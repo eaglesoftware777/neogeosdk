@@ -1,0 +1,57 @@
+[editor]
+line_wrapping=false
+line_break_column=72
+auto_continue_multiline=true
+
+[file_prefs]
+final_new_line=true
+ensure_convert_new_lines=false
+strip_trailing_spaces=false
+replace_tabs=false
+
+[indentation]
+indent_width=4
+indent_type=1
+indent_hard_tab_width=8
+detect_indent=false
+detect_indent_width=false
+indent_mode=2
+
+[project]
+name=neogeosdkprj
+base_path=~/dev2019/neogeosdk
+description=neogeosdk
+file_patterns=*.c;*.h;*.ld;*.S;
+
+[long line marker]
+long_line_behaviour=1
+long_line_column=72
+
+[files]
+current_page=-1
+
+[VTE]
+last_dir=~
+
+[prjorg]
+source_patterns=*.c;*.C;*.cpp;*.cxx;*.c++;*.cc;*.m;
+header_patterns=*.h;*.H;*.hpp;*.hxx;*.h++;*.hh;
+ignored_dirs_patterns=.*;CVS;
+ignored_file_patterns=*.o;*.obj;*.a;*.lib;*.so;*.dll;*.lo;*.la;*.class;*.jar;*.pyc;*.mo;*.gmo;
+generate_tag_prefs=0
+external_dirs=
+
+[build-menu]
+EX_00_LB=_Execute
+EX_00_CM=make test
+EX_00_WD=
+NoneFT_00_LB=build
+NoneFT_00_CM=make all
+NoneFT_00_WD=
+NoneFT_01_LB=clean
+NoneFT_01_CM=make clean
+NoneFT_01_WD=
+NoneFT_02_LB=dump
+NoneFT_02_CM=make dump
+NoneFT_02_WD=
+filetypes=None;
