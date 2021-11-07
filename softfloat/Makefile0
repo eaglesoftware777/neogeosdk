@@ -1,0 +1,15 @@
+SDKHOME=~
+CC=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gcc
+OBJCP=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy
+CFLAGS=  -march=68000 -mcpu=68000 -mtune=68000 -m68000 
+EXTRA=  -DL_double  -DL_floatex -DL_nedf2 -D__subdf3=__subdf3 -D__adddf3=__adddf3 -D__divdf3=__divdf3  -D__muldf3=__muldf3  -D__mulsi3=__mulsi3 -D__divsf3=__divsf3 -S -x assembler-with-cpp
+all:
+	$(CC) $(CFLAGS) $(EXTRA) lb1sf68.S > soft-float.S
+
+clean:
+	rm *.o
+
+
+
+
+
