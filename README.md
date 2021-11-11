@@ -36,7 +36,7 @@ sudo apt-get install python2<br/>
 pip install numpy<br/>
 pip install pypng<br/><br/>
 Put sdk    on ~/neogeosdk<br/>
-Put xtools on ~/xtools<br/>
+Put xtools on ~/x-tools<br/>
 <br/>
 Compilation/Test : <br/><br/>
 cd ~/neogeosdk<br/>
