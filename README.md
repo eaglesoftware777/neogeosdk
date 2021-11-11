@@ -26,3 +26,28 @@ Optional :
 <br/>
 <br/>
 Geany          ==> https://www.geany.org/
+<br/>
+<br/>
+Installation :
+<br/><br/>
+sudo apt-get install mame<br/>
+sudo apt-get install srecord<br/>
+sudo apt-get install python2<br/>
+pip install numpy<br/>
+pip install pypng<br/><br/>
+Put sdk    on ~/neogeosdk<br/>
+Put xtools on ~/xtools<br/>
+<br/>
+Compilation/Test : <br/><br/>
+cd ~/neogeosdk<br/>
+compile      : make<br/>
+test         : make test<br/>
+debug        : make debug<br/>
+dump         : make dump<br/>
+artbox       : make art<br/>
+clean        : make clean<br/>
+artbox clean : make art-clean<br/>
+
+
+
+
