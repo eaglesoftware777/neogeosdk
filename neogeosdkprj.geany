@@ -19,7 +19,7 @@ indent_mode=2
 
 [project]
 name=neogeosdkprj
-base_path=~/dev2019/neogeosdk
+base_path=~/neogeosdk
 description=neogeosdk
 file_patterns=*.c;*.h;*.ld;*.S;
 
