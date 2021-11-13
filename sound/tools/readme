@@ -1,0 +1,4 @@
+sox : sudo apt-get install sox
+ffmpeg : sudo apt-get install ffmpeg
+adpcm_enc
+wla-dx / wla-z80 : git clone https://github.com/vhelin/wla-dx ; cd wla-dx ; cmake . ; make ;  sudo  cp binaries/* /usr/local/bin/ ;

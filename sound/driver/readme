@@ -1,0 +1,138 @@
+Z80 Driver Sound Commands for YM1610:
+
+Command 	Description
+
+$00 	nop
+$01 	BIOS Slot switch
+$02 	BIOS Play eyecatch
+$03 	BIOS Soft Reset
+$04 	Disable All
+$05 	Disable Music
+$06 	Disable Sounds
+$07 	Enable All
+$08 	Enable Music
+$09 	Enable Sounds
+$0A     SSG channels OFF
+$0B 	FM channels OFF
+$0C 	ADPCM-A samples OFF
+$0D 	current ADPCM-B OFF
+$0E 	Tempo Change
+$0F 	???
+$10 	Fade Out
+$11     Fade In/Out OFF
+$12 	Fade In
+$13-$1F ???
+$20-FF 	User use
+
+
+
+Address 	Function 	Port
+
+$04 / $05 	Port
+$06 / $07 	Bits 	Details
+$21 	LSI Test Data 	ALL 	
+	TTTTTTTT 	T=Test
+$22 	LFO Frequency Control 	ALL 	
+	----EFFF 	E=enable F=Frequency
+$24 	Timer A H 	ALL 	
+	HHHHHHHH 	Timer A top 8 bits
+$25 	Timer A L 	ALL 	
+	------LL 	Timer A bottom 2 bits
+$26 	Timer B 	ALL 	
+	TTTTTTTT 	T=Timer B
+$27 	Timer Control, 2ch mode 	ALL 	
+	MMRREELL 	M=Multi Mode, R=Reset timers, E=enable, L=Load
+$28 	Individual Operator Key On/Off 	ALL 	- 	OOOO-GCC 	O=operator / G=Channel group / C=Channel (0=chn 1)
+$31 	Multiplier & Detune 	Ch1 Op1 	Ch3 Op1 	-DDDMMMM 	D=Detune / M=Multiplier
+$32 	Multiplier & Detune 	Ch2 Op1 	Ch4 Op1 	-DDDMMMM 	D=Detune / M=Multiplier
+$35 	Multiplier & Detune 	Ch1 Op2 	Ch3 Op2 	-DDDMMMM 	D=Detune / M=Multiplier
+$36 	Multiplier & Detune 	Ch2 Op2 	Ch4 Op2 	-DDDMMMM 	D=Detune / M=Multiplier
+$39 	Multiplier & Detune 	Ch1 Op3 	Ch3 Op3 	-DDDMMMM 	D=Detune / M=Multiplier
+$3A 	Multiplier & Detune 	Ch2 Op3 	Ch4 Op3 	-DDDMMMM 	D=Detune / M=Multiplier
+$3D 	Multiplier & Detune 	Ch1 Op4 	Ch3 Op4 	-DDDMMMM 	D=Detune / M=Multiplier
+$3E 	Multiplier & Detune 	Ch2 Op4 	Ch4 Op4 	-DDDMMMM 	D=Detune / M=Multiplier
+$41 	Total Level 	Ch1 Op1 	Ch3 Op1 	-TTTTTTT 	T=Total Level (0=max)
+$42 	Total Level 	Ch2 Op1 	Ch4 Op1 	-TTTTTTT 	T=Total Level (0=max)
+$45 	Total Level 	Ch1 Op2 	Ch3 Op2 	-TTTTTTT 	T=Total Level (0=max)
+$46 	Total Level 	Ch2 Op2 	Ch4 Op2 	-TTTTTTT 	T=Total Level (0=max)
+$49 	Total Level 	Ch1 Op3 	Ch3 Op3 	-TTTTTTT 	T=Total Level (0=max)
+$4A 	Total Level 	Ch2 Op3 	Ch4 Op3 	-TTTTTTT 	T=Total Level (0=max)
+$4D 	Total Level 	Ch1 Op4 	Ch3 Op4 	-TTTTTTT 	T=Total Level (0=max)
+$4E 	Total Level 	Ch2 Op4 	Ch4 Op4 	-TTTTTTT 	T=Total Level (0=max)
+$51 	Key Scaling & Attack Rate 	Ch1 Op1 	Ch3 Op1 	KK-RRRRR 	K=Keyscaling / R=attackrate
+$52 	Key Scaling & Attack Rate 	Ch2 Op1 	Ch4 Op1 	KK-RRRRR 	K=Keyscaling / R=attackrate
+$55 	Key Scaling & Attack Rate 	Ch1 Op2 	Ch3 Op2 	KK-RRRRR 	K=Keyscaling / R=attackrate
+$56 	Key Scaling & Attack Rate 	Ch2 Op2 	Ch4 Op2 	KK-RRRRR 	K=Keyscaling / R=attackrate
+$59 	Key Scaling & Attack Rate 	Ch1 Op3 	Ch3 Op3 	KK-RRRRR 	K=Keyscaling / R=attackrate
+$5A 	Key Scaling & Attack Rate 	Ch2 Op3 	Ch4 Op3 	KK-RRRRR 	K=Keyscaling / R=attackrate
+$5D 	Key Scaling & Attack Rate 	Ch1 Op4 	Ch3 Op4 	KK-RRRRR 	K=Keyscaling / R=attackrate
+$5E 	Key Scaling & Attack Rate 	Ch2 Op4 	Ch4 Op4 	KK-RRRRR 	K=Keyscaling / R=attackrate
+$61 	Decay Rate & AM Enable 	Ch1 Op1 	Ch3 Op1 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
+$62 	Decay Rate & AM Enable 	Ch2 Op1 	Ch4 Op1 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
+$65 	Decay Rate & AM Enable 	Ch1 Op2 	Ch3 Op2 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
+$66 	Decay Rate & AM Enable 	Ch2 Op2 	Ch4 Op2 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
+$69 	Decay Rate & AM Enable 	Ch1 Op3 	Ch3 Op3 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
+$6A 	Decay Rate & AM Enable 	Ch2 Op3 	Ch4 Op3 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
+$6D 	Decay Rate & AM Enable 	Ch1 Op4 	Ch3 Op4 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
+$6E 	Decay Rate & AM Enable 	Ch2 Op4 	Ch4 Op4 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
+$71 	Sustain Rate 	Ch1 Op1 	Ch3 Op1 	---SSSSS 	S=Sustain Rate
+$72 	Sustain Rate 	Ch2 Op1 	Ch4 Op1 	---SSSSS 	S=Sustain Rate
+$75 	Sustain Rate 	Ch1 Op2 	Ch3 Op2 	---SSSSS 	S=Sustain Rate
+$76 	Sustain Rate 	Ch2 Op2 	Ch4 Op2 	---SSSSS 	S=Sustain Rate
+$79 	Sustain Rate 	Ch1 Op3 	Ch3 Op3 	---SSSSS 	S=Sustain Rate
+$7A 	Sustain Rate 	Ch2 Op3 	Ch4 Op3 	---SSSSS 	S=Sustain Rate
+$7D 	Sustain Rate 	Ch1 Op4 	Ch3 Op4 	---SSSSS 	S=Sustain Rate
+$7E 	Sustain Rate 	Ch2 Op4 	Ch4 Op4 	---SSSSS 	S=Sustain Rate
+$81 	Release Rate & Sustain Level 	Ch1 Op1 	Ch3 Op1 	SSSSRRRR 	S=Sustain Level / Release Rate
+$82 	Release Rate & Sustain Level 	Ch2 Op1 	Ch4 Op1 	SSSSRRRR 	S=Sustain Level / Release Rate
+$85 	Release Rate & Sustain Level 	Ch1 Op2 	Ch3 Op2 	SSSSRRRR 	S=Sustain Level / Release Rate
+$86 	Release Rate & Sustain Level 	Ch2 Op2 	Ch4 Op2 	SSSSRRRR 	S=Sustain Level / Release Rate
+$89 	Release Rate & Sustain Level 	Ch1 Op3 	Ch3 Op3 	SSSSRRRR 	S=Sustain Level / Release Rate
+$8A 	Release Rate & Sustain Level 	Ch2 Op3 	Ch4 Op3 	SSSSRRRR 	S=Sustain Level / Release Rate
+$8D 	Release Rate & Sustain Level 	Ch1 Op4 	Ch3 Op4 	SSSSRRRR 	S=Sustain Level / Release Rate
+$8E 	Release Rate & Sustain Level 	Ch2 Op4 	Ch4 Op4 	SSSSRRRR 	S=Sustain Level / Release Rate
+$91 	SSG-Envelope Generator 	Ch1 Op1 	Ch3 Op1 	----EEEE 	E=Envelope Gen
+$92 	SSG-Envelope Generator 	Ch2 Op1 	Ch4 Op1 	----EEEE 	E=Envelope Gen
+$95 	SSG-Envelope Generator 	Ch1 Op2 	Ch3 Op2 	----EEEE 	E=Envelope Gen
+$96 	SSG-Envelope Generator 	Ch2 Op2 	Ch4 Op2 	----EEEE 	E=Envelope Gen
+$99 	SSG-Envelope Generator 	Ch1 Op3 	Ch3 Op3 	----EEEE 	E=Envelope Gen
+$9A 	SSG-Envelope Generator 	Ch2 Op3 	Ch4 Op3 	----EEEE 	E=Envelope Gen
+$9D 	SSG-Envelope Generator 	Ch1 Op4 	Ch3 Op4 	----EEEE 	E=Envelope Gen
+$9E 	SSG-Envelope Generator 	Ch2 Op4 	Ch4 Op4 	----EEEE 	E=Envelope Gen
+$A1 	Frequency low (Write Second) 	Ch1 	Ch3 	PPPPPPPP 	P=Frequency Position L
+$A2 	Frequency low (Write Second) 	Ch2 	Ch4 	PPPPPPPP 	P=Frequency Position L
+$A5 	Frequency high & Octave (Write first) 	Ch1 	Ch3 	--OOOPPP 	O=Octive / P=Position H
+$A6 	Frequency high & Octave (Write first) 	Ch2 	Ch4 	--OOOPPP 	O=Octive / P=Position H
+$A9 	Frequency low during Multi-Mode 	Ch1 	Ch3 	PPPPPPPP 	P=Frequency Position L
+$AA 	Frequency low during Multi-Mode 	Ch2 	Ch4 	PPPPPPPP 	P=Frequency Position L
+$AD 	Frequency high & Octave during Multi-Mode 	Ch1 	Ch3 	--OOOPPP 	O=Octive / P=Position H
+$AE 	Frequency high & Octave during Multi-Mode 	Ch2 	Ch4 	--OOOPPP 	O=Octive / P=Position H
+$B1 	Algorithm & Feedback 	Ch1 	Ch3 	--FFFAAA 	F=Feedback / A=Algorithm
+$B2 	Algorithm & Feedback 	Ch2 	Ch4 	--FFFAAA 	F=Feedback / A=Algorithm
+$B5 	FMS & AMS & Stereo 	Ch1 	Ch3 	LRAA-FFF 	Left / Right (1=on) / A=Amplitude Mod Sensitivity / F=Frequency Mod Sensitivity
+$B6 	FMS & AMS & Stereo 	Ch2 	Ch4 	LRAA-FFF 	Left / Right (1=on) / A=Amplitude Mod Sensitivity / F=Frequency Mod Sensitivity
+
+
+
+
+
+
+
+
+	
+Read
+Z80	Port &00
+
+M68k	Address $320000
+
+Write 
+Z80	Port &0C 
+M68k	Address $320000  
+
+
+
+static long stepsizeTable[ 16 ] = 
+{ 
+ 57, 57, 57, 57, 77,102,128,153, 
+ 57, 57, 57, 57, 77,102,128,153 
+};
