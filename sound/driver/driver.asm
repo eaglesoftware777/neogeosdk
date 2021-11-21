@@ -78,7 +78,7 @@ RTS7:
 	ld   a,($FE39)   ;command variable
 	ld   e,a
 	ld   d,$00
-	ld   hl,$0B18  ;handle commande table
+	ld   hl,$0B18  ;handle command table
 	add  hl,de
 	add  hl,de
 	add  hl,de
