@@ -78,7 +78,7 @@ RTS7:
 ld   a,($FE39)   ;command variable
 ld   e,a
 ld   d,$00
-ld   hl,$0B18  ;handle commande table
+ld   hl,$0B18  ;handle command table
 add  hl,de
 add  hl,de
 add  hl,de
@@ -211,11 +211,11 @@ call $09D5
 call $09BC
 ld   a,$01
 out  ($C0),a
-ld   de,$2730 ;FM reset
+ld   de,$2730 ;FM mode 10 ;Enable Timer A; Load A/B
 call $2936
-ld   de,$1001 ;ADPCM-B  reset 
+ld   de,$1001 ;ADPCM-B   Control 1   : 01 (Force stop synthesis)
 call $2936
-ld   de,$1C00 ;flags on
+ld   de,$1C00 ;ADPCM-B   Flag Control : 00 (Enable flags)
 call $2936
 xor  a
 ld   ($FE65),a
@@ -278,16 +278,16 @@ call writeport_b
 ld   de,$B600  ;turn off  2
 call writeport_a
 call writeport_b
-ld   de,$00BF  ;ADPCM-A reset
+ld   de,$00BF  ;ADPCM-A reset (End of synthesis)
 call writeport_b
-ld   de,$1001  ;ADPCM-B Reset
+ld   de,$1001  ;ADPCM-B Reset (Force stop synthesis)
 call writeport_a
 ld   de,$1CBF  ;reset   ADPCM-A CH 1-6 and ADPCM-B flags
 call writeport_a
 ld   de,$1C00  ;reset   ADPCM-A CH 1-6 and ADPCM-B enable
 call writeport_a
 ld   b,$0D
-ld   de,$417F
+ld   de,$417F   ; FM Total Level 
 call writeport_a
 call writeport_b
 ex   de,hl
@@ -295,19 +295,19 @@ ld   de,$0100
 add  hl,de
 ex   de,hl
 djnz $0BF3
-ld   de,$2801    ;FM CH 1 off
+ld   de,$2801    ;FM CH 1 Key off
 call writeport_a
-ld   de,$2802    ;FM CH 2 off
+ld   de,$2802    ;FM CH 2 Key off
 call writeport_a
-ld   de,$2805    ;FM CH 5 off
+ld   de,$2805    ;FM CH 5 Key off
 call writeport_a
-ld   de,$2806    ;FM CH 6 off
+ld   de,$2806    ;FM CH 6 Key off
 call writeport_a
-ld   de,$0800    ; SSG CH A off
+ld   de,$0800    ; SSG CH A Level off
 call writeport_a
-ld   de,$0900    ; SSG CH B off
+ld   de,$0900    ; SSG CH B Level off
 call writeport_a
-ld   de,$0A00    ; SSG CH C off
+ld   de,$0A00    ; SSG CH C Level off
 call writeport_a
 ld   hl,$FFFD  ;dynamic ram loop
 ld   (hl),$C3  ;jp
