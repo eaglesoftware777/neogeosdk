@@ -104,8 +104,8 @@ ASM_END*/
 }
 void NEOGEO_USER load_palettes (uint16_t *p_palette , uint16_t *palette_offset) {
 
-
-for (uint16_t i = 0 ; i < 16 ; i++)
+uint16_t i = 0;
+for (i = 0 ; i < 16 ; i++)
 {
 *(palette_offset + i) = *(p_palette + i);
 }
@@ -186,8 +186,8 @@ pal_tile[15] = t15;
 //}
 void NEOGEO_USER vram_SCB1(uint16_t *SCB1_1 , uint16_t *SCB1_2 ,uint8_t tiles_number)
 {
-
-for (uint16_t i = 0 ; i <  tiles_number  ; i++)
+uint16_t i = 0;
+for (i = 0 ; i <  tiles_number  ; i++)
 { 
 uint16_t SCB11 = *(SCB1_1+i);
 uint16_t SCB12 = *(SCB1_2+i);
@@ -305,7 +305,8 @@ uint16_t addrfix =  FIXMAP+y+x*32;
 uint16_t fixdata = 0;
 NEO_REGISTER(VRAM_ADDR)=addrfix;
 NEO_REGISTER(VRAM_INC) = 0x20;
-for (long i=0; i<textsz;i++)
+long i =0;
+for (i=0; i<textsz;i++)
 
 {		
 fixdata = (pal << 12) | *(mess+i);
@@ -324,7 +325,8 @@ uint16_t addrfix =  FIXMAP+y+x*32;
 uint16_t fixdata = 0;
 NEO_REGISTER(VRAM_ADDR)=addrfix;
 NEO_REGISTER(VRAM_INC) = 0x20;
-for (int i=0; i<objsz;i++)
+int i =0;
+for (i=0; i<objsz;i++)
 {		
 fixdata = (pal << 12) | *(mess+i);
 vram_sfix1(fixdata);
@@ -341,7 +343,8 @@ uint16_t addrfix =  FIXMAP+a*x+b*y+c;
 uint16_t fixdata = 0;
 NEO_REGISTER(VRAM_ADDR)=addrfix;
 NEO_REGISTER(VRAM_INC) = mod;
-for (int i=0; i<objsz;i++)
+int i = 0;
+for (i=0; i<objsz;i++)
 {		
 fixdata = (pal << 12) | *(mess+i);
 vram_sfix1(fixdata);
@@ -914,8 +917,9 @@ objsz =   (int)(log10((float)value)) + 1;
 //fix_svalue1(X,Y+1,objsz,pal,offset);
 uint16_t s[objsz];
 
+int i = 0;
 
-for (int i = objsz-1; i >= 0; i--) {
+for (i = objsz-1; i >= 0; i--) {
 s[i] = (value_tmp2 % 10)+offset;
 value_tmp2 /= 10;
 }

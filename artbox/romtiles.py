@@ -139,26 +139,42 @@ def writeBLK(BLK_,blk,f_c1rom,f_c2rom,f_spr):
 		f_c2rom.flush()
 
 try:
-	os.system("rm neopal.bin")
+	if os.name == 'nt':
+		os.system("del neopal.bin")
+	else :
+		os.system("rm neopal.bin")
+
 except OSError:
     pass
 
 
 try:
-	os.system("rm *.c1 *.c2")
+	if os.name == 'nt':
+		os.system("del *.c1 *.c2")
+	else :
+		os.system("rm *.c1 *.c2")
 except OSError:
     pass
 
 try:
-	os.system("rm neo.pal")
+	if os.name == 'nt':
+		os.system("del neo.pal")
+	else :
+		os.system("rm neo.pal")
 except OSError:
     pass
 try:
-	os.system("rm std.pal")
+	if os.name == 'nt':
+		os.system("del std.pal")
+	else :
+		os.system("rm std.pal")
 except OSError:
     pass
 try:
-	os.system("rm neo.spr")
+	if os.name == 'nt':
+		os.system("del neo.spr")
+	else :
+		os.system("rm neo.spr")
 except OSError:
     pass
 

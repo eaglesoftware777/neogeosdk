@@ -15,8 +15,9 @@ cyclexs(10);
 
 void NEOGEO_USER playgame() {
 
-//showScreen1(16,480,0xF,0xCF,16,0xFFF);	
-for (int i=1;i<=100;i++) {
+//showScreen1(16,480,0xF,0xCF,16,0xFFF);
+int i = 0;	
+for (i=1;i<=100;i++) {
 	
 fixtext_out(15,7,"FRAME 1",0);
 
