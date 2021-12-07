@@ -50,8 +50,7 @@ artbox clean : make art-clean<br/>
 <br/>
 <br/>
 <br/>
-<br/>
-<br/>
+#
 Windows : 
 <br/>
 <br/>
@@ -91,7 +90,8 @@ xxd.exe is used for  dumping the rom, you can change it with an equivalent tool 
 xxd.exe were taken from : https://ftp.nluug.nl/pub/vim/pc/gvim73_46_s.zip
 <br/>
 <br/>
-<br/>
+Compilation/Test : <br/><br/>
+cd %SDKHOME%\neogeosdk<br/>
 compile : c:\SysGCC\m68k-elf\bin\make -f MakefileWin32.mak
 <br/>
 test : c:\SysGCC\m68k-elf\bin\make -f MakefileWin32.mak test
