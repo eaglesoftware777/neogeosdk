@@ -47,4 +47,66 @@ dump         : make dump<br/>
 artbox       : make art<br/>
 clean        : make clean<br/>
 artbox clean : make art-clean<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+Windows : 
+<br/>
+<br/>
+install sysprogs m68k compiler for windows
+<br/>
+m68k compiler : https://sysprogs.com/files/gnutoolchains/m68k-elf/m68k-elf-gcc4.8.0.exe
+<br/>
+install python 2.7  :https://www.python.org/ftp/python/
+<br/>
+<br/>
+install python required package
+<br/>
+py -2.7 -m pip install numpy
+<br/>
+py -2.7 -m pip install pypng
+<br/>
+py -2.7 -m pip install sqlite3
+<br/>
+<br/>
+Change SDKHOME variable in the makefile and artbox bat files such as :
+<br/>
+SDKHOME = Windows folder containing  neogeosdk 
+<br/>
+Default is set to D: driver
+<br/>
+SDKHOME=D: 
+<br/>
+Path to neogeo sdk : d:\neogeosdk
+<br/>
+<br/>
+srec_cat.exe and xxd.exe are in the folder neogeosdk\win 
+<br/>
+srec_cat.exe  : http://srecord.sourceforge.net/download.html
+<br/>
+xxd.exe is used for  dumping the rom, you can change it with an equivalent tool or another windows version
+<br/>
+xxd.exe were taken from : https://ftp.nluug.nl/pub/vim/pc/gvim73_46_s.zip
+<br/>
+<br/>
+<br/>
+compile : c:\SysGCC\m68k-elf\bin\make -f MakefileWin32.mak
+<br/>
+test : c:\SysGCC\m68k-elf\bin\make -f MakefileWin32.mak test
+<br/>
+debug : c:\SysGCC\m68k-elf\bin\make -f MakefileWin32.mak debug
+<br/>
+dump : c:\SysGCC\m68k-elf\bin\make -f MakefileWin32.mak dump
+<br/>
+artbox : c:\SysGCC\m68k-elf\bin\make -f MakefileWin32.mak art
+<br/>
+clean : c:\SysGCC\m68k-elf\bin\make -f MakefileWin32.mak clean
+<br/>
+artbox clean : c:\SysGCC\m68k-elf\bin\make -f MakefileWin32.mak art-clean
+
+
+
+
 
