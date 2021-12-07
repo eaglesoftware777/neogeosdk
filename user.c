@@ -264,7 +264,8 @@ load_palettes(pal_tile0,PALETTES);
 waitVbl();
 fixtext_out(15,10,"TITLE MODE MVS",0);
 playSoundtest(0x24);
-for(int i=0;i<3;i++) {
+int i =0;
+for(i=0;i<3;i++) {
 fix_svalue1(13,15,i,0,48);
 cycle1s();	
 }
@@ -280,7 +281,8 @@ load_palettes(pal_tile0,PALETTES);
 waitVbl();
 fixtext_out(15,10,"TITLE MODE AES",0);
 playSoundtest(0x24);
-for(int i=0;i<5;i++) {
+int i =0;
+for(i=0;i<5;i++) {
 fix_svalue1(13,15,i,0,48);
 cycle1s();	
 }
@@ -288,7 +290,8 @@ cycle1s();
 
 void NEOGEO_USER WORK_INIT(void) {
 uint32_t *p1 = RAMSTART;
-for (int i=1;i<=32768;i++)
+int i = 0;
+for (i=1;i<=32768;i++)
 *p1++=0;
 }
 
@@ -351,7 +354,8 @@ p1c = read_p1credit();
 display_digit(15,14,123456789,0,48);
 fixtext_out(15,15,"P1C: ",0);
 display_digit(20,15,p1c,0,48);
-for(int i=0;i<10;i++) {
+int i = 0;
+for(i=0;i<10;i++) {
 fix_svalue1(27,8,i,0,48);
 cycle1s();	
 }}
