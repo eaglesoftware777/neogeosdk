@@ -36,7 +36,7 @@ cyclexms(30);
 fixtext_out(15,7,"FRAME 4",0);
 
 waitVbl();
-showScreen5(16,520,0xF,0xAF,9,"0xFFF");
+showScreen5(16,520,0xF,0xAF,9,0xFFF);
 cyclexms(30);
 fixtext_out(15,7,"FRAME 5",0);
 
