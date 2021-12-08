@@ -1,3 +1,0 @@
-py -2.7 -m pip install numpy
-py -2.7 -m pip install pypng
-py -2.7 -m pip install sqlite3
