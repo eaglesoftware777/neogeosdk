@@ -85,9 +85,9 @@ srec_cat.exe and xxd.exe are in the folder neogeosdk\win
 <br/>
 srec_cat.exe  : http://srecord.sourceforge.net/download.html
 <br/>
-xxd.exe is used for  dumping the rom, you can change it with an equivalent tool or another windows version
+xxd.exe is used for  dumping the rom, you can change it with an equivalent tool or another windows version :  (https://ftp.nluug.nl/pub/vim/pc/gvim73_46_s.zip)
 <br/>
-xxd.exe were taken from : https://ftp.nluug.nl/pub/vim/pc/gvim73_46_s.zip
+xxd.exe were taken from :  https://sourceforge.net/projects/xxd-for-windows/ 
 <br/>
 <br/>
 Uncompress/install mame in a folder , the makefile use %SDKHOME%\mame\mame.exe
