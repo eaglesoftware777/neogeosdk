@@ -1,1 +1,11 @@
 input png indexed images palette 15 colors
+
+
+to convert image use imagemagick :
+
+$ convert truecolor_source_image.png -colors 15 indexed_neogeo_image.png
+Crop the image (converted image size should be : 256x256)
+You may also use Gimp (png indexed image mode with 15 size palette)
+Dithering algorithms ...
+Option B : pixel art, produce png indexed image using 16 colors, 1 of the colors is transparent
+...
