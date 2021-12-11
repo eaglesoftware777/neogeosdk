@@ -357,6 +357,10 @@ display_digit(20,15,p1c,0,48);
 int i = 0;
 for(i=0;i<10;i++) {
 fix_svalue1(27,8,i,0,48);
+p1c = read_p1credit();
+display_digit(15,14,123456789,0,48);
+fixtext_out(15,15,"P1C: ",0);
+display_digit(20,15,p1c,0,48);
 cycle1s();	
 }}
 
