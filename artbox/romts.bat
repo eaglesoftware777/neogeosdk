@@ -1,4 +1,4 @@
-set SDKHOME=D:
+set SDKHOME=C:
 ..\win\romtool_x64.exe /p 1c.c1 1p.c1 2048 0
 ..\win\romtool_x64.exe /p 2c.c2 2p.c2 2048 0
 ..\win\romtool_x64.exe /f 1p.c1 052-c1.c1
