@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include "macro.h"
+#include "sdk/macro.h"
 
 void NEOGEO_USER maingame (void) {
 clearFix();
