@@ -1,1 +1,1 @@
-set SDKHOME=D:
+set SDKHOME=C:
