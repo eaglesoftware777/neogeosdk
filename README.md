@@ -74,11 +74,11 @@ Change SDKHOME variable in the makefile and artbox bat files such as :
 <br/>
 SDKHOME = Windows folder containing  neogeosdk 
 <br/>
-Default is set to D: driver
+Default is set to C: driver
 <br/>
-SDKHOME=D: 
+SDKHOME=C: 
 <br/>
-Path to neogeo sdk : d:\neogeosdk
+Path to neogeo sdk : c:\neogeosdk
 <br/>
 <br/>
 srec_cat.exe and xxd.exe are in the folder neogeosdk\win 
