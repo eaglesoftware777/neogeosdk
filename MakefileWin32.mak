@@ -1,4 +1,4 @@
-SDKHOME=D:
+SDKHOME=C:
 CC=C:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe
 CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -Wa,-march=68000,-mcpu=68000,-W,--warn  
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=6800 -m68000  -ffreestanding
@@ -12,26 +12,26 @@ INFO=$(SDKHOME)\neogeosdk\win\xxd.exe -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
 
+.PHONY: all
 all:  game 052-p1.p1
 
 game:
-	$(CC) $(CFLAGS)  neogeo.c  -o neogeo0.o
-	$(CC) $(CFLAGS)   user.c -o user0.o
-	$(CC) $(CFLAGS)   main.c -o main0.o
-	$(CC) $(CFLAGS)   neogeolib.c -o neogeolib0.o
-	$(CC) -Wa,-adlns  -c neogeo.c  user.c main.c neogeolib.c  > game.s
-	$(OBJCP) -R .comment -R .text -R .data -R .bss neogeo0.o   neogeo.o
-	$(OBJCP) -R .comment -R .text -R .data -R .bss user0.o    user.o
-	$(OBJCP) -R .comment -R .text -R .data -R .bss main0.o    main.o
-	$(OBJCP) -R .comment -R .text -R .data -R .bss neogeolib0.o    neogeolib.o
-	$(LD) $(LDFLAGS)    -T neogeo.ld -o  game   neogeo.o   user.o main.o neogeolib.o
+	$(CC) $(CFLAGS)   sdk\neogeo.c  -o out\neogeo0.o
+	$(CC) $(CFLAGS)   user.c -o out\user0.o
+	$(CC) $(CFLAGS)   main.c -o out\main0.o
+	$(CC) $(CFLAGS)   sdk\neogeolib.c -o out\neogeolib0.o
+	$(OBJCP) -R .comment -R .text -R .data -R .bss out\neogeo0.o   out\neogeo.o
+	$(OBJCP) -R .comment -R .text -R .data -R .bss out\user0.o    out\user.o
+	$(OBJCP) -R .comment -R .text -R .data -R .bss out\main0.o    out\main.o
+	$(OBJCP) -R .comment -R .text -R .data -R .bss out\neogeolib0.o    out\neogeolib.o
+	$(LD) $(LDFLAGS)    -T sdk\neogeo_win.ld -o  out\game   out\neogeo.o   out\user.o out\main.o out\neogeolib.o
 	
 052-p1.p1: 
-	$(OBJCP)   -O ihex    game game0
-	$(SCAT)  game0 -Intel $(CROP) -o game0.rom -binary
-	$(SCAT)  game0.rom -binary $(SWAP) game1.rom -binary
-	$(SCAT)  game1.rom -binary $(FILL) game.rom -binary
-	copy		 game.rom	052-p1.p1
+	$(OBJCP)   -O ihex    out\game out\game0
+	$(SCAT)  out\game0 -Intel $(CROP) -o out\game0.rom -binary
+	$(SCAT)  out\game0.rom -binary $(SWAP) out\game1.rom -binary
+	$(SCAT)  out\game1.rom -binary $(FILL) out\game.rom -binary
+	copy		 out\game.rom	out\052-p1.p1
 
 
 
@@ -41,24 +41,25 @@ art:
 	artbox\makeartbox.bat 
 
 clean:
-	del  game  *.o *.rom *.p1  *.s *.dump *.hex game0
+	del  out\game  out\*.o out\*.rom out\*.p1  dump\*.s dump\*.dump dump\*.hex out\game0
 	
+.PHONY: dump	
 dump: 	
-	$(OBJDUMP)   -Dht neogeo.o | more
-	$(OBJDUMP)   -Dht user.o | more 
-	$(OBJDUMP)   -Dht main.o | more 
-	$(OBJDUMP)   -Dht game  | more
-	$(OBJDUMP)   -Dht neogeo.o > neogeo.dump
-	$(OBJDUMP)   -Dht user.o  >  user.dump 
-	$(OBJDUMP)   -Dht main.o  >  main.dump 
-	$(OBJDUMP)   -Dht game  >  game.dump
-	$(INFO) game.rom | more 
-	$(INFO) game.rom > game.hex 
+	$(OBJDUMP)   -Dht out\neogeo.o | more
+	$(OBJDUMP)   -Dht out\user.o | more 
+	$(OBJDUMP)   -Dht out\main.o | more 
+	$(OBJDUMP)   -Dht out\game  | more
+	$(OBJDUMP)   -Dht out\neogeo.o > dump\neogeo.dump
+	$(OBJDUMP)   -Dht out\user.o  >  dump\user.dump 
+	$(OBJDUMP)   -Dht out\main.o  >  dump\main.dump 
+	$(OBJDUMP)   -Dht out\game  >  dump\game.dump
+	$(INFO) out\game.rom | more 
+	$(INFO) out\game.rom > dump\game.hex 
 
 test:
-	copy 052-p1.p1  $(SDKHOME)\neogeosdk\roms\ssideki
+	copy out\052-p1.p1  $(SDKHOME)\neogeosdk\roms\ssideki
 	$(SDKHOME)\mame\mame.exe -rompath  $(SDKHOME)\neogeosdk\roms  -output console  -nofilter -waitvsync -window ssideki
 	
 debug:
-	copy 052-p1.p1  $(SDKHOME)\neogeosdk\roms\ssideki
+	copy out\052-p1.p1  $(SDKHOME)\neogeosdk\roms\ssideki
 	$(SDKHOME)\mame\mame.exe -rompath   $(SDKHOME)\neogeosdk\roms -output console -debug -verbose  -nofilter -waitvsync -window ssideki
