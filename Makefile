@@ -3,7 +3,6 @@
 #https://github.com/eaglesoftware777
 #https://github.com/eaglesoftware777/neogeosdk
 #######
-
 SDKHOME=~
 CC=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gcc
 CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -Wa,-march=68000,-mcpu=68000,-W,--warn
