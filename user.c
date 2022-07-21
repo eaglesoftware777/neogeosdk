@@ -1,3 +1,9 @@
+/*******
+https://eaglesoftware.biz
+https://github.com/eaglesoftware777
+https://github.com/eaglesoftware777/neogeosdk
+******/
+
 #include <stdint.h>
 #include "sdk/macro.h"
 #pragma GCC push_options
