@@ -1,3 +1,8 @@
+#######
+#https://eaglesoftware.biz
+#https://github.com/eaglesoftware777
+#https://github.com/eaglesoftware777/neogeosdk
+#######
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
