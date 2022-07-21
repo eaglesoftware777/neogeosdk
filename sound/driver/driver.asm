@@ -1,3 +1,8 @@
+;;;;;;;
+;https://eaglesoftware.biz
+;https://github.com/eaglesoftware777
+;https://github.com/eaglesoftware777/neogeosdk
+;;;;;;;
 ;==============================================================
 ; WLA-DX banking setup
 ;==============================================================
