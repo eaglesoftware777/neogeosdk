@@ -37,8 +37,7 @@ Geany IDE  ⇒  [https://www.geany.org/](https://www.geany.org/) <br/><br/>
 ```
 sudo apt-get install mame
 sudo apt-get install srecord
-sudo apt-get install python3 python3-pip
-pip3 install numpy
+sudo apt-get install python3 python3-pip python3-numpy
 pip3 install pypng
 ```
 
