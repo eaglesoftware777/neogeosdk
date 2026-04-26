@@ -1,10 +1,10 @@
-python createromdb.py
-python romdbimgimport.py 10
-#python romdbfiximport.py
-#python fixtiles.py
-python romtiles.py
-python genmapfile.py 10
-python genmapdb.py
-python genscreens.py 10 16 16 16
+python3 createromdb.py
+python3 romdbimgimport.py 10
+#python3 romdbfiximport.py
+#python3 fixtiles.py
+python3 romtiles.py
+python3 genmapfile.py 10
+python3 genmapdb.py
+python3 genscreens.py 10 16 16 16
 #./romfx.sh
 ./romts.sh

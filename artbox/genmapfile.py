@@ -3,7 +3,7 @@
 #https://github.com/eaglesoftware777
 #https://github.com/eaglesoftware777/neogeosdk
 #######
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Mon Oct 22 19:56:57 2018

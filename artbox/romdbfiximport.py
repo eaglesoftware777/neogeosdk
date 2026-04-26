@@ -3,7 +3,7 @@
 #https://github.com/eaglesoftware777
 #https://github.com/eaglesoftware777/neogeosdk
 #######
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Tue Oct 23 02:07:17 2018
@@ -14,7 +14,6 @@ import sqlite3
 import numpy as np
 import png
 import io
-import itertools
 from sqlite3 import Error
 
 #def adapt_array(arr):
@@ -53,7 +52,7 @@ try:
         #    indexed = np.array(im) # Convert to NumPy array to easier access
         w, h, imap1, metadata = im.read()
         palettep = np.array(metadata['palette'],dtype=np.uint16)
-        indexed = np.vstack(itertools.imap(np.uint16, imap1))
+        indexed = np.vstack(list(map(np.uint16, imap1)))
         cur.execute("insert into imagefix (idx,data,palette) values (?, ?, ?)", (i, indexed,palettep))
         conn.commit()
 except Error as e:

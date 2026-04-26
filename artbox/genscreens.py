@@ -76,7 +76,7 @@ for image_i0 in image_screens:
     for sprt_index in range(sprt_sz):
         s="uint16_t spriteMapS%d_%d[%d] = {" %(image_index,sprt_index+1,16)
         for crt_index in range(crt_sz-1):
-			s=s+"0x%x,"%L[image_i0][crt_index,sprt_index]
+            s=s+"0x%x,"%L[image_i0][crt_index,sprt_index]
         s=s+"0x%x};"%L[image_i0][crt_sz-1,sprt_index]
         print(s)
         s=""

@@ -3,7 +3,7 @@
 #https://github.com/eaglesoftware777
 #https://github.com/eaglesoftware777/neogeosdk
 #######
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Fri Sep 14 15:12:19 2018
@@ -55,7 +55,7 @@ def writePLT(palettep,f_std,f_neogeo,image_index,palbuff):
     pal[14] = 0x0
     pal[15] = 0x0
     sz = len(palettep)-1
-    print sz
+    print(sz)
     print ("0x%x"%pal[0])
     for i in range(sz):
         color24_ = palettep[i]
@@ -220,9 +220,9 @@ for i in range(image_number):
     indexed = data[i][1]
     palettep = data[i][2]
     h, w = indexed.shape[:2]
-    snumber = w /16
+    snumber = w // 16
     #print snumber
-    scnumber = h / 16
+    scnumber = h // 16
     #print scnumber
     tc =  snumber * scnumber
     sprts = np.uint8(np.vsplit(indexed,snumber))
