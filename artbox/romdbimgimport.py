@@ -11,11 +11,15 @@ Created on Tue Oct 23 02:07:17 2018
 @author: eagle software
 """
 import sys
-import sqlite3
+try:
+    import pysqlite3 as sqlite3
+    from pysqlite3 import Error
+except ImportError:
+    import sqlite3
+    from sqlite3 import Error
 import numpy as np
 import png
 import io
-from sqlite3 import Error
 
 #def adapt_array(arr):
 #    out = io.BytesIO()
@@ -43,20 +47,21 @@ image_number = int(sys.argv[1:][0])
 
 try:
     conn = sqlite3.connect("neorom.db", detect_types=sqlite3.PARSE_DECLTYPES)
-    print(sqlite3.version)
-    A=np.ndarray((sz,sz),np.uint16)
+    print(sqlite3.sqlite_version)
+    conn.execute("PRAGMA journal_mode=WAL")
+    conn.execute("PRAGMA synchronous=NORMAL")
     sqlite3.register_adapter(np.ndarray, adapt_array)
     sqlite3.register_converter("array", convert_array)
     cur = conn.cursor()
+    rows = []
     for i in range(image_number):
         im = png.Reader("in/%d.png"%i)
-        #    im = Image.open("in/%d.png"%i) # Replace with your image name here
-        #    indexed = np.array(im) # Convert to NumPy array to easier access
         w, h, imap1, metadata = im.read()
         palettep = np.array(metadata['palette'],dtype=np.uint16)
         indexed = np.vstack(list(map(np.uint16, imap1)))
-        cur.execute("insert into image (idx,data,palette) values (?, ?, ?)", (i, indexed,palettep))
-        conn.commit()
+        rows.append((i, indexed, palettep))
+    cur.executemany("INSERT INTO image (idx,data,palette) VALUES (?,?,?)", rows)
+    conn.commit()
 except Error as e:
     print(e)
 finally:
