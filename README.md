@@ -20,7 +20,7 @@ Ubuntu Linux  ⇒  [https://ubuntu.com/](https://ubuntu.com/) <br/>
 m68k compiler ⇒  [https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.0/x-tools.tar](https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.0/x-tools.tar) <br/>
 mame          ⇒  [https://www.mamedev.org/](https://www.mamedev.org/) <br/>
 srecord       ⇒  [https://packages.ubuntu.com/search?keywords=srecord](https://packages.ubuntu.com/search?keywords=srecord) <br/>
-python 2.7    ⇒  [https://www.python.org/download/releases/2.7/](https://www.python.org/download/releases/2.7/) <br/>
+python 3      ⇒  [https://www.python.org/downloads/](https://www.python.org/downloads/) <br/>
 numpy         ⇒  [https://numpy.org/](https://numpy.org/) <br/>
 pypng         ⇒  [https://pypi.org/project/pypng/](https://pypi.org/project/pypng/) <br/>
 sqlite3       ⇒  [https://www.sqlite.org/index.html](https://www.sqlite.org/index.html) <br/><br/>
@@ -37,9 +37,9 @@ Geany IDE  ⇒  [https://www.geany.org/](https://www.geany.org/) <br/><br/>
 ```
 sudo apt-get install mame
 sudo apt-get install srecord
-sudo apt-get install python2
-pip install numpy
-pip install pypng
+sudo apt-get install python3 python3-pip
+pip3 install numpy
+pip3 install pypng
 ```
 
 Place the SDK in `~/neogeosdk` <br/>
@@ -73,15 +73,14 @@ artbox clean : make art-clean
 Install Sysprogs m68k compiler:
 [https://sysprogs.com/files/gnutoolchains/m68k-elf/m68k-elf-gcc4.8.0.exe](https://sysprogs.com/files/gnutoolchains/m68k-elf/m68k-elf-gcc4.8.0.exe) <br/>
 
-Install Python 2.7:
-[https://www.python.org/ftp/python/](https://www.python.org/ftp/python/) <br/><br/>
+Install Python 3:
+[https://www.python.org/downloads/](https://www.python.org/downloads/) <br/><br/>
 
 Install required Python packages:
 
 ```
-py -2.7 -m pip install numpy
-py -2.7 -m pip install pypng
-py -2.7 -m pip install sqlite3
+py -m pip install numpy
+py -m pip install pypng
 ```
 
 Specify the SDK path in the Makefile and in the Artbox batch files: <br/>

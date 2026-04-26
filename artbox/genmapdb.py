@@ -57,7 +57,7 @@ try:
     buffi  = bfile.read()
 finally:
     bfile.close()  
-print len(buffi)
+print(len(buffi))
 
   
 

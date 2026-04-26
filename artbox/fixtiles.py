@@ -3,7 +3,7 @@
 #https://github.com/eaglesoftware777
 #https://github.com/eaglesoftware777/neogeosdk
 #######
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Fri Sep 14 15:12:19 2018
@@ -43,7 +43,7 @@ def  fixbyte(lp,rp):
     b7 = rp >> 3 & 1
     fixb = np.uint8( b7 << 7 | b6 << 6 | b5 << 5 |  b4 << 4 | b3 << 3 | b2 << 2 | b1 << 1 | b0 )
     print("%x"%fixb)
-    print "++++++++++++++++++++++"
+    print("++++++++++++++++++++++")
     return fixb
 
 def writeBLK(crt,f_s1rom,f_s2rom,f_fix):
@@ -336,17 +336,17 @@ image_number = len(data)
 #st.pack_into('i16Q',buff,0, 0, 0x0, 0x0, 0x0,0x0, 0x0, 0x0, 0x0, 0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0)
 
 for i in range(image_number):
-    print i
-    
+    print(i)
+
     indexed = data[i][1]
     palettep = data[i][2]
     h, w = indexed.shape[:2]
 
-    snumber = w /16
+    snumber = w // 16
     #print snumber
-    scnumber = h / 16
-    print snumber
-    print scnumber
+    scnumber = h // 16
+    print(snumber)
+    print(scnumber)
     #print scnumber
     tc =  snumber * scnumber
     sprts = np.uint8(np.vsplit(indexed,snumber))
