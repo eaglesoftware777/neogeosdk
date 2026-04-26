@@ -16,8 +16,12 @@ import struct as st
 import numpy as np
 #import itertools
 import os
-from sqlite3 import Error
-import sqlite3 as db
+try:
+    import pysqlite3 as db
+    from pysqlite3 import Error
+except ImportError:
+    import sqlite3 as db
+    from sqlite3 import Error
 import io
 bsz = 136
 
@@ -194,6 +198,7 @@ try:
     db.register_adapter(np.ndarray, adapt_array)
     db.register_converter("array", convert_array)
     conn = db.connect("neorom.db", detect_types=db.PARSE_DECLTYPES)
+    conn.execute("PRAGMA journal_mode=WAL")
     cur = conn.cursor()
     cur.execute("select idx,data,palette from image")
     data = cur.fetchall()
