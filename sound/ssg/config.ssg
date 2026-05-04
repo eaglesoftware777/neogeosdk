@@ -1,8 +1,25 @@
-#ssg file
-1000
-1001
-1011
-1111
-1110
-1010
-1100
+; NeoGeo YM2610 SSG preset/config bank
+
+[preset 0]
+name=Clean Square
+tone_mask=0x38
+vol_a=0A
+vol_b=06
+vol_c=00
+noise_freq=00
+
+[preset 1]
+name=Soft Menu Beep
+tone_mask=0x38
+vol_a=08
+vol_b=04
+vol_c=00
+noise_freq=00
+
+[preset 2]
+name=Arcade Alert
+tone_mask=0x38
+vol_a=0F
+vol_b=08
+vol_c=04
+noise_freq=06

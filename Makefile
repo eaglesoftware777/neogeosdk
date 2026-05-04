@@ -3,22 +3,31 @@
 #https://github.com/eaglesoftware777
 #https://github.com/eaglesoftware777/neogeosdk
 #######
-SDKHOME=~
+ifndef SDKHOME
+SDKHOME := $(abspath $(CURDIR)/..)
+endif
 CC=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gcc
 CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -Wa,-march=68000,-mcpu=68000,-W,--warn
-CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=6800 -m68000  -ffreestanding
+CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
 LD=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-ld
 LDFLAGS=  -nostartfiles -nostdlib
 OBJCP=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy
 OBJDUMP=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-objdump
+WLAZ80?=wla-z80
+WLALINK?=wlalink
 CROP=-crop 0x000000 0x01FFFF 
 SCAT=srec_cat
 INFO=xxd -g 2 
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
 
+.DEFAULT_GOAL := p1
+
 .PHONY: all
-all:  game 052-p1.p1
+all: art sfix sound p1
+
+.PHONY: p1
+p1: game 052-p1.p1
 
 game:
 	$(CC) $(CFLAGS)   sdk/neogeo.c  -o out/neogeo0.o
@@ -31,22 +40,97 @@ game:
 	$(OBJCP) -R .comment -R .text -R .data -R .bss out/neogeolib0.o    out/neogeolib.o
 	$(LD) $(LDFLAGS)    -T sdk/neogeo.ld -o  out/game   out/neogeo.o   out/user.o out/main.o out/neogeolib.o
 	
-052-p1.p1: 
+052-p1.p1: game
 	$(OBJCP)   -O ihex    out/game out/game0
 	$(SCAT)  out/game0 -Intel $(CROP) -o out/game0.rom -binary
 	$(SCAT)  out/game0.rom -binary $(SWAP) out/game1.rom -binary
 	$(SCAT)  out/game1.rom -binary $(FILL) out/game.rom -binary
 	cp		 out/game.rom	out/052-p1.p1
+	mkdir -p roms/ssideki
+	cp -f out/052-p1.p1 roms/ssideki/052-p1.p1
+
+.PHONY: mml
+mml:
+	python3 sound/tools/mml_compile.py sound/mml/*.mml -o sound/driver/music_data.inc
+
+.PHONY: fmpatches
+fmpatches:
+	python3 sound/tools/fm_patch_compile.py sound/fm/patches.fm -o sound/driver/fm_patch_table.inc
+
+.PHONY: fm
+fm:
+	python3 sound/tools/fm_compile.py sound/fm/*.mml -o sound/driver/fm_data.inc
+	
+.PHONY: ssgconfig
+ssgconfig:
+	python3 sound/tools/ssg_config_compile.py sound/ssg/config.ssg -o sound/driver/ssg_config.inc
+
+.PHONY: ssg
+ssg:
+	python3 sound/tools/ssg_compile.py sound/ssg/*.mml -o sound/driver/ssg_data.inc	
+
+.PHONY: samples
+samples:
+	cd sound/tools && ./enc_wave16le_a.sh
+	cd sound/tools && ./enc_wave16le_b.sh
+	cd sound/tools && ./adpcm_enc_process.sh
+
+.PHONY: vrom
+vrom:
+	./sound/tools/vrom.sh
+	mkdir -p roms/ssideki
+	cp -f out/052-v1.v1 roms/ssideki/052-v1.v1
+
+.PHONY: m1rom
+m1rom: fmpatches fm mml ssgconfig ssg
+	WLAZ80=$(WLAZ80) WLALINK=$(WLALINK) ./sound/tools/m1rom.sh
+	mkdir -p roms/ssideki
+	cp -f out/052-m1.m1 roms/ssideki/052-m1.m1
+	cp -f out/052-m1.m1 roms/ssideki/sm1.sm1
+
+.PHONY: sound
+sound: samples vrom fmpatches fm mml ssgconfig ssg m1rom
 
 
+.PHONY: sound-all
+sound-all: sound
 
+
+.PHONY: sfix
+sfix:
+	cd artbox && python3 romdbfiximport.py && python3 fixtiles.py && ./romfx.sh
+	mkdir -p roms/ssideki
+	cp -f artbox/052-s1.s1 roms/ssideki/052-s1.s1
+
+.PHONY: srom
+srom: sfix
+
+.PHONY: art-clean
 art-clean:
 	./artbox/makeclean.sh
+
+.PHONY: art
 art:
 	./artbox/makeartbox.sh
 
+.PHONY: clean
 clean:
-	rm  out/game  out/*.o out/*.rom out/*.p1  out/*.s dump/*.dump dump/*.hex out/game0
+	rm -f out/game out/game0 out/game0.rom out/game1.rom out/game.rom out/052-p1.p1
+	rm -f out/*.o out/*.s dump/*.dump dump/*.hex
+	rm -f roms/ssideki/052-p1.p1
+
+.PHONY: sound-clean
+sound-clean:
+	rm -f out/052-m1.m1 out/052-v1.v1 out/driver.gen.asm
+	rm -f roms/ssideki/052-m1.m1 roms/ssideki/052-v1.v1 roms/ssideki/sm1.sm1
+	rm -f sound/samples/out_16el_a/*.wav sound/samples/out_16el_b/*.wav
+	rm -f sound/samples/out_a/*.adpcma sound/samples/out_b/*.adpcmb
+	rm -f sound/driver/fm_data.inc sound/driver/music_data.inc sound/driver/fm_patch_table.inc sound/driver/sample_table.inc sound/driver/ssg_config.inc sound/driver/ssg_data.inc
+
+
+.PHONY: clean-all
+clean-all: clean sound-clean art-clean
+	rm -f roms/ssideki/052-c1.c1 roms/ssideki/052-c2.c2
 	
 .PHONY: dump
 dump: 	

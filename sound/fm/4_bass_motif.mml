@@ -1,0 +1,28 @@
+; 4 - Mono bass motif, good over ADPCM-B background
+T140
+I8
+V15
+O2
+L8
+
+A R A R
+> C R < A R
+G R G R
+> D R < G R
+
+I9
+F R F R
+> C R < F R
+E R E R
+> B R < E R
+
+I8
+A R > C R
+E R C R
+< A4 R4
+
+G R > D R
+< G R > B R
+< A4 R4
+
+~

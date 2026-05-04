@@ -1,0 +1,55 @@
+; 7 - Patch showcase / sound tour
+T150
+V15
+O4
+L16
+
+I0
+C E G > C
+< G E C E
+
+I1
+C E G > C
+< G E C E
+
+I2
+C R E R G R > C R
+
+I3
+< G R E R C R E R
+
+I4
+O3
+A C E A
+G E C A
+
+I5
+O4
+A G E C
+D E G A
+
+I6
+C E G > C
+D C < A G
+
+I7
+G A B > D
+C < B A G
+
+I8
+O2
+A R A R
+> C R < A R
+
+I10
+O5
+C R E R G R > C R
+
+I11
+< G R > C R E R G R
+
+I12
+O3
+A4 R8 E4 R8
+
+~

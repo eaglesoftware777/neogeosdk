@@ -1,0 +1,33 @@
+; 3 - Duel suspense / dark loop
+T104
+I5
+V14
+O3
+L8
+
+A R A C
+E R D C
+< B R > C D
+E4 R4
+
+I6
+A C E G
+F E D C
+< B > C D E
+A4 R4
+
+I13
+O4
+C R D R
+E R G R
+A G E D
+C4 R4
+
+I4
+O3
+A R C R
+E R A R
+G E C A
+A4 R4
+
+~

@@ -1,4 +1,6 @@
-SDKHOME=~
+ifndef SDKHOME
+SDKHOME := $(abspath $(CURDIR)/../..)
+endif
 CC=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gcc
 OBJCP=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy
 LD=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-ld

@@ -201,7 +201,14 @@ try:
     conn.execute("PRAGMA journal_mode=WAL")
     cur = conn.cursor()
     cur.execute("select idx,data,palette from image")
-    data = cur.fetchall()
+    raw = cur.fetchall()
+    # The DB schema uses BLOB columns so PARSE_DECLTYPES won't auto-convert;
+    # deserialise numpy arrays explicitly.
+    for row in raw:
+        idx   = row[0]
+        arr   = convert_array(bytes(row[1])) if isinstance(row[1], (bytes, bytearray, memoryview)) else row[1]
+        pal   = convert_array(bytes(row[2])) if isinstance(row[2], (bytes, bytearray, memoryview)) else row[2]
+        data.append((idx, arr, pal))
 except Error as e:
     print(e)
 finally:
