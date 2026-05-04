@@ -149,14 +149,12 @@ int NEOGEO_USER playgame(void) {
   clearFix();
   clearSprs();
   soundSceneReset();
-  soundSetSSGVolume(0x0A);
-  soundSetADPCMAVolume(0x3F);
-  soundSetADPCMBVolume(0xF0);
-  playMusic(0);
-  soundSetTempo(116);
+     soundSetFMVolume(0x0F);
+    isZ80Ready();
+    playFMTrack(2);
+soundSetADPCMBVolume(0xB8);
+playSFXB(2);
   showWalkDemo(28, 24);
-  soundStopAll();
-  cyclexms(10);
   return 0;
 }
 
