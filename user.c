@@ -392,7 +392,6 @@ void NEOGEO_USER DEMO_GAME(void) {
     soundSetFMVolume(0x0F);
     isZ80Ready();
     playFMTrack(1);
-        cyclexs(3);
 soundSetADPCMBVolume(0xB8);
 playSFXB(1);    
     
