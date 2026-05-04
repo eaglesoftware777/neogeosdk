@@ -1,0 +1,13 @@
+; 1 - SSG arcade alert
+T190
+P2
+V15
+O5
+L16
+
+C R C R
+G R G R
+> C R < G R
+C4 R4
+
+~

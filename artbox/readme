@@ -1,1 +1,68 @@
-neogeo artbox sdk
+NEO GEO ARTBOX SDK - GRAPHICS PIPELINE
+========================================
+
+The Artbox pipeline converts PNG images into Neo Geo compatible sprite and FIX tile formats.
+
+CORE TOOLS
+----------
+img2neo.py
+    Primary image processor. Maps PNG colours to the Neo Geo 4096-colour palette.
+    Supports k-means clustering for optimal 15-colour palette generation.
+    Implements Floyd-Steinberg dithering to preserve detail within the 16-colour limit.
+
+romtiles.py
+    Tile encoder and ROM packer. Slices processed images into 16x16 sprite tiles
+    (C ROMs) or 8x8 FIX tiles (S ROM) and generates the corresponding ROM files.
+
+fixtiles.py
+    S1 (FIX) ROM builder. Generates the 128 KB 052-s1.s1 from three sources:
+      1. Existing 052-s1.s1 - all non-empty tiles preserved at original addresses.
+      2. sfix.sfix system ROM - fills empty slots with standard NeoGeo fonts.
+      3. infix/*.png images  - custom tiles written into remaining empty slots
+                               starting at tile position 256.
+    Outputs 052-s1.s1 in hardware format directly (no post-processing required).
+
+createromdb.py
+    Initialises the neorom.db SQLite database (image and imagefix tables).
+
+romdbimgimport.py
+    Imports sprite source images from in/ into the image DB table.
+
+romdbfiximport.py
+    Imports all indexed-palette PNGs from infix/ into the imagefix DB table.
+    Auto-detects all images (no hardcoded count limit).
+
+genmapdb.py / genscreens.py
+    Generate tile maps and screen layout data from source images.
+
+DIRECTORY STRUCTURE
+-------------------
+artbox/in/      - Sprite source PNGs (16x16 tile multiples recommended).
+artbox/infix/   - FIX layer source PNGs (8x8 multiples, indexed palette, max 15 colours).
+artbox/map/     - Tile mapping data.
+
+USAGE
+-----
+1. Place sprite images in in/ and FIX images in infix/.
+2. Run:  make art    (rebuild C ROMs from sprites)
+          make sfix   (rebuild S1 FIX ROM from infix images)
+          make srom   (alias for make sfix)
+3. ROMs are written to roms/ssideki/.
+
+FIX LAYER IMAGE REQUIREMENTS
+-----------------------------
+  Format:  PNG, indexed palette (mode P in Pillow)
+  Colours: maximum 15 (palette index 0 = transparent)
+  Size:    multiple of 8 pixels in both dimensions
+  Convert: GIMP Image > Mode > Indexed, max 15 colours, or
+           Pillow: img.quantize(colors=15).save(path)
+
+REQUIREMENTS
+------------
+  Python 3.8+, numpy, pypng, pysqlite3 (or sqlite3)
+
+Dithering and Palette Generation
+--------------------------------
+img2neo.py automatically handles 24-bit to Neo Geo palette conversion.
+k-means clustering preserves the most important colours; FS dithering blends
+transitions to avoid harsh banding on the 16-colour limit.

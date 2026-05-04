@@ -1,2 +1,36 @@
-#Music Macro Language
-3ml editor : http://3ml.jp/download.html
+MUSIC MACRO LANGUAGE (MML)
+==========================
+
+MML source files define music tracks for the SSG and FM channels of the YM2610.
+Tracks are compiled by sound/tools/mml_compile.py into Z80 data tables
+(sound/driver/music_data.inc) that the driver's Timer B engine executes.
+
+MML SOURCE FILES
+----------------
+  0_samurai_game_loop.mml   — In-game SSG loop (playMusic(0))
+  1_samurai_battle_loop.mml — Battle scene SSG loop (playMusic(1))
+  2_samurai_night_scene.mml — Night scene SSG loop (playMusic(2))
+
+Track numbers come from alphabetical sort of filenames.
+Adding or renaming files changes the track number mapping.
+
+COMMAND REFERENCE
+-----------------
+  A-G [n]    : Note with optional length suffix (e.g. C4 = quarter, C8 = eighth)
+  + or #     : Sharp modifier after note letter
+  -          : Flat modifier after note letter
+  R [n]      : Rest for duration n
+  O n        : Set octave (0-7)
+  < / >      : Decrease / increase octave by one
+  L n        : Set default note length (4=quarter, 8=eighth, 16=sixteenth, etc.)
+  T n        : Set tempo
+  V n        : Set SSG volume (0-15)
+  ~          : Loop back to start of track
+  @aN        : Trigger ADPCM-A sample N inline
+  @bN        : Trigger ADPCM-B sample N inline
+  @fN        : Trigger FM track N inline (N = 0..FM_TRACK_COUNT-1)
+
+BUILDING
+--------
+  make mml               : compile all .mml files
+  make sound / sound-all : full sound rebuild including MML

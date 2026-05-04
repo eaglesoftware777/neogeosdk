@@ -1,1 +1,9 @@
-del artbox\*.db artbox\*.c1 artbox\*.c2 artbox\*.pal artbox\*.bin artbox\map artbox\*.txt artbox\*.spr  artbox\screens.c
+if exist artbox\*.db del /Q artbox\*.db
+if exist artbox\*.c1 del /Q artbox\*.c1
+if exist artbox\*.c2 del /Q artbox\*.c2
+if exist artbox\*.pal del /Q artbox\*.pal
+if exist artbox\*.bin del /Q artbox\*.bin
+if exist artbox\map del /Q artbox\map
+if exist artbox\*.txt del /Q artbox\*.txt
+if exist artbox\*.spr del /Q artbox\*.spr
+if exist artbox\screens.c del /Q artbox\screens.c
