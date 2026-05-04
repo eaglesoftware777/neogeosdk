@@ -1,145 +1,114 @@
-;;;;;;;
-;https://eaglesoftware.biz
-;https://github.com/eaglesoftware777
-;https://github.com/eaglesoftware777/neogeosdk
-;;;;;;;
+NEO GEO Z80 SOUND DRIVER (YM2610)
+=================================
 
+Custom Z80 driver for the YM2610 (OPNB) chip.  Handles all four audio subsystems:
+ADPCM-A (6-channel samples), ADPCM-B (delta-T stream), SSG/MML (melody), FM (6 op channels).
 
-Z80 Driver Sound Commands for YM1610:
+COMMUNICATION (68k to Z80)
+--------------------------
+The 68000 writes a command byte to REG_SOUND ($320000).  The Z80 receives an NMI,
+queues the command in a 32-byte FIFO, and processes it on the next timer tick.
 
-Command 	Description
+  soundInit()               Command $01
+                            No arguments. Reinitializes YM2610, timer state, and driver RAM.
+  soundReset()              Command $03
+                            No arguments. Soft reset of driver state and FIFO.
+  soundStopAll()            Command $04
+                            No arguments. Stops music, ADPCM-A, ADPCM-B, SSG, and FM.
+  soundStopMusic()          Command $0F
+                            No arguments. Stops music/SSG only.
+  soundCancelFade()         Command $11
+                            No arguments. Cancels a running fade and restores stored volumes.
+  soundSceneReset()         Calls soundStopAll + 4ms + soundReset + 4ms.
+                            No arguments. Use before any major scene transition.
+  soundFadeOut()            Command $0A + default speed byte
+                            No arguments from C. Uses default fade speed internally.
+  soundFadeIn()             Command $12 + default speed byte
+                            No arguments from C. Uses default fade speed internally.
+  soundFadeOutSpeed(n)      Command $0A + n
+                            n = 0..255. Larger values fade out faster.
+  soundFadeInSpeed(n)       Command $12 + n
+                            n = 0..255. Larger values fade in faster.
+  playMusic(n)              Command $20 + n  (MML music track)
+                            n = 0..MUSIC_TRACK_COUNT-1 (currently 3).
+  playSFX(n)                Command $40 + n  (ADPCM-A sample)
+                            n = 0..11 (12 samples).
+  playSFXB(n)               Command $80 + n  (ADPCM-B sample)
+                            n = 0..3 (4 samples).
+  playFMDebug()             Command $30
+                            No arguments. Plays FM track 0 through the sequencer.
+  playFMTrack(n)            Command $31 + n
+                            n = 0..FM_TRACK_COUNT-1 (currently 8). Starts a compiled FM track.
+  soundSetFMVolume(n)       Command $13 + n
+                            n = 0..15. Sets FM output level.
+  playSSGTrack(n)           Command $32 + n
+                            n = 0..SSG_TRACK_COUNT-1 (currently 3). Starts standalone SSG track.
+  soundSetSSGPreset(n)      Command $14 + n (lower nibble)
+                            n = 0..15. Applies SSG tone preset from ssg_config.inc.
+  playInsertCoinSSG()       Plays SSG track 1 with preset 1. No arguments.
+  playVoiceCue(n)           Maps n (1..9) to an ADPCM-A voice sample.
+                            1=get ready, 2=oh hey ya, 3=coin, 4=insert coin,
+                            5=start, 6=title, 7=intro, 8=attack, 9=samurai.
+  playGetReadyVoice()       Plays ADPCM-A sample 10. No arguments.
+  playAttackVoice()         Plays ADPCM-A sample 11. No arguments.
+  playCoinThenReady()       playInsertCoinSSG + 250ms wait + playGetReadyVoice.
+  soundPlayDemoFM(n)        soundSceneReset + soundSetFMVolume(0x0C) + playFMTrack(n).
+  soundPlayTitleMusic(n)    soundSceneReset + set volumes + playMusic(n).
+  soundPlayGameLoop(n)      soundSceneReset + set volumes + playMusic(n).
+  soundSetTempo(n)          Command $0E + n
+                            n = 0..255 raw driver tick divisor.
+  soundSetADPCMAVolume(n)   Command $05 + n
+                            n = 0..63 recommended.
+  soundSetADPCMBVolume(n)   Command $06 + n
+                            n = 0..255 recommended.
+  soundSetSSGVolume(n)      Command $07 + n
+                            n = 0..15 recommended.
+  playSoundtest(index)      Raw command byte passthrough for debug.
+                            index = 0..255, sent unchanged to the driver.
 
-$00 	nop
-$01 	BIOS Slot switch
-$02 	BIOS Play eyecatch
-$03 	BIOS Soft Reset
-$04 	Disable All
-$05 	Disable Music
-$06 	Disable Sounds
-$07 	Enable All
-$08 	Enable Music
-$09 	Enable Sounds
-$0A     SSG channels OFF
-$0B 	FM channels OFF
-$0C 	ADPCM-A samples OFF
-$0D 	current ADPCM-B OFF
-$0E 	Tempo Change
-$0F 	???
-$10 	Fade Out
-$11     Fade In/Out OFF
-$12 	Fade In
-$13-$1F ???
-$20-FF 	User use
+Argument ranges
+---------------
+  music track n:  0..MUSIC_TRACK_COUNT-1 (currently 3)
+  FM track n:     0..FM_TRACK_COUNT-1 (currently 8)
+  SSG track n:    0..SSG_TRACK_COUNT-1 (currently 3)
+  SSG preset n:   0..15
+  FM vol n:       0..15
+  ADPCM-A n:      0..11 (12 samples)
+  ADPCM-B n:      0..3  (4 samples)
+  tempo n:        0..255 raw driver tick divisor
+  fade speed n:   0..255, higher is faster
+  ADPCM-A vol n:  0..63 recommended, written to YM2610 reg $01 on port B
+  ADPCM-B vol n:  0..255 recommended, written to YM2610 reg $1B on port A
+  SSG vol n:      0..15 recommended, used by the music engine
 
+DRIVER MEMORY MAP
+-----------------
+  $0000  Reset vector
+  $0038  Timer B IRQ (music ticker)
+  $0066  NMI handler (command intake)
+  $00D0  Driver main code
+  $F800  Command FIFO (32 bytes)
+  $F820  FIFO read/write pointers
+  $F900  YM2610 port-A register shadow
+  $FA00  YM2610 port-B register shadow
+  $FE00  Driver variables (tempo, volume, channel state, etc.)
 
+YM2610 VOLUME SETTINGS (driver defaults after fixes)
+-----------------------------------------------------
+  ADPCM-A master level  (reg $01, port B):  $3F = maximum
+  ADPCM-A per-channel TL (regs $08-$0D, port B):  $C0 = pan L+R, TL=0 (max)
+  ADPCM-B volume        (reg $1B, port A):  $A8 default (override via command)
+  SSG volume:           set per-channel via command
 
-Address 	Function 	Port
+FEATURES
+--------
+  Auto-Stop:     software timers cut ADPCM-A playback to prevent noise tails
+  Shadow regs:   avoids redundant YM2610 writes; safe for all register classes
+  MML engine:    SSG/FM melody driven by Timer B IRQ at configurable tempo
+  ADPCM-B reset: full reset-flagclear-start sequence before each playback
+  Fade control:   software fade in/out for music, ADPCM-A, and ADPCM-B volumes
 
-$04 / $05 	Port
-$06 / $07 	Bits 	Details
-$21 	LSI Test Data 	ALL 	
-	TTTTTTTT 	T=Test
-$22 	LFO Frequency Control 	ALL 	
-	----EFFF 	E=enable F=Frequency
-$24 	Timer A H 	ALL 	
-	HHHHHHHH 	Timer A top 8 bits
-$25 	Timer A L 	ALL 	
-	------LL 	Timer A bottom 2 bits
-$26 	Timer B 	ALL 	
-	TTTTTTTT 	T=Timer B
-$27 	Timer Control, 2ch mode 	ALL 	
-	MMRREELL 	M=Multi Mode, R=Reset timers, E=enable, L=Load
-$28 	Individual Operator Key On/Off 	ALL 	- 	OOOO-GCC 	O=operator / G=Channel group / C=Channel (0=chn 1)
-$31 	Multiplier & Detune 	Ch1 Op1 	Ch3 Op1 	-DDDMMMM 	D=Detune / M=Multiplier
-$32 	Multiplier & Detune 	Ch2 Op1 	Ch4 Op1 	-DDDMMMM 	D=Detune / M=Multiplier
-$35 	Multiplier & Detune 	Ch1 Op2 	Ch3 Op2 	-DDDMMMM 	D=Detune / M=Multiplier
-$36 	Multiplier & Detune 	Ch2 Op2 	Ch4 Op2 	-DDDMMMM 	D=Detune / M=Multiplier
-$39 	Multiplier & Detune 	Ch1 Op3 	Ch3 Op3 	-DDDMMMM 	D=Detune / M=Multiplier
-$3A 	Multiplier & Detune 	Ch2 Op3 	Ch4 Op3 	-DDDMMMM 	D=Detune / M=Multiplier
-$3D 	Multiplier & Detune 	Ch1 Op4 	Ch3 Op4 	-DDDMMMM 	D=Detune / M=Multiplier
-$3E 	Multiplier & Detune 	Ch2 Op4 	Ch4 Op4 	-DDDMMMM 	D=Detune / M=Multiplier
-$41 	Total Level 	Ch1 Op1 	Ch3 Op1 	-TTTTTTT 	T=Total Level (0=max)
-$42 	Total Level 	Ch2 Op1 	Ch4 Op1 	-TTTTTTT 	T=Total Level (0=max)
-$45 	Total Level 	Ch1 Op2 	Ch3 Op2 	-TTTTTTT 	T=Total Level (0=max)
-$46 	Total Level 	Ch2 Op2 	Ch4 Op2 	-TTTTTTT 	T=Total Level (0=max)
-$49 	Total Level 	Ch1 Op3 	Ch3 Op3 	-TTTTTTT 	T=Total Level (0=max)
-$4A 	Total Level 	Ch2 Op3 	Ch4 Op3 	-TTTTTTT 	T=Total Level (0=max)
-$4D 	Total Level 	Ch1 Op4 	Ch3 Op4 	-TTTTTTT 	T=Total Level (0=max)
-$4E 	Total Level 	Ch2 Op4 	Ch4 Op4 	-TTTTTTT 	T=Total Level (0=max)
-$51 	Key Scaling & Attack Rate 	Ch1 Op1 	Ch3 Op1 	KK-RRRRR 	K=Keyscaling / R=attackrate
-$52 	Key Scaling & Attack Rate 	Ch2 Op1 	Ch4 Op1 	KK-RRRRR 	K=Keyscaling / R=attackrate
-$55 	Key Scaling & Attack Rate 	Ch1 Op2 	Ch3 Op2 	KK-RRRRR 	K=Keyscaling / R=attackrate
-$56 	Key Scaling & Attack Rate 	Ch2 Op2 	Ch4 Op2 	KK-RRRRR 	K=Keyscaling / R=attackrate
-$59 	Key Scaling & Attack Rate 	Ch1 Op3 	Ch3 Op3 	KK-RRRRR 	K=Keyscaling / R=attackrate
-$5A 	Key Scaling & Attack Rate 	Ch2 Op3 	Ch4 Op3 	KK-RRRRR 	K=Keyscaling / R=attackrate
-$5D 	Key Scaling & Attack Rate 	Ch1 Op4 	Ch3 Op4 	KK-RRRRR 	K=Keyscaling / R=attackrate
-$5E 	Key Scaling & Attack Rate 	Ch2 Op4 	Ch4 Op4 	KK-RRRRR 	K=Keyscaling / R=attackrate
-$61 	Decay Rate & AM Enable 	Ch1 Op1 	Ch3 Op1 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
-$62 	Decay Rate & AM Enable 	Ch2 Op1 	Ch4 Op1 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
-$65 	Decay Rate & AM Enable 	Ch1 Op2 	Ch3 Op2 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
-$66 	Decay Rate & AM Enable 	Ch2 Op2 	Ch4 Op2 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
-$69 	Decay Rate & AM Enable 	Ch1 Op3 	Ch3 Op3 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
-$6A 	Decay Rate & AM Enable 	Ch2 Op3 	Ch4 Op3 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
-$6D 	Decay Rate & AM Enable 	Ch1 Op4 	Ch3 Op4 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
-$6E 	Decay Rate & AM Enable 	Ch2 Op4 	Ch4 Op4 	A--DDDDD 	A=Amplitude Mod Enable / D= Decay rate
-$71 	Sustain Rate 	Ch1 Op1 	Ch3 Op1 	---SSSSS 	S=Sustain Rate
-$72 	Sustain Rate 	Ch2 Op1 	Ch4 Op1 	---SSSSS 	S=Sustain Rate
-$75 	Sustain Rate 	Ch1 Op2 	Ch3 Op2 	---SSSSS 	S=Sustain Rate
-$76 	Sustain Rate 	Ch2 Op2 	Ch4 Op2 	---SSSSS 	S=Sustain Rate
-$79 	Sustain Rate 	Ch1 Op3 	Ch3 Op3 	---SSSSS 	S=Sustain Rate
-$7A 	Sustain Rate 	Ch2 Op3 	Ch4 Op3 	---SSSSS 	S=Sustain Rate
-$7D 	Sustain Rate 	Ch1 Op4 	Ch3 Op4 	---SSSSS 	S=Sustain Rate
-$7E 	Sustain Rate 	Ch2 Op4 	Ch4 Op4 	---SSSSS 	S=Sustain Rate
-$81 	Release Rate & Sustain Level 	Ch1 Op1 	Ch3 Op1 	SSSSRRRR 	S=Sustain Level / Release Rate
-$82 	Release Rate & Sustain Level 	Ch2 Op1 	Ch4 Op1 	SSSSRRRR 	S=Sustain Level / Release Rate
-$85 	Release Rate & Sustain Level 	Ch1 Op2 	Ch3 Op2 	SSSSRRRR 	S=Sustain Level / Release Rate
-$86 	Release Rate & Sustain Level 	Ch2 Op2 	Ch4 Op2 	SSSSRRRR 	S=Sustain Level / Release Rate
-$89 	Release Rate & Sustain Level 	Ch1 Op3 	Ch3 Op3 	SSSSRRRR 	S=Sustain Level / Release Rate
-$8A 	Release Rate & Sustain Level 	Ch2 Op3 	Ch4 Op3 	SSSSRRRR 	S=Sustain Level / Release Rate
-$8D 	Release Rate & Sustain Level 	Ch1 Op4 	Ch3 Op4 	SSSSRRRR 	S=Sustain Level / Release Rate
-$8E 	Release Rate & Sustain Level 	Ch2 Op4 	Ch4 Op4 	SSSSRRRR 	S=Sustain Level / Release Rate
-$91 	SSG-Envelope Generator 	Ch1 Op1 	Ch3 Op1 	----EEEE 	E=Envelope Gen
-$92 	SSG-Envelope Generator 	Ch2 Op1 	Ch4 Op1 	----EEEE 	E=Envelope Gen
-$95 	SSG-Envelope Generator 	Ch1 Op2 	Ch3 Op2 	----EEEE 	E=Envelope Gen
-$96 	SSG-Envelope Generator 	Ch2 Op2 	Ch4 Op2 	----EEEE 	E=Envelope Gen
-$99 	SSG-Envelope Generator 	Ch1 Op3 	Ch3 Op3 	----EEEE 	E=Envelope Gen
-$9A 	SSG-Envelope Generator 	Ch2 Op3 	Ch4 Op3 	----EEEE 	E=Envelope Gen
-$9D 	SSG-Envelope Generator 	Ch1 Op4 	Ch3 Op4 	----EEEE 	E=Envelope Gen
-$9E 	SSG-Envelope Generator 	Ch2 Op4 	Ch4 Op4 	----EEEE 	E=Envelope Gen
-$A1 	Frequency low (Write Second) 	Ch1 	Ch3 	PPPPPPPP 	P=Frequency Position L
-$A2 	Frequency low (Write Second) 	Ch2 	Ch4 	PPPPPPPP 	P=Frequency Position L
-$A5 	Frequency high & Octave (Write first) 	Ch1 	Ch3 	--OOOPPP 	O=Octive / P=Position H
-$A6 	Frequency high & Octave (Write first) 	Ch2 	Ch4 	--OOOPPP 	O=Octive / P=Position H
-$A9 	Frequency low during Multi-Mode 	Ch1 	Ch3 	PPPPPPPP 	P=Frequency Position L
-$AA 	Frequency low during Multi-Mode 	Ch2 	Ch4 	PPPPPPPP 	P=Frequency Position L
-$AD 	Frequency high & Octave during Multi-Mode 	Ch1 	Ch3 	--OOOPPP 	O=Octive / P=Position H
-$AE 	Frequency high & Octave during Multi-Mode 	Ch2 	Ch4 	--OOOPPP 	O=Octive / P=Position H
-$B1 	Algorithm & Feedback 	Ch1 	Ch3 	--FFFAAA 	F=Feedback / A=Algorithm
-$B2 	Algorithm & Feedback 	Ch2 	Ch4 	--FFFAAA 	F=Feedback / A=Algorithm
-$B5 	FMS & AMS & Stereo 	Ch1 	Ch3 	LRAA-FFF 	Left / Right (1=on) / A=Amplitude Mod Sensitivity / F=Frequency Mod Sensitivity
-$B6 	FMS & AMS & Stereo 	Ch2 	Ch4 	LRAA-FFF 	Left / Right (1=on) / A=Amplitude Mod Sensitivity / F=Frequency Mod Sensitivity
-
-
-
-
-
-
-
-
-	
-Read
-Z80	Port &00
-
-M68k	Address $320000
-
-Write 
-Z80	Port &0C 
-M68k	Address $320000  
-
-
-
-static long stepsizeTable[ 16 ] = 
-{ 
- 57, 57, 57, 57, 77,102,128,153, 
- 57, 57, 57, 57, 77,102,128,153 
-};
+BUILDING
+--------
+Run `make m1rom` to assemble driver.asm with wla-z80.
+Run `make sound` to rebuild MML data, V ROM, and M1 ROM together.

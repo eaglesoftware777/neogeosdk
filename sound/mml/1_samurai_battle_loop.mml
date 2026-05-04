@@ -1,0 +1,53 @@
+; 1_samurai_battle_loop.mml
+; Fast battle / action loop
+; @b0 = taiko / drone game bed
+; @f2 = fast FM attract/action melody
+; @s1 = SSG arcade alert layer
+; @p2 = aggressive SSG preset
+
+T180
+V11
+O3
+L16
+
+@p2
+@b0
+@f2
+
+; driving SSG ostinato
+A R A R A R > C R
+< G R G R G R > D R
+< F R F R F R > C R
+< E R E R E R > B R
+
+; trigger SSG alert phrase
+@s1
+
+O4
+A C E A
+G E C A
+F A C F
+E C < B E
+
+; blade / hit accents
+@a6
+R8
+@a7
+R8
+
+; second half
+@f2
+
+O3
+A R > C R E R C R
+< G R > B R D R B R
+< F R > A R C R A R
+< E R > G R B R G R
+
+O4
+A G E C
+D E G A
+C < A G E
+A4 R8
+
+~

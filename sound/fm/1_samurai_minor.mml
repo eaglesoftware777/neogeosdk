@@ -1,0 +1,32 @@
+; 1 - Samurai minor menu / duel loop
+T132
+I4
+V15
+O3
+L8
+
+A C E A
+G E C A
+F A C F
+E C < B E
+
+A C E G
+A > C < A G
+E G A C
+< B G E4
+
+I5
+O4
+A G E C
+D E G A
+C < A G E
+A4 R4
+
+I4
+O3
+A C E A
+G E C A
+F E D C
+< B > C E4
+
+~

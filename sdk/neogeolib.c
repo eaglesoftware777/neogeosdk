@@ -29,9 +29,9 @@ void clearFix(void);
 void waitVbl(void);
 void cycle10ms(void);
 void cycle1s(void);
-void cyclexms1(int cyc1);
-void cyclexs(int cyc1xs);
-void cyclexms(int cycxms);
+void cyclexms1(int);
+void cyclexs(int);
+void cyclexms(int);
 uint16_t poll_joystick(void);
 void fix_svalue1(uint16_t, uint16_t,uint16_t,short,uint16_t);
 void fix_svalue(uint16_t, uint16_t,uint16_t,short);
@@ -43,6 +43,37 @@ void  display_digit(uint16_t, uint16_t,uint32_t,short,uint16_t);
 int   read_p1credit(void);
 void  playSoundtest(uint16_t);
 void  isZ80Ready(void);
+void  soundInit(void);
+void soundCommand(uint8_t);
+void  soundReset(void);
+void  soundStopAll(void);
+void  playMusic(uint8_t);
+void  playSFX(uint8_t);
+void  playSFXB(uint8_t);
+void  playFMDebug(void);
+void soundSetFMVolume(uint8_t);
+void  playFMTrack(uint8_t);
+void  playVoiceCue(uint8_t);
+void  soundFadeOut(void);
+void  soundFadeIn(void);
+void  soundFadeOutSpeed(uint8_t);
+void  soundFadeInSpeed(uint8_t);
+void  soundStopMusic(void);
+void  soundCancelFade(void);
+void  soundSetTempo(uint8_t);
+void  soundSetADPCMAVolume(uint8_t);
+void  soundSetADPCMBVolume(uint8_t);
+void  soundSetSSGVolume(uint8_t);
+void playSSGTrack(uint8_t);
+void soundSetSSGPreset(uint8_t);
+void soundSceneReset(void);
+void playInsertCoinSSG(void);
+void playGetReadyVoice(void);
+void playAttackVoice(void);
+void playCoinThenReady(void);
+void soundPlayDemoFM(uint8_t);
+void soundPlayTitleMusic(uint8_t);
+void soundPlayGameLoop(uint8_t);
 void  kickWatchDog(void);
 void  sleep1FFF(void);
 void  displayCreditP1(void);
@@ -898,7 +929,7 @@ int NEOGEO_USER read_p1credit(void) {
 
 int NEOGEO_USER read_joy1() {
 
-	register unsigned int pad, temp;
+	register unsigned int pad;
 	register unsigned char *s;
 	pad = 0x0000;
 	s = (unsigned char *) 0x380000;
@@ -913,33 +944,277 @@ int NEOGEO_USER read_joy1() {
 
 
 void NEOGEO_USER  playSoundtest(uint16_t index) {
-
-	NEO_REGISTER8(REG_SOUND) =  0x01;
 	isZ80Ready();
-	NEO_REGISTER8(REG_SOUND) = 0x03;
-	sleep1FFF();
-	sleep1FFF();
-	NEO_REGISTER8(REG_SOUND) = 0x07;
-	sleep1FFF();
-	sleep1FFF();
-	NEO_REGISTER8(REG_SOUND) = index;
-	
+	soundCommand((uint8_t)(index & 0xFF));
 }
+
+void NEOGEO_USER soundCommand(uint8_t command) {
+	isZ80Ready();
+	NEO_REGISTER8(REG_SOUND) = command;
+	isZ80Ready();
+}
+
+/* ----------------------------------------------------------
+   Core sound control
+   ---------------------------------------------------------- */
+
+void NEOGEO_USER soundInit(void) {
+	isZ80Ready();
+	soundCommand(0x01); // CMD_INIT
+}
+
+void NEOGEO_USER soundReset(void) {
+	isZ80Ready();
+	soundCommand(0x03); // CMD_RESET
+}
+
+void NEOGEO_USER soundStopAll(void) {
+	isZ80Ready();
+	soundCommand(0x04); // CMD_STOP_ALL
+}
+
+void NEOGEO_USER soundStopMusic(void) {
+	isZ80Ready();
+	soundCommand(0x0F); // Stop SSG/music/FM output
+}
+
+void NEOGEO_USER soundCancelFade(void) {
+	isZ80Ready();
+	soundCommand(0x11); // Cancel fade
+}
+
+void NEOGEO_USER soundSceneReset(void) {
+	isZ80Ready();
+	soundStopAll();
+	cyclexms(4);
+	isZ80Ready();
+	soundReset();
+	cyclexms(4);
+}
+
+/* ----------------------------------------------------------
+   Music and sample playback
+   ---------------------------------------------------------- */
+
+void NEOGEO_USER playMusic(uint8_t n) {
+	isZ80Ready();
+	soundCommand(0x20 + n); // MUSIC_BASE + n
+}
+
+void NEOGEO_USER playSFX(uint8_t n) {
+	isZ80Ready();
+	soundCommand(0x40 + n); // SFX_A_BASE + n
+}
+
+void NEOGEO_USER playSFXB(uint8_t n) {
+	isZ80Ready();
+	soundCommand(0x80 + n); // SFX_B_BASE + n
+}
+
+/* ----------------------------------------------------------
+   FM sequencer
+   ---------------------------------------------------------- */
+
+void NEOGEO_USER playFMDebug(void) {
+	isZ80Ready();
+	soundCommand(0x30); // FM track 0/debug
+}
+
+void NEOGEO_USER playFMTrack(uint8_t n) {
+	isZ80Ready();
+	soundCommand(0x31); // FM track select prefix
+	isZ80Ready();
+	soundCommand(n);
+}
+
+void NEOGEO_USER soundSetFMVolume(uint8_t v) {
+	isZ80Ready();
+	soundCommand(0x13); // FM volume prefix
+	isZ80Ready();
+	soundCommand(v & 0x0F);
+}
+
+/* ----------------------------------------------------------
+   Standalone SSG sequencer
+   ---------------------------------------------------------- */
+
+void NEOGEO_USER playSSGTrack(uint8_t n) {
+	isZ80Ready();
+	soundCommand(0x32); // SSG track select prefix
+	isZ80Ready();
+	soundCommand(n);
+}
+
+void NEOGEO_USER soundSetSSGPreset(uint8_t preset) {
+	isZ80Ready();
+	soundCommand(0x14); // SSG preset prefix
+	isZ80Ready();
+	soundCommand(preset & 0x0F);
+}
+
+void NEOGEO_USER playInsertCoinSSG(void) {
+	isZ80Ready();
+	playSSGTrack(1); // sound/ssg/2_insert_coin.mml
+	soundSetSSGPreset(1);
+}
+
+/* ----------------------------------------------------------
+   Voice / cue helpers
+   ---------------------------------------------------------- */
+
+void NEOGEO_USER playVoiceCue(uint8_t n) {
+	isZ80Ready();
+
+	switch (n) {
+		case 1:
+			playSFX(10); // get ready voice
+			break;
+
+		case 2:
+			playSFX(11); // attack voice
+			break;
+
+		default:
+			playSFX(n);
+			break;
+	}
+}
+
+void NEOGEO_USER playGetReadyVoice(void) {
+	isZ80Ready();
+	playSFX(10);
+}
+
+void NEOGEO_USER playAttackVoice(void) {
+	isZ80Ready();
+	playSFX(11);
+}
+
+void NEOGEO_USER playCoinThenReady(void) {
+	isZ80Ready();
+	playInsertCoinSSG();
+	cyclexms(250);
+	isZ80Ready();
+	playGetReadyVoice();
+}
+
+/* ----------------------------------------------------------
+   Fade control
+   ---------------------------------------------------------- */
+
+void NEOGEO_USER soundFadeOut(void) {
+	isZ80Ready();
+	soundFadeOutSpeed(0x20);
+}
+
+void NEOGEO_USER soundFadeIn(void) {
+	isZ80Ready();
+	soundFadeInSpeed(0x20);
+}
+
+void NEOGEO_USER soundFadeOutSpeed(uint8_t speed) {
+	isZ80Ready();
+	soundCommand(0x0A); // fade-out speed prefix
+	isZ80Ready();
+	soundCommand(speed);
+}
+
+void NEOGEO_USER soundFadeInSpeed(uint8_t speed) {
+	isZ80Ready();
+	soundCommand(0x12); // fade-in speed prefix
+	isZ80Ready();
+	soundCommand(speed);
+}
+
+/* ----------------------------------------------------------
+   Runtime tempo / volume
+   ---------------------------------------------------------- */
+
+void NEOGEO_USER soundSetTempo(uint8_t t) {
+	isZ80Ready();
+	soundCommand(0x0E); // tempo prefix
+	isZ80Ready();
+	soundCommand(t);
+}
+
+void NEOGEO_USER soundSetADPCMAVolume(uint8_t v) {
+	isZ80Ready();
+	soundCommand(0x05); // ADPCM-A volume prefix
+	isZ80Ready();
+	soundCommand(v & 0x3F);
+}
+
+void NEOGEO_USER soundSetADPCMBVolume(uint8_t v) {
+	isZ80Ready();
+	soundCommand(0x06); // ADPCM-B volume prefix
+	isZ80Ready();
+	soundCommand(v);
+}
+
+void NEOGEO_USER soundSetSSGVolume(uint8_t v) {
+	isZ80Ready();
+	soundCommand(0x07); // SSG/MML volume prefix
+	isZ80Ready();
+	soundCommand(v & 0x0F);
+}
+
+/* ----------------------------------------------------------
+   Higher-level scene helpers
+   ---------------------------------------------------------- */
+
+void NEOGEO_USER soundPlayDemoFM(uint8_t fm_track) {
+	isZ80Ready();
+	soundSceneReset();
+	isZ80Ready();
+	soundSetFMVolume(0x0C);
+	isZ80Ready();
+	playFMTrack(fm_track);
+}
+
+void NEOGEO_USER soundPlayTitleMusic(uint8_t music_track) {
+	isZ80Ready();
+	soundSceneReset();
+	isZ80Ready();
+	soundSetADPCMBVolume(0x45);
+	isZ80Ready();
+	soundSetSSGVolume(0x08);
+	isZ80Ready();
+	soundSetFMVolume(0x0C);
+	isZ80Ready();
+	playMusic(music_track);
+}
+
+void NEOGEO_USER soundPlayGameLoop(uint8_t music_track) {
+	isZ80Ready();
+	soundSceneReset();
+	isZ80Ready();
+	soundSetADPCMAVolume(0x38);
+	isZ80Ready();
+	soundSetADPCMBVolume(0x45);
+	isZ80Ready();
+	soundSetSSGVolume(0x08);
+	isZ80Ready();
+	soundSetFMVolume(0x0C);
+	isZ80Ready();
+	playMusic(music_track);
+}
+
 void NEOGEO_USER  isZ80Ready() {
 
 	ASM_START
 	ASM_L(.isready)
-	ASM_MVB(REG_SOUND,%%d0)
+	ASM_MVB(#0,0x300001)             // Kick watchdog
+	ASM_MVB(0x320000,%%d0)
 	ASM_CMPB(#0x01,%%d0)
 	ASM_BNE(.isready)
 	: 
 	:
-	: 
+	: "d0"
 	ASM_END
 	
 }
 
-void kickWatchDog(void) {
+void NEOGEO_USER kickWatchDog(void) {
 
 	ASM_START
 	ASM_MVB(%%d0,REG_DIPSW) 

@@ -1,0 +1,50 @@
+; 0_samurai_game_loop.mml
+; Samurai gameplay loop
+; @b2 = duel groove / taiko backing
+; @f1 = samurai minor FM lead
+; @s0 = SSG square support
+; @p0 = clean SSG preset
+
+T150
+V9
+O3
+L16
+
+@p0
+@b2
+@f1
+
+; low SSG pulse
+A R A R C R E R
+A R E R C R A R
+
+G R G R B R D R
+G R D R B R G R
+
+; phrase answer
+O4
+A C E A
+G E C A
+F A C F
+E C < B E
+
+; small taiko/intro accent
+@a3
+R8
+
+O3
+A R A R > C R < A R
+G R G R > D R < G R
+F R F R > C R < F R
+E R E R > B R < E R
+
+; restart FM melody to keep it locked with loop
+@f1
+
+O4
+A C E G
+A > C < A G
+E G A C
+< B G E4
+
+~

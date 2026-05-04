@@ -6,9 +6,13 @@ https://github.com/eaglesoftware777/neogeosdk
 
 #include <stdint.h>
 #include "sdk/macro.h"
+#include "sdk/neogeo.h"
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 
+void NEOGEO_USER showEagleIntro(void);
+void NEOGEO_USER showWalkDemo(int loops, int delay_ms);
+void NEOGEO_USER soundSceneReset(void);
 
 //ZD_ENTRY interrupt subroutine
 NEOGEO_INTERRUPT void NEOGEO_USER ZD_ENTRY(void) {
@@ -41,7 +45,7 @@ NEOGEO_INTERRUPT void NEOGEO_USER VBlank(void) {
 	ASM_MVB(%%d0,REG_DIPSW)        // Kick watchdog
 	ASM_JSR(SYS_IO)
 	ASM_MVEML((%%sp)+, %%d0-%%d7/%%a0-%%a6)
-	: 
+	:
 	:
 	:
 	ASM_END
@@ -52,9 +56,9 @@ NEOGEO_INTERRUPT void  NEOGEO_USER IRQ2(void) {
 
 	ASM_START
 	ASM_MVW(#2,REG_IRQACK)				//;IRQ2
-	: 
 	:
-	: 
+	:
+	:
 	ASM_END
 }
 
@@ -62,11 +66,11 @@ NEOGEO_INTERRUPT void  NEOGEO_USER IRQ2(void) {
 NEOGEO_INTERRUPT void  NEOGEO_USER IRQ3 (void) {
 
 	ASM_START
-	ASM_MVW(#1,REG_IRQACK) 
-	ASM_MVB(%%d0,REG_DIPSW) 
-	: 
+	ASM_MVW(#1,REG_IRQACK)
+	ASM_MVB(%%d0,REG_DIPSW)
 	:
-	: 
+	:
+	:
 	ASM_END
 }
 
@@ -120,7 +124,6 @@ void NEOGEO_USER PLAYER_START (void) {
 	register short P4 = 0;
 	start_flag = NEO_REGISTER8(BIOS_START_FLAG) ;
 	country_code = NEO_REGISTER8(BIOS_COUNTRY_CODE);
-	playSoundtest(0x28);
 	CALLNEOGEOF(SYS_CREDIT_CHECK);
 	P1=(start_flag >> 0) & 1;
 	P2=(start_flag >> 1) & 1;
@@ -178,8 +181,12 @@ void NEOGEO_USER DEMO_END (void) {
 
 // NeoGeo COIN_SOUND handler
 void NEOGEO_USER COIN_SOUND (void) {
+soundSceneReset();
+soundInit();
+soundSetSSGVolume(0x0F);
+   playInsertCoinSSG();
 
-	playSoundtest(0x29);
+    cyclexms(7);
 	int i =0;
 	i++;
 	i++;
@@ -211,7 +218,7 @@ void  NEOGEO_USER POWER_ON (void) {
 // NeoGeo MVS EYE_CATCHER handler
 void  NEOGEO_USER EYE_CATCHER (void) {
 
-	//AES only ; May be used in MVS : 
+	//AES only ; May be used in MVS :
 	// MVS : Eye catcher call within command 2 (attract mode) advised
 }
 
@@ -241,7 +248,7 @@ void  NEOGEO_USER GAME (void) {
 // NeoGeo MVS TITLE Mode
 void NEOGEO_USER TITLE(void) {
 
-	// MVS systems only 
+	// MVS systems only
 	ASM_START
 	ASM_LEA(BIOS_WORKRAM,%%sp)              // A7 (SSP) = 10F300H Init stack pointer
 	ASM_MVB(%%d0,REG_DIPSW)           // Kick watchdog
@@ -281,7 +288,6 @@ void  NEOGEO_USER showTitleMVS(void) {
 	load_palettes(pal_tile0,PALETTES);
 	waitVbl();
 	fixtext_out(15,10,"TITLE MODE MVS",0);
-	playSoundtest(0x24);
 	int i =0;
 	for (i=0;i<3;i++) {
 		fix_svalue1(13,15,i,0,48);
@@ -301,7 +307,6 @@ void  NEOGEO_USER showTitleAES(void) {
 	load_palettes(pal_tile0,PALETTES);
 	waitVbl();
 	fixtext_out(15,10,"TITLE MODE AES",0);
-	playSoundtest(0x24);
 	int i =0;
 	for (i=0;i<5;i++) {
 		fix_svalue1(13,15,i,0,48);
@@ -318,11 +323,11 @@ void NEOGEO_USER WORK_INIT(void) {
 }
 
 void NEOGEO_USER DISPLAY_INIT(void) {
-	ASM_START	
+	ASM_START
 	ASM_MVW(#0x8000,PALETTES)
-	ASM_MVW(#0xFFF,PALETTES+8190) 
+	ASM_MVW(#0xFFF,PALETTES+8190)
 	ASM_JSR(SYS_FIX_CLEAR) // jump to the FIX_CLEAR subroutine
-	ASM_JSR(SYS_LSP_1ST) // jump to the LSP_1st subroutine 
+	ASM_JSR(SYS_LSP_1ST) // jump to the LSP_1st subroutine
 	ASM_JSR(clearSprs)
 	ASM_JSR(clearFix)
 	:
@@ -335,6 +340,7 @@ void NEOGEO_USER DISPLAY_INIT(void) {
 //INIT GAME MODE
 void NEOGEO_USER INIT_GAME(void) {
 	ASM_START
+	ASM_JSR(soundInit)
 	ASM_JSR(WORK_INIT)
 	ASM_JSR(DISPLAY_INIT)
 	:
@@ -371,8 +377,17 @@ void NEOGEO_USER DEMO_GAME(void) {
 	fixtext_out(15,12,"ABCDEFGHIJKLMNOP",0x1);
 	fixtext_out(15,13,"ABCDEFGHIJKLMNOP",0x2);
 	mess_outtest();
-	playSoundtest(0x21);
-	//(0x25);
+	
+soundSceneReset(); 	
+soundInit();
+soundSetADPCMBVolume(0x45);  // lower background
+soundSetFMVolume(0x0C);      // less harsh than 0x0F
+soundSceneReset();
+playSFX(10);                
+cyclexms(4);
+playFMTrack(1);
+
+
 	p1c = read_p1credit();
 	display_digit(15,14,123456789,0,48);
 	fixtext_out(15,15,"P1C: ",0);
@@ -400,7 +415,7 @@ void NEOGEO_USER START_GAME(void) {
 	clearFix();
 	clearSprs();
 	fixtext_out(15,10,"STARTING GAME",0);
-	cyclexs(1);
+	cyclexs(2);
 	fixtext_out(15,10,"LOADING   ...",0);
 	cyclexs(2);
 	maingame();
