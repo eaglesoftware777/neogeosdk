@@ -181,12 +181,13 @@ void NEOGEO_USER DEMO_END (void) {
 
 // NeoGeo COIN_SOUND handler
 void NEOGEO_USER COIN_SOUND (void) {
-soundSceneReset();
-soundInit();
-soundSetSSGVolume(0x0F);
-   playInsertCoinSSG();
 
+    isZ80Ready();
+    playSSGTrack(2);
+    isZ80Ready();
+    soundSetSSGPreset(1);
     cyclexms(7);
+	
 	int i =0;
 	i++;
 	i++;
@@ -378,15 +379,28 @@ void NEOGEO_USER DEMO_GAME(void) {
 	fixtext_out(15,13,"ABCDEFGHIJKLMNOP",0x2);
 	mess_outtest();
 	
-soundSceneReset(); 	
-soundInit();
-soundSetADPCMBVolume(0x45);  // lower background
-soundSetFMVolume(0x0C);      // less harsh than 0x0F
-soundSceneReset();
-playSFX(10);                
-cyclexms(4);
-playFMTrack(1);
+    soundSceneReset();
+    
+    // Test FM with debug tone
+    isZ80Ready();
+    soundSetFMVolume(0x0F);
+    isZ80Ready();
+    soundCommand(0x30);  // FM debug - should play fm_track_0 immediately
+    
 
+    
+    soundSetFMVolume(0x0F);
+    isZ80Ready();
+    playFMTrack(1);
+        cyclexs(3);
+soundSetADPCMBVolume(0xB8);
+playSFXB(1);    
+    
+            // title plucked backing (long)
+/*soundSetADPCMBVolume(0xB8);
+playSFXB(3);                 // night wind ambience (long ADPCM-B loop)
+soundSetSSGVolume(0x06);
+playMusic(2);  */              // 2_samurai_night_scene.mml (quiet SSG)
 
 	p1c = read_p1credit();
 	display_digit(15,14,123456789,0,48);

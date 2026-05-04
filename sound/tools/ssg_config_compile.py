@@ -31,7 +31,7 @@ def parse_config(path):
             current = {
                 "id": pid,
                 "name": f"Preset {pid}",
-                "tone_mask": 0x3C,
+                "tone_mask": 0x38,
                 "vol_a": 0x0A,
                 "vol_b": 0x06,
                 "vol_c": 0x00,
@@ -54,9 +54,9 @@ def parse_config(path):
             current[key] = parse_hex_or_int(value) & 0xFF
         elif key == "noise":
             if value.lower() in ("on", "yes", "true", "1"):
-                current["tone_mask"] &= 0xF7
+                current["tone_mask"] &= ~0x07
             else:
-                current["tone_mask"] |= 0x38
+                current["tone_mask"] |= 0x07
         else:
             raise SystemExit(f"{path}:{lineno}: unknown key: {key}")
 
@@ -69,7 +69,7 @@ def parse_config(path):
         presets = [{
             "id": 0,
             "name": "Default",
-            "tone_mask": 0x3C,
+            "tone_mask": 0x38,
             "vol_a": 0x0A,
             "vol_b": 0x06,
             "vol_c": 0x00,

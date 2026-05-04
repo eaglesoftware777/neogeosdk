@@ -4,8 +4,8 @@
 
 ssg_preset_table:
   ; preset 0 - Clean Square
-  .db $3C,$0A,$06,$00,$00,$00
+  .db $38,$0A,$06,$00,$00,$00
   ; preset 1 - Soft Menu Beep
-  .db $3C,$08,$04,$00,$00,$00
+  .db $38,$08,$04,$00,$00,$00
   ; preset 2 - Arcade Alert
-  .db $26,$0F,$08,$04,$06,$00
+  .db $38,$0F,$08,$04,$06,$00
