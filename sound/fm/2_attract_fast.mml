@@ -1,0 +1,31 @@
+; 2 - Fast attract mode melody
+T190
+I7
+V15
+O4
+L16
+
+C D E G
+A G E D
+C E G > C
+< B A G E
+
+I1
+F G A > C
+D C < A G
+E G B > D
+C < B A G
+
+I6
+O5
+C E D C
+< A C E G
+> C D E G
+E D C < A
+
+I11
+O5
+C R E R G R > C R
+< G R > C R E R G R
+
+~

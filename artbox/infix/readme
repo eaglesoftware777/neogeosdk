@@ -1,1 +1,28 @@
- input png indexed images 15 colors palette
+FIX ASSETS (INFIX)
+==================
+
+Source PNG images for Neo Geo FIX layer tiles (S1 ROM).
+
+  Format:   PNG, indexed palette (mode P), max 15 colours
+  Colours:  palette index 0 = transparent; indices 1-15 = visible colours
+  Size:     multiples of 8x8 pixels (each 8x8 block = one FIX tile)
+  Naming:   0.png, 1.png, 2.png ... (romdbfiximport.py imports all PNGs found)
+
+The FIX layer is used for text overlays, HUDs, score displays, and static
+elements that are drawn on top of the sprite layer.
+
+Pipeline:
+  romdbfiximport.py  →  imagefix table in neorom.db
+  fixtiles.py        →  052-s1.s1 (128 KB, hardware format)
+
+fixtiles.py build order:
+  1. Seed from sfix.sfix (standard NeoGeo system fonts)
+  2. Preserve all non-empty tiles from existing 052-s1.s1
+  3. Write infix PNG tiles into empty slots (tile 256+)
+
+Run: make sfix  (or make srom)   →  roms/ssideki/052-s1.s1
+
+Convert an RGB image to indexed palette (Pillow):
+  from PIL import Image
+  img = Image.open("source.png").quantize(colors=15)
+  img.save("infix/0.png")

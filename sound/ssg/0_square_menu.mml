@@ -1,0 +1,19 @@
+; 0 - SSG clean square menu loop
+T150
+P0
+V10
+O4
+L16
+
+C E G > C
+< G E C E
+A > C E G
+E C < A C
+
+P1
+F A > C F
+E D C < A
+G B > D G
+E D C < G
+
+~

@@ -1,0 +1,55 @@
+; 2_samurai_night_scene.mml
+; Night ambience / suspense loop
+; @b3 = night wind ambience
+; @f3 = dark FM suspense
+; @s0 = soft SSG support
+; @p1 = soft SSG preset
+
+T110
+V7
+O3
+L8
+
+@p1
+@b3
+@f3
+
+; sparse SSG melody
+A R C R
+E R C R
+G R E R
+C4 R4
+
+O2
+A R A R
+E R E R
+F R F R
+G R G R
+
+; soft sparkle layer
+@s0
+
+O3
+A C E G
+F E D C
+< B > C D E
+A4 R4
+
+; atmospheric gong/title accent
+@a2
+R4
+
+@f3
+
+O3
+C R E R
+G R A R
+G E C R
+< B4 R4
+
+O2
+A R > C R
+E R C R
+< A4 R4
+
+~

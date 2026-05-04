@@ -1,11 +1,14 @@
-input png indexed images palette 15 colors
+SPRITE ASSETS (IN)
+==================
 
+Source PNG images for Neo Geo sprite tiles (C ROMs).
 
-to convert image use imagemagick :
+  Format:   PNG (indexed palette preferred, or RGB/RGBA auto-converted)
+  Colours:  15 per image + 1 transparency index (palette index 0 = transparent)
+  Size:     multiples of 16x16 pixels recommended
+  Naming:   0.png, 1.png, 2.png ... (romdbimgimport.py imports these)
 
-$ convert truecolor_source_image.png -colors 15 indexed_neogeo_image.png
-Crop the image (converted image size should be : 256x256)
-You may also use Gimp (png indexed image mode with 15 size palette)
-Dithering algorithms ...
-Option B : pixel art, produce png indexed image using 16 colors, 1 of the colors is transparent
-...
+img2neo.py performs k-means palette reduction (15 colours) and
+Floyd-Steinberg dithering automatically if the image exceeds the colour limit.
+
+Run: make art   (full sprite pipeline → 052-c1.c1 and 052-c2.c2)
