@@ -32,8 +32,8 @@ ssg_config_compile.py
     Compiles the SSG tone preset config (sound/ssg/config.ssg) into a Z80
     data table (sound/driver/ssg_config.inc) for soundSetSSGPreset().
 
-adpcm_enc
-    Binary encoder: converts WAV files to Neo Geo ADPCM-A or ADPCM-B format.
+adpcm_enc.py
+    Python encoder: converts WAV files to Neo Geo ADPCM-A or ADPCM-B format.
 
 enc_wave16le_a.sh / enc_wave16le_b.sh
     Shell wrappers that batch-encode source WAVs to ADPCM-A and ADPCM-B.
