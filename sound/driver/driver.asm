@@ -501,10 +501,12 @@ shadowed_write_b:
 apply_music_volume:
     ld d,$08
     ld a,(VAR_MUSIC_VOL)
+    and $0F         ; FIX: Ensure M bit (bit 4) is 0 for fixed amplitude mode
     ld e,a
     call shadowed_write_a
     ld d,$09
     ld a,(VAR_MUSIC_VOL)
+    and $0F         ; FIX: Ensure M bit (bit 4) is 0 for fixed amplitude mode
     srl a
     add a,3
     ld e,a
@@ -513,10 +515,12 @@ apply_music_volume:
 ssg_apply_standalone_volume:
     ld d,$08
     ld a,(VAR_SSG_VOL)
+    and $0F         ; FIX: Ensure M bit (bit 4) is 0 for fixed amplitude mode
     ld e,a
     call shadowed_write_a
     ld d,$09
     ld a,(VAR_SSG_VOL)
+    and $0F         ; FIX: Ensure M bit (bit 4) is 0 for fixed amplitude mode
     srl a
     add a,3
     ld e,a
@@ -557,6 +561,7 @@ stop_music:
     ld (VAR_FM_WAIT),a
     ld (VAR_SSG_ACTIVE),a
     ld (VAR_SSG_WAIT),a
+    call fm_silence_all   ; FIX: Properly silence all FM channels
     jp init_ssg
 
 force_write_a:
@@ -585,13 +590,22 @@ force_write_b:
 
 ;;; Driver Subsystems
 init_ssg:
-    ld de,$073F ; All off
+    ; FIX: Proper SSG initialization
+    ld de,$073F ; All channels off (mixer: disable all tones and noise)
     call shadowed_write_a
-    ld de,$0800
+    ld de,$0600 ; Initialize noise frequency to 0
     call shadowed_write_a
-    ld de,$0900
+    ld de,$0800 ; Channel A volume = 0 (M=0, fixed amplitude)
     call shadowed_write_a
-    ld de,$0A00
+    ld de,$0900 ; Channel B volume = 0 (M=0, fixed amplitude)
+    call shadowed_write_a
+    ld de,$0A00 ; Channel C volume = 0 (M=0, fixed amplitude)
+    call shadowed_write_a
+    ld de,$0B00 ; Envelope period low = 0
+    call shadowed_write_a
+    ld de,$0C00 ; Envelope period high = 0
+    call shadowed_write_a
+    ld de,$0D00 ; Envelope shape = 0 (no envelope)
     call shadowed_write_a
     ret
 
@@ -602,14 +616,45 @@ init_fm:
     call force_write_a
     ld de,$273A ; Clear resets, keep Timer B IRQ+load active
     call shadowed_write_a
-    ; Operator silence loop
+    
+    ; FIX: Silence all FM channels properly
+    call fm_silence_all
+    
+    ; FIX: Initialize LFO to off
+    ld de,$2200
+    call shadowed_write_a
+    
+    ret
+
+fm_silence_all:
+    ; FIX: Properly silence all 4 FM channels (key off all slots)
+    ld b,4
+    ld c,$01   ; Start with key-code $01
+fm_silence_loop:
+    push bc
+    ld d,$28
+    ld e,c
+    call force_write_a    ; Key off this channel
+    
+    ; Also key off 2nd slot for this channel if in 2-operator mode
+    ld a,c
+    add a,4
+    ld e,a
+    call force_write_a
+    
+    pop bc
+    inc c
+    djnz fm_silence_loop
+    
+    ; FIX: Set all operator TL to max (silence)
     ld b,$0D
     ld de,$417F
-fm_silence:
+fm_silence_tl:
     call shadowed_write_a
     call shadowed_write_b
     inc d
-    djnz fm_silence
+    djnz fm_silence_tl
+    
     ret
 
 init_adpcma:
@@ -667,7 +712,7 @@ stop_all:
     ld (VAR_SSG_TEMPO),a
     ld (VAR_SSG_TICK),a
     call init_ssg
-    call fm_stop
+    call fm_silence_all   ; FIX: Use proper silence function
     call adpcma_stop
     jp adpcmb_stop
 
@@ -1345,9 +1390,12 @@ fm_stop:
     ld (VAR_FM_ACTIVE),a
     ld (VAR_FM_WAIT),a
 
-    ; key off FM channel using key-code $01
+    ; FIX: Key off channel and silence all operators
     ld de,$2801
-    jp force_write_a
+    call force_write_a
+    
+    ; FIX: Also silence all channels to prevent hanging notes
+    jp fm_silence_all
 
 fm_apply_patch:
     ; Load YM2610 FM patch from fm_patch_table.
@@ -1740,21 +1788,27 @@ ssg_preset_ready:
     call ssg_preset_write_a
     inc hl
 
-    ; volume A $08
+    ; volume A $08 (FIX: Ensure M=0 mode)
     ld d,$08
-    ld e,(hl)
+    ld a,(hl)
+    and $0F         ; Ensure M bit is 0 for fixed amplitude
+    ld e,a
     call ssg_preset_write_a
     inc hl
 
-    ; volume B $09
+    ; volume B $09 (FIX: Ensure M=0 mode)
     ld d,$09
-    ld e,(hl)
+    ld a,(hl)
+    and $0F         ; Ensure M bit is 0 for fixed amplitude
+    ld e,a
     call ssg_preset_write_a
     inc hl
 
-    ; volume C $0A
+    ; volume C $0A (FIX: Ensure M=0 mode)
     ld d,$0A
-    ld e,(hl)
+    ld a,(hl)
+    and $0F         ; Ensure M bit is 0 for fixed amplitude
+    ld e,a
     call ssg_preset_write_a
     inc hl
 
@@ -1777,6 +1831,7 @@ ssg_preset_write_a:
 
 
 ssg_note_on:
+    ; FIX: SSG note-on with proper mixer settings
     ld a,b
     ld c,0
 ssg_octave_loop:
@@ -1818,6 +1873,11 @@ ssg_shift_left_loop:
     dec a
     jr nz,ssg_shift_left_loop
 ssg_period_ready:
+    ; FIX: Clamp period to 12-bit max
+    ld a,d
+    and $0F
+    ld d,a
+    
     push de
     ld d,$00
     call shadowed_write_a
@@ -1836,14 +1896,19 @@ ssg_period_ready:
     ld e,d
     ld d,$03
     call shadowed_write_a
-    ld de,$073C
+    
+    ; FIX: Enable tones on all channels, disable noise
+    ld de,$0738    ; Was $073C - FIXED: Enable tones (bits 3-5=0), disable noise (bits 0-2=1)
     call shadowed_write_a
+    
     ld d,$08
     ld a,(VAR_MUSIC_VOL)
+    and $0F         ; FIX: Ensure M=0 mode
     ld e,a
     call shadowed_write_a
     ld d,$09
     ld a,(VAR_MUSIC_VOL)
+    and $0F         ; FIX: Ensure M=0 mode
     srl a
     add a,3
     ld e,a
@@ -1854,10 +1919,12 @@ ssg_standalone_note_on:
     call ssg_note_on
     ld d,$08
     ld a,(VAR_SSG_VOL)
+    and $0F         ; FIX: Ensure M=0 mode
     ld e,a
     call shadowed_write_a
     ld d,$09
     ld a,(VAR_SSG_VOL)
+    and $0F         ; FIX: Ensure M=0 mode
     srl a
     add a,3
     ld e,a
