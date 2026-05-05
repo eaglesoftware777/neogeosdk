@@ -83,7 +83,7 @@ vrom:
 
 .PHONY: m1rom
 m1rom: fmpatches fm mml ssgconfig ssg
-	WLAZ80=$(WLAZ80) WLALINK=$(WLALINK) ./sound/tools/m1rom.sh
+	WLAZ80=$(WLAZ80) WLALINK=$(WLALINK) USE_Z80C=$(USE_Z80C) Z80C_SRC=$(Z80C_SRC_LINUX) ./sound/tools/m1rom.sh
 	mkdir -p roms/ssideki
 	cp -f out/052-m1.m1 roms/ssideki/052-m1.m1
 	cp -f out/052-m1.m1 roms/ssideki/sm1.sm1
