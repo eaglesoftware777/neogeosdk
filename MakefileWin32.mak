@@ -88,7 +88,7 @@ ssg:
 
 .PHONY: m1rom
 m1rom: fmpatches fm mml ssgconfig ssg
-	set WLAZ80=$(WLAZ80)&& set WLALINK=$(WLALINK)&& call sound\tools\m1rom.bat
+	set WLAZ80=$(WLAZ80)&& set WLALINK=$(WLALINK)&& set USE_Z80C=$(USE_Z80C)&& set Z80C_SRC=$(Z80C_SRC_WIN)&& call sound\tools\m1rom.bat
 	if not exist roms\ssideki mkdir roms\ssideki
 	copy /Y out\052-m1.m1 roms\ssideki\052-m1.m1
 	copy /Y out\052-m1.m1 roms\ssideki\sm1.sm1

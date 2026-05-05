@@ -14,12 +14,17 @@ if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
 
 if "%WLAZ80%"=="" set WLAZ80=wla-z80
 if "%WLALINK%"=="" set WLALINK=wlalink
+if "%USE_Z80C%"=="" set USE_Z80C=0
+if "%Z80C_SRC%"=="" set Z80C_SRC=%SDK_ROOT%\sound\driver\driver.c
+
+if not "%USE_Z80C%"=="1" goto assemble_asm
+
 if "%HOSTCC%"=="" set HOSTCC=cc
 if not "%Z80CC%"=="" if not exist "%Z80CC%" (
     echo Ignoring missing Z80CC=%Z80CC%
     set Z80CC=
 )
-if "%Z80CC%"=="" for %%I in ("%SDK_ROOT%\..\neogeo\z80c-special") do set Z80CC_ROOT=%%~fI
+if "%Z80CC%"=="" set Z80CC_ROOT=%SDK_ROOT%\z80c-special
 if "%Z80CC%"=="" set Z80CC=%Z80CC_ROOT%\build\z80cc.exe
 
 if exist "%Z80CC%" goto have_z80cc
@@ -47,17 +52,23 @@ set USE_WSL_Z80CC=1
 
 :have_z80cc
 
-echo Compiling %SDK_ROOT%\sound\driver\driver.c
+echo Compiling %Z80C_SRC%
 if "%USE_WSL_Z80CC%"=="1" (
-    for %%I in ("%SDK_ROOT%\sound\driver\driver.c") do set DRIVER_WIN=%%~fI
+    for %%I in ("%Z80C_SRC%") do set DRIVER_WIN=%%~fI
     for /f "usebackq delims=" %%I in (`wsl.exe wslpath -a "!Z80CC_ROOT!"`) do set Z80CC_ROOT_WSL=%%I
     for /f "usebackq delims=" %%I in (`wsl.exe wslpath -a "!DRIVER_WIN!"`) do set DRIVER_WSL=%%I
     wsl.exe /bin/bash -lc "make -C '!Z80CC_ROOT_WSL!' >/dev/null && '!Z80CC_ROOT_WSL!/build/z80cc' '!DRIVER_WSL!'" > "%ASM%"
 ) else (
-    "%Z80CC%" "%SDK_ROOT%\sound\driver\driver.c" > "%ASM%"
+    "%Z80CC%" --target neogeo -I"%SDK_ROOT%\sound\driver" -S -o "%ASM%" "%Z80C_SRC%"
 )
 if errorlevel 1 exit /b 1
+goto assemble
 
+:assemble_asm
+echo Assembling %SDK_ROOT%\sound\m1\m1.asm
+set ASM=%SDK_ROOT%\sound\m1\m1.asm
+
+:assemble
 echo Assembling %ASM%
 %WLAZ80% -I "%SDK_ROOT%\sound\driver" -o "%OBJ%" "%ASM%"
 if errorlevel 1 exit /b 1
