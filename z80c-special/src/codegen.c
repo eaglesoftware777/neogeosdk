@@ -87,7 +87,7 @@ static void gen_expr(Program *prog, Expr *e) {
             else if (e->op == TOK_NE) printf("    jr nz,.cmptrue%d\n", a);
             else if (e->op == '<') printf("    jr c,.cmptrue%d\n", a);
             else if (e->op == '>') {
-                printf("    jr z,.cmpend%d\n", b);
+                printf("    jp z,.cmpend%d\n", b);
                 printf("    jr nc,.cmptrue%d\n", a);
             }
             else if (e->op == TOK_LE) {
@@ -95,7 +95,7 @@ static void gen_expr(Program *prog, Expr *e) {
                 printf("    jr z,.cmptrue%d\n", a);
             }
             else if (e->op == TOK_GE) printf("    jr nc,.cmptrue%d\n", a);
-            emit("    xor a"); printf("    jr .cmpend%d\n", b);
+            emit("    xor a"); printf("    jp .cmpend%d\n", b);
             printf(".cmptrue%d:\n", a); emit("    ld a,1"); printf(".cmpend%d:\n", b);
         }
         break;
@@ -118,13 +118,13 @@ static void gen_stmt(Program *prog, Stmt *s) {
         case ST_RETURN: gen_expr(prog, s->a); emit("    ret"); break;
         case ST_WHILE: {
             int a = ++label_id, b = ++label_id;
-            printf(".while%d:\n", a); gen_expr(prog, s->a); emit("    or a"); printf("    jr z,.wend%d\n", b);
-            gen_stmt(prog, s->body); printf("    jr .while%d\n", a); printf(".wend%d:\n", b); break;
+            printf(".while%d:\n", a); gen_expr(prog, s->a); emit("    or a"); printf("    jp z,.wend%d\n", b);
+            gen_stmt(prog, s->body); printf("    jp .while%d\n", a); printf(".wend%d:\n", b); break;
         }
         case ST_IF: {
             int a = ++label_id, b = ++label_id;
-            gen_expr(prog, s->a); emit("    or a"); printf("    jr z,.else%d\n", a);
-            gen_stmt(prog, s->body); printf("    jr .ifend%d\n", b); printf(".else%d:\n", a);
+            gen_expr(prog, s->a); emit("    or a"); printf("    jp z,.else%d\n", a);
+            gen_stmt(prog, s->body); printf("    jp .ifend%d\n", b); printf(".else%d:\n", a);
             gen_stmt(prog, s->else_body); printf(".ifend%d:\n", b); break;
         }}
     }

@@ -361,7 +361,48 @@ void fm_stop(void) {
 }
 
 void execute_command(void) {
-    // Command processing logic to be migrated from driver.asm
+    if (var_param_mode != 0) {
+        var_param_mode = 0;
+        if (var_wait_tempo == 1) { var_tempo = var_command; }
+        else if (var_wait_tempo == 2) { 
+            var_adpcma_vol = var_command & 0x3F;
+            var_adpcma_base = var_adpcma_vol;
+            shadowed_write_b(0x01, var_adpcma_vol);
+        }
+        else if (var_wait_tempo == 3) {
+            var_adpcmb_vol = var_command;
+            var_adpcmb_base = var_adpcmb_vol;
+            shadowed_write_a(0x1B, var_adpcmb_vol);
+        }
+        else if (var_wait_tempo == 4) {
+            var_music_vol = var_command & 0x0F;
+            var_music_vol_base = var_music_vol;
+            apply_music_volume();
+        }
+        else if (var_wait_tempo == 10) {
+            var_ssg_preset = var_command & 0x0F;
+            // ssg_apply_preset() to be implemented
+        }
+        else if (var_wait_tempo == 13) {
+            var_fm_vol = var_command & 0x0F;
+            var_fm_vol_base = var_fm_vol;
+            // fm_apply_patch() to be implemented
+        }
+        return;
+    }
+
+    if (var_command == 0) return;
+    if (var_command == 0x01) { driver_init(); return; }
+    if (var_command == 0x03) { driver_init(); return; } // Soft reset
+    if (var_command == 0x04) { stop_all(); return; }
+    if (var_command == 0x05) { var_param_mode = 1; var_wait_tempo = 2; return; } // ADPCM-A volume
+    if (var_command == 0x06) { var_param_mode = 1; var_wait_tempo = 3; return; } // ADPCM-B volume
+    if (var_command == 0x07) { var_param_mode = 1; var_wait_tempo = 4; return; } // SSG volume
+    if (var_command == 0x0C) { adpcma_stop(); return; }
+    if (var_command == 0x0D) { adpcmb_stop(); return; }
+    if (var_command == 0x0E) { var_param_mode = 1; var_wait_tempo = 1; return; } // Tempo
+    if (var_command == 0x13) { var_param_mode = 1; var_wait_tempo = 13; return; } // FM volume
+    if (var_command == SSG_CMD_PRESET) { var_param_mode = 1; var_wait_tempo = 10; return; }
 }
 
 void ticker_update(void) {
