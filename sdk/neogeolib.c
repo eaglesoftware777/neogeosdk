@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "macro.h"
+#include "sound_ids.h"
 
 uint16_t  setSCB2(uint16_t,uint16_t);
 uint16_t  setSCB3(uint16_t,uint16_t,uint16_t);
@@ -71,6 +72,7 @@ void playInsertCoinSSG(void);
 void playGetReadyVoice(void);
 void playAttackVoice(void);
 void playCoinThenReady(void);
+void soundApplyMix(uint8_t,uint8_t,uint8_t,uint8_t);
 void soundPlayDemoFM(uint8_t);
 void soundPlayTitleMusic(uint8_t);
 void soundPlayGameLoop(uint8_t);
@@ -1054,7 +1056,7 @@ void NEOGEO_USER soundSetSSGPreset(uint8_t preset) {
 
 void NEOGEO_USER playInsertCoinSSG(void) {
 	isZ80Ready();
-	playSSGTrack(1); // sound/ssg/2_insert_coin.mml
+	playSSGTrack(SOUND_SSG_INSERT_COIN);
 	soundSetSSGPreset(1);
 }
 
@@ -1066,12 +1068,12 @@ void NEOGEO_USER playVoiceCue(uint8_t n) {
 	isZ80Ready();
 
 	switch (n) {
-		case 1:
-			playSFX(10); // get ready voice
+		case SOUND_VOICE_GET_READY:
+			playSFX(SOUND_SFX_READY_VOICE);
 			break;
 
-		case 2:
-			playSFX(11); // attack voice
+		case SOUND_VOICE_ATTACK:
+			playSFX(SOUND_SFX_ATTACK_VOICE);
 			break;
 
 		default:
@@ -1082,12 +1084,12 @@ void NEOGEO_USER playVoiceCue(uint8_t n) {
 
 void NEOGEO_USER playGetReadyVoice(void) {
 	isZ80Ready();
-	playSFX(10);
+	playSFX(SOUND_SFX_READY_VOICE);
 }
 
 void NEOGEO_USER playAttackVoice(void) {
 	isZ80Ready();
-	playSFX(11);
+	playSFX(SOUND_SFX_ATTACK_VOICE);
 }
 
 void NEOGEO_USER playCoinThenReady(void) {
@@ -1162,6 +1164,17 @@ void NEOGEO_USER soundSetSSGVolume(uint8_t v) {
    Higher-level scene helpers
    ---------------------------------------------------------- */
 
+void NEOGEO_USER soundApplyMix(uint8_t adpcma_vol, uint8_t adpcmb_vol, uint8_t ssg_vol, uint8_t fm_vol) {
+	isZ80Ready();
+	soundSetADPCMAVolume(adpcma_vol);
+	isZ80Ready();
+	soundSetADPCMBVolume(adpcmb_vol);
+	isZ80Ready();
+	soundSetSSGVolume(ssg_vol);
+	isZ80Ready();
+	soundSetFMVolume(fm_vol);
+}
+
 void NEOGEO_USER soundPlayDemoFM(uint8_t fm_track) {
 	isZ80Ready();
 	soundSceneReset();
@@ -1175,11 +1188,7 @@ void NEOGEO_USER soundPlayTitleMusic(uint8_t music_track) {
 	isZ80Ready();
 	soundSceneReset();
 	isZ80Ready();
-	soundSetADPCMBVolume(0x45);
-	isZ80Ready();
-	soundSetSSGVolume(0x08);
-	isZ80Ready();
-	soundSetFMVolume(0x0C);
+	soundApplyMix(0x34, 0x45, 0x08, 0x0C);
 	isZ80Ready();
 	playMusic(music_track);
 }
@@ -1188,13 +1197,7 @@ void NEOGEO_USER soundPlayGameLoop(uint8_t music_track) {
 	isZ80Ready();
 	soundSceneReset();
 	isZ80Ready();
-	soundSetADPCMAVolume(0x38);
-	isZ80Ready();
-	soundSetADPCMBVolume(0x45);
-	isZ80Ready();
-	soundSetSSGVolume(0x08);
-	isZ80Ready();
-	soundSetFMVolume(0x0C);
+	soundApplyMix(0x34, 0xB8, 0x0A, 0x0E);
 	isZ80Ready();
 	playMusic(music_track);
 }
