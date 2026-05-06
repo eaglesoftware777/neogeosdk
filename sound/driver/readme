@@ -45,7 +45,7 @@ queues the command in a 32-byte FIFO, and processes it on the next timer tick.
                             n = 0..SSG_TRACK_COUNT-1 (currently 3). Starts standalone SSG track.
   soundSetSSGPreset(n)      Command $14 + n (lower nibble)
                             n = 0..15. Applies SSG tone preset from ssg_config.inc.
-  playInsertCoinSSG()       Plays SSG track 1 with preset 1. No arguments.
+  playInsertCoinSSG()       Plays SSG track 2 with preset 1. No arguments.
   playVoiceCue(n)           Maps n (1..9) to an ADPCM-A voice sample.
                             1=get ready, 2=oh hey ya, 3=coin, 4=insert coin,
                             5=start, 6=title, 7=intro, 8=attack, 9=samurai.
@@ -112,3 +112,8 @@ BUILDING
 --------
 Run `make m1rom` to assemble driver.asm with wla-z80.
 Run `make sound` to rebuild MML data, V ROM, and M1 ROM together.
+Run `make m1rom USE_Z80C=1` to compile the experimental C driver while still linking
+  the authoritative `driver.asm` into the final playable M1.
+Run `make m1rom-c` to link the experimental C runtime path.
+  The C runtime uses `driver_prelude.asm` for reset/RST/NMI/IRQ, and `driver.c` starts at `$00D0`.
+Run `make compare-driver` to compare the ASM and C M1 ROMs.

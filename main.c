@@ -47,7 +47,6 @@ void NEOGEO_USER showWalkDemo(int loops, int delay_ms) {
 void NEOGEO_USER maingame(void) {
   clearFix();
   clearSprs();
-  soundSceneReset();
   playgame();
 }
 
@@ -58,7 +57,7 @@ void NEOGEO_USER soundAutoDemo(void) {
   fixtext_out(10, 4, "Coin chime", 1);
   soundStopAll();
   soundSetADPCMAVolume(0x34);
-  playSFX(0);
+  playSFX(SOUND_SFX_COIN_CHIME);
   cyclexs(3);
 
   soundStopAll();
@@ -66,7 +65,7 @@ void NEOGEO_USER soundAutoDemo(void) {
   fixtext_out(10, 2, "ARCADE SOUND TOUR", 0);
   fixtext_out(10, 4, "Start slash", 1);
   soundSetADPCMAVolume(0x34);
-  playSFX(1);
+  playSFX(SOUND_SFX_START_SLASH);
   cyclexs(2);
 
   soundStopAll();
@@ -74,7 +73,7 @@ void NEOGEO_USER soundAutoDemo(void) {
   fixtext_out(10, 2, "ARCADE SOUND TOUR", 0);
   fixtext_out(10, 4, "Title gong", 1);
   soundSetADPCMAVolume(0x34);
-  playSFX(2);
+  playSFX(SOUND_SFX_TITLE_GONG);
   cyclexs(2);
 
   soundStopAll();
@@ -82,7 +81,7 @@ void NEOGEO_USER soundAutoDemo(void) {
   fixtext_out(10, 2, "ARCADE SOUND TOUR", 0);
   fixtext_out(10, 4, "Taiko hit", 1);
   soundSetADPCMAVolume(0x34);
-  playSFX(3);
+  playSFX(SOUND_SFX_INTRO_TAIKO);
   cyclexs(2);
 
   soundStopAll();
@@ -90,7 +89,7 @@ void NEOGEO_USER soundAutoDemo(void) {
   fixtext_out(10, 2, "ARCADE SOUND TOUR", 0);
   fixtext_out(10, 4, "Footstep", 1);
   soundSetADPCMAVolume(0x34);
-  playSFX(4);
+  playSFX(SOUND_SFX_FOOTSTEP);
   cyclexs(2);
 
   soundStopAll();
@@ -98,7 +97,7 @@ void NEOGEO_USER soundAutoDemo(void) {
   fixtext_out(10, 2, "ARCADE SOUND TOUR", 0);
   fixtext_out(10, 4, "Voice cue", 1);
   soundSetADPCMAVolume(0x36);
-  playSFX(5);
+  playSFX(SOUND_SFX_SHORT_SHOUT);
   cyclexs(3);
 
   soundStopAll();
@@ -106,7 +105,7 @@ void NEOGEO_USER soundAutoDemo(void) {
   fixtext_out(10, 2, "BACKING CUE", 0);
   fixtext_out(10, 4, "Battle bed", 1);
   soundSetADPCMBVolume(0xB8);
-  playMusic(0);
+  playMusic(SOUND_MUSIC_SAMURAI_GAME_LOOP);
   cyclexs(4);
 
   soundStopAll();
@@ -114,7 +113,7 @@ void NEOGEO_USER soundAutoDemo(void) {
   fixtext_out(10, 2, "BACKING CUE", 0);
   fixtext_out(10, 4, "Title bed", 1);
   soundSetADPCMBVolume(0xB8);
-  playMusic(1);
+  playMusic(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
   cyclexs(4);
 
   soundStopAll();
@@ -148,13 +147,8 @@ void NEOGEO_USER soundAutoDemo(void) {
 int NEOGEO_USER playgame(void) {
   clearFix();
   clearSprs();
-  soundSceneReset();
-     soundSetFMVolume(0x0F);
-    isZ80Ready();
-    playFMTrack(2);
-soundSetADPCMBVolume(0xB8);
-playSFXB(2);
-  showWalkDemo(28, 24);
+  soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+  showWalkDemo(160, 18);
   return 0;
 }
 
@@ -163,7 +157,7 @@ void NEOGEO_USER showGameOver(void) {
   clearFix();
   clearSprs();
   soundSetADPCMAVolume(0x34);
-  playSFX(4);
+  playSFX(SOUND_SFX_FOOTSTEP);
   fixtext_out(15, 10, "GAME OVER", 0);
   cyclexs(3);
   soundStopAll();
@@ -178,9 +172,9 @@ void NEOGEO_USER showEagleIntro(void) {
   soundSetSSGVolume(0x08);
   showScreen8(16, 520, 0xF, 0xAF, 9, 0xFFF);
   cyclexms(200);
-  playSFX(5);
+  playSFX(SOUND_SFX_SHORT_SHOUT);
   cycle1s();
-  playSFX(10);
+  playSFX(SOUND_SFX_READY_VOICE);
   cycle1s();
   soundStopAll();
 }
@@ -202,8 +196,8 @@ void NEOGEO_USER showCharacterParade(void) {
   soundSetSSGVolume(0x08);
   soundSetADPCMAVolume(0x36);
   soundSetADPCMBVolume(0xB0);
-  playSFXB(2);
-  playMusic(0);
+  playSFXB(SOUND_BED_DUEL_GROOVE);
+  playMusic(SOUND_MUSIC_SAMURAI_GAME_LOOP);
   for (i = 0; i < 34; i++) {
     clearFix();
     fixtext_out(9, 4, "ORIGINAL WARRIOR DEMO", 0);
@@ -212,14 +206,14 @@ void NEOGEO_USER showCharacterParade(void) {
     if (i & 1) {
       fixtext_out(14, 8, "SLASH!", 3);
       fixtext_out(19, 13, "DASH! ", 3);
-      if ((i & 3) == 1) playSFX(1);
+      if ((i & 3) == 1) playSFX(SOUND_SFX_START_SLASH);
     } else {
       fixtext_out(17, 8, "CLASH!", 3);
       fixtext_out(16, 13, "STEP! ", 3);
-      if ((i & 7) == 0) playSFX(5);
+      if ((i & 7) == 0) playSFX(SOUND_SFX_SHORT_SHOUT);
     }
     if (i == 16) {
-      playSFX(10);
+      playSFX(SOUND_SFX_READY_VOICE);
     }
     x1++;
     if (x1 > 26) x1 = 2;
@@ -238,7 +232,7 @@ void NEOGEO_USER showPseudo3DLoop(void) {
   soundSetSSGVolume(0x00);
   soundSetADPCMAVolume(0x34);
   soundSetADPCMBVolume(0xB8);
-  playSFXB(3);
+  playSFXB(SOUND_BED_NIGHT_WIND);
   for (i = 0; i < 48; i++) {
     clearFix();
     fixtext_out(10, 3, "PSEUDO 3D ROAD TEST", 0);
@@ -257,7 +251,7 @@ void NEOGEO_USER showPseudo3DLoop(void) {
       fixtext_out(19, 11, "|", 3);
       fixtext_out(19, 15, "|", 3);
     }
-    if ((i & 11) == 4) playSFX(8);
+    if ((i & 11) == 4) playSFX(SOUND_SFX_STRING_PHRASE);
     cyclexms(90);
   }
   soundStopAll();
