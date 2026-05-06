@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "macro.h"
+#include "sound_ids.h"
 
 /* Core sound control */
 void soundInit(void);

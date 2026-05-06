@@ -59,6 +59,9 @@ make sound      : rebuild all sound ROMs (samples + vrom + fmpatches + fm + mml 
 make sound-all  : alias for make sound
 make vrom       : V ROM only (pack ADPCM samples)
 make m1rom      : M1 ROM only (Z80 driver; depends on fmpatches fm mml ssgconfig ssg)
+make m1rom-asm  : build and snapshot the authoritative ASM M1 ROM
+make m1rom-c    : build the experimental C-driver M1 ROM
+make compare-driver : build ASM + C M1 ROMs and compare them
 make mml        : compile MML music data only (sound/mml → music_data.inc)
 make fm         : compile FM MML data only (sound/fm → fm_data.inc)
 make fmpatches  : compile FM patch bank (sound/fm/patches.fm → fm_patch_table.inc)
@@ -100,8 +103,10 @@ The SDK includes a custom Z80 sound driver for the YM2610 (OPNB) chip.
 *   **FM**: Compiled FM sequencer with table-driven patch bank (16 patches). `playFMTrack(n)` selects from up to 8 compiled FM tracks. `soundSetFMVolume` controls the FM output level. Patches defined in `sound/fm/patches.fm` and compiled to `fm_patch_table.inc`.
 *   **Handshake**: Reliable 68000→Z80 command protocol via NMI and a 32-byte FIFO.
 *   **Scene helpers**: `soundSceneReset()`, `soundPlayTitleMusic()`, `soundPlayGameLoop()`, `soundPlayDemoFM()` for clean scene transitions.
+*   **Named sound IDs**: `sdk/sound_ids.h` provides stable track / cue / voice / bed identifiers for 68k-side code.
+*   **Runtime sync**: `make sound` and `make m1rom` copy rebuilt `M1`, `V1`, and `sm1` outputs into `roms/ssideki/` for direct MAME testing.
 
-Driver source: `sound/driver/driver.asm`. Rebuild with `make m1rom`.
+Primary driver source: `sound/driver/driver.asm`. An experimental high-level C port also exists in `sound/driver/driver.c`, compiled through `z80c-special/` with the same generated music, FM, and SSG tables. Rebuild with `make m1rom`, or use `make m1rom-c` to assemble the C-driver runtime.
 
 ---
 
@@ -111,11 +116,12 @@ Driver source: `sound/driver/driver.asm`. Rebuild with `make m1rom`.
 main.c          — Demo entry point (68k)
 user.c          — Game startup / DEMO_GAME / START_GAME hooks
 sdk/            — Hardware headers, linker scripts, neogeolib
+  sound_ids.h   — Named sound track / sample / cue identifiers
 artbox/         — Graphics conversion tools and asset pipeline
   in/           — Sprite source PNGs
   infix/        — FIX layer source PNGs
 sound/          — Z80 driver, MML source, ADPCM samples
-  driver/       — driver.asm (Z80 YM2610 driver), generated .inc tables
+  driver/       — driver.asm, driver.c, generated YM2610 tables
   fm/           — FM MML source tracks (.mml) and FM patch bank (patches.fm)
   mml/          — SSG/MML music source tracks (.mml)
   ssg/          — Standalone SSG MML tracks (.mml) and config (config.ssg)
@@ -126,6 +132,7 @@ roms/ssideki/   — Generated ROM output (mame rompath target)
 out/            — Intermediate build objects
 docs/           — YM2610 datasheet and reference materials
 traces/         — Z80/68k execution traces for debugging
+z80c-special/   — Experimental Z80 C compiler used by the C-driver path
 ```
 
 ---
