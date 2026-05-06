@@ -183,7 +183,7 @@ void NEOGEO_USER DEMO_END (void) {
 void NEOGEO_USER COIN_SOUND (void) {
 
     isZ80Ready();
-    playSSGTrack(2);
+    playSSGTrack(SOUND_SSG_INSERT_COIN);
     isZ80Ready();
     soundSetSSGPreset(1);
     cyclexms(7);
@@ -385,21 +385,21 @@ void NEOGEO_USER DEMO_GAME(void) {
     isZ80Ready();
     soundSetFMVolume(0x0F);
     isZ80Ready();
-    soundCommand(0x30);  // FM debug - should play fm_track_0 immediately
+    playFMDebug();
     
 
     
     soundSetFMVolume(0x0F);
     isZ80Ready();
-    playFMTrack(1);
+    playFMTrack(SOUND_FM_SAMURAI_MINOR);
 soundSetADPCMBVolume(0xB8);
-playSFXB(1);    
+playSFXB(SOUND_BED_TITLE_PLUCK);    
     
             // title plucked backing (long)
 /*soundSetADPCMBVolume(0xB8);
-playSFXB(3);                 // night wind ambience (long ADPCM-B loop)
+playSFXB(SOUND_BED_NIGHT_WIND);
 soundSetSSGVolume(0x06);
-playMusic(2);  */              // 2_samurai_night_scene.mml (quiet SSG)
+playMusic(SOUND_MUSIC_SAMURAI_NIGHT_SCENE);  */
 
 	p1c = read_p1credit();
 	display_digit(15,14,123456789,0,48);

@@ -179,7 +179,7 @@ Behavior:
   Applies SSG tone preset `n` from the compiled preset table. Valid range: `0..15`.
 
 - `playInsertCoinSSG()`
-  Convenience: plays SSG track 1 (insert coin) and applies preset 1. No arguments.
+  Convenience: plays SSG track 2 (insert coin) and applies preset 1. No arguments.
 
 - `playVoiceCue(n)`
   Maps a number 1–9 to an ADPCM-A voice sample:
@@ -201,7 +201,7 @@ Behavior:
   Scene reset → set ADPCM-B volume 0x45, SSG volume 0x08, FM volume 0x0C → start music track `music_track`.
 
 - `soundPlayGameLoop(music_track)`
-  Scene reset → set ADPCM-A volume 0x38, ADPCM-B volume 0x45, SSG volume 0x08, FM volume 0x0C → start music track `music_track`.
+  Scene reset → set ADPCM-A volume 0x34, ADPCM-B volume 0xB8, SSG volume 0x0A, FM volume 0x0E → start music track `music_track`.
 
 - `soundSetTempo(t)`
   Sets the live driver tempo divisor directly. This is not BPM conversion. `t` is `0..255`; small values are fast and large values are slow.
@@ -275,7 +275,7 @@ This section lists every public sound function and the meaning of its arguments.
   `n` selects an SSG tone preset from the compiled preset table. Valid range: `0..15`.
 
 - `playInsertCoinSSG()`
-  No arguments. Plays SSG track 1 with preset 1.
+  No arguments. Plays SSG track 2 with preset 1.
 
 - `playVoiceCue(n)`
   `n` is 1..9. 1=get ready, 2=oh hey ya, 3=coin, 4=insert coin,

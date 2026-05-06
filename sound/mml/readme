@@ -4,6 +4,8 @@ MUSIC MACRO LANGUAGE (MML)
 MML source files define music tracks for the SSG and FM channels of the YM2610.
 Tracks are compiled by sound/tools/mml_compile.py into Z80 data tables
 (sound/driver/music_data.inc) that the driver's Timer B engine executes.
+The music engine can layer SSG notes with inline ADPCM-A, ADPCM-B, and FM
+triggers inside a single looping track.
 
 MML SOURCE FILES
 ----------------
@@ -29,6 +31,13 @@ COMMAND REFERENCE
   @aN        : Trigger ADPCM-A sample N inline
   @bN        : Trigger ADPCM-B sample N inline
   @fN        : Trigger FM track N inline (N = 0..FM_TRACK_COUNT-1)
+
+LAYERING NOTES
+--------------
+  Use one `playMusic(n)` call as the owner of the musical scene.
+  Put long ADPCM-B beds and FM counter-lines inline in that music track.
+  Avoid starting standalone SSG tracks from inside normal music flow; the main
+  music engine already owns the SSG side.
 
 BUILDING
 --------

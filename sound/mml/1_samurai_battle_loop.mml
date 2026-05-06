@@ -2,7 +2,6 @@
 ; Fast battle / action loop
 ; @b0 = taiko / drone game bed
 ; @f2 = fast FM attract/action melody
-; @s1 = SSG arcade alert layer
 ; @p2 = aggressive SSG preset
 
 T180
@@ -19,9 +18,6 @@ A R A R A R > C R
 < G R G R G R > D R
 < F R F R F R > C R
 < E R E R E R > B R
-
-; trigger SSG alert phrase
-@s1
 
 O4
 A C E A
