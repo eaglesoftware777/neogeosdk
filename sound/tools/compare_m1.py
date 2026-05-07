@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Compare two generated M1 ROM images and report the first mismatch."""
+
 import argparse
 import hashlib
 from pathlib import Path
@@ -9,6 +11,7 @@ def sha256(path: Path) -> str:
 
 
 def first_diff(a: bytes, b: bytes):
+    """Return the first differing offset, or None when the payloads match."""
     limit = min(len(a), len(b))
     for idx in range(limit):
         if a[idx] != b[idx]:
@@ -42,8 +45,16 @@ def main() -> int:
     left_byte = left_bytes[diff] if diff < len(left_bytes) else None
     right_byte = right_bytes[diff] if diff < len(right_bytes) else None
     print(f"mismatch: first difference at 0x{diff:04X}")
-    print(f"left byte : {left_byte!r}" if left_byte is None else f"left byte : 0x{left_byte:02X}")
-    print(f"right byte: {right_byte!r}" if right_byte is None else f"right byte: 0x{right_byte:02X}")
+    print(
+        f"left byte : {left_byte!r}"
+        if left_byte is None
+        else f"left byte : 0x{left_byte:02X}"
+    )
+    print(
+        f"right byte: {right_byte!r}"
+        if right_byte is None
+        else f"right byte: 0x{right_byte:02X}"
+    )
     return 1
 
 

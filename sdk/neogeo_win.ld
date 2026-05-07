@@ -27,11 +27,5 @@ SECTIONS
 	   	                out\main.o(neogeo_user)
 	   	                out\main.o(.rodata) 
 						out\neogeolib.o(neogeo_user)
-						softfloat\soft-float.o(neogeo_user2)
-						softfloat\soft-float.o(neogeo_user3)
-						softfloat\soft-float.o(neogeo_user4)
-						softfloat\libfloat.o(neogeo_user2)
-						softfloat\libfloat.o(neogeo_user3)
-						softfloat\libfloat.o(neogeo_user4)
 						} > memory_user =0xFF
 }

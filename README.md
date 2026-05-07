@@ -287,7 +287,6 @@ sound/            — sound driver, tracks, samples, tools
   tools/          — sound build utilities
 roms/ssideki/     — synced ROM outputs for MAME
 out/              — intermediate and generated build artifacts
-softfloat/        — software floating-point support for the 68000 build
 win/              — Windows-side helper binaries used by the build
 z80c-special/     — experimental Z80 C compiler used by the C-driver path
 ```

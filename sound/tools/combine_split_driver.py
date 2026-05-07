@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
+"""Merge the fixed Z80 prelude with compiler-generated driver assembly."""
+
 from pathlib import Path
 import sys
 
 
 def main() -> int:
     if len(sys.argv) != 4:
-        print("usage: combine_split_driver.py <prelude.asm> <driver.gen.asm> <out.asm>", file=sys.stderr)
+        print(
+            "usage: combine_split_driver.py <prelude.asm> <driver.gen.asm> <out.asm>",
+            file=sys.stderr,
+        )
         return 1
 
     prelude = Path(sys.argv[1]).read_text()
@@ -22,6 +27,8 @@ def main() -> int:
         print("could not find .org $00D0 in generated driver asm", file=sys.stderr)
         return 1
 
+    # Keep the fixed vector/prelude block exactly as-authored, then splice in
+    # the generated body from the first gameplay entry point onward.
     body = "\n".join(generated_lines[start:]).rstrip() + "\n"
     out_path.write_text(prelude.rstrip() + "\n\n" + body)
     return 0
