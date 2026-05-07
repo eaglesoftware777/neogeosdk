@@ -28,15 +28,27 @@ Release date: 2026-05-06
   - `make m1rom-c`
   - `make compare-driver`
 - updated Linux and Windows makefiles so generated sound outputs are copied back into `roms/ssideki/`
+- updated Linux and Windows makefiles to support `SDKHOME`, WSL usage, SoX-optional
+  sample conversion, and Win32 wildcard expansion for FM/MML/SSG builds
+- corrected the Win32 `sfix` path so `052-s1.s1` remains the proper 128 KB FIX ROM
 - revised sound content and game-loop layering in:
   - `sound/mml/0_samurai_game_loop.mml`
   - `sound/fm/4_bass_motif.mml`
+- refreshed top-level SDK, install, and sound-driver documentation
+
+### Release asset notes
+
+- refreshed release-facing source and ROM bundle documentation
+- `x-tools.tar` remains on the release page but is intentionally not refreshed by
+  this update path
 
 ### Validation
 
 - `make p1`
 - `make m1rom-c`
 - `make m1rom USE_Z80C=0`
+- `make -n -f MakefileWin32.mak sound`
+- `make -n -f MakefileWin32.mak sfix`
 
 ## v1.1.0 - Sound System, Python 3 Migration & Build Tools
 
@@ -79,3 +91,6 @@ Release date: 2021-11-07
 - `fa8ca15` 2026-05-05 `feat: migrate Z80 sound driver to C and enhance z80cc compiler`
 - `3b5c4d4` 2026-05-05 `feat: implement execute_command and fix compiler distance errors`
 - `bfcaa20` 2026-05-06 `Refine sound driver workflow and demo mix`
+- `7747dcd` 2026-05-07 `Remove softfloat runtime and refresh generated assets`
+- `abaefbe` 2026-05-07 `Document SDK API and clean up source formatting`
+- `HEAD` 2026-05-07 `Refresh install/build docs and fix Win32 sound/FIX parity`

@@ -1,5 +1,12 @@
 #!/bin/sh
+PYTHON_BIN="${PYTHON:-python3}"
+SOX_BIN="${SOX:-sox}"
+
 for fi in ../samples/in_wav_b/*.wav; do
     [ -e "$fi" ] || continue
-    sox "$fi" -b 16 -c 1 -r 16000 -e signed-integer -t raw ../samples/out_16el_b/$(basename $fi .wav).wav
+    if command -v "$SOX_BIN" >/dev/null 2>&1; then
+        "$SOX_BIN" "$fi" -b 16 -c 1 -r 16000 -e signed-integer -t raw ../samples/out_16el_b/$(basename "$fi" .wav).wav
+    else
+        "$PYTHON_BIN" ./wav_to_raw_pcm.py "$fi" ../samples/out_16el_b/$(basename "$fi" .wav).wav --rate 16000
+    fi
 done

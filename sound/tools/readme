@@ -36,7 +36,13 @@ adpcm_enc.py
     Python encoder: converts WAV files to Neo Geo ADPCM-A or ADPCM-B format.
 
 enc_wave16le_a.sh / enc_wave16le_b.sh
-    Shell wrappers that batch-encode source WAVs to ADPCM-A and ADPCM-B.
+    Batch-convert source WAVs to raw 16-bit mono PCM at the target sample rate
+    used by the ADPCM encoders. Prefer SoX when available, otherwise fall back
+    to the bundled Python converter.
+
+wav_to_raw_pcm.py
+    Dependency-free WAV converter used as the Windows-safe fallback when SoX
+    is not installed. Produces raw signed little-endian 16-bit PCM.
 
 adpcm_enc_process.sh
     Processes all raw WAV inputs in samples/in_wav_* through the encoder.
@@ -63,6 +69,22 @@ BUILD COMMANDS
   make m1rom      : assemble Z80 driver (auto-runs fmpatches fm mml ssgconfig ssg)
   make samples    : re-encode raw WAVs to ADPCM
 
+Native Windows equivalents:
+
+  make -f MakefileWin32.mak sound
+  make -f MakefileWin32.mak samples
+  make -f MakefileWin32.mak m1rom
+  make -f MakefileWin32.mak m1rom-c
+
+Environment overrides:
+
+  Linux:
+    PYTHON=python3.12 SOX=/usr/local/bin/sox make samples
+
+  Windows:
+    make -f MakefileWin32.mak samples PY=py SOX=C:\path\to\sox.exe
+
 REQUIREMENTS
 ------------
-  Python 3.x, wla-dx (wla-z80 and wlalink), srecord
+  Python 3.x, numpy, wla-dx (wla-z80 and wlalink), srecord
+  SoX is optional; the bundled WAV converter is used when it is not present.

@@ -2,6 +2,11 @@
 
 This guide covers the public 68000-side SDK helpers declared in [`sdk/neogeo.h`](./sdk/neogeo.h).
 
+For installation, `SDKHOME` layout, WSL usage, and Makefile targets, see:
+
+- [`README.md`](./README.md)
+- the repository wiki home page
+
 The SDK is organized in five layers:
 
 1. Sprite control block builders
@@ -146,4 +151,6 @@ playFMTrack(SOUND_FM_SAMURAI_MINOR);
 
 - `sdk/neogeo.h` is the intended public call surface for the 68000 side.
 - The playable sound driver remains the assembler implementation in `sound/driver/driver.asm`.
+- `make m1rom` builds the authoritative ASM sound runtime.
+- `make m1rom-c` builds the experimental C-linked sound runtime.
 - The current 68000 build no longer links the legacy `softfloat/` runtime by default.

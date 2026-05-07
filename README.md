@@ -11,19 +11,20 @@ A hardware-centered SDK for Neo Geo arcade and home systems, with direct 68000-s
 
 ## Release Assets
 
-The `v1.2.0` release is expected to publish these assets:
+The `v1.2.0` release publishes these attached assets:
 
-- `x-tools.tar`  
-  m68k cross-toolchain bundle used by the Linux build flow
 - `neogeosdkv1.2.0.tar.gz`  
   source snapshot for the SDK
 - `roms-ssideki-v1.2.0.tar.gz`  
   generated demo ROM set for quick MAME testing
 
-Toolchain download link:
+The release page also carries `x-tools.tar` for the Linux toolchain layout used by
+the default `Makefile`. That asset is kept as-is when documentation-only or ROM-only
+release updates are published.
 
-- `x-tools.tar`  
-  `https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.2.0/x-tools.tar`
+Current release page:
+
+- `https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.2.0`
 
 ## Requirements
 
@@ -39,20 +40,62 @@ Linux:
 - `python3-numpy`
 - `python3-pil`
 - `sqlite3`
-- `sox`
 - `wla-z80` and `wlalink`
+
+Optional on Linux:
+
+- `sox`
 
 Windows:
 
 - SysGCC `m68k-elf`
 - `py`
-- `sox`
 - `wla-z80` and `wlalink`
 - MAME
 
+Optional on Windows:
+
+- `sox`
+
 Python packages:
 
+- `numpy`
+- `Pillow`
 - `pypng`
+
+`sox` is optional on both platforms. If it is not installed, `make samples` falls
+back to the bundled `sound/tools/wav_to_raw_pcm.py` converter. No separate Python
+`sox` module is required.
+
+## SDKHOME Layout
+
+Both makefiles expect `SDKHOME` to point to the directory that contains both
+`neogeosdk/` and `x-tools/`.
+
+Expected layout:
+
+```text
+SDKHOME/
+  neogeosdk/
+  x-tools/
+```
+
+If `SDKHOME` is not set, both makefiles default to the parent directory of the
+repository checkout. That works only when the repository is already laid out as
+`<sdk root>/neogeosdk`.
+
+Examples:
+
+```bash
+export SDKHOME=$HOME/neogeo
+export SDKHOME=/opt/neogeo
+export SDKHOME=/mnt/c/neogeo
+```
+
+```bat
+set SDKHOME=C:\neogeo
+set SDKHOME=D:\sdkroot
+```
 
 ## Installation on Linux
 
@@ -69,17 +112,62 @@ make
 sudo cp binaries/wla-z80 binaries/wlalink /usr/local/bin/
 ```
 
-Directory layout:
+Recommended layout:
 
 ```text
-~/neogeosdk   -> this repository
-~/x-tools     -> m68k cross compiler bundle
+$HOME/neogeo/neogeosdk   -> this repository
+$HOME/neogeo/x-tools     -> m68k Linux cross compiler bundle
 ```
 
-Set `SDKHOME` to the parent directory of both:
+Set `SDKHOME` to the parent of both:
 
 ```bash
-export SDKHOME=~
+export SDKHOME=$HOME/neogeo
+```
+
+Build:
+
+```bash
+make all
+make test
+```
+
+## Installation on WSL
+
+Use the Linux `Makefile`, not `MakefileWin32.mak`.
+
+WSL should use the Linux toolchain layout:
+
+- `$(SDKHOME)/x-tools/...` for the `m68k-unknown-elf` binaries
+- Linux `python3`
+- Linux `wla-z80` / `wlalink`
+
+Do not point the WSL build at the Windows SysGCC tree. `MakefileWin32.mak` is for
+native Windows `cmd.exe` builds.
+
+Typical WSL setup:
+
+```bash
+sudo apt-get update
+sudo apt-get install mame srecord cmake build-essential python3 python3-pip python3-numpy python3-pil sqlite3
+pip3 install pypng
+
+mkdir -p $HOME/neogeo
+cd $HOME/neogeo
+git clone https://github.com/eaglesoftware777/neogeosdk.git
+# unpack or place x-tools/ next to neogeosdk/
+
+export SDKHOME=$HOME/neogeo
+cd $SDKHOME/neogeosdk
+make all
+```
+
+If the checkout lives on `/mnt/c/...`, the same `SDKHOME` rule still applies:
+
+```bash
+export SDKHOME=/mnt/c/neogeo
+cd /mnt/c/neogeo/neogeosdk
+make sound
 ```
 
 ## Installation on Windows
@@ -100,10 +188,18 @@ The Win32 makefile assumes:
 Also make sure these are callable from `PATH`:
 
 - `py`
-- `sox`
 - `wla-z80`
 - `wlalink`
 - `mame`
+
+Install the Python packages once:
+
+```bat
+py -m pip install numpy pillow pypng
+```
+
+`sox` is optional. If it is present in `PATH`, the sound pipeline uses it. If it is
+missing, the bundled Python fallback is used automatically.
 
 You can set:
 
@@ -181,7 +277,55 @@ Important recent build behavior:
 
 - `make sound`, `make vrom`, and `make m1rom` sync generated outputs into `roms/ssideki/`
 - both Linux and Windows makefiles keep `052-m1.m1`, `052-v1.v1`, `052-p1.p1`, and `sm1.sm1` aligned with the current build
-- the Win32 flow now matches the Linux sound pipeline much more closely
+- Windows `make samples` works with either SoX or the bundled Python WAV converter
+- Windows `make fm`, `make mml`, and `make ssg` expand source file lists correctly
+- Windows `make sfix` now keeps `052-s1.s1` in the correct 128 KB FIX-ROM format
+
+## Sound Build Modes
+
+There are three distinct Z80 sound-driver build flows:
+
+1. Default playable driver (`driver.asm`)
+
+```bash
+make m1rom
+make sound
+```
+
+```bat
+make -f MakefileWin32.mak m1rom
+make -f MakefileWin32.mak sound
+```
+
+This is the authoritative runtime path used for the generated playable `M1`.
+
+2. Experimental C compilation with the final playable `M1` still linked from `driver.asm`
+
+```bash
+make m1rom USE_Z80C=1
+```
+
+```bat
+make -f MakefileWin32.mak m1rom USE_Z80C=1
+```
+
+This compiles the experimental `sound/driver/driver.c` flow for comparison work but
+still ships the assembler runtime in the final output.
+
+3. Experimental C-linked runtime
+
+```bash
+make m1rom-c
+make compare-driver
+```
+
+```bat
+make -f MakefileWin32.mak m1rom-c
+make -f MakefileWin32.mak compare-driver
+```
+
+This path links the experimental C runtime into the output `M1`. Use it for
+comparison and migration work, not as the default release path.
 
 ## Artbox Graphics Pipeline
 
@@ -253,6 +397,7 @@ General SDK usage:
 
 - [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 - GitHub wiki:
+  - `Build-and-Installation`
   - `Home`
   - `SDK-Library-Reference`
   - `Sound-System-Guide`
@@ -275,6 +420,8 @@ Highlights from the recent commit line:
   experimental C migration of the Z80 sound driver and `z80c-special` compiler work
 - 2026-05-06  
   higher-level sound workflow, named sound IDs, improved multi-layer demo mix, and compare flow for ASM vs C M1 builds
+- 2026-05-07
+  softfloat removal, SDK API docs refresh, Windows sound-build parity fixes, and corrected Win32 FIX-ROM generation
 
 See [`CHANGELOG.md`](./CHANGELOG.md) for release-level notes.
 
@@ -305,3 +452,5 @@ z80c-special/     — experimental Z80 C compiler used by the C-driver path
 - the authoritative playable sound driver remains `sound/driver/driver.asm`
 - the experimental C-driver path is built for comparison and incremental migration work
 - release assets include generated ROM data because this repository tracks and tests them directly
+- `x-tools.tar` remains on the release page for the Linux toolchain layout, but it
+  is not refreshed by every documentation or ROM update

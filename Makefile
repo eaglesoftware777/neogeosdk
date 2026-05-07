@@ -15,6 +15,8 @@ OBJCP=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy
 OBJDUMP=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-objdump
 WLAZ80?=wla-z80
 WLALINK?=wlalink
+PYTHON?=python3
+SOX?=sox
 CROP=-crop 0x000000 0x01FFFF 
 SCAT=srec_cat
 INFO=xxd -g 2 
@@ -71,9 +73,9 @@ ssg:
 
 .PHONY: samples
 samples:
-	cd sound/tools && ./enc_wave16le_a.sh
-	cd sound/tools && ./enc_wave16le_b.sh
-	cd sound/tools && ./adpcm_enc_process.sh
+	cd sound/tools && PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_a.sh
+	cd sound/tools && PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_b.sh
+	cd sound/tools && PYTHON=$(PYTHON) ./adpcm_enc_process.sh
 
 .PHONY: vrom
 vrom:
