@@ -758,6 +758,9 @@ ADPCM samples:
    - `sound/samples/in_wav_a/` for ADPCM-A
    - `sound/samples/in_wav_b/` for ADPCM-B
 2. Run `make samples`.
+   - SoX is used when available.
+   - If SoX is missing, the build falls back to `sound/tools/wav_to_raw_pcm.py`.
+   - No separate Python `sox` module is required.
 3. Run `make vrom` or `make sound`.
 4. `sound/driver/sample_table.inc` is regenerated.
 5. `out/052-v1.v1` is rebuilt and copied into `roms/ssideki/`.
@@ -770,6 +773,16 @@ Driver:
 3. `out/052-m1.m1` is rebuilt and copied into:
    - `roms/ssideki/052-m1.m1`
    - `roms/ssideki/sm1.sm1`
+
+Experimental C-driver comparison path:
+
+1. Edit `sound/driver/driver.c`.
+2. Run `make m1rom USE_Z80C=1`.
+   - This compiles the experimental C path.
+   - The final playable M1 still links the authoritative `driver.asm`.
+3. Run `make m1rom-c` only when you want the experimental C runtime linked into
+   the output M1.
+4. Run `make compare-driver` to build both paths and compare the two ROM images.
 
 
 14. Known limitations
@@ -786,6 +799,9 @@ Current limitations of this implementation:
 - Runtime `soundSetTempo()` uses raw driver timing units, not BPM.
 - Music, FM, and SSG track numbers depend on alphabetical file order in their
   respective source directories.
+- The Win32 sound build uses the same source asset flow as Linux, but shell quoting
+  and wildcard expansion differ. Use `make -f MakefileWin32.mak ...` rather than
+  trying to run the Linux shell wrappers directly from `cmd.exe`.
 
 
 15. Recommended design use

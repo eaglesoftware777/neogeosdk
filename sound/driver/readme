@@ -112,8 +112,16 @@ BUILDING
 --------
 Run `make m1rom` to assemble driver.asm with wla-z80.
 Run `make sound` to rebuild MML data, V ROM, and M1 ROM together.
+Run `make -f MakefileWin32.mak m1rom` for the native Windows build.
+Run `make -f MakefileWin32.mak sound` for the full native Windows sound build.
 Run `make m1rom USE_Z80C=1` to compile the experimental C driver while still linking
   the authoritative `driver.asm` into the final playable M1.
+Run `make -f MakefileWin32.mak m1rom USE_Z80C=1` for the equivalent native Windows
+  comparison build.
 Run `make m1rom-c` to link the experimental C runtime path.
   The C runtime uses `driver_prelude.asm` for reset/RST/NMI/IRQ, and `driver.c` starts at `$00D0`.
+Run `make -f MakefileWin32.mak m1rom-c` for the equivalent native Windows
+  experimental runtime build.
 Run `make compare-driver` to compare the ASM and C M1 ROMs.
+Run `make samples` with or without SoX installed. If SoX is missing, the build falls
+  back to `sound/tools/wav_to_raw_pcm.py`.

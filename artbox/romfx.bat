@@ -1,4 +1,7 @@
+@echo off
 if "%SDKHOME%"=="" set SDKHOME=%~dp0..\..
-..\win\romtool_x64.exe /p 1c.s1 1p.s1 2048 0
-..\win\romtool_x64.exe /f 1p.s1 052-s1.s1
-copy 052-s1.s1 %SDKHOME%\neogeosdk\roms\ssideki
+if not exist 052-s1.s1 (
+    echo Missing 052-s1.s1. Run romdbfiximport.py and fixtiles.py first.
+    exit /b 1
+)
+copy /Y 052-s1.s1 %SDKHOME%\neogeosdk\roms\ssideki\052-s1.s1 >nul

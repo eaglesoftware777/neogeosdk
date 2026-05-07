@@ -18,7 +18,12 @@ OBJDUMP=C:\SysGCC\m68k-elf\bin\m68k-elf-objdump.exe
 WLAZ80?=wla-z80
 WLALINK?=wlalink
 PY?=py
+SOX?=sox
 MAME?=mame
+
+FM_MMLS:=$(wildcard sound/fm/*.mml)
+MML_TRACKS:=$(wildcard sound/mml/*.mml)
+SSG_MMLS:=$(wildcard sound/ssg/*.mml)
 
 CROP=-crop 0x000000 0x01FFFF
 SCAT=$(subst /,\,$(SDKHOME))\neogeosdk\win\srec_cat.exe
@@ -56,9 +61,9 @@ game:
 
 .PHONY: samples
 samples:
-	cd sound\tools && call enc_wave16le_a.bat
-	cd sound\tools && call enc_wave16le_b.bat
-	cd sound\tools && call adpcm_enc_process.bat
+	cd sound\tools && set PY=$(PY)&& set SOX=$(SOX)&& call enc_wave16le_a.bat
+	cd sound\tools && set PY=$(PY)&& set SOX=$(SOX)&& call enc_wave16le_b.bat
+	cd sound\tools && set PY=$(PY)&& call adpcm_enc_process.bat
 
 .PHONY: vrom
 vrom:
@@ -72,11 +77,11 @@ fmpatches:
 
 .PHONY: fm
 fm:
-	$(PY) sound\tools\fm_compile.py sound\fm\*.mml -o sound\driver\fm_data.inc
+	$(PY) sound/tools/fm_compile.py $(FM_MMLS) -o sound/driver/fm_data.inc
 
 .PHONY: mml
 mml:
-	$(PY) sound\tools\mml_compile.py sound\mml\*.mml -o sound\driver\music_data.inc
+	$(PY) sound/tools/mml_compile.py $(MML_TRACKS) -o sound/driver/music_data.inc
 	
 .PHONY: ssgconfig
 ssgconfig:
@@ -84,7 +89,7 @@ ssgconfig:
 
 .PHONY: ssg
 ssg:
-	$(PY) sound\tools\ssg_compile.py sound\ssg\*.mml -o sound\driver\ssg_data.inc	
+	$(PY) sound/tools/ssg_compile.py $(SSG_MMLS) -o sound/driver/ssg_data.inc
 
 .PHONY: m1rom
 m1rom: fmpatches fm mml ssgconfig ssg
@@ -117,7 +122,7 @@ sound-all: sound
 
 .PHONY: sfix
 sfix:
-	cd artbox && py romdbfiximport.py && py fixtiles.py && call romfx.bat
+	cd artbox && py romdbfiximport.py && py fixtiles.py
 	if not exist roms\ssideki mkdir roms\ssideki
 	copy /Y artbox\052-s1.s1 roms\ssideki\052-s1.s1
 
