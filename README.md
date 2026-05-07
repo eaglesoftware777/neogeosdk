@@ -9,6 +9,19 @@ Neo Geo development kit for SNK hardware.
 
 A hardware-centered SDK for Neo Geo arcade and home systems, with direct 68000-side control over VRAM, palettes, sprites, DMA, FIX tiles, and a custom YM2610 sound stack driven by a Z80 sound driver.
 
+SNK's Neo Geo sits in a very specific development world: cartridge-era arcade
+hardware built around a Motorola 68000 main CPU, a Z80 sound subsystem, and the
+YM2610 for FM, SSG, and sampled audio. The machine is close to the metal by
+design. Graphics, palettes, FIX tiles, ROM layout, and sound commands are all
+part of the day-to-day programming model rather than hidden behind a large engine
+layer.
+
+This SDK is intended for self-made Neo Geo games, demos, experiments, and
+homebrew projects that want to stay close to original Neo Geo development
+practice while still using modern build tooling, scripting, and emulator-based
+test loops. The goal is not to abstract the hardware away. The goal is to make
+real Neo Geo development practical on current Linux, WSL, and Windows setups.
+
 ## Release Assets
 
 The `v1.2.0` release publishes these attached assets:
@@ -31,6 +44,7 @@ Current release page:
 Linux:
 
 - Ubuntu or another recent Linux distribution
+- `git`
 - `mame`
 - `srecord`
 - `cmake`
@@ -48,7 +62,8 @@ Optional on Linux:
 
 Windows:
 
-- SysGCC `m68k-elf`
+- a Windows `m68k-elf` GCC toolchain
+- GNU Make
 - `py`
 - `wla-z80` and `wlalink`
 - MAME
@@ -66,6 +81,24 @@ Python packages:
 `sox` is optional on both platforms. If it is not installed, `make samples` falls
 back to the bundled `sound/tools/wav_to_raw_pcm.py` converter. No separate Python
 `sox` module is required.
+
+## Toolchain Notes
+
+Linux 68000 compiler:
+
+- the default Linux `Makefile` expects an `x-tools/` directory under `SDKHOME`
+- the current release page includes `x-tools.tar`
+- after extraction, the compiler should exist at:
+  - `$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gcc`
+
+Windows 68000 compiler:
+
+- the Win32 makefile expects a Windows `m68k-elf` GCC toolchain
+- the tested default is a SysGCC-style layout under:
+  - `C:\SysGCC\m68k-elf`
+- if your toolchain is installed elsewhere, set `M68K_ELF_ROOT` when invoking `make`
+- you do not need to clone the SDK into a fixed drive or fixed folder name beyond
+  keeping `neogeosdk/` under the chosen `SDKHOME` parent
 
 ## SDKHOME Layout
 
@@ -93,8 +126,8 @@ export SDKHOME=/mnt/c/neogeo
 ```
 
 ```bat
-set SDKHOME=C:\neogeo
-set SDKHOME=D:\sdkroot
+set SDKHOME=D:\projects\arcade
+set SDKHOME=E:\homebrew\snk
 ```
 
 ## Installation on Linux
@@ -103,13 +136,13 @@ Install the base packages:
 
 ```bash
 sudo apt-get update
-sudo apt-get install mame srecord cmake build-essential python3 python3-pip python3-numpy python3-pil sqlite3 sox
-pip3 install pypng
+sudo apt-get install git mame srecord cmake build-essential python3 python3-pip python3-numpy python3-pil sqlite3 sox
+python3 -m pip install --user pypng
 git clone https://github.com/vhelin/wla-dx
 cd wla-dx
-cmake .
-make
-sudo cp binaries/wla-z80 binaries/wlalink /usr/local/bin/
+cmake -S . -B build
+cmake --build build -j
+sudo cp build/binaries/wla-z80 build/binaries/wlalink /usr/local/bin/
 ```
 
 Recommended layout:
@@ -117,6 +150,21 @@ Recommended layout:
 ```text
 $HOME/neogeo/neogeosdk   -> this repository
 $HOME/neogeo/x-tools     -> m68k Linux cross compiler bundle
+```
+
+Install the Linux 68000 toolchain from the release asset so that `x-tools/` lands
+next to the repository:
+
+```bash
+cd $HOME/neogeo
+curl -L -o x-tools.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.2.0/x-tools.tar
+tar -xf x-tools.tar
+```
+
+After extraction, verify:
+
+```bash
+$HOME/neogeo/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gcc --version
 ```
 
 Set `SDKHOME` to the parent of both:
@@ -149,13 +197,14 @@ Typical WSL setup:
 
 ```bash
 sudo apt-get update
-sudo apt-get install mame srecord cmake build-essential python3 python3-pip python3-numpy python3-pil sqlite3
-pip3 install pypng
+sudo apt-get install git mame srecord cmake build-essential python3 python3-pip python3-numpy python3-pil sqlite3
+python3 -m pip install --user pypng
 
 mkdir -p $HOME/neogeo
 cd $HOME/neogeo
 git clone https://github.com/eaglesoftware777/neogeosdk.git
-# unpack or place x-tools/ next to neogeosdk/
+curl -L -o x-tools.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.2.0/x-tools.tar
+tar -xf x-tools.tar
 
 export SDKHOME=$HOME/neogeo
 cd $SDKHOME/neogeosdk
@@ -172,22 +221,29 @@ make sound
 
 ## Installation on Windows
 
-Expected layout:
+Recommended layout:
 
 ```text
-C:\neogeo\neogeosdk
-C:\neogeo\x-tools
+<sdk root>\neogeosdk
+<sdk root>\x-tools
 ```
 
-The Win32 makefile assumes:
+The Win32 makefile accepts a configurable `M68K_ELF_ROOT`. The tested default is:
 
 - `C:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe`
 - `C:\SysGCC\m68k-elf\bin\m68k-elf-ld.exe`
 - `C:\SysGCC\m68k-elf\bin\m68k-elf-objcopy.exe`
 
+If your Windows `m68k-elf` toolchain is installed somewhere else, pass its root:
+
+```bat
+make -f MakefileWin32.mak M68K_ELF_ROOT=D:\toolchains\m68k-elf all
+```
+
 Also make sure these are callable from `PATH`:
 
 - `py`
+- `make`
 - `wla-z80`
 - `wlalink`
 - `mame`
@@ -198,13 +254,42 @@ Install the Python packages once:
 py -m pip install numpy pillow pypng
 ```
 
+Install Python itself from python.org or the Microsoft Store so that the `py`
+launcher is available. Install a Windows `m68k-elf` GCC toolchain such as a
+SysGCC-style package, then confirm:
+
+```bat
+C:\path\to\m68k-elf\bin\m68k-elf-gcc.exe --version
+```
+
+You also need a GNU Make binary on `PATH`. If your Windows toolchain bundle ships
+`make.exe`, that is fine. Otherwise install any compatible GNU Make and verify:
+
+```bat
+make --version
+```
+
+Install or build WLA-DX for Windows and make sure both tools are on `PATH`:
+
+```bat
+wla-z80 --version
+wlalink --version
+```
+
+Install MAME and make sure `mame.exe` is on `PATH`:
+
+```bat
+mame -help
+```
+
 `sox` is optional. If it is present in `PATH`, the sound pipeline uses it. If it is
 missing, the bundled Python fallback is used automatically.
 
-You can set:
+Set `SDKHOME` to the parent directory that contains your cloned `neogeosdk`
+directory and the sibling `x-tools` directory:
 
 ```bat
-set SDKHOME=C:\neogeo
+set SDKHOME=D:\projects\arcade
 ```
 
 Then run the Win32 build with:
@@ -240,6 +325,7 @@ Windows:
 make -f MakefileWin32.mak all
 make -f MakefileWin32.mak sound
 make -f MakefileWin32.mak p1
+make -f MakefileWin32.mak M68K_ELF_ROOT=D:\toolchains\m68k-elf all
 ```
 
 ## Build Targets
