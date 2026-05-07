@@ -1,6 +1,6 @@
 # Neo Geo SDK
 
-Neo Geo development kit for SNK hardware.
+Neo Geo development SDK for SNK hardware.
 
 - Repository: https://github.com/eaglesoftware777/neogeosdk
 - Current release target: `v1.2.0`
