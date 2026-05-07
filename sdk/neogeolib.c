@@ -8,7 +8,7 @@ uint16_t  setFIXDATA(uint16_t, uint16_t);
 uint16_t  setSCB4(uint16_t);
 uint16_t  setSCB1_2(uint16_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t);
 void  setBACKDROP(uint16_t);
-void  load_palettes(uint16_t*, uint16_t*);
+void  load_palettes(uint16_t*, uintptr_t);
 void  vram_init(uint16_t,uint16_t);
 void  setpal(uint16_t *,uint16_t, uint16_t, uint16_t, uint16_t, uint16_t, uint16_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t,uint16_t);
 void  vram_SCB1(uint16_t *,uint16_t *,uint8_t);
@@ -132,11 +132,13 @@ ASM_END*/
 
 }
 
-void NEOGEO_USER load_palettes (uint16_t *p_palette , uint16_t *palette_offset) {
+void NEOGEO_USER load_palettes(uint16_t *p_palette, uintptr_t palette_offset) {
 
+	uint16_t *dst = (uint16_t *)palette_offset;
 	uint16_t i = 0;
-	for (i = 0 ; i < 16 ; i++) {
-		*(palette_offset + i) = *(p_palette + i);
+
+	for (i = 0; i < 16; i++) {
+		dst[i] = p_palette[i];
 	}
 	//memcpy(palette_offset,p_palette,16*16);
 	//ASM_START
@@ -450,8 +452,8 @@ void NEOGEO_USER  fixtext_out2(uint16_t x, uint16_t y,uint16_t a, uint16_t b, ui
 void NEOGEO_USER mess_outtest(void) {
 
 	setBIOSMESSBusy();
-	uint16_t *pmessp= NEO_REGISTER32(BIOS_MESS_POINT);
-	uint16_t *ptr = RAMSTART;
+	uint16_t *pmessp = (uint16_t *)NEO_REGISTER32(BIOS_MESS_POINT);
+	uint16_t *ptr = (uint16_t *)RAMSTART;
 	*ptr++ =0x434F;
 	*ptr++ =0x4D4D;
 	*ptr++ =0x414E;
@@ -463,7 +465,7 @@ void NEOGEO_USER mess_outtest(void) {
 	*ptr++ =0x4420;
 	*ptr++ =0x36FF;
 	*ptr++ =0x0;
-	uint16_t *ptrsub = RAMSTART+100;
+	uint16_t *ptrsub = (uint16_t *)(RAMSTART + 100);
 	*ptrsub++=COMMAND5;
 	*ptrsub++=0x0001;
 	*ptrsub++=COMMAND9T1;
@@ -526,7 +528,7 @@ void NEOGEO_USER mess_outtest(void) {
 	*pmessp++=0x454E;
 	*pmessp++=0x44FF;
 	*pmessp++=COMMAND0;
-	NEO_REGISTER32(BIOS_MESS_POINT) = pmessp;
+	NEO_REGISTER32(BIOS_MESS_POINT) = (uint32_t)pmessp;
 	setBIOSMESSReady();
 	CALLNEOGEOF(SYS_MESS_OUT);
 	
@@ -737,8 +739,10 @@ void NEOGEO_USER  cyclexms(int cycxms) {
 
 uint16_t	NEOGEO_USER poll_joystick(/*uint8_t port, uint8_t flags*/) {
 
-	uint16_t*	pdata1 = 0, pdata2 = 0;
-	uint16_t	data1 = 0, data2 = 0;
+	uintptr_t pdata1 = 0;
+	uintptr_t pdata2 = 0;
+	uint16_t data1 = 0;
+	uint16_t data2 = 0;
 	/*switch(port)
 {
 case	1:
@@ -785,9 +789,9 @@ break;
 break;
 }
 */
-	data1 = (uint16_t*)(pdata1);
-	data2 = (uint16_t*)(pdata2);
-	uint16_t ret = data2 <<8 | data1;
+	data1 = *(volatile uint8_t *)pdata1;
+	data2 = *(volatile uint8_t *)pdata2;
+	uint16_t ret = (data2 << 8) | data1;
 	return ret;
 	
 }
@@ -898,8 +902,7 @@ void NEOGEO_USER display_digit(uint16_t X, uint16_t Y,uint32_t value,short pal,u
 int NEOGEO_USER read_p1credit(void) {
 
 	int  p1cr =0;
-	uint8_t  *p1credit =0x0;
-	p1credit = P1_CREDITS;
+	uint8_t  *p1credit = (uint8_t *)P1_CREDITS;
 	p1cr = *p1credit++;
 	return p1cr;
 }

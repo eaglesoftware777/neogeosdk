@@ -4,33 +4,34 @@ https://github.com/eaglesoftware777
 https://github.com/eaglesoftware777/neogeosdk
 ******/
 
-#include <stdint.h>
 #include "sdk/macro.h"
 #include "sdk/neogeo.h"
+#include <stdint.h>
+
 #pragma GCC push_options
-#pragma GCC optimize ("O0")
+#pragma GCC optimize("O0")
 
 void NEOGEO_USER showEagleIntro(void);
 void NEOGEO_USER showWalkDemo(int loops, int delay_ms);
-void NEOGEO_USER soundSceneReset(void);
+void NEOGEO_USER maingame(void);
 
-//ZD_ENTRY interrupt subroutine
+/* ZD_ENTRY interrupt subroutine */
 NEOGEO_INTERRUPT void NEOGEO_USER ZD_ENTRY(void) {
 
 }
 
-//CHK_ENTRY interrupt subroutine
+/* CHK_ENTRY interrupt subroutine */
 NEOGEO_INTERRUPT void NEOGEO_USER CHK_ENTRY(void) {
 
 }
 
-//TRAPV_ENTRY interrupt subroutine
+/* TRAPV_ENTRY interrupt subroutine */
 NEOGEO_INTERRUPT void NEOGEO_USER TRAPV_ENTRY(void) {
 
 }
 
 
-//v-blank interrupt subroutine
+/* VBlank interrupt subroutine */
 NEOGEO_INTERRUPT void NEOGEO_USER VBlank(void) {
 
 	ASM_START
@@ -51,7 +52,7 @@ NEOGEO_INTERRUPT void NEOGEO_USER VBlank(void) {
 	ASM_END
 }
 
-//IRQ2 interrupt
+/* IRQ2 interrupt */
 NEOGEO_INTERRUPT void  NEOGEO_USER IRQ2(void) {
 
 	ASM_START
@@ -62,7 +63,7 @@ NEOGEO_INTERRUPT void  NEOGEO_USER IRQ2(void) {
 	ASM_END
 }
 
-//IRQ3 interrupt
+/* IRQ3 interrupt */
 NEOGEO_INTERRUPT void  NEOGEO_USER IRQ3 (void) {
 
 	ASM_START
@@ -74,21 +75,21 @@ NEOGEO_INTERRUPT void  NEOGEO_USER IRQ3 (void) {
 	ASM_END
 }
 
-//INT4 interrupt
+/* INT4 interrupt */
 NEOGEO_INTERRUPT void  NEOGEO_USER INT4 (void) {
 
 }
-//INT5 interrupt
+/* INT5 interrupt */
 NEOGEO_INTERRUPT void  NEOGEO_USER INT5 (void) {
 
 }
 
-//INT6 interrupt
+/* INT6 interrupt */
 NEOGEO_INTERRUPT void  NEOGEO_USER INT6 (void) {
 
 }
 
-//INT7 interrupt
+/* INT7 interrupt */
 NEOGEO_INTERRUPT void  NEOGEO_USER INT7 (void) {
 
 }
@@ -179,14 +180,14 @@ void NEOGEO_USER DEMO_END (void) {
 	i++;
 }
 
-// NeoGeo COIN_SOUND handler
+/* NeoGeo COIN_SOUND handler */
 void NEOGEO_USER COIN_SOUND (void) {
 
-    isZ80Ready();
-    playSSGTrack(SOUND_SSG_INSERT_COIN);
-    isZ80Ready();
-    soundSetSSGPreset(1);
-    cyclexms(7);
+	isZ80Ready();
+	playSSGTrack(SOUND_SSG_INSERT_COIN);
+	isZ80Ready();
+	soundSetSSGPreset(1);
+	cyclexms(7);
 	
 	int i =0;
 	i++;
@@ -284,43 +285,47 @@ void  NEOGEO_USER eye_cactherAES (void) {
 
 
 void  NEOGEO_USER showTitleMVS(void) {
-	uint16_t  pal_tile0[16];
+	uint16_t pal_tile0[16];
+	int i = 0;
+	int p1c = 0;
+
 	setpal(pal_tile0,BLACK,BLACK,0xFFF,RED,BLUE,MIDGREEN,CYAN,ORANGE,MAGENTA,RED,WHITE,BLUE,RED,BLUE,CYAN,RED);
 	load_palettes(pal_tile0,PALETTES);
 	waitVbl();
 	fixtext_out(15,10,"TITLE MODE MVS",0);
-	int i =0;
-	for (i=0;i<3;i++) {
+	for (i = 0; i < 3; i++) {
 		fix_svalue1(13,15,i,0,48);
 		cycle1s();
 	}
-	int p1c=0;
 	p1c = read_p1credit();
-	if(p1c==0) {
+	if (p1c == 0) {
 		CALLNEOGEOF(GAME);
 	}
 }
 
 void  NEOGEO_USER showTitleAES(void) {
-	//AES System call from GAME
-	uint16_t  pal_tile0[16];
+	/* AES system call from GAME. */
+	uint16_t pal_tile0[16];
+	int i = 0;
+
 	setpal(pal_tile0,BLACK,BLACK,0xFFF,RED,BLUE,MIDGREEN,CYAN,ORANGE,MAGENTA,RED,WHITE,BLUE,RED,BLUE,CYAN,RED);
 	load_palettes(pal_tile0,PALETTES);
 	waitVbl();
 	fixtext_out(15,10,"TITLE MODE AES",0);
-	int i =0;
-	for (i=0;i<5;i++) {
+	for (i = 0; i < 5; i++) {
 		fix_svalue1(13,15,i,0,48);
 		cycle1s();
 	}
 }
 
-//INIT work RAM
+/* Clear the user work RAM block before entering the active game flow. */
 void NEOGEO_USER WORK_INIT(void) {
-	uint32_t *p1 = RAMSTART;
+	uint32_t *p1 = (uint32_t *)RAMSTART;
 	int i = 0;
-	for (i=1;i<=32768;i++)
-	*p1++=0;
+
+	for (i = 1; i <= 32768; i++) {
+		*p1++ = 0;
+	}
 }
 
 void NEOGEO_USER DISPLAY_INIT(void) {
@@ -338,7 +343,7 @@ void NEOGEO_USER DISPLAY_INIT(void) {
 }
 
 
-//INIT GAME MODE
+/* Common display and audio setup shared by title and demo paths. */
 void NEOGEO_USER INIT_GAME(void) {
 	ASM_START
 	ASM_JSR(soundInit)
@@ -350,12 +355,13 @@ void NEOGEO_USER INIT_GAME(void) {
 	ASM_END
 }
 
-// NeoGeo DEMO MODE
+/* NeoGeo DEMO MODE */
 void NEOGEO_USER DEMO_GAME(void) {
-	uint16_t  pal_tile0[16];
-	uint16_t  pal_tile1[16];
-	uint16_t  pal_tile2[16];
-	int   p1c = 0;
+	uint16_t pal_tile0[16];
+	uint16_t pal_tile1[16];
+	uint16_t pal_tile2[16];
+	int p1c = 0;
+	int i = 0;
 
 	setpal(pal_tile0,BLACK,BLACK,0xFFF,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE);
 	load_palettes(pal_tile0,PALETTES);
@@ -374,35 +380,26 @@ void NEOGEO_USER DEMO_GAME(void) {
 	fixtext_out(15,12,"ABCDEFGHIJKLMNOP",0x1);
 	fixtext_out(15,13,"ABCDEFGHIJKLMNOP",0x2);
 	mess_outtest();
-	
-    soundSceneReset();
-    
-    // Test FM with debug tone
-    isZ80Ready();
-    soundSetFMVolume(0x0F);
-    isZ80Ready();
-    playFMDebug();
-    
 
-    
-    soundSetFMVolume(0x0F);
-    isZ80Ready();
-    playFMTrack(SOUND_FM_SAMURAI_MINOR);
-soundSetADPCMBVolume(0xB8);
-playSFXB(SOUND_BED_TITLE_PLUCK);    
-    
-            // title plucked backing (long)
-/*soundSetADPCMBVolume(0xB8);
-playSFXB(SOUND_BED_NIGHT_WIND);
-soundSetSSGVolume(0x06);
-playMusic(SOUND_MUSIC_SAMURAI_NIGHT_SCENE);  */
+	soundSceneReset();
+
+	/* Bring up both FM and ADPCM-B so the demo path exercises layered audio. */
+	isZ80Ready();
+	soundSetFMVolume(0x0F);
+	isZ80Ready();
+	playFMDebug();
+
+	soundSetFMVolume(0x0F);
+	isZ80Ready();
+	playFMTrack(SOUND_FM_SAMURAI_MINOR);
+	soundSetADPCMBVolume(0xB8);
+	playSFXB(SOUND_BED_TITLE_PLUCK);
 
 	p1c = read_p1credit();
 	display_digit(15,14,123456789,0,48);
 	fixtext_out(15,15,"P1C: ",0);
 	display_digit(20,15,p1c,0,48);
-	int i = 0;
-	for (i=0;i<10;i++) {
+	for (i = 0; i < 10; i++) {
 		fix_svalue1(27,8,i,0,48);
 		p1c = read_p1credit();
 		display_digit(15,14,123456789,0,48);
@@ -413,10 +410,11 @@ playMusic(SOUND_MUSIC_SAMURAI_NIGHT_SCENE);  */
 }
 
 
-//STAR_GAME START Handler
+/* START_GAME handler */
 void NEOGEO_USER START_GAME(void) {
-	uint16_t  pal_tile0[16];
-	uint16_t  pal_tile1[16];
+	uint16_t pal_tile0[16];
+	uint16_t pal_tile1[16];
+
 	setpal(pal_tile0,BLACK,BLACK,0xFFF,BLUE,BLUE,BLUE,BLACK,BLUE,BLUE,BLUE,BLUE,BLUE,BLACK,BLUE,BLACK,BLUE);
 	load_palettes(pal_tile0,PALETTES);
 	setpal(pal_tile1,BLACK,BLACK,0xFFF,RED,RED,RED,BLACK,RED,RED,RED,RED,RED,RED,RED,BLACK,RED);

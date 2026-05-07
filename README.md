@@ -5,6 +5,7 @@ Neo Geo development kit for SNK hardware.
 - Repository: https://github.com/eaglesoftware777/neogeosdk
 - Current release target: `v1.2.0`
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
+- SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 
 A hardware-centered SDK for Neo Geo arcade and home systems, with direct 68000-side control over VRAM, palettes, sprites, DMA, FIX tiles, and a custom YM2610 sound stack driven by a Z80 sound driver.
 
@@ -247,6 +248,14 @@ Detailed sound usage:
 - [`sound/SOUND_DRIVER_GUIDE.txt`](./sound/SOUND_DRIVER_GUIDE.txt)
 - [`sound/driver/readme`](./sound/driver/readme)
 - [`sound/mml/readme`](./sound/mml/readme)
+
+General SDK usage:
+
+- [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
+- GitHub wiki:
+  - `Home`
+  - `SDK-Library-Reference`
+  - `Sound-System-Guide`
 
 ## Recent Changes Since 2025
 
