@@ -37,9 +37,6 @@ uint16_t poll_joystick(void);
 void fix_svalue1(uint16_t, uint16_t,uint16_t,short,uint16_t);
 void fix_svalue(uint16_t, uint16_t,uint16_t,short);
 void setsfix(void);
-int  msb(unsigned int);
-float ln2(float);
-float log10(float);
 void  display_digit(uint16_t, uint16_t,uint32_t,short,uint16_t);
 int   read_p1credit(void);
 void  playSoundtest(uint16_t);
@@ -79,7 +76,6 @@ void soundPlayGameLoop(uint8_t);
 void  kickWatchDog(void);
 void  sleep1FFF(void);
 void  displayCreditP1(void);
-double ln(double);
 void  *memcpy(void *, const void *, int);
 void  displayCreditP2(void);
 
@@ -830,90 +826,70 @@ void NEOGEO_USER setsfix() {
 	
 }
 
-int NEOGEO_USER msb(unsigned int v) {
-
-	//pos = {0, 1, 28, 2, 29, 14, 24, 3,
-	//30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19,
-	//16, 7, 26, 12, 18, 6, 11, 5, 10, 9}; 
-	int pos[32];
-	pos[0] =0;
-	pos[1] =1;
-	pos[2] =28;
-	pos[3] =2;
-	pos[4] =29;
-	pos[5] =14;
-	pos[6] =24;
-	pos[7] =3;
-	pos[8] =30;
-	pos[9] =22;
-	pos[10] =20;
-	pos[11] =15;
-	pos[12] =25;
-	pos[13] =17;
-	pos[14] =4;
-	pos[15] =8;
-	pos[16] =31;
-	pos[17] =27;
-	pos[18] =13;
-	pos[19] =23;
-	pos[20] =21;
-	pos[21] =19;
-	pos[22] =16;
-	pos[23] =7;
-	pos[24] =26;
-	pos[25] =12;
-	pos[26] =18;
-	pos[27] =6;
-	pos[28] =11;
-	pos[29] =5;
-	pos[30] =10;
-	pos[31] =9;
-	v |= v >> 1;
-	v |= v >> 2;
-	v |= v >> 4;
-	v |= v >> 8;
-	v |= v >> 16;
-	v = (v >> 1) + 1;
-	return pos[(v * 0x077CB531UL) >> 27];
-	
-}
-
-float NEOGEO_USER ln2(float y) {
-
-	int log2;
-	float divisor, x, result;
-	log2 = msb((int)y);
-	// See: https://stackoverflow.com/a/4970859/6630230
-	divisor = (float)(1 << log2);
-	x = y / divisor;
-	// normalized value between [1.0, 2.0]
-	result = -1.7417939 + (2.8212026 + (-1.4699568 + (0.44717955 - 0.056570851 * x) * x) * x) * x;
-	result += ((float)log2) * 0.69314718;
-	// ln(2) = 0.69314718
-	return result;
-	
-}
-
-
-float NEOGEO_USER log10( float x ) {
-
-	return ln2(x) / LN10;
-}
-
 void NEOGEO_USER display_digit(uint16_t X, uint16_t Y,uint32_t value,short pal,uint16_t offset) {
 
-	int counter = 0;
+	uint16_t s[10];
 	int objsz = 0;
-	uint32_t value_tmp2 = 0;
-	value_tmp2 = value;
-	objsz =   (int)(log10((float)value)) + 1;
-	//fix_svalue1(X,Y+1,objsz,pal,offset);
-	uint16_t s[objsz];
-	int i = 0;
-	for (i = objsz-1; i >= 0; i--) {
-		s[i] = (value_tmp2 % 10)+offset;
-		value_tmp2 /= 10;
+	uint32_t power = 1UL;
+
+	if (value >= 1000000000UL) {
+		power = 1000000000UL;
+	} else if (value >= 100000000UL) {
+		power = 100000000UL;
+	} else if (value >= 10000000UL) {
+		power = 10000000UL;
+	} else if (value >= 1000000UL) {
+		power = 1000000UL;
+	} else if (value >= 100000UL) {
+		power = 100000UL;
+	} else if (value >= 10000UL) {
+		power = 10000UL;
+	} else if (value >= 1000UL) {
+		power = 1000UL;
+	} else if (value >= 100UL) {
+		power = 100UL;
+	} else if (value >= 10UL) {
+		power = 10UL;
 	}
+
+	/*
+	 * Build decimal digits without 32-bit division or modulo. That keeps the
+	 * 68000 game build independent from the old floating-point helper objects.
+	 */
+	while (1) {
+		uint16_t digit = 0;
+
+		while (value >= power) {
+			value -= power;
+			digit++;
+		}
+
+		s[objsz++] = digit + offset;
+		if (power == 1UL) {
+			break;
+		}
+
+		if (power == 1000000000UL) {
+			power = 100000000UL;
+		} else if (power == 100000000UL) {
+			power = 10000000UL;
+		} else if (power == 10000000UL) {
+			power = 1000000UL;
+		} else if (power == 1000000UL) {
+			power = 100000UL;
+		} else if (power == 100000UL) {
+			power = 10000UL;
+		} else if (power == 10000UL) {
+			power = 1000UL;
+		} else if (power == 1000UL) {
+			power = 100UL;
+		} else if (power == 100UL) {
+			power = 10UL;
+		} else {
+			power = 1UL;
+		}
+	}
+
 	fixtext_out1(X,Y,s,pal,objsz);
 	
 }
@@ -1262,26 +1238,6 @@ void NEOGEO_USER displayCreditP1(void) {
 	:
 	: 
 	ASM_END
-	
-}
-
-double NEOGEO_USER ln(double x) {
-
-	double old_sum = 0.0;
-	double xmlxpl = (x - 1) / (x + 1);
-	double xmlxpl_2 = xmlxpl * xmlxpl;
-	double denom = 1.0;
-	double frac = xmlxpl;
-	double term = frac;
-	// denom start from 1.0
-	double sum = term;
-	while ( sum != old_sum ) {
-		old_sum = sum;
-		denom += 2.0;
-		frac *= xmlxpl_2;
-		sum += frac / denom;
-	}
-	return 2.0 * sum;
 	
 }
 

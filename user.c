@@ -356,11 +356,7 @@ void NEOGEO_USER DEMO_GAME(void) {
 	uint16_t  pal_tile1[16];
 	uint16_t  pal_tile2[16];
 	int   p1c = 0;
-	float d=10;
-	float dd=2;
-	d=dd/d;
-	float p = 87;
-	d = ln2(p);
+
 	setpal(pal_tile0,BLACK,BLACK,0xFFF,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE);
 	load_palettes(pal_tile0,PALETTES);
 	setpal(pal_tile1,BLACK,BLACK,RED,RED,RED,RED,RED,RED,RED,RED,RED,RED,RED,RED,RED,RED);
