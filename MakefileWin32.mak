@@ -7,13 +7,17 @@ ifndef SDKHOME
 SDKHOME := $(abspath $(CURDIR)/..)
 endif
 
-CC=C:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe
+M68K_ELF_ROOT?=C:\SysGCC\m68k-elf
+M68K_ELF_BIN=$(M68K_ELF_ROOT)\bin
+REPO_WIN=$(subst /,\,$(CURDIR))
+
+CC=$(M68K_ELF_BIN)\m68k-elf-gcc.exe
 CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -Wa,-march=68000,-mcpu=68000,-W,--warn
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
-LD=C:\SysGCC\m68k-elf\bin\m68k-elf-ld.exe
+LD=$(M68K_ELF_BIN)\m68k-elf-ld.exe
 LDFLAGS=  -nostartfiles -nostdlib
-OBJCP=C:\SysGCC\m68k-elf\bin\m68k-elf-objcopy.exe
-OBJDUMP=C:\SysGCC\m68k-elf\bin\m68k-elf-objdump.exe
+OBJCP=$(M68K_ELF_BIN)\m68k-elf-objcopy.exe
+OBJDUMP=$(M68K_ELF_BIN)\m68k-elf-objdump.exe
 
 WLAZ80?=wla-z80
 WLALINK?=wlalink
@@ -26,8 +30,8 @@ MML_TRACKS:=$(wildcard sound/mml/*.mml)
 SSG_MMLS:=$(wildcard sound/ssg/*.mml)
 
 CROP=-crop 0x000000 0x01FFFF
-SCAT=$(subst /,\,$(SDKHOME))\neogeosdk\win\srec_cat.exe
-INFO=$(subst /,\,$(SDKHOME))\neogeosdk\win\xxd.exe -g 2
+SCAT=$(REPO_WIN)\win\srec_cat.exe
+INFO=$(REPO_WIN)\win\xxd.exe -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
 
@@ -189,9 +193,9 @@ dump:
 	$(INFO) out\game.rom > dump\game.hex
 
 test:
-	copy /Y out\052-p1.p1 $(subst /,\,$(SDKHOME))\neogeosdk\roms\ssideki
-	$(MAME) -rompath $(subst /,\,$(SDKHOME))\neogeosdk\roms -output console -nofilter -waitvsync -window ssideki
+	copy /Y out\052-p1.p1 roms\ssideki
+	$(MAME) -rompath $(REPO_WIN)\roms -output console -nofilter -waitvsync -window ssideki
 
 debug:
-	copy /Y out\052-p1.p1 $(subst /,\,$(SDKHOME))\neogeosdk\roms\ssideki
-	$(MAME) -rompath $(subst /,\,$(SDKHOME))\neogeosdk\roms -output console -debug -verbose -nofilter -waitvsync -window ssideki
+	copy /Y out\052-p1.p1 roms\ssideki
+	$(MAME) -rompath $(REPO_WIN)\roms -output console -debug -verbose -nofilter -waitvsync -window ssideki
