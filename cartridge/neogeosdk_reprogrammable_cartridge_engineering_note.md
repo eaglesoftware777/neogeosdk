@@ -1,5 +1,5 @@
-Eagle Software Engineering Note
-Reprogrammable Cartridge PCB Architecture for NeoGeoSDK Homebrew Development
+## Eagle Software Engineering Note
+## Reprogrammable Cartridge PCB Architecture for NeoGeoSDK Homebrew Development
 Eagle Software is documenting a technical direction for a reprogrammable cartridge PCB intended for NeoGeoSDK homebrew development, hardware validation, diagnostics, and private engineering work.
 The purpose of this board is to allow original NeoGeoSDK output to be programmed into cartridge ROM regions and tested on compatible hardware. It is not intended for unauthorized copying, reproduction, conversion, sale, or use of copyrighted commercial software.
 This engineering note describes two possible hardware paths:
