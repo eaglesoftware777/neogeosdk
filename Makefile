@@ -22,6 +22,8 @@ SCAT=srec_cat
 INFO=xxd -g 2 
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
+NG_RUNTIME_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_sprite_group ng_actions ng_chars ng_border_constraints ng_game_interupt
+NG_RUNTIME_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(NG_RUNTIME_NAMES)))
 
 .DEFAULT_GOAL := p1
 
@@ -36,11 +38,23 @@ game:
 	$(CC) $(CFLAGS)   user.c -o out/user0.o
 	$(CC) $(CFLAGS)   main.c -o out/main0.o
 	$(CC) $(CFLAGS)   sdk/neogeolib.c -o out/neogeolib0.o
+	$(CC) $(CFLAGS)   sdk/ng_defs.c -o out/ng_defs0.o
+	$(CC) $(CFLAGS)   sdk/ng_properties.c -o out/ng_properties0.o
+	$(CC) $(CFLAGS)   sdk/ng_game_time.c -o out/ng_game_time0.o
+	$(CC) $(CFLAGS)   sdk/ng_timers.c -o out/ng_timers0.o
+	$(CC) $(CFLAGS)   sdk/ng_progress.c -o out/ng_progress0.o
+	$(CC) $(CFLAGS)   sdk/ng_status.c -o out/ng_status0.o
+	$(CC) $(CFLAGS)   sdk/ng_game_events.c -o out/ng_game_events0.o
+	$(CC) $(CFLAGS)   sdk/ng_sprite_group.c -o out/ng_sprite_group0.o
+	$(CC) $(CFLAGS)   sdk/ng_actions.c -o out/ng_actions0.o
+	$(CC) $(CFLAGS)   sdk/ng_chars.c -o out/ng_chars0.o
+	$(CC) $(CFLAGS)   sdk/ng_border_constraints.c -o out/ng_border_constraints0.o
+	$(CC) $(CFLAGS)   sdk/ng_game_interupt.c -o out/ng_game_interupt0.o
 	$(OBJCP) -R .comment -R .text -R .data -R .bss out/neogeo0.o   out/neogeo.o
 	$(OBJCP) -R .comment -R .text -R .data -R .bss out/user0.o    out/user.o
 	$(OBJCP) -R .comment -R .text -R .data -R .bss out/main0.o    out/main.o
 	$(OBJCP) -R .comment -R .text -R .data -R .bss out/neogeolib0.o    out/neogeolib.o
-	$(LD) $(LDFLAGS)    -T sdk/neogeo.ld -o  out/game   out/neogeo.o   out/user.o out/main.o out/neogeolib.o
+	$(LD) $(LDFLAGS)    -T sdk/neogeo.ld -o  out/game   out/neogeo.o   out/user.o out/main.o out/neogeolib.o $(NG_RUNTIME_OBJ0)
 	
 052-p1.p1: game
 	$(OBJCP)   -O ihex    out/game out/game0

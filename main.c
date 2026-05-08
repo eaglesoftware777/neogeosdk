@@ -6,6 +6,7 @@ https://github.com/eaglesoftware777/neogeosdk
 
 #include "sdk/macro.h"
 #include "sdk/neogeo.h"
+#include "sdk/ng_runtime.h"
 #include <stdint.h>
 
 void NEOGEO_USER soundAutoDemo(void);
@@ -21,6 +22,259 @@ void NEOGEO_USER showScreen6(int x0, int y0, int xr, int yr, int min_crt_sz, uin
 void NEOGEO_USER showScreen7(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop);
 void NEOGEO_USER showScreen8(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop);
 int NEOGEO_USER playgame(void);
+
+typedef struct RuntimeDemoState {
+    uint16_t direction;
+    uint16_t finished;
+    uint16_t hold_frames;
+    NGBorderConstraint borders[2];
+} RuntimeDemoState;
+
+#define RUNTIME_DEMO_STATE ((RuntimeDemoState *)(uintptr_t)(RAMSTART + 0x0200))
+
+enum {
+    DEMO_CHAR_HERO = 1
+};
+
+enum {
+    DEMO_ACTION_IDLE = 1,
+    DEMO_ACTION_WALK,
+    DEMO_ACTION_INTRO
+};
+
+enum {
+    DEMO_EVENT_LEFT_EDGE = 1,
+    DEMO_EVENT_RIGHT_EDGE
+};
+
+enum {
+    DEMO_STATUS_ROUTE_DONE = 1
+};
+
+enum {
+    DEMO_TIMER_ROUTE_MAX = 1
+};
+
+enum {
+    DEMO_PROGRESS_ROUTE = 1
+};
+
+static const NGActionCmd runtime_demo_idle[] = {
+    FRAME(1, 30),
+    LOOP()
+};
+
+static const NGActionCmd runtime_demo_walk[] = {
+    FRAME(1, 3),
+    FRAME(2, 3),
+    FRAME(3, 3),
+    FRAME(4, 3),
+    FRAME(5, 3),
+    FRAME(6, 3),
+    LOOP()
+};
+
+static const NGActionCmd runtime_demo_intro[] = {
+    FRAME(1, 8),
+    SFX(SOUND_SFX_TITLE_GONG),
+    WAIT(16),
+    GOTO(DEMO_ACTION_WALK)
+};
+
+static void NEOGEO_USER runtime_demo_draw_frame(uint16_t frame, int x0, int y0, uint16_t backdrop) {
+    switch (frame) {
+    case 2:
+        showScreen3(x0, y0, 0xF, 0xAF, 9, backdrop);
+        break;
+    case 3:
+        showScreen4(x0, y0, 0xF, 0xAF, 9, backdrop);
+        break;
+    case 4:
+        showScreen5(x0, y0, 0xF, 0xAF, 9, backdrop);
+        break;
+    case 5:
+        showScreen6(x0, y0, 0xF, 0xAF, 9, backdrop);
+        break;
+    case 6:
+        showScreen7(x0, y0, 0xF, 0xAF, 9, backdrop);
+        break;
+    default:
+        showScreen2(x0, y0, 0xF, 0xAF, 9, backdrop);
+        break;
+    }
+}
+
+static void NEOGEO_USER runtime_demo_sfx(uint16_t id) {
+    playSFX((uint8_t)id);
+}
+
+static void NEOGEO_USER runtime_demo_music(uint16_t id) {
+    playMusic((uint8_t)id);
+}
+
+static void NEOGEO_USER runtime_demo_before_logic(void) {
+    NGCharacter *hero = chars_find(DEMO_CHAR_HERO);
+
+    if (!hero) {
+        return;
+    }
+
+    prop_set(NG_PROP_GROUP_PLAYER, NG_PROP_PLAYER_X, hero->x);
+    prop_set(NG_PROP_GROUP_PLAYER, NG_PROP_PLAYER_Y, hero->y);
+    prop_set(NG_PROP_GROUP_PLAYER, NG_PROP_PLAYER_W, 16);
+    prop_set(NG_PROP_GROUP_PLAYER, NG_PROP_PLAYER_H, 16);
+    prop_set(NG_PROP_GROUP_PLAYER, NG_PROP_PLAYER_HP, 1);
+}
+
+static void NEOGEO_USER runtime_demo_event_handler(const NGGameEvent *e) {
+    RuntimeDemoState *state = RUNTIME_DEMO_STATE;
+    NGCharacter *hero = chars_find(DEMO_CHAR_HERO);
+
+    if (!e || !hero || status_has(DEMO_STATUS_ROUTE_DONE)) {
+        return;
+    }
+
+    if (e->id == DEMO_EVENT_LEFT_EDGE && state->direction != 0) {
+        state->direction = 0;
+        hero->x = 40;
+        hero->x_fp = NG_TO_FP(40);
+        progress_add(DEMO_PROGRESS_ROUTE, 1);
+        playSFX((progress_value(DEMO_PROGRESS_ROUTE) & 1) ? SOUND_SFX_FOOTSTEP : SOUND_SFX_SHORT_SHOUT);
+    } else if (e->id == DEMO_EVENT_RIGHT_EDGE && state->direction == 0) {
+        state->direction = 1;
+        hero->x = 208;
+        hero->x_fp = NG_TO_FP(208);
+        progress_add(DEMO_PROGRESS_ROUTE, 1);
+        playSFX((progress_value(DEMO_PROGRESS_ROUTE) & 1) ? SOUND_SFX_START_SLASH : SOUND_SFX_STRING_PHRASE);
+    }
+
+    if (progress_done(DEMO_PROGRESS_ROUTE)) {
+        status_set(DEMO_STATUS_ROUTE_DONE);
+        state->finished = 1;
+        state->hold_frames = 90;
+        char_action(hero, DEMO_ACTION_IDLE);
+        playVoiceCue(SOUND_VOICE_ATTACK);
+        soundFadeOutSpeed(4);
+    }
+}
+
+static void NEOGEO_USER runtime_demo_update_hero(NGCharacter *c) {
+    RuntimeDemoState *state = RUNTIME_DEMO_STATE;
+
+    if (!c) {
+        return;
+    }
+
+    if (status_has(DEMO_STATUS_ROUTE_DONE)) {
+        c->vx_fp = 0;
+        c->vy_fp = 0;
+        if (c->action != DEMO_ACTION_IDLE) {
+            char_action(c, DEMO_ACTION_IDLE);
+        }
+        return;
+    }
+
+    if (c->action == DEMO_ACTION_INTRO) {
+        return;
+    }
+
+    if (state->direction == 0) {
+        c->vx_fp = NG_TO_FP(2);
+        c->flip_x = 0;
+    } else {
+        c->vx_fp = -NG_TO_FP(2);
+        c->flip_x = 1;
+    }
+    c->vy_fp = 0;
+
+    if (c->action != DEMO_ACTION_WALK) {
+        char_action(c, DEMO_ACTION_WALK);
+    }
+}
+
+static void NEOGEO_USER runtime_demo_before_draw(void) {
+    RuntimeDemoState *state = RUNTIME_DEMO_STATE;
+    NGCharacter *hero = chars_find(DEMO_CHAR_HERO);
+    uint16_t laps = progress_value(DEMO_PROGRESS_ROUTE);
+
+    if (!hero) {
+        return;
+    }
+
+    runtime_demo_draw_frame(hero->sprite_tile, hero->x, hero->y, 0x0FFF);
+
+    fixtext_out(2, 2, "FUNCTIONAL RUNTIME LAYER", 0);
+    fixtext_out(2, 4, "TIME", 1);
+    display_digit(8, 4, game_time_second(), 1, 48);
+    fixtext_out(14, 4, "LAPS", 1);
+    display_digit(20, 4, laps, 1, 48);
+    fixtext_out(24, 4, "PROG", 1);
+    display_digit(30, 4, progress_percent(DEMO_PROGRESS_ROUTE), 1, 48);
+
+    if (state->finished) {
+        fixtext_out(2, 6, "ROUTE CLEAR - runtime scene complete", 2);
+    } else if (state->direction == 0) {
+        fixtext_out(2, 6, "PATROL RIGHT - borders fire game events", 2);
+    } else {
+        fixtext_out(2, 6, "PATROL LEFT  - timers and actions active", 2);
+    }
+
+    fixtext_out(2, 8, "Character + Action + game_interupt", 1);
+    fixtext_out(2, 9, "game_events + Border Constraint", 1);
+    fixtext_out(2, 10, "Status + Timer + Progress + Properties", 1);
+}
+
+static void NEOGEO_USER runtime_demo_init_scene(void) {
+    RuntimeDemoState *state = RUNTIME_DEMO_STATE;
+    NGCharacter *hero = 0;
+
+    clearFix();
+    clearSprs();
+
+    game_runtime_init();
+    actions_set_sound_hooks(runtime_demo_sfx, runtime_demo_music);
+    game_events_set_handler(runtime_demo_event_handler);
+    game_interupt_set_hooks(runtime_demo_before_logic, 0, 0, runtime_demo_before_draw, 0);
+
+    actions_register(DEMO_ACTION_IDLE, runtime_demo_idle);
+    actions_register(DEMO_ACTION_WALK, runtime_demo_walk);
+    actions_register(DEMO_ACTION_INTRO, runtime_demo_intro);
+    chars_set_game_interupt(DEMO_CHAR_HERO, runtime_demo_update_hero);
+
+    progress_start(DEMO_PROGRESS_ROUTE, 6);
+    timer_start(DEMO_TIMER_ROUTE_MAX, 18 * NG_FRAME_RATE);
+
+    state->direction = 0;
+    state->finished = 0;
+    state->hold_frames = 0;
+
+    state->borders[0].x = 24;
+    state->borders[0].y = 520;
+    state->borders[0].w = 8;
+    state->borders[0].h = 16;
+    state->borders[0].event_id = DEMO_EVENT_LEFT_EDGE;
+    state->borders[0].a = 0;
+    state->borders[0].b = 0;
+    state->borders[0].once = 0;
+    state->borders[0].used = 0;
+
+    state->borders[1].x = 224;
+    state->borders[1].y = 520;
+    state->borders[1].w = 8;
+    state->borders[1].h = 16;
+    state->borders[1].event_id = DEMO_EVENT_RIGHT_EDGE;
+    state->borders[1].a = 0;
+    state->borders[1].b = 0;
+    state->borders[1].once = 0;
+    state->borders[1].used = 0;
+    border_constraints_load(state->borders, 2);
+
+    hero = chars_add(DEMO_CHAR_HERO, 40, 520);
+    if (hero) {
+        char_set_body(hero, 0, 0, 16, 16);
+        char_action(hero, DEMO_ACTION_INTRO);
+    }
+}
 
 /*
  * Step through the seven primary character frames at a fixed delay so the
@@ -155,10 +409,25 @@ void NEOGEO_USER soundAutoDemo(void) {
 
 /* The game loop uses the high-level music helper so restart/volume policy stays centralized. */
 int NEOGEO_USER playgame(void) {
-    clearFix();
-    clearSprs();
     soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
-    showWalkDemo(160, 18);
+    runtime_demo_init_scene();
+
+    while (!timer_done(DEMO_TIMER_ROUTE_MAX)) {
+        waitVbl();
+        kickWatchDog();
+        game_interupt();
+
+        if (status_has(DEMO_STATUS_ROUTE_DONE)) {
+            RuntimeDemoState *state = RUNTIME_DEMO_STATE;
+            if (state->hold_frames > 0) {
+                state->hold_frames--;
+            } else {
+                break;
+            }
+        }
+    }
+
+    soundStopAll();
     return 0;
 }
 

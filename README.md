@@ -6,6 +6,8 @@ Neo Geo development SDK for SNK hardware.
 - Current release target: `v1.2.0`
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
+- Runtime layer guide: [`docs/RUNTIME_LAYER.md`](./docs/RUNTIME_LAYER.md)
+- Runtime layer build notes: [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
 
 A hardware-centered SDK for Neo Geo arcade and home systems, with direct 68000-side control over VRAM, palettes, sprites, DMA, FIX tiles, and a custom YM2610 sound stack driven by a Z80 sound driver.
 
@@ -21,6 +23,31 @@ homebrew projects that want to stay close to original Neo Geo development
 practice while still using modern build tooling, scripting, and emulator-based
 test loops. The goal is not to abstract the hardware away. The goal is to make
 real Neo Geo development practical on current Linux, WSL, and Windows setups.
+
+## Functional Runtime Layer
+
+The repository now also includes a reusable functional runtime layer under
+`sdk/ng_*`.
+
+It is a plain-C runtime built around:
+
+- characters
+- actions
+- per-frame `game_interupt()`
+- small `game_events`
+- border constraints
+- status flags
+- timers
+- progress counters
+- a properties matrix
+
+Unlike a normal desktop C build, this SDK needs runtime writable storage to be
+placed explicitly. The integrated build now gives the runtime layer its own
+RAM-backed section so the internal tables for characters, timers, events, and
+properties work correctly on this cartridge-style layout.
+
+The current root demo in `main.c` uses the runtime layer for its main in-game
+scene.
 
 ## Release Assets
 
