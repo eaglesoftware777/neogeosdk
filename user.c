@@ -388,8 +388,6 @@ void NEOGEO_USER DEMO_GAME(void) {
 	soundSetFMVolume(0x0F);
 	isZ80Ready();
 	playFMDebug();
-
-	soundSetFMVolume(0x0F);
 	isZ80Ready();
 	playFMTrack(SOUND_FM_SAMURAI_MINOR);
 	soundSetADPCMBVolume(0xB8);
