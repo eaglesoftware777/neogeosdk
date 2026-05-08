@@ -1,51 +1,34 @@
-; 0_samurai_game_loop.mml
-; Layered samurai gameplay loop
-; @b0 = taiko / drone bed
-; @f4 = FM bass motif
-; @p0 = clean SSG preset
+; samurai_game_loop.mml
+; Layered gameplay loop with SSG lead, FM harmony, ADPCM-B bed, and ADPCM-A hits.
 
-T132
+T124
 V10
 O4
 L8
 
+; Start the backing layers once at the top of the loop.
 @p0
 @b0
-@f4
+@f0
 
-; phrase A
-A C E A
-G E C A
-@a9
-R8
-F A C F
-E C < B E
+; Phrase A
+A C D E G E D C
+A C D E A > C < A G
+@a4 R4
+A C D E G E D C
+D E G A > C < A G E
 
-; phrase B
-O4
-A > C < A G
-E G A C
-@a3
-R8
-< B > C E G
-A4 R4
+; Phrase B
+@p1
+A4 G8 E8 D4 E4
+G A > C < A G E D
+@a4 R4
+A C D E G A > C < A
+G E D C A4 R4
 
-; phrase C
-O4
-A G E C
-D E G A
-@a9
-R8
-C < A G E
-A4 R4
-
-; turnaround
-@a6
-R8
-O4
-A C E G
-E D C A
-G A C E
-A4 R4
-
+; Turnaround back into the loop
+@p0
+A C E A G E D C
+@a4 R4
+A C D E G E D C
 ~

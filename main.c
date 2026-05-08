@@ -27,6 +27,7 @@ typedef struct RuntimeDemoState {
     uint16_t direction;
     uint16_t finished;
     uint16_t hold_frames;
+    int16_t floor_y;
     NGBorderConstraint borders[2];
 } RuntimeDemoState;
 
@@ -57,6 +58,19 @@ enum {
 
 enum {
     DEMO_PROGRESS_ROUTE = 1
+};
+
+enum {
+    RUNTIME_DEMO_BOB_STEPS = 12,
+    RUNTIME_DEMO_RISE_STEPS = 13
+};
+
+static const int16_t runtime_demo_bob_path[RUNTIME_DEMO_BOB_STEPS] = {
+    0, -1, -3, -5, -7, -5, -3, -1, 0, 1, 0, 0
+};
+
+static const int16_t runtime_demo_rise_path[RUNTIME_DEMO_RISE_STEPS] = {
+    0, -4, -8, -12, -16, -20, -24, -20, -16, -12, -8, -4, 0
 };
 
 static const NGActionCmd runtime_demo_idle[] = {
@@ -138,12 +152,14 @@ static void NEOGEO_USER runtime_demo_event_handler(const NGGameEvent *e) {
         state->direction = 0;
         hero->x = 40;
         hero->x_fp = NG_TO_FP(40);
+        hero->data1 = RUNTIME_DEMO_RISE_STEPS;
         progress_add(DEMO_PROGRESS_ROUTE, 1);
         playSFX((progress_value(DEMO_PROGRESS_ROUTE) & 1) ? SOUND_SFX_FOOTSTEP : SOUND_SFX_SHORT_SHOUT);
     } else if (e->id == DEMO_EVENT_RIGHT_EDGE && state->direction == 0) {
         state->direction = 1;
         hero->x = 208;
         hero->x_fp = NG_TO_FP(208);
+        hero->data1 = RUNTIME_DEMO_RISE_STEPS;
         progress_add(DEMO_PROGRESS_ROUTE, 1);
         playSFX((progress_value(DEMO_PROGRESS_ROUTE) & 1) ? SOUND_SFX_START_SLASH : SOUND_SFX_STRING_PHRASE);
     }
@@ -168,6 +184,8 @@ static void NEOGEO_USER runtime_demo_update_hero(NGCharacter *c) {
     if (status_has(DEMO_STATUS_ROUTE_DONE)) {
         c->vx_fp = 0;
         c->vy_fp = 0;
+        c->y = state->floor_y;
+        c->y_fp = NG_TO_FP(state->floor_y);
         if (c->action != DEMO_ACTION_IDLE) {
             char_action(c, DEMO_ACTION_IDLE);
         }
@@ -186,6 +204,20 @@ static void NEOGEO_USER runtime_demo_update_hero(NGCharacter *c) {
         c->flip_x = 1;
     }
     c->vy_fp = 0;
+
+    if (c->data1 > 0) {
+        uint16_t idx = (uint16_t)(RUNTIME_DEMO_RISE_STEPS - c->data1);
+        c->y = (int16_t)(state->floor_y + runtime_demo_rise_path[idx]);
+        c->y_fp = NG_TO_FP(c->y);
+        c->data1--;
+    } else {
+        c->data0++;
+        if (c->data0 >= RUNTIME_DEMO_BOB_STEPS) {
+            c->data0 = 0;
+        }
+        c->y = (int16_t)(state->floor_y + runtime_demo_bob_path[c->data0]);
+        c->y_fp = NG_TO_FP(c->y);
+    }
 
     if (c->action != DEMO_ACTION_WALK) {
         char_action(c, DEMO_ACTION_WALK);
@@ -247,9 +279,10 @@ static void NEOGEO_USER runtime_demo_init_scene(void) {
     state->direction = 0;
     state->finished = 0;
     state->hold_frames = 0;
+    state->floor_y = 520;
 
     state->borders[0].x = 24;
-    state->borders[0].y = 520;
+    state->borders[0].y = state->floor_y;
     state->borders[0].w = 8;
     state->borders[0].h = 16;
     state->borders[0].event_id = DEMO_EVENT_LEFT_EDGE;
@@ -259,7 +292,7 @@ static void NEOGEO_USER runtime_demo_init_scene(void) {
     state->borders[0].used = 0;
 
     state->borders[1].x = 224;
-    state->borders[1].y = 520;
+    state->borders[1].y = state->floor_y;
     state->borders[1].w = 8;
     state->borders[1].h = 16;
     state->borders[1].event_id = DEMO_EVENT_RIGHT_EDGE;
@@ -269,9 +302,11 @@ static void NEOGEO_USER runtime_demo_init_scene(void) {
     state->borders[1].used = 0;
     border_constraints_load(state->borders, 2);
 
-    hero = chars_add(DEMO_CHAR_HERO, 40, 520);
+    hero = chars_add(DEMO_CHAR_HERO, 40, state->floor_y);
     if (hero) {
         char_set_body(hero, 0, 0, 16, 16);
+        hero->data0 = 0;
+        hero->data1 = RUNTIME_DEMO_RISE_STEPS;
         char_action(hero, DEMO_ACTION_INTRO);
     }
 }
