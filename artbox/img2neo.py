@@ -18,7 +18,7 @@ Usage:
 import argparse, os, sys
 import numpy as np
 import png
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageEnhance
 
 DOCS_IMGS = os.path.join(os.path.dirname(__file__), '..', '..', 'docs', 'img')
 IN_DIR    = os.path.join(os.path.dirname(__file__), 'in')
@@ -133,8 +133,11 @@ def convert(src, dst, W=256, H=256, n_colors=15):
 
     img = open_as_rgb(src)
     img = crop_center(img, W, H)
-    # Light sharpening to compensate for LANCZOS softening
-    img = img.filter(ImageFilter.UnsharpMask(radius=1.2, percent=110, threshold=2))
+    # Boost contrast and saturation so the limited 15-colour palette
+    # covers the full 5-bit NeoGeo range as richly as possible.
+    img = ImageEnhance.Contrast(img).enhance(1.2)
+    img = ImageEnhance.Color(img).enhance(1.3)
+    img = img.filter(ImageFilter.UnsharpMask(radius=1.5, percent=150, threshold=2))
 
     # Snap to NeoGeo 5-bit colour space BEFORE palette extraction
     arr = snap_neogeo(np.array(img, dtype=np.uint8))
@@ -145,10 +148,7 @@ def convert(src, dst, W=256, H=256, n_colors=15):
     print(f"    Floyd-Steinberg dithering…")
     indexed = floyd_steinberg(arr, palette)     # values 0 .. n_colors-1
 
-    # Build PyPNG palette list.  romdbimgimport.py reads len(palette)-1 entries
-    # so we pad to n_colors+1 entries; the +1 tail entry is never read.
     pal_list = [(int(r), int(g), int(b)) for r, g, b in palette]
-    pal_list.append((0, 0, 0))   # padding so sz = n_colors (not n_colors-1)
 
     rows = [indexed[y].tolist() for y in range(H)]
     with open(dst, 'wb') as f:

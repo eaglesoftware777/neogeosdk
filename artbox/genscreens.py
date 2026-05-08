@@ -15,6 +15,8 @@ import struct
 import sys
 import numpy as np
 
+SPRITE_PALETTE_BASE = 0x10
+
 def getpal(image_index):
     i = bsz*image_index + 8
     #print i
@@ -60,6 +62,7 @@ crt_sz =  int(sys.argv[1:][3])
 s=""
 for image_i0 in image_screens:
     image_index = image_i0+1
+    palette_bank = SPRITE_PALETTE_BASE + image_i0
     print("")
     print("")
     print("void NEOGEO_USER showScreen%d(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop) {" % image_index)
@@ -80,8 +83,8 @@ for image_i0 in image_screens:
         s=s+"0x%x};"%L[image_i0][crt_sz-1,sprt_index]
         print(s)
         s=""
-    print("load_palettes(pal%d,PALETTES+PALOFFSET*%d);" % (image_index,image_index+1))
-    print("uint16_t SCB1_2common = setSCB1_2(%d,0,0,0,0,0);" %(image_index+1))
+    print("load_palettes(pal%d,PALETTES+PALOFFSET*%d);" % (image_index,palette_bank))
+    print("uint16_t SCB1_2common = setSCB1_2(%d,0,0,0,0,0);" %(palette_bank))
     for sprt_index in range(sprt_sz):
         print("uint16_t spal%d_%d[%d]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};" % (image_index,sprt_index+1,crt_sz))
         # for crt_index in range(crt_sz) : 
