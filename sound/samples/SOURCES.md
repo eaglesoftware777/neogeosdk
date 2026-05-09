@@ -19,9 +19,16 @@ Mapped to `playSFX(n)`.
 
 ### ADPCM-B Samples (Music/Ambience)
 Mapped to `playSFXB(n)`.
-- `1.adpcmb`: Taiko/drone game bed (Index 0).
-- `2.adpcmb`: Title plucked backing cue (Index 1).
-- `3.adpcmb`: Duel groove backing cue (Index 2).
-- `4.adpcmb`: Night wind ambience cue (Index 3).
+- `1.adpcmb`: Title theme (Index 0).
+- `2.adpcmb`: Stage loop 1 / level bed (Index 1).
+- `3.adpcmb`: Stage loop 2 / battle bed (Index 2).
+- `4.adpcmb`: Ending / results scene theme (Index 3).
+
+Current high-level mapping from `sdk/sound_ids.h`:
+
+- `SOUND_BED_TITLE_THEME = 0`
+- `SOUND_BED_STAGE_ONE = 1`
+- `SOUND_BED_STAGE_TWO = 2`
+- `SOUND_BED_ENDING_THEME = 3`
 
 The tracked `out_a` and `out_b` files are the encoded ADPCM payloads used by `sound/tools/vrom.py` to build the V ROM.

@@ -9,12 +9,20 @@ triggers inside a single looping track.
 
 MML SOURCE FILES
 ----------------
-  0_samurai_game_loop.mml   — In-game SSG loop (playMusic(0))
-  1_samurai_battle_loop.mml — Battle scene SSG loop (playMusic(1))
-  2_samurai_night_scene.mml — Night scene SSG loop (playMusic(2))
+  0_samurai_game_loop.mml   — Stage loop 1 / samurai gameplay motif
+  1_samurai_battle_loop.mml — Stage loop 2 / battle motif
+  2_samurai_night_scene.mml — Ending / results motif
+  3_warrior_battle.mml      — Optional extra battle cue source
+  4_eagle_fanfare.mml       — Optional Eagle Software fanfare source
 
 Track numbers come from alphabetical sort of filenames.
 Adding or renaming files changes the track number mapping.
+
+Current shipped 68000 flow:
+
+- `soundPlayTitleMusic()` uses direct ADPCM-B playback for title
+- `soundPlayGameLoop()` uses direct ADPCM-B playback for stage and ending beds
+- `playMusic()` remains the explicit path when you want MML/SSG ownership of a scene
 
 COMMAND REFERENCE
 -----------------

@@ -22,6 +22,34 @@ practice while still using modern build tooling, scripting, and emulator-based
 test loops. The goal is not to abstract the hardware away. The goal is to make
 real Neo Geo development practical on current Linux, WSL, and Windows setups.
 
+## Functional Runtime Layer
+
+The repository includes a reusable functional runtime layer under `sdk/ng_*`.
+
+It is a plain-C runtime built around:
+
+- characters
+- actions
+- per-frame `game_interupt()`
+- small `game_events`
+- border constraints
+- status flags
+- timers
+- progress counters
+- a properties matrix
+
+Important current state:
+
+- the source files are present in `sdk/ng_*.c` and `sdk/ng_*.h`
+- the linker scripts already reserve `runtime_bss` for `out/ng_*0.o`
+- the default makefiles do not compile `sdk/ng_*.c` automatically yet
+
+Use these docs for the current integration path:
+
+- [`docs/RUNTIME_LAYER.md`](./docs/RUNTIME_LAYER.md)
+- [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
+
+
 ## Release Assets
 
 The `v1.2.0` release publishes these attached assets:
@@ -38,6 +66,30 @@ release updates are published.
 Current release page:
 
 - `https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.2.0`
+
+## Documentation
+
+Primary repository docs:
+
+- [`README.md`](./README.md)
+- [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
+- [`docs/RUNTIME_LAYER.md`](./docs/RUNTIME_LAYER.md)
+- [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
+- [`sound/SOUND_DRIVER_GUIDE.txt`](./sound/SOUND_DRIVER_GUIDE.txt)
+- [`sound/driver/readme`](./sound/driver/readme)
+- [`sound/mml/readme`](./sound/mml/readme)
+- [`sound/ssg/readme`](./sound/ssg/readme)
+- [`sound/samples/readme`](./sound/samples/readme)
+- [`sound/samples/SOURCES.md`](./sound/samples/SOURCES.md)
+- [`sound/tools/readme`](./sound/tools/readme)
+
+Wiki pages:
+
+- `Home`
+- `Build-and-Installation`
+- `SDK-Library-Reference`
+- `Sound-System-Guide`
+- `Runtime-Layer`
 
 ## Requirements
 
@@ -363,7 +415,8 @@ Important recent build behavior:
 
 - `make sound`, `make vrom`, and `make m1rom` sync generated outputs into `roms/ssideki/`
 - both Linux and Windows makefiles keep `052-m1.m1`, `052-v1.v1`, `052-p1.p1`, and `sm1.sm1` aligned with the current build
-- Windows `make samples` works with either SoX or the bundled Python WAV converter
+- `make samples` uses the bundled Python WAV converter by default on Linux and Windows
+- set `SOX=/path/to/sox` only when you explicitly want the SoX conversion path
 - Windows `make fm`, `make mml`, and `make ssg` expand source file lists correctly
 - Windows `make sfix` now keeps `052-s1.s1` in the correct 128 KB FIX-ROM format
 
@@ -413,6 +466,25 @@ make -f MakefileWin32.mak compare-driver
 This path links the experimental C runtime into the output `M1`. Use it for
 comparison and migration work, not as the default release path.
 
+## Runtime Layer Build Integration
+
+The runtime layer lives in `sdk/ng_*`, but the default `game:` recipes in
+`Makefile` and `MakefileWin32.mak` still compile only:
+
+- `sdk/neogeo.c`
+- `user.c`
+- `main.c`
+- `sdk/neogeolib.c`
+
+So the runtime layer is shipped in the tree, and the linker scripts are ready
+for it, but you must still add explicit compile steps for `sdk/ng_*.c` if you
+want to use it in a project build.
+
+See:
+
+- [`docs/RUNTIME_LAYER.md`](./docs/RUNTIME_LAYER.md)
+- [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
+
 ## Artbox Graphics Pipeline
 
 The Artbox pipeline converts PNG graphics into Neo Geo sprite and FIX formats.
@@ -457,6 +529,17 @@ Key sound-side paths:
   - `sound/driver/ssg_config.inc`
   - `sound/driver/sample_table.inc`
 
+Current ADPCM-B theme mapping:
+
+- `playSFXB(0)` / `SOUND_BED_TITLE_THEME`
+  - title theme
+- `playSFXB(1)` / `SOUND_BED_STAGE_ONE`
+  - stage loop 1
+- `playSFXB(2)` / `SOUND_BED_STAGE_TWO`
+  - stage loop 2
+- `playSFXB(3)` / `SOUND_BED_ENDING_THEME`
+  - ending / results theme
+
 68k-side sound API highlights:
 
 - `soundSceneReset()`
@@ -473,6 +556,14 @@ Named sound resources now live in:
 
 - `sdk/sound_ids.h`
 
+Current live 68000-side flow:
+
+- `COIN_SOUND()` uses an ADPCM-A coin chime
+- `PLAYER_START()` uses an ADPCM-A start cue
+- `soundPlayTitleMusic()` resets the scene, plays the title gong, then starts the ADPCM-B title theme
+- `soundPlayGameLoop()` resets the scene and selects an ADPCM-B stage or ending bed directly
+- `playMusic()` remains available for explicit MML/SSG playback, but the shipped title/game helpers now prefer direct ADPCM-B playback for cleaner live behavior
+
 Detailed sound usage:
 
 - [`sound/SOUND_DRIVER_GUIDE.txt`](./sound/SOUND_DRIVER_GUIDE.txt)
@@ -485,6 +576,7 @@ General SDK usage:
 - GitHub wiki:
   - `Build-and-Installation`
   - `Home`
+  - `Runtime-Layer`
   - `SDK-Library-Reference`
   - `Sound-System-Guide`
 
@@ -508,6 +600,10 @@ Highlights from the recent commit line:
   higher-level sound workflow, named sound IDs, improved multi-layer demo mix, and compare flow for ASM vs C M1 builds
 - 2026-05-07
   softfloat removal, SDK API docs refresh, Windows sound-build parity fixes, and corrected Win32 FIX-ROM generation
+- 2026-05-08
+  functional runtime layer sources added under `sdk/ng_*`, with linker-space reservation for runtime state
+- 2026-05-09
+  Python became the default sample-conversion path, and the live title/game flow was remapped around the current ADPCM-B theme set
 
 See [`CHANGELOG.md`](./CHANGELOG.md) for release-level notes.
 
@@ -515,10 +611,12 @@ See [`CHANGELOG.md`](./CHANGELOG.md) for release-level notes.
 
 ```text
 CHANGELOG.md      — release notes and version history
+docs/             — runtime-layer and build integration docs
 main.c            — demo/game presentation flow on 68000 side
 user.c            — Neo Geo BIOS hook handlers and startup flow
 sdk/              — headers, linker scripts, support library
   sound_ids.h     — named sound IDs for music, SFX, beds, FM, and SSG tracks
+  ng_*.h/.c       — functional runtime layer modules
 artbox/           — graphics conversion pipeline
 sound/            — sound driver, tracks, samples, tools
   driver/         — ASM driver, experimental C driver, generated tables

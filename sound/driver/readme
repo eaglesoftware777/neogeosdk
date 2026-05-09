@@ -30,7 +30,7 @@ queues the command in a 32-byte FIFO, and processes it on the next timer tick.
   soundFadeInSpeed(n)       Command $12 + n
                             n = 0..255. Larger values fade in faster.
   playMusic(n)              Command $20 + n  (MML music track)
-                            n = 0..MUSIC_TRACK_COUNT-1 (currently 3).
+                            n = 0..MUSIC_TRACK_COUNT-1.
   playSFX(n)                Command $40 + n  (ADPCM-A sample)
                             n = 0..11 (12 samples).
   playSFXB(n)               Command $80 + n  (ADPCM-B sample)
@@ -42,7 +42,7 @@ queues the command in a 32-byte FIFO, and processes it on the next timer tick.
   soundSetFMVolume(n)       Command $13 + n
                             n = 0..15. Sets FM output level.
   playSSGTrack(n)           Command $32 + n
-                            n = 0..SSG_TRACK_COUNT-1 (currently 3). Starts standalone SSG track.
+                            n = 0..SSG_TRACK_COUNT-1 (currently 4 source tracks). Starts standalone SSG track.
   soundSetSSGPreset(n)      Command $14 + n (lower nibble)
                             n = 0..15. Applies SSG tone preset from ssg_config.inc.
   playInsertCoinSSG()       Plays SSG track 2 with preset 1. No arguments.
@@ -53,8 +53,10 @@ queues the command in a 32-byte FIFO, and processes it on the next timer tick.
   playAttackVoice()         Plays ADPCM-A sample 11. No arguments.
   playCoinThenReady()       playInsertCoinSSG + 250ms wait + playGetReadyVoice.
   soundPlayDemoFM(n)        soundSceneReset + soundSetFMVolume(0x0C) + playFMTrack(n).
-  soundPlayTitleMusic(n)    soundSceneReset + set volumes + playMusic(n).
-  soundPlayGameLoop(n)      soundSceneReset + set volumes + playMusic(n).
+  soundPlayTitleMusic(n)    soundSceneReset + title gong + ADPCM-B title theme.
+                            Current helper ignores n and always uses the title-theme bed.
+  soundPlayGameLoop(n)      soundSceneReset + direct ADPCM-B theme select.
+                            n=0 stage loop 1, n=1 stage loop 2, n=2 ending/results.
   soundSetTempo(n)          Command $0E + n
                             n = 0..255 raw driver tick divisor.
   soundSetADPCMAVolume(n)   Command $05 + n
@@ -68,9 +70,9 @@ queues the command in a 32-byte FIFO, and processes it on the next timer tick.
 
 Argument ranges
 ---------------
-  music track n:  0..MUSIC_TRACK_COUNT-1 (currently 3)
+  music track n:  0..MUSIC_TRACK_COUNT-1
   FM track n:     0..FM_TRACK_COUNT-1 (currently 8)
-  SSG track n:    0..SSG_TRACK_COUNT-1 (currently 3)
+  SSG track n:    0..SSG_TRACK_COUNT-1
   SSG preset n:   0..15
   FM vol n:       0..15
   ADPCM-A n:      0..11 (12 samples)
@@ -123,5 +125,5 @@ Run `make m1rom-c` to link the experimental C runtime path.
 Run `make -f MakefileWin32.mak m1rom-c` for the equivalent native Windows
   experimental runtime build.
 Run `make compare-driver` to compare the ASM and C M1 ROMs.
-Run `make samples` with or without SoX installed. If SoX is missing, the build falls
-  back to `sound/tools/wav_to_raw_pcm.py`.
+Run `make samples` to use the bundled Python WAV converter by default.
+Set `SOX=/path/to/sox` only when you explicitly want the SoX path.

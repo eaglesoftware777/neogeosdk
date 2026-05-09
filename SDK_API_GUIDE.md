@@ -5,6 +5,8 @@ This guide covers the public 68000-side SDK helpers declared in [`sdk/neogeo.h`]
 For installation, `SDKHOME` layout, WSL usage, and Makefile targets, see:
 
 - [`README.md`](./README.md)
+- [`docs/RUNTIME_LAYER.md`](./docs/RUNTIME_LAYER.md)
+- [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
 - the repository wiki home page
 
 The SDK is organized in five layers:
@@ -106,6 +108,55 @@ High-level sound control categories:
 | Fade / mix | `soundFadeOut`, `soundFadeIn`, `soundFadeOutSpeed`, `soundFadeInSpeed`, `soundSetTempo`, `soundSetADPCMAVolume`, `soundSetADPCMBVolume`, `soundSetSSGVolume`, `soundApplyMix` |
 | Scene helpers | `soundPlayDemoFM`, `soundPlayTitleMusic`, `soundPlayGameLoop` |
 
+Current shipped helper behavior:
+
+- `soundPlayTitleMusic(track)` resets the scene, plays the title gong, then starts the ADPCM-B title theme
+- `soundPlayGameLoop(track)` resets the scene and maps the requested loop to a direct ADPCM-B stage or ending bed
+- `playMusic(track)` remains the explicit path for MML/SSG playback when you want the music engine directly
+
+## Functional Runtime Layer
+
+The repository also includes a reusable runtime layer under `sdk/ng_*`.
+
+Primary entry header:
+
+```c
+#include "sdk/ng_runtime.h"
+```
+
+Core startup:
+
+```c
+game_runtime_init();
+```
+
+Per-frame entry:
+
+```c
+waitVbl();
+game_interupt();
+```
+
+Main runtime modules:
+
+| Module | Purpose |
+| --- | --- |
+| `ng_actions` | const action scripts with commands like `FRAME`, `WAIT`, `MOVE`, `SFX`, `MUSIC`, `EVENT`, `LOOP` |
+| `ng_chars` | fixed-size character pool with fixed-point motion and sprite binding |
+| `ng_game_events` | small queued event system |
+| `ng_timers` | frame timers |
+| `ng_progress` | progress counters |
+| `ng_status` | boolean status flags |
+| `ng_properties` | live shared values grouped by system |
+| `ng_border_constraints` | invisible trigger rectangles that emit events |
+| `ng_sprite_group` | grouped Neo Geo sprite upload helpers |
+
+Important current build note:
+
+- the linker scripts already reserve `runtime_bss` for `out/ng_*0.o`
+- the default makefiles do not compile `sdk/ng_*.c` automatically yet
+- use [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md) when enabling the runtime layer in a project build
+
 ## Typical Call Patterns
 
 ### One-time startup
@@ -134,13 +185,21 @@ fixtext_out(10, 10, "INSERT COIN", 0);
 display_digit(20, 15, score, 0, 48);
 ```
 
-### Layered sound scene
+### Direct title or stage theme
+
+```c
+soundPlayTitleMusic(0);
+soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+```
+
+### Manual layered sound scene
 
 ```c
 soundSceneReset();
 soundSetADPCMAVolume(0x34);
 soundSetADPCMBVolume(0xB8);
 soundSetSSGVolume(0x08);
+soundSetFMVolume(0x0C);
 
 playSFX(SOUND_SFX_COIN_CHIME);
 playMusic(SOUND_MUSIC_SAMURAI_GAME_LOOP);

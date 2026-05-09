@@ -1,0 +1,44 @@
+STANDALONE SSG TRACKS
+=====================
+
+These files are compiled by `sound/tools/ssg_compile.py` into
+`sound/driver/ssg_data.inc`.
+
+Unlike `sound/mml/*.mml`, these tracks are for the standalone SSG sequencer and
+are started explicitly through:
+
+- `playSSGTrack(track)`
+- `soundSetSSGPreset(preset)`
+- `playInsertCoinSSG()`
+
+CURRENT SOURCE FILES
+--------------------
+  0_square_menu.mml   — clean square-wave menu loop
+  1_arcade_alert.mml  — short alert pattern
+  2_insert_coin.mml   — insert-coin one-shot sting
+  3_warrior_riff.mml  — extra warrior riff accent line
+
+Current preset config source:
+
+  config.ssg          — preset bank compiled into `ssg_config.inc`
+
+BUILDING
+--------
+  make ssg
+  make ssgconfig
+  make sound
+
+USAGE
+-----
+Typical manual use:
+
+```c
+soundSetSSGPreset(1);
+playSSGTrack(2);
+```
+
+Current shipped live flow note:
+
+- the default title and game helpers now prefer direct ADPCM-B playback
+- standalone SSG remains available for menu beeps, alerts, insert-coin stings,
+  and explicit retro square-wave overlays

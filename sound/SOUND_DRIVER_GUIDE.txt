@@ -198,10 +198,16 @@ Behavior:
   Scene reset → set FM volume 0x0C → start FM track `fm_track`.
 
 - `soundPlayTitleMusic(music_track)`
-  Scene reset → set ADPCM-B volume 0x45, SSG volume 0x08, FM volume 0x0C → start music track `music_track`.
+  Scene reset → set ADPCM-A/ADPCM-B mix → play title gong on ADPCM-A →
+  start the direct ADPCM-B title theme. The current helper ignores
+  `music_track` and always uses `SOUND_BED_TITLE_THEME`.
 
 - `soundPlayGameLoop(music_track)`
-  Scene reset → set ADPCM-A volume 0x34, ADPCM-B volume 0xB8, SSG volume 0x0A, FM volume 0x0E → start music track `music_track`.
+  Scene reset → set ADPCM-A/ADPCM-B mix → select a direct ADPCM-B bed from
+  `music_track`:
+  - `0` = `SOUND_BED_STAGE_ONE`
+  - `1` = `SOUND_BED_STAGE_TWO`
+  - `2` = `SOUND_BED_ENDING_THEME`
 
 - `soundSetTempo(t)`
   Sets the live driver tempo divisor directly. This is not BPM conversion. `t` is `0..255`; small values are fast and large values are slow.
@@ -294,10 +300,12 @@ This section lists every public sound function and the meaning of its arguments.
   `n` selects the FM track. Does scene reset, sets FM volume, starts FM track.
 
 - `soundPlayTitleMusic(n)`
-  `n` selects the music track. Does scene reset, sets volumes, starts music.
+  Current helper ignores `n`. It resets the scene, plays the title gong, then
+  starts ADPCM-B bed 0 (`SOUND_BED_TITLE_THEME`).
 
 - `soundPlayGameLoop(n)`
-  `n` selects the music track. Does scene reset, sets volumes, starts music.
+  `n` selects the direct ADPCM-B bed used by the high-level live flow:
+  `0` = stage loop 1, `1` = stage loop 2, `2` = ending/results.
 
 - `soundFadeOut()`
   No arguments. Uses the default fade-out speed.
@@ -347,13 +355,13 @@ soundSceneReset();   // stopAll + 4ms + reset + 4ms
 Recommended title music start pattern:
 
 ```c
-soundPlayTitleMusic(0);   // scene reset + volumes + playMusic(0)
+soundPlayTitleMusic(0);   // scene reset + title gong + direct ADPCM-B title theme
 ```
 
 Recommended game loop start pattern:
 
 ```c
-soundPlayGameLoop(0);     // scene reset + volumes + playMusic(0)
+soundPlayGameLoop(0);     // scene reset + direct ADPCM-B stage loop 1
 ```
 
 Recommended FM demo pattern:
@@ -494,9 +502,9 @@ ADPCM-B sample count:
 
 - `4` samples
 
-Music track count:
+Music track source count:
 
-- `3` tracks
+- `5` source files in `sound/mml/`
 
 Current ADPCM-A slot map, based on `sound/samples/SOURCES.md`:
 
@@ -515,10 +523,10 @@ Current ADPCM-A slot map, based on `sound/samples/SOURCES.md`:
 
 Current ADPCM-B slot map:
 
-- `playSFXB(0)` : Taiko / drone game bed
-- `playSFXB(1)` : Title plucked backing cue
-- `playSFXB(2)` : Duel groove backing cue
-- `playSFXB(3)` : Night wind ambience cue
+- `playSFXB(0)` : Title theme
+- `playSFXB(1)` : Stage loop 1
+- `playSFXB(2)` : Stage loop 2
+- `playSFXB(3)` : Ending / results theme
 
 Current music track map:
 
@@ -527,6 +535,8 @@ Track numbering comes from the alphabetical order of `.mml` files in `sound/mml`
 - `playMusic(0)` : `0_samurai_game_loop.mml`
 - `playMusic(1)` : `1_samurai_battle_loop.mml`
 - `playMusic(2)` : `2_samurai_night_scene.mml`
+- `playMusic(3)` : `3_warrior_battle.mml`
+- `playMusic(4)` : `4_eagle_fanfare.mml`
 
 Current FM track map (from `sound/fm/`, sorted by filename):
 
@@ -544,6 +554,7 @@ Current SSG track map (from `sound/ssg/`, sorted by filename):
 - `playSSGTrack(0)` : `0_square_menu.mml`
 - `playSSGTrack(1)` : `1_arcade_alert.mml`
 - `playSSGTrack(2)` : `2_insert_coin.mml`
+- `playSSGTrack(3)` : `3_warrior_riff.mml`
 
 Important:
 If you add or rename `.mml` files, the generated track numbers can change because `mml_compile.py`, `fm_compile.py`, and `ssg_compile.py` all sort file names.
@@ -710,12 +721,19 @@ Current driver defaults after init/reset:
 - FM volume default: not set by init; call `soundSetFMVolume(0x0C)` before playing FM
 - Fade defaults: fade mode off, stored base volumes match the current defaults
 
-Practical working values used in `soundPlayTitleMusic` and `soundPlayGameLoop`:
+Practical working values used in the current high-level helpers:
 
-- ADPCM-A: `0x38`
-- ADPCM-B: `0x45`
-- SSG:      `0x08`
-- FM:       `0x0C`
+- `soundPlayTitleMusic()`:
+  - ADPCM-A: `0x34`
+  - ADPCM-B: `0xC8`
+  - SSG: `0x00`
+  - FM: `0x00`
+
+- `soundPlayGameLoop()`:
+  - ADPCM-A: `0x30`
+  - ADPCM-B: `0xB8`
+  - SSG: `0x00`
+  - FM: `0x00`
 
 Because the final audible balance depends on source material, ROM encoding, and the YM2610 mixer, treat these as tuning ranges rather than strict rules.
 
@@ -758,8 +776,8 @@ ADPCM samples:
    - `sound/samples/in_wav_a/` for ADPCM-A
    - `sound/samples/in_wav_b/` for ADPCM-B
 2. Run `make samples`.
-   - SoX is used when available.
-   - If SoX is missing, the build falls back to `sound/tools/wav_to_raw_pcm.py`.
+   - The bundled Python WAV converter is used by default.
+   - Set `SOX=/path/to/sox` only when you explicitly want SoX.
    - No separate Python `sox` module is required.
 3. Run `make vrom` or `make sound`.
 4. `sound/driver/sample_table.inc` is regenerated.
@@ -815,10 +833,11 @@ For a clean arcade-style project, use the YM2610 like this:
   ADPCM-A or short SSG stings
 
 - Title opening:
-  ADPCM-B bed plus optional FM stab
+  ADPCM-A gong plus direct ADPCM-B title theme
 
 - In-game loop:
-  MML/SSG melody plus occasional ADPCM-A one-shots
+  direct ADPCM-B stage bed by default, with MML/SSG available when you call
+  `playMusic()` explicitly
 
 - Long ambience:
   ADPCM-B
@@ -862,8 +881,8 @@ Use this checklist when wiring new game code:
 
 - call `soundInit()` during startup
 - use `soundSceneReset()` before every major scene transition
-- use `soundPlayTitleMusic(n)` for title screen music (handles reset + volumes)
-- use `soundPlayGameLoop(n)` for in-game music (handles reset + volumes)
+- use `soundPlayTitleMusic(n)` for title screen music (handles reset + title bed)
+- use `soundPlayGameLoop(n)` for in-game stage or ending beds
 - use `soundPlayDemoFM(n)` for FM-only demo scenes
 - set FM volume with `soundSetFMVolume(v)` before `playFMTrack(n)` in manual flows
 - use `playSFX()` for short effects
