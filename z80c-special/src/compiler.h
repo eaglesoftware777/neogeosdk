@@ -6,7 +6,7 @@
 typedef enum {
     TOK_EOF = 0, TOK_ID = 256, TOK_NUM, TOK_ASM,
     TOK_VOID, TOK_UNSIGNED, TOK_CHAR, TOK_IF, TOK_ELSE, TOK_WHILE, TOK_RETURN,
-    TOK_EQ, TOK_NE, TOK_LE, TOK_GE, TOK_SHR
+    TOK_EQ, TOK_NE, TOK_LE, TOK_GE, TOK_SHR, TOK_SHL, TOK_EXTERN
 } TokenKind;
 
 typedef struct Token {
@@ -23,7 +23,11 @@ typedef struct Lexer {
     Token tok;
 } Lexer;
 
-typedef enum { EX_NUM, EX_VAR, EX_CALL, EX_BIN } ExprKind;
+typedef enum { TY_VOID, TY_CHAR, TY_PTR, TY_ARRAY } TypeKind;
+typedef struct Type Type;
+struct Type { TypeKind kind; Type *base; int size; };
+
+typedef enum { EX_NUM, EX_VAR, EX_CALL, EX_BIN, EX_DEREF, EX_ADDR, EX_INDEX } ExprKind;
 typedef enum { ST_BLOCK, ST_ASM, ST_LOCAL, ST_ASSIGN, ST_EXPR, ST_RETURN, ST_WHILE, ST_IF } StmtKind;
 typedef enum { IT_ASM, IT_GLOBAL, IT_FUNC } ItemKind;
 
@@ -34,12 +38,15 @@ typedef struct Param Param;
 typedef struct Arg Arg;
 
 struct Arg { Expr *expr; Arg *next; };
-struct Param { char *name; Param *next; };
-struct Expr { ExprKind kind; int value; char *name; int op; Expr *left; Expr *right; Arg *args; };
+struct Param { char *name; Type *type; Param *next; };
+struct Expr { ExprKind kind; int value; char *name; int op; Expr *left; Expr *right; Arg *args; Type *type; };
 struct Stmt { StmtKind kind; char *text; char *name; Expr *a; Expr *b; Stmt *body; Stmt *else_body; Stmt *next; };
-struct Item { ItemKind kind; char *name; char *text; Param *params; Stmt *body; Item *next; };
+struct Item { ItemKind kind; char *name; char *text; Type *type; Param *params; Stmt *body; Item *next; };
 
-typedef struct Program { Item *items; Item **tail; } Program;
+typedef struct Symbol Symbol;
+struct Symbol { char *name; Type *type; int is_extern; Symbol *next; };
+
+typedef struct Program { Item *items; Item **tail; Symbol *symbols; } Program;
 
 void lexer_init(Lexer *lx, const char *src);
 void lexer_next(Lexer *lx);

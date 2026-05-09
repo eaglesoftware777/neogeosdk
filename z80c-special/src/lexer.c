@@ -8,111 +8,89 @@ static int isid0(int c) { return isalpha(c) || c == '_'; }
 static int isid(int c) { return isalnum(c) || c == '_'; }
 
 void lexer_init(Lexer *lx, const char *src) {
-    memset(lx, 0, sizeof(*lx));
     lx->src = src;
+    lx->pos = 0;
     lx->line = 1;
-    lexer_next(lx);
 }
 
-static void skip_ws(Lexer *lx) {
-    for (;;) {
-        char c = lx->src[lx->pos];
-        if (c == '\n') { lx->line++; lx->pos++; continue; }
-        if (isspace((unsigned char)c)) { lx->pos++; continue; }
-        if (c == '/' && lx->src[lx->pos + 1] == '/') {
-            lx->pos += 2;
-            while (lx->src[lx->pos] && lx->src[lx->pos] != '\n') lx->pos++;
-            continue;
-        }
-        if (c == '/' && lx->src[lx->pos + 1] == '*') {
-            lx->pos += 2;
-            while (lx->src[lx->pos] && !(lx->src[lx->pos] == '*' && lx->src[lx->pos + 1] == '/')) {
-                if (lx->src[lx->pos] == '\n') lx->line++;
-                lx->pos++;
-            }
-            if (lx->src[lx->pos]) lx->pos += 2;
-            continue;
-        }
-        break;
-    }
-}
-
-static int keyword(const char *s) {
-    if (!strcmp(s, "void")) return TOK_VOID;
-    if (!strcmp(s, "unsigned")) return TOK_UNSIGNED;
-    if (!strcmp(s, "char")) return TOK_CHAR;
-    if (!strcmp(s, "if")) return TOK_IF;
-    if (!strcmp(s, "else")) return TOK_ELSE;
-    if (!strcmp(s, "while")) return TOK_WHILE;
-    if (!strcmp(s, "return")) return TOK_RETURN;
-    return TOK_ID;
-}
-
-static char *read_asm_block(Lexer *lx) {
-    skip_ws(lx);
-    if (lx->src[lx->pos] != '{') {
-        fprintf(stderr, "line %d: expected '{' after asm\n", lx->line);
-        exit(1);
-    }
-    lx->pos++;
+static void read_asm_block(Lexer *lx) {
     size_t start = lx->pos;
     int depth = 1;
-    while (lx->src[lx->pos] && depth) {
-        char c = lx->src[lx->pos++];
-        if (c == '\n') lx->line++;
-        else if (c == '{') depth++;
-        else if (c == '}') depth--;
+    while (lx->src[lx->pos] && depth > 0) {
+        if (lx->src[lx->pos] == '{') depth++;
+        if (lx->src[lx->pos] == '}') depth--;
+        if (lx->src[lx->pos] == '\n') lx->line++;
+        if (depth > 0) lx->pos++;
     }
-    if (depth) {
-        fprintf(stderr, "line %d: unterminated asm block\n", lx->line);
-        exit(1);
-    }
-    size_t end = lx->pos - 1;
-    return xstrndup(lx->src + start, end - start);
+    lx->tok.kind = TOK_ASM;
+    lx->tok.text = xstrndup(lx->src + start, lx->pos - start);
+    if (lx->src[lx->pos] == '}') lx->pos++;
 }
 
 void lexer_next(Lexer *lx) {
-    skip_ws(lx);
-    lx->tok.text = NULL;
-    lx->tok.value = 0;
-    lx->tok.line = lx->line;
-    char c = lx->src[lx->pos];
-    if (!c) { lx->tok.kind = TOK_EOF; lx->tok.text = xstrdup(""); return; }
+    while (isspace(lx->src[lx->pos])) {
+        if (lx->src[lx->pos] == '\n') lx->line++;
+        lx->pos++;
+    }
 
-    if (isid0((unsigned char)c)) {
-        size_t start = lx->pos++;
-        while (isid((unsigned char)lx->src[lx->pos])) lx->pos++;
-        char *s = xstrndup(lx->src + start, lx->pos - start);
-        if (!strcmp(s, "asm")) {
-            free(s);
-            lx->tok.kind = TOK_ASM;
-            lx->tok.text = read_asm_block(lx);
-            return;
-        }
-        lx->tok.kind = keyword(s);
-        lx->tok.text = s;
+    if (!lx->src[lx->pos]) {
+        lx->tok.kind = TOK_EOF;
+        lx->tok.text = "";
         return;
     }
 
-    if (isdigit((unsigned char)c)) {
-        size_t start = lx->pos;
-        if (c == '0' && (lx->src[lx->pos + 1] == 'x' || lx->src[lx->pos + 1] == 'X')) lx->pos += 2;
-        else lx->pos++;
-        while (isxdigit((unsigned char)lx->src[lx->pos])) lx->pos++;
-        char *s = xstrndup(lx->src + start, lx->pos - start);
+    lx->tok.line = lx->line;
+    int c = (unsigned char)lx->src[lx->pos];
+
+    if (isdigit(c)) {
+        char *end;
+        lx->tok.value = strtol(lx->src + lx->pos, &end, 0);
+        lx->tok.text = xstrndup(lx->src + lx->pos, end - (lx->src + lx->pos));
         lx->tok.kind = TOK_NUM;
-        lx->tok.text = s;
-        lx->tok.value = (int)strtol(s, NULL, 0) & 0xff;
+        lx->pos = end - lx->src;
+        return;
+    }
+
+    if (isid0(c)) {
+        size_t start = lx->pos;
+        while (isid(lx->src[lx->pos])) lx->pos++;
+        lx->tok.text = xstrndup(lx->src + start, lx->pos - start);
+        lx->tok.kind = TOK_ID;
+        if (!strcmp(lx->tok.text, "void")) lx->tok.kind = TOK_VOID;
+        if (!strcmp(lx->tok.text, "unsigned")) lx->tok.kind = TOK_UNSIGNED;
+        if (!strcmp(lx->tok.text, "char")) lx->tok.kind = TOK_CHAR;
+        if (!strcmp(lx->tok.text, "if")) lx->tok.kind = TOK_IF;
+        if (!strcmp(lx->tok.text, "else")) lx->tok.kind = TOK_ELSE;
+        if (!strcmp(lx->tok.text, "while")) lx->tok.kind = TOK_WHILE;
+        if (!strcmp(lx->tok.text, "return")) lx->tok.kind = TOK_RETURN;
+        if (!strcmp(lx->tok.text, "asm")) {
+            while (isspace(lx->src[lx->pos])) {
+                if (lx->src[lx->pos] == '\n') lx->line++;
+                lx->pos++;
+            }
+            if (lx->src[lx->pos] == '{') {
+                lx->pos++;
+                read_asm_block(lx);
+            }
+        }
+        if (!strcmp(lx->tok.text, "extern")) lx->tok.kind = TOK_EXTERN;
+        return;
+    }
+
+    if (c == '/' && lx->src[lx->pos + 1] == '/') {
+        while (lx->src[lx->pos] && lx->src[lx->pos] != '\n') lx->pos++;
+        lexer_next(lx);
         return;
     }
 
     if (c == '=' && lx->src[lx->pos + 1] == '=') { lx->pos += 2; lx->tok.kind = TOK_EQ; lx->tok.text = xstrdup("=="); return; }
     if (c == '!' && lx->src[lx->pos + 1] == '=') { lx->pos += 2; lx->tok.kind = TOK_NE; lx->tok.text = xstrdup("!="); return; }
     if (c == '<' && lx->src[lx->pos + 1] == '=') { lx->pos += 2; lx->tok.kind = TOK_LE; lx->tok.text = xstrdup("<="); return; }
+    if (c == '<' && lx->src[lx->pos + 1] == '<') { lx->pos += 2; lx->tok.kind = TOK_SHL; lx->tok.text = xstrdup("<<"); return; }
     if (c == '>' && lx->src[lx->pos + 1] == '=') { lx->pos += 2; lx->tok.kind = TOK_GE; lx->tok.text = xstrdup(">="); return; }
     if (c == '>' && lx->src[lx->pos + 1] == '>') { lx->pos += 2; lx->tok.kind = TOK_SHR; lx->tok.text = xstrdup(">>"); return; }
 
     lx->pos++;
     lx->tok.kind = (unsigned char)c;
-    lx->tok.text = xstrndup(&c, 1);
+    lx->tok.text = xstrndup((char *)&c, 1);
 }

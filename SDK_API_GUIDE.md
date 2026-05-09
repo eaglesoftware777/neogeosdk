@@ -5,7 +5,7 @@ This guide covers the public 68000-side SDK helpers declared in [`sdk/neogeo.h`]
 For installation, `SDKHOME` layout, WSL usage, and Makefile targets, see:
 
 - [`README.md`](./README.md)
-- [`docs/RUNTIME_LAYER.md`](./docs/RUNTIME_LAYER.md)
+- [`docs/GAME_ENGINE_LAYER.md`](./docs/GAME_ENGINE_LAYER.md)
 - [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
 - the repository wiki home page
 
@@ -114,27 +114,27 @@ Current shipped helper behavior:
 - `soundPlayGameLoop(track)` resets the scene and maps the requested loop to a direct ADPCM-B stage or ending bed
 - `playMusic(track)` remains the explicit path for MML/SSG playback when you want the music engine directly
 
-## Functional Runtime Layer
+## 2D Game Engine Layer
 
-The repository also includes a reusable runtime layer under `sdk/ng_*`.
+The repository also includes a reusable game engine layer under `sdk/ng_*`.
 
 Primary entry header:
 
 ```c
-#include "sdk/ng_runtime.h"
+#include "sdk/ng_game_engine.h"
 ```
 
 Core startup:
 
 ```c
-game_runtime_init();
+game_engine_init();
 ```
 
 Per-frame entry:
 
 ```c
 waitVbl();
-game_interupt();
+game_engine_frame();
 ```
 
 Main runtime modules:
@@ -153,9 +153,9 @@ Main runtime modules:
 
 Important current build note:
 
-- the linker scripts already reserve `runtime_bss` for `out/ng_*0.o`
-- the default makefiles do not compile `sdk/ng_*.c` automatically yet
-- use [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md) when enabling the runtime layer in a project build
+- the linker scripts reserve `game_engine_bss` for `out/ng_*0.o`
+- `Makefile` and `MakefileWin32.mak` compile and link the `sdk/ng_*` modules by default
+- use [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md) to inspect the exact build and linker wiring
 
 ## Typical Call Patterns
 
