@@ -8,8 +8,7 @@ MEMORY
   memory_id2         (rx) : ORIGIN = 0x182, LENGTH = 126
   memory_gamedata    (rx) : ORIGIN = 0x200, LENGTH = 384
   memory_user        (rx) : ORIGIN = 0x380, LENGTH = 400K
-
-
+  memory_runtime_bss (rw) : ORIGIN = 0x100800, LENGTH = 0xE800
 
 }
 
@@ -27,5 +26,14 @@ SECTIONS
 	   	                out\main.o(neogeo_user)
 	   	                out\main.o(.rodata) 
 						out\neogeolib.o(neogeo_user)
+						out\ng_*0.o(neogeo_user)
+						out\ng_*0.o(.rodata)
 						} > memory_user =0xFF
+       runtime_bss (NOLOAD) : {
+                        out\ng_*0.o(.bss)
+                        out\ng_*0.o(.bss.*)
+                        out\ng_*0.o(COMMON)
+                        out\ng_*0.o(.data)
+                        out\ng_*0.o(.data.*)
+                        } > memory_runtime_bss
 }

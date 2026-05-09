@@ -386,23 +386,24 @@ void NEOGEO_USER DEMO_GAME(void) {
 	//cyclexs(3);
 	clearSprs();
 	clearFix();
+showEagleIntro();
 	waitVbl();
 	fixtext_out(15,10,"DEMO MODE",0);
-	fixtext_out(15,11,"ABCDEFGHIJKLMNOP",0);
-	fixtext_out(15,12,"ABCDEFGHIJKLMNOP",0x1);
-	fixtext_out(15,13,"ABCDEFGHIJKLMNOP",0x2);
+	fixtext_out(15,11,"EAGLE SOFTWARE",0);
+	fixtext_out(15,12,"HELLO WORLD",0x2);
+	fixtext_out(15,13,"NEO GEO SDK 1.2.1",0x2);
 	mess_outtest();
 
 	soundPlayTitleMusic(0);
 
 	p1c = read_p1credit();
-	display_digit(15,14,123456789,0,48);
+	display_digit(15,14,777,0,48);
 	fixtext_out(15,15,"P1C: ",0);
 	display_digit(20,15,p1c,0,48);
 	for (i = 0; i < 10; i++) {
 		fix_svalue1(27,8,i,0,48);
 		p1c = read_p1credit();
-		display_digit(15,14,123456789,0,48);
+		display_digit(15,14,777,0,48);
 		fixtext_out(15,15,"P1C: ",0);
 		display_digit(20,15,p1c,0,48);
 		cycle1s();
@@ -429,5 +430,7 @@ void NEOGEO_USER START_GAME(void) {
 	maingame();
 	CALLNEOGEOF(GAME);
 }
+
+
 
 #pragma GCC pop_options
