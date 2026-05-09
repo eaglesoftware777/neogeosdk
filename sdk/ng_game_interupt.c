@@ -15,7 +15,7 @@ static NGInteruptHook ng_after_events;
 static NGInteruptHook ng_before_draw;
 static NGInteruptHook ng_after_draw;
 
-void NEOGEO_USER game_runtime_init(void)
+void NEOGEO_USER game_engine_init(void)
 {
     properties_init();
     game_time_init();
@@ -34,7 +34,12 @@ void NEOGEO_USER game_runtime_init(void)
     ng_after_draw = 0;
 }
 
-void NEOGEO_USER game_interupt_set_hooks(
+void NEOGEO_USER game_runtime_init(void)
+{
+    game_engine_init();
+}
+
+void NEOGEO_USER game_engine_set_hooks(
     NGInteruptHook before_logic,
     NGInteruptHook collision_logic,
     NGInteruptHook after_events,
@@ -48,7 +53,23 @@ void NEOGEO_USER game_interupt_set_hooks(
     ng_after_draw = after_draw;
 }
 
-void NEOGEO_USER game_interupt(void)
+void NEOGEO_USER game_interupt_set_hooks(
+    NGInteruptHook before_logic,
+    NGInteruptHook collision_logic,
+    NGInteruptHook after_events,
+    NGInteruptHook before_draw,
+    NGInteruptHook after_draw
+) {
+    game_engine_set_hooks(
+        before_logic,
+        collision_logic,
+        after_events,
+        before_draw,
+        after_draw
+    );
+}
+
+void NEOGEO_USER game_engine_frame(void)
 {
     game_time_tick();
 
@@ -71,4 +92,9 @@ void NEOGEO_USER game_interupt(void)
     chars_draw();
 
     if (ng_after_draw) ng_after_draw();
+}
+
+void NEOGEO_USER game_interupt(void)
+{
+    game_engine_frame();
 }

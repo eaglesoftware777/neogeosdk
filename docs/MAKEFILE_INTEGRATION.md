@@ -1,10 +1,30 @@
-# Makefile Integration for `sdk/ng_*`
+# Game Engine Makefile Integration for `sdk/ng_*`
 
-The runtime-layer source files are present in `sdk/ng_*.c`, and the linker
-scripts already reserve `runtime_bss` for `out/ng_*0.o`, but the default
-`Makefile` and `MakefileWin32.mak` do not compile those files automatically.
+The 2D game engine layer is built from the `sdk/ng_*.c` modules.
 
-This note shows the minimal integration path.
+Current state on `main`:
+
+- `Makefile` compiles the engine modules into `out/ng_*0.o`
+- `MakefileWin32.mak` compiles the same engine modules into `out\\ng_*0.o`
+- both link those objects into the main 68000 game binary
+- both linker scripts place engine state in `game_engine_bss`
+
+This note documents the current wiring so you can extend it safely.
+
+## Current object lists
+
+Linux:
+
+```make
+NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_sprite_group ng_actions ng_chars ng_border_constraints ng_game_interupt
+NG_ENGINE_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(NG_ENGINE_NAMES)))
+```
+
+Windows:
+
+```make
+NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_border_constraints0.o out\ng_game_interupt0.o
+```
 
 ## Current linker state
 
@@ -13,91 +33,56 @@ Already prepared:
 - `sdk/neogeo.ld`
 - `sdk/neogeo_win.ld`
 
-Both scripts already include:
+Both scripts place the engine modules into:
 
-- `out/ng_*0.o(neogeo_user)`
-- `out/ng_*0.o(.rodata)`
-- `out/ng_*0.o(.bss)`
-- `out/ng_*0.o(.data)`
+- `neogeo_user` for code and rodata
+- `game_engine_bss` for BSS, COMMON, and data sections
 
-So the missing step is compilation of the runtime C files into `out/ng_*0.o`.
-
-## Linux `Makefile`
-
-Add compile steps in the `game:` recipe for the runtime files you want to use.
-
-Example:
-
-```make
-	$(CC) $(CFLAGS) sdk/ng_actions.c -o out/ng_actions0.o
-	$(CC) $(CFLAGS) sdk/ng_border_constraints.c -o out/ng_border_constraints0.o
-	$(CC) $(CFLAGS) sdk/ng_chars.c -o out/ng_chars0.o
-	$(CC) $(CFLAGS) sdk/ng_defs.c -o out/ng_defs0.o
-	$(CC) $(CFLAGS) sdk/ng_game_events.c -o out/ng_game_events0.o
-	$(CC) $(CFLAGS) sdk/ng_game_interupt.c -o out/ng_game_interupt0.o
-	$(CC) $(CFLAGS) sdk/ng_game_time.c -o out/ng_game_time0.o
-	$(CC) $(CFLAGS) sdk/ng_progress.c -o out/ng_progress0.o
-	$(CC) $(CFLAGS) sdk/ng_properties.c -o out/ng_properties0.o
-	$(CC) $(CFLAGS) sdk/ng_sprite_group.c -o out/ng_sprite_group0.o
-	$(CC) $(CFLAGS) sdk/ng_status.c -o out/ng_status0.o
-	$(CC) $(CFLAGS) sdk/ng_timers.c -o out/ng_timers0.o
-```
-
-## Native Windows `MakefileWin32.mak`
-
-Add equivalent compile lines in the `game:` recipe:
-
-```make
-	$(CC) $(CFLAGS) sdk\ng_actions.c -o out\ng_actions0.o
-	$(CC) $(CFLAGS) sdk\ng_border_constraints.c -o out\ng_border_constraints0.o
-	$(CC) $(CFLAGS) sdk\ng_chars.c -o out\ng_chars0.o
-	$(CC) $(CFLAGS) sdk\ng_defs.c -o out\ng_defs0.o
-	$(CC) $(CFLAGS) sdk\ng_game_events.c -o out\ng_game_events0.o
-	$(CC) $(CFLAGS) sdk\ng_game_interupt.c -o out\ng_game_interupt0.o
-	$(CC) $(CFLAGS) sdk\ng_game_time.c -o out\ng_game_time0.o
-	$(CC) $(CFLAGS) sdk\ng_progress.c -o out\ng_progress0.o
-	$(CC) $(CFLAGS) sdk\ng_properties.c -o out\ng_properties0.o
-	$(CC) $(CFLAGS) sdk\ng_sprite_group.c -o out\ng_sprite_group0.o
-	$(CC) $(CFLAGS) sdk\ng_status.c -o out\ng_status0.o
-	$(CC) $(CFLAGS) sdk\ng_timers.c -o out\ng_timers0.o
-```
-
-## Minimal runtime-enabled game pattern
+## Minimal game-engine-enabled game pattern
 
 In your 68000 source:
 
 ```c
-#include "sdk/ng_runtime.h"
+#include "sdk/ng_game_engine.h"
 
 void game_boot(void)
 {
-    game_runtime_init();
+    game_engine_init();
 }
 
 void game_frame(void)
 {
     waitVbl();
-    game_interupt();
+    game_engine_frame();
 }
 ```
 
-## Recommended first integration set
+Compatibility aliases remain available:
 
-If you want the smallest useful runtime subset, start with:
+- `#include "sdk/ng_runtime.h"` still works
+- `game_runtime_init()` still calls `game_engine_init()`
+- `game_interupt()` still calls `game_engine_frame()`
 
-- `ng_game_interupt.c`
+Use the game-engine names for new code.
+
+## Default module set
+
+The current default build already includes:
+
+- `ng_defs.c`
+- `ng_properties.c`
 - `ng_game_time.c`
 - `ng_timers.c`
 - `ng_progress.c`
 - `ng_status.c`
 - `ng_game_events.c`
-- `ng_properties.c`
-- `ng_chars.c`
-- `ng_actions.c`
 - `ng_sprite_group.c`
+- `ng_actions.c`
+- `ng_chars.c`
+- `ng_border_constraints.c`
+- `ng_game_interupt.c`
 
-Add `ng_border_constraints.c` when your project starts using authored trigger
-zones driven from player properties.
+That gives you the full engine layer by default.
 
 ## Sound hook integration
 

@@ -22,15 +22,15 @@ practice while still using modern build tooling, scripting, and emulator-based
 test loops. The goal is not to abstract the hardware away. The goal is to make
 real Neo Geo development practical on current Linux, WSL, and Windows setups.
 
-## Functional Runtime Layer
+## 2D Game Engine Layer
 
-The repository includes a reusable functional runtime layer under `sdk/ng_*`.
+The repository includes a reusable 2D game engine layer under `sdk/ng_*`.
 
-It is a plain-C runtime built around:
+It is a plain-C 2D engine built around:
 
 - characters
 - actions
-- per-frame `game_interupt()`
+- per-frame `game_engine_frame()`
 - small `game_events`
 - border constraints
 - status flags
@@ -40,13 +40,13 @@ It is a plain-C runtime built around:
 
 Important current state:
 
-- the source files are present in `sdk/ng_*.c` and `sdk/ng_*.h`
-- the linker scripts already reserve `runtime_bss` for `out/ng_*0.o`
-- the default makefiles do not compile `sdk/ng_*.c` automatically yet
+- the source files live in `sdk/ng_*.c` and `sdk/ng_*.h`
+- the linker scripts reserve `game_engine_bss` for the engine state objects
+- `Makefile` and `MakefileWin32.mak` compile and link the `sdk/ng_*` modules by default
 
 Use these docs for the current integration path:
 
-- [`docs/RUNTIME_LAYER.md`](./docs/RUNTIME_LAYER.md)
+- [`docs/GAME_ENGINE_LAYER.md`](./docs/GAME_ENGINE_LAYER.md)
 - [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
 
 
@@ -73,7 +73,7 @@ Primary repository docs:
 
 - [`README.md`](./README.md)
 - [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
-- [`docs/RUNTIME_LAYER.md`](./docs/RUNTIME_LAYER.md)
+- [`docs/GAME_ENGINE_LAYER.md`](./docs/GAME_ENGINE_LAYER.md)
 - [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
 - [`sound/SOUND_DRIVER_GUIDE.txt`](./sound/SOUND_DRIVER_GUIDE.txt)
 - [`sound/driver/readme`](./sound/driver/readme)
@@ -89,7 +89,7 @@ Wiki pages:
 - `Build-and-Installation`
 - `SDK-Library-Reference`
 - `Sound-System-Guide`
-- `Runtime-Layer`
+- `Game-Engine-Layer`
 
 ## Requirements
 
@@ -466,23 +466,20 @@ make -f MakefileWin32.mak compare-driver
 This path links the experimental C runtime into the output `M1`. Use it for
 comparison and migration work, not as the default release path.
 
-## Runtime Layer Build Integration
+## Game Engine Build Integration
 
-The runtime layer lives in `sdk/ng_*`, but the default `game:` recipes in
-`Makefile` and `MakefileWin32.mak` still compile only:
+The 2D game engine layer in `sdk/ng_*` is already wired into the default
+`game:` recipes in both `Makefile` and `MakefileWin32.mak`.
 
-- `sdk/neogeo.c`
-- `user.c`
-- `main.c`
-- `sdk/neogeolib.c`
+Those builds now:
 
-So the runtime layer is shipped in the tree, and the linker scripts are ready
-for it, but you must still add explicit compile steps for `sdk/ng_*.c` if you
-want to use it in a project build.
+- compile the `sdk/ng_*.c` modules into `out/ng_*0.o`
+- link those objects into the main 68000 game binary
+- place engine state in the linker-managed `game_engine_bss` region
 
 See:
 
-- [`docs/RUNTIME_LAYER.md`](./docs/RUNTIME_LAYER.md)
+- [`docs/GAME_ENGINE_LAYER.md`](./docs/GAME_ENGINE_LAYER.md)
 - [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
 
 ## Artbox Graphics Pipeline
@@ -576,7 +573,7 @@ General SDK usage:
 - GitHub wiki:
   - `Build-and-Installation`
   - `Home`
-  - `Runtime-Layer`
+  - `Game-Engine-Layer`
   - `SDK-Library-Reference`
   - `Sound-System-Guide`
 
@@ -601,7 +598,7 @@ Highlights from the recent commit line:
 - 2026-05-07
   softfloat removal, SDK API docs refresh, Windows sound-build parity fixes, and corrected Win32 FIX-ROM generation
 - 2026-05-08
-  functional runtime layer sources added under `sdk/ng_*`, with linker-space reservation for runtime state
+  2D game engine layer sources added under `sdk/ng_*`, with linker-space reservation for engine state
 - 2026-05-09
   Python became the default sample-conversion path, and the live title/game flow was remapped around the current ADPCM-B theme set
 
@@ -611,12 +608,12 @@ See [`CHANGELOG.md`](./CHANGELOG.md) for release-level notes.
 
 ```text
 CHANGELOG.md      — release notes and version history
-docs/             — runtime-layer and build integration docs
+docs/             — game-engine and build integration docs
 main.c            — demo/game presentation flow on 68000 side
 user.c            — Neo Geo BIOS hook handlers and startup flow
 sdk/              — headers, linker scripts, support library
   sound_ids.h     — named sound IDs for music, SFX, beds, FM, and SSG tracks
-  ng_*.h/.c       — functional runtime layer modules
+  ng_*.h/.c       — 2D game engine layer modules
 artbox/           — graphics conversion pipeline
 sound/            — sound driver, tracks, samples, tools
   driver/         — ASM driver, experimental C driver, generated tables
