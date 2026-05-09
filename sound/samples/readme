@@ -28,6 +28,13 @@ vrom.py generates sound/driver/sample_table.inc automatically.
   ADPCM-A: index 0-11 →  playSFX(n)   (driver command $40+n, 12 samples)
   ADPCM-B: index 0-3  →  playSFXB(n)  (driver command $80+n, 4 samples)
 
+Current ADPCM-B live roles:
+
+  0 = title theme
+  1 = stage loop 1
+  2 = stage loop 2
+  3 = ending / results theme
+
 ADPCM-A VOLUME
 --------------
 Per-channel TL register (port B, regs $08-$0D):
