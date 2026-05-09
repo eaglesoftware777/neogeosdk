@@ -1,34 +1,37 @@
-; samurai_game_loop.mml
-; Layered gameplay loop with SSG lead, FM harmony, ADPCM-B bed, and ADPCM-A hits.
+; 0_samurai_game_loop.mml
+; Happy melodic samurai adventure - overworld / exploration
 
-T124
-V10
+T132
+V12
 O4
 L8
 
-; Start the backing layers once at the top of the loop.
-@p0
-@b0
-@f0
+@p0      ; SSG main melody
+@b0      ; light taiko/percussion
+@f0      ; FM harmony layer
 
-; Phrase A
-A C D E G E D C
-A C D E A > C < A G
-@a4 R4
-A C D E G E D C
-D E G A > C < A G E
+; Bright happy main theme
+C E G A > C4
+< B A G E C4
+D E G A B > C4
+< A G E D C4
 
-; Phrase B
-@p1
-A4 G8 E8 D4 E4
-G A > C < A G E D
-@a4 R4
-A C D E G A > C < A
-G E D C A4 R4
+; Soaring adventurous part
+> C D E G A4
+G E D C < B4
+> C E G > C < B A G
+A4 R4
 
-; Turnaround back into the loop
-@p0
-A C E A G E D C
-@a4 R4
-A C D E G E D C
+; Gentle taiko + repeat phrase
+@a4 R8
+O4
+E G A > C < A G E
+C4 R4
+
+; Variation for interest
+> C E G A B > C < B A G
+E G > C < A G E C
+D E G A > D < A G E
+C4 R4 ~
+
 ~

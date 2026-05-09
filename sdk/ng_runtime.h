@@ -2,6 +2,7 @@
 #define NG_RUNTIME_H
 
 #include "ng_defs.h"
+#include "sound_ids.h"
 #include "ng_properties.h"
 #include "ng_game_time.h"
 #include "ng_timers.h"

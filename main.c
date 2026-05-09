@@ -11,6 +11,7 @@ https://github.com/eaglesoftware777/neogeosdk
 
 void NEOGEO_USER soundAutoDemo(void);
 void NEOGEO_USER showEagleIntro(void);
+void NEOGEO_USER showTitleScreen(void);
 void NEOGEO_USER showCharacterParade(void);
 void NEOGEO_USER showPseudo3DLoop(void);
 void NEOGEO_USER showScreen1(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
@@ -23,6 +24,78 @@ void NEOGEO_USER showScreen7(int x0, int y0, int xr, int yr, int min_crt_sz, uin
 void NEOGEO_USER showScreen8(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen9(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen10(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+/* warrior walk/idle — sprite_001 to sprite_009 */
+void NEOGEO_USER showScreen11(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen12(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen13(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen14(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen15(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen16(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen17(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen18(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen19(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+/* warrior attack — all 30 frames: sprite_010 to sprite_039 */
+void NEOGEO_USER showScreen20(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen21(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen22(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen23(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen24(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen25(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen26(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen27(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen28(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen29(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen30(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen31(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen32(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen33(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen34(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen35(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen36(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen37(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen38(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen39(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen40(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen41(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen42(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen43(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen44(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen45(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen46(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen47(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen48(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen49(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+/* blade and energy effects — sprite_040 to sprite_052 (13 frames) */
+void NEOGEO_USER showScreen50(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen51(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen52(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen53(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen54(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen55(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen56(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen57(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen58(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen59(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen60(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen61(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen62(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+/* eagle mascot — sprite_069 to sprite_082 (14 frames) */
+void NEOGEO_USER showScreen79(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen80(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen81(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen82(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen83(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen84(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen85(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen86(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen87(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen88(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen89(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen90(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen91(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen92(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+/* portrait — sprite_083 */
+void NEOGEO_USER showScreen93(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 int NEOGEO_USER playgame(void);
 
 typedef struct RuntimeDemoState {
@@ -36,13 +109,18 @@ typedef struct RuntimeDemoState {
 #define RUNTIME_DEMO_STATE ((RuntimeDemoState *)(uintptr_t)(RAMSTART + 0x0200))
 
 enum {
-    DEMO_CHAR_HERO = 1
+    DEMO_CHAR_HERO  = 1,
+    DEMO_CHAR_EAGLE = 2,
+    DEMO_CHAR_FX    = 3
 };
 
 enum {
-    DEMO_ACTION_IDLE = 1,
-    DEMO_ACTION_WALK,
-    DEMO_ACTION_INTRO
+    DEMO_ACTION_IDLE   = 1,
+    DEMO_ACTION_WALK   = 2,
+    DEMO_ACTION_INTRO  = 3,
+    DEMO_ACTION_ATTACK = 4,
+    DEMO_ACTION_EAGLE  = 5,
+    DEMO_ACTION_FX     = 6
 };
 
 enum {
@@ -63,7 +141,7 @@ enum {
 };
 
 enum {
-    RUNTIME_DEMO_BOB_STEPS = 12,
+    RUNTIME_DEMO_BOB_STEPS  = 12,
     RUNTIME_DEMO_RISE_STEPS = 13
 };
 
@@ -75,54 +153,123 @@ static const int16_t runtime_demo_rise_path[RUNTIME_DEMO_RISE_STEPS] = {
     0, -4, -8, -12, -16, -20, -24, -20, -16, -12, -8, -4, 0
 };
 
+/*
+ * Warrior idle — sprite_001 (screen 11, tileBase=0xA00, palette=26)
+ */
 static const NGActionCmd runtime_demo_idle[] = {
-    PALETTE(17), FRAME(0x100, 30),
+    PALETTE(26), FRAME(0xA00, 30),
     LOOP()
 };
 
+/*
+ * Warrior walk cycle — sprite_001 through sprite_009 (screens 11-19)
+ * tileBase = (screenIndex-1) * 0x100, palette = 16 + (screenIndex-1)
+ */
 static const NGActionCmd runtime_demo_walk[] = {
-    PALETTE(17), FRAME(0x100, 4),
-    PALETTE(18), FRAME(0x200, 4),
-    PALETTE(19), FRAME(0x300, 4),
-    PALETTE(20), FRAME(0x400, 4),
-    PALETTE(21), FRAME(0x500, 4),
-    PALETTE(22), FRAME(0x600, 4),
-    PALETTE(23), FRAME(0x700, 4),
+    PALETTE(26), FRAME(0xA00, 6),
+    PALETTE(27), FRAME(0xB00, 6),
+    PALETTE(28), FRAME(0xC00, 6),
+    PALETTE(29), FRAME(0xD00, 6),
+    PALETTE(30), FRAME(0xE00, 6),
+    PALETTE(31), FRAME(0xF00, 6),
+    PALETTE(32), FRAME(0x1000, 6),
+    PALETTE(33), FRAME(0x1100, 6),
+    PALETTE(34), FRAME(0x1200, 6),
     LOOP()
 };
 
+/*
+ * Warrior intro — idle pose then SFX gong → walk
+ */
 static const NGActionCmd runtime_demo_intro[] = {
-    PALETTE(17), FRAME(0x100, 8),
+    PALETTE(26), FRAME(0xA00, 8),
     SFX(SOUND_SFX_TITLE_GONG),
-    WAIT(16),
+    WAIT(24),
     GOTO(DEMO_ACTION_WALK)
 };
 
-static void NEOGEO_USER runtime_demo_draw_frame(uint16_t frame, int x0, int y0, uint16_t backdrop) {
-    switch (frame) {
-    case 2:
-        showScreen3(x0, y0, 0xF, 0xAF, 9, backdrop, 64 * 16);
-        break;
-    case 3:
-        showScreen4(x0, y0, 0xF, 0xAF, 9, backdrop, 64 * 16);
-        break;
-    case 4:
-        showScreen5(x0, y0, 0xF, 0xAF, 9, backdrop, 64 * 16);
-        break;
-    case 5:
-        showScreen6(x0, y0, 0xF, 0xAF, 9, backdrop, 64 * 16);
-        break;
-    case 6:
-        showScreen7(x0, y0, 0xF, 0xAF, 9, backdrop, 64 * 16);
-        break;
-    case 7:
-        showScreen8(x0, y0, 0xF, 0xAF, 9, backdrop, 64 * 16);
-        break;
-    default:
-        showScreen2(x0, y0, 0xF, 0xAF, 9, backdrop, 64 * 16);
-        break;
-    }
-}
+/*
+ * Warrior attack — all 30 frames (sprite_010-039, screens 20-49)
+ * SFX at attack start, blade whoosh at wind-up, impact at strike apex
+ */
+static const NGActionCmd runtime_demo_attack[] = {
+    MUSIC(SOUND_MUSIC_WARRIOR_BATTLE),
+    SFX(SOUND_SFX_START_SLASH),
+    PALETTE(35), FRAME(0x1300, 5),
+    PALETTE(36), FRAME(0x1400, 5),
+    PALETTE(37), FRAME(0x1500, 5),
+    PALETTE(38), FRAME(0x1600, 5),
+    PALETTE(39), FRAME(0x1700, 5),
+    SFX(SOUND_SFX_BLADE_WHOOSH),
+    PALETTE(40), FRAME(0x1800, 5),
+    PALETTE(41), FRAME(0x1900, 5),
+    PALETTE(42), FRAME(0x1A00, 5),
+    PALETTE(43), FRAME(0x1B00, 5),
+    PALETTE(44), FRAME(0x1C00, 5),
+    PALETTE(45), FRAME(0x1D00, 5),
+    PALETTE(46), FRAME(0x1E00, 5),
+    PALETTE(47), FRAME(0x1F00, 5),
+    PALETTE(48), FRAME(0x2000, 5),
+    PALETTE(49), FRAME(0x2100, 5),
+    SFX(SOUND_SFX_IMPACT_HIT),
+    PALETTE(50), FRAME(0x2200, 5),
+    PALETTE(51), FRAME(0x2300, 5),
+    PALETTE(52), FRAME(0x2400, 5),
+    PALETTE(53), FRAME(0x2500, 5),
+    PALETTE(54), FRAME(0x2600, 5),
+    PALETTE(55), FRAME(0x2700, 5),
+    PALETTE(56), FRAME(0x2800, 5),
+    PALETTE(57), FRAME(0x2900, 5),
+    PALETTE(58), FRAME(0x2A00, 5),
+    PALETTE(59), FRAME(0x2B00, 5),
+    PALETTE(60), FRAME(0x2C00, 5),
+    PALETTE(61), FRAME(0x2D00, 5),
+    PALETTE(62), FRAME(0x2E00, 5),
+    PALETTE(63), FRAME(0x2F00, 5),
+    PALETTE(64), FRAME(0x3000, 5),
+    GOTO(DEMO_ACTION_WALK)
+};
+
+/*
+ * Eagle mascot fly cycle — sprite_069 to sprite_082 (14 frames, screens 79-92)
+ */
+static const NGActionCmd runtime_demo_eagle[] = {
+    PALETTE(94),  FRAME(0x4E00, 7),
+    PALETTE(95),  FRAME(0x4F00, 7),
+    PALETTE(96),  FRAME(0x5000, 7),
+    PALETTE(97),  FRAME(0x5100, 7),
+    PALETTE(98),  FRAME(0x5200, 7),
+    PALETTE(99),  FRAME(0x5300, 7),
+    PALETTE(100), FRAME(0x5400, 7),
+    PALETTE(101), FRAME(0x5500, 7),
+    PALETTE(102), FRAME(0x5600, 7),
+    PALETTE(103), FRAME(0x5700, 7),
+    PALETTE(104), FRAME(0x5800, 7),
+    PALETTE(105), FRAME(0x5900, 7),
+    PALETTE(106), FRAME(0x5A00, 7),
+    PALETTE(107), FRAME(0x5B00, 7),
+    LOOP()
+};
+
+/*
+ * Blade / energy FX — sprite_040 to sprite_052 (13 frames, screens 50-62)
+ */
+static const NGActionCmd runtime_demo_fx[] = {
+    PALETTE(65), FRAME(0x3100, 3),
+    PALETTE(66), FRAME(0x3200, 3),
+    PALETTE(67), FRAME(0x3300, 3),
+    PALETTE(68), FRAME(0x3400, 3),
+    PALETTE(69), FRAME(0x3500, 3),
+    PALETTE(70), FRAME(0x3600, 3),
+    PALETTE(71), FRAME(0x3700, 3),
+    PALETTE(72), FRAME(0x3800, 3),
+    PALETTE(73), FRAME(0x3900, 3),
+    PALETTE(74), FRAME(0x3A00, 3),
+    PALETTE(75), FRAME(0x3B00, 3),
+    PALETTE(76), FRAME(0x3C00, 3),
+    PALETTE(77), FRAME(0x3D00, 3),
+    END()
+};
 
 static void NEOGEO_USER runtime_demo_sfx(uint16_t id) {
     playSFX((uint8_t)id);
@@ -149,6 +296,7 @@ static void NEOGEO_USER runtime_demo_before_logic(void) {
 static void NEOGEO_USER runtime_demo_event_handler(const NGGameEvent *e) {
     RuntimeDemoState *state = RUNTIME_DEMO_STATE;
     NGCharacter *hero = chars_find(DEMO_CHAR_HERO);
+    NGCharacter *fx = 0;
 
     if (!e || !hero || status_has(DEMO_STATUS_ROUTE_DONE)) {
         return;
@@ -160,14 +308,32 @@ static void NEOGEO_USER runtime_demo_event_handler(const NGGameEvent *e) {
         hero->x_fp = NG_TO_FP(40);
         hero->data1 = RUNTIME_DEMO_RISE_STEPS;
         progress_add(DEMO_PROGRESS_ROUTE, 1);
-        playSFX((progress_value(DEMO_PROGRESS_ROUTE) & 1) ? SOUND_SFX_FOOTSTEP : SOUND_SFX_SHORT_SHOUT);
+        char_action(hero, DEMO_ACTION_ATTACK);
+        fx = chars_find(DEMO_CHAR_FX);
+        if (fx) {
+            fx->x = (int16_t)(hero->x + 48);
+            fx->x_fp = NG_TO_FP(fx->x);
+            fx->y = (int16_t)(hero->y - 32);
+            fx->y_fp = NG_TO_FP(fx->y);
+            fx->data0 = 28;
+            char_action(fx, DEMO_ACTION_FX);
+        }
     } else if (e->id == DEMO_EVENT_RIGHT_EDGE && state->direction == 0) {
         state->direction = 1;
         hero->x = 208;
         hero->x_fp = NG_TO_FP(208);
         hero->data1 = RUNTIME_DEMO_RISE_STEPS;
         progress_add(DEMO_PROGRESS_ROUTE, 1);
-        playSFX((progress_value(DEMO_PROGRESS_ROUTE) & 1) ? SOUND_SFX_START_SLASH : SOUND_SFX_STRING_PHRASE);
+        char_action(hero, DEMO_ACTION_ATTACK);
+        fx = chars_find(DEMO_CHAR_FX);
+        if (fx) {
+            fx->x = (int16_t)(hero->x - 48);
+            fx->x_fp = NG_TO_FP(fx->x);
+            fx->y = (int16_t)(hero->y - 32);
+            fx->y_fp = NG_TO_FP(fx->y);
+            fx->data0 = 28;
+            char_action(fx, DEMO_ACTION_FX);
+        }
     }
 
     if (progress_done(DEMO_PROGRESS_ROUTE)) {
@@ -198,7 +364,9 @@ static void NEOGEO_USER runtime_demo_update_hero(NGCharacter *c) {
         return;
     }
 
-    if (c->action == DEMO_ACTION_INTRO) {
+    if (c->action == DEMO_ACTION_INTRO || c->action == DEMO_ACTION_ATTACK) {
+        c->vx_fp = 0;
+        c->vy_fp = 0;
         return;
     }
 
@@ -239,53 +407,86 @@ static void NEOGEO_USER runtime_demo_before_draw(void) {
         return;
     }
 
-    // Manual draw call removed: SDK chars_draw() now handles animation properly
-
-    fixtext_out(2, 2, "FUNCTIONAL RUNTIME LAYER", 0);
-    fixtext_out(2, 4, "TIME", 1);
-    display_digit(8, 4, game_time_second(), 1, 48);
-    fixtext_out(14, 4, "LAPS", 1);
-    display_digit(20, 4, laps, 1, 48);
-    fixtext_out(24, 4, "PROG", 1);
-    display_digit(30, 4, progress_percent(DEMO_PROGRESS_ROUTE), 1, 48);
+    fixtext_out(1, 1, "WARRIOR", 0);
+    fixtext_out(2, 2, "TIME", 1);
+    display_digit(7, 2, game_time_second(), 1, 48);
+    fixtext_out(13, 2, "LAPS", 1);
+    display_digit(18, 2, laps, 1, 48);
 
     if (state->finished) {
-        fixtext_out(2, 6, "ROUTE CLEAR - runtime scene complete", 2);
-    } else if (state->direction == 0) {
-        fixtext_out(2, 6, "PATROL RIGHT - borders fire game events", 2);
-    } else {
-        fixtext_out(2, 6, "PATROL LEFT  - timers and actions active", 2);
+        fixtext_out(1, 4, "STAGE CLEAR!", 2);
     }
+}
 
-    fixtext_out(2, 8, "Character + Action + game_interupt", 1);
-    fixtext_out(2, 9, "game_events + Border Constraint", 1);
-    fixtext_out(2, 10, "Status + Timer + Progress + Properties", 1);
+static void NEOGEO_USER runtime_demo_update_eagle(NGCharacter *c) {
+    if (!c) return;
+    /* Eagle drifts right-to-left across the top of the screen (128px wide) */
+    c->x -= 2;
+    if (c->x < -128) {
+        c->x = 280;
+        c->x_fp = NG_TO_FP(280);
+    }
+    c->x_fp = NG_TO_FP(c->x);
+}
+
+/* FX hook — called by action engine when attack animation hits the FX command */
+static void NEOGEO_USER runtime_demo_fx_hook(uint16_t kind, int16_t x, int16_t y) {
+    NGCharacter *fx = chars_find(DEMO_CHAR_FX);
+    if (!fx) return;
+    (void)kind;
+    fx->x = x;
+    fx->x_fp = NG_TO_FP(x);
+    fx->y = y;
+    fx->y_fp = NG_TO_FP(y);
+    fx->data0 = 28;
+    char_action(fx, DEMO_ACTION_FX);
+}
+
+static void NEOGEO_USER runtime_demo_update_fx(NGCharacter *c) {
+    if (!c) return;
+    if (c->data0 > 0) {
+        c->data0--;
+    } else {
+        /* FX done — park off right edge */
+        c->x = 400;
+        c->x_fp = NG_TO_FP(400);
+    }
 }
 
 static void NEOGEO_USER runtime_demo_init_scene(void) {
     RuntimeDemoState *state = RUNTIME_DEMO_STATE;
     NGCharacter *hero = 0;
+    NGCharacter *eagle = 0;
+    NGCharacter *fx = 0;
+    uint16_t fix_pal[16];
 
     clearFix();
     clearSprs();
 
     game_runtime_init();
     actions_set_sound_hooks(runtime_demo_sfx, runtime_demo_music);
+    actions_set_fx_hook(runtime_demo_fx_hook);
     game_events_set_handler(runtime_demo_event_handler);
     game_interupt_set_hooks(runtime_demo_before_logic, 0, 0, runtime_demo_before_draw, 0);
 
-    actions_register(DEMO_ACTION_IDLE, runtime_demo_idle);
-    actions_register(DEMO_ACTION_WALK, runtime_demo_walk);
-    actions_register(DEMO_ACTION_INTRO, runtime_demo_intro);
-    chars_set_game_interupt(DEMO_CHAR_HERO, runtime_demo_update_hero);
+    actions_register(DEMO_ACTION_IDLE,   runtime_demo_idle);
+    actions_register(DEMO_ACTION_WALK,   runtime_demo_walk);
+    actions_register(DEMO_ACTION_INTRO,  runtime_demo_intro);
+    actions_register(DEMO_ACTION_ATTACK, runtime_demo_attack);
+    actions_register(DEMO_ACTION_EAGLE,  runtime_demo_eagle);
+    actions_register(DEMO_ACTION_FX,     runtime_demo_fx);
+
+    chars_set_game_interupt(DEMO_CHAR_HERO,  runtime_demo_update_hero);
+    chars_set_game_interupt(DEMO_CHAR_EAGLE, runtime_demo_update_eagle);
+    chars_set_game_interupt(DEMO_CHAR_FX,    runtime_demo_update_fx);
 
     progress_start(DEMO_PROGRESS_ROUTE, 6);
-    timer_start(DEMO_TIMER_ROUTE_MAX, 18 * NG_FRAME_RATE);
+    timer_start(DEMO_TIMER_ROUTE_MAX, 20 * NG_FRAME_RATE);
 
     state->direction = 0;
     state->finished = 0;
     state->hold_frames = 0;
-    state->floor_y = 520;
+    state->floor_y = 67;
 
     state->borders[0].x = 24;
     state->borders[0].y = state->floor_y;
@@ -308,22 +509,124 @@ static void NEOGEO_USER runtime_demo_init_scene(void) {
     state->borders[1].used = 0;
     border_constraints_load(state->borders, 2);
 
-    showScreen1(16, state->floor_y, 0xF, 0xAF, 9, 0x0FFF, 0);
-    showScreen2(16, state->floor_y, 0xF, 0xAF, 9, 0x0FFF, 0);
-    showScreen3(16, state->floor_y, 0xF, 0xAF, 9, 0x0FFF, 0);
-    showScreen4(16, state->floor_y, 0xF, 0xAF, 9, 0x0FFF, 0);
-    showScreen5(16, state->floor_y, 0xF, 0xAF, 9, 0x0FFF, 0);
-    showScreen6(16, state->floor_y, 0xF, 0xAF, 9, 0x0FFF, 0);
-    showScreen7(16, state->floor_y, 0xF, 0xAF, 9, 0x0FFF, 0);
-    showScreen8(16, state->floor_y, 0xF, 0xAF, 9, 0x0FFF, 0);
+    /* Stage background — sprite slots 0-15, stays in VRAM for entire game loop */
+    showScreen3(16, 520, 0xF, 0xAF, 9, BLACK, 0);
+    setBACKDROP(BLACK);
 
+    /* FIX text palettes — pal 0 = white, 1 = yellow, 2 = cyan */
+    setpal(fix_pal, 0, WHITE, YELLOW, CYAN, GREEN, BLUE, ORANGE, MAGENTA,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    load_palettes(fix_pal, PALETTES);
+    setpal(fix_pal, 0, YELLOW, WHITE, CYAN, GREEN, BLUE, ORANGE, MAGENTA,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    load_palettes(fix_pal, PALETTES+PALOFFSET);
+    setpal(fix_pal, 0, CYAN, WHITE, YELLOW, GREEN, BLUE, ORANGE, MAGENTA,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    load_palettes(fix_pal, PALETTES+PALOFFSET*2);
+
+    /* Preload all sprite palettes into PALRAM (compact screens ignore x/y/sprite args) */
+    /* Warrior walk/idle — sprite_001-009, screens 11-19 */
+    showScreen11(0, 0, 0, 0, 0, 0, 0);
+    showScreen12(0, 0, 0, 0, 0, 0, 0);
+    showScreen13(0, 0, 0, 0, 0, 0, 0);
+    showScreen14(0, 0, 0, 0, 0, 0, 0);
+    showScreen15(0, 0, 0, 0, 0, 0, 0);
+    showScreen16(0, 0, 0, 0, 0, 0, 0);
+    showScreen17(0, 0, 0, 0, 0, 0, 0);
+    showScreen18(0, 0, 0, 0, 0, 0, 0);
+    showScreen19(0, 0, 0, 0, 0, 0, 0);
+    /* Warrior attack — sprite_010-039, screens 20-49 (all 30 frames) */
+    showScreen20(0, 0, 0, 0, 0, 0, 0);
+    showScreen21(0, 0, 0, 0, 0, 0, 0);
+    showScreen22(0, 0, 0, 0, 0, 0, 0);
+    showScreen23(0, 0, 0, 0, 0, 0, 0);
+    showScreen24(0, 0, 0, 0, 0, 0, 0);
+    showScreen25(0, 0, 0, 0, 0, 0, 0);
+    showScreen26(0, 0, 0, 0, 0, 0, 0);
+    showScreen27(0, 0, 0, 0, 0, 0, 0);
+    showScreen28(0, 0, 0, 0, 0, 0, 0);
+    showScreen29(0, 0, 0, 0, 0, 0, 0);
+    showScreen30(0, 0, 0, 0, 0, 0, 0);
+    showScreen31(0, 0, 0, 0, 0, 0, 0);
+    showScreen32(0, 0, 0, 0, 0, 0, 0);
+    showScreen33(0, 0, 0, 0, 0, 0, 0);
+    showScreen34(0, 0, 0, 0, 0, 0, 0);
+    showScreen35(0, 0, 0, 0, 0, 0, 0);
+    showScreen36(0, 0, 0, 0, 0, 0, 0);
+    showScreen37(0, 0, 0, 0, 0, 0, 0);
+    showScreen38(0, 0, 0, 0, 0, 0, 0);
+    showScreen39(0, 0, 0, 0, 0, 0, 0);
+    showScreen40(0, 0, 0, 0, 0, 0, 0);
+    showScreen41(0, 0, 0, 0, 0, 0, 0);
+    showScreen42(0, 0, 0, 0, 0, 0, 0);
+    showScreen43(0, 0, 0, 0, 0, 0, 0);
+    showScreen44(0, 0, 0, 0, 0, 0, 0);
+    showScreen45(0, 0, 0, 0, 0, 0, 0);
+    showScreen46(0, 0, 0, 0, 0, 0, 0);
+    showScreen47(0, 0, 0, 0, 0, 0, 0);
+    showScreen48(0, 0, 0, 0, 0, 0, 0);
+    showScreen49(0, 0, 0, 0, 0, 0, 0);
+    /* FX — sprite_040-052, screens 50-62 (13 frames) */
+    showScreen50(0, 0, 0, 0, 0, 0, 0);
+    showScreen51(0, 0, 0, 0, 0, 0, 0);
+    showScreen52(0, 0, 0, 0, 0, 0, 0);
+    showScreen53(0, 0, 0, 0, 0, 0, 0);
+    showScreen54(0, 0, 0, 0, 0, 0, 0);
+    showScreen55(0, 0, 0, 0, 0, 0, 0);
+    showScreen56(0, 0, 0, 0, 0, 0, 0);
+    showScreen57(0, 0, 0, 0, 0, 0, 0);
+    showScreen58(0, 0, 0, 0, 0, 0, 0);
+    showScreen59(0, 0, 0, 0, 0, 0, 0);
+    showScreen60(0, 0, 0, 0, 0, 0, 0);
+    showScreen61(0, 0, 0, 0, 0, 0, 0);
+    showScreen62(0, 0, 0, 0, 0, 0, 0);
+    /* Eagle mascot — sprite_069-082, screens 79-92 (14 frames) */
+    showScreen79(0, 0, 0, 0, 0, 0, 0);
+    showScreen80(0, 0, 0, 0, 0, 0, 0);
+    showScreen81(0, 0, 0, 0, 0, 0, 0);
+    showScreen82(0, 0, 0, 0, 0, 0, 0);
+    showScreen83(0, 0, 0, 0, 0, 0, 0);
+    showScreen84(0, 0, 0, 0, 0, 0, 0);
+    showScreen85(0, 0, 0, 0, 0, 0, 0);
+    showScreen86(0, 0, 0, 0, 0, 0, 0);
+    showScreen87(0, 0, 0, 0, 0, 0, 0);
+    showScreen88(0, 0, 0, 0, 0, 0, 0);
+    showScreen89(0, 0, 0, 0, 0, 0, 0);
+    showScreen90(0, 0, 0, 0, 0, 0, 0);
+    showScreen91(0, 0, 0, 0, 0, 0, 0);
+    showScreen92(0, 0, 0, 0, 0, 0, 0);
+    /* Portrait */
+    showScreen93(0, 0, 0, 0, 0, 0, 0);
+
+    /* Warrior hero — sprite slots 32-40, 9 strips × 10 tiles = 144×160px
+     * covers widest attack frame (9 strips); walk frames (6) composite cleanly against stage */
     hero = chars_add(DEMO_CHAR_HERO, 40, state->floor_y);
     if (hero) {
-        char_set_sprite(hero, 32, 16, 16, 0x100, 17);
+        char_set_sprite(hero, 32, 9, 10, 0xA00, 26);
+        hero->sprite_stride = 16;
         char_set_body(hero, 0, 0, 16, 16);
         hero->data0 = 0;
         hero->data1 = RUNTIME_DEMO_RISE_STEPS;
         char_action(hero, DEMO_ACTION_INTRO);
+    }
+
+    /* Eagle mascot — sprite slots 48-55, 8 strips × 7 tiles = 128×112px
+     * y=8 → eagle occupies scanlines 8-120, above the warrior */
+    eagle = chars_add(DEMO_CHAR_EAGLE, 280, 8);
+    if (eagle) {
+        char_set_sprite(eagle, 48, 8, 7, 0x4E00, 94);
+        eagle->sprite_stride = 16;
+        char_set_body(eagle, 0, 0, 0, 0);
+        char_action(eagle, DEMO_ACTION_EAGLE);
+    }
+
+    /* FX overlay — sprite slots 56-68, 13 strips × 11 tiles = 208×176px, parked off screen */
+    fx = chars_add(DEMO_CHAR_FX, 400, 0);
+    if (fx) {
+        char_set_sprite(fx, 56, 13, 11, 0x3100, 65);
+        fx->sprite_stride = 16;
+        char_set_body(fx, 0, 0, 0, 0);
+        fx->data0 = 0;
     }
 }
 
@@ -359,8 +662,58 @@ void NEOGEO_USER showWalkDemo(int loops, int delay_ms) {
     }
 }
 
+/* Title screen — Eagle Soft logo with blinking INSERT COIN, auto-advances after 6 seconds. */
+void NEOGEO_USER showTitleScreen(void) {
+    uint16_t fix_pal[16];
+    uint16_t i;
+
+    clearFix();
+    clearSprs();
+    soundSceneReset();
+    soundSetADPCMBVolume(0xB8);
+    soundSetADPCMAVolume(0x3F);
+    soundSetSSGVolume(0x08);
+
+    /* Logo background — Eagle Soft brand screen */
+    showScreen9(16, 24, 0xF, 0xAF, 16, 0xFFF, 0);
+    setBACKDROP(BLACK);
+
+    /* FIX text palettes: pal 0 = yellow text, 1 = white text, 2 = cyan text */
+    setpal(fix_pal, 0, WHITE, YELLOW, CYAN, GREEN, BLUE, ORANGE, MAGENTA,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    load_palettes(fix_pal, PALETTES);
+    setpal(fix_pal, 0, WHITE, WHITE, CYAN, GREEN, BLUE, ORANGE, MAGENTA,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    load_palettes(fix_pal, PALETTES+PALOFFSET);
+    setpal(fix_pal, 0, CYAN, CYAN, WHITE, GREEN, BLUE, ORANGE, MAGENTA,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    load_palettes(fix_pal, PALETTES+PALOFFSET*2);
+
+    playMusic(SOUND_MUSIC_SAMURAI_NIGHT_SCENE);
+
+    fixtext_out(12, 26, "EAGLE SOFTWARE  2026", 0);
+    fixtext_out(12, 28, "DEMO  V1.2", 1);
+
+    /* Blink INSERT COIN for 360 frames (6 seconds at 60fps) */
+    for (i = 0; i < 360; i++) {
+        waitVbl();
+        if (i % 60 < 30) {
+            fixtext_out(12, 30, "INSERT COIN", 2);
+        } else {
+            fixtext_out(12, 30, "           ", 2);
+        }
+    }
+
+    soundFadeOutSpeed(4);
+    cyclexms(600);
+    soundStopAll();
+    clearFix();
+    clearSprs();
+}
+
 /* Main demo game entry: reset the visible state, then hand off to playgame(). */
 void NEOGEO_USER maingame(void) {
+    showTitleScreen();
     clearFix();
     clearSprs();
     playgame();
@@ -463,8 +816,9 @@ void NEOGEO_USER soundAutoDemo(void) {
 
 /* The game loop uses the high-level music helper so restart/volume policy stays centralized. */
 int NEOGEO_USER playgame(void) {
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
     runtime_demo_init_scene();
+    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    soundSetADPCMAVolume(0x3F);
 
     while (!timer_done(DEMO_TIMER_ROUTE_MAX)) {
         waitVbl();
@@ -496,23 +850,65 @@ void NEOGEO_USER showGameOver(void) {
     soundStopAll();
 }
 
-/* Short branded intro that resets the scene mix before the title flow takes over. */
+/* Boot intro: typewriter "EAGLE SOFTWARE" with voice cues, then Eagle Soft logo. */
 void NEOGEO_USER showEagleIntro(void) {
+    static const char eagle_word[] = "EAGLE";
+    static const char soft_word[] = "SOFTWARE";
+    uint16_t fix_pal[16];
+    char ch[2];
+    int i;
+
     clearFix();
     clearSprs();
     soundSceneReset();
     soundSetADPCMAVolume(0x3F);
-    soundSetADPCMBVolume(0xF0);
+    soundSetADPCMBVolume(0xB8);
     soundSetSSGVolume(0x08);
-    showScreen10(16, 520, 0xF, 0xAF, 9, 0xFFF, 0);
+
+    /* White text palette for FIX layer typewriter display */
+    setpal(fix_pal, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    load_palettes(fix_pal, PALETTES);
+
+    /* Eagle Fanfare boot melody fires immediately */
+    playMusic(SOUND_MUSIC_EAGLE_FANFARE);
+
+    ch[1] = '\0';
+
+    /* "Get Ready" voice + typewriter "EAGLE" — centered at tile col 17 row 13 */
+    playVoiceCue(SOUND_VOICE_GET_READY);
+    for (i = 0; i < 5; i++) {
+        ch[0] = eagle_word[i];
+        fixtext_out(17 + i, 13, ch, 0);
+        cyclexms(70);
+    }
+
     cyclexms(200);
-    playSFX(SOUND_SFX_SHORT_SHOUT);
-    cycle1s();
+
+    /* "Attack" voice + typewriter "SOFTWARE" — centered at tile col 16 row 15 */
+    playVoiceCue(SOUND_VOICE_ATTACK);
+    for (i = 0; i < 8; i++) {
+        ch[0] = soft_word[i];
+        fixtext_out(16 + i, 15, ch, 0);
+        cyclexms(60);
+    }
+
+    cyclexms(400);
+
+    /* Eagle Soft logo — title gong + logo screen */
+    clearFix();
     clearSprs();
-    showScreen9(16, 520, 0xF, 0xAF, 9, 0xFFF, 0);
-    playSFX(SOUND_SFX_READY_VOICE);
+    playSFX(SOUND_SFX_TITLE_GONG);
+    showScreen9(16, 24, 0xF, 0xAF, 16, 0xFFF, 0);
+    setBACKDROP(BLACK);
     cycle1s();
+    cycle1s();
+
+    soundFadeOutSpeed(4);
+    cyclexms(600);
     soundStopAll();
+    clearFix();
+    clearSprs();
 }
 
 /* Simple FIX-layer character placeholders used by the parade demo. */
@@ -1599,7 +1995,7 @@ uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
 uint16_t  SCB4    = 0x0;
 uint16_t  pal9[16];
-setpal(pal9,0x0,0x7fff,0x0,0x7111,0x7222,0x7333,0x7444,0x7555,0x7666,0x7777,0x7888,0x7999,0x5aba,0x1ccb,0xddd,0xeee);
+setpal(pal9,0x0,0x1015,0x7fff,0x48ce,0x5b,0x1e88,0x4d00,0x1000,0x168a,0x1003,0x34ae,0x108e,0x1cee,0x1038,0x2c24,0x447);
 uint16_t spriteMapS9_1[16] = {0x800,0x810,0x820,0x830,0x840,0x850,0x860,0x870,0x880,0x890,0x8a0,0x8b0,0x8c0,0x8d0,0x8e0,0x8f0};
 uint16_t spriteMapS9_2[16] = {0x801,0x811,0x821,0x831,0x841,0x851,0x861,0x871,0x881,0x891,0x8a1,0x8b1,0x8c1,0x8d1,0x8e1,0x8f1};
 uint16_t spriteMapS9_3[16] = {0x802,0x812,0x822,0x832,0x842,0x852,0x862,0x872,0x882,0x892,0x8a2,0x8b2,0x8c2,0x8d2,0x8e2,0x8f2};
@@ -1838,4 +2234,668 @@ SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*15);
 setBACKDROP(backdrop);
 vram_sprite(sprite_base + 64*15,1,15,spriteMapS10_16,spal10_16,16,SCB2,SCB3,SCB4);
+}
+
+
+void NEOGEO_USER showScreen11(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 11 ******************************************/
+uint16_t  pal11[16];
+setpal(pal11,0x0,0x6831,0x7fe8,0x0,0x6fff,0x5012,0x1410,0x1d70,0x4434,0x7248,0x5ea5,0x3b54,0x6fc2,0x777,0x3125,0x3baa);
+load_palettes(pal11,PALETTES+PALOFFSET*26);
+}
+
+
+void NEOGEO_USER showScreen12(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 12 ******************************************/
+uint16_t  pal12[16];
+setpal(pal12,0x0,0x6fff,0x0,0x2c61,0x536a,0x4ffa,0x7137,0x3c45,0x6411,0x5fe3,0x6731,0x5234,0x1877,0x5012,0xcbb,0x5ea2);
+load_palettes(pal12,PALETTES+PALOFFSET*27);
+}
+
+
+void NEOGEO_USER showScreen13(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 13 ******************************************/
+uint16_t  pal13[16];
+setpal(pal13,0x0,0x0,0x6fb1,0x1247,0xfff,0x521,0x5ffa,0x2aab,0x766,0x136a,0x6821,0x5b60,0x6fd6,0x1124,0x4d75,0x3101);
+load_palettes(pal13,PALETTES+PALOFFSET*28);
+}
+
+
+void NEOGEO_USER showScreen14(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 14 ******************************************/
+uint16_t  pal14[16];
+setpal(pal14,0x0,0x0,0x4ffa,0x1b74,0x1d60,0x6013,0x3889,0x7fe3,0x4148,0x7830,0x6fff,0x1fb6,0x6fa1,0x6545,0x1ccc,0x2511);
+load_palettes(pal14,PALETTES+PALOFFSET*29);
+}
+
+
+void NEOGEO_USER showScreen15(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 15 ******************************************/
+uint16_t  pal15[16];
+setpal(pal15,0x0,0x0,0x4ffa,0x7931,0x1112,0x544,0x248,0x7e85,0x7c61,0xfff,0x6fb1,0x2511,0x3125,0x2bab,0x7fd5,0x5777);
+load_palettes(pal15,PALETTES+PALOFFSET*30);
+}
+
+
+void NEOGEO_USER showScreen16(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 16 ******************************************/
+uint16_t  pal16[16];
+setpal(pal16,0x0,0x0,0xfb6,0x4731,0x3baa,0x6b51,0xfff,0x6e82,0x1247,0x6311,0x3124,0x136a,0x5012,0x5ff9,0x6766,0x4fe2);
+load_palettes(pal16,PALETTES+PALOFFSET*31);
+}
+
+
+void NEOGEO_USER showScreen17(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 17 ******************************************/
+uint16_t  pal17[16];
+setpal(pal17,0x0,0x1830,0x7ffe,0x1410,0x5544,0x64ae,0xa76,0x0,0x2c51,0x2f92,0x4fe9,0x359,0x4013,0x5136,0x5fe3,0x6aaa);
+load_palettes(pal17,PALETTES+PALOFFSET*32);
+}
+
+
+void NEOGEO_USER showScreen18(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 18 ******************************************/
+uint16_t  pal18[16];
+setpal(pal18,0x0,0x5b34,0x2fff,0x0,0x4fc2,0x1247,0x2114,0x7666,0x7aaa,0x2621,0x2e71,0x2feb,0xa51,0x311,0xe96,0x5fe6);
+load_palettes(pal18,PALETTES+PALOFFSET*33);
+}
+
+
+void NEOGEO_USER showScreen19(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 19 ******************************************/
+uint16_t  pal19[16];
+setpal(pal19,0x0,0x6545,0x2821,0x5fe8,0x4fd2,0x3410,0x7e85,0x0,0x3cbb,0x7ffe,0x1136,0x5888,0x3b51,0x7013,0x6e81,0x1258);
+load_palettes(pal19,PALETTES+PALOFFSET*34);
+}
+
+
+void NEOGEO_USER showScreen20(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 20 ******************************************/
+uint16_t  pal20[16];
+setpal(pal20,0x0,0x545,0x6fd2,0x0,0x6fff,0x4e91,0x5730,0x6014,0x5788,0x3b50,0x5147,0x5fd6,0x5ffa,0x6311,0x6bbc,0x5b75);
+load_palettes(pal20,PALETTES+PALOFFSET*35);
+}
+
+
+void NEOGEO_USER showScreen21(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 21 ******************************************/
+uint16_t  pal21[16];
+setpal(pal21,0x0,0x3112,0x5ffa,0x7931,0x544,0x4136,0x3510,0x4e95,0x5fc1,0x5abb,0x0,0x4fe6,0xfff,0x7d61,0x4777,0x1359);
+load_palettes(pal21,PALETTES+PALOFFSET*36);
+}
+
+
+void NEOGEO_USER showScreen22(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 22 ******************************************/
+uint16_t  pal22[16];
+setpal(pal22,0x0,0x6fff,0x0,0x2f91,0x2434,0x5410,0x6fe9,0x7755,0x4e95,0x2989,0x4fe3,0x4bcc,0xc61,0x5830,0x3248,0x3113);
+load_palettes(pal22,PALETTES+PALOFFSET*37);
+}
+
+
+void NEOGEO_USER showScreen23(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 23 ******************************************/
+uint16_t  pal23[16];
+setpal(pal23,0x0,0x7544,0x6fff,0x6e81,0x6a41,0x0,0x4fe2,0x4889,0x7248,0x6fe8,0x112,0x3125,0x3d54,0x6bbc,0x6511,0x2fa5);
+load_palettes(pal23,PALETTES+PALOFFSET*38);
+}
+
+
+void NEOGEO_USER showScreen24(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 24 ******************************************/
+uint16_t  pal24[16];
+setpal(pal24,0x0,0x0,0x99a,0x3b30,0x5963,0x4fe2,0x7fff,0x1eec,0x1247,0x3655,0x4ff8,0x6e81,0x2d37,0x621,0x6113,0x3fa6);
+load_palettes(pal24,PALETTES+PALOFFSET*39);
+}
+
+
+void NEOGEO_USER showScreen25(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 25 ******************************************/
+uint16_t  pal25[16];
+setpal(pal25,0x0,0x7bbc,0x0,0x4ff8,0x2113,0x5554,0x7820,0x5148,0x3e31,0x6fff,0x7fe2,0x5410,0x5888,0x1f90,0x4b61,0x4ea5);
+load_palettes(pal25,PALETTES+PALOFFSET*40);
+}
+
+
+void NEOGEO_USER showScreen26(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 26 ******************************************/
+uint16_t  pal26[16];
+setpal(pal26,0x0,0x1410,0x5012,0xbbb,0x6fe3,0xfff,0x1359,0x6831,0x0,0x4c61,0x6434,0x5777,0x5136,0x1d76,0x7fe8,0x1fa1);
+load_palettes(pal26,PALETTES+PALOFFSET*41);
+}
+
+
+void NEOGEO_USER showScreen27(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 27 ******************************************/
+uint16_t  pal27[16];
+setpal(pal27,0x0,0x112,0xfff,0x0,0x4fe2,0x7249,0x7fe8,0x2821,0x2b51,0x6e49,0x1ea5,0x1410,0x2f81,0x3766,0x3225,0x3aab);
+load_palettes(pal27,PALETTES+PALOFFSET*42);
+}
+
+
+void NEOGEO_USER showScreen28(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 28 ******************************************/
+uint16_t  pal28[16];
+setpal(pal28,0x0,0x4fd1,0x0,0x2511,0x248,0x3544,0x7fff,0x7fe8,0x4e81,0x2113,0x2a41,0x5ffb,0x1bbb,0x1888,0x7fd4,0x7c86);
+load_palettes(pal28,PALETTES+PALOFFSET*43);
+}
+
+
+void NEOGEO_USER showScreen29(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 29 ******************************************/
+uint16_t  pal29[16];
+setpal(pal29,0x0,0x4112,0x1e81,0x6511,0x6fff,0x2249,0xa41,0x7855,0x889,0xfc6,0x2cbc,0x5fe1,0x1125,0x4ffa,0x0,0x3434);
+load_palettes(pal29,PALETTES+PALOFFSET*44);
+}
+
+
+void NEOGEO_USER showScreen30(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 30 ******************************************/
+uint16_t  pal30[16];
+setpal(pal30,0x0,0x731,0x2fff,0x0,0x4311,0x2f91,0x5777,0x113,0x6b51,0x7236,0x4ff9,0x7fe2,0xfa6,0x135a,0x1b45,0x4bbc);
+load_palettes(pal30,PALETTES+PALOFFSET*45);
+}
+
+
+void NEOGEO_USER showScreen31(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 31 ******************************************/
+uint16_t  pal31[16];
+setpal(pal31,0x0,0x7300,0x6fff,0x0,0x7fc1,0x636c,0x4c61,0x6138,0x6fe8,0x6bbc,0x2821,0x7013,0x4e94,0x5988,0x5333,0x2656);
+load_palettes(pal31,PALETTES+PALOFFSET*46);
+}
+
+
+void NEOGEO_USER showScreen32(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 32 ******************************************/
+uint16_t  pal32[16];
+setpal(pal32,0x0,0x2434,0x5fe3,0x766,0x6fff,0x0,0x1999,0x4a51,0x4ff9,0x3610,0x4c84,0xf91,0x2137,0x1112,0x1ccc,0x137b);
+load_palettes(pal32,PALETTES+PALOFFSET*47);
+}
+
+
+void NEOGEO_USER showScreen33(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 33 ******************************************/
+uint16_t  pal33[16];
+setpal(pal33,0x0,0x0,0x7fe8,0x2fff,0x669f,0xc62,0x4248,0x403f,0x6fe2,0x7300,0x7013,0x2434,0x2f92,0x2821,0x1caa,0x5767);
+load_palettes(pal33,PALETTES+PALOFFSET*48);
+}
+
+
+void NEOGEO_USER showScreen34(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 34 ******************************************/
+uint16_t  pal34[16];
+setpal(pal34,0x0,0x7fff,0x0,0x1e81,0x1cbb,0x57bf,0x1510,0x14f,0x7fea,0x5fe1,0x6c39,0x1777,0x4013,0x4136,0x4941,0x4fe6);
+load_palettes(pal34,PALETTES+PALOFFSET*49);
+}
+
+
+void NEOGEO_USER showScreen35(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 35 ******************************************/
+uint16_t  pal35[16];
+setpal(pal35,0x0,0x2a31,0x0,0x5ff1,0x2fff,0x7aab,0x4666,0x4d71,0x6248,0x6d77,0x112,0x3fa1,0x7fea,0x6125,0x4fe6,0x6511);
+load_palettes(pal35,PALETTES+PALOFFSET*50);
+}
+
+
+void NEOGEO_USER showScreen36(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 36 ******************************************/
+uint16_t  pal36[16];
+setpal(pal36,0x0,0x4a41,0x0,0x4fe6,0x1510,0x6fff,0x2cbc,0x5988,0x346b,0x4ffb,0x655,0x1247,0x1124,0x3e71,0x112,0x5fd1);
+load_palettes(pal36,PALETTES+PALOFFSET*51);
+}
+
+
+void NEOGEO_USER showScreen37(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 37 ******************************************/
+uint16_t  pal37[16];
+setpal(pal37,0x0,0x5766,0x0,0x2fff,0x1aab,0x6fd6,0x4b51,0x6249,0x1720,0x4fe1,0x1125,0xe68,0x4333,0x3fea,0x1f91,0x1111);
+load_palettes(pal37,PALETTES+PALOFFSET*52);
+}
+
+
+void NEOGEO_USER showScreen38(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 38 ******************************************/
+uint16_t  pal38[16];
+setpal(pal38,0x0,0x5fd1,0xa89,0x0,0x6fff,0x2931,0x5333,0x536b,0x7d71,0x248,0x6002,0x5410,0x2756,0x4fe8,0x6015,0x7bbc);
+load_palettes(pal38,PALETTES+PALOFFSET*53);
+}
+
+
+void NEOGEO_USER showScreen39(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 39 ******************************************/
+uint16_t  pal39[16];
+setpal(pal39,0x0,0x6821,0x6fff,0x0,0x2645,0x2113,0x7fe1,0x4137,0x6988,0x7c39,0x335a,0x2c61,0x6fe8,0x1fa1,0x3410,0xccd);
+load_palettes(pal39,PALETTES+PALOFFSET*54);
+}
+
+
+void NEOGEO_USER showScreen40(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 40 ******************************************/
+uint16_t  pal40[16];
+setpal(pal40,0x0,0x2931,0x0,0x6fff,0x1fa1,0x36f,0x5259,0x3d61,0x6a78,0x2545,0x7fe8,0x7fe2,0x2113,0x7bbd,0x3510,0x3126);
+load_palettes(pal40,PALETTES+PALOFFSET*55);
+}
+
+
+void NEOGEO_USER showScreen41(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 41 ******************************************/
+uint16_t  pal41[16];
+setpal(pal41,0x0,0x3113,0x0,0x3fff,0x6fd2,0x669f,0xbdf,0x7e70,0x4ff8,0x3d75,0x2a31,0x5666,0x6137,0x1aaa,0x3511,0x515e);
+load_palettes(pal41,PALETTES+PALOFFSET*56);
+}
+
+
+void NEOGEO_USER showScreen42(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 42 ******************************************/
+uint16_t  pal42[16];
+setpal(pal42,0x0,0x0,0x5fff,0x664f,0x1e81,0x6fd1,0x7544,0x4fe6,0x1d33,0x4411,0x2238,0x3113,0x6941,0x2c9f,0x6989,0xfeb);
+load_palettes(pal42,PALETTES+PALOFFSET*57);
+}
+
+
+void NEOGEO_USER showScreen43(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 43 ******************************************/
+uint16_t  pal43[16];
+setpal(pal43,0x0,0x0,0x5caf,0x2b88,0x7fff,0x4458,0x7fe4,0x1f91,0x127,0x6ecf,0x6a31,0x674f,0x3a7f,0x4013,0x621f,0x2511);
+load_palettes(pal43,PALETTES+PALOFFSET*58);
+}
+
+
+void NEOGEO_USER showScreen44(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 44 ******************************************/
+uint16_t  pal44[16];
+setpal(pal44,0x0,0x0,0x6fff,0x6511,0x6e81,0x1235,0x5c95,0x4013,0x259,0x7e25,0x1999,0x1765,0x5eb8,0x2feb,0x6941,0x7fe2);
+load_palettes(pal44,PALETTES+PALOFFSET*59);
+}
+
+
+void NEOGEO_USER showScreen45(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 45 ******************************************/
+uint16_t  pal45[16];
+setpal(pal45,0x0,0x0,0x2fff,0x6fe9,0x7510,0x988,0x3abd,0x5148,0x4fe2,0x7002,0x7e95,0xa41,0x7e80,0x7124,0x1655,0x425f);
+load_palettes(pal45,PALETTES+PALOFFSET*60);
+}
+
+
+void NEOGEO_USER showScreen46(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 46 ******************************************/
+uint16_t  pal46[16];
+setpal(pal46,0x0,0x0,0x6fd2,0x4bcd,0x1e96,0x336e,0x4951,0x5c22,0x248,0x5ff8,0x3510,0xe81,0x3113,0x545,0x7878,0x6fff);
+load_palettes(pal46,PALETTES+PALOFFSET*61);
+}
+
+
+void NEOGEO_USER showScreen47(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 47 ******************************************/
+uint16_t  pal47[16];
+setpal(pal47,0x0,0x4877,0x6fe9,0x0,0x702e,0x6e81,0x5fe2,0x6e96,0x3510,0x548e,0x2fff,0x2238,0x4a41,0x7bbc,0x545,0x3113);
+load_palettes(pal47,PALETTES+PALOFFSET*62);
+}
+
+
+void NEOGEO_USER showScreen48(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 48 ******************************************/
+uint16_t  pal48[16];
+setpal(pal48,0x0,0x6fe9,0x0,0x1235,0x4941,0x7fe3,0xfff,0x6249,0x6d61,0x3fa1,0xbbb,0x4521,0x1112,0x3766,0x2d86,0x4c26);
+load_palettes(pal48,PALETTES+PALOFFSET*63);
+}
+
+
+void NEOGEO_USER showScreen49(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 49 ******************************************/
+uint16_t  pal49[16];
+setpal(pal49,0x0,0x799a,0x0,0x3e86,0x6fff,0x1766,0x3248,0x6014,0xd61,0x4eeb,0x7433,0x5410,0x4fe2,0x3f91,0x7fe6,0x2931);
+load_palettes(pal49,PALETTES+PALOFFSET*64);
+}
+
+
+void NEOGEO_USER showScreen50(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 50 ******************************************/
+uint16_t  pal50[16];
+setpal(pal50,0x0,0x0,0x38af,0x7fff,0x3acf,0x7555,0x314f,0x336f,0x5dff,0x7aab,0x889,0x548f,0x236,0x7222,0x5bef,0x169f);
+load_palettes(pal50,PALETTES+PALOFFSET*65);
+}
+
+
+void NEOGEO_USER showScreen51(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 51 ******************************************/
+uint16_t  pal51[16];
+setpal(pal51,0x0,0x0,0x3fff,0x369f,0x1dff,0x756a,0x18bf,0x1aab,0x5233,0x7555,0x114f,0x347f,0x7bdf,0x59cf,0xddd,0x7888);
+load_palettes(pal51,PALETTES+PALOFFSET*66);
+}
+
+
+void NEOGEO_USER showScreen52(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 52 ******************************************/
+uint16_t  pal52[16];
+setpal(pal52,0x0,0x3235,0x6fd2,0x0,0xc51,0x1865,0x4731,0x5fe6,0x4013,0x3f81,0x6359,0x4fff,0xe96,0x3fea,0x6a9c,0x2411);
+load_palettes(pal52,PALETTES+PALOFFSET*67);
+}
+
+
+void NEOGEO_USER showScreen53(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 53 ******************************************/
+uint16_t  pal53[16];
+setpal(pal53,0x0,0x763f,0x0,0x7ecf,0x196f,0x185f,0x520f,0x351f,0x5caf,0x7fff,0x352e,0x41d,0x1333,0x7a7f,0x6667,0x1aaa);
+load_palettes(pal53,PALETTES+PALOFFSET*68);
+}
+
+
+void NEOGEO_USER showScreen54(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 54 ******************************************/
+uint16_t  pal54[16];
+setpal(pal54,0x0,0x763f,0x0,0x7fff,0x340f,0x7c9f,0x1a7f,0x5889,0x395f,0x384f,0x452f,0x5fdf,0x1b8f,0x341d,0x2434,0x1ebf);
+load_palettes(pal54,PALETTES+PALOFFSET*69);
+}
+
+
+void NEOGEO_USER showScreen55(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 55 ******************************************/
+uint16_t  pal55[16];
+setpal(pal55,0x0,0x7fff,0x0,0x752f,0x5b9f,0x6667,0x1fdf,0x1aaa,0x1a7f,0x7daf,0x7223,0x641e,0x373f,0x130f,0x196f,0x384f);
+load_palettes(pal55,PALETTES+PALOFFSET*70);
+}
+
+
+void NEOGEO_USER showScreen56(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 56 ******************************************/
+uint16_t  pal56[16];
+setpal(pal56,0x0,0x163f,0x5caf,0x0,0x3a7f,0x7fff,0x196f,0x542d,0x4778,0x141f,0x3ebf,0x1fdf,0x445,0x7b8f,0x3bab,0x774f);
+load_palettes(pal56,PALETTES+PALOFFSET*71);
+}
+
+
+void NEOGEO_USER showScreen57(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 57 ******************************************/
+uint16_t  pal57[16];
+setpal(pal57,0x0,0x3113,0x5fc2,0x7fff,0x596f,0x556,0x3daf,0x4c62,0x721,0x6fe9,0x0,0x340f,0x1fdf,0x373f,0x7b8f,0x7989);
+load_palettes(pal57,PALETTES+PALOFFSET*72);
+}
+
+
+void NEOGEO_USER showScreen58(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 58 ******************************************/
+uint16_t  pal58[16];
+setpal(pal58,0x0,0x0,0x7fff,0x5daf,0x361f,0x7fcf,0x5888,0x3323,0x2658,0x595f,0x5fef,0x6555,0x3c9f,0x3ebf,0x2bab,0x7b7f);
+load_palettes(pal58,PALETTES+PALOFFSET*73);
+}
+
+
+void NEOGEO_USER showScreen59(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 59 ******************************************/
+uint16_t  pal59[16];
+setpal(pal59,0x0,0x1410,0x6fff,0x0,0x2c98,0xc61,0x3434,0x546b,0x2f91,0x831,0x4ff9,0x7137,0x4fe3,0x4bbe,0x4777,0x4013);
+load_palettes(pal59,PALETTES+PALOFFSET*74);
+}
+
+
+void NEOGEO_USER showScreen60(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 60 ******************************************/
+uint16_t  pal60[16];
+setpal(pal60,0x0,0x7fff,0x0,0x373f,0x1c9f,0x4334,0x499a,0x4112,0x3daf,0x395f,0x5a7f,0x340f,0x1ecf,0x7fdf,0x76a,0x1556);
+load_palettes(pal60,PALETTES+PALOFFSET*75);
+}
+
+
+void NEOGEO_USER showScreen61(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 61 ******************************************/
+uint16_t  pal61[16];
+setpal(pal61,0x0,0x5fe3,0x0,0x6fff,0x7013,0x7147,0xe96,0x7941,0x2bab,0x6434,0x311,0x1d61,0x4621,0x3866,0x1fa1,0x5ff9);
+load_palettes(pal61,PALETTES+PALOFFSET*76);
+}
+
+
+void NEOGEO_USER showScreen62(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 62 ******************************************/
+uint16_t  pal62[16];
+setpal(pal62,0x0,0x6013,0x4b51,0xfff,0x1888,0x3136,0x4bbb,0x865,0x7fe9,0x831,0x4e82,0x7fc1,0x2fc6,0x2411,0x6434,0x0);
+load_palettes(pal62,PALETTES+PALOFFSET*77);
+}
+
+
+void NEOGEO_USER showScreen63(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 63 ******************************************/
+uint16_t  pal63[16];
+setpal(pal63,0x0,0x1543,0x6fff,0x0,0x6fd6,0x4d72,0x124,0x7410,0x4012,0x4941,0x7866,0x4baa,0x6feb,0x6159,0x5fb1,0x7136);
+load_palettes(pal63,PALETTES+PALOFFSET*78);
+}
+
+
+void NEOGEO_USER showScreen64(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 64 ******************************************/
+uint16_t  pal64[16];
+setpal(pal64,0x0,0x3113,0x6fea,0x4148,0x5b50,0x1655,0x4e81,0x19aa,0x4731,0x7fe5,0x0,0x411,0xfff,0x7fc1,0x6e95,0x1b65);
+load_palettes(pal64,PALETTES+PALOFFSET*79);
+}
+
+
+void NEOGEO_USER showScreen65(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 65 ******************************************/
+uint16_t  pal65[16];
+setpal(pal65,0x0,0x6fff,0x3d74,0x6014,0x4311,0x0,0xbbb,0x4fe2,0x4777,0x248,0x544,0x4ffa,0xb51,0x4fd6,0xf91,0x5720);
+load_palettes(pal65,PALETTES+PALOFFSET*80);
+}
+
+
+void NEOGEO_USER showScreen66(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 66 ******************************************/
+uint16_t  pal66[16];
+setpal(pal66,0x0,0x0,0x7fff,0x5410,0x5fe1,0x2113,0x3bbc,0x7c51,0x234e,0x5fd6,0x7830,0x3877,0x5ffa,0x4444,0x6138,0x3f91);
+load_palettes(pal66,PALETTES+PALOFFSET*81);
+}
+
+
+void NEOGEO_USER showScreen67(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 67 ******************************************/
+uint16_t  pal67[16];
+setpal(pal67,0x0,0x6fc1,0x0,0x6fe6,0x2125,0x699a,0x5ea5,0x5a74,0x2fea,0x1ffe,0x3d70,0x1112,0x2511,0x655,0x941,0x4248);
+load_palettes(pal67,PALETTES+PALOFFSET*82);
+}
+
+
+void NEOGEO_USER showScreen68(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 68 ******************************************/
+uint16_t  pal68[16];
+setpal(pal68,0x0,0x2989,0x3cbc,0x0,0x4731,0x6fe9,0x6fff,0x7e80,0x6137,0x1433,0x3755,0x5ea5,0x1b61,0x5310,0x5012,0x4fd2);
+load_palettes(pal68,PALETTES+PALOFFSET*83);
+}
+
+
+void NEOGEO_USER showScreen69(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 69 ******************************************/
+uint16_t  pal69[16];
+setpal(pal69,0x0,0x3113,0x6fff,0x2b51,0x7fd5,0x3cbb,0x6138,0x0,0x731,0x1f91,0x1c84,0x5ffa,0x4311,0x7fd1,0x4555,0x5888);
+load_palettes(pal69,PALETTES+PALOFFSET*84);
+}
+
+
+void NEOGEO_USER showScreen70(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 70 ******************************************/
+uint16_t  pal70[16];
+setpal(pal70,0x0,0x6411,0xe81,0x7fff,0x6545,0x5b64,0x941,0x4fd1,0x0,0x5136,0xfa5,0x113,0xaaa,0x5eeb,0x1259,0x4fe7);
+load_palettes(pal70,PALETTES+PALOFFSET*85);
+}
+
+
+void NEOGEO_USER showScreen71(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 71 ******************************************/
+uint16_t  pal71[16];
+setpal(pal71,0x0,0x7714,0x0,0x3fd1,0x6125,0x4fe8,0xfff,0x3e77,0x888,0x7248,0x2c61,0x555,0xc34,0x5bbb,0x4521,0x112);
+load_palettes(pal71,PALETTES+PALOFFSET*86);
+}
+
+
+void NEOGEO_USER showScreen72(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 72 ******************************************/
+uint16_t  pal72[16];
+setpal(pal72,0x0,0x1daf,0x0,0x7fff,0x7ebf,0x563f,0x3323,0x384f,0x5fdf,0x5aab,0x7a7f,0x5fef,0x541f,0x5667,0x3c8f,0x596f);
+load_palettes(pal72,PALETTES+PALOFFSET*87);
+}
+
+
+void NEOGEO_USER showScreen73(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 73 ******************************************/
+uint16_t  pal73[16];
+setpal(pal73,0x0,0x7002,0x1baa,0x6ffe,0x5fe3,0x3fa1,0x5c71,0x3856,0x6fea,0x1fa5,0x3225,0x5310,0x0,0x725b,0x6941,0x2621);
+load_palettes(pal73,PALETTES+PALOFFSET*88);
+}
+
+
+void NEOGEO_USER showScreen74(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 74 ******************************************/
+uint16_t  pal74[16];
+setpal(pal74,0x0,0x5fe1,0x1c60,0x248,0x1410,0x6fff,0x0,0x4fb5,0x1830,0x6fe7,0x2f91,0x3114,0x5ffa,0x7d75,0x3aab,0x2856);
+load_palettes(pal74,PALETTES+PALOFFSET*89);
+}
+
+
+void NEOGEO_USER showScreen75(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 75 ******************************************/
+uint16_t  pal75[16];
+setpal(pal75,0x0,0x2d71,0x0,0x5ffa,0x148c,0x3126,0x7fe1,0xfff,0x5730,0x1410,0x1fa5,0x4a51,0xb89,0x2fa2,0x2735,0x6fe6);
+load_palettes(pal75,PALETTES+PALOFFSET*90);
+}
+
+
+void NEOGEO_USER showScreen76(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 76 ******************************************/
+uint16_t  pal76[16];
+setpal(pal76,0x0,0x1c87,0x5ffa,0x0,0x4fe2,0x6e81,0x6fff,0x5410,0x1fa4,0x28ac,0x7fe6,0x2238,0x1830,0x1756,0x2114,0x2b51);
+load_palettes(pal76,PALETTES+PALOFFSET*91);
+}
+
+
+void NEOGEO_USER showScreen77(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 77 ******************************************/
+uint16_t  pal77[16];
+setpal(pal77,0x0,0x5ffa,0x0,0x4c36,0x3114,0x5fe1,0x6fff,0x1fa5,0x6aac,0x4fe6,0x248,0x6767,0xc61,0x5410,0x3830,0x3f91);
+load_palettes(pal77,PALETTES+PALOFFSET*92);
+}
+
+
+void NEOGEO_USER showScreen78(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 78 ******************************************/
+uint16_t  pal78[16];
+setpal(pal78,0x0,0xd71,0x0,0x3b38,0x4ffd,0x5fe1,0x656,0xb99,0x6911,0xfa3,0x4fe7,0x4137,0x311,0x3940,0x258d,0x1620);
+load_palettes(pal78,PALETTES+PALOFFSET*93);
+}
+
+
+void NEOGEO_USER showScreen79(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 79 ******************************************/
+uint16_t  pal79[16];
+setpal(pal79,0x0,0x2200,0x4420,0x7fff,0x2d71,0x5887,0x2baa,0x3a50,0x0,0x2655,0x630,0x840,0x6310,0x3edc,0x5fe0,0x333);
+load_palettes(pal79,PALETTES+PALOFFSET*94);
+}
+
+
+void NEOGEO_USER showScreen80(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 80 ******************************************/
+uint16_t  pal80[16];
+setpal(pal80,0x0,0x310,0x840,0x7fff,0x0,0x333,0x7a99,0x6520,0x6d81,0x1ccc,0x3655,0x6a50,0x3fed,0x6fe0,0x6877,0x2ecb);
+load_palettes(pal80,PALETTES+PALOFFSET*95);
+}
+
+
+void NEOGEO_USER showScreen81(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 81 ******************************************/
+uint16_t  pal81[16];
+setpal(pal81,0x0,0x3433,0x7fff,0x0,0x1b60,0x3766,0xccc,0x4fd0,0x6eed,0x5dca,0x2a99,0x6840,0x420,0x630,0xe92,0x210);
+load_palettes(pal81,PALETTES+PALOFFSET*96);
+}
+
+
+void NEOGEO_USER showScreen82(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 82 ******************************************/
+uint16_t  pal82[16];
+setpal(pal82,0x0,0x7fff,0x3323,0x656,0xcbb,0x878,0x0,0x310,0x3fdc,0x4a99,0x5fc0,0x1eca,0x4630,0x5950,0x6ffe,0x2f80);
+load_palettes(pal82,PALETTES+PALOFFSET*97);
+}
+
+
+void NEOGEO_USER showScreen83(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 83 ******************************************/
+uint16_t  pal83[16];
+setpal(pal83,0x0,0x6fff,0x1212,0x2840,0x2f80,0x656,0x3434,0x3caa,0x0,0x7c22,0x2410,0x6fed,0x5877,0x5fd0,0x3ecb,0x2a89);
+load_palettes(pal83,PALETTES+PALOFFSET*98);
+}
+
+
+void NEOGEO_USER showScreen84(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 84 ******************************************/
+uint16_t  pal84[16];
+setpal(pal84,0x0,0x6fff,0x2410,0x5950,0x4630,0x767,0x2dbb,0x3fec,0x4100,0x3b99,0x1988,0x7fd1,0x0,0x4223,0xf90,0x1545);
+load_palettes(pal84,PALETTES+PALOFFSET*99);
+}
+
+
+void NEOGEO_USER showScreen85(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 85 ******************************************/
+uint16_t  pal85[16];
+setpal(pal85,0x0,0x2fb5,0x0,0x4544,0x5d86,0x248,0x7fe2,0x2867,0x4e91,0x7ffe,0x7fe9,0x4b61,0x1410,0x1830,0x7013,0x2bab);
+load_palettes(pal85,PALETTES+PALOFFSET*100);
+}
+
+
+void NEOGEO_USER showScreen86(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 86 ******************************************/
+uint16_t  pal86[16];
+setpal(pal86,0x0,0x2410,0x5aaa,0x5dbf,0x7d90,0x531f,0x4888,0x5fff,0x0,0x7a7f,0x5740,0x3655,0x574f,0x1ddc,0x1669,0x4333);
+load_palettes(pal86,PALETTES+PALOFFSET*101);
+}
+
+
+void NEOGEO_USER showScreen87(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 87 ******************************************/
+uint16_t  pal87[16];
+setpal(pal87,0x0,0x5e91,0x77ac,0x7fd1,0x0,0x4ffb,0x3300,0x7237,0x4fe9,0x4a78,0x1940,0x1fa4,0xc61,0x1620,0x6fd6,0x6fff);
+load_palettes(pal87,PALETTES+PALOFFSET*102);
+}
+
+
+void NEOGEO_USER showScreen88(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 88 ******************************************/
+uint16_t  pal88[16];
+setpal(pal88,0x0,0x6d71,0x1ffe,0x0,0x5fe5,0x2300,0x5840,0x6a9b,0x2448,0x2fa2,0x3b50,0x1620,0x6fea,0x6fe1,0x3fa5,0x7c64);
+load_palettes(pal88,PALETTES+PALOFFSET*103);
+}
+
+
+void NEOGEO_USER showScreen89(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 89 ******************************************/
+uint16_t  pal89[16];
+setpal(pal89,0x0,0x3c60,0x4000,0x7fe5,0x6239,0x7830,0x7fc7,0xe74,0x5410,0x298a,0xfff,0x2f91,0x4fb4,0x5ffb,0x4fe1,0x6fe9);
+load_palettes(pal89,PALETTES+PALOFFSET*104);
+}
+
+
+void NEOGEO_USER showScreen90(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 90 ******************************************/
+uint16_t  pal90[16];
+setpal(pal90,0x0,0x2fa2,0x0,0x7fe9,0x1a50,0x3b9b,0x146b,0xd71,0x3ffe,0x7225,0x6300,0x3720,0x7fe3,0x6e74,0x4766,0x6fb6);
+load_palettes(pal90,PALETTES+PALOFFSET*105);
+}
+
+
+void NEOGEO_USER showScreen91(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 91 ******************************************/
+uint16_t  pal91[16];
+setpal(pal91,0x0,0x1a50,0x4347,0x410,0x5ffa,0x1fa4,0x0,0x1d23,0x698a,0x7fd8,0x5730,0x4fe1,0xfa1,0x5fe4,0xfff,0x1d71);
+load_palettes(pal91,PALETTES+PALOFFSET*106);
+}
+
+
+void NEOGEO_USER showScreen92(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 92 ******************************************/
+uint16_t  pal92[16];
+setpal(pal92,0x0,0x2fa4,0x1225,0x4ffd,0x0,0x1b25,0x5ade,0x6300,0x7fe8,0x4c9a,0x3720,0x6fd2,0x5a50,0x158b,0x5765,0x1e81);
+load_palettes(pal92,PALETTES+PALOFFSET*107);
+}
+
+
+void NEOGEO_USER showScreen93(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 93 ******************************************/
+uint16_t  pal93[16];
+setpal(pal93,0x0,0x5b60,0x0,0x4ffa,0xa64,0x4fd2,0x1830,0x5467,0x3a79,0x7fd6,0x3424,0x1f94,0xccc,0x4e91,0x7ffe,0x410);
+load_palettes(pal93,PALETTES+PALOFFSET*108);
 }

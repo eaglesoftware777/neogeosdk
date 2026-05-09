@@ -34,6 +34,11 @@ static Type *parse_type(Parser *p) {
 static Expr *expr(Parser *p, Program *prog);
 static Stmt *statement(Parser *p, Program *prog);
 
+static void reg_symbol(Program *prog, char *name, Type *t, int is_ext) {
+    Symbol *s = xcalloc(1, sizeof(Symbol));
+    s->name = name; s->type = t; s->is_extern = is_ext; s->next = prog->symbols; prog->symbols = s;
+}
+
 static Symbol *find_symbol(Program *prog, const char *name) {
     for (Symbol *s = prog->symbols; s; s = s->next) if (!strcmp(s->name, name)) return s;
     return NULL;
@@ -73,7 +78,7 @@ static Expr *unary(Parser *p, Program *prog) {
     }
     Expr *e = expr_new(EX_VAR); e->name = id.text;
     Symbol *sym = find_symbol(prog, e->name);
-    if (sym) e->type = sym->type;
+    if (sym) { e->name = sym->name; e->type = sym->type; }
     return e;
 }
 
@@ -148,11 +153,6 @@ static Type *parse_decl(Parser *p, Type *base, char **name) {
         t = arr;
     }
     return t;
-}
-
-static void reg_symbol(Program *prog, char *name, Type *t, int is_ext) {
-    Symbol *s = xcalloc(1, sizeof(Symbol));
-    s->name = name; s->type = t; s->is_extern = is_ext; s->next = prog->symbols; prog->symbols = s;
 }
 
 static Stmt *statement(Parser *p, Program *prog) {

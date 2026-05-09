@@ -355,56 +355,13 @@ void NEOGEO_USER INIT_GAME(void) {
 	ASM_END
 }
 
-/* NeoGeo DEMO MODE */
+/* NeoGeo DEMO MODE — show Eagle Soft intro then run the full runtime demo */
 void NEOGEO_USER DEMO_GAME(void) {
-	uint16_t pal_tile0[16];
-	uint16_t pal_tile1[16];
-	uint16_t pal_tile2[16];
-	int p1c = 0;
-	int i = 0;
-
-	setpal(pal_tile0,BLACK,BLACK,0xFFF,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE);
-	load_palettes(pal_tile0,PALETTES);
-	setpal(pal_tile1,BLACK,BLACK,RED,RED,RED,RED,RED,RED,RED,RED,RED,RED,RED,RED,RED,RED);
-	load_palettes(pal_tile1,PALETTES+PALOFFSET);
-	setpal(pal_tile2,BLACK,BLACK,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN);
-	load_palettes(pal_tile2,PALETTES+PALOFFSET*2);
-	//waitVbl()	;
-	//showScreen9();
-	//cyclexs(3);
 	clearSprs();
 	clearFix();
-	waitVbl();
-	fixtext_out(15,10,"DEMO MODE",0);
-	fixtext_out(15,11,"ABCDEFGHIJKLMNOP",0);
-	fixtext_out(15,12,"ABCDEFGHIJKLMNOP",0x1);
-	fixtext_out(15,13,"ABCDEFGHIJKLMNOP",0x2);
-	mess_outtest();
-
-	soundSceneReset();
-
-	/* Bring up both FM and ADPCM-B so the demo path exercises layered audio. */
-	isZ80Ready();
-	soundSetFMVolume(0x0F);
-	isZ80Ready();
-	playFMDebug();
-	isZ80Ready();
-	playFMTrack(SOUND_FM_SAMURAI_MINOR);
-	soundSetADPCMBVolume(0xB8);
-	playSFXB(SOUND_BED_TITLE_PLUCK);
-
-	p1c = read_p1credit();
-	display_digit(15,14,123456789,0,48);
-	fixtext_out(15,15,"P1C: ",0);
-	display_digit(20,15,p1c,0,48);
-	for (i = 0; i < 10; i++) {
-		fix_svalue1(27,8,i,0,48);
-		p1c = read_p1credit();
-		display_digit(15,14,123456789,0,48);
-		fixtext_out(15,15,"P1C: ",0);
-		display_digit(20,15,p1c,0,48);
-		cycle1s();
-	}
+	/*soundSceneReset();*/
+	showEagleIntro();
+	maingame();
 }
 
 

@@ -8,15 +8,35 @@
 #define NEOGEO_USER
 #endif
 
+/* Boolean */
 #define NG_TRUE  1
 #define NG_FALSE 0
 
-#define NG_FRAME_RATE 60
+/* Hardware timing */
+#define NG_FRAME_RATE       60
+#define NG_FRAMES_PER_SEC   NG_FRAME_RATE
+#define NG_MS_TO_FRAMES(ms) ((ms) * NG_FRAME_RATE / 1000)
 
-#define NG_FP_SHIFT 8
-#define NG_FP_ONE   (1 << NG_FP_SHIFT)
-#define NG_TO_FP(x) ((int32_t)(x) << NG_FP_SHIFT)
+/* Fixed-point math (8.8 format, shift = 8) */
+#define NG_FP_SHIFT   8
+#define NG_FP_ONE     (1 << NG_FP_SHIFT)
+#define NG_TO_FP(x)   ((int32_t)(x) << NG_FP_SHIFT)
 #define NG_FROM_FP(x) ((int16_t)((x) >> NG_FP_SHIFT))
+#define NG_FP_MUL(a,b) (((int32_t)(a) * (b)) >> NG_FP_SHIFT)
+
+/* Utility math */
+#define NG_MIN(a,b)        ((a) < (b) ? (a) : (b))
+#define NG_MAX(a,b)        ((a) > (b) ? (a) : (b))
+#define NG_CLAMP(v,lo,hi)  NG_MIN(NG_MAX((v),(lo)),(hi))
+#define NG_ABS(x)          ((x) < 0 ? -(x) : (x))
+#define NG_SIGN(x)         ((x) > 0 ? 1 : ((x) < 0 ? -1 : 0))
+#define NG_LERP(a,b,t)     ((a) + (((b)-(a)) * (t) >> 8))
+
+/* Compile-time array length */
+#define NG_ARRAY_SIZE(a)   ((int)(sizeof(a)/sizeof((a)[0])))
+
+/* Suppress unused-variable warnings for unused parameters */
+#define NG_UNUSED(x)       ((void)(x))
 
 #define NG_MAX_CHARS              64
 #define NG_MAX_CHAR_KINDS         128
