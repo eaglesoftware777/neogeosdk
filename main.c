@@ -6,45 +6,125 @@ https://github.com/eaglesoftware777/neogeosdk
 
 #include "sdk/macro.h"
 #include "sdk/neogeo.h"
+#include "sdk/ng_runtime.h"
 #include <stdint.h>
 
 void NEOGEO_USER soundAutoDemo(void);
 void NEOGEO_USER showEagleIntro(void);
+void NEOGEO_USER showTitleScreen(void);
 void NEOGEO_USER showCharacterParade(void);
 void NEOGEO_USER showPseudo3DLoop(void);
-void NEOGEO_USER showGameOver(void);
-void NEOGEO_USER showScreen1(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop);
-void NEOGEO_USER showScreen2(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop);
-void NEOGEO_USER showScreen3(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop);
-void NEOGEO_USER showScreen4(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop);
-void NEOGEO_USER showScreen5(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop);
-void NEOGEO_USER showScreen6(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop);
-void NEOGEO_USER showScreen7(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop);
-void NEOGEO_USER showScreen8(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop);
+void NEOGEO_USER showScreen1(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen2(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen3(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen4(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen5(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen6(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen7(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen8(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen9(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen10(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+/* warrior walk/idle — sprite_001 to sprite_009 */
+void NEOGEO_USER showScreen11(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen12(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen13(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen14(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen15(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen16(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen17(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen18(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen19(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+/* warrior attack — all 30 frames: sprite_010 to sprite_039 */
+void NEOGEO_USER showScreen20(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen21(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen22(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen23(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen24(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen25(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen26(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen27(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen28(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen29(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen30(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen31(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen32(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen33(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen34(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen35(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen36(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen37(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen38(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen39(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen40(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen41(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen42(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen43(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen44(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen45(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen46(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen47(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen48(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen49(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+/* blade and energy effects — sprite_040 to sprite_052 (13 frames) */
+void NEOGEO_USER showScreen50(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen51(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen52(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen53(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen54(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen55(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen56(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen57(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen58(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen59(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen60(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen61(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen62(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+/* eagle mascot — sprite_069 to sprite_082 (14 frames) */
+void NEOGEO_USER showScreen79(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen80(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen81(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen82(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen83(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen84(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen85(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen86(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen87(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen88(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen89(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen90(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen91(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen92(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+/* portrait — sprite_083 */
+void NEOGEO_USER showScreen93(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 int NEOGEO_USER playgame(void);
 
 /*
  * Step through the seven primary character frames at a fixed delay so the
  * current scene music can be judged against predictable animation timing.
  */
+
 void NEOGEO_USER showWalkDemo(int loops, int delay_ms) {
     int i = 0;
     int frame = 0;
+	clearFix();
+    clearSprs();
+    /*showScreen1(16, 520, 0xF, 0xAF, 9, 0x0FFF, 0);*/
     for (i = 0; i < loops; i++) {
         waitVbl();
-        //  if (frame == 0) showScreen1(16, 520, 0xF, 0xAF, 9, 0xFFF);
+        if (frame == 0)
+            showScreen2(16, 520, 0xF, 0xAF, 9, 0xFFF, 0);
         if (frame == 1)
-            showScreen2(16, 520, 0xF, 0xAF, 9, 0xFFF);
+            showScreen3(16, 520, 0xF, 0xAF, 9, 0xFFF, 0);
         if (frame == 2)
-            showScreen3(16, 520, 0xF, 0xAF, 9, 0xFFF);
+            showScreen4(16, 520, 0xF, 0xAF, 9, 0xFFF, 0);
         if (frame == 3)
-            showScreen4(16, 520, 0xF, 0xAF, 9, 0xFFF);
+            showScreen5(16, 520, 0xF, 0xAF, 9, 0xFFF, 0);
         if (frame == 4)
-            showScreen5(16, 520, 0xF, 0xAF, 9, 0xFFF);
+            showScreen6(16, 520, 0xF, 0xAF, 9, 0xFFF, 0);
         if (frame == 5)
-            showScreen6(16, 520, 0xF, 0xAF, 9, 0xFFF);
+            showScreen7(16, 520, 0xF, 0xAF, 9, 0xFFF, 0);
         if (frame == 6)
-            showScreen7(16, 520, 0xF, 0xAF, 9, 0xFFF);
+            showScreen8(16, 520, 0xF, 0xAF, 9, 0xFFF, 0);
         cyclexms(delay_ms);
         frame++;
         if (frame >= 7)
@@ -52,10 +132,66 @@ void NEOGEO_USER showWalkDemo(int loops, int delay_ms) {
     }
 }
 
-/* Main demo game entry: reset the visible state, then hand off to playgame(). */
-void NEOGEO_USER maingame(void) {
+/* Title screen — Eagle Soft logo with blinking INSERT COIN, auto-advances after 6 seconds. */
+void NEOGEO_USER showTitleScreen(void) {
+    uint16_t fix_pal[16];
+    uint16_t i;
+
     clearFix();
     clearSprs();
+    soundSceneReset();
+	soundStopAll();
+    /*soundSetADPCMBVolume(0xB8);
+    soundSetADPCMAVolume(0x3F);
+    soundSetSSGVolume(0x08);*/
+/* setBACKDROP(BLACK);*/
+    /* Logo background — Eagle Soft brand screen */
+    showScreen10(16, 24, 0xF, 0xAF, 16, 0xFFF, 0);
+       playVoiceCue(SOUND_SFX_STRING_PHRASE);
+
+
+    /* FIX text palettes: pal 0 = yellow text, 1 = white text, 2 = cyan text */
+    /*setpal(fix_pal, 0, WHITE, YELLOW, CYAN, GREEN, BLUE, ORANGE, MAGENTA,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    load_palettes(fix_pal, PALETTES);
+    setpal(fix_pal, 0, WHITE, WHITE, CYAN, GREEN, BLUE, ORANGE, MAGENTA,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    load_palettes(fix_pal, PALETTES+PALOFFSET);
+    setpal(fix_pal, 0, CYAN, CYAN, WHITE, GREEN, BLUE, ORANGE, MAGENTA,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    load_palettes(fix_pal, PALETTES+PALOFFSET*2);*/
+
+
+
+
+    /*playMusic(SOUND_MUSIC_SAMURAI_NIGHT_SCENE);*/
+
+ /*   fixtext_out(12, 26, "EAGLE SOFTWARE  2026", 0);
+    fixtext_out(12, 28, "DEMO  V1.2", 1);*/
+
+    /* Blink INSERT COIN for 360 frames (6 seconds at 60fps) */
+   /* for (i = 0; i < 360; i++) {
+        waitVbl();
+        if (i % 60 < 30) {
+            fixtext_out(12, 30, "INSERT COIN", 2);
+        } else {
+            fixtext_out(12, 30, "           ", 2);
+        }
+    }*/
+
+    //soundFadeOutSpeed(4);
+    cyclexms(300);
+    soundStopAll();
+    clearFix();
+    clearSprs();
+}
+
+/* Main demo game entry: reset the visible state, then hand off to playgame(). */
+void NEOGEO_USER maingame(void) {
+   
+    clearFix();
+    clearSprs();
+	showTitleScreen();
     playgame();
 }
 
@@ -181,21 +317,66 @@ void NEOGEO_USER showGameOver(void) {
     soundStopAll();
 }
 
-/* Short branded intro that resets the scene mix before the title flow takes over. */
+/* Boot intro: typewriter "EAGLE SOFTWARE" with voice cues, then Eagle Soft logo. */
 void NEOGEO_USER showEagleIntro(void) {
+    static const char eagle_word[] = "EAGLE";
+    static const char soft_word[] = "SOFTWARE";
+    uint16_t fix_pal[16];
+    char ch[2];
+    int i;
+
     clearFix();
     clearSprs();
     soundSceneReset();
     soundSetADPCMAVolume(0x3F);
-    soundSetADPCMBVolume(0xF0);
+    soundSetADPCMBVolume(0xB8);
     soundSetSSGVolume(0x08);
-    showScreen8(16, 520, 0xF, 0xAF, 9, 0xFFF);
-    cyclexms(200);
-    playSFX(SOUND_SFX_SHORT_SHOUT);
+
+    /* White text palette for FIX layer typewriter display */
+    /*setpal(fix_pal, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    load_palettes(fix_pal, PALETTES);*/
+
+    /* Eagle Fanfare boot melody fires immediately */
+   
+
+    ch[1] = '\0';
+
+    /* "Get Ready" voice + typewriter "EAGLE" — centered at tile col 17 row 13 */
+    playVoiceCue(SOUND_VOICE_GET_READY);
+    for (i = 0; i < 5; i++) {
+        ch[0] = eagle_word[i];
+        fixtext_out(17 + i, 13, ch, 0);
+        cyclexms(70);
+    }
+
+    cyclexms(20);
+
+    /* "Attack" voice + typewriter "SOFTWARE" — centered at tile col 16 row 15 */
+    playVoiceCue(SOUND_VOICE_ATTACK);
+    for (i = 0; i < 8; i++) {
+        ch[0] = soft_word[i];
+        fixtext_out(16 + i, 15, ch, 0);
+        cyclexms(60);
+    }
+
+    cyclexms(50);
+
+    /* Eagle Soft logo — title gong + logo screen */
+    clearFix();
+    clearSprs();
+   /* playSFX(SOUND_SFX_TITLE_GONG);*/
+    showScreen9(16, 24, 0xF, 0xAF, 16, 0xFFF, 0);
+    setBACKDROP(BLACK);
     cycle1s();
-    playSFX(SOUND_SFX_READY_VOICE);
+    playSFX(SOUND_SFX_LOW_DRUM);
     cycle1s();
+
+    soundFadeOutSpeed(4);
+    cyclexms(170);
     soundStopAll();
+    clearFix();
+    clearSprs();
 }
 
 /* Simple FIX-layer character placeholders used by the parade demo. */
@@ -283,7 +464,7 @@ void NEOGEO_USER showPseudo3DLoop(void) {
     soundStopAll();
 }
 
-void NEOGEO_USER showScreen1(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop) {
+void NEOGEO_USER showScreen1(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 1 ******************************************/
 uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
@@ -328,86 +509,86 @@ SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,0,min_crt_sz);
 SCB4    = setSCB4(x0);
 setBACKDROP(backdrop);
-vram_sprite(64*0,1,0,spriteMapS1_1,spal1_1,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*0,1,0,spriteMapS1_1,spal1_1,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*1);
 setBACKDROP(backdrop);
-vram_sprite(64*1,1,1,spriteMapS1_2,spal1_2,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*1,1,1,spriteMapS1_2,spal1_2,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*2);
 setBACKDROP(backdrop);
-vram_sprite(64*2,1,2,spriteMapS1_3,spal1_3,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*2,1,2,spriteMapS1_3,spal1_3,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*3);
 setBACKDROP(backdrop);
-vram_sprite(64*3,1,3,spriteMapS1_4,spal1_4,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*3,1,3,spriteMapS1_4,spal1_4,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*4);
 setBACKDROP(backdrop);
-vram_sprite(64*4,1,4,spriteMapS1_5,spal1_5,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*4,1,4,spriteMapS1_5,spal1_5,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*5);
 setBACKDROP(backdrop);
-vram_sprite(64*5,1,5,spriteMapS1_6,spal1_6,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*5,1,5,spriteMapS1_6,spal1_6,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*6);
 setBACKDROP(backdrop);
-vram_sprite(64*6,1,6,spriteMapS1_7,spal1_7,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*6,1,6,spriteMapS1_7,spal1_7,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*7);
 setBACKDROP(backdrop);
-vram_sprite(64*7,1,7,spriteMapS1_8,spal1_8,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*7,1,7,spriteMapS1_8,spal1_8,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*8);
 setBACKDROP(backdrop);
-vram_sprite(64*8,1,8,spriteMapS1_9,spal1_9,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*8,1,8,spriteMapS1_9,spal1_9,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*9);
 setBACKDROP(backdrop);
-vram_sprite(64*9,1,9,spriteMapS1_10,spal1_10,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*9,1,9,spriteMapS1_10,spal1_10,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*10);
 setBACKDROP(backdrop);
-vram_sprite(64*10,1,10,spriteMapS1_11,spal1_11,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*10,1,10,spriteMapS1_11,spal1_11,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*11);
 setBACKDROP(backdrop);
-vram_sprite(64*11,1,11,spriteMapS1_12,spal1_12,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*11,1,11,spriteMapS1_12,spal1_12,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*12);
 setBACKDROP(backdrop);
-vram_sprite(64*12,1,12,spriteMapS1_13,spal1_13,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*12,1,12,spriteMapS1_13,spal1_13,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*13);
 setBACKDROP(backdrop);
-vram_sprite(64*13,1,13,spriteMapS1_14,spal1_14,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*13,1,13,spriteMapS1_14,spal1_14,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*14);
 setBACKDROP(backdrop);
-vram_sprite(64*14,1,14,spriteMapS1_15,spal1_15,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*14,1,14,spriteMapS1_15,spal1_15,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*15);
 setBACKDROP(backdrop);
-vram_sprite(64*15,1,15,spriteMapS1_16,spal1_16,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*15,1,15,spriteMapS1_16,spal1_16,16,SCB2,SCB3,SCB4);
 }
 
 
-void NEOGEO_USER showScreen2(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop) {
+void NEOGEO_USER showScreen2(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 2 ******************************************/
 uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
@@ -452,86 +633,86 @@ SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,0,min_crt_sz);
 SCB4    = setSCB4(x0);
 setBACKDROP(backdrop);
-vram_sprite(64*0,1,0,spriteMapS2_1,spal2_1,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*0,1,0,spriteMapS2_1,spal2_1,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*1);
 setBACKDROP(backdrop);
-vram_sprite(64*1,1,1,spriteMapS2_2,spal2_2,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*1,1,1,spriteMapS2_2,spal2_2,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*2);
 setBACKDROP(backdrop);
-vram_sprite(64*2,1,2,spriteMapS2_3,spal2_3,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*2,1,2,spriteMapS2_3,spal2_3,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*3);
 setBACKDROP(backdrop);
-vram_sprite(64*3,1,3,spriteMapS2_4,spal2_4,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*3,1,3,spriteMapS2_4,spal2_4,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*4);
 setBACKDROP(backdrop);
-vram_sprite(64*4,1,4,spriteMapS2_5,spal2_5,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*4,1,4,spriteMapS2_5,spal2_5,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*5);
 setBACKDROP(backdrop);
-vram_sprite(64*5,1,5,spriteMapS2_6,spal2_6,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*5,1,5,spriteMapS2_6,spal2_6,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*6);
 setBACKDROP(backdrop);
-vram_sprite(64*6,1,6,spriteMapS2_7,spal2_7,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*6,1,6,spriteMapS2_7,spal2_7,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*7);
 setBACKDROP(backdrop);
-vram_sprite(64*7,1,7,spriteMapS2_8,spal2_8,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*7,1,7,spriteMapS2_8,spal2_8,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*8);
 setBACKDROP(backdrop);
-vram_sprite(64*8,1,8,spriteMapS2_9,spal2_9,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*8,1,8,spriteMapS2_9,spal2_9,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*9);
 setBACKDROP(backdrop);
-vram_sprite(64*9,1,9,spriteMapS2_10,spal2_10,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*9,1,9,spriteMapS2_10,spal2_10,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*10);
 setBACKDROP(backdrop);
-vram_sprite(64*10,1,10,spriteMapS2_11,spal2_11,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*10,1,10,spriteMapS2_11,spal2_11,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*11);
 setBACKDROP(backdrop);
-vram_sprite(64*11,1,11,spriteMapS2_12,spal2_12,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*11,1,11,spriteMapS2_12,spal2_12,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*12);
 setBACKDROP(backdrop);
-vram_sprite(64*12,1,12,spriteMapS2_13,spal2_13,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*12,1,12,spriteMapS2_13,spal2_13,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*13);
 setBACKDROP(backdrop);
-vram_sprite(64*13,1,13,spriteMapS2_14,spal2_14,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*13,1,13,spriteMapS2_14,spal2_14,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*14);
 setBACKDROP(backdrop);
-vram_sprite(64*14,1,14,spriteMapS2_15,spal2_15,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*14,1,14,spriteMapS2_15,spal2_15,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*15);
 setBACKDROP(backdrop);
-vram_sprite(64*15,1,15,spriteMapS2_16,spal2_16,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*15,1,15,spriteMapS2_16,spal2_16,16,SCB2,SCB3,SCB4);
 }
 
 
-void NEOGEO_USER showScreen3(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop) {
+void NEOGEO_USER showScreen3(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 3 ******************************************/
 uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
@@ -576,86 +757,86 @@ SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,0,min_crt_sz);
 SCB4    = setSCB4(x0);
 setBACKDROP(backdrop);
-vram_sprite(64*0,1,0,spriteMapS3_1,spal3_1,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*0,1,0,spriteMapS3_1,spal3_1,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*1);
 setBACKDROP(backdrop);
-vram_sprite(64*1,1,1,spriteMapS3_2,spal3_2,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*1,1,1,spriteMapS3_2,spal3_2,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*2);
 setBACKDROP(backdrop);
-vram_sprite(64*2,1,2,spriteMapS3_3,spal3_3,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*2,1,2,spriteMapS3_3,spal3_3,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*3);
 setBACKDROP(backdrop);
-vram_sprite(64*3,1,3,spriteMapS3_4,spal3_4,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*3,1,3,spriteMapS3_4,spal3_4,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*4);
 setBACKDROP(backdrop);
-vram_sprite(64*4,1,4,spriteMapS3_5,spal3_5,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*4,1,4,spriteMapS3_5,spal3_5,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*5);
 setBACKDROP(backdrop);
-vram_sprite(64*5,1,5,spriteMapS3_6,spal3_6,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*5,1,5,spriteMapS3_6,spal3_6,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*6);
 setBACKDROP(backdrop);
-vram_sprite(64*6,1,6,spriteMapS3_7,spal3_7,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*6,1,6,spriteMapS3_7,spal3_7,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*7);
 setBACKDROP(backdrop);
-vram_sprite(64*7,1,7,spriteMapS3_8,spal3_8,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*7,1,7,spriteMapS3_8,spal3_8,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*8);
 setBACKDROP(backdrop);
-vram_sprite(64*8,1,8,spriteMapS3_9,spal3_9,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*8,1,8,spriteMapS3_9,spal3_9,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*9);
 setBACKDROP(backdrop);
-vram_sprite(64*9,1,9,spriteMapS3_10,spal3_10,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*9,1,9,spriteMapS3_10,spal3_10,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*10);
 setBACKDROP(backdrop);
-vram_sprite(64*10,1,10,spriteMapS3_11,spal3_11,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*10,1,10,spriteMapS3_11,spal3_11,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*11);
 setBACKDROP(backdrop);
-vram_sprite(64*11,1,11,spriteMapS3_12,spal3_12,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*11,1,11,spriteMapS3_12,spal3_12,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*12);
 setBACKDROP(backdrop);
-vram_sprite(64*12,1,12,spriteMapS3_13,spal3_13,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*12,1,12,spriteMapS3_13,spal3_13,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*13);
 setBACKDROP(backdrop);
-vram_sprite(64*13,1,13,spriteMapS3_14,spal3_14,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*13,1,13,spriteMapS3_14,spal3_14,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*14);
 setBACKDROP(backdrop);
-vram_sprite(64*14,1,14,spriteMapS3_15,spal3_15,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*14,1,14,spriteMapS3_15,spal3_15,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*15);
 setBACKDROP(backdrop);
-vram_sprite(64*15,1,15,spriteMapS3_16,spal3_16,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*15,1,15,spriteMapS3_16,spal3_16,16,SCB2,SCB3,SCB4);
 }
 
 
-void NEOGEO_USER showScreen4(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop) {
+void NEOGEO_USER showScreen4(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 4 ******************************************/
 uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
@@ -700,86 +881,86 @@ SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,0,min_crt_sz);
 SCB4    = setSCB4(x0);
 setBACKDROP(backdrop);
-vram_sprite(64*0,1,0,spriteMapS4_1,spal4_1,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*0,1,0,spriteMapS4_1,spal4_1,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*1);
 setBACKDROP(backdrop);
-vram_sprite(64*1,1,1,spriteMapS4_2,spal4_2,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*1,1,1,spriteMapS4_2,spal4_2,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*2);
 setBACKDROP(backdrop);
-vram_sprite(64*2,1,2,spriteMapS4_3,spal4_3,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*2,1,2,spriteMapS4_3,spal4_3,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*3);
 setBACKDROP(backdrop);
-vram_sprite(64*3,1,3,spriteMapS4_4,spal4_4,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*3,1,3,spriteMapS4_4,spal4_4,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*4);
 setBACKDROP(backdrop);
-vram_sprite(64*4,1,4,spriteMapS4_5,spal4_5,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*4,1,4,spriteMapS4_5,spal4_5,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*5);
 setBACKDROP(backdrop);
-vram_sprite(64*5,1,5,spriteMapS4_6,spal4_6,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*5,1,5,spriteMapS4_6,spal4_6,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*6);
 setBACKDROP(backdrop);
-vram_sprite(64*6,1,6,spriteMapS4_7,spal4_7,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*6,1,6,spriteMapS4_7,spal4_7,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*7);
 setBACKDROP(backdrop);
-vram_sprite(64*7,1,7,spriteMapS4_8,spal4_8,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*7,1,7,spriteMapS4_8,spal4_8,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*8);
 setBACKDROP(backdrop);
-vram_sprite(64*8,1,8,spriteMapS4_9,spal4_9,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*8,1,8,spriteMapS4_9,spal4_9,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*9);
 setBACKDROP(backdrop);
-vram_sprite(64*9,1,9,spriteMapS4_10,spal4_10,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*9,1,9,spriteMapS4_10,spal4_10,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*10);
 setBACKDROP(backdrop);
-vram_sprite(64*10,1,10,spriteMapS4_11,spal4_11,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*10,1,10,spriteMapS4_11,spal4_11,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*11);
 setBACKDROP(backdrop);
-vram_sprite(64*11,1,11,spriteMapS4_12,spal4_12,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*11,1,11,spriteMapS4_12,spal4_12,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*12);
 setBACKDROP(backdrop);
-vram_sprite(64*12,1,12,spriteMapS4_13,spal4_13,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*12,1,12,spriteMapS4_13,spal4_13,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*13);
 setBACKDROP(backdrop);
-vram_sprite(64*13,1,13,spriteMapS4_14,spal4_14,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*13,1,13,spriteMapS4_14,spal4_14,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*14);
 setBACKDROP(backdrop);
-vram_sprite(64*14,1,14,spriteMapS4_15,spal4_15,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*14,1,14,spriteMapS4_15,spal4_15,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*15);
 setBACKDROP(backdrop);
-vram_sprite(64*15,1,15,spriteMapS4_16,spal4_16,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*15,1,15,spriteMapS4_16,spal4_16,16,SCB2,SCB3,SCB4);
 }
 
 
-void NEOGEO_USER showScreen5(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop) {
+void NEOGEO_USER showScreen5(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 5 ******************************************/
 uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
@@ -824,86 +1005,86 @@ SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,0,min_crt_sz);
 SCB4    = setSCB4(x0);
 setBACKDROP(backdrop);
-vram_sprite(64*0,1,0,spriteMapS5_1,spal5_1,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*0,1,0,spriteMapS5_1,spal5_1,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*1);
 setBACKDROP(backdrop);
-vram_sprite(64*1,1,1,spriteMapS5_2,spal5_2,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*1,1,1,spriteMapS5_2,spal5_2,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*2);
 setBACKDROP(backdrop);
-vram_sprite(64*2,1,2,spriteMapS5_3,spal5_3,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*2,1,2,spriteMapS5_3,spal5_3,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*3);
 setBACKDROP(backdrop);
-vram_sprite(64*3,1,3,spriteMapS5_4,spal5_4,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*3,1,3,spriteMapS5_4,spal5_4,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*4);
 setBACKDROP(backdrop);
-vram_sprite(64*4,1,4,spriteMapS5_5,spal5_5,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*4,1,4,spriteMapS5_5,spal5_5,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*5);
 setBACKDROP(backdrop);
-vram_sprite(64*5,1,5,spriteMapS5_6,spal5_6,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*5,1,5,spriteMapS5_6,spal5_6,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*6);
 setBACKDROP(backdrop);
-vram_sprite(64*6,1,6,spriteMapS5_7,spal5_7,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*6,1,6,spriteMapS5_7,spal5_7,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*7);
 setBACKDROP(backdrop);
-vram_sprite(64*7,1,7,spriteMapS5_8,spal5_8,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*7,1,7,spriteMapS5_8,spal5_8,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*8);
 setBACKDROP(backdrop);
-vram_sprite(64*8,1,8,spriteMapS5_9,spal5_9,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*8,1,8,spriteMapS5_9,spal5_9,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*9);
 setBACKDROP(backdrop);
-vram_sprite(64*9,1,9,spriteMapS5_10,spal5_10,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*9,1,9,spriteMapS5_10,spal5_10,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*10);
 setBACKDROP(backdrop);
-vram_sprite(64*10,1,10,spriteMapS5_11,spal5_11,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*10,1,10,spriteMapS5_11,spal5_11,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*11);
 setBACKDROP(backdrop);
-vram_sprite(64*11,1,11,spriteMapS5_12,spal5_12,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*11,1,11,spriteMapS5_12,spal5_12,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*12);
 setBACKDROP(backdrop);
-vram_sprite(64*12,1,12,spriteMapS5_13,spal5_13,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*12,1,12,spriteMapS5_13,spal5_13,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*13);
 setBACKDROP(backdrop);
-vram_sprite(64*13,1,13,spriteMapS5_14,spal5_14,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*13,1,13,spriteMapS5_14,spal5_14,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*14);
 setBACKDROP(backdrop);
-vram_sprite(64*14,1,14,spriteMapS5_15,spal5_15,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*14,1,14,spriteMapS5_15,spal5_15,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*15);
 setBACKDROP(backdrop);
-vram_sprite(64*15,1,15,spriteMapS5_16,spal5_16,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*15,1,15,spriteMapS5_16,spal5_16,16,SCB2,SCB3,SCB4);
 }
 
 
-void NEOGEO_USER showScreen6(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop) {
+void NEOGEO_USER showScreen6(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 6 ******************************************/
 uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
@@ -948,86 +1129,86 @@ SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,0,min_crt_sz);
 SCB4    = setSCB4(x0);
 setBACKDROP(backdrop);
-vram_sprite(64*0,1,0,spriteMapS6_1,spal6_1,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*0,1,0,spriteMapS6_1,spal6_1,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*1);
 setBACKDROP(backdrop);
-vram_sprite(64*1,1,1,spriteMapS6_2,spal6_2,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*1,1,1,spriteMapS6_2,spal6_2,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*2);
 setBACKDROP(backdrop);
-vram_sprite(64*2,1,2,spriteMapS6_3,spal6_3,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*2,1,2,spriteMapS6_3,spal6_3,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*3);
 setBACKDROP(backdrop);
-vram_sprite(64*3,1,3,spriteMapS6_4,spal6_4,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*3,1,3,spriteMapS6_4,spal6_4,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*4);
 setBACKDROP(backdrop);
-vram_sprite(64*4,1,4,spriteMapS6_5,spal6_5,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*4,1,4,spriteMapS6_5,spal6_5,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*5);
 setBACKDROP(backdrop);
-vram_sprite(64*5,1,5,spriteMapS6_6,spal6_6,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*5,1,5,spriteMapS6_6,spal6_6,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*6);
 setBACKDROP(backdrop);
-vram_sprite(64*6,1,6,spriteMapS6_7,spal6_7,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*6,1,6,spriteMapS6_7,spal6_7,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*7);
 setBACKDROP(backdrop);
-vram_sprite(64*7,1,7,spriteMapS6_8,spal6_8,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*7,1,7,spriteMapS6_8,spal6_8,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*8);
 setBACKDROP(backdrop);
-vram_sprite(64*8,1,8,spriteMapS6_9,spal6_9,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*8,1,8,spriteMapS6_9,spal6_9,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*9);
 setBACKDROP(backdrop);
-vram_sprite(64*9,1,9,spriteMapS6_10,spal6_10,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*9,1,9,spriteMapS6_10,spal6_10,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*10);
 setBACKDROP(backdrop);
-vram_sprite(64*10,1,10,spriteMapS6_11,spal6_11,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*10,1,10,spriteMapS6_11,spal6_11,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*11);
 setBACKDROP(backdrop);
-vram_sprite(64*11,1,11,spriteMapS6_12,spal6_12,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*11,1,11,spriteMapS6_12,spal6_12,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*12);
 setBACKDROP(backdrop);
-vram_sprite(64*12,1,12,spriteMapS6_13,spal6_13,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*12,1,12,spriteMapS6_13,spal6_13,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*13);
 setBACKDROP(backdrop);
-vram_sprite(64*13,1,13,spriteMapS6_14,spal6_14,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*13,1,13,spriteMapS6_14,spal6_14,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*14);
 setBACKDROP(backdrop);
-vram_sprite(64*14,1,14,spriteMapS6_15,spal6_15,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*14,1,14,spriteMapS6_15,spal6_15,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*15);
 setBACKDROP(backdrop);
-vram_sprite(64*15,1,15,spriteMapS6_16,spal6_16,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*15,1,15,spriteMapS6_16,spal6_16,16,SCB2,SCB3,SCB4);
 }
 
 
-void NEOGEO_USER showScreen7(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop) {
+void NEOGEO_USER showScreen7(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 7 ******************************************/
 uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
@@ -1072,86 +1253,86 @@ SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,0,min_crt_sz);
 SCB4    = setSCB4(x0);
 setBACKDROP(backdrop);
-vram_sprite(64*0,1,0,spriteMapS7_1,spal7_1,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*0,1,0,spriteMapS7_1,spal7_1,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*1);
 setBACKDROP(backdrop);
-vram_sprite(64*1,1,1,spriteMapS7_2,spal7_2,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*1,1,1,spriteMapS7_2,spal7_2,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*2);
 setBACKDROP(backdrop);
-vram_sprite(64*2,1,2,spriteMapS7_3,spal7_3,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*2,1,2,spriteMapS7_3,spal7_3,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*3);
 setBACKDROP(backdrop);
-vram_sprite(64*3,1,3,spriteMapS7_4,spal7_4,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*3,1,3,spriteMapS7_4,spal7_4,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*4);
 setBACKDROP(backdrop);
-vram_sprite(64*4,1,4,spriteMapS7_5,spal7_5,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*4,1,4,spriteMapS7_5,spal7_5,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*5);
 setBACKDROP(backdrop);
-vram_sprite(64*5,1,5,spriteMapS7_6,spal7_6,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*5,1,5,spriteMapS7_6,spal7_6,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*6);
 setBACKDROP(backdrop);
-vram_sprite(64*6,1,6,spriteMapS7_7,spal7_7,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*6,1,6,spriteMapS7_7,spal7_7,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*7);
 setBACKDROP(backdrop);
-vram_sprite(64*7,1,7,spriteMapS7_8,spal7_8,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*7,1,7,spriteMapS7_8,spal7_8,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*8);
 setBACKDROP(backdrop);
-vram_sprite(64*8,1,8,spriteMapS7_9,spal7_9,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*8,1,8,spriteMapS7_9,spal7_9,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*9);
 setBACKDROP(backdrop);
-vram_sprite(64*9,1,9,spriteMapS7_10,spal7_10,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*9,1,9,spriteMapS7_10,spal7_10,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*10);
 setBACKDROP(backdrop);
-vram_sprite(64*10,1,10,spriteMapS7_11,spal7_11,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*10,1,10,spriteMapS7_11,spal7_11,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*11);
 setBACKDROP(backdrop);
-vram_sprite(64*11,1,11,spriteMapS7_12,spal7_12,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*11,1,11,spriteMapS7_12,spal7_12,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*12);
 setBACKDROP(backdrop);
-vram_sprite(64*12,1,12,spriteMapS7_13,spal7_13,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*12,1,12,spriteMapS7_13,spal7_13,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*13);
 setBACKDROP(backdrop);
-vram_sprite(64*13,1,13,spriteMapS7_14,spal7_14,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*13,1,13,spriteMapS7_14,spal7_14,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*14);
 setBACKDROP(backdrop);
-vram_sprite(64*14,1,14,spriteMapS7_15,spal7_15,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*14,1,14,spriteMapS7_15,spal7_15,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*15);
 setBACKDROP(backdrop);
-vram_sprite(64*15,1,15,spriteMapS7_16,spal7_16,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*15,1,15,spriteMapS7_16,spal7_16,16,SCB2,SCB3,SCB4);
 }
 
 
-void NEOGEO_USER showScreen8(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop) {
+void NEOGEO_USER showScreen8(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 8 ******************************************/
 uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
@@ -1196,92 +1377,92 @@ SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,0,min_crt_sz);
 SCB4    = setSCB4(x0);
 setBACKDROP(backdrop);
-vram_sprite(64*0,1,0,spriteMapS8_1,spal8_1,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*0,1,0,spriteMapS8_1,spal8_1,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*1);
 setBACKDROP(backdrop);
-vram_sprite(64*1,1,1,spriteMapS8_2,spal8_2,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*1,1,1,spriteMapS8_2,spal8_2,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*2);
 setBACKDROP(backdrop);
-vram_sprite(64*2,1,2,spriteMapS8_3,spal8_3,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*2,1,2,spriteMapS8_3,spal8_3,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*3);
 setBACKDROP(backdrop);
-vram_sprite(64*3,1,3,spriteMapS8_4,spal8_4,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*3,1,3,spriteMapS8_4,spal8_4,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*4);
 setBACKDROP(backdrop);
-vram_sprite(64*4,1,4,spriteMapS8_5,spal8_5,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*4,1,4,spriteMapS8_5,spal8_5,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*5);
 setBACKDROP(backdrop);
-vram_sprite(64*5,1,5,spriteMapS8_6,spal8_6,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*5,1,5,spriteMapS8_6,spal8_6,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*6);
 setBACKDROP(backdrop);
-vram_sprite(64*6,1,6,spriteMapS8_7,spal8_7,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*6,1,6,spriteMapS8_7,spal8_7,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*7);
 setBACKDROP(backdrop);
-vram_sprite(64*7,1,7,spriteMapS8_8,spal8_8,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*7,1,7,spriteMapS8_8,spal8_8,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*8);
 setBACKDROP(backdrop);
-vram_sprite(64*8,1,8,spriteMapS8_9,spal8_9,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*8,1,8,spriteMapS8_9,spal8_9,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*9);
 setBACKDROP(backdrop);
-vram_sprite(64*9,1,9,spriteMapS8_10,spal8_10,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*9,1,9,spriteMapS8_10,spal8_10,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*10);
 setBACKDROP(backdrop);
-vram_sprite(64*10,1,10,spriteMapS8_11,spal8_11,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*10,1,10,spriteMapS8_11,spal8_11,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*11);
 setBACKDROP(backdrop);
-vram_sprite(64*11,1,11,spriteMapS8_12,spal8_12,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*11,1,11,spriteMapS8_12,spal8_12,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*12);
 setBACKDROP(backdrop);
-vram_sprite(64*12,1,12,spriteMapS8_13,spal8_13,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*12,1,12,spriteMapS8_13,spal8_13,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*13);
 setBACKDROP(backdrop);
-vram_sprite(64*13,1,13,spriteMapS8_14,spal8_14,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*13,1,13,spriteMapS8_14,spal8_14,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*14);
 setBACKDROP(backdrop);
-vram_sprite(64*14,1,14,spriteMapS8_15,spal8_15,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*14,1,14,spriteMapS8_15,spal8_15,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*15);
 setBACKDROP(backdrop);
-vram_sprite(64*15,1,15,spriteMapS8_16,spal8_16,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*15,1,15,spriteMapS8_16,spal8_16,16,SCB2,SCB3,SCB4);
 }
 
 
-void NEOGEO_USER showScreen9(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop) {
+void NEOGEO_USER showScreen9(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 9 ******************************************/
 uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
 uint16_t  SCB4    = 0x0;
 uint16_t  pal9[16];
-setpal(pal9,0x0,0x7fff,0x0,0x7111,0x7222,0x7333,0x7444,0x7555,0x7666,0x7777,0x7888,0x7999,0x5aba,0x1ccb,0xddd,0xeee);
+setpal(pal9,0x0,0x1015,0x7fff,0x48ce,0x5b,0x1e88,0x4d00,0x1000,0x168a,0x1003,0x34ae,0x108e,0x1cee,0x1038,0x2c24,0x447);
 uint16_t spriteMapS9_1[16] = {0x800,0x810,0x820,0x830,0x840,0x850,0x860,0x870,0x880,0x890,0x8a0,0x8b0,0x8c0,0x8d0,0x8e0,0x8f0};
 uint16_t spriteMapS9_2[16] = {0x801,0x811,0x821,0x831,0x841,0x851,0x861,0x871,0x881,0x891,0x8a1,0x8b1,0x8c1,0x8d1,0x8e1,0x8f1};
 uint16_t spriteMapS9_3[16] = {0x802,0x812,0x822,0x832,0x842,0x852,0x862,0x872,0x882,0x892,0x8a2,0x8b2,0x8c2,0x8d2,0x8e2,0x8f2};
@@ -1320,92 +1501,92 @@ SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,0,min_crt_sz);
 SCB4    = setSCB4(x0);
 setBACKDROP(backdrop);
-vram_sprite(64*0,1,0,spriteMapS9_1,spal9_1,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*0,1,0,spriteMapS9_1,spal9_1,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*1);
 setBACKDROP(backdrop);
-vram_sprite(64*1,1,1,spriteMapS9_2,spal9_2,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*1,1,1,spriteMapS9_2,spal9_2,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*2);
 setBACKDROP(backdrop);
-vram_sprite(64*2,1,2,spriteMapS9_3,spal9_3,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*2,1,2,spriteMapS9_3,spal9_3,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*3);
 setBACKDROP(backdrop);
-vram_sprite(64*3,1,3,spriteMapS9_4,spal9_4,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*3,1,3,spriteMapS9_4,spal9_4,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*4);
 setBACKDROP(backdrop);
-vram_sprite(64*4,1,4,spriteMapS9_5,spal9_5,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*4,1,4,spriteMapS9_5,spal9_5,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*5);
 setBACKDROP(backdrop);
-vram_sprite(64*5,1,5,spriteMapS9_6,spal9_6,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*5,1,5,spriteMapS9_6,spal9_6,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*6);
 setBACKDROP(backdrop);
-vram_sprite(64*6,1,6,spriteMapS9_7,spal9_7,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*6,1,6,spriteMapS9_7,spal9_7,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*7);
 setBACKDROP(backdrop);
-vram_sprite(64*7,1,7,spriteMapS9_8,spal9_8,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*7,1,7,spriteMapS9_8,spal9_8,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*8);
 setBACKDROP(backdrop);
-vram_sprite(64*8,1,8,spriteMapS9_9,spal9_9,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*8,1,8,spriteMapS9_9,spal9_9,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*9);
 setBACKDROP(backdrop);
-vram_sprite(64*9,1,9,spriteMapS9_10,spal9_10,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*9,1,9,spriteMapS9_10,spal9_10,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*10);
 setBACKDROP(backdrop);
-vram_sprite(64*10,1,10,spriteMapS9_11,spal9_11,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*10,1,10,spriteMapS9_11,spal9_11,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*11);
 setBACKDROP(backdrop);
-vram_sprite(64*11,1,11,spriteMapS9_12,spal9_12,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*11,1,11,spriteMapS9_12,spal9_12,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*12);
 setBACKDROP(backdrop);
-vram_sprite(64*12,1,12,spriteMapS9_13,spal9_13,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*12,1,12,spriteMapS9_13,spal9_13,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*13);
 setBACKDROP(backdrop);
-vram_sprite(64*13,1,13,spriteMapS9_14,spal9_14,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*13,1,13,spriteMapS9_14,spal9_14,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*14);
 setBACKDROP(backdrop);
-vram_sprite(64*14,1,14,spriteMapS9_15,spal9_15,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*14,1,14,spriteMapS9_15,spal9_15,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*15);
 setBACKDROP(backdrop);
-vram_sprite(64*15,1,15,spriteMapS9_16,spal9_16,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*15,1,15,spriteMapS9_16,spal9_16,16,SCB2,SCB3,SCB4);
 }
 
 
-void NEOGEO_USER showScreen10(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop) {
+void NEOGEO_USER showScreen10(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 10 ******************************************/
 uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
 uint16_t  SCB4    = 0x0;
 uint16_t  pal10[16];
-setpal(pal10,0x0,0x4d72,0x223,0x3423,0x5853,0x4da6,0x5ec9,0x4ff3,0x49e5,0x66b3,0x1396,0x7462,0x2542,0x3333,0x0,0x0);
+setpal(pal10,0x0,0x1000,0x3fe7,0x7f10,0x7820,0x111d,0x4c18,0x4526,0x3104,0x1f80,0xeff,0x79ac,0x7b10,0x7400,0x347e,0x5fe0);
 uint16_t spriteMapS10_1[16] = {0x900,0x910,0x920,0x930,0x940,0x950,0x960,0x970,0x980,0x990,0x9a0,0x9b0,0x9c0,0x9d0,0x9e0,0x9f0};
 uint16_t spriteMapS10_2[16] = {0x901,0x911,0x921,0x931,0x941,0x951,0x961,0x971,0x981,0x991,0x9a1,0x9b1,0x9c1,0x9d1,0x9e1,0x9f1};
 uint16_t spriteMapS10_3[16] = {0x902,0x912,0x922,0x932,0x942,0x952,0x962,0x972,0x982,0x992,0x9a2,0x9b2,0x9c2,0x9d2,0x9e2,0x9f2};
@@ -1444,80 +1625,80 @@ SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,0,min_crt_sz);
 SCB4    = setSCB4(x0);
 setBACKDROP(backdrop);
-vram_sprite(64*0,1,0,spriteMapS10_1,spal10_1,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*0,1,0,spriteMapS10_1,spal10_1,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*1);
 setBACKDROP(backdrop);
-vram_sprite(64*1,1,1,spriteMapS10_2,spal10_2,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*1,1,1,spriteMapS10_2,spal10_2,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*2);
 setBACKDROP(backdrop);
-vram_sprite(64*2,1,2,spriteMapS10_3,spal10_3,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*2,1,2,spriteMapS10_3,spal10_3,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*3);
 setBACKDROP(backdrop);
-vram_sprite(64*3,1,3,spriteMapS10_4,spal10_4,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*3,1,3,spriteMapS10_4,spal10_4,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*4);
 setBACKDROP(backdrop);
-vram_sprite(64*4,1,4,spriteMapS10_5,spal10_5,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*4,1,4,spriteMapS10_5,spal10_5,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*5);
 setBACKDROP(backdrop);
-vram_sprite(64*5,1,5,spriteMapS10_6,spal10_6,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*5,1,5,spriteMapS10_6,spal10_6,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*6);
 setBACKDROP(backdrop);
-vram_sprite(64*6,1,6,spriteMapS10_7,spal10_7,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*6,1,6,spriteMapS10_7,spal10_7,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*7);
 setBACKDROP(backdrop);
-vram_sprite(64*7,1,7,spriteMapS10_8,spal10_8,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*7,1,7,spriteMapS10_8,spal10_8,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*8);
 setBACKDROP(backdrop);
-vram_sprite(64*8,1,8,spriteMapS10_9,spal10_9,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*8,1,8,spriteMapS10_9,spal10_9,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*9);
 setBACKDROP(backdrop);
-vram_sprite(64*9,1,9,spriteMapS10_10,spal10_10,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*9,1,9,spriteMapS10_10,spal10_10,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*10);
 setBACKDROP(backdrop);
-vram_sprite(64*10,1,10,spriteMapS10_11,spal10_11,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*10,1,10,spriteMapS10_11,spal10_11,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*11);
 setBACKDROP(backdrop);
-vram_sprite(64*11,1,11,spriteMapS10_12,spal10_12,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*11,1,11,spriteMapS10_12,spal10_12,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*12);
 setBACKDROP(backdrop);
-vram_sprite(64*12,1,12,spriteMapS10_13,spal10_13,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*12,1,12,spriteMapS10_13,spal10_13,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*13);
 setBACKDROP(backdrop);
-vram_sprite(64*13,1,13,spriteMapS10_14,spal10_14,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*13,1,13,spriteMapS10_14,spal10_14,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*14);
 setBACKDROP(backdrop);
-vram_sprite(64*14,1,14,spriteMapS10_15,spal10_15,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*14,1,14,spriteMapS10_15,spal10_15,16,SCB2,SCB3,SCB4);
 SCB2    = setSCB2(xr,yr);
 SCB3    = setSCB3(496-y0,1,min_crt_sz);
 SCB4    = setSCB4(x0+16*15);
 setBACKDROP(backdrop);
-vram_sprite(64*15,1,15,spriteMapS10_16,spal10_16,16,SCB2,SCB3,SCB4);
+vram_sprite(sprite_base + 64*15,1,15,spriteMapS10_16,spal10_16,16,SCB2,SCB3,SCB4);
 }

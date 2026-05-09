@@ -1,6 +1,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Neo Geo YM2610 sound driver (FIXED)
-;; Fixes applied:
+;; Neo Geo YM2610 sound driver 
+
 ;;   - SSG period table: accurate A=440Hz tuning for 8MHz/64 master divider
 ;;   - SSG mixer: correct bit layout per YM2149/YM2610 spec
 ;;   - SSG volume: M bit (bit 4) always cleared for fixed amplitude mode
@@ -410,9 +410,9 @@ exec_normal:
     cp SSG_CMD_PLAY ; SSG track select parameter follows
     jr z,set_ssgtrack_wait
     cp $28 ; ADPCM-B direct sample 0
-    jr z,play_demo_b0
+    jp z,play_demo_b0
     cp $29 ; ADPCM-B direct sample 1
-    jr z,play_demo_b1
+    jp z,play_demo_b1
 
     cp SFX_B_BASE
     jp nc,play_adpcmb_cmd
@@ -746,17 +746,26 @@ fm_silence_tl_loop:
 
 init_adpcma:
     call adpcma_stop
-    ld d,$01
+    ; Set ADPCM-A master volume: reg $01 Port B
+    ld a,$01
+    di
+    out ($06),a
+    nop
     ld a,(VAR_ADPCMA_VOL)
-    ld e,a
-    call shadowed_write_b
-    ; Set all 6 ADPCM-A channel volumes to $C0 (L+R output enabled)
+    out ($07),a
+    ei
+    ; Set all 6 ADPCM-A channel L/R + volume: regs $08-$0D Port B
     ld b,6
-    ld d,8
+    ld c,$08
 adpcma_vol_loop:
-    ld e,$C0
-    call shadowed_write_b
-    inc d
+    ld a,c
+    di
+    out ($06),a
+    nop
+    ld a,$DF              ; L+R on + max channel volume
+    out ($07),a
+    ei
+    inc c
     djnz adpcma_vol_loop
     ret
 
@@ -775,19 +784,19 @@ init_adpcmb:
     call force_write_a
     ; Step 4: Enable Left + Right output
     ld de,$11C0
-    call shadowed_write_a
+    call force_write_a
     ; Step 5: Set default sample rate (Delta-N for ~16kHz)
     ; Delta-N = (Freq / 55500) * 65536
     ; 16000 / 55500 * 65536 = 18893 = $49CD
-    ld de,$19CD ; Delta-N low byte (was $BA - now more accurate)
-    call shadowed_write_a
+    ld de,$19CD ; Delta-N low byte
+    call force_write_a
     ld de,$1A49 ; Delta-N high byte
-    call shadowed_write_a
+    call force_write_a
     ; Step 6: Set volume
     ld d,$1B
     ld a,(VAR_ADPCMB_VOL)
     ld e,a
-    call shadowed_write_a
+    call force_write_a
     ret
 
 stop_all:
@@ -861,8 +870,15 @@ driver_soft_reset:
 ;;; Register $00 bit 7 = dump mode, bits 0-5 = channel mask
 ;;; $BF = dump + all 6 channels
 adpcma_stop:
-    ld de,$00BF
-    jp force_write_b
+    ; Stop all 6 ADPCM-A channels: reg $00 Port B, data = $BF (dump + all channels)
+    xor a
+    di
+    out ($06),a
+    nop
+    ld a,$BF
+    out ($07),a
+    ei
+    ret
 
 ;;; FIX: ADPCM-B stop: assert reset bit
 adpcmb_stop:
@@ -948,10 +964,13 @@ play_adpcma_index:
     ld (VAR_ADPCMA_TICKS),a
     pop af
     call get_sample_ptr
-    push hl
-    push bc
+    ; get_sample_ptr returns: B=StartLo, C=StartHi, H=EndHi, L=EndLo
+    push hl               ; save end address
+    push bc               ; save start address
+
+    ; Round-robin channel allocation
     ld a,(VAR_ADPCMA_CH)
-    ld c,a
+    ld c,a                ; C = channel index (0-5)
     inc a
     cp 6
     jr c,adpcma_channel_ok
@@ -959,65 +978,128 @@ play_adpcma_index:
 adpcma_channel_ok:
     ld (VAR_ADPCMA_CH),a
 
+    ; Look up channel bit mask
     ld hl,channel_masks
     ld e,c
     ld d,0
     add hl,de
     ld a,(hl)
-    ld (VAR_COMMAND),a
+    ld (VAR_COMMAND),a    ; save mask for later trigger
 
-    ; FIX: Stop this channel first via flag control, then clear flag
-    ld d,$1C
-    ld e,a
-    call force_write_a
-    ld de,$1C00
-    call force_write_a
+    ; === ADK-style direct port I/O (Port B = $06/$07) ===
 
-    ; Set ADPCM-A master volume
-    ld d,$01
+    ; Step 1: Stop this channel: reg $00, data = mask | $80 (dump bit)
+    or $80
+    ld b,a                ; B = stop mask
+    ld a,$00              ; register $00
+    di
+    out ($06),a
+    nop
+    ld a,b
+    out ($07),a
+    ei
+    nop
+    nop
+
+    ; Step 2: Clear flag: reg $1C Port A, data = channel mask
+    ld a,(VAR_COMMAND)
+    ld b,a
+    ld a,$1C
+    di
+    out ($04),a
+    nop
+    ld a,b
+    out ($05),a           ; set flag bits to clear
+    ei
+    nop
+    ; Clear the clear: reg $1C = $00
+    ld a,$1C
+    di
+    out ($04),a
+    nop
+    xor a
+    out ($05),a
+    ei
+
+    ; Step 3: Set master volume: reg $01 Port B, data = VAR_ADPCMA_VOL
+    ld a,$01
+    di
+    out ($06),a
+    nop
     ld a,(VAR_ADPCMA_VOL)
-    ld e,a
-    call shadowed_write_b
+    out ($07),a
+    ei
 
-    ; Set channel L/R output
+    ; Step 4: Set channel L/R + volume: reg $08+ch Port B
+    ; Format: bit7=L, bit6=R, bits4-0=channel volume
+    ; $DF = L+R on + max volume ($1F)
     ld a,c
     add a,$08
-    ld d,a
-    ld e,$C0
-    call shadowed_write_b
+    di
+    out ($06),a
+    nop
+    ld a,$DF
+    out ($07),a
+    ei
 
-    ; Set start address (from get_sample_ptr: BC=start, HL=end)
-    pop hl   ; HL = start address (was pushed as BC)
+    ; Step 5: Set start/end addresses
+    ; pop start address: H=StartLo, L=StartHi (from push bc: B->H, C->L)
+    pop hl
+
+    ; Start Address Low: reg $10+ch, data = StartLo (H)
     ld a,c
     add a,$10
-    ld d,a
-    ld e,h   ; Start address high
-    call shadowed_write_b
+    ld b,a
+    di
+    out ($06),a
+    nop
+    ld a,h
+    out ($07),a
+    ei
+
+    ; Start Address High: reg $18+ch, data = StartHi (L)
     ld a,c
     add a,$18
-    ld d,a
-    ld e,l   ; Start address low
-    call shadowed_write_b
+    di
+    out ($06),a
+    nop
+    ld a,l
+    out ($07),a
+    ei
 
-    ; Set end address
-    pop hl   ; HL = end address
-    ld b,h
+    ; pop end address: H=EndHi, L=EndLo
+    pop hl
+
+    ; End Address Low: reg $20+ch, data = EndLo (L)
     ld a,c
     add a,$20
-    ld d,a
-    ld e,l   ; End address low
-    call shadowed_write_b
+    di
+    out ($06),a
+    nop
+    ld a,l
+    out ($07),a
+    ei
+
+    ; End Address High: reg $28+ch, data = EndHi (H)
     ld a,c
     add a,$28
-    ld d,a
-    ld e,b   ; End address high
-    call shadowed_write_b
+    di
+    out ($06),a
+    nop
+    ld a,h
+    out ($07),a
+    ei
 
-    ; Trigger playback: write channel mask to register $00
+    ; Step 6: Trigger playback: reg $00, data = channel mask (no dump bit)
     ld a,(VAR_COMMAND)
-    ld e,a
-    ld d,$00
-    call force_write_b
+    ld b,a
+    xor a                 ; register $00
+    di
+    out ($06),a
+    nop
+    ld a,b
+    out ($07),a
+    ei
     ret
 
 play_adpcmb_cmd:
@@ -1039,29 +1121,29 @@ play_adpcmb_index:
     ld de,$1C00
     call force_write_a
 
-    ; Step 3: Set start address
+    ; Step 3: Set start address (MUST force_write - shadow skip breaks re-trigger)
     ld d,$12
     ld e,b
-    call shadowed_write_a
+    call force_write_a
     ld d,$13
     ld e,c
-    call shadowed_write_a
+    call force_write_a
 
     ; Step 4: Set end address
     pop hl
     ld c,h
     ld d,$14
     ld e,l
-    call shadowed_write_a
+    call force_write_a
     ld d,$15
     ld e,c
-    call shadowed_write_a
+    call force_write_a
 
-    ; Step 5: Set volume
+    ; Step 5: Set volume (force_write to ensure hardware gets it)
     ld d,$1B
     ld a,(VAR_ADPCMB_VOL)
     ld e,a
-    call shadowed_write_a
+    call force_write_a
 
     ; Step 6: Release reset
     ld de,$1000
@@ -1324,13 +1406,13 @@ music_step_next:
     cp $FE
     jp z,music_loop
     cp $F0
-    jr z,music_set_tempo
+    jp z,music_set_tempo
     cp $F1
-    jr z,music_set_volume
+    jp z,music_set_volume
     cp $F2
-    jr z,music_play_adpcma
+    jp z,music_play_adpcma
     cp $F3
-    jr z,music_play_adpcmb
+    jp z,music_play_adpcmb
     cp $F4
     jp z,music_play_fm
     cp $F5
@@ -1338,7 +1420,7 @@ music_step_next:
     cp $F6
     jp z,music_set_ssg_preset
     cp $80
-    jr z,music_rest
+    jp z,music_rest
 
     ; Normal SSG note: byte = note index, next byte = duration
     ld b,a
