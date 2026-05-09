@@ -1164,21 +1164,38 @@ void NEOGEO_USER soundPlayDemoFM(uint8_t fm_track) {
 }
 
 void NEOGEO_USER soundPlayTitleMusic(uint8_t music_track) {
+	(void)music_track;
 	isZ80Ready();
 	soundSceneReset();
 	isZ80Ready();
-	soundApplyMix(0x34, 0x45, 0x08, 0x0C);
+	soundApplyMix(0x34, 0xC8, 0x00, 0x00);
 	isZ80Ready();
-	playMusic(music_track);
+	playSFX(SOUND_SFX_TITLE_GONG);
+	cyclexms(10);
+	isZ80Ready();
+	playSFXB(SOUND_BED_TITLE_THEME);
 }
 
 void NEOGEO_USER soundPlayGameLoop(uint8_t music_track) {
 	isZ80Ready();
 	soundSceneReset();
 	isZ80Ready();
-	soundApplyMix(0x34, 0xB8, 0x0A, 0x0E);
+	soundApplyMix(0x30, 0xB8, 0x00, 0x00);
 	isZ80Ready();
-	playMusic(music_track);
+	switch (music_track) {
+		case SOUND_MUSIC_SAMURAI_GAME_LOOP:
+			playSFXB(SOUND_BED_STAGE_ONE);
+			break;
+
+		case SOUND_MUSIC_SAMURAI_BATTLE_LOOP:
+			playSFXB(SOUND_BED_STAGE_TWO);
+			break;
+
+		case SOUND_MUSIC_SAMURAI_ENDING_SCENE:
+		default:
+			playSFXB(SOUND_BED_ENDING_THEME);
+			break;
+	}
 }
 
 void NEOGEO_USER  isZ80Ready() {

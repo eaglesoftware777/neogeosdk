@@ -131,6 +131,9 @@ void NEOGEO_USER PLAYER_START (void) {
 	P3=(start_flag >> 2) & 1;
 	P4=(start_flag >> 3) & 1;
 	if (P1==1) {
+		soundStopAll();
+		playSFX(SOUND_SFX_START_SLASH);
+		cyclexms(10);
 		start_flag |= 1 << 0;
 		NEO_REGISTER8(BIOS_PLAYER1_MODE) |= 1 << 0;
 		NEO_REGISTER8(BIOS_PLAYER1_MODE) &= ~(1 << 1);
@@ -138,6 +141,9 @@ void NEOGEO_USER PLAYER_START (void) {
 		NEO_REGISTER8(BIOS_PLAYER1_MODE) &= ~(1 << 3);
 	}
 	if (P2==1) {
+		soundStopAll();
+		playSFX(SOUND_SFX_START_SLASH);
+		cyclexms(10);
 		start_flag |= 1 << 1;
 		if(country_code == 0) {
 			NEO_REGISTER8(BIOS_PLAYER2_MODE) |= 1 << 0;
@@ -184,10 +190,12 @@ void NEOGEO_USER DEMO_END (void) {
 void NEOGEO_USER COIN_SOUND (void) {
 
 	isZ80Ready();
-	playSSGTrack(SOUND_SSG_INSERT_COIN);
+	soundStopAll();
 	isZ80Ready();
-	soundSetSSGPreset(1);
-	cyclexms(7);
+	soundSetADPCMAVolume(0x3C);
+	isZ80Ready();
+	playSFX(SOUND_SFX_COIN_CHIME);
+	cyclexms(12);
 	
 	int i =0;
 	i++;
@@ -291,12 +299,14 @@ void  NEOGEO_USER showTitleMVS(void) {
 
 	setpal(pal_tile0,BLACK,BLACK,0xFFF,RED,BLUE,MIDGREEN,CYAN,ORANGE,MAGENTA,RED,WHITE,BLUE,RED,BLUE,CYAN,RED);
 	load_palettes(pal_tile0,PALETTES);
+	soundPlayTitleMusic(0);
 	waitVbl();
 	fixtext_out(15,10,"TITLE MODE MVS",0);
 	for (i = 0; i < 3; i++) {
 		fix_svalue1(13,15,i,0,48);
 		cycle1s();
 	}
+	soundStopAll();
 	p1c = read_p1credit();
 	if (p1c == 0) {
 		CALLNEOGEOF(GAME);
@@ -310,12 +320,14 @@ void  NEOGEO_USER showTitleAES(void) {
 
 	setpal(pal_tile0,BLACK,BLACK,0xFFF,RED,BLUE,MIDGREEN,CYAN,ORANGE,MAGENTA,RED,WHITE,BLUE,RED,BLUE,CYAN,RED);
 	load_palettes(pal_tile0,PALETTES);
+	soundPlayTitleMusic(0);
 	waitVbl();
 	fixtext_out(15,10,"TITLE MODE AES",0);
 	for (i = 0; i < 5; i++) {
 		fix_svalue1(13,15,i,0,48);
 		cycle1s();
 	}
+	soundStopAll();
 }
 
 /* Clear the user work RAM block before entering the active game flow. */
@@ -381,17 +393,7 @@ void NEOGEO_USER DEMO_GAME(void) {
 	fixtext_out(15,13,"ABCDEFGHIJKLMNOP",0x2);
 	mess_outtest();
 
-	soundSceneReset();
-
-	/* Bring up both FM and ADPCM-B so the demo path exercises layered audio. */
-	isZ80Ready();
-	soundSetFMVolume(0x0F);
-	isZ80Ready();
-	playFMDebug();
-	isZ80Ready();
-	playFMTrack(SOUND_FM_SAMURAI_MINOR);
-	soundSetADPCMBVolume(0xB8);
-	playSFXB(SOUND_BED_TITLE_PLUCK);
+	soundPlayTitleMusic(0);
 
 	p1c = read_p1credit();
 	display_digit(15,14,123456789,0,48);
@@ -405,6 +407,7 @@ void NEOGEO_USER DEMO_GAME(void) {
 		display_digit(20,15,p1c,0,48);
 		cycle1s();
 	}
+	soundStopAll();
 }
 
 

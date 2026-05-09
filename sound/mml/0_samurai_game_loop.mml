@@ -1,16 +1,16 @@
 ; 0_samurai_game_loop.mml
-; Layered samurai gameplay loop
-; @b0 = taiko / drone bed
+; Stage 1 gameplay loop
+; @b1 = level 1 backing theme
 ; @f4 = FM bass motif
 ; @p0 = clean SSG preset
 
-T132
-V10
+T126
+V9
 O4
 L8
 
 @p0
-@b0
+@b1
 @f4
 
 ; phrase A
@@ -19,7 +19,7 @@ G E C A
 @a9
 R8
 F A C F
-E C < B E
+E C < A E
 
 ; phrase B
 O4
