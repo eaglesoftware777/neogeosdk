@@ -1,19 +1,19 @@
 ; 2_samurai_night_scene.mml
-; Night ambience / suspense loop
-; @b3 = night wind ambience
-; @f3 = dark FM suspense
+; Ending / results scene
+; @b3 = ending theme bed
+; @f5 = victory FM line
 ; @p1 = soft SSG preset
 
-T110
+T104
 V7
 O3
 L8
 
 @p1
 @b3
-@f3
+@f5
 
-; sparse SSG melody
+; sparse ending melody
 A R C R
 E R C R
 G R E R
@@ -31,11 +31,10 @@ F E D C
 < B > C D E
 A4 R4
 
-; atmospheric gong/title accent
 @a2
 R4
 
-@f3
+@f5
 
 O3
 C R E R

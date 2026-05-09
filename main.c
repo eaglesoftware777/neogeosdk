@@ -12,6 +12,7 @@ void NEOGEO_USER soundAutoDemo(void);
 void NEOGEO_USER showEagleIntro(void);
 void NEOGEO_USER showCharacterParade(void);
 void NEOGEO_USER showPseudo3DLoop(void);
+void NEOGEO_USER showGameOver(void);
 void NEOGEO_USER showScreen1(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop);
 void NEOGEO_USER showScreen2(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop);
 void NEOGEO_USER showScreen3(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop);
@@ -111,26 +112,31 @@ void NEOGEO_USER soundAutoDemo(void) {
 
     soundStopAll();
     clearFix();
-    fixtext_out(10, 2, "BACKING CUE", 0);
-    fixtext_out(10, 4, "Battle bed", 1);
-    soundSetADPCMBVolume(0xB8);
-    playMusic(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    fixtext_out(10, 2, "TITLE THEME", 0);
+    fixtext_out(10, 4, "ADPCM-B 1", 1);
+    soundPlayTitleMusic(0);
     cyclexs(4);
 
     soundStopAll();
     clearFix();
-    fixtext_out(10, 2, "BACKING CUE", 0);
-    fixtext_out(10, 4, "Title bed", 1);
-    soundSetADPCMBVolume(0xB8);
-    playMusic(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    fixtext_out(10, 2, "STAGE LOOP 1", 0);
+    fixtext_out(10, 4, "ADPCM-B 2 + MML", 1);
+    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
     cyclexs(4);
 
     soundStopAll();
     clearFix();
-    fixtext_out(10, 2, "FM SYNTH", 0);
-    fixtext_out(10, 4, "Layered stab", 1);
-    playFMDebug();
-    cyclexs(3);
+    fixtext_out(10, 2, "STAGE LOOP 2", 0);
+    fixtext_out(10, 4, "ADPCM-B 3 + MML", 1);
+    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    cyclexs(4);
+
+    soundStopAll();
+    clearFix();
+    fixtext_out(10, 2, "ENDING SCENE", 0);
+    fixtext_out(10, 4, "ADPCM-B 4 + MML", 1);
+    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_ENDING_SCENE);
+    cyclexs(4);
 
     soundStopAll();
     clearFix();
@@ -158,7 +164,10 @@ int NEOGEO_USER playgame(void) {
     clearFix();
     clearSprs();
     soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
-    showWalkDemo(160, 18);
+    showWalkDemo(96, 18);
+    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    showWalkDemo(96, 16);
+    showGameOver();
     return 0;
 }
 
@@ -166,10 +175,9 @@ void NEOGEO_USER showGameOver(void) {
     soundStopAll();
     clearFix();
     clearSprs();
-    soundSetADPCMAVolume(0x34);
-    playSFX(SOUND_SFX_FOOTSTEP);
+    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_ENDING_SCENE);
     fixtext_out(15, 10, "GAME OVER", 0);
-    cyclexs(3);
+    cyclexs(4);
     soundStopAll();
 }
 
@@ -208,9 +216,8 @@ void NEOGEO_USER showCharacterParade(void) {
     soundSceneReset();
     soundSetSSGVolume(0x08);
     soundSetADPCMAVolume(0x36);
-    soundSetADPCMBVolume(0xB0);
-    playSFXB(SOUND_BED_DUEL_GROOVE);
-    playMusic(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    soundSetADPCMBVolume(0xA8);
+    playMusic(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
     for (i = 0; i < 34; i++) {
         clearFix();
         fixtext_out(9, 4, "ORIGINAL WARRIOR DEMO", 0);
@@ -249,8 +256,8 @@ void NEOGEO_USER showPseudo3DLoop(void) {
     soundSceneReset();
     soundSetSSGVolume(0x00);
     soundSetADPCMAVolume(0x34);
-    soundSetADPCMBVolume(0xB8);
-    playSFXB(SOUND_BED_NIGHT_WIND);
+    soundSetADPCMBVolume(0xA0);
+    playMusic(SOUND_MUSIC_SAMURAI_ENDING_SCENE);
     for (i = 0; i < 48; i++) {
         clearFix();
         fixtext_out(10, 3, "PSEUDO 3D ROAD TEST", 0);

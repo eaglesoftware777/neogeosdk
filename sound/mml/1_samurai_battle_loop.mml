@@ -1,16 +1,16 @@
 ; 1_samurai_battle_loop.mml
-; Fast battle / action loop
-; @b0 = taiko / drone game bed
-; @f2 = fast FM attract/action melody
+; Stage 2 battle / action loop
+; @b2 = level 2 backing theme
+; @f2 = fast FM action melody
 ; @p2 = aggressive SSG preset
 
-T180
-V11
+T164
+V10
 O3
 L16
 
 @p2
-@b0
+@b2
 @f2
 
 ; driving SSG ostinato
