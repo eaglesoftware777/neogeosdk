@@ -22,7 +22,7 @@ OBJDUMP=$(M68K_ELF_BIN)\m68k-elf-objdump.exe
 WLAZ80?=wla-z80
 WLALINK?=wlalink
 PY?=py
-SOX?=sox
+SOX?=
 MAME?=mame
 
 FM_MMLS:=$(wildcard sound/fm/*.mml)

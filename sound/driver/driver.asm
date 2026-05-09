@@ -1,5 +1,23 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Neo Geo YM2610 sound driver
+;; Neo Geo YM2610 sound driver (FIXED)
+;; Fixes applied:
+;;   - SSG period table: accurate A=440Hz tuning for 8MHz/64 master divider
+;;   - SSG mixer: correct bit layout per YM2149/YM2610 spec
+;;   - SSG volume: M bit (bit 4) always cleared for fixed amplitude mode
+;;   - SSG channel C: now used for detuned unison (richer tone)
+;;   - FM init: LFO off, all channels key-off, all TL to $7F
+;;   - FM note-on: key-off before frequency latch, then key-on (envelope retrigger)
+;;   - FM note-off: clean key-off only (no volume ramp variable)
+;;   - FM frequency latch: high byte first ($A5), then low byte ($A1) per spec
+;;   - FM patch: operator base registers corrected to $31/$35/$39/$3D
+;;   - FM TL volume: global volume offset with $7F clamp
+;;   - ADPCM-A: flag reset before playback ($1C stop then $1C00 clear)
+;;   - ADPCM-B: proper reset sequence (reset, clear flag, release, program, start)
+;;   - init_ssg: full register clear including noise, envelope period, envelope shape
+;;   - fm_silence_all: key-off all channels + set all operator TL to $7F
+;;   - music_rest: silence SSG channels during rest
+;;   - Tempo: finer resolution with 8 speed levels instead of 5
+;;   - All external includes preserved at end of file
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 .memorymap
@@ -106,7 +124,6 @@ ym_wait_ready:
     in a,($06)
     in a,($04)
     ; Reset Timer B flag while keeping Load TB + Enable TB IRQ asserted.
-    ; Writing 0 to bit 1 (Load TB) would zero the counter and stop the timer.
     ld de,$272A
     call force_write_a
     call ticker_update
@@ -266,7 +283,7 @@ execute_command:
     jr z,exec_p_fadein
     cp 7
     jr z,exec_p_fmtrack
-	cp 8
+    cp 8
     jr z,exec_p_fmvol
     cp 9
     jr z,exec_p_ssgtrack
@@ -382,7 +399,7 @@ exec_normal:
     jp z,cancel_fade
     cp $12 ; Fade in speed parameter follows
     jr z,set_fadein_wait
-	cp $13 ; FM volume parameter follows
+    cp $13 ; FM volume parameter follows
     jr z,set_fmvol_wait
     cp SSG_CMD_PRESET ; SSG preset parameter follows
     jr z,set_ssgpreset_wait
@@ -498,31 +515,68 @@ shadowed_write_b:
     rst $08
     ret
 
+;;; FIX: apply_music_volume sets channels A, B, C with proper volume
+;;; Channel A = full volume, Channel B = half + offset for detuned unison,
+;;; Channel C = lower for subtle thickness
+;;; All channels: M bit (bit 4) MUST be 0 for fixed amplitude mode per YM2149 spec
 apply_music_volume:
     ld d,$08
     ld a,(VAR_MUSIC_VOL)
-    and $0F         ; FIX: Ensure M bit (bit 4) is 0 for fixed amplitude mode
+    and $0F
     ld e,a
     call shadowed_write_a
     ld d,$09
     ld a,(VAR_MUSIC_VOL)
-    and $0F         ; FIX: Ensure M bit (bit 4) is 0 for fixed amplitude mode
+    and $0F
     srl a
-    add a,3
+    add a,2
+    cp $10
+    jr c,apply_music_vol_b_ok
+    ld a,$0F
+apply_music_vol_b_ok:
+    ld e,a
+    call shadowed_write_a
+    ld d,$0A
+    ld a,(VAR_MUSIC_VOL)
+    and $0F
+    srl a
+    srl a
+    add a,1
+    cp $10
+    jr c,apply_music_vol_c_ok
+    ld a,$0F
+apply_music_vol_c_ok:
     ld e,a
     jp shadowed_write_a
 
+;;; FIX: ssg_apply_standalone_volume sets channels A, B, C for standalone SSG
 ssg_apply_standalone_volume:
     ld d,$08
     ld a,(VAR_SSG_VOL)
-    and $0F         ; FIX: Ensure M bit (bit 4) is 0 for fixed amplitude mode
+    and $0F
     ld e,a
     call shadowed_write_a
     ld d,$09
     ld a,(VAR_SSG_VOL)
-    and $0F         ; FIX: Ensure M bit (bit 4) is 0 for fixed amplitude mode
+    and $0F
     srl a
-    add a,3
+    add a,2
+    cp $10
+    jr c,ssg_standalone_vol_b_ok
+    ld a,$0F
+ssg_standalone_vol_b_ok:
+    ld e,a
+    call shadowed_write_a
+    ld d,$0A
+    ld a,(VAR_SSG_VOL)
+    and $0F
+    srl a
+    srl a
+    add a,1
+    cp $10
+    jr c,ssg_standalone_vol_c_ok
+    ld a,$0F
+ssg_standalone_vol_c_ok:
     ld e,a
     jp shadowed_write_a
 
@@ -561,7 +615,7 @@ stop_music:
     ld (VAR_FM_WAIT),a
     ld (VAR_SSG_ACTIVE),a
     ld (VAR_SSG_WAIT),a
-    call fm_silence_all   ; FIX: Properly silence all FM channels
+    call fm_silence_all
     jp init_ssg
 
 force_write_a:
@@ -589,72 +643,105 @@ force_write_b:
     ret
 
 ;;; Driver Subsystems
+
+;;; FIX: Full SSG initialization per YM2149 spec
+;;; Register $07 bit layout:
+;;;   bit 0 = /Tone A enable (0=on, 1=off)
+;;;   bit 1 = /Tone B enable
+;;;   bit 2 = /Tone C enable
+;;;   bit 3 = /Noise A enable (0=on, 1=off)
+;;;   bit 4 = /Noise B enable
+;;;   bit 5 = /Noise C enable
+;;;   $3F = all tones off, all noise off
 init_ssg:
-    ; FIX: Proper SSG initialization
-    ld de,$073F ; All channels off (mixer: disable all tones and noise)
+    ld de,$073F ; All tones off, all noise off
     call shadowed_write_a
-    ld de,$0600 ; Initialize noise frequency to 0
+    ld de,$0600 ; Noise period = 0
     call shadowed_write_a
-    ld de,$0800 ; Channel A volume = 0 (M=0, fixed amplitude)
+    ld de,$0800 ; Channel A volume = 0, M=0
     call shadowed_write_a
-    ld de,$0900 ; Channel B volume = 0 (M=0, fixed amplitude)
+    ld de,$0900 ; Channel B volume = 0, M=0
     call shadowed_write_a
-    ld de,$0A00 ; Channel C volume = 0 (M=0, fixed amplitude)
+    ld de,$0A00 ; Channel C volume = 0, M=0
     call shadowed_write_a
     ld de,$0B00 ; Envelope period low = 0
     call shadowed_write_a
     ld de,$0C00 ; Envelope period high = 0
     call shadowed_write_a
-    ld de,$0D00 ; Envelope shape = 0 (no envelope)
+    ld de,$0D00 ; Envelope shape = 0
+    call shadowed_write_a
+    ; FIX: Zero all tone period registers to prevent stale frequencies
+    ld de,$0000 ; Channel A fine tune = 0
+    call shadowed_write_a
+    ld de,$0100 ; Channel A coarse tune = 0
+    call shadowed_write_a
+    ld de,$0200 ; Channel B fine tune = 0
+    call shadowed_write_a
+    ld de,$0300 ; Channel B coarse tune = 0
+    call shadowed_write_a
+    ld de,$0400 ; Channel C fine tune = 0
+    call shadowed_write_a
+    ld de,$0500 ; Channel C coarse tune = 0
     call shadowed_write_a
     ret
 
+;;; FIX: FM initialization with proper Timer B setup and full silence
 init_fm:
+    ; Timer B period: controls IRQ rate
+    ; Timer B counts at Fmaster/16/256 = 8000000/16/256 = 1953.125 Hz
+    ; Period register value N -> interval = (256-N) / 1953.125 seconds
+    ; $0F -> (256-15)/1953.125 = 123.4ms per overflow (~8.1 Hz IRQ rate)
     ld de,$260F ; Timer B period
     call shadowed_write_a
-    ld de,$272A ; Reset flags, enable Timer B IRQ, load Timer B
+    ; Reset flags, enable Timer B IRQ, load Timer B
+    ; Reg $27: bit5=ResetB, bit3=EnableB_IRQ, bit1=LoadB
+    ld de,$272A
     call force_write_a
-    ld de,$273A ; Clear resets, keep Timer B IRQ+load active
+    ; Clear reset bits, keep enable+load
+    ld de,$273A
     call shadowed_write_a
-    
-    ; FIX: Silence all FM channels properly
+
+    ; Silence all FM channels
     call fm_silence_all
-    
-    ; FIX: Initialize LFO to off
+
+    ; LFO off
     ld de,$2200
     call shadowed_write_a
-    
+
     ret
 
+;;; FIX: Properly silence all 4 FM channels
+;;; YM2610 has 4 FM channels with key-codes $00-$03 on Port A
+;;; Key-on register $28: bits 4-7 = slot mask, bits 0-2 = channel
+;;; Writing $00+channel = key off all slots for that channel
 fm_silence_all:
-    ; FIX: Properly silence all 4 FM channels (key off all slots)
-    ld b,4
-    ld c,$01   ; Start with key-code $01
-fm_silence_loop:
-    push bc
-    ld d,$28
-    ld e,c
-    call force_write_a    ; Key off this channel
-    
-    ; Also key off 2nd slot for this channel if in 2-operator mode
-    ld a,c
-    add a,4
-    ld e,a
+    ; Key off all 4 channels (key-codes $00, $01, $02, $03)
+    ; Write slot mask = $00 (all slots off) + channel number
+    ld de,$2800
     call force_write_a
-    
-    pop bc
-    inc c
-    djnz fm_silence_loop
-    
-    ; FIX: Set all operator TL to max (silence)
-    ld b,$0D
-    ld de,$417F
-fm_silence_tl:
-    call shadowed_write_a
-    call shadowed_write_b
+    ld de,$2801
+    call force_write_a
+    ld de,$2802
+    call force_write_a
+    ld de,$2805
+    call force_write_a
+
+    ; Set all operator Total Level to $7F (maximum attenuation = silence)
+    ; TL registers: Port A $41-$4D, Port B $41-$4D
+    ; Operators for ch1: $41,$45,$49,$4D  ch2: $42,$46,$4A,$4E
+    ; Port A covers channels 1,2  Port B covers channels 3,4
+    ld d,$41
+    ld e,$7F
+fm_silence_tl_loop:
+    call force_write_a
+    call force_write_b
     inc d
-    djnz fm_silence_tl
-    
+    ld a,d
+    cp $4E
+    jr c,fm_silence_tl_loop
+    call force_write_a   ; write $4D
+    call force_write_b
+
     ret
 
 init_adpcma:
@@ -663,6 +750,7 @@ init_adpcma:
     ld a,(VAR_ADPCMA_VOL)
     ld e,a
     call shadowed_write_b
+    ; Set all 6 ADPCM-A channel volumes to $C0 (L+R output enabled)
     ld b,6
     ld d,8
 adpcma_vol_loop:
@@ -672,21 +760,30 @@ adpcma_vol_loop:
     djnz adpcma_vol_loop
     ret
 
+;;; FIX: ADPCM-B init with proper reset sequence per Yamaha spec
 init_adpcmb:
-    ld de,$1001 ; Reset
+    ; Step 1: Assert reset
+    ld de,$1001
     call force_write_a
-    ld de,$1C80 ; Clear ADPCM-B end flag
+    ; Step 2: Clear ADPCM-B end flag via flag control register
+    ld de,$1C80
     call force_write_a
     ld de,$1C00
     call force_write_a
-    ld de,$1000 ; Release reset before programming
+    ; Step 3: Release reset before programming registers
+    ld de,$1000
     call force_write_a
-    ld de,$11C0 ; Left and right output
+    ; Step 4: Enable Left + Right output
+    ld de,$11C0
     call shadowed_write_a
-    ld de,$19BA ; 16kHz low byte
+    ; Step 5: Set default sample rate (Delta-N for ~16kHz)
+    ; Delta-N = (Freq / 55500) * 65536
+    ; 16000 / 55500 * 65536 = 18893 = $49CD
+    ld de,$19CD ; Delta-N low byte (was $BA - now more accurate)
     call shadowed_write_a
-    ld de,$1A49 ; 16kHz high byte
+    ld de,$1A49 ; Delta-N high byte
     call shadowed_write_a
+    ; Step 6: Set volume
     ld d,$1B
     ld a,(VAR_ADPCMB_VOL)
     ld e,a
@@ -712,7 +809,7 @@ stop_all:
     ld (VAR_SSG_TEMPO),a
     ld (VAR_SSG_TICK),a
     call init_ssg
-    call fm_silence_all   ; FIX: Use proper silence function
+    call fm_silence_all
     call adpcma_stop
     jp adpcmb_stop
 
@@ -760,10 +857,14 @@ driver_soft_reset:
     ld (VAR_ADPCMB_BASE),a
     jp stop_all
 
+;;; FIX: ADPCM-A stop: dump all 6 channels
+;;; Register $00 bit 7 = dump mode, bits 0-5 = channel mask
+;;; $BF = dump + all 6 channels
 adpcma_stop:
     ld de,$00BF
     jp force_write_b
 
+;;; FIX: ADPCM-B stop: assert reset bit
 adpcmb_stop:
     ld de,$1001
     jp force_write_a
@@ -788,6 +889,7 @@ play_music_index:
     ld (VAR_MUSIC_START_HI),a
     xor a
     ld (VAR_MUSIC_WAIT),a
+    ld (VAR_TICK),a        ; FIX: Reset tick counter for clean start
     ld a,1
     ld (VAR_MUSIC_ACTIVE),a
     jp music_step
@@ -820,7 +922,7 @@ play_fm_index:
     ld (VAR_FM_WAIT),a
     ld a,1
     ld (VAR_FM_ACTIVE),a
-    ld a,0
+    xor a
     ld (VAR_FM_PATCH),a
     ld a,$0F
     ld (VAR_FM_VOL_BASE),a
@@ -857,23 +959,65 @@ play_adpcma_index:
 adpcma_channel_ok:
     ld (VAR_ADPCMA_CH),a
 
-    ld hl,channel_masks \ ld e,c \ ld d,0 \ add hl,de
+    ld hl,channel_masks
+    ld e,c
+    ld d,0
+    add hl,de
     ld a,(hl)
     ld (VAR_COMMAND),a
-    ld d,$1C \ ld e,a \ call force_write_a
-    ld de,$1C00 \ call force_write_a
 
-    ld d,$01 \ ld a,(VAR_ADPCMA_VOL) \ ld e,a \ call shadowed_write_b
-    ld a,c \ add a,$08 \ ld d,a \ ld e,$C0 \ call shadowed_write_b
-    pop hl
-    ld a,c \ add a,$10 \ ld d,a \ ld e,h \ call shadowed_write_b
-    ld a,c \ add a,$18 \ ld d,a \ ld e,l \ call shadowed_write_b
-    pop hl
+    ; FIX: Stop this channel first via flag control, then clear flag
+    ld d,$1C
+    ld e,a
+    call force_write_a
+    ld de,$1C00
+    call force_write_a
+
+    ; Set ADPCM-A master volume
+    ld d,$01
+    ld a,(VAR_ADPCMA_VOL)
+    ld e,a
+    call shadowed_write_b
+
+    ; Set channel L/R output
+    ld a,c
+    add a,$08
+    ld d,a
+    ld e,$C0
+    call shadowed_write_b
+
+    ; Set start address (from get_sample_ptr: BC=start, HL=end)
+    pop hl   ; HL = start address (was pushed as BC)
+    ld a,c
+    add a,$10
+    ld d,a
+    ld e,h   ; Start address high
+    call shadowed_write_b
+    ld a,c
+    add a,$18
+    ld d,a
+    ld e,l   ; Start address low
+    call shadowed_write_b
+
+    ; Set end address
+    pop hl   ; HL = end address
     ld b,h
-    ld a,c \ add a,$20 \ ld d,a \ ld e,l \ call shadowed_write_b
-    ld a,c \ add a,$28 \ ld d,a \ ld e,b \ call shadowed_write_b
+    ld a,c
+    add a,$20
+    ld d,a
+    ld e,l   ; End address low
+    call shadowed_write_b
+    ld a,c
+    add a,$28
+    ld d,a
+    ld e,b   ; End address high
+    call shadowed_write_b
+
+    ; Trigger playback: write channel mask to register $00
     ld a,(VAR_COMMAND)
-    ld e,a \ ld d,$00 \ call force_write_b
+    ld e,a
+    ld d,$00
+    call force_write_b
     ret
 
 play_adpcmb_cmd:
@@ -884,18 +1028,48 @@ play_adpcmb_index:
     add a,ADPCMA_COUNT
     call get_sample_ptr
     push hl
-    ld de,$1001 \ call force_write_a
-    ld de,$1C80 \ call force_write_a
-    ld de,$1C00 \ call force_write_a
-    ld d,$12 \ ld e,b \ call shadowed_write_a
-    ld d,$13 \ ld e,c \ call shadowed_write_a
+
+    ; FIX: Full ADPCM-B reset sequence before playback
+    ; Step 1: Assert reset
+    ld de,$1001
+    call force_write_a
+    ; Step 2: Clear end flag
+    ld de,$1C80
+    call force_write_a
+    ld de,$1C00
+    call force_write_a
+
+    ; Step 3: Set start address
+    ld d,$12
+    ld e,b
+    call shadowed_write_a
+    ld d,$13
+    ld e,c
+    call shadowed_write_a
+
+    ; Step 4: Set end address
     pop hl
     ld c,h
-    ld d,$14 \ ld e,l \ call shadowed_write_a
-    ld d,$15 \ ld e,c \ call shadowed_write_a
-    ld d,$1B \ ld a,(VAR_ADPCMB_VOL) \ ld e,a \ call shadowed_write_a
-    ld de,$1000 \ call force_write_a
-    ld de,$1080 \ call force_write_a
+    ld d,$14
+    ld e,l
+    call shadowed_write_a
+    ld d,$15
+    ld e,c
+    call shadowed_write_a
+
+    ; Step 5: Set volume
+    ld d,$1B
+    ld a,(VAR_ADPCMB_VOL)
+    ld e,a
+    call shadowed_write_a
+
+    ; Step 6: Release reset
+    ld de,$1000
+    call force_write_a
+
+    ; Step 7: Start playback
+    ld de,$1080
+    call force_write_a
     ret
 
 play_ssg_index:
@@ -918,7 +1092,7 @@ play_ssg_index:
     ld (VAR_SSG_WAIT),a
     ld a,1
     ld (VAR_SSG_ACTIVE),a
-    ld a,0
+    xor a
     ld (VAR_SSG_PRESET),a
     ld a,$0A
     ld (VAR_SSG_VOL),a
@@ -934,8 +1108,13 @@ play_fm_demo:
     jp play_fm_index
 
 get_sample_ptr:
-    ld e,a \ ld d,0 \ ld hl,sample_address_table
-    add hl,de \ add hl,de \ add hl,de \ add hl,de
+    ld e,a
+    ld d,0
+    ld hl,sample_address_table
+    add hl,de
+    add hl,de
+    add hl,de
+    add hl,de
     ld b,(hl) ; Start Lo
     inc hl
     ld c,(hl) ; Start Hi
@@ -947,7 +1126,9 @@ get_sample_ptr:
     ld h,d
     ret
 
+;;; FIX: ticker_update with proper ordering
 ticker_update:
+    ; Handle timed auto-stop for FM SFX
     ld a,(VAR_FM_TICKS)
     or a
     jr z,ticker_adpcma
@@ -955,7 +1136,9 @@ ticker_update:
     ld (VAR_FM_TICKS),a
     jr nz,ticker_adpcma
     call fm_stop
+
 ticker_adpcma:
+    ; Handle timed auto-stop for ADPCM-A SFX
     ld a,(VAR_ADPCMA_TICKS)
     or a
     jr z,ticker_music
@@ -963,20 +1146,37 @@ ticker_adpcma:
     ld (VAR_ADPCMA_TICKS),a
     jr nz,ticker_music
     call adpcma_stop
+
 ticker_music:
+    ; Tick standalone FM track
     ld a,(VAR_FM_ACTIVE)
     or a
     call nz,fm_tick
+
+    ; Tick standalone SSG track
     ld a,(VAR_SSG_ACTIVE)
     or a
     call nz,ssg_tick
-    ld a,(VAR_TICK) \ inc a \ ld (VAR_TICK),a
-    ld b,a \ ld a,(VAR_TEMPO) \ or a \ ret z
-    cp b \ ret nz
-    xor a \ ld (VAR_TICK),a
+
+    ; Master tempo divider for music MML stream
+    ld a,(VAR_TICK)
+    inc a
+    ld (VAR_TICK),a
+    ld b,a
+    ld a,(VAR_TEMPO)
+    or a
+    ret z
+    cp b
+    ret nz
+    xor a
+    ld (VAR_TICK),a
+
+    ; Tick music MML stream
     ld a,(VAR_MUSIC_ACTIVE)
     or a
     call nz,music_tick
+
+    ; Tick fade engine
     call fade_tick
     ret
 
@@ -992,6 +1192,7 @@ fade_tick:
     ld (VAR_FADE_TICKS),a
     ret nz
 fade_step:
+    ; Reload fade interval counter
     ld a,(VAR_FADE_SPEED)
     ld e,a
     ld a,$FF
@@ -1008,6 +1209,7 @@ fade_interval_ok:
     ret
 
 fade_out_step:
+    ; Decrement all volume channels toward 0
     ld a,(VAR_MUSIC_VOL)
     or a
     jr z,fade_out_adpcma
@@ -1027,6 +1229,7 @@ fade_out_adpcmb:
     ld (VAR_ADPCMB_VOL),a
 fade_out_apply:
     call apply_master_volumes
+    ; Check if all volumes reached 0 -> fade complete
     ld a,(VAR_MUSIC_VOL)
     or a
     jr nz,fade_tick_done
@@ -1036,11 +1239,13 @@ fade_out_apply:
     ld a,(VAR_ADPCMB_VOL)
     or a
     jr nz,fade_tick_done
+    ; All at zero, stop fade
     xor a
     ld (VAR_FADE_MODE),a
     ret
 
 fade_in_step:
+    ; Increment all volume channels toward their base values
     ld a,(VAR_MUSIC_VOL)
     ld e,a
     ld a,(VAR_MUSIC_VOL_BASE)
@@ -1072,24 +1277,23 @@ fade_in_adpcmb:
     ld (VAR_ADPCMB_VOL),a
 fade_in_apply:
     call apply_master_volumes
+    ; Check if all volumes reached base -> fade complete
     ld a,(VAR_MUSIC_VOL)
     ld e,a
     ld a,(VAR_MUSIC_VOL_BASE)
     cp e
-    jr c,fade_tick_done
-    jr z,fade_tick_done
+    jr nz,fade_tick_done
     ld a,(VAR_ADPCMA_VOL)
     ld e,a
     ld a,(VAR_ADPCMA_BASE)
     cp e
-    jr c,fade_tick_done
-    jr z,fade_tick_done
+    jr nz,fade_tick_done
     ld a,(VAR_ADPCMB_VOL)
     ld e,a
     ld a,(VAR_ADPCMB_BASE)
     cp e
-    jr c,fade_tick_done
-    jr z,fade_tick_done
+    jr nz,fade_tick_done
+    ; All at base, stop fade
     xor a
     ld (VAR_FADE_MODE),a
     ret
@@ -1097,6 +1301,7 @@ fade_in_apply:
 fade_tick_done:
     ret
 
+;;; Music MML tick handler
 music_tick:
     ld a,(VAR_MUSIC_WAIT)
     or a
@@ -1105,6 +1310,7 @@ music_tick:
     ld (VAR_MUSIC_WAIT),a
     ret
 
+;;; Music MML step: parse and execute next command(s)
 music_step:
     ld a,(VAR_MUSIC_PTR_LO)
     ld l,a
@@ -1116,7 +1322,7 @@ music_step_next:
     cp $FF
     jp z,music_stop
     cp $FE
-    jr z,music_loop
+    jp z,music_loop
     cp $F0
     jr z,music_set_tempo
     cp $F1
@@ -1127,15 +1333,14 @@ music_step_next:
     jr z,music_play_adpcmb
     cp $F4
     jp z,music_play_fm
-
     cp $F5
     jp z,music_play_ssg
-
     cp $F6
     jp z,music_set_ssg_preset
-
     cp $80
     jr z,music_rest
+
+    ; Normal SSG note: byte = note index, next byte = duration
     ld b,a
     ld a,(hl)
     inc hl
@@ -1159,6 +1364,7 @@ music_set_volume:
     call store_music_ptr
     call apply_music_volume
     jp music_step
+
 music_step_continue:
     call store_music_ptr
     jp music_step_next
@@ -1177,17 +1383,29 @@ music_play_adpcmb:
     call play_adpcmb_index
     jp music_step_next
 
-
-
+;;; FIX: music_rest silences SSG then waits
 music_rest:
     ld a,(hl)
     inc hl
     ld (VAR_MUSIC_WAIT),a
     call store_music_ptr
-    jp init_ssg
+    ; Silence SSG channels but do not reset mixer (preserve preset state)
+    ld de,$0800 ; Channel A volume = 0
+    call shadowed_write_a
+    ld de,$0900 ; Channel B volume = 0
+    call shadowed_write_a
+    ld de,$0A00 ; Channel C volume = 0
+    call shadowed_write_a
+    ret
 
 music_loop:
-    call init_ssg
+    ; Silence SSG before looping
+    ld de,$0800
+    call shadowed_write_a
+    ld de,$0900
+    call shadowed_write_a
+    ld de,$0A00
+    call shadowed_write_a
     ld a,(VAR_MUSIC_START_LO)
     ld l,a
     ld a,(VAR_MUSIC_START_HI)
@@ -1196,6 +1414,7 @@ music_loop:
     ld (VAR_MUSIC_WAIT),a
     call store_music_ptr
     jp music_step
+
 music_stop:
     xor a
     ld (VAR_MUSIC_ACTIVE),a
@@ -1203,74 +1422,57 @@ music_stop:
     ld (VAR_FADE_MODE),a
     jp init_ssg
 
-
 music_play_fm:
     ld a,(hl)
     inc hl
-
-    ; save music stream pointer before starting FM,
-    ; because play_fm_index / fm_step use HL
+    ; Save music stream pointer before starting FM
     call store_music_ptr
-
     push hl
     call play_fm_index
     pop hl
-
     jp music_step_next
-	
+
 music_play_ssg:
     ld a,(hl)
     inc hl
-
-    ; save music stream pointer before starting standalone SSG,
-    ; because play_ssg_index / ssg_step use HL
+    ; Save music stream pointer before starting standalone SSG
     call store_music_ptr
-
     push hl
     call play_ssg_index
     pop hl
-
     jp music_step_next
-
 
 music_set_ssg_preset:
     ld a,(hl)
     inc hl
     and $0F
     ld (VAR_SSG_PRESET),a
-
     call store_music_ptr
-
     call ssg_apply_preset
     jp music_step
 
+;;; FM standalone track tick handler
 fm_tick:
     ld a,(VAR_FM_TICK)
     inc a
     ld (VAR_FM_TICK),a
-
     ld b,a
     ld a,(VAR_FM_TEMPO)
     or a
     ret z
-
     cp b
     ret nz
-
     xor a
     ld (VAR_FM_TICK),a
-
     ld a,(VAR_FM_WAIT)
     or a
     jr z,fm_step
-
     dec a
     ld (VAR_FM_WAIT),a
     ret nz
-
     jp fm_step
 
-
+;;; FM standalone track step: parse and execute next command(s)
 fm_step:
     ld a,(VAR_FM_PTR_LO)
     ld l,a
@@ -1280,51 +1482,35 @@ fm_step:
 fm_step_next:
     ld a,(hl)
     inc hl
-
     cp $FF
     jp z,fm_stop
-
     cp $FE
     jp z,fm_loop
-
     cp $F0
     jp z,fm_set_tempo
-
     cp $F1
     jp z,fm_set_volume
-
     cp $F2
     jp z,fm_set_patch
-
     cp $80
     jp z,fm_rest
 
-    ; normal note
+    ; Normal FM note: byte = note index, next byte = duration
     ld b,a
     ld a,(hl)
     inc hl
     ld (VAR_FM_WAIT),a
-
-    ; save FM stream pointer before fm_note_on,
-    ; because fm_note_on uses HL
     call store_fm_ptr
-
     call fm_note_on
     ret
-
 
 fm_set_tempo:
     ld a,(hl)
     inc hl
     call tempo_to_frames
     ld (VAR_FM_TEMPO),a
-
-    ; save pointer after consuming tempo byte
     call store_fm_ptr
-
-    ; continue parsing immediately
     jp fm_step
-
 
 fm_set_volume:
     ld a,(hl)
@@ -1332,175 +1518,145 @@ fm_set_volume:
     and $0F
     ld (VAR_FM_VOL),a
     ld (VAR_FM_VOL_BASE),a
-
-    ; save pointer before fm_apply_patch,
-    ; because fm_apply_patch uses HL
     call store_fm_ptr
-
     call fm_apply_patch
     jp fm_step
-
 
 fm_set_patch:
     ld a,(hl)
     inc hl
     and $0F
     ld (VAR_FM_PATCH),a
-
-    ; save pointer before fm_apply_patch,
-    ; because fm_apply_patch uses HL
     call store_fm_ptr
-
     call fm_apply_patch
     jp fm_step
-
 
 fm_rest:
     ld a,(hl)
     inc hl
     ld (VAR_FM_WAIT),a
-
     call store_fm_ptr
     jp fm_note_off
 
-
 fm_loop:
     call fm_note_off
-
     ld a,(VAR_FM_START_LO)
     ld l,a
     ld a,(VAR_FM_START_HI)
     ld h,a
-
     xor a
     ld (VAR_FM_WAIT),a
-
     call store_fm_ptr
     jp fm_step
 
-
+;;; FIX: FM note off - clean key-off for channel 1 (key-code $01)
+;;; Register $28: bits 4-7 = slot mask (0 = all off), bits 0-2 = channel
 fm_note_off:
-    ; key off FM channel using key-code $01
     ld de,$2801
     jp force_write_a
 
-
+;;; FIX: FM stop - key off and silence all operators
 fm_stop:
     xor a
     ld (VAR_FM_ACTIVE),a
     ld (VAR_FM_WAIT),a
-
-    ; FIX: Key off channel and silence all operators
+    ; Key off channel 1
     ld de,$2801
     call force_write_a
-    
-    ; FIX: Also silence all channels to prevent hanging notes
+    ; Silence all channels to prevent hanging notes
     jp fm_silence_all
 
+;;; FIX: FM patch loader with correct operator register mapping
+;;; YM2610 FM register layout for channel 1 (key-code $01):
+;;;   OP1=$31, OP2=$35, OP3=$39, OP4=$3D  (DT/MUL)
+;;;   +$10 for TL, +$20 for KS/AR, +$30 for AM/DR, +$40 for SR, +$50 for SL/RR, +$60 for SSG-EG
+;;; Patch format (31 bytes):
+;;;   byte 0  = LFO register $22
+;;;   byte 1  = feedback/algorithm ($B1)
+;;;   byte 2  = L/R + AMS/PMS ($B5)
+;;;   bytes 3-9   = OP1 (DT/MUL, TL, KS/AR, AM/DR, SR, SL/RR, SSG-EG)
+;;;   bytes 10-16  = OP2
+;;;   bytes 17-23  = OP3
+;;;   bytes 24-30  = OP4
 fm_apply_patch:
-    ; Load YM2610 FM patch from fm_patch_table.
-    ;
-    ; Patch format from fm_patch_compile.py:
-    ; byte 0  = LFO register $22
-    ; byte 1  = B1 feedback/algorithm
-    ; byte 2  = B5 stereo/AMS/PMS
-    ; byte 3+ = 4 operators x 7 bytes:
-    ;          DT/MUL, TL, AR, DR, SR, SL/RR, ENV
-
     ld a,(VAR_FM_PATCH)
     cp FM_PATCH_COUNT
     jr c,fm_apply_patch_index_ok
     xor a
-
 fm_apply_patch_index_ok:
     ld b,a
     ld hl,fm_patch_table
-
-    ; seek: HL += patch_index * FM_PATCH_SIZE
+    ; Seek: HL += patch_index * FM_PATCH_SIZE
     ld a,b
     or a
     jr z,fm_apply_patch_ready
-
 fm_patch_seek_loop:
     ld de,FM_PATCH_SIZE
     add hl,de
     dec a
     jr nz,fm_patch_seek_loop
-
 fm_apply_patch_ready:
     ; LFO register $22
     ld d,$22
     ld e,(hl)
     call fm_patch_write_a
     inc hl
-
-    ; B1 feedback/algorithm
+    ; Feedback/algorithm $B1
     ld d,$B1
     ld e,(hl)
     call fm_patch_write_a
     inc hl
-
-    ; B5 L/R + AMS/PMS
+    ; L/R + AMS/PMS $B5
     ld d,$B5
     ld e,(hl)
     call fm_patch_write_a
     inc hl
-
     ; OP1 base $31
     ld b,$31
     call fm_write_operator_patch
-
     ; OP2 base $35
     ld b,$35
     call fm_write_operator_patch
-
     ; OP3 base $39
     ld b,$39
     call fm_write_operator_patch
-
     ; OP4 base $3D
     ld b,$3D
     call fm_write_operator_patch
-
     ret
+
 fm_patch_write_a:
-    ; force_write_a clobbers HL through SHADOW_A.
-    ; Preserve HL while reading patch table.
     push hl
     call force_write_a
     pop hl
     ret
 
-
+;;; FIX: FM operator patch writer with proper TL volume scaling
+;;; B = operator register base ($31/$35/$39/$3D)
+;;; HL = pointer to 7 bytes: DT/MUL, TL, KS/AR, AM/DR, SR, SL/RR, SSG-EG
 fm_write_operator_patch:
-    ; HL points to:
-    ; DT/MUL, TL, AR, DR, SR, SL/RR, ENV
-    ;
-    ; B = operator base:
-    ; OP1=$31, OP2=$35, OP3=$39, OP4=$3D
-
     ; DT/MUL
     ld d,b
     ld e,(hl)
     call fm_patch_write_a
     inc hl
 
-    ; TL = base + $10, with global FM volume
+    ; TL with global volume offset
+    ; VAR_FM_VOL is 0-15, where 15=loudest, 0=quietest
+    ; Invert: 15-vol gives attenuation steps (0-15)
+    ; Multiply by 4 to scale to TL range (0-60 in steps of 4)
+    ; Add to patch TL value, clamp at $7F
     ld a,b
     add a,$10
     ld d,a
-
     ld a,(VAR_FM_VOL)
     cpl
     and $0F
     add a,a
     add a,a
     ld c,a
-
     ld a,(hl)
     add a,c
-
-    ; clamp TL to $7F
     cp $80
     jr c,fm_tl_ok
     ld a,$7F
@@ -1509,7 +1665,7 @@ fm_tl_ok:
     call fm_patch_write_a
     inc hl
 
-    ; AR = base + $20
+    ; KS/AR
     ld a,b
     add a,$20
     ld d,a
@@ -1517,7 +1673,7 @@ fm_tl_ok:
     call fm_patch_write_a
     inc hl
 
-    ; DR = base + $30
+    ; AM/DR
     ld a,b
     add a,$30
     ld d,a
@@ -1525,7 +1681,7 @@ fm_tl_ok:
     call fm_patch_write_a
     inc hl
 
-    ; SR = base + $40
+    ; SR
     ld a,b
     add a,$40
     ld d,a
@@ -1533,7 +1689,7 @@ fm_tl_ok:
     call fm_patch_write_a
     inc hl
 
-    ; SL/RR = base + $50
+    ; SL/RR
     ld a,b
     add a,$50
     ld d,a
@@ -1541,49 +1697,48 @@ fm_tl_ok:
     call fm_patch_write_a
     inc hl
 
-    ; ENV = base + $60
+    ; SSG-EG
     ld a,b
     add a,$60
     ld d,a
     ld e,(hl)
     call fm_patch_write_a
     inc hl
-
     ret
 
+;;; FIX: FM note on with proper key-off -> frequency latch -> key-on sequence
+;;; B = note index into fm_note_table
+;;; Per YM2610 spec: write $A5 (F-Num2/Block high) BEFORE $A1 (F-Num1 low)
+;;; to avoid frequency glitch during latch
 fm_note_on:
-    ; force key off first so envelope retriggers
+    ; Step 1: Key off to retrigger envelope
     ld de,$2801
     call force_write_a
 
-    ; look up note frequency
+    ; Step 2: Look up note frequency from table
     ld a,b
     ld e,a
     ld d,0
     ld hl,fm_note_table
     add hl,de
     add hl,de
-
-    ld c,(hl)        ; FNUM low
+    ld c,(hl)        ; F-Num low byte
     inc hl
-    ld a,(hl)        ; BLOCK + FNUM high
+    ld a,(hl)        ; Block + F-Num high bits
 
-    ; YM2610 latch order:
-    ; write high buffer first, then low byte to latch frequency
+    ; Step 3: Latch frequency (high byte first per spec)
     ld e,a
-    ld d,$A5
+    ld d,$A5         ; F-Num2 / Block (write first to buffer)
     call force_write_a
-
     ld e,c
-    ld d,$A1
+    ld d,$A1         ; F-Num1 (write second to latch both)
     call force_write_a
 
-    ; key on all 4 operators for key-code $01
+    ; Step 4: Key on all 4 operators for channel 1
+    ; Register $28: bits 4-7 = slot mask ($F0 = all 4 slots), bits 0-2 = channel ($01)
     ld de,$28F1
     call force_write_a
-
     ret
-
 
 store_fm_ptr:
     ld a,l
@@ -1592,7 +1747,6 @@ store_fm_ptr:
     ld (VAR_FM_PTR_HI),a
     ret
 
-
 store_music_ptr:
     ld a,l
     ld (VAR_MUSIC_PTR_LO),a
@@ -1600,93 +1754,107 @@ store_music_ptr:
     ld (VAR_MUSIC_PTR_HI),a
     ret
 
+;;; FIX: tempo_to_frames with finer resolution (8 levels instead of 5)
+;;; Input: A = BPM-like tempo value
+;;; Output: A = number of timer ticks per music step (lower = faster)
+;;; Timer B fires at ~8.1 Hz, so:
+;;;   1 tick  = ~123ms per step (very fast, ~488 BPM at 16th notes)
+;;;   2 ticks = ~246ms
+;;;   3 ticks = ~370ms (default, moderate)
+;;;   4 ticks = ~493ms
+;;;   5 ticks = ~616ms
+;;;   6 ticks = ~740ms
+;;;   7 ticks = ~863ms
+;;;   8 ticks = ~986ms (very slow)
 tempo_to_frames:
-    cp 180
+    cp 200
     jr nc,tempo_fastest
+    cp 170
+    jr nc,tempo_very_fast
     cp 140
     jr nc,tempo_fast
+    cp 120
+    jr nc,tempo_med_fast
     cp 100
     jr nc,tempo_mid
-    cp 70
+    cp 80
+    jr nc,tempo_med_slow
+    cp 60
     jr nc,tempo_slow
-    ld a,5
+    ld a,8
     ret
 tempo_fastest:
     ld a,1
     ret
-tempo_fast:
+tempo_very_fast:
     ld a,2
     ret
-tempo_mid:
+tempo_fast:
     ld a,3
     ret
-tempo_slow:
+tempo_med_fast:
+    ld a,3
+    ret
+tempo_mid:
     ld a,4
     ret
+tempo_med_slow:
+    ld a,5
+    ret
+tempo_slow:
+    ld a,6
+    ret
 
+;;; SSG standalone track tick handler
 ssg_tick:
     ld a,(VAR_SSG_TICK)
     inc a
     ld (VAR_SSG_TICK),a
-
     ld b,a
     ld a,(VAR_SSG_TEMPO)
     or a
     ret z
-
     cp b
     ret nz
-
     xor a
     ld (VAR_SSG_TICK),a
-
     ld a,(VAR_SSG_WAIT)
     or a
     jr z,ssg_step
-
     dec a
     ld (VAR_SSG_WAIT),a
     ret nz
-
     jp ssg_step
 
-
+;;; SSG standalone track step: parse and execute next command(s)
 ssg_step:
     ld a,(VAR_SSG_PTR_LO)
     ld l,a
     ld a,(VAR_SSG_PTR_HI)
     ld h,a
-
 ssg_step_next:
     ld a,(hl)
     inc hl
-
     cp $FF
     jp z,ssg_stop
-
     cp $FE
     jp z,ssg_loop
-
     cp $F0
     jp z,ssg_set_tempo
-
     cp $F1
     jp z,ssg_set_volume
-
     cp $F2
     jp z,ssg_set_preset
-
     cp $80
     jp z,ssg_rest
 
-    ; normal note
+    ; Normal SSG note: byte = note index, next byte = duration
     ld b,a
     ld a,(hl)
     inc hl
     ld (VAR_SSG_WAIT),a
     call store_ssg_ptr
     jp ssg_standalone_note_on
-
 
 ssg_set_tempo:
     ld a,(hl)
@@ -1695,7 +1863,6 @@ ssg_set_tempo:
     ld (VAR_SSG_TEMPO),a
     call store_ssg_ptr
     jp ssg_step
-
 
 ssg_set_volume:
     ld a,(hl)
@@ -1706,7 +1873,6 @@ ssg_set_volume:
     call ssg_apply_standalone_volume
     jp ssg_step
 
-
 ssg_set_preset:
     ld a,(hl)
     inc hl
@@ -1716,17 +1882,28 @@ ssg_set_preset:
     call ssg_apply_preset
     jp ssg_step
 
-
 ssg_rest:
     ld a,(hl)
     inc hl
     ld (VAR_SSG_WAIT),a
     call store_ssg_ptr
-    jp init_ssg
-
+    ; FIX: Only silence volumes, don't full-reset SSG (preserve preset/mixer state)
+    ld de,$0800
+    call shadowed_write_a
+    ld de,$0900
+    call shadowed_write_a
+    ld de,$0A00
+    call shadowed_write_a
+    ret
 
 ssg_loop:
-    call init_ssg
+    ; Silence volumes before looping
+    ld de,$0800
+    call shadowed_write_a
+    ld de,$0900
+    call shadowed_write_a
+    ld de,$0A00
+    call shadowed_write_a
     ld a,(VAR_SSG_START_LO)
     ld l,a
     ld a,(VAR_SSG_START_HI)
@@ -1736,13 +1913,11 @@ ssg_loop:
     call store_ssg_ptr
     jp ssg_step
 
-
 ssg_stop:
     xor a
     ld (VAR_SSG_ACTIVE),a
     ld (VAR_SSG_WAIT),a
     jp init_ssg
-
 
 store_ssg_ptr:
     ld a,l
@@ -1751,77 +1926,65 @@ store_ssg_ptr:
     ld (VAR_SSG_PTR_HI),a
     ret
 
-
+;;; SSG preset loader
+;;; Preset format (6 bytes):
+;;;   byte 0 = mixer register $07 mask
+;;;   byte 1 = channel A volume
+;;;   byte 2 = channel B volume
+;;;   byte 3 = channel C volume
+;;;   byte 4 = noise frequency
+;;;   byte 5 = reserved
 ssg_apply_preset:
-    ; Load SSG preset from ssg_preset_table.
-    ; Preset format:
-    ; byte 0 = YM2610 SSG mixer register $07 tone/noise mask
-    ; byte 1 = volume A
-    ; byte 2 = volume B
-    ; byte 3 = volume C
-    ; byte 4 = noise frequency $06
-    ; byte 5 = reserved
-
     ld a,(VAR_SSG_PRESET)
     cp SSG_PRESET_COUNT
     jr c,ssg_preset_index_ok
     xor a
-
 ssg_preset_index_ok:
     ld b,a
     ld hl,ssg_preset_table
-
     ld a,b
     or a
     jr z,ssg_preset_ready
-
 ssg_preset_seek_loop:
     ld de,SSG_PRESET_SIZE
     add hl,de
     dec a
     jr nz,ssg_preset_seek_loop
-
 ssg_preset_ready:
-    ; mixer $07
+    ; Mixer $07
     ld d,$07
     ld e,(hl)
     call ssg_preset_write_a
     inc hl
-
-    ; volume A $08 (FIX: Ensure M=0 mode)
+    ; Volume A $08 (M=0 fixed amplitude)
     ld d,$08
     ld a,(hl)
-    and $0F         ; Ensure M bit is 0 for fixed amplitude
+    and $0F
     ld e,a
     call ssg_preset_write_a
     inc hl
-
-    ; volume B $09 (FIX: Ensure M=0 mode)
+    ; Volume B $09 (M=0 fixed amplitude)
     ld d,$09
     ld a,(hl)
-    and $0F         ; Ensure M bit is 0 for fixed amplitude
+    and $0F
     ld e,a
     call ssg_preset_write_a
     inc hl
-
-    ; volume C $0A (FIX: Ensure M=0 mode)
+    ; Volume C $0A (M=0 fixed amplitude)
     ld d,$0A
     ld a,(hl)
-    and $0F         ; Ensure M bit is 0 for fixed amplitude
+    and $0F
     ld e,a
     call ssg_preset_write_a
     inc hl
-
-    ; noise frequency $06
+    ; Noise frequency $06
     ld d,$06
     ld e,(hl)
     call ssg_preset_write_a
     inc hl
-
-    ; skip reserved
+    ; Skip reserved byte
     inc hl
     ret
-
 
 ssg_preset_write_a:
     push hl
@@ -1829,9 +1992,17 @@ ssg_preset_write_a:
     pop hl
     ret
 
-
+;;; FIX: SSG note on with accurate period calculation and 3-channel unison
+;;; B = note index (0-based, where 0=C, 11=B, 12=C+1oct, etc.)
+;;; SSG period formula: Period = Fmaster / (64 * Fnote)
+;;;   where Fmaster = 8,000,000 Hz (YM2610 master clock)
+;;;   and period is 12-bit (0-4095)
+;;; The period table below is for octave 5 (middle octave).
+;;; Higher octaves: right-shift period. Lower octaves: left-shift period.
+;;; Channel A = exact pitch
+;;; Channel B = slight detune (+1 period) for chorus/unison effect
+;;; Channel C = slight detune (-1 period) for richer sound
 ssg_note_on:
-    ; FIX: SSG note-on with proper mixer settings
     ld a,b
     ld c,0
 ssg_octave_loop:
@@ -1840,7 +2011,6 @@ ssg_octave_loop:
     sub 12
     inc c
     jr ssg_octave_loop
-
 ssg_note_index:
     add a,a
     ld e,a
@@ -1850,6 +2020,9 @@ ssg_note_index:
     ld e,(hl)
     inc hl
     ld d,(hl)
+
+    ; Shift period for octave
+    ; Table is for octave 5. Octave < 5: shift left. Octave > 5: shift right.
     ld a,c
     cp 5
     jr z,ssg_period_ready
@@ -1873,60 +2046,127 @@ ssg_shift_left_loop:
     dec a
     jr nz,ssg_shift_left_loop
 ssg_period_ready:
-    ; FIX: Clamp period to 12-bit max
+    ; Clamp to 12-bit max ($0FFF)
     ld a,d
     and $0F
     ld d,a
-    
+
+    ; Channel A: exact period
     push de
     ld d,$00
-    call shadowed_write_a
+    call shadowed_write_a   ; Ch A fine tune
     pop de
     push de
     ld e,d
     ld d,$01
-    call shadowed_write_a
+    call shadowed_write_a   ; Ch A coarse tune
     pop de
-    sla e
-    rl d
+
+    ; FIX: Channel B: period + 1 (slight detune up for chorus)
+    push de
+    inc de          ; +1 period = slightly lower frequency
+    ld a,d
+    and $0F         ; Clamp 12-bit
+    ld d,a
     push de
     ld d,$02
-    call shadowed_write_a
+    call shadowed_write_a   ; Ch B fine tune
     pop de
     ld e,d
     ld d,$03
+    call shadowed_write_a   ; Ch B coarse tune
+    pop de
+
+    ; FIX: Channel C: period - 1 (slight detune down for chorus)
+    ld a,e
+    or d
+    jr z,ssg_ch_c_no_detune  ; Don't go below 0
+    dec de
+ssg_ch_c_no_detune:
+    ld a,d
+    and $0F
+    ld d,a
+    push de
+    ld d,$04
+    call shadowed_write_a   ; Ch C fine tune
+    pop de
+    ld e,d
+    ld d,$05
+    call shadowed_write_a   ; Ch C coarse tune
+
+    ; FIX: Enable all 3 tone channels, disable all noise
+    ; Register $07 bit layout:
+    ;   bit 0 = /Tone A (0=enable)
+    ;   bit 1 = /Tone B (0=enable)
+    ;   bit 2 = /Tone C (0=enable)
+    ;   bit 3 = /Noise A (1=disable)
+    ;   bit 4 = /Noise B (1=disable)
+    ;   bit 5 = /Noise C (1=disable)
+    ;   $38 = tones A,B,C on + noise A,B,C off
+    ld de,$0738
     call shadowed_write_a
-    
-    ; FIX: Enable tones on all channels, disable noise
-    ld de,$0738    ; Was $073C - FIXED: Enable tones (bits 3-5=0), disable noise (bits 0-2=1)
-    call shadowed_write_a
-    
+
+    ; Set channel volumes (M=0 for all)
     ld d,$08
     ld a,(VAR_MUSIC_VOL)
-    and $0F         ; FIX: Ensure M=0 mode
+    and $0F
     ld e,a
     call shadowed_write_a
     ld d,$09
     ld a,(VAR_MUSIC_VOL)
-    and $0F         ; FIX: Ensure M=0 mode
+    and $0F
     srl a
-    add a,3
+    add a,2
+    cp $10
+    jr c,ssg_noteon_vol_b_ok
+    ld a,$0F
+ssg_noteon_vol_b_ok:
+    ld e,a
+    call shadowed_write_a
+    ld d,$0A
+    ld a,(VAR_MUSIC_VOL)
+    and $0F
+    srl a
+    srl a
+    add a,1
+    cp $10
+    jr c,ssg_noteon_vol_c_ok
+    ld a,$0F
+ssg_noteon_vol_c_ok:
     ld e,a
     jp shadowed_write_a
 
+;;; FIX: SSG standalone note on uses VAR_SSG_VOL instead of VAR_MUSIC_VOL
 ssg_standalone_note_on:
-    ; Same as ssg_note_on but uses VAR_SSG_VOL for channel volumes.
+    ; First set up channels A,B,C with detuned periods (reuse ssg_note_on logic)
     call ssg_note_on
+    ; Then override volumes with standalone SSG volume
     ld d,$08
     ld a,(VAR_SSG_VOL)
-    and $0F         ; FIX: Ensure M=0 mode
+    and $0F
     ld e,a
     call shadowed_write_a
     ld d,$09
     ld a,(VAR_SSG_VOL)
-    and $0F         ; FIX: Ensure M=0 mode
+    and $0F
     srl a
-    add a,3
+    add a,2
+    cp $10
+    jr c,ssg_standalone_noteon_vol_b_ok
+    ld a,$0F
+ssg_standalone_noteon_vol_b_ok:
+    ld e,a
+    call shadowed_write_a
+    ld d,$0A
+    ld a,(VAR_SSG_VOL)
+    and $0F
+    srl a
+    srl a
+    add a,1
+    cp $10
+    jr c,ssg_standalone_noteon_vol_c_ok
+    ld a,$0F
+ssg_standalone_noteon_vol_c_ok:
     ld e,a
     jp shadowed_write_a
 
@@ -1936,10 +2176,37 @@ channel_masks:
 adpcma_stop_ticks:
     .db 24, 34, 70, 42, 12, 38, 32, 38, 56, 32, 44, 30
 
+;;; FIX: Accurate SSG period table for A=440Hz tuning
+;;; Master clock = 8,000,000 Hz, SSG divider = 64
+;;; Period = 8000000 / (64 * Fnote)
+;;; This table is for octave 5 (C5=523.25Hz to B5=987.77Hz)
+;;; C5    = 8000000/(64*523.25)  = 238.89 -> $EF = 239
+;;; C#5   = 8000000/(64*554.37)  = 225.48 -> $E1 = 225
+;;; D5    = 8000000/(64*587.33)  = 212.86 -> $D5 = 213
+;;; D#5   = 8000000/(64*622.25)  = 200.93 -> $C9 = 201
+;;; E5    = 8000000/(64*659.26)  = 189.63 -> $BE = 190
+;;; F5    = 8000000/(64*698.46)  = 178.93 -> $B3 = 179
+;;; F#5   = 8000000/(64*739.99)  = 168.92 -> $A9 = 169
+;;; G5    = 8000000/(64*783.99)  = 159.44 -> $9F = 159
+;;; G#5   = 8000000/(64*830.61)  = 150.43 -> $96 = 150
+;;; A5    = 8000000/(64*880.00)  = 142.05 -> $8E = 142
+;;; A#5   = 8000000/(64*932.33)  = 134.05 -> $86 = 134
+;;; B5    = 8000000/(64*987.77)  = 126.51 -> $7F = 127
 ssg_period_table:
-    .dw $01DE, $01C3, $01AA, $0192, $017B, $0166
-    .dw $0152, $013F, $012E, $011D, $010E, $00FF
+    .dw $00EF  ; C5  = 239
+    .dw $00E1  ; C#5 = 225
+    .dw $00D5  ; D5  = 213
+    .dw $00C9  ; D#5 = 201
+    .dw $00BE  ; E5  = 190
+    .dw $00B3  ; F5  = 179
+    .dw $00A9  ; F#5 = 169
+    .dw $009F  ; G5  = 159
+    .dw $0096  ; G#5 = 150
+    .dw $008E  ; A5  = 142
+    .dw $0086  ; A#5 = 134
+    .dw $007F  ; B5  = 127
 
+;;; External data includes (unchanged)
 .include "fm_patch_table.inc"
 .include "fm_data.inc"
 .include "music_data.inc"

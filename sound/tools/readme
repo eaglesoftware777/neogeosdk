@@ -37,12 +37,12 @@ adpcm_enc.py
 
 enc_wave16le_a.sh / enc_wave16le_b.sh
     Batch-convert source WAVs to raw 16-bit mono PCM at the target sample rate
-    used by the ADPCM encoders. Prefer SoX when available, otherwise fall back
-    to the bundled Python converter.
+    used by the ADPCM encoders. Use the bundled Python converter by default.
+    SoX is used only when SOX is explicitly set.
 
 wav_to_raw_pcm.py
-    Dependency-free WAV converter used as the Windows-safe fallback when SoX
-    is not installed. Produces raw signed little-endian 16-bit PCM.
+    Dependency-free WAV converter used by default on both Linux and Windows.
+    Produces raw signed little-endian 16-bit PCM.
 
 adpcm_enc_process.sh
     Processes all raw WAV inputs in samples/in_wav_* through the encoder.
@@ -79,12 +79,14 @@ Native Windows equivalents:
 Environment overrides:
 
   Linux:
+    make samples
     PYTHON=python3.12 SOX=/usr/local/bin/sox make samples
 
   Windows:
+    make -f MakefileWin32.mak samples
     make -f MakefileWin32.mak samples PY=py SOX=C:\path\to\sox.exe
 
 REQUIREMENTS
 ------------
   Python 3.x, numpy, wla-dx (wla-z80 and wlalink), srecord
-  SoX is optional; the bundled WAV converter is used when it is not present.
+  SoX is optional and disabled by default; set SOX explicitly to use it.

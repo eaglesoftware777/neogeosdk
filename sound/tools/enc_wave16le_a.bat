@@ -1,10 +1,11 @@
 @echo off
 setlocal
 if not defined PY set "PY=py"
-if not defined SOX set "SOX=sox"
 set "USE_SOX="
-where "%SOX%" >nul 2>nul && set "USE_SOX=1"
-if exist "%SOX%" set "USE_SOX=1"
+if defined SOX (
+    where "%SOX%" >nul 2>nul && set "USE_SOX=1"
+    if exist "%SOX%" set "USE_SOX=1"
+)
 
 for %%f in (..\samples\in_wav_a\*.wav) do (
     echo Processing %%f
