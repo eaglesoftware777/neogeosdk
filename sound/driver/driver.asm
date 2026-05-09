@@ -1446,20 +1446,20 @@ fm_apply_patch_ready:
     call fm_patch_write_a
     inc hl
 
-    ; OP1 base $31
+    ; OP1 base $30
+    ld b,$30
+    call fm_write_operator_patch
+
+    ; OP2 base $31
     ld b,$31
     call fm_write_operator_patch
 
-    ; OP2 base $35
-    ld b,$35
+    ; OP3 base $32
+    ld b,$32
     call fm_write_operator_patch
 
-    ; OP3 base $39
-    ld b,$39
-    call fm_write_operator_patch
-
-    ; OP4 base $3D
-    ld b,$3D
+    ; OP4 base $33
+    ld b,$33
     call fm_write_operator_patch
 
     ret
