@@ -4,13 +4,13 @@ set -eu
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 SDK_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)
 OUT_DIR="$SDK_ROOT/out"
-ROM_DIR="$SDK_ROOT/roms/ssideki"
+ROM_DIR="$SDK_ROOT/roms/neogeosdk"
 OBJ="$OUT_DIR/driver.o"
 OBJ_C="$OUT_DIR/driver_c.o"
 ASM_C="$OUT_DIR/driver.gen.asm"
 ASM_COMBINED="$OUT_DIR/driver_combined.asm"
 LINKFILE="$OUT_DIR/m1.link"
-M1ROM="$OUT_DIR/052-m1.m1"
+M1ROM="$OUT_DIR/777-m1.m1"
 
 mkdir -p "$OUT_DIR"
 
@@ -63,7 +63,7 @@ if [ "$current_size" -lt "$target_size" ]; then
 fi
 
 mkdir -p "$ROM_DIR"
-cp "$M1ROM" "$ROM_DIR/052-m1.m1"
+cp "$M1ROM" "$ROM_DIR/777-m1.m1"
 cp "$M1ROM" "$ROM_DIR/sm1.sm1"
 rm -f "$OBJ" "$OBJ_C" "$ASM_C" "$ASM_COMBINED" "$LINKFILE"
 

@@ -4,13 +4,13 @@ setlocal EnableDelayedExpansion
 set SCRIPT_DIR=%~dp0
 set SDK_ROOT=%SCRIPT_DIR%..\..
 set OUT_DIR=%SDK_ROOT%\out
-set ROM_DIR=%SDK_ROOT%\roms\ssideki
+set ROM_DIR=%SDK_ROOT%\roms\neogeosdk
 set OBJ=%OUT_DIR%\driver.o
 set OBJ_C=%OUT_DIR%\driver_c.o
 set ASM=%OUT_DIR%\driver.gen.asm
 set ASM_COMBINED=%OUT_DIR%\driver_combined.asm
 set LINKFILE=%OUT_DIR%\m1.link
-set M1ROM=%OUT_DIR%\052-m1.m1
+set M1ROM=%OUT_DIR%\777-m1.m1
 
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
 
@@ -107,7 +107,7 @@ if exist "%SCAT%" (
 )
 
 if not exist "%ROM_DIR%" mkdir "%ROM_DIR%"
-copy /y "%M1ROM%" "%ROM_DIR%\052-m1.m1"
+copy /y "%M1ROM%" "%ROM_DIR%\777-m1.m1"
 copy /y "%M1ROM%" "%ROM_DIR%\sm1.sm1"
 
 if exist "%OBJ%" del "%OBJ%"

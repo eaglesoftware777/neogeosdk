@@ -54,7 +54,7 @@ endif
 all: art sfix sound p1
 
 .PHONY: p1
-p1: game 052-p1.p1
+p1: game 777-p1.p1
 
 game:
 	$(CC) $(CFLAGS) sdk\neogeo.c -o out\neogeo0.o
@@ -83,14 +83,14 @@ game:
 	$(OBJCP) -R .comment -R .text -R .data -R .bss out\neogeolib0.o out\neogeolib.o
 	$(LD) $(LDFLAGS) -T sdk\neogeo_win.ld -o out\game out\neogeo.o out\user.o out\main.o out\neogeolib.o $(NG_ENGINE_OBJ0)
 
-052-p1.p1: game
+777-p1.p1: game
 	$(OBJCP) -O ihex out\game out\game0
 	$(SCAT) out\game0 -Intel $(CROP) -o out\game0.rom -binary
 	$(SCAT) out\game0.rom -binary $(SWAP) out\game1.rom -binary
 	$(SCAT) out\game1.rom -binary $(FILL) out\game.rom -binary
-	copy /Y out\game.rom out\052-p1.p1
-	if not exist roms\ssideki mkdir roms\ssideki
-	copy /Y out\052-p1.p1 roms\ssideki\052-p1.p1
+	copy /Y out\game.rom out\777-p1.p1
+	if not exist roms\neogeosdk mkdir roms\neogeosdk
+	copy /Y out\777-p1.p1 roms\neogeosdk\777-p1.p1
 
 .PHONY: samples
 samples:
@@ -101,8 +101,8 @@ samples:
 .PHONY: vrom
 vrom:
 	call sound\tools\vrom.bat
-	if not exist roms\ssideki mkdir roms\ssideki
-	copy /Y out\052-v1.v1 roms\ssideki\052-v1.v1
+	if not exist roms\neogeosdk mkdir roms\neogeosdk
+	copy /Y out\777-v1.v1 roms\neogeosdk\777-v1.v1
 
 .PHONY: fmpatches
 fmpatches:
@@ -127,25 +127,25 @@ ssg:
 .PHONY: m1rom
 m1rom: fmpatches fm mml ssgconfig ssg
 	set WLAZ80=$(WLAZ80)&& set WLALINK=$(WLALINK)&& set USE_Z80C=$(USE_Z80C)&& set Z80C_SRC=$(Z80C_SRC_WIN)&& call sound\tools\m1rom.bat
-	if not exist roms\ssideki mkdir roms\ssideki
-	copy /Y out\052-m1.m1 roms\ssideki\052-m1.m1
-	copy /Y out\052-m1.m1 roms\ssideki\sm1.sm1
+	if not exist roms\neogeosdk mkdir roms\neogeosdk
+	copy /Y out\777-m1.m1 roms\neogeosdk\777-m1.m1
+	copy /Y out\777-m1.m1 roms\neogeosdk\sm1.sm1
 
 .PHONY: m1rom-asm
 m1rom-asm:
 	$(MAKE) m1rom USE_Z80C=0
 	if not exist out\compare mkdir out\compare
-	copy /Y out\052-m1.m1 out\compare\052-m1-asm.m1
+	copy /Y out\777-m1.m1 out\compare\777-m1-asm.m1
 
 .PHONY: m1rom-c
 m1rom-c:
 	$(MAKE) m1rom USE_Z80C=1 LINK_C_DRIVER=1
 	if not exist out\compare mkdir out\compare
-	copy /Y out\052-m1.m1 out\compare\052-m1-c.m1
+	copy /Y out\777-m1.m1 out\compare\777-m1-c.m1
 
 .PHONY: compare-driver
 compare-driver: m1rom-asm m1rom-c
-	$(PY) sound\tools\compare_m1.py out\compare\052-m1-asm.m1 out\compare\052-m1-c.m1
+	$(PY) sound\tools\compare_m1.py out\compare\777-m1-asm.m1 out\compare\777-m1-c.m1
 
 .PHONY: sound
 sound: samples vrom fmpatches fm mml ssgconfig ssg m1rom
@@ -156,8 +156,8 @@ sound-all: sound
 .PHONY: sfix
 sfix:
 	cd artbox && py romdbfiximport.py && py fixtiles.py
-	if not exist roms\ssideki mkdir roms\ssideki
-	copy /Y artbox\052-s1.s1 roms\ssideki\052-s1.s1
+	if not exist roms\neogeosdk mkdir roms\neogeosdk
+	copy /Y artbox\777-s1.s1 roms\neogeosdk\777-s1.s1
 
 .PHONY: srom
 srom: sfix
@@ -177,7 +177,7 @@ clean:
 	if exist out\game0.rom del /Q out\game0.rom
 	if exist out\game1.rom del /Q out\game1.rom
 	if exist out\game.rom del /Q out\game.rom
-	if exist out\052-p1.p1 del /Q out\052-p1.p1
+	if exist out\777-p1.p1 del /Q out\777-p1.p1
 	if exist out\game.map del /Q out\game.map
 	if exist out\*.o del /Q out\*.o
 	if exist out\*.s del /Q out\*.s
@@ -187,16 +187,16 @@ clean:
 	if exist dump\*.sym del /Q dump\*.sym
 	if exist dump\*.gdb del /Q dump\*.gdb
 	if exist dump\*.readelf del /Q dump\*.readelf
-	if exist roms\ssideki\052-p1.p1 del /Q roms\ssideki\052-p1.p1
+	if exist roms\neogeosdk\777-p1.p1 del /Q roms\neogeosdk\777-p1.p1
 
 .PHONY: sound-clean
 sound-clean:
-	if exist out\052-m1.m1 del /Q out\052-m1.m1
-	if exist out\052-v1.v1 del /Q out\052-v1.v1
+	if exist out\777-m1.m1 del /Q out\777-m1.m1
+	if exist out\777-v1.v1 del /Q out\777-v1.v1
 	if exist out\driver.gen.asm del /Q out\driver.gen.asm
-	if exist roms\ssideki\052-m1.m1 del /Q roms\ssideki\052-m1.m1
-	if exist roms\ssideki\052-v1.v1 del /Q roms\ssideki\052-v1.v1
-	if exist roms\ssideki\sm1.sm1 del /Q roms\ssideki\sm1.sm1
+	if exist roms\neogeosdk\777-m1.m1 del /Q roms\neogeosdk\777-m1.m1
+	if exist roms\neogeosdk\777-v1.v1 del /Q roms\neogeosdk\777-v1.v1
+	if exist roms\neogeosdk\sm1.sm1 del /Q roms\neogeosdk\sm1.sm1
 	if exist sound\samples\out_16el_a\*.wav del /Q sound\samples\out_16el_a\*.wav
 	if exist sound\samples\out_16el_b\*.wav del /Q sound\samples\out_16el_b\*.wav
 	if exist sound\samples\out_a\*.adpcma del /Q sound\samples\out_a\*.adpcma
@@ -210,8 +210,8 @@ sound-clean:
 
 .PHONY: clean-all
 clean-all: clean sound-clean art-clean
-	if exist roms\ssideki\052-c1.c1 del /Q roms\ssideki\052-c1.c1
-	if exist roms\ssideki\052-c2.c2 del /Q roms\ssideki\052-c2.c2
+	if exist roms\neogeosdk\777-c1.c1 del /Q roms\neogeosdk\777-c1.c1
+	if exist roms\neogeosdk\777-c2.c2 del /Q roms\neogeosdk\777-c2.c2
 
 .PHONY: dump
 dump:
@@ -227,12 +227,12 @@ dump:
 	$(INFO) out\game.rom > dump\game.hex
 
 test:
-	copy /Y out\052-p1.p1 roms\ssideki
-	$(MAME) -rompath $(REPO_WIN)\roms -output console -nofilter -waitvsync -window ssideki
+	copy /Y out\777-p1.p1 roms\neogeosdk\777-p1.p1
+	$(MAME) neogeo -rompath $(REPO_WIN)\roms -output console -nofilter -waitvsync -window -cart1 neogeosdk
 
 debug:
-	copy /Y out\052-p1.p1 roms\ssideki
-	$(MAME) -rompath $(REPO_WIN)\roms -output console -debug -verbose -nofilter -waitvsync -window ssideki
+	copy /Y out\777-p1.p1 roms\neogeosdk\777-p1.p1
+	$(MAME) neogeo -rompath $(REPO_WIN)\roms -output console -debug -verbose -nofilter -waitvsync -window -cart1 neogeosdk
 
 .PHONY: debug-build
 debug-build:

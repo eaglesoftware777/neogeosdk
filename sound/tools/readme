@@ -6,7 +6,7 @@ Python 3 tools that process audio assets and prepare them for the Neo Geo.
 TOOLS
 -----
 vrom.py
-    Packs ADPCM-A and ADPCM-B samples into the V ROM (052-v1.v1).
+    Packs ADPCM-A and ADPCM-B samples into the V ROM (777-v1.v1).
     Auto-generates sound/driver/sample_table.inc with correct start/end offsets.
 
 mml_compile.py
@@ -49,12 +49,12 @@ adpcm_enc_process.sh
 
 m1rom.sh / m1rom.bat
     Assembles driver.asm with wla-z80, links with wlalink, pads output to
-    64 KB and copies result to out/052-m1.m1 and roms/ssideki/.
+    64 KB and copies result to out/777-m1.m1 and roms/neogeosdk/.
     Expects all .inc files to be pre-generated (run via make m1rom which
     invokes fmpatches, fm, mml, ssgconfig, ssg targets first).
 
 vrom.sh / vrom.bat
-    Runs vrom.py and copies the result to roms/ssideki/052-v1.v1.
+    Runs vrom.py and copies the result to roms/neogeosdk/777-v1.v1.
 
 BUILD COMMANDS
 --------------

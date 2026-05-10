@@ -7,8 +7,8 @@
 """
 Neo Geo FIX ROM (S1) tile generator.
 
-Builds the 128 KB 052-s1.s1 from:
-  1. Existing 052-s1.s1  (all 4096 tiles preserved at their original addresses)
+Builds the 128 KB 777-s1.s1 from:
+  1. Existing 777-s1.s1  (all 4096 tiles preserved at their original addresses)
   2. sfix.sfix system-font ROM  (fills any empty slots not covered by step 1)
   3. infix/*.png images imported via the imagefix DB table
 
@@ -34,10 +34,10 @@ ROM_SIZE   = 131072          # 128 KB
 NUM_TILES  = ROM_SIZE // TILE_BYTES   # 4096
 
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
-ROMS_DIR    = os.path.join(SCRIPT_DIR, '..', 'roms', 'ssideki')
-GAME_S1     = os.path.join(ROMS_DIR, '052-s1.s1')
+ROMS_DIR    = os.path.join(SCRIPT_DIR, '..', 'roms', 'neogeosdk')
+GAME_S1     = os.path.join(ROMS_DIR, '777-s1.s1')
 SFIX_ROM    = os.path.join(ROMS_DIR, 'sfix.sfix')
-OUT_S1      = os.path.join(SCRIPT_DIR, '052-s1.s1')   # written here, Makefile copies
+OUT_S1      = os.path.join(SCRIPT_DIR, '777-s1.s1')   # written here, Makefile copies
 DB_PATH     = os.path.join(SCRIPT_DIR, 'neorom.db')
 INFIX_DIR   = os.path.join(SCRIPT_DIR, 'infix')
 

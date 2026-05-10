@@ -11,4 +11,4 @@ Source PNG images for Neo Geo sprite tiles (C ROMs).
 img2neo.py performs k-means palette reduction (15 colours) and
 Floyd-Steinberg dithering automatically if the image exceeds the colour limit.
 
-Run: make art   (full sprite pipeline → 052-c1.c1 and 052-c2.c2)
+Run: make art   (full sprite pipeline → 777-c1.c1 and 777-c2.c2)
