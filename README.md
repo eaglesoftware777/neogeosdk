@@ -441,7 +441,7 @@ Important recent build behavior:
 - set `SOX=/path/to/sox` only when you explicitly want the SoX conversion path
 - Windows `make fm`, `make mml`, and `make ssg` expand source file lists correctly
 - Windows `make sfix` now keeps `052-s1.s1` in the correct 128 KB FIX-ROM format
-- P1 generation crops and pads to exactly 128 KB (0x020000); the specification requires the P1 ROM to fit within this window
+- P1 generation crops to the full 512 KB program ROM window (0x080000) before byte swap and padding; this is the required ROM format for MAME and hardware
 
 ## Debug and Trace Builds
 
