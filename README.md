@@ -55,6 +55,9 @@ Use these docs for the current integration path:
 
 - [`docs/GAME_ENGINE_LAYER.md`](./docs/GAME_ENGINE_LAYER.md)
 - [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
+- [`docs/DEPENDENCIES.md`](./docs/DEPENDENCIES.md)
+- [`docs/GDB_GUIDE.md`](./docs/GDB_GUIDE.md)
+- [`docs/BANKSWITCH.md`](./docs/BANKSWITCH.md)
 
 
 ## Release Assets
@@ -83,6 +86,12 @@ Primary repository docs:
 - [`docs/GAME_ENGINE_LAYER.md`](./docs/GAME_ENGINE_LAYER.md)
 - [`docs/ARTBOX_PIPELINE.md`](./docs/ARTBOX_PIPELINE.md)
 - [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
+- [`docs/DEPENDENCIES.md`](./docs/DEPENDENCIES.md)
+- [`docs/GDB_GUIDE.md`](./docs/GDB_GUIDE.md)
+- [`docs/BANKSWITCH.md`](./docs/BANKSWITCH.md)
+- [`docs/DEPENDENCIES.md`](./docs/DEPENDENCIES.md)
+- [`docs/GDB_GUIDE.md`](./docs/GDB_GUIDE.md)
+- [`docs/BANKSWITCH.md`](./docs/BANKSWITCH.md)
 - [`sound/SOUND_DRIVER_GUIDE.txt`](./sound/SOUND_DRIVER_GUIDE.txt)
 - [`sound/driver/readme`](./sound/driver/readme)
 - [`sound/mml/readme`](./sound/mml/readme)
@@ -432,7 +441,7 @@ Important recent build behavior:
 - set `SOX=/path/to/sox` only when you explicitly want the SoX conversion path
 - Windows `make fm`, `make mml`, and `make ssg` expand source file lists correctly
 - Windows `make sfix` now keeps `052-s1.s1` in the correct 128 KB FIX-ROM format
-- P1 generation crops to the full 512 KB program ROM window before byte swap and padding, so larger 68000 builds are not truncated at 128 KB
+- P1 generation crops and pads to exactly 128 KB (0x020000); the specification requires the P1 ROM to fit within this window
 
 ## Debug and Trace Builds
 
@@ -684,7 +693,7 @@ Highlights from the recent commit line:
 - 2026-05-09
   Python became the default sample-conversion path, and the live title/game flow was remapped around the current ADPCM-B theme set
 - 2026-05-10
-  2D engine camera scroll, level/NPC/physics/fix modules, artbox asset categories, joystick-driven main-character actions, opponent hazards, and forest-alley final scene work
+  2D engine camera scroll, level/NPC/physics/fix modules, artbox asset categories, joystick-driven main-character actions, opponent hazards, forest-alley final scene work; demo scene rendering fixes (duel backdrop, portrait tracking, phase 1 background); P1 ROM enforced to 128 KB; FIX palette white-on-black; GDB guide, dependency docs, and bankswitch stub API added
 
 See [`CHANGELOG.md`](./CHANGELOG.md) for release-level notes.
 
@@ -696,8 +705,9 @@ docs/             — game-engine and build integration docs
 main.c            — demo/game presentation flow on 68000 side
 user.c            — Neo Geo BIOS hook handlers and startup flow
 sdk/              — headers, linker scripts, support library
-  sound_ids.h     — named sound IDs for music, SFX, beds, FM, and SSG tracks
-  ng_*.h/.c       — 2D game engine layer modules
+  sound_ids.h         — named sound IDs for music, SFX, beds, FM, and SSG tracks
+  ng_*.h/.c           — 2D game engine layer modules
+  ng_bankswitch.h/.c  — P-ROM bank switching stub (not used in demo)
 artbox/           — graphics conversion pipeline
   assets.cfg      — art conversion rules and gameplay categories
   sprite_meta.h   — generated asset metadata for 68000-side sprite setup

@@ -36,11 +36,11 @@ FM_MMLS:=$(wildcard sound/fm/*.mml)
 MML_TRACKS:=$(wildcard sound/mml/*.mml)
 SSG_MMLS:=$(wildcard sound/ssg/*.mml)
 
-CROP=-crop 0x000000 0x080000
+CROP=-crop 0x000000 0x020000
 SCAT=$(REPO_WIN)\win\srec_cat.exe
 INFO=$(REPO_WIN)\win\xxd.exe -g 2
 SWAP= -byte-swap 2 -o
-FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
+FILL= -fill 0xFF  0x000000 0x020000 -range-padding 4 -o
 NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o
 
 ifeq ($(DEBUG),1)

@@ -24,11 +24,11 @@ PYTHON?=python3
 SOX?=
 DEBUG?=0
 GDB_REMOTE?=localhost:1234
-CROP=-crop 0x000000 0x080000 
+CROP=-crop 0x000000 0x020000
 SCAT=srec_cat
-INFO=xxd -g 2 
+INFO=xxd -g 2
 SWAP= -byte-swap 2 -o
-FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
+FILL= -fill 0xFF  0x000000 0x020000 -range-padding 4 -o
 NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt
 NG_ENGINE_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(NG_ENGINE_NAMES)))
 
