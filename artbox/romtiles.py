@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import glob
 import io
 import json
 import os
@@ -170,10 +171,11 @@ def encode_block(block, c1_file, c2_file, transparent_zero):
 
 
 def remove_if_exists(pattern):
-    if os.name == "nt":
-        os.system(f"del /Q /F {pattern} 2>nul")
-    else:
-        os.system(f"rm -f {pattern}")
+    for path in glob.glob(pattern):
+        try:
+            os.remove(path)
+        except OSError:
+            pass
 
 
 remove_if_exists("neopal.bin")
