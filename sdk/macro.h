@@ -328,6 +328,89 @@
 #define ASM_NOP "\tnop\t" "\n\t"
 #define ASM_JEQ(sym1) "\tjeq\t" VAL(sym1) "\n\t"
 
+/* Arithmetic / multiply / divide */
+#define ASM_DIVU(src,dst)    "\tdivu\t"  VAL(src) "\t,\t" VAL(dst) "\n\t"
+#define ASM_DIVS(src,dst)    "\tdivs\t"  VAL(src) "\t,\t" VAL(dst) "\n\t"
+#define ASM_MULU(src,dst)    "\tmulu\t"  VAL(src) "\t,\t" VAL(dst) "\n\t"
+#define ASM_MULS(src,dst)    "\tmuls\t"  VAL(src) "\t,\t" VAL(dst) "\n\t"
+#define ASM_SWAP(reg)        "\tswap\t"  VAL(reg) "\n\t"
+#define ASM_EXT(reg)         "\text.w\t" VAL(reg) "\n\t"
+#define ASM_EXTL(reg)        "\text.l\t" VAL(reg) "\n\t"
+#define ASM_NEG(reg)         "\tneg\t"   VAL(reg) "\n\t"
+#define ASM_NOT(reg)         "\tnot\t"   VAL(reg) "\n\t"
+
+/* Shifts / rotates */
+#define ASM_LSLW(cnt,dst)    "\tlsl.w\t" VAL(cnt) "\t,\t" VAL(dst) "\n\t"
+#define ASM_LSLL(cnt,dst)    "\tlsl.l\t" VAL(cnt) "\t,\t" VAL(dst) "\n\t"
+#define ASM_ASRW(cnt,dst)    "\tasr.w\t" VAL(cnt) "\t,\t" VAL(dst) "\n\t"
+#define ASM_RORW(cnt,dst)    "\tror.w\t" VAL(cnt) "\t,\t" VAL(dst) "\n\t"
+#define ASM_ROLW(cnt,dst)    "\trol.w\t" VAL(cnt) "\t,\t" VAL(dst) "\n\t"
+
+/* Logic */
+#define ASM_ANDW(src,dst)    "\tand.w\t"  VAL(src) "\t,\t" VAL(dst) "\n\t"
+#define ASM_ANDL(src,dst)    "\tand.l\t"  VAL(src) "\t,\t" VAL(dst) "\n\t"
+#define ASM_ORB(src,dst)     "\tor.b\t"   VAL(src) "\t,\t" VAL(dst) "\n\t"
+#define ASM_ORW(src,dst)     "\tor.w\t"   VAL(src) "\t,\t" VAL(dst) "\n\t"
+#define ASM_ORL(src,dst)     "\tor.l\t"   VAL(src) "\t,\t" VAL(dst) "\n\t"
+#define ASM_EORB(src,dst)    "\teor.b\t"  VAL(src) "\t,\t" VAL(dst) "\n\t"
+#define ASM_EORW(src,dst)    "\teor.w\t"  VAL(src) "\t,\t" VAL(dst) "\n\t"
+#define ASM_EORL(src,dst)    "\teor.l\t"  VAL(src) "\t,\t" VAL(dst) "\n\t"
+#define ASM_CLRB(reg)        "\tclr.b\t"  VAL(reg) "\n\t"
+
+/* Branch / compare extras */
+#define ASM_BGT(lbl)         "\tbgt\t"    VAL(lbl) "\n\t"
+#define ASM_BLT(lbl)         "\tblt\t"    VAL(lbl) "\n\t"
+#define ASM_BGE(lbl)         "\tbge\t"    VAL(lbl) "\n\t"
+#define ASM_BLE(lbl)         "\tble\t"    VAL(lbl) "\n\t"
+#define ASM_BCC(lbl)         "\tbcc\t"    VAL(lbl) "\n\t"
+#define ASM_BCS(lbl)         "\tbcs\t"    VAL(lbl) "\n\t"
+#define ASM_CMPIB(imm,dst)   "\tcmpi.b\t" VAL(imm) "\t,\t" VAL(dst) "\n\t"
+#define ASM_CMPIW(imm,dst)   "\tcmpi.w\t" VAL(imm) "\t,\t" VAL(dst) "\n\t"
+#define ASM_CMPIL(imm,dst)   "\tcmpi.l\t" VAL(imm) "\t,\t" VAL(dst) "\n\t"
+#define ASM_CMPAW(src,dst)   "\tcmpa.w\t" VAL(src) "\t,\t" VAL(dst) "\n\t"
+#define ASM_CMPAL(src,dst)   "\tcmpa.l\t" VAL(src) "\t,\t" VAL(dst) "\n\t"
+#define ASM_TST(reg)         "\ttst\t"    VAL(reg) "\n\t"
+#define ASM_TSTL(reg)        "\ttst.l\t"  VAL(reg) "\n\t"
+
+/* Stack helpers */
+#define ASM_PEA(ea)          "\tpea\t"    VAL(ea)  "\n\t"
+#define ASM_UNLK(reg)        "\tunlk\t"   VAL(reg) "\n\t"
+#define ASM_LINK(reg,sz)     "\tlink\t"   VAL(reg) "\t,\t" VAL(sz) "\n\t"
+
+/*
+ * Register tokens for ASM macros.
+ *
+ * GNU as for m68k accepts bare register names (d0, a0, sp …) without a %
+ * prefix. Using these tokens instead of %%d0 avoids a GCC 6+ issue where %%
+ * is not substituted to % in asm volatile blocks that have no operand list
+ * at all (no :outputs:inputs:clobbers clause).
+ *
+ * Rules of thumb:
+ *   - Unconstrained block (no : clause)  → use D0, A0, SP … (bare names)
+ *   - Block with clobbers only            → %%d0 is fine (GCC substitutes)
+ *   - Block with GCC operands (%[name])   → %%d0 is fine (GCC substitutes)
+ *   - Mixing C values into asm            → use named operands:
+ *       asm volatile ("move.l %[val],%%d0" : : [val]"r"(myvar) : "d0");
+ */
+#define D0  d0
+#define D1  d1
+#define D2  d2
+#define D3  d3
+#define D4  d4
+#define D5  d5
+#define D6  d6
+#define D7  d7
+#define A0  a0
+#define A1  a1
+#define A2  a2
+#define A3  a3
+#define A4  a4
+#define A5  a5
+#define A6  a6
+#define A7  a7
+/* SP / ASM_SP — bare stack pointer name (a7 alias) */
+#define ASM_SP  sp
+
 #define ASM_END );
 #define NEOGEO_USER __attribute__ ((section ("neogeo_user")))
 #define NEOGEO_INTERRUPT __attribute__ ((interrupt))
