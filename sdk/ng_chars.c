@@ -1,6 +1,6 @@
 #include "ng_chars.h"
 #include "ng_actions.h"
-#include "ng_properties.h"
+#include "ng_level.h"
 
 static NGCharacter ng_chars[NG_MAX_CHARS];
 static NGCharInterupt ng_char_interupts[NG_MAX_CHAR_KINDS];
@@ -146,6 +146,10 @@ void NEOGEO_USER chars_update(void)
 void NEOGEO_USER chars_draw(void)
 {
     uint8_t i;
+    const NGLevelState *level = level_state();
+    int16_t camera_x = level ? level->scroll_x : 0;
+    int16_t camera_y = level ? level->scroll_y : 0;
+
     for (i = 0; i < NG_MAX_CHARS; i++) {
         NGCharacter *c = &ng_chars[i];
         NGSpriteGroup g;
@@ -155,7 +159,7 @@ void NEOGEO_USER chars_draw(void)
         ngSpriteGroupInit(&g, c->sprite_first, c->sprite_strips, c->sprite_height, c->sprite_tile, c->palette);
         ngSpriteGroupSetTileStride(&g, c->sprite_stride ? c->sprite_stride : c->sprite_strips);
         ngSpriteGroupSetActiveRows(&g, c->sprite_active_rows ? c->sprite_active_rows : c->sprite_height);
-        ngSpriteGroupSetPos(&g, c->x, c->y);
+        ngSpriteGroupSetPos(&g, (int16_t)(c->x - camera_x), (int16_t)(c->y - camera_y));
         ngSpriteGroupSetScale(&g, c->scale_x, c->scale_y);
         ngSpriteGroupSetFlip(&g, c->flip_x, c->flip_y);
 

@@ -1,5 +1,27 @@
 # Changelog
 
+## Unreleased
+
+### Highlights
+
+- added 2D engine camera support with horizontal, vertical, and both-axis joystick scrolling
+- expanded the engine layer with level, FIX cache, NPC, and physics modules
+- added artbox asset categories for `background`, `main_character`, `opponent`, and `npc`
+- added joystick-driven main-character action selection for idle, run, jump, hit, and attack behavior
+- added opponent hazard collision behavior that can damage the player
+- updated the final scene to use the forest alley background with walking NPC sprites
+- added boot intro text shimmer and a pseudo-3D transition before the title screen
+- refreshed engine, API, build integration, runtime redirect, README, changelog, and artbox documentation
+- added `docs/ARTBOX_PIPELINE.md`
+- fixed the start-game path so loading enters `playgame()` directly instead of replaying boot/title sequences
+- fixed P1 generation to preserve the full 512 KB program ROM window instead of truncating larger 68000 builds at 128 KB
+- added debug/GDB make targets that generate size, symbol, readelf, disassembly, map, and GDB trace files
+
+### Validation
+
+- `make`
+- `make gdb-trace`
+
 ## v1.2.0 - C Driver Workflow, Layered Demo Mix, and Release Refresh
 
 Release date: 2026-05-06

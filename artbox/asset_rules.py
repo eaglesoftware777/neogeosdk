@@ -33,6 +33,7 @@ def load_rules(cfg_path=CFG_PATH):
                 "name": section_name[5:],
                 "pattern": _rule_value(section, "pattern", "*.png"),
                 "mode": _rule_value(section, "mode", "screen").strip().lower(),
+                "category": _rule_value(section, "category", "background").strip().lower(),
                 "fit": _rule_value(section, "fit", "crop").strip().lower(),
                 "anchor": _rule_value(section, "anchor", "center").strip().lower(),
                 "target_width": int(_rule_value(section, "target_width", "256")),
@@ -63,6 +64,7 @@ def match_rule(name, rules):
         "name": "fallback",
         "pattern": "*.png",
         "mode": "screen",
+        "category": "background",
         "fit": "crop",
         "anchor": "center",
         "target_width": 256,
@@ -94,6 +96,7 @@ def build_asset_specs(in_dir="in", cfg_path=CFG_PATH):
             "path": os.path.join(in_dir, name),
             "rule_name": rule["name"],
             "mode": rule["mode"],
+            "category": rule["category"],
             "fit": rule["fit"],
             "anchor": rule["anchor"],
             "target_width": rule["target_width"],
@@ -136,6 +139,7 @@ def write_out_srt(specs, out_path=OUT_SRT_PATH):
             handle.write(
                 f"mode={spec['mode']} fit={spec['fit']} anchor={spec['anchor']} rule={spec['rule_name']}\n"
             )
+            handle.write(f"category={spec.get('category', 'background')}\n")
             handle.write(
                 f"source={spec['source_width']}x{spec['source_height']} "
                 f"canvas={spec['canvas_width']}x{spec['canvas_height']} "

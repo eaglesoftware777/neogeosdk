@@ -1,5 +1,6 @@
 #include "ng_level.h"
 #include "ng_properties.h"
+#include "neogeo.h"
 
 static NGLevelState ng_level_state;
 
@@ -82,6 +83,8 @@ void NEOGEO_USER level_set_scroll(int16_t x, int16_t y)
     ng_level_state.scroll_y = y;
     prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_SCROLL_X, x);
     prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_SCROLL_Y, y);
+    prop_set(NG_PROP_GROUP_CAMERA, NG_PROP_CAMERA_X, x);
+    prop_set(NG_PROP_GROUP_CAMERA, NG_PROP_CAMERA_Y, y);
 }
 
 void NEOGEO_USER level_move_scroll(int16_t dx, int16_t dy)
@@ -104,26 +107,70 @@ void NEOGEO_USER level_set_world_bounds(int16_t left, int16_t top, int16_t right
     prop_set(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_BOTTOM, bottom);
 }
 
+void NEOGEO_USER level_set_camera(int16_t x, int16_t y, int16_t screen_w, int16_t screen_h)
+{
+    int16_t max_x;
+    int16_t max_y;
+
+    if (screen_w <= 0) screen_w = 320;
+    if (screen_h <= 0) screen_h = 224;
+
+    max_x = (int16_t)(ng_level_state.world_right - screen_w + 1);
+    max_y = (int16_t)(ng_level_state.world_bottom - screen_h + 1);
+    if (max_x < ng_level_state.world_left) max_x = ng_level_state.world_left;
+    if (max_y < ng_level_state.world_top) max_y = ng_level_state.world_top;
+
+    if (x < ng_level_state.world_left) x = ng_level_state.world_left;
+    if (x > max_x) x = max_x;
+    if (y < ng_level_state.world_top) y = ng_level_state.world_top;
+    if (y > max_y) y = max_y;
+
+    level_set_scroll(x, y);
+    prop_set(NG_PROP_GROUP_CAMERA, NG_PROP_CAMERA_MODE, ng_level_state.mode);
+    prop_set(NG_PROP_GROUP_CAMERA, NG_PROP_CAMERA_W, screen_w);
+    prop_set(NG_PROP_GROUP_CAMERA, NG_PROP_CAMERA_H, screen_h);
+}
+
+void NEOGEO_USER level_move_camera(int16_t dx, int16_t dy, int16_t screen_w, int16_t screen_h)
+{
+    level_set_camera(
+        (int16_t)(ng_level_state.scroll_x + dx),
+        (int16_t)(ng_level_state.scroll_y + dy),
+        screen_w,
+        screen_h
+    );
+}
+
 void NEOGEO_USER level_camera_follow(int16_t target_x, int16_t target_y, int16_t screen_w, int16_t screen_h)
 {
     int16_t cx = (int16_t)(target_x - (screen_w / 2));
     int16_t cy = (int16_t)(target_y - (screen_h / 2));
 
-    if (ng_level_state.world_right > ng_level_state.world_left) {
-        int16_t max_x = (int16_t)(ng_level_state.world_right - screen_w);
-        if (cx < ng_level_state.world_left) cx = ng_level_state.world_left;
-        if (cx > max_x) cx = max_x;
+    level_set_camera(cx, cy, screen_w, screen_h);
+}
+
+void NEOGEO_USER level_camera_input(uint16_t joystick, int16_t speed, uint8_t axes, int16_t screen_w, int16_t screen_h)
+{
+    int16_t dx = 0;
+    int16_t dy = 0;
+
+    if (axes & NG_CAMERA_AXIS_X) {
+        if (joystick & (1u << CNT_LEFT)) dx = (int16_t)(dx - speed);
+        if (joystick & (1u << CNT_RIGHT)) dx = (int16_t)(dx + speed);
     }
-    if (ng_level_state.world_bottom > ng_level_state.world_top) {
-        int16_t max_y = (int16_t)(ng_level_state.world_bottom - screen_h);
-        if (cy < ng_level_state.world_top) cy = ng_level_state.world_top;
-        if (cy > max_y) cy = max_y;
+    if (axes & NG_CAMERA_AXIS_Y) {
+        if (joystick & (1u << CNT_UP)) dy = (int16_t)(dy - speed);
+        if (joystick & (1u << CNT_DOWN)) dy = (int16_t)(dy + speed);
     }
 
-    prop_set(NG_PROP_GROUP_CAMERA, NG_PROP_CAMERA_X, cx);
-    prop_set(NG_PROP_GROUP_CAMERA, NG_PROP_CAMERA_Y, cy);
-    prop_set(NG_PROP_GROUP_CAMERA, NG_PROP_CAMERA_W, screen_w);
-    prop_set(NG_PROP_GROUP_CAMERA, NG_PROP_CAMERA_H, screen_h);
+    if (dx || dy) {
+        level_move_camera(dx, dy, screen_w, screen_h);
+    }
+}
+
+void NEOGEO_USER level_camera_joystick(int16_t speed, uint8_t axes, int16_t screen_w, int16_t screen_h)
+{
+    level_camera_input(poll_joystick(), speed, axes, screen_w, screen_h);
 }
 
 const NGLevelState *NEOGEO_USER level_state(void)

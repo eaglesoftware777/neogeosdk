@@ -12,6 +12,10 @@ entity-component framework. The model is simple:
 - status flags
 - progress slots
 - properties matrix
+- level state and camera scroll
+- cached FIX-layer text
+- NPC helpers
+- physics bodies and solids
 - event queue
 - border constraints
 - one per-frame game engine entry point
@@ -34,6 +38,10 @@ Or include only the modules you need:
 - `sdk/ng_game_time.h`
 - `sdk/ng_progress.h`
 - `sdk/ng_properties.h`
+- `sdk/ng_level.h`
+- `sdk/ng_fix.h`
+- `sdk/ng_npcs.h`
+- `sdk/ng_physics.h`
 - `sdk/ng_status.h`
 - `sdk/ng_timers.h`
 - `sdk/ng_border_constraints.h`
@@ -54,9 +62,13 @@ That resets:
 - progress slots
 - status flags
 - event queue
+- level and camera state
+- cached FIX text state
 - border constraints
 - action table
 - character pool
+- NPC pool
+- physics bodies and solids
 
 ## Per-frame call
 
@@ -70,12 +82,21 @@ game_engine_frame();
 `game_engine_frame()` runs this sequence:
 
 1. `game_time_tick()`
-2. `timers_update()`
-3. `border_constraints_update()`
-4. `chars_update()`
-5. `game_events_update()`
-6. `progress_update()`
-7. `chars_draw()`
+2. optional `before_logic` hook
+3. `timers_update()`
+4. `level_update()`
+5. `npcs_update()`
+6. `physics_update_pre()`
+7. `border_constraints_update()`
+8. `chars_update()`
+9. `physics_resolve()`
+10. optional `collision_logic` hook
+11. `game_events_update()`
+12. optional `after_events` hook
+13. `progress_update()`
+14. optional `before_draw` hook
+15. `chars_draw()`
+16. optional `after_draw` hook
 
 ## Optional frame hooks
 
@@ -153,6 +174,10 @@ Useful helpers:
 
 Sprite-group level helpers live in `sdk/ng_sprite_group.h`.
 
+Characters store world-space `x`/`y` coordinates. `chars_draw()` subtracts the
+current level scroll before writing sprite transforms, so physics, collisions,
+and AI stay in world coordinates while rendering happens in screen space.
+
 ## Action scripts
 
 Action scripts are const arrays of `NGActionCmd`.
@@ -191,6 +216,92 @@ actions_set_fx_hook(fx_hook);
 ```
 
 That keeps the game engine layer independent from a specific game sound policy.
+
+### Input-driven action state
+
+Use the per-kind character callback to translate input into action scripts. Keep
+the priority explicit when several buttons are pressed at once:
+
+```c
+static void player_tick(NGCharacter *player)
+{
+    uint16_t input = poll_joystick();
+
+    if (input & (1u << CNT_A)) {
+        char_action(player, ACT_PLAYER_ATTACK);
+    } else if (input & (1u << CNT_UP)) {
+        char_action(player, ACT_PLAYER_JUMP);
+    } else if (input & ((1u << CNT_LEFT) | (1u << CNT_RIGHT))) {
+        char_action(player, ACT_PLAYER_RUN);
+    } else {
+        char_action(player, ACT_PLAYER_IDLE);
+    }
+}
+```
+
+The demo follows this finite-state-machine style for idle, run, jump, hit, and
+attack. One active action owns the current animation, hitbox, speed changes, and
+sound cues.
+
+## Level and Camera
+
+`ng_level` owns level metadata, scroll values, camera properties, and world
+bounds:
+
+```c
+level_set_world_bounds(0, 0, 639, 447);
+level_set_camera(0, 0, 320, 224);
+level_move_camera(2, 0, 320, 224);
+level_camera_follow(player->x, player->y, 320, 224);
+```
+
+Joystick camera helpers:
+
+```c
+level_camera_joystick(2, NG_CAMERA_AXIS_X, 320, 224);
+level_camera_joystick(2, NG_CAMERA_AXIS_Y, 320, 224);
+level_camera_joystick(2, NG_CAMERA_AXIS_BOTH, 320, 224);
+```
+
+`level_set_camera()` clamps to the current world bounds and writes both
+`NG_PROP_GROUP_LEVEL` scroll values and `NG_PROP_GROUP_CAMERA` values.
+
+## NPCs
+
+`ng_npcs` binds small NPC records to normal `NGCharacter` slots.
+
+```c
+NGNpc *npc = npc_spawn(NPC_KIND, CHAR_KIND, 160, 180);
+npc_set_home(npc, 160, 180);
+npc_set_patrol_bounds(npc, 80, 240, 180, 180);
+npc_set_think(npc, npc_think_patrol, 1);
+```
+
+Use `npc_char(npc)` to access the backing character for body rectangles,
+sprites, HP, and actions.
+
+## Physics
+
+`ng_physics` supplies optional fixed-point movement support:
+
+```c
+physics_attach(player, NG_PHYSICS_GRAVITY | NG_PHYSICS_WORLD | NG_PHYSICS_SOLIDS);
+physics_set_gravity(player, NG_FP_FROM_FRAC(1, 4), NG_TO_FP(4));
+physics_add_solid(0, 208, 320, 16, 0);
+```
+
+The frame pass calls `physics_update_pre()` before character updates and
+`physics_resolve()` after character updates.
+
+## FIX Cache
+
+`ng_fix` wraps FIX text writes with a small cache so repeated HUD/debug strings
+do not rewrite unchanged cells every frame:
+
+```c
+ng_fix_puts(2, 1, "READY", 0);
+ng_fix_put_u16(10, 1, lives, 0, 48);
+```
 
 ## Game events
 
@@ -293,6 +404,10 @@ See `sdk/ng_defs.h` for the fixed capacities:
 - `NG_MAX_PROGRESS`
 - `NG_MAX_STATUS`
 - `NG_MAX_BORDER_CONSTRAINTS`
+- `NG_MAX_NPCS`
+- `NG_MAX_SOLIDS`
+- `NG_FIX_WIDTH`
+- `NG_FIX_HEIGHT`
 
 ## Important build note
 

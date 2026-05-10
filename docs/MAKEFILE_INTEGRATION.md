@@ -8,6 +8,8 @@ Current state on `main`:
 - `MakefileWin32.mak` compiles the same engine modules into `out\\ng_*0.o`
 - both link those objects into the main 68000 game binary
 - both linker scripts place engine state in `game_engine_bss`
+- P1 generation crops the linked program to the full 512 KB P-ROM window before byte swap and padding
+- debug targets can emit symbol, map, readelf, disassembly, and GDB batch-trace files
 
 This note documents the current wiring so you can extend it safely.
 
@@ -16,14 +18,14 @@ This note documents the current wiring so you can extend it safely.
 Linux:
 
 ```make
-NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_sprite_group ng_actions ng_chars ng_border_constraints ng_game_interupt
+NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt
 NG_ENGINE_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(NG_ENGINE_NAMES)))
 ```
 
 Windows:
 
 ```make
-NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_border_constraints0.o out\ng_game_interupt0.o
+NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o
 ```
 
 ## Current linker state
@@ -37,6 +39,11 @@ Both scripts place the engine modules into:
 
 - `neogeo_user` for code and rodata
 - `game_engine_bss` for BSS, COMMON, and data sections
+
+The P1 path keeps the linked game in the `0x000000..0x080000` program ROM
+window. This is important once the 68000 program grows beyond 128 KB; cropping at
+`0x020000` would truncate code and can reset the game when execution reaches the
+missing region.
 
 ## Minimal game-engine-enabled game pattern
 
@@ -76,13 +83,21 @@ The current default build already includes:
 - `ng_progress.c`
 - `ng_status.c`
 - `ng_game_events.c`
+- `ng_level.c`
+- `ng_fix.c`
 - `ng_sprite_group.c`
 - `ng_actions.c`
 - `ng_chars.c`
+- `ng_npcs.c`
+- `ng_physics.c`
 - `ng_border_constraints.c`
 - `ng_game_interupt.c`
 
 That gives you the full engine layer by default.
+
+When adding a new engine module, update both `NG_ENGINE_NAMES` in `Makefile` and
+the explicit `NG_ENGINE_OBJ0` list in `MakefileWin32.mak`, then ensure the source
+is included by `sdk/ng_game_engine.h` if it is part of the public aggregate API.
 
 ## Sound hook integration
 
@@ -101,3 +116,46 @@ You can also point music hooks at higher-level helpers such as:
 - `soundPlayGameLoop()`
 
 when your action scripts are scene-oriented rather than note-oriented.
+
+## Debug and GDB Trace Targets
+
+Linux:
+
+```bash
+make debug-build
+make debug-artifacts
+make gdb-trace
+make gdb
+make gdb-remote GDB_REMOTE=localhost:1234
+```
+
+Windows:
+
+```bat
+make -f MakefileWin32.mak debug-build
+make -f MakefileWin32.mak debug-artifacts
+make -f MakefileWin32.mak gdb-trace
+```
+
+`DEBUG=1` adds:
+
+- `-g3`
+- `-gdwarf-2`
+- `-DNG_DEBUG=1`
+- linker map output at `out/game.map`
+
+Generated debug files:
+
+- `dump/game.size.txt`
+- `dump/game.sym`
+- `dump/game.readelf`
+- `dump/game.debug.dump`
+- `dump/game.map`
+- `dump/gdb_trace.gdb`
+- `dump/gdb_trace.txt`
+
+If the bundled cross-GDB cannot run on the host, pass another compatible GDB:
+
+```bash
+make gdb-trace GDB=/path/to/m68k-gdb
+```
