@@ -43,7 +43,7 @@ endif
 all: art sfix sound p1
 
 .PHONY: p1
-p1: game 052-p1.p1
+p1: game 777-p1.p1
 
 game:
 	$(CC) $(CFLAGS)   sdk/neogeo.c  -o out/neogeo0.o
@@ -72,14 +72,14 @@ game:
 	$(OBJCP) -R .comment -R .text -R .data -R .bss out/neogeolib0.o    out/neogeolib.o
 	$(LD) $(LDFLAGS)    -T sdk/neogeo.ld -o  out/game   out/neogeo.o   out/user.o out/main.o out/neogeolib.o $(NG_ENGINE_OBJ0)
 	
-052-p1.p1: game
+777-p1.p1: game
 	$(OBJCP)   -O ihex    out/game out/game0
 	$(SCAT)  out/game0 -Intel $(CROP) -o out/game0.rom -binary
 	$(SCAT)  out/game0.rom -binary $(SWAP) out/game1.rom -binary
 	$(SCAT)  out/game1.rom -binary $(FILL) out/game.rom -binary
-	cp		 out/game.rom	out/052-p1.p1
-	mkdir -p roms/ssideki
-	cp -f out/052-p1.p1 roms/ssideki/052-p1.p1
+	cp		 out/game.rom	out/777-p1.p1
+	mkdir -p roms/neogeosdk
+	cp -f out/777-p1.p1 roms/neogeosdk/777-p1.p1
 
 .PHONY: mml
 mml:
@@ -110,31 +110,31 @@ samples:
 .PHONY: vrom
 vrom:
 	./sound/tools/vrom.sh
-	mkdir -p roms/ssideki
-	cp -f out/052-v1.v1 roms/ssideki/052-v1.v1
+	mkdir -p roms/neogeosdk
+	cp -f out/777-v1.v1 roms/neogeosdk/777-v1.v1
 
 .PHONY: m1rom
 m1rom: fmpatches fm mml ssgconfig ssg
 	WLAZ80=$(WLAZ80) WLALINK=$(WLALINK) USE_Z80C=$(USE_Z80C) Z80C_SRC=$(Z80C_SRC_LINUX) ./sound/tools/m1rom.sh
-	mkdir -p roms/ssideki
-	cp -f out/052-m1.m1 roms/ssideki/052-m1.m1
-	cp -f out/052-m1.m1 roms/ssideki/sm1.sm1
+	mkdir -p roms/neogeosdk
+	cp -f out/777-m1.m1 roms/neogeosdk/777-m1.m1
+	cp -f out/777-m1.m1 roms/neogeosdk/sm1.sm1
 
 .PHONY: m1rom-asm
 m1rom-asm:
 	$(MAKE) m1rom USE_Z80C=0
 	mkdir -p out/compare
-	cp -f out/052-m1.m1 out/compare/052-m1-asm.m1
+	cp -f out/777-m1.m1 out/compare/777-m1-asm.m1
 
 .PHONY: m1rom-c
 m1rom-c:
 	$(MAKE) m1rom USE_Z80C=1 LINK_C_DRIVER=1
 	mkdir -p out/compare
-	cp -f out/052-m1.m1 out/compare/052-m1-c.m1
+	cp -f out/777-m1.m1 out/compare/777-m1-c.m1
 
 .PHONY: compare-driver
 compare-driver: m1rom-asm m1rom-c
-	python3 sound/tools/compare_m1.py out/compare/052-m1-asm.m1 out/compare/052-m1-c.m1
+	python3 sound/tools/compare_m1.py out/compare/777-m1-asm.m1 out/compare/777-m1-c.m1
 
 .PHONY: sound
 sound: samples vrom fmpatches fm mml ssgconfig ssg m1rom
@@ -147,8 +147,8 @@ sound-all: sound
 .PHONY: sfix
 sfix:
 	cd artbox && python3 romdbfiximport.py && python3 fixtiles.py && ./romfx.sh
-	mkdir -p roms/ssideki
-	cp -f artbox/052-s1.s1 roms/ssideki/052-s1.s1
+	mkdir -p roms/neogeosdk
+	cp -f artbox/777-s1.s1 roms/neogeosdk/777-s1.s1
 
 .PHONY: srom
 srom: sfix
@@ -163,14 +163,14 @@ art:
 
 .PHONY: clean
 clean:
-	rm -f out/game out/game0 out/game0.rom out/game1.rom out/game.rom out/052-p1.p1
+	rm -f out/game out/game0 out/game0.rom out/game1.rom out/game.rom out/777-p1.p1
 	rm -f out/*.o out/*.s out/game.map dump/*.dump dump/*.hex dump/*.txt dump/*.sym dump/*.gdb dump/*.readelf
-	rm -f roms/ssideki/052-p1.p1
+	rm -f roms/neogeosdk/777-p1.p1
 
 .PHONY: sound-clean
 sound-clean:
-	rm -f out/052-m1.m1 out/052-v1.v1 out/driver.gen.asm
-	rm -f roms/ssideki/052-m1.m1 roms/ssideki/052-v1.v1 roms/ssideki/sm1.sm1
+	rm -f out/777-m1.m1 out/777-v1.v1 out/driver.gen.asm
+	rm -f roms/neogeosdk/777-m1.m1 roms/neogeosdk/777-v1.v1 roms/neogeosdk/sm1.sm1
 	rm -f sound/samples/out_16el_a/*.wav sound/samples/out_16el_b/*.wav
 	rm -f sound/samples/out_a/*.adpcma sound/samples/out_b/*.adpcmb
 	rm -f sound/driver/fm_data.inc sound/driver/music_data.inc sound/driver/fm_patch_table.inc sound/driver/sample_table.inc sound/driver/ssg_config.inc sound/driver/ssg_data.inc
@@ -178,7 +178,7 @@ sound-clean:
 
 .PHONY: clean-all
 clean-all: clean sound-clean art-clean
-	rm -f roms/ssideki/052-c1.c1 roms/ssideki/052-c2.c2
+	rm -f roms/neogeosdk/777-c1.c1 roms/neogeosdk/777-c2.c2
 	
 .PHONY: dump
 dump: 	
@@ -195,12 +195,12 @@ dump:
 	$(INFO) out/game.rom > dump/game.hex 
 
 test:
-	cp out/052-p1.p1  $(SDKHOME)/neogeosdk/roms/ssideki
-	mame -rompath  $(SDKHOME)/neogeosdk/roms -output console  -nofilter -waitvsync -window ssideki
-	
+	cp out/777-p1.p1  $(SDKHOME)/neogeosdk/roms/neogeosdk
+	mame neogeo -rompath  $(SDKHOME)/neogeosdk/roms -output console  -nofilter -waitvsync -window -cart1 neogeosdk
+
 debug:
-	cp out/052-p1.p1  $(SDKHOME)/neogeosdk/roms/ssideki
-	mame -rompath  $(SDKHOME)/neogeosdk/roms -output console -debug -verbose  -nofilter -waitvsync -window ssideki
+	cp out/777-p1.p1  $(SDKHOME)/neogeosdk/roms/neogeosdk
+	mame neogeo -rompath  $(SDKHOME)/neogeosdk/roms -output console -debug -verbose  -nofilter -waitvsync -window -cart1 neogeosdk
 
 .PHONY: debug-build
 debug-build:

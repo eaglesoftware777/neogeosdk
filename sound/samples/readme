@@ -19,7 +19,7 @@ ENCODING PIPELINE
 2. Run: make samples
    (runs enc_wave16le_a.sh, enc_wave16le_b.sh, adpcm_enc_process.sh)
 3. Run: make vrom
-   (packs all .adpcm* files into 052-v1.v1 and regenerates sample_table.inc)
+   (packs all .adpcm* files into 777-v1.v1 and regenerates sample_table.inc)
 
 SAMPLE INDICES
 --------------

@@ -781,16 +781,16 @@ ADPCM samples:
    - No separate Python `sox` module is required.
 3. Run `make vrom` or `make sound`.
 4. `sound/driver/sample_table.inc` is regenerated.
-5. `out/052-v1.v1` is rebuilt and copied into `roms/ssideki/`.
+5. `out/777-v1.v1` is rebuilt and copied into `roms/neogeosdk/`.
 
 Driver:
 
 1. Edit `sound/driver/driver.asm`.
 2. Run `make m1rom` or `make sound`.
    Note: `make m1rom` automatically runs fmpatches, fm, mml, ssgconfig, and ssg first.
-3. `out/052-m1.m1` is rebuilt and copied into:
-   - `roms/ssideki/052-m1.m1`
-   - `roms/ssideki/sm1.sm1`
+3. `out/777-m1.m1` is rebuilt and copied into:
+   - `roms/neogeosdk/777-m1.m1`
+   - `roms/neogeosdk/sm1.sm1`
 
 Experimental C-driver comparison path:
 

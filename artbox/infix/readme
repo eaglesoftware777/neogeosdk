@@ -13,14 +13,14 @@ elements that are drawn on top of the sprite layer.
 
 Pipeline:
   romdbfiximport.py  →  imagefix table in neorom.db
-  fixtiles.py        →  052-s1.s1 (128 KB, hardware format)
+  fixtiles.py        →  777-s1.s1 (128 KB, hardware format)
 
 fixtiles.py build order:
   1. Seed from sfix.sfix (standard NeoGeo system fonts)
-  2. Preserve all non-empty tiles from existing 052-s1.s1
+  2. Preserve all non-empty tiles from existing 777-s1.s1
   3. Write infix PNG tiles into empty slots (tile 256+)
 
-Run: make sfix  (or make srom)   →  roms/ssideki/052-s1.s1
+Run: make sfix  (or make srom)   →  roms/neogeosdk/777-s1.s1
 
 Convert an RGB image to indexed palette (Pillow):
   from PIL import Image

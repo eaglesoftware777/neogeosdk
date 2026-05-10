@@ -887,7 +887,7 @@ class PixelPaintTab(QWidget):
                 plane_b = sum(((colors[p] >> 1) & 1) << p for p in range(8))
                 plane_c = sum(((colors[p] >> 2) & 1) << p for p in range(8))
                 plane_d = sum(((colors[p] >> 3) & 1) << p for p in range(8))
-                # 052-c1.c1 is byte-flipped: order is [plane_a, plane_b]
+                # 777-c1.c1 is byte-flipped: order is [plane_a, plane_b]
                 c1_out[off + row * 2]     = plane_a
                 c1_out[off + row * 2 + 1] = plane_b
                 c2_out[off + row * 2]     = plane_c
@@ -1476,8 +1476,8 @@ class ArtboxStudio(QMainWindow):
         self._build_menu()
 
     def _load_data(self):
-        # Load C-ROMs (use 052-c1.c1 / 052-c2.c2 in artbox directory)
-        for fname, attr in (("052-c1.c1", "c1"), ("052-c2.c2", "c2")):
+        # Load C-ROMs (use 777-c1.c1 / 777-c2.c2 in artbox directory)
+        for fname, attr in (("777-c1.c1", "c1"), ("777-c2.c2", "c2")):
             if os.path.exists(fname):
                 with open(fname, "rb") as f:
                     setattr(self, attr, bytearray(f.read()))
@@ -1542,7 +1542,7 @@ class ArtboxStudio(QMainWindow):
         self.statusBar().showMessage("ROMs reloaded.")
 
     def _save_roms(self):
-        for fname, attr in (("052-c1.c1", "c1"), ("052-c2.c2", "c2")):
+        for fname, attr in (("777-c1.c1", "c1"), ("777-c2.c2", "c2")):
             with open(fname, "wb") as f:
                 f.write(getattr(self, attr))
         self.statusBar().showMessage("C-ROMs saved to disk.")
