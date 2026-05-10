@@ -1,7 +1,8 @@
 cd artbox
 python3 createromdb.py
 python3 romdbimgimport.py
-IMG_COUNT=$(ls in/*.png 2>/dev/null | wc -l)
+python3 gen_sprite_meta.py
+IMG_COUNT=$(python3 count_assets.py)
 echo "Art pipeline: $IMG_COUNT images"
 #python3 romdbfiximport.py
 #python3 fixtiles.py

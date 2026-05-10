@@ -43,6 +43,7 @@ void NEOGEO_USER ngSpriteGroupInit(NGSpriteGroup *g, uint16_t firstSprite, uint8
     g->firstSprite = firstSprite;
     g->strips = strips;
     g->heightTiles = heightTiles;
+    g->activeRows = heightTiles;
     g->tileBase = tileBase;
     g->tileStride = strips;
     g->palette = palette;
@@ -60,6 +61,13 @@ void NEOGEO_USER ngSpriteGroupInit(NGSpriteGroup *g, uint16_t firstSprite, uint8
 void NEOGEO_USER ngSpriteGroupSetTileBase(NGSpriteGroup *g, uint16_t tileBase) { if (g) g->tileBase = tileBase; }
 void NEOGEO_USER ngSpriteGroupSetTileStride(NGSpriteGroup *g, uint16_t tileStride) { if (g) g->tileStride = tileStride; }
 void NEOGEO_USER ngSpriteGroupSetPalette(NGSpriteGroup *g, uint8_t palette) { if (g) g->palette = palette; }
+void NEOGEO_USER ngSpriteGroupSetActiveRows(NGSpriteGroup *g, uint8_t activeRows)
+{
+    if (!g) return;
+    if (activeRows < 1) activeRows = 1;
+    if (activeRows > 33) activeRows = 33;
+    g->activeRows = activeRows;
+}
 void NEOGEO_USER ngSpriteGroupSetPos(NGSpriteGroup *g, int16_t x, int16_t y) { if (g) { g->x = x; g->y = y; } }
 void NEOGEO_USER ngSpriteGroupMove(NGSpriteGroup *g, int16_t dx, int16_t dy) { if (g) { g->x += dx; g->y += dy; } }
 void NEOGEO_USER ngSpriteGroupSetScale(NGSpriteGroup *g, uint8_t xScale, uint8_t yScale) { if (g) { g->xScale = xScale; g->yScale = yScale; } }
@@ -70,6 +78,7 @@ void NEOGEO_USER ngSpriteGroupSetVisible(NGSpriteGroup *g, uint8_t visible) { if
 void NEOGEO_USER ngSpriteGroupUpload(NGSpriteGroup *g)
 {
     uint8_t strip, row;
+    uint8_t activeRows;
     uint16_t xScale15, accum;
 
     if (!g) return;
@@ -77,6 +86,7 @@ void NEOGEO_USER ngSpriteGroupUpload(NGSpriteGroup *g)
 
     xScale15 = (uint16_t)g->xScale * 15;
     accum = 0;
+    activeRows = g->activeRows ? g->activeRows : g->heightTiles;
 
     for (strip = 0; strip < g->strips; strip++) {
         uint16_t spriteIndex = (uint16_t)(g->firstSprite + strip);
@@ -84,7 +94,7 @@ void NEOGEO_USER ngSpriteGroupUpload(NGSpriteGroup *g)
         uint8_t sticky = (strip == 0) ? 0 : 1;
         uint8_t xNibble = ngsg_x_nibble_from_accum(xScale15, &accum);
         uint16_t scb2 = setSCB2(xNibble, g->yScale);
-        uint16_t scb3 = setSCB3((uint16_t)(496 - g->y), sticky, g->heightTiles);
+        uint16_t scb3 = setSCB3((uint16_t)(496 - g->y), sticky, activeRows);
         uint16_t scb4 = setSCB4((uint16_t)(g->x + (16 * strip)));
 
         for (row = 0; row < g->heightTiles; row++) {
@@ -99,6 +109,7 @@ void NEOGEO_USER ngSpriteGroupUpload(NGSpriteGroup *g)
 void NEOGEO_USER ngSpriteGroupUpdateTransform(NGSpriteGroup *g)
 {
     uint8_t strip;
+    uint8_t activeRows;
     uint16_t xScale15, accum;
 
     if (!g) return;
@@ -106,13 +117,14 @@ void NEOGEO_USER ngSpriteGroupUpdateTransform(NGSpriteGroup *g)
 
     xScale15 = (uint16_t)g->xScale * 15;
     accum = 0;
+    activeRows = g->activeRows ? g->activeRows : g->heightTiles;
 
     for (strip = 0; strip < g->strips; strip++) {
         uint16_t spriteIndex = (uint16_t)(g->firstSprite + strip);
         uint8_t sticky = (strip == 0) ? 0 : 1;
         uint8_t xNibble = ngsg_x_nibble_from_accum(xScale15, &accum);
         uint16_t scb2 = setSCB2(xNibble, g->yScale);
-        uint16_t scb3 = setSCB3((uint16_t)(496 - g->y), sticky, g->heightTiles);
+        uint16_t scb3 = setSCB3((uint16_t)(496 - g->y), sticky, activeRows);
         uint16_t scb4 = setSCB4((uint16_t)(g->x + (16 * strip)));
 
         vram_SCB234((uint16_t)(SCB2_ADDR + spriteIndex), scb2);

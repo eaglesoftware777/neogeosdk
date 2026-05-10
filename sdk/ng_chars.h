@@ -46,6 +46,7 @@ typedef struct NGCharacter {
     uint16_t sprite_stride; /* tile columns in ROM per image row (set manually) */
     uint8_t  sprite_strips; /* number of visible strips (hardware sprites)     */
     uint8_t  sprite_height; /* height in tiles per strip                       */
+    uint8_t  sprite_active_rows; /* SCB3 active-character count for the strip   */
     uint8_t  palette;       /* palette bank index (0–255)                      */
     uint8_t  scale_x;       /* horizontal scale (0xFF = full, 0x00 = 1px)     */
     uint8_t  scale_y;       /* vertical scale   (0xFF = full, 0x00 = 1px)     */
@@ -89,6 +90,7 @@ void         chars_clear_kind(uint8_t kind);
 NGCharacter* chars_find(uint8_t kind);
 NGCharacter* chars_at(uint8_t index);
 uint8_t      chars_count(void);
+uint8_t      chars_index(NGCharacter *c);
 
 /* Register a per-frame logic callback for all characters of `kind`. */
 void         chars_set_game_interupt(uint8_t kind, NGCharInterupt fn);

@@ -41,6 +41,7 @@ NGCharacter* NEOGEO_USER chars_add(uint8_t kind, int16_t x, int16_t y)
             c->sprite_stride = 1;
             c->sprite_strips = 1;
             c->sprite_height = 1;
+            c->sprite_active_rows = 1;
             c->palette = 0;
             c->scale_x = NG_SPRITE_FULL_XSCALE;
             c->scale_y = NG_SPRITE_FULL_YSCALE;
@@ -105,6 +106,17 @@ uint8_t NEOGEO_USER chars_count(void)
     return count;
 }
 
+uint8_t NEOGEO_USER chars_index(NGCharacter *c)
+{
+    uint8_t i;
+
+    if (!c) return 0xff;
+    for (i = 0; i < NG_MAX_CHARS; i++) {
+        if (&ng_chars[i] == c) return i;
+    }
+    return 0xff;
+}
+
 void NEOGEO_USER chars_set_game_interupt(uint8_t kind, NGCharInterupt fn)
 {
     if (kind >= NG_MAX_CHAR_KINDS) return;
@@ -142,6 +154,7 @@ void NEOGEO_USER chars_draw(void)
 
         ngSpriteGroupInit(&g, c->sprite_first, c->sprite_strips, c->sprite_height, c->sprite_tile, c->palette);
         ngSpriteGroupSetTileStride(&g, c->sprite_stride ? c->sprite_stride : c->sprite_strips);
+        ngSpriteGroupSetActiveRows(&g, c->sprite_active_rows ? c->sprite_active_rows : c->sprite_height);
         ngSpriteGroupSetPos(&g, c->x, c->y);
         ngSpriteGroupSetScale(&g, c->scale_x, c->scale_y);
         ngSpriteGroupSetFlip(&g, c->flip_x, c->flip_y);
@@ -161,6 +174,7 @@ void NEOGEO_USER char_set_sprite(NGCharacter *c, uint16_t firstSprite, uint8_t s
     c->sprite_first = firstSprite;
     c->sprite_strips = strips;
     c->sprite_height = heightTiles;
+    c->sprite_active_rows = heightTiles;
     c->sprite_tile = tileBase;
     c->sprite_stride = strips;
     c->palette = palette;

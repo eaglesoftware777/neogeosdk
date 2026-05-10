@@ -5,8 +5,12 @@
 #include "ng_progress.h"
 #include "ng_status.h"
 #include "ng_game_events.h"
+#include "ng_level.h"
+#include "ng_fix.h"
 #include "ng_border_constraints.h"
 #include "ng_chars.h"
+#include "ng_npcs.h"
+#include "ng_physics.h"
 #include "ng_actions.h"
 
 static NGInteruptHook ng_before_logic;
@@ -23,9 +27,13 @@ void NEOGEO_USER game_engine_init(void)
     progress_init();
     status_init();
     game_events_init();
+    level_init();
+    ng_fix_init();
     border_constraints_init();
     actions_init();
     chars_init();
+    npcs_init();
+    physics_init();
 
     ng_before_logic = 0;
     ng_collision_logic = 0;
@@ -76,8 +84,12 @@ void NEOGEO_USER game_engine_frame(void)
     if (ng_before_logic) ng_before_logic();
 
     timers_update();
+    level_update();
+    npcs_update();
+    physics_update_pre();
     border_constraints_update();
     chars_update();
+    physics_resolve();
 
     if (ng_collision_logic) ng_collision_logic();
 

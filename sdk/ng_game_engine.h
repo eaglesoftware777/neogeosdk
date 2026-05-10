@@ -9,9 +9,13 @@
 #include "ng_progress.h"
 #include "ng_status.h"
 #include "ng_game_events.h"
+#include "ng_level.h"
+#include "ng_fix.h"
 #include "ng_sprite_group.h"
 #include "ng_actions.h"
 #include "ng_chars.h"
+#include "ng_npcs.h"
+#include "ng_physics.h"
 #include "ng_border_constraints.h"
 #include "ng_game_interupt.h"
 
