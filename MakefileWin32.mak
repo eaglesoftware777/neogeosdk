@@ -18,23 +18,35 @@ LD=$(M68K_ELF_BIN)\m68k-elf-ld.exe
 LDFLAGS=  -nostartfiles -nostdlib
 OBJCP=$(M68K_ELF_BIN)\m68k-elf-objcopy.exe
 OBJDUMP=$(M68K_ELF_BIN)\m68k-elf-objdump.exe
+GDB=$(M68K_ELF_BIN)\m68k-elf-gdb.exe
+NM=$(M68K_ELF_BIN)\m68k-elf-nm.exe
+READELF=$(M68K_ELF_BIN)\m68k-elf-readelf.exe
+ADDR2LINE=$(M68K_ELF_BIN)\m68k-elf-addr2line.exe
+SIZE=$(M68K_ELF_BIN)\m68k-elf-size.exe
 
 WLAZ80?=wla-z80
 WLALINK?=wlalink
 PY?=py
 SOX?=
 MAME?=mame
+DEBUG?=0
+GDB_REMOTE?=localhost:1234
 
 FM_MMLS:=$(wildcard sound/fm/*.mml)
 MML_TRACKS:=$(wildcard sound/mml/*.mml)
 SSG_MMLS:=$(wildcard sound/ssg/*.mml)
 
-CROP=-crop 0x000000 0x01FFFF
+CROP=-crop 0x000000 0x080000
 SCAT=$(REPO_WIN)\win\srec_cat.exe
 INFO=$(REPO_WIN)\win\xxd.exe -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
 NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o
+
+ifeq ($(DEBUG),1)
+CFLAGS += -g3 -gdwarf-2 -DNG_DEBUG=1
+LDFLAGS += -Map=out\game.map
+endif
 
 .DEFAULT_GOAL := p1
 
@@ -166,10 +178,15 @@ clean:
 	if exist out\game1.rom del /Q out\game1.rom
 	if exist out\game.rom del /Q out\game.rom
 	if exist out\052-p1.p1 del /Q out\052-p1.p1
+	if exist out\game.map del /Q out\game.map
 	if exist out\*.o del /Q out\*.o
 	if exist out\*.s del /Q out\*.s
 	if exist dump\*.dump del /Q dump\*.dump
 	if exist dump\*.hex del /Q dump\*.hex
+	if exist dump\*.txt del /Q dump\*.txt
+	if exist dump\*.sym del /Q dump\*.sym
+	if exist dump\*.gdb del /Q dump\*.gdb
+	if exist dump\*.readelf del /Q dump\*.readelf
 	if exist roms\ssideki\052-p1.p1 del /Q roms\ssideki\052-p1.p1
 
 .PHONY: sound-clean
@@ -216,3 +233,46 @@ test:
 debug:
 	copy /Y out\052-p1.p1 roms\ssideki
 	$(MAME) -rompath $(REPO_WIN)\roms -output console -debug -verbose -nofilter -waitvsync -window ssideki
+
+.PHONY: debug-build
+debug-build:
+	$(MAKE) -f MakefileWin32.mak DEBUG=1 p1
+	$(MAKE) -f MakefileWin32.mak DEBUG=1 debug-artifacts
+
+.PHONY: debug-artifacts
+debug-artifacts: out\game
+	if not exist dump mkdir dump
+	if exist dump\game.size.txt del /Q dump\game.size.txt
+	if exist dump\game.sym del /Q dump\game.sym
+	if exist dump\game.readelf del /Q dump\game.readelf
+	if exist dump\game.debug.dump del /Q dump\game.debug.dump
+	if exist dump\game.map del /Q dump\game.map
+	$(SIZE) out\game > dump\game.size.txt
+	$(NM) -n out\game > dump\game.sym
+	$(READELF) -a out\game > dump\game.readelf
+	$(OBJDUMP) -DhtS out\game > dump\game.debug.dump
+	if exist out\game.map copy /Y out\game.map dump\game.map
+
+.PHONY: gdb-script
+gdb-script:
+	if not exist dump mkdir dump
+	@echo set pagination off> dump\gdb_trace.gdb
+	@echo set confirm off>> dump\gdb_trace.gdb
+	@echo file out/game>> dump\gdb_trace.gdb
+	@echo info files>> dump\gdb_trace.gdb
+	@echo info functions>> dump\gdb_trace.gdb
+	@echo info variables>> dump\gdb_trace.gdb
+	@echo maintenance info sections>> dump\gdb_trace.gdb
+	@echo quit>> dump\gdb_trace.gdb
+
+.PHONY: gdb-trace
+gdb-trace: debug-build gdb-script
+	$(GDB) --version > NUL 2> dump\gdb_trace.err && $(GDB) -batch -x dump\gdb_trace.gdb > dump\gdb_trace.txt 2>> dump\gdb_trace.err || echo GDB unavailable: $(GDB)> dump\gdb_trace.txt
+
+.PHONY: gdb
+gdb: debug-build
+	$(GDB) out\game
+
+.PHONY: gdb-remote
+gdb-remote: debug-build
+	$(GDB) -ex "target remote $(GDB_REMOTE)" out\game

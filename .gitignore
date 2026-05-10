@@ -1,3 +1,5 @@
 cfg/
 nvram/
 artbox/__pycache__
+dump/
+out/game.map

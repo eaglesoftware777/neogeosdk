@@ -13,17 +13,29 @@ LD=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-ld
 LDFLAGS=  -nostartfiles -nostdlib
 OBJCP=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy
 OBJDUMP=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-objdump
+GDB=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gdb
+NM=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-nm
+READELF=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-readelf
+ADDR2LINE=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-addr2line
+SIZE=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-size
 WLAZ80?=wla-z80
 WLALINK?=wlalink
 PYTHON?=python3
 SOX?=
-CROP=-crop 0x000000 0x01FFFF 
+DEBUG?=0
+GDB_REMOTE?=localhost:1234
+CROP=-crop 0x000000 0x080000 
 SCAT=srec_cat
 INFO=xxd -g 2 
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
 NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt
 NG_ENGINE_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(NG_ENGINE_NAMES)))
+
+ifeq ($(DEBUG),1)
+CFLAGS += -g3 -gdwarf-2 -DNG_DEBUG=1
+LDFLAGS += -Map=out/game.map
+endif
 
 .DEFAULT_GOAL := p1
 
@@ -152,7 +164,7 @@ art:
 .PHONY: clean
 clean:
 	rm -f out/game out/game0 out/game0.rom out/game1.rom out/game.rom out/052-p1.p1
-	rm -f out/*.o out/*.s dump/*.dump dump/*.hex
+	rm -f out/*.o out/*.s out/game.map dump/*.dump dump/*.hex dump/*.txt dump/*.sym dump/*.gdb dump/*.readelf
 	rm -f roms/ssideki/052-p1.p1
 
 .PHONY: sound-clean
@@ -189,3 +201,41 @@ test:
 debug:
 	cp out/052-p1.p1  $(SDKHOME)/neogeosdk/roms/ssideki
 	mame -rompath  $(SDKHOME)/neogeosdk/roms -output console -debug -verbose  -nofilter -waitvsync -window ssideki
+
+.PHONY: debug-build
+debug-build:
+	$(MAKE) DEBUG=1 p1
+	$(MAKE) DEBUG=1 debug-artifacts
+
+.PHONY: debug-artifacts
+debug-artifacts: out/game
+	mkdir -p dump
+	rm -f dump/game.size.txt dump/game.sym dump/game.readelf dump/game.debug.dump dump/game.map
+	$(SIZE) out/game > dump/game.size.txt
+	$(NM) -n out/game > dump/game.sym
+	$(READELF) -a out/game > dump/game.readelf
+	$(OBJDUMP) -DhtS out/game > dump/game.debug.dump
+	if test -f out/game.map; then cp -f out/game.map dump/game.map; fi
+
+.PHONY: gdb-script
+gdb-script:
+	mkdir -p dump
+	printf "set pagination off\nset confirm off\nfile out/game\ninfo files\ninfo functions\ninfo variables\nmaintenance info sections\nquit\n" > dump/gdb_trace.gdb
+
+.PHONY: gdb-trace
+gdb-trace: debug-build gdb-script
+	@if $(GDB) --version >/dev/null 2>dump/gdb_trace.err; then \
+		$(GDB) -batch -x dump/gdb_trace.gdb > dump/gdb_trace.txt 2>>dump/gdb_trace.err; \
+	else \
+		printf "GDB unavailable: %s\n\n" "$(GDB)" > dump/gdb_trace.txt; \
+		cat dump/gdb_trace.err >> dump/gdb_trace.txt; \
+		printf "\nOverride with: make gdb-trace GDB=/path/to/m68k-gdb\n" >> dump/gdb_trace.txt; \
+	fi
+
+.PHONY: gdb
+gdb: debug-build
+	$(GDB) out/game
+
+.PHONY: gdb-remote
+gdb-remote: debug-build
+	$(GDB) -ex "target remote $(GDB_REMOTE)" out/game

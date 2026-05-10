@@ -160,6 +160,10 @@ enum {
     DEMO_ACT_WARRIOR_WALK = 1,
     DEMO_ACT_WARRIOR_ATTACK_A,
     DEMO_ACT_WARRIOR_ATTACK_B,
+    DEMO_ACT_WARRIOR_IDLE,
+    DEMO_ACT_WARRIOR_RUN,
+    DEMO_ACT_WARRIOR_JUMP,
+    DEMO_ACT_WARRIOR_HIT,
     DEMO_ACT_MASCOT_FLOAT,
     DEMO_ACT_FX_SLASH,
     DEMO_ACT_PORTRAIT_END
@@ -168,7 +172,8 @@ enum {
 enum {
     DEMO_EVT_GATE_CENTER = 1,
     DEMO_EVT_ATTACK_IMPACT,
-    DEMO_EVT_GALLERY_DONE
+    DEMO_EVT_GALLERY_DONE,
+    DEMO_EVT_PLAYER_HURT
 };
 
 enum {
@@ -176,7 +181,8 @@ enum {
     DEMO_TIMER_DUEL,
     DEMO_TIMER_HIT_LOCK,
     DEMO_TIMER_GALLERY_STEP,
-    DEMO_TIMER_END_HOLD
+    DEMO_TIMER_END_HOLD,
+    DEMO_TIMER_PLAYER_HURT
 };
 
 enum {
@@ -189,7 +195,8 @@ enum {
     DEMO_STATUS_DUEL_ACTIVE,
     DEMO_STATUS_GALLERY_ACTIVE,
     DEMO_STATUS_DONE,
-    DEMO_STATUS_FLASH
+    DEMO_STATUS_FLASH,
+    DEMO_STATUS_PLAYER_INPUT
 };
 
 static const uint8_t g_demo_gallery_frames[] = {
@@ -204,28 +211,12 @@ static const uint8_t g_demo_cast_right_frames[] = {
     34, 35, 36, 37, 38, 39, 38, 37
 };
 
-static const uint8_t g_demo_final_frames[] = {
-    13, 14, 15, 16, 17, 18, 19, 20, 21, 20, 19, 18, 17, 16, 15, 14
-};
-
 static const uint8_t g_demo_npc_front_frames[] = {
     94, 95, 96, 97, 96, 95
 };
 
 static const uint8_t g_demo_npc_walk_frames[] = {
     98, 99, 100, 101, 102, 103, 104, 105
-};
-
-static const int8_t g_demo_final_x_offsets[] = {
-    -18, -14, -9, -4, 2, 8, 14, 18, 20, 16, 10, 4, -1, -6, -11, -15
-};
-
-static const int8_t g_demo_final_y_offsets[] = {
-    12, 8, 3, -4, -12, -20, -26, -28, -20, -10, -1, 6, 10, 12, 11, 8
-};
-
-static const uint8_t g_demo_final_scales[] = {
-    0xD8, 0xDC, 0xE0, 0xE4, 0xE8, 0xEC, 0xF0, 0xF4, 0xF0, 0xEC, 0xE8, 0xE4, 0xE0, 0xDC, 0xD8, 0xD4
 };
 
 #define DEMO_GALLERY_BASELINE 548
@@ -292,7 +283,7 @@ static const NGActionCmd g_demo_warrior_attack_a[] = {
     DEMO_FRAME(33, 2),
     DEMO_FRAME(34, 2),
     CLEAR_HITBOX(),
-    GOTO(DEMO_ACT_WARRIOR_ATTACK_B)
+    GOTO(DEMO_ACT_WARRIOR_IDLE)
 };
 
 static const NGActionCmd g_demo_warrior_attack_b[] = {
@@ -312,7 +303,42 @@ static const NGActionCmd g_demo_warrior_attack_b[] = {
     DEMO_FRAME(48, 2),
     DEMO_FRAME(49, 4),
     WAIT(8),
-    GOTO(DEMO_ACT_WARRIOR_ATTACK_A)
+    GOTO(DEMO_ACT_WARRIOR_IDLE)
+};
+
+static const NGActionCmd g_demo_warrior_idle[] = {
+    SPEED(0, 0),
+    DEMO_FRAME(11, 8),
+    DEMO_FRAME(12, 8),
+    LOOP()
+};
+
+static const NGActionCmd g_demo_warrior_run[] = {
+    SPEED(0, 0),
+    DEMO_FRAME(13, 3), SFX(SOUND_SFX_FOOTSTEP),
+    DEMO_FRAME(14, 3),
+    DEMO_FRAME(15, 3),
+    DEMO_FRAME(16, 3), SFX(SOUND_SFX_FOOTSTEP),
+    DEMO_FRAME(17, 3),
+    DEMO_FRAME(18, 3),
+    DEMO_FRAME(19, 3),
+    LOOP()
+};
+
+static const NGActionCmd g_demo_warrior_jump[] = {
+    DEMO_FRAME(13, 4),
+    DEMO_FRAME(14, 4),
+    DEMO_FRAME(15, 5),
+    DEMO_FRAME(14, 4),
+    GOTO(DEMO_ACT_WARRIOR_IDLE)
+};
+
+static const NGActionCmd g_demo_warrior_hit[] = {
+    SPEED(0, 0),
+    DEMO_FRAME(11, 4),
+    DEMO_FRAME(12, 4),
+    WAIT(8),
+    GOTO(DEMO_ACT_WARRIOR_IDLE)
 };
 
 static const NGActionCmd g_demo_mascot_float[] = {
@@ -565,6 +591,17 @@ static void NEOGEO_USER demo_cycle_showcase(
     c->sprite_dirty = 1;
 }
 
+static uint8_t NEOGEO_USER demo_input_down(uint16_t input, uint8_t bit)
+{
+    return (input & (uint16_t)(1u << bit)) ? 1 : 0;
+}
+
+static void NEOGEO_USER demo_set_main_action(NGCharacter *c, uint16_t action_id)
+{
+    if (!c || c->action == action_id) return;
+    char_action(c, action_id);
+}
+
 static void NEOGEO_USER demo_sfx_hook(uint16_t id)
 {
     playSFX((uint8_t)id);
@@ -603,11 +640,14 @@ static void NEOGEO_USER demo_start_duel_phase(void)
 
     status_set(DEMO_STATUS_GATE_CROSSED);
     status_set(DEMO_STATUS_DUEL_ACTIVE);
+    status_set(DEMO_STATUS_PLAYER_INPUT);
     status_clear(DEMO_STATUS_GALLERY_ACTIVE);
     progress_set(DEMO_PROGRESS_PHASE, 1);
     prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_MODE, 1);
+    level_set_world_bounds(0, 0, 511, 255);
     timer_start(DEMO_TIMER_DUEL, NG_MS_TO_FRAMES(9000));
     timer_stop(DEMO_TIMER_HIT_LOCK);
+    timer_stop(DEMO_TIMER_PLAYER_HURT);
 
     soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
     playVoiceCue(SOUND_VOICE_ATTACK);
@@ -618,10 +658,10 @@ static void NEOGEO_USER demo_start_duel_phase(void)
     warrior->scale_x = 0xD0;
     warrior->scale_y = 0xD0;
     warrior->sprite_dirty = 1;
-    char_action(warrior, DEMO_ACT_WARRIOR_ATTACK_A);
+    char_action(warrior, DEMO_ACT_WARRIOR_IDLE);
 
     mascot->visible = 1;
-    char_set_pos(mascot, 188, 516);
+    char_set_pos(mascot, 238, 516);
     mascot->scale_x = 0xD0;
     mascot->scale_y = 0xD0;
     mascot->sprite_dirty = 1;
@@ -651,6 +691,7 @@ static void NEOGEO_USER demo_start_gallery_phase(void)
     );
 
     status_clear(DEMO_STATUS_DUEL_ACTIVE);
+    status_clear(DEMO_STATUS_PLAYER_INPUT);
     status_set(DEMO_STATUS_GALLERY_ACTIVE);
     progress_set(DEMO_PROGRESS_PHASE, 2);
     progress_start(DEMO_PROGRESS_GALLERY, 28);
@@ -658,6 +699,7 @@ static void NEOGEO_USER demo_start_gallery_phase(void)
     prop_set(NG_PROP_GROUP_BOSS, NG_PROP_BOSS_PHASE, 2);
     level_set_background(DEMO_LATE_SCENE_BG);
     level_set_backdrop(BLACK);
+    level_set_world_bounds(0, 0, 639, 255);
     char_heal(warrior, 1);
 
     soundPlayGameLoop(SOUND_MUSIC_SAMURAI_ENDING_SCENE);
@@ -702,10 +744,9 @@ static void NEOGEO_USER demo_before_logic(void)
         prop_set(NG_PROP_GROUP_PLAYER, NG_PROP_PLAYER_W, body.w);
         prop_set(NG_PROP_GROUP_PLAYER, NG_PROP_PLAYER_H, body.h);
         prop_set(NG_PROP_GROUP_PLAYER, NG_PROP_PLAYER_HP, player->hp);
-        level_camera_follow(player->x, player->y, 320, 224);
+        level_set_camera((int16_t)(body.x + body.w / 2 - 160), 0, 320, 224);
     }
 
-    prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_SCROLL_X, chars_count());
     prop_set(NG_PROP_GROUP_DEBUG, 0, progress_value(DEMO_PROGRESS_PHASE));
     prop_set(NG_PROP_GROUP_DEBUG, 1, chars_count());
     prop_set(NG_PROP_GROUP_DEBUG, 2, timer_value(DEMO_TIMER_DUEL));
@@ -729,9 +770,23 @@ static void NEOGEO_USER demo_collision_logic(void)
     NGCharacter *mascot = demo_char(DEMO_KIND_MASCOT);
     NGRect hit;
     NGRect target;
+    NGRect body;
+    const NGLevelState *level;
 
     if (!status_has(DEMO_STATUS_DUEL_ACTIVE)) return;
     if (!warrior || !mascot) return;
+
+    if (timer_done(DEMO_TIMER_PLAYER_HURT)) {
+        body = char_body_rect(warrior);
+        target = char_body_rect(mascot);
+        level = level_state();
+        if (ng_rect_hit(body, target) ||
+            body.x <= level->world_left ||
+            (int16_t)(body.x + body.w) >= level->world_right) {
+            game_events_send(DEMO_EVT_PLAYER_HURT, 0, 0, 0);
+        }
+    }
+
     if (mascot->hp == 0) return;
     if (!timer_done(DEMO_TIMER_HIT_LOCK)) return;
     if (warrior->hit_w == 0 || warrior->hit_h == 0) return;
@@ -861,8 +916,22 @@ static void NEOGEO_USER demo_scene_event_handler(const NGGameEvent *e)
             }
             break;
 
+        case DEMO_EVT_PLAYER_HURT:
+            if (demo_char(DEMO_KIND_WARRIOR)) {
+                NGCharacter *warrior = demo_char(DEMO_KIND_WARRIOR);
+                timer_start(DEMO_TIMER_PLAYER_HURT, 80);
+                playSFX(SOUND_SFX_SHORT_SHOUT);
+                char_damage(warrior, 1);
+                demo_set_main_action(warrior, DEMO_ACT_WARRIOR_HIT);
+                if (warrior->hp == 0) {
+                    status_set(DEMO_STATUS_DONE);
+                }
+            }
+            break;
+
         case DEMO_EVT_GALLERY_DONE:
             status_clear(DEMO_STATUS_GALLERY_ACTIVE);
+            status_clear(DEMO_STATUS_PLAYER_INPUT);
             progress_set(DEMO_PROGRESS_PHASE, 3);
             prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_MODE, 3);
             if (demo_char(DEMO_KIND_GALLERY)) demo_park_character(demo_char(DEMO_KIND_GALLERY));
@@ -870,11 +939,11 @@ static void NEOGEO_USER demo_scene_event_handler(const NGGameEvent *e)
             if (demo_char(DEMO_KIND_CAST_RIGHT)) demo_park_character(demo_char(DEMO_KIND_CAST_RIGHT));
             if (demo_char(DEMO_KIND_PORTRAIT)) {
                 NGCharacter *portrait = demo_char(DEMO_KIND_PORTRAIT);
-                demo_place_sprite_frame(portrait, 93, 160, DEMO_PORTRAIT_BASELINE, 0xFF, 0xFF);
+                demo_place_sprite_frame(portrait, 94, 160, 566, 0xC2, 0xC2);
                 portrait->data1 = 0;
-                char_action(portrait, DEMO_ACT_PORTRAIT_END);
+                portrait->state = 0;
             }
-            timer_start(DEMO_TIMER_END_HOLD, 180);
+            timer_start(DEMO_TIMER_END_HOLD, 360);
             break;
 
         default:
@@ -885,6 +954,8 @@ static void NEOGEO_USER demo_scene_event_handler(const NGGameEvent *e)
 static void NEOGEO_USER demo_warrior_tick(NGCharacter *c)
 {
     int16_t base_y;
+    uint16_t input;
+    int16_t vx = 0;
 
     if (!c) return;
     base_y = (int16_t)c->data0;
@@ -893,7 +964,44 @@ static void NEOGEO_USER demo_warrior_tick(NGCharacter *c)
         base_y = c->y;
     }
 
-    if (!status_has(DEMO_STATUS_DUEL_ACTIVE) && !status_has(DEMO_STATUS_GALLERY_ACTIVE)) {
+    if (status_has(DEMO_STATUS_PLAYER_INPUT)) {
+        input = poll_joystick();
+
+        if (demo_input_down(input, CNT_LEFT)) {
+            vx = -2;
+            c->flip_x = 1;
+        }
+        if (demo_input_down(input, CNT_RIGHT)) {
+            vx = 2;
+            c->flip_x = 0;
+        }
+        if (demo_input_down(input, CNT_B) && vx) {
+            vx = (vx < 0) ? -4 : 4;
+        }
+
+        c->vx_fp = NG_TO_FP(vx);
+
+        if (c->data2 > 0) {
+            uint16_t jump_step = c->data2;
+            int16_t jump_y = (int16_t)(base_y - 34 + (int16_t)NG_ABS((int16_t)jump_step - 12) * 3);
+            c->y_fp = NG_TO_FP(jump_y);
+            c->data2 = (uint16_t)(jump_step - 1u);
+            demo_set_main_action(c, DEMO_ACT_WARRIOR_JUMP);
+        } else {
+            c->y_fp = NG_TO_FP(base_y);
+            if (demo_input_down(input, CNT_A)) {
+                demo_set_main_action(c, DEMO_ACT_WARRIOR_ATTACK_A);
+            } else if (demo_input_down(input, CNT_UP)) {
+                c->data2 = 24;
+                playSFX(SOUND_SFX_FOOTSTEP);
+                demo_set_main_action(c, DEMO_ACT_WARRIOR_JUMP);
+            } else if (vx) {
+                demo_set_main_action(c, DEMO_ACT_WARRIOR_RUN);
+            } else if (c->action != DEMO_ACT_WARRIOR_ATTACK_A && c->action != DEMO_ACT_WARRIOR_ATTACK_B) {
+                demo_set_main_action(c, DEMO_ACT_WARRIOR_IDLE);
+            }
+        }
+    } else if (!status_has(DEMO_STATUS_DUEL_ACTIVE) && !status_has(DEMO_STATUS_GALLERY_ACTIVE)) {
         c->y_fp = NG_TO_FP((int16_t)(base_y + (((game_time_frame() >> 3) & 1) ? 2 : 0)));
     } else if (status_has(DEMO_STATUS_GALLERY_ACTIVE)) {
         c->vx_fp = 0;
@@ -1040,31 +1148,31 @@ static void NEOGEO_USER demo_npc_walker_think(NGNpc *npc, NGCharacter *c)
 static void NEOGEO_USER demo_portrait_tick(NGCharacter *c)
 {
     uint16_t step;
+    int16_t center_x;
 
     if (!c) return;
     if (progress_value(DEMO_PROGRESS_PHASE) != 3) return;
 
-    step = c->data1;
-    if (step >= (uint16_t)NG_ARRAY_SIZE(g_demo_final_frames)) {
-        step = 0;
-        c->data1 = 0;
+    center_x = (int16_t)c->data0;
+    if (center_x == 0) {
+        center_x = 32;
     }
-    demo_place_sprite_frame(
-        c,
-        g_demo_final_frames[step],
-        (int16_t)(160 + g_demo_final_x_offsets[step]),
-        (int16_t)(DEMO_PORTRAIT_BASELINE + g_demo_final_y_offsets[step]),
-        g_demo_final_scales[step],
-        g_demo_final_scales[step]
-    );
+    center_x = (int16_t)(center_x + 1);
+    if (center_x > 340) {
+        center_x = -24;
+    }
+    c->data0 = (uint16_t)center_x;
 
-    if ((game_time_frame() & 3u) == 0u) {
-        step++;
-        if (step >= (uint16_t)NG_ARRAY_SIZE(g_demo_final_frames)) {
-            step = 0;
-        }
-        c->data1 = step;
-    }
+    step = demo_wrap_index((uint16_t)(game_time_frame() >> 2), (uint16_t)NG_ARRAY_SIZE(g_demo_npc_walk_frames));
+    demo_place_sprite_frame_ex(
+        c,
+        g_demo_npc_walk_frames[step],
+        center_x,
+        568,
+        0xC2,
+        0xC2,
+        0
+    );
 }
 
 static void NEOGEO_USER demo_register_engine_scripts(void)
@@ -1075,6 +1183,10 @@ static void NEOGEO_USER demo_register_engine_scripts(void)
     actions_register(DEMO_ACT_WARRIOR_WALK, g_demo_warrior_walk);
     actions_register(DEMO_ACT_WARRIOR_ATTACK_A, g_demo_warrior_attack_a);
     actions_register(DEMO_ACT_WARRIOR_ATTACK_B, g_demo_warrior_attack_b);
+    actions_register(DEMO_ACT_WARRIOR_IDLE, g_demo_warrior_idle);
+    actions_register(DEMO_ACT_WARRIOR_RUN, g_demo_warrior_run);
+    actions_register(DEMO_ACT_WARRIOR_JUMP, g_demo_warrior_jump);
+    actions_register(DEMO_ACT_WARRIOR_HIT, g_demo_warrior_hit);
     actions_register(DEMO_ACT_MASCOT_FLOAT, g_demo_mascot_float);
     actions_register(DEMO_ACT_FX_SLASH, g_demo_fx_slash);
     actions_register(DEMO_ACT_PORTRAIT_END, g_demo_portrait_end);
@@ -1319,9 +1431,6 @@ void NEOGEO_USER showWalkDemo(int loops, int delay_ms) {
 
 /* Title screen — Eagle Soft logo with blinking INSERT COIN, auto-advances after 6 seconds. */
 void NEOGEO_USER showTitleScreen(void) {
-    uint16_t fix_pal[16];
-    uint16_t i;
-
     clearFix();
     clearSprs();
     soundSceneReset();
@@ -1376,7 +1485,6 @@ void NEOGEO_USER maingame(void) {
    
     clearFix();
     clearSprs();
-	showTitleScreen();
     playgame();
 }
 
@@ -1514,10 +1622,16 @@ void NEOGEO_USER showEagleIntro(void) {
     soundSetADPCMBVolume(0xB8);
     soundSetSSGVolume(0x08);
 
-    /* White text palette for FIX layer typewriter display */
-    /*setpal(fix_pal, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+    /* FIX palettes for typewriter and shimmer text. */
+    setpal(fix_pal, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
            WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
-    load_palettes(fix_pal, PALETTES);*/
+    load_palettes(fix_pal, PALETTES);
+    setpal(fix_pal, BLACK, CYAN, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    load_palettes(fix_pal, PALETTES + PALOFFSET);
+    setpal(fix_pal, BLACK, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    load_palettes(fix_pal, PALETTES + PALOFFSET * 2);
 
     /* Eagle Fanfare boot melody fires immediately */
    
@@ -1542,7 +1656,15 @@ void NEOGEO_USER showEagleIntro(void) {
         cyclexms(60);
     }
 
-    cyclexms(50);
+    for (i = 0; i < 18; i++) {
+        short pal = (short)((i & 1) ? 2 : 1);
+        fixtext_out(17, 13, "EAGLE", pal);
+        fixtext_out(16, 15, "SOFTWARE", (short)((i & 1) ? 1 : 2));
+        if ((i & 3) == 0) {
+            playSFX(SOUND_SFX_STRING_PHRASE);
+        }
+        cyclexms(35);
+    }
 
     /* Eagle Soft logo — title gong + logo screen */
     clearFix();

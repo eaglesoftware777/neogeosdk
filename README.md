@@ -30,9 +30,13 @@ It is a plain-C 2D engine built around:
 
 - characters
 - actions
+- level state and camera scroll
 - per-frame `game_engine_frame()`
 - small `game_events`
 - border constraints
+- NPC helpers
+- physics bodies and solids
+- cached FIX-layer text output
 - status flags
 - timers
 - progress counters
@@ -43,6 +47,9 @@ Important current state:
 - the source files live in `sdk/ng_*.c` and `sdk/ng_*.h`
 - the linker scripts reserve `game_engine_bss` for the engine state objects
 - `Makefile` and `MakefileWin32.mak` compile and link the `sdk/ng_*` modules by default
+- sprite drawing uses world-space character coordinates minus the current level camera scroll
+- joystick camera helpers support horizontal, vertical, and both-axis scrolling
+- action scripts are used by the demo for idle, run, jump, hit, and attack state changes
 
 Use these docs for the current integration path:
 
@@ -74,6 +81,7 @@ Primary repository docs:
 - [`README.md`](./README.md)
 - [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 - [`docs/GAME_ENGINE_LAYER.md`](./docs/GAME_ENGINE_LAYER.md)
+- [`docs/ARTBOX_PIPELINE.md`](./docs/ARTBOX_PIPELINE.md)
 - [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
 - [`sound/SOUND_DRIVER_GUIDE.txt`](./sound/SOUND_DRIVER_GUIDE.txt)
 - [`sound/driver/readme`](./sound/driver/readme)
@@ -409,6 +417,11 @@ make art-clean       : remove artbox-generated outputs
 make clean-all       : full clean
 make test            : run the generated ROM set in MAME
 make debug           : run MAME with debugger
+make debug-build     : build P1 with debug symbols and linker map
+make debug-artifacts : write size, symbols, readelf, map, and disassembly files
+make gdb-trace       : generate dump/gdb_trace.txt from a batch GDB script
+make gdb             : open GDB on out/game
+make gdb-remote      : open GDB and connect to GDB_REMOTE=host:port
 ```
 
 Important recent build behavior:
@@ -419,6 +432,46 @@ Important recent build behavior:
 - set `SOX=/path/to/sox` only when you explicitly want the SoX conversion path
 - Windows `make fm`, `make mml`, and `make ssg` expand source file lists correctly
 - Windows `make sfix` now keeps `052-s1.s1` in the correct 128 KB FIX-ROM format
+- P1 generation crops to the full 512 KB program ROM window before byte swap and padding, so larger 68000 builds are not truncated at 128 KB
+
+## Debug and Trace Builds
+
+The Linux and Windows makefiles support debug builds for the 68000 program.
+
+Linux:
+
+```bash
+make debug-build
+make debug-artifacts
+make gdb-trace
+make gdb
+make gdb-remote GDB_REMOTE=localhost:1234
+```
+
+Windows:
+
+```bat
+make -f MakefileWin32.mak debug-build
+make -f MakefileWin32.mak debug-artifacts
+make -f MakefileWin32.mak gdb-trace
+```
+
+Generated debug files:
+
+- `dump/game.size.txt`
+- `dump/game.sym`
+- `dump/game.readelf`
+- `dump/game.debug.dump`
+- `dump/game.map`
+- `dump/gdb_trace.gdb`
+- `dump/gdb_trace.txt`
+
+If the bundled cross-GDB cannot start because of host library dependencies,
+override it:
+
+```bash
+make gdb-trace GDB=/path/to/m68k-gdb
+```
 
 ## Sound Build Modes
 
@@ -481,14 +534,40 @@ See:
 
 - [`docs/GAME_ENGINE_LAYER.md`](./docs/GAME_ENGINE_LAYER.md)
 - [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
+- [`docs/ARTBOX_PIPELINE.md`](./docs/ARTBOX_PIPELINE.md)
 
 ## Artbox Graphics Pipeline
 
 The Artbox pipeline converts PNG graphics into Neo Geo sprite and FIX formats.
 
+Detailed guide:
+
+- [`docs/ARTBOX_PIPELINE.md`](./docs/ARTBOX_PIPELINE.md)
+
+The pipeline is rule-driven through `artbox/assets.cfg`. Each PNG can now carry
+both a conversion mode and a gameplay category. The generated manifest and
+`artbox/sprite_meta.h` expose those categories to 68000-side code.
+
+Current built-in categories:
+
+- `background`
+- `main_character`
+- `opponent`
+- `npc`
+
+Current naming rules include:
+
+- `sprite_*.png` as `main_character` sprite pages
+- `opponent_*.png` as `opponent` sprite pages
+- `z_npc_*.png` as `npc` sprite pages
+- `background_*.png` and `zz_npc_forest_alley.png` as `background` screen pages
+
 Core tools:
 
 - `artbox/img2neo.py`
+- `artbox/assets.cfg`
+- `artbox/asset_rules.py`
+- `artbox/gen_sprite_meta.py`
 - `artbox/romtiles.py`
 - `artbox/fixtiles.py`
 - `artbox/romdbfiximport.py`
@@ -503,6 +582,9 @@ Outputs:
 
 - generated C ROMs
 - generated S1 FIX ROM
+- `artbox/assets_manifest.json`
+- `artbox/sprite_meta.h`
+- `artbox/out.srt`
 
 ## Sound Subsystem (YM2610)
 
@@ -601,6 +683,8 @@ Highlights from the recent commit line:
   2D game engine layer sources added under `sdk/ng_*`, with linker-space reservation for engine state
 - 2026-05-09
   Python became the default sample-conversion path, and the live title/game flow was remapped around the current ADPCM-B theme set
+- 2026-05-10
+  2D engine camera scroll, level/NPC/physics/fix modules, artbox asset categories, joystick-driven main-character actions, opponent hazards, and forest-alley final scene work
 
 See [`CHANGELOG.md`](./CHANGELOG.md) for release-level notes.
 
@@ -615,6 +699,8 @@ sdk/              — headers, linker scripts, support library
   sound_ids.h     — named sound IDs for music, SFX, beds, FM, and SSG tracks
   ng_*.h/.c       — 2D game engine layer modules
 artbox/           — graphics conversion pipeline
+  assets.cfg      — art conversion rules and gameplay categories
+  sprite_meta.h   — generated asset metadata for 68000-side sprite setup
 sound/            — sound driver, tracks, samples, tools
   driver/         — ASM driver, experimental C driver, generated tables
   fm/             — FM tracks and patch bank

@@ -6,6 +6,7 @@ For installation, `SDKHOME` layout, WSL usage, and Makefile targets, see:
 
 - [`README.md`](./README.md)
 - [`docs/GAME_ENGINE_LAYER.md`](./docs/GAME_ENGINE_LAYER.md)
+- [`docs/ARTBOX_PIPELINE.md`](./docs/ARTBOX_PIPELINE.md)
 - [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
 - the repository wiki home page
 
@@ -148,6 +149,10 @@ Main runtime modules:
 | `ng_progress` | progress counters |
 | `ng_status` | boolean status flags |
 | `ng_properties` | live shared values grouped by system |
+| `ng_level` | level state, world bounds, camera follow, and joystick camera scroll |
+| `ng_fix` | cached FIX-layer text and numeric output |
+| `ng_npcs` | fixed-size NPC slots bound to characters and think callbacks |
+| `ng_physics` | fixed-point gravity, drag, world bounds, and solid-rectangle resolution |
 | `ng_border_constraints` | invisible trigger rectangles that emit events |
 | `ng_sprite_group` | grouped Neo Geo sprite upload helpers |
 
@@ -156,6 +161,62 @@ Important current build note:
 - the linker scripts reserve `game_engine_bss` for `out/ng_*0.o`
 - `Makefile` and `MakefileWin32.mak` compile and link the `sdk/ng_*` modules by default
 - use [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md) to inspect the exact build and linker wiring
+
+Camera helpers:
+
+```c
+level_set_world_bounds(0, 0, 639, 447);
+level_camera_follow(player->x, player->y, 320, 224);
+level_camera_joystick(2, NG_CAMERA_AXIS_X, 320, 224);    /* horizontal scroll */
+level_camera_joystick(2, NG_CAMERA_AXIS_Y, 320, 224);    /* vertical scroll */
+level_camera_joystick(2, NG_CAMERA_AXIS_BOTH, 320, 224); /* free camera */
+```
+
+Characters keep world-space `x`/`y` values for physics and collision. The engine subtracts the current level scroll when drawing sprites.
+
+Action-state pattern:
+
+```c
+static const NGActionCmd player_run[] = {
+    SPEED(0, 0),
+    FRAME(tile_run_0, 3),
+    FRAME(tile_run_1, 3),
+    LOOP()
+};
+
+actions_register(ACT_PLAYER_RUN, player_run);
+char_action(player, ACT_PLAYER_RUN);
+```
+
+Use a per-character callback to map joystick combinations to actions. The demo
+uses the priority attack, jump, run, idle so combinations produce deterministic
+results.
+
+NPC and opponent pattern:
+
+```c
+NGNpc *opponent = npc_spawn(OPPONENT_KIND, CHAR_OPPONENT, 240, 180);
+npc_set_think(opponent, opponent_think, 1);
+
+if (ng_rect_hit(char_body_rect(player), char_body_rect(npc_char(opponent)))) {
+    char_damage(player, 1);
+}
+```
+
+Artbox asset categories:
+
+| Category | Typical PNG names | Use |
+| --- | --- | --- |
+| `background` | `background_*.png`, `zz_npc_forest_alley.png`, legacy numbered pages | full-screen scene/background pages |
+| `main_character` | `sprite_*.png` | player/main-character animation frames |
+| `opponent` | `opponent_*.png` | enemy/opponent sprite frames |
+| `npc` | `z_npc_*.png` | non-player character sprite frames |
+
+The category is written into `artbox/assets_manifest.json` and generated into
+`artbox/sprite_meta.h` as `NG_ASSET_CATEGORY_*`.
+
+See [`docs/ARTBOX_PIPELINE.md`](./docs/ARTBOX_PIPELINE.md) for the full rule and
+category reference.
 
 ## Typical Call Patterns
 
