@@ -185,9 +185,76 @@ def synthesize_ssg(preset: dict, midi_note: int, duration: float = 0.5) -> np.nd
     t = np.linspace(0, duration, int(SAMPLE_RATE * duration), endpoint=False)
     vol_a = preset.get("vol_a", 10) / 15.0
     sq = np.sign(np.sin(2 * np.pi * freq * t)) * vol_a
-    # Simple fade out
     fade = np.linspace(1, 0, len(t)) ** 0.5
     return (sq * fade).astype(np.float32) * 0.5
+
+_DEFAULT_PATCH = {"alg": 7, "fb": 2, "stereo": 0xC0, "lfo": 0,
+                  "ops": {k: [0x01, 0x20, 0x1F, 0x08, 0x05, 0xAF, 0x00]
+                          for k in ("op1", "op2", "op3", "op4")}}
+_DEFAULT_SSG   = {"vol_a": 12, "vol_b": 0, "vol_c": 0, "tone_mask": 0x38}
+
+def synthesize_track(events: list, patches: list, ssg_presets: list = None,
+                     bpm: int = 120, mode: str = "fm") -> np.ndarray:
+    """Render a full list of MML events to a float32 audio buffer."""
+    if not events:
+        return np.zeros(SAMPLE_RATE // 2, dtype=np.float32)
+    TICKS_PER_BEAT = 48
+    secs_per_tick = 60.0 / (bpm * TICKS_PER_BEAT)
+    total_ticks = max(e[0] + e[2] for e in events)
+    total_secs = total_ticks * secs_per_tick + 1.0
+    buf = np.zeros(int(total_secs * SAMPLE_RATE), dtype=np.float32)
+    for tick, midi, dur, vol, inst in events:
+        t_start = int(tick * secs_per_tick * SAMPLE_RATE)
+        note_dur = max(0.05, dur * secs_per_tick)
+        if mode == "fm":
+            patch = patches[inst % max(1, len(patches))] if patches else _DEFAULT_PATCH
+            note = synthesize_fm(patch, midi, note_dur)
+        else:
+            preset = ssg_presets[inst % max(1, len(ssg_presets))] if ssg_presets else _DEFAULT_SSG
+            note = synthesize_ssg(preset, midi, note_dur)
+        note = note * (vol / 15.0)
+        end = min(len(buf), t_start + len(note))
+        buf[t_start:end] += note[:end - t_start]
+    peak = np.max(np.abs(buf))
+    if peak > 0:
+        buf /= peak
+    return buf.astype(np.float32) * 0.85
+
+def synthesize_step_pattern(channels: list, grid: list, bpm: int,
+                             patches: list, ssg_presets: list,
+                             loops: int = 1) -> np.ndarray:
+    """Render a step-sequencer grid to audio.
+    channels: [{'type':'FM'/'SSG', 'note':midi, 'inst':n, 'vol':0-15}, ...]
+    grid:     grid[ch][step] = bool
+    """
+    num_steps = len(grid[0]) if grid and grid[0] else 16
+    step_dur = 60.0 / bpm / 2      # eighth-note steps
+    note_dur = step_dur * 0.82
+    total_samples = int(num_steps * step_dur * loops * SAMPLE_RATE) + SAMPLE_RATE
+    buf = np.zeros(total_samples, dtype=np.float32)
+    for loop in range(loops):
+        loop_off = int(loop * num_steps * step_dur * SAMPLE_RATE)
+        for step in range(num_steps):
+            t_start = loop_off + int(step * step_dur * SAMPLE_RATE)
+            for ch_idx, ch in enumerate(channels):
+                if ch_idx >= len(grid) or step >= len(grid[ch_idx]):
+                    continue
+                if not grid[ch_idx][step]:
+                    continue
+                midi = ch["note"]; vol = ch["vol"] / 15.0
+                inst = ch["inst"]
+                if ch["type"] == "FM":
+                    patch = patches[inst % max(1, len(patches))] if patches else _DEFAULT_PATCH
+                    note = synthesize_fm(patch, midi, note_dur) * vol * 0.35
+                else:
+                    preset = ssg_presets[inst % max(1, len(ssg_presets))] if ssg_presets else _DEFAULT_SSG
+                    note = synthesize_ssg(preset, midi, note_dur) * vol * 0.35
+                end = min(total_samples, t_start + len(note))
+                buf[t_start:end] += note[:end - t_start]
+    peak = np.max(np.abs(buf))
+    if peak > 0:
+        buf /= peak
+    return buf.astype(np.float32) * 0.85
 
 # ---------------------------------------------------------------------------
 # Audio playback via PyQt6
@@ -717,6 +784,17 @@ class FMPatchTab(QWidget):
         self.note_label = QLabel("Click a key to preview")
         self.note_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         right.addWidget(self.note_label)
+
+        play_row = QHBoxLayout()
+        btn_arp = QPushButton("▶ Arpeggio")
+        btn_arp.setToolTip("Play C-E-G-C major arpeggio")
+        btn_arp.clicked.connect(self._play_arpeggio)
+        play_row.addWidget(btn_arp)
+        btn_chord = QPushButton("▶ Chord")
+        btn_chord.setToolTip("Play C+E+G major chord")
+        btn_chord.clicked.connect(self._play_chord)
+        play_row.addWidget(btn_chord)
+        right.addLayout(play_row)
         right.addStretch()
         layout.addLayout(right)
 
@@ -789,6 +867,42 @@ class FMPatchTab(QWidget):
         self.note_label.setText(f"Note: {midi_to_name(midi)}  (MIDI {midi})")
         self._audio_sink = play_samples(samples)
 
+    def _play_arpeggio(self):
+        if self._current_idx >= len(self.patches):
+            return
+        patch = self.patches[self._current_idx]
+        base = self.oct_spin.value() * 12
+        notes = [base, base + 4, base + 7, base + 12]
+        dur = 0.18
+        total = int(SAMPLE_RATE * (dur * len(notes) + 0.3))
+        buf = np.zeros(total, dtype=np.float32)
+        for i, midi in enumerate(notes):
+            s = synthesize_fm(patch, midi, dur)
+            off = int(i * dur * SAMPLE_RATE)
+            end = min(total, off + len(s))
+            buf[off:end] += s[:end - off]
+        peak = np.max(np.abs(buf))
+        if peak > 0: buf /= peak
+        self.waveform.set_samples(buf)
+        self.note_label.setText("Arpeggio: C-E-G-C")
+        self._audio_sink = play_samples(buf * 0.85)
+
+    def _play_chord(self):
+        if self._current_idx >= len(self.patches):
+            return
+        patch = self.patches[self._current_idx]
+        base = self.oct_spin.value() * 12
+        notes = [base, base + 4, base + 7]
+        dur = 0.6
+        buf = np.zeros(int(SAMPLE_RATE * dur), dtype=np.float32)
+        for midi in notes:
+            buf += synthesize_fm(patch, midi, dur) * 0.4
+        peak = np.max(np.abs(buf))
+        if peak > 0: buf /= peak
+        self.waveform.set_samples(buf)
+        self.note_label.setText("Chord: C+E+G")
+        self._audio_sink = play_samples(buf * 0.85)
+
     def _add_patch(self):
         new_id = max((p["id"] for p in self.patches), default=-1) + 1
         p = {"id": new_id, "name": f"Patch {new_id}", "alg": 7, "fb": 2,
@@ -828,8 +942,11 @@ class MmlComposerTab(QWidget):
         self._current_file = None
         self._current_mode = "fm"
         self._audio_sink = None
+        self._patches = []
+        self._ssg_presets = []
         self._build_ui()
         self._load_file_list()
+        self._reload_patches()
 
     def _build_ui(self):
         layout = QHBoxLayout(self)
@@ -857,6 +974,18 @@ class MmlComposerTab(QWidget):
         btn_compile = QPushButton("Compile All")
         btn_compile.clicked.connect(self._compile_all)
         left.addWidget(btn_compile)
+
+        self.bpm_mml = QSpinBox(); self.bpm_mml.setRange(40, 240); self.bpm_mml.setValue(120)
+        self.bpm_mml.setPrefix("BPM: ")
+        left.addWidget(self.bpm_mml)
+
+        self.btn_play_track = QPushButton("▶ Play Track")
+        self.btn_play_track.clicked.connect(self._play_track)
+        left.addWidget(self.btn_play_track)
+        self.btn_stop_track = QPushButton("■ Stop")
+        self.btn_stop_track.clicked.connect(self._stop_track)
+        left.addWidget(self.btn_stop_track)
+        left.addStretch()
         layout.addLayout(left)
 
         # Center: editor + roll
@@ -955,6 +1084,34 @@ class MmlComposerTab(QWidget):
             samples = synthesize_ssg(preset, midi)
         self.waveform.set_samples(samples)
         self._audio_sink = play_samples(samples)
+
+    def _reload_patches(self):
+        if PATCHES_FILE.exists():
+            self._patches = parse_patches(PATCHES_FILE)
+        if SSG_CONFIG.exists():
+            self._ssg_presets = parse_ssg_presets(SSG_CONFIG)
+
+    def _play_track(self):
+        self._stop_track()
+        self._reload_patches()
+        text = self.editor.toPlainText()
+        events = parse_mml_events(text)
+        if not events:
+            return
+        bpm = self.bpm_mml.value()
+        buf = synthesize_track(events, self._patches, self._ssg_presets, bpm, self._current_mode)
+        self.waveform.set_samples(buf)
+        self._audio_sink = play_samples(buf)
+        self.btn_play_track.setEnabled(False)
+        dur_ms = int(len(buf) / SAMPLE_RATE * 1000) + 200
+        QTimer.singleShot(dur_ms, lambda: self.btn_play_track.setEnabled(True))
+
+    def _stop_track(self):
+        if self._audio_sink:
+            try: self._audio_sink.stop()
+            except: pass
+            self._audio_sink = None
+        self.btn_play_track.setEnabled(True)
 
     def _new_track(self):
         mode_dir = FM_DIR if self._current_mode == "fm" else SSG_DIR
@@ -1292,6 +1449,263 @@ class ADPCMTab(QWidget):
         self._load_samples()
 
 # ---------------------------------------------------------------------------
+# Step Sequencer grid widget
+# ---------------------------------------------------------------------------
+class StepSeqGrid(QWidget):
+    """Clickable step-sequencer grid. Rows = channels, columns = time steps."""
+    step_toggled = pyqtSignal(int, int, bool)
+
+    CELL_W = 30
+    CELL_H = 30
+    LABEL_W = 68
+
+    CH_COLORS = [
+        QColor(60, 120, 220), QColor(40, 100, 200),
+        QColor(30, 80, 180),  QColor(20, 60, 160),
+        QColor(190, 110, 20), QColor(165, 85, 15),
+        QColor(140, 62, 10),
+    ]
+
+    def __init__(self, num_channels: int = 7, num_steps: int = 16, parent=None):
+        super().__init__(parent)
+        self.num_channels = num_channels
+        self.num_steps = num_steps
+        self.grid = [[False] * num_steps for _ in range(num_channels)]
+        self.current_step = -1
+        self.channel_labels = ["FM 1","FM 2","FM 3","FM 4","SSG A","SSG B","SSG C"]
+        self._resize()
+
+    def _resize(self):
+        w = self.LABEL_W + self.num_steps * self.CELL_W + 4
+        h = self.num_channels * self.CELL_H + 4
+        self.setFixedSize(w, h)
+
+    def set_step_count(self, n: int):
+        for ch in range(self.num_channels):
+            cur = self.grid[ch]
+            if len(cur) < n:
+                cur += [False] * (n - len(cur))
+            self.grid[ch] = cur[:n]
+        self.num_steps = n
+        self._resize()
+        self.update()
+
+    def set_playhead(self, step: int):
+        self.current_step = step
+        self.update()
+
+    def clear_all(self):
+        self.grid = [[False] * self.num_steps for _ in range(self.num_channels)]
+        self.update()
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.fillRect(self.rect(), QColor(20, 20, 30))
+        for ch in range(self.num_channels):
+            y = ch * self.CELL_H + 2
+            p.setPen(QColor(200, 200, 220))
+            p.setFont(QFont("Monospace", 8))
+            label = self.channel_labels[ch] if ch < len(self.channel_labels) else f"CH{ch}"
+            p.drawText(2, y + self.CELL_H - 8, label)
+            col = self.CH_COLORS[ch % len(self.CH_COLORS)]
+            for step in range(self.num_steps):
+                x = self.LABEL_W + step * self.CELL_W + 2
+                rx = x + 1; ry = y + 1
+                rw = self.CELL_W - 2; rh = self.CELL_H - 2
+                active = step < len(self.grid[ch]) and self.grid[ch][step]
+                is_beat = step % 4 == 0
+                if active:
+                    p.fillRect(rx, ry, rw, rh, col)
+                    p.setPen(QPen(col.lighter(160), 1))
+                    p.drawLine(rx, ry, rx + rw, ry)
+                elif is_beat:
+                    p.fillRect(rx, ry, rw, rh, QColor(35, 35, 52))
+                else:
+                    p.fillRect(rx, ry, rw, rh, QColor(25, 25, 38))
+                if step == self.current_step:
+                    p.fillRect(rx, ry, rw, rh, QColor(255, 255, 100, 55))
+                p.setPen(QPen(QColor(50, 50, 70), 1))
+                p.drawRect(rx, ry, rw, rh)
+
+    def mousePressEvent(self, event):
+        x = int(event.position().x())
+        y = int(event.position().y())
+        ch   = (y - 2) // self.CELL_H
+        step = (x - self.LABEL_W - 2) // self.CELL_W
+        if 0 <= ch < self.num_channels and 0 <= step < self.num_steps:
+            self.grid[ch][step] = not self.grid[ch][step]
+            self.step_toggled.emit(ch, step, self.grid[ch][step])
+            self.update()
+
+
+# ---------------------------------------------------------------------------
+# Step Sequencer / Composer Tab
+# ---------------------------------------------------------------------------
+class ComposerTab(QWidget):
+    """Multi-channel step sequencer — FM 1-4 + SSG A-C, up to 32 steps."""
+
+    NUM_CH   = 7
+    CH_TYPES = ["FM","FM","FM","FM","SSG","SSG","SSG"]
+    CH_NAMES = ["FM 1","FM 2","FM 3","FM 4","SSG A","SSG B","SSG C"]
+    DEF_NOTES = [60, 64, 67, 72, 60, 64, 67]
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._patches = []
+        self._ssg_presets = []
+        self._sink = None
+        self._play_step = 0
+        self._timer = QTimer()
+        self._timer.timeout.connect(self._tick)
+        self._build_ui()
+        self._reload_data()
+
+    def _build_ui(self):
+        main = QVBoxLayout(self)
+
+        # Transport row
+        tr = QHBoxLayout()
+        self.bpm_spin = QSpinBox(); self.bpm_spin.setRange(40, 240); self.bpm_spin.setValue(120)
+        self.bpm_spin.setPrefix("BPM: ")
+        tr.addWidget(self.bpm_spin)
+
+        self.steps_combo = QComboBox()
+        self.steps_combo.addItems(["16 steps", "32 steps"])
+        self.steps_combo.currentIndexChanged.connect(
+            lambda i: self.seq_grid.set_step_count(32 if i else 16))
+        tr.addWidget(self.steps_combo)
+
+        self.loops_spin = QSpinBox(); self.loops_spin.setRange(1, 8); self.loops_spin.setValue(2)
+        self.loops_spin.setPrefix("Loops: ")
+        tr.addWidget(self.loops_spin)
+
+        self.btn_play = QPushButton("▶ Play")
+        self.btn_play.setFixedWidth(80)
+        self.btn_play.clicked.connect(self._play)
+        tr.addWidget(self.btn_play)
+
+        self.btn_stop = QPushButton("■ Stop")
+        self.btn_stop.setFixedWidth(80)
+        self.btn_stop.clicked.connect(self._stop)
+        tr.addWidget(self.btn_stop)
+
+        btn_clear = QPushButton("Clear All")
+        btn_clear.clicked.connect(lambda: self.seq_grid.clear_all())
+        tr.addWidget(btn_clear)
+
+        btn_export = QPushButton("Export MML…")
+        btn_export.clicked.connect(self._export_mml)
+        tr.addWidget(btn_export)
+        tr.addStretch()
+        main.addLayout(tr)
+
+        # Grid in scroll area
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setMinimumHeight(self.NUM_CH * 32 + 20)
+        inner = QWidget()
+        il = QVBoxLayout(inner)
+        self.seq_grid = StepSeqGrid(self.NUM_CH, 16)
+        il.addWidget(self.seq_grid)
+        il.addStretch()
+        scroll.setWidget(inner)
+        main.addWidget(scroll)
+
+        # Per-channel settings
+        main.addWidget(QLabel("<b>Channel settings:</b>"))
+        ch_grid = QGridLayout()
+        for col, h in enumerate(["Channel","Note","Instrument","Volume"]):
+            ch_grid.addWidget(QLabel(f"<b>{h}</b>"), 0, col)
+
+        self._ch_note = []; self._ch_inst = []; self._ch_vol = []
+        for ch in range(self.NUM_CH):
+            ch_grid.addWidget(QLabel(self.CH_NAMES[ch]), ch+1, 0)
+
+            ns = QSpinBox(); ns.setRange(0, 127); ns.setValue(self.DEF_NOTES[ch])
+            ns.setSuffix(f"  {midi_to_name(self.DEF_NOTES[ch])}")
+            ns.valueChanged.connect(lambda v, s=ns: s.setSuffix(f"  {midi_to_name(v)}"))
+            ch_grid.addWidget(ns, ch+1, 1); self._ch_note.append(ns)
+
+            ins = QSpinBox(); ins.setRange(0, 15); ins.setValue(ch % 4)
+            ch_grid.addWidget(ins, ch+1, 2); self._ch_inst.append(ins)
+
+            vs = QSpinBox(); vs.setRange(0, 15); vs.setValue(12)
+            ch_grid.addWidget(vs, ch+1, 3); self._ch_vol.append(vs)
+
+        main.addLayout(ch_grid)
+
+        self.waveform = WaveformWidget()
+        self.waveform.setMinimumHeight(80)
+        main.addWidget(self.waveform)
+        self.status_lbl = QLabel("Click grid cells to toggle steps, then ▶ Play.")
+        main.addWidget(self.status_lbl)
+
+    def _reload_data(self):
+        if PATCHES_FILE.exists():
+            self._patches = parse_patches(PATCHES_FILE)
+        if SSG_CONFIG.exists():
+            self._ssg_presets = parse_ssg_presets(SSG_CONFIG)
+
+    def _channels(self):
+        return [{"type": self.CH_TYPES[ch], "note": self._ch_note[ch].value(),
+                 "inst": self._ch_inst[ch].value(), "vol": self._ch_vol[ch].value()}
+                for ch in range(self.NUM_CH)]
+
+    def _play(self):
+        self._stop()
+        self._reload_data()
+        bpm   = self.bpm_spin.value()
+        loops = self.loops_spin.value()
+        buf = synthesize_step_pattern(self._channels(), self.seq_grid.grid,
+                                      bpm, self._patches, self._ssg_presets, loops)
+        self.waveform.set_samples(buf)
+        self._sink = play_samples(buf)
+        num_steps = self.seq_grid.num_steps
+        ms_per_step = max(1, int(60000 / bpm / 2))
+        self._play_step = -1
+        self._timer.start(ms_per_step)
+        QTimer.singleShot(num_steps * loops * ms_per_step + 300, self._stop)
+        self.status_lbl.setText(f"Playing {num_steps} steps × {loops} loops @ {bpm} BPM…")
+
+    def _tick(self):
+        self._play_step = (self._play_step + 1) % self.seq_grid.num_steps
+        self.seq_grid.set_playhead(self._play_step)
+
+    def _stop(self):
+        self._timer.stop()
+        if self._sink:
+            try: self._sink.stop()
+            except: pass
+            self._sink = None
+        self.seq_grid.set_playhead(-1)
+        self.status_lbl.setText("Stopped.")
+
+    def _export_mml(self):
+        bpm = self.bpm_spin.value()
+        channels = self._channels()
+        num_steps = self.seq_grid.num_steps
+        NS = ["C","C+","D","D+","E","F","F+","G","G+","A","A+","B"]
+        lines = [f"; Step sequencer export — {bpm} BPM, {num_steps} steps", ""]
+        for ch in range(self.NUM_CH):
+            active_steps = [s for s in range(num_steps) if self.seq_grid.grid[ch][s]]
+            if not active_steps:
+                continue
+            midi = channels[ch]["note"]
+            note_name = NS[midi % 12]
+            octave = midi // 12 - 1
+            lines.append(f"; {self.CH_NAMES[ch]}")
+            lines.append(f"T{bpm} V{channels[ch]['vol']} I{channels[ch]['inst']} O{octave} L8")
+            lines.append("".join(note_name if self.seq_grid.grid[ch][s] else "R"
+                                 for s in range(num_steps)))
+            lines.append("")
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("MML Export")
+        dlg.setText("Save to sound/fm/ or sound/ssg/ as a .mml file:")
+        dlg.setDetailedText("\n".join(lines))
+        dlg.exec()
+
+
+# ---------------------------------------------------------------------------
 # YM2610 Simulator Tab
 # ---------------------------------------------------------------------------
 class YM2610SimTab(QWidget):
@@ -1447,17 +1861,19 @@ class SoundStudio(QMainWindow):
         self._apply_theme()
 
         tabs = QTabWidget()
-        self.fm_tab    = FMPatchTab()
-        self.mml_tab   = MmlComposerTab()
-        self.ssg_tab   = SSGPresetTab()
-        self.adpcm_tab = ADPCMTab()
-        self.sim_tab   = YM2610SimTab()
+        self.fm_tab       = FMPatchTab()
+        self.mml_tab      = MmlComposerTab()
+        self.ssg_tab      = SSGPresetTab()
+        self.adpcm_tab    = ADPCMTab()
+        self.composer_tab = ComposerTab()
+        self.sim_tab      = YM2610SimTab()
 
-        tabs.addTab(self.fm_tab,    "FM Patches")
-        tabs.addTab(self.mml_tab,   "MML Composer")
-        tabs.addTab(self.ssg_tab,   "SSG Presets")
-        tabs.addTab(self.adpcm_tab, "ADPCM Samples")
-        tabs.addTab(self.sim_tab,   "YM2610 Simulator")
+        tabs.addTab(self.fm_tab,       "FM Patches")
+        tabs.addTab(self.mml_tab,      "MML Composer")
+        tabs.addTab(self.ssg_tab,      "SSG Presets")
+        tabs.addTab(self.adpcm_tab,    "ADPCM Samples")
+        tabs.addTab(self.composer_tab, "Composer")
+        tabs.addTab(self.sim_tab,      "YM2610 Simulator")
         self.setCentralWidget(tabs)
 
         self._build_menu()

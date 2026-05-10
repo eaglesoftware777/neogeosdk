@@ -9,7 +9,8 @@ https://github.com/eaglesoftware777/neogeosdk
 #include "sdk/ng_game_engine.h"
 #include "artbox/sprite_meta.h"
 #include <stdint.h>
-
+#define PAL_BLUE 1
+#define PAL_RED  2
 void NEOGEO_USER soundAutoDemo(void);
 void NEOGEO_USER showEagleIntro(void);
 void NEOGEO_USER showTitleScreen(void);
@@ -651,7 +652,7 @@ static void NEOGEO_USER demo_start_duel_phase(void)
 
     soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
     playVoiceCue(SOUND_VOICE_ATTACK);
-    level_set_backdrop(WHITE);
+    level_set_backdrop(BLACK);
     clearSprs();
 
     warrior->visible = 1;
@@ -699,7 +700,7 @@ static void NEOGEO_USER demo_start_gallery_phase(void)
     prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_MODE, 2);
     prop_set(NG_PROP_GROUP_BOSS, NG_PROP_BOSS_PHASE, 2);
     level_set_background(DEMO_LATE_SCENE_BG);
-    level_set_backdrop(WHITE);
+    level_set_backdrop(BLACK);
     level_set_world_bounds(0, 0, 639, 255);
     char_heal(warrior, 1);
 
@@ -863,7 +864,7 @@ static void NEOGEO_USER demo_before_draw(void)
     demo_sync_action_sprite(mascot);
     demo_sync_action_sprite(fx);
 
-    if (phase_step == 0) {
+    if (phase_step == 0 || phase_step == 1) {
         demo_draw_walk_scene();
     } else if (phase_step >= 2) {
         demo_load_palette_group(
@@ -944,7 +945,7 @@ static void NEOGEO_USER demo_scene_event_handler(const NGGameEvent *e)
                 portrait->data1 = 0;
                 portrait->state = 0;
             }
-            timer_start(DEMO_TIMER_END_HOLD, 120);
+            timer_start(DEMO_TIMER_END_HOLD, 360);
             break;
 
         default:
@@ -1273,20 +1274,20 @@ static void NEOGEO_USER demo_build_engine_cast(void)
     }
 
     if (portrait) {
-        char_set_sprite(portrait, 160, 6, 6, DEMO_SCREEN_TILE(94), DEMO_SCREEN_PALETTE(94));
+        char_set_sprite(portrait, 160, 16, 16, DEMO_SCREEN_TILE(93), DEMO_SCREEN_PALETTE(93));
         portrait->sprite_stride = 16;
-        portrait->sprite_active_rows = 6;
-        portrait->scale_x = 0xC2;
-        portrait->scale_y = 0xC2;
+        portrait->sprite_active_rows = 16;
+        portrait->scale_x = 0xFF;
+        portrait->scale_y = 0xAF;
         portrait->visible = 0;
         demo_park_character(portrait);
     }
 
     if (npc_center && npc_char(npc_center)) {
         NGCharacter *c = npc_char(npc_center);
-        char_set_sprite(c, 256, 6, 6, DEMO_SCREEN_TILE(94), DEMO_SCREEN_PALETTE(94));
+        char_set_sprite(c, 256, 3, 3, DEMO_SCREEN_TILE(94), DEMO_SCREEN_PALETTE(94));
         c->sprite_stride = 16;
-        c->sprite_active_rows = 6;
+        c->sprite_active_rows = 3;
         c->scale_x = 0xC2;
         c->scale_y = 0xC2;
         demo_park_character(c);
@@ -1296,9 +1297,9 @@ static void NEOGEO_USER demo_build_engine_cast(void)
 
     if (npc_left && npc_char(npc_left)) {
         NGCharacter *c = npc_char(npc_left);
-        char_set_sprite(c, 272, 6, 6, DEMO_SCREEN_TILE(98), DEMO_SCREEN_PALETTE(98));
+        char_set_sprite(c, 272, 3, 3, DEMO_SCREEN_TILE(98), DEMO_SCREEN_PALETTE(98));
         c->sprite_stride = 16;
-        c->sprite_active_rows = 6;
+        c->sprite_active_rows = 3;
         c->scale_x = 0xBA;
         c->scale_y = 0xBA;
         demo_park_character(c);
@@ -1310,9 +1311,9 @@ static void NEOGEO_USER demo_build_engine_cast(void)
 
     if (npc_right && npc_char(npc_right)) {
         NGCharacter *c = npc_char(npc_right);
-        char_set_sprite(c, 288, 6, 6, DEMO_SCREEN_TILE(98), DEMO_SCREEN_PALETTE(98));
+        char_set_sprite(c, 288, 3, 3, DEMO_SCREEN_TILE(98), DEMO_SCREEN_PALETTE(98));
         c->sprite_stride = 16;
-        c->sprite_active_rows = 6;
+        c->sprite_active_rows = 3;
         c->scale_x = 0xBA;
         c->scale_y = 0xBA;
         demo_park_character(c);
@@ -1331,29 +1332,29 @@ static void NEOGEO_USER demo_build_engine_cast(void)
     chars_set_game_interupt(DEMO_KIND_CAST_RIGHT, demo_cast_tick);
     chars_set_game_interupt(DEMO_KIND_PORTRAIT, demo_portrait_tick);
 }
-
+/*
 static void NEOGEO_USER demo_load_engine_fix_palettes(void)
 {
     uint16_t fix_pal[16];
 
-    setpal(fix_pal, 0, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, 0, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
     load_palettes(fix_pal, PALETTES);
 
-    setpal(fix_pal, 0, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, 0, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
     load_palettes(fix_pal, PALETTES + PALOFFSET);
 
-    setpal(fix_pal, 0, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN,
-           CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN);
+    setpal(fix_pal, 0, WHITE, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2);
-}
+}*/
 
 static void NEOGEO_USER demo_init_engine_scene(void)
 {
     clearFix();
     clearSprs();
-    demo_load_engine_fix_palettes();
+    /*demo_load_engine_fix_palettes();*/
     soundSceneReset();
     soundSetADPCMAVolume(0x34);
     soundSetADPCMBVolume(0xBC);
@@ -1371,8 +1372,8 @@ static void NEOGEO_USER demo_init_engine_scene(void)
     prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_MODE, 0);
     prop_set(NG_PROP_GROUP_BOSS, NG_PROP_BOSS_PHASE, 0);
     level_set_background(0);
+    level_set_backdrop(BLACK);
     level_set_world_bounds(0, 0, 319, 223);
-    level_set_backdrop(WHITE);
     level_set_fix_palette(0);
     progress_start(DEMO_PROGRESS_PHASE, 4);
     progress_set(DEMO_PROGRESS_PHASE, 0);
@@ -1491,19 +1492,8 @@ void NEOGEO_USER maingame(void) {
 
 /* Exercise the exposed YM2610 layers one by one before the visual demo. */
 void NEOGEO_USER soundAutoDemo(void) {
-    uint16_t fix_pal[16];
     clearFix();
     clearSprs();
-    setpal(fix_pal, 0, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
-    load_palettes(fix_pal, PALETTES);
-    setpal(fix_pal, 0, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN,
-           CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN);
-    load_palettes(fix_pal, PALETTES + PALOFFSET);
-    setpal(fix_pal, 0, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN,
-           CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN);
-    load_palettes(fix_pal, PALETTES + PALOFFSET * 2);
-    setBACKDROP(WHITE);
     fixtext_out(10, 2, "ARCADE SOUND TOUR", 0);
     fixtext_out(10, 4, "Coin chime", 1);
     soundStopAll();
@@ -1610,14 +1600,9 @@ int NEOGEO_USER playgame(void) {
 }
 
 void NEOGEO_USER showGameOver(void) {
-    uint16_t fix_pal[16];
     soundStopAll();
     clearFix();
     clearSprs();
-    setpal(fix_pal, 0, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
-    load_palettes(fix_pal, PALETTES);
-    setBACKDROP(WHITE);
     soundPlayGameLoop(SOUND_MUSIC_SAMURAI_ENDING_SCENE);
     fixtext_out(15, 10, "GAME OVER", 0);
     cyclexs(4);
@@ -1639,17 +1624,16 @@ void NEOGEO_USER showEagleIntro(void) {
     soundSetADPCMBVolume(0xB8);
     soundSetSSGVolume(0x08);
 
-    /* FIX palettes for typewriter and shimmer text: black glyphs on white backdrop. */
-    setBACKDROP(WHITE);
-    setpal(fix_pal, 0, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    /* FIX palettes for typewriter and shimmer text. */
+    /*setpal(fix_pal, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
     load_palettes(fix_pal, PALETTES);
-    setpal(fix_pal, 0, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN,
-           CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN);
+    setpal(fix_pal, BLACK, CYAN, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
     load_palettes(fix_pal, PALETTES + PALOFFSET);
-    setpal(fix_pal, 0, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN,
-           CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN);
-    load_palettes(fix_pal, PALETTES + PALOFFSET * 2);
+    setpal(fix_pal, BLACK, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    load_palettes(fix_pal, PALETTES + PALOFFSET * 2);*/
 
     /* Eagle Fanfare boot melody fires immediately */
    
@@ -1674,15 +1658,19 @@ void NEOGEO_USER showEagleIntro(void) {
         cyclexms(60);
     }
 
-    for (i = 0; i < 18; i++) {
-        short pal = (short)((i & 1) ? 2 : 1);
-        fixtext_out(17, 13, "EAGLE", pal);
-        fixtext_out(16, 15, "SOFTWARE", (short)((i & 1) ? 1 : 2));
-        if ((i & 3) == 0) {
-            playSFX(SOUND_SFX_STRING_PHRASE);
-        }
-        cyclexms(35);
+for (i = 0; i < 18; i++) {
+    short eaglePal    = (short)((i & 1) ? PAL_RED  : PAL_BLUE);
+    short softwarePal = (short)((i & 1) ? PAL_BLUE : PAL_RED);
+
+    fixtext_out(17, 13, "EAGLE", eaglePal);
+    fixtext_out(16, 15, "SOFTWARE", softwarePal);
+
+    if ((i & 3) == 0) {
+        playSFX(SOUND_SFX_STRING_PHRASE);
     }
+
+    cyclexms(35);
+}
 
     /* Eagle Soft logo — title gong + logo screen */
     clearFix();
@@ -2784,7 +2772,7 @@ uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
 uint16_t  SCB4    = 0x0;
 uint16_t  pal9[16];
-setpal(pal9,0x0,0x406b,0x7fff,0x3049,0x16be,0x4600,0x3ccd,0x17,0x6813,0x628d,0x1001,0x38,0x337b,0x2005,0x159c,0x4dff);
+setpal(pal9,0x0,0x1015,0x7fff,0x48ce,0x5b,0x1e88,0x4d00,0x1000,0x168a,0x1003,0x34ae,0x108e,0x1cee,0x1038,0x2c24,0x447);
 uint16_t spriteMapS9_1[16] = {0x800,0x810,0x820,0x830,0x840,0x850,0x860,0x870,0x880,0x890,0x8a0,0x8b0,0x8c0,0x8d0,0x8e0,0x8f0};
 uint16_t spriteMapS9_2[16] = {0x801,0x811,0x821,0x831,0x841,0x851,0x861,0x871,0x881,0x891,0x8a1,0x8b1,0x8c1,0x8d1,0x8e1,0x8f1};
 uint16_t spriteMapS9_3[16] = {0x802,0x812,0x822,0x832,0x842,0x852,0x862,0x872,0x882,0x892,0x8a2,0x8b2,0x8c2,0x8d2,0x8e2,0x8f2};
@@ -2908,7 +2896,7 @@ uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
 uint16_t  SCB4    = 0x0;
 uint16_t  pal10[16];
-setpal(pal10,0x0,0x2801,0x4e10,0x3a40,0x1ffe,0x3119,0x436d,0x6ec8,0x1f60,0x6104,0x48ad,0x6fa1,0x1854,0x7300,0x1000,0x7520);
+setpal(pal10,0x0,0x1000,0x3fe7,0x7f10,0x7820,0x111d,0x4c18,0x4526,0x3104,0x1f80,0xeff,0x79ac,0x7b10,0x7400,0x347e,0x5fe0);
 uint16_t spriteMapS10_1[16] = {0x900,0x910,0x920,0x930,0x940,0x950,0x960,0x970,0x980,0x990,0x9a0,0x9b0,0x9c0,0x9d0,0x9e0,0x9f0};
 uint16_t spriteMapS10_2[16] = {0x901,0x911,0x921,0x931,0x941,0x951,0x961,0x971,0x981,0x991,0x9a1,0x9b1,0x9c1,0x9d1,0x9e1,0x9f1};
 uint16_t spriteMapS10_3[16] = {0x902,0x912,0x922,0x932,0x942,0x952,0x962,0x972,0x982,0x992,0x9a2,0x9b2,0x9c2,0x9d2,0x9e2,0x9f2};

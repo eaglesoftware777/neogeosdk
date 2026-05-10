@@ -652,85 +652,85 @@ note=sprite page padded with transparency for chained Neo Geo strips
 [094] z_npc_84.png
 mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
 category=npc
-source=48x48 canvas=256x256 content=48x48 offset=(104,208)
-screen_id=94 palette_bank=109 tile_base=23808 reserved_last=24063 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=94 palette_bank=109 tile_base=23808 reserved_last=24063 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=late-scene npc sprite page padded with transparency
 
 [095] z_npc_85.png
 mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
 category=npc
-source=48x48 canvas=256x256 content=48x48 offset=(104,208)
-screen_id=95 palette_bank=110 tile_base=24064 reserved_last=24319 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=95 palette_bank=110 tile_base=24064 reserved_last=24319 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=late-scene npc sprite page padded with transparency
 
 [096] z_npc_86.png
 mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
 category=npc
-source=48x48 canvas=256x256 content=48x48 offset=(104,208)
-screen_id=96 palette_bank=111 tile_base=24320 reserved_last=24575 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=96 palette_bank=111 tile_base=24320 reserved_last=24575 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=late-scene npc sprite page padded with transparency
 
 [097] z_npc_87.png
 mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
 category=npc
-source=48x48 canvas=256x256 content=48x48 offset=(104,208)
-screen_id=97 palette_bank=112 tile_base=24576 reserved_last=24831 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=97 palette_bank=112 tile_base=24576 reserved_last=24831 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=late-scene npc sprite page padded with transparency
 
 [098] z_npc_88.png
 mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
 category=npc
-source=48x48 canvas=256x256 content=48x48 offset=(104,208)
-screen_id=98 palette_bank=113 tile_base=24832 reserved_last=25087 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=98 palette_bank=113 tile_base=24832 reserved_last=25087 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=late-scene npc sprite page padded with transparency
 
 [099] z_npc_89.png
 mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
 category=npc
-source=48x48 canvas=256x256 content=48x48 offset=(104,208)
-screen_id=99 palette_bank=114 tile_base=25088 reserved_last=25343 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=99 palette_bank=114 tile_base=25088 reserved_last=25343 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=late-scene npc sprite page padded with transparency
 
 [100] z_npc_90.png
 mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
 category=npc
-source=48x48 canvas=256x256 content=48x48 offset=(104,208)
-screen_id=100 palette_bank=115 tile_base=25344 reserved_last=25599 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=100 palette_bank=115 tile_base=25344 reserved_last=25599 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=late-scene npc sprite page padded with transparency
 
 [101] z_npc_91.png
 mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
 category=npc
-source=48x48 canvas=256x256 content=48x48 offset=(104,208)
-screen_id=101 palette_bank=116 tile_base=25600 reserved_last=25855 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=101 palette_bank=116 tile_base=25600 reserved_last=25855 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=late-scene npc sprite page padded with transparency
 
 [102] z_npc_92.png
 mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
 category=npc
-source=48x48 canvas=256x256 content=48x48 offset=(104,208)
-screen_id=102 palette_bank=117 tile_base=25856 reserved_last=26111 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=102 palette_bank=117 tile_base=25856 reserved_last=26111 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=late-scene npc sprite page padded with transparency
 
 [103] z_npc_93.png
 mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
 category=npc
-source=48x48 canvas=256x256 content=48x48 offset=(104,208)
-screen_id=103 palette_bank=118 tile_base=26112 reserved_last=26367 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=103 palette_bank=118 tile_base=26112 reserved_last=26367 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=late-scene npc sprite page padded with transparency
 
 [104] z_npc_94.png
 mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
 category=npc
-source=48x48 canvas=256x256 content=48x48 offset=(104,208)
-screen_id=104 palette_bank=119 tile_base=26368 reserved_last=26623 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=104 palette_bank=119 tile_base=26368 reserved_last=26623 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=late-scene npc sprite page padded with transparency
 
 [105] z_npc_95.png
 mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
 category=npc
-source=48x48 canvas=256x256 content=48x48 offset=(104,208)
-screen_id=105 palette_bank=120 tile_base=26624 reserved_last=26879 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=105 palette_bank=120 tile_base=26624 reserved_last=26879 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=late-scene npc sprite page padded with transparency
 
 [106] zz_npc_forest_alley.png
