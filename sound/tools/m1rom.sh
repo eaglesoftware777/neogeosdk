@@ -64,7 +64,6 @@ fi
 
 mkdir -p "$ROM_DIR"
 cp "$M1ROM" "$ROM_DIR/777-m1.m1"
-cp "$M1ROM" "$ROM_DIR/sm1.sm1"
 rm -f "$OBJ" "$OBJ_C" "$ASM_C" "$ASM_COMBINED" "$LINKFILE"
 
 echo "Built $M1ROM"

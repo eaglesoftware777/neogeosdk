@@ -108,7 +108,6 @@ if exist "%SCAT%" (
 
 if not exist "%ROM_DIR%" mkdir "%ROM_DIR%"
 copy /y "%M1ROM%" "%ROM_DIR%\777-m1.m1"
-copy /y "%M1ROM%" "%ROM_DIR%\sm1.sm1"
 
 if exist "%OBJ%" del "%OBJ%"
 if exist "%OBJ_C%" del "%OBJ_C%"
