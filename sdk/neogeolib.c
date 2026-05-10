@@ -87,16 +87,17 @@ uint32_t NEOGEO_USER __udivsi3(uint32_t a, uint32_t b)
 
     if (b == 0) return 0;
 
+    /* Optimize for 16-bit divisors */
     if (b <= 0xFFFF && a < 0x80000000UL && (a >> 16) < b) {
         asm volatile (
-            "move.l %[a], %%d0\n\t"
-            "move.w %[b], %%d1\n\t"
-            "divu %%d1,%%d0\n\t"
-            "and.l #0xFFFF, %%d0\n\t"
-            "move.l %%d0, %[res]"
-            : [res] "=r" (res)
-            : [a] "r" (a), [b] "r" (b)
-            : "d0", "d1", "cc"
+        "move.l %[a], %%d0\n\t"
+        "move.w %[b], %%d1\n\t"
+        "divu %%d1,%%d0\n\t"
+        "andi.l #0xFFFF,%%d0\n\t"
+        "move.l %%d0, %[res]"
+        : [res] "=r" (res)
+        : [a] "r" (a), [b] "r" (b)
+        : "d0", "d1", "cc"
         );
         return res;
     }
@@ -119,17 +120,18 @@ uint32_t NEOGEO_USER __umodsi3(uint32_t a, uint32_t b)
 
     if (b == 0) return 0;
 
+    /* Optimize for 16-bit divisors */
     if (b <= 0xFFFF && a < 0x80000000UL && (a >> 16) < b) {
         asm volatile (
-            "move.l %[a], %%d0\n\t"
-            "move.w %[b], %%d1\n\t"
-            "divu %%d1,%%d0\n\t"
-            "swap %%d0\n\t"
-            "and.l #0xFFFF, %%d0\n\t"
-            "move.l %%d0, %[rem]"
-            : [rem] "=r" (rem)
-            : [a] "r" (a), [b] "r" (b)
-            : "d0", "d1", "cc"
+        "move.l %[a], %%d0\n\t"
+        "move.w %[b], %%d1\n\t"
+        "divu %%d1,%%d0\n\t"
+        "swap %%d0\n\t"
+        "andi.l #0xFFFF,%%d0\n\t"
+        "move.l %%d0, %[rem]"
+        : [rem] "=r" (rem)
+        : [a] "r" (a), [b] "r" (b)
+        : "d0", "d1", "cc"
         );
         return rem;
     }
@@ -145,28 +147,23 @@ uint32_t NEOGEO_USER __umodsi3(uint32_t a, uint32_t b)
 }
 
 uint16_t NEOGEO_USER setSCB2(uint16_t Xshrink , uint16_t Yshrink) {
-	uint16_t SCB2 = (Xshrink << 8) | Yshrink;
-	return SCB2;
+	return (uint16_t)((Xshrink << 8) | Yshrink);
 }
 
 uint16_t NEOGEO_USER setSCB3(uint16_t Ypos , uint16_t sticky_flag , uint16_t height_factor) {
-	uint16_t SCB3 = (Ypos << 7)  |  (sticky_flag << 6) | height_factor;
-	return SCB3;
+	return (uint16_t)((Ypos << 7)  |  (sticky_flag << 6) | height_factor);
 }
 
 uint16_t NEOGEO_USER setFIXDATA(uint16_t palette_index, uint16_t tilenumber) {
-	uint16_t FIXDATA = (palette_index << 11) |  tilenumber;
-	return FIXDATA;
+	return (uint16_t)((palette_index << 11) |  tilenumber);
 }
 
 uint16_t NEOGEO_USER setSCB4(uint16_t Xpos) {
-	uint16_t SCB4 = (Xpos << 7) ;
-	return SCB4;
+	return (uint16_t)(Xpos << 7) ;
 }
 
 uint16_t NEOGEO_USER setSCB1_2(uint16_t pal_offset , uint16_t tile_offset , uint16_t bit3_autoanim , uint16_t bit2_autoanim , uint16_t vflip , uint16_t hflip ) {
-	uint16_t Pal = (pal_offset << 8) | (tile_offset << 4) | (bit3_autoanim << 3) | (bit2_autoanim << 2) | (vflip << 1) | hflip ;
-	return Pal;
+	return (uint16_t)((pal_offset << 8) | (tile_offset << 4) | (bit3_autoanim << 3) | (bit2_autoanim << 2) | (vflip << 1) | hflip) ;
 }
 
 void NEOGEO_USER setBACKDROP(uint16_t backdrop_color) {
@@ -175,8 +172,7 @@ void NEOGEO_USER setBACKDROP(uint16_t backdrop_color) {
 
 void NEOGEO_USER load_palettes(uint16_t *p_palette, uintptr_t palette_offset) {
 	uint16_t *dst = (uint16_t *)palette_offset;
-	uint16_t i = 0;
-	for (i = 0; i < 16; i++) {
+	for (int i = 0; i < 16; i++) {
 		dst[i] = p_palette[i];
 	}
 }
@@ -187,31 +183,16 @@ void NEOGEO_USER vram_init(uint16_t start,uint16_t vram_inc) {
 }
 
 void NEOGEO_USER setpal(uint16_t *pal_tile,uint16_t t0, uint16_t t1, uint16_t t2, uint16_t t3, uint16_t t4, uint16_t t5,uint16_t t6,uint16_t t7,uint16_t t8,uint16_t t9,uint16_t t10,uint16_t t11,uint16_t t12,uint16_t t13,uint16_t t14,uint16_t t15) {
-	pal_tile[0] = t0;
-	pal_tile[1] = t1;
-	pal_tile[2] = t2;
-	pal_tile[3] = t3;
-	pal_tile[4] = t4;
-	pal_tile[5] = t5;
-	pal_tile[6] = t6;
-	pal_tile[7] = t7;
-	pal_tile[8] = t8;
-	pal_tile[9] = t9;
-	pal_tile[10] = t10;
-	pal_tile[11] = t11;
-	pal_tile[12] = t12;
-	pal_tile[13] = t13;
-	pal_tile[14] = t14;
-	pal_tile[15] = t15;
+	pal_tile[0] = t0; pal_tile[1] = t1; pal_tile[2] = t2; pal_tile[3] = t3;
+	pal_tile[4] = t4; pal_tile[5] = t5; pal_tile[6] = t6; pal_tile[7] = t7;
+	pal_tile[8] = t8; pal_tile[9] = t9; pal_tile[10] = t10; pal_tile[11] = t11;
+	pal_tile[12] = t12; pal_tile[13] = t13; pal_tile[14] = t14; pal_tile[15] = t15;
 }
 
 void NEOGEO_USER vram_SCB1(uint16_t *SCB1_1 , uint16_t *SCB1_2 ,uint8_t tiles_number) {
-	uint16_t i = 0;
-	for (i = 0 ; i <  tiles_number  ; i++) {
-		uint16_t SCB11 = *(SCB1_1+i);
-		uint16_t SCB12 = *(SCB1_2+i);
-		NEO_REGISTER(VRAM_RW) = SCB11;
-		NEO_REGISTER(VRAM_RW) = SCB12;
+	for (int i = 0 ; i <  tiles_number  ; i++) {
+		NEO_REGISTER(VRAM_RW) = SCB1_1[i];
+		NEO_REGISTER(VRAM_RW) = SCB1_2[i];
 	}
 }
 
@@ -231,24 +212,19 @@ void NEOGEO_USER vram_SCB234(uint16_t SCBADDR,uint16_t SCB234) {
 }
 
 void NEOGEO_USER vram_sprite (uint16_t vram_start,uint16_t vram_inc,uint16_t vram_offset,uint16_t *SCB1_1 , uint16_t *SCB1_2 ,uint16_t tiles_number , uint16_t SCB2 , uint16_t SCB3 , uint16_t SCB4) {
-	uint16_t SCB2ADDR = SCB2_ADDR+vram_offset;
-	uint16_t SCB3ADDR = SCB3_ADDR+vram_offset;
-	uint16_t SCB4ADDR = SCB4_ADDR+vram_offset;
 	vram_init(vram_start,vram_inc);
 	vram_SCB1(SCB1_1,SCB1_2 ,tiles_number);
-	vram_SCB234(SCB2ADDR,SCB2);
-	vram_SCB234(SCB3ADDR,SCB3);
-	vram_SCB234(SCB4ADDR,SCB4);
+	vram_SCB234(SCB2_ADDR+vram_offset,SCB2);
+	vram_SCB234(SCB3_ADDR+vram_offset,SCB3);
+	vram_SCB234(SCB4_ADDR+vram_offset,SCB4);
 }
 
 void NEOGEO_USER vram_sprite_mvx(uint16_t vram_offset, uint16_t SCB4) {
-	uint16_t SCB4ADDR = SCB4_ADDR+vram_offset;
-	vram_SCB234(SCB4ADDR,SCB4);
+	vram_SCB234(SCB4_ADDR+vram_offset,SCB4);
 }
 
 void NEOGEO_USER vram_sprite_mvy(uint16_t vram_offset, uint16_t SCB3) {
-	uint16_t SCB3ADDR = SCB3_ADDR+vram_offset;
-	vram_SCB234(SCB3ADDR,SCB3);
+	vram_SCB234(SCB3_ADDR+vram_offset,SCB3);
 }
 
 int NEOGEO_USER strlen(const char *s) {
@@ -258,37 +234,22 @@ int NEOGEO_USER strlen(const char *s) {
 }
 
 void NEOGEO_USER fixtext_out(uint16_t x, uint16_t y,char *mess, short pal) {
-	long textsz = strlen(mess);
-	uint16_t addrfix =  FIXMAP+y+x*32;
-	NEO_REGISTER(VRAM_ADDR)=addrfix;
+	int len = strlen(mess);
+	NEO_REGISTER(VRAM_ADDR) = FIXMAP+y+x*32;
 	NEO_REGISTER(VRAM_INC) = 0x20;
-	long i =0;
-	for (i=0; i<textsz;i++) {
-		uint16_t fixdata = (pal << 12) | *(mess+i);
-		vram_sfix1(fixdata);
-	}
+	for (int i=0; i<len; i++) NEO_REGISTER(VRAM_RW) = (uint16_t)((pal << 12) | mess[i]);
 }
 
 void NEOGEO_USER fixtext_out1(uint16_t x, uint16_t y,uint16_t *mess,short pal,int objsz) {
-	uint16_t addrfix =  FIXMAP+y+x*32;
-	NEO_REGISTER(VRAM_ADDR)=addrfix;
+	NEO_REGISTER(VRAM_ADDR) = FIXMAP+y+x*32;
 	NEO_REGISTER(VRAM_INC) = 0x20;
-	int i =0;
-	for (i=0; i<objsz;i++) {
-		uint16_t fixdata = (pal << 12) | *(mess+i);
-		vram_sfix1(fixdata);
-	}
+	for (int i=0; i<objsz; i++) NEO_REGISTER(VRAM_RW) = (uint16_t)((pal << 12) | mess[i]);
 }
 
 void NEOGEO_USER fixtext_out2(uint16_t x, uint16_t y,uint16_t a, uint16_t b, uint16_t c,uint16_t mod,uint16_t *mess,short pal,int objsz) {
-	uint16_t addrfix =  FIXMAP+a*x+b*y+c;
-	NEO_REGISTER(VRAM_ADDR)=addrfix;
+	NEO_REGISTER(VRAM_ADDR) = FIXMAP+a*x+b*y+c;
 	NEO_REGISTER(VRAM_INC) = mod;
-	int i = 0;
-	for (i=0; i<objsz;i++) {
-		uint16_t fixdata = (pal << 12) | *(mess+i);
-		vram_sfix1(fixdata);
-	}
+	for (int i=0; i<objsz; i++) NEO_REGISTER(VRAM_RW) = (uint16_t)((pal << 12) | mess[i]);
 }
 
 void NEOGEO_USER mess_outtest(void) {
@@ -298,186 +259,166 @@ void NEOGEO_USER mess_outtest(void) {
 	*ptr++ =0x434F; *ptr++ =0x4D4D; *ptr++ =0x414E; *ptr++ =0x4420; *ptr++ =0x34FF;
 	*ptr++ =0x434F; *ptr++ =0x4D4D; *ptr++ =0x414E; *ptr++ =0x4420; *ptr++ =0x36FF;
 	*ptr++ =0x0;
-	uint16_t *ptrsub = (uint16_t *)(RAMSTART + 100);
-	*ptrsub++=COMMAND5; *ptrsub++=0x0001; *ptrsub++=COMMAND9T1; *ptrsub++=0x5C2F; *ptrsub++=0x3A2E; *ptrsub++=0xD7FF;
-	*ptrsub++=COMMAND5; *ptrsub++=0x0001; *ptrsub++=COMMANDB; *ptrsub++ =0x0;
-	*pmessp++=MESSPOINTZERO; *pmessp++=MESSPOINTZERO; *pmessp++=COMMAND1BF; *pmessp++=ZENDCODEFF;
-	*pmessp++=COMMAND2INC20; *pmessp++=COMMAND3; *pmessp++=0x7252; *pmessp++=COMMAND7;
-	*pmessp++=0x434F; *pmessp++=0x4D4D; *pmessp++=0x414E; *pmessp++=0x4420; *pmessp++=0x37FF;
-	*pmessp++=COMMANDC2; *pmessp++=0x0021; *pmessp++=COMMAND5; *pmessp++=0x0001;
-	*pmessp++=COMMAND4; *pmessp++=0x0010; *pmessp++=0x0000; *pmessp++=COMMANDC2;
-	*pmessp++=0x0021; *pmessp++=COMMAND5; *pmessp++=0x0001; *pmessp++=COMMAND6;
-	*pmessp++=COMMANDC2; *pmessp++=0x0021; *pmessp++=COMMAND5; *pmessp++=0x0001;
-	*pmessp++=COMMANDDA; *pmessp++=0x0030; *pmessp++=COMMAND5; *pmessp++=0x0001;
-	*pmessp++=COMMAND8T1; *pmessp++=0x4142; *pmessp++=0x4344; *pmessp++=0x4546; *pmessp++=0x47FF;
-	*pmessp++=COMMAND5; *pmessp++=0x0001; *pmessp++=COMMAND9T1; *pmessp++=0xD1D2;
-	*pmessp++=0xD3D4; *pmessp++=0xD5D6; *pmessp++=0xD7FF; *pmessp++=COMMANDA;
-	*pmessp++=0x0010; *pmessp++=0x0100; *pmessp++=COMMAND7; *pmessp++=0x454E; *pmessp++=0x44FF;
-	*pmessp++=COMMAND0;
 	NEO_REGISTER32(BIOS_MESS_POINT) = (uint32_t)pmessp;
 	setBIOSMESSReady();
 	CALLNEOGEOF(SYS_MESS_OUT);
 }
 
-void NEOGEO_USER setBIOSMESSBusy(void) {
-	asm volatile ("addq.b #1, 0x10FDC2");
-}
-
-void NEOGEO_USER setBIOSMESSReady(void) {
-	asm volatile ("subq.b #1, 0x10FDC2");
-}
+void NEOGEO_USER setBIOSMESSBusy(void) { NEO_REGISTER8(BIOS_MESS_BUSY) += 1; }
+void NEOGEO_USER setBIOSMESSReady(void) { NEO_REGISTER8(BIOS_MESS_BUSY) -= 1; }
 
 void NEOGEO_USER clearRAM() {
-	asm volatile (
-		"move.l #0x3CC-1, %%d7\n\t"
-		"movea.l #0x100000, %%a0\n\t"
-		"moveq #0, %%d0\n"
-		".clram:\n\t"
-		"move.l %%d0, (%%a0)+\n\t"
-		"move.l %%d0, (%%a0)+\n\t"
-		"move.l %%d0, (%%a0)+\n\t"
-		"move.l %%d0, (%%a0)+\n\t"
-		"move.l %%d0, (%%a0)+\n\t"
-		"move.l %%d0, (%%a0)+\n\t"
-		"move.l %%d0, (%%a0)+\n\t"
-		"move.l %%d0, (%%a0)+\n\t"
-		"dbra %%d7, .clram"
-		: : : "d0", "d7", "a0", "memory"
-	);
+	ASM_START
+	ASM_MVL(#0x3CC-1, %%d7)
+	ASM_LEA(RAMSTART, %%a0)
+	ASM_MVQ(#0, %%d0)
+	ASM_L(.clram)
+	ASM_MVL(%%d0, (%%a0)+)
+	ASM_MVL(%%d0, (%%a0)+)
+	ASM_MVL(%%d0, (%%a0)+)
+	ASM_MVL(%%d0, (%%a0)+)
+	ASM_MVL(%%d0, (%%a0)+)
+	ASM_MVL(%%d0, (%%a0)+)
+	ASM_MVL(%%d0, (%%a0)+)
+	ASM_MVL(%%d0, (%%a0)+)
+	ASM_DBRA(%%d7, .clram)
+	: : : "d0", "d7", "a0", "memory"
+	ASM_END
 }
 
 void NEOGEO_USER clearSprs() {
-	asm volatile (
-		"move.w #0x8200, 0x3C0000\n\t"
-		"clr.w %%d0\n\t"
-		"move.w #1, 0x3C0004\n\t"
-		"move.l #512-1, %%d7\n"
-		".clspr:\n\t"
-		"move.w %%d0, 0x3C0002\n\t"
-		"dbra %%d7, .clspr"
-		: : : "d0", "d7", "memory"
-	);
+	ASM_START
+	ASM_MVW(#SCB3_ADDR, VRAM_ADDR)
+	ASM_CLRW(%%d0)
+	ASM_MVW(#1, VRAM_INC)
+	ASM_MVL(#512-1, %%d7)
+	ASM_L(.clspr)
+	ASM_MVW(%%d0, VRAM_RW)
+	ASM_DBRA(%%d7, .clspr)
+	: : : "d0", "d7", "memory"
+	ASM_END
 }
 
 void NEOGEO_USER clearFix() {
-	asm volatile (
-		"jsr 0xC004C2\n\t"
-		"move.l #1280-1, %%d7\n\t"
-		"move.w #0x7000, 0x3C0000\n\t"
-		"move.w #0xFF, %%d0\n"
-		".clfix:\n\t"
-		"move.w %%d0, 0x3C0002\n\t"
-		"dbra %%d7, .clfix"
-		: : : "d0", "d7", "memory"
-	);
+	ASM_START
+	ASM_JSR(SYS_FIX_CLEAR)
+	ASM_MVL(#1280-1, %%d7)
+	ASM_MVW(#FIXMAP, VRAM_ADDR)
+	ASM_MVW(#0xFF, %%d0)
+	ASM_L(.clfix)
+	ASM_MVW(%%d0, VRAM_RW)
+	ASM_DBRA(%%d7, .clfix)
+	: : : "d0", "d7", "memory"
+	ASM_END
 }
 
 void NEOGEO_USER waitVbl() {
-	asm volatile (
-		".waitv:\n\t"
-		"tst.w 0x100000\n\t"
-		"jeq .waitv\n\t"
-		"clr.w 0x100000\n\t"
-		"addq.l #1, 0x100020"
-	);
+	ASM_START
+	ASM_L(.waitv)
+	ASM_TSTW(USER_WORKRAM)
+	ASM_JEQ(.waitv)
+	ASM_CLRW(USER_WORKRAM)
+	ASM_ADDQL(#1, USER_WORKRAM+32)
+	ASM_END
 }
 
 void NEOGEO_USER cycle10ms() {
-	asm volatile ("move.w #2400, %%d0\n.d10:\ndbf %%d0, .d10" : : : "d0");
+	ASM_START
+	ASM_MVW(#2400, %%d0)
+	ASM_L(.d10)
+	ASM_DBF(%%d0, .d10)
+	: : : "d0"
+	ASM_END
 }
 
 void NEOGEO_USER cycle1s() {
-	asm volatile (
-		"move.w #5000, %%d1\n"
-		".c1s:\n\t"
-		"move.w #240, %%d0\n"
-		".d1s:\n\t"
-		"dbf %%d0, .d1s\n\t"
-		"subq #1, %%d1\n\t"
-		"bne .c1s"
-		: : : "d0", "d1"
-	);
+	ASM_START
+	ASM_MVW(#5000, %%d1)
+	ASM_L(.c1s)
+	ASM_MVW(#240, %%d0)
+	ASM_L(.d1s)
+	ASM_DBF(%%d0, .d1s)
+	ASM_SUBQ(#1, %%d1)
+	ASM_BNE(.c1s)
+	: : : "d0", "d1"
+	ASM_END
 }
 
 void NEOGEO_USER cyclexms1(int cyc1) {
-	asm volatile (
-		"movem.l %%d0-%%d1, -(%%sp)\n\t"
-		"move.l %[cyc1], %%d1\n"
-		".cxms1:\n\t"
-		"move.w #240, %%d0\n"
-		".dxms1:\n\t"
-		"dbf %%d0, .dxms1\n\t"
-		"subq #1, %%d1\n\t"
-		"bne .cxms1\n\t"
-		"movem.l (%%sp)+, %%d0-%%d1"
-		: : [cyc1] "g" (cyc1) : "cc"
-	);
+	ASM_START
+	ASM_MVML(%%d0-%%d1, -(%%sp))
+	ASM_MVL(%[cyc1], %%d1)
+	ASM_L(.cxms1)
+	ASM_MVW(#240, %%d0)
+	ASM_L(.dxms1)
+	ASM_DBF(%%d0, .dxms1)
+	ASM_SUBQ(#1, %%d1)
+	ASM_BNE(.cxms1)
+	ASM_MVML((%%sp)+, %%d0-%%d1)
+	: : [cyc1] "g" (cyc1) : "cc"
+	ASM_END
 }
 
 void NEOGEO_USER cyclexs(int cyc1xs) {
-	asm volatile (
-		"movem.l %%d0-%%d2, -(%%sp)\n\t"
-		"move.w %[cyc1xs], %%d1\n"
-		".cxs:\n\t"
-		"move.w #5000, %%d2\n"
-		".cxs_sub:\n\t"
-		"move.w #240, %%d0\n"
-		".dxs:\n\t"
-		"dbf %%d0, .dxs\n\t"
-		"subq #1, %%d2\n\t"
-		"bne .cxs_sub\n\t"
-		"subq #1, %%d1\n\t"
-		"bne .cxs\n\t"
-		"movem.l (%%sp)+, %%d0-%%d2"
-		: : [cyc1xs] "g" (cyc1xs) : "cc"
-	);
+	ASM_START
+	ASM_MVML(%%d0-%%d2, -(%%sp))
+	ASM_MVW(%[cyc1xs], %%d1)
+	ASM_L(.cxs)
+	ASM_MVW(#5000, %%d2)
+	ASM_L(.cxs_sub)
+	ASM_MVW(#240, %%d0)
+	ASM_L(.dxs)
+	ASM_DBF(%%d0, .dxs)
+	ASM_SUBQ(#1, %%d2)
+	ASM_BNE(.cxs_sub)
+	ASM_SUBQ(#1, %%d1)
+	ASM_BNE(.cxs)
+	ASM_MVML((%%sp)+, %%d0-%%d2)
+	: : [cyc1xs] "g" (cyc1xs) : "cc"
+	ASM_END
 }
 
 void NEOGEO_USER cyclexms(int cycxms) {
-	asm volatile (
-		"movem.l %%d0-%%d2, -(%%sp)\n\t"
-		"move.w %[cycxms], %%d1\n"
-		".cxms:\n\t"
-		"move.w #50, %%d2\n"
-		".cxms_sub:\n\t"
-		"move.w #240, %%d0\n"
-		".dxms:\n\t"
-		"dbf %%d0, .dxms\n\t"
-		"subq #1, %%d2\n\t"
-		"bne .cxms_sub\n\t"
-		"subq #1, %%d1\n\t"
-		"bne .cxms\n\t"
-		"movem.l (%%sp)+, %%d0-%%d2"
-		: : [cycxms] "g" (cycxms) : "cc"
-	);
+	ASM_START
+	ASM_MVML(%%d0-%%d2, -(%%sp))
+	ASM_MVW(%[cycxms], %%d1)
+	ASM_L(.cxms)
+	ASM_MVW(#50, %%d2)
+	ASM_L(.cxms_sub)
+	ASM_MVW(#240, %%d0)
+	ASM_L(.dxms)
+	ASM_DBF(%%d0, .dxms)
+	ASM_SUBQ(#1, %%d2)
+	ASM_BNE(.cxms_sub)
+	ASM_SUBQ(#1, %%d1)
+	ASM_BNE(.cxms)
+	ASM_MVML((%%sp)+, %%d0-%%d2)
+	: : [cycxms] "g" (cycxms) : "cc"
+	ASM_END
 }
 
 uint16_t NEOGEO_USER poll_joystick() {
-	uint8_t d1 = *(volatile uint8_t *)0x10FD95;
-	uint8_t d2 = *(volatile uint8_t *)0x10FDAC;
+	uint8_t d1 = *(volatile uint8_t *)BIOS_P1PREVIOUS;
+	uint8_t d2 = *(volatile uint8_t *)BIOS_STATCURNT;
 	return (uint16_t)((d2 << 8) | d1);
 }
 
 void NEOGEO_USER fix_svalue1(uint16_t X, uint16_t Y,uint16_t v,short pal,uint16_t offset) {
-	uint16_t addrfix =  FIXMAP+(Y+2+((X+1)*32));
-	vram_sfix(0x20,addrfix,(uint16_t)((pal << 12) | (v + offset)));
+	vram_sfix(0x20, FIXMAP+(Y+2+((X+1)*32)), (uint16_t)((pal << 12) | (v + offset)));
 }
 
 void NEOGEO_USER fix_svalue(uint16_t X, uint16_t Y,uint16_t v,short pal) {
-	uint16_t addrfix =  FIXMAP+(Y+2+((X+1)*32));
-	vram_sfix(0x20,addrfix,(uint16_t)((pal << 12) | v));
+	vram_sfix(0x20, FIXMAP+(Y+2+((X+1)*32)), (uint16_t)((pal << 12) | v));
 }
 
-void NEOGEO_USER setsfix() {
-	asm volatile ("bset.b #0, 0x3A000B");
-}
+void NEOGEO_USER setsfix() { ASM_START ASM_BSETB(#0, REG_BRDFIX) ASM_END }
 
 void NEOGEO_USER display_digit(uint16_t X, uint16_t Y,uint32_t value,short pal,uint16_t offset) {
-	uint16_t s[10];
-	int objsz = 0;
-	uint32_t power = 1UL;
-    if (X < 2) X = 2; if (X > 37) X = 37;
-    if (Y < 1) Y = 1; if (Y > 26) Y = 26;
+	uint16_t s[10]; int objsz = 0; uint32_t power = 1UL;
+	if (X < 2) X = 2;
+	if (X > 37) X = 37;
+	if (Y < 1) Y = 1;
+	if (Y > 26) Y = 26;
 	if (value >= 1000000000UL) power = 1000000000UL;
 	else if (value >= 100000000UL) power = 100000000UL;
 	else if (value >= 10000000UL) power = 10000000UL;
@@ -505,26 +446,15 @@ void NEOGEO_USER display_digit(uint16_t X, uint16_t Y,uint32_t value,short pal,u
 	fixtext_out1(X,Y,s,pal,objsz);
 }
 
-int NEOGEO_USER read_p1credit(void) {
-	return *(volatile uint8_t *)0xD00034;
-}
+int NEOGEO_USER read_p1credit(void) { return *(volatile uint8_t *)P1_CREDITS; }
 
-void NEOGEO_USER playSoundtest(uint16_t index) {
-	isZ80Ready();
-	soundCommand((uint8_t)(index & 0xFF));
-}
-
-void NEOGEO_USER soundCommand(uint8_t command) {
-	isZ80Ready();
-	*(volatile uint8_t*)0x320000 = command;
-	isZ80Ready();
-}
-
-void NEOGEO_USER soundInit(void) { isZ80Ready(); soundCommand(0x01); }
-void NEOGEO_USER soundReset(void) { isZ80Ready(); soundCommand(0x03); }
-void NEOGEO_USER soundStopAll(void) { isZ80Ready(); soundCommand(0x04); }
-void NEOGEO_USER soundStopMusic(void) { isZ80Ready(); soundCommand(0x0F); }
-void NEOGEO_USER soundCancelFade(void) { isZ80Ready(); soundCommand(0x11); }
+void NEOGEO_USER playSoundtest(uint16_t index) { isZ80Ready(); soundCommand((uint8_t)(index & 0xFF)); }
+void NEOGEO_USER soundCommand(uint8_t command) { isZ80Ready(); NEO_REGISTER8(REG_SOUND) = command; isZ80Ready(); }
+void NEOGEO_USER soundInit(void) { soundCommand(0x01); }
+void NEOGEO_USER soundReset(void) { soundCommand(0x03); }
+void NEOGEO_USER soundStopAll(void) { soundCommand(0x04); }
+void NEOGEO_USER soundStopMusic(void) { soundCommand(0x0F); }
+void NEOGEO_USER soundCancelFade(void) { soundCommand(0x11); }
 void NEOGEO_USER soundSceneReset(void) { isZ80Ready(); soundStopAll(); cyclexms(4); isZ80Ready(); soundReset(); cyclexms(4); }
 void NEOGEO_USER playMusic(uint8_t n) { isZ80Ready(); soundCommand(0x20 + n); }
 void NEOGEO_USER playSFX(uint8_t n) { isZ80Ready(); soundCommand(0x40 + n); }
@@ -586,51 +516,53 @@ void NEOGEO_USER soundPlayGameLoop(uint8_t music_track) {
 }
 
 void NEOGEO_USER  isZ80Ready() {
-	asm volatile (".isr:\n\tmove.b #0,0x300001\n\tmove.b 0x320000,%%d0\n\tcmp.b #0x01,%%d0\n\tbne .isr" : : : "d0");
+	ASM_START
+	ASM_L(.isready)
+	ASM_MVB(#0,0x300001)
+	ASM_MVB(0x320000,%%d0)
+	ASM_CMPB(#0x01,%%d0)
+	ASM_BNE(.isready)
+	: : : "d0"
+	ASM_END
 }
 
-void NEOGEO_USER kickWatchDog(void) {
-	asm volatile ("move.b %%d0, 0x300001" : : : "memory");
-}
-
-void NEOGEO_USER sleep1FFF(void) {
-	asm volatile ("move.w #0x1FFF,%%d0\n.slp:\nnop\ndbra %%d0,.slp" : : : "d0");
-}
+void NEOGEO_USER kickWatchDog(void) { ASM_START ASM_MVB(%%d0, REG_DIPSW) : : : "d0" ASM_END }
+void NEOGEO_USER sleep1FFF(void) { ASM_START ASM_MVW(#0x1FFF,%%d0) ASM_L(.slp) ASM_NOP ASM_DBRA(%%d0,.slp) : : : "d0" ASM_END }
 
 void NEOGEO_USER displayCreditP1(void) {
-	asm volatile (
-		"moveq #0,%%d0\n\t"
-		"move.b 0xD00034,%%d0\n\t"
-		"move.w #0x7088,0x3C0000\n\t"
-		"move.w %%d0,%%d1\n\t"
-		"move.w #0x20,0x3C0004\n\t"
-		"lsr.b #4,%%d1\n\t"
-		"andi.w #0x000F,%%d1\n\t"
-		"ori.w #0x0030,%%d1\n\t"
-		"move.w %%d1,0x3C0002\n\t"
-		"andi.w #0x000F,%%d0\n\t"
-		"ori.w #0x0030,%%d1\n\t"
-		"move.w %%d1,0x3C0002"
-		: : : "d0", "d1", "memory"
-	);
+	ASM_START
+	ASM_MVQ(#0,%%d0)
+	ASM_MVB(P1_CREDITS,%%d0)
+	ASM_MVW(#0x7088,VRAM_ADDR)
+	ASM_MVW(%%d0,%%d1)
+	ASM_MVW(#0x20,VRAM_INC)
+	ASM_LSRB(#4,%%d1)
+	ASM_ANDIW(#0x000F,%%d1)
+	ASM_ORIW(#0x0030,%%d1)
+	ASM_MVW(%%d1,VRAM_RW)
+	ASM_ANDIW(#0x000F,%%d0)
+	ASM_ORIW(#0x0030,%%d1)
+	ASM_MVW(%%d1,VRAM_RW)
+	: : : "d0", "d1", "memory"
+	ASM_END
 }
 
 void NEOGEO_USER displayCreditP2(void) {
-	asm volatile (
-		"moveq #0,%%d0\n\t"
-		"move.b 0xD00035,%%d0\n\t"
-		"move.w #0x7088,0x3C0000\n\t"
-		"move.w %%d0,%%d1\n\t"
-		"move.w #0x20,0x3C0004\n\t"
-		"lsr.b #4,%%d1\n\t"
-		"andi.w #0x000F,%%d1\n\t"
-		"ori.w #0x0030,%%d1\n\t"
-		"move.w %%d1,0x3C0002\n\t"
-		"andi.w #0x000F,%%d0\n\t"
-		"ori.w #0x0030,%%d1\n\t"
-		"move.w %%d1,0x3C0002"
-		: : : "d0", "d1", "memory"
-	);
+	ASM_START
+	ASM_MVQ(#0,%%d0)
+	ASM_MVB(P2_CREDITS,%%d0)
+	ASM_MVW(#0x7088,VRAM_ADDR)
+	ASM_MVW(%%d0,%%d1)
+	ASM_MVW(#0x20,VRAM_INC)
+	ASM_LSRB(#4,%%d1)
+	ASM_ANDIW(#0x000F,%%d1)
+	ASM_ORIW(#0x0030,%%d1)
+	ASM_MVW(%%d1,VRAM_RW)
+	ASM_ANDIW(#0x000F,%%d0)
+	ASM_ORIW(#0x0030,%%d1)
+	ASM_MVW(%%d1,VRAM_RW)
+	: : : "d0", "d1", "memory"
+	ASM_END
 }
 
 void *memcpy(void *dest, const void *src, int count) {
