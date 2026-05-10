@@ -651,6 +651,7 @@ static void NEOGEO_USER demo_start_duel_phase(void)
 
     soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
     playVoiceCue(SOUND_VOICE_ATTACK);
+    level_set_backdrop(BLACK);
     clearSprs();
 
     warrior->visible = 1;
@@ -862,7 +863,7 @@ static void NEOGEO_USER demo_before_draw(void)
     demo_sync_action_sprite(mascot);
     demo_sync_action_sprite(fx);
 
-    if (phase_step == 0) {
+    if (phase_step == 0 || phase_step == 1) {
         demo_draw_walk_scene();
     } else if (phase_step >= 2) {
         demo_load_palette_group(
@@ -1153,7 +1154,7 @@ static void NEOGEO_USER demo_portrait_tick(NGCharacter *c)
     if (!c) return;
     if (progress_value(DEMO_PROGRESS_PHASE) != 3) return;
 
-    center_x = (int16_t)c->data0;
+    center_x = (int16_t)c->data2;
     if (center_x == 0) {
         center_x = 32;
     }
@@ -1161,7 +1162,7 @@ static void NEOGEO_USER demo_portrait_tick(NGCharacter *c)
     if (center_x > 340) {
         center_x = -24;
     }
-    c->data0 = (uint16_t)center_x;
+    c->data2 = (uint16_t)center_x;
 
     step = demo_wrap_index((uint16_t)(game_time_frame() >> 2), (uint16_t)NG_ARRAY_SIZE(g_demo_npc_walk_frames));
     demo_place_sprite_frame_ex(
@@ -1343,7 +1344,7 @@ static void NEOGEO_USER demo_load_engine_fix_palettes(void)
            WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
     load_palettes(fix_pal, PALETTES + PALOFFSET);
 
-    setpal(fix_pal, 0, WHITE, MIDBLUE, MIDBLUE, MIDBLUE, MIDBLUE, MIDBLUE, MIDBLUE,
+    setpal(fix_pal, 0, WHITE, CYAN, CYAN, CYAN, CYAN, CYAN, CYAN,
            WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2);
 }
