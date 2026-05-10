@@ -77,7 +77,7 @@ Four tabs: C-ROM tile grid viewer, sprite designer with C-snippet export, hitbox
 python3 sound/sound_studio.py
 ```
 
-Five tabs: FM patch editor (4-operator, all parameters), MML composer with piano roll and one-click compile, SSG preset editor, ADPCM sample manager with waveform preview, and a YM2610 simulator for mixed FM+SSG channel playback.  See [`docs/YM2610_GUIDE.md`](./docs/YM2610_GUIDE.md).
+Five tabs: FM patch editor (4-operator, all parameters), MML composer with piano roll and one-click compile, SSG preset editor, ADPCM sample manager with waveform preview, and a YM2610 simulator for mixed FM+SSG channel playback.  See [`docs/SOUND_STUDIO_GUIDE.md`](./docs/SOUND_STUDIO_GUIDE.md).
 
 **Requirements:** Python 3, PyQt6, numpy, scipy.
 
@@ -114,7 +114,7 @@ Primary repository docs:
 - [`docs/DEPENDENCIES.md`](./docs/DEPENDENCIES.md)
 - [`docs/GDB_GUIDE.md`](./docs/GDB_GUIDE.md)
 - [`docs/BANKSWITCH.md`](./docs/BANKSWITCH.md)
-- [`docs/YM2610_GUIDE.md`](./docs/YM2610_GUIDE.md)
+- [`docs/SOUND_STUDIO_GUIDE.md`](./docs/SOUND_STUDIO_GUIDE.md)
 - [`sound/SOUND_DRIVER_GUIDE.txt`](./sound/SOUND_DRIVER_GUIDE.txt)
 - [`sound/driver/readme`](./sound/driver/readme)
 - [`sound/mml/readme`](./sound/mml/readme)
