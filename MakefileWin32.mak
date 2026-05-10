@@ -34,7 +34,7 @@ SCAT=$(REPO_WIN)\win\srec_cat.exe
 INFO=$(REPO_WIN)\win\xxd.exe -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
-NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_border_constraints0.o out\ng_game_interupt0.o
+NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o
 
 .DEFAULT_GOAL := p1
 
@@ -56,9 +56,13 @@ game:
 	$(CC) $(CFLAGS) sdk\ng_progress.c -o out\ng_progress0.o
 	$(CC) $(CFLAGS) sdk\ng_status.c -o out\ng_status0.o
 	$(CC) $(CFLAGS) sdk\ng_game_events.c -o out\ng_game_events0.o
+	$(CC) $(CFLAGS) sdk\ng_level.c -o out\ng_level0.o
+	$(CC) $(CFLAGS) sdk\ng_fix.c -o out\ng_fix0.o
 	$(CC) $(CFLAGS) sdk\ng_sprite_group.c -o out\ng_sprite_group0.o
 	$(CC) $(CFLAGS) sdk\ng_actions.c -o out\ng_actions0.o
 	$(CC) $(CFLAGS) sdk\ng_chars.c -o out\ng_chars0.o
+	$(CC) $(CFLAGS) sdk\ng_npcs.c -o out\ng_npcs0.o
+	$(CC) $(CFLAGS) sdk\ng_physics.c -o out\ng_physics0.o
 	$(CC) $(CFLAGS) sdk\ng_border_constraints.c -o out\ng_border_constraints0.o
 	$(CC) $(CFLAGS) sdk\ng_game_interupt.c -o out\ng_game_interupt0.o
 	$(OBJCP) -R .comment -R .text -R .data -R .bss out\neogeo0.o out\neogeo.o

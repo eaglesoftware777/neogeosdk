@@ -7,6 +7,7 @@ typedef struct {
     uint16_t firstSprite;
     uint8_t strips;
     uint8_t heightTiles;
+    uint8_t activeRows;
     uint16_t tileBase;
     uint16_t tileStride;
     uint8_t palette;
@@ -25,6 +26,7 @@ void ngSpriteGroupInit(NGSpriteGroup *g, uint16_t firstSprite, uint8_t strips, u
 void ngSpriteGroupSetTileBase(NGSpriteGroup *g, uint16_t tileBase);
 void ngSpriteGroupSetTileStride(NGSpriteGroup *g, uint16_t tileStride);
 void ngSpriteGroupSetPalette(NGSpriteGroup *g, uint8_t palette);
+void ngSpriteGroupSetActiveRows(NGSpriteGroup *g, uint8_t activeRows);
 void ngSpriteGroupSetPos(NGSpriteGroup *g, int16_t x, int16_t y);
 void ngSpriteGroupMove(NGSpriteGroup *g, int16_t dx, int16_t dy);
 void ngSpriteGroupSetScale(NGSpriteGroup *g, uint8_t xScale, uint8_t yScale);

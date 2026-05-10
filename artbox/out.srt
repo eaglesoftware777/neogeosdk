@@ -1,0 +1,636 @@
+[001] 0.png
+mode=screen fit=crop anchor=center rule=legacy_screens
+source=256x256 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=1 palette_bank=16 tile_base=0 reserved_last=255 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=legacy full-screen scene page
+
+[002] 1.png
+mode=screen fit=crop anchor=center rule=legacy_screens
+source=256x256 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=2 palette_bank=17 tile_base=256 reserved_last=511 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=legacy full-screen scene page
+
+[003] 2.png
+mode=screen fit=crop anchor=center rule=legacy_screens
+source=256x256 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=3 palette_bank=18 tile_base=512 reserved_last=767 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=legacy full-screen scene page
+
+[004] 3.png
+mode=screen fit=crop anchor=center rule=legacy_screens
+source=256x256 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=4 palette_bank=19 tile_base=768 reserved_last=1023 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=legacy full-screen scene page
+
+[005] 4.png
+mode=screen fit=crop anchor=center rule=legacy_screens
+source=256x256 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=5 palette_bank=20 tile_base=1024 reserved_last=1279 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=legacy full-screen scene page
+
+[006] 5.png
+mode=screen fit=crop anchor=center rule=legacy_screens
+source=256x256 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=6 palette_bank=21 tile_base=1280 reserved_last=1535 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=legacy full-screen scene page
+
+[007] 6.png
+mode=screen fit=crop anchor=center rule=legacy_screens
+source=256x256 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=7 palette_bank=22 tile_base=1536 reserved_last=1791 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=legacy full-screen scene page
+
+[008] 7.png
+mode=screen fit=crop anchor=center rule=legacy_screens
+source=256x256 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=8 palette_bank=23 tile_base=1792 reserved_last=2047 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=legacy full-screen scene page
+
+[009] 8.png
+mode=screen fit=crop anchor=center rule=legacy_screens
+source=1024x1024 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=9 palette_bank=24 tile_base=2048 reserved_last=2303 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=legacy full-screen scene page
+
+[010] 9.png
+mode=screen fit=crop anchor=center rule=legacy_screens
+source=1448x1086 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=10 palette_bank=25 tile_base=2304 reserved_last=2559 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=legacy full-screen scene page
+
+[011] sprite_001.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=82x147 canvas=256x256 content=82x147 offset=(87,109)
+screen_id=11 palette_bank=26 tile_base=2560 reserved_last=2815 used_cols=6 used_rows=10 start_col=5 start_row=6 x_pad=7 y_pad=13 used_tiles=60 strips=6 active_rows=10
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[012] sprite_002.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=82x148 canvas=256x256 content=82x148 offset=(87,108)
+screen_id=12 palette_bank=27 tile_base=2816 reserved_last=3071 used_cols=6 used_rows=10 start_col=5 start_row=6 x_pad=7 y_pad=12 used_tiles=60 strips=6 active_rows=10
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[013] sprite_003.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=90x146 canvas=256x256 content=90x146 offset=(83,110)
+screen_id=13 palette_bank=28 tile_base=3072 reserved_last=3327 used_cols=6 used_rows=10 start_col=5 start_row=6 x_pad=3 y_pad=14 used_tiles=60 strips=6 active_rows=10
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[014] sprite_004.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=91x146 canvas=256x256 content=91x146 offset=(82,110)
+screen_id=14 palette_bank=29 tile_base=3328 reserved_last=3583 used_cols=6 used_rows=10 start_col=5 start_row=6 x_pad=2 y_pad=14 used_tiles=60 strips=6 active_rows=10
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[015] sprite_005.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=75x146 canvas=256x256 content=75x146 offset=(90,110)
+screen_id=15 palette_bank=30 tile_base=3584 reserved_last=3839 used_cols=5 used_rows=10 start_col=5 start_row=6 x_pad=10 y_pad=14 used_tiles=50 strips=5 active_rows=10
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[016] sprite_006.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=83x147 canvas=256x256 content=83x147 offset=(86,109)
+screen_id=16 palette_bank=31 tile_base=3840 reserved_last=4095 used_cols=6 used_rows=10 start_col=5 start_row=6 x_pad=6 y_pad=13 used_tiles=60 strips=6 active_rows=10
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[017] sprite_007.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=83x146 canvas=256x256 content=83x146 offset=(86,110)
+screen_id=17 palette_bank=32 tile_base=4096 reserved_last=4351 used_cols=6 used_rows=10 start_col=5 start_row=6 x_pad=6 y_pad=14 used_tiles=60 strips=6 active_rows=10
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[018] sprite_008.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=79x146 canvas=256x256 content=79x146 offset=(88,110)
+screen_id=18 palette_bank=33 tile_base=4352 reserved_last=4607 used_cols=5 used_rows=10 start_col=5 start_row=6 x_pad=8 y_pad=14 used_tiles=50 strips=5 active_rows=10
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[019] sprite_009.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=70x146 canvas=256x256 content=70x146 offset=(93,110)
+screen_id=19 palette_bank=34 tile_base=4608 reserved_last=4863 used_cols=5 used_rows=10 start_col=5 start_row=6 x_pad=13 y_pad=14 used_tiles=50 strips=5 active_rows=10
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[020] sprite_010.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=90x144 canvas=256x256 content=90x144 offset=(83,112)
+screen_id=20 palette_bank=35 tile_base=4864 reserved_last=5119 used_cols=6 used_rows=9 start_col=5 start_row=7 x_pad=3 y_pad=0 used_tiles=54 strips=6 active_rows=9
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[021] sprite_011.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=84x145 canvas=256x256 content=84x145 offset=(86,111)
+screen_id=21 palette_bank=36 tile_base=5120 reserved_last=5375 used_cols=6 used_rows=10 start_col=5 start_row=6 x_pad=6 y_pad=15 used_tiles=60 strips=6 active_rows=10
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[022] sprite_012.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=113x96 canvas=256x256 content=113x96 offset=(71,160)
+screen_id=22 palette_bank=37 tile_base=5376 reserved_last=5631 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=7 y_pad=0 used_tiles=48 strips=8 active_rows=6
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[023] sprite_013.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=105x142 canvas=256x256 content=105x142 offset=(75,114)
+screen_id=23 palette_bank=38 tile_base=5632 reserved_last=5887 used_cols=7 used_rows=9 start_col=4 start_row=7 x_pad=11 y_pad=2 used_tiles=63 strips=7 active_rows=9
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[024] sprite_014.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=107x145 canvas=256x256 content=107x145 offset=(74,111)
+screen_id=24 palette_bank=39 tile_base=5888 reserved_last=6143 used_cols=7 used_rows=10 start_col=4 start_row=6 x_pad=10 y_pad=15 used_tiles=70 strips=7 active_rows=10
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[025] sprite_015.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=118x129 canvas=256x256 content=118x129 offset=(69,127)
+screen_id=25 palette_bank=40 tile_base=6144 reserved_last=6399 used_cols=8 used_rows=9 start_col=4 start_row=7 x_pad=5 y_pad=15 used_tiles=72 strips=8 active_rows=9
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[026] sprite_016.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=110x140 canvas=256x256 content=110x140 offset=(73,116)
+screen_id=26 palette_bank=41 tile_base=6400 reserved_last=6655 used_cols=7 used_rows=9 start_col=4 start_row=7 x_pad=9 y_pad=4 used_tiles=63 strips=7 active_rows=9
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[027] sprite_017.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=134x120 canvas=256x256 content=134x120 offset=(61,136)
+screen_id=27 palette_bank=42 tile_base=6656 reserved_last=6911 used_cols=9 used_rows=8 start_col=3 start_row=8 x_pad=13 y_pad=8 used_tiles=72 strips=9 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[028] sprite_018.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=113x110 canvas=256x256 content=113x110 offset=(71,146)
+screen_id=28 palette_bank=43 tile_base=6912 reserved_last=7167 used_cols=8 used_rows=7 start_col=4 start_row=9 x_pad=7 y_pad=2 used_tiles=56 strips=8 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[029] sprite_019.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=139x106 canvas=256x256 content=139x106 offset=(58,150)
+screen_id=29 palette_bank=44 tile_base=7168 reserved_last=7423 used_cols=9 used_rows=7 start_col=3 start_row=9 x_pad=10 y_pad=6 used_tiles=63 strips=9 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[030] sprite_020.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=129x118 canvas=256x256 content=129x118 offset=(63,138)
+screen_id=30 palette_bank=45 tile_base=7424 reserved_last=7679 used_cols=9 used_rows=8 start_col=3 start_row=8 x_pad=15 y_pad=10 used_tiles=72 strips=9 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[031] sprite_021.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=126x119 canvas=256x256 content=126x119 offset=(65,137)
+screen_id=31 palette_bank=46 tile_base=7680 reserved_last=7935 used_cols=8 used_rows=8 start_col=4 start_row=8 x_pad=1 y_pad=9 used_tiles=64 strips=8 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[032] sprite_022.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=101x97 canvas=256x256 content=101x97 offset=(77,159)
+screen_id=32 palette_bank=47 tile_base=7936 reserved_last=8191 used_cols=7 used_rows=7 start_col=4 start_row=9 x_pad=13 y_pad=15 used_tiles=49 strips=7 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[033] sprite_023.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=177x138 canvas=256x256 content=177x138 offset=(39,118)
+screen_id=33 palette_bank=48 tile_base=8192 reserved_last=8447 used_cols=12 used_rows=9 start_col=2 start_row=7 x_pad=7 y_pad=6 used_tiles=108 strips=12 active_rows=9
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[034] sprite_024.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=224x137 canvas=256x256 content=224x137 offset=(16,119)
+screen_id=34 palette_bank=49 tile_base=8448 reserved_last=8703 used_cols=14 used_rows=9 start_col=1 start_row=7 x_pad=0 y_pad=7 used_tiles=126 strips=14 active_rows=9
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[035] sprite_025.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=108x131 canvas=256x256 content=108x131 offset=(74,125)
+screen_id=35 palette_bank=50 tile_base=8704 reserved_last=8959 used_cols=7 used_rows=9 start_col=4 start_row=7 x_pad=10 y_pad=13 used_tiles=63 strips=7 active_rows=9
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[036] sprite_026.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=143x131 canvas=256x256 content=143x131 offset=(56,125)
+screen_id=36 palette_bank=51 tile_base=8960 reserved_last=9215 used_cols=9 used_rows=9 start_col=3 start_row=7 x_pad=8 y_pad=13 used_tiles=81 strips=9 active_rows=9
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[037] sprite_027.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=184x128 canvas=256x256 content=184x128 offset=(36,128)
+screen_id=37 palette_bank=52 tile_base=9216 reserved_last=9471 used_cols=12 used_rows=8 start_col=2 start_row=8 x_pad=4 y_pad=0 used_tiles=96 strips=12 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[038] sprite_028.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=169x129 canvas=256x256 content=169x129 offset=(43,127)
+screen_id=38 palette_bank=53 tile_base=9472 reserved_last=9727 used_cols=11 used_rows=9 start_col=2 start_row=7 x_pad=11 y_pad=15 used_tiles=99 strips=11 active_rows=9
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[039] sprite_029.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=162x128 canvas=256x256 content=162x128 offset=(47,128)
+screen_id=39 palette_bank=54 tile_base=9728 reserved_last=9983 used_cols=11 used_rows=8 start_col=2 start_row=8 x_pad=15 y_pad=0 used_tiles=88 strips=11 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[040] sprite_030.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=193x128 canvas=256x256 content=193x128 offset=(31,128)
+screen_id=40 palette_bank=55 tile_base=9984 reserved_last=10239 used_cols=13 used_rows=8 start_col=1 start_row=8 x_pad=15 y_pad=0 used_tiles=104 strips=13 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[041] sprite_031.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=123x140 canvas=256x256 content=123x140 offset=(66,116)
+screen_id=41 palette_bank=56 tile_base=10240 reserved_last=10495 used_cols=8 used_rows=9 start_col=4 start_row=7 x_pad=2 y_pad=4 used_tiles=72 strips=8 active_rows=9
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[042] sprite_032.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=110x131 canvas=256x256 content=110x131 offset=(73,125)
+screen_id=42 palette_bank=57 tile_base=10496 reserved_last=10751 used_cols=7 used_rows=9 start_col=4 start_row=7 x_pad=9 y_pad=13 used_tiles=63 strips=7 active_rows=9
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[043] sprite_033.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=160x289 canvas=256x256 content=142x256 offset=(57,0)
+screen_id=43 palette_bank=58 tile_base=10752 reserved_last=11007 used_cols=9 used_rows=16 start_col=3 start_row=0 x_pad=9 y_pad=0 used_tiles=144 strips=9 active_rows=16
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[044] sprite_034.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=149x130 canvas=256x256 content=149x130 offset=(53,126)
+screen_id=44 palette_bank=59 tile_base=11008 reserved_last=11263 used_cols=10 used_rows=9 start_col=3 start_row=7 x_pad=5 y_pad=14 used_tiles=90 strips=10 active_rows=9
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[045] sprite_035.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=135x128 canvas=256x256 content=135x128 offset=(60,128)
+screen_id=45 palette_bank=60 tile_base=11264 reserved_last=11519 used_cols=9 used_rows=8 start_col=3 start_row=8 x_pad=12 y_pad=0 used_tiles=72 strips=9 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[046] sprite_036.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=149x122 canvas=256x256 content=149x122 offset=(53,134)
+screen_id=46 palette_bank=61 tile_base=11520 reserved_last=11775 used_cols=10 used_rows=8 start_col=3 start_row=8 x_pad=5 y_pad=6 used_tiles=80 strips=10 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[047] sprite_037.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=199x125 canvas=256x256 content=199x125 offset=(28,131)
+screen_id=47 palette_bank=62 tile_base=11776 reserved_last=12031 used_cols=13 used_rows=8 start_col=1 start_row=8 x_pad=12 y_pad=3 used_tiles=104 strips=13 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[048] sprite_038.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=111x128 canvas=256x256 content=111x128 offset=(72,128)
+screen_id=48 palette_bank=63 tile_base=12032 reserved_last=12287 used_cols=7 used_rows=8 start_col=4 start_row=8 x_pad=8 y_pad=0 used_tiles=56 strips=7 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[049] sprite_039.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=113x122 canvas=256x256 content=113x122 offset=(71,134)
+screen_id=49 palette_bank=64 tile_base=12288 reserved_last=12543 used_cols=8 used_rows=8 start_col=4 start_row=8 x_pad=7 y_pad=6 used_tiles=64 strips=8 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[050] sprite_040.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=93x48 canvas=256x256 content=93x48 offset=(81,208)
+screen_id=50 palette_bank=65 tile_base=12544 reserved_last=12799 used_cols=6 used_rows=3 start_col=5 start_row=13 x_pad=1 y_pad=0 used_tiles=18 strips=6 active_rows=3
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[051] sprite_041.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=83x44 canvas=256x256 content=83x44 offset=(86,212)
+screen_id=51 palette_bank=66 tile_base=12800 reserved_last=13055 used_cols=6 used_rows=3 start_col=5 start_row=13 x_pad=6 y_pad=4 used_tiles=18 strips=6 active_rows=3
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[052] sprite_042.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=95x168 canvas=256x256 content=95x168 offset=(80,88)
+screen_id=52 palette_bank=67 tile_base=13056 reserved_last=13311 used_cols=6 used_rows=11 start_col=5 start_row=5 x_pad=0 y_pad=8 used_tiles=66 strips=6 active_rows=11
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[053] sprite_043.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=110x110 canvas=256x256 content=110x110 offset=(73,146)
+screen_id=53 palette_bank=68 tile_base=13312 reserved_last=13567 used_cols=7 used_rows=7 start_col=4 start_row=9 x_pad=9 y_pad=2 used_tiles=49 strips=7 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[054] sprite_044.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=143x116 canvas=256x256 content=143x116 offset=(56,140)
+screen_id=54 palette_bank=69 tile_base=13568 reserved_last=13823 used_cols=9 used_rows=8 start_col=3 start_row=8 x_pad=8 y_pad=12 used_tiles=72 strips=9 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[055] sprite_045.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=161x109 canvas=256x256 content=161x109 offset=(47,147)
+screen_id=55 palette_bank=70 tile_base=13824 reserved_last=14079 used_cols=11 used_rows=7 start_col=2 start_row=9 x_pad=15 y_pad=3 used_tiles=77 strips=11 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[056] sprite_046.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=208x100 canvas=256x256 content=208x100 offset=(24,156)
+screen_id=56 palette_bank=71 tile_base=14080 reserved_last=14335 used_cols=13 used_rows=7 start_col=1 start_row=9 x_pad=8 y_pad=12 used_tiles=91 strips=13 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[057] sprite_047.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=194x115 canvas=256x256 content=194x115 offset=(31,141)
+screen_id=57 palette_bank=72 tile_base=14336 reserved_last=14591 used_cols=13 used_rows=8 start_col=1 start_row=8 x_pad=15 y_pad=13 used_tiles=104 strips=13 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[058] sprite_048.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=159x82 canvas=256x256 content=159x82 offset=(48,174)
+screen_id=58 palette_bank=73 tile_base=14592 reserved_last=14847 used_cols=10 used_rows=6 start_col=3 start_row=10 x_pad=0 y_pad=14 used_tiles=60 strips=10 active_rows=6
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[059] sprite_049.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=128x121 canvas=256x256 content=128x121 offset=(64,135)
+screen_id=59 palette_bank=74 tile_base=14848 reserved_last=15103 used_cols=8 used_rows=8 start_col=4 start_row=8 x_pad=0 y_pad=7 used_tiles=64 strips=8 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[060] sprite_050.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=137x65 canvas=256x256 content=137x65 offset=(59,191)
+screen_id=60 palette_bank=75 tile_base=15104 reserved_last=15359 used_cols=9 used_rows=5 start_col=3 start_row=11 x_pad=11 y_pad=15 used_tiles=45 strips=9 active_rows=5
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[061] sprite_051.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=88x163 canvas=256x256 content=88x163 offset=(84,93)
+screen_id=61 palette_bank=76 tile_base=15360 reserved_last=15615 used_cols=6 used_rows=11 start_col=5 start_row=5 x_pad=4 y_pad=13 used_tiles=66 strips=6 active_rows=11
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[062] sprite_052.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=76x143 canvas=256x256 content=76x143 offset=(90,113)
+screen_id=62 palette_bank=77 tile_base=15616 reserved_last=15871 used_cols=5 used_rows=9 start_col=5 start_row=7 x_pad=10 y_pad=1 used_tiles=45 strips=5 active_rows=9
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[063] sprite_053.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=68x143 canvas=256x256 content=68x143 offset=(94,113)
+screen_id=63 palette_bank=78 tile_base=15872 reserved_last=16127 used_cols=5 used_rows=9 start_col=5 start_row=7 x_pad=14 y_pad=1 used_tiles=45 strips=5 active_rows=9
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[064] sprite_054.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=101x119 canvas=256x256 content=101x119 offset=(77,137)
+screen_id=64 palette_bank=79 tile_base=16128 reserved_last=16383 used_cols=7 used_rows=8 start_col=4 start_row=8 x_pad=13 y_pad=9 used_tiles=56 strips=7 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[065] sprite_055.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=104x116 canvas=256x256 content=104x116 offset=(76,140)
+screen_id=65 palette_bank=80 tile_base=16384 reserved_last=16639 used_cols=7 used_rows=8 start_col=4 start_row=8 x_pad=12 y_pad=12 used_tiles=56 strips=7 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[066] sprite_056.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=136x104 canvas=256x256 content=136x104 offset=(60,152)
+screen_id=66 palette_bank=81 tile_base=16640 reserved_last=16895 used_cols=9 used_rows=7 start_col=3 start_row=9 x_pad=12 y_pad=8 used_tiles=63 strips=9 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[067] sprite_057.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=77x121 canvas=256x256 content=77x121 offset=(89,135)
+screen_id=67 palette_bank=82 tile_base=16896 reserved_last=17151 used_cols=5 used_rows=8 start_col=5 start_row=8 x_pad=9 y_pad=7 used_tiles=40 strips=5 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[068] sprite_058.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=141x77 canvas=256x256 content=141x77 offset=(57,179)
+screen_id=68 palette_bank=83 tile_base=17152 reserved_last=17407 used_cols=9 used_rows=5 start_col=3 start_row=11 x_pad=9 y_pad=3 used_tiles=45 strips=9 active_rows=5
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[069] sprite_059.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=100x77 canvas=256x256 content=100x77 offset=(78,179)
+screen_id=69 palette_bank=84 tile_base=17408 reserved_last=17663 used_cols=7 used_rows=5 start_col=4 start_row=11 x_pad=14 y_pad=3 used_tiles=35 strips=7 active_rows=5
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[070] sprite_060.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=180x59 canvas=256x256 content=180x59 offset=(38,197)
+screen_id=70 palette_bank=85 tile_base=17664 reserved_last=17919 used_cols=12 used_rows=4 start_col=2 start_row=12 x_pad=6 y_pad=5 used_tiles=48 strips=12 active_rows=4
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[071] sprite_061.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=94x54 canvas=256x256 content=94x54 offset=(81,202)
+screen_id=71 palette_bank=86 tile_base=17920 reserved_last=18175 used_cols=6 used_rows=4 start_col=5 start_row=12 x_pad=1 y_pad=10 used_tiles=24 strips=6 active_rows=4
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[072] sprite_062.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=34x39 canvas=256x256 content=34x39 offset=(111,217)
+screen_id=72 palette_bank=87 tile_base=18176 reserved_last=18431 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=15 y_pad=9 used_tiles=9 strips=3 active_rows=3
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[073] sprite_063.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=82x137 canvas=256x256 content=82x137 offset=(87,119)
+screen_id=73 palette_bank=88 tile_base=18432 reserved_last=18687 used_cols=6 used_rows=9 start_col=5 start_row=7 x_pad=7 y_pad=7 used_tiles=54 strips=6 active_rows=9
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[074] sprite_064.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=95x119 canvas=256x256 content=95x119 offset=(80,137)
+screen_id=74 palette_bank=89 tile_base=18688 reserved_last=18943 used_cols=6 used_rows=8 start_col=5 start_row=8 x_pad=0 y_pad=9 used_tiles=48 strips=6 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[075] sprite_065.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=101x111 canvas=256x256 content=101x111 offset=(77,145)
+screen_id=75 palette_bank=90 tile_base=18944 reserved_last=19199 used_cols=7 used_rows=7 start_col=4 start_row=9 x_pad=13 y_pad=1 used_tiles=49 strips=7 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[076] sprite_066.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=106x115 canvas=256x256 content=106x115 offset=(75,141)
+screen_id=76 palette_bank=91 tile_base=19200 reserved_last=19455 used_cols=7 used_rows=8 start_col=4 start_row=8 x_pad=11 y_pad=13 used_tiles=56 strips=7 active_rows=8
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[077] sprite_067.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=104x111 canvas=256x256 content=104x111 offset=(76,145)
+screen_id=77 palette_bank=92 tile_base=19456 reserved_last=19711 used_cols=7 used_rows=7 start_col=4 start_row=9 x_pad=12 y_pad=1 used_tiles=49 strips=7 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[078] sprite_068.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=105x111 canvas=256x256 content=105x111 offset=(75,145)
+screen_id=78 palette_bank=93 tile_base=19712 reserved_last=19967 used_cols=7 used_rows=7 start_col=4 start_row=9 x_pad=11 y_pad=1 used_tiles=49 strips=7 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[079] sprite_069.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=97x106 canvas=256x256 content=97x106 offset=(79,150)
+screen_id=79 palette_bank=94 tile_base=19968 reserved_last=20223 used_cols=7 used_rows=7 start_col=4 start_row=9 x_pad=15 y_pad=6 used_tiles=49 strips=7 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[080] sprite_070.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=100x103 canvas=256x256 content=100x103 offset=(78,153)
+screen_id=80 palette_bank=95 tile_base=20224 reserved_last=20479 used_cols=7 used_rows=7 start_col=4 start_row=9 x_pad=14 y_pad=9 used_tiles=49 strips=7 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[081] sprite_071.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=122x95 canvas=256x256 content=122x95 offset=(67,161)
+screen_id=81 palette_bank=96 tile_base=20480 reserved_last=20735 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=3 y_pad=1 used_tiles=48 strips=8 active_rows=6
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[082] sprite_072.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=95x102 canvas=256x256 content=95x102 offset=(80,154)
+screen_id=82 palette_bank=97 tile_base=20736 reserved_last=20991 used_cols=6 used_rows=7 start_col=5 start_row=9 x_pad=0 y_pad=10 used_tiles=42 strips=6 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[083] sprite_073.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=95x100 canvas=256x256 content=95x100 offset=(80,156)
+screen_id=83 palette_bank=98 tile_base=20992 reserved_last=21247 used_cols=6 used_rows=7 start_col=5 start_row=9 x_pad=0 y_pad=12 used_tiles=42 strips=6 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[084] sprite_074.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=91x100 canvas=256x256 content=91x100 offset=(82,156)
+screen_id=84 palette_bank=99 tile_base=21248 reserved_last=21503 used_cols=6 used_rows=7 start_col=5 start_row=9 x_pad=2 y_pad=12 used_tiles=42 strips=6 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[085] sprite_075.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=97x99 canvas=256x256 content=97x99 offset=(79,157)
+screen_id=85 palette_bank=100 tile_base=21504 reserved_last=21759 used_cols=7 used_rows=7 start_col=4 start_row=9 x_pad=15 y_pad=13 used_tiles=49 strips=7 active_rows=7
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[086] sprite_076.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=50x56 canvas=256x256 content=50x56 offset=(103,200)
+screen_id=86 palette_bank=101 tile_base=21760 reserved_last=22015 used_cols=4 used_rows=4 start_col=6 start_row=12 x_pad=7 y_pad=8 used_tiles=16 strips=4 active_rows=4
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[087] sprite_077.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=107x84 canvas=256x256 content=107x84 offset=(74,172)
+screen_id=87 palette_bank=102 tile_base=22016 reserved_last=22271 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=10 y_pad=12 used_tiles=42 strips=7 active_rows=6
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[088] sprite_078.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=106x84 canvas=256x256 content=106x84 offset=(75,172)
+screen_id=88 palette_bank=103 tile_base=22272 reserved_last=22527 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=11 y_pad=12 used_tiles=42 strips=7 active_rows=6
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[089] sprite_079.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=105x84 canvas=256x256 content=105x84 offset=(75,172)
+screen_id=89 palette_bank=104 tile_base=22528 reserved_last=22783 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=11 y_pad=12 used_tiles=42 strips=7 active_rows=6
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[090] sprite_080.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=107x84 canvas=256x256 content=107x84 offset=(74,172)
+screen_id=90 palette_bank=105 tile_base=22784 reserved_last=23039 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=10 y_pad=12 used_tiles=42 strips=7 active_rows=6
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[091] sprite_081.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=105x84 canvas=256x256 content=105x84 offset=(75,172)
+screen_id=91 palette_bank=106 tile_base=23040 reserved_last=23295 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=11 y_pad=12 used_tiles=42 strips=7 active_rows=6
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[092] sprite_082.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=104x84 canvas=256x256 content=104x84 offset=(76,172)
+screen_id=92 palette_bank=107 tile_base=23296 reserved_last=23551 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=12 y_pad=12 used_tiles=42 strips=7 active_rows=6
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[093] sprite_083.png
+mode=sprite fit=pad anchor=bottom-center rule=sprite_parts
+source=105x84 canvas=256x256 content=105x84 offset=(75,172)
+screen_id=93 palette_bank=108 tile_base=23552 reserved_last=23807 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=11 y_pad=12 used_tiles=42 strips=7 active_rows=6
+note=sprite page padded with transparency for chained Neo Geo strips
+
+[094] z_npc_84.png
+mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+source=48x48 canvas=256x256 content=48x48 offset=(104,208)
+screen_id=94 palette_bank=109 tile_base=23808 reserved_last=24063 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+note=late-scene npc sprite page padded with transparency
+
+[095] z_npc_85.png
+mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+source=48x48 canvas=256x256 content=48x48 offset=(104,208)
+screen_id=95 palette_bank=110 tile_base=24064 reserved_last=24319 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+note=late-scene npc sprite page padded with transparency
+
+[096] z_npc_86.png
+mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+source=48x48 canvas=256x256 content=48x48 offset=(104,208)
+screen_id=96 palette_bank=111 tile_base=24320 reserved_last=24575 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+note=late-scene npc sprite page padded with transparency
+
+[097] z_npc_87.png
+mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+source=48x48 canvas=256x256 content=48x48 offset=(104,208)
+screen_id=97 palette_bank=112 tile_base=24576 reserved_last=24831 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+note=late-scene npc sprite page padded with transparency
+
+[098] z_npc_88.png
+mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+source=48x48 canvas=256x256 content=48x48 offset=(104,208)
+screen_id=98 palette_bank=113 tile_base=24832 reserved_last=25087 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+note=late-scene npc sprite page padded with transparency
+
+[099] z_npc_89.png
+mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+source=48x48 canvas=256x256 content=48x48 offset=(104,208)
+screen_id=99 palette_bank=114 tile_base=25088 reserved_last=25343 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+note=late-scene npc sprite page padded with transparency
+
+[100] z_npc_90.png
+mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+source=48x48 canvas=256x256 content=48x48 offset=(104,208)
+screen_id=100 palette_bank=115 tile_base=25344 reserved_last=25599 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+note=late-scene npc sprite page padded with transparency
+
+[101] z_npc_91.png
+mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+source=48x48 canvas=256x256 content=48x48 offset=(104,208)
+screen_id=101 palette_bank=116 tile_base=25600 reserved_last=25855 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+note=late-scene npc sprite page padded with transparency
+
+[102] z_npc_92.png
+mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+source=48x48 canvas=256x256 content=48x48 offset=(104,208)
+screen_id=102 palette_bank=117 tile_base=25856 reserved_last=26111 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+note=late-scene npc sprite page padded with transparency
+
+[103] z_npc_93.png
+mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+source=48x48 canvas=256x256 content=48x48 offset=(104,208)
+screen_id=103 palette_bank=118 tile_base=26112 reserved_last=26367 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+note=late-scene npc sprite page padded with transparency
+
+[104] z_npc_94.png
+mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+source=48x48 canvas=256x256 content=48x48 offset=(104,208)
+screen_id=104 palette_bank=119 tile_base=26368 reserved_last=26623 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+note=late-scene npc sprite page padded with transparency
+
+[105] z_npc_95.png
+mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+source=48x48 canvas=256x256 content=48x48 offset=(104,208)
+screen_id=105 palette_bank=120 tile_base=26624 reserved_last=26879 used_cols=3 used_rows=3 start_col=6 start_row=13 x_pad=8 y_pad=0 used_tiles=9 strips=3 active_rows=3
+note=late-scene npc sprite page padded with transparency
+
+[106] zz_npc_forest_alley.png
+mode=screen fit=crop anchor=center rule=late_scene_backdrop
+source=1254x1254 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=106 palette_bank=121 tile_base=26880 reserved_last=27135 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=late-scene forest alley backdrop
+

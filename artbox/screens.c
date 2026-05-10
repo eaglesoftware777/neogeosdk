@@ -1243,7 +1243,7 @@ vram_sprite(sprite_base + 64*15,1,15,spriteMapS10_16,spal10_16,16,SCB2,SCB3,SCB4
 void NEOGEO_USER showScreen11(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 11 ******************************************/
 uint16_t  pal11[16];
-setpal(pal11,0x0,0x6831,0x7fe8,0x0,0x6fff,0x5012,0x1410,0x1d70,0x4434,0x7248,0x5ea5,0x3b54,0x6fc2,0x777,0x3125,0x3baa);
+setpal(pal11,0x0,0x1111,0x1ddc,0x5123,0x4655,0x7235,0x7a75,0x1eb5,0x3952,0x3632,0x2878,0x5321,0x3fed,0x2baa,0x2c83,0xfd9);
 load_palettes(pal11,PALETTES+PALOFFSET*26);
 }
 
@@ -1251,7 +1251,7 @@ load_palettes(pal11,PALETTES+PALOFFSET*26);
 void NEOGEO_USER showScreen12(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 12 ******************************************/
 uint16_t  pal12[16];
-setpal(pal12,0x0,0x6fff,0x0,0x2c61,0x536a,0x4ffa,0x7137,0x3c45,0x6411,0x5fe3,0x6731,0x5234,0x1877,0x5012,0xcbb,0x5ea2);
+setpal(pal12,0x0,0x644,0x3fda,0x6236,0x111,0x4ec6,0x3521,0x2a99,0x3d93,0x1a73,0x3c96,0x2767,0x223,0x1852,0xccc,0xffe);
 load_palettes(pal12,PALETTES+PALOFFSET*27);
 }
 
@@ -1259,7 +1259,7 @@ load_palettes(pal12,PALETTES+PALOFFSET*27);
 void NEOGEO_USER showScreen13(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 13 ******************************************/
 uint16_t  pal13[16];
-setpal(pal13,0x0,0x0,0x6fb1,0x1247,0xfff,0x521,0x5ffa,0x2aab,0x766,0x136a,0x6821,0x5b60,0x6fd6,0x1124,0x4d75,0x3101);
+setpal(pal13,0x0,0x346,0x1eed,0x5b86,0x1111,0x2422,0x2fda,0x2c83,0x5642,0x5ec7,0x6963,0x4bbb,0x2889,0x3755,0x3223,0x1eb4);
 load_palettes(pal13,PALETTES+PALOFFSET*28);
 }
 
@@ -1267,7 +1267,7 @@ load_palettes(pal13,PALETTES+PALOFFSET*28);
 void NEOGEO_USER showScreen14(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 14 ******************************************/
 uint16_t  pal14[16];
-setpal(pal14,0x0,0x0,0x4ffa,0x1b74,0x1d60,0x6013,0x3889,0x7fe3,0x4148,0x7830,0x6fff,0x1fb6,0x6fa1,0x6545,0x1ccc,0x2511);
+setpal(pal14,0x0,0x1421,0x4eed,0x1963,0x5bba,0x3ea4,0x2101,0x1fd8,0x4b83,0x5233,0x2534,0x5666,0x988,0x6236,0x7112,0x1741);
 load_palettes(pal14,PALETTES+PALOFFSET*29);
 }
 
@@ -1275,7 +1275,7 @@ load_palettes(pal14,PALETTES+PALOFFSET*29);
 void NEOGEO_USER showScreen15(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 15 ******************************************/
 uint16_t  pal15[16];
-setpal(pal15,0x0,0x0,0x4ffa,0x7931,0x1112,0x544,0x248,0x7e85,0x7c61,0xfff,0x6fb1,0x2511,0x3125,0x2bab,0x7fd5,0x5777);
+setpal(pal15,0x0,0x1111,0x7888,0x3952,0x2656,0x1fd8,0x1235,0x6eb4,0x6632,0xbbb,0x3433,0x4eed,0x4322,0x5ca6,0xc83,0x2a65);
 load_palettes(pal15,PALETTES+PALOFFSET*30);
 }
 
@@ -1283,7 +1283,7 @@ load_palettes(pal15,PALETTES+PALOFFSET*30);
 void NEOGEO_USER showScreen16(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 16 ******************************************/
 uint16_t  pal16[16];
-setpal(pal16,0x0,0x0,0xfb6,0x4731,0x3baa,0x6b51,0xfff,0x6e82,0x1247,0x6311,0x3124,0x136a,0x5012,0x5ff9,0x6766,0x4fe2);
+setpal(pal16,0x0,0x3977,0x4322,0x5da4,0x2fda,0x2632,0x3b73,0x5123,0x4ec7,0x1eed,0x7235,0x4655,0x3952,0x3baa,0x111,0x3458);
 load_palettes(pal16,PALETTES+PALOFFSET*31);
 }
 
@@ -1291,7 +1291,7 @@ load_palettes(pal16,PALETTES+PALOFFSET*31);
 void NEOGEO_USER showScreen17(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 17 ******************************************/
 uint16_t  pal17[16];
-setpal(pal17,0x0,0x1830,0x7ffe,0x1410,0x5544,0x64ae,0xa76,0x0,0x2c51,0x2f92,0x4fe9,0x359,0x4013,0x5136,0x5fe3,0x6aaa);
+setpal(pal17,0x0,0x6742,0x5c94,0x6eee,0x7655,0x6001,0x3a63,0x1346,0x5433,0x4888,0x7421,0x7124,0x2baa,0x2212,0x5eda,0x4ec6);
 load_palettes(pal17,PALETTES+PALOFFSET*32);
 }
 
@@ -1299,7 +1299,7 @@ load_palettes(pal17,PALETTES+PALOFFSET*32);
 void NEOGEO_USER showScreen18(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 18 ******************************************/
 uint16_t  pal18[16];
-setpal(pal18,0x0,0x5b34,0x2fff,0x0,0x4fc2,0x1247,0x2114,0x7666,0x7aaa,0x2621,0x2e71,0x2feb,0xa51,0x311,0xe96,0x5fe6);
+setpal(pal18,0x0,0x7421,0x1eed,0x2c86,0x111,0x4666,0x4ec7,0x7742,0x6bbb,0x3fda,0x6236,0x223,0x544,0x4a73,0x4da4,0x1998);
 load_palettes(pal18,PALETTES+PALOFFSET*33);
 }
 
@@ -1307,7 +1307,7 @@ load_palettes(pal18,PALETTES+PALOFFSET*33);
 void NEOGEO_USER showScreen19(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 19 ******************************************/
 uint16_t  pal19[16];
-setpal(pal19,0x0,0x6545,0x2821,0x5fe8,0x4fd2,0x3410,0x7e85,0x0,0x3cbb,0x7ffe,0x1136,0x5888,0x3b51,0x7013,0x6e81,0x1258);
+setpal(pal19,0x0,0x4eed,0x2101,0x4123,0xeb5,0x2655,0x5246,0x3c84,0x6baa,0x235,0x6963,0x3fc8,0x1a45,0x4888,0x4642,0x3421);
 load_palettes(pal19,PALETTES+PALOFFSET*34);
 }
 
@@ -1315,7 +1315,7 @@ load_palettes(pal19,PALETTES+PALOFFSET*34);
 void NEOGEO_USER showScreen20(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 20 ******************************************/
 uint16_t  pal20[16];
-setpal(pal20,0x0,0x545,0x6fd2,0x0,0x6fff,0x4e91,0x5730,0x6014,0x5788,0x3b50,0x5147,0x5fd6,0x5ffa,0x6311,0x6bbc,0x5b75);
+setpal(pal20,0x0,0x7123,0x742,0x6eb5,0x7962,0x7eed,0x5777,0x1111,0x1c93,0x1ccb,0x6236,0x2422,0x1fd9,0x6a99,0x655,0x7a46);
 load_palettes(pal20,PALETTES+PALOFFSET*35);
 }
 
@@ -1323,7 +1323,7 @@ load_palettes(pal20,PALETTES+PALOFFSET*35);
 void NEOGEO_USER showScreen21(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 21 ******************************************/
 uint16_t  pal21[16];
-setpal(pal21,0x0,0x3112,0x5ffa,0x7931,0x544,0x4136,0x3510,0x4e95,0x5fc1,0x5abb,0x0,0x4fe6,0xfff,0x7d61,0x4777,0x1359);
+setpal(pal21,0x0,0x7544,0x5eb4,0x7777,0x4eed,0x5b83,0xfd9,0x3953,0x3baa,0x6001,0x1346,0x1234,0x5ca6,0x2422,0x7112,0x6632);
 load_palettes(pal21,PALETTES+PALOFFSET*36);
 }
 
@@ -1331,7 +1331,7 @@ load_palettes(pal21,PALETTES+PALOFFSET*36);
 void NEOGEO_USER showScreen22(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 22 ******************************************/
 uint16_t  pal22[16];
-setpal(pal22,0x0,0x6fff,0x0,0x2f91,0x2434,0x5410,0x6fe9,0x7755,0x4e95,0x2989,0x4fe3,0x4bcc,0xc61,0x5830,0x3248,0x3113);
+setpal(pal22,0x0,0x1111,0xfff,0x4b83,0x4ec5,0x7888,0x4bbb,0x1421,0x6235,0x4ca6,0x3952,0xfd9,0x3edc,0x4556,0x6632,0x6965);
 load_palettes(pal22,PALETTES+PALOFFSET*37);
 }
 
@@ -1339,7 +1339,7 @@ load_palettes(pal22,PALETTES+PALOFFSET*37);
 void NEOGEO_USER showScreen23(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 23 ******************************************/
 uint16_t  pal23[16];
-setpal(pal23,0x0,0x7544,0x6fff,0x6e81,0x6a41,0x0,0x4fe2,0x4889,0x7248,0x6fe8,0x112,0x3125,0x3d54,0x6bbc,0x6511,0x2fa5);
+setpal(pal23,0x0,0x7888,0x6236,0x4b84,0x5eed,0x5123,0x6da5,0x963,0x2434,0x6ec8,0x1111,0x5642,0x4935,0x4bbb,0x4666,0x422);
 load_palettes(pal23,PALETTES+PALOFFSET*38);
 }
 
@@ -1347,7 +1347,7 @@ load_palettes(pal23,PALETTES+PALOFFSET*38);
 void NEOGEO_USER showScreen24(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 24 ******************************************/
 uint16_t  pal24[16];
-setpal(pal24,0x0,0x0,0x99a,0x3b30,0x5963,0x4fe2,0x7fff,0x1eec,0x1247,0x3655,0x4ff8,0x6e81,0x2d37,0x621,0x6113,0x3fa6);
+setpal(pal24,0x0,0x3a99,0x2522,0x3a65,0x7eed,0x5ec4,0x2644,0x2c83,0x4ca7,0x7223,0x2767,0x3fd9,0x3952,0x1ccb,0x1111,0x346);
 load_palettes(pal24,PALETTES+PALOFFSET*39);
 }
 
@@ -1355,7 +1355,7 @@ load_palettes(pal24,PALETTES+PALOFFSET*39);
 void NEOGEO_USER showScreen25(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 25 ******************************************/
 uint16_t  pal25[16];
-setpal(pal25,0x0,0x7bbc,0x0,0x4ff8,0x2113,0x5554,0x7820,0x5148,0x3e31,0x6fff,0x7fe2,0x5410,0x5888,0x1f90,0x4b61,0x4ea5);
+setpal(pal25,0x0,0x2a63,0x2522,0x2212,0x2baa,0x988,0x4234,0x2c84,0x3eb5,0x7742,0x3dcc,0x7655,0x5246,0x2101,0x6eee,0x1fd9);
 load_palettes(pal25,PALETTES+PALOFFSET*40);
 }
 
@@ -1363,7 +1363,7 @@ load_palettes(pal25,PALETTES+PALOFFSET*40);
 void NEOGEO_USER showScreen26(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 26 ******************************************/
 uint16_t  pal26[16];
-setpal(pal26,0x0,0x1410,0x5012,0xbbb,0x6fe3,0xfff,0x1359,0x6831,0x0,0x4c61,0x6434,0x5777,0x5136,0x1d76,0x7fe8,0x1fa1);
+setpal(pal26,0x0,0x3544,0x5a73,0x4322,0x6eb6,0x1eed,0x6853,0x877,0x4235,0x4123,0x2fda,0x4aaa,0x111,0x6632,0x7c94,0x2347);
 load_palettes(pal26,PALETTES+PALOFFSET*41);
 }
 
@@ -1371,7 +1371,7 @@ load_palettes(pal26,PALETTES+PALOFFSET*41);
 void NEOGEO_USER showScreen27(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 27 ******************************************/
 uint16_t  pal27[16];
-setpal(pal27,0x0,0x112,0xfff,0x0,0x4fe2,0x7249,0x7fe8,0x2821,0x2b51,0x6e49,0x1ea5,0x1410,0x2f81,0x3766,0x3225,0x3aab);
+setpal(pal27,0x0,0x2422,0xc94,0x778,0x5246,0x5eed,0x5642,0x5962,0x7eb5,0x7bbb,0x1a98,0xfd9,0x6545,0x111,0x4966,0x3223);
 load_palettes(pal27,PALETTES+PALOFFSET*42);
 }
 
@@ -1379,7 +1379,7 @@ load_palettes(pal27,PALETTES+PALOFFSET*42);
 void NEOGEO_USER showScreen28(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 28 ******************************************/
 uint16_t  pal28[16];
-setpal(pal28,0x0,0x4fd1,0x0,0x2511,0x248,0x3544,0x7fff,0x7fe8,0x4e81,0x2113,0x2a41,0x5ffb,0x1bbb,0x1888,0x7fd4,0x7c86);
+setpal(pal28,0x0,0x2a63,0x111,0x1ffe,0x4123,0x6eb6,0x2fda,0x7655,0x4c94,0x7433,0x742,0x4ccc,0x5aa9,0x5246,0x2977,0x1421);
 load_palettes(pal28,PALETTES+PALOFFSET*43);
 }
 
@@ -1387,7 +1387,7 @@ load_palettes(pal28,PALETTES+PALOFFSET*43);
 void NEOGEO_USER showScreen29(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 29 ******************************************/
 uint16_t  pal29[16];
-setpal(pal29,0x0,0x4112,0x1e81,0x6511,0x6fff,0x2249,0xa41,0x7855,0x889,0xfc6,0x2cbc,0x5fe1,0x1125,0x4ffa,0x0,0x3434);
+setpal(pal29,0x0,0x2347,0xda4,0x1642,0x4123,0x1421,0x2756,0xfda,0x4bbb,0x5ec6,0x3952,0x4235,0x2101,0x1eed,0x988,0x3b73);
 load_palettes(pal29,PALETTES+PALOFFSET*44);
 }
 
@@ -1395,7 +1395,7 @@ load_palettes(pal29,PALETTES+PALOFFSET*44);
 void NEOGEO_USER showScreen30(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 30 ******************************************/
 uint16_t  pal30[16];
-setpal(pal30,0x0,0x731,0x2fff,0x0,0x4311,0x2f91,0x5777,0x113,0x6b51,0x7236,0x4ff9,0x7fe2,0xfa6,0x135a,0x1b45,0x4bbc);
+setpal(pal30,0x0,0x111,0x5999,0x7852,0x346,0x4eed,0x7c95,0x6eb4,0xa76,0x1223,0x5321,0x4ccc,0x7ec8,0x5b82,0x5666,0x7532);
 load_palettes(pal30,PALETTES+PALOFFSET*45);
 }
 
@@ -1403,7 +1403,7 @@ load_palettes(pal30,PALETTES+PALOFFSET*45);
 void NEOGEO_USER showScreen31(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 31 ******************************************/
 uint16_t  pal31[16];
-setpal(pal31,0x0,0x7300,0x6fff,0x0,0x7fc1,0x636c,0x4c61,0x6138,0x6fe8,0x6bbc,0x2821,0x7013,0x4e94,0x5988,0x5333,0x2656);
+setpal(pal31,0x0,0x4999,0x3eb5,0x3a62,0x7211,0x1346,0x1532,0x5c93,0x6eee,0x4667,0x2224,0x3cbb,0x6965,0x5011,0x2fda,0x7742);
 load_palettes(pal31,PALETTES+PALOFFSET*46);
 }
 
@@ -1411,7 +1411,7 @@ load_palettes(pal31,PALETTES+PALOFFSET*46);
 void NEOGEO_USER showScreen32(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 32 ******************************************/
 uint16_t  pal32[16];
-setpal(pal32,0x0,0x2434,0x5fe3,0x766,0x6fff,0x0,0x1999,0x4a51,0x4ff9,0x3610,0x4c84,0xf91,0x2137,0x1112,0x1ccc,0x137b);
+setpal(pal32,0x0,0x2fd9,0x2101,0x7742,0x1532,0x5c93,0x1222,0x2656,0x7235,0x6ca7,0x5ec5,0x3a62,0x3a75,0x7eed,0x2989,0x3cbb);
 load_palettes(pal32,PALETTES+PALOFFSET*47);
 }
 
@@ -1419,7 +1419,7 @@ load_palettes(pal32,PALETTES+PALOFFSET*47);
 void NEOGEO_USER showScreen33(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 33 ******************************************/
 uint16_t  pal33[16];
-setpal(pal33,0x0,0x0,0x7fe8,0x2fff,0x669f,0xc62,0x4248,0x403f,0x6fe2,0x7300,0x7013,0x2434,0x2f92,0x2821,0x1caa,0x5767);
+setpal(pal33,0x0,0x111,0x5b83,0xfff,0x963,0x422,0x1346,0xfd9,0x568f,0x1eb4,0x6ccc,0x7bcf,0x5642,0x5766,0x5123,0xa99);
 load_palettes(pal33,PALETTES+PALOFFSET*48);
 }
 
@@ -1427,7 +1427,7 @@ load_palettes(pal33,PALETTES+PALOFFSET*48);
 void NEOGEO_USER showScreen34(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 34 ******************************************/
 uint16_t  pal34[16];
-setpal(pal34,0x0,0x7fff,0x0,0x1e81,0x1cbb,0x57bf,0x1510,0x14f,0x7fea,0x5fe1,0x6c39,0x1777,0x4013,0x4136,0x4941,0x4fe6);
+setpal(pal34,0x0,0x3fff,0x646f,0x5346,0x6c94,0x2867,0x1cdf,0x7ec6,0x58af,0x5111,0x3742,0x7a99,0x6422,0x2224,0x2a63,0x5ddb);
 load_palettes(pal34,PALETTES+PALOFFSET*49);
 }
 
@@ -1435,7 +1435,7 @@ load_palettes(pal34,PALETTES+PALOFFSET*49);
 void NEOGEO_USER showScreen35(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 35 ******************************************/
 uint16_t  pal35[16];
-setpal(pal35,0x0,0x2a31,0x0,0x5ff1,0x2fff,0x7aab,0x4666,0x4d71,0x6248,0x6d77,0x112,0x3fa1,0x7fea,0x6125,0x4fe6,0x6511);
+setpal(pal35,0x0,0x1111,0x1eed,0x2b86,0x5555,0x1fd9,0x4ec6,0x3baa,0x2422,0x5da3,0x888,0x7a34,0x6235,0x6b73,0x963,0x4642);
 load_palettes(pal35,PALETTES+PALOFFSET*50);
 }
 
@@ -1443,7 +1443,7 @@ load_palettes(pal35,PALETTES+PALOFFSET*50);
 void NEOGEO_USER showScreen36(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 36 ******************************************/
 uint16_t  pal36[16];
-setpal(pal36,0x0,0x4a41,0x0,0x4fe6,0x1510,0x6fff,0x2cbc,0x5988,0x346b,0x4ffb,0x655,0x1247,0x1124,0x3e71,0x112,0x5fd1);
+setpal(pal36,0x0,0x1eb4,0x4eed,0x1111,0x4333,0xfd8,0x3952,0x999,0x6124,0x5346,0x5b96,0x4b83,0x3cbb,0x7632,0x4766,0x1421);
 load_palettes(pal36,PALETTES+PALOFFSET*51);
 }
 
@@ -1451,7 +1451,7 @@ load_palettes(pal36,PALETTES+PALOFFSET*51);
 void NEOGEO_USER showScreen37(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 37 ******************************************/
 uint16_t  pal37[16];
-setpal(pal37,0x0,0x5766,0x0,0x2fff,0x1aab,0x6fd6,0x4b51,0x6249,0x1720,0x4fe1,0x1125,0xe68,0x4333,0x3fea,0x1f91,0x1111);
+setpal(pal37,0x0,0x5a72,0x7421,0x6236,0x2a99,0x5eed,0x111,0x2842,0x4a76,0x6434,0x7bbb,0x6655,0x6da4,0x5777,0x7ec8,0x1223);
 load_palettes(pal37,PALETTES+PALOFFSET*52);
 }
 
@@ -1459,7 +1459,7 @@ load_palettes(pal37,PALETTES+PALOFFSET*52);
 void NEOGEO_USER showScreen38(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 38 ******************************************/
 uint16_t  pal38[16];
-setpal(pal38,0x0,0x5fd1,0xa89,0x0,0x6fff,0x2931,0x5333,0x536b,0x7d71,0x248,0x6002,0x5410,0x2756,0x4fe8,0x6015,0x7bbc);
+setpal(pal38,0x0,0x2224,0x4ed9,0x6656,0x5b82,0x1111,0x346,0x1321,0x5eed,0x742,0x1962,0x1eb4,0x4889,0x1532,0xb86,0x7bbb);
 load_palettes(pal38,PALETTES+PALOFFSET*53);
 }
 
@@ -1467,7 +1467,7 @@ load_palettes(pal38,PALETTES+PALOFFSET*53);
 void NEOGEO_USER showScreen39(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 39 ******************************************/
 uint16_t  pal39[16];
-setpal(pal39,0x0,0x6821,0x6fff,0x0,0x2645,0x2113,0x7fe1,0x4137,0x6988,0x7c39,0x335a,0x2c61,0x6fe8,0x1fa1,0x3410,0xccd);
+setpal(pal39,0x0,0x3852,0x1eed,0x1222,0x2347,0x5666,0x4235,0x1eb4,0x111,0x532,0x6989,0x5a85,0x4735,0x5b82,0x4ed9,0x7bbb);
 load_palettes(pal39,PALETTES+PALOFFSET*54);
 }
 
@@ -1475,7 +1475,7 @@ load_palettes(pal39,PALETTES+PALOFFSET*54);
 void NEOGEO_USER showScreen40(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 40 ******************************************/
 uint16_t  pal40[16];
-setpal(pal40,0x0,0x2931,0x0,0x6fff,0x1fa1,0x36f,0x5259,0x3d61,0x6a78,0x2545,0x7fe8,0x7fe2,0x2113,0x7bbd,0x3510,0x3126);
+setpal(pal40,0x0,0x3877,0x4247,0x1bcf,0x5111,0x468f,0x3223,0x7946,0x6545,0x1962,0x4ec6,0x1edb,0x5c93,0x6eef,0x6532,0xbaa);
 load_palettes(pal40,PALETTES+PALOFFSET*55);
 }
 
@@ -1483,7 +1483,7 @@ load_palettes(pal40,PALETTES+PALOFFSET*55);
 void NEOGEO_USER showScreen41(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 41 ******************************************/
 uint16_t  pal41[16];
-setpal(pal41,0x0,0x3113,0x0,0x3fff,0x6fd2,0x669f,0xbdf,0x7e70,0x4ff8,0x3d75,0x2a31,0x5666,0x6137,0x1aaa,0x3511,0x515e);
+setpal(pal41,0x0,0x5322,0x568f,0x3baa,0x4cdf,0x3fd9,0x3c83,0xfff,0x2656,0x3632,0x3235,0x79af,0x1111,0x4888,0x4963,0x2eb5);
 load_palettes(pal41,PALETTES+PALOFFSET*56);
 }
 
@@ -1491,7 +1491,7 @@ load_palettes(pal41,PALETTES+PALOFFSET*56);
 void NEOGEO_USER showScreen42(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 42 ******************************************/
 uint16_t  pal42[16];
-setpal(pal42,0x0,0x0,0x5fff,0x664f,0x1e81,0x6fd1,0x7544,0x4fe6,0x1d33,0x4411,0x2238,0x3113,0x6941,0x2c9f,0x6989,0xfeb);
+setpal(pal42,0x0,0x1223,0x5eee,0x4a73,0x7878,0xfd8,0x6656,0x346,0x1111,0x97f,0x3caf,0xeb4,0x4bbb,0x6b86,0x7742,0x4432);
 load_palettes(pal42,PALETTES+PALOFFSET*57);
 }
 
@@ -1499,7 +1499,7 @@ load_palettes(pal42,PALETTES+PALOFFSET*57);
 void NEOGEO_USER showScreen43(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 43 ******************************************/
 uint16_t  pal43[16];
-setpal(pal43,0x0,0x0,0x5caf,0x2b88,0x7fff,0x4458,0x7fe4,0x1f91,0x127,0x6ecf,0x6a31,0x674f,0x3a7f,0x4013,0x621f,0x2511);
+setpal(pal43,0x0,0x3fef,0x964,0x5a9f,0x112,0x7cbf,0x3767,0x1c95,0x1b72,0x6eb5,0x5eda,0x386e,0x5642,0x2422,0x7235,0x4aaa);
 load_palettes(pal43,PALETTES+PALOFFSET*58);
 }
 
@@ -1507,7 +1507,7 @@ load_palettes(pal43,PALETTES+PALOFFSET*58);
 void NEOGEO_USER showScreen44(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 44 ******************************************/
 uint16_t  pal44[16];
-setpal(pal44,0x0,0x0,0x6fff,0x6511,0x6e81,0x1235,0x5c95,0x4013,0x259,0x7e25,0x1999,0x1765,0x5eb8,0x2feb,0x6941,0x7fe2);
+setpal(pal44,0x0,0x4123,0x4eee,0x7da4,0x3ec9,0x3755,0x2b46,0x2b73,0x7742,0x1cb9,0x111,0x7976,0x1edb,0x4246,0x6422,0x2b98);
 load_palettes(pal44,PALETTES+PALOFFSET*59);
 }
 
@@ -1515,7 +1515,7 @@ load_palettes(pal44,PALETTES+PALOFFSET*59);
 void NEOGEO_USER showScreen45(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 45 ******************************************/
 uint16_t  pal45[16];
-setpal(pal45,0x0,0x0,0x2fff,0x6fe9,0x7510,0x988,0x3abd,0x5148,0x4fe2,0x7002,0x7e95,0xa41,0x7e80,0x7124,0x1655,0x425f);
+setpal(pal45,0x0,0x2a75,0x1111,0x267f,0x7b72,0x1852,0x7bbd,0x6422,0x3ea4,0x7ec8,0x3223,0x767,0x2a99,0x4eee,0x5246,0x544);
 load_palettes(pal45,PALETTES+PALOFFSET*60);
 }
 
@@ -1523,7 +1523,7 @@ load_palettes(pal45,PALETTES+PALOFFSET*60);
 void NEOGEO_USER showScreen46(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 46 ******************************************/
 uint16_t  pal46[16];
-setpal(pal46,0x0,0x0,0x6fd2,0x4bcd,0x1e96,0x336e,0x4951,0x5c22,0x248,0x5ff8,0x3510,0xe81,0x3113,0x545,0x7878,0x6fff);
+setpal(pal46,0x0,0x1eee,0x1223,0x4a76,0x1766,0x5c93,0x1111,0x579f,0x5962,0xec6,0x1544,0x742,0x3a99,0x6dcb,0x7236,0x1421);
 load_palettes(pal46,PALETTES+PALOFFSET*61);
 }
 
@@ -1531,7 +1531,7 @@ load_palettes(pal46,PALETTES+PALOFFSET*61);
 void NEOGEO_USER showScreen47(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 47 ******************************************/
 uint16_t  pal47[16];
-setpal(pal47,0x0,0x4877,0x6fe9,0x0,0x702e,0x6e81,0x5fe2,0x6e96,0x3510,0x548e,0x2fff,0x2238,0x4a41,0x7bbc,0x545,0x3113);
+setpal(pal47,0x0,0x2101,0x39af,0x5ddb,0x5ec6,0x5766,0x1346,0x447f,0x532,0x2d94,0x4a73,0x6743,0x2a99,0x334,0x3212,0x4def);
 load_palettes(pal47,PALETTES+PALOFFSET*62);
 }
 
@@ -1539,7 +1539,7 @@ load_palettes(pal47,PALETTES+PALOFFSET*62);
 void NEOGEO_USER showScreen48(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 48 ******************************************/
 uint16_t  pal48[16];
-setpal(pal48,0x0,0x6fe9,0x0,0x1235,0x4941,0x7fe3,0xfff,0x6249,0x6d61,0x3fa1,0xbbb,0x4521,0x1112,0x3766,0x2d86,0x4c26);
+setpal(pal48,0x0,0x6113,0x1532,0x4963,0x3c83,0x1eed,0x4346,0x6b87,0x4ed9,0x7742,0x2101,0x1321,0x1234,0x6eb5,0x877,0x3baa);
 load_palettes(pal48,PALETTES+PALOFFSET*63);
 }
 
@@ -1547,7 +1547,7 @@ load_palettes(pal48,PALETTES+PALOFFSET*63);
 void NEOGEO_USER showScreen49(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 49 ******************************************/
 uint16_t  pal49[16];
-setpal(pal49,0x0,0x799a,0x0,0x3e86,0x6fff,0x1766,0x3248,0x6014,0xd61,0x4eeb,0x7433,0x5410,0x4fe2,0x3f91,0x7fe6,0x2931);
+setpal(pal49,0x0,0x111,0x4c94,0x1eed,0x6963,0x2fda,0x6235,0x3a55,0x4ec6,0x6988,0x2347,0x6656,0x3742,0x4123,0x4bbb,0x6422);
 load_palettes(pal49,PALETTES+PALOFFSET*64);
 }
 
@@ -1555,7 +1555,7 @@ load_palettes(pal49,PALETTES+PALOFFSET*64);
 void NEOGEO_USER showScreen50(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 50 ******************************************/
 uint16_t  pal50[16];
-setpal(pal50,0x0,0x0,0x38af,0x7fff,0x3acf,0x7555,0x314f,0x336f,0x5dff,0x7aab,0x889,0x548f,0x236,0x7222,0x5bef,0x169f);
+setpal(pal50,0x0,0x19bf,0x1def,0x5acf,0x5eff,0x147f,0x179f,0x757f,0x7fff,0x58af,0x335f,0x646f,0x3bcf,0x168f,0x1cdf,0x3abf);
 load_palettes(pal50,PALETTES+PALOFFSET*65);
 }
 
@@ -1563,7 +1563,7 @@ load_palettes(pal50,PALETTES+PALOFFSET*65);
 void NEOGEO_USER showScreen51(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 51 ******************************************/
 uint16_t  pal51[16];
-setpal(pal51,0x0,0x0,0x3fff,0x369f,0x1dff,0x756a,0x18bf,0x1aab,0x5233,0x7555,0x114f,0x347f,0x7bdf,0x59cf,0xddd,0x7888);
+setpal(pal51,0x0,0x3abf,0x547f,0x1def,0x7fff,0x3bcf,0x779f,0x39af,0x179e,0x5eff,0x1eef,0x525f,0x7aaf,0x7cdf,0x368f,0x5bdf);
 load_palettes(pal51,PALETTES+PALOFFSET*66);
 }
 
@@ -1571,7 +1571,7 @@ load_palettes(pal51,PALETTES+PALOFFSET*66);
 void NEOGEO_USER showScreen52(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 52 ******************************************/
 uint16_t  pal52[16];
-setpal(pal52,0x0,0x3235,0x6fd2,0x0,0xc51,0x1865,0x4731,0x5fe6,0x4013,0x3f81,0x6359,0x4fff,0xe96,0x3fea,0x6a9c,0x2411);
+setpal(pal52,0x0,0x4123,0x4ddc,0x7b9f,0xa63,0xeb5,0x4eef,0x7ec8,0x1666,0x2a76,0x1345,0x1742,0x1111,0x6422,0x7c83,0x5aa9);
 load_palettes(pal52,PALETTES+PALOFFSET*67);
 }
 
@@ -1579,7 +1579,7 @@ load_palettes(pal52,PALETTES+PALOFFSET*67);
 void NEOGEO_USER showScreen53(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 53 ******************************************/
 uint16_t  pal53[16];
-setpal(pal53,0x0,0x763f,0x0,0x7ecf,0x196f,0x185f,0x520f,0x351f,0x5caf,0x7fff,0x352e,0x41d,0x1333,0x7a7f,0x6667,0x1aaa);
+setpal(pal53,0x0,0x786e,0x3edf,0x1cbf,0x753b,0x1dcf,0x498f,0x1b9f,0x764d,0x1fff,0x7a8f,0x543a,0x5baf,0x364c,0x97f,0x675e);
 load_palettes(pal53,PALETTES+PALOFFSET*68);
 }
 
@@ -1587,7 +1587,7 @@ load_palettes(pal53,PALETTES+PALOFFSET*68);
 void NEOGEO_USER showScreen54(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 54 ******************************************/
 uint16_t  pal54[16];
-setpal(pal54,0x0,0x763f,0x0,0x7fff,0x340f,0x7c9f,0x1a7f,0x5889,0x395f,0x384f,0x452f,0x5fdf,0x1b8f,0x341d,0x2434,0x1ebf);
+setpal(pal54,0x0,0x5baf,0x775d,0x464e,0x5eef,0x7dcf,0x253b,0x764c,0x5a9f,0x97f,0x5cbf,0x186e,0x7fff,0x653c,0x543a,0xa8f);
 load_palettes(pal54,PALETTES+PALOFFSET*69);
 }
 
@@ -1595,7 +1595,7 @@ load_palettes(pal54,PALETTES+PALOFFSET*69);
 void NEOGEO_USER showScreen55(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 55 ******************************************/
 uint16_t  pal55[16];
-setpal(pal55,0x0,0x7fff,0x0,0x752f,0x5b9f,0x6667,0x1fdf,0x1aaa,0x1a7f,0x7daf,0x7223,0x641e,0x373f,0x130f,0x196f,0x384f);
+setpal(pal55,0x0,0x7dcf,0x64c,0x97f,0x1fff,0x86e,0x1b9f,0x1a8f,0x53b,0x1caf,0x5baf,0x5cbf,0x7cbf,0x7edf,0x3dbf,0x75d);
 load_palettes(pal55,PALETTES+PALOFFSET*70);
 }
 
@@ -1603,7 +1603,7 @@ load_palettes(pal55,PALETTES+PALOFFSET*70);
 void NEOGEO_USER showScreen56(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 56 ******************************************/
 uint16_t  pal56[16];
-setpal(pal56,0x0,0x163f,0x5caf,0x0,0x3a7f,0x7fff,0x196f,0x542d,0x4778,0x141f,0x3ebf,0x1fdf,0x445,0x7b8f,0x3bab,0x774f);
+setpal(pal56,0x0,0x5fff,0x786e,0x3edf,0x764c,0x5baf,0x697f,0x476e,0x4a9f,0x175d,0x1dcf,0x554b,0x7a8f,0x153a,0x5cbf,0x164c);
 load_palettes(pal56,PALETTES+PALOFFSET*71);
 }
 
@@ -1611,7 +1611,7 @@ load_palettes(pal56,PALETTES+PALOFFSET*71);
 void NEOGEO_USER showScreen57(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 57 ******************************************/
 uint16_t  pal57[16];
-setpal(pal57,0x0,0x3113,0x5fc2,0x7fff,0x596f,0x556,0x3daf,0x4c62,0x721,0x6fe9,0x0,0x340f,0x1fdf,0x373f,0x7b8f,0x7989);
+setpal(pal57,0x0,0x4668,0x5cbf,0x5fff,0x6a74,0x86f,0x7224,0x5a9f,0x853,0x3edf,0x5ed9,0x4112,0x6da5,0x6422,0x3644,0x3a99);
 load_palettes(pal57,PALETTES+PALOFFSET*72);
 }
 
@@ -1619,7 +1619,7 @@ load_palettes(pal57,PALETTES+PALOFFSET*72);
 void NEOGEO_USER showScreen58(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 58 ******************************************/
 uint16_t  pal58[16];
-setpal(pal58,0x0,0x0,0x7fff,0x5daf,0x361f,0x7fcf,0x5888,0x3323,0x2658,0x595f,0x5fef,0x6555,0x3c9f,0x3ebf,0x2bab,0x7b7f);
+setpal(pal58,0x0,0xa8f,0x3fef,0x3dbf,0x7dcf,0x3b9f,0x597f,0x274f,0x686f,0x7baf,0x7a8f,0x7edf,0x285f,0x1caf,0x3a7f,0x5fff);
 load_palettes(pal58,PALETTES+PALOFFSET*73);
 }
 
@@ -1627,7 +1627,7 @@ load_palettes(pal58,PALETTES+PALOFFSET*73);
 void NEOGEO_USER showScreen59(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 59 ******************************************/
 uint16_t  pal59[16];
-setpal(pal59,0x0,0x1410,0x6fff,0x0,0x2c98,0xc61,0x3434,0x546b,0x2f91,0x831,0x4ff9,0x7137,0x4fe3,0x4bbe,0x4777,0x4013);
+setpal(pal59,0x0,0x2a63,0x3742,0x1ccb,0x2101,0x347,0x3fd9,0x6eb6,0x6422,0x3212,0x3766,0x3b9f,0x6a99,0x5eee,0x4c94,0x5234);
 load_palettes(pal59,PALETTES+PALOFFSET*74);
 }
 
@@ -1635,7 +1635,7 @@ load_palettes(pal59,PALETTES+PALOFFSET*74);
 void NEOGEO_USER showScreen60(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 60 ******************************************/
 uint16_t  pal60[16];
-setpal(pal60,0x0,0x7fff,0x0,0x373f,0x1c9f,0x4334,0x499a,0x4112,0x3daf,0x395f,0x5a7f,0x340f,0x1ecf,0x7fdf,0x76a,0x1556);
+setpal(pal60,0x0,0x7fff,0x3dbf,0x1a8f,0x5baf,0x7edf,0x385f,0x1fef,0x3caf,0x1dbf,0x597f,0x5cbf,0x7baf,0x1b9f,0x5fff,0x7dcf);
 load_palettes(pal60,PALETTES+PALOFFSET*75);
 }
 
@@ -1643,7 +1643,7 @@ load_palettes(pal60,PALETTES+PALOFFSET*75);
 void NEOGEO_USER showScreen61(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 61 ******************************************/
 uint16_t  pal61[16];
-setpal(pal61,0x0,0x5fe3,0x0,0x6fff,0x7013,0x7147,0xe96,0x7941,0x2bab,0x6434,0x311,0x1d61,0x4621,0x3866,0x1fa1,0x5ff9);
+setpal(pal61,0x0,0x2b76,0x1742,0x5eed,0x1111,0xfd9,0x1421,0x4963,0x4999,0x2cbb,0x5246,0x4444,0x3766,0xeb6,0x7123,0x7c83);
 load_palettes(pal61,PALETTES+PALOFFSET*76);
 }
 
@@ -1651,7 +1651,7 @@ load_palettes(pal61,PALETTES+PALOFFSET*76);
 void NEOGEO_USER showScreen62(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 62 ******************************************/
 uint16_t  pal62[16];
-setpal(pal62,0x0,0x6013,0x4b51,0xfff,0x1888,0x3136,0x4bbb,0x865,0x7fe9,0x831,0x4e82,0x7fc1,0x2fc6,0x2411,0x6434,0x0);
+setpal(pal62,0x0,0x1111,0x3fc8,0x5a73,0x4777,0x7eb5,0x2236,0x7123,0x7c83,0xeed,0x4853,0x4aaa,0x4322,0x3544,0x1c96,0x2632);
 load_palettes(pal62,PALETTES+PALOFFSET*77);
 }
 
@@ -1659,7 +1659,7 @@ load_palettes(pal62,PALETTES+PALOFFSET*77);
 void NEOGEO_USER showScreen63(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 63 ******************************************/
 uint16_t  pal63[16];
-setpal(pal63,0x0,0x1543,0x6fff,0x0,0x6fd6,0x4d72,0x124,0x7410,0x4012,0x4941,0x7866,0x4baa,0x6feb,0x6159,0x5fb1,0x7136);
+setpal(pal63,0x0,0x3842,0x766,0x1eed,0x1321,0xd94,0x1b86,0x3fb5,0x4246,0x4a73,0xaaa,0x3fda,0x1111,0x2224,0x3532,0x2eb8);
 load_palettes(pal63,PALETTES+PALOFFSET*78);
 }
 
@@ -1667,7 +1667,7 @@ load_palettes(pal63,PALETTES+PALOFFSET*78);
 void NEOGEO_USER showScreen64(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 64 ******************************************/
 uint16_t  pal64[16];
-setpal(pal64,0x0,0x3113,0x6fea,0x4148,0x5b50,0x1655,0x4e81,0x19aa,0x4731,0x7fe5,0x0,0x411,0xfff,0x7fc1,0x6e95,0x1b65);
+setpal(pal64,0x0,0x1111,0x5c93,0x5eec,0x2224,0x4876,0x4322,0x5852,0x3a98,0x7ec8,0x5a73,0x7631,0x1eb5,0x5246,0x4544,0x1ccb);
 load_palettes(pal64,PALETTES+PALOFFSET*79);
 }
 
@@ -1675,7 +1675,7 @@ load_palettes(pal64,PALETTES+PALOFFSET*79);
 void NEOGEO_USER showScreen65(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 65 ******************************************/
 uint16_t  pal65[16];
-setpal(pal65,0x0,0x6fff,0x3d74,0x6014,0x4311,0x0,0xbbb,0x4fe2,0x4777,0x248,0x544,0x4ffa,0xb51,0x4fd6,0xf91,0x5720);
+setpal(pal65,0x0,0x5111,0x1fd9,0x999,0x2cbb,0x6422,0x4766,0x5246,0x5eed,0x2a63,0x7742,0x2224,0x5c93,0x5b96,0x7eb5,0x7933);
 load_palettes(pal65,PALETTES+PALOFFSET*80);
 }
 
@@ -1683,7 +1683,7 @@ load_palettes(pal65,PALETTES+PALOFFSET*80);
 void NEOGEO_USER showScreen66(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 66 ******************************************/
 uint16_t  pal66[16];
-setpal(pal66,0x0,0x0,0x7fff,0x5410,0x5fe1,0x2113,0x3bbc,0x7c51,0x234e,0x5fd6,0x7830,0x3877,0x5ffa,0x4444,0x6138,0x3f91);
+setpal(pal66,0x0,0x5123,0x4ec7,0xeed,0x3952,0x6988,0x111,0x742,0x3b73,0x4444,0x1ea3,0x766,0x1421,0x4bbb,0x467d,0x5246);
 load_palettes(pal66,PALETTES+PALOFFSET*81);
 }
 
@@ -1691,7 +1691,7 @@ load_palettes(pal66,PALETTES+PALOFFSET*81);
 void NEOGEO_USER showScreen67(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 67 ******************************************/
 uint16_t  pal67[16];
-setpal(pal67,0x0,0x6fc1,0x0,0x6fe6,0x2125,0x699a,0x5ea5,0x5a74,0x2fea,0x1ffe,0x3d70,0x1112,0x2511,0x655,0x941,0x4248);
+setpal(pal67,0x0,0x3224,0x5ec6,0x2101,0x1421,0x2baa,0x4eed,0xb83,0x3952,0x7112,0x1fd9,0x6766,0x7da3,0x1346,0x1642,0x4b96);
 load_palettes(pal67,PALETTES+PALOFFSET*82);
 }
 
@@ -1699,7 +1699,7 @@ load_palettes(pal67,PALETTES+PALOFFSET*82);
 void NEOGEO_USER showScreen68(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 68 ******************************************/
 uint16_t  pal68[16];
-setpal(pal68,0x0,0x2989,0x3cbc,0x0,0x4731,0x6fe9,0x6fff,0x7e80,0x6137,0x1433,0x3755,0x5ea5,0x1b61,0x5310,0x5012,0x4fd2);
+setpal(pal68,0x0,0x4123,0xccc,0x2fee,0xc83,0x2101,0x2878,0x7742,0x6422,0x4556,0x699a,0x7ec9,0x5eb4,0x7b97,0x1974,0x6235);
 load_palettes(pal68,PALETTES+PALOFFSET*83);
 }
 
@@ -1707,7 +1707,7 @@ load_palettes(pal68,PALETTES+PALOFFSET*83);
 void NEOGEO_USER showScreen69(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 69 ******************************************/
 uint16_t  pal69[16];
-setpal(pal69,0x0,0x3113,0x6fff,0x2b51,0x7fd5,0x3cbb,0x6138,0x0,0x731,0x1f91,0x1c84,0x5ffa,0x4311,0x7fd1,0x4555,0x5888);
+setpal(pal69,0x0,0x4ec6,0x3544,0x2101,0x1321,0x347,0x3b73,0xccc,0x1ffe,0x7852,0x3a98,0x4da4,0x1223,0x2fda,0x2632,0x4777);
 load_palettes(pal69,PALETTES+PALOFFSET*84);
 }
 
@@ -1715,7 +1715,7 @@ load_palettes(pal69,PALETTES+PALOFFSET*84);
 void NEOGEO_USER showScreen70(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 70 ******************************************/
 uint16_t  pal70[16];
-setpal(pal70,0x0,0x6411,0xe81,0x7fff,0x6545,0x5b64,0x941,0x4fd1,0x0,0x5136,0xfa5,0x113,0xaaa,0x5eeb,0x1259,0x4fe7);
+setpal(pal70,0x0,0x1b96,0x6422,0x1fd8,0xfff,0x5998,0x223,0x6236,0xc83,0x7742,0x6556,0x7edb,0x111,0xeb5,0x2965,0x5cb9);
 load_palettes(pal70,PALETTES+PALOFFSET*85);
 }
 
@@ -1723,7 +1723,7 @@ load_palettes(pal70,PALETTES+PALOFFSET*85);
 void NEOGEO_USER showScreen71(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 71 ******************************************/
 uint16_t  pal71[16];
-setpal(pal71,0x0,0x7714,0x0,0x3fd1,0x6125,0x4fe8,0xfff,0x3e77,0x888,0x7248,0x2c61,0x555,0xc34,0x5bbb,0x4521,0x112);
+setpal(pal71,0x0,0x3877,0x7000,0x2347,0xeee,0x7aaa,0x4963,0x5555,0x6c93,0x5333,0x2632,0x7ec6,0x6312,0x3224,0x2112,0x6724);
 load_palettes(pal71,PALETTES+PALOFFSET*86);
 }
 
@@ -1731,7 +1731,7 @@ load_palettes(pal71,PALETTES+PALOFFSET*86);
 void NEOGEO_USER showScreen72(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 72 ******************************************/
 uint16_t  pal72[16];
-setpal(pal72,0x0,0x1daf,0x0,0x7fff,0x7ebf,0x563f,0x3323,0x384f,0x5fdf,0x5aab,0x7a7f,0x5fef,0x541f,0x5667,0x3c8f,0x596f);
+setpal(pal72,0x0,0x1ecf,0x5fff,0x742d,0x75e,0x7a8f,0x575f,0x197e,0x1dbf,0x396f,0x653e,0x7edf,0x263f,0x5baf,0x86f,0x1fef);
 load_palettes(pal72,PALETTES+PALOFFSET*87);
 }
 
@@ -1739,7 +1739,7 @@ load_palettes(pal72,PALETTES+PALOFFSET*87);
 void NEOGEO_USER showScreen73(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 73 ******************************************/
 uint16_t  pal73[16];
-setpal(pal73,0x0,0x7002,0x1baa,0x6ffe,0x5fe3,0x3fa1,0x5c71,0x3856,0x6fea,0x1fa5,0x3225,0x5310,0x0,0x725b,0x6941,0x2621);
+setpal(pal73,0x0,0x1fec,0x5752,0x5321,0x6532,0x5da6,0x5ec4,0x6963,0x1111,0x2224,0x3446,0x1a87,0x6756,0x1fd9,0x5bba,0x3c83);
 load_palettes(pal73,PALETTES+PALOFFSET*88);
 }
 
@@ -1747,7 +1747,7 @@ load_palettes(pal73,PALETTES+PALOFFSET*88);
 void NEOGEO_USER showScreen74(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 74 ******************************************/
 uint16_t  pal74[16];
-setpal(pal74,0x0,0x5fe1,0x1c60,0x248,0x1410,0x6fff,0x0,0x4fb5,0x1830,0x6fe7,0x2f91,0x3114,0x5ffa,0x7d75,0x3aab,0x2856);
+setpal(pal74,0x0,0x6236,0xfc8,0x5111,0x2842,0x3d93,0x4a73,0x1965,0x3521,0x6545,0x6eee,0x7fda,0x5c96,0xcbb,0x1888,0x6eb5);
 load_palettes(pal74,PALETTES+PALOFFSET*89);
 }
 
@@ -1755,7 +1755,7 @@ load_palettes(pal74,PALETTES+PALOFFSET*89);
 void NEOGEO_USER showScreen75(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 75 ******************************************/
 uint16_t  pal75[16];
-setpal(pal75,0x0,0x2d71,0x0,0x5ffa,0x148c,0x3126,0x7fe1,0xfff,0x5730,0x1410,0x1fa5,0x4a51,0xb89,0x2fa2,0x2735,0x6fe6);
+setpal(pal75,0x0,0x2953,0x7eed,0x4baa,0x6236,0x2eb4,0x5877,0x4eb7,0x7fda,0x4642,0x4111,0x6fd7,0x4c95,0x7a73,0x7544,0x3421);
 load_palettes(pal75,PALETTES+PALOFFSET*90);
 }
 
@@ -1763,7 +1763,7 @@ load_palettes(pal75,PALETTES+PALOFFSET*90);
 void NEOGEO_USER showScreen76(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 76 ******************************************/
 uint16_t  pal76[16];
-setpal(pal76,0x0,0x1c87,0x5ffa,0x0,0x4fe2,0x6e81,0x6fff,0x5410,0x1fa4,0x28ac,0x7fe6,0x2238,0x1830,0x1756,0x2114,0x2b51);
+setpal(pal76,0x0,0x6fda,0x1655,0x7eed,0x7baa,0x1346,0x1fc6,0x852,0x4111,0x6963,0x1421,0x7b83,0x2632,0x3d95,0x1223,0x3977);
 load_palettes(pal76,PALETTES+PALOFFSET*91);
 }
 
@@ -1771,7 +1771,7 @@ load_palettes(pal76,PALETTES+PALOFFSET*91);
 void NEOGEO_USER showScreen77(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 77 ******************************************/
 uint16_t  pal77[16];
-setpal(pal77,0x0,0x5ffa,0x0,0x4c36,0x3114,0x5fe1,0x6fff,0x1fa5,0x6aac,0x4fe6,0x248,0x6767,0xc61,0x5410,0x3830,0x3f91);
+setpal(pal77,0x0,0x7fda,0x7421,0x6eb4,0x6963,0x5bba,0x2d96,0x4111,0x6742,0x1977,0x1346,0x6eee,0x6b84,0x1fc7,0x2224,0x7544);
 load_palettes(pal77,PALETTES+PALOFFSET*92);
 }
 
@@ -1779,7 +1779,7 @@ load_palettes(pal77,PALETTES+PALOFFSET*92);
 void NEOGEO_USER showScreen78(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 78 ******************************************/
 uint16_t  pal78[16];
-setpal(pal78,0x0,0xd71,0x0,0x3b38,0x4ffd,0x5fe1,0x656,0xb99,0x6911,0xfa3,0x4fe7,0x4137,0x311,0x3940,0x258d,0x1620);
+setpal(pal78,0x0,0x4111,0x7fda,0x7eb4,0x3baa,0x3742,0x3b73,0x7421,0x1346,0x2ea7,0x2224,0x2867,0x4c95,0x1fd7,0x6eee,0x963);
 load_palettes(pal78,PALETTES+PALOFFSET*93);
 }
 
@@ -1787,7 +1787,7 @@ load_palettes(pal78,PALETTES+PALOFFSET*93);
 void NEOGEO_USER showScreen79(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 79 ******************************************/
 uint16_t  pal79[16];
-setpal(pal79,0x0,0x2200,0x4420,0x7fff,0x2d71,0x5887,0x2baa,0x3a50,0x0,0x2655,0x630,0x840,0x6310,0x3edc,0x5fe0,0x333);
+setpal(pal79,0x0,0x5ddc,0x3310,0x1ffe,0x3766,0x2631,0x6421,0x5998,0x7100,0xec2,0x5554,0x5bba,0xa72,0x2211,0x433,0x5751);
 load_palettes(pal79,PALETTES+PALOFFSET*94);
 }
 
@@ -1795,7 +1795,7 @@ load_palettes(pal79,PALETTES+PALOFFSET*94);
 void NEOGEO_USER showScreen80(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 80 ******************************************/
 uint16_t  pal80[16];
-setpal(pal80,0x0,0x310,0x840,0x7fff,0x0,0x333,0x7a99,0x6520,0x6d81,0x1ccc,0x3655,0x6a50,0x3fed,0x6fe0,0x6877,0x2ecb);
+setpal(pal80,0x0,0x4321,0x6fff,0x3544,0x1776,0x3100,0x3baa,0x5998,0x5751,0x2631,0x2eb1,0x5eed,0x2521,0x2dcc,0x6962,0x1210);
 load_palettes(pal80,PALETTES+PALOFFSET*95);
 }
 
@@ -1803,7 +1803,7 @@ load_palettes(pal80,PALETTES+PALOFFSET*95);
 void NEOGEO_USER showScreen81(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 81 ******************************************/
 uint16_t  pal81[16];
-setpal(pal81,0x0,0x3433,0x7fff,0x0,0x1b60,0x3766,0xccc,0x4fd0,0x6eed,0x5dca,0x2a99,0x6840,0x420,0x630,0xe92,0x210);
+setpal(pal81,0x0,0x321,0x4fff,0x1ea0,0x1210,0x3877,0x1851,0x3100,0x1ccb,0x6421,0x5641,0x3a99,0x3edd,0x3655,0x2433,0x4a72);
 load_palettes(pal81,PALETTES+PALOFFSET*96);
 }
 
@@ -1811,7 +1811,7 @@ load_palettes(pal81,PALETTES+PALOFFSET*96);
 void NEOGEO_USER showScreen82(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 82 ******************************************/
 uint16_t  pal82[16];
-setpal(pal82,0x0,0x7fff,0x3323,0x656,0xcbb,0x878,0x0,0x310,0x3fdc,0x4a99,0x5fc0,0x1eca,0x4630,0x5950,0x6ffe,0x2f80);
+setpal(pal82,0x0,0x7ffe,0x5444,0x5a71,0x5110,0x7baa,0x7dcb,0xa99,0x1877,0x1ea1,0x2421,0x7edc,0x4223,0x7fed,0x3656,0x2742);
 load_palettes(pal82,PALETTES+PALOFFSET*97);
 }
 
@@ -1819,7 +1819,7 @@ load_palettes(pal82,PALETTES+PALOFFSET*97);
 void NEOGEO_USER showScreen83(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 83 ******************************************/
 uint16_t  pal83[16];
-setpal(pal83,0x0,0x6fff,0x1212,0x2840,0x2f80,0x656,0x3434,0x3caa,0x0,0x7c22,0x2410,0x6fed,0x5877,0x5fd0,0x3ecb,0x2a89);
+setpal(pal83,0x0,0x4eed,0x4223,0x2742,0xbaa,0x1988,0x7c80,0x7ffe,0x5eb2,0x5444,0x5666,0x3100,0x4431,0x2311,0x1a62,0x1dcb);
 load_palettes(pal83,PALETTES+PALOFFSET*98);
 }
 
@@ -1827,7 +1827,7 @@ load_palettes(pal83,PALETTES+PALOFFSET*98);
 void NEOGEO_USER showScreen84(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 84 ******************************************/
 uint16_t  pal84[16];
-setpal(pal84,0x0,0x6fff,0x2410,0x5950,0x4630,0x767,0x2dbb,0x3fec,0x4100,0x3b99,0x1988,0x7fd1,0x0,0x4223,0xf90,0x1545);
+setpal(pal84,0x0,0x5110,0x7ffe,0x1988,0xedc,0x2d81,0x6321,0x5aa9,0x5333,0x6cbb,0x2fb4,0x7531,0x4752,0x2767,0x3545,0xfed);
 load_palettes(pal84,PALETTES+PALOFFSET*99);
 }
 
@@ -1835,7 +1835,7 @@ load_palettes(pal84,PALETTES+PALOFFSET*99);
 void NEOGEO_USER showScreen85(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 85 ******************************************/
 uint16_t  pal85[16];
-setpal(pal85,0x0,0x2fb5,0x0,0x4544,0x5d86,0x248,0x7fe2,0x2867,0x4e91,0x7ffe,0x7fe9,0x4b61,0x1410,0x1830,0x7013,0x2bab);
+setpal(pal85,0x0,0x6baa,0xfec,0x2224,0x3a62,0x3fc8,0x7c96,0x7742,0x1346,0x3c83,0x2a65,0x3421,0x111,0x7544,0x3877,0x6eb5);
 load_palettes(pal85,PALETTES+PALOFFSET*100);
 }
 
@@ -1843,7 +1843,7 @@ load_palettes(pal85,PALETTES+PALOFFSET*100);
 void NEOGEO_USER showScreen86(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 86 ******************************************/
 uint16_t  pal86[16];
-setpal(pal86,0x0,0x2410,0x5aaa,0x5dbf,0x7d90,0x531f,0x4888,0x5fff,0x0,0x7a7f,0x5740,0x3655,0x574f,0x1ddc,0x1669,0x4333);
+setpal(pal86,0x0,0x5dcf,0x4641,0x4888,0x686f,0x5bba,0x6ddd,0x1210,0x432,0x2fef,0x5a9f,0x2a72,0x1420,0x5665,0x164e,0x544);
 load_palettes(pal86,PALETTES+PALOFFSET*101);
 }
 
@@ -1851,7 +1851,7 @@ load_palettes(pal86,PALETTES+PALOFFSET*101);
 void NEOGEO_USER showScreen87(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 87 ******************************************/
 uint16_t  pal87[16];
-setpal(pal87,0x0,0x5e91,0x77ac,0x7fd1,0x0,0x4ffb,0x3300,0x7237,0x4fe9,0x4a78,0x1940,0x1fa4,0xc61,0x1620,0x6fd6,0x6fff);
+setpal(pal87,0x0,0x2a63,0x6bab,0x2c84,0x211,0x7eed,0x6742,0x7421,0x3fc4,0x2fc8,0x5765,0x7b86,0x267a,0x2ea6,0x7fda,0x3335);
 load_palettes(pal87,PALETTES+PALOFFSET*102);
 }
 
@@ -1859,7 +1859,7 @@ load_palettes(pal87,PALETTES+PALOFFSET*102);
 void NEOGEO_USER showScreen88(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 88 ******************************************/
 uint16_t  pal88[16];
-setpal(pal88,0x0,0x6d71,0x1ffe,0x0,0x5fe5,0x2300,0x5840,0x6a9b,0x2448,0x2fa2,0x3b50,0x1620,0x6fea,0x6fe1,0x3fa5,0x7c64);
+setpal(pal88,0x0,0x3521,0xfd4,0xb99,0x4963,0x211,0x7fda,0x5b83,0x3867,0x5b85,0x6346,0x3fed,0x1fc7,0x1ccb,0x3742,0x4da5);
 load_palettes(pal88,PALETTES+PALOFFSET*103);
 }
 
@@ -1867,7 +1867,7 @@ load_palettes(pal88,PALETTES+PALOFFSET*103);
 void NEOGEO_USER showScreen89(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 89 ******************************************/
 uint16_t  pal89[16];
-setpal(pal89,0x0,0x3c60,0x4000,0x7fe5,0x6239,0x7830,0x7fc7,0xe74,0x5410,0x298a,0xfff,0x2f91,0x4fb4,0x5ffb,0x4fe1,0x6fe9);
+setpal(pal89,0x0,0x3fed,0x963,0x211,0x2fc8,0x4347,0x742,0x3ea6,0x7421,0x2d94,0x1c85,0x7878,0x3cbb,0x7fda,0x3fc4,0x3b73);
 load_palettes(pal89,PALETTES+PALOFFSET*104);
 }
 
@@ -1875,7 +1875,7 @@ load_palettes(pal89,PALETTES+PALOFFSET*104);
 void NEOGEO_USER showScreen90(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 90 ******************************************/
 uint16_t  pal90[16];
-setpal(pal90,0x0,0x2fa2,0x0,0x7fe9,0x1a50,0x3b9b,0x146b,0xd71,0x3ffe,0x7225,0x6300,0x3720,0x7fe3,0x6e74,0x4766,0x6fb6);
+setpal(pal90,0x0,0x1fd5,0x2742,0x4ccc,0x211,0x2fed,0x1962,0x3b73,0x3434,0x4c95,0x6fda,0x1eb6,0x5a99,0x7421,0x568,0x2966);
 load_palettes(pal90,PALETTES+PALOFFSET*105);
 }
 
@@ -1883,7 +1883,7 @@ load_palettes(pal90,PALETTES+PALOFFSET*105);
 void NEOGEO_USER showScreen91(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 91 ******************************************/
 uint16_t  pal91[16];
-setpal(pal91,0x0,0x1a50,0x4347,0x410,0x5ffa,0x1fa4,0x0,0x1d23,0x698a,0x7fd8,0x5730,0x4fe1,0xfa1,0x5fe4,0xfff,0x1d71);
+setpal(pal91,0x0,0x1eb7,0x532,0x5a73,0x2311,0x742,0x1cbb,0x3100,0x4988,0x6fda,0x4da5,0x7852,0x4456,0x2c84,0x3fc5,0x3fed);
 load_palettes(pal91,PALETTES+PALOFFSET*106);
 }
 
@@ -1891,7 +1891,7 @@ load_palettes(pal91,PALETTES+PALOFFSET*106);
 void NEOGEO_USER showScreen92(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 92 ******************************************/
 uint16_t  pal92[16];
-setpal(pal92,0x0,0x2fa4,0x1225,0x4ffd,0x0,0x1b25,0x5ade,0x6300,0x7fe8,0x4c9a,0x3720,0x6fd2,0x5a50,0x158b,0x5765,0x1e81);
+setpal(pal92,0x0,0x5c94,0x3c98,0x5fd9,0x7421,0x2ea6,0x4346,0x211,0xccc,0x3fec,0x2fc5,0x866,0x7852,0x7a73,0x4642,0x889);
 load_palettes(pal92,PALETTES+PALOFFSET*107);
 }
 
@@ -1899,6 +1899,226 @@ load_palettes(pal92,PALETTES+PALOFFSET*107);
 void NEOGEO_USER showScreen93(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 93 ******************************************/
 uint16_t  pal93[16];
-setpal(pal93,0x0,0x5b60,0x0,0x4ffa,0xa64,0x4fd2,0x1830,0x5467,0x3a79,0x7fd6,0x3424,0x1f94,0xccc,0x4e91,0x7ffe,0x410);
+setpal(pal93,0x0,0x7fda,0x1852,0x1fc4,0x5110,0x4aaa,0xeb7,0x4b86,0x6532,0x5321,0x3756,0x3a63,0x5da4,0x3fc8,0x7eed,0x7b83);
 load_palettes(pal93,PALETTES+PALOFFSET*108);
+}
+
+
+void NEOGEO_USER showScreen94(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 94 ******************************************/
+uint16_t  pal94[16];
+setpal(pal94,0x0,0x0,0x7331,0x7445,0x510,0x4744,0x4774,0x1942,0x3ccd,0x5cb6,0x6d97,0xe75,0x1fc9,0x7fdb,0x7fff,0x0);
+load_palettes(pal94,PALETTES+PALOFFSET*109);
+}
+
+
+void NEOGEO_USER showScreen95(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 95 ******************************************/
+uint16_t  pal95[16];
+setpal(pal95,0x0,0x0,0x7331,0x7445,0x510,0x4744,0x4774,0x1942,0x3ccd,0x5cb6,0x6d97,0xe75,0x1fc9,0x7fdb,0x7fff,0x0);
+load_palettes(pal95,PALETTES+PALOFFSET*110);
+}
+
+
+void NEOGEO_USER showScreen96(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 96 ******************************************/
+uint16_t  pal96[16];
+setpal(pal96,0x0,0x0,0x7331,0x7445,0x510,0x4744,0x4774,0x1942,0x3ccd,0x5cb6,0x6d97,0xe75,0x1fc9,0x7fdb,0x7fff,0x0);
+load_palettes(pal96,PALETTES+PALOFFSET*111);
+}
+
+
+void NEOGEO_USER showScreen97(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 97 ******************************************/
+uint16_t  pal97[16];
+setpal(pal97,0x0,0x0,0x7331,0x7445,0x510,0x4744,0x4774,0x1942,0x3ccd,0x5cb6,0x6d97,0xe75,0x1fc9,0x7fdb,0x7fff,0x0);
+load_palettes(pal97,PALETTES+PALOFFSET*112);
+}
+
+
+void NEOGEO_USER showScreen98(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 98 ******************************************/
+uint16_t  pal98[16];
+setpal(pal98,0x0,0x0,0x7331,0x7445,0x510,0x4744,0x4774,0x4899,0x1942,0x3ccd,0x5cb6,0x6d97,0xe75,0x1fc9,0x7fdb,0x7fff);
+load_palettes(pal98,PALETTES+PALOFFSET*113);
+}
+
+
+void NEOGEO_USER showScreen99(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 99 ******************************************/
+uint16_t  pal99[16];
+setpal(pal99,0x0,0x0,0x7331,0x7445,0x510,0x4744,0x4774,0x1942,0x3ccd,0x5cb6,0x6d97,0xe75,0x1fc9,0x7fdb,0x7fff,0x0);
+load_palettes(pal99,PALETTES+PALOFFSET*114);
+}
+
+
+void NEOGEO_USER showScreen100(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 100 ******************************************/
+uint16_t  pal100[16];
+setpal(pal100,0x0,0x0,0x7331,0x7445,0x510,0x4744,0x4774,0x4899,0x1942,0x3ccd,0x5cb6,0x6d97,0xe75,0x1fc9,0x7fdb,0x7fff);
+load_palettes(pal100,PALETTES+PALOFFSET*115);
+}
+
+
+void NEOGEO_USER showScreen101(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 101 ******************************************/
+uint16_t  pal101[16];
+setpal(pal101,0x0,0x0,0x7331,0x7445,0x510,0x4744,0x4774,0x1942,0x3ccd,0x5cb6,0x6d97,0xe75,0x1fc9,0x7fdb,0x7fff,0x0);
+load_palettes(pal101,PALETTES+PALOFFSET*116);
+}
+
+
+void NEOGEO_USER showScreen102(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 102 ******************************************/
+uint16_t  pal102[16];
+setpal(pal102,0x0,0x0,0x7331,0x7445,0x510,0x4744,0x4774,0x4899,0x1942,0x3ccd,0x5cb6,0x6d97,0xe75,0x1fc9,0x7fdb,0x7fff);
+load_palettes(pal102,PALETTES+PALOFFSET*117);
+}
+
+
+void NEOGEO_USER showScreen103(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 103 ******************************************/
+uint16_t  pal103[16];
+setpal(pal103,0x0,0x0,0x7331,0x7445,0x510,0x4744,0x4774,0x1942,0x3ccd,0x5cb6,0x6d97,0xe75,0x1fc9,0x7fdb,0x7fff,0x0);
+load_palettes(pal103,PALETTES+PALOFFSET*118);
+}
+
+
+void NEOGEO_USER showScreen104(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 104 ******************************************/
+uint16_t  pal104[16];
+setpal(pal104,0x0,0x0,0x7331,0x7445,0x510,0x4744,0x4774,0x4899,0x1942,0x3ccd,0x5cb6,0x6d97,0xe75,0x1fc9,0x7fdb,0x7fff);
+load_palettes(pal104,PALETTES+PALOFFSET*119);
+}
+
+
+void NEOGEO_USER showScreen105(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 105 ******************************************/
+uint16_t  pal105[16];
+setpal(pal105,0x0,0x0,0x7331,0x7445,0x510,0x4744,0x4774,0x1942,0x3ccd,0x5cb6,0x6d97,0xe75,0x1fc9,0x7fdb,0x7fff,0x0);
+load_palettes(pal105,PALETTES+PALOFFSET*120);
+}
+
+
+void NEOGEO_USER showScreen106(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
+/****************************************** screen 106 ******************************************/
+uint16_t  SCB2    = 0x0;
+uint16_t  SCB3    = 0x0;
+uint16_t  SCB4    = 0x0;
+uint16_t  pal106[16];
+setpal(pal106,0x0,0x7321,0x4853,0x2ea3,0x0,0x5011,0x35a,0x2335,0x1869,0x6123,0x6b73,0x774,0x5542,0x13,0x4d87,0x6fd5);
+uint16_t spriteMapS106_1[16] = {0x6900,0x6910,0x6920,0x6930,0x6940,0x6950,0x6960,0x6970,0x6980,0x6990,0x69a0,0x69b0,0x69c0,0x69d0,0x69e0,0x69f0};
+uint16_t spriteMapS106_2[16] = {0x6901,0x6911,0x6921,0x6931,0x6941,0x6951,0x6961,0x6971,0x6981,0x6991,0x69a1,0x69b1,0x69c1,0x69d1,0x69e1,0x69f1};
+uint16_t spriteMapS106_3[16] = {0x6902,0x6912,0x6922,0x6932,0x6942,0x6952,0x6962,0x6972,0x6982,0x6992,0x69a2,0x69b2,0x69c2,0x69d2,0x69e2,0x69f2};
+uint16_t spriteMapS106_4[16] = {0x6903,0x6913,0x6923,0x6933,0x6943,0x6953,0x6963,0x6973,0x6983,0x6993,0x69a3,0x69b3,0x69c3,0x69d3,0x69e3,0x69f3};
+uint16_t spriteMapS106_5[16] = {0x6904,0x6914,0x6924,0x6934,0x6944,0x6954,0x6964,0x6974,0x6984,0x6994,0x69a4,0x69b4,0x69c4,0x69d4,0x69e4,0x69f4};
+uint16_t spriteMapS106_6[16] = {0x6905,0x6915,0x6925,0x6935,0x6945,0x6955,0x6965,0x6975,0x6985,0x6995,0x69a5,0x69b5,0x69c5,0x69d5,0x69e5,0x69f5};
+uint16_t spriteMapS106_7[16] = {0x6906,0x6916,0x6926,0x6936,0x6946,0x6956,0x6966,0x6976,0x6986,0x6996,0x69a6,0x69b6,0x69c6,0x69d6,0x69e6,0x69f6};
+uint16_t spriteMapS106_8[16] = {0x6907,0x6917,0x6927,0x6937,0x6947,0x6957,0x6967,0x6977,0x6987,0x6997,0x69a7,0x69b7,0x69c7,0x69d7,0x69e7,0x69f7};
+uint16_t spriteMapS106_9[16] = {0x6908,0x6918,0x6928,0x6938,0x6948,0x6958,0x6968,0x6978,0x6988,0x6998,0x69a8,0x69b8,0x69c8,0x69d8,0x69e8,0x69f8};
+uint16_t spriteMapS106_10[16] = {0x6909,0x6919,0x6929,0x6939,0x6949,0x6959,0x6969,0x6979,0x6989,0x6999,0x69a9,0x69b9,0x69c9,0x69d9,0x69e9,0x69f9};
+uint16_t spriteMapS106_11[16] = {0x690a,0x691a,0x692a,0x693a,0x694a,0x695a,0x696a,0x697a,0x698a,0x699a,0x69aa,0x69ba,0x69ca,0x69da,0x69ea,0x69fa};
+uint16_t spriteMapS106_12[16] = {0x690b,0x691b,0x692b,0x693b,0x694b,0x695b,0x696b,0x697b,0x698b,0x699b,0x69ab,0x69bb,0x69cb,0x69db,0x69eb,0x69fb};
+uint16_t spriteMapS106_13[16] = {0x690c,0x691c,0x692c,0x693c,0x694c,0x695c,0x696c,0x697c,0x698c,0x699c,0x69ac,0x69bc,0x69cc,0x69dc,0x69ec,0x69fc};
+uint16_t spriteMapS106_14[16] = {0x690d,0x691d,0x692d,0x693d,0x694d,0x695d,0x696d,0x697d,0x698d,0x699d,0x69ad,0x69bd,0x69cd,0x69dd,0x69ed,0x69fd};
+uint16_t spriteMapS106_15[16] = {0x690e,0x691e,0x692e,0x693e,0x694e,0x695e,0x696e,0x697e,0x698e,0x699e,0x69ae,0x69be,0x69ce,0x69de,0x69ee,0x69fe};
+uint16_t spriteMapS106_16[16] = {0x690f,0x691f,0x692f,0x693f,0x694f,0x695f,0x696f,0x697f,0x698f,0x699f,0x69af,0x69bf,0x69cf,0x69df,0x69ef,0x69ff};
+load_palettes(pal106,PALETTES+PALOFFSET*121);
+uint16_t SCB1_2common = setSCB1_2(121,0,0,0,0,0);
+uint16_t spal106_1[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+uint16_t spal106_2[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+uint16_t spal106_3[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+uint16_t spal106_4[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+uint16_t spal106_5[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+uint16_t spal106_6[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+uint16_t spal106_7[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+uint16_t spal106_8[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+uint16_t spal106_9[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+uint16_t spal106_10[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+uint16_t spal106_11[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+uint16_t spal106_12[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+uint16_t spal106_13[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+uint16_t spal106_14[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+uint16_t spal106_15[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+uint16_t spal106_16[16]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,0,min_crt_sz);
+SCB4    = setSCB4(x0);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*0,1,0,spriteMapS106_1,spal106_1,16,SCB2,SCB3,SCB4);
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,1,min_crt_sz);
+SCB4    = setSCB4(x0+16*1);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*1,1,1,spriteMapS106_2,spal106_2,16,SCB2,SCB3,SCB4);
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,1,min_crt_sz);
+SCB4    = setSCB4(x0+16*2);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*2,1,2,spriteMapS106_3,spal106_3,16,SCB2,SCB3,SCB4);
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,1,min_crt_sz);
+SCB4    = setSCB4(x0+16*3);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*3,1,3,spriteMapS106_4,spal106_4,16,SCB2,SCB3,SCB4);
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,1,min_crt_sz);
+SCB4    = setSCB4(x0+16*4);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*4,1,4,spriteMapS106_5,spal106_5,16,SCB2,SCB3,SCB4);
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,1,min_crt_sz);
+SCB4    = setSCB4(x0+16*5);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*5,1,5,spriteMapS106_6,spal106_6,16,SCB2,SCB3,SCB4);
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,1,min_crt_sz);
+SCB4    = setSCB4(x0+16*6);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*6,1,6,spriteMapS106_7,spal106_7,16,SCB2,SCB3,SCB4);
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,1,min_crt_sz);
+SCB4    = setSCB4(x0+16*7);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*7,1,7,spriteMapS106_8,spal106_8,16,SCB2,SCB3,SCB4);
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,1,min_crt_sz);
+SCB4    = setSCB4(x0+16*8);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*8,1,8,spriteMapS106_9,spal106_9,16,SCB2,SCB3,SCB4);
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,1,min_crt_sz);
+SCB4    = setSCB4(x0+16*9);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*9,1,9,spriteMapS106_10,spal106_10,16,SCB2,SCB3,SCB4);
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,1,min_crt_sz);
+SCB4    = setSCB4(x0+16*10);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*10,1,10,spriteMapS106_11,spal106_11,16,SCB2,SCB3,SCB4);
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,1,min_crt_sz);
+SCB4    = setSCB4(x0+16*11);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*11,1,11,spriteMapS106_12,spal106_12,16,SCB2,SCB3,SCB4);
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,1,min_crt_sz);
+SCB4    = setSCB4(x0+16*12);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*12,1,12,spriteMapS106_13,spal106_13,16,SCB2,SCB3,SCB4);
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,1,min_crt_sz);
+SCB4    = setSCB4(x0+16*13);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*13,1,13,spriteMapS106_14,spal106_14,16,SCB2,SCB3,SCB4);
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,1,min_crt_sz);
+SCB4    = setSCB4(x0+16*14);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*14,1,14,spriteMapS106_15,spal106_15,16,SCB2,SCB3,SCB4);
+SCB2    = setSCB2(xr,yr);
+SCB3    = setSCB3(496-y0,1,min_crt_sz);
+SCB4    = setSCB4(x0+16*15);
+setBACKDROP(backdrop);
+vram_sprite(sprite_base + 64*15,1,15,spriteMapS106_16,spal106_16,16,SCB2,SCB3,SCB4);
 }

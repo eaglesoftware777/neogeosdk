@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import io
+import json
 import os
 import struct as st
 
@@ -16,6 +17,7 @@ except ImportError:
 
 
 PALETTE_RECORD_SIZE = 136
+MANIFEST_PATH = "assets_manifest.json"
 
 
 def adapt_array(arr):
@@ -31,13 +33,14 @@ def convert_array(text):
     return np.load(out)
 
 
-def write_palette(palette, std_file, neogeo_file, image_index, packed_palettes):
+def write_palette(palette, std_file, neogeo_file, image_index, packed_palettes, palette_has_zero):
     palette_words = [0x0] * 16
     palette_words[0] = 0x0
 
-    visible_colors = min(len(palette), 15)
+    palette_start = 1 if palette_has_zero else 0
+    visible_colors = min(len(palette) - palette_start, 15)
     for slot in range(visible_colors):
-        rgb = palette[slot]
+        rgb = palette[palette_start + slot]
         red_24 = int(rgb[0])
         green_24 = int(rgb[1])
         blue_24 = int(rgb[2])
@@ -113,10 +116,13 @@ def write_palette(palette, std_file, neogeo_file, image_index, packed_palettes):
     )
 
 
-def encode_block(block, c1_file, c2_file):
+def encode_block(block, c1_file, c2_file, transparent_zero):
     for row in range(8):
         pixels = block[row, :]
-        colors = [int(pixel) + 1 for pixel in pixels]
+        if transparent_zero:
+            colors = [int(pixel) for pixel in pixels]
+        else:
+            colors = [int(pixel) + 1 for pixel in pixels]
 
         plane_d = (
             ((colors[7] >> 3) & 1) << 7
@@ -180,6 +186,7 @@ f_c2rom = open("2c.c2", "wb")
 f_std = open("std.pal", "wb")
 f_neo = open("neo.pal", "wb")
 data = []
+manifest = {}
 
 try:
     db.register_adapter(np.ndarray, adapt_array)
@@ -198,6 +205,13 @@ except Error as exc:
     print(exc)
 finally:
     conn.close()
+
+if os.path.exists(MANIFEST_PATH):
+    with open(MANIFEST_PATH, "r", encoding="utf-8") as manifest_file:
+        manifest = {
+            int(entry["db_index"]): entry
+            for entry in json.load(manifest_file)
+        }
 
 if not data:
     print("Error: len(data) = 0")
@@ -229,6 +243,9 @@ st.pack_into(
 )
 
 for image_index, indexed, palette in data:
+    asset_info = manifest.get(int(image_index), {})
+    transparent_zero = bool(asset_info.get("transparent_zero", 0))
+    palette_has_zero = bool(asset_info.get("palette_has_zero", 0))
     height, width = indexed.shape[:2]
     sprite_count = width // 16
     character_count = height // 16
@@ -241,12 +258,12 @@ for image_index, indexed, palette in data:
             block4 = character[8:16, 0:8]
             block1 = character[0:8, 8:16]
             block2 = character[8:16, 8:16]
-            encode_block(block1, f_c1rom, f_c2rom)
-            encode_block(block2, f_c1rom, f_c2rom)
-            encode_block(block3, f_c1rom, f_c2rom)
-            encode_block(block4, f_c1rom, f_c2rom)
+            encode_block(block1, f_c1rom, f_c2rom, transparent_zero)
+            encode_block(block2, f_c1rom, f_c2rom, transparent_zero)
+            encode_block(block3, f_c1rom, f_c2rom, transparent_zero)
+            encode_block(block4, f_c1rom, f_c2rom, transparent_zero)
 
-    write_palette(palette, f_std, f_neo, image_index + 1, packed_palettes)
+    write_palette(palette, f_std, f_neo, image_index + 1, packed_palettes, palette_has_zero)
 
 os.fsync(f_c1rom)
 os.fsync(f_c2rom)

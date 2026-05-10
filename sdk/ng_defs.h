@@ -23,6 +23,7 @@
 #define NG_TO_FP(x)   ((int32_t)(x) << NG_FP_SHIFT)
 #define NG_FROM_FP(x) ((int16_t)((x) >> NG_FP_SHIFT))
 #define NG_FP_MUL(a,b) (((int32_t)(a) * (b)) >> NG_FP_SHIFT)
+#define NG_FP_FROM_FRAC(num,den) ((int32_t)(((int32_t)(num) * NG_FP_ONE) / (den)))
 
 /* Utility math */
 #define NG_MIN(a,b)        ((a) < (b) ? (a) : (b))
@@ -48,6 +49,10 @@
 #define NG_PROP_GROUPS            16
 #define NG_PROP_COUNT             32
 #define NG_MAX_BORDER_CONSTRAINTS 128
+#define NG_MAX_NPCS               32
+#define NG_MAX_SOLIDS             64
+#define NG_FIX_WIDTH              40
+#define NG_FIX_HEIGHT             32
 
 #define NG_SPRITE_MAX_STRIPS        32
 #define NG_SPRITE_MAX_HEIGHT_TILES  32

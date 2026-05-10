@@ -33,7 +33,7 @@ def snap_neogeo(arr):
     return np.clip(((arr.astype(np.int32) + 4) // 8) * 8, 0, 248).astype(np.uint8)
 
 
-def kmeans_palette(pixels_hw3, n=15, iters=25, seed=0):
+def kmeans_palette(pixels_hw3, n=15, iters=25, seed=0, sample_limit=8192):
     """
     K-means++ clustering in the NeoGeo colour space.
     Returns an (n, 3) uint8 array of palette RGB values.
@@ -41,7 +41,7 @@ def kmeans_palette(pixels_hw3, n=15, iters=25, seed=0):
     rng   = np.random.default_rng(seed)
     flat  = pixels_hw3.reshape(-1, 3).astype(np.float32)
     # Subsample to 8192 pixels for speed without losing colour diversity
-    idx   = rng.choice(len(flat), min(len(flat), 8192), replace=False)
+    idx   = rng.choice(len(flat), min(len(flat), sample_limit), replace=False)
     samp  = flat[idx]
 
     # K-means++ initialisation
@@ -89,6 +89,42 @@ def floyd_steinberg(img_hw3, palette_n3):
                 if x + 1 < w:
                     buf[y + 1, x + 1] += err * (1 / 16)
     return out
+
+
+def nearest_palette_indices(img_hw3, palette_n3):
+    """Fast nearest-colour lookup without diffusion dithering."""
+    pixels = img_hw3.reshape(-1, 3).astype(np.int16)
+    pal = palette_n3.astype(np.int16)
+    diff = pixels[:, None, :] - pal[None, :, :]
+    dist = np.sum(diff * diff, axis=2)
+    return np.argmin(dist, axis=1).astype(np.uint8).reshape(img_hw3.shape[:2])
+
+
+def ordered_dither(img_hw3, palette_n3, strength=0.65):
+    """
+    Faster ordered dithering for painted screens.
+    Keeps the image calmer than full error diffusion.
+    """
+    bayer4 = np.array(
+        [
+            [0, 8, 2, 10],
+            [12, 4, 14, 6],
+            [3, 11, 1, 9],
+            [15, 7, 13, 5],
+        ],
+        dtype=np.float32,
+    )
+    threshold = ((bayer4 / 15.0) - 0.5) * (8.0 * strength)
+    tiled = np.tile(
+        threshold,
+        (
+            (img_hw3.shape[0] + 3) // 4,
+            (img_hw3.shape[1] + 3) // 4,
+        ),
+    )[: img_hw3.shape[0], : img_hw3.shape[1]]
+    adjusted = np.clip(img_hw3.astype(np.float32) + tiled[:, :, None], 0, 255)
+    adjusted = snap_neogeo(adjusted.astype(np.uint8))
+    return nearest_palette_indices(adjusted, palette_n3)
 
 
 # ---------------------------------------------------------------------------

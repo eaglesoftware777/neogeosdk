@@ -5,79 +5,94 @@
 #######
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Oct 24 01:22:23 2018
 
-@author: eagle software
-"""
-
+import json
+import os
 import struct
 import sys
+
 import numpy as np
 
 SPRITE_PALETTE_BASE = 0x10
+MANIFEST_PATH = "assets_manifest.json"
+
 
 def getpal(image_index):
-    i = bsz*image_index + 8
-    j = i+ bsz - 8
+    start = bsz * image_index + 8
+    end = start + bsz - 8
+    return struct.unpack("16Q", buffi[start:end])
 
-    buff = buffi[i:j]
-    pal= struct.unpack('16Q',buff)
 
-    return pal
-imgnb =  int(sys.argv[1:][0])
-image_screens = range(imgnb)
+def load_manifest():
+    if not os.path.exists(MANIFEST_PATH):
+        return None
+    with open(MANIFEST_PATH, "r", encoding="utf-8") as handle:
+        return json.load(handle)
+
+
+manifest = load_manifest()
+if manifest is not None:
+    image_specs = manifest
+else:
+    imgnb = int(sys.argv[1]) if len(sys.argv) > 1 else 0
+    image_specs = [
+        {
+            "db_index": i,
+            "screen_id": i + 1,
+            "palette_bank": SPRITE_PALETTE_BASE + i,
+            "full_codegen": 1 if i < 10 else 0,
+        }
+        for i in range(imgnb)
+    ]
+
 bsz = 136
-buffi = bytearray()
-try:
-    bfile =  open("neopal.bin", "rb")
-    bfile.seek(0)
-    buffi  = bfile.read()
-finally:
-    bfile.close()
+with open("neopal.bin", "rb") as palette_file:
+    buffi = palette_file.read()
 
-sz = int(sys.argv[1:][1])
-img_count = len(image_screens)
-mapl1_start = 0
-mapl1_end = mapl1_start+sz
+sz = int(sys.argv[2]) if len(sys.argv) > 2 else 16
+sprt_sz = int(sys.argv[3]) if len(sys.argv) > 3 else 16
+crt_sz = int(sys.argv[4]) if len(sys.argv) > 4 else 16
 
-# 5th arg: how many screens get the full background display function (default 10)
-full_screens_limit = int(sys.argv[5]) if len(sys.argv) > 5 else 10
+image_count = len(image_specs)
+map_start = 0
+maps = []
+for _count in range(image_count):
+    tile_map = np.uint16(np.zeros((sz, sz)))
+    for row in range(sz):
+        tile_map[row, :] = np.arange(map_start, map_start + sz, 1, dtype=np.uint16)
+        map_start = int(tile_map[row, sz - 1]) + 1
+    maps.append(tile_map)
 
-L=[]
-for count in range(img_count):
+sys.stdout = open("screens.c", "wt")
 
-    A=np.uint16(np.zeros((sz,sz)))
-
-    for j in range(sz):
-            for i in range(sz):
-                A[i,:] = np.arange(mapl1_start,mapl1_end,1,dtype=np.uint16)+i*sz
-    mapl1_start = A[sz-1,sz-1]+1
-    mapl1_end = mapl1_start+sz
-    L.append(A)
-
-
-sys.stdout = open('screens.c','wt')
-pal_sz = 16
-sprt_sz =  int(sys.argv[1:][2])
-crt_sz =  int(sys.argv[1:][3])
-s=""
-
-for image_i0 in image_screens:
-    image_index = image_i0+1
-    palette_bank = SPRITE_PALETTE_BASE + image_i0
-    print("")
-    print("")
-    print("void NEOGEO_USER showScreen%d(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {" % image_index)
-    print("/****************************************** screen %d ******************************************/" % image_index)
+for spec in image_specs:
+    image_i0 = int(spec["db_index"])
+    image_index = int(spec["screen_id"])
+    palette_bank = int(spec.get("palette_bank", SPRITE_PALETTE_BASE + image_i0))
+    full_codegen = int(spec.get("full_codegen", 1 if image_i0 < 10 else 0))
     pal = getpal(image_index)
 
-    if image_i0 >= full_screens_limit:
-        # Compact palette-only version for sprite screens — no VRAM background setup needed
+    print("")
+    print("")
+    print(
+        "void NEOGEO_USER showScreen%d(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {"
+        % image_index
+    )
+    print("/****************************************** screen %d ******************************************/" % image_index)
+
+    if not full_codegen:
         print("uint16_t  pal%d[16];" % image_index)
-        print("setpal(pal%d,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x);"
-                 % (image_index,pal[0],pal[1],pal[2],pal[3],pal[4],pal[5],pal[6],pal[7],pal[8],pal[9],pal[10],pal[11],pal[12],pal[13],pal[14],pal[15]))
-        print("load_palettes(pal%d,PALETTES+PALOFFSET*%d);" % (image_index,palette_bank))
+        print(
+            "setpal(pal%d,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x);"
+            % (
+                image_index,
+                pal[0], pal[1], pal[2], pal[3],
+                pal[4], pal[5], pal[6], pal[7],
+                pal[8], pal[9], pal[10], pal[11],
+                pal[12], pal[13], pal[14], pal[15],
+            )
+        )
+        print("load_palettes(pal%d,PALETTES+PALOFFSET*%d);" % (image_index, palette_bank))
         print("}")
         continue
 
@@ -85,35 +100,45 @@ for image_i0 in image_screens:
     print("uint16_t  SCB3    = 0x0;")
     print("uint16_t  SCB4    = 0x0;")
     print("uint16_t  pal%d[16];" % image_index)
-    print("setpal(pal%d,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x);"
-             % (image_index,pal[0],pal[1],pal[2],pal[3],pal[4],pal[5],pal[6],pal[7],pal[8],pal[9],pal[10],pal[11],pal[12],pal[13],pal[14],pal[15]))
+    print(
+        "setpal(pal%d,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x,0x%x);"
+        % (
+            image_index,
+            pal[0], pal[1], pal[2], pal[3],
+            pal[4], pal[5], pal[6], pal[7],
+            pal[8], pal[9], pal[10], pal[11],
+            pal[12], pal[13], pal[14], pal[15],
+        )
+    )
     for sprt_index in range(sprt_sz):
-        s="uint16_t spriteMapS%d_%d[%d] = {" %(image_index,sprt_index+1,16)
-        for crt_index in range(crt_sz-1):
-            s=s+"0x%x,"%L[image_i0][crt_index,sprt_index]
-        s=s+"0x%x};"%L[image_i0][crt_sz-1,sprt_index]
-        print(s)
-        s=""
-    print("load_palettes(pal%d,PALETTES+PALOFFSET*%d);" % (image_index,palette_bank))
-    print("uint16_t SCB1_2common = setSCB1_2(%d,0,0,0,0,0);" %(palette_bank))
+        values = ["0x%x" % maps[image_i0][crt_index, sprt_index] for crt_index in range(crt_sz)]
+        print("uint16_t spriteMapS%d_%d[%d] = {%s};" % (
+            image_index,
+            sprt_index + 1,
+            crt_sz,
+            ",".join(values),
+        ))
+    print("load_palettes(pal%d,PALETTES+PALOFFSET*%d);" % (image_index, palette_bank))
+    print("uint16_t SCB1_2common = setSCB1_2(%d,0,0,0,0,0);" % palette_bank)
     for sprt_index in range(sprt_sz):
-        print("uint16_t spal%d_%d[%d]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};" % (image_index,sprt_index+1,crt_sz))
+        print(
+            "uint16_t spal%d_%d[%d]={SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common,SCB1_2common};"
+            % (image_index, sprt_index + 1, crt_sz)
+        )
+
     x = "x0"
     y = "496-y0"
-    min_crt_sz = "min_crt_sz"
-    xr = "xr"
-    yr = "yr"
-    link = 1
-    unlink = 0
-    backdrop = "backdrop"
     for sprt_index in range(sprt_sz):
-        print("SCB2    = setSCB2(%s,%s);" %(xr,yr))
-        if (sprt_index == 0):
-            print("SCB3    = setSCB3(%s,%d,%s);" % (y,unlink,min_crt_sz))
+        print("SCB2    = setSCB2(xr,yr);")
+        if sprt_index == 0:
+            print("SCB3    = setSCB3(%s,0,min_crt_sz);" % y)
         else:
-            print("SCB3    = setSCB3(%s,%d,%s);" % (y,link,min_crt_sz))
+            print("SCB3    = setSCB3(%s,1,min_crt_sz);" % y)
         print("SCB4    = setSCB4(%s);" % x)
-        print("setBACKDROP(%s);" % backdrop)
-        print("vram_sprite(sprite_base + 64*%d,1,%d,spriteMapS%d_%d,spal%d_%d,%d,SCB2,SCB3,SCB4);" % (sprt_index,sprt_index,image_index,sprt_index+1,image_index,sprt_index+1,crt_sz))
-        x = "x0+16*%d"%(sprt_index+1)
+        print("setBACKDROP(backdrop);")
+        print(
+            "vram_sprite(sprite_base + 64*%d,1,%d,spriteMapS%d_%d,spal%d_%d,%d,SCB2,SCB3,SCB4);"
+            % (sprt_index, sprt_index, image_index, sprt_index + 1, image_index, sprt_index + 1, crt_sz)
+        )
+        x = "x0+16*%d" % (sprt_index + 1)
     print("}")
