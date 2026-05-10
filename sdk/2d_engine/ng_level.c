@@ -1,0 +1,184 @@
+#include "ng_level.h"
+#include "ng_properties.h"
+#include "neogeo.h"
+
+static NGLevelState ng_level_state;
+
+static void NEOGEO_USER ng_level_sync(void)
+{
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_ID, ng_level_state.level_id);
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_MODE, ng_level_state.mode);
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_SCROLL_X, ng_level_state.scroll_x);
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_SCROLL_Y, ng_level_state.scroll_y);
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_BG_SCREEN, ng_level_state.background_screen);
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_OVERLAY_SCREEN, ng_level_state.overlay_screen);
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_BACKDROP, ng_level_state.backdrop);
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_FLAGS, ng_level_state.flags);
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_FIX_PALETTE, ng_level_state.fix_palette);
+
+    ng_prop_set(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_LEFT, ng_level_state.world_left);
+    ng_prop_set(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_TOP, ng_level_state.world_top);
+    ng_prop_set(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_RIGHT, ng_level_state.world_right);
+    ng_prop_set(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_BOTTOM, ng_level_state.world_bottom);
+    ng_prop_set(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_FLAGS, ng_level_state.flags);
+}
+
+void NEOGEO_USER ng_level_init(void)
+{
+    ng_level_state.level_id = 0;
+    ng_level_state.mode = 0;
+    ng_level_state.background_screen = 0;
+    ng_level_state.overlay_screen = 0;
+    ng_level_state.backdrop = 0x0000;
+    ng_level_state.fix_palette = 0;
+    ng_level_state.scroll_x = 0;
+    ng_level_state.scroll_y = 0;
+    ng_level_state.world_left = 0;
+    ng_level_state.world_top = 0;
+    ng_level_state.world_right = 319;
+    ng_level_state.world_bottom = 223;
+    ng_level_state.flags = 0;
+    ng_level_sync();
+}
+
+void NEOGEO_USER ng_level_set_id(uint8_t level_id)
+{
+    ng_level_state.level_id = level_id;
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_ID, level_id);
+}
+
+void NEOGEO_USER ng_level_set_mode(uint8_t mode)
+{
+    ng_level_state.mode = mode;
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_MODE, mode);
+}
+
+void NEOGEO_USER ng_level_set_background(uint16_t screen_id)
+{
+    ng_level_state.background_screen = screen_id;
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_BG_SCREEN, screen_id);
+}
+
+void NEOGEO_USER ng_level_set_overlay(uint16_t screen_id)
+{
+    ng_level_state.overlay_screen = screen_id;
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_OVERLAY_SCREEN, screen_id);
+}
+
+void NEOGEO_USER ng_level_set_backdrop(uint16_t color)
+{
+    ng_level_state.backdrop = color;
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_BACKDROP, color);
+}
+
+void NEOGEO_USER ng_level_set_fix_palette(uint8_t palette)
+{
+    ng_level_state.fix_palette = palette;
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_FIX_PALETTE, palette);
+}
+
+void NEOGEO_USER ng_level_set_scroll(int16_t x, int16_t y)
+{
+    ng_level_state.scroll_x = x;
+    ng_level_state.scroll_y = y;
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_SCROLL_X, x);
+    ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_SCROLL_Y, y);
+    ng_prop_set(NG_PROP_GROUP_CAMERA, NG_PROP_CAMERA_X, x);
+    ng_prop_set(NG_PROP_GROUP_CAMERA, NG_PROP_CAMERA_Y, y);
+}
+
+void NEOGEO_USER ng_level_move_scroll(int16_t dx, int16_t dy)
+{
+    ng_level_set_scroll(
+        (int16_t)(ng_level_state.scroll_x + dx),
+        (int16_t)(ng_level_state.scroll_y + dy)
+    );
+}
+
+void NEOGEO_USER ng_level_set_world_bounds(int16_t left, int16_t top, int16_t right, int16_t bottom)
+{
+    ng_level_state.world_left = left;
+    ng_level_state.world_top = top;
+    ng_level_state.world_right = right;
+    ng_level_state.world_bottom = bottom;
+    ng_prop_set(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_LEFT, left);
+    ng_prop_set(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_TOP, top);
+    ng_prop_set(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_RIGHT, right);
+    ng_prop_set(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_BOTTOM, bottom);
+}
+
+void NEOGEO_USER ng_level_set_camera(int16_t x, int16_t y, int16_t screen_w, int16_t screen_h)
+{
+    int16_t max_x;
+    int16_t max_y;
+
+    if (screen_w <= 0) screen_w = 320;
+    if (screen_h <= 0) screen_h = 224;
+
+    max_x = (int16_t)(ng_level_state.world_right - screen_w + 1);
+    max_y = (int16_t)(ng_level_state.world_bottom - screen_h + 1);
+    if (max_x < ng_level_state.world_left) max_x = ng_level_state.world_left;
+    if (max_y < ng_level_state.world_top) max_y = ng_level_state.world_top;
+
+    if (x < ng_level_state.world_left) x = ng_level_state.world_left;
+    if (x > max_x) x = max_x;
+    if (y < ng_level_state.world_top) y = ng_level_state.world_top;
+    if (y > max_y) y = max_y;
+
+    ng_level_set_scroll(x, y);
+    ng_prop_set(NG_PROP_GROUP_CAMERA, NG_PROP_CAMERA_MODE, ng_level_state.mode);
+    ng_prop_set(NG_PROP_GROUP_CAMERA, NG_PROP_CAMERA_W, screen_w);
+    ng_prop_set(NG_PROP_GROUP_CAMERA, NG_PROP_CAMERA_H, screen_h);
+}
+
+void NEOGEO_USER ng_level_move_camera(int16_t dx, int16_t dy, int16_t screen_w, int16_t screen_h)
+{
+    ng_level_set_camera(
+        (int16_t)(ng_level_state.scroll_x + dx),
+        (int16_t)(ng_level_state.scroll_y + dy),
+        screen_w,
+        screen_h
+    );
+}
+
+void NEOGEO_USER ng_level_camera_follow(int16_t target_x, int16_t target_y, int16_t screen_w, int16_t screen_h)
+{
+    int16_t cx = (int16_t)(target_x - (screen_w / 2));
+    int16_t cy = (int16_t)(target_y - (screen_h / 2));
+
+    ng_level_set_camera(cx, cy, screen_w, screen_h);
+}
+
+void NEOGEO_USER ng_level_camera_input(uint16_t joystick, int16_t speed, uint8_t axes, int16_t screen_w, int16_t screen_h)
+{
+    int16_t dx = 0;
+    int16_t dy = 0;
+
+    if (axes & NG_CAMERA_AXIS_X) {
+        if (joystick & (1u << CNT_LEFT)) dx = (int16_t)(dx - speed);
+        if (joystick & (1u << CNT_RIGHT)) dx = (int16_t)(dx + speed);
+    }
+    if (axes & NG_CAMERA_AXIS_Y) {
+        if (joystick & (1u << CNT_UP)) dy = (int16_t)(dy - speed);
+        if (joystick & (1u << CNT_DOWN)) dy = (int16_t)(dy + speed);
+    }
+
+    if (dx || dy) {
+        ng_level_move_camera(dx, dy, screen_w, screen_h);
+    }
+}
+
+void NEOGEO_USER ng_level_camera_joystick(int16_t speed, uint8_t axes, int16_t screen_w, int16_t screen_h)
+{
+    ng_level_camera_input(poll_joystick(), speed, axes, screen_w, screen_h);
+}
+
+const NGLevelState *NEOGEO_USER level_state(void)
+{
+    return &ng_level_state;
+}
+
+void NEOGEO_USER ng_level_update(void)
+{
+    ng_level_sync();
+}

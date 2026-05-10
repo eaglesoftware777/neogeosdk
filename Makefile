@@ -7,7 +7,7 @@ ifndef SDKHOME
 SDKHOME := $(abspath $(CURDIR)/..)
 endif
 CC=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gcc
-CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -Wa,-march=68000,-mcpu=68000,-W,--warn
+CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -Isdk -Isdk/2d_engine -Wa,-march=68000,-mcpu=68000,-W,--warn
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
 LD=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-ld
 LDFLAGS=  -nostartfiles -nostdlib
@@ -50,22 +50,22 @@ game:
 	$(CC) $(CFLAGS)   user.c -o out/user0.o
 	$(CC) $(CFLAGS)   main.c -o out/main0.o
 	$(CC) $(CFLAGS)   sdk/neogeolib.c -o out/neogeolib0.o
-	$(CC) $(CFLAGS)   sdk/ng_defs.c -o out/ng_defs0.o
-	$(CC) $(CFLAGS)   sdk/ng_properties.c -o out/ng_properties0.o
-	$(CC) $(CFLAGS)   sdk/ng_game_time.c -o out/ng_game_time0.o
-	$(CC) $(CFLAGS)   sdk/ng_timers.c -o out/ng_timers0.o
-	$(CC) $(CFLAGS)   sdk/ng_progress.c -o out/ng_progress0.o
-	$(CC) $(CFLAGS)   sdk/ng_status.c -o out/ng_status0.o
-	$(CC) $(CFLAGS)   sdk/ng_game_events.c -o out/ng_game_events0.o
-	$(CC) $(CFLAGS)   sdk/ng_level.c -o out/ng_level0.o
-	$(CC) $(CFLAGS)   sdk/ng_fix.c -o out/ng_fix0.o
-	$(CC) $(CFLAGS)   sdk/ng_sprite_group.c -o out/ng_sprite_group0.o
-	$(CC) $(CFLAGS)   sdk/ng_actions.c -o out/ng_actions0.o
-	$(CC) $(CFLAGS)   sdk/ng_chars.c -o out/ng_chars0.o
-	$(CC) $(CFLAGS)   sdk/ng_npcs.c -o out/ng_npcs0.o
-	$(CC) $(CFLAGS)   sdk/ng_physics.c -o out/ng_physics0.o
-	$(CC) $(CFLAGS)   sdk/ng_border_constraints.c -o out/ng_border_constraints0.o
-	$(CC) $(CFLAGS)   sdk/ng_game_interupt.c -o out/ng_game_interupt0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_defs.c -o out/ng_defs0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_properties.c -o out/ng_properties0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_game_time.c -o out/ng_game_time0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_timers.c -o out/ng_timers0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_progress.c -o out/ng_progress0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_status.c -o out/ng_status0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_game_events.c -o out/ng_game_events0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_level.c -o out/ng_level0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_fix.c -o out/ng_fix0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_sprite_group.c -o out/ng_sprite_group0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_actions.c -o out/ng_actions0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_chars.c -o out/ng_chars0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_npcs.c -o out/ng_npcs0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_physics.c -o out/ng_physics0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_border_constraints.c -o out/ng_border_constraints0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_game_interupt.c -o out/ng_game_interupt0.o
 	$(OBJCP) -R .comment -R .text -R .data -R .bss out/neogeo0.o   out/neogeo.o
 	$(OBJCP) -R .comment -R .text -R .data -R .bss out/user0.o    out/user.o
 	$(OBJCP) -R .comment -R .text -R .data -R .bss out/main0.o    out/main.o

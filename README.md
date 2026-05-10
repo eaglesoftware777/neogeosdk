@@ -24,7 +24,7 @@ real Neo Geo development practical on current Linux, WSL, and Windows setups.
 
 ## 2D Game Engine Layer
 
-The repository includes a reusable 2D game engine layer under `sdk/ng_*`.
+The repository includes a reusable 2D game engine layer under `sdk/2d_engine/ng_*`.
 
 It is a plain-C 2D engine built around:
 
@@ -44,9 +44,9 @@ It is a plain-C 2D engine built around:
 
 Important current state:
 
-- the source files live in `sdk/ng_*.c` and `sdk/ng_*.h`
+- the source files live in `sdk/2d_engine/ng_*.c` and `sdk/2d_engine/ng_*.h`
 - the linker scripts reserve `game_engine_bss` for the engine state objects
-- `Makefile` and `MakefileWin32.mak` compile and link the `sdk/ng_*` modules by default
+- `Makefile` and `MakefileWin32.mak` compile and link the `sdk/2d_engine/ng_*` modules by default
 - sprite drawing uses world-space character coordinates minus the current level camera scroll
 - joystick camera helpers support horizontal, vertical, and both-axis scrolling
 - action scripts are used by the demo for idle, run, jump, hit, and attack state changes
@@ -553,12 +553,12 @@ comparison and migration work, not as the default release path.
 
 ## Game Engine Build Integration
 
-The 2D game engine layer in `sdk/ng_*` is already wired into the default
+The 2D game engine layer in `sdk/2d_engine/ng_*` is already wired into the default
 `game:` recipes in both `Makefile` and `MakefileWin32.mak`.
 
 Those builds now:
 
-- compile the `sdk/ng_*.c` modules into `out/ng_*0.o`
+- compile the `sdk/2d_engine/ng_*.c` modules into `out/ng_*0.o`
 - link those objects into the main 68000 game binary
 - place engine state in the linker-managed `game_engine_bss` region
 
@@ -712,7 +712,7 @@ Highlights from the recent commit line:
 - 2026-05-07
   softfloat removal, SDK API docs refresh, Windows sound-build parity fixes, and corrected Win32 FIX-ROM generation
 - 2026-05-08
-  2D game engine layer sources added under `sdk/ng_*`, with linker-space reservation for engine state
+  2D game engine layer sources added under `sdk/2d_engine/ng_*`, with linker-space reservation for engine state
 - 2026-05-09
   Python became the default sample-conversion path, and the live title/game flow was remapped around the current ADPCM-B theme set
 - 2026-05-10

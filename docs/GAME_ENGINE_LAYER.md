@@ -1,6 +1,6 @@
 # NeoGeoSDK 2D Game Engine Layer
 
-This repository carries a reusable 2D game engine layer under `sdk/ng_*`.
+This repository carries a reusable 2D game engine layer under `sdk/2d_engine/ng_*`.
 
 The layer is plain C. It is not a C++ object system and it is not an
 entity-component framework. The model is simple:
@@ -25,27 +25,27 @@ entity-component framework. The model is simple:
 Use the aggregate include:
 
 ```c
-#include "sdk/ng_game_engine.h"
+#include "sdk/2d_engine/ng_game_engine.h"
 ```
 
 Or include only the modules you need:
 
-- `sdk/ng_defs.h`
-- `sdk/ng_actions.h`
-- `sdk/ng_chars.h`
-- `sdk/ng_game_events.h`
-- `sdk/ng_game_interupt.h`
-- `sdk/ng_game_time.h`
-- `sdk/ng_progress.h`
-- `sdk/ng_properties.h`
-- `sdk/ng_level.h`
-- `sdk/ng_fix.h`
-- `sdk/ng_npcs.h`
-- `sdk/ng_physics.h`
-- `sdk/ng_status.h`
-- `sdk/ng_timers.h`
-- `sdk/ng_border_constraints.h`
-- `sdk/ng_sprite_group.h`
+- `sdk/2d_engine/ng_defs.h`
+- `sdk/2d_engine/ng_actions.h`
+- `sdk/2d_engine/ng_chars.h`
+- `sdk/2d_engine/ng_game_events.h`
+- `sdk/2d_engine/ng_game_interupt.h`
+- `sdk/2d_engine/ng_game_time.h`
+- `sdk/2d_engine/ng_progress.h`
+- `sdk/2d_engine/ng_properties.h`
+- `sdk/2d_engine/ng_level.h`
+- `sdk/2d_engine/ng_fix.h`
+- `sdk/2d_engine/ng_npcs.h`
+- `sdk/2d_engine/ng_physics.h`
+- `sdk/2d_engine/ng_status.h`
+- `sdk/2d_engine/ng_timers.h`
+- `sdk/2d_engine/ng_border_constraints.h`
+- `sdk/2d_engine/ng_sprite_group.h`
 
 ## Startup
 
@@ -172,7 +172,7 @@ Useful helpers:
 - `char_body_rect`
 - `char_hit_rect`
 
-Sprite-group level helpers live in `sdk/ng_sprite_group.h`.
+Sprite-group level helpers live in `sdk/2d_engine/ng_sprite_group.h`.
 
 Characters store world-space `x`/`y` coordinates. `chars_draw()` subtracts the
 current level scroll before writing sprite transforms, so physics, collisions,
@@ -395,7 +395,7 @@ Use them for:
 
 ## Runtime limits
 
-See `sdk/ng_defs.h` for the fixed capacities:
+See `sdk/2d_engine/ng_defs.h` for the fixed capacities:
 
 - `NG_MAX_CHARS`
 - `NG_MAX_ACTIONS`
@@ -413,7 +413,7 @@ See `sdk/ng_defs.h` for the fixed capacities:
 
 The engine source files are present in the repository, the linker scripts
 reserve `game_engine_bss` for `out/ng_*0.o`, and the default makefiles now
-compile and link the `sdk/ng_*.c` modules automatically.
+compile and link the `sdk/2d_engine/ng_*.c` modules automatically.
 
 For the current build wiring, follow:
 
@@ -423,7 +423,7 @@ For the current build wiring, follow:
 
 The old names are still accepted for existing code:
 
-- `#include "sdk/ng_runtime.h"`
+- `#include "sdk/2d_engine/ng_runtime.h"`
 - `game_runtime_init()`
 - `game_interupt_set_hooks()`
 - `game_interupt()`

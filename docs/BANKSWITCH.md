@@ -1,6 +1,6 @@
 # NeoGeo P-ROM Bank Switching
 
-This document describes the NeoGeo P-ROM banking mechanism and the `ng_bankswitch` API stub provided in `sdk/ng_bankswitch.h`.
+This document describes the NeoGeo P-ROM banking mechanism and the `ng_bankswitch` API stub provided in `sdk/2d_engine/ng_bankswitch.h`.
 
 **The current NeoGeoSDK demo does not use bank switching.**  The P1 ROM is kept within the fixed 128 KB window.  This document is advisory for future cartridge builds that need more than 512 KB of program space.
 
@@ -43,7 +43,7 @@ After the bank switch, all reads from `0x200000 – 0x2FFFFF` come from the new 
 
 ## SDK API
 
-`sdk/ng_bankswitch.h` / `sdk/ng_bankswitch.c` provide two functions:
+`sdk/2d_engine/ng_bankswitch.h` / `sdk/2d_engine/ng_bankswitch.c` provide two functions:
 
 ```c
 void    ng_bankswitch(uint8_t bank);
