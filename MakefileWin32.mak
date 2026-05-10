@@ -48,7 +48,7 @@ CFLAGS += -g3 -gdwarf-2 -DNG_DEBUG=1
 LDFLAGS += -Map=out\game.map
 endif
 
-HASHPATH=$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
+HASHPATH?=$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
 MAME_COMMON=$(MAME) neogeo -rompath $(REPO_WIN)\roms -hashpath "$(HASHPATH)" -bios unibios22 -cart1 neogeosdk
 
 .DEFAULT_GOAL := p1
@@ -135,9 +135,6 @@ ssg:
 .PHONY: m1rom
 m1rom: fmpatches fm mml ssgconfig ssg
 	set WLAZ80=$(WLAZ80)&& set WLALINK=$(WLALINK)&& set USE_Z80C=$(USE_Z80C)&& set Z80C_SRC=$(Z80C_SRC_WIN)&& call sound\tools\m1rom.bat
-	if not exist roms\neogeosdk mkdir roms\neogeosdk
-	copy /Y out\777-m1.m1 roms\neogeosdk\777-m1.m1
-	copy /Y out\777-m1.m1 roms\neogeosdk\sm1.sm1
 
 .PHONY: m1rom-asm
 m1rom-asm:
@@ -204,7 +201,6 @@ sound-clean:
 	if exist out\driver.gen.asm del /Q out\driver.gen.asm
 	if exist roms\neogeosdk\777-m1.m1 del /Q roms\neogeosdk\777-m1.m1
 	if exist roms\neogeosdk\777-v1.v1 del /Q roms\neogeosdk\777-v1.v1
-	if exist roms\neogeosdk\sm1.sm1 del /Q roms\neogeosdk\sm1.sm1
 	if exist sound\samples\out_16el_a\*.wav del /Q sound\samples\out_16el_a\*.wav
 	if exist sound\samples\out_16el_b\*.wav del /Q sound\samples\out_16el_b\*.wav
 	if exist sound\samples\out_a\*.adpcma del /Q sound\samples\out_a\*.adpcma

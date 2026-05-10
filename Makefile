@@ -37,8 +37,8 @@ CFLAGS += -g3 -gdwarf-2 -DNG_DEBUG=1
 LDFLAGS += -Map=out/game.map
 endif
 
-HASHPATH=$(SDKHOME)/neogeosdk/hash_eagle:$(SDKHOME)/neogeosdk/hash
-MAME_COMMON=mame neogeo -rompath $(SDKHOME)/neogeosdk/roms -hashpath $(HASHPATH) -bios unibios22 -cart1 neogeosdk
+HASHPATH?=$(CURDIR)/hash_eagle:$(CURDIR)/hash
+MAME_COMMON=mame neogeo -rompath $(CURDIR)/roms -hashpath $(HASHPATH) -bios unibios22 -cart1 neogeosdk
 
 .DEFAULT_GOAL := p1
 
@@ -124,9 +124,6 @@ vrom:
 .PHONY: m1rom
 m1rom: fmpatches fm mml ssgconfig ssg
 	WLAZ80=$(WLAZ80) WLALINK=$(WLALINK) USE_Z80C=$(USE_Z80C) Z80C_SRC=$(Z80C_SRC_LINUX) ./sound/tools/m1rom.sh
-	mkdir -p roms/neogeosdk
-	cp -f out/777-m1.m1 roms/neogeosdk/777-m1.m1
-	cp -f out/777-m1.m1 roms/neogeosdk/sm1.sm1
 
 .PHONY: m1rom-asm
 m1rom-asm:
@@ -178,7 +175,7 @@ clean:
 .PHONY: sound-clean
 sound-clean:
 	rm -f out/777-m1.m1 out/777-v1.v1 out/driver.gen.asm
-	rm -f roms/neogeosdk/777-m1.m1 roms/neogeosdk/777-v1.v1 roms/neogeosdk/sm1.sm1
+	rm -f roms/neogeosdk/777-m1.m1 roms/neogeosdk/777-v1.v1
 	rm -f sound/samples/out_16el_a/*.wav sound/samples/out_16el_b/*.wav
 	rm -f sound/samples/out_a/*.adpcma sound/samples/out_b/*.adpcmb
 	rm -f sound/driver/fm_data.inc sound/driver/music_data.inc sound/driver/fm_patch_table.inc sound/driver/sample_table.inc sound/driver/ssg_config.inc sound/driver/ssg_data.inc
@@ -204,12 +201,12 @@ dump:
 
 test:
 	python3 hash_eagle/gen_hash.py
-	cp out/777-p1.p1  $(SDKHOME)/neogeosdk/roms/neogeosdk
+	cp out/777-p1.p1  roms/neogeosdk/
 	$(MAME_COMMON) -output console -nofilter -waitvsync -window
 
 debug:
 	python3 hash_eagle/gen_hash.py
-	cp out/777-p1.p1  $(SDKHOME)/neogeosdk/roms/neogeosdk
+	cp out/777-p1.p1  roms/neogeosdk/
 	$(MAME_COMMON) -output console -debug -verbose -nofilter -waitvsync -window
 
 .PHONY: debug-build
