@@ -7,7 +7,7 @@
         <publisher>Eagle Software</publisher>
         <part name="cart" interface="neo_cart">
             <dataarea name="maincpu" size="0x00080000">
-            <rom name="777-p1.p1" size="0x00080000" crc="d909e1d0" sha1="ae39d64fe057d7434f245a939f679e748a4aff68"/>
+            <rom name="777-p1.p1" size="0x00080000" crc="04e5b29c" sha1="d7779efb0384b9701fa186a0d8ce995b2620ad5d"/>
             </dataarea>
             <dataarea name="audiocpu" size="0x00020000">
             <rom name="777-m1.m1" size="0x00020000" crc="1046f5a3" sha1="944bbabad237ed9d85b531872786838ab2e06b3c"/>

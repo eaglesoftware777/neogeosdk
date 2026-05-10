@@ -116,59 +116,65 @@ void  NEOGEO_USER USER(void) {
 }
 
 // NeoGeo PLAYER_START handler
-// Called from SYSTEM_IO when start button + credit detected.
-// Set accepted START_FLAG bits to 1; BIOS auto-deducts credits on return.
-// Set USER_MODE=2 when any player's start is accepted (game in progress).
-// Do NOT call SYS_CREDIT_DOWN or SYS_RETURN — this is a callback, just return.
 void NEOGEO_USER PLAYER_START (void) {
 
-	uint16_t start_flag, country_code = 0;
-	uint8_t accepted = 0;
+	uint16_t start_flag,country_code = 0;
 	register short P1 = 0;
 	register short P2 = 0;
 	register short P3 = 0;
 	register short P4 = 0;
-	start_flag = NEO_REGISTER8(BIOS_START_FLAG);
+	start_flag = NEO_REGISTER8(BIOS_START_FLAG) ;
 	country_code = NEO_REGISTER8(BIOS_COUNTRY_CODE);
-	P1 = (start_flag >> 0) & 1;
-	P2 = (start_flag >> 1) & 1;
-	P3 = (start_flag >> 2) & 1;
-	P4 = (start_flag >> 3) & 1;
-	if (P1 == 1) {
+	CALLNEOGEOF(SYS_CREDIT_CHECK);
+	P1=(start_flag >> 0) & 1;
+	P2=(start_flag >> 1) & 1;
+	P3=(start_flag >> 2) & 1;
+	P4=(start_flag >> 3) & 1;
+	if (P1==1) {
 		soundStopAll();
 		playSFX(SOUND_SFX_START_SLASH);
 		cyclexms(10);
 		start_flag |= 1 << 0;
-		NEO_REGISTER8(BIOS_PLAYER1_MODE) = 0x01; // bit0=playing, 1P normal
-		accepted = 1;
+		NEO_REGISTER8(BIOS_PLAYER1_MODE) |= 1 << 0;
+		NEO_REGISTER8(BIOS_PLAYER1_MODE) &= ~(1 << 1);
+		NEO_REGISTER8(BIOS_PLAYER1_MODE) &= ~(1 << 2);
+		NEO_REGISTER8(BIOS_PLAYER1_MODE) &= ~(1 << 3);
 	}
-	if (P2 == 1) {
+	if (P2==1) {
 		soundStopAll();
 		playSFX(SOUND_SFX_START_SLASH);
 		cyclexms(10);
 		start_flag |= 1 << 1;
-		if (country_code == 1) {
-			// USA: P2 starts alone
-			NEO_REGISTER8(BIOS_PLAYER2_MODE) = 0x02;
-		} else {
-			// Japan/Europe: P2 start implies 2-player game
-			NEO_REGISTER8(BIOS_PLAYER2_MODE) = 0x03;
+		if(country_code == 0) {
+			NEO_REGISTER8(BIOS_PLAYER2_MODE) |= 1 << 0;
+			NEO_REGISTER8(BIOS_PLAYER2_MODE) |= 1 << 1;
+			NEO_REGISTER8(BIOS_PLAYER2_MODE) &= ~(1 << 2);
+			NEO_REGISTER8(BIOS_PLAYER2_MODE) &= ~(1 << 3);
 		}
-		accepted = 1;
+		if(country_code == 1) {
+			NEO_REGISTER8(BIOS_PLAYER2_MODE) &= ~(1 << 0);
+			NEO_REGISTER8(BIOS_PLAYER2_MODE) |= 1 << 1;
+			NEO_REGISTER8(BIOS_PLAYER2_MODE) &= ~(1 << 2);
+			NEO_REGISTER8(BIOS_PLAYER2_MODE) &= ~(1 << 3);
+		}
+		if(country_code == 2) {
+			NEO_REGISTER8(BIOS_PLAYER2_MODE) |= 1 << 0;
+			NEO_REGISTER8(BIOS_PLAYER2_MODE) |= 1 << 1;
+			NEO_REGISTER8(BIOS_PLAYER2_MODE) &= ~(1 << 2);
+			NEO_REGISTER8(BIOS_PLAYER2_MODE) &= ~(1 << 3);
+		}
 	}
-	if (P3 == 1) {
+	if (P3==1) {
 		start_flag |= 1 << 2;
-		accepted = 1;
 	}
-	if (P4 == 1) {
+	if (P4==1) {
 		start_flag |= 1 << 3;
-		accepted = 1;
 	}
 	NEO_REGISTER8(BIOS_START_FLAG) = start_flag;
-	if (accepted) {
-		NEO_REGISTER8(BIOS_USER_MODE) = 0x02; // game in progress
-	}
-	// Return normally; BIOS deducts credits for every accepted flag bit.
+	//NEO_REGISTER8(BIOS_USER_MODE) = 0x2 //keep user mode game
+	CALLNEOGEOF(SYS_CREDIT_CHECK);
+	CALLNEOGEOF(SYS_CREDIT_DOWN);
+	CALLNEOGEOF(SYS_RETURN);
 }
 
 // NeoGeo DEMO_END handler
@@ -237,7 +243,7 @@ void  NEOGEO_USER GAME (void) {
 	ASM_ADDQB(#1,BIOS_MESS_BUSY) //mess out disable
 	ASM_BCLRB(#7,BIOS_SYSTEM_MODE) //  System mode
 	ASM_MVW(#0x2000,%%sr)              // Enable interrupts SR = 2700H supervisor mode
-	ASM_MVB(#0x01,BIOS_USER_MODE) // demo mode: USER_MODE=1 (game selection allowed on MVS)
+	ASM_MVB(#0x02,BIOS_USER_MODE) //user_request = 2
 	ASM_SUBQB(#1,BIOS_MESS_BUSY) //mess out enable
 	ASM_BSETB(#7,BIOS_SYSTEM_MODE) //  game mode
 	ASM_JSR(INIT_GAME)
@@ -252,10 +258,7 @@ void  NEOGEO_USER GAME (void) {
 // NeoGeo MVS TITLE Mode
 void NEOGEO_USER TITLE(void) {
 
-	// MVS forced-start mode only (USER_REQUEST=3).
-	// BIOS drives the SELECT_TIMER; when it expires the BIOS triggers
-	// game start on its own — no need to jump to START_GAME here.
-	// Return to SYS_RETURN; the system handles the rest.
+	// MVS systems only
 	ASM_START
 	ASM_LEA(BIOS_WORKRAM,%%sp)              // A7 (SSP) = 10F300H Init stack pointer
 	ASM_MVB(%%d0,REG_DIPSW)           // Kick watchdog
@@ -264,12 +267,13 @@ void NEOGEO_USER TITLE(void) {
 	ASM_ADDQB(#1,BIOS_MESS_BUSY) //mess out disable
 	ASM_BCLRB(#7,BIOS_SYSTEM_MODE) //  system mode
 	ASM_MVW(#0x2000,%%sr)              // Enable interrupts SR = 2700H supervisor mode
-	ASM_MVB(#0x01,BIOS_USER_MODE) // title mode: USER_MODE=1 (same as demo)
+	ASM_MVB(#0x03,BIOS_USER_MODE) //user_request = 2
 	ASM_SUBQB(#1,BIOS_MESS_BUSY) //mess out enable
 	ASM_BSETB(#7,BIOS_SYSTEM_MODE) //  game mode
 	ASM_JSR(INIT_GAME)
 	ASM_JSR(showTitleMVS)
-	ASM_JMP(SYS_RETURN)
+	ASM_MVB(#0x02,BIOS_USER_MODE) //user_request = 2
+	ASM_JMP(START_GAME)
 	:
 	:
 	:
@@ -291,6 +295,7 @@ void  NEOGEO_USER eye_cactherAES (void) {
 void  NEOGEO_USER showTitleMVS(void) {
 	uint16_t pal_tile0[16];
 	int i = 0;
+	int p1c = 0;
 
 	setpal(pal_tile0,BLACK,BLACK,0xFFF,RED,BLUE,MIDGREEN,CYAN,ORANGE,MAGENTA,RED,WHITE,BLUE,RED,BLUE,CYAN,RED);
 	load_palettes(pal_tile0,PALETTES);
@@ -302,8 +307,10 @@ void  NEOGEO_USER showTitleMVS(void) {
 		cycle1s();
 	}
 	soundStopAll();
-	// Return to TITLE handler which jumps to SYS_RETURN.
-	// BIOS controls what happens next (forced start or game select).
+	p1c = read_p1credit();
+	if (p1c == 0) {
+		CALLNEOGEOF(GAME);
+	}
 }
 
 void  NEOGEO_USER showTitleAES(void) {
