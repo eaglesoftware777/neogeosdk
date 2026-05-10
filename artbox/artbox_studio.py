@@ -985,6 +985,479 @@ class TileGridTab(QWidget):
 
 
 # ---------------------------------------------------------------------------
+# ROM Address Grid Tab
+# ---------------------------------------------------------------------------
+class RomAddressGridTab(QWidget):
+    """Browse all assets with their NeoGeo C-ROM addresses, tile bases,
+    palette bank registers, and character addresses."""
+
+    def __init__(self, manifest: list, parent=None):
+        super().__init__(parent)
+        self.manifest = manifest
+        self._build_ui()
+        self._populate()
+
+    def _build_ui(self):
+        layout = QVBoxLayout(self)
+
+        # Filter row
+        frow = QHBoxLayout()
+        frow.addWidget(QLabel("Filter:"))
+        self.filter_edit = QLineEdit(); self.filter_edit.setPlaceholderText("name, category…")
+        self.filter_edit.textChanged.connect(self._apply_filter)
+        frow.addWidget(self.filter_edit)
+        frow.addWidget(QLabel("Category:"))
+        self.cat_combo = QComboBox()
+        self.cat_combo.addItem("All")
+        self.cat_combo.currentTextChanged.connect(self._apply_filter)
+        frow.addWidget(self.cat_combo)
+        frow.addStretch()
+        layout.addLayout(frow)
+
+        # Tree view
+        self.tree = QTreeWidget()
+        cols = [
+            "Screen ID", "Name", "Category",
+            "Tile Base", "Tile Base (hex)",
+            "C1 Byte Offset", "C1 Addr (hex)",
+            "Palette Bank", "PAL Register (hex)",
+            "Strips", "Active Rows",
+            "Col Start", "Row Start",
+            "Width px", "Height px",
+        ]
+        self.tree.setColumnCount(len(cols))
+        self.tree.setHeaderLabels(cols)
+        self.tree.setAlternatingRowColors(True)
+        self.tree.setSortingEnabled(True)
+        layout.addWidget(self.tree)
+
+        # Detail panel
+        self.detail = QPlainTextEdit()
+        self.detail.setReadOnly(True)
+        self.detail.setMaximumHeight(120)
+        self.detail.setFont(QFont("Monospace", 9))
+        layout.addWidget(self.detail)
+        self.tree.currentItemChanged.connect(self._on_selection)
+
+    def _populate(self):
+        cats = set()
+        self.tree.clear()
+        for e in self.manifest:
+            cats.add(e.get("category","?"))
+            tile_base = e.get("tile_base", 0)
+            c1_off = tile_base * 64
+            pal_bank = e.get("palette_bank", 0)
+            # NeoGeo palette RAM register: PALETTES base + palette_bank * PALOFFSET
+            # PALOFFSET = 0x200 (palette slot stride in VRAM words)
+            pal_reg = 0x400000 + pal_bank * 0x200 * 2
+            item = QTreeWidgetItem([
+                str(e.get("screen_id", "")),
+                e.get("name", ""),
+                e.get("category", ""),
+                str(tile_base),
+                f"0x{tile_base:04X}",
+                str(c1_off),
+                f"0x{c1_off:06X}",
+                str(pal_bank),
+                f"0x{pal_reg:06X}",
+                str(e.get("sprite_strips", "")),
+                str(e.get("sprite_active_rows", "")),
+                str(e.get("used_tile_col_start", "")),
+                str(e.get("used_tile_row_start", "")),
+                str(e.get("content_width", "")),
+                str(e.get("content_height", "")),
+            ])
+            item.setData(0, Qt.ItemDataRole.UserRole, e)
+            self.tree.addTopLevelItem(item)
+        for i in range(self.tree.columnCount()):
+            self.tree.resizeColumnToContents(i)
+        cats_sorted = sorted(cats)
+        for c in cats_sorted:
+            self.cat_combo.addItem(c)
+
+    def _apply_filter(self):
+        text = self.filter_edit.text().lower()
+        cat  = self.cat_combo.currentText()
+        for i in range(self.tree.topLevelItemCount()):
+            item = self.tree.topLevelItem(i)
+            e = item.data(0, Qt.ItemDataRole.UserRole) or {}
+            name_match = text in item.text(1).lower() if text else True
+            cat_match  = cat == "All" or e.get("category","") == cat
+            item.setHidden(not (name_match and cat_match))
+
+    def _on_selection(self, item, _prev):
+        if item is None:
+            return
+        e = item.data(0, Qt.ItemDataRole.UserRole) or {}
+        tile_base = e.get("tile_base", 0)
+        pal_bank  = e.get("palette_bank", 0)
+        strips    = e.get("sprite_strips", 1)
+        rows      = e.get("sprite_active_rows", 1)
+        c1_off    = tile_base * 64
+        c2_off    = tile_base * 64
+        # NeoGeo char_set_sprite C snippet
+        snippet = (
+            f"/* {e.get('name','')} */\n"
+            f"char_set_sprite(c, x, y, {strips}, {rows},\n"
+            f"                {tile_base}, {pal_bank});\n"
+            f"/* C1 byte offset: 0x{c1_off:06X}  C2 byte offset: 0x{c2_off:06X} */\n"
+            f"/* Palette VRAM addr: 0x{0x400000 + pal_bank*0x400:06X} */"
+        )
+        self.detail.setPlainText(snippet)
+
+
+# ---------------------------------------------------------------------------
+# Palette Manager Tab
+# ---------------------------------------------------------------------------
+class PaletteSwatchGrid(QWidget):
+    """Display up to 16 color swatches for one palette bank."""
+    color_clicked = pyqtSignal(int)   # slot index 0-15
+
+    SWATCH_SIZE = 28
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.colors = [(0,0,0)] * 16
+        self.selected = 0
+        self.setFixedSize(self.SWATCH_SIZE * 8, self.SWATCH_SIZE * 2 + 4)
+
+    def set_palette(self, colors: list):
+        self.colors = list(colors[:16]) + [(0,0,0)] * (16 - len(colors))
+        self.update()
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.fillRect(self.rect(), QColor(30, 30, 40))
+        for i, (r, g, b) in enumerate(self.colors):
+            col = i % 8; row = i // 8
+            x = col * self.SWATCH_SIZE + 1
+            y = row * self.SWATCH_SIZE + 2
+            sw = self.SWATCH_SIZE - 2
+            p.fillRect(x, y, sw, sw, QColor(r, g, b))
+            if i == self.selected:
+                p.setPen(QPen(QColor(255, 220, 0), 2))
+                p.drawRect(x, y, sw, sw)
+            else:
+                p.setPen(QPen(QColor(60, 60, 70), 1))
+                p.drawRect(x, y, sw, sw)
+            # Slot number
+            p.setPen(QColor(200, 200, 200) if (r+g+b) < 300 else QColor(30, 30, 30))
+            p.setFont(QFont("Monospace", 6))
+            p.drawText(x + 2, y + sw - 2, str(i))
+
+    def mousePressEvent(self, event):
+        x = int(event.position().x()); y = int(event.position().y())
+        col = x // self.SWATCH_SIZE; row = y // self.SWATCH_SIZE
+        idx = row * 8 + col
+        if 0 <= idx < 16:
+            self.selected = idx
+            self.color_clicked.emit(idx)
+            self.update()
+
+
+class PaletteManagerTab(QWidget):
+    """Browse all palette banks loaded from neopal.bin, view swatches,
+    copy NeoGeo word values, and export the palette data."""
+
+    def __init__(self, palettes: dict, manifest: list, parent=None):
+        super().__init__(parent)
+        self.palettes = palettes
+        self.manifest = manifest
+        self._build_ui()
+        self._populate()
+
+    def _build_ui(self):
+        layout = QHBoxLayout(self)
+
+        # Left: bank list
+        left = QVBoxLayout()
+        left.addWidget(QLabel("Palette Banks (by asset):"))
+        self.bank_list = QListWidget()
+        self.bank_list.setMaximumWidth(220)
+        self.bank_list.currentRowChanged.connect(self._on_bank_selected)
+        left.addWidget(self.bank_list)
+        layout.addLayout(left)
+
+        # Center: swatches + slot detail
+        center = QVBoxLayout()
+        center.addWidget(QLabel("Colors (click to select slot):"))
+        self.swatch_grid = PaletteSwatchGrid()
+        self.swatch_grid.color_clicked.connect(self._on_color_clicked)
+        center.addWidget(self.swatch_grid)
+
+        self.slot_label = QLabel("Slot 0")
+        self.slot_label.setFont(QFont("Monospace", 9))
+        center.addWidget(self.slot_label)
+
+        # NeoGeo word table
+        center.addWidget(QLabel("All 16 NeoGeo palette words (for C code):"))
+        self.ng_words = QPlainTextEdit()
+        self.ng_words.setReadOnly(True)
+        self.ng_words.setFont(QFont("Monospace", 9))
+        self.ng_words.setMaximumHeight(140)
+        center.addWidget(self.ng_words)
+
+        # C setpal snippet
+        center.addWidget(QLabel("C setpal() snippet:"))
+        self.c_snippet = QPlainTextEdit()
+        self.c_snippet.setReadOnly(True)
+        self.c_snippet.setFont(QFont("Monospace", 9))
+        self.c_snippet.setMaximumHeight(120)
+        center.addWidget(self.c_snippet)
+        center.addStretch()
+        layout.addLayout(center, 2)
+
+        # Right: info
+        right = QVBoxLayout()
+        right.addWidget(QLabel("Palette info:"))
+        self.info_label = QLabel("")
+        self.info_label.setWordWrap(True)
+        self.info_label.setFont(QFont("Monospace", 9))
+        right.addWidget(self.info_label)
+        right.addStretch()
+        layout.addLayout(right)
+
+    def _populate(self):
+        self.bank_list.clear()
+        # Map palette_bank → asset name from manifest
+        bank_names = {}
+        for e in self.manifest:
+            pb = e.get("palette_bank", 0)
+            bank_names[pb] = e.get("name", f"bank {pb}")
+        for img_idx in sorted(self.palettes.keys()):
+            name = bank_names.get(img_idx, f"bank {img_idx}")
+            self.bank_list.addItem(f"[{img_idx:3d}]  {name}")
+        if self.bank_list.count():
+            self.bank_list.setCurrentRow(0)
+
+    def _on_bank_selected(self, row):
+        if row < 0:
+            return
+        keys = sorted(self.palettes.keys())
+        if row >= len(keys):
+            return
+        img_idx = keys[row]
+        colors = self.palettes[img_idx]
+        self.swatch_grid.set_palette(colors)
+        self._refresh_words(img_idx, colors)
+
+    def _refresh_words(self, img_idx, colors):
+        ng_lines = []
+        for i, (r, g, b) in enumerate(colors):
+            ng = rgb_to_ng_color(r, g, b)
+            ng_lines.append(f"  [{i:2d}] 0x{ng:04X}   rgb({r:3d},{g:3d},{b:3d})")
+        self.ng_words.setPlainText("\n".join(ng_lines))
+
+        # C setpal snippet
+        vals = []
+        for r, g, b in colors:
+            ng = rgb_to_ng_color(r, g, b)
+            vals.append(f"0x{ng:04X}")
+        snippet = (f"uint16_t pal[16];\n"
+                   f"setpal(pal, 0,\n"
+                   f"  {', '.join(vals[:8])},\n"
+                   f"  {', '.join(vals[8:])});\n"
+                   f"load_palettes(pal, PALETTES + PALOFFSET * {img_idx});")
+        self.c_snippet.setPlainText(snippet)
+        self.info_label.setText(
+            f"Bank index: {img_idx}\n"
+            f"Palette bank reg: 0x{0x400000 + img_idx*0x400:06X}\n"
+            f"Colors: {len(colors)}"
+        )
+
+    def _on_color_clicked(self, slot):
+        row = self.bank_list.currentRow()
+        if row < 0:
+            return
+        keys = sorted(self.palettes.keys())
+        img_idx = keys[row]
+        colors = self.palettes[img_idx]
+        if slot >= len(colors):
+            return
+        r, g, b = colors[slot]
+        ng = rgb_to_ng_color(r, g, b)
+        self.slot_label.setText(
+            f"Slot {slot}:  rgb({r},{g},{b})  NeoGeo word: 0x{ng:04X}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Manual Palette Editor Tab
+# ---------------------------------------------------------------------------
+class ColorBlockWidget(QWidget):
+    """Single large color block — click to open color picker."""
+    from PyQt6.QtCore import pyqtSignal as _sig
+    color_changed = _sig(int, int, int)   # r, g, b
+
+    def __init__(self, r=0, g=0, b=0, parent=None):
+        super().__init__(parent)
+        self.r = r; self.g = g; self.b = b
+        self.setFixedSize(40, 40)
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
+    def set_color(self, r, g, b):
+        self.r = r; self.g = g; self.b = b
+        self.update()
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.fillRect(self.rect(), QColor(self.r, self.g, self.b))
+        p.setPen(QPen(QColor(120,120,120), 1))
+        p.drawRect(0, 0, self.width()-1, self.height()-1)
+
+    def mousePressEvent(self, event):
+        from PyQt6.QtWidgets import QColorDialog
+        c = QColorDialog.getColor(QColor(self.r, self.g, self.b), self)
+        if c.isValid():
+            self.r = c.red(); self.g = c.green(); self.b = c.blue()
+            self.update()
+            self.color_changed.emit(self.r, self.g, self.b)
+
+
+class ManualPaletteEditorTab(QWidget):
+    """Manually build a 16-color NeoGeo palette, preview it, and export
+    a C setpal() call and raw NeoGeo words."""
+
+    def __init__(self, palettes: dict, parent=None):
+        super().__init__(parent)
+        self.palettes = palettes
+        self._colors = [(0,0,0)] * 16    # current working palette
+        self._build_ui()
+        self._refresh_output()
+
+    def _build_ui(self):
+        layout = QHBoxLayout(self)
+
+        # Left: import from bank
+        left = QVBoxLayout()
+        left.addWidget(QLabel("Import from bank:"))
+        self.import_spin = QSpinBox(); self.import_spin.setRange(0, 255)
+        left.addWidget(self.import_spin)
+        btn_import = QPushButton("Import →")
+        btn_import.clicked.connect(self._import_bank)
+        left.addWidget(btn_import)
+        left.addWidget(QLabel("Bank name:"))
+        self.name_edit = QLineEdit(); self.name_edit.setText("My Palette")
+        left.addWidget(self.name_edit)
+        left.addWidget(QLabel("Palette slot (for export):"))
+        self.slot_spin = QSpinBox(); self.slot_spin.setRange(0, 255)
+        left.addWidget(self.slot_spin)
+        left.addStretch()
+        layout.addLayout(left)
+
+        # Center: 16 color blocks in a 8×2 grid
+        center = QVBoxLayout()
+        center.addWidget(QLabel("Click any swatch to pick a color:"))
+        grid_w = QWidget()
+        grid = QGridLayout(grid_w)
+        grid.setSpacing(4)
+        self._blocks = []
+        for i in range(16):
+            col = i % 8; row = i // 8
+            block = ColorBlockWidget()
+            block.color_changed.connect(lambda r, g, b, idx=i: self._on_color_changed(idx, r, g, b))
+            grid.addWidget(block, row, col)
+            self._blocks.append(block)
+        center.addWidget(grid_w)
+
+        # RGB spinboxes for fine control
+        rgb_row = QHBoxLayout()
+        self.sel_label = QLabel("Slot 0:")
+        rgb_row.addWidget(self.sel_label)
+        self.r_spin = QSpinBox(); self.r_spin.setRange(0,255); self.r_spin.setPrefix("R:")
+        self.g_spin = QSpinBox(); self.g_spin.setRange(0,255); self.g_spin.setPrefix("G:")
+        self.b_spin = QSpinBox(); self.b_spin.setRange(0,255); self.b_spin.setPrefix("B:")
+        for w in (self.r_spin, self.g_spin, self.b_spin):
+            rgb_row.addWidget(w)
+        btn_apply = QPushButton("Apply")
+        btn_apply.clicked.connect(self._apply_rgb)
+        rgb_row.addWidget(btn_apply)
+        self._selected_slot = 0
+        for block in self._blocks:
+            block.mousePressEvent  # wire selection below
+        center.addLayout(rgb_row)
+
+        # Wire block click → select slot
+        for i, block in enumerate(self._blocks):
+            block.mousePressEvent = self._make_slot_click(i, block)
+
+        center.addStretch()
+        layout.addLayout(center, 2)
+
+        # Right: output
+        right = QVBoxLayout()
+        right.addWidget(QLabel("NeoGeo palette words:"))
+        self.ng_out = QPlainTextEdit()
+        self.ng_out.setReadOnly(True)
+        self.ng_out.setFont(QFont("Monospace", 9))
+        self.ng_out.setMaximumHeight(180)
+        right.addWidget(self.ng_out)
+
+        right.addWidget(QLabel("C setpal() snippet:"))
+        self.c_out = QPlainTextEdit()
+        self.c_out.setReadOnly(True)
+        self.c_out.setFont(QFont("Monospace", 9))
+        self.c_out.setMaximumHeight(140)
+        right.addWidget(self.c_out)
+
+        btn_row = QHBoxLayout()
+        btn_copy = QPushButton("Copy C snippet")
+        btn_copy.clicked.connect(lambda: QApplication.clipboard().setText(self.c_out.toPlainText()))
+        btn_row.addWidget(btn_copy)
+        right.addLayout(btn_row)
+        right.addStretch()
+        layout.addLayout(right)
+
+    def _make_slot_click(self, idx, block):
+        orig = ColorBlockWidget.mousePressEvent
+        def handler(event):
+            self._selected_slot = idx
+            self.sel_label.setText(f"Slot {idx}:")
+            r, g, b = self._colors[idx]
+            self.r_spin.setValue(r); self.g_spin.setValue(g); self.b_spin.setValue(b)
+            orig(block, event)
+        return handler
+
+    def _on_color_changed(self, slot, r, g, b):
+        self._colors[slot] = (r, g, b)
+        self._refresh_output()
+
+    def _apply_rgb(self):
+        slot = self._selected_slot
+        r = self.r_spin.value(); g = self.g_spin.value(); b = self.b_spin.value()
+        self._colors[slot] = (r, g, b)
+        self._blocks[slot].set_color(r, g, b)
+        self._refresh_output()
+
+    def _import_bank(self):
+        bank = self.import_spin.value()
+        if bank in self.palettes:
+            for i, (r, g, b) in enumerate(self.palettes[bank][:16]):
+                self._colors[i] = (r, g, b)
+                self._blocks[i].set_color(r, g, b)
+            self._refresh_output()
+        else:
+            QMessageBox.warning(self, "Not Found", f"Palette bank {bank} not loaded.")
+
+    def _refresh_output(self):
+        slot = self.slot_spin.value()
+        lines = []
+        vals  = []
+        for i, (r, g, b) in enumerate(self._colors):
+            ng = rgb_to_ng_color(r, g, b)
+            lines.append(f"  [{i:2d}] 0x{ng:04X}   rgb({r:3d},{g:3d},{b:3d})")
+            vals.append(f"0x{ng:04X}")
+        self.ng_out.setPlainText("\n".join(lines))
+        c_code = (f"/* {self.name_edit.text()} */\n"
+                  f"uint16_t pal[16];\n"
+                  f"setpal(pal, 0,\n"
+                  f"  {', '.join(vals[:8])},\n"
+                  f"  {', '.join(vals[8:])});\n"
+                  f"load_palettes(pal, PALETTES + PALOFFSET * {slot});")
+        self.c_out.setPlainText(c_code)
+
+
+# ---------------------------------------------------------------------------
 # Main Window
 # ---------------------------------------------------------------------------
 class ArtboxStudio(QMainWindow):
@@ -1027,6 +1500,15 @@ class ArtboxStudio(QMainWindow):
 
         self.tab_paint = PixelPaintTab(self.c1, self.c2, self.palettes, self.manifest)
         tabs.addTab(self.tab_paint, "Pixel Paint")
+
+        self.tab_addr = RomAddressGridTab(self.manifest)
+        tabs.addTab(self.tab_addr, "ROM Addresses")
+
+        self.tab_palman = PaletteManagerTab(self.palettes, self.manifest)
+        tabs.addTab(self.tab_palman, "Palette Manager")
+
+        self.tab_paled = ManualPaletteEditorTab(self.palettes)
+        tabs.addTab(self.tab_paled, "Palette Editor")
 
         self.setStatusBar(QStatusBar())
         total = len(self.c1) // 64
