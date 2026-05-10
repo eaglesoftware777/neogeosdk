@@ -117,12 +117,12 @@ Current shipped helper behavior:
 
 ## 2D Game Engine Layer
 
-The repository also includes a reusable game engine layer under `sdk/ng_*`.
+The repository also includes a reusable game engine layer under `sdk/2d_engine/ng_*`.
 
 Primary entry header:
 
 ```c
-#include "sdk/ng_game_engine.h"
+#include "sdk/2d_engine/ng_game_engine.h"
 ```
 
 Core startup:
@@ -159,7 +159,7 @@ Main runtime modules:
 Important current build note:
 
 - the linker scripts reserve `game_engine_bss` for `out/ng_*0.o`
-- `Makefile` and `MakefileWin32.mak` compile and link the `sdk/ng_*` modules by default
+- `Makefile` and `MakefileWin32.mak` compile and link the `sdk/2d_engine/ng_*` modules by default
 - use [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md) to inspect the exact build and linker wiring
 
 Camera helpers:

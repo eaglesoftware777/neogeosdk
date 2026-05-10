@@ -1,6 +1,6 @@
-# Game Engine Makefile Integration for `sdk/ng_*`
+# Game Engine Makefile Integration for `sdk/2d_engine/ng_*`
 
-The 2D game engine layer is built from the `sdk/ng_*.c` modules.
+The 2D game engine layer is built from the `sdk/2d_engine/ng_*.c` modules.
 
 Current state on `main`:
 
@@ -50,7 +50,7 @@ missing region.
 In your 68000 source:
 
 ```c
-#include "sdk/ng_game_engine.h"
+#include "sdk/2d_engine/ng_game_engine.h"
 
 void game_boot(void)
 {
@@ -66,7 +66,7 @@ void game_frame(void)
 
 Compatibility aliases remain available:
 
-- `#include "sdk/ng_runtime.h"` still works
+- `#include "sdk/2d_engine/ng_runtime.h"` still works
 - `game_runtime_init()` still calls `game_engine_init()`
 - `game_interupt()` still calls `game_engine_frame()`
 
@@ -97,7 +97,7 @@ That gives you the full engine layer by default.
 
 When adding a new engine module, update both `NG_ENGINE_NAMES` in `Makefile` and
 the explicit `NG_ENGINE_OBJ0` list in `MakefileWin32.mak`, then ensure the source
-is included by `sdk/ng_game_engine.h` if it is part of the public aggregate API.
+is included by `sdk/2d_engine/ng_game_engine.h` if it is part of the public aggregate API.
 
 ## Sound hook integration
 
