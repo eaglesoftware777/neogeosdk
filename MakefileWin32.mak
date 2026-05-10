@@ -48,6 +48,9 @@ CFLAGS += -g3 -gdwarf-2 -DNG_DEBUG=1
 LDFLAGS += -Map=out\game.map
 endif
 
+HASHPATH=$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
+MAME_COMMON=$(MAME) neogeo -rompath $(REPO_WIN)\roms -hashpath "$(HASHPATH)" -bios unibios22 -cart1 neogeosdk
+
 .DEFAULT_GOAL := p1
 
 .PHONY: all
@@ -91,6 +94,11 @@ game:
 	copy /Y out\game.rom out\777-p1.p1
 	if not exist roms\neogeosdk mkdir roms\neogeosdk
 	copy /Y out\777-p1.p1 roms\neogeosdk\777-p1.p1
+	$(PY) hash_eagle\gen_hash.py
+
+.PHONY: hash
+hash:
+	$(PY) hash_eagle\gen_hash.py
 
 .PHONY: samples
 samples:
@@ -227,12 +235,14 @@ dump:
 	$(INFO) out\game.rom > dump\game.hex
 
 test:
+	$(PY) hash_eagle\gen_hash.py
 	copy /Y out\777-p1.p1 roms\neogeosdk\777-p1.p1
-	$(MAME) neogeo -rompath $(REPO_WIN)\roms -output console -nofilter -waitvsync -window -cart1 neogeosdk
+	$(MAME_COMMON) -output console -nofilter -waitvsync -window
 
 debug:
+	$(PY) hash_eagle\gen_hash.py
 	copy /Y out\777-p1.p1 roms\neogeosdk\777-p1.p1
-	$(MAME) neogeo -rompath $(REPO_WIN)\roms -output console -debug -verbose -nofilter -waitvsync -window -cart1 neogeosdk
+	$(MAME_COMMON) -output console -debug -verbose -nofilter -waitvsync -window
 
 .PHONY: debug-build
 debug-build:
