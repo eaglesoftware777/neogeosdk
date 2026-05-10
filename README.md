@@ -59,6 +59,31 @@ Use these docs for the current integration path:
 - [`docs/GDB_GUIDE.md`](./docs/GDB_GUIDE.md)
 - [`docs/BANKSWITCH.md`](./docs/BANKSWITCH.md)
 
+## Desktop Tools
+
+Two PyQt6 graphical tools ship with the SDK for visual asset editing and sound composition.
+
+### Artbox Studio
+
+```bash
+python3 artbox/artbox_studio.py
+```
+
+Four tabs: C-ROM tile grid viewer, sprite designer with C-snippet export, hitbox editor with draggable rects, and 16-color pixel paint editor that writes back to the ROM buffer.  See [`docs/ARTBOX_PIPELINE.md`](./docs/ARTBOX_PIPELINE.md).
+
+### Sound Studio
+
+```bash
+python3 sound/sound_studio.py
+```
+
+Five tabs: FM patch editor (4-operator, all parameters), MML composer with piano roll and one-click compile, SSG preset editor, ADPCM sample manager with waveform preview, and a YM2610 simulator for mixed FM+SSG channel playback.  See [`docs/YM2610_GUIDE.md`](./docs/YM2610_GUIDE.md).
+
+**Requirements:** Python 3, PyQt6, numpy, scipy.
+
+```bash
+pip install PyQt6 numpy scipy
+```
 
 ## Release Assets
 
@@ -89,9 +114,7 @@ Primary repository docs:
 - [`docs/DEPENDENCIES.md`](./docs/DEPENDENCIES.md)
 - [`docs/GDB_GUIDE.md`](./docs/GDB_GUIDE.md)
 - [`docs/BANKSWITCH.md`](./docs/BANKSWITCH.md)
-- [`docs/DEPENDENCIES.md`](./docs/DEPENDENCIES.md)
-- [`docs/GDB_GUIDE.md`](./docs/GDB_GUIDE.md)
-- [`docs/BANKSWITCH.md`](./docs/BANKSWITCH.md)
+- [`docs/YM2610_GUIDE.md`](./docs/YM2610_GUIDE.md)
 - [`sound/SOUND_DRIVER_GUIDE.txt`](./sound/SOUND_DRIVER_GUIDE.txt)
 - [`sound/driver/readme`](./sound/driver/readme)
 - [`sound/mml/readme`](./sound/mml/readme)
