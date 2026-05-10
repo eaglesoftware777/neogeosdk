@@ -1445,7 +1445,6 @@ class SoundStudio(QMainWindow):
         self.setWindowTitle("NeoGeo YM2610 Sound Studio")
         self.resize(1200, 780)
         self._apply_theme()
-        self._build_menu()
 
         tabs = QTabWidget()
         self.fm_tab    = FMPatchTab()
@@ -1460,6 +1459,8 @@ class SoundStudio(QMainWindow):
         tabs.addTab(self.adpcm_tab, "ADPCM Samples")
         tabs.addTab(self.sim_tab,   "YM2610 Simulator")
         self.setCentralWidget(tabs)
+
+        self._build_menu()
 
     def _apply_theme(self):
         from PyQt6.QtWidgets import QApplication as _A
