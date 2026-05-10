@@ -37,6 +37,9 @@ CFLAGS += -g3 -gdwarf-2 -DNG_DEBUG=1
 LDFLAGS += -Map=out/game.map
 endif
 
+HASHPATH=$(SDKHOME)/neogeosdk/hash_eagle:$(SDKHOME)/neogeosdk/hash
+MAME_COMMON=mame neogeo -rompath $(SDKHOME)/neogeosdk/roms -hashpath $(HASHPATH) -bios unibios22 -cart1 neogeosdk
+
 .DEFAULT_GOAL := p1
 
 .PHONY: all
@@ -80,6 +83,11 @@ game:
 	cp		 out/game.rom	out/777-p1.p1
 	mkdir -p roms/neogeosdk
 	cp -f out/777-p1.p1 roms/neogeosdk/777-p1.p1
+	python3 hash_eagle/gen_hash.py
+
+.PHONY: hash
+hash:
+	python3 hash_eagle/gen_hash.py
 
 .PHONY: mml
 mml:
@@ -195,12 +203,14 @@ dump:
 	$(INFO) out/game.rom > dump/game.hex 
 
 test:
+	python3 hash_eagle/gen_hash.py
 	cp out/777-p1.p1  $(SDKHOME)/neogeosdk/roms/neogeosdk
-	mame neogeo -rompath  $(SDKHOME)/neogeosdk/roms -output console  -nofilter -waitvsync -window -cart1 neogeosdk
+	$(MAME_COMMON) -output console -nofilter -waitvsync -window
 
 debug:
+	python3 hash_eagle/gen_hash.py
 	cp out/777-p1.p1  $(SDKHOME)/neogeosdk/roms/neogeosdk
-	mame neogeo -rompath  $(SDKHOME)/neogeosdk/roms -output console -debug -verbose  -nofilter -waitvsync -window -cart1 neogeosdk
+	$(MAME_COMMON) -output console -debug -verbose -nofilter -waitvsync -window
 
 .PHONY: debug-build
 debug-build:
