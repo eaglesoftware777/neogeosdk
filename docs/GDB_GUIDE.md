@@ -221,4 +221,4 @@ make -f MakefileWin32.mak gdb GDB=D:\tools\m68k-gdb.exe
 
 - The 68000 is big-endian; byte and word reads in GDB reflect that.
 - MAME's GDB stub does not support all GDB features.  Single-step (`stepi`) and register reads work reliably.  Memory watchpoints may not.
-- `out/game` is the ELF target used by GDB.  `out/game.rom` and `out/052-p1.p1` are the final ROM images for MAME; GDB does not load those directly.
+- `out/game` is the ELF target used by GDB.  `out/game.rom` and `out/777-p1.p1` are the final ROM images for MAME; GDB does not load those directly.

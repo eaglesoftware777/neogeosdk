@@ -103,12 +103,12 @@ python3 artbox/artbox_studio.py
 | **Tile Grid** | Scrollable viewer of all tiles from the combined C-ROM. Zoom 1–6×, per-asset palette, click to select, jump to any asset. |
 | **Sprite Designer** | Configure a multi-strip sprite: tile base, strips, active rows, stride, palette bank. Exports a ready-to-paste C `char_set_sprite` call. |
 | **Hitbox Editor** | Place draggable body and hit rectangles over the sprite preview. Exports a C hitbox struct definition. |
-| **Pixel Paint** | 16-color pixel art editor for patching individual tiles directly in the C-ROM buffer. Saves back to `052-c1.c1` / `052-c2.c2`. |
+| **Pixel Paint** | 16-color pixel art editor for patching individual tiles directly in the C-ROM buffer. Saves back to `777-c1.c1` / `777-c2.c2`. |
 
 Tile decoding follows the exact layout written by `romtiles.py`:
 
 - Each C-ROM stores **64 bytes per 16×16 tile** (4 blocks × 8 rows × 2 bytes).
 - Block order: top-right, bottom-right, top-left, bottom-left.
-- `052-c1.c1` is byte-flipped (`romts.sh /f`): row bytes are `[plane_a, plane_b]`.
-- `052-c2.c2` similarly: `[plane_c, plane_d]`.
+- `777-c1.c1` is byte-flipped (`romts.sh /f`): row bytes are `[plane_a, plane_b]`.
+- `777-c2.c2` similarly: `[plane_c, plane_d]`.
 - Color index per pixel: `d<<3 | c<<2 | b<<1 | a` (4-bit, maps into palette[0..15]).

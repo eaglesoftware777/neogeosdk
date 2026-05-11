@@ -52,7 +52,7 @@ Release date: 2026-05-06
 - updated Linux and Windows makefiles so generated sound outputs are copied back into `roms/ssideki/`
 - updated Linux and Windows makefiles to support `SDKHOME`, WSL usage, SoX-optional
   sample conversion, and Win32 wildcard expansion for FM/MML/SSG builds
-- corrected the Win32 `sfix` path so `052-s1.s1` remains the proper 128 KB FIX ROM
+- corrected the Win32 `sfix` path so `777-s1.s1` remains the proper 128 KB FIX ROM
 - revised sound content and game-loop layering in:
   - `sound/mml/0_samurai_game_loop.mml`
   - `sound/fm/4_bass_motif.mml`
