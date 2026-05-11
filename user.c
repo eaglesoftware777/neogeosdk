@@ -10,12 +10,16 @@ https://github.com/eaglesoftware777/neogeosdk
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 
+#define NGO_START_FLAG  0xD00100
+
 void NEOGEO_USER showEagleIntro(void);
 void NEOGEO_USER showWalkDemo(int loops, int delay_ms);
 void NEOGEO_USER soundSceneReset(void);
 void NEOGEO_USER maingame(void);
 void NEOGEO_USER GAME_ATTRACT(void);
 void NEOGEO_USER START_GAME(void);
+void NEOGEO_USER GAME_DISPATCH(void);
+void NEOGEO_USER showScreen9(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 
 //ZD_ENTRY interrupt subroutine
 NEOGEO_INTERRUPT void NEOGEO_USER ZD_ENTRY(void) {
@@ -120,64 +124,23 @@ void  NEOGEO_USER USER(void) {
 // NeoGeo PLAYER_START handler
 void NEOGEO_USER PLAYER_START (void) {
 
-	uint16_t start_flag,country_code = 0;
-	register short P1 = 0;
-	register short P2 = 0;
-	register short P3 = 0;
-	register short P4 = 0;
-	start_flag = NEO_REGISTER8(BIOS_START_FLAG);
-	country_code = NEO_REGISTER8(BIOS_COUNTRY_CODE);
-	P1=(start_flag >> 0) & 1;
-	P2=(start_flag >> 1) & 1;
-	P3=(start_flag >> 2) & 1;
-	P4=(start_flag >> 3) & 1;
-	if (P1==1) {
-		start_flag |= 1 << 0;
-		NEO_REGISTER8(BIOS_PLAYER1_MODE) |= 1 << 0;
-		NEO_REGISTER8(BIOS_PLAYER1_MODE) &= ~(1 << 1);
-		NEO_REGISTER8(BIOS_PLAYER1_MODE) &= ~(1 << 2);
-		NEO_REGISTER8(BIOS_PLAYER1_MODE) &= ~(1 << 3);
+	// BIOS only calls PLAYER_START when start is pressed with credits — always signal game start
+	NEO_REGISTER8(BIOS_USER_MODE) = 2;
+	NEO_REGISTER8(NGO_START_FLAG) = 1;
+
+	uint16_t start_flag = NEO_REGISTER8(BIOS_START_FLAG);
+	uint16_t country_code = NEO_REGISTER8(BIOS_COUNTRY_CODE);
+
+	if ((start_flag >> 0) & 1) {
+		NEO_REGISTER8(BIOS_PLAYER1_MODE) = 1;
 	}
-	if (P2==1) {
-		start_flag |= 1 << 1;
-		if(country_code == 0) {
-			NEO_REGISTER8(BIOS_PLAYER2_MODE) |= 1 << 0;
-			NEO_REGISTER8(BIOS_PLAYER2_MODE) |= 1 << 1;
-			NEO_REGISTER8(BIOS_PLAYER2_MODE) &= ~(1 << 2);
-			NEO_REGISTER8(BIOS_PLAYER2_MODE) &= ~(1 << 3);
-		}
-		if(country_code == 1) {
-			NEO_REGISTER8(BIOS_PLAYER2_MODE) &= ~(1 << 0);
-			NEO_REGISTER8(BIOS_PLAYER2_MODE) |= 1 << 1;
-			NEO_REGISTER8(BIOS_PLAYER2_MODE) &= ~(1 << 2);
-			NEO_REGISTER8(BIOS_PLAYER2_MODE) &= ~(1 << 3);
-		}
-		if(country_code == 2) {
-			NEO_REGISTER8(BIOS_PLAYER2_MODE) |= 1 << 0;
-			NEO_REGISTER8(BIOS_PLAYER2_MODE) |= 1 << 1;
-			NEO_REGISTER8(BIOS_PLAYER2_MODE) &= ~(1 << 2);
-			NEO_REGISTER8(BIOS_PLAYER2_MODE) &= ~(1 << 3);
-		}
+	if ((start_flag >> 1) & 1) {
+		NEO_REGISTER8(BIOS_PLAYER2_MODE) = (country_code == 1) ? 2 : 3;
 	}
-	if (P3==1) {
-		start_flag |= 1 << 2;
-	}
-	if (P4==1) {
-		start_flag |= 1 << 3;
-	}
-	NEO_REGISTER8(BIOS_START_FLAG) = start_flag;
-	if (start_flag & 0x0F)
-		NEO_REGISTER8(BIOS_USER_MODE) = 2;
 #ifndef NG_AES
 	CALLNEOGEOF(SYS_CREDIT_CHECK);
 	CALLNEOGEOF(SYS_CREDIT_DOWN);
 #endif
-	ASM_START
-	ASM_JMP(SYS_RETURN)
-	:
-	:
-	:
-	ASM_END
 }
 
 // NeoGeo DEMO_END handler
@@ -196,18 +159,13 @@ void NEOGEO_USER COIN_SOUND (void) {
 	isZ80Ready();
 	playSFX(SOUND_SFX_COIN_CHIME);
 	cyclexms(7);
-	ASM_START
-	ASM_JMP(SYS_RETURN)
-	:
-	:
-	:
-	ASM_END
 }
 
 // NeoGeo POWER_ON handler
 void  NEOGEO_USER POWER_ON (void) {
 
 	//MVS only
+	NEO_REGISTER8(NGO_START_FLAG) = 0;
 	ASM_START
 	ASM_MVB(#0x00,BIOS_USER_MODE) //user_request = 0
 	ASM_LEA(USER_WORKRAM+64,%%a0)	//Start of game save block
@@ -249,19 +207,32 @@ void  NEOGEO_USER GAME (void) {
 	ASM_SUBQB(#1,BIOS_MESS_BUSY)
 	ASM_BSETB(#7,BIOS_SYSTEM_MODE)
 	ASM_JSR(INIT_GAME)
-	ASM_MVB(BIOS_USER_MODE,%%d0)
-	ASM_SUBQB(#2,%%d0)
-	ASM_BEQ(.do_start)
-	ASM_MVB(#0x01,BIOS_USER_MODE)
-	ASM_JSR(GAME_ATTRACT)
+	ASM_JSR(GAME_DISPATCH)
 	ASM_JMP(SYS_RETURN)
-	ASM_L(.do_start)
-	ASM_MVB(#0x02,BIOS_USER_MODE)
-	ASM_JMP(START_GAME)
 	:
 	:
 	:
 	ASM_END
+}
+
+// C-based GAME dispatch — avoids inline-asm address read issues
+void NEOGEO_USER GAME_DISPATCH(void) {
+#ifndef NG_AES
+	if (NEO_REGISTER8(NGO_START_FLAG)) {
+		NEO_REGISTER8(BIOS_USER_MODE) = 2;
+		START_GAME();
+	} else {
+		NEO_REGISTER8(BIOS_USER_MODE) = 1;
+		GAME_ATTRACT();
+	}
+#else
+	NEO_REGISTER8(BIOS_USER_MODE) = 1;
+	GAME_ATTRACT();
+	if (NEO_REGISTER8(NGO_START_FLAG)) {
+		NEO_REGISTER8(BIOS_USER_MODE) = 2;
+		START_GAME();
+	}
+#endif
 }
 
 // NeoGeo MVS TITLE Mode
@@ -290,33 +261,31 @@ void NEOGEO_USER TITLE(void) {
 }
 
 void  NEOGEO_USER showTitleMVS(void) {
-	uint16_t  pal_tile0[16];
-	int i = 0;
-	setpal(pal_tile0,BLACK,BLACK,0xFFF,RED,BLUE,MIDGREEN,CYAN,ORANGE,MAGENTA,RED,WHITE,BLUE,RED,BLUE,CYAN,RED);
-	load_palettes(pal_tile0,PALETTES);
+	clearFix();
+	clearSprs();
+	showScreen9(16, 24, 0xF, 0xAF, 16, 0xFFF, 0);
 	waitVbl();
-	fixtext_out(15,10,"TITLE MODE MVS",0);
-	for (i = 0; i < 3; i++) {
-		fix_svalue1(13,15,i,0,48);
-		cycle1s();
-	}
-	while (NEO_REGISTER8(BIOS_USER_MODE) != 2) {
+	fixtext_out(15, 25, "HIT START", 0);
+	while (!NEO_REGISTER8(NGO_START_FLAG) && NEO_REGISTER8(BIOS_USER_MODE) != 2) {
 		waitVbl();
 	}
 }
 
 void  NEOGEO_USER showTitleAES(void) {
-	//AES System call from GAME
-	uint16_t  pal_tile0[16];
-	setpal(pal_tile0,BLACK,BLACK,0xFFF,RED,BLUE,MIDGREEN,CYAN,ORANGE,MAGENTA,RED,WHITE,BLUE,RED,BLUE,CYAN,RED);
-	load_palettes(pal_tile0,PALETTES);
-	soundPlayTitleMusic(0);
+	int i = 0;
+	NEO_REGISTER8(NGO_START_FLAG) = 0;
+	clearFix();
+	clearSprs();
+	showScreen9(16, 24, 0xF, 0xAF, 16, 0xFFF, 0);
 	waitVbl();
-	fixtext_out(15,10,"TITLE MODE AES",0);
-	int i =0;
-	for (i=0;i<5;i++) {
-		fix_svalue1(13,15,i,0,48);
+	fixtext_out(15, 25, "HIT START", 0);
+	soundPlayTitleMusic(0);
+	for (i = 0; i < 20; i++) {
+		if (NEO_REGISTER8(NGO_START_FLAG))
+			break;
 		cycle1s();
+		if (NEO_REGISTER8(NGO_START_FLAG))
+			break;
 	}
 	soundStopAll();
 }
@@ -395,12 +364,16 @@ showEagleIntro();
 	fixtext_out(15,15,"P1C: ",0);
 	display_digit(20,15,p1c,0,48);
 	for (i = 0; i < 10; i++) {
+		if (NEO_REGISTER8(NGO_START_FLAG))
+			break;
 		fix_svalue1(27,8,i,0,48);
 		p1c = read_p1credit();
 		display_digit(15,14,777,0,48);
 		fixtext_out(15,15,"P1C: ",0);
 		display_digit(20,15,p1c,0,48);
 		cycle1s();
+		if (NEO_REGISTER8(NGO_START_FLAG))
+			break;
 	}
 	soundStopAll();
 }
@@ -429,6 +402,7 @@ void NEOGEO_USER START_GAME(void) {
 	fixtext_out(15,10,"LOADING   ...",0);
 	cyclexs(2);
 	maingame();
+	NEO_REGISTER8(NGO_START_FLAG) = 0;
 	NEO_REGISTER8(BIOS_USER_MODE) = 1;
 	ASM_START
 	ASM_JMP(SYS_RETURN)
