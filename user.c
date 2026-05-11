@@ -4,34 +4,34 @@ https://github.com/eaglesoftware777
 https://github.com/eaglesoftware777/neogeosdk
 ******/
 
+#include <stdint.h>
 #include "sdk/macro.h"
 #include "sdk/neogeo.h"
-#include <stdint.h>
-
 #pragma GCC push_options
-#pragma GCC optimize("O0")
+#pragma GCC optimize ("O0")
 
 void NEOGEO_USER showEagleIntro(void);
 void NEOGEO_USER showWalkDemo(int loops, int delay_ms);
+void NEOGEO_USER soundSceneReset(void);
 void NEOGEO_USER maingame(void);
 
-/* ZD_ENTRY interrupt subroutine */
+//ZD_ENTRY interrupt subroutine
 NEOGEO_INTERRUPT void NEOGEO_USER ZD_ENTRY(void) {
 
 }
 
-/* CHK_ENTRY interrupt subroutine */
+//CHK_ENTRY interrupt subroutine
 NEOGEO_INTERRUPT void NEOGEO_USER CHK_ENTRY(void) {
 
 }
 
-/* TRAPV_ENTRY interrupt subroutine */
+//TRAPV_ENTRY interrupt subroutine
 NEOGEO_INTERRUPT void NEOGEO_USER TRAPV_ENTRY(void) {
 
 }
 
 
-/* VBlank interrupt subroutine */
+//v-blank interrupt subroutine
 NEOGEO_INTERRUPT void NEOGEO_USER VBlank(void) {
 
 	ASM_START
@@ -52,7 +52,7 @@ NEOGEO_INTERRUPT void NEOGEO_USER VBlank(void) {
 	ASM_END
 }
 
-/* IRQ2 interrupt */
+//IRQ2 interrupt
 NEOGEO_INTERRUPT void  NEOGEO_USER IRQ2(void) {
 
 	ASM_START
@@ -63,7 +63,7 @@ NEOGEO_INTERRUPT void  NEOGEO_USER IRQ2(void) {
 	ASM_END
 }
 
-/* IRQ3 interrupt */
+//IRQ3 interrupt
 NEOGEO_INTERRUPT void  NEOGEO_USER IRQ3 (void) {
 
 	ASM_START
@@ -75,21 +75,21 @@ NEOGEO_INTERRUPT void  NEOGEO_USER IRQ3 (void) {
 	ASM_END
 }
 
-/* INT4 interrupt */
+//INT4 interrupt
 NEOGEO_INTERRUPT void  NEOGEO_USER INT4 (void) {
 
 }
-/* INT5 interrupt */
+//INT5 interrupt
 NEOGEO_INTERRUPT void  NEOGEO_USER INT5 (void) {
 
 }
 
-/* INT6 interrupt */
+//INT6 interrupt
 NEOGEO_INTERRUPT void  NEOGEO_USER INT6 (void) {
 
 }
 
-/* INT7 interrupt */
+//INT7 interrupt
 NEOGEO_INTERRUPT void  NEOGEO_USER INT7 (void) {
 
 }
@@ -123,19 +123,13 @@ void NEOGEO_USER PLAYER_START (void) {
 	register short P2 = 0;
 	register short P3 = 0;
 	register short P4 = 0;
-	start_flag = NEO_REGISTER8(BIOS_START_FLAG) ;
+	start_flag = NEO_REGISTER8(BIOS_START_FLAG);
 	country_code = NEO_REGISTER8(BIOS_COUNTRY_CODE);
-#ifndef NG_AES
-	CALLNEOGEOF(SYS_CREDIT_CHECK);
-#endif
 	P1=(start_flag >> 0) & 1;
 	P2=(start_flag >> 1) & 1;
 	P3=(start_flag >> 2) & 1;
 	P4=(start_flag >> 3) & 1;
 	if (P1==1) {
-		soundStopAll();
-		playSFX(SOUND_SFX_START_SLASH);
-		cyclexms(10);
 		start_flag |= 1 << 0;
 		NEO_REGISTER8(BIOS_PLAYER1_MODE) |= 1 << 0;
 		NEO_REGISTER8(BIOS_PLAYER1_MODE) &= ~(1 << 1);
@@ -143,9 +137,6 @@ void NEOGEO_USER PLAYER_START (void) {
 		NEO_REGISTER8(BIOS_PLAYER1_MODE) &= ~(1 << 3);
 	}
 	if (P2==1) {
-		soundStopAll();
-		playSFX(SOUND_SFX_START_SLASH);
-		cyclexms(10);
 		start_flag |= 1 << 1;
 		if(country_code == 0) {
 			NEO_REGISTER8(BIOS_PLAYER2_MODE) |= 1 << 0;
@@ -190,7 +181,6 @@ void NEOGEO_USER PLAYER_START (void) {
 // NeoGeo DEMO_END handler
 void NEOGEO_USER DEMO_END (void) {
 
-	//only MVS
 	ASM_START
 	ASM_JMP(SYS_RETURN)
 	:
@@ -199,7 +189,7 @@ void NEOGEO_USER DEMO_END (void) {
 	ASM_END
 }
 
-/* NeoGeo COIN_SOUND handler */
+// NeoGeo COIN_SOUND handler
 void NEOGEO_USER COIN_SOUND (void) {
 
 	isZ80Ready();
@@ -208,7 +198,7 @@ void NEOGEO_USER COIN_SOUND (void) {
 	soundSetADPCMAVolume(0x3C);
 	isZ80Ready();
 	playSFX(SOUND_SFX_COIN_CHIME);
-	cyclexms(12);
+	cyclexms(7);
 	ASM_START
 	ASM_JMP(SYS_RETURN)
 	:
@@ -287,7 +277,8 @@ void NEOGEO_USER TITLE(void) {
 	ASM_BSETB(#7,BIOS_SYSTEM_MODE) //  game mode
 	ASM_JSR(INIT_GAME)
 	ASM_JSR(showTitleMVS)
-	ASM_JMP(SYS_RETURN)
+	ASM_MVB(#0x02,BIOS_USER_MODE)
+	ASM_JMP(START_GAME)
 	:
 	:
 	:
@@ -307,6 +298,25 @@ void  NEOGEO_USER eye_cactherAES (void) {
 
 
 void  NEOGEO_USER showTitleMVS(void) {
+	uint16_t  pal_tile0[16];
+	setpal(pal_tile0,BLACK,BLACK,0xFFF,RED,BLUE,MIDGREEN,CYAN,ORANGE,MAGENTA,RED,WHITE,BLUE,RED,BLUE,CYAN,RED);
+	load_palettes(pal_tile0,PALETTES);
+	waitVbl();
+	fixtext_out(15,10,"TITLE MODE MVS",0);
+	int i =0;
+	for (i=0;i<3;i++) {
+		fix_svalue1(13,15,i,0,48);
+		cycle1s();
+	}
+	int p1c=0;
+	p1c = read_p1credit();
+	if(p1c==0) {
+		CALLNEOGEOF(GAME);
+	}
+}
+
+/*
+void  NEOGEO_USER showTitleMVS(void) {
 	uint16_t pal_tile0[16];
 	int i = 0;
 	int p1c = 0;
@@ -323,37 +333,32 @@ void  NEOGEO_USER showTitleMVS(void) {
 	soundStopAll();
 	p1c = read_p1credit();
 	(void)p1c;
-}
+}*/
 
 void  NEOGEO_USER showTitleAES(void) {
-	/* AES system call from GAME. */
-	uint16_t pal_tile0[16];
-	int i = 0;
-
+	//AES System call from GAME
+	uint16_t  pal_tile0[16];
 	setpal(pal_tile0,BLACK,BLACK,0xFFF,RED,BLUE,MIDGREEN,CYAN,ORANGE,MAGENTA,RED,WHITE,BLUE,RED,BLUE,CYAN,RED);
 	load_palettes(pal_tile0,PALETTES);
 	soundPlayTitleMusic(0);
 	waitVbl();
 	fixtext_out(15,10,"TITLE MODE AES",0);
-	for (i = 0; i < 5; i++) {
+	int i =0;
+	for (i=0;i<5;i++) {
 		fix_svalue1(13,15,i,0,48);
 		cycle1s();
 	}
 	soundStopAll();
 }
 
-/* Clear the user work RAM block before entering the active game flow. */
+//INIT work RAM
 void NEOGEO_USER WORK_INIT(void) {
 	uint32_t *p1 = (uint32_t *)RAMSTART;
 	int i = 0;
-
-	/* Clear 0x100000–0x10EFFF (game area + BSS, 60 KB / 15360 longs).
-	   Must stop before BIOS_WORKRAM (0x10F300) where the C stack lives;
-	   writing past 0x10EFFF corrupts return addresses and causes a bus error
-	   at 0x110000+. */
-	for (i = 0; i < 15360; i++) {
+	/* Clear 0x100000-0x10EFFF (game area, 60 KB). Must stop before
+	   BIOS_WORKRAM at 0x10F300 or the BIOS stack gets corrupted. */
+	for (i = 0; i < 15360; i++)
 		*p1++ = 0;
-	}
 }
 
 void NEOGEO_USER DISPLAY_INIT(void) {
@@ -371,7 +376,7 @@ void NEOGEO_USER DISPLAY_INIT(void) {
 }
 
 
-/* Common display and audio setup shared by title and demo paths. */
+//INIT GAME MODE
 void NEOGEO_USER INIT_GAME(void) {
 	ASM_START
 	ASM_JSR(soundInit)
@@ -383,7 +388,7 @@ void NEOGEO_USER INIT_GAME(void) {
 	ASM_END
 }
 
-/* NeoGeo DEMO MODE */
+// NeoGeo DEMO MODE
 void NEOGEO_USER DEMO_GAME(void) {
 	uint16_t pal_tile0[16];
 	uint16_t pal_tile1[16];
@@ -408,6 +413,9 @@ showEagleIntro();
 	fixtext_out(15,11,"EAGLE SOFTWARE",0);
 	fixtext_out(15,12,"HELLO WORLD",0x2);
 	fixtext_out(15,13,"NEO GEO SDK 1.2.1",0x2);
+	fixtext_out(15,11,"ABCDEFGHIJKLMNOP",0);
+	fixtext_out(15,12,"ABCDEFGHIJKLMNOP",0x1);
+	fixtext_out(15,13,"ABCDEFGHIJKLMNOP",0x2);
 	mess_outtest();
 
 	soundPlayTitleMusic(0);
@@ -428,11 +436,10 @@ showEagleIntro();
 }
 
 
-/* START_GAME handler */
+//STAR_GAME START Handler
 void NEOGEO_USER START_GAME(void) {
-	uint16_t pal_tile0[16];
-	uint16_t pal_tile1[16];
-
+	uint16_t  pal_tile0[16];
+	uint16_t  pal_tile1[16];
 	setpal(pal_tile0,BLACK,BLACK,0xFFF,BLUE,BLUE,BLUE,BLACK,BLUE,BLUE,BLUE,BLUE,BLUE,BLACK,BLUE,BLACK,BLUE);
 	load_palettes(pal_tile0,PALETTES);
 	setpal(pal_tile1,BLACK,BLACK,0xFFF,RED,RED,RED,BLACK,RED,RED,RED,RED,RED,RED,RED,BLACK,RED);
@@ -444,6 +451,7 @@ void NEOGEO_USER START_GAME(void) {
 	fixtext_out(15,10,"LOADING   ...",0);
 	cyclexs(2);
 	maingame();
+	CALLNEOGEOF(GAME);
 }
 
 
