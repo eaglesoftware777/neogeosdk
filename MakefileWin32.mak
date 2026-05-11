@@ -60,7 +60,7 @@ HASHPATH?=$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
 #   unibios40 unibios33 unibios32 unibios31 unibios30
 #   unibios23 unibios23o unibios22 unibios21 unibios20
 #   unibios13 unibios12 unibios12o unibios11 unibios10
-BIOS?=us
+BIOS?=euro
 MAME_COMMON=$(MAME) neogeo -rompath $(REPO_WIN)\roms -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 neogeosdk
 
 # PLATFORM: mvs (default) or aes
@@ -77,6 +77,14 @@ endif
 
 .PHONY: all
 all: art sfix sound p1
+
+.PHONY: aes
+aes:
+	$(MAKE) -f MakefileWin32.mak PLATFORM=aes p1
+
+.PHONY: mvs
+mvs:
+	$(MAKE) -f MakefileWin32.mak PLATFORM=mvs p1
 
 .PHONY: p1
 p1: game 777-p1.p1

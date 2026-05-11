@@ -51,7 +51,7 @@ HASHPATH?=$(CURDIR)/hash_eagle:$(CURDIR)/hash
 #   unibios40 unibios33 unibios32 unibios31 unibios30
 #   unibios23 unibios23o unibios22 unibios21 unibios20
 #   unibios13 unibios12 unibios12o unibios11 unibios10
-BIOS?=us
+BIOS?=euro
 MAME_COMMON=mame neogeo -rompath $(CURDIR)/roms -hashpath $(HASHPATH) -bios $(BIOS) -cart1 neogeosdk
 
 # PLATFORM: mvs (default) or aes
