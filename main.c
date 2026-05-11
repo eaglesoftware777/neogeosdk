@@ -1599,7 +1599,7 @@ static void NEOGEO_USER demo_init_engine_scene(void)
     ng_prop_clear_group(NG_PROP_GROUP_PROGRESS);
     ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_MODE, 0);
     ng_prop_set(NG_PROP_GROUP_BOSS, NG_PROP_BOSS_PHASE, 0);
-    ng_level_set_background(0);
+    ng_level_set_background(1);  /* screen 1 = 0.png behind characters */
     ng_level_set_backdrop(0x0FFF);
     ng_level_set_world_bounds(0, 0, 319, 223);
     ng_level_set_fix_palette(0);
@@ -1671,45 +1671,23 @@ static void NEOGEO_USER demo_show_pre_engine_screen(uint8_t screen_id, int x0, i
 
 static void NEOGEO_USER demo_run_pre_engine_showscreen_walk(void)
 {
-    uint8_t frame;
     uint8_t hold;
-    uint8_t repeat;
 
     demo_hard_clear_scene();
     demo_load_engine_fix_palettes();
-    setBACKDROP(0x0FFF);
+    setBACKDROP(0x0000);
 
     soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
 
-    for (repeat = 0; repeat < DEMO_INTRO_WALK_REPEATS; repeat++) {
-        for (frame = 2; frame <= 8; frame++) {
-            clearSprs();
-            demo_hide_all_hardware_sprites();
-            clearFix();
-
-            demo_show_pre_engine_screen(frame, 16, 520);
-
-            fixtext_out(2, 1, "SHOWSCREEN WALK", 1);
-            fixtext_out(2, 3, "1.PNG TO 7.PNG", 1);
-            fixtext_out(2, 5, "OLD DIRECT PICTURE MODE", 1);
-            fixtext_out(2, 7, "NEXT: 2D ENGINE SPRITES", 2);
-
-            if (frame == 2 || frame == 5) playSFX(SOUND_SFX_FOOTSTEP);
-
-            for (hold = 0; hold < DEMO_INTRO_WALK_HOLD; hold++) {
-                waitVbl();
-            }
-        }
-    }
-
-    demo_hard_clear_scene();
+    /* Show 0.png background while announcing the 2D engine transition */
+    showScreen1(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
+    fixtext_out(2, 1, "NEOGEO 2D ENGINE", 1);
+    fixtext_out(2, 3, "HARDWARE SPRITE SCALING", 0);
+    fixtext_out(2, 5, "68000 PHYSICS ENGINE", 1);
+    fixtext_out(2, 7, "PREPARING ENGINE...", 2);
     playVoiceCue(SOUND_VOICE_GET_READY);
 
-    fixtext_out(2, 10, "SHOWSCREEN COMPLETE", 1);
-    fixtext_out(2, 12, "SWITCHING TO 2D ENGINE", 2);
-    fixtext_out(2, 14, "SCENE CLEAR THEN SPRITES", 1);
-
-    for (hold = 0; hold < 100; hold++) {
+    for (hold = 0; hold < 120; hold++) {
         waitVbl();
     }
 
@@ -1839,7 +1817,7 @@ int NEOGEO_USER playgame(void) {
 #define S3D_MAP_H    8
 #define S3D_FP       6       /* fixed-point bits: 1.0 = 64 */
 #define S3D_ONE      64
-#define S3D_COLS     16
+#define S3D_COLS     20      /* 20 strips × 16px = 320px full screen */
 #define S3D_TILES    14      /* tiles per column sprite = 14×16 = 224px max */
 #define S3D_MAXH     224
 #define S3D_SCRCY    112     /* screen centre Y */
@@ -1918,46 +1896,76 @@ void NEOGEO_USER show3DRaycaster(void)
 {
     uint16_t s3d_tiles[S3D_TILES];
     uint16_t s3d_attrs[S3D_TILES];
-    /* Camera starts at map cell (1,1) — corner pocket; rotates slowly */
-    int16_t  cam_x    = (1 << S3D_FP) + S3D_ONE / 2;  /* 1.5 cells FP */
-    int16_t  cam_y    = (1 << S3D_FP) + S3D_ONE / 2;
+    /* Camera starts in open cell (1.5, 1.5) facing right */
+    int16_t  cam_x    = (int16_t)((1 << S3D_FP) + S3D_ONE / 2);
+    int16_t  cam_y    = (int16_t)((1 << S3D_FP) + S3D_ONE / 2);
     uint8_t  cam_a    = 0;
+    uint8_t  stuck    = 0;
     uint16_t frame;
     uint8_t  col, t;
+    int8_t   fwd_dx, fwd_dy;
+    uint8_t  fwd_dist;
 
     clearFix();
     clearSprs();
-    /* Hide slots 0..S3D_COLS-1 cleanly before first frame */
     for (col = 0; col < S3D_COLS; col++)
         vram_SCB234((uint16_t)(SCB3_ADDR + col), 0u);
 
-    setBACKDROP(0x1007);  /* dark navy — corridor ceiling/floor backdrop */
+    setBACKDROP(0x1007);  /* dark navy — corridor backdrop */
     fixtext_out(2, 1, "3D SOFTWARE RAYCASTER", 0);
-    fixtext_out(2, 2, "68000 DDA  SPRITE SCALE", 0);
+    fixtext_out(2, 2, "DDA  FISHEYE CORRECTED", 0);
     fixtext_out(2, 4, "EAGLE SOFTWARE  2026", 0);
 
     for (frame = 0; frame < (uint16_t)NG_MS_TO_FRAMES(12000); frame++) {
-        cam_a++;  /* ~1.4° per frame; full 360° in ~4.3 s */
+        /* Slow rotation: 1 angle unit per 2 frames */
+        if (frame & 1u) cam_a++;
+
+        /* Camera forward movement: advance ~1 FP unit per frame */
+        fwd_dx = (int8_t)S3D_COS(cam_a);
+        fwd_dy = (int8_t)S3D_SIN(cam_a);
+        fwd_dist = s3d_cast(cam_x, cam_y, fwd_dx, fwd_dy);
+
+        if (fwd_dist > 8u) {
+            /* Path is clear — move forward */
+            cam_x = (int16_t)(cam_x + (int16_t)((int16_t)fwd_dx >> 5));
+            cam_y = (int16_t)(cam_y + (int16_t)((int16_t)fwd_dy >> 5));
+            stuck = 0;
+        } else {
+            /* Too close to wall — turn right by ~22.5° */
+            cam_a = (uint8_t)(cam_a + 16u);
+            if (++stuck > 40u) {
+                /* Completely stuck — jump to centre of map */
+                cam_x = (int16_t)((3 << S3D_FP) + S3D_ONE / 2);
+                cam_y = (int16_t)((3 << S3D_FP) + S3D_ONE / 2);
+                stuck = 0;
+            }
+        }
 
         for (col = 0; col < S3D_COLS; col++) {
-            int16_t fov_off = (int16_t)col * (int16_t)S3D_FOV / (int16_t)S3D_COLS
-                              - (int16_t)(S3D_FOV / 2);
-            uint8_t ray_a   = (uint8_t)((int16_t)cam_a + fov_off);
-            int8_t  rdx     = S3D_COS(ray_a);
-            int8_t  rdy     = S3D_SIN(ray_a);
-            uint8_t dist    = s3d_cast(cam_x, cam_y, rdx, rdy);
+            int16_t  fov_off = (int16_t)col * (int16_t)S3D_FOV / (int16_t)S3D_COLS
+                               - (int16_t)(S3D_FOV / 2);
+            uint8_t  ray_a   = (uint8_t)((int16_t)cam_a + fov_off);
+            int8_t   rdx     = (int8_t)S3D_COS(ray_a);
+            int8_t   rdy     = (int8_t)S3D_SIN(ray_a);
+            uint8_t  dist    = s3d_cast(cam_x, cam_y, rdx, rdy);
 
-            uint16_t wall_h = (uint16_t)(S3D_PROJ / (uint16_t)(dist > 0 ? dist : 1));
+            /* Fisheye correction: perp_dist = dist × cos(fov_off) / 63 */
+            uint8_t  abs_fov  = (fov_off < 0) ? (uint8_t)(-(int16_t)fov_off) : (uint8_t)fov_off;
+            uint8_t  cos_fov  = (uint8_t)S3D_COS(abs_fov);
+            uint16_t perp_d   = (uint16_t)((uint16_t)dist * cos_fov / 63u);
+            if (perp_d < 1u) perp_d = 1u;
+
+            uint16_t wall_h   = (uint16_t)(S3D_PROJ / perp_d);
             if (wall_h > S3D_MAXH) wall_h = S3D_MAXH;
+            if (wall_h < 4u)       wall_h = 4u;
 
-            uint8_t  yscale  = (uint8_t)((wall_h * 255u) / S3D_MAXH);
-            uint16_t vram_y  = (uint16_t)(384u + wall_h / 2u);
+            uint8_t  yscale   = (uint8_t)((wall_h * 255u) / S3D_MAXH);
+            uint16_t vram_y   = (uint16_t)(384u + wall_h / 2u);
 
-            /* Tile texture: cycle through background tiles, column-offset */
-            uint16_t base_t  = (uint16_t)(((uint16_t)col * 16u
-                               + (frame >> 3u)) & 0xFFu);
-            /* Wall shading: near columns brighter palette bank */
-            uint8_t pal = (dist < 16) ? 16u : 17u;
+            /* Static wall texture: column-fixed tile offset, no time cycling */
+            uint16_t base_t   = (uint16_t)((col * 13u) & 0xFFu);
+            /* Distance shading: near = pal 16 (bright), far = pal 17 (dim) */
+            uint8_t  pal      = (perp_d < 16u) ? 16u : 17u;
 
             for (t = 0; t < S3D_TILES; t++) {
                 s3d_tiles[t] = (uint16_t)((base_t + t) & 0xFFu);
@@ -2001,8 +2009,6 @@ void NEOGEO_USER showEagleIntro(void) {
     char ch[2];
     int i;
 
-    NG_UNUSED(fix_pal);
-
     clearFix();
     clearSprs();
     soundSceneReset();
@@ -2010,16 +2016,16 @@ void NEOGEO_USER showEagleIntro(void) {
     soundSetADPCMBVolume(0xB8);
     soundSetSSGVolume(0x00);
 
-    /* FIX palettes for typewriter and shimmer text. */
-    /*setpal(fix_pal, BLACK, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    /* FIX palettes: white/cyan/yellow text on black for typewriter and shimmer. */
+    setpal(fix_pal, 0x8000, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES);
-    setpal(fix_pal, BLACK, CYAN, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
+    setpal(fix_pal, 0x8000, CYAN, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES + PALOFFSET);
-    setpal(fix_pal, BLACK, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
-    load_palettes(fix_pal, PALETTES + PALOFFSET * 2);*/
+    setpal(fix_pal, 0x8000, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    load_palettes(fix_pal, PALETTES + PALOFFSET * 2);
 
     /* Eagle Fanfare boot melody fires immediately */
    
@@ -2077,26 +2083,23 @@ for (i = 0; i < 18; i++) {
 
 /* Slide through sprite asset screens 2–8 as a character parade. */
 void NEOGEO_USER showCharacterParade(void) {
-    uint8_t i;
     uint8_t hold;
     clearFix();
     clearSprs();
     setBACKDROP(BLACK);
-    fixtext_out(2, 1, "CHARACTER PARADE", 0);
 
-    for (i = 2; i <= 8; i++) {
-        clearSprs();
-        switch (i) {
-            case 2: showScreen2(16, 24, 0xF, 0xAF, 16, 0x0FFF, 0); break;
-            case 3: showScreen3(16, 24, 0xF, 0xAF, 16, 0x0FFF, 0); break;
-            case 4: showScreen4(16, 24, 0xF, 0xAF, 16, 0x0FFF, 0); break;
-            case 5: showScreen5(16, 24, 0xF, 0xAF, 16, 0x0FFF, 0); break;
-            case 6: showScreen6(16, 24, 0xF, 0xAF, 16, 0x0FFF, 0); break;
-            case 7: showScreen7(16, 24, 0xF, 0xAF, 16, 0x0FFF, 0); break;
-            default: showScreen8(16, 24, 0xF, 0xAF, 16, 0x0FFF, 0); break;
-        }
-        for (hold = 0; hold < 90; hold++) waitVbl();
-    }
+    /* Show 0.png background with SDK feature labels */
+    showScreen1(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
+    fixtext_out(2,  1, "NEOGEO SDK FEATURES", 0);
+    fixtext_out(2,  3, "HARDWARE SPRITES", 1);
+    fixtext_out(2,  5, "PALETTE ANIMATION", 2);
+    fixtext_out(2,  7, "SPRITE SCALING SCB2", 0);
+    fixtext_out(2,  9, "2D ENGINE PHYSICS", 1);
+    fixtext_out(2, 11, "PSEUDO-3D FLOOR", 2);
+    fixtext_out(2, 13, "DDA RAYCASTER 68000", 0);
+    fixtext_out(2, 15, "ADPCM SOUND ENGINE", 1);
+
+    for (hold = 0; hold < 240; hold++) waitVbl();
 
     clearFix();
     clearSprs();
