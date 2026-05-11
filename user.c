@@ -173,6 +173,8 @@ void NEOGEO_USER PLAYER_START (void) {
 		start_flag |= 1 << 3;
 	}
 	NEO_REGISTER8(BIOS_START_FLAG) = start_flag;
+	if (start_flag & 0x0F)
+		NEO_REGISTER8(BIOS_USER_MODE) = 2;
 #ifndef NG_AES
 	CALLNEOGEOF(SYS_CREDIT_CHECK);
 	CALLNEOGEOF(SYS_CREDIT_DOWN);
