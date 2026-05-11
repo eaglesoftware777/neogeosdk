@@ -83,6 +83,8 @@ void NEOGEO_USER ng_chars_set_game_interupt(uint8_t kind, NGCharInterupt fn);
 void NEOGEO_USER ng_chars_update(void);
 void NEOGEO_USER ng_chars_draw(void);
 
+/* firstSprite is used only as an initial seed; ng_chars_draw re-assigns
+ * hardware slots each frame via Y-depth sorting. */
 void NEOGEO_USER ng_char_set_sprite(NGCharacter *c, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette);
 void NEOGEO_USER ng_char_set_body(NGCharacter *c, int16_t x, int16_t y, int16_t w, int16_t h);
 void NEOGEO_USER ng_char_set_pos(NGCharacter *c, int16_t x, int16_t y);

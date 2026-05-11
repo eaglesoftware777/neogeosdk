@@ -138,6 +138,7 @@ void NEOGEO_USER showScreen104(int x0, int y0, int xr, int yr, int min_crt_sz, u
 void NEOGEO_USER showScreen105(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 /* late-scene backdrop */
 void NEOGEO_USER showScreen106(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen107(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 /* title screens from artbox/in/titles/ */
 void NEOGEO_USER showScreen108(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen109(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
@@ -2119,7 +2120,7 @@ void NEOGEO_USER showEagleIntro(void) {
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2);
 
     /* Eagle fanfare boot melody */
-    soundPlayTitleMusic(0);
+   /* soundPlayTitleMusic(0);*/
 
     ch[1] = '\0';
 
@@ -2159,7 +2160,7 @@ for (i = 0; i < 18; i++) {
     clearFix();
     clearSprs();
     playSFX(SOUND_SFX_TITLE_GONG);
-    showScreen108(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
+    showScreen107(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
     cycle1s();
     playSFX(SOUND_SFX_LOW_DRUM);
     cycle1s();
