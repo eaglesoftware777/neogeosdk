@@ -52,8 +52,26 @@ STRIP_SECTS:=-R .comment -R .text -R .data -R .bss
 endif
 
 HASHPATH?=$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
-BIOS?=sp-s2.sp1
+# Default BIOS for test/debug. Override: nmake /f MakefileWin32.mak test BIOS=euro
+# Supported values (nmake bios-list for full table):
+#   us  us-e  us-v2  us-u4  us-u3
+#   euro  euro-s1  asia-mv1c  asia-mv1b
+#   japan  japan-s2  japan-s1  japan-mv1b  japan-j3a  japan-mv1c  japan-hotel
+#   unibios40 unibios33 unibios32 unibios31 unibios30
+#   unibios23 unibios23o unibios22 unibios21 unibios20
+#   unibios13 unibios12 unibios12o unibios11 unibios10
+BIOS?=us
 MAME_COMMON=$(MAME) neogeo -rompath $(REPO_WIN)\roms -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 neogeosdk
+
+# PLATFORM: mvs (default) or aes
+PLATFORM?=mvs
+ifeq ($(PLATFORM),mvs)
+NEOGEO_C=sdk\neogeo_mvs.c
+PLATFORM_CFLAGS=-DNG_MVS=1
+else
+NEOGEO_C=sdk\neogeo_aes.c
+PLATFORM_CFLAGS=-DNG_AES=1
+endif
 
 .DEFAULT_GOAL := p1
 
@@ -64,8 +82,8 @@ all: art sfix sound p1
 p1: game 777-p1.p1
 
 game:
-	$(CC) $(CFLAGS) sdk\neogeo.c -o out\neogeo0.o
-	$(CC) $(CFLAGS) user.c -o out\user0.o
+	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS) $(NEOGEO_C) -o out\neogeo0.o
+	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS) user.c -o out\user0.o
 	$(CC) $(CFLAGS) main.c -o out\main0.o
 	$(CC) $(CFLAGS) sdk\neogeolib.c -o out\neogeolib0.o
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_defs.c -o out\ng_defs0.o
@@ -245,7 +263,47 @@ test:
 
 .PHONY: test-aes
 test-aes:
-	$(MAKE) -f MakefileWin32.mak test BIOS=unibios22
+	$(MAKE) -f MakefileWin32.mak PLATFORM=aes test
+
+.PHONY: test-mvs
+test-mvs:
+	$(MAKE) -f MakefileWin32.mak PLATFORM=mvs test
+
+.PHONY: bios-list
+bios-list:
+	@echo Supported BIOS values for: nmake /f MakefileWin32.mak test BIOS=^<name^>
+	@echo.
+	@echo   euro             Europe MVS (Ver. 2)
+	@echo   euro-s1          Europe MVS (Ver. 1)
+	@echo   asia-mv1c        Asia NEO-MVH MV1C
+	@echo   asia-mv1b        Asia MV1B
+	@echo   us               US MVS (Ver. 2?)          [default]
+	@echo   us-e             US MVS (Ver. 1)
+	@echo   us-v2            US MVS (4 slot, Ver 2)
+	@echo   us-u4            US MVS (U4)
+	@echo   us-u3            US MVS (U3)
+	@echo   japan            Japan MVS (Ver. 3)
+	@echo   japan-s2         Japan MVS (Ver. 2)
+	@echo   japan-s1         Japan MVS (Ver. 1)
+	@echo   japan-mv1b       Japan MV1B
+	@echo   japan-j3a        Japan MVS (J3, alt)
+	@echo   japan-mv1c       Japan NEO-MVH MV1C
+	@echo   japan-hotel      Custom Japanese Hotel
+	@echo   unibios40        Universe BIOS (Hack, Ver. 4.0)
+	@echo   unibios33        Universe BIOS (Hack, Ver. 3.3)
+	@echo   unibios32        Universe BIOS (Hack, Ver. 3.2)
+	@echo   unibios31        Universe BIOS (Hack, Ver. 3.1)
+	@echo   unibios30        Universe BIOS (Hack, Ver. 3.0)
+	@echo   unibios23        Universe BIOS (Hack, Ver. 2.3)
+	@echo   unibios23o       Universe BIOS (Hack, Ver. 2.3, older?)
+	@echo   unibios22        Universe BIOS (Hack, Ver. 2.2)
+	@echo   unibios21        Universe BIOS (Hack, Ver. 2.1)
+	@echo   unibios20        Universe BIOS (Hack, Ver. 2.0)
+	@echo   unibios13        Universe BIOS (Hack, Ver. 1.3)
+	@echo   unibios12        Universe BIOS (Hack, Ver. 1.2)
+	@echo   unibios12o       Universe BIOS (Hack, Ver. 1.2, older)
+	@echo   unibios11        Universe BIOS (Hack, Ver. 1.1)
+	@echo   unibios10        Universe BIOS (Hack, Ver. 1.0)
 
 debug:
 	$(PY) hash_eagle\gen_hash.py
@@ -254,7 +312,7 @@ debug:
 
 .PHONY: debug-aes
 debug-aes:
-	$(MAKE) -f MakefileWin32.mak debug BIOS=unibios22
+	$(MAKE) -f MakefileWin32.mak PLATFORM=aes debug
 
 .PHONY: mame-trace
 mame-trace: p1

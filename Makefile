@@ -43,11 +43,19 @@ STRIP_SECTS:=-R .comment -R .text -R .data -R .bss
 endif
 
 HASHPATH?=$(CURDIR)/hash_eagle:$(CURDIR)/hash
-BIOS?=unibios22
+# Default BIOS for make test/debug. Override: make test BIOS=euro
+# Supported values (make bios-list for full table):
+#   us  us-e  us-v2  us-u4  us-u3
+#   euro  euro-s1  asia-mv1c  asia-mv1b
+#   japan  japan-s2  japan-s1  japan-mv1b  japan-j3a  japan-mv1c  japan-hotel
+#   unibios40 unibios33 unibios32 unibios31 unibios30
+#   unibios23 unibios23o unibios22 unibios21 unibios20
+#   unibios13 unibios12 unibios12o unibios11 unibios10
+BIOS?=us
 MAME_COMMON=mame neogeo -rompath $(CURDIR)/roms -hashpath $(HASHPATH) -bios $(BIOS) -cart1 neogeosdk
 
-# PLATFORM: aes (default) or mvs
-PLATFORM?=aes
+# PLATFORM: mvs (default) or aes
+PLATFORM?=mvs
 ifeq ($(PLATFORM),mvs)
 NEOGEO_C=sdk/neogeo_mvs.c
 PLATFORM_CFLAGS=-DNG_MVS=1
@@ -234,7 +242,47 @@ test:
 
 .PHONY: test-aes
 test-aes:
-	$(MAKE) test
+	$(MAKE) PLATFORM=aes test
+
+.PHONY: test-mvs
+test-mvs:
+	$(MAKE) PLATFORM=mvs test
+
+.PHONY: bios-list
+bios-list:
+	@echo "Supported BIOS values for: make test BIOS=<name>"
+	@echo ""
+	@echo "  euro             Europe MVS (Ver. 2)"
+	@echo "  euro-s1          Europe MVS (Ver. 1)"
+	@echo "  asia-mv1c        Asia NEO-MVH MV1C"
+	@echo "  asia-mv1b        Asia MV1B"
+	@echo "  us               US MVS (Ver. 2?)          [default]"
+	@echo "  us-e             US MVS (Ver. 1)"
+	@echo "  us-v2            US MVS (4 slot, Ver 2)"
+	@echo "  us-u4            US MVS (U4)"
+	@echo "  us-u3            US MVS (U3)"
+	@echo "  japan            Japan MVS (Ver. 3)"
+	@echo "  japan-s2         Japan MVS (Ver. 2)"
+	@echo "  japan-s1         Japan MVS (Ver. 1)"
+	@echo "  japan-mv1b       Japan MV1B"
+	@echo "  japan-j3a        Japan MVS (J3, alt)"
+	@echo "  japan-mv1c       Japan NEO-MVH MV1C"
+	@echo "  japan-hotel      Custom Japanese Hotel"
+	@echo "  unibios40        Universe BIOS (Hack, Ver. 4.0)"
+	@echo "  unibios33        Universe BIOS (Hack, Ver. 3.3)"
+	@echo "  unibios32        Universe BIOS (Hack, Ver. 3.2)"
+	@echo "  unibios31        Universe BIOS (Hack, Ver. 3.1)"
+	@echo "  unibios30        Universe BIOS (Hack, Ver. 3.0)"
+	@echo "  unibios23        Universe BIOS (Hack, Ver. 2.3)"
+	@echo "  unibios23o       Universe BIOS (Hack, Ver. 2.3, older?)"
+	@echo "  unibios22        Universe BIOS (Hack, Ver. 2.2)"
+	@echo "  unibios21        Universe BIOS (Hack, Ver. 2.1)"
+	@echo "  unibios20        Universe BIOS (Hack, Ver. 2.0)"
+	@echo "  unibios13        Universe BIOS (Hack, Ver. 1.3)"
+	@echo "  unibios12        Universe BIOS (Hack, Ver. 1.2)"
+	@echo "  unibios12o       Universe BIOS (Hack, Ver. 1.2, older)"
+	@echo "  unibios11        Universe BIOS (Hack, Ver. 1.1)"
+	@echo "  unibios10        Universe BIOS (Hack, Ver. 1.0)"
 
 debug:
 	python3 hash_eagle/gen_hash.py

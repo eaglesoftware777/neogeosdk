@@ -346,23 +346,23 @@ void NEOGEO_USER cycle1s() {
 
 void NEOGEO_USER cyclexms1(int cyc1) {
 	ASM_START
-	ASM_MVML(%%d0-%%d1, -(%%sp))
 	ASM_MVL(%[cyc1], %%d1)
+	ASM_MVML(%%d0, -(%%sp))
 	ASM_L(.cxms1)
 	ASM_MVW(#240, %%d0)
 	ASM_L(.dxms1)
 	ASM_DBF(%%d0, .dxms1)
 	ASM_SUBQ(#1, %%d1)
 	ASM_BNE(.cxms1)
-	ASM_MVML((%%sp)+, %%d0-%%d1)
+	ASM_MVML((%%sp)+, %%d0)
 	: : [cyc1] "g" (cyc1) : "cc"
 	ASM_END
 }
 
 void NEOGEO_USER cyclexs(int cyc1xs) {
 	ASM_START
-	ASM_MVML(%%d0-%%d2, -(%%sp))
-	ASM_MVW(%[cyc1xs], %%d1)
+	ASM_MVL(%[cyc1xs], %%d1)
+	ASM_MVML(%%d0/%%d2, -(%%sp))
 	ASM_L(.cxs)
 	ASM_MVW(#5000, %%d2)
 	ASM_L(.cxs_sub)
@@ -373,29 +373,29 @@ void NEOGEO_USER cyclexs(int cyc1xs) {
 	ASM_BNE(.cxs_sub)
 	ASM_SUBQ(#1, %%d1)
 	ASM_BNE(.cxs)
-	ASM_MVML((%%sp)+, %%d0-%%d2)
+	ASM_MVML((%%sp)+, %%d0/%%d2)
 	: : [cyc1xs] "g" (cyc1xs) : "cc"
 	ASM_END
 }
 
-void NEOGEO_USER cyclexms(int cycxms) {
-	ASM_START
-	ASM_MVML(%%d0-%%d2, -(%%sp))
-	ASM_MVW(%[cycxms], %%d1)
-	ASM_L(.cxms)
-	ASM_MVW(#50, %%d2)
-	ASM_L(.cxms_sub)
-	ASM_MVW(#240, %%d0)
-	ASM_L(.dxms)
-	ASM_DBF(%%d0, .dxms)
-	ASM_SUBQ(#1, %%d2)
-	ASM_BNE(.cxms_sub)
-	ASM_SUBQ(#1, %%d1)
-	ASM_BNE(.cxms)
-	ASM_MVML((%%sp)+, %%d0-%%d2)
-	: : [cycxms] "g" (cycxms) : "cc"
-	ASM_END
-}
+  void NEOGEO_USER cyclexms(int cycxms) {
+      ASM_START
+      ASM_MVL(%[cycxms], %%d1)
+      ASM_MVML(%%d0/%%d2, -(%%sp))
+      ASM_L(.cxms)
+      ASM_MVW(#50, %%d2)
+      ASM_L(.cxms_sub)
+      ASM_MVW(#240, %%d0)
+      ASM_L(.dxms)
+      ASM_DBF(%%d0, .dxms)
+      ASM_SUBQ(#1, %%d2)
+      ASM_BNE(.cxms_sub)
+      ASM_SUBQ(#1, %%d1)
+      ASM_BNE(.cxms)
+      ASM_MVML((%%sp)+, %%d0/%%d2)
+      : : [cycxms] "g" (cycxms) : "cc"
+      ASM_END
+  }
 
 uint16_t NEOGEO_USER poll_joystick() {
 	uint8_t d1 = *(volatile uint8_t *)BIOS_P1PREVIOUS;
