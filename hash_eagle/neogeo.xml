@@ -1,26 +1,39 @@
 <?xml version="1.0"?>
 <!DOCTYPE softwarelist PUBLIC "-//MAME//DTD Software List//EN" "https://raw.githubusercontent.com/mamedev/mame/master/src/mame/mame.dtd">
-<softwarelist name="neogeo" description="Eagle Software NeoGeo SDK">
+<softwarelist name="neogeo" description="SNK Neo-Geo cartridges">
+    <!--
+    ID-0777
+    . NGM-777
+    NEO-MVS PROG-G2 (SNK-9201) / NEO-MVS CHA 42G-2
+    . NGH-777
+    -->
+
     <software name="neogeosdk">
-        <description>NeoGeo SDK Demo</description>
+        <description>NeoGeo SDK Demo v1.2.1 / Eagle Software</description>
         <year>2026</year>
         <publisher>Eagle Software</publisher>
+        <info name="serial" value="NGM-777 (MVS), NGH-777 (AES)"/>
+        <info name="release" value="20260101 (MVS), 20260101 (AES)"/>
+        <info name="alt_title" value="Eagle SDK"/>
+        <sharedfeat name="release" value="MVS,AES" />
+        <sharedfeat name="compatibility" value="MVS,AES" />
         <part name="cart" interface="neo_cart">
-            <dataarea name="maincpu" size="0x00100000">
-            <rom name="777-p1.p1" size="0x00080000" crc="a8db335b" sha1="ca5b489b64d9ef5def9f63f565bc501f90342b2c" loadflag="load16_word_swap"/>
+            <feature name="slot" value="rom_fatfur2" />
+            <dataarea name="maincpu" width="16" endianness="big" size="0x100000">
+                <rom loadflag="load16_word_swap" name="777-p1.p1" offset="0x000000" size="0x080000" crc="fa035657" sha1="8afe4507494ae0dea3b1308382e9e1da6bd187bc" />
             </dataarea>
-            <dataarea name="audiocpu" size="0x00020000">
-            <rom name="777-m1.m1" size="0x00020000" crc="1046f5a3" sha1="944bbabad237ed9d85b531872786838ab2e06b3c"/>
+            <dataarea name="fixed" size="0x020000">
+                <rom offset="0x000000" size="0x020000" name="777-s1.s1" crc="5e65b95e" sha1="6ed04a0f163a8bd71bd46ba06d968b48ff70bf38" />
             </dataarea>
-            <dataarea name="fixed" size="0x00020000">
-            <rom name="777-s1.s1" size="0x00020000" crc="6913e3bd" sha1="44ebc61adeeb42a1f68a661cd1664120e2237e63"/>
+            <dataarea name="audiocpu" size="0x020000">
+                <rom offset="0x000000" size="0x020000" name="777-m1.m1" crc="1046f5a3" sha1="944bbabad237ed9d85b531872786838ab2e06b3c" />
             </dataarea>
-            <dataarea name="ymsnd:adpcma" size="0x00200000">
-            <rom name="777-v1.v1" size="0x00200000" crc="6435f208" sha1="16885f819dfccaa07ca8afb4480c5164face4be9"/>
+            <dataarea name="ymsnd:adpcma" size="0x200000">
+                <rom name="777-v1.v1" offset="0x000000" size="0x200000" crc="6435f208" sha1="16885f819dfccaa07ca8afb4480c5164face4be9" />
             </dataarea>
-            <dataarea name="sprites" size="0x00400000">
-            <rom name="777-c1.c1" size="0x00200000" crc="8fcf6fd5" sha1="6fb4b5d509b55e86f65c37a443d1ad021c77e6a8" offset="0x00000000" loadflag="load16_byte"/>
-            <rom name="777-c2.c2" size="0x00200000" crc="01fbcc64" sha1="fc0a5f36db09ccb0c4cf0ca1ab786c4b1b09f374" offset="0x00000001" loadflag="load16_byte"/>
+            <dataarea name="sprites" size="0x400000">
+                <rom loadflag="load16_byte" name="777-c1.c1" offset="0x000000" size="0x200000" crc="8fcf6fd5" sha1="6fb4b5d509b55e86f65c37a443d1ad021c77e6a8" />
+                <rom loadflag="load16_byte" name="777-c2.c2" offset="0x000001" size="0x200000" crc="01fbcc64" sha1="fc0a5f36db09ccb0c4cf0ca1ab786c4b1b09f374" />
             </dataarea>
         </part>
     </software>

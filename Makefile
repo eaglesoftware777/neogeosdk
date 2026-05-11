@@ -7,7 +7,7 @@ ifndef SDKHOME
 SDKHOME := $(abspath $(CURDIR)/..)
 endif
 CC=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gcc
-CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -Isdk -Isdk/2d_engine -Wa,-march=68000,-mcpu=68000,-W,--warn
+CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -Isdk -Isdk/2d_engine -Wa,-march=68000,-mcpu=68000,-W,--warn
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
 LD=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-ld
 LDFLAGS=  -nostartfiles -nostdlib
@@ -35,23 +35,46 @@ NG_ENGINE_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(NG_ENGINE_NAMES)))
 ifeq ($(DEBUG),1)
 CFLAGS += -g3 -gdwarf-2 -DNG_DEBUG=1
 LDFLAGS += -Map=out/game.map
+# In debug builds keep .text/.data/.bss so DWARF relocations remain intact;
+# the linker script only picks up custom sections, so extras are discarded.
+STRIP_SECTS:=-R .comment
+else
+STRIP_SECTS:=-R .comment -R .text -R .data -R .bss
 endif
 
 HASHPATH?=$(CURDIR)/hash_eagle:$(CURDIR)/hash
-BIOS?=sp-s2.sp1
+BIOS?=unibios22
 MAME_COMMON=mame neogeo -rompath $(CURDIR)/roms -hashpath $(HASHPATH) -bios $(BIOS) -cart1 neogeosdk
+
+# PLATFORM: aes (default) or mvs
+PLATFORM?=aes
+ifeq ($(PLATFORM),mvs)
+NEOGEO_C=sdk/neogeo_mvs.c
+PLATFORM_CFLAGS=-DNG_MVS=1
+else
+NEOGEO_C=sdk/neogeo_aes.c
+PLATFORM_CFLAGS=-DNG_AES=1
+endif
 
 .DEFAULT_GOAL := p1
 
 .PHONY: all
 all: art sfix sound p1
 
+.PHONY: aes
+aes:
+	$(MAKE) PLATFORM=aes p1
+
+.PHONY: mvs
+mvs:
+	$(MAKE) PLATFORM=mvs p1
+
 .PHONY: p1
 p1: game 777-p1.p1
 
 game:
-	$(CC) $(CFLAGS)   sdk/neogeo.c  -o out/neogeo0.o
-	$(CC) $(CFLAGS)   user.c -o out/user0.o
+	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS)   $(NEOGEO_C)  -o out/neogeo0.o
+	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS)   user.c -o out/user0.o
 	$(CC) $(CFLAGS)   main.c -o out/main0.o
 	$(CC) $(CFLAGS)   sdk/neogeolib.c -o out/neogeolib0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_defs.c -o out/ng_defs0.o
@@ -70,10 +93,10 @@ game:
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_physics.c -o out/ng_physics0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_border_constraints.c -o out/ng_border_constraints0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_game_interupt.c -o out/ng_game_interupt0.o
-	$(OBJCP) -R .comment -R .text -R .data -R .bss out/neogeo0.o   out/neogeo.o
-	$(OBJCP) -R .comment -R .text -R .data -R .bss out/user0.o    out/user.o
-	$(OBJCP) -R .comment -R .text -R .data -R .bss out/main0.o    out/main.o
-	$(OBJCP) -R .comment -R .text -R .data -R .bss out/neogeolib0.o    out/neogeolib.o
+	$(OBJCP) $(STRIP_SECTS) out/neogeo0.o   out/neogeo.o
+	$(OBJCP) $(STRIP_SECTS) out/user0.o    out/user.o
+	$(OBJCP) $(STRIP_SECTS) out/main0.o    out/main.o
+	$(OBJCP) $(STRIP_SECTS) out/neogeolib0.o    out/neogeolib.o
 	$(LD) $(LDFLAGS)    -T sdk/neogeo.ld -o  out/game   out/neogeo.o   out/user.o out/main.o out/neogeolib.o $(NG_ENGINE_OBJ0)
 	
 777-p1.p1: game
@@ -211,7 +234,7 @@ test:
 
 .PHONY: test-aes
 test-aes:
-	$(MAKE) test BIOS=unibios22
+	$(MAKE) test
 
 debug:
 	python3 hash_eagle/gen_hash.py
@@ -220,13 +243,15 @@ debug:
 
 .PHONY: debug-aes
 debug-aes:
-	$(MAKE) debug BIOS=unibios22
+	$(MAKE) debug
 
 .PHONY: mame-trace
-mame-trace: debug-build
+mame-trace: p1
 	mkdir -p dump
 	python3 hash_eagle/gen_hash.py
 	cp out/777-p1.p1 roms/neogeosdk/
+	$(NM) -n out/game > dump/game.sym
+	$(OBJDUMP) -Dht out/game > dump/game.debug.dump
 	$(MAME_COMMON) -verbose -debug -debugscript dump/mame_trace.mds
 	@echo "Trace: dump/m68k_trace.txt  |  Symbols: dump/game.sym  |  Disasm: dump/game.debug.dump"
 

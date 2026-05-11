@@ -31,61 +31,71 @@ def file_info(name):
     sha  = hashlib.sha1(data).hexdigest()
     return len(data), f"{crc:08x}", sha
 
-def rom_tag(name, offset=None, loadflag=None):
-    size, crc, sha = file_info(name)
-    if size is None:
-        return f'            <!-- {name}: MISSING -->'
-    attrs = f'name="{name}" size="{size:#010x}" crc="{crc}" sha1="{sha}"'
-    if offset is not None:
-        attrs += f' offset="{offset:#010x}"'
-    if loadflag:
-        attrs += f' loadflag="{loadflag}"'
-    return f'            <rom {attrs}/>'
-
 def area_size(name):
     path = os.path.join(ROM_DIR, name)
     return os.path.getsize(path) if os.path.exists(path) else 0
 
 def gen_xml():
-    p1_sz = area_size("777-p1.p1")
-    m1_sz = area_size("777-m1.m1")
-    s1_sz = area_size("777-s1.s1")
-    v1_sz = area_size("777-v1.v1")
-    c1_sz = area_size("777-c1.c1")
-    c2_sz = area_size("777-c2.c2")
+    p1_sz, p1_crc, p1_sha = file_info("777-p1.p1")
+    m1_sz, m1_crc, m1_sha = file_info("777-m1.m1")
+    s1_sz, s1_crc, s1_sha = file_info("777-s1.s1")
+    v1_sz, v1_crc, v1_sha = file_info("777-v1.v1")
+    c1_sz, c1_crc, c1_sha = file_info("777-c1.c1")
+    c2_sz, c2_crc, c2_sha = file_info("777-c2.c2")
 
-    # maincpu maps a 1 MB window on Neo Geo even when P1 is 512 KB
-    maincpu_area = max(p1_sz, 0x100000)
+    def sz(n): return f"0x{n:06x}" if n else "0x000000"
 
-    xml = f'''\
+    # maincpu window is always 1 MB on Neo Geo regardless of P1 size
+    maincpu_area = 0x100000
+    # sprite area = c1 + c2 interleaved (each ROM covers half the words)
+    sprites_area = (c1_sz or 0) + (c2_sz or 0)
+
+    # continue entries fill the gap when sprite ROMs don't cover the full bank set
+    # for our ROMs c1 == c2 in size so no gap; include continue block only if needed
+    c_continue = sprites_area < maincpu_area  # heuristic: add if sprites < 1 MB
+
+    xml = f"""\
 <?xml version="1.0"?>
 <!DOCTYPE softwarelist PUBLIC "-//MAME//DTD Software List//EN" "https://raw.githubusercontent.com/mamedev/mame/master/src/mame/mame.dtd">
-<softwarelist name="neogeo" description="Eagle Software NeoGeo SDK">
+<softwarelist name="neogeo" description="SNK Neo-Geo cartridges">
+    <!--
+    ID-0777
+    . NGM-777
+    NEO-MVS PROG-G2 (SNK-9201) / NEO-MVS CHA 42G-2
+    . NGH-777
+    -->
+
     <software name="neogeosdk">
-        <description>NeoGeo SDK Demo</description>
+        <description>NeoGeo SDK Demo v1.2.1 / Eagle Software</description>
         <year>2026</year>
         <publisher>Eagle Software</publisher>
+        <info name="serial" value="NGM-777 (MVS), NGH-777 (AES)"/>
+        <info name="release" value="20260101 (MVS), 20260101 (AES)"/>
+        <info name="alt_title" value="Eagle SDK"/>
+        <sharedfeat name="release" value="MVS,AES" />
+        <sharedfeat name="compatibility" value="MVS,AES" />
         <part name="cart" interface="neo_cart">
-            <dataarea name="maincpu" size="{maincpu_area:#010x}">
-{rom_tag("777-p1.p1", loadflag="load16_word_swap")}
+            <feature name="slot" value="rom_fatfur2" />
+            <dataarea name="maincpu" width="16" endianness="big" size="{sz(maincpu_area)}">
+                <rom loadflag="load16_word_swap" name="777-p1.p1" offset="0x000000" size="{sz(p1_sz)}" crc="{p1_crc}" sha1="{p1_sha}" />
             </dataarea>
-            <dataarea name="audiocpu" size="{m1_sz:#010x}">
-{rom_tag("777-m1.m1")}
+            <dataarea name="fixed" size="{sz(s1_sz)}">
+                <rom offset="0x000000" size="{sz(s1_sz)}" name="777-s1.s1" crc="{s1_crc}" sha1="{s1_sha}" />
             </dataarea>
-            <dataarea name="fixed" size="{s1_sz:#010x}">
-{rom_tag("777-s1.s1")}
+            <dataarea name="audiocpu" size="{sz(m1_sz)}">
+                <rom offset="0x000000" size="{sz(m1_sz)}" name="777-m1.m1" crc="{m1_crc}" sha1="{m1_sha}" />
             </dataarea>
-            <dataarea name="ymsnd:adpcma" size="{v1_sz:#010x}">
-{rom_tag("777-v1.v1")}
+            <dataarea name="ymsnd:adpcma" size="{sz(v1_sz)}">
+                <rom name="777-v1.v1" offset="0x000000" size="{sz(v1_sz)}" crc="{v1_crc}" sha1="{v1_sha}" />
             </dataarea>
-            <dataarea name="sprites" size="{c1_sz + c2_sz:#010x}">
-{rom_tag("777-c1.c1", offset=0, loadflag="load16_byte")}
-{rom_tag("777-c2.c2", offset=1, loadflag="load16_byte")}
+            <dataarea name="sprites" size="{sz(sprites_area)}">
+                <rom loadflag="load16_byte" name="777-c1.c1" offset="0x000000" size="{sz(c1_sz)}" crc="{c1_crc}" sha1="{c1_sha}" />
+                <rom loadflag="load16_byte" name="777-c2.c2" offset="0x000001" size="{sz(c2_sz)}" crc="{c2_crc}" sha1="{c2_sha}" />
             </dataarea>
         </part>
     </software>
 </softwarelist>
-'''
+"""
     with open(OUT_XML, "w", newline="\n") as f:
         f.write(xml)
     print(f"Generated {OUT_XML}")
@@ -97,7 +107,6 @@ def build_dist():
     os.makedirs(roms_dir, exist_ok=True)
     os.makedirs(hash_dir, exist_ok=True)
 
-    # ROM ZIP — files at archive root, no subfolder
     zip_path = os.path.join(roms_dir, "neogeosdk.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_STORED) as zf:
         for rom in ROM_NAMES:
@@ -108,10 +117,8 @@ def build_dist():
                 print(f"WARNING: {rom} missing — skipped in ZIP", file=sys.stderr)
     print(f"Created {zip_path}")
 
-    # Copy XML
     shutil.copy2(OUT_XML, os.path.join(hash_dir, "neogeo.xml"))
 
-    # Dist launchers — no gen_hash.py call, standalone for end users
     _write_dist_bat(dist_dir, debug=False)
     _write_dist_bat(dist_dir, debug=True)
     _write_dist_sh(dist_dir, debug=False)
