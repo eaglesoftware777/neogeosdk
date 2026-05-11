@@ -359,6 +359,19 @@ void NEOGEO_USER DISPLAY_INIT(void) {
 	ASM_END
 }
 
+/* FIX text palette banks 0-2: white / yellow / cyan on black background. */
+void NEOGEO_USER setup_fix_palettes(void) {
+	uint16_t fix_pal[16];
+	setpal(fix_pal, 0x8000, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+	       BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+	load_palettes(fix_pal, PALETTES);
+	setpal(fix_pal, 0x8000, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+	       BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+	load_palettes(fix_pal, PALETTES + PALOFFSET);
+	setpal(fix_pal, 0x8000, CYAN, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+	       BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+	load_palettes(fix_pal, PALETTES + PALOFFSET * 2);
+}
 
 //INIT GAME MODE
 void NEOGEO_USER INIT_GAME(void) {
@@ -366,6 +379,7 @@ void NEOGEO_USER INIT_GAME(void) {
 	ASM_JSR(soundInit)
 	ASM_JSR(WORK_INIT)
 	ASM_JSR(DISPLAY_INIT)
+	ASM_JSR(setup_fix_palettes)
 	:
 	:
 	:
@@ -432,9 +446,9 @@ void NEOGEO_USER GAME_ATTRACT(void) {
 void NEOGEO_USER START_GAME(void) {
 	uint16_t  pal_tile0[16];
 	uint16_t  pal_tile1[16];
-	setpal(pal_tile0,BLACK,BLACK,0xFFF,BLUE,BLUE,BLUE,BLACK,BLUE,BLUE,BLUE,BLUE,BLUE,BLACK,BLUE,BLACK,BLUE);
+	setpal(pal_tile0,BLACK,WHITE,0xFFF,BLUE,BLUE,BLUE,BLACK,BLUE,BLUE,BLUE,BLUE,BLUE,BLACK,BLUE,BLACK,BLUE);
 	load_palettes(pal_tile0,PALETTES);
-	setpal(pal_tile1,BLACK,BLACK,0xFFF,RED,RED,RED,BLACK,RED,RED,RED,RED,RED,RED,RED,BLACK,RED);
+	setpal(pal_tile1,BLACK,CYAN,0xFFF,RED,RED,RED,BLACK,RED,RED,RED,RED,RED,RED,RED,BLACK,RED);
 	load_palettes(pal_tile1,PALETTES+PALOFFSET*2);
 	clearFix();
 	clearSprs();
