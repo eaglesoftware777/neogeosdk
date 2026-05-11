@@ -1,6 +1,3 @@
 cfg/
 nvram/
 artbox/__pycache__
-dump/
-!dump/*.mds
-out/game.map

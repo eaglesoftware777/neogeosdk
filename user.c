@@ -14,6 +14,8 @@ void NEOGEO_USER showEagleIntro(void);
 void NEOGEO_USER showWalkDemo(int loops, int delay_ms);
 void NEOGEO_USER soundSceneReset(void);
 void NEOGEO_USER maingame(void);
+void NEOGEO_USER GAME_ATTRACT(void);
+void NEOGEO_USER START_GAME(void);
 
 //ZD_ENTRY interrupt subroutine
 NEOGEO_INTERRUPT void NEOGEO_USER ZD_ENTRY(void) {
@@ -181,12 +183,7 @@ void NEOGEO_USER PLAYER_START (void) {
 // NeoGeo DEMO_END handler
 void NEOGEO_USER DEMO_END (void) {
 
-	ASM_START
-	ASM_JMP(SYS_RETURN)
-	:
-	:
-	:
-	ASM_END
+	soundStopAll();
 }
 
 // NeoGeo COIN_SOUND handler
@@ -230,30 +227,37 @@ void  NEOGEO_USER POWER_ON (void) {
 	ASM_END
 }
 
-// NeoGeo MVS EYE_CATCHER handler
+// NeoGeo EYE_CATCHER handler
 void  NEOGEO_USER EYE_CATCHER (void) {
 
-	//AES only ; May be used in MVS :
-	// MVS : Eye catcher call within command 2 (attract mode) advised
+#ifdef NG_AES
+	showEagleIntro();
+#endif
 }
 
 // NeoGeo GAME Mode
 void  NEOGEO_USER GAME (void) {
 
 	ASM_START
-	ASM_LEA(BIOS_WORKRAM,%%sp)              // A7 (SSP) = 10F300H Init stack pointer
-	ASM_MVB(%%d0,REG_DIPSW)           // Kick watchdog
-	ASM_MVW(#0x0000,REG_LSPCMODE)    // Pixel timer is disabled (Timer Interrupt: Not allowed)
-	ASM_MVW(#7,REG_IRQACK)           // Clear all interrupts ; Other I/O: Undefined
-	ASM_ADDQB(#1,BIOS_MESS_BUSY) //mess out disable
-	ASM_BCLRB(#7,BIOS_SYSTEM_MODE) //  System mode
-	ASM_MVW(#0x2000,%%sr)              // Enable interrupts SR = 2700H supervisor mode
-	ASM_MVB(#0x02,BIOS_USER_MODE) //user_request = 2
-	ASM_SUBQB(#1,BIOS_MESS_BUSY) //mess out enable
-	ASM_BSETB(#7,BIOS_SYSTEM_MODE) //  game mode
+	ASM_LEA(BIOS_WORKRAM,%%sp)
+	ASM_MVB(%%d0,REG_DIPSW)
+	ASM_MVW(#0x0000,REG_LSPCMODE)
+	ASM_MVW(#7,REG_IRQACK)
+	ASM_ADDQB(#1,BIOS_MESS_BUSY)
+	ASM_BCLRB(#7,BIOS_SYSTEM_MODE)
+	ASM_MVW(#0x2000,%%sr)
+	ASM_SUBQB(#1,BIOS_MESS_BUSY)
+	ASM_BSETB(#7,BIOS_SYSTEM_MODE)
 	ASM_JSR(INIT_GAME)
-	ASM_JSR(DEMO_GAME)
+	ASM_MVB(BIOS_USER_MODE,%%d0)
+	ASM_SUBQB(#2,%%d0)
+	ASM_BEQ(.do_start)
+	ASM_MVB(#0x01,BIOS_USER_MODE)
+	ASM_JSR(GAME_ATTRACT)
 	ASM_JMP(SYS_RETURN)
+	ASM_L(.do_start)
+	ASM_MVB(#0x02,BIOS_USER_MODE)
+	ASM_JMP(START_GAME)
 	:
 	:
 	:
@@ -285,55 +289,21 @@ void NEOGEO_USER TITLE(void) {
 	ASM_END
 }
 
-// NeoGeo AES EYE_CATCHER handler
-void  NEOGEO_USER eye_cactherAES (void) {
-	//AES ONLY
-	ASM_START
-	ASM_JMP(SYS_RETURN)
-	:
-	:
-	:
-	ASM_END
-}
-
-
 void  NEOGEO_USER showTitleMVS(void) {
 	uint16_t  pal_tile0[16];
-	setpal(pal_tile0,BLACK,BLACK,0xFFF,RED,BLUE,MIDGREEN,CYAN,ORANGE,MAGENTA,RED,WHITE,BLUE,RED,BLUE,CYAN,RED);
-	load_palettes(pal_tile0,PALETTES);
-	waitVbl();
-	fixtext_out(15,10,"TITLE MODE MVS",0);
-	int i =0;
-	for (i=0;i<3;i++) {
-		fix_svalue1(13,15,i,0,48);
-		cycle1s();
-	}
-	int p1c=0;
-	p1c = read_p1credit();
-	if(p1c==0) {
-		CALLNEOGEOF(GAME);
-	}
-}
-
-/*
-void  NEOGEO_USER showTitleMVS(void) {
-	uint16_t pal_tile0[16];
 	int i = 0;
-	int p1c = 0;
-
 	setpal(pal_tile0,BLACK,BLACK,0xFFF,RED,BLUE,MIDGREEN,CYAN,ORANGE,MAGENTA,RED,WHITE,BLUE,RED,BLUE,CYAN,RED);
 	load_palettes(pal_tile0,PALETTES);
-	soundPlayTitleMusic(0);
 	waitVbl();
 	fixtext_out(15,10,"TITLE MODE MVS",0);
 	for (i = 0; i < 3; i++) {
 		fix_svalue1(13,15,i,0,48);
 		cycle1s();
 	}
-	soundStopAll();
-	p1c = read_p1credit();
-	(void)p1c;
-}*/
+	while (NEO_REGISTER8(BIOS_USER_MODE) != 2) {
+		waitVbl();
+	}
+}
 
 void  NEOGEO_USER showTitleAES(void) {
 	//AES System call from GAME
@@ -436,7 +406,15 @@ showEagleIntro();
 }
 
 
-//STAR_GAME START Handler
+void NEOGEO_USER GAME_ATTRACT(void) {
+#ifndef NG_AES
+	DEMO_GAME();
+#else
+	showTitleAES();
+#endif
+}
+
+//START_GAME handler
 void NEOGEO_USER START_GAME(void) {
 	uint16_t  pal_tile0[16];
 	uint16_t  pal_tile1[16];
@@ -451,7 +429,13 @@ void NEOGEO_USER START_GAME(void) {
 	fixtext_out(15,10,"LOADING   ...",0);
 	cyclexs(2);
 	maingame();
-	CALLNEOGEOF(GAME);
+	NEO_REGISTER8(BIOS_USER_MODE) = 1;
+	ASM_START
+	ASM_JMP(SYS_RETURN)
+	:
+	:
+	:
+	ASM_END
 }
 
 
