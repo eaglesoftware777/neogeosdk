@@ -9,7 +9,7 @@ Neo Geo development SDK for SNK hardware.
 
 ## Quick Start
 
-Build the MVS program ROM and launch in MAME (default BIOS: US MVS):
+Build the MVS program ROM and launch in MAME (default BIOS: EUROPE MVS):
 
 ```bash
 # Linux / WSL
