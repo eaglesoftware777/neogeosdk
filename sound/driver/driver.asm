@@ -921,7 +921,9 @@ play_music1:
 play_fm_index:
     cp FM_TRACK_COUNT
     ret nc
+    ld b,a          ; preserve track index (fm_stop clobbers A via xor a + jp)
     call fm_stop
+    ld a,b          ; restore track index
     add a,a
     ld e,a
     ld d,0
@@ -1157,7 +1159,9 @@ play_adpcmb_index:
 play_ssg_index:
     cp SSG_TRACK_COUNT
     ret nc
+    ld b,a          ; preserve track index (init_ssg clobbers A via shadowed writes)
     call init_ssg
+    ld a,b          ; restore track index
     add a,a
     ld e,a
     ld d,0
