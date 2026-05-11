@@ -23,6 +23,7 @@ void NEOGEO_USER showTitleMVS(void);
 void NEOGEO_USER showEyeCatcherMVS(void);
 void NEOGEO_USER showCharacterParade(void);
 void NEOGEO_USER showPseudo3DLoop(void);
+void NEOGEO_USER showSoundDemo(void);
 void NEOGEO_USER show3DRaycaster(void);
 void NEOGEO_USER showScreen106(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen108(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
@@ -359,10 +360,10 @@ void NEOGEO_USER DISPLAY_INIT(void) {
 	ASM_END
 }
 
-/* FIX text palette banks 0-2: white / yellow / cyan on black background. */
+/* FIX text palette banks 0-2: yellow / cyan / yellow on black. */
 void NEOGEO_USER setup_fix_palettes(void) {
 	uint16_t fix_pal[16];
-	setpal(fix_pal, 0x8000, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+	setpal(fix_pal, 0x8000, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
 	       BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
 	load_palettes(fix_pal, PALETTES);
 	setpal(fix_pal, 0x8000, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
@@ -390,16 +391,16 @@ void NEOGEO_USER INIT_GAME(void) {
 void NEOGEO_USER DEMO_GAME(void) {
 	clearFix();
 	clearSprs();
+	setBACKDROP(BLACK);
 	soundSceneReset();
 
-	/* 1. Typewriter intro */
+	/* 1. Typewriter intro + Eagle logo */
 	showEagleIntro();
 	if (NEO_REGISTER8(NGO_START_FLAG)) return;
 
 	/* 2. Title screens 108 + 109 with FIX text overlay */
 	clearFix();
 	clearSprs();
-	setBACKDROP(BLACK);
 	showScreen108(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
 	fixtext_out(2,  1, "EAGLE SOFTWARE  2026", 0);
 	fixtext_out(2,  2, "NEO GEO SDK", 1);
@@ -415,21 +416,25 @@ void NEOGEO_USER DEMO_GAME(void) {
 	soundStopAll();
 	if (NEO_REGISTER8(NGO_START_FLAG)) return;
 
-	/* 3. Eye-catcher animation (MVS only) */
+	/* 3. Eye-catcher NPC animation (MVS only) */
 #ifndef NG_AES
 	showEyeCatcherMVS();
 	if (NEO_REGISTER8(NGO_START_FLAG)) return;
 #endif
 
-	/* 4. Character parade — sprite sheets walk across screen */
+	/* 4. SDK feature overview */
 	showCharacterParade();
 	if (NEO_REGISTER8(NGO_START_FLAG)) return;
 
-	/* 5. Pseudo-3D floor — Mode-7 hardware scaling trick */
+	/* 5. Pseudo-3D floor perspective */
 	showPseudo3DLoop();
 	if (NEO_REGISTER8(NGO_START_FLAG)) return;
 
-	/* 6. 3D DDA raycaster — software 3D on 68000 */
+	/* 6. Sound engine demo */
+	showSoundDemo();
+	if (NEO_REGISTER8(NGO_START_FLAG)) return;
+
+	/* 7. Software 3D DDA raycaster */
 	show3DRaycaster();
 }
 
