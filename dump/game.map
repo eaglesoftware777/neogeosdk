@@ -1,0 +1,1005 @@
+
+Discarded input sections
+
+ .group         0x0000000000000000        0x8 out/neogeo.o
+ .group         0x0000000000000000        0x8 out/neogeo.o
+ .group         0x0000000000000000        0x8 out/neogeo.o
+ .group         0x0000000000000000        0x8 out/user.o
+ .group         0x0000000000000000        0x8 out/user.o
+ .group         0x0000000000000000        0x8 out/user.o
+ .debug_macro   0x0000000000000000      0x51a out/user.o
+ .debug_macro   0x0000000000000000      0x34e out/user.o
+ .debug_macro   0x0000000000000000      0x8e5 out/user.o
+ .group         0x0000000000000000        0x8 out/main.o
+ .group         0x0000000000000000        0x8 out/main.o
+ .group         0x0000000000000000        0x8 out/main.o
+ .group         0x0000000000000000        0x8 out/main.o
+ .group         0x0000000000000000        0x8 out/main.o
+ .group         0x0000000000000000        0x8 out/main.o
+ .group         0x0000000000000000        0x8 out/main.o
+ .group         0x0000000000000000        0x8 out/main.o
+ .group         0x0000000000000000        0x8 out/main.o
+ .group         0x0000000000000000        0x8 out/main.o
+ .debug_macro   0x0000000000000000      0x8e5 out/main.o
+ .debug_macro   0x0000000000000000      0x34e out/main.o
+ .group         0x0000000000000000        0x8 out/neogeolib.o
+ .group         0x0000000000000000        0x8 out/neogeolib.o
+ .group         0x0000000000000000        0x8 out/neogeolib.o
+ .debug_macro   0x0000000000000000      0x514 out/neogeolib.o
+ .debug_macro   0x0000000000000000      0x34e out/neogeolib.o
+ .debug_macro   0x0000000000000000      0x8e5 out/neogeolib.o
+ .group         0x0000000000000000        0x8 out/ng_defs0.o
+ .group         0x0000000000000000        0x8 out/ng_defs0.o
+ .group         0x0000000000000000        0x8 out/ng_defs0.o
+ .group         0x0000000000000000        0x8 out/ng_defs0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_defs0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_defs0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_defs0.o
+ .debug_macro   0x0000000000000000      0x112 out/ng_defs0.o
+ .group         0x0000000000000000        0x8 out/ng_properties0.o
+ .group         0x0000000000000000        0x8 out/ng_properties0.o
+ .group         0x0000000000000000        0x8 out/ng_properties0.o
+ .group         0x0000000000000000        0x8 out/ng_properties0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_properties0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_properties0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_properties0.o
+ .debug_macro   0x0000000000000000      0x112 out/ng_properties0.o
+ .group         0x0000000000000000        0x8 out/ng_game_time0.o
+ .group         0x0000000000000000        0x8 out/ng_game_time0.o
+ .group         0x0000000000000000        0x8 out/ng_game_time0.o
+ .group         0x0000000000000000        0x8 out/ng_game_time0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_game_time0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_game_time0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_game_time0.o
+ .debug_macro   0x0000000000000000      0x112 out/ng_game_time0.o
+ .group         0x0000000000000000        0x8 out/ng_timers0.o
+ .group         0x0000000000000000        0x8 out/ng_timers0.o
+ .group         0x0000000000000000        0x8 out/ng_timers0.o
+ .group         0x0000000000000000        0x8 out/ng_timers0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_timers0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_timers0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_timers0.o
+ .debug_macro   0x0000000000000000      0x112 out/ng_timers0.o
+ .group         0x0000000000000000        0x8 out/ng_progress0.o
+ .group         0x0000000000000000        0x8 out/ng_progress0.o
+ .group         0x0000000000000000        0x8 out/ng_progress0.o
+ .group         0x0000000000000000        0x8 out/ng_progress0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_progress0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_progress0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_progress0.o
+ .debug_macro   0x0000000000000000      0x112 out/ng_progress0.o
+ .group         0x0000000000000000        0x8 out/ng_status0.o
+ .group         0x0000000000000000        0x8 out/ng_status0.o
+ .group         0x0000000000000000        0x8 out/ng_status0.o
+ .group         0x0000000000000000        0x8 out/ng_status0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_status0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_status0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_status0.o
+ .debug_macro   0x0000000000000000      0x112 out/ng_status0.o
+ .group         0x0000000000000000        0x8 out/ng_game_events0.o
+ .group         0x0000000000000000        0x8 out/ng_game_events0.o
+ .group         0x0000000000000000        0x8 out/ng_game_events0.o
+ .group         0x0000000000000000        0x8 out/ng_game_events0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_game_events0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_game_events0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_game_events0.o
+ .debug_macro   0x0000000000000000      0x112 out/ng_game_events0.o
+ .group         0x0000000000000000        0x8 out/ng_level0.o
+ .group         0x0000000000000000        0x8 out/ng_level0.o
+ .group         0x0000000000000000        0x8 out/ng_level0.o
+ .group         0x0000000000000000        0x8 out/ng_level0.o
+ .group         0x0000000000000000        0x8 out/ng_level0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_level0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_level0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_level0.o
+ .debug_macro   0x0000000000000000      0x112 out/ng_level0.o
+ .group         0x0000000000000000        0x8 out/ng_fix0.o
+ .group         0x0000000000000000        0x8 out/ng_fix0.o
+ .group         0x0000000000000000        0x8 out/ng_fix0.o
+ .group         0x0000000000000000        0x8 out/ng_fix0.o
+ .group         0x0000000000000000        0x8 out/ng_fix0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_fix0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_fix0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_fix0.o
+ .debug_macro   0x0000000000000000      0x112 out/ng_fix0.o
+ .group         0x0000000000000000        0x8 out/ng_sprite_group0.o
+ .group         0x0000000000000000        0x8 out/ng_sprite_group0.o
+ .group         0x0000000000000000        0x8 out/ng_sprite_group0.o
+ .group         0x0000000000000000        0x8 out/ng_sprite_group0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_sprite_group0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_sprite_group0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_sprite_group0.o
+ .group         0x0000000000000000        0x8 out/ng_actions0.o
+ .group         0x0000000000000000        0x8 out/ng_actions0.o
+ .group         0x0000000000000000        0x8 out/ng_actions0.o
+ .group         0x0000000000000000        0x8 out/ng_actions0.o
+ .group         0x0000000000000000        0x8 out/ng_actions0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_actions0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_actions0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_actions0.o
+ .debug_macro   0x0000000000000000      0x112 out/ng_actions0.o
+ .group         0x0000000000000000        0x8 out/ng_chars0.o
+ .group         0x0000000000000000        0x8 out/ng_chars0.o
+ .group         0x0000000000000000        0x8 out/ng_chars0.o
+ .group         0x0000000000000000        0x8 out/ng_chars0.o
+ .group         0x0000000000000000        0x8 out/ng_chars0.o
+ .group         0x0000000000000000        0x8 out/ng_chars0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_chars0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_chars0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_chars0.o
+ .debug_macro   0x0000000000000000      0x112 out/ng_chars0.o
+ .debug_macro   0x0000000000000000       0x6a out/ng_chars0.o
+ .debug_macro   0x0000000000000000       0x1c out/ng_chars0.o
+ .group         0x0000000000000000        0x8 out/ng_npcs0.o
+ .group         0x0000000000000000        0x8 out/ng_npcs0.o
+ .group         0x0000000000000000        0x8 out/ng_npcs0.o
+ .group         0x0000000000000000        0x8 out/ng_npcs0.o
+ .group         0x0000000000000000        0x8 out/ng_npcs0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_npcs0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_npcs0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_npcs0.o
+ .debug_macro   0x0000000000000000      0x112 out/ng_npcs0.o
+ .group         0x0000000000000000        0x8 out/ng_physics0.o
+ .group         0x0000000000000000        0x8 out/ng_physics0.o
+ .group         0x0000000000000000        0x8 out/ng_physics0.o
+ .group         0x0000000000000000        0x8 out/ng_physics0.o
+ .group         0x0000000000000000        0x8 out/ng_physics0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_physics0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_physics0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_physics0.o
+ .debug_macro   0x0000000000000000      0x112 out/ng_physics0.o
+ .group         0x0000000000000000        0x8 out/ng_border_constraints0.o
+ .group         0x0000000000000000        0x8 out/ng_border_constraints0.o
+ .group         0x0000000000000000        0x8 out/ng_border_constraints0.o
+ .group         0x0000000000000000        0x8 out/ng_border_constraints0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_border_constraints0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_border_constraints0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_border_constraints0.o
+ .debug_macro   0x0000000000000000      0x112 out/ng_border_constraints0.o
+ .group         0x0000000000000000        0x8 out/ng_game_interupt0.o
+ .group         0x0000000000000000        0x8 out/ng_game_interupt0.o
+ .group         0x0000000000000000        0x8 out/ng_game_interupt0.o
+ .group         0x0000000000000000        0x8 out/ng_game_interupt0.o
+ .group         0x0000000000000000        0x8 out/ng_game_interupt0.o
+ .group         0x0000000000000000        0x8 out/ng_game_interupt0.o
+ .group         0x0000000000000000        0x8 out/ng_game_interupt0.o
+ .group         0x0000000000000000        0x8 out/ng_game_interupt0.o
+ .group         0x0000000000000000        0x8 out/ng_game_interupt0.o
+ .debug_macro   0x0000000000000000      0x514 out/ng_game_interupt0.o
+ .debug_macro   0x0000000000000000      0x34e out/ng_game_interupt0.o
+ .debug_macro   0x0000000000000000      0x8e5 out/ng_game_interupt0.o
+ .debug_macro   0x0000000000000000      0x112 out/ng_game_interupt0.o
+ .debug_macro   0x0000000000000000       0x1c out/ng_game_interupt0.o
+ .debug_macro   0x0000000000000000       0x22 out/ng_game_interupt0.o
+ .debug_macro   0x0000000000000000       0x1c out/ng_game_interupt0.o
+ .debug_macro   0x0000000000000000       0x28 out/ng_game_interupt0.o
+ .debug_macro   0x0000000000000000       0x6a out/ng_game_interupt0.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+memory_ivt       0x0000000000000000 0x0000000000000100 xr
+memory_init      0x0000000000000100 0x0000000000000016 xr
+memory_entry     0x0000000000000116 0x0000000000000024 xr
+memory_padds     0x000000000000013a 0x0000000000000047 xr
+memory_id2       0x0000000000000182 0x000000000000007e xr
+memory_gamedata  0x0000000000000200 0x0000000000000180 xr
+memory_user      0x0000000000000380 0x0000000000064000 xr
+memory_game_engine_bss 0x0000000000100800 0x000000000000e800 rw
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+                0x0000000000000000                . = 0x0
+
+neogeo_ivt      0x0000000000000000      0x100
+ out/neogeo.o(neogeo_ivt)
+ neogeo_ivt     0x0000000000000000      0x100 out/neogeo.o
+                0x0000000000000000                IVT
+
+neogeo_init     0x0000000000000100       0x16
+ out/neogeo.o(neogeo_init)
+ neogeo_init    0x0000000000000100       0x16 out/neogeo.o
+                0x0000000000000100                neogeo_str
+                0x0000000000000107                zerobyte
+                0x0000000000000108                id
+                0x000000000000010a                psize
+                0x000000000000010e                pbcks
+                0x0000000000000112                dipsize
+                0x0000000000000114                bioslogoflag
+                0x0000000000000115                bioslogotile
+
+neogeo_entry    0x0000000000000116       0x22
+ out/neogeo.o(neogeo_entry)
+ neogeo_entry   0x0000000000000116       0x22 out/neogeo.o
+                0x0000000000000116                NEOGEO_ENT0
+                0x0000000000000122                NEOGEO_ENT1
+                0x0000000000000126                nop1
+                0x0000000000000128                NEOGEO_ENT2
+                0x000000000000012c                nop2
+                0x000000000000012e                NEOGEO_ENT3
+                0x0000000000000132                nop3
+                0x0000000000000134                NEOGEO_ENT4
+
+neogeo_padds    0x000000000000013a       0x44
+ out/neogeo.o(neogeo_padds)
+ neogeo_padds   0x000000000000013a       0x44 out/neogeo.o
+                0x000000000000013a                padds
+
+neogeo_id2      0x0000000000000182       0x7e
+ out/neogeo.o(neogeo_id2)
+ neogeo_id2     0x0000000000000182       0x7e out/neogeo.o
+                0x0000000000000182                ID
+                0x0000000000000186                ID2
+                0x00000000000001fe                ID2END
+
+neogeo_gamedata
+                0x0000000000000200      0x180
+ out/neogeo.o(neogeo_gamedata)
+ neogeo_gamedata
+                0x0000000000000200      0x180 out/neogeo.o
+                0x0000000000000200                JAPAN_DATA
+                0x0000000000000280                USA_DATA
+                0x0000000000000300                EUROPE_DATA
+
+.data           0x0000000000000380        0x0
+ .data          0x0000000000000380        0x0 out/neogeo.o
+ .data          0x0000000000000380        0x0 out/user.o
+ .data          0x0000000000000380        0x0 out/main.o
+ .data          0x0000000000000380        0x0 out/neogeolib.o
+
+neogeo_user     0x0000000000000380    0x2024a
+ out/user.o(neogeo_user)
+ neogeo_user    0x0000000000000380      0xa44 out/user.o
+                0x0000000000000380                ZD_ENTRY
+                0x0000000000000384                CHK_ENTRY
+                0x0000000000000388                TRAPV_ENTRY
+                0x000000000000038c                VBlank
+                0x00000000000003c6                IRQ2
+                0x00000000000003d2                IRQ3
+                0x00000000000003e4                INT4
+                0x00000000000003e8                INT5
+                0x00000000000003ec                INT6
+                0x00000000000003f0                INT7
+                0x00000000000003f4                USER
+                0x0000000000000420                PLAYER_START
+                0x0000000000000628                DEMO_END
+                0x0000000000000636                COIN_SOUND
+                0x0000000000000674                POWER_ON
+                0x00000000000006a4                EYE_CATCHER
+                0x00000000000006a8                GAME
+                0x00000000000006fe                TITLE
+                0x000000000000075a                eye_cactherAES
+                0x0000000000000764                showTitleMVS
+                0x0000000000000852                showTitleAES
+                0x0000000000000928                WORK_INIT
+                0x000000000000095a                DISPLAY_INIT
+                0x0000000000000986                INIT_GAME
+                0x0000000000000998                DEMO_GAME
+                0x0000000000000c7c                START_GAME
+ out/user.o(.rodata)
+ .rodata        0x0000000000000dc4       0x77 out/user.o
+ out/main.o(neogeo_user)
+ *fill*         0x0000000000000e3b        0x1 ff
+ neogeo_user    0x0000000000000e3c    0x17b30 out/main.o
+                0x0000000000000e3c                showEagleIntro
+                0x000000000000106c                showTitleScreen
+                0x00000000000010d6                showGameOver
+                0x0000000000001124                showScreen1
+                0x0000000000002b24                showScreen2
+                0x0000000000004528                showScreen3
+                0x0000000000005f2c                showScreen4
+                0x0000000000007930                showScreen5
+                0x0000000000009334                showScreen6
+                0x000000000000ad38                showScreen7
+                0x000000000000c73c                showScreen8
+                0x000000000000e140                showScreen9
+                0x000000000000fb44                showScreen10
+                0x0000000000011548                showScreen11
+                0x00000000000115c4                showScreen12
+                0x0000000000011640                showScreen13
+                0x00000000000116bc                showScreen14
+                0x0000000000011738                showScreen15
+                0x00000000000117b4                showScreen16
+                0x0000000000011830                showScreen17
+                0x00000000000118ac                showScreen18
+                0x0000000000011928                showScreen19
+                0x00000000000119a4                showScreen20
+                0x0000000000011a20                showScreen21
+                0x0000000000011a9c                showScreen22
+                0x0000000000011b18                showScreen23
+                0x0000000000011b94                showScreen24
+                0x0000000000011c10                showScreen25
+                0x0000000000011c8c                showScreen26
+                0x0000000000011d08                showScreen27
+                0x0000000000011d84                showScreen28
+                0x0000000000011e00                showScreen29
+                0x0000000000011e7c                showScreen30
+                0x0000000000011ef8                showScreen31
+                0x0000000000011f74                showScreen32
+                0x0000000000011ff0                showScreen33
+                0x000000000001206c                showScreen34
+                0x00000000000120e8                showScreen35
+                0x0000000000012164                showScreen36
+                0x00000000000121e0                showScreen37
+                0x000000000001225c                showScreen38
+                0x00000000000122d8                showScreen39
+                0x0000000000012354                showScreen40
+                0x00000000000123d0                showScreen41
+                0x000000000001244c                showScreen42
+                0x00000000000124c8                showScreen43
+                0x0000000000012544                showScreen44
+                0x00000000000125c0                showScreen45
+                0x000000000001263c                showScreen46
+                0x00000000000126b8                showScreen47
+                0x0000000000012734                showScreen48
+                0x00000000000127b0                showScreen49
+                0x000000000001282c                showScreen50
+                0x00000000000128a8                showScreen51
+                0x0000000000012924                showScreen52
+                0x00000000000129a0                showScreen53
+                0x0000000000012a1c                showScreen54
+                0x0000000000012a98                showScreen55
+                0x0000000000012b14                showScreen56
+                0x0000000000012b90                showScreen57
+                0x0000000000012c0c                showScreen58
+                0x0000000000012c88                showScreen59
+                0x0000000000012d04                showScreen60
+                0x0000000000012d80                showScreen61
+                0x0000000000012dfc                showScreen62
+                0x0000000000012e78                showScreen63
+                0x0000000000012ef4                showScreen64
+                0x0000000000012f70                showScreen65
+                0x0000000000012fec                showScreen66
+                0x0000000000013068                showScreen67
+                0x00000000000130e4                showScreen68
+                0x0000000000013160                showScreen69
+                0x00000000000131dc                showScreen70
+                0x0000000000013258                showScreen71
+                0x00000000000132d4                showScreen72
+                0x0000000000013350                showScreen73
+                0x00000000000133cc                showScreen74
+                0x0000000000013448                showScreen75
+                0x00000000000134c4                showScreen76
+                0x0000000000013540                showScreen77
+                0x00000000000135bc                showScreen78
+                0x0000000000013638                showScreen79
+                0x00000000000136b4                showScreen80
+                0x0000000000013730                showScreen81
+                0x00000000000137ac                showScreen82
+                0x0000000000013828                showScreen83
+                0x00000000000138a4                showScreen84
+                0x0000000000013920                showScreen85
+                0x000000000001399c                showScreen86
+                0x0000000000013a18                showScreen87
+                0x0000000000013a94                showScreen88
+                0x0000000000013b10                showScreen89
+                0x0000000000013b8c                showScreen90
+                0x0000000000013c08                showScreen91
+                0x0000000000013c84                showScreen92
+                0x0000000000013d00                showScreen93
+                0x0000000000013d7c                showScreen94
+                0x0000000000013df2                showScreen95
+                0x0000000000013e68                showScreen96
+                0x0000000000013ede                showScreen97
+                0x0000000000013f54                showScreen98
+                0x0000000000013fcc                showScreen99
+                0x0000000000014042                showScreen100
+                0x00000000000140ba                showScreen101
+                0x0000000000014130                showScreen102
+                0x00000000000141a8                showScreen103
+                0x000000000001421e                showScreen104
+                0x0000000000014296                showScreen105
+                0x000000000001430c                showScreen106
+                0x0000000000015d0e                playgame
+                0x00000000000187e6                showWalkDemo
+                0x0000000000018958                maingame
+ out/main.o(.rodata)
+ .rodata        0x000000000001896c     0x15c7 out/main.o
+ out/neogeolib.o(neogeo_user)
+ *fill*         0x0000000000019f33        0x1 ff
+ neogeo_user    0x0000000000019f34     0x13d0 out/neogeolib.o
+                0x0000000000019f34                __udivsi3
+                0x0000000000019fd8                __umodsi3
+                0x000000000001a06a                setSCB2
+                0x000000000001a08c                setSCB3
+                0x000000000001a0c6                setFIXDATA
+                0x000000000001a0ea                setSCB4
+                0x000000000001a0fe                setSCB1_2
+                0x000000000001a182                setBACKDROP
+                0x000000000001a19c                load_palettes
+                0x000000000001a1d4                vram_init
+                0x000000000001a1fc                setpal
+                0x000000000001a34e                vram_SCB1
+                0x000000000001a3a0                vram_sfix
+                0x000000000001a3de                vram_sfix1
+                0x000000000001a3f8                vram_SCB234
+                0x000000000001a420                vram_sprite
+                0x000000000001a500                vram_sprite_mvx
+                0x000000000001a534                vram_sprite_mvy
+                0x000000000001a568                strlen
+                0x000000000001a596                fixtext_out
+                0x000000000001a620                fixtext_out1
+                0x000000000001a69c                fixtext_out2
+                0x000000000001a74c                mess_outtest
+                0x000000000001a818                setBIOSMESSBusy
+                0x000000000001a82e                setBIOSMESSReady
+                0x000000000001a844                clearRAM
+                0x000000000001a86e                clearSprs
+                0x000000000001a898                clearFix
+                0x000000000001a8c2                waitVbl
+                0x000000000001a8da                cycle10ms
+                0x000000000001a8e6                cycle1s
+                0x000000000001a8fc                cyclexms1
+                0x000000000001a91a                cyclexs
+                0x000000000001a942                cyclexms
+                0x000000000001a96a                poll_joystick
+                0x000000000001a996                fix_svalue1
+                0x000000000001aa14                fix_svalue
+                0x000000000001aa7a                setsfix
+                0x000000000001aa86                display_digit
+                0x000000000001acca                read_p1credit
+                0x000000000001acdc                playSoundtest
+                0x000000000001ad04                soundCommand
+                0x000000000001ad26                soundInit
+                0x000000000001ad34                soundReset
+                0x000000000001ad42                soundStopAll
+                0x000000000001ad50                soundStopMusic
+                0x000000000001ad5e                soundCancelFade
+                0x000000000001ad6c                soundSceneReset
+                0x000000000001ad94                playMusic
+                0x000000000001adc0                playSFX
+                0x000000000001adec                playSFXB
+                0x000000000001ae18                playFMDebug
+                0x000000000001ae2a                playFMTrack
+                0x000000000001ae5a                soundSetFMVolume
+                0x000000000001ae8e                playSSGTrack
+                0x000000000001aebe                soundSetSSGPreset
+                0x000000000001aef2                playInsertCoinSSG
+                0x000000000001af0e                playVoiceCue
+                0x000000000001af5e                playGetReadyVoice
+                0x000000000001af70                playAttackVoice
+                0x000000000001af82                playCoinThenReady
+                0x000000000001afa0                soundFadeOut
+                0x000000000001afb2                soundFadeIn
+                0x000000000001afc4                soundFadeOutSpeed
+                0x000000000001aff4                soundFadeInSpeed
+                0x000000000001b024                soundSetTempo
+                0x000000000001b054                soundSetADPCMAVolume
+                0x000000000001b088                soundSetADPCMBVolume
+                0x000000000001b0b8                soundSetSSGVolume
+                0x000000000001b0ec                soundApplyMix
+                0x000000000001b164                soundPlayDemoFM
+                0x000000000001b19c                soundPlayTitleMusic
+                0x000000000001b1f0                soundPlayGameLoop
+                0x000000000001b25a                isZ80Ready
+                0x000000000001b274                kickWatchDog
+                0x000000000001b27e                sleep1FFF
+                0x000000000001b28c                displayCreditP1
+                0x000000000001b2c8                displayCreditP2
+ out/ng_*0.o(neogeo_user)
+ neogeo_user    0x000000000001b304       0x88 out/ng_defs0.o
+                0x000000000001b304                ng_rect_hit
+                0x000000000001b36c                ng_abs16
+ neogeo_user    0x000000000001b38c      0x1b6 out/ng_properties0.o
+                0x000000000001b38c                ng_properties_init
+                0x000000000001b3e8                ng_prop_set
+                0x000000000001b432                ng_prop_get
+                0x000000000001b47a                ng_prop_add
+                0x000000000001b4f4                ng_prop_clear_group
+ neogeo_user    0x000000000001b542      0x126 out/ng_game_time0.o
+                0x000000000001b542                ng_game_time_init
+                0x000000000001b592                ng_game_time_tick
+                0x000000000001b62e                ng_game_time_reset_stage
+                0x000000000001b650                ng_game_time_frame
+                0x000000000001b658                ng_game_time_second
+                0x000000000001b660                ng_game_time_stage_frame
+ neogeo_user    0x000000000001b668      0x408 out/ng_timers0.o
+                0x000000000001b668                ng_timers_init
+                0x000000000001b6ea                ng_timer_start
+                0x000000000001b76c                ng_timer_stop
+                0x000000000001b7c6                ng_timers_update
+                0x000000000001b8b6                ng_timer_active
+                0x000000000001b8f0                ng_timer_done
+                0x000000000001b930                ng_timer_value
+                0x000000000001b96a                ng_timer_percent_left
+ neogeo_user    0x000000000001ba70      0x51e out/ng_progress0.o
+                0x000000000001ba70                ng_progress_init
+                0x000000000001baf2                ng_progress_start
+                0x000000000001bb74                ng_progress_set
+                0x000000000001bc1e                ng_progress_add
+                0x000000000001bcfa                ng_progress_value
+                0x000000000001bd34                ng_progress_percent
+                0x000000000001bdc8                ng_progress_done
+                0x000000000001be4c                ng_progress_update
+ neogeo_user    0x000000000001bf8e       0xf2 out/ng_status0.o
+                0x000000000001bf8e                ng_status_init
+                0x000000000001bfc0                ng_status_set
+                0x000000000001bfec                ng_status_clear
+                0x000000000001c016                ng_status_has
+                0x000000000001c040                ng_status_toggle
+ neogeo_user    0x000000000001c080      0x1f2 out/ng_game_events0.o
+                0x000000000001c080                ng_game_events_init
+                0x000000000001c096                ng_game_events_set_handler
+                0x000000000001c0a2                ng_game_events_send
+                0x000000000001c170                ng_game_events_read
+                0x000000000001c1d6                ng_game_events_update
+                0x000000000001c206                ng_game_events_count
+ neogeo_user    0x000000000001c272      0x840 out/ng_level0.o
+                0x000000000001c272                ng_level_init
+                0x000000000001c2cc                ng_level_set_id
+                0x000000000001c2fc                ng_level_set_mode
+                0x000000000001c32e                ng_level_set_background
+                0x000000000001c360                ng_level_set_overlay
+                0x000000000001c392                ng_level_set_backdrop
+                0x000000000001c3c4                ng_level_set_fix_palette
+                0x000000000001c3f6                ng_level_set_scroll
+                0x000000000001c474                ng_level_move_scroll
+                0x000000000001c4b2                ng_level_set_world_bounds
+                0x000000000001c552                ng_level_set_camera
+                0x000000000001c690                ng_level_move_camera
+                0x000000000001c6f8                ng_level_camera_follow
+                0x000000000001c784                ng_level_camera_input
+                0x000000000001c888                ng_level_camera_joystick
+                0x000000000001c8ea                ng_level_update
+                0x000000000001caaa                level_state
+ neogeo_user    0x000000000001cab2      0x7d8 out/ng_fix0.o
+                0x000000000001cab2                ng_fix_init
+                0x000000000001caba                ng_fix_invalidate_all
+                0x000000000001cb3e                ng_fix_clear
+                0x000000000001cb96                ng_fix_clear_rect
+                0x000000000001cc64                ng_fix_putc
+                0x000000000001cdfa                ng_fix_puts
+                0x000000000001ce8c                ng_fix_put_u16
+                0x000000000001cf56                ng_fix_put_u32
+                0x000000000001d012                ng_fix_blank_cell
+ neogeo_user    0x000000000001d28a      0x96c out/ng_sprite_group0.o
+                0x000000000001d28a                ng_sprite_group_init
+                0x000000000001d39a                ng_sprite_group_set_tile_base
+                0x000000000001d3ba                ng_sprite_group_set_tile_stride
+                0x000000000001d3f2                ng_sprite_group_set_palette
+                0x000000000001d412                ng_sprite_group_set_active_rows
+                0x000000000001d466                ng_sprite_group_set_pos
+                0x000000000001d494                ng_sprite_group_move
+                0x000000000001d4de                ng_sprite_group_set_scale
+                0x000000000001d50c                ng_sprite_group_set_flip
+                0x000000000001d546                ng_sprite_group_set_auto_anim
+                0x000000000001d580                ng_sprite_group_set_visible
+                0x000000000001d5a6                ng_sprite_group_upload
+                0x000000000001d824                ng_sprite_group_update_transform
+                0x000000000001da10                ng_sprite_group_hide
+                0x000000000001da40                ng_engine_init_hardware
+                0x000000000001da94                ng_sprite_hide_range
+ neogeo_user    0x000000000001dbf6      0x4f0 out/ng_actions0.o
+                0x000000000001dbf6                ng_actions_init
+                0x000000000001dc40                ng_actions_register
+                0x000000000001dc72                ng_actions_set_sound_hooks
+                0x000000000001dc86                ng_actions_set_fx_hook
+                0x000000000001dc92                ng_char_action
+                0x000000000001dce6                ng_actions_update
+                0x000000000001e0b6                actions_get
+ neogeo_user    0x000000000001e0e6      0xf08 out/ng_chars0.o
+                0x000000000001e0e6                ng_chars_init
+                0x000000000001e17c                chars_add
+                0x000000000001e398                ng_chars_remove
+                0x000000000001e406                ng_chars_clear_kind
+                0x000000000001e4ee                chars_find
+                0x000000000001e576                chars_at
+                0x000000000001e5aa                ng_chars_count
+                0x000000000001e600                ng_chars_index
+                0x000000000001e652                ng_chars_set_game_interupt
+                0x000000000001e684                ng_chars_update
+                0x000000000001e79a                ng_chars_draw
+                0x000000000001ebe4                ng_char_set_sprite
+                0x000000000001ed48                ng_char_set_body
+                0x000000000001ed9c                ng_char_set_pos
+                0x000000000001edea                ng_char_set_speed
+                0x000000000001ee26                ng_char_damage
+                0x000000000001ee6a                ng_char_heal
+                0x000000000001eeba                ng_char_body_rect
+                0x000000000001ef30                ng_char_hit_rect
+ neogeo_user    0x000000000001efee      0x5d2 out/ng_npcs0.o
+                0x000000000001efee                ng_npcs_init
+                0x000000000001f022                ng_npc_remove
+                0x000000000001f05c                ng_npc_count
+                0x000000000001f0a6                ng_npc_set_think
+                0x000000000001f0e6                ng_npc_set_home
+                0x000000000001f116                ng_npc_set_patrol_bounds
+                0x000000000001f16a                ng_npcs_update
+                0x000000000001f22e                ng_npc_think_patrol
+                0x000000000001f338                ng_npc_think_hover
+                0x000000000001f3ae                npc_spawn
+                0x000000000001f504                npc_at
+                0x000000000001f52c                npc_find
+                0x000000000001f590                npc_char
+ neogeo_user    0x000000000001f5c0      0xc88 out/ng_physics0.o
+                0x000000000001f5c0                ng_physics_init
+                0x000000000001f6cc                ng_physics_attach
+                0x000000000001f726                ng_physics_detach
+                0x000000000001f760                ng_physics_set_gravity
+                0x000000000001f78a                ng_physics_set_drag
+                0x000000000001f7b4                ng_physics_clear_solids
+                0x000000000001f7be                ng_physics_add_solid
+                0x000000000001f8f8                ng_physics_update_pre
+                0x000000000001fa52                ng_physics_resolve
+                0x000000000001fb52                ng_physics_is_grounded
+                0x0000000000020212                physics_body
+ neogeo_user    0x0000000000020248      0x1ee out/ng_border_constraints0.o
+                0x0000000000020248                ng_border_constraints_init
+                0x0000000000020258                ng_border_constraints_load
+                0x0000000000020278                ng_border_constraints_update
+                0x00000000000203ee                ng_border_constraints_reset_used
+ neogeo_user    0x0000000000020436      0x16c out/ng_game_interupt0.o
+                0x0000000000020436                ng_game_engine_init
+                0x00000000000204a6                ng_game_runtime_init
+                0x00000000000204ae                ng_game_engine_set_hooks
+                0x00000000000204da                ng_game_interupt_set_hooks
+                0x00000000000204fa                ng_game_engine_frame
+                0x000000000002059a                ng_game_interupt
+ out/ng_*0.o(.rodata)
+ .rodata        0x00000000000205a2       0x28 out/ng_fix0.o
+
+.text           0x00000000000205cc       0x4c
+ .text          0x00000000000205cc        0x0 out/neogeo.o
+ .text          0x00000000000205cc        0x0 out/user.o
+ .text          0x00000000000205cc        0x0 out/main.o
+ .text          0x00000000000205cc       0x4c out/neogeolib.o
+                0x00000000000205cc                memcpy
+ .text          0x0000000000020618        0x0 out/ng_defs0.o
+ .text          0x0000000000020618        0x0 out/ng_properties0.o
+ .text          0x0000000000020618        0x0 out/ng_game_time0.o
+ .text          0x0000000000020618        0x0 out/ng_timers0.o
+ .text          0x0000000000020618        0x0 out/ng_progress0.o
+ .text          0x0000000000020618        0x0 out/ng_status0.o
+ .text          0x0000000000020618        0x0 out/ng_game_events0.o
+ .text          0x0000000000020618        0x0 out/ng_level0.o
+ .text          0x0000000000020618        0x0 out/ng_fix0.o
+ .text          0x0000000000020618        0x0 out/ng_sprite_group0.o
+ .text          0x0000000000020618        0x0 out/ng_actions0.o
+ .text          0x0000000000020618        0x0 out/ng_chars0.o
+ .text          0x0000000000020618        0x0 out/ng_npcs0.o
+ .text          0x0000000000020618        0x0 out/ng_physics0.o
+ .text          0x0000000000020618        0x0 out/ng_border_constraints0.o
+ .text          0x0000000000020618        0x0 out/ng_game_interupt0.o
+
+game_engine_bss
+                0x0000000000100800     0x3e98
+ out/ng_*0.o(.bss)
+ .bss           0x0000000000100800        0x0 out/ng_defs0.o
+ .bss           0x0000000000100800      0x800 out/ng_properties0.o
+ .bss           0x0000000000101000        0xb out/ng_game_time0.o
+ *fill*         0x000000000010100b        0x1 
+ .bss           0x000000000010100c      0x180 out/ng_timers0.o
+ .bss           0x000000000010118c      0x180 out/ng_progress0.o
+ .bss           0x000000000010130c      0x100 out/ng_status0.o
+ .bss           0x000000000010140c      0x106 out/ng_game_events0.o
+ *fill*         0x0000000000101512        0x2 
+ .bss           0x0000000000101514       0x18 out/ng_level0.o
+ .bss           0x000000000010152c      0xa00 out/ng_fix0.o
+ .bss           0x0000000000101f2c       0x80 out/ng_sprite_group0.o
+ .bss           0x0000000000101fac      0x40c out/ng_actions0.o
+ .bss           0x00000000001023b8     0x1640 out/ng_chars0.o
+ .bss           0x00000000001039f8      0x400 out/ng_npcs0.o
+ .bss           0x0000000000103df8      0x881 out/ng_physics0.o
+ *fill*         0x0000000000104679        0x3 
+ .bss           0x000000000010467c        0x6 out/ng_border_constraints0.o
+ *fill*         0x0000000000104682        0x2 
+ .bss           0x0000000000104684       0x14 out/ng_game_interupt0.o
+ out/ng_*0.o(.bss.*)
+ out/ng_*0.o(COMMON)
+ out/ng_*0.o(.data)
+ .data          0x0000000000104698        0x0 out/ng_defs0.o
+ .data          0x0000000000104698        0x0 out/ng_properties0.o
+ .data          0x0000000000104698        0x0 out/ng_game_time0.o
+ .data          0x0000000000104698        0x0 out/ng_timers0.o
+ .data          0x0000000000104698        0x0 out/ng_progress0.o
+ .data          0x0000000000104698        0x0 out/ng_status0.o
+ .data          0x0000000000104698        0x0 out/ng_game_events0.o
+ .data          0x0000000000104698        0x0 out/ng_level0.o
+ .data          0x0000000000104698        0x0 out/ng_fix0.o
+ .data          0x0000000000104698        0x0 out/ng_sprite_group0.o
+ .data          0x0000000000104698        0x0 out/ng_actions0.o
+ .data          0x0000000000104698        0x0 out/ng_chars0.o
+ .data          0x0000000000104698        0x0 out/ng_npcs0.o
+ .data          0x0000000000104698        0x0 out/ng_physics0.o
+ .data          0x0000000000104698        0x0 out/ng_border_constraints0.o
+ .data          0x0000000000104698        0x0 out/ng_game_interupt0.o
+ out/ng_*0.o(.data.*)
+LOAD out/neogeo.o
+LOAD out/user.o
+LOAD out/main.o
+LOAD out/neogeolib.o
+LOAD out/ng_defs0.o
+LOAD out/ng_properties0.o
+LOAD out/ng_game_time0.o
+LOAD out/ng_timers0.o
+LOAD out/ng_progress0.o
+LOAD out/ng_status0.o
+LOAD out/ng_game_events0.o
+LOAD out/ng_level0.o
+LOAD out/ng_fix0.o
+LOAD out/ng_sprite_group0.o
+LOAD out/ng_actions0.o
+LOAD out/ng_chars0.o
+LOAD out/ng_npcs0.o
+LOAD out/ng_physics0.o
+LOAD out/ng_border_constraints0.o
+LOAD out/ng_game_interupt0.o
+OUTPUT(out/game elf32-m68k)
+
+.bss            0x0000000000104698        0x0
+ .bss           0x0000000000104698        0x0 out/neogeo.o
+ .bss           0x0000000000104698        0x0 out/user.o
+ .bss           0x0000000000104698        0x0 out/main.o
+ .bss           0x0000000000104698        0x0 out/neogeolib.o
+
+.debug_info     0x0000000000000000     0xd61e
+ .debug_info    0x0000000000000000      0x4fc out/neogeo.o
+ .debug_info    0x00000000000004fc      0x43e out/user.o
+ .debug_info    0x000000000000093a     0x71ec out/main.o
+ .debug_info    0x0000000000007b26     0x11dc out/neogeolib.o
+ .debug_info    0x0000000000008d02      0x136 out/ng_defs0.o
+ .debug_info    0x0000000000008e38      0x1de out/ng_properties0.o
+ .debug_info    0x0000000000009016      0x1d9 out/ng_game_time0.o
+ .debug_info    0x00000000000091ef      0x2b7 out/ng_timers0.o
+ .debug_info    0x00000000000094a6      0x2dd out/ng_progress0.o
+ .debug_info    0x0000000000009783      0x17d out/ng_status0.o
+ .debug_info    0x0000000000009900      0x2aa out/ng_game_events0.o
+ .debug_info    0x0000000000009baa      0x663 out/ng_level0.o
+ .debug_info    0x000000000000a20d      0x54b out/ng_fix0.o
+ .debug_info    0x000000000000a758      0x77c out/ng_sprite_group0.o
+ .debug_info    0x000000000000aed4      0x5ea out/ng_actions0.o
+ .debug_info    0x000000000000b4be      0xafe out/ng_chars0.o
+ .debug_info    0x000000000000bfbc      0x79d out/ng_npcs0.o
+ .debug_info    0x000000000000c759      0x9f7 out/ng_physics0.o
+ .debug_info    0x000000000000d150      0x2dd out/ng_border_constraints0.o
+ .debug_info    0x000000000000d42d      0x1f1 out/ng_game_interupt0.o
+
+.debug_abbrev   0x0000000000000000     0x197a
+ .debug_abbrev  0x0000000000000000       0xcf out/neogeo.o
+ .debug_abbrev  0x00000000000000cf      0x12b out/user.o
+ .debug_abbrev  0x00000000000001fa      0x251 out/main.o
+ .debug_abbrev  0x000000000000044b      0x217 out/neogeolib.o
+ .debug_abbrev  0x0000000000000662       0x9d out/ng_defs0.o
+ .debug_abbrev  0x00000000000006ff       0xd8 out/ng_properties0.o
+ .debug_abbrev  0x00000000000007d7       0x95 out/ng_game_time0.o
+ .debug_abbrev  0x000000000000086c      0x12a out/ng_timers0.o
+ .debug_abbrev  0x0000000000000996      0x139 out/ng_progress0.o
+ .debug_abbrev  0x0000000000000acf       0xc9 out/ng_status0.o
+ .debug_abbrev  0x0000000000000b98      0x148 out/ng_game_events0.o
+ .debug_abbrev  0x0000000000000ce0      0x11e out/ng_level0.o
+ .debug_abbrev  0x0000000000000dfe      0x140 out/ng_fix0.o
+ .debug_abbrev  0x0000000000000f3e      0x183 out/ng_sprite_group0.o
+ .debug_abbrev  0x00000000000010c1      0x185 out/ng_actions0.o
+ .debug_abbrev  0x0000000000001246      0x1ea out/ng_chars0.o
+ .debug_abbrev  0x0000000000001430      0x177 out/ng_npcs0.o
+ .debug_abbrev  0x00000000000015a7      0x213 out/ng_physics0.o
+ .debug_abbrev  0x00000000000017ba      0x10a out/ng_border_constraints0.o
+ .debug_abbrev  0x00000000000018c4       0xb6 out/ng_game_interupt0.o
+
+.debug_aranges  0x0000000000000000      0xf20
+ .debug_aranges
+                0x0000000000000000       0x18 out/neogeo.o
+ .debug_aranges
+                0x0000000000000018       0xe8 out/user.o
+ .debug_aranges
+                0x0000000000000100      0x520 out/main.o
+ .debug_aranges
+                0x0000000000000620      0x290 out/neogeolib.o
+ .debug_aranges
+                0x00000000000008b0       0x28 out/ng_defs0.o
+ .debug_aranges
+                0x00000000000008d8       0x40 out/ng_properties0.o
+ .debug_aranges
+                0x0000000000000918       0x48 out/ng_game_time0.o
+ .debug_aranges
+                0x0000000000000960       0x60 out/ng_timers0.o
+ .debug_aranges
+                0x00000000000009c0       0x60 out/ng_progress0.o
+ .debug_aranges
+                0x0000000000000a20       0x40 out/ng_status0.o
+ .debug_aranges
+                0x0000000000000a60       0x50 out/ng_game_events0.o
+ .debug_aranges
+                0x0000000000000ab0       0xa8 out/ng_level0.o
+ .debug_aranges
+                0x0000000000000b58       0x78 out/ng_fix0.o
+ .debug_aranges
+                0x0000000000000bd0       0xb0 out/ng_sprite_group0.o
+ .debug_aranges
+                0x0000000000000c80       0x50 out/ng_actions0.o
+ .debug_aranges
+                0x0000000000000cd0       0xb8 out/ng_chars0.o
+ .debug_aranges
+                0x0000000000000d88       0x80 out/ng_npcs0.o
+ .debug_aranges
+                0x0000000000000e08       0x98 out/ng_physics0.o
+ .debug_aranges
+                0x0000000000000ea0       0x38 out/ng_border_constraints0.o
+ .debug_aranges
+                0x0000000000000ed8       0x48 out/ng_game_interupt0.o
+
+.debug_macro    0x0000000000000000     0x227c
+ .debug_macro   0x0000000000000000       0x2d out/neogeo.o
+ .debug_macro   0x000000000000002d      0x51a out/neogeo.o
+ .debug_macro   0x0000000000000547      0x34e out/neogeo.o
+ .debug_macro   0x0000000000000895      0x8e5 out/neogeo.o
+ .debug_macro   0x000000000000117a       0x45 out/user.o
+ .debug_macro   0x00000000000011bf      0x18e out/main.o
+ .debug_macro   0x000000000000134d      0x514 out/main.o
+ .debug_macro   0x0000000000001861      0x112 out/main.o
+ .debug_macro   0x0000000000001973       0x1c out/main.o
+ .debug_macro   0x000000000000198f       0x22 out/main.o
+ .debug_macro   0x00000000000019b1       0x6a out/main.o
+ .debug_macro   0x0000000000001a1b       0x1c out/main.o
+ .debug_macro   0x0000000000001a37       0x28 out/main.o
+ .debug_macro   0x0000000000001a5f       0x34 out/main.o
+ .debug_macro   0x0000000000001a93       0x37 out/neogeolib.o
+ .debug_macro   0x0000000000001aca       0x3c out/ng_defs0.o
+ .debug_macro   0x0000000000001b06       0x46 out/ng_properties0.o
+ .debug_macro   0x0000000000001b4c       0x50 out/ng_game_time0.o
+ .debug_macro   0x0000000000001b9c       0x46 out/ng_timers0.o
+ .debug_macro   0x0000000000001be2       0x46 out/ng_progress0.o
+ .debug_macro   0x0000000000001c28       0x46 out/ng_status0.o
+ .debug_macro   0x0000000000001c6e       0x46 out/ng_game_events0.o
+ .debug_macro   0x0000000000001cb4       0x6d out/ng_level0.o
+ .debug_macro   0x0000000000001d21       0x16 out/ng_level0.o
+ .debug_macro   0x0000000000001d37       0x63 out/ng_fix0.o
+ .debug_macro   0x0000000000001d9a       0x1c out/ng_fix0.o
+ .debug_macro   0x0000000000001db6       0x58 out/ng_sprite_group0.o
+ .debug_macro   0x0000000000001e0e      0x118 out/ng_sprite_group0.o
+ .debug_macro   0x0000000000001f26       0x69 out/ng_actions0.o
+ .debug_macro   0x0000000000001f8f       0x64 out/ng_actions0.o
+ .debug_macro   0x0000000000001ff3       0x62 out/ng_chars0.o
+ .debug_macro   0x0000000000002055       0x5f out/ng_npcs0.o
+ .debug_macro   0x00000000000020b4       0x16 out/ng_npcs0.o
+ .debug_macro   0x00000000000020ca       0x69 out/ng_physics0.o
+ .debug_macro   0x0000000000002133       0x22 out/ng_physics0.o
+ .debug_macro   0x0000000000002155       0x5a out/ng_border_constraints0.o
+ .debug_macro   0x00000000000021af       0xcd out/ng_game_interupt0.o
+
+.debug_line     0x0000000000000000     0x3b96
+ .debug_line    0x0000000000000000       0xa6 out/neogeo.o
+ .debug_line    0x00000000000000a6      0x200 out/user.o
+ .debug_line    0x00000000000002a6     0x1649 out/main.o
+ .debug_line    0x00000000000018ef      0x38a out/neogeolib.o
+ .debug_line    0x0000000000001c79      0x100 out/ng_defs0.o
+ .debug_line    0x0000000000001d79      0x13d out/ng_properties0.o
+ .debug_line    0x0000000000001eb6      0x115 out/ng_game_time0.o
+ .debug_line    0x0000000000001fcb      0x188 out/ng_timers0.o
+ .debug_line    0x0000000000002153      0x1ab out/ng_progress0.o
+ .debug_line    0x00000000000022fe      0x105 out/ng_status0.o
+ .debug_line    0x0000000000002403      0x12d out/ng_game_events0.o
+ .debug_line    0x0000000000002530      0x1f9 out/ng_level0.o
+ .debug_line    0x0000000000002729      0x266 out/ng_fix0.o
+ .debug_line    0x000000000000298f      0x2f4 out/ng_sprite_group0.o
+ .debug_line    0x0000000000002c83      0x1d0 out/ng_actions0.o
+ .debug_line    0x0000000000002e53      0x3fb out/ng_chars0.o
+ .debug_line    0x000000000000324e      0x26c out/ng_npcs0.o
+ .debug_line    0x00000000000034ba      0x33a out/ng_physics0.o
+ .debug_line    0x00000000000037f4      0x171 out/ng_border_constraints0.o
+ .debug_line    0x0000000000003965      0x231 out/ng_game_interupt0.o
+
+.debug_str      0x0000000000000000     0xa0ce
+ .debug_str     0x0000000000000000     0x4acc out/neogeo.o
+                                       0x4c3f (size before relaxing)
+ .debug_str     0x0000000000004acc      0x138 out/user.o
+                                       0x4c44 (size before relaxing)
+ .debug_str     0x0000000000004c04     0x3b40 out/main.o
+                                       0x8733 (size before relaxing)
+ .debug_str     0x0000000000008744      0x617 out/neogeolib.o
+                                       0x5302 (size before relaxing)
+ .debug_str     0x0000000000008d5b       0x2d out/ng_defs0.o
+                                       0x5015 (size before relaxing)
+ .debug_str     0x0000000000008d88       0x7e out/ng_properties0.o
+                                       0x507c (size before relaxing)
+ .debug_str     0x0000000000008e06      0x11f out/ng_game_time0.o
+                                       0x51f3 (size before relaxing)
+ .debug_str     0x0000000000008f25       0xd1 out/ng_timers0.o
+                                       0x50ea (size before relaxing)
+ .debug_str     0x0000000000008ff6       0xe2 out/ng_progress0.o
+                                       0x5108 (size before relaxing)
+ .debug_str     0x00000000000090d8       0x7a out/ng_status0.o
+                                       0x5069 (size before relaxing)
+ .debug_str     0x0000000000009152      0x116 out/ng_game_events0.o
+                                       0x5129 (size before relaxing)
+ .debug_str     0x0000000000009268      0x27d out/ng_level0.o
+                                       0x5575 (size before relaxing)
+ .debug_str     0x00000000000094e5      0x117 out/ng_fix0.o
+                                       0x5190 (size before relaxing)
+ .debug_str     0x00000000000095fc      0x2e4 out/ng_sprite_group0.o
+                                       0x5321 (size before relaxing)
+ .debug_str     0x00000000000098e0      0x127 out/ng_actions0.o
+                                       0x5712 (size before relaxing)
+ .debug_str     0x0000000000009a07      0x1da out/ng_chars0.o
+                                       0x5880 (size before relaxing)
+ .debug_str     0x0000000000009be1       0xf5 out/ng_npcs0.o
+                                       0x5342 (size before relaxing)
+ .debug_str     0x0000000000009cd6      0x21f out/ng_physics0.o
+                                       0x55bb (size before relaxing)
+ .debug_str     0x0000000000009ef5       0xd6 out/ng_border_constraints0.o
+                                       0x5289 (size before relaxing)
+ .debug_str     0x0000000000009fcb      0x103 out/ng_game_interupt0.o
+                                       0x5702 (size before relaxing)
+
+.debug_loc      0x0000000000000000    0x1c605
+ .debug_loc     0x0000000000000000      0xda1 out/user.o
+ .debug_loc     0x0000000000000da1    0x17ce7 out/main.o
+ .debug_loc     0x0000000000018a88      0xf2e out/neogeolib.o
+ .debug_loc     0x00000000000199b6       0x20 out/ng_defs0.o
+ .debug_loc     0x00000000000199d6       0xb8 out/ng_properties0.o
+ .debug_loc     0x0000000000019a8e      0x18c out/ng_game_time0.o
+ .debug_loc     0x0000000000019c1a      0x144 out/ng_timers0.o
+ .debug_loc     0x0000000000019d5e      0x144 out/ng_progress0.o
+ .debug_loc     0x0000000000019ea2       0xa0 out/ng_status0.o
+ .debug_loc     0x0000000000019f42      0x118 out/ng_game_events0.o
+ .debug_loc     0x000000000001a05a      0x924 out/ng_level0.o
+ .debug_loc     0x000000000001a97e      0x460 out/ng_fix0.o
+ .debug_loc     0x000000000001adde      0x67b out/ng_sprite_group0.o
+ .debug_loc     0x000000000001b459      0x190 out/ng_actions0.o
+ .debug_loc     0x000000000001b5e9      0x578 out/ng_chars0.o
+ .debug_loc     0x000000000001bb61      0x270 out/ng_npcs0.o
+ .debug_loc     0x000000000001bdd1      0x67c out/ng_physics0.o
+ .debug_loc     0x000000000001c44d      0x15c out/ng_border_constraints0.o
+ .debug_loc     0x000000000001c5a9       0x5c out/ng_game_interupt0.o
+
+.debug_ranges   0x0000000000000000      0xe68
+ .debug_ranges  0x0000000000000000       0xd8 out/user.o
+ .debug_ranges  0x00000000000000d8      0x528 out/main.o
+ .debug_ranges  0x0000000000000600      0x298 out/neogeolib.o
+ .debug_ranges  0x0000000000000898       0x18 out/ng_defs0.o
+ .debug_ranges  0x00000000000008b0       0x30 out/ng_properties0.o
+ .debug_ranges  0x00000000000008e0       0x38 out/ng_game_time0.o
+ .debug_ranges  0x0000000000000918       0x50 out/ng_timers0.o
+ .debug_ranges  0x0000000000000968       0x50 out/ng_progress0.o
+ .debug_ranges  0x00000000000009b8       0x30 out/ng_status0.o
+ .debug_ranges  0x00000000000009e8       0x40 out/ng_game_events0.o
+ .debug_ranges  0x0000000000000a28       0x98 out/ng_level0.o
+ .debug_ranges  0x0000000000000ac0       0xb0 out/ng_fix0.o
+ .debug_ranges  0x0000000000000b70       0xa0 out/ng_sprite_group0.o
+ .debug_ranges  0x0000000000000c10       0x58 out/ng_actions0.o
+ .debug_ranges  0x0000000000000c68       0xa8 out/ng_chars0.o
+ .debug_ranges  0x0000000000000d10       0x70 out/ng_npcs0.o
+ .debug_ranges  0x0000000000000d80       0x88 out/ng_physics0.o
+ .debug_ranges  0x0000000000000e08       0x28 out/ng_border_constraints0.o
+ .debug_ranges  0x0000000000000e30       0x38 out/ng_game_interupt0.o
+
+.debug_frame    0x0000000000000000     0x9454
+ .debug_frame   0x0000000000000000      0x508 out/user.o
+ .debug_frame   0x0000000000000508     0x7290 out/main.o
+ .debug_frame   0x0000000000007798      0x81c out/neogeolib.o
+ .debug_frame   0x0000000000007fb4       0x38 out/ng_defs0.o
+ .debug_frame   0x0000000000007fec       0x84 out/ng_properties0.o
+ .debug_frame   0x0000000000008070       0xc8 out/ng_game_time0.o
+ .debug_frame   0x0000000000008138       0xd4 out/ng_timers0.o
+ .debug_frame   0x000000000000820c       0xd4 out/ng_progress0.o
+ .debug_frame   0x00000000000082e0       0x78 out/ng_status0.o
+ .debug_frame   0x0000000000008358       0xbc out/ng_game_events0.o
+ .debug_frame   0x0000000000008414      0x358 out/ng_level0.o
+ .debug_frame   0x000000000000876c      0x1e8 out/ng_fix0.o
+ .debug_frame   0x0000000000008954      0x2a8 out/ng_sprite_group0.o
+ .debug_frame   0x0000000000008bfc       0xdc out/ng_actions0.o
+ .debug_frame   0x0000000000008cd8      0x26c out/ng_chars0.o
+ .debug_frame   0x0000000000008f44      0x15c out/ng_npcs0.o
+ .debug_frame   0x00000000000090a0      0x288 out/ng_physics0.o
+ .debug_frame   0x0000000000009328       0xa4 out/ng_border_constraints0.o
+ .debug_frame   0x00000000000093cc       0x88 out/ng_game_interupt0.o
+
+.comment        0x0000000000000000       0x2e
+ .comment       0x0000000000000000       0x2e out/ng_defs0.o
+                                         0x2f (size before relaxing)
+ .comment       0x000000000000002e       0x2f out/ng_properties0.o
+ .comment       0x000000000000002e       0x2f out/ng_game_time0.o
+ .comment       0x000000000000002e       0x2f out/ng_timers0.o
+ .comment       0x000000000000002e       0x2f out/ng_progress0.o
+ .comment       0x000000000000002e       0x2f out/ng_status0.o
+ .comment       0x000000000000002e       0x2f out/ng_game_events0.o
+ .comment       0x000000000000002e       0x2f out/ng_level0.o
+ .comment       0x000000000000002e       0x2f out/ng_fix0.o
+ .comment       0x000000000000002e       0x2f out/ng_sprite_group0.o
+ .comment       0x000000000000002e       0x2f out/ng_actions0.o
+ .comment       0x000000000000002e       0x2f out/ng_chars0.o
+ .comment       0x000000000000002e       0x2f out/ng_npcs0.o
+ .comment       0x000000000000002e       0x2f out/ng_physics0.o
+ .comment       0x000000000000002e       0x2f out/ng_border_constraints0.o
+ .comment       0x000000000000002e       0x2f out/ng_game_interupt0.o
