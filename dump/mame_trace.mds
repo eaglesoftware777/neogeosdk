@@ -1,0 +1,9 @@
+// MAME debugger init script — m68k execution trace
+// Usage: run_neogeosdk_trace.bat  (or add -debugscript dump\mame_trace.mds to mame command)
+// Output: dump\m68k_trace.txt
+//
+// When MAME halts on a 68000 exception the trace file contains every
+// instruction executed up to the crash.  The last ~20 lines pinpoint
+// the faulting PC and the call chain above it.
+trace dump\m68k_trace.txt,maincpu,noloop
+g

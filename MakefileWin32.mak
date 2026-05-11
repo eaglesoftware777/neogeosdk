@@ -253,6 +253,14 @@ debug:
 debug-aes:
 	$(MAKE) -f MakefileWin32.mak debug BIOS=unibios22
 
+.PHONY: mame-trace
+mame-trace: debug-build
+	if not exist dump mkdir dump
+	$(PY) hash_eagle\gen_hash.py
+	copy /Y out\777-p1.p1 roms\neogeosdk\777-p1.p1
+	$(MAME_COMMON) -verbose -debug -debugscript dump\mame_trace.mds
+	@echo Trace: dump\m68k_trace.txt  ^|  Symbols: dump\game.sym  ^|  Disasm: dump\game.debug.dump
+
 .PHONY: debug-build
 debug-build:
 	$(MAKE) -f MakefileWin32.mak DEBUG=1 p1

@@ -335,7 +335,11 @@ void NEOGEO_USER WORK_INIT(void) {
 	uint32_t *p1 = (uint32_t *)RAMSTART;
 	int i = 0;
 
-	for (i = 1; i <= 32768; i++) {
+	/* Clear 0x100000–0x10EFFF (game area + BSS, 60 KB / 15360 longs).
+	   Must stop before BIOS_WORKRAM (0x10F300) where the C stack lives;
+	   writing past 0x10EFFF corrupts return addresses and causes a bus error
+	   at 0x110000+. */
+	for (i = 0; i < 15360; i++) {
 		*p1++ = 0;
 	}
 }
