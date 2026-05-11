@@ -5,54 +5,117 @@
 
 #include "sdk/macro.h"
 #include "sdk/neogeo.h"
+#include "sdk/2d_engine/ng_sprite_group.h"
+#include "sdk/2d_engine/ng_sprite_pool.h"
 #include <stdint.h>
 
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 
+void NEOGEO_USER showScreen93(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base);
 void NEOGEO_USER showScreen94(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base);
 void NEOGEO_USER showScreen95(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base);
 void NEOGEO_USER showScreen96(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base);
 void NEOGEO_USER showScreen97(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base);
 void NEOGEO_USER showScreen98(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base);
 void NEOGEO_USER showScreen99(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base);
-void NEOGEO_USER showScreen100(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base);
+
+/* NPC palette loaders — these only load palettes, tile data is in C ROM */
+void NEOGEO_USER showScreen109(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base);
+void NEOGEO_USER showScreen110(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base);
+void NEOGEO_USER showScreen111(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base);
+void NEOGEO_USER showScreen112(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base);
+
+/*
+ * Background slot: display eyecatcher images behind NPC characters.
+ * NG_SPR_BG0_FIRST=300, VRAM base = 300*64 = 0x4B00.
+ */
+#define EC_BG_VRAM_BASE   NG_SPR_VRAM_BASE(NG_SPR_BG0_FIRST)
+
+/*
+ * NPC tile data (z_npc_84.png = screen 109, z_npc_85=110, ...z_npc_87=112).
+ * Each z_npc occupies a 256-tile block: tile_base = (screen_id-1)*256.
+ * Content starts at offset: tile_row_start*16 + tile_col_start = 10*16+5 = 165.
+ * Sprite is 6 strips wide, 6 rows tall, stride = 16 (16-wide VRAM layout).
+ */
+#define EC_NPC_CONTENT_OFFSET  165u   /* 10*16 + 5 */
+#define EC_NPC_TILE(screen_id) ((uint16_t)(((screen_id) - 1u) * 256u + EC_NPC_CONTENT_OFFSET))
+#define EC_NPC_PAL(screen_id)  ((uint8_t)(0x10u + ((screen_id) - 1u)))
+#define EC_NPC_STRIPS          6u
+#define EC_NPC_HEIGHT          6u
+#define EC_NPC_STRIDE          16u
+
+/* NPC walk cycle: 4 frames cycling over screens 109-112 */
+static const uint8_t ec_npc_screens[4] = { 109, 110, 111, 112 };
+
+/* Frames per eyecatcher background slide (60 Hz) */
+#define EC_FRAMES_PER_SLIDE    60u
+
+/*
+ * Eyecatcher background functions — pointer table, indexed 0-6.
+ * Returns the typedef'd function signature used by showScreen.
+ */
+typedef void (*ECBgFn)(int,int,int,int,int,uint16_t,uint16_t);
+static const ECBgFn ec_bg_fns[7] = {
+    showScreen93, showScreen94, showScreen95, showScreen96,
+    showScreen97, showScreen98, showScreen99
+};
+static const ECBgFn ec_npc_pal_fns[4] = {
+    showScreen109, showScreen110, showScreen111, showScreen112
+};
+
+static void NEOGEO_USER ec_show_npc(int16_t x, uint8_t walk_frame)
+{
+    NGSpriteGroup npc;
+    uint8_t npc_screen = ec_npc_screens[walk_frame & 3u];
+
+    ng_sprite_group_init(&npc,
+        NG_SPR_CHAR_FIRST,        /* slot 0: highest priority, draws over BG */
+        EC_NPC_STRIPS,
+        EC_NPC_HEIGHT,
+        EC_NPC_TILE(npc_screen),
+        EC_NPC_PAL(npc_screen));
+    ng_sprite_group_set_tile_stride(&npc, EC_NPC_STRIDE);
+    ng_sprite_group_set_active_rows(&npc, EC_NPC_HEIGHT);
+    ng_sprite_group_set_pos(&npc, x, 140);  /* Y=140 places NPC in lower half */
+    ng_sprite_group_set_scale(&npc, 0xFF, 0xFF);
+    ng_sprite_group_upload(&npc);
+}
 
 void NEOGEO_USER showEyeCatcherMVS(void) {
-    clearFix();
-    clearSprs();
-    showScreen94(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-    cyclexs(2);
+    uint8_t  slide;
+    uint16_t f;
+    int16_t  npc_x;
+    uint8_t  walk_frame;
+    uint8_t  npc_screen_idx;
 
-    clearFix();
-    clearSprs();
-    showScreen95(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-    cyclexs(2);
+    /* Pre-load all NPC palettes once */
+    for (npc_screen_idx = 0; npc_screen_idx < 4u; npc_screen_idx++) {
+        ec_npc_pal_fns[npc_screen_idx](0, 0, 0, 0, 0, 0, 0);
+    }
 
-    clearFix();
-    clearSprs();
-    showScreen96(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-    cyclexs(2);
+    /* NPC starts off the left edge */
+    npc_x = -96;
 
-    clearFix();
-    clearSprs();
-    showScreen97(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-    cyclexs(2);
+    for (slide = 0; slide < 7u; slide++) {
+        /* Upload background at BG slot (behind characters) */
+        clearFix();
+        clearSprs();
+        ec_bg_fns[slide](16, 24, 0xF, 0xAF, 16, 0x0000, EC_BG_VRAM_BASE);
 
-    clearFix();
-    clearSprs();
-    showScreen98(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-    cyclexs(2);
+        /* Run for EC_FRAMES_PER_SLIDE VBLs, animating the NPC */
+        for (f = 0; f < EC_FRAMES_PER_SLIDE; f++) {
+            /* Walk: 1px per frame, wraps right edge back to left */
+            npc_x++;
+            if (npc_x > 304) npc_x = -96;
 
-    clearFix();
-    clearSprs();
-    showScreen99(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-    cyclexs(2);
+            /* Cycle walk frame every 8 VBLs (≈8 fps walk) */
+            walk_frame = (uint8_t)((f >> 3) & 3u);
 
-    clearFix();
-    clearSprs();
-    showScreen100(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-    cyclexs(2);
+            ec_show_npc(npc_x, walk_frame);
+            waitVbl();
+        }
+    }
 
     clearFix();
     clearSprs();

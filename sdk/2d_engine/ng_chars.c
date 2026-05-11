@@ -1,6 +1,7 @@
 #include "ng_chars.h"
 #include "ng_actions.h"
 #include "ng_level.h"
+#include "ng_sprite_pool.h"
 
 static NGCharacter ng_chars[NG_MAX_CHARS];
 static NGCharInterupt ng_char_interupts[NG_MAX_CHAR_KINDS];
@@ -198,41 +199,101 @@ void NEOGEO_USER ng_chars_update(void)
     }
 }
 
+/*
+ * Y-depth sort: build an order[] of active visible character indices, sorted
+ * by Y descending (highest Y = closest to viewer = lowest slot number = drawn
+ * in front).  Returns the count of entries placed in order[].
+ * Invisible chars are NOT included; they are hidden separately.
+ */
+static uint8_t NEOGEO_USER ng_chars_depth_sort(uint8_t *order)
+{
+    uint8_t i, j, count = 0;
+    uint8_t tmp;
+
+    for (i = 0; i < NG_MAX_CHARS; i++) {
+        NGCharacter *c = &ng_chars[i];
+        if (c->active && c->visible && c->sprite_first != 0xffff)
+            order[count++] = i;
+    }
+
+    /* Insertion sort by Y descending */
+    for (i = 1; i < count; i++) {
+        tmp = order[i];
+        j = i;
+        while (j > 0 && ng_chars[order[j-1]].y < ng_chars[tmp].y) {
+            order[j] = order[j-1];
+            j--;
+        }
+        order[j] = tmp;
+    }
+
+    return count;
+}
+
 void NEOGEO_USER ng_chars_draw(void)
 {
     uint8_t i;
+    uint8_t order[NG_MAX_CHARS];
+    uint8_t count;
+    uint16_t next_slot;
     const NGLevelState *level = level_state();
     int16_t camera_x = level ? level->scroll_x : 0;
     int16_t camera_y = level ? level->scroll_y : 0;
 
+    /* Hide invisible / inactive chars that still have a VRAM slot booked. */
     for (i = 0; i < NG_MAX_CHARS; i++) {
         NGCharacter *c = &ng_chars[i];
-        NGSpriteGroup g;
-        uint8_t visibleStrips;
-
-        if (!c->active) continue;
-        if (c->sprite_first == 0xffff) continue;
-
-        visibleStrips = c->sprite_strips ? c->sprite_strips : 1;
-        if (visibleStrips > NG_SPRITE_MAX_STRIPS) visibleStrips = NG_SPRITE_MAX_STRIPS;
-
-        if (!c->visible) {
-            if (ng_char_uploaded_strips[i] != 0) {
-                chars_hide_slot(ng_char_uploaded_first[i], ng_char_uploaded_strips[i]);
+        if (!c->active || !c->visible || c->sprite_first == 0xffff) {
+            if (ng_char_uploaded_first[i] != 0xffff) {
+                ng_sprite_hide_range(ng_char_uploaded_first[i], ng_char_uploaded_strips[i]);
                 ng_char_uploaded_strips[i] = 0;
                 ng_char_uploaded_first[i] = 0xffff;
             }
-            c->sprite_dirty = 1;
-            continue;
+            if (c->active && !c->visible)
+                c->sprite_dirty = 1;
         }
+    }
 
-        if (ng_char_uploaded_first[i] != 0xffff &&
-            ng_char_uploaded_first[i] != c->sprite_first) {
-            chars_hide_slot(ng_char_uploaded_first[i], ng_char_uploaded_strips[i]);
-            ng_char_uploaded_strips[i] = 0;
-            ng_char_uploaded_first[i] = 0xffff;
+    /* Build Y-sorted draw order for active visible chars. */
+    count = ng_chars_depth_sort(order);
+
+    /*
+     * Phase 1 – recompute hardware slot assignments based on sort order.
+     * Chars that change slot: hide their old VRAM data now so Phase 2
+     * uploads don't conflict with stale slot contents.
+     * All hides happen before any uploads to avoid one char's upload
+     * overwriting another's stale data mid-frame.
+     */
+    next_slot = NG_SPR_CHAR_FIRST;
+    for (i = 0; i < count; i++) {
+        uint8_t idx = order[i];
+        NGCharacter *c = &ng_chars[idx];
+        uint8_t strips = c->sprite_strips ? c->sprite_strips : 1;
+        if (strips > NG_SPRITE_MAX_STRIPS) strips = NG_SPRITE_MAX_STRIPS;
+
+        if (c->sprite_first != next_slot) {
+            /* Slot changed due to depth-sort reorder: hide stale VRAM. */
+            if (ng_char_uploaded_first[idx] != 0xffff) {
+                ng_sprite_hide_range(ng_char_uploaded_first[idx],
+                                     ng_char_uploaded_strips[idx]);
+                ng_char_uploaded_strips[idx] = 0;
+                ng_char_uploaded_first[idx] = 0xffff;
+            }
+            c->sprite_first = next_slot;
             c->sprite_dirty = 1;
         }
+        next_slot += strips;
+    }
+
+    /* Phase 2 – draw each char in depth-sorted order (front-to-back). */
+    for (i = 0; i < count; i++) {
+        uint8_t idx = order[i];
+        NGCharacter *c = &ng_chars[idx];
+        NGSpriteGroup g;
+        uint8_t visibleStrips;
+
+        visibleStrips = c->sprite_strips ? c->sprite_strips : 1;
+        if (visibleStrips > NG_SPRITE_MAX_STRIPS) visibleStrips = NG_SPRITE_MAX_STRIPS;
 
         ng_sprite_group_init(
             &g,
@@ -244,26 +305,26 @@ void NEOGEO_USER ng_chars_draw(void)
         );
         ng_sprite_group_set_tile_stride(&g, c->sprite_stride ? c->sprite_stride : visibleStrips);
         ng_sprite_group_set_active_rows(&g, c->sprite_active_rows ? c->sprite_active_rows : g.heightTiles);
-        ng_sprite_group_set_pos(&g, (int16_t)(c->x + c->sprite_offset_x - camera_x), (int16_t)(c->y + c->sprite_offset_y - camera_y));
+        ng_sprite_group_set_pos(&g,
+            (int16_t)(c->x + c->sprite_offset_x - camera_x),
+            (int16_t)(c->y + c->sprite_offset_y - camera_y));
         ng_sprite_group_set_scale(&g, c->scale_x, c->scale_y);
         ng_sprite_group_set_flip(&g, c->flip_x, c->flip_y);
 
         if (c->sprite_dirty) {
             /*
-             * Hardware quirk: do not clear active strips before upload; doing
-             * so can flicker.  Only turn off strips that were visible in the
-             * previous frame but are no longer used by this narrower frame.
+             * Only hide excess strips (char narrowed this frame) – do NOT
+             * clear the active strips first or we flicker.
              */
-            if (ng_char_uploaded_strips[i] > visibleStrips) {
+            if (ng_char_uploaded_strips[idx] > visibleStrips) {
                 ng_sprite_hide_range(
                     c->sprite_first + visibleStrips,
-                    (uint8_t)(ng_char_uploaded_strips[i] - visibleStrips)
+                    (uint8_t)(ng_char_uploaded_strips[idx] - visibleStrips)
                 );
             }
-
             ng_sprite_group_upload(&g);
-            ng_char_uploaded_strips[i] = visibleStrips;
-            ng_char_uploaded_first[i] = c->sprite_first;
+            ng_char_uploaded_strips[idx] = visibleStrips;
+            ng_char_uploaded_first[idx]  = c->sprite_first;
             c->sprite_dirty = 0;
         } else {
             ng_sprite_group_update_transform(&g);
@@ -273,29 +334,46 @@ void NEOGEO_USER ng_chars_draw(void)
 
 void NEOGEO_USER ng_char_set_sprite(NGCharacter *c, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette)
 {
+    uint8_t new_strips;
+    uint8_t new_height;
+
     if (!c) return;
 
-    if (c->sprite_first != 0xffff && c->sprite_first != firstSprite) {
-        uint8_t i = ng_chars_index(c);
-        chars_hide_slot(c->sprite_first, NG_SPRITE_MAX_STRIPS);
-        if (i != 0xff) {
-            ng_char_uploaded_strips[i] = 0;
-            ng_char_uploaded_first[i] = 0xffff;
+    new_strips = strips ? strips : 1;
+    if (new_strips > NG_SPRITE_MAX_STRIPS) new_strips = NG_SPRITE_MAX_STRIPS;
+    new_height = heightTiles ? heightTiles : 1;
+    if (new_height > NG_SPRITE_MAX_HEIGHT_TILES) new_height = NG_SPRITE_MAX_HEIGHT_TILES;
+
+    /*
+     * Y-depth sorting (ng_chars_draw) owns sprite_first — it reassigns the
+     * hardware slot each frame based on Y order.  We only seed sprite_first
+     * the very first time so the char enters the sorted list; after that the
+     * sorter keeps it up to date.
+     *
+     * If the strip count changes, the sorter will reallocate slots for the
+     * new width on the next draw call (it detects the slot-boundary shift).
+     */
+    if (c->sprite_first == 0xffff)
+        c->sprite_first = firstSprite;   /* initial seed — sorter overrides next frame */
+
+    if (c->sprite_strips != new_strips) {
+        /* Width changed: the old VRAM slot allocation is stale — hide it now
+         * so the sorter can repack slots cleanly on the next draw. */
+        uint8_t idx = ng_chars_index(c);
+        if (idx != 0xff && ng_char_uploaded_first[idx] != 0xffff) {
+            ng_sprite_hide_range(ng_char_uploaded_first[idx], ng_char_uploaded_strips[idx]);
+            ng_char_uploaded_strips[idx] = 0;
+            ng_char_uploaded_first[idx]  = 0xffff;
         }
     }
 
-    c->sprite_first = firstSprite;
-    c->sprite_strips = strips ? strips : 1;
-    if (c->sprite_strips > NG_SPRITE_MAX_STRIPS) c->sprite_strips = NG_SPRITE_MAX_STRIPS;
-
-    c->sprite_height = heightTiles ? heightTiles : 1;
-    if (c->sprite_height > NG_SPRITE_MAX_HEIGHT_TILES) c->sprite_height = NG_SPRITE_MAX_HEIGHT_TILES;
-
-    c->sprite_active_rows = c->sprite_height;
-    c->sprite_tile = tileBase;
-    c->sprite_stride = c->sprite_strips;
-    c->palette = palette;
-    c->sprite_dirty = 1;
+    c->sprite_strips      = new_strips;
+    c->sprite_height      = new_height;
+    c->sprite_active_rows = new_height;
+    c->sprite_tile        = tileBase;
+    c->sprite_stride      = new_strips;
+    c->palette            = palette;
+    c->sprite_dirty       = 1;
 }
 
 void NEOGEO_USER ng_char_set_body(NGCharacter *c, int16_t x, int16_t y, int16_t w, int16_t h)
