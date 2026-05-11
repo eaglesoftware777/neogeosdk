@@ -85,14 +85,55 @@ Five tabs: FM patch editor (4-operator, all parameters), MML composer with piano
 pip install PyQt6 numpy scipy
 ```
 
+## Running the ROM in MAME
+
+The cartridge is loaded through the Neo Geo software list as `neogeosdk`.
+
+**Requirements:**
+- MAME installed and on `PATH`
+- Legal `neogeo.zip` BIOS placed in the `roms/` folder
+
+**Do not** run `mame neogeosdk` directly — that looks for a driver, not a cartridge.  
+**Correct command:**
+
+```
+mame neogeo -cart1 neogeosdk -rompath roms -hashpath hash_eagle;hash -bios unibios22
+```
+
+**Windows quick-start:**
+```
+run_neogeosdk.bat
+```
+
+**Linux quick-start:**
+```
+./run.sh
+```
+
+**Insert coin / start (MVS mode):** press `5` then `1` on the keyboard.
+
+### Building the release package
+
+```
+make dist                          # Linux
+nmake -f MakefileWin32.mak dist   # Windows
+```
+
+This builds the P1 ROM, regenerates `hash_eagle/neogeo.xml`, creates `dist/roms/neogeosdk.zip`
+(ROM files at archive root), copies `hash_eagle/neogeo.xml` to `dist/hash_eagle/`, and writes
+`dist/run_neogeosdk.bat` and `dist/run_neogeosdk_debug.bat`.
+
+Distribute `dist/` as-is. End users place their `neogeo.zip` BIOS inside `dist/roms/` and
+run `dist/run_neogeosdk.bat`.
+
 ## Release Assets
 
-The `v1.2.0` release publishes these attached assets:
+The `v1.2.1` release publishes these attached assets:
 
-- `neogeosdkv1.2.0.tar.gz`  
+- `neogeosdkv1.2.1.tar.gz`  
   source snapshot for the SDK
-- `roms-ssideki-v1.2.0.tar.gz`  
-  generated demo ROM set for quick MAME testing
+- `neogeosdk.zip`  
+  generated demo ROM set for MAME (`777-p1.p1`, `777-m1.m1`, `777-s1.s1`, `777-v1.v1`, `777-c1.c1`, `777-c2.c2`)
 
 The release page also carries `x-tools.tar` for the Linux toolchain layout used by
 the default `Makefile`. That asset is kept as-is when documentation-only or ROM-only
@@ -100,7 +141,7 @@ release updates are published.
 
 Current release page:
 
-- `https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.2.0`
+- `https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.2.1`
 
 ## Documentation
 
@@ -454,17 +495,23 @@ make debug-artifacts : write size, symbols, readelf, map, and disassembly files
 make gdb-trace       : generate dump/gdb_trace.txt from a batch GDB script
 make gdb             : open GDB on out/game
 make gdb-remote      : open GDB and connect to GDB_REMOTE=host:port
+make dist            : build p1 + package dist/roms/neogeosdk.zip release layout
+make test            : run in MAME (MVS, sp-s2.sp1 BIOS by default)
+make test-aes        : run in MAME (AES, unibios22 BIOS)
+make test BIOS=unibios22 : run with specific BIOS
 ```
 
 Important recent build behavior:
 
-- `make sound`, `make vrom`, and `make m1rom` sync generated outputs into `roms/ssideki/`
-- both Linux and Windows makefiles keep `052-m1.m1`, `052-v1.v1`, `052-p1.p1`, and `sm1.sm1` aligned with the current build
+- `make sound`, `make vrom`, and `make m1rom` sync generated outputs into `roms/neogeosdk/`
+- all ROM files use the `777-` prefix: `777-m1.m1`, `777-v1.v1`, `777-p1.p1`, `777-s1.s1`, `777-c1.c1`, `777-c2.c2`
 - `make samples` uses the bundled Python WAV converter by default on Linux and Windows
 - set `SOX=/path/to/sox` only when you explicitly want the SoX conversion path
 - Windows `make fm`, `make mml`, and `make ssg` expand source file lists correctly
-- Windows `make sfix` now keeps `052-s1.s1` in the correct 128 KB FIX-ROM format
+- Windows `make sfix` produces `777-s1.s1` in the correct 128 KB FIX-ROM format
 - P1 generation crops to the full 512 KB program ROM window (0x080000) before byte swap and padding; this is the required ROM format for MAME and hardware
+- `hash_eagle/neogeo.xml` is auto-regenerated on every `make p1` build with correct CRC/SHA1 and `loadflag="load16_word_swap"` for the P-ROM
+- `make dist` packages everything into `dist/roms/neogeosdk.zip` with ROM files at archive root (no subfolder)
 
 ## Debug and Trace Builds
 
@@ -741,7 +788,7 @@ sound/            — sound driver, tracks, samples, tools
   ssg/            — standalone SSG tracks and presets
   samples/        — raw and converted sample assets
   tools/          — sound build utilities
-roms/ssideki/     — synced ROM outputs for MAME
+roms/neogeosdk/   — synced ROM outputs for MAME (777-p1.p1 … 777-c2.c2)
 out/              — intermediate and generated build artifacts
 win/              — Windows-side helper binaries used by the build
 z80c-special/     — experimental Z80 C compiler used by the C-driver path

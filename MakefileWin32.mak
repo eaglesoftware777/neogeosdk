@@ -49,7 +49,8 @@ LDFLAGS += -Map=out\game.map
 endif
 
 HASHPATH?=$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
-MAME_COMMON=$(MAME) neogeo -rompath $(REPO_WIN)\roms -hashpath "$(HASHPATH)" -bios unibios22 -cart1 neogeosdk
+BIOS?=sp-s2.sp1
+MAME_COMMON=$(MAME) neogeo -rompath $(REPO_WIN)\roms -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 neogeosdk
 
 .DEFAULT_GOAL := p1
 
@@ -175,6 +176,10 @@ art-clean:
 art:
 	call artbox\makeartbox.bat
 
+.PHONY: dist
+dist: p1
+	$(PY) hash_eagle\gen_hash.py --dist
+
 .PHONY: clean
 clean:
 	if exist out\game del /Q out\game
@@ -235,10 +240,18 @@ test:
 	copy /Y out\777-p1.p1 roms\neogeosdk\777-p1.p1
 	$(MAME_COMMON) -output console -nofilter -waitvsync -window
 
+.PHONY: test-aes
+test-aes:
+	$(MAKE) -f MakefileWin32.mak test BIOS=unibios22
+
 debug:
 	$(PY) hash_eagle\gen_hash.py
 	copy /Y out\777-p1.p1 roms\neogeosdk\777-p1.p1
 	$(MAME_COMMON) -output console -debug -verbose -nofilter -waitvsync -window
+
+.PHONY: debug-aes
+debug-aes:
+	$(MAKE) -f MakefileWin32.mak debug BIOS=unibios22
 
 .PHONY: debug-build
 debug-build:
