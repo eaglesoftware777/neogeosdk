@@ -146,6 +146,45 @@ uint32_t NEOGEO_USER __umodsi3(uint32_t a, uint32_t b)
     return rem;
 }
 
+/* 32-bit signed multiply — not built-in on 68000; provided here for -nostdlib builds.
+ * Uses two 16×16→32 MULU operations.  Only the low 32 bits of the 64-bit result
+ * are returned, which is correct for all uses in this codebase. */
+int32_t NEOGEO_USER __mulsi3(int32_t a, int32_t b)
+{
+    uint16_t a_lo = (uint16_t)a;
+    uint16_t a_hi = (uint16_t)((uint32_t)a >> 16);
+    uint16_t b_lo = (uint16_t)b;
+    uint16_t b_hi = (uint16_t)((uint32_t)b >> 16);
+    uint32_t lo;
+
+    asm volatile (
+        "mulu.w %[b],%[a]"
+        : [a] "=d" (lo)
+        : "0" ((uint32_t)a_lo), [b] "d" (b_lo)
+    );
+    /* Add cross terms (only affect upper 16 bits of the 32-bit result) */
+    lo += (uint32_t)((uint16_t)((uint16_t)(a_hi * b_lo) + (uint16_t)(a_lo * b_hi))) << 16;
+    return (int32_t)lo;
+}
+
+/* 32-bit signed divide — wrap the unsigned implementation. */
+int32_t NEOGEO_USER __divsi3(int32_t a, int32_t b)
+{
+    uint32_t ua = (uint32_t)(a < 0 ? -a : a);
+    uint32_t ub = (uint32_t)(b < 0 ? -b : b);
+    uint32_t r  = __udivsi3(ua, ub);
+    return ((a < 0) != (b < 0)) ? -(int32_t)r : (int32_t)r;
+}
+
+/* 32-bit signed modulo. */
+int32_t NEOGEO_USER __modsi3(int32_t a, int32_t b)
+{
+    uint32_t ua  = (uint32_t)(a < 0 ? -a : a);
+    uint32_t ub  = (uint32_t)(b < 0 ? -b : b);
+    uint32_t rem = __umodsi3(ua, ub);
+    return (a < 0) ? -(int32_t)rem : (int32_t)rem;
+}
+
 uint16_t NEOGEO_USER setSCB2(uint16_t Xshrink , uint16_t Yshrink) {
 	return (uint16_t)((Xshrink << 8) | Yshrink);
 }

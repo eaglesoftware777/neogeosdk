@@ -11,6 +11,17 @@ CFG_PATH = os.path.join(ROOT, "assets.cfg")
 MANIFEST_PATH = os.path.join(ROOT, "assets_manifest.json")
 OUT_SRT_PATH = os.path.join(ROOT, "out.srt")
 
+# Canonical category order — determines tile/palette assignment order
+CATEGORY_ORDER = [
+    "backgrounds",
+    "characters",
+    "effects",
+    "eyecatcher",
+    "npc",
+    "screens",
+    "titles",
+]
+
 
 def _rule_value(section, key, default):
     if key not in section:
@@ -31,6 +42,7 @@ def load_rules(cfg_path=CFG_PATH):
         rules.append(
             {
                 "name": section_name[5:],
+                "match_category": _rule_value(section, "match_category", "").strip().lower(),
                 "pattern": _rule_value(section, "pattern", "*.png"),
                 "mode": _rule_value(section, "mode", "screen").strip().lower(),
                 "category": _rule_value(section, "category", "background").strip().lower(),
@@ -52,16 +64,70 @@ def load_rules(cfg_path=CFG_PATH):
     return rules
 
 
+def _collect_subdir_files(in_dir):
+    """Return [(category, filename, full_path)] sorted by CATEGORY_ORDER then filename."""
+    result = []
+
+    # Files directly in in_dir (legacy flat layout)
+    try:
+        flat = sorted(
+            f for f in os.listdir(in_dir)
+            if f.lower().endswith(".png") and os.path.isfile(os.path.join(in_dir, f))
+        )
+        for f in flat:
+            result.append(("", f, os.path.join(in_dir, f)))
+    except FileNotFoundError:
+        pass
+
+    # Subdirectory files in CATEGORY_ORDER, then alpha-by-filename within each
+    present = set(
+        d for d in os.listdir(in_dir)
+        if os.path.isdir(os.path.join(in_dir, d))
+    )
+    ordered = [d for d in CATEGORY_ORDER if d in present]
+    # Append any subdirs not in CATEGORY_ORDER at the end, sorted
+    ordered += sorted(d for d in present if d not in CATEGORY_ORDER)
+
+    for subdir in ordered:
+        subpath = os.path.join(in_dir, subdir)
+        files = sorted(
+            f for f in os.listdir(subpath) if f.lower().endswith(".png")
+        )
+        for f in files:
+            result.append((subdir, f, os.path.join(subpath, f)))
+
+    return result
+
+
 def list_asset_files(in_dir):
+    """Legacy shim — returns sorted flat filenames (for old callers)."""
     return sorted(f for f in os.listdir(in_dir) if f.lower().endswith(".png"))
 
 
-def match_rule(name, rules):
+def match_rule(name, rules, category=""):
+    """
+    Match rule by category first (match_category field), then by filename pattern.
+    Falls back to a plain pattern match if no category-specific rule exists.
+    """
+    # Priority 1: exact category + matching filename pattern
+    if category:
+        for rule in rules:
+            if rule["match_category"] == category.lower():
+                if fnmatch.fnmatch(name, rule["pattern"]):
+                    return dict(rule)
+        # Priority 2: exact category with wildcard pattern
+        for rule in rules:
+            if rule["match_category"] == category.lower():
+                return dict(rule)
+
+    # Priority 3: legacy filename-only pattern match (no category constraint)
     for rule in rules:
-        if fnmatch.fnmatch(name, rule["pattern"]):
+        if not rule["match_category"] and fnmatch.fnmatch(name, rule["pattern"]):
             return dict(rule)
+
     return {
         "name": "fallback",
+        "match_category": "",
         "pattern": "*.png",
         "mode": "screen",
         "category": "background",
@@ -69,34 +135,35 @@ def match_rule(name, rules):
         "anchor": "center",
         "target_width": 256,
         "target_height": 256,
-        "dither": "ordered",
+        "dither": "floyd",
         "contrast": 1.0,
         "saturation": 1.0,
         "sharpen_radius": 0.0,
         "sharpen_percent": 0,
         "sharpen_threshold": 0,
-        "kmeans_samples": 4096,
-        "kmeans_iters": 16,
+        "kmeans_samples": 8192,
+        "kmeans_iters": 25,
         "note": "",
     }
 
 
 def build_asset_specs(in_dir="in", cfg_path=CFG_PATH):
-    files = list_asset_files(in_dir)
-    rules = load_rules(cfg_path)
-    specs = []
+    entries = _collect_subdir_files(in_dir)
+    rules   = load_rules(cfg_path)
+    specs   = []
 
-    for db_index, name in enumerate(files):
-        rule = match_rule(name, rules)
+    for db_index, (subdir, name, full_path) in enumerate(entries):
+        rule = match_rule(name, rules, category=subdir)
         screen_id = db_index + 1
         spec = {
             "db_index": db_index,
             "screen_id": screen_id,
             "name": name,
-            "path": os.path.join(in_dir, name),
+            "subdir": subdir,
+            "path": full_path,
             "rule_name": rule["name"],
             "mode": rule["mode"],
-            "category": rule["category"],
+            "category": subdir if subdir else rule["category"],
             "fit": rule["fit"],
             "anchor": rule["anchor"],
             "target_width": rule["target_width"],
@@ -135,7 +202,7 @@ def load_manifest(manifest_path=MANIFEST_PATH):
 def write_out_srt(specs, out_path=OUT_SRT_PATH):
     with open(out_path, "w", encoding="utf-8") as handle:
         for spec in specs:
-            handle.write(f"[{spec['screen_id']:03d}] {spec['name']}\n")
+            handle.write(f"[{spec['screen_id']:03d}] {spec.get('subdir','')}/{spec['name']}\n")
             handle.write(
                 f"mode={spec['mode']} fit={spec['fit']} anchor={spec['anchor']} rule={spec['rule_name']}\n"
             )

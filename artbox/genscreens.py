@@ -137,8 +137,25 @@ for spec in image_specs:
         print("SCB4    = setSCB4(%s);" % x)
         print("setBACKDROP(backdrop);")
         print(
-            "vram_sprite(sprite_base + 64*%d,1,%d,spriteMapS%d_%d,spal%d_%d,%d,SCB2,SCB3,SCB4);"
+            "vram_sprite(sprite_base + 64*%d,1,(sprite_base>>6)+%d,spriteMapS%d_%d,spal%d_%d,%d,SCB2,SCB3,SCB4);"
             % (sprt_index, sprt_index, image_index, sprt_index + 1, image_index, sprt_index + 1, crt_sz)
         )
         x = "x0+16*%d" % (sprt_index + 1)
     print("}")
+
+# --- Screen dispatch table (consumed by ng_bg.c / ng_level.c) ---
+# Emitted once after all showScreenN functions.
+# ng_screen_table[i] == showScreen_i (1-based).  Index 0 is NULL (unused).
+max_screen_id = max((int(spec["screen_id"]) for spec in image_specs), default=0)
+print("")
+print("const NGShowScreenFn ng_screen_table[NG_SCREEN_TABLE_MAX] = {")
+print("    0, /* index 0 unused */")
+for sid in range(1, max_screen_id + 1):
+    exists = any(int(spec["screen_id"]) == sid for spec in image_specs)
+    if exists:
+        print("    showScreen%d," % sid)
+    else:
+        print("    0, /* %d not present */" % sid)
+# Pad remaining slots to NG_SCREEN_TABLE_MAX with 0
+print("};")
+print("const uint16_t ng_screen_count = %d;" % image_count)

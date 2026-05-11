@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
-img2neo.py — Convert any image to a NeoGeo-ready 15-color indexed PNG.
+img2neo.py — Convert any image to a NeoGeo-ready 15-colour indexed PNG.
 
 Pipeline:
   1. Load source image (JPG, PNG, BMP, etc.)
   2. Center-crop and resize to target dimensions (multiple of 16)
-  3. Pre-quantise every channel to the NeoGeo 5-bit colour space (steps of 8)
-  4. Optimise 15-colour palette with k-means++ clustering
-  5. Apply Floyd-Steinberg dithering for maximum perceived quality
-  6. Save indexed PNG in the format expected by romdbimgimport.py
+  3. Pre-quantise every channel to the NeoGeo 5-bit colour space (step=8)
+  4. Extract 15-colour palette via k-means++ in CIE-Lab space (perceptual)
+  5. Apply serpentine Floyd-Steinberg dithering (alternating scan, sharper grain)
+  6. Optional second-pass quality refinement (re-anchors worst tiles)
+  7. Save indexed PNG in the format expected by romdbimgimport.py
 
 Usage:
   python3 img2neo.py src.jpg dst.png [-W 256] [-H 256] [-c 15]
@@ -25,7 +26,7 @@ IN_DIR    = os.path.join(os.path.dirname(__file__), 'in')
 
 
 # ---------------------------------------------------------------------------
-# Colour utilities
+# NeoGeo colour-space utilities
 # ---------------------------------------------------------------------------
 
 def snap_neogeo(arr):
@@ -33,22 +34,88 @@ def snap_neogeo(arr):
     return np.clip(((arr.astype(np.int32) + 4) // 8) * 8, 0, 248).astype(np.uint8)
 
 
+# ---------------------------------------------------------------------------
+# CIE-Lab colour conversion (D65, no scipy dependency)
+# ---------------------------------------------------------------------------
+
+def _srgb_to_linear(c: np.ndarray) -> np.ndarray:
+    """sRGB gamma-expand, input float 0-1."""
+    return np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+
+
+def _linear_to_srgb(c: np.ndarray) -> np.ndarray:
+    """sRGB gamma-compress, input float (may be negative/clipped)."""
+    c = np.maximum(c, 0.0)
+    return np.where(c <= 0.0031308, 12.92 * c, 1.055 * c ** (1.0 / 2.4) - 0.055)
+
+
+_M_RGB_XYZ = np.array([
+    [0.4124564, 0.3575761, 0.1804375],
+    [0.2126729, 0.7151522, 0.0721750],
+    [0.0193339, 0.1191920, 0.9503041],
+], dtype=np.float32)
+
+_M_XYZ_RGB = np.array([
+    [ 3.2404542, -1.5371385, -0.4985314],
+    [-0.9692660,  1.8760108,  0.0415560],
+    [ 0.0556434, -0.2040259,  1.0572252],
+], dtype=np.float32)
+
+_D65_WHITE = np.array([0.95047, 1.00000, 1.08883], dtype=np.float32)
+
+
+def rgb_to_lab(arr_uint8: np.ndarray) -> np.ndarray:
+    """Convert (..., 3) uint8 RGB → (..., 3) float32 CIE-Lab (D65)."""
+    c = arr_uint8.astype(np.float32) / 255.0
+    linear = _srgb_to_linear(c)
+    xyz = linear @ _M_RGB_XYZ.T
+    xyz /= _D65_WHITE
+    # f(t) cube-root with linear tail
+    f = np.where(xyz > 0.008856, np.cbrt(np.maximum(xyz, 0.0)),
+                 7.787 * xyz + 16.0 / 116.0)
+    L = 116.0 * f[..., 1] - 16.0
+    a = 500.0 * (f[..., 0] - f[..., 1])
+    b = 200.0 * (f[..., 1] - f[..., 2])
+    return np.stack([L, a, b], axis=-1).astype(np.float32)
+
+
+def lab_to_rgb(lab: np.ndarray) -> np.ndarray:
+    """Convert (..., 3) float32 CIE-Lab → (..., 3) uint8 RGB (clipped)."""
+    L, a, b = lab[..., 0], lab[..., 1], lab[..., 2]
+    fy = (L + 16.0) / 116.0
+    fx = a / 500.0 + fy
+    fz = fy - b / 200.0
+    eps = 0.20689655  # cbrt(0.008856)
+    x = np.where(fx > eps, fx ** 3, (fx - 16.0 / 116.0) / 7.787)
+    y = np.where(fy > eps, fy ** 3, (fy - 16.0 / 116.0) / 7.787)
+    z = np.where(fz > eps, fz ** 3, (fz - 16.0 / 116.0) / 7.787)
+    xyz = np.stack([x * _D65_WHITE[0], y * _D65_WHITE[1], z * _D65_WHITE[2]], axis=-1)
+    linear = xyz @ _M_XYZ_RGB.T
+    srgb = _linear_to_srgb(linear)
+    return np.clip(srgb * 255.0, 0, 255).astype(np.uint8)
+
+
+# ---------------------------------------------------------------------------
+# Palette extraction — k-means++ in CIE-Lab space
+# ---------------------------------------------------------------------------
+
 def kmeans_palette(pixels_hw3, n=15, iters=25, seed=0, sample_limit=8192):
     """
-    K-means++ clustering in the NeoGeo colour space.
-    Returns an (n, 3) uint8 array of palette RGB values.
+    K-means++ in CIE-Lab space for a perceptually optimal NeoGeo palette.
+    Accepts (..., 3) uint8 RGB, returns (n, 3) uint8 snapped NeoGeo RGB.
     """
-    rng   = np.random.default_rng(seed)
-    flat  = pixels_hw3.reshape(-1, 3).astype(np.float32)
-    # Subsample to 8192 pixels for speed without losing colour diversity
-    idx   = rng.choice(len(flat), min(len(flat), sample_limit), replace=False)
-    samp  = flat[idx]
+    rng  = np.random.default_rng(seed)
+    snapped = snap_neogeo(pixels_hw3)
+    flat_lab = rgb_to_lab(snapped.reshape(-1, 3))
 
-    # K-means++ initialisation
+    idx  = rng.choice(len(flat_lab), min(len(flat_lab), sample_limit), replace=False)
+    samp = flat_lab[idx]
+
+    # K-means++ initialisation in Lab space
     c = [samp[int(rng.integers(len(samp)))]]
     for _ in range(n - 1):
         d2   = np.min([np.sum((samp - cc) ** 2, axis=1) for cc in c], axis=0)
-        prob = d2 / d2.sum()
+        prob = d2 / (d2.sum() + 1e-10)
         c.append(samp[rng.choice(len(samp), p=prob)])
     centers = np.array(c, dtype=np.float32)
 
@@ -60,12 +127,17 @@ def kmeans_palette(pixels_hw3, n=15, iters=25, seed=0, sample_limit=8192):
             if mask.any():
                 centers[k] = samp[mask].mean(0)
 
-    return snap_neogeo(centers.astype(np.uint8))
+    # Convert Lab centres back to RGB and snap to NeoGeo grid
+    return snap_neogeo(lab_to_rgb(centers))
 
+
+# ---------------------------------------------------------------------------
+# Dithering — serpentine Floyd-Steinberg (perceptually uniform grain)
+# ---------------------------------------------------------------------------
 
 def floyd_steinberg(img_hw3, palette_n3):
     """
-    Floyd-Steinberg dithering.
+    Serpentine Floyd-Steinberg dithering (alternating scan direction per row).
     Returns (H, W) uint8 array of palette indices (0-based).
     """
     h, w = img_hw3.shape[:2]
@@ -74,57 +146,124 @@ def floyd_steinberg(img_hw3, palette_n3):
     palf = palette_n3.astype(np.float32)
 
     for y in range(h):
-        for x in range(w):
+        if y % 2 == 0:
+            xs = range(w)
+            nbr = lambda x: [(0, x+1, 7/16), (1, x-1, 3/16), (1, x, 5/16), (1, x+1, 1/16)]
+        else:
+            xs = range(w - 1, -1, -1)
+            nbr = lambda x: [(0, x-1, 7/16), (1, x+1, 3/16), (1, x, 5/16), (1, x-1, 1/16)]
+
+        for x in xs:
             old  = np.clip(buf[y, x], 0, 255)
             d2   = np.sum((palf - old) ** 2, axis=1)
             k    = int(d2.argmin())
             out[y, x] = k
             err  = old - palf[k]
-            if x + 1 < w:
-                buf[y,     x + 1] += err * (7 / 16)
-            if y + 1 < h:
-                if x > 0:
-                    buf[y + 1, x - 1] += err * (3 / 16)
-                buf[y + 1, x    ] += err * (5 / 16)
-                if x + 1 < w:
-                    buf[y + 1, x + 1] += err * (1 / 16)
+            for dy, nx, weight in nbr(x):
+                ny = y + dy
+                if 0 <= ny < h and 0 <= nx < w:
+                    buf[ny, nx] += err * weight
     return out
 
 
 def nearest_palette_indices(img_hw3, palette_n3):
     """Fast nearest-colour lookup without diffusion dithering."""
     pixels = img_hw3.reshape(-1, 3).astype(np.int16)
-    pal = palette_n3.astype(np.int16)
-    diff = pixels[:, None, :] - pal[None, :, :]
-    dist = np.sum(diff * diff, axis=2)
+    pal    = palette_n3.astype(np.int16)
+    diff   = pixels[:, None, :] - pal[None, :, :]
+    dist   = np.sum(diff * diff, axis=2)
     return np.argmin(dist, axis=1).astype(np.uint8).reshape(img_hw3.shape[:2])
 
 
 def ordered_dither(img_hw3, palette_n3, strength=0.65):
     """
-    Faster ordered dithering for painted screens.
+    Ordered (Bayer 4×4) dithering — fast, good for large screens.
     Keeps the image calmer than full error diffusion.
     """
     bayer4 = np.array(
-        [
-            [0, 8, 2, 10],
-            [12, 4, 14, 6],
-            [3, 11, 1, 9],
-            [15, 7, 13, 5],
-        ],
+        [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]],
         dtype=np.float32,
     )
     threshold = ((bayer4 / 15.0) - 0.5) * (8.0 * strength)
     tiled = np.tile(
         threshold,
-        (
-            (img_hw3.shape[0] + 3) // 4,
-            (img_hw3.shape[1] + 3) // 4,
-        ),
+        ((img_hw3.shape[0] + 3) // 4, (img_hw3.shape[1] + 3) // 4),
     )[: img_hw3.shape[0], : img_hw3.shape[1]]
     adjusted = np.clip(img_hw3.astype(np.float32) + tiled[:, :, None], 0, 255)
     adjusted = snap_neogeo(adjusted.astype(np.uint8))
     return nearest_palette_indices(adjusted, palette_n3)
+
+
+# ---------------------------------------------------------------------------
+# Second-pass quality refinement
+# ---------------------------------------------------------------------------
+
+def quality_second_pass(indexed_hw, palette_n3, img_hw3, mse_threshold=200.0,
+                         n_worst=6, iters=20, sample_limit=16384):
+    """
+    Re-extract palette with extra weight on the worst 16×16 tiles.
+    Returns a (potentially improved) (n, 3) palette and re-dithered indexed image.
+    """
+    h, w = indexed_hw.shape
+    n = len(palette_n3)
+
+    # Compute per-tile MSE
+    tile_mse = []
+    for ty in range(0, h, 16):
+        for tx in range(0, w, 16):
+            orig  = img_hw3[ty:ty+16, tx:tx+16].astype(np.float32)
+            recon = palette_n3[indexed_hw[ty:ty+16, tx:tx+16]].astype(np.float32)
+            mse   = float(np.mean((orig - recon) ** 2))
+            tile_mse.append((mse, ty, tx))
+
+    worst = sorted(tile_mse, reverse=True)[:n_worst]
+    if not worst or worst[0][0] <= mse_threshold:
+        return palette_n3, indexed_hw  # already good enough
+
+    # Collect anchor colours from the worst tiles
+    anchor_rgb = []
+    for _, ty, tx in worst:
+        tile = snap_neogeo(img_hw3[ty:ty+16, tx:tx+16])
+        unique = np.unique(tile.reshape(-1, 3), axis=0)
+        # Pick the 2 most visually distinct colours from this tile
+        if len(unique) >= 2:
+            lab = rgb_to_lab(unique)
+            spread = np.max(np.sum((lab[:, None] - lab[None]) ** 2, axis=2), axis=1)
+            tops = unique[np.argsort(spread)[-2:]]
+            anchor_rgb.extend(tops.tolist())
+
+    anchor_rgb = snap_neogeo(np.array(anchor_rgb, dtype=np.uint8))
+    # Deduplicate anchors
+    anchor_rgb = np.unique(anchor_rgb, axis=0)
+    n_anch = min(len(anchor_rgb), n // 3)
+    anchor_rgb = anchor_rgb[:n_anch]
+
+    # Rebuild augmented pixel pool: normal pixels + 3× duplicated worst-tile pixels
+    worst_pixels = np.vstack([
+        img_hw3[ty:ty+16, tx:tx+16].reshape(-1, 3) for _, ty, tx in worst
+    ])
+    augmented = np.vstack([img_hw3.reshape(-1, 3),
+                            worst_pixels, worst_pixels, worst_pixels])
+
+    # New palette: anchors + free k-means slots
+    n_free = n - n_anch
+    free_pal = kmeans_palette(augmented.reshape(1, -1, 3),
+                               n=n_free, iters=iters, seed=42,
+                               sample_limit=sample_limit)
+    new_palette = np.vstack([anchor_rgb, free_pal])
+
+    # Re-dither full image with the improved palette
+    arr = snap_neogeo(img_hw3)
+    new_indexed = floyd_steinberg(arr, new_palette)
+
+    # Keep the version with lower overall MSE
+    old_mse = np.mean((palette_n3[indexed_hw].astype(np.float32)
+                       - img_hw3.astype(np.float32)) ** 2)
+    new_mse = np.mean((new_palette[new_indexed].astype(np.float32)
+                       - img_hw3.astype(np.float32)) ** 2)
+    if new_mse < old_mse:
+        return new_palette, new_indexed
+    return palette_n3, indexed_hw
 
 
 # ---------------------------------------------------------------------------
@@ -169,23 +308,22 @@ def convert(src, dst, W=256, H=256, n_colors=15):
 
     img = open_as_rgb(src)
     img = crop_center(img, W, H)
-    # Boost contrast and saturation so the limited 15-colour palette
-    # covers the full 5-bit NeoGeo range as richly as possible.
     img = ImageEnhance.Contrast(img).enhance(1.2)
     img = ImageEnhance.Color(img).enhance(1.3)
     img = img.filter(ImageFilter.UnsharpMask(radius=1.5, percent=150, threshold=2))
 
-    # Snap to NeoGeo 5-bit colour space BEFORE palette extraction
     arr = snap_neogeo(np.array(img, dtype=np.uint8))
 
-    print(f"    k-means palette extraction…")
-    palette = kmeans_palette(arr, n=n_colors)
+    print(f"    k-means palette extraction (CIE-Lab)…")
+    palette = kmeans_palette(arr, n=n_colors, iters=35, sample_limit=16384)
 
-    print(f"    Floyd-Steinberg dithering…")
-    indexed = floyd_steinberg(arr, palette)     # values 0 .. n_colors-1
+    print(f"    serpentine Floyd-Steinberg dithering…")
+    indexed = floyd_steinberg(arr, palette)
+
+    print(f"    quality refinement pass…")
+    palette, indexed = quality_second_pass(indexed, palette, arr)
 
     pal_list = [(int(r), int(g), int(b)) for r, g, b in palette]
-
     rows = [indexed[y].tolist() for y in range(H)]
     with open(dst, 'wb') as f:
         writer = png.Writer(width=W, height=H, palette=pal_list, bitdepth=8)
@@ -194,21 +332,20 @@ def convert(src, dst, W=256, H=256, n_colors=15):
 
 
 # ---------------------------------------------------------------------------
-# Batch mode: convert the best docs/img sources into artbox/in/0..9.png
+# Batch mode
 # ---------------------------------------------------------------------------
 
 BATCH_SOURCES = [
-    # (source filename,                    crop/resize W, H)
-    ('beastlands_0.png',                   256, 256),   # 0 - fantasy background
-    ('forest_tiles.png',                   256, 256),   # 1 - forest tileset
-    ('generic_platformer_mockup.png',      256, 256),   # 2 - platform level
-    ('plastic_shamtastic_mockup.png',      256, 256),   # 3 - colourful scene
-    ('gunnes_0.png',                       256, 256),   # 4 - gun/action
-    ('beastlands_mockup.png',              256, 256),   # 5 - mockup view
-    ('forest_tiles_preview.png',           256, 256),   # 6 - forest preview
-    ('plastic_shamtastic_preview.png',     256, 256),   # 7 - shamtastic
-    ('255.png',                            256, 256),   # 8 - 256-colour test
-    ('plastic_shamtastic_alt_palette.png', 256, 256),   # 9 - alt palette
+    ('beastlands_0.png',                   256, 256),
+    ('forest_tiles.png',                   256, 256),
+    ('generic_platformer_mockup.png',      256, 256),
+    ('plastic_shamtastic_mockup.png',      256, 256),
+    ('gunnes_0.png',                       256, 256),
+    ('beastlands_mockup.png',              256, 256),
+    ('forest_tiles_preview.png',           256, 256),
+    ('plastic_shamtastic_preview.png',     256, 256),
+    ('255.png',                            256, 256),
+    ('plastic_shamtastic_alt_palette.png', 256, 256),
 ]
 
 

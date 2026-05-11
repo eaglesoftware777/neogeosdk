@@ -6,6 +6,7 @@
 #include "ng_status.h"
 #include "ng_game_events.h"
 #include "ng_level.h"
+#include "ng_bg.h"
 #include "ng_fix.h"
 #include "ng_border_constraints.h"
 #include "ng_chars.h"
@@ -40,6 +41,7 @@ void NEOGEO_USER ng_game_engine_init(void)
     ng_after_events = 0;
     ng_before_draw = 0;
     ng_after_draw = 0;
+    ng_bg_init();
 }
 
 void NEOGEO_USER ng_game_runtime_init(void)
@@ -101,6 +103,12 @@ void NEOGEO_USER ng_game_engine_frame(void)
 
     if (ng_before_draw) ng_before_draw();
 
+    {
+        const NGLevelState *_level = level_state();
+        int16_t _cam_x = _level ? _level->scroll_x : 0;
+        int16_t _cam_y = _level ? _level->scroll_y : 0;
+        ng_bg_draw(_cam_x, _cam_y);
+    }
     ng_chars_draw();
 
     if (ng_after_draw) ng_after_draw();

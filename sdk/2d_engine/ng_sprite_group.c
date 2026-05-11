@@ -42,13 +42,12 @@ void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint8_t count)
 
     for (i = 0; i < count; i++) {
         uint16_t spriteIndex = (uint16_t)(firstSprite + i);
-
         /*
-         * Turn the sprite off by clearing SCB3 height/sticky/position.
-         * Do not write fake "blank" tiles into SCB1.  A tile number that is
-         * blank in one ROM can be visible in another ROM.
+         * Clear SCB3 to turn the sprite off (zero height = invisible).
+         * No waitVbl() here: VRAM writes are effective immediately; waiting
+         * per-sprite would stall the CPU for count full frames.
          */
-        vram_SCB234((uint16_t)(SCB3_ADDR + spriteIndex), 0); waitVbl();
+        vram_SCB234((uint16_t)(SCB3_ADDR + spriteIndex), 0);
     }
 }
 
