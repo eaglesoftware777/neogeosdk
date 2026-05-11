@@ -19,6 +19,7 @@ void NEOGEO_USER maingame(void);
 void NEOGEO_USER GAME_ATTRACT(void);
 void NEOGEO_USER START_GAME(void);
 void NEOGEO_USER GAME_DISPATCH(void);
+void NEOGEO_USER showTitleMVS(void);
 void NEOGEO_USER showScreen9(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 
 //ZD_ENTRY interrupt subroutine
@@ -124,16 +125,18 @@ void  NEOGEO_USER USER(void) {
 // NeoGeo PLAYER_START handler
 void NEOGEO_USER PLAYER_START (void) {
 
-	// BIOS only calls PLAYER_START when start is pressed with credits — always signal game start
-	NEO_REGISTER8(BIOS_USER_MODE) = 2;
-	NEO_REGISTER8(NGO_START_FLAG) = 1;
-
 	uint16_t start_flag = NEO_REGISTER8(BIOS_START_FLAG);
 	uint16_t country_code = NEO_REGISTER8(BIOS_COUNTRY_CODE);
 
-	if ((start_flag >> 0) & 1) {
-		NEO_REGISTER8(BIOS_PLAYER1_MODE) = 1;
-	}
+	// US BIOS clears BIOS_START_FLAG before calling PLAYER_START (Japan BIOS leaves
+	// the bit set). Setting BIOS_PLAYER1_MODE and BIOS_START_FLAG unconditionally
+	// ensures the BIOS does not see "no player active" after we return, which would
+	// cause it to invoke POWER_ON and wipe NGO_START_FLAG.
+	NEO_REGISTER8(BIOS_USER_MODE) = 2;
+	NEO_REGISTER8(NGO_START_FLAG) = 1;
+	NEO_REGISTER8(BIOS_PLAYER1_MODE) = 1;
+	NEO_REGISTER8(BIOS_START_FLAG) = start_flag | 1;
+
 	if ((start_flag >> 1) & 1) {
 		NEO_REGISTER8(BIOS_PLAYER2_MODE) = (country_code == 1) ? 2 : 3;
 	}
@@ -218,12 +221,16 @@ void  NEOGEO_USER GAME (void) {
 // C-based GAME dispatch — avoids inline-asm address read issues
 void NEOGEO_USER GAME_DISPATCH(void) {
 #ifndef NG_AES
-	if (NEO_REGISTER8(NGO_START_FLAG)) {
-		NEO_REGISTER8(BIOS_USER_MODE) = 2;
-		START_GAME();
-	} else {
+	if (!NEO_REGISTER8(NGO_START_FLAG)) {
 		NEO_REGISTER8(BIOS_USER_MODE) = 1;
 		GAME_ATTRACT();
+	}
+	if (NEO_REGISTER8(NGO_START_FLAG)) {
+		NEO_REGISTER8(BIOS_USER_MODE) = 2;
+		/* US BIOS skips the TITLE handler and calls GAME directly, so
+		   showTitleMVS here guarantees the title screen on all BIOS variants. */
+		showTitleMVS();
+		START_GAME();
 	}
 #else
 	NEO_REGISTER8(BIOS_USER_MODE) = 1;
@@ -283,6 +290,12 @@ void  NEOGEO_USER showTitleAES(void) {
 	for (i = 0; i < 20; i++) {
 		if (NEO_REGISTER8(NGO_START_FLAG))
 			break;
+		/* On AES the BIOS may not call PLAYER_START during attract, so
+		   read the START button directly — bit 0 of BIOS_P1CHANGE. */
+		if (NEO_REGISTER8(BIOS_P1CHANGE) & 0x01) {
+			NEO_REGISTER8(NGO_START_FLAG) = 1;
+			break;
+		}
 		cycle1s();
 		if (NEO_REGISTER8(NGO_START_FLAG))
 			break;
@@ -352,9 +365,9 @@ showEagleIntro();
 	fixtext_out(15,11,"EAGLE SOFTWARE",0);
 	fixtext_out(15,12,"HELLO WORLD",0x2);
 	fixtext_out(15,13,"NEO GEO SDK 1.2.1",0x2);
-	fixtext_out(15,11,"ABCDEFGHIJKLMNOP",0);
+	/*fixtext_out(15,11,"ABCDEFGHIJKLMNOP",0);
 	fixtext_out(15,12,"ABCDEFGHIJKLMNOP",0x1);
-	fixtext_out(15,13,"ABCDEFGHIJKLMNOP",0x2);
+	fixtext_out(15,13,"ABCDEFGHIJKLMNOP",0x2);*/
 	mess_outtest();
 
 	soundPlayTitleMusic(0);
