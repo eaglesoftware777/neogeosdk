@@ -38,7 +38,8 @@ LDFLAGS += -Map=out/game.map
 endif
 
 HASHPATH?=$(CURDIR)/hash_eagle:$(CURDIR)/hash
-MAME_COMMON=mame neogeo -rompath $(CURDIR)/roms -hashpath $(HASHPATH) -bios unibios22 -cart1 neogeosdk
+BIOS?=sp-s2.sp1
+MAME_COMMON=mame neogeo -rompath $(CURDIR)/roms -hashpath $(HASHPATH) -bios $(BIOS) -cart1 neogeosdk
 
 .DEFAULT_GOAL := p1
 
@@ -166,6 +167,10 @@ art-clean:
 art:
 	./artbox/makeartbox.sh
 
+.PHONY: dist
+dist: p1
+	python3 hash_eagle/gen_hash.py --dist
+
 .PHONY: clean
 clean:
 	rm -f out/game out/game0 out/game0.rom out/game1.rom out/game.rom out/777-p1.p1
@@ -204,10 +209,18 @@ test:
 	cp out/777-p1.p1  roms/neogeosdk/
 	$(MAME_COMMON) -output console -nofilter -waitvsync -window
 
+.PHONY: test-aes
+test-aes:
+	$(MAKE) test BIOS=unibios22
+
 debug:
 	python3 hash_eagle/gen_hash.py
 	cp out/777-p1.p1  roms/neogeosdk/
 	$(MAME_COMMON) -output console -debug -verbose -nofilter -waitvsync -window
+
+.PHONY: debug-aes
+debug-aes:
+	$(MAKE) debug BIOS=unibios22
 
 .PHONY: debug-build
 debug-build:
