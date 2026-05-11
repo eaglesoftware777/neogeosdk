@@ -225,7 +225,7 @@ uint32_t psize  __attribute__ ((section ("neogeo_init"))) = 			0x80000;
 uint32_t pbcks __attribute__ ((section ("neogeo_init"))) = 			0x108000;
 uint16_t dipsize  __attribute__ ((section ("neogeo_init"))) = 			0x1000;
 //uint8_t	 bioslogo  __attribute__ ((section ("neogeo_init"))) = 	{0x2,0};
-uint8_t	 bioslogoflag  __attribute__ ((section ("neogeo_init"))) = 	0x2;//0x0;
+uint8_t	 bioslogoflag  __attribute__ ((section ("neogeo_init"))) = 	0x1;
 uint8_t	 bioslogotile  __attribute__ ((section ("neogeo_init"))) = 	0x0;//0x1B;
 /********************************************************************/
 /* neogeo_entry */

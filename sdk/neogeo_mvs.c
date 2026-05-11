@@ -216,7 +216,7 @@ uint16_t id __attribute__ ((section ("neogeo_init"))) = 			0x0777;
 uint32_t psize  __attribute__ ((section ("neogeo_init"))) = 		0x80000;
 uint32_t pbcks __attribute__ ((section ("neogeo_init"))) = 		0x108000;  /* backup start = start of work RAM */
 uint16_t dipsize  __attribute__ ((section ("neogeo_init"))) = 		0x1000;
-uint8_t bioslogoflag __attribute__ ((section ("neogeo_init"))) = 	0x02;  /* 2 = no system eye-catcher; game handles attract via EYE_CATCHER/TITLE */
+uint8_t bioslogoflag __attribute__ ((section ("neogeo_init"))) = 	0x01;  /* 1 = game supplies its own eye-catcher; BIOS calls EYE_CATCHER entry */
 uint8_t bioslogotile __attribute__ ((section ("neogeo_init"))) = 	0x00;
 /********************************************************************/
 /* neogeo_entry */
