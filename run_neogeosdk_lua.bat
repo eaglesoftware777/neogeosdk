@@ -5,12 +5,10 @@ REM #https://eaglesoftware.biz
 REM #https://github.com/eaglesoftware777
 REM #https://github.com/eaglesoftware777/neogeosdk
 REM #######
-REM NeoGeo SDK - Debug Launcher (Windows)
+REM NeoGeo SDK - Lua Console Launcher (Windows)
 REM Place neogeo.zip (BIOS) inside roms\ before running.
-REM Opens MAME with the built-in 68000 CPU debugger.
-REM
-REM NOTE: -console (Lua scripting console) conflicts with -debug (CPU debugger).
-REM       Use run_neogeosdk_lua.bat if you need the Lua console without -debug.
+REM Opens MAME with the Lua scripting console (interactive, no CPU debugger).
+REM Do NOT combine -console with -debug — they conflict.
 
 py "%~dp0hash_eagle\gen_hash.py"
 if errorlevel 1 goto :eof
@@ -21,6 +19,7 @@ mame neogeo -cart1 neogeosdk ^
     -bios unibios22 ^
     -window ^
     -pluginspath "C:\mame\plugins" ^
-    -verbose ^
-    -debug
+    -plugin console ^
+    -console ^
+    -verbose
 endlocal
