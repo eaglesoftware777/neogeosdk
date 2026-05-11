@@ -21,7 +21,12 @@ void NEOGEO_USER START_GAME(void);
 void NEOGEO_USER GAME_DISPATCH(void);
 void NEOGEO_USER showTitleMVS(void);
 void NEOGEO_USER showEyeCatcherMVS(void);
+void NEOGEO_USER showCharacterParade(void);
+void NEOGEO_USER showPseudo3DLoop(void);
+void NEOGEO_USER show3DRaycaster(void);
 void NEOGEO_USER showScreen106(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen108(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen109(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 
 //ZD_ENTRY interrupt subroutine
 NEOGEO_INTERRUPT void NEOGEO_USER ZD_ENTRY(void) {
@@ -271,13 +276,26 @@ void NEOGEO_USER TITLE(void) {
 }
 
 void  NEOGEO_USER showTitleMVS(void) {
+	int i;
 	clearFix();
 	clearSprs();
-	showScreen106(16, 24, 0xF, 0xAF, 16, 0xFFF, 0);
+	setBACKDROP(BLACK);
+	showScreen108(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
 	waitVbl();
-	fixtext_out(15, 25, "HIT START", 0);
-	while (!NEO_REGISTER8(NGO_START_FLAG) && NEO_REGISTER8(BIOS_USER_MODE) != 2) {
+	fixtext_out(14, 26, "HIT START", 0);
+	for (i = 0; i < 180; i++) {
 		waitVbl();
+		if (NEO_REGISTER8(NGO_START_FLAG) || NEO_REGISTER8(BIOS_USER_MODE) == 2)
+			break;
+	}
+	if (!NEO_REGISTER8(NGO_START_FLAG) && NEO_REGISTER8(BIOS_USER_MODE) != 2) {
+		clearSprs();
+		showScreen109(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
+		waitVbl();
+		fixtext_out(14, 26, "HIT START", 0);
+		while (!NEO_REGISTER8(NGO_START_FLAG) && NEO_REGISTER8(BIOS_USER_MODE) != 2) {
+			waitVbl();
+		}
 	}
 }
 
@@ -286,22 +304,33 @@ void  NEOGEO_USER showTitleAES(void) {
 	NEO_REGISTER8(NGO_START_FLAG) = 0;
 	clearFix();
 	clearSprs();
-	showScreen106(16, 24, 0xF, 0xAF, 16, 0xFFF, 0);
+	setBACKDROP(BLACK);
+	showScreen108(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
 	waitVbl();
-	fixtext_out(15, 25, "HIT START", 0);
+	fixtext_out(14, 26, "HIT START", 0);
 	soundPlayTitleMusic(0);
-	for (i = 0; i < 20; i++) {
-		if (NEO_REGISTER8(NGO_START_FLAG))
-			break;
-		/* On AES the BIOS may not call PLAYER_START during attract, so
-		   read the START button directly — bit 0 of BIOS_P1CHANGE. */
+	for (i = 0; i < 10; i++) {
+		if (NEO_REGISTER8(NGO_START_FLAG)) break;
 		if (NEO_REGISTER8(BIOS_P1CHANGE) & 0x01) {
 			NEO_REGISTER8(NGO_START_FLAG) = 1;
 			break;
 		}
 		cycle1s();
-		if (NEO_REGISTER8(NGO_START_FLAG))
-			break;
+		if (NEO_REGISTER8(NGO_START_FLAG)) break;
+	}
+	if (!NEO_REGISTER8(NGO_START_FLAG)) {
+		clearSprs();
+		showScreen109(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
+		waitVbl();
+		fixtext_out(14, 26, "HIT START", 0);
+		for (i = 0; i < 10; i++) {
+			if (NEO_REGISTER8(NGO_START_FLAG)) break;
+			if (NEO_REGISTER8(BIOS_P1CHANGE) & 0x01) {
+				NEO_REGISTER8(NGO_START_FLAG) = 1;
+				break;
+			}
+			cycle1s();
+		}
 	}
 	soundStopAll();
 }
@@ -343,55 +372,51 @@ void NEOGEO_USER INIT_GAME(void) {
 	ASM_END
 }
 
-// NeoGeo DEMO MODE
+/* Full SDK showcase attract loop — demonstrates all major engine features. */
 void NEOGEO_USER DEMO_GAME(void) {
-	uint16_t pal_tile0[16];
-	uint16_t pal_tile1[16];
-	uint16_t pal_tile2[16];
-	int p1c = 0;
-	int i = 0;
-
-	setpal(pal_tile0,BLACK,BLACK,0xFFF,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE,BLUE);
-	load_palettes(pal_tile0,PALETTES);
-	setpal(pal_tile1,BLACK,BLACK,RED,RED,RED,RED,RED,RED,RED,RED,RED,RED,RED,RED,RED,RED);
-	load_palettes(pal_tile1,PALETTES+PALOFFSET);
-	setpal(pal_tile2,BLACK,BLACK,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN,GREEN);
-	load_palettes(pal_tile2,PALETTES+PALOFFSET*2);
-	//waitVbl()	;
-	//showScreen9();
-	//cyclexs(3);
-	clearSprs();
 	clearFix();
-showEagleIntro();
-	waitVbl();
-	fixtext_out(15,10,"DEMO MODE",0);
-	fixtext_out(15,11,"EAGLE SOFTWARE",0);
-	fixtext_out(15,12,"HELLO WORLD",0x2);
-	fixtext_out(15,13,"NEO GEO SDK 1.2.1",0x2);
-	/*fixtext_out(15,11,"ABCDEFGHIJKLMNOP",0);
-	fixtext_out(15,12,"ABCDEFGHIJKLMNOP",0x1);
-	fixtext_out(15,13,"ABCDEFGHIJKLMNOP",0x2);*/
-	mess_outtest();
+	clearSprs();
+	soundSceneReset();
 
+	/* 1. Typewriter intro */
+	showEagleIntro();
+	if (NEO_REGISTER8(NGO_START_FLAG)) return;
+
+	/* 2. Title screens 108 + 109 with FIX text overlay */
+	clearFix();
+	clearSprs();
+	setBACKDROP(BLACK);
+	showScreen108(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
+	fixtext_out(2,  1, "EAGLE SOFTWARE  2026", 0);
+	fixtext_out(2,  2, "NEO GEO SDK", 1);
+	fixtext_out(2, 26, "INSERT COIN", 2);
 	soundPlayTitleMusic(0);
+	cyclexs(4);
+	if (NEO_REGISTER8(NGO_START_FLAG)) { soundStopAll(); return; }
 
-	p1c = read_p1credit();
-	display_digit(15,14,777,0,48);
-	fixtext_out(15,15,"P1C: ",0);
-	display_digit(20,15,p1c,0,48);
-	for (i = 0; i < 10; i++) {
-		if (NEO_REGISTER8(NGO_START_FLAG))
-			break;
-		fix_svalue1(27,8,i,0,48);
-		p1c = read_p1credit();
-		display_digit(15,14,777,0,48);
-		fixtext_out(15,15,"P1C: ",0);
-		display_digit(20,15,p1c,0,48);
-		cycle1s();
-		if (NEO_REGISTER8(NGO_START_FLAG))
-			break;
-	}
+	clearSprs();
+	showScreen109(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
+	fixtext_out(2, 26, "INSERT COIN", 2);
+	cyclexs(4);
 	soundStopAll();
+	if (NEO_REGISTER8(NGO_START_FLAG)) return;
+
+	/* 3. Eye-catcher animation (MVS only) */
+#ifndef NG_AES
+	showEyeCatcherMVS();
+	if (NEO_REGISTER8(NGO_START_FLAG)) return;
+#endif
+
+	/* 4. Character parade — sprite sheets walk across screen */
+	showCharacterParade();
+	if (NEO_REGISTER8(NGO_START_FLAG)) return;
+
+	/* 5. Pseudo-3D floor — Mode-7 hardware scaling trick */
+	showPseudo3DLoop();
+	if (NEO_REGISTER8(NGO_START_FLAG)) return;
+
+	/* 6. 3D DDA raycaster — software 3D on 68000 */
+	show3DRaycaster();
 }
 
 

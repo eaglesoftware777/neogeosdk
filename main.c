@@ -138,6 +138,10 @@ void NEOGEO_USER showScreen104(int x0, int y0, int xr, int yr, int min_crt_sz, u
 void NEOGEO_USER showScreen105(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 /* late-scene backdrop */
 void NEOGEO_USER showScreen106(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+/* title screens from artbox/in/titles/ */
+void NEOGEO_USER showScreen108(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen109(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER show3DRaycaster(void);
 int NEOGEO_USER playgame(void);
 
 typedef void (*SceneScreenFn)(int, int, int, int, int, uint16_t, uint16_t);
@@ -1725,6 +1729,12 @@ static void NEOGEO_USER demo_run_engine_scene(void)
         frame++;
     }
     soundStopAll();
+
+    /* Pseudo-3D floor perspective demo */
+    showPseudo3DLoop();
+
+    /* Software 3D DDA raycaster demo */
+    show3DRaycaster();
 }
 
 /*
@@ -1763,50 +1773,34 @@ void NEOGEO_USER showWalkDemo(int loops, int delay_ms) {
 
 /* Title screen — Eagle Soft logo with blinking INSERT COIN, auto-advances after 6 seconds. */
 void NEOGEO_USER showTitleScreen(void) {
+    int i;
     clearFix();
     clearSprs();
     soundSceneReset();
-	soundStopAll();
-    /*soundSetADPCMBVolume(0xB8);
-    soundSetADPCMAVolume(0x3F);
-    soundSetSSGVolume(0x00);*/
-/* setBACKDROP(BLACK);*/
-    /* Logo background — Eagle Soft brand screen */
-    showScreen10(16, 24, 0xF, 0xAF, 16, 0xFFF, 0);
-       playVoiceCue(SOUND_SFX_STRING_PHRASE);
+    soundStopAll();
+    setBACKDROP(BLACK);
+
+    /* Title image 1 — 8.png */
+    showScreen108(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
+    playVoiceCue(SOUND_SFX_STRING_PHRASE);
 
 
-    /* FIX text palettes: pal 0 = yellow text, 1 = white text, 2 = cyan text */
-    /*setpal(fix_pal, 0, WHITE, YELLOW, CYAN, GREEN, BLUE, ORANGE, MAGENTA,
-           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
-    load_palettes(fix_pal, PALETTES);
-    setpal(fix_pal, 0, WHITE, WHITE, CYAN, GREEN, BLUE, ORANGE, MAGENTA,
-           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
-    load_palettes(fix_pal, PALETTES+PALOFFSET);
-    setpal(fix_pal, 0, CYAN, CYAN, WHITE, GREEN, BLUE, ORANGE, MAGENTA,
-           WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE, WHITE);
-    load_palettes(fix_pal, PALETTES+PALOFFSET*2);*/
+    /* Hold title image 1 for ~3 seconds then cross-fade to image 2 */
+    cyclexs(3);
 
+    clearSprs();
+    showScreen109(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
+    playSFX(SOUND_SFX_LOW_DRUM);
 
-
-
-    /*playMusic(SOUND_MUSIC_SAMURAI_NIGHT_SCENE);*/
-
- /*   fixtext_out(12, 26, "EAGLE SOFTWARE  2026", 0);
-    fixtext_out(12, 28, "DEMO  V1.2", 1);*/
-
-    /* Blink INSERT COIN for 360 frames (6 seconds at 60fps) */
-   /* for (i = 0; i < 360; i++) {
+    /* Blink HIT START for 5 seconds */
+    for (i = 0; i < 300; i++) {
         waitVbl();
-        if (i % 60 < 30) {
-            fixtext_out(12, 30, "INSERT COIN", 2);
-        } else {
-            fixtext_out(12, 30, "           ", 2);
-        }
-    }*/
+        if (i % 60 < 30)
+            fixtext_out(14, 26, "PRESS START", 0);
+        else
+            fixtext_out(14, 26, "           ", 0);
+    }
 
-    //soundFadeOutSpeed(4);
-    cyclexms(300);
     soundStopAll();
     clearFix();
     clearSprs();
@@ -1830,6 +1824,164 @@ int NEOGEO_USER playgame(void) {
     showGameOver();
     return 0;
 }
+
+/* ---- 3D Software Raycaster (DDA) -----------------------------------------
+ * Shows a rotating first-person 3D corridor using Neo Geo sprite scaling.
+ * 16 columns, each a sprite strip scaled by 1/distance.  Map is 8x8 cells.
+ * Uses tiles 0-255 (background 0.png) and palette bank 16 for wall texture.
+ * Camera rotates in place at ~1.4°/frame; runs for ~12 seconds then exits.
+ * Sprite slots 0..15 used standalone (no engine characters active).
+ * --------------------------------------------------------------------------*/
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
+
+#define S3D_MAP_W    8
+#define S3D_MAP_H    8
+#define S3D_FP       6       /* fixed-point bits: 1.0 = 64 */
+#define S3D_ONE      64
+#define S3D_COLS     16
+#define S3D_TILES    14      /* tiles per column sprite = 14×16 = 224px max */
+#define S3D_MAXH     224
+#define S3D_SCRCY    112     /* screen centre Y */
+#define S3D_PROJ     2048    /* projection constant → wall_h = PROJ/dist */
+#define S3D_FOV      43      /* ≈60° in 256-unit circle space */
+
+static const int8_t s3d_sintab[256] = {
+       0,   2,   3,   5,   6,   8,   9,  11,  12,  14,  15,  17,  18,  20,  21,  23,
+      24,  26,  27,  28,  30,  31,  32,  34,  35,  36,  38,  39,  40,  41,  42,  43,
+      45,  46,  47,  48,  49,  50,  51,  52,  52,  53,  54,  55,  56,  56,  57,  58,
+      58,  59,  59,  60,  60,  61,  61,  61,  62,  62,  62,  63,  63,  63,  63,  63,
+      63,  63,  63,  63,  63,  63,  62,  62,  62,  61,  61,  61,  60,  60,  59,  59,
+      58,  58,  57,  56,  56,  55,  54,  53,  52,  52,  51,  50,  49,  48,  47,  46,
+      45,  43,  42,  41,  40,  39,  38,  36,  35,  34,  32,  31,  30,  28,  27,  26,
+      24,  23,  21,  20,  18,  17,  15,  14,  12,  11,   9,   8,   6,   5,   3,   2,
+       0,  -2,  -3,  -5,  -6,  -8,  -9, -11, -12, -14, -15, -17, -18, -20, -21, -23,
+     -24, -26, -27, -28, -30, -31, -32, -34, -35, -36, -38, -39, -40, -41, -42, -43,
+     -45, -46, -47, -48, -49, -50, -51, -52, -52, -53, -54, -55, -56, -56, -57, -58,
+     -58, -59, -59, -60, -60, -61, -61, -61, -62, -62, -62, -63, -63, -63, -63, -63,
+     -63, -63, -63, -63, -63, -63, -62, -62, -62, -61, -61, -61, -60, -60, -59, -59,
+     -58, -58, -57, -56, -56, -55, -54, -53, -52, -52, -51, -50, -49, -48, -47, -46,
+     -45, -43, -42, -41, -40, -39, -38, -36, -35, -34, -32, -31, -30, -28, -27, -26,
+     -24, -23, -21, -20, -18, -17, -15, -14, -12, -11,  -9,  -8,  -6,  -5,  -3,  -2
+};
+#define S3D_SIN(a)  s3d_sintab[(uint8_t)(a)]
+#define S3D_COS(a)  s3d_sintab[(uint8_t)((uint8_t)(a) + 64u)]
+
+static const uint8_t s3d_map[S3D_MAP_H][S3D_MAP_W] = {
+    {1,1,1,1,1,1,1,1},
+    {1,0,0,1,0,0,0,1},
+    {1,0,1,1,0,1,0,1},
+    {1,0,0,0,0,1,0,1},
+    {1,0,1,0,0,0,0,1},
+    {1,0,1,1,0,1,0,1},
+    {1,0,0,0,0,0,0,1},
+    {1,1,1,1,1,1,1,1},
+};
+
+/* DDA ray cast — returns approximate step count proportional to distance.
+ * Dominant axis advances 8 FP units per step (1/8 cell); 72 steps max.
+ * (cam_x, cam_y) in FP units where S3D_ONE = 1 map cell.
+ * (rdx, rdy) from sin table: range -63..+63.  Returns 1..72. */
+static uint8_t NEOGEO_USER s3d_cast(int16_t cam_x, int16_t cam_y,
+                                     int8_t rdx, int8_t rdy)
+{
+    int8_t  ax = rdx, ay = rdy, sx, sy;
+    int16_t rx = cam_x, ry = cam_y;
+    uint8_t i;
+
+    if (ax < 0) ax = -ax;
+    if (ay < 0) ay = -ay;
+
+    if (ax >= ay) {
+        sx = (rdx >= 0) ? 8 : -8;
+        sy = (rdx != 0) ? (int8_t)((int16_t)rdy * 8 / rdx) : 0;
+    } else {
+        sy = (rdy >= 0) ? 8 : -8;
+        sx = (rdy != 0) ? (int8_t)((int16_t)rdx * 8 / rdy) : 0;
+    }
+    if (!sx && rdx) sx = (rdx > 0) ? 1 : -1;
+    if (!sy && rdy) sy = (rdy > 0) ? 1 : -1;
+
+    for (i = 1; i < 72; i++) {
+        int8_t mx, my;
+        rx += sx;
+        ry += sy;
+        mx = (int8_t)((uint16_t)rx >> S3D_FP);
+        my = (int8_t)((uint16_t)ry >> S3D_FP);
+        if ((uint8_t)mx >= S3D_MAP_W || (uint8_t)my >= S3D_MAP_H) return i;
+        if (s3d_map[my][mx]) return i;
+    }
+    return 72;
+}
+
+void NEOGEO_USER show3DRaycaster(void)
+{
+    uint16_t s3d_tiles[S3D_TILES];
+    uint16_t s3d_attrs[S3D_TILES];
+    /* Camera starts at map cell (1,1) — corner pocket; rotates slowly */
+    int16_t  cam_x    = (1 << S3D_FP) + S3D_ONE / 2;  /* 1.5 cells FP */
+    int16_t  cam_y    = (1 << S3D_FP) + S3D_ONE / 2;
+    uint8_t  cam_a    = 0;
+    uint16_t frame;
+    uint8_t  col, t;
+
+    clearFix();
+    clearSprs();
+    /* Hide slots 0..S3D_COLS-1 cleanly before first frame */
+    for (col = 0; col < S3D_COLS; col++)
+        vram_SCB234((uint16_t)(SCB3_ADDR + col), 0u);
+
+    setBACKDROP(0x1007);  /* dark navy — corridor ceiling/floor backdrop */
+    fixtext_out(2, 1, "3D SOFTWARE RAYCASTER", 0);
+    fixtext_out(2, 2, "68000 DDA  SPRITE SCALE", 0);
+    fixtext_out(2, 4, "EAGLE SOFTWARE  2026", 0);
+
+    for (frame = 0; frame < (uint16_t)NG_MS_TO_FRAMES(12000); frame++) {
+        cam_a++;  /* ~1.4° per frame; full 360° in ~4.3 s */
+
+        for (col = 0; col < S3D_COLS; col++) {
+            int16_t fov_off = (int16_t)col * (int16_t)S3D_FOV / (int16_t)S3D_COLS
+                              - (int16_t)(S3D_FOV / 2);
+            uint8_t ray_a   = (uint8_t)((int16_t)cam_a + fov_off);
+            int8_t  rdx     = S3D_COS(ray_a);
+            int8_t  rdy     = S3D_SIN(ray_a);
+            uint8_t dist    = s3d_cast(cam_x, cam_y, rdx, rdy);
+
+            uint16_t wall_h = (uint16_t)(S3D_PROJ / (uint16_t)(dist > 0 ? dist : 1));
+            if (wall_h > S3D_MAXH) wall_h = S3D_MAXH;
+
+            uint8_t  yscale  = (uint8_t)((wall_h * 255u) / S3D_MAXH);
+            uint16_t vram_y  = (uint16_t)(384u + wall_h / 2u);
+
+            /* Tile texture: cycle through background tiles, column-offset */
+            uint16_t base_t  = (uint16_t)(((uint16_t)col * 16u
+                               + (frame >> 3u)) & 0xFFu);
+            /* Wall shading: near columns brighter palette bank */
+            uint8_t pal = (dist < 16) ? 16u : 17u;
+
+            for (t = 0; t < S3D_TILES; t++) {
+                s3d_tiles[t] = (uint16_t)((base_t + t) & 0xFFu);
+                s3d_attrs[t] = setSCB1_2(pal, 0, 0, 0, 0, 0);
+            }
+
+            vram_sprite(
+                (uint16_t)(col * 64u), 1u, (uint16_t)col,
+                s3d_tiles, s3d_attrs, (uint8_t)S3D_TILES,
+                setSCB2(0xFu, yscale),
+                setSCB3(vram_y, 0u, (uint16_t)S3D_TILES),
+                setSCB4((uint16_t)(col * 16u))
+            );
+        }
+        waitVbl();
+    }
+
+    for (col = 0; col < S3D_COLS; col++)
+        vram_SCB234((uint16_t)(SCB3_ADDR + col), 0u);
+    clearFix();
+    clearSprs();
+}
+
+#pragma GCC pop_options
 
 void NEOGEO_USER showGameOver(void) {
     soundStopAll();
