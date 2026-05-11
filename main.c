@@ -1802,28 +1802,87 @@ int NEOGEO_USER playgame(void) {
     return 0;
 }
 
-/* Sound demo: plays music, voice cues, and SFX in sequence with FIX labels. */
+/* Full YM2610 sound driver showcase: FM, SSG, ADPCM-A, ADPCM-B, full mix. */
 void NEOGEO_USER showSoundDemo(void) {
     clearFix();
     clearSprs();
     soundSceneReset();
-    fixtext_out(2, 1, "SOUND ENGINE DEMO", 0);
-    fixtext_out(2, 3, "ADPCM-A MUSIC", 1);
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
-    cyclexs(3);
+    fixtext_out(2, 1, "YM2610 SOUND DRIVER", 0);
 
-    fixtext_out(2, 5, "VOICE CUES", 2);
+    /* FM channels — OPN2 4-op FM synthesis */
+    fixtext_out(2, 3, "FM  ATTRACT FAST", 1);
+    soundSetFMVolume(0x0C);
+    soundSetSSGVolume(0x00);
+    soundSetADPCMAVolume(0x00);
+    soundSetADPCMBVolume(0x00);
+    playFMTrack(SOUND_FM_ATTRACT_FAST);
+    cyclexs(2);
+    fixtext_out(2, 4, "FM  DUEL SUSPENSE", 2);
+    soundStopMusic();
+    playFMTrack(SOUND_FM_DUEL_SUSPENSE);
+    cyclexs(2);
+    fixtext_out(2, 5, "FM  VICTORY JINGLE", 0);
+    soundStopMusic();
+    playFMTrack(SOUND_FM_VICTORY_JINGLE);
+    cyclexs(2);
+    soundStopAll();
+
+    /* SSG — AY-3-8910 3-voice PSG oscillators */
+    fixtext_out(2, 7, "SSG ARCADE ALERT", 1);
+    soundSetSSGVolume(0x0F);
+    soundSetFMVolume(0x00);
+    playSSGTrack(SOUND_SSG_ARCADE_ALERT);
+    soundSetSSGPreset(1);
+    cyclexs(2);
+    fixtext_out(2, 8, "SSG MENU LOOP", 2);
+    playSSGTrack(SOUND_SSG_MENU_LOOP);
+    cyclexs(2);
+    fixtext_out(2, 9, "SSG INSERT COIN", 0);
+    playSSGTrack(SOUND_SSG_INSERT_COIN);
+    soundSetSSGPreset(0);
+    cyclexs(2);
+    soundStopAll();
+
+    /* ADPCM-A — 6-channel 4-bit PCM samples */
+    clearFix();
+    clearSprs();
+    fixtext_out(2, 1, "YM2610 SOUND DRIVER", 0);
+    fixtext_out(2, 3, "ADPCM-A 6CH SAMPLES", 1);
+    soundSetADPCMAVolume(0x3F);
+    playSFX(SOUND_SFX_INTRO_TAIKO);    cyclexs(1);
+    playSFX(SOUND_SFX_TITLE_GONG);     cyclexms(600);
+    playSFX(SOUND_SFX_BLADE_WHOOSH);   cyclexms(400);
+    playSFX(SOUND_SFX_IMPACT_HIT);     cyclexms(400);
+    playSFX(SOUND_SFX_STRING_PHRASE);  cyclexms(700);
+    playSFX(SOUND_SFX_LOW_DRUM);       cyclexms(500);
+    playSFX(SOUND_SFX_COIN_CHIME);     cyclexms(500);
+    playSFX(SOUND_SFX_SHORT_SHOUT);    cyclexms(600);
+
+    /* ADPCM-B — 1-channel high-quality PCM bed + voice over */
+    fixtext_out(2, 5, "ADPCM-B MUSIC BED", 2);
+    soundSetADPCMBVolume(0xBC);
+    soundSetADPCMAVolume(0x3F);
+    playSFXB(SOUND_BED_STAGE_TWO);
+    cyclexms(500);
+    fixtext_out(2, 7, "VOICE CUE  GET READY", 0);
     playVoiceCue(SOUND_VOICE_GET_READY);
     cyclexs(2);
+    fixtext_out(2, 9, "VOICE CUE  ATTACK", 1);
     playVoiceCue(SOUND_VOICE_ATTACK);
     cyclexs(2);
 
-    fixtext_out(2, 7, "SFX: BLADE + IMPACT", 0);
+    /* Full mix — all channels simultaneously */
+    fixtext_out(2, 11, "FULL MIX ALL CHANNELS", 2);
+    soundApplyMix(0x30, 0xB8, 0x08, 0x08);
+    playFMTrack(SOUND_FM_BASS_MOTIF);
+    playSSGTrack(SOUND_SSG_INSERT_COIN);
+    soundSetSSGPreset(1);
+    cyclexms(500);
     playSFX(SOUND_SFX_BLADE_WHOOSH);
-    cyclexs(1);
-    playSFX(SOUND_SFX_IMPACT_HIT);
-    cyclexs(1);
+    cyclexs(3);
 
+    soundFadeOutSpeed(8);
+    cyclexs(2);
     soundStopAll();
     clearFix();
     clearSprs();
@@ -2096,11 +2155,11 @@ for (i = 0; i < 18; i++) {
     cyclexms(35);
 }
 
-    /* Eagle Soft logo */
+    /* Eagle Soft title reveal */
     clearFix();
     clearSprs();
     playSFX(SOUND_SFX_TITLE_GONG);
-    showScreen106(16, 24, 0xF, 0xAF, 16, 0xFFF, 0);
+    showScreen108(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
     cycle1s();
     playSFX(SOUND_SFX_LOW_DRUM);
     cycle1s();
@@ -2238,7 +2297,7 @@ uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
 uint16_t  SCB4    = 0x0;
 uint16_t  pal1[16];
-setpal(pal1,0x0,0x5459,0x7122,0x5642,0x5012,0x2d74,0x5968,0x7000,0x5452,0x4773,0x4322,0x5124,0x5232,0x6434,0x3953,0xdb4);
+setpal(pal1,0x0,0x7113,0x7fff,0x5451,0x4231,0x7001,0x1871,0x0,0x1310,0x7747,0x753,0x5448,0x1121,0x433,0x4b53,0x7d92);
 uint16_t spriteMapS1_1[16] = {0x0,0x10,0x20,0x30,0x40,0x50,0x60,0x70,0x80,0x90,0xa0,0xb0,0xc0,0xd0,0xe0,0xf0};
 uint16_t spriteMapS1_2[16] = {0x1,0x11,0x21,0x31,0x41,0x51,0x61,0x71,0x81,0x91,0xa1,0xb1,0xc1,0xd1,0xe1,0xf1};
 uint16_t spriteMapS1_3[16] = {0x2,0x12,0x22,0x32,0x42,0x52,0x62,0x72,0x82,0x92,0xa2,0xb2,0xc2,0xd2,0xe2,0xf2};
