@@ -125,7 +125,9 @@ void NEOGEO_USER PLAYER_START (void) {
 	register short P4 = 0;
 	start_flag = NEO_REGISTER8(BIOS_START_FLAG) ;
 	country_code = NEO_REGISTER8(BIOS_COUNTRY_CODE);
+#ifndef NG_AES
 	CALLNEOGEOF(SYS_CREDIT_CHECK);
+#endif
 	P1=(start_flag >> 0) & 1;
 	P2=(start_flag >> 1) & 1;
 	P3=(start_flag >> 2) & 1;
@@ -171,19 +173,28 @@ void NEOGEO_USER PLAYER_START (void) {
 		start_flag |= 1 << 3;
 	}
 	NEO_REGISTER8(BIOS_START_FLAG) = start_flag;
-	//NEO_REGISTER8(BIOS_USER_MODE) = 0x2 //keep user mode game
+#ifndef NG_AES
 	CALLNEOGEOF(SYS_CREDIT_CHECK);
 	CALLNEOGEOF(SYS_CREDIT_DOWN);
-	CALLNEOGEOF(SYS_RETURN);
+#endif
+	ASM_START
+	ASM_JMP(SYS_RETURN)
+	:
+	:
+	:
+	ASM_END
 }
 
 // NeoGeo DEMO_END handler
 void NEOGEO_USER DEMO_END (void) {
 
 	//only MVS
-	int i =0;
-	i++;
-	i++;
+	ASM_START
+	ASM_JMP(SYS_RETURN)
+	:
+	:
+	:
+	ASM_END
 }
 
 /* NeoGeo COIN_SOUND handler */
@@ -196,10 +207,12 @@ void NEOGEO_USER COIN_SOUND (void) {
 	isZ80Ready();
 	playSFX(SOUND_SFX_COIN_CHIME);
 	cyclexms(12);
-	
-	int i =0;
-	i++;
-	i++;
+	ASM_START
+	ASM_JMP(SYS_RETURN)
+	:
+	:
+	:
+	ASM_END
 }
 
 // NeoGeo POWER_ON handler
@@ -272,8 +285,7 @@ void NEOGEO_USER TITLE(void) {
 	ASM_BSETB(#7,BIOS_SYSTEM_MODE) //  game mode
 	ASM_JSR(INIT_GAME)
 	ASM_JSR(showTitleMVS)
-	ASM_MVB(#0x02,BIOS_USER_MODE) //user_request = 2
-	ASM_JMP(START_GAME)
+	ASM_JMP(SYS_RETURN)
 	:
 	:
 	:
@@ -308,9 +320,7 @@ void  NEOGEO_USER showTitleMVS(void) {
 	}
 	soundStopAll();
 	p1c = read_p1credit();
-	if (p1c == 0) {
-		CALLNEOGEOF(GAME);
-	}
+	(void)p1c;
 }
 
 void  NEOGEO_USER showTitleAES(void) {
@@ -432,7 +442,6 @@ void NEOGEO_USER START_GAME(void) {
 	fixtext_out(15,10,"LOADING   ...",0);
 	cyclexs(2);
 	maingame();
-	CALLNEOGEOF(GAME);
 }
 
 

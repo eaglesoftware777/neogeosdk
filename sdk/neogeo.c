@@ -220,7 +220,7 @@ uint32_t * IVT[] __attribute__ ((section ("neogeo_ivt"))) = {
 uint8_t neogeo_str[] __attribute__ ((section ("neogeo_init"))) = { 0x4e, 0x45, 0x4f, 0x2d, 0x47, 0x45, 0x4f };
 uint8_t zerobyte __attribute__ ((section ("neogeo_init"))) = 0x00;
 /*asm ("\t    .org 0x108 \t\n");*/
-uint16_t id __attribute__ ((section ("neogeo_init"))) = 				0x555;  //0x52
+uint16_t id __attribute__ ((section ("neogeo_init"))) = 				0x0777;  //0x52
 uint32_t psize  __attribute__ ((section ("neogeo_init"))) = 			0x80000;
 uint32_t pbcks __attribute__ ((section ("neogeo_init"))) = 			0x108000;
 uint16_t dipsize  __attribute__ ((section ("neogeo_init"))) = 			0x1000;

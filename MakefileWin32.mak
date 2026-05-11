@@ -12,7 +12,7 @@ M68K_ELF_BIN=$(M68K_ELF_ROOT)\bin
 REPO_WIN=$(subst /,\,$(CURDIR))
 
 CC=$(M68K_ELF_BIN)\m68k-elf-gcc.exe
-CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -Isdk -Isdk/2d_engine -Wa,-march=68000,-mcpu=68000,-W,--warn
+CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -Isdk -Isdk/2d_engine -Wa,-march=68000,-mcpu=68000,-W,--warn
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
 LD=$(M68K_ELF_BIN)\m68k-elf-ld.exe
 LDFLAGS=  -nostartfiles -nostdlib
@@ -46,6 +46,9 @@ NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_ti
 ifeq ($(DEBUG),1)
 CFLAGS += -g3 -gdwarf-2 -DNG_DEBUG=1
 LDFLAGS += -Map=out\game.map
+STRIP_SECTS:=-R .comment
+else
+STRIP_SECTS:=-R .comment -R .text -R .data -R .bss
 endif
 
 HASHPATH?=$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
@@ -81,10 +84,10 @@ game:
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_physics.c -o out\ng_physics0.o
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_border_constraints.c -o out\ng_border_constraints0.o
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_game_interupt.c -o out\ng_game_interupt0.o
-	$(OBJCP) -R .comment -R .text -R .data -R .bss out\neogeo0.o out\neogeo.o
-	$(OBJCP) -R .comment -R .text -R .data -R .bss out\user0.o out\user.o
-	$(OBJCP) -R .comment -R .text -R .data -R .bss out\main0.o out\main.o
-	$(OBJCP) -R .comment -R .text -R .data -R .bss out\neogeolib0.o out\neogeolib.o
+	$(OBJCP) $(STRIP_SECTS) out\neogeo0.o out\neogeo.o
+	$(OBJCP) $(STRIP_SECTS) out\user0.o out\user.o
+	$(OBJCP) $(STRIP_SECTS) out\main0.o out\main.o
+	$(OBJCP) $(STRIP_SECTS) out\neogeolib0.o out\neogeolib.o
 	$(LD) $(LDFLAGS) -T sdk\neogeo_win.ld -o out\game out\neogeo.o out\user.o out\main.o out\neogeolib.o $(NG_ENGINE_OBJ0)
 
 777-p1.p1: game
@@ -254,10 +257,12 @@ debug-aes:
 	$(MAKE) -f MakefileWin32.mak debug BIOS=unibios22
 
 .PHONY: mame-trace
-mame-trace: debug-build
+mame-trace: p1
 	if not exist dump mkdir dump
 	$(PY) hash_eagle\gen_hash.py
 	copy /Y out\777-p1.p1 roms\neogeosdk\777-p1.p1
+	$(NM) -n out\game > dump\game.sym
+	$(OBJDUMP) -Dht out\game > dump\game.debug.dump
 	$(MAME_COMMON) -verbose -debug -debugscript dump\mame_trace.mds
 	@echo Trace: dump\m68k_trace.txt  ^|  Symbols: dump\game.sym  ^|  Disasm: dump\game.debug.dump
 
