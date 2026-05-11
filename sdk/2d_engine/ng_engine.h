@@ -10,6 +10,8 @@
 #include "ng_status.h"
 #include "ng_game_events.h"
 #include "ng_level.h"
+#include "ng_sprite_pool.h"
+#include "ng_bg.h"
 #include "ng_fix.h"
 #include "ng_sprite_group.h"
 #include "ng_chars.h"

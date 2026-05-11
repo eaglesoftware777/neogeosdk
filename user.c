@@ -20,7 +20,8 @@ void NEOGEO_USER GAME_ATTRACT(void);
 void NEOGEO_USER START_GAME(void);
 void NEOGEO_USER GAME_DISPATCH(void);
 void NEOGEO_USER showTitleMVS(void);
-void NEOGEO_USER showScreen9(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showEyeCatcherMVS(void);
+void NEOGEO_USER showScreen106(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 
 //ZD_ENTRY interrupt subroutine
 NEOGEO_INTERRUPT void NEOGEO_USER ZD_ENTRY(void) {
@@ -193,6 +194,8 @@ void  NEOGEO_USER EYE_CATCHER (void) {
 
 #ifdef NG_AES
 	showEagleIntro();
+#else
+	showEyeCatcherMVS();
 #endif
 }
 
@@ -270,7 +273,7 @@ void NEOGEO_USER TITLE(void) {
 void  NEOGEO_USER showTitleMVS(void) {
 	clearFix();
 	clearSprs();
-	showScreen9(16, 24, 0xF, 0xAF, 16, 0xFFF, 0);
+	showScreen106(16, 24, 0xF, 0xAF, 16, 0xFFF, 0);
 	waitVbl();
 	fixtext_out(15, 25, "HIT START", 0);
 	while (!NEO_REGISTER8(NGO_START_FLAG) && NEO_REGISTER8(BIOS_USER_MODE) != 2) {
@@ -283,7 +286,7 @@ void  NEOGEO_USER showTitleAES(void) {
 	NEO_REGISTER8(NGO_START_FLAG) = 0;
 	clearFix();
 	clearSprs();
-	showScreen9(16, 24, 0xF, 0xAF, 16, 0xFFF, 0);
+	showScreen106(16, 24, 0xF, 0xAF, 16, 0xFFF, 0);
 	waitVbl();
 	fixtext_out(15, 25, "HIT START", 0);
 	soundPlayTitleMusic(0);

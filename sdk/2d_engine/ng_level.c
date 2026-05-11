@@ -1,4 +1,5 @@
 #include "ng_level.h"
+#include "ng_bg.h"
 #include "ng_properties.h"
 #include "neogeo.h"
 
@@ -57,6 +58,9 @@ void NEOGEO_USER ng_level_set_background(uint16_t screen_id)
 {
     ng_level_state.background_screen = screen_id;
     ng_prop_set(NG_PROP_GROUP_LEVEL, NG_PROP_LEVEL_BG_SCREEN, screen_id);
+    /* Wire directly into the background renderer at layer 0.
+     * Parallax = 0 (fixed) by default; caller can call ng_bg_set() for custom params. */
+    ng_bg_set_by_id(NG_BG_LAYER0, screen_id, 0, 0);
 }
 
 void NEOGEO_USER ng_level_set_overlay(uint16_t screen_id)

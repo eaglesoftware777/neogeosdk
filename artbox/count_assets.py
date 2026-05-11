@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-
 import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from asset_rules import build_asset_specs
 
 
 def main():
-    files = sorted(f for f in os.listdir("in") if f.lower().endswith(".png"))
-    print(len(files))
+    specs = build_asset_specs("in")
+    print(len(specs))
 
 
 if __name__ == "__main__":

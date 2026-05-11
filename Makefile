@@ -29,7 +29,7 @@ SCAT=srec_cat
 INFO=xxd -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
-NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt
+NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_bg ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt
 NG_ENGINE_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(NG_ENGINE_NAMES)))
 
 ifeq ($(DEBUG),1)
@@ -93,6 +93,7 @@ game:
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_status.c -o out/ng_status0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_game_events.c -o out/ng_game_events0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_level.c -o out/ng_level0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_bg.c -o out/ng_bg0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_fix.c -o out/ng_fix0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_sprite_group.c -o out/ng_sprite_group0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_actions.c -o out/ng_actions0.o
@@ -101,11 +102,13 @@ game:
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_physics.c -o out/ng_physics0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_border_constraints.c -o out/ng_border_constraints0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_game_interupt.c -o out/ng_game_interupt0.o
+	$(CC) $(CFLAGS)   eyecatcher.c -o out/eyecatcher0.o
 	$(OBJCP) $(STRIP_SECTS) out/neogeo0.o   out/neogeo.o
 	$(OBJCP) $(STRIP_SECTS) out/user0.o    out/user.o
 	$(OBJCP) $(STRIP_SECTS) out/main0.o    out/main.o
 	$(OBJCP) $(STRIP_SECTS) out/neogeolib0.o    out/neogeolib.o
-	$(LD) $(LDFLAGS)    -T sdk/neogeo.ld -o  out/game   out/neogeo.o   out/user.o out/main.o out/neogeolib.o $(NG_ENGINE_OBJ0)
+	$(OBJCP) $(STRIP_SECTS) out/eyecatcher0.o   out/eyecatcher.o
+	$(LD) $(LDFLAGS)    -T sdk/neogeo.ld -o  out/game   out/neogeo.o   out/user.o out/main.o out/neogeolib.o out/eyecatcher.o $(NG_ENGINE_OBJ0)
 	
 777-p1.p1: game
 	$(OBJCP)   -O ihex    out/game out/game0

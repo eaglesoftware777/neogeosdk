@@ -113,6 +113,9 @@ for pal_index in range(image_number):
             
                 
 snumber = len(lsprts)
+if snumber == 0:
+    print("/* genmapdb: map file empty, no sprite maps to emit */")
+    sys.exit(0)
 scnumber = len(lsprts[0])
 counter0 = 0
 counter1 = 0
