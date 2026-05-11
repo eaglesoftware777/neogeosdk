@@ -222,6 +222,14 @@ debug:
 debug-aes:
 	$(MAKE) debug BIOS=unibios22
 
+.PHONY: mame-trace
+mame-trace: debug-build
+	mkdir -p dump
+	python3 hash_eagle/gen_hash.py
+	cp out/777-p1.p1 roms/neogeosdk/
+	$(MAME_COMMON) -verbose -debug -debugscript dump/mame_trace.mds
+	@echo "Trace: dump/m68k_trace.txt  |  Symbols: dump/game.sym  |  Disasm: dump/game.debug.dump"
+
 .PHONY: debug-build
 debug-build:
 	$(MAKE) DEBUG=1 p1
