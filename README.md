@@ -7,43 +7,6 @@ Neo Geo development SDK for SNK hardware.
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 
-## Quick Start
-
-Build the MVS program ROM and launch in MAME (default BIOS: EUROPE MVS):
-
-```bash
-# Linux / WSL
-make test
-
-# Windows
-nmake /f MakefileWin32.mak test
-```
-
-Test with a specific BIOS:
-
-```bash
-# Linux / WSL
-make test BIOS=euro
-make test BIOS=unibios40
-make test BIOS=japan
-
-# Windows
-nmake /f MakefileWin32.mak test BIOS=euro
-```
-
-List all supported BIOS names:
-
-```bash
-make bios-list
-# Windows: nmake /f MakefileWin32.mak bios-list
-```
-
-Build AES cartridge ROM instead:
-
-```bash
-make test-aes
-# Windows: nmake /f MakefileWin32.mak test-aes
-```
 
 A hardware-centered SDK for Neo Geo arcade and home systems, with direct 68000-side control over VRAM, palettes, sprites, DMA, FIX tiles, and a custom YM2610 sound stack driven by a Z80 sound driver.
 
@@ -122,6 +85,46 @@ Five tabs: FM patch editor (4-operator, all parameters), MML composer with piano
 ```bash
 pip install PyQt6 numpy scipy
 ```
+
+
+## Quick Start
+
+Build the MVS program ROM and launch in MAME (default BIOS: EUROPE MVS):
+
+```bash
+# Linux / WSL
+make test
+
+# Windows
+nmake /f MakefileWin32.mak test
+```
+
+Test with a specific BIOS:
+
+```bash
+# Linux / WSL
+make test BIOS=euro
+make test BIOS=unibios40
+make test BIOS=japan
+
+# Windows
+nmake /f MakefileWin32.mak test BIOS=euro
+```
+
+List all supported BIOS names:
+
+```bash
+make bios-list
+# Windows: nmake /f MakefileWin32.mak bios-list
+```
+
+Build AES cartridge ROM instead:
+
+```bash
+make test-aes
+# Windows: nmake /f MakefileWin32.mak test-aes
+```
+
 
 ## Running the ROM in MAME
 
