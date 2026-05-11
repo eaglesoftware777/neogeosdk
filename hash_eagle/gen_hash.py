@@ -114,6 +114,8 @@ def build_dist():
     # Dist launchers — no gen_hash.py call, standalone for end users
     _write_dist_bat(dist_dir, debug=False)
     _write_dist_bat(dist_dir, debug=True)
+    _write_dist_sh(dist_dir, debug=False)
+    _write_dist_sh(dist_dir, debug=True)
     print(f"Dist ready: {dist_dir}")
 
 def _write_dist_bat(dist_dir, debug):
@@ -137,6 +139,30 @@ endlocal
     path = os.path.join(dist_dir, name)
     with open(path, "w", newline="\r\n") as f:
         f.write(content)
+    print(f"Written {path}")
+
+def _write_dist_sh(dist_dir, debug):
+    name = "run_neogeosdk_debug.sh" if debug else "run_neogeosdk.sh"
+    extra = " \\\n    -debug" if debug else ""
+    content = f"""\
+#!/bin/bash
+# NeoGeo SDK - {'Debug ' if debug else ''}Release Launcher (Linux)
+# Place neogeo.zip (BIOS) inside roms/ before running.
+# Correct launch: mame neogeo -cart1 neogeosdk  (NOT mame neogeosdk)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+exec mame neogeo \\
+    -cart1 neogeosdk \\
+    -rompath "$SCRIPT_DIR/roms" \\
+    -hashpath "$SCRIPT_DIR/hash_eagle:$SCRIPT_DIR/hash" \\
+    -bios unibios22 \\
+    -window \\
+    -console \\
+    -verbose{extra}
+"""
+    path = os.path.join(dist_dir, name)
+    with open(path, "w", newline="\n") as f:
+        f.write(content)
+    os.chmod(path, 0o755)
     print(f"Written {path}")
 
 def main():
