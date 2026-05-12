@@ -33,6 +33,7 @@ NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_stat
 NG_ENGINE_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(NG_ENGINE_NAMES)))
 DEMO_NAMES=demo demo_screen demo_sound demo_3d demo_2d_engine
 DEMO_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(DEMO_NAMES)))
+NG_FIX_SDK_OBJ0=out/ng_fix_sdk0.o
 
 ifeq ($(DEBUG),1)
 CFLAGS += -g3 -gdwarf-2 -DNG_DEBUG=1
@@ -87,6 +88,7 @@ game:
 	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS)   user.c -o out/user0.o
 	$(CC) $(CFLAGS)   main.c -o out/main0.o
 	$(CC) $(CFLAGS)   sdk/neogeolib.c -o out/neogeolib0.o
+	$(CC) $(CFLAGS)   sdk/ng_fix/ng_fix.c -o out/ng_fix_sdk0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_defs.c -o out/ng_defs0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_properties.c -o out/ng_properties0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_game_time.c -o out/ng_game_time0.o
@@ -115,7 +117,7 @@ game:
 	$(OBJCP) $(STRIP_SECTS) out/main0.o    out/main.o
 	$(OBJCP) $(STRIP_SECTS) out/neogeolib0.o    out/neogeolib.o
 	$(OBJCP) $(STRIP_SECTS) out/eyecatcher0.o   out/eyecatcher.o
-	$(LD) $(LDFLAGS)    -T sdk/neogeo.ld -o  out/game   out/neogeo.o   out/user.o out/main.o out/neogeolib.o out/eyecatcher.o $(NG_ENGINE_OBJ0) $(DEMO_OBJ0)
+	$(LD) $(LDFLAGS)    -T sdk/neogeo.ld -o  out/game   out/neogeo.o   out/user.o out/main.o out/neogeolib.o out/eyecatcher.o $(NG_FIX_SDK_OBJ0) $(NG_ENGINE_OBJ0) $(DEMO_OBJ0)
 	
 777-p1.p1: game
 	$(OBJCP)   -O ihex    out/game out/game0
