@@ -7,7 +7,7 @@ ifndef SDKHOME
 SDKHOME := $(abspath $(CURDIR)/..)
 endif
 CC=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gcc
-CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -Isdk -Isdk/2d_engine -Wa,-march=68000,-mcpu=68000,-W,--warn
+CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Wa,-march=68000,-mcpu=68000,-W,--warn
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
 LD=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-ld
 LDFLAGS=  -nostartfiles -nostdlib
@@ -31,6 +31,8 @@ SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
 NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_bg ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt
 NG_ENGINE_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(NG_ENGINE_NAMES)))
+DEMO_NAMES=demo demo_screen demo_sound demo_3d demo_2d_engine
+DEMO_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(DEMO_NAMES)))
 
 ifeq ($(DEBUG),1)
 CFLAGS += -g3 -gdwarf-2 -DNG_DEBUG=1
@@ -102,13 +104,18 @@ game:
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_physics.c -o out/ng_physics0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_border_constraints.c -o out/ng_border_constraints0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_game_interupt.c -o out/ng_game_interupt0.o
+	$(CC) $(CFLAGS)   demo/demo.c -o out/demo0.o
+	$(CC) $(CFLAGS)   demo/demo_screen.c -o out/demo_screen0.o
+	$(CC) $(CFLAGS)   demo/demo_sound.c -o out/demo_sound0.o
+	$(CC) $(CFLAGS)   demo/demo_3d.c -o out/demo_3d0.o
+	$(CC) $(CFLAGS)   demo/demo_2d_engine.c -o out/demo_2d_engine0.o
 	$(CC) $(CFLAGS)   eyecatcher.c -o out/eyecatcher0.o
 	$(OBJCP) $(STRIP_SECTS) out/neogeo0.o   out/neogeo.o
 	$(OBJCP) $(STRIP_SECTS) out/user0.o    out/user.o
 	$(OBJCP) $(STRIP_SECTS) out/main0.o    out/main.o
 	$(OBJCP) $(STRIP_SECTS) out/neogeolib0.o    out/neogeolib.o
 	$(OBJCP) $(STRIP_SECTS) out/eyecatcher0.o   out/eyecatcher.o
-	$(LD) $(LDFLAGS)    -T sdk/neogeo.ld -o  out/game   out/neogeo.o   out/user.o out/main.o out/neogeolib.o out/eyecatcher.o $(NG_ENGINE_OBJ0)
+	$(LD) $(LDFLAGS)    -T sdk/neogeo.ld -o  out/game   out/neogeo.o   out/user.o out/main.o out/neogeolib.o out/eyecatcher.o $(NG_ENGINE_OBJ0) $(DEMO_OBJ0)
 	
 777-p1.p1: game
 	$(OBJCP)   -O ihex    out/game out/game0

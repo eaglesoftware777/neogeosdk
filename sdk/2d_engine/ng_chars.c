@@ -69,6 +69,8 @@ NGCharacter* NEOGEO_USER chars_add(uint8_t kind, int16_t x, int16_t y)
             c->flip_x = 0;
             c->flip_y = 0;
             c->sprite_dirty = 1;
+            c->priority_band = NG_RENDER_BAND_PLAYER;
+            c->depth_offset = 0;
             c->sprite_offset_x = 0;
             c->sprite_offset_y = 0;
             ng_char_uploaded_strips[i] = 0;
@@ -199,28 +201,78 @@ void NEOGEO_USER ng_chars_update(void)
     }
 }
 
+static uint8_t NEOGEO_USER ng_char_render_visible(NGCharacter *c, int16_t camera_x, int16_t camera_y)
+{
+    int16_t sx;
+    int16_t sy;
+    int16_t w;
+    int16_t h;
+    uint8_t strips;
+    uint8_t rows;
+
+    if (!c) return 0;
+    if (!c->active || !c->visible || c->sprite_first == 0xffff) return 0;
+
+    strips = c->sprite_strips ? c->sprite_strips : 1;
+    rows = c->sprite_active_rows ? c->sprite_active_rows : c->sprite_height;
+    if (!rows) rows = 1;
+
+    sx = (int16_t)(c->x + c->sprite_offset_x - camera_x);
+    sy = (int16_t)(c->y + c->sprite_offset_y - camera_y);
+    w = (int16_t)(strips * 16);
+    h = (int16_t)(rows * 16);
+
+    if (sx < (int16_t)(NG_SPRITE_CULL_LEFT - w)) return 0;
+    if (sx > NG_SPRITE_CULL_RIGHT) return 0;
+    if (sy < (int16_t)(NG_SPRITE_CULL_TOP - h)) return 0;
+    if (sy > NG_SPRITE_CULL_BOTTOM) return 0;
+
+    return 1;
+}
+
+static int16_t NEOGEO_USER ng_char_sort_y(NGCharacter *c)
+{
+    return (int16_t)(c->y + c->depth_offset);
+}
+
+static uint8_t NEOGEO_USER ng_char_draws_before(NGCharacter *a, NGCharacter *b)
+{
+    int16_t ay;
+    int16_t by;
+
+    if (a->priority_band != b->priority_band) {
+        return (uint8_t)(a->priority_band > b->priority_band);
+    }
+
+    ay = ng_char_sort_y(a);
+    by = ng_char_sort_y(b);
+
+    /* Higher Y is closer to the viewer in brawler/adventure scenes. */
+    return (uint8_t)(ay > by);
+}
+
 /*
- * Y-depth sort: build an order[] of active visible character indices, sorted
- * by Y descending (highest Y = closest to viewer = lowest slot number = drawn
- * in front).  Returns the count of entries placed in order[].
- * Invisible chars are NOT included; they are hidden separately.
+ * Priority/depth sort: build an order[] of active visible character indices.
+ * Higher priority bands are placed first and therefore receive lower hardware
+ * sprite slots, which are displayed in front.  Inside one band, characters are
+ * sorted by Y descending.  Invisible/offscreen chars are hidden separately.
  */
-static uint8_t NEOGEO_USER ng_chars_depth_sort(uint8_t *order)
+static uint8_t NEOGEO_USER ng_chars_depth_sort(uint8_t *order, int16_t camera_x, int16_t camera_y)
 {
     uint8_t i, j, count = 0;
     uint8_t tmp;
 
     for (i = 0; i < NG_MAX_CHARS; i++) {
         NGCharacter *c = &ng_chars[i];
-        if (c->active && c->visible && c->sprite_first != 0xffff)
+        if (ng_char_render_visible(c, camera_x, camera_y))
             order[count++] = i;
     }
 
-    /* Insertion sort by Y descending */
+    /* Insertion sort by render band, then Y descending. */
     for (i = 1; i < count; i++) {
         tmp = order[i];
         j = i;
-        while (j > 0 && ng_chars[order[j-1]].y < ng_chars[tmp].y) {
+        while (j > 0 && !ng_char_draws_before(&ng_chars[order[j-1]], &ng_chars[tmp])) {
             order[j] = order[j-1];
             j--;
         }
@@ -240,22 +292,24 @@ void NEOGEO_USER ng_chars_draw(void)
     int16_t camera_x = level ? level->scroll_x : 0;
     int16_t camera_y = level ? level->scroll_y : 0;
 
-    /* Hide invisible / inactive chars that still have a VRAM slot booked. */
+    /* Hide inactive, invisible or offscreen chars that still have a VRAM slot booked. */
     for (i = 0; i < NG_MAX_CHARS; i++) {
         NGCharacter *c = &ng_chars[i];
-        if (!c->active || !c->visible || c->sprite_first == 0xffff) {
+        uint8_t should_draw = ng_char_render_visible(c, camera_x, camera_y);
+
+        if (!should_draw) {
             if (ng_char_uploaded_first[i] != 0xffff) {
                 ng_sprite_hide_range(ng_char_uploaded_first[i], ng_char_uploaded_strips[i]);
                 ng_char_uploaded_strips[i] = 0;
                 ng_char_uploaded_first[i] = 0xffff;
             }
-            if (c->active && !c->visible)
+            if (c->active && c->visible)
                 c->sprite_dirty = 1;
         }
     }
 
-    /* Build Y-sorted draw order for active visible chars. */
-    count = ng_chars_depth_sort(order);
+    /* Build sorted draw order for active visible on-screen chars. */
+    count = ng_chars_depth_sort(order, camera_x, camera_y);
 
     /*
      * Phase 1 – recompute hardware slot assignments based on sort order.
@@ -399,6 +453,27 @@ void NEOGEO_USER ng_char_set_speed(NGCharacter *c, int16_t vx_px, int16_t vy_px)
     if (!c) return;
     c->vx_fp = NG_TO_FP(vx_px);
     c->vy_fp = NG_TO_FP(vy_px);
+}
+
+void NEOGEO_USER ng_char_set_speed_fp(NGCharacter *c, int32_t vx_fp, int32_t vy_fp)
+{
+    if (!c) return;
+    c->vx_fp = vx_fp;
+    c->vy_fp = vy_fp;
+}
+
+void NEOGEO_USER ng_char_add_speed_fp(NGCharacter *c, int32_t ax_fp, int32_t ay_fp)
+{
+    if (!c) return;
+    c->vx_fp += ax_fp;
+    c->vy_fp += ay_fp;
+}
+
+void NEOGEO_USER ng_char_set_priority(NGCharacter *c, uint8_t priority_band, int16_t depth_offset)
+{
+    if (!c) return;
+    c->priority_band = priority_band;
+    c->depth_offset = depth_offset;
 }
 
 void NEOGEO_USER ng_char_damage(NGCharacter *c, uint8_t amount)

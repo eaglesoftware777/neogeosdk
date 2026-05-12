@@ -264,9 +264,11 @@ void NEOGEO_USER ng_sprite_group_update_transform(NGSpriteGroup *g)
         /*
          * Sticky group movement: bit 6 (0x40) of SCB3 is the chain bit.
          * Horizontal reduction (SCB2) must match driver for consistent width.
+         * The driver owns Y, height and vertical shrink; chained strips should
+         * keep SCB3 as the sticky bit only, matching ng_sprite_group_upload().
          */
         vram_SCB234((uint16_t)(SCB2_ADDR + spriteIndex), scb2);
-        vram_SCB234((uint16_t)(SCB3_ADDR + spriteIndex), 0x0040 | activeRows);
+        vram_SCB234((uint16_t)(SCB3_ADDR + spriteIndex), 0x0040);
     }
 }
 

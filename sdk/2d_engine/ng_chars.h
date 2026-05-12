@@ -15,6 +15,10 @@ typedef struct NGCharacter NGCharacter;
 
 typedef void(*NGCharInterupt)(NGCharacter *c);
 
+/*
+ * Render priority bands.  Lower hardware sprite slots draw in front on Neo Geo,
+ * so the character renderer packs higher-priority bands first, then sorts by Y.
+ */
 struct NGCharacter {
     uint8_t active;
     uint8_t kind;
@@ -45,6 +49,8 @@ struct NGCharacter {
     uint8_t flip_x;
     uint8_t flip_y;
     uint8_t sprite_dirty;
+    uint8_t priority_band;
+    int16_t depth_offset;
 
     /*
      * Per-frame draw offsets from the generated Artbox metadata.
@@ -89,6 +95,9 @@ void NEOGEO_USER ng_char_set_sprite(NGCharacter *c, uint16_t firstSprite, uint8_
 void NEOGEO_USER ng_char_set_body(NGCharacter *c, int16_t x, int16_t y, int16_t w, int16_t h);
 void NEOGEO_USER ng_char_set_pos(NGCharacter *c, int16_t x, int16_t y);
 void NEOGEO_USER ng_char_set_speed(NGCharacter *c, int16_t vx_px, int16_t vy_px);
+void NEOGEO_USER ng_char_set_speed_fp(NGCharacter *c, int32_t vx_fp, int32_t vy_fp);
+void NEOGEO_USER ng_char_add_speed_fp(NGCharacter *c, int32_t ax_fp, int32_t ay_fp);
+void NEOGEO_USER ng_char_set_priority(NGCharacter *c, uint8_t priority_band, int16_t depth_offset);
 void NEOGEO_USER ng_char_damage(NGCharacter *c, uint8_t amount);
 void NEOGEO_USER ng_char_heal(NGCharacter *c, uint8_t amount);
 NGRect NEOGEO_USER ng_char_body_rect(NGCharacter *c);

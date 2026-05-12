@@ -17,6 +17,34 @@
 #define NG_FRAMES_PER_SEC   NG_FRAME_RATE
 #define NG_MS_TO_FRAMES(ms) ((ms) * NG_FRAME_RATE / 1000)
 
+/* Logical visible area.  Sprite code still uses Neo Geo/LSPC hardware
+ * coordinates internally, but these values describe the intended game window. */
+#define NG_SCREEN_WIDTH      320
+#define NG_SCREEN_HEIGHT     224
+
+/* Conservative sprite culling range.
+ *
+ * Neo Geo sprite Y coordinates are not a simple modern top-left 0..223 range
+ * in this SDK; many generated showScreen()/sprite demos use hardware-style
+ * baselines above 496.  Therefore the default Y cull range is intentionally
+ * wide so existing demos are not hidden by accident.  X culling is stricter
+ * because X is already handled as ordinary screen/world space in the engine. */
+#define NG_SPRITE_CULL_LEFT     -64
+#define NG_SPRITE_CULL_RIGHT    384
+#define NG_SPRITE_CULL_TOP      -128
+#define NG_SPRITE_CULL_BOTTOM   640
+
+/* Render priority bands.
+ * Higher band values are drawn in front because ng_chars_draw() assigns them
+ * to lower hardware sprite slots first.  Inside one band, characters are
+ * depth-sorted by Y position plus depth_offset. */
+#define NG_RENDER_BAND_BACK      0
+#define NG_RENDER_BAND_NPC       1
+#define NG_RENDER_BAND_ENEMY     2
+#define NG_RENDER_BAND_PLAYER    3
+#define NG_RENDER_BAND_FX        4
+#define NG_RENDER_BAND_FRONT     5
+
 /* Fixed-point math (8.8 format, shift = 8) */
 #define NG_FP_SHIFT   8
 #define NG_FP_ONE     (1 << NG_FP_SHIFT)
