@@ -31,6 +31,7 @@ void NEOGEO_USER showPseudo3DLoop(void);
 void NEOGEO_USER showSoundDemo(void);
 void NEOGEO_USER show3DRaycaster(void);
 void NEOGEO_USER showScreen106(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen107(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen108(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen109(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 
@@ -286,7 +287,7 @@ void  NEOGEO_USER showTitleMVS(void) {
 	clearFix();
 	clearSprs();
 	setBACKDROP(BLACK);
-	showScreen108(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
+	showScreen108(16, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
 	waitVbl();
 	fixtext_out(14, 26, "HIT START", 0);
 	for (i = 0; i < 180; i++) {
@@ -296,7 +297,7 @@ void  NEOGEO_USER showTitleMVS(void) {
 	}
 	if (!NEO_REGISTER8(NGO_START_FLAG) && NEO_REGISTER8(BIOS_USER_MODE) != 2) {
 		clearSprs();
-		showScreen109(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
+		showScreen107(16, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
 		waitVbl();
 		fixtext_out(14, 26, "HIT START", 0);
 		while (!NEO_REGISTER8(NGO_START_FLAG) && NEO_REGISTER8(BIOS_USER_MODE) != 2) {
@@ -311,7 +312,7 @@ void  NEOGEO_USER showTitleAES(void) {
 	clearFix();
 	clearSprs();
 	setBACKDROP(BLACK);
-	showScreen108(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
+	showScreen108(16, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
 	waitVbl();
 	fixtext_out(14, 26, "HIT START", 0);
 	soundPlayTitleMusic(0);
@@ -326,7 +327,7 @@ void  NEOGEO_USER showTitleAES(void) {
 	}
 	if (!NEO_REGISTER8(NGO_START_FLAG)) {
 		clearSprs();
-		showScreen109(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
+		showScreen107(16, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
 		waitVbl();
 		fixtext_out(14, 26, "HIT START", 0);
 		for (i = 0; i < 10; i++) {
@@ -411,8 +412,9 @@ void NEOGEO_USER START_GAME(void) {
 	clearFix();
 	clearSprs();
 	setBACKDROP(BLACK);
-	fixtext_out(13,10,"NEO GEO SDK",0);
-	fixtext_out(10,12,"DEMO FLOW START",1);
+	soundSceneReset();
+	fixtext_out(13,10,"FULL DEMO MODE",0);
+	fixtext_out(7,12,"SOUND + SPECIAL MOVES",2);
 	cyclexs(1);
 	maingame();
 	NEO_REGISTER8(NGO_START_FLAG) = 0;
