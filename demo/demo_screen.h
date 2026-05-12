@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "sdk/macro.h"
+#include "sdk/2d_engine/ng_sprite_pool.h"
 
 #ifndef NEOGEO_USER
 #define NEOGEO_USER
@@ -16,6 +17,17 @@ typedef void (*DemoShowScreenFn)(int, int, int, int, int, uint16_t, uint16_t);
 #define DEMO_SPRITE_TILE(sprite_id) DEMO_SCREEN_TILE(DEMO_SPRITE_SCREEN(sprite_id))
 #define DEMO_SPRITE_PALETTE(sprite_id) DEMO_SCREEN_PALETTE(DEMO_SPRITE_SCREEN(sprite_id))
 
+/*
+ * Never use sprite_base 0 for visible generated screens.
+ * VRAM 0000H-003FH is reserved for transparency/init data.
+ * Slot 1 => SCB1 base 0040H.
+ */
+#define DEMO_SHOWSCREEN_SLOT 1u
+#define DEMO_SHOWSCREEN_BASE NG_SPR_VRAM_BASE(DEMO_SHOWSCREEN_SLOT)
+#define DEMO_SHOWSCREEN_BASE2 NG_SPR_VRAM_BASE(24u)
+#define DEMO_SHOWSCREEN_BASE3 NG_SPR_VRAM_BASE(48u)
+#define DEMO_PRELOAD_BASE NG_SPR_VRAM_BASE(320u)
+
 void NEOGEO_USER demo_clear_scene(void);
 void NEOGEO_USER demo_screen_showcase(void);
 void NEOGEO_USER showWalkDemo(int loops, int delay_ms);
@@ -25,6 +37,11 @@ uint8_t NEOGEO_USER demo_advance_requested(void);
 uint8_t NEOGEO_USER demo_wait_frames_or_a(uint16_t frames);
 void NEOGEO_USER demo_scene_caption(const char *title, const char *line1, const char *line2);
 void NEOGEO_USER demo_clear_all_sprites(void);
+void NEOGEO_USER demo_safe_show(DemoShowScreenFn fn, int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+
+void NEOGEO_USER demo_fix_puts(uint8_t x, uint8_t y, const char *text, uint8_t pal);
+void NEOGEO_USER demo_load_screen_palette(uint8_t screen_id);
+void NEOGEO_USER demo_draw_sprite_screen(uint8_t screen_id, uint16_t first_sprite, int16_t x, int16_t y, uint8_t strips, uint8_t rows, uint8_t scale_x, uint8_t scale_y);
 
 void NEOGEO_USER showScreen1(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen2(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);

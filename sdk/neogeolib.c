@@ -437,9 +437,19 @@ void NEOGEO_USER cyclexs(int cyc1xs) {
   }
 
 uint16_t NEOGEO_USER poll_joystick() {
-	uint8_t d1 = *(volatile uint8_t *)BIOS_P1PREVIOUS;
+	uint8_t d1 = *(volatile uint8_t *)BIOS_P1CURRENT;
 	uint8_t d2 = *(volatile uint8_t *)BIOS_STATCURNT;
-	return (uint16_t)((d2 << 8) | d1);
+	return (uint16_t)(((uint16_t)d2 << 8) | d1);
+}
+
+uint16_t NEOGEO_USER poll_joystick_edge() {
+	uint8_t d1 = *(volatile uint8_t *)BIOS_P1CHANGE;
+	uint8_t d2 = *(volatile uint8_t *)BIOS_STATCHANGE;
+	return (uint16_t)(((uint16_t)d2 << 8) | d1);
+}
+
+uint16_t NEOGEO_USER read_joy1(void) {
+	return poll_joystick();
 }
 
 void NEOGEO_USER fix_svalue1(uint16_t X, uint16_t Y,uint16_t v,short pal,uint16_t offset) {

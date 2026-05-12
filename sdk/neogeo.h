@@ -86,8 +86,9 @@ void sleep1FFF(void);
  * reads the hardware input ports directly.
  */
 uint16_t poll_joystick(void);
+uint16_t poll_joystick_edge(void);
 int read_p1credit(void);
-int read_joy1(void);
+uint16_t read_joy1(void);
 
 /* Low-level sound command helpers. */
 void playSoundtest(uint16_t index);
