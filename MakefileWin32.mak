@@ -12,7 +12,7 @@ M68K_ELF_BIN=$(M68K_ELF_ROOT)\bin
 REPO_WIN=$(subst /,\,$(CURDIR))
 
 CC=$(M68K_ELF_BIN)\m68k-elf-gcc.exe
-CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -Isdk -Isdk/2d_engine -Wa,-march=68000,-mcpu=68000,-W,--warn
+CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Wa,-march=68000,-mcpu=68000,-W,--warn
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
 LD=$(M68K_ELF_BIN)\m68k-elf-ld.exe
 LDFLAGS=  -nostartfiles -nostdlib
@@ -42,6 +42,7 @@ INFO=$(REPO_WIN)\win\xxd.exe -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
 NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_bg0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o
+DEMO_OBJ0=out\demo0.o out\demo_screen0.o out\demo_sound0.o out\demo_3d0.o out\demo_2d_engine0.o
 
 ifeq ($(DEBUG),1)
 CFLAGS += -g3 -gdwarf-2 -DNG_DEBUG=1
@@ -111,13 +112,18 @@ game:
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_physics.c -o out\ng_physics0.o
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_border_constraints.c -o out\ng_border_constraints0.o
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_game_interupt.c -o out\ng_game_interupt0.o
+	$(CC) $(CFLAGS) demo\demo.c -o out\demo0.o
+	$(CC) $(CFLAGS) demo\demo_screen.c -o out\demo_screen0.o
+	$(CC) $(CFLAGS) demo\demo_sound.c -o out\demo_sound0.o
+	$(CC) $(CFLAGS) demo\demo_3d.c -o out\demo_3d0.o
+	$(CC) $(CFLAGS) demo\demo_2d_engine.c -o out\demo_2d_engine0.o
 	$(CC) $(CFLAGS) eyecatcher.c -o out\eyecatcher0.o
 	$(OBJCP) $(STRIP_SECTS) out\neogeo0.o out\neogeo.o
 	$(OBJCP) $(STRIP_SECTS) out\user0.o out\user.o
 	$(OBJCP) $(STRIP_SECTS) out\main0.o out\main.o
 	$(OBJCP) $(STRIP_SECTS) out\neogeolib0.o out\neogeolib.o
 	$(OBJCP) $(STRIP_SECTS) out\eyecatcher0.o out\eyecatcher.o
-	$(LD) $(LDFLAGS) -T sdk\neogeo_win.ld -o out\game out\neogeo.o out\user.o out\main.o out\neogeolib.o out\eyecatcher.o $(NG_ENGINE_OBJ0)
+	$(LD) $(LDFLAGS) -T sdk\neogeo_win.ld -o out\game out\neogeo.o out\user.o out\main.o out\neogeolib.o out\eyecatcher.o $(NG_ENGINE_OBJ0) $(DEMO_OBJ0)
 
 777-p1.p1: game
 	$(OBJCP) -O ihex out\game out\game0

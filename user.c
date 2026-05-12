@@ -7,6 +7,11 @@ https://github.com/eaglesoftware777/neogeosdk
 #include <stdint.h>
 #include "sdk/macro.h"
 #include "sdk/neogeo.h"
+#include "demo/demo.h"
+#include "demo/demo_screen.h"
+#include "demo/demo_sound.h"
+#include "demo/demo_3d.h"
+#include "demo/demo_2d_engine.h"
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 
@@ -387,55 +392,9 @@ void NEOGEO_USER INIT_GAME(void) {
 	ASM_END
 }
 
-/* Full SDK showcase attract loop — demonstrates all major engine features. */
+/* Full SDK showcase attract loop — implemented in demo/. */
 void NEOGEO_USER DEMO_GAME(void) {
-	clearFix();
-	clearSprs();
-	setBACKDROP(BLACK);
-	soundSceneReset();
-
-	/* 1. Typewriter intro + Eagle logo */
-	showEagleIntro();
-	if (NEO_REGISTER8(NGO_START_FLAG)) return;
-
-	/* 2. Title screens 108 + 109 with FIX text overlay */
-	clearFix();
-	clearSprs();
-	showScreen108(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-	fixtext_out(2,  1, "EAGLE SOFTWARE  2026", 0);
-	fixtext_out(2,  2, "NEO GEO SDK", 1);
-	fixtext_out(2, 26, "INSERT COIN", 2);
-	soundPlayTitleMusic(0);
-	cyclexs(4);
-	if (NEO_REGISTER8(NGO_START_FLAG)) { soundStopAll(); return; }
-
-	clearSprs();
-	showScreen109(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-	fixtext_out(2, 26, "INSERT COIN", 2);
-	cyclexs(4);
-	soundStopAll();
-	if (NEO_REGISTER8(NGO_START_FLAG)) return;
-
-	/* 3. Eye-catcher NPC animation (MVS only) */
-#ifndef NG_AES
-	showEyeCatcherMVS();
-	if (NEO_REGISTER8(NGO_START_FLAG)) return;
-#endif
-
-	/* 4. SDK feature overview */
-	showCharacterParade();
-	if (NEO_REGISTER8(NGO_START_FLAG)) return;
-
-	/* 5. Pseudo-3D floor perspective */
-	showPseudo3DLoop();
-	if (NEO_REGISTER8(NGO_START_FLAG)) return;
-
-	/* 6. Sound engine demo */
-	showSoundDemo();
-	if (NEO_REGISTER8(NGO_START_FLAG)) return;
-
-	/* 7. Software 3D DDA raycaster */
-	show3DRaycaster();
+	demo_run_attract();
 }
 
 
@@ -449,18 +408,12 @@ void NEOGEO_USER GAME_ATTRACT(void) {
 
 //START_GAME handler
 void NEOGEO_USER START_GAME(void) {
-	uint16_t  pal_tile0[16];
-	uint16_t  pal_tile1[16];
-	setpal(pal_tile0,BLACK,YELLOW,0xFFF,BLUE,BLUE,BLUE,BLACK,BLUE,BLUE,BLUE,BLUE,BLUE,BLACK,BLUE,BLACK,BLUE);
-	load_palettes(pal_tile0,PALETTES);
-	setpal(pal_tile1,BLACK,CYAN,0xFFF,RED,RED,RED,BLACK,RED,RED,RED,RED,RED,RED,RED,BLACK,RED);
-	load_palettes(pal_tile1,PALETTES+PALOFFSET*2);
 	clearFix();
 	clearSprs();
-	fixtext_out(15,10,"STARTING GAME",0);
-	cyclexs(2);
-	fixtext_out(15,10,"LOADING   ...",0);
-	cyclexs(2);
+	setBACKDROP(BLACK);
+	fixtext_out(13,10,"NEO GEO SDK",0);
+	fixtext_out(10,12,"DEMO FLOW START",1);
+	cyclexs(1);
 	maingame();
 	NEO_REGISTER8(NGO_START_FLAG) = 0;
 	NEO_REGISTER8(BIOS_USER_MODE) = 1;
