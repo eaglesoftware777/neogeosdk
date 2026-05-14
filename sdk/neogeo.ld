@@ -16,24 +16,31 @@ SECTIONS
 {
 	   . = 0x0;
      neogeo_ivt : {  out/neogeo.o(neogeo_ivt)      } > memory_ivt AT > memory_ivt
-	   neogeo_init : {  out/neogeo.o(neogeo_init)     } > memory_init AT > memory_init 
+	   neogeo_init : {  out/neogeo.o(neogeo_init)     } > memory_init AT > memory_init
 	   neogeo_entry : {  out/neogeo.o(neogeo_entry)     } > memory_entry AT > memory_entry =0xFF
 	   neogeo_padds : {  out/neogeo.o(neogeo_padds)    } > memory_padds AT > memory_padds =0xFF
 	   neogeo_id2 : {  out/neogeo.o(neogeo_id2)      } > memory_id2 AT > memory_id2
 	   neogeo_gamedata : {  out/neogeo.o(neogeo_gamedata) } > memory_gamedata AT > memory_gamedata
-	   neogeo_user : {  out/user.o(neogeo_user) 
-	                    out/user.o(.rodata) 
-	   	                out/main.o(neogeo_user)
-	   	                out/main.o(.rodata) 
-						out/neogeolib.o(neogeo_user)
-						out/ng_*0.o(neogeo_user)
-						out/ng_*0.o(.rodata)
-						} > memory_user =0xFF
+	   neogeo_user : {  out/user.o(neogeo_user)
+	                    out/user.o(.rodata)
+   	                out/main.o(neogeo_user)
+   	                out/main.o(.rodata)
+					out/neogeolib.o(neogeo_user)
+					out/ng_*0.o(neogeo_user)
+					out/ng_*0.o(.rodata)
+					out/demo*0.o(neogeo_user)
+					out/demo*0.o(.rodata)
+					} > memory_user =0xFF
        game_engine_bss (NOLOAD) : {
                         out/ng_*0.o(.bss)
                         out/ng_*0.o(.bss.*)
                         out/ng_*0.o(COMMON)
                         out/ng_*0.o(.data)
                         out/ng_*0.o(.data.*)
+                        out/demo*0.o(.bss)
+                        out/demo*0.o(.bss.*)
+                        out/demo*0.o(COMMON)
+                        out/demo*0.o(.data)
+                        out/demo*0.o(.data.*)
                         } > memory_game_engine_bss
 }

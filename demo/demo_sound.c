@@ -1,9 +1,20 @@
+/*
+ * demo_sound.c — Scene 10: YM2610 audio engine showcase
+ *
+ * Demonstrates: FM tracks, SSG oscillators, ADPCM-A samples,
+ * ADPCM-B bed, voice cues, full mix.
+ *
+ * https://eaglesoftware.biz
+ */
+
 #include "demo_sound.h"
-#include "demo_screen.h"
+#include "demo.h"
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
 #include <stdint.h>
 
+void NEOGEO_USER waitVbl(void);
+void NEOGEO_USER clearFix(void);
 void NEOGEO_USER soundSceneReset(void);
 void NEOGEO_USER soundStopAll(void);
 void NEOGEO_USER soundStopMusic(void);
@@ -19,161 +30,154 @@ void NEOGEO_USER playSFX(uint8_t n);
 void NEOGEO_USER playSFXB(uint8_t n);
 void NEOGEO_USER playVoiceCue(uint8_t n);
 void NEOGEO_USER soundApplyMix(uint8_t a, uint8_t b, uint8_t s, uint8_t f);
-void NEOGEO_USER waitVbl(void);
-void NEOGEO_USER clearFix(void);
-void NEOGEO_USER fixtext_out(uint16_t x, uint16_t y, char *mess, short pal);
 
-static void NEOGEO_USER demo_sound_vbl(uint8_t frames)
+static void NEOGEO_USER snd_vbl(uint8_t frames)
 {
     uint8_t i;
-    for (i = 0; i < frames; i++) waitVbl();
+    for (i = 0u; i < frames; i++) waitVbl();
 }
 
-static void NEOGEO_USER demo_sound_reset(void)
+static void NEOGEO_USER snd_reset(void)
 {
     soundCancelFade();
     soundStopAll();
-    demo_sound_vbl(6);
+    snd_vbl(6u);
     soundSceneReset();
-    demo_sound_vbl(8);
+    snd_vbl(8u);
     soundCancelFade();
 }
 
-static uint8_t NEOGEO_USER demo_sound_hold(uint16_t frames)
+static void NEOGEO_USER snd_label(uint8_t row, const char *kind, const char *name, uint8_t pal)
 {
-    return demo_wait_frames_or_a(frames);
+    demo_fix_puts(2u, row, "                                    ", 0u);
+    demo_fix_puts(2u, row, kind, pal);
+    demo_fix_puts(12u, row, name, pal);
 }
 
-static void NEOGEO_USER demo_sound_line(uint8_t row, const char *kind, const char *name, uint8_t pal)
-{
-    demo_fix_puts(2, row, "                                    ", 0);
-    demo_fix_puts(2, row, kind, pal);
-    demo_fix_puts(12, row, name, pal);
-}
-
-static uint8_t NEOGEO_USER demo_sound_play_a(uint8_t row, const char *name, uint8_t pal, uint8_t sample)
-{
-    demo_sound_line(row, "ADPCM-A", name, pal);
-    playSFX(sample);
-    return demo_sound_hold(72);
-}
-
-void NEOGEO_USER showSoundDemo(void)
+/* ------------------------------------------------------------------ */
+/*  Public: sound scene                                                  */
+/* ------------------------------------------------------------------ */
+void NEOGEO_USER demo_sound_run(void)
 {
     demo_clear_scene();
-    demo_sound_reset();
-    demo_scene_caption("YM2610 SOUND DEMO", "CHANNELS ARE LABELED BEFORE PLAY", "A ADVANCES / START IS IGNORED HERE");
-    demo_sound_hold(24);
+    snd_reset();
 
-    soundSetFMVolume(0x0C);
-    soundSetSSGVolume(0x00);
-    soundSetADPCMAVolume(0x00);
-    soundSetADPCMBVolume(0x00);
+    /* -- FM Tracks -- */
+    demo_caption("YM2610 SOUND DEMO", "FM SYNTHESIS  OPN2 CHANNELS", "FM = 4 CHANNELS  FULL POLYPHONY");
+    snd_vbl(24u);
+
+    soundSetFMVolume(0x0Cu);
+    soundSetSSGVolume(0x00u);
+    soundSetADPCMAVolume(0x00u);
+    soundSetADPCMBVolume(0x00u);
     soundCancelFade();
 
-    demo_sound_line(7, "FM", "ATTRACT FAST", 1);
+    snd_label(7u, "FM", "ATTRACT FAST", 1u);
     playFMTrack(SOUND_FM_ATTRACT_FAST);
-    if (demo_sound_hold(120)) goto sound_done;
+    if (demo_wait(120u)) goto done;
 
-    demo_sound_line(8, "FM", "DUEL SUSPENSE", 2);
+    snd_label(8u, "FM", "DUEL SUSPENSE", 2u);
     soundStopMusic();
-    demo_sound_vbl(4);
+    snd_vbl(4u);
     playFMTrack(SOUND_FM_DUEL_SUSPENSE);
-    if (demo_sound_hold(120)) goto sound_done;
+    if (demo_wait(120u)) goto done;
 
-    demo_sound_line(9, "FM", "VICTORY JINGLE", 0);
+    snd_label(9u, "FM", "VICTORY JINGLE", 0u);
     soundStopMusic();
-    demo_sound_vbl(4);
+    snd_vbl(4u);
     playFMTrack(SOUND_FM_VICTORY_JINGLE);
-    if (demo_sound_hold(100)) goto sound_done;
+    if (demo_wait(100u)) goto done;
 
+    /* -- SSG Tracks -- */
     demo_clear_scene();
-    demo_sound_reset();
-    demo_scene_caption("YM2610 SOUND DEMO", "SSG / PSG OSCILLATORS", "TEXT FIRST THEN SOUND");
-    soundSetSSGVolume(0x0F);
-    soundSetFMVolume(0x00);
-    demo_sound_hold(16);
+    snd_reset();
+    demo_caption("YM2610 SOUND DEMO", "SSG / PSG OSCILLATORS", "3 SQUARE-WAVE CHANNELS");
+    soundSetSSGVolume(0x0Fu);
+    soundSetFMVolume(0x00u);
+    snd_vbl(16u);
 
-    demo_sound_line(7, "SSG", "ARCADE ALERT", 1);
+    snd_label(7u, "SSG", "ARCADE ALERT", 1u);
     playSSGTrack(SOUND_SSG_ARCADE_ALERT);
-    soundSetSSGPreset(1);
-    if (demo_sound_hold(100)) goto sound_done;
+    soundSetSSGPreset(1u);
+    if (demo_wait(100u)) goto done;
 
-    demo_sound_line(8, "SSG", "MENU LOOP", 2);
+    snd_label(8u, "SSG", "MENU LOOP", 2u);
     playSSGTrack(SOUND_SSG_MENU_LOOP);
-    if (demo_sound_hold(100)) goto sound_done;
+    if (demo_wait(100u)) goto done;
 
-    demo_sound_line(9, "SSG", "INSERT COIN", 0);
+    snd_label(9u, "SSG", "INSERT COIN", 0u);
     playSSGTrack(SOUND_SSG_INSERT_COIN);
-    soundSetSSGPreset(0);
-    if (demo_sound_hold(96)) goto sound_done;
+    soundSetSSGPreset(0u);
+    if (demo_wait(96u)) goto done;
 
+    /* -- ADPCM-A Samples -- */
     demo_clear_scene();
-    demo_sound_reset();
-    demo_scene_caption("YM2610 SOUND DEMO", "ADPCM-A 6CH SAMPLES", "SAMPLES ARE SHORT AND NAMED");
-    soundSetADPCMAVolume(0x3F);
-    soundSetADPCMBVolume(0x00);
-    demo_sound_hold(16);
+    snd_reset();
+    demo_caption("YM2610 SOUND DEMO", "ADPCM-A 6CH SAMPLES", "DELTA-SIGMA PCM  ~18.5 KHZ");
+    soundSetADPCMAVolume(0x3Fu);
+    soundSetADPCMBVolume(0x00u);
+    snd_vbl(16u);
 
-    if (demo_sound_play_a(7,  "INTRO TAIKO",   1, SOUND_SFX_INTRO_TAIKO)) goto sound_done;
-    if (demo_sound_play_a(8,  "TITLE GONG",    2, SOUND_SFX_TITLE_GONG)) goto sound_done;
-    if (demo_sound_play_a(9,  "BLADE WHOOSH",  1, SOUND_SFX_BLADE_WHOOSH)) goto sound_done;
-    if (demo_sound_play_a(10, "IMPACT HIT",    2, SOUND_SFX_IMPACT_HIT)) goto sound_done;
-    if (demo_sound_play_a(11, "STRING PHRASE", 1, SOUND_SFX_STRING_PHRASE)) goto sound_done;
-    if (demo_sound_play_a(12, "LOW DRUM",      2, SOUND_SFX_LOW_DRUM)) goto sound_done;
-    if (demo_sound_play_a(13, "COIN CHIME",    1, SOUND_SFX_COIN_CHIME)) goto sound_done;
-    if (demo_sound_play_a(14, "SHORT SHOUT",   2, SOUND_SFX_SHORT_SHOUT)) goto sound_done;
+    snd_label(7u,  "ADPCM-A", "INTRO TAIKO",   1u); playSFX(SOUND_SFX_INTRO_TAIKO);   if (demo_wait(72u)) goto done;
+    snd_label(8u,  "ADPCM-A", "TITLE GONG",    2u); playSFX(SOUND_SFX_TITLE_GONG);    if (demo_wait(72u)) goto done;
+    snd_label(9u,  "ADPCM-A", "BLADE WHOOSH",  1u); playSFX(SOUND_SFX_BLADE_WHOOSH);  if (demo_wait(72u)) goto done;
+    snd_label(10u, "ADPCM-A", "IMPACT HIT",    2u); playSFX(SOUND_SFX_IMPACT_HIT);    if (demo_wait(72u)) goto done;
+    snd_label(11u, "ADPCM-A", "STRING PHRASE", 1u); playSFX(SOUND_SFX_STRING_PHRASE); if (demo_wait(72u)) goto done;
+    snd_label(12u, "ADPCM-A", "LOW DRUM",      2u); playSFX(SOUND_SFX_LOW_DRUM);      if (demo_wait(72u)) goto done;
+    snd_label(13u, "ADPCM-A", "COIN CHIME",    1u); playSFX(SOUND_SFX_COIN_CHIME);    if (demo_wait(72u)) goto done;
+    snd_label(14u, "ADPCM-A", "SHORT SHOUT",   2u); playSFX(SOUND_SFX_SHORT_SHOUT);   if (demo_wait(72u)) goto done;
 
+    /* -- ADPCM-B Bed + Voices -- */
     demo_clear_scene();
-    demo_sound_reset();
-    demo_scene_caption("YM2610 SOUND DEMO", "ADPCM-B BED + VOICES", "MUSIC BED WITH VOICE OVERLAY");
-    soundSetADPCMBVolume(0xC0);
-    soundSetADPCMAVolume(0x3F);
-    demo_sound_hold(16);
+    snd_reset();
+    demo_caption("YM2610 SOUND DEMO", "ADPCM-B BED + VOICE CUES", "STREAMING MUSIC BED  ~55 KHZ");
+    soundSetADPCMBVolume(0xC0u);
+    soundSetADPCMAVolume(0x3Fu);
+    snd_vbl(16u);
 
-    demo_sound_line(7, "ADPCM-B", "STAGE TWO BED", 1);
+    snd_label(7u,  "ADPCM-B", "STAGE TWO BED", 1u);
     playSFXB(SOUND_BED_STAGE_TWO);
-    if (demo_sound_hold(120)) goto sound_done;
+    if (demo_wait(120u)) goto done;
 
-    demo_sound_line(9, "VOICE", "GET READY", 2);
+    snd_label(9u,  "VOICE", "GET READY", 2u);
     playVoiceCue(SOUND_VOICE_GET_READY);
-    if (demo_sound_hold(84)) goto sound_done;
+    if (demo_wait(84u)) goto done;
 
-    demo_sound_line(11, "VOICE", "ATTACK", 1);
+    snd_label(11u, "VOICE", "ATTACK", 1u);
     playVoiceCue(SOUND_VOICE_ATTACK);
-    if (demo_sound_hold(84)) goto sound_done;
+    if (demo_wait(84u)) goto done;
 
+    /* -- Full Mix -- */
     demo_clear_scene();
-    demo_sound_reset();
-    demo_scene_caption("YM2610 SOUND DEMO", "FULL MIX", "FM + SSG + ADPCM-A + ADPCM-B");
-    soundApplyMix(0x30, 0xC0, 0x08, 0x08);
-    demo_sound_vbl(4);
+    snd_reset();
+    demo_caption("YM2610 SOUND DEMO", "FULL MIX", "FM + SSG + ADPCM-A + ADPCM-B");
+    soundApplyMix(0x30u, 0xC0u, 0x08u, 0x08u);
+    snd_vbl(4u);
     playSFXB(SOUND_BED_STAGE_ONE);
     playFMTrack(SOUND_FM_BASS_MOTIF);
     playSSGTrack(SOUND_SSG_INSERT_COIN);
-    soundSetSSGPreset(1);
-    demo_sound_line(7, "BED", "STAGE ONE", 1);
-    demo_sound_line(8, "FM", "BASS MOTIF", 2);
-    demo_sound_line(9, "SSG", "INSERT COIN", 1);
-    if (demo_sound_hold(120)) goto sound_done;
-    demo_sound_line(11, "ADPCM-A", "BLADE WHOOSH", 2);
+    soundSetSSGPreset(1u);
+    snd_label(7u, "BED",     "STAGE ONE",   1u);
+    snd_label(8u, "FM",      "BASS MOTIF",  2u);
+    snd_label(9u, "SSG",     "INSERT COIN", 1u);
+    if (demo_wait(120u)) goto done;
+    snd_label(11u, "ADPCM-A", "BLADE WHOOSH", 2u);
     playSFX(SOUND_SFX_BLADE_WHOOSH);
-    demo_sound_hold(96);
+    demo_wait(96u);
 
-sound_done:
-    /* Do not leave fade state active for the next demo section. */
+done:
     soundCancelFade();
-    demo_sound_vbl(4);
+    snd_vbl(4u);
     soundStopAll();
-    demo_sound_vbl(8);
+    snd_vbl(8u);
     soundSceneReset();
-    demo_sound_vbl(8);
+    snd_vbl(8u);
     soundCancelFade();
     demo_clear_scene();
 }
 
-void NEOGEO_USER demo_sound_showcase(void)
+/* Legacy compat */
+void NEOGEO_USER showSoundDemo(void)
 {
-    showSoundDemo();
-    demo_clear_scene();
+    demo_sound_run();
 }

@@ -9,10 +9,8 @@ https://github.com/eaglesoftware777/neogeosdk
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
 #include "demo/demo.h"
-#include "demo/demo_screen.h"
 #include "demo/demo_sound.h"
-#include "demo/demo_3d.h"
-#include "demo/demo_2d_engine.h"
+#include "demo/demo_fix.h"
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 
