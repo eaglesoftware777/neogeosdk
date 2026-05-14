@@ -7,6 +7,7 @@ https://github.com/eaglesoftware777/neogeosdk
 #include <stdint.h>
 #include "sdk/macro.h"
 #include "sdk/neogeo.h"
+#include "sdk/sound_ids.h"
 #include "demo/demo.h"
 #include "demo/demo_screen.h"
 #include "demo/demo_sound.h"
@@ -201,14 +202,15 @@ void  NEOGEO_USER POWER_ON (void) {
 	ASM_END
 }
 
-// NeoGeo EYE_CATCHER handler
+// NeoGeo EYE_CATCHER handler — same sprite animation for both AES and MVS
 void  NEOGEO_USER EYE_CATCHER (void) {
 
-#ifdef NG_AES
-	showEagleIntro();
-#else
+	soundSceneReset();
+	soundSetADPCMAVolume(0x00);
+	soundSetADPCMBVolume(0xBC);
+	playSFXB(SOUND_BED_EYECATCHER);
 	showEyeCatcherMVS();
-#endif
+	soundStopAll();
 }
 
 // NeoGeo GAME Mode
@@ -289,19 +291,34 @@ void  NEOGEO_USER showTitleMVS(void) {
 	setBACKDROP(BLACK);
 	showScreen108(16, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
 	waitVbl();
-	fixtext_out(14, 26, "HIT START", 0);
-	for (i = 0; i < 180; i++) {
+
+	/* MVS: blink INSERT COIN when no credits; show HIT START when credits available. */
+	for (i = 0; i < 360; i++) {
+		if (read_p1credit() > 0)
+			fixtext_out(10, 26, "   HIT START  ", 0);
+		else if ((i >> 4) & 1)
+			fixtext_out(10, 26, " INSERT COIN  ", 0);
+		else
+			fixtext_out(10, 26, "              ", 0);
 		waitVbl();
 		if (NEO_REGISTER8(NGO_START_FLAG) || NEO_REGISTER8(BIOS_USER_MODE) == 2)
 			break;
 	}
+
 	if (!NEO_REGISTER8(NGO_START_FLAG) && NEO_REGISTER8(BIOS_USER_MODE) != 2) {
 		clearSprs();
 		showScreen107(16, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
 		waitVbl();
-		fixtext_out(14, 26, "HIT START", 0);
-		while (!NEO_REGISTER8(NGO_START_FLAG) && NEO_REGISTER8(BIOS_USER_MODE) != 2) {
+		for (i = 0; ; i++) {
+			if (read_p1credit() > 0)
+				fixtext_out(10, 26, "   HIT START  ", 0);
+			else if ((i >> 4) & 1)
+				fixtext_out(10, 26, " INSERT COIN  ", 0);
+			else
+				fixtext_out(10, 26, "              ", 0);
 			waitVbl();
+			if (NEO_REGISTER8(NGO_START_FLAG) || NEO_REGISTER8(BIOS_USER_MODE) == 2)
+				break;
 		}
 	}
 }

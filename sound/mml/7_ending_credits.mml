@@ -1,0 +1,52 @@
+; 7_ending_credits.mml
+; Ending credits — slow A-minor reflection
+; @f6 = FM_GAMEOVER_DARK  @b3 = SOUND_BED_ENDING_THEME  @p1 = Soft Menu Beep SSG
+; @a8 = STRING_PHRASE accent
+
+T76
+V9
+O4
+L4
+
+@p1
+@b3
+@f6
+
+; phrase A — sparse descending
+A R G E
+F R E C
+@a8
+R
+O3
+A R
+O4
+A R G R
+
+; phrase B — inner voice movement
+O4
+E G A R
+G E C R
+@a8
+R
+D F G A
+A R R R
+
+; phrase C — expressive rise
+O4
+C E G A
+@a8
+R
+G E D C
+< A R
+O4
+A R
+
+; echo fade
+O4
+A R G R
+@a8
+R
+E F
+< A2
+
+~

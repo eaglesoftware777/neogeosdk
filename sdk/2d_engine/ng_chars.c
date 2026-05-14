@@ -9,12 +9,23 @@ static NGCharInterupt ng_char_interupts[NG_MAX_CHAR_KINDS];
 static uint8_t ng_char_uploaded_strips[NG_MAX_CHARS];
 static uint16_t ng_char_uploaded_first[NG_MAX_CHARS];
 
+/* Highest occupied slot index + 1. Limits scan loops to avoid iterating all
+ * NG_MAX_CHARS entries when only a few characters are active. */
+static uint8_t ng_chars_active_top;
+
 static void NEOGEO_USER chars_hide_slot(uint16_t firstSprite, uint8_t strips)
 {
     if (firstSprite == 0xffff) return;
     if (strips == 0) strips = NG_SPRITE_MAX_STRIPS;
     if (strips > NG_SPRITE_MAX_STRIPS) strips = NG_SPRITE_MAX_STRIPS;
     ng_sprite_hide_range(firstSprite, strips);
+}
+
+static void NEOGEO_USER ng_chars_rebuild_top(void)
+{
+    uint8_t i = NG_MAX_CHARS;
+    while (i > 0u && !ng_chars[i - 1u].active) --i;
+    ng_chars_active_top = i;
 }
 
 void NEOGEO_USER ng_chars_init(void)
@@ -30,6 +41,8 @@ void NEOGEO_USER ng_chars_init(void)
     for (i = 0; i < NG_MAX_CHAR_KINDS; i++) {
         ng_char_interupts[i] = 0;
     }
+
+    ng_chars_active_top = 0;
 }
 
 NGCharacter* NEOGEO_USER chars_add(uint8_t kind, int16_t x, int16_t y)
@@ -93,6 +106,8 @@ NGCharacter* NEOGEO_USER chars_add(uint8_t kind, int16_t x, int16_t y)
             c->data1 = 0;
             c->data2 = 0;
 
+            if ((uint8_t)(i + 1u) > ng_chars_active_top)
+                ng_chars_active_top = (uint8_t)(i + 1u);
             return c;
         }
     }
@@ -115,6 +130,7 @@ void NEOGEO_USER ng_chars_remove(NGCharacter *c)
     }
 
     c->active = 0;
+    ng_chars_rebuild_top();
 }
 
 void NEOGEO_USER ng_chars_clear_kind(uint8_t kind)
@@ -129,6 +145,7 @@ void NEOGEO_USER ng_chars_clear_kind(uint8_t kind)
             ng_chars[i].active = 0;
         }
     }
+    ng_chars_rebuild_top();
 }
 
 NGCharacter* NEOGEO_USER chars_find(uint8_t kind)
@@ -153,7 +170,7 @@ uint8_t NEOGEO_USER ng_chars_count(void)
     uint8_t i;
     uint8_t count = 0;
 
-    for (i = 0; i < NG_MAX_CHARS; i++) {
+    for (i = 0; i < ng_chars_active_top; i++) {
         if (ng_chars[i].active) count++;
     }
 
@@ -163,14 +180,10 @@ uint8_t NEOGEO_USER ng_chars_count(void)
 uint8_t NEOGEO_USER ng_chars_index(NGCharacter *c)
 {
     uint8_t i;
-
     if (!c) return 0xff;
-
-    for (i = 0; i < NG_MAX_CHARS; i++) {
-        if (&ng_chars[i] == c) return i;
-    }
-
-    return 0xff;
+    i = (uint8_t)(c - ng_chars);
+    if (i >= NG_MAX_CHARS) return 0xff;
+    return i;
 }
 
 void NEOGEO_USER ng_chars_set_game_interupt(uint8_t kind, NGCharInterupt fn)
@@ -183,7 +196,7 @@ void NEOGEO_USER ng_chars_update(void)
 {
     uint8_t i;
 
-    for (i = 0; i < NG_MAX_CHARS; i++) {
+    for (i = 0; i < ng_chars_active_top; i++) {
         NGCharacter *c = &ng_chars[i];
 
         if (!c->active) continue;
@@ -247,22 +260,23 @@ static uint8_t NEOGEO_USER ng_char_draws_before(NGCharacter *a, NGCharacter *b)
     ay = ng_char_sort_y(a);
     by = ng_char_sort_y(b);
 
-    /* Higher Y is closer to the viewer in brawler/adventure scenes. */
-    return (uint8_t)(ay > by);
+    /* Smaller Y = lower scan line = lower on screen = nearer in brawler scenes. */
+    return (uint8_t)(ay < by);
 }
 
 /*
  * Priority/depth sort: build an order[] of active visible character indices.
  * Higher priority bands are placed first and therefore receive lower hardware
  * sprite slots, which are displayed in front.  Inside one band, characters are
- * sorted by Y descending.  Invisible/offscreen chars are hidden separately.
+ * sorted by Y ascending (lower Y = lower on screen = nearer = in front).
+ * Invisible/offscreen chars are hidden separately.
  */
 static uint8_t NEOGEO_USER ng_chars_depth_sort(uint8_t *order, int16_t camera_x, int16_t camera_y)
 {
     uint8_t i, j, count = 0;
     uint8_t tmp;
 
-    for (i = 0; i < NG_MAX_CHARS; i++) {
+    for (i = 0; i < ng_chars_active_top; i++) {
         NGCharacter *c = &ng_chars[i];
         if (ng_char_render_visible(c, camera_x, camera_y))
             order[count++] = i;
@@ -293,7 +307,7 @@ void NEOGEO_USER ng_chars_draw(void)
     int16_t camera_y = level ? level->scroll_y : 0;
 
     /* Hide inactive, invisible or offscreen chars that still have a VRAM slot booked. */
-    for (i = 0; i < NG_MAX_CHARS; i++) {
+    for (i = 0; i < ng_chars_active_top; i++) {
         NGCharacter *c = &ng_chars[i];
         uint8_t should_draw = ng_char_render_visible(c, camera_x, camera_y);
 
@@ -428,6 +442,13 @@ void NEOGEO_USER ng_char_set_sprite(NGCharacter *c, uint16_t firstSprite, uint8_
     c->sprite_stride      = new_strips;
     c->palette            = palette;
     c->sprite_dirty       = 1;
+}
+
+void NEOGEO_USER ng_char_set_tile_stride(NGCharacter *c, uint16_t stride)
+{
+    if (!c) return;
+    c->sprite_stride = stride ? stride : (uint16_t)c->sprite_strips;
+    c->sprite_dirty = 1;
 }
 
 void NEOGEO_USER ng_char_set_body(NGCharacter *c, int16_t x, int16_t y, int16_t w, int16_t h)

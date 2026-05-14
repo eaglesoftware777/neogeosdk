@@ -29,9 +29,9 @@ SCAT=srec_cat
 INFO=xxd -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
-NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_bg ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt
+NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_bg ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt ng_depthfx
 NG_ENGINE_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(NG_ENGINE_NAMES)))
-DEMO_NAMES=demo demo_screen demo_sound demo_3d demo_2d_engine
+DEMO_NAMES=demo demo_screen demo_sound demo_fix demo_3d demo_2d_engine
 DEMO_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(DEMO_NAMES)))
 NG_FIX_SDK_OBJ0=out/ng_fix_sdk0.o
 
@@ -106,9 +106,11 @@ game:
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_physics.c -o out/ng_physics0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_border_constraints.c -o out/ng_border_constraints0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_game_interupt.c -o out/ng_game_interupt0.o
+	$(CC) $(CFLAGS)   sdk/2d_engine/ng_depthfx.c -o out/ng_depthfx0.o
 	$(CC) $(CFLAGS)   demo/demo.c -o out/demo0.o
 	$(CC) $(CFLAGS)   demo/demo_screen.c -o out/demo_screen0.o
 	$(CC) $(CFLAGS)   demo/demo_sound.c -o out/demo_sound0.o
+	$(CC) $(CFLAGS)   demo/demo_fix.c -o out/demo_fix0.o
 	$(CC) $(CFLAGS)   demo/demo_3d.c -o out/demo_3d0.o
 	$(CC) $(CFLAGS)   demo/demo_2d_engine.c -o out/demo_2d_engine0.o
 	$(CC) $(CFLAGS)   eyecatcher.c -o out/eyecatcher0.o
