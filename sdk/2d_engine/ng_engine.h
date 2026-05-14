@@ -1,6 +1,7 @@
 #ifndef NG_ENGINE_H
 #define NG_ENGINE_H
 
+/* Core engine */
 #include "ng_defs.h"
 #include "sound_ids.h"
 #include "ng_properties.h"
@@ -20,5 +21,15 @@
 #include "ng_physics.h"
 #include "ng_border_constraints.h"
 #include "ng_game_interupt.h"
+
+/* New subsystems (Stages 3..11) */
+#include "ng_render_queue.h"
+#include "ng_fixed.h"
+#include "ng_camera.h"
+#include "ng_palette_fx.h"
+#include "ng_particles.h"
+#include "ng_feedback.h"
+#include "ng_depthfx.h"
+#include "ng_debug.h"
 
 #endif
