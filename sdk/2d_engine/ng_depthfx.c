@@ -1,88 +1,184 @@
+/*
+ * ng_depthfx.c — Depth FX / 2.5D projection (Stage 10)
+ *
+ * Perspective projection without division:
+ *   shrink = ng_shrink_tab[z & 0x7F]   (range 0x20..0xFF)
+ *
+ *   screen_x = cx + ((world_x - cx) * shrink) >> 8
+ *   screen_y = cy + ((world_y - cy) * shrink) >> 8
+ *
+ * The >> 8 shift replaces the division by 256 that would normalise shrink.
+ * Since ng_shrink_tab values range 0x20..0xFF, the shift by 8 gives us
+ * roughly 12.5%..100% projection scaling — adequate for arcade depth cues.
+ *
+ * NeoGeo SCB2 split:
+ *   bits 15..8 = horizontal shrink nibble (put in bits 11..8 = high nibble)
+ *   bits  7..0 = vertical shrink byte
+ *
+ * For this projection:
+ *   shrink_x = shrink >> 4 (4-bit nibble, 0..15)
+ *   shrink_y = shrink       (8-bit byte, 0..255)
+ */
+
 #include "ng_depthfx.h"
+#include "macro.h"
+#include "neogeo.h"
 
-void NEOGEO_USER ng_depthfx_default(NGDepthFXConfig *cfg)
+static uint8_t ng_df_fog_near;
+static uint8_t ng_df_fog_mid;
+static uint8_t ng_df_fog_far;
+static uint8_t ng_df_fog_very_far;
+
+/* Cheap xorshift16 for starfield — no stdlib rand */
+static uint16_t ng_df_noise = 0xACE1;
+
+static uint16_t NEOGEO_USER ng_df_xorshift(void)
 {
-    if (!cfg) return;
-    cfg->far_y = 88;
-    cfg->mid_y = 124;
-    cfg->near_y = 176;
-    cfg->far_scale = 0xB8;
-    cfg->mid_scale = 0xD0;
-    cfg->near_scale = 0xEC;
-    cfg->preserve_x_scale = 0;
-    cfg->priority_band = NG_RENDER_BAND_PLAYER;
+    ng_df_noise ^= (uint16_t)(ng_df_noise << 7);
+    ng_df_noise ^= (uint16_t)(ng_df_noise >> 9);
+    ng_df_noise ^= (uint16_t)(ng_df_noise << 8);
+    return ng_df_noise;
 }
 
-static uint8_t NEOGEO_USER ng_depthfx_lerp_u8(uint8_t a, uint8_t b, uint8_t t)
+void NEOGEO_USER ng_depthfx_init(void)
 {
-    /* >>8 instead of /255: avoids DIVS, error ≤1 LSB at typical scale values */
-    return (uint8_t)((uint16_t)a + (((int16_t)((int16_t)b - (int16_t)a) * (int16_t)t) >> 8));
+    ng_df_fog_near     = 0;
+    ng_df_fog_mid      = 0;
+    ng_df_fog_far      = 1;
+    ng_df_fog_very_far = 2;
 }
 
-uint8_t NEOGEO_USER ng_depthfx_scale_for_y(const NGDepthFXConfig *cfg, int16_t y)
+void NEOGEO_USER ng_depthfx_set_fog_palettes(uint8_t near_offset,
+                                              uint8_t mid_offset,
+                                              uint8_t far_offset,
+                                              uint8_t very_far_offset)
 {
-    int16_t num;
-    int16_t den;
-    uint8_t t;
-    NGDepthFXConfig local;
-
-    if (!cfg) {
-        ng_depthfx_default(&local);
-        cfg = &local;
-    }
-
-    if (y <= cfg->far_y) return cfg->far_scale;
-    if (y >= cfg->near_y) return cfg->near_scale;
-
-    if (y < cfg->mid_y) {
-        num = (int16_t)(y - cfg->far_y);
-        den = (int16_t)(cfg->mid_y - cfg->far_y);
-        if (den <= 0) return cfg->mid_scale;
-        t = (uint8_t)((num * 255) / den);
-        return ng_depthfx_lerp_u8(cfg->far_scale, cfg->mid_scale, t);
-    }
-
-    num = (int16_t)(y - cfg->mid_y);
-    den = (int16_t)(cfg->near_y - cfg->mid_y);
-    if (den <= 0) return cfg->near_scale;
-    t = (uint8_t)((num * 255) / den);
-    return ng_depthfx_lerp_u8(cfg->mid_scale, cfg->near_scale, t);
+    ng_df_fog_near     = near_offset;
+    ng_df_fog_mid      = mid_offset;
+    ng_df_fog_far      = far_offset;
+    ng_df_fog_very_far = very_far_offset;
 }
 
-void NEOGEO_USER ng_depthfx_apply_y(NGCharacter *c, const NGDepthFXConfig *cfg)
+NGProjected NEOGEO_USER ng_depthfx_project(NGVec3 p, uint8_t base_palette)
 {
-    uint8_t scale;
-    NGDepthFXConfig local;
+    NGProjected out;
+    uint8_t  shrink;
+    int16_t  dx;
+    int16_t  dy;
+    uint8_t  fog_off;
 
-    if (!c || !c->visible) return;
-    if (!cfg) {
-        ng_depthfx_default(&local);
-        cfg = &local;
+    /* Default: not visible */
+    out.visible = 0;
+
+    /* Clamp Z to valid range */
+    if (p.z < 0) p.z = 0;
+    if (p.z >= NGFX_SHRINK_ENTRIES) p.z = (int16_t)(NGFX_SHRINK_ENTRIES - 1);
+
+    /* Lookup shrink value from table — avoids division */
+    shrink = ng_shrink_tab[(uint8_t)p.z];
+
+    if (shrink == 0) {
+        /* Sprite too far — invisible */
+        return out;
     }
 
-    scale = ng_depthfx_scale_for_y(cfg, c->y);
+    /*
+     * Project world X/Y relative to vanishing point.
+     * screen = vp + (world - vp) * shrink / 256
+     * = vp + ((world - vp) * shrink) >> 8
+     *
+     * 68000: one MULS per axis, 16x8 → 24 bit result, shift right 8.
+     */
+    dx = (int16_t)(p.x - NG_DEPTH_CX);
+    dy = (int16_t)(p.y - NG_DEPTH_CY);
 
-    /* Scale lives in SCB2; update_transform writes it every frame without a
-     * full tile re-upload.  Only set dirty if tiles actually need re-uploading. */
-    if (!cfg->preserve_x_scale)
-        c->scale_x = scale;
-    c->scale_y = scale;
+    out.screen_x = (int16_t)(NG_DEPTH_CX + ((int32_t)dx * (int32_t)shrink >> 8));
+    out.screen_y = (int16_t)(NG_DEPTH_CY + ((int32_t)dy * (int32_t)shrink >> 8));
 
-    ng_char_set_priority(c, cfg->priority_band, c->y);
+    /*
+     * SCB2 encoding:
+     *   bits 15..8 = horizontal shrink nibble (stored in bits 11..8)
+     *   bits  7..0 = vertical shrink byte
+     * setSCB2 expects: xNibble = shrink >> 4, yShrink = shrink
+     */
+    out.shrink_x = (uint8_t)(shrink >> 4);    /* 0..15 nibble */
+    out.shrink_y = shrink;                     /* 0..255 byte  */
+
+    /* Fog palette selection */
+    if (p.z < 32)
+        fog_off = ng_df_fog_near;
+    else if (p.z < 64)
+        fog_off = ng_df_fog_mid;
+    else if (p.z < 96)
+        fog_off = ng_df_fog_far;
+    else
+        fog_off = ng_df_fog_very_far;
+
+    out.palette = (uint8_t)(base_palette + fog_off);
+
+    /* Visibility: cull off-screen with small margin */
+    if (out.screen_x < -32 || out.screen_x > NG_SCREEN_WIDTH + 32 ||
+        out.screen_y < -32 || out.screen_y > NG_SCREEN_HEIGHT + 32) {
+        return out; /* visible=0 */
+    }
+
+    out.visible = 1;
+    return out;
 }
 
-void NEOGEO_USER ng_depthfx_apply_virtual_z(NGCharacter *c, const NGDepthFXConfig *cfg, int16_t z)
+void NEOGEO_USER ng_depthfx_draw_group(NGSpriteGroup *group, NGVec3 p, uint8_t base_palette)
 {
-    NGDepthFXConfig local;
-    int16_t mapped_y;
+    NGProjected proj;
 
-    if (!c) return;
-    if (!cfg) {
-        ng_depthfx_default(&local);
-        cfg = &local;
+    if (!group) return;
+
+    proj = ng_depthfx_project(p, base_palette);
+
+    if (!proj.visible) {
+        ng_sprite_group_hide(group);
+        return;
     }
 
-    mapped_y = (int16_t)(cfg->near_y - z);
-    ng_depthfx_apply_y(c, cfg);
-    c->depth_offset = mapped_y;
+    group->x      = proj.screen_x;
+    group->y      = proj.screen_y;
+    group->xScale = (uint8_t)(proj.shrink_x << 4); /* convert nibble to 8-bit scale */
+    group->yScale = proj.shrink_y;
+    group->palette = proj.palette;
+
+    ng_sprite_group_update_transform(group);
+}
+
+void NEOGEO_USER ng_depthfx_advance_star(NGVec3 *p, int16_t speed, int16_t z_max,
+                                          int16_t spread_x, int16_t spread_y)
+{
+    uint16_t noise;
+
+    if (!p) return;
+
+    p->z -= speed;
+
+    if (p->z <= 0) {
+        /* Reset star to far plane with random position */
+        p->z = z_max;
+
+        noise = ng_df_xorshift();
+        /* Map noise to spread range: noise % spread (avoid modulo via mask trick) */
+        /* Use bit masking for powers of 2 spread, or just keep noise in range */
+        {
+            int16_t rx = (int16_t)(noise & 0x1FF);  /* 0..511 */
+            int16_t ry;
+            noise = ng_df_xorshift();
+            ry = (int16_t)(noise & 0x0FF);           /* 0..255 */
+
+            /* Centre around NG_DEPTH_CX / CY */
+            if (spread_x > 0) rx = (int16_t)(NG_DEPTH_CX - spread_x + (rx % (spread_x * 2)));
+            else rx = NG_DEPTH_CX;
+
+            if (spread_y > 0) ry = (int16_t)(NG_DEPTH_CY - spread_y + (ry % (spread_y * 2)));
+            else ry = NG_DEPTH_CY;
+
+            p->x = rx;
+            p->y = ry;
+        }
+    }
 }

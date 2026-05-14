@@ -12,6 +12,18 @@
  * vertical shrink from the driver, while each strip still needs its own tile
  * map, palette attributes and horizontal shrink.
  */
+/*
+ * Dirty flag bits for NGSpriteGroup.
+ * Only the bits that are set get written to VRAM on the next update.
+ * This avoids re-uploading all SCB fields every frame for static objects.
+ */
+#define NG_SGF_DIRTY_POS      0x01  /* x/y changed → write SCB3/SCB4 */
+#define NG_SGF_DIRTY_TILE     0x02  /* tileBase/stride changed → write SCB1 */
+#define NG_SGF_DIRTY_PALETTE  0x04  /* palette changed → update SCB1 attrs */
+#define NG_SGF_DIRTY_SHRINK   0x08  /* scale changed → write SCB2 */
+#define NG_SGF_DIRTY_VIS      0x10  /* visibility changed */
+#define NG_SGF_DIRTY_ALL      0x1F  /* force full upload */
+
 typedef struct {
     uint16_t firstSprite;
     uint8_t strips;
@@ -29,9 +41,14 @@ typedef struct {
     uint8_t autoAnim4;
     uint8_t autoAnim8;
     uint8_t visible;
+    uint8_t dirty;      /* bitmask of NG_SGF_DIRTY_* flags */
 } NGSpriteGroup;
 
 void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette);
+/* Mark specific attributes dirty so the next flush only uploads changed data. */
+void NEOGEO_USER ng_sprite_group_mark_dirty(NGSpriteGroup *g, uint8_t dirty_flags);
+/* Dirty-aware flush: only writes VRAM regions flagged in g->dirty. */
+void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_group_set_tile_base(NGSpriteGroup *g, uint16_t tileBase);
 void NEOGEO_USER ng_sprite_group_set_tile_stride(NGSpriteGroup *g, uint16_t tileStride);
 void NEOGEO_USER ng_sprite_group_set_palette(NGSpriteGroup *g, uint8_t palette);

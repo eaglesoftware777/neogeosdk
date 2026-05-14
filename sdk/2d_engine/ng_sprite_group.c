@@ -74,11 +74,17 @@ void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, ui
     g->autoAnim4 = 0;
     g->autoAnim8 = 0;
     g->visible = 1;
+    g->dirty = NG_SGF_DIRTY_ALL;   /* force full upload on first draw */
+}
+
+void NEOGEO_USER ng_sprite_group_mark_dirty(NGSpriteGroup *g, uint8_t dirty_flags)
+{
+    if (g) g->dirty |= dirty_flags;
 }
 
 void NEOGEO_USER ng_sprite_group_set_tile_base(NGSpriteGroup *g, uint16_t tileBase)
 {
-    if (g) g->tileBase = tileBase;
+    if (g) { g->tileBase = tileBase; g->dirty |= NG_SGF_DIRTY_TILE; }
 }
 
 void NEOGEO_USER ng_sprite_group_set_tile_stride(NGSpriteGroup *g, uint16_t tileStride)
@@ -88,7 +94,7 @@ void NEOGEO_USER ng_sprite_group_set_tile_stride(NGSpriteGroup *g, uint16_t tile
 
 void NEOGEO_USER ng_sprite_group_set_palette(NGSpriteGroup *g, uint8_t palette)
 {
-    if (g) g->palette = palette;
+    if (g) { g->palette = palette; g->dirty |= NG_SGF_DIRTY_PALETTE; }
 }
 
 void NEOGEO_USER ng_sprite_group_set_active_rows(NGSpriteGroup *g, uint8_t activeRows)
@@ -107,6 +113,7 @@ void NEOGEO_USER ng_sprite_group_set_pos(NGSpriteGroup *g, int16_t x, int16_t y)
     if (g) {
         g->x = x;
         g->y = y;
+        g->dirty |= NG_SGF_DIRTY_POS;
     }
 }
 
@@ -115,6 +122,7 @@ void NEOGEO_USER ng_sprite_group_move(NGSpriteGroup *g, int16_t dx, int16_t dy)
     if (g) {
         g->x += dx;
         g->y += dy;
+        g->dirty |= NG_SGF_DIRTY_POS;
     }
 }
 
@@ -123,6 +131,7 @@ void NEOGEO_USER ng_sprite_group_set_scale(NGSpriteGroup *g, uint8_t xScale, uin
     if (g) {
         g->xScale = xScale;
         g->yScale = yScale;
+        g->dirty |= NG_SGF_DIRTY_SHRINK;
     }
 }
 
@@ -144,7 +153,10 @@ void NEOGEO_USER ng_sprite_group_set_auto_anim(NGSpriteGroup *g, uint8_t autoAni
 
 void NEOGEO_USER ng_sprite_group_set_visible(NGSpriteGroup *g, uint8_t visible)
 {
-    if (g) g->visible = visible ? 1 : 0;
+    if (g) {
+        g->visible = visible ? 1 : 0;
+        g->dirty |= NG_SGF_DIRTY_VIS;
+    }
 }
 
 void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
@@ -264,11 +276,9 @@ void NEOGEO_USER ng_sprite_group_update_transform(NGSpriteGroup *g)
         /*
          * Sticky group movement: bit 6 (0x40) of SCB3 is the chain bit.
          * Horizontal reduction (SCB2) must match driver for consistent width.
-         * The driver owns Y, height and vertical shrink; chained strips should
-         * keep SCB3 as the sticky bit only, matching ng_sprite_group_upload().
          */
         vram_SCB234((uint16_t)(SCB2_ADDR + spriteIndex), scb2);
-        vram_SCB234((uint16_t)(SCB3_ADDR + spriteIndex), 0x0040);
+        vram_SCB234((uint16_t)(SCB3_ADDR + spriteIndex), 0x0040 | activeRows);
     }
 }
 
@@ -291,4 +301,93 @@ void NEOGEO_USER ng_sprite_group_hide(NGSpriteGroup *g)
 {
     if (!g) return;
     ng_sprite_hide_range(g->firstSprite, g->strips);
+}
+
+/*
+ * ng_sprite_group_flush — dirty-aware VRAM update.
+ *
+ * Only writes the VRAM regions corresponding to set dirty flags.
+ * Clears all dirty flags after writing.
+ *
+ * Rules:
+ *   NG_SGF_DIRTY_TILE or PALETTE → full SCB1 upload (tile+attr per row).
+ *   NG_SGF_DIRTY_SHRINK           → write SCB2 for all strips.
+ *   NG_SGF_DIRTY_POS              → write SCB3 (driver) + SCB4 (all strips).
+ *   NG_SGF_DIRTY_VIS              → hide or show as appropriate.
+ *
+ * If nothing is dirty, the function returns immediately — zero VRAM writes.
+ */
+void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
+{
+    uint8_t strip;
+    uint8_t activeRows;
+    uint8_t xNibble;
+    uint16_t scb2;
+    uint16_t driverScb3;
+    uint16_t driverScb4;
+    uint16_t attr;
+    uint8_t row;
+
+    if (!g) return;
+    if (!g->dirty) return;
+
+    /* Visibility change: hide and return if not visible */
+    if ((g->dirty & NG_SGF_DIRTY_VIS) && !g->visible) {
+        ng_sprite_group_hide(g);
+        g->dirty = 0;
+        return;
+    }
+
+    activeRows = g->activeRows ? g->activeRows : g->heightTiles;
+    if (activeRows > g->heightTiles) activeRows = g->heightTiles;
+    if (activeRows > NG_SPRITE_MAX_HEIGHT_TILES) activeRows = NG_SPRITE_MAX_HEIGHT_TILES;
+
+    /* Compute values once even if some are not needed — branch avoidance */
+    xNibble    = ngsg_x_shrink_nibble(g->xScale);
+    scb2       = setSCB2(xNibble, g->yScale);
+    driverScb3 = setSCB3((uint16_t)(496 - g->y), 0, activeRows);
+    driverScb4 = setSCB4((uint16_t)g->x);
+    attr       = setSCB1_2(g->palette, 0, g->autoAnim8, g->autoAnim4, g->vflip, g->hflip);
+
+    /* SCB1 tile + attribute upload — only when tile or palette changed */
+    if (g->dirty & (NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_PALETTE)) {
+        for (strip = 0; strip < g->strips; strip++) {
+            uint16_t scb1Addr = (uint16_t)(64u * (uint16_t)(g->firstSprite + strip));
+
+            for (row = 0; row < g->heightTiles; row++) {
+                ngsg_tiles[row] = ngsg_tile_for(g, strip, row);
+                ngsg_attrs[row] = attr;
+            }
+
+            vram_init(scb1Addr, 1);
+            vram_SCB1(ngsg_tiles, ngsg_attrs, g->heightTiles);
+        }
+    }
+
+    /* SCB2 shrink upload */
+    if (g->dirty & NG_SGF_DIRTY_SHRINK) {
+        for (strip = 0; strip < g->strips; strip++) {
+            uint16_t spriteIndex = (uint16_t)(g->firstSprite + strip);
+            vram_SCB234((uint16_t)(SCB2_ADDR + spriteIndex), scb2);
+        }
+    }
+
+    /* SCB3/4 position upload */
+    if (g->dirty & (NG_SGF_DIRTY_POS | NG_SGF_DIRTY_VIS)) {
+        vram_SCB234((uint16_t)(SCB3_ADDR + g->firstSprite), driverScb3);
+        vram_SCB234((uint16_t)(SCB4_ADDR + g->firstSprite), driverScb4);
+
+        for (strip = 1; strip < g->strips; strip++) {
+            uint16_t spriteIndex = (uint16_t)(g->firstSprite + strip);
+            /*
+             * Sticky chain strips: SCB3 bit 6 = chain bit.
+             * Only the driver strip needs full SCB3; chained strips just need
+             * the chain bit set and height in bits [5:0].
+             */
+            vram_SCB234((uint16_t)(SCB3_ADDR + spriteIndex), (uint16_t)(0x0040 | activeRows));
+            vram_SCB234((uint16_t)(SCB4_ADDR + spriteIndex), 0);
+        }
+    }
+
+    g->dirty = 0;   /* all flushed */
 }
