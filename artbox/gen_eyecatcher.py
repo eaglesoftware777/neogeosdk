@@ -19,8 +19,13 @@ import pathlib
 MANIFEST  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets_manifest.json")
 OUT_C     = pathlib.Path(__file__).resolve().parents[1] / "eyecatcher.c"
 
-# Seconds each frame is displayed (cyclexs units = 1 s at 60 fps)
-FRAME_DELAY = 2
+# Logo frames hold for ~1.5 s — long enough to read, matches real NeoGeo pacing.
+# The single flash/transition frame (4.png) gets a short burst.
+LOGO_DELAY_MS  = 1500
+FLASH_DELAY_MS = 250
+
+# Filenames that are flash/transition frames (held briefly).
+FLASH_FRAMES = {"4.png"}
 
 
 def main():
@@ -67,12 +72,13 @@ def main():
     ]
 
     for spec in frames:
-        sid = spec["screen_id"]
+        sid   = spec["screen_id"]
+        delay = FLASH_DELAY_MS if spec["name"] in FLASH_FRAMES else LOGO_DELAY_MS
         lines += [
             f"    clearFix();",
             f"    clearSprs();",
             f"    showScreen{sid}(16, 24, 0xF, 0xAF, 16, 0x0000, 0);",
-            f"    cyclexs({FRAME_DELAY});",
+            f"    cyclexms({delay});",
             "",
         ]
 

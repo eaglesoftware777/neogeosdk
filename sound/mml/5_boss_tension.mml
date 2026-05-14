@@ -1,0 +1,50 @@
+; 5_boss_tension.mml
+; Boss encounter — aggressive D-minor driving loop
+; @f3 = FM_DUEL_SUSPENSE  @b2 = SOUND_BED_STAGE_TWO  @p2 = Arcade Alert SSG
+; @a9 = LOW_DRUM percussion kick
+
+T168
+V14
+O4
+L8
+
+@p2
+@b2
+@f3
+
+; phrase A — punchy D-minor stabs
+D F A R
+@a9
+R
+D F A > D
+< A4 R4
+
+; phrase B — chromatic tension climb
+O4
+A B- > C D
+< A G F E
+@a9
+R
+F G A B-
+A4 R4
+
+; phrase C — modal D-A pulse
+O3
+D A > D A
+F A > D A
+@a9
+R
+O4
+E G B- G
+A4 R4
+
+; turnaround — driving resolve
+O4
+D E F G
+A B- > D C
+@a9
+R
+< A G F E
+D4 R4
+
+~

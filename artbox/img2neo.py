@@ -301,24 +301,34 @@ def open_as_rgb(path):
 # Main conversion
 # ---------------------------------------------------------------------------
 
-def convert(src, dst, W=256, H=256, n_colors=15):
+def convert(src, dst, W=256, H=256, n_colors=15, dither='ordered'):
+    """
+    dither: 'ordered' (Bayer 4×4, calmer grain — recommended for logos/sprites),
+            'fs' (serpentine Floyd-Steinberg, maximum diffusion),
+            'none' (nearest colour only, cleanest solid areas).
+    """
     W = (W // 16) * 16
     H = (H // 16) * 16
-    print(f"  {os.path.basename(src)}  →  {os.path.basename(dst)}  ({W}x{H}, {n_colors} colours)")
+    print(f"  {os.path.basename(src)}  →  {os.path.basename(dst)}  ({W}x{H}, {n_colors} colours, dither={dither})")
 
     img = open_as_rgb(src)
     img = crop_center(img, W, H)
-    img = ImageEnhance.Contrast(img).enhance(1.2)
-    img = ImageEnhance.Color(img).enhance(1.3)
-    img = img.filter(ImageFilter.UnsharpMask(radius=1.5, percent=150, threshold=2))
+    img = ImageEnhance.Contrast(img).enhance(1.15)
+    img = ImageEnhance.Color(img).enhance(1.25)
+    img = img.filter(ImageFilter.UnsharpMask(radius=1.2, percent=120, threshold=3))
 
     arr = snap_neogeo(np.array(img, dtype=np.uint8))
 
     print(f"    k-means palette extraction (CIE-Lab)…")
-    palette = kmeans_palette(arr, n=n_colors, iters=35, sample_limit=16384)
+    palette = kmeans_palette(arr, n=n_colors, iters=40, sample_limit=20480)
 
-    print(f"    serpentine Floyd-Steinberg dithering…")
-    indexed = floyd_steinberg(arr, palette)
+    print(f"    {dither} dithering…")
+    if dither == 'none':
+        indexed = nearest_palette_indices(arr, palette)
+    elif dither == 'fs':
+        indexed = floyd_steinberg(arr, palette)
+    else:  # 'ordered' — default
+        indexed = ordered_dither(arr, palette, strength=0.45)
 
     print(f"    quality refinement pass…")
     palette, indexed = quality_second_pass(indexed, palette, arr)
@@ -371,6 +381,8 @@ if __name__ == '__main__':
     ap.add_argument('-H', '--height', type=int, default=256)
     ap.add_argument('-c', '--colors', type=int, default=15,
                     help='Number of palette colours (default 15)')
+    ap.add_argument('--dither', choices=['ordered', 'fs', 'none'], default='ordered',
+                    help='Dithering method: ordered (default, Bayer 4x4), fs (Floyd-Steinberg), none')
     ap.add_argument('--batch', action='store_true',
                     help='Convert the standard docs/img set to artbox/in/')
     args = ap.parse_args()
@@ -378,7 +390,7 @@ if __name__ == '__main__':
     if args.batch:
         run_batch()
     elif args.src and args.dst:
-        convert(args.src, args.dst, args.width, args.height, args.colors)
+        convert(args.src, args.dst, args.width, args.height, args.colors, args.dither)
     else:
         ap.print_help()
         sys.exit(1)

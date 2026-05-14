@@ -15,7 +15,8 @@ void NEOGEO_USER ng_depthfx_default(NGDepthFXConfig *cfg)
 
 static uint8_t NEOGEO_USER ng_depthfx_lerp_u8(uint8_t a, uint8_t b, uint8_t t)
 {
-    return (uint8_t)(a + (((int16_t)b - (int16_t)a) * (int16_t)t) / 255);
+    /* >>8 instead of /255: avoids DIVS, error ≤1 LSB at typical scale values */
+    return (uint8_t)((uint16_t)a + (((int16_t)((int16_t)b - (int16_t)a) * (int16_t)t) >> 8));
 }
 
 uint8_t NEOGEO_USER ng_depthfx_scale_for_y(const NGDepthFXConfig *cfg, int16_t y)
@@ -61,14 +62,11 @@ void NEOGEO_USER ng_depthfx_apply_y(NGCharacter *c, const NGDepthFXConfig *cfg)
 
     scale = ng_depthfx_scale_for_y(cfg, c->y);
 
-    if (!cfg->preserve_x_scale && c->scale_x != scale) {
+    /* Scale lives in SCB2; update_transform writes it every frame without a
+     * full tile re-upload.  Only set dirty if tiles actually need re-uploading. */
+    if (!cfg->preserve_x_scale)
         c->scale_x = scale;
-        c->sprite_dirty = 1;
-    }
-    if (c->scale_y != scale) {
-        c->scale_y = scale;
-        c->sprite_dirty = 1;
-    }
+    c->scale_y = scale;
 
     ng_char_set_priority(c, cfg->priority_band, c->y);
 }
