@@ -20,10 +20,10 @@ GDB can:
 
 ### Linux / WSL
 
-The cross-GDB is included in the `x-tools.tar` release asset alongside the compiler:
+The cross-GDB is included in the `x-tools-v2` release asset alongside the compiler:
 
 ```text
-$SDKHOME/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gdb
+$SDKHOME/x-tools-v2/m68k-unknown-elf/bin/m68k-unknown-elf-gdb
 ```
 
 If the bundled GDB cannot start because of missing host libraries (common on newer Ubuntu), install a system GDB that understands the m68k ELF format:
@@ -42,7 +42,15 @@ make gdb-remote GDB=gdb-multiarch GDB_REMOTE=localhost:1234
 
 ### Windows
 
-The cross-GDB is `m68k-elf-gdb.exe` inside the SysGCC toolchain tree:
+On Windows, the makefile resolves `GDB` from the selected compiler prefix.
+With `x-tools-v2-win`, it is typically one of:
+
+```text
+<sdk root>\x-tools-v2-win\m68k-unknown-elf\bin\m68k-unknown-elf-gdb.exe
+<sdk root>\x-tools-v2-win\m68k-elf\bin\m68k-elf-gdb.exe
+```
+
+SysGCC fallback:
 
 ```text
 C:\SysGCC\m68k-elf\bin\m68k-elf-gdb.exe

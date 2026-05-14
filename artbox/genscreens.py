@@ -10,11 +10,15 @@ import json
 import os
 import struct
 import sys
+from pathlib import Path
 
 import numpy as np
 
 SPRITE_PALETTE_BASE = 0x10
-MANIFEST_PATH = "assets_manifest.json"
+ROOT = Path(__file__).resolve().parent
+MANIFEST_PATH = ROOT / "assets_manifest.json"
+NEOPAL_PATH = ROOT / "neopal.bin"
+SCREENS_C_PATH = ROOT / "screens.c"
 
 
 def getpal(image_index):
@@ -24,9 +28,9 @@ def getpal(image_index):
 
 
 def load_manifest():
-    if not os.path.exists(MANIFEST_PATH):
+    if not MANIFEST_PATH.exists():
         return None
-    with open(MANIFEST_PATH, "r", encoding="utf-8") as handle:
+    with MANIFEST_PATH.open("r", encoding="utf-8") as handle:
         return json.load(handle)
 
 
@@ -46,7 +50,7 @@ else:
     ]
 
 bsz = 136
-with open("neopal.bin", "rb") as palette_file:
+with NEOPAL_PATH.open("rb") as palette_file:
     buffi = palette_file.read()
 
 sz = int(sys.argv[2]) if len(sys.argv) > 2 else 16
@@ -63,7 +67,7 @@ for _count in range(image_count):
         map_start = int(tile_map[row, sz - 1]) + 1
     maps.append(tile_map)
 
-sys.stdout = open("screens.c", "wt")
+sys.stdout = SCREENS_C_PATH.open("wt", encoding="utf-8")
 
 for spec in image_specs:
     image_i0 = int(spec["db_index"])

@@ -26,14 +26,26 @@ SECTIONS
 	   	                out\main.o(neogeo_user)
 	   	                out\main.o(.rodata) 
 						out\neogeolib.o(neogeo_user)
+						out\demo*0.o(neogeo_user)
+						out\demo*0.o(.rodata)
 						out\ng_*0.o(neogeo_user)
 						out\ng_*0.o(.rodata)
 						} > memory_user =0xFF
        game_engine_bss (NOLOAD) : {
+                        out\demo*0.o(.bss)
+                        out\demo*0.o(.bss.*)
+                        out\demo*0.o(COMMON)
+                        out\demo*0.o(.data)
+                        out\demo*0.o(.data.*)
                         out\ng_*0.o(.bss)
                         out\ng_*0.o(.bss.*)
                         out\ng_*0.o(COMMON)
                         out\ng_*0.o(.data)
                         out\ng_*0.o(.data.*)
+                        *(.bss)
+                        *(.bss.*)
+                        *(COMMON)
+                        *(.data)
+                        *(.data.*)
                         } > memory_game_engine_bss
 }

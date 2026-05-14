@@ -7,22 +7,50 @@ ifndef SDKHOME
 SDKHOME := $(abspath $(CURDIR)/..)
 endif
 
-M68K_ELF_ROOT?=C:\SysGCC\m68k-elf
-M68K_ELF_BIN=$(M68K_ELF_ROOT)\bin
+# Toolchain selection order:
+# - TOOLCHAIN=legacy: force existing M68K_ELF_ROOT fallback (e.g. SysGCC)
+# - TOOLCHAIN=auto (default):
+#   1) $(SDKHOME)\x-tools-v2-win\m68k-unknown-elf\bin
+#   2) $(SDKHOME)\x-tools-v2-win\m68k-elf\bin
+#   3) existing M68K_ELF_ROOT fallback (e.g. SysGCC)
+TOOLCHAIN?=auto
+XTOOLS_V2_WIN_U1:=$(SDKHOME)/x-tools-v2-win/m68k-unknown-elf/bin
+XTOOLS_V2_WIN_U2:=$(SDKHOME)/x-tools-v2-win/m68k-elf/bin
+
+ifeq ($(TOOLCHAIN),legacy)
+  M68K_ELF_ROOT?=C:\SysGCC\m68k-elf
+  M68K_ELF_BIN=$(M68K_ELF_ROOT)\bin
+  M68K_ELF_PREFIX=m68k-elf
+else
+  ifeq ($(wildcard $(XTOOLS_V2_WIN_U1)/m68k-unknown-elf-gcc.exe),)
+    ifeq ($(wildcard $(XTOOLS_V2_WIN_U2)/m68k-elf-gcc.exe),)
+      M68K_ELF_ROOT?=C:\SysGCC\m68k-elf
+      M68K_ELF_BIN=$(M68K_ELF_ROOT)\bin
+      M68K_ELF_PREFIX=m68k-elf
+    else
+      M68K_ELF_BIN:=$(subst /,\,$(XTOOLS_V2_WIN_U2))
+      M68K_ELF_PREFIX=m68k-elf
+    endif
+  else
+    M68K_ELF_BIN:=$(subst /,\,$(XTOOLS_V2_WIN_U1))
+    M68K_ELF_PREFIX=m68k-unknown-elf
+  endif
+endif
+
 REPO_WIN=$(subst /,\,$(CURDIR))
 
-CC=$(M68K_ELF_BIN)\m68k-elf-gcc.exe
+CC=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-gcc.exe
 CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Wa,-march=68000,-mcpu=68000,-W,--warn
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
-LD=$(M68K_ELF_BIN)\m68k-elf-ld.exe
-LDFLAGS=  -nostartfiles -nostdlib
-OBJCP=$(M68K_ELF_BIN)\m68k-elf-objcopy.exe
-OBJDUMP=$(M68K_ELF_BIN)\m68k-elf-objdump.exe
-GDB=$(M68K_ELF_BIN)\m68k-elf-gdb.exe
-NM=$(M68K_ELF_BIN)\m68k-elf-nm.exe
-READELF=$(M68K_ELF_BIN)\m68k-elf-readelf.exe
-ADDR2LINE=$(M68K_ELF_BIN)\m68k-elf-addr2line.exe
-SIZE=$(M68K_ELF_BIN)\m68k-elf-size.exe
+LD=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-ld.exe
+LDFLAGS=  -nostdlib
+OBJCP=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-objcopy.exe
+OBJDUMP=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-objdump.exe
+GDB=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-gdb.exe
+NM=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-nm.exe
+READELF=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-readelf.exe
+ADDR2LINE=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-addr2line.exe
+SIZE=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-size.exe
 
 WLAZ80?=wla-z80
 WLALINK?=wlalink
@@ -41,8 +69,8 @@ SCAT=$(REPO_WIN)\win\srec_cat.exe
 INFO=$(REPO_WIN)\win\xxd.exe -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
-NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_bg0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o
-DEMO_OBJ0=out\demo0.o out\demo_screen0.o out\demo_sound0.o out\demo_3d0.o out\demo_2d_engine0.o
+NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_bg0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o out\ng_depthfx0.o
+DEMO_OBJ0=out\demo0.o out\demo_screen0.o out\demo_sound0.o out\demo_fix0.o out\demo_3d0.o out\demo_2d_engine0.o
 NG_FIX_SDK_OBJ0=out\ng_fix_sdk0.o
 
 ifeq ($(DEBUG),1)
@@ -111,14 +139,16 @@ game:
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_actions.c -o out\ng_actions0.o
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_chars.c -o out\ng_chars0.o
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_npcs.c -o out\ng_npcs0.o
-	$(CC) $(CFLAGS) sdk\2d_engine\ng_physics.c -o out\ng_physics0.o
-	$(CC) $(CFLAGS) sdk\2d_engine\ng_border_constraints.c -o out\ng_border_constraints0.o
-	$(CC) $(CFLAGS) sdk\2d_engine\ng_game_interupt.c -o out\ng_game_interupt0.o
-	$(CC) $(CFLAGS) demo\demo.c -o out\demo0.o
-	$(CC) $(CFLAGS) demo\demo_screen.c -o out\demo_screen0.o
-	$(CC) $(CFLAGS) demo\demo_sound.c -o out\demo_sound0.o
-	$(CC) $(CFLAGS) demo\demo_3d.c -o out\demo_3d0.o
-	$(CC) $(CFLAGS) demo\demo_2d_engine.c -o out\demo_2d_engine0.o
+		$(CC) $(CFLAGS) sdk\2d_engine\ng_physics.c -o out\ng_physics0.o
+		$(CC) $(CFLAGS) sdk\2d_engine\ng_border_constraints.c -o out\ng_border_constraints0.o
+		$(CC) $(CFLAGS) sdk\2d_engine\ng_game_interupt.c -o out\ng_game_interupt0.o
+		$(CC) $(CFLAGS) sdk\2d_engine\ng_depthfx.c -o out\ng_depthfx0.o
+		$(CC) $(CFLAGS) demo\demo.c -o out\demo0.o
+		$(CC) $(CFLAGS) demo\demo_screen.c -o out\demo_screen0.o
+		$(CC) $(CFLAGS) demo\demo_sound.c -o out\demo_sound0.o
+		$(CC) $(CFLAGS) demo\demo_fix.c -o out\demo_fix0.o
+		$(CC) $(CFLAGS) demo\demo_3d.c -o out\demo_3d0.o
+		$(CC) $(CFLAGS) demo\demo_2d_engine.c -o out\demo_2d_engine0.o
 	$(CC) $(CFLAGS) eyecatcher.c -o out\eyecatcher0.o
 	$(OBJCP) $(STRIP_SECTS) out\neogeo0.o out\neogeo.o
 	$(OBJCP) $(STRIP_SECTS) out\user0.o out\user.o

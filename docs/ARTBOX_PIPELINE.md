@@ -71,6 +71,18 @@ cd artbox
 makeartbox.bat
 ```
 
+If `makeartbox.bat` fails with `PIL/img2neo not available`, install packages
+through the same interpreter used by `py`:
+
+```bat
+py -0p
+py -m pip --version
+py -m pip install --upgrade pip
+py -m pip install numpy pillow pypng
+cd artbox
+py -c "import sys; print(sys.executable); import PIL, numpy, png, img2neo; print('OK')"
+```
+
 Then rebuild the ROM:
 
 ```bash
