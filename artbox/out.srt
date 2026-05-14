@@ -1,5 +1,5 @@
 [001] backgrounds/0.png
-mode=screen fit=crop anchor=center rule=cat_backgrounds
+mode=screen fit=contain anchor=center rule=cat_backgrounds
 category=backgrounds
 source=1254x1254 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=1 palette_bank=16 tile_base=0 reserved_last=255 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
@@ -643,198 +643,198 @@ screen_id=92 palette_bank=107 tile_base=23296 reserved_last=23551 used_cols=3 us
 note=special effect or transition animation
 
 [093] eyecatcher/1.png
-mode=screen fit=crop anchor=center rule=cat_eyecatcher
+mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=93 palette_bank=108 tile_base=23552 reserved_last=23807 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+source=1536x1024 canvas=256x256 content=256x171 offset=(0,42)
+screen_id=93 palette_bank=108 tile_base=23552 reserved_last=23807 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=10 used_tiles=176 strips=16 active_rows=11
 note=eye catcher animation frame (logo/intro sequence)
 
 [094] eyecatcher/2.png
-mode=screen fit=crop anchor=center rule=cat_eyecatcher
+mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=94 palette_bank=109 tile_base=23808 reserved_last=24063 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+source=1536x1024 canvas=256x256 content=256x171 offset=(0,42)
+screen_id=94 palette_bank=109 tile_base=23808 reserved_last=24063 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=10 used_tiles=176 strips=16 active_rows=11
 note=eye catcher animation frame (logo/intro sequence)
 
 [095] eyecatcher/3.png
-mode=screen fit=crop anchor=center rule=cat_eyecatcher
+mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=95 palette_bank=110 tile_base=24064 reserved_last=24319 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+source=1536x1024 canvas=256x256 content=256x171 offset=(0,42)
+screen_id=95 palette_bank=110 tile_base=24064 reserved_last=24319 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=10 used_tiles=176 strips=16 active_rows=11
 note=eye catcher animation frame (logo/intro sequence)
 
 [096] eyecatcher/4.png
-mode=screen fit=crop anchor=center rule=cat_eyecatcher
+mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=96 palette_bank=111 tile_base=24320 reserved_last=24575 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+source=1536x1024 canvas=256x256 content=256x171 offset=(0,42)
+screen_id=96 palette_bank=111 tile_base=24320 reserved_last=24575 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=10 used_tiles=176 strips=16 active_rows=11
 note=eye catcher animation frame (logo/intro sequence)
 
 [097] eyecatcher/5.png
-mode=screen fit=crop anchor=center rule=cat_eyecatcher
+mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=97 palette_bank=112 tile_base=24576 reserved_last=24831 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+source=1536x1024 canvas=256x256 content=256x171 offset=(0,42)
+screen_id=97 palette_bank=112 tile_base=24576 reserved_last=24831 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=10 used_tiles=176 strips=16 active_rows=11
 note=eye catcher animation frame (logo/intro sequence)
 
 [098] eyecatcher/6.png
-mode=screen fit=crop anchor=center rule=cat_eyecatcher
+mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=98 palette_bank=113 tile_base=24832 reserved_last=25087 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+source=1536x1024 canvas=256x256 content=256x171 offset=(0,42)
+screen_id=98 palette_bank=113 tile_base=24832 reserved_last=25087 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=10 used_tiles=176 strips=16 active_rows=11
 note=eye catcher animation frame (logo/intro sequence)
 
 [099] eyecatcher/7.png
-mode=screen fit=crop anchor=center rule=cat_eyecatcher
+mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=99 palette_bank=114 tile_base=25088 reserved_last=25343 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+source=1536x1024 canvas=256x256 content=256x171 offset=(0,42)
+screen_id=99 palette_bank=114 tile_base=25088 reserved_last=25343 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=10 used_tiles=176 strips=16 active_rows=11
 note=eye catcher animation frame (logo/intro sequence)
 
 [100] screens/1.png
-mode=screen fit=crop anchor=center rule=cat_screens
+mode=screen fit=contain anchor=center rule=cat_screens
 category=screens
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=100 palette_bank=115 tile_base=25344 reserved_last=25599 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen — vertical/horizontal shooter background or level
 
 [101] screens/2.png
-mode=screen fit=crop anchor=center rule=cat_screens
+mode=screen fit=contain anchor=center rule=cat_screens
 category=screens
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=101 palette_bank=116 tile_base=25600 reserved_last=25855 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen — vertical/horizontal shooter background or level
 
 [102] screens/3.png
-mode=screen fit=crop anchor=center rule=cat_screens
+mode=screen fit=contain anchor=center rule=cat_screens
 category=screens
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=102 palette_bank=117 tile_base=25856 reserved_last=26111 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen — vertical/horizontal shooter background or level
 
 [103] screens/4.png
-mode=screen fit=crop anchor=center rule=cat_screens
+mode=screen fit=contain anchor=center rule=cat_screens
 category=screens
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=103 palette_bank=118 tile_base=26112 reserved_last=26367 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen — vertical/horizontal shooter background or level
 
 [104] screens/5.png
-mode=screen fit=crop anchor=center rule=cat_screens
+mode=screen fit=contain anchor=center rule=cat_screens
 category=screens
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=104 palette_bank=119 tile_base=26368 reserved_last=26623 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen — vertical/horizontal shooter background or level
 
 [105] screens/6.png
-mode=screen fit=crop anchor=center rule=cat_screens
+mode=screen fit=contain anchor=center rule=cat_screens
 category=screens
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=105 palette_bank=120 tile_base=26624 reserved_last=26879 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen — vertical/horizontal shooter background or level
 
 [106] screens/7.png
-mode=screen fit=crop anchor=center rule=cat_screens
+mode=screen fit=contain anchor=center rule=cat_screens
 category=screens
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=106 palette_bank=121 tile_base=26880 reserved_last=27135 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen — vertical/horizontal shooter background or level
 
 [107] titles/8.png
-mode=screen fit=crop anchor=center rule=cat_titles
+mode=screen fit=contain anchor=center rule=cat_titles
 category=titles
 source=1024x1024 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=107 palette_bank=122 tile_base=27136 reserved_last=27391 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=game title, intro, demo logo or fix overlay
 
 [108] titles/9.png
-mode=screen fit=crop anchor=center rule=cat_titles
+mode=screen fit=contain anchor=center rule=cat_titles
 category=titles
-source=1448x1086 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=108 palette_bank=123 tile_base=27392 reserved_last=27647 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+source=1448x1086 canvas=256x256 content=256x192 offset=(0,32)
+screen_id=108 palette_bank=123 tile_base=27392 reserved_last=27647 used_cols=16 used_rows=12 start_col=0 start_row=2 x_pad=0 y_pad=0 used_tiles=192 strips=16 active_rows=12
 note=game title, intro, demo logo or fix overlay
 
 [109] npcs/z_npc_84.png
-mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=109 palette_bank=124 tile_base=27648 reserved_last=27903 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=late-scene npc sprite page padded with transparency
+note=NPC character repeated animation
 
 [110] npcs/z_npc_85.png
-mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=110 palette_bank=125 tile_base=27904 reserved_last=28159 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=late-scene npc sprite page padded with transparency
+note=NPC character repeated animation
 
 [111] npcs/z_npc_86.png
-mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=111 palette_bank=126 tile_base=28160 reserved_last=28415 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=late-scene npc sprite page padded with transparency
+note=NPC character repeated animation
 
 [112] npcs/z_npc_87.png
-mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=112 palette_bank=127 tile_base=28416 reserved_last=28671 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=late-scene npc sprite page padded with transparency
+note=NPC character repeated animation
 
 [113] npcs/z_npc_88.png
-mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=113 palette_bank=128 tile_base=28672 reserved_last=28927 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=late-scene npc sprite page padded with transparency
+note=NPC character repeated animation
 
 [114] npcs/z_npc_89.png
-mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=114 palette_bank=129 tile_base=28928 reserved_last=29183 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=late-scene npc sprite page padded with transparency
+note=NPC character repeated animation
 
 [115] npcs/z_npc_90.png
-mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=115 palette_bank=130 tile_base=29184 reserved_last=29439 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=late-scene npc sprite page padded with transparency
+note=NPC character repeated animation
 
 [116] npcs/z_npc_91.png
-mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=116 palette_bank=131 tile_base=29440 reserved_last=29695 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=late-scene npc sprite page padded with transparency
+note=NPC character repeated animation
 
 [117] npcs/z_npc_92.png
-mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=117 palette_bank=132 tile_base=29696 reserved_last=29951 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=late-scene npc sprite page padded with transparency
+note=NPC character repeated animation
 
 [118] npcs/z_npc_93.png
-mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=118 palette_bank=133 tile_base=29952 reserved_last=30207 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=late-scene npc sprite page padded with transparency
+note=NPC character repeated animation
 
 [119] npcs/z_npc_94.png
-mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=119 palette_bank=134 tile_base=30208 reserved_last=30463 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=late-scene npc sprite page padded with transparency
+note=NPC character repeated animation
 
 [120] npcs/z_npc_95.png
-mode=sprite fit=pad anchor=bottom-center rule=z_npc_parts
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=120 palette_bank=135 tile_base=30464 reserved_last=30719 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=late-scene npc sprite page padded with transparency
+note=NPC character repeated animation
 
