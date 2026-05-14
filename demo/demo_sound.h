@@ -7,7 +7,10 @@
 #define NEOGEO_USER
 #endif
 
-void NEOGEO_USER demo_sound_showcase(void);
+/* Scene 10 — YM2610 audio engine showcase */
+void NEOGEO_USER demo_sound_run(void);
+
+/* Legacy compatibility entry point */
 void NEOGEO_USER showSoundDemo(void);
 
-#endif
+#endif /* DEMO_SOUND_H */

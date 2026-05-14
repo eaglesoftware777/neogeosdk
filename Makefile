@@ -43,7 +43,7 @@ SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
 NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_bg ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt ng_depthfx ng_render_queue ng_fixed ng_camera ng_palette_fx ng_particles ng_feedback ng_debug ng_demo_advanced
 NG_ENGINE_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(NG_ENGINE_NAMES)))
-DEMO_NAMES=demo demo_screen demo_sound demo_fix demo_3d demo_2d_engine
+DEMO_NAMES=demo demo_intro demo_sprites demo_camera demo_palette demo_particles demo_depth demo_sound demo_fix demo_combat demo_stress demo_title
 DEMO_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(DEMO_NAMES)))
 NG_FIX_SDK_OBJ0=out/ng_fix_sdk0.o
 
@@ -128,11 +128,17 @@ game:
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_debug.c -o out/ng_debug0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_demo_advanced.c -o out/ng_demo_advanced0.o
 	$(CC) $(CFLAGS)   demo/demo.c -o out/demo0.o
-	$(CC) $(CFLAGS)   demo/demo_screen.c -o out/demo_screen0.o
+	$(CC) $(CFLAGS)   demo/demo_intro.c -o out/demo_intro0.o
+	$(CC) $(CFLAGS)   demo/demo_sprites.c -o out/demo_sprites0.o
+	$(CC) $(CFLAGS)   demo/demo_camera.c -o out/demo_camera0.o
+	$(CC) $(CFLAGS)   demo/demo_palette.c -o out/demo_palette0.o
+	$(CC) $(CFLAGS)   demo/demo_particles.c -o out/demo_particles0.o
+	$(CC) $(CFLAGS)   demo/demo_depth.c -o out/demo_depth0.o
 	$(CC) $(CFLAGS)   demo/demo_sound.c -o out/demo_sound0.o
 	$(CC) $(CFLAGS)   demo/demo_fix.c -o out/demo_fix0.o
-	$(CC) $(CFLAGS)   demo/demo_3d.c -o out/demo_3d0.o
-	$(CC) $(CFLAGS)   demo/demo_2d_engine.c -o out/demo_2d_engine0.o
+	$(CC) $(CFLAGS)   demo/demo_combat.c -o out/demo_combat0.o
+	$(CC) $(CFLAGS)   demo/demo_stress.c -o out/demo_stress0.o
+	$(CC) $(CFLAGS)   demo/demo_title.c -o out/demo_title0.o
 	$(CC) $(CFLAGS)   eyecatcher.c -o out/eyecatcher0.o
 	$(OBJCP) $(STRIP_SECTS) out/neogeo0.o   out/neogeo.o
 	$(OBJCP) $(STRIP_SECTS) out/user0.o    out/user.o

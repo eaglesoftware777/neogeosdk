@@ -1,16 +1,51 @@
+/*
+ * demo.c — top-level demo flow: attract loop, full showcase, MVS/AES branching.
+ *
+ * https://eaglesoftware.biz
+ * https://github.com/eaglesoftware777/neogeosdk
+ */
+
 #include "demo.h"
-#include "demo_screen.h"
+#include "demo_intro.h"
+#include "demo_sprites.h"
+#include "demo_camera.h"
+#include "demo_palette.h"
+#include "demo_particles.h"
+#include "demo_depth.h"
 #include "demo_sound.h"
 #include "demo_fix.h"
-#include "demo_2d_engine.h"
-#include "demo_3d.h"
+#include "demo_combat.h"
+#include "demo_stress.h"
+#include "demo_title.h"
+
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
+#include "sdk/2d_engine/ng_engine.h"
+#include "sdk/2d_engine/ng_render_queue.h"
+#include "sdk/2d_engine/ng_palette_fx.h"
+#include "sdk/2d_engine/ng_particles.h"
+#include "sdk/2d_engine/ng_camera.h"
+#include "sdk/2d_engine/ng_feedback.h"
+#include "artbox/sprite_meta.h"
 #include <stdint.h>
 
-void NEOGEO_USER showEyeCatcherMVS(void);
-void NEOGEO_USER soundSceneReset(void);
+/* ------------------------------------------------------------------ */
+/*  External hardware / BIOS functions                                  */
+/* ------------------------------------------------------------------ */
+void NEOGEO_USER waitVbl(void);
+void NEOGEO_USER clearFix(void);
+void NEOGEO_USER clearSprs(void);
+void NEOGEO_USER setBACKDROP(uint16_t backdrop_color);
+void NEOGEO_USER fixtext_out(uint16_t x, uint16_t y, char *mess, short pal);
+void NEOGEO_USER vram_SCB234(uint16_t SCBADDR, uint16_t SCB234);
+void NEOGEO_USER load_palettes(uint16_t *p_palette, uintptr_t palette_offset);
+void NEOGEO_USER setpal(uint16_t *pal_tile,
+    uint16_t t0, uint16_t t1, uint16_t t2, uint16_t t3,
+    uint16_t t4, uint16_t t5, uint16_t t6, uint16_t t7,
+    uint16_t t8, uint16_t t9, uint16_t t10, uint16_t t11,
+    uint16_t t12, uint16_t t13, uint16_t t14, uint16_t t15);
 void NEOGEO_USER soundStopAll(void);
+void NEOGEO_USER soundSceneReset(void);
 void NEOGEO_USER soundSetADPCMAVolume(uint8_t v);
 void NEOGEO_USER soundSetADPCMBVolume(uint8_t v);
 void NEOGEO_USER soundSetSSGVolume(uint8_t v);
@@ -20,152 +55,445 @@ void NEOGEO_USER soundPlayGameLoop(uint8_t music_track);
 void NEOGEO_USER playSFX(uint8_t n);
 void NEOGEO_USER playSFXB(uint8_t n);
 void NEOGEO_USER playVoiceCue(uint8_t n);
-void NEOGEO_USER setpal(uint16_t *pal_tile, uint16_t t0, uint16_t t1, uint16_t t2, uint16_t t3, uint16_t t4, uint16_t t5, uint16_t t6, uint16_t t7, uint16_t t8, uint16_t t9, uint16_t t10, uint16_t t11, uint16_t t12, uint16_t t13, uint16_t t14, uint16_t t15);
-void NEOGEO_USER load_palettes(uint16_t *p_palette, uintptr_t palette_offset);
-void NEOGEO_USER clearFix(void);
-void NEOGEO_USER clearSprs(void);
-void NEOGEO_USER cycle1s(void);
-void NEOGEO_USER cyclexms(int cycxms);
-void NEOGEO_USER waitVbl(void);
-void NEOGEO_USER fixtext_out(uint16_t x, uint16_t y, char *mess, short pal);
+void NEOGEO_USER showEyeCatcherMVS(void);
 
-#define PAL_BLUE 1
-#define PAL_RED  2
+/* ------------------------------------------------------------------ */
+/*  demo_frame: per-frame pump — call from any scene loop               */
+/* ------------------------------------------------------------------ */
+uint8_t NEOGEO_USER demo_frame(void)
+{
+    waitVbl();
+    ng_render_queue_flush();
+    ng_palette_fx_update();
+    ng_particles_update();
+    ng_feedback_update();
+    return demo_advance_requested();
+}
+
+/* ------------------------------------------------------------------ */
+/*  Input helpers                                                        */
+/* ------------------------------------------------------------------ */
+uint8_t NEOGEO_USER demo_advance_requested(void)
+{
+    return (NEO_REGISTER8(BIOS_P1CHANGE) & (uint8_t)(1u << CNT_A)) ? 1u : 0u;
+}
+
+uint8_t NEOGEO_USER demo_wait(uint16_t frames)
+{
+    uint16_t i;
+    for (i = 0; i < frames; i++) {
+        if (demo_frame()) return 1;
+    }
+    return 0;
+}
+
+/* ------------------------------------------------------------------ */
+/*  FIX text helpers                                                     */
+/* ------------------------------------------------------------------ */
+void NEOGEO_USER demo_fix_puts(uint8_t x, uint8_t y, const char *text, uint8_t pal)
+{
+    char buf[39];
+    uint8_t i = 0;
+
+    if (!text || x >= 40u || y >= 28u) return;
+
+    while (text[i] && i < (uint8_t)(38u - x)) {
+        buf[i] = text[i];
+        i++;
+    }
+    buf[i] = '\0';
+    fixtext_out(x, y, buf, (short)pal);
+}
+
+void NEOGEO_USER demo_caption(const char *line1, const char *line2, const char *line3)
+{
+    clearFix();
+    if (line1) demo_fix_puts(2, 1,  line1, 2);
+    if (line2) demo_fix_puts(2, 3,  line2, 1);
+    if (line3) demo_fix_puts(2, 5,  line3, 0);
+    demo_fix_puts(2, 27, "A: NEXT", 1);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Scene clear                                                          */
+/* ------------------------------------------------------------------ */
+void NEOGEO_USER demo_clear_all_sprites(void)
+{
+    uint16_t s;
+    clearSprs();
+    for (s = 0; s < 384u; s++) {
+        vram_SCB234((uint16_t)(SCB3_ADDR + s), 0u);
+    }
+}
+
+void NEOGEO_USER demo_clear_scene(void)
+{
+    soundStopAll();
+    clearFix();
+    demo_clear_all_sprites();
+    setBACKDROP(BLACK);
+    waitVbl();
+    clearFix();
+    demo_clear_all_sprites();
+    waitVbl();
+}
+
+/* ------------------------------------------------------------------ */
+/*  Screen helpers                                                       */
+/* ------------------------------------------------------------------ */
+void NEOGEO_USER demo_safe_show(DemoShowScreenFn fn,
+                                int x0, int y0,
+                                int xr, int yr,
+                                int min_crt_sz,
+                                uint16_t backdrop,
+                                uint16_t sprite_base)
+{
+    if (!fn) return;
+    if (sprite_base == 0u) sprite_base = DEMO_SHOWSCREEN_BASE;
+    fn(x0, y0, xr, yr, min_crt_sz, backdrop, sprite_base);
+}
+
+/* Forward-declare all showScreenN functions needed for palette preload */
+void NEOGEO_USER showScreen1(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen2(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen3(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen4(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen5(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen6(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen7(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen8(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen9(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen10(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen11(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen12(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen13(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen14(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen15(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen16(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen17(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen18(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen19(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen20(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen21(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen22(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen23(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen24(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen25(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen26(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen27(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen28(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen29(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen30(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen31(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen32(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen33(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen34(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen35(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen36(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen37(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen38(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen39(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen40(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen41(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen42(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen43(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen44(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen45(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen46(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen47(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen48(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen49(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen50(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen51(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen52(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen53(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen54(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen55(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen56(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen57(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen58(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen59(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen60(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen61(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen62(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen63(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen64(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen65(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen66(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen67(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen68(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen69(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen70(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen71(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen72(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen73(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen74(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen75(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen76(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen77(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen78(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen79(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen80(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen81(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen82(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen83(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen84(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen85(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen86(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen87(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen88(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen89(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen90(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen91(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen92(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen107(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen108(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen109(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+
+/* ------------------------------------------------------------------ */
+/*  Palette preload helper (off-screen load for palette-only priming)    */
+/* ------------------------------------------------------------------ */
+void NEOGEO_USER demo_load_screen_palette(uint8_t screen_id)
+{
+    switch (screen_id) {
+        case 1:  showScreen1 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 2:  showScreen2 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 3:  showScreen3 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 4:  showScreen4 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 5:  showScreen5 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 6:  showScreen6 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 7:  showScreen7 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 8:  showScreen8 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 9:  showScreen9 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 10: showScreen10(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 11: showScreen11(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 12: showScreen12(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 13: showScreen13(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 14: showScreen14(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 15: showScreen15(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 16: showScreen16(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 17: showScreen17(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 18: showScreen18(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 19: showScreen19(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 20: showScreen20(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 21: showScreen21(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 22: showScreen22(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 23: showScreen23(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 24: showScreen24(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 25: showScreen25(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 26: showScreen26(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 27: showScreen27(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 28: showScreen28(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 29: showScreen29(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 30: showScreen30(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 31: showScreen31(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 32: showScreen32(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 33: showScreen33(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 34: showScreen34(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 35: showScreen35(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 36: showScreen36(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 37: showScreen37(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 38: showScreen38(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 39: showScreen39(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 40: showScreen40(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 41: showScreen41(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 42: showScreen42(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 43: showScreen43(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 44: showScreen44(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 45: showScreen45(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 46: showScreen46(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 47: showScreen47(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 48: showScreen48(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 49: showScreen49(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 50: showScreen50(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 51: showScreen51(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 52: showScreen52(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 53: showScreen53(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 54: showScreen54(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 55: showScreen55(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 56: showScreen56(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 57: showScreen57(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 58: showScreen58(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 59: showScreen59(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 60: showScreen60(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 61: showScreen61(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 62: showScreen62(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 63: showScreen63(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 64: showScreen64(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 65: showScreen65(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 66: showScreen66(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 67: showScreen67(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 68: showScreen68(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 69: showScreen69(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 70: showScreen70(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 71: showScreen71(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 72: showScreen72(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 73: showScreen73(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 74: showScreen74(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 75: showScreen75(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 76: showScreen76(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 77: showScreen77(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 78: showScreen78(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 79: showScreen79(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 80: showScreen80(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 81: showScreen81(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 82: showScreen82(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 83: showScreen83(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 84: showScreen84(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 85: showScreen85(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 86: showScreen86(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 87: showScreen87(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 88: showScreen88(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 89: showScreen89(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 90: showScreen90(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 91: showScreen91(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 92: showScreen92(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 107: showScreen107(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 108: showScreen108(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        case 109: showScreen109(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
+        default: break;
+    }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sprite group draw helper                                             */
+/* ------------------------------------------------------------------ */
+static uint8_t NEOGEO_USER demo_normalize_x_scale(uint8_t scale_x)
+{
+    /*
+     * Generated showScreen() calls use 0x0F nibble for full-width.
+     * NGSpriteGroup uses 0xFF.  Remap 4-bit → 8-bit so groups render correctly.
+     */
+    if (scale_x <= 0x0Fu) {
+        return (uint8_t)((scale_x << 4) | scale_x);
+    }
+    return scale_x;
+}
+
+void NEOGEO_USER demo_draw_sprite_screen(uint8_t screen_id,
+                                         uint16_t first_sprite,
+                                         int16_t x, int16_t y,
+                                         uint8_t strips, uint8_t rows,
+                                         uint8_t scale_x, uint8_t scale_y)
+{
+    NGSpriteGroup g;
+    if (screen_id == 0u) return;
+    if (strips == 0u) strips = 1u;
+    if (rows   == 0u) rows   = 1u;
+    if (strips > 16u) strips = 16u;
+    if (rows   > 16u) rows   = 16u;
+
+    demo_load_screen_palette(screen_id);
+
+    ng_sprite_group_init(&g, first_sprite, strips, 16u,
+                         DEMO_SCREEN_TILE(screen_id),
+                         DEMO_SCREEN_PALETTE(screen_id));
+    ng_sprite_group_set_tile_stride(&g, 16u);
+    ng_sprite_group_set_active_rows(&g, rows);
+    ng_sprite_group_set_pos(&g, x, y);
+    ng_sprite_group_set_scale(&g,
+                              demo_normalize_x_scale(scale_x),
+                              scale_y);
+    ng_sprite_group_upload(&g);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Legacy entry points (user.c / main.c compatibility)                 */
+/* ------------------------------------------------------------------ */
+void NEOGEO_USER showEagleIntro(void)
+{
+    demo_intro_eagle();
+}
 
 void NEOGEO_USER showGameOver(void)
 {
-    soundStopAll();
-    demo_clear_scene();
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_ENDING_SCENE);
-    fixtext_out(14, 10, "DEMO COMPLETE", 0);
-    fixtext_out(8,  13, "NEO GEO SDK 2D ENGINE", 2);
-    demo_wait_frames_or_a(210);
-    soundFadeOutSpeed(6);
-    demo_wait_frames_or_a(45);
-    soundStopAll();
-    demo_clear_scene();
+    demo_title_end_card();
 }
 
-void NEOGEO_USER showEagleIntro(void)
+void NEOGEO_USER showTitleScreen(void)
 {
-    uint16_t fix_pal[16];
-    int i;
-
-    clearFix();
-    clearSprs();
-    soundSceneReset();
-    soundSetADPCMAVolume(0x3F);
-    soundSetADPCMBVolume(0xB8);
-    soundSetSSGVolume(0x00);
-    soundSetFMVolume(0x00);
-
-    setpal(fix_pal, 0x8000, WHITE, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
-    load_palettes(fix_pal, PALETTES);
-    setpal(fix_pal, 0x8000, CYAN, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
-    load_palettes(fix_pal, PALETTES + PALOFFSET);
-    setpal(fix_pal, 0x8000, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
-    load_palettes(fix_pal, PALETTES + PALOFFSET * 2);
-
-    /* Instant full reveal */
-    fixtext_out(17, 13, "EAGLE", 0);
-    fixtext_out(16, 15, "SOFTWARE", 1);
-    playVoiceCue(SOUND_VOICE_GET_READY);
-    cyclexms(400);
-
-    /* Four quick color hits */
-    for (i = 0; i < 4; i++) {
-        fixtext_out(17, 13, "EAGLE",    (short)((i & 1) ? PAL_BLUE : PAL_RED));
-        fixtext_out(16, 15, "SOFTWARE", (short)((i & 1) ? PAL_RED  : PAL_BLUE));
-        if (i == 0) playSFX(SOUND_SFX_STRING_PHRASE);
-        cyclexms(60);
-    }
-
-    /* Logo snap */
-    clearFix();
-    clearSprs();
-    playSFX(SOUND_SFX_TITLE_GONG);
-    demo_safe_show(showScreen107, 16, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
-    cycle1s();
-
-    soundFadeOutSpeed(6);
-    cyclexms(120);
-    soundStopAll();
-    demo_clear_scene();
+    demo_title_screen();
 }
 
 void NEOGEO_USER showCharacterParade(void)
 {
-    uint8_t i;
-    static const DemoShowScreenFn frames[] = {
-        showScreen79, showScreen80, showScreen81, showScreen82, showScreen83,
-        showScreen84, showScreen85, showScreen86, showScreen87, showScreen88,
-        showScreen89, showScreen90, showScreen91, showScreen92
-    };
-
-    demo_clear_scene();
-    soundSceneReset();
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
-    demo_scene_caption("MASCOT PARADE", "EYECATCHER ANIMATION FRAMES", "SLOW FRAME TIMING");
-    playVoiceCue(SOUND_VOICE_GET_READY);
-
-    for (i = 0; i < (uint8_t)(sizeof(frames) / sizeof(frames[0])); i++) {
-        /* No sprite clear inside the loop: palette-only frames (90-92) rely on
-         * the previous frame's sprite tile data remaining in VRAM. */
-        demo_scene_caption("MASCOT PARADE", "EYECATCHER ANIMATION FRAMES", "SLOW FRAME TIMING");
-        demo_safe_show(frames[i], 72, 62, 0xF, 0xAF, 10, BLACK, DEMO_SHOWSCREEN_BASE);
-        if ((i & 3u) == 0u) playSFX(SOUND_SFX_STRING_PHRASE);
-        if (demo_wait_frames_or_a(28)) break;
-    }
-
-    soundStopAll();
-    demo_clear_scene();
+    demo_sprites_parade();
 }
 
-static void NEOGEO_USER demo_show_mvs_eyecatcher_block(void)
+void NEOGEO_USER showWalkDemo(int loops, int delay_frames)
 {
-#ifndef NG_AES
-    demo_clear_scene();
-    demo_scene_caption("MVS EYECATCHER", "CABINET BOOT STYLE", "CENTERED / PACED");
-    playSFX(SOUND_SFX_TITLE_GONG);
-    demo_wait_frames_or_a(45);
-    showEyeCatcherMVS();
-    demo_clear_scene();
-#endif
+    demo_sprites_walk(loops, delay_frames);
 }
 
+/* ------------------------------------------------------------------ */
+/*  Attract mode (short, loops)                                          */
+/* ------------------------------------------------------------------ */
 void NEOGEO_USER demo_run_attract(void)
 {
-    /* Attract mode is deliberately short.  Full tech showcase starts only
-       after START_GAME, avoiding boring long loops before coin/start. */
     soundSceneReset();
     soundSetADPCMAVolume(0x00);
-    soundSetADPCMBVolume(0xBC);
+    soundSetADPCMBVolume(0xBCu);
+
+#ifndef NG_AES
     playSFXB(SOUND_BED_EYECATCHER);
     showEyeCatcherMVS();
     soundStopAll();
-    showTitleScreen();
+#endif
+
+    demo_title_screen();
 }
 
+/* ------------------------------------------------------------------ */
+/*  Full showcase (after START_GAME or auto-advance)                    */
+/* ------------------------------------------------------------------ */
 void NEOGEO_USER demo_run_full_flow(void)
 {
-    showEagleIntro();
+    /* Initialize SDK subsystems once at the top of the full flow */
+    ng_render_queue_init();
+    ng_palette_fx_init();
+    ng_particles_init();
+    ng_feedback_init();
+    ng_debug_init();
 
     soundSceneReset();
-    soundSetADPCMAVolume(0x3C);
-    soundSetADPCMBVolume(0xB8);
-    soundSetSSGVolume(0x08);
-    soundSetFMVolume(0x08);
+    soundSetADPCMAVolume(0x3Cu);
+    soundSetADPCMBVolume(0xB8u);
+    soundSetSSGVolume(0x08u);
+    soundSetFMVolume(0x08u);
 
-    demo_screen_showcase();
-    demo_sound_showcase();
-    demo_fix_showcase();
-    demo_2d_engine_run();
-    demo_3d_showcase();
-    demo_show_mvs_eyecatcher_block();
-    showCharacterParade();
-    demo_2d_engine_advanced_animation();
-    showGameOver();
+    /* Scene 1: Eagle Software intro */
+    demo_intro_eagle();
+
+    /* Scene 2: SDK title card */
+    demo_intro_sdk_title();
+
+    /* Scene 3: Sprite group showcase */
+    demo_sprites_run();
+
+    /* Scene 4: Camera + parallax */
+    demo_camera_run();
+
+    /* Scene 5: Palette FX */
+    demo_palette_run();
+
+    /* Scene 6: Particles */
+    demo_particles_run();
+
+    /* Scene 7: Combat feedback */
+    demo_combat_run();
+
+    /* Scene 8: Depth FX */
+    demo_depth_run();
+
+    /* Scene 9: FIX layer */
+    demo_fix_run();
+
+    /* Scene 10: Sound showcase */
+    demo_sound_run();
+
+    /* Scene 11: Stress test */
+    demo_stress_run();
+
+    /* Scene 12: Credits / end card */
+    demo_title_end_card();
 }
