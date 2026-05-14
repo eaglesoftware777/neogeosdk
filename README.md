@@ -3,7 +3,7 @@
 Neo Geo development SDK for SNK hardware.
 
 - Repository: https://github.com/eaglesoftware777/neogeosdk
-- Current release target: `v1.2.0`
+- Current release target: `v1.3.0`
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 
@@ -27,34 +27,49 @@ real Neo Geo development practical on current Linux, WSL, and Windows setups.
 
 The repository includes a reusable 2D game engine layer under `sdk/2d_engine/ng_*`.
 
-It is a plain-C 2D engine built around:
+It is a plain-C engine targeting **NeoGeo Deluxe 2D**: huge animated characters, large bosses, smooth camera movement, parallax depth, sprite-scaling depth effects, palette lighting, hit sparks, particles, cinematic transitions, and stable 60 FPS — no float, no malloc during gameplay, no division in the frame loop.
 
-- characters
-- actions
+### Core engine modules
+
+- characters and action scripts
 - level state and camera scroll
 - per-frame `game_engine_frame()`
-- small `game_events`
-- border constraints
-- NPC helpers
-- physics bodies and solids
+- game events, border constraints
+- NPC helpers, physics bodies and solids
 - cached FIX-layer text output
-- status flags
-- timers
-- progress counters
-- a properties matrix
+- status flags, timers, progress counters, properties matrix
 
-Important current state:
+### Deluxe 2D engine modules (v1.3.0+)
 
-- the source files live in `sdk/2d_engine/ng_*.c` and `sdk/2d_engine/ng_*.h`
-- the linker scripts reserve `game_engine_bss` for the engine state objects
-- `Makefile` and `MakefileWin32.mak` compile and link the `sdk/2d_engine/ng_*` modules by default
+| Module | Header | What it does |
+|--------|--------|-------------|
+| Render queue | `ng_render_queue.h` | 128-slot VBlank-safe deferred VRAM/palette write queue |
+| Fixed-point math | `ng_fixed.h` | 16.16 fixed-point, sin/cos/shrink lookup tables |
+| Camera | `ng_camera.h` | Smooth follow, dead zone, look-ahead, shake, cinematic pan, border clamp |
+| Palette FX | `ng_palette_fx.h` | Fade, flash (white/red/blue), pulse, color cycle — queue-safe |
+| Particles | `ng_particles.h` | 32-slot fixed pool, 8 types, priority eviction |
+| Feedback | `ng_feedback.h` | Hitstop + screen shake + palette flash + sound hook in one call |
+| Depth FX | `ng_depthfx.h` | NGVec3 perspective projection, Z→shrink lookup, starfield |
+| Sprite groups | `ng_sprite_group.h` | Dirty-flag sticky-bit sprite chains, write-only-what-changed |
+| Debug HUD | `ng_debug.h` | Fix-layer perf overlay (`#define NG_DEBUG_PERF 1`) |
+
+### Important build notes
+
+- source files live in `sdk/2d_engine/ng_*.c` and `sdk/2d_engine/ng_*.h`
+- linker scripts reserve `game_engine_bss` for the engine state objects
+- `Makefile` and `MakefileWin32.mak` compile and link all `sdk/2d_engine/ng_*` modules automatically
 - sprite drawing uses world-space character coordinates minus the current level camera scroll
-- joystick camera helpers support horizontal, vertical, and both-axis scrolling
-- action scripts are used by the demo for idle, run, jump, hit, and attack state changes
 
 Use these docs for the current integration path:
 
 - [`docs/GAME_ENGINE_LAYER.md`](./docs/GAME_ENGINE_LAYER.md)
+- [`docs/sprite_groups.md`](./docs/sprite_groups.md)
+- [`docs/render_queue.md`](./docs/render_queue.md)
+- [`docs/camera.md`](./docs/camera.md)
+- [`docs/palette_fx.md`](./docs/palette_fx.md)
+- [`docs/particles.md`](./docs/particles.md)
+- [`docs/depthfx.md`](./docs/depthfx.md)
+- [`docs/performance_rules.md`](./docs/performance_rules.md)
 - [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
 - [`docs/DEPENDENCIES.md`](./docs/DEPENDENCIES.md)
 - [`docs/GDB_GUIDE.md`](./docs/GDB_GUIDE.md)
@@ -191,6 +206,13 @@ Primary repository docs:
 - [`README.md`](./README.md)
 - [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 - [`docs/GAME_ENGINE_LAYER.md`](./docs/GAME_ENGINE_LAYER.md)
+- [`docs/sprite_groups.md`](./docs/sprite_groups.md)
+- [`docs/render_queue.md`](./docs/render_queue.md)
+- [`docs/camera.md`](./docs/camera.md)
+- [`docs/palette_fx.md`](./docs/palette_fx.md)
+- [`docs/particles.md`](./docs/particles.md)
+- [`docs/depthfx.md`](./docs/depthfx.md)
+- [`docs/performance_rules.md`](./docs/performance_rules.md)
 - [`docs/ARTBOX_PIPELINE.md`](./docs/ARTBOX_PIPELINE.md)
 - [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
 - [`docs/DEPENDENCIES.md`](./docs/DEPENDENCIES.md)

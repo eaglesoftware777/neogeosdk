@@ -1,5 +1,65 @@
 # Changelog
 
+## v1.3.0 — NeoGeo Deluxe 2D Engine Layer
+
+Release date: 2026-05-14
+
+### Highlights
+
+Complete second-generation engine layer targeting NeoGeo-native deluxe 2D: huge animated characters, large bosses, smooth camera, parallax depth, sprite-scaling depth effects, palette lighting, hit sparks, particles, cinematic transitions, and stable 60 FPS. No float, no malloc during gameplay, no division in the frame loop.
+
+### New engine modules
+
+| Module | Files | What it does |
+|--------|-------|-------------|
+| Render queue | `ng_render_queue.h/.c` | 128-slot VBlank-safe deferred VRAM and palette write queue |
+| Fixed-point math | `ng_fixed.h/.c` | 16.16 fixed-point, pre-baked sin/cos/shrink lookup tables |
+| Camera | `ng_camera.h/.c` | Smooth follow, dead zone, look-ahead, shake, cinematic pan, border clamp |
+| Palette FX | `ng_palette_fx.h/.c` | Fade, flash (white/red/blue), pulse, color cycle, queue-safe |
+| Particles | `ng_particles.h/.c` | 32-slot fixed pool, 8 particle types, priority-based eviction |
+| Feedback | `ng_feedback.h/.c` | Hitstop + screen shake + palette flash + sound hook in one call |
+| Depth FX | `ng_depthfx.h/.c` | NGVec3 perspective projection, Z→shrink lookup table, starfield |
+| Debug HUD | `ng_debug.h/.c` | Fix-layer perf overlay (compile with `NG_DEBUG_PERF=1`) |
+
+### Updated engine modules
+
+- `ng_sprite_group`: dirty flags (`NG_SGF_DIRTY_POS/TILE/PALETTE/SHRINK/VIS`) and `ng_sprite_group_flush()` — only changed SCB regions written per frame
+- `ng_depthfx`: extended with `NGVec3`, full perspective projection, Z→fog palette, starfield advance
+- `ng_engine.h`: aggregate include now covers all new subsystem headers
+
+### New documentation
+
+- `docs/sprite_groups.md`
+- `docs/render_queue.md`
+- `docs/camera.md`
+- `docs/palette_fx.md`
+- `docs/particles.md`
+- `docs/depthfx.md`
+- `docs/performance_rules.md`
+
+### Artbox pipeline
+
+- default fit mode changed from `crop` to `contain` for non-destructive asset scaling
+- `fit=contain` pads transparent pixels to palette index 0, visible pixels to 1..15
+- `romdbimgimport.py` hardened with absolute paths and fail-fast error handling
+- `gen_eyecatcher.py` updated with fast animation pacing (lead hold, 2× pass, final hold)
+- eyecatcher sprites positioned at hardware-accurate size and position
+
+### Build
+
+- Makefile toolchain detection defaults to `x-tools-v2` with `x-tools` legacy fallback
+- Linker flags corrected (`-nostdlib`, `-nostartfiles` removed)
+- Win32 Makefile object/link parity for all new modules
+- All new modules in `NG_ENGINE_NAMES` with explicit compile rules
+
+### Validation
+
+- `make game`
+- `make test`
+- zero errors, zero warnings
+
+---
+
 ## Unreleased
 
 ### Highlights

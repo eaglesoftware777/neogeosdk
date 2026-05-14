@@ -2,30 +2,51 @@
 
 This repository carries a reusable 2D game engine layer under `sdk/2d_engine/ng_*`.
 
-The layer is plain C. It is not a C++ object system and it is not an
-entity-component framework. The model is simple:
+The layer is plain C. No float, no malloc during gameplay, no division in the frame loop. It is not a C++ object system and not an entity-component framework.
 
-- fixed-size arrays
-- character pool
-- action scripts
-- timers
-- status flags
-- progress slots
-- properties matrix
-- level state and camera scroll
-- cached FIX-layer text
-- NPC helpers
-- physics bodies and solids
-- event queue
-- border constraints
-- one per-frame game engine entry point
+## Module overview
+
+### Core engine modules
+
+| Module | Header | Purpose |
+|--------|--------|---------|
+| Definitions | `ng_defs.h` | Shared types, constants, pool sizes |
+| Characters | `ng_chars.h` | Fixed-size character pool, per-kind callbacks |
+| Actions | `ng_actions.h` | Action script execution (FRAME, WAIT, MOVE, SFX, …) |
+| Level | `ng_level.h` | Level bounds, camera scroll, joystick camera helpers |
+| Background | `ng_bg.h` | Sprite-based background layer with parallax ratios |
+| FIX cache | `ng_fix.h` | Cached FIX tile writes — only rewrites changed cells |
+| NPCs | `ng_npcs.h` | NPC pool with patrol, think hooks, home/bounds |
+| Physics | `ng_physics.h` | Fixed-point velocity, gravity, collision solids |
+| Game events | `ng_game_events.h` | Fixed ring-buffer event queue |
+| Border constraints | `ng_border_constraints.h` | Trigger rects that emit events on enter |
+| Status | `ng_status.h` | Bit-flag status set |
+| Timers | `ng_timers.h` | Fixed-size timer pool |
+| Progress | `ng_progress.h` | Named progress counters |
+| Properties | `ng_properties.h` | Runtime shared-value matrix |
+| Game time | `ng_game_time.h` | Frame counter |
+| Interrupt | `ng_game_interupt.h` | Per-frame hook dispatch |
+
+### Deluxe 2D engine modules (v1.3.0+)
+
+| Module | Header | Purpose |
+|--------|--------|---------|
+| Sprite groups | `ng_sprite_group.h` | Dirty-flag sticky-bit sprite chains |
+| Render queue | `ng_render_queue.h` | 128-slot VBlank-safe deferred VRAM/palette writes |
+| Fixed-point | `ng_fixed.h` | 16.16 fixed-point math, sin/cos/shrink lookup tables |
+| Camera | `ng_camera.h` | Smooth follow, dead zone, shake, cinematic pan |
+| Palette FX | `ng_palette_fx.h` | Fade, flash, pulse, color cycle — queue-safe |
+| Particles | `ng_particles.h` | 32-slot pool, 8 types, priority eviction |
+| Feedback | `ng_feedback.h` | Hitstop + shake + flash + sound hook in one call |
+| Depth FX | `ng_depthfx.h` | NGVec3 perspective projection, Z→shrink/fog |
+| Debug HUD | `ng_debug.h` | Fix-layer perf overlay (`NG_DEBUG_PERF=1`) |
 
 ## Headers
 
 Use the aggregate include:
 
 ```c
-#include "sdk/2d_engine/ng_game_engine.h"
+#include "sdk/2d_engine/ng_engine.h"
 ```
 
 Or include only the modules you need:
@@ -46,6 +67,14 @@ Or include only the modules you need:
 - `sdk/2d_engine/ng_timers.h`
 - `sdk/2d_engine/ng_border_constraints.h`
 - `sdk/2d_engine/ng_sprite_group.h`
+- `sdk/2d_engine/ng_render_queue.h`
+- `sdk/2d_engine/ng_fixed.h`
+- `sdk/2d_engine/ng_camera.h`
+- `sdk/2d_engine/ng_palette_fx.h`
+- `sdk/2d_engine/ng_particles.h`
+- `sdk/2d_engine/ng_feedback.h`
+- `sdk/2d_engine/ng_depthfx.h`
+- `sdk/2d_engine/ng_debug.h`
 
 ## Startup
 
