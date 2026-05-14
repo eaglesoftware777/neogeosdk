@@ -10,6 +10,8 @@ SCREENS_C = ROOT / "artbox" / "screens.c"
 
 
 def main():
+    if not SCREENS_C.exists():
+        raise RuntimeError(f"{SCREENS_C} was not generated. Run artbox pipeline first.")
     main_text = MAIN_C.read_text(encoding="utf-8")
     screens_text = SCREENS_C.read_text(encoding="utf-8").strip()
 

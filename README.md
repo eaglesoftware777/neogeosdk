@@ -260,31 +260,35 @@ back to the bundled `sound/tools/wav_to_raw_pcm.py` converter. No separate Pytho
 
 Linux 68000 compiler:
 
-- the default Linux `Makefile` expects an `x-tools/` directory under `SDKHOME`
-- the current release page includes `x-tools.tar`
-- after extraction, the compiler should exist at:
-  - `$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gcc`
+- default search order in `Makefile`:
+  1. `$(SDKHOME)/x-tools-v2`
+  2. `$(SDKHOME)/x-tools` (legacy fallback)
+- after extraction, compiler path is:
+  - `$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-gcc`
 
 Windows 68000 compiler:
 
-- the Win32 makefile expects a Windows `m68k-elf` GCC toolchain
-- the tested default is a SysGCC-style layout under:
-  - `C:\SysGCC\m68k-elf`
-- if your toolchain is installed elsewhere, set `M68K_ELF_ROOT` when invoking `make`
+- default search order in `MakefileWin32.mak`:
+  1. `$(SDKHOME)\x-tools-v2-win\m68k-unknown-elf\bin`
+  2. `$(SDKHOME)\x-tools-v2-win\m68k-elf\bin`
+  3. `M68K_ELF_ROOT` fallback (default `C:\SysGCC\m68k-elf`)
+- if your fallback toolchain is installed elsewhere, set `M68K_ELF_ROOT` when invoking `make`
 - you do not need to clone the SDK into a fixed drive or fixed folder name beyond
   keeping `neogeosdk/` under the chosen `SDKHOME` parent
 
 ## SDKHOME Layout
 
-Both makefiles expect `SDKHOME` to point to the directory that contains both
-`neogeosdk/` and `x-tools/`.
+Both makefiles expect `SDKHOME` to point to the directory that contains `neogeosdk/`
+and toolchain folders.
 
 Expected layout:
 
 ```text
 SDKHOME/
   neogeosdk/
-  x-tools/
+  x-tools-v2/         # Linux default
+  x-tools/            # Linux legacy fallback
+  x-tools-v2-win/     # Windows default
 ```
 
 If `SDKHOME` is not set, both makefiles default to the parent directory of the
@@ -323,22 +327,23 @@ Recommended layout:
 
 ```text
 $HOME/neogeo/neogeosdk   -> this repository
-$HOME/neogeo/x-tools     -> m68k Linux cross compiler bundle
+$HOME/neogeo/x-tools-v2  -> m68k Linux cross compiler bundle (default)
+$HOME/neogeo/x-tools     -> legacy fallback bundle
 ```
 
-Install the Linux 68000 toolchain from the release asset so that `x-tools/` lands
+Install the Linux 68000 toolchain from the release asset so that `x-tools-v2/` lands
 next to the repository:
 
 ```bash
 cd $HOME/neogeo
-curl -L -o x-tools.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.2.0/x-tools.tar
-tar -xf x-tools.tar
+curl -L -o x-tools-v2.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.2.0/x-tools-v2.tar
+tar -xf x-tools-v2.tar
 ```
 
 After extraction, verify:
 
 ```bash
-$HOME/neogeo/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gcc --version
+$HOME/neogeo/x-tools-v2/m68k-unknown-elf/bin/m68k-unknown-elf-gcc --version
 ```
 
 Set `SDKHOME` to the parent of both:
@@ -360,7 +365,7 @@ Use the Linux `Makefile`, not `MakefileWin32.mak`.
 
 WSL should use the Linux toolchain layout:
 
-- `$(SDKHOME)/x-tools/...` for the `m68k-unknown-elf` binaries
+- `$(SDKHOME)/x-tools-v2/...` (or legacy `x-tools/...`) for `m68k-unknown-elf` binaries
 - Linux `python3`
 - Linux `wla-z80` / `wlalink`
 
@@ -377,8 +382,8 @@ python3 -m pip install --user pypng
 mkdir -p $HOME/neogeo
 cd $HOME/neogeo
 git clone https://github.com/eaglesoftware777/neogeosdk.git
-curl -L -o x-tools.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.2.0/x-tools.tar
-tar -xf x-tools.tar
+curl -L -o x-tools-v2.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.2.0/x-tools-v2.tar
+tar -xf x-tools-v2.tar
 
 export SDKHOME=$HOME/neogeo
 cd $SDKHOME/neogeosdk
@@ -399,10 +404,11 @@ Recommended layout:
 
 ```text
 <sdk root>\neogeosdk
-<sdk root>\x-tools
+<sdk root>\x-tools-v2-win
 ```
 
-The Win32 makefile accepts a configurable `M68K_ELF_ROOT`. The tested default is:
+The Win32 makefile auto-detects `x-tools-v2-win` first. If not present, it accepts
+a configurable `M68K_ELF_ROOT` fallback. Example fallback layout:
 
 - `C:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe`
 - `C:\SysGCC\m68k-elf\bin\m68k-elf-ld.exe`
@@ -425,7 +431,20 @@ Also make sure these are callable from `PATH`:
 Install the Python packages once:
 
 ```bat
+py -0p
+py -m pip --version
+py -m pip install --upgrade pip
 py -m pip install numpy pillow pypng
+```
+
+Use `py -m pip` (not `pip`/`pip3`) so packages are installed into the same
+interpreter used by `makeartbox.bat`.
+
+Verify with:
+
+```bat
+cd artbox
+py -c "import sys; print(sys.executable); import PIL, numpy, png, img2neo; print('OK')"
 ```
 
 Install Python itself from python.org or the Microsoft Store so that the `py`

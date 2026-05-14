@@ -6,18 +6,30 @@
 ifndef SDKHOME
 SDKHOME := $(abspath $(CURDIR)/..)
 endif
-CC=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gcc
+
+# Toolchain selection:
+# 1) $(SDKHOME)/x-tools-v2 (default)
+# 2) $(SDKHOME)/x-tools (legacy fallback)
+XTOOLS_V2 := $(SDKHOME)/x-tools-v2
+XTOOLS_OLD := $(SDKHOME)/x-tools
+ifeq ($(wildcard $(XTOOLS_V2)/m68k-unknown-elf/bin/m68k-unknown-elf-gcc),)
+XTOOLS_ROOT ?= $(XTOOLS_OLD)
+else
+XTOOLS_ROOT ?= $(XTOOLS_V2)
+endif
+
+CC=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-gcc
 CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Wa,-march=68000,-mcpu=68000,-W,--warn
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
-LD=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-ld
-LDFLAGS=  -nostartfiles -nostdlib
-OBJCP=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy
-OBJDUMP=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-objdump
-GDB=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gdb
-NM=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-nm
-READELF=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-readelf
-ADDR2LINE=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-addr2line
-SIZE=$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-size
+LD=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-ld
+LDFLAGS=  -nostdlib
+OBJCP=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy
+OBJDUMP=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-objdump
+GDB=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-gdb
+NM=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-nm
+READELF=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-readelf
+ADDR2LINE=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-addr2line
+SIZE=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-size
 WLAZ80?=wla-z80
 WLALINK?=wlalink
 PYTHON?=python3

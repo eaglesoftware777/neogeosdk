@@ -5,6 +5,7 @@ import io
 import math
 import os
 import sys
+from pathlib import Path
 
 import numpy as np
 import png
@@ -23,6 +24,15 @@ except ImportError:
     HAS_PIL = False
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+ROOT = Path(__file__).resolve().parent
+
+try:
+    from asset_rules import build_asset_specs, save_manifest, write_out_srt
+except ImportError:
+    build_asset_specs = None
+    save_manifest = None
+    write_out_srt = None
+
 try:
     from img2neo import (
         snap_neogeo,
@@ -33,7 +43,6 @@ try:
         open_as_rgb,
         crop_center,
     )
-    from asset_rules import build_asset_specs, save_manifest, write_out_srt
     HAS_IMG2NEO = True
 except ImportError:
     HAS_IMG2NEO = False
@@ -272,15 +281,19 @@ def main():
     sqlite3.register_adapter(np.ndarray, adapt_array)
     sqlite3.register_converter("array", convert_array)
 
-    specs = build_asset_specs("in")
+    if build_asset_specs is None or save_manifest is None or write_out_srt is None:
+        raise RuntimeError("asset_rules import failed; ensure artbox/asset_rules.py is present and valid.")
+
+    specs = build_asset_specs(str(ROOT / "in"))
     if not specs:
         print("No PNG files found in in")
         return
 
     print(f"Importing {len(specs)} images (rule-driven order):")
 
+    conn = None
     try:
-        conn = sqlite3.connect("neorom.db", detect_types=sqlite3.PARSE_DECLTYPES)
+        conn = sqlite3.connect(str(ROOT / "neorom.db"), detect_types=sqlite3.PARSE_DECLTYPES)
         print(sqlite3.sqlite_version)
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA synchronous=NORMAL")
@@ -300,14 +313,15 @@ def main():
 
         cur.executemany("INSERT INTO image (idx,data,palette) VALUES (?,?,?)", db_rows)
         conn.commit()
-        save_manifest(specs)
-        write_out_srt(specs)
+        save_manifest(specs, str(ROOT / "assets_manifest.json"))
+        write_out_srt(specs, str(ROOT / "out.srt"))
         print(f"Imported {len(db_rows)} images.")
     except Error as exc:
         print(exc)
         raise
     finally:
-        conn.close()
+        if conn is not None:
+            conn.close()
 
 
 if __name__ == "__main__":
