@@ -21,38 +21,42 @@ void NEOGEO_USER showScreen99(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_
 void NEOGEO_USER showEyeCatcherMVS(void) {
     clearFix();
     clearSprs();
-    showScreen93(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-    cyclexms(1500);
 
-    clearFix();
-    clearSprs();
-    showScreen94(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-    cyclexms(1500);
+    showScreen93(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(80);
 
-    clearFix();
-    clearSprs();
-    showScreen95(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-    cyclexms(1500);
+    showScreen93(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(50);
+    showScreen94(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(50);
+    showScreen95(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(50);
+    showScreen96(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(35);
+    showScreen97(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(50);
+    showScreen98(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(50);
+    showScreen99(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(50);
 
-    clearFix();
-    clearSprs();
-    showScreen96(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-    cyclexms(250);
+    showScreen93(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(50);
+    showScreen94(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(50);
+    showScreen95(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(50);
+    showScreen96(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(35);
+    showScreen97(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(50);
+    showScreen98(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(50);
+    showScreen99(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(50);
 
-    clearFix();
-    clearSprs();
-    showScreen97(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-    cyclexms(1500);
-
-    clearFix();
-    clearSprs();
-    showScreen98(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-    cyclexms(1500);
-
-    clearFix();
-    clearSprs();
-    showScreen99(16, 24, 0xF, 0xAF, 16, 0x0000, 0);
-    cyclexms(1500);
+    showScreen99(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    cyclexms(100);
 
     clearFix();
     clearSprs();

@@ -74,6 +74,54 @@ def fit_sprite_rgba(img, target_w, target_h, anchor):
     return canvas, left, top, img.width, img.height
 
 
+def fit_screen_rgba(img, target_w, target_h, anchor, fit_mode):
+    tw = (target_w // 16) * 16
+    th = (target_h // 16) * 16
+    img = img.convert("RGBA")
+
+    mode = (fit_mode or "contain").lower()
+    if mode == "crop":
+        w, h = img.size
+        if h == 0 or w == 0:
+            canvas = Image.new("RGBA", (tw, th), (0, 0, 0, 0))
+            return canvas, 0, 0, 0, 0
+        if (w / h) > (tw / th):
+            nw = int(h * tw / th)
+            left = (w - nw) // 2
+            img = img.crop((left, 0, left + nw, h))
+        else:
+            nh = int(w * th / tw)
+            top = (h - nh) // 2
+            img = img.crop((0, top, w, top + nh))
+        img = img.resize((tw, th), Image.LANCZOS)
+        canvas = Image.new("RGBA", (tw, th), (0, 0, 0, 0))
+        canvas.alpha_composite(img, (0, 0))
+        return canvas, 0, 0, tw, th
+
+    # contain / pad / letterbox (non-destructive)
+    if img.width > tw or img.height > th:
+        img.thumbnail((tw, th), Image.LANCZOS)
+
+    canvas = Image.new("RGBA", (tw, th), (0, 0, 0, 0))
+    left = (tw - img.width) // 2
+    top = (th - img.height) // 2
+    if anchor == "top-center":
+        top = 0
+    elif anchor == "bottom-center":
+        top = th - img.height
+    elif anchor == "left-center":
+        left = 0
+    elif anchor == "right-center":
+        left = tw - img.width
+
+    if left < 0:
+        left = 0
+    if top < 0:
+        top = 0
+    canvas.alpha_composite(img, (left, top))
+    return canvas, left, top, img.width, img.height
+
+
 def make_sprite_palette(opaque_rgb):
     if opaque_rgb.size == 0:
         return np.zeros((15, 3), dtype=np.uint16)
@@ -164,8 +212,12 @@ def load_screen_asset(spec):
     tw = (spec["target_width"] // 16) * 16
     th = (spec["target_height"] // 16) * 16
 
-    img = open_as_rgb(spec["path"])
-    img = crop_center(img, tw, th)
+    src = Image.open(spec["path"]).convert("RGBA")
+    canvas, left, top, content_w, content_h = fit_screen_rgba(
+        src, tw, th, spec.get("anchor", "center"), spec.get("fit", "contain")
+    )
+    img = canvas.convert("RGB")
+
     if spec["contrast"] != 1.0:
         img = ImageEnhance.Contrast(img).enhance(spec["contrast"])
     if spec["saturation"] != 1.0:
@@ -179,27 +231,24 @@ def load_screen_asset(spec):
             )
         )
 
+    rgba = np.array(canvas, dtype=np.uint8)
+    alpha_mask = rgba[:, :, 3] >= 16
     arr = snap_neogeo(np.array(img, dtype=np.uint8))
-    pal = kmeans_palette(
-        arr,
-        n=15,
-        iters=spec["kmeans_iters"],
-        sample_limit=spec["kmeans_samples"],
-    )
-    if spec["dither"] == "floyd":
-        indexed = floyd_steinberg(arr, pal).astype(np.uint16)
-    elif spec["dither"] == "none":
-        indexed = nearest_palette_indices(arr, pal).astype(np.uint16)
-    else:
-        indexed = ordered_dither(arr, pal).astype(np.uint16)
 
+    palette15 = make_sprite_palette(arr[alpha_mask])
+    indexed = index_sprite_pixels(arr, alpha_mask, palette15)
+    palette = np.zeros((16, 3), dtype=np.uint16)
+    palette[1:] = palette15
+
+    spec["transparent_zero"] = 1
+    spec["palette_has_zero"] = 1
     spec["canvas_width"] = tw
     spec["canvas_height"] = th
-    spec["content_left"] = 0
-    spec["content_top"] = 0
-    spec["content_width"] = tw
-    spec["content_height"] = th
-    return indexed, pal.astype(np.uint16)
+    spec["content_left"] = left
+    spec["content_top"] = top
+    spec["content_width"] = content_w
+    spec["content_height"] = content_h
+    return indexed, palette
 
 
 def finalize_spec(spec):

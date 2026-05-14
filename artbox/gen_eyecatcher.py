@@ -19,12 +19,24 @@ import pathlib
 MANIFEST  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets_manifest.json")
 OUT_C     = pathlib.Path(__file__).resolve().parents[1] / "eyecatcher.c"
 
-# Logo frames hold for ~1.5 s — long enough to read, matches real NeoGeo pacing.
-# The single flash/transition frame (4.png) gets a short burst.
-LOGO_DELAY_MS  = 1500
-FLASH_DELAY_MS = 250
+# Eyecatcher pacing:
+# - short lead hold
+# - one fast animation pass
+# - one confirm pass
+# - short final hold
+LEAD_HOLD_MS = 80
+ANIM_FRAME_MS = 50
+FLASH_FRAME_MS = 35
+FINAL_HOLD_MS = 100
 
-# Filenames that are flash/transition frames (held briefly).
+# Shrink eyecatcher footprint so it feels closer to the original logo presentation.
+EC_X0 = 54
+EC_Y0 = 48
+EC_XR = 0xB
+EC_YR = 0x7F
+EC_MIN_CRT = 12
+
+# Filenames that should use a shorter transition delay.
 FLASH_FRAMES = {"4.png"}
 
 
@@ -71,16 +83,35 @@ def main():
         "void NEOGEO_USER showEyeCatcherMVS(void) {",
     ]
 
-    for spec in frames:
-        sid   = spec["screen_id"]
-        delay = FLASH_DELAY_MS if spec["name"] in FLASH_FRAMES else LOGO_DELAY_MS
-        lines += [
-            f"    clearFix();",
-            f"    clearSprs();",
-            f"    showScreen{sid}(16, 24, 0xF, 0xAF, 16, 0x0000, 0);",
-            f"    cyclexms({delay});",
-            "",
-        ]
+    lines += [
+        "    clearFix();",
+        "    clearSprs();",
+        "",
+    ]
+
+    first = frames[0]
+    lines += [
+        f"    showScreen{first['screen_id']}({EC_X0}, {EC_Y0}, {hex(EC_XR)}, {hex(EC_YR)}, {EC_MIN_CRT}, 0x0000, 0);",
+        f"    cyclexms({LEAD_HOLD_MS});",
+        "",
+    ]
+
+    for _ in range(2):
+        for spec in frames:
+            sid = spec["screen_id"]
+            delay = FLASH_FRAME_MS if spec["name"] in FLASH_FRAMES else ANIM_FRAME_MS
+            lines += [
+                f"    showScreen{sid}({EC_X0}, {EC_Y0}, {hex(EC_XR)}, {hex(EC_YR)}, {EC_MIN_CRT}, 0x0000, 0);",
+                f"    cyclexms({delay});",
+            ]
+        lines.append("")
+
+    last = frames[-1]
+    lines += [
+        f"    showScreen{last['screen_id']}({EC_X0}, {EC_Y0}, {hex(EC_XR)}, {hex(EC_YR)}, {EC_MIN_CRT}, 0x0000, 0);",
+        f"    cyclexms({FINAL_HOLD_MS});",
+        "",
+    ]
 
     lines += [
         "    clearFix();",
