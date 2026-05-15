@@ -10,6 +10,9 @@
 #include "demo_fix.h"
 #include "demo.h"
 #include "sdk/neogeo.h"
+#include "sdk/2d_engine/ng_timers.h"
+#include "sdk/2d_engine/ng_progress.h"
+#include "sdk/2d_engine/ng_status.h"
 #include <stdint.h>
 
 void NEOGEO_USER waitVbl(void);
@@ -53,12 +56,154 @@ static void NEOGEO_USER fix_scroll_line(uint8_t row, const char *text, uint8_t p
 }
 
 /* ------------------------------------------------------------------ */
+/*  Sub-scene: timers, progress bars, status flags                       */
+/* ------------------------------------------------------------------ */
+static void NEOGEO_USER fix_timers_progress(void)
+{
+    uint16_t t;
+    uint8_t  i;
+    uint8_t  status_bits[4];
+    uint16_t status_timer;
+    char     bar[14];
+
+    /* Page 1: countdown timer */
+    demo_clear_scene();
+    demo_caption("TIMERS / PROGRESS / STATUS", "REAL-TIME SDK COUNTERS", "NG ENGINE UTILS");
+
+    ng_timer_start(0u, 180u);
+
+    for (t = 0u; t < 200u; t++) {
+        uint8_t pct;
+        uint8_t filled;
+        uint16_t val;
+
+        ng_timers_update();
+        val  = ng_timer_value(0u);
+        pct  = ng_timer_percent_left(0u);
+        filled = (uint8_t)(pct / 10u);
+        if (filled > 10u) filled = 10u;
+
+        bar[0] = '[';
+        for (i = 0u; i < 10u; i++) bar[1u + i] = (i < filled) ? '#' : ' ';
+        bar[11] = ']';
+        bar[12] = '\0';
+
+        demo_fix_puts(4u,  8u, "TIMER:", 0u);
+        demo_fix_puts(11u, 8u, bar, (val > 60u) ? 1u : 2u);
+
+        {
+            char nbuf[6];
+            nbuf[0] = (char)('0' + val / 100u % 10u);
+            nbuf[1] = (char)('0' + val / 10u  % 10u);
+            nbuf[2] = (char)('0' + val         % 10u);
+            nbuf[3] = '\0';
+            demo_fix_puts(24u, 8u, nbuf, 1u);
+        }
+
+        if (ng_timer_done(0u)) {
+            demo_fix_puts(14u, 10u, "TIME UP!", 2u);
+            demo_wait(30u);
+            break;
+        }
+        if (demo_frame()) goto timers_done;
+    }
+
+    demo_wait(30u);
+
+    /* Page 2: progress bar */
+    demo_clear_scene();
+    demo_caption("PROGRESS BAR", "FILLING UP OVER TIME", "NG_PROGRESS MODULE");
+
+    ng_progress_start(0u, 10u);
+
+    for (i = 0u; i < 10u; i++) {
+        ng_progress_add(0u, 1u);
+        {
+            uint8_t pct   = ng_progress_percent(0u);
+            uint8_t fill2 = (uint8_t)(pct / 10u);
+            if (fill2 > 10u) fill2 = 10u;
+
+            bar[0] = '[';
+            for (t = 0u; t < 10u; t++) bar[1u + t] = ((uint8_t)t < fill2) ? '#' : ' ';
+            bar[11] = ']';
+            bar[12] = '\0';
+            demo_fix_puts(4u, 8u, "PROGRESS:", 0u);
+            demo_fix_puts(14u, 8u, bar, 1u);
+
+            {
+                char pbuf[8];
+                pbuf[0] = (char)('0' + (i + 1u));
+                pbuf[1] = '/';
+                pbuf[2] = '1';
+                pbuf[3] = '0';
+                pbuf[4] = '\0';
+                demo_fix_puts(27u, 8u, pbuf, 2u);
+            }
+        }
+        if (demo_wait(24u)) goto timers_done;
+    }
+
+    demo_fix_puts(14u, 10u, "COMPLETE!", 2u);
+    demo_wait(60u);
+
+    /* Page 3: status flags */
+    demo_clear_scene();
+    demo_caption("STATUS FLAGS", "FOUR BITS TOGGLED EVERY 30 FRAMES", "NG_STATUS MODULE");
+
+    for (i = 0u; i < 4u; i++) {
+        ng_status_clear((uint16_t)i);
+        status_bits[i] = 0u;
+    }
+    status_timer = 0u;
+
+    for (t = 0u; t < 240u; t++) {
+        if (status_timer == 0u) {
+            for (i = 0u; i < 4u; i++) {
+                ng_status_toggle((uint16_t)i);
+                status_bits[i] = ng_status_has((uint16_t)i);
+            }
+        }
+        status_timer = (uint16_t)((status_timer + 1u) % 30u);
+
+        for (i = 0u; i < 4u; i++) {
+            char sbuf[18];
+            sbuf[0]  = 'S';
+            sbuf[1]  = 'T';
+            sbuf[2]  = 'A';
+            sbuf[3]  = 'T';
+            sbuf[4]  = 'U';
+            sbuf[5]  = 'S';
+            sbuf[6]  = ' ';
+            sbuf[7]  = '[';
+            sbuf[8]  = (char)('0' + i);
+            sbuf[9]  = ']';
+            sbuf[10] = ':';
+            sbuf[11] = ' ';
+            if (status_bits[i]) {
+                sbuf[12] = 'O'; sbuf[13] = 'N'; sbuf[14] = ' '; sbuf[15] = '\0';
+            } else {
+                sbuf[12] = 'O'; sbuf[13] = 'F'; sbuf[14] = 'F'; sbuf[15] = '\0';
+            }
+            demo_fix_puts(10u, (uint8_t)(9u + i * 2u), sbuf,
+                          status_bits[i] ? 2u : 0u);
+        }
+
+        if (demo_frame()) goto timers_done;
+    }
+
+timers_done:
+    demo_clear_scene();
+}
+
+/* ------------------------------------------------------------------ */
 /*  Public: FIX scene                                                    */
 /* ------------------------------------------------------------------ */
 void NEOGEO_USER demo_fix_run(void)
 {
     uint8_t  i, col, row;
     char     ch[2];
+
+    fix_timers_progress();
 
     /* Page 1 — overview */
     demo_clear_scene();

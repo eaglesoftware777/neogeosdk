@@ -13,4 +13,10 @@ void NEOGEO_USER demo_title_screen(void);
 /* End card / credits (shown at end of full flow) */
 void NEOGEO_USER demo_title_end_card(void);
 
+/* Game over scene: red flash + score drain */
+void NEOGEO_USER demo_title_game_over(void);
+
+/* Attract reel: title card + teaser screenshots + coin detect */
+void NEOGEO_USER demo_title_attract_reel(void);
+
 #endif /* DEMO_TITLE_H */

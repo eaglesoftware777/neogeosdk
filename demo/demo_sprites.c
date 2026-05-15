@@ -15,10 +15,13 @@
 #include "sdk/2d_engine/ng_engine.h"
 #include "sdk/2d_engine/ng_sprite_group.h"
 #include "sdk/2d_engine/ng_chars.h"
+#include "sdk/2d_engine/ng_physics.h"
+#include "sdk/2d_engine/ng_fixed.h"
 #include <stdint.h>
 
 void NEOGEO_USER waitVbl(void);
 void NEOGEO_USER clearFix(void);
+void NEOGEO_USER setBACKDROP(uint16_t backdrop_color);
 void NEOGEO_USER soundSceneReset(void);
 void NEOGEO_USER soundStopAll(void);
 void NEOGEO_USER soundPlayGameLoop(uint8_t music_track);
@@ -205,6 +208,183 @@ static void NEOGEO_USER spr_crowd(void)
 }
 
 /* ------------------------------------------------------------------ */
+/*  Sub-scene: raw SCB API demo                                          */
+/* ------------------------------------------------------------------ */
+static void NEOGEO_USER spr_raw_api(void)
+{
+    NGSpriteGroup g;
+    uint16_t t;
+    int16_t  sx;
+
+    clearFix();
+    setBACKDROP(BLACK);
+    demo_fix_puts(2u, 0u, "RAW NEO GEO API / DIRECT SCB WRITES", 2u);
+    demo_fix_puts(2u, 1u, "NO NG_* WRAPPERS  PURE HARDWARE", 1u);
+    demo_fix_puts(2u, 3u, "SCB1=TILE+PAL  SCB2=SCALE  SCB3=Y+STICKY  SCB4=X", 0u);
+    demo_fix_puts(2u, 27u, "A: NEXT", 0u);
+
+    demo_load_screen_palette(11u);
+
+    ng_sprite_group_init(&g, 1u, 6u, 10u,
+                         DEMO_SCREEN_TILE(11u), DEMO_SCREEN_PALETTE(11u));
+    ng_sprite_group_set_tile_stride(&g, 16u);
+    ng_sprite_group_set_active_rows(&g, 10u);
+    ng_sprite_group_set_scale(&g, 0xFFu, 0xFFu);
+
+    sx = 20;
+
+    for (t = 0u; t < 180u; t++) {
+        ng_sprite_group_set_pos(&g, sx, (int16_t)(-34));
+        ng_sprite_group_upload(&g);
+
+        sx = (int16_t)(sx + 1);
+        if (sx > 280) sx = 20;
+
+        {
+            char buf[8];
+            buf[0] = 'X';
+            buf[1] = ':';
+            buf[2] = (char)('0' + ((uint16_t)sx / 100u % 10u));
+            buf[3] = (char)('0' + ((uint16_t)sx / 10u % 10u));
+            buf[4] = (char)('0' + ((uint16_t)sx % 10u));
+            buf[5] = '\0';
+            demo_fix_puts(2u, 5u, buf, 1u);
+        }
+
+        if (demo_frame()) break;
+    }
+
+    ng_sprite_group_hide(&g);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sub-scene: animation state machine                                   */
+/* ------------------------------------------------------------------ */
+static void NEOGEO_USER spr_action_fsm(void)
+{
+    NGCharacter *c;
+    uint16_t t;
+    uint8_t  state;
+    uint16_t state_timer;
+
+    static const char *const s_state_names[4] = {
+        "IDLE  ", "RUN   ", "JUMP  ", "ATTACK"
+    };
+    static const uint16_t s_state_dur[4] = { 60u, 60u, 40u, 40u };
+    static const uint8_t  s_state_frame[4] = { 11u, 12u, 15u, 20u };
+
+    clearFix();
+    demo_fix_puts(2u, 0u, "ANIMATION STATE MACHINE", 2u);
+    demo_fix_puts(2u, 1u, "TIMER-DRIVEN FSM  IDLE/RUN/JUMP/ATTACK", 1u);
+    demo_fix_puts(2u, 27u, "A: NEXT", 0u);
+
+    demo_load_screen_palette(11u);
+    ng_chars_init();
+
+    c = chars_add(0u, 160, 180);
+    if (c) {
+        ng_char_set_sprite(c, 0u, 6u, 10u,
+                           DEMO_SCREEN_TILE(11u), DEMO_SCREEN_PALETTE(11u));
+        ng_char_set_tile_stride(c, 16u);
+        c->sprite_offset_y = -160;
+        c->scale_x = 0xFFu;
+        c->scale_y = 0xFFu;
+    }
+
+    state = 0u;
+    state_timer = 0u;
+
+    for (t = 0u; t < 360u; t++) {
+        if (state_timer >= s_state_dur[state]) {
+            state = (uint8_t)((state + 1u) & 3u);
+            state_timer = 0u;
+            if (c) {
+                uint16_t tile = DEMO_SCREEN_TILE(s_state_frame[state]);
+                if (c->sprite_tile != tile) {
+                    c->sprite_tile = tile;
+                    c->sprite_dirty = 1u;
+                }
+            }
+        }
+        state_timer++;
+
+        demo_fix_puts(2u, 3u, "STATE:", 0u);
+        demo_fix_puts(9u, 3u, s_state_names[state], 2u);
+
+        ng_chars_draw();
+        if (demo_frame()) break;
+    }
+
+    ng_chars_init();
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sub-scene: physics with gravity and solid platform                   */
+/* ------------------------------------------------------------------ */
+static void NEOGEO_USER spr_physics(void)
+{
+    NGCharacter *chars[3];
+    uint8_t i;
+    uint16_t t;
+    static const int16_t start_x[3] = { 60, 160, 260 };
+    static const int16_t start_y[3] = { 10,  40,  70 };
+
+    clearFix();
+    demo_fix_puts(2u, 0u, "PHYSICS / GRAVITY / SOLIDS", 2u);
+    demo_fix_puts(2u, 1u, "PLATFORM COLLISION  GROUNDED STATE", 1u);
+    demo_fix_puts(2u, 27u, "A: NEXT", 0u);
+
+    demo_load_screen_palette(109u);
+    ng_chars_init();
+    ng_physics_init();
+
+    ng_physics_add_solid(40, 160, 240, 8, 0u);
+
+    demo_fix_puts(4u, 21u, "=============================", 0u);
+
+    for (i = 0u; i < 3u; i++) {
+        chars[i] = chars_add(0u, start_x[i], start_y[i]);
+        if (chars[i]) {
+            ng_char_set_sprite(chars[i], 0u, 6u, 6u,
+                               NPC_TILE(i * 3u), NPC_PALETTE);
+            ng_char_set_tile_stride(chars[i], NPC_STRIDE);
+            chars[i]->sprite_offset_y = -96;
+            chars[i]->scale_x = 0x80u;
+            chars[i]->scale_y = 0x80u;
+            ng_physics_attach(chars[i],
+                (uint16_t)(NG_PHYSICS_GRAVITY | NG_PHYSICS_SOLIDS));
+            ng_physics_set_gravity(chars[i],
+                NG_FP_FROM_FRAC(1, 4),
+                NG_TO_FP(4));
+        }
+    }
+
+    for (t = 0u; t < 300u; t++) {
+        ng_physics_update_pre();
+        ng_chars_update();
+        ng_physics_resolve();
+        ng_chars_draw();
+
+        for (i = 0u; i < 3u; i++) {
+            if (chars[i]) {
+                uint8_t grounded = ng_physics_is_grounded(chars[i]);
+                char buf[4];
+                buf[0] = (char)('0' + i);
+                buf[1] = ':';
+                buf[2] = grounded ? 'G' : 'F';
+                buf[3] = '\0';
+                demo_fix_puts((uint8_t)(3u + i * 5u), 22u, buf, grounded ? 2u : 1u);
+            }
+        }
+
+        if (demo_frame()) break;
+    }
+
+    ng_physics_clear_solids();
+    ng_chars_init();
+}
+
+/* ------------------------------------------------------------------ */
 /*  Public: full sprites scene                                           */
 /* ------------------------------------------------------------------ */
 void NEOGEO_USER demo_sprites_run(void)
@@ -216,6 +396,9 @@ void NEOGEO_USER demo_sprites_run(void)
     soundSetSSGVolume(0x08u);
     soundSetFMVolume(0x08u);
 
+    spr_raw_api();
+    spr_action_fsm();
+    spr_physics();
     spr_walk_loop();
     spr_scale_matrix();
     spr_crowd();
