@@ -12,12 +12,13 @@ display convention as showScreenN() in screens.c (x=16, y=24, full-screen
 16-strip layout).
 """
 
+import argparse
 import json
 import os
 import pathlib
 
 MANIFEST  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets_manifest.json")
-OUT_C     = pathlib.Path(__file__).resolve().parents[1] / "eyecatcher.c"
+_DEFAULT_OUT_C = pathlib.Path(__file__).resolve().parents[1] / "eyecatcher.c"
 
 # Eyecatcher pacing:
 # - short lead hold
@@ -41,6 +42,11 @@ FLASH_FRAMES = {"4.png"}
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--out", default=None, help="Output path for eyecatcher.c")
+    args = parser.parse_args()
+    OUT_C = pathlib.Path(args.out) if args.out else _DEFAULT_OUT_C
+
     if not os.path.exists(MANIFEST):
         print("gen_eyecatcher: no manifest found, skipping.")
         return

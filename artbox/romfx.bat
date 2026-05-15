@@ -1,11 +1,12 @@
 @echo off
 setlocal
+if "%GAME_ID%"=="" set GAME_ID=777
 set SCRIPT_DIR=%~dp0
 set REPO_ROOT=%SCRIPT_DIR%..
-if not exist 777-s1.s1 (
-    echo Missing 777-s1.s1. Run romdbfiximport.py and fixtiles.py first.
+if not exist %GAME_ID%-s1.s1 (
+    echo Missing %GAME_ID%-s1.s1. Run romdbfiximport.py and fixtiles.py first.
     exit /b 1
 )
 if not exist "%REPO_ROOT%\roms\neogeosdk" mkdir "%REPO_ROOT%\roms\neogeosdk"
-copy /Y 777-s1.s1 "%REPO_ROOT%\roms\neogeosdk\777-s1.s1" >nul
+copy /Y %GAME_ID%-s1.s1 "%REPO_ROOT%\roms\neogeosdk\%GAME_ID%-s1.s1" >nul
 endlocal

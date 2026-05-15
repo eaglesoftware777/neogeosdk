@@ -3,6 +3,12 @@
 #https://github.com/eaglesoftware777
 #https://github.com/eaglesoftware777/neogeosdk
 #######
+
+# Game selection — default is demo
+# Usage: make GAME=helloworld / make GAME=tutorial / make GAME=neogeogame
+GAME ?= demo
+-include games/$(GAME)/game.mk
+
 ifndef SDKHOME
 SDKHOME := $(abspath $(CURDIR)/..)
 endif
@@ -19,7 +25,7 @@ XTOOLS_ROOT ?= $(XTOOLS_V2)
 endif
 
 CC=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-gcc
-CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Wa,-march=68000,-mcpu=68000,-W,--warn
+CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Wa,-march=68000,-mcpu=68000,-W,--warn
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
 LD=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-ld
 LDFLAGS=  -nostdlib
@@ -93,12 +99,24 @@ mvs:
 	$(MAKE) PLATFORM=mvs p1
 
 .PHONY: p1
-p1: game 777-p1.p1
+p1: game $(GAME_ID)-p1.p1
+
+# Scene files come from GAME_SCENES in game.mk (explicit list, avoids compiling helper/included files)
+GAME_SCENE_SRCS := $(addprefix games/$(GAME)/scenes/,$(addsuffix .c,$(GAME_SCENES)))
+GAME_SCENE_OBJS := $(addprefix out/,$(addsuffix 0.o,$(GAME_SCENES)))
+
+# Select per-game neogeo platform file
+ifeq ($(PLATFORM),mvs)
+GAME_NEOGEO_C = games/$(GAME)/neogeo_mvs.c
+else
+GAME_NEOGEO_C = games/$(GAME)/neogeo_aes.c
+endif
 
 game:
-	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS)   $(NEOGEO_C)  -o out/neogeo0.o
-	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS)   user.c -o out/user0.o
-	$(CC) $(CFLAGS)   main.c -o out/main0.o
+	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS)   $(GAME_NEOGEO_C) -o out/neogeo0.o
+	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS)   games/$(GAME)/user.c -o out/user0.o
+	$(CC) $(CFLAGS)   games/$(GAME)/main.c -o out/main0.o
+	$(CC) $(CFLAGS)   games/$(GAME)/eyecatcher.c -o out/eyecatcher0.o
 	$(CC) $(CFLAGS)   sdk/neogeolib.c -o out/neogeolib0.o
 	$(CC) $(CFLAGS)   sdk/ng_fix/ng_fix.c -o out/ng_fix_sdk0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_defs.c -o out/ng_defs0.o
@@ -127,88 +145,95 @@ game:
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_feedback.c -o out/ng_feedback0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_debug.c -o out/ng_debug0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_demo_advanced.c -o out/ng_demo_advanced0.o
-	$(CC) $(CFLAGS)   demo/demo.c -o out/demo0.o
-	$(CC) $(CFLAGS)   demo/demo_intro.c -o out/demo_intro0.o
-	$(CC) $(CFLAGS)   demo/demo_sprites.c -o out/demo_sprites0.o
-	$(CC) $(CFLAGS)   demo/demo_camera.c -o out/demo_camera0.o
-	$(CC) $(CFLAGS)   demo/demo_palette.c -o out/demo_palette0.o
-	$(CC) $(CFLAGS)   demo/demo_particles.c -o out/demo_particles0.o
-	$(CC) $(CFLAGS)   demo/demo_depth.c -o out/demo_depth0.o
-	$(CC) $(CFLAGS)   demo/demo_sound.c -o out/demo_sound0.o
-	$(CC) $(CFLAGS)   demo/demo_fix.c -o out/demo_fix0.o
-	$(CC) $(CFLAGS)   demo/demo_combat.c -o out/demo_combat0.o
-	$(CC) $(CFLAGS)   demo/demo_stress.c -o out/demo_stress0.o
-	$(CC) $(CFLAGS)   demo/demo_title.c -o out/demo_title0.o
-	$(CC) $(CFLAGS)   demo/demo_render.c -o out/demo_render0.o
-	$(CC) $(CFLAGS)   eyecatcher.c -o out/eyecatcher0.o
-	$(OBJCP) $(STRIP_SECTS) out/neogeo0.o   out/neogeo.o
-	$(OBJCP) $(STRIP_SECTS) out/user0.o    out/user.o
-	$(OBJCP) $(STRIP_SECTS) out/main0.o    out/main.o
-	$(OBJCP) $(STRIP_SECTS) out/neogeolib0.o    out/neogeolib.o
-	$(OBJCP) $(STRIP_SECTS) out/eyecatcher0.o   out/eyecatcher.o
-	$(LD) $(LDFLAGS)    -T sdk/neogeo.ld -o  out/game   out/neogeo.o   out/user.o out/main.o out/neogeolib.o out/eyecatcher.o $(NG_FIX_SDK_OBJ0) $(NG_ENGINE_OBJ0) $(DEMO_OBJ0)
-	
-777-p1.p1: game
+	$(foreach src,$(GAME_SCENE_SRCS),$(CC) $(CFLAGS) $(src) -o out/$(notdir $(basename $(src)))0.o;)
+	$(OBJCP) $(STRIP_SECTS) out/neogeo0.o     out/neogeo.o
+	$(OBJCP) $(STRIP_SECTS) out/user0.o       out/user.o
+	$(OBJCP) $(STRIP_SECTS) out/main0.o       out/main.o
+	$(OBJCP) $(STRIP_SECTS) out/eyecatcher0.o out/eyecatcher.o
+	$(OBJCP) $(STRIP_SECTS) out/neogeolib0.o  out/neogeolib.o
+	$(LD) $(LDFLAGS) -T games/$(GAME)/neogeo.ld -o out/game \
+	    out/neogeo.o out/user.o out/main.o out/eyecatcher.o out/neogeolib.o \
+	    $(NG_FIX_SDK_OBJ0) $(NG_ENGINE_OBJ0) $(GAME_SCENE_OBJS)
+
+$(GAME_ID)-p1.p1: game
 	$(OBJCP)   -O ihex    out/game out/game0
 	$(SCAT)  out/game0 -Intel $(CROP) -o out/game0.rom -binary
 	$(SCAT)  out/game0.rom -binary $(SWAP) out/game1.rom -binary
 	$(SCAT)  out/game1.rom -binary $(FILL) out/game.rom -binary
-	cp		 out/game.rom	out/777-p1.p1
+	cp       out/game.rom out/$(GAME_ID)-p1.p1
 	mkdir -p roms/neogeosdk
-	cp -f out/777-p1.p1 roms/neogeosdk/777-p1.p1
+	cp -f out/$(GAME_ID)-p1.p1 roms/neogeosdk/$(GAME_ID)-p1.p1
 	python3 hash_eagle/gen_hash.py
 
 .PHONY: hash
 hash:
 	python3 hash_eagle/gen_hash.py
 
+GAME_SOUND = games/$(GAME)/sound
+
+# Wildcard expansion at parse time — empty string when a folder has no files
+FM_MMLS   := $(wildcard $(GAME_SOUND)/fm/*.mml)
+MML_TRACKS := $(wildcard $(GAME_SOUND)/mml/*.mml)
+SSG_MMLS  := $(wildcard $(GAME_SOUND)/ssg/*.mml)
+
 .PHONY: mml
 mml:
-	python3 sound/tools/mml_compile.py sound/mml/*.mml -o sound/driver/music_data.inc
+	@[ -z "$(MML_TRACKS)" ] && echo "mml: no MML files in $(GAME_SOUND)/mml/, skipping" || \
+	  python3 sound/tools/mml_compile.py $(MML_TRACKS) -o sound/driver/music_data.inc
 
 .PHONY: fmpatches
 fmpatches:
-	python3 sound/tools/fm_patch_compile.py sound/fm/patches.fm -o sound/driver/fm_patch_table.inc
+	@[ -f "$(GAME_SOUND)/fm/patches.fm" ] && \
+	  python3 sound/tools/fm_patch_compile.py $(GAME_SOUND)/fm/patches.fm -o sound/driver/fm_patch_table.inc || \
+	  echo "fmpatches: no patches.fm in $(GAME_SOUND)/fm/, skipping"
 
 .PHONY: fm
 fm:
-	python3 sound/tools/fm_compile.py sound/fm/*.mml -o sound/driver/fm_data.inc
-	
+	@[ -z "$(FM_MMLS)" ] && echo "fm: no MML files in $(GAME_SOUND)/fm/, skipping" || \
+	  python3 sound/tools/fm_compile.py $(FM_MMLS) -o sound/driver/fm_data.inc
+
 .PHONY: ssgconfig
 ssgconfig:
-	python3 sound/tools/ssg_config_compile.py sound/ssg/config.ssg -o sound/driver/ssg_config.inc
+	@[ -f "$(GAME_SOUND)/ssg/config.ssg" ] && \
+	  python3 sound/tools/ssg_config_compile.py $(GAME_SOUND)/ssg/config.ssg -o sound/driver/ssg_config.inc || \
+	  echo "ssgconfig: no config.ssg in $(GAME_SOUND)/ssg/, skipping"
 
 .PHONY: ssg
 ssg:
-	python3 sound/tools/ssg_compile.py sound/ssg/*.mml -o sound/driver/ssg_data.inc	
+	@[ -z "$(SSG_MMLS)" ] && echo "ssg: no MML files in $(GAME_SOUND)/ssg/, skipping" || \
+	  python3 sound/tools/ssg_compile.py $(SSG_MMLS) -o sound/driver/ssg_data.inc
 
 .PHONY: samples
 samples:
-	cd sound/tools && PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_a.sh
-	cd sound/tools && PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_b.sh
-	cd sound/tools && PYTHON=$(PYTHON) ./adpcm_enc_process.sh
+	@[ -d "$(GAME_SOUND)/samples/in_wav_a" ] && \
+	  (cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_a.sh) || \
+	  echo "samples: no in_wav_a in $(GAME_SOUND)/samples/, skipping a"
+	@[ -d "$(GAME_SOUND)/samples/in_wav_b" ] && \
+	  (cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_b.sh) || \
+	  echo "samples: no in_wav_b in $(GAME_SOUND)/samples/, skipping b"
+	@cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) ./adpcm_enc_process.sh
 
 .PHONY: vrom
 vrom:
-	./sound/tools/vrom.sh
+	GAME_ID=$(GAME_ID) ./sound/tools/vrom.sh
 	mkdir -p roms/neogeosdk
-	cp -f out/777-v1.v1 roms/neogeosdk/777-v1.v1
+	cp -f out/$(GAME_ID)-v1.v1 roms/neogeosdk/$(GAME_ID)-v1.v1
 
 .PHONY: m1rom
 m1rom: fmpatches fm mml ssgconfig ssg
-	WLAZ80=$(WLAZ80) WLALINK=$(WLALINK) USE_Z80C=$(USE_Z80C) Z80C_SRC=$(Z80C_SRC_LINUX) ./sound/tools/m1rom.sh
+	WLAZ80=$(WLAZ80) WLALINK=$(WLALINK) USE_Z80C=$(USE_Z80C) Z80C_SRC=$(Z80C_SRC_LINUX) GAME_SOUND=$(GAME_SOUND) GAME_ID=$(GAME_ID) ./sound/tools/m1rom.sh
 
 .PHONY: m1rom-asm
 m1rom-asm:
 	$(MAKE) m1rom USE_Z80C=0
 	mkdir -p out/compare
-	cp -f out/777-m1.m1 out/compare/777-m1-asm.m1
+	cp -f out/$(GAME_ID)-m1.m1 out/compare/$(GAME_ID)-m1-asm.m1
 
 .PHONY: m1rom-c
 m1rom-c:
 	$(MAKE) m1rom USE_Z80C=1 LINK_C_DRIVER=1
 	mkdir -p out/compare
-	cp -f out/777-m1.m1 out/compare/777-m1-c.m1
+	cp -f out/$(GAME_ID)-m1.m1 out/compare/$(GAME_ID)-m1-c.m1
 
 .PHONY: compare-driver
 compare-driver: m1rom-asm m1rom-c
@@ -224,9 +249,11 @@ sound-all: sound
 
 .PHONY: sfix
 sfix:
-	cd artbox && python3 romdbfiximport.py && python3 fixtiles.py && ./romfx.sh
+	ln -sfn $(CURDIR)/games/$(GAME)/artbox/infix artbox/infix
+	cd artbox && GAME_ID=$(GAME_ID) python3 romdbfiximport.py && GAME_ID=$(GAME_ID) python3 fixtiles.py && GAME_ID=$(GAME_ID) ./romfx.sh
+	rm -f artbox/infix
 	mkdir -p roms/neogeosdk
-	cp -f artbox/777-s1.s1 roms/neogeosdk/777-s1.s1
+	cp -f artbox/$(GAME_ID)-s1.s1 roms/neogeosdk/$(GAME_ID)-s1.s1
 
 .PHONY: srom
 srom: sfix
@@ -237,7 +264,7 @@ art-clean:
 
 .PHONY: art
 art:
-	./artbox/makeartbox.sh
+	GAME_ID=$(GAME_ID) ./artbox/makeartbox.sh $(GAME)
 
 .PHONY: dist
 dist: p1
@@ -245,14 +272,14 @@ dist: p1
 
 .PHONY: clean
 clean:
-	rm -f out/game out/game0 out/game0.rom out/game1.rom out/game.rom out/777-p1.p1
+	rm -f out/game out/game0 out/game0.rom out/game1.rom out/game.rom out/$(GAME_ID)-p1.p1
 	rm -f out/*.o out/*.s out/game.map dump/*.dump dump/*.hex dump/*.txt dump/*.sym dump/*.gdb dump/*.readelf
-	rm -f roms/neogeosdk/777-p1.p1
+	rm -f roms/neogeosdk/$(GAME_ID)-p1.p1
 
 .PHONY: sound-clean
 sound-clean:
-	rm -f out/777-m1.m1 out/777-v1.v1 out/driver.gen.asm
-	rm -f roms/neogeosdk/777-m1.m1 roms/neogeosdk/777-v1.v1
+	rm -f out/$(GAME_ID)-m1.m1 out/$(GAME_ID)-v1.v1 out/driver.gen.asm
+	rm -f roms/neogeosdk/$(GAME_ID)-m1.m1 roms/neogeosdk/$(GAME_ID)-v1.v1
 	rm -f sound/samples/out_16el_a/*.wav sound/samples/out_16el_b/*.wav
 	rm -f sound/samples/out_a/*.adpcma sound/samples/out_b/*.adpcmb
 	rm -f sound/driver/fm_data.inc sound/driver/music_data.inc sound/driver/fm_patch_table.inc sound/driver/sample_table.inc sound/driver/ssg_config.inc sound/driver/ssg_data.inc
@@ -260,7 +287,7 @@ sound-clean:
 
 .PHONY: clean-all
 clean-all: clean sound-clean art-clean
-	rm -f roms/neogeosdk/777-c1.c1 roms/neogeosdk/777-c2.c2
+	rm -f roms/neogeosdk/$(GAME_ID)-c1.c1 roms/neogeosdk/$(GAME_ID)-c2.c2
 	
 .PHONY: dump
 dump: 	
@@ -278,7 +305,7 @@ dump:
 
 test:
 	python3 hash_eagle/gen_hash.py
-	cp out/777-p1.p1  roms/neogeosdk/
+	cp out/$(GAME_ID)-p1.p1 roms/neogeosdk/
 	$(MAME_COMMON) -output console -nofilter -waitvsync -window
 
 .PHONY: test-aes
@@ -327,7 +354,7 @@ bios-list:
 
 debug:
 	python3 hash_eagle/gen_hash.py
-	cp out/777-p1.p1  roms/neogeosdk/
+	cp out/$(GAME_ID)-p1.p1 roms/neogeosdk/
 	$(MAME_COMMON) -output console -debug -verbose -nofilter -waitvsync -window
 
 .PHONY: debug-aes
@@ -338,7 +365,7 @@ debug-aes:
 mame-trace: p1
 	mkdir -p dump
 	python3 hash_eagle/gen_hash.py
-	cp out/777-p1.p1 roms/neogeosdk/
+	cp out/$(GAME_ID)-p1.p1 roms/neogeosdk/
 	$(NM) -n out/game > dump/game.sym
 	$(OBJDUMP) -Dht out/game > dump/game.debug.dump
 	$(MAME_COMMON) -verbose -debug -debugscript dump/mame_trace.mds

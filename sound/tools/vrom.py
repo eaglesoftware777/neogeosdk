@@ -15,7 +15,8 @@ def build_vrom():
     out_dir = os.path.join(sdk_root, "out")
     rom_dir = os.path.join(sdk_root, "roms", "neogeosdk")
     table_path = os.path.join(sdk_root, "sound", "driver", "sample_table.inc")
-    vrom_path = os.path.join(out_dir, "777-v1.v1")
+    game_id = os.environ.get("GAME_ID", "777")
+    vrom_path = os.path.join(out_dir, f"{game_id}-v1.v1")
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
@@ -85,7 +86,7 @@ def build_vrom():
         os.makedirs(rom_dir)
 
     import shutil
-    shutil.copy2(vrom_path, os.path.join(rom_dir, "777-v1.v1"))
+    shutil.copy2(vrom_path, os.path.join(rom_dir, f"{game_id}-v1.v1"))
 
     print(f"Built {vrom_path} ({len(samples_info)} samples)")
     print(f"Updated {table_path}")

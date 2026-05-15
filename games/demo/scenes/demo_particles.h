@@ -1,0 +1,13 @@
+#ifndef DEMO_PARTICLES_H
+#define DEMO_PARTICLES_H
+
+#include "sdk/macro.h"
+
+#ifndef NEOGEO_USER
+#define NEOGEO_USER
+#endif
+
+/* Scene 6 — particle system showcase */
+void NEOGEO_USER demo_particles_run(void);
+
+#endif /* DEMO_PARTICLES_H */
