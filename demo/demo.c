@@ -17,6 +17,7 @@
 #include "demo_combat.h"
 #include "demo_stress.h"
 #include "demo_title.h"
+#include "demo_render.h"
 
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
@@ -431,16 +432,12 @@ void NEOGEO_USER showWalkDemo(int loops, int delay_frames)
 void NEOGEO_USER demo_run_attract(void)
 {
     soundSceneReset();
-    soundSetADPCMAVolume(0x00);
+    soundSetADPCMAVolume(0x3Cu);
     soundSetADPCMBVolume(0xBCu);
 
-#ifndef NG_AES
-    playSFXB(SOUND_BED_EYECATCHER);
-    showEyeCatcherMVS();
-    soundStopAll();
-#endif
-
-    demo_title_screen();
+    demo_intro_sdk_title();
+    demo_intro_system_banner();
+    demo_title_attract_reel();
 }
 
 /* ------------------------------------------------------------------ */
@@ -448,7 +445,6 @@ void NEOGEO_USER demo_run_attract(void)
 /* ------------------------------------------------------------------ */
 void NEOGEO_USER demo_run_full_flow(void)
 {
-    /* Initialize SDK subsystems once at the top of the full flow */
     ng_render_queue_init();
     ng_palette_fx_init();
     ng_particles_init();
@@ -461,39 +457,30 @@ void NEOGEO_USER demo_run_full_flow(void)
     soundSetSSGVolume(0x08u);
     soundSetFMVolume(0x08u);
 
-    /* Scene 1: Eagle Software intro */
-    demo_intro_eagle();
-
-    /* Scene 2: SDK title card */
-    demo_intro_sdk_title();
-
-    /* Scene 3: Sprite group showcase */
+    /* BLOCK 2 — Core hardware */
     demo_sprites_run();
-
-    /* Scene 4: Camera + parallax */
-    demo_camera_run();
-
-    /* Scene 5: Palette FX */
-    demo_palette_run();
-
-    /* Scene 6: Particles */
-    demo_particles_run();
-
-    /* Scene 7: Combat feedback */
-    demo_combat_run();
-
-    /* Scene 8: Depth FX */
-    demo_depth_run();
-
-    /* Scene 9: FIX layer */
     demo_fix_run();
-
-    /* Scene 10: Sound showcase */
     demo_sound_run();
 
-    /* Scene 11: Stress test */
+    /* BLOCK 3 — 2D engine core */
+    demo_combat_run();
+
+    /* BLOCK 4 — 2D engine advanced */
+    demo_camera_run();
+    demo_palette_run();
+    demo_particles_run();
+
+    /* BLOCK 6 — Depth / 3D */
+    demo_depth_run();
+
+    /* BLOCK 6.4-6.5 — Software rendering */
+    demo_render_run();
+
+    /* BLOCK 7 — Combination showpiece */
+    demo_intro_loading();
     demo_stress_run();
 
-    /* Scene 12: Credits / end card */
+    /* BLOCK 8 — Close */
+    demo_title_game_over();
     demo_title_end_card();
 }

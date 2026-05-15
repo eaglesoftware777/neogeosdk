@@ -428,10 +428,7 @@ void NEOGEO_USER START_GAME(void) {
 	clearSprs();
 	setBACKDROP(BLACK);
 	soundSceneReset();
-	fixtext_out(13,10,"FULL DEMO MODE",0);
-	fixtext_out(7,12,"SOUND + SPECIAL MOVES",2);
-	cyclexs(1);
-	maingame();
+	demo_run_full_flow();
 	NEO_REGISTER8(NGO_START_FLAG) = 0;
 	NEO_REGISTER8(BIOS_USER_MODE) = 1;
 	ASM_START

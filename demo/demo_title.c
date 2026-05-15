@@ -11,7 +11,12 @@
 #include "demo.h"
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
+#include "sdk/2d_engine/ng_palette_fx.h"
 #include <stdint.h>
+
+#ifndef NGO_START_FLAG
+#define NGO_START_FLAG  0xD00100
+#endif
 
 void NEOGEO_USER waitVbl(void);
 void NEOGEO_USER clearFix(void);
@@ -33,8 +38,12 @@ void NEOGEO_USER soundSetFMVolume(uint8_t v);
 void NEOGEO_USER soundPlayGameLoop(uint8_t music_track);
 void NEOGEO_USER playSFX(uint8_t n);
 void NEOGEO_USER playFMTrack(uint8_t n);
+void NEOGEO_USER showScreen1  (int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen11 (int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen79 (int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen107(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen108(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen109(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 
 /* ------------------------------------------------------------------ */
 /*  Title screen                                                         */
@@ -91,6 +100,155 @@ void NEOGEO_USER demo_title_screen(void)
         }
     }
 
+    demo_clear_scene();
+}
+
+/* ------------------------------------------------------------------ */
+/*  Game over scene                                                      */
+/* ------------------------------------------------------------------ */
+void NEOGEO_USER demo_title_game_over(void)
+{
+    static const uint16_t s_go_pal[16] = {
+        0x0000u, 0x7FFFu, 0x4F00u, 0x2422u, 0x3747u, 0x7551u,
+        0x7001u, 0x7011u, 0x4e82u, 0x2a82u, 0x5341u, 0x3113u,
+        0x1448u, 0x1b55u, 0x6FF0u, 0x30FFu
+    };
+    uint16_t fix_pal[16];
+    uint16_t score;
+
+    soundStopAll();
+    demo_clear_scene();
+    setBACKDROP(BLACK);
+
+    setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    load_palettes(fix_pal, PALETTES);
+    setpal(fix_pal, 0x8000u, RED,    BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    load_palettes(fix_pal, PALETTES + PALOFFSET * 3u);
+
+    ng_palfx_flash_red(0u, s_go_pal, 30u);
+
+    demo_wait(20u);
+
+    clearFix();
+    demo_fix_puts(14u, 11u, "GAME OVER", 2u);
+    demo_fix_puts(15u, 12u, "---------", 0u);
+    demo_fix_puts(13u, 14u, "SCORE:", 1u);
+
+    score = 9999u;
+
+    for (; score > 0u; score = (uint16_t)(score >= 100u ? score - 100u : 0u)) {
+        char sbuf[6];
+        sbuf[0] = (char)('0' + (score / 1000u % 10u));
+        sbuf[1] = (char)('0' + (score / 100u  % 10u));
+        sbuf[2] = (char)('0' + (score / 10u   % 10u));
+        sbuf[3] = (char)('0' + (score          % 10u));
+        sbuf[4] = '\0';
+        demo_fix_puts(20u, 14u, sbuf, 2u);
+        ng_palette_fx_update();
+        if (demo_frame()) goto go_done;
+    }
+
+    demo_fix_puts(20u, 14u, "0000", 0u);
+    demo_wait(180u);
+
+    ng_palfx_fade_out(0u, s_go_pal, 30u);
+    demo_wait(30u);
+
+go_done:
+    ng_palfx_stop(0u);
+    demo_clear_scene();
+}
+
+/* ------------------------------------------------------------------ */
+/*  Attract reel                                                         */
+/* ------------------------------------------------------------------ */
+void NEOGEO_USER demo_title_attract_reel(void)
+{
+    static const uint8_t s_teaser_ids[5] = { 1u, 11u, 79u, 107u, 109u };
+    static const char *const s_teaser_labels[5] = {
+        "BLOCK 2: CORE HARDWARE",
+        "BLOCK 3: 2D ENGINE",
+        "BLOCK 4: ADVANCED 2D",
+        "BLOCK 6: DEPTH / 2.5D",
+        "BLOCK 7: STRESS TEST"
+    };
+    static const uint16_t s_title_pal[16] = {
+        0x0000u, 0x7FFFu, 0x30FFu, 0x6FF0u, 0x4F00u, 0x7551u,
+        0x7001u, 0x7011u, 0x4e82u, 0x2a82u, 0x5341u, 0x3113u,
+        0x1448u, 0x1b55u, 0x6FF0u, 0x30FFu
+    };
+
+    uint8_t  teaser;
+    uint16_t hold;
+    uint16_t fix_pal[16];
+
+    demo_clear_scene();
+    setBACKDROP(BLACK);
+
+    setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    load_palettes(fix_pal, PALETTES);
+    setpal(fix_pal, 0x8000u, CYAN,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    load_palettes(fix_pal, PALETTES + PALOFFSET);
+    setpal(fix_pal, 0x8000u, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
+
+    /* Show title card with pulsing INSERT COIN */
+    demo_safe_show(showScreen108, 16, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
+    ng_palfx_pulse(DEMO_SCREEN_PALETTE(108u), s_title_pal, 60u);
+
+    soundSceneReset();
+    soundSetADPCMAVolume(0x3Cu);
+    soundSetADPCMBVolume(0xBCu);
+    playSFX(SOUND_SFX_TITLE_GONG);
+
+    teaser = 0u;
+    hold   = 0u;
+
+    for (;;) {
+#ifndef NG_AES
+        if (NEO_REGISTER8(NGO_START_FLAG)) break;
+        if (read_p1credit() > 0) break;
+#else
+        if (NEO_REGISTER8(NGO_START_FLAG)) break;
+        if (NEO_REGISTER8(BIOS_P1CHANGE) & (uint8_t)(1u << CNT_A)) break;
+#endif
+
+        /* Blink INSERT COIN */
+        if ((hold & 0x1Fu) < 16u) {
+            demo_fix_puts(13u, 26u, "INSERT COIN", 1u);
+        } else {
+            demo_fix_puts(13u, 26u, "           ", 0u);
+        }
+
+        hold++;
+
+        /* Every 180 frames cycle to next teaser */
+        if ((hold % 180u) == 0u) {
+            uint8_t sid = s_teaser_ids[teaser];
+            demo_clear_scene();
+            demo_load_screen_palette(sid);
+            demo_draw_sprite_screen(sid, 1u, 16, 24, 16u, 16u, 0xFFu, 0xFFu);
+            demo_fix_puts(4u, 25u, s_teaser_labels[teaser], 1u);
+            demo_fix_puts(13u, 26u, "INSERT COIN", 1u);
+            teaser = (uint8_t)((teaser + 1u) % 5u);
+        }
+
+        ng_palette_fx_update();
+        if (demo_frame()) break;
+
+        if (hold > 3600u) {
+            hold = 0u;
+            teaser = 0u;
+        }
+    }
+
+    ng_palfx_stop(DEMO_SCREEN_PALETTE(108u));
+    soundStopAll();
     demo_clear_scene();
 }
 

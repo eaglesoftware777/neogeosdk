@@ -40,6 +40,74 @@ void NEOGEO_USER playSFX(uint8_t n);
 #define CAM_WORLD_H    224
 
 /* ------------------------------------------------------------------ */
+/*  Sub-scene: cinematic pan                                             */
+/* ------------------------------------------------------------------ */
+static void NEOGEO_USER cam_cinematic(void)
+{
+    NGCamera cam;
+    NGSpriteGroup near_layer, far_layer;
+    uint16_t t;
+    int16_t  cam_x;
+
+    clearFix();
+    demo_fix_puts(2u, 0u, "CINEMATIC PAN / WIDE WORLD SCROLL", 2u);
+    demo_fix_puts(2u, 1u, "LETTERBOX BARS  NEAR=1X  FAR=0.5X", 1u);
+    demo_fix_puts(2u, 27u, "A: NEXT", 0u);
+
+    /* Letterbox bars */
+    demo_fix_puts(0u, 2u,  "########################################", 2u);
+    demo_fix_puts(0u, 25u, "########################################", 2u);
+
+    demo_load_screen_palette(1u);
+    ng_sprite_group_init(&far_layer, NG_SPR_BG0_FIRST, 16u, 16u,
+                         DEMO_SCREEN_TILE(1u), DEMO_SCREEN_PALETTE(1u));
+    ng_sprite_group_set_tile_stride(&far_layer, 16u);
+    ng_sprite_group_set_scale(&far_layer, 0xFFu, 0xFFu);
+
+    demo_load_screen_palette(2u);
+    ng_sprite_group_init(&near_layer, NG_SPR_BG1_FIRST, 16u, 16u,
+                         DEMO_SCREEN_TILE(2u), DEMO_SCREEN_PALETTE(2u));
+    ng_sprite_group_set_tile_stride(&near_layer, 16u);
+    ng_sprite_group_set_scale(&near_layer, 0xFFu, 0xFFu);
+
+    ng_camera_init(&cam);
+    cam.mode = NG_CAM_CINEMATIC;
+
+    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+
+    cam_x = 0;
+    for (t = 0u; t < 240u; t++) {
+        cam_x = (int16_t)(cam_x + 3);
+        if (cam_x > 640) cam_x = 0;
+
+        ng_sprite_group_set_pos(&far_layer,  (int16_t)(-(cam_x >> 1)), (int16_t)0);
+        ng_sprite_group_mark_dirty(&far_layer, NG_SGF_DIRTY_POS);
+        ng_sprite_group_flush(&far_layer);
+
+        ng_sprite_group_set_pos(&near_layer, (int16_t)(-cam_x), (int16_t)0);
+        ng_sprite_group_mark_dirty(&near_layer, NG_SGF_DIRTY_POS);
+        ng_sprite_group_flush(&near_layer);
+
+        {
+            char buf[8];
+            buf[0] = 'C';
+            buf[1] = 'X';
+            buf[2] = ':';
+            buf[3] = (char)('0' + ((uint16_t)cam_x / 100u % 10u));
+            buf[4] = (char)('0' + ((uint16_t)cam_x / 10u % 10u));
+            buf[5] = (char)('0' + ((uint16_t)cam_x % 10u));
+            buf[6] = '\0';
+            demo_fix_puts(30u, 3u, buf, 0u);
+        }
+
+        if (demo_frame()) break;
+    }
+
+    ng_sprite_group_hide(&far_layer);
+    ng_sprite_group_hide(&near_layer);
+}
+
+/* ------------------------------------------------------------------ */
 /*  Sub-scene: follow + dead zone                                        */
 /* ------------------------------------------------------------------ */
 static void NEOGEO_USER cam_follow_demo(void)
@@ -240,6 +308,7 @@ void NEOGEO_USER demo_camera_run(void)
     soundSceneReset();
     soundSetADPCMAVolume(0x3Cu);
 
+    cam_cinematic();
     cam_parallax_demo();
     cam_follow_demo();
     cam_shake_demo();

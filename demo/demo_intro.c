@@ -9,6 +9,7 @@
 #include "demo.h"
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
+#include "sdk/2d_engine/ng_progress.h"
 #include <stdint.h>
 
 void NEOGEO_USER waitVbl(void);
@@ -104,6 +105,119 @@ void NEOGEO_USER demo_intro_eagle(void)
 
 intro_done:
     soundStopAll();
+    demo_clear_scene();
+}
+
+/* ------------------------------------------------------------------ */
+/*  Scene 0.2 — System Banner                                           */
+/* ------------------------------------------------------------------ */
+void NEOGEO_USER demo_intro_system_banner(void)
+{
+    demo_clear_scene();
+    setBACKDROP(BLACK);
+
+    {
+        uint16_t fix_pal[16];
+        setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+               BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+        load_palettes(fix_pal, PALETTES);
+        setpal(fix_pal, 0x8000u, CYAN,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+               BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+        load_palettes(fix_pal, PALETTES + PALOFFSET);
+        setpal(fix_pal, 0x8000u, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+               BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+        load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
+    }
+
+#ifdef NG_AES
+    demo_fix_puts(10u, 9u,  "AES CONSOLE MODE", 2u);
+#else
+    demo_fix_puts(10u, 9u,  "MVS ARCADE MODE",  2u);
+#endif
+    demo_fix_puts(10u, 11u, "ROM: NEOGEOSDK V1.3.0",  1u);
+    demo_fix_puts(10u, 13u, "BUILD: 2026-05-15",       0u);
+    demo_fix_puts(4u,  15u, "CPU: MC68000 / SOUND: YM2610 / FIX: 40x28", 0u);
+    demo_fix_puts(2u,  27u, "A: NEXT", 1u);
+
+    demo_wait(120u);
+    demo_clear_scene();
+}
+
+/* ------------------------------------------------------------------ */
+/*  Scene 7.0 — Loading scene                                           */
+/* ------------------------------------------------------------------ */
+void NEOGEO_USER demo_intro_loading(void)
+{
+    static const char *const s_labels[8] = {
+        "SPRITE BANKS",
+        "PALETTE DATA",
+        "FIX TILESET",
+        "SOUND SAMPLES",
+        "FM PATCHES",
+        "LEVEL DATA",
+        "PHYSICS WORLD",
+        "PARTICLE POOL"
+    };
+    uint8_t i;
+    char bar[14];
+
+    demo_clear_scene();
+    setBACKDROP(BLACK);
+
+    {
+        uint16_t fix_pal[16];
+        setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+               BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+        load_palettes(fix_pal, PALETTES);
+        setpal(fix_pal, 0x8000u, CYAN,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+               BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+        load_palettes(fix_pal, PALETTES + PALOFFSET);
+        setpal(fix_pal, 0x8000u, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+               BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+        load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
+    }
+
+    demo_fix_puts(10u, 5u, "LOADING ASSETS...", 2u);
+    demo_fix_puts(8u,  7u, "[          ]  0/8",  1u);
+
+    ng_progress_start(0u, 8u);
+
+    for (i = 0u; i < 8u; i++) {
+        uint8_t pct;
+        uint8_t filled;
+        uint8_t j;
+
+        ng_progress_add(0u, 1u);
+        pct    = ng_progress_percent(0u);
+        filled = (uint8_t)(pct / 10u);
+        if (filled > 10u) filled = 10u;
+
+        bar[0]  = '[';
+        for (j = 0u; j < 10u; j++) {
+            bar[1u + j] = (j < filled) ? '#' : ' ';
+        }
+        bar[11] = ']';
+        bar[12] = ' ';
+        bar[13] = '\0';
+        demo_fix_puts(8u, 7u, bar, 1u);
+
+        {
+            char num[6];
+            num[0] = (char)('0' + (uint8_t)(i + 1u));
+            num[1] = '/';
+            num[2] = '8';
+            num[3] = '\0';
+            demo_fix_puts(22u, 7u, num, 1u);
+        }
+
+        demo_fix_puts(4u, 9u, "                            ", 0u);
+        demo_fix_puts(4u, 9u, s_labels[i], 0u);
+
+        demo_wait(18u);
+    }
+
+    demo_fix_puts(10u, 12u, "READY!", 2u);
+    demo_wait(60u);
     demo_clear_scene();
 }
 

@@ -16,11 +16,16 @@
 #include "sdk/2d_engine/ng_sprite_group.h"
 #include "sdk/2d_engine/ng_particles.h"
 #include "sdk/2d_engine/ng_chars.h"
+#include "sdk/2d_engine/ng_npcs.h"
+#include "sdk/2d_engine/ng_camera.h"
+#include "sdk/2d_engine/ng_palette_fx.h"
+#include "sdk/2d_engine/ng_feedback.h"
 #include "sdk/2d_engine/ng_debug.h"
 #include "sdk/2d_engine/ng_render_queue.h"
 #include <stdint.h>
 
 void NEOGEO_USER clearFix(void);
+void NEOGEO_USER setBACKDROP(uint16_t backdrop_color);
 void NEOGEO_USER soundSceneReset(void);
 void NEOGEO_USER soundStopAll(void);
 void NEOGEO_USER soundPlayGameLoop(uint8_t music_track);
@@ -91,6 +96,262 @@ static void NEOGEO_USER stress_draw_hud(uint8_t part_count,
     demo_fix_puts(22u, 4u, buf, 1u);
 }
 
+/* SFX hook for feedback */
+static void NEOGEO_USER stress_sfx_hook(uint16_t id)
+{
+    if (id < 32u) playSFX((uint8_t)id);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sub-scene: full combined scene                                        */
+/* ------------------------------------------------------------------ */
+static void NEOGEO_USER stress_full_scene(void)
+{
+    NGCamera cam;
+    NGCharacter *player;
+    NGNpc *npcs[4];
+    NGCharacter *nc;
+    uint8_t i;
+    uint16_t t;
+    static const int16_t npc_sx[4] = { 40, 100, 200, 270 };
+
+    static const uint16_t s_player_pal[16] = {
+        0x0000u, 0x7FFFu, 0x4F00u, 0x2422u, 0x3747u, 0x7551u,
+        0x7001u, 0x7011u, 0x4e82u, 0x2a82u, 0x5341u, 0x3113u,
+        0x1448u, 0x1b55u, 0x6FF0u, 0x30FFu
+    };
+
+    clearFix();
+    setBACKDROP(BLACK);
+    demo_fix_puts(2u, 0u, "FULL SCENE / ALL MODULES LIVE", 2u);
+    demo_fix_puts(2u, 1u, "CAM + NPCs + PARTICLES + PULSE + MUSIC", 1u);
+    demo_fix_puts(2u, 27u, "A: NEXT", 0u);
+
+    ng_feedback_init();
+    ng_feedback_set_sfx_hook(stress_sfx_hook);
+    ng_particles_init();
+    ng_debug_init();
+
+    ng_camera_init(&cam);
+    ng_camera_set_bounds(&cam, 0, 0, 640, 0);
+    ng_camera_set_follow_speed(&cam, 20u);
+    ng_camera_set_dead_zone(&cam, 40u, 0u);
+
+    ng_palfx_pulse(0u, s_player_pal, 60u);
+
+    demo_load_screen_palette(11u);
+    demo_load_screen_palette(109u);
+    ng_chars_init();
+    ng_npcs_init();
+
+    player = chars_add(0u, 160, 160);
+    if (player) {
+        ng_char_set_sprite(player, 0u, STRESS_NPC_STRIPS, STRESS_NPC_ROWS,
+                           STRESS_NPC_TILE(0u), STRESS_NPC_PAL);
+        ng_char_set_tile_stride(player, STRESS_NPC_STRIDE);
+        player->sprite_offset_y = -96;
+        player->scale_x = 0xA0u;
+        player->scale_y = 0xA0u;
+    }
+
+    for (i = 0u; i < 4u; i++) {
+        npcs[i] = npc_spawn(0u, 0u, npc_sx[i], 160);
+        if (npcs[i]) {
+            nc = npc_char(npcs[i]);
+            if (nc) {
+                ng_char_set_sprite(nc, 0u, STRESS_NPC_STRIPS, STRESS_NPC_ROWS,
+                                   STRESS_NPC_TILE((uint8_t)(i * 3u)), STRESS_NPC_PAL);
+                ng_char_set_tile_stride(nc, STRESS_NPC_STRIDE);
+                nc->sprite_offset_y = -96;
+                nc->scale_x = 0x70u;
+                nc->scale_y = 0x70u;
+            }
+            ng_npc_set_home(npcs[i], npc_sx[i], 160);
+            ng_npc_set_patrol_bounds(npcs[i],
+                (int16_t)(npc_sx[i] - 60), (int16_t)(npc_sx[i] + 60), 130, 190);
+            ng_npc_set_think(npcs[i], ng_npc_think_patrol, 8u);
+        }
+    }
+
+    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+
+    for (t = 0u; t < 300u; t++) {
+        int16_t px = 160;
+        if (player) px = player->x;
+
+        px = (int16_t)(160 + (int16_t)((t & 0xFFu) - 128));
+        if (player) {
+            player->x = px;
+            uint8_t anim = (uint8_t)((t / 12u) % 12u);
+            uint16_t tile = STRESS_NPC_TILE(anim);
+            if (player->sprite_tile != tile) {
+                player->sprite_tile = tile;
+                player->sprite_dirty = 1u;
+            }
+        }
+
+        ng_camera_update(&cam, px, 160, 0);
+
+        for (i = 0u; i < 4u; i++) {
+            if (npcs[i]) {
+                nc = npc_char(npcs[i]);
+                if (nc) {
+                    uint8_t anim = (uint8_t)((t / 12u) % 12u);
+                    uint16_t tile = STRESS_NPC_TILE(anim);
+                    if (nc->sprite_tile != tile) {
+                        nc->sprite_tile = tile;
+                        nc->sprite_dirty = 1u;
+                    }
+                }
+            }
+        }
+
+        if ((t % 30u) == 0u) {
+            int16_t bx = (int16_t)((stress_rand8() & 0x7Fu) + 80);
+            int16_t by = (int16_t)((stress_rand8() & 0x3Fu) + 80);
+            ng_spawn_magic_spark(bx, by, 0u, STRESS_PART_PAL);
+        }
+
+        ng_npcs_update();
+        ng_chars_draw();
+        ng_particles_update();
+        ng_particles_draw(STRESS_PART_SLOT, STRESS_PART_SLOT);
+        ng_palette_fx_update();
+        ng_feedback_update();
+        ng_debug_draw();
+
+        if (demo_frame()) break;
+    }
+
+    ng_palfx_stop(0u);
+    ng_chars_init();
+    ng_npcs_init();
+    ng_particles_init();
+    ng_debug_clear();
+    soundStopAll();
+}
+
+/* ------------------------------------------------------------------ */
+/*  Sub-scene: boss encounter                                             */
+/* ------------------------------------------------------------------ */
+static void NEOGEO_USER stress_boss(void)
+{
+    NGCharacter *boss;
+    NGCamera cam;
+    uint8_t  boss_hp;
+    uint8_t  player_hp;
+    uint16_t t;
+    uint8_t  phase2;
+    char     bar[14];
+    uint8_t  i;
+
+    static const uint16_t s_boss_pal[16] = {
+        0x0000u, 0x7FFFu, 0x4F00u, 0x2422u, 0x3747u, 0x7551u,
+        0x7001u, 0x7011u, 0x4e82u, 0x2a82u, 0x5341u, 0x3113u,
+        0x1448u, 0x1b55u, 0x6FF0u, 0x30FFu
+    };
+
+    clearFix();
+    setBACKDROP(BLACK);
+    demo_fix_puts(2u, 0u, "BOSS ENCOUNTER", 2u);
+    demo_fix_puts(2u, 1u, "PHASE 2 AT 50% HP  HITSTOP + SHAKE", 1u);
+    demo_fix_puts(2u, 27u, "A: NEXT", 0u);
+
+    ng_camera_init(&cam);
+    ng_camera_set_bounds(&cam, 0, 0, 0, 0);
+    ng_camera_snap(&cam, 0, 0);
+
+    ng_feedback_init();
+    ng_feedback_set_sfx_hook(stress_sfx_hook);
+    ng_particles_init();
+
+    demo_load_screen_palette(109u);
+    ng_chars_init();
+
+    boss = chars_add(0u, 200, 140);
+    if (boss) {
+        ng_char_set_sprite(boss, 0u, STRESS_NPC_STRIPS, STRESS_NPC_ROWS,
+                           STRESS_NPC_TILE(0u), STRESS_NPC_PAL);
+        ng_char_set_tile_stride(boss, STRESS_NPC_STRIDE);
+        boss->sprite_offset_y = -96;
+        boss->scale_x = 0xD0u;
+        boss->scale_y = 0xD0u;
+        boss->hp     = 10u;
+        boss->max_hp = 10u;
+    }
+
+    boss_hp   = 10u;
+    player_hp = 10u;
+    phase2    = 0u;
+
+    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+
+    for (t = 0u; t < 500u; t++) {
+        if (boss_hp == 0u) break;
+
+        /* Player attacks boss every 60 frames */
+        if ((t % 60u) == 0u && t > 0u && boss && boss_hp > 0u) {
+            boss_hp--;
+            ng_char_damage(boss, 1u);
+            ng_impact_event(NG_IMPACT_HEAVY, STRESS_NPC_PAL, s_boss_pal,
+                            &cam, (uint16_t)SOUND_SFX_IMPACT_HIT,
+                            200, 110, 0u, STRESS_PART_PAL);
+            ng_spawn_hit_spark(200, 110, 0u, STRESS_PART_PAL);
+
+            if (!phase2 && boss_hp <= 5u) {
+                phase2 = 1u;
+                ng_camera_shake(&cam, 4u, 20u);
+                ng_palfx_flash_white(0u, s_boss_pal, 12u);
+                demo_fix_puts(14u, 5u, "PHASE 2!", 2u);
+            }
+        }
+
+        if (boss) {
+            uint8_t anim = (uint8_t)((t / 8u) % 12u);
+            uint16_t tile = STRESS_NPC_TILE(anim);
+            if (boss->sprite_tile != tile) {
+                boss->sprite_tile = tile;
+                boss->sprite_dirty = 1u;
+            }
+        }
+
+        ng_camera_update(&cam, 0, 0, 0);
+
+        if (boss) {
+            if (boss->scale_x < 0xD0u) boss->scale_x = 0xD0u;
+            ng_chars_draw();
+        }
+
+        ng_particles_update();
+        ng_particles_draw(STRESS_PART_SLOT, STRESS_PART_SLOT);
+        ng_palette_fx_update();
+        ng_feedback_update();
+
+        /* Boss HP bar */
+        bar[0] = '[';
+        for (i = 0u; i < 10u; i++) bar[1u + i] = (i < boss_hp) ? '#' : ' ';
+        bar[11] = ']';
+        bar[12] = '\0';
+        demo_fix_puts(2u,  24u, "BOSS:", 0u);
+        demo_fix_puts(8u,  24u, bar, boss_hp > 5u ? 2u : 1u);
+
+        bar[0] = '[';
+        for (i = 0u; i < 10u; i++) bar[1u + i] = (i < player_hp) ? '#' : ' ';
+        bar[11] = ']';
+        bar[12] = '\0';
+        demo_fix_puts(2u,  25u, "PLYR:", 0u);
+        demo_fix_puts(8u,  25u, bar, 1u);
+
+        if (demo_frame()) break;
+    }
+
+    ng_palfx_stop(0u);
+    ng_chars_init();
+    ng_particles_init();
+    soundStopAll();
+    demo_clear_scene();
+}
+
 /* ------------------------------------------------------------------ */
 /*  Public: stress test scene                                            */
 /* ------------------------------------------------------------------ */
@@ -104,6 +365,9 @@ void NEOGEO_USER demo_stress_run(void)
     demo_clear_scene();
     soundSceneReset();
     soundSetADPCMAVolume(0x3Cu);
+
+    stress_full_scene();
+    stress_boss();
 
     clearFix();
     demo_fix_puts(2u, 0u, "PERFORMANCE HUD / HARDWARE STRESS",  2u);
