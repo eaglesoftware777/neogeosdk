@@ -41,6 +41,7 @@ void NEOGEO_USER showScreen108(int x0, int y0, int xr, int yr, int min_crt_sz, u
 #define PAL_CYAN    1
 #define PAL_YELLOW  2
 #define PAL_RED     3
+#define PAL_BLUE    4 
 
 /* ------------------------------------------------------------------ */
 /*  Scene 1 — Eagle Software intro                                       */
@@ -64,7 +65,7 @@ void NEOGEO_USER demo_intro_eagle(void)
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES);
 
-    setpal(fix_pal, 0x8000u, CYAN,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+    setpal(fix_pal, 0x8000u, BLUE,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES + PALOFFSET);
 
@@ -78,15 +79,15 @@ void NEOGEO_USER demo_intro_eagle(void)
 
     /* Flash in the text */
     demo_fix_puts(17u, 13u, "EAGLE",    PAL_WHITE);
-    demo_fix_puts(16u, 15u, "SOFTWARE", PAL_CYAN);
+    demo_fix_puts(16u, 15u, "SOFTWARE", PAL_WHITE);
 
     playVoiceCue(SOUND_VOICE_GET_READY);
     cyclexms(400);
 
     /* Four quick color alternation hits */
     for (i = 0; i < 4u; i++) {
-        demo_fix_puts(17u, 13u, "EAGLE",    (uint8_t)((i & 1u) ? PAL_CYAN   : PAL_RED));
-        demo_fix_puts(16u, 15u, "SOFTWARE", (uint8_t)((i & 1u) ? PAL_RED    : PAL_CYAN));
+        demo_fix_puts(17u, 13u, "EAGLE",    (uint8_t)((i & 1u) ? PAL_BLUE  : PAL_RED));
+        demo_fix_puts(16u, 15u, "SOFTWARE", (uint8_t)((i & 1u) ? PAL_RED    : PAL_BLUE));
         if (i == 0u) playSFX(SOUND_SFX_STRING_PHRASE);
         cyclexms(60);
     }
@@ -136,7 +137,7 @@ void NEOGEO_USER demo_intro_system_banner(void)
 #endif
     demo_fix_puts(10u, 11u, "ROM: NEOGEOSDK V1.3.0",  1u);
     demo_fix_puts(10u, 13u, "BUILD: 2026-05-15",       0u);
-    demo_fix_puts(4u,  15u, "CPU: MC68000 / SOUND: YM2610 / FIX: 40x28", 0u);
+    demo_fix_puts(4u,  15u, "CPU: MC68000 / SOUND: YM2610", 0u);
     demo_fix_puts(2u,  27u, "A: NEXT", 1u);
 
     demo_wait(120u);
@@ -249,12 +250,21 @@ void NEOGEO_USER demo_intro_sdk_title(void)
     setpal(fix_pal, 0x8000u, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
+	
+	   setpal(fix_pal, 0x8000u, RED,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    load_palettes(fix_pal, PALETTES + PALOFFSET * 3u);
+	
+		   setpal(fix_pal, 0x8000u, BLUE,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    load_palettes(fix_pal, PALETTES + PALOFFSET * 4u);
+
 
     /* Character-by-character scroll in — title line */
     {
-        const char *title = "NEO GEO SDK";
-        const char *sub1  = "HIGH-PERFORMANCE 2D ENGINE";
-        const char *sub2  = "60 FPS  REAL HARDWARE  MAME";
+        const char *title = "NEO GEO SDK V1.3.0";
+        const char *sub1  = "2D ENGINE";
+        const char *sub2  = "60 FPS  REAL HARDWARE + MAME";
         uint8_t col;
 
         /* Show title character by character */
@@ -262,7 +272,7 @@ void NEOGEO_USER demo_intro_sdk_title(void)
             char ch[2];
             ch[0] = title[col];
             ch[1] = '\0';
-            demo_fix_puts((uint8_t)(14u + col), 11u, ch, PAL_CYAN);
+            demo_fix_puts((uint8_t)(14u + col), 11u, ch, PAL_BLUE);
             waitVbl();
             waitVbl();
             if (demo_advance_requested()) goto title_done;
@@ -271,9 +281,9 @@ void NEOGEO_USER demo_intro_sdk_title(void)
         playSFX(SOUND_SFX_TITLE_GONG);
         demo_wait(12u);
 
-        demo_fix_puts(7u, 13u, sub1, PAL_WHITE);
+        demo_fix_puts(7u, 13u, sub1, PAL_RED);
         demo_wait(8u);
-        demo_fix_puts(6u, 15u, sub2, PAL_YELLOW);
+        demo_fix_puts(6u, 15u, sub2, PAL_WHITE);
         demo_wait(8u);
 
         playFMTrack(SOUND_FM_VICTORY_JINGLE);
@@ -284,11 +294,12 @@ void NEOGEO_USER demo_intro_sdk_title(void)
     /* Pulse the title with color cycling */
     for (t = 0u; t < 150u; t++) {
         uint8_t pal = (uint8_t)((t >> 4) % 3u);
-        demo_fix_puts(14u, 11u, "NEO GEO SDK", pal);
+        demo_fix_puts(14u, 11u, "NEO GEO SDK V1.3.0", pal);
         if (demo_frame()) goto title_done;
     }
 
 title_done:
+     demo_wait(77u);
     soundStopAll();
     demo_clear_scene();
 }

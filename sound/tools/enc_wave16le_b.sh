@@ -1,8 +1,9 @@
 #!/bin/sh
 PYTHON_BIN="${PYTHON:-python3}"
 SOX_BIN="${SOX:-}"
+SAMPLES_IN="${GAME_SOUND:-..}/samples/in_wav_b"
 
-for fi in ../samples/in_wav_b/*.wav; do
+for fi in "$SAMPLES_IN"/*.wav; do
     [ -e "$fi" ] || continue
     if [ -n "$SOX_BIN" ] && command -v "$SOX_BIN" >/dev/null 2>&1; then
         "$SOX_BIN" "$fi" -b 16 -c 1 -r 16000 -e signed-integer -t raw ../samples/out_16el_b/$(basename "$fi" .wav).wav

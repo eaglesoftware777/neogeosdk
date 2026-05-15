@@ -3,7 +3,7 @@
 Neo Geo development SDK for SNK hardware.
 
 - Repository: https://github.com/eaglesoftware777/neogeosdk
-- Current release target: `v1.3.0`
+- Current release target: `v1.4.0`
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 
@@ -110,8 +110,8 @@ Build the MVS program ROM and launch in MAME (default BIOS: EUROPE MVS):
 # Linux / WSL
 make test
 
-# Windows
-nmake /f MakefileWin32.mak test
+# Windows (GNU make required — use make, not nmake)
+make -f MakefileWin32.mak test
 ```
 
 Test with a specific BIOS:
@@ -123,23 +123,148 @@ make test BIOS=unibios40
 make test BIOS=japan
 
 # Windows
-nmake /f MakefileWin32.mak test BIOS=euro
+make -f MakefileWin32.mak test BIOS=euro
 ```
 
 List all supported BIOS names:
 
 ```bash
 make bios-list
-# Windows: nmake /f MakefileWin32.mak bios-list
+# Windows: make -f MakefileWin32.mak bios-list
 ```
 
 Build AES cartridge ROM instead:
 
 ```bash
 make test-aes
-# Windows: nmake /f MakefileWin32.mak test-aes
+# Windows: make -f MakefileWin32.mak test-aes
 ```
 
+
+## Multi-Game Build System
+
+The SDK supports multiple independent games under a single repository.  Each game
+lives in its own subdirectory under `games/` and produces its own ROM when built
+with `GAME=<name>`.
+
+### Included games
+
+| Folder | Game ID | ROM prefix | Description |
+|--------|---------|------------|-------------|
+| `games/demo` | 777 | `777-*` | Full SDK showcase — 13 scenes, all engine features |
+| `games/helloworld` | 772 | `772-*` | Minimal FIX-text "Hello World" starting point |
+| `games/tutorial` | 555 | `555-*` | Tutorial template with working BIOS hooks |
+| `games/neogeogame` | 775 | `775-*` | Blank game template for new projects |
+
+### Building a specific game
+
+`demo` is the default when `GAME` is not specified.
+
+```bash
+# Linux / WSL
+make game                          # build demo (default)
+make GAME=helloworld game          # build helloworld
+make GAME=tutorial p1              # build + package tutorial ROM
+make GAME=neogeogame p1            # build + package neogeogame ROM
+
+# Windows
+make -f MakefileWin32.mak game
+make -f MakefileWin32.mak GAME=helloworld game
+make -f MakefileWin32.mak GAME=tutorial p1
+make -f MakefileWin32.mak GAME=neogeogame p1
+```
+
+Full build (art + sound + program ROM):
+
+```bash
+# Linux / WSL
+make GAME=helloworld all
+
+# Windows
+make -f MakefileWin32.mak GAME=helloworld all
+```
+
+### Game folder layout
+
+Each game under `games/<name>/` contains:
+
+```text
+games/<name>/
+  game.mk          — GAME_NAME, GAME_ID, GAME_SCENES (required)
+  main.c           — ng_screen_table, ng_screen_count stubs
+  user.c           — all BIOS dispatch and interrupt handlers
+  eyecatcher.c     — eye-catcher animation
+  neogeo_mvs.c     — MVS ROM header with game ID
+  neogeo_aes.c     — AES ROM header with game ID
+  neogeo.ld        — linker script listing this game's object files
+  artbox/
+    in/            — sprite and background source images
+    infix/         — FIX tile source images
+  sound/
+    fm/            — FM patch and music MML files
+    mml/           — SSG/MML music files
+    ssg/           — SSG configuration and data
+    samples/
+      in_wav_a/    — ADPCM-A source WAV files
+      in_wav_b/    — ADPCM-B source WAV files
+  scenes/          — scene source files (listed in GAME_SCENES)
+```
+
+### `game.mk` format
+
+Every game must provide a `game.mk`:
+
+```makefile
+GAME_NAME  = My Game Title
+GAME_ID    = 775
+GAME_SCENES = scene_main scene_title scene_game
+```
+
+`GAME_SCENES` is an explicit space-separated list of scene base names (no `.c`
+extension, no path prefix). Files that are `#include`-d from other scene files
+should be omitted to avoid multiple-definition errors.
+
+If the game has no scene files (e.g. `helloworld`), omit `GAME_SCENES` entirely.
+
+### Art and sound pipelines
+
+The art and sound pipelines read per-game asset folders automatically:
+
+```bash
+# Linux / WSL
+make GAME=helloworld art          # runs artbox on games/helloworld/artbox/
+make GAME=tutorial sound          # compiles games/tutorial/sound/{fm,mml,ssg,samples}
+
+# Windows
+make -f MakefileWin32.mak GAME=helloworld art
+make -f MakefileWin32.mak GAME=tutorial sound
+```
+
+On Linux, `artbox/makeartbox.sh` uses temporary symlinks (`ln -sfn`) to redirect
+the pipeline to the per-game asset folder.  On Windows, `artbox/makeartbox.bat`
+uses directory junctions (`mklink /J`), which do not require administrator
+privileges on Windows Vista and later.
+
+### Interactive launcher
+
+Both launcher scripts include a game-selection step:
+
+```bash
+# Linux / WSL
+./neogeosdk.sh          # press g to change the active game
+
+# Windows
+neogeosdk.bat           # press g to change the active game
+```
+
+### Adding a new game
+
+1. Copy `games/neogeogame/` to `games/<yourname>/`.
+2. Edit `games/<yourname>/game.mk` — set `GAME_NAME`, `GAME_ID`, and `GAME_SCENES`.
+3. Edit `games/<yourname>/neogeo_mvs.c` and `neogeo_aes.c` — update the `id` field to your unique game ID (hex).
+4. Edit `games/<yourname>/neogeo.ld` — add any new scene object file patterns.
+5. Implement your scenes in `games/<yourname>/scenes/`.
+6. Build: `make GAME=<yourname> p1`
 
 ## Running the ROM in MAME
 
@@ -172,7 +297,7 @@ run_neogeosdk.bat
 
 ```
 make dist                          # Linux
-nmake -f MakefileWin32.mak dist   # Windows
+make -f MakefileWin32.mak dist    # Windows
 ```
 
 This builds the P1 ROM, regenerates `hash_eagle/neogeo.xml`, creates `dist/roms/neogeosdk.zip`

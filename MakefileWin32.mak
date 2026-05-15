@@ -3,6 +3,17 @@
 #https://github.com/eaglesoftware777
 #https://github.com/eaglesoftware777/neogeosdk
 #######
+
+# Game selection — default is demo
+# Usage: make -f MakefileWin32.mak GAME=helloworld p1
+#        make -f MakefileWin32.mak GAME=tutorial p1
+#        make -f MakefileWin32.mak GAME=neogeogame p1
+GAME ?= demo
+-include games/$(GAME)/game.mk
+
+# Per-game sound folder — defined early so FM_MMLS wildcards resolve correctly
+GAME_SOUND = games/$(GAME)/sound
+
 ifndef SDKHOME
 SDKHOME := $(abspath $(CURDIR)/..)
 endif
@@ -40,7 +51,7 @@ endif
 REPO_WIN=$(subst /,\,$(CURDIR))
 
 CC=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-gcc.exe
-CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Wa,-march=68000,-mcpu=68000,-W,--warn
+CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Wa,-march=68000,-mcpu=68000,-W,--warn
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
 LD=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-ld.exe
 LDFLAGS=  -nostdlib
@@ -60,17 +71,17 @@ MAME?=mame
 DEBUG?=0
 GDB_REMOTE?=localhost:1234
 
-FM_MMLS:=$(wildcard sound/fm/*.mml)
-MML_TRACKS:=$(wildcard sound/mml/*.mml)
-SSG_MMLS:=$(wildcard sound/ssg/*.mml)
+FM_MMLS:=$(wildcard $(GAME_SOUND)/fm/*.mml)
+MML_TRACKS:=$(wildcard $(GAME_SOUND)/mml/*.mml)
+SSG_MMLS:=$(wildcard $(GAME_SOUND)/ssg/*.mml)
 
 CROP=-crop 0x000000 0x080000
 SCAT=$(REPO_WIN)\win\srec_cat.exe
 INFO=$(REPO_WIN)\win\xxd.exe -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
-NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_bg0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o out\ng_depthfx0.o
-DEMO_OBJ0=out\demo0.o out\demo_screen0.o out\demo_sound0.o out\demo_fix0.o out\demo_3d0.o out\demo_2d_engine0.o
+NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_bg0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o out\ng_depthfx0.o out\ng_render_queue0.o out\ng_fixed0.o out\ng_camera0.o out\ng_palette_fx0.o out\ng_particles0.o out\ng_feedback0.o out\ng_debug0.o out\ng_demo_advanced0.o
+GAME_SCENE_OBJS := $(addprefix out/,$(addsuffix 0.o,$(GAME_SCENES)))
 NG_FIX_SDK_OBJ0=out\ng_fix_sdk0.o
 
 ifeq ($(DEBUG),1)
@@ -82,8 +93,8 @@ STRIP_SECTS:=-R .comment -R .text -R .data -R .bss
 endif
 
 HASHPATH?=$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
-# Default BIOS for test/debug. Override: nmake /f MakefileWin32.mak test BIOS=euro
-# Supported values (nmake bios-list for full table):
+# Default BIOS for test/debug. Override: make -f MakefileWin32.mak test BIOS=euro
+# Supported values (make -f MakefileWin32.mak bios-list for full table):
 #   us  us-e  us-v2  us-u4  us-u3
 #   euro  euro-s1  asia-mv1c  asia-mv1b
 #   japan  japan-s2  japan-s1  japan-mv1b  japan-j3a  japan-mv1c  japan-hotel
@@ -96,10 +107,10 @@ MAME_COMMON=$(MAME) neogeo -rompath $(REPO_WIN)\roms -hashpath "$(HASHPATH)" -bi
 # PLATFORM: mvs (default) or aes
 PLATFORM?=mvs
 ifeq ($(PLATFORM),mvs)
-NEOGEO_C=sdk\neogeo_mvs.c
+GAME_NEOGEO_C=games\$(GAME)\neogeo_mvs.c
 PLATFORM_CFLAGS=-DNG_MVS=1
 else
-NEOGEO_C=sdk\neogeo_aes.c
+GAME_NEOGEO_C=games\$(GAME)\neogeo_aes.c
 PLATFORM_CFLAGS=-DNG_AES=1
 endif
 
@@ -110,19 +121,19 @@ all: art sfix sound p1
 
 .PHONY: aes
 aes:
-	$(MAKE) -f MakefileWin32.mak PLATFORM=aes p1
+	$(MAKE) -f MakefileWin32.mak PLATFORM=aes GAME=$(GAME) p1
 
 .PHONY: mvs
 mvs:
-	$(MAKE) -f MakefileWin32.mak PLATFORM=mvs p1
+	$(MAKE) -f MakefileWin32.mak PLATFORM=mvs GAME=$(GAME) p1
 
 .PHONY: p1
-p1: game 777-p1.p1
+p1: game $(GAME_ID)-p1.p1
 
 game:
-	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS) $(NEOGEO_C) -o out\neogeo0.o
-	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS) user.c -o out\user0.o
-	$(CC) $(CFLAGS) main.c -o out\main0.o
+	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS) $(GAME_NEOGEO_C) -o out\neogeo0.o
+	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS) games\$(GAME)\user.c -o out\user0.o
+	$(CC) $(CFLAGS) games\$(GAME)\main.c -o out\main0.o
 	$(CC) $(CFLAGS) sdk\neogeolib.c -o out\neogeolib0.o
 	$(CC) $(CFLAGS) sdk\ng_fix\ng_fix.c -o out\ng_fix_sdk0.o
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_defs.c -o out\ng_defs0.o
@@ -139,32 +150,35 @@ game:
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_actions.c -o out\ng_actions0.o
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_chars.c -o out\ng_chars0.o
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_npcs.c -o out\ng_npcs0.o
-		$(CC) $(CFLAGS) sdk\2d_engine\ng_physics.c -o out\ng_physics0.o
-		$(CC) $(CFLAGS) sdk\2d_engine\ng_border_constraints.c -o out\ng_border_constraints0.o
-		$(CC) $(CFLAGS) sdk\2d_engine\ng_game_interupt.c -o out\ng_game_interupt0.o
-		$(CC) $(CFLAGS) sdk\2d_engine\ng_depthfx.c -o out\ng_depthfx0.o
-		$(CC) $(CFLAGS) demo\demo.c -o out\demo0.o
-		$(CC) $(CFLAGS) demo\demo_screen.c -o out\demo_screen0.o
-		$(CC) $(CFLAGS) demo\demo_sound.c -o out\demo_sound0.o
-		$(CC) $(CFLAGS) demo\demo_fix.c -o out\demo_fix0.o
-		$(CC) $(CFLAGS) demo\demo_3d.c -o out\demo_3d0.o
-		$(CC) $(CFLAGS) demo\demo_2d_engine.c -o out\demo_2d_engine0.o
-	$(CC) $(CFLAGS) eyecatcher.c -o out\eyecatcher0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_physics.c -o out\ng_physics0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_border_constraints.c -o out\ng_border_constraints0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_game_interupt.c -o out\ng_game_interupt0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_depthfx.c -o out\ng_depthfx0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_render_queue.c -o out\ng_render_queue0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_fixed.c -o out\ng_fixed0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_camera.c -o out\ng_camera0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_palette_fx.c -o out\ng_palette_fx0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_particles.c -o out\ng_particles0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_feedback.c -o out\ng_feedback0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_debug.c -o out\ng_debug0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_demo_advanced.c -o out\ng_demo_advanced0.o
+	$(if $(GAME_SCENES),for %%f in ($(GAME_SCENES)) do $(CC) $(CFLAGS) games\$(GAME)\scenes\%%f.c -o out\%%f0.o)
+	$(CC) $(CFLAGS) games\$(GAME)\eyecatcher.c -o out\eyecatcher0.o
 	$(OBJCP) $(STRIP_SECTS) out\neogeo0.o out\neogeo.o
 	$(OBJCP) $(STRIP_SECTS) out\user0.o out\user.o
 	$(OBJCP) $(STRIP_SECTS) out\main0.o out\main.o
 	$(OBJCP) $(STRIP_SECTS) out\neogeolib0.o out\neogeolib.o
 	$(OBJCP) $(STRIP_SECTS) out\eyecatcher0.o out\eyecatcher.o
-	$(LD) $(LDFLAGS) -T sdk\neogeo_win.ld -o out\game out\neogeo.o out\user.o out\main.o out\neogeolib.o out\eyecatcher.o $(NG_FIX_SDK_OBJ0) $(NG_ENGINE_OBJ0) $(DEMO_OBJ0)
+	$(LD) $(LDFLAGS) -T games/$(GAME)/neogeo.ld -o out\game out\neogeo.o out\user.o out\main.o out\neogeolib.o out\eyecatcher.o $(NG_FIX_SDK_OBJ0) $(NG_ENGINE_OBJ0) $(GAME_SCENE_OBJS)
 
-777-p1.p1: game
+$(GAME_ID)-p1.p1: game
 	$(OBJCP) -O ihex out\game out\game0
 	$(SCAT) out\game0 -Intel $(CROP) -o out\game0.rom -binary
 	$(SCAT) out\game0.rom -binary $(SWAP) out\game1.rom -binary
 	$(SCAT) out\game1.rom -binary $(FILL) out\game.rom -binary
-	copy /Y out\game.rom out\777-p1.p1
+	copy /Y out\game.rom out\$(GAME_ID)-p1.p1
 	if not exist roms\neogeosdk mkdir roms\neogeosdk
-	copy /Y out\777-p1.p1 roms\neogeosdk\777-p1.p1
+	copy /Y out\$(GAME_ID)-p1.p1 roms\neogeosdk\$(GAME_ID)-p1.p1
 	$(PY) hash_eagle\gen_hash.py
 
 .PHONY: hash
@@ -173,35 +187,35 @@ hash:
 
 .PHONY: samples
 samples:
-	cd sound\tools && set PY=$(PY)&& set SOX=$(SOX)&& call enc_wave16le_a.bat
-	cd sound\tools && set PY=$(PY)&& set SOX=$(SOX)&& call enc_wave16le_b.bat
-	cd sound\tools && set PY=$(PY)&& call adpcm_enc_process.bat
+	$(if $(wildcard $(GAME_SOUND)/samples/in_wav_a),cd sound\tools && set PY=$(PY)&& set SOX=$(SOX)&& set GAME_SOUND=..\..\$(GAME_SOUND)&& call enc_wave16le_a.bat,@echo samples: no in_wav_a in $(GAME_SOUND)\samples\, skipping a)
+	$(if $(wildcard $(GAME_SOUND)/samples/in_wav_b),cd sound\tools && set PY=$(PY)&& set SOX=$(SOX)&& set GAME_SOUND=..\..\$(GAME_SOUND)&& call enc_wave16le_b.bat,@echo samples: no in_wav_b in $(GAME_SOUND)\samples\, skipping b)
+	cd sound\tools && set PY=$(PY)&& set GAME_SOUND=..\..\$(GAME_SOUND)&& call adpcm_enc_process.bat
 
 .PHONY: vrom
 vrom:
 	call sound\tools\vrom.bat
 	if not exist roms\neogeosdk mkdir roms\neogeosdk
-	copy /Y out\777-v1.v1 roms\neogeosdk\777-v1.v1
+	copy /Y out\$(GAME_ID)-v1.v1 roms\neogeosdk\$(GAME_ID)-v1.v1
 
 .PHONY: fmpatches
 fmpatches:
-	$(PY) sound\tools\fm_patch_compile.py sound\fm\patches.fm -o sound\driver\fm_patch_table.inc
+	$(if $(wildcard $(GAME_SOUND)/fm/patches.fm),$(PY) sound\tools\fm_patch_compile.py $(GAME_SOUND)\fm\patches.fm -o sound\driver\fm_patch_table.inc,@echo fmpatches: no patches.fm in $(GAME_SOUND)\fm\, skipping)
 
 .PHONY: fm
 fm:
-	$(PY) sound/tools/fm_compile.py $(FM_MMLS) -o sound/driver/fm_data.inc
+	$(if $(FM_MMLS),$(PY) sound/tools/fm_compile.py $(FM_MMLS) -o sound/driver/fm_data.inc,@echo fm: no MML files in $(GAME_SOUND)\fm\, skipping)
 
 .PHONY: mml
 mml:
-	$(PY) sound/tools/mml_compile.py $(MML_TRACKS) -o sound/driver/music_data.inc
-	
+	$(if $(MML_TRACKS),$(PY) sound/tools/mml_compile.py $(MML_TRACKS) -o sound/driver/music_data.inc,@echo mml: no MML files in $(GAME_SOUND)\mml\, skipping)
+
 .PHONY: ssgconfig
 ssgconfig:
-	$(PY) sound\tools\ssg_config_compile.py sound\ssg\config.ssg -o sound\driver\ssg_config.inc
+	$(if $(wildcard $(GAME_SOUND)/ssg/config.ssg),$(PY) sound\tools\ssg_config_compile.py $(GAME_SOUND)\ssg\config.ssg -o sound\driver\ssg_config.inc,@echo ssgconfig: no config.ssg in $(GAME_SOUND)\ssg\, skipping)
 
 .PHONY: ssg
 ssg:
-	$(PY) sound/tools/ssg_compile.py $(SSG_MMLS) -o sound/driver/ssg_data.inc
+	$(if $(SSG_MMLS),$(PY) sound/tools/ssg_compile.py $(SSG_MMLS) -o sound/driver/ssg_data.inc,@echo ssg: no MML files in $(GAME_SOUND)\ssg\, skipping)
 
 .PHONY: m1rom
 m1rom: fmpatches fm mml ssgconfig ssg
@@ -209,19 +223,19 @@ m1rom: fmpatches fm mml ssgconfig ssg
 
 .PHONY: m1rom-asm
 m1rom-asm:
-	$(MAKE) m1rom USE_Z80C=0
+	$(MAKE) -f MakefileWin32.mak GAME=$(GAME) m1rom USE_Z80C=0
 	if not exist out\compare mkdir out\compare
-	copy /Y out\777-m1.m1 out\compare\777-m1-asm.m1
+	copy /Y out\$(GAME_ID)-m1.m1 out\compare\$(GAME_ID)-m1-asm.m1
 
 .PHONY: m1rom-c
 m1rom-c:
-	$(MAKE) m1rom USE_Z80C=1 LINK_C_DRIVER=1
+	$(MAKE) -f MakefileWin32.mak GAME=$(GAME) m1rom USE_Z80C=1 LINK_C_DRIVER=1
 	if not exist out\compare mkdir out\compare
-	copy /Y out\777-m1.m1 out\compare\777-m1-c.m1
+	copy /Y out\$(GAME_ID)-m1.m1 out\compare\$(GAME_ID)-m1-c.m1
 
 .PHONY: compare-driver
 compare-driver: m1rom-asm m1rom-c
-	$(PY) sound\tools\compare_m1.py out\compare\777-m1-asm.m1 out\compare\777-m1-c.m1
+	$(PY) sound\tools\compare_m1.py out\compare\$(GAME_ID)-m1-asm.m1 out\compare\$(GAME_ID)-m1-c.m1
 
 .PHONY: sound
 sound: samples vrom fmpatches fm mml ssgconfig ssg m1rom
@@ -231,9 +245,12 @@ sound-all: sound
 
 .PHONY: sfix
 sfix:
-	cd artbox && py romdbfiximport.py && py fixtiles.py
+	if exist artbox\infix rmdir artbox\infix
+	mklink /J artbox\infix $(REPO_WIN)\games\$(GAME)\artbox\infix
+	cd artbox && set GAME_ID=$(GAME_ID) && $(PY) romdbfiximport.py && $(PY) fixtiles.py
+	rmdir artbox\infix
 	if not exist roms\neogeosdk mkdir roms\neogeosdk
-	copy /Y artbox\777-s1.s1 roms\neogeosdk\777-s1.s1
+	copy /Y artbox\$(GAME_ID)-s1.s1 roms\neogeosdk\$(GAME_ID)-s1.s1
 
 .PHONY: srom
 srom: sfix
@@ -244,7 +261,7 @@ art-clean:
 
 .PHONY: art
 art:
-	call artbox\makeartbox.bat
+	set GAME_ID=$(GAME_ID) && call artbox\makeartbox.bat $(GAME)
 
 .PHONY: dist
 dist: p1
@@ -257,7 +274,7 @@ clean:
 	if exist out\game0.rom del /Q out\game0.rom
 	if exist out\game1.rom del /Q out\game1.rom
 	if exist out\game.rom del /Q out\game.rom
-	if exist out\777-p1.p1 del /Q out\777-p1.p1
+	if exist out\$(GAME_ID)-p1.p1 del /Q out\$(GAME_ID)-p1.p1
 	if exist out\game.map del /Q out\game.map
 	if exist out\*.o del /Q out\*.o
 	if exist out\*.s del /Q out\*.s
@@ -267,15 +284,15 @@ clean:
 	if exist dump\*.sym del /Q dump\*.sym
 	if exist dump\*.gdb del /Q dump\*.gdb
 	if exist dump\*.readelf del /Q dump\*.readelf
-	if exist roms\neogeosdk\777-p1.p1 del /Q roms\neogeosdk\777-p1.p1
+	if exist roms\neogeosdk\$(GAME_ID)-p1.p1 del /Q roms\neogeosdk\$(GAME_ID)-p1.p1
 
 .PHONY: sound-clean
 sound-clean:
-	if exist out\777-m1.m1 del /Q out\777-m1.m1
-	if exist out\777-v1.v1 del /Q out\777-v1.v1
+	if exist out\$(GAME_ID)-m1.m1 del /Q out\$(GAME_ID)-m1.m1
+	if exist out\$(GAME_ID)-v1.v1 del /Q out\$(GAME_ID)-v1.v1
 	if exist out\driver.gen.asm del /Q out\driver.gen.asm
-	if exist roms\neogeosdk\777-m1.m1 del /Q roms\neogeosdk\777-m1.m1
-	if exist roms\neogeosdk\777-v1.v1 del /Q roms\neogeosdk\777-v1.v1
+	if exist roms\neogeosdk\$(GAME_ID)-m1.m1 del /Q roms\neogeosdk\$(GAME_ID)-m1.m1
+	if exist roms\neogeosdk\$(GAME_ID)-v1.v1 del /Q roms\neogeosdk\$(GAME_ID)-v1.v1
 	if exist sound\samples\out_16el_a\*.wav del /Q sound\samples\out_16el_a\*.wav
 	if exist sound\samples\out_16el_b\*.wav del /Q sound\samples\out_16el_b\*.wav
 	if exist sound\samples\out_a\*.adpcma del /Q sound\samples\out_a\*.adpcma
@@ -289,8 +306,8 @@ sound-clean:
 
 .PHONY: clean-all
 clean-all: clean sound-clean art-clean
-	if exist roms\neogeosdk\777-c1.c1 del /Q roms\neogeosdk\777-c1.c1
-	if exist roms\neogeosdk\777-c2.c2 del /Q roms\neogeosdk\777-c2.c2
+	if exist roms\neogeosdk\$(GAME_ID)-c1.c1 del /Q roms\neogeosdk\$(GAME_ID)-c1.c1
+	if exist roms\neogeosdk\$(GAME_ID)-c2.c2 del /Q roms\neogeosdk\$(GAME_ID)-c2.c2
 
 .PHONY: dump
 dump:
@@ -307,20 +324,20 @@ dump:
 
 test:
 	$(PY) hash_eagle\gen_hash.py
-	copy /Y out\777-p1.p1 roms\neogeosdk\777-p1.p1
+	copy /Y out\$(GAME_ID)-p1.p1 roms\neogeosdk\$(GAME_ID)-p1.p1
 	$(MAME_COMMON) -output console -nofilter -waitvsync -window
 
 .PHONY: test-aes
 test-aes:
-	$(MAKE) -f MakefileWin32.mak PLATFORM=aes test
+	$(MAKE) -f MakefileWin32.mak PLATFORM=aes GAME=$(GAME) test
 
 .PHONY: test-mvs
 test-mvs:
-	$(MAKE) -f MakefileWin32.mak PLATFORM=mvs test
+	$(MAKE) -f MakefileWin32.mak PLATFORM=mvs GAME=$(GAME) test
 
 .PHONY: bios-list
 bios-list:
-	@echo Supported BIOS values for: nmake /f MakefileWin32.mak test BIOS=^<name^>
+	@echo Supported BIOS values for: make -f MakefileWin32.mak test BIOS=^<name^>
 	@echo.
 	@echo   euro             Europe MVS (Ver. 2)
 	@echo   euro-s1          Europe MVS (Ver. 1)
@@ -356,18 +373,18 @@ bios-list:
 
 debug:
 	$(PY) hash_eagle\gen_hash.py
-	copy /Y out\777-p1.p1 roms\neogeosdk\777-p1.p1
+	copy /Y out\$(GAME_ID)-p1.p1 roms\neogeosdk\$(GAME_ID)-p1.p1
 	$(MAME_COMMON) -output console -debug -verbose -nofilter -waitvsync -window
 
 .PHONY: debug-aes
 debug-aes:
-	$(MAKE) -f MakefileWin32.mak PLATFORM=aes debug
+	$(MAKE) -f MakefileWin32.mak PLATFORM=aes GAME=$(GAME) debug
 
 .PHONY: mame-trace
 mame-trace: p1
 	if not exist dump mkdir dump
 	$(PY) hash_eagle\gen_hash.py
-	copy /Y out\777-p1.p1 roms\neogeosdk\777-p1.p1
+	copy /Y out\$(GAME_ID)-p1.p1 roms\neogeosdk\$(GAME_ID)-p1.p1
 	$(NM) -n out\game > dump\game.sym
 	$(OBJDUMP) -Dht out\game > dump\game.debug.dump
 	$(MAME_COMMON) -verbose -debug -debugscript dump\mame_trace.mds
@@ -375,8 +392,8 @@ mame-trace: p1
 
 .PHONY: debug-build
 debug-build:
-	$(MAKE) -f MakefileWin32.mak DEBUG=1 p1
-	$(MAKE) -f MakefileWin32.mak DEBUG=1 debug-artifacts
+	$(MAKE) -f MakefileWin32.mak GAME=$(GAME) DEBUG=1 p1
+	$(MAKE) -f MakefileWin32.mak GAME=$(GAME) DEBUG=1 debug-artifacts
 
 .PHONY: debug-artifacts
 debug-artifacts: out\game

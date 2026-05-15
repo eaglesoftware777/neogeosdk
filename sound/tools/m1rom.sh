@@ -10,7 +10,12 @@ OBJ_C="$OUT_DIR/driver_c.o"
 ASM_C="$OUT_DIR/driver.gen.asm"
 ASM_COMBINED="$OUT_DIR/driver_combined.asm"
 LINKFILE="$OUT_DIR/m1.link"
-M1ROM="$OUT_DIR/777-m1.m1"
+
+# Per-game overrides: Makefile passes GAME_SOUND and GAME_ID; fall back to defaults for standalone use
+: "${GAME_SOUND:=$SDK_ROOT/sound}"
+: "${GAME_ID:=777}"
+
+M1ROM="$OUT_DIR/${GAME_ID}-m1.m1"
 
 mkdir -p "$OUT_DIR"
 
@@ -26,11 +31,19 @@ if [ "$USE_Z80C" = "1" ] && [ ! -f "$Z80CC" ]; then
     make -C "$SDK_ROOT/z80c-special"
 fi
 
-python3 "$SDK_ROOT/sound/tools/fm_patch_compile.py" "$SDK_ROOT/sound/fm/patches.fm" -o "$SDK_ROOT/sound/driver/fm_patch_table.inc"
-python3 "$SDK_ROOT/sound/tools/fm_compile.py" "$SDK_ROOT"/sound/fm/*.mml -o "$SDK_ROOT/sound/driver/fm_data.inc"
-python3 "$SDK_ROOT/sound/tools/mml_compile.py" "$SDK_ROOT"/sound/mml/*.mml -o "$SDK_ROOT/sound/driver/music_data.inc"
-python3 "$SDK_ROOT/sound/tools/ssg_config_compile.py" "$SDK_ROOT/sound/ssg/config.ssg" -o "$SDK_ROOT/sound/driver/ssg_config.inc"
-python3 "$SDK_ROOT/sound/tools/ssg_compile.py" "$SDK_ROOT"/sound/ssg/*.mml -o "$SDK_ROOT/sound/driver/ssg_data.inc"
+# Compile sound data (skipped gracefully when files are absent)
+if [ -f "$GAME_SOUND/fm/patches.fm" ]; then
+    python3 "$SDK_ROOT/sound/tools/fm_patch_compile.py" "$GAME_SOUND/fm/patches.fm" -o "$SDK_ROOT/sound/driver/fm_patch_table.inc"
+fi
+FM_MMLS=$(ls "$GAME_SOUND"/fm/*.mml 2>/dev/null || true)
+[ -n "$FM_MMLS" ] && python3 "$SDK_ROOT/sound/tools/fm_compile.py" $FM_MMLS -o "$SDK_ROOT/sound/driver/fm_data.inc"
+MML_TRACKS=$(ls "$GAME_SOUND"/mml/*.mml 2>/dev/null || true)
+[ -n "$MML_TRACKS" ] && python3 "$SDK_ROOT/sound/tools/mml_compile.py" $MML_TRACKS -o "$SDK_ROOT/sound/driver/music_data.inc"
+if [ -f "$GAME_SOUND/ssg/config.ssg" ]; then
+    python3 "$SDK_ROOT/sound/tools/ssg_config_compile.py" "$GAME_SOUND/ssg/config.ssg" -o "$SDK_ROOT/sound/driver/ssg_config.inc"
+fi
+SSG_MMLS=$(ls "$GAME_SOUND"/ssg/*.mml 2>/dev/null || true)
+[ -n "$SSG_MMLS" ] && python3 "$SDK_ROOT/sound/tools/ssg_compile.py" $SSG_MMLS -o "$SDK_ROOT/sound/driver/ssg_data.inc"
 
 if [ "$USE_Z80C" = "1" ]; then
     echo "Compiling C driver with $Z80CC from $Z80C_SRC"
@@ -63,7 +76,7 @@ if [ "$current_size" -lt "$target_size" ]; then
 fi
 
 mkdir -p "$ROM_DIR"
-cp "$M1ROM" "$ROM_DIR/777-m1.m1"
+cp "$M1ROM" "$ROM_DIR/${GAME_ID}-m1.m1"
 rm -f "$OBJ" "$OBJ_C" "$ASM_C" "$ASM_COMBINED" "$LINKFILE"
 
 echo "Built $M1ROM"

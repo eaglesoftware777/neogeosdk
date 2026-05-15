@@ -1,5 +1,72 @@
 # Changelog
 
+## v1.4.0 — Multi-Game Build System
+
+Release date: 2026-05-15
+
+### Highlights
+
+Single repository, multiple independent games.  Each game under `games/<name>/`
+carries its own source files, linker script, artbox assets, and sound data.
+Build any game with `make GAME=<name>`.  Default is `demo`.
+
+### New game layout
+
+| Game | ID | Description |
+|------|----|-------------|
+| `games/demo` | 777 | Full SDK showcase (13 scenes) |
+| `games/helloworld` | 772 | Minimal FIX-text hello world |
+| `games/tutorial` | 555 | Tutorial template |
+| `games/neogeogame` | 775 | Blank template for new projects |
+
+Each game folder contains: `game.mk`, `main.c`, `user.c`, `eyecatcher.c`,
+`neogeo_mvs.c`, `neogeo_aes.c`, `neogeo.ld`, `artbox/`, `sound/`, `scenes/`.
+
+### Build system changes
+
+- `Makefile` and `MakefileWin32.mak` now accept `GAME=<name>` (default `demo`)
+- `-include games/$(GAME)/game.mk` loads per-game `GAME_ID` and `GAME_SCENES`
+- CFLAGS: `-Igames/$(GAME)/scenes` added for scene header resolution
+- All ROM filenames derived from `$(GAME_ID)` — no more hardcoded `777`
+- `GAME_SCENE_SRCS` / `GAME_SCENE_OBJS` computed from `GAME_SCENES` list
+- Per-game source paths: `games/$(GAME)/user.c`, `main.c`, `eyecatcher.c`
+- Per-game platform files: `games/$(GAME)/neogeo_mvs.c` / `neogeo_aes.c`
+- Per-game linker script: `games/$(GAME)/neogeo.ld`
+- Per-game sound: `GAME_SOUND = games/$(GAME)/sound` — fm, mml, ssg, samples
+- Per-game art: `artbox/makeartbox.sh GAME` / `artbox/makeartbox.bat GAME`
+- `MakefileWin32.mak` engine module list updated to match Linux (added
+  `ng_render_queue`, `ng_fixed`, `ng_camera`, `ng_palette_fx`, `ng_particles`,
+  `ng_feedback`, `ng_debug`, `ng_demo_advanced`)
+- `aes`, `mvs`, `test-aes`, `test-mvs`, `debug-aes`, `debug-build` targets now
+  forward `GAME=` to sub-makes
+
+### Windows artbox
+
+`artbox/makeartbox.bat` updated to accept a game name argument and uses
+`mklink /J` directory junctions instead of symlinks — no administrator
+privileges required on Windows Vista and later.
+
+### Launcher scripts
+
+Both `neogeosdk.sh` (Linux) and `neogeosdk.bat` (Windows) gained a game
+selection step (`g` key).  The selected game is passed to every build command
+for the duration of the session.
+
+### SDK contract header
+
+`sdk/bsp/bsp.h` documents the complete set of symbols every `user.c` must
+implement: BIOS dispatch functions, interrupt handlers, and game entry points.
+
+### Validation
+
+- `make game` (demo, default)
+- `make GAME=helloworld game`
+- `make GAME=tutorial game`
+- `make GAME=neogeogame game`
+- zero errors, zero warnings on all four games
+
+---
+
 ## v1.3.0 — NeoGeo Deluxe 2D Engine Layer
 
 Release date: 2026-05-14
