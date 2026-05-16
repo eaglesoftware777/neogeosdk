@@ -18,6 +18,8 @@
  * sprite_base + 64*S, and the hardware sprite slot for SCB2/3/4 is
  * sprite_base/64 + S.
  */
+#define NG_SPR_TOTAL         380
+#define NG_SPR_LAST          379
 #define NG_SPR_CHAR_FIRST    1
 #define NG_SPR_CHAR_LAST     299
 #define NG_SPR_BG0_FIRST     300
