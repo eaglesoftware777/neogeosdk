@@ -4,17 +4,9 @@
 #https://github.com/eaglesoftware777/neogeosdk
 #######
 
-# Game selection from game.cfg (override with GAME=...).
+# Game selection — default is demo
 # Usage: make GAME=helloworld / make GAME=tutorial / make GAME=neogeogame
-GAME_CFG_FILE ?= game.cfg
--include $(GAME_CFG_FILE)
-ifeq ($(strip $(GAME)),)
-  ifneq ($(strip $(CURRENT_GAME)),)
-    GAME := $(strip $(CURRENT_GAME))
-  else
-    GAME := demo
-  endif
-endif
+GAME ?= demo
 -include games/$(GAME)/game.mk
 
 ifndef SDKHOME
@@ -33,7 +25,7 @@ XTOOLS_ROOT ?= $(XTOOLS_V2)
 endif
 
 CC=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-gcc
-CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox -Wa,-march=68000,-mcpu=68000,-W,--warn
+CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Wa,-march=68000,-mcpu=68000,-W,--warn
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
 LD=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-ld
 LDFLAGS=  -nostdlib
@@ -55,7 +47,7 @@ SCAT=srec_cat
 INFO=xxd -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
-NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_bg ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt ng_depthfx ng_render_queue ng_fixed ng_camera ng_palette_fx ng_particles ng_feedback ng_debug ng_joystick ng_demo_advanced
+NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_bg ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt ng_depthfx ng_render_queue ng_fixed ng_camera ng_palette_fx ng_particles ng_feedback ng_debug ng_demo_advanced
 NG_ENGINE_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(NG_ENGINE_NAMES)))
 DEMO_NAMES=demo demo_intro demo_sprites demo_camera demo_palette demo_particles demo_depth demo_sound demo_fix demo_combat demo_stress demo_title demo_render
 DEMO_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(DEMO_NAMES)))
@@ -71,8 +63,7 @@ else
 STRIP_SECTS:=-R .comment -R .text -R .data -R .bss
 endif
 
-# Intentionally pinned to game-first order; do not inherit ambient HASHPATH env.
-HASHPATH:=$(CURDIR)/hash_eagle/$(GAME):$(CURDIR)/hash_eagle:$(CURDIR)/hash
+HASHPATH?=$(CURDIR)/hash_eagle/$(GAME):$(CURDIR)/hash_eagle:$(CURDIR)/hash
 # Default BIOS for make test/debug. Override: make test BIOS=euro
 # Supported values (make bios-list for full table):
 #   us  us-e  us-v2  us-u4  us-u3
@@ -83,9 +74,7 @@ HASHPATH:=$(CURDIR)/hash_eagle/$(GAME):$(CURDIR)/hash_eagle:$(CURDIR)/hash
 #   unibios13 unibios12 unibios12o unibios11 unibios10
 BIOS?=euro
 ROM_DIR = roms/$(GAME)
-DUMP_DIR = dump/$(GAME)
 MAME_COMMON=mame neogeo -rompath $(CURDIR)/roms -hashpath $(HASHPATH) -bios $(BIOS) -cart1 $(GAME)
-LOG_CTX=@echo "[neogeosdk] target=$@ game=$(GAME) game_id=$(GAME_ID) platform=$(PLATFORM) rom_dir=$(ROM_DIR) hashpath=$(HASHPATH)"
 
 # PLATFORM: mvs (default) or aes
 PLATFORM?=mvs
@@ -99,13 +88,8 @@ endif
 
 .DEFAULT_GOAL := p1
 
-.PHONY: game-check
-game-check:
-	@GAME="$(GAME)" $(PYTHON) tools/check_game_cfg.py --cfg "$(GAME_CFG_FILE)"
-
 .PHONY: all
-all: game-check art sfix sound p1
-	$(LOG_CTX)
+all: art sfix sound p1
 
 .PHONY: aes
 aes:
@@ -116,8 +100,7 @@ mvs:
 	$(MAKE) PLATFORM=mvs p1
 
 .PHONY: p1
-p1: game-check game $(GAME_ID)-p1.p1
-	$(LOG_CTX)
+p1: game $(GAME_ID)-p1.p1
 
 # Scene files come from GAME_SCENES in game.mk (explicit list, avoids compiling helper/included files)
 GAME_SCENE_SRCS := $(addprefix games/$(GAME)/scenes/,$(addsuffix .c,$(GAME_SCENES)))
@@ -130,8 +113,7 @@ else
 GAME_NEOGEO_C = games/$(GAME)/neogeo_aes.c
 endif
 
-game: game-check
-	$(LOG_CTX)
+game:
 	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS)   $(GAME_NEOGEO_C) -o out/neogeo0.o
 	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS)   games/$(GAME)/user.c -o out/user0.o
 	$(CC) $(CFLAGS)   games/$(GAME)/main.c -o out/main0.o
@@ -163,7 +145,6 @@ game: game-check
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_particles.c -o out/ng_particles0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_feedback.c -o out/ng_feedback0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_debug.c -o out/ng_debug0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_joystick.c -o out/ng_joystick0.o
 	$(CC) $(CFLAGS)   sdk/2d_engine/ng_demo_advanced.c -o out/ng_demo_advanced0.o
 	$(foreach src,$(GAME_SCENE_SRCS),$(CC) $(CFLAGS) $(src) -o out/$(notdir $(basename $(src)))0.o;)
 	$(OBJCP) $(STRIP_SECTS) out/neogeo0.o     out/neogeo.o
@@ -260,8 +241,7 @@ compare-driver: m1rom-asm m1rom-c
 	python3 sound/tools/compare_m1.py out/compare/$(GAME_ID)-m1-asm.m1 out/compare/$(GAME_ID)-m1-c.m1
 
 .PHONY: sound
-sound: game-check samples vrom fmpatches fm mml ssgconfig ssg m1rom
-	$(LOG_CTX)
+sound: samples vrom fmpatches fm mml ssgconfig ssg m1rom
 
 
 .PHONY: sound-all
@@ -269,23 +249,12 @@ sound-all: sound
 
 
 .PHONY: sfix
-sfix: game-check
-	$(LOG_CTX)
-	mkdir -p games/$(GAME)/artbox
-	cd games/$(GAME)/artbox && ARTBOX_DATA_DIR="$(CURDIR)/games/$(GAME)/artbox" GAME=$(GAME) GAME_ID=$(GAME_ID) python3 "$(CURDIR)/artbox/romdbfiximport.py" && ARTBOX_DATA_DIR="$(CURDIR)/games/$(GAME)/artbox" GAME=$(GAME) GAME_ID=$(GAME_ID) python3 "$(CURDIR)/artbox/fixtiles.py" && GAME=$(GAME) GAME_ID=$(GAME_ID) "$(CURDIR)/artbox/romfx.sh"
-	python3 tools/verify_sfix_output.py --root "$(CURDIR)" --game "$(GAME)" --game-id "$(GAME_ID)"
+sfix:
+	ln -sfn $(CURDIR)/games/$(GAME)/artbox/infix artbox/infix
+	cd artbox && GAME=$(GAME) GAME_ID=$(GAME_ID) python3 romdbfiximport.py && GAME=$(GAME) GAME_ID=$(GAME_ID) python3 fixtiles.py && GAME=$(GAME) GAME_ID=$(GAME_ID) ./romfx.sh
+	rm -f artbox/infix
 	mkdir -p $(ROM_DIR)
-	@set -e; \
-	for ext in s1 c1 c2; do \
-		src_game="games/$(GAME)/artbox/$(GAME_ID)-$$ext.$$ext"; \
-		dst="$(ROM_DIR)/$(GAME_ID)-$$ext.$$ext"; \
-		if [ -f "$$src_game" ]; then \
-			cp -f "$$src_game" "$$dst"; \
-		else \
-			echo "ERROR: missing $$src_game" >&2; \
-			exit 1; \
-		fi; \
-	done
+	cp -f artbox/$(GAME_ID)-s1.s1 $(ROM_DIR)/$(GAME_ID)-s1.s1
 
 .PHONY: srom
 srom: sfix
@@ -293,81 +262,54 @@ srom: sfix
 .PHONY: art-clean
 art-clean:
 	./artbox/makeclean.sh
-	rm -f artbox/neorom.db artbox/map artbox/output1.txt artbox/out.srt artbox/screens.c artbox/sprite_meta.h
-	rm -f artbox/neo.pal artbox/std.pal artbox/neopal.bin artbox/1p.c1 artbox/2p.c2
-	rm -f artbox/1c.c1 artbox/2c.c2 artbox/1c.s1
-	rm -f artbox/$(GAME_ID)-s1.s1 artbox/$(GAME_ID)-c1.c1 artbox/$(GAME_ID)-c2.c2
-	rm -rf artbox/__pycache__
 
 .PHONY: art
-art: game-check
-	$(LOG_CTX)
+art:
 	GAME_ID=$(GAME_ID) ./artbox/makeartbox.sh $(GAME)
-	python3 tools/verify_artbox_palettes.py --root "$(CURDIR)" --game "$(GAME)"
-	rm -f artbox/1c.c1 artbox/2c.c2 artbox/$(GAME_ID)-s1.s1 artbox/assets_manifest.json artbox/map artbox/neo.pal artbox/std.pal artbox/neopal.bin artbox/neorom.db artbox/out.srt artbox/output1.txt artbox/screens.c artbox/sprite_meta.h
-	rm -rf artbox/__pycache__
 
 .PHONY: dist
-dist: game-check all
-	$(LOG_CTX)
+dist: p1
 	GAME=$(GAME) GAME_ID=$(GAME_ID) python3 hash_eagle/gen_hash.py --dist
 
 .PHONY: clean
 clean:
 	rm -f out/game out/game0 out/game0.rom out/game1.rom out/game.rom out/$(GAME_ID)-p1.p1
-	rm -f out/*.o out/*.s out/game.map $(DUMP_DIR)/*.dump $(DUMP_DIR)/*.hex $(DUMP_DIR)/*.txt $(DUMP_DIR)/*.sym $(DUMP_DIR)/*.gdb $(DUMP_DIR)/*.readelf
+	rm -f out/*.o out/*.s out/game.map dump/*.dump dump/*.hex dump/*.txt dump/*.sym dump/*.gdb dump/*.readelf
 	rm -f $(ROM_DIR)/$(GAME_ID)-p1.p1
-	rm -f hash_eagle/$(GAME)/neogeo.xml
 
 .PHONY: sound-clean
 sound-clean:
 	rm -f out/$(GAME_ID)-m1.m1 out/$(GAME_ID)-v1.v1 out/driver.gen.asm
 	rm -f $(ROM_DIR)/$(GAME_ID)-m1.m1 $(ROM_DIR)/$(GAME_ID)-v1.v1
-	rm -f $(GAME_SOUND)/samples/out_16el_a/*.wav $(GAME_SOUND)/samples/out_16el_b/*.wav
-	rm -f $(GAME_SOUND)/samples/out_sr_a/*.wav $(GAME_SOUND)/samples/out_sr_b/*.wav
-	rm -f $(GAME_SOUND)/samples/out_a/*.adpcma $(GAME_SOUND)/samples/out_b/*.adpcmb
+	rm -f sound/samples/out_16el_a/*.wav sound/samples/out_16el_b/*.wav
+	rm -f sound/samples/out_a/*.adpcma sound/samples/out_b/*.adpcmb
 	rm -f sound/driver/fm_data.inc sound/driver/music_data.inc sound/driver/fm_patch_table.inc sound/driver/sample_table.inc sound/driver/ssg_config.inc sound/driver/ssg_data.inc
 
 
 .PHONY: clean-all
 clean-all: clean sound-clean art-clean
-	rm -f $(ROM_DIR)/$(GAME_ID)-s1.s1 $(ROM_DIR)/$(GAME_ID)-c1.c1 $(ROM_DIR)/$(GAME_ID)-c2.c2
-	rm -f main.c user.c eyecatcher.c
-	rm -rf demo
+	rm -f $(ROM_DIR)/$(GAME_ID)-c1.c1 $(ROM_DIR)/$(GAME_ID)-c2.c2
 	
 .PHONY: dump
 dump: 	
-	mkdir -p $(DUMP_DIR)
 	$(OBJDUMP)   -Dht out/neogeo.o | more
 	$(OBJDUMP)   -Dht out/user.o | more 
 	$(OBJDUMP)   -Dht out/main.o | more 
 	$(OBJDUMP)   -Dht out/game  | more
-	$(OBJDUMP)   -Dht out/neogeo.o > $(DUMP_DIR)/neogeo.dump
-	$(OBJDUMP)   -Dht out/user.o  >  $(DUMP_DIR)/user.dump 
-	$(OBJDUMP)   -Dht out/main.o  >  $(DUMP_DIR)/main.dump 
-	$(OBJDUMP)   -Dht out/game  >  $(DUMP_DIR)/game.dump
+	$(OBJDUMP)   -Dht out/neogeo.o > dump/neogeo.dump
+	$(OBJDUMP)   -Dht out/user.o  >  dump/user.dump 
+	$(OBJDUMP)   -Dht out/main.o  >  dump/main.dump 
+	$(OBJDUMP)   -Dht out/game  >  dump/game.dump
 	#$(CC) -Wa,-acdlns  -c sdk/neogeo.c  user.c main.c sdk/neogeolib.c  > out/game.s
 	$(INFO) out/game.rom | more 
-	$(INFO) out/game.rom > $(DUMP_DIR)/game.hex 
+	$(INFO) out/game.rom > dump/game.hex 
 
 .PHONY: test
-test: game-check test-precheck hash
-	$(LOG_CTX)
+test:
+	GAME=$(GAME) GAME_ID=$(GAME_ID) python3 hash_eagle/gen_hash.py
+	mkdir -p $(ROM_DIR)
+	cp -f out/$(GAME_ID)-p1.p1 $(ROM_DIR)/$(GAME_ID)-p1.p1
 	$(MAME_COMMON) -output console -nofilter -waitvsync -window
-
-.PHONY: test-precheck
-test-precheck: game-check
-	$(LOG_CTX)
-	@[ -f "$(ROM_DIR)/$(GAME_ID)-p1.p1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-p1.p1. Build first with: make all" && exit 1)
-	@[ -f "$(ROM_DIR)/$(GAME_ID)-m1.m1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-m1.m1. Build first with: make all" && exit 1)
-	@[ -f "$(ROM_DIR)/$(GAME_ID)-s1.s1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-s1.s1. Build first with: make all" && exit 1)
-	@[ -f "$(ROM_DIR)/$(GAME_ID)-v1.v1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-v1.v1. Build first with: make all" && exit 1)
-	@[ -f "$(ROM_DIR)/$(GAME_ID)-c1.c1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-c1.c1. Build first with: make all" && exit 1)
-	@[ -f "$(ROM_DIR)/$(GAME_ID)-c2.c2" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-c2.c2. Build first with: make all" && exit 1)
-
-.PHONY: test-build
-test-build: all
-	$(MAKE) test
 
 .PHONY: test-aes
 test-aes:
@@ -413,44 +355,11 @@ bios-list:
 	@echo "  unibios11        Universe BIOS (Hack, Ver. 1.1)"
 	@echo "  unibios10        Universe BIOS (Hack, Ver. 1.0)"
 
-.PHONY: games-list
-games-list:
-	@echo "Available GAME values:"
-	@for d in games/*; do \
-		if [ -d "$$d" ]; then \
-			basename "$$d"; \
-		fi; \
-	done
-
-.PHONY: menu
-menu:
-	@echo "NeoGeoSDK Make Menu (Linux)"
-	@echo ""
-	@echo "Core build:"
-	@echo "  make all                     # full pipeline (art+sfix+sound+p1)"
-	@echo "  make GAME=<name> all         # build specific game"
-	@echo "  make p1 / sound / sfix / art # individual stages"
-	@echo ""
-	@echo "Run/Test:"
-	@echo "  make test                    # run already-built ROM set (no build)"
-	@echo "  make test-build              # build then run"
-	@echo "  make debug                   # build then run with debugger flags"
-	@echo "  make mame-trace              # build + MAME trace script"
-	@echo ""
-	@echo "Packaging:"
-	@echo "  make dist                    # full build + dist package for GAME"
-	@echo ""
-	@echo "Utilities:"
-	@echo "  make games-list              # list game folders"
-	@echo "  make bios-list               # list BIOS values"
-	@echo "  make clean / clean-all       # clear current game artifacts"
-
-.PHONY: help
-help: menu
-
 .PHONY: debug
-debug: all
-	$(LOG_CTX)
+debug:
+	GAME=$(GAME) GAME_ID=$(GAME_ID) python3 hash_eagle/gen_hash.py
+	mkdir -p $(ROM_DIR)
+	cp -f out/$(GAME_ID)-p1.p1 $(ROM_DIR)/$(GAME_ID)-p1.p1
 	$(MAME_COMMON) -output console -debug -verbose -nofilter -waitvsync -window
 
 .PHONY: debug-aes
@@ -458,13 +367,15 @@ debug-aes:
 	$(MAKE) debug
 
 .PHONY: mame-trace
-mame-trace: all
-	$(LOG_CTX)
-	mkdir -p $(DUMP_DIR)
-	$(NM) -n out/game > $(DUMP_DIR)/game.sym
-	$(OBJDUMP) -Dht out/game > $(DUMP_DIR)/game.debug.dump
-	$(MAME_COMMON) -verbose -debug -debugscript $(DUMP_DIR)/mame_trace.mds
-	@echo "Trace: $(DUMP_DIR)/m68k_trace.txt  |  Symbols: $(DUMP_DIR)/game.sym  |  Disasm: $(DUMP_DIR)/game.debug.dump"
+mame-trace: p1
+	mkdir -p dump
+	GAME=$(GAME) GAME_ID=$(GAME_ID) python3 hash_eagle/gen_hash.py
+	mkdir -p $(ROM_DIR)
+	cp -f out/$(GAME_ID)-p1.p1 $(ROM_DIR)/$(GAME_ID)-p1.p1
+	$(NM) -n out/game > dump/game.sym
+	$(OBJDUMP) -Dht out/game > dump/game.debug.dump
+	$(MAME_COMMON) -verbose -debug -debugscript dump/mame_trace.mds
+	@echo "Trace: dump/m68k_trace.txt  |  Symbols: dump/game.sym  |  Disasm: dump/game.debug.dump"
 
 .PHONY: debug-build
 debug-build:
@@ -473,27 +384,27 @@ debug-build:
 
 .PHONY: debug-artifacts
 debug-artifacts: out/game
-	mkdir -p $(DUMP_DIR)
-	rm -f $(DUMP_DIR)/game.size.txt $(DUMP_DIR)/game.sym $(DUMP_DIR)/game.readelf $(DUMP_DIR)/game.debug.dump $(DUMP_DIR)/game.map
-	$(SIZE) out/game > $(DUMP_DIR)/game.size.txt
-	$(NM) -n out/game > $(DUMP_DIR)/game.sym
-	$(READELF) -a out/game > $(DUMP_DIR)/game.readelf
-	$(OBJDUMP) -DhtS out/game > $(DUMP_DIR)/game.debug.dump
-	if test -f out/game.map; then cp -f out/game.map $(DUMP_DIR)/game.map; fi
+	mkdir -p dump
+	rm -f dump/game.size.txt dump/game.sym dump/game.readelf dump/game.debug.dump dump/game.map
+	$(SIZE) out/game > dump/game.size.txt
+	$(NM) -n out/game > dump/game.sym
+	$(READELF) -a out/game > dump/game.readelf
+	$(OBJDUMP) -DhtS out/game > dump/game.debug.dump
+	if test -f out/game.map; then cp -f out/game.map dump/game.map; fi
 
 .PHONY: gdb-script
 gdb-script:
-	mkdir -p $(DUMP_DIR)
-	printf "set pagination off\nset confirm off\nfile out/game\ninfo files\ninfo functions\ninfo variables\nmaintenance info sections\nquit\n" > $(DUMP_DIR)/gdb_trace.gdb
+	mkdir -p dump
+	printf "set pagination off\nset confirm off\nfile out/game\ninfo files\ninfo functions\ninfo variables\nmaintenance info sections\nquit\n" > dump/gdb_trace.gdb
 
 .PHONY: gdb-trace
 gdb-trace: debug-build gdb-script
-	@if $(GDB) --version >/dev/null 2>$(DUMP_DIR)/gdb_trace.err; then \
-		$(GDB) -batch -x $(DUMP_DIR)/gdb_trace.gdb > $(DUMP_DIR)/gdb_trace.txt 2>>$(DUMP_DIR)/gdb_trace.err; \
+	@if $(GDB) --version >/dev/null 2>dump/gdb_trace.err; then \
+		$(GDB) -batch -x dump/gdb_trace.gdb > dump/gdb_trace.txt 2>>dump/gdb_trace.err; \
 	else \
-		printf "GDB unavailable: %s\n\n" "$(GDB)" > $(DUMP_DIR)/gdb_trace.txt; \
-		cat $(DUMP_DIR)/gdb_trace.err >> $(DUMP_DIR)/gdb_trace.txt; \
-		printf "\nOverride with: make gdb-trace GDB=/path/to/m68k-gdb\n" >> $(DUMP_DIR)/gdb_trace.txt; \
+		printf "GDB unavailable: %s\n\n" "$(GDB)" > dump/gdb_trace.txt; \
+		cat dump/gdb_trace.err >> dump/gdb_trace.txt; \
+		printf "\nOverride with: make gdb-trace GDB=/path/to/m68k-gdb\n" >> dump/gdb_trace.txt; \
 	fi
 
 .PHONY: gdb
