@@ -60,7 +60,7 @@ static void NEOGEO_USER part_hit_sparks(void)
         }
 
         ng_particles_update();
-        ng_particles_draw(PART_SLOT_START, PART_SLOT_START);
+        ng_particles_draw(PART_SLOT_START, 0u);
 
         if (demo_frame()) break;
     }
@@ -94,7 +94,7 @@ static void NEOGEO_USER part_dust_smoke(void)
         }
 
         ng_particles_update();
-        ng_particles_draw(PART_SLOT_START, PART_SLOT_START);
+        ng_particles_draw(PART_SLOT_START, 0u);
 
         if (demo_frame()) break;
     }
@@ -140,7 +140,7 @@ static void NEOGEO_USER part_explosions_slash(void)
         }
 
         ng_particles_update();
-        ng_particles_draw(PART_SLOT_START, PART_SLOT_START);
+        ng_particles_draw(PART_SLOT_START, 0u);
 
         if (demo_frame()) break;
     }
@@ -194,7 +194,7 @@ static void NEOGEO_USER part_magic_eviction(void)
         }
 
         ng_particles_update();
-        ng_particles_draw(PART_SLOT_START, PART_SLOT_START);
+        ng_particles_draw(PART_SLOT_START, 0u);
 
         if (demo_frame()) break;
     }
