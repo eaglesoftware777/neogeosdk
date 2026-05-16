@@ -73,7 +73,8 @@ HASHPATH?=$(CURDIR)/hash_eagle:$(CURDIR)/hash
 #   unibios23 unibios23o unibios22 unibios21 unibios20
 #   unibios13 unibios12 unibios12o unibios11 unibios10
 BIOS?=euro
-MAME_COMMON=mame neogeo -rompath $(CURDIR)/roms -hashpath $(HASHPATH) -bios $(BIOS) -cart1 neogeosdk
+ROM_DIR = roms/$(GAME)
+MAME_COMMON=mame neogeo -rompath $(CURDIR)/roms -hashpath $(HASHPATH) -bios $(BIOS) -cart1 $(GAME)
 
 # PLATFORM: mvs (default) or aes
 PLATFORM?=mvs
@@ -161,13 +162,13 @@ $(GAME_ID)-p1.p1: game
 	$(SCAT)  out/game0.rom -binary $(SWAP) out/game1.rom -binary
 	$(SCAT)  out/game1.rom -binary $(FILL) out/game.rom -binary
 	cp       out/game.rom out/$(GAME_ID)-p1.p1
-	mkdir -p roms/neogeosdk
-	cp -f out/$(GAME_ID)-p1.p1 roms/neogeosdk/$(GAME_ID)-p1.p1
-	python3 hash_eagle/gen_hash.py
+	mkdir -p $(ROM_DIR)
+	cp -f out/$(GAME_ID)-p1.p1 $(ROM_DIR)/$(GAME_ID)-p1.p1
+	GAME=$(GAME) GAME_ID=$(GAME_ID) python3 hash_eagle/gen_hash.py
 
 .PHONY: hash
 hash:
-	python3 hash_eagle/gen_hash.py
+	GAME=$(GAME) GAME_ID=$(GAME_ID) python3 hash_eagle/gen_hash.py
 
 GAME_SOUND = games/$(GAME)/sound
 
@@ -215,13 +216,13 @@ samples:
 
 .PHONY: vrom
 vrom:
-	GAME_ID=$(GAME_ID) ./sound/tools/vrom.sh
-	mkdir -p roms/neogeosdk
-	cp -f out/$(GAME_ID)-v1.v1 roms/neogeosdk/$(GAME_ID)-v1.v1
+	GAME=$(GAME) GAME_ID=$(GAME_ID) ./sound/tools/vrom.sh
+	mkdir -p $(ROM_DIR)
+	cp -f out/$(GAME_ID)-v1.v1 $(ROM_DIR)/$(GAME_ID)-v1.v1
 
 .PHONY: m1rom
 m1rom: fmpatches fm mml ssgconfig ssg
-	WLAZ80=$(WLAZ80) WLALINK=$(WLALINK) USE_Z80C=$(USE_Z80C) Z80C_SRC=$(Z80C_SRC_LINUX) GAME_SOUND=$(GAME_SOUND) GAME_ID=$(GAME_ID) ./sound/tools/m1rom.sh
+	WLAZ80=$(WLAZ80) WLALINK=$(WLALINK) USE_Z80C=$(USE_Z80C) Z80C_SRC=$(Z80C_SRC_LINUX) GAME=$(GAME) GAME_SOUND=$(GAME_SOUND) GAME_ID=$(GAME_ID) ./sound/tools/m1rom.sh
 
 .PHONY: m1rom-asm
 m1rom-asm:
@@ -237,7 +238,7 @@ m1rom-c:
 
 .PHONY: compare-driver
 compare-driver: m1rom-asm m1rom-c
-	python3 sound/tools/compare_m1.py out/compare/777-m1-asm.m1 out/compare/777-m1-c.m1
+	python3 sound/tools/compare_m1.py out/compare/$(GAME_ID)-m1-asm.m1 out/compare/$(GAME_ID)-m1-c.m1
 
 .PHONY: sound
 sound: samples vrom fmpatches fm mml ssgconfig ssg m1rom
@@ -250,10 +251,10 @@ sound-all: sound
 .PHONY: sfix
 sfix:
 	ln -sfn $(CURDIR)/games/$(GAME)/artbox/infix artbox/infix
-	cd artbox && GAME_ID=$(GAME_ID) python3 romdbfiximport.py && GAME_ID=$(GAME_ID) python3 fixtiles.py && GAME_ID=$(GAME_ID) ./romfx.sh
+	cd artbox && GAME=$(GAME) GAME_ID=$(GAME_ID) python3 romdbfiximport.py && GAME=$(GAME) GAME_ID=$(GAME_ID) python3 fixtiles.py && GAME=$(GAME) GAME_ID=$(GAME_ID) ./romfx.sh
 	rm -f artbox/infix
-	mkdir -p roms/neogeosdk
-	cp -f artbox/$(GAME_ID)-s1.s1 roms/neogeosdk/$(GAME_ID)-s1.s1
+	mkdir -p $(ROM_DIR)
+	cp -f artbox/$(GAME_ID)-s1.s1 $(ROM_DIR)/$(GAME_ID)-s1.s1
 
 .PHONY: srom
 srom: sfix
@@ -268,18 +269,18 @@ art:
 
 .PHONY: dist
 dist: p1
-	python3 hash_eagle/gen_hash.py --dist
+	GAME=$(GAME) GAME_ID=$(GAME_ID) python3 hash_eagle/gen_hash.py --dist
 
 .PHONY: clean
 clean:
 	rm -f out/game out/game0 out/game0.rom out/game1.rom out/game.rom out/$(GAME_ID)-p1.p1
 	rm -f out/*.o out/*.s out/game.map dump/*.dump dump/*.hex dump/*.txt dump/*.sym dump/*.gdb dump/*.readelf
-	rm -f roms/neogeosdk/$(GAME_ID)-p1.p1
+	rm -f $(ROM_DIR)/$(GAME_ID)-p1.p1
 
 .PHONY: sound-clean
 sound-clean:
 	rm -f out/$(GAME_ID)-m1.m1 out/$(GAME_ID)-v1.v1 out/driver.gen.asm
-	rm -f roms/neogeosdk/$(GAME_ID)-m1.m1 roms/neogeosdk/$(GAME_ID)-v1.v1
+	rm -f $(ROM_DIR)/$(GAME_ID)-m1.m1 $(ROM_DIR)/$(GAME_ID)-v1.v1
 	rm -f sound/samples/out_16el_a/*.wav sound/samples/out_16el_b/*.wav
 	rm -f sound/samples/out_a/*.adpcma sound/samples/out_b/*.adpcmb
 	rm -f sound/driver/fm_data.inc sound/driver/music_data.inc sound/driver/fm_patch_table.inc sound/driver/sample_table.inc sound/driver/ssg_config.inc sound/driver/ssg_data.inc
@@ -287,7 +288,7 @@ sound-clean:
 
 .PHONY: clean-all
 clean-all: clean sound-clean art-clean
-	rm -f roms/neogeosdk/$(GAME_ID)-c1.c1 roms/neogeosdk/$(GAME_ID)-c2.c2
+	rm -f $(ROM_DIR)/$(GAME_ID)-c1.c1 $(ROM_DIR)/$(GAME_ID)-c2.c2
 	
 .PHONY: dump
 dump: 	
@@ -303,9 +304,11 @@ dump:
 	$(INFO) out/game.rom | more 
 	$(INFO) out/game.rom > dump/game.hex 
 
+.PHONY: test
 test:
-	python3 hash_eagle/gen_hash.py
-	cp out/$(GAME_ID)-p1.p1 roms/neogeosdk/
+	GAME=$(GAME) GAME_ID=$(GAME_ID) python3 hash_eagle/gen_hash.py
+	mkdir -p $(ROM_DIR)
+	cp -f out/$(GAME_ID)-p1.p1 $(ROM_DIR)/$(GAME_ID)-p1.p1
 	$(MAME_COMMON) -output console -nofilter -waitvsync -window
 
 .PHONY: test-aes
@@ -352,9 +355,11 @@ bios-list:
 	@echo "  unibios11        Universe BIOS (Hack, Ver. 1.1)"
 	@echo "  unibios10        Universe BIOS (Hack, Ver. 1.0)"
 
+.PHONY: debug
 debug:
-	python3 hash_eagle/gen_hash.py
-	cp out/$(GAME_ID)-p1.p1 roms/neogeosdk/
+	GAME=$(GAME) GAME_ID=$(GAME_ID) python3 hash_eagle/gen_hash.py
+	mkdir -p $(ROM_DIR)
+	cp -f out/$(GAME_ID)-p1.p1 $(ROM_DIR)/$(GAME_ID)-p1.p1
 	$(MAME_COMMON) -output console -debug -verbose -nofilter -waitvsync -window
 
 .PHONY: debug-aes
@@ -364,8 +369,9 @@ debug-aes:
 .PHONY: mame-trace
 mame-trace: p1
 	mkdir -p dump
-	python3 hash_eagle/gen_hash.py
-	cp out/$(GAME_ID)-p1.p1 roms/neogeosdk/
+	GAME=$(GAME) GAME_ID=$(GAME_ID) python3 hash_eagle/gen_hash.py
+	mkdir -p $(ROM_DIR)
+	cp -f out/$(GAME_ID)-p1.p1 $(ROM_DIR)/$(GAME_ID)-p1.p1
 	$(NM) -n out/game > dump/game.sym
 	$(OBJDUMP) -Dht out/game > dump/game.debug.dump
 	$(MAME_COMMON) -verbose -debug -debugscript dump/mame_trace.mds
