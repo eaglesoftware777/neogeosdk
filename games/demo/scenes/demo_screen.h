@@ -4,12 +4,11 @@
 #include <stdint.h>
 #include "sdk/macro.h"
 #include "sdk/2d_engine/ng_sprite_pool.h"
+#include "demo.h"
 
 #ifndef NEOGEO_USER
 #define NEOGEO_USER
 #endif
-
-typedef void (*DemoShowScreenFn)(int, int, int, int, int, uint16_t, uint16_t);
 
 #define DEMO_SCREEN_TILE(screen_id) ((uint16_t)(((screen_id) - 1u) * 256u))
 #define DEMO_SCREEN_PALETTE(screen_id) ((uint8_t)(0x10u + ((screen_id) - 1u)))

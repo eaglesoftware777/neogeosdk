@@ -260,15 +260,15 @@ static uint8_t NEOGEO_USER ng_char_draws_before(NGCharacter *a, NGCharacter *b)
     ay = ng_char_sort_y(a);
     by = ng_char_sort_y(b);
 
-    /* Smaller Y = lower scan line = lower on screen = nearer in brawler scenes. */
-    return (uint8_t)(ay < by);
+    /* Greater Y = lower on screen = nearer to viewer in brawler/platformer scenes. */
+    return (uint8_t)(ay > by);
 }
 
 /*
  * Priority/depth sort: build an order[] of active visible character indices.
  * Higher priority bands are placed first and therefore receive lower hardware
  * sprite slots, which are displayed in front.  Inside one band, characters are
- * sorted by Y ascending (lower Y = lower on screen = nearer = in front).
+ * sorted by Y descending (higher Y = lower on screen = nearer = in front).
  * Invisible/offscreen chars are hidden separately.
  */
 static uint8_t NEOGEO_USER ng_chars_depth_sort(uint8_t *order, int16_t camera_x, int16_t camera_y)

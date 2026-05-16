@@ -1,6 +1,9 @@
 #include "ng_fix/ng_fix.h"
 #include "neogeo.h"
 
+extern void setsfix(void);
+extern void clearFix(void);
+
 static uint16_t ngfix_cache[NGFIX_HEIGHT][NGFIX_WIDTH];
 
 static NGFixFont ngfix_font_state = {
@@ -45,6 +48,7 @@ void NEOGEO_USER ngfix_init(void)
     ngfix_box_state.fill = NGFIX_DEFAULT_BLANK_TILE;
 
     ngfix_cache_invalidate();
+    setsfix();  /* switch hardware to game S ROM; BIOS boot leaves BRDFIX=0 */
 }
 
 void NEOGEO_USER ngfix_set_font(const NGFixFont *font)
@@ -220,7 +224,8 @@ void NEOGEO_USER ngfix_clear_line(uint8_t y)
 
 void NEOGEO_USER ngfix_clear(void)
 {
-    clearFix();
+    clearFix();     /* BIOS call resets BRDFIX to 0; restore game S ROM after */
+    setsfix();
     ngfix_cache_invalidate();
     ngfix_clear_rect(0, 0, NGFIX_WIDTH, NGFIX_HEIGHT);
 }

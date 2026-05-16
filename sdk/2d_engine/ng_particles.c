@@ -133,7 +133,7 @@ NGParticle * NEOGEO_USER ng_particle_spawn(uint8_t type, uint8_t priority,
                                             uint8_t frame_count, uint8_t anim_period)
 {
     uint8_t i;
-    uint8_t drop_pri = 0xff;
+    uint8_t drop_pri = 0;
     uint8_t drop_idx = 0xff;
 
     /* Find a free slot; track the lowest-priority active particle as fallback */

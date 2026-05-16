@@ -5,8 +5,16 @@
 #https://github.com/eaglesoftware777/neogeosdk
 #######
 """
-Regenerates hash_eagle/neogeo.xml from the current ROM files in roms/<GAME>/.
-Must be run before launching MAME whenever any ROM is rebuilt.
+Regenerates hash_eagle/<GAME>/neogeo.xml from the current ROM files in
+roms/<GAME>/.  Must be run before launching MAME whenever any ROM is rebuilt.
+
+Each game gets its own subdirectory so multiple builds can coexist on disk:
+  hash_eagle/demo/neogeo.xml
+  hash_eagle/helloworld/neogeo.xml
+  ...
+
+MAME resolves the correct XML via -hashpath which is set to
+hash_eagle/<GAME>:hash_eagle:hash (game-specific dir first).
 
 Usage:
   python3 hash_eagle/gen_hash.py          # update XML only
@@ -24,8 +32,11 @@ REPO_ROOT   = os.path.dirname(SCRIPT_DIR)
 GAME    = os.environ.get("GAME",    "demo")
 GAME_ID = os.environ.get("GAME_ID", "777")
 
-ROM_DIR   = os.path.join(REPO_ROOT, "roms", GAME)
-OUT_XML   = os.path.join(SCRIPT_DIR, "neogeo.xml")
+ROM_DIR    = os.path.join(REPO_ROOT, "roms", GAME)
+# Per-game hash directory: hash_eagle/<GAME>/neogeo.xml
+HASH_GAME_DIR = os.path.join(SCRIPT_DIR, GAME)
+OUT_XML       = os.path.join(HASH_GAME_DIR, "neogeo.xml")
+
 ROM_NAMES = [
     f"{GAME_ID}-p1.p1",
     f"{GAME_ID}-m1.m1",
@@ -50,6 +61,8 @@ def area_size(name):
     return os.path.getsize(path) if os.path.exists(path) else 0
 
 def gen_xml():
+    os.makedirs(HASH_GAME_DIR, exist_ok=True)
+
     p1_sz, p1_crc, p1_sha = file_info(f"{GAME_ID}-p1.p1")
     m1_sz, m1_crc, m1_sha = file_info(f"{GAME_ID}-m1.m1")
     s1_sz, s1_crc, s1_sha = file_info(f"{GAME_ID}-s1.s1")
@@ -111,7 +124,8 @@ def gen_xml():
 def build_dist():
     dist_dir  = os.path.join(REPO_ROOT, "dist")
     roms_dir  = os.path.join(dist_dir, "roms")
-    hash_dir  = os.path.join(dist_dir, "hash_eagle")
+    # Per-game hash directory in dist mirrors the hash_eagle layout
+    hash_dir  = os.path.join(dist_dir, "hash_eagle", GAME)
     os.makedirs(roms_dir, exist_ok=True)
     os.makedirs(hash_dir, exist_ok=True)
 
@@ -143,7 +157,7 @@ REM NeoGeo SDK - {'Debug ' if debug else ''}Release Launcher ({GAME})
 REM Place neogeo.zip (BIOS) inside the roms\\ folder before running.
 mame neogeo -cart1 {GAME} ^
     -rompath "%~dp0roms" ^
-    -hashpath "%~dp0hash_eagle;%~dp0hash" ^
+    -hashpath "%~dp0hash_eagle\\{GAME};%~dp0hash_eagle;%~dp0hash" ^
     -bios unibios22 ^
     -window ^
     -console ^
@@ -166,7 +180,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 exec mame neogeo \\
     -cart1 {GAME} \\
     -rompath "$SCRIPT_DIR/roms" \\
-    -hashpath "$SCRIPT_DIR/hash_eagle:$SCRIPT_DIR/hash" \\
+    -hashpath "$SCRIPT_DIR/hash_eagle/{GAME}:$SCRIPT_DIR/hash_eagle:$SCRIPT_DIR/hash" \\
     -bios unibios22 \\
     -window \\
     -console \\

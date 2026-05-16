@@ -97,7 +97,7 @@ else
 STRIP_SECTS:=-R .comment -R .text -R .data -R .bss
 endif
 
-HASHPATH?=$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
+HASHPATH?=$(REPO_WIN)\hash_eagle\$(GAME);$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
 # Default BIOS for test/debug. Override: make -f MakefileWin32.mak test BIOS=euro
 # Supported values (make -f MakefileWin32.mak bios-list for full table):
 #   us  us-e  us-v2  us-u4  us-u3

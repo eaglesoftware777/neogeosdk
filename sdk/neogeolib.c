@@ -194,7 +194,7 @@ uint16_t NEOGEO_USER setSCB3(uint16_t Ypos , uint16_t sticky_flag , uint16_t hei
 }
 
 uint16_t NEOGEO_USER setFIXDATA(uint16_t palette_index, uint16_t tilenumber) {
-	return (uint16_t)((palette_index << 11) |  tilenumber);
+	return (uint16_t)((palette_index << 12) |  tilenumber);
 }
 
 uint16_t NEOGEO_USER setSCB4(uint16_t Xpos) {
@@ -590,8 +590,8 @@ void NEOGEO_USER displayCreditP1(void) {
 	ASM_ORIW(#0x0030,%%d1)
 	ASM_MVW(%%d1,VRAM_RW)
 	ASM_ANDIW(#0x000F,%%d0)
-	ASM_ORIW(#0x0030,%%d1)
-	ASM_MVW(%%d1,VRAM_RW)
+	ASM_ORIW(#0x0030,%%d0)
+	ASM_MVW(%%d0,VRAM_RW)
 	: : : "d0", "d1", "memory"
 	ASM_END
 }
@@ -600,7 +600,7 @@ void NEOGEO_USER displayCreditP2(void) {
 	ASM_START
 	ASM_MVQ(#0,%%d0)
 	ASM_MVB(P2_CREDITS,%%d0)
-	ASM_MVW(#0x7088,VRAM_ADDR)
+	ASM_MVW(#0x7288,VRAM_ADDR)
 	ASM_MVW(%%d0,%%d1)
 	ASM_MVW(#0x20,VRAM_INC)
 	ASM_LSRB(#4,%%d1)
@@ -608,8 +608,8 @@ void NEOGEO_USER displayCreditP2(void) {
 	ASM_ORIW(#0x0030,%%d1)
 	ASM_MVW(%%d1,VRAM_RW)
 	ASM_ANDIW(#0x000F,%%d0)
-	ASM_ORIW(#0x0030,%%d1)
-	ASM_MVW(%%d1,VRAM_RW)
+	ASM_ORIW(#0x0030,%%d0)
+	ASM_MVW(%%d0,VRAM_RW)
 	: : : "d0", "d1", "memory"
 	ASM_END
 }
