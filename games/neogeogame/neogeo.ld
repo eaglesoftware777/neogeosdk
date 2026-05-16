@@ -35,5 +35,10 @@ SECTIONS
                         out/ng_*0.o(COMMON)
                         out/ng_*0.o(.data)
                         out/ng_*0.o(.data.*)
+                        *(.data)
+                        *(.data.*)
+                        *(.bss)
+                        *(.bss.*)
+                        *(COMMON)
                         } > memory_game_engine_bss
 }
