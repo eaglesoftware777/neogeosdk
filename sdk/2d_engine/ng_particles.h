@@ -73,7 +73,8 @@ void NEOGEO_USER ng_particles_update(void);
 /*
  * Draw all active particles using sprite slots starting at first_slot.
  * Returns the next free sprite slot after the particles.
- * Drops NG_PART_PRI_OPTIONAL particles when sprite_budget_used >= threshold.
+ * sprite_budget_used is the number of sprite slots already occupied before
+ * particle drawing; optional particles drop when it reaches the threshold.
  */
 uint16_t NEOGEO_USER ng_particles_draw(uint16_t first_slot, uint16_t sprite_budget_used);
 

@@ -430,7 +430,7 @@ void NEOGEO_USER demo_stress_run(void)
         }
 
         ng_particles_update();
-        spr_used = ng_particles_draw(STRESS_PART_SLOT, STRESS_PART_SLOT);
+        spr_used = (uint16_t)(ng_particles_draw(STRESS_PART_SLOT, STRESS_PART_SLOT) - STRESS_PART_SLOT);
 
         /* Update HUD */
         stress_draw_hud(ng_particles_count(),
