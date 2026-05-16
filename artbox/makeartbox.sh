@@ -2,7 +2,7 @@
 # GAME defaults to "demo". GAME_ID is read from env (set by Makefile).
 GAME=${1:-demo}
 : "${GAME_ID:=777}"
-export GAME_ID
+export GAME GAME_ID
 
 # Resolve absolute paths before any cd so symlinks land correctly
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"

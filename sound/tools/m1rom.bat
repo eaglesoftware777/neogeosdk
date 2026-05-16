@@ -3,9 +3,10 @@ setlocal EnableDelayedExpansion
 
 for %%i in ("%~dp0..\..") do set SDK_ROOT=%%~fi
 if "%GAME_ID%"=="" set GAME_ID=777
+if "%GAME%"=="" set GAME=demo
 if "%GAME_SOUND%"=="" set GAME_SOUND=%SDK_ROOT%\sound
 set OUT_DIR=%SDK_ROOT%\out
-set ROM_DIR=%SDK_ROOT%\roms\neogeosdk
+set ROM_DIR=%SDK_ROOT%\roms\%GAME%
 set OBJ=%OUT_DIR%\driver.o
 set OBJ_C=%OUT_DIR%\driver_c.o
 set ASM=%OUT_DIR%\driver.gen.asm

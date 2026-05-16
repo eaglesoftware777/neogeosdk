@@ -34,8 +34,9 @@ ROM_SIZE   = 131072          # 128 KB
 NUM_TILES  = ROM_SIZE // TILE_BYTES   # 4096
 
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
-ROMS_DIR    = os.path.join(SCRIPT_DIR, '..', 'roms', 'neogeosdk')
 _GAME_ID    = os.environ.get('GAME_ID', '777')
+_GAME       = os.environ.get('GAME', 'demo')
+ROMS_DIR    = os.path.join(SCRIPT_DIR, '..', 'roms', _GAME)
 GAME_S1     = os.path.join(ROMS_DIR, f'{_GAME_ID}-s1.s1')
 SFIX_ROM    = os.path.join(ROMS_DIR, 'sfix.sfix')
 OUT_S1      = os.path.join(SCRIPT_DIR, f'{_GAME_ID}-s1.s1')   # written here, Makefile copies

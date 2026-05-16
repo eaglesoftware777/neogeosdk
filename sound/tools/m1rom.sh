@@ -4,7 +4,8 @@ set -eu
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 SDK_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)
 OUT_DIR="$SDK_ROOT/out"
-ROM_DIR="$SDK_ROOT/roms/neogeosdk"
+: "${GAME:=demo}"
+ROM_DIR="$SDK_ROOT/roms/$GAME"
 OBJ="$OUT_DIR/driver.o"
 OBJ_C="$OUT_DIR/driver_c.o"
 ASM_C="$OUT_DIR/driver.gen.asm"

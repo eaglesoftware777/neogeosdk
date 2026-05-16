@@ -107,7 +107,8 @@ HASHPATH?=$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
 #   unibios23 unibios23o unibios22 unibios21 unibios20
 #   unibios13 unibios12 unibios12o unibios11 unibios10
 BIOS?=euro
-MAME_COMMON=$(MAME) neogeo -rompath $(REPO_WIN)\roms -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 neogeosdk
+ROM_DIR = roms\$(GAME)
+MAME_COMMON=$(MAME) neogeo -rompath $(REPO_WIN)\roms -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME)
 
 # PLATFORM: mvs (default) or aes
 PLATFORM?=mvs
@@ -182,9 +183,9 @@ $(GAME_ID)-p1.p1: game
 	$(SCAT) out\game0.rom -binary $(SWAP) out\game1.rom -binary
 	$(SCAT) out\game1.rom -binary $(FILL) out\game.rom -binary
 	copy /Y out\game.rom out\$(GAME_ID)-p1.p1
-	if not exist roms\neogeosdk mkdir roms\neogeosdk
-	copy /Y out\$(GAME_ID)-p1.p1 roms\neogeosdk\$(GAME_ID)-p1.p1
-	$(PY) hash_eagle\gen_hash.py
+	if not exist $(ROM_DIR) mkdir $(ROM_DIR)
+	copy /Y out\$(GAME_ID)-p1.p1 $(ROM_DIR)\$(GAME_ID)-p1.p1
+	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) hash_eagle\gen_hash.py
 
 .PHONY: hash
 hash:
@@ -198,9 +199,9 @@ samples:
 
 .PHONY: vrom
 vrom:
-	set GAME_ID=$(GAME_ID)&& call sound\tools\vrom.bat
-	if not exist roms\neogeosdk mkdir roms\neogeosdk
-	copy /Y out\$(GAME_ID)-v1.v1 roms\neogeosdk\$(GAME_ID)-v1.v1
+	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& call sound\tools\vrom.bat
+	if not exist $(ROM_DIR) mkdir $(ROM_DIR)
+	copy /Y out\$(GAME_ID)-v1.v1 $(ROM_DIR)\$(GAME_ID)-v1.v1
 
 .PHONY: fmpatches
 fmpatches:
@@ -224,7 +225,7 @@ ssg:
 
 .PHONY: m1rom
 m1rom: fmpatches fm mml ssgconfig ssg
-	set GAME_ID=$(GAME_ID)&& set GAME_SOUND=$(subst /,\,$(GAME_SOUND))&& set WLAZ80=$(WLAZ80)&& set WLALINK=$(WLALINK)&& set USE_Z80C=$(USE_Z80C)&& set Z80C_SRC=$(Z80C_SRC_WIN)&& call sound\tools\m1rom.bat
+	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& set GAME_SOUND=$(subst /,\,$(GAME_SOUND))&& set WLAZ80=$(WLAZ80)&& set WLALINK=$(WLALINK)&& set USE_Z80C=$(USE_Z80C)&& set Z80C_SRC=$(Z80C_SRC_WIN)&& call sound\tools\m1rom.bat
 
 .PHONY: m1rom-asm
 m1rom-asm:
@@ -252,10 +253,10 @@ sound-all: sound
 sfix:
 	if exist artbox\infix rmdir artbox\infix
 	mklink /J artbox\infix $(REPO_WIN)\games\$(GAME)\artbox\infix
-	cd artbox && set GAME_ID=$(GAME_ID)&& $(PY) romdbfiximport.py && $(PY) fixtiles.py
+	cd artbox && set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) romdbfiximport.py && $(PY) fixtiles.py
 	rmdir artbox\infix
-	if not exist roms\neogeosdk mkdir roms\neogeosdk
-	copy /Y artbox\$(GAME_ID)-s1.s1 roms\neogeosdk\$(GAME_ID)-s1.s1
+	if not exist $(ROM_DIR) mkdir $(ROM_DIR)
+	copy /Y artbox\$(GAME_ID)-s1.s1 $(ROM_DIR)\$(GAME_ID)-s1.s1
 
 .PHONY: srom
 srom: sfix
@@ -289,15 +290,15 @@ clean:
 	if exist dump\*.sym del /Q dump\*.sym
 	if exist dump\*.gdb del /Q dump\*.gdb
 	if exist dump\*.readelf del /Q dump\*.readelf
-	if exist roms\neogeosdk\$(GAME_ID)-p1.p1 del /Q roms\neogeosdk\$(GAME_ID)-p1.p1
+	if exist $(ROM_DIR)\$(GAME_ID)-p1.p1 del /Q $(ROM_DIR)\$(GAME_ID)-p1.p1
 
 .PHONY: sound-clean
 sound-clean:
 	if exist out\$(GAME_ID)-m1.m1 del /Q out\$(GAME_ID)-m1.m1
 	if exist out\$(GAME_ID)-v1.v1 del /Q out\$(GAME_ID)-v1.v1
 	if exist out\driver.gen.asm del /Q out\driver.gen.asm
-	if exist roms\neogeosdk\$(GAME_ID)-m1.m1 del /Q roms\neogeosdk\$(GAME_ID)-m1.m1
-	if exist roms\neogeosdk\$(GAME_ID)-v1.v1 del /Q roms\neogeosdk\$(GAME_ID)-v1.v1
+	if exist $(ROM_DIR)\$(GAME_ID)-m1.m1 del /Q $(ROM_DIR)\$(GAME_ID)-m1.m1
+	if exist $(ROM_DIR)\$(GAME_ID)-v1.v1 del /Q $(ROM_DIR)\$(GAME_ID)-v1.v1
 	if exist sound\samples\out_16el_a\*.wav del /Q sound\samples\out_16el_a\*.wav
 	if exist sound\samples\out_16el_b\*.wav del /Q sound\samples\out_16el_b\*.wav
 	if exist sound\samples\out_a\*.adpcma del /Q sound\samples\out_a\*.adpcma
@@ -311,8 +312,8 @@ sound-clean:
 
 .PHONY: clean-all
 clean-all: clean sound-clean art-clean
-	if exist roms\neogeosdk\$(GAME_ID)-c1.c1 del /Q roms\neogeosdk\$(GAME_ID)-c1.c1
-	if exist roms\neogeosdk\$(GAME_ID)-c2.c2 del /Q roms\neogeosdk\$(GAME_ID)-c2.c2
+	if exist $(ROM_DIR)\$(GAME_ID)-c1.c1 del /Q $(ROM_DIR)\$(GAME_ID)-c1.c1
+	if exist $(ROM_DIR)\$(GAME_ID)-c2.c2 del /Q $(ROM_DIR)\$(GAME_ID)-c2.c2
 
 .PHONY: dump
 dump:
@@ -327,9 +328,11 @@ dump:
 	$(INFO) out\game.rom | more
 	$(INFO) out\game.rom > dump\game.hex
 
+.PHONY: test
 test:
-	$(PY) hash_eagle\gen_hash.py
-	copy /Y out\$(GAME_ID)-p1.p1 roms\neogeosdk\$(GAME_ID)-p1.p1
+	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) hash_eagle\gen_hash.py
+	if not exist $(ROM_DIR) mkdir $(ROM_DIR)
+	copy /Y out\$(GAME_ID)-p1.p1 $(ROM_DIR)\$(GAME_ID)-p1.p1
 	$(MAME_COMMON) -output console -nofilter -waitvsync -window
 
 .PHONY: test-aes
@@ -376,9 +379,11 @@ bios-list:
 	@echo   unibios11        Universe BIOS (Hack, Ver. 1.1)
 	@echo   unibios10        Universe BIOS (Hack, Ver. 1.0)
 
+.PHONY: debug
 debug:
-	$(PY) hash_eagle\gen_hash.py
-	copy /Y out\$(GAME_ID)-p1.p1 roms\neogeosdk\$(GAME_ID)-p1.p1
+	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) hash_eagle\gen_hash.py
+	if not exist $(ROM_DIR) mkdir $(ROM_DIR)
+	copy /Y out\$(GAME_ID)-p1.p1 $(ROM_DIR)\$(GAME_ID)-p1.p1
 	$(MAME_COMMON) -output console -debug -verbose -nofilter -waitvsync -window
 
 .PHONY: debug-aes
@@ -388,8 +393,9 @@ debug-aes:
 .PHONY: mame-trace
 mame-trace: p1
 	if not exist dump mkdir dump
-	$(PY) hash_eagle\gen_hash.py
-	copy /Y out\$(GAME_ID)-p1.p1 roms\neogeosdk\$(GAME_ID)-p1.p1
+	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) hash_eagle\gen_hash.py
+	if not exist $(ROM_DIR) mkdir $(ROM_DIR)
+	copy /Y out\$(GAME_ID)-p1.p1 $(ROM_DIR)\$(GAME_ID)-p1.p1
 	$(NM) -n out\game > dump\game.sym
 	$(OBJDUMP) -Dht out\game > dump\game.debug.dump
 	$(MAME_COMMON) -verbose -debug -debugscript dump\mame_trace.mds
