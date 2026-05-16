@@ -6,25 +6,14 @@
 
 # Force cmd.exe as the shell so built-in commands (mklink, if, del, copy, rmdir) work correctly.
 # Without this, GNU make may try to run them directly via CreateProcess and fail.
-ifeq ($(strip $(COMSPEC)),)
-COMSPEC := cmd.exe
-endif
 SHELL = $(COMSPEC)
 .SHELLFLAGS = /c
 
-# Game selection from game.cfg (override with GAME=...).
+# Game selection — default is demo
 # Usage: make -f MakefileWin32.mak GAME=helloworld p1
 #        make -f MakefileWin32.mak GAME=tutorial p1
 #        make -f MakefileWin32.mak GAME=neogeogame p1
-GAME_CFG_FILE ?= game.cfg
--include $(GAME_CFG_FILE)
-ifeq ($(strip $(GAME)),)
-  ifneq ($(strip $(CURRENT_GAME)),)
-    GAME := $(strip $(CURRENT_GAME))
-  else
-    GAME := demo
-  endif
-endif
+GAME ?= demo
 -include games/$(GAME)/game.mk
 
 # Per-game sound folder — defined early so FM_MMLS wildcards resolve correctly
@@ -67,7 +56,7 @@ endif
 REPO_WIN=$(subst /,\,$(CURDIR))
 
 CC=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-gcc.exe
-CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox -Wa,-march=68000,-mcpu=68000,-W,--warn
+CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Wa,-march=68000,-mcpu=68000,-W,--warn
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
 LD=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-ld.exe
 LDFLAGS=  -nostdlib
@@ -96,7 +85,7 @@ SCAT=$(REPO_WIN)\win\srec_cat.exe
 INFO=$(REPO_WIN)\win\xxd.exe -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
-NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_bg0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o out\ng_depthfx0.o out\ng_render_queue0.o out\ng_fixed0.o out\ng_camera0.o out\ng_palette_fx0.o out\ng_particles0.o out\ng_feedback0.o out\ng_debug0.o out\ng_joystick0.o out\ng_demo_advanced0.o
+NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_bg0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o out\ng_depthfx0.o out\ng_render_queue0.o out\ng_fixed0.o out\ng_camera0.o out\ng_palette_fx0.o out\ng_particles0.o out\ng_feedback0.o out\ng_debug0.o out\ng_demo_advanced0.o
 GAME_SCENE_OBJS := $(addprefix out/,$(addsuffix 0.o,$(GAME_SCENES)))
 NG_FIX_SDK_OBJ0=out\ng_fix_sdk0.o
 
@@ -108,8 +97,7 @@ else
 STRIP_SECTS:=-R .comment -R .text -R .data -R .bss
 endif
 
-# Intentionally pinned to game-first order; do not inherit ambient HASHPATH env.
-HASHPATH:=$(REPO_WIN)\hash_eagle\$(GAME);$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
+HASHPATH?=$(REPO_WIN)\hash_eagle\$(GAME);$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
 # Default BIOS for test/debug. Override: make -f MakefileWin32.mak test BIOS=euro
 # Supported values (make -f MakefileWin32.mak bios-list for full table):
 #   us  us-e  us-v2  us-u4  us-u3
@@ -120,9 +108,7 @@ HASHPATH:=$(REPO_WIN)\hash_eagle\$(GAME);$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
 #   unibios13 unibios12 unibios12o unibios11 unibios10
 BIOS?=euro
 ROM_DIR = roms\$(GAME)
-DUMP_DIR = dump\$(GAME)
 MAME_COMMON=$(MAME) neogeo -rompath $(REPO_WIN)\roms -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME)
-LOG_CTX=@echo [neogeosdk] target=$@ game=$(GAME) game_id=$(GAME_ID) platform=$(PLATFORM) rom_dir=$(ROM_DIR) hashpath=$(HASHPATH)
 
 # PLATFORM: mvs (default) or aes
 PLATFORM?=mvs
@@ -136,13 +122,8 @@ endif
 
 .DEFAULT_GOAL := p1
 
-.PHONY: game-check
-game-check:
-	@set GAME=$(GAME)&& $(PY) tools\check_game_cfg.py --cfg $(GAME_CFG_FILE)
-
 .PHONY: all
-all: game-check art sfix sound p1
-	$(LOG_CTX)
+all: art sfix sound p1
 
 .PHONY: aes
 aes:
@@ -153,11 +134,9 @@ mvs:
 	$(MAKE) -f MakefileWin32.mak PLATFORM=mvs GAME=$(GAME) p1
 
 .PHONY: p1
-p1: game-check game $(GAME_ID)-p1.p1
-	$(LOG_CTX)
+p1: game $(GAME_ID)-p1.p1
 
-game: game-check
-	$(LOG_CTX)
+game:
 	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS) $(GAME_NEOGEO_C) -o out\neogeo0.o
 	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS) games\$(GAME)\user.c -o out\user0.o
 	$(CC) $(CFLAGS) games\$(GAME)\main.c -o out\main0.o
@@ -185,11 +164,10 @@ game: game-check
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_fixed.c -o out\ng_fixed0.o
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_camera.c -o out\ng_camera0.o
 	$(CC) $(CFLAGS) sdk\2d_engine\ng_palette_fx.c -o out\ng_palette_fx0.o
-		$(CC) $(CFLAGS) sdk\2d_engine\ng_particles.c -o out\ng_particles0.o
-		$(CC) $(CFLAGS) sdk\2d_engine\ng_feedback.c -o out\ng_feedback0.o
-		$(CC) $(CFLAGS) sdk\2d_engine\ng_debug.c -o out\ng_debug0.o
-		$(CC) $(CFLAGS) sdk\2d_engine\ng_joystick.c -o out\ng_joystick0.o
-		$(CC) $(CFLAGS) sdk\2d_engine\ng_demo_advanced.c -o out\ng_demo_advanced0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_particles.c -o out\ng_particles0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_feedback.c -o out\ng_feedback0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_debug.c -o out\ng_debug0.o
+	$(CC) $(CFLAGS) sdk\2d_engine\ng_demo_advanced.c -o out\ng_demo_advanced0.o
 	$(if $(GAME_SCENES),for %%f in ($(GAME_SCENES)) do $(CC) $(CFLAGS) games\$(GAME)\scenes\%%f.c -o out\%%f0.o)
 	$(CC) $(CFLAGS) games\$(GAME)\eyecatcher.c -o out\eyecatcher0.o
 	$(OBJCP) $(STRIP_SECTS) out\neogeo0.o out\neogeo.o
@@ -211,7 +189,7 @@ $(GAME_ID)-p1.p1: game
 
 .PHONY: hash
 hash:
-	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) hash_eagle\gen_hash.py
+	$(PY) hash_eagle\gen_hash.py
 
 .PHONY: samples
 samples:
@@ -266,25 +244,19 @@ compare-driver: m1rom-asm m1rom-c
 	$(PY) sound\tools\compare_m1.py out\compare\$(GAME_ID)-m1-asm.m1 out\compare\$(GAME_ID)-m1-c.m1
 
 .PHONY: sound
-sound: game-check samples vrom fmpatches fm mml ssgconfig ssg m1rom
-	$(LOG_CTX)
+sound: samples vrom fmpatches fm mml ssgconfig ssg m1rom
 
 .PHONY: sound-all
 sound-all: sound
 
 .PHONY: sfix
-sfix: game-check
-	$(LOG_CTX)
-	if not exist games\$(GAME)\artbox mkdir games\$(GAME)\artbox
-	cd games\$(GAME)\artbox && set ARTBOX_DATA_DIR=$(REPO_WIN)\games\$(GAME)\artbox&& set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) $(REPO_WIN)\artbox\romdbfiximport.py && $(PY) $(REPO_WIN)\artbox\fixtiles.py && call $(REPO_WIN)\artbox\romfx.bat
-	$(PY) tools\verify_sfix_output.py --root "$(CURDIR)" --game "$(GAME)" --game-id "$(GAME_ID)"
+sfix:
+	if exist artbox\infix rmdir artbox\infix
+	mklink /J artbox\infix $(REPO_WIN)\games\$(GAME)\artbox\infix
+	cd artbox && set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) romdbfiximport.py && $(PY) fixtiles.py
+	rmdir artbox\infix
 	if not exist $(ROM_DIR) mkdir $(ROM_DIR)
-	if not exist games\$(GAME)\artbox\$(GAME_ID)-s1.s1 (echo ERROR: missing games\$(GAME)\artbox\$(GAME_ID)-s1.s1 & exit /b 1)
-	if not exist games\$(GAME)\artbox\$(GAME_ID)-c1.c1 (echo ERROR: missing games\$(GAME)\artbox\$(GAME_ID)-c1.c1 & exit /b 1)
-	if not exist games\$(GAME)\artbox\$(GAME_ID)-c2.c2 (echo ERROR: missing games\$(GAME)\artbox\$(GAME_ID)-c2.c2 & exit /b 1)
-	copy /Y games\$(GAME)\artbox\$(GAME_ID)-s1.s1 $(ROM_DIR)\$(GAME_ID)-s1.s1
-	copy /Y games\$(GAME)\artbox\$(GAME_ID)-c1.c1 $(ROM_DIR)\$(GAME_ID)-c1.c1
-	copy /Y games\$(GAME)\artbox\$(GAME_ID)-c2.c2 $(ROM_DIR)\$(GAME_ID)-c2.c2
+	copy /Y artbox\$(GAME_ID)-s1.s1 $(ROM_DIR)\$(GAME_ID)-s1.s1
 
 .PHONY: srom
 srom: sfix
@@ -292,49 +264,14 @@ srom: sfix
 .PHONY: art-clean
 art-clean:
 	call artbox\makeclean.bat
-	if exist artbox\neorom.db del /Q artbox\neorom.db
-	if exist artbox\map del /Q artbox\map
-	if exist artbox\output1.txt del /Q artbox\output1.txt
-	if exist artbox\out.srt del /Q artbox\out.srt
-	if exist artbox\screens.c del /Q artbox\screens.c
-	if exist artbox\sprite_meta.h del /Q artbox\sprite_meta.h
-	if exist artbox\neo.pal del /Q artbox\neo.pal
-	if exist artbox\std.pal del /Q artbox\std.pal
-	if exist artbox\neopal.bin del /Q artbox\neopal.bin
-	if exist artbox\1p.c1 del /Q artbox\1p.c1
-	if exist artbox\2p.c2 del /Q artbox\2p.c2
-	if exist artbox\1c.c1 del /Q artbox\1c.c1
-	if exist artbox\2c.c2 del /Q artbox\2c.c2
-	if exist artbox\1c.s1 del /Q artbox\1c.s1
-	if exist artbox\$(GAME_ID)-s1.s1 del /Q artbox\$(GAME_ID)-s1.s1
-	if exist artbox\$(GAME_ID)-c1.c1 del /Q artbox\$(GAME_ID)-c1.c1
-	if exist artbox\$(GAME_ID)-c2.c2 del /Q artbox\$(GAME_ID)-c2.c2
-	if exist artbox\__pycache__ rmdir /S /Q artbox\__pycache__
 
 .PHONY: art
-art: game-check
-	$(LOG_CTX)
+art:
 	set GAME_ID=$(GAME_ID)&& call artbox\makeartbox.bat $(GAME)
-	$(PY) tools\verify_artbox_palettes.py --root "$(CURDIR)" --game "$(GAME)"
-	if exist artbox\1c.c1 del /Q artbox\1c.c1
-	if exist artbox\2c.c2 del /Q artbox\2c.c2
-	if exist artbox\$(GAME_ID)-s1.s1 del /Q artbox\$(GAME_ID)-s1.s1
-	if exist artbox\assets_manifest.json del /Q artbox\assets_manifest.json
-	if exist artbox\map del /Q artbox\map
-	if exist artbox\neo.pal del /Q artbox\neo.pal
-	if exist artbox\std.pal del /Q artbox\std.pal
-	if exist artbox\neopal.bin del /Q artbox\neopal.bin
-	if exist artbox\neorom.db del /Q artbox\neorom.db
-	if exist artbox\out.srt del /Q artbox\out.srt
-	if exist artbox\output1.txt del /Q artbox\output1.txt
-	if exist artbox\screens.c del /Q artbox\screens.c
-	if exist artbox\sprite_meta.h del /Q artbox\sprite_meta.h
-	if exist artbox\__pycache__ rmdir /S /Q artbox\__pycache__
 
 .PHONY: dist
-dist: game-check all
-	$(LOG_CTX)
-	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) hash_eagle\gen_hash.py --dist
+dist: p1
+	$(PY) hash_eagle\gen_hash.py --dist
 
 .PHONY: clean
 clean:
@@ -347,14 +284,13 @@ clean:
 	if exist out\game.map del /Q out\game.map
 	if exist out\*.o del /Q out\*.o
 	if exist out\*.s del /Q out\*.s
-	if exist $(DUMP_DIR)\*.dump del /Q $(DUMP_DIR)\*.dump
-	if exist $(DUMP_DIR)\*.hex del /Q $(DUMP_DIR)\*.hex
-	if exist $(DUMP_DIR)\*.txt del /Q $(DUMP_DIR)\*.txt
-	if exist $(DUMP_DIR)\*.sym del /Q $(DUMP_DIR)\*.sym
-	if exist $(DUMP_DIR)\*.gdb del /Q $(DUMP_DIR)\*.gdb
-	if exist $(DUMP_DIR)\*.readelf del /Q $(DUMP_DIR)\*.readelf
+	if exist dump\*.dump del /Q dump\*.dump
+	if exist dump\*.hex del /Q dump\*.hex
+	if exist dump\*.txt del /Q dump\*.txt
+	if exist dump\*.sym del /Q dump\*.sym
+	if exist dump\*.gdb del /Q dump\*.gdb
+	if exist dump\*.readelf del /Q dump\*.readelf
 	if exist $(ROM_DIR)\$(GAME_ID)-p1.p1 del /Q $(ROM_DIR)\$(GAME_ID)-p1.p1
-	if exist hash_eagle\$(GAME)\neogeo.xml del /Q hash_eagle\$(GAME)\neogeo.xml
 
 .PHONY: sound-clean
 sound-clean:
@@ -363,12 +299,10 @@ sound-clean:
 	if exist out\driver.gen.asm del /Q out\driver.gen.asm
 	if exist $(ROM_DIR)\$(GAME_ID)-m1.m1 del /Q $(ROM_DIR)\$(GAME_ID)-m1.m1
 	if exist $(ROM_DIR)\$(GAME_ID)-v1.v1 del /Q $(ROM_DIR)\$(GAME_ID)-v1.v1
-	if exist $(subst /,\,$(GAME_SOUND))\samples\out_16el_a\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_16el_a\*.wav
-	if exist $(subst /,\,$(GAME_SOUND))\samples\out_16el_b\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_16el_b\*.wav
-	if exist $(subst /,\,$(GAME_SOUND))\samples\out_sr_a\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_sr_a\*.wav
-	if exist $(subst /,\,$(GAME_SOUND))\samples\out_sr_b\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_sr_b\*.wav
-	if exist $(subst /,\,$(GAME_SOUND))\samples\out_a\*.adpcma del /Q $(subst /,\,$(GAME_SOUND))\samples\out_a\*.adpcma
-	if exist $(subst /,\,$(GAME_SOUND))\samples\out_b\*.adpcmb del /Q $(subst /,\,$(GAME_SOUND))\samples\out_b\*.adpcmb
+	if exist sound\samples\out_16el_a\*.wav del /Q sound\samples\out_16el_a\*.wav
+	if exist sound\samples\out_16el_b\*.wav del /Q sound\samples\out_16el_b\*.wav
+	if exist sound\samples\out_a\*.adpcma del /Q sound\samples\out_a\*.adpcma
+	if exist sound\samples\out_b\*.adpcmb del /Q sound\samples\out_b\*.adpcmb
 	if exist sound\driver\fm_data.inc del /Q sound\driver\fm_data.inc
 	if exist sound\driver\music_data.inc del /Q sound\driver\music_data.inc
 	if exist sound\driver\fm_patch_table.inc del /Q sound\driver\fm_patch_table.inc
@@ -378,46 +312,28 @@ sound-clean:
 
 .PHONY: clean-all
 clean-all: clean sound-clean art-clean
-	if exist $(ROM_DIR)\$(GAME_ID)-s1.s1 del /Q $(ROM_DIR)\$(GAME_ID)-s1.s1
 	if exist $(ROM_DIR)\$(GAME_ID)-c1.c1 del /Q $(ROM_DIR)\$(GAME_ID)-c1.c1
 	if exist $(ROM_DIR)\$(GAME_ID)-c2.c2 del /Q $(ROM_DIR)\$(GAME_ID)-c2.c2
-	if exist main.c del /Q main.c
-	if exist user.c del /Q user.c
-	if exist eyecatcher.c del /Q eyecatcher.c
-	if exist demo rmdir /S /Q demo
 
 .PHONY: dump
 dump:
-	if not exist $(DUMP_DIR) mkdir $(DUMP_DIR)
 	$(OBJDUMP) -Dht out\neogeo.o | more
 	$(OBJDUMP) -Dht out\user.o | more
 	$(OBJDUMP) -Dht out\main.o | more
 	$(OBJDUMP) -Dht out\game | more
-	$(OBJDUMP) -Dht out\neogeo.o > $(DUMP_DIR)\neogeo.dump
-	$(OBJDUMP) -Dht out\user.o > $(DUMP_DIR)\user.dump
-	$(OBJDUMP) -Dht out\main.o > $(DUMP_DIR)\main.dump
-	$(OBJDUMP) -Dht out\game > $(DUMP_DIR)\game.dump
+	$(OBJDUMP) -Dht out\neogeo.o > dump\neogeo.dump
+	$(OBJDUMP) -Dht out\user.o > dump\user.dump
+	$(OBJDUMP) -Dht out\main.o > dump\main.dump
+	$(OBJDUMP) -Dht out\game > dump\game.dump
 	$(INFO) out\game.rom | more
-	$(INFO) out\game.rom > $(DUMP_DIR)\game.hex
+	$(INFO) out\game.rom > dump\game.hex
 
 .PHONY: test
-test: game-check test-precheck hash
-	$(LOG_CTX)
+test:
+	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) hash_eagle\gen_hash.py
+	if not exist $(ROM_DIR) mkdir $(ROM_DIR)
+	copy /Y out\$(GAME_ID)-p1.p1 $(ROM_DIR)\$(GAME_ID)-p1.p1
 	$(MAME_COMMON) -output console -nofilter -waitvsync -window
-
-.PHONY: test-precheck
-test-precheck: game-check
-	$(LOG_CTX)
-	@if not exist $(ROM_DIR)\$(GAME_ID)-p1.p1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-p1.p1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
-	@if not exist $(ROM_DIR)\$(GAME_ID)-m1.m1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-m1.m1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
-	@if not exist $(ROM_DIR)\$(GAME_ID)-s1.s1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-s1.s1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
-	@if not exist $(ROM_DIR)\$(GAME_ID)-v1.v1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-v1.v1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
-	@if not exist $(ROM_DIR)\$(GAME_ID)-c1.c1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-c1.c1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
-	@if not exist $(ROM_DIR)\$(GAME_ID)-c2.c2 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-c2.c2. Build first with: make -f MakefileWin32.mak all & exit /b 1)
-
-.PHONY: test-build
-test-build: all
-	$(MAKE) -f MakefileWin32.mak GAME=$(GAME) test
 
 .PHONY: test-aes
 test-aes:
@@ -463,40 +379,11 @@ bios-list:
 	@echo   unibios11        Universe BIOS (Hack, Ver. 1.1)
 	@echo   unibios10        Universe BIOS (Hack, Ver. 1.0)
 
-.PHONY: games-list
-games-list:
-	@echo Available GAME values:
-	@for /D %%d in (games\*) do @echo   %%~nxd
-
-.PHONY: menu
-menu:
-	@echo NeoGeoSDK Make Menu (Win32)
-	@echo.
-	@echo Core build:
-	@echo   make -f MakefileWin32.mak all
-	@echo   make -f MakefileWin32.mak GAME^=demo all
-	@echo   make -f MakefileWin32.mak p1 ^| sound ^| sfix ^| art
-	@echo.
-	@echo Run/Test:
-	@echo   make -f MakefileWin32.mak test
-	@echo   make -f MakefileWin32.mak test-build
-	@echo   make -f MakefileWin32.mak debug
-	@echo   make -f MakefileWin32.mak mame-trace
-	@echo.
-	@echo Packaging:
-	@echo   make -f MakefileWin32.mak dist
-	@echo.
-	@echo Utilities:
-	@echo   make -f MakefileWin32.mak games-list
-	@echo   make -f MakefileWin32.mak bios-list
-	@echo   make -f MakefileWin32.mak clean ^| clean-all
-
-.PHONY: help
-help: menu
-
 .PHONY: debug
-debug: all
-	$(LOG_CTX)
+debug:
+	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) hash_eagle\gen_hash.py
+	if not exist $(ROM_DIR) mkdir $(ROM_DIR)
+	copy /Y out\$(GAME_ID)-p1.p1 $(ROM_DIR)\$(GAME_ID)-p1.p1
 	$(MAME_COMMON) -output console -debug -verbose -nofilter -waitvsync -window
 
 .PHONY: debug-aes
@@ -504,13 +391,15 @@ debug-aes:
 	$(MAKE) -f MakefileWin32.mak PLATFORM=aes GAME=$(GAME) debug
 
 .PHONY: mame-trace
-mame-trace: all
-	$(LOG_CTX)
-	if not exist $(DUMP_DIR) mkdir $(DUMP_DIR)
-	$(NM) -n out\game > $(DUMP_DIR)\game.sym
-	$(OBJDUMP) -Dht out\game > $(DUMP_DIR)\game.debug.dump
-	$(MAME_COMMON) -verbose -debug -debugscript $(DUMP_DIR)\mame_trace.mds
-	@echo Trace: $(DUMP_DIR)\m68k_trace.txt  ^|  Symbols: $(DUMP_DIR)\game.sym  ^|  Disasm: $(DUMP_DIR)\game.debug.dump
+mame-trace: p1
+	if not exist dump mkdir dump
+	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) hash_eagle\gen_hash.py
+	if not exist $(ROM_DIR) mkdir $(ROM_DIR)
+	copy /Y out\$(GAME_ID)-p1.p1 $(ROM_DIR)\$(GAME_ID)-p1.p1
+	$(NM) -n out\game > dump\game.sym
+	$(OBJDUMP) -Dht out\game > dump\game.debug.dump
+	$(MAME_COMMON) -verbose -debug -debugscript dump\mame_trace.mds
+	@echo Trace: dump\m68k_trace.txt  ^|  Symbols: dump\game.sym  ^|  Disasm: dump\game.debug.dump
 
 .PHONY: debug-build
 debug-build:
@@ -519,33 +408,33 @@ debug-build:
 
 .PHONY: debug-artifacts
 debug-artifacts: out\game
-	if not exist $(DUMP_DIR) mkdir $(DUMP_DIR)
-	if exist $(DUMP_DIR)\game.size.txt del /Q $(DUMP_DIR)\game.size.txt
-	if exist $(DUMP_DIR)\game.sym del /Q $(DUMP_DIR)\game.sym
-	if exist $(DUMP_DIR)\game.readelf del /Q $(DUMP_DIR)\game.readelf
-	if exist $(DUMP_DIR)\game.debug.dump del /Q $(DUMP_DIR)\game.debug.dump
-	if exist $(DUMP_DIR)\game.map del /Q $(DUMP_DIR)\game.map
-	$(SIZE) out\game > $(DUMP_DIR)\game.size.txt
-	$(NM) -n out\game > $(DUMP_DIR)\game.sym
-	$(READELF) -a out\game > $(DUMP_DIR)\game.readelf
-	$(OBJDUMP) -DhtS out\game > $(DUMP_DIR)\game.debug.dump
-	if exist out\game.map copy /Y out\game.map $(DUMP_DIR)\game.map
+	if not exist dump mkdir dump
+	if exist dump\game.size.txt del /Q dump\game.size.txt
+	if exist dump\game.sym del /Q dump\game.sym
+	if exist dump\game.readelf del /Q dump\game.readelf
+	if exist dump\game.debug.dump del /Q dump\game.debug.dump
+	if exist dump\game.map del /Q dump\game.map
+	$(SIZE) out\game > dump\game.size.txt
+	$(NM) -n out\game > dump\game.sym
+	$(READELF) -a out\game > dump\game.readelf
+	$(OBJDUMP) -DhtS out\game > dump\game.debug.dump
+	if exist out\game.map copy /Y out\game.map dump\game.map
 
 .PHONY: gdb-script
 gdb-script:
-	if not exist $(DUMP_DIR) mkdir $(DUMP_DIR)
-	@echo set pagination off> $(DUMP_DIR)\gdb_trace.gdb
-	@echo set confirm off>> $(DUMP_DIR)\gdb_trace.gdb
-	@echo file out/game>> $(DUMP_DIR)\gdb_trace.gdb
-	@echo info files>> $(DUMP_DIR)\gdb_trace.gdb
-	@echo info functions>> $(DUMP_DIR)\gdb_trace.gdb
-	@echo info variables>> $(DUMP_DIR)\gdb_trace.gdb
-	@echo maintenance info sections>> $(DUMP_DIR)\gdb_trace.gdb
-	@echo quit>> $(DUMP_DIR)\gdb_trace.gdb
+	if not exist dump mkdir dump
+	@echo set pagination off> dump\gdb_trace.gdb
+	@echo set confirm off>> dump\gdb_trace.gdb
+	@echo file out/game>> dump\gdb_trace.gdb
+	@echo info files>> dump\gdb_trace.gdb
+	@echo info functions>> dump\gdb_trace.gdb
+	@echo info variables>> dump\gdb_trace.gdb
+	@echo maintenance info sections>> dump\gdb_trace.gdb
+	@echo quit>> dump\gdb_trace.gdb
 
 .PHONY: gdb-trace
 gdb-trace: debug-build gdb-script
-	$(GDB) --version > NUL 2> $(DUMP_DIR)\gdb_trace.err && $(GDB) -batch -x $(DUMP_DIR)\gdb_trace.gdb > $(DUMP_DIR)\gdb_trace.txt 2>> $(DUMP_DIR)\gdb_trace.err || echo GDB unavailable: $(GDB)> $(DUMP_DIR)\gdb_trace.txt
+	$(GDB) --version > NUL 2> dump\gdb_trace.err && $(GDB) -batch -x dump\gdb_trace.gdb > dump\gdb_trace.txt 2>> dump\gdb_trace.err || echo GDB unavailable: $(GDB)> dump\gdb_trace.txt
 
 .PHONY: gdb
 gdb: debug-build

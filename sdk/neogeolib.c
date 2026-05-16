@@ -341,7 +341,7 @@ void NEOGEO_USER clearSprs() {
 void NEOGEO_USER clearFix() {
 	ASM_START
 	ASM_JSR(SYS_FIX_CLEAR)
-	//ASM_BSETB(#0, REG_BRDFIX)  /* SYS_FIX_CLEAR resets BRDFIX to 0; restore game S ROM */
+	ASM_BSETB(#0, REG_BRDFIX)  /* SYS_FIX_CLEAR resets BRDFIX to 0; restore game S ROM */
 	ASM_MVL(#1280-1, %%d7)
 	ASM_MVW(#FIXMAP, VRAM_ADDR)
 	ASM_MVW(#0xFF, %%d0)
