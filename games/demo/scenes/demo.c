@@ -27,6 +27,7 @@
 #include "sdk/2d_engine/ng_particles.h"
 #include "sdk/2d_engine/ng_camera.h"
 #include "sdk/2d_engine/ng_feedback.h"
+#include "sdk/2d_engine/ng_sprite_pool.h"
 #include "sprite_meta.h"
 #include <stdint.h>
 
@@ -122,7 +123,7 @@ void NEOGEO_USER demo_clear_all_sprites(void)
 {
     uint16_t s;
     clearSprs();
-    for (s = 0; s < 384u; s++) {
+    for (s = 0; s < NG_SPR_TOTAL; s++) {
         vram_SCB234((uint16_t)(SCB3_ADDR + s), 0u);
     }
 }
