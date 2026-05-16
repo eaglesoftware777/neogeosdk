@@ -281,8 +281,6 @@ void NEOGEO_USER ng_camera_apply(NGCamera *cam,
 
     if (!cam) return;
 
-    ng_camera_update(cam, target_x, target_y, target_vx);
-
     level = level_state();
     if (level) {
         ng_camera_set_bounds(cam,
@@ -291,6 +289,8 @@ void NEOGEO_USER ng_camera_apply(NGCamera *cam,
                              level->world_right,
                              level->world_bottom);
     }
+
+    ng_camera_update(cam, target_x, target_y, target_vx);
 
     ng_level_set_scroll(cam->x, cam->y);
 }

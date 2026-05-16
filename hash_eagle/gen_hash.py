@@ -5,8 +5,16 @@
 #https://github.com/eaglesoftware777/neogeosdk
 #######
 """
-Regenerates hash_eagle/neogeo.xml from the current ROM files in roms/<GAME>/.
-Must be run before launching MAME whenever any ROM is rebuilt.
+Regenerates hash_eagle/<GAME>/neogeo.xml from the current ROM files in
+roms/<GAME>/.  Must be run before launching MAME whenever any ROM is rebuilt.
+
+Each game gets its own subdirectory so multiple builds can coexist on disk:
+  hash_eagle/demo/neogeo.xml
+  hash_eagle/helloworld/neogeo.xml
+  ...
+
+MAME resolves the correct XML via -hashpath which is set to
+hash_eagle/<GAME>:hash_eagle:hash (game-specific dir first).
 
 Usage:
   python3 hash_eagle/gen_hash.py          # update XML only
@@ -24,8 +32,11 @@ REPO_ROOT   = os.path.dirname(SCRIPT_DIR)
 GAME    = os.environ.get("GAME",    "demo")
 GAME_ID = os.environ.get("GAME_ID", "777")
 
-ROM_DIR   = os.path.join(REPO_ROOT, "roms", GAME)
-OUT_XML   = os.path.join(SCRIPT_DIR, "neogeo.xml")
+ROM_DIR    = os.path.join(REPO_ROOT, "roms", GAME)
+# Per-game hash directory: hash_eagle/<GAME>/neogeo.xml
+HASH_GAME_DIR = os.path.join(SCRIPT_DIR, GAME)
+OUT_XML       = os.path.join(HASH_GAME_DIR, "neogeo.xml")
+
 ROM_NAMES = [
     f"{GAME_ID}-p1.p1",
     f"{GAME_ID}-m1.m1",
@@ -50,6 +61,8 @@ def area_size(name):
     return os.path.getsize(path) if os.path.exists(path) else 0
 
 def gen_xml():
+    os.makedirs(HASH_GAME_DIR, exist_ok=True)
+
     p1_sz, p1_crc, p1_sha = file_info(f"{GAME_ID}-p1.p1")
     m1_sz, m1_crc, m1_sha = file_info(f"{GAME_ID}-m1.m1")
     s1_sz, s1_crc, s1_sha = file_info(f"{GAME_ID}-s1.s1")
@@ -111,8 +124,11 @@ def gen_xml():
 def build_dist():
     dist_dir  = os.path.join(REPO_ROOT, "dist")
     roms_dir  = os.path.join(dist_dir, "roms")
-    hash_dir  = os.path.join(dist_dir, "hash_eagle")
+    hash_root = os.path.join(dist_dir, "hash_eagle")
+    # Per-game hash directory in dist mirrors the hash_eagle layout
+    hash_dir  = os.path.join(dist_dir, "hash_eagle", GAME)
     os.makedirs(roms_dir, exist_ok=True)
+    os.makedirs(hash_root, exist_ok=True)
     os.makedirs(hash_dir, exist_ok=True)
 
     zip_path = os.path.join(roms_dir, f"{GAME}.zip")
@@ -126,11 +142,29 @@ def build_dist():
     print(f"Created {zip_path}")
 
     shutil.copy2(OUT_XML, os.path.join(hash_dir, "neogeo.xml"))
+    legacy_hash = os.path.join(hash_root, "neogeo.xml")
+    if os.path.exists(legacy_hash):
+        os.remove(legacy_hash)
+
+    # Remove legacy single-game launchers from older dist layouts.
+    for legacy in (
+        "run_neogeosdk.bat",
+        "run_neogeosdk_debug.bat",
+        "run_neogeosdk.sh",
+        "run_neogeosdk_debug.sh",
+    ):
+        legacy_path = os.path.join(dist_dir, legacy)
+        if os.path.exists(legacy_path):
+            os.remove(legacy_path)
 
     _write_dist_bat(dist_dir, debug=False)
     _write_dist_bat(dist_dir, debug=True)
     _write_dist_sh(dist_dir, debug=False)
     _write_dist_sh(dist_dir, debug=True)
+    _write_multi_game_bat(dist_dir, debug=False)
+    _write_multi_game_bat(dist_dir, debug=True)
+    _write_multi_game_sh(dist_dir, debug=False)
+    _write_multi_game_sh(dist_dir, debug=True)
     print(f"Dist ready: {dist_dir}")
 
 def _write_dist_bat(dist_dir, debug):
@@ -143,7 +177,7 @@ REM NeoGeo SDK - {'Debug ' if debug else ''}Release Launcher ({GAME})
 REM Place neogeo.zip (BIOS) inside the roms\\ folder before running.
 mame neogeo -cart1 {GAME} ^
     -rompath "%~dp0roms" ^
-    -hashpath "%~dp0hash_eagle;%~dp0hash" ^
+    -hashpath "%~dp0hash_eagle\\{GAME};%~dp0hash_eagle;%~dp0hash" ^
     -bios unibios22 ^
     -window ^
     -console ^
@@ -166,7 +200,69 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 exec mame neogeo \\
     -cart1 {GAME} \\
     -rompath "$SCRIPT_DIR/roms" \\
-    -hashpath "$SCRIPT_DIR/hash_eagle:$SCRIPT_DIR/hash" \\
+    -hashpath "$SCRIPT_DIR/hash_eagle/{GAME}:$SCRIPT_DIR/hash_eagle:$SCRIPT_DIR/hash" \\
+    -bios unibios22 \\
+    -window \\
+    -console \\
+    -verbose{extra}
+"""
+    path = os.path.join(dist_dir, name)
+    with open(path, "w", newline="\n") as f:
+        f.write(content)
+    os.chmod(path, 0o755)
+    print(f"Written {path}")
+
+def _write_multi_game_bat(dist_dir, debug):
+    name = "run_game_debug.bat" if debug else "run_game.bat"
+    debug_flags = " ^\n    -debug" if debug else ""
+    content = f"""\
+@echo off
+setlocal
+if "%~1"=="" (
+    echo Usage: %~nx0 ^<game^>
+    echo Example: %~nx0 demo
+    exit /b 1
+)
+set GAME=%~1
+if not exist "%~dp0hash_eagle\\%GAME%\\neogeo.xml" (
+    echo ERROR: missing "%~dp0hash_eagle\\%GAME%\\neogeo.xml"
+    exit /b 1
+)
+mame neogeo -cart1 %GAME% ^
+    -rompath "%~dp0roms" ^
+    -hashpath "%~dp0hash_eagle\\%GAME%;%~dp0hash_eagle;%~dp0hash" ^
+    -bios unibios22 ^
+    -window ^
+    -console ^
+    -verbose{debug_flags}
+endlocal
+"""
+    path = os.path.join(dist_dir, name)
+    with open(path, "w", newline="\r\n") as f:
+        f.write(content)
+    print(f"Written {path}")
+
+def _write_multi_game_sh(dist_dir, debug):
+    name = "run_game_debug.sh" if debug else "run_game.sh"
+    extra = " \\\n    -debug" if debug else ""
+    content = f"""\
+#!/bin/bash
+set -e
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+GAME="${{1:-}}"
+if [ -z "$GAME" ]; then
+    echo "Usage: $0 <game>"
+    echo "Example: $0 demo"
+    exit 1
+fi
+if [ ! -f "$SCRIPT_DIR/hash_eagle/$GAME/neogeo.xml" ]; then
+    echo "ERROR: missing $SCRIPT_DIR/hash_eagle/$GAME/neogeo.xml"
+    exit 1
+fi
+exec mame neogeo \\
+    -cart1 "$GAME" \\
+    -rompath "$SCRIPT_DIR/roms" \\
+    -hashpath "$SCRIPT_DIR/hash_eagle/$GAME:$SCRIPT_DIR/hash_eagle:$SCRIPT_DIR/hash" \\
     -bios unibios22 \\
     -window \\
     -console \\

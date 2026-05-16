@@ -23,8 +23,9 @@ def adapt_array(arr):
     out.seek(0)
     return sqlite3.Binary(out.read())
 
-INFIX_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'infix')
-DB_PATH   = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'neorom.db')
+DATA_DIR  = os.path.abspath(os.environ.get("ARTBOX_DATA_DIR", os.path.dirname(os.path.abspath(__file__))))
+INFIX_DIR = os.path.join(DATA_DIR, 'infix')
+DB_PATH   = os.path.join(DATA_DIR, 'neorom.db')
 
 # Collect all numeric PNG files, then any remaining named ones
 pngs = sorted(f for f in os.listdir(INFIX_DIR)

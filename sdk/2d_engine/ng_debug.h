@@ -61,7 +61,7 @@ void NEOGEO_USER ng_debug_clear(void);
  * ng_debug.c regardless of NG_DEBUG_PERF so the link always resolves. */
 extern uint16_t ng_dbg_sprite_groups;
 extern uint16_t ng_dbg_sprites_used;
-extern uint8_t  ng_dbg_particles;
+extern uint16_t ng_dbg_particles;
 extern uint8_t  ng_dbg_rq_used;
 extern uint8_t  ng_dbg_pal_q_used;
 extern int16_t  ng_dbg_camera_x;

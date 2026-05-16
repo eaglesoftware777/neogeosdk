@@ -2,12 +2,14 @@
 PYTHON_BIN="${PYTHON:-python3}"
 SOX_BIN="${SOX:-}"
 SAMPLES_IN="${GAME_SOUND:-..}/samples/in_wav_b"
+SAMPLES_OUT="${GAME_SOUND:-..}/samples/out_16el_b"
+mkdir -p "$SAMPLES_OUT"
 
 for fi in "$SAMPLES_IN"/*.wav; do
     [ -e "$fi" ] || continue
     if [ -n "$SOX_BIN" ] && command -v "$SOX_BIN" >/dev/null 2>&1; then
-        "$SOX_BIN" "$fi" -b 16 -c 1 -r 16000 -e signed-integer -t raw ../samples/out_16el_b/$(basename "$fi" .wav).wav
+        "$SOX_BIN" "$fi" -b 16 -c 1 -r 16000 -e signed-integer -t raw "$SAMPLES_OUT/$(basename "$fi" .wav).wav"
     else
-        "$PYTHON_BIN" ./wav_to_raw_pcm.py "$fi" ../samples/out_16el_b/$(basename "$fi" .wav).wav --rate 16000
+        "$PYTHON_BIN" ./wav_to_raw_pcm.py "$fi" "$SAMPLES_OUT/$(basename "$fi" .wav).wav" --rate 16000
     fi
 done

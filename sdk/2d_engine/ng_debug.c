@@ -122,7 +122,7 @@ void NEOGEO_USER ng_debug_clear(void)
 
 uint16_t ng_dbg_sprite_groups   = 0;
 uint16_t ng_dbg_sprites_used    = 0;
-uint8_t  ng_dbg_particles       = 0;
+uint16_t ng_dbg_particles       = 0;
 uint8_t  ng_dbg_rq_used         = 0;
 uint8_t  ng_dbg_pal_q_used      = 0;
 int16_t  ng_dbg_camera_x        = 0;

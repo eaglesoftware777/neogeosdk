@@ -15,7 +15,7 @@ from pathlib import Path
 import numpy as np
 
 SPRITE_PALETTE_BASE = 0x10
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(os.environ.get("ARTBOX_DATA_DIR", str(Path(__file__).resolve().parent))).resolve()
 MANIFEST_PATH = ROOT / "assets_manifest.json"
 NEOPAL_PATH = ROOT / "neopal.bin"
 SCREENS_C_PATH = ROOT / "screens.c"

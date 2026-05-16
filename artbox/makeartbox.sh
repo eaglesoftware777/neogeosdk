@@ -10,31 +10,29 @@ REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 GAME_ARTBOX_IN="$REPO_DIR/games/$GAME/artbox/in"
 GAME_ARTBOX_INFIX="$REPO_DIR/games/$GAME/artbox/infix"
+GAME_ARTBOX_DIR="$REPO_DIR/games/$GAME/artbox"
 GAME_MAIN_C="$REPO_DIR/games/$GAME/main.c"
 GAME_EYECATCHER_C="$REPO_DIR/games/$GAME/eyecatcher.c"
 
-cd "$SCRIPT_DIR"
+mkdir -p "$GAME_ARTBOX_DIR"
+cd "$GAME_ARTBOX_DIR"
 
-# Remove stale symlinks and create fresh ones pointing to per-game asset dirs
-rm -f in infix
-ln -sfn "$GAME_ARTBOX_IN"    in
-ln -sfn "$GAME_ARTBOX_INFIX" infix
-
-python3 createromdb.py
-python3 romdbimgimport.py
-python3 gen_sprite_meta.py
+PYTHONDONTWRITEBYTECODE=1 ARTBOX_DATA_DIR="$GAME_ARTBOX_DIR" python3 "$SCRIPT_DIR/gen_assets_cfg.py"
+PYTHONDONTWRITEBYTECODE=1 ARTBOX_DATA_DIR="$GAME_ARTBOX_DIR" python3 "$SCRIPT_DIR/createromdb.py"
+PYTHONDONTWRITEBYTECODE=1 ARTBOX_DATA_DIR="$GAME_ARTBOX_DIR" python3 "$SCRIPT_DIR/romdbimgimport.py"
+PYTHONDONTWRITEBYTECODE=1 ARTBOX_DATA_DIR="$GAME_ARTBOX_DIR" python3 "$SCRIPT_DIR/gen_sprite_meta.py"
 #python3 romdbfiximport.py
 #python3 fixtiles.py
-python3 romtiles.py
-IMG_COUNT=$(python3 count_assets.py)
+PYTHONDONTWRITEBYTECODE=1 ARTBOX_DATA_DIR="$GAME_ARTBOX_DIR" python3 "$SCRIPT_DIR/romtiles.py"
+IMG_COUNT=$(PYTHONDONTWRITEBYTECODE=1 ARTBOX_DATA_DIR="$GAME_ARTBOX_DIR" python3 "$SCRIPT_DIR/count_assets.py")
 echo "Art pipeline [$GAME]: $IMG_COUNT images"
 
 if [ "${IMG_COUNT:-0}" -gt 0 ] 2>/dev/null; then
-    python3 genmapfile.py $IMG_COUNT
-    python3 genmapdb.py
-    python3 genscreens.py $IMG_COUNT 16 16 16
-    python3 sync_main_screens.py --main-c "$GAME_MAIN_C"
-    python3 gen_eyecatcher.py --out "$GAME_EYECATCHER_C"
+    PYTHONDONTWRITEBYTECODE=1 ARTBOX_DATA_DIR="$GAME_ARTBOX_DIR" python3 "$SCRIPT_DIR/genmapfile.py" $IMG_COUNT
+    PYTHONDONTWRITEBYTECODE=1 ARTBOX_DATA_DIR="$GAME_ARTBOX_DIR" python3 "$SCRIPT_DIR/genmapdb.py"
+    PYTHONDONTWRITEBYTECODE=1 ARTBOX_DATA_DIR="$GAME_ARTBOX_DIR" python3 "$SCRIPT_DIR/genscreens.py" $IMG_COUNT 16 16 16
+    PYTHONDONTWRITEBYTECODE=1 ARTBOX_DATA_DIR="$GAME_ARTBOX_DIR" python3 "$SCRIPT_DIR/sync_main_screens.py" --main-c "$GAME_MAIN_C"
+    PYTHONDONTWRITEBYTECODE=1 ARTBOX_DATA_DIR="$GAME_ARTBOX_DIR" python3 "$SCRIPT_DIR/gen_eyecatcher.py" --out "$GAME_EYECATCHER_C"
 else
     echo "Art pipeline [$GAME]: no sprite images, skipping map/screen generation"
     # Write a stub so the game links without art assets
@@ -48,9 +46,6 @@ void showEyeCatcherMVS(void) {}
 EYECATCHER_EOF
 fi
 #./romfx.sh
-./romts.sh
-
-# Remove temporary symlinks
-rm -f in infix
+GAME="$GAME" GAME_ID="$GAME_ID" "$SCRIPT_DIR/romts.sh"
 
 cd "$REPO_DIR"

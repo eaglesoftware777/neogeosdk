@@ -12,44 +12,48 @@ for %%i in ("%~dp0..") do set REPO_DIR=%%~fi
 
 set GAME_ARTBOX_IN=%REPO_DIR%\games\%GAME%\artbox\in
 set GAME_ARTBOX_INFIX=%REPO_DIR%\games\%GAME%\artbox\infix
+set GAME_ARTBOX_DIR=%REPO_DIR%\games\%GAME%\artbox
 set GAME_MAIN_C=%REPO_DIR%\games\%GAME%\main.c
 set GAME_EYECATCHER_C=%REPO_DIR%\games\%GAME%\eyecatcher.c
 
-cd /d "%~dp0"
+if not exist "%GAME_ARTBOX_DIR%" mkdir "%GAME_ARTBOX_DIR%"
+cd /d "%GAME_ARTBOX_DIR%"
 
-REM Remove stale junctions if present
-if exist in  rmdir in
-if exist infix rmdir infix
-
-REM Create directory junctions so the pipeline scripts find in\ and infix\
-mklink /J in    "%GAME_ARTBOX_IN%"
-if errorlevel 1 goto :fail
-mklink /J infix "%GAME_ARTBOX_INFIX%"
-if errorlevel 1 goto :fail
-
-py createromdb.py
+set ARTBOX_DATA_DIR=%GAME_ARTBOX_DIR%
+set PYTHONDONTWRITEBYTECODE=1
+py "%~dp0gen_assets_cfg.py"
 if errorlevel 1 goto :cleanup_fail
-py romdbimgimport.py
+py "%~dp0createromdb.py"
 if errorlevel 1 goto :cleanup_fail
-py gen_sprite_meta.py
+py "%~dp0romdbimgimport.py"
+if errorlevel 1 goto :cleanup_fail
+py "%~dp0gen_sprite_meta.py"
 if errorlevel 1 goto :cleanup_fail
 rem py romdbfiximport.py
 rem py fixtiles.py
-py romtiles.py
+py "%~dp0romtiles.py"
 if errorlevel 1 goto :cleanup_fail
-for /f %%i in ('py count_assets.py') do set IMG_COUNT=%%i
+if not exist "%GAME_ARTBOX_DIR%\1c.c1" (
+  echo ERROR: missing C1 intermediate at games\%GAME%\artbox\1c.c1
+  goto :cleanup_fail
+)
+if not exist "%GAME_ARTBOX_DIR%\2c.c2" (
+  echo ERROR: missing C2 intermediate at games\%GAME%\artbox\2c.c2
+  goto :cleanup_fail
+)
+for /f %%i in ('py "%~dp0count_assets.py"') do set IMG_COUNT=%%i
 echo Art pipeline [%GAME%]: %IMG_COUNT% images
 
 if "%IMG_COUNT%"=="0" goto :skip_screens
-py genmapfile.py %IMG_COUNT%
+py "%~dp0genmapfile.py" %IMG_COUNT%
 if errorlevel 1 goto :cleanup_fail
-py genmapdb.py
+py "%~dp0genmapdb.py"
 if errorlevel 1 goto :cleanup_fail
-py genscreens.py %IMG_COUNT% 16 16 16
+py "%~dp0genscreens.py" %IMG_COUNT% 16 16 16
 if errorlevel 1 goto :cleanup_fail
-py sync_main_screens.py --main-c "%GAME_MAIN_C%"
+py "%~dp0sync_main_screens.py" --main-c "%GAME_MAIN_C%"
 if errorlevel 1 goto :cleanup_fail
-py gen_eyecatcher.py --out "%GAME_EYECATCHER_C%"
+py "%~dp0gen_eyecatcher.py" --out "%GAME_EYECATCHER_C%"
 if errorlevel 1 goto :cleanup_fail
 goto :after_screens
 
@@ -66,25 +70,14 @@ echo Art pipeline [%GAME%]: no sprite images, skipping map/screen generation
 
 :after_screens
 rem call romfx.bat
-call romts.bat
+call "%~dp0romts.bat"
 if errorlevel 1 goto :cleanup_fail
-
-REM Remove junctions (rmdir removes the junction, not the target)
-rmdir in
-rmdir infix
 
 cd /d "%REPO_DIR%"
 endlocal
 goto :eof
 
 :cleanup_fail
-rmdir in  2>nul
-rmdir infix 2>nul
-cd /d "%REPO_DIR%"
-endlocal
-exit /b 1
-
-:fail
 cd /d "%REPO_DIR%"
 endlocal
 exit /b 1
