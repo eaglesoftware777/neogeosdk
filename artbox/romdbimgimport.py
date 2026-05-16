@@ -158,7 +158,7 @@ def index_sprite_pixels(rgb, alpha_mask, palette15):
     return indexed
 
 
-def load_sprite_asset(spec):
+def load_sprite_asset(spec, shared_palette15=None):
     if not HAS_IMG2NEO or not HAS_PIL:
         raise RuntimeError(
             f"PIL/img2neo not available to auto-convert {os.path.basename(spec['path'])}. "
@@ -177,7 +177,7 @@ def load_sprite_asset(spec):
     alpha_mask = rgba[:, :, 3] >= 16
     rgb = snap_neogeo(rgba[:, :, :3])
 
-    palette15 = make_sprite_palette(rgb[alpha_mask])
+    palette15 = shared_palette15 if shared_palette15 is not None else make_sprite_palette(rgb[alpha_mask])
     indexed = index_sprite_pixels(rgb, alpha_mask, palette15)
 
     palette = np.zeros((16, 3), dtype=np.uint16)
@@ -192,6 +192,43 @@ def load_sprite_asset(spec):
     spec["content_width"] = content_w
     spec["content_height"] = content_h
     return indexed, palette
+
+
+def build_shared_sprite_palettes(specs):
+    shared = {}
+    if not HAS_IMG2NEO or not HAS_PIL:
+        return shared
+
+    for group in ("characters", "npcs"):
+        group_specs = [
+            spec for spec in specs
+            if spec["mode"] == "sprite"
+            and (spec.get("subdir") == group or spec.get("category") == group)
+        ]
+        if len(group_specs) <= 1:
+            continue
+
+        opaque_chunks = []
+        for spec in group_specs:
+            img = Image.open(spec["path"])
+            canvas, _left, _top, _content_w, _content_h = fit_sprite_rgba(
+                img,
+                spec["target_width"],
+                spec["target_height"],
+                spec["anchor"],
+            )
+            rgba = np.array(canvas, dtype=np.uint8)
+            alpha_mask = rgba[:, :, 3] >= 16
+            if alpha_mask.any():
+                opaque_chunks.append(snap_neogeo(rgba[:, :, :3])[alpha_mask])
+
+        if opaque_chunks:
+            opaque_rgb = np.vstack(opaque_chunks)
+            if len(opaque_rgb) > 65536:
+                rng = np.random.default_rng(0)
+                opaque_rgb = opaque_rgb[rng.choice(len(opaque_rgb), 65536, replace=False)]
+            shared[group] = make_sprite_palette(opaque_rgb)
+    return shared
 
 
 def load_screen_asset(spec):
@@ -277,6 +314,31 @@ def finalize_spec(spec):
     spec["sprite_active_rows"] = max(1, used_rows)
 
 
+def normalize_sequence_bounds(specs):
+    for group in ("npcs",):
+        group_specs = [
+            spec for spec in specs
+            if spec["mode"] == "sprite"
+            and (spec.get("subdir") == group or spec.get("category") == group)
+        ]
+        if len(group_specs) <= 1:
+            continue
+
+        min_col = min(spec["used_tile_col_start"] for spec in group_specs)
+        min_row = min(spec["used_tile_row_start"] for spec in group_specs)
+        max_col = max(spec["used_tile_col_start"] + spec["used_tile_cols"] for spec in group_specs)
+        max_row = max(spec["used_tile_row_start"] + spec["used_tile_rows"] for spec in group_specs)
+
+        for spec in group_specs:
+            spec["used_tile_col_start"] = min_col
+            spec["used_tile_row_start"] = min_row
+            spec["used_tile_cols"] = max_col - min_col
+            spec["used_tile_rows"] = max_row - min_row
+            spec["used_tile_count"] = spec["used_tile_cols"] * spec["used_tile_rows"]
+            spec["sprite_strips"] = max(1, spec["used_tile_cols"])
+            spec["sprite_active_rows"] = max(1, spec["used_tile_rows"])
+
+
 def main():
     sqlite3.register_adapter(np.ndarray, adapt_array)
     sqlite3.register_converter("array", convert_array)
@@ -301,16 +363,19 @@ def main():
         cur.execute("DELETE FROM image")
 
         db_rows = []
+        shared_palettes = build_shared_sprite_palettes(specs)
         for spec in specs:
             print(f"  [{spec['db_index']:3d}] {spec['name']}  mode={spec['mode']}")
             if spec["mode"] == "sprite":
-                indexed, palette = load_sprite_asset(spec)
+                shared_palette15 = shared_palettes.get(spec.get("subdir"))
+                indexed, palette = load_sprite_asset(spec, shared_palette15)
             else:
                 indexed, palette = load_screen_asset(spec)
 
             finalize_spec(spec)
             db_rows.append((spec["db_index"], indexed, palette))
 
+        normalize_sequence_bounds(specs)
         cur.executemany("INSERT INTO image (idx,data,palette) VALUES (?,?,?)", db_rows)
         conn.commit()
         save_manifest(specs, str(ROOT / "assets_manifest.json"))

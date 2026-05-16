@@ -7,9 +7,8 @@ and writes eyecatcher.c containing showEyeCatcherMVS() — an animation
 function that sequences through the frames.  The function is compiled into
 the game via the main Makefile.
 
-Each frame is displayed for FRAME_DELAY seconds, using the same sprite-
-display convention as showScreenN() in screens.c (x=16, y=24, full-screen
-16-strip layout).
+Each frame is displayed for FRAME_DELAY seconds through showScreenN().
+The generated call uses slot 1; slot 0 is reserved by the runtime.
 """
 
 import argparse
@@ -31,12 +30,12 @@ ANIM_FRAME_MS = 50
 FLASH_FRAME_MS = 35
 FINAL_HOLD_MS = 100
 
-# Shrink eyecatcher footprint so it feels closer to the original logo presentation.
-EC_X0 = 54
-EC_Y0 = 48
-EC_XR = 0xB
-EC_YR = 0x7F
-EC_MIN_CRT = 12
+# 256px wide generated art centered in the 320x224 display.
+EC_X0 = 32
+EC_Y0 = 24
+EC_XR = 0xF
+EC_YR = 0xFF
+EC_MIN_CRT = 11
 
 # Filenames that should use a shorter transition delay.
 FLASH_FRAMES = {"4.png"}
@@ -72,6 +71,8 @@ def main():
         '#include "sdk/neogeo.h"',
         '#include <stdint.h>',
         "",
+        "#define EC_SPRITE_BASE 0x0040u",
+        "",
         "#pragma GCC push_options",
         "#pragma GCC optimize (\"O0\")",
         "",
@@ -98,7 +99,7 @@ def main():
 
     first = frames[0]
     lines += [
-        f"    showScreen{first['screen_id']}({EC_X0}, {EC_Y0}, {hex(EC_XR)}, {hex(EC_YR)}, {EC_MIN_CRT}, 0x0000, 0);",
+        f"    showScreen{first['screen_id']}({EC_X0}, {EC_Y0}, {hex(EC_XR)}, {hex(EC_YR)}, {EC_MIN_CRT}, 0x0000, EC_SPRITE_BASE);",
         f"    cyclexms({LEAD_HOLD_MS});",
         "",
     ]
@@ -108,14 +109,14 @@ def main():
             sid = spec["screen_id"]
             delay = FLASH_FRAME_MS if spec["name"] in FLASH_FRAMES else ANIM_FRAME_MS
             lines += [
-                f"    showScreen{sid}({EC_X0}, {EC_Y0}, {hex(EC_XR)}, {hex(EC_YR)}, {EC_MIN_CRT}, 0x0000, 0);",
+                f"    showScreen{sid}({EC_X0}, {EC_Y0}, {hex(EC_XR)}, {hex(EC_YR)}, {EC_MIN_CRT}, 0x0000, EC_SPRITE_BASE);",
                 f"    cyclexms({delay});",
             ]
         lines.append("")
 
     last = frames[-1]
     lines += [
-        f"    showScreen{last['screen_id']}({EC_X0}, {EC_Y0}, {hex(EC_XR)}, {hex(EC_YR)}, {EC_MIN_CRT}, 0x0000, 0);",
+        f"    showScreen{last['screen_id']}({EC_X0}, {EC_Y0}, {hex(EC_XR)}, {hex(EC_YR)}, {EC_MIN_CRT}, 0x0000, EC_SPRITE_BASE);",
         f"    cyclexms({FINAL_HOLD_MS});",
         "",
     ]

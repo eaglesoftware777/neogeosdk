@@ -23,9 +23,16 @@
 #define DEMO_SHOWSCREEN_BASE3  NG_SPR_VRAM_BASE(48u)
 #define DEMO_PRELOAD_BASE      NG_SPR_VRAM_BASE(320u)
 
-/* Sprite tile / palette offset formulas matching screens.c palette banks */
-#define DEMO_SCREEN_TILE(screen_id)    ((uint16_t)(((screen_id) - 1u) * 256u))
-#define DEMO_SCREEN_PALETTE(screen_id) ((uint8_t)(0x10u + ((screen_id) - 1u)))
+/* Metadata-backed tile/palette helpers for generated artbox assets. */
+uint16_t NEOGEO_USER demo_screen_tile(uint8_t screen_id);
+uint8_t  NEOGEO_USER demo_screen_palette(uint8_t screen_id);
+uint8_t  NEOGEO_USER demo_screen_strips(uint8_t screen_id);
+uint8_t  NEOGEO_USER demo_screen_rows(uint8_t screen_id);
+int16_t  NEOGEO_USER demo_screen_x_offset(uint8_t screen_id);
+int16_t  NEOGEO_USER demo_screen_y_offset(uint8_t screen_id);
+
+#define DEMO_SCREEN_TILE(screen_id)    demo_screen_tile((uint8_t)(screen_id))
+#define DEMO_SCREEN_PALETTE(screen_id) demo_screen_palette((uint8_t)(screen_id))
 
 /* ------------------------------------------------------------------ */
 /*  Shared show-screen callback type                                    */

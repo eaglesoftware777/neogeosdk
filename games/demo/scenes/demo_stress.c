@@ -33,12 +33,15 @@ void NEOGEO_USER soundSetADPCMAVolume(uint8_t v);
 void NEOGEO_USER playSFX(uint8_t n);
 
 /* NPC data */
-#define STRESS_NPC_TILE(n)   ((uint16_t)(27648u + (uint16_t)((uint8_t)(n) % 12u) * 256u + 165u))
-#define STRESS_NPC_PAL       124u
-#define STRESS_NPC_STRIPS     6u
-#define STRESS_NPC_ROWS       6u
+#define STRESS_NPC_FIRST_SCREEN 110u
+#define STRESS_NPC_SCREEN(n) ((uint8_t)(STRESS_NPC_FIRST_SCREEN + ((uint8_t)(n) % STRESS_NPC_COUNT)))
+#define STRESS_NPC_TILE(n)   DEMO_SCREEN_TILE(STRESS_NPC_SCREEN(n))
+#define STRESS_NPC_PAL(n)    DEMO_SCREEN_PALETTE(STRESS_NPC_FIRST_SCREEN)
+#define STRESS_NPC_STRIPS    12u
+#define STRESS_NPC_ROWS      15u
 #define STRESS_NPC_STRIDE    16u
 #define STRESS_NPC_COUNT     12u  /* use 12 NGCharacter objects */
+#define STRESS_NPC_OFFSET_Y (-240)
 
 /* Particle palette */
 #define STRESS_PART_PAL    0x40u
@@ -140,16 +143,16 @@ static void NEOGEO_USER stress_full_scene(void)
     ng_palfx_pulse(0u, s_player_pal, 60u);
 
     demo_load_screen_palette(11u);
-    demo_load_screen_palette(109u);
+    demo_load_screen_palette(STRESS_NPC_FIRST_SCREEN);
     ng_chars_init();
     ng_npcs_init();
 
     player = chars_add(0u, 160, 160);
     if (player) {
         ng_char_set_sprite(player, 0u, STRESS_NPC_STRIPS, STRESS_NPC_ROWS,
-                           STRESS_NPC_TILE(0u), STRESS_NPC_PAL);
+                           STRESS_NPC_TILE(0u), STRESS_NPC_PAL(0u));
         ng_char_set_tile_stride(player, STRESS_NPC_STRIDE);
-        player->sprite_offset_y = -96;
+        player->sprite_offset_y = STRESS_NPC_OFFSET_Y;
         player->scale_x = 0xA0u;
         player->scale_y = 0xA0u;
     }
@@ -160,9 +163,9 @@ static void NEOGEO_USER stress_full_scene(void)
             nc = npc_char(npcs[i]);
             if (nc) {
                 ng_char_set_sprite(nc, 0u, STRESS_NPC_STRIPS, STRESS_NPC_ROWS,
-                                   STRESS_NPC_TILE((uint8_t)(i * 3u)), STRESS_NPC_PAL);
+                                   STRESS_NPC_TILE((uint8_t)(i * 3u)), STRESS_NPC_PAL((uint8_t)(i * 3u)));
                 ng_char_set_tile_stride(nc, STRESS_NPC_STRIDE);
-                nc->sprite_offset_y = -96;
+                nc->sprite_offset_y = STRESS_NPC_OFFSET_Y;
                 nc->scale_x = 0x70u;
                 nc->scale_y = 0x70u;
             }
@@ -184,8 +187,11 @@ static void NEOGEO_USER stress_full_scene(void)
             player->x = px;
             uint8_t anim = (uint8_t)((t / 12u) % 12u);
             uint16_t tile = STRESS_NPC_TILE(anim);
-            if (player->sprite_tile != tile) {
+            uint8_t pal = STRESS_NPC_PAL(anim);
+            demo_load_screen_palette(STRESS_NPC_FIRST_SCREEN);
+            if (player->sprite_tile != tile || player->palette != pal) {
                 player->sprite_tile = tile;
+                player->palette = pal;
                 player->sprite_dirty = 1u;
             }
         }
@@ -198,8 +204,11 @@ static void NEOGEO_USER stress_full_scene(void)
                 if (nc) {
                     uint8_t anim = (uint8_t)((t / 12u) % 12u);
                     uint16_t tile = STRESS_NPC_TILE(anim);
-                    if (nc->sprite_tile != tile) {
+                    uint8_t pal = STRESS_NPC_PAL(anim);
+                    demo_load_screen_palette(STRESS_NPC_FIRST_SCREEN);
+                    if (nc->sprite_tile != tile || nc->palette != pal) {
                         nc->sprite_tile = tile;
+                        nc->palette = pal;
                         nc->sprite_dirty = 1u;
                     }
                 }
@@ -265,15 +274,15 @@ static void NEOGEO_USER stress_boss(void)
     ng_feedback_set_sfx_hook(stress_sfx_hook);
     ng_particles_init();
 
-    demo_load_screen_palette(109u);
+    demo_load_screen_palette(STRESS_NPC_FIRST_SCREEN);
     ng_chars_init();
 
     boss = chars_add(0u, 200, 140);
     if (boss) {
         ng_char_set_sprite(boss, 0u, STRESS_NPC_STRIPS, STRESS_NPC_ROWS,
-                           STRESS_NPC_TILE(0u), STRESS_NPC_PAL);
+                           STRESS_NPC_TILE(0u), STRESS_NPC_PAL(0u));
         ng_char_set_tile_stride(boss, STRESS_NPC_STRIDE);
-        boss->sprite_offset_y = -96;
+        boss->sprite_offset_y = STRESS_NPC_OFFSET_Y;
         boss->scale_x = 0xD0u;
         boss->scale_y = 0xD0u;
         boss->hp     = 10u;
@@ -293,7 +302,7 @@ static void NEOGEO_USER stress_boss(void)
         if ((t % 60u) == 0u && t > 0u && boss && boss_hp > 0u) {
             boss_hp--;
             ng_char_damage(boss, 1u);
-            ng_impact_event(NG_IMPACT_HEAVY, STRESS_NPC_PAL, s_boss_pal,
+            ng_impact_event(NG_IMPACT_HEAVY, STRESS_NPC_PAL(0u), s_boss_pal,
                             &cam, (uint16_t)SOUND_SFX_IMPACT_HIT,
                             200, 110, 0u, STRESS_PART_PAL);
             ng_spawn_hit_spark(200, 110, 0u, STRESS_PART_PAL);
@@ -309,8 +318,11 @@ static void NEOGEO_USER stress_boss(void)
         if (boss) {
             uint8_t anim = (uint8_t)((t / 8u) % 12u);
             uint16_t tile = STRESS_NPC_TILE(anim);
-            if (boss->sprite_tile != tile) {
+            uint8_t pal = STRESS_NPC_PAL(anim);
+            demo_load_screen_palette(STRESS_NPC_FIRST_SCREEN);
+            if (boss->sprite_tile != tile || boss->palette != pal) {
                 boss->sprite_tile = tile;
+                boss->palette = pal;
                 boss->sprite_dirty = 1u;
             }
         }
@@ -382,7 +394,7 @@ void NEOGEO_USER demo_stress_run(void)
     ng_particles_init();
     ng_chars_init();
 
-    demo_load_screen_palette(109u);
+    demo_load_screen_palette(STRESS_NPC_FIRST_SCREEN);
     soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
 
     /* Populate 12 NPCs at various depth positions */
@@ -394,9 +406,9 @@ void NEOGEO_USER demo_stress_run(void)
         if (chars[i]) {
             ng_char_set_sprite(chars[i], 0u,
                                STRESS_NPC_STRIPS, STRESS_NPC_ROWS,
-                               STRESS_NPC_TILE(fn), STRESS_NPC_PAL);
+                               STRESS_NPC_TILE(fn), STRESS_NPC_PAL(fn));
             ng_char_set_tile_stride(chars[i], STRESS_NPC_STRIDE);
-            chars[i]->sprite_offset_y = -96;
+            chars[i]->sprite_offset_y = STRESS_NPC_OFFSET_Y;
             chars[i]->scale_x = 0x70u;
             chars[i]->scale_y = 0x70u;
         }
@@ -405,13 +417,19 @@ void NEOGEO_USER demo_stress_run(void)
     for (t = 0u; t < 360u; t++) {
         uint8_t anim = (uint8_t)((t / 12u) % 12u);
         uint16_t tile = STRESS_NPC_TILE(anim);
+        uint8_t pal = STRESS_NPC_PAL(anim);
         uint16_t spr_used;
+        demo_load_screen_palette(STRESS_NPC_FIRST_SCREEN);
 
         /* Update NPC positions + animation */
         for (i = 0u; i < STRESS_NPC_COUNT; i++) {
             NGCharacter *c = chars[i];
             if (!c) continue;
-            if (c->sprite_tile != tile) { c->sprite_tile = tile; c->sprite_dirty = 1u; }
+            if (c->sprite_tile != tile || c->palette != pal) {
+                c->sprite_tile = tile;
+                c->palette = pal;
+                c->sprite_dirty = 1u;
+            }
             cy[i] = (int16_t)(cy[i] - 1);
             if (cy[i] < -50) cy[i] = 60;
             c->y = cy[i];

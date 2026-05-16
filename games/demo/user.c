@@ -203,6 +203,7 @@ void  NEOGEO_USER POWER_ON (void) {
 // NeoGeo EYE_CATCHER handler — same sprite animation for both AES and MVS
 void  NEOGEO_USER EYE_CATCHER (void) {
 
+	soundCancelFade();
 	soundSceneReset();
 	soundSetADPCMAVolume(0x00);
 	soundSetADPCMBVolume(0xBC);
@@ -287,7 +288,7 @@ void  NEOGEO_USER showTitleMVS(void) {
 	clearFix();
 	clearSprs();
 	setBACKDROP(BLACK);
-	showScreen108(16, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
+	showScreen108(32, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
 	waitVbl();
 
 	/* MVS: blink INSERT COIN when no credits; show HIT START when credits available. */
@@ -305,7 +306,7 @@ void  NEOGEO_USER showTitleMVS(void) {
 
 	if (!NEO_REGISTER8(NGO_START_FLAG) && NEO_REGISTER8(BIOS_USER_MODE) != 2) {
 		clearSprs();
-		showScreen107(16, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
+		showScreen107(32, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
 		waitVbl();
 		for (i = 0; ; i++) {
 			if (read_p1credit() > 0)
@@ -327,7 +328,7 @@ void  NEOGEO_USER showTitleAES(void) {
 	clearFix();
 	clearSprs();
 	setBACKDROP(BLACK);
-	showScreen108(16, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
+	showScreen108(32, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
 	waitVbl();
 	fixtext_out(14, 26, "HIT START", 0);
 	soundPlayTitleMusic(0);
@@ -342,7 +343,7 @@ void  NEOGEO_USER showTitleAES(void) {
 	}
 	if (!NEO_REGISTER8(NGO_START_FLAG)) {
 		clearSprs();
-		showScreen107(16, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
+		showScreen107(32, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
 		waitVbl();
 		fixtext_out(14, 26, "HIT START", 0);
 		for (i = 0; i < 10; i++) {

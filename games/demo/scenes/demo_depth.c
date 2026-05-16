@@ -30,10 +30,11 @@ void NEOGEO_USER playSFX(uint8_t n);
 #define STAR_SLOT_0   2u   /* slots 2..17 */
 
 /* NPC tile for flying objects */
-#define DEPTH_NPC_TILE    ((uint16_t)(27648u + 165u))
-#define DEPTH_NPC_PAL     124u
-#define DEPTH_NPC_STRIPS   6u
-#define DEPTH_NPC_ROWS     6u
+#define DEPTH_NPC_SCREEN  110u
+#define DEPTH_NPC_TILE    DEMO_SCREEN_TILE(DEPTH_NPC_SCREEN)
+#define DEPTH_NPC_PAL     DEMO_SCREEN_PALETTE(DEPTH_NPC_SCREEN)
+#define DEPTH_NPC_STRIPS  12u
+#define DEPTH_NPC_ROWS    15u
 
 /* xorshift noise for star reset positions */
 static uint16_t s_lfsr = 0xACE1u;
@@ -74,7 +75,7 @@ static void NEOGEO_USER depth_starfield(void)
         star_grp[i].visible = 1u;
     }
 
-    demo_load_screen_palette(109u);
+    demo_load_screen_palette(DEPTH_NPC_SCREEN);
     soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
 
     for (t = 0u; t < 300u; t++) {
@@ -186,7 +187,7 @@ static void NEOGEO_USER depth_zsort(void)
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);
 
     ng_depthfx_init();
-    demo_load_screen_palette(109u);
+    demo_load_screen_palette(DEPTH_NPC_SCREEN);
 
     static const uint8_t s_angle_tab[8] = {
         0, 32, 64, 96, 128, 160, 192, 224

@@ -96,7 +96,7 @@ void NEOGEO_USER demo_intro_eagle(void)
     clearFix();
     clearSprs();
     playSFX(SOUND_SFX_TITLE_GONG);
-    demo_safe_show(showScreen107, 16, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
+    demo_safe_show(showScreen107, 32, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
 
     if (demo_wait(60u)) goto intro_done;
     if (demo_wait(60u)) goto intro_done;

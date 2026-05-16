@@ -36,8 +36,8 @@ void NEOGEO_USER playSFX(uint8_t n);
 #define ATKER_SCREEN   20u   /* attack pose */
 #define ATKER_SLOT      1u
 
-/* Defender: NPC = screen 109, slot 20 */
-#define DEFDR_SCREEN  109u
+/* Defender: NPC = cat_01, slot 20 */
+#define DEFDR_SCREEN  110u
 #define DEFDR_SLOT     20u
 
 /* Base palette slots */
@@ -57,11 +57,15 @@ static void NEOGEO_USER combat_sfx_hook(uint16_t id)
 }
 
 /* NPC tile constants */
-#define COMBAT_NPC_TILE(n)  ((uint16_t)(27648u + (uint16_t)((uint8_t)(n) % 12u) * 256u + 165u))
-#define COMBAT_NPC_PAL      124u
-#define COMBAT_NPC_STRIPS    6u
-#define COMBAT_NPC_ROWS      6u
+#define COMBAT_NPC_FRAME_COUNT 12u
+#define COMBAT_NPC_FIRST_SCREEN 110u
+#define COMBAT_NPC_SCREEN(n) ((uint8_t)(COMBAT_NPC_FIRST_SCREEN + ((uint8_t)(n) % COMBAT_NPC_FRAME_COUNT)))
+#define COMBAT_NPC_TILE(n)  DEMO_SCREEN_TILE(COMBAT_NPC_SCREEN(n))
+#define COMBAT_NPC_PAL(n)   DEMO_SCREEN_PALETTE(COMBAT_NPC_FIRST_SCREEN)
+#define COMBAT_NPC_STRIPS   12u
+#define COMBAT_NPC_ROWS     15u
 #define COMBAT_NPC_STRIDE   16u
+#define COMBAT_NPC_OFFSET_Y (-240)
 
 /* ------------------------------------------------------------------ */
 /*  Sub-scene: hitbox visualisation                                      */
@@ -88,7 +92,7 @@ static void NEOGEO_USER combat_hitbox_visual(void)
     ng_particles_init();
 
     demo_load_screen_palette(11u);
-    demo_load_screen_palette(109u);
+    demo_load_screen_palette(COMBAT_NPC_FIRST_SCREEN);
     ng_chars_init();
 
     attacker = chars_add(0u, 80, 180);
@@ -107,10 +111,10 @@ static void NEOGEO_USER combat_hitbox_visual(void)
     defender = chars_add(0u, 220, 180);
     if (defender) {
         ng_char_set_sprite(defender, 0u, COMBAT_NPC_STRIPS, COMBAT_NPC_ROWS,
-                           COMBAT_NPC_TILE(0u), COMBAT_NPC_PAL);
+                           COMBAT_NPC_TILE(0u), COMBAT_NPC_PAL(0u));
         ng_char_set_tile_stride(defender, COMBAT_NPC_STRIDE);
         ng_char_set_body(defender, -20, -90, 40, 90);
-        defender->sprite_offset_y = -96;
+        defender->sprite_offset_y = COMBAT_NPC_OFFSET_Y;
         defender->scale_x = 0x80u;
         defender->scale_y = 0x80u;
         defender->hp     = 10u;
@@ -210,15 +214,15 @@ static void NEOGEO_USER combat_border_trigger(void)
     ng_border_constraints_load(triggers, 2u);
     ng_game_events_set_handler(combat_bc_handler);
 
-    demo_load_screen_palette(109u);
+    demo_load_screen_palette(COMBAT_NPC_FIRST_SCREEN);
     ng_chars_init();
     walker = chars_add(0u, 0, 180);
     if (walker) {
         ng_char_set_sprite(walker, 0u, COMBAT_NPC_STRIPS, COMBAT_NPC_ROWS,
-                           COMBAT_NPC_TILE(0u), COMBAT_NPC_PAL);
+                           COMBAT_NPC_TILE(0u), COMBAT_NPC_PAL(0u));
         ng_char_set_tile_stride(walker, COMBAT_NPC_STRIDE);
         ng_char_set_body(walker, -20, -90, 40, 90);
-        walker->sprite_offset_y = -96;
+        walker->sprite_offset_y = COMBAT_NPC_OFFSET_Y;
         walker->scale_x = 0x80u;
         walker->scale_y = 0x80u;
     }
@@ -286,7 +290,7 @@ static void NEOGEO_USER combat_npc_basic(void)
     demo_fix_puts(2u, 1u, "3 NPCS  PATROL BOUNDS  THINK EVERY 8F", 1u);
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);
 
-    demo_load_screen_palette(109u);
+    demo_load_screen_palette(COMBAT_NPC_FIRST_SCREEN);
     ng_chars_init();
     ng_npcs_init();
 
@@ -296,9 +300,9 @@ static void NEOGEO_USER combat_npc_basic(void)
             c = npc_char(npcs[i]);
             if (c) {
                 ng_char_set_sprite(c, 0u, COMBAT_NPC_STRIPS, COMBAT_NPC_ROWS,
-                                   COMBAT_NPC_TILE(i * 2u), COMBAT_NPC_PAL);
+                                   COMBAT_NPC_TILE(i * 2u), COMBAT_NPC_PAL(i * 2u));
                 ng_char_set_tile_stride(c, COMBAT_NPC_STRIDE);
-                c->sprite_offset_y = -96;
+                c->sprite_offset_y = COMBAT_NPC_OFFSET_Y;
                 c->scale_x = 0x80u;
                 c->scale_y = 0x80u;
             }
@@ -328,8 +332,11 @@ static void NEOGEO_USER combat_npc_basic(void)
                 if (c) {
                     uint8_t anim = (uint8_t)((t / 12u) % 12u);
                     uint16_t tile = COMBAT_NPC_TILE(anim);
-                    if (c->sprite_tile != tile) {
+                    uint8_t pal = COMBAT_NPC_PAL(anim);
+                    demo_load_screen_palette(COMBAT_NPC_FIRST_SCREEN);
+                    if (c->sprite_tile != tile || c->palette != pal) {
                         c->sprite_tile = tile;
+                        c->palette = pal;
                         c->sprite_dirty = 1u;
                     }
                     {
@@ -380,7 +387,7 @@ static void NEOGEO_USER combat_npc_advanced(void)
     ng_feedback_set_sfx_hook(combat_sfx_hook);
     ng_particles_init();
 
-    demo_load_screen_palette(109u);
+    demo_load_screen_palette(COMBAT_NPC_FIRST_SCREEN);
     ng_chars_init();
     ng_npcs_init();
 
@@ -389,9 +396,9 @@ static void NEOGEO_USER combat_npc_advanced(void)
         bc = npc_char(boss);
         if (bc) {
             ng_char_set_sprite(bc, 0u, COMBAT_NPC_STRIPS, COMBAT_NPC_ROWS,
-                               COMBAT_NPC_TILE(0u), COMBAT_NPC_PAL);
+                               COMBAT_NPC_TILE(0u), COMBAT_NPC_PAL(0u));
             ng_char_set_tile_stride(bc, COMBAT_NPC_STRIDE);
-            bc->sprite_offset_y = -96;
+            bc->sprite_offset_y = COMBAT_NPC_OFFSET_Y;
             bc->scale_x = 0xB0u;
             bc->scale_y = 0xB0u;
             bc->hp     = 10u;
@@ -411,7 +418,7 @@ static void NEOGEO_USER combat_npc_advanced(void)
             phase_timer = 0u;
 
             if (phase == 2u && boss) {
-                ng_impact_event(NG_IMPACT_MEDIUM, COMBAT_NPC_PAL, s_atker_pal,
+                ng_impact_event(NG_IMPACT_MEDIUM, COMBAT_NPC_PAL(0u), s_atker_pal,
                                 &cam, (uint16_t)SOUND_SFX_IMPACT_HIT,
                                 160, 112, 0u, 0x40u);
             }
@@ -423,8 +430,11 @@ static void NEOGEO_USER combat_npc_advanced(void)
             if (bc) {
                 uint8_t anim = (uint8_t)((t / 12u) % 12u);
                 uint16_t tile = COMBAT_NPC_TILE(anim);
-                if (bc->sprite_tile != tile) {
+                uint8_t pal = COMBAT_NPC_PAL(anim);
+                demo_load_screen_palette(COMBAT_NPC_FIRST_SCREEN);
+                if (bc->sprite_tile != tile || bc->palette != pal) {
                     bc->sprite_tile = tile;
+                    bc->palette = pal;
                     bc->sprite_dirty = 1u;
                 }
             }
@@ -475,7 +485,7 @@ static void NEOGEO_USER combat_special_moves(void)
     ng_particles_init();
 
     demo_load_screen_palette(11u);
-    demo_load_screen_palette(109u);
+    demo_load_screen_palette(COMBAT_NPC_FIRST_SCREEN);
     ng_chars_init();
 
     attacker = chars_add(0u, 80, 180);
@@ -496,10 +506,10 @@ static void NEOGEO_USER combat_special_moves(void)
     defender = chars_add(0u, 220, 180);
     if (defender) {
         ng_char_set_sprite(defender, 0u, COMBAT_NPC_STRIPS, COMBAT_NPC_ROWS,
-                           COMBAT_NPC_TILE(0u), COMBAT_NPC_PAL);
+                           COMBAT_NPC_TILE(0u), COMBAT_NPC_PAL(0u));
         ng_char_set_tile_stride(defender, COMBAT_NPC_STRIDE);
         ng_char_set_body(defender, -20, -90, 40, 90);
-        defender->sprite_offset_y = -96;
+        defender->sprite_offset_y = COMBAT_NPC_OFFSET_Y;
         defender->scale_x = 0x80u;
         defender->scale_y = 0x80u;
     }
@@ -692,8 +702,8 @@ static void NEOGEO_USER combat_hit_sequence(void)
     /* Draw both characters once (static for hitstop demo) */
     demo_load_screen_palette(11u);
     demo_draw_sprite_screen(11u, ATKER_SLOT,  60, (int16_t)(-34), 16u, 16u, 0xFFu, 0xFFu);
-    demo_load_screen_palette(109u);
-    demo_draw_sprite_screen(109u, DEFDR_SLOT, 200, (int16_t)(-60), 6u, 6u, 0x70u, 0x70u);
+    demo_load_screen_palette(COMBAT_NPC_FIRST_SCREEN);
+    demo_draw_sprite_screen(DEFDR_SCREEN, DEFDR_SLOT, 200, (int16_t)(-60), COMBAT_NPC_STRIPS, COMBAT_NPC_ROWS, 0x70u, 0x70u);
 
     soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
 
