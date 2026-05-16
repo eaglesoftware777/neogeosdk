@@ -224,8 +224,7 @@ void NEOGEO_USER ngfix_clear_line(uint8_t y)
 
 void NEOGEO_USER ngfix_clear(void)
 {
-    clearFix();     /* BIOS call resets BRDFIX to 0; restore game S ROM after */
-    setsfix();
+    clearFix();     /* restores BRDFIX to game S ROM internally */
     ngfix_cache_invalidate();
     ngfix_clear_rect(0, 0, NGFIX_WIDTH, NGFIX_HEIGHT);
 }
