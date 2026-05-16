@@ -192,9 +192,9 @@ hash:
 
 .PHONY: samples
 samples:
-	$(if $(wildcard $(GAME_SOUND)/samples/in_wav_a),cd sound\tools && set PY=$(PY)&& set SOX=$(SOX)&& set GAME_SOUND=..\..\$(GAME_SOUND)&& call enc_wave16le_a.bat,@echo samples: no in_wav_a in $(GAME_SOUND)\samples\, skipping a)
-	$(if $(wildcard $(GAME_SOUND)/samples/in_wav_b),cd sound\tools && set PY=$(PY)&& set SOX=$(SOX)&& set GAME_SOUND=..\..\$(GAME_SOUND)&& call enc_wave16le_b.bat,@echo samples: no in_wav_b in $(GAME_SOUND)\samples\, skipping b)
-	cd sound\tools && set PY=$(PY)&& set GAME_SOUND=..\..\$(GAME_SOUND)&& call adpcm_enc_process.bat
+	$(if $(wildcard $(GAME_SOUND)/samples/in_wav_a),cd sound\tools && set PY=$(PY)&& set SOX=$(SOX)&& set GAME_SOUND=..\..\$(subst /,\,$(GAME_SOUND))&& call enc_wave16le_a.bat,@echo samples: no in_wav_a in $(GAME_SOUND)\samples\, skipping a)
+	$(if $(wildcard $(GAME_SOUND)/samples/in_wav_b),cd sound\tools && set PY=$(PY)&& set SOX=$(SOX)&& set GAME_SOUND=..\..\$(subst /,\,$(GAME_SOUND))&& call enc_wave16le_b.bat,@echo samples: no in_wav_b in $(GAME_SOUND)\samples\, skipping b)
+	cd sound\tools && set PY=$(PY)&& set GAME_SOUND=..\..\$(subst /,\,$(GAME_SOUND))&& call adpcm_enc_process.bat
 
 .PHONY: vrom
 vrom:
@@ -252,7 +252,7 @@ sound-all: sound
 sfix:
 	if exist artbox\infix rmdir artbox\infix
 	mklink /J artbox\infix $(REPO_WIN)\games\$(GAME)\artbox\infix
-	cd artbox && set GAME_ID=$(GAME_ID) && $(PY) romdbfiximport.py && $(PY) fixtiles.py
+	cd artbox && set GAME_ID=$(GAME_ID)&& $(PY) romdbfiximport.py && $(PY) fixtiles.py
 	rmdir artbox\infix
 	if not exist roms\neogeosdk mkdir roms\neogeosdk
 	copy /Y artbox\$(GAME_ID)-s1.s1 roms\neogeosdk\$(GAME_ID)-s1.s1
