@@ -24,15 +24,59 @@
 /* Max fall speed in 8.8 fixed-point */
 #define NG_PART_MAX_FALL_FP 0x400  /* 4.0 px/frame */
 
+#define NG_PART_DRAW_TRACKS 4
+
 static NGParticle ng_part_pool[NG_PART_MAX_PARTICLES];
+
+static uint16_t ng_part_track_first[NG_PART_DRAW_TRACKS];
+static uint16_t ng_part_track_end[NG_PART_DRAW_TRACKS];
+static uint8_t  ng_part_track_used[NG_PART_DRAW_TRACKS];
 
 /* Scratch tile/attr arrays for sprite upload */
 static uint16_t ng_part_tiles[1];
 static uint16_t ng_part_attrs[1];
 
+static void NEOGEO_USER ng_part_hide_slots(uint16_t first, uint16_t end)
+{
+    while (first < end && first <= NG_SPR_CHAR_LAST) {
+        vram_SCB234((uint16_t)(SCB3_ADDR + first), 0);
+        first++;
+    }
+}
+
+static uint8_t NEOGEO_USER ng_part_track_for(uint16_t first_slot)
+{
+    uint8_t i;
+    uint8_t free_idx = 0xffu;
+
+    for (i = 0; i < NG_PART_DRAW_TRACKS; i++) {
+        if (ng_part_track_used[i] && ng_part_track_first[i] == first_slot)
+            return i;
+        if (!ng_part_track_used[i] && free_idx == 0xffu)
+            free_idx = i;
+    }
+
+    if (free_idx != 0xffu) {
+        ng_part_track_used[free_idx] = 1u;
+        ng_part_track_first[free_idx] = first_slot;
+        ng_part_track_end[free_idx] = first_slot;
+        return free_idx;
+    }
+
+    return 0u;
+}
+
 void NEOGEO_USER ng_particles_init(void)
 {
     uint8_t i;
+    for (i = 0; i < NG_PART_DRAW_TRACKS; i++) {
+        if (ng_part_track_used[i])
+            ng_part_hide_slots(ng_part_track_first[i], ng_part_track_end[i]);
+        ng_part_track_used[i] = 0u;
+        ng_part_track_first[i] = 0u;
+        ng_part_track_end[i] = 0u;
+    }
+
     for (i = 0; i < NG_PART_MAX_PARTICLES; i++) {
         ng_part_pool[i].active = 0;
     }
@@ -85,6 +129,7 @@ void NEOGEO_USER ng_particles_update(void)
 uint16_t NEOGEO_USER ng_particles_draw(uint16_t first_slot, uint16_t sprite_budget_used)
 {
     uint8_t  i;
+    uint8_t  track;
     uint16_t slot = first_slot;
     uint8_t  drop_optional = (sprite_budget_used >= NG_PART_BUDGET_THRESHOLD) ? 1 : 0;
 
@@ -121,6 +166,11 @@ uint16_t NEOGEO_USER ng_particles_draw(uint16_t first_slot, uint16_t sprite_budg
 
         slot++;
     }
+
+    track = ng_part_track_for(first_slot);
+    if (ng_part_track_end[track] > slot)
+        ng_part_hide_slots(slot, ng_part_track_end[track]);
+    ng_part_track_end[track] = slot;
 
     return slot;
 }
