@@ -3,7 +3,7 @@
 Neo Geo development SDK for SNK hardware.
 
 - Repository: https://github.com/eaglesoftware777/neogeosdk
-- Current release target: `v1.4.0`
+- Current release target: `v1.2.0`
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 
@@ -39,7 +39,7 @@ It is a plain-C engine targeting **NeoGeo Deluxe 2D**: huge animated characters,
 - cached FIX-layer text output
 - status flags, timers, progress counters, properties matrix
 
-### Deluxe 2D engine modules (v1.3.0+)
+### Deluxe 2D engine modules
 
 | Module | Header | What it does |
 |--------|--------|-------------|

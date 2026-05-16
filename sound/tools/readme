@@ -6,31 +6,33 @@ Python 3 tools that process audio assets and prepare them for the Neo Geo.
 TOOLS
 -----
 vrom.py
-    Packs ADPCM-A and ADPCM-B samples into the V ROM (777-v1.v1).
+    Packs ADPCM-A and ADPCM-B samples into the V ROM (<GAME_ID>-v1.v1).
     Auto-generates sound/driver/sample_table.inc with correct start/end offsets.
+    Reads GAME_ID from environment (set by Makefile via GAME=<name>).
 
 mml_compile.py
-    Compiles MML source files (sound/mml/*.mml) into Z80 data tables
-    (sound/driver/music_data.inc) for the SSG/MML music engine.
+    Compiles MML source files (games/<GAME>/sound/mml/*.mml) into Z80 data
+    tables (sound/driver/music_data.inc) for the SSG/MML music engine.
 
 fm_compile.py
-    Compiles FM MML source files (sound/fm/*.mml) into Z80 data tables
-    (sound/driver/fm_data.inc) for the FM sequencer. Includes 128-entry
+    Compiles FM MML source files (games/<GAME>/sound/fm/*.mml) into Z80 data
+    tables (sound/driver/fm_data.inc) for the FM sequencer. Includes 128-entry
     note frequency table (BLOCK/FNUM pairs) and compiled track byte streams.
 
 fm_patch_compile.py
-    Compiles the FM patch bank (sound/fm/patches.fm) into a Z80 data table
-    (sound/driver/fm_patch_table.inc). Supports up to 16 named patches with
-    full operator parameters (DT/MUL, TL, AR, DR, SR, SL/RR, ENV) plus
-    algorithm, feedback, stereo, and LFO fields.
+    Compiles the FM patch bank (games/<GAME>/sound/fm/patches.fm) into a Z80
+    data table (sound/driver/fm_patch_table.inc). Supports up to 16 named
+    patches with full operator parameters (DT/MUL, TL, AR, DR, SR, SL/RR, ENV)
+    plus algorithm, feedback, stereo, and LFO fields.
 
 ssg_compile.py
-    Compiles standalone SSG MML source files (sound/ssg/*.mml) into Z80 data
-    tables (sound/driver/ssg_data.inc) for the standalone SSG sequencer.
+    Compiles standalone SSG MML source files (games/<GAME>/sound/ssg/*.mml)
+    into Z80 data tables (sound/driver/ssg_data.inc) for the standalone SSG
+    sequencer.
 
 ssg_config_compile.py
-    Compiles the SSG tone preset config (sound/ssg/config.ssg) into a Z80
-    data table (sound/driver/ssg_config.inc) for soundSetSSGPreset().
+    Compiles the SSG tone preset config (games/<GAME>/sound/ssg/config.ssg)
+    into a Z80 data table (sound/driver/ssg_config.inc) for soundSetSSGPreset().
 
 adpcm_enc.py
     Python encoder: converts WAV files to Neo Geo ADPCM-A or ADPCM-B format.
@@ -49,12 +51,14 @@ adpcm_enc_process.sh
 
 m1rom.sh / m1rom.bat
     Assembles driver.asm with wla-z80, links with wlalink, pads output to
-    64 KB and copies result to out/777-m1.m1 and roms/neogeosdk/.
+    128 KB and copies result to out/<GAME_ID>-m1.m1 and roms/neogeosdk/.
+    Reads GAME_ID and GAME_SOUND from environment (set by Makefile).
     Expects all .inc files to be pre-generated (run via make m1rom which
     invokes fmpatches, fm, mml, ssgconfig, ssg targets first).
 
 vrom.sh / vrom.bat
-    Runs vrom.py and copies the result to roms/neogeosdk/777-v1.v1.
+    Runs vrom.py and copies the result to roms/neogeosdk/<GAME_ID>-v1.v1.
+    Reads GAME_ID from environment.
 
 BUILD COMMANDS
 --------------

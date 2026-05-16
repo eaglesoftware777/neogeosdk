@@ -193,7 +193,7 @@ samples:
 
 .PHONY: vrom
 vrom:
-	call sound\tools\vrom.bat
+	set GAME_ID=$(GAME_ID)&& call sound\tools\vrom.bat
 	if not exist roms\neogeosdk mkdir roms\neogeosdk
 	copy /Y out\$(GAME_ID)-v1.v1 roms\neogeosdk\$(GAME_ID)-v1.v1
 
@@ -219,7 +219,7 @@ ssg:
 
 .PHONY: m1rom
 m1rom: fmpatches fm mml ssgconfig ssg
-	set WLAZ80=$(WLAZ80)&& set WLALINK=$(WLALINK)&& set USE_Z80C=$(USE_Z80C)&& set Z80C_SRC=$(Z80C_SRC_WIN)&& call sound\tools\m1rom.bat
+	set GAME_ID=$(GAME_ID)&& set GAME_SOUND=$(subst /,\,$(GAME_SOUND))&& set WLAZ80=$(WLAZ80)&& set WLALINK=$(WLALINK)&& set USE_Z80C=$(USE_Z80C)&& set Z80C_SRC=$(Z80C_SRC_WIN)&& call sound\tools\m1rom.bat
 
 .PHONY: m1rom-asm
 m1rom-asm:

@@ -7,14 +7,15 @@ set GAME=%~1
 if "%GAME%"=="" set GAME=demo
 if "%GAME_ID%"=="" set GAME_ID=777
 
-set SCRIPT_DIR=%~dp0
-set REPO_DIR=%SCRIPT_DIR%..
-set GAME_ARTBOX_IN=%REPO_DIR%games\%GAME%\artbox\in
-set GAME_ARTBOX_INFIX=%REPO_DIR%games\%GAME%\artbox\infix
-set GAME_MAIN_C=%REPO_DIR%games\%GAME%\main.c
-set GAME_EYECATCHER_C=%REPO_DIR%games\%GAME%\eyecatcher.c
+REM Resolve absolute repo root — %~dp0 includes trailing \, so ".." alone would give "artbox\.."
+for %%i in ("%~dp0..") do set REPO_DIR=%%~fi
 
-cd /d "%SCRIPT_DIR%"
+set GAME_ARTBOX_IN=%REPO_DIR%\games\%GAME%\artbox\in
+set GAME_ARTBOX_INFIX=%REPO_DIR%\games\%GAME%\artbox\infix
+set GAME_MAIN_C=%REPO_DIR%\games\%GAME%\main.c
+set GAME_EYECATCHER_C=%REPO_DIR%\games\%GAME%\eyecatcher.c
+
+cd /d "%~dp0"
 
 REM Remove stale junctions if present
 if exist in  rmdir in
