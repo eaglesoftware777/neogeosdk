@@ -14,6 +14,9 @@ def build_vrom():
     sdk_root = os.path.abspath(os.path.join(script_dir, "..", ".."))
     out_dir = os.path.join(sdk_root, "out")
     game = os.environ.get("GAME", "demo")
+    game_sound = os.environ.get("GAME_SOUND", os.path.join("games", game, "sound"))
+    if not os.path.isabs(game_sound):
+        game_sound = os.path.join(sdk_root, game_sound)
     rom_dir = os.path.join(sdk_root, "roms", game)
     table_path = os.path.join(sdk_root, "sound", "driver", "sample_table.inc")
     game_id = os.environ.get("GAME_ID", "777")
@@ -29,7 +32,7 @@ def build_vrom():
 
     with open(vrom_path, "wb") as vrom:
         # Process ADPCM-A
-        files_a = sorted(glob.glob(os.path.join(sdk_root, "sound", "samples", "out_a", "*.adpcma")), key=sample_sort_key)
+        files_a = sorted(glob.glob(os.path.join(game_sound, "samples", "out_a", "*.adpcma")), key=sample_sort_key)
         for f in files_a:
             size = os.path.getsize(f)
             if size == 0: continue
@@ -50,7 +53,7 @@ def build_vrom():
             adpcma_count += 1
 
         # Process ADPCM-B
-        files_b = sorted(glob.glob(os.path.join(sdk_root, "sound", "samples", "out_b", "*.adpcmb")), key=sample_sort_key)
+        files_b = sorted(glob.glob(os.path.join(game_sound, "samples", "out_b", "*.adpcmb")), key=sample_sort_key)
         for f in files_b:
             size = os.path.getsize(f)
             if size == 0: continue

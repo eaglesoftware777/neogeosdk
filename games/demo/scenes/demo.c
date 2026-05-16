@@ -27,7 +27,7 @@
 #include "sdk/2d_engine/ng_particles.h"
 #include "sdk/2d_engine/ng_camera.h"
 #include "sdk/2d_engine/ng_feedback.h"
-#include "artbox/sprite_meta.h"
+#include "sprite_meta.h"
 #include <stdint.h>
 
 /* ------------------------------------------------------------------ */

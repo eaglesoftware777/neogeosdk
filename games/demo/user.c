@@ -408,7 +408,7 @@ void NEOGEO_USER INIT_GAME(void) {
 	ASM_END
 }
 
-/* Full SDK showcase attract loop — implemented in demo/. */
+/* Full SDK showcase attract loop — implemented in games/demo/scenes/. */
 void NEOGEO_USER DEMO_GAME(void) {
 	demo_run_attract();
 }

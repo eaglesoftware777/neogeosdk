@@ -18,6 +18,7 @@
 #include "ng_palette_fx.h"
 #include "ng_feedback.h"
 #include "ng_depthfx.h"
+#include "ng_joystick.h"
 
 static NGInteruptHook ng_before_logic;
 static NGInteruptHook ng_collision_logic;
@@ -45,6 +46,7 @@ void NEOGEO_USER ng_game_engine_init(void)
     ng_palette_fx_init();
     ng_feedback_init();
     ng_depthfx_init();
+    ng_joystick_init();
 
     ng_before_logic = 0;
     ng_collision_logic = 0;
@@ -92,6 +94,7 @@ void NEOGEO_USER ng_game_interupt_set_hooks(
 void NEOGEO_USER ng_game_engine_frame(void)
 {
     ng_game_time_tick();
+    ng_joystick_update();
 
     if (ng_before_logic) ng_before_logic();
 

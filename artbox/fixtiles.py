@@ -34,14 +34,16 @@ ROM_SIZE   = 131072          # 128 KB
 NUM_TILES  = ROM_SIZE // TILE_BYTES   # 4096
 
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR    = os.path.abspath(os.environ.get("ARTBOX_DATA_DIR", SCRIPT_DIR))
 _GAME_ID    = os.environ.get('GAME_ID', '777')
 _GAME       = os.environ.get('GAME', 'demo')
 ROMS_DIR    = os.path.join(SCRIPT_DIR, '..', 'roms', _GAME)
 GAME_S1     = os.path.join(ROMS_DIR, f'{_GAME_ID}-s1.s1')
 SFIX_ROM    = os.path.join(ROMS_DIR, 'sfix.sfix')
-OUT_S1      = os.path.join(SCRIPT_DIR, f'{_GAME_ID}-s1.s1')   # written here, Makefile copies
-DB_PATH     = os.path.join(SCRIPT_DIR, 'neorom.db')
-INFIX_DIR   = os.path.join(SCRIPT_DIR, 'infix')
+SFIX_FALLBACK = os.path.join(SCRIPT_DIR, '..', 'roms', 'neogeo', 'sfix.sfix')
+OUT_S1      = os.path.join(DATA_DIR, f'{_GAME_ID}-s1.s1')
+DB_PATH     = os.path.join(DATA_DIR, 'neorom.db')
+INFIX_DIR   = os.path.join(DATA_DIR, 'infix')
 
 # ── tile encoding / decoding ───────────────────────────────────────────────────
 _COL_PAIRS  = [(4,5),(6,7),(0,1),(2,3)]
@@ -106,11 +108,14 @@ def read_rom(path):
 rom = bytearray(ROM_SIZE)   # transparent = all 0x00
 
 # Step 1: seed with sfix.sfix so standard NeoGeo fonts are available everywhere
-sfix_tiles = read_rom(SFIX_ROM)
+sfix_path = SFIX_ROM if os.path.exists(SFIX_ROM) else SFIX_FALLBACK
+sfix_tiles = read_rom(sfix_path)
 if sfix_tiles:
     for i, t in enumerate(sfix_tiles[:NUM_TILES]):
         rom[i*TILE_BYTES:(i+1)*TILE_BYTES] = t
-    print(f"Seeded {len(sfix_tiles[:NUM_TILES])} tiles from sfix.sfix")
+    print(f"Seeded {len(sfix_tiles[:NUM_TILES])} tiles from {os.path.basename(sfix_path)}")
+else:
+    print(f"Warning: no sfix.sfix found in {SFIX_ROM} or {SFIX_FALLBACK}")
 
 # Step 2: overlay the existing game S1 ROM (preserve all non-empty tiles in place)
 game_tiles = read_rom(GAME_S1)
