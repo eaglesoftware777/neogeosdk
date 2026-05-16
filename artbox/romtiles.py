@@ -38,8 +38,8 @@ def write_palette(palette, std_file, neogeo_file, image_index, packed_palettes):
     palette_words = [0x0] * 16
     palette_words[0] = 0x0
 
-    visible_colors = min(len(palette), 15)
-    for slot in range(visible_colors):
+    visible_colors = min(len(palette), 16)
+    for slot in range(1, visible_colors):
         rgb = palette[slot]
         red_24 = int(rgb[0])
         green_24 = int(rgb[1])
@@ -90,7 +90,7 @@ def write_palette(palette, std_file, neogeo_file, image_index, packed_palettes):
             | blue_3
         )
         ng_word.tofile(neogeo_file)
-        palette_words[slot + 1] = int(ng_word)
+        palette_words[slot] = int(ng_word)
 
     st.pack_into(
         "i16Q",
@@ -119,7 +119,7 @@ def write_palette(palette, std_file, neogeo_file, image_index, packed_palettes):
 def encode_block(block, c1_file, c2_file):
     for row in range(8):
         pixels = block[row, :]
-        colors = [int(pixel) + 1 for pixel in pixels]
+        colors = [int(pixel) & 0x0F for pixel in pixels]
 
         plane_d = (
             ((colors[7] >> 3) & 1) << 7

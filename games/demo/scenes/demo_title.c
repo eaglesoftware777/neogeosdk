@@ -76,7 +76,7 @@ void NEOGEO_USER demo_title_screen(void)
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
 
     demo_caption("TITLE SCREEN", "NEO GEO SDK DEMO", "SAFE SHOWSCREEN BASE 0040H");
-    demo_safe_show(showScreen108, 16, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
+    demo_safe_show(showScreen108, 32, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
     playSFX(SOUND_SFX_TITLE_GONG);
 
     if (demo_wait(180u)) {
@@ -87,7 +87,7 @@ void NEOGEO_USER demo_title_screen(void)
     /* Second title with PRESS START blink */
     demo_clear_scene();
     demo_caption("TITLE SCREEN", "EAGLE SOFTWARE", "PRESS START");
-    demo_safe_show(showScreen107, 16, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
+    demo_safe_show(showScreen107, 32, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
     playSFX(SOUND_SFX_LOW_DRUM);
 
     for (i = 0u; i < 180u; i++) {
@@ -198,7 +198,7 @@ void NEOGEO_USER demo_title_attract_reel(void)
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
 
     /* Show title card with pulsing INSERT COIN */
-    demo_safe_show(showScreen108, 16, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
+    demo_safe_show(showScreen108, 32, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
     ng_palfx_pulse(DEMO_SCREEN_PALETTE(108u), s_title_pal, 60u);
 
     soundSceneReset();

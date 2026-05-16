@@ -29,8 +29,8 @@ void NEOGEO_USER playSFX(uint8_t n);
 #define CAM_BG_SLOT       20u
 
 /* Player tile: warrior walk frame 1 (screen 11 = meta[10]) */
-#define CAM_PLAYER_TILE        ((uint16_t)((11u - 1u) * 256u))
-#define CAM_PLAYER_PALETTE     ((uint8_t)(0x10u + 10u))
+#define CAM_PLAYER_TILE        DEMO_SCREEN_TILE(11u)
+#define CAM_PLAYER_PALETTE     DEMO_SCREEN_PALETTE(11u)
 #define CAM_PLAYER_STRIPS       6u
 #define CAM_PLAYER_ROWS         10u
 #define CAM_PLAYER_STRIDE       16u
@@ -59,13 +59,13 @@ static void NEOGEO_USER cam_cinematic(void)
     demo_fix_puts(0u, 25u, "########################################", 2u);
 
     demo_load_screen_palette(1u);
-    ng_sprite_group_init(&far_layer, NG_SPR_BG0_FIRST, 16u, 16u,
+    ng_sprite_group_init(&far_layer, NG_SPR_BG0_FIRST, demo_screen_strips(1u), demo_screen_rows(1u),
                          DEMO_SCREEN_TILE(1u), DEMO_SCREEN_PALETTE(1u));
     ng_sprite_group_set_tile_stride(&far_layer, 16u);
     ng_sprite_group_set_scale(&far_layer, 0xFFu, 0xFFu);
 
     demo_load_screen_palette(2u);
-    ng_sprite_group_init(&near_layer, NG_SPR_BG1_FIRST, 16u, 16u,
+    ng_sprite_group_init(&near_layer, NG_SPR_BG1_FIRST, demo_screen_strips(2u), demo_screen_rows(2u),
                          DEMO_SCREEN_TILE(2u), DEMO_SCREEN_PALETTE(2u));
     ng_sprite_group_set_tile_stride(&near_layer, 16u);
     ng_sprite_group_set_scale(&near_layer, 0xFFu, 0xFFu);
@@ -80,11 +80,11 @@ static void NEOGEO_USER cam_cinematic(void)
         cam_x = (int16_t)(cam_x + 3);
         if (cam_x > 640) cam_x = 0;
 
-        ng_sprite_group_set_pos(&far_layer,  (int16_t)(-(cam_x >> 1)), (int16_t)0);
+        ng_sprite_group_set_pos(&far_layer,  (int16_t)(-(cam_x >> 1)), demo_screen_y_offset(1u));
         ng_sprite_group_mark_dirty(&far_layer, NG_SGF_DIRTY_POS);
         ng_sprite_group_flush(&far_layer);
 
-        ng_sprite_group_set_pos(&near_layer, (int16_t)(-cam_x), (int16_t)0);
+        ng_sprite_group_set_pos(&near_layer, (int16_t)(-cam_x), demo_screen_y_offset(2u));
         ng_sprite_group_mark_dirty(&near_layer, NG_SGF_DIRTY_POS);
         ng_sprite_group_flush(&near_layer);
 
@@ -160,8 +160,10 @@ static void NEOGEO_USER cam_follow_demo(void)
 
         /* Advance walk animation */
         anim_frame = (uint8_t)(11u + ((t / 8u) % 9u));
+        demo_load_screen_palette(anim_frame);
         ng_sprite_group_set_tile_base(&player, DEMO_SCREEN_TILE(anim_frame));
-        ng_sprite_group_mark_dirty(&player, NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_POS);
+        ng_sprite_group_set_palette(&player, DEMO_SCREEN_PALETTE(anim_frame));
+        ng_sprite_group_mark_dirty(&player, NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_PALETTE | NG_SGF_DIRTY_POS);
         ng_sprite_group_set_pos(&player, screen_x, (int16_t)(-34));
         ng_sprite_group_flush(&player);
 
@@ -263,14 +265,14 @@ static void NEOGEO_USER cam_parallax_demo(void)
 
     /* Far layer: background screen 1 at half scroll speed */
     demo_load_screen_palette(1u);
-    ng_sprite_group_init(&far_layer, NG_SPR_BG0_FIRST, 16u, 16u,
+    ng_sprite_group_init(&far_layer, NG_SPR_BG0_FIRST, demo_screen_strips(1u), demo_screen_rows(1u),
                          DEMO_SCREEN_TILE(1u), DEMO_SCREEN_PALETTE(1u));
     ng_sprite_group_set_tile_stride(&far_layer, 16u);
     ng_sprite_group_set_scale(&far_layer, 0xFFu, 0xFFu);
 
     /* Near layer: background screen 2 at full scroll speed */
     demo_load_screen_palette(2u);
-    ng_sprite_group_init(&near_layer, NG_SPR_BG1_FIRST, 16u, 16u,
+    ng_sprite_group_init(&near_layer, NG_SPR_BG1_FIRST, demo_screen_strips(2u), demo_screen_rows(2u),
                          DEMO_SCREEN_TILE(2u), DEMO_SCREEN_PALETTE(2u));
     ng_sprite_group_set_tile_stride(&near_layer, 16u);
     ng_sprite_group_set_scale(&near_layer, 0xFFu, 0xFFu);
@@ -280,12 +282,12 @@ static void NEOGEO_USER cam_parallax_demo(void)
     scroll = 0;
     for (t = 0u; t < 300u; t++) {
         /* Far layer scrolls at half rate */
-        ng_sprite_group_set_pos(&far_layer,  (int16_t)(-(scroll >> 1)), (int16_t)0);
+        ng_sprite_group_set_pos(&far_layer,  (int16_t)(-(scroll >> 1)), demo_screen_y_offset(1u));
         ng_sprite_group_mark_dirty(&far_layer, NG_SGF_DIRTY_POS);
         ng_sprite_group_flush(&far_layer);
 
         /* Near layer scrolls at full rate */
-        ng_sprite_group_set_pos(&near_layer, (int16_t)(-scroll), (int16_t)0);
+        ng_sprite_group_set_pos(&near_layer, (int16_t)(-scroll), demo_screen_y_offset(2u));
         ng_sprite_group_mark_dirty(&near_layer, NG_SGF_DIRTY_POS);
         ng_sprite_group_flush(&near_layer);
 

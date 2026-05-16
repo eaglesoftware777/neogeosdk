@@ -7,6 +7,8 @@
 #include "sdk/neogeo.h"
 #include <stdint.h>
 
+#define EC_SPRITE_BASE 0x0040u
+
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 
@@ -22,40 +24,40 @@ void NEOGEO_USER showEyeCatcherMVS(void) {
     clearFix();
     clearSprs();
 
-    showScreen94(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen94(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(80);
 
-    showScreen94(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen94(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(50);
-    showScreen95(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen95(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(50);
-    showScreen96(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen96(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(50);
-    showScreen97(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen97(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(35);
-    showScreen98(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen98(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(50);
-    showScreen99(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen99(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(50);
-    showScreen100(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen100(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(50);
 
-    showScreen94(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen94(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(50);
-    showScreen95(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen95(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(50);
-    showScreen96(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen96(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(50);
-    showScreen97(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen97(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(35);
-    showScreen98(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen98(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(50);
-    showScreen99(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen99(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(50);
-    showScreen100(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen100(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(50);
 
-    showScreen100(54, 48, 0xb, 0x7f, 12, 0x0000, 0);
+    showScreen100(32, 24, 0xf, 0xff, 11, 0x0000, EC_SPRITE_BASE);
     cyclexms(100);
 
     clearFix();

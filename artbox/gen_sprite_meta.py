@@ -53,6 +53,7 @@ with open("sprite_meta.h", "w", encoding="utf-8") as out:
             "main_character": 1,
             "opponent": 2,
             "npc": 3,
+            "npcs": 3,
             "background": 0,
         }.get(category_name, 0)
         out.write(

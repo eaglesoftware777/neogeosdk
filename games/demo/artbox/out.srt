@@ -807,125 +807,41 @@ note=NPC sprite pages
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=189x208 canvas=256x256 content=189x208 offset=(33,48)
-screen_id=116 palette_bank=131 tile_base=29440 reserved_last=29695 used_cols=12 used_rows=13 start_col=2 start_row=3 x_pad=1 y_pad=0 used_tiles=156 strips=12 active_rows=13
+screen_id=116 palette_bank=131 tile_base=29440 reserved_last=29695 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=1 y_pad=0 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages
 
 [117] npcs/cat_08.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=182x201 canvas=256x256 content=182x201 offset=(37,55)
-screen_id=117 palette_bank=132 tile_base=29696 reserved_last=29951 used_cols=12 used_rows=13 start_col=2 start_row=3 x_pad=5 y_pad=7 used_tiles=156 strips=12 active_rows=13
+screen_id=117 palette_bank=132 tile_base=29696 reserved_last=29951 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=5 y_pad=7 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages
 
 [118] npcs/cat_09.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=180x199 canvas=256x256 content=180x199 offset=(38,57)
-screen_id=118 palette_bank=133 tile_base=29952 reserved_last=30207 used_cols=12 used_rows=13 start_col=2 start_row=3 x_pad=6 y_pad=9 used_tiles=156 strips=12 active_rows=13
+screen_id=118 palette_bank=133 tile_base=29952 reserved_last=30207 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=6 y_pad=9 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages
 
 [119] npcs/cat_10.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=189x200 canvas=256x256 content=189x200 offset=(33,56)
-screen_id=119 palette_bank=134 tile_base=30208 reserved_last=30463 used_cols=12 used_rows=13 start_col=2 start_row=3 x_pad=1 y_pad=8 used_tiles=156 strips=12 active_rows=13
+screen_id=119 palette_bank=134 tile_base=30208 reserved_last=30463 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=1 y_pad=8 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages
 
 [120] npcs/cat_11.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=185x202 canvas=256x256 content=185x202 offset=(35,54)
-screen_id=120 palette_bank=135 tile_base=30464 reserved_last=30719 used_cols=12 used_rows=13 start_col=2 start_row=3 x_pad=3 y_pad=6 used_tiles=156 strips=12 active_rows=13
+screen_id=120 palette_bank=135 tile_base=30464 reserved_last=30719 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=3 y_pad=6 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages
 
 [121] npcs/cat_12.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=187x198 canvas=256x256 content=187x198 offset=(34,58)
-screen_id=121 palette_bank=136 tile_base=30720 reserved_last=30975 used_cols=12 used_rows=13 start_col=2 start_row=3 x_pad=2 y_pad=10 used_tiles=156 strips=12 active_rows=13
-note=NPC sprite pages
-
-[122] npcs/z_npc_84.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
-category=npcs
-source=96x96 canvas=256x256 content=96x96 offset=(80,160)
-screen_id=122 palette_bank=137 tile_base=30976 reserved_last=31231 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=NPC sprite pages
-
-[123] npcs/z_npc_85.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
-category=npcs
-source=96x96 canvas=256x256 content=96x96 offset=(80,160)
-screen_id=123 palette_bank=138 tile_base=31232 reserved_last=31487 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=NPC sprite pages
-
-[124] npcs/z_npc_86.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
-category=npcs
-source=96x96 canvas=256x256 content=96x96 offset=(80,160)
-screen_id=124 palette_bank=139 tile_base=31488 reserved_last=31743 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=NPC sprite pages
-
-[125] npcs/z_npc_87.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
-category=npcs
-source=96x96 canvas=256x256 content=96x96 offset=(80,160)
-screen_id=125 palette_bank=140 tile_base=31744 reserved_last=31999 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=NPC sprite pages
-
-[126] npcs/z_npc_88.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
-category=npcs
-source=96x96 canvas=256x256 content=96x96 offset=(80,160)
-screen_id=126 palette_bank=141 tile_base=32000 reserved_last=32255 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=NPC sprite pages
-
-[127] npcs/z_npc_89.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
-category=npcs
-source=96x96 canvas=256x256 content=96x96 offset=(80,160)
-screen_id=127 palette_bank=142 tile_base=32256 reserved_last=32511 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=NPC sprite pages
-
-[128] npcs/z_npc_90.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
-category=npcs
-source=96x96 canvas=256x256 content=96x96 offset=(80,160)
-screen_id=128 palette_bank=143 tile_base=32512 reserved_last=32767 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=NPC sprite pages
-
-[129] npcs/z_npc_91.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
-category=npcs
-source=96x96 canvas=256x256 content=96x96 offset=(80,160)
-screen_id=129 palette_bank=144 tile_base=32768 reserved_last=33023 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=NPC sprite pages
-
-[130] npcs/z_npc_92.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
-category=npcs
-source=96x96 canvas=256x256 content=96x96 offset=(80,160)
-screen_id=130 palette_bank=145 tile_base=33024 reserved_last=33279 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=NPC sprite pages
-
-[131] npcs/z_npc_93.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
-category=npcs
-source=96x96 canvas=256x256 content=96x96 offset=(80,160)
-screen_id=131 palette_bank=146 tile_base=33280 reserved_last=33535 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=NPC sprite pages
-
-[132] npcs/z_npc_94.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
-category=npcs
-source=96x96 canvas=256x256 content=96x96 offset=(80,160)
-screen_id=132 palette_bank=147 tile_base=33536 reserved_last=33791 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
-note=NPC sprite pages
-
-[133] npcs/z_npc_95.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
-category=npcs
-source=96x96 canvas=256x256 content=96x96 offset=(80,160)
-screen_id=133 palette_bank=148 tile_base=33792 reserved_last=34047 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
+screen_id=121 palette_bank=136 tile_base=30720 reserved_last=30975 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=2 y_pad=10 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages
 

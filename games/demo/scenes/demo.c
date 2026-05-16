@@ -47,6 +47,7 @@ void NEOGEO_USER setpal(uint16_t *pal_tile,
     uint16_t t8, uint16_t t9, uint16_t t10, uint16_t t11,
     uint16_t t12, uint16_t t13, uint16_t t14, uint16_t t15);
 void NEOGEO_USER soundStopAll(void);
+void NEOGEO_USER soundCancelFade(void);
 void NEOGEO_USER soundSceneReset(void);
 void NEOGEO_USER soundSetADPCMAVolume(uint8_t v);
 void NEOGEO_USER soundSetADPCMBVolume(uint8_t v);
@@ -130,7 +131,9 @@ void NEOGEO_USER demo_clear_all_sprites(void)
 
 void NEOGEO_USER demo_clear_scene(void)
 {
+    soundCancelFade();
     soundStopAll();
+    soundSceneReset();
     clearFix();
     demo_clear_all_sprites();
     setBACKDROP(BLACK);
@@ -153,6 +156,61 @@ void NEOGEO_USER demo_safe_show(DemoShowScreenFn fn,
     if (!fn) return;
     if (sprite_base == 0u) sprite_base = DEMO_SHOWSCREEN_BASE;
     fn(x0, y0, xr, yr, min_crt_sz, backdrop, sprite_base);
+}
+
+static const NGSpriteAssetMeta * NEOGEO_USER demo_screen_meta(uint8_t screen_id)
+{
+    uint16_t idx;
+    if (screen_id == 0u) return 0;
+    idx = (uint16_t)(screen_id - 1u);
+    if (idx >= NG_ASSET_META_COUNT) return 0;
+    return &g_ng_asset_meta[idx];
+}
+
+uint16_t NEOGEO_USER demo_screen_tile(uint8_t screen_id)
+{
+    const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (screen_id == 0u) return 0u;
+    if (!meta) return (uint16_t)(((uint16_t)(screen_id - 1u)) * 256u);
+    return (uint16_t)(meta->tile_base +
+                      ((uint16_t)meta->tile_row_start * 16u) +
+                      meta->tile_col_start);
+}
+
+uint8_t NEOGEO_USER demo_screen_palette(uint8_t screen_id)
+{
+    const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (screen_id == 0u) return 0u;
+    if (!meta) return (uint8_t)(0x10u + (screen_id - 1u));
+    return meta->palette_bank;
+}
+
+uint8_t NEOGEO_USER demo_screen_strips(uint8_t screen_id)
+{
+    const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (!meta || meta->strips == 0u) return 1u;
+    return meta->strips;
+}
+
+uint8_t NEOGEO_USER demo_screen_rows(uint8_t screen_id)
+{
+    const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (!meta || meta->active_rows == 0u) return 1u;
+    return meta->active_rows;
+}
+
+int16_t NEOGEO_USER demo_screen_x_offset(uint8_t screen_id)
+{
+    const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (!meta) return 0;
+    return (int16_t)((uint16_t)meta->tile_col_start * 16u);
+}
+
+int16_t NEOGEO_USER demo_screen_y_offset(uint8_t screen_id)
+{
+    const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (!meta) return 0;
+    return (int16_t)((uint16_t)meta->tile_row_start * 16u);
 }
 
 /* Forward-declare all showScreenN functions needed for palette preload */
@@ -255,106 +313,19 @@ void NEOGEO_USER showScreen109(int x0, int y0, int xr, int yr, int min_crt_sz, u
 /* ------------------------------------------------------------------ */
 /*  Palette preload helper (off-screen load for palette-only priming)    */
 /* ------------------------------------------------------------------ */
+extern const DemoShowScreenFn ng_screen_table[];
+extern const uint16_t ng_screen_count;
+
 void NEOGEO_USER demo_load_screen_palette(uint8_t screen_id)
 {
-    switch (screen_id) {
-        case 1:  showScreen1 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 2:  showScreen2 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 3:  showScreen3 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 4:  showScreen4 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 5:  showScreen5 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 6:  showScreen6 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 7:  showScreen7 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 8:  showScreen8 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 9:  showScreen9 (-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 10: showScreen10(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 11: showScreen11(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 12: showScreen12(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 13: showScreen13(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 14: showScreen14(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 15: showScreen15(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 16: showScreen16(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 17: showScreen17(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 18: showScreen18(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 19: showScreen19(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 20: showScreen20(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 21: showScreen21(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 22: showScreen22(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 23: showScreen23(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 24: showScreen24(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 25: showScreen25(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 26: showScreen26(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 27: showScreen27(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 28: showScreen28(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 29: showScreen29(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 30: showScreen30(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 31: showScreen31(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 32: showScreen32(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 33: showScreen33(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 34: showScreen34(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 35: showScreen35(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 36: showScreen36(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 37: showScreen37(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 38: showScreen38(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 39: showScreen39(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 40: showScreen40(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 41: showScreen41(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 42: showScreen42(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 43: showScreen43(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 44: showScreen44(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 45: showScreen45(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 46: showScreen46(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 47: showScreen47(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 48: showScreen48(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 49: showScreen49(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 50: showScreen50(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 51: showScreen51(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 52: showScreen52(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 53: showScreen53(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 54: showScreen54(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 55: showScreen55(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 56: showScreen56(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 57: showScreen57(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 58: showScreen58(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 59: showScreen59(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 60: showScreen60(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 61: showScreen61(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 62: showScreen62(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 63: showScreen63(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 64: showScreen64(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 65: showScreen65(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 66: showScreen66(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 67: showScreen67(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 68: showScreen68(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 69: showScreen69(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 70: showScreen70(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 71: showScreen71(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 72: showScreen72(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 73: showScreen73(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 74: showScreen74(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 75: showScreen75(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 76: showScreen76(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 77: showScreen77(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 78: showScreen78(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 79: showScreen79(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 80: showScreen80(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 81: showScreen81(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 82: showScreen82(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 83: showScreen83(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 84: showScreen84(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 85: showScreen85(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 86: showScreen86(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 87: showScreen87(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 88: showScreen88(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 89: showScreen89(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 90: showScreen90(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 91: showScreen91(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 92: showScreen92(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 107: showScreen107(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 108: showScreen108(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        case 109: showScreen109(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE); break;
-        default: break;
-    }
+    DemoShowScreenFn fn;
+
+    if (screen_id == 0u || screen_id > ng_screen_count) return;
+
+    fn = ng_screen_table[screen_id];
+    if (!fn) return;
+
+    fn(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE);
 }
 
 /* ------------------------------------------------------------------ */
@@ -379,20 +350,29 @@ void NEOGEO_USER demo_draw_sprite_screen(uint8_t screen_id,
                                          uint8_t scale_x, uint8_t scale_y)
 {
     NGSpriteGroup g;
+    uint8_t meta_strips;
+    uint8_t meta_rows;
     if (screen_id == 0u) return;
     if (strips == 0u) strips = 1u;
     if (rows   == 0u) rows   = 1u;
     if (strips > 16u) strips = 16u;
     if (rows   > 16u) rows   = 16u;
 
+    meta_strips = demo_screen_strips(screen_id);
+    meta_rows = demo_screen_rows(screen_id);
+    if (strips > meta_strips) strips = meta_strips;
+    if (rows > meta_rows) rows = meta_rows;
+
     demo_load_screen_palette(screen_id);
 
-    ng_sprite_group_init(&g, first_sprite, strips, 16u,
+    ng_sprite_group_init(&g, first_sprite, strips, meta_rows,
                          DEMO_SCREEN_TILE(screen_id),
                          DEMO_SCREEN_PALETTE(screen_id));
     ng_sprite_group_set_tile_stride(&g, 16u);
     ng_sprite_group_set_active_rows(&g, rows);
-    ng_sprite_group_set_pos(&g, x, y);
+    ng_sprite_group_set_pos(&g,
+                            (int16_t)(x + demo_screen_x_offset(screen_id)),
+                            (int16_t)(y + demo_screen_y_offset(screen_id)));
     ng_sprite_group_set_scale(&g,
                               demo_normalize_x_scale(scale_x),
                               scale_y);

@@ -27,7 +27,7 @@ void NEOGEO_USER setpal(uint16_t *pal_tile,
 
 /*
  * Main character screen IDs 11-93 (walk, attack, FX frames).
- * showScreen109 = z_npc_84 (first NPC walk frame): loads palette bank 124.
+ * NPC frames are looked up through generated metadata.
  */
 
 #define DEMO_MAIN_X            20
@@ -41,19 +41,18 @@ void NEOGEO_USER setpal(uint16_t *pal_tile,
 #define DEMO_NPC_Y            (-60)
 
 /*
- * z_npc_84..z_npc_95 = meta[108..119] = screens 109-120.
- * tile_base = 27648 + n*256  (artbox 256-tile canvas stride)
- * content tile = tile_base + tile_row_start*16 + tile_col_start
- *              = tile_base + 10*16 + 5 = tile_base + 165
- * All 12 frames are the same character; palette bank 124 (z_npc_84) is used
- * for all frames so only one showScreen109 preload is needed.
+ * cat_01..cat_12 = screens 110-121 in the generated manifest.
+ * The sequence uses one shared palette to avoid frame-to-frame color shifts.
  */
 #define DEMO_NPC_FRAME_COUNT    12u
-#define DEMO_NPC_TILE(n)        ((uint16_t)(27648u + (uint16_t)((uint8_t)(n) % 12u) * 256u + 165u))
-#define DEMO_NPC_PALETTE        124u
-#define DEMO_NPC_STRIPS         6u
-#define DEMO_NPC_ROWS           6u
+#define DEMO_NPC_FIRST_SCREEN  110u
+#define DEMO_NPC_SCREEN(n)     ((uint8_t)(DEMO_NPC_FIRST_SCREEN + ((uint8_t)(n) % DEMO_NPC_FRAME_COUNT)))
+#define DEMO_NPC_TILE(n)       DEMO_SCREEN_TILE(DEMO_NPC_SCREEN(n))
+#define DEMO_NPC_PALETTE(n)    DEMO_SCREEN_PALETTE(DEMO_NPC_FIRST_SCREEN)
+#define DEMO_NPC_STRIPS        12u
+#define DEMO_NPC_ROWS          15u
 #define DEMO_NPC_STRIDE         16u
+#define DEMO_NPC_OFFSET_Y     (-240)
 
 /* Sprite slot outside the NGCharacter range (NG_SPR_CHAR_FIRST=1..NG_SPR_CHAR_LAST=299)
  * used by the scale/flip showcase to avoid overlapping live engine slots. */
@@ -63,7 +62,7 @@ void NEOGEO_USER setpal(uint16_t *pal_tile,
  * Depth sort/FX Y range.
  * DEPTH_FAR_Y=60  → scan line ~20 (top of screen, small = far).
  * DEPTH_NEAR_Y=-50 → scan line ~130 (lower screen, large = near).
- * Both values account for sprite_offset_y=-96 used by NGCharacter NPCs.
+ * Both values account for the NGCharacter NPC draw offset.
  */
 #define DEPTH_FAR_Y    60
 #define DEPTH_NEAR_Y  (-50)
@@ -159,14 +158,10 @@ static void NEOGEO_USER demo_energy_combo(void)
     }
 }
 
-/*
- * Load z_npc_84 palette into hardware palette bank 124.
- * All 12 NPC walk frames (z_npc_84..z_npc_95) are the same character and
- * share the same colors; one preload covers the full animation cycle.
- */
-static void NEOGEO_USER demo_preload_npc_palette(void)
+static void NEOGEO_USER demo_preload_npc_palette(uint8_t frame)
 {
-    demo_load_screen_palette(109);
+    (void)frame;
+    demo_load_screen_palette(DEMO_NPC_FIRST_SCREEN);
 }
 
 /*
@@ -192,7 +187,6 @@ static void NEOGEO_USER demo_npc_scene(void)
     soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
     playSFX(SOUND_SFX_STRING_PHRASE);
 
-    demo_preload_npc_palette();
     ng_chars_init();
 
     /* NPCs at DEMO_NPC_Y (-60) = scan ~140, lower-center, natural floor level.
@@ -201,18 +195,20 @@ static void NEOGEO_USER demo_npc_scene(void)
     cb = chars_add(0, 120, DEMO_NPC_Y);
 
     if (ca) {
+        demo_preload_npc_palette(0);
         ng_char_set_sprite(ca, 0, DEMO_NPC_STRIPS, DEMO_NPC_ROWS,
-                           DEMO_NPC_TILE(0), DEMO_NPC_PALETTE);
+                           DEMO_NPC_TILE(0), DEMO_NPC_PALETTE(0));
         ng_char_set_tile_stride(ca, DEMO_NPC_STRIDE);
-        ca->sprite_offset_y = -96;
+        ca->sprite_offset_y = DEMO_NPC_OFFSET_Y;
         ca->scale_x = 0x70;
         ca->scale_y = 0x70;
     }
     if (cb) {
+        demo_preload_npc_palette(6);
         ng_char_set_sprite(cb, 0, DEMO_NPC_STRIPS, DEMO_NPC_ROWS,
-                           DEMO_NPC_TILE(6), DEMO_NPC_PALETTE);
+                           DEMO_NPC_TILE(6), DEMO_NPC_PALETTE(6));
         ng_char_set_tile_stride(cb, DEMO_NPC_STRIDE);
-        cb->sprite_offset_y = -96;
+        cb->sprite_offset_y = DEMO_NPC_OFFSET_Y;
         cb->flip_x = 1;
         cb->sprite_dirty = 1;
         cb->scale_x = 0x70;
@@ -225,17 +221,29 @@ static void NEOGEO_USER demo_npc_scene(void)
         uint8_t fb = (uint8_t)(((t + 6u) / 18u) % DEMO_NPC_FRAME_COUNT);
         uint16_t ta_tile = DEMO_NPC_TILE(fa);
         uint16_t tb_tile = DEMO_NPC_TILE(fb);
+        uint8_t ta_pal = DEMO_NPC_PALETTE(fa);
+        uint8_t tb_pal = DEMO_NPC_PALETTE(fb);
+        demo_preload_npc_palette(fa);
+        demo_preload_npc_palette(fb);
 
         /* Hero at slot 320 — above NGCharacter range, no slot conflict. */
         demo_draw_sprite_screen(hero_frame, 320u, DEMO_MAIN_X, DEMO_MAIN_Y, 16, 16, 0xFF, 0xFF);
 
         if (ca) {
             ca->x = (int16_t)(-40 + (int16_t)(t % 180u));
-            if (ca->sprite_tile != ta_tile) { ca->sprite_tile = ta_tile; ca->sprite_dirty = 1; }
+            if (ca->sprite_tile != ta_tile || ca->palette != ta_pal) {
+                ca->sprite_tile = ta_tile;
+                ca->palette = ta_pal;
+                ca->sprite_dirty = 1;
+            }
         }
         if (cb) {
             cb->x = (int16_t)(120 - (int16_t)(t % 180u));
-            if (cb->sprite_tile != tb_tile) { cb->sprite_tile = tb_tile; cb->sprite_dirty = 1; }
+            if (cb->sprite_tile != tb_tile || cb->palette != tb_pal) {
+                cb->sprite_tile = tb_tile;
+                cb->palette = tb_pal;
+                cb->sprite_dirty = 1;
+            }
         }
 
         ng_chars_draw();
@@ -260,7 +268,7 @@ static void NEOGEO_USER demo_scale_matrix(void)
     /* Scales and X positions for 4 NPC-sized sprites side by side */
     static const uint8_t  scales[4]   = { 0xFF, 0xC8, 0x96, 0x64 };
     static const int16_t  xpos[4]     = { 12,   76,  148,  216  };
-    static const uint16_t slots[4]    = { 300,  306,  312,  318  };
+    static const uint16_t slots[4]    = { 300,  312,  324,  336  };
 
     demo_prepare_scene("HARDWARE SCALE MATRIX",
                        "4 SIZES LIVE  SCB2 XSCALE/YSCALE");
@@ -274,15 +282,15 @@ static void NEOGEO_USER demo_scale_matrix(void)
     demo_fix_puts(27, 9, " 39%", 2);
     demo_fix_puts(1, 10, "0xFF 0xC8 0x96 0x64", 0);
 
-    demo_preload_npc_palette();
-
     for (t = 0; t < 420u; t++) {
         uint8_t frame = (uint8_t)((t / 18u) % DEMO_NPC_FRAME_COUNT);
         uint16_t tile  = DEMO_NPC_TILE(frame);
+        uint8_t pal = DEMO_NPC_PALETTE(frame);
+        demo_preload_npc_palette(frame);
 
         for (i = 0; i < 4u; i++) {
             ng_sprite_group_init(&g[i], slots[i], DEMO_NPC_STRIPS, DEMO_NPC_ROWS,
-                                 tile, DEMO_NPC_PALETTE);
+                                 tile, pal);
             ng_sprite_group_set_tile_stride(&g[i], DEMO_NPC_STRIDE);
             ng_sprite_group_set_active_rows(&g[i], DEMO_NPC_ROWS);
             ng_sprite_group_set_scale(&g[i], scales[i], scales[i]);
@@ -350,7 +358,7 @@ static void NEOGEO_USER demo_live_depth_sort(void)
                        "LOWER ON SCREEN = NEARER = FRONT");
     demo_fix_puts(2, 7, "2 CHARS CROSS: SLOT SWAPS LIVE", 1);
     soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
-    demo_preload_npc_palette();
+    demo_preload_npc_palette(0);
 
     ng_chars_init();
 
@@ -361,16 +369,18 @@ static void NEOGEO_USER demo_live_depth_sort(void)
     cb = chars_add(0, 82, yb);
 
     if (ca) {
+        demo_preload_npc_palette(0);
         ng_char_set_sprite(ca, 0, DEMO_NPC_STRIPS, DEMO_NPC_ROWS,
-                           DEMO_NPC_TILE(0), DEMO_NPC_PALETTE);
+                           DEMO_NPC_TILE(0), DEMO_NPC_PALETTE(0));
         ng_char_set_tile_stride(ca, DEMO_NPC_STRIDE);
-        ca->sprite_offset_y = -96;
+        ca->sprite_offset_y = DEMO_NPC_OFFSET_Y;
     }
     if (cb) {
+        demo_preload_npc_palette(6);
         ng_char_set_sprite(cb, 0, DEMO_NPC_STRIPS, DEMO_NPC_ROWS,
-                           DEMO_NPC_TILE(6), DEMO_NPC_PALETTE);
+                           DEMO_NPC_TILE(6), DEMO_NPC_PALETTE(6));
         ng_char_set_tile_stride(cb, DEMO_NPC_STRIDE);
-        cb->sprite_offset_y = -96;
+        cb->sprite_offset_y = DEMO_NPC_OFFSET_Y;
         cb->flip_x = 1;
         cb->sprite_dirty = 1;
     }
@@ -380,17 +390,29 @@ static void NEOGEO_USER demo_live_depth_sort(void)
         uint8_t fb = (uint8_t)(((t + 6u) / 18u) % DEMO_NPC_FRAME_COUNT);
         uint16_t ta_tile = DEMO_NPC_TILE(fa);
         uint16_t tb_tile = DEMO_NPC_TILE(fb);
+        uint8_t ta_pal = DEMO_NPC_PALETTE(fa);
+        uint8_t tb_pal = DEMO_NPC_PALETTE(fb);
+        demo_preload_npc_palette(fa);
+        demo_preload_npc_palette(fb);
 
         if (ca) {
             uint8_t sc = demo_depth_scale(ya);
-            if (ca->sprite_tile != ta_tile) { ca->sprite_tile = ta_tile; ca->sprite_dirty = 1; }
+            if (ca->sprite_tile != ta_tile || ca->palette != ta_pal) {
+                ca->sprite_tile = ta_tile;
+                ca->palette = ta_pal;
+                ca->sprite_dirty = 1;
+            }
             ca->y = ya;
             ca->scale_x = sc;
             ca->scale_y = sc;
         }
         if (cb) {
             uint8_t sc = demo_depth_scale(yb);
-            if (cb->sprite_tile != tb_tile) { cb->sprite_tile = tb_tile; cb->sprite_dirty = 1; }
+            if (cb->sprite_tile != tb_tile || cb->palette != tb_pal) {
+                cb->sprite_tile = tb_tile;
+                cb->palette = tb_pal;
+                cb->sprite_dirty = 1;
+            }
             cb->y = yb;
             cb->scale_x = sc;
             cb->scale_y = sc;
@@ -443,7 +465,7 @@ static void NEOGEO_USER demo_perspective_crowd(void)
 
     soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
     playSFX(SOUND_SFX_STRING_PHRASE);
-    demo_preload_npc_palette();
+    demo_preload_npc_palette(0);
     ng_chars_init();
 
     for (i = 0; i < CROWD_COUNT; i++) {
@@ -451,15 +473,18 @@ static void NEOGEO_USER demo_perspective_crowd(void)
         cy[i] = start_y[i];
         chars[i] = chars_add(0, start_x[i], cy[i]);
         if (chars[i]) {
+            demo_preload_npc_palette(fn);
             ng_char_set_sprite(chars[i], 0, DEMO_NPC_STRIPS, DEMO_NPC_ROWS,
-                               DEMO_NPC_TILE(fn), DEMO_NPC_PALETTE);
+                               DEMO_NPC_TILE(fn), DEMO_NPC_PALETTE(fn));
             ng_char_set_tile_stride(chars[i], DEMO_NPC_STRIDE);
-            chars[i]->sprite_offset_y = -96;
+            chars[i]->sprite_offset_y = DEMO_NPC_OFFSET_Y;
         }
     }
 
     for (t = 0; t < 480u; t++) {
         uint8_t anim_frame = (uint8_t)((t / 18u) % DEMO_NPC_FRAME_COUNT);
+        uint8_t anim_pal = DEMO_NPC_PALETTE(anim_frame);
+        demo_preload_npc_palette(anim_frame);
 
         for (i = 0; i < CROWD_COUNT; i++) {
             NGCharacter *c = chars[i];
@@ -468,7 +493,11 @@ static void NEOGEO_USER demo_perspective_crowd(void)
             if (!c) continue;
 
             tile = DEMO_NPC_TILE(anim_frame);
-            if (c->sprite_tile != tile) { c->sprite_tile = tile; c->sprite_dirty = 1; }
+            if (c->sprite_tile != tile || c->palette != anim_pal) {
+                c->sprite_tile = tile;
+                c->palette = anim_pal;
+                c->sprite_dirty = 1;
+            }
 
             /* March toward camera: Y decreases = moves to NEAR (bottom/large) */
             cy[i] = (int16_t)(cy[i] - 1);

@@ -10,8 +10,6 @@
 #define NEOGEO_USER
 #endif
 
-#define DEMO_SCREEN_TILE(screen_id) ((uint16_t)(((screen_id) - 1u) * 256u))
-#define DEMO_SCREEN_PALETTE(screen_id) ((uint8_t)(0x10u + ((screen_id) - 1u)))
 #define DEMO_SPRITE_SCREEN(sprite_id) ((uint8_t)((sprite_id) + 10u))
 #define DEMO_SPRITE_TILE(sprite_id) DEMO_SCREEN_TILE(DEMO_SPRITE_SCREEN(sprite_id))
 #define DEMO_SPRITE_PALETTE(sprite_id) DEMO_SCREEN_PALETTE(DEMO_SPRITE_SCREEN(sprite_id))
