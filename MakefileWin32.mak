@@ -4,6 +4,11 @@
 #https://github.com/eaglesoftware777/neogeosdk
 #######
 
+# Force cmd.exe as the shell so built-in commands (mklink, if, del, copy, rmdir) work correctly.
+# Without this, GNU make may try to run them directly via CreateProcess and fail.
+SHELL = $(COMSPEC)
+.SHELLFLAGS = /c
+
 # Game selection — default is demo
 # Usage: make -f MakefileWin32.mak GAME=helloworld p1
 #        make -f MakefileWin32.mak GAME=tutorial p1
@@ -261,7 +266,7 @@ art-clean:
 
 .PHONY: art
 art:
-	set GAME_ID=$(GAME_ID) && call artbox\makeartbox.bat $(GAME)
+	set GAME_ID=$(GAME_ID)&& call artbox\makeartbox.bat $(GAME)
 
 .PHONY: dist
 dist: p1
