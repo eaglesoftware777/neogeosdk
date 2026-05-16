@@ -60,10 +60,4 @@
 #define SSG_CMD_PRESET                 DRIVER_CMD_SET_SSG_PRESET
 #define SSG_CMD_PLAY                   DRIVER_CMD_PLAY_SSG_PREFIX
 
-// Performance macros using compiler builtins for "closer to ASM" code generation
-#define WRITE_A(r, v) write_a(r, v)
-#define WRITE_B(r, v) write_b(r, v)
-#define FORCE_A(r, v) force_a(r, v)
-#define FORCE_B(r, v) force_b(r, v)
-
 #endif
