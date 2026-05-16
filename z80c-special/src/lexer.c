@@ -85,6 +85,10 @@ void lexer_next(Lexer *lx) {
 
     if (c == '=' && lx->src[lx->pos + 1] == '=') { lx->pos += 2; lx->tok.kind = TOK_EQ; lx->tok.text = xstrdup("=="); return; }
     if (c == '!' && lx->src[lx->pos + 1] == '=') { lx->pos += 2; lx->tok.kind = TOK_NE; lx->tok.text = xstrdup("!="); return; }
+    if (c == '+' && lx->src[lx->pos + 1] == '+') { lx->pos += 2; lx->tok.kind = TOK_INC; lx->tok.text = xstrdup("++"); return; }
+    if (c == '-' && lx->src[lx->pos + 1] == '-') { lx->pos += 2; lx->tok.kind = TOK_DEC; lx->tok.text = xstrdup("--"); return; }
+    if (c == '&' && lx->src[lx->pos + 1] == '&') { lx->pos += 2; lx->tok.kind = TOK_LAND; lx->tok.text = xstrdup("&&"); return; }
+    if (c == '|' && lx->src[lx->pos + 1] == '|') { lx->pos += 2; lx->tok.kind = TOK_LOR; lx->tok.text = xstrdup("||"); return; }
     if (c == '<' && lx->src[lx->pos + 1] == '=') { lx->pos += 2; lx->tok.kind = TOK_LE; lx->tok.text = xstrdup("<="); return; }
     if (c == '<' && lx->src[lx->pos + 1] == '<') { lx->pos += 2; lx->tok.kind = TOK_SHL; lx->tok.text = xstrdup("<<"); return; }
     if (c == '>' && lx->src[lx->pos + 1] == '=') { lx->pos += 2; lx->tok.kind = TOK_GE; lx->tok.text = xstrdup(">="); return; }

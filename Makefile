@@ -63,7 +63,7 @@ else
 STRIP_SECTS:=-R .comment -R .text -R .data -R .bss
 endif
 
-HASHPATH?=$(CURDIR)/hash_eagle:$(CURDIR)/hash
+HASHPATH?=$(CURDIR)/hash_eagle/$(GAME):$(CURDIR)/hash_eagle:$(CURDIR)/hash
 # Default BIOS for make test/debug. Override: make test BIOS=euro
 # Supported values (make bios-list for full table):
 #   us  us-e  us-v2  us-u4  us-u3

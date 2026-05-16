@@ -13,6 +13,11 @@
 #include "ng_npcs.h"
 #include "ng_physics.h"
 #include "ng_actions.h"
+#include "ng_render_queue.h"
+#include "ng_particles.h"
+#include "ng_palette_fx.h"
+#include "ng_feedback.h"
+#include "ng_depthfx.h"
 
 static NGInteruptHook ng_before_logic;
 static NGInteruptHook ng_collision_logic;
@@ -35,6 +40,11 @@ void NEOGEO_USER ng_game_engine_init(void)
     ng_chars_init();
     ng_npcs_init();
     ng_physics_init();
+    ng_render_queue_init();
+    ng_particles_init();
+    ng_palette_fx_init();
+    ng_feedback_init();
+    ng_depthfx_init();
 
     ng_before_logic = 0;
     ng_collision_logic = 0;
@@ -112,6 +122,11 @@ void NEOGEO_USER ng_game_engine_frame(void)
     ng_chars_draw();
 
     if (ng_after_draw) ng_after_draw();
+
+    ng_particles_update();
+    ng_palette_fx_update();
+    ng_feedback_update();
+    ng_render_queue_flush();
 }
 
 void NEOGEO_USER ng_game_interupt(void)

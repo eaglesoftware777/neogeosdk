@@ -104,11 +104,9 @@ void NEOGEO_USER ng_impact_event(uint8_t impact_kind,
         shake_amp    = 3;
         shake_frames = 8;
         flash_frames = 8;
-        if (base_pal) {
-            ng_palfx_flash_white(palette_slot, base_pal, 4);
-            /* Red flash overlaps after white settles — schedule via palette */
-            ng_palfx_flash_red(palette_slot, base_pal, flash_frames);
-        }
+        /* White flash only: both effects share the same palette slot so a
+         * subsequent flash_red call would immediately overwrite the white. */
+        if (base_pal) ng_palfx_flash_white(palette_slot, base_pal, flash_frames);
         break;
 
     case NG_IMPACT_BOSS:

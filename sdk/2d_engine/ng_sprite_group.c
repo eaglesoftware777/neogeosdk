@@ -213,12 +213,11 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
             scb4 = driverScb4;
         } else {
             /*
-             * Sticky/chain strip: SCB3 must be sticky bit only.
-             * Hardware glues this strip directly to the right of the previous
-             * strip and inherits Y, height and vertical shrink from the driver.
-             * SCB4 is ignored while sticky is set, but keep it deterministic.
+             * Sticky/chain strip: bit 6 = chain bit, bits[5:0] = height.
+             * Hardware ignores height on chained strips but emulators may read
+             * it; keep consistent with update_transform/flush paths.
              */
-            scb3 = 0x0040;
+            scb3 = (uint16_t)(0x0040 | activeRows);
             scb4 = 0;
         }
 
