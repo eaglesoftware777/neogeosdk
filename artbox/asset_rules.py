@@ -6,10 +6,13 @@ import json
 import os
 
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-CFG_PATH = os.path.join(ROOT, "assets.cfg")
-MANIFEST_PATH = os.path.join(ROOT, "assets_manifest.json")
-OUT_SRT_PATH = os.path.join(ROOT, "out.srt")
+SCRIPT_ROOT = os.path.dirname(os.path.abspath(__file__))
+DATA_ROOT = os.environ.get("ARTBOX_DATA_DIR", SCRIPT_ROOT)
+CFG_PATH = os.path.join(DATA_ROOT, "assets.cfg")
+if not os.path.isfile(CFG_PATH):
+    CFG_PATH = os.path.join(SCRIPT_ROOT, "assets.cfg")
+MANIFEST_PATH = os.path.join(DATA_ROOT, "assets_manifest.json")
+OUT_SRT_PATH = os.path.join(DATA_ROOT, "out.srt")
 
 # Canonical category order — determines tile/palette assignment order
 CATEGORY_ORDER = [

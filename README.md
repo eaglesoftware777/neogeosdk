@@ -278,7 +278,7 @@ The cartridge is loaded through the Neo Geo software list as `neogeosdk`.
 **Correct command:**
 
 ```
-mame neogeo -cart1 neogeosdk -rompath roms -hashpath hash_eagle;hash -bios unibios22
+mame neogeo -cart1 demo -rompath roms -hashpath hash_eagle/demo;hash_eagle;hash -bios unibios22
 ```
 
 **Windows quick-start:**
@@ -300,8 +300,8 @@ make dist                          # Linux
 make -f MakefileWin32.mak dist    # Windows
 ```
 
-This builds the P1 ROM, regenerates `hash_eagle/neogeo.xml`, creates `dist/roms/neogeosdk.zip`
-(ROM files at archive root), copies `hash_eagle/neogeo.xml` to `dist/hash_eagle/`, and writes
+This builds the ROM set, regenerates `hash_eagle/<game>/neogeo.xml`, creates `dist/roms/<game>.zip`
+(ROM files at archive root), copies `hash_eagle/<game>/neogeo.xml` to `dist/hash_eagle/<game>/`, and writes
 `dist/run_neogeosdk.bat` and `dist/run_neogeosdk_debug.bat`.
 
 Distribute `dist/` as-is. End users place their `neogeo.zip` BIOS inside `dist/roms/` and
@@ -702,7 +702,7 @@ make debug-artifacts : write size, symbols, readelf, map, and disassembly files
 make gdb-trace       : generate dump/gdb_trace.txt from a batch GDB script
 make gdb             : open GDB on out/game
 make gdb-remote      : open GDB and connect to GDB_REMOTE=host:port
-make dist            : build p1 + package dist/roms/neogeosdk.zip release layout
+make dist            : build p1 + package dist/roms/<game>.zip release layout
 make test            : run in MAME (MVS, sp-s2.sp1 BIOS by default)
 make test-aes        : run in MAME (AES, unibios22 BIOS)
 make test BIOS=unibios22 : run with specific BIOS
@@ -710,15 +710,15 @@ make test BIOS=unibios22 : run with specific BIOS
 
 Important recent build behavior:
 
-- `make sound`, `make vrom`, and `make m1rom` sync generated outputs into `roms/neogeosdk/`
+- `make sound`, `make vrom`, and `make m1rom` sync generated outputs into `roms/<game>/`
 - all ROM files use the `777-` prefix: `777-m1.m1`, `777-v1.v1`, `777-p1.p1`, `777-s1.s1`, `777-c1.c1`, `777-c2.c2`
 - `make samples` uses the bundled Python WAV converter by default on Linux and Windows
 - set `SOX=/path/to/sox` only when you explicitly want the SoX conversion path
 - Windows `make fm`, `make mml`, and `make ssg` expand source file lists correctly
 - Windows `make sfix` produces `777-s1.s1` in the correct 128 KB FIX-ROM format
 - P1 generation crops to the full 512 KB program ROM window (0x080000) before byte swap and padding; this is the required ROM format for MAME and hardware
-- `hash_eagle/neogeo.xml` is auto-regenerated on every `make p1` build with correct CRC/SHA1 and `loadflag="load16_word_swap"` for the P-ROM
-- `make dist` packages everything into `dist/roms/neogeosdk.zip` with ROM files at archive root (no subfolder)
+- `hash_eagle/<game>/neogeo.xml` is auto-regenerated on every `make p1` build with correct CRC/SHA1 and `loadflag="load16_word_swap"` for the P-ROM
+- `make dist` packages everything into `dist/roms/<game>.zip` with ROM files at archive root (no subfolder)
 
 ## Debug and Trace Builds
 
@@ -995,7 +995,7 @@ sound/            — sound driver, tracks, samples, tools
   ssg/            — standalone SSG tracks and presets
   samples/        — raw and converted sample assets
   tools/          — sound build utilities
-roms/neogeosdk/   — synced ROM outputs for MAME (777-p1.p1 … 777-c2.c2)
+roms/<game>/      — synced ROM outputs for MAME (777-p1.p1 … 777-c2.c2)
 out/              — intermediate and generated build artifacts
 win/              — Windows-side helper binaries used by the build
 z80c-special/     — experimental Z80 C compiler used by the C-driver path
@@ -1087,8 +1087,8 @@ Purpose:        NeoGeoSDK homebrew validation
 Recommended first capacity:
 ```text
 P1  = 1 MB
-C1  = 2 MB
-C2  = 2 MB
+C1  = 8 MB
+C2  = 8 MB
 S1  = 128 KB
 M1  = 128 KB
 V1  = 2 MB
@@ -1291,12 +1291,12 @@ P1 region:
 
 C1 region:
   width: according to CHA bus wiring
-  size: 2 MB minimum
+  size: up to 8 MB in current SDK build flow
   device: parallel NOR flash
 
 C2 region:
   width: according to CHA bus wiring
-  size: 2 MB minimum
+  size: up to 8 MB in current SDK build flow
   device: parallel NOR flash
 
 S1 region:
@@ -1330,8 +1330,8 @@ V1 region:
 The SDK output must be padded to the exact hardware region size using `0xFF`.
 ```text
 P1  -> 0x100000
-C1  -> 0x200000
-C2  -> 0x200000
+C1  -> 0x800000
+C2  -> 0x800000
 S1  -> 0x020000
 M1  -> 0x020000
 V1  -> 0x200000
@@ -1340,8 +1340,8 @@ Example region table:
 ```text
 REGION  FILE EXTENSION  SIZE       FUNCTION
 P1      .p1             1 MB       main program
-C1      .c1             2 MB       sprite data
-C2      .c2             2 MB       sprite data
+C1      .c1             8 MB       sprite data
+C2      .c2             8 MB       sprite data
 S1      .s1             128 KB     fix/text data
 M1      .m1             128 KB     sound program
 V1      .v1             2 MB       sample data

@@ -31,5 +31,6 @@
 #include "ng_feedback.h"
 #include "ng_depthfx.h"
 #include "ng_debug.h"
+#include "ng_joystick.h"
 
 #endif

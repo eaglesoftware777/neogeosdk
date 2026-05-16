@@ -24,7 +24,7 @@ except ImportError:
     HAS_PIL = False
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(os.environ.get("ARTBOX_DATA_DIR", str(Path(__file__).resolve().parent))).resolve()
 
 try:
     from asset_rules import build_asset_specs, save_manifest, write_out_srt
