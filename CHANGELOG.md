@@ -1,100 +1,97 @@
 # Changelog
 
-## v1.4.0 — Multi-Game Build System
+## v1.2.0 - NeoGeo Deluxe 2D Engine, Multi-Game Build System, and Sound Pipeline
 
-Release date: 2026-05-15
+Release date: 2026-05-06
 
 ### Highlights
 
-Single repository, multiple independent games.  Each game under `games/<name>/`
-carries its own source files, linker script, artbox assets, and sound data.
-Build any game with `make GAME=<name>`.  Default is `demo`.
+- Complete NeoGeo Deluxe 2D engine layer targeting huge animated characters, smooth camera, parallax depth, sprite-scaling, palette FX, particles, and stable 60 FPS — no float, no malloc during gameplay
+- Multi-game build system: single repository, multiple independent games under `games/<name>/`
+- Full per-game art, sound, and ROM pipeline on both Linux and Windows
+- Refined YM2610 sound driver workflow on both the authoritative ASM path and the experimental C path
+- Stable sound IDs for 68k-side code and improved demo/game loop mixing
 
-### New game layout
+### Multi-Game Build System
 
 | Game | ID | Description |
 |------|----|-------------|
-| `games/demo` | 777 | Full SDK showcase (13 scenes) |
+| `games/demo` | 777 | Full SDK showcase (13 scenes, all engine features) |
 | `games/helloworld` | 772 | Minimal FIX-text hello world |
-| `games/tutorial` | 555 | Tutorial template |
+| `games/tutorial` | 555 | Tutorial template with BIOS hooks |
 | `games/neogeogame` | 775 | Blank template for new projects |
 
-Each game folder contains: `game.mk`, `main.c`, `user.c`, `eyecatcher.c`,
-`neogeo_mvs.c`, `neogeo_aes.c`, `neogeo.ld`, `artbox/`, `sound/`, `scenes/`.
+Build any game with `make GAME=<name>` (Linux) or `make -f MakefileWin32.mak GAME=<name>` (Windows).
 
-### Build system changes
-
-- `Makefile` and `MakefileWin32.mak` now accept `GAME=<name>` (default `demo`)
+- `Makefile` and `MakefileWin32.mak` accept `GAME=<name>` (default `demo`)
 - `-include games/$(GAME)/game.mk` loads per-game `GAME_ID` and `GAME_SCENES`
-- CFLAGS: `-Igames/$(GAME)/scenes` added for scene header resolution
-- All ROM filenames derived from `$(GAME_ID)` — no more hardcoded `777`
-- `GAME_SCENE_SRCS` / `GAME_SCENE_OBJS` computed from `GAME_SCENES` list
-- Per-game source paths: `games/$(GAME)/user.c`, `main.c`, `eyecatcher.c`
-- Per-game platform files: `games/$(GAME)/neogeo_mvs.c` / `neogeo_aes.c`
-- Per-game linker script: `games/$(GAME)/neogeo.ld`
-- Per-game sound: `GAME_SOUND = games/$(GAME)/sound` — fm, mml, ssg, samples
+- All ROM filenames derived from `$(GAME_ID)` — no hardcoded `777`
+- Per-game source paths: `games/$(GAME)/user.c`, `main.c`, `eyecatcher.c`, `neogeo.ld`
+- Per-game sound: `GAME_SOUND = games/$(GAME)/sound` — fm, mml, ssg, samples all per-game
 - Per-game art: `artbox/makeartbox.sh GAME` / `artbox/makeartbox.bat GAME`
-- `MakefileWin32.mak` engine module list updated to match Linux (added
-  `ng_render_queue`, `ng_fixed`, `ng_camera`, `ng_palette_fx`, `ng_particles`,
-  `ng_feedback`, `ng_debug`, `ng_demo_advanced`)
-- `aes`, `mvs`, `test-aes`, `test-mvs`, `debug-aes`, `debug-build` targets now
-  forward `GAME=` to sub-makes
+- `GAME_ID` and `GAME_SOUND` propagated to all artbox and sound tools (romts, romfx, fixtiles, vrom, m1rom)
+- Games with no art receive a stub `showEyeCatcherMVS()` to avoid linker errors
+- Empty sound/art folders handled gracefully — each target skips with a message
+- `aes`, `mvs`, `test-aes`, `test-mvs`, `debug-aes`, `debug-build` targets forward `GAME=`
 
-### Windows artbox
+### Deluxe 2D Engine Layer
 
-`artbox/makeartbox.bat` updated to accept a game name argument and uses
-`mklink /J` directory junctions instead of symlinks — no administrator
-privileges required on Windows Vista and later.
-
-### Launcher scripts
-
-Both `neogeosdk.sh` (Linux) and `neogeosdk.bat` (Windows) gained a game
-selection step (`g` key).  The selected game is passed to every build command
-for the duration of the session.
-
-### SDK contract header
-
-`sdk/bsp/bsp.h` documents the complete set of symbols every `user.c` must
-implement: BIOS dispatch functions, interrupt handlers, and game entry points.
-
-### Validation
-
-- `make game` (demo, default)
-- `make GAME=helloworld game`
-- `make GAME=tutorial game`
-- `make GAME=neogeogame game`
-- zero errors, zero warnings on all four games
-
----
-
-## v1.3.0 — NeoGeo Deluxe 2D Engine Layer
-
-Release date: 2026-05-14
-
-### Highlights
-
-Complete second-generation engine layer targeting NeoGeo-native deluxe 2D: huge animated characters, large bosses, smooth camera, parallax depth, sprite-scaling depth effects, palette lighting, hit sparks, particles, cinematic transitions, and stable 60 FPS. No float, no malloc during gameplay, no division in the frame loop.
-
-### New engine modules
+New engine modules under `sdk/2d_engine/`:
 
 | Module | Files | What it does |
 |--------|-------|-------------|
 | Render queue | `ng_render_queue.h/.c` | 128-slot VBlank-safe deferred VRAM and palette write queue |
 | Fixed-point math | `ng_fixed.h/.c` | 16.16 fixed-point, pre-baked sin/cos/shrink lookup tables |
 | Camera | `ng_camera.h/.c` | Smooth follow, dead zone, look-ahead, shake, cinematic pan, border clamp |
-| Palette FX | `ng_palette_fx.h/.c` | Fade, flash (white/red/blue), pulse, color cycle, queue-safe |
+| Palette FX | `ng_palette_fx.h/.c` | Fade, flash, pulse, color cycle — queue-safe |
 | Particles | `ng_particles.h/.c` | 32-slot fixed pool, 8 particle types, priority-based eviction |
 | Feedback | `ng_feedback.h/.c` | Hitstop + screen shake + palette flash + sound hook in one call |
 | Depth FX | `ng_depthfx.h/.c` | NGVec3 perspective projection, Z→shrink lookup table, starfield |
 | Debug HUD | `ng_debug.h/.c` | Fix-layer perf overlay (compile with `NG_DEBUG_PERF=1`) |
 
-### Updated engine modules
+Updated engine modules:
 
-- `ng_sprite_group`: dirty flags (`NG_SGF_DIRTY_POS/TILE/PALETTE/SHRINK/VIS`) and `ng_sprite_group_flush()` — only changed SCB regions written per frame
+- `ng_sprite_group`: dirty flags and `ng_sprite_group_flush()` — only changed SCB regions written per frame
 - `ng_depthfx`: extended with `NGVec3`, full perspective projection, Z→fog palette, starfield advance
-- `ng_engine.h`: aggregate include now covers all new subsystem headers
+- `ng_engine.h`: aggregate include covers all subsystem headers
 
-### New documentation
+### Sound System
+
+- Refined YM2610 sound driver workflow on ASM and experimental C-driver paths
+- `sdk/sound_ids.h` — stable track / cue / bed / voice identifiers for 68k-side code
+- `sound/driver/driver_defs.h` — named C-driver command and runtime constants
+- Experimental C-driver: `driver.c`, `driver_prelude.asm`, `combine_split_driver.py`, `compare_m1.py`
+- Compare flow: `make m1rom-asm`, `make m1rom-c`, `make compare-driver`
+- Higher-level sound helpers and mix setup in `sdk/neogeolib.c`
+- Improved demo/game loop mix layering: SSG, FM, ADPCM-B, and ADPCM-A accents
+- `GAME_SOUND` env var passed through all sound tools for per-game audio isolation
+- `enc_wave16le_a/b.sh` and `.bat` read WAV input from `$GAME_SOUND/samples/` instead of shared dir
+- Linux and Windows makefiles support `SDKHOME`, WSL usage, SoX-optional sample conversion
+
+### Artbox Pipeline
+
+- Default fit mode changed from `crop` to `contain` — non-destructive asset scaling
+- `gen_eyecatcher.py` updated with fast animation pacing (lead hold, 2× animation pass, final hold)
+- Eyecatcher sprites positioned at hardware-accurate size and position
+- `romdbimgimport.py` hardened with absolute paths and fail-fast error handling
+- `makeartbox.sh` / `makeartbox.bat` use absolute-path resolution to avoid symlink nesting bugs
+- Windows: `mklink /J` directory junctions — no administrator privileges required (Vista+)
+- Windows path bug fixed: `REPO_DIR` now resolved with `for %%i ... %%~fi` instead of raw `..`
+
+### Build System
+
+- Makefile toolchain detection defaults to `x-tools-v2` with `x-tools` legacy fallback
+- Linker flags corrected (`-nostdlib`, `-nostartfiles` removed)
+- Win32 Makefile engine module list updated to match Linux (added `ng_render_queue`, `ng_fixed`, `ng_camera`, `ng_palette_fx`, `ng_particles`, `ng_feedback`, `ng_debug`, `ng_demo_advanced`)
+- `MakefileWin32.mak`: `vrom` and `m1rom` targets now export `GAME_ID` and `GAME_SOUND` to environment
+- FIX ROM path corrected — `sfix` target creates its own temporary `artbox/infix` symlink/junction
+- Win32 sound/FIX path parity corrected
+
+### Launcher Scripts
+
+Both `neogeosdk.sh` (Linux) and `neogeosdk.bat` (Windows) gained a game-selection step (`g` key). The selected game is passed to every build command for the duration of the session.
+
+### New Documentation
 
 - `docs/sprite_groups.md`
 - `docs/render_queue.md`
@@ -103,101 +100,20 @@ Complete second-generation engine layer targeting NeoGeo-native deluxe 2D: huge 
 - `docs/particles.md`
 - `docs/depthfx.md`
 - `docs/performance_rules.md`
-
-### Artbox pipeline
-
-- default fit mode changed from `crop` to `contain` for non-destructive asset scaling
-- `fit=contain` pads transparent pixels to palette index 0, visible pixels to 1..15
-- `romdbimgimport.py` hardened with absolute paths and fail-fast error handling
-- `gen_eyecatcher.py` updated with fast animation pacing (lead hold, 2× pass, final hold)
-- eyecatcher sprites positioned at hardware-accurate size and position
-
-### Build
-
-- Makefile toolchain detection defaults to `x-tools-v2` with `x-tools` legacy fallback
-- Linker flags corrected (`-nostdlib`, `-nostartfiles` removed)
-- Win32 Makefile object/link parity for all new modules
-- All new modules in `NG_ENGINE_NAMES` with explicit compile rules
+- `docs/ARTBOX_PIPELINE.md`
 
 ### Validation
 
-- `make game`
-- `make test`
-- zero errors, zero warnings
+- `make all` (demo, default)
+- `make GAME=helloworld all`
+- `make GAME=tutorial game`
+- `make GAME=neogeogame game`
+- `make m1rom-c`
+- `make -f MakefileWin32.mak sound`
+- `make -f MakefileWin32.mak sfix`
+- zero errors, zero warnings on all four games
 
 ---
-
-## Unreleased
-
-### Highlights
-
-- added 2D engine camera support with horizontal, vertical, and both-axis joystick scrolling
-- expanded the engine layer with level, FIX cache, NPC, and physics modules
-- added artbox asset categories for `background`, `main_character`, `opponent`, and `npc`
-- added joystick-driven main-character action selection for idle, run, jump, hit, and attack behavior
-- added opponent hazard collision behavior that can damage the player
-- updated the final scene to use the forest alley background with walking NPC sprites
-- added boot intro text shimmer and a pseudo-3D transition before the title screen
-- refreshed engine, API, build integration, runtime redirect, README, changelog, and artbox documentation
-- added `docs/ARTBOX_PIPELINE.md`
-- fixed the start-game path so loading enters `playgame()` directly instead of replaying boot/title sequences
-- fixed P1 generation to preserve the full 512 KB program ROM window instead of truncating larger 68000 builds at 128 KB
-- added debug/GDB make targets that generate size, symbol, readelf, disassembly, map, and GDB trace files
-
-### Validation
-
-- `make`
-- `make gdb-trace`
-
-## v1.2.0 - C Driver Workflow, Layered Demo Mix, and Release Refresh
-
-Release date: 2026-05-06
-
-### Highlights
-
-- refined the YM2610 sound-driver workflow on both the authoritative ASM path and the experimental C-driver path
-- added stable named sound IDs for 68k-side code
-- improved the demo/game loop mix to layer SSG, FM, ADPCM-B, and short ADPCM-A accents more coherently
-- expanded build and release documentation for Linux and Windows
-- prepared release assets for source, ROMs, and toolchain distribution
-
-### Included work
-
-- higher-level sound helpers and mix setup in `sdk/neogeolib.c`
-- `sdk/sound_ids.h` for stable track / cue / bed / voice identifiers
-- `sound/driver/driver_defs.h` for named C-driver command and runtime constants
-- experimental C-driver support files:
-  - `sound/driver/driver.c`
-  - `sound/driver/driver_prelude.asm`
-  - `sound/driver/driver_prelude.inc`
-  - `sound/tools/combine_split_driver.py`
-  - `sound/tools/compare_m1.py`
-- new compare flow:
-  - `make m1rom-asm`
-  - `make m1rom-c`
-  - `make compare-driver`
-- updated Linux and Windows makefiles so generated sound outputs are copied back into `roms/ssideki/`
-- updated Linux and Windows makefiles to support `SDKHOME`, WSL usage, SoX-optional
-  sample conversion, and Win32 wildcard expansion for FM/MML/SSG builds
-- corrected the Win32 `sfix` path so `777-s1.s1` remains the proper 128 KB FIX ROM
-- revised sound content and game-loop layering in:
-  - `sound/mml/0_samurai_game_loop.mml`
-  - `sound/fm/4_bass_motif.mml`
-- refreshed top-level SDK, install, and sound-driver documentation
-
-### Release asset notes
-
-- refreshed release-facing source and ROM bundle documentation
-- `x-tools.tar` remains on the release page but is intentionally not refreshed by
-  this update path
-
-### Validation
-
-- `make p1`
-- `make m1rom-c`
-- `make m1rom USE_Z80C=0`
-- `make -n -f MakefileWin32.mak sound`
-- `make -n -f MakefileWin32.mak sfix`
 
 ## v1.1.0 - Sound System, Python 3 Migration & Build Tools
 

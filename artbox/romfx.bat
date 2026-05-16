@@ -1,8 +1,7 @@
 @echo off
 setlocal
 if "%GAME_ID%"=="" set GAME_ID=777
-set SCRIPT_DIR=%~dp0
-set REPO_ROOT=%SCRIPT_DIR%..
+for %%i in ("%~dp0..") do set REPO_ROOT=%%~fi
 if not exist %GAME_ID%-s1.s1 (
     echo Missing %GAME_ID%-s1.s1. Run romdbfiximport.py and fixtiles.py first.
     exit /b 1
