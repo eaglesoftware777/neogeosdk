@@ -44,5 +44,10 @@ SECTIONS
                         out/demo*0.o(COMMON)
                         out/demo*0.o(.data)
                         out/demo*0.o(.data.*)
+                        *(.data)
+                        *(.data.*)
+                        *(.bss)
+                        *(.bss.*)
+                        *(COMMON)
                         } > memory_game_engine_bss
 }
