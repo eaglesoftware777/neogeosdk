@@ -21,6 +21,7 @@
 #include "sdk/2d_engine/ng_npcs.h"
 #include "sdk/2d_engine/ng_border_constraints.h"
 #include "sdk/2d_engine/ng_game_events.h"
+#include "sdk/2d_engine/ng_joystick.h"
 #include "sdk/2d_engine/ng_defs.h"
 #include <stdint.h>
 
@@ -544,6 +545,128 @@ static void NEOGEO_USER combat_special_moves(void)
 }
 
 /* ------------------------------------------------------------------ */
+/*  Sub-scene: joystick module live example                               */
+/* ------------------------------------------------------------------ */
+static uint16_t s_joy_last_event;
+
+static void NEOGEO_USER combat_joy_event_handler(const NGGameEvent *e)
+{
+    if (!e) return;
+    if (e->id >= NG_EVENT_JOY_JUMP && e->id <= NG_EVENT_JOY_SPECIAL_DP) {
+        s_joy_last_event = e->id;
+    }
+}
+
+static void NEOGEO_USER combat_joy_put_event(uint16_t ev)
+{
+    switch (ev) {
+        case NG_EVENT_JOY_JUMP:
+            demo_fix_puts(2u, 5u, "EVENT: JUMP      ", 2u);
+            break;
+        case NG_EVENT_JOY_FIRE_LIGHT:
+            demo_fix_puts(2u, 5u, "EVENT: LIGHT HIT ", 1u);
+            break;
+        case NG_EVENT_JOY_FIRE_HEAVY:
+            demo_fix_puts(2u, 5u, "EVENT: HEAVY HIT ", 1u);
+            break;
+        case NG_EVENT_JOY_HIT:
+            demo_fix_puts(2u, 5u, "EVENT: BASIC HIT ", 0u);
+            break;
+        case NG_EVENT_JOY_SPECIAL_QCF:
+            demo_fix_puts(2u, 5u, "EVENT: SPECIAL QCF", 2u);
+            break;
+        case NG_EVENT_JOY_SPECIAL_DP:
+            demo_fix_puts(2u, 5u, "EVENT: SPECIAL DP ", 2u);
+            break;
+        default:
+            demo_fix_puts(2u, 5u, "EVENT: ---       ", 0u);
+            break;
+    }
+}
+
+static void NEOGEO_USER combat_joystick_example(void)
+{
+    NGCharacter *player;
+    NGJoystickCharConfig cfg;
+    uint16_t t;
+
+    clearFix();
+    demo_fix_puts(2u, 0u, "JOYSTICK INPUT EXAMPLE", 2u);
+    demo_fix_puts(2u, 1u, "LEFT/RIGHT MOVE  A JUMP  B/C ATTACK", 1u);
+    demo_fix_puts(2u, 2u, "QCF+B OR DP+C -> SPECIAL EVENT", 1u);
+    demo_fix_puts(2u, 27u, "A: NEXT", 0u);
+
+    demo_load_screen_palette(11u);
+    ng_chars_init();
+    ng_physics_init();
+    ng_game_events_init();
+    ng_game_events_set_handler(combat_joy_event_handler);
+    ng_joystick_init();
+
+    ng_physics_add_solid(24, 188, 272, 8, 0u);
+    demo_fix_puts(2u, 24u, "====================================", 0u);
+
+    player = chars_add(0u, 96, 188);
+    if (player) {
+        ng_char_set_sprite(player, 0u, 6u, 10u,
+                           DEMO_SCREEN_TILE(11u), DEMO_SCREEN_PALETTE(11u));
+        ng_char_set_tile_stride(player, 16u);
+        ng_char_set_body(player, -20, -158, 40, 158);
+        player->sprite_offset_y = -160;
+        player->scale_x = 0xFFu;
+        player->scale_y = 0xFFu;
+        ng_physics_attach(player, (uint16_t)(NG_PHYSICS_GRAVITY | NG_PHYSICS_SOLIDS));
+    }
+
+    cfg = *ng_joy_default_char_config();
+    cfg.jump_button = BUTTON_A;
+    cfg.light_button = BUTTON_B;
+    cfg.heavy_button = BUTTON_C;
+    cfg.hit_button = BUTTON_D;
+
+    s_joy_last_event = 0u;
+    combat_joy_put_event(0u);
+
+    for (t = 0u; t < 420u; t++) {
+        const NGJoystickState *js;
+        ng_joystick_update();
+        js = ng_joystick_state();
+
+        if (player) {
+            ng_joy_control_character(player, &cfg);
+        }
+
+        ng_physics_update_pre();
+        ng_chars_update();
+        ng_physics_resolve();
+        ng_game_events_update();
+        ng_chars_draw();
+
+        combat_joy_put_event(s_joy_last_event);
+        {
+            char buf[24];
+            uint8_t dir = js ? js->dir : 5u;
+            uint8_t jump_hold = ng_joy_held_frames(BUTTON_A);
+            uint8_t atk_hold = ng_joy_held_frames(BUTTON_B);
+            buf[0] = 'D'; buf[1] = 'I'; buf[2] = 'R'; buf[3] = ':'; buf[4] = ' ';
+            buf[5] = (char)('0' + (dir % 10u));
+            buf[6] = ' '; buf[7] = 'J'; buf[8] = ':'; buf[9] = (char)('0' + ((jump_hold / 10u) % 10u));
+            buf[10] = (char)('0' + (jump_hold % 10u));
+            buf[11] = ' '; buf[12] = 'B'; buf[13] = ':'; buf[14] = (char)('0' + ((atk_hold / 10u) % 10u));
+            buf[15] = (char)('0' + (atk_hold % 10u));
+            buf[16] = ' '; buf[17] = ' '; buf[18] = ' '; buf[19] = ' '; buf[20] = ' '; buf[21] = ' '; buf[22] = ' '; buf[23] = '\0';
+            demo_fix_puts(2u, 7u, buf, 0u);
+        }
+
+        if (demo_frame()) break;
+    }
+
+    ng_game_events_set_handler(0);
+    ng_physics_clear_solids();
+    ng_chars_init();
+}
+
+/* ------------------------------------------------------------------ */
 /*  Combat sub-scene: escalating hit sequence                            */
 /* ------------------------------------------------------------------ */
 static void NEOGEO_USER combat_hit_sequence(void)
@@ -623,6 +746,7 @@ void NEOGEO_USER demo_combat_run(void)
     combat_npc_basic();
     combat_npc_advanced();
     combat_special_moves();
+    combat_joystick_example();
     combat_hit_sequence();
 
     soundStopAll();

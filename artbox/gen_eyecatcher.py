@@ -17,7 +17,8 @@ import json
 import os
 import pathlib
 
-MANIFEST  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets_manifest.json")
+DATA_DIR = os.environ.get("ARTBOX_DATA_DIR", os.path.dirname(os.path.abspath(__file__)))
+MANIFEST  = os.path.join(DATA_DIR, "assets_manifest.json")
 _DEFAULT_OUT_C = pathlib.Path(__file__).resolve().parents[1] / "eyecatcher.c"
 
 # Eyecatcher pacing:

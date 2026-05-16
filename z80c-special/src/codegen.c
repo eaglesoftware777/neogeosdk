@@ -54,6 +54,18 @@ static void gen_call(Program *prog, Expr *e) {
     if (!strcmp(e->name, "halt") || !strcmp(e->name, "di") || !strcmp(e->name, "ei")) {
         printf("    %s\n", e->name); return;
     }
+    if (!strcmp(e->name, "write_a") || !strcmp(e->name, "write_b") || !strcmp(e->name, "force_a") || !strcmp(e->name, "force_b")) {
+        Arg *r = e->args;
+        Arg *v = r ? r->next : NULL;
+        if (!r || !v) { fprintf(stderr, "%s expects 2 args\n", e->name); exit(1); }
+        gen_expr(prog, r->expr); emit("    ld d,a");
+        gen_expr(prog, v->expr); emit("    ld e,a");
+        if (!strcmp(e->name, "write_a")) emit("    call shadowed_write_a");
+        else if (!strcmp(e->name, "write_b")) emit("    call shadowed_write_b");
+        else if (!strcmp(e->name, "force_a")) emit("    call force_write_a");
+        else emit("    call force_write_b");
+        return;
+    }
     Item *fn = find_func(prog, e->name);
     if (!fn) { fprintf(stderr, "unknown function %s\n", e->name); exit(1); }
     Arg *a = e->args;
@@ -111,9 +123,53 @@ static void gen_expr(Program *prog, Expr *e) {
             printf("    ld e,a\n    ld d,0\n    pop hl\n");
             if (e->op == '+') printf("    add hl,de\n");
             else if (e->op == '-') printf("    or a\n    sbc hl,de\n");
-            // Result is now in HL
             break;
         }
+
+        // Optimized literal arithmetic
+        if (e->right->kind == EX_NUM) {
+            unsigned char val = e->right->value & 255;
+            gen_expr(prog, e->left);
+            if (e->op == '+') {
+                if (val == 1) emit("    inc a");
+                else if (val != 0) printf("    add a,$%02X\n", val);
+            }
+            else if (e->op == '-') {
+                if (val == 1) emit("    dec a");
+                else if (val != 0) printf("    sub $%02X\n", val);
+            }
+            else if (e->op == '&') printf("    and $%02X\n", val);
+            else if (e->op == '|') printf("    or $%02X\n", val);
+            else if (e->op == '^') printf("    xor $%02X\n", val);
+            else if (e->op == TOK_SHR) {
+                int n = val & 7;
+                while (n--) emit("    srl a");
+            }
+            else if (e->op == TOK_SHL) {
+                int n = val & 7;
+                while (n--) emit("    add a,a");
+            }
+            else {
+                printf("    cp $%02X\n", val);
+                int label_true = ++label_id, label_end = ++label_id;
+                if (e->op == TOK_EQ) printf("    jr z,.cmptrue%d\n", label_true);
+                else if (e->op == TOK_NE) printf("    jr nz,.cmptrue%d\n", label_true);
+                else if (e->op == '<') printf("    jr c,.cmptrue%d\n", label_true);
+                else if (e->op == '>') {
+                    printf("    jr z,.cmpend%d\n", label_end);
+                    printf("    jr nc,.cmptrue%d\n", label_true);
+                }
+                else if (e->op == TOK_LE) {
+                    printf("    jr c,.cmptrue%d\n", label_true);
+                    printf("    jr z,.cmptrue%d\n", label_true);
+                }
+                else if (e->op == TOK_GE) printf("    jr nc,.cmptrue%d\n", label_true);
+                emit("    xor a"); printf("    jr .cmpend%d\n", label_end);
+                printf(".cmptrue%d:\n", label_true); emit("    ld a,1"); printf(".cmpend%d:\n", label_end);
+            }
+            break;
+        }
+
         gen_expr(prog, e->left); emit("    push af");
         gen_expr(prog, e->right); emit("    ld b,a"); emit("    pop af");
         if (e->op == '+') emit("    add a,b");
@@ -121,17 +177,21 @@ static void gen_expr(Program *prog, Expr *e) {
         else if (e->op == '&') emit("    and b");
         else if (e->op == '|') emit("    or b");
         else if (e->op == '^') emit("    xor b");
-        else if (e->op == TOK_SHR) {
-            if (e->right->kind == EX_NUM) {
-                int n = e->right->value & 7;
-                while (n--) emit("    srl a");
-            }
+        else if (e->op == TOK_LAND) {
+            int label_false = ++label_id, label_end = ++label_id;
+            gen_expr(prog, e->left); emit("    or a"); printf("    jr z,.lbl%d\n", label_false);
+            gen_expr(prog, e->right); emit("    or a"); printf("    jr z,.lbl%d\n", label_false);
+            emit("    ld a,1"); printf("    jr .lbl%d\n", label_end);
+            printf(".lbl%d:\n", label_false); emit("    xor a");
+            printf(".lbl%d:\n", label_end);
         }
-        else if (e->op == TOK_SHL) {
-            if (e->right->kind == EX_NUM) {
-                int n = e->right->value & 7;
-                while (n--) emit("    add a,a");
-            }
+        else if (e->op == TOK_LOR) {
+            int label_true = ++label_id, label_end = ++label_id;
+            gen_expr(prog, e->left); emit("    or a"); printf("    jr nz,.lbl%d\n", label_true);
+            gen_expr(prog, e->right); emit("    or a"); printf("    jr nz,.lbl%d\n", label_true);
+            emit("    xor a"); printf("    jr .lbl%d\n", label_end);
+            printf(".lbl%d:\n", label_true); emit("    ld a,1");
+            printf(".lbl%d:\n", label_end);
         }
         else {
             int a = ++label_id, b = ++label_id;
@@ -140,7 +200,7 @@ static void gen_expr(Program *prog, Expr *e) {
             else if (e->op == TOK_NE) printf("    jr nz,.cmptrue%d\n", a);
             else if (e->op == '<') printf("    jr c,.cmptrue%d\n", a);
             else if (e->op == '>') {
-                printf("    jp z,.cmpend%d\n", b);
+                printf("    jr z,.cmpend%d\n", b);
                 printf("    jr nc,.cmptrue%d\n", a);
             }
             else if (e->op == TOK_LE) {
@@ -148,7 +208,7 @@ static void gen_expr(Program *prog, Expr *e) {
                 printf("    jr z,.cmptrue%d\n", a);
             }
             else if (e->op == TOK_GE) printf("    jr nc,.cmptrue%d\n", a);
-            emit("    xor a"); printf("    jp .cmpend%d\n", b);
+            emit("    xor a"); printf("    jr .cmpend%d\n", b);
             printf(".cmptrue%d:\n", a); emit("    ld a,1"); printf(".cmpend%d:\n", b);
         }
         break;
@@ -208,9 +268,11 @@ void emit_program(Program *p) {
     emit(".bank 0 slot 0");
     int explicit_org = has_explicit_org(p);
     int first_func = 1;
+
     for (Item *it = p->items; it; it = it->next) {
         if (it->kind == IT_ASM) raw_asm(it->text);
         else if (it->kind == IT_FUNC) {
+            if (!it->body) continue; // Skip prototypes
             if (first_func && !explicit_org) emit(".org $0100");
             first_func = 0;
             printf("\n%s:\n", it->name);

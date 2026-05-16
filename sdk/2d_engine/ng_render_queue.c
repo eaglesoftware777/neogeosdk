@@ -130,8 +130,8 @@ void NEOGEO_USER ng_render_queue_flush(void)
     /* --- Apply palette uploads --- */
     for (i = 0; i < ng_rq_pal_count; i++) {
         const NGPaletteUpload *p = &ng_rq_palettes[i];
-        uint16_t base = (uint16_t)(PALETTES + (uint32_t)p->palette_addr * 2u);
-        load_palettes((uint16_t *)p->data, (uintptr_t)base);
+        uintptr_t base = (uintptr_t)((uint32_t)PALETTES + (uint32_t)p->palette_addr * 2u);
+        load_palettes((uint16_t *)p->data, base);
     }
     ng_rq_pal_count = 0;
 }
