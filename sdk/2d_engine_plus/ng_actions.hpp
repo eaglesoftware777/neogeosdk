@@ -3,44 +3,16 @@
 
 #include "ng_defs.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
 struct NGCharacter;
 
 /*
- * NGActionCmd — one step in an animation script.
+ * NGActionCmd — one step in an animation script (POD, used in const arrays).
  *
- * Scripts are const arrays terminated by END() or LOOP().
- * The engine processes one command per frame pass; FRAME() commands consume
- * multiple frames (the `time` argument is the hold duration in ticks).
- *
- * Quick reference:
- *   FRAME(tile, ticks)   — display tileBase `tile` for `ticks` frames
- *   PALETTE(bank)        — switch to palette bank `bank`
- *   FLIP(hflip, vflip)   — set mirror flags (0 or 1)
- *   SCALE(sx, sy)        — set scale (0xFF = full size)
- *   MOVE(dx, dy)         — instant position offset
- *   SPEED(vx, vy)        — set fixed-point velocity (pixels/frame)
- *   WAIT(ticks)          — pause script for `ticks` frames (no tile change)
- *   SFX(id)              — fire ADPCM-A sample via the registered SFX hook
- *   MUSIC(id)            — start music track via the registered music hook
- *   FX(kind, dx, dy)     — call the FX hook at (c->x+dx, c->y+dy)
- *   HITBOX(x,y,w,h)      — enable a hit-stun box relative to the character
- *   CLEAR_HITBOX()       — remove the hit-stun box
- *   EVENT(id,a,b)        — fire a game event with payload (a, b)
- *   GOTO(action_id)      — jump to another registered action script
- *   LOOP()               — restart the current script from the beginning
- *   END()                — stop the script; character holds its last frame
+ * Scripts are terminated by END() or LOOP().
  */
 typedef struct {
     uint8_t cmd;
-    int16_t a;
-    int16_t b;
-    int16_t c;
-    int16_t d;
+    int16_t a, b, c, d;
 } NGActionCmd;
 
 enum {
@@ -83,14 +55,44 @@ typedef void(*NGActionSfxHook)(uint16_t id);
 typedef void(*NGActionMusicHook)(uint16_t id);
 typedef void(*NGActionFxHook)(uint16_t kind, int16_t x, int16_t y);
 
-void NEOGEO_USER ng_actions_init(void);
-void NEOGEO_USER ng_actions_register(uint16_t action_id, const NGActionCmd *script);
-const NGActionCmd* actions_get(uint16_t action_id);
-void NEOGEO_USER ng_actions_set_sound_hooks(NGActionSfxHook sfx_hook, NGActionMusicHook music_hook);
-void NEOGEO_USER ng_actions_set_fx_hook(NGActionFxHook fx_hook);
-void NEOGEO_USER ng_char_action(struct NGCharacter *c, uint16_t action_id);
-void NEOGEO_USER ng_actions_update(struct NGCharacter *c);
+/*
+ * ActionRegistry — singleton owning the script table and hooks.
+ */
+class ActionRegistry {
+public:
+    static ActionRegistry& instance();
 
+    void NEOGEO_USER init();
+    void NEOGEO_USER registerScript(uint16_t action_id, const NGActionCmd *script);
+    const NGActionCmd* NEOGEO_USER get(uint16_t action_id) const;
+    void NEOGEO_USER setSoundHooks(NGActionSfxHook sfx, NGActionMusicHook music);
+    void NEOGEO_USER setFxHook(NGActionFxHook fx);
+    void NEOGEO_USER update(struct NGCharacter *c);
+
+    NGActionSfxHook   sfxHook()   const { return sfx_hook; }
+    NGActionMusicHook musicHook() const { return music_hook; }
+    NGActionFxHook    fxHook()    const { return fx_hook; }
+
+private:
+    ActionRegistry() {}
+
+    const NGActionCmd *table[NG_MAX_ACTIONS];
+    NGActionSfxHook    sfx_hook;
+    NGActionMusicHook  music_hook;
+    NGActionFxHook     fx_hook;
+};
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void               NEOGEO_USER ng_actions_init(void);
+void               NEOGEO_USER ng_actions_register(uint16_t action_id, const NGActionCmd *script);
+const NGActionCmd* actions_get(uint16_t action_id);
+void               NEOGEO_USER ng_actions_set_sound_hooks(NGActionSfxHook sfx_hook, NGActionMusicHook music_hook);
+void               NEOGEO_USER ng_actions_set_fx_hook(NGActionFxHook fx_hook);
+void               NEOGEO_USER ng_char_action(struct NGCharacter *c, uint16_t action_id);
+void               NEOGEO_USER ng_actions_update(struct NGCharacter *c);
 
 #ifdef __cplusplus
 } /* extern "C" */

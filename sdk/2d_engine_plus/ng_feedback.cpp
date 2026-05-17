@@ -1,158 +1,127 @@
-/*
- * ng_feedback.c — Hitstop, timing, and feedback helpers (Stage 9)
- */
-
 #include "ng_feedback.hpp"
 #include "ng_palette_fx.hpp"
 
-extern "C" {
+/* --- FeedbackSystem singleton --- */
 
-
-static uint8_t           ng_fb_hitstop;
-static uint8_t           ng_fb_slow_motion;
-static NGFeedbackSfxHook ng_fb_sfx_hook;
-
-void NEOGEO_USER ng_feedback_init(void)
+FeedbackSystem& FeedbackSystem::instance()
 {
-    ng_fb_hitstop    = 0;
-    ng_fb_slow_motion = 0;
-    ng_fb_sfx_hook   = 0;
+    static FeedbackSystem fs;
+    return fs;
 }
 
-void NEOGEO_USER ng_feedback_set_sfx_hook(NGFeedbackSfxHook hook)
+/* --- FeedbackSystem public methods --- */
+
+void FeedbackSystem::init()
 {
-    ng_fb_sfx_hook = hook;
+    fb_hitstop    = 0;
+    fb_slow_motion = 0;
+    fb_sfx_hook   = 0;
 }
 
-void NEOGEO_USER ng_feedback_update(void)
+void FeedbackSystem::setSfxHook(NGFeedbackSfxHook hook)
 {
-    if (ng_fb_hitstop > 0)     ng_fb_hitstop--;
-    if (ng_fb_slow_motion > 0) ng_fb_slow_motion--;
-
-    /* Palette FX is updated separately in ng_palette_fx_update() */
+    fb_sfx_hook = hook;
 }
 
-void NEOGEO_USER ng_feedback_hitstop(uint8_t frames)
+void FeedbackSystem::update()
 {
-    if (frames > ng_fb_hitstop) ng_fb_hitstop = frames;
+    if (fb_hitstop    > 0) fb_hitstop--;
+    if (fb_slow_motion > 0) fb_slow_motion--;
 }
 
-uint8_t NEOGEO_USER ng_feedback_is_hitstop(void)
+void FeedbackSystem::hitstop(uint8_t frames)
 {
-    return ng_fb_hitstop > 0 ? 1 : 0;
+    if (frames > fb_hitstop) fb_hitstop = frames;
 }
 
-void NEOGEO_USER ng_feedback_shake(NGCamera *cam, uint8_t amp, uint8_t frames)
+uint8_t FeedbackSystem::isHitstop() const  { return fb_hitstop > 0 ? 1 : 0; }
+uint8_t FeedbackSystem::hitstopRemaining() const { return fb_hitstop; }
+
+void FeedbackSystem::shake(NGCamera *cam, uint8_t amp, uint8_t frames)
 {
-    if (cam) ng_camera_shake(cam, amp, frames);
+    if (cam) cam->shake(amp, frames);
 }
 
-void NEOGEO_USER ng_feedback_flash_white(uint8_t palette_slot, const uint16_t *base_pal, uint8_t frames)
+void FeedbackSystem::flashWhite(uint8_t palette_slot, const uint16_t *base_pal, uint8_t frames)
 {
     ng_palfx_flash_white(palette_slot, base_pal, frames);
 }
 
-void NEOGEO_USER ng_feedback_flash_red(uint8_t palette_slot, const uint16_t *base_pal, uint8_t frames)
+void FeedbackSystem::flashRed(uint8_t palette_slot, const uint16_t *base_pal, uint8_t frames)
 {
     ng_palfx_flash_red(palette_slot, base_pal, frames);
 }
 
-void NEOGEO_USER ng_feedback_slow_motion(uint8_t frames)
+void FeedbackSystem::slowMotion(uint8_t frames)
 {
-    if (frames > ng_fb_slow_motion) ng_fb_slow_motion = frames;
+    if (frames > fb_slow_motion) fb_slow_motion = frames;
 }
 
-uint8_t NEOGEO_USER ng_feedback_is_slow_motion(void)
-{
-    return ng_fb_slow_motion > 0 ? 1 : 0;
-}
+uint8_t FeedbackSystem::isSlowMotion() const  { return fb_slow_motion > 0 ? 1 : 0; }
+uint8_t FeedbackSystem::slowMotionRemaining() const { return fb_slow_motion; }
 
-void NEOGEO_USER ng_impact_event(uint8_t impact_kind,
-                                  uint8_t palette_slot,
-                                  const uint16_t *base_pal,
-                                  NGCamera *cam,
-                                  uint16_t sfx_id,
+void FeedbackSystem::impactEvent(uint8_t impact_kind,
+                                  uint8_t palette_slot, const uint16_t *base_pal,
+                                  NGCamera *cam, uint16_t sfx_id,
                                   int16_t spark_x, int16_t spark_y,
                                   uint16_t spark_tile, uint8_t spark_pal)
 {
-    uint8_t hitstop = 0;
-    uint8_t shake_amp = 0;
-    uint8_t shake_frames = 0;
-    uint8_t flash_frames = 0;
+    uint8_t hs = 0, shake_amp = 0, shake_frames = 0, flash_f = 0;
 
-    /*
-     * Impact presets — tuned for arcade feel on 60Hz hardware.
-     * Heavy impacts use both white and red flashes: white first (peak),
-     * red lingers (damage read).
-     */
     switch (impact_kind) {
     case NG_IMPACT_LIGHT:
-        hitstop      = 3;
-        shake_amp    = 1;
-        shake_frames = 4;
-        flash_frames = 4;
-        if (base_pal) ng_palfx_flash_white(palette_slot, base_pal, flash_frames);
+        hs = 3; shake_amp = 1; shake_frames = 4; flash_f = 4;
+        if (base_pal) flashWhite(palette_slot, base_pal, flash_f);
         break;
-
     case NG_IMPACT_MEDIUM:
-        hitstop      = 5;
-        shake_amp    = 2;
-        shake_frames = 6;
-        flash_frames = 6;
-        if (base_pal) ng_palfx_flash_red(palette_slot, base_pal, flash_frames);
+        hs = 5; shake_amp = 2; shake_frames = 6; flash_f = 6;
+        if (base_pal) flashRed(palette_slot, base_pal, flash_f);
         break;
-
     case NG_IMPACT_HEAVY:
-        hitstop      = 8;
-        shake_amp    = 3;
-        shake_frames = 8;
-        flash_frames = 8;
-        /* White flash only: both effects share the same palette slot so a
-         * subsequent flash_red call would immediately overwrite the white. */
-        if (base_pal) ng_palfx_flash_white(palette_slot, base_pal, flash_frames);
+        hs = 8; shake_amp = 3; shake_frames = 8; flash_f = 8;
+        if (base_pal) flashWhite(palette_slot, base_pal, flash_f);
         break;
-
     case NG_IMPACT_BOSS:
-        hitstop      = 12;
-        shake_amp    = 4;
-        shake_frames = 12;
-        flash_frames = 12;
-        if (base_pal) ng_palfx_flash_white(palette_slot, base_pal, flash_frames);
+        hs = 12; shake_amp = 4; shake_frames = 12; flash_f = 12;
+        if (base_pal) flashWhite(palette_slot, base_pal, flash_f);
         break;
-
     default:
-        hitstop      = 3;
-        shake_amp    = 1;
-        shake_frames = 4;
+        hs = 3; shake_amp = 1; shake_frames = 4;
         break;
     }
 
-    ng_feedback_hitstop(hitstop);
-
-    if (cam && shake_amp > 0) {
-        ng_camera_shake(cam, shake_amp, shake_frames);
-    }
-
-    /* Sound */
-    if (sfx_id > 0 && ng_fb_sfx_hook) {
-        ng_fb_sfx_hook(sfx_id);
-    }
-
-    /* Particles */
-    if (spark_tile > 0) {
-        ng_spawn_hit_spark(spark_x, spark_y, spark_tile, spark_pal);
-    }
+    hitstop(hs);
+    if (cam && shake_amp > 0) cam->shake(shake_amp, shake_frames);
+    if (sfx_id > 0 && fb_sfx_hook) fb_sfx_hook(sfx_id);
+    if (spark_tile > 0) ng_spawn_hit_spark(spark_x, spark_y, spark_tile, spark_pal);
 }
 
-uint8_t NEOGEO_USER ng_feedback_hitstop_remaining(void)
+/* --- extern "C" wrappers --- */
+
+extern "C" {
+
+void NEOGEO_USER ng_feedback_init(void)                 { FeedbackSystem::instance().init(); }
+void NEOGEO_USER ng_feedback_set_sfx_hook(NGFeedbackSfxHook hook) { FeedbackSystem::instance().setSfxHook(hook); }
+void NEOGEO_USER ng_feedback_update(void)               { FeedbackSystem::instance().update(); }
+void NEOGEO_USER ng_feedback_hitstop(uint8_t frames)    { FeedbackSystem::instance().hitstop(frames); }
+uint8_t NEOGEO_USER ng_feedback_is_hitstop(void)        { return FeedbackSystem::instance().isHitstop(); }
+void NEOGEO_USER ng_feedback_shake(NGCamera *cam, uint8_t amp, uint8_t frames) { FeedbackSystem::instance().shake(cam, amp, frames); }
+void NEOGEO_USER ng_feedback_flash_white(uint8_t ps, const uint16_t *b, uint8_t f) { FeedbackSystem::instance().flashWhite(ps, b, f); }
+void NEOGEO_USER ng_feedback_flash_red(uint8_t ps, const uint16_t *b, uint8_t f)   { FeedbackSystem::instance().flashRed(ps, b, f); }
+void NEOGEO_USER ng_feedback_slow_motion(uint8_t frames){ FeedbackSystem::instance().slowMotion(frames); }
+uint8_t NEOGEO_USER ng_feedback_is_slow_motion(void)    { return FeedbackSystem::instance().isSlowMotion(); }
+uint8_t NEOGEO_USER ng_feedback_hitstop_remaining(void) { return FeedbackSystem::instance().hitstopRemaining(); }
+uint8_t NEOGEO_USER ng_feedback_slow_motion_remaining(void) { return FeedbackSystem::instance().slowMotionRemaining(); }
+
+void NEOGEO_USER ng_impact_event(uint8_t impact_kind,
+                                  uint8_t palette_slot, const uint16_t *base_pal,
+                                  NGCamera *cam, uint16_t sfx_id,
+                                  int16_t spark_x, int16_t spark_y,
+                                  uint16_t spark_tile, uint8_t spark_pal)
 {
-    return ng_fb_hitstop;
+    FeedbackSystem::instance().impactEvent(impact_kind, palette_slot, base_pal,
+                                           cam, sfx_id, spark_x, spark_y,
+                                           spark_tile, spark_pal);
 }
-
-uint8_t NEOGEO_USER ng_feedback_slow_motion_remaining(void)
-{
-    return ng_fb_slow_motion;
-}
-
 
 } /* extern "C" */

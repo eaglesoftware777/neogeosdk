@@ -38,7 +38,6 @@ void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint8_t count)
     uint8_t i;
 
     if (firstSprite == 0xffff) return;
-    if (count > NG_SPRITE_MAX_STRIPS) count = NG_SPRITE_MAX_STRIPS;
 
     for (i = 0; i < count; i++) {
         uint16_t spriteIndex = (uint16_t)(firstSprite + i);
