@@ -63,24 +63,6 @@ ngfix_box(1, 1, 38, 6, 0);
 ngfix_bar_u8(4, 8, 16, hp, max_hp, 2, '#', '-');
 ```
 
-## BRDFIX — Game S ROM vs BIOS S ROM
-
-The BRDFIX register (`$3A0003` bit 0) controls which S ROM the hardware uses for
-FIX tile lookups:
-
-- `0` = BIOS S ROM (default at boot, used by BIOS routines)
-- `1` = Game S ROM (required for any game tile output)
-
-`ngfix_init()` calls `setsfix()` which sets BRDFIX to 1.
-
-`ngfix_clear()` calls `clearFix()` which internally calls the BIOS `SYS_FIX_CLEAR`
-routine.  That BIOS routine resets BRDFIX to 0.  `clearFix()` now immediately
-restores BRDFIX to 1 after the BIOS call so that all tile output that follows uses
-the game S ROM.
-
-You do not need to call `setsfix()` manually after `ngfix_clear()`.  The restoration
-is handled inside `clearFix()`.
-
 ## Compatibility
 
 `sdk/2d_engine/ng_fix.c` now delegates to this module, so existing calls such as

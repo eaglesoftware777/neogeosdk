@@ -33,7 +33,27 @@ XTOOLS_ROOT ?= $(XTOOLS_V2)
 endif
 
 CC=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-gcc
-CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox -Wa,-march=68000,-mcpu=68000,-W,--warn
+
+# 2D engine variant:
+#   USE_2D_PLUS=0  (default) — compile sdk/2d_engine   (C, std=gnu99)
+#   USE_2D_PLUS=1            — compile sdk/2d_engine_plus (C++14, freestanding)
+USE_2D_PLUS ?= 0
+
+ifeq ($(USE_2D_PLUS),1)
+  ENGINE_DIR  := sdk/2d_engine_plus
+  ENGINE_EXT  := cpp
+  ENGINE_CC   := $(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-g++
+  # CFLAGS: used by all .c files — C-compatible flags only, include path updated
+  CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine_plus -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox -Wa,-march=68000,-mcpu=68000,-W,--warn
+  # CXXFLAGS: used only for engine .cpp files
+  CXXFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=c++14 -fno-exceptions -fno-rtti -fno-threadsafe-statics -I. -Isdk -Isdk/2d_engine_plus -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox -Wa,-march=68000,-mcpu=68000,-W,--warn
+else
+  ENGINE_DIR  := sdk/2d_engine
+  ENGINE_EXT  := c
+  ENGINE_CC   := $(CC)
+  CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox -Wa,-march=68000,-mcpu=68000,-W,--warn
+  CXXFLAGS= $(CFLAGS)
+endif
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
 LD=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-ld
 LDFLAGS=  -nostdlib
@@ -138,33 +158,33 @@ game: game-check
 	$(CC) $(CFLAGS)   games/$(GAME)/eyecatcher.c -o out/eyecatcher0.o
 	$(CC) $(CFLAGS)   sdk/neogeolib.c -o out/neogeolib0.o
 	$(CC) $(CFLAGS)   sdk/ng_fix/ng_fix.c -o out/ng_fix_sdk0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_defs.c -o out/ng_defs0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_properties.c -o out/ng_properties0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_game_time.c -o out/ng_game_time0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_timers.c -o out/ng_timers0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_progress.c -o out/ng_progress0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_status.c -o out/ng_status0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_game_events.c -o out/ng_game_events0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_level.c -o out/ng_level0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_bg.c -o out/ng_bg0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_fix.c -o out/ng_fix0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_sprite_group.c -o out/ng_sprite_group0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_actions.c -o out/ng_actions0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_chars.c -o out/ng_chars0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_npcs.c -o out/ng_npcs0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_physics.c -o out/ng_physics0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_border_constraints.c -o out/ng_border_constraints0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_game_interupt.c -o out/ng_game_interupt0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_depthfx.c -o out/ng_depthfx0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_render_queue.c -o out/ng_render_queue0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_fixed.c -o out/ng_fixed0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_camera.c -o out/ng_camera0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_palette_fx.c -o out/ng_palette_fx0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_particles.c -o out/ng_particles0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_feedback.c -o out/ng_feedback0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_debug.c -o out/ng_debug0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_joystick.c -o out/ng_joystick0.o
-	$(CC) $(CFLAGS)   sdk/2d_engine/ng_demo_advanced.c -o out/ng_demo_advanced0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_defs.$(ENGINE_EXT) -o out/ng_defs0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_properties.$(ENGINE_EXT) -o out/ng_properties0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_game_time.$(ENGINE_EXT) -o out/ng_game_time0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_timers.$(ENGINE_EXT) -o out/ng_timers0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_progress.$(ENGINE_EXT) -o out/ng_progress0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_status.$(ENGINE_EXT) -o out/ng_status0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_game_events.$(ENGINE_EXT) -o out/ng_game_events0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_level.$(ENGINE_EXT) -o out/ng_level0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_bg.$(ENGINE_EXT) -o out/ng_bg0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_fix.$(ENGINE_EXT) -o out/ng_fix0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_sprite_group.$(ENGINE_EXT) -o out/ng_sprite_group0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_actions.$(ENGINE_EXT) -o out/ng_actions0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_chars.$(ENGINE_EXT) -o out/ng_chars0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_npcs.$(ENGINE_EXT) -o out/ng_npcs0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_physics.$(ENGINE_EXT) -o out/ng_physics0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_border_constraints.$(ENGINE_EXT) -o out/ng_border_constraints0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_game_interupt.$(ENGINE_EXT) -o out/ng_game_interupt0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_depthfx.$(ENGINE_EXT) -o out/ng_depthfx0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_render_queue.$(ENGINE_EXT) -o out/ng_render_queue0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_fixed.$(ENGINE_EXT) -o out/ng_fixed0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_camera.$(ENGINE_EXT) -o out/ng_camera0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_palette_fx.$(ENGINE_EXT) -o out/ng_palette_fx0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_particles.$(ENGINE_EXT) -o out/ng_particles0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_feedback.$(ENGINE_EXT) -o out/ng_feedback0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_debug.$(ENGINE_EXT) -o out/ng_debug0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_joystick.$(ENGINE_EXT) -o out/ng_joystick0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_demo_advanced.$(ENGINE_EXT) -o out/ng_demo_advanced0.o
 	$(foreach src,$(GAME_SCENE_SRCS),$(CC) $(CFLAGS) $(src) -o out/$(notdir $(basename $(src)))0.o;)
 	$(OBJCP) $(STRIP_SECTS) out/neogeo0.o     out/neogeo.o
 	$(OBJCP) $(STRIP_SECTS) out/user0.o       out/user.o

@@ -17,16 +17,6 @@ Release date: 2026-05-17
 
 ### Bug Fixes
 
-#### FIX Layer — BRDFIX Register Not Restored After `clearFix()`
-
-`clearFix()` calls the BIOS routine `SYS_FIX_CLEAR` which resets the `BRDFIX`
-register (`$3A0003` bit 0) to 0, switching hardware to the BIOS S ROM.  All text
-drawn afterward used wrong tile indices and appeared blank or black.
-
-Fix: `clearFix()` in `sdk/neogeolib.c` now executes `BSET.B #0,REG_BRDFIX`
-immediately after the BIOS call to restore the game S ROM.  All callers —
-including `ngfix_clear()` — benefit automatically.  The redundant `setsfix()`
-that was in `ngfix_clear()` has been removed.
 
 #### Z80 Sound — `soundCommand` Polling Race Condition
 

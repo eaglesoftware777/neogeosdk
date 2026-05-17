@@ -161,12 +161,6 @@ ngfix_clear();
 ngfix_puts(2, 2, "MY GAME", 0);
 ```
 
-`ngfix_clear()` calls `clearFix()` internally.  `clearFix()` invokes the BIOS
-`SYS_FIX_CLEAR` routine, which resets the BRDFIX register to 0 (BIOS S ROM).
-The SDK restores BRDFIX to 1 (game S ROM) immediately after the BIOS call, so
-FIX tile output always uses your game S ROM.  You do not need to call `setsfix()`
-manually after `ngfix_clear()`.
-
 ---
 
 ## 9. Using the 2D engine
