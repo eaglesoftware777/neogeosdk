@@ -71,7 +71,7 @@ Use these helpers for text, counters, debug overlays, and BIOS message coordinat
 | --- | --- |
 | `clearRAM()` | Clear the SDK work RAM area. |
 | `clearSprs()` | Clear the visible sprite list. |
-| `clearFix()` | Clear the FIX layer. |
+| `clearFix()` | Clear the FIX layer. Restores BRDFIX (game S ROM) after the BIOS clear call. |
 | `waitVbl()` | Wait for the next VBlank. |
 | `cycle10ms()` | Rough 10 ms delay helper. |
 | `cycle1s()` | Rough 1 second delay helper. |
@@ -270,7 +270,9 @@ playFMTrack(SOUND_FM_SAMURAI_MINOR);
 ## Notes
 
 - `sdk/neogeo.h` is the intended public call surface for the 68000 side.
-- The playable sound driver remains the assembler implementation in `sound/driver/driver.asm`.
-- `make m1rom` builds the authoritative ASM sound runtime.
-- `make m1rom-c` builds the experimental C-linked sound runtime.
+- The playable sound driver is the assembler implementation in `sound/driver/driver.asm`.
+- `make m1rom` / `make m1rom-asm` builds the authoritative ASM sound runtime.
+- `make m1rom-c` builds the experimental C-linked sound runtime for comparison only.
 - The current 68000 build no longer links the legacy `softfloat/` runtime by default.
+- `clearFix()` calls the BIOS `SYS_FIX_CLEAR` routine which resets BRDFIX to 0. The SDK now restores BRDFIX (`BSET.B #0,REG_BRDFIX`) immediately after that call so the game S ROM is always selected. Never call `clearFix()` without following up with text draws — the game S ROM is restored automatically.
+- `soundCommand()` no longer calls `isZ80Ready()` after writing the command byte. The trailing poll created a race condition with the Z80 NMI handler that caused a permanent 68k deadlock. Callers that need to verify Z80 readiness before sending a second command should call `isZ80Ready()` explicitly between commands.

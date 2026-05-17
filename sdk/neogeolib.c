@@ -499,7 +499,7 @@ void NEOGEO_USER display_digit(uint16_t X, uint16_t Y,uint32_t value,short pal,u
 int NEOGEO_USER read_p1credit(void) { return *(volatile uint8_t *)P1_CREDITS; }
 
 void NEOGEO_USER playSoundtest(uint16_t index) { isZ80Ready(); soundCommand((uint8_t)(index & 0xFF)); }
-void NEOGEO_USER soundCommand(uint8_t command) { isZ80Ready(); NEO_REGISTER8(REG_SOUND) = command; isZ80Ready(); }
+void NEOGEO_USER soundCommand(uint8_t command) { isZ80Ready(); NEO_REGISTER8(REG_SOUND) = command; }
 void NEOGEO_USER soundInit(void) { soundCommand(0x01); }
 void NEOGEO_USER soundReset(void) { soundCommand(0x03); }
 void NEOGEO_USER soundStopAll(void) { soundCommand(0x04); }
