@@ -149,7 +149,27 @@ make GAME=mygame test BIOS=unibios40
 
 ---
 
-## 8. Using the 2D engine
+## 8. FIX layer text
+
+Call `ngfix_init()` once at startup and `ngfix_clear()` before drawing any FIX text.
+
+```c
+#include "sdk/ng_fix/ng_fix.h"
+
+ngfix_init();
+ngfix_clear();
+ngfix_puts(2, 2, "MY GAME", 0);
+```
+
+`ngfix_clear()` calls `clearFix()` internally.  `clearFix()` invokes the BIOS
+`SYS_FIX_CLEAR` routine, which resets the BRDFIX register to 0 (BIOS S ROM).
+The SDK restores BRDFIX to 1 (game S ROM) immediately after the BIOS call, so
+FIX tile output always uses your game S ROM.  You do not need to call `setsfix()`
+manually after `ngfix_clear()`.
+
+---
+
+## 9. Using the 2D engine
 
 To use `ng_game_engine_init` / `ng_game_engine_frame` from `ng_game_interupt.h`:
 
@@ -181,7 +201,7 @@ render queue, particles, palette FX, feedback, and depth FX.
 
 ---
 
-## 9. Linker script
+## 10. Linker script
 
 Copy `games/demo/neogeo.ld` to `games/mygame/neogeo.ld`.  Adjust section
 sizes if your game has more/fewer scenes or a larger BSS footprint.
@@ -192,7 +212,7 @@ required for Windows GNU ld compatibility.
 
 ---
 
-## 10. Sound assets (optional)
+## 11. Sound assets (optional)
 
 If your game has its own music/samples, place them in `games/mygame/sound/`:
 
@@ -219,7 +239,7 @@ subdirectories for the sound features you actually use.
 
 ---
 
-## 11. Distribution package
+## 12. Distribution package
 
 ```bash
 make GAME=mygame dist

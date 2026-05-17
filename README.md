@@ -3,7 +3,7 @@
 Neo Geo development SDK for SNK hardware.
 
 - Repository: https://github.com/eaglesoftware777/neogeosdk
-- Current release target: `v1.2.0`
+- Current release target: `v1.3.0`
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 
@@ -278,7 +278,7 @@ The cartridge is loaded through the Neo Geo software list as `neogeosdk`.
 **Correct command:**
 
 ```
-mame neogeo -cart1 demo -rompath roms -hashpath hash_eagle/demo;hash_eagle;hash -bios unibios22
+mame neogeo -cart1 demo -rompath roms/demo;roms -hashpath hash_eagle/demo;hash_eagle;hash -bios unibios22
 ```
 
 **Windows quick-start:**
@@ -309,9 +309,9 @@ run `dist/run_neogeosdk.bat`.
 
 ## Release Assets
 
-The `v1.2.1` release publishes these attached assets:
+The `v1.3.0` release publishes these attached assets:
 
-- `neogeosdkv1.2.1.tar.gz`  
+- `neogeosdkv1.3.0.tar.gz`  
   source snapshot for the SDK
 - `neogeosdk.zip`  
   generated demo ROM set for MAME (`777-p1.p1`, `777-m1.m1`, `777-s1.s1`, `777-v1.v1`, `777-c1.c1`, `777-c2.c2`)
@@ -322,7 +322,7 @@ release updates are published.
 
 Current release page:
 
-- `https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.2.1`
+- `https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.3.0`
 
 ## Documentation
 
@@ -711,14 +711,15 @@ make test BIOS=unibios22 : run with specific BIOS
 Important recent build behavior:
 
 - `make sound`, `make vrom`, and `make m1rom` sync generated outputs into `roms/<game>/`
-- all ROM files use the `777-` prefix: `777-m1.m1`, `777-v1.v1`, `777-p1.p1`, `777-s1.s1`, `777-c1.c1`, `777-c2.c2`
+- ROM files are written to `roms/<game>/` — e.g. `roms/demo/777-p1.p1`, `roms/helloworld/772-p1.p1`
 - `make samples` uses the bundled Python WAV converter by default on Linux and Windows
 - set `SOX=/path/to/sox` only when you explicitly want the SoX conversion path
 - Windows `make fm`, `make mml`, and `make ssg` expand source file lists correctly
-- Windows `make sfix` produces `777-s1.s1` in the correct 128 KB FIX-ROM format
+- Windows `make sfix` produces `<GAME_ID>-s1.s1` in the correct 128 KB FIX-ROM format
 - P1 generation crops to the full 512 KB program ROM window (0x080000) before byte swap and padding; this is the required ROM format for MAME and hardware
 - `hash_eagle/<game>/neogeo.xml` is auto-regenerated on every `make p1` build with correct CRC/SHA1 and `loadflag="load16_word_swap"` for the P-ROM
 - `make dist` packages everything into `dist/roms/<game>.zip` with ROM files at archive root (no subfolder)
+- `make m1rom-asm` is the authoritative M1 build path (`USE_Z80C=0`); the experimental C path (`make m1rom-c`) is for comparison only
 
 ## Debug and Trace Builds
 
@@ -954,25 +955,27 @@ Highlights from the recent commit line:
 - 2026-04-26  
   artbox pipeline migrated to Python 3 and installation docs updated
 - 2026-05-04  
-  custom Neo Geo sound system added:
-  - Z80 YM2610 driver
-  - MML / FM / SSG build chain
-  - cross-platform Python ADPCM encoder
-  - Windows sound build parity
+  custom Neo Geo sound system added: Z80 YM2610 driver, MML/FM/SSG build chain, cross-platform Python ADPCM encoder, Windows sound build parity
 - 2026-05-05  
   experimental C migration of the Z80 sound driver and `z80c-special` compiler work
 - 2026-05-06  
   higher-level sound workflow, named sound IDs, improved multi-layer demo mix, and compare flow for ASM vs C M1 builds
-- 2026-05-07
+- 2026-05-07  
   softfloat removal, SDK API docs refresh, Windows sound-build parity fixes, and corrected Win32 FIX-ROM generation
-- 2026-05-08
+- 2026-05-08  
   2D game engine layer sources added under `sdk/2d_engine/ng_*`, with linker-space reservation for engine state
-- 2026-05-09
-  Python became the default sample-conversion path, and the live title/game flow was remapped around the current ADPCM-B theme set
-- 2026-05-10
-  2D engine camera scroll, level/NPC/physics/fix modules, artbox asset categories, joystick-driven main-character actions, opponent hazards, forest-alley final scene work; demo scene rendering fixes (duel backdrop, portrait tracking, phase 1 background); P1 ROM enforced to 128 KB; FIX palette white-on-black; GDB guide, dependency docs, and bankswitch stub API added
+- 2026-05-09  
+  Python became the default sample-conversion path; live title/game flow remapped around the ADPCM-B theme set
+- 2026-05-10  
+  2D engine camera scroll, level/NPC/physics/fix modules, artbox asset categories, joystick-driven main-character actions; GDB guide, dependency docs, and bankswitch stub API added
+- 2026-05-13 – 2026-05-15  
+  per-game ROM folders (`roms/<game>/`), full `GAME_ID` propagation, multi-game build path refactor, Windows build path bugs fixed, 15 SDK bugs fixed
+- 2026-05-16  
+  FIX layer BRDFIX bug fixed in `clearFix()` — game S ROM now always restored after clear; demo rewritten as 13-scene cinematic showcase; particle slot and budget reporting corrected
+- 2026-05-17  
+  Z80 communication race condition in `soundCommand` fixed — trailing `isZ80Ready()` removed to prevent 68k deadlock; sound driver (`driver.asm`) restored to last known-good working version
 
-See [`CHANGELOG.md`](./CHANGELOG.md) for release-level notes.
+See [`CHANGELOG.md`](./CHANGELOG.md) for full release-level notes.
 
 ## Repository Overview
 
@@ -995,7 +998,7 @@ sound/            — sound driver, tracks, samples, tools
   ssg/            — standalone SSG tracks and presets
   samples/        — raw and converted sample assets
   tools/          — sound build utilities
-roms/<game>/      — synced ROM outputs for MAME (777-p1.p1 … 777-c2.c2)
+roms/<game>/      — per-game ROM outputs for MAME (e.g. roms/demo/777-p1.p1 … 777-c2.c2)
 out/              — intermediate and generated build artifacts
 win/              — Windows-side helper binaries used by the build
 z80c-special/     — experimental Z80 C compiler used by the C-driver path

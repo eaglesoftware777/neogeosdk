@@ -1,5 +1,113 @@
 # Changelog
 
+## v1.3.0 - Bug Fixes, Per-Game ROM Folders, Z80 Sound Fix, and Demo Overhaul
+
+Release date: 2026-05-17
+
+### Highlights
+
+- 15 SDK bug fixes across sprite, FIX, sound, and build subsystems
+- Per-game ROM output folders (`roms/<game>/`) — all ROM files now isolated per game
+- FIX layer hardware bug fix: `clearFix()` now restores BRDFIX so game S ROM is always selected after a clear
+- Z80 communication race condition fixed: `soundCommand` no longer hangs the 68k in polling loop
+- Sound driver restored to last known-good assembly version (1947-line working driver)
+- Demo fully rewritten as a cinematic 13-scene SDK showcase
+- Windows build path bugs corrected across all sound and FIX tools
+- Multiple-definition linker errors from scene file additions resolved
+
+### Bug Fixes
+
+#### FIX Layer — BRDFIX Register Not Restored After `clearFix()`
+
+`clearFix()` calls the BIOS routine `SYS_FIX_CLEAR` which resets the `BRDFIX`
+register (`$3A0003` bit 0) to 0, switching hardware to the BIOS S ROM.  All text
+drawn afterward used wrong tile indices and appeared blank or black.
+
+Fix: `clearFix()` in `sdk/neogeolib.c` now executes `BSET.B #0,REG_BRDFIX`
+immediately after the BIOS call to restore the game S ROM.  All callers —
+including `ngfix_clear()` — benefit automatically.  The redundant `setsfix()`
+that was in `ngfix_clear()` has been removed.
+
+#### Z80 Sound — `soundCommand` Polling Race Condition
+
+`soundCommand` called `isZ80Ready()` twice: once before writing the command and
+once after.  The trailing call wrote 0 to `$300001` (REG_DIPSW), triggering a Z80
+NMI.  The NMI handler clears `$320000` (REG_SOUND) to 0 while processing the
+previous command.  The 68k polling loop then reads 0, re-triggers another NMI, and
+the cycle deadlocks permanently — producing a frozen white screen with no sound.
+
+Fix: the trailing `isZ80Ready()` has been removed from `soundCommand` in
+`sdk/neogeolib.c`.
+
+#### Z80 Driver — Restored Working Assembly Driver
+
+The M1 ROM was being built from an updated 2301-line `driver.asm` that diverged
+from the last verified-working version (1947 lines).  `sound/driver/driver.asm`
+has been restored to the working version and the M1 ROM rebuilt via the pure
+assembler path (`USE_Z80C=0`).
+
+#### Particle System — Sprite Budget Reporting and Stale Slot Cleanup
+
+- Particle sprite budget counter now correctly reports actual slots consumed.
+- Stale particle sprite slots are cleared when particles expire, preventing
+  ghost sprites from persisting across scene transitions.
+- Demo sprite cleanup limited to valid slot range to avoid out-of-bounds writes.
+
+#### Linker — Multiple-Definition Errors When Adding Scene Files
+
+Adding `demo_screen.c` to the demo scene list caused multiple-definition linker
+errors for symbols shared across scene files.  Fixed by correcting the `GAME_SCENES`
+list to exclude files that are `#include`-d by other scenes.
+
+### Per-Game ROM Folders
+
+ROM output files are now written to `roms/<game>/` instead of a shared `roms/`
+root.  The `make p1`, `make sound`, `make art`, and `make sfix` targets all sync
+their outputs to the per-game folder.
+
+```text
+roms/demo/       777-p1.p1  777-m1.m1  777-s1.s1  777-v1.v1  777-c1.c1  777-c2.c2
+roms/helloworld/ 772-p1.p1  772-m1.m1  ...
+roms/tutorial/   555-p1.p1  555-m1.m1  ...
+```
+
+`hash_eagle/<game>/neogeo.xml` is regenerated automatically on every `make p1`.
+
+### Windows Build Fixes
+
+- `MakefileWin32.mak`: `SHELL=cmd.exe` forced to prevent sh-style path expansion.
+- `romts.bat` / `romfx.bat`: `GAME_ID` filenames now quoted to prevent romtool from
+  treating hyphens as flags.
+- `GAME_SOUND` path backslash-corrected; trailing space in `sfix GAME_ID` removed.
+- All game linker scripts gain catch-all `.data` / `.bss` patterns for Windows `ld`
+  compatibility.
+- Per-game `GAME_ID` and `GAME_SOUND` propagated to all artbox and sound tools.
+
+### Demo Overhaul
+
+The demo game (`games/demo`) has been rewritten as a cinematic 13-scene SDK
+showcase covering: intro, sprites, camera, palette FX, particles, depth FX, FIX
+layer, sound, combat, stress test, title, render queue, and a 3D starfield scene.
+Each scene exercises a distinct engine subsystem with timed transitions.
+
+### Documentation
+
+- `BUGFIX_SESSION.md` added at repository root — full root-cause analysis and fix
+  description for the frozen-screen regression.
+- `docs/ADDING_A_GAME.md` updated with per-game ROM folder layout.
+
+### Validation
+
+- `make GAME=demo all` — zero errors, zero warnings
+- `make GAME=helloworld all`
+- `make GAME=tutorial game`
+- `make GAME=neogeogame game`
+- `make m1rom-asm` — assembler path, working driver
+- `make -f MakefileWin32.mak sound`
+- `make -f MakefileWin32.mak sfix`
+
+---
+
 ## v1.2.0 - NeoGeo Deluxe 2D Engine, Multi-Game Build System, and Sound Pipeline
 
 Release date: 2026-05-06

@@ -62,3 +62,14 @@ Velocities are in 8.8 fixed-point (matching `NG_FP_SHIFT = 8`):
 - 32 particles at 1 strip each = 32 SCB1+SCB2+SCB3+SCB4 writes = fast.
 - Limit long-lived optional particles (smoke) to avoid pool saturation.
 - Use `ng_particles_count()` to feed the debug HUD sprite counter.
+
+## Recent Fixes
+
+- **Sprite budget reporting** (`29c5787`): the budget counter now correctly reflects
+  the actual number of sprite slots consumed by active particles.  Previously the
+  counter was miscounted, causing the debug HUD to show incorrect occupancy.
+- **Stale slot cleanup** (`3fac09d`): when a particle expires, its sprite slot is
+  now explicitly cleared (SCB3 height set to 0).  Previously expired particles could
+  leave visible ghost sprites until another particle reused the same slot.
+- **Valid slot bounds** (`97e14e0`): the demo sprite cleanup loop is clamped to
+  valid slot indices, preventing out-of-bounds VRAM writes during scene transitions.
