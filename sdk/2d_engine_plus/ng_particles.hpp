@@ -1,16 +1,8 @@
 /*
- * ng_particles.h — Particle and impact effect system (Stage 8)
+ * ng_particles.hpp — Particle and impact effect system.
  *
- * Fixed-size pool, no malloc.  Low-priority particles are silently dropped
- * when the sprite budget is tight.  Each particle is a 1-strip sprite group
- * (16 px wide).
- *
- * NeoGeo sprite budget note:
- *   Sprite slots 0..299 are for characters, effects, NPCs.
- *   Particles share this budget.  The particle system tracks the sprite
- *   cursor and refuses to allocate if the cursor exceeds NG_SPR_CHAR_LAST.
- *
- * Velocity is 8.8 fixed-point (matches ng_defs.h format).
+ * Fixed-size pool, no malloc.  Priority-based drop when sprite budget is tight.
+ * Each particle is a 1-strip sprite (16 px wide).
  */
 
 #ifndef NG_PARTICLES_HPP
@@ -19,20 +11,12 @@
 #include "ng_defs.hpp"
 #include "ng_sprite_group.hpp"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-
-/* Total particle slots — must not exceed hardware sprite budget */
 #define NG_PART_MAX_PARTICLES   32
 
-/* Priority levels */
-#define NG_PART_PRI_CRITICAL    0   /* always drawn: hit sparks, death explosions */
-#define NG_PART_PRI_NORMAL      1   /* usually drawn: dust, debris */
-#define NG_PART_PRI_OPTIONAL    2   /* decorative: background ambient particles */
+#define NG_PART_PRI_CRITICAL    0
+#define NG_PART_PRI_NORMAL      1
+#define NG_PART_PRI_OPTIONAL    2
 
-/* Particle type IDs */
 #define NG_PART_DUST            0
 #define NG_PART_HIT_SPARK       1
 #define NG_PART_SLASH_TRAIL     2
@@ -42,73 +26,98 @@ extern "C" {
 #define NG_PART_WATER_SPLASH    6
 #define NG_PART_METAL_HIT       7
 
-/* Number of frames per particle animation tile */
 #define NG_PART_ANIM_FRAMES     4
 
-typedef struct {
+/*
+ * NGParticle — per-particle state.  All fields public for direct C access.
+ */
+struct NGParticle {
     uint8_t  active;
-    uint8_t  priority;      /* NG_PART_PRI_* */
-    uint8_t  type;          /* NG_PART_* */
+    uint8_t  priority;
+    uint8_t  type;
 
-    int16_t  x;             /* world position */
+    int16_t  x;
     int16_t  y;
-
-    int32_t  vx_fp;         /* velocity in 8.8 fixed-point */
+    int32_t  vx_fp;
     int32_t  vy_fp;
 
-    uint8_t  lifetime;      /* frames remaining */
-    uint8_t  max_life;      /* initial lifetime (for anim phase) */
-
-    uint16_t tile_base;     /* first tile in the animation strip */
-    uint8_t  palette;       /* hardware palette slot */
-    uint8_t  anim_timer;    /* counts down to advance tile */
-    uint8_t  anim_period;   /* frames per tile */
-    uint8_t  frame;         /* current animation frame index */
-    uint8_t  frame_count;   /* number of animation frames */
-} NGParticle;
-
-void NEOGEO_USER ng_particles_init(void);
+    uint8_t  lifetime;
+    uint8_t  max_life;
+    uint16_t tile_base;
+    uint8_t  palette;
+    uint8_t  anim_timer;
+    uint8_t  anim_period;
+    uint8_t  frame;
+    uint8_t  frame_count;
+};
 
 /*
- * Per-frame update: advance physics, update animation, expire dead particles.
- * Call once per frame before ng_particles_draw().
+ * ParticleSystem — singleton that owns the particle pool and draw tracks.
  */
-void NEOGEO_USER ng_particles_update(void);
+class ParticleSystem {
+public:
+    static ParticleSystem& instance();
 
-/*
- * Draw all active particles using sprite slots starting at first_slot.
- * Returns the next free sprite slot after the particles.
- * sprite_budget_used is the number of sprite slots already occupied before
- * particle drawing; optional particles drop when it reaches the threshold.
- */
-uint16_t NEOGEO_USER ng_particles_draw(uint16_t first_slot, uint16_t sprite_budget_used);
+    void NEOGEO_USER init();
+    void NEOGEO_USER update();
+    uint16_t NEOGEO_USER draw(uint16_t first_slot, uint16_t sprite_budget_used);
 
-/* Spawn helpers — return pointer to the new particle or NULL if pool full */
-NGParticle * NEOGEO_USER ng_spawn_hit_spark(int16_t x, int16_t y,
-                                              uint16_t tile_base, uint8_t palette);
-NGParticle * NEOGEO_USER ng_spawn_dust(int16_t x, int16_t y,
-                                         uint16_t tile_base, uint8_t palette);
-NGParticle * NEOGEO_USER ng_spawn_slash_trail(int16_t x, int16_t y, int8_t dir,
-                                               uint16_t tile_base, uint8_t palette);
-NGParticle * NEOGEO_USER ng_spawn_explosion(int16_t x, int16_t y,
-                                             uint16_t tile_base, uint8_t palette);
-NGParticle * NEOGEO_USER ng_spawn_smoke(int16_t x, int16_t y,
-                                         uint16_t tile_base, uint8_t palette);
-NGParticle * NEOGEO_USER ng_spawn_magic_spark(int16_t x, int16_t y,
-                                               uint16_t tile_base, uint8_t palette);
+    NGParticle* NEOGEO_USER spawn(uint8_t type, uint8_t priority,
+                                  int16_t x, int16_t y,
+                                  int32_t vx_fp, int32_t vy_fp,
+                                  uint8_t lifetime,
+                                  uint16_t tile_base, uint8_t palette,
+                                  uint8_t frame_count, uint8_t anim_period);
 
-/* Low-level: spawn with full control */
-NGParticle * NEOGEO_USER ng_particle_spawn(uint8_t type, uint8_t priority,
-                                            int16_t x, int16_t y,
-                                            int32_t vx_fp, int32_t vy_fp,
-                                            uint8_t lifetime,
-                                            uint16_t tile_base, uint8_t palette,
-                                            uint8_t frame_count, uint8_t anim_period);
+    NGParticle* NEOGEO_USER spawnHitSpark(int16_t x, int16_t y, uint16_t tile_base, uint8_t palette);
+    NGParticle* NEOGEO_USER spawnDust(int16_t x, int16_t y, uint16_t tile_base, uint8_t palette);
+    NGParticle* NEOGEO_USER spawnSlashTrail(int16_t x, int16_t y, int8_t dir, uint16_t tile_base, uint8_t palette);
+    NGParticle* NEOGEO_USER spawnExplosion(int16_t x, int16_t y, uint16_t tile_base, uint8_t palette);
+    NGParticle* NEOGEO_USER spawnSmoke(int16_t x, int16_t y, uint16_t tile_base, uint8_t palette);
+    NGParticle* NEOGEO_USER spawnMagicSpark(int16_t x, int16_t y, uint16_t tile_base, uint8_t palette);
 
-/* Count active particles by priority level. */
+    uint8_t NEOGEO_USER count() const;
+    uint8_t NEOGEO_USER countPriority(uint8_t priority) const;
+
+private:
+    ParticleSystem() {}
+
+    static constexpr uint8_t DRAW_TRACKS = 4;
+    static constexpr uint16_t BUDGET_THRESHOLD = 200;
+
+    NGParticle pool[NG_PART_MAX_PARTICLES];
+    uint16_t   track_first[DRAW_TRACKS];
+    uint16_t   track_end[DRAW_TRACKS];
+    uint8_t    track_used[DRAW_TRACKS];
+
+    void     hideSlots(uint16_t first, uint16_t end);
+    uint8_t  trackFor(uint16_t first_slot);
+};
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void      NEOGEO_USER ng_particles_init(void);
+void      NEOGEO_USER ng_particles_update(void);
+uint16_t  NEOGEO_USER ng_particles_draw(uint16_t first_slot, uint16_t sprite_budget_used);
+
+NGParticle* NEOGEO_USER ng_spawn_hit_spark(int16_t x, int16_t y, uint16_t tile_base, uint8_t palette);
+NGParticle* NEOGEO_USER ng_spawn_dust(int16_t x, int16_t y, uint16_t tile_base, uint8_t palette);
+NGParticle* NEOGEO_USER ng_spawn_slash_trail(int16_t x, int16_t y, int8_t dir, uint16_t tile_base, uint8_t palette);
+NGParticle* NEOGEO_USER ng_spawn_explosion(int16_t x, int16_t y, uint16_t tile_base, uint8_t palette);
+NGParticle* NEOGEO_USER ng_spawn_smoke(int16_t x, int16_t y, uint16_t tile_base, uint8_t palette);
+NGParticle* NEOGEO_USER ng_spawn_magic_spark(int16_t x, int16_t y, uint16_t tile_base, uint8_t palette);
+
+NGParticle* NEOGEO_USER ng_particle_spawn(uint8_t type, uint8_t priority,
+                                           int16_t x, int16_t y,
+                                           int32_t vx_fp, int32_t vy_fp,
+                                           uint8_t lifetime,
+                                           uint16_t tile_base, uint8_t palette,
+                                           uint8_t frame_count, uint8_t anim_period);
+
 uint8_t NEOGEO_USER ng_particles_count(void);
 uint8_t NEOGEO_USER ng_particles_count_priority(uint8_t priority);
-
 
 #ifdef __cplusplus
 } /* extern "C" */

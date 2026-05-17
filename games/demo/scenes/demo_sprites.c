@@ -29,6 +29,7 @@ void NEOGEO_USER soundSetADPCMAVolume(uint8_t v);
 void NEOGEO_USER soundSetADPCMBVolume(uint8_t v);
 void NEOGEO_USER playSFX(uint8_t n);
 void NEOGEO_USER playVoiceCue(uint8_t n);
+void NEOGEO_USER ng_clear_screen_full(void);
 
 /* ------------------------------------------------------------------ */
 /*  Asset layout constants                                               */
@@ -224,42 +225,43 @@ static void NEOGEO_USER spr_raw_api(void)
 {
     NGSpriteGroup g;
     uint16_t t;
-    int16_t  sx;
+
+    enum {
+        SCREEN_W = 320,
+        SCREEN_H = 224,
+        SPR_COLS = 6,
+        SPR_ROWS = 10,
+        TILE_SIZE = 16,
+        SPR_W = SPR_COLS * TILE_SIZE,
+        SPR_H = SPR_ROWS * TILE_SIZE,
+        CENTER_X = (SCREEN_W - SPR_W) / 2,
+        CENTER_Y = (SCREEN_H - SPR_H) / 2
+    };
 
     clearFix();
     setBACKDROP(BLACK);
-    demo_fix_puts(2u, 0u, "RAW NEO GEO API / DIRECT SCB WRITES", 2u);
-    demo_fix_puts(2u, 1u, "NO NG_* WRAPPERS  PURE HARDWARE", 1u);
-    demo_fix_puts(2u, 3u, "SCB1=TILE+PAL  SCB2=SCALE  SCB3=Y+STICKY  SCB4=X", 0u);
+
+    demo_fix_puts(2u, 0u,  "RAW NEO GEO API / DIRECT SCB WRITES", 2u);
+    demo_fix_puts(2u, 1u,  "NO NG_* WRAPPERS  PURE HARDWARE", 1u);
+    demo_fix_puts(2u, 3u,  "SCB1=TILE+PAL  SCB2=SCALE  SCB3=Y+STICKY  SCB4=X", 0u);
+    demo_fix_puts(2u, 5u,  "CENTERED CHARACTER", 1u);
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);
 
     demo_load_screen_palette(11u);
+    soundSceneReset();
+    soundSetADPCMAVolume(0x38u);
+    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    ng_sprite_group_init(&g, 1u, SPR_COLS, SPR_ROWS,
+                         DEMO_SCREEN_TILE(11u),
+                         DEMO_SCREEN_PALETTE(11u));
 
-    ng_sprite_group_init(&g, 1u, 6u, 10u,
-                         DEMO_SCREEN_TILE(11u), DEMO_SCREEN_PALETTE(11u));
     ng_sprite_group_set_tile_stride(&g, 16u);
-    ng_sprite_group_set_active_rows(&g, 10u);
+    ng_sprite_group_set_active_rows(&g, SPR_ROWS);
     ng_sprite_group_set_scale(&g, 0xFFu, 0xFFu);
 
-    sx = 20;
-
     for (t = 0u; t < 180u; t++) {
-        ng_sprite_group_set_pos(&g, sx, (int16_t)(-34));
+        ng_sprite_group_set_pos(&g, CENTER_X, CENTER_Y);
         ng_sprite_group_upload(&g);
-
-        sx = (int16_t)(sx + 1);
-        if (sx > 280) sx = 20;
-
-        {
-            char buf[8];
-            buf[0] = 'X';
-            buf[1] = ':';
-            buf[2] = (char)('0' + ((uint16_t)sx / 100u % 10u));
-            buf[3] = (char)('0' + ((uint16_t)sx / 10u % 10u));
-            buf[4] = (char)('0' + ((uint16_t)sx % 10u));
-            buf[5] = '\0';
-            demo_fix_puts(2u, 5u, buf, 1u);
-        }
 
         if (demo_frame()) break;
     }
@@ -274,130 +276,293 @@ static void NEOGEO_USER spr_action_fsm(void)
 {
     NGCharacter *c;
     uint16_t t;
-    uint8_t  state;
+    uint8_t state;
     uint16_t state_timer;
+    int16_t base_x;
+    int16_t base_y;
+    int16_t draw_y;
+
+    enum {
+        SCREEN_W = 320,
+        SCREEN_H = 224,
+
+        SPR_COLS = 14,
+        SPR_ROWS = 10,
+        TILE_SIZE = 16,
+        SPR_W = SPR_COLS * TILE_SIZE,
+        SPR_H = SPR_ROWS * TILE_SIZE,
+
+        CENTER_X = (SCREEN_W - SPR_W) / 2,
+        BASE_Y = ((SCREEN_H - SPR_H) / 2) + SPR_H,
+
+        JUMP_H = 32
+    };
+
+    enum {
+        STATE_IDLE = 0,
+        STATE_RUN = 1,
+        STATE_JUMP = 2,
+        STATE_ATTACK = 3
+    };
 
     static const char *const s_state_names[4] = {
         "IDLE  ", "RUN   ", "JUMP  ", "ATTACK"
     };
-    static const uint16_t s_state_dur[4] = { 60u, 60u, 40u, 40u };
-    static const uint8_t  s_state_frame[4] = { 11u, 12u, 15u, 20u };
+
+    static const uint16_t s_state_dur[4] = {
+        90u, 180u, 70u, 90u
+    };
+
+    static const uint8_t s_state_speed[4] = {
+        12u, 8u, 7u, 7u
+    };
+
+    static const uint8_t s_idle_frames[1] = { 13u };
+    static const uint8_t s_run_frames[4] = { 15u, 16u, 17u, 18u };
+    static const uint8_t s_jump_frames[4] = { 14u, 19u, 20u, 21u };
+    static const uint8_t s_attack_frames[5] = { 26u, 27u, 28u, 29u, 30u };
 
     clearFix();
-    demo_fix_puts(2u, 0u, "ANIMATION STATE MACHINE", 2u);
-    demo_fix_puts(2u, 1u, "TIMER-DRIVEN FSM  IDLE/RUN/JUMP/ATTACK", 1u);
+    setBACKDROP(BLACK);
+
+    demo_fix_puts(2u, 0u,  "ANIMATION STATE MACHINE", 2u);
+    demo_fix_puts(2u, 1u,  "RUNNING FULL SEQUENCE", 1u);
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);
 
-    demo_load_screen_palette(11u);
     ng_chars_init();
 
-    c = chars_add(0u, 160, 180);
+    base_x = CENTER_X;
+    base_y = BASE_Y;
+
+    demo_load_screen_palette(s_run_frames[0]);
+
+    c = chars_add(0u, base_x, base_y);
     if (c) {
-        ng_char_set_sprite(c, 0u, 6u, 10u,
-                           DEMO_SCREEN_TILE(11u), DEMO_SCREEN_PALETTE(11u));
+        ng_char_set_sprite(c, 0u, SPR_COLS, SPR_ROWS,
+                           DEMO_SCREEN_TILE(s_run_frames[0]),
+                           DEMO_SCREEN_PALETTE(s_run_frames[0]));
+
         ng_char_set_tile_stride(c, 16u);
-        c->sprite_offset_y = -160;
+
+        c->sprite_offset_y = -SPR_H;
         c->scale_x = 0xFFu;
         c->scale_y = 0xFFu;
     }
 
-    state = 0u;
+    state = STATE_RUN;
     state_timer = 0u;
 
-    for (t = 0u; t < 360u; t++) {
+    for (t = 0u; t < ((90u + 180u + 70u + 90u) * 2u); t++) {
+        uint8_t frame_id;
+
         if (state_timer >= s_state_dur[state]) {
             state = (uint8_t)((state + 1u) & 3u);
             state_timer = 0u;
-            if (c) {
-                uint16_t tile = DEMO_SCREEN_TILE(s_state_frame[state]);
-                uint8_t pal = DEMO_SCREEN_PALETTE(s_state_frame[state]);
-                demo_load_screen_palette(s_state_frame[state]);
-                if (c->sprite_tile != tile || c->palette != pal) {
-                    c->sprite_tile = tile;
-                    c->palette = pal;
-                    c->sprite_dirty = 1u;
-                }
+        }
+
+        draw_y = base_y;
+
+        if (state == STATE_JUMP) {
+            uint16_t half = s_state_dur[STATE_JUMP] / 2u;
+
+            if (state_timer < half) {
+                draw_y = (int16_t)(base_y -
+                    (((int16_t)state_timer * JUMP_H) / (int16_t)half));
+            } else {
+                uint16_t down = (uint16_t)(state_timer - half);
+
+                draw_y = (int16_t)(base_y - JUMP_H +
+                    (((int16_t)down * JUMP_H) / (int16_t)half));
             }
         }
-        state_timer++;
+
+        if (state == STATE_IDLE) {
+            frame_id = s_idle_frames[0];
+        } else if (state == STATE_RUN) {
+            frame_id = s_run_frames[
+                (state_timer / s_state_speed[STATE_RUN]) % 4u
+            ];
+        } else if (state == STATE_JUMP) {
+            frame_id = s_jump_frames[
+                (state_timer / s_state_speed[STATE_JUMP]) % 4u
+            ];
+        } else {
+            frame_id = s_attack_frames[
+                (state_timer / s_state_speed[STATE_ATTACK]) % 5u
+            ];
+        }
+
+        if (c) {
+            uint16_t tile = DEMO_SCREEN_TILE(frame_id);
+            uint8_t pal = DEMO_SCREEN_PALETTE(frame_id);
+
+            demo_load_screen_palette(frame_id);
+
+            if (c->sprite_tile != tile || c->palette != pal) {
+                c->sprite_tile = tile;
+                c->palette = pal;
+                c->sprite_dirty = 1u;
+            }
+
+            c->x = base_x;
+            c->y = draw_y;
+        }
 
         demo_fix_puts(2u, 3u, "STATE:", 0u);
         demo_fix_puts(9u, 3u, s_state_names[state], 2u);
 
         ng_chars_draw();
-        if (demo_frame()) break;
+        state_timer++;
+
+        if (demo_frame()) {
+            break;
+        }
     }
 
-    ng_chars_init();
+    ng_clear_screen_full();
 }
-
 /* ------------------------------------------------------------------ */
 /*  Sub-scene: physics with gravity and solid platform                   */
 /* ------------------------------------------------------------------ */
 static void NEOGEO_USER spr_physics(void)
 {
-    NGCharacter *chars[3];
-    uint8_t i;
+    NGCharacter *eagle = 0;
     uint16_t t;
-    static const int16_t start_x[3] = { 60, 160, 260 };
-    static const int16_t start_y[3] = { 10,  40,  70 };
+    uint8_t frame_id;
+    uint8_t grounded;
+    char buf[8];
 
-    clearFix();
-    demo_fix_puts(2u, 0u, "PHYSICS / GRAVITY / SOLIDS", 2u);
-    demo_fix_puts(2u, 1u, "PLATFORM COLLISION  GROUNDED STATE", 1u);
+    enum {
+        EAGLE_ROWS = 6,
+        EAGLE_STRIDE = 16,
+        EAGLE_H = EAGLE_ROWS * 8,
+
+        PLATFORM_X = 40,
+        PLATFORM_Y = 160,
+        PLATFORM_W = 240,
+        PLATFORM_H = 8,
+
+        EAGLE_X = 82,
+        EAGLE_START_Y = 118,
+
+        FLY_TIME = 90,
+        DEMO_END = 330
+    };
+
+    static const uint8_t s_eagle_frames[3] = {
+        76u, 77u, 78u
+    };
+    static const uint8_t s_eagle_ground_frames[3] = {
+        73u, 74u, 75u
+    };
+
+    ng_clear_screen_full();
+
+    demo_fix_puts(2u, 0u,  "EAGLE PHYSICS TEST", 2u);
+    demo_fix_puts(2u, 1u,  "FLY -> FALL -> LAND", 1u);
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);
 
-    ng_chars_init();
+    demo_fix_puts(5u, 20u, "==============================", 2u);
+
     ng_physics_init();
+    ng_physics_add_solid(PLATFORM_X, PLATFORM_Y,
+                         PLATFORM_W, PLATFORM_H, 0u);
 
-    ng_physics_add_solid(40, 160, 240, 8, 0u);
+    frame_id = s_eagle_frames[0];
+    demo_load_screen_palette(frame_id);
 
-    demo_fix_puts(4u, 21u, "=============================", 0u);
+    eagle = chars_add(0u, EAGLE_X, EAGLE_START_Y);
+    if (eagle) {
+        ng_char_set_sprite(eagle, 0u,
+                           demo_screen_strips(frame_id),
+                           EAGLE_ROWS,
+                           DEMO_SCREEN_TILE(frame_id),
+                           DEMO_SCREEN_PALETTE(frame_id));
 
-    for (i = 0u; i < 3u; i++) {
-        chars[i] = chars_add(0u, start_x[i], start_y[i]);
-        if (chars[i]) {
-            uint8_t fn = (uint8_t)(i * 3u);
-            demo_load_screen_palette(NPC_FIRST_SCREEN);
-            ng_char_set_sprite(chars[i], 0u, NPC_STRIPS, NPC_ROWS,
-                               NPC_TILE(fn), NPC_PALETTE(fn));
-            ng_char_set_tile_stride(chars[i], NPC_STRIDE);
-            chars[i]->sprite_offset_y = NPC_OFFSET_Y;
-            chars[i]->scale_x = 0x80u;
-            chars[i]->scale_y = 0x80u;
-            ng_physics_attach(chars[i],
-                (uint16_t)(NG_PHYSICS_GRAVITY | NG_PHYSICS_SOLIDS));
-            ng_physics_set_gravity(chars[i],
-                NG_FP_FROM_FRAC(1, 4),
-                NG_TO_FP(4));
-        }
+        ng_char_set_tile_stride(eagle, EAGLE_STRIDE);
+
+        /*
+         * Bottom anchor for physics.
+         */
+        eagle->sprite_offset_y = -EAGLE_H;
+
+        /*
+         * Shrink so the full eagle fits and landing is readable.
+         */
+        eagle->scale_x = 0x80u;
+        eagle->scale_y = 0x80u;
+
+        ng_physics_attach(eagle,
+            (uint16_t)(NG_PHYSICS_GRAVITY | NG_PHYSICS_SOLIDS));
+
+        ng_physics_set_gravity(eagle,
+            NG_FP_FROM_FRAC(1, 4),
+            NG_TO_FP(4));
     }
 
-    for (t = 0u; t < 300u; t++) {
-        ng_physics_update_pre();
-        ng_chars_update();
-        ng_physics_resolve();
+    for (t = 0u; t < DEMO_END; t++) {
+        if (eagle) {
+            if (t < FLY_TIME) {
+                eagle->x = EAGLE_X;
+                eagle->y = (int16_t)(EAGLE_START_Y +
+                    (((t & 15u) < 8u) ? 0 : 3));
+
+                frame_id = s_eagle_frames[(t / 10u) % 3u];
+
+                demo_fix_puts(2u, 23u, "STATE: FLYING  ", 1u);
+            } else {
+                if (t == FLY_TIME) {
+                    eagle->x = EAGLE_X;
+                    eagle->y = EAGLE_START_Y;
+                }
+
+                ng_physics_update_pre();
+                ng_chars_update();
+                ng_physics_resolve();
+
+                grounded = ng_physics_is_grounded(eagle);
+
+                frame_id = grounded
+                    ? s_eagle_ground_frames[(t / 6u) % 3u]
+                    : s_eagle_frames[(t / 6u) % 3u];
+
+                demo_fix_puts(2u, 23u,
+                              grounded ? "STATE: GROUNDED" : "STATE: FALLING ",
+                              grounded ? 2u : 1u);
+            }
+
+            demo_load_screen_palette(frame_id);
+
+            if (eagle->sprite_tile   != DEMO_SCREEN_TILE(frame_id)     ||
+                eagle->palette       != DEMO_SCREEN_PALETTE(frame_id)  ||
+                eagle->sprite_strips != demo_screen_strips(frame_id)) {
+                eagle->sprite_tile   = DEMO_SCREEN_TILE(frame_id);
+                eagle->palette       = DEMO_SCREEN_PALETTE(frame_id);
+                eagle->sprite_strips = demo_screen_strips(frame_id);
+                eagle->sprite_dirty  = 1u;
+            }
+
+            grounded = ng_physics_is_grounded(eagle);
+
+            buf[0] = 'G';
+            buf[1] = 'R';
+            buf[2] = 'D';
+            buf[3] = ':';
+            buf[4] = grounded ? '1' : '0';
+            buf[5] = '\0';
+
+            demo_fix_puts(27u, 23u, buf, grounded ? 2u : 1u);
+        }
+
         ng_chars_draw();
 
-        for (i = 0u; i < 3u; i++) {
-            if (chars[i]) {
-                uint8_t grounded = ng_physics_is_grounded(chars[i]);
-                char buf[4];
-                buf[0] = (char)('0' + i);
-                buf[1] = ':';
-                buf[2] = grounded ? 'G' : 'F';
-                buf[3] = '\0';
-                demo_fix_puts((uint8_t)(3u + i * 5u), 22u, buf, grounded ? 2u : 1u);
-            }
+        if (demo_frame()) {
+            break;
         }
-
-        if (demo_frame()) break;
     }
 
-    ng_physics_clear_solids();
-    ng_chars_init();
+    ng_clear_screen_full();
 }
-
 /* ------------------------------------------------------------------ */
 /*  Public: full sprites scene                                           */
 /* ------------------------------------------------------------------ */
@@ -475,4 +640,29 @@ void NEOGEO_USER demo_sprites_walk(int loops, int delay_frames)
     }
 
     demo_clear_scene();
+}
+
+/* Call this to clear all graphics, sprites, and physics state */
+void NEOGEO_USER ng_clear_screen_full(void)
+{
+    /* Remove all physics solids */
+    ng_physics_clear_solids();
+
+    /* Reset software character pool */
+    ng_chars_init();
+
+    /* Clear the FIX layer and set a black backdrop */
+    clearFix();
+    setBACKDROP(BLACK);
+
+    /* HARD CLEAR: zero SCB3 height for all 380 hardware sprite slots */
+    ng_sprite_hide_range(0,   255u);
+    ng_sprite_hide_range(255, 125u);
+
+    /*
+     * Push one blank frame: render the empty sprite list
+     * so any hardware state left in VRAM is no longer drawn.
+     */
+    ng_chars_draw();
+    demo_frame();
 }

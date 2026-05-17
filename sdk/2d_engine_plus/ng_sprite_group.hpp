@@ -3,56 +3,73 @@
 
 #include "ng_defs.hpp"
 
+#define NG_SGF_DIRTY_POS      0x01
+#define NG_SGF_DIRTY_TILE     0x02
+#define NG_SGF_DIRTY_PALETTE  0x04
+#define NG_SGF_DIRTY_SHRINK   0x08
+#define NG_SGF_DIRTY_VIS      0x10
+#define NG_SGF_DIRTY_ALL      0x1F
+
+/*
+ * NGSpriteGroup — hardware sprite group with member-method API.
+ *
+ * A group is N adjacent 16-px-wide strips sharing tile data.
+ * Strip 0 is the driver (owns Y, height, vertical shrink);
+ * strips 1..N-1 carry the sticky/chain bit.
+ * All data is public so C game code can read fields directly.
+ */
+struct NGSpriteGroup {
+    uint16_t firstSprite;
+    uint8_t  strips;
+    uint8_t  heightTiles;
+    uint8_t  activeRows;
+    uint16_t tileBase;
+    uint16_t tileStride;
+    uint8_t  palette;
+    int16_t  x;
+    int16_t  y;
+    uint8_t  xScale;
+    uint8_t  yScale;
+    uint8_t  hflip;
+    uint8_t  vflip;
+    uint8_t  autoAnim4;
+    uint8_t  autoAnim8;
+    uint8_t  visible;
+    uint8_t  dirty;
+
+    void NEOGEO_USER init(uint16_t firstSprite, uint8_t strips, uint8_t heightTiles,
+                          uint16_t tileBase, uint8_t palette);
+    void NEOGEO_USER markDirty(uint8_t flags);
+    void NEOGEO_USER flush();
+    void NEOGEO_USER setTileBase(uint16_t tileBase);
+    void NEOGEO_USER setTileStride(uint16_t tileStride);
+    void NEOGEO_USER setPalette(uint8_t palette);
+    void NEOGEO_USER setActiveRows(uint8_t rows);
+    void NEOGEO_USER setPos(int16_t x, int16_t y);
+    void NEOGEO_USER move(int16_t dx, int16_t dy);
+    void NEOGEO_USER setScale(uint8_t xScale, uint8_t yScale);
+    void NEOGEO_USER setFlip(uint8_t hflip, uint8_t vflip);
+    void NEOGEO_USER setAutoAnim(uint8_t aa4, uint8_t aa8);
+    void NEOGEO_USER setVisible(uint8_t v);
+    void NEOGEO_USER upload();
+    void NEOGEO_USER updateTransform();
+    void NEOGEO_USER hide();
+
+    static void NEOGEO_USER hideRange(uint16_t firstSprite, uint8_t count);
+    static void NEOGEO_USER initHardware(uint16_t transparentTile);
+
+private:
+    static uint8_t  clampU8(uint8_t v, uint8_t mn, uint8_t mx);
+    static uint8_t  xShrinkNibble(uint8_t xScale);
+    uint16_t tileFor(uint8_t strip, uint8_t row) const;
+};
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
-/*
- * Hardware sprite group.
- *
- * Neo Geo sprites are 16px-wide vertical strips.  A large object is a group
- * of adjacent strips, normally using the SCB3 sticky/chain bit for strips
- * 1..N.  The first strip is the driver; chained strips inherit Y, height and
- * vertical shrink from the driver, while each strip still needs its own tile
- * map, palette attributes and horizontal shrink.
- */
-/*
- * Dirty flag bits for NGSpriteGroup.
- * Only the bits that are set get written to VRAM on the next update.
- * This avoids re-uploading all SCB fields every frame for static objects.
- */
-#define NG_SGF_DIRTY_POS      0x01  /* x/y changed → write SCB3/SCB4 */
-#define NG_SGF_DIRTY_TILE     0x02  /* tileBase/stride changed → write SCB1 */
-#define NG_SGF_DIRTY_PALETTE  0x04  /* palette changed → update SCB1 attrs */
-#define NG_SGF_DIRTY_SHRINK   0x08  /* scale changed → write SCB2 */
-#define NG_SGF_DIRTY_VIS      0x10  /* visibility changed */
-#define NG_SGF_DIRTY_ALL      0x1F  /* force full upload */
-
-typedef struct {
-    uint16_t firstSprite;
-    uint8_t strips;
-    uint8_t heightTiles;
-    uint8_t activeRows;
-    uint16_t tileBase;
-    uint16_t tileStride;
-    uint8_t palette;
-    int16_t x;
-    int16_t y;
-    uint8_t xScale;
-    uint8_t yScale;
-    uint8_t hflip;
-    uint8_t vflip;
-    uint8_t autoAnim4;
-    uint8_t autoAnim8;
-    uint8_t visible;
-    uint8_t dirty;      /* bitmask of NG_SGF_DIRTY_* flags */
-} NGSpriteGroup;
-
 void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette);
-/* Mark specific attributes dirty so the next flush only uploads changed data. */
 void NEOGEO_USER ng_sprite_group_mark_dirty(NGSpriteGroup *g, uint8_t dirty_flags);
-/* Dirty-aware flush: only writes VRAM regions flagged in g->dirty. */
 void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_group_set_tile_base(NGSpriteGroup *g, uint16_t tileBase);
 void NEOGEO_USER ng_sprite_group_set_tile_stride(NGSpriteGroup *g, uint16_t tileStride);
@@ -68,10 +85,7 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_group_update_transform(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_group_hide(NGSpriteGroup *g);
 void NEOGEO_USER ng_engine_init_hardware(uint16_t transparentTile);
-
-/* Hide a raw hardware-sprite range by clearing SCB3 height. */
 void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint8_t count);
-
 
 #ifdef __cplusplus
 } /* extern "C" */
