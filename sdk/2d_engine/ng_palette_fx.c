@@ -143,6 +143,32 @@ void NEOGEO_USER ng_palette_fx_init(void)
     }
 }
 
+void NEOGEO_USER ng_palette_load_bank(uint8_t palette_slot, const uint16_t *pal)
+{
+    if (!pal) return;
+    load_palettes((uint16_t *)pal,
+                  (uintptr_t)((uint32_t)PALETTES +
+                              ((uint32_t)PALOFFSET * (uint32_t)palette_slot)));
+}
+
+uint8_t NEOGEO_USER ng_palette_load_asset(const NGPaletteAsset *assets,
+                                          uint16_t count,
+                                          uint16_t asset_id)
+{
+    uint16_t i;
+
+    if (!assets) return 0u;
+
+    for (i = 0u; i < count; i++) {
+        if (assets[i].asset_id == asset_id) {
+            ng_palette_load_bank(assets[i].palette_slot, assets[i].colors);
+            return 1u;
+        }
+    }
+
+    return 0u;
+}
+
 void NEOGEO_USER ng_palfx_upload_base(uint8_t palette_slot, const uint16_t *pal)
 {
     if (!pal) return;

@@ -75,7 +75,7 @@ SCAT=srec_cat
 INFO=xxd -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
-NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_bg ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt ng_scene ng_depthfx ng_render_queue ng_fixed ng_camera ng_palette_fx ng_particles ng_feedback ng_debug ng_joystick ng_demo_advanced
+NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_vram ng_sprite_window ng_art_asset ng_palette_assets ng_bg ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt ng_scene ng_depthfx ng_render_queue ng_fixed ng_camera ng_palette_fx ng_particles ng_feedback ng_debug ng_joystick ng_demo_advanced
 NG_ENGINE_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(NG_ENGINE_NAMES)))
 DEMO_NAMES=demo demo_intro demo_sprites demo_camera demo_palette demo_particles demo_depth demo_sound demo_fix demo_combat demo_stress demo_title demo_render
 DEMO_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(DEMO_NAMES)))
@@ -166,6 +166,10 @@ game: game-check
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_status.$(ENGINE_EXT) -o out/ng_status0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_game_events.$(ENGINE_EXT) -o out/ng_game_events0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_level.$(ENGINE_EXT) -o out/ng_level0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_vram.$(ENGINE_EXT) -o out/ng_vram0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_sprite_window.$(ENGINE_EXT) -o out/ng_sprite_window0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_art_asset.$(ENGINE_EXT) -o out/ng_art_asset0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_palette_assets.$(ENGINE_EXT) -o out/ng_palette_assets0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_bg.$(ENGINE_EXT) -o out/ng_bg0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_fix.$(ENGINE_EXT) -o out/ng_fix0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_sprite_group.$(ENGINE_EXT) -o out/ng_sprite_group0.o

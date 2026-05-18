@@ -1,6 +1,7 @@
 #include "ng_hw.hpp"
 #include "ng_sprite_group.hpp"
 #include "ng_sprite_pool.hpp"
+#include "ng_vram.hpp"
 
 static uint16_t ngsg_tiles[NG_SPRITE_MAX_HEIGHT_TILES];
 static uint16_t ngsg_attrs[NG_SPRITE_MAX_HEIGHT_TILES];
@@ -33,29 +34,17 @@ uint16_t NGSpriteGroup::tileFor(uint8_t strip, uint8_t row) const
 
 void NGSpriteGroup::hideRange(uint16_t first, uint16_t count)
 {
-    uint16_t end;
-
-    if (first == 0xffff) return;
-    if (first >= NG_SPR_TOTAL) return;
-
-    end = (uint16_t)(first + count);
-    if (end > NG_SPR_TOTAL) end = NG_SPR_TOTAL;
-
-    for (uint16_t i = first; i < end; i++) {
-        vram_SCB234((uint16_t)(SCB2_ADDR + i), 0);
-        vram_SCB234((uint16_t)(SCB3_ADDR + i), 0);
-        vram_SCB234((uint16_t)(SCB4_ADDR + i), 0);
-    }
+    ng_vram_clear_sprite_range(first, count);
 }
 
 void NGSpriteGroup::hideVramBase(uint16_t spriteBase, uint16_t count)
 {
-    hideRange((uint16_t)(spriteBase >> 6), count);
+    ng_vram_clear_sprite_vram_base(spriteBase, count);
 }
 
 void NGSpriteGroup::hideAll()
 {
-    hideRange(0u, NG_SPR_TOTAL);
+    ng_vram_clear_all_sprites();
 }
 
 void NGSpriteGroup::initHardware(uint16_t transparentTile)

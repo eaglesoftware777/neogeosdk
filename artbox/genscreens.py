@@ -147,6 +147,67 @@ for spec in image_specs:
         x = "x0+16*%d" % (sprt_index + 1)
     print("}")
 
+print("")
+print("static const NGPaletteAsset ng_screen_palette_assets[] = {")
+for spec in image_specs:
+    image_i0 = int(spec["db_index"])
+    image_index = int(spec["screen_id"])
+    palette_bank = int(spec.get("palette_bank", SPRITE_PALETTE_BASE + image_i0))
+    pal = getpal(image_index)
+    values = ",".join("0x%x" % color for color in pal)
+    print("    {%d,%d,{%s}}," % (image_index, palette_bank, values))
+print("};")
+print("const uint16_t ng_screen_palette_count = %d;" % image_count)
+print("")
+print("uint8_t NEOGEO_USER ng_load_screen_palette(uint16_t screen_id) {")
+print("    return ng_palette_load_asset(ng_screen_palette_assets, ng_screen_palette_count, screen_id);")
+print("}")
+
+def art_type_for(spec):
+    mode = str(spec.get("mode", "screen"))
+    category = str(spec.get("category", ""))
+    if category == "backgrounds" or category == "background":
+        return "NG_ART_TYPE_BACKGROUND"
+    if mode == "sprite":
+        return "NG_ART_TYPE_SPRITE"
+    return "NG_ART_TYPE_SCREEN"
+
+print("")
+print("const NGArtAsset ng_screen_art_assets[] = {")
+for spec in image_specs:
+    image_index = int(spec["screen_id"])
+    tile_base = int(spec.get("tile_base", int(spec["db_index"]) * 256))
+    tile_col = int(spec.get("used_tile_col_start", 0))
+    tile_row = int(spec.get("used_tile_row_start", 0))
+    tile_stride = int(spec.get("target_width", 256)) // 16
+    if tile_stride < 1:
+        tile_stride = 16
+    active_tile = tile_base + tile_row * tile_stride + tile_col
+    print(
+        "    {%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d},"
+        % (
+            image_index,
+            art_type_for(spec),
+            int(spec.get("palette_bank", SPRITE_PALETTE_BASE + int(spec["db_index"]))),
+            active_tile,
+            int(spec.get("tile_reserved_last", active_tile)),
+            int(spec.get("sprite_strips", 1)),
+            int(spec.get("used_tile_rows", spec.get("sprite_active_rows", 1))),
+            int(spec.get("sprite_active_rows", 1)),
+            tile_stride,
+            int(spec.get("used_tile_col_start", 0)) * 16,
+            int(spec.get("used_tile_row_start", 0)) * 16,
+            int(spec.get("content_width", 0)),
+            int(spec.get("content_height", 0)),
+        )
+    )
+print("};")
+print("const uint16_t ng_screen_art_asset_count = %d;" % image_count)
+print("")
+print("const NGArtAsset * NEOGEO_USER ng_screen_art_asset(uint16_t screen_id) {")
+print("    return ng_art_asset_find(ng_screen_art_assets, ng_screen_art_asset_count, screen_id);")
+print("}")
+
 # --- Screen dispatch table (consumed by ng_bg.c / ng_level.c) ---
 # Emitted once after all showScreenN functions.
 # ng_screen_table[i] == showScreen_i (1-based).  Index 0 is NULL (unused).

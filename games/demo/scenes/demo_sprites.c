@@ -463,7 +463,7 @@ static void NEOGEO_USER spr_physics(void)
     static const uint8_t s_eagle_ground_frame = 75u;
 
     ng_clear_screen_full();
-	clearSprs();
+    ng_sprite_hide_all();
     for (i = 0u; i < NG_MAX_CHARS; i++) {
         ng_chars_reset_slot(i);
     }

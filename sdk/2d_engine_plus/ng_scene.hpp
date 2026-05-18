@@ -28,10 +28,10 @@ extern "C" {
 
 void NEOGEO_USER ng_scene_clean(uint8_t flags);
 void NEOGEO_USER ng_scene_clean_default(void);
+void NEOGEO_USER ng_scene_begin(uint8_t flags, uint8_t wait_vblank);
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
 #endif
-

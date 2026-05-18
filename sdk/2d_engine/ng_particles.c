@@ -38,7 +38,7 @@ static uint16_t ng_part_attrs[1];
 
 static void NEOGEO_USER ng_part_hide_slots(uint16_t first, uint16_t end)
 {
-    while (first < end && first <= NG_SPR_CHAR_LAST) {
+    while (first < end && first <= NG_SPR_PART_LAST) {
         vram_SCB234((uint16_t)(SCB3_ADDR + first), 0);
         first++;
     }
@@ -133,6 +133,8 @@ uint16_t NEOGEO_USER ng_particles_draw(uint16_t first_slot, uint16_t sprite_budg
     uint16_t slot = first_slot;
     uint8_t  drop_optional = (sprite_budget_used >= NG_PART_BUDGET_THRESHOLD) ? 1 : 0;
 
+    if (slot < NG_SPR_PART_FIRST) slot = NG_SPR_PART_FIRST;
+
     for (i = 0; i < NG_PART_MAX_PARTICLES; i++) {
         NGParticle *p = &ng_part_pool[i];
 
@@ -142,7 +144,7 @@ uint16_t NEOGEO_USER ng_particles_draw(uint16_t first_slot, uint16_t sprite_budg
         if (drop_optional && p->priority == NG_PART_PRI_OPTIONAL) continue;
 
         /* Stop if we'd exceed the character sprite range */
-        if (slot > NG_SPR_CHAR_LAST) break;
+        if (slot > NG_SPR_PART_LAST) break;
 
         /* Build tile / attr words for this frame */
         ng_part_tiles[0] = (uint16_t)(p->tile_base + p->frame);

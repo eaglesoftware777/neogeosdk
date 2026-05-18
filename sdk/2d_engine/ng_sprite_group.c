@@ -2,6 +2,7 @@
 #include "neogeo.h"
 #include "ng_sprite_group.h"
 #include "ng_sprite_pool.h"
+#include "ng_vram.h"
 
 static uint16_t ngsg_tiles[NG_SPRITE_MAX_HEIGHT_TILES];
 static uint16_t ngsg_attrs[NG_SPRITE_MAX_HEIGHT_TILES];
@@ -36,31 +37,17 @@ static uint16_t NEOGEO_USER ngsg_tile_for(NGSpriteGroup *g, uint8_t strip, uint8
 
 void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint16_t count)
 {
-    uint16_t i;
-    uint16_t end;
-
-    if (firstSprite == 0xffff) return;
-    if (firstSprite >= NG_SPR_TOTAL) return;
-
-    end = (uint16_t)(firstSprite + count);
-    if (end > NG_SPR_TOTAL) end = NG_SPR_TOTAL;
-
-    for (i = firstSprite; i < end; i++) {
-        uint16_t spriteIndex = i;
-        vram_SCB234((uint16_t)(SCB2_ADDR + spriteIndex), 0);
-        vram_SCB234((uint16_t)(SCB3_ADDR + spriteIndex), 0);
-        vram_SCB234((uint16_t)(SCB4_ADDR + spriteIndex), 0);
-    }
+    ng_vram_clear_sprite_range(firstSprite, count);
 }
 
 void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count)
 {
-    ng_sprite_hide_range((uint16_t)(spriteBase >> 6), count);
+    ng_vram_clear_sprite_vram_base(spriteBase, count);
 }
 
 void NEOGEO_USER ng_sprite_hide_all(void)
 {
-    ng_sprite_hide_range(0u, NG_SPR_TOTAL);
+    ng_vram_clear_all_sprites();
 }
 
 void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette)

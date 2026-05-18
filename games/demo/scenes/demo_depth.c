@@ -216,9 +216,9 @@ static void NEOGEO_USER depth_zsort(void)
             /* cos-like approximation: 0..7 → {64,45,0,-45,-64,-45,0,45} */
             static const int8_t cstep[8] = { 64, 45, 0, -45, -64, -45, 0, 45 };
             static const int8_t sstep[8] = { 0,  45, 64, 45,  0,  -45,-64,-45 };
-            uint8_t ai = (uint8_t)((angle >> 5) & 7u);
-            objs[i].x = (int16_t)(start_x[i] + cstep[ai]);
-            objs[i].z = (int16_t)(8 + i * 10 + sstep[ai] + 64);
+            uint8_t angle_i = (uint8_t)((angle >> 5) & 7u);
+            objs[i].x = (int16_t)(start_x[i] + cstep[angle_i]);
+            objs[i].z = (int16_t)(8 + i * 10 + sstep[angle_i] + 64);
         }
 
         /* Bubble sort by Z descending (far first = painter) */

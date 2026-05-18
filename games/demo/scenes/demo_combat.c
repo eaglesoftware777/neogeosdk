@@ -286,7 +286,7 @@ static void NEOGEO_USER combat_npc_basic(void)
     static const int16_t npc_x[3] = { 40, 140, 240 };
 
     clearFix();
-    demo_fix_puts(2u, 0u, "NPC PATROL / AI THINK LOOP", 2u);
+    demo_fix_puts(2u, 0u, "NPC PATROL / THINK LOOP", 2u);
     demo_fix_puts(2u, 1u, "3 NPCS  PATROL BOUNDS  THINK EVERY 8F", 1u);
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);
 
