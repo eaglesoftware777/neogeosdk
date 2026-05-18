@@ -16,6 +16,7 @@ extern "C" {
 #define NG_EVENT_JOY_HIT             0x5004
 #define NG_EVENT_JOY_SPECIAL_QCF     0x5005
 #define NG_EVENT_JOY_SPECIAL_DP      0x5006
+#define NG_EVENT_JOY_COMMAND         0x5007
 
 /* Direction values stored in history using numpad notation:
  * 2=down, 4=left, 6=right, 8=up, diagonals 1/3/7/9, 5=neutral. */
@@ -73,6 +74,17 @@ void NEOGEO_USER ng_joy_apply_hitbox(NGCharacter *c, uint8_t active_frames, int1
 /* Default config with classic brawler mapping:
  * A=jump, B=light, C=heavy, D=hit-test trigger. */
 const NGJoystickCharConfig *NEOGEO_USER ng_joy_default_char_config(void);
+
+typedef struct {
+    uint8_t code;
+    uint8_t arg0;
+    uint8_t arg1;
+    uint8_t age;
+} NGJoyCommand;
+
+typedef void (*NGJoyEventHandler)(uint16_t event_id, uint16_t a, uint16_t b, uint16_t c);
+void NEOGEO_USER ng_joy_set_event_handler(NGJoyEventHandler fn);
+uint8_t NEOGEO_USER ng_joy_pop_command(NGJoyCommand *out);
 
 
 #ifdef __cplusplus

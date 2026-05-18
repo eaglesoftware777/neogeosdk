@@ -35,6 +35,7 @@
 #include "ng_physics.hpp"
 #include "ng_border_constraints.hpp"
 #include "ng_game_interupt.hpp"
+#include "ng_scene.hpp"
 #include "ng_render_queue.hpp"
 #include "ng_fixed.hpp"
 #include "ng_camera.hpp"

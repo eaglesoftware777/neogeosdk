@@ -21,6 +21,7 @@
 #include "ng_physics.h"
 #include "ng_border_constraints.h"
 #include "ng_game_interupt.h"
+#include "ng_scene.h"
 
 /* New subsystems (Stages 3..11) */
 #include "ng_render_queue.h"

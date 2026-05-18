@@ -3,6 +3,37 @@
 #include "ng_level.hpp"
 #include "ng_sprite_pool.hpp"
 
+static void NEOGEO_USER ng_char_reset_fields(NGCharacter *c);
+static uint8_t ng_palette_owner[64];
+static uint8_t ng_default_arena_id;
+static uint8_t ng_fixed_updates_per_frame = 1u;
+
+static uint8_t NEOGEO_USER ng_char_validate_asset_window_impl(uint16_t tileBase,
+                                                               uint8_t strips,
+                                                               uint8_t rows,
+                                                               uint16_t stride,
+                                                               uint16_t tileStart,
+                                                               uint16_t tileEnd)
+{
+    uint32_t last;
+    uint16_t use_strips = strips ? strips : 1u;
+    uint16_t use_rows = rows ? rows : 1u;
+    uint16_t use_stride = stride ? stride : use_strips;
+
+    if (tileEnd < tileStart) return 0u;
+    if (tileBase < tileStart) return 0u;
+    if (use_strips > NG_SPRITE_MAX_STRIPS) return 0u;
+    if (use_rows > NG_SPRITE_MAX_HEIGHT_TILES) return 0u;
+    if (use_stride < use_strips) return 0u;
+
+    last = (uint32_t)tileBase +
+           (uint32_t)(use_rows - 1u) * (uint32_t)use_stride +
+           (uint32_t)(use_strips - 1u);
+
+    if (last > 0xffffu) return 0u;
+    return (uint8_t)(last <= (uint32_t)tileEnd);
+}
+
 /* --- CharManager singleton --- */
 
 CharManager& CharManager::instance()
@@ -45,10 +76,10 @@ uint8_t CharManager::renderVisible(const NGCharacter *c, int16_t cam_x, int16_t 
     w  = (int16_t)(strips * 16);
     h  = (int16_t)(rows * 16);
 
-    if (sx < (int16_t)(NG_SPRITE_CULL_LEFT - w)) return 0;
-    if (sx > NG_SPRITE_CULL_RIGHT)                return 0;
-    if (sy < (int16_t)(NG_SPRITE_CULL_TOP - h))  return 0;
-    if (sy > NG_SPRITE_CULL_BOTTOM)               return 0;
+    if (sx < (int16_t)(NG_SPRITE_CULL_LEFT - w - c->cull_margin_left)) return 0;
+    if (sx > (int16_t)(NG_SPRITE_CULL_RIGHT + c->cull_margin_right)) return 0;
+    if (sy < (int16_t)(NG_SPRITE_CULL_TOP - h - c->cull_margin_top)) return 0;
+    if (sy > (int16_t)(NG_SPRITE_CULL_BOTTOM + c->cull_margin_bottom)) return 0;
 
     return 1;
 }
@@ -101,7 +132,12 @@ void CharManager::init()
     for (i = 0; i < NG_MAX_CHAR_KINDS; i++) {
         interrupts[i] = 0;
     }
+    for (i = 0; i < 64u; i++) {
+        ng_palette_owner[i] = 0xffu;
+    }
     active_top = 0;
+    ng_default_arena_id = 0u;
+    ng_fixed_updates_per_frame = 1u;
 }
 
 NGCharacter* CharManager::add(uint8_t kind, int16_t px, int16_t py)
@@ -158,6 +194,18 @@ NGCharacter* CharManager::add(uint8_t kind, int16_t px, int16_t py)
             c->max_hp = 1;
             c->flags  = 0;
             c->data0  = 0; c->data1 = 0; c->data2 = 0;
+            c->asset_tile_start = 0u;
+            c->asset_tile_end = 0u;
+            c->asset_bounds_enabled = 0u;
+            c->life_state = NG_CHAR_LIFE_VISIBLE;
+            c->arena_id = ng_default_arena_id;
+            c->cull_margin_left = 0;
+            c->cull_margin_right = 0;
+            c->cull_margin_top = 0;
+            c->cull_margin_bottom = 0;
+            c->anim_clip = 0;
+            c->anim_frame = 0;
+            c->anim_timer = 0;
 
             if ((uint8_t)(i + 1u) > active_top)
                 active_top = (uint8_t)(i + 1u);
@@ -182,6 +230,7 @@ void CharManager::remove(NGCharacter *c)
     }
 
     c->active = 0;
+    c->life_state = NG_CHAR_LIFE_FREE;
     rebuildTop();
 }
 
@@ -195,9 +244,62 @@ void CharManager::clearKind(uint8_t kind)
             uploaded_strips[i] = 0;
             uploaded_first[i]  = 0xffff;
             pool[i].active     = 0;
+            pool[i].life_state = NG_CHAR_LIFE_FREE;
         }
     }
     rebuildTop();
+}
+
+void CharManager::resetSlot(uint8_t index)
+{
+    NGCharacter *c;
+    if (index >= NG_MAX_CHARS) return;
+    c = &pool[index];
+
+    hideSlot(c->sprite_first, NG_SPRITE_MAX_STRIPS);
+    clearUploadSlot(index);
+    ng_char_reset_fields(c);
+    rebuildTop();
+}
+
+void CharManager::clearArena(uint8_t arena_id)
+{
+    uint8_t i;
+    for (i = 0; i < NG_MAX_CHARS; i++) {
+        if (pool[i].active && pool[i].arena_id == arena_id) {
+            resetSlot(i);
+        }
+    }
+}
+
+void CharManager::setDefaultArena(uint8_t arena_id)
+{
+    ng_default_arena_id = arena_id;
+}
+
+void CharManager::setFixedStep(uint8_t updates_per_frame)
+{
+    ng_fixed_updates_per_frame = updates_per_frame ? updates_per_frame : 1u;
+}
+
+void CharManager::updateFixed()
+{
+    uint8_t i;
+    for (i = 0; i < ng_fixed_updates_per_frame; i++) {
+        update();
+    }
+}
+
+void CharManager::defragSlots()
+{
+    uint8_t i;
+    for (i = 0; i < active_top; i++) {
+        if (!pool[i].active) continue;
+        uploaded_strips[i] = 0u;
+        uploaded_first[i] = 0xffff;
+        pool[i].sprite_first = 0xffff;
+        pool[i].sprite_dirty = 1u;
+    }
 }
 
 NGCharacter* CharManager::find(uint8_t kind) const
@@ -238,6 +340,38 @@ void CharManager::setInterrupt(uint8_t kind, NGCharInterupt fn)
 {
     if (kind >= NG_MAX_CHAR_KINDS) return;
     interrupts[kind] = fn;
+}
+
+static void NEOGEO_USER ng_char_reset_fields(NGCharacter *c)
+{
+    c->active = 0u;
+    c->visible = 0u;
+    c->sprite_first = 0xffff;
+    c->sprite_tile = 0u;
+    c->sprite_stride = 1u;
+    c->sprite_strips = 1u;
+    c->sprite_height = 1u;
+    c->sprite_active_rows = 1u;
+    c->palette = 0u;
+    c->scale_x = NG_SPRITE_FULL_XSCALE;
+    c->scale_y = NG_SPRITE_FULL_YSCALE;
+    c->flip_x = 0u;
+    c->flip_y = 0u;
+    c->sprite_dirty = 0u;
+    c->sprite_offset_x = 0;
+    c->sprite_offset_y = 0;
+    c->asset_tile_start = 0u;
+    c->asset_tile_end = 0u;
+    c->asset_bounds_enabled = 0u;
+    c->life_state = NG_CHAR_LIFE_FREE;
+    c->arena_id = 0u;
+    c->cull_margin_left = 0;
+    c->cull_margin_right = 0;
+    c->cull_margin_top = 0;
+    c->cull_margin_bottom = 0;
+    c->anim_clip = 0;
+    c->anim_frame = 0;
+    c->anim_timer = 0;
 }
 
 void CharManager::clearUploadSlot(uint8_t index)
@@ -386,6 +520,17 @@ void NGCharacter::setSprite(uint16_t first, uint8_t strips_arg, uint8_t h, uint1
 
     if (ns > NG_SPRITE_MAX_STRIPS)      ns = NG_SPRITE_MAX_STRIPS;
     if (nh > NG_SPRITE_MAX_HEIGHT_TILES) nh = NG_SPRITE_MAX_HEIGHT_TILES;
+    if (asset_bounds_enabled) {
+        uint16_t use_stride = ns;
+        if (!ng_char_validate_asset_window_impl(tb,
+                                                ns,
+                                                nh,
+                                                use_stride,
+                                                asset_tile_start,
+                                                asset_tile_end)) {
+            return;
+        }
+    }
 
     if (sprite_first == 0xffff)
         sprite_first = first;
@@ -408,6 +553,60 @@ void NGCharacter::setSprite(uint16_t first, uint8_t strips_arg, uint8_t h, uint1
     sprite_stride      = ns;
     palette            = pal;
     sprite_dirty       = 1;
+    life_state = visible ? NG_CHAR_LIFE_VISIBLE : NG_CHAR_LIFE_HIDDEN;
+}
+
+void NGCharacter::setAssetBounds(uint16_t tileStart, uint16_t tileEnd)
+{
+    if (tileEnd < tileStart) {
+        asset_bounds_enabled = 0u;
+        asset_tile_start = 0u;
+        asset_tile_end = 0u;
+        return;
+    }
+
+    asset_bounds_enabled = 1u;
+    asset_tile_start = tileStart;
+    asset_tile_end = tileEnd;
+}
+
+uint8_t NGCharacter::bindAsset(const NGSpriteAssetView *asset)
+{
+    if (!asset) return 0u;
+    setAssetBounds(asset->tile_start, asset->tile_end);
+    setSprite(sprite_first, asset->strips, asset->rows, asset->tile_base, asset->palette);
+    setTileStride(asset->tile_stride ? asset->tile_stride : asset->strips);
+    sprite_offset_x = asset->offset_x;
+    sprite_offset_y = asset->offset_y;
+    return 1u;
+}
+
+void NGCharacter::setCullMargin(int16_t l, int16_t r, int16_t t, int16_t b)
+{
+    cull_margin_left = l;
+    cull_margin_right = r;
+    cull_margin_top = t;
+    cull_margin_bottom = b;
+}
+
+void NGCharacter::setAnimClip(const NGAnimClip *clip)
+{
+    anim_clip = clip;
+    anim_frame = 0u;
+    anim_timer = 0u;
+}
+
+void NGCharacter::animUpdate()
+{
+    if (!anim_clip || anim_clip->frame_count == 0u) return;
+    anim_timer++;
+    if (anim_timer < (anim_clip->frame_period ? anim_clip->frame_period : 1u)) return;
+    anim_timer = 0u;
+    if ((uint8_t)(anim_frame + 1u) >= anim_clip->frame_count) {
+        if (anim_clip->loop) anim_frame = 0u;
+    } else {
+        anim_frame++;
+    }
 }
 
 void NGCharacter::setTileStride(uint16_t stride)
@@ -464,6 +663,16 @@ NGRect NGCharacter::hitRect() const
 
 extern "C" {
 
+uint8_t NEOGEO_USER ng_char_validate_asset_window(uint16_t tileBase,
+                                                  uint8_t strips,
+                                                  uint8_t rows,
+                                                  uint16_t stride,
+                                                  uint16_t tileStart,
+                                                  uint16_t tileEnd)
+{
+    return ng_char_validate_asset_window_impl(tileBase, strips, rows, stride, tileStart, tileEnd);
+}
+
 void NEOGEO_USER ng_chars_init(void)
 {
     CharManager::instance().init();
@@ -509,6 +718,41 @@ void NEOGEO_USER ng_chars_set_game_interupt(uint8_t kind, NGCharInterupt fn)
     CharManager::instance().setInterrupt(kind, fn);
 }
 
+void NEOGEO_USER ng_chars_reset_slot(uint8_t index)
+{
+    CharManager::instance().resetSlot(index);
+}
+
+void NEOGEO_USER ng_chars_begin_scene_arena(uint8_t arena_id)
+{
+    CharManager::instance().setDefaultArena(arena_id);
+}
+
+void NEOGEO_USER ng_chars_clear_arena(uint8_t arena_id)
+{
+    CharManager::instance().clearArena(arena_id);
+}
+
+void NEOGEO_USER ng_chars_set_default_arena(uint8_t arena_id)
+{
+    CharManager::instance().setDefaultArena(arena_id);
+}
+
+void NEOGEO_USER ng_chars_set_fixed_step(uint8_t updates_per_frame)
+{
+    CharManager::instance().setFixedStep(updates_per_frame);
+}
+
+void NEOGEO_USER ng_chars_update_fixed(void)
+{
+    CharManager::instance().updateFixed();
+}
+
+void NEOGEO_USER ng_chars_defrag_slots(void)
+{
+    CharManager::instance().defragSlots();
+}
+
 void NEOGEO_USER ng_chars_update(void)
 {
     CharManager::instance().update();
@@ -522,6 +766,32 @@ void NEOGEO_USER ng_chars_draw(void)
 void NEOGEO_USER ng_char_set_sprite(NGCharacter *c, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette)
 {
     if (c) c->setSprite(firstSprite, strips, heightTiles, tileBase, palette);
+}
+
+void NEOGEO_USER ng_char_set_asset_bounds(NGCharacter *c, uint16_t tileStart, uint16_t tileEnd)
+{
+    if (c) c->setAssetBounds(tileStart, tileEnd);
+}
+
+uint8_t NEOGEO_USER ng_char_bind_asset(NGCharacter *c, const NGSpriteAssetView *asset)
+{
+    if (!c) return 0u;
+    return c->bindAsset(asset);
+}
+
+void NEOGEO_USER ng_char_set_cull_margin(NGCharacter *c, int16_t l, int16_t r, int16_t t, int16_t b)
+{
+    if (c) c->setCullMargin(l, r, t, b);
+}
+
+void NEOGEO_USER ng_char_set_anim_clip(NGCharacter *c, const NGAnimClip *clip)
+{
+    if (c) c->setAnimClip(clip);
+}
+
+void NEOGEO_USER ng_char_anim_update(NGCharacter *c)
+{
+    if (c) c->animUpdate();
 }
 
 void NEOGEO_USER ng_char_set_tile_stride(NGCharacter *c, uint16_t stride)
@@ -581,6 +851,23 @@ NGRect NEOGEO_USER ng_char_hit_rect(NGCharacter *c)
     NGRect r = {0, 0, 0, 0};
     if (c) r = c->hitRect();
     return r;
+}
+
+uint8_t NEOGEO_USER ng_palette_claim(uint8_t palette_slot, uint8_t owner_kind)
+{
+    if (palette_slot >= 64u) return 0u;
+    if (ng_palette_owner[palette_slot] != 0xffu &&
+        ng_palette_owner[palette_slot] != owner_kind) return 0u;
+    ng_palette_owner[palette_slot] = owner_kind;
+    return 1u;
+}
+
+void NEOGEO_USER ng_palette_release(uint8_t palette_slot, uint8_t owner_kind)
+{
+    if (palette_slot >= 64u) return;
+    if (ng_palette_owner[palette_slot] == owner_kind) {
+        ng_palette_owner[palette_slot] = 0xffu;
+    }
 }
 
 } /* extern "C" */
