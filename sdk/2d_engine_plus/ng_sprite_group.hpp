@@ -55,7 +55,9 @@ struct NGSpriteGroup {
     void NEOGEO_USER updateTransform();
     void NEOGEO_USER hide();
 
-    static void NEOGEO_USER hideRange(uint16_t firstSprite, uint8_t count);
+    static void NEOGEO_USER hideRange(uint16_t firstSprite, uint16_t count);
+    static void NEOGEO_USER hideVramBase(uint16_t spriteBase, uint16_t count);
+    static void NEOGEO_USER hideAll();
     static void NEOGEO_USER initHardware(uint16_t transparentTile);
 
 private:
@@ -85,7 +87,9 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_group_update_transform(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_group_hide(NGSpriteGroup *g);
 void NEOGEO_USER ng_engine_init_hardware(uint16_t transparentTile);
-void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint8_t count);
+void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint16_t count);
+void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count);
+void NEOGEO_USER ng_sprite_hide_all(void);
 
 #ifdef __cplusplus
 } /* extern "C" */
