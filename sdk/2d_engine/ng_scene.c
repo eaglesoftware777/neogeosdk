@@ -11,7 +11,6 @@
 
 void NEOGEO_USER ng_scene_clean(uint8_t flags)
 {
-    uint16_t s;
     uint8_t i;
 
     if (flags & NG_SCENE_CLEAN_FIX) {
@@ -20,9 +19,7 @@ void NEOGEO_USER ng_scene_clean(uint8_t flags)
 
     if (flags & NG_SCENE_CLEAN_SPRITES) {
         clearSprs();
-        for (s = 0; s < NG_SPR_TOTAL; s++) {
-            vram_SCB234((uint16_t)(SCB3_ADDR + s), 0u);
-        }
+        ng_sprite_hide_all();
     }
 
     if (flags & NG_SCENE_CLEAN_CHARS) {
@@ -57,4 +54,3 @@ void NEOGEO_USER ng_scene_clean_default(void)
 {
     ng_scene_clean(NG_SCENE_CLEAN_DEFAULT);
 }
-

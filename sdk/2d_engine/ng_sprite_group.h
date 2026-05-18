@@ -64,7 +64,9 @@ void NEOGEO_USER ng_sprite_group_update_transform(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_group_hide(NGSpriteGroup *g);
 void NEOGEO_USER ng_engine_init_hardware(uint16_t transparentTile);
 
-/* Hide a raw hardware-sprite range by clearing SCB3 height. */
-void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint8_t count);
+/* Hide a raw hardware-sprite range and clear stale chain/position state. */
+void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint16_t count);
+void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count);
+void NEOGEO_USER ng_sprite_hide_all(void);
 
 #endif

@@ -1,5 +1,6 @@
 #include "ng_hw.hpp"
 #include "ng_sprite_group.hpp"
+#include "ng_sprite_pool.hpp"
 
 static uint16_t ngsg_tiles[NG_SPRITE_MAX_HEIGHT_TILES];
 static uint16_t ngsg_attrs[NG_SPRITE_MAX_HEIGHT_TILES];
@@ -30,13 +31,31 @@ uint16_t NGSpriteGroup::tileFor(uint8_t strip, uint8_t row) const
 
 /* --- NGSpriteGroup static methods --- */
 
-void NGSpriteGroup::hideRange(uint16_t first, uint8_t count)
+void NGSpriteGroup::hideRange(uint16_t first, uint16_t count)
 {
+    uint16_t end;
+
     if (first == 0xffff) return;
-    if (count > NG_SPRITE_MAX_STRIPS) count = NG_SPRITE_MAX_STRIPS;
-    for (uint8_t i = 0; i < count; i++) {
-        vram_SCB234((uint16_t)(SCB3_ADDR + first + i), 0);
+    if (first >= NG_SPR_TOTAL) return;
+
+    end = (uint16_t)(first + count);
+    if (end > NG_SPR_TOTAL) end = NG_SPR_TOTAL;
+
+    for (uint16_t i = first; i < end; i++) {
+        vram_SCB234((uint16_t)(SCB2_ADDR + i), 0);
+        vram_SCB234((uint16_t)(SCB3_ADDR + i), 0);
+        vram_SCB234((uint16_t)(SCB4_ADDR + i), 0);
     }
+}
+
+void NGSpriteGroup::hideVramBase(uint16_t spriteBase, uint16_t count)
+{
+    hideRange((uint16_t)(spriteBase >> 6), count);
+}
+
+void NGSpriteGroup::hideAll()
+{
+    hideRange(0u, NG_SPR_TOTAL);
 }
 
 void NGSpriteGroup::initHardware(uint16_t transparentTile)
@@ -267,13 +286,19 @@ void NGSpriteGroup::flush()
 
 extern "C" {
 
-void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint8_t count)
+void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint16_t count)
 {
-    uint8_t i;
-    if (firstSprite == 0xffff) return;
-    for (i = 0; i < count; i++) {
-        vram_SCB234((uint16_t)(SCB3_ADDR + firstSprite + i), 0);
-    }
+    NGSpriteGroup::hideRange(firstSprite, count);
+}
+
+void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count)
+{
+    NGSpriteGroup::hideVramBase(spriteBase, count);
+}
+
+void NEOGEO_USER ng_sprite_hide_all(void)
+{
+    NGSpriteGroup::hideAll();
 }
 
 void NEOGEO_USER ng_engine_init_hardware(uint16_t transparentTile)

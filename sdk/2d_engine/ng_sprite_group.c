@@ -1,6 +1,7 @@
 #include "macro.h"
 #include "neogeo.h"
 #include "ng_sprite_group.h"
+#include "ng_sprite_pool.h"
 
 static uint16_t ngsg_tiles[NG_SPRITE_MAX_HEIGHT_TILES];
 static uint16_t ngsg_attrs[NG_SPRITE_MAX_HEIGHT_TILES];
@@ -33,21 +34,33 @@ static uint16_t NEOGEO_USER ngsg_tile_for(NGSpriteGroup *g, uint8_t strip, uint8
     return (uint16_t)(g->tileBase + ((uint16_t)sourceRow * g->tileStride) + sourceStrip);
 }
 
-void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint8_t count)
+void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint16_t count)
 {
-    uint8_t i;
+    uint16_t i;
+    uint16_t end;
 
     if (firstSprite == 0xffff) return;
+    if (firstSprite >= NG_SPR_TOTAL) return;
 
-    for (i = 0; i < count; i++) {
-        uint16_t spriteIndex = (uint16_t)(firstSprite + i);
-        /*
-         * Clear SCB3 to turn the sprite off (zero height = invisible).
-         * No waitVbl() here: VRAM writes are effective immediately; waiting
-         * per-sprite would stall the CPU for count full frames.
-         */
+    end = (uint16_t)(firstSprite + count);
+    if (end > NG_SPR_TOTAL) end = NG_SPR_TOTAL;
+
+    for (i = firstSprite; i < end; i++) {
+        uint16_t spriteIndex = i;
+        vram_SCB234((uint16_t)(SCB2_ADDR + spriteIndex), 0);
         vram_SCB234((uint16_t)(SCB3_ADDR + spriteIndex), 0);
+        vram_SCB234((uint16_t)(SCB4_ADDR + spriteIndex), 0);
     }
+}
+
+void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count)
+{
+    ng_sprite_hide_range((uint16_t)(spriteBase >> 6), count);
+}
+
+void NEOGEO_USER ng_sprite_hide_all(void)
+{
+    ng_sprite_hide_range(0u, NG_SPR_TOTAL);
 }
 
 void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette)

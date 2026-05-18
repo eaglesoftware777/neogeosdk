@@ -121,13 +121,50 @@ void NEOGEO_USER demo_caption(const char *line1, const char *line2, const char *
 /* ------------------------------------------------------------------ */
 /*  Scene clear                                                          */
 /* ------------------------------------------------------------------ */
+static uint16_t demo_sprite_window_first[8];
+static uint8_t demo_sprite_window_count[8];
+
+static void NEOGEO_USER demo_reset_sprite_window_cache(void)
+{
+    uint8_t i;
+
+    for (i = 0u; i < 8u; i++) {
+        demo_sprite_window_first[i] = 0xffffu;
+        demo_sprite_window_count[i] = 0u;
+    }
+}
+
+static uint8_t NEOGEO_USER demo_sprite_window_index(uint16_t first_sprite)
+{
+    uint8_t i;
+    uint8_t free_slot = 0xffu;
+
+    for (i = 0u; i < 8u; i++) {
+        if (demo_sprite_window_first[i] == first_sprite) return i;
+        if (free_slot == 0xffu &&
+            (demo_sprite_window_first[i] == 0xffffu ||
+             (demo_sprite_window_first[i] == 0u &&
+              demo_sprite_window_count[i] == 0u))) {
+            free_slot = i;
+        }
+    }
+
+    if (free_slot != 0xffu) {
+        demo_sprite_window_first[free_slot] = first_sprite;
+        demo_sprite_window_count[free_slot] = 0u;
+        return free_slot;
+    }
+
+    demo_sprite_window_first[0] = first_sprite;
+    demo_sprite_window_count[0] = 0u;
+    return 0u;
+}
+
 void NEOGEO_USER demo_clear_all_sprites(void)
 {
-    uint16_t s;
     clearSprs();
-    for (s = 0; s < NG_SPR_TOTAL; s++) {
-        vram_SCB234((uint16_t)(SCB3_ADDR + s), 0u);
-    }
+    ng_sprite_hide_all();
+    demo_reset_sprite_window_cache();
 }
 
 void NEOGEO_USER demo_clear_scene(void)
@@ -137,8 +174,6 @@ void NEOGEO_USER demo_clear_scene(void)
     soundSceneReset();
     ng_scene_clean_default();
     setBACKDROP(BLACK);
-    waitVbl();
-    ng_scene_clean_default();
     waitVbl();
 }
 
@@ -154,7 +189,8 @@ void NEOGEO_USER demo_safe_show(DemoShowScreenFn fn,
 {
     if (!fn) return;
     if (sprite_base == 0u) sprite_base = DEMO_SHOWSCREEN_BASE;
-    ng_sprite_hide_range(sprite_base, NG_SPRITE_MAX_STRIPS);
+    ng_sprite_hide_vram_base(sprite_base, 32u);
+    demo_reset_sprite_window_cache();
     fn(x0, y0, xr, yr, min_crt_sz, backdrop, sprite_base);
 }
 
@@ -352,6 +388,9 @@ void NEOGEO_USER demo_draw_sprite_screen(uint8_t screen_id,
     NGSpriteGroup g;
     uint8_t meta_strips;
     uint8_t meta_rows;
+    uint8_t window_idx;
+    uint8_t old_strips;
+
     if (screen_id == 0u) return;
     if (strips == 0u) strips = 1u;
     if (rows   == 0u) rows   = 1u;
@@ -363,12 +402,15 @@ void NEOGEO_USER demo_draw_sprite_screen(uint8_t screen_id,
     if (strips > meta_strips) strips = meta_strips;
     if (rows > meta_rows) rows = meta_rows;
 
-    /*
-     * Clear previous content in this sprite slot window before upload.
-     * Many scenes reuse first_sprite=1 with different asset widths; without
-     * a hard hide, old right-side strips can remain visible.
-     */
-    ng_sprite_hide_range(first_sprite, NG_SPRITE_MAX_STRIPS);
+    window_idx = demo_sprite_window_index(first_sprite);
+    old_strips = demo_sprite_window_count[window_idx];
+    if (old_strips == 0u) {
+        ng_sprite_hide_range(first_sprite, NG_SPRITE_MAX_STRIPS);
+    } else if (old_strips > strips) {
+        ng_sprite_hide_range((uint16_t)(first_sprite + strips),
+                             (uint16_t)(old_strips - strips));
+    }
+    demo_sprite_window_count[window_idx] = strips;
 
     demo_load_screen_palette(screen_id);
 
