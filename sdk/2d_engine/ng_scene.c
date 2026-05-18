@@ -7,6 +7,7 @@
 #include "ng_palette_fx.h"
 #include "ng_sprite_pool.h"
 #include "ng_sprite_group.h"
+#include "ng_sprite_window.h"
 #include "neogeo.h"
 
 void NEOGEO_USER ng_scene_clean(uint8_t flags)
@@ -53,4 +54,10 @@ void NEOGEO_USER ng_scene_clean(uint8_t flags)
 void NEOGEO_USER ng_scene_clean_default(void)
 {
     ng_scene_clean(NG_SCENE_CLEAN_DEFAULT);
+}
+
+void NEOGEO_USER ng_scene_begin(uint8_t flags, uint8_t wait_vblank)
+{
+    ng_scene_clean(flags);
+    if (wait_vblank) waitVbl();
 }

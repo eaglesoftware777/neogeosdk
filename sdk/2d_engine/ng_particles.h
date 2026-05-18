@@ -6,9 +6,8 @@
  * (16 px wide).
  *
  * NeoGeo sprite budget note:
- *   Sprite slots 0..299 are for characters, effects, NPCs.
- *   Particles share this budget.  The particle system tracks the sprite
- *   cursor and refuses to allocate if the cursor exceeds NG_SPR_CHAR_LAST.
+ *   Particles use the particle slot range from ng_sprite_pool.h.  The system
+ *   tracks the sprite cursor and refuses to allocate outside that range.
  *
  * Velocity is 8.8 fixed-point (matches ng_defs.h format).
  */

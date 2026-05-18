@@ -32,6 +32,8 @@
 #include "sprite_meta.h"
 #include <stdint.h>
 
+const NGArtAsset * NEOGEO_USER ng_screen_art_asset(uint16_t screen_id);
+
 /* ------------------------------------------------------------------ */
 /*  External hardware / BIOS functions                                  */
 /* ------------------------------------------------------------------ */
@@ -79,7 +81,23 @@ uint8_t NEOGEO_USER demo_frame(void)
 /* ------------------------------------------------------------------ */
 uint8_t NEOGEO_USER demo_advance_requested(void)
 {
-    return (NEO_REGISTER8(BIOS_P1CHANGE) & (uint8_t)(1u << CNT_A)) ? 1u : 0u;
+    static uint8_t input_ready;
+    static uint16_t prev_joy;
+    uint16_t joy = poll_joystick();
+    uint16_t edge;
+    uint8_t bios_edge;
+
+    if (!input_ready) {
+        prev_joy = joy;
+        input_ready = 1u;
+        return 0u;
+    }
+
+    edge = (uint16_t)(joy & (uint16_t)(~prev_joy));
+    prev_joy = joy;
+    bios_edge = (uint8_t)(NEO_REGISTER8(BIOS_P1CHANGE) & (uint8_t)(1u << CNT_A));
+
+    return ((edge & BUTTON_A) || bios_edge) ? 1u : 0u;
 }
 
 uint8_t NEOGEO_USER demo_wait(uint16_t frames)
@@ -121,43 +139,46 @@ void NEOGEO_USER demo_caption(const char *line1, const char *line2, const char *
 /* ------------------------------------------------------------------ */
 /*  Scene clear                                                          */
 /* ------------------------------------------------------------------ */
-static uint16_t demo_sprite_window_first[8];
-static uint8_t demo_sprite_window_count[8];
+static NGSpriteWindow demo_sprite_windows[8];
 
 static void NEOGEO_USER demo_reset_sprite_window_cache(void)
 {
     uint8_t i;
 
     for (i = 0u; i < 8u; i++) {
-        demo_sprite_window_first[i] = 0xffffu;
-        demo_sprite_window_count[i] = 0u;
+        ng_sprite_window_init(&demo_sprite_windows[i], 0u, 0xffffu, NG_SPRITE_MAX_STRIPS);
     }
 }
 
-static uint8_t NEOGEO_USER demo_sprite_window_index(uint16_t first_sprite)
+static NGSpriteWindow * NEOGEO_USER demo_sprite_window_find(uint16_t first_sprite)
 {
     uint8_t i;
     uint8_t free_slot = 0xffu;
 
     for (i = 0u; i < 8u; i++) {
-        if (demo_sprite_window_first[i] == first_sprite) return i;
+        if (demo_sprite_windows[i].first_slot == first_sprite) return &demo_sprite_windows[i];
         if (free_slot == 0xffu &&
-            (demo_sprite_window_first[i] == 0xffffu ||
-             (demo_sprite_window_first[i] == 0u &&
-              demo_sprite_window_count[i] == 0u))) {
+            (demo_sprite_windows[i].first_slot == 0xffffu ||
+             (demo_sprite_windows[i].first_slot == 0u &&
+              demo_sprite_windows[i].current_strips == 0u))) {
             free_slot = i;
         }
     }
 
     if (free_slot != 0xffu) {
-        demo_sprite_window_first[free_slot] = first_sprite;
-        demo_sprite_window_count[free_slot] = 0u;
-        return free_slot;
+        ng_sprite_window_init(&demo_sprite_windows[free_slot],
+                              1u,
+                              first_sprite,
+                              NG_SPRITE_MAX_STRIPS);
+        return &demo_sprite_windows[free_slot];
     }
 
-    demo_sprite_window_first[0] = first_sprite;
-    demo_sprite_window_count[0] = 0u;
-    return 0u;
+    ng_sprite_window_clear(&demo_sprite_windows[0]);
+    ng_sprite_window_init(&demo_sprite_windows[0],
+                          1u,
+                          first_sprite,
+                          NG_SPRITE_MAX_STRIPS);
+    return &demo_sprite_windows[0];
 }
 
 void NEOGEO_USER demo_clear_all_sprites(void)
@@ -172,7 +193,7 @@ void NEOGEO_USER demo_clear_scene(void)
     soundCancelFade();
     soundStopAll();
     soundSceneReset();
-    ng_scene_clean_default();
+    ng_scene_begin(NG_SCENE_CLEAN_DEFAULT, 0u);
     setBACKDROP(BLACK);
     waitVbl();
 }
@@ -203,9 +224,17 @@ static const NGSpriteAssetMeta * NEOGEO_USER demo_screen_meta(uint8_t screen_id)
     return &g_ng_asset_meta[idx];
 }
 
+static const NGArtAsset * NEOGEO_USER demo_screen_asset(uint8_t screen_id)
+{
+    if (screen_id == 0u) return 0;
+    return ng_screen_art_asset(screen_id);
+}
+
 uint16_t NEOGEO_USER demo_screen_tile(uint8_t screen_id)
 {
+    const NGArtAsset *asset = demo_screen_asset(screen_id);
     const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (asset) return asset->tile_base;
     if (screen_id == 0u) return 0u;
     if (!meta) return (uint16_t)(((uint16_t)(screen_id - 1u)) * 256u);
     return (uint16_t)(meta->tile_base +
@@ -215,7 +244,9 @@ uint16_t NEOGEO_USER demo_screen_tile(uint8_t screen_id)
 
 uint8_t NEOGEO_USER demo_screen_palette(uint8_t screen_id)
 {
+    const NGArtAsset *asset = demo_screen_asset(screen_id);
     const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (asset) return asset->palette_bank;
     if (screen_id == 0u) return 0u;
     if (!meta) return (uint8_t)(0x10u + (screen_id - 1u));
     return meta->palette_bank;
@@ -223,28 +254,36 @@ uint8_t NEOGEO_USER demo_screen_palette(uint8_t screen_id)
 
 uint8_t NEOGEO_USER demo_screen_strips(uint8_t screen_id)
 {
+    const NGArtAsset *asset = demo_screen_asset(screen_id);
     const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (asset && asset->strips != 0u) return asset->strips;
     if (!meta || meta->strips == 0u) return 1u;
     return meta->strips;
 }
 
 uint8_t NEOGEO_USER demo_screen_rows(uint8_t screen_id)
 {
+    const NGArtAsset *asset = demo_screen_asset(screen_id);
     const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (asset && asset->active_rows != 0u) return asset->active_rows;
     if (!meta || meta->active_rows == 0u) return 1u;
     return meta->active_rows;
 }
 
 int16_t NEOGEO_USER demo_screen_x_offset(uint8_t screen_id)
 {
+    const NGArtAsset *asset = demo_screen_asset(screen_id);
     const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (asset) return asset->offset_x;
     if (!meta) return 0;
     return (int16_t)((uint16_t)meta->tile_col_start * 16u);
 }
 
 int16_t NEOGEO_USER demo_screen_y_offset(uint8_t screen_id)
 {
+    const NGArtAsset *asset = demo_screen_asset(screen_id);
     const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (asset) return asset->offset_y;
     if (!meta) return 0;
     return (int16_t)((uint16_t)meta->tile_row_start * 16u);
 }
@@ -351,17 +390,12 @@ void NEOGEO_USER showScreen109(int x0, int y0, int xr, int yr, int min_crt_sz, u
 /* ------------------------------------------------------------------ */
 extern const DemoShowScreenFn ng_screen_table[];
 extern const uint16_t ng_screen_count;
+uint8_t NEOGEO_USER ng_load_screen_palette(uint16_t screen_id);
 
 void NEOGEO_USER demo_load_screen_palette(uint8_t screen_id)
 {
-    DemoShowScreenFn fn;
-
     if (screen_id == 0u || screen_id > ng_screen_count) return;
-
-    fn = ng_screen_table[screen_id];
-    if (!fn) return;
-
-    fn(-320, 1024, 0, 0, 0, BLACK, DEMO_PRELOAD_BASE);
+    ng_load_screen_palette(screen_id);
 }
 
 /* ------------------------------------------------------------------ */
@@ -388,8 +422,7 @@ void NEOGEO_USER demo_draw_sprite_screen(uint8_t screen_id,
     NGSpriteGroup g;
     uint8_t meta_strips;
     uint8_t meta_rows;
-    uint8_t window_idx;
-    uint8_t old_strips;
+    NGSpriteWindow *window;
 
     if (screen_id == 0u) return;
     if (strips == 0u) strips = 1u;
@@ -402,15 +435,9 @@ void NEOGEO_USER demo_draw_sprite_screen(uint8_t screen_id,
     if (strips > meta_strips) strips = meta_strips;
     if (rows > meta_rows) rows = meta_rows;
 
-    window_idx = demo_sprite_window_index(first_sprite);
-    old_strips = demo_sprite_window_count[window_idx];
-    if (old_strips == 0u) {
-        ng_sprite_hide_range(first_sprite, NG_SPRITE_MAX_STRIPS);
-    } else if (old_strips > strips) {
-        ng_sprite_hide_range((uint16_t)(first_sprite + strips),
-                             (uint16_t)(old_strips - strips));
-    }
-    demo_sprite_window_count[window_idx] = strips;
+    window = demo_sprite_window_find(first_sprite);
+    ng_sprite_window_set_current(window, strips);
+    ng_sprite_window_clear_tail(window);
 
     demo_load_screen_palette(screen_id);
 

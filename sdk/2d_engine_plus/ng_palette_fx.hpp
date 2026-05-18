@@ -36,6 +36,12 @@ struct NGPalFxSlot {
     uint16_t        work_pal[16];
 };
 
+struct NGPaletteAsset {
+    uint16_t asset_id;
+    uint8_t  palette_slot;
+    uint16_t colors[16];
+};
+
 /*
  * PaletteFxSystem — singleton owning the FX slot pool.
  */
@@ -76,6 +82,10 @@ extern "C" {
 
 void    NEOGEO_USER ng_palette_fx_init(void);
 void    NEOGEO_USER ng_palette_fx_update(void);
+void    NEOGEO_USER ng_palette_load_bank(uint8_t palette_slot, const uint16_t *pal);
+uint8_t NEOGEO_USER ng_palette_load_asset(const NGPaletteAsset *assets,
+                                          uint16_t count,
+                                          uint16_t asset_id);
 void    NEOGEO_USER ng_palfx_upload_base(uint8_t palette_slot, const uint16_t *pal);
 void    NEOGEO_USER ng_palfx_fade_in(uint8_t palette_slot, const uint16_t *base_pal, uint8_t duration);
 void    NEOGEO_USER ng_palfx_fade_out(uint8_t palette_slot, const uint16_t *base_pal, uint8_t duration);

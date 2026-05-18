@@ -52,8 +52,18 @@ typedef struct {
     uint16_t work_pal[16];    /* modified palette built each frame */
 } NGPalFxSlot;
 
+typedef struct {
+    uint16_t asset_id;
+    uint8_t palette_slot;
+    uint16_t colors[16];
+} NGPaletteAsset;
+
 void NEOGEO_USER ng_palette_fx_init(void);
 void NEOGEO_USER ng_palette_fx_update(void);
+void NEOGEO_USER ng_palette_load_bank(uint8_t palette_slot, const uint16_t *pal);
+uint8_t NEOGEO_USER ng_palette_load_asset(const NGPaletteAsset *assets,
+                                          uint16_t count,
+                                          uint16_t asset_id);
 
 /* Upload base palette to hardware immediately (safe to call at scene init). */
 void NEOGEO_USER ng_palfx_upload_base(uint8_t palette_slot, const uint16_t *pal);

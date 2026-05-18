@@ -57,4 +57,10 @@ void NEOGEO_USER ng_scene_clean_default(void)
     ng_scene_clean(NG_SCENE_CLEAN_DEFAULT);
 }
 
+void NEOGEO_USER ng_scene_begin(uint8_t flags, uint8_t wait_vblank)
+{
+    ng_scene_clean(flags);
+    if (wait_vblank) waitVbl();
+}
+
 } /* extern "C" */

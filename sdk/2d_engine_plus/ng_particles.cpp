@@ -14,7 +14,7 @@ ParticleSystem& ParticleSystem::instance()
 
 void ParticleSystem::hideSlots(uint16_t first, uint16_t end)
 {
-    while (first < end && first <= NG_SPR_CHAR_LAST) {
+    while (first < end && first <= NG_SPR_PART_LAST) {
         vram_SCB234((uint16_t)(SCB3_ADDR + first), 0);
         first++;
     }
@@ -92,11 +92,13 @@ uint16_t ParticleSystem::draw(uint16_t first_slot, uint16_t sprite_budget_used)
     uint8_t  drop_opt    = (sprite_budget_used >= BUDGET_THRESHOLD) ? 1 : 0;
     uint16_t tiles[1], attrs[1];
 
+    if (slot < NG_SPR_PART_FIRST) slot = NG_SPR_PART_FIRST;
+
     for (i = 0; i < NG_PART_MAX_PARTICLES; i++) {
         NGParticle *p = &pool[i];
         if (!p->active) continue;
         if (drop_opt && p->priority == NG_PART_PRI_OPTIONAL) continue;
-        if (slot > NG_SPR_CHAR_LAST) break;
+        if (slot > NG_SPR_PART_LAST) break;
 
         tiles[0] = (uint16_t)(p->tile_base + p->frame);
         attrs[0] = setSCB1_2(p->palette, 0, 0, 0, 0, 0);
