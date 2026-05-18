@@ -23,6 +23,7 @@
 #include "sdk/sound_ids.h"
 #include "sdk/2d_engine/ng_engine.h"
 #include "sdk/2d_engine/ng_render_queue.h"
+#include "sdk/2d_engine/ng_scene.h"
 #include "sdk/2d_engine/ng_palette_fx.h"
 #include "sdk/2d_engine/ng_particles.h"
 #include "sdk/2d_engine/ng_camera.h"
@@ -134,12 +135,10 @@ void NEOGEO_USER demo_clear_scene(void)
     soundCancelFade();
     soundStopAll();
     soundSceneReset();
-    clearFix();
-    demo_clear_all_sprites();
+    ng_scene_clean_default();
     setBACKDROP(BLACK);
     waitVbl();
-    clearFix();
-    demo_clear_all_sprites();
+    ng_scene_clean_default();
     waitVbl();
 }
 
@@ -155,6 +154,7 @@ void NEOGEO_USER demo_safe_show(DemoShowScreenFn fn,
 {
     if (!fn) return;
     if (sprite_base == 0u) sprite_base = DEMO_SHOWSCREEN_BASE;
+    ng_sprite_hide_range(sprite_base, NG_SPRITE_MAX_STRIPS);
     fn(x0, y0, xr, yr, min_crt_sz, backdrop, sprite_base);
 }
 
@@ -362,6 +362,13 @@ void NEOGEO_USER demo_draw_sprite_screen(uint8_t screen_id,
     meta_rows = demo_screen_rows(screen_id);
     if (strips > meta_strips) strips = meta_strips;
     if (rows > meta_rows) rows = meta_rows;
+
+    /*
+     * Clear previous content in this sprite slot window before upload.
+     * Many scenes reuse first_sprite=1 with different asset widths; without
+     * a hard hide, old right-side strips can remain visible.
+     */
+    ng_sprite_hide_range(first_sprite, NG_SPRITE_MAX_STRIPS);
 
     demo_load_screen_palette(screen_id);
 

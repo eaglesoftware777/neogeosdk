@@ -232,7 +232,10 @@ void NEOGEO_USER demo_title_attract_reel(void)
             uint8_t sid = s_teaser_ids[teaser];
             demo_clear_scene();
             demo_load_screen_palette(sid);
-             demo_draw_sprite_screen(sid, 1u, 16, 0, 16u, 16u, 0xFFu, 0xFFu);
+            demo_draw_sprite_screen(sid, 1u, 16, 0,
+                                    demo_screen_strips(sid),
+                                    demo_screen_rows(sid),
+                                    0xFFu, 0xFFu);
             demo_fix_puts(4u, 25u, s_teaser_labels[teaser], 1u);
             demo_fix_puts(13u, 26u, "INSERT COIN", 1u);
             teaser = (uint8_t)((teaser + 1u) % 5u);

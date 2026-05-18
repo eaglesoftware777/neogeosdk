@@ -17,6 +17,10 @@ static NGJoystickState ng_joy;
 static NGJoyDirSample ng_joy_hist[NG_JOY_HISTORY_LEN];
 static uint8_t ng_joy_hist_count;
 static uint8_t ng_joy_attack_timer[NG_MAX_CHARS];
+static NGJoyEventHandler ng_joy_event_handler;
+static NGJoyCommand ng_joy_cmd_queue[8];
+static uint8_t ng_joy_cmd_head;
+static uint8_t ng_joy_cmd_tail;
 
 static const NGJoystickCharConfig ng_joy_default_cfg = {
     2,                  /* move_speed_px */
@@ -118,6 +122,23 @@ static uint8_t NEOGEO_USER ng_joy_pressed_button(uint16_t button)
     return (uint8_t)((ng_joy.pressed & button) != 0);
 }
 
+static void NEOGEO_USER ng_joy_emit(uint16_t event_id, uint16_t a, uint16_t b, uint16_t c)
+{
+    ng_game_events_send(event_id, a, b, c);
+    if (ng_joy_event_handler) ng_joy_event_handler(event_id, a, b, c);
+}
+
+static void NEOGEO_USER ng_joy_push_command(uint8_t code, uint8_t arg0, uint8_t arg1)
+{
+    uint8_t next = (uint8_t)((ng_joy_cmd_head + 1u) & 7u);
+    if (next == ng_joy_cmd_tail) return;
+    ng_joy_cmd_queue[ng_joy_cmd_head].code = code;
+    ng_joy_cmd_queue[ng_joy_cmd_head].arg0 = arg0;
+    ng_joy_cmd_queue[ng_joy_cmd_head].arg1 = arg1;
+    ng_joy_cmd_queue[ng_joy_cmd_head].age = 0u;
+    ng_joy_cmd_head = next;
+}
+
 void NEOGEO_USER ng_joystick_init(void)
 {
     uint8_t i;
@@ -135,6 +156,9 @@ void NEOGEO_USER ng_joystick_init(void)
     }
     ng_joy_hist_count = 0;
     for (i = 0; i < NG_MAX_CHARS; i++) ng_joy_attack_timer[i] = 0;
+    ng_joy_event_handler = 0;
+    ng_joy_cmd_head = 0u;
+    ng_joy_cmd_tail = 0u;
 }
 
 void NEOGEO_USER ng_joystick_update(void)
@@ -199,7 +223,9 @@ uint8_t NEOGEO_USER ng_joy_special_qcf(uint8_t facing_left, uint16_t attack_butt
     if (i1 == 0xff) return 0;
     i2 = ng_joy_find_dir(2, (uint8_t)(i1 + 1), 20);
     if (i2 == 0xff) return 0;
-    ng_game_events_send(NG_EVENT_JOY_SPECIAL_QCF, fwd, dfd, attack_button_mask);
+    ng_joy_emit(NG_EVENT_JOY_SPECIAL_QCF, fwd, dfd, attack_button_mask);
+    ng_joy_push_command(1u, fwd, dfd);
+    ng_joy_emit(NG_EVENT_JOY_COMMAND, 1u, fwd, dfd);
     return 1;
 }
 
@@ -216,7 +242,9 @@ uint8_t NEOGEO_USER ng_joy_special_dp(uint8_t facing_left, uint16_t attack_butto
     if (i1 == 0xff) return 0;
     i2 = ng_joy_find_dir(fwd, (uint8_t)(i1 + 1), 18);
     if (i2 == 0xff) return 0;
-    ng_game_events_send(NG_EVENT_JOY_SPECIAL_DP, fwd, dfd, attack_button_mask);
+    ng_joy_emit(NG_EVENT_JOY_SPECIAL_DP, fwd, dfd, attack_button_mask);
+    ng_joy_push_command(2u, fwd, dfd);
+    ng_joy_emit(NG_EVENT_JOY_COMMAND, 2u, fwd, dfd);
     return 1;
 }
 
@@ -268,7 +296,7 @@ void NEOGEO_USER ng_joy_control_character(NGCharacter *c, const NGJoystickCharCo
         uint8_t grounded = ng_physics_is_grounded(c);
         if (grounded || !body || !body->enabled) {
             c->vy_fp = use_cfg->jump_speed_fp;
-            ng_game_events_send(NG_EVENT_JOY_JUMP, (uint16_t)idx, (uint16_t)c->x, (uint16_t)c->y);
+            ng_joy_emit(NG_EVENT_JOY_JUMP, (uint16_t)idx, (uint16_t)c->x, (uint16_t)c->y);
         }
     }
 
@@ -283,7 +311,7 @@ void NEOGEO_USER ng_joy_control_character(NGCharacter *c, const NGJoystickCharCo
     if (ng_joy_pressed_button(use_cfg->light_button)) {
         int16_t hx = (int16_t)ng_joy_facing_adjust_x(use_cfg->hit_light_x, facing_left);
         ng_joy_apply_hitbox(c, use_cfg->attack_frames_light, hx, use_cfg->hit_light_y, use_cfg->hit_light_w, use_cfg->hit_light_h);
-        ng_game_events_send(NG_EVENT_JOY_FIRE_LIGHT, (uint16_t)idx, (uint16_t)use_cfg->attack_frames_light, 0);
+        ng_joy_emit(NG_EVENT_JOY_FIRE_LIGHT, (uint16_t)idx, (uint16_t)use_cfg->attack_frames_light, 0);
         (void)ng_joy_special_qcf(facing_left, use_cfg->light_button);
         (void)ng_joy_special_dp(facing_left, use_cfg->light_button);
     }
@@ -291,17 +319,30 @@ void NEOGEO_USER ng_joy_control_character(NGCharacter *c, const NGJoystickCharCo
     if (ng_joy_pressed_button(use_cfg->heavy_button)) {
         int16_t hx = (int16_t)ng_joy_facing_adjust_x(use_cfg->hit_heavy_x, facing_left);
         ng_joy_apply_hitbox(c, use_cfg->attack_frames_heavy, hx, use_cfg->hit_heavy_y, use_cfg->hit_heavy_w, use_cfg->hit_heavy_h);
-        ng_game_events_send(NG_EVENT_JOY_FIRE_HEAVY, (uint16_t)idx, (uint16_t)use_cfg->attack_frames_heavy, 0);
+        ng_joy_emit(NG_EVENT_JOY_FIRE_HEAVY, (uint16_t)idx, (uint16_t)use_cfg->attack_frames_heavy, 0);
         (void)ng_joy_special_qcf(facing_left, use_cfg->heavy_button);
         (void)ng_joy_special_dp(facing_left, use_cfg->heavy_button);
     }
 
     if (ng_joy_pressed_button(use_cfg->hit_button)) {
-        ng_game_events_send(NG_EVENT_JOY_HIT, (uint16_t)idx, 0, 0);
+        ng_joy_emit(NG_EVENT_JOY_HIT, (uint16_t)idx, 0, 0);
     }
 }
 
 const NGJoystickCharConfig *NEOGEO_USER ng_joy_default_char_config(void)
 {
     return &ng_joy_default_cfg;
+}
+
+void NEOGEO_USER ng_joy_set_event_handler(NGJoyEventHandler fn)
+{
+    ng_joy_event_handler = fn;
+}
+
+uint8_t NEOGEO_USER ng_joy_pop_command(NGJoyCommand *out)
+{
+    if (ng_joy_cmd_tail == ng_joy_cmd_head) return 0u;
+    if (out) *out = ng_joy_cmd_queue[ng_joy_cmd_tail];
+    ng_joy_cmd_tail = (uint8_t)((ng_joy_cmd_tail + 1u) & 7u);
+    return 1u;
 }
