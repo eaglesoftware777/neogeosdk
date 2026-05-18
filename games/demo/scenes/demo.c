@@ -18,6 +18,7 @@
 #include "demo_stress.h"
 #include "demo_title.h"
 #include "demo_render.h"
+#include "demo_unified.h"
 
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
@@ -514,30 +515,5 @@ void NEOGEO_USER demo_run_full_flow(void)
     soundSetSSGVolume(0x08u);
     soundSetFMVolume(0x08u);
 
-    /* BLOCK 2 — Core hardware */
-    demo_sprites_run();
-    demo_fix_run();
-    demo_sound_run();
-
-    /* BLOCK 3 — 2D engine core */
-    demo_combat_run();
-
-    /* BLOCK 4 — 2D engine advanced */
-    demo_camera_run();
-    demo_palette_run();
-    demo_particles_run();
-
-    /* BLOCK 6 — Depth / 3D */
-    demo_depth_run();
-
-    /* BLOCK 6.4-6.5 — Software rendering */
-    demo_render_run();
-
-    /* BLOCK 7 — Combination showpiece */
-    demo_intro_loading();
-    demo_stress_run();
-
-    /* BLOCK 8 — Close */
-    demo_title_game_over();
-    demo_title_end_card();
+    demo_unified_run();
 }
