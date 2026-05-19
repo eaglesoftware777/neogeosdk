@@ -166,7 +166,7 @@ go_done:
 /* ------------------------------------------------------------------ */
 void NEOGEO_USER demo_title_attract_reel(void)
 {
-    static const uint8_t s_teaser_ids[5] = { 1u, 11u, 79u, 107u, 109u };
+    static const uint8_t s_teaser_ids[5] = { 101u, 102u, 103u, 104u, 105u };
     static const char *const s_teaser_labels[5] = {
         "BLOCK 2: CORE HARDWARE",
         "BLOCK 3: 2D ENGINE",
@@ -174,12 +174,6 @@ void NEOGEO_USER demo_title_attract_reel(void)
         "BLOCK 6: DEPTH / 2.5D",
         "BLOCK 7: STRESS TEST"
     };
-    static const uint16_t s_title_pal[16] = {
-        0x0000u, 0x7FFFu, 0x30FFu, 0x6FF0u, 0x4F00u, 0x7551u,
-        0x7001u, 0x7011u, 0x4e82u, 0x2a82u, 0x5341u, 0x3113u,
-        0x1448u, 0x1b55u, 0x6FF0u, 0x30FFu
-    };
-
     uint8_t  teaser;
     uint16_t hold;
     uint16_t fix_pal[16];
@@ -199,7 +193,6 @@ void NEOGEO_USER demo_title_attract_reel(void)
 
     /* Show title card with pulsing INSERT COIN */
     demo_safe_show(showScreen108, 32, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
-    ng_palfx_pulse(DEMO_SCREEN_PALETTE(108u), s_title_pal, 60u);
 
     soundSceneReset();
     soundSetADPCMAVolume(0x3Cu);
@@ -232,7 +225,8 @@ void NEOGEO_USER demo_title_attract_reel(void)
             uint8_t sid = s_teaser_ids[teaser];
             demo_clear_scene();
             demo_load_screen_palette(sid);
-            demo_draw_sprite_screen(sid, 1u, 16, 0,
+            ng_palfx_stop(DEMO_SCREEN_PALETTE(108u));
+            demo_draw_sprite_screen(sid, 1u, 32, -16,
                                     demo_screen_strips(sid),
                                     demo_screen_rows(sid),
                                     0xFFu, 0xFFu);
