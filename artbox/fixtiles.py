@@ -8,9 +8,9 @@
 Neo Geo FIX ROM (S1) tile generator.
 
 Builds the 128 KB 777-s1.s1 from:
-  1. Existing 777-s1.s1  (all 4096 tiles preserved at their original addresses)
-  2. sfix.sfix system-font ROM  (fills any empty slots not covered by step 1)
-  3. infix/*.png images imported via the imagefix DB table
+  1. sfix.sfix system-font ROM  (standard ASCII/FIX tiles)
+  2. Existing 777-s1.s1  (non-infix area preserved at original addresses)
+  3. infix/*.png images imported via the imagefix DB table at tile 256+
 
 Hardware tile format (after romtool /f or direct from this script):
   Each 8×8 / 4-bpp tile = 32 bytes.
@@ -44,6 +44,7 @@ SFIX_FALLBACK = os.path.join(SCRIPT_DIR, '..', 'roms', 'neogeo', 'sfix.sfix')
 OUT_S1      = os.path.join(DATA_DIR, f'{_GAME_ID}-s1.s1')
 DB_PATH     = os.path.join(DATA_DIR, 'neorom.db')
 INFIX_DIR   = os.path.join(DATA_DIR, 'infix')
+INFIX_REGION_START = int(os.environ.get("INFIX_TILE_BASE", "256"), 0)
 
 # ── tile encoding / decoding ───────────────────────────────────────────────────
 _COL_PAIRS  = [(4,5),(6,7),(0,1),(2,3)]
@@ -117,15 +118,20 @@ if sfix_tiles:
 else:
     print(f"Warning: no sfix.sfix found in {SFIX_ROM} or {SFIX_FALLBACK}")
 
-# Step 2: overlay the existing game S1 ROM (preserve all non-empty tiles in place)
+# Step 2: overlay the existing game S1 ROM outside the generated infix region.
+# Tiles 0-255 remain the normal font area.  Tiles 256+ are deterministic
+# generated art slots so runtime code can address infix images by fixed tile
+# numbers without depending on old ROM contents.
 game_tiles = read_rom(GAME_S1)
 preserved  = 0
 for i, t in enumerate(game_tiles[:NUM_TILES]):
+    if i >= INFIX_REGION_START:
+        continue
     if not is_empty_tile(t):
         rom[i*TILE_BYTES:(i+1)*TILE_BYTES] = t
         preserved += 1
 if preserved:
-    print(f"Preserved {preserved} non-empty tiles from {os.path.basename(GAME_S1)}")
+    print(f"Preserved {preserved} non-empty base-font tiles from {os.path.basename(GAME_S1)}")
 
 # ── collect infix tiles from DB ───────────────────────────────────────────────
 infix_tiles = []
@@ -167,24 +173,22 @@ if not infix_tiles:
     except ImportError:
         print("pypng not available; no infix tiles loaded")
 
-# ── find empty slots and write infix tiles ────────────────────────────────────
-# Write into empty slots from tile 256 onward (0-255 = standard font area)
-INFIX_REGION_START = 256
-empty_slots = [i for i in range(INFIX_REGION_START, NUM_TILES)
-               if is_empty_tile(rom[i*TILE_BYTES:(i+1)*TILE_BYTES])]
-
+# ── write infix tiles at deterministic tile numbers ───────────────────────────
+# The demo and generated docs expect the first infix tile to start at tile 256.
+# This region deliberately overwrites the system font copy above tile 255.
 written = 0
+max_infix_tiles = NUM_TILES - INFIX_REGION_START
 for tile_data in infix_tiles:
-    if written >= len(empty_slots):
-        print(f"Warning: ROM full ({len(empty_slots)} empty slots), "
-              f"{len(infix_tiles)-written} infix tiles not written")
+    if written >= max_infix_tiles:
+        print(f"Warning: ROM full ({max_infix_tiles} infix slots), "
+              f"{len(infix_tiles) - written} infix tiles not written")
         break
-    slot = empty_slots[written]
+    slot = INFIX_REGION_START + written
     rom[slot*TILE_BYTES:(slot+1)*TILE_BYTES] = tile_data
     written += 1
 
 if written:
-    print(f"Wrote {written} infix tiles into empty slots starting at tile {empty_slots[0]}")
+    print(f"Wrote {written} infix tiles starting at tile {INFIX_REGION_START}")
 
 # ── write output ───────────────────────────────────────────────────────────────
 with open(OUT_S1, 'wb') as f:
