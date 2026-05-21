@@ -66,19 +66,22 @@ void NEOGEO_USER ng_clear_screen_full(void);
 #define U_CENTRE_X      160
 
 /*
- * Sprite slot priority on NeoGeo hardware: HIGHER slot is drawn ON TOP
- * of lower-numbered slots when they overlap.  So:
- *   - BG must be at a LOW slot to sit BEHIND chars
- *   - Hero must be at a HIGHER slot than the BG to render IN FRONT
+ * Sprite slot priority on Neo Geo:  LOWER slot = drawn IN FRONT.
+ * (See sdk/2d_engine_plus/ng_sprite_pool.hpp for the full layout.)
  *
- * Layout for this demo:
- *   slot   1..16   = background sprite group (BG_BACK_SLOT)
- *   slot  64..79   = hero sprite group       (HERO_SLOT_FIRST)
- *   slot  96..223  = Character system (NPCs / enemies)
- *   slot 256..287  = particles
+ * For this demo:
+ *   slot   1..15   = hero sprite group         (HERO_SLOT_FIRST = 1)
+ *                    Drawn IN FRONT of everything else.
+ *   slot  32..47   = enemy / target sprite group (ENEMY_SLOT_FIRST = 32)
+ *                    Behind the hero, in front of NPCs/BG.
+ *   slot  96..223  = NGCharacter system (NPCs / managed chars)
+ *   slot 256..287  = particles (NG_SPR_PART_FIRST)
+ *   slot 300..315  = BACKGROUND layer 0  (DEMO_BG_BACK_SLOT = 300)
+ *                    Drawn BEHIND everything else.
  */
-#define DEMO_BG_BACK_SLOT   1u
-#define HERO_SLOT_FIRST    64u
+#define DEMO_BG_BACK_SLOT  NG_SPR_BG0_FIRST   /* 300 — back-most */
+#define HERO_SLOT_FIRST    1u                 /* front-most */
+#define ENEMY_SLOT_FIRST   32u                /* between hero and BG */
 
 /* Base palette used by palette FX + feedback chapters. */
 static const uint16_t s_palfx_base[16] = {
@@ -718,7 +721,7 @@ static uint8_t NEOGEO_USER chap_physics(void)
         EAGLE_BODY_W     = 32,
         EAGLE_BODY_H     = 48,
         EAGLE_START_X    = 160,
-        EAGLE_START_Y    = 40,
+        EAGLE_START_Y    = 110,    /* closer to the floor so the fall is short */
         PLATFORM_X       = 0,
         PLATFORM_W       = 320
     };
@@ -791,7 +794,9 @@ static uint8_t NEOGEO_USER chap_physics(void)
                             EAGLE_BODY_W,
                             EAGLE_BODY_H);
     ng_physics_attach(eagle, (uint16_t)(NG_PHYSICS_GRAVITY | NG_PHYSICS_SOLIDS));
-    ng_physics_set_gravity(eagle, NG_FP_FROM_FRAC(1, 8), NG_TO_FP(3));
+    /* Gentle gravity (1/32 px/frame^2) + low terminal velocity so the
+     * fall reads clearly on screen instead of being a brief snap. */
+    ng_physics_set_gravity(eagle, NG_FP_FROM_FRAC(1, 32), NG_FP_FROM_FRAC(3, 2));
 
     s_draw_chars = 1u;
 
@@ -1230,11 +1235,19 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
     const uint8_t  spark_pal  = DEMO_SCREEN_PALETTE(spark_id);
 
     /*
-     * Enemy uses a SEPARATE sprite group slot (not 1 like the hero).
-     * Cats are dimensionally uniform 12 strips × 15 rows so the Character
-     * system works for them — we use it for the enemy chase AI.
+     * Hit target = a colourful 6x2-cell rectangle drawn on the FIX layer.
+     * No character sprite involved — no split/strip issues.  The target
+     * has a position, an "alive" flag, and a respawn timer.  When the
+     * hero's strike reaches the target it clears, sound plays, particles
+     * burst, then it respawns at a new X after a short delay.
      */
-    NGCharacter *enemy;
+    uint8_t  target_cx     = 28u;     /* FIX cell column of target left edge */
+    uint8_t  target_cy     = 14u;     /* FIX cell row */
+    uint8_t  target_alive  = 1u;
+    uint8_t  target_respawn = 0u;
+    static const uint8_t TARGET_W = 6u;    /* 6 cells = 48 px wide */
+    static const uint8_t TARGET_H = 2u;    /* 2 cells = 16 px tall */
+
     uint16_t t;
     uint8_t  hero_state = 0u;   /* 0=stand 1=walk 2=jump 3=strike */
     uint8_t  state_t    = 0u;
@@ -1245,38 +1258,43 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
     uint8_t  hero_flip  = 0u;
     uint16_t score      = 0u;
     uint16_t enemy_hits = 0u;
-    uint8_t  enemy_frame = 110u;
     const uint16_t TOTAL = 2700u;        /* 45 sec @ 60 fps */
     char buf[6];
 
     chap_header(13u, "MINI-GAME", "B STRIKE  C JUMP  D-PAD MOVE");
     demo_fix_puts(2u, 2u, "HOLD LEFT/RIGHT TO RUN", 1u);
-    demo_fix_puts(2u, 3u, "STRIKE CAT FOR SCORE",   0u);
+    demo_fix_puts(2u, 3u, "STRIKE THE COLOURED TARGET", 0u);
     snd_cross_to(SOUND_MUSIC_WARRIOR_BATTLE);
 
-    /* BG drawn ONCE at low slot — sits behind hero/enemy automatically */
+    /* BG drawn ONCE at slot 300 (back).  Hero (slot 1) sits in front. */
     draw_background(2u, 32, 16);
 
     ng_joystick_init();
-    reset_palette_memo();
-
-    /* Enemy stays in the Character system — uniform cat frames are safe */
-    enemy = chars_add(1u, 240, U_FLOOR_Y);
-    if (!enemy) return uwait(60u);
-    bind_character_asset(enemy, enemy_frame, 0x40u, 0x40u);
     demo_load_screen_palette(spark_id);
 
     demo_fix_puts(2u, 25u, "SCORE:", 2u);
     demo_fix_puts(15u, 25u, "TIME:", 2u);
     demo_fix_puts(26u, 25u, "HITS:", 2u);
 
-    s_draw_chars     = 1u;
     s_draw_particles = 1u;
+
+    /* helper: draw the target rectangle on FIX in alternating palettes */
+    {
+        uint8_t r;
+        for (r = 0u; r < TARGET_H; r++) {
+            uint8_t c;
+            for (c = 0u; c < TARGET_W; c++) {
+                demo_fix_puts((uint8_t)(target_cx + c),
+                              (uint8_t)(target_cy + r),
+                              (r & 1u) ? "#" : "*",
+                              (uint8_t)((c + r) & 3u ? 2u : 1u));
+            }
+        }
+    }
 
     for (t = 0u; t < TOTAL; t++) {
         uint16_t down;
         uint16_t pressed;
-        uint8_t want_enemy;
         uint8_t hero_frame;
         int16_t hx_old = hero_world_x;
 
@@ -1331,18 +1349,32 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
             break;
         default:                              /* strike */
             hero_frame = s_hero_strike[(state_t / 3u) % 8u];
-            if (state_t == 9u) {
-                int16_t reach = (int16_t)(hero_flip ? (hero_world_x - 40)
-                                                    : (hero_world_x + 40));
-                int16_t dx = (int16_t)(reach - enemy->x);
+            if (state_t == 9u && target_alive) {
+                /* hit-test against the FIX-layer target rectangle */
+                int16_t reach_px = (int16_t)(hero_flip ? (hero_world_x - 40)
+                                                       : (hero_world_x + 40));
+                int16_t tx_px = (int16_t)(target_cx * 8 + (TARGET_W * 4));
+                int16_t ty_px = (int16_t)(target_cy * 8 + (TARGET_H * 4));
+                int16_t dx = (int16_t)(reach_px - tx_px);
+                int16_t dy = (int16_t)(hero_world_y - ty_px);
                 if (dx < 0) dx = (int16_t)(-dx);
-                if (dx < 28) {
+                if (dy < 0) dy = (int16_t)(-dy);
+                if (dx < 32 && dy < 40) {
+                    uint8_t r;
                     score = (uint16_t)(score + 10u);
                     enemy_hits++;
                     playSFX(SOUND_SFX_IMPACT_HIT);
-                    spawn_impact_burst((int16_t)(enemy->x), 140,
-                                       spark_tile, spark_pal, 3u);
-                    enemy->x = (int16_t)(enemy->x + (hero_flip ? -16 : 16));
+                    spawn_impact_burst(tx_px, ty_px, spark_tile, spark_pal, 3u);
+                    /* CLEAN the FIX cells of the destroyed target */
+                    for (r = 0u; r < TARGET_H; r++) {
+                        uint8_t c;
+                        for (c = 0u; c < TARGET_W; c++) {
+                            demo_fix_puts((uint8_t)(target_cx + c),
+                                          (uint8_t)(target_cy + r), " ", 0u);
+                        }
+                    }
+                    target_alive   = 0u;
+                    target_respawn = 60u;          /* 1 sec until respawn */
                 }
             }
             state_t++;
@@ -1350,18 +1382,25 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
             break;
         }
 
-        /* Enemy AI: slow chase */
-        if ((t & 1u) == 0u) {
-            if (enemy->x > hero_world_x + 60) enemy->x--;
-            else if (enemy->x < hero_world_x + 50) enemy->x++;
-        }
-        if (enemy->x < 32)  enemy->x = 32;
-        if (enemy->x > 296) enemy->x = 296;
-        enemy->y = U_FLOOR_Y;
-        want_enemy = (uint8_t)(110u + ((t / 8u) % 12u));
-        if (want_enemy != enemy_frame) {
-            bind_character_asset(enemy, want_enemy, 0x40u, 0x40u);
-            enemy_frame = want_enemy;
+        /* Target respawn timer + relocation */
+        if (!target_alive) {
+            if (target_respawn > 0u) {
+                target_respawn--;
+            } else {
+                uint8_t r;
+                /* pick a new X (cell) — pseudo-random walk from prior position */
+                target_cx = (uint8_t)(8u + ((t * 7u) % 22u));
+                target_alive = 1u;
+                for (r = 0u; r < TARGET_H; r++) {
+                    uint8_t c;
+                    for (c = 0u; c < TARGET_W; c++) {
+                        demo_fix_puts((uint8_t)(target_cx + c),
+                                      (uint8_t)(target_cy + r),
+                                      (r & 1u) ? "#" : "*",
+                                      (uint8_t)((c + r) & 3u ? 2u : 1u));
+                    }
+                }
+            }
         }
 
         if (hero_state == 1u && hx_old != hero_world_x && (t & 31u) == 0u)

@@ -5,21 +5,35 @@
 
 /*
  * Hardware sprite slot priority layout.
- * Lower slot number = higher display priority (drawn in front of higher-numbered sprites).
  *
- *   Slots   1-95  : generated title/fullscreen previews
- *   Slots  96-223 : characters and NPCs
- *   Slots 224-255 : front effects
- *   Slots 256-287 : particles and temporary effects
- *   Slots 300-315 : background layer 0 (up to 16 strips = 256 px wide)
- *   Slots 316-331 : background layer 1 / overlay (up to 16 strips)
+ *   ╔══════════════════════════════════════════════════════════════════╗
+ *   ║  RULE: LOWER hardware slot number = drawn IN FRONT.              ║
+ *   ║         HIGHER slot number = drawn BEHIND.                       ║
+ *   ║                                                                  ║
+ *   ║  Neo Geo LSPC scans the sprite list from slot 0 first; each      ║
+ *   ║  later sprite that overlaps is OBSCURED by the earlier-drawn     ║
+ *   ║  pixels, so a lower-numbered sprite always wins.                 ║
+ *   ╚══════════════════════════════════════════════════════════════════╝
  *
- * Neo Geo hardware supports 380 sprite slots (0-379).
+ * Recommended layout (front to back):
+ *   Slots   1-15  : HUD / overlays (drawn on top of everything)
+ *   Slots  16-95  : foreground sprites — heroes, projectiles
+ *   Slots  96-223 : characters / NPCs (assigned automatically by ng_chars)
+ *   Slots 224-255 : front effects (in front of chars but behind hero)
+ *   Slots 256-287 : particles
+ *   Slots 288-299 : transient effects
+ *   Slots 300-315 : BACKGROUND layer 0 (full 16 strips for a 256-px wallpaper)
+ *   Slots 316-331 : BACKGROUND layer 1 / parallax behind layer 0
  *
  * The sprite_base parameter passed to showScreenN() is the VRAM byte offset
  * for tile data: sprite_base = slot * 64.  SCB1 address for strip S is
  * sprite_base + 64*S, and the hardware sprite slot for SCB2/3/4 is
  * sprite_base/64 + S.
+ *
+ * COMMON MISTAKE: do NOT draw a background at slot 1 expecting it to sit
+ * "behind" the player at slot 96 — slot 1 is the FRONT-most slot and will
+ * cover the hero.  Backgrounds belong at slot 300+ where they are drawn
+ * BEHIND every char and effect.
  */
 #define NG_SPR_TOTAL         380
 #define NG_SPR_LAST          379
