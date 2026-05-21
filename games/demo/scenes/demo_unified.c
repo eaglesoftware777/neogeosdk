@@ -394,9 +394,21 @@ static uint8_t NEOGEO_USER chap_title(void)
         else                frame = 109u;
 
         if (frame != last_frame) {
-            demo_draw_sprite_screen(frame, 1u, 32, 16,
-                                    demo_screen_strips(frame),
-                                    demo_screen_rows(frame),
+            /*
+             * CENTER the title art both axes by computing the position
+             * from the actual frame strip/row count instead of using a
+             * hard-coded (32, 16).  Screen W=320, H=224.  Sprite top-
+             * left x = (W - strips*16)/2 = 160 - strips*8 (after
+             * stripping artbox x_offset).  Same for y.
+             */
+            int16_t strips = demo_screen_strips(frame);
+            int16_t rows   = demo_screen_rows(frame);
+            int16_t off_x  = demo_screen_x_offset(frame);
+            int16_t off_y  = demo_screen_y_offset(frame);
+            int16_t draw_x = (int16_t)(160 - (strips * 16) / 2 - off_x);
+            int16_t draw_y = (int16_t)(112 - (rows   * 16) / 2 - off_y);
+            demo_draw_sprite_screen(frame, 1u, draw_x, draw_y,
+                                    (uint8_t)strips, (uint8_t)rows,
                                     0xFFu, 0xFFu);
             last_frame = frame;
         }
@@ -414,6 +426,13 @@ static uint8_t NEOGEO_USER chap_fix(void)
     char buf[8];
 
     chap_header(2u, "FIX LAYER", "TEXT  PALETTES  DIRTY CACHE");
+    /*
+     * Draw a BG sprite (screen 1 = a background image) at slot 300
+     * BEHIND the FIX text so transparent cells reveal the artwork
+     * instead of pure black.  This is what makes the FIX layer look
+     * "transparent" to the user.
+     */
+    draw_background(1u, 32, 16);
     demo_fix_puts(2u, 2u, "FIX = 40x32 CELL OVERLAY", 1u);
     demo_fix_puts(2u, 3u, "DIRTY-CELL CACHE  NO TEAR", 0u);
     snd_cross_to(SOUND_MUSIC_SHOP_JINGLE);
@@ -501,15 +520,13 @@ static uint8_t NEOGEO_USER chap_sound(void)
     demo_fix_puts(2u, 2u, "Z80 SOUND CPU  4 CHANNELS:",  1u);
     demo_fix_puts(2u, 3u, "FM  SSG  ADPCM-A  ADPCM-B",   0u);
 
-    /* --- FM patch demo ------------------------------------------------ */
-    demo_fix_puts(2u, 5u, "FM PATCH                       ", 2u);
+    /* --- Intro: clean MML music (not raw FM patch — that was noisy) -- */
+    demo_fix_puts(2u, 5u, "MUSIC INTRO                    ", 2u);
     soundStopAll();                          snd_step();
     soundSceneReset();                       snd_step();
-    soundApplyMix(0x00u, 0x00u, 0x00u, 0x0Du); snd_step();
-    soundSetTempo(5u);                       snd_step();
-    soundSetFMVolume(0x0Du);                 snd_step();
-    playFMTrack(SOUND_FM_PATCH_SHOWCASE);    snd_step();
-    demo_fix_puts(2u, 6u, "PATCH BANK SHOWCASE            ", 1u);
+    soundApplyMix(0x30u, 0xB8u, 0x08u, 0x08u); snd_step();
+    soundPlayGameLoop(SOUND_MUSIC_EAGLE_FANFARE); snd_step();
+    demo_fix_puts(2u, 6u, "EAGLE FANFARE (FM + SSG + ADPCM)", 1u);
     if (uwait(140u)) return 1u;
 
     /* --- 4 music tracks, each with a real fade between -------------- */
@@ -752,8 +769,10 @@ static uint8_t NEOGEO_USER chap_physics(void)
     demo_fix_puts(2u, 3u, "FLOOR Y=192  EAGLE FALLS",      0u);
     snd_cross_to(SOUND_MUSIC_SAMURAI_GAME_LOOP);
 
-    /* Floor strip drawn as FIX so the user sees the contact plane */
-    demo_fix_puts(0u, 24u, "========================================", 2u);
+    /* Floor strip — raised to row 23 so the eagle's feet visibly
+     * land ON the bar (row 24 was below the sprite bottom). */
+    demo_fix_puts(0u, 23u, "========================================", 2u);
+    demo_fix_puts(0u, 24u, "                                        ", 0u);
 
     /*
      * EXTRA hard clear before physics setup — kills any stale strip
@@ -944,11 +963,22 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
      *   * Two side chevrons (palette 15)
      * Everything outside rows 9-17 stays transparent so the BG shows.
      */
+    /*
+     * The KEY fix: load the synthetic FX palette into VRAM slot 15
+     * BEFORE drawing the diamond, then draw EVERY diamond cell using
+     * palette 15 so the palette FX (fade / flash / pulse / cycle)
+     * ACTUALLY animates the diamond colours.  Previously the diamond
+     * was drawn with palette 2 (FIX accent) while FX was applied to
+     * slot 15 — so nothing visibly changed.
+     */
+    ng_palfx_upload_base(fx_slot, s_palfx_base);
+
     {
         uint8_t r, c;
-        /* Centre-line text */
+        /* Centre-line label (palette 2 = static FIX accent) */
         demo_fix_puts(13u, 9u,  "  /  \\  PALETTE FX  /  \\  ", 2u);
-        /* Diamond — drawn with X/Y symmetry around (19, 13) */
+        /* Diamond — drawn with X/Y symmetry around (19, 13).
+         * Uses palette index 15 so FX on slot 15 modulates these tiles. */
         for (r = 0u; r <= 4u; r++) {
             uint8_t span = (r <= 2u) ? r : (uint8_t)(4u - r);
             uint8_t row_top    = (uint8_t)(11u + r);
@@ -957,19 +987,17 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
                 uint8_t x = (uint8_t)(19u - span + c);
                 const char *g = (c == 0u || c == span * 2u) ? "/" :
                                 (c == span)                  ? "*" : "#";
-                demo_fix_puts(x, row_top,    g, 2u);
+                demo_fix_puts(x, row_top,    g, 15u);
                 if (row_top != row_bottom)
-                    demo_fix_puts(x, row_bottom, g, 2u);
+                    demo_fix_puts(x, row_bottom, g, 15u);
             }
         }
-        /* Side chevrons */
-        demo_fix_puts(5u,  13u, ">>>>>>", 2u);
-        demo_fix_puts(29u, 13u, "<<<<<<", 2u);
-        /* Effect name banner above the diamond */
+        /* Side chevrons — also on palette 15 so they pulse */
+        demo_fix_puts(5u,  13u, ">>>>>>", 15u);
+        demo_fix_puts(29u, 13u, "<<<<<<", 15u);
+        /* Effect name banner above the diamond (static palette 2) */
         demo_fix_puts(2u, 6u, "EFFECT:",                       1u);
     }
-
-    ng_palfx_upload_base(fx_slot, s_palfx_base);
 
     /* ---- Effect sequence — all on slot 15 ----------------------- */
     demo_fix_puts(10u, 6u, "FADE-IN 60F          ", 1u);
@@ -1494,7 +1522,10 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
                 vy = 0;
                 hero_state = 0u;
             }
-            hero_frame = s_hero_specA[(t / 5u) % 8u];
+            /* Use the dimensionally-uniform STAND set during jump so
+             * the sprite doesn't change strip-count each frame — no
+             * more "movement stripes" artefact when C is pressed. */
+            hero_frame = s_hero_stand[(t / 8u) % 8u];
             break;
         default:                              /* strike */
             hero_frame = s_hero_strike[(state_t / 3u) % 8u];
@@ -1543,29 +1574,54 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
          * sweeping a whole row, which produced a "black strip" overlay
          * on top of the BG).
          */
+        /*
+         * Multi-cell SWORD ARC during the active hit window — 5 FIX
+         * cells extending from the hero in the facing direction.
+         * Pattern: > > > * +    (or < < < + * mirrored when facing left)
+         * Animated tail glyphs cycle each frame for a "slash" feel.
+         * Remembered cells so erase is targeted.
+         */
         {
-            static uint8_t  sw_last_cx = 0xFFu;
-            static uint8_t  sw_last_cy = 0u;
-            static uint8_t  sw_last_cx2 = 0xFFu;
+            static uint8_t sw_last_cx = 0xFFu;
+            static uint8_t sw_last_cy = 0u;
+            const  uint8_t SW_LEN = 5u;
             if (hero_state == 3u && state_t >= 4u && state_t <= 18u) {
                 uint8_t sword_cx = (uint8_t)((hero_flip
-                    ? (hero_world_x - 56) : (hero_world_x + 16)) / 8);
+                    ? (hero_world_x - 72) : (hero_world_x + 16)) / 8);
                 uint8_t sword_cy = (uint8_t)(hero_world_y / 8);
-                /* erase prior pair before drawing the new one */
-                if (sw_last_cx != 0xFFu && (sw_last_cx != sword_cx || sw_last_cy != sword_cy)) {
-                    demo_fix_puts(sw_last_cx,  sw_last_cy, " ", 0u);
-                    demo_fix_puts(sw_last_cx2, sw_last_cy, " ", 0u);
+                uint8_t k;
+                /* erase prior arc if it has moved */
+                if (sw_last_cx != 0xFFu &&
+                    (sw_last_cx != sword_cx || sw_last_cy != sword_cy)) {
+                    for (k = 0u; k < SW_LEN; k++)
+                        demo_fix_puts((uint8_t)(sw_last_cx + k),
+                                      sw_last_cy, " ", 0u);
                 }
-                if (sword_cx < 38u && sword_cy < 25u) {
-                    demo_fix_puts(sword_cx, sword_cy, hero_flip ? "<" : ">", 2u);
-                    demo_fix_puts((uint8_t)(sword_cx + 1), sword_cy, "*", 2u);
+                if (sword_cx < (uint8_t)(38u - SW_LEN) && sword_cy < 25u) {
+                    /* draw the arc — tail glyphs animate over frames */
+                    for (k = 0u; k < SW_LEN; k++) {
+                        const char *g;
+                        uint8_t pal = (uint8_t)(1u + (k & 1u));
+                        if (hero_flip) {
+                            /* facing left: pattern + * < < <  */
+                            g = (k == 0u) ? "+" :
+                                (k == 1u) ? "*" : "<";
+                        } else {
+                            /* facing right: > > > * + */
+                            g = (k == SW_LEN - 1u) ? "+" :
+                                (k == SW_LEN - 2u) ? "*" : ">";
+                        }
+                        /* shimmer effect: cycle palette per frame */
+                        if (((state_t + k) & 3u) == 0u) pal = 2u;
+                        demo_fix_puts((uint8_t)(sword_cx + k), sword_cy, g, pal);
+                    }
                     sw_last_cx = sword_cx; sw_last_cy = sword_cy;
-                    sw_last_cx2 = (uint8_t)(sword_cx + 1);
                 }
             } else if (sw_last_cx != 0xFFu) {
-                /* strike just ended — erase only the two arc cells */
-                demo_fix_puts(sw_last_cx,  sw_last_cy, " ", 0u);
-                demo_fix_puts(sw_last_cx2, sw_last_cy, " ", 0u);
+                uint8_t k;
+                for (k = 0u; k < SW_LEN; k++)
+                    demo_fix_puts((uint8_t)(sw_last_cx + k),
+                                  sw_last_cy, " ", 0u);
                 sw_last_cx = 0xFFu;
             }
         }
@@ -1892,50 +1948,90 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
 /* ================================================================== */
 static uint8_t NEOGEO_USER chap_render3d(void)
 {
+    /*
+     * Pseudo-3D ROAD on the FIX layer — full visible perspective.
+     *
+     * The road is drawn as 18 horizontal strips (rows 8..25), each
+     * progressively wider so they converge to a vanishing point at
+     * (col 20, row 7).  The CLOSER the strip, the wider AND brighter.
+     *
+     * Side rails (LL // RR) emphasise the perspective.  A scrolling
+     * highlight row simulates movement DOWN the road.
+     */
     uint16_t t;
 
-    chap_header(16u, "3D EFFECT", "FIX PERSPECTIVE ROAD");
-    demo_fix_puts(2u, 2u, "ROAD WIDTH GROWS BY DEPTH",  1u);
-    demo_fix_puts(2u, 3u, "STATIC TEXTURE  ANIMATED Y", 0u);
+    chap_header(16u, "3D EFFECT", "PERSPECTIVE ROAD");
+    demo_fix_puts(2u, 2u, "FULL-WIDTH FIX STRIPS",       1u);
+    demo_fix_puts(2u, 3u, "VANISHING-POINT GRADIENT",    0u);
     snd_cross_to(SOUND_MUSIC_BOSS_TENSION);
 
-    /* Lay out the road once — no per-frame full clears */
+    /*
+     * Lay out the road ONCE — 18 strips from horizon (row 8) to
+     * camera (row 25).  Each strip uses the FULL computed width.
+     */
     {
-        uint8_t row;
-        for (row = 7u; row < 26u; row++) {
-            uint8_t w = (uint8_t)(4u + (row - 7u) * 2u);
-            uint8_t x = (uint8_t)(20u - (w >> 1));
-            uint8_t col;
-            demo_fix_puts(0u, row, "                                        ", 0u);
-            for (col = 0u; col < w && (uint8_t)(x + col) < 39u; col++) {
-                demo_fix_puts((uint8_t)(x + col), row,
-                              (row & 1u) ? "=" : "-",
-                              (uint8_t)((row & 1u) ? 2u : 1u));
+        uint8_t row, col;
+        for (row = 8u; row < 26u; row++) {
+            uint8_t depth_idx = (uint8_t)(row - 8u);     /* 0..17 */
+            /* width grows ~2 cells per row up to a 36-cell maximum */
+            uint8_t w = (uint8_t)(2u + depth_idx * 2u);
+            uint8_t centre = 20u;
+            uint8_t half   = (uint8_t)(w >> 1);
+            uint8_t left   = (centre > half) ? (uint8_t)(centre - half) : 0u;
+            uint8_t right  = (uint8_t)(centre + half);
+            uint8_t pal    = (uint8_t)((depth_idx < 6u)  ? 0u :
+                                       (depth_idx < 12u) ? 1u : 2u);
+
+            /* clear the whole row first */
+            for (col = 0u; col < 40u; col++) demo_fix_puts(col, row, " ", 0u);
+            /* draw road surface */
+            for (col = left; col < right && col < 40u; col++) {
+                demo_fix_puts(col, row, (row & 1u) ? "=" : "-", pal);
             }
+            /* side rails — bold | one cell outside the surface */
+            if (left  > 0u)   demo_fix_puts((uint8_t)(left - 1u),  row, "/", 2u);
+            if (right < 39u)  demo_fix_puts((uint8_t)(right),      row, "\\", 2u);
+            /* centre lane stripe — dashes every 2 rows on the centre */
+            if ((row & 1u) == 0u) demo_fix_puts(centre, row, "I", 1u);
         }
+        /* horizon line + sky band */
+        demo_fix_puts(0u, 7u, "________________________________________", 2u);
+        for (row = 4u; row < 7u; row++)
+            demo_fix_puts(0u, row, "                                        ", 0u);
     }
 
-    /* Per-frame: just sweep a single highlight row to fake motion */
-    for (t = 0u; t < 360u; t++) {
-        uint8_t row = (uint8_t)(7u + (t / 4u) % 19u);
-        uint8_t w   = (uint8_t)(4u + (row - 7u) * 2u);
-        uint8_t x   = (uint8_t)(20u - (w >> 1));
+    /* Per-frame: scroll a HIGHLIGHT band downward to fake motion */
+    for (t = 0u; t < 480u; t++) {
+        uint8_t row     = (uint8_t)(8u + (t / 3u) % 18u);
+        uint8_t depth   = (uint8_t)(row - 8u);
+        uint8_t w       = (uint8_t)(2u + depth * 2u);
+        uint8_t centre  = 20u;
+        uint8_t half    = (uint8_t)(w >> 1);
+        uint8_t left    = (centre > half) ? (uint8_t)(centre - half) : 0u;
+        uint8_t right   = (uint8_t)(centre + half);
         uint8_t col;
-        for (col = 0u; col < w && (uint8_t)(x + col) < 39u; col++) {
-            demo_fix_puts((uint8_t)(x + col), row, "*", 0u);
+        uint8_t pal_org = (uint8_t)((depth < 6u) ? 0u : (depth < 12u) ? 1u : 2u);
+
+        /* draw highlight */
+        for (col = left; col < right && col < 40u; col++) {
+            demo_fix_puts(col, row, "*", 2u);
         }
-        if ((t & 1u) == 0u) {
-            /* restore previous row */
-            uint8_t prow = (uint8_t)(7u + ((t / 4u + 18u) % 19u));
-            uint8_t pw   = (uint8_t)(4u + (prow - 7u) * 2u);
-            uint8_t px   = (uint8_t)(20u - (pw >> 1));
-            for (col = 0u; col < pw && (uint8_t)(px + col) < 39u; col++) {
-                demo_fix_puts((uint8_t)(px + col), prow,
-                              (prow & 1u) ? "=" : "-",
-                              (uint8_t)((prow & 1u) ? 2u : 1u));
+        /* restore the row two steps back */
+        if (t >= 6u) {
+            uint8_t prow  = (uint8_t)(8u + ((t / 3u + 16u) % 18u));
+            uint8_t pdep  = (uint8_t)(prow - 8u);
+            uint8_t pw    = (uint8_t)(2u + pdep * 2u);
+            uint8_t phalf = (uint8_t)(pw >> 1);
+            uint8_t pleft = (centre > phalf) ? (uint8_t)(centre - phalf) : 0u;
+            uint8_t prght = (uint8_t)(centre + phalf);
+            uint8_t ppal  = (uint8_t)((pdep < 6u) ? 0u : (pdep < 12u) ? 1u : 2u);
+            (void)pal_org;
+            for (col = pleft; col < prght && col < 40u; col++) {
+                demo_fix_puts(col, prow, (prow & 1u) ? "=" : "-", ppal);
             }
+            if ((prow & 1u) == 0u) demo_fix_puts(centre, prow, "I", 1u);
         }
-        if ((t % 120u) == 0u) playSFX(SOUND_SFX_LOW_DRUM);
+        if ((t % 90u) == 0u) playSFX(SOUND_SFX_LOW_DRUM);
         if (uframe()) return 1u;
     }
     return 0u;
@@ -2705,78 +2801,91 @@ static uint8_t NEOGEO_USER chap_credits(void)
  */
 static uint8_t NEOGEO_USER chap_fix_fx(void)
 {
+    /*
+     * Big animated "Z" motif on the FIX layer.  Previous wave-bar
+     * pattern looked too "skeleton" — the user asked for a clearer
+     * letterform.  A Z is drawn as 3 strokes:
+     *   - top horizontal  (row 5, cols 6..32)
+     *   - diagonal        (cols 31..7 down rows 6..21)
+     *   - bottom horizontal (row 22, cols 6..32)
+     * Strokes light up in sequence; once full, palette-cycles.
+     */
     uint16_t t;
 
-    chap_header(21u, "FIX FX", "ANIMATED FIX-ONLY DEMO");
-    demo_fix_puts(2u, 2u, "BARS / WAVE / PALETTE STRIPES",   1u);
-    demo_fix_puts(2u, 3u, "ALL ON THE FIX LAYER ALONE",      0u);
+    chap_header(21u, "FIX FX", "ANIMATED FIX-ONLY  Z MOTIF");
+    demo_fix_puts(2u, 2u, "BIG Z PATTERN  PALETTE CYCLES",   1u);
+    demo_fix_puts(2u, 3u, "STROKES LIGHT UP IN SEQUENCE",    0u);
     snd_cross_to(SOUND_MUSIC_SHOP_JINGLE);
 
-    /* Per-row palette stripes (static) — show off all 3 demo palettes */
-    {
-        uint8_t y;
-        for (y = 5u; y < 9u; y++) {
-            demo_fix_puts(2u, y, "====================================",
-                          (uint8_t)((y - 5u) % 3u));
-        }
-    }
-
-    /* Title banner that flashes between palettes */
-    demo_fix_puts(11u, 11u, "<<  FIX FX SHOWCASE  >>", 2u);
-
-    for (t = 0u; t < 540u; t++) {
-        uint8_t  bar_x;
+    for (t = 0u; t < 720u; t++) {
+        uint16_t stage = (uint16_t)(t % 240u);
+        uint8_t  pal_top, pal_diag, pal_bot;
         uint8_t  i;
 
-        /* 1) Horizontal bar at row 14, sliding left-right */
-        {
-            uint16_t phase = (uint16_t)(t % 60u);
-            bar_x = (uint8_t)((phase < 30u) ? phase : (60u - phase));
-            /* erase previous bar — only the 8-cell strip we drew */
-            if (t > 0u) {
-                uint8_t prev = (uint8_t)(((t - 1u) % 60u) < 30u
-                                         ? ((t - 1u) % 60u)
-                                         : (60u - ((t - 1u) % 60u)));
-                for (i = 0u; i < 8u; i++)
-                    demo_fix_puts((uint8_t)(2u + prev + i), 14u, " ", 0u);
-            }
-            for (i = 0u; i < 8u; i++)
-                demo_fix_puts((uint8_t)(2u + bar_x + i), 14u, "#", 1u);
+        /* Stage-based palette per stroke (sequential reveal) */
+        if (stage < 60u) {
+            pal_top  = (uint8_t)((stage < 6u) ? 0u : 2u);
+            pal_diag = 0u;
+            pal_bot  = 0u;
+        } else if (stage < 140u) {
+            pal_top  = 1u;
+            pal_diag = 2u;
+            pal_bot  = 0u;
+        } else if (stage < 200u) {
+            pal_top  = 1u;
+            pal_diag = 1u;
+            pal_bot  = 2u;
+        } else {
+            /* Cycle phase — palettes rotate every 12 frames */
+            uint8_t base = (uint8_t)((stage / 12u) % 3u);
+            pal_top  = base;
+            pal_diag = (uint8_t)((base + 1u) % 3u);
+            pal_bot  = (uint8_t)((base + 2u) % 3u);
         }
 
-        /* 2) Vertical wave-bars on rows 16..20 */
-        {
-            for (i = 0u; i < 36u; i++) {
-                uint8_t height = (uint8_t)(((i + (t >> 1)) & 7u) >> 1);  /* 0..3 */
-                uint8_t r;
-                /* erase column */
-                for (r = 16u; r <= 20u; r++)
-                    demo_fix_puts((uint8_t)(2u + i), r, " ", 0u);
-                /* draw new column from bottom up */
-                for (r = 0u; r <= height; r++) {
-                    demo_fix_puts((uint8_t)(2u + i), (uint8_t)(20u - r),
-                                  "|", (uint8_t)(r & 1u ? 1u : 2u));
-                }
-            }
+        /* TOP horizontal stroke (row 5) — 27 cells */
+        for (i = 6u; i < 33u; i++) {
+            demo_fix_puts(i, 5u, "=", pal_top);
+            demo_fix_puts(i, 6u, "=", pal_top);
         }
 
-        /* 3) Palette-flash title every 60 frames */
-        if ((t % 60u) == 0u) {
-            uint8_t pal = (uint8_t)((t / 60u) % 3u);
-            demo_fix_puts(11u, 11u, "<<  FIX FX SHOWCASE  >>", pal);
+        /* DIAGONAL stroke — cols 31..7 across rows 6..21 (16 rows) */
+        for (i = 0u; i < 16u; i++) {
+            uint8_t row = (uint8_t)(6u + i);
+            uint8_t col = (uint8_t)(31u - (i * 24u) / 16u);  /* 31 → 7 */
+            demo_fix_puts(col, row, "\\", pal_diag);
+            if (col > 0u) demo_fix_puts((uint8_t)(col - 1u), row, "\\", pal_diag);
         }
 
-        /* 4) Scrolling marquee at row 23 */
+        /* BOTTOM horizontal stroke (rows 21..22) */
+        for (i = 6u; i < 33u; i++) {
+            demo_fix_puts(i, 21u, "=", pal_bot);
+            demo_fix_puts(i, 22u, "=", pal_bot);
+        }
+
+        /* Side accent dots when in cycle phase */
+        if (stage >= 200u) {
+            uint8_t spin = (uint8_t)((stage / 4u) % 4u);
+            const char *g = (spin == 0u) ? "*" : (spin == 1u) ? "+" :
+                            (spin == 2u) ? "x" : ".";
+            demo_fix_puts(3u, 13u, g, 2u);
+            demo_fix_puts(36u, 13u, g, 2u);
+        } else if (stage == 199u) {
+            demo_fix_puts(3u,  13u, " ", 0u);
+            demo_fix_puts(36u, 13u, " ", 0u);
+        }
+
+        /* Scrolling caption at row 26 */
         {
             static const char ribbon[] =
-                "  FIX LAYER  *  40x32 CELLS  *  3 PALETTES  "
-                "*  DIRTY-CELL CACHE  *  NO TEAR  *  ";
+                "  Z = FIX LAYER ALPHA   PALETTE CYCLES   "
+                "DIRTY-CELL CACHE   NO TEAR   ";
             const uint16_t L = (uint16_t)(sizeof(ribbon) - 1u);
             char row[40];
             uint16_t off = (uint16_t)(t % L);
             for (i = 0u; i < 36u; i++) row[i] = ribbon[(off + i) % L];
             row[36] = '\0';
-            demo_fix_puts(2u, 23u, row, 2u);
+            demo_fix_puts(2u, 26u, row, 1u);
         }
 
         if (uframe()) return 1u;
