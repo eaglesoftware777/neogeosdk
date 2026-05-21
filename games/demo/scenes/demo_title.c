@@ -180,12 +180,6 @@ void NEOGEO_USER demo_title_attract_reel(void)
         "NPCS + MINI-GAME + JOYSTICK",
         "SCROLL + RENDER + GALAXIAN"
     };
-    /*
-     * Hero walk cycle drawn at slot 1 (front).  All eight frames in
-     * the chosen set share 6 strips x 10 rows so the strip count is
-     * stable and there is no split glitch.
-     */
-    static const uint8_t s_walk[8] = { 3u, 4u, 5u, 7u, 8u, 9u, 11u, 12u };
     uint8_t  teaser;
     uint16_t hold;
     uint16_t fix_pal[16];
@@ -242,19 +236,6 @@ void NEOGEO_USER demo_title_attract_reel(void)
             demo_fix_puts(13u, 26u, "INSERT COIN", 1u);
         } else {
             demo_fix_puts(13u, 26u, "           ", 0u);
-        }
-
-        /* Animate the warrior walking across the bottom of the
-         * attract screen.  Slot 1 = FRONT, in front of the teaser BG. */
-        {
-            uint8_t walk_frame = s_walk[(hold / 6u) % 8u];
-            int16_t x = (int16_t)(40 + (int16_t)((hold * 2u) % 250u));
-            demo_load_screen_palette(walk_frame);
-            demo_draw_sprite_screen(walk_frame, 1u, x, -64,
-                                    demo_screen_strips(walk_frame),
-                                    demo_screen_rows(walk_frame),
-                                    0xFFu, 0xFFu);
-            if ((hold % 24u) == 0u) playSFX(SOUND_SFX_FOOTSTEP);
         }
 
         hold++;

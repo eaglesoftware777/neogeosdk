@@ -66,22 +66,31 @@ void NEOGEO_USER ng_clear_screen_full(void);
 #define U_CENTRE_X      160
 
 /*
- * Sprite slot priority on Neo Geo:  LOWER slot = drawn IN FRONT.
- * (See sdk/2d_engine_plus/ng_sprite_pool.hpp for the full layout.)
+ * Sprite slot priority — empirically determined from user testing.
+ *
+ * Despite what the SDK comment in ng_sprite_pool.h says, on the actual
+ * Neo Geo MVS hardware HIGHER sprite slot numbers are drawn IN FRONT
+ * of lower ones.  The SDK's assumption was the opposite, which is why
+ * draw_background() pointing at slot 300 ended up COVERING characters
+ * in the 96..223 range.  We now follow the observed hardware behaviour.
  *
  * For this demo:
- *   slot   1..15   = hero sprite group         (HERO_SLOT_FIRST = 1)
- *                    Drawn IN FRONT of everything else.
- *   slot  32..47   = enemy / target sprite group (ENEMY_SLOT_FIRST = 32)
- *                    Behind the hero, in front of NPCs/BG.
+ *   slot   1..16   = BACKGROUND  (DEMO_BG_BACK_SLOT = 1)
+ *                    Drawn BEHIND everything else (lowest = back).
  *   slot  96..223  = NGCharacter system (NPCs / managed chars)
  *   slot 256..287  = particles (NG_SPR_PART_FIRST)
- *   slot 300..315  = BACKGROUND layer 0  (DEMO_BG_BACK_SLOT = 300)
- *                    Drawn BEHIND everything else.
+ *   slot 350..365  = hero sprite group  (HERO_SLOT_FIRST = 350)
+ *                    HIGHER slot = drawn ON TOP of BG, chars, particles.
+ *   slot 366..374  = enemy / target sprite group (ENEMY_SLOT_FIRST = 366)
+ *                    Behind the hero but in front of everything else.
+ *
+ * NB: this empirical direction is captured here in the demo only.  The
+ * engine's pool comment still claims the opposite — keep this header
+ * authoritative for any code that needs occlusion to actually work.
  */
-#define DEMO_BG_BACK_SLOT  NG_SPR_BG0_FIRST   /* 300 — back-most */
-#define HERO_SLOT_FIRST    1u                 /* front-most */
-#define ENEMY_SLOT_FIRST   32u                /* between hero and BG */
+#define DEMO_BG_BACK_SLOT  1u                 /* back-most */
+#define HERO_SLOT_FIRST    350u               /* front-most for the hero */
+#define ENEMY_SLOT_FIRST   366u               /* in front of BG, behind hero */
 
 /* Base palette used by palette FX + feedback chapters. */
 static const uint16_t s_palfx_base[16] = {
@@ -1015,8 +1024,16 @@ static uint8_t NEOGEO_USER chap_particles(void)
          *   [360..540) FINISHER       : explosion + smoke ring + screen-flash
          */
         uint8_t hero_frame;
-        int16_t bx = (int16_t)(s_hero_x + 36);
-        int16_t by = (int16_t)(s_hero_y - 32);
+        /*
+         * Particles target the HEAD area of the hero sprite, not the
+         * sword arc.  With the hero centred vertically at s_hero_y=112
+         * and a 10-row warrior sprite (spans 32..192), the head sits
+         * around y = s_hero_y - 64 (top-quarter of the sprite).  Spawn
+         * sparks slightly above and to the side of the head so they
+         * burst around the warrior's crown / shoulders.
+         */
+        int16_t bx = (int16_t)(s_hero_x + 6);    /* small lateral offset */
+        int16_t by = (int16_t)(s_hero_y - 64);   /* near the head */
 
         if (t < 160u) {
             hero_frame = s_hero_specA[(t / 8u) % 8u];
@@ -1125,25 +1142,27 @@ static uint8_t NEOGEO_USER chap_feedback(void)
         int16_t saved = s_hero_x;
         s_hero_x = (int16_t)(160 + bob);
 
+        /* Impact bursts land on the hero's HEAD (~s_hero_y - 64), not
+         * on the body — that's where it reads visually as a "hit". */
         if (t == 60u && fired < 1u) {
             ng_feedback_shake(&cam, 1u, 8u);
             playSFX(SOUND_SFX_IMPACT_HIT);
-            spawn_impact_burst(160, 132, spark_tile, spark_pal, 1u);
+            spawn_impact_burst(160, 48, spark_tile, spark_pal, 1u);
             demo_fix_puts(2u, 5u, "FIRED: LIGHT   ", 1u); fired = 1u;
         } else if (t == 180u && fired < 2u) {
             ng_feedback_shake(&cam, 2u, 12u);
             playSFX(SOUND_SFX_IMPACT_HIT);
-            spawn_impact_burst(160, 132, spark_tile, spark_pal, 2u);
+            spawn_impact_burst(160, 48, spark_tile, spark_pal, 2u);
             demo_fix_puts(2u, 5u, "FIRED: MEDIUM  ", 2u); fired = 2u;
         } else if (t == 320u && fired < 3u) {
             ng_feedback_shake(&cam, 3u, 16u);
             playSFX(SOUND_SFX_IMPACT_HIT);
-            spawn_impact_burst(160, 132, spark_tile, spark_pal, 3u);
+            spawn_impact_burst(160, 48, spark_tile, spark_pal, 3u);
             demo_fix_puts(2u, 5u, "FIRED: HEAVY   ", 2u); fired = 3u;
         } else if (t == 460u && fired < 4u) {
             ng_feedback_shake(&cam, 4u, 20u);
             playSFX(SOUND_SFX_LOW_DRUM);
-            spawn_impact_burst(160, 132, spark_tile, spark_pal, 4u);
+            spawn_impact_burst(160, 48, spark_tile, spark_pal, 4u);
             demo_fix_puts(2u, 5u, "FIRED: BOSS    ", 2u); fired = 4u;
         }
 

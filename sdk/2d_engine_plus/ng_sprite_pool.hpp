@@ -7,33 +7,34 @@
  * Hardware sprite slot priority layout.
  *
  *   ╔══════════════════════════════════════════════════════════════════╗
- *   ║  RULE: LOWER hardware slot number = drawn IN FRONT.              ║
- *   ║         HIGHER slot number = drawn BEHIND.                       ║
+ *   ║  OBSERVED HARDWARE RULE: HIGHER slot number = drawn IN FRONT.    ║
+ *   ║                          LOWER slot number  = drawn BEHIND.      ║
  *   ║                                                                  ║
- *   ║  Neo Geo LSPC scans the sprite list from slot 0 first; each      ║
- *   ║  later sprite that overlaps is OBSCURED by the earlier-drawn     ║
- *   ║  pixels, so a lower-numbered sprite always wins.                 ║
+ *   ║  This contradicts older SDK comments that claimed the opposite.  ║
+ *   ║  The direction was determined empirically — putting a background ║
+ *   ║  at slot 300 covered chars at slot 96, confirming HIGHER = TOP.  ║
  *   ╚══════════════════════════════════════════════════════════════════╝
  *
- * Recommended layout (front to back):
- *   Slots   1-15  : HUD / overlays (drawn on top of everything)
- *   Slots  16-95  : foreground sprites — heroes, projectiles
+ * Recommended layout (back to front):
+ *   Slots   1-15  : BACKGROUND back layer  (drawn behind everything)
+ *   Slots  16-31  : BACKGROUND parallax mid-layer
  *   Slots  96-223 : characters / NPCs (assigned automatically by ng_chars)
- *   Slots 224-255 : front effects (in front of chars but behind hero)
+ *   Slots 224-255 : front effects on top of chars
  *   Slots 256-287 : particles
  *   Slots 288-299 : transient effects
- *   Slots 300-315 : BACKGROUND layer 0 (full 16 strips for a 256-px wallpaper)
- *   Slots 316-331 : BACKGROUND layer 1 / parallax behind layer 0
+ *   Slots 300-345 : foreground sprites / hero
+ *   Slots 346-379 : HUD / overlays (drawn on top of everything)
+ *
+ * The legacy names NG_SPR_BG0_FIRST = 300 / NG_SPR_BG1_FIRST = 316 are
+ * MISLEADING — those slots are at the FRONT, not the back.  New code
+ * that needs a true background should use slots 1..15.  The existing
+ * names are kept for source compatibility but should be considered
+ * deprecated.
  *
  * The sprite_base parameter passed to showScreenN() is the VRAM byte offset
  * for tile data: sprite_base = slot * 64.  SCB1 address for strip S is
  * sprite_base + 64*S, and the hardware sprite slot for SCB2/3/4 is
  * sprite_base/64 + S.
- *
- * COMMON MISTAKE: do NOT draw a background at slot 1 expecting it to sit
- * "behind" the player at slot 96 — slot 1 is the FRONT-most slot and will
- * cover the hero.  Backgrounds belong at slot 300+ where they are drawn
- * BEHIND every char and effect.
  */
 #define NG_SPR_TOTAL         380
 #define NG_SPR_LAST          379
