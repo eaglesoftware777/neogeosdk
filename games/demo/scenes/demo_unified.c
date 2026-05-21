@@ -1462,17 +1462,21 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
             break;
         default:                              /* strike */
             hero_frame = s_hero_strike[(state_t / 3u) % 8u];
-            if (state_t == 9u && target_alive) {
-                /* hit-test against the FIX-layer target rectangle */
-                int16_t reach_px = (int16_t)(hero_flip ? (hero_world_x - 40)
-                                                       : (hero_world_x + 40));
+            /*
+             * Hit window = frames 4..18 of the 24-frame strike (a third
+             * of a second).  Single-frame windows were impossible to
+             * land on real input timing.  We also keep checking every
+             * frame so brushing past the target counts, and use a
+             * VERY generous reach + body box (sword arc + body width).
+             */
+            if (target_alive && state_t >= 4u && state_t <= 18u) {
+                int16_t reach_left  = (int16_t)(hero_world_x - 64);
+                int16_t reach_right = (int16_t)(hero_world_x + 64);
                 int16_t tx_px = (int16_t)(target_cx * 8 + (TARGET_W * 4));
                 int16_t ty_px = (int16_t)(target_cy * 8 + (TARGET_H * 4));
-                int16_t dx = (int16_t)(reach_px - tx_px);
                 int16_t dy = (int16_t)(hero_world_y - ty_px);
-                if (dx < 0) dx = (int16_t)(-dx);
                 if (dy < 0) dy = (int16_t)(-dy);
-                if (dx < 32 && dy < 40) {
+                if (dy < 80 && tx_px >= reach_left && tx_px <= reach_right) {
                     uint8_t r;
                     score = (uint16_t)(score + 10u);
                     enemy_hits++;
@@ -1487,12 +1491,39 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
                         }
                     }
                     target_alive   = 0u;
-                    target_respawn = 60u;          /* 1 sec until respawn */
+                    target_respawn = 40u;          /* faster respawn */
                 }
             }
             state_t++;
             if (state_t >= 24u) { hero_state = 0u; state_t = 0u; }
             break;
+        }
+
+        /*
+         * Visible SWORD ARC during the active hit window — a few FIX
+         * cells next to the hero so the user can SEE the reach.
+         * Drawn on row matching the target so it visually overlaps when
+         * in range.  Erased when the strike ends.
+         */
+        if (hero_state == 3u && state_t >= 4u && state_t <= 18u) {
+            uint8_t sword_cx = (uint8_t)((hero_flip
+                ? (hero_world_x - 56) : (hero_world_x + 16)) / 8);
+            uint8_t sword_cy = (uint8_t)(hero_world_y / 8);
+            if (sword_cx < 38u && sword_cy < 25u) {
+                demo_fix_puts(sword_cx,           sword_cy, hero_flip ? "<" : ">", 2u);
+                demo_fix_puts((uint8_t)(sword_cx + 1), sword_cy, "*", 2u);
+            }
+        } else if (state_t == 19u || (hero_state == 0u && state_t == 1u)) {
+            /* erase a small swept row when the strike ends */
+            uint8_t cy = (uint8_t)(hero_world_y / 8);
+            uint8_t c;
+            for (c = 2u; c < 38u; c++) {
+                /* don't erase target cells */
+                uint8_t in_target = (target_alive
+                    && cy >= target_cy && cy < target_cy + TARGET_H
+                    && c  >= target_cx && c  < target_cx + TARGET_W);
+                if (!in_target) demo_fix_puts(c, cy, " ", 0u);
+            }
         }
 
         /* Target respawn timer + relocation */
@@ -1550,11 +1581,20 @@ static uint8_t NEOGEO_USER chap_joystick(void)
     const int16_t HERO_GROUND_Y = 112;
     uint8_t  hero_flip = 0u;
     int16_t  vy = 0;
+    /*
+     * PERSISTENT state machine — previous version reset every frame
+     * which meant the strike animation only played for 1 frame and
+     * the user couldn't see anything.  Now strike_t and special_t
+     * count down across frames so the action remains visible.
+     */
+    uint8_t  strike_t  = 0u;     /* >0 while strike anim plays */
+    uint8_t  special_t = 0u;     /* >0 while QCF/DP special plays */
+    uint8_t  hits      = 0u;
     char buf[8];
 
     chap_header(14u, "JOYSTICK", "LIVE INPUT  QCF + DP");
-    demo_fix_puts(2u, 2u, "A IDLE FOR 60F SKIPS THIS",   0u);
-    demo_fix_puts(2u, 3u, "B STRIKE  C JUMP  QCF+B FX",  1u);
+    demo_fix_puts(2u, 2u, "ARROWS MOVE  B STRIKE  C JUMP",   1u);
+    demo_fix_puts(2u, 3u, "QCF+B SPECIAL  DP+B FINISHER",    0u);
     snd_cross_to(SOUND_MUSIC_SAMURAI_GAME_LOOP);
 
     ng_joystick_init();
@@ -1568,11 +1608,25 @@ static uint8_t NEOGEO_USER chap_joystick(void)
     demo_fix_puts(2u, 10u, "HELD D:",     2u);
     demo_fix_puts(2u, 12u, "QCF+B:",      2u);
     demo_fix_puts(2u, 13u, "DP +B:",      2u);
-    demo_fix_puts(2u, 25u, "MOVE: ARROWS   B: STRIKE   C: JUMP", 0u);
+    demo_fix_puts(2u, 25u, "HIT TARGET ON RIGHT WITH B",       0u);
+    demo_fix_puts(2u, 26u, "HITS:",                            2u);
+
+    /* Static FIX target — a small rectangle the hero can strike */
+    {
+        uint8_t r, c;
+        for (r = 0u; r < 3u; r++) {
+            for (c = 0u; c < 5u; c++) {
+                demo_fix_puts((uint8_t)(32u + c),
+                              (uint8_t)(13u + r),
+                              (r == 1u && c == 2u) ? "X" : "#",
+                              (uint8_t)(1u + ((c + r) & 1u)));
+            }
+        }
+    }
 
     draw_background(2u, 32, 16);
 
-    for (t = 0u; t < 720u; t++) {
+    for (t = 0u; t < 1200u; t++) {
         uint16_t down;
         uint16_t pressed;
         uint16_t released;
@@ -1580,7 +1634,6 @@ static uint8_t NEOGEO_USER chap_joystick(void)
         uint8_t qcf;
         uint8_t dpc;
         uint8_t i;
-        uint8_t striking = 0u;
 
         ng_joystick_update();
         down     = ng_joy_down();
@@ -1618,25 +1671,80 @@ static uint8_t NEOGEO_USER chap_joystick(void)
         demo_fix_puts(9u, 12u, qcf ? "OK  " : "--- ", qcf ? 2u : 0u);
         demo_fix_puts(9u, 13u, dpc ? "OK  " : "--- ", dpc ? 2u : 0u);
 
-        /* Motion ---------------------------------------------------- */
-        if (down & JOY_LEFT) {
-            hero_world_x -= 2;
-            hero_flip = 1u;
-        } else if (down & JOY_RIGHT) {
-            hero_world_x += 2;
-            hero_flip = 0u;
+        /* Motion (only when not striking) ---------------------------- */
+        if (strike_t == 0u) {
+            if (down & JOY_LEFT) {
+                hero_world_x -= 2;
+                hero_flip = 1u;
+            } else if (down & JOY_RIGHT) {
+                hero_world_x += 2;
+                hero_flip = 0u;
+            }
         }
+
+        /* Specials take priority over basic strike */
+        if (special_t == 0u && strike_t == 0u && (pressed & BUTTON_B)) {
+            if (dpc) {
+                special_t = 36u;
+                playSFX(SOUND_SFX_LOW_DRUM);
+            } else if (qcf) {
+                special_t = 30u;
+                playSFX(SOUND_SFX_STRING_PHRASE);
+            } else {
+                strike_t = 24u;
+                playSFX(SOUND_SFX_BLADE_WHOOSH);
+            }
+        }
+
         if ((pressed & BUTTON_C) && hero_world_y >= HERO_GROUND_Y) {
             vy = -7;
             playSFX(SOUND_SFX_SHORT_SHOUT);
         }
-        if (pressed & BUTTON_B) {
-            striking = 1u;
-            playSFX(SOUND_SFX_BLADE_WHOOSH);
-        }
-        if (qcf)  playSFX(SOUND_SFX_STRING_PHRASE);
-        if (dpc)  playSFX(SOUND_SFX_LOW_DRUM);
         (void)released;
+
+        /* Hit-test the FIX target during the active strike window.
+         * Target lives at cols 32..36, rows 13..15 → centre px (272, 112). */
+        if ((strike_t >= 6u && strike_t <= 18u) || special_t >= 6u) {
+            int16_t target_cx_px = 32 * 8 + 20;     /* 276 */
+            int16_t target_cy_px = 14 * 8 + 8;      /* 120 */
+            int16_t reach_left  = (int16_t)(hero_world_x - 64);
+            int16_t reach_right = (int16_t)(hero_world_x + 64);
+            int16_t dy = (int16_t)(hero_world_y - target_cy_px);
+            if (dy < 0) dy = (int16_t)(-dy);
+            if (dy < 64 && target_cx_px >= reach_left && target_cx_px <= reach_right) {
+                if (hits < 99u) hits++;
+                playSFX(SOUND_SFX_IMPACT_HIT);
+                /* Visual: re-draw the target with a flash palette this frame */
+                {
+                    uint8_t r, c;
+                    for (r = 0u; r < 3u; r++) {
+                        for (c = 0u; c < 5u; c++) {
+                            demo_fix_puts((uint8_t)(32u + c),
+                                          (uint8_t)(13u + r),
+                                          (r == 1u && c == 2u) ? "X" : "#",
+                                          2u);
+                        }
+                    }
+                }
+                strike_t = 0u;   /* one hit per swing — finish the strike */
+                special_t = 0u;
+            }
+        }
+        if (strike_t  > 0u) strike_t--;
+        if (special_t > 0u) special_t--;
+
+        /* Reset target colours after a hit-frame flash (small visual TTL) */
+        if (hits > 0u && (t & 7u) == 0u) {
+            uint8_t r, c;
+            for (r = 0u; r < 3u; r++) {
+                for (c = 0u; c < 5u; c++) {
+                    demo_fix_puts((uint8_t)(32u + c),
+                                  (uint8_t)(13u + r),
+                                  (r == 1u && c == 2u) ? "X" : "#",
+                                  (uint8_t)(1u + ((c + r) & 1u)));
+                }
+            }
+        }
 
         if (hero_world_y < HERO_GROUND_Y || vy != 0) {
             hero_world_y = (int16_t)(hero_world_y - vy);
@@ -1649,12 +1757,26 @@ static uint8_t NEOGEO_USER chap_joystick(void)
         if (hero_world_x < 24)  hero_world_x = 24;
         if (hero_world_x > 280) hero_world_x = 280;
 
-        /* Select animation set based on input */
-        if (striking)             frame = s_hero_strike[(t / 3u) % 8u];
-        else if (vy != 0)         frame = s_hero_specA[(t / 5u) % 8u];
+        /* Animation frame selection — driven by persistent state */
+        if (special_t > 0u)
+            frame = s_hero_specA[((36u - special_t) / 3u) % 8u];
+        else if (strike_t > 0u)
+            frame = s_hero_strike[((24u - strike_t) / 3u) % 8u];
+        else if (vy != 0)
+            frame = s_hero_walk[(t / 5u) % 8u];   /* jump pose */
         else if (down & (JOY_LEFT | JOY_RIGHT))
-                                  frame = s_hero_walk[(t / 5u) % 8u];
-        else                      frame = s_hero_stand[(t / 14u) % 8u];
+            frame = s_hero_walk[(t / 5u) % 8u];
+        else
+            frame = s_hero_stand[(t / 14u) % 8u];
+
+        /* HITS counter on HUD */
+        {
+            char hb[4];
+            hb[0] = (char)('0' + (hits / 10u));
+            hb[1] = (char)('0' + (hits % 10u));
+            hb[2] = '\0';
+            demo_fix_puts(8u, 26u, hb, 1u);
+        }
 
         s_hero_x = hero_world_x;
         s_hero_y = hero_world_y;
@@ -1834,246 +1956,473 @@ static uint8_t NEOGEO_USER chap_render2d(void)
 static uint8_t NEOGEO_USER chap_ssg_arcade(void)
 {
     /*
-     * Playable Galaxian-style mini-game on the FIX layer.
-     *   LEFT / RIGHT       move ship horizontally
-     *   B (or A)           fire a single bullet
-     *   12 enemies in a 4×3 formation
-     *   ship row = 25, enemies on rows 6..11, bullet rises through rows 7..24
-     *   30-second timer, score per kill
+     * Galaxian-style FIX-layer shooter — second pass.
+     *
+     * Improvements over the first version:
+     *   - 4-row × 6-col formation (24 enemies)
+     *   - Two enemy types: WORKER (W) and BOSS (M) worth different scores
+     *   - DIVE attack — every ~120 frames one alive enemy detaches from
+     *     the formation, dives at the player in an arc, then re-joins
+     *     (or shoots back during the dive)
+     *   - Enemy bullets travel DOWN and end the wave if they hit the ship
+     *   - Multi-glyph ship (3 cells wide rendered as /^\ over === over [_])
+     *   - Score popups float upward from kills, fade after 30 frames
+     *   - Stage flag (1, 2, 3) increments per wave
+     *   - Game-over banner if ship destroyed; victory banner if 3 waves cleared
      */
     enum {
-        ROWS_E = 3,
-        COLS_E = 4,
-        ENEMY_COUNT = ROWS_E * COLS_E,
-        SHIP_ROW    = 25,
-        BULLET_MAX  = 3,        /* multi-bullet, max 3 in flight */
-        DEBRIS_MAX  = 8         /* explosion debris with gravity */
+        ROWS_E       = 4,
+        COLS_E       = 6,
+        ENEMY_COUNT  = ROWS_E * COLS_E,
+        SHIP_ROW     = 25,
+        BULLET_MAX   = 4,         /* player bullets */
+        EBULLET_MAX  = 6,         /* enemy bullets */
+        DEBRIS_MAX   = 12,
+        POPUP_MAX    = 4,         /* floating score popups */
+        DIVE_NONE    = 0xFFu
     };
-    uint8_t enemy_alive[ENEMY_COUNT];
-    uint8_t enemy_cx[ENEMY_COUNT];
-    uint8_t enemy_cy[ENEMY_COUNT];
+    uint8_t  enemy_alive[ENEMY_COUNT];
+    uint8_t  enemy_type[ENEMY_COUNT];   /* 0 = worker, 1 = boss */
+    uint8_t  enemy_cx[ENEMY_COUNT];     /* formation column (cell) */
+    uint8_t  enemy_cy[ENEMY_COUNT];     /* formation row (cell) */
 
-    /* multi-bullet pool */
-    uint8_t bul_x[BULLET_MAX];
-    uint8_t bul_y[BULLET_MAX];
-    uint8_t bul_active[BULLET_MAX];
-    uint8_t bul_last_x[BULLET_MAX];
-    uint8_t bul_last_y[BULLET_MAX];
+    /* Player bullets */
+    uint8_t  pb_x[BULLET_MAX], pb_y[BULLET_MAX], pb_act[BULLET_MAX];
+    uint8_t  pb_lx[BULLET_MAX], pb_ly[BULLET_MAX];
+    /* Enemy bullets */
+    uint8_t  eb_x[EBULLET_MAX], eb_y[EBULLET_MAX], eb_act[EBULLET_MAX];
+    uint8_t  eb_lx[EBULLET_MAX], eb_ly[EBULLET_MAX];
 
-    /* debris (gravity-affected) — emitted on enemy kill */
-    int16_t deb_x_fp[DEBRIS_MAX];   /* fixed-point pixel X */
-    int16_t deb_y_fp[DEBRIS_MAX];
-    int16_t deb_vx[DEBRIS_MAX];
-    int16_t deb_vy[DEBRIS_MAX];
-    uint8_t deb_ttl[DEBRIS_MAX];
-    uint8_t deb_last_cx[DEBRIS_MAX];
-    uint8_t deb_last_cy[DEBRIS_MAX];
+    /* Diving enemy state */
+    uint8_t  dive_idx = DIVE_NONE;     /* index of currently-diving enemy */
+    int16_t  dive_x_fp = 0, dive_y_fp = 0;
+    int16_t  dive_vx = 0, dive_vy = 0;
+    uint8_t  dive_last_cx = 0xFFu, dive_last_cy = 0xFFu;
+    uint16_t dive_timer = 240u;        /* frames until next dive */
 
-    uint8_t ship_x = 18u;
-    uint8_t last_ship_x = 0xFFu;
-    uint16_t score = 0u;
+    /* Debris with gravity */
+    int16_t  deb_x_fp[DEBRIS_MAX], deb_y_fp[DEBRIS_MAX];
+    int16_t  deb_vx[DEBRIS_MAX],   deb_vy[DEBRIS_MAX];
+    uint8_t  deb_ttl[DEBRIS_MAX];
+    uint8_t  deb_lx[DEBRIS_MAX],   deb_ly[DEBRIS_MAX];
+
+    /* Score popups */
+    uint8_t  pop_cx[POPUP_MAX], pop_cy[POPUP_MAX];
+    uint8_t  pop_ttl[POPUP_MAX];
+    uint16_t pop_val[POPUP_MAX];
+    uint8_t  pop_lcx[POPUP_MAX], pop_lcy[POPUP_MAX];
+
+    uint8_t  ship_x       = 18u;
+    uint8_t  last_ship_x  = 0xFFu;
+    uint16_t score        = 0u;
+    uint8_t  stage        = 1u;
+    uint8_t  lives        = 3u;
+    uint8_t  game_over    = 0u;
     uint16_t t;
-    uint8_t i;
-    char buf[6];
+    uint8_t  i;
+    char     buf[6];
 
-    chap_header(18u, "SSG ARCADE", "GALAXIAN MINI-SHOOTER");
-    demo_fix_puts(2u, 2u, "L/R: MOVE   B: FIRE  (UP TO 3)", 1u);
-    demo_fix_puts(2u, 3u, "ENEMIES EXPLODE WITH DEBRIS",    0u);
+    chap_header(18u, "SSG ARCADE", "EAGLE INVADERS");
+    demo_fix_puts(2u, 2u, "L/R: MOVE  B: FIRE", 1u);
+    demo_fix_puts(2u, 3u, "BEWARE DIVERS + RETURN FIRE", 0u);
 
-    /* Vblank-spaced Z80 setup so SSG track plays cleanly */
-    soundStopAll();                           snd_step();
-    soundSceneReset();                        snd_step();
+    /* Vblank-spaced Z80 setup */
+    soundStopAll();                            snd_step();
+    soundSceneReset();                         snd_step();
     soundApplyMix(0x20u, 0x00u, 0x0Fu, 0x00u); snd_step();
-    soundSetSSGPreset(2u);                    snd_step();
-    playSSGTrack(SOUND_SSG_ARCADE_ALERT);     snd_step();
+    soundSetSSGPreset(2u);                     snd_step();
+    playSSGTrack(SOUND_SSG_ARCADE_ALERT);      snd_step();
 
     ng_joystick_init();
 
+    /* Spawn formation */
     for (i = 0u; i < ENEMY_COUNT; i++) {
+        uint8_t row = (uint8_t)(i / COLS_E);
+        uint8_t col = (uint8_t)(i % COLS_E);
         enemy_alive[i] = 1u;
-        enemy_cx[i] = (uint8_t)(8u + (i % COLS_E) * 6u);
-        enemy_cy[i] = (uint8_t)(7u + (i / COLS_E) * 2u);
+        enemy_type[i] = (uint8_t)((row == 0u) ? 1u : 0u);   /* top row = bosses */
+        enemy_cx[i] = (uint8_t)(4u + col * 5u);
+        enemy_cy[i] = (uint8_t)(6u + row * 2u);
     }
-    for (i = 0u; i < BULLET_MAX; i++) {
-        bul_active[i] = 0u;
-        bul_last_x[i] = 0xFFu;
-    }
-    for (i = 0u; i < DEBRIS_MAX; i++) {
-        deb_ttl[i] = 0u;
-        deb_last_cx[i] = 0xFFu;
-    }
+    for (i = 0u; i < BULLET_MAX;  i++) { pb_act[i] = 0u; pb_lx[i] = 0xFFu; }
+    for (i = 0u; i < EBULLET_MAX; i++) { eb_act[i] = 0u; eb_lx[i] = 0xFFu; }
+    for (i = 0u; i < DEBRIS_MAX;  i++) { deb_ttl[i] = 0u; deb_lx[i] = 0xFFu; }
+    for (i = 0u; i < POPUP_MAX;   i++) { pop_ttl[i] = 0u; pop_lcx[i] = 0xFFu; }
 
-    demo_fix_puts(2u, 26u, "SCORE:",        2u);
-    demo_fix_puts(20u, 26u, "ALIVE:",       2u);
-    demo_fix_puts(30u, 26u, "TIME:",        2u);
+    /* HUD bar (rows 26-27) */
+    demo_fix_puts(2u, 26u, "SCORE:",  2u);
+    demo_fix_puts(12u, 26u, "STAGE:", 2u);
+    demo_fix_puts(20u, 26u, "ALIVE:", 2u);
+    demo_fix_puts(28u, 26u, "LIVES:", 2u);
+    demo_fix_puts(35u, 26u, "TIME:",  2u);
 
-    for (t = 0u; t < 1800u; t++) {       /* 30 sec @ 60 fps */
-        uint16_t down;
-        uint16_t pressed;
-        uint8_t alive_count = 0u;
-        uint8_t enemy_drift = (uint8_t)((t / 60u) & 1u);
+    for (t = 0u; ; t++) {
+        uint16_t down, pressed;
+        uint8_t  alive_count = 0u;
+        uint8_t  drift = (uint8_t)((t / 30u) & 1u);
+        uint16_t time_left;
+
+        if (t > 5400u) break;       /* 90 sec hard cap */
 
         ng_joystick_update();
         down    = ng_joy_down();
         pressed = ng_joy_pressed();
 
-        /* Ship motion */
-        if ((t & 1u) == 0u) {
-            if ((down & JOY_LEFT)  && ship_x > 2u)  ship_x--;
-            if ((down & JOY_RIGHT) && ship_x < 35u) ship_x++;
-        }
-
-        /* Fire — find an inactive bullet slot */
-        if (pressed & (BUTTON_B | BUTTON_A)) {
-            for (i = 0u; i < BULLET_MAX; i++) {
-                if (!bul_active[i]) {
-                    bul_x[i] = (uint8_t)(ship_x + 1u);
-                    bul_y[i] = (uint8_t)(SHIP_ROW - 1u);
-                    bul_active[i] = 1u;
-                    playSFX(SOUND_SFX_BLADE_WHOOSH);
-                    break;
+        if (!game_over) {
+            /* Ship motion */
+            if ((t & 1u) == 0u) {
+                if ((down & JOY_LEFT)  && ship_x > 2u)  ship_x--;
+                if ((down & JOY_RIGHT) && ship_x < 35u) ship_x++;
+            }
+            /* Fire */
+            if (pressed & (BUTTON_B | BUTTON_A)) {
+                for (i = 0u; i < BULLET_MAX; i++) {
+                    if (!pb_act[i]) {
+                        pb_x[i] = (uint8_t)(ship_x + 1u);
+                        pb_y[i] = (uint8_t)(SHIP_ROW - 2u);
+                        pb_act[i] = 1u;
+                        playSFX(SOUND_SFX_BLADE_WHOOSH);
+                        break;
+                    }
                 }
             }
         }
 
-        /* Update bullets — rise, collide, clean up */
+        /* ---- Player bullets ---------------------------------------- */
         for (i = 0u; i < BULLET_MAX; i++) {
             uint8_t j;
-            if (!bul_active[i]) continue;
-            if (bul_y[i] == 0u) {
-                /* off top — erase and deactivate */
-                if (bul_last_x[i] != 0xFFu) {
-                    demo_fix_puts(bul_last_x[i], bul_last_y[i], " ", 0u);
-                    bul_last_x[i] = 0xFFu;
+            if (!pb_act[i]) continue;
+            if (pb_y[i] == 0u) {
+                if (pb_lx[i] != 0xFFu) {
+                    demo_fix_puts(pb_lx[i], pb_ly[i], " ", 0u);
+                    pb_lx[i] = 0xFFu;
                 }
-                bul_active[i] = 0u;
+                pb_act[i] = 0u;
                 continue;
             }
-            bul_y[i]--;
+            pb_y[i]--;
+            /* Hit-test against the diving enemy first */
+            if (dive_idx != DIVE_NONE) {
+                uint8_t dcx = (uint8_t)(dive_x_fp / (8 * 16));
+                uint8_t dcy = (uint8_t)(dive_y_fp / (8 * 16));
+                if (pb_y[i] == dcy && pb_x[i] >= dcx &&
+                    pb_x[i] <= (uint8_t)(dcx + 2u)) {
+                    enemy_alive[dive_idx] = 0u;
+                    demo_fix_puts(dcx, dcy, "   ", 0u);
+                    if (dive_last_cx != 0xFFu)
+                        demo_fix_puts(dive_last_cx, dive_last_cy, "   ", 0u);
+                    score = (uint16_t)(score +
+                                       (enemy_type[dive_idx] ? 300u : 100u));
+                    /* register popup */
+                    for (j = 0u; j < POPUP_MAX; j++) {
+                        if (!pop_ttl[j]) {
+                            pop_cx[j] = dcx; pop_cy[j] = dcy;
+                            pop_ttl[j] = 30u;
+                            pop_val[j] = (uint16_t)(enemy_type[dive_idx] ? 300u : 100u);
+                            pop_lcx[j] = 0xFFu;
+                            break;
+                        }
+                    }
+                    /* debris */
+                    for (j = 0u; j < DEBRIS_MAX; j++) {
+                        if (deb_ttl[j]) continue;
+                        deb_x_fp[j] = dive_x_fp;
+                        deb_y_fp[j] = dive_y_fp;
+                        deb_vx[j] = (int16_t)(((j & 7u) - 4) * 14);
+                        deb_vy[j] = (int16_t)(-32 - (int16_t)(j & 3u) * 6);
+                        deb_ttl[j] = (uint8_t)(28u + (j & 7u) * 3u);
+                        deb_lx[j]  = 0xFFu;
+                        if (j >= 5u) break;
+                    }
+                    dive_idx = DIVE_NONE;
+                    playSFX(SOUND_SFX_IMPACT_HIT);
+                    if (pb_lx[i] != 0xFFu)
+                        demo_fix_puts(pb_lx[i], pb_ly[i], " ", 0u);
+                    pb_act[i] = 0u;
+                    continue;
+                }
+            }
+            /* Hit-test formation */
             for (j = 0u; j < ENEMY_COUNT; j++) {
                 if (!enemy_alive[j]) continue;
-                if (bul_y[i] == enemy_cy[j] &&
-                    bul_x[i] >= enemy_cx[j] &&
-                    bul_x[i] <= (uint8_t)(enemy_cx[j] + 2u)) {
+                if (j == dive_idx) continue;
+                if (pb_y[i] == enemy_cy[j] &&
+                    pb_x[i] >= enemy_cx[j] &&
+                    pb_x[i] <= (uint8_t)(enemy_cx[j] + 2u)) {
                     uint8_t d;
-                    /* enemy dies — clean its FIX cells */
+                    uint8_t pts = enemy_type[j] ? 200u : 80u;
                     enemy_alive[j] = 0u;
                     demo_fix_puts(enemy_cx[j], enemy_cy[j], "   ", 0u);
-                    score = (uint16_t)(score + 50u);
+                    demo_fix_puts((uint8_t)(enemy_cx[j] - drift),
+                                  enemy_cy[j], "   ", 0u);
+                    score = (uint16_t)(score + pts);
                     playSFX(SOUND_SFX_IMPACT_HIT);
-
-                    /* clean the bullet too */
-                    if (bul_last_x[i] != 0xFFu) {
-                        demo_fix_puts(bul_last_x[i], bul_last_y[i], " ", 0u);
-                        bul_last_x[i] = 0xFFu;
+                    for (d = 0u; d < POPUP_MAX; d++) {
+                        if (!pop_ttl[d]) {
+                            pop_cx[d] = enemy_cx[j]; pop_cy[d] = enemy_cy[j];
+                            pop_ttl[d] = 30u; pop_val[d] = pts;
+                            pop_lcx[d] = 0xFFu;
+                            break;
+                        }
                     }
-                    bul_active[i] = 0u;
-
-                    /* emit debris from the kill point — gravity-affected */
                     for (d = 0u; d < DEBRIS_MAX; d++) {
                         if (deb_ttl[d]) continue;
                         deb_x_fp[d] = (int16_t)((enemy_cx[j] + 1) * 8 * 16);
                         deb_y_fp[d] = (int16_t)((enemy_cy[j]) * 8 * 16);
-                        deb_vx[d] = (int16_t)(((d & 7u) - 4) * 12);    /* spread */
-                        deb_vy[d] = (int16_t)(-24 - (int16_t)(d & 3u) * 4);
-                        deb_ttl[d] = (uint8_t)(36u + (d & 7u) * 3u);
-                        deb_last_cx[d] = 0xFFu;
+                        deb_vx[d] = (int16_t)(((d & 7u) - 4) * 14);
+                        deb_vy[d] = (int16_t)(-28 - (int16_t)(d & 3u) * 5);
+                        deb_ttl[d] = (uint8_t)(28u + (d & 7u) * 3u);
+                        deb_lx[d] = 0xFFu;
                         if (d >= 4u) break;
                     }
+                    if (pb_lx[i] != 0xFFu)
+                        demo_fix_puts(pb_lx[i], pb_ly[i], " ", 0u);
+                    pb_act[i] = 0u;
                     break;
                 }
             }
         }
 
-        /* Update debris — physics: vy += gravity each frame */
+        /* ---- Enemy bullets ----------------------------------------- */
+        for (i = 0u; i < EBULLET_MAX; i++) {
+            if (!eb_act[i]) continue;
+            if (eb_y[i] >= 27u) {
+                if (eb_lx[i] != 0xFFu) {
+                    demo_fix_puts(eb_lx[i], eb_ly[i], " ", 0u);
+                    eb_lx[i] = 0xFFu;
+                }
+                eb_act[i] = 0u;
+                continue;
+            }
+            eb_y[i]++;
+            /* Hit ship? */
+            if (!game_over &&
+                eb_y[i] == SHIP_ROW &&
+                eb_x[i] >= ship_x && eb_x[i] <= (uint8_t)(ship_x + 2u)) {
+                if (eb_lx[i] != 0xFFu)
+                    demo_fix_puts(eb_lx[i], eb_ly[i], " ", 0u);
+                eb_act[i] = 0u;
+                if (lives > 0u) lives--;
+                playSFX(SOUND_SFX_LOW_DRUM);
+                /* mini debris from ship */
+                {
+                    uint8_t d;
+                    for (d = 0u; d < DEBRIS_MAX; d++) {
+                        if (deb_ttl[d]) continue;
+                        deb_x_fp[d] = (int16_t)((ship_x + 1) * 8 * 16);
+                        deb_y_fp[d] = (int16_t)(SHIP_ROW * 8 * 16);
+                        deb_vx[d] = (int16_t)(((d & 7u) - 4) * 12);
+                        deb_vy[d] = (int16_t)(-20 - (int16_t)(d & 3u) * 4);
+                        deb_ttl[d] = 30u;
+                        deb_lx[d] = 0xFFu;
+                        if (d >= 4u) break;
+                    }
+                }
+                if (lives == 0u) {
+                    game_over = 1u;
+                    /* erase ship */
+                    if (last_ship_x != 0xFFu) {
+                        demo_fix_puts(last_ship_x, SHIP_ROW, "   ", 0u);
+                        last_ship_x = 0xFFu;
+                    }
+                }
+            }
+        }
+
+        /* ---- Dive AI ------------------------------------------------ */
+        if (dive_idx == DIVE_NONE) {
+            if (dive_timer > 0u) dive_timer--;
+            if (dive_timer == 0u && !game_over) {
+                /* pick a random alive enemy from the bottom row */
+                uint8_t k;
+                for (k = 0u; k < ENEMY_COUNT; k++) {
+                    uint8_t idx = (uint8_t)((t + k * 7u) % ENEMY_COUNT);
+                    if (enemy_alive[idx]) {
+                        dive_idx = idx;
+                        dive_x_fp = (int16_t)((enemy_cx[idx] + drift) * 8 * 16);
+                        dive_y_fp = (int16_t)(enemy_cy[idx] * 8 * 16);
+                        dive_vx = (int16_t)((ship_x > enemy_cx[idx]) ? 18 : -18);
+                        dive_vy = 22;
+                        dive_last_cx = 0xFFu;
+                        /* clear from formation while diving */
+                        demo_fix_puts(enemy_cx[idx], enemy_cy[idx], "   ", 0u);
+                        playSFX(SOUND_SFX_STRING_PHRASE);
+                        break;
+                    }
+                }
+                dive_timer = (uint16_t)(180u + ((t * 3u) & 127u));
+            }
+        } else {
+            uint8_t cx, cy;
+            /* erase old position */
+            if (dive_last_cx != 0xFFu &&
+                dive_last_cx < 37u && dive_last_cy < 26u) {
+                demo_fix_puts(dive_last_cx, dive_last_cy, "   ", 0u);
+            }
+            dive_x_fp = (int16_t)(dive_x_fp + dive_vx);
+            dive_y_fp = (int16_t)(dive_y_fp + dive_vy);
+            /* shoot during dive (twice per dive) */
+            if ((t & 31u) == 15u) {
+                uint8_t k;
+                for (k = 0u; k < EBULLET_MAX; k++) {
+                    if (!eb_act[k]) {
+                        eb_x[k] = (uint8_t)(dive_x_fp / (8 * 16) + 1);
+                        eb_y[k] = (uint8_t)(dive_y_fp / (8 * 16) + 1);
+                        eb_act[k] = 1u;
+                        eb_lx[k] = 0xFFu;
+                        break;
+                    }
+                }
+            }
+            cx = (uint8_t)(dive_x_fp / (8 * 16));
+            cy = (uint8_t)(dive_y_fp / (8 * 16));
+            if (cy >= 27u || cx >= 37u) {
+                /* dove off screen — return to formation */
+                enemy_alive[dive_idx] = 1u;
+                dive_idx = DIVE_NONE;
+            } else {
+                demo_fix_puts(cx, cy, enemy_type[dive_idx] ? "<M>" : "/V\\",
+                              (uint8_t)(enemy_type[dive_idx] ? 2u : 1u));
+                dive_last_cx = cx;
+                dive_last_cy = cy;
+            }
+        }
+
+        /* ---- Debris ------------------------------------------------- */
         for (i = 0u; i < DEBRIS_MAX; i++) {
             uint8_t cx, cy;
             if (!deb_ttl[i]) continue;
-
-            /* erase old cell */
-            if (deb_last_cx[i] != 0xFFu &&
-                deb_last_cx[i] < 40u && deb_last_cy[i] < 28u) {
-                demo_fix_puts(deb_last_cx[i], deb_last_cy[i], " ", 0u);
+            if (deb_lx[i] != 0xFFu &&
+                deb_lx[i] < 40u && deb_ly[i] < 28u) {
+                demo_fix_puts(deb_lx[i], deb_ly[i], " ", 0u);
             }
-
             deb_x_fp[i] = (int16_t)(deb_x_fp[i] + deb_vx[i]);
             deb_y_fp[i] = (int16_t)(deb_y_fp[i] + deb_vy[i]);
-            deb_vy[i]  = (int16_t)(deb_vy[i] + 4);      /* gravity */
+            deb_vy[i]  = (int16_t)(deb_vy[i] + 4);
             deb_ttl[i]--;
-
             cx = (uint8_t)(deb_x_fp[i] / (8 * 16));
             cy = (uint8_t)(deb_y_fp[i] / (8 * 16));
-            if (cx < 40u && cy < 28u && deb_ttl[i] > 0u) {
-                const char *g = (deb_ttl[i] > 24u) ? "*" :
-                                (deb_ttl[i] > 12u) ? "+" : ".";
+            if (cx < 40u && cy < 26u && deb_ttl[i] > 0u) {
+                const char *g = (deb_ttl[i] > 18u) ? "*" :
+                                (deb_ttl[i] >  8u) ? "+" : ".";
                 demo_fix_puts(cx, cy, g, (uint8_t)((deb_ttl[i] >> 3) & 3u));
-                deb_last_cx[i] = cx;
-                deb_last_cy[i] = cy;
+                deb_lx[i] = cx; deb_ly[i] = cy;
             } else {
-                deb_last_cx[i] = 0xFFu;
+                deb_lx[i] = 0xFFu;
                 deb_ttl[i] = 0u;
             }
         }
 
-        /* Redraw the enemy formation only when it drifts */
-        if ((t % 60u) == 0u) {
-            for (i = 0u; i < ENEMY_COUNT; i++) {
-                if (!enemy_alive[i]) continue;
-                demo_fix_puts((uint8_t)(enemy_cx[i] - enemy_drift), enemy_cy[i],
-                              "   ", 0u);
+        /* ---- Score popups (float upward) --------------------------- */
+        for (i = 0u; i < POPUP_MAX; i++) {
+            if (!pop_ttl[i]) continue;
+            if (pop_lcx[i] != 0xFFu &&
+                pop_lcx[i] < 38u && pop_lcy[i] < 28u) {
+                demo_fix_puts(pop_lcx[i], pop_lcy[i], "   ", 0u);
             }
-            enemy_drift ^= 1u;
+            if ((pop_ttl[i] & 1u) == 0u && pop_cy[i] > 0u) pop_cy[i]--;
+            pop_ttl[i]--;
+            if (pop_ttl[i] > 0u && pop_cx[i] < 38u && pop_cy[i] < 28u) {
+                /* draw 3-digit popup */
+                buf[0] = (char)('0' + (pop_val[i] / 100u) % 10u);
+                buf[1] = (char)('0' + (pop_val[i] /  10u) % 10u);
+                buf[2] = (char)('0' + (pop_val[i] %  10u));
+                buf[3] = '\0';
+                demo_fix_puts(pop_cx[i], pop_cy[i], buf, 2u);
+                pop_lcx[i] = pop_cx[i]; pop_lcy[i] = pop_cy[i];
+            } else {
+                pop_lcx[i] = 0xFFu;
+            }
+        }
+
+        /* ---- Formation redraw (drift erase + new draw) ------------- */
+        if ((t % 30u) == 0u) {
+            for (i = 0u; i < ENEMY_COUNT; i++) {
+                if (!enemy_alive[i] || i == dive_idx) continue;
+                demo_fix_puts((uint8_t)(enemy_cx[i] - drift),
+                              enemy_cy[i], "   ", 0u);
+            }
         }
         for (i = 0u; i < ENEMY_COUNT; i++) {
-            if (enemy_alive[i]) {
-                demo_fix_puts((uint8_t)(enemy_cx[i] + enemy_drift),
-                              enemy_cy[i], "/W\\",
-                              (uint8_t)(1u + (i & 1u)));
+            if (enemy_alive[i] && i != dive_idx) {
+                demo_fix_puts((uint8_t)(enemy_cx[i] + drift),
+                              enemy_cy[i],
+                              enemy_type[i] ? "<M>" : "/W\\",
+                              (uint8_t)(enemy_type[i] ? 2u : 1u));
                 alive_count++;
             }
         }
 
-        /* Ship draw: erase old, draw new */
-        if (last_ship_x != 0xFFu && last_ship_x != ship_x) {
-            demo_fix_puts(last_ship_x, SHIP_ROW, "   ", 0u);
+        /* ---- Ship draw (multi-glyph) ------------------------------- */
+        if (!game_over) {
+            if (last_ship_x != 0xFFu && last_ship_x != ship_x) {
+                demo_fix_puts(last_ship_x, (uint8_t)(SHIP_ROW - 1u), "   ", 0u);
+                demo_fix_puts(last_ship_x, SHIP_ROW, "   ", 0u);
+            }
+            demo_fix_puts(ship_x, (uint8_t)(SHIP_ROW - 1u), "/A\\", 1u);
+            demo_fix_puts(ship_x, SHIP_ROW,            "[#]", 2u);
+            last_ship_x = ship_x;
         }
-        demo_fix_puts(ship_x, SHIP_ROW, "/A\\", 2u);
-        last_ship_x = ship_x;
 
-        /* Multi-bullet draw — erase prior, draw current for each */
+        /* ---- Bullets draw ----------------------------------------- */
         for (i = 0u; i < BULLET_MAX; i++) {
-            if (bul_last_x[i] != 0xFFu &&
-                (!bul_active[i] || bul_last_x[i] != bul_x[i] ||
-                 bul_last_y[i] != bul_y[i])) {
-                demo_fix_puts(bul_last_x[i], bul_last_y[i], " ", 0u);
-                bul_last_x[i] = 0xFFu;
+            if (pb_lx[i] != 0xFFu &&
+                (!pb_act[i] || pb_lx[i] != pb_x[i] || pb_ly[i] != pb_y[i])) {
+                demo_fix_puts(pb_lx[i], pb_ly[i], " ", 0u);
+                pb_lx[i] = 0xFFu;
             }
-            if (bul_active[i]) {
-                demo_fix_puts(bul_x[i], bul_y[i], "|", 1u);
-                bul_last_x[i] = bul_x[i];
-                bul_last_y[i] = bul_y[i];
+            if (pb_act[i]) {
+                demo_fix_puts(pb_x[i], pb_y[i], "|", 1u);
+                pb_lx[i] = pb_x[i]; pb_ly[i] = pb_y[i];
+            }
+        }
+        for (i = 0u; i < EBULLET_MAX; i++) {
+            if (eb_lx[i] != 0xFFu &&
+                (!eb_act[i] || eb_lx[i] != eb_x[i] || eb_ly[i] != eb_y[i])) {
+                demo_fix_puts(eb_lx[i], eb_ly[i], " ", 0u);
+                eb_lx[i] = 0xFFu;
+            }
+            if (eb_act[i]) {
+                demo_fix_puts(eb_x[i], eb_y[i], "v", 2u);
+                eb_lx[i] = eb_x[i]; eb_ly[i] = eb_y[i];
             }
         }
 
-        /* HUD */
-        digit3(buf, score);
-        demo_fix_puts(8u, 26u, buf, 1u);
-        digit3(buf, alive_count);
-        demo_fix_puts(26u, 26u, buf, 1u);
-        digit3(buf, (uint16_t)(30u - (t / 60u)));
-        demo_fix_puts(35u, 26u, buf, 1u);
+        /* ---- HUD ---------------------------------------------------- */
+        digit3(buf, score);              demo_fix_puts(8u,  26u, buf, 1u);
+        buf[0] = (char)('0' + stage); buf[1] = '\0';
+        demo_fix_puts(18u, 26u, buf, 1u);
+        digit3(buf, alive_count);        demo_fix_puts(26u, 26u, buf, 1u);
+        buf[0] = (char)('0' + lives); buf[1] = '\0';
+        demo_fix_puts(34u, 26u, buf, 1u);
+        time_left = (t > 5400u) ? 0u : (uint16_t)((5400u - t) / 60u);
+        digit3(buf, time_left);          demo_fix_puts(40u - 3u, 26u, buf, 1u);
 
-        /* Win condition: clear formation */
-        if (alive_count == 0u) {
-            demo_fix_puts(13u, 14u, "*** STAGE CLEAR ***", 2u);
+        /* Win condition */
+        if (alive_count == 0u && dive_idx == DIVE_NONE) {
+            demo_fix_puts(13u, 14u, "***  WAVE  CLEAR  ***", 2u);
             if (uwait(120u)) goto fade_out;
-            /* respawn formation for next wave */
-            for (i = 0u; i < ENEMY_COUNT; i++) {
-                enemy_alive[i] = 1u;
-                enemy_cx[i] = (uint8_t)(8u + (i % COLS_E) * 6u);
-                enemy_cy[i] = (uint8_t)(7u + (i / COLS_E) * 2u);
+            demo_fix_puts(13u, 14u, "                       ", 0u);
+            if (stage >= 3u) {
+                demo_fix_puts(11u, 14u, "***  VICTORY  ***", 2u);
+                if (uwait(180u)) goto fade_out;
+                goto fade_out;
             }
-            demo_fix_puts(13u, 14u, "                  ", 0u);
+            stage++;
+            for (i = 0u; i < ENEMY_COUNT; i++) {
+                uint8_t row = (uint8_t)(i / COLS_E);
+                uint8_t col = (uint8_t)(i % COLS_E);
+                enemy_alive[i] = 1u;
+                enemy_type[i]  = (uint8_t)((row < 2u) ? 1u : 0u);  /* more bosses in later waves */
+                enemy_cx[i] = (uint8_t)(4u + col * 5u);
+                enemy_cy[i] = (uint8_t)(6u + row * 2u);
+            }
+            dive_timer = (uint16_t)(180u / stage);   /* dives more often per wave */
+        }
+        if (game_over) {
+            demo_fix_puts(13u, 14u, "***  GAME  OVER  ***", 2u);
+            if (uwait(180u)) goto fade_out;
+            goto fade_out;
         }
 
         if (uframe()) goto fade_out;
@@ -2081,7 +2430,7 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
 
 fade_out:
     soundFadeOutSpeed(8u); snd_step();
-    if (uwait(12u)) return 1u;
+    if (uwait(16u)) return 1u;
     soundStopAll();        snd_step();
     return 0u;
 }
