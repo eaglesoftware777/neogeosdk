@@ -179,6 +179,13 @@ static void NEOGEO_USER chap_header(uint8_t n,
      * "stick" onto a freshly-bound sprite in the new chapter.
      */
     clearSprs();
+    /*
+     * Softer backdrop than pure black so that chapters with no BG
+     * sprite (FIX showcase, sound, render-2D/3D, credits) don't look
+     * like they're broken — gives a dim navy where FIX cells with
+     * palette-index 0 (transparent) would otherwise reveal pure black.
+     */
+    setBACKDROP(0x8001);
     ng_level_set_scroll(0, 0);
     ng_particles_init();
     ng_feedback_init();
@@ -911,18 +918,42 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
     const uint8_t fx_slot = 15u;
     uint16_t t;
 
-    chap_header(8u, "PALETTE FX", "ISOLATED SLOT  BG INTACT");
-    demo_fix_puts(2u, 2u, "PALETTE 15 = FX SANDBOX",        1u);
-    demo_fix_puts(2u, 3u, "BG PALETTE LEFT UNTOUCHED",      0u);
+    chap_header(8u, "PALETTE FX", "AFFECTS ONLY THE TARGET");
+    demo_fix_puts(2u, 2u, "BG (BOTTOM) UNTOUCHED",          1u);
+    demo_fix_puts(2u, 3u, "FX TARGET (TOP RECT) PULSES",    0u);
     snd_cross_to(SOUND_MUSIC_SHOP_JINGLE);
 
+    /* BG behind everything — its own palette is never touched */
     draw_background(2u, 32, 16);
 
     /*
-     * The BG keeps its own palette.  We upload s_palfx_base into a
-     * SEPARATE slot so that fade / flash / cycle effects animate
-     * THERE without modifying the BG palette VRAM at all.
+     * Draw a clearly-labelled FX TARGET REGION on the FIX layer using
+     * the dedicated palette slot.  This way the user can see EXACTLY
+     * which area is being modulated by the palette effects, contrasted
+     * against the unchanged BG.
+     *
+     * Target = 30 cells wide × 4 rows tall, rows 6..9, columns 5..34,
+     * using the sandbox palette (15) so flash/cycle/fade visibly
+     * change the target while the rest of the screen stays static.
      */
+    {
+        uint8_t r, c;
+        demo_fix_puts(4u, 5u, "+----------------------------+", 2u);
+        for (r = 6u; r < 10u; r++) {
+            demo_fix_puts(4u,  r, "|",                            2u);
+            demo_fix_puts(35u, r, "|",                            2u);
+            for (c = 5u; c < 35u; c++) {
+                /* fill the target with characters whose palette is the
+                 * sandbox.  Mix glyphs so the cycle is visible. */
+                const char *g = ((r + c) & 1u) ? "#" : "*";
+                demo_fix_puts(c, r, g, 2u);   /* pal 2 → s_palfx_base */
+            }
+        }
+        demo_fix_puts(4u, 10u, "+----------------------------+", 2u);
+        demo_fix_puts(2u, 11u, "<- FX TARGET (PALETTE 15)",       1u);
+        demo_fix_puts(2u, 21u, "<- BG IMAGE (UNTOUCHED PALETTE)", 0u);
+    }
+
     ng_palfx_upload_base(fx_slot, s_palfx_base);
 
     demo_fix_puts(2u, 5u, "EFFECT: FADE-IN 60F  ", 1u);
@@ -961,61 +992,102 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
 static uint8_t NEOGEO_USER chap_particles(void)
 {
     uint16_t t;
-    char cnt[4];
     const uint8_t spark_id    = 93u;
     const uint16_t spark_tile = DEMO_SCREEN_TILE(spark_id);
     const uint8_t  spark_pal  = DEMO_SCREEN_PALETTE(spark_id);
 
-    chap_header(9u, "PARTICLES", "POOL + PRIORITIES");
-    demo_fix_puts(2u, 2u, "TYPES: SPARK DUST MAGIC SMOKE", 1u);
-    demo_fix_puts(2u, 3u, "PRIORITIES: CRITICAL/NORMAL/OPT",0u);
-    demo_fix_puts(2u, 4u, "ACTIVE: ",                       2u);
+    chap_header(9u, "PARTICLES", "HERO SPECIAL MOVE + FX");
+    demo_fix_puts(2u, 2u, "WARRIOR PERFORMS A SPECIAL", 1u);
+    demo_fix_puts(2u, 3u, "PARTICLES SYNC TO ANIM FRAMES",0u);
+    demo_fix_puts(2u, 4u, "ACTIVE: ",                    2u);
     snd_cross_to(SOUND_MUSIC_BOSS_TENSION);
 
-    /* Hero stands at fixed position; sparks fly around him */
     hero_place(160, 112);
     demo_load_screen_palette(spark_id);
 
     s_draw_particles = 1u;
 
-    for (t = 0u; t < 360u; t++) {
-        int16_t bx = (int16_t)(s_hero_x + 50);
-        int16_t by = (int16_t)(s_hero_y + 40);
+    for (t = 0u; t < 540u; t++) {
+        /*
+         * Phase machine — 3 special-move beats:
+         *   [  0..160) WIND-UP        : faint dust around feet
+         *   [160..360) STRIKE         : magic sparks burst from sword arc
+         *   [360..540) FINISHER       : explosion + smoke ring + screen-flash
+         */
+        uint8_t hero_frame;
+        int16_t bx = (int16_t)(s_hero_x + 36);
+        int16_t by = (int16_t)(s_hero_y - 32);
 
-        if ((t % 16u) == 0u) {
-            ng_particle_spawn(NG_PART_HIT_SPARK, NG_PART_PRI_CRITICAL,
-                              bx, by, 0, -(2L << NG_FP_SHIFT),
-                              24u, spark_tile, spark_pal, 1u, 1u);
-            ng_particle_spawn(NG_PART_DUST, NG_PART_PRI_NORMAL,
-                              (int16_t)(bx + 16), (int16_t)(by + 12),
-                              -(1L << NG_FP_SHIFT), -(1L << (NG_FP_SHIFT - 1)),
-                              28u, (uint16_t)(spark_tile + 1u), spark_pal, 1u, 1u);
-            ng_particle_spawn(NG_PART_MAGIC_SPARK, NG_PART_PRI_NORMAL,
-                              (int16_t)(bx - 16), (int16_t)(by + 8),
-                              (1L << NG_FP_SHIFT), -(1L << NG_FP_SHIFT),
-                              22u, (uint16_t)(spark_tile + 2u), spark_pal, 1u, 1u);
+        if (t < 160u) {
+            hero_frame = s_hero_specA[(t / 8u) % 8u];
+            if ((t % 12u) == 0u) {
+                ng_particle_spawn(NG_PART_DUST, NG_PART_PRI_NORMAL,
+                                  (int16_t)(s_hero_x - 12),
+                                  (int16_t)(s_hero_y + 60),
+                                  -(1L << (NG_FP_SHIFT - 1)),
+                                  -(1L << (NG_FP_SHIFT - 1)),
+                                  20u, spark_tile, spark_pal, 1u, 1u);
+                ng_particle_spawn(NG_PART_DUST, NG_PART_PRI_NORMAL,
+                                  (int16_t)(s_hero_x + 12),
+                                  (int16_t)(s_hero_y + 60),
+                                  (1L << (NG_FP_SHIFT - 1)),
+                                  -(1L << (NG_FP_SHIFT - 1)),
+                                  20u, spark_tile, spark_pal, 1u, 1u);
+            }
+            if (t == 8u) playSFX(SOUND_SFX_STRING_PHRASE);
+        } else if (t < 360u) {
+            hero_frame = s_hero_strike[((t - 160u) / 6u) % 8u];
+            /* sparks burst on the sword-arc beats */
+            if ((t % 10u) == 0u) {
+                ng_particle_spawn(NG_PART_MAGIC_SPARK, NG_PART_PRI_CRITICAL,
+                                  bx, by,
+                                  (3L << NG_FP_SHIFT),
+                                  -(2L << NG_FP_SHIFT),
+                                  24u, spark_tile, spark_pal, 1u, 1u);
+                ng_particle_spawn(NG_PART_HIT_SPARK, NG_PART_PRI_CRITICAL,
+                                  (int16_t)(bx - 6), (int16_t)(by - 4),
+                                  -(1L << NG_FP_SHIFT),
+                                  -(3L << NG_FP_SHIFT),
+                                  22u, (uint16_t)(spark_tile + 1u),
+                                  spark_pal, 1u, 1u);
+                ng_particle_spawn(NG_PART_MAGIC_SPARK, NG_PART_PRI_NORMAL,
+                                  (int16_t)(bx + 8), (int16_t)(by + 6),
+                                  (2L << NG_FP_SHIFT),
+                                  (1L << NG_FP_SHIFT),
+                                  22u, (uint16_t)(spark_tile + 2u),
+                                  spark_pal, 1u, 1u);
+            }
+            if (t == 160u) playSFX(SOUND_SFX_BLADE_WHOOSH);
+            if (t == 240u) playSFX(SOUND_SFX_IMPACT_HIT);
+        } else {
+            hero_frame = s_hero_specB[((t - 360u) / 10u) % 6u];
+            /* finisher: explosion at hero, smoke ring */
+            if (t == 360u) {
+                uint8_t k;
+                playSFX(SOUND_SFX_LOW_DRUM);
+                ng_particle_spawn(NG_PART_EXPLOSION, NG_PART_PRI_CRITICAL,
+                                  s_hero_x, s_hero_y, 0, 0, 36u,
+                                  spark_tile, spark_pal, 1u, 1u);
+                for (k = 0u; k < 8u; k++) {
+                    int32_t a = (int32_t)k * 2L;
+                    ng_particle_spawn(NG_PART_SMOKE, NG_PART_PRI_NORMAL,
+                                      s_hero_x, s_hero_y,
+                                      (a - 8L) << (NG_FP_SHIFT - 1),
+                                      -(a) << (NG_FP_SHIFT - 1),
+                                      40u, spark_tile, spark_pal, 1u, 1u);
+                }
+            }
+            if ((t % 24u) == 0u) {
+                ng_particle_spawn(NG_PART_MAGIC_SPARK, NG_PART_PRI_NORMAL,
+                                  (int16_t)(s_hero_x + ((int16_t)(t & 31u) - 16)),
+                                  (int16_t)(s_hero_y - 40),
+                                  0, -(1L << NG_FP_SHIFT),
+                                  30u, spark_tile, spark_pal, 1u, 1u);
+            }
         }
-        if (t == 80u) {
-            ng_particle_spawn(NG_PART_EXPLOSION, NG_PART_PRI_CRITICAL,
-                              160, 120, 0, 0,
-                              36u, spark_tile, spark_pal, 1u, 1u);
-            playSFX(SOUND_SFX_LOW_DRUM);
-        }
-        if (t == 200u) {
-            ng_particle_spawn(NG_PART_SMOKE, NG_PART_PRI_OPTIONAL,
-                              80, 100, 0, -(1L << (NG_FP_SHIFT - 1)),
-                              45u, spark_tile, spark_pal, 1u, 1u);
-            ng_particle_spawn(NG_PART_MAGIC_SPARK, NG_PART_PRI_NORMAL,
-                              220, 100, 0, -(1L << NG_FP_SHIFT),
-                              32u, spark_tile, spark_pal, 1u, 1u);
-            playSFX(SOUND_SFX_STRING_PHRASE);
-        }
-
-        digit3(cnt, (uint16_t)ng_particles_count());
-        demo_fix_puts(10u, 4u, cnt, 1u);
 
         /* Hero rendered through the proven sprite-window path */
-        hero_draw(s_hero_stand[(t / 14u) % 8u]);
+        hero_draw(hero_frame);
 
         if (uframe()) return 1u;
     }
@@ -1109,10 +1181,32 @@ static uint8_t NEOGEO_USER chap_depthfx(void)
     /* xorshift seed — deterministic */
     uint16_t rng = 0xACE1u;
 
-    chap_header(11u, "DEPTH FX", "STARFIELD  Z-PROJECTION");
+    chap_header(11u, "DEPTH FX", "STARFIELD AT DAWN");
     demo_fix_puts(2u, 2u, "NG_DEPTHFX_ADVANCE_STAR + PROJECT", 1u);
     demo_fix_puts(2u, 3u, "FAR=.  MID=+  NEAR=*",              0u);
     snd_cross_to(SOUND_MUSIC_SAMURAI_ENDING_SCENE);
+
+    /*
+     * Dawn backdrop: top rows = bright/warm palette (rows 4..9),
+     * mid rows = transition (10..17), bottom = deep blue night (18..26).
+     * We draw a thin band of '~' / '_' characters in graduated palettes
+     * to suggest a horizon glow without using a sprite background.
+     */
+    {
+        uint8_t y;
+        for (y = 4u; y < 10u; y++) {
+            uint8_t r;
+            for (r = 0u; r < 40u; r++) {
+                demo_fix_puts(r, y, ((r + y) & 3u) ? " " : "~", 2u);
+            }
+        }
+        for (y = 10u; y < 18u; y++) {
+            demo_fix_puts(0u, y, "                                        ",
+                          (uint8_t)((y < 14u) ? 1u : 0u));
+        }
+        /* horizon line */
+        demo_fix_puts(0u, 18u, "________________________________________", 1u);
+    }
 
     ng_depthfx_init();
 
@@ -1732,26 +1826,40 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
         ROWS_E = 3,
         COLS_E = 4,
         ENEMY_COUNT = ROWS_E * COLS_E,
-        SHIP_ROW = 25,
-        BULLET_INACTIVE = 0xFFu
+        SHIP_ROW    = 25,
+        BULLET_MAX  = 3,        /* multi-bullet, max 3 in flight */
+        DEBRIS_MAX  = 8         /* explosion debris with gravity */
     };
     uint8_t enemy_alive[ENEMY_COUNT];
     uint8_t enemy_cx[ENEMY_COUNT];
     uint8_t enemy_cy[ENEMY_COUNT];
+
+    /* multi-bullet pool */
+    uint8_t bul_x[BULLET_MAX];
+    uint8_t bul_y[BULLET_MAX];
+    uint8_t bul_active[BULLET_MAX];
+    uint8_t bul_last_x[BULLET_MAX];
+    uint8_t bul_last_y[BULLET_MAX];
+
+    /* debris (gravity-affected) — emitted on enemy kill */
+    int16_t deb_x_fp[DEBRIS_MAX];   /* fixed-point pixel X */
+    int16_t deb_y_fp[DEBRIS_MAX];
+    int16_t deb_vx[DEBRIS_MAX];
+    int16_t deb_vy[DEBRIS_MAX];
+    uint8_t deb_ttl[DEBRIS_MAX];
+    uint8_t deb_last_cx[DEBRIS_MAX];
+    uint8_t deb_last_cy[DEBRIS_MAX];
+
     uint8_t ship_x = 18u;
     uint8_t last_ship_x = 0xFFu;
-    uint8_t bullet_x = BULLET_INACTIVE;
-    uint8_t bullet_y = 0u;
-    uint8_t last_bullet_x = BULLET_INACTIVE;
-    uint8_t last_bullet_y = 0u;
     uint16_t score = 0u;
     uint16_t t;
     uint8_t i;
     char buf[6];
 
     chap_header(18u, "SSG ARCADE", "GALAXIAN MINI-SHOOTER");
-    demo_fix_puts(2u, 2u, "L/R: MOVE   B: FIRE", 1u);
-    demo_fix_puts(2u, 3u, "DESTROY THE FORMATION",0u);
+    demo_fix_puts(2u, 2u, "L/R: MOVE   B: FIRE  (UP TO 3)", 1u);
+    demo_fix_puts(2u, 3u, "ENEMIES EXPLODE WITH DEBRIS",    0u);
 
     /* Vblank-spaced Z80 setup so SSG track plays cleanly */
     soundStopAll();                           snd_step();
@@ -1762,11 +1870,18 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
 
     ng_joystick_init();
 
-    /* Initial enemy formation */
     for (i = 0u; i < ENEMY_COUNT; i++) {
         enemy_alive[i] = 1u;
         enemy_cx[i] = (uint8_t)(8u + (i % COLS_E) * 6u);
         enemy_cy[i] = (uint8_t)(7u + (i / COLS_E) * 2u);
+    }
+    for (i = 0u; i < BULLET_MAX; i++) {
+        bul_active[i] = 0u;
+        bul_last_x[i] = 0xFFu;
+    }
+    for (i = 0u; i < DEBRIS_MAX; i++) {
+        deb_ttl[i] = 0u;
+        deb_last_cx[i] = 0xFFu;
     }
 
     demo_fix_puts(2u, 26u, "SCORE:",        2u);
@@ -1777,45 +1892,107 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
         uint16_t down;
         uint16_t pressed;
         uint8_t alive_count = 0u;
-        uint8_t enemy_drift = (uint8_t)((t / 60u) & 1u);   /* slow side-to-side */
+        uint8_t enemy_drift = (uint8_t)((t / 60u) & 1u);
 
         ng_joystick_update();
         down    = ng_joy_down();
         pressed = ng_joy_pressed();
 
-        /* Ship motion (every 2 frames so it feels smooth, not jittery) */
+        /* Ship motion */
         if ((t & 1u) == 0u) {
             if ((down & JOY_LEFT)  && ship_x > 2u)  ship_x--;
             if ((down & JOY_RIGHT) && ship_x < 35u) ship_x++;
         }
 
-        /* Fire (B or A) */
-        if ((pressed & (BUTTON_B | BUTTON_A)) && bullet_x == BULLET_INACTIVE) {
-            bullet_x = (uint8_t)(ship_x + 1u);
-            bullet_y = (uint8_t)(SHIP_ROW - 1u);
-            playSFX(SOUND_SFX_BLADE_WHOOSH);
+        /* Fire — find an inactive bullet slot */
+        if (pressed & (BUTTON_B | BUTTON_A)) {
+            for (i = 0u; i < BULLET_MAX; i++) {
+                if (!bul_active[i]) {
+                    bul_x[i] = (uint8_t)(ship_x + 1u);
+                    bul_y[i] = (uint8_t)(SHIP_ROW - 1u);
+                    bul_active[i] = 1u;
+                    playSFX(SOUND_SFX_BLADE_WHOOSH);
+                    break;
+                }
+            }
         }
 
-        /* Bullet rise + collision */
-        if (bullet_x != BULLET_INACTIVE) {
-            if (bullet_y == 0u) {
-                bullet_x = BULLET_INACTIVE;       /* off top */
-            } else {
-                bullet_y--;
-                for (i = 0u; i < ENEMY_COUNT; i++) {
-                    if (!enemy_alive[i]) continue;
-                    if (bullet_y == enemy_cy[i] &&
-                        bullet_x >= enemy_cx[i] &&
-                        bullet_x <= (uint8_t)(enemy_cx[i] + 2u)) {
-                        enemy_alive[i] = 0u;
-                        bullet_x = BULLET_INACTIVE;
-                        score = (uint16_t)(score + 50u);
-                        playSFX(SOUND_SFX_IMPACT_HIT);
-                        /* erase dead enemy */
-                        demo_fix_puts(enemy_cx[i], enemy_cy[i], "   ", 0u);
-                        break;
-                    }
+        /* Update bullets — rise, collide, clean up */
+        for (i = 0u; i < BULLET_MAX; i++) {
+            uint8_t j;
+            if (!bul_active[i]) continue;
+            if (bul_y[i] == 0u) {
+                /* off top — erase and deactivate */
+                if (bul_last_x[i] != 0xFFu) {
+                    demo_fix_puts(bul_last_x[i], bul_last_y[i], " ", 0u);
+                    bul_last_x[i] = 0xFFu;
                 }
+                bul_active[i] = 0u;
+                continue;
+            }
+            bul_y[i]--;
+            for (j = 0u; j < ENEMY_COUNT; j++) {
+                if (!enemy_alive[j]) continue;
+                if (bul_y[i] == enemy_cy[j] &&
+                    bul_x[i] >= enemy_cx[j] &&
+                    bul_x[i] <= (uint8_t)(enemy_cx[j] + 2u)) {
+                    uint8_t d;
+                    /* enemy dies — clean its FIX cells */
+                    enemy_alive[j] = 0u;
+                    demo_fix_puts(enemy_cx[j], enemy_cy[j], "   ", 0u);
+                    score = (uint16_t)(score + 50u);
+                    playSFX(SOUND_SFX_IMPACT_HIT);
+
+                    /* clean the bullet too */
+                    if (bul_last_x[i] != 0xFFu) {
+                        demo_fix_puts(bul_last_x[i], bul_last_y[i], " ", 0u);
+                        bul_last_x[i] = 0xFFu;
+                    }
+                    bul_active[i] = 0u;
+
+                    /* emit debris from the kill point — gravity-affected */
+                    for (d = 0u; d < DEBRIS_MAX; d++) {
+                        if (deb_ttl[d]) continue;
+                        deb_x_fp[d] = (int16_t)((enemy_cx[j] + 1) * 8 * 16);
+                        deb_y_fp[d] = (int16_t)((enemy_cy[j]) * 8 * 16);
+                        deb_vx[d] = (int16_t)(((d & 7u) - 4) * 12);    /* spread */
+                        deb_vy[d] = (int16_t)(-24 - (int16_t)(d & 3u) * 4);
+                        deb_ttl[d] = (uint8_t)(36u + (d & 7u) * 3u);
+                        deb_last_cx[d] = 0xFFu;
+                        if (d >= 4u) break;
+                    }
+                    break;
+                }
+            }
+        }
+
+        /* Update debris — physics: vy += gravity each frame */
+        for (i = 0u; i < DEBRIS_MAX; i++) {
+            uint8_t cx, cy;
+            if (!deb_ttl[i]) continue;
+
+            /* erase old cell */
+            if (deb_last_cx[i] != 0xFFu &&
+                deb_last_cx[i] < 40u && deb_last_cy[i] < 28u) {
+                demo_fix_puts(deb_last_cx[i], deb_last_cy[i], " ", 0u);
+            }
+
+            deb_x_fp[i] = (int16_t)(deb_x_fp[i] + deb_vx[i]);
+            deb_y_fp[i] = (int16_t)(deb_y_fp[i] + deb_vy[i]);
+            deb_vy[i]  = (int16_t)(deb_vy[i] + 4);      /* gravity */
+            deb_ttl[i]--;
+
+            cx = (uint8_t)(deb_x_fp[i] / (8 * 16));
+            cy = (uint8_t)(deb_y_fp[i] / (8 * 16));
+            if (cx < 40u && cy < 28u && deb_ttl[i] > 0u) {
+                const char *g = (deb_ttl[i] > 24u) ? "*" :
+                                (deb_ttl[i] > 12u) ? "+" : ".";
+                demo_fix_puts(cx, cy, g, (uint8_t)((deb_ttl[i] >> 3) & 3u));
+                deb_last_cx[i] = cx;
+                deb_last_cy[i] = cy;
+            } else {
+                deb_last_cx[i] = 0xFFu;
+                deb_ttl[i] = 0u;
             }
         }
 
@@ -1823,7 +2000,6 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
         if ((t % 60u) == 0u) {
             for (i = 0u; i < ENEMY_COUNT; i++) {
                 if (!enemy_alive[i]) continue;
-                /* erase old shifted cell */
                 demo_fix_puts((uint8_t)(enemy_cx[i] - enemy_drift), enemy_cy[i],
                               "   ", 0u);
             }
@@ -1838,23 +2014,27 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
             }
         }
 
-        /* Ship draw: erase old position, draw new */
+        /* Ship draw: erase old, draw new */
         if (last_ship_x != 0xFFu && last_ship_x != ship_x) {
             demo_fix_puts(last_ship_x, SHIP_ROW, "   ", 0u);
         }
         demo_fix_puts(ship_x, SHIP_ROW, "/A\\", 2u);
         last_ship_x = ship_x;
 
-        /* Bullet draw: erase old, draw current */
-        if (last_bullet_x != BULLET_INACTIVE &&
-            (last_bullet_x != bullet_x || last_bullet_y != bullet_y)) {
-            demo_fix_puts(last_bullet_x, last_bullet_y, " ", 0u);
+        /* Multi-bullet draw — erase prior, draw current for each */
+        for (i = 0u; i < BULLET_MAX; i++) {
+            if (bul_last_x[i] != 0xFFu &&
+                (!bul_active[i] || bul_last_x[i] != bul_x[i] ||
+                 bul_last_y[i] != bul_y[i])) {
+                demo_fix_puts(bul_last_x[i], bul_last_y[i], " ", 0u);
+                bul_last_x[i] = 0xFFu;
+            }
+            if (bul_active[i]) {
+                demo_fix_puts(bul_x[i], bul_y[i], "|", 1u);
+                bul_last_x[i] = bul_x[i];
+                bul_last_y[i] = bul_y[i];
+            }
         }
-        if (bullet_x != BULLET_INACTIVE) {
-            demo_fix_puts(bullet_x, bullet_y, "|", 1u);
-        }
-        last_bullet_x = bullet_x;
-        last_bullet_y = bullet_y;
 
         /* HUD */
         digit3(buf, score);
