@@ -915,79 +915,86 @@ static uint8_t NEOGEO_USER chap_camera(void)
 static uint8_t NEOGEO_USER chap_palette_fx(void)
 {
     /*
-     * Demoing palette FX without touching the BG: we upload our own
-     * synthetic palette (s_palfx_base) into a DEDICATED palette slot
-     * (15 — usually unused by demo assets), then animate FX on THAT
-     * slot.  The BG continues to use its own authored palette and is
-     * never modified, so colours don't get distorted.
+     * PALETTE FX showcase — drawn geometry in the MIDDLE of the screen,
+     * BG (full image) stays visible and UNTOUCHED at top + bottom.
+     * Effects only modulate the dedicated sandbox palette slot 15.
      *
-     * The visual effect is shown via FIX-layer text rendered on the
-     * dedicated palette: the FX colour changes are visible there.
+     * Layout:
+     *   rows 0-1   : chapter header
+     *   rows 2-4   : labels (this scene description)
+     *   rows 6-7   : effect name banner
+     *   rows 9-17  : DRAWN GEOMETRY in the middle (uses palette 15)
+     *   rows 18+   : BG visible through transparent FIX cells (untouched)
      */
     const uint8_t fx_slot = 15u;
     uint16_t t;
 
-    chap_header(8u, "PALETTE FX", "AFFECTS ONLY THE TARGET");
-    demo_fix_puts(2u, 2u, "BG (BOTTOM) UNTOUCHED",          1u);
-    demo_fix_puts(2u, 3u, "FX TARGET (TOP RECT) PULSES",    0u);
+    chap_header(8u, "PALETTE FX", "GEOMETRY IN MIDDLE  BG UNTOUCHED");
+    demo_fix_puts(2u, 2u, "DIAMOND / RING / CHEVRONS USE PAL 15", 1u);
+    demo_fix_puts(2u, 3u, "BG KEEPS ITS AUTHORED COLOURS",        0u);
     snd_cross_to(SOUND_MUSIC_SHOP_JINGLE);
 
-    /* BG behind everything — its own palette is never touched */
+    /* BG drawn ONCE; its palette stays static for the whole chapter */
     draw_background(2u, 32, 16);
 
     /*
-     * Draw a clearly-labelled FX TARGET REGION on the FIX layer using
-     * the dedicated palette slot.  This way the user can see EXACTLY
-     * which area is being modulated by the palette effects, contrasted
-     * against the unchanged BG.
-     *
-     * Target = 30 cells wide × 4 rows tall, rows 6..9, columns 5..34,
-     * using the sandbox palette (15) so flash/cycle/fade visibly
-     * change the target while the rest of the screen stays static.
+     * Drawn geometry in the SCREEN-CENTRE band (rows 9..17).
+     *   * Outer diamond rim (palette 15)
+     *   * Inner filled diamond (palette 15)
+     *   * Two side chevrons (palette 15)
+     * Everything outside rows 9-17 stays transparent so the BG shows.
      */
     {
         uint8_t r, c;
-        demo_fix_puts(4u, 5u, "+----------------------------+", 2u);
-        for (r = 6u; r < 10u; r++) {
-            demo_fix_puts(4u,  r, "|",                            2u);
-            demo_fix_puts(35u, r, "|",                            2u);
-            for (c = 5u; c < 35u; c++) {
-                /* fill the target with characters whose palette is the
-                 * sandbox.  Mix glyphs so the cycle is visible. */
-                const char *g = ((r + c) & 1u) ? "#" : "*";
-                demo_fix_puts(c, r, g, 2u);   /* pal 2 → s_palfx_base */
+        /* Centre-line text */
+        demo_fix_puts(13u, 9u,  "  /  \\  PALETTE FX  /  \\  ", 2u);
+        /* Diamond — drawn with X/Y symmetry around (19, 13) */
+        for (r = 0u; r <= 4u; r++) {
+            uint8_t span = (r <= 2u) ? r : (uint8_t)(4u - r);
+            uint8_t row_top    = (uint8_t)(11u + r);
+            uint8_t row_bottom = (uint8_t)(15u - r);
+            for (c = 0u; c <= span * 2u; c++) {
+                uint8_t x = (uint8_t)(19u - span + c);
+                const char *g = (c == 0u || c == span * 2u) ? "/" :
+                                (c == span)                  ? "*" : "#";
+                demo_fix_puts(x, row_top,    g, 2u);
+                if (row_top != row_bottom)
+                    demo_fix_puts(x, row_bottom, g, 2u);
             }
         }
-        demo_fix_puts(4u, 10u, "+----------------------------+", 2u);
-        demo_fix_puts(2u, 11u, "<- FX TARGET (PALETTE 15)",       1u);
-        demo_fix_puts(2u, 21u, "<- BG IMAGE (UNTOUCHED PALETTE)", 0u);
+        /* Side chevrons */
+        demo_fix_puts(5u,  13u, ">>>>>>", 2u);
+        demo_fix_puts(29u, 13u, "<<<<<<", 2u);
+        /* Effect name banner above the diamond */
+        demo_fix_puts(2u, 6u, "EFFECT:",                       1u);
     }
 
     ng_palfx_upload_base(fx_slot, s_palfx_base);
 
-    demo_fix_puts(2u, 5u, "EFFECT: FADE-IN 60F  ", 1u);
+    /* ---- Effect sequence — all on slot 15 ----------------------- */
+    demo_fix_puts(10u, 6u, "FADE-IN 60F          ", 1u);
     ng_palfx_fade_in(fx_slot, s_palfx_base, 60u);
     if (uwait(80u)) return 1u;
 
-    demo_fix_puts(2u, 5u, "EFFECT: FLASH WHITE  ", 2u);
+    demo_fix_puts(10u, 6u, "FLASH WHITE          ", 2u);
     ng_palfx_flash_white(fx_slot, s_palfx_base, 20u);
     if (uwait(40u)) return 1u;
 
-    demo_fix_puts(2u, 5u, "EFFECT: FLASH RED    ", 2u);
+    demo_fix_puts(10u, 6u, "FLASH RED            ", 2u);
     ng_palfx_flash_red(fx_slot, s_palfx_base, 20u);
     if (uwait(40u)) return 1u;
 
-    demo_fix_puts(2u, 5u, "EFFECT: PULSE        ", 1u);
+    demo_fix_puts(10u, 6u, "PULSE                ", 1u);
     ng_palfx_pulse(fx_slot, s_palfx_base, 30u);
     if (uwait(150u)) return 1u;
 
-    demo_fix_puts(2u, 5u, "EFFECT: CYCLE 8-14   ", 1u);
+    demo_fix_puts(10u, 6u, "CYCLE (ROTATE 8..14) ", 1u);
     ng_palfx_cycle(fx_slot, s_palfx_base, 8u, 14u);
-    for (t = 0u; t < 180u; t++) {
+    for (t = 0u; t < 240u; t++) {
         if (uframe()) return 1u;
     }
 
-    demo_fix_puts(2u, 5u, "EFFECT: FADE-OUT 60F ", 0u);
+    demo_fix_puts(10u, 6u, "FADE-OUT 60F         ", 0u);
     ng_palfx_fade_out(fx_slot, s_palfx_base, 60u);
     if (uwait(80u)) return 1u;
 
@@ -1180,98 +1187,127 @@ static uint8_t NEOGEO_USER chap_feedback(void)
 static uint8_t NEOGEO_USER chap_depthfx(void)
 {
     /*
-     * STARFIELD demo — the correct use of ng_depthfx_advance_star.
-     * 24 stars at random (x,y,z) world positions; each frame z is
-     * decremented; when a star reaches the camera plane it loops
-     * back to z_max with a fresh random x/y spread.
+     * CORRIDOR depth demo — more representative of how a real game
+     * uses ng_depthfx_project.  We project a row of WAYPOINTS along
+     * a corridor going INTO the screen, and a set of TARGETS flying
+     * toward the camera.  All positions are computed via
+     * ng_depthfx_project so the math is engine-real, not faked.
      *
-     * Rendering uses the FIX layer (no warrior sprite distorted):
-     * each projected star is drawn as a `.` (far), `+` (mid), or
-     * `*` (near) cell at the projected screen coordinates.
+     * Rendering uses the FIX layer for clarity:
+     *   - the corridor is a perspective grid (vanishing-point lines)
+     *   - waypoints (10 zones deep) draw as marker glyphs that shrink
+     *     and dim with distance via the palette
+     *   - 6 "drone" targets cycle z from far → near → loop, drawn
+     *     as glyphs whose intensity tracks z
      */
-    enum { STAR_COUNT = 24 };
-    NGVec3 stars[STAR_COUNT];
-    /* Track last cell positions so we can clear them next frame */
-    uint8_t last_cx[STAR_COUNT];
-    uint8_t last_cy[STAR_COUNT];
-    uint8_t last_valid[STAR_COUNT];
+    enum { DRONE_COUNT = 6, WAYPOINT_COUNT = 8 };
+    NGVec3   drone[DRONE_COUNT];
+    uint8_t  d_last_cx[DRONE_COUNT];
+    uint8_t  d_last_cy[DRONE_COUNT];
+    uint8_t  d_valid[DRONE_COUNT];
     uint16_t t;
-    uint8_t i;
-    /* xorshift seed — deterministic */
-    uint16_t rng = 0xACE1u;
+    uint8_t  i;
 
-    chap_header(11u, "DEPTH FX", "STARFIELD AT DAWN");
-    demo_fix_puts(2u, 2u, "NG_DEPTHFX_ADVANCE_STAR + PROJECT", 1u);
-    demo_fix_puts(2u, 3u, "FAR=.  MID=+  NEAR=*",              0u);
+    chap_header(11u, "DEPTH FX", "CORRIDOR  Z-PROJECTION");
+    demo_fix_puts(2u, 2u, "NG_DEPTHFX_PROJECT IN A CORRIDOR",   1u);
+    demo_fix_puts(2u, 3u, "DRONES FLY TOWARD CAMERA",           0u);
     snd_cross_to(SOUND_MUSIC_SAMURAI_ENDING_SCENE);
 
     /*
-     * Dawn backdrop: top rows = bright/warm palette (rows 4..9),
-     * mid rows = transition (10..17), bottom = deep blue night (18..26).
-     * We draw a thin band of '~' / '_' characters in graduated palettes
-     * to suggest a horizon glow without using a sprite background.
+     * Draw the static corridor — vanishing-point perspective:
+     *   * a HORIZON line at row 13 (vanishing point at column 20)
+     *   * two converging lines (left + right walls) drawn with FIX chars
+     *   * 8 horizontal floor lines that shrink as they recede
      */
     {
         uint8_t y;
-        for (y = 4u; y < 10u; y++) {
-            uint8_t r;
-            for (r = 0u; r < 40u; r++) {
-                demo_fix_puts(r, y, ((r + y) & 3u) ? " " : "~", 2u);
-            }
-        }
-        for (y = 10u; y < 18u; y++) {
+        /* sky band */
+        for (y = 4u; y < 13u; y++) {
             demo_fix_puts(0u, y, "                                        ",
-                          (uint8_t)((y < 14u) ? 1u : 0u));
+                          (uint8_t)((y < 8u) ? 1u : 0u));
         }
-        /* horizon line */
-        demo_fix_puts(0u, 18u, "________________________________________", 1u);
+        demo_fix_puts(0u, 13u, "________________________________________", 2u);
+
+        /* walls + floor lines */
+        for (y = 0u; y < WAYPOINT_COUNT; y++) {
+            /* z in 8..120 — closer waypoints are wider apart */
+            uint8_t row    = (uint8_t)(14u + y * 2u);
+            uint8_t half_w = (uint8_t)(y * 2u + 1u);
+            uint8_t cx     = 20u;
+            uint8_t left   = (cx > half_w) ? (uint8_t)(cx - half_w) : 0u;
+            uint8_t right  = (uint8_t)(cx + half_w);
+            uint8_t c;
+            uint8_t pal    = (uint8_t)((y < 3u) ? 0u : (y < 6u) ? 1u : 2u);
+
+            if (row >= 27u) break;
+            /* horizontal floor line */
+            for (c = left; c <= right && c < 40u; c++) {
+                demo_fix_puts(c, row, (y == 0u) ? "-" : "=", pal);
+            }
+            /* wall posts */
+            if (left  > 0u)   demo_fix_puts((uint8_t)(left  - 1u),
+                                            (uint8_t)(row - 1u), "|", pal);
+            if (right < 39u)  demo_fix_puts((uint8_t)(right + 1u),
+                                            (uint8_t)(row - 1u), "|", pal);
+        }
     }
 
     ng_depthfx_init();
 
-    /* Seed stars at random (x, y) in [-80..80], z in [16..127] */
-    for (i = 0u; i < STAR_COUNT; i++) {
-        rng ^= (uint16_t)(rng << 7);
-        rng ^= (uint16_t)(rng >> 9);
-        rng ^= (uint16_t)(rng << 8);
-        stars[i].x = (int16_t)((int16_t)(rng & 0xFFu) - 128);
-        stars[i].y = (int16_t)((int16_t)((rng >> 8) & 0x7Fu) - 64);
-        stars[i].z = (int16_t)(16 + (rng & 0x6Fu));
-        last_valid[i] = 0u;
+    /* Seed drones spaced along z, all near the centre line */
+    for (i = 0u; i < DRONE_COUNT; i++) {
+        drone[i].x = (int16_t)((int16_t)(i & 1u ? 12 : -12));
+        drone[i].y = (int16_t)((int16_t)(i & 2u ? -8 : 8));
+        drone[i].z = (int16_t)(20 + i * 18);
+        d_valid[i] = 0u;
     }
 
     for (t = 0u; t < 540u; t++) {
-        for (i = 0u; i < STAR_COUNT; i++) {
+        for (i = 0u; i < DRONE_COUNT; i++) {
             NGProjected pr;
 
-            /* Clear last position */
-            if (last_valid[i] &&
-                last_cx[i] < 40u && last_cy[i] < 28u) {
-                demo_fix_puts(last_cx[i], last_cy[i], " ", 0u);
+            /* erase last drawn cell */
+            if (d_valid[i] && d_last_cx[i] < 40u && d_last_cy[i] < 28u) {
+                demo_fix_puts(d_last_cx[i], d_last_cy[i], " ", 0u);
             }
 
-            /* Advance z, wrap to z_max with new spread on each lap */
-            ng_depthfx_advance_star(&stars[i], 1, 127, 80, 60);
+            /* advance z (loop when at camera) */
+            drone[i].z = (int16_t)(drone[i].z - 1);
+            if (drone[i].z < 8) drone[i].z = 120;
 
-            pr = ng_depthfx_project(stars[i], 0u);
+            pr = ng_depthfx_project(drone[i], 0u);
             if (pr.visible) {
                 uint8_t cx = (uint8_t)((pr.screen_x + 160) >> 3);
                 uint8_t cy = (uint8_t)((pr.screen_y + 112) >> 3);
-                if (cx < 40u && cy < 28u) {
+                if (cx < 40u && cy >= 4u && cy < 27u) {
                     const char *glyph;
                     uint8_t pal;
-                    if (stars[i].z > 80)      { glyph = ".";  pal = 0u; }
-                    else if (stars[i].z > 32) { glyph = "+";  pal = 1u; }
-                    else                       { glyph = "*";  pal = 2u; }
+                    if (drone[i].z > 80)      { glyph = ".";  pal = 0u; }
+                    else if (drone[i].z > 40) { glyph = "o";  pal = 1u; }
+                    else if (drone[i].z > 20) { glyph = "O";  pal = 2u; }
+                    else                       { glyph = "@";  pal = 2u; }
                     demo_fix_puts(cx, cy, glyph, pal);
-                    last_cx[i]    = cx;
-                    last_cy[i]    = cy;
-                    last_valid[i] = 1u;
+                    d_last_cx[i] = cx;
+                    d_last_cy[i] = cy;
+                    d_valid[i]   = 1u;
                     continue;
                 }
             }
-            last_valid[i] = 0u;
+            d_valid[i] = 0u;
         }
+
+        /* Z indicator + drone count on top-left */
+        {
+            char buf[5];
+            uint8_t alive = 0u;
+            for (i = 0u; i < DRONE_COUNT; i++) if (d_valid[i]) alive++;
+            buf[0] = (char)('0' + (alive / 10u));
+            buf[1] = (char)('0' + (alive % 10u));
+            buf[2] = '\0';
+            demo_fix_puts(2u, 5u, "DRONES:", 1u);
+            demo_fix_puts(10u, 5u, buf,      2u);
+        }
+
         if (uframe()) return 1u;
     }
     return 0u;
@@ -1500,29 +1536,37 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
         }
 
         /*
-         * Visible SWORD ARC during the active hit window — a few FIX
-         * cells next to the hero so the user can SEE the reach.
-         * Drawn on row matching the target so it visually overlaps when
-         * in range.  Erased when the strike ends.
+         * Visible SWORD ARC during the active hit window — just two FIX
+         * cells adjacent to the hero so the user sees the reach.  We
+         * remember the LAST drawn cells in static vars so we can erase
+         * EXACTLY those two cells when the strike ends (instead of
+         * sweeping a whole row, which produced a "black strip" overlay
+         * on top of the BG).
          */
-        if (hero_state == 3u && state_t >= 4u && state_t <= 18u) {
-            uint8_t sword_cx = (uint8_t)((hero_flip
-                ? (hero_world_x - 56) : (hero_world_x + 16)) / 8);
-            uint8_t sword_cy = (uint8_t)(hero_world_y / 8);
-            if (sword_cx < 38u && sword_cy < 25u) {
-                demo_fix_puts(sword_cx,           sword_cy, hero_flip ? "<" : ">", 2u);
-                demo_fix_puts((uint8_t)(sword_cx + 1), sword_cy, "*", 2u);
-            }
-        } else if (state_t == 19u || (hero_state == 0u && state_t == 1u)) {
-            /* erase a small swept row when the strike ends */
-            uint8_t cy = (uint8_t)(hero_world_y / 8);
-            uint8_t c;
-            for (c = 2u; c < 38u; c++) {
-                /* don't erase target cells */
-                uint8_t in_target = (target_alive
-                    && cy >= target_cy && cy < target_cy + TARGET_H
-                    && c  >= target_cx && c  < target_cx + TARGET_W);
-                if (!in_target) demo_fix_puts(c, cy, " ", 0u);
+        {
+            static uint8_t  sw_last_cx = 0xFFu;
+            static uint8_t  sw_last_cy = 0u;
+            static uint8_t  sw_last_cx2 = 0xFFu;
+            if (hero_state == 3u && state_t >= 4u && state_t <= 18u) {
+                uint8_t sword_cx = (uint8_t)((hero_flip
+                    ? (hero_world_x - 56) : (hero_world_x + 16)) / 8);
+                uint8_t sword_cy = (uint8_t)(hero_world_y / 8);
+                /* erase prior pair before drawing the new one */
+                if (sw_last_cx != 0xFFu && (sw_last_cx != sword_cx || sw_last_cy != sword_cy)) {
+                    demo_fix_puts(sw_last_cx,  sw_last_cy, " ", 0u);
+                    demo_fix_puts(sw_last_cx2, sw_last_cy, " ", 0u);
+                }
+                if (sword_cx < 38u && sword_cy < 25u) {
+                    demo_fix_puts(sword_cx, sword_cy, hero_flip ? "<" : ">", 2u);
+                    demo_fix_puts((uint8_t)(sword_cx + 1), sword_cy, "*", 2u);
+                    sw_last_cx = sword_cx; sw_last_cy = sword_cy;
+                    sw_last_cx2 = (uint8_t)(sword_cx + 1);
+                }
+            } else if (sw_last_cx != 0xFFu) {
+                /* strike just ended — erase only the two arc cells */
+                demo_fix_puts(sw_last_cx,  sw_last_cy, " ", 0u);
+                demo_fix_puts(sw_last_cx2, sw_last_cy, " ", 0u);
+                sw_last_cx = 0xFFu;
             }
         }
 
@@ -2025,6 +2069,32 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
     chap_header(18u, "SSG ARCADE", "EAGLE INVADERS");
     demo_fix_puts(2u, 2u, "L/R: MOVE  B: FIRE", 1u);
     demo_fix_puts(2u, 3u, "BEWARE DIVERS + RETURN FIRE", 0u);
+
+    /*
+     * STARFIELD background so empty FIX cells show stars, not pure black.
+     * A handful of `.` `*` `+` glyphs scattered across the play area at
+     * deterministic positions — they sit ON the FIX layer in the cells
+     * the gameplay never overwrites, so the user sees space instead of
+     * a black stripe where the formation gaps are.
+     */
+    {
+        static const uint8_t star_cx[24] = {
+             1,  4,  9, 13, 17, 22, 26, 31, 35, 38,
+             3,  7, 11, 16, 20, 24, 29, 33,
+             2,  6, 14, 21, 27, 36
+        };
+        static const uint8_t star_cy[24] = {
+             4,  5,  9, 11, 16, 19, 22, 24,  5, 17,
+            12, 23, 17,  9, 12, 21, 16, 20,
+            10, 18,  6, 13, 25,  8
+        };
+        static const char *const star_g[3] = { ".", "*", "+" };
+        uint8_t k;
+        for (k = 0u; k < 24u; k++) {
+            demo_fix_puts(star_cx[k], star_cy[k],
+                          star_g[k % 3u], (uint8_t)((k & 1u)));
+        }
+    }
 
     /* Vblank-spaced Z80 setup */
     soundStopAll();                            snd_step();
@@ -2623,7 +2693,99 @@ static uint8_t NEOGEO_USER chap_credits(void)
 }
 
 /* ================================================================== */
-/*  Public entry — 20-chapter linear flow                                */
+/*  Chapter 21 — FIX FX (dedicated FIX showcase placed after SOUND)     */
+/* ================================================================== */
+/*
+ * Animated FIX-only scene placed in the flow right after chap_sound.
+ * Demonstrates four things the FIX layer is uniquely good at:
+ *   1. Solid-colour horizontal bars sliding back and forth
+ *   2. Wave-form vertical bars
+ *   3. Per-row palette stripes
+ *   4. A multi-palette text scroll
+ */
+static uint8_t NEOGEO_USER chap_fix_fx(void)
+{
+    uint16_t t;
+
+    chap_header(21u, "FIX FX", "ANIMATED FIX-ONLY DEMO");
+    demo_fix_puts(2u, 2u, "BARS / WAVE / PALETTE STRIPES",   1u);
+    demo_fix_puts(2u, 3u, "ALL ON THE FIX LAYER ALONE",      0u);
+    snd_cross_to(SOUND_MUSIC_SHOP_JINGLE);
+
+    /* Per-row palette stripes (static) — show off all 3 demo palettes */
+    {
+        uint8_t y;
+        for (y = 5u; y < 9u; y++) {
+            demo_fix_puts(2u, y, "====================================",
+                          (uint8_t)((y - 5u) % 3u));
+        }
+    }
+
+    /* Title banner that flashes between palettes */
+    demo_fix_puts(11u, 11u, "<<  FIX FX SHOWCASE  >>", 2u);
+
+    for (t = 0u; t < 540u; t++) {
+        uint8_t  bar_x;
+        uint8_t  i;
+
+        /* 1) Horizontal bar at row 14, sliding left-right */
+        {
+            uint16_t phase = (uint16_t)(t % 60u);
+            bar_x = (uint8_t)((phase < 30u) ? phase : (60u - phase));
+            /* erase previous bar — only the 8-cell strip we drew */
+            if (t > 0u) {
+                uint8_t prev = (uint8_t)(((t - 1u) % 60u) < 30u
+                                         ? ((t - 1u) % 60u)
+                                         : (60u - ((t - 1u) % 60u)));
+                for (i = 0u; i < 8u; i++)
+                    demo_fix_puts((uint8_t)(2u + prev + i), 14u, " ", 0u);
+            }
+            for (i = 0u; i < 8u; i++)
+                demo_fix_puts((uint8_t)(2u + bar_x + i), 14u, "#", 1u);
+        }
+
+        /* 2) Vertical wave-bars on rows 16..20 */
+        {
+            for (i = 0u; i < 36u; i++) {
+                uint8_t height = (uint8_t)(((i + (t >> 1)) & 7u) >> 1);  /* 0..3 */
+                uint8_t r;
+                /* erase column */
+                for (r = 16u; r <= 20u; r++)
+                    demo_fix_puts((uint8_t)(2u + i), r, " ", 0u);
+                /* draw new column from bottom up */
+                for (r = 0u; r <= height; r++) {
+                    demo_fix_puts((uint8_t)(2u + i), (uint8_t)(20u - r),
+                                  "|", (uint8_t)(r & 1u ? 1u : 2u));
+                }
+            }
+        }
+
+        /* 3) Palette-flash title every 60 frames */
+        if ((t % 60u) == 0u) {
+            uint8_t pal = (uint8_t)((t / 60u) % 3u);
+            demo_fix_puts(11u, 11u, "<<  FIX FX SHOWCASE  >>", pal);
+        }
+
+        /* 4) Scrolling marquee at row 23 */
+        {
+            static const char ribbon[] =
+                "  FIX LAYER  *  40x32 CELLS  *  3 PALETTES  "
+                "*  DIRTY-CELL CACHE  *  NO TEAR  *  ";
+            const uint16_t L = (uint16_t)(sizeof(ribbon) - 1u);
+            char row[40];
+            uint16_t off = (uint16_t)(t % L);
+            for (i = 0u; i < 36u; i++) row[i] = ribbon[(off + i) % L];
+            row[36] = '\0';
+            demo_fix_puts(2u, 23u, row, 2u);
+        }
+
+        if (uframe()) return 1u;
+    }
+    return 0u;
+}
+
+/* ================================================================== */
+/*  Public entry — 21-chapter linear flow                                */
 /* ================================================================== */
 void NEOGEO_USER demo_unified_run(void)
 {
@@ -2631,6 +2793,7 @@ void NEOGEO_USER demo_unified_run(void)
     (void)chap_title();
     (void)chap_fix();
     (void)chap_sound();
+    (void)chap_fix_fx();        /* new — FIX showcase after SOUND */
     (void)chap_sprite();
     (void)chap_chars();
     (void)chap_physics();
