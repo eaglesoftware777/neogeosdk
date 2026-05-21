@@ -2087,11 +2087,164 @@ fade_out:
 }
 
 /* ================================================================== */
-/*  Chapter 19 — Credits                                                 */
+/*  Chapter 19 — Garden 3D (sprite-scaling pseudo-3D walk)               */
+/* ================================================================== */
+/*
+ * Pseudo-3D garden — the warrior walks at fixed Y while a row of "tree"
+ * sprites approaches the camera and scales up.  Floor on the FIX layer
+ * uses per-row palette banding to give a perspective gradient.
+ *
+ * NeoGeo hardware sprite scaling (SCB2 shrink nibble) does the
+ * heavy lifting — every tree is just a sprite group with its xScale /
+ * yScale set proportionally to "distance".  No raycaster needed; this
+ * runs at 60 fps on 68k without breaking a sweat.
+ */
+static uint8_t NEOGEO_USER chap_garden3d(void)
+{
+    enum {
+        TREE_COUNT = 5,
+        TREE_FRAME = 81u,        /* small eagle proxy — replace with tree art later */
+        Z_NEAR = 8,
+        Z_FAR  = 96,
+        FLOOR_TOP_ROW    = 12,
+        FLOOR_BOTTOM_ROW = 26
+    };
+    /*
+     * z = depth (0 = camera plane, Z_FAR = horizon).
+     * As z decreases, the tree grows and slides outward off-screen.
+     */
+    int16_t tz[TREE_COUNT]    = { 16, 32, 48, 64, 80 };
+    /* world X relative to camera centre — alternating left/right of the trail */
+    static const int16_t txw[TREE_COUNT] = { -40, 30, -30, 40, -20 };
+    uint16_t t;
+    uint8_t  i;
+    int16_t  hero_world_x = 160;
+    uint8_t  hero_flip = 0u;
+
+    chap_header(19u, "GARDEN 3D", "PSEUDO-3D SPRITE SCALING WALK");
+    demo_fix_puts(2u, 2u, "TREES APPROACH AS YOU WALK",     1u);
+    demo_fix_puts(2u, 3u, "L/R MOVE  HARDWARE-SCALE TREES", 0u);
+    snd_cross_to(SOUND_MUSIC_SAMURAI_ENDING_SCENE);
+
+    /*
+     * Perspective floor on the FIX layer.  We paint rows 12..26 with a
+     * graduated brightness pattern: sparse dots near the horizon
+     * (palette 0), denser bands further down (palettes 1, 2).
+     */
+    {
+        uint8_t r, c;
+        for (r = FLOOR_TOP_ROW; r <= FLOOR_BOTTOM_ROW; r++) {
+            uint8_t band   = (uint8_t)(r - FLOOR_TOP_ROW);
+            uint8_t pal    = (uint8_t)((band > 8u) ? 2u
+                                      : (band > 4u) ? 1u : 0u);
+            uint8_t spacing = (band < 4u) ? 6u : (band < 8u) ? 3u : 2u;
+            for (c = 0u; c < 40u; c++) {
+                if ((c % spacing) == 0u) {
+                    demo_fix_puts(c, r,
+                                  (band > 7u) ? "=" : "-",
+                                  pal);
+                } else if (band > 9u && (c & 1u)) {
+                    demo_fix_puts(c, r, ".", pal);
+                }
+            }
+        }
+        /* horizon line */
+        demo_fix_puts(0u, (uint8_t)(FLOOR_TOP_ROW - 1),
+                      "________________________________________", 2u);
+    }
+
+    ng_joystick_init();
+
+    for (t = 0u; t < 900u; t++) {            /* 15 sec */
+        uint16_t down;
+        uint8_t  hero_frame;
+
+        ng_joystick_update();
+        down = ng_joy_down();
+
+        /* hero motion */
+        if (down & JOY_LEFT)  { hero_world_x -= 2; hero_flip = 1u; }
+        if (down & JOY_RIGHT) { hero_world_x += 2; hero_flip = 0u; }
+        if (hero_world_x < 32)  hero_world_x = 32;
+        if (hero_world_x > 288) hero_world_x = 288;
+
+        /*
+         * Per-frame: each tree marches one step toward the camera.
+         * When a tree passes the camera plane, recycle it to the back.
+         */
+        for (i = 0u; i < TREE_COUNT; i++) {
+            int16_t scale;
+            int16_t screen_x, screen_y;
+            uint8_t scale8;
+
+            tz[i] = (int16_t)(tz[i] - 1);
+            if (tz[i] < Z_NEAR) tz[i] = Z_FAR;
+
+            /*
+             * Pseudo-projection:  scale = ~(Z_FAR / z), clamped.
+             * Trees at z=Z_FAR are small (~25%), at z=Z_NEAR they're big (~100%).
+             */
+            scale = (int16_t)((int16_t)Z_FAR * 64 / (int16_t)tz[i]);  /* 64..768 */
+            if (scale > 0xFF) scale = 0xFF;
+            if (scale < 0x40) scale = 0x40;
+            scale8 = (uint8_t)scale;
+
+            /*
+             * Project x: closer trees drift further out from centre.
+             * screen_x = 160 + txw * (Z_FAR / z).
+             * screen_y dips below horizon based on z (closer = lower on screen).
+             */
+            screen_x = (int16_t)(160 + (txw[i] * (int16_t)Z_FAR) / (int16_t)tz[i]);
+            screen_y = (int16_t)(96 + (Z_FAR - tz[i]));   /* horizon at 96 */
+
+            /* Draw each tree as a sprite group at a unique high slot.
+             * Slots 280-299 are unused by chars/particles — safe range. */
+            {
+                uint8_t  tree_strips = demo_screen_strips(TREE_FRAME);
+                uint8_t  tree_rows   = demo_screen_rows(TREE_FRAME);
+                int16_t  grid_w = (int16_t)(tree_strips * 16);
+                int16_t  grid_h = (int16_t)(tree_rows * 16);
+                int16_t  off_x  = demo_screen_x_offset(TREE_FRAME);
+                int16_t  off_y  = demo_screen_y_offset(TREE_FRAME);
+                /* anchor bottom-centre at (screen_x, screen_y) so trees
+                 * "stand" on the projected floor */
+                int16_t  draw_x = (int16_t)(screen_x - (grid_w * scale8 / 256) / 2 - off_x);
+                int16_t  draw_y = (int16_t)(screen_y - (grid_h * scale8 / 256) - off_y);
+
+                demo_draw_sprite_screen(TREE_FRAME,
+                                        (uint16_t)(280u + i),
+                                        draw_x, draw_y,
+                                        tree_strips, tree_rows,
+                                        scale8, scale8);
+            }
+        }
+
+        /* hero animation — fixed Y, sprite-window pipeline */
+        hero_frame = (down & (JOY_LEFT | JOY_RIGHT))
+                   ? s_hero_walk[(t / 5u) % 8u]
+                   : s_hero_stand[(t / 14u) % 8u];
+        s_hero_x = hero_world_x;
+        s_hero_y = 112;
+        hero_draw(hero_frame);
+        /* flip is on the character struct in the engine; we let the
+         * sprite group default (no flip) — left/right facing reads from
+         * motion direction in a fuller demo. */
+        (void)hero_flip;
+
+        if ((t & 31u) == 0u && (down & (JOY_LEFT | JOY_RIGHT)))
+            playSFX(SOUND_SFX_FOOTSTEP);
+
+        if (uframe()) return 1u;
+    }
+    return 0u;
+}
+
+/* ================================================================== */
+/*  Chapter 20 — Credits                                                 */
 /* ================================================================== */
 static uint8_t NEOGEO_USER chap_credits(void)
 {
-    chap_header(19u, "CREDITS", "EAGLE SOFTWARE 2026");
+    chap_header(20u, "CREDITS", "EAGLE SOFTWARE 2026");
     snd_cross_to(SOUND_MUSIC_ENDING_CREDITS);
 
     demo_fix_puts(2u,  4u, "ENGINE   SDK/2D_ENGINE_PLUS", 1u);
@@ -2144,5 +2297,6 @@ void NEOGEO_USER demo_unified_run(void)
     (void)chap_render3d();
     (void)chap_render2d();
     (void)chap_ssg_arcade();
+    (void)chap_garden3d();
     (void)chap_credits();
 }
