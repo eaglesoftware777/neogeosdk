@@ -12,6 +12,7 @@
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
 #include "sdk/2d_engine/ng_palette_fx.h"
+#include "sdk/2d_engine/ng_sprite_pool.h"
 #include <stdint.h>
 
 #ifndef NGO_START_FLAG
@@ -166,14 +167,25 @@ go_done:
 /* ------------------------------------------------------------------ */
 void NEOGEO_USER demo_title_attract_reel(void)
 {
-    static const uint8_t s_teaser_ids[5] = { 101u, 102u, 103u, 104u, 105u };
-    static const char *const s_teaser_labels[5] = {
-        "BLOCK 2: CORE HARDWARE",
-        "BLOCK 3: 2D ENGINE",
-        "BLOCK 4: ADVANCED 2D",
-        "BLOCK 6: DEPTH / 2.5D",
-        "BLOCK 7: STRESS TEST"
+    static const uint8_t s_teaser_ids[6] = { 101u, 102u, 103u, 104u, 105u, 106u };
+    /*
+     * Teaser labels describe what the unified demo actually shows.
+     * Order roughly follows the chapter sequence in demo_unified_run.
+     */
+    static const char *const s_teaser_labels[6] = {
+        "TITLE / FIX / SOUND CHAPTERS",
+        "SPRITE GROUPS + CHARACTERS",
+        "PHYSICS + CAMERA + PALETTE FX",
+        "PARTICLES + FEEDBACK + DEPTH",
+        "NPCS + MINI-GAME + JOYSTICK",
+        "SCROLL + RENDER + GALAXIAN"
     };
+    /*
+     * Hero walk cycle drawn at slot 1 (front).  All eight frames in
+     * the chosen set share 6 strips x 10 rows so the strip count is
+     * stable and there is no split glitch.
+     */
+    static const uint8_t s_walk[8] = { 3u, 4u, 5u, 7u, 8u, 9u, 11u, 12u };
     uint8_t  teaser;
     uint16_t hold;
     uint16_t fix_pal[16];
@@ -191,13 +203,24 @@ void NEOGEO_USER demo_title_attract_reel(void)
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
 
-    /* Show title card with pulsing INSERT COIN */
-    demo_safe_show(showScreen108, 32, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
+    /* Title card stays on screen behind the walking warrior (slot != 1) */
+    demo_safe_show(showScreen108, 32, 24, 0xF, 0xAF, 16, BLACK,
+                   NG_SPR_VRAM_BASE(NG_SPR_BG0_FIRST));
 
-    soundSceneReset();
-    soundSetADPCMAVolume(0x3Cu);
-    soundSetADPCMBVolume(0xBCu);
-    playSFX(SOUND_SFX_TITLE_GONG);
+    /* Header text */
+    demo_fix_puts(7u, 2u, "NEO GEO SDK V1.3.0", 2u);
+    demo_fix_puts(2u, 4u, "UNIFIED DEMO PRESENTS:", 1u);
+
+    /* Reset sound stack and start a looping intro track.  The Z80
+     * commands are spaced by waitVbl so the driver applies cleanly. */
+    soundSceneReset();   waitVbl();
+    soundSetADPCMAVolume(0x3Cu);  waitVbl();
+    soundSetADPCMBVolume(0xBCu);  waitVbl();
+    soundSetFMVolume(0x0Du);      waitVbl();
+    playSFX(SOUND_SFX_TITLE_GONG); waitVbl();
+    /* Loop EAGLE_FANFARE in attract — it's an upbeat intro track */
+    soundPlayGameLoop(SOUND_MUSIC_EAGLE_FANFARE);
+    waitVbl();
 
     teaser = 0u;
     hold   = 0u;
@@ -205,7 +228,10 @@ void NEOGEO_USER demo_title_attract_reel(void)
     for (;;) {
 #ifndef NG_AES
         if (NEO_REGISTER8(NGO_START_FLAG)) break;
-        if (read_p1credit() > 0) break;
+        if (read_p1credit() > 0) {
+            playSFX(SOUND_SFX_COIN_CHIME);
+            break;
+        }
 #else
         if (NEO_REGISTER8(NGO_START_FLAG)) break;
         if (NEO_REGISTER8(BIOS_P1CHANGE) & (uint8_t)(1u << CNT_A)) break;
@@ -218,33 +244,43 @@ void NEOGEO_USER demo_title_attract_reel(void)
             demo_fix_puts(13u, 26u, "           ", 0u);
         }
 
+        /* Animate the warrior walking across the bottom of the
+         * attract screen.  Slot 1 = FRONT, in front of the teaser BG. */
+        {
+            uint8_t walk_frame = s_walk[(hold / 6u) % 8u];
+            int16_t x = (int16_t)(40 + (int16_t)((hold * 2u) % 250u));
+            demo_load_screen_palette(walk_frame);
+            demo_draw_sprite_screen(walk_frame, 1u, x, -64,
+                                    demo_screen_strips(walk_frame),
+                                    demo_screen_rows(walk_frame),
+                                    0xFFu, 0xFFu);
+            if ((hold % 24u) == 0u) playSFX(SOUND_SFX_FOOTSTEP);
+        }
+
         hold++;
 
-        /* Every 180 frames cycle to next teaser */
-        if ((hold % 180u) == 0u) {
+        /* Every 240 frames cycle to next teaser banner */
+        if ((hold % 240u) == 0u) {
             uint8_t sid = s_teaser_ids[teaser];
-            demo_clear_scene();
-            demo_load_screen_palette(sid);
             ng_palfx_stop(DEMO_SCREEN_PALETTE(108u));
-            demo_draw_sprite_screen(sid, 1u, 32, -16,
+            demo_load_screen_palette(sid);
+            demo_draw_sprite_screen(sid,
+                                    NG_SPR_BG0_FIRST, 32, -16,
                                     demo_screen_strips(sid),
                                     demo_screen_rows(sid),
                                     0xFFu, 0xFFu);
-            demo_fix_puts(4u, 25u, s_teaser_labels[teaser], 1u);
-            demo_fix_puts(13u, 26u, "INSERT COIN", 1u);
-            teaser = (uint8_t)((teaser + 1u) % 5u);
+            demo_fix_puts(2u, 24u, "                                      ", 0u);
+            demo_fix_puts(2u, 24u, s_teaser_labels[teaser], 1u);
+            teaser = (uint8_t)((teaser + 1u) % 6u);
         }
 
         ng_palette_fx_update();
         if (demo_frame()) break;
-
-        if (hold > 3600u) {
-            hold = 0u;
-            teaser = 0u;
-        }
     }
 
     ng_palfx_stop(DEMO_SCREEN_PALETTE(108u));
+    soundFadeOutSpeed(6u); waitVbl();
+    demo_wait(10u);
     soundStopAll();
     demo_clear_scene();
 }
