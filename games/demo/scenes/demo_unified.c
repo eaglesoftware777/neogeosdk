@@ -1461,9 +1461,9 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
     const uint16_t TOTAL = 2700u;        /* 45 sec @ 60 fps */
     char buf[6];
 
-    chap_header(13u, "MINI-GAME", "B STRIKE  C JUMP  D-PAD MOVE");
+    chap_header(13u, "MINI-GAME", "ARROWS MOVE   B STRIKE");
     demo_fix_puts(2u, 2u, "HOLD LEFT/RIGHT TO RUN", 1u);
-    demo_fix_puts(2u, 3u, "STRIKE THE COLOURED TARGET", 0u);
+    demo_fix_puts(2u, 3u, "B = STRIKE THE COLOURED TARGET", 0u);
     snd_cross_to(SOUND_MUSIC_WARRIOR_BATTLE);
 
     /* BG drawn ONCE at slot 300 (back).  Hero (slot 1) sits in front. */
@@ -1502,19 +1502,18 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
         down    = ng_joy_down();
         pressed = ng_joy_pressed();
 
-        /* Strike start (B), only on the ground */
-        if ((pressed & BUTTON_B) && hero_state != 3u && hero_state != 2u) {
+        /*
+         * Mini-game has NO JUMP — only move + strike.  The
+         * "jump-with-specials" demo lives in chap_joystick (ch 14).
+         * This scene focuses on the strike → colourful target → hit
+         * feedback loop, nothing else.  C is intentionally inert here.
+         */
+        if ((pressed & BUTTON_B) && hero_state != 3u) {
             hero_state = 3u;
             state_t = 0u;
             playSFX(SOUND_SFX_BLADE_WHOOSH);
         }
-        /* Jump start (C) */
-        if ((pressed & BUTTON_C) && hero_state != 2u && hero_state != 3u) {
-            hero_state = 2u;
-            state_t = 0u;
-            vy = -8;
-            playSFX(SOUND_SFX_SHORT_SHOUT);
-        }
+        (void)vy;     /* still declared for the switch case below */
 
         /* Movement is allowed in stand/walk states only */
         if (hero_state < 2u) {
