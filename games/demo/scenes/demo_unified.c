@@ -1538,16 +1538,25 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
         case 0:  hero_frame = s_hero_stand[(t / 14u) % 8u]; break;
         case 1:  hero_frame = s_hero_walk[(t /  6u) % 8u]; break;
         case 2:                               /* jump */
-            hero_world_y = (int16_t)(hero_world_y - vy);
+            /*
+             * Y is screen-down-positive.  vy is signed: negative = up,
+             * positive = down (gravity adds to vy).
+             *
+             * BUG FIX: was `hero_world_y - vy` which made the hero go
+             * DOWN on jump init (vy = -8 → y += 8) and immediately
+             * landed on the ground on the next frame, so the jump
+             * never visibly happened when C was pressed.
+             *
+             * Correct: pos += vel.
+             */
+            hero_world_y = (int16_t)(hero_world_y + vy);
             vy++;
             if (hero_world_y >= HERO_GROUND_Y) {
                 hero_world_y = HERO_GROUND_Y;
                 vy = 0;
                 hero_state = 0u;
             }
-            /* Use the dimensionally-uniform STAND set during jump so
-             * the sprite doesn't change strip-count each frame — no
-             * more "movement stripes" artefact when C is pressed. */
+            /* Uniform STAND set during jump so no strip-width split. */
             hero_frame = s_hero_stand[(t / 8u) % 8u];
             break;
         default:                              /* strike */
@@ -1906,7 +1915,10 @@ static uint8_t NEOGEO_USER chap_joystick(void)
         }
 
         if (hero_world_y < HERO_GROUND_Y || vy != 0) {
-            hero_world_y = (int16_t)(hero_world_y - vy);
+            /* pos += vel  (Y down-positive, vy negative = up) — was
+             * `- vy` which made the hero descend on jump-start and
+             * land instantly on frame 1. */
+            hero_world_y = (int16_t)(hero_world_y + vy);
             vy = (int16_t)(vy + 1);
             if (hero_world_y >= HERO_GROUND_Y) {
                 hero_world_y = HERO_GROUND_Y;
