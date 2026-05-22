@@ -427,14 +427,28 @@ static uint8_t NEOGEO_USER chap_fix(void)
 
     chap_header(2u, "FIX LAYER", "TEXT  PALETTES  DIRTY CACHE");
     /*
-     * Draw a BG sprite (screen 1 = a background image) at slot 300
-     * BEHIND the FIX text so transparent cells reveal the artwork
-     * instead of pure black.  This is what makes the FIX layer look
-     * "transparent" to the user.
+     * Clean WHITE backdrop — no artwork BG image, no pure black.
+     * The empty cells of the FIX layer are transparent and show this
+     * backdrop colour, which makes the FIX text easy to read on a
+     * paper-like surface.  We override the chap_header backdrop
+     * (which was dim navy) just for this chapter.
      */
-    draw_background(1u, 32, 16);
+    setBACKDROP(WHITE);
+    /*
+     * Re-write the header tag + "A: NEXT" using palette 2 (yellow/
+     * accent) instead of palette 0 (white) so they remain visible on
+     * the new white backdrop.
+     */
+    {
+        char tag[6];
+        tag[0] = 'C'; tag[1] = 'H'; tag[2] = '.';
+        tag[3] = '0'; tag[4] = '2'; tag[5] = '\0';
+        demo_fix_puts(2u,  0u, tag,        2u);
+        demo_fix_puts(36u, 0u, "02",       2u);
+        demo_fix_puts(2u, 27u, "A: NEXT",  2u);
+    }
     demo_fix_puts(2u, 2u, "FIX = 40x32 CELL OVERLAY", 1u);
-    demo_fix_puts(2u, 3u, "DIRTY-CELL CACHE  NO TEAR", 0u);
+    demo_fix_puts(2u, 3u, "DIRTY-CELL CACHE  NO TEAR", 2u);
     snd_cross_to(SOUND_MUSIC_SHOP_JINGLE);
 
     demo_fix_puts(2u,  6u, "PALETTE 0  STANDARD",   0u);
@@ -442,7 +456,7 @@ static uint8_t NEOGEO_USER chap_fix(void)
     demo_fix_puts(2u,  8u, "PALETTE 2  WARN",       2u);
 
     demo_fix_puts(2u, 11u, "OVERWRITING ROW 13 EACH FRAME:", 1u);
-    demo_fix_puts(2u, 12u, "(WATCH: NO FLICKER)",            0u);
+    demo_fix_puts(2u, 12u, "(WATCH: NO FLICKER)",            2u);
 
     for (t = 0u; t < 180u; t++) {
         digit3(buf, t);
