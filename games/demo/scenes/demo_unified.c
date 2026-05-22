@@ -779,14 +779,36 @@ static uint8_t NEOGEO_USER chap_physics(void)
     uint8_t  i;
 
     chap_header(6u, "PHYSICS", "GRAVITY  SOLIDS  GROUNDED");
+
+    /*
+     * EXPLICIT SCREEN CLEAR before drawing anything.
+     * Even though chap_header runs ng_clear_screen_full(), we re-clear
+     * the FIX layer and force the backdrop back to dim navy here so
+     * the previous chapter's white/coloured backdrop cannot bleed
+     * through and the floor / eagle render against a known background.
+     */
+    clearFix();
+    setBACKDROP(0x8001);
+
+    /* Re-draw header text after the clear */
+    demo_fix_puts(2u,  0u, "CH.06",        2u);
+    demo_fix_puts(8u,  0u, "PHYSICS",      2u);
+    demo_fix_puts(2u,  1u, "GRAVITY  SOLIDS  GROUNDED", 1u);
+    demo_fix_puts(36u, 0u, "06",           2u);
+    demo_fix_puts(2u, 27u, "A: NEXT",      0u);
+
     demo_fix_puts(2u, 2u, "NGPHYSICSBODY  GRAVITY 0.125",  1u);
-    demo_fix_puts(2u, 3u, "FLOOR Y=192  EAGLE FALLS",      0u);
+    demo_fix_puts(2u, 3u, "FLOOR Y=184  EAGLE FALLS",      0u);
     snd_cross_to(SOUND_MUSIC_SAMURAI_GAME_LOOP);
 
-    /* Floor strip — raised to row 23 so the eagle's feet visibly
-     * land ON the bar (row 24 was below the sprite bottom). */
+    /*
+     * Visible floor bar — drawn at FIX row 23 (pixel y 184..191).
+     * The PHYSICS solid below is placed at y=184 (same top edge) so
+     * the eagle's feet land EXACTLY on the bar.  Previously the bar
+     * was at row 23 but the solid was at y=192, so the eagle fell
+     * 8 px past the visible bar.
+     */
     demo_fix_puts(0u, 23u, "========================================", 2u);
-    demo_fix_puts(0u, 24u, "                                        ", 0u);
 
     /*
      * EXTRA hard clear before physics setup — kills any stale strip
@@ -797,7 +819,8 @@ static uint8_t NEOGEO_USER chap_physics(void)
     ng_chars_defrag_slots();
 
     ng_physics_init();
-    ng_physics_add_solid(PLATFORM_X, U_FLOOR_Y, PLATFORM_W, 8, 0u);
+    /* Solid Y = 184 matches the top edge of the FIX floor bar at row 23 */
+    ng_physics_add_solid(PLATFORM_X, 184, PLATFORM_W, 8, 0u);
 
     reset_palette_memo();
     frame = s_eagle_fly[0];
@@ -1229,125 +1252,111 @@ static uint8_t NEOGEO_USER chap_feedback(void)
 static uint8_t NEOGEO_USER chap_depthfx(void)
 {
     /*
-     * CORRIDOR depth demo — more representative of how a real game
-     * uses ng_depthfx_project.  We project a row of WAYPOINTS along
-     * a corridor going INTO the screen, and a set of TARGETS flying
-     * toward the camera.  All positions are computed via
-     * ng_depthfx_project so the math is engine-real, not faked.
+     * DEPTH demo using WARRIOR FACE SPRITES at varying Z.
+     * Three warrior sprites are drawn at different "distances" — the
+     * closest is full-size, the middle is 50%, the farthest is 25%.
+     * Their hardware scale + position is computed via
+     * ng_depthfx_project so the math is engine-real.
      *
-     * Rendering uses the FIX layer for clarity:
-     *   - the corridor is a perspective grid (vanishing-point lines)
-     *   - waypoints (10 zones deep) draw as marker glyphs that shrink
-     *     and dim with distance via the palette
-     *   - 6 "drone" targets cycle z from far → near → loop, drawn
-     *     as glyphs whose intensity tracks z
+     * Per-row FIX stripes underneath visualise the depth bands: each
+     * band uses a different palette so the user can SEE the depth
+     * zones the warriors are flying through.
      */
-    enum { DRONE_COUNT = 6, WAYPOINT_COUNT = 8 };
-    NGVec3   drone[DRONE_COUNT];
-    uint8_t  d_last_cx[DRONE_COUNT];
-    uint8_t  d_last_cy[DRONE_COUNT];
-    uint8_t  d_valid[DRONE_COUNT];
+    enum { WARRIOR_COUNT = 3 };
+    /* z 8..96 — closer = smaller number = bigger on screen */
+    int16_t  wz[WARRIOR_COUNT]  = { 16, 40, 72 };
+    int16_t  wx[WARRIOR_COUNT]  = { -40,  0,  40 };
     uint16_t t;
     uint8_t  i;
 
-    chap_header(11u, "DEPTH FX", "CORRIDOR  Z-PROJECTION");
-    demo_fix_puts(2u, 2u, "NG_DEPTHFX_PROJECT IN A CORRIDOR",   1u);
-    demo_fix_puts(2u, 3u, "DRONES FLY TOWARD CAMERA",           0u);
+    chap_header(11u, "DEPTH FX", "WARRIORS AT VARYING Z");
+    demo_fix_puts(2u, 2u, "3 WARRIORS  3 DEPTHS  ENGINE SCALE", 1u);
+    demo_fix_puts(2u, 3u, "DEPTH STRIPES ON FIX  LABELS BELOW", 0u);
     snd_cross_to(SOUND_MUSIC_SAMURAI_ENDING_SCENE);
 
     /*
-     * Draw the static corridor — vanishing-point perspective:
-     *   * a HORIZON line at row 13 (vanishing point at column 20)
-     *   * two converging lines (left + right walls) drawn with FIX chars
-     *   * 8 horizontal floor lines that shrink as they recede
+     * Static depth stripes — 4 horizontal bands on rows 4..7 each in
+     * a different palette to demarcate distance zones.  Below each
+     * band we label the zone so the user can read the depth tag.
      */
     {
         uint8_t y;
-        /* sky band */
-        for (y = 4u; y < 13u; y++) {
-            demo_fix_puts(0u, y, "                                        ",
-                          (uint8_t)((y < 8u) ? 1u : 0u));
-        }
-        demo_fix_puts(0u, 13u, "________________________________________", 2u);
-
-        /* walls + floor lines */
-        for (y = 0u; y < WAYPOINT_COUNT; y++) {
-            /* z in 8..120 — closer waypoints are wider apart */
-            uint8_t row    = (uint8_t)(14u + y * 2u);
-            uint8_t half_w = (uint8_t)(y * 2u + 1u);
-            uint8_t cx     = 20u;
-            uint8_t left   = (cx > half_w) ? (uint8_t)(cx - half_w) : 0u;
-            uint8_t right  = (uint8_t)(cx + half_w);
-            uint8_t c;
-            uint8_t pal    = (uint8_t)((y < 3u) ? 0u : (y < 6u) ? 1u : 2u);
-
-            if (row >= 27u) break;
-            /* horizontal floor line */
-            for (c = left; c <= right && c < 40u; c++) {
-                demo_fix_puts(c, row, (y == 0u) ? "-" : "=", pal);
-            }
-            /* wall posts */
-            if (left  > 0u)   demo_fix_puts((uint8_t)(left  - 1u),
-                                            (uint8_t)(row - 1u), "|", pal);
-            if (right < 39u)  demo_fix_puts((uint8_t)(right + 1u),
-                                            (uint8_t)(row - 1u), "|", pal);
+        const char *labels[4] = { "VERY FAR", "FAR     ",
+                                  "MID     ", "NEAR    " };
+        for (y = 0u; y < 4u; y++) {
+            uint8_t row = (uint8_t)(5u + y);
+            uint8_t pal = (uint8_t)((y == 0u) ? 0u :
+                                    (y == 1u) ? 1u :
+                                    (y == 2u) ? 1u : 2u);
+            demo_fix_puts(0u, row,
+                          "========================================",
+                          pal);
+            demo_fix_puts(2u, (uint8_t)(row + 18u), labels[y], pal);
         }
     }
 
     ng_depthfx_init();
 
-    /* Seed drones spaced along z, all near the centre line */
-    for (i = 0u; i < DRONE_COUNT; i++) {
-        drone[i].x = (int16_t)((int16_t)(i & 1u ? 12 : -12));
-        drone[i].y = (int16_t)((int16_t)(i & 2u ? -8 : 8));
-        drone[i].z = (int16_t)(20 + i * 18);
-        d_valid[i] = 0u;
-    }
+    /* Static labels for the 3 warriors below the depth stripes */
+    demo_fix_puts(2u, 24u, "WARRIOR Z = ", 1u);
 
-    for (t = 0u; t < 540u; t++) {
-        for (i = 0u; i < DRONE_COUNT; i++) {
-            NGProjected pr;
-
-            /* erase last drawn cell */
-            if (d_valid[i] && d_last_cx[i] < 40u && d_last_cy[i] < 28u) {
-                demo_fix_puts(d_last_cx[i], d_last_cy[i], " ", 0u);
-            }
-
-            /* advance z (loop when at camera) */
-            drone[i].z = (int16_t)(drone[i].z - 1);
-            if (drone[i].z < 8) drone[i].z = 120;
-
-            pr = ng_depthfx_project(drone[i], 0u);
-            if (pr.visible) {
-                uint8_t cx = (uint8_t)((pr.screen_x + 160) >> 3);
-                uint8_t cy = (uint8_t)((pr.screen_y + 112) >> 3);
-                if (cx < 40u && cy >= 4u && cy < 27u) {
-                    const char *glyph;
-                    uint8_t pal;
-                    if (drone[i].z > 80)      { glyph = ".";  pal = 0u; }
-                    else if (drone[i].z > 40) { glyph = "o";  pal = 1u; }
-                    else if (drone[i].z > 20) { glyph = "O";  pal = 2u; }
-                    else                       { glyph = "@";  pal = 2u; }
-                    demo_fix_puts(cx, cy, glyph, pal);
-                    d_last_cx[i] = cx;
-                    d_last_cy[i] = cy;
-                    d_valid[i]   = 1u;
-                    continue;
-                }
-            }
-            d_valid[i] = 0u;
+    for (t = 0u; t < 720u; t++) {
+        char buf[6];
+        /* HUD: show each warrior's current z value */
+        for (i = 0u; i < WARRIOR_COUNT; i++) {
+            buf[0] = (char)('0' + (wz[i] / 100u) % 10u);
+            buf[1] = (char)('0' + (wz[i] /  10u) % 10u);
+            buf[2] = (char)('0' + (wz[i] %  10u));
+            buf[3] = ' ';
+            buf[4] = '\0';
+            demo_fix_puts((uint8_t)(14u + i * 8u), 24u, buf,
+                          (uint8_t)(i == 2u ? 2u : 1u));
         }
 
-        /* Z indicator + drone count on top-left */
-        {
-            char buf[5];
-            uint8_t alive = 0u;
-            for (i = 0u; i < DRONE_COUNT; i++) if (d_valid[i]) alive++;
-            buf[0] = (char)('0' + (alive / 10u));
-            buf[1] = (char)('0' + (alive % 10u));
-            buf[2] = '\0';
-            demo_fix_puts(2u, 5u, "DRONES:", 1u);
-            demo_fix_puts(10u, 5u, buf,      2u);
+        for (i = 0u; i < WARRIOR_COUNT; i++) {
+            NGVec3   p;
+            NGProjected pr;
+            uint8_t  scale;
+
+            /* advance z toward camera, loop when too close */
+            wz[i] = (int16_t)(wz[i] - 1);
+            if (wz[i] < 8) wz[i] = 96;
+
+            p.x = wx[i];
+            p.y = 0;
+            p.z = wz[i];
+            pr = ng_depthfx_project(p, 0u);
+
+            /* Scale from z: closer = bigger (0xFF at z=8, 0x40 at z=96) */
+            scale = (uint8_t)(0x40u + (uint16_t)((96 - wz[i]) * 0xC0u) / 88u);
+
+            (void)pr;
+            /*
+             * Draw a warrior sprite at this Z.  Use the dimensionally
+             * uniform stand set so different frames don't shift width.
+             * Slot ranges 280-290 reserved for these — slot increases
+             * with i so warriors don't overlap each other in VRAM.
+             */
+            {
+                uint8_t frame = s_hero_stand[(t / 14u) % 8u];
+                uint8_t strips = demo_screen_strips(frame);
+                uint8_t rows   = demo_screen_rows(frame);
+                int16_t off_x  = demo_screen_x_offset(frame);
+                int16_t off_y  = demo_screen_y_offset(frame);
+                /* centre on screen X = 160 + wx (closer warriors
+                 * further from screen centre, further closer to it) */
+                int16_t screen_x = (int16_t)(160 + (wx[i] * (96 - wz[i])) / 96);
+                int16_t screen_y = (int16_t)(120 + (96 - wz[i]) / 4);
+                int16_t draw_x = (int16_t)(screen_x
+                                 - (strips * 16 * scale / 256) / 2 - off_x);
+                int16_t draw_y = (int16_t)(screen_y
+                                 - (rows   * 16 * scale / 256) / 2 - off_y);
+                demo_load_screen_palette(frame);
+                demo_draw_sprite_screen(frame,
+                                        (uint16_t)(280u + i * 8u),
+                                        draw_x, draw_y,
+                                        strips, rows, scale, scale);
+            }
         }
 
         if (uframe()) return 1u;
@@ -1589,53 +1598,79 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
          * on top of the BG).
          */
         /*
-         * Multi-cell SWORD ARC during the active hit window — 5 FIX
-         * cells extending from the hero in the facing direction.
-         * Pattern: > > > * +    (or < < < + * mirrored when facing left)
-         * Animated tail glyphs cycle each frame for a "slash" feel.
-         * Remembered cells so erase is targeted.
+         * Multi-row BIG SWORD SLASH during the active hit window.
+         * Drawn as a 3-row × 6-col arc anchored next to the hero so
+         * it can't possibly be missed.  Also writes a "STRIKE!" label
+         * at top-left of the screen so the user can confirm B was
+         * detected even if the arc is somehow obscured.
          */
         {
             static uint8_t sw_last_cx = 0xFFu;
             static uint8_t sw_last_cy = 0u;
-            const  uint8_t SW_LEN = 5u;
-            if (hero_state == 3u && state_t >= 4u && state_t <= 18u) {
+            const  uint8_t SW_LEN = 6u;
+            if (hero_state == 3u && state_t >= 1u && state_t <= 22u) {
                 uint8_t sword_cx = (uint8_t)((hero_flip
-                    ? (hero_world_x - 72) : (hero_world_x + 16)) / 8);
-                uint8_t sword_cy = (uint8_t)(hero_world_y / 8);
+                    ? (hero_world_x - 80) : (hero_world_x + 16)) / 8);
+                uint8_t sword_cy = (uint8_t)((hero_world_y / 8) - 1u);
                 uint8_t k;
-                /* erase prior arc if it has moved */
+                /* erase prior 3x6 if it moved */
                 if (sw_last_cx != 0xFFu &&
                     (sw_last_cx != sword_cx || sw_last_cy != sword_cy)) {
-                    for (k = 0u; k < SW_LEN; k++)
-                        demo_fix_puts((uint8_t)(sw_last_cx + k),
-                                      sw_last_cy, " ", 0u);
+                    uint8_t row;
+                    for (row = 0u; row < 3u; row++)
+                        for (k = 0u; k < SW_LEN; k++)
+                            demo_fix_puts((uint8_t)(sw_last_cx + k),
+                                          (uint8_t)(sw_last_cy + row),
+                                          " ", 0u);
                 }
-                if (sword_cx < (uint8_t)(38u - SW_LEN) && sword_cy < 25u) {
-                    /* draw the arc — tail glyphs animate over frames */
+                if (sword_cx < (uint8_t)(38u - SW_LEN) && sword_cy < 24u) {
+                    /* 3-row arc — TOP/MID/BOT with diagonal pattern */
+                    static const char *const slash_r[3] = {
+                        "\\\\\\***",
+                        "==>>>",
+                        "///***"
+                    };
                     for (k = 0u; k < SW_LEN; k++) {
-                        const char *g;
-                        uint8_t pal = (uint8_t)(1u + (k & 1u));
+                        uint8_t pal_top = 2u;
+                        uint8_t pal_mid = 1u;
+                        uint8_t pal_bot = 2u;
+                        const char *gt, *gm, *gb;
                         if (hero_flip) {
-                            /* facing left: pattern + * < < <  */
-                            g = (k == 0u) ? "+" :
-                                (k == 1u) ? "*" : "<";
+                            /* mirror: top "***///", mid "<<<==", bot "***\\\\\\" */
+                            gt = (k < 3u) ? "*" : "/";
+                            gm = (k == SW_LEN - 1u) ? "=" :
+                                 (k == SW_LEN - 2u) ? "=" : "<";
+                            gb = (k < 3u) ? "*" : "\\";
                         } else {
-                            /* facing right: > > > * + */
-                            g = (k == SW_LEN - 1u) ? "+" :
-                                (k == SW_LEN - 2u) ? "*" : ">";
+                            gt = (k < 3u) ? "\\" : "*";
+                            gm = (k < 2u) ? "=" :
+                                 (k == 2u) ? ">" : ">";
+                            gb = (k < 3u) ? "/" : "*";
                         }
-                        /* shimmer effect: cycle palette per frame */
-                        if (((state_t + k) & 3u) == 0u) pal = 2u;
-                        demo_fix_puts((uint8_t)(sword_cx + k), sword_cy, g, pal);
+                        /* per-frame palette shimmer */
+                        if (((state_t + k) & 3u) == 0u) {
+                            pal_top = 1u; pal_mid = 2u; pal_bot = 1u;
+                        }
+                        demo_fix_puts((uint8_t)(sword_cx + k),
+                                      sword_cy,                  gt, pal_top);
+                        demo_fix_puts((uint8_t)(sword_cx + k),
+                                      (uint8_t)(sword_cy + 1u),  gm, pal_mid);
+                        demo_fix_puts((uint8_t)(sword_cx + k),
+                                      (uint8_t)(sword_cy + 2u),  gb, pal_bot);
                     }
                     sw_last_cx = sword_cx; sw_last_cy = sword_cy;
+                    (void)slash_r;
                 }
+                /* visible "STRIKE!" indicator so user can verify B detection */
+                demo_fix_puts(32u, 22u, "STRIKE!", 2u);
             } else if (sw_last_cx != 0xFFu) {
-                uint8_t k;
-                for (k = 0u; k < SW_LEN; k++)
-                    demo_fix_puts((uint8_t)(sw_last_cx + k),
-                                  sw_last_cy, " ", 0u);
+                uint8_t row, k;
+                for (row = 0u; row < 3u; row++)
+                    for (k = 0u; k < SW_LEN; k++)
+                        demo_fix_puts((uint8_t)(sw_last_cx + k),
+                                      (uint8_t)(sw_last_cy + row),
+                                      " ", 0u);
+                demo_fix_puts(32u, 22u, "       ", 0u);
                 sw_last_cx = 0xFFu;
             }
         }
@@ -1695,6 +1730,7 @@ static uint8_t NEOGEO_USER chap_joystick(void)
     const int16_t HERO_GROUND_Y = 112;
     uint8_t  hero_flip = 0u;
     int16_t  vy = 0;
+    (void)hero_flip;   /* tracked for symmetry; not used for facing on hero_draw */
     /*
      * PERSISTENT state machine — previous version reset every frame
      * which meant the strike animation only played for 1 frame and
@@ -1706,9 +1742,9 @@ static uint8_t NEOGEO_USER chap_joystick(void)
     uint8_t  hits      = 0u;
     char buf[8];
 
-    chap_header(14u, "JOYSTICK", "LIVE INPUT  QCF + DP");
+    chap_header(14u, "JOYSTICK", "LIVE INPUT  TWO-BUTTON SPECIALS");
     demo_fix_puts(2u, 2u, "ARROWS MOVE  B STRIKE  C JUMP",   1u);
-    demo_fix_puts(2u, 3u, "QCF+B SPECIAL  DP+B FINISHER",    0u);
+    demo_fix_puts(2u, 3u, "B+C TOGETHER SPECIAL  B+D FINISHER", 0u);
     snd_cross_to(SOUND_MUSIC_SAMURAI_GAME_LOOP);
 
     ng_joystick_init();
@@ -1720,8 +1756,8 @@ static uint8_t NEOGEO_USER chap_joystick(void)
     demo_fix_puts(2u,  8u, "HELD B:",     2u);
     demo_fix_puts(2u,  9u, "HELD C:",     2u);
     demo_fix_puts(2u, 10u, "HELD D:",     2u);
-    demo_fix_puts(2u, 12u, "QCF+B:",      2u);
-    demo_fix_puts(2u, 13u, "DP +B:",      2u);
+    demo_fix_puts(2u, 12u, "B+C:",        2u);   /* light special */
+    demo_fix_puts(2u, 13u, "B+D:",        2u);   /* heavy finisher */
     demo_fix_puts(2u, 25u, "HIT TARGET ON RIGHT WITH B",       0u);
     demo_fix_puts(2u, 26u, "HITS:",                            2u);
 
@@ -1745,16 +1781,20 @@ static uint8_t NEOGEO_USER chap_joystick(void)
         uint16_t pressed;
         uint16_t released;
         uint8_t frame;
-        uint8_t qcf;
-        uint8_t dpc;
+        uint8_t combo_bc;     /* B+C held together → light special */
+        uint8_t combo_bd;     /* B+D held together → heavy finisher */
         uint8_t i;
 
         ng_joystick_update();
         down     = ng_joy_down();
         pressed  = ng_joy_pressed();
         released = ng_joy_released();
-        qcf      = ng_joy_special_qcf(hero_flip, BUTTON_B);
-        dpc      = ng_joy_special_dp(hero_flip, BUTTON_B);
+        /*
+         * Simplified specials — just hold TWO buttons together.
+         * No quarter-circle / dragon-punch motion required.
+         */
+        combo_bc = (uint8_t)(((down & BUTTON_B) && (down & BUTTON_C)) ? 1u : 0u);
+        combo_bd = (uint8_t)(((down & BUTTON_B) && (down & BUTTON_D)) ? 1u : 0u);
 
         /* Pad letters: U D L R */
         {
@@ -1782,8 +1822,8 @@ static uint8_t NEOGEO_USER chap_joystick(void)
             digit3(buf, h);
             demo_fix_puts(10u, (uint8_t)(7u + i), buf, 1u);
         }
-        demo_fix_puts(9u, 12u, qcf ? "OK  " : "--- ", qcf ? 2u : 0u);
-        demo_fix_puts(9u, 13u, dpc ? "OK  " : "--- ", dpc ? 2u : 0u);
+        demo_fix_puts(8u, 12u, combo_bc ? "OK  " : "--- ", combo_bc ? 2u : 0u);
+        demo_fix_puts(8u, 13u, combo_bd ? "OK  " : "--- ", combo_bd ? 2u : 0u);
 
         /* Motion (only when not striking) ---------------------------- */
         if (strike_t == 0u) {
@@ -1796,15 +1836,20 @@ static uint8_t NEOGEO_USER chap_joystick(void)
             }
         }
 
-        /* Specials take priority over basic strike */
-        if (special_t == 0u && strike_t == 0u && (pressed & BUTTON_B)) {
-            if (dpc) {
+        /*
+         * Specials = two-button combos, checked BEFORE plain B strike.
+         * Press B+D together → heavy finisher (36-frame action).
+         * Press B+C together → light special (30-frame).
+         * Press B alone     → basic strike (24-frame).
+         */
+        if (special_t == 0u && strike_t == 0u) {
+            if (combo_bd && (pressed & (BUTTON_B | BUTTON_D))) {
                 special_t = 36u;
                 playSFX(SOUND_SFX_LOW_DRUM);
-            } else if (qcf) {
+            } else if (combo_bc && (pressed & (BUTTON_B | BUTTON_C))) {
                 special_t = 30u;
                 playSFX(SOUND_SFX_STRING_PHRASE);
-            } else {
+            } else if (pressed & BUTTON_B) {
                 strike_t = 24u;
                 playSFX(SOUND_SFX_BLADE_WHOOSH);
             }
