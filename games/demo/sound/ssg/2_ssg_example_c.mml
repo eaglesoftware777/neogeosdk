@@ -1,22 +1,24 @@
-; 2_insert_coin.mml
-; Standalone SSG insert coin chime
-; Build with ssg_compile.py -> ssg_data.inc
-; Play with playSSGTrack(2)
+; 2_ssg_example_c — Defender-style alert arpeggio (E minor, urgent)
 
-T210
-P1
-V15
-O5
-L32
-
-C E G > C
-R16
-< G > C E G
-R16
-
+T160
 P2
-O6
-C R E R G R > C R
-< G4 R8
+V12
+O5
+L8
 
-; one-shot: no loop
+; phrase A — alert pattern
+E G B > E  E G B > E
+D F+ A > D  D F+ A > D
+
+; phrase B — climb / urgency
+L16
+E G B > E  D F+ A > D  C E G > C  < B > D F+ A
+G B > D F+  E G B > E  D F+ A > D  C E G > C
+L8
+
+; phrase C — resolve
+> E < G > B > E  > D < B G E
+F+ A > C+ F+  E D C < B
+> E2 R4 R4
+
+~

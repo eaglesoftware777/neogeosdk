@@ -1,32 +1,29 @@
-; 1 - Samurai minor menu / duel loop
-T132
-I4
-V15
-O3
+; 1_fm_example_b — Mario-overworld-style melody (A major, upbeat)
+
+T150
+I1
+V13
+O5
 L8
 
-A C E A
-G E C A
-F A C F
-E C < B E
+; phrase A — main hook
+E E R E  R C E R
+G R R R  < G R R R
 
-A C E G
-A > C < A G
-E G A C
-< B G E4
+; phrase B — answer
+> C R < G R  E R R A
+B R B- A  > C E < A G
 
-I5
-O4
-A G E C
-D E G A
-C < A G E
-A4 R4
+; phrase C — bridge
+E G > C R  < G > E F R
+G F E R  G F E R
+> C R E < A  < B > C R < G
+> C R E < A  < B > C R < G
 
-I4
-O3
-A C E A
-G E C A
-F E D C
-< B > C E4
+; phrase D — variation
+E G > C R  < G > E F R
+G F E R  > C < G C R
+E R R E  R C E R
+G2 R2
 
 ~

@@ -1,55 +1,29 @@
-; 7 - Patch showcase / sound tour
-T150
-V15
-O4
-L16
+; 7_fm_example_h — Metal Slug boss-style epic (B minor, intense)
 
-I0
-C E G > C
-< G E C E
-
-I1
-C E G > C
-< G E C E
-
-I2
-C R E R G R > C R
-
-I3
-< G R E R C R E R
-
-I4
-O3
-A C E A
-G E C A
-
-I5
-O4
-A G E C
-D E G A
-
-I6
-C E G > C
-D C < A G
-
+T145
 I7
-G A B > D
-C < B A G
+V13
+O4
+L8
 
-I8
-O2
-A R A R
-> C R < A R
+; phrase A — driving low end
+B > F+ B > F+  > D < B G+ B
+A > E A > E  > C < A F+ A
 
-I10
-O5
-C R E R G R > C R
+; phrase B — main theme rising
+L4
+B > D F+ B
+L8
+A G+ F+ E  D < B A G+
+F+4 E4  D4 < B4
 
-I11
-< G R > C R E R G R
-
-I12
-O3
-A4 R8 E4 R8
+; phrase C — climax
+> B A G+ F+  E F+ G+ A
+B > D < B G+  F+ E D < B
+> B A G+ F+  E G+ B > E
+L4
+> D < B  > C+ < A
+L8
+B G+ F+ E  > B2
 
 ~

@@ -1,24 +1,26 @@
-; 5 - Victory jingle
-T168
-I0
-V15
+; 5_fm_example_f — Castlevania-style minor melody (D minor, dramatic)
+
+T105
+I5
+V12
 O4
-L16
+L8
 
-C E G > C
-E G > C E
-D F A > D
-F A > D F
+; phrase A — sustained intro
+D F A > D  > C < A F D
+< E G B- > E  > D < B- G E
 
-I1
-O5
-E D C < G
-A G E C
-G4 R8
+; phrase B — main theme
+> A G F E  D > D < A F
+G F E D  C E G < B-
+> A G F E  D F A > D
+< G F E D  > D2
 
-I11
-O5
-C R E R G R > C R
+; phrase C — descending finale
+L4
+> A G F E  D < A F D
+L8
+< C E G > C  < B- D F < B-
+A4 R4 R2
 
-; remove ~ if you want one-shot
 ~

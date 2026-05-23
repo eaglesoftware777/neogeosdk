@@ -1,11 +1,24 @@
-; 3 - Warrior riff — 4-bar A-minor staccato accent line
-T180
+; 3_ssg_example_d — Asteroids-style sparse pulse (A minor, tense)
+
+T125
 P1
-V8
-O3
-L16
-A R A R O4 E R A R G R E R D R O3 A8 R8
-B R O4 D R F R A R G R F R E R O3 B8 R8
-O4 E R G R B R O5 E R D R C R O4 B R O3 E8 R8
-O4 A R O5 C R E R A R G R E R C R O4 A8 R8
+V10
+O4
+L4
+
+; phrase A — sparse beats
+A R > C R  E R A R
+G R B R  > D R G R
+
+; phrase B — building
+L8
+> A < E A > C  E A > C < A
+> G < D G B  > D G B < G
+
+; phrase C — climax
+> A > C E A  G E C < A
+> F A > C E  D < B G F
+L4
+> E A < E A  > C E < A2
+
 ~

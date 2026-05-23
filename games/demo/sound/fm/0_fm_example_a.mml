@@ -1,36 +1,25 @@
-; 0 - Clean happy arcade menu loop
-T148
+; 0_fm_example_a — bright C-major arcade intro (Pac-Man / Galaga vibe)
+
+T140
 I0
-V14
-O4
-L16
-
-; main phrase
-C E G > C
-D C < G E
-A > C E G
-E D C < A
-
-; answer phrase
-I1
-F A > C D
-E D C < A
-G B > D E
-D C < B G
-
-; variation
-I0
-C E G > C
-< B A G E
-A > C E A
-G E D C
-
-; soft ending
-I1
+V13
 O5
-C D E G
-E D C < A
-G E D C
-< G4 R8
+L8
+
+; intro arpeggio (climbing)
+C E G > C  E G > C E
+< G E C < G  > C E G C
+
+; main melody A — bouncy hook
+> C C D E  G E C E
+D D E F  A F D F
+E G > C E  G > C E < G
+F A > C F  A > C < A F
+
+; main melody B — answer phrase
+E G > C E  D F A D
+< C E G C  < B > D F < B
+A > C E A  G E C < A
+> C < G E C  > C4 R4
 
 ~
