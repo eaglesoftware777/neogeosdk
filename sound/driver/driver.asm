@@ -2311,10 +2311,26 @@ ssg_ch_c_no_detune:
     ;   bit 4 = /Noise B (1=disable)
     ;   bit 5 = /Noise C (1=disable)
     ;   $38 = tones A,B,C on + noise A,B,C off
+    ;
+    ; SKIP this write when the standalone SSG is in envelope-voice
+    ; mode (VAR_SSG_ENV_ON=1).  Voice presets explicitly enable noise
+    ; on channel A via reg $07 = $36; resetting it to $38 every note
+    ; would kill the consonant noise burst.
+    ld a,(VAR_SSG_ENV_ON)
+    or a
+    jr nz,ssg_note_on_skip_mixer
     ld de,$0738
     call shadowed_write_a
+ssg_note_on_skip_mixer:
 
-    ; Set channel volumes (M=0 for all)
+    ; Set channel volumes (M=0 for all).  When VAR_SSG_ENV_ON is set
+    ; we're in envelope-voice mode — the preset already configured
+    ; channel A's vol to $10 (M=1) and channels B/C should stay at the
+    ; preset's quiet values (often 0).  Skip the vol writes here so the
+    ; envelope shaping isn't masked by chorus channels.
+    ld a,(VAR_SSG_ENV_ON)
+    or a
+    ret nz
     ld d,$08
     ld a,(VAR_MUSIC_VOL)
     and $0F

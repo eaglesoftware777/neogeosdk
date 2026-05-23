@@ -1,30 +1,35 @@
-; 4_voice_get_ready — YM2149 envelope-driven voice: "GET READY!"
+; 4_voice_get_ready — YM2149 envelope voice cue: "GET READY!"
 ;
-; Each note in envelope mode auto-retriggers shape $0 (sharp attack,
-; slow decay).  Q sets envelope period HIGH byte:
-;   Q1 ~130 ms env cycle  (fast syllable)
-;   Q2 ~260 ms env cycle  (normal syllable)
-;   Q3 ~390 ms env cycle  (held vowel)
-;
-; Voice cadence: 4 syllables, descending pitch with rising exclamation.
+; One syllable = consonant burst (preset 3 = tone+noise on ch A)
+; + sustained vowel (preset 4 = tone-only on ch A).  Channels B,C
+; stay silent (preset vol_b=vol_c=0) so the envelope-shaped channel
+; A is what the listener hears, not chorus.  E0 retriggers shape $0
+; (decay) on every note; Q sets envelope cycle per syllable.
 
 T220
 V14
 O5
-L32
 
-Q2 E0
-P3 D E
-P0 F+ G G+ A G F+ E D
-
-Q2 E0
-P3 D E
-P0 F+ G A B A G F+ E D
-
+; "GET"  — sharp consonant + short rising vowel
 Q3 E0
-P0 D D E E D D < B
+P3 D32
+P4 G+16
+R32
 
-Q1 E0
-P0 > E F+ G A > C
+; "REA"  — sustained vowel
+Q4 E0
+P3 D32
+P4 A8
+R32
+
+; "DY"   — descending close
+Q3 E0
+P3 D32
+P4 E16
+R32
+
+; "!"    — short exclamation high
+Q2 E0
+P4 > C16
 
 ~

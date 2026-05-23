@@ -1,20 +1,24 @@
-; 6_voice_game_over — YM2149 envelope-driven voice: "GAME OVER"
+; 6_voice_game_over — YM2149 envelope voice cue: "GAME OVER"
 
 T220
 V13
 O4
-L32
 
+; "GAME"  — sustained mid vowel
+Q5 E0
+P3 D32
+P4 G8
+R32
+
+; "O"     — short open vowel
 Q3 E0
-P3 F G
-P0 A B B B A G F+ F E
+P3 D32
+P4 F+16
+R32
 
-Q2 E0
-P3 E E
-P0 F F+ G F E E D
-
-Q4 E0
-P3 D D
-P0 E D C+ C < B A+ A G+ G F+ F E
+; "VER"   — long fading vowel
+Q6 E0
+P3 D32
+P4 E4
 
 ~
