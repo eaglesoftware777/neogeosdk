@@ -1460,6 +1460,277 @@ class ManualPaletteEditorTab(QWidget):
 # ---------------------------------------------------------------------------
 # Main Window
 # ---------------------------------------------------------------------------
+###############################################################################
+#  Pipeline Runner Tab
+#  ---------------------------------------------------------------------------
+#  Run every artbox-pipeline step from inside the studio.  Each step has a
+#  Run button, a status pill, and a shared scrollback log pane.
+#
+#  Steps wired up:
+#    1. img2neo          (PNGs → indexed NeoGeo palettes / dithered)
+#    2. img2neo --hd     (HD pipeline: bilateral + CLAHE + blue-noise)
+#    3. genscreens       (generate showScreenN bodies)
+#    4. gen_sprite_meta  (sprite metadata table)
+#    5. fixtiles         (FIX-layer tiles → S1 ROM)
+#    6. fixtiles --hd    (per-tile palette + sharp-text)
+#    7. romdbimgimport   (PNG → C-ROM blocks)
+#    8. romtiles         (C1/C2 ROM packer)
+#    9. romdbfiximport   (FIX ROM packer)
+#   10. createromdb      (regenerate ROM database)
+#   11. ALL (art)        (full pipeline via `make art`)
+###############################################################################
+import subprocess as _ax_sub
+import shlex      as _ax_shlex
+from pathlib       import Path as _AxPath
+from PyQt6.QtCore    import QProcess, QProcessEnvironment
+
+# Repository root (one level up from artbox/)
+_AX_REPO_ROOT = _AxPath(__file__).resolve().parent.parent
+_AX_ARTBOX    = _AX_REPO_ROOT / "artbox"
+
+PIPELINE_STEPS = [
+    ("img2neo",         ["python3", str(_AX_ARTBOX / "img2neo.py"), "--batch"],
+                        "Convert source PNGs → NeoGeo palettes (Floyd-Steinberg)"),
+    ("img2neo HD",      ["python3", str(_AX_ARTBOX / "img2neo_hd.py")],
+                        "HD photo pipeline (bilateral + CLAHE + blue-noise)"),
+    ("genscreens",      ["python3", str(_AX_ARTBOX / "genscreens.py")],
+                        "Generate showScreenN bodies + screens.c"),
+    ("gen_sprite_meta", ["python3", str(_AX_ARTBOX / "gen_sprite_meta.py")],
+                        "Build sprite metadata table (sprite_meta.h)"),
+    ("fixtiles",        ["python3", str(_AX_ARTBOX / "fixtiles.py")],
+                        "Pack FIX-layer 8x8 tiles → S1 ROM"),
+    ("fixtiles HD",     ["python3", str(_AX_ARTBOX / "fixtiles_hd.py")],
+                        "HD FIX pipeline (per-tile palette + sharp-text)"),
+    ("romdbimgimport",  ["python3", str(_AX_ARTBOX / "romdbimgimport.py")],
+                        "PNG → C-ROM blocks (sprite image data)"),
+    ("romtiles",        ["python3", str(_AX_ARTBOX / "romtiles.py")],
+                        "Pack C1/C2 ROM blocks into final C ROMs"),
+    ("romdbfiximport",  ["python3", str(_AX_ARTBOX / "romdbfiximport.py")],
+                        "Import FIX tiles into ROM database"),
+    ("createromdb",     ["python3", str(_AX_ARTBOX / "createromdb.py")],
+                        "Regenerate the ROM database (neorom.db)"),
+    ("ALL (art)",       ["make", "art"],
+                        "Full art pipeline via the top-level Makefile"),
+]
+
+
+class _ArtStatusPill(QLabel):
+    """Tiny coloured status indicator (IDLE / RUNNING / OK / FAIL)."""
+    def __init__(self):
+        super().__init__("IDLE")
+        self.setFixedWidth(72)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.set_state("idle")
+
+    def set_state(self, state: str):
+        styles = {
+            "idle":    ("#3a3a48", "#bababa", "IDLE"),
+            "running": ("#0066aa", "#ffffff", "RUNNING"),
+            "ok":      ("#00aa55", "#ffffff", "OK"),
+            "fail":    ("#aa3333", "#ffffff", "FAIL"),
+            "skip":    ("#665533", "#ffcc66", "MISSING"),
+        }
+        bg, fg, txt = styles.get(state, styles["idle"])
+        self.setText(txt)
+        self.setStyleSheet(
+            f"QLabel {{ background:{bg}; color:{fg}; padding:2px 6px;"
+            f" border-radius:6px; font-weight:bold; font-size:10px; }}")
+
+
+class PipelineRunnerTab(QWidget):
+    """
+    Tab that runs each artbox pipeline step independently or all in
+    sequence.  Pipes the live output of every step into a single
+    scrollback so the user can see exactly what tool failed and where.
+    """
+    def __init__(self):
+        super().__init__()
+        self._proc      = None
+        self._queue     = []
+        self._step_rows = []
+
+        title = QLabel("<b>Artbox Pipeline Runner</b>")
+        intro = QLabel(
+            "Run any single step or chain the lot.  Stops on the first "
+            "failure to surface the error.  GAME selection is honoured "
+            "from games/$(CURRENT_GAME)/."
+        )
+        intro.setWordWrap(True)
+
+        grid_box = QGroupBox("Pipeline Steps")
+        grid     = QGridLayout(grid_box)
+        grid.addWidget(QLabel("<b>Step</b>"),    0, 0)
+        grid.addWidget(QLabel("<b>Status</b>"),  0, 1)
+        grid.addWidget(QLabel("<b>Description</b>"), 0, 2)
+        grid.addWidget(QLabel("<b>Action</b>"),  0, 3)
+
+        for row, (name, cmd, desc) in enumerate(PIPELINE_STEPS, start=1):
+            grid.addWidget(QLabel(name), row, 0)
+            pill = _ArtStatusPill()
+            # Auto-mark missing scripts so the user sees what's installed
+            if cmd[0] == "python3" and not os.path.exists(cmd[1]):
+                pill.set_state("skip")
+            grid.addWidget(pill, row, 1)
+            grid.addWidget(QLabel(desc), row, 2)
+            btn  = QPushButton("Run")
+            btn.clicked.connect(lambda _, n=name, c=cmd: self._run_one(n, c))
+            grid.addWidget(btn, row, 3)
+            self._step_rows.append((name, btn, pill, cmd))
+
+        action_row = QHBoxLayout()
+        self.btn_all   = QPushButton("Run Full Pipeline (sequential)")
+        self.btn_clear = QPushButton("Clear Log")
+        self.btn_stop  = QPushButton("Stop")
+        self.btn_all  .clicked.connect(self._run_all)
+        self.btn_clear.clicked.connect(lambda: self.log.clear())
+        self.btn_stop .clicked.connect(self._stop)
+        self.btn_stop.setEnabled(False)
+        action_row.addWidget(self.btn_all)
+        action_row.addWidget(self.btn_clear)
+        action_row.addWidget(self.btn_stop)
+        action_row.addStretch()
+
+        self.log = QPlainTextEdit()
+        self.log.setReadOnly(True)
+        self.log.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#cfcf80;"
+            " font-family:'Courier New',monospace; }")
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(title)
+        layout.addWidget(intro)
+        layout.addWidget(grid_box)
+        layout.addLayout(action_row)
+        layout.addWidget(self.log, 1)
+
+    def _log(self, text: str):
+        self.log.appendPlainText(text)
+
+    def _set_pill(self, name: str, state: str):
+        for n, _btn, pill, _cmd in self._step_rows:
+            if n == name:
+                pill.set_state(state)
+                return
+
+    def _set_buttons_enabled(self, enabled: bool):
+        for _n, btn, _pill, _cmd in self._step_rows:
+            btn.setEnabled(enabled)
+        self.btn_all.setEnabled(enabled)
+        self.btn_stop.setEnabled(not enabled)
+
+    def _run_one(self, name: str, cmd_list: list):
+        if self._proc is not None:
+            self._log("(busy — finish or stop the current step first)")
+            return
+        # Skip if a Python tool doesn't exist on disk
+        if cmd_list[0] == "python3" and not os.path.exists(cmd_list[1]):
+            self._set_pill(name, "skip")
+            self._log(f"--- {name} SKIPPED (script not found: {cmd_list[1]}) ---")
+            if self._queue:
+                next_name, next_cmd = self._queue.pop(0)
+                self._run_one(next_name, next_cmd)
+            return
+        self._set_pill(name, "running")
+        self._set_buttons_enabled(False)
+        self._current_name = name
+        self._log(f"=== {name} ===")
+        self._log("$ " + " ".join(_ax_shlex.quote(c) for c in cmd_list))
+
+        proc = QProcess(self)
+        proc.setWorkingDirectory(str(_AX_REPO_ROOT))
+        proc.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+        proc.readyReadStandardOutput.connect(self._on_stdout)
+        proc.finished.connect(self._on_finished)
+        proc.setProcessEnvironment(QProcessEnvironment.systemEnvironment())
+        self._proc = proc
+        proc.start(cmd_list[0], cmd_list[1:])
+
+    def _on_stdout(self):
+        if self._proc is None:
+            return
+        data = self._proc.readAllStandardOutput().data().decode(errors="replace")
+        for line in data.splitlines():
+            self._log(line)
+
+    def _on_finished(self, code, _status):
+        name = getattr(self, "_current_name", "?")
+        if code == 0:
+            self._set_pill(name, "ok")
+            self._log(f"--- {name} OK ---")
+        else:
+            self._set_pill(name, "fail")
+            self._log(f"--- {name} FAILED (exit {code}) ---")
+            self._queue = []
+        self._proc = None
+        if self._queue:
+            next_name, next_cmd = self._queue.pop(0)
+            self._run_one(next_name, next_cmd)
+        else:
+            self._set_buttons_enabled(True)
+
+    def _run_all(self):
+        if self._proc is not None:
+            return
+        for n, _btn, pill, _cmd in self._step_rows:
+            pill.set_state("idle")
+        # Exclude HD variants (they're explicit opt-ins) and the
+        # trailing "ALL (art)" alias from the chained sequence.
+        self._queue = [(n, c) for n, _b, _p, c in self._step_rows
+                       if "HD" not in n and not n.startswith("ALL")]
+        if not self._queue:
+            return
+        name, cmd = self._queue.pop(0)
+        self._run_one(name, cmd)
+
+    def _stop(self):
+        if self._proc is None:
+            return
+        self._proc.kill()
+        self._queue = []
+
+
+class AssetRulesTab(QWidget):
+    """Browse / edit artbox/assets.cfg — the file that drives per-category
+    fit and category bucketing for the pipeline."""
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>artbox/assets.cfg</b>"))
+
+        self.editor = QPlainTextEdit()
+        self.editor.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#cfcf80;"
+            " font-family:'Courier New',monospace; }")
+        self._path = _AX_ARTBOX / "assets.cfg"
+        try:
+            self.editor.setPlainText(self._path.read_text(errors="replace"))
+        except Exception as e:
+            self.editor.setPlainText(f"(could not read: {e})")
+        layout.addWidget(self.editor, 1)
+
+        btn_row = QHBoxLayout()
+        btn_save = QPushButton("Save")
+        btn_reload = QPushButton("Reload from Disk")
+        btn_save.clicked.connect(self._save)
+        btn_reload.clicked.connect(self._reload)
+        btn_row.addWidget(btn_save)
+        btn_row.addWidget(btn_reload)
+        btn_row.addStretch()
+        layout.addLayout(btn_row)
+
+    def _save(self):
+        try:
+            self._path.write_text(self.editor.toPlainText())
+        except Exception as e:
+            QMessageBox.warning(self, "Save Failed", str(e))
+
+    def _reload(self):
+        try:
+            self.editor.setPlainText(self._path.read_text(errors="replace"))
+        except Exception as e:
+            QMessageBox.warning(self, "Reload Failed", str(e))
+
+
 class ArtboxStudio(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -1509,6 +1780,12 @@ class ArtboxStudio(QMainWindow):
 
         self.tab_paled = ManualPaletteEditorTab(self.palettes)
         tabs.addTab(self.tab_paled, "Palette Editor")
+
+        self.tab_pipeline = PipelineRunnerTab()
+        tabs.addTab(self.tab_pipeline, "Pipeline")
+
+        self.tab_rules = AssetRulesTab()
+        tabs.addTab(self.tab_rules, "Asset Rules")
 
         self.setStatusBar(QStatusBar())
         total = len(self.c1) // 64

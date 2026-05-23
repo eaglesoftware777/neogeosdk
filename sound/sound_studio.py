@@ -1853,6 +1853,243 @@ class YM2610SimTab(QWidget):
 # ---------------------------------------------------------------------------
 # Main window
 # ---------------------------------------------------------------------------
+###############################################################################
+#  Pipeline Runner Tab
+#  ---------------------------------------------------------------------------
+#  Run every sound-pipeline step from inside the studio.  Each step has a
+#  Run button, a status pill (idle / running / ok / fail), and a shared
+#  scrollback log pane.  A "Run All" button chains the steps in order.
+#
+#  Steps wired up:
+#    1. samples         (re-encode WAVs → ADPCM-A / ADPCM-B blocks)
+#    2. vrom            (pack samples into V ROM <GAME_ID>-v1.v1)
+#    3. fmpatches       (build FM patch table)
+#    4. mml             (compile MML files)
+#    5. ssg             (compile SSG track tables)
+#    6. ssgconfig       (rebuild SSG presets)
+#    7. fm              (link FM bank into driver)
+#    8. m1rom           (assemble Z80 M1 ROM)
+#    9. sound (alias)   (the full chain via `make sound`)
+###############################################################################
+import subprocess as _sp_sub
+import shlex      as _sp_shlex
+from PyQt6.QtCore    import QProcess, QProcessEnvironment
+from PyQt6.QtWidgets import QSplitter as _QSplit
+
+PIPELINE_STEPS = [
+    ("samples",     ["make", "samples"],     "Re-encode WAVs → ADPCM-A / ADPCM-B"),
+    ("vrom",        ["make", "vrom"],        "Pack samples → V ROM (<ID>-v1.v1)"),
+    ("fmpatches",   ["make", "fmpatches"],   "Compile FM patch table"),
+    ("mml",         ["make", "mml"],         "Compile MML music tracks"),
+    ("ssg",         ["make", "ssg"],         "Compile SSG track tables"),
+    ("ssgconfig",   ["make", "ssgconfig"],   "Rebuild SSG presets"),
+    ("fm",          ["make", "fm"],          "Link FM bank into driver"),
+    ("m1rom",       ["make", "m1rom"],       "Assemble Z80 M1 ROM"),
+    ("ALL (sound)", ["make", "sound"],       "Full sound pipeline (alias)"),
+]
+
+
+class _StatusPill(QLabel):
+    """Tiny coloured status indicator (IDLE / RUNNING / OK / FAIL)."""
+    def __init__(self):
+        super().__init__("IDLE")
+        self.setFixedWidth(72)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.set_state("idle")
+
+    def set_state(self, state: str):
+        styles = {
+            "idle":    ("#3a3a48", "#bababa", "IDLE"),
+            "running": ("#0066aa", "#ffffff", "RUNNING"),
+            "ok":      ("#00aa55", "#ffffff", "OK"),
+            "fail":    ("#aa3333", "#ffffff", "FAIL"),
+        }
+        bg, fg, txt = styles.get(state, styles["idle"])
+        self.setText(txt)
+        self.setStyleSheet(
+            f"QLabel {{ background:{bg}; color:{fg}; padding:2px 6px;"
+            f" border-radius:6px; font-weight:bold; font-size:10px; }}")
+
+
+class PipelineRunnerTab(QWidget):
+    """
+    Tab that exposes every sound-pipeline step as a runnable button +
+    status pill, with a shared live log.  Steps are run via QProcess
+    so the UI stays responsive and stdout/stderr stream into the log.
+    """
+    def __init__(self):
+        super().__init__()
+        self._proc      = None
+        self._queue     = []        # remaining steps in a "Run All" batch
+        self._step_rows = []        # list of (name, btn, pill) per row
+
+        # --- top: title / intro ----------------------------------------
+        title = QLabel("<b>Sound Pipeline Runner</b>")
+        intro = QLabel(
+            "Runs the make targets that build the M1 ROM, V ROM, FM, MML, "
+            "and SSG tables.  Output streams below.  GAME selection is "
+            "honoured from games/$(CURRENT_GAME)/."
+        )
+        intro.setWordWrap(True)
+
+        # --- middle: step grid -----------------------------------------
+        grid_box = QGroupBox("Pipeline Steps")
+        grid     = QGridLayout(grid_box)
+        grid.addWidget(QLabel("<b>Step</b>"),    0, 0)
+        grid.addWidget(QLabel("<b>Status</b>"),  0, 1)
+        grid.addWidget(QLabel("<b>Description</b>"), 0, 2)
+        grid.addWidget(QLabel("<b>Action</b>"),  0, 3)
+
+        for row, (name, cmd, desc) in enumerate(PIPELINE_STEPS, start=1):
+            grid.addWidget(QLabel(name), row, 0)
+            pill = _StatusPill()
+            grid.addWidget(pill, row, 1)
+            grid.addWidget(QLabel(desc), row, 2)
+            btn  = QPushButton("Run")
+            btn.clicked.connect(lambda _, n=name, c=cmd: self._run_one(n, c))
+            grid.addWidget(btn, row, 3)
+            self._step_rows.append((name, btn, pill, cmd))
+
+        # --- bottom: actions + log -------------------------------------
+        action_row = QHBoxLayout()
+        self.btn_all   = QPushButton("Run Full Pipeline (sequential)")
+        self.btn_clear = QPushButton("Clear Log")
+        self.btn_stop  = QPushButton("Stop")
+        self.btn_all  .clicked.connect(self._run_all)
+        self.btn_clear.clicked.connect(lambda: self.log.clear())
+        self.btn_stop .clicked.connect(self._stop)
+        self.btn_stop.setEnabled(False)
+        action_row.addWidget(self.btn_all)
+        action_row.addWidget(self.btn_clear)
+        action_row.addWidget(self.btn_stop)
+        action_row.addStretch()
+
+        self.log = QPlainTextEdit()
+        self.log.setReadOnly(True)
+        self.log.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#cfcf80;"
+            " font-family:'Space Mono','Courier New',monospace; }")
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(title)
+        layout.addWidget(intro)
+        layout.addWidget(grid_box)
+        layout.addLayout(action_row)
+        layout.addWidget(self.log, 1)
+
+    # --- run helpers ---------------------------------------------------
+    def _log(self, text: str, colour=None):
+        if colour:
+            self.log.appendPlainText(f"[{colour}] {text}")
+        else:
+            self.log.appendPlainText(text)
+
+    def _set_pill(self, name: str, state: str):
+        for n, _btn, pill, _cmd in self._step_rows:
+            if n == name:
+                pill.set_state(state)
+                return
+
+    def _set_buttons_enabled(self, enabled: bool):
+        for _n, btn, _pill, _cmd in self._step_rows:
+            btn.setEnabled(enabled)
+        self.btn_all.setEnabled(enabled)
+        self.btn_stop.setEnabled(not enabled)
+
+    def _run_one(self, name: str, cmd_list: list):
+        if self._proc is not None:
+            self._log("(busy — finish or stop the current step first)")
+            return
+        self._set_pill(name, "running")
+        self._set_buttons_enabled(False)
+        self._current_name = name
+        self._log(f"=== {name} ===")
+        self._log("$ " + " ".join(_sp_shlex.quote(c) for c in cmd_list))
+
+        proc = QProcess(self)
+        proc.setWorkingDirectory(str(REPO_ROOT))
+        proc.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+        proc.readyReadStandardOutput.connect(self._on_stdout)
+        proc.finished.connect(self._on_finished)
+        env = QProcessEnvironment.systemEnvironment()
+        proc.setProcessEnvironment(env)
+        self._proc = proc
+        proc.start(cmd_list[0], cmd_list[1:])
+
+    def _on_stdout(self):
+        if self._proc is None:
+            return
+        data = self._proc.readAllStandardOutput().data().decode(errors="replace")
+        for line in data.splitlines():
+            self._log(line)
+
+    def _on_finished(self, code, _status):
+        name = getattr(self, "_current_name", "?")
+        if code == 0:
+            self._set_pill(name, "ok")
+            self._log(f"--- {name} OK ---")
+        else:
+            self._set_pill(name, "fail")
+            self._log(f"--- {name} FAILED (exit {code}) ---")
+            self._queue = []   # abort batch on failure
+        self._proc = None
+        if self._queue:
+            next_name, next_cmd = self._queue.pop(0)
+            self._run_one(next_name, next_cmd)
+        else:
+            self._set_buttons_enabled(True)
+
+    def _run_all(self):
+        if self._proc is not None:
+            return
+        # Reset all pills to idle
+        for n, _btn, pill, _cmd in self._step_rows:
+            pill.set_state("idle")
+        # Queue every step EXCEPT the trailing "ALL (sound)" alias, which
+        # would re-do everything via `make sound` and be redundant
+        self._queue = [(n, c) for n, _b, _p, c in self._step_rows
+                       if not n.startswith("ALL")]
+        if not self._queue:
+            return
+        name, cmd = self._queue.pop(0)
+        self._run_one(name, cmd)
+
+    def _stop(self):
+        if self._proc is None:
+            return
+        self._proc.kill()
+        self._queue = []
+
+
+class DriverDefsTab(QWidget):
+    """Browse the named identifiers from sdk/sound_ids.h and
+    sound/driver/driver_defs.h — useful when wiring code or MML."""
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>SDK & Driver Identifiers</b>"))
+
+        splitter = _QSplit(Qt.Orientation.Horizontal)
+
+        for header_path in [REPO_ROOT / "sdk" / "sound_ids.h",
+                            REPO_ROOT / "sound" / "driver" / "driver_defs.h"]:
+            box = QGroupBox(str(header_path.relative_to(REPO_ROOT)))
+            box_l = QVBoxLayout(box)
+            text = QPlainTextEdit()
+            text.setReadOnly(True)
+            text.setStyleSheet(
+                "QPlainTextEdit { background:#0c0c10; color:#a0c0e0;"
+                " font-family:'Space Mono','Courier New',monospace; }")
+            try:
+                text.setPlainText(header_path.read_text(errors="replace"))
+            except Exception as e:
+                text.setPlainText(f"(could not read: {e})")
+            box_l.addWidget(text)
+            splitter.addWidget(box)
+
+        layout.addWidget(splitter, 1)
+
+
 class SoundStudio(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -1867,6 +2104,8 @@ class SoundStudio(QMainWindow):
         self.adpcm_tab    = ADPCMTab()
         self.composer_tab = ComposerTab()
         self.sim_tab      = YM2610SimTab()
+        self.pipe_tab     = PipelineRunnerTab()
+        self.defs_tab     = DriverDefsTab()
 
         tabs.addTab(self.fm_tab,       "FM Patches")
         tabs.addTab(self.mml_tab,      "MML Composer")
@@ -1874,6 +2113,8 @@ class SoundStudio(QMainWindow):
         tabs.addTab(self.adpcm_tab,    "ADPCM Samples")
         tabs.addTab(self.composer_tab, "Composer")
         tabs.addTab(self.sim_tab,      "YM2610 Simulator")
+        tabs.addTab(self.pipe_tab,     "Pipeline")
+        tabs.addTab(self.defs_tab,     "Identifiers")
         self.setCentralWidget(tabs)
 
         self._build_menu()

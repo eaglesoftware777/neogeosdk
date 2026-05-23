@@ -1,6 +1,16 @@
 # Sound Studio Guide
 
-> **v1.3.1 — usage notes**
+> **v1.3.1 — new tabs**
+>
+> Sound Studio gained two new tabs in v1.3.1:
+>
+> - **Pipeline** — runs every audio build step (samples / vrom /
+>   fmpatches / mml / ssg / ssgconfig / fm / m1rom) with a status pill
+>   per step and a shared live log.  "Run Full Pipeline" chains them
+>   sequentially and stops on the first failure.
+> - **Identifiers** — read-only side-by-side view of `sdk/sound_ids.h`
+>   and `sound/driver/driver_defs.h` so you don't have to grep when
+>   wiring code or MML.
 >
 > The unified demo's chapter 03 (SOUND) replaces the noisy raw FM-patch
 > demo with a clean MML music intro (`SOUND_MUSIC_EAGLE_FANFARE`).

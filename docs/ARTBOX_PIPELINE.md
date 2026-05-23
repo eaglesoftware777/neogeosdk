@@ -1,6 +1,18 @@
 # Artbox Graphics Pipeline
 
-> **v1.3.1 — HD alt scripts**
+> **v1.3.1 — Artbox Studio Pipeline tab + Asset Rules editor**
+>
+> `artbox/artbox_studio.py` gained two new tabs:
+>
+> - **Pipeline** — run every step (img2neo / genscreens / gen_sprite_meta /
+>   fixtiles / romdbimgimport / romtiles / romdbfiximport / createromdb)
+>   with a status pill per step and a live log.  Includes opt-in HD
+>   variants (`img2neo HD`, `fixtiles HD`).  "Run Full Pipeline"
+>   chains the standard set sequentially.
+> - **Asset Rules** — editor for `artbox/assets.cfg` with save/reload
+>   buttons.
+>
+> **HD alt scripts** (introduced in v1.3.1):
 >
 > Two new scripts sit alongside the existing pipeline.  They do NOT
 > replace `img2neo.py` / `fixtiles.py` — they're opt-in alternatives:
