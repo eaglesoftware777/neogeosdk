@@ -555,14 +555,23 @@ void NEOGEO_USER soundPlayTitleMusic(uint8_t music_track) {
 	isZ80Ready(); playSFX(SOUND_SFX_TITLE_GONG); cyclexms(10); isZ80Ready(); playSFXB(SOUND_BED_TITLE_THEME);
 }
 
+/*
+ * soundPlayGameLoop — plays an MML music track by its numeric ID.
+ *
+ * Previous implementation only handled 2 IDs (SAMURAI_GAME_LOOP /
+ * SAMURAI_BATTLE_LOOP) and fell through to playSFXB(ENDING_THEME) for
+ * every other ID, so calling soundPlayGameLoop(SOUND_MUSIC_EAGLE_FANFARE),
+ * SOUND_MUSIC_BOSS_TENSION, etc. played the wrong audio.  Now every
+ * music ID is routed through playMusic() (the standard BIOS-side
+ * playback command that the Z80 driver maps to the matching MML data).
+ *
+ * A full scene reset + bed-friendly default mix is applied first so
+ * the music starts on a clean Z80 state.
+ */
 void NEOGEO_USER soundPlayGameLoop(uint8_t music_track) {
-	isZ80Ready(); soundSceneReset(); isZ80Ready(); soundApplyMix(0x30, 0xB8, 0x00, 0x00);
-	isZ80Ready();
-	switch (music_track) {
-		case SOUND_MUSIC_SAMURAI_GAME_LOOP: playSFXB(SOUND_BED_STAGE_ONE); break;
-		case SOUND_MUSIC_SAMURAI_BATTLE_LOOP: playSFXB(SOUND_BED_STAGE_TWO); break;
-		default: playSFXB(SOUND_BED_ENDING_THEME); break;
-	}
+	isZ80Ready(); soundSceneReset();
+	isZ80Ready(); soundApplyMix(0x30, 0xB8, 0x08, 0x08);
+	isZ80Ready(); playMusic(music_track);
 }
 
 void NEOGEO_USER  isZ80Ready() {
