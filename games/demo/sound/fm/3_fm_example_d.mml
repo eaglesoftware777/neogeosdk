@@ -1,15 +1,15 @@
 ; 3_fm_example_d — Donkey Kong jumpman-style (G major, mid range)
 
-T130
+T220
 I3
 V13
 O4
-L8
+L16
 
 G B D G  D B G4
 F A C F  A C F4
 
-L8
+L16
 G B D G  D B G B
 F A C F  C A F C
 

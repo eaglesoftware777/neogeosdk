@@ -572,7 +572,11 @@ static uint8_t NEOGEO_USER chap_sound(void)
         demo_fix_puts(2u, 7u, "                  ", 0u);
     }
 
-    /* --- 2) FM MML — play every FM track (long melodic loops) ------- */
+    /* --- 2) FM MML — play every FM track (long melodic loops) -------
+     *
+     * Each FM track is T220 L16 → ~370 ms per note × ~30 notes ≈ 11 s.
+     * The dwell is sized so the user actually hears the melody play out
+     * — short dwells just retriggered the first key-on then moved on. */
     demo_fix_puts(2u, 5u, "2. FM TRACKS  (1..8)              ", 2u);
     soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
     for (i = 0u; i < SOUND_FM_TRACK_COUNT; i++) {
@@ -582,9 +586,7 @@ static uint8_t NEOGEO_USER chap_sound(void)
         demo_fix_puts(2u, 9u, lbl, 1u);
         soundStopMusic();        snd_step();
         playFMTrack(i);          snd_step();
-        /* longer dwell — each FM track now has ~30+ notes, so 240
-         * frames (4 sec) lets the melody actually breathe. */
-        if (uwait(240u)) return 1u;
+        if (uwait(420u)) return 1u;
     }
     soundStopMusic(); snd_step();
     soundSetFMVolume(0x00u); snd_step();
@@ -602,7 +604,7 @@ static uint8_t NEOGEO_USER chap_sound(void)
         soundStopMusic();             snd_step();
         soundSetSSGPreset(i);         snd_step();
         playSSGTrack(i);              snd_step();
-        if (uwait(220u)) return 1u;
+        if (uwait(420u)) return 1u;
     }
     soundStopMusic(); snd_step();
     soundSetSSGVolume(0x00u); snd_step();

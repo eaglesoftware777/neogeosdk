@@ -1,10 +1,10 @@
 ; 6_fm_example_g — Sonic-style fast bouncy (G major, mid range)
 
-T160
+T220
 I6
 V13
 O4
-L8
+L16
 
 G B D G  D B G D
 F+ A C F+  C A F+ C
@@ -12,7 +12,7 @@ F+ A C F+  C A F+ C
 L16
 G A B C  D E F+ G  A G F+ E  D C B A
 G A B C  D E F+ G  C B A G  C G E G
-L8
+L16
 
 G F+ E D  G B D G
 F+ E D B  C E G B

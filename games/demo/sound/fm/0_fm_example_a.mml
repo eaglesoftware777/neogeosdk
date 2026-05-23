@@ -1,10 +1,10 @@
 ; 0_fm_example_a — bright C-major arcade intro (mid range)
 
-T140
+T220
 I0
 V13
 O4
-L8
+L16
 
 C E G C  E G C E  R4
 G E C E  G C R4

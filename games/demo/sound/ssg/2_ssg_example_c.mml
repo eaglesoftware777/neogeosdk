@@ -1,10 +1,10 @@
 ; 2_ssg_example_c — Defender-style alert (E minor, mid range)
 
-T160
+T220
 P2
 V12
 O4
-L8
+L16
 
 E G B E  E G B4
 D F+ A D  D F+ A4
@@ -12,7 +12,7 @@ D F+ A D  D F+ A4
 L16
 E G B E  D F+ A D  C E G C  B D F+ A
 G B D F+  E G B E  D F+ A D  C E G C
-L8
+L16
 
 E G B E  D B G E
 F+ A C+ F+  E D C B

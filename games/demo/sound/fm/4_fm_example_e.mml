@@ -1,10 +1,10 @@
 ; 4_fm_example_e — Street Fighter Ryu-style theme (E minor, mid range)
 
-T120
+T220
 I4
 V13
 O4
-L8
+L16
 
 E G B E  D B G E
 F A C F  E D C B
