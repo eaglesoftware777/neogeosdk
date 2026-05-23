@@ -558,24 +558,25 @@ void NEOGEO_USER soundPlayTitleMusic(uint8_t music_track) {
 /*
  * soundPlayGameLoop — main scene music.
  *
- * POLICY (post-v1.3.1 audio review): the FM-based MML tracks are
- * noisy and inconsistent on the current driver build, so EVERY call
- * here plays the ADPCM-B "Stage One" bed instead.  The bed is a
- * smooth streamed loop that sounds clean across scenes.
+ * POLICY (v1.3.1 audio review):
+ *   - Music is ALWAYS an ADPCM-B bed (FM is harsh on the current
+ *     driver, so we never use it as continuous background).
+ *   - The `music_track` argument is mapped to ADPCM-B bed (0..3) via
+ *     `music_track % 4` so different scenes get different beds.
+ *   - SOUND_BED_EYECATCHER (bed 4) is RESERVED for the eyecatcher
+ *     screen — it is never produced by this dispatcher.  Call
+ *     playSFXB(SOUND_BED_EYECATCHER) directly if you need it.
  *
- * If a game wants a different bed for a specific moment, call
- * playSFXB(SOUND_BED_XXX) directly.  FM / SSG / ADPCM-A remain
- * available for SFX cues and dedicated audio demos.
- *
- * The `music_track` argument is accepted for source compatibility
- * with code that still passes SOUND_MUSIC_* constants — it is
- * silently ignored.
+ * FM / SSG / ADPCM-A remain available as one-shot cues via
+ * playFMTrack / playSSGTrack / playSFX.
  */
 void NEOGEO_USER soundPlayGameLoop(uint8_t music_track) {
-	(void)music_track;
+	/* Map any of the 8 SOUND_MUSIC_* IDs to ADPCM-B beds 0..3.
+	 * Skips bed 4 (SOUND_BED_EYECATCHER) reserved for the eyecatcher. */
+	uint8_t bed = (uint8_t)(music_track & 0x03u);
 	isZ80Ready(); soundSceneReset();
 	isZ80Ready(); soundApplyMix(0x30, 0xB8, 0x00, 0x00);  /* bed prominent, FM/SSG silent */
-	isZ80Ready(); playSFXB(SOUND_BED_STAGE_ONE);
+	isZ80Ready(); playSFXB(bed);
 }
 
 void NEOGEO_USER  isZ80Ready() {

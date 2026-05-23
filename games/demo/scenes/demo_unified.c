@@ -526,53 +526,64 @@ static uint8_t NEOGEO_USER chap_sound(void)
     };
     uint8_t i;
 
-    chap_header(3u, "SOUND", "ADPCM-B MAIN  ADPCM-A SFX  FM/SSG DEMO");
-    demo_fix_puts(2u, 2u, "MAIN MUSIC = ADPCM-B BED (STAGE 1)",  1u);
-    demo_fix_puts(2u, 3u, "ADPCM-A / SSG / FM ONLY ON CUE",      0u);
+    chap_header(3u, "SOUND", "SFX / SSG / FM CUE DEMO (NO BG)");
+    demo_fix_puts(2u, 2u, "NO BACKGROUND MUSIC IN THIS SCENE", 1u);
+    demo_fix_puts(2u, 3u, "EACH CUE PLAYS ONCE THEN STOPS",    0u);
 
-    /* --- 1) MAIN BED — ADPCM-B only, no FM/SSG ---------------------- */
-    demo_fix_puts(2u, 5u, "1. MAIN BED (ADPCM-B track 1)     ", 2u);
+    /*
+     * IMPORTANT: chap_sound runs WITHOUT continuous background music.
+     * The previous chapter's bed is killed up-front and nothing is
+     * looped here — only the explicit cues below fire.  This makes
+     * each SFX / SSG / FM demonstration audible against silence.
+     */
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
-    soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();  /* FM / SSG muted */
-    playSFXB(SOUND_BED_STAGE_ONE);             snd_step();
-    demo_fix_puts(2u, 6u, "smooth streamed loop, no FM       ", 1u);
-    if (uwait(160u)) return 1u;
+    soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
 
-    /* --- 2) SFX TRIGGERS — ADPCM-A short hits over the bed --------- */
-    demo_fix_puts(2u, 5u, "2. ADPCM-A SFX TRIGGERS           ", 2u);
+    /* --- 1) ADPCM-A SFX TRIGGERS (over silence) ---------------------- */
+    demo_fix_puts(2u, 5u, "1. ADPCM-A SFX (silence between)  ", 2u);
     demo_fix_puts(2u, 6u, "each SFX fires once               ", 1u);
     for (i = 0u; i < 6u; i++) {
         demo_fix_puts(2u, 8u, s_sfx_names[i], 2u);
         playSFX(s_sfx[i]);    snd_step();
-        if (uwait(36u)) return 1u;
+        if (uwait(40u)) return 1u;
     }
     demo_fix_puts(2u, 8u, "                ", 0u);
 
-    /* --- 3) SSG CUE — short SSG track over the bed ----------------- */
-    demo_fix_puts(2u, 5u, "3. SSG CUE  (arcade alert, short) ", 2u);
-    soundApplyMix(0x30u, 0xB8u, 0x0Au, 0x00u); snd_step();  /* SSG audible */
+    /* --- 2) SSG CUE — short, then immediately silenced ------------- */
+    demo_fix_puts(2u, 5u, "2. SSG CUE  (arcade alert, short) ", 2u);
+    soundApplyMix(0x30u, 0x00u, 0x0Au, 0x00u); snd_step();
     soundSetSSGPreset(2u);                     snd_step();
     playSSGTrack(SOUND_SSG_ARCADE_ALERT);      snd_step();
     if (uwait(90u)) return 1u;
-    soundSetSSGVolume(0x00u);                  snd_step();  /* SSG silent */
-    soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
+    soundSetSSGVolume(0x00u);                  snd_step();
+    soundStopMusic();                          snd_step();   /* kill SSG track */
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x00u); snd_step();
 
-    /* --- 4) FM DEMO — play ONE FM track, then stop FM entirely ---- */
-    demo_fix_puts(2u, 5u, "4. FM ONE-SHOT (then silenced)    ", 2u);
+    /* --- 3) FM ONE-SHOT — play once, then fully stop --------------- */
+    demo_fix_puts(2u, 5u, "3. FM ONE-SHOT (then silenced)    ", 2u);
     demo_fix_puts(2u, 6u, "FM driver: harsh, used sparingly  ", 0u);
-    soundApplyMix(0x30u, 0xB8u, 0x00u, 0x0Au); snd_step();  /* FM audible */
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Au); snd_step();
     playFMTrack(SOUND_FM_BASS_MOTIF);          snd_step();
     if (uwait(120u)) return 1u;
-    soundSetFMVolume(0x00u);                   snd_step();  /* FM mute */
-    soundStopMusic();                          snd_step();  /* belt + braces */
-    soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
-    demo_fix_puts(2u, 6u, "FM stopped, only ADPCM-B continues", 1u);
-    if (uwait(40u)) return 1u;
+    soundSetFMVolume(0x00u);                   snd_step();
+    soundStopMusic();                          snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x00u); snd_step();
+    demo_fix_puts(2u, 6u, "FM stopped completely             ", 1u);
+    if (uwait(30u)) return 1u;
 
-    /* --- 5) DRIVER FUNCTIONS — controls on the bed ----------------- */
-    demo_fix_puts(2u, 5u, "5. DRIVER FUNCTIONS               ", 2u);
-    demo_fix_puts(2u, 17u, "                                  ", 0u);
+    /* --- 4) DRIVER FUNCTIONS — exercise on a TEMPORARY bed --------- */
+    /*
+     * We bring up a TEMPORARY ADPCM-B bed (track 0 = TITLE_THEME) to
+     * have something to control with, then take it down at the end so
+     * chap_sound ends in silence — the next scene will start its own
+     * music with its own snd_cross_to() call.
+     */
+    demo_fix_puts(2u, 5u, "4. DRIVER FUNCTIONS               ", 2u);
+    demo_fix_puts(2u, 6u, "TEMP BED for vol/fade demo        ", 0u);
+    soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
+    playSFXB(SOUND_BED_TITLE_THEME);           snd_step();
+    if (uwait(40u)) return 1u;
 
     demo_fix_puts(2u, 18u, "soundSetADPCMBVolume sweep        ", 1u);
     soundSetADPCMBVolume(0xF8u); snd_step();  if (uwait(40u)) return 1u;
@@ -589,7 +600,7 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundFadeOutSpeed(4u); snd_step();
     if (uwait(90u)) return 1u;
 
-    demo_fix_puts(2u, 18u, "soundStopMusic + playSFX          ", 1u);
+    demo_fix_puts(2u, 18u, "soundStopMusic + playSFX (alive)  ", 1u);
     soundStopMusic(); snd_step();
     if (uwait(10u)) return 1u;
     playSFX(SOUND_SFX_COIN_CHIME); snd_step();
@@ -597,7 +608,7 @@ static uint8_t NEOGEO_USER chap_sound(void)
     playSFX(SOUND_SFX_IMPACT_HIT); snd_step();
     if (uwait(36u)) return 1u;
 
-    demo_fix_puts(2u, 18u, "soundStopAll                      ", 1u);
+    demo_fix_puts(2u, 18u, "soundStopAll (silence)            ", 1u);
     soundStopAll(); snd_step();
     if (uwait(30u)) return 1u;
     return 0u;
