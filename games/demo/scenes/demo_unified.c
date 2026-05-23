@@ -526,36 +526,55 @@ static uint8_t NEOGEO_USER chap_sound(void)
     };
     uint8_t i;
 
-    chap_header(3u, "SOUND", "PLAY EVERY MML  MUSIC / FM / SSG");
+    chap_header(3u, "SOUND", "ADPCM-B BEDS / FM / SSG");
     demo_fix_puts(2u, 2u, "NO BACKGROUND MUSIC IN THIS SCENE", 1u);
-    demo_fix_puts(2u, 3u, "PLAYS EVERY MML THEN ALL SFX",      0u);
+    demo_fix_puts(2u, 3u, "PLAYS EVERY BED, FM, SSG, AND SFX",  0u);
 
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
 
-    /* --- 1) MUSIC MML — play every music track (TRACK_1..TRACK_8) --- */
-    demo_fix_puts(2u, 5u, "1. MUSIC TRACKS (1..8)            ", 2u);
-    for (i = 0u; i < SOUND_MUSIC_TRACK_COUNT; i++) {
-        char lbl[16];
-        lbl[0] = 'T'; lbl[1] = 'R'; lbl[2] = 'A'; lbl[3] = 'C';
-        lbl[4] = 'K'; lbl[5] = ' '; lbl[6] = (char)('0' + (i + 1u));
-        lbl[7] = '\0';
-        demo_fix_puts(2u, 7u, lbl, 1u);
-        soundFadeOutSpeed(8u);                snd_step();
-        if (uwait(6u)) return 1u;
-        soundStopAll();                       snd_step();
-        playMusic(i);                         snd_step();
-        if (uwait(90u)) return 1u;
+    /*
+     * --- 1) ADPCM-B BEDS — play every streamed bed one after another.
+     *
+     * The user complained that the previous music-MML section just made
+     * "bzzz bipp" noises — that is by design: MML music is SSG square
+     * waves that come out short and chip-tuney even when the melody is
+     * good.  The beds are full streamed audio (1.wav..9.wav) so this
+     * section now showcases the BEDS instead.  Bed E (5.wav) is reserved
+     * for the eyecatcher screen so we skip it.
+     */
+    {
+        static const uint8_t s_bed_list[8] = {
+            SOUND_BED_A, SOUND_BED_B, SOUND_BED_C, SOUND_BED_D,
+            SOUND_BED_F, SOUND_BED_G, SOUND_BED_H, SOUND_BED_I
+        };
+        static const char *const s_bed_names[8] = {
+            "BED 1 (1.WAV)   ", "BED 2 (2.WAV)   ",
+            "BED 3 (3.WAV)   ", "BED 4 (4.WAV)   ",
+            "BED 6 (6.WAV)   ", "BED 7 (7.WAV)   ",
+            "BED 8 (8.WAV)   ", "BED 9 (9.WAV)   "
+        };
+        uint8_t b;
+        demo_fix_puts(2u, 5u, "1. ADPCM-B BEDS (1..9)            ", 2u);
+        for (b = 0u; b < 8u; b++) {
+            demo_fix_puts(2u, 7u, s_bed_names[b], 1u);
+            soundFadeOutSpeed(8u);             snd_step();
+            if (uwait(6u)) return 1u;
+            soundStopAll();                    snd_step();
+            soundApplyMix(0x30u, 0xC0u, 0x00u, 0x00u); snd_step();
+            playSFXB(s_bed_list[b]);           snd_step();
+            if (uwait(110u)) return 1u;
+        }
+        soundFadeOutSpeed(8u); snd_step();
+        if (uwait(8u)) return 1u;
+        soundStopAll();        snd_step();
+        demo_fix_puts(2u, 7u, "                  ", 0u);
     }
-    soundFadeOutSpeed(8u); snd_step();
-    if (uwait(8u)) return 1u;
-    soundStopAll();        snd_step();
-    demo_fix_puts(2u, 7u, "         ", 0u);
 
-    /* --- 2) FM MML — play every FM track (TRACK_1..TRACK_8) -------- */
+    /* --- 2) FM MML — play every FM track (long melodic loops) ------- */
     demo_fix_puts(2u, 5u, "2. FM TRACKS  (1..8)              ", 2u);
-    soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Cu); snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
     for (i = 0u; i < SOUND_FM_TRACK_COUNT; i++) {
         char lbl[8];
         lbl[0] = 'F'; lbl[1] = 'M'; lbl[2] = ' '; lbl[3] = (char)('0' + (i + 1u));
@@ -563,15 +582,17 @@ static uint8_t NEOGEO_USER chap_sound(void)
         demo_fix_puts(2u, 9u, lbl, 1u);
         soundStopMusic();        snd_step();
         playFMTrack(i);          snd_step();
-        if (uwait(60u)) return 1u;
+        /* longer dwell — each FM track now has ~30+ notes, so 240
+         * frames (4 sec) lets the melody actually breathe. */
+        if (uwait(240u)) return 1u;
     }
     soundStopMusic(); snd_step();
     soundSetFMVolume(0x00u); snd_step();
     soundApplyMix(0x30u, 0x00u, 0x00u, 0x00u); snd_step();
     demo_fix_puts(2u, 9u, "         ", 0u);
 
-    /* --- 3) SSG MML — play every SSG track (TRACK_1..TRACK_3) ----- */
-    demo_fix_puts(2u, 5u, "3. SSG TRACKS (1..3)              ", 2u);
+    /* --- 3) SSG MML — play every SSG track (longer melodic loops) -- */
+    demo_fix_puts(2u, 5u, "3. SSG TRACKS (1..4)              ", 2u);
     soundApplyMix(0x30u, 0x00u, 0x0Eu, 0x00u); snd_step();
     for (i = 0u; i < SOUND_SSG_TRACK_COUNT; i++) {
         char lbl[8];
@@ -581,7 +602,7 @@ static uint8_t NEOGEO_USER chap_sound(void)
         soundStopMusic();             snd_step();
         soundSetSSGPreset(i);         snd_step();
         playSSGTrack(i);              snd_step();
-        if (uwait(70u)) return 1u;
+        if (uwait(220u)) return 1u;
     }
     soundStopMusic(); snd_step();
     soundSetSSGVolume(0x00u); snd_step();

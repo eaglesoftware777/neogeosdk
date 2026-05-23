@@ -1,33 +1,26 @@
-; 3 - Duel suspense / dark loop
-T104
-I5
-V14
-O3
+; 3_fm_example_d — Donkey Kong jumpman-style (G major, walking)
+
+T130
+I3
+V13
+O5
 L8
 
-A R A C
-E R D C
-< B R > C D
-E4 R4
+; phrase A — walking bass-like hook (in lead range)
+G > D B G  > D B G4
+F A > C F  A > C F4
 
-I6
-A C E G
-F E D C
-< B > C D E
-A4 R4
+; phrase B — climb
+G B > D G  > D B G > D
+F A > C F  > C < A F > C
 
-I13
-O4
-C R D R
-E R G R
-A G E D
-C4 R4
+; phrase C — descent
+> D < B G > D  B G D < G
+< C < A F > C  < A F C < F
 
-I4
-O3
-A R C R
-E R A R
-G E C A
-A4 R4
+; phrase D — finale
+G B > D G  F A > C F
+E G > C E  D < B G D
+> G4 R4 R2
 
 ~

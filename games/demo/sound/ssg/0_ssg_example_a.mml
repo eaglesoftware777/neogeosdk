@@ -1,19 +1,25 @@
-; 0 - SSG clean square menu loop
-T150
+; 0_ssg_example_a — Galaxian-style arpeggio chimes (C major)
+
+T140
 P0
-V10
-O4
-L16
+V11
+O5
+L8
 
-C E G > C
-< G E C E
-A > C E G
-E C < A C
+; intro — climbing arpeggio (Galaxian wave entry)
+C E G > C  E G > C E
+< G E C < G  > C E G C
 
-P1
-F A > C F
-E D C < A
-G B > D G
-E D C < G
+; melody A — bouncy
+> C C E G  > C < G E C
+D D F A  > D < A F D
+E G > C E  G > C E < G
+F A > C F  A > C < A F
+
+; melody B — descent
+> C < G E C  > C < G E C
+< B G E < B  > B < G E < B
+A F D < A  A F D < A
+G E C < G  > G2
 
 ~

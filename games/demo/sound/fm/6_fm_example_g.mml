@@ -1,27 +1,25 @@
-; 6 - Game over / dark theme
-T90
-I12
-V15
-O3
+; 6_fm_example_g — Sonic-style fast bouncy chase (G major)
+
+T160
+I6
+V13
+O5
 L8
 
-A4 R8
-E4 R8
-C4 R8
-< A4 R8
+; phrase A — fast hook
+G B > D G  > D < B G > D
+F A > C F  > C < A F > C
 
-I5
-O3
-A C E A
-G E C A
-F E D C
-< B > C E4
+; phrase B — main melody
+L16
+G A B > C  D E F+ G  A G F+ E  D C < B A
+G A B > C  D E F+ G  > C < B A G  > C < G E G
+L8
 
-I12
-O2
-A2 R4
-E2 R4
-A2 R4
+; phrase C — call/answer
+> G F+ E D  < G B > D < G
+F+ E D < B  > C E G < B
+A G F+ E  D < B G D
+> G2 R2
 
-; remove ~ if game over should end
 ~

@@ -1,13 +1,23 @@
-; 1 - SSG arcade alert
-T190
-P2
-V15
-O5
-L16
+; 1_ssg_example_b — Frogger-style bouncy melody (G major)
 
-C R C R
-G R G R
-> C R < G R
-C4 R4
+T135
+P1
+V11
+O5
+L8
+
+; phrase A — main hook
+G B > D G  > D B G4
+F+ A > C F+  > C A F+4
+
+; phrase B — answer
+> G F+ E D  C < B A G
+F+ E D < B  > C E G < B
+
+; phrase C — variation
+> D < B G D  E < B G E
+F+ A > C F+  G B > D G
+> C < A F+ > C  < B G E < B
+> G2 R4 R4
 
 ~

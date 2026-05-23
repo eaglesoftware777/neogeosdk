@@ -1,28 +1,25 @@
-; 4 - Mono bass motif, good under the samurai game loop
-T136
-I8
-V12
-O2
+; 4_fm_example_e — Street Fighter Ryu-style character theme (E minor)
+
+T120
+I4
+V13
+O4
 L8
 
-A R A E
-> C R < A E
-G R G D
-> D R < G D
+; phrase A — moody intro
+E G > B E  > D < B G E
+F A > C F  E D C < B
 
-I9
-F R F C
-> C R < F C
-E R E B
-> B R < E B
+; phrase B — main melody
+> E < G > B > E  > D < B G E
+> F < A > C > F  > E D C < B
+> E < G > B > E  > D < B G > D
+> C E G > C  < B G E < B
 
-I8
-A R > C R
-E R C R
-< A4 R4
-
-G R > D R
-< G R > B R
-< A4 R4
+; phrase C — answer / resolution
+> A G F E  D F A > D
+< G F E D  C E G < B
+> E G B > E  < G B > D < G
+> E2 R4 R4
 
 ~
