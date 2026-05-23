@@ -650,64 +650,92 @@ static uint8_t NEOGEO_USER chap_sound(void)
     playSFX(SOUND_SFX_8); snd_step();
     if (uwait(36u)) return 1u;
 
-    /* --- 6) MML MUSIC — full multi-channel MML music tracks --------- *
-     * Plays three MML music tracks (A, B, C).  MML music mixes ADPCM-B
-     * bed + FM patches + SSG melody via @b/@f/@p directives — quite
-     * different from raw FM/SSG which only use one chip. */
-    demo_fix_puts(2u, 5u, "6. MML MUSIC (multi-channel)      ", 2u);
+    /* --- 6) MULTITRACK MUSIC — bed + FM + SSG layered explicitly ----- *
+     *
+     * Real "multitrack" means three engines playing AT THE SAME TIME:
+     * ADPCM-B (streamed bed), FM (4-op patches), SSG (squarewave).
+     * Just calling playMusic() can sound thin because the MML's @b
+     * trigger plays a single ADPCM-B sample that ends after a few
+     * seconds — once it stops you only hear the SSG melody.  Here we
+     * keep the bed sustained by directly playing it via playSFXB and
+     * layering FM + SSG melodic loops on top. */
+    demo_fix_puts(2u, 5u, "6. MULTITRACK (BED + FM + SSG)    ", 2u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
-    soundApplyMix(0x30u, 0xB8u, 0x06u, 0x08u); snd_step();
+    soundApplyMix(0x30u, 0xC0u, 0x0Bu, 0x0Du); snd_step();
     {
-        static const uint8_t s_mml_tracks[3] = {
-            SOUND_MUSIC_A, SOUND_MUSIC_E, SOUND_MUSIC_G
+        static const uint8_t s_beds[3] = {
+            SOUND_BED_A, SOUND_BED_C, SOUND_BED_G
         };
-        static const char *const s_mml_names[3] = {
-            "MML A (intro)   ",
-            "MML E (fanfare) ",
-            "MML G (jingle)  "
+        static const uint8_t s_fms[3]  = { 0u, 4u, 6u };
+        static const uint8_t s_ssgs[3] = { 0u, 1u, 2u };
+        static const char *const s_labels[3] = {
+            "MIX A: bed1 + FM A + SSG A",
+            "MIX B: bed3 + FM E + SSG B",
+            "MIX C: bed7 + FM G + SSG C"
         };
         uint8_t m;
         for (m = 0u; m < 3u; m++) {
-            demo_fix_puts(2u, 15u, s_mml_names[m], 1u);
+            demo_fix_puts(2u, 15u, "                                  ", 0u);
+            demo_fix_puts(2u, 15u, s_labels[m], 1u);
+
             soundFadeOutSpeed(10u); snd_step();
             if (uwait(8u)) return 1u;
-            soundStopMusic();       snd_step();
-            playMusic(s_mml_tracks[m]); snd_step();
+            soundStopAll();         snd_step();
+            soundSceneReset();      snd_step();
+            soundApplyMix(0x30u, 0xC0u, 0x0Bu, 0x0Du); snd_step();
+
+            playSFXB(s_beds[m]);    snd_step();
+            playFMTrack(s_fms[m]);  snd_step();
+            soundSetSSGPreset(s_ssgs[m]); snd_step();
+            playSSGTrack(s_ssgs[m]); snd_step();
             if (uwait(360u)) return 1u;
         }
     }
     soundFadeOutSpeed(6u); snd_step();
     if (uwait(40u)) return 1u;
     soundStopAll();        snd_step();
-    demo_fix_puts(2u, 15u, "                  ", 0u);
+    demo_fix_puts(2u, 15u, "                                  ", 0u);
 
-    /* --- 7) MORE DRIVER FEATURES — fade in/out variants, tempo ------ */
+    /* --- 7) MORE DRIVER FEATURES — fade in/out variants, tempo ------ *
+     *
+     * The driver's fade-in ramps VOL toward BASE.  Setting volume via
+     * soundSetADPCMBVolume sets BOTH (so fade-in from a fresh silent
+     * setup has BASE == VOL == 0 and never ramps).  The working
+     * pattern is: bed at full vol → fade out (drops VOL to 0, BASE
+     * still high) → cancel/fade-in (ramps VOL back to BASE). */
     demo_fix_puts(2u, 5u, "7. DRIVER FEATURES (fade/tempo)   ", 2u);
     soundSceneReset();                         snd_step();
-    soundApplyMix(0x30u, 0x00u, 0x00u, 0x00u); snd_step();
+    soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
     playSFXB(SOUND_BED_C);                     snd_step();
+    if (uwait(40u)) return 1u;
 
-    demo_fix_puts(2u, 18u, "soundFadeInSpeed(8) from silent   ", 1u);
-    soundSetADPCMBVolume(0x00u); snd_step();
-    soundFadeInSpeed(8u);        snd_step();
-    if (uwait(90u)) return 1u;
-
-    demo_fix_puts(2u, 18u, "soundFadeInSpeed(2) slow ramp     ", 1u);
-    soundSetADPCMBVolume(0x00u); snd_step();
-    soundFadeInSpeed(2u);        snd_step();
+    demo_fix_puts(2u, 18u, "FadeOut(2) slow                   ", 1u);
+    soundFadeOutSpeed(2u); snd_step();
     if (uwait(120u)) return 1u;
+
+    demo_fix_puts(2u, 18u, "FadeIn(2) restores from silent    ", 1u);
+    soundFadeInSpeed(2u);  snd_step();
+    if (uwait(120u)) return 1u;
+
+    demo_fix_puts(2u, 18u, "FadeOut(8) fast                   ", 1u);
+    soundFadeOutSpeed(8u); snd_step();
+    if (uwait(40u)) return 1u;
+    demo_fix_puts(2u, 18u, "FadeIn(8) fast                    ", 1u);
+    soundFadeInSpeed(8u);  snd_step();
+    if (uwait(40u)) return 1u;
 
     demo_fix_puts(2u, 18u, "soundSetTempo (driver tempo)      ", 1u);
     soundSetTempo(80u);  snd_step();  if (uwait(40u)) return 1u;
     soundSetTempo(180u); snd_step();  if (uwait(40u)) return 1u;
     soundSetTempo(120u); snd_step();  if (uwait(40u)) return 1u;
 
-    demo_fix_puts(2u, 18u, "soundFadeOut + Cancel + FadeIn    ", 1u);
-    soundFadeOutSpeed(10u); snd_step();
-    if (uwait(30u)) return 1u;
+    demo_fix_puts(2u, 18u, "FadeOut + Cancel (vol snaps back) ", 1u);
+    soundFadeOutSpeed(4u);  snd_step();
+    if (uwait(40u)) return 1u;
     soundCancelFade();      snd_step();
-    if (uwait(20u)) return 1u;
+    if (uwait(40u)) return 1u;
+
     soundFadeOutSpeed(4u);  snd_step();
     if (uwait(80u)) return 1u;
     soundStopAll();         snd_step();
