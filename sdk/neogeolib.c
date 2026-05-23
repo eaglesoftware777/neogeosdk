@@ -556,22 +556,26 @@ void NEOGEO_USER soundPlayTitleMusic(uint8_t music_track) {
 }
 
 /*
- * soundPlayGameLoop — plays an MML music track by its numeric ID.
+ * soundPlayGameLoop — main scene music.
  *
- * Previous implementation only handled 2 IDs (SAMURAI_GAME_LOOP /
- * SAMURAI_BATTLE_LOOP) and fell through to playSFXB(ENDING_THEME) for
- * every other ID, so calling soundPlayGameLoop(SOUND_MUSIC_EAGLE_FANFARE),
- * SOUND_MUSIC_BOSS_TENSION, etc. played the wrong audio.  Now every
- * music ID is routed through playMusic() (the standard BIOS-side
- * playback command that the Z80 driver maps to the matching MML data).
+ * POLICY (post-v1.3.1 audio review): the FM-based MML tracks are
+ * noisy and inconsistent on the current driver build, so EVERY call
+ * here plays the ADPCM-B "Stage One" bed instead.  The bed is a
+ * smooth streamed loop that sounds clean across scenes.
  *
- * A full scene reset + bed-friendly default mix is applied first so
- * the music starts on a clean Z80 state.
+ * If a game wants a different bed for a specific moment, call
+ * playSFXB(SOUND_BED_XXX) directly.  FM / SSG / ADPCM-A remain
+ * available for SFX cues and dedicated audio demos.
+ *
+ * The `music_track` argument is accepted for source compatibility
+ * with code that still passes SOUND_MUSIC_* constants — it is
+ * silently ignored.
  */
 void NEOGEO_USER soundPlayGameLoop(uint8_t music_track) {
+	(void)music_track;
 	isZ80Ready(); soundSceneReset();
-	isZ80Ready(); soundApplyMix(0x30, 0xB8, 0x08, 0x08);
-	isZ80Ready(); playMusic(music_track);
+	isZ80Ready(); soundApplyMix(0x30, 0xB8, 0x00, 0x00);  /* bed prominent, FM/SSG silent */
+	isZ80Ready(); playSFXB(SOUND_BED_STAGE_ONE);
 }
 
 void NEOGEO_USER  isZ80Ready() {
