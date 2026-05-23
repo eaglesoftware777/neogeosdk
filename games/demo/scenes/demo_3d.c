@@ -83,8 +83,8 @@ void NEOGEO_USER showPseudo3DLoop(void)
     demo_clear_scene();
     setBACKDROP(BLACK);
     demo_scene_caption("OPTICAL 3D IDEA", "FIX FLOOR ONLY / NO SCB SHRINK", "STABLE PREVIEW - NO SPRITE FLICKER");
-    demo_3d_audio(SOUND_MUSIC_SAMURAI_GAME_LOOP);
-    playSFX(SOUND_SFX_STRING_PHRASE);
+    demo_3d_audio(SOUND_MUSIC_A);
+    playSFX(SOUND_SFX_9);
 
     for (frame = 0; frame < 360u; frame++) {
         demo_clear_all_sprites();
@@ -93,7 +93,7 @@ void NEOGEO_USER showPseudo3DLoop(void)
         demo_fix_puts(2, 5, "NO SCB SHRINK IN THIS SCENE", 1);
         demo_fix_puts(2, 27, "A: NEXT   START: GAME FLOW ONLY", 1);
         demo_perspective_floor(frame);
-        if ((frame % 120u) == 0u) playSFX(SOUND_SFX_LOW_DRUM);
+        if ((frame % 120u) == 0u) playSFX(SOUND_SFX_10);
         if (demo_wait_frames_or_a(1)) break;
     }
 
@@ -125,8 +125,8 @@ void NEOGEO_USER show3DRaycaster(void)
     demo_clear_scene();
     setBACKDROP(BLACK);
     demo_scene_caption("DEPTH COLUMN IDEA", "DESIGN PREVIEW ONLY", "NO SPRITE WALLS / NO SHRINK YET");
-    demo_3d_audio(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
-    playSFX(SOUND_SFX_TITLE_GONG);
+    demo_3d_audio(SOUND_MUSIC_B);
+    playSFX(SOUND_SFX_3);
 
     for (frame = 0; frame < 300u; frame++) {
         demo_clear_all_sprites();

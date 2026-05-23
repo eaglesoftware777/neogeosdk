@@ -132,7 +132,7 @@ static void NEOGEO_USER combat_hitbox_visual(void)
                 def_hp--;
                 ng_char_damage(defender, 1u);
                 ng_impact_event(NG_IMPACT_MEDIUM, DEFDR_PAL, s_atker_pal,
-                                &cam, (uint16_t)SOUND_SFX_IMPACT_HIT,
+                                &cam, (uint16_t)SOUND_SFX_8,
                                 220, 112, 0u, 0x40u);
             }
         }
@@ -419,7 +419,7 @@ static void NEOGEO_USER combat_npc_advanced(void)
 
             if (phase == 2u && boss) {
                 ng_impact_event(NG_IMPACT_MEDIUM, COMBAT_NPC_PAL(0u), s_atker_pal,
-                                &cam, (uint16_t)SOUND_SFX_IMPACT_HIT,
+                                &cam, (uint16_t)SOUND_SFX_8,
                                 160, 112, 0u, 0x40u);
             }
         }
@@ -523,7 +523,7 @@ static void NEOGEO_USER combat_special_moves(void)
             NGRect dr = ng_char_body_rect(defender);
             if (ng_rect_hit(hr, dr)) {
                 ng_impact_event(NG_IMPACT_HEAVY, DEFDR_PAL, s_atker_pal,
-                                &cam, (uint16_t)SOUND_SFX_IMPACT_HIT,
+                                &cam, (uint16_t)SOUND_SFX_8,
                                 220, 100, 0u, 0x40u);
                 ng_spawn_slash_trail(220, 100, 1u, 0u, 0x40u);
                 ng_spawn_hit_spark(220, 100, 0u, 0x40u);
@@ -705,7 +705,7 @@ static void NEOGEO_USER combat_hit_sequence(void)
     demo_load_screen_palette(COMBAT_NPC_FIRST_SCREEN);
     demo_draw_sprite_screen(DEFDR_SCREEN, DEFDR_SLOT, 200, (int16_t)(-60), COMBAT_NPC_STRIPS, COMBAT_NPC_ROWS, 0x70u, 0x70u);
 
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_B);
 
     for (t = 0u; t < 360u; t++) {
         /* Trigger a hit at frames 60, 120, 180, 240 — escalating */
@@ -715,7 +715,7 @@ static void NEOGEO_USER combat_hit_sequence(void)
 
             ng_impact_event(hit, DEFDR_PAL, s_atker_pal,
                             &cam,
-                            (uint16_t)SOUND_SFX_IMPACT_HIT,
+                            (uint16_t)SOUND_SFX_8,
                             200, 112, 0u, 0x40u);
 
             {

@@ -46,7 +46,7 @@ static void NEOGEO_USER part_hit_sparks(void)
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);
 
     ng_particles_init();
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_B);
 
     for (t = 0u; t < 240u; t++) {
         /* Burst every 60 frames */
@@ -56,7 +56,7 @@ static void NEOGEO_USER part_hit_sparks(void)
             for (burst = 0u; burst < 8u; burst++) {
                 ng_spawn_hit_spark(cx, cy, 0u, PART_PAL);
             }
-            playSFX(SOUND_SFX_IMPACT_HIT);
+            playSFX(SOUND_SFX_8);
         }
 
         ng_particles_update();
@@ -80,7 +80,7 @@ static void NEOGEO_USER part_dust_smoke(void)
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);
 
     ng_particles_init();
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_A);
 
     for (t = 0u; t < 240u; t++) {
         /* Continuous dust spawns */
@@ -90,7 +90,7 @@ static void NEOGEO_USER part_dust_smoke(void)
             if ((t % 24u) == 0u) {
                 ng_spawn_smoke((int16_t)(dx + 16), 150, 0u, PART_PAL);
             }
-            playSFX(SOUND_SFX_FOOTSTEP);
+            playSFX(SOUND_SFX_5);
         }
 
         ng_particles_update();
@@ -115,7 +115,7 @@ static void NEOGEO_USER part_explosions_slash(void)
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);
 
     ng_particles_init();
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_B);
 
     for (t = 0u; t < 300u; t++) {
         if ((t % 45u) == 0u) {
@@ -136,7 +136,7 @@ static void NEOGEO_USER part_explosions_slash(void)
             ng_spawn_hit_spark(ex, ey, 0u, PART_PAL);
             ng_spawn_hit_spark((int16_t)(ex + 8), (int16_t)(ey - 4), 0u, PART_PAL);
 
-            playSFX(SOUND_SFX_BLADE_WHOOSH);
+            playSFX(SOUND_SFX_7);
         }
 
         ng_particles_update();
@@ -161,7 +161,7 @@ static void NEOGEO_USER part_magic_eviction(void)
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);
 
     ng_particles_init();
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_A);
 
     for (t = 0u; t < 240u; t++) {
         /* Flood with magic sparks (low priority) + critical hit sparks */
@@ -173,7 +173,7 @@ static void NEOGEO_USER part_magic_eviction(void)
         /* Critical sparks always succeed */
         if ((t % 30u) == 0u) {
             ng_spawn_hit_spark(160, 112, 0u, PART_PAL);
-            playSFX(SOUND_SFX_STRING_PHRASE);
+            playSFX(SOUND_SFX_9);
         }
 
         {

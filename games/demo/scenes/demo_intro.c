@@ -81,21 +81,21 @@ void NEOGEO_USER demo_intro_eagle(void)
     demo_fix_puts(17u, 13u, "EAGLE",    PAL_WHITE);
     demo_fix_puts(16u, 15u, "SOFTWARE", PAL_WHITE);
 
-    playVoiceCue(SOUND_VOICE_GET_READY);
+    playVoiceCue(SOUND_VOICE_1);
     cyclexms(400);
 
     /* Four quick color alternation hits */
     for (i = 0; i < 4u; i++) {
         demo_fix_puts(17u, 13u, "EAGLE",    (uint8_t)((i & 1u) ? PAL_BLUE  : PAL_RED));
         demo_fix_puts(16u, 15u, "SOFTWARE", (uint8_t)((i & 1u) ? PAL_RED    : PAL_BLUE));
-        if (i == 0u) playSFX(SOUND_SFX_STRING_PHRASE);
+        if (i == 0u) playSFX(SOUND_SFX_9);
         cyclexms(60);
     }
 
     /* Logo snap — show Eagle logo screen */
     clearFix();
     clearSprs();
-    playSFX(SOUND_SFX_TITLE_GONG);
+    playSFX(SOUND_SFX_3);
     demo_safe_show(showScreen107, 32, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
 
     if (demo_wait(60u)) goto intro_done;
@@ -136,7 +136,6 @@ void NEOGEO_USER demo_intro_system_banner(void)
     demo_fix_puts(10u, 9u,  "MVS ARCADE MODE",  2u);
 #endif
     demo_fix_puts(10u, 11u, "ROM: NEOGEOSDK V1.3.0",  1u);
-    demo_fix_puts(10u, 13u, "BUILD: 2026-05-15",       0u);
     demo_fix_puts(4u,  15u, "CPU: MC68000 / SOUND: YM2610", 0u);
     demo_fix_puts(2u,  27u, "A: NEXT", 1u);
 
@@ -278,7 +277,7 @@ void NEOGEO_USER demo_intro_sdk_title(void)
             if (demo_advance_requested()) goto title_done;
         }
 
-        playSFX(SOUND_SFX_TITLE_GONG);
+        playSFX(SOUND_SFX_3);
         demo_wait(12u);
 
         demo_fix_puts(7u, 13u, sub1, PAL_RED);
@@ -286,7 +285,7 @@ void NEOGEO_USER demo_intro_sdk_title(void)
         demo_fix_puts(6u, 15u, sub2, PAL_WHITE);
         demo_wait(8u);
 
-        playFMTrack(SOUND_FM_VICTORY_JINGLE);
+        playFMTrack(SOUND_FM_F);
     }
 
     demo_fix_puts(2u, 27u, "A: NEXT", 1u);

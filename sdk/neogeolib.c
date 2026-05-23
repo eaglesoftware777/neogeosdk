@@ -514,19 +514,19 @@ void NEOGEO_USER playFMTrack(uint8_t n) { isZ80Ready(); soundCommand(0x31); isZ8
 void NEOGEO_USER soundSetFMVolume(uint8_t v) { isZ80Ready(); soundCommand(0x13); isZ80Ready(); soundCommand(v & 0x0F); }
 void NEOGEO_USER playSSGTrack(uint8_t n) { isZ80Ready(); soundCommand(0x32); isZ80Ready(); soundCommand(n); }
 void NEOGEO_USER soundSetSSGPreset(uint8_t preset) { isZ80Ready(); soundCommand(0x14); isZ80Ready(); soundCommand(preset & 0x0F); }
-void NEOGEO_USER playInsertCoinSSG(void) { isZ80Ready(); playSSGTrack(SOUND_SSG_INSERT_COIN); soundSetSSGPreset(1); }
+void NEOGEO_USER playInsertCoinSSG(void) { isZ80Ready(); playSSGTrack(SOUND_SSG_C); soundSetSSGPreset(1); }
 
 void NEOGEO_USER playVoiceCue(uint8_t n) {
 	isZ80Ready();
 	switch (n) {
-		case SOUND_VOICE_GET_READY: playSFX(SOUND_SFX_READY_VOICE); break;
-		case SOUND_VOICE_ATTACK: playSFX(SOUND_SFX_ATTACK_VOICE); break;
+		case SOUND_VOICE_1: playSFX(SOUND_SFX_11); break;
+		case SOUND_VOICE_2: playSFX(SOUND_SFX_12); break;
 		default: playSFX(n); break;
 	}
 }
 
-void NEOGEO_USER playGetReadyVoice(void) { isZ80Ready(); playSFX(SOUND_SFX_READY_VOICE); }
-void NEOGEO_USER playAttackVoice(void) { isZ80Ready(); playSFX(SOUND_SFX_ATTACK_VOICE); }
+void NEOGEO_USER playGetReadyVoice(void) { isZ80Ready(); playSFX(SOUND_SFX_11); }
+void NEOGEO_USER playAttackVoice(void) { isZ80Ready(); playSFX(SOUND_SFX_12); }
 
 void NEOGEO_USER playCoinThenReady(void) {
 	isZ80Ready(); playInsertCoinSSG(); cyclexms(250); isZ80Ready(); playGetReadyVoice();
@@ -552,7 +552,7 @@ void NEOGEO_USER soundPlayDemoFM(uint8_t fm_track) {
 
 void NEOGEO_USER soundPlayTitleMusic(uint8_t music_track) {
 	isZ80Ready(); soundSceneReset(); isZ80Ready(); soundApplyMix(0x34, 0xC8, 0x00, 0x00);
-	isZ80Ready(); playSFX(SOUND_SFX_TITLE_GONG); cyclexms(10); isZ80Ready(); playSFXB(SOUND_BED_TITLE_THEME);
+	isZ80Ready(); playSFX(SOUND_SFX_3); cyclexms(10); isZ80Ready(); playSFXB(SOUND_BED_A);
 }
 
 /*
@@ -563,27 +563,27 @@ void NEOGEO_USER soundPlayTitleMusic(uint8_t music_track) {
  *     driver, so we never use it as continuous background).
  *   - The `music_track` argument is mapped to ADPCM-B bed (0..3) via
  *     `music_track % 4` so different scenes get different beds.
- *   - SOUND_BED_EYECATCHER (bed 4) is RESERVED for the eyecatcher
+ *   - SOUND_BED_E (bed 4) is RESERVED for the eyecatcher
  *     screen — it is never produced by this dispatcher.  Call
- *     playSFXB(SOUND_BED_EYECATCHER) directly if you need it.
+ *     playSFXB(SOUND_BED_E) directly if you need it.
  *
  * FM / SSG / ADPCM-A remain available as one-shot cues via
  * playFMTrack / playSSGTrack / playSFX.
  */
 void NEOGEO_USER soundPlayGameLoop(uint8_t music_track) {
-	/* Pool of every ADPCM-B bed EXCEPT bed 4 (SOUND_BED_EYECATCHER),
+	/* Pool of every ADPCM-B bed EXCEPT bed 4 (SOUND_BED_E),
 	 * which is reserved for the eyecatcher screen.  Eight slots map
 	 * to 1.wav..4.wav, 6.wav..9.wav — gives a wider variety of scene
 	 * music than the old 4-slot rotation. */
 	static const uint8_t bed_pool[8] = {
-		SOUND_BED_TITLE_THEME,   /* 1.wav */
-		SOUND_BED_STAGE_ONE,     /* 2.wav */
-		SOUND_BED_STAGE_TWO,     /* 3.wav */
-		SOUND_BED_ENDING_THEME,  /* 4.wav */
-		SOUND_BED_SCENE_F,       /* 6.wav */
-		SOUND_BED_SCENE_G,       /* 7.wav */
-		SOUND_BED_SCENE_H,       /* 8.wav */
-		SOUND_BED_SCENE_I        /* 9.wav */
+		SOUND_BED_A,   /* 1.wav */
+		SOUND_BED_B,     /* 2.wav */
+		SOUND_BED_C,     /* 3.wav */
+		SOUND_BED_D,  /* 4.wav */
+		SOUND_BED_F,       /* 6.wav */
+		SOUND_BED_G,       /* 7.wav */
+		SOUND_BED_H,       /* 8.wav */
+		SOUND_BED_I        /* 9.wav */
 	};
 	uint8_t bed = bed_pool[music_track & 0x07u];
 	isZ80Ready(); soundSceneReset();

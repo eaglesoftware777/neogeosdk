@@ -156,7 +156,7 @@ static void NEOGEO_USER scene_particles(void)
                                   -(2L << NG_FP_SHIFT),
                                   30u, 0u, 1u, 1u, 1u);
             }
-            playSFX(SOUND_SFX_FOOTSTEP);
+            playSFX(SOUND_SFX_5);
         }
 
         /* Active count display — 3 digits */
@@ -224,7 +224,7 @@ void NEOGEO_USER demo_plus_main_run(void)
     ng_chars_init();
 
     soundSceneReset();
-    soundPlayGameLoop(SOUND_MUSIC_EAGLE_FANFARE);
+    soundPlayGameLoop(SOUND_MUSIC_E);
 
     /* Loop the scenes forever; A advances through them. */
     for (;;) {

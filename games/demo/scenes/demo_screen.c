@@ -50,12 +50,12 @@ static void NEOGEO_USER screen_walk_showcase(int loops, int delay_frames)
     soundSceneReset();
     soundSetADPCMAVolume(0x38);
     demo_scene_caption("SPRITE TILE PREVIEW", "CENTERED NGSpriteGroup DRAW", "NO PER-FRAME HARD CLEAR");
-    playVoiceCue(SOUND_VOICE_GET_READY);
+    playVoiceCue(SOUND_VOICE_1);
 
     frame = 0;
     for (i = 0; i < loops; i++) {
         demo_draw_sprite_screen((uint8_t)(2u + frame), 1, 20, -34, 16, 16, 0xFF, 0xFF);
-        if ((frame & 3u) == 0u) playSFX(SOUND_SFX_FOOTSTEP);
+        if ((frame & 3u) == 0u) playSFX(SOUND_SFX_5);
         if (demo_wait_frames_or_a((uint16_t)(delay_frames > 0 ? delay_frames : 24))) break;
         frame++;
         if (frame >= 7) frame = 0;
@@ -77,7 +77,7 @@ static void NEOGEO_USER screen_title_showcase(void)
 
     demo_scene_caption("TITLE SCREEN", "NEO GEO SDK DEMO", "SAFE SHOWSCREEN BASE 0040H");
     demo_safe_show(showScreen108, 32, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
-    playSFX(SOUND_SFX_TITLE_GONG);
+    playSFX(SOUND_SFX_3);
     if (demo_wait_frames_or_a(180)) {
         demo_clear_scene();
         return;
@@ -86,7 +86,7 @@ static void NEOGEO_USER screen_title_showcase(void)
     demo_clear_scene();
     demo_scene_caption("TITLE SCREEN", "EAGLE SOFTWARE FALLBACK", "SECOND TITLE ASSET BYPASSED");
     demo_safe_show(showScreen107, 32, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
-    playSFX(SOUND_SFX_LOW_DRUM);
+    playSFX(SOUND_SFX_10);
 
     for (i = 0; i < 180; i++) {
         waitVbl();

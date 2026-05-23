@@ -82,7 +82,7 @@ void NEOGEO_USER DEMO_END(void)   { soundStopAll(); }
 void NEOGEO_USER COIN_SOUND(void) {
     isZ80Ready(); soundStopAll();
     isZ80Ready(); soundSetADPCMAVolume(0x3C);
-    isZ80Ready(); playSFX(SOUND_SFX_COIN_CHIME);
+    isZ80Ready(); playSFX(SOUND_SFX_1);
     cyclexms(7);
 }
 

@@ -31,13 +31,11 @@ Build
 SDK identifiers
 ---------------
 
-  ADPCM-A trigger samples (sdk/sound_ids.h SOUND_SFX_*):
-    COIN_CHIME / START_SLASH / TITLE_GONG / INTRO_TAIKO /
-    FOOTSTEP / SHORT_SHOUT / BLADE_WHOOSH / IMPACT_HIT /
-    STRING_PHRASE / LOW_DRUM / READY_VOICE / ATTACK_VOICE
+  ADPCM-A trigger samples (sdk/sound_ids.h):
+    SOUND_SFX_1 .. SOUND_SFX_12   (maps to in_wav_a/1.wav .. 12.wav)
 
   ADPCM-B streamed beds:
-    SOUND_BED_TITLE_THEME / STAGE_ONE / STAGE_TWO /
-    SOUND_BED_ENDING_THEME / EYECATCHER
+    SOUND_BED_A .. SOUND_BED_I    (maps to in_wav_b/1.wav .. 9.wav)
+    SOUND_BED_E (= 5.wav) is reserved for the eyecatcher screen.
 
 See SOURCES.md for the licensing + provenance of each WAV.
