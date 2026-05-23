@@ -650,6 +650,90 @@ static uint8_t NEOGEO_USER chap_sound(void)
     playSFX(SOUND_SFX_8); snd_step();
     if (uwait(36u)) return 1u;
 
+    /* --- 6) MML MUSIC — full multi-channel MML music tracks --------- *
+     * Plays three MML music tracks (A, B, C).  MML music mixes ADPCM-B
+     * bed + FM patches + SSG melody via @b/@f/@p directives — quite
+     * different from raw FM/SSG which only use one chip. */
+    demo_fix_puts(2u, 5u, "6. MML MUSIC (multi-channel)      ", 2u);
+    soundStopAll();                            snd_step();
+    soundSceneReset();                         snd_step();
+    soundApplyMix(0x30u, 0xB8u, 0x06u, 0x08u); snd_step();
+    {
+        static const uint8_t s_mml_tracks[3] = {
+            SOUND_MUSIC_A, SOUND_MUSIC_E, SOUND_MUSIC_G
+        };
+        static const char *const s_mml_names[3] = {
+            "MML A (intro)   ",
+            "MML E (fanfare) ",
+            "MML G (jingle)  "
+        };
+        uint8_t m;
+        for (m = 0u; m < 3u; m++) {
+            demo_fix_puts(2u, 15u, s_mml_names[m], 1u);
+            soundFadeOutSpeed(10u); snd_step();
+            if (uwait(8u)) return 1u;
+            soundStopMusic();       snd_step();
+            playMusic(s_mml_tracks[m]); snd_step();
+            if (uwait(360u)) return 1u;
+        }
+    }
+    soundFadeOutSpeed(6u); snd_step();
+    if (uwait(40u)) return 1u;
+    soundStopAll();        snd_step();
+    demo_fix_puts(2u, 15u, "                  ", 0u);
+
+    /* --- 7) MORE DRIVER FEATURES — fade in/out variants, tempo ------ */
+    demo_fix_puts(2u, 5u, "7. DRIVER FEATURES (fade/tempo)   ", 2u);
+    soundSceneReset();                         snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x00u); snd_step();
+    playSFXB(SOUND_BED_C);                     snd_step();
+
+    demo_fix_puts(2u, 18u, "soundFadeInSpeed(8) from silent   ", 1u);
+    soundSetADPCMBVolume(0x00u); snd_step();
+    soundFadeInSpeed(8u);        snd_step();
+    if (uwait(90u)) return 1u;
+
+    demo_fix_puts(2u, 18u, "soundFadeInSpeed(2) slow ramp     ", 1u);
+    soundSetADPCMBVolume(0x00u); snd_step();
+    soundFadeInSpeed(2u);        snd_step();
+    if (uwait(120u)) return 1u;
+
+    demo_fix_puts(2u, 18u, "soundSetTempo (driver tempo)      ", 1u);
+    soundSetTempo(80u);  snd_step();  if (uwait(40u)) return 1u;
+    soundSetTempo(180u); snd_step();  if (uwait(40u)) return 1u;
+    soundSetTempo(120u); snd_step();  if (uwait(40u)) return 1u;
+
+    demo_fix_puts(2u, 18u, "soundFadeOut + Cancel + FadeIn    ", 1u);
+    soundFadeOutSpeed(10u); snd_step();
+    if (uwait(30u)) return 1u;
+    soundCancelFade();      snd_step();
+    if (uwait(20u)) return 1u;
+    soundFadeOutSpeed(4u);  snd_step();
+    if (uwait(80u)) return 1u;
+    soundStopAll();         snd_step();
+    demo_fix_puts(2u, 18u, "                                  ", 0u);
+
+    /* --- 8) VOICE SYNTHESIS — new driver commands ($50/$51/$52) ----- *
+     * Pure-SSG cadence/pitch approximations of arcade voice cues —
+     * no PCM samples required.  Driver source: play_voice_get_ready
+     * and friends in sound/driver/driver.asm. */
+    demo_fix_puts(2u, 5u, "8. VOICE SYNTHESIS ($50/$51/$52)  ", 2u);
+    soundSceneReset();                         snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x0Fu, 0x00u); snd_step();
+
+    demo_fix_puts(2u, 20u, "playVoiceGetReady() ($50)         ", 1u);
+    playVoiceGetReady(); snd_step();
+    if (uwait(110u)) return 1u;
+
+    demo_fix_puts(2u, 20u, "playVoiceLetsGo()   ($51)         ", 1u);
+    playVoiceLetsGo();   snd_step();
+    if (uwait(110u)) return 1u;
+
+    demo_fix_puts(2u, 20u, "playVoiceGameOver() ($52)         ", 1u);
+    playVoiceGameOver(); snd_step();
+    if (uwait(140u)) return 1u;
+    demo_fix_puts(2u, 20u, "                                  ", 0u);
+
     demo_fix_puts(2u, 18u, "soundStopAll                      ", 1u);
     soundStopAll(); snd_step();
     if (uwait(30u)) return 1u;

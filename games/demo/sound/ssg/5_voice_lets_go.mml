@@ -1,0 +1,16 @@
+; 5_voice_lets_go — SSG voice cue: "LET'S GO!"
+;
+; Two-syllable rising cue:
+;   LETS = E5  short staccato burst
+;   GO!  = A5  longer ringing accent
+
+T220
+P2
+V13
+O5
+L32
+
+E E E  R32
+A A A8
+
+~

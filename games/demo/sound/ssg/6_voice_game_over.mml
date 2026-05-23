@@ -1,0 +1,18 @@
+; 6_voice_game_over — SSG voice cue: "GAME OVER"
+;
+; Solemn 3-syllable descending cue with a slow tail:
+;   GAME = G4  medium
+;   O-   = E4  medium
+;   -VER = C4  long fade
+
+T220
+P1
+V11
+O4
+L16
+
+G G  R32
+E E  R32
+C4
+
+~
