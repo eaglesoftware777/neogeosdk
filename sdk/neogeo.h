@@ -124,6 +124,11 @@ void playGetReadyVoice(void);
 void playAttackVoice(void);
 void playCoinThenReady(void);
 
+/* SSG-synthesised voice cues (driver $50 / $51 / $52). */
+void playVoiceGetReady(void);
+void playVoiceLetsGo(void);
+void playVoiceGameOver(void);
+
 /* Fades. */
 void soundFadeOut(void);
 void soundFadeIn(void);

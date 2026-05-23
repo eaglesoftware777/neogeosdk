@@ -65,6 +65,13 @@ queues the command in a 32-byte FIFO, and processes it on the next timer tick.
   playGetReadyVoice()       Plays ADPCM-A sample 10. No arguments.
   playAttackVoice()         Plays ADPCM-A sample 11. No arguments.
   playCoinThenReady()       playInsertCoinSSG + 250ms wait + playGetReadyVoice.
+  playVoiceGetReady()       Command $50
+                            SSG-synthesised "GET READY!" voice cue
+                            (dispatches SSG voice track 4).
+  playVoiceLetsGo()         Command $51
+                            SSG-synthesised "LET'S GO!" voice cue (SSG track 5).
+  playVoiceGameOver()       Command $52
+                            SSG-synthesised "GAME OVER" voice cue (SSG track 6).
   soundPlayDemoFM(n)        soundSceneReset + soundSetFMVolume(0x0C) + playFMTrack(n).
   soundPlayTitleMusic(n)    soundSceneReset + title gong + ADPCM-B title theme.
                             Current helper ignores n and always uses the title-theme bed.

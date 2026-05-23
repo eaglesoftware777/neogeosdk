@@ -68,6 +68,9 @@ void soundSceneReset(void);
 void playInsertCoinSSG(void);
 void playGetReadyVoice(void);
 void playAttackVoice(void);
+void playVoiceGetReady(void);
+void playVoiceLetsGo(void);
+void playVoiceGameOver(void);
 void playCoinThenReady(void);
 void soundApplyMix(uint8_t,uint8_t,uint8_t,uint8_t);
 void soundPlayDemoFM(uint8_t);
@@ -531,6 +534,18 @@ void NEOGEO_USER playAttackVoice(void) { isZ80Ready(); playSFX(SOUND_SFX_12); }
 void NEOGEO_USER playCoinThenReady(void) {
 	isZ80Ready(); playInsertCoinSSG(); cyclexms(250); isZ80Ready(); playGetReadyVoice();
 }
+
+/*
+ * Voice synthesis cues (driver commands $50 / $51 / $52) — SSG-tone
+ * approximations of classic arcade speech.  Each command dispatches a
+ * dedicated SSG voice MML (tracks 4..6 in ssg_data.inc) that is shaped
+ * to mimic the cadence + pitch contour of the spoken phrase.  Real
+ * speech on YM2610 requires ADPCM samples; this is a synthesis-only
+ * approximation that's free of sample storage.
+ */
+void NEOGEO_USER playVoiceGetReady(void) { isZ80Ready(); soundCommand(0x50); }
+void NEOGEO_USER playVoiceLetsGo(void)   { isZ80Ready(); soundCommand(0x51); }
+void NEOGEO_USER playVoiceGameOver(void) { isZ80Ready(); soundCommand(0x52); }
 
 void NEOGEO_USER soundFadeOut(void) { isZ80Ready(); soundFadeOutSpeed(0x20); }
 void NEOGEO_USER soundFadeIn(void) { isZ80Ready(); soundFadeInSpeed(0x20); }

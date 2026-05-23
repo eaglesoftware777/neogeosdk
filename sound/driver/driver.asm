@@ -380,39 +380,50 @@ exec_normal:
     cp $04 ; Stop all
     jp z,stop_all
     cp $05 ; ADPCM-A volume parameter follows
-    jr z,set_adpcma_volume_wait
+    jp z,set_adpcma_volume_wait
     cp $06 ; ADPCM-B volume parameter follows
-    jr z,set_adpcmb_volume_wait
+    jp z,set_adpcmb_volume_wait
     cp $07 ; SSG/MML volume parameter follows
-    jr z,set_ssg_volume_wait
+    jp z,set_ssg_volume_wait
     cp $0A ; Fade out speed parameter follows
-    jr z,set_fadeout_wait
+    jp z,set_fadeout_wait
     cp $0C ; ADPCM-A stop
     jp z,adpcma_stop
     cp $0D ; ADPCM-B stop
     jp z,adpcmb_stop
     cp $0E ; Tempo Wait
-    jr z,set_tempo_wait
+    jp z,set_tempo_wait
     cp $0F ; Stop SSG / music only
     jp z,stop_music
     cp $11 ; Stop fade out
     jp z,cancel_fade
     cp $12 ; Fade in speed parameter follows
-    jr z,set_fadein_wait
+    jp z,set_fadein_wait
     cp $13 ; FM volume parameter follows
-    jr z,set_fmvol_wait
+    jp z,set_fmvol_wait
     cp SSG_CMD_PRESET ; SSG preset parameter follows
-    jr z,set_ssgpreset_wait
+    jp z,set_ssgpreset_wait
     cp $30 ; FM debug tone
     jp z,play_fm_demo
     cp $31 ; FM track select parameter follows
-    jr z,set_fmtrack_wait
+    jp z,set_fmtrack_wait
     cp SSG_CMD_PLAY ; SSG track select parameter follows
-    jr z,set_ssgtrack_wait
+    jp z,set_ssgtrack_wait
     cp $28 ; ADPCM-B direct sample 0
     jp z,play_demo_b0
     cp $29 ; ADPCM-B direct sample 1
     jp z,play_demo_b1
+
+    ; Voice synthesis cues — single-byte commands that dispatch a
+    ; hardcoded SSG voice index.  The MML data lives in
+    ; sound/ssg/4_voice_get_ready.mml etc and is compiled into
+    ; ssg_track_4 .. ssg_track_6.  See SOUND_DRIVER_GUIDE.txt §"Voice".
+    cp $50 ; Voice: "GET READY!"
+    jp z,play_voice_get_ready
+    cp $51 ; Voice: "LET'S GO!"
+    jp z,play_voice_lets_go
+    cp $52 ; Voice: "GAME OVER"
+    jp z,play_voice_game_over
 
     cp SFX_B_BASE
     jp nc,play_adpcmb_cmd
@@ -421,6 +432,16 @@ exec_normal:
     cp MUSIC_BASE
     jp nc,play_fm_cmd
     ret
+
+play_voice_get_ready:
+    ld a,4
+    jp play_ssg_index
+play_voice_lets_go:
+    ld a,5
+    jp play_ssg_index
+play_voice_game_over:
+    ld a,6
+    jp play_ssg_index
 
 set_tempo_wait:
     ld a,1

@@ -1,0 +1,25 @@
+; 4_voice_get_ready — SSG voice cue: "GET READY!"
+;
+; Pure SSG can't synthesise real speech, but we can approximate the
+; cadence + pitch contour of an arcade voice cue.  Three syllable
+; bursts at descending pitches with sharp attacks:
+;
+;   GET   = G5  short
+;   REA-  = E5  short
+;   -DY   = D5  short
+;   !     = A5  longer (exclamation)
+;
+; T220 L32 (~123 ms per note) keeps the cadence syllable-fast.
+
+T220
+P0
+V12
+O5
+L32
+
+G G G  R32
+E E E  R32
+D D D  R32
+A8
+
+~
