@@ -1,5 +1,18 @@
 # GDB Guide for NeoGeoSDK
 
+> **v1.3.1 note**
+>
+> Debug builds work the same way for both engine variants.  With
+> `USE_2D_PLUS=1`, the engine source files are `.cpp` and you can step
+> through C++ methods directly; GDB will demangle the symbols for you.
+>
+> Set a breakpoint in a demo chapter with:
+>
+> ```
+> break demo_unified.c:chap_mini_game
+> break demo_plus_main.c:demo_plus_main_run
+> ```
+
 This guide covers how to use the cross-GDB (`m68k-unknown-elf-gdb` on Linux, `m68k-elf-gdb.exe` on Windows) with NeoGeoSDK builds.
 
 ---

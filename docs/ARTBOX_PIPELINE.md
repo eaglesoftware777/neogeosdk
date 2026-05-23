@@ -1,5 +1,25 @@
 # Artbox Graphics Pipeline
 
+> **v1.3.1 — HD alt scripts**
+>
+> Two new scripts sit alongside the existing pipeline.  They do NOT
+> replace `img2neo.py` / `fixtiles.py` — they're opt-in alternatives:
+>
+> - `artbox/img2neo_hd.py` — high-quality photo-to-NeoGeo conversion:
+>   bilateral filter (edge-preserving smoothing), CLAHE (local contrast
+>   equalisation on the L channel of Lab), unsharp mask, embedded 32×32
+>   blue-noise dither.  Best for photographs and detailed art.  CLI:
+>   `--no-bilateral`, `--no-clahe`, `--no-unsharp`,
+>   `--dither blue|fs|ordered|none`.
+>
+> - `artbox/fixtiles_hd.py` — per-tile palette FIX conversion: each 8×8
+>   FIX cell picks its own 16-colour palette.  `--sharp-text` binarises
+>   the input for glyph/HUD sources.  Writes a sidecar `*.pal.json` with
+>   the per-tile palette table for a future packer.
+>
+> The existing scripts continue to be the default for the demo's
+> `make GAME=demo art` pipeline.
+
 Artbox converts PNG sources into Neo Geo graphics data and generated metadata.
 The current pipeline is rule-driven through `artbox/assets.cfg`.
 

@@ -1,5 +1,19 @@
 # Sound Studio Guide
 
+> **v1.3.1 — usage notes**
+>
+> The unified demo's chapter 03 (SOUND) replaces the noisy raw FM-patch
+> demo with a clean MML music intro (`SOUND_MUSIC_EAGLE_FANFARE`).
+> When auditioning patches through Sound Studio, prefer the
+> MML/composition path over `playFMTrack(SOUND_FM_PATCH_SHOWCASE)`
+> alone — the patch table doesn't carry sequencing.
+>
+> Sound Studio's panels map 1-to-1 to the on-ROM channels: FM (4 ch),
+> SSG (3 ch), ADPCM-A (6 ch sampled), ADPCM-B (1 ch streamed).  The
+> identifier headers `sdk/sound_ids.h` and `sound/driver/driver_defs.h`
+> remain the source of truth for what each command does on the Z80
+> side.
+
 `sound/sound_studio.py` is a PyQt6 desktop tool for composing and previewing
 NeoGeo YM2610 audio without leaving your dev environment.
 
