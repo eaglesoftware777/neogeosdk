@@ -3073,8 +3073,7 @@ void NEOGEO_USER demo_unified_run(void)
     (void)chap_boot();
     (void)chap_title();
     (void)chap_fix();
-    (void)chap_sound();
-    (void)chap_fix_fx();        /* new — FIX showcase after SOUND */
+    (void)chap_fix_fx();
     (void)chap_sprite();
     (void)chap_chars();
     (void)chap_physics();
@@ -3091,5 +3090,6 @@ void NEOGEO_USER demo_unified_run(void)
     (void)chap_render3d();
     (void)chap_ssg_arcade();
     (void)chap_garden3d();
+    (void)chap_sound();         /* moved to just before the credits   */
     (void)chap_credits();
 }

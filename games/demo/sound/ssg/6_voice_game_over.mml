@@ -1,21 +1,20 @@
-; 6_voice_game_over — SSG envelope-driven voice approx: "GAME OVER"
+; 6_voice_game_over — YM2149 envelope-driven voice: "GAME OVER"
 
 T220
 V13
 O4
-L64
+L32
 
-Q40 E0
-P3 F G G+
-P0 A B B B B B A A G F+ F E
-R32
+Q3 E0
+P3 F G
+P0 A B B B A G F+ F E
 
-Q60 E0
+Q2 E0
 P3 E E
-P0 F F+ G G F+ F E E D
-R64
+P0 F F+ G F E E D
 
-Q80 E0
-P3 D
-P0 E D C+ C C < B B A+ A G+ G F+ F E
+Q4 E0
+P3 D D
+P0 E D C+ C < B A+ A G+ G F+ F E
+
 ~
