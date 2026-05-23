@@ -1731,6 +1731,295 @@ class AssetRulesTab(QWidget):
             QMessageBox.warning(self, "Reload Failed", str(e))
 
 
+###############################################################################
+#  Asset Browser — recursively list every PNG in artbox/in/* with thumbnail
+###############################################################################
+class AssetBrowserTab(QWidget):
+    def __init__(self):
+        super().__init__()
+        from PyQt6.QtWidgets import QTreeWidget, QTreeWidgetItem
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Source Asset Browser</b>"))
+        layout.addWidget(QLabel(
+            "Every PNG under artbox/in/ + artbox/infix/.  Click a file "
+            "to preview at native size."))
+
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+
+        self.tree = QTreeWidget()
+        self.tree.setHeaderLabels(["Asset", "Size", "Dim"])
+        self.tree.setColumnWidth(0, 240)
+        self.tree.itemSelectionChanged.connect(self._on_select)
+        splitter.addWidget(self.tree)
+
+        right = QWidget()
+        rl = QVBoxLayout(right)
+        rl.addWidget(QLabel("<b>Preview</b>"))
+        self.preview = QLabel()
+        self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.preview.setStyleSheet("background:#1a1a1a; border:1px solid #333;")
+        self.preview.setMinimumSize(256, 256)
+        rl.addWidget(self.preview, 1)
+
+        self.info = QPlainTextEdit()
+        self.info.setReadOnly(True)
+        self.info.setMaximumHeight(120)
+        self.info.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#a0c0e0;"
+            " font-family:'Courier New',monospace; }")
+        rl.addWidget(self.info)
+
+        btn = QPushButton("Refresh")
+        btn.clicked.connect(self._populate)
+        rl.addWidget(btn)
+
+        splitter.addWidget(right)
+        splitter.setSizes([320, 600])
+        layout.addWidget(splitter, 1)
+
+        self._populate()
+
+    def _populate(self):
+        from PyQt6.QtWidgets import QTreeWidgetItem
+        self.tree.clear()
+        for label, folder in [
+            ("in/backgrounds",         _AX_ARTBOX / "in" / "backgrounds"),
+            ("in/characters",          _AX_ARTBOX / "in" / "characters"),
+            ("in/effects",             _AX_ARTBOX / "in" / "effects"),
+            ("in/eyecatcher",          _AX_ARTBOX / "in" / "eyecatcher"),
+            ("in/npcs",                _AX_ARTBOX / "in" / "npcs"),
+            ("in/screens",             _AX_ARTBOX / "in" / "screens"),
+            ("in/titles",              _AX_ARTBOX / "in" / "titles"),
+            ("infix (FIX-layer art)",  _AX_ARTBOX / "infix"),
+        ]:
+            root = QTreeWidgetItem([label, "", ""])
+            self.tree.addTopLevelItem(root)
+            if not folder.exists():
+                root.setText(1, "missing")
+                continue
+            try:
+                for entry in sorted(folder.iterdir()):
+                    if entry.is_file() and entry.suffix.lower() == ".png":
+                        sz = entry.stat().st_size
+                        dim = self._png_dim(entry)
+                        item = QTreeWidgetItem(
+                            [entry.name, f"{sz}", dim])
+                        item.setData(
+                            0, Qt.ItemDataRole.UserRole, str(entry))
+                        root.addChild(item)
+            except Exception as e:
+                root.setText(1, f"err: {e}")
+            root.setExpanded(False)
+
+    def _png_dim(self, path):
+        try:
+            img = QImage(str(path))
+            if img.isNull():
+                return "?"
+            return f"{img.width()}x{img.height()}"
+        except Exception:
+            return "?"
+
+    def _on_select(self):
+        items = self.tree.selectedItems()
+        if not items:
+            return
+        p_str = items[0].data(0, Qt.ItemDataRole.UserRole)
+        if not p_str:
+            self.preview.clear()
+            self.info.clear()
+            return
+        path = _AxPath(p_str)
+        img = QImage(p_str)
+        if img.isNull():
+            self.preview.setText("(failed to load)")
+            self.info.setPlainText(f"{path}\n(invalid PNG)")
+            return
+        # Scale preview to fit
+        from PyQt6.QtGui import QPixmap
+        pix = QPixmap.fromImage(img)
+        max_size = self.preview.size()
+        if pix.width() > max_size.width() or pix.height() > max_size.height():
+            pix = pix.scaled(max_size,
+                             Qt.AspectRatioMode.KeepAspectRatio,
+                             Qt.TransformationMode.SmoothTransformation)
+        self.preview.setPixmap(pix)
+        self.info.setPlainText(
+            f"Path:   {path}\n"
+            f"Dim:    {img.width()}x{img.height()}\n"
+            f"Size:   {path.stat().st_size} bytes\n"
+            f"Format: {img.format()}\n"
+            f"Colors: {'paletted' if img.format() == QImage.Format.Format_Indexed8 else 'RGB(A)'}"
+        )
+
+
+###############################################################################
+#  HD Compare — convert any PNG through standard AND HD pipelines, A/B view
+###############################################################################
+class HdCompareTab(QWidget):
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>HD Conversion Compare</b>"))
+        layout.addWidget(QLabel(
+            "Convert a PNG with BOTH the standard and HD pipelines, "
+            "then view the indexed outputs side by side.  Originals "
+            "untouched on disk — outputs land in artbox/out/_hd_cmp/."))
+
+        # Source picker row
+        pick_row = QHBoxLayout()
+        self.src_line = QLineEdit()
+        self.src_line.setPlaceholderText(
+            "Pick a PNG (e.g. artbox/in/characters/sprite_001_*.png)")
+        btn_pick = QPushButton("Browse…")
+        btn_pick.clicked.connect(self._pick_src)
+        btn_run  = QPushButton("Convert (both pipelines)")
+        btn_run.clicked.connect(self._convert)
+        pick_row.addWidget(self.src_line, 1)
+        pick_row.addWidget(btn_pick)
+        pick_row.addWidget(btn_run)
+        layout.addLayout(pick_row)
+
+        # Side-by-side previews
+        previews = QHBoxLayout()
+        self.std_label = QLabel("(standard output)")
+        self.hd_label  = QLabel("(HD output)")
+        for lbl in (self.std_label, self.hd_label):
+            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            lbl.setStyleSheet(
+                "background:#1a1a1a; border:1px solid #333; min-height:280px;")
+        std_box = QGroupBox("Standard (img2neo.py)")
+        hd_box  = QGroupBox("HD (img2neo_hd.py)")
+        for box, lbl in [(std_box, self.std_label), (hd_box, self.hd_label)]:
+            bl = QVBoxLayout(box)
+            bl.addWidget(lbl, 1)
+        previews.addWidget(std_box, 1)
+        previews.addWidget(hd_box, 1)
+        layout.addLayout(previews, 1)
+
+        # Log
+        self.log = QPlainTextEdit()
+        self.log.setReadOnly(True)
+        self.log.setMaximumHeight(150)
+        self.log.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#cfcf80;"
+            " font-family:'Courier New',monospace; }")
+        layout.addWidget(self.log)
+
+    def _pick_src(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Pick source PNG",
+            str(_AX_ARTBOX / "in"), "PNG (*.png);;All Files (*)")
+        if path:
+            self.src_line.setText(path)
+
+    def _convert(self):
+        src = self.src_line.text().strip()
+        if not src or not os.path.exists(src):
+            self.log.appendPlainText("(no source selected)")
+            return
+        out_dir = _AX_ARTBOX / "out" / "_hd_cmp"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        base = os.path.splitext(os.path.basename(src))[0]
+        std_out = out_dir / f"{base}_std.png"
+        hd_out  = out_dir / f"{base}_hd.png"
+        for label, script, out in [
+            ("standard", _AX_ARTBOX / "img2neo.py", std_out),
+            ("HD",       _AX_ARTBOX / "img2neo_hd.py", hd_out),
+        ]:
+            if not script.exists():
+                self.log.appendPlainText(f"--- {label} SKIPPED ({script} missing) ---")
+                continue
+            cmd = ["python3", str(script), src, str(out)]
+            self.log.appendPlainText(f"$ {' '.join(cmd)}")
+            try:
+                r = _ax_sub.run(cmd, capture_output=True, text=True, timeout=120)
+                self.log.appendPlainText(r.stdout)
+                if r.returncode != 0:
+                    self.log.appendPlainText(f"!! {label} failed: {r.stderr}")
+                    continue
+            except Exception as e:
+                self.log.appendPlainText(f"!! {label} error: {e}")
+                continue
+            # Load result image into the preview
+            if out.exists():
+                img = QImage(str(out))
+                if not img.isNull():
+                    from PyQt6.QtGui import QPixmap
+                    pix = QPixmap.fromImage(img)
+                    target = self.std_label if label == "standard" else self.hd_label
+                    sz = target.size()
+                    pix = pix.scaled(sz,
+                                     Qt.AspectRatioMode.KeepAspectRatio,
+                                     Qt.TransformationMode.FastTransformation)
+                    target.setPixmap(pix)
+
+
+###############################################################################
+#  ROM Inspector — show built ROM file inventory
+###############################################################################
+class RomInventoryTab(QWidget):
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Built ROM Inventory</b>"))
+        layout.addWidget(QLabel(
+            "Every ROM kind (p1 / m1 / s1 / v1 / c1 / c2) for every game "
+            "under roms/.  Refresh to pick up new builds."))
+
+        from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
+        self.table = QTableWidget(0, 5)
+        self.table.setHorizontalHeaderLabels(
+            ["Game", "File", "Size (B)", "Modified", "Present"])
+        self.table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents)
+        layout.addWidget(self.table, 1)
+
+        btn = QPushButton("Refresh")
+        btn.clicked.connect(self._refresh)
+        layout.addWidget(btn)
+        self._refresh()
+
+    def _refresh(self):
+        from PyQt6.QtWidgets import QTableWidgetItem
+        roms_dir = _AX_REPO_ROOT / "roms"
+        rows = []
+        if roms_dir.exists():
+            for game_dir in sorted(roms_dir.iterdir()):
+                if not game_dir.is_dir():
+                    continue
+                game = game_dir.name
+                game_id = "???"
+                mk = _AX_REPO_ROOT / "games" / game / "game.mk"
+                if mk.exists():
+                    for line in mk.read_text(errors="replace").splitlines():
+                        if line.strip().startswith("GAME_ID"):
+                            parts = line.split("=")
+                            if len(parts) > 1:
+                                game_id = parts[1].strip()
+                                break
+                for kind in ("p1", "m1", "s1", "v1", "c1", "c2"):
+                    fname = f"{game_id}-{kind}.{kind}"
+                    fpath = game_dir / fname
+                    if fpath.exists():
+                        st = fpath.stat()
+                        import datetime
+                        mtime = datetime.datetime.fromtimestamp(
+                            st.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                        rows.append((game, fname, str(st.st_size), mtime, "yes"))
+                    else:
+                        rows.append((game, fname, "—", "—", "no"))
+        self.table.setRowCount(len(rows))
+        for r, row_data in enumerate(rows):
+            for c, val in enumerate(row_data):
+                item = QTableWidgetItem(val)
+                if c == 4 and val == "no":
+                    item.setForeground(QColor("#aa6666"))
+                elif c == 4 and val == "yes":
+                    item.setForeground(QColor("#66aa66"))
+                self.table.setItem(r, c, item)
+
+
 class ArtboxStudio(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -1781,8 +2070,17 @@ class ArtboxStudio(QMainWindow):
         self.tab_paled = ManualPaletteEditorTab(self.palettes)
         tabs.addTab(self.tab_paled, "Palette Editor")
 
+        self.tab_browser = AssetBrowserTab()
+        tabs.addTab(self.tab_browser, "Asset Browser")
+
         self.tab_pipeline = PipelineRunnerTab()
         tabs.addTab(self.tab_pipeline, "Pipeline")
+
+        self.tab_hd = HdCompareTab()
+        tabs.addTab(self.tab_hd, "HD Compare")
+
+        self.tab_inv = RomInventoryTab()
+        tabs.addTab(self.tab_inv, "ROM Inventory")
 
         self.tab_rules = AssetRulesTab()
         tabs.addTab(self.tab_rules, "Asset Rules")

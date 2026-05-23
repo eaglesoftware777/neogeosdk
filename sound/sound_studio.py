@@ -2090,6 +2090,248 @@ class DriverDefsTab(QWidget):
         layout.addWidget(splitter, 1)
 
 
+###############################################################################
+#  Track Browser — discover everything in sound/mml, sound/ssg, sound/samples
+###############################################################################
+class TrackBrowserTab(QWidget):
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Audio Asset Browser</b>"))
+        layout.addWidget(QLabel(
+            "Every audio source file in sound/ — MML scripts, SSG presets, "
+            "and WAV samples for ADPCM encoding."))
+
+        splitter = _QSplit(Qt.Orientation.Horizontal)
+
+        # Left: tree of folders
+        from PyQt6.QtWidgets import QTreeWidget, QTreeWidgetItem
+        self.tree = QTreeWidget()
+        self.tree.setHeaderLabels(["File", "Size"])
+        self.tree.setColumnWidth(0, 280)
+        self.tree.itemSelectionChanged.connect(self._on_select)
+        splitter.addWidget(self.tree)
+
+        # Right: details
+        right = QWidget()
+        rl = QVBoxLayout(right)
+        rl.addWidget(QLabel("<b>Details</b>"))
+        self.detail = QPlainTextEdit()
+        self.detail.setReadOnly(True)
+        self.detail.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#cfcf80;"
+            " font-family:'Courier New',monospace; }")
+        rl.addWidget(self.detail, 1)
+
+        btn_refresh = QPushButton("Refresh")
+        btn_refresh.clicked.connect(self._populate)
+        rl.addWidget(btn_refresh)
+
+        splitter.addWidget(right)
+        splitter.setSizes([350, 600])
+        layout.addWidget(splitter, 1)
+
+        self._populate()
+
+    def _populate(self):
+        from PyQt6.QtWidgets import QTreeWidgetItem
+        self.tree.clear()
+        for label, folder in [
+            ("MML music",      SOUND_DIR / "mml"),
+            ("MML music (fm)", SOUND_DIR / "fm"),
+            ("SSG presets",    SOUND_DIR / "ssg"),
+            ("WAV samples A",  SAMPLES_DIR),
+            ("WAV samples B",  SOUND_DIR / "samples" / "in_wav_b"),
+            ("Driver source",  SOUND_DIR / "driver"),
+            ("Tools",          SOUND_DIR / "tools"),
+        ]:
+            root = QTreeWidgetItem([label, ""])
+            self.tree.addTopLevelItem(root)
+            if not folder.exists():
+                root.setText(1, "(missing)")
+                continue
+            try:
+                for entry in sorted(folder.iterdir()):
+                    if entry.is_file():
+                        sz = entry.stat().st_size
+                        item = QTreeWidgetItem([entry.name, f"{sz} B"])
+                        item.setData(0, Qt.ItemDataRole.UserRole, str(entry))
+                        root.addChild(item)
+            except Exception as e:
+                root.setText(1, f"(error: {e})")
+            root.setExpanded(True)
+
+    def _on_select(self):
+        items = self.tree.selectedItems()
+        if not items:
+            self.detail.clear()
+            return
+        path_str = items[0].data(0, Qt.ItemDataRole.UserRole)
+        if not path_str:
+            self.detail.clear()
+            return
+        p = Path(path_str)
+        info = [
+            f"Path:  {p}",
+            f"Size:  {p.stat().st_size} bytes",
+            f"Suffix:{p.suffix}",
+            "",
+        ]
+        # Text files: preview content
+        if p.suffix.lower() in (".mml", ".cfg", ".inc", ".h", ".c",
+                                ".asm", ".txt", ".md", ".py"):
+            try:
+                info.append(p.read_text(errors="replace"))
+            except Exception as e:
+                info.append(f"(read error: {e})")
+        else:
+            info.append("(binary file — no preview)")
+        self.detail.setPlainText("\n".join(info))
+
+
+###############################################################################
+#  Audio Mix — global mixer that emits the corresponding soundApplyMix call
+###############################################################################
+class AudioMixTab(QWidget):
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Global Audio Mix</b>"))
+        layout.addWidget(QLabel(
+            "Build a `soundApplyMix(adpcma, adpcmb, ssg, fm)` call and copy "
+            "it into your game / MML init.  Each slider is 0..255."))
+
+        form = QFormLayout()
+        self.sl = {}
+        for name, default in [("ADPCM-A", 0x30), ("ADPCM-B", 0xB8),
+                              ("SSG", 0x08), ("FM", 0x08)]:
+            s = QSlider(Qt.Orientation.Horizontal)
+            s.setRange(0, 255)
+            s.setValue(default)
+            lbl = QLabel(f"0x{default:02X}")
+            s.valueChanged.connect(
+                lambda v, l=lbl: l.setText(f"0x{v:02X}"))
+            s.valueChanged.connect(self._update_call)
+            row = QHBoxLayout()
+            row.addWidget(s)
+            row.addWidget(lbl)
+            w = QWidget()
+            w.setLayout(row)
+            form.addRow(name, w)
+            self.sl[name] = s
+        layout.addLayout(form)
+
+        layout.addWidget(QLabel("<b>Emitted C call:</b>"))
+        self.call = QPlainTextEdit()
+        self.call.setReadOnly(True)
+        self.call.setMaximumHeight(80)
+        self.call.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#a0e0a0;"
+            " font-family:'Courier New',monospace; font-size:14px; }")
+        layout.addWidget(self.call)
+
+        # Preset row
+        preset_row = QHBoxLayout()
+        for name, vals in [
+            ("Default game",   (0x30, 0xB8, 0x08, 0x08)),
+            ("FM showcase",    (0x00, 0x00, 0x00, 0x0D)),
+            ("Pure SSG",       (0x20, 0x00, 0x0F, 0x00)),
+            ("Stage mix",      (0x3C, 0xBC, 0x10, 0x0C)),
+            ("Mute",           (0x00, 0x00, 0x00, 0x00)),
+        ]:
+            btn = QPushButton(name)
+            btn.clicked.connect(
+                lambda _, v=vals: self._apply_preset(v))
+            preset_row.addWidget(btn)
+        layout.addLayout(preset_row)
+
+        layout.addStretch()
+        self._update_call()
+
+    def _apply_preset(self, vals):
+        names = ["ADPCM-A", "ADPCM-B", "SSG", "FM"]
+        for n, v in zip(names, vals):
+            self.sl[n].setValue(v)
+
+    def _update_call(self):
+        a = self.sl["ADPCM-A"].value()
+        b = self.sl["ADPCM-B"].value()
+        s = self.sl["SSG"].value()
+        f = self.sl["FM"].value()
+        self.call.setPlainText(
+            f"soundApplyMix(0x{a:02X}u, 0x{b:02X}u, 0x{s:02X}u, 0x{f:02X}u);")
+
+
+###############################################################################
+#  ROM Inspector — show built ROM files (sizes, timestamps, presence)
+###############################################################################
+class RomInspectorTab(QWidget):
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Built ROM Inspector</b>"))
+        layout.addWidget(QLabel(
+            "Status of every ROM file under roms/<game>/.  Refresh to "
+            "pick up new builds."))
+
+        from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
+        self.table = QTableWidget(0, 5)
+        self.table.setHorizontalHeaderLabels(
+            ["Game", "File", "Size (B)", "Modified", "Present"])
+        self.table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents)
+        layout.addWidget(self.table, 1)
+
+        btn_refresh = QPushButton("Refresh")
+        btn_refresh.clicked.connect(self._refresh)
+        layout.addWidget(btn_refresh)
+
+        self._refresh()
+
+    def _refresh(self):
+        from PyQt6.QtWidgets import QTableWidgetItem
+        roms_dir = REPO_ROOT / "roms"
+        rows = []
+        if not roms_dir.exists():
+            self.table.setRowCount(0)
+            return
+        # For each game folder, list every expected ROM kind
+        for game_dir in sorted(roms_dir.iterdir()):
+            if not game_dir.is_dir():
+                continue
+            game = game_dir.name
+            # Find the GAME_ID by reading the game's game.mk if available
+            game_id = "???"
+            mk = REPO_ROOT / "games" / game / "game.mk"
+            if mk.exists():
+                for line in mk.read_text(errors="replace").splitlines():
+                    if line.strip().startswith("GAME_ID"):
+                        parts = line.split("=")
+                        if len(parts) > 1:
+                            game_id = parts[1].strip()
+                            break
+            for kind in ("p1", "m1", "s1", "v1", "c1", "c2"):
+                fname = f"{game_id}-{kind}.{kind}"
+                fpath = game_dir / fname
+                if fpath.exists():
+                    st = fpath.stat()
+                    import datetime
+                    mtime = datetime.datetime.fromtimestamp(
+                        st.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                    rows.append((game, fname, str(st.st_size), mtime, "yes"))
+                else:
+                    rows.append((game, fname, "—", "—", "no"))
+        self.table.setRowCount(len(rows))
+        for r, row_data in enumerate(rows):
+            for c, val in enumerate(row_data):
+                item = QTableWidgetItem(val)
+                if c == 4 and val == "no":
+                    item.setForeground(QColor("#aa6666"))
+                elif c == 4 and val == "yes":
+                    item.setForeground(QColor("#66aa66"))
+                self.table.setItem(r, c, item)
+
+
 class SoundStudio(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -2106,6 +2348,9 @@ class SoundStudio(QMainWindow):
         self.sim_tab      = YM2610SimTab()
         self.pipe_tab     = PipelineRunnerTab()
         self.defs_tab     = DriverDefsTab()
+        self.tracks_tab   = TrackBrowserTab()
+        self.mix_tab      = AudioMixTab()
+        self.rom_tab      = RomInspectorTab()
 
         tabs.addTab(self.fm_tab,       "FM Patches")
         tabs.addTab(self.mml_tab,      "MML Composer")
@@ -2113,7 +2358,10 @@ class SoundStudio(QMainWindow):
         tabs.addTab(self.adpcm_tab,    "ADPCM Samples")
         tabs.addTab(self.composer_tab, "Composer")
         tabs.addTab(self.sim_tab,      "YM2610 Simulator")
+        tabs.addTab(self.tracks_tab,   "Track Browser")
+        tabs.addTab(self.mix_tab,      "Audio Mix")
         tabs.addTab(self.pipe_tab,     "Pipeline")
+        tabs.addTab(self.rom_tab,      "ROM Inspector")
         tabs.addTab(self.defs_tab,     "Identifiers")
         self.setCentralWidget(tabs)
 

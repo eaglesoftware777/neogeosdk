@@ -2,12 +2,22 @@
 
 > **v1.3.1 — new tabs**
 >
-> Sound Studio gained two new tabs in v1.3.1:
+> Sound Studio gained five new tabs in v1.3.1:
 >
 > - **Pipeline** — runs every audio build step (samples / vrom /
 >   fmpatches / mml / ssg / ssgconfig / fm / m1rom) with a status pill
 >   per step and a shared live log.  "Run Full Pipeline" chains them
 >   sequentially and stops on the first failure.
+> - **Track Browser** — tree of every audio asset in `sound/` (MML
+>   scripts, SSG presets, WAV samples).  Click a file to preview its
+>   content (text files inline, binaries reported by size).
+> - **Audio Mix** — live mixer for `soundApplyMix(adpcma, adpcmb,
+>   ssg, fm)`.  Four sliders, five preset buttons (Default game / FM
+>   showcase / Pure SSG / Stage mix / Mute) and an auto-updated C call
+>   you can copy into your game init.
+> - **ROM Inspector** — table of every ROM kind (p1 / m1 / s1 / v1 /
+>   c1 / c2) for every game folder, with size + mtime + present/absent
+>   colour-coded.
 > - **Identifiers** — read-only side-by-side view of `sdk/sound_ids.h`
 >   and `sound/driver/driver_defs.h` so you don't have to grep when
 >   wiring code or MML.
