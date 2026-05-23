@@ -22,6 +22,7 @@
 
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
+#include "sdk/ng_fix/ng_fix.h"
 #include "sdk/2d_engine/ng_engine.h"
 #include "sdk/2d_engine/ng_render_queue.h"
 #include "sdk/2d_engine/ng_scene.h"
@@ -117,14 +118,32 @@ void NEOGEO_USER demo_fix_puts(uint8_t x, uint8_t y, const char *text, uint8_t p
 {
     char buf[39];
     uint8_t i = 0;
+    uint8_t all_spaces;
 
     if (!text || x >= 40u || y >= 28u) return;
 
+    all_spaces = 1u;
     while (text[i] && i < (uint8_t)(38u - x)) {
         buf[i] = text[i];
+        if (text[i] != ' ') all_spaces = 0u;
         i++;
     }
     buf[i] = '\0';
+
+    /*
+     * When the caller is clearing cells (all-spaces + palette 0),
+     * paint the truly-transparent FIX tile 0 instead of tile 0x20
+     * (space glyph).  Tile 0x20 isn't fully transparent in this FIX
+     * font and used to leave dark blocks over the BG.
+     */
+    if (pal == 0u && all_spaces) {
+        uint8_t k;
+        for (k = 0u; k < i; k++) {
+            ngfix_write_tile((uint8_t)(x + k), y, 0u, 0u);
+        }
+        return;
+    }
+
     fixtext_out(x, y, buf, (short)pal);
 }
 
