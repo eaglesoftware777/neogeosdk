@@ -1,27 +1,24 @@
-; 3_mml_example_d — hero theme (G major, anthemic)
+; 3_mml_example_d — hero theme (G major, mid range)
 
 T130
 @p0
 @b3
 @f6
-V13
-O5
+V12
+O4
 L8
 
-; phrase A — fanfare
-G > D B G  D B G4
-F A > D F  A > D F4
+G B D G  D B G4
+F A C F  C A F4
 
-; phrase B — soaring
-< G B > D G  B > D G4
-< F A > C F  A > C F4
+G B D G  D B G B
+F A C F  C A F C
 
-; phrase C — call/answer
-> D < B G D  < B G D4
-> C < A F C  < A F C4
+D B G D  B G D G
+C A F C  A F C F
 
-; phrase D — finale
-< G B > D G  > D B G4
-< F A > D F  > G2
+G B D G  F A C F
+E G C E  D B G D
+G2 R4 R4
 
 ~

@@ -1,25 +1,24 @@
-; 0_fm_example_a — bright C-major arcade intro (Pac-Man / Galaga vibe)
+; 0_fm_example_a — bright C-major arcade intro (mid range)
 
 T140
 I0
 V13
-O5
+O4
 L8
 
-; intro arpeggio (climbing)
-C E G > C  E G > C E
-< G E C < G  > C E G C
+C E G C  E G C E  R4
+G E C E  G C R4
+F A C F  A C R4
+G E C R4
 
-; main melody A — bouncy hook
-> C C D E  G E C E
-D D E F  A F D F
-E G > C E  G > C E < G
-F A > C F  A > C < A F
+C C E G  E G C C
+D D F A  F A D D
+E G C E  G C C E
+F A C F  A C F4
 
-; main melody B — answer phrase
-E G > C E  D F A D
-< C E G C  < B > D F < B
-A > C E A  G E C < A
-> C < G E C  > C4 R4
+C E G E  C E G E
+D F A F  D F A F
+E G C G  E G C G
+F A C A  F A C2
 
 ~
