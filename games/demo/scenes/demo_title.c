@@ -39,15 +39,14 @@ void NEOGEO_USER soundSetFMVolume(uint8_t v);
 void NEOGEO_USER soundPlayGameLoop(uint8_t music_track);
 void NEOGEO_USER playSFX(uint8_t n);
 void NEOGEO_USER playFMTrack(uint8_t n);
-void NEOGEO_USER showScreen1  (int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
-void NEOGEO_USER showScreen2  (int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
-void NEOGEO_USER showScreen3  (int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
-void NEOGEO_USER showScreen4  (int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
-void NEOGEO_USER showScreen5  (int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
-void NEOGEO_USER showScreen6  (int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
-void NEOGEO_USER showScreen7  (int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen11 (int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen79 (int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen101(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen102(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen103(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen104(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen105(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
+void NEOGEO_USER showScreen106(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen107(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen108(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen109(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
@@ -175,14 +174,26 @@ void NEOGEO_USER demo_title_attract_reel(void)
 {
     typedef void (*show_fn_t)(int, int, int, int, int,
                               uint16_t, uint16_t);
+    /*
+     * screens/<N>.png are imported by artbox with screen_id = 100 + N,
+     * so the slideshow uses showScreen101 .. showScreen107.  Using
+     * showScreen1..7 would actually draw the BG art from in/backgrounds/.
+     */
     static const show_fn_t s_show[7] = {
-        showScreen1, showScreen2, showScreen3, showScreen4,
-        showScreen5, showScreen6, showScreen7
+        showScreen101, showScreen102, showScreen103, showScreen104,
+        showScreen105, showScreen106, showScreen107
     };
     static const char *const s_labels[7] = {
-        "SCREEN 1", "SCREEN 2", "SCREEN 3", "SCREEN 4",
-        "SCREEN 5", "SCREEN 6", "SCREEN 7"
+        "SCENE 1", "SCENE 2", "SCENE 3", "SCENE 4",
+        "SCENE 5", "SCENE 6", "SCENE 7"
     };
+    /*
+     * Walking-girl frames — the 12 row-1 sprites of the character sheet
+     * (screen_id 3..14 = sprite_001 .. sprite_012).  Skipping idle-ish
+     * cels gives a smoother walk cycle.
+     */
+    static const uint8_t s_walk[8] =
+        { 3u, 4u, 5u, 7u, 8u, 9u, 11u, 12u };
     uint8_t  slide;
     uint16_t hold;
     uint16_t fix_pal[16];
@@ -203,8 +214,8 @@ void NEOGEO_USER demo_title_attract_reel(void)
     soundSceneReset();   waitVbl();
     soundSetADPCMAVolume(0x3Cu);  waitVbl();
     soundSetADPCMBVolume(0xBCu);  waitVbl();
-    soundSetFMVolume(0x0Du);      waitVbl();
-    playSFX(SOUND_SFX_3);         waitVbl();
+    soundSetSSGVolume(0x00u);     waitVbl();
+    soundSetFMVolume(0x00u);      waitVbl();
     soundPlayGameLoop(SOUND_MUSIC_E);
     waitVbl();
 
@@ -237,10 +248,24 @@ void NEOGEO_USER demo_title_attract_reel(void)
             demo_fix_puts(13u, 26u, "           ", 0u);
         }
 
+        /* Walking girl overlay — drawn into a HIGH sprite slot (60+)
+         * so it sits ON TOP of the screens slideshow (DEMO_SHOWSCREEN_BASE
+         * = slot 1).  X wraps left-to-right at 1 px / 2 frames. */
+        {
+            uint8_t  frame = s_walk[(hold / 6u) % 8u];
+            int16_t  x     = (int16_t)(((hold >> 1) % 320u) - 32);
+            demo_load_screen_palette(frame);
+            demo_draw_sprite_screen(frame, 60u, x, 120,
+                                    demo_screen_strips(frame),
+                                    demo_screen_rows(frame),
+                                    0xFFu, 0xFFu);
+            if ((hold % 48u) == 0u) playSFX(SOUND_SFX_5);
+        }
+
         hold++;
 
-        /* Every 180 frames (~3 s) advance to the next 1.png..7.png */
-        if ((hold % 180u) == 0u) {
+        /* Every 240 frames (~4 s) advance to the next screens/N.png */
+        if ((hold % 240u) == 0u) {
             slide = (uint8_t)((slide + 1u) % 7u);
             demo_safe_show(s_show[slide], 32, 24, 0xF, 0xAF, 16,
                            BLACK, DEMO_SHOWSCREEN_BASE);
@@ -254,9 +279,19 @@ void NEOGEO_USER demo_title_attract_reel(void)
         if (demo_frame()) break;
     }
 
-    soundFadeOutSpeed(6u); waitVbl();
-    demo_wait(10u);
+    /*
+     * Clean sound exit — fade out, give the driver time to settle,
+     * then fully reset to a known-good state so the next scene (which
+     * will call soundSceneReset itself) does not race a half-faded
+     * driver.  Without the explicit reset here the demo was losing all
+     * audio on the very first chapter after attract.
+     */
+    soundFadeOutSpeed(6u);
+    demo_wait(30u);
     soundStopAll();
+    waitVbl(); waitVbl();
+    soundSceneReset();
+    waitVbl();
     demo_clear_scene();
 }
 
