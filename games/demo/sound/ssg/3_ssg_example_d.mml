@@ -1,4 +1,4 @@
-; 3_ssg_example_d — Asteroids-style sparse pulse (A minor, tense)
+; 3_ssg_example_d — Asteroids-style pulse (A minor, mid range)
 
 T125
 P1
@@ -6,19 +6,15 @@ V10
 O4
 L4
 
-; phrase A — sparse beats
-A R > C R  E R A R
-G R B R  > D R G R
+A R C R  E R A R
+G R B R  D R G R
 
-; phrase B — building
 L8
-> A < E A > C  E A > C < A
-> G < D G B  > D G B < G
+A E A C  E A C A
+G D G B  D G B G
 
-; phrase C — climax
-> A > C E A  G E C < A
-> F A > C E  D < B G F
-L4
-> E A < E A  > C E < A2
+A C E A  G E C A
+F A C E  D B G F
+E A E A  C E A2
 
 ~

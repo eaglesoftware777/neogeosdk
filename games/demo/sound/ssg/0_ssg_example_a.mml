@@ -1,25 +1,24 @@
-; 0_ssg_example_a — Galaxian-style arpeggio chimes (C major)
+; 0_ssg_example_a — Galaxian-style arpeggio (C major, mid range)
 
 T140
 P0
 V11
-O5
+O4
 L8
 
-; intro — climbing arpeggio (Galaxian wave entry)
-C E G > C  E G > C E
-< G E C < G  > C E G C
+C E G C  E G C E  R4
+G E C G  E C R4
+F A C F  A C R4
+G E C R4
 
-; melody A — bouncy
-> C C E G  > C < G E C
-D D F A  > D < A F D
-E G > C E  G > C E < G
-F A > C F  A > C < A F
+C C E G  C C E G
+D D F A  D D F A
+E E G C  E E G C
+F F A C  F F A C  R4
 
-; melody B — descent
-> C < G E C  > C < G E C
-< B G E < B  > B < G E < B
-A F D < A  A F D < A
-G E C < G  > G2
+C E G E  C E G E
+D F A F  D F A F
+E G C G  E G C G
+F2 R4 R4
 
 ~

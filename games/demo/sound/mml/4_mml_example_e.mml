@@ -1,27 +1,22 @@
-; 4_mml_example_e — title fanfare (F major, triumphant)
+; 4_mml_example_e — title fanfare (F major, mid range)
 
-T160
+T155
 @p0
 @b0
 @f0
-V14
-O5
+V13
+O4
 L8
 
-; fanfare A — bold entry
-F A > C F  > C < A F4
-G > D < B G  > D < B G4
+F A C F  C A F4
+G B D G  D B G4
 
-; fanfare B — answer
-> F < A > F < A  > C F A > C
-< G > D < G > D  F A > D F
+F A C F  A C F A
+G B D G  B D G B
 
-; fanfare C — climb
-< F A > C F  A > C F4
-< G B > D G  B > D G4
-
-; fanfare D — landing
-> F A > C F  E D C < A
-G F E D  > C2
+F A C F  E D C A
+G F E D  C E G C
+F A C F  G B D G
+F A C2
 
 ~

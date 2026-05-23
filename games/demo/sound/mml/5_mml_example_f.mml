@@ -1,28 +1,25 @@
-; 5_mml_example_f — boss tension (D minor, driving)
+; 5_mml_example_f — boss tension (D minor, mid range)
 
-T155
+T150
 @p2
 @b1
 @f7
-V13
+V12
 O4
 L8
 
-; stab A — minor pulse
-D F A R  D F A4
-E G > C R  E G > C4
+D F A D  D F A4
+E G C E  E G C4
 
-; stab B — climb
-< F A > D F  A > D F4
-< G B- > E G  B- > E G4
+F A D F  A D F4
+G B- E G  B- E G4
 
-; stab C — descend
-> A F D < A  > A F D4
-G E C < G  G E C4
+A F D A  A F D4
+G E C G  G E C4
 
-; bridge — staccato
 L16
-D R F R A R > D R  < C R E R G R > C R
-< B- R D R F R B- R  < A R > C R E R A R
+D R F R A R D R  C R E R G R C R
+B- R D R F R B- R  A R C R E R A R
+L8
 
 ~

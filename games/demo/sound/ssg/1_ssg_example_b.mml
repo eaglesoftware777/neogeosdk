@@ -1,23 +1,20 @@
-; 1_ssg_example_b — Frogger-style bouncy melody (G major)
+; 1_ssg_example_b — Frogger-style bounce (G major, mid range)
 
 T135
 P1
 V11
-O5
+O4
 L8
 
-; phrase A — main hook
-G B > D G  > D B G4
-F+ A > C F+  > C A F+4
+G B D G  D B G4
+F+ A C F+  C A F+4
 
-; phrase B — answer
-> G F+ E D  C < B A G
-F+ E D < B  > C E G < B
+G F+ E D  C B A G
+F+ E D B  C E G B
 
-; phrase C — variation
-> D < B G D  E < B G E
-F+ A > C F+  G B > D G
-> C < A F+ > C  < B G E < B
-> G2 R4 R4
+D B G D  E B G E
+F+ A C F+  G B D G
+C A F+ C  B G E B
+G2 R4 R4
 
 ~

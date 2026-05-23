@@ -1,4 +1,4 @@
-; 4_fm_example_e — Street Fighter Ryu-style character theme (E minor)
+; 4_fm_example_e — Street Fighter Ryu-style theme (E minor, mid range)
 
 T120
 I4
@@ -6,20 +6,16 @@ V13
 O4
 L8
 
-; phrase A — moody intro
-E G > B E  > D < B G E
-F A > C F  E D C < B
+E G B E  D B G E
+F A C F  E D C B
 
-; phrase B — main melody
-> E < G > B > E  > D < B G E
-> F < A > C > F  > E D C < B
-> E < G > B > E  > D < B G > D
-> C E G > C  < B G E < B
+E G B E  D B G E
+F A C F  E D C B
+E G B E  D B G D
+C E G C  B G E B
 
-; phrase C — answer / resolution
-> A G F E  D F A > D
-< G F E D  C E G < B
-> E G B > E  < G B > D < G
-> E2 R4 R4
+A G F E  D F A D
+G F E D  C E G B
+E G B E  G B E2
 
 ~

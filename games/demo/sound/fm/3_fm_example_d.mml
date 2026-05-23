@@ -1,26 +1,23 @@
-; 3_fm_example_d — Donkey Kong jumpman-style (G major, walking)
+; 3_fm_example_d — Donkey Kong jumpman-style (G major, mid range)
 
 T130
 I3
 V13
-O5
+O4
 L8
 
-; phrase A — walking bass-like hook (in lead range)
-G > D B G  > D B G4
-F A > C F  A > C F4
+G B D G  D B G4
+F A C F  A C F4
 
-; phrase B — climb
-G B > D G  > D B G > D
-F A > C F  > C < A F > C
+L8
+G B D G  D B G B
+F A C F  C A F C
 
-; phrase C — descent
-> D < B G > D  B G D < G
-< C < A F > C  < A F C < F
+D B G D  B G D G
+C A F C  A F C F
 
-; phrase D — finale
-G B > D G  F A > C F
-E G > C E  D < B G D
-> G4 R4 R2
+G B D G  F A C F
+E G C E  D B G D
+G4 R4 R2
 
 ~

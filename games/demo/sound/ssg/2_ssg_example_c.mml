@@ -1,24 +1,21 @@
-; 2_ssg_example_c — Defender-style alert arpeggio (E minor, urgent)
+; 2_ssg_example_c — Defender-style alert (E minor, mid range)
 
 T160
 P2
 V12
-O5
+O4
 L8
 
-; phrase A — alert pattern
-E G B > E  E G B > E
-D F+ A > D  D F+ A > D
+E G B E  E G B4
+D F+ A D  D F+ A4
 
-; phrase B — climb / urgency
 L16
-E G B > E  D F+ A > D  C E G > C  < B > D F+ A
-G B > D F+  E G B > E  D F+ A > D  C E G > C
+E G B E  D F+ A D  C E G C  B D F+ A
+G B D F+  E G B E  D F+ A D  C E G C
 L8
 
-; phrase C — resolve
-> E < G > B > E  > D < B G E
-F+ A > C+ F+  E D C < B
-> E2 R4 R4
+E G B E  D B G E
+F+ A C+ F+  E D C B
+E G B E  G B E2
 
 ~
