@@ -2001,50 +2001,58 @@ ssg_set_preset:
 ; the envelope generator).  ALSO flips channel A into envelope-
 ; amplitude mode (M bit set in vol register $08).  Future note-on
 ; calls preserve M=1 while VAR_SSG_ENV_ON is set.
+; $F7 — set envelope shape (writes register $0D).  Writing $0D
+; ALWAYS retriggers the envelope generator on the YM2149, which is
+; what arcade AY/SSG voice synthesis exploits to get a fresh
+; attack/decay per syllable.  Also forces channel A into envelope-
+; amplitude mode (vol reg $08 with bit-4 M=1).
+;
+; CRITICAL: store_ssg_ptr clobbers register A (it writes L then H
+; into VAR_SSG_PTR_LO/HI via A).  We MUST save the directive's
+; value byte BEFORE calling store_ssg_ptr or the shape register
+; gets garbage from the pointer high byte.
 ssg_set_envelope:
     ld a,(hl)
     inc hl
     and $0F
+    push af                      ; save shape value across store_ssg_ptr
     call store_ssg_ptr
-    push af
-    ; Force envelope mode on channel A: vol reg $08 with bit 4 = M = 1.
+    ; Enable channel A envelope-amplitude mode for subsequent notes.
     ld a,1
     ld (VAR_SSG_ENV_ON),a
-    ld de,$0810       ; reg $08, value $10 = M=1, fixed bits = 0
+    ld de,$0810                  ; reg $08, value $10 = M=1, fixed=0
     call shadowed_write_a
-    ; Write envelope shape register — this retriggers the envelope
-    ; generator EVERY time it's written, so each call gives a fresh
-    ; attack/decay.  Use force_write (not shadowed) so a duplicate
-    ; shape value still retriggers.
-    pop af
+    pop af                       ; restore shape value
     ld d,$0D
     ld e,a
-    call force_write_a
+    call force_write_a           ; force-write retriggers envelope
     jp ssg_step
 
-; $F8 — set envelope period low byte (register $0B).  High byte ($0C)
-; is left at the current value (driver init writes 0).
+; $F8 — set envelope period low byte (register $0B).  High byte
+; ($0C) is left at the current value (driver init writes 0).
 ssg_set_env_period:
     ld a,(hl)
     inc hl
+    push af                      ; preserve period byte
     call store_ssg_ptr
+    pop af
     ld d,$0B
     ld e,a
     call shadowed_write_a
     jp ssg_step
 
 ; $F9 — toggle channel A envelope-mode flag.  $00 = manual fixed
-; volume, $01 = envelope amplitude.  Restoring manual mode also
-; immediately rewrites vol $08 with M=0 so the user hears the change.
+; volume (from VAR_SSG_VOL), $01 = envelope amplitude.
 ssg_set_env_mode:
     ld a,(hl)
     inc hl
     and $01
+    push af                      ; preserve flag
     call store_ssg_ptr
+    pop af
     ld (VAR_SSG_ENV_ON),a
     or a
     jr nz,ssg_set_env_mode_on
-    ; restore manual mode — write vol A with M=0 from VAR_SSG_VOL
     ld a,(VAR_SSG_VOL)
     and $0F
     ld e,a
@@ -2130,12 +2138,19 @@ ssg_preset_ready:
     ld e,(hl)
     call ssg_preset_write_a
     inc hl
-    ; Volume A $08 (M=0 fixed amplitude)
+    ; Volume A $08.  If channel A is currently in envelope-amplitude
+    ; mode (M=1 set by $F7 directive), DON'T overwrite vol A from the
+    ; preset — that would clear M and silence the envelope.  Skip the
+    ; write and just advance HL past the preset's vol-A byte.
+    ld a,(VAR_SSG_ENV_ON)
+    or a
+    jr nz,ssg_preset_skip_vol_a
     ld d,$08
     ld a,(hl)
     and $0F
     ld e,a
     call ssg_preset_write_a
+ssg_preset_skip_vol_a:
     inc hl
     ; Volume B $09 (M=0 fixed amplitude)
     ld d,$09
