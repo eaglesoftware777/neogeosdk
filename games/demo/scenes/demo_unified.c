@@ -1011,70 +1011,67 @@ static uint8_t NEOGEO_USER chap_camera(void)
 static uint8_t NEOGEO_USER chap_palette_fx(void)
 {
     /*
-     * PALETTE FX showcase — drawn geometry in the MIDDLE of the screen,
-     * BG (full image) stays visible and UNTOUCHED at top + bottom.
-     * Effects only modulate the dedicated sandbox palette slot 15.
+     * PALETTE FX showcase — real character portrait + real background.
      *
-     * Layout:
-     *   rows 0-1   : chapter header
-     *   rows 2-4   : labels (this scene description)
-     *   rows 6-7   : effect name banner
-     *   rows 9-17  : DRAWN GEOMETRY in the middle (uses palette 15)
-     *   rows 18+   : BG visible through transparent FIX cells (untouched)
+     * The character (portrait sprite from the last row of the character
+     * sheet) sits in front of the BG image and is NEVER touched by the
+     * palette FX.  Effects only modulate a dedicated sandbox palette
+     * slot (15), which is bound to a small banner sprite below the
+     * character.  The character's own palette is left alone, so no
+     * "part of the character changes colour" any more.
      */
-    const uint8_t fx_slot = 15u;
+    const uint8_t fx_slot     = 15u;
+    /*
+     * sprite_080 (row 08 col 01, screen_id 82) = first portrait /
+     * face frame.  These are the cleanest "single subject" sprites in
+     * the sheet and have their own palette bank so the BG palette
+     * cannot leak into them.
+     */
+    const uint8_t portrait_id = 82u;
     uint16_t t;
+    uint8_t  banner_x;
 
-    chap_header(8u, "PALETTE FX", "GEOMETRY IN MIDDLE  BG UNTOUCHED");
-    demo_fix_puts(2u, 2u, "DIAMOND / RING / CHEVRONS USE PAL 15", 1u);
-    demo_fix_puts(2u, 3u, "BG KEEPS ITS AUTHORED COLOURS",        0u);
+    chap_header(8u, "PALETTE FX", "PORTRAIT  BG  FX BANNER");
+    demo_fix_puts(2u, 2u, "PORTRAIT IN FRONT  BG BEHIND",  1u);
+    demo_fix_puts(2u, 3u, "FX ONLY MODULATES PAL 15",      0u);
     snd_cross_to(SOUND_MUSIC_G);
 
-    /* BG drawn ONCE; its palette stays static for the whole chapter */
+    /*
+     * BG drawn ONCE at the low slot so it stays BEHIND the portrait.
+     * draw_background uses DEMO_BG_BACK_SLOT (96+) per its comment;
+     * since higher slot = drawn on top, our portrait sprite below
+     * needs to live on an even higher slot than the BG.
+     */
     draw_background(2u, 32, 16);
 
     /*
-     * Drawn geometry in the SCREEN-CENTRE band (rows 9..17).
-     *   * Outer diamond rim (palette 15)
-     *   * Inner filled diamond (palette 15)
-     *   * Two side chevrons (palette 15)
-     * Everything outside rows 9-17 stays transparent so the BG shows.
+     * Portrait — drawn at slot 200 so it sits ON TOP of the BG (slot
+     * 96).  Centred horizontally, slightly above vertical centre.
+     * Palette is the portrait's OWN palette bank (loaded by
+     * demo_load_screen_palette) — completely independent of slot 15
+     * so the FX cycle cannot corrupt the face.
      */
+    demo_load_screen_palette(portrait_id);
+    {
+        int16_t strips = demo_screen_strips(portrait_id);
+        int16_t rows   = demo_screen_rows(portrait_id);
+        int16_t draw_x = (int16_t)(160 - (strips * 16) / 2);
+        int16_t draw_y = (int16_t)(96  - (rows   * 16) / 2);
+        demo_draw_sprite_screen(portrait_id, 200u,
+                                draw_x, draw_y,
+                                (uint8_t)strips, (uint8_t)rows,
+                                0xFFu, 0xFFu);
+    }
+
     /*
-     * The KEY fix: load the synthetic FX palette into VRAM slot 15
-     * BEFORE drawing the diamond, then draw EVERY diamond cell using
-     * palette 15 so the palette FX (fade / flash / pulse / cycle)
-     * ACTUALLY animates the diamond colours.  Previously the diamond
-     * was drawn with palette 2 (FIX accent) while FX was applied to
-     * slot 15 — so nothing visibly changed.
+     * FX banner — a small horizontal strip at row 20 painted in
+     * palette 15.  THIS is the only thing the FX modulates.
      */
     ng_palfx_upload_base(fx_slot, s_palfx_base);
-
-    {
-        uint8_t r, c;
-        /* Centre-line label (palette 2 = static FIX accent) */
-        demo_fix_puts(13u, 9u,  "  /  \\  PALETTE FX  /  \\  ", 2u);
-        /* Diamond — drawn with X/Y symmetry around (19, 13).
-         * Uses palette index 15 so FX on slot 15 modulates these tiles. */
-        for (r = 0u; r <= 4u; r++) {
-            uint8_t span = (r <= 2u) ? r : (uint8_t)(4u - r);
-            uint8_t row_top    = (uint8_t)(11u + r);
-            uint8_t row_bottom = (uint8_t)(15u - r);
-            for (c = 0u; c <= span * 2u; c++) {
-                uint8_t x = (uint8_t)(19u - span + c);
-                const char *g = (c == 0u || c == span * 2u) ? "/" :
-                                (c == span)                  ? "*" : "#";
-                demo_fix_puts(x, row_top,    g, 15u);
-                if (row_top != row_bottom)
-                    demo_fix_puts(x, row_bottom, g, 15u);
-            }
-        }
-        /* Side chevrons — also on palette 15 so they pulse */
-        demo_fix_puts(5u,  13u, ">>>>>>", 15u);
-        demo_fix_puts(29u, 13u, "<<<<<<", 15u);
-        /* Effect name banner above the diamond (static palette 2) */
-        demo_fix_puts(2u, 6u, "EFFECT:",                       1u);
+    for (banner_x = 4u; banner_x < 36u; banner_x++) {
+        demo_fix_puts(banner_x, 20u, "#", 15u);
     }
+    demo_fix_puts(2u, 6u, "EFFECT:", 1u);
 
     /* ---- Effect sequence — all on slot 15 ----------------------- */
     demo_fix_puts(10u, 6u, "FADE-IN 60F          ", 1u);
@@ -1619,12 +1616,19 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
                     enemy_hits++;
                     playSFX(SOUND_SFX_8);
                     spawn_impact_burst(tx_px, ty_px, spark_tile, spark_pal, 3u);
-                    /* CLEAN the FIX cells of the destroyed target */
+                    /*
+                     * Truly clear the target's FIX cells.  Writing " "
+                     * (space char) with pal 0 paints tile 0x20 which is
+                     * NOT a fully-transparent tile in the demo's FIX
+                     * font — that's what produced the black box / stripe
+                     * artefacts.  ngfix_write_tile(x, y, 0, 0) writes the
+                     * real transparent FIX tile 0 so the BG shows through.
+                     */
                     for (r = 0u; r < TARGET_H; r++) {
                         uint8_t c;
                         for (c = 0u; c < TARGET_W; c++) {
-                            demo_fix_puts((uint8_t)(target_cx + c),
-                                          (uint8_t)(target_cy + r), " ", 0u);
+                            ngfix_write_tile((uint8_t)(target_cx + c),
+                                             (uint8_t)(target_cy + r), 0u, 0u);
                         }
                     }
                     target_alive   = 0u;
@@ -1666,9 +1670,9 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
                     uint8_t row;
                     for (row = 0u; row < 3u; row++)
                         for (k = 0u; k < SW_LEN; k++)
-                            demo_fix_puts((uint8_t)(sw_last_cx + k),
-                                          (uint8_t)(sw_last_cy + row),
-                                          " ", 0u);
+                            ngfix_write_tile((uint8_t)(sw_last_cx + k),
+                                             (uint8_t)(sw_last_cy + row),
+                                             0u, 0u);
                 }
                 if (sword_cx < (uint8_t)(38u - SW_LEN) && sword_cy < 24u) {
                     /* 3-row arc — TOP/MID/BOT with diagonal pattern */
@@ -1714,10 +1718,11 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
                 uint8_t row, k;
                 for (row = 0u; row < 3u; row++)
                     for (k = 0u; k < SW_LEN; k++)
-                        demo_fix_puts((uint8_t)(sw_last_cx + k),
-                                      (uint8_t)(sw_last_cy + row),
-                                      " ", 0u);
-                demo_fix_puts(32u, 22u, "       ", 0u);
+                        ngfix_write_tile((uint8_t)(sw_last_cx + k),
+                                         (uint8_t)(sw_last_cy + row),
+                                         0u, 0u);
+                for (k = 0u; k < 7u; k++)
+                    ngfix_write_tile((uint8_t)(32u + k), 22u, 0u, 0u);
                 sw_last_cx = 0xFFu;
             }
         }
@@ -2053,94 +2058,61 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
 }
 
 /* ================================================================== */
-/*  Chapter 16 — 3D effect (FIX perspective road, low churn)             */
+/*  Chapter 16 — 3D effect (single-character depth animation)            */
 /* ================================================================== */
 static uint8_t NEOGEO_USER chap_render3d(void)
 {
     /*
-     * Pseudo-3D ROAD on the FIX layer — full visible perspective.
-     *
-     * The road is drawn as 18 horizontal strips (rows 8..25), each
-     * progressively wider so they converge to a vanishing point at
-     * (col 20, row 7).  The CLOSER the strip, the wider AND brighter.
-     *
-     * Side rails (LL // RR) emphasise the perspective.  A scrolling
-     * highlight row simulates movement DOWN the road.
+     * Minimal pseudo-3D scene — ONE hero character at screen centre
+     * that scales between near and far (depth oscillation) on top of a
+     * simple BG with a horizon line.  No fancy FIX road, no formations,
+     * no multi-strip overlays.  The goal is to clearly demonstrate
+     * "depth via sprite scale" with a single readable subject.
      */
     uint16_t t;
+    const uint8_t hero_frame = 14u;   /* sprite_012 — clean idle pose  */
 
-    chap_header(16u, "3D EFFECT", "PERSPECTIVE ROAD");
-    demo_fix_puts(2u, 2u, "FULL-WIDTH FIX STRIPS",       1u);
-    demo_fix_puts(2u, 3u, "VANISHING-POINT GRADIENT",    0u);
+    chap_header(16u, "3D EFFECT", "DEPTH SCALE  ONE CHARACTER");
+    demo_fix_puts(2u, 2u, "ONE HERO SCALES NEAR <-> FAR", 1u);
+    demo_fix_puts(2u, 3u, "BG STATIC  SCALE = DEPTH",     0u);
     snd_cross_to(SOUND_MUSIC_F);
 
-    /*
-     * Lay out the road ONCE — 18 strips from horizon (row 8) to
-     * camera (row 25).  Each strip uses the FULL computed width.
-     */
-    {
-        uint8_t row, col;
-        for (row = 8u; row < 26u; row++) {
-            uint8_t depth_idx = (uint8_t)(row - 8u);     /* 0..17 */
-            /* width grows ~2 cells per row up to a 36-cell maximum */
-            uint8_t w = (uint8_t)(2u + depth_idx * 2u);
-            uint8_t centre = 20u;
-            uint8_t half   = (uint8_t)(w >> 1);
-            uint8_t left   = (centre > half) ? (uint8_t)(centre - half) : 0u;
-            uint8_t right  = (uint8_t)(centre + half);
-            uint8_t pal    = (uint8_t)((depth_idx < 6u)  ? 0u :
-                                       (depth_idx < 12u) ? 1u : 2u);
+    /* Background scene (drawn once at low-priority slot) */
+    draw_background(2u, 32, 16);
 
-            /* clear the whole row first */
-            for (col = 0u; col < 40u; col++) demo_fix_puts(col, row, " ", 0u);
-            /* draw road surface */
-            for (col = left; col < right && col < 40u; col++) {
-                demo_fix_puts(col, row, (row & 1u) ? "=" : "-", pal);
-            }
-            /* side rails — bold | one cell outside the surface */
-            if (left  > 0u)   demo_fix_puts((uint8_t)(left - 1u),  row, "/", 2u);
-            if (right < 39u)  demo_fix_puts((uint8_t)(right),      row, "\\", 2u);
-            /* centre lane stripe — dashes every 2 rows on the centre */
-            if ((row & 1u) == 0u) demo_fix_puts(centre, row, "I", 1u);
+    /* Simple horizon line on FIX so the depth cue reads clearly */
+    {
+        uint8_t col;
+        for (col = 0u; col < 40u; col++) {
+            ngfix_write_tile(col, 14u, 0u, 0u);   /* clear  */
         }
-        /* horizon line + sky band */
-        demo_fix_puts(0u, 7u, "________________________________________", 2u);
-        for (row = 4u; row < 7u; row++)
-            demo_fix_puts(0u, row, "                                        ", 0u);
+        demo_fix_puts(0u, 14u, "________________________________________", 2u);
     }
 
-    /* Per-frame: scroll a HIGHLIGHT band downward to fake motion */
-    for (t = 0u; t < 480u; t++) {
-        uint8_t row     = (uint8_t)(8u + (t / 3u) % 18u);
-        uint8_t depth   = (uint8_t)(row - 8u);
-        uint8_t w       = (uint8_t)(2u + depth * 2u);
-        uint8_t centre  = 20u;
-        uint8_t half    = (uint8_t)(w >> 1);
-        uint8_t left    = (centre > half) ? (uint8_t)(centre - half) : 0u;
-        uint8_t right   = (uint8_t)(centre + half);
-        uint8_t col;
-        uint8_t pal_org = (uint8_t)((depth < 6u) ? 0u : (depth < 12u) ? 1u : 2u);
+    demo_load_screen_palette(hero_frame);
+    s_hero_x = (int16_t)(160 - 32);
+    s_hero_y = 128;
 
-        /* draw highlight */
-        for (col = left; col < right && col < 40u; col++) {
-            demo_fix_puts(col, row, "*", 2u);
-        }
-        /* restore the row two steps back */
-        if (t >= 6u) {
-            uint8_t prow  = (uint8_t)(8u + ((t / 3u + 16u) % 18u));
-            uint8_t pdep  = (uint8_t)(prow - 8u);
-            uint8_t pw    = (uint8_t)(2u + pdep * 2u);
-            uint8_t phalf = (uint8_t)(pw >> 1);
-            uint8_t pleft = (centre > phalf) ? (uint8_t)(centre - phalf) : 0u;
-            uint8_t prght = (uint8_t)(centre + phalf);
-            uint8_t ppal  = (uint8_t)((pdep < 6u) ? 0u : (pdep < 12u) ? 1u : 2u);
-            (void)pal_org;
-            for (col = pleft; col < prght && col < 40u; col++) {
-                demo_fix_puts(col, prow, (prow & 1u) ? "=" : "-", ppal);
-            }
-            if ((prow & 1u) == 0u) demo_fix_puts(centre, prow, "I", 1u);
-        }
-        if ((t % 90u) == 0u) playSFX(SOUND_SFX_10);
+    /*
+     * Scale oscillates between 0x40 (small / distant) and 0xFF (full /
+     * near).  Period = 240 frames = ~4 sec.
+     */
+    for (t = 0u; t < 480u; t++) {
+        /* triangle wave 0..255..0 over 240 frames */
+        uint16_t phase = (uint16_t)(t % 240u);
+        uint8_t  scale = (uint8_t)((phase < 120u)
+                                   ? (0x40u + phase)
+                                   : (0x40u + (240u - phase)));
+        int16_t  y_off = (int16_t)((255u - scale) / 4u);   /* sink as it shrinks */
+
+        demo_draw_sprite_screen(hero_frame, 60u,
+                                s_hero_x,
+                                (int16_t)(s_hero_y + y_off),
+                                demo_screen_strips(hero_frame),
+                                demo_screen_rows(hero_frame),
+                                scale, scale);
+
+        if ((t %  60u) == 0u) playSFX(SOUND_SFX_5);
         if (uframe()) return 1u;
     }
     return 0u;
@@ -2301,12 +2273,18 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
         }
     }
 
-    /* Vblank-spaced Z80 setup */
+    /*
+     * Vblank-spaced Z80 setup — galaxian scene now uses a melodic
+     * ADPCM-B bed UNDER quieter SSG.  The previous mix (ADPCM-A=0x20,
+     * SSG=0x0F) drove the SSG square waves at full tilt which produced
+     * the "noisy" buzz the user reported.  We now keep SSG soft (0x06)
+     * and let the bed carry the music.
+     */
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
-    soundApplyMix(0x20u, 0x00u, 0x0Fu, 0x00u); snd_step();
-    soundSetSSGPreset(2u);                     snd_step();
-    playSSGTrack(SOUND_SSG_B);      snd_step();
+    soundApplyMix(0x30u, 0xA0u, 0x06u, 0x00u); snd_step();
+    soundPlayGameLoop(SOUND_MUSIC_B);          snd_step();
+    soundSetSSGPreset(1u);                     snd_step();
 
     ng_joystick_init();
 
