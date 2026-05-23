@@ -1,0 +1,49 @@
+Neo Geo SDK · sound/mml/
+========================
+
+MML (Music Macro Language) source files for FM and SSG music tracks.
+
+Files
+-----
+
+Each track file has the extension .mml and is compiled into a YM2610
+sequence consumed by the Z80 sound driver via the `playMusic` /
+`soundPlayGameLoop` / `playFMTrack` SDK helpers.
+
+Layout
+------
+
+  fm/        FM channel MML (4 channels: FM1..FM4)
+  ssg/       SSG channel MML (3 channels: SSG1..SSG3)
+  ../mml     this directory — high-level music sequencing that
+             references FM patches and SSG presets
+
+Track ID map (sdk/sound_ids.h)
+------------------------------
+
+  SOUND_MUSIC_ENDING_CREDITS         = 0
+  SOUND_MUSIC_SAMURAI_GAME_LOOP      = 1
+  SOUND_MUSIC_SAMURAI_ENDING_SCENE   = 2
+  SOUND_MUSIC_SHOP_JINGLE            = 3
+  SOUND_MUSIC_SAMURAI_BATTLE_LOOP    = 4
+  SOUND_MUSIC_EAGLE_FANFARE          = 5
+  SOUND_MUSIC_WARRIOR_BATTLE         = 6
+  SOUND_MUSIC_BOSS_TENSION           = 7
+
+Build
+-----
+
+  make sound         # full audio pipeline (samples + vrom + fm + mml + ssg + m1rom)
+  make mml           # only re-compile MML files
+
+The compiled music data lands in sound/driver/music_data.inc which the
+Z80 driver pulls in when assembling the M1 ROM.
+
+v1.3.1
+------
+
+  - The demo's chapter 03 (SOUND) now uses MML-sequenced music
+    (SOUND_MUSIC_EAGLE_FANFARE) for its intro line instead of the raw
+    FM patch player; the patch path produced timbre without melody.
+  - Attract mode (games/demo/scenes/demo_title.c) loops EAGLE_FANFARE
+    for the full attract, fades out on coin-insert.

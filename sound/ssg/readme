@@ -1,0 +1,36 @@
+Neo Geo SDK · sound/ssg/
+========================
+
+SSG (Software-controlled Sound Generator) configuration and presets.
+
+The YM2610 has 3 SSG channels (square / noise / envelope) inherited
+from the AY-3-8910 lineage.  This directory holds preset definitions
+that the SDK loads with `soundSetSSGPreset(uint8_t preset)`.
+
+Track IDs (sdk/sound_ids.h)
+---------------------------
+
+  SOUND_SSG_BATTLE_STING   = 0
+  SOUND_SSG_MENU_LOOP      = 1
+  SOUND_SSG_INSERT_COIN    = 2
+  SOUND_SSG_ARCADE_ALERT   = 3
+
+Presets are bound via:
+
+  soundSetSSGPreset(preset_id);
+  playSSGTrack(SOUND_SSG_*);
+
+Build
+-----
+
+  make ssgconfig    # rebuild SSG configuration
+  make ssg          # rebuild SSG track tables
+  make sound        # full audio pipeline
+
+v1.3.1
+------
+
+  - Chapter 18 of the unified demo (SSG ARCADE / EAGLE INVADERS) plays
+    SOUND_SSG_ARCADE_ALERT in a pure-SSG mix (FM volume 0).  Z80
+    commands are spaced by a vblank each so the driver can apply
+    `soundApplyMix` + `soundSetSSGPreset` + `playSSGTrack` cleanly.

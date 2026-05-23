@@ -3,9 +3,26 @@
 Neo Geo development SDK for SNK hardware.
 
 - Repository: https://github.com/eaglesoftware777/neogeosdk
-- Current release target: `v1.3.0`
+- Current release target: `v1.3.1` (in-progress on `neo_universal_2d`)
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
+
+## What's new in v1.3.1
+
+- **Unified 21-chapter demo** (`games/demo`) covering every public engine
+  subsystem in one linear flow; top-right chapter number on every scene
+- **`games/demo_plus`** (ID 778) — a new game that links exclusively
+  against `sdk/2d_engine_plus` (C++14 engine); shares the demo's artbox
+  via the new `GAME_EXTRA_INCLUDES` makefile hook
+- **Engine occlusion documented** in both `ng_sprite_pool.h` and
+  `ng_sprite_pool.hpp` (LOWER slot = drawn IN FRONT)
+- **HD artbox alt-pipeline** — `artbox/img2neo_hd.py` and
+  `artbox/fixtiles_hd.py` add bilateral / CLAHE / unsharp / blue-noise
+  dither (alongside the existing pipeline, not replacing it)
+- Mini-game = arrows + B strike (no jump).  Joystick chapter B+C / B+D
+  two-button specials replace QCF / DP motion inputs
+- Galaxian → **Eagle Invaders**: dive attacks, return fire, debris,
+  score popups, 3-wave campaign
 
 
 A hardware-centered SDK for Neo Geo arcade and home systems, with direct 68000-side control over VRAM, palettes, sprites, DMA, FIX tiles, and a custom YM2610 sound stack driven by a Z80 sound driver.

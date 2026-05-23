@@ -1,5 +1,17 @@
 # SDK API Guide
 
+> **v1.3.1 quick reference**
+>
+> - Sprite slot priority: **LOWER slot number = drawn IN FRONT** (see the
+>   boxed rule in `sdk/2d_engine/ng_sprite_pool.h` and the `_plus.hpp` copy).
+>   Backgrounds belong at slot 300+, hero/HUD at slot 1–95.
+> - C++14 engine: build with `USE_2D_PLUS=1` (engine in `sdk/2d_engine_plus/`).
+>   New `games/demo_plus` (ID 778) is a smoke-test target that links only
+>   against the C++ engine.
+> - `Makefile` accepts `GAME_EXTRA_INCLUDES` (set by a game's `game.mk`)
+>   so a game can pull in another game's artbox/header path without
+>   duplicating data.
+
 This guide covers the public 68000-side SDK helpers declared in [`sdk/neogeo.h`](./sdk/neogeo.h).
 
 For installation, `SDKHOME` layout, WSL usage, and Makefile targets, see:

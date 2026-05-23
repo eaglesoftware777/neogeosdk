@@ -1,0 +1,43 @@
+Neo Geo SDK · sound/samples/
+============================
+
+WAV sample sources for ADPCM-A and ADPCM-B playback on the YM2610.
+
+Layout
+------
+
+  in_wav_a/      WAV inputs that will be encoded to ADPCM-A
+                 (6 short trigger-and-forget channels, percussion-like)
+  in_wav_b/      WAV inputs that will be encoded to ADPCM-B
+                 (1 streamed channel, music beds / long voices)
+
+Pipeline
+--------
+
+  in_wav_a/*.wav   --enc_wave16le_a-->  ADPCM-A blocks
+  in_wav_b/*.wav   --enc_wave16le_b-->  ADPCM-B stream
+
+Both encoders are pure-Python (see sound/tools/) so no native binary is
+required.  SoX is optional for WAV resampling but the pipeline runs
+without it.
+
+Build
+-----
+
+  make samples    # re-encode all WAV inputs
+  make vrom       # bundle the V ROM
+  make sound      # full audio pipeline
+
+SDK identifiers
+---------------
+
+  ADPCM-A trigger samples (sdk/sound_ids.h SOUND_SFX_*):
+    COIN_CHIME / START_SLASH / TITLE_GONG / INTRO_TAIKO /
+    FOOTSTEP / SHORT_SHOUT / BLADE_WHOOSH / IMPACT_HIT /
+    STRING_PHRASE / LOW_DRUM / READY_VOICE / ATTACK_VOICE
+
+  ADPCM-B streamed beds:
+    SOUND_BED_TITLE_THEME / STAGE_ONE / STAGE_TWO /
+    SOUND_BED_ENDING_THEME / EYECATCHER
+
+See SOURCES.md for the licensing + provenance of each WAV.

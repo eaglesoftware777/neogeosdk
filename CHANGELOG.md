@@ -1,5 +1,99 @@
 # Changelog
 
+## v1.3.1 - Unified Demo, Demo Plus, Engine Occlusion Docs, and HD Artbox
+
+Release date: 2026-05-22
+
+### Highlights
+
+- **Unified 21-chapter demo** (`games/demo`) — single linear flow exercising
+  every public engine subsystem in order: boot, title, FIX, sound, FIX FX,
+  sprites, characters, physics, camera, palette FX, particles, feedback,
+  depth FX, NPCs, mini-game, joystick, scroll level, 3D effect, 2D render,
+  Eagle Invaders (Galaxian-style), Garden 3D, credits.  Top-right chapter
+  indicator on every scene so issues can be reported by number.
+- **`games/demo_plus`** — new game (ID 778) that builds exclusively against
+  `sdk/2d_engine_plus` (C++14 engine).  Smoke-test sub-scenes (TITLE /
+  PARTICLES / MARQUEE) that exercise the render queue, palette FX, and
+  particle pool through the C++ API.  Shares the demo's artbox via a new
+  `GAME_EXTRA_INCLUDES` Makefile hook.
+- **Engine occlusion documented** in both `sdk/2d_engine/ng_sprite_pool.h`
+  and `sdk/2d_engine_plus/ng_sprite_pool.hpp`.  Hardware-observed rule —
+  LOWER slot is drawn IN FRONT — captured explicitly, including the
+  common mistake of placing a BG at slot 1 expecting it to sit behind.
+- **HD artbox conversion** — alternative scripts
+  `artbox/img2neo_hd.py` (bilateral + CLAHE + unsharp + blue-noise
+  dither) and `artbox/fixtiles_hd.py` (per-tile palette pick, sharp-text
+  mode) sit alongside the existing pipeline without changing it.
+
+### New Demo Chapters
+
+| Ch | Name | What it shows |
+|----|------|---------------|
+| 00 | BOOT | Engine ready / chapter index |
+| 01 | TITLE | Centred attract reel (auto-positions any sprite) |
+| 02 | FIX LAYER | White backdrop, 3-palette demo, dirty-cell cache, INFIX pages |
+| 03 | SOUND | Z80 mix + music tracks + SFX trigger sequence (no FM noise) |
+| 04 | SPRITE SCREENS | Generated screen reel |
+| 05 | CHARACTERS | Full warrior moveset cycle (STAND / WALK / STRIKE / SPEC A / SPEC B) |
+| 06 | PHYSICS | Eagle falls under gentle gravity, lands on visible bar |
+| 07 | CAMERA | Follow + dead-zone + shake with BG parallax |
+| 08 | PALETTE FX | Drawn diamond in middle, palette 15 sandbox cycles; BG untouched |
+| 09 | PARTICLES | Hero special-move sequence with synced particle beats |
+| 10 | FEEDBACK | Head-targeted impact bursts at 4 intensities |
+| 11 | DEPTH FX | 3 warriors at varying Z drawn via `ng_depthfx_project` |
+| 12 | NPCS | Patrol AI on unique kinds |
+| 13 | MINI-GAME | Arrows + B strike to hit a colourful FIX target (no jump) |
+| 14 | JOYSTICK | Live input + B / C / B+C / B+D two-button specials |
+| 15 | SCROLL LEVEL | World 768, camera follows, jump arc |
+| 16 | 3D EFFECT | FIX perspective road with full strips + sweeping highlight |
+| 17 | 2D RENDER | FIX blitter patterns |
+| 18 | SSG ARCADE | EAGLE INVADERS — diving enemies, return fire, score popups, debris |
+| 19 | GARDEN 3D | Sprite-scaling pseudo-3D walk |
+| 20 | CREDITS | Module roll + fade-out |
+| 21 | FIX FX | Big animated Z motif with sequential strokes + palette cycle |
+
+### Mini-game / Joystick Specifics
+
+- **Mini-game** (ch 13): no jump, arrows + B only.  Sword arc is a 3-row ×
+  6-col multi-glyph slash with per-frame palette shimmer.  Hit window
+  widened to 22 frames.  Visible "STRIKE!" indicator confirms B detection.
+- **Joystick** (ch 14): QCF / DP motion specials replaced with simple
+  TWO-BUTTON COMBOS — hold B+C together = light special, B+D = heavy
+  finisher, B alone = basic strike.  HUD lights OK / --- per combo.
+- **Galaxian → Eagle Invaders** (ch 18): 4×6 formation, two enemy types
+  (BOSS / WORKER), dive attacks with return fire, multi-bullet pool,
+  gravity-affected debris, score popups, 3-wave campaign with VICTORY /
+  GAME OVER endings.
+- **C-jump fix**: position update was `y -= vy` instead of `y += vy` so
+  the hero descended on jump-start and immediately landed on frame 1.
+  Mini-game and joystick both corrected.
+
+### Engine
+
+- `sdk/2d_engine/ng_sprite_pool.h` and `sdk/2d_engine_plus/ng_sprite_pool.hpp`:
+  pool layout doc rewritten with an unambiguous priority box and a
+  callout for the "draw BG at slot 1" trap.
+- Demo's chap_header now performs `ng_clear_screen_full() + clearSprs() +
+  setBACKDROP(0x8001)` so no state can leak across chapter transitions.
+- `Makefile` gained `GAME_EXTRA_INCLUDES` for games that need to pull in
+  another game's headers (used by `games/demo_plus` to share the demo's
+  artbox tables without duplicating ~3600 lines of asset data).
+
+### Attract Mode
+
+- `chap_title_attract_reel` (`games/demo/scenes/demo_title.c`) now loops
+  `SOUND_MUSIC_EAGLE_FANFARE` for the full attract, fades out on
+  coin-insert + plays `SOUND_SFX_COIN_CHIME` for audible feedback.
+- Teaser banners describe the real unified-demo content.
+
+### Validation
+
+- `make GAME=demo p1 USE_2D_PLUS=1` → clean (`roms/demo/777-p1.p1`)
+- `make GAME=demo_plus p1 USE_2D_PLUS=1` → clean (`roms/demo_plus/778-p1.p1`)
+
+---
+
 ## v1.3.0 - Bug Fixes, Per-Game ROM Folders, Z80 Sound Fix, and Demo Overhaul
 
 Release date: 2026-05-17

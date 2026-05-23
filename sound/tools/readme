@@ -1,6 +1,14 @@
 SOUND TOOLS AND BUILD PIPELINE
 ==============================
 
+v1.3.1 notes
+------------
+- Sound tools are unchanged at the data-format level — the audio
+  pipeline (samples → vrom → fm → mml → ssg → m1rom) is the same as
+  v1.3.0.  Only the IDs and the demo's USE of the tracks have changed.
+- See sound/mml/readme, sound/ssg/readme, and sound/samples/readme
+  for the per-stage entry points.
+
 Python 3 tools that process audio assets and prepare them for the Neo Geo.
 
 TOOLS

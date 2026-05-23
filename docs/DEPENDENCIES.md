@@ -1,5 +1,14 @@
 # Build Dependencies
 
+> **v1.3.1 — extra dependencies**
+>
+> - The HD artbox alt scripts (`artbox/img2neo_hd.py`,
+>   `artbox/fixtiles_hd.py`) require the same packages as the main
+>   pipeline (`numpy`, `pypng`, `Pillow`).  No new dependencies, but
+>   they're slower because of the bilateral filter + CLAHE numpy passes.
+> - The C++ engine (`USE_2D_PLUS=1`) is built by the same
+>   `m68k-unknown-elf-g++` shipped with `x-tools-v2`.  No extra toolchain.
+
 This document lists every tool and library required to build the NeoGeoSDK on Linux, WSL, and Windows.
 
 ---

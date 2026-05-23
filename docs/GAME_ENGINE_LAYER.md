@@ -1,5 +1,19 @@
 # NeoGeoSDK 2D Game Engine Layer
 
+> **v1.3.1 — engine occlusion direction**
+>
+> The boxed rule at the top of `sdk/2d_engine/ng_sprite_pool.h` (and the
+> `sdk/2d_engine_plus/ng_sprite_pool.hpp` copy) is now authoritative:
+> **LOWER hardware slot = drawn IN FRONT** of any higher-numbered sprite
+> they overlap.  Drawing a background at slot 1 does **not** put it
+> behind the player — slot 1 is the front-most slot.  Backgrounds
+> belong at slots 300–315 (BG0) and 316–331 (BG1).
+>
+> Both `sdk/2d_engine/` (C, `gnu99`) and `sdk/2d_engine_plus/` (C++14,
+> `-fno-exceptions -fno-rtti -fno-threadsafe-statics`) ship with the
+> same public API surface.  Select with `USE_2D_PLUS=0` or
+> `USE_2D_PLUS=1` on the `make` line.
+
 This repository carries a reusable 2D game engine layer under `sdk/2d_engine/ng_*`.
 
 The layer is plain C. No float, no malloc during gameplay, no division in the frame loop. It is not a C++ object system and not an entity-component framework.
