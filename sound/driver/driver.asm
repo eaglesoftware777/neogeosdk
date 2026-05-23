@@ -85,6 +85,7 @@ banks 1
 .define VAR_SSG_TICK       $FE2A
 .define VAR_SSG_VOL        $FE2B
 .define VAR_SSG_ENV_ON     $FE2C    ; 1 = channel A uses envelope amplitude
+.define VAR_SSG_ENV_SHAPE  $FE2D    ; last shape value written by $F7
 
 .define STACK              $FFFC
 .define READY_VALUE        $01
@@ -1203,6 +1204,7 @@ play_ssg_index:
     xor a
     ld (VAR_SSG_PRESET),a
     ld (VAR_SSG_ENV_ON),a    ; reset envelope-mode flag per track
+    ld (VAR_SSG_ENV_SHAPE),a ; default shape = $0 (single decay)
     ld a,$0A
     ld (VAR_SSG_VOL),a
     ld a,3
@@ -2017,26 +2019,43 @@ ssg_set_envelope:
     and $0F
     push af                      ; save shape value across store_ssg_ptr
     call store_ssg_ptr
+    pop af
+    ld (VAR_SSG_ENV_SHAPE),a     ; remember for per-note retrigger
+    push af
     ; Enable channel A envelope-amplitude mode for subsequent notes.
     ld a,1
     ld (VAR_SSG_ENV_ON),a
     ld de,$0810                  ; reg $08, value $10 = M=1, fixed=0
     call shadowed_write_a
-    pop af                       ; restore shape value
+    pop af
     ld d,$0D
     ld e,a
     call force_write_a           ; force-write retriggers envelope
     jp ssg_step
 
-; $F8 — set envelope period low byte (register $0B).  High byte
-; ($0C) is left at the current value (driver init writes 0).
+; $F8 — set envelope period.  The YM2149 envelope is clocked at
+; f_master / (256 * period_16).  With f_master = 8 MHz, one envelope
+; STEP = 32 µs * period_16, and a full 16-step cycle (e.g. shape $0
+; "single decay") takes 16 * step = 512 µs * period_16.
+;
+; Writing only the low byte (period_16 < 256) gives a maximum 130 ms
+; cycle, which is shorter than a single MML note at T220 L64 and
+; makes the channel go silent before any audible vowel is heard.
+;
+; We therefore write the directive value to the HIGH byte ($0C) and
+; zero the low byte ($0B).  This means Q1 = period_16 = 256 (~130 ms),
+; Q2 = 512 (~260 ms — typical syllable), Q4 = 1024 (~520 ms — long
+; held vowel).  Range 1..255 covers everything voice synthesis needs.
 ssg_set_env_period:
     ld a,(hl)
     inc hl
     push af                      ; preserve period byte
     call store_ssg_ptr
+    ; Low byte = 0
+    ld de,$0B00
+    call shadowed_write_a
     pop af
-    ld d,$0B
+    ld d,$0C
     ld e,a
     call shadowed_write_a
     jp ssg_step
@@ -2337,6 +2356,15 @@ ssg_standalone_note_on:
     ld d,$08
     ld e,$10
     call shadowed_write_a
+    ; Retrigger envelope shape register on EVERY note-on while
+    ; envelope mode is active.  Writing $0D always restarts the
+    ; envelope cycle on YM2149, so each note gets a fresh attack/
+    ; decay — that's what gives voice-synthesis its per-syllable
+    ; amplitude shape instead of a flat sustained tone.
+    ld a,(VAR_SSG_ENV_SHAPE)
+    ld d,$0D
+    ld e,a
+    call force_write_a
     jr ssg_standalone_volbc
 ssg_standalone_vola_fixed:
     ld d,$08

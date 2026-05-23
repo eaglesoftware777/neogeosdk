@@ -1,34 +1,30 @@
-; 4_voice_get_ready — SSG envelope-driven voice approx: "GET READY!"
+; 4_voice_get_ready — YM2149 envelope-driven voice: "GET READY!"
 ;
-; Q  = envelope period (smaller = faster swept attack/decay)
-; E  = envelope shape (writing it retriggers the envelope — every E
-;      directive is the start of a new "syllable")
-;        $0 = single decay (sharp attack, fade)
-;        $E = bidirectional triangle (vibrato-like)
+; Each note in envelope mode auto-retriggers shape $0 (sharp attack,
+; slow decay).  Q sets envelope period HIGH byte:
+;   Q1 ~130 ms env cycle  (fast syllable)
+;   Q2 ~260 ms env cycle  (normal syllable)
+;   Q3 ~390 ms env cycle  (held vowel)
 ;
-; Each syllable: pick consonant preset (noise burst) + retrigger
-; envelope + run a short pitch sweep for vowel formant.
+; Voice cadence: 4 syllables, descending pitch with rising exclamation.
 
 T220
 V14
 O5
-L64
+L32
 
-Q30 E0
-P3 D E F+
-P0 G G+ A A G F+ E
-R64
+Q2 E0
+P3 D E
+P0 F+ G G+ A G F+ E D
 
-Q40 E0
-P3 E F+
-P0 G A A+ B B B B A+ A G F+
-R64
+Q2 E0
+P3 D E
+P0 F+ G A B A G F+ E D
 
-Q24 E0
-P3 D D
-P0 E F+ F E D D D
-R64
+Q3 E0
+P0 D D E E D D < B
 
-Q50 E0
-P0 G A B > C C
+Q1 E0
+P0 > E F+ G A > C
+
 ~
