@@ -54,6 +54,9 @@ void NEOGEO_USER soundSetSSGVolume(uint8_t v);
 void NEOGEO_USER soundSetFMVolume(uint8_t v);
 void NEOGEO_USER soundSetTempo(uint8_t t);
 void NEOGEO_USER soundFadeOutSpeed(uint8_t speed);
+void NEOGEO_USER soundCancelFade(void);
+void NEOGEO_USER soundStopMusic(void);
+void NEOGEO_USER playMusic(uint8_t n);
 void NEOGEO_USER playFMTrack(uint8_t n);
 void NEOGEO_USER playSSGTrack(uint8_t n);
 void NEOGEO_USER soundSetSSGPreset(uint8_t preset);
@@ -359,8 +362,8 @@ static uint8_t NEOGEO_USER chap_boot(void)
     demo_fix_puts(2u,  3u, "EAGLE SOFTWARE NEOGEO SDK", 1u);
     demo_fix_puts(2u,  4u, "(C) 2026  EAGLESOFTWARE.BIZ", 0u);
 
-    demo_fix_puts(2u,  7u, "UNIFIED ENGINE SHOWCASE", 2u);
-    demo_fix_puts(2u,  9u, "20 CHAPTERS  FULL ENGINE TOUR", 1u);
+    demo_fix_puts(2u,  7u, "SDK SHOWCASE", 2u);
+    demo_fix_puts(2u,  9u, "20 CHAPTERS  FULL SDK TOUR", 1u);
 
     demo_fix_puts(2u, 12u, "SHOWCASE FLOW:",         2u);
     demo_fix_puts(4u, 13u, "AUTOMATIC CHAPTERS",     1u);
@@ -384,7 +387,6 @@ static uint8_t NEOGEO_USER chap_title(void)
 
     chap_header(1u, "TITLE", "ATTRACT REEL");
     demo_fix_puts(2u, 2u, "TITLE ART + EYECATCHER", 1u);
-    demo_fix_puts(2u, 3u, "STABLE CENTERED REEL",   0u);
     snd_cross_to(SOUND_MUSIC_EAGLE_FANFARE);
 
     for (t = 0u; t < 360u; t++) {
@@ -425,7 +427,7 @@ static uint8_t NEOGEO_USER chap_fix(void)
     uint16_t t;
     char buf[8];
 
-    chap_header(2u, "FIX LAYER", "TEXT  PALETTES  DIRTY CACHE");
+    chap_header(2u, "FIX LAYER", "TEXT  PALETTES");
     /*
      * Clean WHITE backdrop — no artwork BG image, no pure black.
      * The empty cells of the FIX layer are transparent and show this
@@ -448,15 +450,13 @@ static uint8_t NEOGEO_USER chap_fix(void)
         demo_fix_puts(2u, 27u, "A: NEXT",  2u);
     }
     demo_fix_puts(2u, 2u, "FIX = 40x32 CELL OVERLAY", 1u);
-    demo_fix_puts(2u, 3u, "DIRTY-CELL CACHE  NO TEAR", 2u);
     snd_cross_to(SOUND_MUSIC_SHOP_JINGLE);
 
     demo_fix_puts(2u,  6u, "PALETTE 0  STANDARD",   0u);
     demo_fix_puts(2u,  7u, "PALETTE 1  ACCENT",     1u);
     demo_fix_puts(2u,  8u, "PALETTE 2  WARN",       2u);
 
-    demo_fix_puts(2u, 11u, "OVERWRITING ROW 13 EACH FRAME:", 1u);
-    demo_fix_puts(2u, 12u, "(WATCH: NO FLICKER)",            2u);
+
 
     for (t = 0u; t < 180u; t++) {
         digit3(buf, t);
@@ -589,6 +589,84 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundFadeOutSpeed(6u); snd_step();
     if (uwait(20u)) return 1u;
     soundStopAll();        snd_step();
+
+    /* --- Driver-function showcase ------------------------------------ */
+    /*
+     * Demonstrate the LIVE control surface of the Z80 driver: per-channel
+     * volume sweeps, tempo changes, fade-out / fade-cancel, and the
+     * difference between soundStopMusic (music only) and soundStopAll.
+     * Each step shows its name on row 18 so the user can read what
+     * driver call is happening as they hear the result.
+     */
+    soundStopAll();             snd_step();
+    soundSceneReset();          snd_step();
+    soundApplyMix(0x30u, 0xB8u, 0x08u, 0x08u); snd_step();
+
+    demo_fix_puts(2u, 17u, "DRIVER FUNCTIONS                  ", 2u);
+    demo_fix_puts(2u, 18u, "                                  ", 0u);
+
+    /* 1) Start a track to demonstrate against */
+    demo_fix_puts(2u, 18u, "playMusic(SAMURAI_GAME_LOOP)      ", 1u);
+    playMusic(SOUND_MUSIC_SAMURAI_GAME_LOOP); snd_step();
+    if (uwait(60u)) return 1u;
+
+    /* 2) FM channel volume sweep */
+    demo_fix_puts(2u, 18u, "soundSetFMVolume sweep (0x0F->01) ", 1u);
+    {
+        int v;
+        for (v = 0x0F; v >= 0x01; v--) {
+            soundSetFMVolume((uint8_t)v); snd_step();
+            if (uwait(3u)) return 1u;
+        }
+        soundSetFMVolume(0x08u); snd_step();
+    }
+    if (uwait(20u)) return 1u;
+
+    /* 3) ADPCM-B bed volume sweep (lift, then drop) */
+    demo_fix_puts(2u, 18u, "soundSetADPCMBVolume sweep (B8/F8)", 1u);
+    soundSetADPCMBVolume(0xF8u); snd_step();
+    if (uwait(40u)) return 1u;
+    soundSetADPCMBVolume(0x40u); snd_step();
+    if (uwait(40u)) return 1u;
+    soundSetADPCMBVolume(0xB8u); snd_step();
+    if (uwait(20u)) return 1u;
+
+    /* 4) Tempo change live */
+    demo_fix_puts(2u, 18u, "soundSetTempo(3) - slower         ", 1u);
+    soundSetTempo(3u); snd_step();
+    if (uwait(80u)) return 1u;
+    demo_fix_puts(2u, 18u, "soundSetTempo(7) - faster         ", 1u);
+    soundSetTempo(7u); snd_step();
+    if (uwait(80u)) return 1u;
+    soundSetTempo(5u); snd_step();
+
+    /* 5) Fade out, then cancel half-way */
+    demo_fix_puts(2u, 18u, "soundFadeOutSpeed(8) + cancel @24f", 2u);
+    soundFadeOutSpeed(8u); snd_step();
+    if (uwait(24u)) return 1u;
+    demo_fix_puts(2u, 19u, "soundCancelFade()                 ", 2u);
+    soundCancelFade(); snd_step();
+    if (uwait(40u)) return 1u;
+    demo_fix_puts(2u, 19u, "                                  ", 0u);
+
+    /* 6) Now let the fade complete */
+    demo_fix_puts(2u, 18u, "soundFadeOutSpeed(4) until silent ", 1u);
+    soundFadeOutSpeed(4u); snd_step();
+    if (uwait(80u)) return 1u;
+
+    /* 7) Stop ONLY music (SFX would still play); fire one SFX afterward */
+    demo_fix_puts(2u, 18u, "soundStopMusic + playSFX (alive)  ", 1u);
+    soundStopMusic(); snd_step();
+    if (uwait(10u)) return 1u;
+    playSFX(SOUND_SFX_COIN_CHIME); snd_step();
+    if (uwait(40u)) return 1u;
+    playSFX(SOUND_SFX_BLADE_WHOOSH); snd_step();
+    if (uwait(40u)) return 1u;
+
+    /* 8) Final full stop */
+    demo_fix_puts(2u, 18u, "soundStopAll                      ", 1u);
+    soundStopAll(); snd_step();
+    if (uwait(30u)) return 1u;
     return 0u;
 }
 
@@ -794,10 +872,9 @@ static uint8_t NEOGEO_USER chap_physics(void)
     demo_fix_puts(2u,  0u, "CH.06",        2u);
     demo_fix_puts(8u,  0u, "PHYSICS",      2u);
     demo_fix_puts(2u,  1u, "GRAVITY  SOLIDS  GROUNDED", 1u);
-    demo_fix_puts(36u, 0u, "06",           2u);
     demo_fix_puts(2u, 27u, "A: NEXT",      0u);
 
-    demo_fix_puts(2u, 2u, "NGPHYSICSBODY  GRAVITY 0.125",  1u);
+    demo_fix_puts(2u, 2u, "NGPHYSICS  GRAVITY 0.125",  1u);
     demo_fix_puts(2u, 3u, "FLOOR Y=184  EAGLE FALLS",      0u);
     snd_cross_to(SOUND_MUSIC_SAMURAI_GAME_LOOP);
 
@@ -1377,7 +1454,6 @@ static uint8_t NEOGEO_USER chap_npcs(void)
     uint8_t i;
 
     chap_header(12u, "NPCS", "PATROL + THINK CALLBACK");
-    demo_fix_puts(2u, 2u, "4 CATS  EACH OWN NPC KIND",  1u);
     demo_fix_puts(2u, 3u, "ENGINE THINK FN HANDLES VX", 0u);
     snd_cross_to(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
 
@@ -2833,7 +2909,6 @@ static uint8_t NEOGEO_USER chap_credits(void)
     snd_cross_to(SOUND_MUSIC_ENDING_CREDITS);
 
     demo_fix_puts(2u,  4u, "ENGINE   SDK/2D_ENGINE_PLUS", 1u);
-    demo_fix_puts(2u,  5u, "BUILD    USE_2D_PLUS=1",      0u);
     demo_fix_puts(2u,  6u, "WEB      EAGLESOFTWARE.BIZ",  0u);
 
     demo_fix_puts(2u,  9u, "MODULES SHOWN:",          2u);
@@ -2844,10 +2919,6 @@ static uint8_t NEOGEO_USER chap_credits(void)
     demo_fix_puts(4u, 14u, "NPCS  JOYSTICK  SCROLL",  1u);
     demo_fix_puts(4u, 15u, "2D/3D RENDER  SSG ARCADE",1u);
 
-    demo_fix_puts(2u, 17u, "BEHIND THE SCENES:",          2u);
-    demo_fix_puts(4u, 18u, "TIMERS  PROGRESS  STATUS",    0u);
-    demo_fix_puts(4u, 19u, "PROPERTIES  EVENTS  BORDERS", 0u);
-    demo_fix_puts(4u, 20u, "RENDER QUEUE  VBLANK FLUSH",  0u);
 
     demo_fix_puts(2u, 24u, "THANKS FOR PLAYING.", 2u);
     if (uwait(240u)) return 1u;
