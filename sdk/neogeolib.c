@@ -571,9 +571,21 @@ void NEOGEO_USER soundPlayTitleMusic(uint8_t music_track) {
  * playFMTrack / playSSGTrack / playSFX.
  */
 void NEOGEO_USER soundPlayGameLoop(uint8_t music_track) {
-	/* Map any of the 8 SOUND_MUSIC_* IDs to ADPCM-B beds 0..3.
-	 * Skips bed 4 (SOUND_BED_EYECATCHER) reserved for the eyecatcher. */
-	uint8_t bed = (uint8_t)(music_track & 0x03u);
+	/* Pool of every ADPCM-B bed EXCEPT bed 4 (SOUND_BED_EYECATCHER),
+	 * which is reserved for the eyecatcher screen.  Eight slots map
+	 * to 1.wav..4.wav, 6.wav..9.wav — gives a wider variety of scene
+	 * music than the old 4-slot rotation. */
+	static const uint8_t bed_pool[8] = {
+		SOUND_BED_TITLE_THEME,   /* 1.wav */
+		SOUND_BED_STAGE_ONE,     /* 2.wav */
+		SOUND_BED_STAGE_TWO,     /* 3.wav */
+		SOUND_BED_ENDING_THEME,  /* 4.wav */
+		SOUND_BED_SCENE_F,       /* 6.wav */
+		SOUND_BED_SCENE_G,       /* 7.wav */
+		SOUND_BED_SCENE_H,       /* 8.wav */
+		SOUND_BED_SCENE_I        /* 9.wav */
+	};
+	uint8_t bed = bed_pool[music_track & 0x07u];
 	isZ80Ready(); soundSceneReset();
 	isZ80Ready(); soundApplyMix(0x30, 0xB8, 0x00, 0x00);  /* bed prominent, FM/SSG silent */
 	isZ80Ready(); playSFXB(bed);
