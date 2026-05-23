@@ -20,20 +20,20 @@
         <part name="cart" interface="neo_cart">
             <feature name="slot" value="rom_fatfur2" />
             <dataarea name="maincpu" width="16" endianness="big" size="0x100000">
-                <rom loadflag="load16_word_swap" name="777-p1.p1" offset="0x000000" size="0x080000" crc="1bf67ba5" sha1="ee287ec67951f44290b84e9027ae2d160651b56f" />
+                <rom loadflag="load16_word_swap" name="777-p1.p1" offset="0x000000" size="0x080000" crc="ad7453d5" sha1="b7d7d63062773c3cec1babb2f1877aae23081b0f" />
             </dataarea>
             <dataarea name="fixed" size="0x020000">
                 <rom offset="0x000000" size="0x020000" name="777-s1.s1" crc="edbb7d8e" sha1="dc95dec36e292fcc6cb877010330bddbbe5d8c44" />
             </dataarea>
             <dataarea name="audiocpu" size="0x020000">
-                <rom offset="0x000000" size="0x020000" name="777-m1.m1" crc="dbda41bc" sha1="6a984ec79078327822dd30e0716b9ddb7db25076" />
+                <rom offset="0x000000" size="0x020000" name="777-m1.m1" crc="1778321b" sha1="0017b4e379f3c1c2348ea4538b13184f6b6e533d" />
             </dataarea>
             <dataarea name="ymsnd:adpcma" size="0x371a00">
                 <rom name="777-v1.v1" offset="0x000000" size="0x371a00" crc="69404aef" sha1="940142a5b14b22644d69782838ee69c242760205" />
             </dataarea>
             <dataarea name="sprites" size="0x1000000">
-                <rom loadflag="load16_byte" name="777-c1.c1" offset="0x000000" size="0x800000" crc="6b7af420" sha1="33d59604297fabce558f4ad8c59e1fb917baed60" />
-                <rom loadflag="load16_byte" name="777-c2.c2" offset="0x000001" size="0x800000" crc="0b1c9460" sha1="aa132322156089712a80227064afb99c0c4067f8" />
+                <rom loadflag="load16_byte" name="777-c1.c1" offset="0x000000" size="0x800000" crc="7039b509" sha1="cc5bf7eababddb6e72c5c7828c3378dd9c643adf" />
+                <rom loadflag="load16_byte" name="777-c2.c2" offset="0x000001" size="0x800000" crc="16d56a79" sha1="1966445098a3193bbb8588f4112a2178fc2ad2ea" />
             </dataarea>
         </part>
     </software>

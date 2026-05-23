@@ -34,3 +34,14 @@ vol_a=0E
 vol_b=00
 vol_c=00
 noise_freq=10
+
+; Vowel preset for voice synthesis: TONE A only, no noise, B and C
+; silent.  Channel A's vol_a is irrelevant when envelope mode (M=1)
+; is enabled by the $F7 directive, but we set it to a sane fallback.
+[preset 4]
+name=Voice Vowel
+tone_mask=0x3E
+vol_a=0F
+vol_b=00
+vol_c=00
+noise_freq=00
