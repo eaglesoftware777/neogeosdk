@@ -205,6 +205,14 @@ void NEOGEO_USER demo_title_attract_reel(void)
     demo_fix_puts(7u, 2u, "NEO GEO SDK V1.3.0", 2u);
     demo_fix_puts(2u, 4u, "UNIFIED DEMO PRESENTS:", 1u);
 
+    /*
+     * Continuous walking warrior on attract — 8-frame uniform stand set
+     * (no strip-width changes between frames) so the sprite never
+     * splits.  The warrior loops left-to-right across the bottom band
+     * at slot 1 (above the BG title card), restarting at the left
+     * edge when it reaches the right edge — no pause / no stop.
+     */
+
     /* Reset sound stack and start a looping intro track.  The Z80
      * commands are spaced by waitVbl so the driver applies cleanly. */
     soundSceneReset();   waitVbl();
@@ -236,6 +244,25 @@ void NEOGEO_USER demo_title_attract_reel(void)
             demo_fix_puts(13u, 26u, "INSERT COIN", 1u);
         } else {
             demo_fix_puts(13u, 26u, "           ", 0u);
+        }
+
+        /*
+         * Continuous walking warrior — uniform 6-strip × 10-row STAND
+         * frames so the sprite-window cache stays stable.  X advances
+         * 1 px every 2 frames and wraps when it reaches the right side
+         * of the screen, so the warrior never stops walking.
+         */
+        {
+            static const uint8_t s_walk[8] =
+                { 3u, 4u, 5u, 7u, 8u, 9u, 11u, 12u };
+            uint8_t  frame = s_walk[(hold / 6u) % 8u];
+            int16_t  x = (int16_t)(((hold >> 1) % 320u) - 32);
+            demo_load_screen_palette(frame);
+            demo_draw_sprite_screen(frame, 1u, x, 80,
+                                    demo_screen_strips(frame),
+                                    demo_screen_rows(frame),
+                                    0xFFu, 0xFFu);
+            if ((hold % 24u) == 0u) playSFX(SOUND_SFX_FOOTSTEP);
         }
 
         hold++;

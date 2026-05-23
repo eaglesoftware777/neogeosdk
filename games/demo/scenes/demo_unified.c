@@ -526,60 +526,79 @@ static uint8_t NEOGEO_USER chap_sound(void)
     };
     uint8_t i;
 
-    chap_header(3u, "SOUND", "SFX / SSG / FM CUE DEMO (NO BG)");
+    chap_header(3u, "SOUND", "PLAY EVERY MML  MUSIC / FM / SSG");
     demo_fix_puts(2u, 2u, "NO BACKGROUND MUSIC IN THIS SCENE", 1u);
-    demo_fix_puts(2u, 3u, "EACH CUE PLAYS ONCE THEN STOPS",    0u);
+    demo_fix_puts(2u, 3u, "PLAYS EVERY MML THEN ALL SFX",      0u);
 
-    /*
-     * IMPORTANT: chap_sound runs WITHOUT continuous background music.
-     * The previous chapter's bed is killed up-front and nothing is
-     * looped here — only the explicit cues below fire.  This makes
-     * each SFX / SSG / FM demonstration audible against silence.
-     */
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
 
-    /* --- 1) ADPCM-A SFX TRIGGERS (over silence) ---------------------- */
-    demo_fix_puts(2u, 5u, "1. ADPCM-A SFX (silence between)  ", 2u);
-    demo_fix_puts(2u, 6u, "each SFX fires once               ", 1u);
+    /* --- 1) MUSIC MML — play every music track (TRACK_1..TRACK_8) --- */
+    demo_fix_puts(2u, 5u, "1. MUSIC TRACKS (1..8)            ", 2u);
+    for (i = 0u; i < SOUND_MUSIC_TRACK_COUNT; i++) {
+        char lbl[16];
+        lbl[0] = 'T'; lbl[1] = 'R'; lbl[2] = 'A'; lbl[3] = 'C';
+        lbl[4] = 'K'; lbl[5] = ' '; lbl[6] = (char)('0' + (i + 1u));
+        lbl[7] = '\0';
+        demo_fix_puts(2u, 7u, lbl, 1u);
+        soundFadeOutSpeed(8u);                snd_step();
+        if (uwait(6u)) return 1u;
+        soundStopAll();                       snd_step();
+        playMusic(i);                         snd_step();
+        if (uwait(90u)) return 1u;
+    }
+    soundFadeOutSpeed(8u); snd_step();
+    if (uwait(8u)) return 1u;
+    soundStopAll();        snd_step();
+    demo_fix_puts(2u, 7u, "         ", 0u);
+
+    /* --- 2) FM MML — play every FM track (TRACK_1..TRACK_8) -------- */
+    demo_fix_puts(2u, 5u, "2. FM TRACKS  (1..8)              ", 2u);
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Cu); snd_step();
+    for (i = 0u; i < SOUND_FM_TRACK_COUNT; i++) {
+        char lbl[8];
+        lbl[0] = 'F'; lbl[1] = 'M'; lbl[2] = ' '; lbl[3] = (char)('0' + (i + 1u));
+        lbl[4] = '\0';
+        demo_fix_puts(2u, 9u, lbl, 1u);
+        soundStopMusic();        snd_step();
+        playFMTrack(i);          snd_step();
+        if (uwait(60u)) return 1u;
+    }
+    soundStopMusic(); snd_step();
+    soundSetFMVolume(0x00u); snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x00u); snd_step();
+    demo_fix_puts(2u, 9u, "         ", 0u);
+
+    /* --- 3) SSG MML — play every SSG track (TRACK_1..TRACK_3) ----- */
+    demo_fix_puts(2u, 5u, "3. SSG TRACKS (1..3)              ", 2u);
+    soundApplyMix(0x30u, 0x00u, 0x0Eu, 0x00u); snd_step();
+    for (i = 0u; i < SOUND_SSG_TRACK_COUNT; i++) {
+        char lbl[8];
+        lbl[0] = 'S'; lbl[1] = 'S'; lbl[2] = 'G'; lbl[3] = ' ';
+        lbl[4] = (char)('0' + (i + 1u)); lbl[5] = '\0';
+        demo_fix_puts(2u, 11u, lbl, 1u);
+        soundStopMusic();             snd_step();
+        soundSetSSGPreset(i);         snd_step();
+        playSSGTrack(i);              snd_step();
+        if (uwait(70u)) return 1u;
+    }
+    soundStopMusic(); snd_step();
+    soundSetSSGVolume(0x00u); snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x00u); snd_step();
+    demo_fix_puts(2u, 11u, "         ", 0u);
+
+    /* --- 4) ADPCM-A SFX TRIGGERS — every SFX once ----------------- */
+    demo_fix_puts(2u, 5u, "4. ADPCM-A SFX (silence between)  ", 2u);
     for (i = 0u; i < 6u; i++) {
-        demo_fix_puts(2u, 8u, s_sfx_names[i], 2u);
+        demo_fix_puts(2u, 13u, s_sfx_names[i], 1u);
         playSFX(s_sfx[i]);    snd_step();
         if (uwait(40u)) return 1u;
     }
-    demo_fix_puts(2u, 8u, "                ", 0u);
+    demo_fix_puts(2u, 13u, "                ", 0u);
 
-    /* --- 2) SSG CUE — short, then immediately silenced ------------- */
-    demo_fix_puts(2u, 5u, "2. SSG CUE  (arcade alert, short) ", 2u);
-    soundApplyMix(0x30u, 0x00u, 0x0Au, 0x00u); snd_step();
-    soundSetSSGPreset(2u);                     snd_step();
-    playSSGTrack(SOUND_SSG_ARCADE_ALERT);      snd_step();
-    if (uwait(90u)) return 1u;
-    soundSetSSGVolume(0x00u);                  snd_step();
-    soundStopMusic();                          snd_step();   /* kill SSG track */
-    soundApplyMix(0x30u, 0x00u, 0x00u, 0x00u); snd_step();
-
-    /* --- 3) FM ONE-SHOT — play once, then fully stop --------------- */
-    demo_fix_puts(2u, 5u, "3. FM ONE-SHOT (then silenced)    ", 2u);
-    demo_fix_puts(2u, 6u, "FM driver: harsh, used sparingly  ", 0u);
-    soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Au); snd_step();
-    playFMTrack(SOUND_FM_BASS_MOTIF);          snd_step();
-    if (uwait(120u)) return 1u;
-    soundSetFMVolume(0x00u);                   snd_step();
-    soundStopMusic();                          snd_step();
-    soundApplyMix(0x30u, 0x00u, 0x00u, 0x00u); snd_step();
-    demo_fix_puts(2u, 6u, "FM stopped completely             ", 1u);
-    if (uwait(30u)) return 1u;
-
-    /* --- 4) DRIVER FUNCTIONS — exercise on a TEMPORARY bed --------- */
-    /*
-     * We bring up a TEMPORARY ADPCM-B bed (track 0 = TITLE_THEME) to
-     * have something to control with, then take it down at the end so
-     * chap_sound ends in silence — the next scene will start its own
-     * music with its own snd_cross_to() call.
-     */
-    demo_fix_puts(2u, 5u, "4. DRIVER FUNCTIONS               ", 2u);
+    /* --- 5) DRIVER FUNCTIONS — controls on a temp bed ------------- */
+    demo_fix_puts(2u, 5u, "5. DRIVER FUNCTIONS               ", 2u);
     demo_fix_puts(2u, 6u, "TEMP BED for vol/fade demo        ", 0u);
     soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
     playSFXB(SOUND_BED_TITLE_THEME);           snd_step();
@@ -600,7 +619,7 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundFadeOutSpeed(4u); snd_step();
     if (uwait(90u)) return 1u;
 
-    demo_fix_puts(2u, 18u, "soundStopMusic + playSFX (alive)  ", 1u);
+    demo_fix_puts(2u, 18u, "soundStopMusic + playSFX          ", 1u);
     soundStopMusic(); snd_step();
     if (uwait(10u)) return 1u;
     playSFX(SOUND_SFX_COIN_CHIME); snd_step();
@@ -608,7 +627,7 @@ static uint8_t NEOGEO_USER chap_sound(void)
     playSFX(SOUND_SFX_IMPACT_HIT); snd_step();
     if (uwait(36u)) return 1u;
 
-    demo_fix_puts(2u, 18u, "soundStopAll (silence)            ", 1u);
+    demo_fix_puts(2u, 18u, "soundStopAll                      ", 1u);
     soundStopAll(); snd_step();
     if (uwait(30u)) return 1u;
     return 0u;
