@@ -2142,51 +2142,70 @@ static uint8_t NEOGEO_USER chap_render3d(void)
 /* ================================================================== */
 /*  Chapter 17 — 2D render idea  (light per-frame churn)                 */
 /* ================================================================== */
-static uint8_t NEOGEO_USER chap_render2d(void)
+static uint8_t NEOGEO_USER chap_char_2d(void)
 {
+    /*
+     * 2D rendering showcase — demonstrates the SAME concepts the old
+     * "2D RENDER FIX BLITTER PATTERNS" chapter did (moving bar,
+     * waveform, static box), but through ONE character so the user
+     * sees how the engine drives 2D sprite motion rather than raw
+     * FIX-cell tricks.
+     *
+     * Three phases on a single hero:
+     *   [  0..200) LINEAR SWEEP — hero walks left→right across screen
+     *   [200..420) WAVE BOB     — hero bobs in a sine pattern in place
+     *   [420..600) IDLE LOOP    — hero stands centred, frame-cycles
+     */
     uint16_t t;
-    uint8_t last_bar_x = 0xFFu;
+    const uint8_t hero_frame_idle  = 3u;
+    int16_t  hero_x;
+    int16_t  hero_y;
+    uint8_t  frame;
 
-    chap_header(17u, "2D RENDER", "FIX BLITTER PATTERNS");
-    demo_fix_puts(2u, 2u, "MOVING BAR  WAVEFORM  BOX",   1u);
-    demo_fix_puts(2u, 3u, "CACHED CLEARS  LOW CPU",      0u);
+    chap_header(17u, "CHAR 2D", "MOTION  WAVE  IDLE");
+    demo_fix_puts(2u, 2u, "ONE CHARACTER  THREE PATTERNS",  1u);
+    demo_fix_puts(2u, 3u, "LINEAR SWEEP  SINE BOB  IDLE",   0u);
     snd_cross_to(SOUND_MUSIC_G);
 
-    demo_fix_puts(8u, 12u, "+----------------------+", 2u);
-    demo_fix_puts(8u, 13u, "|  SOFTWARE 2D LAYER   |", 1u);
-    demo_fix_puts(8u, 14u, "+----------------------+", 2u);
+    /* Single static info panel (the "box" concept) */
+    demo_fix_puts(8u, 22u, "+----------------------+", 2u);
+    demo_fix_puts(8u, 23u, "|  2D MOTION SHOWCASE  |", 1u);
+    demo_fix_puts(8u, 24u, "+----------------------+", 2u);
 
-    for (t = 0u; t < 360u; t++) {
-        uint8_t bar_x = (uint8_t)(2u + ((t >> 1) % 30u));
+    draw_background(2u, 32, 16);
 
-        /* Move horizontal bar: only erase old position then draw new */
-        if (last_bar_x != 0xFFu) {
-            uint8_t i;
-            for (i = 0u; i < 8u; i++) {
-                demo_fix_puts((uint8_t)(last_bar_x + i), 6u, " ", 0u);
-            }
-        }
-        {
-            uint8_t i;
-            for (i = 0u; i < 8u; i++) {
-                demo_fix_puts((uint8_t)(bar_x + i), 6u, "#", 1u);
-            }
-        }
-        last_bar_x = bar_x;
+    demo_load_screen_palette(hero_frame_idle);
 
-        /* Animated waveform on row 18 — clamp Y range so it really moves */
-        {
-            uint8_t i;
-            demo_fix_puts(1u, 18u, "                                      ", 0u);
-            for (i = 0u; i < 28u; i++) {
-                /* spread across rows 17..21 */
-                uint8_t off = (uint8_t)(((i + (t >> 2)) & 7u));
-                uint8_t y = (uint8_t)(17u + (off >> 1));
-                if (i == 0u || y != 18u) {
-                    demo_fix_puts((uint8_t)(5u + i), y, "*", (uint8_t)(1u + (i & 1u)));
-                }
-            }
+    for (t = 0u; t < 600u; t++) {
+        if (t < 200u) {
+            /* phase 1 — linear walk left→right */
+            hero_x = (int16_t)(-32 + (int16_t)((t * 380u) / 200u));
+            hero_y = 110;
+            frame  = s_hero_walk[(t / 5u) % 8u];
+            demo_fix_puts(2u, 6u, "PHASE 1 - LINEAR WALK ", 2u);
+        } else if (t < 420u) {
+            /* phase 2 — stationary bob (sine via triangle wave on Y) */
+            uint16_t p = (uint16_t)(t - 200u);
+            uint16_t cy = (uint16_t)(p % 60u);
+            int16_t  dy = (int16_t)((cy < 30u) ? cy : (60u - cy));   /* 0..30 */
+            hero_x = (int16_t)(160 - 32);
+            hero_y = (int16_t)(96 + dy);
+            frame  = s_hero_walk[(p / 6u) % 8u];
+            demo_fix_puts(2u, 6u, "PHASE 2 - WAVE BOB    ", 2u);
+        } else {
+            /* phase 3 — idle, just frame-cycle in place */
+            hero_x = (int16_t)(160 - 32);
+            hero_y = 110;
+            frame  = s_hero_stand[(t / 10u) % 8u];
+            demo_fix_puts(2u, 6u, "PHASE 3 - IDLE LOOP   ", 2u);
         }
+
+        demo_draw_sprite_screen(frame, 60u, hero_x, hero_y,
+                                demo_screen_strips(frame),
+                                demo_screen_rows(frame),
+                                0xFFu, 0xFFu);
+
+        if ((t % 60u) == 0u) playSFX(SOUND_SFX_5);
         if (uframe()) return 1u;
     }
     return 0u;
@@ -3018,8 +3037,8 @@ void NEOGEO_USER demo_unified_run(void)
     (void)chap_mini_game();
     (void)chap_joystick();
     (void)chap_scrolling_level();
+    (void)chap_char_2d();
     (void)chap_render3d();
-    (void)chap_render2d();
     (void)chap_ssg_arcade();
     (void)chap_garden3d();
     (void)chap_credits();
