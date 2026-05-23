@@ -1,10 +1,10 @@
 ; 1_fm_example_b — Mario-overworld-style melody (A major, upbeat)
 
-T150
+T220
 I1
 V13
 O5
-L8
+L16
 
 ; phrase A — main hook
 E E R E  R C E R

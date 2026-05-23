@@ -1,10 +1,10 @@
 ; 2_fm_example_c — Bubble Bobble-style upbeat (F major, bouncy)
 
-T155
+T220
 I2
 V13
 O5
-L8
+L16
 
 ; phrase A — bouncing hook
 F A > C F  > C < A F4
@@ -13,7 +13,7 @@ G B- > D G  > D < B- G4
 ; phrase B — playful runs
 L16
 F G A > C  D < A G F  E F G A  B- > C < B- A
-L8
+L16
 G B- > D F  E D C < B-
 A G F E  F4 R4
 

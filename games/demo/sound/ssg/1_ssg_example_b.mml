@@ -1,10 +1,10 @@
 ; 1_ssg_example_b — Frogger-style bounce (G major, mid range)
 
-T135
+T220
 P1
 V11
 O4
-L8
+L16
 
 G B D G  D B G4
 F+ A C F+  C A F+4
