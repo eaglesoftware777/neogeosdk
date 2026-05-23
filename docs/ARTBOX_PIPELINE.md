@@ -2,13 +2,23 @@
 
 > **v1.3.1 — Artbox Studio Pipeline tab + Asset Rules editor**
 >
-> `artbox/artbox_studio.py` gained two new tabs:
+> `artbox/artbox_studio.py` gained FIVE new tabs in v1.3.1:
 >
-> - **Pipeline** — run every step (img2neo / genscreens / gen_sprite_meta /
->   fixtiles / romdbimgimport / romtiles / romdbfiximport / createromdb)
->   with a status pill per step and a live log.  Includes opt-in HD
->   variants (`img2neo HD`, `fixtiles HD`).  "Run Full Pipeline"
->   chains the standard set sequentially.
+> - **Pipeline** — run every step (img2neo / genscreens /
+>   gen_sprite_meta / fixtiles / romdbimgimport / romtiles /
+>   romdbfiximport / createromdb) with a status pill per step and a
+>   live log.  Includes opt-in HD variants (`img2neo HD`,
+>   `fixtiles HD`).  "Run Full Pipeline" chains the standard set
+>   sequentially.
+> - **Asset Browser** — tree of every PNG under `artbox/in/*` and
+>   `artbox/infix/`, with dimensions / file size and a side-panel
+>   preview at native scale.
+> - **HD Compare** — pick any PNG, run it through both the standard
+>   and HD pipelines, see the indexed outputs side-by-side.  Output
+>   files land in `artbox/out/_hd_cmp/` (originals untouched).
+> - **ROM Inventory** — table of every ROM kind (p1 / m1 / s1 / v1 /
+>   c1 / c2) for every game folder, with size + mtime + present/absent
+>   colour-coded.
 > - **Asset Rules** — editor for `artbox/assets.cfg` with save/reload
 >   buttons.
 >
