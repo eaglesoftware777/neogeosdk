@@ -6,7 +6,7 @@ v1.3.1 status
 - Polling-race fix in `soundCommand` (v1.3.0) confirmed stable.
 - Drivers + Z80 ROM build path unchanged.
 - Demo audio: ch 03 (sound chapter) plays MML music via
-  `soundPlayGameLoop(SOUND_MUSIC_EAGLE_FANFARE)`; the noisy raw FM
+  `soundPlayGameLoop(SOUND_MUSIC_E)`; the noisy raw FM
   patch demo from earlier was removed.
 - Galaxian (ch 18) drives a pure-SSG mix sequence; Z80 commands are
   spaced by `waitVbl()` so multi-step setup applies cleanly.
@@ -210,14 +210,14 @@ Behavior:
 - `soundPlayTitleMusic(music_track)`
   Scene reset → set ADPCM-A/ADPCM-B mix → play title gong on ADPCM-A →
   start the direct ADPCM-B title theme. The current helper ignores
-  `music_track` and always uses `SOUND_BED_TITLE_THEME`.
+  `music_track` and always uses `SOUND_BED_A`.
 
 - `soundPlayGameLoop(music_track)`
   Scene reset → set ADPCM-A/ADPCM-B mix → select a direct ADPCM-B bed from
   `music_track`:
-  - `0` = `SOUND_BED_STAGE_ONE`
-  - `1` = `SOUND_BED_STAGE_TWO`
-  - `2` = `SOUND_BED_ENDING_THEME`
+  - `0` = `SOUND_BED_B`
+  - `1` = `SOUND_BED_C`
+  - `2` = `SOUND_BED_D`
 
 - `soundSetTempo(t)`
   Sets the live driver tempo divisor directly. This is not BPM conversion. `t` is `0..255`; small values are fast and large values are slow.
@@ -311,7 +311,7 @@ This section lists every public sound function and the meaning of its arguments.
 
 - `soundPlayTitleMusic(n)`
   Current helper ignores `n`. It resets the scene, plays the title gong, then
-  starts ADPCM-B bed 0 (`SOUND_BED_TITLE_THEME`).
+  starts ADPCM-B bed 0 (`SOUND_BED_A`).
 
 - `soundPlayGameLoop(n)`
   `n` selects the direct ADPCM-B bed used by the high-level live flow:

@@ -26,9 +26,9 @@ Mapped to `playSFXB(n)`.
 
 Current high-level mapping from `sdk/sound_ids.h`:
 
-- `SOUND_BED_TITLE_THEME = 0`
-- `SOUND_BED_STAGE_ONE = 1`
-- `SOUND_BED_STAGE_TWO = 2`
-- `SOUND_BED_ENDING_THEME = 3`
+- `SOUND_BED_A = 0`
+- `SOUND_BED_B = 1`
+- `SOUND_BED_C = 2`
+- `SOUND_BED_D = 3`
 
 The tracked `out_a` and `out_b` files are the encoded ADPCM payloads used by `sound/tools/vrom.py` to build the V ROM.

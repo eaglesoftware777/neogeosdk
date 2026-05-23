@@ -35,9 +35,9 @@
 >   wiring code or MML.
 >
 > The unified demo's chapter 03 (SOUND) replaces the noisy raw FM-patch
-> demo with a clean MML music intro (`SOUND_MUSIC_EAGLE_FANFARE`).
+> demo with a clean MML music intro (`SOUND_MUSIC_E`).
 > When auditioning patches through Sound Studio, prefer the
-> MML/composition path over `playFMTrack(SOUND_FM_PATCH_SHOWCASE)`
+> MML/composition path over `playFMTrack(SOUND_FM_H)`
 > alone — the patch table doesn't carry sequencing.
 >
 > Sound Studio's panels map 1-to-1 to the on-ROM channels: FM (4 ch),

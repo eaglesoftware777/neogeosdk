@@ -914,13 +914,13 @@ Key sound-side paths:
 
 Current ADPCM-B theme mapping:
 
-- `playSFXB(0)` / `SOUND_BED_TITLE_THEME`
+- `playSFXB(0)` / `SOUND_BED_A`
   - title theme
-- `playSFXB(1)` / `SOUND_BED_STAGE_ONE`
+- `playSFXB(1)` / `SOUND_BED_B`
   - stage loop 1
-- `playSFXB(2)` / `SOUND_BED_STAGE_TWO`
+- `playSFXB(2)` / `SOUND_BED_C`
   - stage loop 2
-- `playSFXB(3)` / `SOUND_BED_ENDING_THEME`
+- `playSFXB(3)` / `SOUND_BED_D`
   - ending / results theme
 
 68k-side sound API highlights:

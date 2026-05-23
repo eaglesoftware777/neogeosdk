@@ -176,7 +176,7 @@ static void NEOGEO_USER stress_full_scene(void)
         }
     }
 
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_B);
 
     for (t = 0u; t < 300u; t++) {
         int16_t px = 160;
@@ -293,7 +293,7 @@ static void NEOGEO_USER stress_boss(void)
     player_hp = 10u;
     phase2    = 0u;
 
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_B);
 
     for (t = 0u; t < 500u; t++) {
         if (boss_hp == 0u) break;
@@ -303,7 +303,7 @@ static void NEOGEO_USER stress_boss(void)
             boss_hp--;
             ng_char_damage(boss, 1u);
             ng_impact_event(NG_IMPACT_HEAVY, STRESS_NPC_PAL(0u), s_boss_pal,
-                            &cam, (uint16_t)SOUND_SFX_IMPACT_HIT,
+                            &cam, (uint16_t)SOUND_SFX_8,
                             200, 110, 0u, STRESS_PART_PAL);
             ng_spawn_hit_spark(200, 110, 0u, STRESS_PART_PAL);
 
@@ -395,7 +395,7 @@ void NEOGEO_USER demo_stress_run(void)
     ng_chars_init();
 
     demo_load_screen_palette(STRESS_NPC_FIRST_SCREEN);
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_B);
 
     /* Populate 12 NPCs at various depth positions */
     for (i = 0u; i < STRESS_NPC_COUNT; i++) {
@@ -457,7 +457,7 @@ void NEOGEO_USER demo_stress_run(void)
 
         ng_debug_draw();
 
-        if ((t % 90u) == 0u) playSFX(SOUND_SFX_STRING_PHRASE);
+        if ((t % 90u) == 0u) playSFX(SOUND_SFX_9);
         if (demo_frame()) break;
     }
 

@@ -76,7 +76,7 @@ static void NEOGEO_USER depth_starfield(void)
     }
 
     demo_load_screen_palette(DEPTH_NPC_SCREEN);
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_B);
 
     for (t = 0u; t < 300u; t++) {
         for (i = 0u; i < STAR_COUNT; i++) {
@@ -128,7 +128,7 @@ static void NEOGEO_USER depth_perspective_floor(void)
     demo_fix_puts(2u, 1u, "VANISHING POINT  CONVERGENCE LINES", 1u);
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);
 
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_A);
 
     for (t = 0u; t < 300u; t++) {
         phase = (uint8_t)((t >> 4) & 1u);
@@ -160,7 +160,7 @@ static void NEOGEO_USER depth_perspective_floor(void)
         demo_fix_puts(4u,  13u, "/",  1u);
         demo_fix_puts(34u, 13u, "\\", 1u);
 
-        if ((t % 90u) == 0u) playSFX(SOUND_SFX_LOW_DRUM);
+        if ((t % 90u) == 0u) playSFX(SOUND_SFX_10);
         if (demo_frame()) break;
     }
 }
@@ -205,7 +205,7 @@ static void NEOGEO_USER depth_zsort(void)
         ng_sprite_group_set_active_rows(&grps[i], DEPTH_NPC_ROWS);
     }
 
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_B);
 
     for (t = 0u; t < 300u; t++) {
         uint8_t phase = (uint8_t)(t & 7u);
@@ -295,7 +295,7 @@ static void NEOGEO_USER depth_ground_plane(void)
         ng_sprite_group_set_pos(&strips[i], 0, strip_y[i]);
     }
 
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_A);
 
     tile_off = 0u;
     for (t = 0u; t < 300u; t++) {

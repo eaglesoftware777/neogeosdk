@@ -1,15 +1,15 @@
 [001] backgrounds/0.png
 mode=screen fit=contain anchor=center rule=cat_backgrounds
 category=backgrounds
-source=368x240 canvas=256x256 content=256x167 offset=(0,44)
-screen_id=1 palette_bank=16 tile_base=0 reserved_last=255 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=12 used_tiles=176 strips=16 active_rows=11
+source=1032x624 canvas=256x256 content=256x155 offset=(0,50)
+screen_id=1 palette_bank=16 tile_base=0 reserved_last=255 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=2 used_tiles=160 strips=16 active_rows=10
 note=background layer or multi-level backdrop
 
 [002] backgrounds/1.png
 mode=screen fit=contain anchor=center rule=cat_backgrounds
 category=backgrounds
-source=1032x624 canvas=256x256 content=256x155 offset=(0,50)
-screen_id=2 palette_bank=17 tile_base=256 reserved_last=511 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=2 used_tiles=160 strips=16 active_rows=10
+source=368x240 canvas=256x256 content=256x167 offset=(0,44)
+screen_id=2 palette_bank=17 tile_base=256 reserved_last=511 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=12 used_tiles=176 strips=16 active_rows=11
 note=background layer or multi-level backdrop
 
 [003] characters/sprite_001_r01_c01.png

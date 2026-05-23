@@ -73,7 +73,7 @@ static void NEOGEO_USER cam_cinematic(void)
     ng_camera_init(&cam);
     cam.mode = NG_CAM_CINEMATIC;
 
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_A);
 
     cam_x = 0;
     for (t = 0u; t < 240u; t++) {
@@ -141,7 +141,7 @@ static void NEOGEO_USER cam_follow_demo(void)
     px  = 160;
     pvx = 1;
 
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_A);
 
     for (t = 0u; t < 360u; t++) {
         int16_t screen_x;
@@ -183,7 +183,7 @@ static void NEOGEO_USER cam_follow_demo(void)
             demo_fix_puts(2u, 3u, buf, 0u);
         }
 
-        if ((t % 90u) == 0u) playSFX(SOUND_SFX_FOOTSTEP);
+        if ((t % 90u) == 0u) playSFX(SOUND_SFX_5);
         if (demo_frame()) break;
     }
 
@@ -219,7 +219,7 @@ static void NEOGEO_USER cam_shake_demo(void)
     ng_sprite_group_set_pos(&player, 140, (int16_t)(-34));
     ng_sprite_group_upload(&player);
 
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_B);
 
     for (t = 0u; t < 240u; t++) {
         int16_t sx;
@@ -230,7 +230,7 @@ static void NEOGEO_USER cam_shake_demo(void)
             amp = (uint8_t)(2u + (t / 60u) * 2u);
             if (amp > 8u) amp = 8u;
             ng_camera_shake(&cam, amp, 12u);
-            playSFX(SOUND_SFX_IMPACT_HIT);
+            playSFX(SOUND_SFX_8);
         }
 
         ng_camera_update(&cam, 0, 0, 0);
@@ -277,7 +277,7 @@ static void NEOGEO_USER cam_parallax_demo(void)
     ng_sprite_group_set_tile_stride(&near_layer, 16u);
     ng_sprite_group_set_scale(&near_layer, 0xFFu, 0xFFu);
 
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_A);
 
     scroll = 0;
     for (t = 0u; t < 300u; t++) {

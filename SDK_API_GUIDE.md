@@ -262,7 +262,7 @@ display_digit(20, 15, score, 0, 48);
 
 ```c
 soundPlayTitleMusic(0);
-soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+soundPlayGameLoop(SOUND_MUSIC_A);
 ```
 
 ### Manual layered sound scene
@@ -274,9 +274,9 @@ soundSetADPCMBVolume(0xB8);
 soundSetSSGVolume(0x08);
 soundSetFMVolume(0x0C);
 
-playSFX(SOUND_SFX_COIN_CHIME);
-playMusic(SOUND_MUSIC_SAMURAI_GAME_LOOP);
-playFMTrack(SOUND_FM_SAMURAI_MINOR);
+playSFX(SOUND_SFX_1);
+playMusic(SOUND_MUSIC_A);
+playFMTrack(SOUND_FM_B);
 ```
 
 ## Notes

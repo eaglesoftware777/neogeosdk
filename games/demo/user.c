@@ -172,7 +172,7 @@ void NEOGEO_USER COIN_SOUND (void) {
 	isZ80Ready();
 	soundSetADPCMAVolume(0x3C);
 	isZ80Ready();
-	playSFX(SOUND_SFX_COIN_CHIME);
+	playSFX(SOUND_SFX_1);
 	cyclexms(7);
 }
 
@@ -207,7 +207,7 @@ void  NEOGEO_USER EYE_CATCHER (void) {
 	soundSceneReset();
 	soundSetADPCMAVolume(0x00);
 	soundSetADPCMBVolume(0xBC);
-	playSFXB(SOUND_BED_EYECATCHER);
+	playSFXB(SOUND_BED_E);
 	showEyeCatcherMVS();
 	soundStopAll();
 }

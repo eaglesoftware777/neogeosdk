@@ -119,7 +119,7 @@ static void NEOGEO_USER pal_flash_sequence(void)
             default:                   ng_palfx_flash_blue (pal_slot, s_char_pal, 8u); break;
         }
 
-        playSFX(SOUND_SFX_IMPACT_HIT);
+        playSFX(SOUND_SFX_8);
         if (demo_wait(20u)) { ng_palfx_stop(pal_slot); return; }
     }
     ng_palfx_stop(pal_slot);
@@ -134,7 +134,7 @@ void NEOGEO_USER demo_palette_run(void)
     soundSceneReset();
     soundSetADPCMAVolume(0x3Cu);
 
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_B);
 
     /* Fade in */
     pal_show_char_with_fx("FADE IN  FROM BLACK", NG_PALFX_FADE_IN, 50u);

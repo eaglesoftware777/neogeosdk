@@ -21,14 +21,17 @@ Layout
 Track ID map (sdk/sound_ids.h)
 ------------------------------
 
-  SOUND_MUSIC_ENDING_CREDITS         = 0
-  SOUND_MUSIC_SAMURAI_GAME_LOOP      = 1
-  SOUND_MUSIC_SAMURAI_ENDING_SCENE   = 2
-  SOUND_MUSIC_SHOP_JINGLE            = 3
-  SOUND_MUSIC_SAMURAI_BATTLE_LOOP    = 4
-  SOUND_MUSIC_EAGLE_FANFARE          = 5
-  SOUND_MUSIC_WARRIOR_BATTLE         = 6
-  SOUND_MUSIC_BOSS_TENSION           = 7
+  SOUND_MUSIC_A = 0   /* 0_mml_example_a.mml */
+  SOUND_MUSIC_B = 1   /* 1_mml_example_b.mml */
+  SOUND_MUSIC_C = 2   /* 2_mml_example_c.mml */
+  SOUND_MUSIC_D = 3   /* 3_mml_example_d.mml */
+  SOUND_MUSIC_E = 4   /* 4_mml_example_e.mml */
+  SOUND_MUSIC_F = 5   /* 5_mml_example_f.mml */
+  SOUND_MUSIC_G = 6   /* 6_mml_example_g.mml */
+  SOUND_MUSIC_H = 7   /* 7_mml_example_h.mml */
+
+The indexed aliases SOUND_MUSIC_TRACK_1 .. SOUND_MUSIC_TRACK_8 map to
+SOUND_MUSIC_A .. SOUND_MUSIC_H.
 
 Build
 -----
@@ -39,11 +42,10 @@ Build
 The compiled music data lands in sound/driver/music_data.inc which the
 Z80 driver pulls in when assembling the M1 ROM.
 
-v1.3.1
-------
+Notes
+-----
 
-  - The demo's chapter 03 (SOUND) now uses MML-sequenced music
-    (SOUND_MUSIC_EAGLE_FANFARE) for its intro line instead of the raw
-    FM patch player; the patch path produced timbre without melody.
-  - Attract mode (games/demo/scenes/demo_title.c) loops EAGLE_FANFARE
+  - Demo chapter 03 (SOUND) uses MML-sequenced music (SOUND_MUSIC_E)
+    for its intro line instead of the raw FM patch player.
+  - Attract mode (games/demo/scenes/demo_title.c) loops SOUND_MUSIC_E
     for the full attract, fades out on coin-insert.

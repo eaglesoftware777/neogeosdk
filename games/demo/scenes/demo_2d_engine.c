@@ -112,13 +112,13 @@ static void NEOGEO_USER demo_walk_showcase(void)
 
     demo_prepare_scene("MAIN CHARACTER", "WALK / IDLE TILES FROM C ROM");
     demo_fix_puts(2, 7, "CENTERED / NO PER-FRAME CLEAR", 1);
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
-    playVoiceCue(SOUND_VOICE_GET_READY);
+    soundPlayGameLoop(SOUND_MUSIC_A);
+    playVoiceCue(SOUND_VOICE_1);
 
     for (t = 0; t < 9u * 30u; t++) {
         uint8_t frame = (uint8_t)(11u + (t / 30u));
         demo_main_frame(frame, DEMO_MAIN_X, DEMO_MAIN_Y, 0xFF, 0xFF);
-        if ((t % 60u) == 0u) playSFX(SOUND_SFX_FOOTSTEP);
+        if ((t % 60u) == 0u) playSFX(SOUND_SFX_5);
         if (demo_wait_short(1)) return;
     }
 }
@@ -129,13 +129,13 @@ static void NEOGEO_USER demo_blade_combo(void)
 
     demo_prepare_scene("SPECIAL MOVE 1", "BLADE COMBO: WHOOSH + IMPACT");
     demo_fix_puts(2, 7, "NO FLICKER: SAME SPRITE SLOTS", 1);
-    playVoiceCue(SOUND_VOICE_ATTACK);
+    playVoiceCue(SOUND_VOICE_2);
 
     for (t = 0; t < 15u * 24u; t++) {
         uint8_t frame = (uint8_t)(20u + (t / 24u));
         demo_main_frame(frame, DEMO_MAIN_ATTACK_X, DEMO_MAIN_ATTACK_Y, 0xFF, 0xFF);
-        if (t == 72u) playSFX(SOUND_SFX_BLADE_WHOOSH);
-        if (t == 216u) playSFX(SOUND_SFX_IMPACT_HIT);
+        if (t == 72u) playSFX(SOUND_SFX_7);
+        if (t == 216u) playSFX(SOUND_SFX_8);
         if (demo_wait_short(1)) return;
     }
 }
@@ -146,14 +146,14 @@ static void NEOGEO_USER demo_energy_combo(void)
 
     demo_prepare_scene("SPECIAL MOVE 2", "ENERGY / SLASH FX OVERLAY");
     demo_fix_puts(2, 7, "MAIN SPRITE + FX SPRITE GROUP", 1);
-    playSFX(SOUND_SFX_START_SLASH);
+    playSFX(SOUND_SFX_2);
 
     for (t = 0; t < 13u * 24u; t++) {
         uint8_t f = (uint8_t)(50u + (t / 24u));
         uint8_t main_f = (uint8_t)(20u + ((t / 24u) % 12u));
         demo_main_frame(main_f, DEMO_MAIN_ATTACK_X, DEMO_MAIN_ATTACK_Y, 0xFF, 0xFF);
         demo_fx_frame(f, DEMO_FX_X, DEMO_FX_Y);
-        if ((t % 96u) == 0u) playSFX(SOUND_SFX_STRING_PHRASE);
+        if ((t % 96u) == 0u) playSFX(SOUND_SFX_9);
         if (demo_wait_short(1)) return;
     }
 }
@@ -184,8 +184,8 @@ static void NEOGEO_USER demo_npc_scene(void)
 
     demo_prepare_scene("NPC WALK CAST", "HERO + 2 SMALL NPCs  LIVE ENGINE");
     demo_fix_puts(2, 7, "DEPTH SORTED  TILE CYCLE  HFLIP", 1);
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
-    playSFX(SOUND_SFX_STRING_PHRASE);
+    soundPlayGameLoop(SOUND_MUSIC_A);
+    playSFX(SOUND_SFX_9);
 
     ng_chars_init();
 
@@ -247,7 +247,7 @@ static void NEOGEO_USER demo_npc_scene(void)
         }
 
         ng_chars_draw();
-        if ((t % 108u) == 0u) playSFX(SOUND_SFX_FOOTSTEP);
+        if ((t % 108u) == 0u) playSFX(SOUND_SFX_5);
         if (demo_wait_short(1)) break;
     }
 
@@ -272,8 +272,8 @@ static void NEOGEO_USER demo_scale_matrix(void)
 
     demo_prepare_scene("HARDWARE SCALE MATRIX",
                        "4 SIZES LIVE  SCB2 XSCALE/YSCALE");
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
-    playSFX(SOUND_SFX_LOW_DRUM);
+    soundPlayGameLoop(SOUND_MUSIC_B);
+    playSFX(SOUND_SFX_10);
 
     /* Draw scale labels once on FIX (no per-frame rewrite) */
     demo_fix_puts(3,  9, "100%", 1);
@@ -298,7 +298,7 @@ static void NEOGEO_USER demo_scale_matrix(void)
             ng_sprite_group_upload(&g[i]);
         }
 
-        if ((t % 120u) == 0u) playSFX(SOUND_SFX_BLADE_WHOOSH);
+        if ((t % 120u) == 0u) playSFX(SOUND_SFX_7);
         if (demo_wait_short(1)) return;
     }
 }
@@ -318,7 +318,7 @@ static void NEOGEO_USER demo_palette_flash(void)
                        "ZERO-COST WHITE-OUT  PALETTE RAM SWAP");
     demo_fix_puts(2, 7, "WHOLE SPRITE INVERTS WITHOUT REWRITING", 1);
     demo_fix_puts(2, 8, "TILE DATA — JUST ONE PALETTE WRITE", 0);
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_B);
 
     for (i = 0; i < 16u; i++) white_pal[i] = 0x7FFFu;
     white_pal[0] = 0x0000u;  /* index 0 = transparent */
@@ -333,7 +333,7 @@ static void NEOGEO_USER demo_palette_flash(void)
         /* For 2 frames after each hit: overwrite palette → all white */
         if ((t % 90u) < 2u) {
             load_palettes(white_pal, (uintptr_t)(PALETTES + PALOFFSET * (uintptr_t)pal_bank));
-            if ((t % 90u) == 0u && t > 0u) playSFX(SOUND_SFX_IMPACT_HIT);
+            if ((t % 90u) == 0u && t > 0u) playSFX(SOUND_SFX_8);
         }
 
         if (demo_wait_short(1)) return;
@@ -357,7 +357,7 @@ static void NEOGEO_USER demo_live_depth_sort(void)
     demo_prepare_scene("LIVE ENGINE: Y-DEPTH SORT",
                        "LOWER ON SCREEN = NEARER = FRONT");
     demo_fix_puts(2, 7, "2 CHARS CROSS: SLOT SWAPS LIVE", 1);
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_A);
     demo_preload_npc_palette(0);
 
     ng_chars_init();
@@ -426,7 +426,7 @@ static void NEOGEO_USER demo_live_depth_sort(void)
 
         ng_chars_draw();
 
-        if ((t % 144u) == 0u) playSFX(SOUND_SFX_FOOTSTEP);
+        if ((t % 144u) == 0u) playSFX(SOUND_SFX_5);
         if (demo_wait_short(1)) break;
     }
 
@@ -463,8 +463,8 @@ static void NEOGEO_USER demo_perspective_crowd(void)
     demo_fix_puts(2, 7,  "BOTTOM = NEAR = LARGE", 1);
     demo_fix_puts(2, 8,  "TOP    = FAR  = SMALL", 2);
 
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
-    playSFX(SOUND_SFX_STRING_PHRASE);
+    soundPlayGameLoop(SOUND_MUSIC_B);
+    playSFX(SOUND_SFX_9);
     demo_preload_npc_palette(0);
     ng_chars_init();
 
@@ -511,7 +511,7 @@ static void NEOGEO_USER demo_perspective_crowd(void)
 
         ng_chars_draw();
 
-        if ((t % 90u) == 0u) playSFX(SOUND_SFX_FOOTSTEP);
+        if ((t % 90u) == 0u) playSFX(SOUND_SFX_5);
         if (demo_wait_short(1)) break;
     }
 
@@ -551,12 +551,12 @@ void NEOGEO_USER demo_2d_engine_advanced_animation(void)
     soundSceneReset();
     soundSetADPCMAVolume(0x3F);
     soundSetADPCMBVolume(0xB8);
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_B);
 
     for (t = 0; t < 360u; t++) {
         uint8_t frame = (uint8_t)(30u + ((t / 24u) % 20u));
         demo_main_frame(frame, DEMO_MAIN_ATTACK_X, DEMO_MAIN_ATTACK_Y, 0xFF, 0xFF);
-        if ((t % 120u) == 0u) playSFX(SOUND_SFX_IMPACT_HIT);
+        if ((t % 120u) == 0u) playSFX(SOUND_SFX_8);
         if (demo_wait_short(1)) break;
     }
 

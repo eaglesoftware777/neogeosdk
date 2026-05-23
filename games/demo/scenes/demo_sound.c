@@ -73,19 +73,19 @@ void NEOGEO_USER demo_sound_run(void)
     soundCancelFade();
 
     snd_label(7u, "FM", "ATTRACT FAST", 1u);
-    playFMTrack(SOUND_FM_ATTRACT_FAST);
+    playFMTrack(SOUND_FM_C);
     if (demo_wait(120u)) goto done;
 
     snd_label(8u, "FM", "DUEL SUSPENSE", 2u);
     soundStopMusic();
     snd_vbl(4u);
-    playFMTrack(SOUND_FM_DUEL_SUSPENSE);
+    playFMTrack(SOUND_FM_D);
     if (demo_wait(120u)) goto done;
 
     snd_label(9u, "FM", "VICTORY JINGLE", 0u);
     soundStopMusic();
     snd_vbl(4u);
-    playFMTrack(SOUND_FM_VICTORY_JINGLE);
+    playFMTrack(SOUND_FM_F);
     if (demo_wait(100u)) goto done;
 
     /* -- SSG Tracks -- */
@@ -97,16 +97,16 @@ void NEOGEO_USER demo_sound_run(void)
     snd_vbl(16u);
 
     snd_label(7u, "SSG", "ARCADE ALERT", 1u);
-    playSSGTrack(SOUND_SSG_ARCADE_ALERT);
+    playSSGTrack(SOUND_SSG_B);
     soundSetSSGPreset(1u);
     if (demo_wait(100u)) goto done;
 
     snd_label(8u, "SSG", "MENU LOOP", 2u);
-    playSSGTrack(SOUND_SSG_MENU_LOOP);
+    playSSGTrack(SOUND_SSG_A);
     if (demo_wait(100u)) goto done;
 
     snd_label(9u, "SSG", "INSERT COIN", 0u);
-    playSSGTrack(SOUND_SSG_INSERT_COIN);
+    playSSGTrack(SOUND_SSG_C);
     soundSetSSGPreset(0u);
     if (demo_wait(96u)) goto done;
 
@@ -118,14 +118,14 @@ void NEOGEO_USER demo_sound_run(void)
     soundSetADPCMBVolume(0x00u);
     snd_vbl(16u);
 
-    snd_label(7u,  "ADPCM-A", "INTRO TAIKO",   1u); playSFX(SOUND_SFX_INTRO_TAIKO);   if (demo_wait(72u)) goto done;
-    snd_label(8u,  "ADPCM-A", "TITLE GONG",    2u); playSFX(SOUND_SFX_TITLE_GONG);    if (demo_wait(72u)) goto done;
-    snd_label(9u,  "ADPCM-A", "BLADE WHOOSH",  1u); playSFX(SOUND_SFX_BLADE_WHOOSH);  if (demo_wait(72u)) goto done;
-    snd_label(10u, "ADPCM-A", "IMPACT HIT",    2u); playSFX(SOUND_SFX_IMPACT_HIT);    if (demo_wait(72u)) goto done;
-    snd_label(11u, "ADPCM-A", "STRING PHRASE", 1u); playSFX(SOUND_SFX_STRING_PHRASE); if (demo_wait(72u)) goto done;
-    snd_label(12u, "ADPCM-A", "LOW DRUM",      2u); playSFX(SOUND_SFX_LOW_DRUM);      if (demo_wait(72u)) goto done;
-    snd_label(13u, "ADPCM-A", "COIN CHIME",    1u); playSFX(SOUND_SFX_COIN_CHIME);    if (demo_wait(72u)) goto done;
-    snd_label(14u, "ADPCM-A", "SHORT SHOUT",   2u); playSFX(SOUND_SFX_SHORT_SHOUT);   if (demo_wait(72u)) goto done;
+    snd_label(7u,  "ADPCM-A", "INTRO TAIKO",   1u); playSFX(SOUND_SFX_4);   if (demo_wait(72u)) goto done;
+    snd_label(8u,  "ADPCM-A", "TITLE GONG",    2u); playSFX(SOUND_SFX_3);    if (demo_wait(72u)) goto done;
+    snd_label(9u,  "ADPCM-A", "BLADE WHOOSH",  1u); playSFX(SOUND_SFX_7);  if (demo_wait(72u)) goto done;
+    snd_label(10u, "ADPCM-A", "IMPACT HIT",    2u); playSFX(SOUND_SFX_8);    if (demo_wait(72u)) goto done;
+    snd_label(11u, "ADPCM-A", "STRING PHRASE", 1u); playSFX(SOUND_SFX_9); if (demo_wait(72u)) goto done;
+    snd_label(12u, "ADPCM-A", "LOW DRUM",      2u); playSFX(SOUND_SFX_10);      if (demo_wait(72u)) goto done;
+    snd_label(13u, "ADPCM-A", "COIN CHIME",    1u); playSFX(SOUND_SFX_1);    if (demo_wait(72u)) goto done;
+    snd_label(14u, "ADPCM-A", "SHORT SHOUT",   2u); playSFX(SOUND_SFX_6);   if (demo_wait(72u)) goto done;
 
     /* -- ADPCM-B Bed + Voices -- */
     demo_clear_scene();
@@ -136,15 +136,15 @@ void NEOGEO_USER demo_sound_run(void)
     snd_vbl(16u);
 
     snd_label(7u,  "ADPCM-B", "STAGE TWO BED", 1u);
-    playSFXB(SOUND_BED_STAGE_TWO);
+    playSFXB(SOUND_BED_C);
     if (demo_wait(120u)) goto done;
 
     snd_label(9u,  "VOICE", "GET READY", 2u);
-    playVoiceCue(SOUND_VOICE_GET_READY);
+    playVoiceCue(SOUND_VOICE_1);
     if (demo_wait(84u)) goto done;
 
     snd_label(11u, "VOICE", "ATTACK", 1u);
-    playVoiceCue(SOUND_VOICE_ATTACK);
+    playVoiceCue(SOUND_VOICE_2);
     if (demo_wait(84u)) goto done;
 
     /* -- Full Mix -- */
@@ -153,16 +153,16 @@ void NEOGEO_USER demo_sound_run(void)
     demo_caption("YM2610 SOUND DEMO", "FULL MIX", "FM + SSG + ADPCM-A + ADPCM-B");
     soundApplyMix(0x30u, 0xC0u, 0x08u, 0x08u);
     snd_vbl(4u);
-    playSFXB(SOUND_BED_STAGE_ONE);
-    playFMTrack(SOUND_FM_BASS_MOTIF);
-    playSSGTrack(SOUND_SSG_INSERT_COIN);
+    playSFXB(SOUND_BED_B);
+    playFMTrack(SOUND_FM_E);
+    playSSGTrack(SOUND_SSG_C);
     soundSetSSGPreset(1u);
     snd_label(7u, "BED",     "STAGE ONE",   1u);
     snd_label(8u, "FM",      "BASS MOTIF",  2u);
     snd_label(9u, "SSG",     "INSERT COIN", 1u);
     if (demo_wait(120u)) goto done;
     snd_label(11u, "ADPCM-A", "BLADE WHOOSH", 2u);
-    playSFX(SOUND_SFX_BLADE_WHOOSH);
+    playSFX(SOUND_SFX_7);
     demo_wait(96u);
 
 done:

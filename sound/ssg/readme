@@ -10,10 +10,10 @@ that the SDK loads with `soundSetSSGPreset(uint8_t preset)`.
 Track IDs (sdk/sound_ids.h)
 ---------------------------
 
-  SOUND_SSG_BATTLE_STING   = 0
-  SOUND_SSG_MENU_LOOP      = 1
-  SOUND_SSG_INSERT_COIN    = 2
-  SOUND_SSG_ARCADE_ALERT   = 3
+  SOUND_SSG_B   = 0
+  SOUND_SSG_A      = 1
+  SOUND_SSG_C    = 2
+  SOUND_SSG_B   = 3
 
 Presets are bound via:
 
@@ -31,6 +31,6 @@ v1.3.1
 ------
 
   - Chapter 18 of the unified demo (SSG ARCADE / EAGLE INVADERS) plays
-    SOUND_SSG_ARCADE_ALERT in a pure-SSG mix (FM volume 0).  Z80
+    SOUND_SSG_B in a pure-SSG mix (FM volume 0).  Z80
     commands are spaced by a vblank each so the driver can apply
     `soundApplyMix` + `soundSetSSGPreset` + `playSSGTrack` cleanly.

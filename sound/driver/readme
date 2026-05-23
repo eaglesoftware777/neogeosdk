@@ -7,12 +7,12 @@ v1.3.1 notes
   remains in place — only the LEADING `isZ80Ready()` is called, not
   the trailing one that triggered a perpetual NMI loop.
 - The unified demo's chap_sound (ch 03) replaces the noisy raw FM-patch
-  showcase with MML music (SOUND_MUSIC_EAGLE_FANFARE) for the intro
+  showcase with MML music (SOUND_MUSIC_E) for the intro
   line.  Z80 commands inside the demo are spaced by waitVbl() so the
   driver gets a full frame to apply mix / preset / track changes.
 - Galaxian / Eagle Invaders (ch 18) drives a pure-SSG mix:
   `soundApplyMix(0x20, 0x00, 0x0F, 0x00) + soundSetSSGPreset(2)`
-  before `playSSGTrack(SOUND_SSG_ARCADE_ALERT)`.
+  before `playSSGTrack(SOUND_SSG_B)`.
 
 Custom Z80 driver for the YM2610 (OPNB) chip.  Handles all four audio subsystems:
 ADPCM-A (6-channel samples), ADPCM-B (delta-T stream), SSG/MML (melody), FM (6 op channels).

@@ -95,13 +95,13 @@ static void NEOGEO_USER spr_walk_loop(void)
 
     spr_header("SPRITE GROUP CHAINS", "WALK CYCLE  ZERO SPLIT  DIRTY-FLAG");
     demo_fix_puts(2u, 7u, "16-STRIP GROUP  STICKY-BIT CHAINED", 1u);
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
-    playVoiceCue(SOUND_VOICE_GET_READY);
+    soundPlayGameLoop(SOUND_MUSIC_A);
+    playVoiceCue(SOUND_VOICE_1);
 
     for (t = 0u; t < (uint16_t)(SPR_WALK_COUNT * 30u); t++) {
         uint8_t frame = (uint8_t)(SPR_WALK_FIRST + (t / 30u));
         demo_draw_sprite_screen(frame, 1u, SPR_MAIN_X, SPR_MAIN_Y, 16u, 16u, 0xFFu, 0xFFu);
-        if ((t % 60u) == 0u) playSFX(SOUND_SFX_FOOTSTEP);
+        if ((t % 60u) == 0u) playSFX(SOUND_SFX_5);
         if (demo_wait(1u)) return;
     }
 }
@@ -122,8 +122,8 @@ static void NEOGEO_USER spr_scale_matrix(void)
     demo_fix_puts(27u, 9u, " 39%", 2u);
     demo_fix_puts(1u, 10u, "0xFF 0xC8 0x96 0x64", 0u);
 
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
-    playSFX(SOUND_SFX_LOW_DRUM);
+    soundPlayGameLoop(SOUND_MUSIC_B);
+    playSFX(SOUND_SFX_10);
 
     for (t = 0u; t < 300u; t++) {
         uint8_t frame = (uint8_t)((t / 18u) % NPC_FRAME_COUNT);
@@ -141,7 +141,7 @@ static void NEOGEO_USER spr_scale_matrix(void)
             ng_sprite_group_upload(&g[i]);
         }
 
-        if ((t % 120u) == 0u) playSFX(SOUND_SFX_BLADE_WHOOSH);
+        if ((t % 120u) == 0u) playSFX(SOUND_SFX_7);
         if (demo_wait(1u)) return;
     }
 }
@@ -164,8 +164,8 @@ static void NEOGEO_USER spr_crowd(void)
     demo_fix_puts(2u, 7u, "BOTTOM=NEAR=LARGE   TOP=FAR=SMALL", 1u);
     demo_fix_puts(2u, 8u, "380 SPRITES / ZERO SPLIT ALLOWED", 2u);
 
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
-    playSFX(SOUND_SFX_STRING_PHRASE);
+    soundPlayGameLoop(SOUND_MUSIC_B);
+    playSFX(SOUND_SFX_9);
     ng_chars_init();
 
     for (i = 0u; i < CROWD_N; i++) {
@@ -210,7 +210,7 @@ static void NEOGEO_USER spr_crowd(void)
 
         ng_chars_draw();
 
-        if ((t % 90u) == 0u) playSFX(SOUND_SFX_FOOTSTEP);
+        if ((t % 90u) == 0u) playSFX(SOUND_SFX_5);
         if (demo_wait(1u)) break;
     }
 
@@ -250,7 +250,7 @@ static void NEOGEO_USER spr_raw_api(void)
     demo_load_screen_palette(11u);
     soundSceneReset();
     soundSetADPCMAVolume(0x38u);
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_A);
     ng_sprite_group_init(&g, 1u, SPR_COLS, SPR_ROWS,
                          DEMO_SCREEN_TILE(11u),
                          DEMO_SCREEN_PALETTE(11u));
@@ -632,9 +632,9 @@ void NEOGEO_USER demo_sprites_parade(void)
     demo_clear_scene();
     soundSceneReset();
     soundSetADPCMAVolume(0x38u);
-    soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    soundPlayGameLoop(SOUND_MUSIC_A);
     demo_caption("MASCOT PARADE", "EYECATCHER ANIMATION FRAMES", "SLOW FRAME TIMING");
-    playVoiceCue(SOUND_VOICE_GET_READY);
+    playVoiceCue(SOUND_VOICE_1);
 
     for (i = 0u; i < PARADE_COUNT; i++) {
         demo_caption("MASCOT PARADE", "EYECATCHER ANIMATION FRAMES", "SLOW FRAME TIMING");
@@ -642,7 +642,7 @@ void NEOGEO_USER demo_sprites_parade(void)
         demo_load_screen_palette(s_parade_screens[i]);
         demo_draw_sprite_screen(s_parade_screens[i], 1u,
                                 72, 62, 16u, 16u, 0xFFu, 0xFFu);
-        if ((i & 3u) == 0u) playSFX(SOUND_SFX_STRING_PHRASE);
+        if ((i & 3u) == 0u) playSFX(SOUND_SFX_9);
         if (demo_wait(28u)) break;
     }
 
@@ -662,14 +662,14 @@ void NEOGEO_USER demo_sprites_walk(int loops, int delay_frames)
     soundSceneReset();
     soundSetADPCMAVolume(0x38u);
     demo_caption("SPRITE TILE PREVIEW", "CENTERED NGSpriteGroup DRAW", "NO PER-FRAME HARD CLEAR");
-    playVoiceCue(SOUND_VOICE_GET_READY);
+    playVoiceCue(SOUND_VOICE_1);
 
     frame = 0u;
     for (i = 0; i < loops; i++) {
         demo_draw_sprite_screen((uint8_t)(2u + frame), 1u,
                                 SPR_MAIN_X, SPR_MAIN_Y,
                                 16u, 16u, 0xFFu, 0xFFu);
-        if ((frame & 3u) == 0u) playSFX(SOUND_SFX_FOOTSTEP);
+        if ((frame & 3u) == 0u) playSFX(SOUND_SFX_5);
         if (demo_wait((uint16_t)(delay_frames > 0 ? delay_frames : 24))) break;
         frame++;
         if (frame >= 7u) frame = 0u;

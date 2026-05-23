@@ -387,7 +387,7 @@ static uint8_t NEOGEO_USER chap_title(void)
 
     chap_header(1u, "TITLE", "ATTRACT REEL");
     demo_fix_puts(2u, 2u, "TITLE ART + EYECATCHER", 1u);
-    snd_cross_to(SOUND_MUSIC_EAGLE_FANFARE);
+    snd_cross_to(SOUND_MUSIC_E);
 
     for (t = 0u; t < 360u; t++) {
         uint8_t frame;
@@ -450,7 +450,7 @@ static uint8_t NEOGEO_USER chap_fix(void)
         demo_fix_puts(2u, 27u, "A: NEXT",  2u);
     }
     demo_fix_puts(2u, 2u, "FIX = 40x32 CELL OVERLAY", 1u);
-    snd_cross_to(SOUND_MUSIC_SHOP_JINGLE);
+    snd_cross_to(SOUND_MUSIC_G);
 
     demo_fix_puts(2u,  6u, "PALETTE 0  STANDARD",   0u);
     demo_fix_puts(2u,  7u, "PALETTE 1  ACCENT",     1u);
@@ -515,9 +515,9 @@ static uint8_t NEOGEO_USER chap_sound(void)
      *     ADPCM bed, so we don't use it as ongoing music.
      */
     static const uint8_t s_sfx[6] = {
-        SOUND_SFX_COIN_CHIME, SOUND_SFX_BLADE_WHOOSH,
-        SOUND_SFX_IMPACT_HIT, SOUND_SFX_FOOTSTEP,
-        SOUND_SFX_STRING_PHRASE, SOUND_SFX_LOW_DRUM
+        SOUND_SFX_1, SOUND_SFX_7,
+        SOUND_SFX_8, SOUND_SFX_5,
+        SOUND_SFX_9, SOUND_SFX_10
     };
     static const char * const s_sfx_names[6] = {
         "COIN CHIME      ", "BLADE WHOOSH    ",
@@ -601,7 +601,7 @@ static uint8_t NEOGEO_USER chap_sound(void)
     demo_fix_puts(2u, 5u, "5. DRIVER FUNCTIONS               ", 2u);
     demo_fix_puts(2u, 6u, "TEMP BED for vol/fade demo        ", 0u);
     soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
-    playSFXB(SOUND_BED_TITLE_THEME);           snd_step();
+    playSFXB(SOUND_BED_A);           snd_step();
     if (uwait(40u)) return 1u;
 
     demo_fix_puts(2u, 18u, "soundSetADPCMBVolume sweep        ", 1u);
@@ -622,9 +622,9 @@ static uint8_t NEOGEO_USER chap_sound(void)
     demo_fix_puts(2u, 18u, "soundStopMusic + playSFX          ", 1u);
     soundStopMusic(); snd_step();
     if (uwait(10u)) return 1u;
-    playSFX(SOUND_SFX_COIN_CHIME); snd_step();
+    playSFX(SOUND_SFX_1); snd_step();
     if (uwait(36u)) return 1u;
-    playSFX(SOUND_SFX_IMPACT_HIT); snd_step();
+    playSFX(SOUND_SFX_8); snd_step();
     if (uwait(36u)) return 1u;
 
     demo_fix_puts(2u, 18u, "soundStopAll                      ", 1u);
@@ -647,7 +647,7 @@ static uint8_t NEOGEO_USER chap_sprite(void)
     demo_fix_puts(2u, 2u, "SCREEN ASSETS REEL", 1u);
     demo_fix_puts(2u, 3u, "IDS 101..107",       0u);
 
-    snd_cross_to(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    snd_cross_to(SOUND_MUSIC_B);
 
     for (t = 0u; t < 252u; t++) {
         uint8_t frame = screens[(t / 36u) % count];
@@ -737,7 +737,7 @@ static uint8_t NEOGEO_USER chap_chars(void)
     chap_header(5u, "CHARACTERS", "FULL WARRIOR MOVESET");
     demo_fix_puts(2u, 2u, "STAND -> WALK -> STRIKE -> SPECIAL", 1u);
     demo_fix_puts(2u, 3u, "DEMO_DRAW_SPRITE_SCREEN PIPELINE",    0u);
-    snd_cross_to(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    snd_cross_to(SOUND_MUSIC_A);
 
     hero_place(160, 112);   /* centre of screen */
 
@@ -775,10 +775,10 @@ static uint8_t NEOGEO_USER chap_chars(void)
 
         hero_draw(frame);
 
-        if (phase == 1u && (t % 24u) == 0u) playSFX(SOUND_SFX_FOOTSTEP);
-        if (phase == 2u && (t %  6u) == 0u) playSFX(SOUND_SFX_BLADE_WHOOSH);
-        if (phase == 3u && (t % 12u) == 0u) playSFX(SOUND_SFX_STRING_PHRASE);
-        if (phase == 4u && (t % 16u) == 0u) playSFX(SOUND_SFX_LOW_DRUM);
+        if (phase == 1u && (t % 24u) == 0u) playSFX(SOUND_SFX_5);
+        if (phase == 2u && (t %  6u) == 0u) playSFX(SOUND_SFX_7);
+        if (phase == 3u && (t % 12u) == 0u) playSFX(SOUND_SFX_9);
+        if (phase == 4u && (t % 16u) == 0u) playSFX(SOUND_SFX_10);
 
         if (uframe()) return 1u;
     }
@@ -839,7 +839,7 @@ static uint8_t NEOGEO_USER chap_physics(void)
 
     demo_fix_puts(2u, 2u, "NGPHYSICS  GRAVITY 0.125",  1u);
     demo_fix_puts(2u, 3u, "FLOOR Y=184  EAGLE FALLS",      0u);
-    snd_cross_to(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    snd_cross_to(SOUND_MUSIC_A);
 
     /*
      * Visible floor bar — drawn at FIX row 23 (pixel y 184..191).
@@ -962,7 +962,7 @@ static uint8_t NEOGEO_USER chap_camera(void)
     chap_header(7u, "CAMERA", "FOLLOW  DEAD ZONE  SHAKE");
     demo_fix_puts(2u, 2u, "WARRIOR WALKS  CAMERA SCROLLS", 1u);
     demo_fix_puts(2u, 3u, "T=120, T=240 -> SHAKE",         0u);
-    snd_cross_to(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    snd_cross_to(SOUND_MUSIC_A);
 
     ng_camera_init(&cam);
     ng_camera_set_bounds(&cam, 0, 0, 640, 224);
@@ -981,8 +981,8 @@ static uint8_t NEOGEO_USER chap_camera(void)
         frame = (vx != 0) ? s_hero_walk[(t / 6u) % 8u]
                           : s_hero_stand[(t / 12u) % 8u];
 
-        if (t == 120u) { ng_camera_shake(&cam, 4u, 12u); playSFX(SOUND_SFX_IMPACT_HIT); }
-        if (t == 240u) { ng_camera_shake(&cam, 3u, 10u); playSFX(SOUND_SFX_IMPACT_HIT); }
+        if (t == 120u) { ng_camera_shake(&cam, 4u, 12u); playSFX(SOUND_SFX_8); }
+        if (t == 240u) { ng_camera_shake(&cam, 3u, 10u); playSFX(SOUND_SFX_8); }
 
         ng_camera_update(&cam, s_hero_x, U_FLOOR_Y, vx);
         bg_x = (int16_t)(32 - (int16_t)((uint16_t)cam.x & 0x00FFu));
@@ -1028,7 +1028,7 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
     chap_header(8u, "PALETTE FX", "GEOMETRY IN MIDDLE  BG UNTOUCHED");
     demo_fix_puts(2u, 2u, "DIAMOND / RING / CHEVRONS USE PAL 15", 1u);
     demo_fix_puts(2u, 3u, "BG KEEPS ITS AUTHORED COLOURS",        0u);
-    snd_cross_to(SOUND_MUSIC_SHOP_JINGLE);
+    snd_cross_to(SOUND_MUSIC_G);
 
     /* BG drawn ONCE; its palette stays static for the whole chapter */
     draw_background(2u, 32, 16);
@@ -1121,7 +1121,7 @@ static uint8_t NEOGEO_USER chap_particles(void)
     demo_fix_puts(2u, 2u, "WARRIOR PERFORMS A SPECIAL", 1u);
     demo_fix_puts(2u, 3u, "PARTICLES SYNC TO ANIM FRAMES",0u);
     demo_fix_puts(2u, 4u, "ACTIVE: ",                    2u);
-    snd_cross_to(SOUND_MUSIC_BOSS_TENSION);
+    snd_cross_to(SOUND_MUSIC_F);
 
     hero_place(160, 112);
     demo_load_screen_palette(spark_id);
@@ -1163,7 +1163,7 @@ static uint8_t NEOGEO_USER chap_particles(void)
                                   -(1L << (NG_FP_SHIFT - 1)),
                                   20u, spark_tile, spark_pal, 1u, 1u);
             }
-            if (t == 8u) playSFX(SOUND_SFX_STRING_PHRASE);
+            if (t == 8u) playSFX(SOUND_SFX_9);
         } else if (t < 360u) {
             hero_frame = s_hero_strike[((t - 160u) / 6u) % 8u];
             /* sparks burst on the sword-arc beats */
@@ -1186,14 +1186,14 @@ static uint8_t NEOGEO_USER chap_particles(void)
                                   22u, (uint16_t)(spark_tile + 2u),
                                   spark_pal, 1u, 1u);
             }
-            if (t == 160u) playSFX(SOUND_SFX_BLADE_WHOOSH);
-            if (t == 240u) playSFX(SOUND_SFX_IMPACT_HIT);
+            if (t == 160u) playSFX(SOUND_SFX_7);
+            if (t == 240u) playSFX(SOUND_SFX_8);
         } else {
             hero_frame = s_hero_specB[((t - 360u) / 10u) % 6u];
             /* finisher: explosion at hero, smoke ring */
             if (t == 360u) {
                 uint8_t k;
-                playSFX(SOUND_SFX_LOW_DRUM);
+                playSFX(SOUND_SFX_10);
                 ng_particle_spawn(NG_PART_EXPLOSION, NG_PART_PRI_CRITICAL,
                                   s_hero_x, s_hero_y, 0, 0, 36u,
                                   spark_tile, spark_pal, 1u, 1u);
@@ -1238,7 +1238,7 @@ static uint8_t NEOGEO_USER chap_feedback(void)
     chap_header(10u, "FEEDBACK", "SHAKE  PARTICLE IMPACTS");
     demo_fix_puts(2u, 2u, "WARRIOR TAKES HITS", 1u);
     demo_fix_puts(2u, 3u, "4 INTENSITIES OVER 9 SECONDS",     0u);
-    snd_cross_to(SOUND_MUSIC_BOSS_TENSION);
+    snd_cross_to(SOUND_MUSIC_F);
 
     ng_camera_init(&cam);
     ng_camera_set_bounds(&cam, 0, 0, 320, 224);
@@ -1258,22 +1258,22 @@ static uint8_t NEOGEO_USER chap_feedback(void)
          * on the body — that's where it reads visually as a "hit". */
         if (t == 60u && fired < 1u) {
             ng_feedback_shake(&cam, 1u, 8u);
-            playSFX(SOUND_SFX_IMPACT_HIT);
+            playSFX(SOUND_SFX_8);
             spawn_impact_burst(160, 48, spark_tile, spark_pal, 1u);
             demo_fix_puts(2u, 5u, "FIRED: LIGHT   ", 1u); fired = 1u;
         } else if (t == 180u && fired < 2u) {
             ng_feedback_shake(&cam, 2u, 12u);
-            playSFX(SOUND_SFX_IMPACT_HIT);
+            playSFX(SOUND_SFX_8);
             spawn_impact_burst(160, 48, spark_tile, spark_pal, 2u);
             demo_fix_puts(2u, 5u, "FIRED: MEDIUM  ", 2u); fired = 2u;
         } else if (t == 320u && fired < 3u) {
             ng_feedback_shake(&cam, 3u, 16u);
-            playSFX(SOUND_SFX_IMPACT_HIT);
+            playSFX(SOUND_SFX_8);
             spawn_impact_burst(160, 48, spark_tile, spark_pal, 3u);
             demo_fix_puts(2u, 5u, "FIRED: HEAVY   ", 2u); fired = 3u;
         } else if (t == 460u && fired < 4u) {
             ng_feedback_shake(&cam, 4u, 20u);
-            playSFX(SOUND_SFX_LOW_DRUM);
+            playSFX(SOUND_SFX_10);
             spawn_impact_burst(160, 48, spark_tile, spark_pal, 4u);
             demo_fix_puts(2u, 5u, "FIRED: BOSS    ", 2u); fired = 4u;
         }
@@ -1312,7 +1312,7 @@ static uint8_t NEOGEO_USER chap_depthfx(void)
     chap_header(11u, "DEPTH FX", "WARRIORS AT VARYING Z");
     demo_fix_puts(2u, 2u, "3 WARRIORS  3 DEPTHS  ENGINE SCALE", 1u);
     demo_fix_puts(2u, 3u, "DEPTH STRIPES ON FIX  LABELS BELOW", 0u);
-    snd_cross_to(SOUND_MUSIC_SAMURAI_ENDING_SCENE);
+    snd_cross_to(SOUND_MUSIC_C);
 
     /*
      * Static depth stripes — 4 horizontal bands on rows 4..7 each in
@@ -1418,7 +1418,7 @@ static uint8_t NEOGEO_USER chap_npcs(void)
 
     chap_header(12u, "NPCS", "PATROL + THINK CALLBACK");
     demo_fix_puts(2u, 3u, "ENGINE THINK FN HANDLES VX", 0u);
-    snd_cross_to(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    snd_cross_to(SOUND_MUSIC_B);
 
     ng_npcs_init();
     reset_palette_memo();
@@ -1503,7 +1503,7 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
     chap_header(13u, "MINI-GAME", "ARROWS MOVE   B STRIKE");
     demo_fix_puts(2u, 2u, "HOLD LEFT/RIGHT TO RUN", 1u);
     demo_fix_puts(2u, 3u, "B = STRIKE THE COLOURED TARGET", 0u);
-    snd_cross_to(SOUND_MUSIC_WARRIOR_BATTLE);
+    snd_cross_to(SOUND_MUSIC_D);
 
     /* BG drawn ONCE at slot 300 (back).  Hero (slot 1) sits in front. */
     draw_background(2u, 32, 16);
@@ -1550,7 +1550,7 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
         if ((pressed & BUTTON_B) && hero_state != 3u) {
             hero_state = 3u;
             state_t = 0u;
-            playSFX(SOUND_SFX_BLADE_WHOOSH);
+            playSFX(SOUND_SFX_7);
         }
         (void)vy;     /* still declared for the switch case below */
 
@@ -1617,7 +1617,7 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
                     uint8_t r;
                     score = (uint16_t)(score + 10u);
                     enemy_hits++;
-                    playSFX(SOUND_SFX_IMPACT_HIT);
+                    playSFX(SOUND_SFX_8);
                     spawn_impact_burst(tx_px, ty_px, spark_tile, spark_pal, 3u);
                     /* CLEAN the FIX cells of the destroyed target */
                     for (r = 0u; r < TARGET_H; r++) {
@@ -1744,7 +1744,7 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
         }
 
         if (hero_state == 1u && hx_old != hero_world_x && (t & 31u) == 0u)
-            playSFX(SOUND_SFX_FOOTSTEP);
+            playSFX(SOUND_SFX_5);
 
         /* HUD */
         digit3(buf, score);
@@ -1792,7 +1792,7 @@ static uint8_t NEOGEO_USER chap_joystick(void)
     chap_header(14u, "JOYSTICK", "LIVE INPUT  TWO-BUTTON SPECIALS");
     demo_fix_puts(2u, 2u, "ARROWS MOVE  B STRIKE  C JUMP",   1u);
     demo_fix_puts(2u, 3u, "B+C TOGETHER SPECIAL  B+D FINISHER", 0u);
-    snd_cross_to(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+    snd_cross_to(SOUND_MUSIC_A);
 
     ng_joystick_init();
 
@@ -1892,19 +1892,19 @@ static uint8_t NEOGEO_USER chap_joystick(void)
         if (special_t == 0u && strike_t == 0u) {
             if (combo_bd && (pressed & (BUTTON_B | BUTTON_D))) {
                 special_t = 36u;
-                playSFX(SOUND_SFX_LOW_DRUM);
+                playSFX(SOUND_SFX_10);
             } else if (combo_bc && (pressed & (BUTTON_B | BUTTON_C))) {
                 special_t = 30u;
-                playSFX(SOUND_SFX_STRING_PHRASE);
+                playSFX(SOUND_SFX_9);
             } else if (pressed & BUTTON_B) {
                 strike_t = 24u;
-                playSFX(SOUND_SFX_BLADE_WHOOSH);
+                playSFX(SOUND_SFX_7);
             }
         }
 
         if ((pressed & BUTTON_C) && hero_world_y >= HERO_GROUND_Y) {
             vy = -7;
-            playSFX(SOUND_SFX_SHORT_SHOUT);
+            playSFX(SOUND_SFX_6);
         }
         (void)released;
 
@@ -1919,7 +1919,7 @@ static uint8_t NEOGEO_USER chap_joystick(void)
             if (dy < 0) dy = (int16_t)(-dy);
             if (dy < 64 && target_cx_px >= reach_left && target_cx_px <= reach_right) {
                 if (hits < 99u) hits++;
-                playSFX(SOUND_SFX_IMPACT_HIT);
+                playSFX(SOUND_SFX_8);
                 /* Visual: re-draw the target with a flash palette this frame */
                 {
                     uint8_t r, c;
@@ -2007,7 +2007,7 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
     chap_header(15u, "SCROLL LEVEL", "WORLD 768  CAM FOLLOWS");
     demo_fix_puts(2u, 2u, "WARRIOR RUNS LEFT-TO-RIGHT", 1u);
     demo_fix_puts(2u, 3u, "JUMP ARC EVERY 3 SEC",       0u);
-    snd_cross_to(SOUND_MUSIC_SAMURAI_BATTLE_LOOP);
+    snd_cross_to(SOUND_MUSIC_B);
 
     ng_camera_init(&cam);
     ng_camera_set_bounds(&cam, 0, 0, 768, 224);
@@ -2042,7 +2042,7 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
         s_hero_y = (int16_t)(112 - jump);
         hero_draw(frame);
 
-        if ((t % 90u) == 0u) playSFX(SOUND_SFX_FOOTSTEP);
+        if ((t % 90u) == 0u) playSFX(SOUND_SFX_5);
         if (uframe()) {
             ng_level_set_scroll(0, 0);
             return 1u;
@@ -2072,7 +2072,7 @@ static uint8_t NEOGEO_USER chap_render3d(void)
     chap_header(16u, "3D EFFECT", "PERSPECTIVE ROAD");
     demo_fix_puts(2u, 2u, "FULL-WIDTH FIX STRIPS",       1u);
     demo_fix_puts(2u, 3u, "VANISHING-POINT GRADIENT",    0u);
-    snd_cross_to(SOUND_MUSIC_BOSS_TENSION);
+    snd_cross_to(SOUND_MUSIC_F);
 
     /*
      * Lay out the road ONCE — 18 strips from horizon (row 8) to
@@ -2140,7 +2140,7 @@ static uint8_t NEOGEO_USER chap_render3d(void)
             }
             if ((prow & 1u) == 0u) demo_fix_puts(centre, prow, "I", 1u);
         }
-        if ((t % 90u) == 0u) playSFX(SOUND_SFX_LOW_DRUM);
+        if ((t % 90u) == 0u) playSFX(SOUND_SFX_10);
         if (uframe()) return 1u;
     }
     return 0u;
@@ -2157,7 +2157,7 @@ static uint8_t NEOGEO_USER chap_render2d(void)
     chap_header(17u, "2D RENDER", "FIX BLITTER PATTERNS");
     demo_fix_puts(2u, 2u, "MOVING BAR  WAVEFORM  BOX",   1u);
     demo_fix_puts(2u, 3u, "CACHED CLEARS  LOW CPU",      0u);
-    snd_cross_to(SOUND_MUSIC_SHOP_JINGLE);
+    snd_cross_to(SOUND_MUSIC_G);
 
     demo_fix_puts(8u, 12u, "+----------------------+", 2u);
     demo_fix_puts(8u, 13u, "|  SOFTWARE 2D LAYER   |", 1u);
@@ -2306,7 +2306,7 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
     soundSceneReset();                         snd_step();
     soundApplyMix(0x20u, 0x00u, 0x0Fu, 0x00u); snd_step();
     soundSetSSGPreset(2u);                     snd_step();
-    playSSGTrack(SOUND_SSG_ARCADE_ALERT);      snd_step();
+    playSSGTrack(SOUND_SSG_B);      snd_step();
 
     ng_joystick_init();
 
@@ -2356,7 +2356,7 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
                         pb_x[i] = (uint8_t)(ship_x + 1u);
                         pb_y[i] = (uint8_t)(SHIP_ROW - 2u);
                         pb_act[i] = 1u;
-                        playSFX(SOUND_SFX_BLADE_WHOOSH);
+                        playSFX(SOUND_SFX_7);
                         break;
                     }
                 }
@@ -2410,7 +2410,7 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
                         if (j >= 5u) break;
                     }
                     dive_idx = DIVE_NONE;
-                    playSFX(SOUND_SFX_IMPACT_HIT);
+                    playSFX(SOUND_SFX_8);
                     if (pb_lx[i] != 0xFFu)
                         demo_fix_puts(pb_lx[i], pb_ly[i], " ", 0u);
                     pb_act[i] = 0u;
@@ -2431,7 +2431,7 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
                     demo_fix_puts((uint8_t)(enemy_cx[j] - drift),
                                   enemy_cy[j], "   ", 0u);
                     score = (uint16_t)(score + pts);
-                    playSFX(SOUND_SFX_IMPACT_HIT);
+                    playSFX(SOUND_SFX_8);
                     for (d = 0u; d < POPUP_MAX; d++) {
                         if (!pop_ttl[d]) {
                             pop_cx[d] = enemy_cx[j]; pop_cy[d] = enemy_cy[j];
@@ -2478,7 +2478,7 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
                     demo_fix_puts(eb_lx[i], eb_ly[i], " ", 0u);
                 eb_act[i] = 0u;
                 if (lives > 0u) lives--;
-                playSFX(SOUND_SFX_LOW_DRUM);
+                playSFX(SOUND_SFX_10);
                 /* mini debris from ship */
                 {
                     uint8_t d;
@@ -2521,7 +2521,7 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
                         dive_last_cx = 0xFFu;
                         /* clear from formation while diving */
                         demo_fix_puts(enemy_cx[idx], enemy_cy[idx], "   ", 0u);
-                        playSFX(SOUND_SFX_STRING_PHRASE);
+                        playSFX(SOUND_SFX_9);
                         break;
                     }
                 }
@@ -2748,7 +2748,7 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
     chap_header(19u, "GARDEN 3D", "PSEUDO-3D SPRITE SCALING WALK");
     demo_fix_puts(2u, 2u, "TREES APPROACH AS YOU WALK",     1u);
     demo_fix_puts(2u, 3u, "L/R MOVE  HARDWARE-SCALE TREES", 0u);
-    snd_cross_to(SOUND_MUSIC_SAMURAI_ENDING_SCENE);
+    snd_cross_to(SOUND_MUSIC_C);
 
     /*
      * Perspective floor on the FIX layer.  We paint rows 12..26 with a
@@ -2856,7 +2856,7 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
         (void)hero_flip;
 
         if ((t & 31u) == 0u && (down & (JOY_LEFT | JOY_RIGHT)))
-            playSFX(SOUND_SFX_FOOTSTEP);
+            playSFX(SOUND_SFX_5);
 
         if (uframe()) return 1u;
     }
@@ -2869,7 +2869,7 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
 static uint8_t NEOGEO_USER chap_credits(void)
 {
     chap_header(20u, "CREDITS", "EAGLE SOFTWARE 2026");
-    snd_cross_to(SOUND_MUSIC_ENDING_CREDITS);
+    snd_cross_to(SOUND_MUSIC_H);
 
     demo_fix_puts(2u,  4u, "ENGINE   SDK/2D_ENGINE_PLUS", 1u);
     demo_fix_puts(2u,  6u, "WEB      EAGLESOFTWARE.BIZ",  0u);
@@ -2919,7 +2919,7 @@ static uint8_t NEOGEO_USER chap_fix_fx(void)
     chap_header(21u, "FIX FX", "ANIMATED FIX-ONLY  Z MOTIF");
     demo_fix_puts(2u, 2u, "BIG Z PATTERN  PALETTE CYCLES",   1u);
     demo_fix_puts(2u, 3u, "STROKES LIGHT UP IN SEQUENCE",    0u);
-    snd_cross_to(SOUND_MUSIC_SHOP_JINGLE);
+    snd_cross_to(SOUND_MUSIC_G);
 
     for (t = 0u; t < 720u; t++) {
         uint16_t stage = (uint16_t)(t % 240u);

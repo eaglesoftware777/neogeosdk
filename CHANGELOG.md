@@ -83,8 +83,8 @@ Release date: 2026-05-22
 ### Attract Mode
 
 - `chap_title_attract_reel` (`games/demo/scenes/demo_title.c`) now loops
-  `SOUND_MUSIC_EAGLE_FANFARE` for the full attract, fades out on
-  coin-insert + plays `SOUND_SFX_COIN_CHIME` for audible feedback.
+  `SOUND_MUSIC_E` for the full attract, fades out on
+  coin-insert + plays `SOUND_SFX_1` for audible feedback.
 - Teaser banners describe the real unified-demo content.
 
 ### Validation
