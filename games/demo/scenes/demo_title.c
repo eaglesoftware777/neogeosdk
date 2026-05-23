@@ -176,27 +176,18 @@ void NEOGEO_USER demo_title_attract_reel(void)
                               uint16_t, uint16_t);
     /*
      * screens/<N>.png are imported by artbox with screen_id = 100 + N,
-     * so the slideshow uses showScreen101 .. showScreen107.  Using
-     * showScreen1..7 would actually draw the BG art from in/backgrounds/.
+     * so the slideshow uses showScreen101 .. showScreen107.
      */
     static const show_fn_t s_show[7] = {
         showScreen101, showScreen102, showScreen103, showScreen104,
         showScreen105, showScreen106, showScreen107
     };
-    static const char *const s_labels[7] = {
-        "SCENE 1", "SCENE 2", "SCENE 3", "SCENE 4",
-        "SCENE 5", "SCENE 6", "SCENE 7"
-    };
-    /*
-     * Walking-girl frames — the 12 row-1 sprites of the character sheet
-     * (screen_id 3..14 = sprite_001 .. sprite_012).  Skipping idle-ish
-     * cels gives a smoother walk cycle.
-     */
     static const uint8_t s_walk[8] =
         { 3u, 4u, 5u, 7u, 8u, 9u, 11u, 12u };
     uint8_t  slide;
     uint16_t hold;
     uint16_t fix_pal[16];
+    uint8_t  user_started = 0u;
 
     demo_clear_scene();
     setBACKDROP(BLACK);
@@ -211,80 +202,96 @@ void NEOGEO_USER demo_title_attract_reel(void)
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
 
-    soundSceneReset();   waitVbl();
-    soundSetADPCMAVolume(0x3Cu);  waitVbl();
-    soundSetADPCMBVolume(0xBCu);  waitVbl();
-    soundSetSSGVolume(0x00u);     waitVbl();
-    soundSetFMVolume(0x00u);      waitVbl();
-    soundPlayGameLoop(SOUND_MUSIC_E);
-    waitVbl();
+    /*
+     * Outer "restart" loop — the entire attract reel re-arms its music
+     * + slide-0 every 900 frames (~15 s).  User START / CREDIT exits
+     * the inner loop AND the outer loop.
+     */
+    while (!user_started) {
+        soundSceneReset();   waitVbl();
+        soundSetADPCMAVolume(0x3Cu);  waitVbl();
+        soundSetADPCMBVolume(0xBCu);  waitVbl();
+        soundSetSSGVolume(0x00u);     waitVbl();
+        soundSetFMVolume(0x00u);      waitVbl();
+        soundPlayGameLoop(SOUND_MUSIC_E);
+        waitVbl();
 
-    slide = 0u;
-    hold  = 0u;
+        slide = 0u;
+        hold  = 0u;
 
-    /* Initial slide */
-    demo_safe_show(s_show[slide], 32, 24, 0xF, 0xAF, 16,
-                   BLACK, DEMO_SHOWSCREEN_BASE);
-    demo_fix_puts(7u, 2u, "NEO GEO SDK V1.3.0", 2u);
-    demo_fix_puts(2u, 4u, "UNIFIED DEMO PRESENTS:", 1u);
-    demo_fix_puts(2u, 24u, "                                      ", 0u);
-    demo_fix_puts(2u, 24u, s_labels[slide], 1u);
+        /*
+         * Initial slide — demo_safe_show is used here only for the
+         * FIRST draw (resets sprite-window cache and hides any stale
+         * sprites from a previous chapter).  Subsequent slide advances
+         * call the show fn DIRECTLY so the walking girl's window cache
+         * is preserved and she keeps walking without a hiccup.
+         */
+        demo_safe_show(s_show[slide], 32, 24, 0xF, 0xAF, 16,
+                       BLACK, DEMO_SHOWSCREEN_BASE);
+        demo_fix_puts(7u, 2u, "NEO GEO SDK V1.3.0", 2u);
+        demo_fix_puts(2u, 4u, "UNIFIED DEMO PRESENTS:", 1u);
 
-    for (;;) {
+        while (hold < 900u) {
 #ifndef NG_AES
-        if (NEO_REGISTER8(NGO_START_FLAG)) break;
-        if (read_p1credit() > 0) {
-            playSFX(SOUND_SFX_1);
-            break;
-        }
+            if (NEO_REGISTER8(NGO_START_FLAG)) { user_started = 1u; break; }
+            if (read_p1credit() > 0) {
+                playSFX(SOUND_SFX_1);
+                user_started = 1u;
+                break;
+            }
 #else
-        if (NEO_REGISTER8(NGO_START_FLAG)) break;
-        if (NEO_REGISTER8(BIOS_P1CHANGE) & (uint8_t)(1u << CNT_A)) break;
+            if (NEO_REGISTER8(NGO_START_FLAG)) { user_started = 1u; break; }
+            if (NEO_REGISTER8(BIOS_P1CHANGE) & (uint8_t)(1u << CNT_A)) {
+                user_started = 1u;
+                break;
+            }
 #endif
 
-        if ((hold & 0x1Fu) < 16u) {
-            demo_fix_puts(13u, 26u, "INSERT COIN", 1u);
-        } else {
-            demo_fix_puts(13u, 26u, "           ", 0u);
+            if ((hold & 0x1Fu) < 16u) {
+                demo_fix_puts(13u, 26u, "INSERT COIN", 1u);
+            } else {
+                demo_fix_puts(13u, 26u, "           ", 0u);
+            }
+
+            /* Walking girl — high sprite slot (60) draws on top of the
+             * slideshow (slots 1..16).  X wraps continuously. */
+            {
+                uint8_t  frame = s_walk[(hold / 6u) % 8u];
+                int16_t  x     = (int16_t)(((hold >> 1) % 320u) - 32);
+                demo_load_screen_palette(frame);
+                demo_draw_sprite_screen(frame, 60u, x, 120,
+                                        demo_screen_strips(frame),
+                                        demo_screen_rows(frame),
+                                        0xFFu, 0xFFu);
+                if ((hold % 48u) == 0u) playSFX(SOUND_SFX_5);
+            }
+
+            hold++;
+
+            /*
+             * Advance slide every 130 frames (~2.2 s).  Call the show
+             * fn DIRECTLY (no demo_safe_show wrapper) so the walking
+             * girl's sprite-window cache at slot 60 is NOT reset — she
+             * keeps walking through the transition.
+             */
+            if ((hold % 130u) == 0u) {
+                slide = (uint8_t)((slide + 1u) % 7u);
+                s_show[slide](32, 24, 0xF, 0xAF, 16,
+                              BLACK, DEMO_SHOWSCREEN_BASE);
+                demo_fix_puts(7u, 2u, "NEO GEO SDK V1.3.0", 2u);
+                demo_fix_puts(2u, 4u, "UNIFIED DEMO PRESENTS:", 1u);
+            }
+
+            ng_palette_fx_update();
+            if (demo_frame()) { user_started = 1u; break; }
         }
-
-        /* Walking girl overlay — drawn into a HIGH sprite slot (60+)
-         * so it sits ON TOP of the screens slideshow (DEMO_SHOWSCREEN_BASE
-         * = slot 1).  X wraps left-to-right at 1 px / 2 frames. */
-        {
-            uint8_t  frame = s_walk[(hold / 6u) % 8u];
-            int16_t  x     = (int16_t)(((hold >> 1) % 320u) - 32);
-            demo_load_screen_palette(frame);
-            demo_draw_sprite_screen(frame, 60u, x, 120,
-                                    demo_screen_strips(frame),
-                                    demo_screen_rows(frame),
-                                    0xFFu, 0xFFu);
-            if ((hold % 48u) == 0u) playSFX(SOUND_SFX_5);
-        }
-
-        hold++;
-
-        /* Every 240 frames (~4 s) advance to the next screens/N.png */
-        if ((hold % 240u) == 0u) {
-            slide = (uint8_t)((slide + 1u) % 7u);
-            demo_safe_show(s_show[slide], 32, 24, 0xF, 0xAF, 16,
-                           BLACK, DEMO_SHOWSCREEN_BASE);
-            demo_fix_puts(7u, 2u, "NEO GEO SDK V1.3.0", 2u);
-            demo_fix_puts(2u, 4u, "UNIFIED DEMO PRESENTS:", 1u);
-            demo_fix_puts(2u, 24u, "                                      ", 0u);
-            demo_fix_puts(2u, 24u, s_labels[slide], 1u);
-        }
-
-        ng_palette_fx_update();
-        if (demo_frame()) break;
     }
 
     /*
      * Clean sound exit — fade out, give the driver time to settle,
      * then fully reset to a known-good state so the next scene (which
      * will call soundSceneReset itself) does not race a half-faded
-     * driver.  Without the explicit reset here the demo was losing all
-     * audio on the very first chapter after attract.
+     * driver.
      */
     soundFadeOutSpeed(6u);
     demo_wait(30u);

@@ -1,21 +1,27 @@
-; 3 - Warrior battle theme — A-minor epic loop
-; @f3 = FM_DUEL_SUSPENSE (proper battle tension)
-; @s3 = SSG_WARRIOR_RIFF (percussive accent line)
-T160
-V14
+; 3_mml_example_d — hero theme (G major, anthemic)
+
+T130
 @p0
-@f3
-@s3
-O3 L12 A
-O4 C E A G E C
-O3 A6 B
-O4 D F A G F E D6
-O4 E D C D E G A4
-O3 R12
-O4 A4 O5 C4 O4 A4 G4
-O5 E4 D4 C4 O4 B4 A4 G4
-O4 A4 O5 C4 E4 G4 A3
-O4 G4 E4 C4 O3 A3
-O4 A O5 C E A G E C O4 A4
-O3 A4 R4
+@b3
+@f6
+V13
+O5
+L8
+
+; phrase A — fanfare
+G > D B G  D B G4
+F A > D F  A > D F4
+
+; phrase B — soaring
+< G B > D G  B > D G4
+< F A > C F  A > C F4
+
+; phrase C — call/answer
+> D < B G D  < B G D4
+> C < A F C  < A F C4
+
+; phrase D — finale
+< G B > D G  > D B G4
+< F A > D F  > G2
+
 ~

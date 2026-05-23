@@ -1,51 +1,28 @@
-; 0_samurai_game_loop.mml
-; Stage 1 gameplay loop
-; @b1 = level 1 backing theme
-; @f4 = FM bass motif
-; @p0 = clean SSG preset
+; 0_mml_example_a — bright arcade menu loop (C major)
+; SSG carries the melody, ADPCM-B bed under, FM lead on top.
 
-T126
-V9
-O4
+T140
+@p1
+@b0
+@f0
+V12
+O5
 L8
 
-@p0
-@b1
-@f4
+; phrase A — call
+C E G E  C E G4
+< G E C E  G E C4
 
-; phrase A
-A C E A
-G E C A
-@a9
-R8
-F A C F
-E C < A E
+; phrase B — answer
+> D F A F  D F A4
+< A F D F  A F D4
 
-; phrase B
-O4
-A > C < A G
-E G A C
-@a3
-R8
-< B > C E G
-A4 R4
+; phrase C — lift
+> E G > C < G  E G > C4
+< F A > C < A  F A > C4
 
-; phrase C
-O4
-A G E C
-D E G A
-@a9
-R8
-C < A G E
-A4 R4
-
-; turnaround
-@a6
-R8
-O4
-A C E G
-E D C A
-G A C E
-A4 R4
+; phrase D — resolve
+< C E G E  D F A F
+E G > C < G  > C4 R4
 
 ~
