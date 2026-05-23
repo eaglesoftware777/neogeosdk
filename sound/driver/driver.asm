@@ -84,6 +84,7 @@ banks 1
 .define VAR_SSG_TEMPO      $FE29
 .define VAR_SSG_TICK       $FE2A
 .define VAR_SSG_VOL        $FE2B
+.define VAR_SSG_ENV_ON     $FE2C    ; 1 = channel A uses envelope amplitude
 
 .define STACK              $FFFC
 .define READY_VALUE        $01
@@ -1201,6 +1202,7 @@ play_ssg_index:
     ld (VAR_SSG_ACTIVE),a
     xor a
     ld (VAR_SSG_PRESET),a
+    ld (VAR_SSG_ENV_ON),a    ; reset envelope-mode flag per track
     ld a,$0A
     ld (VAR_SSG_VOL),a
     ld a,3
@@ -1952,6 +1954,12 @@ ssg_step_next:
     jp z,ssg_set_volume
     cp $F2
     jp z,ssg_set_preset
+    cp $F7
+    jp z,ssg_set_envelope
+    cp $F8
+    jp z,ssg_set_env_period
+    cp $F9
+    jp z,ssg_set_env_mode
     cp $80
     jp z,ssg_rest
 
@@ -1987,6 +1995,65 @@ ssg_set_preset:
     ld (VAR_SSG_PRESET),a
     call store_ssg_ptr
     call ssg_apply_preset
+    jp ssg_step
+
+; $F7 — set envelope shape (writes register $0D, which retriggers
+; the envelope generator).  ALSO flips channel A into envelope-
+; amplitude mode (M bit set in vol register $08).  Future note-on
+; calls preserve M=1 while VAR_SSG_ENV_ON is set.
+ssg_set_envelope:
+    ld a,(hl)
+    inc hl
+    and $0F
+    call store_ssg_ptr
+    push af
+    ; Force envelope mode on channel A: vol reg $08 with bit 4 = M = 1.
+    ld a,1
+    ld (VAR_SSG_ENV_ON),a
+    ld de,$0810       ; reg $08, value $10 = M=1, fixed bits = 0
+    call shadowed_write_a
+    ; Write envelope shape register — this retriggers the envelope
+    ; generator EVERY time it's written, so each call gives a fresh
+    ; attack/decay.  Use force_write (not shadowed) so a duplicate
+    ; shape value still retriggers.
+    pop af
+    ld d,$0D
+    ld e,a
+    call force_write_a
+    jp ssg_step
+
+; $F8 — set envelope period low byte (register $0B).  High byte ($0C)
+; is left at the current value (driver init writes 0).
+ssg_set_env_period:
+    ld a,(hl)
+    inc hl
+    call store_ssg_ptr
+    ld d,$0B
+    ld e,a
+    call shadowed_write_a
+    jp ssg_step
+
+; $F9 — toggle channel A envelope-mode flag.  $00 = manual fixed
+; volume, $01 = envelope amplitude.  Restoring manual mode also
+; immediately rewrites vol $08 with M=0 so the user hears the change.
+ssg_set_env_mode:
+    ld a,(hl)
+    inc hl
+    and $01
+    call store_ssg_ptr
+    ld (VAR_SSG_ENV_ON),a
+    or a
+    jr nz,ssg_set_env_mode_on
+    ; restore manual mode — write vol A with M=0 from VAR_SSG_VOL
+    ld a,(VAR_SSG_VOL)
+    and $0F
+    ld e,a
+    ld d,$08
+    call shadowed_write_a
+    jp ssg_step
+ssg_set_env_mode_on:
+    ld de,$0810
+    call shadowed_write_a
     jp ssg_step
 
 ssg_rest:
@@ -2247,12 +2314,22 @@ ssg_noteon_vol_c_ok:
 ssg_standalone_note_on:
     ; First set up channels A,B,C with detuned periods (reuse ssg_note_on logic)
     call ssg_note_on
-    ; Then override volumes with standalone SSG volume
+    ; Channel A volume: honour VAR_SSG_ENV_ON.  Envelope mode on → vol
+    ; reg $08 = $10 (M=1, env amp).  Else → VAR_SSG_VOL & $0F (fixed).
+    ld a,(VAR_SSG_ENV_ON)
+    or a
+    jr z,ssg_standalone_vola_fixed
+    ld d,$08
+    ld e,$10
+    call shadowed_write_a
+    jr ssg_standalone_volbc
+ssg_standalone_vola_fixed:
     ld d,$08
     ld a,(VAR_SSG_VOL)
     and $0F
     ld e,a
     call shadowed_write_a
+ssg_standalone_volbc:
     ld d,$09
     ld a,(VAR_SSG_VOL)
     and $0F

@@ -1,24 +1,21 @@
-; 6_voice_game_over — SSG voice approximation: "GAME OVER"
-;
-; Slow solemn 4-syllable descending cue with extended tails.
+; 6_voice_game_over — SSG envelope-driven voice approx: "GAME OVER"
 
 T220
-V12
+V13
 O4
 L64
 
-; "G-" + "AME" rising vowel             (~350 ms)
+Q40 E0
 P3 F G G+
-P0 A B B B B B B A A G F+ F E
-P3 R32
-
-; brief intake pause
+P0 A B B B B B A A G F+ F E
 R32
 
-; "O-" mid vowel                        (~250 ms)
-P0 E F F+ G G F+ F E E D D
-P3 R64
+Q60 E0
+P3 E E
+P0 F F+ G G F+ F E E D
+R64
 
-; "VER" descending vowel close          (~400 ms)
-P0 D E D C+ C C < B B B B A+ A G+ G G G F+ F E E
+Q80 E0
+P3 D
+P0 E D C+ C C < B B A+ A G+ G F+ F E
 ~

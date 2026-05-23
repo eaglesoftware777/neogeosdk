@@ -56,6 +56,36 @@ def parse_mml(text):
             events.append((0xF2, preset & 0x0F))
             continue
 
+        # Envelope shape (YM2149 register $0D).  Writing this register
+        # always retriggers the envelope generator — so emitting `E n`
+        # at the start of every "syllable" gives a fresh attack/decay
+        # shape per syllable, which is what real arcade voice synth
+        # does on AY/SSG.  The directive ALSO forces channel A into
+        # envelope-amplitude mode (M=1) on the driver side.
+        if c == 'e':
+            i += 1
+            n, i = read_number(s, i, 0)
+            events.append((0xF7, n & 0x0F))
+            continue
+
+        # Envelope period (low byte of $0B/$0C).  Smaller value = faster
+        # envelope sweep.  Useful for setting syllable-rate amplitude
+        # decay.
+        if c == 'q':
+            i += 1
+            n, i = read_number(s, i, 0)
+            events.append((0xF8, n & 0xFF))
+            continue
+
+        # Channel A fixed-amplitude mode reset (turn envelope off).
+        # `Y0` returns to manual volume control; subsequent V directives
+        # set the fixed volume again.
+        if c == 'y':
+            i += 1
+            n, i = read_number(s, i, 0)
+            events.append((0xF9, n & 0x01))
+            continue
+
         if c == 'o':
             i += 1
             octave, i = read_number(s, i, octave)

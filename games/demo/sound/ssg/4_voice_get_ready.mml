@@ -1,30 +1,34 @@
-; 4_voice_get_ready — SSG voice approximation: "GET READY!"
+; 4_voice_get_ready — SSG envelope-driven voice approx: "GET READY!"
 ;
-; Three syllable bursts.  Each "syllable" is a rapid micro-glide of
-; close notes (vowel formant simulation) capped with a noise burst
-; (consonant simulation).  Preset 2 has aggressive tone+noise mix
-; for the consonants; preset 0 is clean square for vowels.
+; Q  = envelope period (smaller = faster swept attack/decay)
+; E  = envelope shape (writing it retriggers the envelope — every E
+;      directive is the start of a new "syllable")
+;        $0 = single decay (sharp attack, fade)
+;        $E = bidirectional triangle (vibrato-like)
+;
+; Each syllable: pick consonant preset (noise burst) + retrigger
+; envelope + run a short pitch sweep for vowel formant.
 
 T220
-V13
+V14
 O5
 L64
 
-; "G-" consonant + "ET" vowel glide   (~250 ms)
-P3 D E
-P0 F+ G G+ A A G F+ E
+Q30 E0
+P3 D E F+
+P0 G G+ A A G F+ E
+R64
 
-; brief gap
-P3 R32
+Q40 E0
+P3 E F+
+P0 G A A+ B B B B A+ A G F+
+R64
 
-; "REA-" rapid rising vowel             (~300 ms)
-P0 E F+ G A B B B B A G
-P3 R64
+Q24 E0
+P3 D D
+P0 E F+ F E D D D
+R64
 
-; "-DY" descending vowel close          (~250 ms)
-P0 A G F+ E D D D D
-P3 R64
-
-; "!" exclamation accent
-P0 A A B B > C
+Q50 E0
+P0 G A B > C C
 ~
