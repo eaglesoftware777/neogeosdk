@@ -1616,8 +1616,15 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
     uint8_t  target_cy     = 14u;     /* FIX cell row */
     uint8_t  target_alive  = 1u;
     uint8_t  target_respawn = 0u;
-    static const uint8_t TARGET_W = 6u;    /* 6 cells = 48 px wide */
-    static const uint8_t TARGET_H = 2u;    /* 2 cells = 16 px tall */
+    /*
+     * Target = 5-cell-wide bracketed block: "[BOX]".  Single-row keeps
+     * the visual clean and uses only characters that exist in every
+     * FIX font (brackets + letters), no `#`/`*` which were rendering
+     * as glyphs over the BG and looked like "noise on the image".
+     */
+    static const uint8_t TARGET_W = 5u;    /* 5 cells = 40 px wide */
+    static const uint8_t TARGET_H = 1u;    /* 1 cell  = 8 px tall  */
+    static const char    TARGET_TEXT[6] = "[BOX]";
 
     uint16_t t;
     uint8_t  hero_state = 0u;   /* 0=stand 1=walk 2=jump 3=strike */
@@ -1649,17 +1656,15 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
 
     s_draw_particles = 1u;
 
-    /* helper: draw the target rectangle on FIX in alternating palettes */
+    /* Draw the bracketed target with palette per cell for colour. */
     {
-        uint8_t r;
-        for (r = 0u; r < TARGET_H; r++) {
-            uint8_t c;
-            for (c = 0u; c < TARGET_W; c++) {
-                demo_fix_puts((uint8_t)(target_cx + c),
-                              (uint8_t)(target_cy + r),
-                              (r & 1u) ? "#" : "*",
-                              (uint8_t)((c + r) & 3u ? 2u : 1u));
-            }
+        uint8_t c;
+        for (c = 0u; c < TARGET_W; c++) {
+            char glyph[2];
+            glyph[0] = TARGET_TEXT[c];
+            glyph[1] = '\0';
+            demo_fix_puts((uint8_t)(target_cx + c), target_cy,
+                          glyph, (uint8_t)(1u + (c & 1u)));
         }
     }
 
@@ -1746,28 +1751,21 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
                 int16_t dy = (int16_t)(hero_world_y - ty_px);
                 if (dy < 0) dy = (int16_t)(-dy);
                 if (dy < 80 && tx_px >= reach_left && tx_px <= reach_right) {
-                    uint8_t r;
+                    uint8_t c;
                     score = (uint16_t)(score + 10u);
                     enemy_hits++;
                     playSFX(SOUND_SFX_8);
                     spawn_impact_burst(tx_px, ty_px, spark_tile, spark_pal, 3u);
-                    /*
-                     * Truly clear the target's FIX cells.  Writing " "
-                     * (space char) with pal 0 paints tile 0x20 which is
-                     * NOT a fully-transparent tile in the demo's FIX
-                     * font — that's what produced the black box / stripe
-                     * artefacts.  ngfix_write_tile(x, y, 0, 0) writes the
-                     * real transparent FIX tile 0 so the BG shows through.
-                     */
-                    for (r = 0u; r < TARGET_H; r++) {
-                        uint8_t c;
-                        for (c = 0u; c < TARGET_W; c++) {
-                            ngfix_write_tile((uint8_t)(target_cx + c),
-                                             (uint8_t)(target_cy + r), 0u, 0u);
-                        }
+                    /* Clear the target cells with truly-transparent
+                     * FIX tile 0 so the BG shows through.  " " (space)
+                     * with pal 0 paints tile 0x20 which is NOT fully
+                     * transparent in this FIX font. */
+                    for (c = 0u; c < TARGET_W; c++) {
+                        ngfix_write_tile((uint8_t)(target_cx + c),
+                                         target_cy, 0u, 0u);
                     }
                     target_alive   = 0u;
-                    target_respawn = 40u;          /* faster respawn */
+                    target_respawn = 40u;
                 }
             }
             state_t++;
@@ -1784,80 +1782,46 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
          * on top of the BG).
          */
         /*
-         * Multi-row BIG SWORD SLASH during the active hit window.
-         * Drawn as a 3-row × 6-col arc anchored next to the hero so
-         * it can't possibly be missed.  Also writes a "STRIKE!" label
-         * at top-left of the screen so the user can confirm B was
-         * detected even if the arc is somehow obscured.
+         * Single-row SLASH during the active hit window.  3 cells of
+         * "===" anchored next to the hero, palette 2 (yellow accent).
+         * Single row keeps the FIX overlay minimal so it doesn't read
+         * as "noise on the image".  Previous version drew a 3×6 multi-
+         * glyph arc that looked busy and left BG-coloured strips when
+         * adjacent cells weren't erased exactly.
          */
         {
             static uint8_t sw_last_cx = 0xFFu;
             static uint8_t sw_last_cy = 0u;
-            const  uint8_t SW_LEN = 6u;
+            const  uint8_t SW_LEN = 3u;
             if (hero_state == 3u && state_t >= 1u && state_t <= 22u) {
                 uint8_t sword_cx = (uint8_t)((hero_flip
-                    ? (hero_world_x - 80) : (hero_world_x + 16)) / 8);
+                    ? (hero_world_x - 40) : (hero_world_x + 16)) / 8);
                 uint8_t sword_cy = (uint8_t)((hero_world_y / 8) - 1u);
                 uint8_t k;
-                /* erase prior 3x6 if it moved */
                 if (sw_last_cx != 0xFFu &&
                     (sw_last_cx != sword_cx || sw_last_cy != sword_cy)) {
-                    uint8_t row;
-                    for (row = 0u; row < 3u; row++)
-                        for (k = 0u; k < SW_LEN; k++)
-                            ngfix_write_tile((uint8_t)(sw_last_cx + k),
-                                             (uint8_t)(sw_last_cy + row),
-                                             0u, 0u);
-                }
-                if (sword_cx < (uint8_t)(38u - SW_LEN) && sword_cy < 24u) {
-                    /* 3-row arc — TOP/MID/BOT with diagonal pattern */
-                    static const char *const slash_r[3] = {
-                        "\\\\\\***",
-                        "==>>>",
-                        "///***"
-                    };
-                    for (k = 0u; k < SW_LEN; k++) {
-                        uint8_t pal_top = 2u;
-                        uint8_t pal_mid = 1u;
-                        uint8_t pal_bot = 2u;
-                        const char *gt, *gm, *gb;
-                        if (hero_flip) {
-                            /* mirror: top "***///", mid "<<<==", bot "***\\\\\\" */
-                            gt = (k < 3u) ? "*" : "/";
-                            gm = (k == SW_LEN - 1u) ? "=" :
-                                 (k == SW_LEN - 2u) ? "=" : "<";
-                            gb = (k < 3u) ? "*" : "\\";
-                        } else {
-                            gt = (k < 3u) ? "\\" : "*";
-                            gm = (k < 2u) ? "=" :
-                                 (k == 2u) ? ">" : ">";
-                            gb = (k < 3u) ? "/" : "*";
-                        }
-                        /* per-frame palette shimmer */
-                        if (((state_t + k) & 3u) == 0u) {
-                            pal_top = 1u; pal_mid = 2u; pal_bot = 1u;
-                        }
-                        demo_fix_puts((uint8_t)(sword_cx + k),
-                                      sword_cy,                  gt, pal_top);
-                        demo_fix_puts((uint8_t)(sword_cx + k),
-                                      (uint8_t)(sword_cy + 1u),  gm, pal_mid);
-                        demo_fix_puts((uint8_t)(sword_cx + k),
-                                      (uint8_t)(sword_cy + 2u),  gb, pal_bot);
-                    }
-                    sw_last_cx = sword_cx; sw_last_cy = sword_cy;
-                    (void)slash_r;
-                }
-                /* visible "STRIKE!" indicator so user can verify B detection */
-                demo_fix_puts(32u, 22u, "STRIKE!", 2u);
-            } else if (sw_last_cx != 0xFFu) {
-                uint8_t row, k;
-                for (row = 0u; row < 3u; row++)
                     for (k = 0u; k < SW_LEN; k++)
                         ngfix_write_tile((uint8_t)(sw_last_cx + k),
-                                         (uint8_t)(sw_last_cy + row),
-                                         0u, 0u);
-                for (k = 0u; k < 7u; k++)
-                    ngfix_write_tile((uint8_t)(32u + k), 22u, 0u, 0u);
+                                         sw_last_cy, 0u, 0u);
+                }
+                if (sword_cx < (uint8_t)(40u - SW_LEN) && sword_cy < 28u) {
+                    const char *g = hero_flip ? "<==" : "==>";
+                    uint8_t pal  = (uint8_t)(((state_t & 3u) == 0u) ? 1u : 2u);
+                    for (k = 0u; k < SW_LEN; k++) {
+                        char tmp[2];
+                        tmp[0] = g[k];
+                        tmp[1] = '\0';
+                        demo_fix_puts((uint8_t)(sword_cx + k),
+                                      sword_cy, tmp, pal);
+                    }
+                    sw_last_cx = sword_cx;
+                    sw_last_cy = sword_cy;
+                }
+            } else if (sw_last_cx != 0xFFu) {
+                uint8_t k;
+                for (k = 0u; k < SW_LEN; k++)
+                    ngfix_write_tile((uint8_t)(sw_last_cx + k),
+                                     sw_last_cy, 0u, 0u);
                 sw_last_cx = 0xFFu;
             }
         }
@@ -1867,18 +1831,15 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
             if (target_respawn > 0u) {
                 target_respawn--;
             } else {
-                uint8_t r;
-                /* pick a new X (cell) — pseudo-random walk from prior position */
+                uint8_t c;
                 target_cx = (uint8_t)(8u + ((t * 7u) % 22u));
                 target_alive = 1u;
-                for (r = 0u; r < TARGET_H; r++) {
-                    uint8_t c;
-                    for (c = 0u; c < TARGET_W; c++) {
-                        demo_fix_puts((uint8_t)(target_cx + c),
-                                      (uint8_t)(target_cy + r),
-                                      (r & 1u) ? "#" : "*",
-                                      (uint8_t)((c + r) & 3u ? 2u : 1u));
-                    }
+                for (c = 0u; c < TARGET_W; c++) {
+                    char glyph[2];
+                    glyph[0] = TARGET_TEXT[c];
+                    glyph[1] = '\0';
+                    demo_fix_puts((uint8_t)(target_cx + c), target_cy,
+                                  glyph, (uint8_t)(1u + (c & 1u)));
                 }
             }
         }
@@ -2024,22 +1985,31 @@ static uint8_t NEOGEO_USER chap_joystick(void)
         }
 
         /*
-         * Specials = two-button combos, checked BEFORE plain B strike.
-         * Press B+D together → heavy finisher (36-frame action).
-         * Press B+C together → light special (30-frame).
-         * Press B alone     → basic strike (24-frame).
+         * Specials = two-button combos.  Detection must INTERRUPT an
+         * in-progress plain strike so the user can press B, then add D
+         * shortly after, and have the move upgrade into B+D — pressing
+         * exactly simultaneously is nearly impossible on a real stick.
+         *   Press D while B is held → heavy finisher (36-frame).
+         *   Press C while B is held → light special (30-frame).
+         *   Press B alone           → basic strike (24-frame).
          */
-        if (special_t == 0u && strike_t == 0u) {
-            if (combo_bd && (pressed & (BUTTON_B | BUTTON_D))) {
-                special_t = 36u;
-                playSFX(SOUND_SFX_10);
-            } else if (combo_bc && (pressed & (BUTTON_B | BUTTON_C))) {
-                special_t = 30u;
-                playSFX(SOUND_SFX_9);
-            } else if (pressed & BUTTON_B) {
-                strike_t = 24u;
-                playSFX(SOUND_SFX_7);
-            }
+        if ((pressed & BUTTON_D) && (down & BUTTON_B)) {
+            special_t = 36u;
+            strike_t  = 0u;
+            playSFX(SOUND_SFX_10);
+        } else if ((pressed & BUTTON_C) && (down & BUTTON_B)) {
+            special_t = 30u;
+            strike_t  = 0u;
+            playSFX(SOUND_SFX_9);
+        } else if ((pressed & BUTTON_B) && (down & BUTTON_D)) {
+            special_t = 36u;
+            playSFX(SOUND_SFX_10);
+        } else if ((pressed & BUTTON_B) && (down & BUTTON_C)) {
+            special_t = 30u;
+            playSFX(SOUND_SFX_9);
+        } else if ((pressed & BUTTON_B) && special_t == 0u && strike_t == 0u) {
+            strike_t = 24u;
+            playSFX(SOUND_SFX_7);
         }
 
         if ((pressed & BUTTON_C) && hero_world_y >= HERO_GROUND_Y) {
@@ -2198,53 +2168,43 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
 static uint8_t NEOGEO_USER chap_render3d(void)
 {
     /*
-     * Minimal pseudo-3D scene — ONE hero character at screen centre
-     * that scales between near and far (depth oscillation) on top of a
-     * simple BG with a horizon line.  No fancy FIX road, no formations,
-     * no multi-strip overlays.  The goal is to clearly demonstrate
-     * "depth via sprite scale" with a single readable subject.
+     * Minimal pseudo-3D scene — ONE hero centred on screen that
+     * scales between distant (small/up) and close (full/down) to
+     * convey depth.  Hero lives at sprite slot 220 so it draws ON
+     * TOP of the BG (DEMO_BG_BACK_SLOT = ~96; higher slot = on top).
      */
     uint16_t t;
-    const uint8_t hero_frame = 14u;   /* sprite_012 — clean idle pose  */
+    const uint8_t hero_frame = HERO_IDLE_FRAME;   /* clean idle pose */
 
     chap_header(16u, "3D EFFECT", "DEPTH SCALE  ONE CHARACTER");
-    demo_fix_puts(2u, 2u, "ONE HERO SCALES NEAR <-> FAR", 1u);
-    demo_fix_puts(2u, 3u, "BG STATIC  SCALE = DEPTH",     0u);
+    demo_fix_puts(2u, 2u, "HERO SCALES NEAR <-> FAR",  1u);
+    demo_fix_puts(2u, 3u, "BG STATIC  SCALE = DEPTH",  0u);
     snd_cross_to(SOUND_MUSIC_F);
 
-    /* Background scene (drawn once at low-priority slot) */
     draw_background(2u, 32, 16);
-
-    /* Simple horizon line on FIX so the depth cue reads clearly */
-    {
-        uint8_t col;
-        for (col = 0u; col < 40u; col++) {
-            ngfix_write_tile(col, 14u, 0u, 0u);   /* clear  */
-        }
-        demo_fix_puts(0u, 14u, "________________________________________", 2u);
-    }
-
     demo_load_screen_palette(hero_frame);
-    s_hero_x = (int16_t)(160 - 32);
-    s_hero_y = 128;
 
     /*
-     * Scale oscillates between 0x40 (small / distant) and 0xFF (full /
-     * near).  Period = 240 frames = ~4 sec.
+     * Scale triangles between 0x60 (small/distant) and 0xFF (full/
+     * near) over a 240-frame period.  Y travels inversely: smaller
+     * scale → higher Y (further away on the picture plane), bigger
+     * scale → lower Y (closer to camera).
      */
     for (t = 0u; t < 480u; t++) {
-        /* triangle wave 0..255..0 over 240 frames */
         uint16_t phase = (uint16_t)(t % 240u);
         uint8_t  scale = (uint8_t)((phase < 120u)
-                                   ? (0x40u + phase)
-                                   : (0x40u + (240u - phase)));
-        int16_t  y_off = (int16_t)((255u - scale) / 4u);   /* sink as it shrinks */
+                                   ? (0x60u + (uint16_t)((phase * 0x9F) / 120u))
+                                   : (0x60u + (uint16_t)(((240u - phase) * 0x9F) / 120u)));
+        int16_t  strips = demo_screen_strips(hero_frame);
+        int16_t  rows   = demo_screen_rows(hero_frame);
+        int16_t  px_w   = (int16_t)((strips * 16 * scale) >> 8);
+        int16_t  px_h   = (int16_t)((rows   * 16 * scale) >> 8);
+        int16_t  draw_x = (int16_t)(160 - (px_w >> 1));
+        int16_t  draw_y = (int16_t)(192 - px_h);   /* feet on the ground */
 
-        demo_draw_sprite_screen(hero_frame, 60u,
-                                s_hero_x,
-                                (int16_t)(s_hero_y + y_off),
-                                demo_screen_strips(hero_frame),
-                                demo_screen_rows(hero_frame),
+        demo_draw_sprite_screen(hero_frame, 220u,
+                                draw_x, draw_y,
+                                (uint8_t)strips, (uint8_t)rows,
                                 scale, scale);
 
         if ((t %  60u) == 0u) playSFX(SOUND_SFX_5);
@@ -2428,15 +2388,24 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
     }
 
     /*
-     * Vblank-spaced Z80 setup — galaxian scene now uses a melodic
-     * ADPCM-B bed UNDER quieter SSG.  The previous mix (ADPCM-A=0x20,
-     * SSG=0x0F) drove the SSG square waves at full tilt which produced
-     * the "noisy" buzz the user reported.  We now keep SSG soft (0x06)
-     * and let the bed carry the music.
+     * Real background image behind the FIX-cell shooter — gives the
+     * scene a proper backdrop instead of pure black, and lets the
+     * starfield + ship glyphs read as overlays instead of "everything
+     * is FIX text on void".  Same artbox bg (id 2) the other chapters
+     * use.
+     */
+    draw_background(2u, 32, 16);
+
+    /*
+     * Audio: ADPCM-B bed carries the music continuously so the user
+     * never hears just raw SSG buzz.  SSG is kept low and used only
+     * for hit / fire SFX (we still call playSFX on ADPCM-A samples
+     * for the punchy shoots).  Bed volume is fairly loud (0xB0) so
+     * the streamed audio dominates the mix.
      */
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
-    soundApplyMix(0x30u, 0xA0u, 0x06u, 0x00u); snd_step();
+    soundApplyMix(0x30u, 0xB0u, 0x05u, 0x00u); snd_step();
     soundPlayGameLoop(SOUND_MUSIC_B);          snd_step();
     soundSetSSGPreset(1u);                     snd_step();
 
@@ -2858,55 +2827,33 @@ fade_out:
 static uint8_t NEOGEO_USER chap_garden3d(void)
 {
     enum {
-        TREE_COUNT = 5,
-        TREE_FRAME = 81u,        /* small eagle proxy — replace with tree art later */
-        Z_NEAR = 8,
-        Z_FAR  = 96,
-        FLOOR_TOP_ROW    = 12,
-        FLOOR_BOTTOM_ROW = 26
+        NPC_COUNT = 3,
+        Z_NEAR    = 12,
+        Z_FAR     = 96
     };
-    /*
-     * z = depth (0 = camera plane, Z_FAR = horizon).
-     * As z decreases, the tree grows and slides outward off-screen.
-     */
-    int16_t tz[TREE_COUNT]    = { 16, 32, 48, 64, 80 };
-    /* world X relative to camera centre — alternating left/right of the trail */
-    static const int16_t txw[TREE_COUNT] = { -40, 30, -30, 40, -20 };
+    /* z = depth.  As z decreases toward Z_NEAR, the NPC scales up
+     * and slides toward the edge.  Recycled to Z_FAR when it passes. */
+    int16_t  nz[NPC_COUNT]   = { 30, 60, 90 };
+    /* World-X relative to camera centre (positive = right of camera). */
+    static const int16_t nxw[NPC_COUNT] = { -32, 28, -16 };
+    /* Use cat NPCs (screen_id 110..117) as the "approaching objects".
+     * Different IDs per slot for visual variety. */
+    static const uint8_t npc_frames[NPC_COUNT] = { 110u, 114u, 117u };
     uint16_t t;
     uint8_t  i;
     int16_t  hero_world_x = 160;
-    uint8_t  hero_flip = 0u;
 
-    chap_header(19u, "GARDEN 3D", "PSEUDO-3D SPRITE SCALING WALK");
-    demo_fix_puts(2u, 2u, "TREES APPROACH AS YOU WALK",     1u);
-    demo_fix_puts(2u, 3u, "L/R MOVE  HARDWARE-SCALE TREES", 0u);
+    chap_header(19u, "DEPTH RIDE", "OBJECTS APPROACH AS YOU WALK");
+    demo_fix_puts(2u, 2u, "NPCS APPROACH FROM HORIZON",   1u);
+    demo_fix_puts(2u, 3u, "L/R MOVE  HARDWARE-SCALE NPCS", 0u);
     snd_cross_to(SOUND_MUSIC_C);
 
-    /*
-     * Perspective floor on the FIX layer.  We paint rows 12..26 with a
-     * graduated brightness pattern: sparse dots near the horizon
-     * (palette 0), denser bands further down (palettes 1, 2).
-     */
-    {
-        uint8_t r, c;
-        for (r = FLOOR_TOP_ROW; r <= FLOOR_BOTTOM_ROW; r++) {
-            uint8_t band   = (uint8_t)(r - FLOOR_TOP_ROW);
-            uint8_t pal    = (uint8_t)((band > 8u) ? 2u
-                                      : (band > 4u) ? 1u : 0u);
-            uint8_t spacing = (band < 4u) ? 6u : (band < 8u) ? 3u : 2u;
-            for (c = 0u; c < 40u; c++) {
-                if ((c % spacing) == 0u) {
-                    demo_fix_puts(c, r,
-                                  (band > 7u) ? "=" : "-",
-                                  pal);
-                } else if (band > 9u && (c & 1u)) {
-                    demo_fix_puts(c, r, ".", pal);
-                }
-            }
-        }
-        /* horizon line */
-        demo_fix_puts(0u, (uint8_t)(FLOOR_TOP_ROW - 1),
-                      "________________________________________", 2u);
+    /* Real BG image so the scene has a backdrop, not pure black. */
+    draw_background(2u, 32, 16);
+
+    /* Pre-load all NPC palettes once so subsequent draws don't thrash. */
+    for (i = 0u; i < NPC_COUNT; i++) {
+        demo_load_screen_palette(npc_frames[i]);
     }
 
     ng_joystick_init();
@@ -2918,74 +2865,48 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
         ng_joystick_update();
         down = ng_joy_down();
 
-        /* hero motion */
-        if (down & JOY_LEFT)  { hero_world_x -= 2; hero_flip = 1u; }
-        if (down & JOY_RIGHT) { hero_world_x += 2; hero_flip = 0u; }
+        if (down & JOY_LEFT)  hero_world_x -= 2;
+        if (down & JOY_RIGHT) hero_world_x += 2;
         if (hero_world_x < 32)  hero_world_x = 32;
         if (hero_world_x > 288) hero_world_x = 288;
 
-        /*
-         * Per-frame: each tree marches one step toward the camera.
-         * When a tree passes the camera plane, recycle it to the back.
-         */
-        for (i = 0u; i < TREE_COUNT; i++) {
-            int16_t scale;
-            int16_t screen_x, screen_y;
-            uint8_t scale8;
+        for (i = 0u; i < NPC_COUNT; i++) {
+            uint8_t  npc_frame = npc_frames[i];
+            int16_t  scale;
+            int16_t  screen_x, screen_y;
+            uint8_t  scale8;
+            uint8_t  strips = demo_screen_strips(npc_frame);
+            uint8_t  rows   = demo_screen_rows(npc_frame);
 
-            tz[i] = (int16_t)(tz[i] - 1);
-            if (tz[i] < Z_NEAR) tz[i] = Z_FAR;
+            nz[i] = (int16_t)(nz[i] - 1);
+            if (nz[i] < Z_NEAR) nz[i] = Z_FAR;
 
-            /*
-             * Pseudo-projection:  scale = ~(Z_FAR / z), clamped.
-             * Trees at z=Z_FAR are small (~25%), at z=Z_NEAR they're big (~100%).
-             */
-            scale = (int16_t)((int16_t)Z_FAR * 64 / (int16_t)tz[i]);  /* 64..768 */
+            scale = (int16_t)((int16_t)Z_FAR * 96 / (int16_t)nz[i]);
             if (scale > 0xFF) scale = 0xFF;
             if (scale < 0x40) scale = 0x40;
             scale8 = (uint8_t)scale;
 
-            /*
-             * Project x: closer trees drift further out from centre.
-             * screen_x = 160 + txw * (Z_FAR / z).
-             * screen_y dips below horizon based on z (closer = lower on screen).
-             */
-            screen_x = (int16_t)(160 + (txw[i] * (int16_t)Z_FAR) / (int16_t)tz[i]);
-            screen_y = (int16_t)(96 + (Z_FAR - tz[i]));   /* horizon at 96 */
-
-            /* Draw each tree as a sprite group at a unique high slot.
-             * Slots 280-299 are unused by chars/particles — safe range. */
+            screen_x = (int16_t)(160 + (nxw[i] * (int16_t)Z_FAR) / (int16_t)nz[i]);
+            screen_y = (int16_t)(80 + (Z_FAR - nz[i]) * 5 / 6);
             {
-                uint8_t  tree_strips = demo_screen_strips(TREE_FRAME);
-                uint8_t  tree_rows   = demo_screen_rows(TREE_FRAME);
-                int16_t  grid_w = (int16_t)(tree_strips * 16);
-                int16_t  grid_h = (int16_t)(tree_rows * 16);
-                int16_t  off_x  = demo_screen_x_offset(TREE_FRAME);
-                int16_t  off_y  = demo_screen_y_offset(TREE_FRAME);
-                /* anchor bottom-centre at (screen_x, screen_y) so trees
-                 * "stand" on the projected floor */
-                int16_t  draw_x = (int16_t)(screen_x - (grid_w * scale8 / 256) / 2 - off_x);
-                int16_t  draw_y = (int16_t)(screen_y - (grid_h * scale8 / 256) - off_y);
-
-                demo_draw_sprite_screen(TREE_FRAME,
-                                        (uint16_t)(280u + i),
+                int16_t px_w  = (int16_t)((strips * 16 * scale8) >> 8);
+                int16_t px_h  = (int16_t)((rows   * 16 * scale8) >> 8);
+                int16_t draw_x = (int16_t)(screen_x - (px_w >> 1));
+                int16_t draw_y = (int16_t)(screen_y - px_h);
+                demo_draw_sprite_screen(npc_frame,
+                                        (uint16_t)(200u + i * 6u),
                                         draw_x, draw_y,
-                                        tree_strips, tree_rows,
+                                        strips, rows,
                                         scale8, scale8);
             }
         }
 
-        /* hero animation — fixed Y, sprite-window pipeline */
         hero_frame = (down & (JOY_LEFT | JOY_RIGHT))
                    ? s_hero_walk[(t / 5u) % 8u]
                    : s_hero_stand[(t / 14u) % 8u];
         s_hero_x = hero_world_x;
-        s_hero_y = 112;
+        s_hero_y = 180;
         hero_draw(hero_frame);
-        /* flip is on the character struct in the engine; we let the
-         * sprite group default (no flip) — left/right facing reads from
-         * motion direction in a fuller demo. */
-        (void)hero_flip;
 
         if ((t & 31u) == 0u && (down & (JOY_LEFT | JOY_RIGHT)))
             playSFX(SOUND_SFX_5);
