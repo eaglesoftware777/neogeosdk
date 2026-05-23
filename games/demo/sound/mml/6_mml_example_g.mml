@@ -1,47 +1,27 @@
-; 6_shop_jingle.mml
-; Town shop — cheerful C-major bounce loop
-; @f0 = FM_MENU_MAJOR  @b0 = SOUND_BED_TITLE_THEME  @p0 = Clean Square SSG
-; @a2 = TITLE_GONG accent
+; 6_mml_example_g — shop / town jingle (C major, light)
 
-T118
-V12
+T120
+@p0
+@b2
+@f1
+V11
 O5
 L8
 
-@p0
-@b0
-@f0
+; phrase A — bouncy arpeggio
+C E G E  C E G4
+D F A F  D F A4
 
-; phrase A — rising arpeggio
-C E G R
-E G > C R
-< A G E R
-C4 R4
+; phrase B — answer
+> E < A > C E  G E C < A
+F D < B > C  E C < G4
 
-; phrase B — step-wise melody
-O5
-E F G A
-G E C R
-@a2
-R
-D F A R
-G E C R
+; phrase C — playful
+> G > C E G  E C < G > C
+A F D < A  > F D < A4
 
-; phrase C — playful turnaround
-O4
-G > C E G
-E C < G R
-@a2
-R
-O4
-G A B > C
-C4 R4
-
-; finish — descend and loop
-O5
-C E G E
-C E G R
-F A > C R
-< G E C4
+; phrase D — turnaround
+< C E G > C  < G E C < G
+> C E G > C  > C2
 
 ~

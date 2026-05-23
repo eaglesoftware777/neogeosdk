@@ -1,49 +1,28 @@
-; 1_samurai_battle_loop.mml
-; Stage 2 battle / action loop
-; @b2 = level 2 backing theme
-; @f2 = fast FM action melody
-; @p2 = aggressive SSG preset
+; 1_mml_example_b — action stage loop (A minor, driving)
 
-T164
-V10
-O3
-L16
-
+T150
 @p2
-@b2
-@f2
+@b1
+@f4
+V13
+O5
+L8
 
-; driving SSG ostinato
-A R A R A R > C R
-< G R G R G R > D R
-< F R F R F R > C R
-< E R E R E R > B R
+; melody A — minor riff
+A > C E < A  G E C < G
+A > C E G  A4 R4
 
-O4
-A C E A
-G E C A
-F A C F
-E C < B E
+; melody B — push up
+> C E G > C  < B G E < B
+> D F A > D  < C A F < C
 
-; blade / hit accents
-@a6
-R8
-@a7
-R8
+; melody C — descend
+> E < A > C E  D < A > C D
+< E > C < A E  A4 R4
 
-; second half
-@f2
-
-O3
-A R > C R E R C R
-< G R > B R D R B R
-< F R > A R C R A R
-< E R > G R B R G R
-
-O4
-A G E C
-D E G A
-C < A G E
-A4 R8
+; bridge — staccato
+L16
+A R A R > C R E R  < G R G R > B R D R
+< F R F R > A R C R  < E R E R > G R B R
 
 ~

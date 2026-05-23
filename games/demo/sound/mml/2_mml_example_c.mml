@@ -1,50 +1,25 @@
-; 2_samurai_night_scene.mml
-; Ending / results scene
-; @b3 = ending theme bed
-; @f5 = victory FM line
-; @p1 = soft SSG preset
+; 2_mml_example_c — mysterious slow theme (D minor)
 
-T104
-V7
-O3
-L8
-
+T100
 @p1
-@b3
+@b2
 @f5
+V11
+O5
+L4
 
-; sparse ending melody
-A R C R
-E R C R
-G R E R
-C4 R4
+; phrase A — sparse
+D F A F  D F A4
+< C E G E  C E G4
 
-O2
-A R A R
-E R E R
-F R F R
-G R G R
+; phrase B — rise
+L8
+> A G F E  D F A > D
+< G A > C < A  G F E D
 
-O3
-A C E G
-F E D C
-< B > C D E
-A4 R4
-
-@a2
-R4
-
-@f5
-
-O3
-C R E R
-G R A R
-G E C R
-< B4 R4
-
-O2
-A R > C R
-E R C R
-< A4 R4
+; phrase C — fall back
+L4
+> D < A F D  D < A F4
+E < G > C < G  E < G > C4
 
 ~

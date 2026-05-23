@@ -1,14 +1,27 @@
-; 4 - Eagle Soft boot fanfare — heroic A major entrance, 4 bars
-; @f5 = FM_VICTORY_JINGLE (triumphant FM stab layer)
-; @b1 = SOUND_BED_TITLE_PLUCK (plucky bass support)
-T120
-V15
-@f5
-@b1
+; 4_mml_example_e — title fanfare (F major, triumphant)
+
+T160
 @p0
-O4 L8 A4 R8
-O5 C4 E4 A2
-O5 A8 G8 E8 C8
-O4 B4 R8 O5 C8 E8 A4
-O4 A2 R4
+@b0
+@f0
+V14
+O5
+L8
+
+; fanfare A — bold entry
+F A > C F  > C < A F4
+G > D < B G  > D < B G4
+
+; fanfare B — answer
+> F < A > F < A  > C F A > C
+< G > D < G > D  F A > D F
+
+; fanfare C — climb
+< F A > C F  A > C F4
+< G B > D G  B > D G4
+
+; fanfare D — landing
+> F A > C F  E D C < A
+G F E D  > C2
+
 ~
