@@ -506,18 +506,14 @@ static uint8_t NEOGEO_USER chap_fix(void)
 /* ================================================================== */
 static uint8_t NEOGEO_USER chap_sound(void)
 {
-    static const uint8_t  s_tracks[4] = {
-        SOUND_MUSIC_EAGLE_FANFARE,
-        SOUND_MUSIC_SAMURAI_GAME_LOOP,
-        SOUND_MUSIC_SAMURAI_BATTLE_LOOP,
-        SOUND_MUSIC_BOSS_TENSION
-    };
-    static const char * const s_track_names[4] = {
-        "EAGLE FANFARE   ",
-        "SAMURAI GAME    ",
-        "SAMURAI BATTLE  ",
-        "BOSS TENSION    "
-    };
+    /*
+     * Sound policy (post-v1.3.1 audio review):
+     *   - MAIN music = ADPCM-B "Stage One" bed (smooth streamed loop)
+     *   - ADPCM-A and SSG play only as triggered SFX
+     *   - FM is demonstrated ONCE here for completeness and then
+     *     stopped — the FM driver currently sounds harsh against the
+     *     ADPCM bed, so we don't use it as ongoing music.
+     */
     static const uint8_t s_sfx[6] = {
         SOUND_SFX_COIN_CHIME, SOUND_SFX_BLADE_WHOOSH,
         SOUND_SFX_IMPACT_HIT, SOUND_SFX_FOOTSTEP,
@@ -530,140 +526,77 @@ static uint8_t NEOGEO_USER chap_sound(void)
     };
     uint8_t i;
 
-    chap_header(3u, "SOUND", "MUSIC + SFX SAMPLES");
-    demo_fix_puts(2u, 2u, "Z80 SOUND CPU  4 CHANNELS:",  1u);
-    demo_fix_puts(2u, 3u, "FM  SSG  ADPCM-A  ADPCM-B",   0u);
+    chap_header(3u, "SOUND", "ADPCM-B MAIN  ADPCM-A SFX  FM/SSG DEMO");
+    demo_fix_puts(2u, 2u, "MAIN MUSIC = ADPCM-B BED (STAGE 1)",  1u);
+    demo_fix_puts(2u, 3u, "ADPCM-A / SSG / FM ONLY ON CUE",      0u);
 
-    /* --- Intro: clean MML music (not raw FM patch — that was noisy) -- */
-    demo_fix_puts(2u, 5u, "MUSIC INTRO                    ", 2u);
-    soundStopAll();                          snd_step();
-    soundSceneReset();                       snd_step();
-    soundApplyMix(0x30u, 0xB8u, 0x08u, 0x08u); snd_step();
-    soundPlayGameLoop(SOUND_MUSIC_EAGLE_FANFARE); snd_step();
-    demo_fix_puts(2u, 6u, "EAGLE FANFARE (FM + SSG + ADPCM)", 1u);
-    if (uwait(140u)) return 1u;
+    /* --- 1) MAIN BED — ADPCM-B only, no FM/SSG ---------------------- */
+    demo_fix_puts(2u, 5u, "1. MAIN BED (ADPCM-B track 1)     ", 2u);
+    soundStopAll();                            snd_step();
+    soundSceneReset();                         snd_step();
+    soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();  /* FM / SSG muted */
+    playSFXB(SOUND_BED_STAGE_ONE);             snd_step();
+    demo_fix_puts(2u, 6u, "smooth streamed loop, no FM       ", 1u);
+    if (uwait(160u)) return 1u;
 
-    /* --- 4 music tracks, each with a real fade between -------------- */
-    demo_fix_puts(2u, 5u, "MUSIC PLAYBACK                 ", 2u);
-    for (i = 0u; i < 4u; i++) {
-        char lbl[4];
-        lbl[0] = 'T'; lbl[1] = (char)('0' + (i + 1u)); lbl[2] = '\0';
-        demo_fix_puts(2u, 6u, lbl,               1u);
-        demo_fix_puts(5u, 6u, s_track_names[i],  2u);
-        soundFadeOutSpeed(6u);                snd_step();
-        if (uwait(8u)) return 1u;
-        soundStopAll();                       snd_step();
-        soundPlayGameLoop(s_tracks[i]);       snd_step();
-        if (uwait(120u)) return 1u;
-    }
-
-    soundFadeOutSpeed(6u);    snd_step();
-    if (uwait(10u)) return 1u;
-    soundStopAll();           snd_step();
-
-    /* --- SFX section -------------------------------------------------- */
-    demo_fix_puts(2u,  5u, "SFX TRIGGERS                   ", 2u);
-    demo_fix_puts(2u,  6u, "                               ", 0u);
+    /* --- 2) SFX TRIGGERS — ADPCM-A short hits over the bed --------- */
+    demo_fix_puts(2u, 5u, "2. ADPCM-A SFX TRIGGERS           ", 2u);
+    demo_fix_puts(2u, 6u, "each SFX fires once               ", 1u);
     for (i = 0u; i < 6u; i++) {
-        demo_fix_puts(2u, 8u, s_sfx_names[i], 1u);
+        demo_fix_puts(2u, 8u, s_sfx_names[i], 2u);
         playSFX(s_sfx[i]);    snd_step();
         if (uwait(36u)) return 1u;
     }
     demo_fix_puts(2u, 8u, "                ", 0u);
 
-    /* --- Full mix (each command separated by vblank) ----------------- */
-    soundStopAll();           snd_step();
-    soundSceneReset();        snd_step();
-    demo_fix_puts(2u, 12u, "FULL MIX                       ", 2u);
-    soundApplyMix(0x30u, 0xB8u, 0x08u, 0x09u); snd_step();
-    playSFXB(SOUND_BED_STAGE_ONE);             snd_step();
-    playFMTrack(SOUND_FM_BASS_MOTIF);          snd_step();
-    playSSGTrack(SOUND_SSG_MENU_LOOP);         snd_step();
-    soundSetSSGPreset(1u);                     snd_step();
-    demo_fix_puts(2u, 13u, "ADPCM-B BED + FM BASS",   1u);
-    demo_fix_puts(2u, 14u, "SSG LINE + ADPCM-A HIT",  0u);
+    /* --- 3) SSG CUE — short SSG track over the bed ----------------- */
+    demo_fix_puts(2u, 5u, "3. SSG CUE  (arcade alert, short) ", 2u);
+    soundApplyMix(0x30u, 0xB8u, 0x0Au, 0x00u); snd_step();  /* SSG audible */
+    soundSetSSGPreset(2u);                     snd_step();
+    playSSGTrack(SOUND_SSG_ARCADE_ALERT);      snd_step();
     if (uwait(90u)) return 1u;
-    playSFX(SOUND_SFX_IMPACT_HIT); snd_step();
-    if (uwait(80u)) return 1u;
+    soundSetSSGVolume(0x00u);                  snd_step();  /* SSG silent */
+    soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
 
-    soundFadeOutSpeed(6u); snd_step();
-    if (uwait(20u)) return 1u;
-    soundStopAll();        snd_step();
-
-    /* --- Driver-function showcase ------------------------------------ */
-    /*
-     * Demonstrate the LIVE control surface of the Z80 driver: per-channel
-     * volume sweeps, tempo changes, fade-out / fade-cancel, and the
-     * difference between soundStopMusic (music only) and soundStopAll.
-     * Each step shows its name on row 18 so the user can read what
-     * driver call is happening as they hear the result.
-     */
-    soundStopAll();             snd_step();
-    soundSceneReset();          snd_step();
-    soundApplyMix(0x30u, 0xB8u, 0x08u, 0x08u); snd_step();
-
-    demo_fix_puts(2u, 17u, "DRIVER FUNCTIONS                  ", 2u);
-    demo_fix_puts(2u, 18u, "                                  ", 0u);
-
-    /* 1) Start a track to demonstrate against */
-    demo_fix_puts(2u, 18u, "playMusic(SAMURAI_GAME_LOOP)      ", 1u);
-    playMusic(SOUND_MUSIC_SAMURAI_GAME_LOOP); snd_step();
-    if (uwait(60u)) return 1u;
-
-    /* 2) FM channel volume sweep */
-    demo_fix_puts(2u, 18u, "soundSetFMVolume sweep (0x0F->01) ", 1u);
-    {
-        int v;
-        for (v = 0x0F; v >= 0x01; v--) {
-            soundSetFMVolume((uint8_t)v); snd_step();
-            if (uwait(3u)) return 1u;
-        }
-        soundSetFMVolume(0x08u); snd_step();
-    }
-    if (uwait(20u)) return 1u;
-
-    /* 3) ADPCM-B bed volume sweep (lift, then drop) */
-    demo_fix_puts(2u, 18u, "soundSetADPCMBVolume sweep (B8/F8)", 1u);
-    soundSetADPCMBVolume(0xF8u); snd_step();
+    /* --- 4) FM DEMO — play ONE FM track, then stop FM entirely ---- */
+    demo_fix_puts(2u, 5u, "4. FM ONE-SHOT (then silenced)    ", 2u);
+    demo_fix_puts(2u, 6u, "FM driver: harsh, used sparingly  ", 0u);
+    soundApplyMix(0x30u, 0xB8u, 0x00u, 0x0Au); snd_step();  /* FM audible */
+    playFMTrack(SOUND_FM_BASS_MOTIF);          snd_step();
+    if (uwait(120u)) return 1u;
+    soundSetFMVolume(0x00u);                   snd_step();  /* FM mute */
+    soundStopMusic();                          snd_step();  /* belt + braces */
+    soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
+    demo_fix_puts(2u, 6u, "FM stopped, only ADPCM-B continues", 1u);
     if (uwait(40u)) return 1u;
-    soundSetADPCMBVolume(0x40u); snd_step();
-    if (uwait(40u)) return 1u;
-    soundSetADPCMBVolume(0xB8u); snd_step();
-    if (uwait(20u)) return 1u;
 
-    /* 4) Tempo change live */
-    demo_fix_puts(2u, 18u, "soundSetTempo(3) - slower         ", 1u);
-    soundSetTempo(3u); snd_step();
-    if (uwait(80u)) return 1u;
-    demo_fix_puts(2u, 18u, "soundSetTempo(7) - faster         ", 1u);
-    soundSetTempo(7u); snd_step();
-    if (uwait(80u)) return 1u;
-    soundSetTempo(5u); snd_step();
+    /* --- 5) DRIVER FUNCTIONS — controls on the bed ----------------- */
+    demo_fix_puts(2u, 5u, "5. DRIVER FUNCTIONS               ", 2u);
+    demo_fix_puts(2u, 17u, "                                  ", 0u);
 
-    /* 5) Fade out, then cancel half-way */
-    demo_fix_puts(2u, 18u, "soundFadeOutSpeed(8) + cancel @24f", 2u);
+    demo_fix_puts(2u, 18u, "soundSetADPCMBVolume sweep        ", 1u);
+    soundSetADPCMBVolume(0xF8u); snd_step();  if (uwait(40u)) return 1u;
+    soundSetADPCMBVolume(0x40u); snd_step();  if (uwait(40u)) return 1u;
+    soundSetADPCMBVolume(0xB8u); snd_step();  if (uwait(20u)) return 1u;
+
+    demo_fix_puts(2u, 18u, "soundFadeOutSpeed(8) + cancel     ", 1u);
     soundFadeOutSpeed(8u); snd_step();
-    if (uwait(24u)) return 1u;
-    demo_fix_puts(2u, 19u, "soundCancelFade()                 ", 2u);
-    soundCancelFade(); snd_step();
+    if (uwait(20u)) return 1u;
+    soundCancelFade();     snd_step();
     if (uwait(40u)) return 1u;
-    demo_fix_puts(2u, 19u, "                                  ", 0u);
 
-    /* 6) Now let the fade complete */
     demo_fix_puts(2u, 18u, "soundFadeOutSpeed(4) until silent ", 1u);
     soundFadeOutSpeed(4u); snd_step();
-    if (uwait(80u)) return 1u;
+    if (uwait(90u)) return 1u;
 
-    /* 7) Stop ONLY music (SFX would still play); fire one SFX afterward */
-    demo_fix_puts(2u, 18u, "soundStopMusic + playSFX (alive)  ", 1u);
+    demo_fix_puts(2u, 18u, "soundStopMusic + playSFX          ", 1u);
     soundStopMusic(); snd_step();
     if (uwait(10u)) return 1u;
     playSFX(SOUND_SFX_COIN_CHIME); snd_step();
-    if (uwait(40u)) return 1u;
-    playSFX(SOUND_SFX_BLADE_WHOOSH); snd_step();
-    if (uwait(40u)) return 1u;
+    if (uwait(36u)) return 1u;
+    playSFX(SOUND_SFX_IMPACT_HIT); snd_step();
+    if (uwait(36u)) return 1u;
 
-    /* 8) Final full stop */
     demo_fix_puts(2u, 18u, "soundStopAll                      ", 1u);
     soundStopAll(); snd_step();
     if (uwait(30u)) return 1u;
