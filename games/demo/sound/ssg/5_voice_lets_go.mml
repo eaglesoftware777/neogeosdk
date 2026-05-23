@@ -1,16 +1,18 @@
-; 5_voice_lets_go — SSG voice cue: "LET'S GO!"
+; 5_voice_lets_go — SSG voice approximation: "LET'S GO!"
 ;
-; Two-syllable rising cue:
-;   LETS = E5  short staccato burst
-;   GO!  = A5  longer ringing accent
+; Two-syllable rising cue with consonant noise bursts.
 
 T220
-P2
 V13
 O5
-L32
+L64
 
-E E E  R32
-A A A8
+; "L-" + "ETS" vowel glide              (~280 ms)
+P3 D E F
+P0 G G+ A A A B A G F+ E
+P3 R64
 
+; "G-" + "O!" long descending vowel     (~400 ms)
+P3 E F+ G
+P0 A B > C C C C < B B A G G F+ E D D
 ~

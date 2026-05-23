@@ -23,3 +23,14 @@ vol_a=0F
 vol_b=08
 vol_c=04
 noise_freq=06
+
+; Noise-mix preset for voice consonant simulation: channel A plays
+; TONE + NOISE simultaneously; channels B and C are silent.  Mixer
+; bit layout: bit0 /Tone A, bit3 /Noise A — both 0 means both on.
+[preset 3]
+name=Voice Consonant
+tone_mask=0x36
+vol_a=0E
+vol_b=00
+vol_c=00
+noise_freq=10
