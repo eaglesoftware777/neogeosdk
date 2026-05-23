@@ -2,7 +2,19 @@
 
 > **v1.3.1 — new tabs**
 >
-> Sound Studio gained five new tabs in v1.3.1:
+> Sound Studio gained SEVEN new tabs in v1.3.1:
+>
+> - **Live Waveform** — generate a clip (C major arpeggio / step pattern
+>   / MML phrase) and watch the WAVEFORM + FFT SPECTRUM animate as the
+>   clip plays through `QAudioSink`.  Spectrum is colour-graded (green
+>   low-freq → yellow mid → red high) so the harmonic balance is read
+>   at a glance.
+> - **MML Designer** — visual piano-roll MML editor.  Click cells in a
+>   2-octave × N-step grid to place notes; the corresponding `t### l# o#
+>   c d e ...` text is generated live and can be saved to
+>   `sound/mml/`.  Step count, tempo, and step length are adjustable.
+>
+> Plus the five tabs from the previous v1.3.1 commits:
 >
 > - **Pipeline** — runs every audio build step (samples / vrom /
 >   fmpatches / mml / ssg / ssgconfig / fm / m1rom) with a status pill
