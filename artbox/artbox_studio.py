@@ -2020,6 +2020,505 @@ class RomInventoryTab(QWidget):
                 self.table.setItem(r, c, item)
 
 
+###############################################################################
+#  Hex Sprite Inspector — view a tile's raw C-ROM bytes + decoded pixels +
+#  let the user swap palette and instantly recolour
+###############################################################################
+class HexSpriteInspectorTab(QWidget):
+    def __init__(self, c1, c2, palettes):
+        super().__init__()
+        self.c1 = c1
+        self.c2 = c2
+        self.palettes = palettes
+        self._tile_idx = 0
+        self._zoom = 8
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Hex Sprite Inspector</b>"))
+        layout.addWidget(QLabel(
+            "Pick a tile index, view its raw bytes from C1/C2, the "
+            "decoded 16×16 pixel grid, and swap palettes live."))
+
+        # Control row
+        ctrl = QHBoxLayout()
+        ctrl.addWidget(QLabel("Tile #"))
+        max_tiles = max(1, len(self.c1) // 64)
+        self.sp_tile = QSpinBox()
+        self.sp_tile.setRange(0, max_tiles - 1)
+        self.sp_tile.valueChanged.connect(self._on_tile)
+        ctrl.addWidget(self.sp_tile)
+        ctrl.addWidget(QLabel("Zoom"))
+        self.sp_zoom = QSpinBox()
+        self.sp_zoom.setRange(1, 24)
+        self.sp_zoom.setValue(self._zoom)
+        self.sp_zoom.valueChanged.connect(self._on_zoom)
+        ctrl.addWidget(self.sp_zoom)
+        ctrl.addWidget(QLabel("Palette"))
+        self.cb_pal = QComboBox()
+        for k in sorted(self.palettes.keys()):
+            self.cb_pal.addItem(f"{k}", k)
+        self.cb_pal.currentIndexChanged.connect(lambda _: self._refresh())
+        ctrl.addWidget(self.cb_pal, 1)
+        layout.addLayout(ctrl)
+
+        # Big preview + hex panel splitter
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+
+        # LEFT: preview + palette strip
+        left = QWidget()
+        left_l = QVBoxLayout(left)
+        left_l.addWidget(QLabel("<b>Decoded pixels</b>"))
+        self.preview = QLabel()
+        self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.preview.setStyleSheet(
+            "background:#1a1a1a; border:1px solid #333;")
+        self.preview.setMinimumSize(256, 256)
+        left_l.addWidget(self.preview, 1)
+        left_l.addWidget(QLabel("<b>Palette (current)</b>"))
+        self.pal_strip = QLabel()
+        self.pal_strip.setFixedHeight(28)
+        self.pal_strip.setStyleSheet("background:#1a1a1a; border:1px solid #333;")
+        left_l.addWidget(self.pal_strip)
+        splitter.addWidget(left)
+
+        # RIGHT: hex dumps + tile palette indices
+        right = QWidget()
+        right_l = QVBoxLayout(right)
+        right_l.addWidget(QLabel("<b>C1 ROM bytes (64 B / tile)</b>"))
+        self.hex_c1 = QPlainTextEdit()
+        self.hex_c1.setReadOnly(True)
+        self.hex_c1.setMaximumHeight(140)
+        self.hex_c1.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#a0e0a0;"
+            " font-family:'Courier New',monospace; }")
+        right_l.addWidget(self.hex_c1)
+        right_l.addWidget(QLabel("<b>C2 ROM bytes (64 B / tile)</b>"))
+        self.hex_c2 = QPlainTextEdit()
+        self.hex_c2.setReadOnly(True)
+        self.hex_c2.setMaximumHeight(140)
+        self.hex_c2.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#a0c0e0;"
+            " font-family:'Courier New',monospace; }")
+        right_l.addWidget(self.hex_c2)
+        right_l.addWidget(QLabel("<b>Pixel palette indices (16×16)</b>"))
+        self.idx_grid = QPlainTextEdit()
+        self.idx_grid.setReadOnly(True)
+        self.idx_grid.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#cfcf80;"
+            " font-family:'Courier New',monospace; font-size:11px; }")
+        right_l.addWidget(self.idx_grid, 1)
+        splitter.addWidget(right)
+        splitter.setSizes([400, 600])
+
+        layout.addWidget(splitter, 1)
+        self._refresh()
+
+    def _on_tile(self, v):
+        self._tile_idx = v
+        self._refresh()
+
+    def _on_zoom(self, v):
+        self._zoom = v
+        self._refresh()
+
+    def _refresh(self):
+        if not self.c1 or not self.c2:
+            self.preview.setText("(no C-ROM loaded)")
+            return
+        tile = decode_tile(self.c1, self.c2, self._tile_idx)
+        # Palette
+        pal_key = self.cb_pal.currentData()
+        pal_rgb = self.palettes.get(pal_key, [(0, 0, 0)] * 16)
+        if len(pal_rgb) < 16:
+            pal_rgb = list(pal_rgb) + [(0, 0, 0)] * (16 - len(pal_rgb))
+
+        # Render preview
+        pix = tile_to_pixmap(tile, pal_rgb, zoom=self._zoom)
+        self.preview.setPixmap(pix)
+
+        # Render palette strip (16 swatches)
+        strip = QImage(16 * 16, 24, QImage.Format.Format_RGB32)
+        strip.fill(QColor(20, 20, 30))
+        painter = QPainter(strip)
+        for i, (r, g, b) in enumerate(pal_rgb[:16]):
+            painter.fillRect(i * 16, 0, 16, 24, QColor(r, g, b))
+            painter.setPen(QColor(60, 60, 60))
+            painter.drawRect(i * 16, 0, 15, 23)
+        painter.end()
+        from PyQt6.QtGui import QPixmap
+        self.pal_strip.setPixmap(QPixmap.fromImage(strip))
+
+        # Hex dump
+        base = self._tile_idx * 64
+        def hex_block(buf):
+            out = []
+            for r in range(4):
+                row = buf[base + r * 16:base + (r + 1) * 16]
+                out.append(" ".join(f"{b:02X}" for b in row))
+            return "\n".join(out)
+        self.hex_c1.setPlainText(hex_block(self.c1))
+        self.hex_c2.setPlainText(hex_block(self.c2))
+
+        # Pixel grid as palette indices
+        rows = []
+        for y in range(16):
+            rows.append(" ".join(f"{tile[y, x]:X}" for x in range(16)))
+        self.idx_grid.setPlainText("\n".join(rows))
+
+
+###############################################################################
+#  Movement / Animation Designer
+#  ---------------------------------------------------------------------------
+#  Build a frame sequence (a list of tile-group indices each with a duration)
+#  and watch it loop in the preview at the chosen FPS.
+###############################################################################
+class MovementDesignerTab(QWidget):
+    def __init__(self, c1, c2, palettes, manifest):
+        super().__init__()
+        self.c1 = c1
+        self.c2 = c2
+        self.palettes = palettes
+        self.manifest = manifest
+        self._frames = []     # list of dicts {"tile": int, "dur_ms": int}
+        self._cursor = 0
+        self._elapsed = 0
+        self._anim_running = False
+        self._zoom = 6
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Movement / Animation Designer</b>"))
+        layout.addWidget(QLabel(
+            "Build a frame sequence — tile index + duration per frame — "
+            "and preview it looping.  Export prints C arrays you can "
+            "paste into a scene."))
+
+        # Top row: frame controls
+        ctrl = QHBoxLayout()
+        ctrl.addWidget(QLabel("Tile"))
+        self.sp_tile = QSpinBox()
+        max_tiles = max(1, len(self.c1) // 64)
+        self.sp_tile.setRange(0, max_tiles - 1)
+        ctrl.addWidget(self.sp_tile)
+        ctrl.addWidget(QLabel("Dur (ms)"))
+        self.sp_dur = QSpinBox()
+        self.sp_dur.setRange(16, 4000)
+        self.sp_dur.setSingleStep(33)
+        self.sp_dur.setValue(100)
+        ctrl.addWidget(self.sp_dur)
+        ctrl.addWidget(QLabel("Palette"))
+        self.cb_pal = QComboBox()
+        for k in sorted(self.palettes.keys()):
+            self.cb_pal.addItem(str(k), k)
+        ctrl.addWidget(self.cb_pal, 1)
+        btn_add = QPushButton("+ Add Frame")
+        btn_add.clicked.connect(self._add_frame)
+        ctrl.addWidget(btn_add)
+        btn_del = QPushButton("- Remove Sel")
+        btn_del.clicked.connect(self._del_frame)
+        ctrl.addWidget(btn_del)
+        layout.addLayout(ctrl)
+
+        # Splitter: frame list + preview
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+
+        # LEFT: frame list
+        left = QWidget()
+        ll = QVBoxLayout(left)
+        ll.addWidget(QLabel("<b>Frame sequence</b>"))
+        self.lst = QListWidget()
+        self.lst.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
+        ll.addWidget(self.lst, 1)
+        ll_btn = QHBoxLayout()
+        for label, fn in [("↑ Up", self._move_up),
+                          ("↓ Down", self._move_down),
+                          ("Clear", self._clear_all)]:
+            b = QPushButton(label)
+            b.clicked.connect(fn)
+            ll_btn.addWidget(b)
+        ll.addLayout(ll_btn)
+        splitter.addWidget(left)
+
+        # RIGHT: animation preview + export
+        right = QWidget()
+        rl = QVBoxLayout(right)
+        rl.addWidget(QLabel("<b>Loop preview</b>"))
+        self.preview = QLabel()
+        self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.preview.setStyleSheet(
+            "background:#1a1a1a; border:1px solid #333; min-height:200px;")
+        rl.addWidget(self.preview, 1)
+        play_row = QHBoxLayout()
+        self.btn_play = QPushButton("▶ Play")
+        self.btn_play.clicked.connect(self._toggle)
+        self.btn_step = QPushButton("Step →")
+        self.btn_step.clicked.connect(self._step_one)
+        play_row.addWidget(self.btn_play)
+        play_row.addWidget(self.btn_step)
+        play_row.addStretch()
+        rl.addLayout(play_row)
+        rl.addWidget(QLabel("<b>Export (C array)</b>"))
+        self.exp = QPlainTextEdit()
+        self.exp.setReadOnly(True)
+        self.exp.setMaximumHeight(120)
+        self.exp.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#a0c0e0;"
+            " font-family:'Courier New',monospace; font-size:11px; }")
+        rl.addWidget(self.exp)
+        splitter.addWidget(right)
+        splitter.setSizes([280, 600])
+
+        layout.addWidget(splitter, 1)
+
+        self.timer = QTimer(self)
+        self.timer.setInterval(33)
+        self.timer.timeout.connect(self._tick)
+
+    def _add_frame(self):
+        f = {"tile": self.sp_tile.value(),
+             "dur_ms": self.sp_dur.value(),
+             "pal": self.cb_pal.currentData()}
+        self._frames.append(f)
+        self.lst.addItem(f"#{len(self._frames)-1}  tile={f['tile']}  {f['dur_ms']}ms  pal={f['pal']}")
+        self._update_export()
+
+    def _del_frame(self):
+        row = self.lst.currentRow()
+        if row < 0 or row >= len(self._frames):
+            return
+        del self._frames[row]
+        self.lst.takeItem(row)
+        self._update_export()
+
+    def _clear_all(self):
+        self._frames.clear()
+        self.lst.clear()
+        self._update_export()
+
+    def _move_up(self):
+        row = self.lst.currentRow()
+        if row <= 0:
+            return
+        self._frames[row], self._frames[row-1] = self._frames[row-1], self._frames[row]
+        self._rebuild_list()
+        self.lst.setCurrentRow(row - 1)
+
+    def _move_down(self):
+        row = self.lst.currentRow()
+        if row < 0 or row >= len(self._frames) - 1:
+            return
+        self._frames[row], self._frames[row+1] = self._frames[row+1], self._frames[row]
+        self._rebuild_list()
+        self.lst.setCurrentRow(row + 1)
+
+    def _rebuild_list(self):
+        self.lst.clear()
+        for i, f in enumerate(self._frames):
+            self.lst.addItem(
+                f"#{i}  tile={f['tile']}  {f['dur_ms']}ms  pal={f['pal']}")
+        self._update_export()
+
+    def _toggle(self):
+        if self._anim_running:
+            self.timer.stop()
+            self._anim_running = False
+            self.btn_play.setText("▶ Play")
+        elif self._frames:
+            self._cursor = 0
+            self._elapsed = 0
+            self.timer.start()
+            self._anim_running = True
+            self.btn_play.setText("⏸ Pause")
+            self._draw_frame()
+
+    def _step_one(self):
+        if not self._frames:
+            return
+        self._cursor = (self._cursor + 1) % len(self._frames)
+        self._draw_frame()
+
+    def _tick(self):
+        if not self._frames:
+            self.timer.stop()
+            self._anim_running = False
+            return
+        self._elapsed += 33
+        cur = self._frames[self._cursor]
+        if self._elapsed >= cur["dur_ms"]:
+            self._cursor = (self._cursor + 1) % len(self._frames)
+            self._elapsed = 0
+            self._draw_frame()
+
+    def _draw_frame(self):
+        if not self._frames:
+            return
+        f = self._frames[self._cursor]
+        if not self.c1 or not self.c2:
+            return
+        tile = decode_tile(self.c1, self.c2, f["tile"])
+        pal = self.palettes.get(f["pal"], [(0, 0, 0)] * 16)
+        if len(pal) < 16:
+            pal = list(pal) + [(0, 0, 0)] * (16 - len(pal))
+        self.preview.setPixmap(tile_to_pixmap(tile, pal, zoom=self._zoom))
+
+    def _update_export(self):
+        if not self._frames:
+            self.exp.setPlainText("/* (empty — add frames first) */")
+            return
+        lines = [
+            "/* Generated by Artbox Studio — Movement Designer */",
+            f"static const uint16_t anim_frame_tile[{len(self._frames)}] = {{",
+            "    " + ", ".join(f"{f['tile']}u" for f in self._frames),
+            "};",
+            f"static const uint8_t  anim_frame_dur[{len(self._frames)}] = {{",
+            "    " + ", ".join(f"{max(1, f['dur_ms']//16)}u" for f in self._frames)
+                + "  /* duration in vblank frames (1/60s) */",
+            "};",
+        ]
+        self.exp.setPlainText("\n".join(lines))
+
+
+###############################################################################
+#  Level Designer — paint a tilemap, export as a C array of tile indices
+###############################################################################
+class LevelDesignerTab(QWidget):
+    def __init__(self, c1, c2, palettes):
+        super().__init__()
+        self.c1 = c1
+        self.c2 = c2
+        self.palettes = palettes
+        self._cols = 20
+        self._rows = 14
+        self._cell_px = 24
+        self._brush_tile = 0
+        self._brush_pal = 0
+        self._map = [[0] * self._cols for _ in range(self._rows)]
+        self._pal_idx = [[0] * self._cols for _ in range(self._rows)]
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Level / Tilemap Designer</b>"))
+        layout.addWidget(QLabel(
+            f"Paint a {self._cols}×{self._rows} tilemap.  Click to paint, "
+            "right-click to erase.  Export gives you a ready-to-paste C array."))
+
+        # Control row
+        ctrl = QHBoxLayout()
+        ctrl.addWidget(QLabel("Brush tile"))
+        self.sp_tile = QSpinBox()
+        self.sp_tile.setRange(0, max(0, (len(self.c1) // 64) - 1))
+        self.sp_tile.valueChanged.connect(
+            lambda v: setattr(self, "_brush_tile", v))
+        ctrl.addWidget(self.sp_tile)
+        ctrl.addWidget(QLabel("Brush pal"))
+        self.cb_pal = QComboBox()
+        for k in sorted(self.palettes.keys()):
+            self.cb_pal.addItem(str(k), k)
+        self.cb_pal.currentIndexChanged.connect(
+            lambda _: setattr(self, "_brush_pal",
+                              self.cb_pal.currentData()))
+        ctrl.addWidget(self.cb_pal, 1)
+        btn_clear = QPushButton("Clear Map")
+        btn_clear.clicked.connect(self._clear)
+        ctrl.addWidget(btn_clear)
+        btn_export = QPushButton("Update Export")
+        btn_export.clicked.connect(self._refresh_export)
+        ctrl.addWidget(btn_export)
+        layout.addLayout(ctrl)
+
+        # Splitter: canvas + export
+        splitter = QSplitter(Qt.Orientation.Vertical)
+
+        # Canvas
+        self.canvas = QLabel()
+        self.canvas.setStyleSheet("background:#0c0c10; border:1px solid #333;")
+        self.canvas.setFixedSize(self._cols * self._cell_px,
+                                 self._rows * self._cell_px)
+        self.canvas.setAlignment(Qt.AlignmentFlag.AlignTop |
+                                 Qt.AlignmentFlag.AlignLeft)
+        self.canvas.mousePressEvent  = self._on_mouse
+        self.canvas.mouseMoveEvent   = self._on_mouse
+        splitter.addWidget(self.canvas)
+
+        self.exp = QPlainTextEdit()
+        self.exp.setReadOnly(True)
+        self.exp.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#a0e0a0;"
+            " font-family:'Courier New',monospace; font-size:11px; }")
+        splitter.addWidget(self.exp)
+        splitter.setSizes([400, 200])
+        layout.addWidget(splitter, 1)
+
+        self._render()
+        self._refresh_export()
+
+    def _on_mouse(self, evt):
+        x = int(evt.position().x()) // self._cell_px
+        y = int(evt.position().y()) // self._cell_px
+        if x < 0 or x >= self._cols or y < 0 or y >= self._rows:
+            return
+        if evt.buttons() & Qt.MouseButton.LeftButton:
+            self._map[y][x] = self._brush_tile
+            self._pal_idx[y][x] = self._brush_pal
+        elif evt.buttons() & Qt.MouseButton.RightButton:
+            self._map[y][x] = 0
+            self._pal_idx[y][x] = 0
+        self._render()
+
+    def _clear(self):
+        for y in range(self._rows):
+            for x in range(self._cols):
+                self._map[y][x] = 0
+                self._pal_idx[y][x] = 0
+        self._render()
+        self._refresh_export()
+
+    def _render(self):
+        canvas = QImage(self._cols * self._cell_px,
+                        self._rows * self._cell_px,
+                        QImage.Format.Format_RGB32)
+        canvas.fill(QColor(12, 12, 16))
+        painter = QPainter(canvas)
+        pen = QPen(QColor(40, 40, 50), 1)
+        painter.setPen(pen)
+        # grid + tile thumbnails
+        for y in range(self._rows):
+            for x in range(self._cols):
+                rect_x = x * self._cell_px
+                rect_y = y * self._cell_px
+                t = self._map[y][x]
+                if t > 0 and self.c1 and self.c2:
+                    pal_key = self._pal_idx[y][x]
+                    pal_rgb = self.palettes.get(pal_key, [(0, 0, 0)] * 16)
+                    if len(pal_rgb) < 16:
+                        pal_rgb = list(pal_rgb) + [(0, 0, 0)] * (16 - len(pal_rgb))
+                    tile = decode_tile(self.c1, self.c2, t)
+                    pix = tile_to_pixmap(tile, pal_rgb, zoom=1)
+                    if pix and not pix.isNull():
+                        scaled = pix.toImage().scaled(
+                            self._cell_px, self._cell_px,
+                            Qt.AspectRatioMode.IgnoreAspectRatio,
+                            Qt.TransformationMode.FastTransformation)
+                        painter.drawImage(rect_x, rect_y, scaled)
+                painter.drawRect(rect_x, rect_y,
+                                 self._cell_px - 1, self._cell_px - 1)
+        painter.end()
+        from PyQt6.QtGui import QPixmap
+        self.canvas.setPixmap(QPixmap.fromImage(canvas))
+
+    def _refresh_export(self):
+        lines = [
+            "/* Generated by Artbox Studio — Level Designer */",
+            f"#define LEVEL_W {self._cols}",
+            f"#define LEVEL_H {self._rows}",
+            "",
+            f"static const uint16_t level_tile[LEVEL_H][LEVEL_W] = {{"
+        ]
+        for y in range(self._rows):
+            row = ", ".join(f"{t:3d}u" for t in self._map[y])
+            lines.append(f"    {{ {row} }}{',' if y < self._rows-1 else ''}")
+        lines.append("};")
+        self.exp.setPlainText("\n".join(lines))
+
+
 class ArtboxStudio(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -2072,6 +2571,16 @@ class ArtboxStudio(QMainWindow):
 
         self.tab_browser = AssetBrowserTab()
         tabs.addTab(self.tab_browser, "Asset Browser")
+
+        self.tab_hex = HexSpriteInspectorTab(self.c1, self.c2, self.palettes)
+        tabs.addTab(self.tab_hex, "Hex Sprite Inspector")
+
+        self.tab_move = MovementDesignerTab(
+            self.c1, self.c2, self.palettes, self.manifest)
+        tabs.addTab(self.tab_move, "Movement Designer")
+
+        self.tab_level = LevelDesignerTab(self.c1, self.c2, self.palettes)
+        tabs.addTab(self.tab_level, "Level Designer")
 
         self.tab_pipeline = PipelineRunnerTab()
         tabs.addTab(self.tab_pipeline, "Pipeline")

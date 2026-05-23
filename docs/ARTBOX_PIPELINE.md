@@ -2,7 +2,22 @@
 
 > **v1.3.1 — Artbox Studio Pipeline tab + Asset Rules editor**
 >
-> `artbox/artbox_studio.py` gained FIVE new tabs in v1.3.1:
+> `artbox/artbox_studio.py` gained EIGHT new tabs in v1.3.1:
+>
+> - **Hex Sprite Inspector** — pick any tile index, see its decoded
+>   16×16 pixel grid, the raw C1/C2 ROM bytes (4 rows × 16 hex
+>   bytes each), and a live palette-swap dropdown.  Useful when
+>   debugging palette assignments or verifying tile order in C-ROM.
+> - **Movement Designer** — build a frame sequence (tile + duration
+>   per frame), loop-preview it at the chosen FPS, and the EXPORT
+>   pane writes a ready-to-paste pair of C arrays (`anim_frame_tile[]`
+>   and `anim_frame_dur[]` in vblank units).
+> - **Level Designer** — paint a 20×14 tilemap.  Left-click paints
+>   the current brush (tile + palette); right-click erases.  Tiles
+>   are rendered as scaled thumbnails so you see exactly what's at
+>   each cell.  Export gives a `level_tile[LEVEL_H][LEVEL_W]` C array.
+>
+> Plus the five tabs from the previous v1.3.1 commits:
 >
 > - **Pipeline** — run every step (img2neo / genscreens /
 >   gen_sprite_meta / fixtiles / romdbimgimport / romtiles /
