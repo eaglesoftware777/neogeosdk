@@ -1,24 +1,21 @@
-; 0_ssg_example_a — Galaxian-style arpeggio (C major, mid range)
+; 0_ssg_example_a — Simple C major arpeggio (Galaxian intro feel)
 
-T220
+T180
 P0
-V11
-O4
-L16
+V13
+O5
+L8
 
-C E G C  E G C E  R4
-G E C G  E C R4
-F A C F  A C R4
-G E C R4
+; A — ascending arpeggio
+C E G > C  < G E C4
+C E G > C  < G E C4
 
-C C E G  C C E G
-D D F A  D D F A
-E E G C  E E G C
-F F A C  F F A C  R4
+; B — variation
+D F A > D  < A F D4
+E G > C E  < G E C4
 
-C E G E  C E G E
-D F A F  D F A F
-E G C G  E G C G
-F2 R4 R4
+; C — descending close
+> C < B A G  F E D C
+G4 E4 C4 R4
 
 ~
