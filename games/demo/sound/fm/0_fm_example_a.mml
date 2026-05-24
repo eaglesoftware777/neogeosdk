@@ -1,26 +1,23 @@
-; 0_fm_example_a — Streets-of-Rage / Bare Knuckle style driving lead
+; 0_fm_example_a — Arcade FM lead hook (C minor)
 ;
-; C minor groove.  Eighth-note ostinato on the root anchors the
-; rhythm, then a 3rd/5th lift, then a falling answer phrase.
+; Catchy 4-bar phrase with clear pitch movement on every beat.
 
 T220
 I0
 V13
-O4
-L8
+O5
+L16
 
-; A — root ostinato (steady 8th-note pulse)
-C C E- G  C C E- G
-C C E- G  C C E- G
+; phrase A — opening hook
+G E- C E-  G > C E- G
+F D < B- D  F A- > C F
 
-; B — push to fourth (drives forward)
-F F A- > C  F F A- > C
-< G G > D F  < G G > D F
-
-; C — answer phrase, descending
+; phrase B — descend
 > C < B- A- G  F E- D C
-> C < B- A- G  F E- D C
-; tail — short cadence
-B- F G C  > C2
+> C < A- G F  E- D < B- > C
+
+; phrase C — call/answer
+G > C E- G  < B- > D F < B-
+A- > C E- A-  G E- C2
 
 ~
