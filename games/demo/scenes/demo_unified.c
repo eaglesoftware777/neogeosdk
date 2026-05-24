@@ -634,33 +634,34 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundSetFMVolume(0x00u); snd_step();
     demo_fix_puts(2u, 13u, "         ", 0u);
 
-    /* --- 5) FM LFO (NEW DRIVER FEATURE — $22 register) ------------- *
+    /* --- 5) FM LFO (DRIVER FEATURE — $22 register) ---------------- *
      *
-     * Cycle four LFO settings.  Each setting RESTARTS the FM track so
-     * the effect is heard from the beginning of the melody rather than
-     * mid-way through where most listeners can't isolate the change.
-     * Patch's AMS/PMS bits (from fm/patches.fm) must be non-zero for
-     * the LFO to actually modulate. */
+     * Play one FM track and toggle the LFO live across four settings.
+     * fm_apply_patch no longer overrides register $22, so the user
+     * setting from soundFMSetLFO persists across notes — the listener
+     * hears the same melody change character (flat → slow wobble →
+     * vibrato → off) as the section progresses.  Patch's AMS/PMS bits
+     * in fm/patches.fm must be non-zero for the modulation to be
+     * audible. */
     demo_fix_puts(2u, 5u, "5. FM LFO  ($22, vibrato/tremolo) ", 2u);
-    {
-        static const uint8_t s_lfo_vals[4]  = { 0x00u, 0x09u, 0x0Bu, 0x0Eu };
-        static const char *const s_lfo_lbls[4] = {
-            "LFO OFF      (flat reference)     ",
-            "LFO rate=1   (slowest wobble)     ",
-            "LFO rate=3   (medium vibrato)     ",
-            "LFO rate=6   (fastest vibrato)    "
-        };
-        uint8_t k;
-        for (k = 0u; k < 4u; k++) {
-            demo_fix_puts(2u, 15u, s_lfo_lbls[k], 1u);
-            soundStopAll();                            snd_step();
-            soundSceneReset();                         snd_step();
-            soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
-            soundFMSetLFO(s_lfo_vals[k]);              snd_step();
-            playFMTrack(6u);                           snd_step();
-            if (uwait(220u)) return 1u;
-        }
-    }
+    soundStopAll();                            snd_step();
+    soundSceneReset();                         snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
+    playFMTrack(6u);                           snd_step();
+
+    demo_fix_puts(2u, 15u, "LFO OFF      (flat reference)     ", 1u);
+    soundFMSetLFO(0x00u); snd_step();
+    if (uwait(220u)) return 1u;
+    demo_fix_puts(2u, 15u, "LFO rate=1   (slow wobble)        ", 1u);
+    soundFMSetLFO(0x09u); snd_step();
+    if (uwait(220u)) return 1u;
+    demo_fix_puts(2u, 15u, "LFO rate=3   (medium vibrato)     ", 1u);
+    soundFMSetLFO(0x0Bu); snd_step();
+    if (uwait(220u)) return 1u;
+    demo_fix_puts(2u, 15u, "LFO rate=6   (fastest vibrato)    ", 1u);
+    soundFMSetLFO(0x0Eu); snd_step();
+    if (uwait(220u)) return 1u;
+
     soundFMSetLFO(0x00u);    snd_step();
     soundStopMusic();        snd_step();
     soundSetFMVolume(0x00u); snd_step();
