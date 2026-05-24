@@ -1,4 +1,7 @@
-; 5_fm_example_f — Castlevania-style minor melody (D minor, dramatic)
+; 5_fm_example_f — Castlevania-style dramatic minor theme (D minor)
+;
+; Slower than typical arcade-FM, sustained notes with quarter-rest
+; for tension.  Boss-fight feel.
 
 T220
 I5
@@ -6,21 +9,21 @@ V12
 O4
 L8
 
-; phrase A — sustained intro
-D F A > D  > C < A F D
-< E G B- > E  > D < B- G E
+; A — sustained intro
+D4 F A  > D4 < A F
+D4 F A  > D2
+< E4 G B-  > E4 < B- G
+E4 G B-  > E2
 
-; phrase B — main theme
-> A G F E  D > D < A F
-G F E D  C E G < B-
-> A G F E  D F A > D
-< G F E D  > D2
+; B — main theme
+> A4 G4  F4 E4
+D4 < A4  F4 D2
+> A4 G4  F4 E4
+> D2 R4 R4
 
-; phrase C — descending finale
+; C — finale
 L4
 > A G F E  D < A F D
-L8
-< C E G > C  < B- D F < B-
-A4 R4 R2
+< F A > C E  D2
 
 ~

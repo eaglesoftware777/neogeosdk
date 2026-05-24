@@ -1,4 +1,7 @@
-; 1_fm_example_b — Mario-overworld-style melody (A major, upbeat)
+; 1_fm_example_b — Sonic-style fast bouncy lead (G major)
+;
+; Quick arpeggiated runs alternating with staccato rests — the
+; classic Mega Drive arcade-FM platformer feel.
 
 T220
 I1
@@ -6,24 +9,24 @@ V13
 O5
 L8
 
-; phrase A — main hook
-E E R E  R C E R
-G R R R  < G R R R
+; A — leaping ascend
+G B > D G  > D < B G4
+F+ A > C F+  > C < A F+4
 
-; phrase B — answer
-> C R < G R  E R R A
-B R B- A  > C E < A G
+; B — running 16ths then resolve
+L16
+D E F+ G  A B > C D  E D C < B  A G F+ E
+L8
+D4 G2 R4
 
-; phrase C — bridge
-E G > C R  < G > E F R
-G F E R  G F E R
-> C R E < A  < B > C R < G
-> C R E < A  < B > C R < G
+; C — answer with grace notes
+> D < B G B  > D < B G4
+> C < A F+ A  > C < A F+4
 
-; phrase D — variation
-E G > C R  < G > E F R
-G F E R  > C < G C R
-E R R E  R C E R
-G2 R2
+; D — descend to tonic
+L16
+> E D C < B  A G F+ E  D C < B A  G F+ E D
+L8
+G2 R4 R4
 
 ~

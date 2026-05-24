@@ -1,4 +1,7 @@
-; 0_fm_example_a — bright C-major arcade intro (mid range)
+; 0_fm_example_a — Streets-of-Rage / Bare Knuckle style driving lead
+;
+; C minor groove.  Eighth-note ostinato on the root anchors the
+; rhythm, then a 3rd/5th lift, then a falling answer phrase.
 
 T220
 I0
@@ -6,19 +9,18 @@ V13
 O4
 L8
 
-C E G C  E G C E  R4
-G E C E  G C R4
-F A C F  A C R4
-G E C R4
+; A — root ostinato (steady 8th-note pulse)
+C C E- G  C C E- G
+C C E- G  C C E- G
 
-C C E G  E G C C
-D D F A  F A D D
-E G C E  G C C E
-F A C F  A C F4
+; B — push to fourth (drives forward)
+F F A- > C  F F A- > C
+< G G > D F  < G G > D F
 
-C E G E  C E G E
-D F A F  D F A F
-E G C G  E G C G
-F A C A  F A C2
+; C — answer phrase, descending
+> C < B- A- G  F E- D C
+> C < B- A- G  F E- D C
+; tail — short cadence
+B- F G C  > C2
 
 ~

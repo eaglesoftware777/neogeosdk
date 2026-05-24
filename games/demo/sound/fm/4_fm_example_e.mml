@@ -1,4 +1,7 @@
-; 4_fm_example_e — Street Fighter Ryu-style theme (E minor, mid range)
+; 4_fm_example_e — Final Fight style brawler verse (E minor)
+;
+; Syncopated motif with brief silence — driving but with breathing
+; room.  Classic CPS-1/M68k arcade FM brawler feel.
 
 T220
 I4
@@ -6,16 +9,18 @@ V13
 O4
 L8
 
-E G B E  D B G E
-F A C F  E D C B
+; A — main motif (3-note climb + descent)
+E G B  > D < B G  E G B4
+F+ A > C  > E < C < A  F+ A > C4
 
-E G B E  D B G E
-F A C F  E D C B
-E G B E  D B G D
-C E G C  B G E B
+; B — call/response
+G G E E  D D < B B
+> C C < A A  G G E E
 
-A G F E  D F A D
-G F E D  C E G B
-E G B E  G B E2
+; C — long arc
+E F+ G A  B > C < B A
+G F+ E D  C < B A G
+F+ G A B  > C D E F+
+> G4 R4 R2
 
 ~
