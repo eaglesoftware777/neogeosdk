@@ -372,7 +372,7 @@ static uint8_t NEOGEO_USER chap_boot(void)
     demo_fix_puts(4u, 16u, "NPC + PATROL + DEPTH",   1u);
     demo_fix_puts(4u, 17u, "JOYSTICK + MINI-GAME",   1u);
 
-    return uwait(180u);
+    return uwait(220u);
 }
 
 /* ================================================================== */
@@ -385,10 +385,18 @@ static uint8_t NEOGEO_USER chap_title(void)
     uint16_t t;
     uint8_t last_frame = 0xFFu;
 
-    chap_header(1u, "TITLE", "ATTRACT REEL");
-    demo_fix_puts(2u, 2u, "TITLE ART + EYECATCHER", 1u);
-    snd_cross_to(SOUND_MUSIC_E);
+ soundSceneReset();   waitVbl();
+        soundSetADPCMAVolume(0x3Cu);  waitVbl();
+        soundSetADPCMBVolume(0xBCu);  waitVbl();
+        soundSetSSGVolume(0x00u);     waitVbl();
+        soundSetFMVolume(0x00u);      waitVbl();
+        soundPlayGameLoop(SOUND_MUSIC_E);
+        waitVbl();
 
+    chap_header(1u, "TITLE", "ATTRACT REEL");
+    demo_fix_puts(2u, 2u, "TITLE / EYECATCHER", 1u);
+	
+	
     for (t = 0u; t < 360u; t++) {
         uint8_t frame;
         if (t < 90u)        frame = 108u;
@@ -550,10 +558,10 @@ static uint8_t NEOGEO_USER chap_sound(void)
             SOUND_BED_F, SOUND_BED_G, SOUND_BED_H, SOUND_BED_I
         };
         static const char *const s_bed_names[8] = {
-            "BED 1 (1.WAV)   ", "BED 2 (2.WAV)   ",
-            "BED 3 (3.WAV)   ", "BED 4 (4.WAV)   ",
-            "BED 6 (6.WAV)   ", "BED 7 (7.WAV)   ",
-            "BED 8 (8.WAV)   ", "BED 9 (9.WAV)   "
+            "TRACK 1 (1.WAV)   ", "TRACK 2 (2.WAV)   ",
+            "TRACK 3 (3.WAV)   ", "TRACK 4 (4.WAV)   ",
+            "TRACK 6 (6.WAV)   ", "TRACK 7 (7.WAV)   ",
+            "TRACK 8 (8.WAV)   ", "TRACK 9 (9.WAV)   "
         };
         uint8_t b;
         demo_fix_puts(2u, 5u, "1. ADPCM-B BEDS (1..9)            ", 2u);
@@ -2974,94 +2982,137 @@ static uint8_t NEOGEO_USER chap_credits(void)
 static uint8_t NEOGEO_USER chap_fix_fx(void)
 {
     /*
-     * Big animated "Z" motif on the FIX layer.  Previous wave-bar
-     * pattern looked too "skeleton" — the user asked for a clearer
-     * letterform.  A Z is drawn as 3 strokes:
-     *   - top horizontal  (row 5, cols 6..32)
-     *   - diagonal        (cols 31..7 down rows 6..21)
-     *   - bottom horizontal (row 22, cols 6..32)
-     * Strokes light up in sequence; once full, palette-cycles.
+     * FIX-photo animation showcase — replaces the old "Z motif".
+     *
+     * Source assets are the PNGs in games/demo/artbox/infix/ which
+     * fixtiles.py compiles into the S1 ROM starting at FIX tile 256
+     * (sequential, row-major per PNG).  Each 8×8 source pixel block
+     * becomes one FIX tile, so a 32×4 PNG is 128 contiguous FIX tiles
+     * that we can stamp anywhere on the 40×28 FIX grid.
+     *
+     * Four phases — each demonstrates a different FIX animation
+     * primitive built on the low-level ngfix_* helpers and the
+     * draw_infix_block utility defined earlier in this file:
+     *
+     *   PHASE 1 SLIDESHOW    — center-blit a sequence of infix
+     *                          banners with ngfix_clear_rect between.
+     *   PHASE 2 SLIDE-IN     — march a banner across the FIX grid
+     *                          by clearing the trailing column with
+     *                          ngfix_blank_cell and redrawing.
+     *   PHASE 3 PALETTE CYCLE — same banner stamped every frame at
+     *                          a rotating palette index, showing how
+     *                          cheap colour cycling is on the FIX layer.
+     *   PHASE 4 MOSAIC       — multiple infix blocks (different
+     *                          source PNGs, different palettes) tiled
+     *                          on the same frame.
      */
+    typedef struct {
+        uint16_t tile_base;
+        uint8_t  cols;
+        uint8_t  rows;
+        const char *label;
+    } InfixAsset;
+    /* Tile bases match those compiled by fixtiles.py and already used
+     * by chap_fix_fx's predecessors elsewhere in this file. */
+    static const InfixAsset BANNERS[4] = {
+        { 492u, 32u, 4u, "INFIX 4.PNG  32x4" },
+        { 772u, 32u, 4u, "INFIX 7.PNG  32x4" },
+        { 948u, 32u, 5u, "INFIX 9.PNG  32x5" },
+        { 620u, 24u, 5u, "INFIX 5.PNG  24x5" }
+    };
     uint16_t t;
 
-    chap_header(21u, "FIX FX", "ANIMATED FIX-ONLY  Z MOTIF");
-    demo_fix_puts(2u, 2u, "BIG Z PATTERN  PALETTE CYCLES",   1u);
-    demo_fix_puts(2u, 3u, "STROKES LIGHT UP IN SEQUENCE",    0u);
+    chap_header(21u, "FIX FX", "INFIX PHOTOS  4 PHASE ANIMATION");
+    demo_fix_puts(2u, 2u, "REAL FIX-PHOTO ANIMATION",       1u);
+    demo_fix_puts(2u, 3u, "INFIX/*.PNG TILES  ngfix_* API", 0u);
     snd_cross_to(SOUND_MUSIC_G);
 
-    for (t = 0u; t < 720u; t++) {
-        uint16_t stage = (uint16_t)(t % 240u);
-        uint8_t  pal_top, pal_diag, pal_bot;
-        uint8_t  i;
+    /* ---------------- PHASE 1 — slideshow (480 frames, 4 banners) -- */
+    demo_fix_puts(2u, 5u, "PHASE 1  SLIDESHOW                ", 2u);
+    {
+        uint8_t b;
+        for (b = 0u; b < 4u; b++) {
+            const InfixAsset *a = &BANNERS[b];
+            uint8_t cx = (uint8_t)((40u - a->cols) / 2u);
+            uint8_t cy = (uint8_t)(10u + ((6u - a->rows) >> 1));
+            uint8_t pal = (uint8_t)(1u + (b & 1u));
 
-        /* Stage-based palette per stroke (sequential reveal) */
-        if (stage < 60u) {
-            pal_top  = (uint8_t)((stage < 6u) ? 0u : 2u);
-            pal_diag = 0u;
-            pal_bot  = 0u;
-        } else if (stage < 140u) {
-            pal_top  = 1u;
-            pal_diag = 2u;
-            pal_bot  = 0u;
-        } else if (stage < 200u) {
-            pal_top  = 1u;
-            pal_diag = 1u;
-            pal_bot  = 2u;
-        } else {
-            /* Cycle phase — palettes rotate every 12 frames */
-            uint8_t base = (uint8_t)((stage / 12u) % 3u);
-            pal_top  = base;
-            pal_diag = (uint8_t)((base + 1u) % 3u);
-            pal_bot  = (uint8_t)((base + 2u) % 3u);
+            ngfix_clear_rect(0u, 9u, 40u, 8u);
+            draw_infix_block(a->tile_base, a->cols, a->rows, cx, cy, pal);
+            demo_fix_puts(2u, 24u, "                                  ", 0u);
+            demo_fix_puts(2u, 24u, a->label, 1u);
+
+            if (uwait(110u)) return 1u;
         }
-
-        /* TOP horizontal stroke (row 5) — 27 cells */
-        for (i = 6u; i < 33u; i++) {
-            demo_fix_puts(i, 5u, "=", pal_top);
-            demo_fix_puts(i, 6u, "=", pal_top);
-        }
-
-        /* DIAGONAL stroke — cols 31..7 across rows 6..21 (16 rows) */
-        for (i = 0u; i < 16u; i++) {
-            uint8_t row = (uint8_t)(6u + i);
-            uint8_t col = (uint8_t)(31u - (i * 24u) / 16u);  /* 31 → 7 */
-            demo_fix_puts(col, row, "\\", pal_diag);
-            if (col > 0u) demo_fix_puts((uint8_t)(col - 1u), row, "\\", pal_diag);
-        }
-
-        /* BOTTOM horizontal stroke (rows 21..22) */
-        for (i = 6u; i < 33u; i++) {
-            demo_fix_puts(i, 21u, "=", pal_bot);
-            demo_fix_puts(i, 22u, "=", pal_bot);
-        }
-
-        /* Side accent dots when in cycle phase */
-        if (stage >= 200u) {
-            uint8_t spin = (uint8_t)((stage / 4u) % 4u);
-            const char *g = (spin == 0u) ? "*" : (spin == 1u) ? "+" :
-                            (spin == 2u) ? "x" : ".";
-            demo_fix_puts(3u, 13u, g, 2u);
-            demo_fix_puts(36u, 13u, g, 2u);
-        } else if (stage == 199u) {
-            demo_fix_puts(3u,  13u, " ", 0u);
-            demo_fix_puts(36u, 13u, " ", 0u);
-        }
-
-        /* Scrolling caption at row 26 */
-        {
-            static const char ribbon[] =
-                "  Z = FIX LAYER ALPHA   PALETTE CYCLES   "
-                "DIRTY-CELL CACHE   NO TEAR   ";
-            const uint16_t L = (uint16_t)(sizeof(ribbon) - 1u);
-            char row[40];
-            uint16_t off = (uint16_t)(t % L);
-            for (i = 0u; i < 36u; i++) row[i] = ribbon[(off + i) % L];
-            row[36] = '\0';
-            demo_fix_puts(2u, 26u, row, 1u);
-        }
-
-        if (uframe()) return 1u;
     }
+    ngfix_clear_rect(0u, 9u, 40u, 8u);
+    demo_fix_puts(2u, 24u, "                                  ", 0u);
+
+    /* ---------------- PHASE 2 — slide-in (240 frames) -------------- */
+    demo_fix_puts(2u, 5u, "PHASE 2  SLIDE-IN (clear-redraw)  ", 2u);
+    {
+        const InfixAsset *a = &BANNERS[0];   /* infix 4.png 32x4 */
+        uint8_t  last_x = 0xFFu;
+        for (t = 0u; t < 240u; t++) {
+            /* X marches from -32 (offscreen left) through 8 (centred). */
+            int16_t pos = (int16_t)((int16_t)t / 6 - 32);  /* -32..7 */
+            uint8_t bx;
+            if (pos < 0) {
+                /* Banner partly off-screen; only paint visible portion.
+                 * Clamp source column count to fit. */
+                bx = 0u;
+            } else {
+                bx = (uint8_t)pos;
+            }
+            if (last_x != 0xFFu && bx != last_x) {
+                ngfix_clear_rect(last_x, 11u, a->cols, a->rows);
+            }
+            if (pos >= -((int16_t)a->cols) && pos < 40) {
+                /* Draw at bx; off-screen cells naturally clipped by
+                 * draw_infix_block (bounds-checked) */
+                draw_infix_block(a->tile_base, a->cols, a->rows,
+                                 bx, 11u, 2u);
+            }
+            last_x = bx;
+            if (uframe()) return 1u;
+        }
+    }
+    ngfix_clear_rect(0u, 11u, 40u, 5u);
+
+    /* ---------------- PHASE 3 — palette cycle (240 frames) --------- */
+    demo_fix_puts(2u, 5u, "PHASE 3  PALETTE CYCLE            ", 2u);
+    {
+        const InfixAsset *a = &BANNERS[2];   /* infix 9.png 32x5 */
+        uint8_t  cx = (uint8_t)((40u - a->cols) / 2u);
+        uint8_t  cy = 11u;
+        /* Draw once at pal 0; then per frame just rewrite palette
+         * nibble per cell — proves how cheap palette cycling is. */
+        for (t = 0u; t < 240u; t++) {
+            uint8_t pal = (uint8_t)((t / 6u) % 3u);
+            draw_infix_block(a->tile_base, a->cols, a->rows, cx, cy, pal);
+            if (uframe()) return 1u;
+        }
+    }
+    ngfix_clear_rect(0u, 11u, 40u, 5u);
+
+    /* ---------------- PHASE 4 — mosaic (240 frames) ---------------- */
+    demo_fix_puts(2u, 5u, "PHASE 4  MOSAIC (multi-tile)      ", 2u);
+    {
+        uint8_t  flicker;
+        /* Static composition first */
+        draw_infix_block(256u, 20u, 4u,  0u, 10u, 1u);    /* 0.png left  */
+        draw_infix_block(740u, 16u, 2u, 22u, 11u, 2u);    /* 6.png right */
+        draw_infix_block(900u, 12u, 4u, 14u, 16u, 1u);    /* 8.png center-bottom */
+
+        for (t = 0u; t < 240u; t++) {
+            /* Flicker the centre block's palette every 8 frames */
+            flicker = (uint8_t)(((t >> 3) & 1u) + 1u);
+            draw_infix_block(900u, 12u, 4u, 14u, 16u, flicker);
+            if (uframe()) return 1u;
+        }
+    }
+    ngfix_clear_rect(0u, 9u, 40u, 12u);
+    demo_fix_puts(2u, 5u, "                                  ", 0u);
     return 0u;
 }
 
