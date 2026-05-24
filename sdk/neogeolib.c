@@ -71,6 +71,9 @@ void playAttackVoice(void);
 void playVoiceGetReady(void);
 void playVoiceLetsGo(void);
 void playVoiceGameOver(void);
+void soundSetADPCMBPan(uint8_t pan);
+void soundFMSetLFO(uint8_t rate_enable);
+void soundSetSSGNoise(uint8_t period);
 void playCoinThenReady(void);
 void soundApplyMix(uint8_t,uint8_t,uint8_t,uint8_t);
 void soundPlayDemoFM(uint8_t);
@@ -547,6 +550,40 @@ void NEOGEO_USER playVoiceGetReady(void) { isZ80Ready(); soundCommand(0x50); }
 void NEOGEO_USER playVoiceLetsGo(void)   { isZ80Ready(); soundCommand(0x51); }
 void NEOGEO_USER playVoiceGameOver(void) { isZ80Ready(); soundCommand(0x52); }
 
+/*
+ * ADPCM-B L/R pan control (YM2610 register $11, active-high).
+ *   pan = 0xC0 → stereo (L+R)
+ *   pan = 0x80 → left only
+ *   pan = 0x40 → right only
+ *   pan = 0x00 → mute
+ * Takes effect immediately on the currently-playing ADPCM-B sample.
+ */
+void NEOGEO_USER soundSetADPCMBPan(uint8_t pan) {
+	isZ80Ready(); soundCommand(0x15); isZ80Ready(); soundCommand(pan & 0xC0);
+}
+
+/*
+ * FM LFO control (YM2610 register $22).
+ *   bit 3 = LFO enable
+ *   bits 0..2 = rate (0 slowest .. 7 fastest)
+ * FM patches with non-zero AMS/PMS (set via fm/patches.fm) only
+ * modulate when the LFO is enabled here.  Common values:
+ *   0x00 = off, 0x0A = enable+rate2, 0x0F = enable+max-rate
+ */
+void NEOGEO_USER soundFMSetLFO(uint8_t rate_enable) {
+	isZ80Ready(); soundCommand(0x17); isZ80Ready(); soundCommand(rate_enable & 0x0F);
+}
+
+/*
+ * SSG noise period (YM2610 register $06, 5 bits).
+ * Higher value = lower noise frequency.  Range 1..31; 0 silences the
+ * noise generator (per chip behaviour).  Useful for tuning consonant
+ * "colour" in voice cues or for noise-only SFX.
+ */
+void NEOGEO_USER soundSetSSGNoise(uint8_t period) {
+	isZ80Ready(); soundCommand(0x19); isZ80Ready(); soundCommand(period & 0x1F);
+}
+
 void NEOGEO_USER soundFadeOut(void) { isZ80Ready(); soundFadeOutSpeed(0x20); }
 void NEOGEO_USER soundFadeIn(void) { isZ80Ready(); soundFadeInSpeed(0x20); }
 void NEOGEO_USER soundFadeOutSpeed(uint8_t speed) { isZ80Ready(); soundCommand(0x0A); isZ80Ready(); soundCommand(speed); }
@@ -567,43 +604,43 @@ void NEOGEO_USER soundPlayDemoFM(uint8_t fm_track) {
 
 void NEOGEO_USER soundPlayTitleMusic(uint8_t music_track) {
 	isZ80Ready(); soundSceneReset(); isZ80Ready(); soundApplyMix(0x34, 0xC8, 0x00, 0x00);
-	isZ80Ready(); playSFX(SOUND_SFX_3); cyclexms(10); isZ80Ready(); playSFXB(SOUND_BED_A);
+	isZ80Ready(); playSFX(SOUND_SFX_3); cyclexms(10); isZ80Ready(); playSFXB(SOUND_TRACK_A);
 }
 
 /*
  * soundPlayGameLoop — main scene music.
  *
  * POLICY (v1.3.1 audio review):
- *   - Music is ALWAYS an ADPCM-B bed (FM is harsh on the current
+ *   - Music is ALWAYS an ADPCM-B TRACK (FM is harsh on the current
  *     driver, so we never use it as continuous background).
- *   - The `music_track` argument is mapped to ADPCM-B bed (0..3) via
- *     `music_track % 4` so different scenes get different beds.
- *   - SOUND_BED_E (bed 4) is RESERVED for the eyecatcher
+ *   - The `music_track` argument is mapped to ADPCM-B TRACK (0..3) via
+ *     `music_track % 4` so different scenes get different TRACKs.
+ *   - SOUND_TRACK_E (TRACK 4) is RESERVED for the eyecatcher
  *     screen — it is never produced by this dispatcher.  Call
- *     playSFXB(SOUND_BED_E) directly if you need it.
+ *     playSFXB(SOUND_TRACK_E) directly if you need it.
  *
  * FM / SSG / ADPCM-A remain available as one-shot cues via
  * playFMTrack / playSSGTrack / playSFX.
  */
 void NEOGEO_USER soundPlayGameLoop(uint8_t music_track) {
-	/* Pool of every ADPCM-B bed EXCEPT bed 4 (SOUND_BED_E),
+	/* Pool of every ADPCM-B TRACK EXCEPT TRACK 4 (SOUND_TRACK_E),
 	 * which is reserved for the eyecatcher screen.  Eight slots map
 	 * to 1.wav..4.wav, 6.wav..9.wav — gives a wider variety of scene
 	 * music than the old 4-slot rotation. */
-	static const uint8_t bed_pool[8] = {
-		SOUND_BED_A,   /* 1.wav */
-		SOUND_BED_B,     /* 2.wav */
-		SOUND_BED_C,     /* 3.wav */
-		SOUND_BED_D,  /* 4.wav */
-		SOUND_BED_F,       /* 6.wav */
-		SOUND_BED_G,       /* 7.wav */
-		SOUND_BED_H,       /* 8.wav */
-		SOUND_BED_I        /* 9.wav */
+	static const uint8_t TRACK_pool[8] = {
+		SOUND_TRACK_A,   /* 1.wav */
+		SOUND_TRACK_B,     /* 2.wav */
+		SOUND_TRACK_C,     /* 3.wav */
+		SOUND_TRACK_D,  /* 4.wav */
+		SOUND_TRACK_F,       /* 6.wav */
+		SOUND_TRACK_G,       /* 7.wav */
+		SOUND_TRACK_H,       /* 8.wav */
+		SOUND_TRACK_I        /* 9.wav */
 	};
-	uint8_t bed = bed_pool[music_track & 0x07u];
+	uint8_t TRACK = TRACK_pool[music_track & 0x07u];
 	isZ80Ready(); soundSceneReset();
-	isZ80Ready(); soundApplyMix(0x30, 0xB8, 0x00, 0x00);  /* bed prominent, FM/SSG silent */
-	isZ80Ready(); playSFXB(bed);
+	isZ80Ready(); soundApplyMix(0x30, 0xB8, 0x00, 0x00);  /* TRACK prominent, FM/SSG silent */
+	isZ80Ready(); playSFXB(TRACK);
 }
 
 void NEOGEO_USER  isZ80Ready() {

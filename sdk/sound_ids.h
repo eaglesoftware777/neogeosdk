@@ -53,26 +53,26 @@ enum {
 #define SOUND_SFX_COUNT  12
 
 /* ---------------------------------------------------------------- */
-/*  Beds (ADPCM-B streams) — sound/samples/in_wav_b/<N+1>.wav        */
+/*  TRACKs (ADPCM-B streams) — sound/samples/in_wav_b/<N+1>.wav        */
 /*                                                                   */
-/*  Bed N corresponds to file (N+1).wav.  Bed 4 (5.wav) is RESERVED  */
+/*  TRACK N corresponds to file (N+1).wav.  TRACK 4 (5.wav) is RESERVED  */
 /*  for the eyecatcher screen — soundPlayGameLoop never selects it.  */
 /* ---------------------------------------------------------------- */
 enum {
-	SOUND_BED_A = 0,    /* 1.wav */
-	SOUND_BED_B = 1,    /* 2.wav */
-	SOUND_BED_C = 2,    /* 3.wav */
-	SOUND_BED_D = 3,    /* 4.wav */
-	SOUND_BED_E = 4,    /* 5.wav — RESERVED (eyecatcher) */
-	SOUND_BED_F = 5,    /* 6.wav */
-	SOUND_BED_G = 6,    /* 7.wav */
-	SOUND_BED_H = 7,    /* 8.wav */
-	SOUND_BED_I = 8     /* 9.wav */
+	SOUND_TRACK_A = 0,    /* 1.wav */
+	SOUND_TRACK_B = 1,    /* 2.wav */
+	SOUND_TRACK_C = 2,    /* 3.wav */
+	SOUND_TRACK_D = 3,    /* 4.wav */
+	SOUND_TRACK_E = 4,    /* 5.wav — RESERVED (eyecatcher) */
+	SOUND_TRACK_F = 5,    /* 6.wav */
+	SOUND_TRACK_G = 6,    /* 7.wav */
+	SOUND_TRACK_H = 7,    /* 8.wav */
+	SOUND_TRACK_I = 8     /* 9.wav */
 };
 
-#define SOUND_BED_COUNT       9
-#define SOUND_BED_FIRST_FREE  0
-#define SOUND_BED_LAST_FREE   8
+#define SOUND_TRACK_COUNT       9
+#define SOUND_TRACK_FIRST_FREE  0
+#define SOUND_TRACK_LAST_FREE   8
 
 /* ---------------------------------------------------------------- */
 /*  FM patches — games/<game>/sound/fm/<N>_fm_example_<x>.mml        */

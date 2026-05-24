@@ -298,7 +298,13 @@ execute_command:
     cp 9
     jr z,exec_p_ssgtrack
     cp 10
-    jr z,exec_p_ssgpreset
+    jp z,exec_p_ssgpreset
+    cp 11
+    jp z,exec_p_adpcmb_pan
+    cp 12
+    jp z,exec_p_fm_lfo
+    cp 13
+    jp z,exec_p_ssg_noise
     ret
 exec_p_tempo:
     ld a,c
@@ -371,6 +377,39 @@ exec_p_ssgpreset:
     ld (VAR_SSG_PRESET),a
     call ssg_apply_preset
     ret
+
+; --- ADPCM-B L/R pan ($11 register, active-high) ---
+; bit 7 = L output, bit 6 = R output.  Common values:
+;   $C0 = stereo (default), $80 = L only, $40 = R only, $00 = mute
+exec_p_adpcmb_pan:
+    ld a,c
+    and $C0
+    ld d,$11
+    ld e,a
+    jp force_write_a
+
+; --- FM LFO control ($22 register) ---
+; bit 3 = LFO enable, bits 0-2 = rate (0=slowest, 7=fastest)
+; Caller passes the raw register-$22 value.  Patches that use
+; AMS/PMS (bits set per channel) only modulate when LFO is enabled
+; via this command.
+exec_p_fm_lfo:
+    ld a,c
+    and $0F
+    ld d,$22
+    ld e,a
+    jp force_write_a
+
+; --- SSG noise period ($06 register) ---
+; 5-bit value (1..31).  Higher value = lower noise frequency.
+; Useful for tuning the "fricative" character of consonants in
+; SFX or speech overlays.
+exec_p_ssg_noise:
+    ld a,c
+    and $1F
+    ld d,$06
+    ld e,a
+    jp shadowed_write_a
 set_fmvol_wait:
     ld a,8
     ld (VAR_WAIT_TEMPO),a
@@ -419,6 +458,12 @@ exec_normal:
     jp z,set_fmtrack_wait
     cp SSG_CMD_PLAY ; SSG track select parameter follows
     jp z,set_ssgtrack_wait
+    cp $15 ; ADPCM-B L/R pan parameter follows
+    jp z,set_adpcmb_pan_wait
+    cp $17 ; FM LFO enable+rate parameter follows
+    jp z,set_fm_lfo_wait
+    cp $19 ; SSG noise period parameter follows
+    jp z,set_ssg_noise_wait
     cp $28 ; ADPCM-B direct sample 0
     jp z,play_demo_b0
     cp $29 ; ADPCM-B direct sample 1
@@ -508,6 +553,24 @@ set_ssgtrack_wait:
 
 set_ssgpreset_wait:
     ld a,10
+    ld (VAR_WAIT_TEMPO),a
+    ld (VAR_PARAM_MODE),a
+    ret
+
+set_adpcmb_pan_wait:
+    ld a,11
+    ld (VAR_WAIT_TEMPO),a
+    ld (VAR_PARAM_MODE),a
+    ret
+
+set_fm_lfo_wait:
+    ld a,12
+    ld (VAR_WAIT_TEMPO),a
+    ld (VAR_PARAM_MODE),a
+    ret
+
+set_ssg_noise_wait:
+    ld a,13
     ld (VAR_WAIT_TEMPO),a
     ld (VAR_PARAM_MODE),a
     ret
@@ -1188,6 +1251,13 @@ play_adpcmb_index:
     ; Step 6: Release reset
     ld de,$1000
     call force_write_a
+
+    ; Step 6b: Ensure L+R outputs are enabled.  Reg $11 (active-high
+    ; pan) defaults indeterminate after some chip resets; explicitly
+    ; writing $C0 (L on + R on) prevents the "mute despite playback"
+    ; failure mode.  soundSetADPCMBPan can override this at any time.
+    ld de,$11C0
+    call shadowed_write_a
 
     ; Step 7: Start playback
     ld de,$1080
