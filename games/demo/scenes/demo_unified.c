@@ -1586,269 +1586,240 @@ static uint8_t NEOGEO_USER chap_npcs(void)
 }
 
 /* ================================================================== */
-/*  Chapter 13 — Mini-game (30 sec deterministic loop)                   */
+/*  Chapter 13 — Mini-game (player vs clone)                            */
+/*                                                                       */
+/*  Two characters fight: the player (left) and a CLONE (right) that    */
+/*  uses the same sprite sheet.  The clone is passive at first — the    */
+/*  player can walk up and strike it for score.  If the player goes     */
+/*  too long without landing a hit, the clone wakes up and walks        */
+/*  toward the player to retaliate.  Land a hit and the clone resets    */
+/*  to passive.  Get hit by the clone and lose HP.                      */
 /* ================================================================== */
 static uint8_t NEOGEO_USER chap_mini_game(void)
 {
-    const uint8_t spark_id    = 93u;
-    const uint16_t spark_tile = DEMO_SCREEN_TILE(spark_id);
-    const uint8_t  spark_pal  = DEMO_SCREEN_PALETTE(spark_id);
+    enum {
+        CLONE_IDLE      = 0u,   /* passive — does nothing                */
+        CLONE_AGGRO     = 1u,   /* walking toward the player             */
+        CLONE_STRIKING  = 2u,   /* swing animation                       */
+        CLONE_RECOVER   = 3u    /* brief cooldown after striking         */
+    };
 
-    /*
-     * Hit target = a colourful 6x2-cell rectangle drawn on the FIX layer.
-     * No character sprite involved — no split/strip issues.  The target
-     * has a position, an "alive" flag, and a respawn timer.  When the
-     * hero's strike reaches the target it clears, sound plays, particles
-     * burst, then it respawns at a new X after a short delay.
-     */
-    uint8_t  target_cx     = 28u;     /* FIX cell column of target left edge */
-    uint8_t  target_cy     = 14u;     /* FIX cell row */
-    uint8_t  target_alive  = 1u;
-    uint8_t  target_respawn = 0u;
-    /*
-     * Target = 5-cell-wide bracketed block: "[BOX]".  Single-row keeps
-     * the visual clean and uses only characters that exist in every
-     * FIX font (brackets + letters), no `#`/`*` which were rendering
-     * as glyphs over the BG and looked like "noise on the image".
-     */
-    static const uint8_t TARGET_W = 5u;    /* 5 cells = 40 px wide */
-    static const uint8_t TARGET_H = 1u;    /* 1 cell  = 8 px tall  */
-    static const char    TARGET_TEXT[6] = "[BOX]";
+    const uint8_t  spark_id    = 93u;
+    const uint16_t spark_tile  = DEMO_SCREEN_TILE(spark_id);
+    const uint8_t  spark_pal   = DEMO_SCREEN_PALETTE(spark_id);
+    const int16_t  GROUND_Y    = 132;
+    const uint16_t TOTAL       = 2700u;        /* 45 s @ 60 fps */
+    const uint16_t AGGRO_AFTER = 300u;         /* 5 s of inactivity → clone wakes */
+    const int16_t  REACH_PX    = 56;           /* sword reach radius */
+    const uint8_t  CLONE_SLOT  = 24u;          /* sprite slot for the clone */
 
     uint16_t t;
-    uint8_t  hero_state = 0u;   /* 0=stand 1=walk 2=jump 3=strike */
-    uint8_t  state_t    = 0u;
-    int16_t  vy         = 0;
-    int16_t  hero_world_x = 80;
-    int16_t  hero_world_y = 112;     /* vertical centre of screen */
-    const int16_t HERO_GROUND_Y = 112;
-    uint8_t  hero_flip  = 0u;
+    /* Player state */
+    int16_t  p_x        = 80;
+    uint8_t  p_state    = 0u;   /* 0 stand, 1 walk, 2 strike */
+    uint8_t  p_t        = 0u;
+    uint8_t  p_flip     = 0u;
+    uint8_t  hp         = 100u;
     uint16_t score      = 0u;
-    uint16_t enemy_hits = 0u;
-    const uint16_t TOTAL = 2700u;        /* 45 sec @ 60 fps */
+    uint16_t hits_done  = 0u;
+    uint16_t since_hit  = 0u;   /* frames since player last landed a hit */
+
+    /* Clone state — mirrors player frame arrays */
+    int16_t  c_x         = 240;
+    uint8_t  c_state     = CLONE_IDLE;
+    uint8_t  c_t         = 0u;
+    uint8_t  c_flip      = 1u;   /* faces left initially */
+    uint8_t  c_strike_landed = 0u;  /* edge flag for one-shot hit per swing */
+
     char buf[6];
 
-    chap_header(13u, "MINI-GAME", "ARROWS MOVE   B STRIKE");
-    demo_fix_puts(2u, 2u, "HOLD LEFT/RIGHT TO RUN", 1u);
-    demo_fix_puts(2u, 3u, "B = STRIKE THE COLOURED TARGET", 0u);
+    chap_header(13u, "MINI-GAME", "FIGHT THE CLONE  B STRIKE");
+    demo_fix_puts(2u, 2u, "WALK + B TO HIT THE CLONE",     1u);
+    demo_fix_puts(2u, 3u, "TOO SLOW AND IT WAKES UP",      0u);
     snd_cross_to(SOUND_MUSIC_D);
 
-    /* BG drawn ONCE at slot 300 (back).  Hero (slot 1) sits in front. */
     draw_background(2u, 32, 16);
-
     ng_joystick_init();
     demo_load_screen_palette(spark_id);
+    demo_load_screen_palette(HERO_IDLE_FRAME);
 
-    demo_fix_puts(2u, 25u, "SCORE:", 2u);
-    demo_fix_puts(15u, 25u, "TIME:", 2u);
-    demo_fix_puts(26u, 25u, "HITS:", 2u);
+    demo_fix_puts(2u, 25u,  "SCORE:", 2u);
+    demo_fix_puts(13u, 25u, "HITS:",  2u);
+    demo_fix_puts(22u, 25u, "HP:",    2u);
+    demo_fix_puts(30u, 25u, "STATE:", 2u);
 
     s_draw_particles = 1u;
 
-    /* Draw the bracketed target with palette per cell for colour. */
-    {
-        uint8_t c;
-        for (c = 0u; c < TARGET_W; c++) {
-            char glyph[2];
-            glyph[0] = TARGET_TEXT[c];
-            glyph[1] = '\0';
-            demo_fix_puts((uint8_t)(target_cx + c), target_cy,
-                          glyph, (uint8_t)(1u + (c & 1u)));
-        }
-    }
-
     for (t = 0u; t < TOTAL; t++) {
-        uint16_t down;
-        uint16_t pressed;
-        uint8_t hero_frame;
-        int16_t hx_old = hero_world_x;
+        uint16_t down, pressed;
+        uint8_t  p_frame, c_frame;
 
         ng_joystick_update();
         down    = ng_joy_down();
         pressed = ng_joy_pressed();
 
-        /*
-         * Mini-game has NO JUMP — only move + strike.  The
-         * "jump-with-specials" demo lives in chap_joystick (ch 14).
-         * This scene focuses on the strike → colourful target → hit
-         * feedback loop, nothing else.  C is intentionally inert here.
-         */
-        if ((pressed & BUTTON_B) && hero_state != 3u) {
-            hero_state = 3u;
-            state_t = 0u;
+        /* ============================================================
+         * PLAYER input + state machine
+         * ============================================================ */
+        if ((pressed & BUTTON_B) && p_state != 2u) {
+            p_state = 2u;
+            p_t = 0u;
             playSFX(SOUND_SFX_7);
         }
-        (void)vy;     /* still declared for the switch case below */
+        if (p_state < 2u) {
+            if (down & JOY_LEFT)  { p_x -= 2; p_flip = 1u; p_state = 1u; }
+            else if (down & JOY_RIGHT) { p_x += 2; p_flip = 0u; p_state = 1u; }
+            else                  { p_state = 0u; }
+        }
+        if (p_x < 24)  p_x = 24;
+        if (p_x > 296) p_x = 296;
 
-        /* Movement is allowed in stand/walk states only */
-        if (hero_state < 2u) {
-            if (down & JOY_LEFT) {
-                hero_world_x -= 2;
-                hero_flip = 1u;
-                hero_state = 1u;
-            } else if (down & JOY_RIGHT) {
-                hero_world_x += 2;
-                hero_flip = 0u;
-                hero_state = 1u;
-            } else {
-                hero_state = 0u;
+        switch (p_state) {
+        case 0:  p_frame = s_hero_stand[(t / 14u) % 8u]; break;
+        case 1:  p_frame = s_hero_walk [(t /  6u) % 8u]; break;
+        default: p_frame = s_hero_strike[(p_t / 3u) % 8u]; break;
+        }
+
+        /* Player hit-test — connects when strike is in active window
+         * (frames 4..18 of the 24-frame swing) and player+clone
+         * overlap within REACH_PX horizontally. */
+        if (p_state == 2u && p_t >= 4u && p_t <= 18u) {
+            int16_t dx = (int16_t)(c_x - p_x);
+            if (dx < 0) dx = (int16_t)(-dx);
+            if (dx < REACH_PX) {
+                score = (uint16_t)(score + 10u);
+                hits_done++;
+                since_hit = 0u;
+                playSFX(SOUND_SFX_8);
+                spawn_impact_burst(c_x, (int16_t)(GROUND_Y - 16),
+                                   spark_tile, spark_pal, 3u);
+                /* Reset clone to passive — they recoil and stop attacking */
+                c_state = CLONE_RECOVER;
+                c_t     = 0u;
+                /* Knockback: nudge the clone back a few pixels */
+                if (c_x > p_x) c_x += 8; else c_x -= 8;
+                if (c_x < 32)  c_x = 32;
+                if (c_x > 296) c_x = 296;
+                /* Don't double-hit on the same swing */
+                p_t = 19u;
             }
         }
-        if (hero_world_x < 24)  hero_world_x = 24;
-        if (hero_world_x > 280) hero_world_x = 280;
+        if (p_state == 2u) {
+            p_t++;
+            if (p_t >= 24u) { p_state = 0u; p_t = 0u; }
+        }
 
-        /* State-machine animation frame selection ---------------------- */
-        switch (hero_state) {
-        case 0:  hero_frame = s_hero_stand[(t / 14u) % 8u]; break;
-        case 1:  hero_frame = s_hero_walk[(t /  6u) % 8u]; break;
-        case 2:                               /* jump */
-            /*
-             * Y is screen-down-positive.  vy is signed: negative = up,
-             * positive = down (gravity adds to vy).
-             *
-             * BUG FIX: was `hero_world_y - vy` which made the hero go
-             * DOWN on jump init (vy = -8 → y += 8) and immediately
-             * landed on the ground on the next frame, so the jump
-             * never visibly happened when C was pressed.
-             *
-             * Correct: pos += vel.
-             */
-            hero_world_y = (int16_t)(hero_world_y + vy);
-            vy++;
-            if (hero_world_y >= HERO_GROUND_Y) {
-                hero_world_y = HERO_GROUND_Y;
-                vy = 0;
-                hero_state = 0u;
+        /* ============================================================
+         * CLONE AI
+         * ============================================================ */
+        since_hit++;
+        switch (c_state) {
+        case CLONE_IDLE:
+            /* Become aggressive after a long silence */
+            if (since_hit > AGGRO_AFTER) {
+                c_state = CLONE_AGGRO;
+                c_t = 0u;
+                playSFX(SOUND_SFX_9);  /* clone wakes up cue */
             }
-            /* Uniform STAND set during jump so no strip-width split. */
-            hero_frame = s_hero_stand[(t / 8u) % 8u];
+            c_frame = s_hero_stand[(t / 14u) % 8u];
             break;
-        default:                              /* strike */
-            hero_frame = s_hero_strike[(state_t / 3u) % 8u];
-            /*
-             * Hit window = frames 4..18 of the 24-frame strike (a third
-             * of a second).  Single-frame windows were impossible to
-             * land on real input timing.  We also keep checking every
-             * frame so brushing past the target counts, and use a
-             * VERY generous reach + body box (sword arc + body width).
-             */
-            if (target_alive && state_t >= 4u && state_t <= 18u) {
-                int16_t reach_left  = (int16_t)(hero_world_x - 64);
-                int16_t reach_right = (int16_t)(hero_world_x + 64);
-                int16_t tx_px = (int16_t)(target_cx * 8 + (TARGET_W * 4));
-                int16_t ty_px = (int16_t)(target_cy * 8 + (TARGET_H * 4));
-                int16_t dy = (int16_t)(hero_world_y - ty_px);
-                if (dy < 0) dy = (int16_t)(-dy);
-                if (dy < 80 && tx_px >= reach_left && tx_px <= reach_right) {
-                    uint8_t c;
-                    score = (uint16_t)(score + 10u);
-                    enemy_hits++;
+
+        case CLONE_AGGRO: {
+            /* Walk toward player until within striking distance */
+            int16_t dx = (int16_t)(c_x - p_x);
+            if (dx > REACH_PX) { c_x -= 1; c_flip = 1u; }
+            else if (dx < -REACH_PX) { c_x += 1; c_flip = 0u; }
+            else {
+                /* In range — start a strike */
+                c_state = CLONE_STRIKING;
+                c_t = 0u;
+                c_strike_landed = 0u;
+                playSFX(SOUND_SFX_7);
+            }
+            c_frame = s_hero_walk[(t / 6u) % 8u];
+            break;
+        }
+
+        case CLONE_STRIKING:
+            c_frame = s_hero_strike[(c_t / 3u) % 8u];
+            /* Clone hit-test on active window — only count once. */
+            if (!c_strike_landed && c_t >= 4u && c_t <= 18u) {
+                int16_t dx = (int16_t)(p_x - c_x);
+                if (dx < 0) dx = (int16_t)(-dx);
+                if (dx < REACH_PX) {
+                    c_strike_landed = 1u;
                     playSFX(SOUND_SFX_8);
-                    spawn_impact_burst(tx_px, ty_px, spark_tile, spark_pal, 3u);
-                    /* Clear the target cells with truly-transparent
-                     * FIX tile 0 so the BG shows through.  " " (space)
-                     * with pal 0 paints tile 0x20 which is NOT fully
-                     * transparent in this FIX font. */
-                    for (c = 0u; c < TARGET_W; c++) {
-                        ngfix_write_tile((uint8_t)(target_cx + c),
-                                         target_cy, 0u, 0u);
-                    }
-                    target_alive   = 0u;
-                    target_respawn = 40u;
+                    spawn_impact_burst(p_x, (int16_t)(GROUND_Y - 16),
+                                       spark_tile, spark_pal, 2u);
+                    if (hp > 10u) hp = (uint8_t)(hp - 10u);
+                    else          hp = 0u;
+                    /* Knockback the player */
+                    if (p_x < c_x) p_x -= 8; else p_x += 8;
+                    if (p_x < 24)  p_x = 24;
+                    if (p_x > 296) p_x = 296;
                 }
             }
-            state_t++;
-            if (state_t >= 24u) { hero_state = 0u; state_t = 0u; }
+            c_t++;
+            if (c_t >= 24u) {
+                c_state = CLONE_RECOVER;
+                c_t = 0u;
+            }
+            break;
+
+        case CLONE_RECOVER:
+        default:
+            c_frame = s_hero_stand[(t / 14u) % 8u];
+            c_t++;
+            if (c_t >= 90u) {
+                c_state = CLONE_IDLE;
+                c_t = 0u;
+                /* Don't reset since_hit — if the player still doesn't
+                 * hit, the clone will wake again. */
+            }
             break;
         }
 
-        /*
-         * Visible SWORD ARC during the active hit window — just two FIX
-         * cells adjacent to the hero so the user sees the reach.  We
-         * remember the LAST drawn cells in static vars so we can erase
-         * EXACTLY those two cells when the strike ends (instead of
-         * sweeping a whole row, which produced a "black strip" overlay
-         * on top of the BG).
-         */
-        /*
-         * Single-row SLASH during the active hit window.  3 cells of
-         * "===" anchored next to the hero, palette 2 (yellow accent).
-         * Single row keeps the FIX overlay minimal so it doesn't read
-         * as "noise on the image".  Previous version drew a 3×6 multi-
-         * glyph arc that looked busy and left BG-coloured strips when
-         * adjacent cells weren't erased exactly.
-         */
+        if (p_state == 1u && (t & 31u) == 0u) playSFX(SOUND_SFX_5);
+
+        /* ============================================================
+         * HUD
+         * ============================================================ */
+        digit3(buf, score);     demo_fix_puts(9u, 25u, buf, 1u);
+        digit3(buf, hits_done); demo_fix_puts(19u, 25u, buf, 1u);
+        digit3(buf, hp);        demo_fix_puts(26u, 25u, buf,
+                                              (uint8_t)(hp < 30u ? 2u : 1u));
+        demo_fix_puts(36u, 25u,
+                      (c_state == CLONE_IDLE)     ? "IDLE  " :
+                      (c_state == CLONE_AGGRO)    ? "ANGRY " :
+                      (c_state == CLONE_STRIKING) ? "ATTK! " :
+                                                    "REST  ",
+                      (uint8_t)(c_state == CLONE_STRIKING ? 2u : 1u));
+
+        /* ============================================================
+         * Render — clone first (slot 24), then player (slot 1 via
+         * hero_draw).  Player gets the higher slot priority because
+         * HIGHER slot = drawn on top in our pipeline.
+         * ============================================================ */
         {
-            static uint8_t sw_last_cx = 0xFFu;
-            static uint8_t sw_last_cy = 0u;
-            const  uint8_t SW_LEN = 3u;
-            if (hero_state == 3u && state_t >= 1u && state_t <= 22u) {
-                uint8_t sword_cx = (uint8_t)((hero_flip
-                    ? (hero_world_x - 40) : (hero_world_x + 16)) / 8);
-                uint8_t sword_cy = (uint8_t)((hero_world_y / 8) - 1u);
-                uint8_t k;
-                if (sw_last_cx != 0xFFu &&
-                    (sw_last_cx != sword_cx || sw_last_cy != sword_cy)) {
-                    for (k = 0u; k < SW_LEN; k++)
-                        ngfix_write_tile((uint8_t)(sw_last_cx + k),
-                                         sw_last_cy, 0u, 0u);
-                }
-                if (sword_cx < (uint8_t)(40u - SW_LEN) && sword_cy < 28u) {
-                    const char *g = hero_flip ? "<==" : "==>";
-                    uint8_t pal  = (uint8_t)(((state_t & 3u) == 0u) ? 1u : 2u);
-                    for (k = 0u; k < SW_LEN; k++) {
-                        char tmp[2];
-                        tmp[0] = g[k];
-                        tmp[1] = '\0';
-                        demo_fix_puts((uint8_t)(sword_cx + k),
-                                      sword_cy, tmp, pal);
-                    }
-                    sw_last_cx = sword_cx;
-                    sw_last_cy = sword_cy;
-                }
-            } else if (sw_last_cx != 0xFFu) {
-                uint8_t k;
-                for (k = 0u; k < SW_LEN; k++)
-                    ngfix_write_tile((uint8_t)(sw_last_cx + k),
-                                     sw_last_cy, 0u, 0u);
-                sw_last_cx = 0xFFu;
-            }
+            uint8_t strips = demo_screen_strips(c_frame);
+            uint8_t rows   = demo_screen_rows(c_frame);
+            int16_t draw_x = (int16_t)(c_x - (strips * 16) / 2);
+            int16_t draw_y = (int16_t)(GROUND_Y - rows * 16);
+            demo_draw_sprite_screen(c_frame, CLONE_SLOT,
+                                    draw_x, draw_y, strips, rows,
+                                    0xFFu, 0xFFu);
         }
+        s_hero_x = p_x;
+        s_hero_y = GROUND_Y;
+        hero_draw(p_frame);
+        (void)p_flip; (void)c_flip;
 
-        /* Target respawn timer + relocation */
-        if (!target_alive) {
-            if (target_respawn > 0u) {
-                target_respawn--;
-            } else {
-                uint8_t c;
-                target_cx = (uint8_t)(8u + ((t * 7u) % 22u));
-                target_alive = 1u;
-                for (c = 0u; c < TARGET_W; c++) {
-                    char glyph[2];
-                    glyph[0] = TARGET_TEXT[c];
-                    glyph[1] = '\0';
-                    demo_fix_puts((uint8_t)(target_cx + c), target_cy,
-                                  glyph, (uint8_t)(1u + (c & 1u)));
-                }
-            }
+        /* Game over on HP exhausted */
+        if (hp == 0u) {
+            demo_fix_puts(13u, 13u, "  KNOCKED OUT  ", 2u);
+            if (demo_wait(120u)) return 1u;
+            return 0u;
         }
-
-        if (hero_state == 1u && hx_old != hero_world_x && (t & 31u) == 0u)
-            playSFX(SOUND_SFX_5);
-
-        /* HUD */
-        digit3(buf, score);
-        demo_fix_puts(8u, 25u, buf, 1u);
-        digit3(buf, (uint16_t)(45u - (t / 60u)));
-        demo_fix_puts(20u, 25u, buf, 1u);
-        digit3(buf, enemy_hits);
-        demo_fix_puts(31u, 25u, buf, 1u);
-
-        /* Hero rendered via the proven sprite-window pipeline.
-         * hero_world_x/y are already in CENTRE-of-character coords. */
-        s_hero_x = hero_world_x;
-        s_hero_y = hero_world_y;
-        hero_draw(hero_frame);
 
         if (uframe()) return 1u;
     }
