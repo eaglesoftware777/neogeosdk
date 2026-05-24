@@ -208,7 +208,7 @@ void  NEOGEO_USER EYE_CATCHER (void) {
 	soundSceneReset();
 	soundSetADPCMAVolume(0x00);
 	soundSetADPCMBVolume(0xBC);
-	playSFXB(SOUND_BED_E);
+	playSFXB(SOUND_TRACK_E);
 	showEyeCatcherMVS();
 	soundStopAll();
 }

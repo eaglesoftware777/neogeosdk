@@ -124,7 +124,7 @@ High-level sound control categories:
 Current shipped helper behavior:
 
 - `soundPlayTitleMusic(track)` resets the scene, plays the title gong, then starts the ADPCM-B title theme
-- `soundPlayGameLoop(track)` resets the scene and maps the requested loop to a direct ADPCM-B stage or ending bed
+- `soundPlayGameLoop(track)` resets the scene and maps the requested loop to a direct ADPCM-B stage or ending TRACK
 - `playMusic(track)` remains the explicit path for MML/SSG playback when you want the music engine directly
 
 ## 2D Game Engine Layer
