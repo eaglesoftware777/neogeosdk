@@ -594,24 +594,24 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundStopAll();        snd_step();
     demo_fix_puts(2u, 9u, "                                  ", 0u);
 
-    /* --- 3) SPEECH SYNTHESIS — SSG phoneme engine ------------------ *
+    /* --- 3) VOICE CUES — recorded ADPCM-A samples ------------------ *
      *
-     * Driver $50/$51/$52 trigger the 3-formant phoneme engine —
-     * channels A,B,C act as F1/F2/F3, noise mixed into A/B for
-     * fricative consonants.  Pure-chip output is robotic by design;
-     * intelligible speech needs ADPCM PCM samples. */
-    demo_fix_puts(2u, 5u, "3. SPEECH SYNTH (SSG formants)    ", 2u);
+     * Intelligible speech on YM2610 requires PCM samples.  These
+     * cues play V-ROM voice clips (SFX 11/12, 10) — that's what every
+     * NeoGeo arcade with speech actually used.  Pure-chip SSG/FM
+     * formant synthesis only produces robotic chords. */
+    demo_fix_puts(2u, 5u, "3. VOICE CUES (recorded ADPCM-A)  ", 2u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
-    soundApplyMix(0x30u, 0x00u, 0x0Fu, 0x00u); snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x00u); snd_step();
 
-    demo_fix_puts(2u, 11u, "playVoiceGetReady()  ($50)        ", 1u);
+    demo_fix_puts(2u, 11u, "playVoiceGetReady()  ADPCM-A SFX  ", 1u);
     playVoiceGetReady(); snd_step();
     if (uwait(160u)) return 1u;
-    demo_fix_puts(2u, 11u, "playVoiceLetsGo()    ($51)        ", 1u);
+    demo_fix_puts(2u, 11u, "playVoiceLetsGo()    ADPCM-A SFX  ", 1u);
     playVoiceLetsGo();   snd_step();
     if (uwait(160u)) return 1u;
-    demo_fix_puts(2u, 11u, "playVoiceGameOver()  ($52)        ", 1u);
+    demo_fix_puts(2u, 11u, "playVoiceGameOver()  ADPCM-A SFX  ", 1u);
     playVoiceGameOver(); snd_step();
     if (uwait(200u)) return 1u;
     demo_fix_puts(2u, 11u, "                                  ", 0u);

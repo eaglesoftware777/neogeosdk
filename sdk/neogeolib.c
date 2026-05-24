@@ -547,15 +547,20 @@ void NEOGEO_USER playCoinThenReady(void) {
  * approximation that's free of sample storage.
  */
 /*
- * Voice cues use the Z80-side phoneme engine ($50/$51/$52) which
- * drives all three SSG channels as formants (F1/F2/F3) per the
- * "How Yamaha Neo Geo SSG Speech Synthesis Works" reference.  Output
- * is robotic (intelligible speech is fundamentally beyond a YM2149
- * without PCM), but the cadence + pitch contour reads as a vocal cue.
+ * Voice cues use existing ADPCM-A voice samples in the V ROM
+ * (SFX 11 = "Get Ready" voice; SFX 12 = "Attack" voice; SFX 10 =
+ * low drum as a stand-in for "Game Over").  This is the only way
+ * to get intelligible speech on the YM2610 — pure-chip SSG / FM
+ * formant synthesis only produces robotic chords, not phonemes.
+ *
+ * The driver-side $50/$51/$52 phoneme engine is no longer present
+ * (it was an over-engineered detour); these wrappers route directly
+ * to playSFX so the speech section of chap_sound plays real recorded
+ * voice when those slots exist in the V ROM.
  */
-void NEOGEO_USER playVoiceGetReady(void) { isZ80Ready(); soundCommand(0x50); }
-void NEOGEO_USER playVoiceLetsGo(void)   { isZ80Ready(); soundCommand(0x51); }
-void NEOGEO_USER playVoiceGameOver(void) { isZ80Ready(); soundCommand(0x52); }
+void NEOGEO_USER playVoiceGetReady(void) { isZ80Ready(); playSFX(SOUND_SFX_11); }
+void NEOGEO_USER playVoiceLetsGo(void)   { isZ80Ready(); playSFX(SOUND_SFX_12); }
+void NEOGEO_USER playVoiceGameOver(void) { isZ80Ready(); playSFX(SOUND_SFX_10); }
 
 /*
  * ADPCM-B L/R pan control (YM2610 register $11, active-high).
