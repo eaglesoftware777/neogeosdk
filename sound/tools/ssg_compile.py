@@ -57,12 +57,19 @@ def parse_mml(text):
             continue
 
         # Envelope shape (YM2149 register $0D).  Writing this register
-        # always retriggers the envelope generator — so emitting `E n`
+        # always retriggers the envelope generator — so emitting `K n`
         # at the start of every "syllable" gives a fresh attack/decay
         # shape per syllable, which is what real arcade voice synth
         # does on AY/SSG.  The directive ALSO forces channel A into
         # envelope-amplitude mode (M=1) on the driver side.
-        if c == 'e':
+        #
+        # CRITICAL: this directive used to be `E n` but `e` collides
+        # with the musical note E.  All melodic SSG tracks that
+        # contained the note "E" were being compiled as envelope-shape
+        # writes instead of E notes — that's the "empty click no note"
+        # SSG bug.  `K` is reserved (not a note letter A-G) so it is
+        # safe alongside notes.
+        if c == 'k':
             i += 1
             n, i = read_number(s, i, 0)
             events.append((0xF7, n & 0x0F))

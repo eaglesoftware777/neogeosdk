@@ -5,19 +5,19 @@ V13
 O4
 
 ; "GAME"  — sustained mid vowel
-Q5 E0
+Q5 K0
 P3 D32
 P4 G8
 R32
 
 ; "O"     — short open vowel
-Q3 E0
+Q3 K0
 P3 D32
 P4 F+16
 R32
 
 ; "VER"   — long fading vowel
-Q6 E0
+Q6 K0
 P3 D32
 P4 E4
 

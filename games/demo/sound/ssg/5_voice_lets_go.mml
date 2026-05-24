@@ -5,14 +5,14 @@ V14
 O5
 
 ; "LETS"  — consonant + short vowel + "s" hiss
-Q3 E0
+Q3 K0
 P3 D32
 P4 G+16
 P3 D32
 R32
 
 ; "GO!"   — consonant + long descending vowel
-Q5 E0
+Q5 K0
 P3 D32
 P4 A4
 

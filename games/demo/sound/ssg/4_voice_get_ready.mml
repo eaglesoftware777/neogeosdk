@@ -3,7 +3,7 @@
 ; One syllable = consonant burst (preset 3 = tone+noise on ch A)
 ; + sustained vowel (preset 4 = tone-only on ch A).  Channels B,C
 ; stay silent (preset vol_b=vol_c=0) so the envelope-shaped channel
-; A is what the listener hears, not chorus.  E0 retriggers shape $0
+; A is what the listener hears, not chorus.  K0 retriggers shape $0
 ; (decay) on every note; Q sets envelope cycle per syllable.
 
 T220
@@ -11,25 +11,25 @@ V14
 O5
 
 ; "GET"  — sharp consonant + short rising vowel
-Q3 E0
+Q3 K0
 P3 D32
 P4 G+16
 R32
 
 ; "REA"  — sustained vowel
-Q4 E0
+Q4 K0
 P3 D32
 P4 A8
 R32
 
 ; "DY"   — descending close
-Q3 E0
+Q3 K0
 P3 D32
 P4 E16
 R32
 
 ; "!"    — short exclamation high
-Q2 E0
+Q2 K0
 P4 > C16
 
 ~
