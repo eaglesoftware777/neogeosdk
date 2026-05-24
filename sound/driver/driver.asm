@@ -2726,14 +2726,18 @@ speech_load_phoneme:
     ld e,a
     call shadowed_write_a
     pop af
-    ld de,$0727
+    ld a,$27
     jr speech_mixer_apply
 speech_mixer_no_noise:
     ; vowel: tones A/B/C ON, all noise OFF — mixer $07 = $38
-    ld de,$0738
+    ld a,$38
 speech_mixer_apply:
-    call shadowed_write_a
-    ret
+    ; Force-write the mixer (not shadowed) because adjacent phonemes
+    ; often have the same mixer value and we want the chip-side
+    ; transition to be explicit.
+    ld d,$07
+    ld e,a
+    jp force_write_a
 
 ; speech_stop — silence all three SSG channels and clear ACTIVE.
 speech_stop:
@@ -2759,58 +2763,57 @@ speech_stop:
 ; ticks @ 8.1 Hz Timer-B: 1 tick ≈ 123 ms per phoneme frame.
 ; ------------------------------------------------------------
 
-; "GET READY!" — 8 phonemes
+; Phoneme sequences — emphasize VOWEL formants over consonant noise.
+; Earlier versions had short noise consonants between every vowel; the
+; user perceived the whole cue as just noise ("shhhh") because the
+; broadband consonants masked the narrowband vowels.  These tables
+; mostly play sustained vowels at full volume (15/15/15) with very
+; brief, soft consonants for cadence.
+
+; "GET READY!" — vowel-forward
 speech_seq_get_ready:
-    ; G  (voiced stop, low tone + noise)
-    .db 1, $F4,$01, $8B,$00, $45,$00,  12,6,2,  6
-    ; E  (vowel: F1=500 F2=1700 F3=2500)
-    .db 1, $FA,$00, $4A,$00, $32,$00,  14,10,4, 0
-    ; T  (unvoiced stop, noise only)
-    .db 1, $00,$00, $00,$00, $00,$00,  15,0,0,  8
-    ; R  (liquid: F1=350 F2=1300 F3=2200)
-    .db 1, $65,$01, $60,$00, $39,$00,  12,8,4,  0
-    ; E
-    .db 1, $FA,$00, $4A,$00, $32,$00,  14,10,4, 0
-    ; A  (vowel: F1=700 F2=1100 F3=2450)
-    .db 2, $B3,$00, $72,$00, $33,$00,  15,11,5, 0
-    ; D
-    .db 1, $F4,$01, $8B,$00, $45,$00,  13,6,2,  5
-    ; Y  (vowel "ee": F1=300 F2=2200 F3=3000)
-    .db 2, $A1,$01, $39,$00, $2A,$00,  13,10,5, 0
+    ; brief soft G consonant
+    .db 1, $F4,$01, $8B,$00, $45,$00,   8,4,2,  10
+    ; E vowel (F1=500 F2=1700 F3=2500) — held
+    .db 2, $FA,$00, $4A,$00, $32,$00,  15,12,8, 0
+    ; brief gap
+    .db 1, $00,$00, $00,$00, $00,$00,   0,0,0,  0
+    ; A vowel (F1=700 F2=1100 F3=2450) — long, the syllable peak
+    .db 3, $B3,$00, $72,$00, $33,$00,  15,13,9, 0
+    ; brief soft D
+    .db 1, $F4,$01, $8B,$00, $45,$00,   8,4,2,  8
+    ; I vowel "ee" (F1=300 F2=2200 F3=3000) — held, descending pitch
+    .db 3, $A1,$01, $39,$00, $2A,$00,  15,12,8, 0
     .db 0
 
-; "LET'S GO!" — 5 phonemes
+; "LET'S GO!" — vowel-forward
 speech_seq_lets_go:
-    ; L  (liquid: F1=400 F2=1200 F3=2400)
-    .db 1, $39,$01, $68,$00, $34,$00,  12,8,3,  0
-    ; E
-    .db 1, $FA,$00, $4A,$00, $32,$00,  14,10,4, 0
-    ; TS (noise burst)
-    .db 1, $00,$00, $00,$00, $00,$00,  15,10,0, 8
-    ; G
-    .db 1, $F4,$01, $8B,$00, $45,$00,  12,6,2,  6
-    ; O  (vowel: F1=500 F2=900 F3=2400, longer)
-    .db 3, $FA,$00, $8B,$00, $34,$00,  15,8,3,  0
+    ; brief soft L
+    .db 1, $39,$01, $68,$00, $34,$00,   8,5,2,  0
+    ; E vowel
+    .db 3, $FA,$00, $4A,$00, $32,$00,  15,13,9, 0
+    ; brief soft TS
+    .db 1, $00,$00, $00,$00, $00,$00,  10,6,0,  12
+    ; brief soft G
+    .db 1, $F4,$01, $8B,$00, $45,$00,   8,4,2,  6
+    ; O vowel (F1=500 F2=900 F3=2400) — long ending
+    .db 4, $FA,$00, $8B,$00, $34,$00,  15,12,8, 0
     .db 0
 
-; "GAME OVER" — 7 phonemes
+; "GAME OVER" — vowel-forward
 speech_seq_game_over:
-    ; G
-    .db 1, $F4,$01, $8B,$00, $45,$00,  12,6,2,  6
-    ; A
-    .db 2, $B3,$00, $72,$00, $33,$00,  15,11,5, 0
-    ; M  (nasal: F1=250 F2=700 F3=1200)
-    .db 1, $F4,$01, $B3,$00, $68,$00,  12,5,1,  0
-    ; (brief silence-ish gap via low vol)
-    .db 1, $FA,$00, $8B,$00, $34,$00,   8,4,1,  0
-    ; O
-    .db 2, $FA,$00, $8B,$00, $34,$00,  15,8,3,  0
-    ; V  (voiced fricative: tone + noise)
-    .db 1, $F4,$01, $8B,$00, $00,$00,  10,6,0,  10
-    ; E
-    .db 1, $FA,$00, $4A,$00, $32,$00,  14,10,4, 0
-    ; R
-    .db 2, $65,$01, $60,$00, $39,$00,  12,8,4,  0
+    ; brief soft G
+    .db 1, $F4,$01, $8B,$00, $45,$00,   8,4,2,  6
+    ; A vowel held
+    .db 3, $B3,$00, $72,$00, $33,$00,  15,13,9, 0
+    ; brief nasal M
+    .db 1, $F4,$01, $B3,$00, $68,$00,   8,5,1,  0
+    ; O vowel held
+    .db 3, $FA,$00, $8B,$00, $34,$00,  15,12,8, 0
+    ; brief V (fricative)
+    .db 1, $F4,$01, $8B,$00, $00,$00,   8,5,0,  10
+    ; E vowel held
+    .db 3, $FA,$00, $4A,$00, $32,$00,  15,12,8, 0
     .db 0
 
 ;;; External data includes (unchanged)
