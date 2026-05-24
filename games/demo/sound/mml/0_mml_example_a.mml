@@ -1,5 +1,5 @@
 ; 0_mml_example_a — bright arcade menu loop (C major)
-; SSG carries the melody, ADPCM-B bed under, FM lead on top.
+; SSG carries the melody, ADPCM-B TRACK under, FM lead on top.
 
 T140
 @p1

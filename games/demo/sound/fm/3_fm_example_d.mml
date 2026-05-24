@@ -4,12 +4,12 @@ T220
 I3
 V13
 O4
-L16
+L8
 
 G B D G  D B G4
 F A C F  A C F4
 
-L16
+L8
 G B D G  D B G B
 F A C F  C A F C
 

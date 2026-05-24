@@ -74,6 +74,7 @@ void playVoiceGameOver(void);
 void soundSetADPCMBPan(uint8_t pan);
 void soundFMSetLFO(uint8_t rate_enable);
 void soundSetSSGNoise(uint8_t period);
+void soundFMSetTempo(uint8_t period_frames);
 void playCoinThenReady(void);
 void soundApplyMix(uint8_t,uint8_t,uint8_t,uint8_t);
 void soundPlayDemoFM(uint8_t);
@@ -594,6 +595,25 @@ void NEOGEO_USER soundFMSetLFO(uint8_t rate_enable) {
  */
 void NEOGEO_USER soundSetSSGNoise(uint8_t period) {
 	isZ80Ready(); soundCommand(0x19); isZ80Ready(); soundCommand(period & 0x1F);
+}
+
+/*
+ * FM tempo override (writes VAR_FM_TEMPO directly).
+ *
+ * period_frames = Timer-B IRQs per FM music step.  Timer B fires
+ * at ~8.1 Hz on the YM2610, so:
+ *
+ *   period_frames=1 → step every ~123 ms (fastest, sub-jingle pace)
+ *   period_frames=2 → step every ~246 ms
+ *   period_frames=4 → step every ~493 ms (relaxed)
+ *   period_frames=8 → step every ~986 ms (very slow)
+ *
+ * Takes effect immediately on the currently-playing FM track and
+ * persists until either the next F0 directive in the MML or the
+ * next call to this function.  Range 1..8.
+ */
+void NEOGEO_USER soundFMSetTempo(uint8_t period_frames) {
+	isZ80Ready(); soundCommand(0x1A); isZ80Ready(); soundCommand(period_frames);
 }
 
 void NEOGEO_USER soundFadeOut(void) { isZ80Ready(); soundFadeOutSpeed(0x20); }

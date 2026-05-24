@@ -4,7 +4,7 @@ T220
 I5
 V12
 O4
-L16
+L8
 
 ; phrase A — sustained intro
 D F A > D  > C < A F D
@@ -19,7 +19,7 @@ G F E D  C E G < B-
 ; phrase C — descending finale
 L4
 > A G F E  D < A F D
-L16
+L8
 < C E G > C  < B- D F < B-
 A4 R4 R2
 

@@ -76,11 +76,12 @@ op4=01,00,1F,06,03,7F,00
 name=Vibrato Hero Lead
 alg=7
 fb=6
-; stereo byte $C7 = L + R + AMS=0 + PMS=7 (±80 cents).  PMS=7 gives
-; the strongest pitch-modulation depth available, so the LFO demo in
-; chap_sound section 5 produces an obvious vibrato when soundFMSetLFO
-; toggles the chip's $22 register.
-stereo=C7
+; stereo byte $C3 = L + R + AMS=0 + PMS=3 (±10 cents).  PMS=3 is a
+; musical vibrato depth — PMS=7 (±80 cents) is closer to a siren
+; than vibrato.  The LFO demo in chap_sound section 5 cycles rate
+; 0→1→3→6 so the listener hears the same melody with no vibrato →
+; slow wobble → medium → fast wobble at this natural depth.
+stereo=C3
 lfo=0A
 op1=01,24,1F,0A,06,9F,00
 op2=02,30,1F,0A,06,9F,00

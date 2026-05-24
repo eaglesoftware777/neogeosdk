@@ -634,16 +634,19 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundSetFMVolume(0x00u); snd_step();
     demo_fix_puts(2u, 13u, "         ", 0u);
 
-    /* --- 5) FM LFO (DRIVER FEATURE — $22 register) ---------------- *
+    /* --- 5) FM EFFECTS — LFO (vibrato) + live tempo override ------ *
      *
-     * Play one FM track and toggle the LFO live across four settings.
-     * fm_apply_patch no longer overrides register $22, so the user
-     * setting from soundFMSetLFO persists across notes — the listener
-     * hears the same melody change character (flat → slow wobble →
-     * vibrato → off) as the section progresses.  Patch's AMS/PMS bits
-     * in fm/patches.fm must be non-zero for the modulation to be
-     * audible. */
-    demo_fix_puts(2u, 5u, "5. FM LFO  ($22, vibrato/tremolo) ", 2u);
+     * Plays one FM track and toggles two live effects against it:
+     *  (a) LFO ($22 register): cycles rate 0 → 1 → 3 → 6.  Patch 6
+     *      sets PMS=3 in its stereo byte ($C3) so vibrato depth is
+     *      a musical ±10 cents (not a siren).  The listener should
+     *      hear the same melody alternate between flat tones and
+     *      progressively faster pitch wobble.
+     *  (b) FM tempo (soundFMSetTempo writes VAR_FM_TEMPO directly):
+     *      cycles raw period 1 → 2 → 4 → 1.  Lower value = faster
+     *      music step; the melody should obviously speed up and slow
+     *      down without restarting. */
+    demo_fix_puts(2u, 5u, "5. FM EFFECTS  (LFO + TEMPO)      ", 2u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
@@ -651,18 +654,31 @@ static uint8_t NEOGEO_USER chap_sound(void)
 
     demo_fix_puts(2u, 15u, "LFO OFF      (flat reference)     ", 1u);
     soundFMSetLFO(0x00u); snd_step();
-    if (uwait(220u)) return 1u;
+    if (uwait(180u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=1   (slow wobble)        ", 1u);
     soundFMSetLFO(0x09u); snd_step();
-    if (uwait(220u)) return 1u;
+    if (uwait(180u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=3   (medium vibrato)     ", 1u);
     soundFMSetLFO(0x0Bu); snd_step();
-    if (uwait(220u)) return 1u;
-    demo_fix_puts(2u, 15u, "LFO rate=6   (fastest vibrato)    ", 1u);
+    if (uwait(180u)) return 1u;
+    demo_fix_puts(2u, 15u, "LFO rate=6   (fast vibrato)       ", 1u);
     soundFMSetLFO(0x0Eu); snd_step();
-    if (uwait(220u)) return 1u;
+    if (uwait(180u)) return 1u;
+    soundFMSetLFO(0x00u); snd_step();
 
-    soundFMSetLFO(0x00u);    snd_step();
+    demo_fix_puts(2u, 15u, "TEMPO period=1  (fast)            ", 1u);
+    soundFMSetTempo(1u); snd_step();
+    if (uwait(180u)) return 1u;
+    demo_fix_puts(2u, 15u, "TEMPO period=2  (medium)          ", 1u);
+    soundFMSetTempo(2u); snd_step();
+    if (uwait(180u)) return 1u;
+    demo_fix_puts(2u, 15u, "TEMPO period=4  (slow)            ", 1u);
+    soundFMSetTempo(4u); snd_step();
+    if (uwait(180u)) return 1u;
+    demo_fix_puts(2u, 15u, "TEMPO period=1  (back to fast)    ", 1u);
+    soundFMSetTempo(1u); snd_step();
+    if (uwait(120u)) return 1u;
+
     soundStopMusic();        snd_step();
     soundSetFMVolume(0x00u); snd_step();
     demo_fix_puts(2u, 15u, "                                  ", 0u);
@@ -743,62 +759,68 @@ static uint8_t NEOGEO_USER chap_sound(void)
 
     /* --- 9) FADE TESTS on ADPCM-B TRACK 7 -------------------------- *
      *
-     * IMPORTANT: the driver's fade-speed formula is COUNTER = $FF -
-     * speed, where COUNTER is the number of Timer-B IRQs (~123 ms
-     * each) between every -1 volume step.  So:
+     * WHAT YOU SHOULD HEAR:
+     *  - FadeOut: the bed starts loud, then volume drops smoothly to
+     *    silence over ~2-3 seconds.  Music doesn't stop — only its
+     *    AMPLITUDE shrinks.
+     *  - FadeIn:  silence first (vol = 0 from the prior fade-out),
+     *    then the bed ramps back up to loud over ~2-3 seconds.
+     *  - CancelFade: mid-fade, the volume INSTANTLY snaps back to
+     *    the base level instead of continuing the fade.
      *
-     *   speed=$FF (255) → 1 IRQ/step  → vol $B8→0 in ~22 s        (instant)
-     *   speed=$FE (254) → 1 IRQ/step  → same
-     *   speed=$FC (252) → 3 IRQs/step → ~70 s    (too slow)
-     *   speed=$F0 (240) → 15 IRQs/step → ~5 min  (no audible fade)
-     *
-     * Wait — fade -1 per step from $B8 is 184 steps.  With speed=$FE,
-     * 184 IRQs × 123 ms = 22.6 s.  Even max speed is slow.  For the
-     * demo we use the fastest values to get audible fades in a few
-     * seconds. */
+     * The driver's fade engine decrements/increments all master
+     * volumes (music, ADPCM-A, ADPCM-B) by 8 per step at every Timer-B
+     * IRQ when SPEED >= $FE.  Earlier values like SPEED=8 took ~70 s
+     * to fade — essentially inaudible — which is why this section
+     * sticks to $FF/$FE/$FD. */
     demo_fix_puts(2u, 5u, "9. FADE TESTS  (ADPCM-B only)     ", 2u);
 
     /* --- FadeOut fast --- */
+    demo_fix_puts(2u, 22u, "Listen: bed LOUD then silent      ", 0u);
     demo_fix_puts(2u, 23u, "FadeOut(0xFF) fastest             ", 1u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
     playSFXB(SOUND_TRACK_G);                   snd_step();
-    if (uwait(60u)) return 1u;
+    if (uwait(90u)) return 1u;
     soundFadeOutSpeed(0xFFu); snd_step();
     if (uwait(180u)) return 1u;
 
-    /* --- FadeIn fast --- */
+    /* --- FadeIn fast (continues from prior fade-out at vol 0) --- */
+    demo_fix_puts(2u, 22u, "Listen: silent then LOUD again    ", 0u);
     demo_fix_puts(2u, 23u, "FadeIn(0xFF)  fastest ramp        ", 1u);
     soundFadeInSpeed(0xFFu); snd_step();
     if (uwait(180u)) return 1u;
 
     /* --- FadeOut medium --- */
+    demo_fix_puts(2u, 22u, "Listen: slower fade than first one", 0u);
     demo_fix_puts(2u, 23u, "FadeOut(0xFD) medium              ", 1u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
     playSFXB(SOUND_TRACK_G);                   snd_step();
-    if (uwait(40u)) return 1u;
+    if (uwait(60u)) return 1u;
     soundFadeOutSpeed(0xFDu); snd_step();
-    if (uwait(180u)) return 1u;
+    if (uwait(240u)) return 1u;
     demo_fix_puts(2u, 23u, "FadeIn(0xFD)  medium ramp         ", 1u);
     soundFadeInSpeed(0xFDu); snd_step();
-    if (uwait(180u)) return 1u;
+    if (uwait(240u)) return 1u;
 
     /* --- CancelFade snap-back --- */
+    demo_fix_puts(2u, 22u, "Listen: fading then SNAPS to loud ", 0u);
     demo_fix_puts(2u, 23u, "soundCancelFade  snap-back        ", 1u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
     playSFXB(SOUND_TRACK_G);                   snd_step();
-    if (uwait(40u)) return 1u;
+    if (uwait(60u)) return 1u;
     soundFadeOutSpeed(0xFEu); snd_step();
     if (uwait(80u)) return 1u;
     soundCancelFade();     snd_step();
     if (uwait(180u)) return 1u;
 
     /* --- Final FadeOut to silence --- */
+    demo_fix_puts(2u, 22u, "                                  ", 0u);
     demo_fix_puts(2u, 23u, "Final FadeOut(0xFF) to silence    ", 1u);
     soundFadeOutSpeed(0xFFu); snd_step();
     if (uwait(220u)) return 1u;
