@@ -87,6 +87,12 @@ banks 1
 .define VAR_SSG_ENV_ON     $FE2C    ; 1 = channel A uses envelope amplitude
 .define VAR_SSG_ENV_SHAPE  $FE2D    ; last shape value written by $F7
 
+; --- Speech synthesis (phoneme-based formant playback on all 3 SSG ch) ---
+.define VAR_SPEECH_ACTIVE  $FE2E    ; 1 while a phoneme sequence is playing
+.define VAR_SPEECH_PTR_LO  $FE2F
+.define VAR_SPEECH_PTR_HI  $FE30
+.define VAR_SPEECH_TICKS   $FE31    ; Timer-B ticks remaining for current phoneme
+
 .define STACK              $FFFC
 .define READY_VALUE        $01
 
@@ -210,6 +216,8 @@ driver_init:
     ld (VAR_SSG_PRESET),a
     ld (VAR_SSG_TEMPO),a
     ld (VAR_SSG_TICK),a
+    ld (VAR_SPEECH_ACTIVE),a
+    ld (VAR_SPEECH_TICKS),a
     ld a,$0A
     ld (VAR_SSG_VOL),a
     ld a,3
@@ -435,15 +443,20 @@ exec_normal:
     jp nc,play_fm_cmd
     ret
 
+; Voice cues now use the phoneme speech engine (speech_play) instead
+; of the SSG MML track engine.  Phoneme tables live at the end of
+; this file.  Each cue plays three formants (channels A,B,C) per
+; phoneme frame, with optional noise mixing for consonants — see
+; the "How Yamaha Neo Geo SSG Speech Synthesis Works" reference.
 play_voice_get_ready:
-    ld a,4
-    jp play_ssg_index
+    ld hl,speech_seq_get_ready
+    jp speech_play
 play_voice_lets_go:
-    ld a,5
-    jp play_ssg_index
+    ld hl,speech_seq_lets_go
+    jp speech_play
 play_voice_game_over:
-    ld a,6
-    jp play_ssg_index
+    ld hl,speech_seq_game_over
+    jp speech_play
 
 set_tempo_wait:
     ld a,1
@@ -840,6 +853,8 @@ stop_all:
     ld (VAR_SSG_PRESET),a
     ld (VAR_SSG_TEMPO),a
     ld (VAR_SSG_TICK),a
+    ld (VAR_SPEECH_ACTIVE),a
+    ld (VAR_SPEECH_TICKS),a
     call init_ssg
     call fm_silence_all
     call adpcma_stop
@@ -1268,6 +1283,11 @@ ticker_music:
     ld a,(VAR_SSG_ACTIVE)
     or a
     call nz,ssg_tick
+
+    ; Tick phoneme speech engine
+    ld a,(VAR_SPEECH_ACTIVE)
+    or a
+    call nz,speech_tick
 
     ; Master tempo divider for music MML stream
     ld a,(VAR_TICK)
@@ -2450,6 +2470,272 @@ ssg_period_table:
     .dw $008E  ; A5  = 142
     .dw $0086  ; A#5 = 134
     .dw $007F  ; B5  = 127
+
+; ============================================================
+; SPEECH SYNTHESIS ENGINE
+;
+; Phoneme-frame playback on the 3 SSG channels.  Each phoneme is
+; 11 bytes:
+;   byte 0     : ticks_to_play (1..255, 0 = end-of-sequence marker)
+;   bytes 1-2  : channel A tone period (lo, hi)  — 12-bit
+;   bytes 3-4  : channel B tone period (lo, hi)
+;   bytes 5-6  : channel C tone period (lo, hi)
+;   byte 7     : vol A (0..15)
+;   byte 8     : vol B (0..15)
+;   byte 9     : vol C (0..15)
+;   byte 10    : noise period (0 = no noise, 1..31 = noise enabled)
+;
+; Channels A/B/C act as three vocal formants (F1/F2/F3).  Noise is
+; mixed into A and B for fricative consonants (S, T, K ...).  Ticks
+; are counted at the Timer-B IRQ rate (~8.1 Hz, ~123 ms per tick).
+;
+; Period formula matches the existing SSG path: period = 8 MHz /
+; (64 × frequency_Hz).  Sample values:
+;   250 Hz  = 500 = $01F4
+;   300 Hz  = 417 = $01A1
+;   350 Hz  = 357 = $0165
+;   400 Hz  = 313 = $0139
+;   500 Hz  = 250 = $00FA
+;   700 Hz  = 179 = $00B3
+;   800 Hz  = 156 = $009C
+;   900 Hz  = 139 = $008B
+;  1100 Hz  = 114 = $0072
+;  1200 Hz  = 104 = $0068
+;  1300 Hz  =  96 = $0060
+;  1600 Hz  =  78 = $004E
+;  1700 Hz  =  74 = $004A
+;  1800 Hz  =  69 = $0045
+;  2200 Hz  =  57 = $0039
+;  2400 Hz  =  52 = $0034
+;  2450 Hz  =  51 = $0033
+;  2500 Hz  =  50 = $0032
+;  3000 Hz  =  42 = $002A
+; ============================================================
+
+; speech_play — HL points to a phoneme sequence; start playback.
+; Stops any other SSG-channel activity so the speech engine owns
+; the three SSG channels without interference.
+speech_play:
+    di
+    ld a,1
+    ld (VAR_SPEECH_ACTIVE),a
+    ld a,l
+    ld (VAR_SPEECH_PTR_LO),a
+    ld a,h
+    ld (VAR_SPEECH_PTR_HI),a
+    xor a
+    ld (VAR_SPEECH_TICKS),a
+    ; Disable competing SSG sources
+    ld (VAR_SSG_ACTIVE),a
+    ld (VAR_SSG_ENV_ON),a
+    ei
+    jp speech_load_phoneme
+
+; speech_tick — called from ticker_update each Timer B IRQ.
+; Decrements TICKS; when it reaches 0, advance to next phoneme.
+speech_tick:
+    ld a,(VAR_SPEECH_TICKS)
+    or a
+    ret z                       ; spurious tick (shouldn't happen)
+    dec a
+    ld (VAR_SPEECH_TICKS),a
+    ret nz                      ; still inside current phoneme
+    ; current phoneme done — advance pointer by 11 then load next
+    ld a,(VAR_SPEECH_PTR_LO)
+    ld l,a
+    ld a,(VAR_SPEECH_PTR_HI)
+    ld h,a
+    ld de,11
+    add hl,de
+    ld a,l
+    ld (VAR_SPEECH_PTR_LO),a
+    ld a,h
+    ld (VAR_SPEECH_PTR_HI),a
+    ; fall through to load the new phoneme
+
+; speech_load_phoneme — read the phoneme at VAR_SPEECH_PTR and
+; program the YM2610 SSG registers.  TICKS gets set from byte 0;
+; if byte 0 is 0 we stop the speech.
+speech_load_phoneme:
+    ld a,(VAR_SPEECH_PTR_LO)
+    ld l,a
+    ld a,(VAR_SPEECH_PTR_HI)
+    ld h,a
+    ; byte 0 = duration ticks (0 = end)
+    ld a,(hl)
+    or a
+    jp z,speech_stop
+    ld (VAR_SPEECH_TICKS),a
+    inc hl
+    ; --- Channel A period (regs $00 fine, $01 coarse) ---
+    ld a,(hl)
+    inc hl
+    push hl
+    ld d,$00
+    ld e,a
+    call shadowed_write_a
+    pop hl
+    ld a,(hl)
+    inc hl
+    push hl
+    ld d,$01
+    ld e,a
+    call shadowed_write_a
+    pop hl
+    ; --- Channel B period ($02/$03) ---
+    ld a,(hl)
+    inc hl
+    push hl
+    ld d,$02
+    ld e,a
+    call shadowed_write_a
+    pop hl
+    ld a,(hl)
+    inc hl
+    push hl
+    ld d,$03
+    ld e,a
+    call shadowed_write_a
+    pop hl
+    ; --- Channel C period ($04/$05) ---
+    ld a,(hl)
+    inc hl
+    push hl
+    ld d,$04
+    ld e,a
+    call shadowed_write_a
+    pop hl
+    ld a,(hl)
+    inc hl
+    push hl
+    ld d,$05
+    ld e,a
+    call shadowed_write_a
+    pop hl
+    ; --- Vol A ($08) ---
+    ld a,(hl)
+    inc hl
+    push hl
+    and $0F
+    ld d,$08
+    ld e,a
+    call shadowed_write_a
+    pop hl
+    ; --- Vol B ($09) ---
+    ld a,(hl)
+    inc hl
+    push hl
+    and $0F
+    ld d,$09
+    ld e,a
+    call shadowed_write_a
+    pop hl
+    ; --- Vol C ($0A) ---
+    ld a,(hl)
+    inc hl
+    push hl
+    and $0F
+    ld d,$0A
+    ld e,a
+    call shadowed_write_a
+    pop hl
+    ; --- Noise period + mixer ($06, $07) ---
+    ld a,(hl)
+    or a
+    jr z,speech_mixer_no_noise
+    ; noise enabled: write period to $06, mixer $07 = $27
+    ; ($27 = tone A/B/C OFF, noise A/B ON, noise C OFF)
+    push af
+    ld d,$06
+    ld e,a
+    call shadowed_write_a
+    pop af
+    ld de,$0727
+    jr speech_mixer_apply
+speech_mixer_no_noise:
+    ; vowel: tones A/B/C ON, all noise OFF — mixer $07 = $38
+    ld de,$0738
+speech_mixer_apply:
+    call shadowed_write_a
+    ret
+
+; speech_stop — silence all three SSG channels and clear ACTIVE.
+speech_stop:
+    xor a
+    ld (VAR_SPEECH_ACTIVE),a
+    ld (VAR_SPEECH_TICKS),a
+    ld de,$0800
+    call shadowed_write_a
+    ld de,$0900
+    call shadowed_write_a
+    ld de,$0A00
+    call shadowed_write_a
+    ld de,$073F     ; all tone + all noise disabled
+    jp shadowed_write_a
+
+; ------------------------------------------------------------
+; Phoneme sequences
+;
+; Each frame: ticks, A-period(lo,hi), B-period(lo,hi), C-period(lo,hi),
+;             vol_a, vol_b, vol_c, noise_period
+; Terminator: a leading 0 byte.
+;
+; ticks @ 8.1 Hz Timer-B: 1 tick ≈ 123 ms per phoneme frame.
+; ------------------------------------------------------------
+
+; "GET READY!" — 8 phonemes
+speech_seq_get_ready:
+    ; G  (voiced stop, low tone + noise)
+    .db 1, $F4,$01, $8B,$00, $45,$00,  12,6,2,  6
+    ; E  (vowel: F1=500 F2=1700 F3=2500)
+    .db 1, $FA,$00, $4A,$00, $32,$00,  14,10,4, 0
+    ; T  (unvoiced stop, noise only)
+    .db 1, $00,$00, $00,$00, $00,$00,  15,0,0,  8
+    ; R  (liquid: F1=350 F2=1300 F3=2200)
+    .db 1, $65,$01, $60,$00, $39,$00,  12,8,4,  0
+    ; E
+    .db 1, $FA,$00, $4A,$00, $32,$00,  14,10,4, 0
+    ; A  (vowel: F1=700 F2=1100 F3=2450)
+    .db 2, $B3,$00, $72,$00, $33,$00,  15,11,5, 0
+    ; D
+    .db 1, $F4,$01, $8B,$00, $45,$00,  13,6,2,  5
+    ; Y  (vowel "ee": F1=300 F2=2200 F3=3000)
+    .db 2, $A1,$01, $39,$00, $2A,$00,  13,10,5, 0
+    .db 0
+
+; "LET'S GO!" — 5 phonemes
+speech_seq_lets_go:
+    ; L  (liquid: F1=400 F2=1200 F3=2400)
+    .db 1, $39,$01, $68,$00, $34,$00,  12,8,3,  0
+    ; E
+    .db 1, $FA,$00, $4A,$00, $32,$00,  14,10,4, 0
+    ; TS (noise burst)
+    .db 1, $00,$00, $00,$00, $00,$00,  15,10,0, 8
+    ; G
+    .db 1, $F4,$01, $8B,$00, $45,$00,  12,6,2,  6
+    ; O  (vowel: F1=500 F2=900 F3=2400, longer)
+    .db 3, $FA,$00, $8B,$00, $34,$00,  15,8,3,  0
+    .db 0
+
+; "GAME OVER" — 7 phonemes
+speech_seq_game_over:
+    ; G
+    .db 1, $F4,$01, $8B,$00, $45,$00,  12,6,2,  6
+    ; A
+    .db 2, $B3,$00, $72,$00, $33,$00,  15,11,5, 0
+    ; M  (nasal: F1=250 F2=700 F3=1200)
+    .db 1, $F4,$01, $B3,$00, $68,$00,  12,5,1,  0
+    ; (brief silence-ish gap via low vol)
+    .db 1, $FA,$00, $8B,$00, $34,$00,   8,4,1,  0
+    ; O
+    .db 2, $FA,$00, $8B,$00, $34,$00,  15,8,3,  0
+    ; V  (voiced fricative: tone + noise)
+    .db 1, $F4,$01, $8B,$00, $00,$00,  10,6,0,  10
+    ; E
+    .db 1, $FA,$00, $4A,$00, $32,$00,  14,10,4, 0
+    ; R
+    .db 2, $65,$01, $60,$00, $39,$00,  12,8,4,  0
+    .db 0
 
 ;;; External data includes (unchanged)
 .include "fm_patch_table.inc"
