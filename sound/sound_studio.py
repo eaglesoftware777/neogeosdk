@@ -1369,7 +1369,7 @@ class ADPCMTab(QWidget):
             "  → packed into 777-v1.v1\n\n"
             "Rebuild VROM:\n"
             "  make vrom  (Linux)\n"
-            "  nmake -f MakefileWin32.mak vrom\n\n"
+            "  make -f MakefileWin32.mak vrom\n\n"
             "YM2610 ADPCM-A specs:\n"
             "  Sample rate: up to ~18.5 kHz\n"
             "  Max channels: 6 simultaneous\n"
