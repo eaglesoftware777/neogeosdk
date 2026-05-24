@@ -1,4 +1,4 @@
-; 3_fm_example_d — Donkey Kong jumpman-style (G major, mid range)
+; 3_fm_example_d — Strider-style heroic theme (G minor)
 
 T220
 I3
@@ -6,18 +6,18 @@ V13
 O4
 L8
 
-G B D G  D B G4
-F A C F  A C F4
+; A — heroic stab + answer
+G G B- > D  < G B- > D G
+F+ F+ A > C  < F+ A > C F+
 
-L8
-G B D G  D B G B
-F A C F  C A F C
+; B — climbing motif
+G A B- > C  < D E- F G
+F E- D < B-  > A G F+ G
 
-D B G D  B G D G
-C A F C  A F C F
-
-G B D G  F A C F
-E G C E  D B G D
-G4 R4 R2
+; C — wide-interval finale
+> D < G > D < G  > D < G > D < G
+> C < F > C < F  > C < F > C < F
+B- F A E-  G D F C
+> G2
 
 ~

@@ -26,7 +26,7 @@
                 <rom offset="0x000000" size="0x020000" name="777-s1.s1" crc="edbb7d8e" sha1="dc95dec36e292fcc6cb877010330bddbbe5d8c44" />
             </dataarea>
             <dataarea name="audiocpu" size="0x020000">
-                <rom offset="0x000000" size="0x020000" name="777-m1.m1" crc="30e607f7" sha1="4e0c7830acda615b25a665bca436f26bd4779782" />
+                <rom offset="0x000000" size="0x020000" name="777-m1.m1" crc="0295b5c1" sha1="a223646029b9cf2715c4d2e7ced6e2c83e011ab7" />
             </dataarea>
             <dataarea name="ymsnd:adpcma" size="0x371a00">
                 <rom name="777-v1.v1" offset="0x000000" size="0x371a00" crc="69404aef" sha1="940142a5b14b22644d69782838ee69c242760205" />

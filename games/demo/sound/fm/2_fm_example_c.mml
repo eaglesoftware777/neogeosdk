@@ -1,4 +1,4 @@
-; 2_fm_example_c — Bubble Bobble-style upbeat (F major, bouncy)
+; 2_fm_example_c — Outrun-style cruising melody (F major)
 
 T220
 I2
@@ -6,21 +6,17 @@ V13
 O5
 L8
 
-; phrase A — bouncing hook
-F A > C F  > C < A F4
-G B- > D G  > D < B- G4
+; A — opening phrase
+F G A > C  < A F G A
+> C < A G F  E F G A
 
-; phrase B — playful runs
-L8
-F G A > C  D < A G F  E F G A  B- > C < B- A
-L8
-G B- > D F  E D C < B-
-A G F E  F4 R4
+; B — chord climb
+F A > C F  G B- > D G
+< A > C F A  < B- > D F4
 
-; phrase C — call/answer
-> F < A > C F  E D C < B-
-A G F E  F G A4
-< F A > C F  G > C E G
-F > C < A F  > F2
+; C — sustained outro
+> C < A F4  G E C4
+F G A > C  < A G F4
+< F A > C2
 
 ~
