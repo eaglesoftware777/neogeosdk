@@ -42,10 +42,24 @@ try:
         ordered_dither,
         open_as_rgb,
         crop_center,
+        alpha_bleed,
     )
     HAS_IMG2NEO = True
 except ImportError:
     HAS_IMG2NEO = False
+    alpha_bleed = None
+
+# Opt-in CRT-optimised converter (Lab quantisation + horizontal-biased dither
+# + gamma/contrast pre-boost).  Enabled by exporting ARTBOX_CRT=1 (or via
+# `make art-crt` / `nmake art-crt`).  Falls back silently to the legacy
+# nearest-neighbour pipeline if the module fails to import.
+USE_CRT = os.environ.get("ARTBOX_CRT", "").strip() in ("1", "true", "yes", "on")
+try:
+    from img2neo_crt import convert_screen_to_indexed as crt_convert_screen
+    HAS_CRT = True
+except ImportError:
+    HAS_CRT = False
+    crt_convert_screen = None
 
 
 def adapt_array(arr):
@@ -174,6 +188,10 @@ def load_sprite_asset(spec, shared_palette15=None):
         spec["anchor"],
     )
     rgba = np.array(canvas, dtype=np.uint8)
+    # Inward edge dilation kills white/colour halos before anti-aliased
+    # edge pixels get promoted to opaque palette indices.
+    if alpha_bleed is not None:
+        rgba = alpha_bleed(rgba, opaque_alpha=128)
     alpha_mask = rgba[:, :, 3] >= 16
     rgb = snap_neogeo(rgba[:, :, :3])
 
@@ -218,6 +236,8 @@ def build_shared_sprite_palettes(specs):
                 spec["anchor"],
             )
             rgba = np.array(canvas, dtype=np.uint8)
+            if alpha_bleed is not None:
+                rgba = alpha_bleed(rgba, opaque_alpha=128)
             alpha_mask = rgba[:, :, 3] >= 16
             if alpha_mask.any():
                 opaque_chunks.append(snap_neogeo(rgba[:, :, :3])[alpha_mask])
@@ -257,6 +277,25 @@ def load_screen_asset(spec):
 
     tw = (spec["target_width"] // 16) * 16
     th = (spec["target_height"] // 16) * 16
+
+    if USE_CRT and HAS_CRT:
+        indexed, palette, meta = crt_convert_screen(
+            spec["path"],
+            target_w=tw,
+            target_h=th,
+            fit=spec.get("fit", "contain"),
+            anchor=spec.get("anchor", "center"),
+            n_colors=15,
+        )
+        spec["transparent_zero"] = 1
+        spec["palette_has_zero"] = 1
+        spec["canvas_width"]   = meta["canvas_width"]
+        spec["canvas_height"]  = meta["canvas_height"]
+        spec["content_left"]   = meta["content_left"]
+        spec["content_top"]    = meta["content_top"]
+        spec["content_width"]  = meta["content_width"]
+        spec["content_height"] = meta["content_height"]
+        return indexed, palette
 
     src = Image.open(spec["path"]).convert("RGBA")
     canvas, left, top, content_w, content_h = fit_screen_rgba(

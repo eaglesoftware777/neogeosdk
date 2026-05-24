@@ -19,6 +19,14 @@ Neo Geo development SDK for SNK hardware.
 - **HD artbox alt-pipeline** — `artbox/img2neo_hd.py` and
   `artbox/fixtiles_hd.py` add bilateral / CLAHE / unsharp / blue-noise
   dither (alongside the existing pipeline, not replacing it)
+- **CRT-optimised artbox pipeline** — `artbox/img2neo_crt.py` does
+  CIE-Lab k-means palette + horizontal-biased Floyd-Steinberg + gamma
+  1.20 / contrast 1.10 pre-boost for arcade CRT output; opt in via
+  `make art-crt` (Linux) or `nmake -f MakefileWin32.mak art-crt` (Win32)
+- **Sprite halo fix** — `artbox/img2neo.py` exposes `alpha_bleed()` and
+  the sprite path uses it after `fit_sprite_rgba` so anti-aliased
+  contours stop baking the source PNG's hidden transparent-pixel RGB
+  (typically near-white) into the indexed sprite
 - Mini-game = arrows + B strike (no jump).  Joystick chapter B+C / B+D
   two-button specials replace QCF / DP motion inputs
 - Galaxian → **Eagle Invaders**: dive attacks, return fire, debris,
@@ -695,6 +703,8 @@ make p1              : build only the 68000 game ROM
 make sound           : samples + vrom + fmpatches + fm + mml + ssgconfig + ssg + m1rom
 make sound-all       : alias for make sound
 make art             : rebuild sprite C ROMs from artbox
+make art-crt         : same as 'art' but routes screens through the
+                       CRT-optimised pipeline (img2neo_crt.py)
 make sfix            : rebuild S1 FIX ROM
 make srom            : alias for make sfix
 make vrom            : rebuild V ROM from ADPCM assets
