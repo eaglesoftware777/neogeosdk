@@ -594,27 +594,27 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundStopAll();        snd_step();
     demo_fix_puts(2u, 9u, "                                  ", 0u);
 
-    /* --- 3) SPEECH SYNTHESIS — phoneme-frame engine ----------------- *
+    /* --- 3) VOICE CUES — recorded ADPCM-A voice samples ------------- *
      *
-     * Driver commands $50 / $51 / $52 each kick off a sequence of
-     * phoneme frames that drive all three SSG channels as formants
-     * (F1/F2/F3) with shared noise mixed in for fricative consonants.
-     * Software-controlled per-phoneme volumes — no envelope generator
-     * involvement, no SSG MML. */
-    demo_fix_puts(2u, 5u, "3. SPEECH (3-formant phoneme eng) ", 2u);
+     * Three voice cues backed by real V-ROM samples (SFX 11, 12, 10).
+     * Pure-chip SSG can't synthesise intelligible speech so these
+     * playSFX-based wrappers replace the earlier phoneme engine for
+     * audible voice in the demo.  The driver-side $50/$51/$52 phoneme
+     * commands still exist for callers that want SSG robotic speech. */
+    demo_fix_puts(2u, 5u, "3. VOICE CUES (ADPCM-A)           ", 2u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
-    soundApplyMix(0x30u, 0x00u, 0x0Fu, 0x00u); snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x00u); snd_step();
 
-    demo_fix_puts(2u, 11u, "playVoiceGetReady()  ($50)        ", 1u);
+    demo_fix_puts(2u, 11u, "playVoiceGetReady()  SFX 11       ", 1u);
     playVoiceGetReady(); snd_step();
-    if (uwait(160u)) return 1u;
-    demo_fix_puts(2u, 11u, "playVoiceLetsGo()    ($51)        ", 1u);
+    if (uwait(140u)) return 1u;
+    demo_fix_puts(2u, 11u, "playVoiceLetsGo()    SFX 12       ", 1u);
     playVoiceLetsGo();   snd_step();
-    if (uwait(160u)) return 1u;
-    demo_fix_puts(2u, 11u, "playVoiceGameOver()  ($52)        ", 1u);
+    if (uwait(140u)) return 1u;
+    demo_fix_puts(2u, 11u, "playVoiceGameOver()  SFX 10       ", 1u);
     playVoiceGameOver(); snd_step();
-    if (uwait(200u)) return 1u;
+    if (uwait(160u)) return 1u;
     demo_fix_puts(2u, 11u, "                                  ", 0u);
     soundStopAll(); snd_step();
 
@@ -664,6 +664,7 @@ static uint8_t NEOGEO_USER chap_sound(void)
 
     /* --- 6) SSG TRACKS — 4 melodic loops --------------------------- */
     demo_fix_puts(2u, 5u, "6. SSG TRACKS (1..4)              ", 2u);
+    soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0x00u, 0x0Eu, 0x00u); snd_step();
     for (i = 0u; i < SOUND_SSG_TRACK_COUNT; i++) {
@@ -676,8 +677,11 @@ static uint8_t NEOGEO_USER chap_sound(void)
         playSSGTrack(i);              snd_step();
         if (uwait(360u)) return 1u;
     }
-    soundStopMusic();         snd_step();
-    soundSetSSGVolume(0x00u); snd_step();
+    /* FULL teardown so the next section starts on a known-good
+     * driver state — soundStopMusic alone left state that could
+     * suppress subsequent ADPCM-A/B and FM playback. */
+    soundStopAll();           snd_step();
+    soundSceneReset();        snd_step();
     demo_fix_puts(2u, 17u, "         ", 0u);
 
     /* --- 7) ADPCM-A SFX bank -------------------------------------- */

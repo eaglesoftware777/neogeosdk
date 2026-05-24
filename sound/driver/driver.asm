@@ -714,6 +714,9 @@ stop_music:
     ld (VAR_FM_WAIT),a
     ld (VAR_SSG_ACTIVE),a
     ld (VAR_SSG_WAIT),a
+    ld (VAR_SSG_ENV_ON),a       ; clear envelope mode so a subsequent
+                                ; SSG track isn't muted by ssg_note_on
+                                ; skipping its vol writes.
     call fm_silence_all
     jp init_ssg
 
@@ -916,6 +919,8 @@ stop_all:
     ld (VAR_SSG_PRESET),a
     ld (VAR_SSG_TEMPO),a
     ld (VAR_SSG_TICK),a
+    ld (VAR_SSG_ENV_ON),a       ; defensively clear so next SSG track
+    ld (VAR_SSG_ENV_SHAPE),a    ; won't inherit stuck envelope mode
     ld (VAR_SPEECH_ACTIVE),a
     ld (VAR_SPEECH_TICKS),a
     call init_ssg
