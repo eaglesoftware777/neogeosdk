@@ -546,9 +546,23 @@ void NEOGEO_USER playCoinThenReady(void) {
  * speech on YM2610 requires ADPCM samples; this is a synthesis-only
  * approximation that's free of sample storage.
  */
-void NEOGEO_USER playVoiceGetReady(void) { isZ80Ready(); soundCommand(0x50); }
-void NEOGEO_USER playVoiceLetsGo(void)   { isZ80Ready(); soundCommand(0x51); }
-void NEOGEO_USER playVoiceGameOver(void) { isZ80Ready(); soundCommand(0x52); }
+/*
+ * Voice cues now play recorded ADPCM-A voice samples instead of the
+ * SSG phoneme synthesiser.  Three-channel SSG can't produce
+ * intelligible speech regardless of how cleverly we drive the chip,
+ * so the high-level helpers use the V ROM's voice samples for real
+ * audible voice.  The driver-side phoneme engine ($50/$51/$52) is
+ * still wired up for callers that want pure-chip robotic speech.
+ *
+ *   playVoiceGetReady → SOUND_SFX_11  (existing "Get Ready" voice)
+ *   playVoiceLetsGo   → SOUND_SFX_12  (existing "Attack" / "Let's Go" voice)
+ *   playVoiceGameOver → SOUND_SFX_10  (low drum as a stand-in until a
+ *                                       dedicated "Game Over" voice
+ *                                       sample exists in the V ROM)
+ */
+void NEOGEO_USER playVoiceGetReady(void) { isZ80Ready(); playSFX(SOUND_SFX_11); }
+void NEOGEO_USER playVoiceLetsGo(void)   { isZ80Ready(); playSFX(SOUND_SFX_12); }
+void NEOGEO_USER playVoiceGameOver(void) { isZ80Ready(); playSFX(SOUND_SFX_10); }
 
 /*
  * ADPCM-B L/R pan control (YM2610 register $11, active-high).
