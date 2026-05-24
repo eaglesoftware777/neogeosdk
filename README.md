@@ -914,13 +914,13 @@ Key sound-side paths:
 
 Current ADPCM-B theme mapping:
 
-- `playSFXB(0)` / `SOUND_BED_A`
+- `playSFXB(0)` / `SOUND_TRACK_A`
   - title theme
-- `playSFXB(1)` / `SOUND_BED_B`
+- `playSFXB(1)` / `SOUND_TRACK_B`
   - stage loop 1
-- `playSFXB(2)` / `SOUND_BED_C`
+- `playSFXB(2)` / `SOUND_TRACK_C`
   - stage loop 2
-- `playSFXB(3)` / `SOUND_BED_D`
+- `playSFXB(3)` / `SOUND_TRACK_D`
   - ending / results theme
 
 68k-side sound API highlights:
@@ -944,7 +944,7 @@ Current live 68000-side flow:
 - `COIN_SOUND()` uses an ADPCM-A coin chime
 - `PLAYER_START()` uses an ADPCM-A start cue
 - `soundPlayTitleMusic()` resets the scene, plays the title gong, then starts the ADPCM-B title theme
-- `soundPlayGameLoop()` resets the scene and selects an ADPCM-B stage or ending bed directly
+- `soundPlayGameLoop()` resets the scene and selects an ADPCM-B stage or ending TRACK directly
 - `playMusic()` remains available for explicit MML/SSG playback, but the shipped title/game helpers now prefer direct ADPCM-B playback for cleaner live behavior
 
 Detailed sound usage:
@@ -1002,7 +1002,7 @@ docs/             — game-engine and build integration docs
 main.c            — demo/game presentation flow on 68000 side
 user.c            — Neo Geo BIOS hook handlers and startup flow
 sdk/              — headers, linker scripts, support library
-  sound_ids.h         — named sound IDs for music, SFX, beds, FM, and SSG tracks
+  sound_ids.h         — named sound IDs for music, SFX, TRACKs, FM, and SSG tracks
   ng_*.h/.c           — 2D game engine layer modules
   ng_bankswitch.h/.c  — P-ROM bank switching stub (not used in demo)
 artbox/           — graphics conversion pipeline
