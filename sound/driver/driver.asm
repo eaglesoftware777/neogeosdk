@@ -1376,28 +1376,27 @@ fade_interval_ok:
     ret
 
 fade_out_step:
-    ; Decrement all volume channels by FADE_STEP_DEC toward 0.
+    ; Decrement all volume channels by 16 per step toward 0.
     ;
-    ; The original driver decremented by 1 per step — at the chip's
-    ; Timer-B IRQ rate of ~8.1 Hz, fading vol $B8 (the typical
-    ; ADPCM-B level) to 0 took 184 IRQs = 22.6 s even at maximum
-    ; speed.  That's so slow the user reports "no fade at all".
-    ; Decrementing by 8 per step cuts the worst-case fade to ~2.8 s
-    ; which is clearly audible.
+    ; The original driver decremented by 1 — at the chip's Timer-B
+    ; IRQ rate of ~8.1 Hz, fading vol $B8 to 0 took 22.6 s even at
+    ; max speed (user reports "no fade at all" with that step).  At
+    ; -16 per step the same fade completes in ~1.4 s — clearly
+    ; audible inside any reasonable demo dwell.
     ld a,(VAR_MUSIC_VOL)
-    sub 8
+    sub 16
     jr nc,fade_out_music_ok
     xor a
 fade_out_music_ok:
     ld (VAR_MUSIC_VOL),a
     ld a,(VAR_ADPCMA_VOL)
-    sub 8
+    sub 16
     jr nc,fade_out_adpcma_ok
     xor a
 fade_out_adpcma_ok:
     ld (VAR_ADPCMA_VOL),a
     ld a,(VAR_ADPCMB_VOL)
-    sub 8
+    sub 16
     jr nc,fade_out_adpcmb_ok
     xor a
 fade_out_adpcmb_ok:
@@ -1420,10 +1419,10 @@ fade_out_apply:
     ret
 
 fade_in_step:
-    ; Increment all volume channels by FADE_STEP_INC toward base.
-    ; Same +8 step as fade_out_step for matching ramp speed.
+    ; Increment all volume channels by 16 per step toward base.
+    ; Matches the +/-16 used by fade_out for symmetric ramp speed.
     ld a,(VAR_MUSIC_VOL)
-    add a,8
+    add a,16
     jr nc,fade_in_music_nowrap
     ld a,$FF
 fade_in_music_nowrap:
@@ -1437,7 +1436,7 @@ fade_in_music_keep:
     ld (VAR_MUSIC_VOL),a
 
     ld a,(VAR_ADPCMA_VOL)
-    add a,8
+    add a,16
     jr nc,fade_in_adpcma_nowrap
     ld a,$FF
 fade_in_adpcma_nowrap:
@@ -1451,7 +1450,7 @@ fade_in_adpcma_keep:
     ld (VAR_ADPCMA_VOL),a
 
     ld a,(VAR_ADPCMB_VOL)
-    add a,8
+    add a,16
     jr nc,fade_in_adpcmb_nowrap
     ld a,$FF
 fade_in_adpcmb_nowrap:

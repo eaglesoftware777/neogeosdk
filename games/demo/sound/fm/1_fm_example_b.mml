@@ -7,7 +7,7 @@ T220
 I1
 V13
 O5
-L8
+L16
 
 ; A — leaping ascend
 G B > D G  > D < B G4
@@ -16,7 +16,7 @@ F+ A > C F+  > C < A F+4
 ; B — running 16ths then resolve
 L16
 D E F+ G  A B > C D  E D C < B  A G F+ E
-L8
+L16
 D4 G2 R4
 
 ; C — answer with grace notes
@@ -26,7 +26,7 @@ D4 G2 R4
 ; D — descend to tonic
 L16
 > E D C < B  A G F+ E  D C < B A  G F+ E D
-L8
+L16
 G2 R4 R4
 
 ~
