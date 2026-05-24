@@ -21,7 +21,7 @@ Adding or renaming files changes the track number mapping.
 Current shipped 68000 flow:
 
 - `soundPlayTitleMusic()` uses direct ADPCM-B playback for title
-- `soundPlayGameLoop()` uses direct ADPCM-B playback for stage and ending beds
+- `soundPlayGameLoop()` uses direct ADPCM-B playback for stage and ending TRACKs
 - `playMusic()` remains the explicit path when you want MML/SSG ownership of a scene
 
 COMMAND REFERENCE

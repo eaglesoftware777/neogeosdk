@@ -20,15 +20,15 @@ Mapped to `playSFX(n)`.
 ### ADPCM-B Samples (Music/Ambience)
 Mapped to `playSFXB(n)`.
 - `1.adpcmb`: Title theme (Index 0).
-- `2.adpcmb`: Stage loop 1 / level bed (Index 1).
-- `3.adpcmb`: Stage loop 2 / battle bed (Index 2).
+- `2.adpcmb`: Stage loop 1 / level TRACK (Index 1).
+- `3.adpcmb`: Stage loop 2 / battle TRACK (Index 2).
 - `4.adpcmb`: Ending / results scene theme (Index 3).
 
 Current high-level mapping from `sdk/sound_ids.h`:
 
-- `SOUND_BED_A = 0`
-- `SOUND_BED_B = 1`
-- `SOUND_BED_C = 2`
-- `SOUND_BED_D = 3`
+- `SOUND_TRACK_A = 0`
+- `SOUND_TRACK_B = 1`
+- `SOUND_TRACK_C = 2`
+- `SOUND_TRACK_D = 3`
 
 The tracked `out_a` and `out_b` files are the encoded ADPCM payloads used by `sound/tools/vrom.py` to build the V ROM.

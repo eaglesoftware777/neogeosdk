@@ -130,9 +130,10 @@ void playVoiceLetsGo(void);
 void playVoiceGameOver(void);
 
 /* YM2610 chip-level controls. */
-void soundSetADPCMBPan(uint8_t pan);    /* $C0 stereo, $80 L, $40 R, $00 mute */
-void soundFMSetLFO(uint8_t rate_enable);/* bit3 enable, bits0-2 rate */
-void soundSetSSGNoise(uint8_t period);  /* 5-bit noise period */
+void soundSetADPCMBPan(uint8_t pan);     /* $C0 stereo, $80 L, $40 R, $00 mute */
+void soundFMSetLFO(uint8_t rate_enable); /* bit3 enable, bits0-2 rate */
+void soundSetSSGNoise(uint8_t period);   /* 5-bit noise period */
+void soundFMSetTempo(uint8_t period);    /* Timer-B IRQs per FM step, 1..8 */
 
 /* Fades. */
 void soundFadeOut(void);

@@ -4,16 +4,16 @@ T220
 I2
 V13
 O5
-L16
+L8
 
 ; phrase A — bouncing hook
 F A > C F  > C < A F4
 G B- > D G  > D < B- G4
 
 ; phrase B — playful runs
-L16
+L8
 F G A > C  D < A G F  E F G A  B- > C < B- A
-L16
+L8
 G B- > D F  E D C < B-
 A G F E  F4 R4
 

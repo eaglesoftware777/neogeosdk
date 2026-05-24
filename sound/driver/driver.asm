@@ -270,23 +270,23 @@ execute_command:
     ld (VAR_PARAM_MODE),a
     ld a,(VAR_WAIT_TEMPO)
     cp 1
-    jr z,exec_p_tempo
+    jp z,exec_p_tempo
     cp 2
-    jr z,exec_p_adpcma
+    jp z,exec_p_adpcma
     cp 3
-    jr z,exec_p_adpcmb
+    jp z,exec_p_adpcmb
     cp 4
-    jr z,exec_p_ssg
+    jp z,exec_p_ssg
     cp 5
-    jr z,exec_p_fadeout
+    jp z,exec_p_fadeout
     cp 6
-    jr z,exec_p_fadein
+    jp z,exec_p_fadein
     cp 7
-    jr z,exec_p_fmtrack
+    jp z,exec_p_fmtrack
     cp 8
-    jr z,exec_p_fmvol
+    jp z,exec_p_fmvol
     cp 9
-    jr z,exec_p_ssgtrack
+    jp z,exec_p_ssgtrack
     cp 10
     jp z,exec_p_ssgpreset
     cp 11
@@ -295,6 +295,8 @@ execute_command:
     jp z,exec_p_fm_lfo
     cp 13
     jp z,exec_p_ssg_noise
+    cp 14
+    jp z,exec_p_fm_tempo
     ret
 exec_p_tempo:
     ld a,c
@@ -394,6 +396,20 @@ exec_p_ssg_noise:
     ld e,a
     jp shadowed_write_a
 
+; --- FM tempo override (writes VAR_FM_TEMPO directly) ---
+; Raw value 1..8 = Timer-B IRQs per music step (1 = fastest).
+; This is the live equivalent of the MML F0 directive but takes the
+; cooked period directly so the SDK caller doesn't need to call
+; tempo_to_frames.
+exec_p_fm_tempo:
+    ld a,c
+    or a
+    jr nz,exec_p_fm_tempo_ok
+    ld a,1
+exec_p_fm_tempo_ok:
+    ld (VAR_FM_TEMPO),a
+    ret
+
 set_fmvol_wait:
     ld a,8
     ld (VAR_WAIT_TEMPO),a
@@ -413,41 +429,43 @@ exec_normal:
     cp $04 ; Stop all
     jp z,stop_all
     cp $05 ; ADPCM-A volume parameter follows
-    jr z,set_adpcma_volume_wait
+    jp z,set_adpcma_volume_wait
     cp $06 ; ADPCM-B volume parameter follows
-    jr z,set_adpcmb_volume_wait
+    jp z,set_adpcmb_volume_wait
     cp $07 ; SSG/MML volume parameter follows
-    jr z,set_ssg_volume_wait
+    jp z,set_ssg_volume_wait
     cp $0A ; Fade out speed parameter follows
-    jr z,set_fadeout_wait
+    jp z,set_fadeout_wait
     cp $0C ; ADPCM-A stop
     jp z,adpcma_stop
     cp $0D ; ADPCM-B stop
     jp z,adpcmb_stop
     cp $0E ; Tempo Wait
-    jr z,set_tempo_wait
+    jp z,set_tempo_wait
     cp $0F ; Stop SSG / music only
     jp z,stop_music
     cp $11 ; Stop fade out
     jp z,cancel_fade
     cp $12 ; Fade in speed parameter follows
-    jr z,set_fadein_wait
+    jp z,set_fadein_wait
     cp $13 ; FM volume parameter follows
-    jr z,set_fmvol_wait
+    jp z,set_fmvol_wait
     cp SSG_CMD_PRESET ; SSG preset parameter follows
-    jr z,set_ssgpreset_wait
+    jp z,set_ssgpreset_wait
     cp $30 ; FM debug tone
     jp z,play_fm_demo
     cp $31 ; FM track select parameter follows
-    jr z,set_fmtrack_wait
+    jp z,set_fmtrack_wait
     cp SSG_CMD_PLAY ; SSG track select parameter follows
-    jr z,set_ssgtrack_wait
+    jp z,set_ssgtrack_wait
     cp $15 ; ADPCM-B L/R pan parameter follows
     jp z,set_adpcmb_pan_wait
     cp $17 ; FM LFO enable+rate parameter follows
     jp z,set_fm_lfo_wait
     cp $19 ; SSG noise period parameter follows
     jp z,set_ssg_noise_wait
+    cp $1A ; FM tempo (raw Timer-B period) parameter follows
+    jp z,set_fm_tempo_wait
     cp $28 ; ADPCM-B direct sample 0
     jp z,play_demo_b0
     cp $29 ; ADPCM-B direct sample 1
@@ -529,6 +547,12 @@ set_fm_lfo_wait:
 
 set_ssg_noise_wait:
     ld a,13
+    ld (VAR_WAIT_TEMPO),a
+    ld (VAR_PARAM_MODE),a
+    ret
+
+set_fm_tempo_wait:
+    ld a,14
     ld (VAR_WAIT_TEMPO),a
     ld (VAR_PARAM_MODE),a
     ret
@@ -1352,23 +1376,31 @@ fade_interval_ok:
     ret
 
 fade_out_step:
-    ; Decrement all volume channels toward 0
+    ; Decrement all volume channels by FADE_STEP_DEC toward 0.
+    ;
+    ; The original driver decremented by 1 per step — at the chip's
+    ; Timer-B IRQ rate of ~8.1 Hz, fading vol $B8 (the typical
+    ; ADPCM-B level) to 0 took 184 IRQs = 22.6 s even at maximum
+    ; speed.  That's so slow the user reports "no fade at all".
+    ; Decrementing by 8 per step cuts the worst-case fade to ~2.8 s
+    ; which is clearly audible.
     ld a,(VAR_MUSIC_VOL)
-    or a
-    jr z,fade_out_adpcma
-    dec a
+    sub 8
+    jr nc,fade_out_music_ok
+    xor a
+fade_out_music_ok:
     ld (VAR_MUSIC_VOL),a
-fade_out_adpcma:
     ld a,(VAR_ADPCMA_VOL)
-    or a
-    jr z,fade_out_adpcmb
-    dec a
+    sub 8
+    jr nc,fade_out_adpcma_ok
+    xor a
+fade_out_adpcma_ok:
     ld (VAR_ADPCMA_VOL),a
-fade_out_adpcmb:
     ld a,(VAR_ADPCMB_VOL)
-    or a
-    jr z,fade_out_apply
-    dec a
+    sub 8
+    jr nc,fade_out_adpcmb_ok
+    xor a
+fade_out_adpcmb_ok:
     ld (VAR_ADPCMB_VOL),a
 fade_out_apply:
     call apply_master_volumes
@@ -1388,36 +1420,50 @@ fade_out_apply:
     ret
 
 fade_in_step:
-    ; Increment all volume channels toward their base values
+    ; Increment all volume channels by FADE_STEP_INC toward base.
+    ; Same +8 step as fade_out_step for matching ramp speed.
     ld a,(VAR_MUSIC_VOL)
+    add a,8
+    jr nc,fade_in_music_nowrap
+    ld a,$FF
+fade_in_music_nowrap:
     ld e,a
     ld a,(VAR_MUSIC_VOL_BASE)
     cp e
-    jr c,fade_in_adpcma
-    jr z,fade_in_adpcma
-    ld a,(VAR_MUSIC_VOL)
-    inc a
+    jr nc,fade_in_music_keep
+    ld e,a
+fade_in_music_keep:
+    ld a,e
     ld (VAR_MUSIC_VOL),a
-fade_in_adpcma:
+
     ld a,(VAR_ADPCMA_VOL)
+    add a,8
+    jr nc,fade_in_adpcma_nowrap
+    ld a,$FF
+fade_in_adpcma_nowrap:
     ld e,a
     ld a,(VAR_ADPCMA_BASE)
     cp e
-    jr c,fade_in_adpcmb
-    jr z,fade_in_adpcmb
-    ld a,(VAR_ADPCMA_VOL)
-    inc a
+    jr nc,fade_in_adpcma_keep
+    ld e,a
+fade_in_adpcma_keep:
+    ld a,e
     ld (VAR_ADPCMA_VOL),a
-fade_in_adpcmb:
+
     ld a,(VAR_ADPCMB_VOL)
+    add a,8
+    jr nc,fade_in_adpcmb_nowrap
+    ld a,$FF
+fade_in_adpcmb_nowrap:
     ld e,a
     ld a,(VAR_ADPCMB_BASE)
     cp e
-    jr c,fade_in_apply
-    jr z,fade_in_apply
-    ld a,(VAR_ADPCMB_VOL)
-    inc a
+    jr nc,fade_in_adpcmb_keep
+    ld e,a
+fade_in_adpcmb_keep:
+    ld a,e
     ld (VAR_ADPCMB_VOL),a
+
 fade_in_apply:
     call apply_master_volumes
     ; Check if all volumes reached base -> fade complete
