@@ -355,6 +355,29 @@ art: game-check
 	if exist artbox\sprite_meta.h del /Q artbox\sprite_meta.h
 	if exist artbox\__pycache__ rmdir /S /Q artbox\__pycache__
 
+# art-crt: same as `art` but exports ARTBOX_CRT=1 so romdbimgimport routes
+# screen conversions through artbox\img2neo_crt.py (CIE-Lab quantisation +
+# horizontal-biased Floyd-Steinberg + CRT gamma/contrast pre-boost).
+.PHONY: art-crt
+art-crt: game-check
+	$(LOG_CTX)
+	set ARTBOX_CRT=1&& set GAME_ID=$(GAME_ID)&& call artbox\makeartbox.bat $(GAME)
+	$(PY) tools\verify_artbox_palettes.py --root "$(CURDIR)" --game "$(GAME)"
+	if exist artbox\1c.c1 del /Q artbox\1c.c1
+	if exist artbox\2c.c2 del /Q artbox\2c.c2
+	if exist artbox\$(GAME_ID)-s1.s1 del /Q artbox\$(GAME_ID)-s1.s1
+	if exist artbox\assets_manifest.json del /Q artbox\assets_manifest.json
+	if exist artbox\map del /Q artbox\map
+	if exist artbox\neo.pal del /Q artbox\neo.pal
+	if exist artbox\std.pal del /Q artbox\std.pal
+	if exist artbox\neopal.bin del /Q artbox\neopal.bin
+	if exist artbox\neorom.db del /Q artbox\neorom.db
+	if exist artbox\out.srt del /Q artbox\out.srt
+	if exist artbox\output1.txt del /Q artbox\output1.txt
+	if exist artbox\screens.c del /Q artbox\screens.c
+	if exist artbox\sprite_meta.h del /Q artbox\sprite_meta.h
+	if exist artbox\__pycache__ rmdir /S /Q artbox\__pycache__
+
 .PHONY: dist
 dist: game-check all
 	$(LOG_CTX)

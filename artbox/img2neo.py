@@ -34,6 +34,69 @@ def snap_neogeo(arr):
     return np.clip(((arr.astype(np.int32) + 4) // 8) * 8, 0, 248).astype(np.uint8)
 
 
+def alpha_bleed(rgba: np.ndarray,
+                opaque_alpha: int = 128,
+                max_passes: int = 32) -> np.ndarray:
+    """
+    Eliminate white/colour halos around sprite contours.
+
+    For every pixel whose alpha is below `opaque_alpha`, replace its RGB
+    with the average RGB of the nearest fully-opaque pixels (8-neighbour
+    iterative dilation).  The alpha channel itself is left untouched, so
+    downstream alpha thresholding still produces the same shape — only
+    the RGB of edge / transparent pixels is sanitised.
+
+    Why: PNG sprites often have anti-aliased contours where the edge
+    pixels are semi-transparent with raw RGB biased toward whatever the
+    artist composited against (commonly white).  Once alpha thresholding
+    promotes those pixels to fully opaque, that washed-out RGB gets
+    quantised into a near-white palette entry — the halo the user sees.
+    Bleeding the interior colour outward eliminates the problem.
+
+    Returns a new (H, W, 4) uint8 array.  No-op when every pixel is
+    either fully opaque or there are no opaque pixels at all.
+    """
+    rgba = np.asarray(rgba, dtype=np.uint8)
+    if rgba.ndim != 3 or rgba.shape[2] != 4:
+        return rgba
+    rgb = rgba[:, :, :3].astype(np.int32).copy()
+    alpha = rgba[:, :, 3]
+    known = alpha >= opaque_alpha
+
+    if known.all() or not known.any():
+        return rgba.copy()
+
+    for _ in range(max_passes):
+        if known.all():
+            break
+        pad_rgb = np.pad(rgb, ((1, 1), (1, 1), (0, 0)), mode='edge')
+        pad_known = np.pad(known, ((1, 1), (1, 1)),
+                           mode='constant', constant_values=False)
+        sum_rgb = np.zeros_like(rgb)
+        count = np.zeros(rgb.shape[:2], dtype=np.int32)
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                if dy == 0 and dx == 0:
+                    continue
+                y0, y1 = 1 + dy, 1 + dy + rgb.shape[0]
+                x0, x1 = 1 + dx, 1 + dx + rgb.shape[1]
+                nrgb = pad_rgb[y0:y1, x0:x1]
+                nk = pad_known[y0:y1, x0:x1]
+                sum_rgb += nrgb * nk[..., None]
+                count += nk.astype(np.int32)
+        newly = (~known) & (count > 0)
+        if not newly.any():
+            break
+        safe_count = np.maximum(count, 1)[..., None]
+        avg = sum_rgb // safe_count
+        rgb[newly] = avg[newly]
+        known = known | newly
+
+    out = rgba.copy()
+    out[:, :, :3] = np.clip(rgb, 0, 255).astype(np.uint8)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # CIE-Lab colour conversion (D65, no scipy dependency)
 # ---------------------------------------------------------------------------

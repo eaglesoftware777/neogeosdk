@@ -340,6 +340,20 @@ art: game-check
 	rm -f artbox/1c.c1 artbox/2c.c2 artbox/$(GAME_ID)-s1.s1 artbox/assets_manifest.json artbox/map artbox/neo.pal artbox/std.pal artbox/neopal.bin artbox/neorom.db artbox/out.srt artbox/output1.txt artbox/screens.c artbox/sprite_meta.h
 	rm -rf artbox/__pycache__
 
+# art-crt: same pipeline as `art` but flips ARTBOX_CRT=1 so romdbimgimport
+# routes screen conversions through artbox/img2neo_crt.py (CIE-Lab k-means
+# palette + horizontal-biased Floyd-Steinberg + CRT gamma/contrast pre-boost).
+# Use when you want the best-fidelity rendering of photographic / hand-painted
+# title screens.  Sprites are unaffected — they keep the legacy nearest-
+# neighbour path so existing shared-palette behaviour is preserved.
+.PHONY: art-crt
+art-crt: game-check
+	$(LOG_CTX)
+	ARTBOX_CRT=1 GAME_ID=$(GAME_ID) ./artbox/makeartbox.sh $(GAME)
+	python3 tools/verify_artbox_palettes.py --root "$(CURDIR)" --game "$(GAME)"
+	rm -f artbox/1c.c1 artbox/2c.c2 artbox/$(GAME_ID)-s1.s1 artbox/assets_manifest.json artbox/map artbox/neo.pal artbox/std.pal artbox/neopal.bin artbox/neorom.db artbox/out.srt artbox/output1.txt artbox/screens.c artbox/sprite_meta.h
+	rm -rf artbox/__pycache__
+
 .PHONY: dist
 dist: game-check all
 	$(LOG_CTX)
