@@ -22,7 +22,7 @@ Neo Geo development SDK for SNK hardware.
 - **CRT-optimised artbox pipeline** — `artbox/img2neo_crt.py` does
   CIE-Lab k-means palette + horizontal-biased Floyd-Steinberg + gamma
   1.20 / contrast 1.10 pre-boost for arcade CRT output; opt in via
-  `make art-crt` (Linux) or `nmake -f MakefileWin32.mak art-crt` (Win32)
+  `make art-crt` (Linux) or `make -f MakefileWin32.mak art-crt` (Win32)
 - **Sprite halo fix** — `artbox/img2neo.py` exposes `alpha_bleed()` and
   the sprite path uses it after `fit_sprite_rgba` so anti-aliased
   contours stop baking the source PNG's hidden transparent-pixel RGB
@@ -135,7 +135,7 @@ Build the MVS program ROM and launch in MAME (default BIOS: EUROPE MVS):
 # Linux / WSL
 make test
 
-# Windows (GNU make required — use make, not nmake)
+# Windows
 make -f MakefileWin32.mak test
 ```
 

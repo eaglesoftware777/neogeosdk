@@ -88,7 +88,7 @@ After saving, rebuild the patch table:
 
 ```bash
 make fmpatches          # Linux
-nmake -f MakefileWin32.mak fmpatches   # Windows
+make -f MakefileWin32.mak fmpatches   # Windows
 ```
 
 ---
@@ -126,7 +126,7 @@ After compiling, rebuild the M1 ROM:
 
 ```bash
 make m1rom          # Linux
-nmake -f MakefileWin32.mak m1rom   # Windows
+make -f MakefileWin32.mak m1rom   # Windows
 ```
 
 ---
@@ -166,7 +166,7 @@ After adding or replacing samples, re-encode and rebuild the VROM:
 
 ```bash
 make samples vrom       # Linux
-nmake -f MakefileWin32.mak samples vrom   # Windows
+make -f MakefileWin32.mak samples vrom   # Windows
 ```
 
 **Channel limits:**

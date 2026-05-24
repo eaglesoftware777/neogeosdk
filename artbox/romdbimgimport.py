@@ -51,7 +51,7 @@ except ImportError:
 
 # Opt-in CRT-optimised converter (Lab quantisation + horizontal-biased dither
 # + gamma/contrast pre-boost).  Enabled by exporting ARTBOX_CRT=1 (or via
-# `make art-crt` / `nmake art-crt`).  Falls back silently to the legacy
+# `make art-crt`).  Falls back silently to the legacy
 # nearest-neighbour pipeline if the module fails to import.
 USE_CRT = os.environ.get("ARTBOX_CRT", "").strip() in ("1", "true", "yes", "on")
 try:
