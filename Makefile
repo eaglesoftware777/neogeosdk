@@ -258,6 +258,9 @@ samples:
 	@[ -d "$(GAME_SOUND)/samples/in_wav_a" ] && \
 	  (cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_a.sh) || \
 	  echo "samples: no in_wav_a in $(GAME_SOUND)/samples/, skipping a"
+	@[ -d "$(GAME_SOUND)/samples/in_wav_a_voice" ] && \
+	  (cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_a_voice.sh) || \
+	  echo "samples: no in_wav_a_voice in $(GAME_SOUND)/samples/, skipping voice"
 	@[ -d "$(GAME_SOUND)/samples/in_wav_b" ] && \
 	  (cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_b.sh) || \
 	  echo "samples: no in_wav_b in $(GAME_SOUND)/samples/, skipping b"

@@ -60,13 +60,13 @@ void NEOGEO_USER demo_title_screen(void)
     uint16_t i;
 
     demo_clear_scene();
-    soundSceneReset();
     setBACKDROP(BLACK);
 
-    soundSetADPCMAVolume(0x3Cu);
-    soundSetADPCMBVolume(0xB0u);
-    soundSetSSGVolume(0x00u);
-    soundSetFMVolume(0x00u);
+        soundSceneReset();   waitVbl();
+        soundSetADPCMAVolume(0x3Cu);  waitVbl();
+        soundSetADPCMBVolume(0xBCu);  waitVbl();
+        soundSetSSGVolume(0x00u);     waitVbl();
+        soundSetFMVolume(0x00u);      waitVbl();
 
     /* FIX palette 0 = white, 1 = cyan, 2 = yellow */
     setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
@@ -228,8 +228,8 @@ void NEOGEO_USER demo_title_attract_reel(void)
          */
         demo_safe_show(s_show[slide], 32, 24, 0xF, 0xAF, 16,
                        BLACK, DEMO_SHOWSCREEN_BASE);
-        demo_fix_puts(7u, 2u, "NEO GEO SDK V1.3.0", 2u);
-        demo_fix_puts(2u, 4u, "UNIFIED DEMO PRESENTS:", 1u);
+        demo_fix_puts(7u, 2u, "EAGLE SOFTWARE", 2u);
+        demo_fix_puts(2u, 4u, " PRESENTS: NEO GEO SDK V1.3.0", 1u);
 
         while (hold < 900u) {
 #ifndef NG_AES
@@ -269,17 +269,17 @@ void NEOGEO_USER demo_title_attract_reel(void)
             hold++;
 
             /*
-             * Advance slide every 130 frames (~2.2 s).  Call the show
+             * Advance slide every 10 frames.  Call the show
              * fn DIRECTLY (no demo_safe_show wrapper) so the walking
              * girl's sprite-window cache at slot 60 is NOT reset — she
              * keeps walking through the transition.
              */
-            if ((hold % 130u) == 0u) {
+            if ((hold % 10u) == 0u) {
                 slide = (uint8_t)((slide + 1u) % 7u);
                 s_show[slide](32, 24, 0xF, 0xAF, 16,
                               BLACK, DEMO_SHOWSCREEN_BASE);
-                demo_fix_puts(7u, 2u, "NEO GEO SDK V1.3.0", 2u);
-                demo_fix_puts(2u, 4u, "UNIFIED DEMO PRESENTS:", 1u);
+        demo_fix_puts(7u, 2u, "EAGLE SOFTWARE", 2u);
+        demo_fix_puts(2u, 4u, " PRESENTS: NEO GEO SDK V1.3.0", 1u);
             }
 
             ng_palette_fx_update();
@@ -294,7 +294,7 @@ void NEOGEO_USER demo_title_attract_reel(void)
      * driver.
      */
     soundFadeOutSpeed(6u);
-    demo_wait(30u);
+    demo_wait(40u);
     soundStopAll();
     waitVbl(); waitVbl();
     soundSceneReset();
@@ -340,16 +340,13 @@ void NEOGEO_USER demo_title_end_card(void)
     demo_fix_puts(4u,  9u,  "HIGH-PERFORMANCE 2D ENGINE", 0u);
     demo_fix_puts(3u,  11u, "EAGLESOFTWARE.BIZ",          2u);
     demo_fix_puts(1u,  13u, "GITHUB.COM/EAGLESOFTWARE777/NEOGEOSDK", 1u);
-    demo_fix_puts(7u,  16u, "PROGRAMMING",  0u);
-    demo_fix_puts(10u, 17u, "EAGLESOFTWARE777", 2u);
-    demo_fix_puts(6u,  19u, "ALL RIGHTS RESERVED", 0u);
-    demo_fix_puts(5u,  21u, "2025  EAGLE SOFTWARE", 1u);
+    demo_fix_puts(5u,  21u, "2026  EAGLE SOFTWARE", 1u);
 
     if (demo_wait(210u)) goto end_done;
 
     /* Color cycle on title line */
     for (i = 0u; i < 120u; i++) {
-        demo_fix_puts(14u, 4u, "DEMO COMPLETE",
+        demo_fix_puts(14u, 4u, "DEMO COMPLETE, GAME OVER",
                       (uint8_t)((i >> 4) % 3u));
         waitVbl();
         if (demo_advance_requested()) break;
@@ -357,7 +354,7 @@ void NEOGEO_USER demo_title_end_card(void)
 
 end_done:
     soundFadeOutSpeed(6u);
-    demo_wait(45u);
+    demo_wait(100u);
     soundStopAll();
     demo_clear_scene();
 }
