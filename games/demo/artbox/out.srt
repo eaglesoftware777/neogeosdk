@@ -757,8 +757,8 @@ note=title and logo screens
 [109] titles/9.png
 mode=screen fit=contain anchor=center rule=cat_titles
 category=titles
-source=1448x1086 canvas=256x256 content=256x192 offset=(0,32)
-screen_id=109 palette_bank=124 tile_base=27648 reserved_last=27903 used_cols=16 used_rows=12 start_col=0 start_row=2 x_pad=0 y_pad=0 used_tiles=192 strips=16 active_rows=12
+source=880x1184 canvas=256x256 content=190x256 offset=(33,0)
+screen_id=109 palette_bank=124 tile_base=27648 reserved_last=27903 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=1 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=title and logo screens
 
 [110] npcs/cat_01.png

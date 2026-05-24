@@ -614,7 +614,20 @@ static uint8_t NEOGEO_USER chap_sound(void)
     demo_fix_puts(2u, 11u, "playVoiceGameOver()  ADPCM-A SFX  ", 1u);
     playVoiceGameOver(); snd_step();
     if (uwait(200u)) return 1u;
+
+    /* speakWord — letter-by-letter alphabet voice samples bundled
+     * from sound/samples/in_wav_a_voice/.  The SDK iterates each
+     * character of the ASCII string and triggers the matching
+     * ADPCM-A sample (a.adpcma .. z.adpcma in V-ROM). */
+    demo_fix_puts(2u, 13u, "speakWord(\"NEOGEO\")               ", 1u);
+    speakWord("NEOGEO");
+    if (uwait(60u)) return 1u;
+    demo_fix_puts(2u, 13u, "speakWord(\"EAGLE\")                ", 1u);
+    speakWord("EAGLE");
+    if (uwait(60u)) return 1u;
+
     demo_fix_puts(2u, 11u, "                                  ", 0u);
+    demo_fix_puts(2u, 13u, "                                  ", 0u);
     soundStopAll(); snd_step();
 
     /* --- 4) FM TRACKS — all 8 melodic loops ------------------------ */

@@ -139,7 +139,7 @@ void NEOGEO_USER demo_intro_system_banner(void)
     demo_fix_puts(4u,  15u, "CPU: MC68000 / SOUND: YM2610", 0u);
     demo_fix_puts(2u,  27u, "A: NEXT", 1u);
 
-    demo_wait(120u);
+    demo_wait(175u);
     demo_clear_scene();
 }
 
@@ -262,7 +262,7 @@ void NEOGEO_USER demo_intro_sdk_title(void)
     /* Character-by-character scroll in — title line */
     {
         const char *title = "NEO GEO SDK V1.3.0";
-        const char *sub1  = "2D ENGINE";
+        const char *sub1  = "POWERED BY 2D ENGINE";
         const char *sub2  = "60 FPS  REAL HARDWARE + MAME";
         uint8_t col;
 
@@ -277,7 +277,7 @@ void NEOGEO_USER demo_intro_sdk_title(void)
             if (demo_advance_requested()) goto title_done;
         }
 
-        playSFX(SOUND_SFX_3);
+        playSFX(SOUND_SFX_10);
         demo_wait(12u);
 
         demo_fix_puts(7u, 13u, sub1, PAL_RED);
@@ -285,7 +285,7 @@ void NEOGEO_USER demo_intro_sdk_title(void)
         demo_fix_puts(6u, 15u, sub2, PAL_WHITE);
         demo_wait(8u);
 
-        playFMTrack(SOUND_FM_F);
+        playSFX(SOUND_SFX_9);
     }
 
     demo_fix_puts(2u, 27u, "A: NEXT", 1u);
@@ -298,7 +298,7 @@ void NEOGEO_USER demo_intro_sdk_title(void)
     }
 
 title_done:
-     demo_wait(77u);
+     demo_wait(170u);
     soundStopAll();
     demo_clear_scene();
 }

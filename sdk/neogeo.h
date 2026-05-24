@@ -135,6 +135,14 @@ void soundFMSetLFO(uint8_t rate_enable); /* bit3 enable, bits0-2 rate */
 void soundSetSSGNoise(uint8_t period);   /* 5-bit noise period */
 void soundFMSetTempo(uint8_t period);    /* Timer-B IRQs per FM step, 1..8 */
 
+/* Voice alphabet — ADPCM-A samples bundled from in_wav_a_voice/. */
+void playVoiceLetter(uint8_t letter_index);  /* SOUND_VOICE_LETTER_X */
+void speakWord(const char *text);            /* spell out ASCII letters */
+
+/* CSM speech (FM channel 2 + Timer A) — stub helpers. */
+void soundFMCSMBegin(void);
+void soundFMCSMEnd(void);
+
 /* Fades. */
 void soundFadeOut(void);
 void soundFadeIn(void);

@@ -9,7 +9,7 @@ Layout
   in_wav_a/      WAV inputs that will be encoded to ADPCM-A
                  (6 short trigger-and-forget channels, percussion-like)
   in_wav_b/      WAV inputs that will be encoded to ADPCM-B
-                 (1 streamed channel, music beds / long voices)
+                 (1 streamed channel, music TRACKs / long voices)
 
 Pipeline
 --------
@@ -34,8 +34,8 @@ SDK identifiers
   ADPCM-A trigger samples (sdk/sound_ids.h):
     SOUND_SFX_1 .. SOUND_SFX_12   (maps to in_wav_a/1.wav .. 12.wav)
 
-  ADPCM-B streamed beds:
-    SOUND_BED_A .. SOUND_BED_I    (maps to in_wav_b/1.wav .. 9.wav)
-    SOUND_BED_E (= 5.wav) is reserved for the eyecatcher screen.
+  ADPCM-B streamed TRACKs:
+    SOUND_TRACK_A .. SOUND_TRACK_I    (maps to in_wav_b/1.wav .. 9.wav)
+    SOUND_TRACK_E (= 5.wav) is reserved for the eyecatcher screen.
 
 See SOURCES.md for the licensing + provenance of each WAV.

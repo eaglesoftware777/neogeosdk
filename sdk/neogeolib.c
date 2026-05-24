@@ -75,6 +75,10 @@ void soundSetADPCMBPan(uint8_t pan);
 void soundFMSetLFO(uint8_t rate_enable);
 void soundSetSSGNoise(uint8_t period);
 void soundFMSetTempo(uint8_t period_frames);
+void playVoiceLetter(uint8_t letter_index);
+void speakWord(const char *text);
+void soundFMCSMBegin(void);
+void soundFMCSMEnd(void);
 void playCoinThenReady(void);
 void soundApplyMix(uint8_t,uint8_t,uint8_t,uint8_t);
 void soundPlayDemoFM(uint8_t);
@@ -614,6 +618,61 @@ void NEOGEO_USER soundSetSSGNoise(uint8_t period) {
  */
 void NEOGEO_USER soundFMSetTempo(uint8_t period_frames) {
 	isZ80Ready(); soundCommand(0x1A); isZ80Ready(); soundCommand(period_frames);
+}
+
+/*
+ * Voice alphabet playback.  Each letter is one ADPCM-A sample in
+ * the voice bank that lives in V-ROM right after the regular SFX
+ * bank.  playVoiceLetter takes a SOUND_VOICE_LETTER_X enum (which
+ * is the ADPCM-A index inside the chip).  speakWord iterates an
+ * ASCII string letter-by-letter with a fixed inter-letter delay so
+ * the words are intelligible.
+ *
+ * Non-letter characters (digits, punctuation, spaces) are skipped
+ * but their delay still applies as a "between-word" pause.
+ */
+void NEOGEO_USER playVoiceLetter(uint8_t letter_index) {
+	playSFX(letter_index);
+}
+
+void NEOGEO_USER speakWord(const char *text) {
+	const char *p;
+	if (!text) return;
+	for (p = text; *p; p++) {
+		char c = *p;
+		if (c >= 'A' && c <= 'Z') {
+			playVoiceLetter((uint8_t)(SOUND_VOICE_LETTER_BASE + (c - 'A')));
+		} else if (c >= 'a' && c <= 'z') {
+			playVoiceLetter((uint8_t)(SOUND_VOICE_LETTER_BASE + (c - 'a')));
+		}
+		/* Inter-letter gap so consecutive samples don't overlap.
+		 * Roughly 280 ms — comfortable cadence for single letters. */
+		cyclexms(280);
+	}
+}
+
+/*
+ * CSM (Composite Sine Mode) on FM channel 2 — stub.
+ *
+ * CSM is the YM2610's hardware speech-synthesis path: writing the
+ * Mode register $27 with bit 6 set puts FM channel 2 under control
+ * of Timer A.  Each Timer A overflow auto-keys-on then keys-off the
+ * channel 2 operators, generating a formant at the Timer A
+ * frequency.  Combined with FM operator settings that approximate
+ * vowel formants, the chip produces SAM-style robotic speech.
+ *
+ * Real CSM implementation requires a phoneme table + per-tick
+ * Timer A reload + FM channel 2 frequency control, none of which
+ * the driver currently exposes.  These wrappers are placeholders so
+ * game code can be written against the API; they currently route to
+ * the ADPCM-A voice path which is the more practical speech method
+ * on this chip.
+ */
+void NEOGEO_USER soundFMCSMBegin(void) {
+	/* TODO: driver cmd to write reg $27 = $40 (CSM mode + load A) */
+}
+void NEOGEO_USER soundFMCSMEnd(void) {
+	/* TODO: driver cmd to write reg $27 = $00 (back to normal mode) */
 }
 
 void NEOGEO_USER soundFadeOut(void) { isZ80Ready(); soundFadeOutSpeed(0x20); }

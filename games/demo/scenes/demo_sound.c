@@ -2,7 +2,7 @@
  * demo_sound.c — Scene 10: YM2610 audio engine showcase
  *
  * Demonstrates: FM tracks, SSG oscillators, ADPCM-A samples,
- * ADPCM-B bed, voice cues, full mix.
+ * ADPCM-B TRACK, voice cues, full mix.
  *
  * https://eaglesoftware.biz
  */
@@ -127,16 +127,16 @@ void NEOGEO_USER demo_sound_run(void)
     snd_label(13u, "ADPCM-A", "COIN CHIME",    1u); playSFX(SOUND_SFX_1);    if (demo_wait(72u)) goto done;
     snd_label(14u, "ADPCM-A", "SHORT SHOUT",   2u); playSFX(SOUND_SFX_6);   if (demo_wait(72u)) goto done;
 
-    /* -- ADPCM-B Bed + Voices -- */
+    /* -- ADPCM-B TRACK + Voices -- */
     demo_clear_scene();
     snd_reset();
-    demo_caption("YM2610 SOUND DEMO", "ADPCM-B BED + VOICE CUES", "STREAMING MUSIC BED  ~55 KHZ");
+    demo_caption("YM2610 SOUND DEMO", "ADPCM-B TRACK + VOICE CUES", "STREAMING MUSIC TRACK  ~55 KHZ");
     soundSetADPCMBVolume(0xC0u);
     soundSetADPCMAVolume(0x3Fu);
     snd_vbl(16u);
 
-    snd_label(7u,  "ADPCM-B", "STAGE TWO BED", 1u);
-    playSFXB(SOUND_BED_C);
+    snd_label(7u,  "ADPCM-B", "STAGE TWO TRACK", 1u);
+    playSFXB(SOUND_TRACK_C);
     if (demo_wait(120u)) goto done;
 
     snd_label(9u,  "VOICE", "GET READY", 2u);
@@ -153,11 +153,11 @@ void NEOGEO_USER demo_sound_run(void)
     demo_caption("YM2610 SOUND DEMO", "FULL MIX", "FM + SSG + ADPCM-A + ADPCM-B");
     soundApplyMix(0x30u, 0xC0u, 0x08u, 0x08u);
     snd_vbl(4u);
-    playSFXB(SOUND_BED_B);
+    playSFXB(SOUND_TRACK_B);
     playFMTrack(SOUND_FM_E);
     playSSGTrack(SOUND_SSG_C);
     soundSetSSGPreset(1u);
-    snd_label(7u, "BED",     "STAGE ONE",   1u);
+    snd_label(7u, "TRACK",     "STAGE ONE",   1u);
     snd_label(8u, "FM",      "BASS MOTIF",  2u);
     snd_label(9u, "SSG",     "INSERT COIN", 1u);
     if (demo_wait(120u)) goto done;
