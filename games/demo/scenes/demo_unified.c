@@ -594,27 +594,26 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundStopAll();        snd_step();
     demo_fix_puts(2u, 9u, "                                  ", 0u);
 
-    /* --- 3) VOICE CUES — recorded ADPCM-A voice samples ------------- *
+    /* --- 3) SPEECH SYNTHESIS — SSG phoneme engine ------------------ *
      *
-     * Three voice cues backed by real V-ROM samples (SFX 11, 12, 10).
-     * Pure-chip SSG can't synthesise intelligible speech so these
-     * playSFX-based wrappers replace the earlier phoneme engine for
-     * audible voice in the demo.  The driver-side $50/$51/$52 phoneme
-     * commands still exist for callers that want SSG robotic speech. */
-    demo_fix_puts(2u, 5u, "3. VOICE CUES (ADPCM-A)           ", 2u);
+     * Driver $50/$51/$52 trigger the 3-formant phoneme engine —
+     * channels A,B,C act as F1/F2/F3, noise mixed into A/B for
+     * fricative consonants.  Pure-chip output is robotic by design;
+     * intelligible speech needs ADPCM PCM samples. */
+    demo_fix_puts(2u, 5u, "3. SPEECH SYNTH (SSG formants)    ", 2u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
-    soundApplyMix(0x30u, 0x00u, 0x00u, 0x00u); snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x0Fu, 0x00u); snd_step();
 
-    demo_fix_puts(2u, 11u, "playVoiceGetReady()  SFX 11       ", 1u);
+    demo_fix_puts(2u, 11u, "playVoiceGetReady()  ($50)        ", 1u);
     playVoiceGetReady(); snd_step();
-    if (uwait(140u)) return 1u;
-    demo_fix_puts(2u, 11u, "playVoiceLetsGo()    SFX 12       ", 1u);
-    playVoiceLetsGo();   snd_step();
-    if (uwait(140u)) return 1u;
-    demo_fix_puts(2u, 11u, "playVoiceGameOver()  SFX 10       ", 1u);
-    playVoiceGameOver(); snd_step();
     if (uwait(160u)) return 1u;
+    demo_fix_puts(2u, 11u, "playVoiceLetsGo()    ($51)        ", 1u);
+    playVoiceLetsGo();   snd_step();
+    if (uwait(160u)) return 1u;
+    demo_fix_puts(2u, 11u, "playVoiceGameOver()  ($52)        ", 1u);
+    playVoiceGameOver(); snd_step();
+    if (uwait(200u)) return 1u;
     demo_fix_puts(2u, 11u, "                                  ", 0u);
     soundStopAll(); snd_step();
 
@@ -637,27 +636,32 @@ static uint8_t NEOGEO_USER chap_sound(void)
 
     /* --- 5) FM LFO (NEW DRIVER FEATURE — $22 register) ------------- *
      *
-     * Enables the YM2610 LFO and re-plays an FM track with vibrato
-     * audible (assuming the patch's PMS/AMS bits are non-zero in
-     * fm/patches.fm).  Toggles LFO off mid-section so the difference
-     * is obvious. */
+     * Cycle four LFO settings.  Each setting RESTARTS the FM track so
+     * the effect is heard from the beginning of the melody rather than
+     * mid-way through where most listeners can't isolate the change.
+     * Patch's AMS/PMS bits (from fm/patches.fm) must be non-zero for
+     * the LFO to actually modulate. */
     demo_fix_puts(2u, 5u, "5. FM LFO  ($22, vibrato/tremolo) ", 2u);
-    soundSceneReset();                         snd_step();
-    soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
-    playFMTrack(6u);                           snd_step();
-
-    demo_fix_puts(2u, 15u, "LFO OFF  (flat tone)              ", 1u);
-    soundFMSetLFO(0x00u); snd_step();
-    if (uwait(180u)) return 1u;
-    demo_fix_puts(2u, 15u, "LFO ON   rate=2  (slow wobble)    ", 1u);
-    soundFMSetLFO(0x0Au); snd_step();
-    if (uwait(180u)) return 1u;
-    demo_fix_puts(2u, 15u, "LFO ON   rate=6  (fast vibrato)   ", 1u);
-    soundFMSetLFO(0x0Eu); snd_step();
-    if (uwait(180u)) return 1u;
-    demo_fix_puts(2u, 15u, "LFO OFF  (reset)                  ", 1u);
-    soundFMSetLFO(0x00u); snd_step();
-    if (uwait(60u)) return 1u;
+    {
+        static const uint8_t s_lfo_vals[4]  = { 0x00u, 0x09u, 0x0Bu, 0x0Eu };
+        static const char *const s_lfo_lbls[4] = {
+            "LFO OFF      (flat reference)     ",
+            "LFO rate=1   (slowest wobble)     ",
+            "LFO rate=3   (medium vibrato)     ",
+            "LFO rate=6   (fastest vibrato)    "
+        };
+        uint8_t k;
+        for (k = 0u; k < 4u; k++) {
+            demo_fix_puts(2u, 15u, s_lfo_lbls[k], 1u);
+            soundStopAll();                            snd_step();
+            soundSceneReset();                         snd_step();
+            soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
+            soundFMSetLFO(s_lfo_vals[k]);              snd_step();
+            playFMTrack(6u);                           snd_step();
+            if (uwait(220u)) return 1u;
+        }
+    }
+    soundFMSetLFO(0x00u);    snd_step();
     soundStopMusic();        snd_step();
     soundSetFMVolume(0x00u); snd_step();
     demo_fix_puts(2u, 15u, "                                  ", 0u);
@@ -694,29 +698,32 @@ static uint8_t NEOGEO_USER chap_sound(void)
     }
     demo_fix_puts(2u, 19u, "                ", 0u);
 
-    /* --- 8) MULTITRACK MIX — bed + soft FM / soft SSG --------------- *
+    /* --- 8) MULTITRACK MIX — bed dominant, FM/SSG accent only ------ *
      *
-     * Three short mixes so the listener can tell the engines apart
-     * even when they overlap.  ADPCM-B carries the music; FM and SSG
-     * are kept quiet so they layer instead of fighting. */
+     * Streamed ADPCM-B beds are full mixed tracks; layering loud
+     * FM or SSG melody on top usually clashes because the keys and
+     * tempos of the MML tracks don't match the bed.  This section
+     * keeps the bed loud (0xC0) and FM/SSG VERY quiet (0x02/0x03)
+     * so they read as subtle accent texture rather than competing
+     * melodies.  Each mix RESTARTS the bed + accent together so the
+     * listener hears the combined sound from the same instant. */
     demo_fix_puts(2u, 5u, "8. MULTITRACK MIXES               ", 2u);
     {
         static const uint8_t s_mix_track[3] = { SOUND_TRACK_A, SOUND_TRACK_C, SOUND_TRACK_G };
         static const uint8_t s_mix_fm[3]    = { 0u,    0xFFu, 2u   };
         static const uint8_t s_mix_ssg[3]   = { 0xFFu, 0u,    1u   };
         static const char *const s_mix_lbl[3] = {
-            "MIX A  ADPCM-B + soft FM          ",
-            "MIX B  ADPCM-B + soft SSG         ",
-            "MIX C  ADPCM-B + soft FM + SSG    "
+            "MIX A  bed + FM accent (whisper)  ",
+            "MIX B  bed + SSG accent (whisper) ",
+            "MIX C  bed + FM + SSG (both soft) "
         };
         uint8_t m;
         for (m = 0u; m < 3u; m++) {
             demo_fix_puts(2u, 21u, s_mix_lbl[m], 1u);
-            soundFadeOutSpeed(10u); snd_step();
-            if (uwait(8u)) return 1u;
-            soundStopAll();         snd_step();
-            soundSceneReset();      snd_step();
-            soundApplyMix(0x30u, 0xB8u, 0x04u, 0x05u); snd_step();
+            soundStopAll();    snd_step();
+            soundSceneReset(); snd_step();
+            /* bed loud, FM/SSG barely-there accent vol */
+            soundApplyMix(0x30u, 0xC0u, 0x02u, 0x03u); snd_step();
             playSFXB(s_mix_track[m]); snd_step();
             if (s_mix_fm[m] != 0xFFu) {
                 playFMTrack(s_mix_fm[m]); snd_step();
@@ -733,28 +740,72 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundStopAll();        snd_step();
     demo_fix_puts(2u, 21u, "                                  ", 0u);
 
-    /* --- 9) FADE TESTS on ADPCM-B TRACK 7 -------------------------- */
+    /* --- 9) FADE TESTS on ADPCM-B TRACK 7 -------------------------- *
+     *
+     * Each fade test RESTARTS the bed first so the listener hears it
+     * begin at full volume and then the named fade applies.  Without
+     * the restart, an earlier fade leaves the bed at vol 0 and the
+     * next test has nothing to fade. */
     demo_fix_puts(2u, 5u, "9. FADE TESTS  (ADPCM-B only)     ", 2u);
+
+    /*
+     * Helper inline: replay bed at full vol, brief warm-up, apply
+     * fade-out call, then wait.  Repeated for each speed variant.
+     */
+    /* --- FadeOut(2) slow --- */
+    demo_fix_puts(2u, 23u, "FadeOut(2)  slow                  ", 1u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
     playSFXB(SOUND_TRACK_G);                   snd_step();
-    if (uwait(110u)) return 1u;
+    if (uwait(60u)) return 1u;
+    soundFadeOutSpeed(2u); snd_step();
+    if (uwait(240u)) return 1u;
 
-    demo_fix_puts(2u, 23u, "FadeOut(2)  slow                  ", 1u);
-    soundFadeOutSpeed(2u); snd_step();  if (uwait(240u)) return 1u;
-    demo_fix_puts(2u, 23u, "FadeIn(2)   slow                  ", 1u);
-    soundFadeInSpeed(2u);  snd_step();  if (uwait(240u)) return 1u;
+    /* --- FadeIn(2) slow ramp (continues from prior fade-out) --- */
+    demo_fix_puts(2u, 23u, "FadeIn(2)   slow ramp             ", 1u);
+    soundFadeInSpeed(2u);  snd_step();
+    if (uwait(240u)) return 1u;
+
+    /* --- FadeOut(8) medium --- */
     demo_fix_puts(2u, 23u, "FadeOut(8)  medium                ", 1u);
-    soundFadeOutSpeed(8u); snd_step();  if (uwait(150u)) return 1u;
-    demo_fix_puts(2u, 23u, "FadeIn(8)   medium                ", 1u);
-    soundFadeInSpeed(8u);  snd_step();  if (uwait(150u)) return 1u;
+    soundStopAll();                            snd_step();
+    soundSceneReset();                         snd_step();
+    soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
+    playSFXB(SOUND_TRACK_G);                   snd_step();
+    if (uwait(40u)) return 1u;
+    soundFadeOutSpeed(8u); snd_step();
+    if (uwait(150u)) return 1u;
+    demo_fix_puts(2u, 23u, "FadeIn(8)   medium ramp           ", 1u);
+    soundFadeInSpeed(8u);  snd_step();
+    if (uwait(150u)) return 1u;
+
+    /* --- FadeOut(20) fast --- */
     demo_fix_puts(2u, 23u, "FadeOut(20) fast                  ", 1u);
-    soundFadeOutSpeed(20u); snd_step(); if (uwait(120u)) return 1u;
+    soundStopAll();                            snd_step();
+    soundSceneReset();                         snd_step();
+    soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
+    playSFXB(SOUND_TRACK_G);                   snd_step();
+    if (uwait(40u)) return 1u;
+    soundFadeOutSpeed(20u); snd_step();
+    if (uwait(120u)) return 1u;
+
+    /* --- CancelFade snap-back --- */
     demo_fix_puts(2u, 23u, "soundCancelFade  snap-back        ", 1u);
-    soundCancelFade();     snd_step();  if (uwait(180u)) return 1u;
+    soundStopAll();                            snd_step();
+    soundSceneReset();                         snd_step();
+    soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
+    playSFXB(SOUND_TRACK_G);                   snd_step();
+    if (uwait(40u)) return 1u;
+    soundFadeOutSpeed(4u); snd_step();
+    if (uwait(80u)) return 1u;
+    soundCancelFade();     snd_step();
+    if (uwait(180u)) return 1u;
+
+    /* --- Final FadeOut to silence --- */
     demo_fix_puts(2u, 23u, "Final FadeOut(4) to silence       ", 1u);
-    soundFadeOutSpeed(4u); snd_step();  if (uwait(220u)) return 1u;
+    soundFadeOutSpeed(4u); snd_step();
+    if (uwait(220u)) return 1u;
 
     soundStopAll(); snd_step();
     demo_fix_puts(2u, 23u, "                                  ", 0u);
