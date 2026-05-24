@@ -1802,10 +1802,11 @@ fm_patch_seek_loop:
     dec a
     jr nz,fm_patch_seek_loop
 fm_apply_patch_ready:
-    ; LFO register $22
-    ld d,$22
-    ld e,(hl)
-    call fm_patch_write_a
+    ; LFO register $22 — skip the write but still advance HL past the
+    ; patch's LFO byte.  LFO is global on the YM2610 (one register for
+    ; the whole chip) so it is now controlled exclusively by the
+    ; soundFMSetLFO command ($17); having every patch reset it would
+    ; clobber the user's setting on every play_fm_index / fm_set_patch.
     inc hl
     ; Feedback/algorithm $B1
     ld d,$B1
