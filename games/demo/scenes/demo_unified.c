@@ -743,53 +743,48 @@ static uint8_t NEOGEO_USER chap_sound(void)
 
     /* --- 9) FADE TESTS on ADPCM-B TRACK 7 -------------------------- *
      *
-     * Each fade test RESTARTS the bed first so the listener hears it
-     * begin at full volume and then the named fade applies.  Without
-     * the restart, an earlier fade leaves the bed at vol 0 and the
-     * next test has nothing to fade. */
+     * IMPORTANT: the driver's fade-speed formula is COUNTER = $FF -
+     * speed, where COUNTER is the number of Timer-B IRQs (~123 ms
+     * each) between every -1 volume step.  So:
+     *
+     *   speed=$FF (255) → 1 IRQ/step  → vol $B8→0 in ~22 s        (instant)
+     *   speed=$FE (254) → 1 IRQ/step  → same
+     *   speed=$FC (252) → 3 IRQs/step → ~70 s    (too slow)
+     *   speed=$F0 (240) → 15 IRQs/step → ~5 min  (no audible fade)
+     *
+     * Wait — fade -1 per step from $B8 is 184 steps.  With speed=$FE,
+     * 184 IRQs × 123 ms = 22.6 s.  Even max speed is slow.  For the
+     * demo we use the fastest values to get audible fades in a few
+     * seconds. */
     demo_fix_puts(2u, 5u, "9. FADE TESTS  (ADPCM-B only)     ", 2u);
 
-    /*
-     * Helper inline: replay bed at full vol, brief warm-up, apply
-     * fade-out call, then wait.  Repeated for each speed variant.
-     */
-    /* --- FadeOut(2) slow --- */
-    demo_fix_puts(2u, 23u, "FadeOut(2)  slow                  ", 1u);
+    /* --- FadeOut fast --- */
+    demo_fix_puts(2u, 23u, "FadeOut(0xFF) fastest             ", 1u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
     playSFXB(SOUND_TRACK_G);                   snd_step();
     if (uwait(60u)) return 1u;
-    soundFadeOutSpeed(2u); snd_step();
-    if (uwait(240u)) return 1u;
+    soundFadeOutSpeed(0xFFu); snd_step();
+    if (uwait(180u)) return 1u;
 
-    /* --- FadeIn(2) slow ramp (continues from prior fade-out) --- */
-    demo_fix_puts(2u, 23u, "FadeIn(2)   slow ramp             ", 1u);
-    soundFadeInSpeed(2u);  snd_step();
-    if (uwait(240u)) return 1u;
+    /* --- FadeIn fast --- */
+    demo_fix_puts(2u, 23u, "FadeIn(0xFF)  fastest ramp        ", 1u);
+    soundFadeInSpeed(0xFFu); snd_step();
+    if (uwait(180u)) return 1u;
 
-    /* --- FadeOut(8) medium --- */
-    demo_fix_puts(2u, 23u, "FadeOut(8)  medium                ", 1u);
+    /* --- FadeOut medium --- */
+    demo_fix_puts(2u, 23u, "FadeOut(0xFD) medium              ", 1u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
     playSFXB(SOUND_TRACK_G);                   snd_step();
     if (uwait(40u)) return 1u;
-    soundFadeOutSpeed(8u); snd_step();
-    if (uwait(150u)) return 1u;
-    demo_fix_puts(2u, 23u, "FadeIn(8)   medium ramp           ", 1u);
-    soundFadeInSpeed(8u);  snd_step();
-    if (uwait(150u)) return 1u;
-
-    /* --- FadeOut(20) fast --- */
-    demo_fix_puts(2u, 23u, "FadeOut(20) fast                  ", 1u);
-    soundStopAll();                            snd_step();
-    soundSceneReset();                         snd_step();
-    soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
-    playSFXB(SOUND_TRACK_G);                   snd_step();
-    if (uwait(40u)) return 1u;
-    soundFadeOutSpeed(20u); snd_step();
-    if (uwait(120u)) return 1u;
+    soundFadeOutSpeed(0xFDu); snd_step();
+    if (uwait(180u)) return 1u;
+    demo_fix_puts(2u, 23u, "FadeIn(0xFD)  medium ramp         ", 1u);
+    soundFadeInSpeed(0xFDu); snd_step();
+    if (uwait(180u)) return 1u;
 
     /* --- CancelFade snap-back --- */
     demo_fix_puts(2u, 23u, "soundCancelFade  snap-back        ", 1u);
@@ -798,14 +793,14 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundApplyMix(0x30u, 0xB8u, 0x00u, 0x00u); snd_step();
     playSFXB(SOUND_TRACK_G);                   snd_step();
     if (uwait(40u)) return 1u;
-    soundFadeOutSpeed(4u); snd_step();
+    soundFadeOutSpeed(0xFEu); snd_step();
     if (uwait(80u)) return 1u;
     soundCancelFade();     snd_step();
     if (uwait(180u)) return 1u;
 
     /* --- Final FadeOut to silence --- */
-    demo_fix_puts(2u, 23u, "Final FadeOut(4) to silence       ", 1u);
-    soundFadeOutSpeed(4u); snd_step();
+    demo_fix_puts(2u, 23u, "Final FadeOut(0xFF) to silence    ", 1u);
+    soundFadeOutSpeed(0xFFu); snd_step();
     if (uwait(220u)) return 1u;
 
     soundStopAll(); snd_step();

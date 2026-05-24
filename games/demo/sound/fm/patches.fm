@@ -76,7 +76,11 @@ op4=01,00,1F,06,03,7F,00
 name=Vibrato Hero Lead
 alg=7
 fb=6
-stereo=C2
+; stereo byte $C7 = L + R + AMS=0 + PMS=7 (±80 cents).  PMS=7 gives
+; the strongest pitch-modulation depth available, so the LFO demo in
+; chap_sound section 5 produces an obvious vibrato when soundFMSetLFO
+; toggles the chip's $22 register.
+stereo=C7
 lfo=0A
 op1=01,24,1F,0A,06,9F,00
 op2=02,30,1F,0A,06,9F,00
