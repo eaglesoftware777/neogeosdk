@@ -1,19 +1,12 @@
-; 5_voice_lets_go — YM2149 envelope voice cue: "LET'S GO!"
+; 5_voice_lets_go — SSG voice approximation: "LET'S GO!"
 
 T220
-V14
-O5
+P2
+V13
+O4
+L16
 
-; "LETS"  — consonant + short vowel + "s" hiss
-Q3 K0
-P3 D32
-P4 G+16
-P3 D32
-R32
-
-; "GO!"   — consonant + long descending vowel
-Q5 K0
-P3 D32
-P4 A4
+E G B16  G16
+> C E G  > C2
 
 ~

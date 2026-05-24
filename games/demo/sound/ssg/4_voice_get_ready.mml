@@ -1,35 +1,23 @@
-; 4_voice_get_ready — YM2149 envelope voice cue: "GET READY!"
+; 4_voice_get_ready — SSG voice approximation: "GET READY!"
 ;
-; One syllable = consonant burst (preset 3 = tone+noise on ch A)
-; + sustained vowel (preset 4 = tone-only on ch A).  Channels B,C
-; stay silent (preset vol_b=vol_c=0) so the envelope-shaped channel
-; A is what the listener hears, not chorus.  K0 retriggers shape $0
-; (decay) on every note; Q sets envelope cycle per syllable.
+; Plain SSG notes — no envelope directives (K/Q/Y), so the standard
+; reverted driver can parse this without falling through to garbage
+; bytes.  Cadence + pitch contour approximates the spoken phrase:
+;
+;   GET   = short low-mid burst
+;   REA-  = sustained rising vowel
+;   -DY   = descending close
+;   !     = high accent
 
 T220
-V14
-O5
+P0
+V12
+O4
+L16
 
-; "GET"  — sharp consonant + short rising vowel
-Q3 K0
-P3 D32
-P4 G+16
-R32
-
-; "REA"  — sustained vowel
-Q4 K0
-P3 D32
-P4 A8
-R32
-
-; "DY"   — descending close
-Q3 K0
-P3 D32
-P4 E16
-R32
-
-; "!"    — short exclamation high
-Q2 K0
-P4 > C16
+D F+ A4
+E G B8
+C E G4
+> C2
 
 ~

@@ -552,20 +552,20 @@ void NEOGEO_USER playCoinThenReady(void) {
  * approximation that's free of sample storage.
  */
 /*
- * Voice cues use existing ADPCM-A voice samples in the V ROM
- * (SFX 11 = "Get Ready" voice; SFX 12 = "Attack" voice; SFX 10 =
- * low drum as a stand-in for "Game Over").  This is the only way
- * to get intelligible speech on the YM2610 — pure-chip SSG / FM
- * formant synthesis only produces robotic chords, not phonemes.
+ * Voice cues route to dedicated SSG voice tracks (SSG tracks 4/5/6
+ * in ssg_data.inc, sourced from games/<game>/sound/ssg/4_voice_*.mml).
+ * Each MML is a short pitch-contour melody whose cadence approximates
+ * the spoken phrase — robotic-arcade-cue, not intelligible speech.
  *
- * The driver-side $50/$51/$52 phoneme engine is no longer present
- * (it was an over-engineered detour); these wrappers route directly
- * to playSFX so the speech section of chap_sound plays real recorded
- * voice when those slots exist in the V ROM.
+ * The earlier ADPCM-A routing (playSFX 11/12/10) duplicated samples
+ * that the demo already plays in the SFX section, and the user
+ * preferred chip-level voice so each cue is distinct from the SFX
+ * bank.  For real intelligible speech, use speakWord() which reads
+ * the V-ROM alphabet voice bank.
  */
-void NEOGEO_USER playVoiceGetReady(void) { isZ80Ready(); playSFX(SOUND_SFX_11); }
-void NEOGEO_USER playVoiceLetsGo(void)   { isZ80Ready(); playSFX(SOUND_SFX_12); }
-void NEOGEO_USER playVoiceGameOver(void) { isZ80Ready(); playSFX(SOUND_SFX_10); }
+void NEOGEO_USER playVoiceGetReady(void) { isZ80Ready(); playSSGTrack(4); }
+void NEOGEO_USER playVoiceLetsGo(void)   { isZ80Ready(); playSSGTrack(5); }
+void NEOGEO_USER playVoiceGameOver(void) { isZ80Ready(); playSSGTrack(6); }
 
 /*
  * ADPCM-B L/R pan control (YM2610 register $11, active-high).
@@ -645,9 +645,10 @@ void NEOGEO_USER speakWord(const char *text) {
 		} else if (c >= 'a' && c <= 'z') {
 			playVoiceLetter((uint8_t)(SOUND_VOICE_LETTER_BASE + (c - 'a')));
 		}
-		/* Inter-letter gap so consecutive samples don't overlap.
-		 * Roughly 280 ms — comfortable cadence for single letters. */
-		cyclexms(280);
+		/* Inter-letter gap — short enough for natural cadence but
+		 * long enough that the previous sample's tail doesn't get
+		 * cut off by the next trigger.  ~150 ms feels word-like. */
+		cyclexms(150);
 	}
 }
 
