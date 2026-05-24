@@ -84,14 +84,6 @@ banks 1
 .define VAR_SSG_TEMPO      $FE29
 .define VAR_SSG_TICK       $FE2A
 .define VAR_SSG_VOL        $FE2B
-.define VAR_SSG_ENV_ON     $FE2C    ; 1 = channel A uses envelope amplitude
-.define VAR_SSG_ENV_SHAPE  $FE2D    ; last shape value written by $F7
-
-; --- Speech synthesis (phoneme-based formant playback on all 3 SSG ch) ---
-.define VAR_SPEECH_ACTIVE  $FE2E    ; 1 while a phoneme sequence is playing
-.define VAR_SPEECH_PTR_LO  $FE2F
-.define VAR_SPEECH_PTR_HI  $FE30
-.define VAR_SPEECH_TICKS   $FE31    ; Timer-B ticks remaining for current phoneme
 
 .define STACK              $FFFC
 .define READY_VALUE        $01
@@ -216,8 +208,6 @@ driver_init:
     ld (VAR_SSG_PRESET),a
     ld (VAR_SSG_TEMPO),a
     ld (VAR_SSG_TICK),a
-    ld (VAR_SPEECH_ACTIVE),a
-    ld (VAR_SPEECH_TICKS),a
     ld a,$0A
     ld (VAR_SSG_VOL),a
     ld a,3
@@ -378,9 +368,8 @@ exec_p_ssgpreset:
     call ssg_apply_preset
     ret
 
-; --- ADPCM-B L/R pan ($11 register, active-high) ---
-; bit 7 = L output, bit 6 = R output.  Common values:
-;   $C0 = stereo (default), $80 = L only, $40 = R only, $00 = mute
+; --- ADPCM-B L/R pan (reg $11, active-high) ---
+;   $C0 = stereo, $80 = L only, $40 = R only, $00 = mute
 exec_p_adpcmb_pan:
     ld a,c
     and $C0
@@ -388,11 +377,8 @@ exec_p_adpcmb_pan:
     ld e,a
     jp force_write_a
 
-; --- FM LFO control ($22 register) ---
-; bit 3 = LFO enable, bits 0-2 = rate (0=slowest, 7=fastest)
-; Caller passes the raw register-$22 value.  Patches that use
-; AMS/PMS (bits set per channel) only modulate when LFO is enabled
-; via this command.
+; --- FM LFO control (reg $22) ---
+;   bit 3 = enable, bits 0..2 = rate
 exec_p_fm_lfo:
     ld a,c
     and $0F
@@ -400,16 +386,14 @@ exec_p_fm_lfo:
     ld e,a
     jp force_write_a
 
-; --- SSG noise period ($06 register) ---
-; 5-bit value (1..31).  Higher value = lower noise frequency.
-; Useful for tuning the "fricative" character of consonants in
-; SFX or speech overlays.
+; --- SSG noise period (reg $06, 5 bits) ---
 exec_p_ssg_noise:
     ld a,c
     and $1F
     ld d,$06
     ld e,a
     jp shadowed_write_a
+
 set_fmvol_wait:
     ld a,8
     ld (VAR_WAIT_TEMPO),a
@@ -429,35 +413,35 @@ exec_normal:
     cp $04 ; Stop all
     jp z,stop_all
     cp $05 ; ADPCM-A volume parameter follows
-    jp z,set_adpcma_volume_wait
+    jr z,set_adpcma_volume_wait
     cp $06 ; ADPCM-B volume parameter follows
-    jp z,set_adpcmb_volume_wait
+    jr z,set_adpcmb_volume_wait
     cp $07 ; SSG/MML volume parameter follows
-    jp z,set_ssg_volume_wait
+    jr z,set_ssg_volume_wait
     cp $0A ; Fade out speed parameter follows
-    jp z,set_fadeout_wait
+    jr z,set_fadeout_wait
     cp $0C ; ADPCM-A stop
     jp z,adpcma_stop
     cp $0D ; ADPCM-B stop
     jp z,adpcmb_stop
     cp $0E ; Tempo Wait
-    jp z,set_tempo_wait
+    jr z,set_tempo_wait
     cp $0F ; Stop SSG / music only
     jp z,stop_music
     cp $11 ; Stop fade out
     jp z,cancel_fade
     cp $12 ; Fade in speed parameter follows
-    jp z,set_fadein_wait
+    jr z,set_fadein_wait
     cp $13 ; FM volume parameter follows
-    jp z,set_fmvol_wait
+    jr z,set_fmvol_wait
     cp SSG_CMD_PRESET ; SSG preset parameter follows
-    jp z,set_ssgpreset_wait
+    jr z,set_ssgpreset_wait
     cp $30 ; FM debug tone
     jp z,play_fm_demo
     cp $31 ; FM track select parameter follows
-    jp z,set_fmtrack_wait
+    jr z,set_fmtrack_wait
     cp SSG_CMD_PLAY ; SSG track select parameter follows
-    jp z,set_ssgtrack_wait
+    jr z,set_ssgtrack_wait
     cp $15 ; ADPCM-B L/R pan parameter follows
     jp z,set_adpcmb_pan_wait
     cp $17 ; FM LFO enable+rate parameter follows
@@ -469,17 +453,6 @@ exec_normal:
     cp $29 ; ADPCM-B direct sample 1
     jp z,play_demo_b1
 
-    ; Voice synthesis cues — single-byte commands that dispatch a
-    ; hardcoded SSG voice index.  The MML data lives in
-    ; sound/ssg/4_voice_get_ready.mml etc and is compiled into
-    ; ssg_track_4 .. ssg_track_6.  See SOUND_DRIVER_GUIDE.txt §"Voice".
-    cp $50 ; Voice: "GET READY!"
-    jp z,play_voice_get_ready
-    cp $51 ; Voice: "LET'S GO!"
-    jp z,play_voice_lets_go
-    cp $52 ; Voice: "GAME OVER"
-    jp z,play_voice_game_over
-
     cp SFX_B_BASE
     jp nc,play_adpcmb_cmd
     cp SFX_A_BASE
@@ -487,21 +460,6 @@ exec_normal:
     cp MUSIC_BASE
     jp nc,play_fm_cmd
     ret
-
-; Voice cues now use the phoneme speech engine (speech_play) instead
-; of the SSG MML track engine.  Phoneme tables live at the end of
-; this file.  Each cue plays three formants (channels A,B,C) per
-; phoneme frame, with optional noise mixing for consonants — see
-; the "How Yamaha Neo Geo SSG Speech Synthesis Works" reference.
-play_voice_get_ready:
-    ld hl,speech_seq_get_ready
-    jp speech_play
-play_voice_lets_go:
-    ld hl,speech_seq_lets_go
-    jp speech_play
-play_voice_game_over:
-    ld hl,speech_seq_game_over
-    jp speech_play
 
 set_tempo_wait:
     ld a,1
@@ -714,9 +672,6 @@ stop_music:
     ld (VAR_FM_WAIT),a
     ld (VAR_SSG_ACTIVE),a
     ld (VAR_SSG_WAIT),a
-    ld (VAR_SSG_ENV_ON),a       ; clear envelope mode so a subsequent
-                                ; SSG track isn't muted by ssg_note_on
-                                ; skipping its vol writes.
     call fm_silence_all
     jp init_ssg
 
@@ -919,10 +874,6 @@ stop_all:
     ld (VAR_SSG_PRESET),a
     ld (VAR_SSG_TEMPO),a
     ld (VAR_SSG_TICK),a
-    ld (VAR_SSG_ENV_ON),a       ; defensively clear so next SSG track
-    ld (VAR_SSG_ENV_SHAPE),a    ; won't inherit stuck envelope mode
-    ld (VAR_SPEECH_ACTIVE),a
-    ld (VAR_SPEECH_TICKS),a
     call init_ssg
     call fm_silence_all
     call adpcma_stop
@@ -1257,13 +1208,6 @@ play_adpcmb_index:
     ld de,$1000
     call force_write_a
 
-    ; Step 6b: Ensure L+R outputs are enabled.  Reg $11 (active-high
-    ; pan) defaults indeterminate after some chip resets; explicitly
-    ; writing $C0 (L on + R on) prevents the "mute despite playback"
-    ; failure mode.  soundSetADPCMBPan can override this at any time.
-    ld de,$11C0
-    call shadowed_write_a
-
     ; Step 7: Start playback
     ld de,$1080
     call force_write_a
@@ -1293,8 +1237,6 @@ play_ssg_index:
     ld (VAR_SSG_ACTIVE),a
     xor a
     ld (VAR_SSG_PRESET),a
-    ld (VAR_SSG_ENV_ON),a    ; reset envelope-mode flag per track
-    ld (VAR_SSG_ENV_SHAPE),a ; default shape = $0 (single decay)
     ld a,$0A
     ld (VAR_SSG_VOL),a
     ld a,3
@@ -1358,11 +1300,6 @@ ticker_music:
     ld a,(VAR_SSG_ACTIVE)
     or a
     call nz,ssg_tick
-
-    ; Tick phoneme speech engine
-    ld a,(VAR_SPEECH_ACTIVE)
-    or a
-    call nz,speech_tick
 
     ; Master tempo divider for music MML stream
     ld a,(VAR_TICK)
@@ -1802,11 +1739,10 @@ fm_patch_seek_loop:
     dec a
     jr nz,fm_patch_seek_loop
 fm_apply_patch_ready:
-    ; LFO register $22 — skip the write but still advance HL past the
-    ; patch's LFO byte.  LFO is global on the YM2610 (one register for
-    ; the whole chip) so it is now controlled exclusively by the
-    ; soundFMSetLFO command ($17); having every patch reset it would
-    ; clobber the user's setting on every play_fm_index / fm_set_patch.
+    ; LFO register $22
+    ld d,$22
+    ld e,(hl)
+    call fm_patch_write_a
     inc hl
     ; Feedback/algorithm $B1
     ld d,$B1
@@ -2052,12 +1988,6 @@ ssg_step_next:
     jp z,ssg_set_volume
     cp $F2
     jp z,ssg_set_preset
-    cp $F7
-    jp z,ssg_set_envelope
-    cp $F8
-    jp z,ssg_set_env_period
-    cp $F9
-    jp z,ssg_set_env_mode
     cp $80
     jp z,ssg_rest
 
@@ -2093,90 +2023,6 @@ ssg_set_preset:
     ld (VAR_SSG_PRESET),a
     call store_ssg_ptr
     call ssg_apply_preset
-    jp ssg_step
-
-; $F7 — set envelope shape (writes register $0D, which retriggers
-; the envelope generator).  ALSO flips channel A into envelope-
-; amplitude mode (M bit set in vol register $08).  Future note-on
-; calls preserve M=1 while VAR_SSG_ENV_ON is set.
-; $F7 — set envelope shape (writes register $0D).  Writing $0D
-; ALWAYS retriggers the envelope generator on the YM2149, which is
-; what arcade AY/SSG voice synthesis exploits to get a fresh
-; attack/decay per syllable.  Also forces channel A into envelope-
-; amplitude mode (vol reg $08 with bit-4 M=1).
-;
-; CRITICAL: store_ssg_ptr clobbers register A (it writes L then H
-; into VAR_SSG_PTR_LO/HI via A).  We MUST save the directive's
-; value byte BEFORE calling store_ssg_ptr or the shape register
-; gets garbage from the pointer high byte.
-ssg_set_envelope:
-    ld a,(hl)
-    inc hl
-    and $0F
-    push af                      ; save shape value across store_ssg_ptr
-    call store_ssg_ptr
-    pop af
-    ld (VAR_SSG_ENV_SHAPE),a     ; remember for per-note retrigger
-    push af
-    ; Enable channel A envelope-amplitude mode for subsequent notes.
-    ld a,1
-    ld (VAR_SSG_ENV_ON),a
-    ld de,$0810                  ; reg $08, value $10 = M=1, fixed=0
-    call shadowed_write_a
-    pop af
-    ld d,$0D
-    ld e,a
-    call force_write_a           ; force-write retriggers envelope
-    jp ssg_step
-
-; $F8 — set envelope period.  The YM2149 envelope is clocked at
-; f_master / (256 * period_16).  With f_master = 8 MHz, one envelope
-; STEP = 32 µs * period_16, and a full 16-step cycle (e.g. shape $0
-; "single decay") takes 16 * step = 512 µs * period_16.
-;
-; Writing only the low byte (period_16 < 256) gives a maximum 130 ms
-; cycle, which is shorter than a single MML note at T220 L64 and
-; makes the channel go silent before any audible vowel is heard.
-;
-; We therefore write the directive value to the HIGH byte ($0C) and
-; zero the low byte ($0B).  This means Q1 = period_16 = 256 (~130 ms),
-; Q2 = 512 (~260 ms — typical syllable), Q4 = 1024 (~520 ms — long
-; held vowel).  Range 1..255 covers everything voice synthesis needs.
-ssg_set_env_period:
-    ld a,(hl)
-    inc hl
-    push af                      ; preserve period byte
-    call store_ssg_ptr
-    ; Low byte = 0
-    ld de,$0B00
-    call shadowed_write_a
-    pop af
-    ld d,$0C
-    ld e,a
-    call shadowed_write_a
-    jp ssg_step
-
-; $F9 — toggle channel A envelope-mode flag.  $00 = manual fixed
-; volume (from VAR_SSG_VOL), $01 = envelope amplitude.
-ssg_set_env_mode:
-    ld a,(hl)
-    inc hl
-    and $01
-    push af                      ; preserve flag
-    call store_ssg_ptr
-    pop af
-    ld (VAR_SSG_ENV_ON),a
-    or a
-    jr nz,ssg_set_env_mode_on
-    ld a,(VAR_SSG_VOL)
-    and $0F
-    ld e,a
-    ld d,$08
-    call shadowed_write_a
-    jp ssg_step
-ssg_set_env_mode_on:
-    ld de,$0810
-    call shadowed_write_a
     jp ssg_step
 
 ssg_rest:
@@ -2253,19 +2099,12 @@ ssg_preset_ready:
     ld e,(hl)
     call ssg_preset_write_a
     inc hl
-    ; Volume A $08.  If channel A is currently in envelope-amplitude
-    ; mode (M=1 set by $F7 directive), DON'T overwrite vol A from the
-    ; preset — that would clear M and silence the envelope.  Skip the
-    ; write and just advance HL past the preset's vol-A byte.
-    ld a,(VAR_SSG_ENV_ON)
-    or a
-    jr nz,ssg_preset_skip_vol_a
+    ; Volume A $08 (M=0 fixed amplitude)
     ld d,$08
     ld a,(hl)
     and $0F
     ld e,a
     call ssg_preset_write_a
-ssg_preset_skip_vol_a:
     inc hl
     ; Volume B $09 (M=0 fixed amplitude)
     ld d,$09
@@ -2407,26 +2246,10 @@ ssg_ch_c_no_detune:
     ;   bit 4 = /Noise B (1=disable)
     ;   bit 5 = /Noise C (1=disable)
     ;   $38 = tones A,B,C on + noise A,B,C off
-    ;
-    ; SKIP this write when the standalone SSG is in envelope-voice
-    ; mode (VAR_SSG_ENV_ON=1).  Voice presets explicitly enable noise
-    ; on channel A via reg $07 = $36; resetting it to $38 every note
-    ; would kill the consonant noise burst.
-    ld a,(VAR_SSG_ENV_ON)
-    or a
-    jr nz,ssg_note_on_skip_mixer
     ld de,$0738
     call shadowed_write_a
-ssg_note_on_skip_mixer:
 
-    ; Set channel volumes (M=0 for all).  When VAR_SSG_ENV_ON is set
-    ; we're in envelope-voice mode — the preset already configured
-    ; channel A's vol to $10 (M=1) and channels B/C should stay at the
-    ; preset's quiet values (often 0).  Skip the vol writes here so the
-    ; envelope shaping isn't masked by chorus channels.
-    ld a,(VAR_SSG_ENV_ON)
-    or a
-    ret nz
+    ; Set channel volumes (M=0 for all)
     ld d,$08
     ld a,(VAR_MUSIC_VOL)
     and $0F
@@ -2460,28 +2283,7 @@ ssg_noteon_vol_c_ok:
 ssg_standalone_note_on:
     ; First set up channels A,B,C with detuned periods (reuse ssg_note_on logic)
     call ssg_note_on
-    ; Channel A volume: honour VAR_SSG_ENV_ON.  Envelope mode on → vol
-    ; reg $08 = $10 (M=1, env amp), then retrigger the envelope shape
-    ; register so this note gets a fresh attack/decay.  ALSO force
-    ; channels B and C to vol 0 so the chorus does not mask the
-    ; envelope-shaped channel A — that was the audible bug that made
-    ; voice cues sound like flat 3-channel SSG notes regardless of
-    ; envelope state.
-    ld a,(VAR_SSG_ENV_ON)
-    or a
-    jr z,ssg_standalone_vola_fixed
-    ld d,$08
-    ld e,$10
-    call shadowed_write_a
-    ld a,(VAR_SSG_ENV_SHAPE)
-    ld d,$0D
-    ld e,a
-    call force_write_a
-    ld de,$0900                  ; vol B = 0 (silent chorus)
-    call shadowed_write_a
-    ld de,$0A00                  ; vol C = 0
-    jp shadowed_write_a
-ssg_standalone_vola_fixed:
+    ; Then override volumes with standalone SSG volume
     ld d,$08
     ld a,(VAR_SSG_VOL)
     and $0F
@@ -2546,275 +2348,6 @@ ssg_period_table:
     .dw $008E  ; A5  = 142
     .dw $0086  ; A#5 = 134
     .dw $007F  ; B5  = 127
-
-; ============================================================
-; SPEECH SYNTHESIS ENGINE
-;
-; Phoneme-frame playback on the 3 SSG channels.  Each phoneme is
-; 11 bytes:
-;   byte 0     : ticks_to_play (1..255, 0 = end-of-sequence marker)
-;   bytes 1-2  : channel A tone period (lo, hi)  — 12-bit
-;   bytes 3-4  : channel B tone period (lo, hi)
-;   bytes 5-6  : channel C tone period (lo, hi)
-;   byte 7     : vol A (0..15)
-;   byte 8     : vol B (0..15)
-;   byte 9     : vol C (0..15)
-;   byte 10    : noise period (0 = no noise, 1..31 = noise enabled)
-;
-; Channels A/B/C act as three vocal formants (F1/F2/F3).  Noise is
-; mixed into A and B for fricative consonants (S, T, K ...).  Ticks
-; are counted at the Timer-B IRQ rate (~8.1 Hz, ~123 ms per tick).
-;
-; Period formula matches the existing SSG path: period = 8 MHz /
-; (64 × frequency_Hz).  Sample values:
-;   250 Hz  = 500 = $01F4
-;   300 Hz  = 417 = $01A1
-;   350 Hz  = 357 = $0165
-;   400 Hz  = 313 = $0139
-;   500 Hz  = 250 = $00FA
-;   700 Hz  = 179 = $00B3
-;   800 Hz  = 156 = $009C
-;   900 Hz  = 139 = $008B
-;  1100 Hz  = 114 = $0072
-;  1200 Hz  = 104 = $0068
-;  1300 Hz  =  96 = $0060
-;  1600 Hz  =  78 = $004E
-;  1700 Hz  =  74 = $004A
-;  1800 Hz  =  69 = $0045
-;  2200 Hz  =  57 = $0039
-;  2400 Hz  =  52 = $0034
-;  2450 Hz  =  51 = $0033
-;  2500 Hz  =  50 = $0032
-;  3000 Hz  =  42 = $002A
-; ============================================================
-
-; speech_play — HL points to a phoneme sequence; start playback.
-; Stops any other SSG-channel activity so the speech engine owns
-; the three SSG channels without interference.
-speech_play:
-    di
-    ld a,1
-    ld (VAR_SPEECH_ACTIVE),a
-    ld a,l
-    ld (VAR_SPEECH_PTR_LO),a
-    ld a,h
-    ld (VAR_SPEECH_PTR_HI),a
-    xor a
-    ld (VAR_SPEECH_TICKS),a
-    ; Disable competing SSG sources
-    ld (VAR_SSG_ACTIVE),a
-    ld (VAR_SSG_ENV_ON),a
-    ei
-    jp speech_load_phoneme
-
-; speech_tick — called from ticker_update each Timer B IRQ.
-; Decrements TICKS; when it reaches 0, advance to next phoneme.
-speech_tick:
-    ld a,(VAR_SPEECH_TICKS)
-    or a
-    ret z                       ; spurious tick (shouldn't happen)
-    dec a
-    ld (VAR_SPEECH_TICKS),a
-    ret nz                      ; still inside current phoneme
-    ; current phoneme done — advance pointer by 11 then load next
-    ld a,(VAR_SPEECH_PTR_LO)
-    ld l,a
-    ld a,(VAR_SPEECH_PTR_HI)
-    ld h,a
-    ld de,11
-    add hl,de
-    ld a,l
-    ld (VAR_SPEECH_PTR_LO),a
-    ld a,h
-    ld (VAR_SPEECH_PTR_HI),a
-    ; fall through to load the new phoneme
-
-; speech_load_phoneme — read the phoneme at VAR_SPEECH_PTR and
-; program the YM2610 SSG registers.  TICKS gets set from byte 0;
-; if byte 0 is 0 we stop the speech.
-speech_load_phoneme:
-    ld a,(VAR_SPEECH_PTR_LO)
-    ld l,a
-    ld a,(VAR_SPEECH_PTR_HI)
-    ld h,a
-    ; byte 0 = duration ticks (0 = end)
-    ld a,(hl)
-    or a
-    jp z,speech_stop
-    ld (VAR_SPEECH_TICKS),a
-    inc hl
-    ; --- Channel A period (regs $00 fine, $01 coarse) ---
-    ld a,(hl)
-    inc hl
-    push hl
-    ld d,$00
-    ld e,a
-    call shadowed_write_a
-    pop hl
-    ld a,(hl)
-    inc hl
-    push hl
-    ld d,$01
-    ld e,a
-    call shadowed_write_a
-    pop hl
-    ; --- Channel B period ($02/$03) ---
-    ld a,(hl)
-    inc hl
-    push hl
-    ld d,$02
-    ld e,a
-    call shadowed_write_a
-    pop hl
-    ld a,(hl)
-    inc hl
-    push hl
-    ld d,$03
-    ld e,a
-    call shadowed_write_a
-    pop hl
-    ; --- Channel C period ($04/$05) ---
-    ld a,(hl)
-    inc hl
-    push hl
-    ld d,$04
-    ld e,a
-    call shadowed_write_a
-    pop hl
-    ld a,(hl)
-    inc hl
-    push hl
-    ld d,$05
-    ld e,a
-    call shadowed_write_a
-    pop hl
-    ; --- Vol A ($08) ---
-    ld a,(hl)
-    inc hl
-    push hl
-    and $0F
-    ld d,$08
-    ld e,a
-    call shadowed_write_a
-    pop hl
-    ; --- Vol B ($09) ---
-    ld a,(hl)
-    inc hl
-    push hl
-    and $0F
-    ld d,$09
-    ld e,a
-    call shadowed_write_a
-    pop hl
-    ; --- Vol C ($0A) ---
-    ld a,(hl)
-    inc hl
-    push hl
-    and $0F
-    ld d,$0A
-    ld e,a
-    call shadowed_write_a
-    pop hl
-    ; --- Noise period + mixer ($06, $07) ---
-    ld a,(hl)
-    or a
-    jr z,speech_mixer_no_noise
-    ; noise enabled: write period to $06, mixer $07 = $27
-    ; ($27 = tone A/B/C OFF, noise A/B ON, noise C OFF)
-    push af
-    ld d,$06
-    ld e,a
-    call shadowed_write_a
-    pop af
-    ld a,$27
-    jr speech_mixer_apply
-speech_mixer_no_noise:
-    ; vowel: tones A/B/C ON, all noise OFF — mixer $07 = $38
-    ld a,$38
-speech_mixer_apply:
-    ; Force-write the mixer (not shadowed) because adjacent phonemes
-    ; often have the same mixer value and we want the chip-side
-    ; transition to be explicit.
-    ld d,$07
-    ld e,a
-    jp force_write_a
-
-; speech_stop — silence all three SSG channels and clear ACTIVE.
-speech_stop:
-    xor a
-    ld (VAR_SPEECH_ACTIVE),a
-    ld (VAR_SPEECH_TICKS),a
-    ld de,$0800
-    call shadowed_write_a
-    ld de,$0900
-    call shadowed_write_a
-    ld de,$0A00
-    call shadowed_write_a
-    ld de,$073F     ; all tone + all noise disabled
-    jp shadowed_write_a
-
-; ------------------------------------------------------------
-; Phoneme sequences
-;
-; Each frame: ticks, A-period(lo,hi), B-period(lo,hi), C-period(lo,hi),
-;             vol_a, vol_b, vol_c, noise_period
-; Terminator: a leading 0 byte.
-;
-; ticks @ 8.1 Hz Timer-B: 1 tick ≈ 123 ms per phoneme frame.
-; ------------------------------------------------------------
-
-; Phoneme sequences — emphasize VOWEL formants over consonant noise.
-; Earlier versions had short noise consonants between every vowel; the
-; user perceived the whole cue as just noise ("shhhh") because the
-; broadband consonants masked the narrowband vowels.  These tables
-; mostly play sustained vowels at full volume (15/15/15) with very
-; brief, soft consonants for cadence.
-
-; "GET READY!" — vowel-forward
-speech_seq_get_ready:
-    ; brief soft G consonant
-    .db 1, $F4,$01, $8B,$00, $45,$00,   8,4,2,  10
-    ; E vowel (F1=500 F2=1700 F3=2500) — held
-    .db 2, $FA,$00, $4A,$00, $32,$00,  15,12,8, 0
-    ; brief gap
-    .db 1, $00,$00, $00,$00, $00,$00,   0,0,0,  0
-    ; A vowel (F1=700 F2=1100 F3=2450) — long, the syllable peak
-    .db 3, $B3,$00, $72,$00, $33,$00,  15,13,9, 0
-    ; brief soft D
-    .db 1, $F4,$01, $8B,$00, $45,$00,   8,4,2,  8
-    ; I vowel "ee" (F1=300 F2=2200 F3=3000) — held, descending pitch
-    .db 3, $A1,$01, $39,$00, $2A,$00,  15,12,8, 0
-    .db 0
-
-; "LET'S GO!" — vowel-forward
-speech_seq_lets_go:
-    ; brief soft L
-    .db 1, $39,$01, $68,$00, $34,$00,   8,5,2,  0
-    ; E vowel
-    .db 3, $FA,$00, $4A,$00, $32,$00,  15,13,9, 0
-    ; brief soft TS
-    .db 1, $00,$00, $00,$00, $00,$00,  10,6,0,  12
-    ; brief soft G
-    .db 1, $F4,$01, $8B,$00, $45,$00,   8,4,2,  6
-    ; O vowel (F1=500 F2=900 F3=2400) — long ending
-    .db 4, $FA,$00, $8B,$00, $34,$00,  15,12,8, 0
-    .db 0
-
-; "GAME OVER" — vowel-forward
-speech_seq_game_over:
-    ; brief soft G
-    .db 1, $F4,$01, $8B,$00, $45,$00,   8,4,2,  6
-    ; A vowel held
-    .db 3, $B3,$00, $72,$00, $33,$00,  15,13,9, 0
-    ; brief nasal M
-    .db 1, $F4,$01, $B3,$00, $68,$00,   8,5,1,  0
-    ; O vowel held
-    .db 3, $FA,$00, $8B,$00, $34,$00,  15,12,8, 0
-    ; brief V (fricative)
-    .db 1, $F4,$01, $8B,$00, $00,$00,   8,5,0,  10
-    ; E vowel held
-    .db 3, $FA,$00, $4A,$00, $32,$00,  15,12,8, 0
-    .db 0
 
 ;;; External data includes (unchanged)
 .include "fm_patch_table.inc"
