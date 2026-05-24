@@ -239,6 +239,7 @@ hash:
 .PHONY: samples
 samples:
 	$(if $(wildcard $(GAME_SOUND)/samples/in_wav_a),cd sound\tools && set PY=$(PY)&& set SOX=$(SOX)&& set GAME_SOUND=..\..\$(subst /,\,$(GAME_SOUND))&& call enc_wave16le_a.bat,@echo samples: no in_wav_a in $(GAME_SOUND)\samples\, skipping a)
+	$(if $(wildcard $(GAME_SOUND)/samples/in_wav_a_voice),cd sound\tools && set PY=$(PY)&& set SOX=$(SOX)&& set GAME_SOUND=..\..\$(subst /,\,$(GAME_SOUND))&& call enc_wave16le_a_voice.bat,@echo samples: no in_wav_a_voice in $(GAME_SOUND)\samples\, skipping voice)
 	$(if $(wildcard $(GAME_SOUND)/samples/in_wav_b),cd sound\tools && set PY=$(PY)&& set SOX=$(SOX)&& set GAME_SOUND=..\..\$(subst /,\,$(GAME_SOUND))&& call enc_wave16le_b.bat,@echo samples: no in_wav_b in $(GAME_SOUND)\samples\, skipping b)
 	cd sound\tools && set PY=$(PY)&& set GAME_SOUND=..\..\$(subst /,\,$(GAME_SOUND))&& call adpcm_enc_process.bat
 
@@ -387,10 +388,12 @@ sound-clean:
 	if exist $(ROM_DIR)\$(GAME_ID)-m1.m1 del /Q $(ROM_DIR)\$(GAME_ID)-m1.m1
 	if exist $(ROM_DIR)\$(GAME_ID)-v1.v1 del /Q $(ROM_DIR)\$(GAME_ID)-v1.v1
 	if exist $(subst /,\,$(GAME_SOUND))\samples\out_16el_a\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_16el_a\*.wav
+	if exist $(subst /,\,$(GAME_SOUND))\samples\out_16el_a_voice\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_16el_a_voice\*.wav
 	if exist $(subst /,\,$(GAME_SOUND))\samples\out_16el_b\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_16el_b\*.wav
 	if exist $(subst /,\,$(GAME_SOUND))\samples\out_sr_a\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_sr_a\*.wav
 	if exist $(subst /,\,$(GAME_SOUND))\samples\out_sr_b\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_sr_b\*.wav
 	if exist $(subst /,\,$(GAME_SOUND))\samples\out_a\*.adpcma del /Q $(subst /,\,$(GAME_SOUND))\samples\out_a\*.adpcma
+	if exist $(subst /,\,$(GAME_SOUND))\samples\out_a_voice\*.adpcma del /Q $(subst /,\,$(GAME_SOUND))\samples\out_a_voice\*.adpcma
 	if exist $(subst /,\,$(GAME_SOUND))\samples\out_b\*.adpcmb del /Q $(subst /,\,$(GAME_SOUND))\samples\out_b\*.adpcmb
 	if exist sound\driver\fm_data.inc del /Q sound\driver\fm_data.inc
 	if exist sound\driver\music_data.inc del /Q sound\driver\music_data.inc
