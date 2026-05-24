@@ -2365,30 +2365,32 @@ ssg_standalone_note_on:
     ; First set up channels A,B,C with detuned periods (reuse ssg_note_on logic)
     call ssg_note_on
     ; Channel A volume: honour VAR_SSG_ENV_ON.  Envelope mode on → vol
-    ; reg $08 = $10 (M=1, env amp).  Else → VAR_SSG_VOL & $0F (fixed).
+    ; reg $08 = $10 (M=1, env amp), then retrigger the envelope shape
+    ; register so this note gets a fresh attack/decay.  ALSO force
+    ; channels B and C to vol 0 so the chorus does not mask the
+    ; envelope-shaped channel A — that was the audible bug that made
+    ; voice cues sound like flat 3-channel SSG notes regardless of
+    ; envelope state.
     ld a,(VAR_SSG_ENV_ON)
     or a
     jr z,ssg_standalone_vola_fixed
     ld d,$08
     ld e,$10
     call shadowed_write_a
-    ; Retrigger envelope shape register on EVERY note-on while
-    ; envelope mode is active.  Writing $0D always restarts the
-    ; envelope cycle on YM2149, so each note gets a fresh attack/
-    ; decay — that's what gives voice-synthesis its per-syllable
-    ; amplitude shape instead of a flat sustained tone.
     ld a,(VAR_SSG_ENV_SHAPE)
     ld d,$0D
     ld e,a
     call force_write_a
-    jr ssg_standalone_volbc
+    ld de,$0900                  ; vol B = 0 (silent chorus)
+    call shadowed_write_a
+    ld de,$0A00                  ; vol C = 0
+    jp shadowed_write_a
 ssg_standalone_vola_fixed:
     ld d,$08
     ld a,(VAR_SSG_VOL)
     and $0F
     ld e,a
     call shadowed_write_a
-ssg_standalone_volbc:
     ld d,$09
     ld a,(VAR_SSG_VOL)
     and $0F
