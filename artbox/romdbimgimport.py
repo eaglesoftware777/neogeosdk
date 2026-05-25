@@ -49,26 +49,24 @@ except ImportError:
     HAS_IMG2NEO = False
     alpha_bleed = None
 
-# Default screen path: CRT-tuned pipeline (img2neo_crt) — CIE-Lab k-means
-# palette + horizontal-biased Floyd-Steinberg + gamma 1.20 / contrast 1.10
-# pre-boost.  This was previously the explicit `make art-crt` target; it's
-# now the default because it produces the best perceptual quality under
-# the existing single-15-colour-bank downstream.
+# Screen-converter dispatch.  Both makefiles' `art` target exports
+# ARTBOX_TILE=1 so the default route is the tile-local pipeline
+# (img2neo_tile): per-tile k-means + per-tile Floyd-Steinberg + greedy
+# MAE bank dedup + Lab-nearest pixel remap into a representative
+# palette derived from the weighted union of banks.  Preserves the
+# per-tile dither micro-detail through to the final indices.
 #
-# Opt-in alternatives (export to override):
-#   ARTBOX_TILE=1    -> spatially-localised tile pipeline (img2neo_tile).
-#                        Generates per-tile candidate palettes then merges
-#                        into a single global LUT.  Promising for future
-#                        per-tile-bank packers but currently underperforms
-#                        CRT in the single-bank case (the global merge
-#                        step discards the per-tile dither work).  Keep
-#                        until a per-bank downstream lands.
+# Precedence (highest first):
 #   ARTBOX_LEGACY=1  -> original nearest-neighbour-against-global-palette
-#                        path; kept for diffing / sanity-check builds.
+#                        path (kept for diffing / sanity-check builds).
+#   ARTBOX_CRT=1     -> CRT-tuned pipeline (img2neo_crt: Lab k-means +
+#                        horizontal-biased FS + gamma 1.20 / contrast
+#                        1.10 pre-boost).  Set by `make art-crt`.
+#   ARTBOX_TILE=1    -> tile-local pipeline (default; set by `make art`).
+#   (none set)       -> tile-local if available, else CRT, else legacy.
+USE_CRT    = os.environ.get("ARTBOX_CRT",    "").strip() in ("1", "true", "yes", "on")
 USE_TILE   = os.environ.get("ARTBOX_TILE",   "").strip() in ("1", "true", "yes", "on")
 USE_LEGACY = os.environ.get("ARTBOX_LEGACY", "").strip() in ("1", "true", "yes", "on")
-# ARTBOX_CRT=1 is still honoured for backward compatibility but is now
-# also the default; treat any value as a no-op affirmation of the default.
 try:
     from img2neo_crt import convert_screen_to_indexed as crt_convert_screen
     HAS_CRT = True
@@ -299,17 +297,22 @@ def load_screen_asset(spec):
     tw = (spec["target_width"] // 16) * 16
     th = (spec["target_height"] // 16) * 16
 
-    # Dispatch: CRT is default, ARTBOX_TILE=1 for the experimental
-    # tile-local pipeline, ARTBOX_LEGACY=1 for the original path.
+    # Dispatch (see module-level header for the full precedence table):
+    #   LEGACY  -> fall through to legacy nearest-neighbour
+    #   CRT     -> img2neo_crt
+    #   TILE    -> img2neo_tile (Makefile default)
+    #   nothing -> tile if available, else CRT, else legacy
     convert_fn = None
     if USE_LEGACY:
-        convert_fn = None                       # fall through to legacy path
+        convert_fn = None
+    elif USE_CRT and HAS_CRT:
+        convert_fn = crt_convert_screen
     elif USE_TILE and HAS_TILE:
         convert_fn = tile_convert_screen
-    elif HAS_CRT:
-        convert_fn = crt_convert_screen         # default
     elif HAS_TILE:
-        convert_fn = tile_convert_screen        # fallback if CRT import failed
+        convert_fn = tile_convert_screen        # default
+    elif HAS_CRT:
+        convert_fn = crt_convert_screen         # fallback
 
     if convert_fn is not None:
         indexed, palette, meta = convert_fn(

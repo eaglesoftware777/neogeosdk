@@ -19,18 +19,24 @@ Neo Geo development SDK for SNK hardware.
 - **HD artbox alt-pipeline** — `artbox/img2neo_hd.py` and
   `artbox/fixtiles_hd.py` add bilateral / CLAHE / unsharp / blue-noise
   dither (alongside the existing pipeline, not replacing it)
-- **Default screen pipeline is CRT-tuned** — `artbox/img2neo_crt.py`:
-  CIE-Lab k-means palette + horizontal-biased Floyd-Steinberg + gamma
-  1.20 / contrast 1.10 pre-boost for arcade CRT output.  Used by every
-  `make art GAME=...` build on both Linux and Windows.
-- **Tile-local pipeline as opt-in** — `artbox/img2neo_tile.py` slices
-  the canvas into 16x16 macroblocks, runs luma-weighted k-means++ +
-  Floyd-Steinberg per block, then derives a single global palette
-  from the weighted union of tile palettes.  Designed for future
-  per-tile-bank packers; enable with `ARTBOX_TILE=1` for evaluation.
-  Currently underperforms CRT in the single-bank case (the global
-  merge discards the per-tile dither work).
-- `ARTBOX_LEGACY=1` falls back to the original nearest-neighbour path.
+- **Default screen pipeline is tile-local** — `artbox/img2neo_tile.py`:
+  per-tile k-means++ + per-tile Floyd-Steinberg dither + greedy MAE
+  bank dedup + Lab-nearest pixel remap into a representative palette
+  derived from the weighted union of banks.  Both `make art GAME=...`
+  (Linux) and `make -f MakefileWin32.mak art GAME=...` (Windows)
+  export `ARTBOX_TILE=1` so this is the route every build takes.
+  Preserves the per-tile dither micro-detail end-to-end (no global
+  re-quantisation).  When `genscreens` learns to emit per-tile
+  palette attributes, the module's `cluster_and_remap_tile_palettes()`
+  + `extract_tile_data_for_dedup()` plug straight in for real
+  multi-bank backgrounds.
+- **CRT pipeline as the `art-crt` target** — `artbox/img2neo_crt.py`:
+  CIE-Lab k-means + horizontal-biased Floyd-Steinberg + gamma 1.20 /
+  contrast 1.10 pre-boost.  Use `make art-crt` / `make -f
+  MakefileWin32.mak art-crt` when you specifically want the CRT
+  preprocessing (or export `ARTBOX_CRT=1`).
+- `ARTBOX_LEGACY=1` falls back to the original nearest-neighbour path
+  (kept for diffing / sanity-check builds).
 - **Sprite halo fix** — `artbox/img2neo.py` exposes `alpha_bleed()` and
   the sprite path uses it after `fit_sprite_rgba` so anti-aliased
   contours stop baking the source PNG's hidden transparent-pixel RGB

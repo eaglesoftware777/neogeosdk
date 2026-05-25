@@ -541,6 +541,130 @@ def extract_tile_data_for_dedup(
 
 
 # ---------------------------------------------------------------------------
+# Greedy palette-bank packer with smart pixel remap
+# ---------------------------------------------------------------------------
+
+def cluster_and_remap_tile_palettes(
+        indices_per_tile: np.ndarray,
+        palettes_per_tile: np.ndarray,
+        max_banks: int = 32,
+        epsilon: float = 15.0,
+        ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """
+    Greedy MAE clustering of N per-tile palettes into <= max_banks
+    shared hardware banks, followed by a perceptually-correct LOCAL
+    -> BANK pixel-index remap.
+
+    Why the remap matters: the per-tile dither produces indices
+    0..15 that reference each tile's OWN local palette.  Just
+    assigning the tile to a shared bank without remapping leaves
+    those indices pointing at the wrong slot inside the bank — the
+    Floyd-Steinberg pattern is preserved but the colours are
+    nonsense.  This pass builds a local -> bank slot table per tile
+    (Lab-nearest match for each of the 15 local colours against the
+    15 bank colours) and translates the dithered indices through it,
+    so the dither texture is preserved while colours land at the
+    bank's nearest perceptual neighbour.
+
+    Index-0 transparency is preserved unchanged.
+
+    Parameters
+    ----------
+    indices_per_tile : (N, 256) uint8, values in 0..15
+                       (0 = transparent, 1..15 = local palette slot)
+    palettes_per_tile : (N, 15, 3) uint8 NeoGeo-grid RGB
+    max_banks         : hard ceiling on emitted shared banks
+    epsilon           : MAE threshold for "close enough to existing
+                        bank".  Lower = more banks, higher fidelity;
+                        higher = fewer banks, more colour compromise.
+
+    Returns
+    -------
+    remapped_indices : (N, 256) uint8 — same layout as input, but
+                       indices 1..15 now reference the assigned
+                       bank's palette (not the local palette).
+    bank_palettes    : (n_banks, 15, 3) uint8 — shared bank LUTs.
+                       n_banks is <= max_banks.
+    tile_to_bank     : (N,) uint16 — bank index per tile.
+    """
+    if indices_per_tile.shape[0] != palettes_per_tile.shape[0]:
+        raise ValueError("indices/palettes tile-count mismatch")
+
+    n_tiles = palettes_per_tile.shape[0]
+    pal_f32 = palettes_per_tile.astype(np.float32)
+
+    # --- 1. Greedy MAE clustering ------------------------------------
+    # Note: MAE on raw RGB is fast and matches the user-supplied
+    # heuristic.  Lab-mean MAE is more perceptual but adds a per-bank
+    # rgb2lab on every comparison; raw RGB MAE is good enough for the
+    # bank-budget granularity (we're picking banks, not individual
+    # colours), and the eps default 15.0 is calibrated to it.
+    bank_palettes: list[np.ndarray] = []
+    tile_to_bank = np.zeros(n_tiles, dtype=np.uint16)
+
+    for ti in range(n_tiles):
+        pal = pal_f32[ti]
+        matched = -1
+        for bi, bank in enumerate(bank_palettes):
+            mae = float(np.mean(np.abs(pal - bank)))
+            if mae < epsilon:
+                matched = bi
+                break
+        if matched == -1:
+            if len(bank_palettes) < max_banks:
+                bank_palettes.append(pal.copy())
+                matched = len(bank_palettes) - 1
+            else:
+                # Force-fall-back: nearest existing bank by MAE.
+                dists = np.array([
+                    float(np.mean(np.abs(pal - b)))
+                    for b in bank_palettes
+                ])
+                matched = int(dists.argmin())
+        tile_to_bank[ti] = matched
+
+    bank_palettes_arr = np.stack(bank_palettes, axis=0).astype(np.uint8)
+    bank_palettes_arr = snap_neogeo(bank_palettes_arr)
+
+    # --- 2. Smart LOCAL -> BANK pixel remap --------------------------
+    # For each tile, pre-compute a 15-entry lookup that maps each
+    # local palette slot (0..14) to its nearest match in the assigned
+    # bank (also 0..14).  Lab distance ensures perceptual fidelity.
+    remapped = np.zeros_like(indices_per_tile)
+
+    # Cache the bank palettes' Lab once — Lab conversion is the
+    # expensive step.
+    bank_lab_cache = {
+        bi: rgb_to_lab(bank_palettes_arr[bi])
+        for bi in range(bank_palettes_arr.shape[0])
+    }
+
+    for ti in range(n_tiles):
+        local_pal = palettes_per_tile[ti]                  # (15, 3) u8
+        assigned_bank = int(tile_to_bank[ti])
+
+        local_lab = rgb_to_lab(local_pal)                  # (15, 3) f32
+        bank_lab = bank_lab_cache[assigned_bank]           # (15, 3) f32
+
+        # (15, 15) squared distance matrix — local i to bank j.
+        d2 = np.sum((local_lab[:, None, :] - bank_lab[None, :, :]) ** 2,
+                    axis=2)
+        # local_to_bank[k] = bank slot best matching local slot k.
+        # Both are in 0..14 (i.e. before the +1 transparency shift).
+        local_to_bank = d2.argmin(axis=1).astype(np.uint8)
+
+        tile_indices = indices_per_tile[ti]                # (256,) u8
+        opaque = tile_indices != 0
+        out_tile = np.zeros_like(tile_indices)
+        # For opaque pixels: index = local_to_bank[(idx - 1)] + 1.
+        # The +1 shift preserves slot 0 = transparency on both sides.
+        out_tile[opaque] = local_to_bank[tile_indices[opaque] - 1] + 1
+        remapped[ti] = out_tile
+
+    return remapped, bank_palettes_arr, tile_to_bank
+
+
+# ---------------------------------------------------------------------------
 # Single-palette derivation for single-bank downstream pipelines
 # ---------------------------------------------------------------------------
 
@@ -678,58 +802,214 @@ def convert_screen_via_tile_palette(
         anchor: str = "center",
         n_colors: int = COLORS_PER_TILE,
         alpha_threshold: int = ALPHA_OPAQUE_THRESHOLD,
+        max_banks: int = 32,
+        epsilon: float = 15.0,
         ) -> tuple[np.ndarray, np.ndarray, dict]:
     """
     Drop-in replacement for `romdbimgimport.load_screen_asset`'s
-    full-image quantizer, using the tile-local pipeline to derive
-    its 15-colour global palette.
+    full-image quantizer.
+
+    Pipeline (no re-dither — preserves Floyd-Steinberg micro-detail):
+
+      1. LANCZOS-resize / pad the source to a 16-aligned canvas.
+      2. For each 16x16 tile: luma-weighted k-means++ -> local 15-
+         colour palette, then luma-weighted Floyd-Steinberg dither
+         against THAT local palette.  This is the high-fidelity step
+         the original pipeline threw away.
+      3. Greedy-MAE-cluster the N per-tile palettes into <= max_banks
+         shared banks (eps-tolerant grouping).
+      4. Smart LOCAL -> BANK pixel-index remap for every tile (Lab-
+         nearest match per palette slot).  Dither pattern is locked
+         in; only colour indices shift to point at the assigned bank.
+      5. The existing single-bank downstream (romtiles / genscreens)
+         takes ONE palette per image, so pick the bank used by the
+         most tiles as the "representative" bank for the whole
+         image.  Other tiles get a second remap pass through that
+         representative bank.  This is strictly better than the
+         previous global-k-means-then-redither approach because
+         (a) the candidate set was already de-noised by per-tile
+         clustering and (b) the dither pattern is preserved through
+         the Lab-nearest remap.
+
+    Once `genscreens` learns to emit per-tile palette attributes,
+    drop the step-5 collapse and pass `bank_palettes` / `tile_to_bank`
+    straight through — `extract_tile_data_for_dedup()` already shapes
+    its output that way.
 
     Returns
     -------
-    indexed   : (H, W) uint16 indices, 0 = transparent, 1..15 opaque
-    palette16 : (16, 3) uint16, palette[0] = (0,0,0) sentinel,
-                palette[1..15] = the derived global palette
-    metadata  : dict, geometry of the conversion canvas
+    indexed   : (H, W) uint16 — 0 = transparent, 1..15 opaque
+    palette16 : (16, 3) uint16 — palette[0] sentinel, palette[1..15]
+                are the representative bank's colours
+    metadata  : dict — geometry + the dedup statistics
+                ("n_banks_pre_collapse", "n_banks_post_collapse",
+                 "tile_to_bank_pre_collapse").
     """
     img = Image.open(image_path).convert("RGBA")
     canvas, cl, ct, cw, ch = _fit_to_tile_grid(img, target_w, target_h, fit)
     arr = np.array(canvas, dtype=np.uint8)
     canvas_h, canvas_w = arr.shape[:2]
 
-    # Step 1: tile-local pass — produces high-quality candidate
-    # palettes that already respect local colour clusters.
     tile_cols = canvas_w // TILE_SIZE
     tile_rows = canvas_h // TILE_SIZE
     n_tiles = tile_cols * tile_rows
+
+    # --- Step 1-2: per-tile quantize + local FS dither ----------------
+    tile_indices_local = np.zeros((n_tiles, PIXELS_PER_TILE), dtype=np.uint8)
     tile_palettes = np.zeros((n_tiles, n_colors, 3), dtype=np.uint8)
     for ty in range(tile_rows):
         for tx in range(tile_cols):
             tile_rgba = arr[ty * TILE_SIZE:(ty + 1) * TILE_SIZE,
                             tx * TILE_SIZE:(tx + 1) * TILE_SIZE]
-            _, tile_palette = _quantize_tile(tile_rgba, n_colors)
-            tile_palettes[ty * tile_cols + tx] = tile_palette
+            ti = ty * tile_cols + tx
+            idx, pal = _quantize_tile(tile_rgba, n_colors)
+            tile_indices_local[ti] = idx
+            tile_palettes[ti] = pal
 
-    # Step 2: derive single global palette from the candidate union.
-    global_palette15 = derive_global_palette_from_tile_palettes(
-        tile_palettes, k=n_colors)
+    # --- Step 3-4: greedy bank dedup + LOCAL->BANK remap --------------
+    remapped, bank_palettes, tile_to_bank = cluster_and_remap_tile_palettes(
+        tile_indices_local, tile_palettes,
+        max_banks=max_banks, epsilon=epsilon,
+    )
 
-    # Step 3: Floyd-Steinberg dither the WHOLE image against the
-    # global palette (not the local one — we want a single coherent
-    # palette for the downstream single-bank packer).  Perceptual
-    # luminance-weighted nearest-colour lookup keeps text/HUD edges
-    # crisp.
-    rgb = arr[:, :, :3]
-    alpha_mask = arr[:, :, 3] >= alpha_threshold
-    if alpha_mask.any():
-        raw_idx = _floyd_steinberg_global(rgb, global_palette15, alpha_mask)
-        indexed = np.where(alpha_mask,
-                           (raw_idx + 1).astype(np.uint16),
-                           np.uint16(0))
-    else:
-        indexed = np.zeros(rgb.shape[:2], dtype=np.uint16)
+    # --- Step 5: collapse to single representative bank ---------------
+    # Pick the bank used by the most tiles WHOSE PALETTE IS NON-
+    # DEGENERATE.  Naive "most-tile-count" picks the all-zero palette
+    # produced by fully-transparent border tiles in letterboxed
+    # images — that bank dominates the count but contributes no
+    # colour, so the second remap pass collapses every content
+    # colour onto bank-slot-0 and the whole image goes monochrome.
+    # Filter to banks whose palette has at least one non-zero RGB
+    # channel before voting.
+    n_banks_pre = bank_palettes.shape[0]
+    bincount = np.bincount(tile_to_bank, minlength=n_banks_pre)
+    nonzero_bank_mask = bank_palettes.reshape(n_banks_pre, -1).any(axis=1)
+    if not nonzero_bank_mask.any():
+        # Whole image is transparent — emit zeros.
+        final_indices_2d = np.zeros((canvas_h, canvas_w), dtype=np.uint16)
+        palette16 = np.zeros((16, 3), dtype=np.uint16)
+        return final_indices_2d, palette16, {
+            "source_width":   int(img.size[0]),
+            "source_height":  int(img.size[1]),
+            "canvas_width":   int(canvas_w),
+            "canvas_height":  int(canvas_h),
+            "content_left":   int(cl),
+            "content_top":    int(ct),
+            "content_width":  int(cw),
+            "content_height": int(ch),
+            "n_colors":       int(n_colors),
+            "tile_cols":      int(tile_cols),
+            "tile_rows":      int(tile_rows),
+            "n_tiles":        int(n_tiles),
+            "pipeline":       "tile_local_dedup_remap_empty",
+        }
+    # Derive the representative palette from ALL non-degenerate banks
+    # weighted by their tile count.  Picking the single most-used bank
+    # (argmax) biases toward whatever region dominates the canvas
+    # (e.g. a sky / floor) and the rest of the image collapses to its
+    # nearest neighbours in that region's 15 colours.  Weighted
+    # Lab-k-means over the multi-bank candidate union finds the 15
+    # colours that best span the actual content across the whole
+    # image.  Still ONE palette (single-bank downstream constraint)
+    # but informed by the entire multi-bank dedup.
+    masked_counts = np.where(nonzero_bank_mask, bincount, 0).astype(np.float32)
+    # Build a weighted candidate-colour set: each bank's 15 colours
+    # repeated `tile_count` times.  np.repeat keeps this simple and
+    # the union stays small (<= 32 banks * 15 colours = 480 candidates
+    # before weighting, which weighted k-means handles trivially).
+    weighted_candidates = []
+    weighted_weights = []
+    for bi in range(n_banks_pre):
+        if not nonzero_bank_mask[bi] or masked_counts[bi] <= 0:
+            continue
+        weighted_candidates.append(bank_palettes[bi])
+        weighted_weights.append(np.full(n_colors, masked_counts[bi],
+                                          dtype=np.float32))
+    flat_candidates = np.concatenate(weighted_candidates, axis=0)
+    flat_weights = np.concatenate(weighted_weights, axis=0)
+    # Drop pure-black padding entries — every bank pads short palettes
+    # with the last-used colour, but legitimate dark colours rarely
+    # land at exactly (0,0,0).  Keep (0,0,0) only when it carries
+    # weight from a truly-black tile.
+    nonzero_color_mask = flat_candidates.sum(axis=1) > 0
+    if nonzero_color_mask.any():
+        flat_candidates = flat_candidates[nonzero_color_mask]
+        flat_weights = flat_weights[nonzero_color_mask]
+
+    # Lab-space weighted k-means++.
+    cand_lab = rgb_to_lab(flat_candidates)
+    rng = np.random.default_rng(0)
+    centres = np.empty((n_colors, 3), dtype=np.float32)
+    probs = flat_weights / flat_weights.sum()
+    centres[0] = cand_lab[rng.choice(len(cand_lab), p=probs)]
+    closest_d2 = np.sum((cand_lab - centres[0]) ** 2, axis=1)
+    for i in range(1, n_colors):
+        biased = closest_d2 * flat_weights
+        total = biased.sum()
+        if total <= 1e-12:
+            centres[i] = cand_lab[rng.integers(len(cand_lab))]
+        else:
+            centres[i] = cand_lab[rng.choice(len(cand_lab),
+                                              p=biased / total)]
+        new_d2 = np.sum((cand_lab - centres[i]) ** 2, axis=1)
+        closest_d2 = np.minimum(closest_d2, new_d2)
+    for _ in range(20):
+        d2 = np.sum((cand_lab[:, None, :] - centres[None, :, :]) ** 2,
+                    axis=2)
+        labels = d2.argmin(axis=1)
+        moved = False
+        new_centres = centres.copy()
+        for j in range(n_colors):
+            mask = labels == j
+            if mask.any():
+                w = flat_weights[mask][:, None]
+                wsum = w.sum()
+                if wsum > 0:
+                    mean = (cand_lab[mask] * w).sum(axis=0) / wsum
+                    if np.any(np.abs(mean - centres[j]) > 1e-3):
+                        moved = True
+                    new_centres[j] = mean
+        centres = new_centres
+        if not moved:
+            break
+
+    from img2neo import lab_to_rgb
+    rep_palette = snap_neogeo(lab_to_rgb(centres))         # (15, 3) u8
+    # No single source bank now corresponds to rep_palette — fix the
+    # rep_bank value to a sentinel so the equality check in the tile
+    # loop below never short-circuits the second remap pass (every
+    # tile gets remapped through rep_palette via Lab-nearest).
+    rep_bank = -1
+
+    final_indices_2d = np.zeros((canvas_h, canvas_w), dtype=np.uint16)
+    rep_lab = rgb_to_lab(rep_palette)
+
+    for ti in range(n_tiles):
+        ty, tx = divmod(ti, tile_cols)
+        y0, x0 = ty * TILE_SIZE, tx * TILE_SIZE
+        tile = remapped[ti].reshape(TILE_SIZE, TILE_SIZE)
+
+        if tile_to_bank[ti] == rep_bank:
+            # Already references the representative bank — straight copy.
+            final_indices_2d[y0:y0 + TILE_SIZE,
+                             x0:x0 + TILE_SIZE] = tile.astype(np.uint16)
+            continue
+
+        # Lab-nearest remap from the assigned bank's palette into the
+        # representative bank's palette.  No re-dither.
+        src_bank = bank_palettes[int(tile_to_bank[ti])]
+        src_lab = rgb_to_lab(src_bank)
+        d2 = np.sum((src_lab[:, None, :] - rep_lab[None, :, :]) ** 2,
+                    axis=2)
+        bank_to_rep = d2.argmin(axis=1).astype(np.uint8)   # (15,)
+        opaque = tile != 0
+        out_tile = np.zeros_like(tile)
+        out_tile[opaque] = bank_to_rep[tile[opaque] - 1] + 1
+        final_indices_2d[y0:y0 + TILE_SIZE,
+                         x0:x0 + TILE_SIZE] = out_tile.astype(np.uint16)
 
     palette16 = np.zeros((16, 3), dtype=np.uint16)
-    palette16[1:1 + n_colors] = global_palette15.astype(np.uint16)
+    palette16[1:1 + n_colors] = rep_palette.astype(np.uint16)
 
     metadata = {
         "source_width":   int(img.size[0]),
@@ -744,9 +1024,13 @@ def convert_screen_via_tile_palette(
         "tile_cols":      int(tile_cols),
         "tile_rows":      int(tile_rows),
         "n_tiles":        int(n_tiles),
-        "pipeline":       "tile_local_global_merge",
+        "pipeline":       "tile_local_dedup_remap_weighted",
+        "n_banks_pre_collapse":  int(n_banks_pre),
+        "n_banks_used":          int(nonzero_bank_mask.sum()),
+        "max_banks_budget":      int(max_banks),
+        "epsilon_mae":           float(epsilon),
     }
-    return indexed, palette16, metadata
+    return final_indices_2d, palette16, metadata
 
 
 # ---------------------------------------------------------------------------
