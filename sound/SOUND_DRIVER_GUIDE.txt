@@ -106,13 +106,42 @@ Voice alphabet (v1.3.2):
                                 from the V-ROM voice bank
                                 (sound/samples/in_wav_a_voice/)
 
-CSM speech (v1.3.2 stubs — not yet wired through the Z80 driver):
+CSM (Composite Sine Mode, v1.3.3 — driver cmds $1B / $1C):
 
-- `soundFMCSMBegin()`        — TODO: reg $27 = $40 (CSM mode + Load A)
-- `soundFMCSMEnd()`          — TODO: reg $27 = $00 (back to normal)
+- `soundFMCSMBegin(period_hi)` — start CSM on FM channel 2.  Driver
+                                  cmd $1B with a 1-byte Timer-A high
+                                  byte parameter (0..255) writes reg
+                                  $24 = period_hi, reg $25 = 0, reg
+                                  $27 = $C0 (load A + CSM mode).  Pair
+                                  with a `playFMTrack()` so ch2 has an
+                                  active patch to be auto-keyed.
+- `soundFMCSMEnd()`            — cmd $1C, no parameter — writes reg
+                                  $27 = $00 to leave CSM mode.  Also
+                                  invoked by `stop_all` so CSM state
+                                  can't bleed across scenes.
+- `soundFMCSMSweep(a, b, ms)`  — SDK helper that begins CSM at Timer
+                                  A high = a, then steps toward b in
+                                  ms-millisecond intervals, then ends
+                                  CSM.  Produces a vowel-slide formant.
 
-All listed functions are implemented by the current Z80 command decoder
-except the CSM helpers (currently no-op placeholders).
+Voice cue speech (v1.3.3 update):
+
+- `speakWord()` now silences SSG/FM (`soundStopMusic`) before iterating
+  the alphabet samples so the spelled word is the only audible voice.
+  Inter-letter gap reduced from 150 ms to 85 ms for brisker cadence.
+- `playVoiceGetReady` / `playVoiceLetsGo` / `playVoiceGameOver` route
+  through `speakWord("GET READY" / "LETS GO" / "GAME OVER")` instead of
+  playing abstract SSG note streams — the cues are now intelligible.
+
+FM LFO persistence (v1.3.3 fix):
+
+- `fm_apply_patch` no longer writes reg $22 — the LFO is a global
+  YM2610 register, so the user's `soundFMSetLFO()` setting now
+  survives every patch switch and note-on (previously each patch
+  load reset $22 back to its baked-in default and silently undid the
+  user's setting).
+
+All listed functions are implemented by the current Z80 command decoder.
 
 
 3. High-level SDK API

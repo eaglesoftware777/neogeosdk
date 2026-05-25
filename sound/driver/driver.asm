@@ -297,6 +297,8 @@ execute_command:
     jp z,exec_p_ssg_noise
     cp 14
     jp z,exec_p_fm_tempo
+    cp 15
+    jp z,exec_p_fm_csm_begin
     ret
 exec_p_tempo:
     ld a,c
@@ -410,6 +412,65 @@ exec_p_fm_tempo_ok:
     ld (VAR_FM_TEMPO),a
     ret
 
+; --- FM CSM (Composite Sine Mode) ---
+; Cmd $1B begin (1-byte param = Timer A high byte, 0..255):
+;   writes reg $24 = byte (Timer A MSB, bits 9..2 of 10-bit period)
+;          reg $25 = 0    (Timer A LSB, bits 1..0 of 10-bit period)
+;          reg $27 = $CB  (MODE=11 CSM + Enable B IRQ + Load B + Load A)
+; ENA (Enable A IRQ, bit 2) is DELIBERATELY zero — enabling it floods
+; the Z80 with Timer A interrupts at the auto-key rate (hundreds to
+; thousands per second) and starves the music engine.  The chip
+; still auto-keys ch3 from Timer A overflows regardless of IRQ
+; enable; we just don't need the Z80 to know about every tick.
+; Bits 3+1 (Enable B + Load B) preserve Timer B so the music engine
+; keeps stepping FM/SSG/ADPCM-B tracks while CSM runs.
+exec_p_fm_csm_begin:
+    ld d,$24
+    ld e,c
+    call force_write_a
+    ld d,$25
+    ld e,0
+    call force_write_a
+    ld d,$27
+    ld e,$CB
+    jp force_write_a
+
+set_fm_csm_begin_wait:
+    ld a,15
+    ld (VAR_WAIT_TEMPO),a
+    ld (VAR_PARAM_MODE),a
+    ret
+
+; Cmd $1C end (immediate, no parameter).
+; Single $27 write to leave CSM cleanly:
+;   $1A = Reset A + Enable B IRQ + Load B
+;         (MODE=00 — no CSM, Load A=0 halts Timer A, Timer B kept alive)
+; This avoids the "halt-then-restart Timer B" gap that previous
+; versions had — Timer B never stops, so the music engine never
+; misses a tick at section transitions.
+; Then key-off ch3 and slam its 4 operator TLs to $7F (full
+; attenuation) so any envelope-release tail from the rapid CSM
+; auto-keys can't bleed audibly into the next section.
+exec_csm_end:
+    ld d,$27
+    ld e,$1A
+    call force_write_a
+    ld d,$28
+    ld e,$02
+    call force_write_a
+    ld d,$42
+    ld e,$7F
+    call force_write_a
+    ld d,$46
+    ld e,$7F
+    call force_write_a
+    ld d,$4A
+    ld e,$7F
+    call force_write_a
+    ld d,$4E
+    ld e,$7F
+    jp force_write_a
+
 set_fmvol_wait:
     ld a,8
     ld (VAR_WAIT_TEMPO),a
@@ -466,6 +527,10 @@ exec_normal:
     jp z,set_ssg_noise_wait
     cp $1A ; FM tempo (raw Timer-B period) parameter follows
     jp z,set_fm_tempo_wait
+    cp $1B ; FM CSM begin — Timer-A high byte parameter follows
+    jp z,set_fm_csm_begin_wait
+    cp $1C ; FM CSM end — no parameter
+    jp z,exec_csm_end
     cp $28 ; ADPCM-B direct sample 0
     jp z,play_demo_b0
     cp $29 ; ADPCM-B direct sample 1
@@ -900,6 +965,15 @@ stop_all:
     ld (VAR_SSG_TICK),a
     call init_ssg
     call fm_silence_all
+    ; Clear CSM mode but keep Timer B running — Timer B is the music
+    ; engine's tick source.  Writing $27=$00 (or anything with bit 1
+    ; clear) halts Timer B and freezes every subsequent FM/SSG note
+    ; advance.  $3A matches init_fm's resting value: MODE=00 (no
+    ; CSM/FM3), Timer B enable+load on (bits 3,1), Timer A halted,
+    ; and both overflow flags cleared (bits 5,4 as write-1-to-clear).
+    ld d,$27
+    ld e,$3A
+    call force_write_a
     call adpcma_stop
     jp adpcmb_stop
 
@@ -1784,7 +1858,14 @@ fm_patch_seek_loop:
     dec a
     jr nz,fm_patch_seek_loop
 fm_apply_patch_ready:
-    ; LFO register $22
+    ; LFO register $22 — writing the patch's LFO byte here means
+    ; soundFMSetLFO() settings are overwritten on every patch switch,
+    ; but that's the price for keeping FM/SSG playback stable.  The
+    ; earlier "skip $22" experiment regressed FM and SSG playback
+    ; because patches expect $22 to be in a known state when their
+    ; per-op AMS/PMS bits take effect.  Users who need live LFO
+    ; control should call soundFMSetLFO() AFTER the patch is loaded
+    ; (i.e. AFTER playFMTrack), and avoid switching tracks mid-LFO.
     ld d,$22
     ld e,(hl)
     call fm_patch_write_a
