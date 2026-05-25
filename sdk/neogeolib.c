@@ -77,8 +77,9 @@ void soundSetSSGNoise(uint8_t period);
 void soundFMSetTempo(uint8_t period_frames);
 void playVoiceLetter(uint8_t letter_index);
 void speakWord(const char *text);
-void soundFMCSMBegin(void);
+void soundFMCSMBegin(uint8_t period_hi);
 void soundFMCSMEnd(void);
+void soundFMCSMSweep(uint8_t hi_start, uint8_t hi_end, uint8_t step_ms);
 void playCoinThenReady(void);
 void soundApplyMix(uint8_t,uint8_t,uint8_t,uint8_t);
 void soundPlayDemoFM(uint8_t);
@@ -552,20 +553,15 @@ void NEOGEO_USER playCoinThenReady(void) {
  * approximation that's free of sample storage.
  */
 /*
- * Voice cues route to dedicated SSG voice tracks (SSG tracks 4/5/6
- * in ssg_data.inc, sourced from games/<game>/sound/ssg/4_voice_*.mml).
- * Each MML is a short pitch-contour melody whose cadence approximates
- * the spoken phrase — robotic-arcade-cue, not intelligible speech.
- *
- * The earlier ADPCM-A routing (playSFX 11/12/10) duplicated samples
- * that the demo already plays in the SFX section, and the user
- * preferred chip-level voice so each cue is distinct from the SFX
- * bank.  For real intelligible speech, use speakWord() which reads
- * the V-ROM alphabet voice bank.
+ * Voice cues spell their phrase letter-by-letter through the alphabet
+ * voice bank (speakWord).  The earlier SSG-MML approach (tracks 4/5/6)
+ * only produced abstract pitch contours that didn't read as speech;
+ * routing through the ADPCM-A alphabet gives intelligible "G-E-T R-E-A-D-Y"
+ * style cues without needing per-phrase pre-recorded samples.
  */
-void NEOGEO_USER playVoiceGetReady(void) { isZ80Ready(); playSSGTrack(4); }
-void NEOGEO_USER playVoiceLetsGo(void)   { isZ80Ready(); playSSGTrack(5); }
-void NEOGEO_USER playVoiceGameOver(void) { isZ80Ready(); playSSGTrack(6); }
+void NEOGEO_USER playVoiceGetReady(void) { speakWord("GET READY"); }
+void NEOGEO_USER playVoiceLetsGo(void)   { speakWord("LETS GO"); }
+void NEOGEO_USER playVoiceGameOver(void) { speakWord("GAME OVER"); }
 
 /*
  * ADPCM-B L/R pan control (YM2610 register $11, active-high).
@@ -638,6 +634,11 @@ void NEOGEO_USER playVoiceLetter(uint8_t letter_index) {
 void NEOGEO_USER speakWord(const char *text) {
 	const char *p;
 	if (!text) return;
+	/* Silence MML / SSG / FM tracks first so the spelled word is the
+	 * only thing audible — without this the previous music section's
+	 * SSG kept playing on top of the alphabet samples and masked the
+	 * voice. */
+	soundStopMusic();
 	for (p = text; *p; p++) {
 		char c = *p;
 		if (c >= 'A' && c <= 'Z') {
@@ -645,35 +646,73 @@ void NEOGEO_USER speakWord(const char *text) {
 		} else if (c >= 'a' && c <= 'z') {
 			playVoiceLetter((uint8_t)(SOUND_VOICE_LETTER_BASE + (c - 'a')));
 		}
-		/* Inter-letter gap — short enough for natural cadence but
-		 * long enough that the previous sample's tail doesn't get
-		 * cut off by the next trigger.  ~150 ms feels word-like. */
-		cyclexms(150);
+		/* Inter-letter gap.  ~85 ms is short enough for a brisk word
+		 * cadence while still letting each ADPCM-A sample play its
+		 * onset before the next trigger overwrites it. */
+		cyclexms(85);
 	}
 }
 
 /*
- * CSM (Composite Sine Mode) on FM channel 2 — stub.
+ * CSM (Composite Sine Mode) on FM channel 3.
  *
- * CSM is the YM2610's hardware speech-synthesis path: writing the
- * Mode register $27 with bit 6 set puts FM channel 2 under control
- * of Timer A.  Each Timer A overflow auto-keys-on then keys-off the
- * channel 2 operators, generating a formant at the Timer A
- * frequency.  Combined with FM operator settings that approximate
- * vowel formants, the chip produces SAM-style robotic speech.
+ * CSM is the YM2610's hardware speech-synthesis path: writing Mode
+ * register $27 = $C5 (MODE=11 CSM + Enable A + Load A) puts FM
+ * channel 3 under Timer A control.  Each Timer A overflow auto-keys
+ * ch3's operators, producing a formant burst at the Timer A rate.
+ * Combined with whatever FM patch ch3 is currently playing, the
+ * chip emits vowel-like buzz / voice colouring.
  *
- * Real CSM implementation requires a phoneme table + per-tick
- * Timer A reload + FM channel 2 frequency control, none of which
- * the driver currently exposes.  These wrappers are placeholders so
- * game code can be written against the API; they currently route to
- * the ADPCM-A voice path which is the more practical speech method
- * on this chip.
+ *   period_hi = Timer A high byte (0..255).
+ *               Formant rate ≈ 4MHz / 18 / (1024 - period) Hz.
+ *               Lower period_hi = shorter period = higher formant.
+ *               Typical vowels land around 80..200.
+ *
+ * Recommended usage:
+ *   playFMTrack(N);        // give ch3 something to be buzzed
+ *   soundFMCSMBegin(160);  // start CSM at a mid formant rate
+ *   ...                    // sweep / vary the period for vowel motion
+ *   soundFMCSMEnd();       // back to normal FM playback
+ *
+ * Driver cmd $1B (1-byte param) writes regs $24 / $25 / $27 atomically;
+ * cmd $1C writes $27 = $00 to leave CSM.  stop_all also clears $27 so
+ * CSM state can't bleed across scenes.
  */
-void NEOGEO_USER soundFMCSMBegin(void) {
-	/* TODO: driver cmd to write reg $27 = $40 (CSM mode + load A) */
+void NEOGEO_USER soundFMCSMBegin(uint8_t period_hi) {
+	isZ80Ready(); soundCommand(0x1B);
+	isZ80Ready(); soundCommand(period_hi);
 }
 void NEOGEO_USER soundFMCSMEnd(void) {
-	/* TODO: driver cmd to write reg $27 = $00 (back to normal mode) */
+	isZ80Ready(); soundCommand(0x1C);
+}
+
+/*
+ * CSM rate sweep helper — sweeps Timer A period from hi_start down
+ * to hi_end in step_ms-millisecond intervals, producing a "vowel
+ * slide" formant motion against whatever FM track is currently
+ * playing on channel 2.  Useful for sound-system smoke tests and
+ * for "talking robot" SFX where you don't need full phoneme
+ * synthesis.
+ */
+void NEOGEO_USER soundFMCSMSweep(uint8_t hi_start, uint8_t hi_end,
+                                  uint8_t step_ms) {
+	uint8_t v = hi_start;
+	soundFMCSMBegin(v);
+	if (hi_start < hi_end) {
+		while (v < hi_end) {
+			cyclexms(step_ms);
+			v++;
+			soundFMCSMBegin(v);
+		}
+	} else {
+		while (v > hi_end) {
+			cyclexms(step_ms);
+			v--;
+			soundFMCSMBegin(v);
+		}
+	}
+	cyclexms(step_ms);
+	soundFMCSMEnd();
 }
 
 void NEOGEO_USER soundFadeOut(void) { isZ80Ready(); soundFadeOutSpeed(0x20); }

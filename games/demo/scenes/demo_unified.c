@@ -600,31 +600,31 @@ static uint8_t NEOGEO_USER chap_sound(void)
      * cues play V-ROM voice clips (SFX 11/12, 10) — that's what every
      * NeoGeo arcade with speech actually used.  Pure-chip SSG/FM
      * formant synthesis only produces robotic chords. */
-    demo_fix_puts(2u, 5u, "3. VOICE CUES (recorded ADPCM-A)  ", 2u);
+    demo_fix_puts(2u, 5u, "3. VOICE CUES (speakWord spelling)", 2u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0x00u, 0x00u, 0x00u); snd_step();
 
-    demo_fix_puts(2u, 11u, "playVoiceGetReady()  ADPCM-A SFX  ", 1u);
-    playVoiceGetReady(); snd_step();
-    if (uwait(160u)) return 1u;
-    demo_fix_puts(2u, 11u, "playVoiceLetsGo()    ADPCM-A SFX  ", 1u);
-    playVoiceLetsGo();   snd_step();
-    if (uwait(160u)) return 1u;
-    demo_fix_puts(2u, 11u, "playVoiceGameOver()  ADPCM-A SFX  ", 1u);
-    playVoiceGameOver(); snd_step();
-    if (uwait(200u)) return 1u;
+    /* The cue wrappers now go through speakWord so each one spells
+     * its phrase letter-by-letter from the ADPCM-A alphabet bank.
+     * Each speakWord call silences SSG/FM first so nothing masks the
+     * spelled word. */
+    demo_fix_puts(2u, 11u, "playVoiceGetReady()  \"GET READY\"  ", 1u);
+    playVoiceGetReady();
+    if (uwait(60u)) return 1u;
+    demo_fix_puts(2u, 11u, "playVoiceLetsGo()    \"LETS GO\"    ", 1u);
+    playVoiceLetsGo();
+    if (uwait(60u)) return 1u;
+    demo_fix_puts(2u, 11u, "playVoiceGameOver()  \"GAME OVER\"  ", 1u);
+    playVoiceGameOver();
+    if (uwait(60u)) return 1u;
 
-    /* speakWord — letter-by-letter alphabet voice samples bundled
-     * from sound/samples/in_wav_a_voice/.  The SDK iterates each
-     * character of the ASCII string and triggers the matching
-     * ADPCM-A sample (a.adpcma .. z.adpcma in V-ROM). */
     demo_fix_puts(2u, 13u, "speakWord(\"NEOGEO\")               ", 1u);
     speakWord("NEOGEO");
-    if (uwait(60u)) return 1u;
+    if (uwait(40u)) return 1u;
     demo_fix_puts(2u, 13u, "speakWord(\"EAGLE\")                ", 1u);
     speakWord("EAGLE");
-    if (uwait(60u)) return 1u;
+    if (uwait(40u)) return 1u;
 
     demo_fix_puts(2u, 11u, "                                  ", 0u);
     demo_fix_puts(2u, 13u, "                                  ", 0u);
@@ -663,18 +663,31 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
-    playFMTrack(6u);                           snd_step();
 
+    /* Restart the FM track for every LFO rate so each variant is
+     * heard from the beginning of the melody — easier A/B comparison
+     * than letting the track scroll through unrelated bars.  Note
+     * the order: playFMTrack first (which loads the patch and writes
+     * the patch's own LFO byte to $22), THEN soundFMSetLFO to
+     * override with the rate we actually want to demo. */
     demo_fix_puts(2u, 15u, "LFO OFF      (flat reference)     ", 1u);
+    soundStopMusic();    snd_step();
+    playFMTrack(6u);     snd_step();
     soundFMSetLFO(0x00u); snd_step();
     if (uwait(180u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=1   (slow wobble)        ", 1u);
+    soundStopMusic();    snd_step();
+    playFMTrack(6u);     snd_step();
     soundFMSetLFO(0x09u); snd_step();
     if (uwait(180u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=3   (medium vibrato)     ", 1u);
+    soundStopMusic();    snd_step();
+    playFMTrack(6u);     snd_step();
     soundFMSetLFO(0x0Bu); snd_step();
     if (uwait(180u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=6   (fast vibrato)       ", 1u);
+    soundStopMusic();    snd_step();
+    playFMTrack(6u);     snd_step();
     soundFMSetLFO(0x0Eu); snd_step();
     if (uwait(180u)) return 1u;
     soundFMSetLFO(0x00u); snd_step();
@@ -692,6 +705,44 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundFMSetTempo(1u); snd_step();
     if (uwait(120u)) return 1u;
 
+    soundStopMusic();        snd_step();
+    soundSetFMVolume(0x00u); snd_step();
+    demo_fix_puts(2u, 15u, "                                  ", 0u);
+
+    /* --- 5b) FM CSM (Composite Sine Mode) ------------------------- *
+     *
+     * CSM puts FM channel 2 under Timer-A auto-key-on control so each
+     * Timer-A overflow re-triggers ch2 — producing a vowel-like buzz
+     * coloured by whatever patch ch2 is currently playing.  Pair it
+     * with a normal FM track so ch2 has notes to chop; the audible
+     * effect is a "robot speaking through the music" formant.
+     *
+     *   soundFMCSMBegin(hi)   — start CSM with Timer-A high byte hi
+     *   soundFMCSMSweep(a,b,m) — slide formant from a to b (m ms/step)
+     *   soundFMCSMEnd()       — back to normal FM playback
+     */
+    /* CSM is inherently buzzy / clicky — it's the chip rapidly
+     * key-cycling FM ch3 at the Timer-A overflow rate.  Keep the
+     * demo short and quiet so it reads as "speech effect", not
+     * "broken sound".  After the demo we ramp FM volume back up so
+     * the SSG section follows on a clean state. */
+    demo_fix_puts(2u, 5u, "5b. FM CSM (formant buzz on ch3)  ", 2u);
+    soundStopAll();                            snd_step();
+    soundSceneReset();                         snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x06u); snd_step();
+    playFMTrack(6u);                           snd_step();
+
+    demo_fix_puts(2u, 15u, "soundFMCSMBegin(180)  mid formant ", 1u);
+    soundFMCSMBegin(180u);
+    if (uwait(80u)) return 1u;
+    soundFMCSMEnd(); snd_step();
+    if (uwait(20u)) return 1u;
+
+    demo_fix_puts(2u, 15u, "soundFMCSMSweep(180,140,10 ms)   ", 1u);
+    soundFMCSMSweep(180u, 140u, 10u);
+    if (uwait(20u)) return 1u;
+
+    soundFMCSMEnd();         snd_step();
     soundStopMusic();        snd_step();
     soundSetFMVolume(0x00u); snd_step();
     demo_fix_puts(2u, 15u, "                                  ", 0u);

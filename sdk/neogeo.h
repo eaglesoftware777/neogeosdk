@@ -139,9 +139,12 @@ void soundFMSetTempo(uint8_t period);    /* Timer-B IRQs per FM step, 1..8 */
 void playVoiceLetter(uint8_t letter_index);  /* SOUND_VOICE_LETTER_X */
 void speakWord(const char *text);            /* spell out ASCII letters */
 
-/* CSM speech (FM channel 2 + Timer A) — stub helpers. */
-void soundFMCSMBegin(void);
+/* CSM (Composite Sine Mode) — FM channel 2 auto-keyed by Timer A.
+ * Begin/End drive reg $27 + Timer A regs $24/$25 via driver cmds $1B/$1C.
+ * Sweep slides the Timer A high byte for a formant-glide effect. */
+void soundFMCSMBegin(uint8_t period_hi);
 void soundFMCSMEnd(void);
+void soundFMCSMSweep(uint8_t hi_start, uint8_t hi_end, uint8_t step_ms);
 
 /* Fades. */
 void soundFadeOut(void);
