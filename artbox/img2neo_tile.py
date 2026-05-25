@@ -794,6 +794,38 @@ def _floyd_steinberg_global(rgb: np.ndarray,
     return out
 
 
+def _kmeans_palette_from_context(context_rgb: np.ndarray,
+                                  alpha_mask: np.ndarray | None,
+                                  n_colors: int) -> np.ndarray:
+    """
+    Run luma-weighted k-means++ over the OPAQUE pixels of a 24x24
+    (or arbitrary) context window and return the (n_colors, 3) uint8
+    NeoGeo-snapped palette.  No dithering — palette derivation only.
+
+    Used by convert_screen_via_tile_palette to sample palette
+    candidates from an overlapping 8-pixel-strip window so adjacent
+    tiles see shared context and produce consistent palette hints.
+    Without this, tiles produce slightly different palettes for the
+    same conceptual region (sky / skin) and the boundary remap shows
+    as a 16-pixel grid of colour steps.
+    """
+    if alpha_mask is None:
+        opaque_rgb = context_rgb.reshape(-1, 3)
+    else:
+        opaque_rgb = context_rgb[alpha_mask]
+    if opaque_rgb.size == 0:
+        return np.zeros((n_colors, 3), dtype=np.uint8)
+    opaque_ycc = rgb_to_weighted_ycbcr(opaque_rgb)
+    centres_ycc = _kmeans_pp_weighted(opaque_ycc, n_clusters=n_colors)
+
+    centres_unweighted = centres_ycc.copy()
+    centres_unweighted[..., 0] /= LUMA_WEIGHT
+    inv = np.linalg.inv(_M_RGB_YCBCR.astype(np.float64))
+    palette_rgb = centres_unweighted @ inv.T.astype(np.float32)
+    palette_rgb = np.clip(palette_rgb, 0.0, 255.0).astype(np.uint8)
+    return snap_neogeo(palette_rgb)
+
+
 def convert_screen_via_tile_palette(
         image_path: str | os.PathLike,
         target_w: int | None = 320,
@@ -804,71 +836,114 @@ def convert_screen_via_tile_palette(
         alpha_threshold: int = ALPHA_OPAQUE_THRESHOLD,
         max_banks: int = 32,
         epsilon: float = 15.0,
+        context_pad: int = 4,
+        gamma: float = 1.20,
+        contrast: float = 1.10,
         ) -> tuple[np.ndarray, np.ndarray, dict]:
     """
     Drop-in replacement for `romdbimgimport.load_screen_asset`'s
     full-image quantizer.
 
-    Pipeline (no re-dither — preserves Floyd-Steinberg micro-detail):
+    Pipeline (eliminates tile-boundary seams by combining context-
+    window palette derivation with a single image-wide dither pass):
 
-      1. LANCZOS-resize / pad the source to a 16-aligned canvas.
-      2. For each 16x16 tile: luma-weighted k-means++ -> local 15-
-         colour palette, then luma-weighted Floyd-Steinberg dither
-         against THAT local palette.  This is the high-fidelity step
-         the original pipeline threw away.
-      3. Greedy-MAE-cluster the N per-tile palettes into <= max_banks
-         shared banks (eps-tolerant grouping).
-      4. Smart LOCAL -> BANK pixel-index remap for every tile (Lab-
-         nearest match per palette slot).  Dither pattern is locked
-         in; only colour indices shift to point at the assigned bank.
-      5. The existing single-bank downstream (romtiles / genscreens)
-         takes ONE palette per image, so pick the bank used by the
-         most tiles as the "representative" bank for the whole
-         image.  Other tiles get a second remap pass through that
-         representative bank.  This is strictly better than the
-         previous global-k-means-then-redither approach because
-         (a) the candidate set was already de-noised by per-tile
-         clustering and (b) the dither pattern is preserved through
-         the Lab-nearest remap.
+      1. LANCZOS-resize / pad source to a 16-aligned canvas, then
+         apply the CRT pre-boost (gamma 1.20 + 1.10x contrast) so
+         the rest of the pipeline operates in arcade-luminance space.
 
-    Once `genscreens` learns to emit per-tile palette attributes,
-    drop the step-5 collapse and pass `bank_palettes` / `tile_to_bank`
-    straight through — `extract_tile_data_for_dedup()` already shapes
-    its output that way.
+      2. For each 16x16 tile slot, sample a (16 + 2*context_pad)
+         square centred on the tile and run luma-weighted k-means++
+         over its opaque pixels.  Default context_pad=4 gives a
+         24x24 window per tile with an 8-pixel-strip overlap with
+         every neighbour, so adjacent tiles see shared content and
+         produce palette candidates that align across boundaries
+         (the single biggest cause of visible 16-pixel grid seams
+         in the previous version).
+
+      3. Greedy-MAE-cluster the per-tile palettes into <= max_banks
+         shared banks.  Multi-bank data is kept available via
+         `extract_tile_data_for_dedup()` / `cluster_and_remap_tile_palettes()`
+         for future per-tile-bank packers; the single-bank
+         downstream consumes it via step 4.
+
+      4. Derive ONE representative 15-colour palette by weighted
+         Lab-space k-means++ over the union of per-tile palettes,
+         each bank weighted by its tile count.  Better-informed
+         than naive global k-means because per-tile clustering
+         already de-noised the input set.
+
+      5. Floyd-Steinberg dither the WHOLE image (single pass) against
+         the representative palette using luma-weighted nearest-
+         colour lookup.  A single global pass means error diffuses
+         seamlessly across tile boundaries — no more grid lines
+         from independent per-tile FS runs.
+
+    Multi-bank artefacts are still emitted in `metadata` so a future
+    `genscreens` that supports per-tile palette attributes can use
+    them without re-running the whole pipeline.
 
     Returns
     -------
     indexed   : (H, W) uint16 — 0 = transparent, 1..15 opaque
     palette16 : (16, 3) uint16 — palette[0] sentinel, palette[1..15]
-                are the representative bank's colours
-    metadata  : dict — geometry + the dedup statistics
-                ("n_banks_pre_collapse", "n_banks_post_collapse",
-                 "tile_to_bank_pre_collapse").
+                are the derived representative colours
+    metadata  : dict — geometry + dedup statistics + CRT params
     """
+    from img2neo_crt import apply_crt_tone
+
     img = Image.open(image_path).convert("RGBA")
     canvas, cl, ct, cw, ch = _fit_to_tile_grid(img, target_w, target_h, fit)
     arr = np.array(canvas, dtype=np.uint8)
     canvas_h, canvas_w = arr.shape[:2]
 
+    # --- Step 1: CRT pre-boost (gamma + contrast) ---------------------
+    rgb_f = arr[:, :, :3].astype(np.float32) / 255.0
+    rgb_f = apply_crt_tone(rgb_f, gamma=gamma, contrast=contrast)
+    rgb_corrected = snap_neogeo((rgb_f * 255.0).astype(np.uint8))
+    alpha_full = arr[:, :, 3]
+    opaque_full = alpha_full >= alpha_threshold
+
     tile_cols = canvas_w // TILE_SIZE
     tile_rows = canvas_h // TILE_SIZE
     n_tiles = tile_cols * tile_rows
 
-    # --- Step 1-2: per-tile quantize + local FS dither ----------------
-    tile_indices_local = np.zeros((n_tiles, PIXELS_PER_TILE), dtype=np.uint8)
+    # Pad by context_pad pixels on every side so edge tiles can sample
+    # a full context window without index gymnastics.  Pad mode "edge"
+    # extends the boundary colours into the pad — matches what neighbour
+    # tiles see for interior windows.
+    pad = int(context_pad)
+    padded_rgb = np.pad(rgb_corrected,
+                        ((pad, pad), (pad, pad), (0, 0)), mode="edge")
+    padded_opaque = np.pad(opaque_full,
+                           ((pad, pad), (pad, pad)), mode="edge")
+
+    # --- Step 2: per-tile palette from context windows ----------------
+    # Sample (TILE_SIZE + 2*pad) windows; cluster k=n_colors per window.
+    # No per-tile dither here — the global pass below handles dither.
     tile_palettes = np.zeros((n_tiles, n_colors, 3), dtype=np.uint8)
+    win_size = TILE_SIZE + 2 * pad
     for ty in range(tile_rows):
         for tx in range(tile_cols):
-            tile_rgba = arr[ty * TILE_SIZE:(ty + 1) * TILE_SIZE,
-                            tx * TILE_SIZE:(tx + 1) * TILE_SIZE]
+            py = ty * TILE_SIZE + pad
+            px = tx * TILE_SIZE + pad
+            ctx_rgb = padded_rgb[py - pad:py - pad + win_size,
+                                  px - pad:px - pad + win_size]
+            ctx_opq = padded_opaque[py - pad:py - pad + win_size,
+                                     px - pad:px - pad + win_size]
             ti = ty * tile_cols + tx
-            idx, pal = _quantize_tile(tile_rgba, n_colors)
-            tile_indices_local[ti] = idx
-            tile_palettes[ti] = pal
+            tile_palettes[ti] = _kmeans_palette_from_context(
+                ctx_rgb, ctx_opq, n_colors)
 
-    # --- Step 3-4: greedy bank dedup + LOCAL->BANK remap --------------
-    remapped, bank_palettes, tile_to_bank = cluster_and_remap_tile_palettes(
-        tile_indices_local, tile_palettes,
+    # --- Step 3: greedy MAE bank dedup (kept for future per-bank work)
+    # We don't use the remapped indices here (no per-tile dither to
+    # remap), but the bank palettes + tile-to-bank mapping are
+    # information consumers of extract_tile_data_for_dedup expect.
+    # Reuse `cluster_and_remap_tile_palettes` for the bank palettes
+    # only; throw away the remapped indices (we'll dither globally).
+    dummy_local_indices = np.zeros((n_tiles, PIXELS_PER_TILE),
+                                    dtype=np.uint8)
+    _, bank_palettes, tile_to_bank = cluster_and_remap_tile_palettes(
+        dummy_local_indices, tile_palettes,
         max_banks=max_banks, epsilon=epsilon,
     )
 
@@ -981,32 +1056,19 @@ def convert_screen_via_tile_palette(
     # tile gets remapped through rep_palette via Lab-nearest).
     rep_bank = -1
 
-    final_indices_2d = np.zeros((canvas_h, canvas_w), dtype=np.uint16)
-    rep_lab = rgb_to_lab(rep_palette)
-
-    for ti in range(n_tiles):
-        ty, tx = divmod(ti, tile_cols)
-        y0, x0 = ty * TILE_SIZE, tx * TILE_SIZE
-        tile = remapped[ti].reshape(TILE_SIZE, TILE_SIZE)
-
-        if tile_to_bank[ti] == rep_bank:
-            # Already references the representative bank — straight copy.
-            final_indices_2d[y0:y0 + TILE_SIZE,
-                             x0:x0 + TILE_SIZE] = tile.astype(np.uint16)
-            continue
-
-        # Lab-nearest remap from the assigned bank's palette into the
-        # representative bank's palette.  No re-dither.
-        src_bank = bank_palettes[int(tile_to_bank[ti])]
-        src_lab = rgb_to_lab(src_bank)
-        d2 = np.sum((src_lab[:, None, :] - rep_lab[None, :, :]) ** 2,
-                    axis=2)
-        bank_to_rep = d2.argmin(axis=1).astype(np.uint8)   # (15,)
-        opaque = tile != 0
-        out_tile = np.zeros_like(tile)
-        out_tile[opaque] = bank_to_rep[tile[opaque] - 1] + 1
-        final_indices_2d[y0:y0 + TILE_SIZE,
-                         x0:x0 + TILE_SIZE] = out_tile.astype(np.uint16)
+    # --- Step 5: single image-wide Floyd-Steinberg pass ---------------
+    # One global FS pass means dither error diffuses smoothly across
+    # tile boundaries.  This is the second half of the seam fix — the
+    # context window aligned the palette choices in step 2, and now
+    # the global dither aligns the per-pixel patterns too.
+    if opaque_full.any():
+        raw_idx = _floyd_steinberg_global(rgb_corrected, rep_palette,
+                                            opaque_full)
+        final_indices_2d = np.where(opaque_full,
+                                     (raw_idx + 1).astype(np.uint16),
+                                     np.uint16(0))
+    else:
+        final_indices_2d = np.zeros((canvas_h, canvas_w), dtype=np.uint16)
 
     palette16 = np.zeros((16, 3), dtype=np.uint16)
     palette16[1:1 + n_colors] = rep_palette.astype(np.uint16)
@@ -1024,11 +1086,15 @@ def convert_screen_via_tile_palette(
         "tile_cols":      int(tile_cols),
         "tile_rows":      int(tile_rows),
         "n_tiles":        int(n_tiles),
-        "pipeline":       "tile_local_dedup_remap_weighted",
+        "pipeline":       "tile_context_global_fs",
         "n_banks_pre_collapse":  int(n_banks_pre),
         "n_banks_used":          int(nonzero_bank_mask.sum()),
         "max_banks_budget":      int(max_banks),
         "epsilon_mae":           float(epsilon),
+        "context_pad":           int(pad),
+        "context_window":        int(win_size),
+        "gamma":                 float(gamma),
+        "contrast":              float(contrast),
     }
     return final_indices_2d, palette16, metadata
 
