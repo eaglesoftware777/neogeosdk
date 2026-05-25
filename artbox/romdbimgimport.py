@@ -49,17 +49,33 @@ except ImportError:
     HAS_IMG2NEO = False
     alpha_bleed = None
 
-# Opt-in CRT-optimised converter (Lab quantisation + horizontal-biased dither
-# + gamma/contrast pre-boost).  Enabled by exporting ARTBOX_CRT=1 (or via
-# `make art-crt`).  Falls back silently to the legacy
-# nearest-neighbour pipeline if the module fails to import.
-USE_CRT = os.environ.get("ARTBOX_CRT", "").strip() in ("1", "true", "yes", "on")
+# Default screen path: tile-local pipeline (img2neo_tile).  Slices the canvas
+# into 16x16 macroblocks, runs luma-weighted k-means++ + Floyd-Steinberg on
+# each, then derives the global 15-colour palette from the union of tile
+# palettes (weighted by usage frequency).  Produces noticeably better
+# gradient + HUD-text fidelity than naive global k-means while still emitting
+# a single 15-colour palette compatible with the existing single-bank
+# downstream (romtiles + genscreens).
+#
+# Opt-out escape hatches (export one to override the default):
+#   ARTBOX_CRT=1     -> CRT-tuned pipeline (Lab kmeans + horizontal-biased
+#                        FS + gamma/contrast pre-boost; img2neo_crt)
+#   ARTBOX_LEGACY=1  -> original nearest-neighbour-against-global-palette
+#                        path; kept for diffing / sanity-check builds
+USE_CRT    = os.environ.get("ARTBOX_CRT",    "").strip() in ("1", "true", "yes", "on")
+USE_LEGACY = os.environ.get("ARTBOX_LEGACY", "").strip() in ("1", "true", "yes", "on")
 try:
     from img2neo_crt import convert_screen_to_indexed as crt_convert_screen
     HAS_CRT = True
 except ImportError:
     HAS_CRT = False
     crt_convert_screen = None
+try:
+    from img2neo_tile import convert_screen_via_tile_palette as tile_convert_screen
+    HAS_TILE = True
+except ImportError:
+    HAS_TILE = False
+    tile_convert_screen = None
 
 
 def adapt_array(arr):
@@ -278,8 +294,20 @@ def load_screen_asset(spec):
     tw = (spec["target_width"] // 16) * 16
     th = (spec["target_height"] // 16) * 16
 
-    if USE_CRT and HAS_CRT:
-        indexed, palette, meta = crt_convert_screen(
+    # Dispatch: tile-local is default, CRT is the first opt-out,
+    # legacy nearest-neighbour is the last-resort escape.
+    convert_fn = None
+    if USE_LEGACY:
+        convert_fn = None                       # fall through to legacy path
+    elif USE_CRT and HAS_CRT:
+        convert_fn = crt_convert_screen
+    elif HAS_TILE:
+        convert_fn = tile_convert_screen        # default
+    elif HAS_CRT:
+        convert_fn = crt_convert_screen         # fallback if tile import failed
+
+    if convert_fn is not None:
+        indexed, palette, meta = convert_fn(
             spec["path"],
             target_w=tw,
             target_h=th,
