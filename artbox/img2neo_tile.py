@@ -107,7 +107,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Reuse the NeoGeo 5-bit grid snap and Lab conversion from img2neo —
 # keeps the module dependency-free of scikit-learn / scikit-image.
-from img2neo import snap_neogeo, rgb_to_lab
+from img2neo import snap_neogeo, rgb_to_lab, kmeans_palette as _img2neo_kmeans_palette
 
 
 TILE_SIZE = 16
@@ -764,29 +764,34 @@ def _floyd_steinberg_global(rgb: np.ndarray,
                             alpha_mask: np.ndarray) -> np.ndarray:
     """
     Floyd-Steinberg dither a whole image against a single global
-    palette using luminance-weighted nearest-colour lookup.  Same
-    perceptual bias as the per-tile dither — Y dominates index choice,
-    RGB error propagates colour-true.
+    palette using RGB Euclidean nearest-colour lookup.
 
-    Returns (H, W) uint8 of palette indices 0..K-1, with K-1 at
-    transparent pixels (caller masks transparent separately).
+    The palette was DERIVED in CIE-Lab via the context-window
+    k-means in step 2/3 of convert_screen_via_tile_palette, so it
+    already spans hues perceptually — RGB distance against a
+    Lab-derived palette is the standard approach (see
+    img2neo.floyd_steinberg) and avoids the per-pixel rgb_to_lab
+    call that pushed the inner loop from 0.6s to 4s per 320x224
+    screen.  Earlier luma-weighted YCbCr lookup was the buggy
+    middle path that produced the sepia collapse.
+
+    Returns (H, W) uint8 of palette indices 0..K-1; caller masks
+    transparent pixels separately.
     """
     h, w = rgb.shape[:2]
     buf = rgb.astype(np.float32).copy()
     out = np.zeros((h, w), dtype=np.uint8)
-
-    palette_ycc = rgb_to_weighted_ycbcr(palette)
+    palette_f = palette.astype(np.float32)
 
     for y in range(h):
         for x in range(w):
             if not alpha_mask[y, x]:
                 continue
-            current_rgb = np.clip(buf[y, x], 0.0, 255.0)
-            current_ycc = rgb_to_weighted_ycbcr(current_rgb[None, :])[0]
-            d2 = np.sum((palette_ycc - current_ycc) ** 2, axis=1)
+            current = np.clip(buf[y, x], 0.0, 255.0)
+            d2 = np.sum((palette_f - current) ** 2, axis=1)
             best = int(d2.argmin())
             out[y, x] = best
-            err = current_rgb - palette[best].astype(np.float32)
+            err = current - palette_f[best]
             for dy, dx, weight in _FS_KERNEL:
                 ny, nx = y + dy, x + dx
                 if 0 <= ny < h and 0 <= nx < w and alpha_mask[ny, nx]:
@@ -798,16 +803,21 @@ def _kmeans_palette_from_context(context_rgb: np.ndarray,
                                   alpha_mask: np.ndarray | None,
                                   n_colors: int) -> np.ndarray:
     """
-    Run luma-weighted k-means++ over the OPAQUE pixels of a 24x24
-    (or arbitrary) context window and return the (n_colors, 3) uint8
-    NeoGeo-snapped palette.  No dithering — palette derivation only.
+    Run CIE-Lab k-means++ over the OPAQUE pixels of a context window
+    and return the (n_colors, 3) uint8 NeoGeo-snapped palette.  No
+    dithering — palette derivation only.
+
+    Uses Lab distance (L*a*b* perceptually balanced) instead of the
+    earlier luma-weighted YCbCr.  The 4x Y weight in YCbCr collapsed
+    chroma distinctions: blue + grey pixels of the same luma landed
+    in the same cluster, so palettes ended up sepia/grey-heavy.
+    Lab keeps brightness AND hue/chroma weighted naturally
+    (1-unit-L ≈ 1-unit-a* ≈ 1-unit-b* perceptually).
 
     Used by convert_screen_via_tile_palette to sample palette
-    candidates from an overlapping 8-pixel-strip window so adjacent
-    tiles see shared context and produce consistent palette hints.
-    Without this, tiles produce slightly different palettes for the
-    same conceptual region (sky / skin) and the boundary remap shows
-    as a 16-pixel grid of colour steps.
+    candidates from a 24x24 window so adjacent tiles see shared
+    content and produce palette hints that line up across the
+    16-pixel tile boundary.
     """
     if alpha_mask is None:
         opaque_rgb = context_rgb.reshape(-1, 3)
@@ -815,15 +825,16 @@ def _kmeans_palette_from_context(context_rgb: np.ndarray,
         opaque_rgb = context_rgb[alpha_mask]
     if opaque_rgb.size == 0:
         return np.zeros((n_colors, 3), dtype=np.uint8)
-    opaque_ycc = rgb_to_weighted_ycbcr(opaque_rgb)
-    centres_ycc = _kmeans_pp_weighted(opaque_ycc, n_clusters=n_colors)
-
-    centres_unweighted = centres_ycc.copy()
-    centres_unweighted[..., 0] /= LUMA_WEIGHT
-    inv = np.linalg.inv(_M_RGB_YCBCR.astype(np.float64))
-    palette_rgb = centres_unweighted @ inv.T.astype(np.float32)
-    palette_rgb = np.clip(palette_rgb, 0.0, 255.0).astype(np.uint8)
-    return snap_neogeo(palette_rgb)
+    # CIE-Lab feature space — perceptually balanced L*a*b* so cluster
+    # centres respect both brightness AND chroma.  _kmeans_pp_weighted
+    # has explicit uniform-input guards that img2neo.kmeans_palette
+    # lacks (the latter trips a numerical probability-collapse on
+    # small uniform-colour windows like a clear-sky tile).
+    opaque_lab = rgb_to_lab(opaque_rgb)
+    centres_lab = _kmeans_pp_weighted(opaque_lab.astype(np.float32),
+                                        n_clusters=n_colors)
+    from img2neo import lab_to_rgb
+    return snap_neogeo(lab_to_rgb(centres_lab))
 
 
 def convert_screen_via_tile_palette(
