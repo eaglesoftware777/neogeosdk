@@ -333,9 +333,15 @@ art-clean:
 	rm -rf artbox/__pycache__
 
 .PHONY: art
+# Default screen converter is the tile-local pipeline (img2neo_tile.py):
+# per-tile k-means + per-tile Floyd-Steinberg dither + greedy MAE bank
+# dedup + Lab-nearest pixel remap into a representative palette derived
+# from the weighted union of all banks.  Override with `make art-crt`
+# (ARTBOX_CRT=1) or by exporting ARTBOX_LEGACY=1 to fall back to the
+# original nearest-neighbour-against-global-palette path.
 art: game-check
 	$(LOG_CTX)
-	GAME_ID=$(GAME_ID) ./artbox/makeartbox.sh $(GAME)
+	ARTBOX_TILE=1 GAME_ID=$(GAME_ID) ./artbox/makeartbox.sh $(GAME)
 	python3 tools/verify_artbox_palettes.py --root "$(CURDIR)" --game "$(GAME)"
 	rm -f artbox/1c.c1 artbox/2c.c2 artbox/$(GAME_ID)-s1.s1 artbox/assets_manifest.json artbox/map artbox/neo.pal artbox/std.pal artbox/neopal.bin artbox/neorom.db artbox/out.srt artbox/output1.txt artbox/screens.c artbox/sprite_meta.h
 	rm -rf artbox/__pycache__
