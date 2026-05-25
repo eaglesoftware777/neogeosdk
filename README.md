@@ -19,19 +19,18 @@ Neo Geo development SDK for SNK hardware.
 - **HD artbox alt-pipeline** — `artbox/img2neo_hd.py` and
   `artbox/fixtiles_hd.py` add bilateral / CLAHE / unsharp / blue-noise
   dither (alongside the existing pipeline, not replacing it)
-- **Default screen pipeline is now tile-local** — `artbox/img2neo_tile.py`
-  slices the canvas into 16x16 macroblocks, runs luma-weighted k-means++ +
-  Floyd-Steinberg per block, then derives the global 15-colour palette
-  from the weighted union of tile palettes.  Noticeably better gradient
-  + HUD-text fidelity than naive global k-means while still emitting a
-  single 15-colour palette for the existing single-bank downstream.
-  Opt-out: `ARTBOX_CRT=1` for the CRT-tuned pipeline, `ARTBOX_LEGACY=1`
-  for the original nearest-neighbour path.
-- **CRT-optimised artbox pipeline** — `artbox/img2neo_crt.py` does
+- **Default screen pipeline is CRT-tuned** — `artbox/img2neo_crt.py`:
   CIE-Lab k-means palette + horizontal-biased Floyd-Steinberg + gamma
-  1.20 / contrast 1.10 pre-boost for arcade CRT output; opt in via
-  `make art-crt` (Linux) or `make -f MakefileWin32.mak art-crt` (Win32),
-  or by exporting `ARTBOX_CRT=1`
+  1.20 / contrast 1.10 pre-boost for arcade CRT output.  Used by every
+  `make art GAME=...` build on both Linux and Windows.
+- **Tile-local pipeline as opt-in** — `artbox/img2neo_tile.py` slices
+  the canvas into 16x16 macroblocks, runs luma-weighted k-means++ +
+  Floyd-Steinberg per block, then derives a single global palette
+  from the weighted union of tile palettes.  Designed for future
+  per-tile-bank packers; enable with `ARTBOX_TILE=1` for evaluation.
+  Currently underperforms CRT in the single-bank case (the global
+  merge discards the per-tile dither work).
+- `ARTBOX_LEGACY=1` falls back to the original nearest-neighbour path.
 - **Sprite halo fix** — `artbox/img2neo.py` exposes `alpha_bleed()` and
   the sprite path uses it after `fit_sprite_rgba` so anti-aliased
   contours stop baking the source PNG's hidden transparent-pixel RGB
