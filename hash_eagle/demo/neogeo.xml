@@ -31,9 +31,9 @@
             <dataarea name="ymsnd:adpcma" size="0x000000">
                 <rom name="777-v1.v1" offset="0x000000" size="0x000000" crc="None" sha1="None" />
             </dataarea>
-            <dataarea name="sprites" size="0x1000000">
-                <rom loadflag="load16_byte" name="777-c1.c1" offset="0x000000" size="0x800000" crc="209d503c" sha1="a473b686e8e3a8f037f5cd57ca2b7ab1fa5e6e06" />
-                <rom loadflag="load16_byte" name="777-c2.c2" offset="0x000001" size="0x800000" crc="a704ba29" sha1="5d9fe87991c1f6d9d00285487dcd2214142566c3" />
+            <dataarea name="sprites" size="0x000000">
+                <rom loadflag="load16_byte" name="777-c1.c1" offset="0x000000" size="0x000000" crc="None" sha1="None" />
+                <rom loadflag="load16_byte" name="777-c2.c2" offset="0x000001" size="0x000000" crc="None" sha1="None" />
             </dataarea>
         </part>
     </software>

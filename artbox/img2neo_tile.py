@@ -794,17 +794,24 @@ def _floyd_steinberg_global(rgb: np.ndarray,
                             palette: np.ndarray,
                             alpha_mask: np.ndarray) -> np.ndarray:
     """
-    Floyd-Steinberg dither a whole image against a single global
-    palette using RGB Euclidean nearest-colour lookup.
+    Atkinson dither a whole image against a single global palette
+    using RGB Euclidean nearest-colour lookup.  (Function name kept
+    for source-stability; the algorithm is Atkinson, not FS.)
 
-    The palette was DERIVED in CIE-Lab via the context-window
-    k-means in step 2/3 of convert_screen_via_tile_palette, so it
-    already spans hues perceptually — RGB distance against a
-    Lab-derived palette is the standard approach (see
-    img2neo.floyd_steinberg) and avoids the per-pixel rgb_to_lab
-    call that pushed the inner loop from 0.6s to 4s per 320x224
-    screen.  Earlier luma-weighted YCbCr lookup was the buggy
-    middle path that produced the sepia collapse.
+    Bill Atkinson's 1980s dither was designed for very small
+    palettes — exactly our 15-colour-per-tile budget.  Each pixel's
+    quantisation error is split into 8 equal parts; 6 of them go
+    to neighbours (gy,gx+1), (gy,gx+2), (gy+1,gx-1), (gy+1,gx),
+    (gy+1,gx+1), (gy+2,gx) — and 2 are dropped on the floor.  The
+    deliberate 25% bleed-off prevents error build-up that would
+    otherwise overshoot into wrong-colour speckles ("worming") on
+    smooth gradients like skin tones / sky.
+
+    The palette was already DERIVED in CIE-Lab via the context-
+    window k-means, so RGB distance against a Lab-derived palette
+    gives perceptually-correct nearest-colour matches at a
+    fraction of the cost of per-pixel Lab conversion in the inner
+    loop.
 
     Returns (H, W) uint8 of palette indices 0..K-1; caller masks
     transparent pixels separately.
@@ -822,11 +829,14 @@ def _floyd_steinberg_global(rgb: np.ndarray,
             d2 = np.sum((palette_f - current) ** 2, axis=1)
             best = int(d2.argmin())
             out[y, x] = best
-            err = current - palette_f[best]
-            for dy, dx, weight in _FS_KERNEL:
+            err_eighth = (current - palette_f[best]) * 0.125
+            # 6-neighbour Atkinson distribution with alpha skip.
+            for dy, dx in ((0, 1), (0, 2),
+                            (1, -1), (1, 0), (1, 1),
+                            (2, 0)):
                 ny, nx = y + dy, x + dx
                 if 0 <= ny < h and 0 <= nx < w and alpha_mask[ny, nx]:
-                    buf[ny, nx] += err * weight
+                    buf[ny, nx] += err_eighth
     return out
 
 
@@ -1229,11 +1239,13 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
                 ).reshape(15, 3).astype(np.float32)
 
     # ---------------------------------------------------------
-    # PASS 2: GLOBAL SCANLINE DITHER (alpha-aware)
+    # PASS 2: GLOBAL SCANLINE DITHER (alpha-aware, Atkinson)
     # ---------------------------------------------------------
-    # Pad right + bottom by 1 so the FS kernel never indexes past the
-    # screen edge for the final row / column.
-    global_error_canvas = np.pad(rgb_np, ((0, 1), (0, 1), (0, 0)),
+    # Pad right + bottom by 2 so the Atkinson 6-neighbour kernel never
+    # indexes past the canvas for the last two columns / rows (it
+    # writes to gx+1, gx+2, gy+1, gy+2).  FS only needed +1; Atkinson
+    # reaches further.
+    global_error_canvas = np.pad(rgb_np, ((0, 2), (0, 2), (0, 0)),
                                    mode='edge')
     global_indices = np.full((target_h, target_w), 255, dtype=np.uint8)
     # Sentinel 255 = transparent.  Opaque pixels get 0..14, then the
@@ -1287,17 +1299,31 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
             best_idx = int(np.argmin(distances))
             global_indices[gy, gx] = best_idx
 
-            # 0.85 leak-dampener prevents runaway speckle compounding.
+            # ATKINSON DITHERING — replaces Floyd-Steinberg.
+            # FS pushes 100% of the quant error forward; with a 15-
+            # colour palette the accumulated brightness error overshoots
+            # within a few pixels and the algorithm grabs a wildly-off
+            # colour to balance the running average ("worming" / salt-
+            # and-pepper speckle on faces + sky gradients).  Atkinson
+            # distributes 1/8 of the error to each of 6 neighbours
+            # (6 * 1/8 = 75% retained, 25% deliberately dropped).  The
+            # bleed-off keeps error magnitudes low so the wavefront
+            # can't accumulate into panic-mode wrong-colour dots.
+            # No 0.85 leak-dampener — Atkinson's natural 25% drop
+            # already does what the dampener was approximating.
+            #
             # Error is the difference between the ERROR-LADEN px and
-            # the chosen palette entry — never between match_px (which
-            # would silently delete energy at trap pixels).
-            quant_error = (px - active_palette[best_idx]) * 0.85
-
-            global_error_canvas[gy, gx + 1, :] += quant_error * (7.0 / 16.0)
+            # the chosen palette entry — Teflon Routing still works
+            # (match_px snaps lookup at trap pixels, but the wave
+            # continues forward through them).
+            err_eighth = (px - active_palette[best_idx]) * 0.125
+            global_error_canvas[gy,     gx + 1, :] += err_eighth
+            global_error_canvas[gy,     gx + 2, :] += err_eighth
             if gx > 0:
-                global_error_canvas[gy + 1, gx - 1, :] += quant_error * (3.0 / 16.0)
-            global_error_canvas[gy + 1, gx,     :] += quant_error * (5.0 / 16.0)
-            global_error_canvas[gy + 1, gx + 1, :] += quant_error * (1.0 / 16.0)
+                global_error_canvas[gy + 1, gx - 1, :] += err_eighth
+            global_error_canvas[gy + 1, gx,     :] += err_eighth
+            global_error_canvas[gy + 1, gx + 1, :] += err_eighth
+            global_error_canvas[gy + 2, gx,     :] += err_eighth
 
     # ---------------------------------------------------------
     # PASS 3: SLICE BACK TO NEO GEO HARDWARE BLOCKS
@@ -1337,7 +1363,7 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
 
 _VIVID_CACHE_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), ".cache", "vivid")
-_VIVID_CACHE_VERSION = "v7-unified-asset-pipeline"
+_VIVID_CACHE_VERSION = "v8-atkinson-dither"
 
 
 def _vivid_cache_key(image_path: str, target_w: int, target_h: int,
