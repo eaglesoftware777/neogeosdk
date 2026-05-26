@@ -794,18 +794,15 @@ def _floyd_steinberg_global(rgb: np.ndarray,
                             palette: np.ndarray,
                             alpha_mask: np.ndarray) -> np.ndarray:
     """
-    Atkinson dither a whole image against a single global palette
-    using RGB Euclidean nearest-colour lookup.  (Function name kept
-    for source-stability; the algorithm is Atkinson, not FS.)
-
-    Bill Atkinson's 1980s dither was designed for very small
-    palettes — exactly our 15-colour-per-tile budget.  Each pixel's
-    quantisation error is split into 8 equal parts; 6 of them go
-    to neighbours (gy,gx+1), (gy,gx+2), (gy+1,gx-1), (gy+1,gx),
-    (gy+1,gx+1), (gy+2,gx) — and 2 are dropped on the floor.  The
-    deliberate 25% bleed-off prevents error build-up that would
-    otherwise overshoot into wrong-colour speckles ("worming") on
-    smooth gradients like skin tones / sky.
+    Variance-gated dither — the "Photocopy" approach.  At every
+    pixel we compute local turbulence (sum of abs RGB diffs with
+    left + top neighbour).  Smooth surfaces (variance < 15) and
+    luma extremes (>240 / <15) snap straight to the nearest palette
+    entry from the PRISTINE source value: no upstream error
+    contamination, no new error propagated.  Detail regions get
+    the classic Floyd-Steinberg 7/3/5/1 distribution with a 0.75
+    leak-dampener (75% retention = same total energy as Atkinson,
+    tighter 4-neighbour diamond preserves high-frequency texture).
 
     The palette was already DERIVED in CIE-Lab via the context-
     window k-means, so RGB distance against a Lab-derived palette
@@ -813,11 +810,13 @@ def _floyd_steinberg_global(rgb: np.ndarray,
     fraction of the cost of per-pixel Lab conversion in the inner
     loop.
 
-    Returns (H, W) uint8 of palette indices 0..K-1; caller masks
-    transparent pixels separately.
+    Function name retained for source-stability; the algorithm is
+    the variance-gated FS hybrid.  Returns (H, W) uint8 of palette
+    indices 0..K-1; caller masks transparent pixels separately.
     """
     h, w = rgb.shape[:2]
     buf = rgb.astype(np.float32).copy()
+    src = rgb.astype(np.float32)
     out = np.zeros((h, w), dtype=np.uint8)
     palette_f = palette.astype(np.float32)
 
@@ -825,18 +824,41 @@ def _floyd_steinberg_global(rgb: np.ndarray,
         for x in range(w):
             if not alpha_mask[y, x]:
                 continue
-            current = np.clip(buf[y, x], 0.0, 255.0)
-            d2 = np.sum((palette_f - current) ** 2, axis=1)
+            current_err = np.clip(buf[y, x], 0.0, 255.0)
+            orig = src[y, x]
+            orig_luma = (orig[0] * 0.299 +
+                          orig[1] * 0.587 +
+                          orig[2] * 0.114)
+
+            variance = 0.0
+            if x > 0 and y > 0:
+                left = src[y, x - 1]
+                top = src[y - 1, x]
+                variance = (abs(orig[0] - left[0]) +
+                             abs(orig[1] - left[1]) +
+                             abs(orig[2] - left[2]) +
+                             abs(orig[0] - top[0]) +
+                             abs(orig[1] - top[1]) +
+                             abs(orig[2] - top[2]))
+
+            smooth_mode = (variance < 15.0
+                            or orig_luma > 240.0
+                            or orig_luma < 15.0)
+            match_px = orig if smooth_mode else current_err
+
+            d2 = np.sum((palette_f - match_px) ** 2, axis=1)
             best = int(d2.argmin())
             out[y, x] = best
-            err_eighth = (current - palette_f[best]) * 0.125
-            # 6-neighbour Atkinson distribution with alpha skip.
-            for dy, dx in ((0, 1), (0, 2),
-                            (1, -1), (1, 0), (1, 1),
-                            (2, 0)):
-                ny, nx = y + dy, x + dx
-                if 0 <= ny < h and 0 <= nx < w and alpha_mask[ny, nx]:
-                    buf[ny, nx] += err_eighth
+
+            if not smooth_mode:
+                err = (current_err - palette_f[best]) * 0.75
+                for dy, dx, wgt in ((0, 1, 7.0 / 16.0),
+                                      (1, -1, 3.0 / 16.0),
+                                      (1, 0, 5.0 / 16.0),
+                                      (1, 1, 1.0 / 16.0)):
+                    ny, nx = y + dy, x + dx
+                    if 0 <= ny < h and 0 <= nx < w and alpha_mask[ny, nx]:
+                        buf[ny, nx] += err * wgt
     return out
 
 
@@ -1265,65 +1287,65 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
             tx_idx = gx // 16
             active_palette = local_luts[(ty_idx, tx_idx)]
 
-            # Teflon Routing for UI + line art.
-            # Separate the colour-MATCHING pixel from the error-CARRYING
-            # pixel.  Earlier "zero the outgoing error" trap broke the
-            # Floyd-Steinberg wavefront everywhere line art was drawn:
-            # the wave couldn't cross 16x16 tile boundaries, so per-tile
-            # palette seams reappeared.
+            # PHOTOCOPY VARIANCE GATE + TEFLON ROUTING.
             #
-            # Routing:
-            #   - When the ORIGINAL source pixel is near-pure-white
-            #     (luma > 240) or near-pure-black (luma < 15) — bubble
-            #     fills, text glyphs, panel outlines — the nearest-
-            #     palette lookup uses the pristine source RGB so the
-            #     pixel snaps to the actual white/black palette entry
-            #     instead of absorbing the upstream FS bleed.
-            #   - The quant_error is ALWAYS computed against the
-            #     error-laden `px` (the global-canvas value).  This
-            #     keeps the FS wave's mathematical energy intact: the
-            #     bubble/line acts as Teflon — the wave flows through
-            #     uninterrupted, bouncing the accumulated error forward
-            #     to the next pixel where it belongs.
+            # Compute local turbulence from the ORIGINAL source (not
+            # the error-laden canvas) as the sum of absolute RGB diffs
+            # with the left + top neighbours.  Smooth gradients (sky,
+            # skin, large flat fills) have variance ≈ 0; high-detail
+            # regions (textures, hair, line art) shoot well past 15.
+            #
+            # Smooth mode (variance < 15 OR pure-white / pure-black
+            # luma trap):
+            #   - match_px = pristine source RGB (ignore upstream
+            #     error → no inherited noise bleed)
+            #   - apply_dither = False (don't propagate new error →
+            #     smooth surfaces stay pure, no compounding speckle)
+            #
+            # Detail mode (everything else):
+            #   - match_px = error-laden canvas value
+            #   - apply_dither = True (Floyd-Steinberg with 0.75
+            #     dampener; equivalent to Atkinson's 25% retention
+            #     drop, distributed via the classic 4-neighbour
+            #     7/3/5/1 diamond for tighter texture preservation)
             px = np.clip(global_error_canvas[gy, gx, :], 0.0, 255.0)
             orig_px = rgb_np[gy, gx]
             orig_luma = (orig_px[0] * 0.299
                           + orig_px[1] * 0.587
                           + orig_px[2] * 0.114)
-            if orig_luma > 240.0 or orig_luma < 15.0:
-                match_px = np.clip(orig_px, 0.0, 255.0)
-            else:
-                match_px = px
+
+            variance = 0.0
+            if gx > 0 and gy > 0:
+                left = rgb_np[gy, gx - 1]
+                top = rgb_np[gy - 1, gx]
+                variance = (abs(orig_px[0] - left[0]) +
+                             abs(orig_px[1] - left[1]) +
+                             abs(orig_px[2] - left[2]) +
+                             abs(orig_px[0] - top[0]) +
+                             abs(orig_px[1] - top[1]) +
+                             abs(orig_px[2] - top[2]))
+
+            smooth_mode = (variance < 15.0
+                            or orig_luma > 240.0
+                            or orig_luma < 15.0)
+            match_px = np.clip(orig_px, 0.0, 255.0) if smooth_mode else px
 
             distances = np.sum((active_palette - match_px) ** 2, axis=1)
             best_idx = int(np.argmin(distances))
             global_indices[gy, gx] = best_idx
 
-            # ATKINSON DITHERING — replaces Floyd-Steinberg.
-            # FS pushes 100% of the quant error forward; with a 15-
-            # colour palette the accumulated brightness error overshoots
-            # within a few pixels and the algorithm grabs a wildly-off
-            # colour to balance the running average ("worming" / salt-
-            # and-pepper speckle on faces + sky gradients).  Atkinson
-            # distributes 1/8 of the error to each of 6 neighbours
-            # (6 * 1/8 = 75% retained, 25% deliberately dropped).  The
-            # bleed-off keeps error magnitudes low so the wavefront
-            # can't accumulate into panic-mode wrong-colour dots.
-            # No 0.85 leak-dampener — Atkinson's natural 25% drop
-            # already does what the dampener was approximating.
-            #
-            # Error is the difference between the ERROR-LADEN px and
-            # the chosen palette entry — Teflon Routing still works
-            # (match_px snaps lookup at trap pixels, but the wave
-            # continues forward through them).
-            err_eighth = (px - active_palette[best_idx]) * 0.125
-            global_error_canvas[gy,     gx + 1, :] += err_eighth
-            global_error_canvas[gy,     gx + 2, :] += err_eighth
-            if gx > 0:
-                global_error_canvas[gy + 1, gx - 1, :] += err_eighth
-            global_error_canvas[gy + 1, gx,     :] += err_eighth
-            global_error_canvas[gy + 1, gx + 1, :] += err_eighth
-            global_error_canvas[gy + 2, gx,     :] += err_eighth
+            if not smooth_mode:
+                # Floyd-Steinberg 7/3/5/1 with 0.75 leak-dampener.
+                # 75% retention is the same total energy as Atkinson
+                # but the 4-neighbour diamond keeps texture tighter
+                # for detail regions (smooth regions never reach this
+                # branch — they snap clean above).
+                quant_error = (px - active_palette[best_idx]) * 0.75
+                global_error_canvas[gy, gx + 1, :] += quant_error * (7.0 / 16.0)
+                if gx > 0:
+                    global_error_canvas[gy + 1, gx - 1, :] += quant_error * (3.0 / 16.0)
+                global_error_canvas[gy + 1, gx,     :] += quant_error * (5.0 / 16.0)
+                global_error_canvas[gy + 1, gx + 1, :] += quant_error * (1.0 / 16.0)
 
     # ---------------------------------------------------------
     # PASS 3: SLICE BACK TO NEO GEO HARDWARE BLOCKS
@@ -1363,7 +1385,7 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
 
 _VIVID_CACHE_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), ".cache", "vivid")
-_VIVID_CACHE_VERSION = "v8-atkinson-dither"
+_VIVID_CACHE_VERSION = "v9-photocopy-variance-gate"
 
 
 def _vivid_cache_key(image_path: str, target_w: int, target_h: int,

@@ -22,18 +22,18 @@
             <dataarea name="maincpu" width="16" endianness="big" size="0x100000">
                 <rom loadflag="load16_word_swap" name="777-p1.p1" offset="0x000000" size="0x080000" crc="f4ee7a7f" sha1="f72d265b8b955699669f904f038b512ade3ddc83" />
             </dataarea>
-            <dataarea name="fixed" size="0x000000">
-                <rom offset="0x000000" size="0x000000" name="777-s1.s1" crc="None" sha1="None" />
+            <dataarea name="fixed" size="0x020000">
+                <rom offset="0x000000" size="0x020000" name="777-s1.s1" crc="edbb7d8e" sha1="dc95dec36e292fcc6cb877010330bddbbe5d8c44" />
             </dataarea>
-            <dataarea name="audiocpu" size="0x000000">
-                <rom offset="0x000000" size="0x000000" name="777-m1.m1" crc="None" sha1="None" />
+            <dataarea name="audiocpu" size="0x020000">
+                <rom offset="0x000000" size="0x020000" name="777-m1.m1" crc="d0018617" sha1="dd8ca2ab301a93900feb51abe1007cc6c2499dd1" />
             </dataarea>
-            <dataarea name="ymsnd:adpcma" size="0x000000">
-                <rom name="777-v1.v1" offset="0x000000" size="0x000000" crc="None" sha1="None" />
+            <dataarea name="ymsnd:adpcma" size="0x38b200">
+                <rom name="777-v1.v1" offset="0x000000" size="0x38b200" crc="58d64856" sha1="e0584094aac575587dd60c3a6d31bd738936c0c7" />
             </dataarea>
-            <dataarea name="sprites" size="0x000000">
-                <rom loadflag="load16_byte" name="777-c1.c1" offset="0x000000" size="0x000000" crc="None" sha1="None" />
-                <rom loadflag="load16_byte" name="777-c2.c2" offset="0x000001" size="0x000000" crc="None" sha1="None" />
+            <dataarea name="sprites" size="0x1000000">
+                <rom loadflag="load16_byte" name="777-c1.c1" offset="0x000000" size="0x800000" crc="28a096a2" sha1="f6230a50a7cf5efb1e19216fc4f9cc06687900f9" />
+                <rom loadflag="load16_byte" name="777-c2.c2" offset="0x000001" size="0x800000" crc="4a891285" sha1="7f42b97ea9e90ad9b2abac6eedf513c46cf00811" />
             </dataarea>
         </part>
     </software>
