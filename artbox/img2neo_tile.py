@@ -799,6 +799,229 @@ def _floyd_steinberg_global(rgb: np.ndarray,
     return out
 
 
+# ---------------------------------------------------------------------------
+# Consolidated "vivid" pipeline — per-tile CIE-Lab K-Means clustering
+# + per-tile RGB-Euclidean Floyd-Steinberg
+# ---------------------------------------------------------------------------
+#
+# Per the user's specified architecture.  Two-step solution:
+#   STEP 1: Convert each 16x16 tile to CIE-Lab and run k-means++ with
+#           uniform-input guards.  Perceptually-balanced Lab clustering
+#           avoids the luma-weighted YCbCr "sepia collapse" bug.
+#   STEP 2: Convert the resulting 15-colour palette back to RGB and dither
+#           the tile with a fast RGB-Euclidean Floyd-Steinberg loop.
+#
+# The downstream adapter `convert_screen_via_vivid_pipeline` collapses
+# the per-tile output into the single-bank (indexed, palette16, meta)
+# shape that `romdbimgimport.load_screen_asset` consumes.
+
+def _kmeans_pp_weighted_local(data: np.ndarray,
+                               k: int,
+                               max_iters: int = 20,
+                               rng_seed: int = 0) -> np.ndarray:
+    """
+    K-Means++ initialisation and Lloyd's clustering with a uniform-input
+    guard.  Operates on (N, 3) float features in any colour space
+    (caller decides — Lab for the vivid pipeline).  Returns (k, 3)
+    cluster centres in the same feature space.
+
+    Uniform-input guard prevents the numerical-probability collapse
+    that crashes the standard implementation on flat colour zones
+    (clear-sky tiles, blank fills): if the input's max - min spread
+    is below 1e-5 across all axes, every centre is set to the input's
+    single colour.
+    """
+    n = data.shape[0]
+    if n == 0:
+        return np.zeros((k, 3), dtype=np.float32)
+    if float(np.max(data) - np.min(data)) < 1e-5:
+        return np.repeat(data[0:1], k, axis=0).astype(np.float32)
+    if n <= k:
+        out = np.zeros((k, 3), dtype=np.float32)
+        out[:n] = data
+        out[n:] = data[-1]
+        return out
+
+    rng = np.random.default_rng(rng_seed)
+    centres = np.empty((k, 3), dtype=np.float32)
+    centres[0] = data[rng.integers(n)]
+    closest_d2 = np.sum((data - centres[0]) ** 2, axis=1)
+    for i in range(1, k):
+        total = closest_d2.sum()
+        if total <= 1e-12:
+            centres[i] = data[rng.integers(n)]
+        else:
+            probs = closest_d2 / total
+            centres[i] = data[rng.choice(n, p=probs)]
+        new_d2 = np.sum((data - centres[i]) ** 2, axis=1)
+        closest_d2 = np.minimum(closest_d2, new_d2)
+
+    for _ in range(max_iters):
+        d2 = np.sum((data[:, None, :] - centres[None, :, :]) ** 2, axis=2)
+        labels = d2.argmin(axis=1)
+        moved = False
+        new_centres = centres.copy()
+        for j in range(k):
+            mask = labels == j
+            if mask.any():
+                mean = data[mask].mean(axis=0)
+                if np.any(np.abs(mean - centres[j]) > 1e-3):
+                    moved = True
+                new_centres[j] = mean
+        centres = new_centres
+        if not moved:
+            break
+    return centres
+
+
+def process_vivid_artbox_pipeline(image_path,
+                                   target_w: int = 320,
+                                   target_h: int = 224
+                                   ) -> tuple[list, list]:
+    """
+    Per the user's specified architecture: per-tile CIE-Lab K-Means
+    palette generation + per-tile RGB-Euclidean Floyd-Steinberg loop.
+
+    Returns
+    -------
+    ready_tiles : list of 256-int lists, one per tile, values in 1..15
+                  (Neo Geo +1 transparency-bypass shift already applied).
+    final_palettes : list of 45-int lists, one per tile, holding the
+                     15 RGB palette colours flat (R,G,B,R,G,B,...).
+    """
+    src = Image.open(image_path).convert("RGB")
+    src = src.resize((target_w, target_h), Image.Resampling.LANCZOS)
+    src_np = np.array(src, dtype=np.float32)
+
+    ready_tiles = []
+    final_palettes = []
+
+    for y in range(0, target_h, 16):
+        for x in range(0, target_w, 16):
+            tile_rgb = src_np[y:y + 16, x:x + 16]
+
+            # STEP 1: per-tile CIE-Lab k-means++ palette generation.
+            tile_pil = Image.fromarray(tile_rgb.astype(np.uint8))
+            tile_lab = np.array(
+                tile_pil.convert("LAB"), dtype=np.float32
+            ).reshape(-1, 3)
+            lab_centres = _kmeans_pp_weighted_local(tile_lab, 15)
+
+            # Lab -> RGB via PIL ICC so the dither loop sees displayable
+            # RGB values for nearest-colour lookup.
+            palette_img = Image.fromarray(
+                lab_centres.reshape(1, 15, 3).astype(np.uint8), mode="LAB"
+            )
+            rgb_palette = np.array(
+                palette_img.convert("RGB")
+            ).reshape(15, 3).astype(np.float32)
+
+            # STEP 2: per-tile RGB-Euclidean Floyd-Steinberg dither.
+            output_indices = np.zeros((16, 16), dtype=np.uint8)
+            error_buffer = np.zeros((18, 18, 3), dtype=np.float32)
+            error_buffer[1:17, 1:17, :] = tile_rgb.copy()
+            for ty in range(16):
+                for tx in range(16):
+                    px = error_buffer[ty + 1, tx + 1, :]
+                    distances = np.sum((rgb_palette - px) ** 2, axis=1)
+                    best_idx = int(np.argmin(distances))
+                    output_indices[ty, tx] = best_idx
+                    quant_error = px - rgb_palette[best_idx]
+                    error_buffer[ty + 1, tx + 2, :] += quant_error * (7.0 / 16.0)
+                    error_buffer[ty + 2, tx,     :] += quant_error * (3.0 / 16.0)
+                    error_buffer[ty + 2, tx + 1, :] += quant_error * (5.0 / 16.0)
+                    error_buffer[ty + 2, tx + 2, :] += quant_error * (1.0 / 16.0)
+
+            hardware_tile = output_indices + 1
+            ready_tiles.append(hardware_tile.flatten().tolist())
+            final_palettes.append(rgb_palette.astype(np.uint8).flatten().tolist())
+
+    return ready_tiles, final_palettes
+
+
+def convert_screen_via_vivid_pipeline(
+        image_path,
+        target_w: int = 320,
+        target_h: int = 224,
+        fit: str = "contain",
+        anchor: str = "center",
+        n_colors: int = COLORS_PER_TILE,
+        **kwargs,
+        ) -> tuple[np.ndarray, np.ndarray, dict]:
+    """
+    Adapter that runs `process_vivid_artbox_pipeline` and shapes its
+    per-tile output into the (indexed_uint16, palette16_uint16,
+    metadata) contract required by `romdbimgimport.load_screen_asset`.
+
+    Pipeline:
+      1. process_vivid_artbox_pipeline -> per-tile indices + palettes.
+      2. Reconstruct a per-pixel RGB canvas from those per-tile
+         outputs (so colour information from each tile's local
+         palette survives into the global pass).
+      3. Derive ONE 15-colour global palette via Lab-space k-means++
+         over the union of every per-tile palette's colours.
+      4. Re-quantise the reconstructed canvas against the global
+         palette with the same RGB-Euclidean Floyd-Steinberg used in
+         the per-tile loop (consistent dither character).
+    """
+    target_w = (target_w // 16) * 16
+    target_h = (target_h // 16) * 16
+
+    ready_tiles, final_palettes = process_vivid_artbox_pipeline(
+        image_path, target_w, target_h)
+
+    tile_cols = target_w // 16
+    tile_rows = target_h // 16
+    n_tiles = len(ready_tiles)
+
+    # 2. Reconstruct the per-pixel RGB canvas.
+    canvas_rgb = np.zeros((target_h, target_w, 3), dtype=np.uint8)
+    for ti in range(n_tiles):
+        ty, tx = divmod(ti, tile_cols)
+        y0, x0 = ty * 16, tx * 16
+        indices_u8 = np.array(ready_tiles[ti], dtype=np.uint8).reshape(16, 16)
+        palette_u8 = np.array(final_palettes[ti], dtype=np.uint8).reshape(15, 3)
+        idx_local = (indices_u8 - 1).clip(0, 14)
+        canvas_rgb[y0:y0 + 16, x0:x0 + 16] = palette_u8[idx_local]
+
+    # 3. Single global palette from the union of per-tile palettes.
+    all_pal_rgb = np.concatenate([
+        np.array(p, dtype=np.uint8).reshape(15, 3) for p in final_palettes
+    ], axis=0)
+    nonzero = all_pal_rgb.sum(axis=1) > 0
+    candidates = all_pal_rgb[nonzero] if nonzero.any() else all_pal_rgb
+    candidates = snap_neogeo(candidates)
+    cand_lab = rgb_to_lab(candidates).astype(np.float32)
+    global_centres_lab = _kmeans_pp_weighted_local(cand_lab, n_colors)
+    from img2neo import lab_to_rgb
+    global_palette = snap_neogeo(lab_to_rgb(global_centres_lab))
+
+    # 4. Global RGB-Euclidean Floyd-Steinberg dither.
+    alpha_mask = np.ones((target_h, target_w), dtype=bool)
+    raw_idx = _floyd_steinberg_global(canvas_rgb, global_palette, alpha_mask)
+    indexed = (raw_idx + 1).astype(np.uint16)
+
+    palette16 = np.zeros((16, 3), dtype=np.uint16)
+    palette16[1:1 + n_colors] = global_palette.astype(np.uint16)
+
+    metadata = {
+        "source_width":   int(target_w),
+        "source_height":  int(target_h),
+        "canvas_width":   int(target_w),
+        "canvas_height":  int(target_h),
+        "content_left":   0,
+        "content_top":    0,
+        "content_width":  int(target_w),
+        "content_height": int(target_h),
+        "n_colors":       int(n_colors),
+        "tile_cols":      int(tile_cols),
+        "tile_rows":      int(tile_rows),
+        "n_tiles":        int(n_tiles),
+        "pipeline":       "vivid_pertile_lab_kmeans",
+    }
+    return indexed, palette16, metadata
+
+
 def _kmeans_palette_from_context(context_rgb: np.ndarray,
                                   alpha_mask: np.ndarray | None,
                                   n_colors: int) -> np.ndarray:
