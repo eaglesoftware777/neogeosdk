@@ -1080,39 +1080,45 @@ def execute_final_vivid_pipeline(image_path,
             tx_idx = gx // 16
             active_palette = local_luts[(ty_idx, tx_idx)]
 
-            # UI / Luma Trap: when the ORIGINAL source pixel is
-            # effectively pure white (luma > 240) or pure black
-            # (luma < 15) — speech-bubble fills, hard text edges,
-            # comic outlines — bypass the global error canvas and
-            # use the source RGB directly for the nearest-colour
-            # lookup.  Without this, accumulated upstream FS error
-            # (e.g. a sky-blue wavefront ending at a bubble border)
-            # contaminates the lookup and the pure-white bubble
-            # gets quantised to a light-grey palette index.
+            # Teflon Routing for UI + line art.
+            # Separate the colour-MATCHING pixel from the error-CARRYING
+            # pixel.  Earlier "zero the outgoing error" trap broke the
+            # Floyd-Steinberg wavefront everywhere line art was drawn:
+            # the wave couldn't cross 16x16 tile boundaries, so per-tile
+            # palette seams reappeared.
+            #
+            # Routing:
+            #   - When the ORIGINAL source pixel is near-pure-white
+            #     (luma > 240) or near-pure-black (luma < 15) — bubble
+            #     fills, text glyphs, panel outlines — the nearest-
+            #     palette lookup uses the pristine source RGB so the
+            #     pixel snaps to the actual white/black palette entry
+            #     instead of absorbing the upstream FS bleed.
+            #   - The quant_error is ALWAYS computed against the
+            #     error-laden `px` (the global-canvas value).  This
+            #     keeps the FS wave's mathematical energy intact: the
+            #     bubble/line acts as Teflon — the wave flows through
+            #     uninterrupted, bouncing the accumulated error forward
+            #     to the next pixel where it belongs.
+            px = np.clip(global_error_canvas[gy, gx, :], 0.0, 255.0)
             orig_px = rgb_np[gy, gx]
             orig_luma = (orig_px[0] * 0.299
                           + orig_px[1] * 0.587
                           + orig_px[2] * 0.114)
-            is_trap_pixel = orig_luma > 240.0 or orig_luma < 15.0
-
-            if is_trap_pixel:
-                # Absorb incoming error — look up against the original.
-                px = np.clip(orig_px, 0.0, 255.0)
+            if orig_luma > 240.0 or orig_luma < 15.0:
+                match_px = np.clip(orig_px, 0.0, 255.0)
             else:
-                px = np.clip(global_error_canvas[gy, gx, :], 0.0, 255.0)
+                match_px = px
 
-            distances = np.sum((active_palette - px) ** 2, axis=1)
+            distances = np.sum((active_palette - match_px) ** 2, axis=1)
             best_idx = int(np.argmin(distances))
             global_indices[gy, gx] = best_idx
 
-            if is_trap_pixel:
-                # Stop pushing new error forward — bubble fills and
-                # text edges no longer seed the dither downstream.
-                quant_error = np.zeros(3, dtype=np.float32)
-            else:
-                # 0.85 leak-dampener prevents runaway speckle
-                # compounding without a brittle threshold-gate cut.
-                quant_error = (px - active_palette[best_idx]) * 0.85
+            # 0.85 leak-dampener prevents runaway speckle compounding.
+            # Error is the difference between the ERROR-LADEN px and
+            # the chosen palette entry — never between match_px (which
+            # would silently delete energy at trap pixels).
+            quant_error = (px - active_palette[best_idx]) * 0.85
 
             global_error_canvas[gy, gx + 1, :] += quant_error * (7.0 / 16.0)
             if gx > 0:
@@ -1153,7 +1159,7 @@ def execute_final_vivid_pipeline(image_path,
 
 _VIVID_CACHE_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), ".cache", "vivid")
-_VIVID_CACHE_VERSION = "v5-scanline-alpha-lumatrap"
+_VIVID_CACHE_VERSION = "v6-scanline-alpha-teflon"
 
 
 def _vivid_cache_key(image_path: str, target_w: int, target_h: int,
