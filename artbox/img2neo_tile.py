@@ -971,54 +971,83 @@ def execute_final_vivid_pipeline(image_path,
     """
     Decoupled Spatial Processing pipeline — corrects the Z-Order
     Traversal Bug that produced deep-fried high-frequency noise in
-    earlier per-tile-loop iterations.
+    earlier per-tile-loop iterations, with full alpha-channel
+    preservation so sprites with transparent regions don't render
+    as solid coloured blocks.
 
       Pass 1 — Pre-calculate all per-tile CIE-Lab palettes.  Each
-               16x16 tile is converted to PIL "LAB", k-means++
-               clustered (uniform-input guard at spread < 1e-4,
+               16x16 tile is converted to PIL "LAB"; only OPAQUE
+               pixels feed the k-means clusterer (alpha >= 128
+               threshold).  Fully-transparent tiles emit a zero
+               palette.  Uniform-input guard at spread < 1e-4;
                sklearn MiniBatchKMeans where available, local
-               numpy k-means++ fallback otherwise).  Palettes are
-               stashed in local_luts[(ty_idx, tx_idx)].
+               numpy k-means++ fallback otherwise.
 
-      Pass 2 — GLOBAL SCANLINE Floyd-Steinberg.  A single continuous
-               (gy, gx) loop sweeps the entire image left-to-right,
-               top-to-bottom.  At each pixel the active palette is
-               hot-swapped via (gy // 16, gx // 16) so per-tile
-               palettes are preserved while the FS wavefront is
-               unbroken — error diffuses pixel-by-pixel into the
-               canvas-sized global_error_canvas exactly as the
-               textbook algorithm requires.  0.85 leak-dampener
-               on the propagated error prevents extreme-value
-               compounding without the buggy threshold-gate from
-               the previous version.
+      Pass 2 — GLOBAL SCANLINE Floyd-Steinberg with alpha skip.
+               A single continuous (gy, gx) sweep with per-pixel
+               palette hot-swap via (gy // 16, gx // 16).
+               Transparent pixels short-circuit straight to the
+               transparency sentinel (255) without consuming a
+               palette slot or diffusing error.  Opaque pixels
+               get the textbook FS treatment + 0.85 leak-dampener.
 
-      Pass 3 — Slice the flat global_indices buffer back into
-               per-tile 16x16 blocks and apply the NeoGeo +1
-               transparency shift.
+      Pass 3 — Slice into per-tile blocks.  Opaque pixels apply the
+               NeoGeo +1 transparency shift (so they end up in
+               slots 1..15).  Transparent pixels become 0.
+
+    Hardware contract caveat
+    ------------------------
+    The returned `final_palettes` list contains ONE 15-colour palette
+    per tile — i.e. up to (target_w/16) * (target_h/16) entries
+    (280 for a 320x224 screen).  Neo Geo has 256 palette banks of
+    16 colours TOTAL in palette RAM.  This raw output is NOT
+    hardware-safe by itself.  Run it through
+    `cluster_and_remap_tile_palettes()` (greedy MAE clustering) or
+    the convert_screen_via_vivid_pipeline adapter (single-palette
+    collapse) BEFORE feeding to romtiles / genscreens.
 
     Returns
     -------
-    ready_tiles    : list of flat 256-int lists, values 1..15.
+    ready_tiles    : list of flat 256-int lists, values 0..15
+                     (0 = transparent, 1..15 = palette slot).
     final_palettes : list of flat 45-int lists, 15 RGB triples each.
     """
-    src = Image.open(image_path).convert("RGB")
+    src = Image.open(image_path).convert("RGBA")
     src = src.resize((target_w, target_h), Image.Resampling.LANCZOS)
     src_np = np.array(src, dtype=np.float32)
+    rgb_np = src_np[:, :, :3]
+    alpha_np = src_np[:, :, 3]
+    opaque_mask = alpha_np >= 128.0
 
     # ---------------------------------------------------------
     # PASS 1: PRE-CALCULATE ALL LOCAL PALETTES
+    # Alpha-aware: only opaque pixels feed the clusterer.  Fully-
+    # transparent tiles emit a zero palette (irrelevant — those
+    # pixels short-circuit in Pass 2 anyway).
     # ---------------------------------------------------------
     local_luts = {}
     for ty_idx in range(target_h // 16):
         for tx_idx in range(target_w // 16):
             y, x = ty_idx * 16, tx_idx * 16
-            tile_rgb = src_np[y:y + 16, x:x + 16]
-            tile_pil = Image.fromarray(tile_rgb.astype(np.uint8))
-            tile_lab = np.array(
-                tile_pil.convert("LAB"), dtype=np.float32
+            tile_rgb = rgb_np[y:y + 16, x:x + 16]
+            tile_alpha = opaque_mask[y:y + 16, x:x + 16]
+
+            if not tile_alpha.any():
+                # Fully transparent tile — no opaque pixels to cluster.
+                local_luts[(ty_idx, tx_idx)] = np.zeros((15, 3),
+                                                          dtype=np.float32)
+                continue
+
+            opaque_rgb = tile_rgb[tile_alpha].astype(np.uint8)
+            # PIL LAB conversion needs a 2D image, not a flat list.
+            # Pack opaque pixels into an Nx1 strip for conversion.
+            opaque_strip = opaque_rgb.reshape(-1, 1, 3)
+            opaque_pil = Image.fromarray(opaque_strip, mode="RGB")
+            opaque_lab = np.array(
+                opaque_pil.convert("LAB"), dtype=np.float32
             ).reshape(-1, 3)
 
-            lab_centres = _kmeans_pp_weighted_vivid(tile_lab, 15)
+            lab_centres = _kmeans_pp_weighted_vivid(opaque_lab, 15)
             palette_img = Image.fromarray(
                 lab_centres.reshape(1, 15, 3).astype(np.uint8), mode="LAB"
             )
@@ -1027,35 +1056,63 @@ def execute_final_vivid_pipeline(image_path,
             ).reshape(15, 3).astype(np.float32)
 
     # ---------------------------------------------------------
-    # PASS 2: GLOBAL SCANLINE DITHER
+    # PASS 2: GLOBAL SCANLINE DITHER (alpha-aware)
     # ---------------------------------------------------------
     # Pad right + bottom by 1 so the FS kernel never indexes past the
     # screen edge for the final row / column.
-    global_error_canvas = np.pad(src_np, ((0, 1), (0, 1), (0, 0)),
+    global_error_canvas = np.pad(rgb_np, ((0, 1), (0, 1), (0, 0)),
                                    mode='edge')
-    global_indices = np.zeros((target_h, target_w), dtype=np.uint8)
+    global_indices = np.full((target_h, target_w), 255, dtype=np.uint8)
+    # Sentinel 255 = transparent.  Opaque pixels get 0..14, then the
+    # +1 shift in Pass 3 maps them to NeoGeo slots 1..15.
 
     for gy in range(target_h):
         for gx in range(target_w):
-            # Hot-swap the active palette as the scanline crosses
-            # 16-pixel tile boundaries.  Per-tile palettes preserved;
-            # the FS wavefront is uninterrupted by the swap because
-            # error diffuses into the same global canvas regardless
-            # of which palette was active at the source pixel.
+            # Alpha skip: transparent source pixels short-circuit
+            # straight to the transparency sentinel.  No palette
+            # lookup, no error diffusion — error from neighbours
+            # propagating INTO a transparent pixel just sits in the
+            # canvas, which is fine since we never read it.
+            if not opaque_mask[gy, gx]:
+                continue
+
             ty_idx = gy // 16
             tx_idx = gx // 16
             active_palette = local_luts[(ty_idx, tx_idx)]
 
-            px = global_error_canvas[gy, gx, :]
-            px = np.clip(px, 0.0, 255.0)
+            # UI / Luma Trap: when the ORIGINAL source pixel is
+            # effectively pure white (luma > 240) or pure black
+            # (luma < 15) — speech-bubble fills, hard text edges,
+            # comic outlines — bypass the global error canvas and
+            # use the source RGB directly for the nearest-colour
+            # lookup.  Without this, accumulated upstream FS error
+            # (e.g. a sky-blue wavefront ending at a bubble border)
+            # contaminates the lookup and the pure-white bubble
+            # gets quantised to a light-grey palette index.
+            orig_px = rgb_np[gy, gx]
+            orig_luma = (orig_px[0] * 0.299
+                          + orig_px[1] * 0.587
+                          + orig_px[2] * 0.114)
+            is_trap_pixel = orig_luma > 240.0 or orig_luma < 15.0
+
+            if is_trap_pixel:
+                # Absorb incoming error — look up against the original.
+                px = np.clip(orig_px, 0.0, 255.0)
+            else:
+                px = np.clip(global_error_canvas[gy, gx, :], 0.0, 255.0)
 
             distances = np.sum((active_palette - px) ** 2, axis=1)
             best_idx = int(np.argmin(distances))
             global_indices[gy, gx] = best_idx
 
-            # 0.85 leak-dampener prevents runaway speckle compounding
-            # without the threshold-gate's brittle high-contrast cut.
-            quant_error = (px - active_palette[best_idx]) * 0.85
+            if is_trap_pixel:
+                # Stop pushing new error forward — bubble fills and
+                # text edges no longer seed the dither downstream.
+                quant_error = np.zeros(3, dtype=np.float32)
+            else:
+                # 0.85 leak-dampener prevents runaway speckle
+                # compounding without a brittle threshold-gate cut.
+                quant_error = (px - active_palette[best_idx]) * 0.85
 
             global_error_canvas[gy, gx + 1, :] += quant_error * (7.0 / 16.0)
             if gx > 0:
@@ -1065,6 +1122,7 @@ def execute_final_vivid_pipeline(image_path,
 
     # ---------------------------------------------------------
     # PASS 3: SLICE BACK TO NEO GEO HARDWARE BLOCKS
+    # Transparent sentinel 255 -> NeoGeo slot 0; opaque 0..14 -> 1..15.
     # ---------------------------------------------------------
     ready_tiles = []
     final_palettes = []
@@ -1072,12 +1130,78 @@ def execute_final_vivid_pipeline(image_path,
         for tx_idx in range(target_w // 16):
             tile_block = global_indices[ty_idx * 16:(ty_idx + 1) * 16,
                                           tx_idx * 16:(tx_idx + 1) * 16]
-            ready_tiles.append((tile_block + 1).flatten().tolist())
+            transparent = tile_block == 255
+            shifted = np.where(transparent,
+                               np.uint8(0),
+                               (tile_block + 1).astype(np.uint8))
+            ready_tiles.append(shifted.flatten().tolist())
             final_palettes.append(
                 local_luts[(ty_idx, tx_idx)].astype(np.uint8).flatten().tolist()
             )
 
     return ready_tiles, final_palettes
+
+
+# ---------------------------------------------------------------------------
+# Hash-keyed cache for the vivid screen converter
+# ---------------------------------------------------------------------------
+# Per-tile FS over 121+ images during `make all` is the dominant cost of a
+# full rebuild.  Most images don't change between builds, so SHA256 the
+# source + params, persist the (indexed, palette16, meta) tuple, and skip
+# the recompute on cache hit.  Cache lives under artbox/.cache/vivid/ so
+# it stays inside the repo dir tree (gitignored).
+
+_VIVID_CACHE_DIR = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), ".cache", "vivid")
+_VIVID_CACHE_VERSION = "v5-scanline-alpha-lumatrap"
+
+
+def _vivid_cache_key(image_path: str, target_w: int, target_h: int,
+                      fit: str, anchor: str, n_colors: int) -> str:
+    """SHA256 of source bytes + params + pipeline version tag."""
+    import hashlib
+    h = hashlib.sha256()
+    try:
+        with open(image_path, "rb") as f:
+            while True:
+                chunk = f.read(64 * 1024)
+                if not chunk:
+                    break
+                h.update(chunk)
+    except OSError:
+        return ""
+    h.update(f"|{target_w}|{target_h}|{fit}|{anchor}|{n_colors}|"
+              f"{_VIVID_CACHE_VERSION}".encode())
+    return h.hexdigest()
+
+
+def _vivid_cache_load(key: str):
+    if not key:
+        return None
+    path = os.path.join(_VIVID_CACHE_DIR, f"{key}.npz")
+    if not os.path.exists(path):
+        return None
+    try:
+        d = np.load(path, allow_pickle=True)
+        indexed = d["indexed"]
+        palette16 = d["palette16"]
+        meta = d["meta"].item()
+        return indexed, palette16, meta
+    except (OSError, KeyError, ValueError):
+        return None
+
+
+def _vivid_cache_save(key: str, indexed: np.ndarray,
+                       palette16: np.ndarray, meta: dict):
+    if not key:
+        return
+    try:
+        os.makedirs(_VIVID_CACHE_DIR, exist_ok=True)
+        path = os.path.join(_VIVID_CACHE_DIR, f"{key}.npz")
+        np.savez(path, indexed=indexed, palette16=palette16,
+                 meta=np.array(meta, dtype=object))
+    except OSError:
+        pass
 
 
 def convert_screen_via_vivid_pipeline(
@@ -1108,9 +1232,16 @@ def convert_screen_via_vivid_pipeline(
     target_w = (target_w // 16) * 16
     target_h = (target_h // 16) * 16
 
+    # Cache hot-path: SHA256 of source bytes + params + version tag.
+    cache_key = _vivid_cache_key(str(image_path), target_w, target_h,
+                                   fit, anchor, n_colors)
+    cached = _vivid_cache_load(cache_key)
+    if cached is not None:
+        return cached
+
     # 3-Pass Context-Insulated Quantizer: Lab kmeans palettes per tile
     # + unified global error matrix (no per-tile FS reset = no seams)
-    # + adaptive threshold gate for sharp edges.
+    # + scanline FS with alpha skip.
     ready_tiles, final_palettes = execute_final_vivid_pipeline(
         image_path, target_w, target_h)
 
@@ -1118,15 +1249,21 @@ def convert_screen_via_vivid_pipeline(
     tile_rows = target_h // 16
     n_tiles = len(ready_tiles)
 
-    # 2. Reconstruct the per-pixel RGB canvas.
+    # 2. Reconstruct the per-pixel RGB canvas + alpha mask from the
+    # per-tile output.  Transparent pixels (index 0) propagate the
+    # transparency through the final global FS pass.
     canvas_rgb = np.zeros((target_h, target_w, 3), dtype=np.uint8)
+    alpha_mask = np.zeros((target_h, target_w), dtype=bool)
     for ti in range(n_tiles):
         ty, tx = divmod(ti, tile_cols)
         y0, x0 = ty * 16, tx * 16
         indices_u8 = np.array(ready_tiles[ti], dtype=np.uint8).reshape(16, 16)
         palette_u8 = np.array(final_palettes[ti], dtype=np.uint8).reshape(15, 3)
-        idx_local = (indices_u8 - 1).clip(0, 14)
-        canvas_rgb[y0:y0 + 16, x0:x0 + 16] = palette_u8[idx_local]
+        opaque_tile = indices_u8 != 0
+        idx_local = (indices_u8.astype(np.int16) - 1).clip(0, 14).astype(np.uint8)
+        tile_rgb = palette_u8[idx_local]
+        canvas_rgb[y0:y0 + 16, x0:x0 + 16] = tile_rgb
+        alpha_mask[y0:y0 + 16, x0:x0 + 16] = opaque_tile
 
     # 3. Single global palette from the union of per-tile palettes.
     all_pal_rgb = np.concatenate([
@@ -1140,10 +1277,13 @@ def convert_screen_via_vivid_pipeline(
     from img2neo import lab_to_rgb
     global_palette = snap_neogeo(lab_to_rgb(global_centres_lab))
 
-    # 4. Global RGB-Euclidean Floyd-Steinberg dither.
-    alpha_mask = np.ones((target_h, target_w), dtype=bool)
+    # 4. Global RGB-Euclidean Floyd-Steinberg dither.  Transparent
+    # pixels skip the dither entirely so the alpha mask survives the
+    # final pass and the output's slot-0 transparency is preserved.
     raw_idx = _floyd_steinberg_global(canvas_rgb, global_palette, alpha_mask)
-    indexed = (raw_idx + 1).astype(np.uint16)
+    indexed = np.where(alpha_mask,
+                        (raw_idx + 1).astype(np.uint16),
+                        np.uint16(0))
 
     palette16 = np.zeros((16, 3), dtype=np.uint16)
     palette16[1:1 + n_colors] = global_palette.astype(np.uint16)
@@ -1162,7 +1302,9 @@ def convert_screen_via_vivid_pipeline(
         "tile_rows":      int(tile_rows),
         "n_tiles":        int(n_tiles),
         "pipeline":       "vivid_pertile_lab_kmeans",
+        "cache_version":  _VIVID_CACHE_VERSION,
     }
+    _vivid_cache_save(cache_key, indexed, palette16, metadata)
     return indexed, palette16, metadata
 
 
