@@ -969,46 +969,49 @@ def execute_final_vivid_pipeline(image_path,
                                    target_h: int = 224
                                    ) -> tuple[list, list]:
     """
-    3-Pass Context-Insulated Quantizer per the specified architecture:
+    Decoupled Spatial Processing pipeline — corrects the Z-Order
+    Traversal Bug that produced deep-fried high-frequency noise in
+    earlier per-tile-loop iterations.
 
-      Pass 1 — Per-tile palette extraction in CIE-Lab (perceptual hue
-               preservation), with uniform-input guards.
-      Pass 2 — Unified global error matrix.  Floyd-Steinberg error
-               diffuses directly into a single padded canvas instead
-               of per-tile 18x18 buffers, so quantisation error
-               crosses 16x16 tile boundaries naturally — the grid
-               seams that earlier per-tile FS produced vanish.
-      Pass 3 — Adaptive Threshold Gate.  When the quantisation error
-               at a pixel exceeds 140 (high-contrast outline / line
-               art / sharp text edge), the error is multiplied by
-               0.10 to suppress propagation, keeping line art
-               pristine.  Smooth gradients fall through to the
-               0.70 leak-dampener which preserves dither character
-               while preventing speckle compounding.
+      Pass 1 — Pre-calculate all per-tile CIE-Lab palettes.  Each
+               16x16 tile is converted to PIL "LAB", k-means++
+               clustered (uniform-input guard at spread < 1e-4,
+               sklearn MiniBatchKMeans where available, local
+               numpy k-means++ fallback otherwise).  Palettes are
+               stashed in local_luts[(ty_idx, tx_idx)].
+
+      Pass 2 — GLOBAL SCANLINE Floyd-Steinberg.  A single continuous
+               (gy, gx) loop sweeps the entire image left-to-right,
+               top-to-bottom.  At each pixel the active palette is
+               hot-swapped via (gy // 16, gx // 16) so per-tile
+               palettes are preserved while the FS wavefront is
+               unbroken — error diffuses pixel-by-pixel into the
+               canvas-sized global_error_canvas exactly as the
+               textbook algorithm requires.  0.85 leak-dampener
+               on the propagated error prevents extreme-value
+               compounding without the buggy threshold-gate from
+               the previous version.
+
+      Pass 3 — Slice the flat global_indices buffer back into
+               per-tile 16x16 blocks and apply the NeoGeo +1
+               transparency shift.
 
     Returns
     -------
-    ready_tiles    : list of flat 256-int lists, values 1..15
-                     (NeoGeo +1 transparency shift applied).
-    final_palettes : list of flat 45-int lists holding 15 RGB triples
-                     per tile (R,G,B,R,G,B,...).
+    ready_tiles    : list of flat 256-int lists, values 1..15.
+    final_palettes : list of flat 45-int lists, 15 RGB triples each.
     """
     src = Image.open(image_path).convert("RGB")
     src = src.resize((target_w, target_h), Image.Resampling.LANCZOS)
     src_np = np.array(src, dtype=np.float32)
 
-    # 1. PRE-ALLOCATE GLOBAL ERROR CANVAS — pad bottom & right by 2px
-    # so the FS kernel never indexes out of bounds at the screen edge.
-    global_error_canvas = np.pad(src_np, ((0, 2), (0, 2), (0, 0)),
-                                   mode='edge')
-
-    ready_tiles = []
-    final_palettes = []
-
-    # 2. GENERATE ALL LOCAL LUTs UPFRONT (Pass 1).
+    # ---------------------------------------------------------
+    # PASS 1: PRE-CALCULATE ALL LOCAL PALETTES
+    # ---------------------------------------------------------
     local_luts = {}
-    for ty_idx, y in enumerate(range(0, target_h, 16)):
-        for tx_idx, x in enumerate(range(0, target_w, 16)):
+    for ty_idx in range(target_h // 16):
+        for tx_idx in range(target_w // 16):
+            y, x = ty_idx * 16, tx_idx * 16
             tile_rgb = src_np[y:y + 16, x:x + 16]
             tile_pil = Image.fromarray(tile_rgb.astype(np.uint8))
             tile_lab = np.array(
@@ -1019,58 +1022,60 @@ def execute_final_vivid_pipeline(image_path,
             palette_img = Image.fromarray(
                 lab_centres.reshape(1, 15, 3).astype(np.uint8), mode="LAB"
             )
-            rgb_palette = np.array(
+            local_luts[(ty_idx, tx_idx)] = np.array(
                 palette_img.convert("RGB")
             ).reshape(15, 3).astype(np.float32)
-            local_luts[(ty_idx, tx_idx)] = rgb_palette
 
-    # 3. UNIFIED FS LOOP (Pass 2 + Pass 3).
-    for ty_idx, y in enumerate(range(0, target_h, 16)):
-        for tx_idx, x in enumerate(range(0, target_w, 16)):
-            rgb_palette = local_luts[(ty_idx, tx_idx)]
-            output_indices = np.zeros((16, 16), dtype=np.uint8)
+    # ---------------------------------------------------------
+    # PASS 2: GLOBAL SCANLINE DITHER
+    # ---------------------------------------------------------
+    # Pad right + bottom by 1 so the FS kernel never indexes past the
+    # screen edge for the final row / column.
+    global_error_canvas = np.pad(src_np, ((0, 1), (0, 1), (0, 0)),
+                                   mode='edge')
+    global_indices = np.zeros((target_h, target_w), dtype=np.uint8)
 
-            for ty in range(16):
-                global_y = y + ty
-                for tx in range(16):
-                    global_x = x + tx
-                    # Continuous global canvas — accumulated errors from
-                    # previously-processed tiles are already here.
-                    px = global_error_canvas[global_y, global_x, :]
-                    px = np.clip(px, 0.0, 255.0)
+    for gy in range(target_h):
+        for gx in range(target_w):
+            # Hot-swap the active palette as the scanline crosses
+            # 16-pixel tile boundaries.  Per-tile palettes preserved;
+            # the FS wavefront is uninterrupted by the swap because
+            # error diffuses into the same global canvas regardless
+            # of which palette was active at the source pixel.
+            ty_idx = gy // 16
+            tx_idx = gx // 16
+            active_palette = local_luts[(ty_idx, tx_idx)]
 
-                    distances = np.sum((rgb_palette - px) ** 2, axis=1)
-                    best_idx = int(np.argmin(distances))
-                    output_indices[ty, tx] = best_idx
+            px = global_error_canvas[gy, gx, :]
+            px = np.clip(px, 0.0, 255.0)
 
-                    quant_error = px - rgb_palette[best_idx]
+            distances = np.sum((active_palette - px) ** 2, axis=1)
+            best_idx = int(np.argmin(distances))
+            global_indices[gy, gx] = best_idx
 
-                    # Adaptive Threshold Gate (Pass 3): suppress
-                    # diffusion on absolute high-contrast outlines so
-                    # line art stays sharp; otherwise leak-dampen by
-                    # 0.70 to prevent runaway speckle compounding.
-                    if np.max(np.abs(quant_error)) > 140.0:
-                        quant_error = quant_error * 0.10
-                    else:
-                        quant_error = quant_error * 0.70
+            # 0.85 leak-dampener prevents runaway speckle compounding
+            # without the threshold-gate's brittle high-contrast cut.
+            quant_error = (px - active_palette[best_idx]) * 0.85
 
-                    # Diffuse directly into the global canvas — error
-                    # crosses 16-pixel tile boundaries automatically.
-                    if global_x + 1 < global_error_canvas.shape[1]:
-                        global_error_canvas[global_y,
-                                             global_x + 1, :] += quant_error * (7.0 / 16.0)
-                    if global_y + 1 < global_error_canvas.shape[0]:
-                        if global_x - 1 >= 0:
-                            global_error_canvas[global_y + 1,
-                                                 global_x - 1, :] += quant_error * (3.0 / 16.0)
-                        global_error_canvas[global_y + 1,
-                                             global_x,     :] += quant_error * (5.0 / 16.0)
-                        if global_x + 1 < global_error_canvas.shape[1]:
-                            global_error_canvas[global_y + 1,
-                                                 global_x + 1, :] += quant_error * (1.0 / 16.0)
+            global_error_canvas[gy, gx + 1, :] += quant_error * (7.0 / 16.0)
+            if gx > 0:
+                global_error_canvas[gy + 1, gx - 1, :] += quant_error * (3.0 / 16.0)
+            global_error_canvas[gy + 1, gx,     :] += quant_error * (5.0 / 16.0)
+            global_error_canvas[gy + 1, gx + 1, :] += quant_error * (1.0 / 16.0)
 
-            ready_tiles.append((output_indices + 1).flatten().tolist())
-            final_palettes.append(rgb_palette.astype(np.uint8).flatten().tolist())
+    # ---------------------------------------------------------
+    # PASS 3: SLICE BACK TO NEO GEO HARDWARE BLOCKS
+    # ---------------------------------------------------------
+    ready_tiles = []
+    final_palettes = []
+    for ty_idx in range(target_h // 16):
+        for tx_idx in range(target_w // 16):
+            tile_block = global_indices[ty_idx * 16:(ty_idx + 1) * 16,
+                                          tx_idx * 16:(tx_idx + 1) * 16]
+            ready_tiles.append((tile_block + 1).flatten().tolist())
+            final_palettes.append(
+                local_luts[(ty_idx, tx_idx)].astype(np.uint8).flatten().tolist()
+            )
 
     return ready_tiles, final_palettes
 

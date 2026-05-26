@@ -32,8 +32,8 @@
                 <rom name="777-v1.v1" offset="0x000000" size="0x38b200" crc="58d64856" sha1="e0584094aac575587dd60c3a6d31bd738936c0c7" />
             </dataarea>
             <dataarea name="sprites" size="0x1000000">
-                <rom loadflag="load16_byte" name="777-c1.c1" offset="0x000000" size="0x800000" crc="75e973bd" sha1="8abc399147f9a483b2ee11968224c997372b42e0" />
-                <rom loadflag="load16_byte" name="777-c2.c2" offset="0x000001" size="0x800000" crc="0a089cdf" sha1="197b81070f16adf0fca234704795a3275cbaa15c" />
+                <rom loadflag="load16_byte" name="777-c1.c1" offset="0x000000" size="0x800000" crc="2c79e5db" sha1="1869812d66357b1be0b39aeaba67aabf9a5cacbd" />
+                <rom loadflag="load16_byte" name="777-c2.c2" offset="0x000001" size="0x800000" crc="a1e7f7b0" sha1="0d91b8014d2ca51c64a80148a4c70b0e7abf5462" />
             </dataarea>
         </part>
     </software>
