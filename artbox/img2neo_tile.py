@@ -1109,7 +1109,33 @@ def execute_final_vivid_pipeline(image_path,
     """
     src = Image.open(image_path).convert("RGBA")
     src = src.resize((target_w, target_h), Image.Resampling.LANCZOS)
-    src_np = np.array(src, dtype=np.float32)
+    return _vivid_pipeline_from_rgba(
+        np.array(src, dtype=np.float32),
+        asset_type=asset_type,
+        master_palette=master_palette,
+    )
+
+
+def _vivid_pipeline_from_rgba(rgba: np.ndarray,
+                                asset_type: str = "background",
+                                master_palette: np.ndarray | None = None
+                                ) -> tuple[list, list]:
+    """
+    Core 3-pass quantizer working from a pre-prepared (H, W, 4)
+    float32 RGBA array.  Both execute_final_vivid_pipeline (the
+    path-based entry) and the sprite import path call into this —
+    the latter needs to run anchor-aware fit_sprite_rgba +
+    alpha_bleed BEFORE quantisation, which would be skipped if it
+    went through the path-based wrapper's flat .resize().
+    """
+    if rgba.ndim != 3 or rgba.shape[2] != 4:
+        raise ValueError(f"_vivid_pipeline_from_rgba needs (H, W, 4); "
+                          f"got shape {rgba.shape}")
+    src_np = rgba.astype(np.float32, copy=False)
+    target_h, target_w = src_np.shape[:2]
+    if (target_h % 16) or (target_w % 16):
+        raise ValueError(f"input dims must be multiples of 16; got "
+                          f"{target_w}x{target_h}")
     rgb_np = src_np[:, :, :3]
     alpha_np = src_np[:, :, 3]
     opaque_mask = alpha_np >= 128.0

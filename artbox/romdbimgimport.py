@@ -80,10 +80,24 @@ try:
     # single 15-colour palette for the existing single-bank downstream
     # via img2neo_tile.convert_screen_via_vivid_pipeline.
     from img2neo_tile import convert_screen_via_vivid_pipeline as tile_convert_screen
+    # Sprite import also flips to the unified vivid pipeline by default
+    # (asset_type="sprite"): one CIE-Lab master palette covering every
+    # frame of the group, scanline FS with Teflon Routing + alpha-aware
+    # transparent drain.  derive_master_sprite_palette computes the
+    # group master; _vivid_pipeline_from_rgba does the quantization
+    # from an anchor-aware fit_sprite_rgba + alpha_bleed canvas.
+    from img2neo_tile import (
+        derive_master_sprite_palette as _derive_master_sprite_palette,
+        _vivid_pipeline_from_rgba as _vivid_quantize_canvas,
+    )
     HAS_TILE = True
+    HAS_VIVID_SPRITES = True
 except ImportError:
     HAS_TILE = False
+    HAS_VIVID_SPRITES = False
     tile_convert_screen = None
+    _derive_master_sprite_palette = None
+    _vivid_quantize_canvas = None
 
 
 def adapt_array(arr):
@@ -275,6 +289,104 @@ def build_shared_sprite_palettes(specs):
     return shared
 
 
+def build_master_sprite_palettes(specs):
+    """
+    Vivid-pipeline replacement for build_shared_sprite_palettes.
+    Groups sprite specs by subdir / category (characters, npcs) and
+    derives ONE CIE-Lab k-means++ master palette per group from the
+    union of every group sprite's opaque pixels.  Used by
+    load_sprite_asset_vivid: every frame of one character renders
+    against the same 15-colour palette, so animations cannot flicker
+    or shift hues between frames.
+    """
+    shared = {}
+    if not HAS_VIVID_SPRITES or not HAS_PIL:
+        return shared
+    for group in ("characters", "npcs"):
+        group_specs = [
+            spec for spec in specs
+            if spec["mode"] == "sprite"
+            and (spec.get("subdir") == group or spec.get("category") == group)
+        ]
+        if len(group_specs) <= 1:
+            continue
+        paths = [spec["path"] for spec in group_specs]
+        shared[group] = _derive_master_sprite_palette(paths, n_colors=15)
+    return shared
+
+
+def load_sprite_asset_vivid(spec, shared_master=None):
+    """
+    Vivid-pipeline sprite import.  Anchor-aware positioning via
+    fit_sprite_rgba (preserves the spec's bottom-center / center
+    anchor for sprite placement), inward-edge dilation via
+    alpha_bleed (kills white halo on Lanczos-AA contours), then
+    quantisation through img2neo_tile._vivid_pipeline_from_rgba in
+    sprite mode (single palette across the whole image, no per-tile
+    drift).  When `shared_master` is supplied (output of
+    build_master_sprite_palettes) every frame of the group renders
+    against the same 15-colour palette so animations are pixel-stable.
+
+    Returns the same (indexed_u16, palette16_u16) tuple shape that
+    load_sprite_asset produces so call sites stay identical.
+    """
+    if not HAS_IMG2NEO or not HAS_PIL or not HAS_VIVID_SPRITES:
+        raise RuntimeError(
+            f"img2neo_tile not available to auto-convert "
+            f"{os.path.basename(spec['path'])}; install Pillow + numpy."
+        )
+
+    img = Image.open(spec["path"])
+    source_w, source_h = img.size
+
+    canvas, left, top, content_w, content_h = fit_sprite_rgba(
+        img,
+        spec["target_width"],
+        spec["target_height"],
+        spec["anchor"],
+    )
+    rgba = np.array(canvas, dtype=np.uint8)
+    if alpha_bleed is not None:
+        rgba = alpha_bleed(rgba, opaque_alpha=128)
+
+    master = None
+    if shared_master is not None:
+        master = np.asarray(shared_master, dtype=np.uint8).reshape(-1, 3)
+        if master.shape[0] >= 15:
+            master = master[:15]
+
+    ready_tiles, final_palettes = _vivid_quantize_canvas(
+        rgba.astype(np.float32),
+        asset_type="sprite",
+        master_palette=master,
+    )
+
+    canvas_h, canvas_w = rgba.shape[:2]
+    tile_cols = canvas_w // 16
+
+    indexed = np.zeros((canvas_h, canvas_w), dtype=np.uint16)
+    for ti, tile_row in enumerate(ready_tiles):
+        ty, tx = divmod(ti, tile_cols)
+        y0, x0 = ty * 16, tx * 16
+        tile = np.array(tile_row, dtype=np.uint8).reshape(16, 16)
+        indexed[y0:y0 + 16, x0:x0 + 16] = tile.astype(np.uint16)
+
+    sprite_palette15 = np.array(final_palettes[0],
+                                  dtype=np.uint8).reshape(15, 3)
+    palette = np.zeros((16, 3), dtype=np.uint16)
+    palette[1:] = sprite_palette15.astype(np.uint16)
+
+    spec["source_width"] = source_w
+    spec["source_height"] = source_h
+    spec["canvas_width"] = canvas.width
+    spec["canvas_height"] = canvas.height
+    spec["content_left"] = left
+    spec["content_top"] = top
+    spec["content_width"] = content_w
+    spec["content_height"] = content_h
+    return indexed, palette
+
+
 def load_screen_asset(spec):
     reader = png.Reader(spec["path"])
     source_w, source_h, rows, metadata = reader.read()
@@ -443,12 +555,25 @@ def main():
         cur.execute("DELETE FROM image")
 
         db_rows = []
-        shared_palettes = build_shared_sprite_palettes(specs)
+        # Sprite import dispatch matches the screen-import dispatch:
+        # ARTBOX_LEGACY=1 -> legacy build_shared_sprite_palettes +
+        # load_sprite_asset (naive nearest-colour, no dither).
+        # default       -> vivid pipeline: build_master_sprite_palettes
+        # derives ONE CIE-Lab master per group (characters / npcs) and
+        # load_sprite_asset_vivid quantises every frame against that
+        # master with scanline FS + Teflon Routing.  Animations are
+        # bit-stable across frames by construction (single palette).
+        if USE_LEGACY or not HAS_VIVID_SPRITES:
+            shared_palettes = build_shared_sprite_palettes(specs)
+            sprite_loader = load_sprite_asset
+        else:
+            shared_palettes = build_master_sprite_palettes(specs)
+            sprite_loader = load_sprite_asset_vivid
         for spec in specs:
             print(f"  [{spec['db_index']:3d}] {spec['name']}  mode={spec['mode']}")
             if spec["mode"] == "sprite":
-                shared_palette15 = shared_palettes.get(spec.get("subdir"))
-                indexed, palette = load_sprite_asset(spec, shared_palette15)
+                shared = shared_palettes.get(spec.get("subdir"))
+                indexed, palette = sprite_loader(spec, shared)
             else:
                 indexed, palette = load_screen_asset(spec)
 
