@@ -593,38 +593,69 @@ def cluster_and_remap_tile_palettes(
     n_tiles = palettes_per_tile.shape[0]
     pal_f32 = palettes_per_tile.astype(np.float32)
 
-    # --- 1. Greedy MAE clustering ------------------------------------
-    # Note: MAE on raw RGB is fast and matches the user-supplied
-    # heuristic.  Lab-mean MAE is more perceptual but adds a per-bank
-    # rgb2lab on every comparison; raw RGB MAE is good enough for the
-    # bank-budget granularity (we're picking banks, not individual
-    # colours), and the eps default 15.0 is calibrated to it.
-    bank_palettes: list[np.ndarray] = []
-    tile_to_bank = np.zeros(n_tiles, dtype=np.uint16)
-
-    for ti in range(n_tiles):
-        pal = pal_f32[ti]
-        matched = -1
-        for bi, bank in enumerate(bank_palettes):
-            mae = float(np.mean(np.abs(pal - bank)))
-            if mae < epsilon:
-                matched = bi
-                break
-        if matched == -1:
-            if len(bank_palettes) < max_banks:
-                bank_palettes.append(pal.copy())
-                matched = len(bank_palettes) - 1
-            else:
-                # Force-fall-back: nearest existing bank by MAE.
-                dists = np.array([
-                    float(np.mean(np.abs(pal - b)))
-                    for b in bank_palettes
-                ])
-                matched = int(dists.argmin())
-        tile_to_bank[ti] = matched
-
-    bank_palettes_arr = np.stack(bank_palettes, axis=0).astype(np.uint8)
-    bank_palettes_arr = snap_neogeo(bank_palettes_arr)
+    # --- 1. Greedy MAE clustering with auto-scaling epsilon ----------
+    # The eps tolerance for "close enough to existing bank" is the
+    # tuning knob: too low and we run out of bank budget before all
+    # tiles are clustered (forcing a brute-force "nearest existing
+    # bank" fallback that shatters colours on the unlucky overflow
+    # tiles); too high and dissimilar palettes get merged together.
+    # Rather than relying on a hand-picked constant, retry the whole
+    # clustering with progressively wider eps until the result fits
+    # under max_banks WITHOUT triggering the fallback for any tile.
+    # Geometric growth (eps *= 1.5) converges in <8 attempts even on
+    # extremely colourful sources.
+    cur_eps = float(epsilon)
+    bank_palettes_arr = None
+    tile_to_bank = None
+    eps_history = [cur_eps]
+    for _attempt in range(8):
+        bank_palettes: list[np.ndarray] = []
+        candidate_assignments = np.full(n_tiles, -1, dtype=np.int32)
+        overflowed = False
+        for ti in range(n_tiles):
+            pal = pal_f32[ti]
+            matched = -1
+            for bi, bank in enumerate(bank_palettes):
+                mae = float(np.mean(np.abs(pal - bank)))
+                if mae < cur_eps:
+                    matched = bi
+                    break
+            if matched == -1:
+                if len(bank_palettes) < max_banks:
+                    bank_palettes.append(pal.copy())
+                    matched = len(bank_palettes) - 1
+                else:
+                    overflowed = True
+                    break
+            candidate_assignments[ti] = matched
+        if not overflowed:
+            # Fits in budget — accept this clustering.
+            bank_palettes_arr = np.stack(bank_palettes,
+                                          axis=0).astype(np.uint8)
+            bank_palettes_arr = snap_neogeo(bank_palettes_arr)
+            tile_to_bank = candidate_assignments.astype(np.uint16)
+            break
+        # Overflow: widen tolerance and retry the entire pass.
+        cur_eps *= 1.5
+        eps_history.append(cur_eps)
+    if bank_palettes_arr is None:
+        # 8 attempts and still overflowing.  Fall back to the brute-
+        # force nearest-bank assignment with the last attempted eps;
+        # at least colours stay close to their original cluster.
+        bank_palettes_arr = np.stack(bank_palettes,
+                                      axis=0).astype(np.uint8)
+        bank_palettes_arr = snap_neogeo(bank_palettes_arr)
+        tile_to_bank = np.zeros(n_tiles, dtype=np.uint16)
+        for ti in range(n_tiles):
+            if candidate_assignments[ti] != -1:
+                tile_to_bank[ti] = candidate_assignments[ti]
+                continue
+            pal = pal_f32[ti]
+            dists = np.array([
+                float(np.mean(np.abs(pal - b.astype(np.float32))))
+                for b in bank_palettes_arr
+            ])
+            tile_to_bank[ti] = int(dists.argmin())
 
     # --- 2. Smart LOCAL -> BANK pixel remap --------------------------
     # For each tile, pre-compute a 15-entry lookup that maps each
@@ -1130,18 +1161,25 @@ def execute_final_vivid_pipeline(image_path,
     # PASS 3: SLICE BACK TO NEO GEO HARDWARE BLOCKS
     # Transparent sentinel 255 -> NeoGeo slot 0; opaque 0..14 -> 1..15.
     # ---------------------------------------------------------
-    ready_tiles = []
-    final_palettes = []
-    for ty_idx in range(target_h // 16):
-        for tx_idx in range(target_w // 16):
+    # Pre-allocate output lists by exact tile count to avoid
+    # repeated list.append() reallocations inside the inner loop —
+    # tile count is known upfront from the target dimensions.
+    tile_rows = target_h // 16
+    tile_cols = target_w // 16
+    n_tiles = tile_rows * tile_cols
+    ready_tiles: list = [None] * n_tiles
+    final_palettes: list = [None] * n_tiles
+    for ty_idx in range(tile_rows):
+        for tx_idx in range(tile_cols):
             tile_block = global_indices[ty_idx * 16:(ty_idx + 1) * 16,
                                           tx_idx * 16:(tx_idx + 1) * 16]
             transparent = tile_block == 255
             shifted = np.where(transparent,
                                np.uint8(0),
                                (tile_block + 1).astype(np.uint8))
-            ready_tiles.append(shifted.flatten().tolist())
-            final_palettes.append(
+            slot = ty_idx * tile_cols + tx_idx
+            ready_tiles[slot] = shifted.flatten().tolist()
+            final_palettes[slot] = (
                 local_luts[(ty_idx, tx_idx)].astype(np.uint8).flatten().tolist()
             )
 
