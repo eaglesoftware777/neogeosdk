@@ -1,15 +1,15 @@
 [001] backgrounds/0.png
 mode=screen fit=contain anchor=center rule=cat_backgrounds
 category=backgrounds
-source=1032x624 canvas=256x256 content=256x155 offset=(0,50)
-screen_id=1 palette_bank=16 tile_base=0 reserved_last=255 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=2 used_tiles=160 strips=16 active_rows=10
+source=1032x624 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=1 palette_bank=16 tile_base=0 reserved_last=255 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=background layer or multi-level backdrop
 
 [002] backgrounds/1.png
 mode=screen fit=contain anchor=center rule=cat_backgrounds
 category=backgrounds
-source=368x240 canvas=256x256 content=256x167 offset=(0,44)
-screen_id=2 palette_bank=17 tile_base=256 reserved_last=511 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=12 used_tiles=176 strips=16 active_rows=11
+source=368x240 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=2 palette_bank=17 tile_base=256 reserved_last=511 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=background layer or multi-level backdrop
 
 [003] characters/sprite_001_r01_c01.png
@@ -652,50 +652,50 @@ note=effects and transitions
 [094] eyecatcher/1.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x171 offset=(0,42)
-screen_id=94 palette_bank=109 tile_base=23808 reserved_last=24063 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=10 used_tiles=176 strips=16 active_rows=11
+source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=94 palette_bank=109 tile_base=23808 reserved_last=24063 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=eyecatcher sequence
 
 [095] eyecatcher/2.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x171 offset=(0,42)
-screen_id=95 palette_bank=110 tile_base=24064 reserved_last=24319 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=10 used_tiles=176 strips=16 active_rows=11
+source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=95 palette_bank=110 tile_base=24064 reserved_last=24319 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=eyecatcher sequence
 
 [096] eyecatcher/3.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x171 offset=(0,42)
-screen_id=96 palette_bank=111 tile_base=24320 reserved_last=24575 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=10 used_tiles=176 strips=16 active_rows=11
+source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=96 palette_bank=111 tile_base=24320 reserved_last=24575 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=eyecatcher sequence
 
 [097] eyecatcher/4.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x171 offset=(0,42)
-screen_id=97 palette_bank=112 tile_base=24576 reserved_last=24831 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=10 used_tiles=176 strips=16 active_rows=11
+source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=97 palette_bank=112 tile_base=24576 reserved_last=24831 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=eyecatcher sequence
 
 [098] eyecatcher/5.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x171 offset=(0,42)
-screen_id=98 palette_bank=113 tile_base=24832 reserved_last=25087 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=10 used_tiles=176 strips=16 active_rows=11
+source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=98 palette_bank=113 tile_base=24832 reserved_last=25087 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=eyecatcher sequence
 
 [099] eyecatcher/6.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x171 offset=(0,42)
-screen_id=99 palette_bank=114 tile_base=25088 reserved_last=25343 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=10 used_tiles=176 strips=16 active_rows=11
+source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=99 palette_bank=114 tile_base=25088 reserved_last=25343 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=eyecatcher sequence
 
 [100] eyecatcher/7.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x171 offset=(0,42)
-screen_id=100 palette_bank=115 tile_base=25344 reserved_last=25599 used_cols=16 used_rows=11 start_col=0 start_row=2 x_pad=0 y_pad=10 used_tiles=176 strips=16 active_rows=11
+source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=100 palette_bank=115 tile_base=25344 reserved_last=25599 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=eyecatcher sequence
 
 [101] screens/1.png
@@ -757,8 +757,8 @@ note=title and logo screens
 [109] titles/9.png
 mode=screen fit=contain anchor=center rule=cat_titles
 category=titles
-source=880x1184 canvas=256x256 content=190x256 offset=(33,0)
-screen_id=109 palette_bank=124 tile_base=27648 reserved_last=27903 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=1 y_pad=0 used_tiles=192 strips=12 active_rows=16
+source=880x1184 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=109 palette_bank=124 tile_base=27648 reserved_last=27903 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=title and logo screens
 
 [110] npcs/cat_01.png
