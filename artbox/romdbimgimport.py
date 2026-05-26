@@ -74,7 +74,12 @@ except ImportError:
     HAS_CRT = False
     crt_convert_screen = None
 try:
-    from img2neo_tile import convert_screen_via_tile_palette as tile_convert_screen
+    # ARTBOX_TILE=1 routes through the consolidated "vivid" pipeline:
+    # per-tile CIE-Lab k-means + per-tile RGB-Euclidean Floyd-Steinberg
+    # (img2neo_tile.process_vivid_artbox_pipeline), collapsed to a
+    # single 15-colour palette for the existing single-bank downstream
+    # via img2neo_tile.convert_screen_via_vivid_pipeline.
+    from img2neo_tile import convert_screen_via_vivid_pipeline as tile_convert_screen
     HAS_TILE = True
 except ImportError:
     HAS_TILE = False
