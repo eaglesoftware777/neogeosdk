@@ -995,9 +995,73 @@ def _kmeans_pp_weighted_vivid(data: np.ndarray, k: int) -> np.ndarray:
         return _kmeans_pp_weighted_local(data, k)
 
 
+def derive_master_sprite_palette(image_paths,
+                                   n_colors: int = 15
+                                   ) -> np.ndarray:
+    """
+    Compute ONE 15-colour CIE-Lab k-means++ palette covering the
+    opaque pixels of an entire sprite sheet — or a list of separate
+    animation-frame PNGs that should look identical from frame to
+    frame.
+
+    Pass this palette to `execute_final_vivid_pipeline(... master_palette=...)`
+    for every frame so the animation can't flicker between frames:
+    each frame is dithered against the SAME 15 colours.
+
+    Transparent pixels (alpha < 128) are excluded from the cluster
+    input so the master palette isn't biased toward whatever colour
+    PNG editors happen to leave hidden under fully-transparent areas.
+
+    Parameters
+    ----------
+    image_paths : str | os.PathLike | iterable of paths
+                  Single sheet, or any iterable of per-frame paths.
+    n_colors    : int, default 15.
+
+    Returns
+    -------
+    (n_colors, 3) uint8 NeoGeo-snapped RGB palette.
+    """
+    if isinstance(image_paths, (str, os.PathLike)):
+        image_paths = [image_paths]
+
+    opaque_chunks: list[np.ndarray] = []
+    for p in image_paths:
+        img = Image.open(p).convert("RGBA")
+        arr = np.array(img, dtype=np.uint8)
+        mask = arr[:, :, 3] >= 128
+        if mask.any():
+            opaque_chunks.append(arr[mask][:, :3])
+
+    if not opaque_chunks:
+        return np.zeros((n_colors, 3), dtype=np.uint8)
+
+    opaque_rgb = np.concatenate(opaque_chunks, axis=0)
+    # Sub-sample very large sheets so k-means stays fast — Lab
+    # clustering converges well on a few thousand representative
+    # pixels.
+    if opaque_rgb.shape[0] > 16384:
+        rng = np.random.default_rng(0)
+        idx = rng.choice(opaque_rgb.shape[0], 16384, replace=False)
+        opaque_rgb = opaque_rgb[idx]
+
+    opaque_strip = opaque_rgb.reshape(-1, 1, 3)
+    opaque_pil = Image.fromarray(opaque_strip, mode="RGB")
+    opaque_lab = np.array(opaque_pil.convert("LAB"),
+                            dtype=np.float32).reshape(-1, 3)
+    lab_centres = _kmeans_pp_weighted_vivid(opaque_lab, n_colors)
+    palette_img = Image.fromarray(
+        lab_centres.reshape(1, n_colors, 3).astype(np.uint8), mode="LAB"
+    )
+    rgb_palette = np.array(palette_img.convert("RGB")).reshape(n_colors, 3)
+    return snap_neogeo(rgb_palette)
+
+
 def execute_final_vivid_pipeline(image_path,
                                    target_w: int = 320,
-                                   target_h: int = 224
+                                   target_h: int = 224,
+                                   asset_type: str = "background",
+                                   master_palette: np.ndarray | None = None,
                                    ) -> tuple[list, list]:
     """
     Decoupled Spatial Processing pipeline — corrects the Z-Order
@@ -1050,41 +1114,93 @@ def execute_final_vivid_pipeline(image_path,
     alpha_np = src_np[:, :, 3]
     opaque_mask = alpha_np >= 128.0
 
+    tile_rows = target_h // 16
+    tile_cols = target_w // 16
+
     # ---------------------------------------------------------
-    # PASS 1: PRE-CALCULATE ALL LOCAL PALETTES
-    # Alpha-aware: only opaque pixels feed the clusterer.  Fully-
-    # transparent tiles emit a zero palette (irrelevant — those
-    # pixels short-circuit in Pass 2 anyway).
+    # PASS 1: PALETTE DERIVATION (routed by asset_type)
     # ---------------------------------------------------------
+    # Three modes:
+    #   master_palette != None  -> caller supplies the 15-colour
+    #     palette directly.  Every tile uses it.  This is the path
+    #     for animation frames that must share a palette to avoid
+    #     per-frame flicker — see derive_master_sprite_palette().
+    #   asset_type == "sprite"  -> derive ONE 15-colour palette from
+    #     all opaque pixels in this image and assign it to every
+    #     tile.  Single-frame sprites + UI elements use this path
+    #     so the result has zero per-tile palette drift.
+    #   asset_type == "background"  -> derive a fresh 15-colour
+    #     palette per 16x16 tile (the original high-fidelity HD
+    #     path).  Requires palette dedup downstream — see
+    #     cluster_and_remap_tile_palettes().
+    # All modes feed a Lab-space k-means++ via PIL's LAB conversion;
+    # transparent pixels (alpha < 128) are excluded from clustering
+    # so the palette isn't biased by under-the-mask hidden colours.
     local_luts = {}
-    for ty_idx in range(target_h // 16):
-        for tx_idx in range(target_w // 16):
-            y, x = ty_idx * 16, tx_idx * 16
-            tile_rgb = rgb_np[y:y + 16, x:x + 16]
-            tile_alpha = opaque_mask[y:y + 16, x:x + 16]
 
-            if not tile_alpha.any():
-                # Fully transparent tile — no opaque pixels to cluster.
-                local_luts[(ty_idx, tx_idx)] = np.zeros((15, 3),
-                                                          dtype=np.float32)
-                continue
+    if master_palette is not None:
+        shared = np.asarray(master_palette, dtype=np.float32)
+        if shared.shape != (15, 3):
+            raise ValueError(
+                f"master_palette must be shape (15, 3); got {shared.shape}")
+        for ty_idx in range(tile_rows):
+            for tx_idx in range(tile_cols):
+                local_luts[(ty_idx, tx_idx)] = shared
 
-            opaque_rgb = tile_rgb[tile_alpha].astype(np.uint8)
-            # PIL LAB conversion needs a 2D image, not a flat list.
-            # Pack opaque pixels into an Nx1 strip for conversion.
+    elif asset_type == "sprite":
+        # Single global palette over all opaque pixels of this image.
+        if opaque_mask.any():
+            opaque_rgb = rgb_np[opaque_mask].astype(np.uint8)
+            # Subsample very large sprites to keep clustering cheap.
+            if opaque_rgb.shape[0] > 16384:
+                rng = np.random.default_rng(0)
+                idx = rng.choice(opaque_rgb.shape[0], 16384, replace=False)
+                opaque_rgb = opaque_rgb[idx]
             opaque_strip = opaque_rgb.reshape(-1, 1, 3)
             opaque_pil = Image.fromarray(opaque_strip, mode="RGB")
             opaque_lab = np.array(
                 opaque_pil.convert("LAB"), dtype=np.float32
             ).reshape(-1, 3)
-
             lab_centres = _kmeans_pp_weighted_vivid(opaque_lab, 15)
             palette_img = Image.fromarray(
                 lab_centres.reshape(1, 15, 3).astype(np.uint8), mode="LAB"
             )
-            local_luts[(ty_idx, tx_idx)] = np.array(
+            master_rgb = np.array(
                 palette_img.convert("RGB")
             ).reshape(15, 3).astype(np.float32)
+        else:
+            master_rgb = np.zeros((15, 3), dtype=np.float32)
+        for ty_idx in range(tile_rows):
+            for tx_idx in range(tile_cols):
+                local_luts[(ty_idx, tx_idx)] = master_rgb
+
+    else:  # asset_type == "background"
+        for ty_idx in range(tile_rows):
+            for tx_idx in range(tile_cols):
+                y, x = ty_idx * 16, tx_idx * 16
+                tile_rgb = rgb_np[y:y + 16, x:x + 16]
+                tile_alpha = opaque_mask[y:y + 16, x:x + 16]
+
+                if not tile_alpha.any():
+                    # Fully transparent tile — no opaque pixels to cluster.
+                    local_luts[(ty_idx, tx_idx)] = np.zeros((15, 3),
+                                                              dtype=np.float32)
+                    continue
+
+                opaque_rgb = tile_rgb[tile_alpha].astype(np.uint8)
+                opaque_strip = opaque_rgb.reshape(-1, 1, 3)
+                opaque_pil = Image.fromarray(opaque_strip, mode="RGB")
+                opaque_lab = np.array(
+                    opaque_pil.convert("LAB"), dtype=np.float32
+                ).reshape(-1, 3)
+
+                lab_centres = _kmeans_pp_weighted_vivid(opaque_lab, 15)
+                palette_img = Image.fromarray(
+                    lab_centres.reshape(1, 15, 3).astype(np.uint8), mode="LAB"
+                )
+                local_luts[(ty_idx, tx_idx)] = np.array(
+                    palette_img.convert("RGB")
+                ).reshape(15, 3).astype(np.float32)
 
     # ---------------------------------------------------------
     # PASS 2: GLOBAL SCANLINE DITHER (alpha-aware)
@@ -1163,9 +1279,7 @@ def execute_final_vivid_pipeline(image_path,
     # ---------------------------------------------------------
     # Pre-allocate output lists by exact tile count to avoid
     # repeated list.append() reallocations inside the inner loop —
-    # tile count is known upfront from the target dimensions.
-    tile_rows = target_h // 16
-    tile_cols = target_w // 16
+    # tile_rows / tile_cols computed once at the top of the function.
     n_tiles = tile_rows * tile_cols
     ready_tiles: list = [None] * n_tiles
     final_palettes: list = [None] * n_tiles
@@ -1197,12 +1311,22 @@ def execute_final_vivid_pipeline(image_path,
 
 _VIVID_CACHE_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), ".cache", "vivid")
-_VIVID_CACHE_VERSION = "v6-scanline-alpha-teflon"
+_VIVID_CACHE_VERSION = "v7-unified-asset-pipeline"
 
 
 def _vivid_cache_key(image_path: str, target_w: int, target_h: int,
-                      fit: str, anchor: str, n_colors: int) -> str:
-    """SHA256 of source bytes + params + pipeline version tag."""
+                      fit: str, anchor: str, n_colors: int,
+                      asset_type: str = "background",
+                      master_palette: np.ndarray | None = None) -> str:
+    """
+    SHA256 of source bytes + params + pipeline version tag.
+
+    asset_type and master_palette participate so background and
+    sprite conversions of the same source PNG live in separate
+    cache entries; a per-frame call with a shared master palette
+    keys on the palette's bytes so reusing the same master across
+    frames produces deterministic cache hits.
+    """
     import hashlib
     h = hashlib.sha256()
     try:
@@ -1215,7 +1339,11 @@ def _vivid_cache_key(image_path: str, target_w: int, target_h: int,
     except OSError:
         return ""
     h.update(f"|{target_w}|{target_h}|{fit}|{anchor}|{n_colors}|"
-              f"{_VIVID_CACHE_VERSION}".encode())
+              f"{asset_type}|{_VIVID_CACHE_VERSION}".encode())
+    if master_palette is not None:
+        h.update(b"|master:")
+        h.update(np.ascontiguousarray(
+            master_palette, dtype=np.uint8).tobytes())
     return h.hexdigest()
 
 
@@ -1248,6 +1376,92 @@ def _vivid_cache_save(key: str, indexed: np.ndarray,
         pass
 
 
+def convert_sprite_via_vivid_pipeline(
+        image_path,
+        target_w: int = 64,
+        target_h: int = 64,
+        fit: str = "contain",
+        anchor: str = "center",
+        n_colors: int = COLORS_PER_TILE,
+        master_palette: np.ndarray | None = None,
+        **kwargs,
+        ) -> tuple[np.ndarray, np.ndarray, dict]:
+    """
+    Sprite-mode wrapper: routes through execute_final_vivid_pipeline
+    with asset_type="sprite" so the whole image locks to a single
+    15-colour palette.  Use master_palette=<derived> to share one
+    palette across every frame of an animation sequence so there
+    is zero per-frame palette drift (no shimmer).
+
+    Returns the same (indexed_uint16, palette16_uint16, metadata)
+    contract as convert_screen_via_vivid_pipeline so callers can
+    treat sprites and screens identically downstream.
+
+    For sprites the single-bank collapse is trivial — the master
+    palette IS the only palette — so the global-palette derivation
+    step is skipped.  The dither pattern uses the per-pixel scanline
+    FS with the same Teflon Routing for high-contrast UI elements.
+    """
+    target_w = max(16, (target_w // 16) * 16)
+    target_h = max(16, (target_h // 16) * 16)
+
+    cache_key = _vivid_cache_key(str(image_path), target_w, target_h,
+                                   fit, anchor, n_colors,
+                                   asset_type="sprite",
+                                   master_palette=master_palette)
+    cached = _vivid_cache_load(cache_key)
+    if cached is not None:
+        return cached
+
+    ready_tiles, final_palettes = execute_final_vivid_pipeline(
+        image_path, target_w, target_h,
+        asset_type="sprite",
+        master_palette=master_palette,
+    )
+
+    tile_cols = target_w // 16
+    tile_rows = target_h // 16
+    n_tiles = len(ready_tiles)
+
+    # Single palette across the whole sprite — every tile shares
+    # final_palettes[0].  Pack into the (16, 3) NeoGeo bank shape.
+    sprite_palette = np.array(final_palettes[0],
+                                dtype=np.uint8).reshape(15, 3)
+    palette16 = np.zeros((16, 3), dtype=np.uint16)
+    palette16[1:1 + n_colors] = sprite_palette.astype(np.uint16)
+
+    # Assemble the (H, W) indexed buffer directly — no second
+    # dither pass needed since every tile already references the
+    # same palette.
+    indexed = np.zeros((target_h, target_w), dtype=np.uint16)
+    for ti in range(n_tiles):
+        ty, tx = divmod(ti, tile_cols)
+        y0, x0 = ty * 16, tx * 16
+        tile_indices = np.array(ready_tiles[ti],
+                                  dtype=np.uint8).reshape(16, 16)
+        indexed[y0:y0 + 16, x0:x0 + 16] = tile_indices.astype(np.uint16)
+
+    metadata = {
+        "source_width":   int(target_w),
+        "source_height":  int(target_h),
+        "canvas_width":   int(target_w),
+        "canvas_height":  int(target_h),
+        "content_left":   0,
+        "content_top":    0,
+        "content_width":  int(target_w),
+        "content_height": int(target_h),
+        "n_colors":       int(n_colors),
+        "tile_cols":      int(tile_cols),
+        "tile_rows":      int(tile_rows),
+        "n_tiles":        int(n_tiles),
+        "pipeline":       "vivid_sprite_single_palette",
+        "cache_version":  _VIVID_CACHE_VERSION,
+        "master_palette_supplied": master_palette is not None,
+    }
+    _vivid_cache_save(cache_key, indexed, palette16, metadata)
+    return indexed, palette16, metadata
+
+
 def convert_screen_via_vivid_pipeline(
         image_path,
         target_w: int = 320,
@@ -1278,7 +1492,8 @@ def convert_screen_via_vivid_pipeline(
 
     # Cache hot-path: SHA256 of source bytes + params + version tag.
     cache_key = _vivid_cache_key(str(image_path), target_w, target_h,
-                                   fit, anchor, n_colors)
+                                   fit, anchor, n_colors,
+                                   asset_type="background")
     cached = _vivid_cache_load(cache_key)
     if cached is not None:
         return cached
