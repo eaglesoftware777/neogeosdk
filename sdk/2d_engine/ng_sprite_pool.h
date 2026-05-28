@@ -6,18 +6,18 @@
 /*
  * Hardware sprite slot priority layout.
  *
- * Lower sprite slot numbers draw in front of higher-numbered slots.
- * Keep backgrounds in the high range and active characters/effects in
- * lower ranges so large background strips cannot cover gameplay sprites.
+ * Higher sprite slot numbers draw in front of lower-numbered slots.
+ * Keep backgrounds in low ranges and active characters/effects above them
+ * so large background strips cannot cover gameplay sprites.
  *
- * Recommended layout (front to back):
- *   Slots   1-95  : title/front one-off generated screens
+ * Recommended layout (back to front):
+ *   Slots   1-31  : background layers / parallax
+ *   Slots  33-95  : title/front one-off generated screens
  *   Slots  96-223 : characters / NPCs assigned by ng_chars
  *   Slots 224-255 : effects
  *   Slots 256-287 : particles
  *   Slots 288-299 : temporary effects
- *   Slots 300-315 : background layer 0
- *   Slots 316-331 : background layer 1 / parallax
+ *   Slots 300-331 : reserved legacy high windows
  *
  * The sprite_base parameter passed to showScreenN() is the VRAM byte offset
  * for tile data: sprite_base = slot * 64.  SCB1 address for strip S is
@@ -26,7 +26,7 @@
  */
 #define NG_SPR_TOTAL         380
 #define NG_SPR_LAST          379
-#define NG_SPR_TITLE_FIRST   1
+#define NG_SPR_TITLE_FIRST   33
 #define NG_SPR_TITLE_LAST    95
 #define NG_SPR_CHAR_FIRST    96
 #define NG_SPR_CHAR_LAST     223
@@ -36,8 +36,8 @@
 #define NG_SPR_PART_LAST     287
 #define NG_SPR_TEMP_FIRST    288
 #define NG_SPR_TEMP_LAST     299
-#define NG_SPR_BG0_FIRST     300
-#define NG_SPR_BG1_FIRST     316
+#define NG_SPR_BG0_FIRST     1
+#define NG_SPR_BG1_FIRST     17
 #define NG_SPR_BG_STRIPS     16
 
 /* sprite_base value for showScreenN: slot * 64 */
