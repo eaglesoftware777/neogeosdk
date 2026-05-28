@@ -50,6 +50,11 @@ static void NEOGEO_USER chars_hide_slot(uint16_t firstSprite, uint8_t strips)
     ng_sprite_hide_range(firstSprite, strips);
 }
 
+static void NEOGEO_USER chars_hide_window(uint16_t firstSprite)
+{
+    chars_hide_slot(firstSprite, NG_SPRITE_MAX_STRIPS);
+}
+
 static void NEOGEO_USER ng_chars_rebuild_top(void)
 {
     uint8_t i = NG_MAX_CHARS;
@@ -449,7 +454,7 @@ void NEOGEO_USER ng_chars_draw(void)
 
         if (!should_draw) {
             if (ng_char_uploaded_first[i] != 0xffff) {
-                ng_sprite_hide_range(ng_char_uploaded_first[i], ng_char_uploaded_strips[i]);
+                chars_hide_window(ng_char_uploaded_first[i]);
                 ng_char_uploaded_strips[i] = 0;
                 ng_char_uploaded_first[i] = 0xffff;
             }
@@ -472,22 +477,22 @@ void NEOGEO_USER ng_chars_draw(void)
     for (i = 0; i < count; i++) {
         uint8_t idx = order[i];
         NGCharacter *c = &ng_chars[idx];
-        uint8_t strips = c->sprite_strips ? c->sprite_strips : 1;
-        if (strips > NG_SPRITE_MAX_STRIPS) strips = NG_SPRITE_MAX_STRIPS;
-
         if (c->sprite_first != next_slot) {
-            /* Slot changed due to depth-sort reorder: hide stale VRAM. */
             if (ng_char_uploaded_first[idx] != 0xffff) {
-                ng_sprite_hide_range(ng_char_uploaded_first[idx],
-                                     ng_char_uploaded_strips[idx]);
+                chars_hide_window(ng_char_uploaded_first[idx]);
                 ng_char_uploaded_strips[idx] = 0;
                 ng_char_uploaded_first[idx] = 0xffff;
             }
             c->sprite_first = next_slot;
             c->sprite_dirty = 1;
         }
-        next_slot += strips;
+        next_slot += NG_SPRITE_MAX_STRIPS;
+        if (next_slot > NG_SPR_CHAR_LAST) {
+            i++;
+            break;
+        }
     }
+    count = i;
 
     /* Phase 2 – draw each char in depth-sorted order (front-to-back). */
     for (i = 0; i < count; i++) {
@@ -516,15 +521,9 @@ void NEOGEO_USER ng_chars_draw(void)
         ng_sprite_group_set_flip(&g, c->flip_x, c->flip_y);
 
         if (c->sprite_dirty) {
-            /*
-             * Only hide excess strips (char narrowed this frame) – do NOT
-             * clear the active strips first or we flicker.
-             */
-            if (ng_char_uploaded_strips[idx] > visibleStrips) {
-                ng_sprite_hide_range(
-                    c->sprite_first + visibleStrips,
-                    (uint8_t)(ng_char_uploaded_strips[idx] - visibleStrips)
-                );
+            if (visibleStrips < NG_SPRITE_MAX_STRIPS) {
+                ng_sprite_hide_range((uint16_t)(c->sprite_first + visibleStrips),
+                                     (uint16_t)(NG_SPRITE_MAX_STRIPS - visibleStrips));
             }
             ng_sprite_group_upload(&g);
             ng_char_uploaded_strips[idx] = visibleStrips;
@@ -532,6 +531,10 @@ void NEOGEO_USER ng_chars_draw(void)
             c->sprite_dirty = 0;
         } else {
             ng_sprite_group_update_transform(&g);
+            if (visibleStrips < NG_SPRITE_MAX_STRIPS) {
+                ng_sprite_hide_range((uint16_t)(c->sprite_first + visibleStrips),
+                                     (uint16_t)(NG_SPRITE_MAX_STRIPS - visibleStrips));
+            }
         }
     }
 }
@@ -577,7 +580,7 @@ void NEOGEO_USER ng_char_set_sprite(NGCharacter *c, uint16_t firstSprite, uint8_
          * so the sorter can repack slots cleanly on the next draw. */
         uint8_t idx = ng_chars_index(c);
         if (idx != 0xff && ng_char_uploaded_first[idx] != 0xffff) {
-            ng_sprite_hide_range(ng_char_uploaded_first[idx], ng_char_uploaded_strips[idx]);
+            chars_hide_window(ng_char_uploaded_first[idx]);
             ng_char_uploaded_strips[idx] = 0;
             ng_char_uploaded_first[idx]  = 0xffff;
         }

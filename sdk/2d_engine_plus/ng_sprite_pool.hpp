@@ -6,30 +6,18 @@
 /*
  * Hardware sprite slot priority layout.
  *
- *   ╔══════════════════════════════════════════════════════════════════╗
- *   ║  OBSERVED HARDWARE RULE: HIGHER slot number = drawn IN FRONT.    ║
- *   ║                          LOWER slot number  = drawn BEHIND.      ║
- *   ║                                                                  ║
- *   ║  This contradicts older SDK comments that claimed the opposite.  ║
- *   ║  The direction was determined empirically — putting a background ║
- *   ║  at slot 300 covered chars at slot 96, confirming HIGHER = TOP.  ║
- *   ╚══════════════════════════════════════════════════════════════════╝
+ * Lower sprite slot numbers draw in front of higher-numbered slots.
+ * Keep backgrounds in the high range and active characters/effects in
+ * lower ranges so large background strips cannot cover gameplay sprites.
  *
- * Recommended layout (back to front):
- *   Slots   1-15  : BACKGROUND back layer  (drawn behind everything)
- *   Slots  16-31  : BACKGROUND parallax mid-layer
- *   Slots  96-223 : characters / NPCs (assigned automatically by ng_chars)
- *   Slots 224-255 : front effects on top of chars
+ * Recommended layout (front to back):
+ *   Slots   1-95  : title/front one-off generated screens
+ *   Slots  96-223 : characters / NPCs assigned by ng_chars
+ *   Slots 224-255 : effects
  *   Slots 256-287 : particles
- *   Slots 288-299 : transient effects
- *   Slots 300-345 : foreground sprites / hero
- *   Slots 346-379 : HUD / overlays (drawn on top of everything)
- *
- * The legacy names NG_SPR_BG0_FIRST = 300 / NG_SPR_BG1_FIRST = 316 are
- * MISLEADING — those slots are at the FRONT, not the back.  New code
- * that needs a true background should use slots 1..15.  The existing
- * names are kept for source compatibility but should be considered
- * deprecated.
+ *   Slots 288-299 : temporary effects
+ *   Slots 300-315 : background layer 0
+ *   Slots 316-331 : background layer 1 / parallax
  *
  * The sprite_base parameter passed to showScreenN() is the VRAM byte offset
  * for tile data: sprite_base = slot * 64.  SCB1 address for strip S is

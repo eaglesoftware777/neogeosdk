@@ -53,6 +53,12 @@ void NEOGEO_USER soundSetADPCMBVolume(uint8_t v);
 void NEOGEO_USER soundSetSSGVolume(uint8_t v);
 void NEOGEO_USER soundSetFMVolume(uint8_t v);
 void NEOGEO_USER soundSetTempo(uint8_t t);
+void NEOGEO_USER soundApplyMix(uint8_t adpcma, uint8_t adpcmb,
+                               uint8_t ssg, uint8_t fm);
+void NEOGEO_USER soundSetADPCMBPan(uint8_t pan);
+void NEOGEO_USER soundFMSetLFO(uint8_t value);
+void NEOGEO_USER soundFMSetTempo(uint8_t value);
+void NEOGEO_USER soundFadeInSpeed(uint8_t speed);
 void NEOGEO_USER soundFadeOutSpeed(uint8_t speed);
 void NEOGEO_USER soundCancelFade(void);
 void NEOGEO_USER soundStopMusic(void);
@@ -69,31 +75,15 @@ void NEOGEO_USER ng_clear_screen_full(void);
 #define U_CENTRE_X      160
 
 /*
- * Sprite slot priority — empirically determined from user testing.
+ * Sprite slot plan.
  *
- * Despite what the SDK comment in ng_sprite_pool.h says, on the actual
- * Neo Geo MVS hardware HIGHER sprite slot numbers are drawn IN FRONT
- * of lower ones.  The SDK's assumption was the opposite, which is why
- * draw_background() pointing at slot 300 ended up COVERING characters
- * in the 96..223 range.  We now follow the observed hardware behaviour.
- *
- * For this demo:
- *   slot   1..16   = BACKGROUND  (DEMO_BG_BACK_SLOT = 1)
- *                    Drawn BEHIND everything else (lowest = back).
- *   slot  96..223  = NGCharacter system (NPCs / managed chars)
- *   slot 256..287  = particles (NG_SPR_PART_FIRST)
- *   slot 350..365  = hero sprite group  (HERO_SLOT_FIRST = 350)
- *                    HIGHER slot = drawn ON TOP of BG, chars, particles.
- *   slot 366..374  = enemy / target sprite group (ENEMY_SLOT_FIRST = 366)
- *                    Behind the hero but in front of everything else.
- *
- * NB: this empirical direction is captured here in the demo only.  The
- * engine's pool comment still claims the opposite — keep this header
- * authoritative for any code that needs occlusion to actually work.
+ * Lower sprite slots draw in front.  Backgrounds stay in the high
+ * background range, while the direct hero/enemy windows stay below the
+ * managed character range so they are never hidden by a full-screen BG.
  */
-#define DEMO_BG_BACK_SLOT  1u                 /* back-most */
-#define HERO_SLOT_FIRST    350u               /* front-most for the hero */
-#define ENEMY_SLOT_FIRST   366u               /* in front of BG, behind hero */
+#define DEMO_BG_BACK_SLOT  NG_SPR_BG0_FIRST
+#define HERO_SLOT_FIRST    64u
+#define ENEMY_SLOT_FIRST   80u
 
 /* Base palette used by palette FX + feedback chapters. */
 static const uint16_t s_palfx_base[16] = {
@@ -318,7 +308,7 @@ static void NEOGEO_USER draw_infix_block(uint16_t tile_base,
 
 static void NEOGEO_USER draw_background(uint8_t frame, int16_t x, int16_t y)
 {
-    /* Low slot so it sits BEHIND chars (96+) on real hardware. */
+    /* High background slot keeps this layer behind characters and effects. */
     demo_draw_sprite_screen(frame, DEMO_BG_BACK_SLOT, x, y,
                             demo_screen_strips(frame),
                             demo_screen_rows(frame),
@@ -633,17 +623,22 @@ static uint8_t NEOGEO_USER chap_sound(void)
     /* --- 4) FM TRACKS — all 8 melodic loops ------------------------ */
     demo_fix_puts(2u, 5u, "4. FM TRACKS (1..8)               ", 2u);
     soundSceneReset();                         snd_step();
-    soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Au); snd_step();
     for (i = 0u; i < SOUND_FM_TRACK_COUNT; i++) {
         char lbl[8];
         lbl[0] = 'F'; lbl[1] = 'M'; lbl[2] = ' '; lbl[3] = (char)('0' + (i + 1u));
         lbl[4] = '\0';
         demo_fix_puts(2u, 13u, lbl, 1u);
-        soundStopMusic(); snd_step();
-        playFMTrack(i);   snd_step();
-        if (uwait(360u)) return 1u;
+        soundStopAll();                            snd_step();
+        soundSceneReset();                         snd_step();
+        soundFMSetLFO(0x00u);                      snd_step();
+        soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Au); snd_step();
+        playFMTrack(i);                            snd_step();
+        if (uwait(220u)) return 1u;
     }
-    soundStopMusic();        snd_step();
+    soundStopAll();          snd_step();
+    soundSceneReset();       snd_step();
+    soundFMSetLFO(0x00u);    snd_step();
     soundSetFMVolume(0x00u); snd_step();
     demo_fix_puts(2u, 13u, "         ", 0u);
 
@@ -671,22 +666,30 @@ static uint8_t NEOGEO_USER chap_sound(void)
      * the patch's own LFO byte to $22), THEN soundFMSetLFO to
      * override with the rate we actually want to demo. */
     demo_fix_puts(2u, 15u, "LFO OFF      (flat reference)     ", 1u);
-    soundStopMusic();    snd_step();
+    soundStopAll();      snd_step();
+    soundSceneReset();   snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x08u); snd_step();
     playFMTrack(6u);     snd_step();
     soundFMSetLFO(0x00u); snd_step();
     if (uwait(180u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=1   (slow wobble)        ", 1u);
-    soundStopMusic();    snd_step();
+    soundStopAll();      snd_step();
+    soundSceneReset();   snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x08u); snd_step();
     playFMTrack(6u);     snd_step();
     soundFMSetLFO(0x09u); snd_step();
     if (uwait(180u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=3   (medium vibrato)     ", 1u);
-    soundStopMusic();    snd_step();
+    soundStopAll();      snd_step();
+    soundSceneReset();   snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x08u); snd_step();
     playFMTrack(6u);     snd_step();
     soundFMSetLFO(0x0Bu); snd_step();
     if (uwait(180u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=6   (fast vibrato)       ", 1u);
-    soundStopMusic();    snd_step();
+    soundStopAll();      snd_step();
+    soundSceneReset();   snd_step();
+    soundApplyMix(0x30u, 0x00u, 0x00u, 0x08u); snd_step();
     playFMTrack(6u);     snd_step();
     soundFMSetLFO(0x0Eu); snd_step();
     if (uwait(180u)) return 1u;
@@ -705,45 +708,26 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundFMSetTempo(1u); snd_step();
     if (uwait(120u)) return 1u;
 
-    soundStopMusic();        snd_step();
+    soundStopAll();          snd_step();
+    soundSceneReset();       snd_step();
+    soundFMSetLFO(0x00u);    snd_step();
     soundSetFMVolume(0x00u); snd_step();
     demo_fix_puts(2u, 15u, "                                  ", 0u);
 
-    /* --- 5b) FM CSM (Composite Sine Mode) ------------------------- *
-     *
-     * CSM puts FM channel 2 under Timer-A auto-key-on control so each
-     * Timer-A overflow re-triggers ch2 — producing a vowel-like buzz
-     * coloured by whatever patch ch2 is currently playing.  Pair it
-     * with a normal FM track so ch2 has notes to chop; the audible
-     * effect is a "robot speaking through the music" formant.
-     *
-     *   soundFMCSMBegin(hi)   — start CSM with Timer-A high byte hi
-     *   soundFMCSMSweep(a,b,m) — slide formant from a to b (m ms/step)
-     *   soundFMCSMEnd()       — back to normal FM playback
-     */
-    /* CSM is inherently buzzy / clicky — it's the chip rapidly
-     * key-cycling FM ch3 at the Timer-A overflow rate.  Keep the
-     * demo short and quiet so it reads as "speech effect", not
-     * "broken sound".  After the demo we ramp FM volume back up so
-     * the SSG section follows on a clean state. */
-    demo_fix_puts(2u, 5u, "5b. FM CSM (formant buzz on ch3)  ", 2u);
-    soundStopAll();                            snd_step();
-    soundSceneReset();                         snd_step();
-    soundApplyMix(0x30u, 0x00u, 0x00u, 0x06u); snd_step();
-    playFMTrack(6u);                           snd_step();
+    demo_fix_puts(2u, 5u, "5b. FM PATCH PROFILE RESET        ", 2u);
+    for (i = 0u; i < 3u; i++) {
+        demo_fix_puts(2u, 15u, "clean stop -> reset -> patch load ", 1u);
+        soundStopAll();                            snd_step();
+        soundSceneReset();                         snd_step();
+        soundFMSetLFO(0x00u);                      snd_step();
+        soundApplyMix(0x30u, 0x00u, 0x00u, 0x08u); snd_step();
+        playFMTrack((uint8_t)(i + 2u));            snd_step();
+        if (uwait(140u)) return 1u;
+    }
 
-    demo_fix_puts(2u, 15u, "soundFMCSMBegin(180)  mid formant ", 1u);
-    soundFMCSMBegin(180u);
-    if (uwait(80u)) return 1u;
-    soundFMCSMEnd(); snd_step();
-    if (uwait(20u)) return 1u;
-
-    demo_fix_puts(2u, 15u, "soundFMCSMSweep(180,140,10 ms)   ", 1u);
-    soundFMCSMSweep(180u, 140u, 10u);
-    if (uwait(20u)) return 1u;
-
-    soundFMCSMEnd();         snd_step();
-    soundStopMusic();        snd_step();
+    soundStopAll();          snd_step();
+    soundSceneReset();       snd_step();
+    soundFMSetLFO(0x00u);    snd_step();
     soundSetFMVolume(0x00u); snd_step();
     demo_fix_puts(2u, 15u, "                                  ", 0u);
 
@@ -1298,16 +1282,14 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
     snd_cross_to(SOUND_MUSIC_G);
 
     /*
-     * BG drawn ONCE at the low slot so it stays BEHIND the portrait.
-     * draw_background uses DEMO_BG_BACK_SLOT (96+) per its comment;
-     * since higher slot = drawn on top, our portrait sprite below
-     * needs to live on an even higher slot than the BG.
+     * BG drawn once in the high background slot range so it stays behind
+     * the portrait and other gameplay sprites.
      */
     draw_background(2u, 32, 16);
 
     /*
-     * Portrait — drawn at slot 200 so it sits ON TOP of the BG (slot
-     * 96).  Centred horizontally, slightly above vertical centre.
+     * Portrait drawn at slot 200, in front of the high-slot background.
+     * It is centred horizontally and slightly above vertical centre.
      * Palette is the portrait's OWN palette bank (loaded by
      * demo_load_screen_palette) — completely independent of slot 15
      * so the FX cycle cannot corrupt the face.
@@ -1847,7 +1829,7 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
         }
 
         /* ============================================================
-         * CLONE AI
+         * CLONE LOGIC
          * ============================================================ */
         since_hit++;
         switch (c_state) {
@@ -1933,9 +1915,8 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
                       (uint8_t)(c_state == CLONE_STRIKING ? 2u : 1u));
 
         /* ============================================================
-         * Render — clone first (slot 24), then player (slot 1 via
-         * hero_draw).  Player gets the higher slot priority because
-         * HIGHER slot = drawn on top in our pipeline.
+         * Render clone first, then the player.  The player window uses
+         * the lower front slot so it stays over the clone and backdrop.
          * ============================================================ */
         {
             uint8_t strips = demo_screen_strips(c_frame);
@@ -2265,10 +2246,10 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
 static uint8_t NEOGEO_USER chap_render3d(void)
 {
     /*
-     * Minimal pseudo-3D scene — ONE hero centred on screen that
+     * Minimal pseudo-3D scene: one hero centred on screen that
      * scales between distant (small/up) and close (full/down) to
-     * convey depth.  Hero lives at sprite slot 220 so it draws ON
-     * TOP of the BG (DEMO_BG_BACK_SLOT = ~96; higher slot = on top).
+     * convey depth.  The hero uses a lower slot than the background,
+     * so it stays visible while scaling.
      */
     uint16_t t;
     const uint8_t hero_frame = HERO_IDLE_FRAME;   /* clean idle pose */
@@ -2702,7 +2683,7 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
             }
         }
 
-        /* ---- Dive AI ------------------------------------------------ */
+        /* ---- Dive pattern ------------------------------------------- */
         if (dive_idx == DIVE_NONE) {
             if (dive_timer > 0u) dive_timer--;
             if (dive_timer == 0u && !game_over) {

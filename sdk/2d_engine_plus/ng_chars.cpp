@@ -417,7 +417,7 @@ void CharManager::draw()
 
         if (!should_draw) {
             if (uploaded_first[i] != 0xffff) {
-                NGSpriteGroup::hideRange(uploaded_first[i], uploaded_strips[i]);
+                NGSpriteGroup::hideRange(uploaded_first[i], NG_SPRITE_MAX_STRIPS);
                 uploaded_strips[i] = 0;
                 uploaded_first[i]  = 0xffff;
             }
@@ -433,20 +433,22 @@ void CharManager::draw()
     for (i = 0; i < count; i++) {
         uint8_t idx = order[i];
         NGCharacter *c = &pool[idx];
-        uint8_t strips = c->sprite_strips ? c->sprite_strips : 1;
-        if (strips > NG_SPRITE_MAX_STRIPS) strips = NG_SPRITE_MAX_STRIPS;
-
         if (c->sprite_first != next_slot) {
             if (uploaded_first[idx] != 0xffff) {
-                NGSpriteGroup::hideRange(uploaded_first[idx], uploaded_strips[idx]);
+                NGSpriteGroup::hideRange(uploaded_first[idx], NG_SPRITE_MAX_STRIPS);
                 uploaded_strips[idx] = 0;
                 uploaded_first[idx]  = 0xffff;
             }
             c->sprite_first = next_slot;
             c->sprite_dirty = 1;
         }
-        next_slot += strips;
+        next_slot += NG_SPRITE_MAX_STRIPS;
+        if (next_slot > NG_SPR_CHAR_LAST) {
+            i++;
+            break;
+        }
     }
+    count = i;
 
     /* Phase 2 — upload or transform-only update each visible char */
     for (i = 0; i < count; i++) {
@@ -471,9 +473,9 @@ void CharManager::draw()
         g.setFlip(c->flip_x, c->flip_y);
 
         if (c->sprite_dirty) {
-            if (uploaded_strips[idx] > vis_strips) {
-                NGSpriteGroup::hideRange(c->sprite_first + vis_strips,
-                                        (uint8_t)(uploaded_strips[idx] - vis_strips));
+            if (vis_strips < NG_SPRITE_MAX_STRIPS) {
+                NGSpriteGroup::hideRange((uint16_t)(c->sprite_first + vis_strips),
+                                        (uint8_t)(NG_SPRITE_MAX_STRIPS - vis_strips));
             }
             g.upload();
             uploaded_strips[idx] = vis_strips;
@@ -481,6 +483,10 @@ void CharManager::draw()
             c->sprite_dirty      = 0;
         } else {
             g.updateTransform();
+            if (vis_strips < NG_SPRITE_MAX_STRIPS) {
+                NGSpriteGroup::hideRange((uint16_t)(c->sprite_first + vis_strips),
+                                        (uint8_t)(NG_SPRITE_MAX_STRIPS - vis_strips));
+            }
         }
     }
 }
@@ -540,7 +546,7 @@ void NGCharacter::setSprite(uint16_t first, uint8_t strips_arg, uint8_t h, uint1
         if (idx != 0xff) {
             uint16_t uf = mgr.uploaded_first[idx];
             if (uf != 0xffff) {
-                NGSpriteGroup::hideRange(uf, mgr.uploaded_strips[idx]);
+                NGSpriteGroup::hideRange(uf, NG_SPRITE_MAX_STRIPS);
                 mgr.clearUploadSlot(idx);
             }
         }
