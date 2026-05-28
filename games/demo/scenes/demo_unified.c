@@ -77,11 +77,11 @@ void NEOGEO_USER ng_clear_screen_full(void);
 /*
  * Sprite slot plan.
  *
- * Lower sprite slots draw in front.  Backgrounds stay in the high
- * background range, while the direct hero/enemy windows stay below the
- * managed character range so they are never hidden by a full-screen BG.
+ * Higher sprite slots draw in front on Neo Geo.  Backgrounds use a low
+ * slot window, while direct hero/enemy windows stay higher so they are
+ * never hidden by a full-screen BG.
  */
-#define DEMO_BG_BACK_SLOT  NG_SPR_BG0_FIRST
+#define DEMO_BG_BACK_SLOT  1u
 #define HERO_SLOT_FIRST    64u
 #define ENEMY_SLOT_FIRST   80u
 
@@ -134,6 +134,20 @@ static uint8_t NEOGEO_USER uwait(uint16_t frames)
     uint16_t t;
     for (t = 0u; t < frames; t++)
         if (uframe()) return 1u;
+    return 0u;
+}
+
+static uint8_t NEOGEO_USER fm_lfo_hold(uint8_t value, uint16_t frames)
+{
+    uint16_t t;
+
+    for (t = 0u; t < frames; t++) {
+        if ((t & 15u) == 0u) {
+            soundFMSetLFO(value);
+        }
+        if (uframe()) return 1u;
+    }
+
     return 0u;
 }
 
@@ -642,57 +656,25 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundSetFMVolume(0x00u); snd_step();
     demo_fix_puts(2u, 13u, "         ", 0u);
 
-    /* --- 5) FM EFFECTS — LFO (vibrato) + live tempo override ------ *
-     *
-     * Plays one FM track and toggles two live effects against it:
-     *  (a) LFO ($22 register): cycles rate 0 → 1 → 3 → 6.  Patch 6
-     *      sets PMS=3 in its stereo byte ($C3) so vibrato depth is
-     *      a musical ±10 cents (not a siren).  The listener should
-     *      hear the same melody alternate between flat tones and
-     *      progressively faster pitch wobble.
-     *  (b) FM tempo (soundFMSetTempo writes VAR_FM_TEMPO directly):
-     *      cycles raw period 1 → 2 → 4 → 1.  Lower value = faster
-     *      music step; the melody should obviously speed up and slow
-     *      down without restarting. */
+    /* --- 5) FM EFFECTS: LFO (vibrato) + live tempo override ------- */
     demo_fix_puts(2u, 5u, "5. FM EFFECTS  (LFO + TEMPO)      ", 2u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
+    playFMTrack(6u);                           snd_step();
 
-    /* Restart the FM track for every LFO rate so each variant is
-     * heard from the beginning of the melody — easier A/B comparison
-     * than letting the track scroll through unrelated bars.  Note
-     * the order: playFMTrack first (which loads the patch and writes
-     * the patch's own LFO byte to $22), THEN soundFMSetLFO to
-     * override with the rate we actually want to demo. */
     demo_fix_puts(2u, 15u, "LFO OFF      (flat reference)     ", 1u);
-    soundStopAll();      snd_step();
-    soundSceneReset();   snd_step();
-    soundApplyMix(0x30u, 0x00u, 0x00u, 0x08u); snd_step();
-    playFMTrack(6u);     snd_step();
     soundFMSetLFO(0x00u); snd_step();
-    if (uwait(180u)) return 1u;
+    if (fm_lfo_hold(0x00u, 180u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=1   (slow wobble)        ", 1u);
-    soundStopAll();      snd_step();
-    soundSceneReset();   snd_step();
-    soundApplyMix(0x30u, 0x00u, 0x00u, 0x08u); snd_step();
-    playFMTrack(6u);     snd_step();
     soundFMSetLFO(0x09u); snd_step();
-    if (uwait(180u)) return 1u;
+    if (fm_lfo_hold(0x09u, 180u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=3   (medium vibrato)     ", 1u);
-    soundStopAll();      snd_step();
-    soundSceneReset();   snd_step();
-    soundApplyMix(0x30u, 0x00u, 0x00u, 0x08u); snd_step();
-    playFMTrack(6u);     snd_step();
     soundFMSetLFO(0x0Bu); snd_step();
-    if (uwait(180u)) return 1u;
+    if (fm_lfo_hold(0x0Bu, 180u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=6   (fast vibrato)       ", 1u);
-    soundStopAll();      snd_step();
-    soundSceneReset();   snd_step();
-    soundApplyMix(0x30u, 0x00u, 0x00u, 0x08u); snd_step();
-    playFMTrack(6u);     snd_step();
     soundFMSetLFO(0x0Eu); snd_step();
-    if (uwait(180u)) return 1u;
+    if (fm_lfo_hold(0x0Eu, 180u)) return 1u;
     soundFMSetLFO(0x00u); snd_step();
 
     demo_fix_puts(2u, 15u, "TEMPO period=1  (fast)            ", 1u);
