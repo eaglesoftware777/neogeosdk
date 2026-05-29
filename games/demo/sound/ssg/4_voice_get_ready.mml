@@ -1,13 +1,4 @@
-; 4_voice_get_ready — SSG voice approximation: "GET READY!"
-;
-; Plain SSG notes — no envelope directives (K/Q/Y), so the standard
-; reverted driver can parse this without falling through to garbage
-; bytes.  Cadence + pitch contour approximates the spoken phrase:
-;
-;   GET   = short low-mid burst
-;   REA-  = sustained rising vowel
-;   -DY   = descending close
-;   !     = high accent
+; 4_voice_get_ready - short ready sting
 
 T220
 P0
@@ -15,9 +6,9 @@ V12
 O4
 L16
 
-D F+ A4
-E G B8
-C E G4
-> C2
+G B > D8
+< A > C E8
+< G > D G4
+R4
 
 ~

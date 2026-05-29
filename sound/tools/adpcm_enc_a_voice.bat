@@ -1,6 +1,6 @@
 @echo off
-rem Voice alphabet 16-bit PCM -> ADPCM-A.  Mirrors adpcm_enc_a.bat but
-rem operates on samples\out_16el_a_voice -> samples\out_a_voice.
+rem Voice 16-bit PCM -> ADPCM-A. Mirrors adpcm_enc_a.bat but operates on
+rem samples\out_16el_a_voice -> samples\out_a_voice.
 if not defined PY set "PY=py"
 if not defined GAME_SOUND set "GAME_SOUND=.."
 set "SAMPLES_BASE=%GAME_SOUND%\samples"

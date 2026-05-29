@@ -62,11 +62,11 @@ op3=01,30,1F,0C,08,AF,00
 op4=01,00,1F,0A,06,9F,00
 
 [patch 5]
-name=Dark Reed Tremolo
+name=Dark Reed Vibrato
 alg=4
 fb=6
-stereo=D0
-lfo=09
+stereo=C7
+lfo=00
 op1=01,24,1F,08,04,7F,00
 op2=02,1C,1F,08,04,7F,00
 op3=01,30,1F,08,04,8F,00

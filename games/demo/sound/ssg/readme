@@ -13,10 +13,10 @@ are started explicitly through:
 
 CURRENT SOURCE FILES
 --------------------
-  0_square_menu.mml   — clean square-wave menu loop
-  1_arcade_alert.mml  — short alert pattern
-  2_insert_coin.mml   — insert-coin one-shot sting
-  3_warrior_riff.mml  — extra warrior riff accent line
+  0_ssg_example_a.mml — short star-coin ladder hook
+  1_ssg_example_b.mml — maze-runner bounce hook
+  2_ssg_example_c.mml — red-alert climbing hook
+  3_ssg_example_d.mml — spare low-pulse hook
 
 Current preset config source:
 
@@ -42,3 +42,5 @@ Current shipped live flow note:
 - the default title and game helpers now prefer direct ADPCM-B playback
 - standalone SSG remains available for menu beeps, alerts, insert-coin stings,
   and explicit retro square-wave overlays
+- the demo scene intentionally showcases only the first three SSG tracks so the
+  section stays short and readable

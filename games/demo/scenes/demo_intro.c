@@ -279,6 +279,7 @@ void NEOGEO_USER demo_intro_sdk_title(void)
 
         playSFX(SOUND_SFX_10);
         demo_wait(12u);
+		speakWord("SDKV1.3.0");
 
         demo_fix_puts(7u, 13u, sub1, PAL_RED);
         demo_wait(8u);
