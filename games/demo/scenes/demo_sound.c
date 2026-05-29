@@ -30,6 +30,8 @@ void NEOGEO_USER playSFX(uint8_t n);
 void NEOGEO_USER playSFXB(uint8_t n);
 void NEOGEO_USER playVoiceCue(uint8_t n);
 void NEOGEO_USER soundApplyMix(uint8_t a, uint8_t b, uint8_t s, uint8_t f);
+void NEOGEO_USER soundFMSetLFO(uint8_t value);
+void NEOGEO_USER soundFMSetTempo(uint8_t value);
 
 static void NEOGEO_USER snd_vbl(uint8_t frames)
 {
@@ -72,21 +74,28 @@ void NEOGEO_USER demo_sound_run(void)
     soundSetADPCMBVolume(0x00u);
     soundCancelFade();
 
-    snd_label(7u, "FM", "ATTRACT FAST", 1u);
-    playFMTrack(SOUND_FM_C);
-    if (demo_wait(120u)) goto done;
-
-    snd_label(8u, "FM", "DUEL SUSPENSE", 2u);
+    snd_label(7u, "FM4", "DUEL SUSPENSE", 2u);
     soundStopMusic();
     snd_vbl(4u);
     playFMTrack(SOUND_FM_D);
     if (demo_wait(120u)) goto done;
 
-    snd_label(9u, "FM", "VICTORY JINGLE", 0u);
+    snd_label(9u, "FM6", "LFO OFF", 1u);
     soundStopMusic();
     snd_vbl(4u);
     playFMTrack(SOUND_FM_F);
-    if (demo_wait(100u)) goto done;
+    soundFMSetLFO(0x00u);
+    if (demo_wait(64u)) goto done;
+    snd_label(10u, "FM6", "LFO FAST", 2u);
+    soundFMSetLFO(0x0Fu);
+    if (demo_wait(96u)) goto done;
+    snd_label(11u, "FM6", "TEMPO SLOW", 1u);
+    soundFMSetTempo(6u);
+    if (demo_wait(96u)) goto done;
+    snd_label(12u, "FM6", "TEMPO FAST", 2u);
+    soundFMSetTempo(1u);
+    if (demo_wait(72u)) goto done;
+    soundFMSetLFO(0x00u);
 
     /* -- SSG Tracks -- */
     demo_clear_scene();
@@ -139,12 +148,8 @@ void NEOGEO_USER demo_sound_run(void)
     playSFXB(SOUND_TRACK_C);
     if (demo_wait(120u)) goto done;
 
-    snd_label(9u,  "VOICE", "GET READY", 2u);
-    playVoiceCue(SOUND_VOICE_1);
-    if (demo_wait(84u)) goto done;
-
-    snd_label(11u, "VOICE", "ATTACK", 1u);
-    playVoiceCue(SOUND_VOICE_2);
+    snd_label(9u,  "VOICE", "INSERT COIN", 2u);
+    speakText("INSERT COIN");
     if (demo_wait(84u)) goto done;
 
     /* -- Full Mix -- */

@@ -1,21 +1,19 @@
-; 0_ssg_example_a — Simple C major arpeggio (Galaxian intro feel)
+; 0_ssg_example_a - star coin ladder
 
-T180
+T210
 P0
 V13
 O5
+L16
+
+C G > C < G  E G > C < E
+F A > C < A  E G B G
+
+G B > D < B  A > C E < A
+G E C E  G > C < G E
+
 L8
-
-; A — ascending arpeggio
-C E G > C  < G E C4
-C E G > C  < G E C4
-
-; B — variation
-D F A > D  < A F D4
-E G > C E  < G E C4
-
-; C — descending close
-> C < B A G  F E D C
-G4 E4 C4 R4
+F G A > C  < B A G E
+C4 R8 C8 G8 > C4
 
 ~

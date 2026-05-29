@@ -1,8 +1,7 @@
 #!/bin/sh
-# Voice alphabet WAV → 16-bit PCM (intermediate step before ADPCM-A
-# encoding).  Mirrors enc_wave16le_a.sh but reads from samples/
-# in_wav_a_voice (the alphabet WAVs a.wav..z.wav) and writes to
-# samples/out_16el_a_voice.
+# Voice WAV -> 16-bit PCM (intermediate step before ADPCM-A encoding).
+# Mirrors enc_wave16le_a.sh but reads from samples/in_wav_a_voice and
+# writes to samples/out_16el_a_voice.
 PYTHON_BIN="${PYTHON:-python3}"
 SOX_BIN="${SOX:-}"
 SAMPLES_IN="${GAME_SOUND:-..}/samples/in_wav_a_voice"

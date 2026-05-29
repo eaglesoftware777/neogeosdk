@@ -1,20 +1,19 @@
-; 1_ssg_example_b — Frogger-style bounce (G major, mid range)
+; 1_ssg_example_b - maze runner bounce
 
-T220
+T230
 P1
 V11
 O4
 L16
 
-G B D G  D B G4
-F+ A C F+  C A F+4
+G R B R  > D < B G R
+A R > C R  E < C A R
 
-G F+ E D  C B A G
-F+ E D B  C E G B
+G B > D G  F+ D < B G
+A > C E A  G E C < A
 
-D B G D  E B G E
-F+ A C F+  G B D G
-C A F+ C  B G E B
-G2 R4 R4
+L8
+B > D C < B  A G F+ E
+G4 R8 G8 > D8 < G4
 
 ~

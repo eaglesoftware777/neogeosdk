@@ -1,8 +1,7 @@
 @echo off
-rem Voice alphabet WAV -> 16-bit PCM (intermediate step before ADPCM-A
-rem encoding).  Mirrors enc_wave16le_a.bat but reads from samples\
-rem in_wav_a_voice (the alphabet WAVs a.wav..z.wav) and writes to
-rem samples\out_16el_a_voice.
+rem Voice WAV -> 16-bit PCM (intermediate step before ADPCM-A encoding).
+rem Mirrors enc_wave16le_a.bat but reads from samples\in_wav_a_voice and
+rem writes to samples\out_16el_a_voice.
 setlocal
 if not defined PY set "PY=py"
 if not defined GAME_SOUND set "GAME_SOUND=.."

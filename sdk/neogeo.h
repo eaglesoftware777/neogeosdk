@@ -136,8 +136,12 @@ void soundSetSSGNoise(uint8_t period);   /* 5-bit noise period */
 void soundFMSetTempo(uint8_t period);    /* Timer-B IRQs per FM step, 1..8 */
 
 /* Voice alphabet — ADPCM-A samples bundled from in_wav_a_voice/. */
+void playVoiceSample(uint8_t sample_index);  /* SOUND_VOICE_* full ADPCM-A index */
 void playVoiceLetter(uint8_t letter_index);  /* SOUND_VOICE_LETTER_X */
-void speakWord(const char *text);            /* spell out ASCII letters */
+void playVoiceWord(uint8_t word_sample);     /* SOUND_VOICE_WORD_X */
+void playVoiceNumber(uint16_t value);        /* direct number sample or digit fallback */
+void speakWord(const char *text);            /* compatibility alias for speakText */
+void speakText(const char *text);            /* direct words, then letters/digits */
 
 /* CSM (Composite Sine Mode) — FM channel 2 auto-keyed by Timer A.
  * Begin/End drive reg $27 + Timer A regs $24/$25 via driver cmds $1B/$1C.

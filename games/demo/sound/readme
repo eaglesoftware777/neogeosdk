@@ -6,27 +6,37 @@ Raw and processed audio samples for the YM2610 ADPCM-A and ADPCM-B channels.
 DIRECTORY LAYOUT
 ----------------
   in_wav_a/        — Source WAV files for ADPCM-A (6-channel samples)
+  in_wav_a_voice/  — Source WAV files for generated ADPCM-A voice samples
   in_wav_b/        — Source WAV files for ADPCM-B (delta-T streaming)
   out_16el_a/      — Intermediate 16-bit LE WAVs for ADPCM-A
+  out_16el_a_voice/— Intermediate 16-bit LE WAVs for voice samples
   out_16el_b/      — Intermediate 16-bit LE WAVs for ADPCM-B
   out_a/           — Final .adpcma encoded files
+  out_a_voice/     — Final .adpcma voice files packed after regular SFX
   out_b/           — Final .adpcmb encoded files
   downloads/       — Downloaded raw sample sources
 
 ENCODING PIPELINE
 -----------------
-1. Place WAV source files in in_wav_a/ (ADPCM-A) or in_wav_b/ (ADPCM-B).
+1. Place WAV source files in in_wav_a/ (ADPCM-A), in_wav_a_voice/
+   (ADPCM-A voice bank), or in_wav_b/ (ADPCM-B).
 2. Run: make samples
-   (runs enc_wave16le_a.sh, enc_wave16le_b.sh, adpcm_enc_process.sh)
+   (runs the ADPCM-A, voice, and ADPCM-B conversion steps)
 3. Run: make vrom
-   (packs all .adpcm* files into 777-v1.v1 and regenerates sample_table.inc)
+   (packs all .adpcm* files into 777-v1.v1, regenerates sample_table.inc,
+   and writes sdk/sound_voice_ids.h)
 
 SAMPLE INDICES
 --------------
 vrom.py generates sound/driver/sample_table.inc automatically.
 
-  ADPCM-A: index 0-11 →  playSFX(n)   (driver command $40+n, 12 samples)
-  ADPCM-B: index 0-3  →  playSFXB(n)  (driver command $80+n, 4 samples)
+  ADPCM-A regular SFX: index 0-11 -> playSFX(n)
+  ADPCM-A voice bank:  generated SOUND_VOICE_* constants -> speakText(),
+                       playVoiceSample(), playVoiceWord(), playVoiceNumber()
+  ADPCM-B streams:     index 0-8 -> playSFXB(n)
+
+The SDK automatically switches ADPCM-A samples above 63 to the parameterized
+driver command, so generated voice IDs can be passed directly.
 
 Current ADPCM-B live roles:
 

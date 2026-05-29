@@ -299,11 +299,16 @@ execute_command:
     jp z,exec_p_fm_tempo
     cp 15
     jp z,exec_p_fm_csm_begin
+    cp 16
+    jp z,exec_p_adpcma_sample
     ret
 exec_p_tempo:
     ld a,c
     ld (VAR_TEMPO),a
     ret
+exec_p_adpcma_sample:
+    ld a,c
+    jp play_adpcma_index
 exec_p_fadeout:
     ld a,c
     ld (VAR_FADE_SPEED),a
@@ -409,7 +414,13 @@ exec_p_fm_tempo:
     jr nz,exec_p_fm_tempo_ok
     ld a,1
 exec_p_fm_tempo_ok:
+    cp 9
+    jr c,exec_p_fm_tempo_range_ok
+    ld a,8
+exec_p_fm_tempo_range_ok:
     ld (VAR_FM_TEMPO),a
+    xor a
+    ld (VAR_FM_TICK),a
     ret
 
 ; --- FM CSM (Composite Sine Mode) ---
@@ -521,6 +532,8 @@ exec_normal:
     jp z,set_ssgtrack_wait
     cp $15 ; ADPCM-B L/R pan parameter follows
     jp z,set_adpcmb_pan_wait
+    cp $16 ; ADPCM-A full sample index parameter follows
+    jp z,set_adpcma_sample_wait
     cp $17 ; FM LFO enable+rate parameter follows
     jp z,set_fm_lfo_wait
     cp $19 ; SSG noise period parameter follows
@@ -600,6 +613,12 @@ set_ssgpreset_wait:
 
 set_adpcmb_pan_wait:
     ld a,11
+    ld (VAR_WAIT_TEMPO),a
+    ld (VAR_PARAM_MODE),a
+    ret
+
+set_adpcma_sample_wait:
+    ld a,16
     ld (VAR_WAIT_TEMPO),a
     ld (VAR_PARAM_MODE),a
     ret

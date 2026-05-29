@@ -1,12 +1,12 @@
-; 5_voice_lets_go — SSG voice approximation: "LET'S GO!"
+; 5_voice_lets_go - short launch sting
 
-T220
+T230
 P2
 V13
 O4
 L16
 
-E G B16  G16
-> C E G  > C2
+E G B > E  < B G E8
+G B > D G  > C4
 
 ~

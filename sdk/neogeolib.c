@@ -71,6 +71,10 @@ void playAttackVoice(void);
 void playVoiceGetReady(void);
 void playVoiceLetsGo(void);
 void playVoiceGameOver(void);
+void playVoiceSample(uint8_t sample_index);
+void playVoiceWord(uint8_t word_sample);
+void playVoiceNumber(uint16_t value);
+void speakText(const char *text);
 void soundSetADPCMBPan(uint8_t pan);
 void soundFMSetLFO(uint8_t rate_enable);
 void soundSetSSGNoise(uint8_t period);
@@ -353,7 +357,6 @@ void NEOGEO_USER clearSprs() {
 void NEOGEO_USER clearFix() {
 	ASM_START
 	ASM_JSR(SYS_FIX_CLEAR)
-	
 	ASM_MVL(#1280-1, %%d7)
 	ASM_MVW(#FIXMAP, VRAM_ADDR)
 	ASM_MVW(#0xFF, %%d0)
@@ -519,7 +522,16 @@ void NEOGEO_USER soundStopMusic(void) { soundCommand(0x0F); }
 void NEOGEO_USER soundCancelFade(void) { soundCommand(0x11); }
 void NEOGEO_USER soundSceneReset(void) { isZ80Ready(); soundStopAll(); cyclexms(4); isZ80Ready(); soundReset(); cyclexms(4); }
 void NEOGEO_USER playMusic(uint8_t n) { isZ80Ready(); soundCommand(0x20 + n); }
-void NEOGEO_USER playSFX(uint8_t n) { isZ80Ready(); soundCommand(0x40 + n); }
+void NEOGEO_USER playSFX(uint8_t n) {
+	isZ80Ready();
+	if (n < 0x40u) {
+		soundCommand((uint8_t)(0x40u + n));
+	} else {
+		soundCommand(0x16u);
+		isZ80Ready();
+		soundCommand(n);
+	}
+}
 void NEOGEO_USER playSFXB(uint8_t n) { isZ80Ready(); soundCommand(0x80 + n); }
 void NEOGEO_USER playFMDebug(void) { isZ80Ready(); soundCommand(0x30); }
 void NEOGEO_USER playFMTrack(uint8_t n) { isZ80Ready(); soundCommand(0x31); isZ80Ready(); soundCommand(n); }
@@ -531,37 +543,397 @@ void NEOGEO_USER playInsertCoinSSG(void) { isZ80Ready(); playSSGTrack(SOUND_SSG_
 void NEOGEO_USER playVoiceCue(uint8_t n) {
 	isZ80Ready();
 	switch (n) {
-		case SOUND_VOICE_1: playSFX(SOUND_SFX_11); break;
-		case SOUND_VOICE_2: playSFX(SOUND_SFX_12); break;
+		case SOUND_VOICE_1: playVoiceGetReady(); break;
+		case SOUND_VOICE_2: playAttackVoice(); break;
 		default: playSFX(n); break;
 	}
 }
 
-void NEOGEO_USER playGetReadyVoice(void) { isZ80Ready(); playSFX(SOUND_SFX_11); }
+void NEOGEO_USER playVoiceSample(uint8_t sample_index) {
+	playSFX(sample_index);
+}
+
+void NEOGEO_USER playGetReadyVoice(void) { playVoiceGetReady(); }
 void NEOGEO_USER playAttackVoice(void) { isZ80Ready(); playSFX(SOUND_SFX_12); }
 
 void NEOGEO_USER playCoinThenReady(void) {
 	isZ80Ready(); playInsertCoinSSG(); cyclexms(250); isZ80Ready(); playGetReadyVoice();
 }
 
-/*
- * Voice synthesis cues (driver commands $50 / $51 / $52) — SSG-tone
- * approximations of classic arcade speech.  Each command dispatches a
- * dedicated SSG voice MML (tracks 4..6 in ssg_data.inc) that is shaped
- * to mimic the cadence + pitch contour of the spoken phrase.  Real
- * speech on YM2610 requires ADPCM samples; this is a synthesis-only
- * approximation that's free of sample storage.
- */
-/*
- * Voice cues spell their phrase letter-by-letter through the alphabet
- * voice bank (speakWord).  The earlier SSG-MML approach (tracks 4/5/6)
- * only produced abstract pitch contours that didn't read as speech;
- * routing through the ADPCM-A alphabet gives intelligible "G-E-T R-E-A-D-Y"
- * style cues without needing per-phrase pre-recorded samples.
- */
-void NEOGEO_USER playVoiceGetReady(void) { speakWord("GET READY"); }
-void NEOGEO_USER playVoiceLetsGo(void)   { speakWord("LETS GO"); }
-void NEOGEO_USER playVoiceGameOver(void) { speakWord("GAME OVER"); }
+static uint8_t NEOGEO_USER voice_letter_sample(char c) {
+	switch (c) {
+#ifdef SOUND_VOICE_LETTER_A
+		case 'A': case 'a': return SOUND_VOICE_LETTER_A;
+#endif
+#ifdef SOUND_VOICE_LETTER_B
+		case 'B': case 'b': return SOUND_VOICE_LETTER_B;
+#endif
+#ifdef SOUND_VOICE_LETTER_C
+		case 'C': case 'c': return SOUND_VOICE_LETTER_C;
+#endif
+#ifdef SOUND_VOICE_LETTER_D
+		case 'D': case 'd': return SOUND_VOICE_LETTER_D;
+#endif
+#ifdef SOUND_VOICE_LETTER_E
+		case 'E': case 'e': return SOUND_VOICE_LETTER_E;
+#endif
+#ifdef SOUND_VOICE_LETTER_F
+		case 'F': case 'f': return SOUND_VOICE_LETTER_F;
+#endif
+#ifdef SOUND_VOICE_LETTER_G
+		case 'G': case 'g': return SOUND_VOICE_LETTER_G;
+#endif
+#ifdef SOUND_VOICE_LETTER_H
+		case 'H': case 'h': return SOUND_VOICE_LETTER_H;
+#endif
+#ifdef SOUND_VOICE_LETTER_I
+		case 'I': case 'i': return SOUND_VOICE_LETTER_I;
+#endif
+#ifdef SOUND_VOICE_LETTER_J
+		case 'J': case 'j': return SOUND_VOICE_LETTER_J;
+#endif
+#ifdef SOUND_VOICE_LETTER_K
+		case 'K': case 'k': return SOUND_VOICE_LETTER_K;
+#endif
+#ifdef SOUND_VOICE_LETTER_L
+		case 'L': case 'l': return SOUND_VOICE_LETTER_L;
+#endif
+#ifdef SOUND_VOICE_LETTER_M
+		case 'M': case 'm': return SOUND_VOICE_LETTER_M;
+#endif
+#ifdef SOUND_VOICE_LETTER_N
+		case 'N': case 'n': return SOUND_VOICE_LETTER_N;
+#endif
+#ifdef SOUND_VOICE_LETTER_O
+		case 'O': case 'o': return SOUND_VOICE_LETTER_O;
+#endif
+#ifdef SOUND_VOICE_LETTER_P
+		case 'P': case 'p': return SOUND_VOICE_LETTER_P;
+#endif
+#ifdef SOUND_VOICE_LETTER_Q
+		case 'Q': case 'q': return SOUND_VOICE_LETTER_Q;
+#endif
+#ifdef SOUND_VOICE_LETTER_R
+		case 'R': case 'r': return SOUND_VOICE_LETTER_R;
+#endif
+#ifdef SOUND_VOICE_LETTER_S
+		case 'S': case 's': return SOUND_VOICE_LETTER_S;
+#endif
+#ifdef SOUND_VOICE_LETTER_T
+		case 'T': case 't': return SOUND_VOICE_LETTER_T;
+#endif
+#ifdef SOUND_VOICE_LETTER_U
+		case 'U': case 'u': return SOUND_VOICE_LETTER_U;
+#endif
+#ifdef SOUND_VOICE_LETTER_V
+		case 'V': case 'v': return SOUND_VOICE_LETTER_V;
+#endif
+#ifdef SOUND_VOICE_LETTER_W
+		case 'W': case 'w': return SOUND_VOICE_LETTER_W;
+#endif
+#ifdef SOUND_VOICE_LETTER_X
+		case 'X': case 'x': return SOUND_VOICE_LETTER_X;
+#endif
+#ifdef SOUND_VOICE_LETTER_Y
+		case 'Y': case 'y': return SOUND_VOICE_LETTER_Y;
+#endif
+#ifdef SOUND_VOICE_LETTER_Z
+		case 'Z': case 'z': return SOUND_VOICE_LETTER_Z;
+#endif
+		default: return 0xFFu;
+	}
+}
+
+static char NEOGEO_USER voice_upper(char c) {
+	if (c >= 'a' && c <= 'z') return (char)(c - ('a' - 'A'));
+	return c;
+}
+
+static uint8_t NEOGEO_USER voice_match_phrase(const char *text,
+                                              const char *phrase) {
+	uint8_t i = 0u;
+	while (phrase[i]) {
+		if (voice_upper(text[i]) != phrase[i]) return 0u;
+		i++;
+	}
+	return i;
+}
+
+static uint8_t NEOGEO_USER voice_direct_phrase(const char *text,
+                                               uint8_t *sample,
+                                               uint8_t *advance) {
+	uint8_t n;
+
+#ifdef SOUND_VOICE_WORD_INSERT_COIN
+	n = voice_match_phrase(text, "INSERT COIN");
+	if (n) { *sample = SOUND_VOICE_WORD_INSERT_COIN; *advance = n; return 1u; }
+#endif
+#ifdef SOUND_VOICE_WORD_GAME_OVER
+	n = voice_match_phrase(text, "GAME OVER");
+	if (n) { *sample = SOUND_VOICE_WORD_GAME_OVER; *advance = n; return 1u; }
+#endif
+#ifdef SOUND_VOICE_WORD_CONTINUE
+	n = voice_match_phrase(text, "CONTINUE");
+	if (n) { *sample = SOUND_VOICE_WORD_CONTINUE; *advance = n; return 1u; }
+#endif
+#ifdef SOUND_VOICE_WORD_PLAYER
+	n = voice_match_phrase(text, "PLAYER");
+	if (n) { *sample = SOUND_VOICE_WORD_PLAYER; *advance = n; return 1u; }
+#endif
+#ifdef SOUND_VOICE_WORD_READY
+	n = voice_match_phrase(text, "READY");
+	if (n) { *sample = SOUND_VOICE_WORD_READY; *advance = n; return 1u; }
+#endif
+#ifdef SOUND_VOICE_WORD_START
+	n = voice_match_phrase(text, "START");
+	if (n) { *sample = SOUND_VOICE_WORD_START; *advance = n; return 1u; }
+#endif
+#ifdef SOUND_VOICE_WORD_STAGE
+	n = voice_match_phrase(text, "STAGE");
+	if (n) { *sample = SOUND_VOICE_WORD_STAGE; *advance = n; return 1u; }
+#endif
+#ifdef SOUND_VOICE_WORD_LEVEL
+	n = voice_match_phrase(text, "LEVEL");
+	if (n) { *sample = SOUND_VOICE_WORD_LEVEL; *advance = n; return 1u; }
+#endif
+#ifdef SOUND_VOICE_WORD_SCORE
+	n = voice_match_phrase(text, "SCORE");
+	if (n) { *sample = SOUND_VOICE_WORD_SCORE; *advance = n; return 1u; }
+#endif
+#ifdef SOUND_VOICE_WORD_GO
+	n = voice_match_phrase(text, "GO");
+	if (n) { *sample = SOUND_VOICE_WORD_GO; *advance = n; return 1u; }
+#endif
+	return 0u;
+}
+
+static uint8_t NEOGEO_USER voice_char_sample(char c) {
+	switch (c) {
+#ifdef SOUND_VOICE_NUM_0_ZERO
+		case '0': return SOUND_VOICE_NUM_0_ZERO;
+#endif
+#ifdef SOUND_VOICE_NUM_1_ONE
+		case '1': return SOUND_VOICE_NUM_1_ONE;
+#endif
+#ifdef SOUND_VOICE_NUM_2_TWO
+		case '2': return SOUND_VOICE_NUM_2_TWO;
+#endif
+#ifdef SOUND_VOICE_NUM_3_THREE
+		case '3': return SOUND_VOICE_NUM_3_THREE;
+#endif
+#ifdef SOUND_VOICE_NUM_4_FOUR
+		case '4': return SOUND_VOICE_NUM_4_FOUR;
+#endif
+#ifdef SOUND_VOICE_NUM_5_FIVE
+		case '5': return SOUND_VOICE_NUM_5_FIVE;
+#endif
+#ifdef SOUND_VOICE_NUM_6_SIX
+		case '6': return SOUND_VOICE_NUM_6_SIX;
+#endif
+#ifdef SOUND_VOICE_NUM_7_SEVEN
+		case '7': return SOUND_VOICE_NUM_7_SEVEN;
+#endif
+#ifdef SOUND_VOICE_NUM_8_EIGHT
+		case '8': return SOUND_VOICE_NUM_8_EIGHT;
+#endif
+#ifdef SOUND_VOICE_NUM_9_NINE
+		case '9': return SOUND_VOICE_NUM_9_NINE;
+#endif
+#ifdef SOUND_VOICE_CHAR_SPACE
+		case ' ': return SOUND_VOICE_CHAR_SPACE;
+#endif
+#ifdef SOUND_VOICE_CHAR_EXCLAMATION_MARK
+		case '!': return SOUND_VOICE_CHAR_EXCLAMATION_MARK;
+#endif
+#ifdef SOUND_VOICE_CHAR_QUESTION_MARK
+		case '?': return SOUND_VOICE_CHAR_QUESTION_MARK;
+#endif
+#ifdef SOUND_VOICE_CHAR_COMMA
+		case ',': return SOUND_VOICE_CHAR_COMMA;
+#endif
+#ifdef SOUND_VOICE_CHAR_COLON
+		case ':': return SOUND_VOICE_CHAR_COLON;
+#endif
+#ifdef SOUND_VOICE_CHAR_SEMICOLON
+		case ';': return SOUND_VOICE_CHAR_SEMICOLON;
+#endif
+#ifdef SOUND_VOICE_CHAR_DOT
+		case '.': return SOUND_VOICE_CHAR_DOT;
+#endif
+#ifdef SOUND_VOICE_CHAR_DASH
+		case '-': return SOUND_VOICE_CHAR_DASH;
+#endif
+#ifdef SOUND_VOICE_CHAR_SLASH
+		case '/': return SOUND_VOICE_CHAR_SLASH;
+#endif
+#ifdef SOUND_VOICE_CHAR_BACKSLASH
+		case '\\': return SOUND_VOICE_CHAR_BACKSLASH;
+#endif
+#ifdef SOUND_VOICE_CHAR_PLUS
+		case '+': return SOUND_VOICE_CHAR_PLUS;
+#endif
+#ifdef SOUND_VOICE_CHAR_STAR
+		case '*': return SOUND_VOICE_CHAR_STAR;
+#endif
+#ifdef SOUND_VOICE_CHAR_EQUAL
+		case '=': return SOUND_VOICE_CHAR_EQUAL;
+#endif
+#ifdef SOUND_VOICE_CHAR_PERCENT
+		case '%': return SOUND_VOICE_CHAR_PERCENT;
+#endif
+#ifdef SOUND_VOICE_CHAR_HASH
+		case '#': return SOUND_VOICE_CHAR_HASH;
+#endif
+#ifdef SOUND_VOICE_CHAR_AT
+		case '@': return SOUND_VOICE_CHAR_AT;
+#endif
+#ifdef SOUND_VOICE_CHAR_AMPERSAND
+		case '&': return SOUND_VOICE_CHAR_AMPERSAND;
+#endif
+#ifdef SOUND_VOICE_CHAR_UNDERSCORE
+		case '_': return SOUND_VOICE_CHAR_UNDERSCORE;
+#endif
+#ifdef SOUND_VOICE_CHAR_QUOTE
+		case '"': case '\'': return SOUND_VOICE_CHAR_QUOTE;
+#endif
+#ifdef SOUND_VOICE_CHAR_OPEN_PARENTHESIS
+		case '(': return SOUND_VOICE_CHAR_OPEN_PARENTHESIS;
+#endif
+#ifdef SOUND_VOICE_CHAR_CLOSE_PARENTHESIS
+		case ')': return SOUND_VOICE_CHAR_CLOSE_PARENTHESIS;
+#endif
+		default: return 0xFFu;
+	}
+}
+
+void NEOGEO_USER playVoiceWord(uint8_t word_sample) {
+	playVoiceSample(word_sample);
+}
+
+void NEOGEO_USER playVoiceNumber(uint16_t value) {
+	uint8_t sample = 0xFFu;
+
+	switch (value) {
+#ifdef SOUND_VOICE_NUM_0_ZERO
+		case 0u: sample = SOUND_VOICE_NUM_0_ZERO; break;
+#endif
+#ifdef SOUND_VOICE_NUM_1_ONE
+		case 1u: sample = SOUND_VOICE_NUM_1_ONE; break;
+#endif
+#ifdef SOUND_VOICE_NUM_2_TWO
+		case 2u: sample = SOUND_VOICE_NUM_2_TWO; break;
+#endif
+#ifdef SOUND_VOICE_NUM_3_THREE
+		case 3u: sample = SOUND_VOICE_NUM_3_THREE; break;
+#endif
+#ifdef SOUND_VOICE_NUM_4_FOUR
+		case 4u: sample = SOUND_VOICE_NUM_4_FOUR; break;
+#endif
+#ifdef SOUND_VOICE_NUM_5_FIVE
+		case 5u: sample = SOUND_VOICE_NUM_5_FIVE; break;
+#endif
+#ifdef SOUND_VOICE_NUM_6_SIX
+		case 6u: sample = SOUND_VOICE_NUM_6_SIX; break;
+#endif
+#ifdef SOUND_VOICE_NUM_7_SEVEN
+		case 7u: sample = SOUND_VOICE_NUM_7_SEVEN; break;
+#endif
+#ifdef SOUND_VOICE_NUM_8_EIGHT
+		case 8u: sample = SOUND_VOICE_NUM_8_EIGHT; break;
+#endif
+#ifdef SOUND_VOICE_NUM_9_NINE
+		case 9u: sample = SOUND_VOICE_NUM_9_NINE; break;
+#endif
+#ifdef SOUND_VOICE_NUM_10_TEN
+		case 10u: sample = SOUND_VOICE_NUM_10_TEN; break;
+#endif
+#ifdef SOUND_VOICE_NUM_11_ELEVEN
+		case 11u: sample = SOUND_VOICE_NUM_11_ELEVEN; break;
+#endif
+#ifdef SOUND_VOICE_NUM_12_TWELVE
+		case 12u: sample = SOUND_VOICE_NUM_12_TWELVE; break;
+#endif
+#ifdef SOUND_VOICE_NUM_13_THIRTEEN
+		case 13u: sample = SOUND_VOICE_NUM_13_THIRTEEN; break;
+#endif
+#ifdef SOUND_VOICE_NUM_14_FOURTEEN
+		case 14u: sample = SOUND_VOICE_NUM_14_FOURTEEN; break;
+#endif
+#ifdef SOUND_VOICE_NUM_15_FIFTEEN
+		case 15u: sample = SOUND_VOICE_NUM_15_FIFTEEN; break;
+#endif
+#ifdef SOUND_VOICE_NUM_16_SIXTEEN
+		case 16u: sample = SOUND_VOICE_NUM_16_SIXTEEN; break;
+#endif
+#ifdef SOUND_VOICE_NUM_17_SEVENTEEN
+		case 17u: sample = SOUND_VOICE_NUM_17_SEVENTEEN; break;
+#endif
+#ifdef SOUND_VOICE_NUM_18_EIGHTEEN
+		case 18u: sample = SOUND_VOICE_NUM_18_EIGHTEEN; break;
+#endif
+#ifdef SOUND_VOICE_NUM_19_NINETEEN
+		case 19u: sample = SOUND_VOICE_NUM_19_NINETEEN; break;
+#endif
+#ifdef SOUND_VOICE_NUM_20_TWENTY
+		case 20u: sample = SOUND_VOICE_NUM_20_TWENTY; break;
+#endif
+#ifdef SOUND_VOICE_NUM_30_THIRTY
+		case 30u: sample = SOUND_VOICE_NUM_30_THIRTY; break;
+#endif
+#ifdef SOUND_VOICE_NUM_40_FORTY
+		case 40u: sample = SOUND_VOICE_NUM_40_FORTY; break;
+#endif
+#ifdef SOUND_VOICE_NUM_50_FIFTY
+		case 50u: sample = SOUND_VOICE_NUM_50_FIFTY; break;
+#endif
+#ifdef SOUND_VOICE_NUM_60_SIXTY
+		case 60u: sample = SOUND_VOICE_NUM_60_SIXTY; break;
+#endif
+#ifdef SOUND_VOICE_NUM_70_SEVENTY
+		case 70u: sample = SOUND_VOICE_NUM_70_SEVENTY; break;
+#endif
+#ifdef SOUND_VOICE_NUM_80_EIGHTY
+		case 80u: sample = SOUND_VOICE_NUM_80_EIGHTY; break;
+#endif
+#ifdef SOUND_VOICE_NUM_90_NINETY
+		case 90u: sample = SOUND_VOICE_NUM_90_NINETY; break;
+#endif
+#ifdef SOUND_VOICE_NUM_100_HUNDRED
+		case 100u: sample = SOUND_VOICE_NUM_100_HUNDRED; break;
+#endif
+#ifdef SOUND_VOICE_NUM_1000_THOUSAND
+		case 1000u: sample = SOUND_VOICE_NUM_1000_THOUSAND; break;
+#endif
+		default: break;
+	}
+
+	if (sample != 0xFFu) {
+		playVoiceSample(sample);
+		return;
+	}
+
+	{
+		char digits[6];
+		uint8_t len = 0u;
+		uint8_t i;
+		uint16_t v = value;
+
+		while (v > 0u && len < 5u) {
+			digits[len++] = (char)('0' + (v % 10u));
+			v /= 10u;
+		}
+		for (i = 0u; i < len; i++) {
+			uint8_t d = (uint8_t)(digits[(uint8_t)(len - 1u - i)] - '0');
+			sample = voice_char_sample((char)('0' + d));
+			if (sample != 0xFFu) playVoiceSample(sample);
+			cyclexms(85);
+		}
+	}
+}
+
+void NEOGEO_USER playVoiceGetReady(void) { speakText("GET READY"); }
+void NEOGEO_USER playVoiceLetsGo(void)   { speakText("LETS GO"); }
+void NEOGEO_USER playVoiceGameOver(void) { speakText("GAME OVER"); }
 
 /*
  * ADPCM-B L/R pan control (YM2610 register $11, active-high).
@@ -613,42 +985,48 @@ void NEOGEO_USER soundSetSSGNoise(uint8_t period) {
  * next call to this function.  Range 1..8.
  */
 void NEOGEO_USER soundFMSetTempo(uint8_t period_frames) {
+	if (period_frames == 0u) {
+		period_frames = 1u;
+	} else if (period_frames > 8u) {
+		period_frames = 8u;
+	}
 	isZ80Ready(); soundCommand(0x1A); isZ80Ready(); soundCommand(period_frames);
 }
-
 /*
- * Voice alphabet playback.  Each letter is one ADPCM-A sample in
- * the voice bank that lives in V-ROM right after the regular SFX
- * bank.  playVoiceLetter takes a SOUND_VOICE_LETTER_X enum (which
- * is the ADPCM-A index inside the chip).  speakWord iterates an
- * ASCII string letter-by-letter with a fixed inter-letter delay so
- * the words are intelligible.
- *
- * Non-letter characters (digits, punctuation, spaces) are skipped
- * but their delay still applies as a "between-word" pause.
+ * Voice playback. Each voice constant is an ADPCM-A sample in the bank
+ * generated from in_wav_a_voice. speakText prefers complete word samples
+ * when available, then falls back to letters, numbers, and punctuation.
  */
 void NEOGEO_USER playVoiceLetter(uint8_t letter_index) {
-	playSFX(letter_index);
+	playVoiceSample(letter_index);
 }
 
 void NEOGEO_USER speakWord(const char *text) {
+	speakText(text);
+}
+
+void NEOGEO_USER speakText(const char *text) {
 	const char *p;
 	if (!text) return;
-	/* Silence MML / SSG / FM tracks first so the spelled word is the
-	 * only thing audible — without this the previous music section's
-	 * SSG kept playing on top of the alphabet samples and masked the
-	 * voice. */
+
 	soundStopMusic();
 	for (p = text; *p; p++) {
+		uint8_t sample;
+		uint8_t advance;
 		char c = *p;
-		if (c >= 'A' && c <= 'Z') {
-			playVoiceLetter((uint8_t)(SOUND_VOICE_LETTER_BASE + (c - 'A')));
-		} else if (c >= 'a' && c <= 'z') {
-			playVoiceLetter((uint8_t)(SOUND_VOICE_LETTER_BASE + (c - 'a')));
+
+		if (voice_direct_phrase(p, &sample, &advance)) {
+			playVoiceSample(sample);
+			cyclexms(180);
+			p += (advance - 1u);
+			continue;
 		}
-		/* Inter-letter gap.  ~85 ms is short enough for a brisk word
-		 * cadence while still letting each ADPCM-A sample play its
-		 * onset before the next trigger overwrites it. */
+
+		sample = voice_letter_sample(c);
+		if (sample == 0xFFu) sample = voice_char_sample(c);
+		if (sample != 0xFFu) {
+			playVoiceSample(sample);
+		}
 		cyclexms(85);
 	}
 }

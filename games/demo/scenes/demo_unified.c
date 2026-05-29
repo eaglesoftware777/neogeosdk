@@ -598,56 +598,35 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundStopAll();        snd_step();
     demo_fix_puts(2u, 9u, "                                  ", 0u);
 
-    /* --- 3) VOICE CUES — recorded ADPCM-A samples ------------------ *
-     *
-     * Intelligible speech on YM2610 requires PCM samples.  These
-     * cues play V-ROM voice clips (SFX 11/12, 10) — that's what every
-     * NeoGeo arcade with speech actually used.  Pure-chip SSG/FM
-     * formant synthesis only produces robotic chords. */
-    demo_fix_puts(2u, 5u, "3. VOICE CUES (speakWord spelling)", 2u);
+    /* --- 3) VOICE CUES — generated ADPCM-A voice bank --------------- */
+    demo_fix_puts(2u, 5u, "3. VOICE CUES (direct word samples)", 2u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0x00u, 0x00u, 0x00u); snd_step();
 
-    /* The cue wrappers now go through speakWord so each one spells
-     * its phrase letter-by-letter from the ADPCM-A alphabet bank.
-     * Each speakWord call silences SSG/FM first so nothing masks the
-     * spelled word. */
+    demo_fix_puts(2u, 11u, "speakText(\"INSERT COIN\")           ", 1u);
+    speakText("INSERT COIN");
+    if (uwait(55u)) return 1u;
     demo_fix_puts(2u, 11u, "playVoiceGetReady()  \"GET READY\"  ", 1u);
     playVoiceGetReady();
-    if (uwait(60u)) return 1u;
-    demo_fix_puts(2u, 11u, "playVoiceLetsGo()    \"LETS GO\"    ", 1u);
-    playVoiceLetsGo();
-    if (uwait(60u)) return 1u;
-    demo_fix_puts(2u, 11u, "playVoiceGameOver()  \"GAME OVER\"  ", 1u);
-    playVoiceGameOver();
-    if (uwait(60u)) return 1u;
-
-    demo_fix_puts(2u, 13u, "speakWord(\"NEOGEO\")               ", 1u);
-    speakWord("NEOGEO");
-    if (uwait(40u)) return 1u;
-    demo_fix_puts(2u, 13u, "speakWord(\"EAGLE\")                ", 1u);
-    speakWord("EAGLE");
-    if (uwait(40u)) return 1u;
+    if (uwait(55u)) return 1u;
 
     demo_fix_puts(2u, 11u, "                                  ", 0u);
     demo_fix_puts(2u, 13u, "                                  ", 0u);
     soundStopAll(); snd_step();
 
-    /* --- 4) FM TRACKS — all 8 melodic loops ------------------------ */
-    demo_fix_puts(2u, 5u, "4. FM TRACKS (1..8)               ", 2u);
+    /* --- 4) FM TRACKS — focused FM4/FM6 demo ----------------------- */
+    demo_fix_puts(2u, 5u, "4. FM TRACKS (FM4 + FM6)          ", 2u);
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Au); snd_step();
-    for (i = 0u; i < SOUND_FM_TRACK_COUNT; i++) {
-        char lbl[8];
-        lbl[0] = 'F'; lbl[1] = 'M'; lbl[2] = ' '; lbl[3] = (char)('0' + (i + 1u));
-        lbl[4] = '\0';
-        demo_fix_puts(2u, 13u, lbl, 1u);
+    for (i = 0u; i < 2u; i++) {
+        uint8_t fm_track = (i == 0u) ? SOUND_FM_D : SOUND_FM_F;
+        demo_fix_puts(2u, 13u, (i == 0u) ? "FM 4  DUEL SUSPENSE" : "FM 6  LFO LEAD      ", 1u);
         soundStopAll();                            snd_step();
         soundSceneReset();                         snd_step();
         soundFMSetLFO(0x00u);                      snd_step();
         soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Au); snd_step();
-        playFMTrack(i);                            snd_step();
+        playFMTrack(fm_track);                     snd_step();
         if (uwait(220u)) return 1u;
     }
     soundStopAll();          snd_step();
@@ -661,31 +640,28 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
-    playFMTrack(6u);                           snd_step();
+    playFMTrack(SOUND_FM_F);                  snd_step();
 
     demo_fix_puts(2u, 15u, "LFO OFF      (flat reference)     ", 1u);
     soundFMSetLFO(0x00u); snd_step();
-    if (fm_lfo_hold(0x00u, 180u)) return 1u;
+    if (fm_lfo_hold(0x00u, 120u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=1   (slow wobble)        ", 1u);
     soundFMSetLFO(0x09u); snd_step();
-    if (fm_lfo_hold(0x09u, 180u)) return 1u;
+    if (fm_lfo_hold(0x09u, 120u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=3   (medium vibrato)     ", 1u);
     soundFMSetLFO(0x0Bu); snd_step();
-    if (fm_lfo_hold(0x0Bu, 180u)) return 1u;
+    if (fm_lfo_hold(0x0Bu, 120u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=6   (fast vibrato)       ", 1u);
     soundFMSetLFO(0x0Eu); snd_step();
-    if (fm_lfo_hold(0x0Eu, 180u)) return 1u;
+    if (fm_lfo_hold(0x0Eu, 120u)) return 1u;
     soundFMSetLFO(0x00u); snd_step();
 
     demo_fix_puts(2u, 15u, "TEMPO period=1  (fast)            ", 1u);
     soundFMSetTempo(1u); snd_step();
-    if (uwait(180u)) return 1u;
-    demo_fix_puts(2u, 15u, "TEMPO period=2  (medium)          ", 1u);
-    soundFMSetTempo(2u); snd_step();
-    if (uwait(180u)) return 1u;
-    demo_fix_puts(2u, 15u, "TEMPO period=4  (slow)            ", 1u);
-    soundFMSetTempo(4u); snd_step();
-    if (uwait(180u)) return 1u;
+    if (uwait(140u)) return 1u;
+    demo_fix_puts(2u, 15u, "TEMPO period=6  (slow)            ", 1u);
+    soundFMSetTempo(6u); snd_step();
+    if (uwait(140u)) return 1u;
     demo_fix_puts(2u, 15u, "TEMPO period=1  (back to fast)    ", 1u);
     soundFMSetTempo(1u); snd_step();
     if (uwait(120u)) return 1u;
@@ -696,29 +672,12 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundSetFMVolume(0x00u); snd_step();
     demo_fix_puts(2u, 15u, "                                  ", 0u);
 
-    demo_fix_puts(2u, 5u, "5b. FM PATCH PROFILE RESET        ", 2u);
-    for (i = 0u; i < 3u; i++) {
-        demo_fix_puts(2u, 15u, "clean stop -> reset -> patch load ", 1u);
-        soundStopAll();                            snd_step();
-        soundSceneReset();                         snd_step();
-        soundFMSetLFO(0x00u);                      snd_step();
-        soundApplyMix(0x30u, 0x00u, 0x00u, 0x08u); snd_step();
-        playFMTrack((uint8_t)(i + 2u));            snd_step();
-        if (uwait(140u)) return 1u;
-    }
-
-    soundStopAll();          snd_step();
-    soundSceneReset();       snd_step();
-    soundFMSetLFO(0x00u);    snd_step();
-    soundSetFMVolume(0x00u); snd_step();
-    demo_fix_puts(2u, 15u, "                                  ", 0u);
-
-    /* --- 6) SSG TRACKS — 4 melodic loops --------------------------- */
-    demo_fix_puts(2u, 5u, "6. SSG TRACKS (1..4)              ", 2u);
+    /* --- 6) SSG TRACKS — 3 melodic loops --------------------------- */
+    demo_fix_puts(2u, 5u, "6. SSG TRACKS (3 SHORT LOOPS)     ", 2u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0x00u, 0x0Eu, 0x00u); snd_step();
-    for (i = 0u; i < SOUND_SSG_TRACK_COUNT; i++) {
+    for (i = 0u; i < 3u; i++) {
         char lbl[8];
         lbl[0] = 'S'; lbl[1] = 'S'; lbl[2] = 'G'; lbl[3] = ' ';
         lbl[4] = (char)('0' + (i + 1u)); lbl[5] = '\0';

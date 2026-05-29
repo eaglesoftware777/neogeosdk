@@ -98,13 +98,20 @@ New chip-level controls (v1.3.2):
 - `soundSetSSGNoise(period)` — YM2610 reg $06 noise period (5 bits)
 - `soundFMSetTempo(period)`  — live VAR_FM_TEMPO override (1..8)
 
-Voice alphabet (v1.3.2):
+Voice sample bank:
 
+- `playVoiceSample(idx)`     — play one generated ADPCM-A voice sample
+                                (`SOUND_VOICE_*` full sample ID)
 - `playVoiceLetter(idx)`     — play one ADPCM-A voice sample by index
                                 (use `SOUND_VOICE_LETTER_A` etc.)
-- `speakWord("HELLO")`       — spell ASCII text letter-by-letter
-                                from the V-ROM voice bank
-                                (sound/samples/in_wav_a_voice/)
+- `playVoiceWord(idx)`       — play one generated word sample
+                                (use `SOUND_VOICE_WORD_*`)
+- `playVoiceNumber(n)`       — play a direct number sample when present,
+                                otherwise fall back to digit samples
+- `speakText("READY!")`      — prefer direct word samples, then fall back
+                                to letters, digits, and punctuation
+                                from games/<game>/sound/samples/in_wav_a_voice/
+- `speakWord("HELLO")`       — compatibility alias for `speakText`
 
 CSM (Composite Sine Mode, v1.3.3 — driver cmds $1B / $1C):
 
@@ -124,14 +131,17 @@ CSM (Composite Sine Mode, v1.3.3 — driver cmds $1B / $1C):
                                   ms-millisecond intervals, then ends
                                   CSM.  Produces a vowel-slide formant.
 
-Voice cue speech (v1.3.3 update):
+Voice cue speech:
 
-- `speakWord()` now silences SSG/FM (`soundStopMusic`) before iterating
-  the alphabet samples so the spelled word is the only audible voice.
-  Inter-letter gap reduced from 150 ms to 85 ms for brisker cadence.
-- `playVoiceGetReady` / `playVoiceLetsGo` / `playVoiceGameOver` route
-  through `speakWord("GET READY" / "LETS GO" / "GAME OVER")` instead of
-  playing abstract SSG note streams — the cues are now intelligible.
+- `sound/tools/vrom.py` generates `sdk/sound_voice_ids.h` from every
+  encoded file in `out_a_voice`.
+- Letter samples stay first and contiguous (`a.wav` through `z.wav`).
+  Extra `char_*.wav`, `num_*.wav`, and `word_*.wav` samples follow.
+- `speakText()` silences SSG/FM with `soundStopMusic()`, then picks
+  whole-word samples such as `word_insert_coin.wav` or `word_game_over.wav`
+  before falling back to letters, digits, and punctuation.
+- `playVoiceGetReady`, `playVoiceLetsGo`, and `playVoiceGameOver` route
+  through `speakText()`.
 
 FM LFO persistence (v1.3.3 fix):
 
@@ -219,6 +229,9 @@ Behavior:
 
 - `playSFX(n)`
   Triggers ADPCM-A sample `n`. Valid range: `0..ADPCMA_COUNT-1`.
+  Samples `0..63` use the compact one-byte command. Larger sample IDs use
+  the parameterized ADPCM-A command so voice-bank samples above 63 do not
+  collide with ADPCM-B commands.
 
 - `playSFXB(n)`
   Triggers ADPCM-B sample `n`. Valid range: `0..ADPCMB_COUNT-1`.
@@ -344,14 +357,33 @@ This section lists every public sound function and the meaning of its arguments.
   No arguments. Plays SSG track 2 with preset 1.
 
 - `playVoiceCue(n)`
-  `n` is 1..9. 1=get ready, 2=oh hey ya, 3=coin, 4=insert coin,
-  5=start, 6=title, 7=intro, 8=attack, 9=samurai.
+  `n` selects a compatibility cue. `1` routes to `playVoiceGetReady()`,
+  `2` routes to `playAttackVoice()`, and any other value is passed through
+  as a raw ADPCM-A sample index.
 
 - `playGetReadyVoice()`
-  No arguments. Plays ADPCM-A sample 10.
+  No arguments. Compatibility wrapper for `playVoiceGetReady()`.
 
 - `playAttackVoice()`
   No arguments. Plays ADPCM-A sample 11.
+
+- `playVoiceSample(n)`
+  `n` is a full ADPCM-A sample index. Use generated constants from
+  `sdk/sound_voice_ids.h`, for example `SOUND_VOICE_WORD_READY`.
+
+- `playVoiceWord(n)`
+  Same argument rules as `playVoiceSample`, intended for `SOUND_VOICE_WORD_*`.
+
+- `playVoiceNumber(n)`
+  `n` is a 16-bit value. Direct generated number samples are used for
+  values present in `in_wav_a_voice`; other values are spoken digit by digit.
+
+- `speakText(text)`
+  `text` is an ASCII string. Whole-word samples are used first, then
+  letter, number, and punctuation samples.
+
+- `speakWord(text)`
+  Compatibility alias for `speakText(text)`.
 
 - `playCoinThenReady()`
   No arguments. Plays insert-coin SSG, waits 250 ms, plays ready voice.
@@ -522,6 +554,11 @@ Current raw command map in `sound/driver/driver.asm`:
 - `$14`
   SSG preset prefix. The next byte is the preset index (lower nibble, 0..15).
 
+- `$16`
+  ADPCM-A full sample prefix. The next byte is the raw ADPCM-A sample index.
+  This is used by `playSFX()` and the voice helpers when the sample index is
+  `64` or higher.
+
 - `$20` and up
   Music track trigger range (command $20+n starts music track n).
 
@@ -541,7 +578,9 @@ Current raw command map in `sound/driver/driver.asm`:
   SSG track select prefix. The next byte is the SSG track index.
 
 - `$40` and up
-  ADPCM-A trigger range (command $40+n starts ADPCM-A sample n).
+  Compact ADPCM-A trigger range for samples `0..63`
+  (command `$40+n` starts ADPCM-A sample n). Use `$16, n` for higher ADPCM-A
+  sample IDs.
 
 - `$80` and up
   ADPCM-B trigger range (command $80+n starts ADPCM-B sample n).
@@ -556,15 +595,17 @@ These values are generated, not hard-coded by hand.
 
 ADPCM-A sample count:
 
-- `12` samples
+- `101` samples total in the current demo V ROM
+- `12` regular SFX samples
+- `89` generated voice-bank samples
 
 ADPCM-B sample count:
 
-- `4` samples
+- `9` samples
 
 Music track source count:
 
-- `5` source files in `sound/mml/`
+- `8` source files in `games/demo/sound/mml/`
 
 Current ADPCM-A slot map, based on `sound/samples/SOURCES.md`:
 

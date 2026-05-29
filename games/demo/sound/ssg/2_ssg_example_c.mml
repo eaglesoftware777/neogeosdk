@@ -1,21 +1,19 @@
-; 2_ssg_example_c — Defender-style alert (E minor, mid range)
+; 2_ssg_example_c - red alert climb
 
-T220
+T240
 P2
 V12
 O4
 L16
 
-E G B E  E G B4
-D F+ A D  D F+ A4
+E R E G  B R > E < B
+D R D F+ A R > D < A
 
-L16
-E G B E  D F+ A D  C E G C  B D F+ A
-G B D F+  E G B E  D F+ A D  C E G C
-L16
+E G B > E  < G B > E < B
+D F+ A > D  < F+ A > D < A
 
-E G B E  D B G E
-F+ A C+ F+  E D C B
-E G B E  G B E2
+L8
+C D E G  F+ E D < B
+E4 R8 E8 B8 > E4
 
 ~

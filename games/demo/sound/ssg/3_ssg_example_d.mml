@@ -1,20 +1,20 @@
-; 3_ssg_example_d — Asteroids-style pulse (A minor, mid range)
+; 3_ssg_example_d - spare low pulse
 
-T220
+T190
 P1
 V10
 O4
-L4
+L8
 
-A R C R  E R A R
-G R B R  D R G R
+A R A R  C R E R
+G R E R  C R A R
 
 L16
-A E A C  E A C A
-G D G B  D G B G
+A C E A  C E A > C
+< G B > D G  < B > D G B
 
-A C E A  G E C A
-F A C E  D B G F
-E A E A  C E A2
+L8
+A G E C  D E G A
+C4 R4 A4 R4
 
 ~

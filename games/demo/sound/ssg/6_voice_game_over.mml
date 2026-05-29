@@ -1,13 +1,13 @@
-; 6_voice_game_over — SSG voice approximation: "GAME OVER"
+; 6_voice_game_over - short fall sting
 
-T220
+T170
 P1
 V11
 O4
-L16
+L8
 
-G E C8
-F D < B-8
-E- C < G2
+G E C < G
+> F D < B- G
+> E- C < G2
 
 ~
