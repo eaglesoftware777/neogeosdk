@@ -313,8 +313,8 @@ void  NEOGEO_USER showTitleMVS(void) {
 			timer[11] = (char)('0' + (secs / 10));
 			timer[12] = (char)('0' + (secs % 10));
 			timer[13] = 's'; timer[14] = ' '; timer[15] = ' '; timer[16] = '\0';
-			fixtext_out(10, 25, timer, 1);
-			fixtext_out(10, 26, "   HIT START  ", 0);
+			mess_out(10, 25, timer, 1);
+			mess_out(10, 26, "   HIT START  ", 0);
 			if (auto_frames > 0) auto_frames--;
 			else {
 				NEO_REGISTER8(NGO_START_FLAG) = 1;
@@ -323,11 +323,11 @@ void  NEOGEO_USER showTitleMVS(void) {
 				break;
 			}
 		} else if ((i >> 4) & 1) {
-			fixtext_out(10, 25, "                ", 0);
-			fixtext_out(10, 26, " INSERT COIN  ", 0);
+			mess_out(10, 25, "                ", 0);
+			mess_out(10, 26, " INSERT COIN  ", 0);
 		} else {
-			fixtext_out(10, 25, "                ", 0);
-			fixtext_out(10, 26, "              ", 0);
+			mess_out(10, 25, "                ", 0);
+			mess_out(10, 26, "              ", 0);
 		}
 		waitVbl();
 		if (NEO_REGISTER8(NGO_START_FLAG) || NEO_REGISTER8(BIOS_USER_MODE) == 2)
@@ -343,7 +343,7 @@ void  NEOGEO_USER showTitleAES(void) {
 	setBACKDROP(BLACK);
 	showScreen108(32, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
 	waitVbl();
-	fixtext_out(14, 26, "HIT START", 0);
+	mess_out(14, 26, "HIT START", 0);
 	soundPlayTitleMusic(0);
 	for (i = 0; i < 10; i++) {
 		if (NEO_REGISTER8(NGO_START_FLAG)) break;
@@ -358,7 +358,7 @@ void  NEOGEO_USER showTitleAES(void) {
 		clearSprs();
 		showScreen107(32, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
 		waitVbl();
-		fixtext_out(14, 26, "HIT START", 0);
+		mess_out(14, 26, "HIT START", 0);
 		for (i = 0; i < 10; i++) {
 			if (NEO_REGISTER8(NGO_START_FLAG)) break;
 			if (NEO_REGISTER8(BIOS_P1CHANGE) & 0x01) {
@@ -395,13 +395,13 @@ void NEOGEO_USER DISPLAY_INIT(void) {
 	ASM_END
 }
 
-/* FIX text palette banks 0-2: yellow / cyan / yellow on black. */
+/* FIX text palette banks 0-2: green / green / cyan on black. */
 void NEOGEO_USER setup_fix_palettes(void) {
 	uint16_t fix_pal[16];
-	setpal(fix_pal, 0x8000, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+	setpal(fix_pal, 0x8000, GREEN, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
 	       BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
 	load_palettes(fix_pal, PALETTES);
-	setpal(fix_pal, 0x8000, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+	setpal(fix_pal, 0x8000, GREEN, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
 	       BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
 	load_palettes(fix_pal, PALETTES + PALOFFSET);
 	setpal(fix_pal, 0x8000, CYAN, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,

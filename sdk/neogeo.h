@@ -51,6 +51,10 @@ void fixtext_out(uint16_t x, uint16_t y, char *text, short pal);
 void fixtext_out1(uint16_t x, uint16_t y, uint16_t *tiles, short pal, int count);
 void fixtext_out2(uint16_t x, uint16_t y, uint16_t a, uint16_t b, uint16_t c, uint16_t mod,
                   uint16_t *tiles, short pal, int count);
+void mess_out(uint16_t x, uint16_t y, const char *text, short pal);
+void mess_out_clipped(uint16_t x, uint16_t y, const char *text, short pal, uint16_t max_chars);
+void mess_out_vram(uint16_t vram_addr, uint16_t vram_inc, const char *text, short pal,
+                   uint16_t max_chars);
 void fix_svalue1(uint16_t x, uint16_t y, uint16_t value, short pal, uint16_t offset);
 void fix_svalue(uint16_t x, uint16_t y, uint16_t value, short pal);
 void display_digit(uint16_t x, uint16_t y, uint32_t value, short pal, uint16_t offset);

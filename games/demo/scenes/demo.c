@@ -43,7 +43,8 @@ void NEOGEO_USER waitVbl(void);
 void NEOGEO_USER clearFix(void);
 void NEOGEO_USER clearSprs(void);
 void NEOGEO_USER setBACKDROP(uint16_t backdrop_color);
-void NEOGEO_USER fixtext_out(uint16_t x, uint16_t y, char *mess, short pal);
+void NEOGEO_USER mess_out_clipped(uint16_t x, uint16_t y, const char *text,
+                                  short pal, uint16_t max_chars);
 void NEOGEO_USER vram_SCB234(uint16_t SCBADDR, uint16_t SCB234);
 void NEOGEO_USER load_palettes(uint16_t *p_palette, uintptr_t palette_offset);
 void NEOGEO_USER setpal(uint16_t *pal_tile,
@@ -116,14 +117,12 @@ uint8_t NEOGEO_USER demo_wait(uint16_t frames)
 /* ------------------------------------------------------------------ */
 void NEOGEO_USER demo_fix_puts(uint8_t x, uint8_t y, const char *text, uint8_t pal)
 {
-    uint8_t i = 0;
+    uint16_t max_chars;
 
     if (!text || x >= 40u || y >= 28u) return;
 
-    while (text[i] && i < (uint8_t)(38u - x)) {
-        ngfix_write_char((uint8_t)(x + i), y, text[i], pal);
-        i++;
-    }
+    max_chars = (uint16_t)(40u - x);
+    mess_out_clipped(x, y, text, (short)pal, max_chars);
 }
 
 void NEOGEO_USER demo_caption(const char *line1, const char *line2, const char *line3)

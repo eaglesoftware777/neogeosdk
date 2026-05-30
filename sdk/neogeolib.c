@@ -21,6 +21,9 @@ void  vram_sprite_mvy(uint16_t,uint16_t);
 void  fixtext_out(uint16_t, uint16_t,char *,short);
 void  fixtext_out1(uint16_t, uint16_t,uint16_t *,short,int);
 void  fixtext_out2(uint16_t, uint16_t,uint16_t, uint16_t, uint16_t,uint16_t,uint16_t *,short,int);
+void  mess_out(uint16_t, uint16_t,const char *,short);
+void  mess_out_clipped(uint16_t, uint16_t,const char *,short,uint16_t);
+void  mess_out_vram(uint16_t, uint16_t,const char *,short,uint16_t);
 void  mess_outtest(void);
 void setBIOSMESSBusy(void);
 void setBIOSMESSReady(void);
@@ -297,6 +300,85 @@ void NEOGEO_USER fixtext_out(uint16_t x, uint16_t y,char *mess, short pal) {
 	NEO_REGISTER(VRAM_ADDR) = FIXMAP+y+x*32;
 	NEO_REGISTER(VRAM_INC) = 0x20;
 	for (int i=0; i<len; i++) NEO_REGISTER(VRAM_RW) = (uint16_t)((pal << 12) | mess[i]);
+}
+
+static uint16_t NEOGEO_USER mess_out_strlen_clipped(const char *text, uint16_t max_chars)
+{
+	uint16_t len = 0;
+
+	if (!text) return 0;
+	if (max_chars > 240u) max_chars = 240u;
+
+	while (len < max_chars && text[len]) len++;
+	return len;
+}
+
+void NEOGEO_USER mess_out_vram(uint16_t vram_addr, uint16_t vram_inc,
+                               const char *text, short pal, uint16_t max_chars)
+{
+	uint16_t len = mess_out_strlen_clipped(text, max_chars);
+	uint16_t word_buffer[240];
+	uint16_t cell_pal;
+	uint16_t inc_cmd;
+	uint32_t data_addr;
+	uint16_t i;
+
+	if (!len) return;
+
+	cell_pal = (uint16_t)(((uint16_t)pal & 0x000Fu) << 12);
+	for (i = 0; i < len; i++) {
+		uint8_t ch = (uint8_t)text[i];
+		word_buffer[i] = (ch == ' ') ? 0x00FFu : (uint16_t)(cell_pal | ch);
+	}
+
+	inc_cmd = (uint16_t)(((vram_inc & 0x00FFu) << 8) | 0x0002u);
+	data_addr = (uint32_t)(uintptr_t)word_buffer;
+
+	asm volatile (
+		"movem.l %%d0-%%d7/%%a0-%%a6,-(%%sp)\n\t"
+		"addq.b #1,%c[busy]\n\t"
+		"movea.l #%c[buffer],%%a0\n\t"
+		"clr.l (%%a0)+\n\t"
+		"move.w #%c[cmd1],(%%a0)+\n\t"
+		"move.w %[len],(%%a0)+\n\t"
+		"move.w %[inc_cmd],(%%a0)+\n\t"
+		"move.w #%c[cmd3],(%%a0)+\n\t"
+		"move.w %[vram_addr],(%%a0)+\n\t"
+		"move.w #%c[cmd4],(%%a0)+\n\t"
+		"move.l %[data_addr],(%%a0)+\n\t"
+		"clr.w (%%a0)+\n\t"
+		"move.l %%a0,%c[point]\n\t"
+		"subq.b #1,%c[busy]\n\t"
+		"jsr %c[sys_mess]\n\t"
+		"movem.l (%%sp)+,%%d0-%%d7/%%a0-%%a6\n\t"
+		:
+		: [len] "d" (len),
+		  [inc_cmd] "d" (inc_cmd),
+		  [vram_addr] "d" (vram_addr),
+		  [data_addr] "d" (data_addr),
+		  [busy] "i" (BIOS_MESS_BUSY),
+		  [buffer] "i" (BIOS_MESS_BUFFER),
+		  [point] "i" (BIOS_MESS_POINT),
+		  [sys_mess] "i" (SYS_MESS_OUT),
+		  [cmd1] "i" (COMMAND1WL),
+		  [cmd3] "i" (COMMAND3),
+		  [cmd4] "i" (COMMAND4)
+		: "cc", "memory"
+	);
+}
+
+void NEOGEO_USER mess_out_clipped(uint16_t x, uint16_t y, const char *text,
+                                  short pal, uint16_t max_chars)
+{
+	if (!text || x >= 40u || y >= 32u) return;
+	if (max_chars > (uint16_t)(40u - x)) max_chars = (uint16_t)(40u - x);
+	mess_out_vram((uint16_t)(FIXMAP + y + x * 32u), 0x20u, text, pal, max_chars);
+}
+
+void NEOGEO_USER mess_out(uint16_t x, uint16_t y, const char *text, short pal)
+{
+	if (x >= 40u) return;
+	mess_out_clipped(x, y, text, pal, (uint16_t)(40u - x));
 }
 
 void NEOGEO_USER fixtext_out1(uint16_t x, uint16_t y,uint16_t *mess,short pal,int objsz) {

@@ -225,7 +225,7 @@ void NEOGEO_USER demo_fix_run(void)
 
     demo_fix_puts(4u, 8u,  "PAL 0  DEFAULT  TITLE TEXT", 0u);
     demo_fix_puts(4u, 10u, "PAL 1  ACCENT   SUBTITLES",  1u);
-    demo_fix_puts(4u, 12u, "PAL 2  BRIGHT   HIGHLIGHTS", 2u);
+    demo_fix_puts(4u, 12u, "PAL 2  GREEN    HIGHLIGHTS", 2u);
     demo_fix_puts(2u, 16u, "TEXT COLOR IS SET PER TILE --", 0u);
     demo_fix_puts(2u, 17u, "NO REWRITE NEEDED TO CHANGE IT.", 0u);
 
