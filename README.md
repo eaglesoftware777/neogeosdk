@@ -584,6 +584,226 @@ cd /mnt/c/neogeo/neogeosdk
 make sound
 ```
 
+### WSL2 + Ubuntu 24.04 + PulseAudio - Working Audio Guide
+
+#### The Problem
+
+WSLg ships PulseAudio `17.0`, but Ubuntu 24.04 only has `16.1` in its
+repositories. The version mismatch can cause connections to hang or fail with
+protocol errors. This can affect both WSL terminal sessions and SSH sessions.
+
+#### Part 1 - Fix WSL Terminal Audio Through WSLg
+
+Disable the conflicting systemd PulseAudio units:
+
+```bash
+systemctl --user disable --now pulseaudio.service pulseaudio.socket
+systemctl --user mask pulseaudio.service pulseaudio.socket
+```
+
+Clean broken symlinks:
+
+```bash
+rm -rf /run/user/1000/pulse
+mkdir -p /run/user/1000/pulse
+```
+
+Test WSLg directly:
+
+```bash
+PULSE_SERVER=unix:/mnt/wslg/PulseServer pactl info
+```
+
+The output should report `Server Version: 17.0` and `Default Sink: RDPSink`.
+
+#### Part 2 - Build PulseAudio 17.0 From Source
+
+Ubuntu repositories only have PulseAudio `16.1`; build `17.0` to match WSLg.
+
+Install build dependencies:
+
+```bash
+sudo apt install -y build-essential meson ninja-build git \
+    libsndfile1-dev libspeexdsp-dev libtdb-dev \
+    libdbus-1-dev libcap-dev libasyncns-dev \
+    libglib2.0-dev libavahi-client-dev \
+    libssl-dev check libsoxr-dev \
+    libfftw3-dev libwebrtc-audio-processing-dev
+```
+
+Clone and build:
+
+```bash
+mkdir -p ~/pulseaudio && cd ~/pulseaudio
+git clone --depth=1 --branch v17.0 \
+    https://gitlab.freedesktop.org/pulseaudio/pulseaudio.git .
+
+meson setup build --prefix=/usr/local \
+    -Ddaemon=true \
+    -Dclient=true \
+    -Dtests=false \
+    -Ddoxygen=false \
+    -Dbluez5=disabled \
+    -Djack=disabled \
+    -Dlirc=disabled \
+    -Dgcov=false
+
+cd build
+ninja
+sudo ninja install
+```
+
+Fix library linking:
+
+```bash
+echo '/usr/local/lib' | sudo tee /etc/ld.so.conf.d/pulseaudio-local.conf
+sudo ldconfig /usr/local/lib
+```
+
+Verify:
+
+```bash
+/usr/local/bin/pactl --version
+# Should show: pactl 17.0
+
+ldd /usr/local/bin/pactl | grep pulse
+# Should show: /usr/local/lib/... instead of /usr/lib/...
+
+PULSE_SERVER=unix:/mnt/wslg/PulseServer /usr/local/bin/pactl info
+# Should connect and show Server Version: 17.0
+```
+
+#### Part 3 - Expose Audio Over TCP for SSH Sessions
+
+SSH sessions cannot access WSLg's Unix socket directly, so expose it over TCP.
+Use this only on a trusted local WSL instance.
+
+Load the TCP module into WSLg:
+
+```bash
+PULSE_SERVER=unix:/mnt/wslg/PulseServer /usr/local/bin/pactl \
+    load-module module-native-protocol-tcp auth-anonymous=1 port=4713
+```
+
+Test from an SSH session:
+
+```bash
+PULSE_SERVER=tcp:127.0.0.1:4713 /usr/local/bin/pactl info
+# Should connect and show RDPSink
+```
+
+Fix the ALSA-to-PulseAudio bridge:
+
+```bash
+cat > ~/.asoundrc << 'EOF'
+pcm.!default {
+    type pulse
+    server "tcp:127.0.0.1:4713"
+}
+ctl.!default {
+    type pulse
+    server "tcp:127.0.0.1:4713"
+}
+EOF
+```
+
+Make the environment permanent:
+
+```bash
+cat >> ~/.bashrc << 'EOF'
+export PULSE_SERVER=tcp:127.0.0.1:4713
+export SDL_AUDIODRIVER=pulse
+export PATH=/usr/local/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+EOF
+
+cat >> ~/.profile << 'EOF'
+export PULSE_SERVER=tcp:127.0.0.1:4713
+export SDL_AUDIODRIVER=pulse
+export PATH=/usr/local/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+EOF
+
+source ~/.bashrc
+```
+
+#### Part 4 - Auto-load the TCP Module on WSL Start
+
+First get your username:
+
+```bash
+whoami
+```
+
+Then edit `/etc/wsl.conf`. Replace `YOUR_USERNAME` with the output from
+`whoami`:
+
+```bash
+sudo tee /etc/wsl.conf << 'EOF'
+[boot]
+systemd=true
+command = su - YOUR_USERNAME -c "PULSE_SERVER=unix:/mnt/wslg/PulseServer /usr/local/bin/pactl load-module module-native-protocol-tcp auth-anonymous=1 port=4713"
+
+[user]
+default=YOUR_USERNAME
+
+[interop]
+enabled=true
+appendWindowsPath=true
+EOF
+```
+
+Or fill it in automatically:
+
+```bash
+MYUSER=$(whoami)
+sudo tee /etc/wsl.conf << EOF
+[boot]
+systemd=true
+command = su - $MYUSER -c "PULSE_SERVER=unix:/mnt/wslg/PulseServer /usr/local/bin/pactl load-module module-native-protocol-tcp auth-anonymous=1 port=4713"
+
+[user]
+default=$MYUSER
+
+[interop]
+enabled=true
+appendWindowsPath=true
+EOF
+```
+
+Restart WSL from Windows PowerShell:
+
+```powershell
+wsl --shutdown
+```
+
+Reopen WSL and SSH. Audio should work automatically.
+
+#### Quick Verification Checklist
+
+```bash
+# 1. WSLg socket exists
+ls /mnt/wslg/PulseServer
+
+# 2. TCP port is listening
+ss -tlnp | grep 4713
+
+# 3. pactl works over TCP
+PULSE_SERVER=tcp:127.0.0.1:4713 /usr/local/bin/pactl info
+
+# 4. Play a test sound
+paplay /usr/share/sounds/freedesktop/stereo/bell.oga
+```
+
+Key facts:
+
+- WSLg runs PulseAudio `17.0`, while Ubuntu 24.04 ships `16.1`.
+- The WSLg Unix socket at `/mnt/wslg/PulseServer` works from the WSL terminal,
+  but not from SSH sessions.
+- The TCP module bridges SSH sessions to WSLg audio.
+- Building PulseAudio `17.0` from source keeps the client and WSLg server
+  protocol versions aligned on Ubuntu 24.04.
+
 ## Installation on Windows
 
 Recommended layout:
