@@ -97,7 +97,7 @@ STRIP_SECTS:=-R .comment -R .text -R .data -R .bss
 endif
 
 # Intentionally pinned to game-first order; do not inherit ambient HASHPATH env.
-HASHPATH:=$(CURDIR)/hash_eagle/$(GAME):$(CURDIR)/hash_eagle:$(CURDIR)/hash
+HASHPATH:=$(CURDIR)/hash_eagle/$(GAME);$(CURDIR)/hash_eagle;$(CURDIR)/hash
 # Default BIOS for make test/debug. Override: make test BIOS=euro
 # Supported values (make bios-list for full table):
 #   us  us-e  us-v2  us-u4  us-u3
@@ -109,7 +109,7 @@ HASHPATH:=$(CURDIR)/hash_eagle/$(GAME):$(CURDIR)/hash_eagle:$(CURDIR)/hash
 BIOS?=euro
 ROM_DIR = roms/$(GAME)
 DUMP_DIR = dump/$(GAME)
-MAME_COMMON=mame neogeo -rompath $(CURDIR)/roms -hashpath $(HASHPATH) -bios $(BIOS) -cart1 $(GAME)
+MAME_COMMON=mame neogeo -rompath $(CURDIR)/roms -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME)
 LOG_CTX=@echo "[neogeosdk] target=$@ game=$(GAME) game_id=$(GAME_ID) platform=$(PLATFORM) rom_dir=$(ROM_DIR) hashpath=$(HASHPATH)"
 
 # PLATFORM: mvs (default) or aes

@@ -14,7 +14,7 @@ Each game gets its own subdirectory so multiple builds can coexist on disk:
   ...
 
 MAME resolves the correct XML via -hashpath which is set to
-hash_eagle/<GAME>:hash_eagle:hash (game-specific dir first).
+hash_eagle/<GAME>;hash_eagle;hash (game-specific dir first).
 
 Usage:
   python3 hash_eagle/gen_hash.py          # update XML only
@@ -200,7 +200,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 exec mame neogeo \\
     -cart1 {GAME} \\
     -rompath "$SCRIPT_DIR/roms" \\
-    -hashpath "$SCRIPT_DIR/hash_eagle/{GAME}:$SCRIPT_DIR/hash_eagle:$SCRIPT_DIR/hash" \\
+    -hashpath "$SCRIPT_DIR/hash_eagle/{GAME};$SCRIPT_DIR/hash_eagle;$SCRIPT_DIR/hash" \\
     -bios unibios22 \\
     -window \\
     -console \\
@@ -262,7 +262,7 @@ fi
 exec mame neogeo \\
     -cart1 "$GAME" \\
     -rompath "$SCRIPT_DIR/roms" \\
-    -hashpath "$SCRIPT_DIR/hash_eagle/$GAME:$SCRIPT_DIR/hash_eagle:$SCRIPT_DIR/hash" \\
+    -hashpath "$SCRIPT_DIR/hash_eagle/$GAME;$SCRIPT_DIR/hash_eagle;$SCRIPT_DIR/hash" \\
     -bios unibios22 \\
     -window \\
     -console \\

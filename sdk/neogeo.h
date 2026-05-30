@@ -117,6 +117,9 @@ void soundSetFMVolume(uint8_t volume);
 void playSSGTrack(uint8_t track);
 void soundSetSSGPreset(uint8_t preset);
 void playInsertCoinSSG(void);
+void playSSGVoiceGetReady(void);
+void playSSGVoiceLetsGo(void);
+void playSSGVoiceGameOver(void);
 
 /* Voice and cue helpers. */
 void playVoiceCue(uint8_t cue);
@@ -149,6 +152,7 @@ void speakText(const char *text);            /* direct words, then letters/digit
 void soundFMCSMBegin(uint8_t period_hi);
 void soundFMCSMEnd(void);
 void soundFMCSMSweep(uint8_t hi_start, uint8_t hi_end, uint8_t step_ms);
+void playFMSpeechRobot(void);
 
 /* Fades. */
 void soundFadeOut(void);

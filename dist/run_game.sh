@@ -14,7 +14,7 @@ fi
 exec mame neogeo \
     -cart1 "$GAME" \
     -rompath "$SCRIPT_DIR/roms" \
-    -hashpath "$SCRIPT_DIR/hash_eagle/$GAME:$SCRIPT_DIR/hash_eagle:$SCRIPT_DIR/hash" \
+    -hashpath "$SCRIPT_DIR/hash_eagle/$GAME;$SCRIPT_DIR/hash_eagle;$SCRIPT_DIR/hash" \
     -bios unibios22 \
     -window \
     -console \

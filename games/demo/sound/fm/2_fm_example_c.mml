@@ -1,22 +1,23 @@
-; 2_fm_example_c — Outrun-style cruising melody (F major)
+; 2_fm_example_c - short mix piano accent
 
-T220
+T210
 I2
-V13
-O5
-L16
+V10
+O4
+L8
 
-; A — opening phrase
-F G A > C  < A F G A
-> C < A G F  E F G A
+; A - simple minor piano comp, leaves room for ADPCM-B
+C E- G > C  < B- G E- C
+D F A > D  < C A F D
 
-; B — chord climb
-F A > C F  G B- > D G
-< A > C F A  < B- > D F4
+; B - answer phrase
+E- G B- > E-  < D B- G E-
+F A > C F  < E- C A F
 
-; C — sustained outro
-> C < A F4  G E C4
-F G A > C  < A G F4
-< F A > C2
+; C - short cadence for mix overlay
+L4
+G E- C R
+F D < B- R
+> C2 R2
 
 ~

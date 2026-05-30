@@ -107,13 +107,14 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Reuse the NeoGeo 5-bit grid snap and Lab conversion from img2neo —
 # keeps the module dependency-free of scikit-learn / scikit-image.
-from img2neo import snap_neogeo, rgb_to_lab, kmeans_palette as _img2neo_kmeans_palette
+from img2neo import snap_neogeo, rgb_to_lab, kmeans_palette as _img2neo_kmeans_palette, alpha_bleed
 
 
 TILE_SIZE = 16
 COLORS_PER_TILE = 15
 PIXELS_PER_TILE = TILE_SIZE * TILE_SIZE   # 256
 ALPHA_OPAQUE_THRESHOLD = 128
+ALPHA_SOLID_THRESHOLD = 240
 
 
 # ---------------------------------------------------------------------------
@@ -146,6 +147,134 @@ def rgb_to_weighted_ycbcr(rgb_uint8: np.ndarray) -> np.ndarray:
     ycc = rgb @ _M_RGB_YCBCR.T
     ycc[..., 0] *= LUMA_WEIGHT
     return ycc
+
+
+def _luma(rgb: np.ndarray) -> np.ndarray:
+    rgb_f = rgb.astype(np.float32)
+    return (rgb_f[..., 0] * 0.299 +
+            rgb_f[..., 1] * 0.587 +
+            rgb_f[..., 2] * 0.114)
+
+
+def _neo_palette_pop(rgb: np.ndarray,
+                     mask: np.ndarray | None,
+                     asset_type: str = "background") -> np.ndarray:
+    """
+    Small pre-quantisation tone pass for palette selection.
+
+    The Neo Geo palette is only 15 visible colours per bank.  This pass
+    slightly separates shadows, highlights and chroma before k-means so
+    the limited palette keeps the crisp arcade contrast instead of
+    collapsing into middle tones.
+    """
+    out = rgb.astype(np.float32).copy()
+    if mask is None:
+        sample = out.reshape(-1, 3)
+    else:
+        sample = out[mask]
+
+    if sample.size:
+        lum = _luma(sample)
+        lo, hi = np.percentile(lum, (3.0, 97.0))
+        if hi - lo > 18.0:
+            cur_lum = _luma(out)
+            target_lum = np.clip((cur_lum - lo) * (255.0 / (hi - lo)), 0.0, 255.0)
+            blend = 0.26 if asset_type == "sprite" else 0.18
+            scale = (cur_lum * (1.0 - blend) + target_lum * blend + 1.0) / (cur_lum + 1.0)
+            out *= scale[..., None]
+
+    sat = 1.10 if asset_type == "sprite" else 1.06
+    gray = _luma(out)[..., None]
+    out = gray + (out - gray) * sat
+    return np.clip(out, 0.0, 255.0).astype(np.uint8)
+
+
+def _reserved_anchor_colors(rgb: np.ndarray,
+                            max_anchors: int = 2) -> list[np.ndarray]:
+    """
+    Reserve hard contrast colours when the asset actually uses them.
+
+    This protects FIX/UI text and sprite line art from losing pure black
+    or bright white when the remaining colours are busy.
+    """
+    if rgb.size == 0 or max_anchors <= 0:
+        return []
+    lum = _luma(rgb)
+    anchors: list[np.ndarray] = []
+    if np.any(lum < 18.0):
+        anchors.append(np.array([0, 0, 0], dtype=np.uint8))
+    if len(anchors) < max_anchors and np.any(lum > 236.0):
+        anchors.append(np.array([248, 248, 248], dtype=np.uint8))
+    return anchors
+
+
+def _lab_kmeans_palette_with_anchors(rgb: np.ndarray,
+                                     n_colors: int = 15,
+                                     asset_type: str = "background"
+                                     ) -> np.ndarray:
+    """
+    CIE-Lab k-means palette with optional black/white slot reservation.
+
+    Returns exactly n_colors RGB entries snapped to the Neo Geo colour grid.
+    """
+    rgb = np.asarray(rgb, dtype=np.uint8).reshape(-1, 3)
+    if rgb.size == 0:
+        return np.zeros((n_colors, 3), dtype=np.uint8)
+
+    anchors = _reserved_anchor_colors(rgb, max_anchors=2)
+    k = max(1, n_colors - len(anchors))
+
+    if rgb.shape[0] > 16384:
+        rng = np.random.default_rng(0)
+        rgb = rgb[rng.choice(rgb.shape[0], 16384, replace=False)]
+
+    source = _neo_palette_pop(rgb.reshape(-1, 1, 3),
+                              np.ones((rgb.shape[0], 1), dtype=bool),
+                              asset_type=asset_type).reshape(-1, 3)
+    lab = rgb_to_lab(source).astype(np.float32)
+    centres = _kmeans_pp_weighted_vivid(lab, k)
+    from img2neo import lab_to_rgb
+    palette = snap_neogeo(lab_to_rgb(centres))
+
+    if anchors:
+        palette = np.vstack([palette, np.stack(anchors, axis=0)])
+
+    palette = _dedupe_and_pad_palette(palette, source, n_colors)
+    return snap_neogeo(palette)
+
+
+def _dedupe_and_pad_palette(palette: np.ndarray,
+                            fallback_rgb: np.ndarray,
+                            n_colors: int = 15) -> np.ndarray:
+    palette = snap_neogeo(np.asarray(palette, dtype=np.uint8).reshape(-1, 3))
+    unique = []
+    seen = set()
+    for color in palette:
+        key = tuple(int(v) for v in color)
+        if key not in seen:
+            unique.append(color)
+            seen.add(key)
+        if len(unique) == n_colors:
+            break
+
+    if not unique:
+        unique.append(np.array([0, 0, 0], dtype=np.uint8))
+
+    if len(unique) < n_colors and fallback_rgb.size:
+        fallback = snap_neogeo(np.asarray(fallback_rgb, dtype=np.uint8).reshape(-1, 3))
+        vals, counts = np.unique(fallback, axis=0, return_counts=True)
+        order = np.argsort(-counts)
+        for idx in order:
+            key = tuple(int(v) for v in vals[idx])
+            if key not in seen:
+                unique.append(vals[idx])
+                seen.add(key)
+            if len(unique) == n_colors:
+                break
+
+    while len(unique) < n_colors:
+        unique.append(unique[-1])
+    return np.stack(unique[:n_colors], axis=0).astype(np.uint8)
 
 
 # ---------------------------------------------------------------------------
@@ -1060,8 +1189,12 @@ def derive_master_sprite_palette(image_paths,
     opaque_chunks: list[np.ndarray] = []
     for p in image_paths:
         img = Image.open(p).convert("RGBA")
-        arr = np.array(img, dtype=np.uint8)
-        mask = arr[:, :, 3] >= 128
+        arr = alpha_bleed(np.array(img, dtype=np.uint8),
+                          opaque_alpha=ALPHA_OPAQUE_THRESHOLD)
+        alpha = arr[:, :, 3]
+        mask = alpha >= ALPHA_SOLID_THRESHOLD
+        if not mask.any():
+            mask = alpha >= ALPHA_OPAQUE_THRESHOLD
         if mask.any():
             opaque_chunks.append(arr[mask][:, :3])
 
@@ -1077,16 +1210,8 @@ def derive_master_sprite_palette(image_paths,
         idx = rng.choice(opaque_rgb.shape[0], 16384, replace=False)
         opaque_rgb = opaque_rgb[idx]
 
-    opaque_strip = opaque_rgb.reshape(-1, 1, 3)
-    opaque_pil = Image.fromarray(opaque_strip, mode="RGB")
-    opaque_lab = np.array(opaque_pil.convert("LAB"),
-                            dtype=np.float32).reshape(-1, 3)
-    lab_centres = _kmeans_pp_weighted_vivid(opaque_lab, n_colors)
-    palette_img = Image.fromarray(
-        lab_centres.reshape(1, n_colors, 3).astype(np.uint8), mode="LAB"
-    )
-    rgb_palette = np.array(palette_img.convert("RGB")).reshape(n_colors, 3)
-    return snap_neogeo(rgb_palette)
+    return _lab_kmeans_palette_with_anchors(
+        opaque_rgb, n_colors=n_colors, asset_type="sprite")
 
 
 def execute_final_vivid_pipeline(image_path,
@@ -1163,14 +1288,23 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
     if rgba.ndim != 3 or rgba.shape[2] != 4:
         raise ValueError(f"_vivid_pipeline_from_rgba needs (H, W, 4); "
                           f"got shape {rgba.shape}")
+    if asset_type == "sprite":
+        rgba = alpha_bleed(rgba.astype(np.uint8),
+                           opaque_alpha=ALPHA_OPAQUE_THRESHOLD)
     src_np = rgba.astype(np.float32, copy=False)
     target_h, target_w = src_np.shape[:2]
     if (target_h % 16) or (target_w % 16):
         raise ValueError(f"input dims must be multiples of 16; got "
                           f"{target_w}x{target_h}")
-    rgb_np = src_np[:, :, :3]
+    rgb_raw = src_np[:, :, :3]
     alpha_np = src_np[:, :, 3]
     opaque_mask = alpha_np >= 128.0
+    solid_mask = alpha_np >= float(ALPHA_SOLID_THRESHOLD)
+    rgb_np = _neo_palette_pop(
+        rgb_raw.astype(np.uint8),
+        solid_mask if asset_type == "sprite" and solid_mask.any() else opaque_mask,
+        asset_type=asset_type,
+    ).astype(np.float32)
 
     tile_rows = target_h // 16
     tile_cols = target_w // 16
@@ -1208,24 +1342,11 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
     elif asset_type == "sprite":
         # Single global palette over all opaque pixels of this image.
         if opaque_mask.any():
-            opaque_rgb = rgb_np[opaque_mask].astype(np.uint8)
-            # Subsample very large sprites to keep clustering cheap.
-            if opaque_rgb.shape[0] > 16384:
-                rng = np.random.default_rng(0)
-                idx = rng.choice(opaque_rgb.shape[0], 16384, replace=False)
-                opaque_rgb = opaque_rgb[idx]
-            opaque_strip = opaque_rgb.reshape(-1, 1, 3)
-            opaque_pil = Image.fromarray(opaque_strip, mode="RGB")
-            opaque_lab = np.array(
-                opaque_pil.convert("LAB"), dtype=np.float32
-            ).reshape(-1, 3)
-            lab_centres = _kmeans_pp_weighted_vivid(opaque_lab, 15)
-            palette_img = Image.fromarray(
-                lab_centres.reshape(1, 15, 3).astype(np.uint8), mode="LAB"
-            )
-            master_rgb = np.array(
-                palette_img.convert("RGB")
-            ).reshape(15, 3).astype(np.float32)
+            palette_mask = solid_mask if solid_mask.any() else opaque_mask
+            opaque_rgb = rgb_np[palette_mask].astype(np.uint8)
+            master_rgb = _lab_kmeans_palette_with_anchors(
+                opaque_rgb, n_colors=15, asset_type="sprite"
+            ).astype(np.float32)
         else:
             master_rgb = np.zeros((15, 3), dtype=np.float32)
         for ty_idx in range(tile_rows):
@@ -1246,19 +1367,9 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
                     continue
 
                 opaque_rgb = tile_rgb[tile_alpha].astype(np.uint8)
-                opaque_strip = opaque_rgb.reshape(-1, 1, 3)
-                opaque_pil = Image.fromarray(opaque_strip, mode="RGB")
-                opaque_lab = np.array(
-                    opaque_pil.convert("LAB"), dtype=np.float32
-                ).reshape(-1, 3)
-
-                lab_centres = _kmeans_pp_weighted_vivid(opaque_lab, 15)
-                palette_img = Image.fromarray(
-                    lab_centres.reshape(1, 15, 3).astype(np.uint8), mode="LAB"
-                )
-                local_luts[(ty_idx, tx_idx)] = np.array(
-                    palette_img.convert("RGB")
-                ).reshape(15, 3).astype(np.float32)
+                local_luts[(ty_idx, tx_idx)] = _lab_kmeans_palette_with_anchors(
+                    opaque_rgb, n_colors=15, asset_type="background"
+                ).astype(np.float32)
 
     # ---------------------------------------------------------
     # PASS 2: GLOBAL SCANLINE DITHER (alpha-aware, Atkinson)
@@ -1325,7 +1436,9 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
                              abs(orig_px[1] - top[1]) +
                              abs(orig_px[2] - top[2]))
 
-            smooth_mode = (variance < 15.0
+            edge_mode = (asset_type == "sprite" and alpha_np[gy, gx] < 250.0)
+            smooth_mode = (edge_mode
+                            or variance < 15.0
                             or orig_luma > 240.0
                             or orig_luma < 15.0)
             match_px = np.clip(orig_px, 0.0, 255.0) if smooth_mode else px
@@ -1385,7 +1498,7 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
 
 _VIVID_CACHE_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), ".cache", "vivid")
-_VIVID_CACHE_VERSION = "v9-photocopy-variance-gate"
+_VIVID_CACHE_VERSION = "v10-edge-anchor-palette"
 
 
 def _vivid_cache_key(image_path: str, target_w: int, target_h: int,
