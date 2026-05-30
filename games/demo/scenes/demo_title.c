@@ -68,8 +68,8 @@ void NEOGEO_USER demo_title_screen(void)
         soundSetSSGVolume(0x00u);     waitVbl();
         soundSetFMVolume(0x00u);      waitVbl();
 
-    /* FIX palette 0 = white, 1 = cyan, 2 = yellow */
-    setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+    /* FIX palette 0 = black, 1 = cyan, 2 = green */
+    setpal(fix_pal, 0x8000u, BLACK,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES);
 
@@ -77,7 +77,7 @@ void NEOGEO_USER demo_title_screen(void)
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES + PALOFFSET);
 
-    setpal(fix_pal, 0x8000u, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+    setpal(fix_pal, 0x8000u, GREEN,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
 
@@ -126,7 +126,7 @@ void NEOGEO_USER demo_title_game_over(void)
     demo_clear_scene();
     setBACKDROP(BLACK);
 
-    setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+    setpal(fix_pal, 0x8000u, BLACK,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES);
     setpal(fix_pal, 0x8000u, RED,    BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
@@ -192,13 +192,13 @@ void NEOGEO_USER demo_title_attract_reel(void)
     demo_clear_scene();
     setBACKDROP(BLACK);
 
-    setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+    setpal(fix_pal, 0x8000u, BLACK,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES);
     setpal(fix_pal, 0x8000u, CYAN,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES + PALOFFSET);
-    setpal(fix_pal, 0x8000u, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+    setpal(fix_pal, 0x8000u, GREEN,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
 
@@ -321,7 +321,7 @@ void NEOGEO_USER demo_title_end_card(void)
 
     setBACKDROP(BLACK);
 
-    setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+    setpal(fix_pal, 0x8000u, BLACK,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES);
 
@@ -329,7 +329,7 @@ void NEOGEO_USER demo_title_end_card(void)
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES + PALOFFSET);
 
-    setpal(fix_pal, 0x8000u, YELLOW, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+    setpal(fix_pal, 0x8000u, GREEN,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
 

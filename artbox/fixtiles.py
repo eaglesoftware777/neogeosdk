@@ -72,6 +72,18 @@ def decode_tile(raw32):
 def is_empty_tile(raw32):
     return all(b in (0x00, 0x11) for b in raw32)
 
+def remap_tile_pen(raw32, src_pen, dst_pen):
+    px = decode_tile(raw32)
+    px[px == src_pen] = dst_pen
+    return encode_tile(px)
+
+def make_base_font_transparent():
+    end = min(INFIX_REGION_START, 256, NUM_TILES)
+    for slot in range(end):
+        start = slot * TILE_BYTES
+        raw = bytes(rom[start:start + TILE_BYTES])
+        rom[start:start + TILE_BYTES] = remap_tile_pen(raw, 2, 0)
+
 # ── image → tile list ──────────────────────────────────────────────────────────
 def image_to_tiles(indexed_2d):
     """Slice any ×8 sized indexed pixel array into 32-byte hardware tiles (row-major)."""
@@ -132,6 +144,9 @@ for i, t in enumerate(game_tiles[:NUM_TILES]):
         preserved += 1
 if preserved:
     print(f"Preserved {preserved} non-empty base-font tiles from {os.path.basename(GAME_S1)}")
+
+make_base_font_transparent()
+print("Made base FIX font background transparent")
 
 # ── collect infix tiles from DB ───────────────────────────────────────────────
 infix_tiles = []

@@ -514,7 +514,7 @@ static uint8_t NEOGEO_USER chap_fix(void)
 
     demo_fix_puts(2u,  6u, "PALETTE 0  STANDARD",   0u);
     demo_fix_puts(2u,  7u, "PALETTE 1  ACCENT",     1u);
-    demo_fix_puts(2u,  8u, "PALETTE 2  WARN",       2u);
+    demo_fix_puts(2u,  8u, "PALETTE 2  GREEN",      2u);
 
 
 
