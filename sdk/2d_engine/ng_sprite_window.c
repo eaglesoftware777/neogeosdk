@@ -20,6 +20,8 @@ void NEOGEO_USER ng_sprite_window_init(NGSpriteWindow *window,
     window->max_strips = max_strips ? max_strips : 1u;
     window->current_strips = 0u;
     window->previous_strips = 0u;
+    window->current_rows = 0u;
+    window->previous_rows = 0u;
     window->visible = 0u;
 }
 
@@ -29,16 +31,27 @@ void NEOGEO_USER ng_sprite_window_reset(NGSpriteWindow *window)
 
     window->current_strips = 0u;
     window->previous_strips = 0u;
+    window->current_rows = 0u;
+    window->previous_rows = 0u;
     window->visible = 0u;
 }
 
 void NEOGEO_USER ng_sprite_window_set_current(NGSpriteWindow *window,
                                               uint8_t current_strips)
 {
+    ng_sprite_window_set_shape(window, current_strips, 0u);
+}
+
+void NEOGEO_USER ng_sprite_window_set_shape(NGSpriteWindow *window,
+                                            uint8_t current_strips,
+                                            uint8_t current_rows)
+{
     if (!window) return;
 
     window->previous_strips = window->current_strips;
+    window->previous_rows = window->current_rows;
     window->current_strips = ngsw_clamp_count(current_strips, window->max_strips);
+    window->current_rows = current_rows ? current_rows : 1u;
     window->visible = 1u;
 }
 
@@ -49,6 +62,8 @@ void NEOGEO_USER ng_sprite_window_clear(NGSpriteWindow *window)
     ng_vram_clear_sprite_range(window->first_slot, window->max_strips);
     window->previous_strips = 0u;
     window->current_strips = 0u;
+    window->previous_rows = 0u;
+    window->current_rows = 0u;
     window->visible = 0u;
 }
 
@@ -57,6 +72,11 @@ void NEOGEO_USER ng_sprite_window_clear_tail(NGSpriteWindow *window)
     if (!window) return;
 
     if (window->previous_strips == 0u) {
+        ng_vram_clear_sprite_range(window->first_slot, window->max_strips);
+        return;
+    }
+
+    if (window->previous_rows != window->current_rows) {
         ng_vram_clear_sprite_range(window->first_slot, window->max_strips);
         return;
     }
@@ -76,4 +96,6 @@ void NEOGEO_USER ng_sprite_window_hide(NGSpriteWindow *window)
     window->visible = 0u;
     window->previous_strips = window->current_strips;
     window->current_strips = 0u;
+    window->previous_rows = window->current_rows;
+    window->current_rows = 0u;
 }

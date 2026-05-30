@@ -35,9 +35,9 @@
 #define NG_SPRITE_CULL_BOTTOM   640
 
 /* Render priority bands.
- * Higher band values are drawn in front because ng_chars_draw() assigns them
- * to lower hardware sprite slots first.  Inside one band, characters are
- * depth-sorted by Y position plus depth_offset. */
+ * Higher band values are drawn in front because ng_chars_draw() assigns
+ * back-to-front objects to increasing hardware sprite slots. Inside one band,
+ * characters are depth-sorted by Y position plus depth_offset. */
 #define NG_RENDER_BAND_BACK      0
 #define NG_RENDER_BAND_NPC       1
 #define NG_RENDER_BAND_ENEMY     2

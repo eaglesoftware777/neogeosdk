@@ -116,35 +116,14 @@ uint8_t NEOGEO_USER demo_wait(uint16_t frames)
 /* ------------------------------------------------------------------ */
 void NEOGEO_USER demo_fix_puts(uint8_t x, uint8_t y, const char *text, uint8_t pal)
 {
-    char buf[39];
     uint8_t i = 0;
-    uint8_t all_spaces;
 
     if (!text || x >= 40u || y >= 28u) return;
 
-    all_spaces = 1u;
     while (text[i] && i < (uint8_t)(38u - x)) {
-        buf[i] = text[i];
-        if (text[i] != ' ') all_spaces = 0u;
+        ngfix_write_char((uint8_t)(x + i), y, text[i], pal);
         i++;
     }
-    buf[i] = '\0';
-
-    /*
-     * When the caller is clearing cells (all-spaces + palette 0),
-     * paint the truly-transparent FIX tile 0 instead of tile 0x20
-     * (space glyph).  Tile 0x20 isn't fully transparent in this FIX
-     * font and used to leave dark blocks over the BG.
-     */
-    if (pal == 0u && all_spaces) {
-        uint8_t k;
-        for (k = 0u; k < i; k++) {
-            ngfix_write_tile((uint8_t)(x + k), y, 0u, 0u);
-        }
-        return;
-    }
-
-    fixtext_out(x, y, buf, (short)pal);
 }
 
 void NEOGEO_USER demo_caption(const char *line1, const char *line2, const char *line3)
@@ -159,13 +138,15 @@ void NEOGEO_USER demo_caption(const char *line1, const char *line2, const char *
 /* ------------------------------------------------------------------ */
 /*  Scene clear                                                          */
 /* ------------------------------------------------------------------ */
-static NGSpriteWindow demo_sprite_windows[8];
+#define DEMO_SPRITE_WINDOWS 16u
+
+static NGSpriteWindow demo_sprite_windows[DEMO_SPRITE_WINDOWS];
 
 static void NEOGEO_USER demo_reset_sprite_window_cache(void)
 {
     uint8_t i;
 
-    for (i = 0u; i < 8u; i++) {
+    for (i = 0u; i < DEMO_SPRITE_WINDOWS; i++) {
         ng_sprite_window_init(&demo_sprite_windows[i], 0u, 0xffffu, NG_SPRITE_MAX_STRIPS);
     }
 }
@@ -175,7 +156,7 @@ static NGSpriteWindow * NEOGEO_USER demo_sprite_window_find(uint16_t first_sprit
     uint8_t i;
     uint8_t free_slot = 0xffu;
 
-    for (i = 0u; i < 8u; i++) {
+    for (i = 0u; i < DEMO_SPRITE_WINDOWS; i++) {
         if (demo_sprite_windows[i].first_slot == first_sprite) return &demo_sprite_windows[i];
         if (free_slot == 0xffu &&
             (demo_sprite_windows[i].first_slot == 0xffffu ||
@@ -439,6 +420,17 @@ void NEOGEO_USER demo_draw_sprite_screen(uint8_t screen_id,
                                          uint8_t strips, uint8_t rows,
                                          uint8_t scale_x, uint8_t scale_y)
 {
+    demo_draw_sprite_screen_flip(screen_id, first_sprite, x, y,
+                                 strips, rows, scale_x, scale_y, 0u);
+}
+
+void NEOGEO_USER demo_draw_sprite_screen_flip(uint8_t screen_id,
+                                              uint16_t first_sprite,
+                                              int16_t x, int16_t y,
+                                              uint8_t strips, uint8_t rows,
+                                              uint8_t scale_x, uint8_t scale_y,
+                                              uint8_t hflip)
+{
     NGSpriteGroup g;
     uint8_t meta_strips;
     uint8_t meta_rows;
@@ -456,7 +448,7 @@ void NEOGEO_USER demo_draw_sprite_screen(uint8_t screen_id,
     if (rows > meta_rows) rows = meta_rows;
 
     window = demo_sprite_window_find(first_sprite);
-    ng_sprite_window_set_current(window, strips);
+    ng_sprite_window_set_shape(window, strips, rows);
     ng_sprite_window_clear_tail(window);
 
     demo_load_screen_palette(screen_id);
@@ -472,6 +464,7 @@ void NEOGEO_USER demo_draw_sprite_screen(uint8_t screen_id,
     ng_sprite_group_set_scale(&g,
                               demo_normalize_x_scale(scale_x),
                               scale_y);
+    ng_sprite_group_set_flip(&g, hflip, 0u);
     ng_sprite_group_upload(&g);
 }
 
@@ -534,5 +527,8 @@ void NEOGEO_USER demo_run_full_flow(void)
     soundSetSSGVolume(0x08u);
     soundSetFMVolume(0x08u);
 
+    playSFX(SOUND_SFX_3);
+    demo_wait(20u);
+    demo_intro_loading();
     demo_unified_run();
 }

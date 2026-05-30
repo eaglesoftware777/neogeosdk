@@ -45,8 +45,8 @@ typedef struct {
 } NGAnimClip;
 
 /*
- * Render priority bands.  Lower hardware sprite slots draw in front on Neo Geo,
- * so the character renderer packs higher-priority bands first, then sorts by Y.
+ * Render priority bands. Higher hardware sprite slots draw in front on Neo Geo,
+ * so the character renderer packs lower/back bands first, then sorts by Y.
  */
 struct NGCharacter {
     uint8_t active;

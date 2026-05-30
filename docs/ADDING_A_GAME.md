@@ -117,7 +117,7 @@ MAME is invoked with `-cart1 mygame` so it looks in `roms/mygame/` automatically
 `mygame` and ROM prefix `888`.  The HASHPATH passed to MAME is:
 
 ```
-hash_eagle/mygame : hash_eagle : hash
+hash_eagle/mygame ; hash_eagle ; hash
 ```
 
 MAME finds `hash_eagle/mygame/neogeo.xml` first (highest priority), so

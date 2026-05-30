@@ -105,14 +105,20 @@ enum {
 	SOUND_SSG_A = 0,    /* 0_ssg_example_a.mml */
 	SOUND_SSG_B = 1,    /* 1_ssg_example_b.mml */
 	SOUND_SSG_C = 2,    /* 2_ssg_example_c.mml */
-	SOUND_SSG_D = 3     /* 3_ssg_example_d.mml */
+	SOUND_SSG_D = 3,    /* 3_ssg_example_d.mml */
+	SOUND_SSG_E = 4,    /* 4_voice_get_ready.mml */
+	SOUND_SSG_F = 5,    /* 5_voice_lets_go.mml */
+	SOUND_SSG_G = 6     /* 6_voice_game_over.mml */
 };
 
 #define SOUND_SSG_TRACK_1  SOUND_SSG_A
 #define SOUND_SSG_TRACK_2  SOUND_SSG_B
 #define SOUND_SSG_TRACK_3  SOUND_SSG_C
 #define SOUND_SSG_TRACK_4  SOUND_SSG_D
-#define SOUND_SSG_TRACK_COUNT  4
+#define SOUND_SSG_TRACK_5  SOUND_SSG_E
+#define SOUND_SSG_TRACK_6  SOUND_SSG_F
+#define SOUND_SSG_TRACK_7  SOUND_SSG_G
+#define SOUND_SSG_TRACK_COUNT  7
 
 /* ---------------------------------------------------------------- */
 /*  Voice cues (ADPCM-A long voice samples)                          */

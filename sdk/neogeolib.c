@@ -66,6 +66,9 @@ void playSSGTrack(uint8_t);
 void soundSetSSGPreset(uint8_t);
 void soundSceneReset(void);
 void playInsertCoinSSG(void);
+void playSSGVoiceGetReady(void);
+void playSSGVoiceLetsGo(void);
+void playSSGVoiceGameOver(void);
 void playGetReadyVoice(void);
 void playAttackVoice(void);
 void playVoiceGetReady(void);
@@ -84,6 +87,7 @@ void speakWord(const char *text);
 void soundFMCSMBegin(uint8_t period_hi);
 void soundFMCSMEnd(void);
 void soundFMCSMSweep(uint8_t hi_start, uint8_t hi_end, uint8_t step_ms);
+void playFMSpeechRobot(void);
 void playCoinThenReady(void);
 void soundApplyMix(uint8_t,uint8_t,uint8_t,uint8_t);
 void soundPlayDemoFM(uint8_t);
@@ -514,7 +518,7 @@ void NEOGEO_USER display_digit(uint16_t X, uint16_t Y,uint32_t value,short pal,u
 int NEOGEO_USER read_p1credit(void) { return *(volatile uint8_t *)P1_CREDITS; }
 
 void NEOGEO_USER playSoundtest(uint16_t index) { isZ80Ready(); soundCommand((uint8_t)(index & 0xFF)); }
-void NEOGEO_USER soundCommand(uint8_t command) { isZ80Ready(); NEO_REGISTER8(REG_SOUND) = command; isZ80Ready(); }
+void NEOGEO_USER soundCommand(uint8_t command) { isZ80Ready(); NEO_REGISTER8(REG_SOUND) = command; }
 void NEOGEO_USER soundInit(void) { soundCommand(0x01); }
 void NEOGEO_USER soundReset(void) { soundCommand(0x03); }
 void NEOGEO_USER soundStopAll(void) { soundCommand(0x04); }
@@ -538,7 +542,10 @@ void NEOGEO_USER playFMTrack(uint8_t n) { isZ80Ready(); soundCommand(0x31); isZ8
 void NEOGEO_USER soundSetFMVolume(uint8_t v) { isZ80Ready(); soundCommand(0x13); isZ80Ready(); soundCommand(v & 0x0F); }
 void NEOGEO_USER playSSGTrack(uint8_t n) { isZ80Ready(); soundCommand(0x32); isZ80Ready(); soundCommand(n); }
 void NEOGEO_USER soundSetSSGPreset(uint8_t preset) { isZ80Ready(); soundCommand(0x14); isZ80Ready(); soundCommand(preset & 0x0F); }
-void NEOGEO_USER playInsertCoinSSG(void) { isZ80Ready(); playSSGTrack(SOUND_SSG_C); soundSetSSGPreset(1); }
+void NEOGEO_USER playInsertCoinSSG(void) { isZ80Ready(); soundSetSSGPreset(1u); isZ80Ready(); playSSGTrack(SOUND_SSG_C); }
+void NEOGEO_USER playSSGVoiceGetReady(void) { isZ80Ready(); soundSetSSGPreset(4u); isZ80Ready(); playSSGTrack(SOUND_SSG_E); }
+void NEOGEO_USER playSSGVoiceLetsGo(void) { isZ80Ready(); soundSetSSGPreset(3u); isZ80Ready(); playSSGTrack(SOUND_SSG_F); }
+void NEOGEO_USER playSSGVoiceGameOver(void) { isZ80Ready(); soundSetSSGPreset(4u); isZ80Ready(); playSSGTrack(SOUND_SSG_G); }
 
 void NEOGEO_USER playVoiceCue(uint8_t n) {
 	isZ80Ready();
@@ -926,13 +933,13 @@ void NEOGEO_USER playVoiceNumber(uint16_t value) {
 			uint8_t d = (uint8_t)(digits[(uint8_t)(len - 1u - i)] - '0');
 			sample = voice_char_sample((char)('0' + d));
 			if (sample != 0xFFu) playVoiceSample(sample);
-			cyclexms(85);
+			cyclexms(45);
 		}
 	}
 }
 
-void NEOGEO_USER playVoiceGetReady(void) { speakText("GET READY"); }
-void NEOGEO_USER playVoiceLetsGo(void)   { speakText("LETS GO"); }
+void NEOGEO_USER playVoiceGetReady(void) { speakText("READY"); }
+void NEOGEO_USER playVoiceLetsGo(void)   { speakText("GO"); }
 void NEOGEO_USER playVoiceGameOver(void) { speakText("GAME OVER"); }
 
 /*
@@ -1017,7 +1024,7 @@ void NEOGEO_USER speakText(const char *text) {
 
 		if (voice_direct_phrase(p, &sample, &advance)) {
 			playVoiceSample(sample);
-			cyclexms(180);
+			cyclexms(115);
 			p += (advance - 1u);
 			continue;
 		}
@@ -1027,7 +1034,7 @@ void NEOGEO_USER speakText(const char *text) {
 		if (sample != 0xFFu) {
 			playVoiceSample(sample);
 		}
-		cyclexms(85);
+		cyclexms(45);
 	}
 }
 
@@ -1091,6 +1098,18 @@ void NEOGEO_USER soundFMCSMSweep(uint8_t hi_start, uint8_t hi_end,
 	}
 	cyclexms(step_ms);
 	soundFMCSMEnd();
+}
+
+void NEOGEO_USER playFMSpeechRobot(void) {
+	isZ80Ready(); soundStopAll();
+	isZ80Ready(); soundSceneReset();
+	isZ80Ready(); soundApplyMix(0x00u, 0x00u, 0x00u, 0x0Cu);
+	isZ80Ready(); playFMTrack(SOUND_FM_F);
+	cyclexms(20);
+	soundFMCSMSweep(150u, 92u, 7u);
+	soundFMCSMSweep(92u, 168u, 7u);
+	isZ80Ready(); soundFMCSMEnd();
+	isZ80Ready(); soundSetFMVolume(0x00u);
 }
 
 void NEOGEO_USER soundFadeOut(void) { isZ80Ready(); soundFadeOutSpeed(0x20); }

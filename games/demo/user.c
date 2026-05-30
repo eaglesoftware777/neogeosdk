@@ -152,6 +152,8 @@ void NEOGEO_USER PLAYER_START (void) {
 	if ((start_flag >> 1) & 1) {
 		NEO_REGISTER8(BIOS_PLAYER2_MODE) = (country_code == 1) ? 2 : 3;
 	}
+	soundSetADPCMAVolume(0x3C);
+	playSFX(SOUND_SFX_3);
 #ifndef NG_AES
 	CALLNEOGEOF(SYS_CREDIT_CHECK);
 	CALLNEOGEOF(SYS_CREDIT_DOWN);
@@ -285,40 +287,51 @@ void NEOGEO_USER TITLE(void) {
 
 void  NEOGEO_USER showTitleMVS(void) {
 	int i;
+	int credit_seen = 0;
+	int auto_frames = 15 * 60;
 	clearFix();
 	clearSprs();
 	setBACKDROP(BLACK);
 	showScreen108(32, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
 	waitVbl();
 
-	/* MVS: blink INSERT COIN when no credits; show HIT START when credits available. */
-	for (i = 0; i < 360; i++) {
-		if (read_p1credit() > 0)
+	/* MVS: wait for credit, then auto-start after 15 seconds if START is not pressed. */
+	for (i = 0; ; i++) {
+		if (read_p1credit() > 0) {
+			char timer[18];
+			int secs;
+			if (!credit_seen) {
+				credit_seen = 1;
+				auto_frames = 15 * 60;
+				soundSetADPCMAVolume(0x3C);
+				playSFX(SOUND_SFX_1);
+			}
+			secs = (auto_frames + 59) / 60;
+			timer[0] = 'A'; timer[1] = 'U'; timer[2] = 'T'; timer[3] = 'O';
+			timer[4] = ' '; timer[5] = 'S'; timer[6] = 'T'; timer[7] = 'A';
+			timer[8] = 'R'; timer[9] = 'T'; timer[10] = ' ';
+			timer[11] = (char)('0' + (secs / 10));
+			timer[12] = (char)('0' + (secs % 10));
+			timer[13] = 's'; timer[14] = ' '; timer[15] = ' '; timer[16] = '\0';
+			fixtext_out(10, 25, timer, 1);
 			fixtext_out(10, 26, "   HIT START  ", 0);
-		else if ((i >> 4) & 1)
+			if (auto_frames > 0) auto_frames--;
+			else {
+				NEO_REGISTER8(NGO_START_FLAG) = 1;
+				NEO_REGISTER8(BIOS_USER_MODE) = 2;
+				playSFX(SOUND_SFX_3);
+				break;
+			}
+		} else if ((i >> 4) & 1) {
+			fixtext_out(10, 25, "                ", 0);
 			fixtext_out(10, 26, " INSERT COIN  ", 0);
-		else
+		} else {
+			fixtext_out(10, 25, "                ", 0);
 			fixtext_out(10, 26, "              ", 0);
+		}
 		waitVbl();
 		if (NEO_REGISTER8(NGO_START_FLAG) || NEO_REGISTER8(BIOS_USER_MODE) == 2)
 			break;
-	}
-
-	if (!NEO_REGISTER8(NGO_START_FLAG) && NEO_REGISTER8(BIOS_USER_MODE) != 2) {
-		clearSprs();
-		showScreen107(32, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
-		waitVbl();
-		for (i = 0; ; i++) {
-			if (read_p1credit() > 0)
-				fixtext_out(10, 26, "   HIT START  ", 0);
-			else if ((i >> 4) & 1)
-				fixtext_out(10, 26, " INSERT COIN  ", 0);
-			else
-				fixtext_out(10, 26, "              ", 0);
-			waitVbl();
-			if (NEO_REGISTER8(NGO_START_FLAG) || NEO_REGISTER8(BIOS_USER_MODE) == 2)
-				break;
-		}
 	}
 }
 

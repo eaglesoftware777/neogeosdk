@@ -395,21 +395,22 @@ static uint8_t NEOGEO_USER ng_char_draws_before(NGCharacter *a, NGCharacter *b)
     int16_t by;
 
     if (a->priority_band != b->priority_band) {
-        return (uint8_t)(a->priority_band > b->priority_band);
+        return (uint8_t)(a->priority_band < b->priority_band);
     }
 
     ay = ng_char_sort_y(a);
     by = ng_char_sort_y(b);
 
-    /* Greater Y = lower on screen = nearer to viewer in brawler/platformer scenes. */
-    return (uint8_t)(ay > by);
+    /* Greater Y = lower on screen = nearer, so it must be assigned later. */
+    return (uint8_t)(ay < by);
 }
 
 /*
  * Priority/depth sort: build an order[] of active visible character indices.
- * Higher priority bands are placed first and therefore receive lower hardware
- * sprite slots, which are displayed in front.  Inside one band, characters are
- * sorted by Y descending (higher Y = lower on screen = nearer = in front).
+ * Lower/back priority bands are placed first and receive lower hardware sprite
+ * slots. Higher/front bands are assigned later slots, which draw in front.
+ * Inside one band, characters are sorted by Y ascending, so lower-on-screen
+ * characters draw later.
  * Invisible/offscreen chars are hidden separately.
  */
 static uint8_t NEOGEO_USER ng_chars_depth_sort(uint8_t *order, int16_t camera_x, int16_t camera_y)
@@ -423,7 +424,7 @@ static uint8_t NEOGEO_USER ng_chars_depth_sort(uint8_t *order, int16_t camera_x,
             order[count++] = i;
     }
 
-    /* Insertion sort by render band, then Y descending. */
+    /* Insertion sort by render band, then Y ascending. */
     for (i = 1; i < count; i++) {
         tmp = order[i];
         j = i;
@@ -477,6 +478,13 @@ void NEOGEO_USER ng_chars_draw(void)
     for (i = 0; i < count; i++) {
         uint8_t idx = order[i];
         NGCharacter *c = &ng_chars[idx];
+        uint8_t visibleStrips = c->sprite_strips ? c->sprite_strips : 1;
+        if (visibleStrips > NG_SPRITE_MAX_STRIPS) visibleStrips = NG_SPRITE_MAX_STRIPS;
+
+        if ((uint16_t)(next_slot + visibleStrips - 1u) > NG_SPR_CHAR_LAST) {
+            break;
+        }
+
         if (c->sprite_first != next_slot) {
             if (ng_char_uploaded_first[idx] != 0xffff) {
                 chars_hide_window(ng_char_uploaded_first[idx]);
@@ -486,15 +494,11 @@ void NEOGEO_USER ng_chars_draw(void)
             c->sprite_first = next_slot;
             c->sprite_dirty = 1;
         }
-        next_slot += NG_SPRITE_MAX_STRIPS;
-        if (next_slot > NG_SPR_CHAR_LAST) {
-            i++;
-            break;
-        }
+        next_slot = (uint16_t)(next_slot + visibleStrips);
     }
     count = i;
 
-    /* Phase 2 – draw each char in depth-sorted order (front-to-back). */
+    /* Phase 2 – draw each char in depth-sorted order (back-to-front). */
     for (i = 0; i < count; i++) {
         uint8_t idx = order[i];
         NGCharacter *c = &ng_chars[idx];

@@ -691,14 +691,6 @@ void NEOGEO_USER ng_clear_screen_full(void)
     clearFix();
     setBACKDROP(BLACK);
 
-    /* HARD CLEAR: zero SCB3 height for all 380 hardware sprite slots */
-    ng_sprite_hide_range(0,   255u);
-    ng_sprite_hide_range(255, 125u);
-
-    /*
-     * Push one blank frame: render the empty sprite list
-     * so any hardware state left in VRAM is no longer drawn.
-     */
-    ng_chars_draw();
-    demo_frame();
+    /* Clear SCB2/SCB3/SCB4 for every hardware sprite slot. */
+    ng_sprite_hide_all();
 }
