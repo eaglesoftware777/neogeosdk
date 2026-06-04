@@ -1,6 +1,6 @@
 # SDK API Guide
 
-> **v1.3.1 quick reference**
+> **v1.3.0 quick reference**
 >
 > - Sprite slot priority: **LOWER slot number = drawn IN FRONT** (see the
 >   boxed rule in `sdk/2d_engine/ng_sprite_pool.h` and the `_plus.hpp` copy).

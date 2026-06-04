@@ -1,6 +1,6 @@
 # Game Engine Makefile Integration for `sdk/2d_engine/ng_*`
 
-> **v1.3.1 additions**
+> **v1.3.0 additions**
 >
 > - `USE_2D_PLUS=1` switches the engine source set to
 >   `sdk/2d_engine_plus/ng_*.cpp` (C++14, no exceptions, no RTTI, no
