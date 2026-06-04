@@ -1,9 +1,9 @@
 Neo Geo YM2610 Sound Driver Guide
 =================================
 
-v1.3.1 status
+v1.3.0 status
 -------------
-- Polling-race fix in `soundCommand` (v1.3.0) confirmed stable.
+- Polling-race fix in `soundCommand` (v1.3.0-pre) confirmed stable.
 - Drivers + Z80 ROM build path unchanged.
 - Demo audio: ch 03 (sound chapter) plays MML music via
   `soundPlayGameLoop(SOUND_MUSIC_E)`; the noisy raw FM

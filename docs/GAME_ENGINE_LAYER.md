@@ -1,6 +1,6 @@
 # NeoGeoSDK 2D Game Engine Layer
 
-> **v1.3.1 — engine occlusion direction**
+> **v1.3.0 — engine occlusion direction**
 >
 > The boxed rule at the top of `sdk/2d_engine/ng_sprite_pool.h` (and the
 > `sdk/2d_engine_plus/ng_sprite_pool.hpp` copy) is now authoritative:
