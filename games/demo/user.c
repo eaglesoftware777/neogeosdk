@@ -11,6 +11,7 @@ https://github.com/eaglesoftware777/neogeosdk
 #include "games/demo/scenes/demo.h"
 #include "games/demo/scenes/demo_sound.h"
 #include "games/demo/scenes/demo_fix.h"
+#include "infix_palettes.h"
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 
@@ -398,6 +399,8 @@ void NEOGEO_USER DISPLAY_INIT(void) {
 /* FIX text palette banks 0-2: green / green / cyan on black. */
 void NEOGEO_USER setup_fix_palettes(void) {
 	uint16_t fix_pal[16];
+	uint8_t  i, j;
+
 	setpal(fix_pal, 0x8000, GREEN, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
 	       BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
 	load_palettes(fix_pal, PALETTES);
@@ -407,6 +410,18 @@ void NEOGEO_USER setup_fix_palettes(void) {
 	setpal(fix_pal, 0x8000, CYAN, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
 	       BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
 	load_palettes(fix_pal, PALETTES + PALOFFSET * 2);
+
+	/* Banks 4..(4+N-1): per-image FIX palettes for infix photos.
+	 * Each infix PNG was authored as 4bpp indexed; its original RGB
+	 * palette has been packed to NeoGeo words by artbox/fixtiles.py
+	 * and emitted as INFIX_PALETTES[][] in infix_palettes.h. */
+	for (i = 0u; i < INFIX_IMAGE_COUNT; i++) {
+		for (j = 0u; j < 16u; j++) {
+			fix_pal[j] = INFIX_PALETTES[i][j];
+		}
+		load_palettes(fix_pal,
+		              PALETTES + PALOFFSET * INFIX_IMAGES[i].pal_bank);
+	}
 }
 
 //INIT GAME MODE
