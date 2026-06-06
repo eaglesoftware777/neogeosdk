@@ -53,16 +53,22 @@ void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr)
     vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
     vram_SCB234((uint16_t)(SCB4_ADDR + spr), 0u);
 
-    /* 3. FULL SCB1 clear — 64 words per slot (32 tile + 32 attr).
-     *    A sprite strip is up to 32 tiles tall and each row has its
-     *    own tile/attr word pair; clearing only row 0 leaves rows
-     *    1..31 holding last chapter's artwork, ready to reappear
-     *    the moment a stray write puts a non-zero value back into
-     *    SCB3's ACT field. */
+    /* 3. FULL SCB1 clear — 32 rows × (tile, attr) per slot.
+     *    A sprite strip is up to 32 tiles tall and each row has
+     *    its own (tile, attr) word pair.  Writing tile=0/attr=0
+     *    would make the LSPC render C-ROM tile 0 through palette
+     *    bank 0, whose entry 0 is the monitor-sync reference
+     *    black — that paints a black rectangle wherever the
+     *    disabled slot's Y lands on-screen.  Use the project's
+     *    reserved blank tile (NG_SPRITE_BLANK_TILE = 0x00FF by
+     *    convention, matching the FIX-layer blank cell) so even
+     *    if a corrupted SCB3 ever resurrects the slot the worst
+     *    case renders fully transparent. */
     scb1_base = (uint16_t)(64u * spr);
     vram_init(scb1_base, 1u);
-    for (i = 0u; i < 64u; i++) {
-        vram_sfix1(0u);
+    for (i = 0u; i < 32u; i++) {
+        vram_sfix1(NG_SPRITE_BLANK_TILE);   /* tile word */
+        vram_sfix1(NG_SPRITE_BLANK_ATTR);   /* attr word */
     }
 }
 

@@ -64,6 +64,35 @@ void NEOGEO_USER ng_sprite_group_update_transform(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_group_hide(NGSpriteGroup *g);
 void NEOGEO_USER ng_engine_init_hardware(uint16_t transparentTile);
 
+/*
+ * Blank-tile convention for hardware sprite teardown.
+ *
+ * ng_sprite_disable_hw() fills every SCB1 row of a slot with a
+ * (tile, attr) pair.  If we wrote (0, 0) the LSPC would still
+ * happily render C-ROM tile 0 through palette bank 0 — and on
+ * NeoGeo, palette[0][0] is the monitor-sync reference colour
+ * (pure black).  Combined with any non-transparent pixel in
+ * tile 0, that paints a black rectangle wherever the slot's Y
+ * happens to fall on-screen.
+ *
+ * Convention used by the engine and by the artbox C-ROM packer:
+ *   - Tile 0x00FF is reserved as an always-transparent C-ROM tile
+ *     (matches NGFIX_DEFAULT_BLANK_TILE for the FIX layer).
+ *   - Attribute 0x0000 keeps palette/flip bits zero.  With a fully
+ *     transparent tile the chosen palette is irrelevant, but using
+ *     0 keeps the disabled slot identifiable in VRAM dumps.
+ *
+ * If a project ships its own C-ROM, ensure tile 0x00FF is empty
+ * (all pixel indices = 0) or override these constants before
+ * including this header.
+ */
+#ifndef NG_SPRITE_BLANK_TILE
+#define NG_SPRITE_BLANK_TILE  0x00FFu
+#endif
+#ifndef NG_SPRITE_BLANK_ATTR
+#define NG_SPRITE_BLANK_ATTR  0x0000u
+#endif
+
 /* Hide a raw hardware-sprite range and clear stale chain/position state. */
 void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint16_t count);
 void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count);
