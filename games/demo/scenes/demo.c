@@ -504,6 +504,95 @@ void NEOGEO_USER demo_draw_sprite_screen(uint8_t screen_id,
                                  strips, rows, scale_x, scale_y, 0u);
 }
 
+/*
+ * Deferred sprite write queue.
+ *
+ * NeoGeo sprite tearing comes from writing SCB1/2/3/4 while the LSPC
+ * is reading them mid-frame.  The chapter loops in demo_unified.c
+ * call demo_draw_sprite_screen during ACTIVE VIDEO (before uframe's
+ * waitVbl), so every issued upload had a chance to be partly read by
+ * the sprite chip — that's the "char splits / old sprite still
+ * shows when char walks" the demo has been exhibiting in every
+ * chapter with a moving main character.
+ *
+ * Fix: demo_draw_sprite_screen{,_flip} now only RECORDS the request
+ * here.  demo_flush_sprite_queue() drains the queue inside the
+ * vblank window (called by uframe in demo_unified.c right after
+ * waitVbl, before ng_render_queue_flush), so every SCB write
+ * completes while the screen is blanked.
+ */
+#define DEMO_SPRITE_QUEUE_MAX 16u
+
+typedef struct {
+    uint8_t  active;
+    uint8_t  screen_id;
+    uint16_t first_sprite;
+    int16_t  x;
+    int16_t  y;
+    uint8_t  strips;
+    uint8_t  rows;
+    uint8_t  scale_x;
+    uint8_t  scale_y;
+    uint8_t  hflip;
+} DemoSpriteDraw;
+
+static DemoSpriteDraw demo_sprite_queue[DEMO_SPRITE_QUEUE_MAX];
+static uint8_t        demo_sprite_queue_count = 0u;
+
+static void NEOGEO_USER demo_perform_sprite_draw(const DemoSpriteDraw *cmd)
+{
+    NGSpriteGroup g;
+    uint8_t meta_strips;
+    uint8_t meta_rows;
+    uint8_t strips;
+    uint8_t rows;
+    NGSpriteWindow *window;
+
+    if (!cmd || cmd->screen_id == 0u) return;
+
+    strips = cmd->strips ? cmd->strips : 1u;
+    rows   = cmd->rows   ? cmd->rows   : 1u;
+    if (strips > 16u) strips = 16u;
+    if (rows   > 16u) rows   = 16u;
+
+    meta_strips = demo_screen_strips(cmd->screen_id);
+    meta_rows   = demo_screen_rows(cmd->screen_id);
+    if (strips > meta_strips) strips = meta_strips;
+    if (rows   > meta_rows)   rows   = meta_rows;
+
+    window = demo_sprite_window_find(cmd->first_sprite);
+    ng_sprite_window_set_shape(window, strips, rows);
+    ng_sprite_window_clear_tail(window);
+
+    demo_load_screen_palette(cmd->screen_id);
+
+    ng_sprite_group_init(&g, cmd->first_sprite, strips, meta_rows,
+                         DEMO_SCREEN_TILE(cmd->screen_id),
+                         DEMO_SCREEN_PALETTE(cmd->screen_id));
+    ng_sprite_group_set_tile_stride(&g, 16u);
+    ng_sprite_group_set_active_rows(&g, rows);
+    ng_sprite_group_set_pos(&g,
+                            (int16_t)(cmd->x + demo_screen_x_offset(cmd->screen_id)),
+                            (int16_t)(cmd->y + demo_screen_y_offset(cmd->screen_id)));
+    ng_sprite_group_set_scale(&g,
+                              demo_normalize_x_scale(cmd->scale_x),
+                              cmd->scale_y);
+    ng_sprite_group_set_flip(&g, cmd->hflip, 0u);
+    ng_sprite_group_upload(&g);
+}
+
+void NEOGEO_USER demo_flush_sprite_queue(void)
+{
+    uint8_t i;
+    for (i = 0u; i < demo_sprite_queue_count; i++) {
+        if (demo_sprite_queue[i].active) {
+            demo_perform_sprite_draw(&demo_sprite_queue[i]);
+            demo_sprite_queue[i].active = 0u;
+        }
+    }
+    demo_sprite_queue_count = 0u;
+}
+
 void NEOGEO_USER demo_draw_sprite_screen_flip(uint8_t screen_id,
                                               uint16_t first_sprite,
                                               int16_t x, int16_t y,
@@ -511,41 +600,47 @@ void NEOGEO_USER demo_draw_sprite_screen_flip(uint8_t screen_id,
                                               uint8_t scale_x, uint8_t scale_y,
                                               uint8_t hflip)
 {
-    NGSpriteGroup g;
-    uint8_t meta_strips;
-    uint8_t meta_rows;
-    NGSpriteWindow *window;
+    DemoSpriteDraw *slot;
 
     if (screen_id == 0u) return;
-    if (strips == 0u) strips = 1u;
-    if (rows   == 0u) rows   = 1u;
-    if (strips > 16u) strips = 16u;
-    if (rows   > 16u) rows   = 16u;
 
-    meta_strips = demo_screen_strips(screen_id);
-    meta_rows = demo_screen_rows(screen_id);
-    if (strips > meta_strips) strips = meta_strips;
-    if (rows > meta_rows) rows = meta_rows;
+    /* Coalesce: if the queue already has an entry for this slot this
+     * frame, overwrite it.  Chapters that call draw_asset_bottom_center
+     * twice (rare but possible) take the last one, which matches the
+     * old direct-write behaviour. */
+    {
+        uint8_t i;
+        for (i = 0u; i < demo_sprite_queue_count; i++) {
+            if (demo_sprite_queue[i].active &&
+                demo_sprite_queue[i].first_sprite == first_sprite) {
+                slot = &demo_sprite_queue[i];
+                goto fill;
+            }
+        }
+    }
 
-    window = demo_sprite_window_find(first_sprite);
-    ng_sprite_window_set_shape(window, strips, rows);
-    ng_sprite_window_clear_tail(window);
+    if (demo_sprite_queue_count >= DEMO_SPRITE_QUEUE_MAX) {
+        /* Queue full — fall back to direct write (rare; still fixes
+         * the common case which is 1..4 sprite groups per frame). */
+        DemoSpriteDraw tmp = {1u, screen_id, first_sprite, x, y,
+                              strips, rows, scale_x, scale_y, hflip};
+        demo_perform_sprite_draw(&tmp);
+        return;
+    }
 
-    demo_load_screen_palette(screen_id);
+    slot = &demo_sprite_queue[demo_sprite_queue_count++];
 
-    ng_sprite_group_init(&g, first_sprite, strips, meta_rows,
-                         DEMO_SCREEN_TILE(screen_id),
-                         DEMO_SCREEN_PALETTE(screen_id));
-    ng_sprite_group_set_tile_stride(&g, 16u);
-    ng_sprite_group_set_active_rows(&g, rows);
-    ng_sprite_group_set_pos(&g,
-                            (int16_t)(x + demo_screen_x_offset(screen_id)),
-                            (int16_t)(y + demo_screen_y_offset(screen_id)));
-    ng_sprite_group_set_scale(&g,
-                              demo_normalize_x_scale(scale_x),
-                              scale_y);
-    ng_sprite_group_set_flip(&g, hflip, 0u);
-    ng_sprite_group_upload(&g);
+fill:
+    slot->active       = 1u;
+    slot->screen_id    = screen_id;
+    slot->first_sprite = first_sprite;
+    slot->x            = x;
+    slot->y            = y;
+    slot->strips       = strips;
+    slot->rows         = rows;
+    slot->scale_x      = scale_x;
+    slot->scale_y      = scale_y;
+    slot->hflip        = hflip;
 }
 
 /* ------------------------------------------------------------------ */
