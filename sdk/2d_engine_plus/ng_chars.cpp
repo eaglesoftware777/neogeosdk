@@ -59,6 +59,19 @@ void CharManager::hideSlot(uint16_t firstSprite, uint8_t strips)
     NGSpriteGroup::hideRange(firstSprite, strips);
 }
 
+void CharManager::hideUploaded(uint8_t idx)
+{
+    uint16_t first;
+    uint8_t  strips;
+
+    if (idx >= NG_MAX_CHARS) return;
+    first = uploaded_first[idx];
+    strips = uploaded_strips[idx];
+    if (first == 0xffffu) return;
+    if (strips == 0u) strips = NG_SPRITE_MAX_STRIPS;
+    hideSlot(first, strips);
+}
+
 uint8_t CharManager::renderVisible(const NGCharacter *c, int16_t cam_x, int16_t cam_y) const
 {
     int16_t sx, sy, w, h;
@@ -222,11 +235,14 @@ void CharManager::remove(NGCharacter *c)
 
     if (!c) return;
     i = indexOf(c);
-    hideSlot(c->sprite_first, NG_SPRITE_MAX_STRIPS);
-
     if (i != 0xff) {
+        hideUploaded(i);
         uploaded_strips[i] = 0;
         uploaded_first[i]  = 0xffff;
+    } else {
+        hideSlot(c->sprite_first,
+                 c->sprite_strips ? c->sprite_strips
+                                  : (uint8_t)NG_SPRITE_MAX_STRIPS);
     }
 
     c->active = 0;
@@ -240,7 +256,7 @@ void CharManager::clearKind(uint8_t kind)
 
     for (i = 0; i < NG_MAX_CHARS; i++) {
         if (pool[i].active && pool[i].kind == kind) {
-            hideSlot(pool[i].sprite_first, NG_SPRITE_MAX_STRIPS);
+            hideUploaded(i);
             uploaded_strips[i] = 0;
             uploaded_first[i]  = 0xffff;
             pool[i].active     = 0;
@@ -256,7 +272,7 @@ void CharManager::resetSlot(uint8_t index)
     if (index >= NG_MAX_CHARS) return;
     c = &pool[index];
 
-    hideSlot(c->sprite_first, NG_SPRITE_MAX_STRIPS);
+    hideUploaded(index);
     clearUploadSlot(index);
     ng_char_reset_fields(c);
     rebuildTop();
@@ -417,7 +433,7 @@ void CharManager::draw()
 
         if (!should_draw) {
             if (uploaded_first[i] != 0xffff) {
-                NGSpriteGroup::hideRange(uploaded_first[i], NG_SPRITE_MAX_STRIPS);
+                hideUploaded(i);
                 uploaded_strips[i] = 0;
                 uploaded_first[i]  = 0xffff;
             }
@@ -428,25 +444,31 @@ void CharManager::draw()
 
     count = depthSort(order, cam_x, cam_y);
 
-    /* Phase 1 — reassign hardware slots by depth order; hide stale data first */
+    /* Phase 1 — reassign hardware slots by depth order; hide stale
+     * data first.  Pack slots tightly by each char's actual visible
+     * strip count instead of striding by NG_SPRITE_MAX_STRIPS (=32)
+     * which capped the engine at 4 chars and wasted 28 slots each. */
     next_slot = NG_SPR_CHAR_FIRST;
     for (i = 0; i < count; i++) {
         uint8_t idx = order[i];
         NGCharacter *c = &pool[idx];
+        uint8_t vis_strips = c->sprite_strips ? c->sprite_strips : 1u;
+        if (vis_strips > NG_SPRITE_MAX_STRIPS) vis_strips = NG_SPRITE_MAX_STRIPS;
+
+        if ((uint16_t)(next_slot + vis_strips - 1u) > NG_SPR_CHAR_LAST) {
+            break;
+        }
+
         if (c->sprite_first != next_slot) {
             if (uploaded_first[idx] != 0xffff) {
-                NGSpriteGroup::hideRange(uploaded_first[idx], NG_SPRITE_MAX_STRIPS);
+                hideUploaded(idx);
                 uploaded_strips[idx] = 0;
                 uploaded_first[idx]  = 0xffff;
             }
             c->sprite_first = next_slot;
             c->sprite_dirty = 1;
         }
-        next_slot += NG_SPRITE_MAX_STRIPS;
-        if (next_slot > NG_SPR_CHAR_LAST) {
-            i++;
-            break;
-        }
+        next_slot = (uint16_t)(next_slot + vis_strips);
     }
     count = i;
 
@@ -543,12 +565,9 @@ void NGCharacter::setSprite(uint16_t first, uint8_t strips_arg, uint8_t h, uint1
 
     if (sprite_strips != ns) {
         uint8_t idx = mgr.indexOf(this);
-        if (idx != 0xff) {
-            uint16_t uf = mgr.uploaded_first[idx];
-            if (uf != 0xffff) {
-                NGSpriteGroup::hideRange(uf, NG_SPRITE_MAX_STRIPS);
-                mgr.clearUploadSlot(idx);
-            }
+        if (idx != 0xff && mgr.uploaded_first[idx] != 0xffff) {
+            mgr.hideUploaded(idx);
+            mgr.clearUploadSlot(idx);
         }
     }
 

@@ -288,6 +288,87 @@ int16_t NEOGEO_USER demo_screen_y_offset(uint8_t screen_id)
     return (int16_t)((uint16_t)meta->tile_row_start * 16u);
 }
 
+uint8_t NEOGEO_USER demo_screen_x_pad(uint8_t screen_id)
+{
+    const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (!meta) return 0u;
+    return meta->x_pad;
+}
+
+uint8_t NEOGEO_USER demo_screen_y_pad(uint8_t screen_id)
+{
+    const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (!meta) return 0u;
+    return meta->y_pad;
+}
+
+uint16_t NEOGEO_USER demo_screen_content_width(uint8_t screen_id)
+{
+    const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (!meta) return 0u;
+    return meta->content_width;
+}
+
+uint16_t NEOGEO_USER demo_screen_content_height(uint8_t screen_id)
+{
+    const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (!meta) return 0u;
+    return meta->content_height;
+}
+
+static int16_t NEOGEO_USER demo_scale_px_u16(uint16_t px, uint8_t scale)
+{
+    if (scale >= 0xFFu) return (int16_t)px;
+    return (int16_t)(((uint32_t)px * (uint32_t)scale + 127u) >> 8);
+}
+
+void NEOGEO_USER demo_anchor_bottom_center(uint8_t screen_id,
+                                           uint8_t scale_x,
+                                           uint8_t scale_y,
+                                           int16_t cx,
+                                           int16_t cy,
+                                           int16_t *out_x,
+                                           int16_t *out_y)
+{
+    const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    uint16_t pad_x;
+    uint16_t pad_y;
+    int16_t  off_x;
+    int16_t  off_y;
+
+    if (!meta) {
+        if (out_x) *out_x = cx;
+        if (out_y) *out_y = cy;
+        return;
+    }
+
+    /* x_pad + content_width/2 is the per-frame offset from the
+     * top-left of the artwork's used tile region to the centre of
+     * the actual painted artwork.  y_pad + content_height is the
+     * offset to the artwork's bottom edge. Both vary frame-to-frame
+     * across an animation cycle, but together they describe the
+     * STABLE position of the art inside whatever tile bounding box
+     * the artist drew this frame in, so anchoring on them removes
+     * the per-frame jitter the demo was exhibiting. */
+    pad_x = (uint16_t)meta->x_pad + (meta->content_width >> 1);
+    pad_y = (uint16_t)meta->y_pad + meta->content_height;
+
+    /* The tile-grid origin offset (tile_col_start * 16) is added
+     * UNSCALED by demo_draw_sprite_screen when computing the SCB4
+     * X position, so we subtract it unscaled here too.  Only the
+     * in-tile component lives inside the shrinking sprite, so only
+     * that part is multiplied by the SCB2 scale factor. */
+    off_x = demo_scale_px_u16(pad_x, scale_x);
+    off_y = demo_scale_px_u16(pad_y, scale_y);
+
+    if (out_x) *out_x = (int16_t)(cx
+                                  - (int16_t)((uint16_t)meta->tile_col_start * 16u)
+                                  - off_x);
+    if (out_y) *out_y = (int16_t)(cy
+                                  - (int16_t)((uint16_t)meta->tile_row_start * 16u)
+                                  - off_y);
+}
+
 /* Forward-declare all showScreenN functions needed for palette preload */
 void NEOGEO_USER showScreen1(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen2(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
