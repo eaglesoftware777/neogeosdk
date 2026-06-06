@@ -37,7 +37,7 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=75x146 canvas=256x256 content=75x146 offset=(90,110)
-screen_id=6 palette_bank=21 tile_base=1280 reserved_last=1535 used_cols=5 used_rows=10 start_col=5 start_row=6 x_pad=10 y_pad=14 used_tiles=50 strips=5 active_rows=10
+screen_id=6 palette_bank=21 tile_base=1280 reserved_last=1535 used_cols=6 used_rows=10 start_col=5 start_row=6 x_pad=10 y_pad=14 used_tiles=60 strips=6 active_rows=10
 note=16x16 character sprite sheet
 
 [007] characters/sprite_005_r01_c05.png
@@ -65,7 +65,7 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=79x147 canvas=256x256 content=79x147 offset=(88,109)
-screen_id=10 palette_bank=25 tile_base=2304 reserved_last=2559 used_cols=5 used_rows=10 start_col=5 start_row=6 x_pad=8 y_pad=13 used_tiles=50 strips=5 active_rows=10
+screen_id=10 palette_bank=25 tile_base=2304 reserved_last=2559 used_cols=6 used_rows=10 start_col=5 start_row=6 x_pad=8 y_pad=13 used_tiles=60 strips=6 active_rows=10
 note=16x16 character sprite sheet
 
 [011] characters/sprite_009_r01_c09.png
@@ -86,7 +86,7 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=70x147 canvas=256x256 content=70x147 offset=(93,109)
-screen_id=13 palette_bank=28 tile_base=3072 reserved_last=3327 used_cols=5 used_rows=10 start_col=5 start_row=6 x_pad=13 y_pad=13 used_tiles=50 strips=5 active_rows=10
+screen_id=13 palette_bank=28 tile_base=3072 reserved_last=3327 used_cols=6 used_rows=10 start_col=5 start_row=6 x_pad=13 y_pad=13 used_tiles=60 strips=6 active_rows=10
 note=16x16 character sprite sheet
 
 [014] characters/sprite_012_r01_c12.png
@@ -114,35 +114,35 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=139x106 canvas=256x256 content=139x106 offset=(58,150)
-screen_id=17 palette_bank=32 tile_base=4096 reserved_last=4351 used_cols=9 used_rows=7 start_col=3 start_row=9 x_pad=10 y_pad=6 used_tiles=63 strips=9 active_rows=7
+screen_id=17 palette_bank=32 tile_base=4096 reserved_last=4351 used_cols=10 used_rows=7 start_col=3 start_row=9 x_pad=10 y_pad=6 used_tiles=70 strips=10 active_rows=7
 note=16x16 character sprite sheet
 
 [018] characters/sprite_016_r02_c04.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=134x120 canvas=256x256 content=134x120 offset=(61,136)
-screen_id=18 palette_bank=33 tile_base=4352 reserved_last=4607 used_cols=9 used_rows=8 start_col=3 start_row=8 x_pad=13 y_pad=8 used_tiles=72 strips=9 active_rows=8
+screen_id=18 palette_bank=33 tile_base=4352 reserved_last=4607 used_cols=10 used_rows=8 start_col=3 start_row=8 x_pad=13 y_pad=8 used_tiles=80 strips=10 active_rows=8
 note=16x16 character sprite sheet
 
 [019] characters/sprite_017_r02_c05.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=110x140 canvas=256x256 content=110x140 offset=(73,116)
-screen_id=19 palette_bank=34 tile_base=4608 reserved_last=4863 used_cols=7 used_rows=9 start_col=4 start_row=7 x_pad=9 y_pad=4 used_tiles=63 strips=7 active_rows=9
+screen_id=19 palette_bank=34 tile_base=4608 reserved_last=4863 used_cols=8 used_rows=9 start_col=4 start_row=7 x_pad=9 y_pad=4 used_tiles=72 strips=8 active_rows=9
 note=16x16 character sprite sheet
 
 [020] characters/sprite_018_r02_c06.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=107x145 canvas=256x256 content=107x145 offset=(74,111)
-screen_id=20 palette_bank=35 tile_base=4864 reserved_last=5119 used_cols=7 used_rows=10 start_col=4 start_row=6 x_pad=10 y_pad=15 used_tiles=70 strips=7 active_rows=10
+screen_id=20 palette_bank=35 tile_base=4864 reserved_last=5119 used_cols=8 used_rows=10 start_col=4 start_row=6 x_pad=10 y_pad=15 used_tiles=80 strips=8 active_rows=10
 note=16x16 character sprite sheet
 
 [021] characters/sprite_019_r02_c07.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=102x134 canvas=256x256 content=102x134 offset=(77,122)
-screen_id=21 palette_bank=36 tile_base=5120 reserved_last=5375 used_cols=7 used_rows=9 start_col=4 start_row=7 x_pad=13 y_pad=10 used_tiles=63 strips=7 active_rows=9
+screen_id=21 palette_bank=36 tile_base=5120 reserved_last=5375 used_cols=8 used_rows=9 start_col=4 start_row=7 x_pad=13 y_pad=10 used_tiles=72 strips=8 active_rows=9
 note=16x16 character sprite sheet
 
 [022] characters/sprite_020_r02_c08.png
@@ -163,35 +163,35 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=101x98 canvas=256x256 content=101x98 offset=(77,158)
-screen_id=24 palette_bank=39 tile_base=5888 reserved_last=6143 used_cols=7 used_rows=7 start_col=4 start_row=9 x_pad=13 y_pad=14 used_tiles=49 strips=7 active_rows=7
+screen_id=24 palette_bank=39 tile_base=5888 reserved_last=6143 used_cols=8 used_rows=7 start_col=4 start_row=9 x_pad=13 y_pad=14 used_tiles=56 strips=8 active_rows=7
 note=16x16 character sprite sheet
 
 [025] characters/sprite_023_r03_c01.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=108x131 canvas=256x256 content=108x131 offset=(74,125)
-screen_id=25 palette_bank=40 tile_base=6144 reserved_last=6399 used_cols=7 used_rows=9 start_col=4 start_row=7 x_pad=10 y_pad=13 used_tiles=63 strips=7 active_rows=9
+screen_id=25 palette_bank=40 tile_base=6144 reserved_last=6399 used_cols=8 used_rows=9 start_col=4 start_row=7 x_pad=10 y_pad=13 used_tiles=72 strips=8 active_rows=9
 note=16x16 character sprite sheet
 
 [026] characters/sprite_024_r03_c02.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=143x131 canvas=256x256 content=143x131 offset=(56,125)
-screen_id=26 palette_bank=41 tile_base=6400 reserved_last=6655 used_cols=9 used_rows=9 start_col=3 start_row=7 x_pad=8 y_pad=13 used_tiles=81 strips=9 active_rows=9
+screen_id=26 palette_bank=41 tile_base=6400 reserved_last=6655 used_cols=10 used_rows=9 start_col=3 start_row=7 x_pad=8 y_pad=13 used_tiles=90 strips=10 active_rows=9
 note=16x16 character sprite sheet
 
 [027] characters/sprite_025_r03_c03.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=169x129 canvas=256x256 content=169x129 offset=(43,127)
-screen_id=27 palette_bank=42 tile_base=6656 reserved_last=6911 used_cols=11 used_rows=9 start_col=2 start_row=7 x_pad=11 y_pad=15 used_tiles=99 strips=11 active_rows=9
+screen_id=27 palette_bank=42 tile_base=6656 reserved_last=6911 used_cols=12 used_rows=9 start_col=2 start_row=7 x_pad=11 y_pad=15 used_tiles=108 strips=12 active_rows=9
 note=16x16 character sprite sheet
 
 [028] characters/sprite_026_r03_c04.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=162x128 canvas=256x256 content=162x128 offset=(47,128)
-screen_id=28 palette_bank=43 tile_base=6912 reserved_last=7167 used_cols=11 used_rows=8 start_col=2 start_row=8 x_pad=15 y_pad=0 used_tiles=88 strips=11 active_rows=8
+screen_id=28 palette_bank=43 tile_base=6912 reserved_last=7167 used_cols=12 used_rows=8 start_col=2 start_row=8 x_pad=15 y_pad=0 used_tiles=96 strips=12 active_rows=8
 note=16x16 character sprite sheet
 
 [029] characters/sprite_027_r03_c05.png
@@ -233,21 +233,21 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=131x135 canvas=256x256 content=131x135 offset=(62,121)
-screen_id=34 palette_bank=49 tile_base=8448 reserved_last=8703 used_cols=9 used_rows=9 start_col=3 start_row=7 x_pad=14 y_pad=9 used_tiles=81 strips=9 active_rows=9
+screen_id=34 palette_bank=49 tile_base=8448 reserved_last=8703 used_cols=10 used_rows=9 start_col=3 start_row=7 x_pad=14 y_pad=9 used_tiles=90 strips=10 active_rows=9
 note=16x16 character sprite sheet
 
 [035] characters/sprite_033_r04_c03.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=110x131 canvas=256x256 content=110x131 offset=(73,125)
-screen_id=35 palette_bank=50 tile_base=8704 reserved_last=8959 used_cols=7 used_rows=9 start_col=4 start_row=7 x_pad=9 y_pad=13 used_tiles=63 strips=7 active_rows=9
+screen_id=35 palette_bank=50 tile_base=8704 reserved_last=8959 used_cols=8 used_rows=9 start_col=4 start_row=7 x_pad=9 y_pad=13 used_tiles=72 strips=8 active_rows=9
 note=16x16 character sprite sheet
 
 [036] characters/sprite_034_r04_c04.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=135x128 canvas=256x256 content=135x128 offset=(60,128)
-screen_id=36 palette_bank=51 tile_base=8960 reserved_last=9215 used_cols=9 used_rows=8 start_col=3 start_row=8 x_pad=12 y_pad=0 used_tiles=72 strips=9 active_rows=8
+screen_id=36 palette_bank=51 tile_base=8960 reserved_last=9215 used_cols=10 used_rows=8 start_col=3 start_row=8 x_pad=12 y_pad=0 used_tiles=80 strips=10 active_rows=8
 note=16x16 character sprite sheet
 
 [037] characters/sprite_035_r04_c05.png
@@ -261,14 +261,14 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=199x125 canvas=256x256 content=199x125 offset=(28,131)
-screen_id=38 palette_bank=53 tile_base=9472 reserved_last=9727 used_cols=13 used_rows=8 start_col=1 start_row=8 x_pad=12 y_pad=3 used_tiles=104 strips=13 active_rows=8
+screen_id=38 palette_bank=53 tile_base=9472 reserved_last=9727 used_cols=14 used_rows=8 start_col=1 start_row=8 x_pad=12 y_pad=3 used_tiles=112 strips=14 active_rows=8
 note=16x16 character sprite sheet
 
 [039] characters/sprite_037_r04_c07.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=111x127 canvas=256x256 content=111x127 offset=(72,129)
-screen_id=39 palette_bank=54 tile_base=9728 reserved_last=9983 used_cols=7 used_rows=8 start_col=4 start_row=8 x_pad=8 y_pad=1 used_tiles=56 strips=7 active_rows=8
+screen_id=39 palette_bank=54 tile_base=9728 reserved_last=9983 used_cols=8 used_rows=8 start_col=4 start_row=8 x_pad=8 y_pad=1 used_tiles=64 strips=8 active_rows=8
 note=16x16 character sprite sheet
 
 [040] characters/sprite_038_r04_c08.png
@@ -310,7 +310,7 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=131x119 canvas=256x256 content=131x119 offset=(62,137)
-screen_id=45 palette_bank=60 tile_base=11264 reserved_last=11519 used_cols=9 used_rows=8 start_col=3 start_row=8 x_pad=14 y_pad=9 used_tiles=72 strips=9 active_rows=8
+screen_id=45 palette_bank=60 tile_base=11264 reserved_last=11519 used_cols=10 used_rows=8 start_col=3 start_row=8 x_pad=14 y_pad=9 used_tiles=80 strips=10 active_rows=8
 note=16x16 character sprite sheet
 
 [046] characters/sprite_044_r05_c03.png
@@ -331,21 +331,21 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=40x29 canvas=256x256 content=40x29 offset=(108,227)
-screen_id=48 palette_bank=63 tile_base=12032 reserved_last=12287 used_cols=3 used_rows=2 start_col=6 start_row=14 x_pad=12 y_pad=3 used_tiles=6 strips=3 active_rows=2
+screen_id=48 palette_bank=63 tile_base=12032 reserved_last=12287 used_cols=4 used_rows=2 start_col=6 start_row=14 x_pad=12 y_pad=3 used_tiles=8 strips=4 active_rows=2
 note=16x16 character sprite sheet
 
 [049] characters/sprite_047_r05_c06.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=143x112 canvas=256x256 content=143x112 offset=(56,144)
-screen_id=49 palette_bank=64 tile_base=12288 reserved_last=12543 used_cols=9 used_rows=7 start_col=3 start_row=9 x_pad=8 y_pad=0 used_tiles=63 strips=9 active_rows=7
+screen_id=49 palette_bank=64 tile_base=12288 reserved_last=12543 used_cols=10 used_rows=7 start_col=3 start_row=9 x_pad=8 y_pad=0 used_tiles=70 strips=10 active_rows=7
 note=16x16 character sprite sheet
 
 [050] characters/sprite_048_r05_c07.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=110x103 canvas=256x256 content=110x103 offset=(73,153)
-screen_id=50 palette_bank=65 tile_base=12544 reserved_last=12799 used_cols=7 used_rows=7 start_col=4 start_row=9 x_pad=9 y_pad=9 used_tiles=49 strips=7 active_rows=7
+screen_id=50 palette_bank=65 tile_base=12544 reserved_last=12799 used_cols=8 used_rows=7 start_col=4 start_row=9 x_pad=9 y_pad=9 used_tiles=56 strips=8 active_rows=7
 note=16x16 character sprite sheet
 
 [051] characters/sprite_049_r05_c08.png
@@ -380,14 +380,14 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=172x115 canvas=256x256 content=172x115 offset=(42,141)
-screen_id=55 palette_bank=70 tile_base=13824 reserved_last=14079 used_cols=11 used_rows=8 start_col=2 start_row=8 x_pad=10 y_pad=13 used_tiles=88 strips=11 active_rows=8
+screen_id=55 palette_bank=70 tile_base=13824 reserved_last=14079 used_cols=12 used_rows=8 start_col=2 start_row=8 x_pad=10 y_pad=13 used_tiles=96 strips=12 active_rows=8
 note=16x16 character sprite sheet
 
 [056] characters/sprite_054_r06_c01.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=169x126 canvas=256x256 content=169x126 offset=(43,130)
-screen_id=56 palette_bank=71 tile_base=14080 reserved_last=14335 used_cols=11 used_rows=8 start_col=2 start_row=8 x_pad=11 y_pad=2 used_tiles=88 strips=11 active_rows=8
+screen_id=56 palette_bank=71 tile_base=14080 reserved_last=14335 used_cols=12 used_rows=8 start_col=2 start_row=8 x_pad=11 y_pad=2 used_tiles=96 strips=12 active_rows=8
 note=16x16 character sprite sheet
 
 [057] characters/sprite_055_r06_c02.png
@@ -408,21 +408,21 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=104x116 canvas=256x256 content=104x116 offset=(76,140)
-screen_id=59 palette_bank=74 tile_base=14848 reserved_last=15103 used_cols=7 used_rows=8 start_col=4 start_row=8 x_pad=12 y_pad=12 used_tiles=56 strips=7 active_rows=8
+screen_id=59 palette_bank=74 tile_base=14848 reserved_last=15103 used_cols=8 used_rows=8 start_col=4 start_row=8 x_pad=12 y_pad=12 used_tiles=64 strips=8 active_rows=8
 note=16x16 character sprite sheet
 
 [060] characters/sprite_058_r06_c05.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=101x119 canvas=256x256 content=101x119 offset=(77,137)
-screen_id=60 palette_bank=75 tile_base=15104 reserved_last=15359 used_cols=7 used_rows=8 start_col=4 start_row=8 x_pad=13 y_pad=9 used_tiles=56 strips=7 active_rows=8
+screen_id=60 palette_bank=75 tile_base=15104 reserved_last=15359 used_cols=8 used_rows=8 start_col=4 start_row=8 x_pad=13 y_pad=9 used_tiles=64 strips=8 active_rows=8
 note=16x16 character sprite sheet
 
 [061] characters/sprite_059_r06_c06.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=100x77 canvas=256x256 content=100x77 offset=(78,179)
-screen_id=61 palette_bank=76 tile_base=15360 reserved_last=15615 used_cols=7 used_rows=5 start_col=4 start_row=11 x_pad=14 y_pad=3 used_tiles=35 strips=7 active_rows=5
+screen_id=61 palette_bank=76 tile_base=15360 reserved_last=15615 used_cols=8 used_rows=5 start_col=4 start_row=11 x_pad=14 y_pad=3 used_tiles=40 strips=8 active_rows=5
 note=16x16 character sprite sheet
 
 [062] characters/sprite_060_r06_c07.png
@@ -436,7 +436,7 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=77x126 canvas=256x256 content=77x126 offset=(89,130)
-screen_id=63 palette_bank=78 tile_base=15872 reserved_last=16127 used_cols=5 used_rows=8 start_col=5 start_row=8 x_pad=9 y_pad=2 used_tiles=40 strips=5 active_rows=8
+screen_id=63 palette_bank=78 tile_base=15872 reserved_last=16127 used_cols=6 used_rows=8 start_col=5 start_row=8 x_pad=9 y_pad=2 used_tiles=48 strips=6 active_rows=8
 note=16x16 character sprite sheet
 
 [064] characters/sprite_062_r06_c09.png
@@ -450,14 +450,14 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=67x124 canvas=256x256 content=67x124 offset=(94,132)
-screen_id=65 palette_bank=80 tile_base=16384 reserved_last=16639 used_cols=5 used_rows=8 start_col=5 start_row=8 x_pad=14 y_pad=4 used_tiles=40 strips=5 active_rows=8
+screen_id=65 palette_bank=80 tile_base=16384 reserved_last=16639 used_cols=6 used_rows=8 start_col=5 start_row=8 x_pad=14 y_pad=4 used_tiles=48 strips=6 active_rows=8
 note=16x16 character sprite sheet
 
 [066] characters/sprite_064_r06_c11.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=77x103 canvas=256x256 content=77x103 offset=(89,153)
-screen_id=66 palette_bank=81 tile_base=16640 reserved_last=16895 used_cols=5 used_rows=7 start_col=5 start_row=9 x_pad=9 y_pad=9 used_tiles=35 strips=5 active_rows=7
+screen_id=66 palette_bank=81 tile_base=16640 reserved_last=16895 used_cols=6 used_rows=7 start_col=5 start_row=9 x_pad=9 y_pad=9 used_tiles=42 strips=6 active_rows=7
 note=16x16 character sprite sheet
 
 [067] characters/sprite_065_r06_c12.png
@@ -478,28 +478,28 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=103x94 canvas=256x256 content=103x94 offset=(76,162)
-screen_id=69 palette_bank=84 tile_base=17408 reserved_last=17663 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=12 y_pad=2 used_tiles=42 strips=7 active_rows=6
+screen_id=69 palette_bank=84 tile_base=17408 reserved_last=17663 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=12 y_pad=2 used_tiles=48 strips=8 active_rows=6
 note=16x16 character sprite sheet
 
 [070] characters/sprite_068_r07_c03.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=101x94 canvas=256x256 content=101x94 offset=(77,162)
-screen_id=70 palette_bank=85 tile_base=17664 reserved_last=17919 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=13 y_pad=2 used_tiles=42 strips=7 active_rows=6
+screen_id=70 palette_bank=85 tile_base=17664 reserved_last=17919 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=13 y_pad=2 used_tiles=48 strips=8 active_rows=6
 note=16x16 character sprite sheet
 
 [071] characters/sprite_069_r07_c04.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=101x94 canvas=256x256 content=101x94 offset=(77,162)
-screen_id=71 palette_bank=86 tile_base=17920 reserved_last=18175 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=13 y_pad=2 used_tiles=42 strips=7 active_rows=6
+screen_id=71 palette_bank=86 tile_base=17920 reserved_last=18175 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=13 y_pad=2 used_tiles=48 strips=8 active_rows=6
 note=16x16 character sprite sheet
 
 [072] characters/sprite_070_r07_c05.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=76x94 canvas=256x256 content=76x94 offset=(90,162)
-screen_id=72 palette_bank=87 tile_base=18176 reserved_last=18431 used_cols=5 used_rows=6 start_col=5 start_row=10 x_pad=10 y_pad=2 used_tiles=30 strips=5 active_rows=6
+screen_id=72 palette_bank=87 tile_base=18176 reserved_last=18431 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=10 y_pad=2 used_tiles=36 strips=6 active_rows=6
 note=16x16 character sprite sheet
 
 [073] characters/sprite_071_r07_c06.png
@@ -548,7 +548,7 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=100x93 canvas=256x256 content=100x93 offset=(78,163)
-screen_id=79 palette_bank=94 tile_base=19968 reserved_last=20223 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=14 y_pad=3 used_tiles=42 strips=7 active_rows=6
+screen_id=79 palette_bank=94 tile_base=19968 reserved_last=20223 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=14 y_pad=3 used_tiles=48 strips=8 active_rows=6
 note=16x16 character sprite sheet
 
 [080] characters/sprite_078_r07_c13.png
@@ -569,35 +569,35 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=107x83 canvas=256x256 content=107x83 offset=(74,173)
-screen_id=82 palette_bank=97 tile_base=20736 reserved_last=20991 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=10 y_pad=13 used_tiles=42 strips=7 active_rows=6
+screen_id=82 palette_bank=97 tile_base=20736 reserved_last=20991 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=10 y_pad=13 used_tiles=48 strips=8 active_rows=6
 note=16x16 character sprite sheet
 
 [083] characters/sprite_081_r08_c02.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=106x83 canvas=256x256 content=106x83 offset=(75,173)
-screen_id=83 palette_bank=98 tile_base=20992 reserved_last=21247 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=11 y_pad=13 used_tiles=42 strips=7 active_rows=6
+screen_id=83 palette_bank=98 tile_base=20992 reserved_last=21247 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=11 y_pad=13 used_tiles=48 strips=8 active_rows=6
 note=16x16 character sprite sheet
 
 [084] characters/sprite_082_r08_c03.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=105x83 canvas=256x256 content=105x83 offset=(75,173)
-screen_id=84 palette_bank=99 tile_base=21248 reserved_last=21503 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=11 y_pad=13 used_tiles=42 strips=7 active_rows=6
+screen_id=84 palette_bank=99 tile_base=21248 reserved_last=21503 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=11 y_pad=13 used_tiles=48 strips=8 active_rows=6
 note=16x16 character sprite sheet
 
 [085] characters/sprite_083_r08_c04.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=108x83 canvas=256x256 content=108x83 offset=(74,173)
-screen_id=85 palette_bank=100 tile_base=21504 reserved_last=21759 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=10 y_pad=13 used_tiles=42 strips=7 active_rows=6
+screen_id=85 palette_bank=100 tile_base=21504 reserved_last=21759 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=10 y_pad=13 used_tiles=48 strips=8 active_rows=6
 note=16x16 character sprite sheet
 
 [086] characters/sprite_084_r08_c05.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=105x83 canvas=256x256 content=105x83 offset=(75,173)
-screen_id=86 palette_bank=101 tile_base=21760 reserved_last=22015 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=11 y_pad=13 used_tiles=42 strips=7 active_rows=6
+screen_id=86 palette_bank=101 tile_base=21760 reserved_last=22015 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=11 y_pad=13 used_tiles=48 strips=8 active_rows=6
 note=16x16 character sprite sheet
 
 [087] characters/sprite_085_r08_c06.png
@@ -611,21 +611,21 @@ note=16x16 character sprite sheet
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
 source=105x83 canvas=256x256 content=105x83 offset=(75,173)
-screen_id=88 palette_bank=103 tile_base=22272 reserved_last=22527 used_cols=7 used_rows=6 start_col=4 start_row=10 x_pad=11 y_pad=13 used_tiles=42 strips=7 active_rows=6
+screen_id=88 palette_bank=103 tile_base=22272 reserved_last=22527 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=11 y_pad=13 used_tiles=48 strips=8 active_rows=6
 note=16x16 character sprite sheet
 
 [089] effects/sprite_040.png
 mode=sprite fit=pad anchor=center rule=cat_effects
 category=effects
 source=93x48 canvas=256x256 content=93x48 offset=(81,104)
-screen_id=89 palette_bank=104 tile_base=22528 reserved_last=22783 used_cols=6 used_rows=3 start_col=5 start_row=6 x_pad=1 y_pad=8 used_tiles=18 strips=6 active_rows=3
+screen_id=89 palette_bank=104 tile_base=22528 reserved_last=22783 used_cols=6 used_rows=4 start_col=5 start_row=6 x_pad=1 y_pad=8 used_tiles=24 strips=6 active_rows=4
 note=effects and transitions
 
 [090] effects/sprite_041.png
 mode=sprite fit=pad anchor=center rule=cat_effects
 category=effects
 source=83x44 canvas=256x256 content=83x44 offset=(86,106)
-screen_id=90 palette_bank=105 tile_base=22784 reserved_last=23039 used_cols=6 used_rows=3 start_col=5 start_row=6 x_pad=6 y_pad=10 used_tiles=18 strips=6 active_rows=3
+screen_id=90 palette_bank=105 tile_base=22784 reserved_last=23039 used_cols=6 used_rows=4 start_col=5 start_row=6 x_pad=6 y_pad=10 used_tiles=24 strips=6 active_rows=4
 note=effects and transitions
 
 [091] effects/sprite_048.png
@@ -639,14 +639,14 @@ note=effects and transitions
 mode=sprite fit=pad anchor=center rule=cat_effects
 category=effects
 source=137x65 canvas=256x256 content=137x65 offset=(59,95)
-screen_id=92 palette_bank=107 tile_base=23296 reserved_last=23551 used_cols=9 used_rows=5 start_col=3 start_row=5 x_pad=11 y_pad=15 used_tiles=45 strips=9 active_rows=5
+screen_id=92 palette_bank=107 tile_base=23296 reserved_last=23551 used_cols=10 used_rows=5 start_col=3 start_row=5 x_pad=11 y_pad=15 used_tiles=50 strips=10 active_rows=5
 note=effects and transitions
 
 [093] effects/sprite_062.png
 mode=sprite fit=pad anchor=center rule=cat_effects
 category=effects
 source=34x39 canvas=256x256 content=34x39 offset=(111,108)
-screen_id=93 palette_bank=108 tile_base=23552 reserved_last=23807 used_cols=3 used_rows=3 start_col=6 start_row=6 x_pad=15 y_pad=12 used_tiles=9 strips=3 active_rows=3
+screen_id=93 palette_bank=108 tile_base=23552 reserved_last=23807 used_cols=4 used_rows=4 start_col=6 start_row=6 x_pad=15 y_pad=12 used_tiles=16 strips=4 active_rows=4
 note=effects and transitions
 
 [094] eyecatcher/1.png

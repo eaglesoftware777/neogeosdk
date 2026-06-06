@@ -490,20 +490,49 @@ def load_screen_asset(spec):
 
 
 def finalize_spec(spec):
-    used_cols = int(math.ceil(spec["content_width"] / 16.0)) if spec["content_width"] else 0
-    used_rows = int(math.ceil(spec["content_height"] / 16.0)) if spec["content_height"] else 0
     used_col_start = int(spec["content_left"] // 16) if spec["content_width"] else 0
     used_row_start = int(spec["content_top"] // 16) if spec["content_height"] else 0
+    left_mod = int(spec["content_left"] % 16) if spec["content_width"] else 0
+    top_mod  = int(spec["content_top"]  % 16) if spec["content_height"] else 0
+
+    # When the content's painted bounding box starts mid-tile, the rightmost
+    # used tile column has its leftmost (left_mod) pixels worth of art and the
+    # leftmost used tile column has its rightmost pixels worth of art.  Naively
+    # taking ceil(content_width / 16) ignores the sub-tile offset and
+    # under-counts the columns whenever (left_mod + content_width) crosses an
+    # extra tile boundary, leaving the rightmost N pixels of the art in a tile
+    # column the engine never reads.  Same shape for rows.
+    used_cols = (int(math.ceil((left_mod + spec["content_width"]) / 16.0))
+                 if spec["content_width"] else 0)
+    used_rows = (int(math.ceil((top_mod  + spec["content_height"]) / 16.0))
+                 if spec["content_height"] else 0)
 
     spec["used_tile_cols"] = used_cols
     spec["used_tile_rows"] = used_rows
     spec["used_tile_col_start"] = used_col_start
     spec["used_tile_row_start"] = used_row_start
-    spec["content_left_mod"] = int(spec["content_left"] % 16) if spec["content_width"] else 0
-    spec["content_top_mod"] = int(spec["content_top"] % 16) if spec["content_height"] else 0
+    spec["content_left_mod"] = left_mod
+    spec["content_top_mod"]  = top_mod
     spec["used_tile_count"] = used_cols * used_rows
     spec["sprite_strips"] = max(1, used_cols)
     spec["sprite_active_rows"] = max(1, used_rows)
+
+    # Asset audit: catch any spec that still has the painted bbox extending
+    # past the chosen used_cols x used_rows rectangle.  With the corrected
+    # formula above this should never trip; the assert is a guardrail against
+    # future refactors that touch finalize_spec.
+    if spec["content_width"] and left_mod + spec["content_width"] > used_cols * 16:
+        raise AssertionError(
+            f"asset {spec.get('path', '?')}: "
+            f"content_left_mod={left_mod} + content_width={spec['content_width']} "
+            f"exceeds used_tile_cols * 16 = {used_cols * 16}"
+        )
+    if spec["content_height"] and top_mod + spec["content_height"] > used_rows * 16:
+        raise AssertionError(
+            f"asset {spec.get('path', '?')}: "
+            f"content_top_mod={top_mod} + content_height={spec['content_height']} "
+            f"exceeds used_tile_rows * 16 = {used_rows * 16}"
+        )
 
 
 def normalize_sequence_bounds(specs):
