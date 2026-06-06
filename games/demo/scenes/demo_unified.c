@@ -148,6 +148,12 @@ static uint8_t NEOGEO_USER uframe(void)
 {
     perf_hud_draw();
     waitVbl();                          /* arrive at vblank start */
+    /* Drain queued sprite-group uploads while the screen is blanked.
+     * Chapters call demo_draw_sprite_screen() during active video to
+     * queue work; this is where it actually reaches SCB.  Without
+     * this the sprite chip would read mid-write SCB and tear the
+     * char in half. */
+    demo_flush_sprite_queue();
     if (s_draw_chars)     ng_chars_draw();
     if (s_draw_particles) ng_particles_draw(NG_SPR_PART_FIRST, 0u);
     ng_render_queue_flush();
@@ -370,6 +376,13 @@ static void NEOGEO_USER clear_fix_rect_force(uint8_t x,
     }
 }
 
+static int16_t NEOGEO_USER asset_scaled_px(uint8_t cells, uint8_t scale)
+{
+    uint16_t px = (uint16_t)cells * 16u;
+    if (scale >= 0xFFu) return (int16_t)px;
+    return (int16_t)(((uint32_t)px * (uint32_t)scale + 127u) >> 8);
+}
+
 static void NEOGEO_USER draw_asset_bottom_center(uint8_t frame,
                                                  uint16_t first_sprite,
                                                  int16_t cx,
@@ -379,13 +392,12 @@ static void NEOGEO_USER draw_asset_bottom_center(uint8_t frame,
 {
     uint8_t strips = demo_screen_strips(frame);
     uint8_t rows = demo_screen_rows(frame);
-    int16_t draw_x;
-    int16_t draw_y;
+    int16_t w = asset_scaled_px(strips, scale_x);
+    int16_t h = asset_scaled_px(rows, scale_y);
 
-    demo_anchor_bottom_center(frame, scale_x, scale_y, cx, bottom_y,
-                              &draw_x, &draw_y);
     demo_draw_sprite_screen(frame, first_sprite,
-                            draw_x, draw_y,
+                            (int16_t)(cx - (w >> 1) - demo_screen_x_offset(frame)),
+                            (int16_t)(bottom_y - h - demo_screen_y_offset(frame)),
                             strips, rows, scale_x, scale_y);
 }
 
@@ -399,13 +411,12 @@ static void NEOGEO_USER draw_asset_bottom_center_flip(uint8_t frame,
 {
     uint8_t strips = demo_screen_strips(frame);
     uint8_t rows = demo_screen_rows(frame);
-    int16_t draw_x;
-    int16_t draw_y;
+    int16_t w = asset_scaled_px(strips, scale_x);
+    int16_t h = asset_scaled_px(rows, scale_y);
 
-    demo_anchor_bottom_center(frame, scale_x, scale_y, cx, bottom_y,
-                              &draw_x, &draw_y);
     demo_draw_sprite_screen_flip(frame, first_sprite,
-                                 draw_x, draw_y,
+                                 (int16_t)(cx - (w >> 1) - demo_screen_x_offset(frame)),
+                                 (int16_t)(bottom_y - h - demo_screen_y_offset(frame)),
                                  strips, rows, scale_x, scale_y, flip);
 }
 
@@ -1041,21 +1052,24 @@ static uint8_t s_hero_scale_y = U_SCALE_FULL;
 
 static void NEOGEO_USER hero_draw(uint8_t frame)
 {
-    uint8_t  strips = demo_screen_strips(frame);
-    uint8_t  rows   = demo_screen_rows(frame);
-    int16_t  draw_x;
-    int16_t  draw_y;
-
-    /* Content-bottom-center anchoring stops the 8-pixel jitter
-     * the old grid-center math introduced as walk/strike frames
-     * with different x_pad / content_width came around. */
-    demo_anchor_bottom_center(frame,
-                              s_hero_scale_x, s_hero_scale_y,
-                              s_hero_x, s_hero_y,
-                              &draw_x, &draw_y);
+    /* Grid-center anchoring is what the chapter code was tuned for —
+     * s_hero_x / s_hero_y are treated as the centre of the tile grid,
+     * so reverting to this stops the "everyone too high on the screen"
+     * shift the bottom-center anchor caused.  Frame jitter is solved
+     * separately by routing the actual VRAM writes through the demo's
+     * vblank-safe queue (see demo_draw_sprite_screen). */
+    int16_t strips = demo_screen_strips(frame);
+    int16_t rows   = demo_screen_rows(frame);
+    int16_t grid_w = asset_scaled_px((uint8_t)strips, s_hero_scale_x);
+    int16_t grid_h = asset_scaled_px((uint8_t)rows, s_hero_scale_y);
+    int16_t off_x  = demo_screen_x_offset(frame);
+    int16_t off_y  = demo_screen_y_offset(frame);
+    int16_t draw_x = (int16_t)(s_hero_x - (grid_w / 2) - off_x);
+    int16_t draw_y = (int16_t)(s_hero_y - (grid_h / 2) - off_y);
     demo_draw_sprite_screen(frame, HERO_SLOT_FIRST,
                             draw_x, draw_y,
-                            strips, rows,
+                            (uint8_t)strips,
+                            (uint8_t)rows,
                             s_hero_scale_x, s_hero_scale_y);
 }
 

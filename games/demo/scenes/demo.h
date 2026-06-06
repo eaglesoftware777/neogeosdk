@@ -95,7 +95,9 @@ uint8_t NEOGEO_USER demo_frame(void);
 /* Load palette for a given screen_id into hardware */
 void NEOGEO_USER demo_load_screen_palette(uint8_t screen_id);
 
-/* Draw a sprite-group screen at arbitrary position */
+/* Draw a sprite-group screen at arbitrary position.  Queues the
+ * upload; the actual SCB writes happen when demo_flush_sprite_queue
+ * is called (from uframe inside vblank). */
 void NEOGEO_USER demo_draw_sprite_screen(uint8_t screen_id,
                                          uint16_t first_sprite,
                                          int16_t x, int16_t y,
@@ -107,6 +109,11 @@ void NEOGEO_USER demo_draw_sprite_screen_flip(uint8_t screen_id,
                                               uint8_t strips, uint8_t rows,
                                               uint8_t scale_x, uint8_t scale_y,
                                               uint8_t hflip);
+
+/* Drain the deferred sprite-draw queue.  Call inside the vblank
+ * window (right after waitVbl, before ng_render_queue_flush).
+ * Without this, queued draws never reach hardware. */
+void NEOGEO_USER demo_flush_sprite_queue(void);
 
 /* ------------------------------------------------------------------ */
 /*  Top-level demo flow — called from user.c                            */
