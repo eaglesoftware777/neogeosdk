@@ -69,4 +69,28 @@ void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint16_t count);
 void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count);
 void NEOGEO_USER ng_sprite_hide_all(void);
 
+/*
+ * Fully disable a single hardware sprite slot.
+ *
+ * Neo Geo sprites are 16px-wide vertical strips chained via the SCB3
+ * sticky bit; a wide sprite is N adjacent strips with strip[0] as the
+ * driver and strip[1..N-1] inheriting position/scale via the chain.
+ * If the chain bit on an old strip is left set after a shrink, that
+ * strip stays attached to the new driver and shows leftover tile
+ * data at the new sprite's X position — the "old object stuck to new
+ * char" symptom.
+ *
+ * ng_sprite_disable_hw() performs the complete teardown of a slot:
+ *   - ACT (SCB3 height field) = 0
+ *   - chain (SCB3 bit 6)      = 0
+ *   - position                = off-screen (Y_pos=496, X=0)
+ *   - scale                   = full size (SCB2 = 0x0FFF)
+ *   - tile / attr (SCB1[0..1])= 0
+ *
+ * Use it for every unused strip and every freed slot, including at
+ * scene boundaries.
+ */
+void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr);
+void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count);
+
 #endif

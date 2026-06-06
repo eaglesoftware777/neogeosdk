@@ -1,4 +1,5 @@
 #include "ng_vram.h"
+#include "ng_sprite_group.h"
 #include "macro.h"
 #include "neogeo.h"
 
@@ -14,24 +15,15 @@ uint16_t NEOGEO_USER ng_vram_scb1_to_sprite_slot(uint16_t scb1_base)
 
 void NEOGEO_USER ng_vram_clear_sprite_slot(uint16_t sprite_slot)
 {
-    uint16_t scb1_base;
-
-    if (sprite_slot >= NG_SPR_TOTAL) return;
-
-    vram_SCB234((uint16_t)(SCB2_ADDR + sprite_slot), 0);
-    vram_SCB234((uint16_t)(SCB3_ADDR + sprite_slot), 0);
-    vram_SCB234((uint16_t)(SCB4_ADDR + sprite_slot), 0);
-
-    /* Zero the first tile/attribute pair in SCB1 for this slot.  SCB3=0
-     * is meant to mean "height 0 = invisible", but if a downstream write
-     * later flips a single bit in SCB3 (e.g. sticky-chain inheritance
-     * from a neighbouring driver strip), the leftover SCB1 tile would
-     * render as a ghost.  Writing tile=0/attr=0 ensures the worst case
-     * is a transparent strip, not stale art from a previous chapter. */
-    scb1_base = (uint16_t)(64u * sprite_slot);
-    vram_init(scb1_base, 1);
-    vram_sfix1(0);   /* tile id row 0 */
-    vram_sfix1(0);   /* attr   row 0 */
+    /* Delegate to the hardware-level disable.  Older callers used
+     * this helper expecting a "fully off" sprite slot; in practice
+     * it was only zeroing SCB2/3/4 + the first SCB1 word.  That left
+     * the slot's chain bit, scale, X position and per-row SCB1
+     * tile/attr state intact, and a single bit flip in SCB3 from
+     * an adjacent driver strip would resurrect the slot as a
+     * ghost.  ng_sprite_disable_hw does the complete teardown:
+     * ACT=0, chain=0, off-screen Y=496, full scale, tile=attr=0. */
+    ng_sprite_disable_hw(sprite_slot);
 }
 
 void NEOGEO_USER ng_vram_clear_sprite_range(uint16_t first_sprite, uint16_t count)

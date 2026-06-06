@@ -678,19 +678,24 @@ void NEOGEO_USER demo_sprites_walk(int loops, int delay_frames)
     demo_clear_scene();
 }
 
-/* Call this to clear all graphics, sprites, and physics state */
+/*
+ * Full reset of every drawable subsystem.  Call at scene start AND
+ * scene end so the hardware never carries pixel residue across a
+ * chapter boundary.
+ *
+ * The critical part is ng_sprite_hide_all(): it iterates all 380
+ * hardware sprite slots through ng_sprite_disable_hw(), which writes
+ * ACT=0, chain=0, off-screen Y=496, full scale, tile=attr=0.  A
+ * "soft" hide that only zeroed SCB3 was leaving leftover SCB1 tile
+ * data and stale chain bits behind, which then reappeared as ghost
+ * strips on the next chapter's chars — the "old object stuck to new
+ * char" symptom.
+ */
 void NEOGEO_USER ng_clear_screen_full(void)
 {
-    /* Remove all physics solids */
     ng_physics_clear_solids();
-
-    /* Reset software character pool */
     ng_chars_init();
-
-    /* Clear the FIX layer and set a black backdrop */
     clearFix();
     setBACKDROP(BLACK);
-
-    /* Clear SCB2/SCB3/SCB4 for every hardware sprite slot. */
     ng_sprite_hide_all();
 }

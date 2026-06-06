@@ -35,9 +35,61 @@ static uint16_t NEOGEO_USER ngsg_tile_for(NGSpriteGroup *g, uint8_t strip, uint8
     return (uint16_t)(g->tileBase + ((uint16_t)sourceRow * g->tileStride) + sourceStrip);
 }
 
+void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr)
+{
+    uint16_t scb1_base;
+
+    if (spr >= NG_SPR_TOTAL) return;
+
+    /* SCB2: scale.  0x0FFF = full size on both axes (X-shrink nibble
+     * 0x0F = 16-px wide strip, Y-shrink byte 0xFF = full height).
+     * Setting it explicitly avoids leaving a 1-pixel-wide leftover
+     * value behind from a previous chapter. */
+    vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
+
+    /* SCB3: Y_pos = 496 (off-screen below the visible 224-line area),
+     * sticky/chain bit = 0, sprite_height (ACT) field = 0.  The chain
+     * bit MUST be 0 here — leaving it set on a disabled slot causes
+     * the slot to follow whatever driver strip happens to live in
+     * slot-1, which is the "old strip stuck to new char" glitch. */
+    vram_SCB234((uint16_t)(SCB3_ADDR + spr), 0xF800u);
+
+    /* SCB4: X = 0.  Combined with the off-screen Y above this also
+     * normalises the slot's debug appearance in emulators that ignore
+     * height=0. */
+    vram_SCB234((uint16_t)(SCB4_ADDR + spr), 0u);
+
+    /* SCB1 row 0 tile and attribute.  With ACT=0 the LSPC should
+     * render zero rows; with chain=0 it cannot inherit a non-zero
+     * height from a neighbour either.  But a single corrupted bit
+     * flip in SCB3 would resurrect the slot, and writing tile=0/
+     * attr=0 here means the worst-case "resurrection" renders a
+     * transparent tile, not last chapter's leftover artwork. */
+    scb1_base = (uint16_t)(64u * spr);
+    vram_init(scb1_base, 1);
+    vram_sfix1(0);
+    vram_sfix1(0);
+}
+
+void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count)
+{
+    uint16_t end;
+    uint16_t i;
+
+    if (first == 0xffffu) return;
+    if (first >= NG_SPR_TOTAL) return;
+
+    end = (uint16_t)(first + count);
+    if (end > NG_SPR_TOTAL || end < first) end = NG_SPR_TOTAL;
+
+    for (i = first; i < end; i++) {
+        ng_sprite_disable_hw(i);
+    }
+}
+
 void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint16_t count)
 {
-    ng_vram_clear_sprite_range(firstSprite, count);
+    ng_sprite_disable_hw_range(firstSprite, count);
 }
 
 void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count)
