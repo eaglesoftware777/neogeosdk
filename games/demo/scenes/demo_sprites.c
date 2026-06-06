@@ -683,13 +683,22 @@ void NEOGEO_USER demo_sprites_walk(int loops, int delay_frames)
  * scene end so the hardware never carries pixel residue across a
  * chapter boundary.
  *
- * The critical part is ng_sprite_hide_all(): it iterates all 380
- * hardware sprite slots through ng_sprite_disable_hw(), which writes
- * ACT=0, chain=0, off-screen Y=496, full scale, tile=attr=0.  A
- * "soft" hide that only zeroed SCB3 was leaving leftover SCB1 tile
- * data and stale chain bits behind, which then reappeared as ghost
- * strips on the next chapter's chars — the "old object stuck to new
- * char" symptom.
+ * Order matters:
+ *
+ *   1. Reset software state (physics, char pool, FIX layer, backdrop)
+ *      so nothing re-emits stale metadata after the hardware clear.
+ *   2. ng_sprite_hide_all() runs ng_sprite_disable_hw() on every one
+ *      of the 380 hardware slots — ACT=0, chain=0, off-screen Y=496,
+ *      full scale, full 64-word SCB1 wipe (32 tile + 32 attr).  A
+ *      partial wipe (just row 0) used to leave rows 1..31 carrying
+ *      last chapter's artwork, which then reappeared the moment any
+ *      stray write put a non-zero value back into SCB3's ACT field.
+ *   3. Push a blank frame (ng_chars_draw + demo_frame) so the LSPC
+ *      latches the cleared SCB before the scene starts drawing into
+ *      it.  Without this, the very first frame of the new scene can
+ *      still show one row of the previous scene's residue.
+ *   4. clearFix() one more time because demo_frame() can paint FIX
+ *      cells via the render queue.
  */
 void NEOGEO_USER ng_clear_screen_full(void)
 {
@@ -697,5 +706,11 @@ void NEOGEO_USER ng_clear_screen_full(void)
     ng_chars_init();
     clearFix();
     setBACKDROP(BLACK);
+
     ng_sprite_hide_all();
+
+    ng_chars_draw();
+    demo_frame();
+
+    clearFix();
 }
