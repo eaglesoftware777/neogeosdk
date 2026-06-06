@@ -91,11 +91,23 @@ void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint16_t count);
 void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count);
 void NEOGEO_USER ng_sprite_hide_all(void);
 
+/* Blank-tile convention for hardware sprite teardown.  See the
+ * C engine companion (sdk/2d_engine/ng_sprite_group.h) for the
+ * full rationale: writing literal tile=0 / attr=0 would render
+ * monitor-sync black through palette 0; use a reserved blank C-ROM
+ * tile and a safe attribute instead. */
+#ifndef NG_SPRITE_BLANK_TILE
+#define NG_SPRITE_BLANK_TILE  0x00FFu
+#endif
+#ifndef NG_SPRITE_BLANK_ATTR
+#define NG_SPRITE_BLANK_ATTR  0x0000u
+#endif
+
 /* Fully disable a single hardware sprite slot.  See the C engine
- * companion (sdk/2d_engine/ng_sprite_group.h) for the per-field
- * rationale: ACT=0, chain=0, off-screen Y=496, full scale,
- * tile=attr=0.  Use for every unused strip / freed slot, including
- * at scene boundaries. */
+ * companion for the per-field rationale: ACT=0, chain=0,
+ * off-screen Y=496, full scale, every SCB1 row set to
+ * NG_SPRITE_BLANK_TILE/NG_SPRITE_BLANK_ATTR.  Use for every unused
+ * strip / freed slot, including at scene boundaries. */
 void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr);
 void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count);
 
