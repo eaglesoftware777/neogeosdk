@@ -81,10 +81,23 @@ void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count)
 
 void NEOGEO_USER ng_sprite_park_off(uint16_t spr)
 {
+    uint16_t scb1_base;
+
     if (spr >= NG_SPR_TOTAL) return;
+
+    /* Per-frame hot path: kill SCB3, normalise SCB2/SCB4, blank
+     * SCB1 row 0.  The row-0 wipe is required because some real
+     * boards treat SCB3 height=0 as "32 rows with Y-wrap" rather
+     * than "0 rows", which would let leftover tile data render as
+     * a horizontal strip across the screen. */
     vram_SCB234((uint16_t)(SCB3_ADDR + spr), NG_SPRITE_DISABLED_SCB3);
     vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
     vram_SCB234((uint16_t)(SCB4_ADDR + spr), NG_SPRITE_DISABLED_X);
+
+    scb1_base = (uint16_t)(64u * spr);
+    vram_init(scb1_base, 1u);
+    vram_sfix1(NG_SPRITE_BLANK_TILE);
+    vram_sfix1(NG_SPRITE_BLANK_ATTR);
 }
 
 void NEOGEO_USER ng_sprite_park_off_range(uint16_t first, uint16_t count)

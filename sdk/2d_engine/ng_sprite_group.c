@@ -93,15 +93,29 @@ void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count)
 
 void NEOGEO_USER ng_sprite_park_off(uint16_t spr)
 {
+    uint16_t scb1_base;
+
     if (spr >= NG_SPR_TOTAL) return;
 
-    /* Per-frame hot path.  Just SCB234 — three writes per slot.
-     * No SCB1 wipe: the sprite cannot render with ACT=0/chain=0/
-     * off-screen position, and the next upload to this slot will
-     * rewrite SCB1 anyway. */
+    /* Per-frame hot path.  Kill display first via SCB3, then
+     * normalise scale + park X off-screen, then blank SCB1 row 0.
+     *
+     * The SCB1 row 0 wipe is essential even with ACT=0: some real
+     * hardware (and some emulators) treat the SCB3 height field
+     * differently — 0 means "0 rows" on a well-behaved board but
+     * "32 rows with Y-wrap" on others.  Without a blank row 0,
+     * the leftover tile id in SCB1[0] renders as a horizontal
+     * strip spanning the whole screen whenever the LSPC walks a
+     * "disabled" slot.  Five writes per slot instead of three;
+     * still well within vblank for typical tail-clear counts. */
     vram_SCB234((uint16_t)(SCB3_ADDR + spr), NG_SPRITE_DISABLED_SCB3);
     vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
     vram_SCB234((uint16_t)(SCB4_ADDR + spr), NG_SPRITE_DISABLED_X);
+
+    scb1_base = (uint16_t)(64u * spr);
+    vram_init(scb1_base, 1u);
+    vram_sfix1(NG_SPRITE_BLANK_TILE);
+    vram_sfix1(NG_SPRITE_BLANK_ATTR);
 }
 
 void NEOGEO_USER ng_sprite_park_off_range(uint16_t first, uint16_t count)
