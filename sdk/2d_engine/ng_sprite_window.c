@@ -1,4 +1,5 @@
 #include "ng_sprite_window.h"
+#include "ng_sprite_group.h"
 #include "ng_vram.h"
 
 static uint8_t NEOGEO_USER ngsw_clamp_count(uint8_t value, uint8_t max_value)
@@ -65,7 +66,7 @@ void NEOGEO_USER ng_sprite_window_clear(NGSpriteWindow *window)
 {
     if (!window) return;
 
-    ng_vram_clear_sprite_range(window->first_slot, window->max_strips);
+    ng_sprite_park_off_range(window->first_slot, window->max_strips);
     window->previous_strips = 0u;
     window->current_strips = 0u;
     window->previous_rows = 0u;
@@ -89,17 +90,17 @@ void NEOGEO_USER ng_sprite_window_clear_tail(NGSpriteWindow *window)
     if (footprint == 0u) footprint = window->max_strips;
 
     if (window->previous_strips == 0u) {
-        ng_vram_clear_sprite_range(window->first_slot, footprint);
+        ng_sprite_park_off_range(window->first_slot, footprint);
         return;
     }
 
     if (window->previous_rows != window->current_rows) {
-        ng_vram_clear_sprite_range(window->first_slot, footprint);
+        ng_sprite_park_off_range(window->first_slot, footprint);
         return;
     }
 
     if (window->previous_strips > window->current_strips) {
-        ng_vram_clear_sprite_range(
+        ng_sprite_park_off_range(
             (uint16_t)(window->first_slot + window->current_strips),
             (uint16_t)(window->previous_strips - window->current_strips));
     }
@@ -109,7 +110,7 @@ void NEOGEO_USER ng_sprite_window_hide(NGSpriteWindow *window)
 {
     if (!window) return;
 
-    ng_vram_clear_sprite_range(window->first_slot, window->max_strips);
+    ng_sprite_park_off_range(window->first_slot, window->max_strips);
     window->visible = 0u;
     window->previous_strips = window->current_strips;
     window->current_strips = 0u;

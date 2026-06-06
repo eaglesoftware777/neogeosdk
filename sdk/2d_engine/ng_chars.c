@@ -541,20 +541,29 @@ void NEOGEO_USER ng_chars_draw(void)
         ng_sprite_group_set_scale(&g, c->scale_x, c->scale_y);
         ng_sprite_group_set_flip(&g, c->flip_x, c->flip_y);
 
+        /* Tail clear: only the slots that this char ACTUALLY used
+         * last frame and is no longer using.  Previously we wiped
+         * the full NG_SPRITE_MAX_STRIPS (=32) window every frame,
+         * which clobbered up to 26 unrelated slots and pushed the
+         * vblank past its budget — the horizontal-strip / black-
+         * box artefacts came from those overruns spilling into
+         * active video. */
         if (c->sprite_dirty) {
-            if (visibleStrips < NG_SPRITE_MAX_STRIPS) {
+            uint8_t prev = ng_char_uploaded_strips[idx];
+            if (prev > visibleStrips) {
                 ng_sprite_hide_range((uint16_t)(c->sprite_first + visibleStrips),
-                                     (uint16_t)(NG_SPRITE_MAX_STRIPS - visibleStrips));
+                                     (uint16_t)(prev - visibleStrips));
             }
             ng_sprite_group_upload(&g);
             ng_char_uploaded_strips[idx] = visibleStrips;
             ng_char_uploaded_first[idx]  = c->sprite_first;
             c->sprite_dirty = 0;
         } else {
+            uint8_t prev = ng_char_uploaded_strips[idx];
             ng_sprite_group_update_transform(&g);
-            if (visibleStrips < NG_SPRITE_MAX_STRIPS) {
+            if (prev > visibleStrips) {
                 ng_sprite_hide_range((uint16_t)(c->sprite_first + visibleStrips),
-                                     (uint16_t)(NG_SPRITE_MAX_STRIPS - visibleStrips));
+                                     (uint16_t)(prev - visibleStrips));
             }
         }
     }

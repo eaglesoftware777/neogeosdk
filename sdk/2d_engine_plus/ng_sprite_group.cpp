@@ -79,9 +79,35 @@ void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count)
     }
 }
 
+void NEOGEO_USER ng_sprite_park_off(uint16_t spr)
+{
+    if (spr >= NG_SPR_TOTAL) return;
+    vram_SCB234((uint16_t)(SCB3_ADDR + spr), NG_SPRITE_DISABLED_SCB3);
+    vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
+    vram_SCB234((uint16_t)(SCB4_ADDR + spr), NG_SPRITE_DISABLED_X);
+}
+
+void NEOGEO_USER ng_sprite_park_off_range(uint16_t first, uint16_t count)
+{
+    uint16_t end;
+    uint16_t i;
+
+    if (first == 0xffffu) return;
+    if (first >= NG_SPR_TOTAL) return;
+
+    end = (uint16_t)(first + count);
+    if (end > NG_SPR_TOTAL || end < first) end = NG_SPR_TOTAL;
+
+    for (i = first; i < end; i++) {
+        ng_sprite_park_off(i);
+    }
+}
+
 void NGSpriteGroup::hideRange(uint16_t first, uint16_t count)
 {
-    ng_sprite_disable_hw_range(first, count);
+    /* Per-frame hot path: light park, not full SCB1 wipe.  Scene
+     * boundaries still go through hideAll -> heavy disable. */
+    ng_sprite_park_off_range(first, count);
 }
 
 void NGSpriteGroup::hideVramBase(uint16_t spriteBase, uint16_t count)

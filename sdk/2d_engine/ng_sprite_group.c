@@ -91,9 +91,42 @@ void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count)
     }
 }
 
+void NEOGEO_USER ng_sprite_park_off(uint16_t spr)
+{
+    if (spr >= NG_SPR_TOTAL) return;
+
+    /* Per-frame hot path.  Just SCB234 — three writes per slot.
+     * No SCB1 wipe: the sprite cannot render with ACT=0/chain=0/
+     * off-screen position, and the next upload to this slot will
+     * rewrite SCB1 anyway. */
+    vram_SCB234((uint16_t)(SCB3_ADDR + spr), NG_SPRITE_DISABLED_SCB3);
+    vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
+    vram_SCB234((uint16_t)(SCB4_ADDR + spr), NG_SPRITE_DISABLED_X);
+}
+
+void NEOGEO_USER ng_sprite_park_off_range(uint16_t first, uint16_t count)
+{
+    uint16_t end;
+    uint16_t i;
+
+    if (first == 0xffffu) return;
+    if (first >= NG_SPR_TOTAL) return;
+
+    end = (uint16_t)(first + count);
+    if (end > NG_SPR_TOTAL || end < first) end = NG_SPR_TOTAL;
+
+    for (i = first; i < end; i++) {
+        ng_sprite_park_off(i);
+    }
+}
+
+/* Per-frame hide path: hot, must fit in vblank.  Uses the quick
+ * park (just SCB234, no SCB1 wipe).  ng_sprite_hide_all() goes
+ * through ng_vram_clear_all_sprites() -> heavy disable instead,
+ * so scene boundaries still get the full SCB1 teardown. */
 void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint16_t count)
 {
-    ng_sprite_disable_hw_range(firstSprite, count);
+    ng_sprite_park_off_range(firstSprite, count);
 }
 
 void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count)

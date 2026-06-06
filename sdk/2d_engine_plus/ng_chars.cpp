@@ -494,20 +494,25 @@ void CharManager::draw()
         g.setScale(c->scale_x, c->scale_y);
         g.setFlip(c->flip_x, c->flip_y);
 
+        /* Tail clear bounded by the slots this char actually used
+         * last frame.  See the C engine companion for the budget
+         * rationale — wiping 32 slots every frame overruns vblank. */
         if (c->sprite_dirty) {
-            if (vis_strips < NG_SPRITE_MAX_STRIPS) {
+            uint8_t prev = uploaded_strips[idx];
+            if (prev > vis_strips) {
                 NGSpriteGroup::hideRange((uint16_t)(c->sprite_first + vis_strips),
-                                        (uint8_t)(NG_SPRITE_MAX_STRIPS - vis_strips));
+                                        (uint16_t)(prev - vis_strips));
             }
             g.upload();
             uploaded_strips[idx] = vis_strips;
             uploaded_first[idx]  = c->sprite_first;
             c->sprite_dirty      = 0;
         } else {
+            uint8_t prev = uploaded_strips[idx];
             g.updateTransform();
-            if (vis_strips < NG_SPRITE_MAX_STRIPS) {
+            if (prev > vis_strips) {
                 NGSpriteGroup::hideRange((uint16_t)(c->sprite_first + vis_strips),
-                                        (uint8_t)(NG_SPRITE_MAX_STRIPS - vis_strips));
+                                        (uint16_t)(prev - vis_strips));
             }
         }
     }

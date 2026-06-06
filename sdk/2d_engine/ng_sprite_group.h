@@ -119,27 +119,32 @@ void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count);
 void NEOGEO_USER ng_sprite_hide_all(void);
 
 /*
- * Fully disable a single hardware sprite slot.
+ * Two-tier hardware sprite teardown.
  *
- * Neo Geo sprites are 16px-wide vertical strips chained via the SCB3
- * sticky bit; a wide sprite is N adjacent strips with strip[0] as the
- * driver and strip[1..N-1] inheriting position/scale via the chain.
- * If the chain bit on an old strip is left set after a shrink, that
- * strip stays attached to the new driver and shows leftover tile
- * data at the new sprite's X position — the "old object stuck to new
- * char" symptom.
+ * Per-frame tail clears (sprite_window::clear_tail, char Phase-2
+ * shrink) are on the hot path: a single moving char can disable
+ * dozens of slots every frame.  The full 64-word SCB1 wipe is too
+ * expensive there — at ~67 VRAM writes per slot, 26 tail slots ×
+ * 4 chars already pushes past 7000 writes per frame and overruns
+ * the ~3 ms vblank.  The overrun spills into active video, the
+ * LSPC reads mid-write SCB and the screen shows horizontal strips
+ * and stray black boxes around moving chars.
  *
- * ng_sprite_disable_hw() performs the complete teardown of a slot:
- *   - ACT (SCB3 height field) = 0
- *   - chain (SCB3 bit 6)      = 0
- *   - position                = off-screen (Y_pos=496, X=0)
- *   - scale                   = full size (SCB2 = 0x0FFF)
- *   - tile / attr (SCB1[0..1])= 0
+ *   ng_sprite_disable_hw()  - HEAVY.  ACT=0, chain=0, off-screen
+ *     Y/X, full scale, and EVERY SCB1 row (32 tile + 32 attr words)
+ *     replaced with NG_SPRITE_BLANK_TILE / NG_SPRITE_BLANK_ATTR.
+ *     ~67 VRAM writes per slot.  Use at scene boundaries (called
+ *     transitively from ng_sprite_hide_all()).
  *
- * Use it for every unused strip and every freed slot, including at
- * scene boundaries.
+ *   ng_sprite_park_off()    - QUICK.  ACT=0, chain=0, off-screen
+ *     Y/X, full scale.  No SCB1 wipe.  ~3 VRAM writes per slot.
+ *     Use for every per-frame tail clear: SCB3 ACT=0 + chain=0 +
+ *     off-screen position means the slot cannot render, and the
+ *     next ng_sprite_group_upload() will rewrite SCB1 anyway.
  */
 void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr);
 void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count);
+void NEOGEO_USER ng_sprite_park_off(uint16_t spr);
+void NEOGEO_USER ng_sprite_park_off_range(uint16_t first, uint16_t count);
 
 #endif
