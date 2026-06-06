@@ -32,9 +32,48 @@ uint16_t NGSpriteGroup::tileFor(uint8_t strip, uint8_t row) const
 
 /* --- NGSpriteGroup static methods --- */
 
+void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr)
+{
+    uint16_t scb1_base;
+
+    if (spr >= NG_SPR_TOTAL) return;
+
+    /* SCB2 = full scale (X-shrink 0x0F = 16-px, Y-shrink 0xFF = max). */
+    vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
+
+    /* SCB3: Y_pos = 496 (off-screen), chain bit 0, height 0. */
+    vram_SCB234((uint16_t)(SCB3_ADDR + spr), 0xF800u);
+
+    /* SCB4: X = 0. */
+    vram_SCB234((uint16_t)(SCB4_ADDR + spr), 0u);
+
+    /* SCB1 row 0 tile + attr = 0, so a corrupted SCB3 leak still
+     * renders a transparent tile rather than last frame's artwork. */
+    scb1_base = (uint16_t)(64u * spr);
+    vram_init(scb1_base, 1);
+    vram_sfix1(0);
+    vram_sfix1(0);
+}
+
+void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count)
+{
+    uint16_t end;
+    uint16_t i;
+
+    if (first == 0xffffu) return;
+    if (first >= NG_SPR_TOTAL) return;
+
+    end = (uint16_t)(first + count);
+    if (end > NG_SPR_TOTAL || end < first) end = NG_SPR_TOTAL;
+
+    for (i = first; i < end; i++) {
+        ng_sprite_disable_hw(i);
+    }
+}
+
 void NGSpriteGroup::hideRange(uint16_t first, uint16_t count)
 {
-    ng_vram_clear_sprite_range(first, count);
+    ng_sprite_disable_hw_range(first, count);
 }
 
 void NGSpriteGroup::hideVramBase(uint16_t spriteBase, uint16_t count)
