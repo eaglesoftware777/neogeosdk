@@ -39,12 +39,15 @@ void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr)
 
     if (spr >= NG_SPR_TOTAL) return;
 
-    /* 1. Kill display first: ACT=0, chain=0, Y_pos=496 off-screen. */
-    vram_SCB234((uint16_t)(SCB3_ADDR + spr), 0xF800u);
+    /* 1. Kill display first: ACT=0, chain=0, Y_field=256 so
+     *    screen_y=240 (past the 224-line visible window).  Note
+     *    Y_field=496 would resolve to screen_y=0 / top of screen
+     *    — visible, not off-screen. */
+    vram_SCB234((uint16_t)(SCB3_ADDR + spr), NG_SPRITE_DISABLED_SCB3);
 
-    /* 2. Normalise scale (full size) and X position. */
+    /* 2. Normalise scale (full size) and park X off-screen right. */
     vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
-    vram_SCB234((uint16_t)(SCB4_ADDR + spr), 0u);
+    vram_SCB234((uint16_t)(SCB4_ADDR + spr), NG_SPRITE_DISABLED_X);
 
     /* 3. FULL SCB1 clear — 32 rows × (tile, attr) per slot.
      *    Writing tile=0/attr=0 would render C-ROM tile 0 through

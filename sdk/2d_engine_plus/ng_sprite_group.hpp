@@ -91,6 +91,16 @@ void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint16_t count);
 void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count);
 void NEOGEO_USER ng_sprite_hide_all(void);
 
+/* Off-screen parking constants for hardware sprite teardown.
+ * See the C engine companion (sdk/2d_engine/ng_sprite_group.h)
+ * for the full rationale: Y_field=496 lands at screen_y=0 (top
+ * of visible area), so disabled slots must park at Y_field=256
+ * (screen_y=240, past visible) and X=496 (past the 320-px
+ * right edge). */
+#define NG_SPRITE_DISABLED_YREG   256u
+#define NG_SPRITE_DISABLED_X      496u
+#define NG_SPRITE_DISABLED_SCB3   ((uint16_t)(NG_SPRITE_DISABLED_YREG << 7))
+
 /* Blank-tile convention for hardware sprite teardown.  See the
  * C engine companion (sdk/2d_engine/ng_sprite_group.h) for the
  * full rationale: writing literal tile=0 / attr=0 would render

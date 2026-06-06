@@ -65,6 +65,26 @@ void NEOGEO_USER ng_sprite_group_hide(NGSpriteGroup *g);
 void NEOGEO_USER ng_engine_init_hardware(uint16_t transparentTile);
 
 /*
+ * Off-screen parking constants for hardware sprite teardown.
+ *
+ * The engine's SCB3 encoding is Y_field = 496 - screen_y, so
+ * Y_field = 496 puts the sprite at screen_y = 0 (top of visible
+ * area) — NOT off-screen.  If a disabled slot ever has its ACT/
+ * chain bumped non-zero by a stray write, parking it at Y_field
+ * = 496 makes it appear as a black/blank bar across the top of
+ * the screen (this was visible in MAME after the first version
+ * of ng_sprite_disable_hw shipped).
+ *
+ * Park at Y_field = 256 so screen_y = 240 (past the 224-line
+ * visible window) and X = 496 so it sits well off the right
+ * edge of the 320-px screen.  Even with the worst-case bit flip,
+ * the resurrected sprite ends up where the user cannot see it.
+ */
+#define NG_SPRITE_DISABLED_YREG   256u
+#define NG_SPRITE_DISABLED_X      496u
+#define NG_SPRITE_DISABLED_SCB3   ((uint16_t)(NG_SPRITE_DISABLED_YREG << 7))
+
+/*
  * Blank-tile convention for hardware sprite teardown.
  *
  * ng_sprite_disable_hw() fills every SCB1 row of a slot with a
