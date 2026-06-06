@@ -113,13 +113,13 @@ void NEOGEO_USER ng_sprite_hide_all(void);
 #define NG_SPRITE_BLANK_ATTR  0x0000u
 #endif
 
-/* Fully disable a single hardware sprite slot.  See the C engine
- * companion for the per-field rationale: ACT=0, chain=0,
- * off-screen Y=496, full scale, every SCB1 row set to
- * NG_SPRITE_BLANK_TILE/NG_SPRITE_BLANK_ATTR.  Use for every unused
- * strip / freed slot, including at scene boundaries. */
+/* Two-tier sprite teardown.  See the C engine companion
+ * (sdk/2d_engine/ng_sprite_group.h) for the per-field rationale
+ * and the vblank-budget motivation. */
 void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr);
 void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count);
+void NEOGEO_USER ng_sprite_park_off(uint16_t spr);
+void NEOGEO_USER ng_sprite_park_off_range(uint16_t first, uint16_t count);
 
 #ifdef __cplusplus
 } /* extern "C" */
