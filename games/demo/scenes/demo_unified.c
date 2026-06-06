@@ -215,9 +215,15 @@ static void NEOGEO_USER chap_header(uint8_t n,
 {
     char tag[6];
 
-    /* hard reset hardware + char/physics/particles/feedback/palette FX */
+    /* hard reset hardware + char/physics/particles/feedback/palette FX.
+     * demo_clear_all_sprites() goes beyond clearSprs(): it zeros SCB2/3/4
+     * for every sprite slot AND resets the demo sprite-window cache so
+     * the next chapter's first draw doesn't trust stale previous_strips /
+     * previous_rows values from the chapter that just ended.  Without
+     * this reset, sprites whose strip count happens to match a previous
+     * chapter's leave residual SCB1 tile data behind. */
     ng_clear_screen_full();
-    clearSprs();
+    demo_clear_all_sprites();
     /*
      * Pure black keeps transparent padding and freshly-cleared FIX cells
      * from reading as large pale rectangles during chapter transitions.
