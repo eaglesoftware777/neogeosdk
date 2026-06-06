@@ -37,38 +37,33 @@ static uint16_t NEOGEO_USER ngsg_tile_for(NGSpriteGroup *g, uint8_t strip, uint8
 
 void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr)
 {
+    uint16_t i;
     uint16_t scb1_base;
 
     if (spr >= NG_SPR_TOTAL) return;
 
-    /* SCB2: scale.  0x0FFF = full size on both axes (X-shrink nibble
-     * 0x0F = 16-px wide strip, Y-shrink byte 0xFF = full height).
-     * Setting it explicitly avoids leaving a 1-pixel-wide leftover
-     * value behind from a previous chapter. */
-    vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
-
-    /* SCB3: Y_pos = 496 (off-screen below the visible 224-line area),
-     * sticky/chain bit = 0, sprite_height (ACT) field = 0.  The chain
-     * bit MUST be 0 here — leaving it set on a disabled slot causes
-     * the slot to follow whatever driver strip happens to live in
-     * slot-1, which is the "old strip stuck to new char" glitch. */
+    /* 1. Kill display FIRST.  Writing SCB3 before touching anything
+     *    else guarantees no intermediate state where SCB1 has stale
+     *    tile data AND SCB3 still says "render N rows".  ACT/height
+     *    = 0, chain bit = 0, Y_pos = 496 (off-screen below the
+     *    visible 224-line area). */
     vram_SCB234((uint16_t)(SCB3_ADDR + spr), 0xF800u);
 
-    /* SCB4: X = 0.  Combined with the off-screen Y above this also
-     * normalises the slot's debug appearance in emulators that ignore
-     * height=0. */
+    /* 2. Normalise scale and X to known-safe values. */
+    vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
     vram_SCB234((uint16_t)(SCB4_ADDR + spr), 0u);
 
-    /* SCB1 row 0 tile and attribute.  With ACT=0 the LSPC should
-     * render zero rows; with chain=0 it cannot inherit a non-zero
-     * height from a neighbour either.  But a single corrupted bit
-     * flip in SCB3 would resurrect the slot, and writing tile=0/
-     * attr=0 here means the worst-case "resurrection" renders a
-     * transparent tile, not last chapter's leftover artwork. */
+    /* 3. FULL SCB1 clear — 64 words per slot (32 tile + 32 attr).
+     *    A sprite strip is up to 32 tiles tall and each row has its
+     *    own tile/attr word pair; clearing only row 0 leaves rows
+     *    1..31 holding last chapter's artwork, ready to reappear
+     *    the moment a stray write puts a non-zero value back into
+     *    SCB3's ACT field. */
     scb1_base = (uint16_t)(64u * spr);
-    vram_init(scb1_base, 1);
-    vram_sfix1(0);
-    vram_sfix1(0);
+    vram_init(scb1_base, 1u);
+    for (i = 0u; i < 64u; i++) {
+        vram_sfix1(0u);
+    }
 }
 
 void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count)

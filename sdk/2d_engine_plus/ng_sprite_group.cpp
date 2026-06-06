@@ -34,25 +34,28 @@ uint16_t NGSpriteGroup::tileFor(uint8_t strip, uint8_t row) const
 
 void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr)
 {
+    uint16_t i;
     uint16_t scb1_base;
 
     if (spr >= NG_SPR_TOTAL) return;
 
-    /* SCB2 = full scale (X-shrink 0x0F = 16-px, Y-shrink 0xFF = max). */
-    vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
-
-    /* SCB3: Y_pos = 496 (off-screen), chain bit 0, height 0. */
+    /* 1. Kill display first: ACT=0, chain=0, Y_pos=496 off-screen. */
     vram_SCB234((uint16_t)(SCB3_ADDR + spr), 0xF800u);
 
-    /* SCB4: X = 0. */
+    /* 2. Normalise scale (full size) and X position. */
+    vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
     vram_SCB234((uint16_t)(SCB4_ADDR + spr), 0u);
 
-    /* SCB1 row 0 tile + attr = 0, so a corrupted SCB3 leak still
-     * renders a transparent tile rather than last frame's artwork. */
+    /* 3. FULL SCB1 clear — 64 words per slot (32 tile + 32 attr).
+     *    A strip is up to 32 tiles tall; clearing only row 0 leaves
+     *    rows 1..31 holding last chapter's artwork, ready to come
+     *    back the moment something puts a non-zero value back into
+     *    SCB3's ACT field. */
     scb1_base = (uint16_t)(64u * spr);
-    vram_init(scb1_base, 1);
-    vram_sfix1(0);
-    vram_sfix1(0);
+    vram_init(scb1_base, 1u);
+    for (i = 0u; i < 64u; i++) {
+        vram_sfix1(0u);
+    }
 }
 
 void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count)
