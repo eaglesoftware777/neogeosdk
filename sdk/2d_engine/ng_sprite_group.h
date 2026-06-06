@@ -95,19 +95,29 @@ void NEOGEO_USER ng_engine_init_hardware(uint16_t transparentTile);
  * tile 0, that paints a black rectangle wherever the slot's Y
  * happens to fall on-screen.
  *
- * Convention used by the engine and by the artbox C-ROM packer:
- *   - Tile 0x00FF is reserved as an always-transparent C-ROM tile
- *     (matches NGFIX_DEFAULT_BLANK_TILE for the FIX layer).
+ * Convention:
+ *   - Tile 0xFFFF is reserved as the always-transparent C-ROM
+ *     tile id (matches NGFIX_DEFAULT_BLANK_TILE = 0x00FF for the
+ *     FIX layer's separate space).  This tile lives near the top
+ *     of the SCB1-addressable 16-bit tile range (0..0xFFFF), which
+ *     for this project's 16 MB C-ROM is well past the last asset
+ *     (0x78FA) and so reads as all-zero pixel data — fully
+ *     transparent.
  *   - Attribute 0x0000 keeps palette/flip bits zero.  With a fully
  *     transparent tile the chosen palette is irrelevant, but using
  *     0 keeps the disabled slot identifiable in VRAM dumps.
  *
- * If a project ships its own C-ROM, ensure tile 0x00FF is empty
- * (all pixel indices = 0) or override these constants before
- * including this header.
+ * If a project ships its own C-ROM, ensure tile 0xFFFF (or whatever
+ * the project picks) is empty (every pixel index = 0) or override
+ * these constants before including this header.  Verify with:
+ *
+ *     xxd -s $((0xFFFF * 64)) -l 64 games/<game>/artbox/<id>-c1.c1
+ *     xxd -s $((0xFFFF * 64)) -l 64 games/<game>/artbox/<id>-c2.c2
+ *
+ * both should print 64 zero bytes.
  */
 #ifndef NG_SPRITE_BLANK_TILE
-#define NG_SPRITE_BLANK_TILE  0x00FFu
+#define NG_SPRITE_BLANK_TILE  0xFFFFu
 #endif
 #ifndef NG_SPRITE_BLANK_ATTR
 #define NG_SPRITE_BLANK_ATTR  0x0000u
@@ -119,28 +129,28 @@ void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count);
 void NEOGEO_USER ng_sprite_hide_all(void);
 
 /*
- * Two-tier hardware sprite teardown.
+ * Hardware sprite teardown.
  *
- * Per-frame tail clears (sprite_window::clear_tail, char Phase-2
- * shrink) are on the hot path: a single moving char can disable
- * dozens of slots every frame.  The full 64-word SCB1 wipe is too
- * expensive there — at ~67 VRAM writes per slot, 26 tail slots ×
- * 4 chars already pushes past 7000 writes per frame and overruns
- * the ~3 ms vblank.  The overrun spills into active video, the
- * LSPC reads mid-write SCB and the screen shows horizontal strips
- * and stray black boxes around moving chars.
+ * Both ng_sprite_disable_hw() and ng_sprite_park_off() do the
+ * SAME full teardown — a partial "quick park" that only zeros
+ * SCB3 (and maybe SCB1 row 0) is not enough.  If any later write
+ * resurrects ACT/chain or the LSPC wraps the height field, rows
+ * 1..31 of SCB1 still hold last-frame artwork and reappear as
+ * horizontal strips / black boxes around the active chars.
  *
- *   ng_sprite_disable_hw()  - HEAVY.  ACT=0, chain=0, off-screen
- *     Y/X, full scale, and EVERY SCB1 row (32 tile + 32 attr words)
- *     replaced with NG_SPRITE_BLANK_TILE / NG_SPRITE_BLANK_ATTR.
- *     ~67 VRAM writes per slot.  Use at scene boundaries (called
- *     transitively from ng_sprite_hide_all()).
+ * The pair is kept as a vocabulary distinction (disable_hw at
+ * scene boundaries, park_off in per-frame tail clears) but the
+ * VRAM cost is the same — ~67 writes per slot.  Correctness over
+ * speed: vblank can absorb the cost so long as callers bound the
+ * tail-clear count to the actual shrink (see ng_chars_draw
+ * Phase 2 using prev_strips - vis_strips, and sprite_window's
+ * max_used_strips), which they now do.
  *
- *   ng_sprite_park_off()    - QUICK.  ACT=0, chain=0, off-screen
- *     Y/X, full scale.  No SCB1 wipe.  ~3 VRAM writes per slot.
- *     Use for every per-frame tail clear: SCB3 ACT=0 + chain=0 +
- *     off-screen position means the slot cannot render, and the
- *     next ng_sprite_group_upload() will rewrite SCB1 anyway.
+ * Per slot the teardown writes:
+ *   SCB3       = NG_SPRITE_DISABLED_SCB3 (ACT=0, chain=0, Y off-screen)
+ *   SCB2       = 0x0FFF (full scale)
+ *   SCB4       = NG_SPRITE_DISABLED_X (off-screen right)
+ *   SCB1[0..63]= 32 × (NG_SPRITE_BLANK_TILE, NG_SPRITE_BLANK_ATTR)
  */
 void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr);
 void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count);

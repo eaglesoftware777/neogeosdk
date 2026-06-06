@@ -107,7 +107,7 @@ void NEOGEO_USER ng_sprite_hide_all(void);
  * monitor-sync black through palette 0; use a reserved blank C-ROM
  * tile and a safe attribute instead. */
 #ifndef NG_SPRITE_BLANK_TILE
-#define NG_SPRITE_BLANK_TILE  0x00FFu
+#define NG_SPRITE_BLANK_TILE  0xFFFFu
 #endif
 #ifndef NG_SPRITE_BLANK_ATTR
 #define NG_SPRITE_BLANK_ATTR  0x0000u
