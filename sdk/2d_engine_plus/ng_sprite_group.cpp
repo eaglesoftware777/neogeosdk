@@ -32,35 +32,35 @@ uint16_t NGSpriteGroup::tileFor(uint8_t strip, uint8_t row) const
 
 /* --- NGSpriteGroup static methods --- */
 
-void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr)
+static void NEOGEO_USER ng_sprite_kill_slot(uint16_t spr)
 {
     uint16_t i;
     uint16_t scb1_base;
 
     if (spr >= NG_SPR_TOTAL) return;
 
-    /* 1. Kill display first: ACT=0, chain=0, Y_field=256 so
-     *    screen_y=240 (past the 224-line visible window).  Note
-     *    Y_field=496 would resolve to screen_y=0 / top of screen
-     *    — visible, not off-screen. */
+    /* SCB3 first — ACT=0, chain=0, Y off-screen. */
     vram_SCB234((uint16_t)(SCB3_ADDR + spr), NG_SPRITE_DISABLED_SCB3);
-
-    /* 2. Normalise scale (full size) and park X off-screen right. */
+    /* Scale + X off-screen right. */
     vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
     vram_SCB234((uint16_t)(SCB4_ADDR + spr), NG_SPRITE_DISABLED_X);
 
-    /* 3. FULL SCB1 clear — 32 rows × (tile, attr) per slot.
-     *    Writing tile=0/attr=0 would render C-ROM tile 0 through
-     *    palette bank 0 (monitor-sync black) and paint a black
-     *    rectangle on any slot whose SCB3 ever bumps off 0.  Use
-     *    the project's reserved blank tile so the worst case is
-     *    fully transparent. */
+    /* FULL SCB1 wipe — all 32 (tile, attr) rows replaced with
+     * the project's reserved blank tile.  See the C engine
+     * companion for the full rationale; in short, anything less
+     * than 32 rows blanked lets the LSPC render leftover tile
+     * data as strips/boxes if it ever wraps height or chain. */
     scb1_base = (uint16_t)(64u * spr);
     vram_init(scb1_base, 1u);
     for (i = 0u; i < 32u; i++) {
         vram_sfix1(NG_SPRITE_BLANK_TILE);
         vram_sfix1(NG_SPRITE_BLANK_ATTR);
     }
+}
+
+void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr)
+{
+    ng_sprite_kill_slot(spr);
 }
 
 void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count)
@@ -81,23 +81,11 @@ void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count)
 
 void NEOGEO_USER ng_sprite_park_off(uint16_t spr)
 {
-    uint16_t scb1_base;
-
-    if (spr >= NG_SPR_TOTAL) return;
-
-    /* Per-frame hot path: kill SCB3, normalise SCB2/SCB4, blank
-     * SCB1 row 0.  The row-0 wipe is required because some real
-     * boards treat SCB3 height=0 as "32 rows with Y-wrap" rather
-     * than "0 rows", which would let leftover tile data render as
-     * a horizontal strip across the screen. */
-    vram_SCB234((uint16_t)(SCB3_ADDR + spr), NG_SPRITE_DISABLED_SCB3);
-    vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
-    vram_SCB234((uint16_t)(SCB4_ADDR + spr), NG_SPRITE_DISABLED_X);
-
-    scb1_base = (uint16_t)(64u * spr);
-    vram_init(scb1_base, 1u);
-    vram_sfix1(NG_SPRITE_BLANK_TILE);
-    vram_sfix1(NG_SPRITE_BLANK_ATTR);
+    /* Same full teardown as disable_hw; per-slot vocabulary only.
+     * Leaving rows 1..31 of SCB1 with last frame's data is what
+     * was producing the horizontal strips and boxes around
+     * moving chars. */
+    ng_sprite_kill_slot(spr);
 }
 
 void NEOGEO_USER ng_sprite_park_off_range(uint16_t first, uint16_t count)

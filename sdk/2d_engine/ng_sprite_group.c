@@ -35,44 +35,40 @@ static uint16_t NEOGEO_USER ngsg_tile_for(NGSpriteGroup *g, uint8_t strip, uint8
     return (uint16_t)(g->tileBase + ((uint16_t)sourceRow * g->tileStride) + sourceStrip);
 }
 
-void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr)
+static void NEOGEO_USER ng_sprite_kill_slot(uint16_t spr)
 {
     uint16_t i;
     uint16_t scb1_base;
 
     if (spr >= NG_SPR_TOTAL) return;
 
-    /* 1. Kill display FIRST.  Writing SCB3 before touching anything
-     *    else guarantees no intermediate state where SCB1 has stale
-     *    tile data AND SCB3 still says "render N rows".  ACT/height
-     *    = 0, chain bit = 0, Y_field = 256 (screen_y = 240, just
-     *    past the visible 224-line window — NOT Y_field = 496
-     *    which would resolve to screen_y = 0 / top of screen). */
+    /* 1. Kill display FIRST: ACT=0, chain=0, Y_field=256 ->
+     *    screen_y=240 (past visible).  Y_field=496 would resolve
+     *    to screen_y=0 — visible, not off-screen. */
     vram_SCB234((uint16_t)(SCB3_ADDR + spr), NG_SPRITE_DISABLED_SCB3);
 
-    /* 2. Normalise scale (full size) and park X off-screen right
-     *    rather than at 0.  Even if a stray write later flips
-     *    ACT non-zero, the resurrected sprite stays out of sight. */
+    /* 2. Normalise scale (full size) and park X off-screen right. */
     vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
     vram_SCB234((uint16_t)(SCB4_ADDR + spr), NG_SPRITE_DISABLED_X);
 
-    /* 3. FULL SCB1 clear — 32 rows × (tile, attr) per slot.
-     *    A sprite strip is up to 32 tiles tall and each row has
-     *    its own (tile, attr) word pair.  Writing tile=0/attr=0
-     *    would make the LSPC render C-ROM tile 0 through palette
-     *    bank 0, whose entry 0 is the monitor-sync reference
-     *    black — that paints a black rectangle wherever the
-     *    disabled slot's Y lands on-screen.  Use the project's
-     *    reserved blank tile (NG_SPRITE_BLANK_TILE = 0x00FF by
-     *    convention, matching the FIX-layer blank cell) so even
-     *    if a corrupted SCB3 ever resurrects the slot the worst
-     *    case renders fully transparent. */
+    /* 3. FULL SCB1 clear — every one of the 32 (tile, attr) rows.
+     *    If hardware ever wraps the height field or some later
+     *    write resurrects ACT, rows 1..31 must be safe.  Using
+     *    NG_SPRITE_BLANK_TILE (a tile slot the artbox guarantees
+     *    is all-zero pixel data) makes the worst-case render a
+     *    fully transparent 16x32 area instead of last frame's
+     *    artwork. */
     scb1_base = (uint16_t)(64u * spr);
     vram_init(scb1_base, 1u);
     for (i = 0u; i < 32u; i++) {
-        vram_sfix1(NG_SPRITE_BLANK_TILE);   /* tile word */
-        vram_sfix1(NG_SPRITE_BLANK_ATTR);   /* attr word */
+        vram_sfix1(NG_SPRITE_BLANK_TILE);
+        vram_sfix1(NG_SPRITE_BLANK_ATTR);
     }
+}
+
+void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr)
+{
+    ng_sprite_kill_slot(spr);
 }
 
 void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count)
@@ -93,29 +89,15 @@ void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count)
 
 void NEOGEO_USER ng_sprite_park_off(uint16_t spr)
 {
-    uint16_t scb1_base;
-
-    if (spr >= NG_SPR_TOTAL) return;
-
-    /* Per-frame hot path.  Kill display first via SCB3, then
-     * normalise scale + park X off-screen, then blank SCB1 row 0.
-     *
-     * The SCB1 row 0 wipe is essential even with ACT=0: some real
-     * hardware (and some emulators) treat the SCB3 height field
-     * differently — 0 means "0 rows" on a well-behaved board but
-     * "32 rows with Y-wrap" on others.  Without a blank row 0,
-     * the leftover tile id in SCB1[0] renders as a horizontal
-     * strip spanning the whole screen whenever the LSPC walks a
-     * "disabled" slot.  Five writes per slot instead of three;
-     * still well within vblank for typical tail-clear counts. */
-    vram_SCB234((uint16_t)(SCB3_ADDR + spr), NG_SPRITE_DISABLED_SCB3);
-    vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
-    vram_SCB234((uint16_t)(SCB4_ADDR + spr), NG_SPRITE_DISABLED_X);
-
-    scb1_base = (uint16_t)(64u * spr);
-    vram_init(scb1_base, 1u);
-    vram_sfix1(NG_SPRITE_BLANK_TILE);
-    vram_sfix1(NG_SPRITE_BLANK_ATTR);
+    /* Same full teardown as ng_sprite_disable_hw — a partial
+     * "park only SCB3" left rows 1..31 of SCB1 carrying last
+     * frame's tile data, which the LSPC happily rendered as
+     * horizontal strips/boxes whenever ACT or chain accidentally
+     * resurrected.  Correctness over speed; callers cap the
+     * tail-clear count to actual shrinks (sprite_window's
+     * max_used_strips, chars Phase 2's prev_strips), so the
+     * per-frame VRAM cost stays bounded. */
+    ng_sprite_kill_slot(spr);
 }
 
 void NEOGEO_USER ng_sprite_park_off_range(uint16_t first, uint16_t count)
