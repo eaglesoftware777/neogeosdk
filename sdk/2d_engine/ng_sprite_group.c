@@ -45,13 +45,16 @@ void NEOGEO_USER ng_sprite_disable_hw(uint16_t spr)
     /* 1. Kill display FIRST.  Writing SCB3 before touching anything
      *    else guarantees no intermediate state where SCB1 has stale
      *    tile data AND SCB3 still says "render N rows".  ACT/height
-     *    = 0, chain bit = 0, Y_pos = 496 (off-screen below the
-     *    visible 224-line area). */
-    vram_SCB234((uint16_t)(SCB3_ADDR + spr), 0xF800u);
+     *    = 0, chain bit = 0, Y_field = 256 (screen_y = 240, just
+     *    past the visible 224-line window — NOT Y_field = 496
+     *    which would resolve to screen_y = 0 / top of screen). */
+    vram_SCB234((uint16_t)(SCB3_ADDR + spr), NG_SPRITE_DISABLED_SCB3);
 
-    /* 2. Normalise scale and X to known-safe values. */
+    /* 2. Normalise scale (full size) and park X off-screen right
+     *    rather than at 0.  Even if a stray write later flips
+     *    ACT non-zero, the resurrected sprite stays out of sight. */
     vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
-    vram_SCB234((uint16_t)(SCB4_ADDR + spr), 0u);
+    vram_SCB234((uint16_t)(SCB4_ADDR + spr), NG_SPRITE_DISABLED_X);
 
     /* 3. FULL SCB1 clear — 32 rows × (tile, attr) per slot.
      *    A sprite strip is up to 32 tiles tall and each row has
