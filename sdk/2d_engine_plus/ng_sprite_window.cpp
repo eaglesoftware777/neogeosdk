@@ -15,21 +15,37 @@ void NGSpriteWindow::init(uint8_t owner_kind, uint16_t first, uint8_t max_count)
     max_strips = max_count ? max_count : 1u;
     current_strips = 0u;
     previous_strips = 0u;
+    current_rows = 0u;
+    previous_rows = 0u;
     visible = 0u;
+    max_used_strips = 0u;
 }
 
 void NGSpriteWindow::reset()
 {
     current_strips = 0u;
     previous_strips = 0u;
+    current_rows = 0u;
+    previous_rows = 0u;
     visible = 0u;
+    max_used_strips = 0u;
 }
 
 void NGSpriteWindow::setCurrent(uint8_t count)
 {
+    setShape(count, 0u);
+}
+
+void NGSpriteWindow::setShape(uint8_t count, uint8_t rows)
+{
     previous_strips = current_strips;
+    previous_rows = current_rows;
     current_strips = ngsw_clamp_count(count, max_strips);
+    current_rows = rows ? rows : 1u;
     visible = 1u;
+    if (current_strips > max_used_strips) {
+        max_used_strips = current_strips;
+    }
 }
 
 void NGSpriteWindow::clear()
@@ -37,13 +53,25 @@ void NGSpriteWindow::clear()
     ng_vram_clear_sprite_range(first_slot, max_strips);
     previous_strips = 0u;
     current_strips = 0u;
+    previous_rows = 0u;
+    current_rows = 0u;
     visible = 0u;
 }
 
 void NGSpriteWindow::clearTail()
 {
+    /* Only wipe the range this window has ever actually occupied;
+     * see C engine for the full rationale. */
+    uint8_t footprint = max_used_strips;
+    if (footprint == 0u) footprint = max_strips;
+
     if (previous_strips == 0u) {
-        ng_vram_clear_sprite_range(first_slot, max_strips);
+        ng_vram_clear_sprite_range(first_slot, footprint);
+        return;
+    }
+
+    if (previous_rows != current_rows) {
+        ng_vram_clear_sprite_range(first_slot, footprint);
         return;
     }
 
@@ -60,6 +88,8 @@ void NGSpriteWindow::hide()
     visible = 0u;
     previous_strips = current_strips;
     current_strips = 0u;
+    previous_rows = current_rows;
+    current_rows = 0u;
 }
 
 void NEOGEO_USER ng_sprite_window_init(NGSpriteWindow *window,
@@ -79,6 +109,13 @@ void NEOGEO_USER ng_sprite_window_set_current(NGSpriteWindow *window,
                                               uint8_t current_strips)
 {
     if (window) window->setCurrent(current_strips);
+}
+
+void NEOGEO_USER ng_sprite_window_set_shape(NGSpriteWindow *window,
+                                            uint8_t current_strips,
+                                            uint8_t current_rows)
+{
+    if (window) window->setShape(current_strips, current_rows);
 }
 
 void NEOGEO_USER ng_sprite_window_clear(NGSpriteWindow *window)

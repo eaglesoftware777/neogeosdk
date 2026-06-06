@@ -30,6 +30,36 @@ uint8_t  NEOGEO_USER demo_screen_strips(uint8_t screen_id);
 uint8_t  NEOGEO_USER demo_screen_rows(uint8_t screen_id);
 int16_t  NEOGEO_USER demo_screen_x_offset(uint8_t screen_id);
 int16_t  NEOGEO_USER demo_screen_y_offset(uint8_t screen_id);
+uint8_t  NEOGEO_USER demo_screen_x_pad(uint8_t screen_id);
+uint8_t  NEOGEO_USER demo_screen_y_pad(uint8_t screen_id);
+uint16_t NEOGEO_USER demo_screen_content_width(uint8_t screen_id);
+uint16_t NEOGEO_USER demo_screen_content_height(uint8_t screen_id);
+
+/*
+ * Stable bottom-center anchor for an animated sprite asset.
+ *
+ * The per-frame artbox meta varies wildly across an animation cycle
+ * (strips 7..9, rows 7..10, tile_col_start 3..4, tile_row_start 6..9,
+ *  x_pad 5..15, y_pad 2..15, content_width/height by 30+px).
+ *
+ * Old centering used grid_w/2 = strips*16/2, which shifted the visible
+ * content by up to 8 pixels each animation frame.  That jitter was the
+ * "split / old sprite still showing" the demo chapters were exhibiting.
+ *
+ * This helper computes a draw_x / draw_y such that, after the engine
+ * adds back demo_screen_x_offset/demo_screen_y_offset and the hardware
+ * applies SCB2 shrink, the actual artwork's bottom-center sits at the
+ * requested (cx, cy).  Works across frames because it uses the per-
+ * frame content metrics (x_pad, content_width, y_pad, content_height)
+ * which DO describe each frame's real artwork position.
+ */
+void NEOGEO_USER demo_anchor_bottom_center(uint8_t screen_id,
+                                           uint8_t scale_x,
+                                           uint8_t scale_y,
+                                           int16_t cx,
+                                           int16_t cy,
+                                           int16_t *out_x,
+                                           int16_t *out_y);
 
 #define DEMO_SCREEN_TILE(screen_id)    demo_screen_tile((uint8_t)(screen_id))
 #define DEMO_SCREEN_PALETTE(screen_id) demo_screen_palette((uint8_t)(screen_id))

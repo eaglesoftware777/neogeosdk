@@ -12,6 +12,12 @@ typedef struct {
     uint8_t current_rows;
     uint8_t previous_rows;
     uint8_t visible;
+    /* High-water mark of strips this window has ever occupied.
+     * Used by clear_tail to bound full-window clears to the actual
+     * VRAM range this sprite has ever touched, instead of wiping the
+     * whole NG_SPRITE_MAX_STRIPS window and stomping on neighbouring
+     * sprite groups (e.g. HERO at slot 64 wiping ENEMY at slot 80). */
+    uint8_t max_used_strips;
 } NGSpriteWindow;
 
 void NEOGEO_USER ng_sprite_window_init(NGSpriteWindow *window,

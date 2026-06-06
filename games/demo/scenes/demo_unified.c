@@ -215,15 +215,9 @@ static void NEOGEO_USER chap_header(uint8_t n,
 {
     char tag[6];
 
-    /* hard reset hardware + char/physics/particles/feedback/palette FX.
-     * demo_clear_all_sprites() goes beyond clearSprs(): it zeros SCB2/3/4
-     * for every sprite slot AND resets the demo sprite-window cache so
-     * the next chapter's first draw doesn't trust stale previous_strips /
-     * previous_rows values from the chapter that just ended.  Without
-     * this reset, sprites whose strip count happens to match a previous
-     * chapter's leave residual SCB1 tile data behind. */
+    /* hard reset hardware + char/physics/particles/feedback/palette FX */
     ng_clear_screen_full();
-    demo_clear_all_sprites();
+    clearSprs();
     /*
      * Pure black keeps transparent padding and freshly-cleared FIX cells
      * from reading as large pale rectangles during chapter transitions.
@@ -309,18 +303,26 @@ static void NEOGEO_USER bind_character_asset(NGCharacter *c,
     c->scale_x = scale_x;
     c->scale_y = scale_y;
 
-    /*
-     * GRID anchor (not meta x_pad/y_pad).
-     * Animation frames have different content_height/y_pad in the meta
-     * table (e.g. idle frame 14 has content_height=96, attack frame 30
-     * has 140) — using those values shifts the sprite by ~22 px between
-     * frames and produces the "feet detach from body" glitch during an
-     * attack swing.  Using rows*16 (full grid) anchors every frame to
-     * the same bottom-centre point: foot stays planted, swing only
-     * extends UP.
-     */
-    anchor_x = (uint16_t)(((uint16_t)strips * 16u) >> 1);
-    anchor_y = (uint16_t)((uint16_t)rows * 16u);
+    /* Content-bottom-center anchoring.  DEMO_SCREEN_TILE points at the
+     * content's top-left tile, so the sprite group's origin (g->x,
+     * g->y) corresponds to that canvas pixel.  The artwork lives at
+     * +(x_pad, y_pad) within the rendered strip area and extends for
+     * (content_width, content_height) pixels.  Anchoring on the centre
+     * of the BOTTOM edge keeps the char's feet planted at (c->x, c->y)
+     * across every animation frame, even when strips/rows/y_pad swing
+     * by 50% during an attack — only the top of the sprite extends UP
+     * for taller poses, never the bottom.
+     *
+     * For hero animation frames the artbox already aligns
+     *   tile_row_start*16 + y_pad + content_height = canvas_bottom_y
+     * for every frame, so this anchor is rock-stable. */
+    anchor_x = (uint16_t)((uint16_t)demo_screen_x_pad(frame)
+                          + (demo_screen_content_width(frame) >> 1));
+    anchor_y = (uint16_t)((uint16_t)demo_screen_y_pad(frame)
+                          + demo_screen_content_height(frame));
+
+    if (anchor_x == 0u) anchor_x = (uint16_t)(((uint16_t)strips * 16u) >> 1);
+    if (anchor_y == 0u) anchor_y = (uint16_t)((uint16_t)rows * 16u);
 
     c->sprite_offset_x = -(int16_t)((anchor_x * scale_x) >> 8);
     c->sprite_offset_y = -(int16_t)((anchor_y * scale_y) >> 8);
@@ -368,14 +370,6 @@ static void NEOGEO_USER clear_fix_rect_force(uint8_t x,
     }
 }
 
-static int16_t NEOGEO_USER asset_scaled_px(uint8_t cells, uint8_t scale)
-{
-    uint16_t px = (uint16_t)cells * 16u;
-
-    if (scale >= 0xFFu) return (int16_t)px;
-    return (int16_t)(((uint32_t)px * (uint32_t)scale + 127u) >> 8);
-}
-
 static void NEOGEO_USER draw_asset_bottom_center(uint8_t frame,
                                                  uint16_t first_sprite,
                                                  int16_t cx,
@@ -385,12 +379,13 @@ static void NEOGEO_USER draw_asset_bottom_center(uint8_t frame,
 {
     uint8_t strips = demo_screen_strips(frame);
     uint8_t rows = demo_screen_rows(frame);
-    int16_t w = asset_scaled_px(strips, scale_x);
-    int16_t h = asset_scaled_px(rows, scale_y);
+    int16_t draw_x;
+    int16_t draw_y;
 
+    demo_anchor_bottom_center(frame, scale_x, scale_y, cx, bottom_y,
+                              &draw_x, &draw_y);
     demo_draw_sprite_screen(frame, first_sprite,
-                            (int16_t)(cx - (w >> 1) - demo_screen_x_offset(frame)),
-                            (int16_t)(bottom_y - h - demo_screen_y_offset(frame)),
+                            draw_x, draw_y,
                             strips, rows, scale_x, scale_y);
 }
 
@@ -404,12 +399,13 @@ static void NEOGEO_USER draw_asset_bottom_center_flip(uint8_t frame,
 {
     uint8_t strips = demo_screen_strips(frame);
     uint8_t rows = demo_screen_rows(frame);
-    int16_t w = asset_scaled_px(strips, scale_x);
-    int16_t h = asset_scaled_px(rows, scale_y);
+    int16_t draw_x;
+    int16_t draw_y;
 
+    demo_anchor_bottom_center(frame, scale_x, scale_y, cx, bottom_y,
+                              &draw_x, &draw_y);
     demo_draw_sprite_screen_flip(frame, first_sprite,
-                                 (int16_t)(cx - (w >> 1) - demo_screen_x_offset(frame)),
-                                 (int16_t)(bottom_y - h - demo_screen_y_offset(frame)),
+                                 draw_x, draw_y,
                                  strips, rows, scale_x, scale_y, flip);
 }
 
@@ -1045,18 +1041,21 @@ static uint8_t s_hero_scale_y = U_SCALE_FULL;
 
 static void NEOGEO_USER hero_draw(uint8_t frame)
 {
-    int16_t strips = demo_screen_strips(frame);
-    int16_t rows   = demo_screen_rows(frame);
-    int16_t grid_w = asset_scaled_px((uint8_t)strips, s_hero_scale_x);
-    int16_t grid_h = asset_scaled_px((uint8_t)rows, s_hero_scale_y);
-    int16_t off_x  = demo_screen_x_offset(frame);
-    int16_t off_y  = demo_screen_y_offset(frame);
-    int16_t draw_x = (int16_t)(s_hero_x - (grid_w / 2) - off_x);
-    int16_t draw_y = (int16_t)(s_hero_y - (grid_h / 2) - off_y);
+    uint8_t  strips = demo_screen_strips(frame);
+    uint8_t  rows   = demo_screen_rows(frame);
+    int16_t  draw_x;
+    int16_t  draw_y;
+
+    /* Content-bottom-center anchoring stops the 8-pixel jitter
+     * the old grid-center math introduced as walk/strike frames
+     * with different x_pad / content_width came around. */
+    demo_anchor_bottom_center(frame,
+                              s_hero_scale_x, s_hero_scale_y,
+                              s_hero_x, s_hero_y,
+                              &draw_x, &draw_y);
     demo_draw_sprite_screen(frame, HERO_SLOT_FIRST,
                             draw_x, draw_y,
-                            (uint8_t)strips,
-                            (uint8_t)rows,
+                            strips, rows,
                             s_hero_scale_x, s_hero_scale_y);
 }
 

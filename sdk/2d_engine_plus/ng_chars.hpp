@@ -172,6 +172,7 @@ private:
 
     void rebuildTop();
     void hideSlot(uint16_t firstSprite, uint8_t strips);
+    void hideUploaded(uint8_t idx);
     uint8_t renderVisible(const NGCharacter *c, int16_t cam_x, int16_t cam_y) const;
     int16_t sortY(const NGCharacter *c) const;
     uint8_t drawsBefore(const NGCharacter *a, const NGCharacter *b) const;
