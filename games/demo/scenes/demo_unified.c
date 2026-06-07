@@ -78,6 +78,16 @@ void NEOGEO_USER ng_clear_screen_full(void);
 #define U_FLOOR_Y       192
 #define U_CENTRE_X      160
 
+/* Lowered-hero baselines used by the palette FX, particles and
+ * feedback/hitstop scenes.  FX_HERO_BOTTOM_Y matches the engine
+ * floor at U_FLOOR_Y; FX_HERO_LIFT_Y is 4 px above it, which is
+ * the actual draw target for those scenes so the eagle/hero
+ * doesn't sit on the BG's earth strip and avoids the stale
+ * sprite-window strip that was sometimes left attached when the
+ * pose frame was uploaded at the old higher Y of 208/210/202. */
+#define FX_HERO_BOTTOM_Y 192
+#define FX_HERO_LIFT_Y   188
+
 /*
  * Sprite slot plan.
  *
@@ -391,13 +401,23 @@ static void NEOGEO_USER draw_asset_bottom_center(uint8_t frame,
                                                  uint8_t scale_y)
 {
     uint8_t strips = demo_screen_strips(frame);
-    uint8_t rows = demo_screen_rows(frame);
-    int16_t w = asset_scaled_px(strips, scale_x);
-    int16_t h = asset_scaled_px(rows, scale_y);
+    uint8_t rows   = demo_screen_rows(frame);
+    int16_t draw_x;
+    int16_t draw_y;
+
+    /* Anchor on the artwork's painted bottom-centre (x_pad +
+     * content_width/2, y_pad + content_height) instead of the raw
+     * tile-grid box.  The grid size jumps frame-to-frame as the
+     * animation cycles through poses with different used tile
+     * footprints, which made the eagle/hero drift up and down
+     * between frames and exposed the sprite-window cache to stale
+     * strips outside the new frame's footprint. */
+    demo_anchor_bottom_center(frame, scale_x, scale_y,
+                              cx, bottom_y,
+                              &draw_x, &draw_y);
 
     demo_draw_sprite_screen(frame, first_sprite,
-                            (int16_t)(cx - (w >> 1) - demo_screen_x_offset(frame)),
-                            (int16_t)(bottom_y - h - demo_screen_y_offset(frame)),
+                            draw_x, draw_y,
                             strips, rows, scale_x, scale_y);
 }
 
@@ -1650,6 +1670,11 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
     uint8_t active_pal = DEMO_SCREEN_PALETTE(s_fx_effect_frames[0]);
 
     chap_header(8u, "PALETTE FX", "SPRITE PALETTE STAGES");
+    /* One-shot hard clear of the lower-hero sprite window before the
+     * first pose draw — kills any stale strips left from the prior
+     * chapter that would otherwise stay attached when the new frame's
+     * footprint happens to be narrower than the old one. */
+    ng_sprite_park_off_range(HERO_SLOT_FIRST, 16u);
     demo_fix_puts(2u, 2u, "EFFECTS: 040 / 041 / 048 / 050", 1u);
     demo_fix_puts(2u, 3u, "CHAR: 047R05C06 -> 051R05C10", 0u);
     snd_cross_to(SOUND_MUSIC_G);
@@ -1705,7 +1730,8 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
         draw_asset_bottom_center(fx_left, 124u, 70, 98, U_SCALE_55, U_SCALE_55);
         draw_asset_bottom_center(fx_mid, 148u, 160, 86, U_SCALE_55, U_SCALE_55);
         draw_asset_bottom_center(fx_right, 172u, 250, 98, U_SCALE_55, U_SCALE_55);
-        draw_asset_bottom_center(pose, 206u, 160, 208, U_SCALE_55, U_SCALE_55);
+        draw_asset_bottom_center(pose, HERO_SLOT_FIRST, 160,
+                                 FX_HERO_LIFT_Y, U_SCALE_55, U_SCALE_55);
 
         if (uframe()) return 1u;
     }
@@ -1726,6 +1752,10 @@ static uint8_t NEOGEO_USER chap_particles(void)
     const uint8_t  spark_pal  = DEMO_SCREEN_PALETTE(spark_id);
 
     chap_header(9u, "PARTICLES", "HERO SPECIAL MOVE + FX");
+    /* Same hard wipe as the palette FX chapter so the lower hero
+     * starts on a clean window — no stale strips left over when the
+     * next pose is narrower than the previous one. */
+    ng_sprite_park_off_range(HERO_SLOT_FIRST, 16u);
     demo_fix_puts(2u, 2u, "EFFECTS STAY ABOVE  CHARACTER BELOW", 1u);
     demo_fix_puts(2u, 3u, "040/041/048/050 PARTICLE BURSTS",0u);
     demo_fix_puts(2u, 4u, "ACTIVE: ",                    2u);
@@ -1818,7 +1848,7 @@ static uint8_t NEOGEO_USER chap_particles(void)
         draw_asset_bottom_center(s_fx_effect_frames[(t / 8u) & 3u],
                                  164u, bx, by, U_SCALE_55, U_SCALE_55);
         draw_asset_bottom_center(hero_frame, HERO_SLOT_FIRST,
-                                 160, 210, U_SCALE_55, U_SCALE_55);
+                                 160, FX_HERO_LIFT_Y, U_SCALE_55, U_SCALE_55);
 
         if (uframe()) return 1u;
     }
@@ -1838,6 +1868,9 @@ static uint8_t NEOGEO_USER chap_feedback(void)
     uint8_t  fired = 0u;
 
     chap_header(10u, "FEEDBACK", "SHAKE  PARTICLE IMPACTS");
+    /* Hard wipe of the lower hero's strip window before the first
+     * feedback shake/impact so no stale strips ride the bob offset. */
+    ng_sprite_park_off_range(HERO_SLOT_FIRST, 16u);
     demo_fix_puts(2u, 2u, "WARRIOR TAKES HITS", 1u);
     demo_fix_puts(2u, 3u, "4 INTENSITIES OVER 9 SECONDS",     0u);
     snd_cross_to(SOUND_MUSIC_F);
@@ -1887,7 +1920,7 @@ static uint8_t NEOGEO_USER chap_feedback(void)
                                  (int16_t)(60 + (int16_t)((t * 3u) % 220u)),
                                  92, U_SCALE_60, U_SCALE_60);
         draw_asset_bottom_center(hero_frame, HERO_SLOT_FIRST,
-                                 s_hero_x, 202, U_SCALE_60, U_SCALE_60);
+                                 s_hero_x, FX_HERO_LIFT_Y, U_SCALE_60, U_SCALE_60);
         s_hero_x = saved;
         if (uframe()) return 1u;
     }
