@@ -61,6 +61,14 @@ def load_rules(cfg_path=CFG_PATH):
                 "sharpen_threshold": int(_rule_value(section, "sharpen_threshold", "0")),
                 "kmeans_samples": int(_rule_value(section, "kmeans_samples", "4096")),
                 "kmeans_iters": int(_rule_value(section, "kmeans_iters", "16")),
+                # Outer-ring halo strip (sprite-mode only).  Off by default;
+                # opt-in per category so legitimate glow / highlight sprites
+                # don't lose their bright outlines.
+                "halo_strip": _rule_value(section, "halo_strip", "false")
+                                  .strip().lower() in ("1", "true", "yes", "on"),
+                "halo_luma_threshold": int(_rule_value(section,
+                                                       "halo_luma_threshold",
+                                                       "220")),
                 "note": _rule_value(section, "note", "").strip(),
             }
         )
@@ -146,6 +154,8 @@ def match_rule(name, rules, category=""):
         "sharpen_threshold": 0,
         "kmeans_samples": 8192,
         "kmeans_iters": 25,
+        "halo_strip": False,
+        "halo_luma_threshold": 220,
         "note": "",
     }
 
@@ -179,6 +189,8 @@ def build_asset_specs(in_dir="in", cfg_path=CFG_PATH):
             "sharpen_threshold": rule["sharpen_threshold"],
             "kmeans_samples": rule["kmeans_samples"],
             "kmeans_iters": rule["kmeans_iters"],
+            "halo_strip": rule["halo_strip"],
+            "halo_luma_threshold": rule["halo_luma_threshold"],
             "note": rule["note"],
             "tile_base": db_index * 256,
             "tile_reserved_count": 256,
