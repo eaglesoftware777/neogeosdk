@@ -65,8 +65,8 @@ sharpen_threshold = 0
 kmeans_samples = 2048
 kmeans_iters = 15
 halo_strip = true
-halo_luma_threshold = 220
-note = effects and transitions
+halo_luma_threshold = 200
+note = effects and transitions  (aggressive halo strip: bright outer ring is almost always a matte artefact on glow / spark FX)
 
 [rule:cat_eyecatcher]
 match_category = eyecatcher
@@ -104,7 +104,9 @@ sharpen_percent = 0
 sharpen_threshold = 0
 kmeans_samples = 2048
 kmeans_iters = 12
-note = NPC sprite pages
+halo_strip = true
+halo_luma_threshold = 220
+note = NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [rule:cat_screens]
 match_category = screens
