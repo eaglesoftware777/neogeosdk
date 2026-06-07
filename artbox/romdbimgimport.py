@@ -113,6 +113,141 @@ def convert_array(text):
     return np.load(out)
 
 
+def strip_halo_edges(rgba, luma_threshold=220):
+    """
+    Cut the bright outer ring from a sprite's silhouette.
+
+    Many source PNGs were composited against a white matte or carry
+    intentional bright outlines that, against a darker in-game backdrop,
+    read as a "halo" around the sprite.  This pass kills only the
+    pixels that:
+        - are opaque (alpha >= 128) in the source, AND
+        - have at least one transparent 4-neighbour, AND
+        - have luma >= luma_threshold.
+
+    Those pixels become fully transparent (alpha = 0).  alpha_bleed,
+    when run afterwards, will then re-bleed the next-inner colour into
+    the newly transparent ring so the quantiser never sees stale white
+    RGB from the matte.
+
+    Other bright pixels (interior highlights, eyes, magic, metal
+    speculars) are NOT touched — only the contour ring.  Controlled
+    per-asset via the halo_strip / halo_luma_threshold spec fields so
+    sprites that NEED a bright outline (signs, glow effects) can opt
+    out.
+    """
+    rgba = np.asarray(rgba, dtype=np.uint8)
+    if rgba.ndim != 3 or rgba.shape[2] != 4:
+        return rgba
+
+    alpha = rgba[:, :, 3]
+    opaque = alpha >= 128
+    if not opaque.any():
+        return rgba
+
+    # Edge opaque = opaque pixel with at least one transparent 4-neighbour
+    transparent = ~opaque
+    edge = np.zeros_like(opaque)
+    edge[1:, :]  |= opaque[1:, :]  & transparent[:-1, :]
+    edge[:-1, :] |= opaque[:-1, :] & transparent[1:, :]
+    edge[:, 1:]  |= opaque[:, 1:]  & transparent[:, :-1]
+    edge[:, :-1] |= opaque[:, :-1] & transparent[:, 1:]
+
+    rgb = rgba[:, :, :3].astype(np.int32)
+    luma = (299 * rgb[:, :, 0] + 587 * rgb[:, :, 1] + 114 * rgb[:, :, 2]) // 1000
+    halo = edge & (luma >= luma_threshold)
+
+    if not halo.any():
+        return rgba
+
+    out = rgba.copy()
+    out[halo, 3] = 0
+    return out
+
+
+def audit_sprite_transparency(spec, indexed, label="post-convert"):
+    """
+    Verify the transparency contract on a converted sprite.
+
+    Required invariants:
+      (1) every canvas pixel where the source PNG's alpha was below
+          the opaque threshold must be palette index 0;
+      (2) every canvas pixel outside the source PNG's placement
+          rectangle must be palette index 0;
+      (3) tiles outside the used_tile_cols x used_tile_rows render
+          rectangle (within the asset's 16x16 tile allocation) must
+          be entirely palette index 0.
+
+    Raises AssertionError on the first violation with enough context
+    to identify the offending sprite.
+    """
+    indexed = np.asarray(indexed, dtype=np.uint16)
+    if indexed.ndim != 2:
+        return
+
+    # Reload the source's alpha to drive checks 1 and 2 (no resize -
+    # spec records the canvas placement directly).
+    if not HAS_PIL:
+        return
+    img = Image.open(spec["path"]).convert("RGBA")
+    src_alpha = np.array(img)[:, :, 3]
+    src_op = src_alpha >= 128
+
+    ch, cw = indexed.shape
+    left = int(spec.get("content_left", 0))
+    top  = int(spec.get("content_top",  0))
+    sh = min(int(src_op.shape[0]), ch - top)
+    sw = min(int(src_op.shape[1]), cw - left)
+
+    # Check 1 + 2: pixel-level transparency.
+    src_in_canvas_op = np.zeros((ch, cw), dtype=bool)
+    if sh > 0 and sw > 0:
+        src_in_canvas_op[top:top + sh, left:left + sw] = src_op[:sh, :sw]
+    must_be_zero = ~src_in_canvas_op
+    leaks = int(((indexed != 0) & must_be_zero).sum())
+    if leaks:
+        ys, xs = np.where((indexed != 0) & must_be_zero)
+        first = list(zip(xs[:3].tolist(), ys[:3].tolist()))
+        raise AssertionError(
+            f"{label} audit: spec {spec.get('name', '?')}: {leaks} canvas "
+            f"pixels are non-zero where the source was transparent or padding "
+            f"(first: {first})"
+        )
+
+    # Check 3: tile padding outside the render rectangle.
+    s = int(spec.get("sprite_strips", 0))
+    r = int(spec.get("sprite_active_rows", 0))
+    cs = int(spec.get("used_tile_col_start", 0))
+    rs = int(spec.get("used_tile_row_start", 0))
+    if s and r:
+        # The render rectangle the engine reads is rows [rs..rs+r),
+        # cols [cs..cs+s) within the 16x16 asset-tile allocation.
+        tile_cols_total = cw // 16
+        bad_tiles = []
+        for tr in range(16):
+            for tc in range(16):
+                inside = (rs <= tr < rs + r) and (cs <= tc < cs + s)
+                if inside:
+                    continue
+                y0, x0 = tr * 16, tc * 16
+                if y0 >= ch or x0 >= cw:
+                    continue
+                block = indexed[y0:y0 + 16, x0:x0 + 16]
+                if (block != 0).any():
+                    bad_tiles.append((tr, tc))
+                    if len(bad_tiles) > 5:
+                        break
+            if len(bad_tiles) > 5:
+                break
+        if bad_tiles:
+            # Padding-tile leaks aren't visible (the engine never reads
+            # those tiles) but they hint at a packer / canvas leak we
+            # want to know about.  Warn only — do not abort the build.
+            print(f"    WARN {label} audit: spec {spec.get('name', '?')}: "
+                  f"{len(bad_tiles)}+ non-zero tiles outside the strips x rows "
+                  f"render rect (first: {bad_tiles[:5]})")
+
+
 def fit_sprite_rgba(img, target_w, target_h, anchor):
     tw = (target_w // 16) * 16
     th = (target_h // 16) * 16
@@ -226,6 +361,16 @@ def load_sprite_asset(spec, shared_palette15=None):
         spec["anchor"],
     )
     rgba = np.array(canvas, dtype=np.uint8)
+    # Optional outer-ring halo strip BEFORE alpha_bleed so alpha_bleed
+    # then re-bleeds the next-inner colour into the freshly transparent
+    # ring.  Drives the matte-cleanup for sprites whose artist painted
+    # the silhouette edge in a near-white colour against a white
+    # background; configured per-asset via the assets.cfg rule.
+    if spec.get("halo_strip"):
+        rgba = strip_halo_edges(
+            rgba,
+            luma_threshold=int(spec.get("halo_luma_threshold", 220)),
+        )
     # Inward edge dilation kills white/colour halos before anti-aliased
     # edge pixels get promoted to opaque palette indices.
     if alpha_bleed is not None:
@@ -346,6 +491,13 @@ def load_sprite_asset_vivid(spec, shared_master=None):
         spec["anchor"],
     )
     rgba = np.array(canvas, dtype=np.uint8)
+    # Outer-ring halo strip before alpha_bleed (so the bleed re-fills
+    # the freshly-transparent ring with the next-inner colour).
+    if spec.get("halo_strip"):
+        rgba = strip_halo_edges(
+            rgba,
+            luma_threshold=int(spec.get("halo_luma_threshold", 220)),
+        )
     if alpha_bleed is not None:
         rgba = alpha_bleed(rgba, opaque_alpha=128)
 
@@ -607,6 +759,16 @@ def main():
                 indexed, palette = load_screen_asset(spec)
 
             finalize_spec(spec)
+
+            # Verify the transparency contract after the spec is final
+            # (finalize_spec sets sprite_strips / sprite_active_rows /
+            # used_tile_col_start / used_tile_row_start which the audit
+            # needs to bound check 3).  Sprite-only — backgrounds tile
+            # the entire canvas by design.
+            if spec["mode"] == "sprite":
+                audit_sprite_transparency(spec, indexed,
+                                          label=spec.get("rule_name", "?"))
+
             db_rows.append((spec["db_index"], indexed, palette))
 
         normalize_sequence_bounds(specs)

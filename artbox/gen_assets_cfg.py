@@ -43,6 +43,8 @@ sharpen_percent = 0
 sharpen_threshold = 0
 kmeans_samples = 4096
 kmeans_iters = 20
+halo_strip = true
+halo_luma_threshold = 220
 note = 16x16 character sprite sheet
 
 [rule:cat_effects]
@@ -62,6 +64,8 @@ sharpen_percent = 0
 sharpen_threshold = 0
 kmeans_samples = 2048
 kmeans_iters = 15
+halo_strip = true
+halo_luma_threshold = 220
 note = effects and transitions
 
 [rule:cat_eyecatcher]
