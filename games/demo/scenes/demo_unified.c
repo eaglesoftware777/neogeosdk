@@ -1308,87 +1308,332 @@ static uint8_t NEOGEO_USER chap_physics(void)
 }
 
 /* ================================================================== */
-/*  Chapter 07 — Camera  (follow + dead zone + shake)                    */
+/*  Chapter 07 — Camera Lab (auto-tour)                                  */
+/*                                                                       */
+/*  Auto-cycles through six camera modes; the player walks in a         */
+/*  scripted pattern so the user just watches each behaviour.           */
+/*                                                                       */
+/*  Music: ADPCM-B loops the whole chapter as the bed; FM and SSG are    */
+/*  muted; ADPCM-A is reserved for the per-mode SFX chirps.             */
 /* ================================================================== */
+enum {
+    CAMLAB_MODE_HARD_FOLLOW = 0u,   /* tight  */
+    CAMLAB_MODE_SMOOTH      = 1u,   /* eased  */
+    CAMLAB_MODE_SHAKE       = 2u,   /* shake bursts                       */
+    CAMLAB_MODE_PAN         = 3u,   /* cinematic pan to centre and back   */
+    CAMLAB_MODE_VERTICAL    = 4u,   /* vertical scroll, camera follows Y  */
+    CAMLAB_MODE_DEADZONE    = 5u,   /* dead-zone box, shown last          */
+    CAMLAB_MODE_COUNT       = 6u
+};
+
+static const char *const CAMLAB_LABEL[CAMLAB_MODE_COUNT] = {
+    "HARD FOLLOW   ",
+    "SMOOTH FOLLOW ",
+    "SHAKE TEST    ",
+    "CINEMATIC PAN ",
+    "VERTICAL SCROL",
+    "DEAD-ZONE BOX ",
+};
+
+static void NEOGEO_USER camlab_apply_mode(NGCamera *cam, uint8_t mode,
+                                          int16_t pan_dest_x)
+{
+    switch (mode) {
+    case CAMLAB_MODE_HARD_FOLLOW:
+        ng_camera_set_follow_speed(cam, 16u);
+        ng_camera_set_dead_zone(cam, 0u, 0u);
+        ng_camera_set_look_ahead(cam, 0, 0, 0u);
+        break;
+    case CAMLAB_MODE_SMOOTH:
+        ng_camera_set_follow_speed(cam, 4u);
+        ng_camera_set_dead_zone(cam, 0u, 0u);
+        ng_camera_set_look_ahead(cam, 0, 0, 0u);
+        break;
+    case CAMLAB_MODE_SHAKE:
+        ng_camera_set_follow_speed(cam, 8u);
+        ng_camera_set_dead_zone(cam, 0u, 0u);
+        ng_camera_set_look_ahead(cam, 0, 0, 0u);
+        ng_camera_shake(cam, 6u, 30u);
+        break;
+    case CAMLAB_MODE_PAN:
+        ng_camera_set_follow_speed(cam, 6u);
+        ng_camera_pan_to(cam, pan_dest_x, 0, 6u);
+        break;
+    case CAMLAB_MODE_VERTICAL:
+        ng_camera_set_follow_speed(cam, 8u);
+        ng_camera_set_dead_zone(cam, 0u, 0u);
+        ng_camera_set_look_ahead(cam, 0, 0, 0u);
+        break;
+    case CAMLAB_MODE_DEADZONE:
+        ng_camera_set_follow_speed(cam, 8u);
+        ng_camera_set_dead_zone(cam, 56u, 0u);
+        ng_camera_set_look_ahead(cam, 0, 0, 0u);
+        break;
+    default:
+        break;
+    }
+}
+
+/*
+ * Two-line world ruler painted into the FIX layer along rows 8..9.
+ * Tracks the camera so the labelled markers slide past as the
+ * camera scrolls — visible proof that the world coordinates the
+ * char is using ARE actually scrolling under the camera, not just
+ * the background image.
+ */
+static void NEOGEO_USER camlab_world_markers(int16_t cam_x)
+{
+    static const int16_t markers[5] = { 0, 192, 384, 576, 768 };
+    static const char  *labels[5]   = { "S", "1", "2", "3", "E" };
+    uint8_t i;
+
+    /* Solid track row. */
+    demo_fix_puts(0u, 8u,
+                  "----------------------------------------",
+                  0u);
+
+    /* Marker labels on the row below. */
+    demo_fix_puts(0u, 9u,
+                  "                                        ",
+                  0u);
+    for (i = 0u; i < 5u; i++) {
+        int16_t sx = (int16_t)(markers[i] - cam_x);
+        if (sx >= 0 && sx < 320) {
+            uint8_t col = (uint8_t)(sx >> 3);
+            demo_fix_puts(col, 9u, labels[i], 2u);
+        }
+    }
+}
+
+/* Optional dead-zone box painted around the player's screen position
+ * so the user can see when the camera is "asleep" because the char
+ * hasn't yet reached the edge of the dead zone. */
+static void NEOGEO_USER camlab_deadzone_box(int16_t cx_screen,
+                                            int16_t cy_screen,
+                                            uint8_t half_w,
+                                            uint8_t half_h)
+{
+    int16_t x0;
+    int16_t x1;
+    int16_t y0;
+    int16_t y1;
+    uint8_t col;
+
+    if (half_w == 0u && half_h == 0u) return;
+
+    x0 = (int16_t)(cx_screen - (int16_t)half_w);
+    x1 = (int16_t)(cx_screen + (int16_t)half_w);
+    y0 = (int16_t)(cy_screen - (int16_t)half_h);
+    y1 = (int16_t)(cy_screen + (int16_t)half_h);
+
+    /* Snap to FIX columns/rows (8-px), clamp to visible 40x28. */
+    if (x0 < 0) x0 = 0;
+    if (x1 > 319) x1 = 319;
+    if (y0 < 0) y0 = 0;
+    if (y1 > 223) y1 = 223;
+
+    {
+        uint8_t cx0 = (uint8_t)(x0 >> 3);
+        uint8_t cx1 = (uint8_t)(x1 >> 3);
+        uint8_t cy0 = (uint8_t)(y0 >> 3);
+        uint8_t cy1 = (uint8_t)(y1 >> 3);
+
+        if (cx1 <= cx0 || cy1 <= cy0) return;
+
+        for (col = cx0; col <= cx1; col++) {
+            demo_fix_puts(col, cy0, "-", 1u);
+            demo_fix_puts(col, cy1, "-", 1u);
+        }
+        demo_fix_puts(cx0, cy0, "+", 1u);
+        demo_fix_puts(cx1, cy0, "+", 1u);
+        demo_fix_puts(cx0, cy1, "+", 1u);
+        demo_fix_puts(cx1, cy1, "+", 1u);
+    }
+}
+
 static uint8_t NEOGEO_USER chap_camera(void)
 {
     NGCamera cam;
-    uint16_t t;
-    static const uint8_t s_bg_seq[4] = { U_BG_FOREST, 1u, U_BG_FOREST, 1u };
+    const int16_t  WORLD_RIGHT  = 768;
+    const int16_t  WORLD_BOTTOM = 320;             /* > 224 -> Y can scroll */
+    const int16_t  PAN_DEST_X   = 384;             /* world centre          */
+    const int16_t  HERO_Y_REST  = 156;             /* mid-low resting band  */
+    const uint16_t MODE_FRAMES  = 180u;            /* 3 sec per mode -> 18 s
+                                                    * total for 6 modes    */
+    const uint16_t TOTAL_FRAMES = MODE_FRAMES * CAMLAB_MODE_COUNT;
 
-    chap_header(7u, "CAMERA", "H-SCROLL  V-SCROLL  LEVELS");
-    demo_fix_puts(2u, 2u, "FIRST HORIZONTAL, THEN VERTICAL", 1u);
-    demo_fix_puts(2u, 3u, "BG IMAGE CHANGES PER LEVEL",      0u);
-    snd_cross_to(SOUND_MUSIC_A);
+    int16_t  player_world_x = 80;
+    int16_t  player_world_y = HERO_Y_REST;
+    uint8_t  mode           = CAMLAB_MODE_HARD_FOLLOW;
+    uint8_t  prev_mode      = 0xFFu;
+    uint16_t t;
+    int16_t  vx_logical     = 0;
+    int16_t  vy_logical     = 0;
+    char     hud[6];
+
+    chap_header(7u, "CAMERA LAB",
+                "AUTO TOUR: HARD SMOOTH SHAKE PAN VERT DEADZONE");
+
+    /* Sound: ADPCM-B carries the loop the whole chapter.  FM/SSG muted,
+     * ADPCM-A reserved for the per-mode SFX chirps. */
+    soundSceneReset();              waitVbl();
+    soundSetADPCMAVolume(0x3Cu);    waitVbl();
+    soundSetADPCMBVolume(0xBCu);    waitVbl();
+    soundSetSSGVolume(0x00u);       waitVbl();
+    soundSetFMVolume(0x00u);        waitVbl();
+    soundPlayGameLoop(SOUND_MUSIC_E);
+    waitVbl();
 
     ng_camera_init(&cam);
-    ng_camera_set_bounds(&cam, 0, 0, 768, 288);
-    ng_camera_set_follow_speed(&cam, 8u);
-    ng_camera_set_dead_zone(&cam, 32u, 16u);
-    ng_camera_set_look_ahead(&cam, 24, 0, 4u);
-
+    ng_camera_set_bounds(&cam, 0, 0, WORLD_RIGHT, WORLD_BOTTOM);
     hero_scale(U_SCALE_60);
-    hero_place(80, 112);
 
-    demo_fix_puts(2u, 24u, "LV  HP [--------------------]", 1u);
-    demo_fix_puts(2u, 25u, "MODE: HORIZONTAL SCROLL", 2u);
+    for (t = 0u; t < TOTAL_FRAMES; t++) {
+        uint8_t  next_mode = (uint8_t)((t / MODE_FRAMES) % CAMLAB_MODE_COUNT);
+        uint16_t mode_t    = (uint16_t)(t % MODE_FRAMES);
+        uint8_t  frame;
+        int16_t  screen_x;
+        int16_t  screen_y;
+        int16_t  bg_x;
+        int16_t  bg_y;
 
-    for (t = 0u; t < 720u; t++) {
-        uint8_t level = (uint8_t)(1u + (t / 180u));
-        uint8_t bg = s_bg_seq[(level - 1u) & 3u];
-        uint8_t hp = (uint8_t)(20u - ((t / 36u) % 8u));
-        int16_t vx = (int16_t)((t < 360u) ? 2 : 0);
-        int16_t vy = (int16_t)((t >= 360u) ? 1 : 0);
-        int16_t bg_x;
-        int16_t bg_y;
-        uint8_t frame;
-        uint8_t p;
-        char hud[4];
+        /* --- transition into a new mode --------------------------- */
+        if (next_mode != prev_mode) {
+            mode = next_mode;
+            camlab_apply_mode(&cam, mode, PAN_DEST_X);
+            /* Snap player Y back to the resting band whenever the
+             * vertical mode releases. */
+            if (prev_mode == CAMLAB_MODE_VERTICAL) {
+                player_world_y = HERO_Y_REST;
+            }
+            playSFX(SOUND_SFX_5);
+            prev_mode = mode;
+        }
 
-        if (vx != 0 && s_hero_x < 700) s_hero_x = (int16_t)(s_hero_x + vx);
-        frame = (vx || vy) ? s_hero_walk[(t / 6u) % 8u]
-                           : s_hero_stand[(t / 12u) % 8u];
+        /* --- scripted X movement: 2-second swing -------------------
+         * Skip in PAN mode so the camera drift to the centre isn't
+         * masked by the player chasing it. */
+        vx_logical = 0;
+        if (mode != CAMLAB_MODE_PAN) {
+            uint16_t phase = (uint16_t)(mode_t % 120u);   /* 2 s period */
+            if (phase < 60u) {
+                vx_logical = +2;
+                if (player_world_x < WORLD_RIGHT - 16) player_world_x += 2;
+            } else {
+                vx_logical = -2;
+                if (player_world_x > 16) player_world_x -= 2;
+            }
+        }
 
-        if (t == 120u) { ng_camera_shake(&cam, 4u, 12u); playSFX(SOUND_SFX_8); }
-        if (t == 360u) { ng_camera_shake(&cam, 3u, 10u); playSFX(SOUND_SFX_8); }
-        if (t == 540u) { ng_camera_shake(&cam, 2u, 10u); playSFX(SOUND_SFX_8); }
+        /* --- scripted Y movement only during VERTICAL mode ---------
+         * 130..220 sweep makes the camera follow vertically while the
+         * floor BG slides up/down behind the player. */
+        vy_logical = 0;
+        if (mode == CAMLAB_MODE_VERTICAL) {
+            if (mode_t < (MODE_FRAMES / 2u)) {
+                vy_logical = +1;
+                if (player_world_y < 220) player_world_y += 1;
+            } else {
+                vy_logical = -1;
+                if (player_world_y > 100) player_world_y -= 1;
+            }
+        }
 
-        ng_camera_update(&cam, s_hero_x, (int16_t)(U_FLOOR_Y + ((t >= 360u) ? (t - 360u) / 4u : 0u)), vx);
-        if (t < 360u) {
-            bg_x = -(int16_t)((uint16_t)cam.x & 0x00FFu);
-            draw_scrolling_background(bg, bg_x, 0);
-            demo_fix_puts(2u, 25u, "MODE: HORIZONTAL SCROLL", 2u);
+        /* Mode-specific scripted events */
+        if (mode == CAMLAB_MODE_SHAKE) {
+            /* Re-trigger every ~60 frames inside the 180-frame slot. */
+            if (mode_t == 20u || mode_t == 90u) {
+                ng_camera_shake(&cam, 6u, 20u);
+                playSFX(SOUND_SFX_8);
+            }
+        }
+        if (mode == CAMLAB_MODE_PAN) {
+            if (mode_t == 20u) {
+                ng_camera_pan_to(&cam, PAN_DEST_X, 0, 6u);
+                playSFX(SOUND_SFX_7);
+            }
+            if (mode_t == 110u) {
+                ng_camera_pan_to(&cam, player_world_x, 0, 6u);
+                playSFX(SOUND_SFX_7);
+            }
+        }
+
+        /* --- camera update ---------------------------------------- */
+        ng_camera_update(&cam, player_world_x, player_world_y, vx_logical);
+
+        /* --- background ------------------------------------------- */
+        bg_x = -(int16_t)((uint16_t)cam.x & 0x00FFu);
+        /* In VERTICAL mode also tie BG Y to cam.y so the world looks
+         * like it's scrolling, not just the player.  Modulo 32 keeps
+         * the offset inside one tile so the strips don't tear. */
+        if (mode == CAMLAB_MODE_VERTICAL) {
+            bg_y = -(int16_t)((uint16_t)cam.y & 0x001Fu);
         } else {
-            bg_y = -(int16_t)(((t - 360u) / 4u) & 31u);
-            draw_vertical_background(bg, 32, bg_y);
-            demo_fix_puts(2u, 25u, "MODE: VERTICAL SCROLL  ", 2u);
+            bg_y = 0;
+        }
+        draw_scrolling_background(U_BG_FOREST, bg_x, bg_y);
+
+        /* --- screen position of the player ------------------------ */
+        screen_x = (int16_t)(player_world_x - cam.x);
+        screen_y = (int16_t)(player_world_y - cam.y);
+        if (screen_x < -32) screen_x = -32;
+        if (screen_x > 320) screen_x =  320;
+
+        /* --- FIX HUD (top of screen) ----------------------------- */
+        demo_fix_puts(2u, 4u, "MODE:", 1u);
+        demo_fix_puts(8u, 4u, CAMLAB_LABEL[mode], 2u);
+
+        digit3(hud, (uint16_t)player_world_x);
+        demo_fix_puts(2u, 5u, "PLAYER X:", 1u);
+        demo_fix_puts(12u, 5u, hud, 2u);
+        digit3(hud, (uint16_t)((cam.x < 0) ? 0 : cam.x));
+        demo_fix_puts(18u, 5u, "CAM X:", 1u);
+        demo_fix_puts(25u, 5u, hud, 2u);
+
+        demo_fix_puts(2u, 6u, "DEADZONE:", 1u);
+        if (cam.dead_zone_x || cam.dead_zone_y) {
+            digit3(hud, (uint16_t)cam.dead_zone_x);
+            demo_fix_puts(12u, 6u, hud, 2u);
+        } else {
+            demo_fix_puts(12u, 6u, "OFF", 0u);
+        }
+        demo_fix_puts(18u, 6u, "SHAKE:", 1u);
+        if (cam.shake_frames) {
+            digit3(hud, (uint16_t)cam.shake_frames);
+            demo_fix_puts(25u, 6u, hud, 2u);
+        } else {
+            demo_fix_puts(25u, 6u, "--  ", 0u);
         }
 
-        p = hp;
-        if (p > 20u) p = 20u;
-        {
-            char bar[23];
-            uint8_t k;
-            bar[0] = '[';
-            for (k = 0u; k < 20u; k++) bar[1u + k] = (k < p) ? '#' : '-';
-            bar[21] = ']';
-            bar[22] = '\0';
-            hud[0] = (char)('0' + level);
-            hud[1] = '\0';
-            demo_fix_puts(5u, 24u, hud, 2u);
-            demo_fix_puts(10u, 24u, bar, (uint8_t)(hp < 10u ? 2u : 1u));
+        /* World ruler with S/1/2/3/E markers sliding under the camera. */
+        camlab_world_markers(cam.x);
+
+        /* Dead-zone box only on the dead-zone mode itself. */
+        if (mode == CAMLAB_MODE_DEADZONE) {
+            camlab_deadzone_box(screen_x,
+                                (int16_t)(screen_y - 24),
+                                cam.dead_zone_x,
+                                (uint8_t)(cam.dead_zone_y ? cam.dead_zone_y : 20u));
         }
 
-        /* Hero stays mostly fixed; camera motion is shown by the background. */
+        /* --- player draw ----------------------------------------- */
+        frame = (vx_logical || vy_logical)
+              ? s_hero_walk [(t / 6u)  % 8u]
+              : s_hero_stand[(t / 12u) % 8u];
         {
-            int16_t saved = s_hero_x;
-            s_hero_x = 160;
-            s_hero_y = (int16_t)((t < 360u) ? 112 : 132);
+            int16_t saved_x = s_hero_x;
+            int16_t saved_y = s_hero_y;
+            s_hero_x = screen_x;
+            s_hero_y = screen_y;
             hero_draw(frame);
-            s_hero_x = saved;
+            s_hero_x = saved_x;
+            s_hero_y = saved_y;
         }
 
-        if (uframe()) return 1u;
+        if (uframe()) {
+            ng_level_set_scroll(0, 0);
+            return 1u;
+        }
     }
     ng_level_set_scroll(0, 0);
     return 0u;
