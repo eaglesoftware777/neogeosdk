@@ -3,11 +3,15 @@
 > **v1.3.0 — engine occlusion direction**
 >
 > The boxed rule at the top of `sdk/2d_engine/ng_sprite_pool.h` (and the
-> `sdk/2d_engine_plus/ng_sprite_pool.hpp` copy) is now authoritative:
-> **LOWER hardware slot = drawn IN FRONT** of any higher-numbered sprite
-> they overlap.  Drawing a background at slot 1 does **not** put it
-> behind the player — slot 1 is the front-most slot.  Backgrounds
-> belong at slots 300–315 (BG0) and 316–331 (BG1).
+> `sdk/2d_engine_plus/ng_sprite_pool.hpp` copy) is authoritative:
+> **LOWER hardware slot = drawn BEHIND higher-numbered sprites** when
+> they overlap.  The Neo Geo LSPC walks the sprite control blocks
+> sequentially from slot 0 upward, so a sprite at slot 1 is written
+> first and any later slot covers it.  Backgrounds belong at low
+> slots 1–32 (`NG_SPR_BG0_FIRST=1`, `NG_SPR_BG1_FIRST=17`); characters
+> at 96–223 (`NG_SPR_CHAR_FIRST..NG_SPR_CHAR_LAST`); FX, particles
+> and temporary front effects at higher slots so they draw on top.
+> See `sdk/2d_engine/ng_sprite_pool.h` for the canonical layout.
 >
 > Both `sdk/2d_engine/` (C, `gnu99`) and `sdk/2d_engine_plus/` (C++14,
 > `-fno-exceptions -fno-rtti -fno-threadsafe-statics`) ship with the
@@ -54,6 +58,39 @@ The layer is plain C. No float, no malloc during gameplay, no division in the fr
 | Feedback | `ng_feedback.h` | Hitstop + shake + flash + sound hook in one call |
 | Depth FX | `ng_depthfx.h` | NGVec3 perspective projection, Z→shrink/fog |
 | Debug HUD | `ng_debug.h` | Fix-layer perf overlay (`NG_DEBUG_PERF=1`) |
+
+## VRAM and CRAM write contract
+
+The Neo Geo LSPC and the 68000 share the VRAM and CRAM buses.  Writes
+that land during active video can collide with the LSPC's per-scanline
+reads and show up as torn sprites, partial palettes, or "snow" on the
+display.
+
+### Current (v1.3.x) contract
+
+| Subsystem | Where it writes | Status |
+|---|---|---|
+| `ng_bg_draw()` | Direct SCB1/SCB2/SCB3/SCB4 writes | Direct, must run inside the vblank window after `waitVbl()` |
+| `ng_chars_draw()` | Direct SCB1/SCB2/SCB3/SCB4 writes | Direct, must run inside the vblank window after `waitVbl()` |
+| `ng_particles_draw()` | Direct SCB writes | Direct, must run inside the vblank window |
+| `ng_render_queue_flush()` | Drains queued SCB / palette commands | Vblank-safe by design |
+| `ng_palette_fx_*` | Queues via `ng_render_queue` | Vblank-safe |
+| `ng_feedback_*` | State only; rendering rides ng_render_queue | Vblank-safe |
+| `demo_draw_sprite_screen{,_flip}` | Queues into the demo's sprite queue | Vblank-safe (drained at uframe top) |
+
+What this means in practice:
+
+* **CRAM writes (palette RAM at `0x400000`) MUST go through the render
+  queue.**  Use `ng_rq_palette_upload()` or `ng_palette_fx_*`.  Writing
+  the palette directly from game logic during active video produces
+  rolling "snow" pixels on every line currently being scanned out.
+* **The big draws (`ng_bg_draw`, `ng_chars_draw`, `ng_particles_draw`)
+  are still direct VRAM writes**, but the engine drives them only from
+  inside the per-frame pump immediately after `waitVbl()` returns, so
+  the writes complete before the LSPC starts scanning the next frame.
+* A future v1.4.0 may move those big draws fully through the queue;
+  until then, keep custom rendering code aligned with the pump order
+  (`waitVbl()` -> draws -> `ng_render_queue_flush()` -> updates).
 
 ## Headers
 

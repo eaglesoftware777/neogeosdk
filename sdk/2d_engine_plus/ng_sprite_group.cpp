@@ -163,7 +163,13 @@ void NGSpriteGroup::setTileBase(uint16_t tb)
 
 void NGSpriteGroup::setTileStride(uint16_t ts)
 {
-    tileStride = ts ? ts : strips;
+    uint16_t new_stride = ts ? ts : strips;
+    if (tileStride != new_stride) {
+        tileStride = new_stride;
+        /* Stride feeds into tile_for() — every cell's tile id changes,
+         * so SCB1 must be re-uploaded. */
+        dirty |= NG_SGF_DIRTY_TILE;
+    }
 }
 
 void NGSpriteGroup::setPalette(uint8_t pal)
@@ -177,7 +183,13 @@ void NGSpriteGroup::setActiveRows(uint8_t rows)
     if (rows < 1) rows = 1;
     if (rows > heightTiles) rows = heightTiles;
     if (rows > NG_SPRITE_MAX_HEIGHT_TILES) rows = NG_SPRITE_MAX_HEIGHT_TILES;
-    activeRows = rows;
+    if (activeRows != rows) {
+        activeRows = rows;
+        /* activeRows is encoded into SCB3 height (driver) and
+         * 0x40 | activeRows (chained strips); both ride the POS
+         * flush path. */
+        dirty |= NG_SGF_DIRTY_POS;
+    }
 }
 
 void NGSpriteGroup::setPos(int16_t px, int16_t py)
@@ -200,14 +212,29 @@ void NGSpriteGroup::setScale(uint8_t sx, uint8_t sy)
 
 void NGSpriteGroup::setFlip(uint8_t h, uint8_t v)
 {
-    hflip = h ? 1 : 0;
-    vflip = v ? 1 : 0;
+    uint8_t nh = h ? 1 : 0;
+    uint8_t nv = v ? 1 : 0;
+    if (hflip != nh || vflip != nv) {
+        hflip = nh;
+        vflip = nv;
+        /* hflip mirrors the per-strip tile lookup and the SCB1 attr's
+         * hflip bit; vflip does the same for rows.  Re-emit SCB1 via
+         * the TILE + PALETTE flush paths. */
+        dirty |= NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_PALETTE;
+    }
 }
 
 void NGSpriteGroup::setAutoAnim(uint8_t aa4, uint8_t aa8)
 {
-    autoAnim4 = aa4 ? 1 : 0;
-    autoAnim8 = aa8 ? 1 : 0;
+    uint8_t na4 = aa4 ? 1 : 0;
+    uint8_t na8 = aa8 ? 1 : 0;
+    if (autoAnim4 != na4 || autoAnim8 != na8) {
+        autoAnim4 = na4;
+        autoAnim8 = na8;
+        /* autoAnim bits live in SCB1 attribute bits 3/2 — re-emit via
+         * the PALETTE flush path. */
+        dirty |= NG_SGF_DIRTY_PALETTE;
+    }
 }
 
 void NGSpriteGroup::setVisible(uint8_t v)
