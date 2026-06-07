@@ -173,7 +173,16 @@ void NEOGEO_USER ng_sprite_group_set_tile_base(NGSpriteGroup *g, uint16_t tileBa
 
 void NEOGEO_USER ng_sprite_group_set_tile_stride(NGSpriteGroup *g, uint16_t tileStride)
 {
-    if (g) g->tileStride = tileStride ? tileStride : g->strips;
+    if (g) {
+        uint16_t new_stride = tileStride ? tileStride : g->strips;
+        if (g->tileStride != new_stride) {
+            g->tileStride = new_stride;
+            /* tile_for() multiplies the row index by tileStride, so the
+             * computed tile id for every cell changes — SCB1 must be
+             * re-uploaded for the new stride to take effect. */
+            g->dirty |= NG_SGF_DIRTY_TILE;
+        }
+    }
 }
 
 void NEOGEO_USER ng_sprite_group_set_palette(NGSpriteGroup *g, uint8_t palette)
@@ -189,7 +198,13 @@ void NEOGEO_USER ng_sprite_group_set_active_rows(NGSpriteGroup *g, uint8_t activ
     if (activeRows > g->heightTiles) activeRows = g->heightTiles;
     if (activeRows > NG_SPRITE_MAX_HEIGHT_TILES) activeRows = NG_SPRITE_MAX_HEIGHT_TILES;
 
-    g->activeRows = activeRows;
+    if (g->activeRows != activeRows) {
+        g->activeRows = activeRows;
+        /* SCB3 holds (driver) height = activeRows and chained-strip
+         * height = 0x40 | activeRows.  Both must be re-emitted, which
+         * sits inside the DIRTY_POS flush path. */
+        g->dirty |= NG_SGF_DIRTY_POS;
+    }
 }
 
 void NEOGEO_USER ng_sprite_group_set_pos(NGSpriteGroup *g, int16_t x, int16_t y)
@@ -222,16 +237,32 @@ void NEOGEO_USER ng_sprite_group_set_scale(NGSpriteGroup *g, uint8_t xScale, uin
 void NEOGEO_USER ng_sprite_group_set_flip(NGSpriteGroup *g, uint8_t hflip, uint8_t vflip)
 {
     if (g) {
-        g->hflip = hflip ? 1 : 0;
-        g->vflip = vflip ? 1 : 0;
+        uint8_t nh = hflip ? 1 : 0;
+        uint8_t nv = vflip ? 1 : 0;
+        if (g->hflip != nh || g->vflip != nv) {
+            g->hflip = nh;
+            g->vflip = nv;
+            /* hflip mirrors the per-strip tile id lookup AND the SCB1
+             * attribute word's hflip bit; vflip does the same for rows.
+             * Both pieces live behind the TILE/PALETTE flush path, so
+             * mark both so the next flush re-emits SCB1. */
+            g->dirty |= NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_PALETTE;
+        }
     }
 }
 
 void NEOGEO_USER ng_sprite_group_set_auto_anim(NGSpriteGroup *g, uint8_t autoAnim4, uint8_t autoAnim8)
 {
     if (g) {
-        g->autoAnim4 = autoAnim4 ? 1 : 0;
-        g->autoAnim8 = autoAnim8 ? 1 : 0;
+        uint8_t na4 = autoAnim4 ? 1 : 0;
+        uint8_t na8 = autoAnim8 ? 1 : 0;
+        if (g->autoAnim4 != na4 || g->autoAnim8 != na8) {
+            g->autoAnim4 = na4;
+            g->autoAnim8 = na8;
+            /* autoAnim bits live in SCB1's attribute word (bits 3/2);
+             * re-emit via the PALETTE flush path which owns SCB1[attr]. */
+            g->dirty |= NG_SGF_DIRTY_PALETTE;
+        }
     }
 }
 

@@ -119,8 +119,13 @@ void NEOGEO_USER ng_bg_draw(int16_t camera_x, int16_t camera_y)
              * Full tile + palette upload.  sprite_base = NG_SPR_VRAM_BASE(slot)
              * ensures the generated showScreenN uses sprite slots [slot..slot+strips-1]
              * for SCB2/3/4 as well (after the genscreens.py fix).
-             * These high-numbered slots have lower display priority than character
-             * sprites at slots 0-299, so backgrounds appear behind game objects.
+             *
+             * Background layers live at the LOW slots NG_SPR_BG0_FIRST (1) and
+             * NG_SPR_BG1_FIRST (17).  In this engine's render contract the LSPC
+             * walks slots from 0 upward and later writes cover earlier ones, so
+             * the low BG slots are drawn FIRST and characters at slots 96..223
+             * (NG_SPR_CHAR_*) end up rendered on top — see ng_sprite_pool.h
+             * for the canonical layout.
              */
             bg->show_fn((int)draw_x, (int)bg->y0,
                         (int)bg->xr, (int)bg->yr,
