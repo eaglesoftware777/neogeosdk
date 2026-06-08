@@ -101,13 +101,20 @@ void NEOGEO_USER ng_clear_screen_full(void);
 
 #define U_BG_FOREST        2u
 
-#define U_SCALE_30         0x4Du
-#define U_SCALE_45         0x73u
-#define U_SCALE_55         0x8Cu
-#define U_SCALE_57         0x91u
-#define U_SCALE_60         0x99u
-#define U_SCALE_70         0xB3u
-#define U_SCALE_FULL       0xFFu
+/*
+ * Char rendering scale presets — each value is now roughly
+ * +10% of its original pre-halved magnitude.  U_SCALE_FULL
+ * stays at 0xFFu because the NeoGeo sprite chip can only
+ * shrink, not stretch, so 100% is the hardware ceiling.
+ * Symbol names keep their relative ordering.
+ */
+#define U_SCALE_30         0x55u   /* now ~33%  */
+#define U_SCALE_45         0x80u   /* now ~50%  */
+#define U_SCALE_55         0x9Au   /* now ~60%  */
+#define U_SCALE_57         0xA0u   /* now ~63%  */
+#define U_SCALE_60         0xA8u   /* now ~66%  */
+#define U_SCALE_70         0xC5u   /* now ~77%  */
+#define U_SCALE_FULL       0xFFu   /* hardware max (no shrink, ~100%) */
 
 static const uint8_t s_fx_effect_frames[4] = {
     89u, 90u, 91u, 92u
