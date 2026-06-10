@@ -86,6 +86,23 @@ void NEOGEO_USER COIN_SOUND(void) {
     cyclexms(7);
 }
 
+void NEOGEO_USER showTitleMVS(void) {
+    int i;
+
+    clearFix();
+    clearSprs();
+    setBACKDROP(BLACK);
+    soundSetADPCMAVolume(0x3C);
+    playSFX(SOUND_SFX_3);
+    fixtext_out(9,  9, "EAGLE SOFTWARE", 0);
+    fixtext_out(12, 12, "STAR RAID", 1);
+    fixtext_out(8,  16, "READY PLAYER ONE", 0);
+    fixtext_out(7,  20, "B FIRE   ARROWS MOVE", 1);
+    for (i = 0; i < 180; i++) {
+        waitVbl();
+    }
+}
+
 void NEOGEO_USER POWER_ON(void) {
     NEO_REGISTER8(NGO_START_FLAG) = 0;
     ASM_START
@@ -142,8 +159,9 @@ void NEOGEO_USER TITLE(void) {
     ASM_SUBQB(#1,BIOS_MESS_BUSY)
     ASM_BSETB(#7,BIOS_SYSTEM_MODE)
     ASM_JSR(INIT_GAME)
-    ASM_JSR(START_GAME)
-    ASM_JMP(SYS_RETURN)
+    ASM_JSR(showTitleMVS)
+    ASM_MVB(#0x02,BIOS_USER_MODE)
+    ASM_JMP(START_GAME)
     ::: ASM_END
 }
 
@@ -191,6 +209,7 @@ void NEOGEO_USER GAME_DISPATCH(void) {
     }
     if (NEO_REGISTER8(NGO_START_FLAG)) {
         NEO_REGISTER8(BIOS_USER_MODE) = 2;
+        showTitleMVS();
         START_GAME();
     }
 #else
@@ -204,12 +223,15 @@ void NEOGEO_USER GAME_DISPATCH(void) {
 }
 
 void NEOGEO_USER DEMO_GAME(void)    { GAME_ATTRACT(); }
+void NEOGEO_USER neogeogame_run(void);
 
 void NEOGEO_USER GAME_ATTRACT(void) {
     int i;
     clearFix(); clearSprs(); setBACKDROP(BLACK);
-    fixtext_out(11, 13, "HELLO WORLD", 0);
-    fixtext_out(8,  15, "INSERT COIN", 0);
+    fixtext_out(8,  9, "EAGLE SOFTWARE", 0);
+    fixtext_out(11, 12, "STAR RAID", 1);
+    fixtext_out(7,  15, "INSERT COIN / START", 0);
+    fixtext_out(6,  18, "B FIRE   ARROWS MOVE", 1);
     for (i = 0; ; i++) {
         if (NEO_REGISTER8(NGO_START_FLAG)) break;
         waitVbl();
@@ -217,10 +239,11 @@ void NEOGEO_USER GAME_ATTRACT(void) {
 }
 
 void NEOGEO_USER START_GAME(void) {
-    int i;
-    clearFix(); clearSprs(); setBACKDROP(BLACK);
-    fixtext_out(9, 13, "PRESS START", 0);
-    for (i = 0; i < 300; i++) waitVbl();
+    clearFix();
+    clearSprs();
+    setBACKDROP(BLACK);
+    soundSceneReset();
+    neogeogame_run();
     NEO_REGISTER8(NGO_START_FLAG) = 0;
     NEO_REGISTER8(BIOS_USER_MODE) = 1;
     ASM_START ASM_JMP(SYS_RETURN) ::: ASM_END
