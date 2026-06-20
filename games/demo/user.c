@@ -453,9 +453,10 @@ void NEOGEO_USER GAME_ATTRACT(void) {
 
 //START_GAME handler
 void NEOGEO_USER START_GAME(void) {
+	setBACKDROP(BLACK);
+	waitVbl();
 	clearFix();
 	clearSprs();
-	setBACKDROP(BLACK);
 	soundSceneReset();
 	demo_run_full_flow();
 	NEO_REGISTER8(NGO_START_FLAG) = 0;
