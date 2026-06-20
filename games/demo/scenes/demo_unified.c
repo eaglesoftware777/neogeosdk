@@ -101,6 +101,13 @@ void NEOGEO_USER ng_clear_screen_full(void);
 
 #define U_BG_FOREST        2u
 
+#define U_SHOOTER_ENEMY          122u
+#define U_SHOOTER_ENEMY_BULLET   123u
+#define U_SHOOTER_EXPLOSION      124u
+#define U_SHOOTER_PLAYER_BULLET  125u
+#define U_SHOOTER_SHIP           126u
+#define U_SHOOTER_SHIP_ALT       127u
+
 /*
  * Char rendering scale presets — each value is now roughly
  * +10% of its original pre-halved magnitude.  U_SCALE_FULL
@@ -240,10 +247,13 @@ static void NEOGEO_USER chap_header(uint8_t n,
 
     /* hard reset hardware + char/physics/particles/feedback/palette FX */
     ng_clear_screen_full();
-    clearSprs();
     /*
      * Pure black keeps transparent padding and freshly-cleared FIX cells
      * from reading as large pale rectangles during chapter transitions.
+     * clearSprs() is intentionally omitted here: ng_clear_screen_full()
+     * already does a full ng_sprite_hide_all() kill (SCB3=0x8000, full
+     * SCB1 wipe with blank-tile 0xFFFF).  A second clearSprs() would
+     * overwrite that safe blank-tile fill with tile-0, which may carry art.
      */
     setBACKDROP(BLACK);
     ng_level_set_scroll(0, 0);
@@ -521,10 +531,10 @@ static uint8_t NEOGEO_USER chap_boot(void)
     snd_silence();
 
     demo_fix_puts(2u,  3u, "EAGLE SOFTWARE NEOGEO SDK", 1u);
-    demo_fix_puts(2u,  4u, "(C) 2026  EAGLESOFTWARE.BIZ", 0u);
+    demo_fix_puts(2u,  4u, "2026  EAGLESOFTWARE.BIZ", 0u);
 
     demo_fix_puts(2u,  7u, "SDK SHOWCASE", 2u);
-    demo_fix_puts(2u,  9u, "20 CHAPTERS  FULL SDK TOUR", 1u);
+    demo_fix_puts(2u,  9u, "20 CHAPTERS  FULL SDK DEMO", 1u);
 
     demo_fix_puts(2u, 12u, "SHOWCASE FLOW:",         2u);
     demo_fix_puts(4u, 13u, "AUTOMATIC CHAPTERS",     1u);
@@ -634,6 +644,7 @@ static uint8_t NEOGEO_USER chap_fix(void)
     demo_fix_puts(2u, 2u, "FIX = 40x32 CELL OVERLAY", 1u);
     snd_cross_to(SOUND_MUSIC_G);
 
+    demo_fix_puts(2u,  6u, "PALETTE 0  STANDARD",   0u);
     demo_fix_puts(2u,  6u, "PALETTE 0  STANDARD",   0u);
     demo_fix_puts(2u,  7u, "PALETTE 1  ACCENT",     1u);
     demo_fix_puts(2u,  8u, "PALETTE 2  GREEN",      2u);
@@ -2619,34 +2630,306 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
     return 0u;
 }
 
-/* ================================================================== */
-/*  Chapter 16 — 3D effect (single-character depth animation)            */
-/* ================================================================== */
-static uint8_t NEOGEO_USER chap_render3d(void)
-{
-    uint16_t t;
+static const char *const s_raytrace_map[16] = {
+    "################",
+    "#......#.......#",
+    "#......#.......#",
+    "#..##......##..#",
+    "#..............#",
+    "#......##......#",
+    "#..............#",
+    "#..#.......#...#",
+    "#..#.......#...#",
+    "#..............#",
+    "#.....##.......#",
+    "#..............#",
+    "#..##......##..#",
+    "#..............#",
+    "#..............#",
+    "################"
+};
 
-    chap_header(16u, "3D EFFECT", "DEPTH LANE  SCALE");
-    demo_fix_puts(2u, 2u, "FLYING EAGLE DEPTH PASS", 1u);
-    demo_fix_puts(2u, 3u, "SPRITE 076..078  SHRUNK TO 70%", 0u);
+static const int16_t s_ray_vec_x[32] = {
+     256,  251,  237,  213,  181,  142,   98,   50,
+       0,  -50,  -98, -142, -181, -213, -237, -251,
+    -256, -251, -237, -213, -181, -142,  -98,  -50,
+       0,   50,   98,  142,  181,  213,  237,  251
+};
+
+static const int16_t s_ray_vec_y[32] = {
+       0,   50,   98,  142,  181,  213,  237,  251,
+     256,  251,  237,  213,  181,  142,   98,   50,
+       0,  -50,  -98, -142, -181, -213, -237, -251,
+    -256, -251, -237, -213, -181, -142,  -98,  -50
+};
+
+static uint8_t NEOGEO_USER raytrace_wall_at(int16_t x, int16_t y)
+{
+    int16_t mx = (int16_t)(x >> 8);
+    int16_t my = (int16_t)(y >> 8);
+
+    if (mx < 0 || mx >= 16 || my < 0 || my >= 16) return 1u;
+    return (uint8_t)(s_raytrace_map[my][mx] == '#');
+}
+
+static uint8_t NEOGEO_USER raytrace_try_move(int16_t *x,
+                                             int16_t *y,
+                                             uint8_t angle,
+                                             int8_t step)
+{
+    int16_t nx = (int16_t)(*x + ((s_ray_vec_x[angle & 31u] * step) >> 4));
+    int16_t ny = (int16_t)(*y + ((s_ray_vec_y[angle & 31u] * step) >> 4));
+
+    if (raytrace_wall_at(nx, ny)) return 0u;
+    *x = nx;
+    *y = ny;
+    return 1u;
+}
+
+static uint8_t NEOGEO_USER raytrace_cast(int16_t x,
+                                         int16_t y,
+                                         uint8_t angle)
+{
+    int16_t rx = x;
+    int16_t ry = y;
+    uint8_t step;
+
+    for (step = 0u; step < 96u; step++) {
+        rx = (int16_t)(rx + (s_ray_vec_x[angle & 31u] >> 4));
+        ry = (int16_t)(ry + (s_ray_vec_y[angle & 31u] >> 4));
+        if (raytrace_wall_at(rx, ry)) return step;
+    }
+    return 96u;
+}
+
+static void NEOGEO_USER raytrace_put(uint8_t x,
+                                     uint8_t y,
+                                     uint16_t tile,
+                                     uint8_t pal)
+{
+    if (x < 40u && y < 28u) {
+        ngfix_write_tile(x, y, tile, pal);
+    }
+}
+
+static void NEOGEO_USER raytrace_column_pair(uint8_t col,
+                                             uint8_t top,
+                                             uint8_t bottom,
+                                             uint8_t shade,
+                                             uint8_t t)
+{
+    uint8_t y;
+    uint16_t wall_tile = (shade < 12u) ? '#' : ((shade < 28u) ? 'H' : '|');
+
+    for (y = 4u; y < 24u; y++) {
+        uint16_t tile;
+        uint8_t pal;
+
+        if (y < top) {
+            tile = (((uint8_t)(y + t + col) & 3u) == 0u)
+                 ? '.'
+                 : NGFIX_DEFAULT_BLANK_TILE;
+            pal = 0u;
+        } else if (y <= bottom) {
+            tile = wall_tile;
+            pal = (uint8_t)((shade < 18u) ? 2u : 1u);
+        } else {
+            tile = (((uint8_t)(y + col + (t >> 1)) & 1u) == 0u) ? '.' : ',';
+            pal = (uint8_t)((y > 20u) ? 2u : 1u);
+        }
+
+        raytrace_put(col, y, tile, pal);
+        raytrace_put((uint8_t)(col + 1u), y, tile, pal);
+    }
+}
+
+static void NEOGEO_USER raytrace_draw_view(int16_t px,
+                                           int16_t py,
+                                           uint8_t angle,
+                                           uint8_t reticle_col,
+                                           uint8_t locked,
+                                           uint8_t fire_timer,
+                                           uint8_t t)
+{
+    uint8_t col;
+
+    for (col = 0u; col < 40u; col = (uint8_t)(col + 2u)) {
+        int16_t side = (int16_t)((int16_t)col - 20);
+        uint8_t ray_angle = (uint8_t)((angle + 32u + (uint8_t)(side / 2)) & 31u);
+        uint8_t dist = raytrace_cast(px, py, ray_angle);
+        uint8_t height;
+        uint8_t top;
+        uint8_t bottom;
+
+        if (dist < 2u) dist = 2u;
+        height = (uint8_t)(34u - (dist >> 1));
+        if (height > 19u) height = 19u;
+        if (height < 4u) height = 4u;
+        top = (uint8_t)(14u - (height >> 1));
+        bottom = (uint8_t)(top + height);
+        if (bottom > 23u) bottom = 23u;
+        raytrace_column_pair(col, top, bottom, dist, t);
+    }
+
+    raytrace_put((uint8_t)(reticle_col - 1u), 13u, '[', locked ? 2u : 1u);
+    raytrace_put(reticle_col, 13u, '+', locked ? 2u : 1u);
+    raytrace_put((uint8_t)(reticle_col + 1u), 13u, ']', locked ? 2u : 1u);
+
+    if (fire_timer) {
+        raytrace_put(18u, 22u, '/', 2u);
+        raytrace_put(19u, 21u, '/', 2u);
+        raytrace_put(20u, 20u, '*', 2u);
+        raytrace_put(21u, 21u, '\\', 2u);
+        raytrace_put(22u, 22u, '\\', 2u);
+    } else {
+        raytrace_put(18u, 22u, NGFIX_DEFAULT_BLANK_TILE, 0u);
+        raytrace_put(19u, 21u, NGFIX_DEFAULT_BLANK_TILE, 0u);
+        raytrace_put(20u, 20u, NGFIX_DEFAULT_BLANK_TILE, 0u);
+        raytrace_put(21u, 21u, NGFIX_DEFAULT_BLANK_TILE, 0u);
+        raytrace_put(22u, 22u, NGFIX_DEFAULT_BLANK_TILE, 0u);
+    }
+}
+
+/* ================================================================== */
+/*  Chapter 16 — Raytrace 3D                                            */
+/* ================================================================== */
+static uint8_t NEOGEO_USER chap_raytrace3d(void)
+{
+    enum {
+        TARGET_COUNT = 4,
+        Z_NEAR = 16,
+        Z_FAR = 112
+    };
+    static const int16_t lane_x[TARGET_COUNT] = { -72, -26, 30, 78 };
+    static const uint8_t target_frame[TARGET_COUNT] = { 49u, 50u, 51u, 53u };
+    int16_t player_x = (int16_t)(3 * 256 + 128);
+    int16_t player_y = (int16_t)(3 * 256 + 128);
+    int16_t target_z[TARGET_COUNT] = { 36, 62, 88, 108 };
+    uint8_t target_flash[TARGET_COUNT] = { 0u, 0u, 0u, 0u };
+    uint8_t angle = 3u;
+    uint8_t fire_timer = 0u;
+    uint8_t ammo = 24u;
+    uint16_t score = 0u;
+    uint16_t t;
+    uint8_t i;
+    char buf[4];
+
+    chap_header(16u, "RAYTRACE 3D", "GRID CAST  SPRITE TARGETS");
+    demo_fix_puts(2u, 2u, "D-PAD MOVE/TURN  B FIRE", 1u);
+    demo_fix_puts(2u, 3u, "FIX COLUMNS + SPRITE DEPTH", 0u);
     snd_cross_to(SOUND_MUSIC_F);
 
     draw_background(U_BG_FOREST, 32, 16);
+    for (i = 0u; i < TARGET_COUNT; i++) {
+        demo_load_screen_palette(target_frame[i]);
+    }
 
-    for (t = 0u; t < 480u; t++) {
-        uint16_t phase = (uint16_t)(t % 240u);
-        uint8_t frame = s_flight_frames[(t / 8u) % 3u];
-        int16_t x = (int16_t)(160 + ((phase < 120u)
-            ? ((int16_t)phase - 60)
-            : (180 - (int16_t)phase)));
-        int16_t y = (int16_t)(96 + ((phase < 120u) ? (phase / 8u)
-                                                  : ((240u - phase) / 8u)));
+    demo_fix_puts(2u, 24u, "HP [########]  AMMO 024", 1u);
+    demo_fix_puts(2u, 25u, "SCORE 000  LOCK ---", 0u);
+    demo_fix_puts(2u, 26u, "EAGLE SOFTWARE RAYTRACE DEMO", 1u);
+    ng_joystick_init();
 
-        demo_load_screen_palette(frame);
-        draw_asset_bottom_center(frame, HERO_SLOT_FIRST,
-                                 x, y, U_SCALE_70, U_SCALE_70);
+    for (t = 0u; t < 900u; t++) {
+        uint16_t down;
+        uint16_t pressed;
+        uint8_t reticle_col = 20u;
+        int8_t locked_idx = -1;
+        int16_t best_dx = 32000;
 
-        if ((t %  60u) == 0u) playSFX(SOUND_SFX_5);
+        ng_joystick_update();
+        down = ng_joy_down();
+        pressed = ng_joy_pressed();
+
+        if ((t & 1u) == 0u) {
+            if (down & JOY_LEFT) {
+                angle = (uint8_t)((angle + 31u) & 31u);
+            }
+            if (down & JOY_RIGHT) {
+                angle = (uint8_t)((angle + 1u) & 31u);
+            }
+            if (down & JOY_UP) {
+                (void)raytrace_try_move(&player_x, &player_y, angle, 8);
+            }
+            if (down & JOY_DOWN) {
+                (void)raytrace_try_move(&player_x, &player_y, angle, -6);
+            }
+        }
+
+        for (i = 0u; i < TARGET_COUNT; i++) {
+            int16_t sx;
+            int16_t dx;
+            if (target_flash[i]) continue;
+            sx = (int16_t)(160 + ((lane_x[i] * (Z_FAR - target_z[i])) /
+                                  (Z_FAR - Z_NEAR)));
+            dx = (int16_t)(sx - 160);
+            if (dx < 0) dx = (int16_t)-dx;
+            if (dx < best_dx) {
+                best_dx = dx;
+                locked_idx = (int8_t)i;
+            }
+        }
+
+        if ((pressed & BUTTON_B) && ammo > 0u) {
+            fire_timer = 6u;
+            ammo--;
+            playSFX(SOUND_SFX_7);
+            if (locked_idx >= 0 && best_dx < 28) {
+                target_flash[locked_idx] = 12u;
+                target_z[locked_idx] = Z_FAR;
+                score = (uint16_t)((score < 975u) ? score + 25u : 999u);
+                playSFX(SOUND_SFX_8);
+            }
+        }
+
+        raytrace_draw_view(player_x, player_y, angle,
+                           reticle_col,
+                           (uint8_t)(locked_idx >= 0 && best_dx < 28),
+                           fire_timer,
+                           (uint8_t)t);
+
+        for (i = 0u; i < TARGET_COUNT; i++) {
+            uint8_t scale;
+            int16_t sx;
+            int16_t bottom_y;
+
+            if (target_flash[i]) {
+                draw_asset_bottom_center(s_fx_effect_frames[(target_flash[i] >> 1) & 3u],
+                                         (uint16_t)(224u + i * 12u),
+                                         (int16_t)(160 + lane_x[i] / 3),
+                                         130,
+                                         U_SCALE_45,
+                                         U_SCALE_45);
+                target_flash[i]--;
+                continue;
+            }
+
+            target_z[i] = (int16_t)(target_z[i] - 1);
+            if (target_z[i] < Z_NEAR) target_z[i] = Z_FAR;
+
+            sx = (int16_t)(160 + ((lane_x[i] * (Z_FAR - target_z[i])) /
+                                  (Z_FAR - Z_NEAR)));
+            bottom_y = (int16_t)(116 + (((Z_FAR - target_z[i]) * 64) /
+                                        (Z_FAR - Z_NEAR)));
+            scale = (uint8_t)(0x35u + (((uint16_t)(Z_FAR - target_z[i]) * 0xA0u) /
+                                        (Z_FAR - Z_NEAR)));
+            draw_asset_bottom_center(target_frame[i],
+                                     (uint16_t)(128u + i * 20u),
+                                     sx,
+                                     bottom_y,
+                                     scale,
+                                     scale);
+        }
+
+        digit3(buf, score);
+        demo_fix_puts(8u, 25u, buf, 1u);
+        digit3(buf, ammo);
+        demo_fix_puts(22u, 24u, buf, 2u);
+        demo_fix_puts(17u, 25u,
+                      (locked_idx >= 0 && best_dx < 28) ? "LOCK" : "--- ",
+                      (locked_idx >= 0 && best_dx < 28) ? 2u : 0u);
+
+        if (fire_timer) fire_timer--;
+
         if (uframe()) return 1u;
     }
     return 0u;
@@ -2710,68 +2993,330 @@ static uint8_t NEOGEO_USER chap_char_2d(void)
 /* ================================================================== */
 /*  Chapter 18 — SSG arcade (vblank-spaced Z80 setup)                    */
 /* ================================================================== */
+static uint8_t NEOGEO_USER chap_image_shooter(void)
+{
+    enum {
+        SHOOTER_ENEMIES = 4,
+        SHOOTER_SLOT_ENEMY = 96,
+        SHOOTER_SLOT_PLAYER = 156,
+        SHOOTER_SLOT_BOOM = 172,
+        SHOOTER_SLOT_PBULLET = 184,
+        SHOOTER_SLOT_EBULLET = 196,
+        SHOOTER_TIME = 900
+    };
+    static const int16_t enemy_home_x[SHOOTER_ENEMIES] = {
+        72, 124, 176, 228
+    };
+    static const int16_t enemy_home_y[SHOOTER_ENEMIES] = {
+        74, 62, 62, 74
+    };
+    uint8_t enemy_alive[SHOOTER_ENEMIES];
+    int16_t enemy_x[SHOOTER_ENEMIES];
+    int16_t enemy_y[SHOOTER_ENEMIES];
+    uint8_t enemy_flash[SHOOTER_ENEMIES];
+    int16_t ship_x = 160;
+    int16_t shot_x = 0;
+    int16_t shot_y = 0;
+    uint8_t shot_active = 0u;
+    uint8_t enemy_shot_active = 0u;
+    int16_t enemy_shot_x = 0;
+    int16_t enemy_shot_y = 0;
+    int16_t boom_x = -220;
+    int16_t boom_y = -220;
+    uint8_t boom_timer = 0u;
+    uint8_t prev_joy = 0u;
+    uint8_t wave = 1u;
+    uint8_t lives = 3u;
+    uint16_t score = 0u;
+    uint16_t t;
+    uint8_t i;
+    char buf[8];
+
+    chap_header(18u, "SSG ARCADE", "SPRITE SHOOTER MINI");
+    demo_fix_puts(2u, 2u, "B FIRE  ARROWS MOVE", 1u);
+    demo_fix_puts(2u, 3u, "IMAGE SPRITES + SSG + ADPCM", 0u);
+
+    draw_background(U_BG_FOREST, 32, 16);
+    demo_load_screen_palette(U_BG_FOREST);
+    demo_load_screen_palette(U_SHOOTER_ENEMY);
+    demo_load_screen_palette(U_SHOOTER_ENEMY_BULLET);
+    demo_load_screen_palette(U_SHOOTER_EXPLOSION);
+    demo_load_screen_palette(U_SHOOTER_PLAYER_BULLET);
+    demo_load_screen_palette(U_SHOOTER_SHIP);
+    demo_load_screen_palette(U_SHOOTER_SHIP_ALT);
+
+    soundStopAll();                            snd_step();
+    soundSceneReset();                         snd_step();
+    soundApplyMix(0x34u, 0xB8u, 0x05u, 0x00u); snd_step();
+    soundPlayGameLoop(SOUND_MUSIC_B);          snd_step();
+    playSSGTrack(SOUND_SSG_B);                 snd_step();
+
+    for (i = 0u; i < SHOOTER_ENEMIES; i++) {
+        enemy_alive[i] = 1u;
+        enemy_x[i] = enemy_home_x[i];
+        enemy_y[i] = enemy_home_y[i];
+        enemy_flash[i] = 0u;
+    }
+
+    for (t = 0u; t < SHOOTER_TIME; t++) {
+        uint16_t joy = poll_joystick();
+        uint8_t edge = (uint8_t)(joy & (uint16_t)(~prev_joy));
+        uint8_t alive_count = 0u;
+        int16_t sway = (int16_t)((int16_t)((t >> 2) & 31u) - 15);
+        uint8_t diving = (uint8_t)((t / 150u) % SHOOTER_ENEMIES);
+
+        prev_joy = (uint8_t)joy;
+
+        if ((joy & JOY_LEFT) && ship_x > 54) ship_x = (int16_t)(ship_x - 3);
+        if ((joy & JOY_RIGHT) && ship_x < 266) ship_x = (int16_t)(ship_x + 3);
+
+        if (!shot_active && (edge & BUTTON_B)) {
+            shot_active = 1u;
+            shot_x = ship_x;
+            shot_y = 158;
+            playSFX(SOUND_SFX_7);
+        }
+        if (!shot_active && ((t & 63u) == 20u)) {
+            shot_active = 1u;
+            shot_x = ship_x;
+            shot_y = 158;
+        }
+
+        if (shot_active) {
+            shot_y = (int16_t)(shot_y - 5);
+            if (shot_y < 28) shot_active = 0u;
+        }
+
+        if (!enemy_shot_active && ((t % 92u) == 30u)) {
+            for (i = 0u; i < SHOOTER_ENEMIES; i++) {
+                uint8_t idx = (uint8_t)((i + diving) % SHOOTER_ENEMIES);
+                if (enemy_alive[idx]) {
+                    enemy_shot_active = 1u;
+                    enemy_shot_x = enemy_x[idx];
+                    enemy_shot_y = (int16_t)(enemy_y[idx] + 22);
+                    break;
+                }
+            }
+        }
+        if (enemy_shot_active) {
+            enemy_shot_y = (int16_t)(enemy_shot_y + 3);
+            if (enemy_shot_y > 190) enemy_shot_active = 0u;
+            if (enemy_shot_y > 158 &&
+                enemy_shot_y < 184 &&
+                enemy_shot_x > (int16_t)(ship_x - 18) &&
+                enemy_shot_x < (int16_t)(ship_x + 18)) {
+                enemy_shot_active = 0u;
+                if (lives > 0u) lives--;
+                boom_x = ship_x;
+                boom_y = 166;
+                boom_timer = 32u;
+                playSFX(SOUND_SFX_10);
+            }
+        }
+
+        for (i = 0u; i < SHOOTER_ENEMIES; i++) {
+            int16_t y_wave = (int16_t)((i & 1u) ? ((t >> 3) & 7u) : -((t >> 3) & 7u));
+            enemy_x[i] = (int16_t)(enemy_home_x[i] + sway);
+            enemy_y[i] = (int16_t)(enemy_home_y[i] + y_wave);
+            if (i == diving && enemy_alive[i]) {
+                uint8_t dive_step = (uint8_t)((t % 150u) / 3u);
+                if (dive_step < 32u) {
+                    enemy_y[i] = (int16_t)(enemy_y[i] + dive_step);
+                    enemy_x[i] = (int16_t)(enemy_x[i] + ((dive_step & 1u) ? dive_step : -dive_step));
+                }
+            }
+
+            if (enemy_alive[i] && shot_active &&
+                shot_y > (int16_t)(enemy_y[i] - 20) &&
+                shot_y < (int16_t)(enemy_y[i] + 18) &&
+                shot_x > (int16_t)(enemy_x[i] - 20) &&
+                shot_x < (int16_t)(enemy_x[i] + 20)) {
+                enemy_alive[i] = 0u;
+                enemy_flash[i] = 24u;
+                shot_active = 0u;
+                boom_x = enemy_x[i];
+                boom_y = enemy_y[i];
+                boom_timer = 24u;
+                score = (uint16_t)(score + 120u);
+                playSFX(SOUND_SFX_8);
+            }
+
+            if (enemy_alive[i]) alive_count++;
+        }
+
+        if (alive_count == 0u) {
+            wave++;
+            score = (uint16_t)(score + 500u);
+            for (i = 0u; i < SHOOTER_ENEMIES; i++) {
+                enemy_alive[i] = 1u;
+                enemy_flash[i] = 0u;
+            }
+            playSFX(SOUND_SFX_9);
+        }
+
+        demo_fix_puts(2u, 5u, "SCORE", 1u);
+        digit3(buf, (uint16_t)(score % 1000u));
+        demo_fix_puts(9u, 5u, buf, 2u);
+        demo_fix_puts(15u, 5u, "WAVE", 1u);
+        digit3(buf, wave);
+        demo_fix_puts(21u, 5u, buf, 2u);
+        demo_fix_puts(27u, 5u, "LIFE", 1u);
+        digit3(buf, lives);
+        demo_fix_puts(33u, 5u, buf, 2u);
+
+        for (i = 0u; i < SHOOTER_ENEMIES; i++) {
+            uint16_t slot = (uint16_t)(SHOOTER_SLOT_ENEMY + (uint16_t)i * 12u);
+            if (enemy_alive[i]) {
+                draw_asset_bottom_center(U_SHOOTER_ENEMY, slot,
+                                         enemy_x[i], (int16_t)(enemy_y[i] + 22),
+                                         U_SCALE_55, U_SCALE_55);
+            } else {
+                draw_asset_bottom_center(U_SHOOTER_ENEMY, slot,
+                                         -220, -220,
+                                         U_SCALE_55, U_SCALE_55);
+            }
+            if (enemy_flash[i] > 0u) enemy_flash[i]--;
+        }
+
+        draw_asset_bottom_center((t & 16u) ? U_SHOOTER_SHIP_ALT : U_SHOOTER_SHIP,
+                                 SHOOTER_SLOT_PLAYER,
+                                 ship_x, 184,
+                                 U_SCALE_60, U_SCALE_60);
+
+        draw_asset_bottom_center(U_SHOOTER_PLAYER_BULLET,
+                                 SHOOTER_SLOT_PBULLET,
+                                 shot_active ? shot_x : -220,
+                                 shot_active ? shot_y : -220,
+                                 U_SCALE_FULL, U_SCALE_FULL);
+
+        draw_asset_bottom_center(U_SHOOTER_ENEMY_BULLET,
+                                 SHOOTER_SLOT_EBULLET,
+                                 enemy_shot_active ? enemy_shot_x : -220,
+                                 enemy_shot_active ? enemy_shot_y : -220,
+                                 U_SCALE_FULL, U_SCALE_FULL);
+
+        if (boom_timer > 0u) {
+            draw_asset_bottom_center(U_SHOOTER_EXPLOSION,
+                                     SHOOTER_SLOT_BOOM,
+                                     boom_x, (int16_t)(boom_y + 18),
+                                     U_SCALE_55, U_SCALE_55);
+            boom_timer--;
+        } else {
+            draw_asset_bottom_center(U_SHOOTER_EXPLOSION,
+                                     SHOOTER_SLOT_BOOM,
+                                     -220, -220,
+                                     U_SCALE_55, U_SCALE_55);
+        }
+
+        if ((t & 127u) == 0u) playSFX(SOUND_SFX_5);
+        if (uframe()) return 1u;
+    }
+
+    soundFadeOutSpeed(8u);
+    (void)uwait(12u);
+    soundStopAll();
+    return 0u;
+}
+
 static uint8_t NEOGEO_USER chap_ssg_arcade(void)
 {
+    return chap_image_shooter();
+
     {
         enum {
-            INV_COUNT = 12,
-            SHOT_COUNT = 3
+            INV_ROWS = 3,
+            INV_COLS = 6,
+            INV_COUNT = INV_ROWS * INV_COLS,
+            STAR_COUNT = 18
         };
-        static const uint8_t sx[10] = { 4, 9, 14, 19, 24, 29, 34, 7, 17, 27 };
-        static const uint8_t sy[10] = { 7, 5, 9, 6, 10, 4, 8, 13, 15, 12 };
+        static const uint8_t star_x[STAR_COUNT] = {
+            2, 5, 9, 13, 17, 22, 28, 33, 37,
+            4, 8, 15, 20, 25, 30, 35, 6, 27
+        };
+        static const uint8_t star_y[STAR_COUNT] = {
+            5, 7, 11, 6, 14, 9, 17, 12, 20,
+            16, 22, 19, 8, 23, 6, 15, 10, 21
+        };
         uint8_t inv_x[INV_COUNT];
         uint8_t inv_y[INV_COUNT];
         uint8_t old_x[INV_COUNT];
         uint8_t old_y[INV_COUNT];
-        uint8_t shot_x[SHOT_COUNT];
-        uint8_t shot_y[SHOT_COUNT];
-        uint8_t old_shot_x[SHOT_COUNT];
-        uint8_t old_shot_y[SHOT_COUNT];
+        uint8_t alive[INV_COUNT];
+        uint8_t shot_x = 0u;
+        uint8_t shot_y = 0u;
+        uint8_t old_shot_x = 0u;
+        uint8_t old_shot_y = 0u;
+        uint8_t shot_active = 0u;
+        uint8_t enemy_shot_x = 0u;
+        uint8_t enemy_shot_y = 0u;
+        uint8_t old_enemy_shot_x = 0u;
+        uint8_t old_enemy_shot_y = 0u;
+        uint8_t enemy_shot_active = 0u;
+        uint8_t prev_joy = 0u;
+        uint16_t score_val = 0u;
         uint16_t t;
         uint8_t i;
         uint8_t ship_x = 20u;
         uint8_t old_ship_x = 20u;
         char score[6];
 
-        chap_header(18u, "SSG ARCADE", "EAGLE WAVE");
-        demo_fix_puts(2u, 2u, "AUTO WAVE  DIVERS  RETURN FIRE", 1u);
-        demo_fix_puts(2u, 3u, "SSG BASS PULSE UNDER FIX ACTION", 0u);
+        chap_header(18u, "SSG ARCADE", "STAR RAID MINI");
+        demo_fix_puts(2u, 2u, "B FIRE  ARROWS MOVE", 1u);
+        demo_fix_puts(2u, 3u, "QUICK FORMATION DIVE TEST", 0u);
         playSSGTrack(SOUND_SSG_B);
 
-        for (i = 0u; i < 10u; i++) {
-            demo_fix_puts(sx[i], sy[i], ".", (i & 1u) ? 1u : 2u);
+        for (i = 0u; i < STAR_COUNT; i++) {
+            demo_fix_puts(star_x[i], star_y[i],
+                          (i & 3u) ? "." : "+",
+                          (i & 1u) ? 1u : 0u);
         }
 
         for (i = 0u; i < INV_COUNT; i++) {
-            inv_x[i] = (uint8_t)(7u + (i % 6u) * 5u);
-            inv_y[i] = (uint8_t)(7u + (i / 6u) * 3u);
+            inv_x[i] = (uint8_t)(6u + (i % INV_COLS) * 5u);
+            inv_y[i] = (uint8_t)(7u + (i / INV_COLS) * 3u);
             old_x[i] = inv_x[i];
             old_y[i] = inv_y[i];
-        }
-        for (i = 0u; i < SHOT_COUNT; i++) {
-            shot_x[i] = (uint8_t)(9u + i * 10u);
-            shot_y[i] = (uint8_t)(12u + i * 3u);
-            old_shot_x[i] = shot_x[i];
-            old_shot_y[i] = shot_y[i];
+            alive[i] = 1u;
         }
 
-        for (t = 0u; t < 720u; t++) {
+        for (t = 0u; t < 540u; t++) {
+            uint16_t joy = poll_joystick();
+            uint8_t edge = (uint8_t)(joy & (uint16_t)(~prev_joy));
             uint8_t wave = (uint8_t)((t / 24u) & 3u);
-            uint8_t dive = (uint8_t)((t / 90u) % INV_COUNT);
-            uint8_t k;
+            uint8_t dive = (uint8_t)((t / 72u) % INV_COUNT);
+            uint8_t alive_count = 0u;
+
+            prev_joy = (uint8_t)joy;
 
             for (i = 0u; i < INV_COUNT; i++) {
                 demo_fix_puts(old_x[i], old_y[i], " ", 0u);
             }
-            for (i = 0u; i < SHOT_COUNT; i++) {
-                demo_fix_puts(old_shot_x[i], old_shot_y[i], " ", 0u);
+            if (shot_active) {
+                demo_fix_puts(old_shot_x, old_shot_y, " ", 0u);
+            }
+            if (enemy_shot_active) {
+                demo_fix_puts(old_enemy_shot_x, old_enemy_shot_y, " ", 0u);
             }
             demo_fix_puts(old_ship_x, 24u, "   ", 0u);
 
+            if ((joy & JOY_LEFT) && ship_x > 3u) ship_x--;
+            if ((joy & JOY_RIGHT) && ship_x < 34u) ship_x++;
+            if (!shot_active && ((edge & BUTTON_B) || ((t & 31u) == 6u))) {
+                shot_active = 1u;
+                shot_x = (uint8_t)(ship_x + 1u);
+                shot_y = 23u;
+                playSFX(SOUND_SFX_7);
+            }
+            if (!enemy_shot_active && (t % 82u) == 30u) {
+                enemy_shot_active = 1u;
+                enemy_shot_x = inv_x[dive];
+                enemy_shot_y = (uint8_t)(inv_y[dive] + 1u);
+            }
+
             for (i = 0u; i < INV_COUNT; i++) {
-                int16_t x = (int16_t)(7 + (i % 6u) * 5u + wave);
-                int16_t y = (int16_t)(7 + (i / 6u) * 3u);
-                if (i == dive) {
+                int16_t x = (int16_t)(6 + (i % INV_COLS) * 5u + wave);
+                int16_t y = (int16_t)(7 + (i / INV_COLS) * 3u);
+                if (i == dive && alive[i]) {
                     uint8_t p = (uint8_t)((t % 90u) / 6u);
                     x = (int16_t)(x + ((p < 8u) ? p : (16u - p)));
                     y = (int16_t)(y + p);
@@ -2779,41 +3324,78 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
                 }
                 inv_x[i] = (uint8_t)x;
                 inv_y[i] = (uint8_t)y;
-                demo_fix_puts(inv_x[i], inv_y[i], (i & 1u) ? "Y" : "V", (i == dive) ? 2u : 1u);
                 old_x[i] = inv_x[i];
                 old_y[i] = inv_y[i];
+
+                if (alive[i] && shot_active &&
+                    shot_y <= inv_y[i] + 1u &&
+                    shot_y + 1u >= inv_y[i] &&
+                    shot_x >= inv_x[i] &&
+                    shot_x <= inv_x[i] + 1u) {
+                    alive[i] = 0u;
+                    shot_active = 0u;
+                    score_val = (uint16_t)(score_val + ((i < INV_COLS) ? 80u : 50u));
+                    playSFX(SOUND_SFX_8);
+                    demo_fix_puts(inv_x[i], inv_y[i], "*", 2u);
+                    continue;
+                }
+
+                if (alive[i]) {
+                    alive_count++;
+                    demo_fix_puts(inv_x[i], inv_y[i],
+                                  (i < INV_COLS) ? "M" : ((i & 1u) ? "Y" : "V"),
+                                  (i == dive) ? 2u : 1u);
+                }
             }
 
-            for (i = 0u; i < SHOT_COUNT; i++) {
-                shot_y[i] = (uint8_t)(5u + ((t / 3u + i * 7u) % 18u));
-                shot_x[i] = (uint8_t)(8u + ((i * 11u + t / 18u) % 24u));
-                demo_fix_puts(shot_x[i], shot_y[i], "|", 2u);
-                old_shot_x[i] = shot_x[i];
-                old_shot_y[i] = shot_y[i];
+            if (shot_active) {
+                if (shot_y > 4u) {
+                    shot_y--;
+                    old_shot_x = shot_x;
+                    old_shot_y = shot_y;
+                    demo_fix_puts(shot_x, shot_y, "|", 1u);
+                } else {
+                    shot_active = 0u;
+                }
+            }
+            if (enemy_shot_active) {
+                if (enemy_shot_y < 24u) {
+                    enemy_shot_y++;
+                    old_enemy_shot_x = enemy_shot_x;
+                    old_enemy_shot_y = enemy_shot_y;
+                    demo_fix_puts(enemy_shot_x, enemy_shot_y, "v", 2u);
+                } else {
+                    enemy_shot_active = 0u;
+                }
             }
 
-            ship_x = (uint8_t)(6u + ((t / 5u) % 28u));
             demo_fix_puts(ship_x, 24u, "/^\\", 2u);
             old_ship_x = ship_x;
 
-            score[0] = (char)('0' + (uint8_t)((t / 1000u) % 10u));
-            score[1] = (char)('0' + (uint8_t)((t / 100u) % 10u));
-            score[2] = (char)('0' + (uint8_t)((t / 10u) % 10u));
-            score[3] = (char)('0' + (uint8_t)(t % 10u));
-            score[4] = '\0';
+            if (alive_count == 0u) {
+                for (i = 0u; i < INV_COUNT; i++) alive[i] = 1u;
+                score_val = (uint16_t)(score_val + 300u);
+                playSFX(SOUND_SFX_9);
+            }
+
+            score[0] = (char)('0' + (uint8_t)((score_val / 1000u) % 10u));
+            score[1] = (char)('0' + (uint8_t)((score_val / 100u) % 10u));
+            score[2] = (char)('0' + (uint8_t)((score_val / 10u) % 10u));
+            score[3] = (char)('0' + (uint8_t)(score_val % 10u));
+            score[4] = ' ';
+            score[5] = '\0';
             demo_fix_puts(2u, 26u, "SCORE", 1u);
             demo_fix_puts(8u, 26u, score, 2u);
+            demo_fix_puts(18u, 26u, "B=FIRE", 1u);
 
-            if ((t % 120u) == 0u) playSFX(SOUND_SFX_5);
-            for (k = 0u; k < 1u; k++) {
-                if (uframe()) return 1u;
-            }
+            if ((t % 128u) == 0u) playSFX(SOUND_SFX_5);
+            if (uframe()) return 1u;
         }
         return 0u;
     }
 
     /*
-     * Galaxian-style FIX-layer shooter — second pass.
+     * FIX-layer shooter — second pass.
      *
      * Improvements over the first version:
      *   - 4-row × 6-col formation (24 enemies)
@@ -3522,7 +4104,7 @@ static uint8_t NEOGEO_USER chap_credits(void)
     demo_fix_puts(4u, 12u, "PALETTE FX  PARTICLES",   1u);
     demo_fix_puts(4u, 13u, "FEEDBACK  DEPTH FX",      1u);
     demo_fix_puts(4u, 14u, "NPCS  JOYSTICK  SCROLL",  1u);
-    demo_fix_puts(4u, 15u, "2D/3D RENDER  SSG ARCADE",1u);
+    demo_fix_puts(4u, 15u, "RAYTRACE 3D  SSG ARCADE",  1u);
 
 
     demo_fix_puts(2u, 24u, "THANKS FOR PLAYING.", 2u);
@@ -3693,7 +4275,7 @@ void NEOGEO_USER demo_unified_run(void)
     (void)chap_joystick();
     (void)chap_scrolling_level();
     (void)chap_char_2d();
-    (void)chap_render3d();
+    (void)chap_raytrace3d();
     (void)chap_ssg_arcade();
     (void)chap_garden3d();
     (void)chap_sound();         /* moved to just before the credits   */
