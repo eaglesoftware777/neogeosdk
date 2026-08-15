@@ -185,25 +185,38 @@ def audit_sprite_transparency(spec, indexed, label="post-convert"):
     if indexed.ndim != 2:
         return
 
-    # Reload the source's alpha to drive checks 1 and 2 (no resize -
-    # spec records the canvas placement directly).
-    if not HAS_PIL:
-        return
-    img = Image.open(spec["path"]).convert("RGBA")
-    src_alpha = np.array(img)[:, :, 3]
-    src_op = src_alpha >= 128
-
     ch, cw = indexed.shape
-    left = int(spec.get("content_left", 0))
-    top  = int(spec.get("content_top",  0))
-    sh = min(int(src_op.shape[0]), ch - top)
-    sw = min(int(src_op.shape[1]), cw - left)
 
-    # Check 1 + 2: pixel-level transparency.
-    src_in_canvas_op = np.zeros((ch, cw), dtype=bool)
-    if sh > 0 and sw > 0:
-        src_in_canvas_op[top:top + sh, left:left + sw] = src_op[:sh, :sw]
-    must_be_zero = ~src_in_canvas_op
+    # Prefer the loader's own placement mask (post-scale, post-bleed
+    # canvas alpha) when the loader stashed one on the spec.  It is
+    # geometrically exact regardless of thumbnail scaling, halo strip,
+    # or anchor, because it comes straight from the canvas the loader
+    # actually drew and quantised.  Reopening the original source file
+    # and mapping it 1:1 at content_left/content_top (the old fallback
+    # below) silently assumes the source was never resized - false for
+    # any source whose dimensions exceed target_width/target_height, and
+    # it will either falsely flag real content as a leak or, if used to
+    # force-zero pixels, delete real character parts that fall outside
+    # the wrongly-scaled mapping.
+    keep_mask = spec.get("_keep_mask")
+    if keep_mask is not None:
+        must_be_zero = ~np.asarray(keep_mask, dtype=bool)
+    else:
+        if not HAS_PIL:
+            return
+        img = Image.open(spec["path"]).convert("RGBA")
+        src_alpha = np.array(img)[:, :, 3]
+        src_op = src_alpha >= 128
+
+        left = int(spec.get("content_left", 0))
+        top  = int(spec.get("content_top",  0))
+        sh = min(int(src_op.shape[0]), ch - top)
+        sw = min(int(src_op.shape[1]), cw - left)
+
+        src_in_canvas_op = np.zeros((ch, cw), dtype=bool)
+        if sh > 0 and sw > 0:
+            src_in_canvas_op[top:top + sh, left:left + sw] = src_op[:sh, :sw]
+        must_be_zero = ~src_in_canvas_op
     leaks = int(((indexed != 0) & must_be_zero).sum())
     if leaks:
         ys, xs = np.where((indexed != 0) & must_be_zero)
@@ -381,6 +394,13 @@ def load_sprite_asset(spec, shared_palette15=None):
     palette15 = shared_palette15 if shared_palette15 is not None else make_sprite_palette(rgb[alpha_mask])
     indexed = index_sprite_pixels(rgb, alpha_mask, palette15)
 
+    # Stash the exact mask indexed was built from (post-scale, post-halo-
+    # strip, post-bleed canvas alpha) so the audit can compare against
+    # the real placement geometry instead of re-deriving one from the
+    # unscaled source file, which is wrong whenever fit_sprite_rgba had
+    # to thumbnail the source down to fit target_width/target_height.
+    spec["_keep_mask"] = alpha_mask
+
     palette = np.zeros((16, 3), dtype=np.uint16)
     palette[1:] = palette15
 
@@ -522,6 +542,18 @@ def load_sprite_asset_vivid(spec, shared_master=None):
         y0, x0 = ty * 16, tx * 16
         tile = np.array(tile_row, dtype=np.uint8).reshape(16, 16)
         indexed[y0:y0 + 16, x0:x0 + 16] = tile.astype(np.uint16)
+
+    # The tile quantiser doesn't necessarily respect alpha, so enforce the
+    # transparency contract explicitly using the canvas alpha mask (post-
+    # scale, post-halo-strip, post-bleed) - the same geometry that was
+    # actually drawn and quantised.  Do NOT reopen the original source
+    # file for this: fit_sprite_rgba thumbnails sources larger than
+    # target_width/target_height, so an unscaled 1:1 mapping of the
+    # original file's alpha is wrong and deletes real content that the
+    # scaled placement legitimately covers.
+    keep_mask = rgba[:, :, 3] >= 16
+    indexed[~keep_mask] = 0
+    spec["_keep_mask"] = keep_mask
 
     sprite_palette15 = np.array(final_palettes[0],
                                   dtype=np.uint8).reshape(15, 3)
@@ -687,6 +719,24 @@ def finalize_spec(spec):
         )
 
 
+def _anim_group_key(name):
+    """
+    Collapse an asset filename to the animation family it belongs to,
+    e.g. "cat_01".."cat_12" -> "cat", "zz_shooter_ship"/"_alt" ->
+    "zz_shooter_ship".  Used to scope normalize_sequence_bounds' shared
+    bounding box to actual same-animation frame sets instead of an
+    entire category folder - unrelated small sprites (bullets, one-off
+    enemies) that happen to share a folder with a big multi-frame walk
+    cycle must not be padded out to that walk cycle's bbox.
+    """
+    stem = os.path.splitext(name)[0]
+    if stem.endswith("_alt"):
+        stem = stem[:-4]
+    while stem and stem[-1].isdigit():
+        stem = stem[:-1]
+    return stem.rstrip("_")
+
+
 def normalize_sequence_bounds(specs):
     for group in ("npcs",):
         group_specs = [
@@ -697,19 +747,27 @@ def normalize_sequence_bounds(specs):
         if len(group_specs) <= 1:
             continue
 
-        min_col = min(spec["used_tile_col_start"] for spec in group_specs)
-        min_row = min(spec["used_tile_row_start"] for spec in group_specs)
-        max_col = max(spec["used_tile_col_start"] + spec["used_tile_cols"] for spec in group_specs)
-        max_row = max(spec["used_tile_row_start"] + spec["used_tile_rows"] for spec in group_specs)
-
+        by_anim = {}
         for spec in group_specs:
-            spec["used_tile_col_start"] = min_col
-            spec["used_tile_row_start"] = min_row
-            spec["used_tile_cols"] = max_col - min_col
-            spec["used_tile_rows"] = max_row - min_row
-            spec["used_tile_count"] = spec["used_tile_cols"] * spec["used_tile_rows"]
-            spec["sprite_strips"] = max(1, spec["used_tile_cols"])
-            spec["sprite_active_rows"] = max(1, spec["used_tile_rows"])
+            by_anim.setdefault(_anim_group_key(spec["name"]), []).append(spec)
+
+        for anim_specs in by_anim.values():
+            if len(anim_specs) <= 1:
+                continue
+
+            min_col = min(spec["used_tile_col_start"] for spec in anim_specs)
+            min_row = min(spec["used_tile_row_start"] for spec in anim_specs)
+            max_col = max(spec["used_tile_col_start"] + spec["used_tile_cols"] for spec in anim_specs)
+            max_row = max(spec["used_tile_row_start"] + spec["used_tile_rows"] for spec in anim_specs)
+
+            for spec in anim_specs:
+                spec["used_tile_col_start"] = min_col
+                spec["used_tile_row_start"] = min_row
+                spec["used_tile_cols"] = max_col - min_col
+                spec["used_tile_rows"] = max_row - min_row
+                spec["used_tile_count"] = spec["used_tile_cols"] * spec["used_tile_rows"]
+                spec["sprite_strips"] = max(1, spec["used_tile_cols"])
+                spec["sprite_active_rows"] = max(1, spec["used_tile_rows"])
 
 
 def main():
@@ -766,8 +824,16 @@ def main():
             # needs to bound check 3).  Sprite-only — backgrounds tile
             # the entire canvas by design.
             if spec["mode"] == "sprite":
-                audit_sprite_transparency(spec, indexed,
-                                          label=spec.get("rule_name", "?"))
+                try:
+                    audit_sprite_transparency(spec, indexed,
+                                              label=spec.get("rule_name", "?"))
+                finally:
+                    # _keep_mask is a numpy array stashed by the sprite
+                    # loaders purely for the audit above; it must not
+                    # survive into save_manifest's plain json.dump, which
+                    # cannot serialize ndarrays and would corrupt the
+                    # manifest mid-write.
+                    spec.pop("_keep_mask", None)
 
             db_rows.append((spec["db_index"], indexed, palette))
 
