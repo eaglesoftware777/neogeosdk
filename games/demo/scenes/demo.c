@@ -137,7 +137,18 @@ void NEOGEO_USER demo_caption(const char *line1, const char *line2, const char *
 /* ------------------------------------------------------------------ */
 /*  Scene clear                                                          */
 /* ------------------------------------------------------------------ */
-#define DEMO_SPRITE_WINDOWS 16u
+/* One window per distinct first_sprite slot drawn this scene, used to
+ * track each sprite group's previous tile footprint so a shrinking
+ * frame correctly clears its old tail (see ng_sprite_window_clear_tail
+ * below).  Sized for the busiest chapter's real distinct-slot count,
+ * same reasoning as DEMO_SPRITE_QUEUE_MAX above: a 24-enemy formation
+ * plus player/bullet/explosion pools uses up to 35 distinct slots in
+ * one scene.  When this overflows, demo_sprite_window_find() below
+ * forcibly evicts slot 0 for every slot beyond the cap, so multiple
+ * unrelated sprites thrash the same cached window within a single
+ * frame - corrupting their tail-clear state and producing exactly the
+ * "sprites missing / garbled" symptom this cache exists to prevent. */
+#define DEMO_SPRITE_WINDOWS 48u
 
 static NGSpriteWindow demo_sprite_windows[DEMO_SPRITE_WINDOWS];
 
@@ -193,6 +204,15 @@ void NEOGEO_USER demo_clear_scene(void)
     soundCancelFade();
     soundStopAll();
     soundSceneReset();
+    /* ng_scene_begin(..., 0u) below does NOT wait for vblank itself - it
+     * clears sprite/FIX VRAM immediately, then returns.  Without this
+     * sync first, that clear can straddle active scanout and produce
+     * exactly the same "black box flash" the START_GAME fix eliminated
+     * for the boot path - demo_clear_scene() is called 60+ times across
+     * every scene file (including the very first thing demo_intro_loading()
+     * does right after START), so this was the far more common source
+     * of it. */
+    waitVbl();
     ng_scene_begin(NG_SCENE_CLEAN_DEFAULT, 0u);
     setBACKDROP(BLACK);
     waitVbl();
@@ -520,8 +540,17 @@ void NEOGEO_USER demo_draw_sprite_screen(uint8_t screen_id,
  * vblank window (called by uframe in demo_unified.c right after
  * waitVbl, before ng_render_queue_flush), so every SCB write
  * completes while the screen is blanked.
+ *
+ * Sized for the busiest chapter's worst-case per-frame draw count, not
+ * just "the common case" - a full 24-enemy Galaxian-style formation
+ * plus player/bullet/explosion pools needs up to 35 queued draws in a
+ * single frame.  Whenever the queue is full, callers silently fall
+ * back to an immediate, unsynced write (see the overflow branch below)
+ * which reintroduces the exact tearing this queue exists to prevent -
+ * so this bound must stay above any real chapter's per-frame draw
+ * count, not just comfortably above "1..4 sprite groups".
  */
-#define DEMO_SPRITE_QUEUE_MAX 16u
+#define DEMO_SPRITE_QUEUE_MAX 48u
 
 typedef struct {
     uint8_t  active;
@@ -620,8 +649,10 @@ void NEOGEO_USER demo_draw_sprite_screen_flip(uint8_t screen_id,
     }
 
     if (demo_sprite_queue_count >= DEMO_SPRITE_QUEUE_MAX) {
-        /* Queue full — fall back to direct write (rare; still fixes
-         * the common case which is 1..4 sprite groups per frame). */
+        /* Queue full — fall back to an immediate, unsynced write.  This
+         * reintroduces tearing for the overflow sprites, so it should
+         * never trigger in practice; DEMO_SPRITE_QUEUE_MAX must stay
+         * above every chapter's real per-frame draw count. */
         DemoSpriteDraw tmp = {1u, screen_id, first_sprite, x, y,
                               strips, rows, scale_x, scale_y, hflip};
         demo_perform_sprite_draw(&tmp);
