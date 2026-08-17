@@ -161,6 +161,24 @@ static void NEOGEO_USER demo_reset_sprite_window_cache(void)
     }
 }
 
+/* Public entry point for chap_header() (demo_unified.c) to call at the
+ * start of every chapter.  This cache is otherwise never reset by the
+ * normal per-chapter clear path (ng_clear_screen_full() only clears
+ * sprite VRAM/SCB state, not this tracking table) - it's global and
+ * cumulative across the whole ROM run, only reset via
+ * demo_clear_all_sprites()/demo_safe_show(), which chapters don't
+ * call.  Every distinct first_sprite value any chapter has ever used
+ * this run permanently occupies a slot until evicted, so a run with
+ * enough distinct one-off slot numbers across many chapters can starve
+ * a later chapter (like the 24-enemy shooter, which alone needs ~35)
+ * of free slots, forcing thrashing/corruption before it even gets
+ * going.  A plain VRAM clear doesn't touch this table at all, so this
+ * has to be called explicitly. */
+void NEOGEO_USER demo_sprite_window_cache_reset(void)
+{
+    demo_reset_sprite_window_cache();
+}
+
 static NGSpriteWindow * NEOGEO_USER demo_sprite_window_find(uint16_t first_sprite)
 {
     uint8_t i;

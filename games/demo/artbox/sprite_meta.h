@@ -26,7 +26,7 @@ typedef struct {
 #define NG_ASSET_CATEGORY_OPPONENT 2
 #define NG_ASSET_CATEGORY_NPC 3
 
-#define NG_ASSET_META_COUNT 131
+#define NG_ASSET_META_COUNT 150
 
 static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 0, 16, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* 0.png */
@@ -160,6 +160,25 @@ static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 32768, 144, 8, 5, 4, 11, 2, 12, 124, 68, 1, 3 }, /* zzz_ufo_green.png */
     { 33024, 145, 8, 5, 4, 11, 2, 8, 124, 72, 1, 3 }, /* zzz_ufo_pink.png */
     { 33280, 146, 8, 4, 4, 12, 2, 2, 124, 62, 1, 3 }, /* zzz_ufo_yellow.png */
+    { 33536, 147, 8, 6, 4, 10, 14, 1, 99, 95, 1, 3 }, /* zzzz_duck_back.png */
+    { 33792, 148, 8, 6, 4, 10, 14, 1, 99, 95, 1, 3 }, /* zzzz_duck_target_brown.png */
+    { 34048, 149, 8, 6, 4, 10, 14, 1, 99, 95, 1, 3 }, /* zzzz_duck_target_white.png */
+    { 34304, 150, 8, 6, 4, 10, 14, 1, 99, 95, 1, 3 }, /* zzzz_duck_target_yellow.png */
+    { 34560, 151, 2, 2, 7, 14, 0, 0, 32, 32, 1, 3 }, /* zzzzz_hitbox.png */
+    { 34816, 152, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzz_particle_dust.png */
+    { 35072, 153, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzz_particle_explosion.png */
+    { 35328, 154, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzz_particle_hitspark.png */
+    { 35584, 155, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzz_particle_magic.png */
+    { 35840, 156, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzz_particle_smoke.png */
+    { 36096, 157, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzzz_ssg_starfield.png */
+    { 36352, 158, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzzzz_enemyship_blue.png */
+    { 36608, 159, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzzzz_enemyship_green.png */
+    { 36864, 160, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzzzz_enemyship_pink.png */
+    { 37120, 161, 12, 16, 2, 0, 10, 0, 172, 256, 1, 3 }, /* zzzzzzzz_player_vessel.png */
+    { 37376, 162, 4, 6, 6, 10, 0, 0, 64, 96, 1, 3 }, /* zzzzzzzzz_balloon_blue.png */
+    { 37632, 163, 4, 6, 6, 10, 0, 0, 64, 96, 1, 3 }, /* zzzzzzzzz_balloon_green.png */
+    { 37888, 164, 4, 6, 6, 10, 0, 0, 64, 96, 1, 3 }, /* zzzzzzzzz_balloon_red.png */
+    { 38144, 165, 4, 6, 6, 10, 0, 0, 64, 96, 1, 3 }, /* zzzzzzzzz_balloon_yellow.png */
 };
 
 #endif
