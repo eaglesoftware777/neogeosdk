@@ -1325,6 +1325,13 @@ play_adpcmb_index:
     ld de,$1000
     call force_write_a
 
+    ; Step 6b: Ensure L+R outputs are enabled.  Reg $11 (active-high
+    ; pan) defaults indeterminate after some chip resets; explicitly
+    ; writing $C0 (L on + R on) prevents the "mute despite playback"
+    ; failure mode.  soundSetADPCMBPan can override this at any time.
+    ld de,$11C0
+    call force_write_a
+
     ; Step 7: Start playback
     ld de,$1080
     call force_write_a

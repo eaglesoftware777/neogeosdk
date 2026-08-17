@@ -74,6 +74,7 @@ void NEOGEO_USER playSFXB(uint8_t n);
 void NEOGEO_USER playSFX(uint8_t n);
 void NEOGEO_USER playVoiceCue(uint8_t n);
 void NEOGEO_USER ng_clear_screen_full(void);
+void NEOGEO_USER demo_sprite_window_cache_reset(void);
 
 #define U_FLOOR_Y       192
 #define U_CENTRE_X      160
@@ -100,6 +101,10 @@ void NEOGEO_USER ng_clear_screen_full(void);
 #define ENEMY_SLOT_FIRST   80u
 
 #define U_BG_FOREST        2u
+/* The second background already in the pipeline (screen_id 1,
+ * games/demo/artbox/in/backgrounds/0.png - mountain/waterfall/pagoda
+ * scene) was sitting unused. */
+#define U_BG_MOUNTAIN      1u
 
 #define U_SHOOTER_ENEMY          122u
 #define U_SHOOTER_ENEMY_BULLET   123u
@@ -117,6 +122,74 @@ void NEOGEO_USER ng_clear_screen_full(void);
 #define U_UFO_GREEN              129u
 #define U_UFO_PINK               130u
 #define U_UFO_YELLOW             131u
+
+/* CC0 (public domain), Kenney "Shooting Gallery" pack via OpenGameArt.org -
+ * appended after the UFO entries so no index shifted (verified: 131
+ * existing entries unchanged, 4 new ones landed at 132-135).  Replaces
+ * the target range chapter's old target sprites (reused hero/effect
+ * frames 49/50/51/53, which didn't read as "targets" at all). */
+#define U_DUCK_BACK              132u
+#define U_DUCK_TARGET_BROWN      133u
+#define U_DUCK_TARGET_WHITE      134u
+#define U_DUCK_TARGET_YELLOW     135u
+
+/* CC0 (public domain), "Wooden box - Pixel art 32x32" by MSavioti via
+ * OpenGameArt.org - appended after the duck entries so no index shifted
+ * (verified: 135 existing entries unchanged, landed at 136).  Replaces
+ * the joystick chapter's ASCII "#"/"." grid stand-in for its punch
+ * target with an actual pixel-art crate. */
+#define U_HITBOX                 136u
+
+/* CC0 (public domain), Kenney "Particle Pack" via OpenGameArt.org -
+ * appended after the hitbox entry so no index shifted (verified: 136
+ * existing entries unchanged, 5 new ones landed at 137-141).  The pack's
+ * sprites are grayscale (designed for additive blending, which the
+ * NeoGeo hardware can't do), so each was pre-tinted to its particle
+ * role before import.  Replaces the particles chapter's single reused
+ * effect sprite (048.png strip) standing in for every particle kind -
+ * dust, magic, hit-spark, explosion and smoke all looked identical. */
+#define U_PARTICLE_DUST          137u
+#define U_PARTICLE_EXPLOSION     138u
+#define U_PARTICLE_HITSPARK      139u
+#define U_PARTICLE_MAGIC         140u
+#define U_PARTICLE_SMOKE         141u
+
+/* CC0 (public domain), "Seamless Space Backgrounds" (Starfield 3) by
+ * Screaming Brain Studios via OpenGameArt.org - appended after the
+ * particle entries so no index shifted (verified: 141 existing entries
+ * unchanged, landed at 142).  The "npcs" catch-all category gets the
+ * same full 256x256 canvas as the dedicated "backgrounds" category, so
+ * this can be drawn with the same draw_background() primitive used
+ * elsewhere without needing the (unsafe-to-append-to) backgrounds/
+ * folder.  Replaces the SSG arcade's plain black backdrop. */
+#define U_SSG_STARFIELD          142u
+
+/* User-provided ship art (games/demo/artbox/in/npcs/zzzzzzzz_*) -
+ * appended after the starfield entry so no index shifted (verified:
+ * 142 existing entries unchanged, landed at 143-146).  Replaces the
+ * UFO enemies and the shooter/player ship.  Pink/green are hue-rotated
+ * from the source blue so all three read as one consistent enemy
+ * design instead of mixed art styles across rows.  The player vessel
+ * source was a JPEG with a checkerboard baked into the pixels instead
+ * of real alpha (JPEG has no alpha channel at all) - flood-filled the
+ * checker tones out from the image edges before import so the sprite
+ * doesn't carry a "many dots" artifact from the transparency being
+ * misread. */
+#define U_ENEMYSHIP_BLUE         143u
+#define U_ENEMYSHIP_GREEN        144u
+#define U_ENEMYSHIP_PINK         145u
+#define U_PLAYER_VESSEL          146u
+
+/* Simple procedurally-generated balloons (no licensing question -
+ * avoids the CC-BY-SA/attribution options found while sourcing this)
+ * - appended after the player vessel entry so no index shifted
+ * (verified: 146 existing entries unchanged, landed at 147-150).
+ * Replaces the scrolling-level chapter's cat NPC waypoint markers,
+ * which shouldn't be NPCs at all in that chapter. */
+#define U_BALLOON_BLUE           147u
+#define U_BALLOON_GREEN          148u
+#define U_BALLOON_RED            149u
+#define U_BALLOON_YELLOW         150u
 
 /*
  * Char rendering scale presets.  The NeoGeo sprite chip can only
@@ -162,6 +235,13 @@ static const uint16_t s_palfx_base[16] = {
 static uint8_t  s_draw_chars      = 0u;
 static uint8_t  s_draw_particles  = 0u;
 
+/* Whichever face was picked (or left on, in AI mode) when chap_char_select()
+ * finished - 0 = girl, 1 = eagle.  Later chapters that want to reflect the
+ * player's choice (e.g. palette FX) read this instead of hardcoding a
+ * character. */
+static uint8_t  s_selected_char   = 1u;   /* defaults to eagle if select
+                                            * chapter never runs first */
+
 /* Bottom-row caption bar (row 27) — set once per chapter by chap_header(),
  * redrawn every frame by uframe() with a live elapsed-time counter so
  * every scene carries a concise "what is this" label plus proof it's
@@ -175,6 +255,31 @@ static uint16_t s_chapter_elapsed = 0u;
  * argument (whose numbering follows source layout, not playback order,
  * and is left alone). */
 static uint8_t  s_chapter_view_index = 0u;
+
+/*
+ * ADPCM-B streamed TRACKs have no hardware loop - the chip plays from
+ * start address to end address once and stops.  soundPlayGameLoop()'s
+ * name is aspirational: nothing on the Z80 side re-triggers it, so any
+ * chapter that runs longer than the selected TRACK's raw sample length
+ * goes completely silent for the rest of the chapter (confirmed against
+ * games/demo/sound/samples/in_wav_b - the wav files there run 11..82s,
+ * while several chapters run well past that once a player lingers or
+ * plays for a while).  This table (frames at 60Hz, ~0.5s short of the
+ * real length as a retrigger margin) lets uframe() restart the current
+ * TRACK from the top just before it would run out, so background music
+ * actually loops instead of playing once and dying.  Order matches
+ * soundPlayGameLoop's own TRACK_pool (games/demo/sound/samples/in_wav_b,
+ * skipping TRACK_E which is reserved for the eyecatcher: A/B/C/D/F/G/H/I).
+ */
+static const uint16_t s_bgm_loop_frames[8] = {
+    647u, 4425u, 4884u, 2649u, 3570u, 2010u, 2130u, 3150u
+};
+static const uint8_t s_bgm_track_id[8] = {
+    SOUND_TRACK_A, SOUND_TRACK_B, SOUND_TRACK_C, SOUND_TRACK_D,
+    SOUND_TRACK_F, SOUND_TRACK_G, SOUND_TRACK_H, SOUND_TRACK_I
+};
+static uint8_t  s_bgm_track       = 0xFFu;   /* 0xFF = watchdog disarmed */
+static uint16_t s_bgm_frames_left = 0u;
 
 static void NEOGEO_USER hero_scale(uint8_t scale);
 
@@ -222,6 +327,20 @@ static uint8_t NEOGEO_USER uframe(void)
         line[p++] = 'E'; line[p++] = 'X'; line[p++] = 'T';
         line[p] = '\0';
         demo_fix_puts(2u, 27u, line, 0u);
+    }
+
+    /* Background-music loop watchdog - see s_bgm_loop_frames above.
+     * Only armed while a chapter is using snd_cross_to()'s TRACK bed;
+     * chap_sound()'s manual TRACK-cycling demo never calls
+     * snd_cross_to(), so s_bgm_track stays 0xFF and this is a no-op
+     * there. */
+    if (s_bgm_track != 0xFFu) {
+        if (s_bgm_frames_left > 0u) {
+            s_bgm_frames_left--;
+        } else {
+            playSFXB(s_bgm_track_id[s_bgm_track]);
+            s_bgm_frames_left = s_bgm_loop_frames[s_bgm_track];
+        }
     }
 
     perf_hud_draw();
@@ -280,6 +399,8 @@ static void NEOGEO_USER snd_cross_to(uint8_t track)
     snd_step();
     soundPlayGameLoop(track);
     snd_step();
+    s_bgm_track = (uint8_t)(track & 0x07u);
+    s_bgm_frames_left = s_bgm_loop_frames[s_bgm_track];
 }
 
 static void NEOGEO_USER snd_silence(void)
@@ -288,6 +409,7 @@ static void NEOGEO_USER snd_silence(void)
     (void)uwait(10u);
     soundStopAll();
     snd_step();
+    s_bgm_track = 0xFFu;
 }
 
 /* ------------------------------------------------------------------ */
@@ -301,6 +423,15 @@ static void NEOGEO_USER chap_header(uint8_t n,
 
     /* hard reset hardware + char/physics/particles/feedback/palette FX */
     ng_clear_screen_full();
+    /* The sprite-window tracking cache (demo.c) is separate from VRAM/
+     * SCB state and is NOT touched by ng_clear_screen_full() - it's
+     * global across the whole ROM run and only reset via helpers no
+     * chapter here calls, so distinct slot numbers used by earlier
+     * chapters permanently occupy its 48 entries until evicted.  Reset
+     * it every chapter so each one gets the full budget fresh instead
+     * of starving a later, slot-heavy chapter (e.g. the 24-enemy
+     * shooter) of room and causing sprite thrashing/corruption. */
+    demo_sprite_window_cache_reset();
     /*
      * Pure black keeps transparent padding and freshly-cleared FIX cells
      * from reading as large pale rectangles during chapter transitions.
@@ -319,6 +450,11 @@ static void NEOGEO_USER chap_header(uint8_t n,
     s_draw_chars     = 0u;
     s_draw_particles = 0u;
     hero_scale(U_SCALE_FULL);
+
+    /* Disarm the BGM loop watchdog - re-armed only if this chapter calls
+     * snd_cross_to() itself, so chapters managing sound manually (the
+     * sound tour, the SSG-only shooter) aren't second-guessed. */
+    s_bgm_track = 0xFFu;
 
     /* Displayed number is the chapter's position in actual viewing order
      * (1, 2, 3...), not the `n` id argument — call sites number by source
@@ -744,35 +880,39 @@ static uint8_t NEOGEO_USER chap_fix(void)
     /* Clear only working rows; avoid reprinting blank strings over art. */
     clear_fix_rect_force(0u, 5u, 40u, 22u);
 
-    demo_fix_puts(2u, 2u, "INFIX 0..3  DEFAULT COLOURS", 1u);
+    /* Every block in this section used to hardcode palette 0, reading
+     * flat/monochrome next to the palette-cycling counter above it.
+     * Spreading the same 3 palettes (0/1/2) across the blocks keeps
+     * this section just as colourful. */
+    demo_fix_puts(2u, 2u, "INFIX 0..3  MULTI-PALETTE", 1u);
     draw_infix_block(infix[0].tile_base, infix[0].cols, infix[0].rows,
-                     1u,  5u, 0u);
+                     1u,  5u, 1u);
     draw_infix_block(infix[3].tile_base, infix[3].cols, infix[3].rows,
-                     27u, 6u, 0u);
+                     27u, 6u, 2u);
     draw_infix_block(infix[2].tile_base, infix[2].cols, infix[2].rows,
                      1u, 11u, 0u);
     draw_infix_block(infix[1].tile_base, infix[1].cols, infix[1].rows,
-                     0u, 20u, 0u);
+                     0u, 20u, 1u);
     if (uwait(120u)) return 1u;
 
     clear_fix_rect_force(0u, 5u, 40u, 22u);
-    demo_fix_puts(2u, 2u, "INFIX 4..7  DEFAULT COLOURS", 1u);
+    demo_fix_puts(2u, 2u, "INFIX 4..7  MULTI-PALETTE", 1u);
     draw_infix_block(infix[4].tile_base, infix[4].cols, infix[4].rows,
-                     4u,  5u, 0u);
+                     4u,  5u, 2u);
     draw_infix_block(infix[5].tile_base, infix[5].cols, infix[5].rows,
                      2u, 11u, 0u);
     draw_infix_block(infix[6].tile_base, infix[6].cols, infix[6].rows,
-                     24u, 12u, 0u);
+                     24u, 12u, 1u);
     draw_infix_block(infix[7].tile_base, infix[7].cols, infix[7].rows,
-                     4u, 19u, 0u);
+                     4u, 19u, 2u);
     if (uwait(120u)) return 1u;
 
     clear_fix_rect_force(0u, 5u, 40u, 22u);
     demo_fix_puts(2u, 2u, "INFIX 8..9 + SFIX SHEET", 1u);
     draw_infix_block(infix[8].tile_base, infix[8].cols, infix[8].rows,
-                     2u,  6u, 0u);
+                     2u,  6u, 1u);
     draw_infix_block(infix[9].tile_base, infix[9].cols, infix[9].rows,
-                     4u, 12u, 0u);
+                     4u, 12u, 2u);
     draw_infix_block(1108u, 16u, 8u, 12u, 19u, 0u);
     if (uwait(120u)) return 1u;
 
@@ -931,7 +1071,10 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
-    playFMTrack(SOUND_FM_F);                  snd_step();
+    /* Was SOUND_FM_F, already heard in section 5 and fairly sparse -
+     * SOUND_FM_B ("fast bouncy lead", quick arpeggiated 16th-note
+     * runs) makes both vibrato and tempo changes far more audible. */
+    playFMTrack(SOUND_FM_B);                  snd_step();
 
     demo_fix_puts(2u, 15u, "LFO OFF      (flat reference)     ", 1u);
     soundFMSetLFO(0x00u); snd_step();
@@ -968,23 +1111,34 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0x00u, 0x0Eu, 0x00u); snd_step();
-    for (i = 0u; i < 3u; i++) {
-        char lbl[8];
-        lbl[0] = 'S'; lbl[1] = 'S'; lbl[2] = 'G'; lbl[3] = ' ';
-        lbl[4] = (char)('0' + (i + 1u)); lbl[5] = '\0';
-        demo_fix_puts(2u, 17u, lbl, 1u);
-        soundStopMusic();             snd_step();
-        /* playSSGTrack's driver handler (play_ssg_index) unconditionally
-         * resets VAR_SSG_PRESET to 0 as part of loading the track, so a
-         * soundSetSSGPreset() call BEFORE playSSGTrack was silently
-         * discarded every iteration - all 3 "different" tracks were
-         * actually playing under preset 0.  soundSetSSGPreset's own
-         * handler (exec_p_ssgpreset) only updates the preset and
-         * reapplies it - it doesn't reload the track - so calling it
-         * after is what actually makes the requested preset stick. */
-        playSSGTrack(i);              snd_step();
-        soundSetSSGPreset(i);         snd_step();
-        if (uwait(360u)) return 1u;
+    /* Was A/B/C (0,1,2) - B ("mix bass pulse") is a plain repeating
+     * root-note thump with no real melody, weak next to A's ascending
+     * "star coin ladder" run and C's "red alert climb".  D ("spare low
+     * pulse") still has arpeggiated movement and a proper melodic
+     * close, so it reads as an actual loop rather than a pulse. */
+    {
+        static const uint8_t s_ssg_showcase[3] = {
+            SOUND_SSG_A, SOUND_SSG_D, SOUND_SSG_C
+        };
+        for (i = 0u; i < 3u; i++) {
+            uint8_t track = s_ssg_showcase[i];
+            char lbl[8];
+            lbl[0] = 'S'; lbl[1] = 'S'; lbl[2] = 'G'; lbl[3] = ' ';
+            lbl[4] = (char)('0' + (i + 1u)); lbl[5] = '\0';
+            demo_fix_puts(2u, 17u, lbl, 1u);
+            soundStopMusic();             snd_step();
+            /* playSSGTrack's driver handler (play_ssg_index) unconditionally
+             * resets VAR_SSG_PRESET to 0 as part of loading the track, so a
+             * soundSetSSGPreset() call BEFORE playSSGTrack was silently
+             * discarded every iteration - all 3 "different" tracks were
+             * actually playing under preset 0.  soundSetSSGPreset's own
+             * handler (exec_p_ssgpreset) only updates the preset and
+             * reapplies it - it doesn't reload the track - so calling it
+             * after is what actually makes the requested preset stick. */
+            playSSGTrack(track);          snd_step();
+            soundSetSSGPreset(track);     snd_step();
+            if (uwait(360u)) return 1u;
+        }
     }
     /* FULL teardown so the next section starts on a known-good
      * driver state — soundStopMusic alone left state that could
@@ -1016,7 +1170,9 @@ static uint8_t NEOGEO_USER chap_sound(void)
     {
         static const uint8_t s_mix_track[3] = { SOUND_TRACK_A, SOUND_TRACK_C, SOUND_TRACK_G };
         static const uint8_t s_mix_fm[3]    = { SOUND_FM_C, SOUND_FM_D, SOUND_FM_C };
-        static const uint8_t s_mix_ssg[3]   = { SOUND_SSG_B, SOUND_SSG_A, SOUND_SSG_B };
+        /* Was {B, A, B} - always use SSG3 (SOUND_SSG_C, "red alert
+         * climb") for every mix instead of varying per mix. */
+        static const uint8_t s_mix_ssg[3]   = { SOUND_SSG_C, SOUND_SSG_C, SOUND_SSG_C };
         static const char *const s_mix_lbl[3] = {
             "MIX A  bed + FM piano + SSG bass  ",
             "MIX B  bed + FM stab + SSG pulse  ",
@@ -1112,6 +1268,44 @@ static uint8_t NEOGEO_USER chap_sound(void)
     if (uwait(220u)) return 1u;
 
     soundStopAll(); snd_step();
+    demo_fix_puts(2u, 23u, "                                  ", 0u);
+
+    /* --- 11) MML MUSIC — the driver's own native music engine ------ *
+     *
+     * Every prior music-shaped section in this chapter (1, 5, 6, 7)
+     * plays a pre-selected TRACK/FM/SSG asset picked by the demo, not
+     * the driver's own MML sequencer.  playMusic() drives a genuinely
+     * separate engine (VAR_MUSIC_ACTIVE / music_tick / music_loop in
+     * driver.asm, its own command_track_table) built from the raw
+     * .mml files under games/demo/sound/mml/ - and unlike the ADPCM-B
+     * TRACKs in section 1 (which have no hardware loop and just play
+     * once), this engine loops natively on the Z80 side.  Each track
+     * runs long enough to hear it reach its own loop point and restart
+     * from the top without any 68k intervention. */
+    demo_fix_puts(2u, 5u, "11. MML MUSIC (driver-native loop) ", 2u);
+    {
+        static const uint8_t s_mml_showcase[3] = {
+            SOUND_MUSIC_A, SOUND_MUSIC_D, SOUND_MUSIC_G
+        };
+        static const char *const s_mml_lbl[3] = {
+            "MML A  (0_mml_example_a)          ",
+            "MML D  (3_mml_example_d)          ",
+            "MML G  (6_mml_example_g)          "
+        };
+        for (i = 0u; i < 3u; i++) {
+            demo_fix_puts(2u, 22u, "Listen: track loops on its own    ", 0u);
+            demo_fix_puts(2u, 23u, s_mml_lbl[i], 1u);
+            soundStopAll();                            snd_step();
+            soundSceneReset();                         snd_step();
+            soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
+            playMusic(s_mml_showcase[i]);              snd_step();
+            if (uwait(300u)) return 1u;
+        }
+    }
+    soundFadeOutSpeed(8u); snd_step();
+    if (uwait(40u)) return 1u;
+    soundStopAll(); snd_step();
+    demo_fix_puts(2u, 22u, "                                  ", 0u);
     demo_fix_puts(2u, 23u, "                                  ", 0u);
     return 0u;
 }
@@ -1327,6 +1521,25 @@ static uint8_t NEOGEO_USER chap_char_select(void)
     demo_load_screen_palette(eagle_ground);
     for (i = 0u; i < EAGLE_FRAME_COUNT; i++) demo_load_screen_palette(eagle_frames[i]);
 
+    /* Decorative FIX-layer border around the portrait selection area -
+     * this chapter had nothing but bare text before, no frame around
+     * the two picks. */
+    {
+        char rule[35];
+        uint8_t p;
+        uint8_t row;
+        rule[0] = '+';
+        for (p = 1u; p < 33u; p++) rule[p] = '-';
+        rule[33] = '+';
+        rule[34] = '\0';
+        demo_fix_puts(3u, 5u, rule, 1u);
+        for (row = 6u; row < 24u; row++) {
+            demo_fix_puts(3u,  row, "|", 1u);
+            demo_fix_puts(35u, row, "|", 1u);
+        }
+        demo_fix_puts(3u, 24u, rule, 1u);
+    }
+
     for (t = 0u; t < 900u; t++) {
         uint16_t joy = poll_joystick();
         uint16_t edge = (uint16_t)(joy & (uint16_t)(~prev_joy));
@@ -1361,9 +1574,11 @@ static uint8_t NEOGEO_USER chap_char_select(void)
         draw_asset_bottom_center(girl_frame,  SLOT_GIRL,  110, 180, U_SCALE_60, U_SCALE_60);
         draw_asset_bottom_center(eagle_frame, SLOT_EAGLE, 210, 180, U_SCALE_45, U_SCALE_45);
         anim_t++;
+        s_selected_char = sel;
 
         if (uframe()) return 1u;
     }
+    s_selected_char = sel;
     return 0u;
 }
 
@@ -1430,13 +1645,13 @@ static uint8_t NEOGEO_USER chap_physics(void)
     snd_cross_to(SOUND_MUSIC_A);
 
     /*
-     * Bar drawn at row 23 (Y=184..191) to align with the physics solid's
-     * top at Y=184 - it was previously one row lower (row 24, Y=192) to
-     * avoid the FIX layer drawing over the eagle's feet, but that left
-     * a visible 8px gap between the grounded eagle and the line it's
-     * meant to be standing on.
+     * Bar drawn at row 25 (Y=200..207).  Row 23 (the solid's own top,
+     * Y=184) visibly cut across the eagle; row 24 (Y=192) was still
+     * reported as crossing it - the eagle's actual rendered sprite
+     * bottom must be sitting a bit below its physics-grounded Y, so
+     * one more row down.
      */
-    demo_fix_puts(0u, 23u, "========================================", 2u);
+    demo_fix_puts(0u, 25u, "========================================", 2u);
 
     /*
      * EXTRA hard clear before physics setup — kills any stale strip
@@ -1716,7 +1931,11 @@ static uint8_t NEOGEO_USER chap_camera(void)
     const int16_t  WORLD_RIGHT  = 768;
     const int16_t  WORLD_BOTTOM = 320;             /* > 224 -> Y can scroll */
     const int16_t  PAN_DEST_X   = 384;             /* world centre          */
-    const int16_t  HERO_Y_REST  = 156;             /* mid-low resting band  */
+    /* Was 156 - chap_mini_game uses GROUND_Y=204 against this same
+     * U_BG_FOREST background, and 156 left the hero floating ~48px
+     * above that same ground line instead of standing on it. */
+    const int16_t  HERO_Y_REST  = 204;             /* matches U_BG_FOREST's
+                                                    * ground line          */
     const uint16_t MODE_FRAMES  = 180u;            /* 3 sec per mode -> 18 s
                                                     * total for 6 modes    */
     const uint16_t TOTAL_FRAMES = MODE_FRAMES * CAMLAB_MODE_COUNT;
@@ -1924,6 +2143,15 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
     demo_load_screen_palette(s_fx_effect_frames[3]);
     demo_fix_puts(2u, 6u, "ACTIVE:", 1u);
 
+    /* Corner portrait of whichever face the player picked in the char
+     * select chapter (s_selected_char) - this scene otherwise had no
+     * link back to that choice at all. */
+    {
+        uint8_t badge_frame = (s_selected_char == 0u) ? 68u : 75u;
+        demo_load_screen_palette(badge_frame);
+        demo_fix_puts(2u, 20u, "PLAYING AS:", 1u);
+    }
+
     for (t = 0u; t < 660u; t++) {
         uint8_t next_stage = (uint8_t)(t / 132u);
         uint8_t pose = s_fx_char_frames[(t / 12u) % 5u];
@@ -1971,6 +2199,8 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
         draw_asset_bottom_center(fx_right, 172u, 250, 98, U_SCALE_55, U_SCALE_55);
         draw_asset_bottom_center(pose, HERO_SLOT_FIRST, 160,
                                  FX_HERO_LIFT_Y, U_SCALE_55, U_SCALE_55);
+        draw_asset_bottom_center((s_selected_char == 0u) ? 68u : 75u, 180u,
+                                 36, 210, U_SCALE_30, U_SCALE_30);
 
         if (uframe()) return 1u;
     }
@@ -1985,10 +2215,21 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
 static uint8_t NEOGEO_USER chap_particles(void)
 {
     uint16_t t;
-    const uint8_t spark_id    = s_fx_effect_frames[0];
-    const uint8_t impact_id   = s_fx_char_frames[4];
-    const uint16_t spark_tile = DEMO_SCREEN_TILE(spark_id);
-    const uint8_t  spark_pal  = DEMO_SCREEN_PALETTE(spark_id);
+    const uint8_t impact_id  = s_fx_char_frames[4];
+    /* Dedicated art per particle kind (U_PARTICLE_*) instead of one
+     * reused effect strip standing in for dust/magic/spark/explosion/
+     * smoke alike - see the U_PARTICLE_* block near the top of the
+     * file. */
+    const uint16_t dust_tile = DEMO_SCREEN_TILE(U_PARTICLE_DUST);
+    const uint8_t  dust_pal  = DEMO_SCREEN_PALETTE(U_PARTICLE_DUST);
+    const uint16_t magic_tile = DEMO_SCREEN_TILE(U_PARTICLE_MAGIC);
+    const uint8_t  magic_pal  = DEMO_SCREEN_PALETTE(U_PARTICLE_MAGIC);
+    const uint16_t hit_tile  = DEMO_SCREEN_TILE(U_PARTICLE_HITSPARK);
+    const uint8_t  hit_pal   = DEMO_SCREEN_PALETTE(U_PARTICLE_HITSPARK);
+    const uint16_t boom_tile = DEMO_SCREEN_TILE(U_PARTICLE_EXPLOSION);
+    const uint8_t  boom_pal  = DEMO_SCREEN_PALETTE(U_PARTICLE_EXPLOSION);
+    const uint16_t smoke_tile = DEMO_SCREEN_TILE(U_PARTICLE_SMOKE);
+    const uint8_t  smoke_pal  = DEMO_SCREEN_PALETTE(U_PARTICLE_SMOKE);
 
     chap_header(9u, "PARTICLES", "HERO SPECIAL MOVE + FX");
     /* Same hard wipe as the palette FX chapter so the lower hero
@@ -1996,13 +2237,18 @@ static uint8_t NEOGEO_USER chap_particles(void)
      * next pose is narrower than the previous one. */
     ng_sprite_park_off_range(HERO_SLOT_FIRST, 16u);
     demo_fix_puts(2u, 2u, "EFFECTS STAY ABOVE  CHARACTER BELOW", 1u);
-    demo_fix_puts(2u, 3u, "040/041/048/050 PARTICLE BURSTS",0u);
+    demo_fix_puts(2u, 3u, "DUST / MAGIC / SPARK / EXPLOSION / SMOKE",0u);
     demo_fix_puts(2u, 4u, "ACTIVE: ",                    2u);
     snd_cross_to(SOUND_MUSIC_F);
 
     hero_place(160, 152);
-    demo_load_screen_palette(spark_id);
     demo_load_screen_palette(impact_id);
+    demo_load_screen_palette(U_PARTICLE_DUST);
+    demo_load_screen_palette(U_PARTICLE_MAGIC);
+    demo_load_screen_palette(U_PARTICLE_HITSPARK);
+    demo_load_screen_palette(U_PARTICLE_EXPLOSION);
+    demo_load_screen_palette(U_PARTICLE_SMOKE);
+    demo_load_screen_palette((s_selected_char == 0u) ? 68u : 75u);
 
     s_draw_particles = 1u;
 
@@ -2012,26 +2258,32 @@ static uint8_t NEOGEO_USER chap_particles(void)
          *   [  0..160) WIND-UP        : faint dust around feet
          *   [160..360) STRIKE         : magic sparks burst from sword arc
          *   [360..540) FINISHER       : explosion + smoke ring + screen-flash
+         *
+         * bx/by track the moving strike point.  Was centred around
+         * y=78..98, ~80px above where the hero actually stands
+         * (FX_HERO_LIFT_Y) - the sparks read as floating disconnected
+         * over the character's head instead of coming from their
+         * weapon.  Rebased near the character's own height instead.
          */
         uint8_t hero_frame;
         int16_t bx = (int16_t)(92 + (int16_t)((t * 2u) % 136u));
-        int16_t by = (int16_t)(78 + (int16_t)((t & 31u) >> 3));
+        int16_t by = (int16_t)(FX_HERO_LIFT_Y - 34 + (int16_t)((t & 31u) >> 3));
 
         if (t < 160u) {
             hero_frame = s_fx_char_frames[(t / 12u) % 5u];
             if ((t % 12u) == 0u) {
                 ng_particle_spawn(NG_PART_DUST, NG_PART_PRI_NORMAL,
                                   (int16_t)(126 + (int16_t)(t & 15u)),
-                                  178,
+                                  FX_HERO_LIFT_Y,
                                   -(1L << (NG_FP_SHIFT - 1)),
                                   -(1L << (NG_FP_SHIFT - 1)),
-                                  20u, spark_tile, spark_pal, 1u, 1u);
+                                  20u, dust_tile, dust_pal, 1u, 1u);
                 ng_particle_spawn(NG_PART_DUST, NG_PART_PRI_NORMAL,
                                   (int16_t)(178 - (int16_t)(t & 15u)),
-                                  178,
+                                  FX_HERO_LIFT_Y,
                                   (1L << (NG_FP_SHIFT - 1)),
                                   -(1L << (NG_FP_SHIFT - 1)),
-                                  20u, spark_tile, spark_pal, 1u, 1u);
+                                  20u, dust_tile, dust_pal, 1u, 1u);
             }
             if (t == 8u) playSFX(SOUND_SFX_9);
         } else if (t < 360u) {
@@ -2041,19 +2293,17 @@ static uint8_t NEOGEO_USER chap_particles(void)
                                   bx, by,
                                   (3L << NG_FP_SHIFT),
                                   -(2L << NG_FP_SHIFT),
-                                  24u, spark_tile, spark_pal, 1u, 1u);
+                                  24u, magic_tile, magic_pal, 1u, 1u);
                 ng_particle_spawn(NG_PART_HIT_SPARK, NG_PART_PRI_CRITICAL,
                                   (int16_t)(bx - 6), (int16_t)(by - 4),
                                   -(1L << NG_FP_SHIFT),
                                   -(3L << NG_FP_SHIFT),
-                                  22u, (uint16_t)(spark_tile + 1u),
-                                  spark_pal, 1u, 1u);
+                                  22u, hit_tile, hit_pal, 1u, 1u);
                 ng_particle_spawn(NG_PART_MAGIC_SPARK, NG_PART_PRI_NORMAL,
                                   (int16_t)(bx + 8), (int16_t)(by + 6),
                                   (2L << NG_FP_SHIFT),
                                   (1L << NG_FP_SHIFT),
-                                  22u, (uint16_t)(spark_tile + 2u),
-                                  spark_pal, 1u, 1u);
+                                  22u, magic_tile, magic_pal, 1u, 1u);
             }
             if (t == 160u) playSFX(SOUND_SFX_7);
             if (t == 240u) playSFX(SOUND_SFX_8);
@@ -2064,30 +2314,33 @@ static uint8_t NEOGEO_USER chap_particles(void)
                 uint8_t k;
                 playSFX(SOUND_SFX_10);
                 ng_particle_spawn(NG_PART_EXPLOSION, NG_PART_PRI_CRITICAL,
-                                  160, 92, 0, 0, 36u,
-                                  spark_tile, spark_pal, 1u, 1u);
+                                  160, (int16_t)(FX_HERO_LIFT_Y - 30), 0, 0, 36u,
+                                  boom_tile, boom_pal, 1u, 1u);
                 for (k = 0u; k < 8u; k++) {
                     int32_t a = (int32_t)k * 2L;
                     ng_particle_spawn(NG_PART_SMOKE, NG_PART_PRI_NORMAL,
-                                      160, 92,
+                                      160, (int16_t)(FX_HERO_LIFT_Y - 30),
                                       (a - 8L) << (NG_FP_SHIFT - 1),
                                       -(a) << (NG_FP_SHIFT - 1),
-                                      40u, spark_tile, spark_pal, 1u, 1u);
+                                      40u, smoke_tile, smoke_pal, 1u, 1u);
                 }
             }
             if ((t % 24u) == 0u) {
                 ng_particle_spawn(NG_PART_MAGIC_SPARK, NG_PART_PRI_NORMAL,
                                   (int16_t)(160 + ((int16_t)(t & 31u) - 16)),
-                                  86,
+                                  (int16_t)(FX_HERO_LIFT_Y - 42),
                                   0, -(1L << NG_FP_SHIFT),
-                                  30u, spark_tile, spark_pal, 1u, 1u);
+                                  30u, magic_tile, magic_pal, 1u, 1u);
             }
         }
 
-        draw_asset_bottom_center(s_fx_effect_frames[(t / 8u) & 3u],
-                                 164u, bx, by, U_SCALE_55, U_SCALE_55);
         draw_asset_bottom_center(hero_frame, HERO_SLOT_FIRST,
                                  160, FX_HERO_LIFT_Y, U_SCALE_55, U_SCALE_55);
+
+        /* The other picked face watches from the side, standing at
+         * rest - this scene otherwise showed only the acting hero. */
+        draw_asset_bottom_center((s_selected_char == 0u) ? 68u : 75u, 184u,
+                                 258, FX_HERO_LIFT_Y, U_SCALE_45, U_SCALE_45);
 
         if (uframe()) return 1u;
     }
@@ -2372,9 +2625,29 @@ static uint8_t NEOGEO_USER chap_depth_parallax(void)
     demo_fix_puts(2u, 3u, "NEAR BG LAYER MOVES AT 1.0X", 0u);
     snd_cross_to(SOUND_MUSIC_A);
 
+    /* Was playing a periodic footstep SFX with no character on screen
+     * at all - a walking figure gives the cue something to belong to,
+     * and doubles as a clear foreground reference point for the
+     * parallax effect itself.  Same one-shot hard clear the other
+     * hero_draw()-using chapters do, so the hero doesn't pick up a
+     * stale sprite window left over from whatever ran before this. */
+    ng_sprite_park_off_range(HERO_SLOT_FIRST, 16u);
+    hero_scale(U_SCALE_57);
+    hero_place(160, 176);
+
     for (t = 0u; t < 480u; t++) {
-        far_x  = (int16_t)(far_x  - 1);
-        near_x = (int16_t)(near_x - 2);
+        uint8_t frame = s_hero_walk[(t / 6u) % 8u];
+
+        /* These backgrounds are one-off scenic images, not seamless
+         * tiling textures - the wrap-around seam (source's right edge
+         * jump-cutting back to its left edge) is genuinely visible at
+         * every wrap.  Was 1px/2px per frame, wrapping every ~4.3s/
+         * ~2.1s - several jarring cuts within this chapter's 8s
+         * runtime read as "blinking/flashing".  Slowed to a quarter/
+         * half speed (moving only every 4th/2nd frame) so neither
+         * layer completes a full wrap during the chapter at all. */
+        if ((t & 3u) == 0u) far_x  = (int16_t)(far_x  - 1);
+        if ((t & 1u) == 0u) near_x = (int16_t)(near_x - 1);
         while (far_x  >  32) far_x  = (int16_t)(far_x  - 256);
         while (far_x  < -192) far_x = (int16_t)(far_x  + 256);
         while (near_x >  32) near_x = (int16_t)(near_x - 256);
@@ -2390,6 +2663,8 @@ static uint8_t NEOGEO_USER chap_depth_parallax(void)
         demo_draw_sprite_screen(2u, SLOT_NEAR_B, (int16_t)(near_x + 256), 0,
                                 near_strips, near_rows, 0xFFu, 0xFFu);
 
+        hero_draw(frame);
+
         if ((t % 90u) == 0u) playSFX(SOUND_SFX_5);
         if (uframe()) return 1u;
     }
@@ -2402,6 +2677,10 @@ static uint8_t NEOGEO_USER chap_depth_parallax(void)
 static uint8_t NEOGEO_USER chap_npcs(void)
 {
     enum { N = 4 };
+    /* Raised 8px above the shared U_FLOOR_Y (192, used elsewhere for
+     * full-scale characters) - at this chapter's U_SCALE_45 the NPCs
+     * read as sitting too close to the bottom edge/caption bar there. */
+    enum { NPC_FLOOR_Y = 184 };
     static const int16_t home_x[N] = { 78, 132, 188, 242 };
     NGNpc *npcs[N];
     uint8_t last_asset[N];
@@ -2421,17 +2700,17 @@ static uint8_t NEOGEO_USER chap_npcs(void)
         last_asset[i] = asset;
 
         /* npc_kind = char_kind = i (unique) so chars_find / chars_at work */
-        npcs[i] = npc_spawn((uint8_t)i, (uint8_t)i, home_x[i], U_FLOOR_Y);
+        npcs[i] = npc_spawn((uint8_t)i, (uint8_t)i, home_x[i], NPC_FLOOR_Y);
         if (!npcs[i]) continue;
         c = npc_char(npcs[i]);
         if (!c) continue;
 
         bind_character_asset(c, asset, U_SCALE_45, U_SCALE_45);
-        ng_npc_set_home(npcs[i], home_x[i], U_FLOOR_Y);
+        ng_npc_set_home(npcs[i], home_x[i], NPC_FLOOR_Y);
         ng_npc_set_patrol_bounds(npcs[i],
                                  (int16_t)(home_x[i] - 44),
                                  (int16_t)(home_x[i] + 44),
-                                 U_FLOOR_Y, U_FLOOR_Y);
+                                 NPC_FLOOR_Y, NPC_FLOOR_Y);
         npcs[i]->flags = NG_NPC_FLAG_PATROL_X | NG_NPC_FLAG_FACE_MOTION;
         ng_npc_set_think(npcs[i], ng_npc_think_patrol, 2u);
     }
@@ -2475,9 +2754,11 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
         CLONE_RECOVER   = 3u    /* brief cooldown after striking         */
     };
 
-    const uint8_t  spark_id    = 93u;
-    const uint16_t spark_tile  = DEMO_SCREEN_TILE(spark_id);
-    const uint8_t  spark_pal   = DEMO_SCREEN_PALETTE(spark_id);
+    /* Was a reused generic effect frame (93) - now the same dedicated
+     * hit-spark particle art used in chap_particles, instead of a
+     * different-but-still-generic sprite standing in for an impact. */
+    const uint16_t spark_tile  = DEMO_SCREEN_TILE(U_PARTICLE_HITSPARK);
+    const uint8_t  spark_pal   = DEMO_SCREEN_PALETTE(U_PARTICLE_HITSPARK);
     const int16_t  GROUND_Y    = 204;
     const uint16_t TOTAL       = 1800u;
     const uint16_t AGGRO_AFTER = 45u;
@@ -2513,7 +2794,7 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
     draw_background(U_BG_FOREST, 32, 16);
     hero_scale(U_SCALE_57);
     ng_joystick_init();
-    demo_load_screen_palette(spark_id);
+    demo_load_screen_palette(U_PARTICLE_HITSPARK);
     demo_load_screen_palette(HERO_IDLE_FRAME);
 
     demo_fix_puts(2u, 25u,  "SCORE:", 2u);
@@ -2728,6 +3009,7 @@ static uint8_t NEOGEO_USER chap_joystick(void)
     uint8_t  special_t = 0u;     /* >0 while QCF/DP special plays */
     uint8_t  hits      = 0u;
     uint16_t inactive  = 0u;
+    uint8_t  box_flash = 0u;     /* >0 briefly after a hit - scale pulse */
     char buf[8];
 
     chap_header(14u, "JOYSTICK", "LIVE INPUT  TWO-BUTTON SPECIALS");
@@ -2750,19 +3032,7 @@ static uint8_t NEOGEO_USER chap_joystick(void)
     demo_fix_puts(2u, 25u, "HIT BOX ON RIGHT  B STRIKE",        0u);
     demo_fix_puts(2u, 26u, "HITS:",                            2u);
 
-    /* Static FIX target hitbox. */
-    {
-        uint8_t r, c;
-        for (r = 0u; r < 4u; r++) {
-            for (c = 0u; c < 6u; c++) {
-                demo_fix_puts((uint8_t)(32u + c),
-                              (uint8_t)(12u + r),
-                              (r == 0u || r == 3u || c == 0u || c == 5u) ? "#" : ".",
-                              (uint8_t)(1u + ((c + r) & 1u)));
-            }
-        }
-    }
-
+    demo_load_screen_palette(U_HITBOX);
     draw_background(U_BG_FOREST, 32, 16);
 
     for (t = 0u; t < 1200u; t++) {
@@ -2866,10 +3136,12 @@ static uint8_t NEOGEO_USER chap_joystick(void)
         }
         (void)released;
 
-        /* Hit-test the FIX target during the active strike window.
-         * Target lives at cols 32..36, rows 13..15 → centre px (272, 112). */
+        /* Hit-test window for the box target.  Was x=276 (nearly at the
+         * 320px screen edge) - pulled in to 250 so there's clearly
+         * visible room around it.  Must stay in sync with the box's
+         * own draw position below. */
         if ((strike_t >= 6u && strike_t <= 18u) || special_t >= 6u) {
-            int16_t target_cx_px = 32 * 8 + 20;     /* 276 */
+            int16_t target_cx_px = 250;
             int16_t target_cy_px = 14 * 8 + 8;      /* 120 */
             int16_t reach_left  = (int16_t)(hero_world_x - 64);
             int16_t reach_right = (int16_t)(hero_world_x + 64);
@@ -2879,37 +3151,14 @@ static uint8_t NEOGEO_USER chap_joystick(void)
                 if (hits < 99u) hits++;
                 inactive = 0u;
                 playSFX(SOUND_SFX_8);
-                /* Visual: re-draw the target with a flash palette this frame */
-                {
-                    uint8_t r, c;
-                    for (r = 0u; r < 4u; r++) {
-                        for (c = 0u; c < 6u; c++) {
-                            demo_fix_puts((uint8_t)(32u + c),
-                                          (uint8_t)(12u + r),
-                                          (r == 0u || r == 3u || c == 0u || c == 5u) ? "#" : ".",
-                                          2u);
-                        }
-                    }
-                }
+                box_flash = 10u;   /* brief scale-pulse, drawn below */
                 strike_t = 0u;   /* one hit per swing — finish the strike */
                 special_t = 0u;
             }
         }
         if (strike_t  > 0u) strike_t--;
         if (special_t > 0u) special_t--;
-
-        /* Reset target colours after a hit-frame flash (small visual TTL) */
-        if (hits > 0u && (t & 7u) == 0u) {
-            uint8_t r, c;
-            for (r = 0u; r < 4u; r++) {
-                for (c = 0u; c < 6u; c++) {
-                    demo_fix_puts((uint8_t)(32u + c),
-                                  (uint8_t)(12u + r),
-                                  (r == 0u || r == 3u || c == 0u || c == 5u) ? "#" : ".",
-                                  (uint8_t)(1u + ((c + r) & 1u)));
-                }
-            }
-        }
+        if (box_flash  > 0u) box_flash--;
 
         if (hero_world_y < HERO_GROUND_Y || vy != 0) {
             /* pos += vel  (Y down-positive, vy negative = up) — was
@@ -2950,6 +3199,12 @@ static uint8_t NEOGEO_USER chap_joystick(void)
         s_hero_y = hero_world_y;
         hero_draw(frame);
 
+        /* Was x=276/U_SCALE_57 - pulled in from the screen edge and
+         * sized up, matching the hit-test window above. */
+        draw_asset_bottom_center(U_HITBOX, 100u, 250, 136,
+                                 box_flash ? U_SCALE_FULL : U_SCALE_70,
+                                 box_flash ? U_SCALE_FULL : U_SCALE_70);
+
         if (uframe()) return 1u;
     }
     return 0u;
@@ -2962,14 +3217,31 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
 {
     NGCamera cam;
     uint16_t t;
-    static const uint8_t s_level_bg[4] = {
-        U_BG_FOREST, U_BG_FOREST, U_BG_FOREST, U_BG_FOREST
+    /* Only one background asset (U_BG_FOREST) exists in this pipeline,
+     * and draw_scrolling_background() tiles it twice for the wrap-
+     * around loop - swapping the texture mid-scroll would flash/pop
+     * since both halves change on the same frame with no crossfade
+     * (the NeoGeo has no blend mode for one).  That's almost certainly
+     * what went wrong in the earlier attempt this was reverted from.
+     * Instead of retrying the same risky swap, each level gets its own
+     * small foreground waypoint marker at a fixed screen position, so
+     * the level genuinely reads as different without touching the
+     * scroll path.  Was cat NPC sprites, but NPCs don't belong in this
+     * chapter - colored balloons instead. */
+    static const uint8_t s_level_marker[4] = {
+        U_BALLOON_RED, U_BALLOON_BLUE, U_BALLOON_GREEN, U_BALLOON_YELLOW
     };
+    static const char *const s_level_name[4] = {
+        "GROVE", "RIDGE", "HOLLOW", "SUMMIT"
+    };
+    uint8_t i;
 
     chap_header(15u, "SCROLL LEVEL", "WORLD MAP  H/V STAGES");
     demo_fix_puts(2u, 2u, "RUN ACROSS LEVELS, THEN CLIMB", 1u);
-    demo_fix_puts(2u, 3u, "BG SWAPS AT EACH LEVEL GATE",   0u);
+    demo_fix_puts(2u, 3u, "MARKER + NAME CHANGE AT EACH GATE",   0u);
     snd_cross_to(SOUND_MUSIC_B);
+
+    for (i = 0u; i < 4u; i++) demo_load_screen_palette(s_level_marker[i]);
 
     ng_camera_init(&cam);
     ng_camera_set_bounds(&cam, 0, 0, 768, 288);
@@ -2983,7 +3255,7 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
 
     for (t = 0u; t < 780u; t++) {
         uint8_t level = (uint8_t)(1u + (t / 195u));
-        uint8_t bg = s_level_bg[(level - 1u) & 3u];
+        uint8_t level_idx = (uint8_t)((level - 1u) & 3u);
         int16_t bg_x;
         int16_t bg_y;
         int16_t jump = 0;
@@ -3002,17 +3274,20 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
         ng_camera_update(&cam, world_x, U_FLOOR_Y, 2);
         if (level < 3u) {
             bg_x = -(int16_t)((uint16_t)cam.x & 0x00FFu);
-            draw_scrolling_background(bg, bg_x, 0);
+            draw_scrolling_background(U_BG_FOREST, bg_x, 0);
             demo_fix_puts(2u, 25u, "GATE: HORIZONTAL ROAD", 2u);
         } else {
             bg_y = -(int16_t)(((t - 390u) / 4u) & 31u);
-            draw_vertical_background(bg, 32, bg_y);
+            draw_vertical_background(U_BG_FOREST, 32, bg_y);
             demo_fix_puts(2u, 25u, "GATE: VERTICAL PASS   ", 2u);
         }
 
         level_text[0] = (char)('0' + level);
         level_text[1] = '\0';
         demo_fix_puts(8u, 24u, level_text, 2u);
+        demo_fix_puts(20u, 24u, s_level_name[level_idx], 2u);
+        draw_asset_bottom_center(s_level_marker[level_idx], 220u,
+                                 292, 40, U_SCALE_30, U_SCALE_30);
 
         /* Hero stays at a fixed screen X — camera shows the world scroll */
         s_hero_x = 160;
@@ -3114,7 +3389,14 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
         RETICLE_MAX = 260
     };
     static const int16_t lane_x[TARGET_COUNT] = { -72, -26, 30, 78 };
-    static const uint8_t target_frame[TARGET_COUNT] = { 49u, 50u, 51u, 53u };
+    /* Was reusing hero/effect frames 49/50/51/53, which read as random
+     * character art rather than actual "targets."  Real duck-shooting-
+     * gallery sprites (U_DUCK_*) instead - the last lane uses the
+     * rear-facing duck as a "sneaky" bonus variant. */
+    static const uint8_t target_frame[TARGET_COUNT] = {
+        U_DUCK_TARGET_YELLOW, U_DUCK_TARGET_WHITE,
+        U_DUCK_TARGET_BROWN,  U_DUCK_BACK
+    };
     int16_t target_z[TARGET_COUNT] = { 36, 62, 88, 108 };
     uint8_t target_flash[TARGET_COUNT] = { 0u, 0u, 0u, 0u };
     int16_t reticle_x = 160;
@@ -3125,9 +3407,9 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
     uint8_t i;
     char buf[4];
 
-    chap_header(16u, "TARGET RANGE", "PERSPECTIVE FRAME  SPRITE DEPTH");
+    chap_header(16u, "TARGET RANGE", "DUCK SHOOT  SPRITE DEPTH");
     demo_fix_puts(2u, 2u, "D-PAD AIM  B FIRE", 1u);
-    demo_fix_puts(2u, 3u, "STATIC FRAME + SPRITE-SCALED TARGETS", 0u);
+    demo_fix_puts(2u, 3u, "STATIC FRAME + DUCK TARGETS", 0u);
     snd_cross_to(SOUND_MUSIC_F);
 
     for (i = 0u; i < TARGET_COUNT; i++) {
@@ -3266,21 +3548,20 @@ static uint8_t NEOGEO_USER chap_char_2d(void)
 {
     uint16_t t;
 
-    chap_header(17u, "CHAR 2D", "PATHS  EASE  FRAME BIND");
+    chap_header(17u, "CHAR 2D", "EAGLE FLIGHT ARC");
     demo_fix_puts(2u, 2u, "EAGLE FLYING FRAME BIND", 1u);
     demo_fix_puts(2u, 3u, "076 -> 077 -> 078 AT 70%", 0u);
     snd_cross_to(SOUND_MUSIC_G);
 
     draw_background(U_BG_FOREST, 32, 16);
-    demo_fix_puts(5u, 23u, "[------------------------------]", 1u);
 
     for (t = 0u; t < 600u; t++) {
         uint16_t p = (uint16_t)(t % 300u);
         uint8_t frame = s_flight_frames[(t / 8u) % 3u];
         int16_t x;
         int16_t y;
-        uint8_t k;
-        char bar[31];
+        uint16_t altitude;
+        char buf[8];
 
         if (t < 200u) {
             demo_fix_puts(2u, 6u, "PHASE: ARC WALK        ", 2u);
@@ -3298,11 +3579,14 @@ static uint8_t NEOGEO_USER chap_char_2d(void)
         y = (int16_t)(186 - (int16_t)((p < 80u) ? (p >> 2)
                                                 : ((p < 160u) ? ((160u - p) >> 2) : 0u)));
 
-        for (k = 0u; k < 30u; k++) {
-            bar[k] = (k < (uint8_t)((p * 30u) / 300u)) ? '#' : '-';
-        }
-        bar[30] = '\0';
-        demo_fix_puts(6u, 23u, bar, 2u);
+        /* Replaces a raw "[###----]" progress bar that didn't tell the
+         * viewer anything about what it was tracking - an altitude
+         * readout actually reflects what's happening on screen (the
+         * eagle rising through the arc/hop phases). */
+        altitude = (uint16_t)(186 - y);
+        demo_fix_puts(2u, 23u, "ALTITUDE:", 1u);
+        digit3(buf, altitude);
+        demo_fix_puts(12u, 23u, buf, 2u);
 
         demo_load_screen_palette(frame);
         draw_asset_bottom_center(frame, HERO_SLOT_FIRST,
@@ -3320,16 +3604,21 @@ static uint8_t NEOGEO_USER chap_char_2d(void)
 static uint8_t NEOGEO_USER chap_image_shooter(void)
 {
     enum {
-        FORM_ROWS = 4,
+        /* Was 4x6 (24 enemies) with a formation fly-in animation on
+         * top - games/neogeogame/main.c (a separate, proven, actually-
+         * working standalone shooter ROM in this SDK) uses 3x6 (18)
+         * with no fly-in at all and reads far cleaner, so matching
+         * that scale here instead of continuing to patch the bigger,
+         * more failure-prone version. */
+        FORM_ROWS = 3,
         FORM_COLS = 6,
-        SHOOTER_ENEMIES = FORM_ROWS * FORM_COLS,   /* 24 - Galaxian-style grid */
+        SHOOTER_ENEMIES = FORM_ROWS * FORM_COLS,   /* 18 - Galaxian-style grid */
         DIVER_MAX    = 2,      /* concurrent divers detached from formation */
         PBULLET_MAX  = 3,
         EBULLET_MAX  = 4,
         BOOM_MAX     = 3,
-        ENTRY_FRAMES = 60,     /* formation fly-in duration at wave start */
         STAGE_MAX    = 3,
-        SHOOTER_SLOT_ENEMY   = 96,   /* 24 * 4 strips = 96 slots -> 96..191 */
+        SHOOTER_SLOT_ENEMY   = 96,   /* 18 * 4 strips = 72 slots -> 96..167 */
         SHOOTER_SLOT_PLAYER  = 192,  /* 4 strips      -> 192..195 */
         SHOOTER_SLOT_BOOM    = 196,  /* 3 * 4 strips  -> 196..207 */
         SHOOTER_SLOT_PBULLET = 208,  /* 3 * 2 strips  -> 208..213 */
@@ -3339,7 +3628,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     /* Back row (row 0) is worth the most, matching classic Galaxian
      * scoring where the deeper formation rows are harder to clear a
      * path to. */
-    static const uint16_t row_score[FORM_ROWS] = { 150u, 120u, 90u, 60u };
+    static const uint16_t row_score[FORM_ROWS] = { 150u, 100u, 70u };
 
     int16_t home_x[SHOOTER_ENEMIES];
     int16_t home_y[SHOOTER_ENEMIES];
@@ -3355,6 +3644,11 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     uint8_t boom_timer[BOOM_MAX];
 
     enum { IDLE_ADVANCE_FRAMES = 300u };  /* ~5s idle once player-controlled */
+    enum { ATTRACT_MAX_FRAMES  = 480u };  /* ~8s cap if START is never
+                                            * pressed at all - was running
+                                            * the full 1200-frame (20s)
+                                            * duration even with nobody
+                                            * watching/playing. */
     int16_t ship_x = 160;
     uint16_t prev_joy = 0u;
     uint8_t wave = 1u;
@@ -3376,18 +3670,30 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     demo_fix_puts(2u, 2u, "WATCHING - PRESS START TO PLAY", 1u);
     demo_fix_puts(2u, 3u, "IMAGE SPRITES + SSG + ADPCM", 0u);
 
-    /* Blank space backdrop - the forest background didn't fit a space
-     * shooter; chap_header() already leaves the backdrop black. */
-    demo_load_screen_palette(U_SHOOTER_ENEMY);
+    /* Starfield backdrop - was plain black (the forest background
+     * didn't fit a space shooter, and no space background existed in
+     * the pipeline at the time). */
+    demo_load_screen_palette(U_SSG_STARFIELD);
+    /* U_SHOOTER_ENEMY (plain single-colour enemy, superseded by the
+     * row_ufo[] variants below) and U_SHOOTER_SHIP_ALT (the flicker
+     * frame removed earlier - see the note further down) were still
+     * being palette-loaded despite never being drawn. */
     demo_load_screen_palette(U_SHOOTER_ENEMY_BULLET);
     demo_load_screen_palette(U_SHOOTER_EXPLOSION);
     demo_load_screen_palette(U_SHOOTER_PLAYER_BULLET);
-    demo_load_screen_palette(U_SHOOTER_SHIP);
-    demo_load_screen_palette(U_SHOOTER_SHIP_ALT);
-    demo_load_screen_palette(U_UFO_BLUE);
-    demo_load_screen_palette(U_UFO_GREEN);
-    demo_load_screen_palette(U_UFO_PINK);
-    demo_load_screen_palette(U_UFO_YELLOW);
+    demo_load_screen_palette(U_PLAYER_VESSEL);
+    demo_load_screen_palette(U_ENEMYSHIP_BLUE);
+    demo_load_screen_palette(U_ENEMYSHIP_GREEN);
+    demo_load_screen_palette(U_ENEMYSHIP_PINK);
+    /* Was draw_background(), which derives strips/rows from the
+     * pipeline's auto-detected content bounding box - it mistook the
+     * starfield's mostly-black space content for empty margin and
+     * cropped it to content_width=172 of the full 256px canvas, so
+     * only a narrow strip painted instead of the whole play area, with
+     * white gaps down both sides.  Forcing the full 16x16 strips/rows
+     * here draws the entire canvas regardless of that mis-detection. */
+    demo_draw_sprite_screen(U_SSG_STARFIELD, DEMO_BG_BACK_SLOT, 32, 16,
+                            16u, 16u, 0xFFu, 0xFFu);
 
     /* SSG-only music - the ADPCM-B game-loop track was playing prominent
      * (0xB8) alongside SSG at near-silent (0x05), so SSG never actually
@@ -3396,13 +3702,43 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x34u, 0x00u, 0x0Eu, 0x00u); snd_step();
-    playSSGTrack(SOUND_SSG_B);                 snd_step();
+    /* Was SOUND_SSG_B ("mix bass pulse" - plain root-note thump, no
+     * real melody, same track just replaced in the sound tour's own
+     * showcase for being the weak link).  SOUND_SSG_C ("red alert
+     * climb", the demo sound chapter's "SSG 3") is far more energetic
+     * and fits a Galaxian-style shooter much better. */
+    playSSGTrack(SOUND_SSG_C);                 snd_step();
+
+    /* Play-area border - rows 0..6 are the HUD (title/status text,
+     * SCORE/WAVE/LIFE, progress bar); the formation used to start at
+     * home_y=40, which is INSIDE that HUD band (row 5) instead of
+     * below it.  This box marks exactly where the game itself lives,
+     * starting right after the HUD, and the formation is placed with
+     * clearance below it instead of overlapping. */
+    {
+        uint8_t bx;
+        uint8_t by;
+        for (bx = 3u; bx <= 36u; bx++) {
+            demo_fix_puts(bx, 7u,  "-", 1u);
+            demo_fix_puts(bx, 25u, "-", 1u);
+        }
+        for (by = 7u; by <= 25u; by++) {
+            demo_fix_puts(3u,  by, "|", 1u);
+            demo_fix_puts(36u, by, "|", 1u);
+        }
+        demo_fix_puts(3u,  7u,  "+", 1u);
+        demo_fix_puts(36u, 7u,  "+", 1u);
+        demo_fix_puts(3u,  25u, "+", 1u);
+        demo_fix_puts(36u, 25u, "+", 1u);
+    }
 
     for (i = 0u; i < SHOOTER_ENEMIES; i++) {
         uint8_t row = (uint8_t)(i / FORM_COLS);
         uint8_t col = (uint8_t)(i % FORM_COLS);
         home_x[i] = (int16_t)(60 + col * 40);
-        home_y[i] = (int16_t)(40 + row * 22);
+        /* Was 40 (inside the HUD band above) - 64 sits just below the
+         * play-area border's top edge (row 7 / y=56). */
+        home_y[i] = (int16_t)(64 + row * 22);
         enemy_alive[i] = 1u;
         enemy_x[i] = home_x[i];
         enemy_y[i] = home_y[i];
@@ -3418,8 +3754,11 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
          * detected here regardless of what checked for it. */
         uint16_t edge = (uint16_t)(joy & (uint16_t)(~prev_joy));
         uint8_t alive_count = 0u;
-        uint8_t entering = (wave_t < ENTRY_FRAMES) ? 1u : 0u;
-        uint16_t settled_t = entering ? 0u : (uint16_t)(wave_t - ENTRY_FRAMES);
+        /* Formation appears in place from frame 0 - was a fly-in lerp
+         * from y=-30 (off the top of the screen) up to home_y, which
+         * read as enemies spawning above the play area/HUD instead of
+         * inside it. */
+        uint16_t settled_t = wave_t;
         int16_t sway = (int16_t)((int16_t)((settled_t >> 2) & 31u) - 15);
         uint8_t diver[DIVER_MAX];
 
@@ -3434,8 +3773,10 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         if (!player_controlled && (edge & (START1 | START2))) {
             player_controlled = 1u;
             idle_frames = 0u;
-            demo_fix_puts(2u, 2u, "B FIRE  ARROWS MOVE           ", 1u);
+            demo_fix_puts(2u, 2u, "B FIRE  ARROWS MOVE   A:NEXT  ", 1u);
         }
+
+        if (!player_controlled && t >= ATTRACT_MAX_FRAMES) return 1u;
 
         if (player_controlled) {
             if (joy) idle_frames = 0u;
@@ -3485,7 +3826,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
             if (pb_y[j] < 28) pb_active[j] = 0u;
         }
 
-        if (!entering && (wave_t % dive_interval) == 30u) {
+        if ((wave_t % dive_interval) == 30u) {
             for (j = 0u; j < DIVER_MAX; j++) {
                 uint8_t idx = diver[j];
                 uint8_t k;
@@ -3524,24 +3865,19 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
 
         for (i = 0u; i < SHOOTER_ENEMIES; i++) {
             uint8_t is_diver = 0u;
+            int16_t y_wave = (int16_t)((i & 1u) ? ((settled_t >> 3) & 7u) : -((settled_t >> 3) & 7u));
 
-            if (entering) {
-                enemy_x[i] = home_x[i];
-                enemy_y[i] = (int16_t)(-30 + ((int32_t)(home_y[i] + 30) * wave_t) / ENTRY_FRAMES);
-            } else {
-                int16_t y_wave = (int16_t)((i & 1u) ? ((settled_t >> 3) & 7u) : -((settled_t >> 3) & 7u));
-                enemy_x[i] = (int16_t)(home_x[i] + sway);
-                enemy_y[i] = (int16_t)(home_y[i] + y_wave);
+            enemy_x[i] = (int16_t)(home_x[i] + sway);
+            enemy_y[i] = (int16_t)(home_y[i] + y_wave);
 
-                for (j = 0u; j < DIVER_MAX; j++) {
-                    if (diver[j] == i) is_diver = 1u;
-                }
-                if (is_diver && enemy_alive[i]) {
-                    uint8_t dive_step = (uint8_t)((settled_t % dive_interval) / 3u);
-                    if (dive_step < 32u) {
-                        enemy_y[i] = (int16_t)(enemy_y[i] + dive_step);
-                        enemy_x[i] = (int16_t)(enemy_x[i] + ((dive_step & 1u) ? dive_step : -dive_step));
-                    }
+            for (j = 0u; j < DIVER_MAX; j++) {
+                if (diver[j] == i) is_diver = 1u;
+            }
+            if (is_diver && enemy_alive[i]) {
+                uint8_t dive_step = (uint8_t)((settled_t % dive_interval) / 3u);
+                if (dive_step < 32u) {
+                    enemy_y[i] = (int16_t)(enemy_y[i] + dive_step);
+                    enemy_x[i] = (int16_t)(enemy_x[i] + ((dive_step & 1u) ? dive_step : -dive_step));
                 }
             }
 
@@ -3609,55 +3945,64 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
 
         for (i = 0u; i < SHOOTER_ENEMIES; i++) {
             uint16_t slot = (uint16_t)(SHOOTER_SLOT_ENEMY + (uint16_t)i * 4u);
-            /* One UFO colour per row - back row (highest row_score) is
-             * pink, then blue, green, yellow - instead of the same
-             * plain enemy sprite repeated across all 24 formation
-             * slots, so the score tiers actually look distinct. */
+            /* One ship colour per row - back row (highest row_score) is
+             * pink, then blue, green - instead of the same plain enemy
+             * sprite repeated across every formation slot, so the
+             * score tiers actually look distinct. */
             static const uint8_t row_ufo[FORM_ROWS] = {
-                U_UFO_PINK, U_UFO_BLUE, U_UFO_GREEN, U_UFO_YELLOW
+                U_ENEMYSHIP_PINK, U_ENEMYSHIP_BLUE, U_ENEMYSHIP_GREEN
             };
             uint8_t enemy_frame = row_ufo[i / FORM_COLS];
             if (enemy_alive[i]) {
                 draw_asset_bottom_center(enemy_frame, slot,
                                          enemy_x[i], (int16_t)(enemy_y[i] + 22),
-                                         U_SCALE_55, U_SCALE_55);
+                                         U_SCALE_30, U_SCALE_30);
             } else {
                 draw_asset_bottom_center(enemy_frame, slot,
                                          -220, -220,
-                                         U_SCALE_55, U_SCALE_55);
+                                         U_SCALE_30, U_SCALE_30);
             }
         }
 
-        draw_asset_bottom_center((t & 16u) ? U_SHOOTER_SHIP_ALT : U_SHOOTER_SHIP,
+        /* Was alternating U_SHOOTER_SHIP/U_SHOOTER_SHIP_ALT every 16
+         * frames for an engine-flicker look, but the two source sprites
+         * aren't the same width (40px vs 43px) - swapping them on the
+         * same slot left a sliver of the wider one un-cleared, reading
+         * as a small icon stuck to the ship. One consistent sprite. */
+        draw_asset_bottom_center(U_PLAYER_VESSEL,
                                  SHOOTER_SLOT_PLAYER,
                                  ship_x, 184,
-                                 U_SCALE_60, U_SCALE_60);
+                                 U_SCALE_45, U_SCALE_45);
 
+        /* Bullets were drawn at U_SCALE_FULL - the single largest
+         * scale in the whole preset table, meant for full character
+         * portraits, not small projectiles.  That alone made the
+         * whole formation read as oversized next to them. */
         for (j = 0u; j < PBULLET_MAX; j++) {
             uint16_t slot = (uint16_t)(SHOOTER_SLOT_PBULLET + (uint16_t)j * 2u);
             draw_asset_bottom_center(U_SHOOTER_PLAYER_BULLET, slot,
                                      pb_active[j] ? pb_x[j] : -220,
                                      pb_active[j] ? pb_y[j] : -220,
-                                     U_SCALE_FULL, U_SCALE_FULL);
+                                     U_SCALE_30, U_SCALE_30);
         }
         for (j = 0u; j < EBULLET_MAX; j++) {
             uint16_t slot = (uint16_t)(SHOOTER_SLOT_EBULLET + (uint16_t)j * 2u);
             draw_asset_bottom_center(U_SHOOTER_ENEMY_BULLET, slot,
                                      eb_active[j] ? eb_x[j] : -220,
                                      eb_active[j] ? eb_y[j] : -220,
-                                     U_SCALE_FULL, U_SCALE_FULL);
+                                     U_SCALE_30, U_SCALE_30);
         }
         for (j = 0u; j < BOOM_MAX; j++) {
             uint16_t slot = (uint16_t)(SHOOTER_SLOT_BOOM + (uint16_t)j * 4u);
             if (boom_timer[j] > 0u) {
                 draw_asset_bottom_center(U_SHOOTER_EXPLOSION, slot,
                                          boom_x[j], (int16_t)(boom_y[j] + 18),
-                                         U_SCALE_55, U_SCALE_55);
+                                         U_SCALE_45, U_SCALE_45);
                 boom_timer[j]--;
             } else {
                 draw_asset_bottom_center(U_SHOOTER_EXPLOSION, slot,
                                          -220, -220,
-                                         U_SCALE_55, U_SCALE_55);
+                                         U_SCALE_45, U_SCALE_45);
             }
         }
 
@@ -3706,24 +4051,24 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
         uint8_t i;
 
         chap_header(19u, "DEPTH RIDE", "ROAD DEPTH  SCALE OBJECTS");
-        demo_fix_puts(2u, 2u, "BACKGROUND 1 + SMALL DEPTH OBJECTS", 1u);
+        demo_fix_puts(2u, 2u, "BACKGROUND 2 + SMALL DEPTH OBJECTS", 1u);
         demo_fix_puts(2u, 3u, "EAGLE CENTERED UPPER SCREEN 30%", 0u);
         snd_cross_to(SOUND_MUSIC_C);
 
-        draw_background(U_BG_FOREST, 32, 16);
+        /* Was the forest background plus a crude ASCII "\"/"/" overlay
+         * simulating road-perspective lines - an incoherent mashup
+         * that didn't actually read as a road.  Tried a downloaded
+         * "dark forest path" image next, but it read as too dark/ugly
+         * against the rest of the demo - swapped for the second
+         * background already sitting in the pipeline instead. */
+        demo_load_screen_palette(U_BG_MOUNTAIN);
+        draw_background(U_BG_MOUNTAIN, 32, 16);
         for (i = 0u; i < OBJ_COUNT; i++) demo_load_screen_palette(obj_frame[i]);
         hero_scale(U_SCALE_30);
         hero_place(160, 96);
 
         for (t = 0u; t < 840u; t++) {
-            uint8_t road;
             uint8_t frame = s_flight_frames[(t / 8u) % 3u];
-
-            for (road = 0u; road < 6u; road++) {
-                uint8_t y = (uint8_t)(12u + road * 2u);
-                demo_fix_puts((uint8_t)(12u - road), y, "\\", 1u);
-                demo_fix_puts((uint8_t)(27u + road), y, "/", 1u);
-            }
 
             for (i = 0u; i < OBJ_COUNT; i++) {
                 uint8_t scale;
@@ -3739,7 +4084,11 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
 
                 scale = (uint8_t)(0x30u + (((uint16_t)(Z_FAR - z[i]) * 0x80u) / (Z_FAR - Z_NEAR)));
                 sx = (int16_t)(160 + ((lane_x[i] * (Z_FAR - z[i])) / (Z_FAR - Z_NEAR)));
-                sy = (int16_t)(80 + ((Z_FAR - z[i]) * 104) / (Z_FAR - Z_NEAR));
+                /* Was spanning y=80..184 (104px) - far end sat near the
+                 * eagle (y=96) but the near end drifted all the way to
+                 * the bottom, reading as disconnected from it.  Tighter
+                 * range keeps the whole approach closer to the eagle. */
+                sy = (int16_t)(74 + ((Z_FAR - z[i]) * 70) / (Z_FAR - Z_NEAR));
                 w = (int16_t)((strips * 16 * scale) >> 8);
                 h = (int16_t)((rows * 16 * scale) >> 8);
 
@@ -3919,10 +4268,15 @@ static uint8_t NEOGEO_USER chap_fix_fx(void)
      * fixtiles.py) so the demo is always in sync with whatever the
      * artist dropped into games/demo/artbox/infix/.  Each photo has
      * its own FIX palette bank uploaded by setup_fix_palettes(). */
-    static const uint8_t  BANNER_IDX[4] = { 4u, 7u, 9u, 5u };
+    /* Was {4,7,9,5} - infix 5.png ("DEBUG HUD") is flat green-on-black
+     * text with no real colour variety, reading as a black-and-white
+     * eyesore next to the other three banners' bordered, multi-colour
+     * bitmap art.  infix 2.png ("PRESS START", rainbow-coloured per
+     * letter) was already sitting unused in the same asset folder. */
+    static const uint8_t  BANNER_IDX[4] = { 4u, 7u, 9u, 2u };
     static const char *const BANNER_LBL[4] = {
         "INFIX 4.PNG", "INFIX 7.PNG",
-        "INFIX 9.PNG", "INFIX 5.PNG"
+        "INFIX 9.PNG", "INFIX 2.PNG"
     };
     uint16_t t;
 
