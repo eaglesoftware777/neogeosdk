@@ -2625,19 +2625,7 @@ static uint8_t NEOGEO_USER chap_depth_parallax(void)
     demo_fix_puts(2u, 3u, "NEAR BG LAYER MOVES AT 1.0X", 0u);
     snd_cross_to(SOUND_MUSIC_A);
 
-    /* Was playing a periodic footstep SFX with no character on screen
-     * at all - a walking figure gives the cue something to belong to,
-     * and doubles as a clear foreground reference point for the
-     * parallax effect itself.  Same one-shot hard clear the other
-     * hero_draw()-using chapters do, so the hero doesn't pick up a
-     * stale sprite window left over from whatever ran before this. */
-    ng_sprite_park_off_range(HERO_SLOT_FIRST, 16u);
-    hero_scale(U_SCALE_57);
-    hero_place(160, 176);
-
     for (t = 0u; t < 480u; t++) {
-        uint8_t frame = s_hero_walk[(t / 6u) % 8u];
-
         /* These backgrounds are one-off scenic images, not seamless
          * tiling textures - the wrap-around seam (source's right edge
          * jump-cutting back to its left edge) is genuinely visible at
@@ -2663,9 +2651,6 @@ static uint8_t NEOGEO_USER chap_depth_parallax(void)
         demo_draw_sprite_screen(2u, SLOT_NEAR_B, (int16_t)(near_x + 256), 0,
                                 near_strips, near_rows, 0xFFu, 0xFFu);
 
-        hero_draw(frame);
-
-        if ((t % 90u) == 0u) playSFX(SOUND_SFX_5);
         if (uframe()) return 1u;
     }
     return 0u;
@@ -3643,12 +3628,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     int16_t boom_x[BOOM_MAX], boom_y[BOOM_MAX];
     uint8_t boom_timer[BOOM_MAX];
 
-    enum { IDLE_ADVANCE_FRAMES = 300u };  /* ~5s idle once player-controlled */
-    enum { ATTRACT_MAX_FRAMES  = 480u };  /* ~8s cap if START is never
-                                            * pressed at all - was running
-                                            * the full 1200-frame (20s)
-                                            * duration even with nobody
-                                            * watching/playing. */
+    enum { IDLE_ADVANCE_FRAMES = 300u };  /* ~5s idle -> advance to credits */
     int16_t ship_x = 160;
     uint16_t prev_joy = 0u;
     uint8_t wave = 1u;
@@ -3659,15 +3639,11 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     uint16_t wave_t = 0u;
     uint16_t dive_interval;
     uint16_t idle_frames = 0u;
-    uint8_t player_controlled = 0u;
     uint8_t i, j;
     char buf[8];
 
     chap_header(18u, "SSG ARCADE", "GALAXIAN FORMATION MINI");
-    /* Plays itself by default (attract-mode style) - press START to
-     * take manual control for the rest of the chapter.  Row 2 is
-     * updated live below once control state can change. */
-    demo_fix_puts(2u, 2u, "WATCHING - PRESS START TO PLAY", 1u);
+    demo_fix_puts(2u, 2u, "ARROWS MOVE   B FIRE", 1u);
     demo_fix_puts(2u, 3u, "IMAGE SPRITES + SSG + ADPCM", 0u);
 
     /* Starfield backdrop - was plain black (the forest background
@@ -3749,9 +3725,6 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
 
     for (t = 0u; t < SHOOTER_TIME; t++) {
         uint16_t joy = poll_joystick();
-        /* Was uint8_t, which silently truncated away the high byte where
-         * START1/START2 live - no press on those bits could ever be
-         * detected here regardless of what checked for it. */
         uint16_t edge = (uint16_t)(joy & (uint16_t)(~prev_joy));
         uint8_t alive_count = 0u;
         /* Formation appears in place from frame 0 - was a fly-in lerp
@@ -3770,44 +3743,12 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
 
         prev_joy = joy;
 
-        if (!player_controlled && (edge & (START1 | START2))) {
-            player_controlled = 1u;
-            idle_frames = 0u;
-            demo_fix_puts(2u, 2u, "B FIRE  ARROWS MOVE   A:NEXT  ", 1u);
-        }
+        if (joy) idle_frames = 0u;
+        else if (idle_frames < 0xFFFFu) idle_frames++;
+        if (idle_frames >= IDLE_ADVANCE_FRAMES) return 1u;
 
-        if (!player_controlled && t >= ATTRACT_MAX_FRAMES) return 1u;
-
-        if (player_controlled) {
-            if (joy) idle_frames = 0u;
-            else if (idle_frames < 0xFFFFu) idle_frames++;
-            if (idle_frames >= IDLE_ADVANCE_FRAMES) return 1u;
-
-            if ((joy & JOY_LEFT) && ship_x > 54) ship_x = (int16_t)(ship_x - 3);
-            if ((joy & JOY_RIGHT) && ship_x < 266) ship_x = (int16_t)(ship_x + 3);
-        } else {
-            /* Simple attract-mode AI: steer toward whichever enemy is
-             * currently diving (the immediate threat), or the first
-             * surviving enemy if none are - firing is handled by the
-             * existing periodic auto-fire below, shared with manual
-             * play, so no separate AI fire logic is needed. */
-            int16_t target_x = ship_x;
-            uint8_t found = 0u;
-            for (j = 0u; j < DIVER_MAX; j++) {
-                if (enemy_alive[diver[j]]) {
-                    target_x = enemy_x[diver[j]];
-                    found = 1u;
-                    break;
-                }
-            }
-            if (!found) {
-                for (i = 0u; i < SHOOTER_ENEMIES; i++) {
-                    if (enemy_alive[i]) { target_x = enemy_x[i]; break; }
-                }
-            }
-            if (target_x < (int16_t)(ship_x - 3) && ship_x > 54) ship_x = (int16_t)(ship_x - 3);
-            else if (target_x > (int16_t)(ship_x + 3) && ship_x < 266) ship_x = (int16_t)(ship_x + 3);
-        }
+        if ((joy & JOY_LEFT) && ship_x > 54) ship_x = (int16_t)(ship_x - 3);
+        if ((joy & JOY_RIGHT) && ship_x < 266) ship_x = (int16_t)(ship_x + 3);
 
         if ((edge & BUTTON_B) || ((t & 31u) == 20u)) {
             for (j = 0u; j < PBULLET_MAX; j++) {
@@ -4394,8 +4335,9 @@ void NEOGEO_USER demo_unified_run(void)
     (void)chap_scrolling_level();
     (void)chap_char_2d();
     (void)chap_raytrace3d();
-    (void)chap_ssg_arcade();
     (void)chap_garden3d();
-    (void)chap_sound();         /* moved to just before the credits   */
+    (void)chap_sound();
+    (void)chap_ssg_arcade();    /* last playable chapter - idles straight
+                                  * into the credits below              */
     (void)chap_credits();
 }

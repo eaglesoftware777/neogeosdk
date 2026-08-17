@@ -2,3 +2,6 @@ cfg/
 nvram/
 artbox/__pycache__
 artbox/.cache/
+snap/
+mame_capture/*
+!mame_capture/full_run.lua
