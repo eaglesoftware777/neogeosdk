@@ -121,8 +121,8 @@
 #define REG_SHADOW       0x3A0011
 #define REG_BRDFIX       0x3A000B   //Use embedded fix tileset
 #define REG_CRTFIX       0x3A001B   //Use game fix tileset
-#define REG_PALBANK1     0x3A000F   //Use palette bank 1
-#define REG_PALBANK0     0x3A001F   //Use palette bank 0 (default);
+#define REG_PALBANK0     0x3A000F   //Use palette bank 0 (default)
+#define REG_PALBANK1     0x3A001F   //Use palette bank 1
  
 #define VRAM_ADDR        0x3C0000
 #define VRAM_RW          0x3C0002
