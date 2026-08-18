@@ -301,6 +301,8 @@ execute_command:
     jp z,exec_p_fm_csm_begin
     cp 16
     jp z,exec_p_adpcma_sample
+    cp 17
+    jp z,exec_p_fm_csm_patch
     ret
 exec_p_tempo:
     ld a,c
@@ -452,6 +454,12 @@ set_fm_csm_begin_wait:
     ld (VAR_PARAM_MODE),a
     ret
 
+set_fm_csm_patch_wait:
+    ld a,17
+    ld (VAR_WAIT_TEMPO),a
+    ld (VAR_PARAM_MODE),a
+    ret
+
 ; Cmd $1C end (immediate, no parameter).
 ; Single $27 write to leave CSM cleanly:
 ;   $1A = Reset A + Enable B IRQ + Load B
@@ -480,6 +488,78 @@ exec_csm_end:
     call force_write_a
     ld d,$4E
     ld e,$7F
+    jp force_write_a
+
+; --- FM CSM voice load (writes to FM channel 3's own registers) ---
+; Cmd $1D (1-byte param = patch index into fm_patch_table).
+;
+; CSM's Timer-A auto-key only ever triggers channel 3 (pitch regs
+; $A2/$A6, tone regs $B2/$B6/$22/$32/$36/$3A/$3E) — but every other FM
+; routine in this driver (fm_apply_patch / fm_note_on, used by
+; playFMTrack) writes channel 2's registers instead ($B1/$B5/$31/$35/
+; $39/$3D, key-on $28=$F1).  A CSM effect that calls playFMTrack() to
+; "give the channel something to buzz" therefore loads a patch onto
+; the wrong channel; channel 3 is left with whatever it last had,
+; which since nothing else in this driver ever writes it is the
+; power-on state — no patch and a frequency latch of 0 (silence).
+; This loads the patch directly onto channel 3 and latches a base
+; pitch so CSM's auto key pulses have an actual instrument and note
+; to sound.
+exec_p_fm_csm_patch:
+    ld a,c
+    cp FM_PATCH_COUNT
+    jr c,fm_csm_patch_index_ok
+    xor a
+fm_csm_patch_index_ok:
+    ld b,a
+    ld hl,fm_patch_table
+    ld a,b
+    or a
+    jr z,fm_csm_patch_ready
+fm_csm_patch_seek_loop:
+    ld de,FM_PATCH_SIZE
+    add hl,de
+    dec a
+    jr nz,fm_csm_patch_seek_loop
+fm_csm_patch_ready:
+    ; LFO register $22 (chip-global, shared with channel 2 patches)
+    ld d,$22
+    ld e,(hl)
+    call fm_patch_write_a
+    inc hl
+    ; Feedback/algorithm $B2 (channel 3, vs. $B1 for channel 2)
+    ld d,$B2
+    ld e,(hl)
+    call fm_patch_write_a
+    inc hl
+    ; L/R + AMS/PMS $B6 (channel 3, vs. $B5 for channel 2)
+    ld d,$B6
+    ld e,(hl)
+    call fm_patch_write_a
+    inc hl
+    ; Operators — channel 3 bases (channel 2 uses $31/$35/$39/$3D)
+    ld b,$32
+    call fm_write_operator_patch
+    ld b,$36
+    call fm_write_operator_patch
+    ld b,$3A
+    call fm_write_operator_patch
+    ld b,$3E
+    call fm_write_operator_patch
+    ; Latch a base pitch on channel 3 — F-Num2/Block high byte first,
+    ; then F-Num1 low byte, per spec (same ordering fm_note_on uses)
+    ; to avoid a glitch on the low-byte write.  Table index 24 is a
+    ; mid-range carrier note; the CSM "voice" character comes from
+    ; the Timer-A sweep on top of it, not from this base pitch.
+    ld hl,fm_note_table+48
+    ld c,(hl)
+    inc hl
+    ld a,(hl)
+    ld e,a
+    ld d,$A6
+    call force_write_a
+    ld e,c
+    ld d,$A2
     jp force_write_a
 
 set_fmvol_wait:
@@ -544,6 +624,8 @@ exec_normal:
     jp z,set_fm_csm_begin_wait
     cp $1C ; FM CSM end — no parameter
     jp z,exec_csm_end
+    cp $1D ; FM CSM voice load — patch index parameter follows
+    jp z,set_fm_csm_patch_wait
     cp $28 ; ADPCM-B direct sample 0
     jp z,play_demo_b0
     cp $29 ; ADPCM-B direct sample 1

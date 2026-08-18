@@ -995,29 +995,29 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [143] npcs/zzzzzzzz_enemyship_blue.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
-source=1254x1254 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=143 palette_bank=158 tile_base=36352 reserved_last=36607 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+source=112x112 canvas=256x256 content=112x112 offset=(72,144)
+screen_id=143 palette_bank=158 tile_base=36352 reserved_last=36607 used_cols=8 used_rows=7 start_col=4 start_row=9 x_pad=8 y_pad=0 used_tiles=56 strips=8 active_rows=7
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [144] npcs/zzzzzzzz_enemyship_green.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
-source=1254x1254 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=144 palette_bank=159 tile_base=36608 reserved_last=36863 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+source=112x112 canvas=256x256 content=112x112 offset=(72,144)
+screen_id=144 palette_bank=159 tile_base=36608 reserved_last=36863 used_cols=8 used_rows=7 start_col=4 start_row=9 x_pad=8 y_pad=0 used_tiles=56 strips=8 active_rows=7
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [145] npcs/zzzzzzzz_enemyship_pink.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
-source=1254x1254 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=145 palette_bank=160 tile_base=36864 reserved_last=37119 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+source=112x112 canvas=256x256 content=112x112 offset=(72,144)
+screen_id=145 palette_bank=160 tile_base=36864 reserved_last=37119 used_cols=8 used_rows=7 start_col=4 start_row=9 x_pad=8 y_pad=0 used_tiles=56 strips=8 active_rows=7
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [146] npcs/zzzzzzzz_player_vessel.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
-source=784x1168 canvas=256x256 content=172x256 offset=(42,0)
-screen_id=146 palette_bank=161 tile_base=37120 reserved_last=37375 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=10 y_pad=0 used_tiles=192 strips=12 active_rows=16
+source=75x112 canvas=256x256 content=75x112 offset=(90,144)
+screen_id=146 palette_bank=161 tile_base=37120 reserved_last=37375 used_cols=6 used_rows=7 start_col=5 start_row=9 x_pad=10 y_pad=0 used_tiles=42 strips=6 active_rows=7
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [147] npcs/zzzzzzzzz_balloon_blue.png

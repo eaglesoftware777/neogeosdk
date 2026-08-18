@@ -1,0 +1,28 @@
+; 7_ssg_example_e - battle drive
+
+T230
+P2
+V13
+O4
+L16
+
+D R F R  A R > D < A
+C R E R  G R > C < G
+
+D F A > D  < F A > D < A
+C E G > C  < E G > C < G
+
+L8
+D E F G  A > C < B A
+
+O5
+L16
+D C < B A  G F E D
+
+D F A D  C A F D
+
+L8
+D F A > D  C < A F D
+D4 R8 D8 A8 > D4
+
+~

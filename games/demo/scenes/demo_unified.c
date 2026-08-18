@@ -3603,11 +3603,29 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         EBULLET_MAX  = 4,
         BOOM_MAX     = 3,
         STAGE_MAX    = 3,
-        SHOOTER_SLOT_ENEMY   = 96,   /* 18 * 4 strips = 72 slots -> 96..167 */
-        SHOOTER_SLOT_PLAYER  = 192,  /* 4 strips      -> 192..195 */
-        SHOOTER_SLOT_BOOM    = 196,  /* 3 * 4 strips  -> 196..207 */
-        SHOOTER_SLOT_PBULLET = 208,  /* 3 * 2 strips  -> 208..213 */
-        SHOOTER_SLOT_EBULLET = 214,  /* 4 * 2 strips  -> 214..221 */
+        /* The enemy/player art (U_ENEMYSHIP_* and U_PLAYER_VESSEL) was
+         * regenerated at a much higher source resolution than the
+         * placeholder art these slot budgets were sized for - the
+         * pipeline was compiling them to 16 strips (enemies) / 12
+         * strips (player) instead of the assumed 4, so adjacent
+         * entities' real sprite footprints overlapped and stomped
+         * each other's VRAM every frame (flickering/half-visible
+         * enemies, an invisible player whenever an explosion's slots
+         * landed on top of it).  Rather than lose art detail by
+         * cropping, the 4 source images were rescaled down (LANCZOS,
+         * aspect-preserved, full artwork kept) to a size that
+         * compiles to a modest, budget-fitting strip count - 8 for
+         * the enemies, 6 for the player - confirmed against the
+         * rebuilt games/demo/artbox/screens.c asset table below.
+         * This chapter never triggers ng_particles/ng_feedback (no
+         * hit-spark/shake calls anywhere in it), so its slots are
+         * free to run past NG_SPR_CHAR_LAST (223) into the otherwise
+         * idle FX pool without colliding with anything. */
+        SHOOTER_SLOT_ENEMY   = 96,   /* 18 * 8 strips = 144 slots -> 96..239 */
+        SHOOTER_SLOT_PLAYER  = 240,  /* 6 strips      -> 240..245 */
+        SHOOTER_SLOT_BOOM    = 246,  /* 3 * 4 strips  -> 246..257 */
+        SHOOTER_SLOT_PBULLET = 258,  /* 3 * 2 strips  -> 258..263 */
+        SHOOTER_SLOT_EBULLET = 264,  /* 4 * 2 strips  -> 264..271 */
         SHOOTER_TIME = 1200
     };
     /* Back row (row 0) is worth the most, matching classic Galaxian
@@ -3752,7 +3770,14 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
 
         if (joy) idle_frames = 0u;
         else if (idle_frames < 0xFFFFu) idle_frames++;
-        if (idle_frames >= IDLE_ADVANCE_FRAMES) return 1u;
+        /* Was a bare `return 1u` - every other exit from this chapter
+         * (the SHOOTER_TIME loop falling through below, and the skip
+         * check further down) fades the SSG track out before leaving,
+         * but this one didn't, so idling out cut the music dead the
+         * instant the next chapter's own soundStopAll() ran - the
+         * "SSG cutting" symptom.  snd_silence() gives it the same
+         * graceful fade the other exits already get. */
+        if (idle_frames >= IDLE_ADVANCE_FRAMES) { snd_silence(); return 1u; }
 
         if ((joy & JOY_LEFT) && ship_x > 54) ship_x = (int16_t)(ship_x - 3);
         if ((joy & JOY_RIGHT) && ship_x < 266) ship_x = (int16_t)(ship_x + 3);
@@ -3892,7 +3917,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         }
 
         for (i = 0u; i < SHOOTER_ENEMIES; i++) {
-            uint16_t slot = (uint16_t)(SHOOTER_SLOT_ENEMY + (uint16_t)i * 4u);
+            uint16_t slot = (uint16_t)(SHOOTER_SLOT_ENEMY + (uint16_t)i * 8u);
             /* One ship colour per row - back row (highest row_score) is
              * pink, then blue, green - instead of the same plain enemy
              * sprite repeated across every formation slot, so the
@@ -3955,7 +3980,9 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         }
 
         if ((t & 127u) == 0u) playSFX(SOUND_SFX_5);
-        if (uframe()) return 1u;
+        /* Same hard-cut issue as the idle-advance check above - the
+         * global chapter-skip request bypassed the fade entirely. */
+        if (uframe()) { snd_silence(); return 1u; }
     }
 
     soundFadeOutSpeed(8u);
