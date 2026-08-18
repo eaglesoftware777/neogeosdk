@@ -3628,7 +3628,14 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     int16_t boom_x[BOOM_MAX], boom_y[BOOM_MAX];
     uint8_t boom_timer[BOOM_MAX];
 
-    enum { IDLE_ADVANCE_FRAMES = 300u };  /* ~5s idle -> advance to credits */
+    enum { IDLE_ADVANCE_FRAMES = 600u };  /* ~10s idle -> advance to credits.
+                                            * Was 300 (5s) - too short for a
+                                            * player to even register the
+                                            * chapter and reach for the
+                                            * controls, so it read as the
+                                            * chapter never showing anything
+                                            * at all before jumping straight
+                                            * to credits. */
     int16_t ship_x = 160;
     uint16_t prev_joy = 0u;
     uint8_t wave = 1u;

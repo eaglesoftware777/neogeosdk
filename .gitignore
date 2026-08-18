@@ -5,3 +5,4 @@ artbox/.cache/
 snap/
 mame_capture/*
 !mame_capture/full_run.lua
+__pycache__/
