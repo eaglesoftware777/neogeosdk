@@ -171,10 +171,10 @@ static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 35584, 155, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzz_particle_magic.png */
     { 35840, 156, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzz_particle_smoke.png */
     { 36096, 157, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzzz_ssg_starfield.png */
-    { 36352, 158, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzzzz_enemyship_blue.png */
-    { 36608, 159, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzzzz_enemyship_green.png */
-    { 36864, 160, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzzzz_enemyship_pink.png */
-    { 37120, 161, 12, 16, 2, 0, 10, 0, 172, 256, 1, 3 }, /* zzzzzzzz_player_vessel.png */
+    { 36352, 158, 8, 7, 4, 9, 8, 0, 112, 112, 1, 3 }, /* zzzzzzzz_enemyship_blue.png */
+    { 36608, 159, 8, 7, 4, 9, 8, 0, 112, 112, 1, 3 }, /* zzzzzzzz_enemyship_green.png */
+    { 36864, 160, 8, 7, 4, 9, 8, 0, 112, 112, 1, 3 }, /* zzzzzzzz_enemyship_pink.png */
+    { 37120, 161, 6, 7, 5, 9, 10, 0, 75, 112, 1, 3 }, /* zzzzzzzz_player_vessel.png */
     { 37376, 162, 4, 6, 6, 10, 0, 0, 64, 96, 1, 3 }, /* zzzzzzzzz_balloon_blue.png */
     { 37632, 163, 4, 6, 6, 10, 0, 0, 64, 96, 1, 3 }, /* zzzzzzzzz_balloon_green.png */
     { 37888, 164, 4, 6, 6, 10, 0, 0, 64, 96, 1, 3 }, /* zzzzzzzzz_balloon_red.png */

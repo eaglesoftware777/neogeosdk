@@ -108,7 +108,9 @@ enum {
 	SOUND_SSG_D = 3,    /* 3_ssg_example_d.mml */
 	SOUND_SSG_E = 4,    /* 4_voice_get_ready.mml */
 	SOUND_SSG_F = 5,    /* 5_voice_lets_go.mml */
-	SOUND_SSG_G = 6     /* 6_voice_game_over.mml */
+	SOUND_SSG_G = 6,    /* 6_voice_game_over.mml */
+	SOUND_SSG_H = 7,    /* 7_ssg_example_e.mml - "battle drive" */
+	SOUND_SSG_I = 8     /* 8_ssg_example_f.mml - "fanfare charge" */
 };
 
 #define SOUND_SSG_TRACK_1  SOUND_SSG_A
@@ -118,7 +120,9 @@ enum {
 #define SOUND_SSG_TRACK_5  SOUND_SSG_E
 #define SOUND_SSG_TRACK_6  SOUND_SSG_F
 #define SOUND_SSG_TRACK_7  SOUND_SSG_G
-#define SOUND_SSG_TRACK_COUNT  7
+#define SOUND_SSG_TRACK_8  SOUND_SSG_H
+#define SOUND_SSG_TRACK_9  SOUND_SSG_I
+#define SOUND_SSG_TRACK_COUNT  9
 
 /* ---------------------------------------------------------------- */
 /*  Voice cues (ADPCM-A long voice samples)                          */

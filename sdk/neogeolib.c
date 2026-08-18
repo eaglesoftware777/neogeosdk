@@ -1154,6 +1154,19 @@ void NEOGEO_USER soundFMCSMEnd(void) {
 }
 
 /*
+ * Loads an FM patch directly onto FM channel 3 — the one channel CSM
+ * actually auto-keys — and latches a base pitch on it.  playFMTrack()
+ * loads patches onto channel 2 instead, which is why "playFMTrack()
+ * then CSM" left CSM buzzing an unconfigured, silent channel.  Call
+ * this instead of playFMTrack() before soundFMCSMBegin()/Sweep().
+ * patch = index into the FM patch table (same indices as MML `I`).
+ */
+void NEOGEO_USER soundFMCSMLoadVoice(uint8_t patch) {
+	isZ80Ready(); soundCommand(0x1D);
+	isZ80Ready(); soundCommand(patch);
+}
+
+/*
  * CSM rate sweep helper — sweeps Timer A period from hi_start down
  * to hi_end in step_ms-millisecond intervals, producing a "vowel
  * slide" formant motion against whatever FM track is currently
@@ -1186,7 +1199,12 @@ void NEOGEO_USER playFMSpeechRobot(void) {
 	isZ80Ready(); soundStopAll();
 	isZ80Ready(); soundSceneReset();
 	isZ80Ready(); soundApplyMix(0x00u, 0x00u, 0x00u, 0x0Cu);
-	isZ80Ready(); playFMTrack(SOUND_FM_F);
+	/* Was playFMTrack(SOUND_FM_F) - that loads a patch onto FM channel
+	 * 2, but CSM only ever auto-keys channel 3, so the track it started
+	 * played on the wrong channel while CSM buzzed a silent, unloaded
+	 * one.  soundFMCSMLoadVoice loads the same patch (index 5, the one
+	 * SOUND_FM_F's MML selects) directly onto channel 3. */
+	isZ80Ready(); soundFMCSMLoadVoice(5u);
 	cyclexms(20);
 	soundFMCSMSweep(150u, 92u, 7u);
 	soundFMCSMSweep(92u, 168u, 7u);

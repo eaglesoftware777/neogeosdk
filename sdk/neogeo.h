@@ -150,12 +150,16 @@ void playVoiceNumber(uint16_t value);        /* direct number sample or digit fa
 void speakWord(const char *text);            /* compatibility alias for speakText */
 void speakText(const char *text);            /* direct words, then letters/digits */
 
-/* CSM (Composite Sine Mode) — FM channel 2 auto-keyed by Timer A.
+/* CSM (Composite Sine Mode) — FM channel 3 auto-keyed by Timer A.
  * Begin/End drive reg $27 + Timer A regs $24/$25 via driver cmds $1B/$1C.
- * Sweep slides the Timer A high byte for a formant-glide effect. */
+ * Sweep slides the Timer A high byte for a formant-glide effect.
+ * Channel 3 has no patch/pitch of its own until soundFMCSMLoadVoice()
+ * loads one — playFMTrack() loads channel 2 instead, which CSM never
+ * auto-keys. */
 void soundFMCSMBegin(uint8_t period_hi);
 void soundFMCSMEnd(void);
 void soundFMCSMSweep(uint8_t hi_start, uint8_t hi_end, uint8_t step_ms);
+void soundFMCSMLoadVoice(uint8_t patch);
 void playFMSpeechRobot(void);
 
 /* Fades. */
