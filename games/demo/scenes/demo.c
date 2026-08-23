@@ -98,9 +98,23 @@ uint8_t NEOGEO_USER demo_advance_requested(void)
 
     edge = (uint16_t)(joy & (uint16_t)(~prev_joy));
     prev_joy = joy;
-    bios_edge = (uint8_t)(NEO_REGISTER8(BIOS_P1CHANGE) & (uint8_t)(1u << CNT_A));
+    bios_edge = NEO_REGISTER8(BIOS_P1CHANGE);
 
-    return ((edge & BUTTON_A) || bios_edge) ? 1u : 0u;
+    /*
+     * Two distinct requests share this one edge detector, because it is
+     * the only place that owns prev_joy - a second detector elsewhere
+     * would race this one for the same button edge and one of them
+     * would miss presses.
+     *
+     *   2 = C, restart the current chapter
+     *   1 = A, advance to the next chapter
+     *
+     * Callers that only care "should this scene stop" keep working
+     * unchanged: both codes are simply non-zero.
+     */
+    if ((edge & BUTTON_C) || (bios_edge & (uint8_t)(1u << CNT_C))) return 2u;
+    if ((edge & BUTTON_A) || (bios_edge & (uint8_t)(1u << CNT_A))) return 1u;
+    return 0u;
 }
 
 uint8_t NEOGEO_USER demo_wait(uint16_t frames)
