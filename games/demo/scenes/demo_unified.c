@@ -256,6 +256,26 @@ void NEOGEO_USER demo_sprite_window_cache_reset(void);
 #define U_SCALE_70         0x76u   /* ~46% (was ~77%)  */
 #define U_SCALE_FULL       0x99u   /* ~60% (was 100%, hardware ceiling) */
 
+/*
+ * Clean-ratio scales.
+ *
+ * The hardware shrink byte V renders (V+1)/256 of the source, and the
+ * shrink table decides which source lines to drop.  When that fraction
+ * is not a simple binary one the dropped lines land unevenly, which on
+ * pixel art shows up as some rows of a sprite losing a pixel of detail
+ * while their neighbours keep it - thin outlines go dashed and eyes or
+ * belts flicker as the character animates.  The presets above are all
+ * arbitrary fractions (60.2%, 46.5%, ...) and suffer from exactly that.
+ *
+ * These are the exact binary fractions, where the table drops every
+ * Nth line evenly and the art stays coherent:
+ */
+#define U_SCALE_1_4        0x3Fu   /* 64/256  = 1/4   = 25.0% */
+#define U_SCALE_5_16       0x4Fu   /* 80/256  = 5/16  = 31.2% */
+#define U_SCALE_3_8        0x5Fu   /* 96/256  = 3/8   = 37.5% */
+#define U_SCALE_7_16       0x6Fu   /* 112/256 = 7/16  = 43.8% */
+#define U_SCALE_1_2        0x7Fu   /* 128/256 = 1/2   = 50.0% */
+
 static const uint8_t s_fx_effect_frames[4] = {
     89u, 90u, 91u, 92u
 };
@@ -1614,13 +1634,13 @@ static uint8_t NEOGEO_USER chap_chars(void)
     snd_cross_to(SOUND_MUSIC_A);
 
     hero_place(160, 112);   /* centre of screen */
-    /* The moveset showcase is the one chapter that deliberately runs the
-     * hero at the largest preset (~154px tall) so the poses read clearly.
-     * Stated explicitly rather than inherited from chap_header()'s reset -
-     * this was the only chapter whose hero size depended on that default,
-     * which made it look like an oversight next to every other chapter's
-     * explicit hero_scale() call. */
-    hero_scale(U_SCALE_FULL);
+    /* Moveset showcase.  Was U_SCALE_FULL (60.2%), which is both larger
+     * than it needs to be and an uneven shrink fraction - exactly the
+     * case where the shrink table drops source lines unevenly and the
+     * hero's outline goes dashed as she animates.  1/2 is smaller and
+     * is an exact binary fraction, so every other line is dropped
+     * evenly and the poses stay crisp. */
+    hero_scale(U_SCALE_1_2);
 
     /*
      * Five-phase showcase (96 frames each, total 480 frames = 8 sec):
@@ -2157,7 +2177,9 @@ static uint8_t NEOGEO_USER chap_camera(void)
 
     ng_camera_init(&cam);
     ng_camera_set_bounds(&cam, 0, 0, WORLD_RIGHT, WORLD_BOTTOM);
-    hero_scale(U_SCALE_60);
+    /* Was U_SCALE_60 (39.8%, an uneven fraction) - smaller now, and an
+     * exact 3/8 so the shrink drops lines evenly. */
+    hero_scale(U_SCALE_3_8);
 
     for (t = 0u; t < TOTAL_FRAMES; t++) {
         uint8_t  next_mode = (uint8_t)((t / MODE_FRAMES) % CAMLAB_MODE_COUNT);
@@ -4015,10 +4037,10 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
          * read as enemies spawning above the play area/HUD instead of
          * inside it. */
         uint16_t settled_t = wave_t;
-        int16_t sway = (int16_t)((int16_t)((settled_t >> 3) & 15u) - 8);
+        int16_t sway = (int16_t)((int16_t)((settled_t >> 2) & 15u) - 8);  /* was >>3 */
         uint8_t diver[DIVER_MAX];
 
-        dive_interval = (uint16_t)(180u - (uint16_t)(stage - 1u) * 18u);
+        dive_interval = (uint16_t)(120u - (uint16_t)(stage - 1u) * 18u);  /* was 180 */
         for (j = 0u; j < DIVER_MAX; j++) {
             uint16_t phase = (uint16_t)(settled_t + (uint16_t)j * (dive_interval / DIVER_MAX));
             diver[j] = (uint8_t)((phase / dive_interval) % SHOOTER_ENEMIES);
@@ -4042,10 +4064,11 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
          * graceful fade the other exits already get. */
         if (idle_frames >= IDLE_ADVANCE_FRAMES) { snd_silence(); return 1u; }
 
-        if ((joy & JOY_LEFT) && ship_x > 54) ship_x = (int16_t)(ship_x - 2);
-        if ((joy & JOY_RIGHT) && ship_x < 266) ship_x = (int16_t)(ship_x + 2);
+        /* Was 2px/frame, which read as sluggish for an arcade shooter. */
+        if ((joy & JOY_LEFT) && ship_x > 54) ship_x = (int16_t)(ship_x - 4);
+        if ((joy & JOY_RIGHT) && ship_x < 266) ship_x = (int16_t)(ship_x + 4);
 
-        if ((edge & BUTTON_B) || ((t & 31u) == 20u)) {
+        if ((edge & BUTTON_B) || ((t & 15u) == 10u)) {   /* was every 32 frames */
             for (j = 0u; j < PBULLET_MAX; j++) {
                 if (!pb_active[j]) {
                     pb_active[j] = 1u;
@@ -4058,7 +4081,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         }
         for (j = 0u; j < PBULLET_MAX; j++) {
             if (!pb_active[j]) continue;
-            pb_y[j] = (int16_t)(pb_y[j] - 4);
+            pb_y[j] = (int16_t)(pb_y[j] - 7);   /* was 4 */
             if (pb_y[j] < 28) pb_active[j] = 0u;
         }
 
@@ -4080,7 +4103,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         }
         for (j = 0u; j < EBULLET_MAX; j++) {
             if (!eb_active[j]) continue;
-            eb_y[j] = (int16_t)(eb_y[j] + 2);
+            eb_y[j] = (int16_t)(eb_y[j] + 4);   /* was 2 */
             if (eb_y[j] > 190) { eb_active[j] = 0u; continue; }
             if (eb_y[j] > 158 && eb_y[j] < 184 &&
                 eb_x[j] > (int16_t)(ship_x - 18) &&

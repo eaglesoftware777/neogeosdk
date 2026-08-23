@@ -1,6 +1,6 @@
 # GDB Guide for NeoGeoSDK
 
-> **v1.3.0 note**
+> **v1.7.0 note**
 >
 > Debug builds work the same way for both engine variants.  With
 > `USE_2D_PLUS=1`, the engine source files are `.cpp` and you can step

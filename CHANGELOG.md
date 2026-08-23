@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.3.0 - Unified Demo, Demo Plus, Engine Occlusion Docs, and HD Artbox
+## v1.7.0 - Unified Demo, Demo Plus, Engine Occlusion Docs, and HD Artbox
 
 Release date: TBD (in-progress on `neo_universal_2d`)
 
@@ -94,9 +94,9 @@ Release date: TBD (in-progress on `neo_universal_2d`)
 
 ---
 
-## v1.3.0-pre - Bug Fixes, Per-Game ROM Folders, Z80 Sound Fix, and Demo Overhaul
+## v1.7.0-pre - Bug Fixes, Per-Game ROM Folders, Z80 Sound Fix, and Demo Overhaul
 
-Release date: 2026-05-17 (pre-release; superseded by v1.3.0 above)
+Release date: 2026-05-17 (pre-release; superseded by v1.7.0 above)
 
 ### Highlights
 

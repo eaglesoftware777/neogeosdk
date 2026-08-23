@@ -314,8 +314,10 @@ void  NEOGEO_USER showTitleMVS(void) {
 			timer[11] = (char)('0' + (secs / 10));
 			timer[12] = (char)('0' + (secs % 10));
 			timer[13] = 's'; timer[14] = ' '; timer[15] = ' '; timer[16] = '\0';
-			mess_out(10, 25, timer, 1);
-			mess_out(10, 26, "   HIT START  ", 0);
+			/* Red (bank 3) instead of green, centred on the 40-cell
+			 * row and dropped one row down the screen. */
+			mess_out(13, 26, timer, 3);
+			mess_out(15, 27, "HIT START", 3);
 			if (auto_frames > 0) auto_frames--;
 			else {
 				NEO_REGISTER8(NGO_START_FLAG) = 1;
@@ -344,7 +346,7 @@ void  NEOGEO_USER showTitleAES(void) {
 	setBACKDROP(BLACK);
 	showScreen108(32, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
 	waitVbl();
-	mess_out(14, 26, "HIT START", 0);
+	mess_out(15, 27, "HIT START", 3);
 	soundPlayTitleMusic(0);
 	for (i = 0; i < 10; i++) {
 		if (NEO_REGISTER8(NGO_START_FLAG)) break;
@@ -359,7 +361,7 @@ void  NEOGEO_USER showTitleAES(void) {
 		clearSprs();
 		showScreen107(32, 24, 0xF, 0xAF, 16, 0x0000, DEMO_SHOWSCREEN_BASE);
 		waitVbl();
-		mess_out(14, 26, "HIT START", 0);
+		mess_out(15, 27, "HIT START", 3);
 		for (i = 0; i < 10; i++) {
 			if (NEO_REGISTER8(NGO_START_FLAG)) break;
 			if (NEO_REGISTER8(BIOS_P1CHANGE) & 0x01) {
@@ -410,6 +412,11 @@ void NEOGEO_USER setup_fix_palettes(void) {
 	setpal(fix_pal, 0x8000, CYAN, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
 	       BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
 	load_palettes(fix_pal, PALETTES + PALOFFSET * 2);
+	/* Bank 3 = red, used by the title/insert-coin prompts.  Bank 4 up
+	 * is the infix image range (INFIX_PAL_BANK_BASE), so 3 is free. */
+	setpal(fix_pal, 0x8000, RED, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+	       BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+	load_palettes(fix_pal, PALETTES + PALOFFSET * 3);
 
 	/* Banks 4..(4+N-1): per-image FIX palettes for infix photos.
 	 * Each infix PNG was authored as 4bpp indexed; its original RGB

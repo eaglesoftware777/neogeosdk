@@ -1,8 +1,8 @@
 # Sound Studio Guide
 
-> **v1.3.0 — new tabs**
+> **v1.7.0 — new tabs**
 >
-> Sound Studio gained SEVEN new tabs in v1.3.0:
+> Sound Studio gained SEVEN new tabs in v1.7.0:
 >
 > - **Live Waveform** — generate a clip (C major arpeggio / step pattern
 >   / MML phrase) and watch the WAVEFORM + FFT SPECTRUM animate as the
@@ -14,7 +14,7 @@
 >   c d e ...` text is generated live and can be saved to
 >   `sound/mml/`.  Step count, tempo, and step length are adjustable.
 >
-> Plus the five tabs from the previous v1.3.0 commits:
+> Plus the five tabs from the previous v1.7.0 commits:
 >
 > - **Pipeline** — runs every audio build step (samples / vrom /
 >   fmpatches / mml / ssg / ssgconfig / fm / m1rom) with a status pill

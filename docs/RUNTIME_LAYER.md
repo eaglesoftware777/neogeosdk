@@ -15,7 +15,7 @@ Current engine documentation covers:
 - border constraints
 - events, timers, status, progress, and properties
 
-**Deluxe 2D modules (v1.3.0+):**
+**Deluxe 2D modules (v1.7.0+):**
 - sticky-bit sprite groups with dirty flags — [`docs/sprite_groups.md`](./sprite_groups.md)
 - VBlank-safe render queue — [`docs/render_queue.md`](./render_queue.md)
 - smooth camera system — [`docs/camera.md`](./camera.md)
