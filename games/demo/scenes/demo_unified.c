@@ -95,10 +95,56 @@ void NEOGEO_USER demo_sprite_window_cache_reset(void);
  * Lower sprite slots draw first on Neo Geo, so later slots draw in front.
  * Backgrounds use the low slot window; direct hero/enemy windows stay above
  * them so they are never hidden by a full-screen BG.
+ *
+ * A sprite drawn at slot S occupies S .. S+strips-1, where `strips` comes
+ * from the art's own metadata and varies per FRAME, not per chapter - so
+ * every window below has to be sized for the widest frame that can land in
+ * it, not the one that happens to be on screen.  The widest asset in the
+ * table is 16 strips.  Prop windows used to be bare numeric literals
+ * scattered across five chapters with their budget implied only by the gap
+ * to the next literal; that is the exact condition that produced the
+ * shooter's sprite-slot overlap, so they are named and measured here.
+ *
+ *   1..32     backgrounds / parallax strips   DEMO_BG_BACK_SLOT, NG_SPR_BG*
+ *   64..79    hero                (16 wide)   HERO_SLOT_FIRST
+ *   80..95    enemy / clone       (16 wide)   ENEMY_SLOT_FIRST
+ *   100..123  joystick hitbox prop            DEMO_PROP_HITBOX_SLOT
+ *   124..147  FX prop A                       DEMO_PROP_FX_A_SLOT
+ *   148..171  FX prop B                       DEMO_PROP_FX_B_SLOT
+ *   172..183  FX prop C                       DEMO_PROP_FX_C_SLOT
+ *   184..219  character cameo                 DEMO_PROP_CAMEO_SLOT
+ *   220..239  scrolling-level marker          DEMO_PROP_MARKER_SLOT
+ *   256..287  particle pool                   NG_SPR_PART_FIRST
+ *
+ * Measured worst cases against those windows (asset -> strips):
+ *   hitbox 136        -> 16, fits 100..115
+ *   FX frames 89..92  -> up to 10, fit the A/B/C windows
+ *   cameo 68/75       -> up to 14, fits 184..197
+ *   markers 132..135  -> up to 8,  fits 220..227
+ *   hero frames       -> up to 16, exactly fills 64..79 up to ENEMY at 80
+ *
+ * The cameo window starts at 184 rather than 180 because of a real
+ * collision: chap_palette_fx draws FX prop C and the cameo in the same
+ * frame, and the FX frames run to 10 strips, so prop C spans 172..181
+ * and overlapped the cameo's first two slots.  Two sprites writing the
+ * same SCB slots every frame is the same failure that corrupted the
+ * shooter's formation.  Keep a window's start at least max-strips past
+ * the previous window's start.
+ *
+ * The shooter chapter deliberately reuses 96..271 wholesale for its
+ * formation; it draws none of the props above, so that overlap is by
+ * design and confined to that one chapter.
  */
 #define DEMO_BG_BACK_SLOT  NG_SPR_BG0_FIRST
 #define HERO_SLOT_FIRST    64u
 #define ENEMY_SLOT_FIRST   80u
+
+#define DEMO_PROP_HITBOX_SLOT  100u
+#define DEMO_PROP_FX_A_SLOT    124u
+#define DEMO_PROP_FX_B_SLOT    148u
+#define DEMO_PROP_FX_C_SLOT    172u
+#define DEMO_PROP_CAMEO_SLOT   184u
+#define DEMO_PROP_MARKER_SLOT  220u
 
 #define U_BG_FOREST        2u
 /* The second background already in the pipeline (screen_id 1,
@@ -257,6 +303,27 @@ static uint16_t s_chapter_elapsed = 0u;
 static uint8_t  s_chapter_view_index = 0u;
 
 /*
+ * Chapter restart (C).
+ *
+ * demo_advance_requested() reports A as 1 and C as 2; CHAP_REQ_RESTART
+ * names the latter.  uframe() turns a C press into s_restart_requested
+ * and still returns non-zero, so every chapter's existing
+ * "if (uframe()) return 1u;" unwinds out of its loop with no per-chapter
+ * changes at all.  run_chapter() below sees the flag and simply calls
+ * the chapter function again, which re-runs its own chap_header() and
+ * setup - so a restart resets sprites, palettes, sound and game state
+ * by construction instead of each chapter hand-rolling a reset.
+ *
+ * s_restart_enabled is the opt-out for a chapter that needs C as a
+ * gameplay button (the joystick chapter uses it for jump and for the
+ * B+C combos it exists to demonstrate).
+ */
+#define CHAP_REQ_RESTART  2u
+
+static uint8_t  s_restart_requested = 0u;
+static uint8_t  s_restart_enabled   = 1u;
+
+/*
  * ADPCM-B streamed TRACKs have no hardware loop - the chip plays from
  * start address to end address once and stops.  soundPlayGameLoop()'s
  * name is aspirational: nothing on the Z80 side re-triggers it, so any
@@ -357,7 +424,19 @@ static uint8_t NEOGEO_USER uframe(void)
     ng_palette_fx_update();
     ng_particles_update();
     ng_feedback_update();
-    return demo_advance_requested();
+
+    {
+        uint8_t req = demo_advance_requested();
+
+        if (req == CHAP_REQ_RESTART) {
+            /* A chapter that uses C as a gameplay button opts out, and
+             * for it C must not end the chapter either - swallow the
+             * request entirely rather than letting it read as a skip. */
+            if (!s_restart_enabled) return 0u;
+            s_restart_requested = 1u;
+        }
+        return req;
+    }
 }
 
 static uint8_t NEOGEO_USER uwait(uint16_t frames)
@@ -391,12 +470,44 @@ static void NEOGEO_USER snd_step(void)
     waitVbl();
 }
 
+/*
+ * The driver's fade "speed" is an INTERVAL, not a rate: its fade engine
+ * reloads a counter with (255 - speed) Timer-B ticks between each -16
+ * volume step, and Timer B runs at ~8.1 Hz (123ms).  The old speed of 6
+ * therefore meant 249 ticks -> ~30 SECONDS per step, so across the old
+ * 12-frame (0.2s) wait below not one step ever ran and the "cross-fade"
+ * was really an abrupt cut.  0xFE is the fastest the driver can express
+ * (1 tick, ~123ms per step), which makes the dip actually audible.
+ */
+#define SND_FADE_SPEED    0xFEu
+#define SND_FADE_FRAMES   36u   /* ~0.6s - about 5 of the -16 steps */
+#define SND_SILENCE_FRAMES 48u  /* ~0.8s - a fuller fade before silence */
+
+/*
+ * Restore the live volume registers after a fade.
+ *
+ * The driver's stop-all clears the fade STATE but deliberately leaves
+ * the volume registers wherever the fade left them; only its cancel-fade
+ * command copies the *_BASE values back into the live volumes.  Those
+ * BASE values are exactly what soundApplyMix() last wrote, so this
+ * restores the chapter's intended mix rather than any hardcoded default.
+ * Without it, now that the fade above actually moves the volume, every
+ * chapter transition would start its track quieter than the last and the
+ * music would decay toward silence over the course of the reel.
+ */
+static void NEOGEO_USER snd_restore_mix(void)
+{
+    soundCancelFade();
+    snd_step();
+}
+
 static void NEOGEO_USER snd_cross_to(uint8_t track)
 {
-    soundFadeOutSpeed(6u);
-    (void)uwait(12u);
+    soundFadeOutSpeed(SND_FADE_SPEED);
+    (void)uwait(SND_FADE_FRAMES);
     soundStopAll();
     snd_step();
+    snd_restore_mix();
     soundPlayGameLoop(track);
     snd_step();
     s_bgm_track = (uint8_t)(track & 0x07u);
@@ -405,11 +516,64 @@ static void NEOGEO_USER snd_cross_to(uint8_t track)
 
 static void NEOGEO_USER snd_silence(void)
 {
-    soundFadeOutSpeed(8u);
-    (void)uwait(10u);
+    soundFadeOutSpeed(SND_FADE_SPEED);
+    (void)uwait(SND_SILENCE_FRAMES);
     soundStopAll();
     snd_step();
+    /* Leave the mixer at the chapter's configured levels, not at the
+     * faded-down ones - the next chapter to start a track inherits
+     * these registers. */
+    snd_restore_mix();
     s_bgm_track = 0xFFu;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Common FIX-layer chrome shared by every chapter                     */
+/*                                                                      */
+/*  Row ownership (FIX rows are 0..27) - respect this or the write is   */
+/*  silently lost:                                                      */
+/*    0      chapter tag + title + index    chap_header(), once         */
+/*    1      chapter subtitle               chap_header(), once         */
+/*    2..3   per-chapter title/subtitle     each chapter, once          */
+/*    4..25  chapter body / HUD             each chapter, free          */
+/*    26     separator rule + control hint  chap_header()/chap_hint()   */
+/*    27     caption bar + live timer       uframe(), EVERY FRAME       */
+/*                                                                      */
+/*  Row 27 belongs to uframe() alone: it is rebuilt from scratch on      */
+/*  every single frame, so a chapter writing a one-shot hint there is    */
+/*  overwritten before the next vblank and never becomes visible.  Three */
+/*  chapters were doing exactly that (the FIX tour, physics, and the     */
+/*  shooter's "C: RESTART"), which is why the shooter's restart control  */
+/*  was undiscoverable.  Chapters advertise controls with chap_hint()    */
+/*  instead, which lands on row 26 and stays put.                        */
+/* ------------------------------------------------------------------ */
+#define CHAP_RULE_W  36u   /* cols 2..37 - the separator/hint field */
+
+static void NEOGEO_USER chap_hint(const char *hint)
+{
+    char rule[CHAP_RULE_W + 1u];
+    uint8_t n = 0u;
+    uint8_t p;
+    uint8_t k;
+
+    /* Every chapter can be restarted with C, so that is the default
+     * hint; the caption bar on row 27 already carries A:NEXT. */
+    if (!hint) hint = "C:RESTART";
+
+    /* Cap well under the field width so the dash padding below can never
+     * run past the start of the rule. */
+    while (hint[n] != '\0' && n < 28u) n++;
+
+    for (p = 0u; p < CHAP_RULE_W; p++) rule[p] = '-';
+    rule[CHAP_RULE_W] = '\0';
+
+    if (n > 0u) {
+        uint8_t start = (uint8_t)(CHAP_RULE_W - n);
+        rule[start - 1u] = ' ';          /* one blank cell before the hint */
+        for (k = 0u; k < n; k++) rule[start + k] = hint[k];
+    }
+
+    demo_fix_puts(2u, 26u, rule, 0u);
 }
 
 /* ------------------------------------------------------------------ */
@@ -451,6 +615,10 @@ static void NEOGEO_USER chap_header(uint8_t n,
     s_draw_particles = 0u;
     hero_scale(U_SCALE_FULL);
 
+    /* Restart is available by default; a chapter that needs C for its
+     * own input clears this after calling us. */
+    s_restart_enabled = 1u;
+
     /* Disarm the BGM loop watchdog - re-armed only if this chapter calls
      * snd_cross_to() itself, so chapters managing sound manually (the
      * sound tour, the SSG-only shooter) aren't second-guessed. */
@@ -474,14 +642,10 @@ static void NEOGEO_USER chap_header(uint8_t n,
     demo_fix_puts(8u,  0u, title, 2u);
     if (subtitle) demo_fix_puts(2u, 1u, subtitle, 1u);
 
-    /* Separator line above the caption bar, drawn once per chapter. */
-    {
-        char rule[37];
-        uint8_t p;
-        for (p = 0u; p < 36u; p++) rule[p] = '-';
-        rule[36] = '\0';
-        demo_fix_puts(2u, 26u, rule, 0u);
-    }
+    /* Separator line above the caption bar, drawn once per chapter.  A
+     * chapter with an extra control to advertise calls chap_hint() after
+     * this to fold it into the same row. */
+    chap_hint(0);
 
     /* Bottom caption bar: "CH## TITLE" — concise, rebuilt once here,
      * redrawn with a live timer every frame by uframe(). */
@@ -859,7 +1023,9 @@ static uint8_t NEOGEO_USER chap_fix(void)
         tag[3] = '0'; tag[4] = '2'; tag[5] = '\0';
         demo_fix_puts(2u,  0u, tag,        2u);
         demo_fix_puts(36u, 0u, "02",       2u);
-        demo_fix_puts(2u, 27u, "A: NEXT",  2u);
+        /* The "A: NEXT" hint that used to be written to row 27 here was
+         * overwritten by uframe()'s caption bar every frame; the caption
+         * bar already ends in A:NEXT, so it was pure dead weight. */
     }
     demo_fix_puts(2u, 2u, "FIX = 40x32 CELL OVERLAY", 1u);
     snd_cross_to(SOUND_MUSIC_G);
@@ -878,7 +1044,7 @@ static uint8_t NEOGEO_USER chap_fix(void)
     }
 
     /* Clear only working rows; avoid reprinting blank strings over art. */
-    clear_fix_rect_force(0u, 5u, 40u, 22u);
+    clear_fix_rect_force(0u, 5u, 40u, 21u);
 
     /* Every block in this section used to hardcode palette 0, reading
      * flat/monochrome next to the palette-cycling counter above it.
@@ -895,7 +1061,7 @@ static uint8_t NEOGEO_USER chap_fix(void)
                      0u, 20u, 1u);
     if (uwait(120u)) return 1u;
 
-    clear_fix_rect_force(0u, 5u, 40u, 22u);
+    clear_fix_rect_force(0u, 5u, 40u, 21u);
     demo_fix_puts(2u, 2u, "INFIX 4..7  MULTI-PALETTE", 1u);
     draw_infix_block(infix[4].tile_base, infix[4].cols, infix[4].rows,
                      4u,  5u, 2u);
@@ -907,7 +1073,7 @@ static uint8_t NEOGEO_USER chap_fix(void)
                      4u, 19u, 2u);
     if (uwait(120u)) return 1u;
 
-    clear_fix_rect_force(0u, 5u, 40u, 22u);
+    clear_fix_rect_force(0u, 5u, 40u, 21u);
     demo_fix_puts(2u, 2u, "INFIX 8..9 + SFIX SHEET", 1u);
     draw_infix_block(infix[8].tile_base, infix[8].cols, infix[8].rows,
                      2u,  6u, 1u);
@@ -1363,6 +1529,23 @@ static const uint8_t s_hero_strike[8] = { 23u, 24u, 25u, 26u, 27u, 28u, 29u, 30u
 static const uint8_t s_hero_specA[8]  = { 34u, 35u, 36u, 37u, 38u, 39u, 41u, 43u };
 static const uint8_t s_hero_specB[6]  = { 44u, 45u, 47u, 49u, 50u, 52u };
 
+/*
+ * Hero animation cadence: game frames held per animation frame, so a
+ * lower number steps the art more often and reads smoother.
+ *
+ * These were inline literals that had drifted into two unrelated
+ * families - showcase chapters ran stand at t/12 and walk at t/6 while
+ * gameplay chapters ran stand at t/14 and walk at t/5 - so the same
+ * character visibly idled and walked at different speeds depending on
+ * which chapter you were watching, for no design reason.  Unified here
+ * on the smoother value of each pair.
+ */
+#define HERO_CAD_STAND    12u   /* 8 frames -> 1.60s idle cycle  */
+#define HERO_CAD_WALK      5u   /* 8 frames -> 0.67s walk cycle  */
+#define HERO_CAD_STRIKE    6u
+#define HERO_CAD_SPECIAL   6u
+#define HERO_CAD_SPECIAL_B 8u
+
 #define HERO_IDLE_FRAME   3u
 
 /*
@@ -1431,6 +1614,13 @@ static uint8_t NEOGEO_USER chap_chars(void)
     snd_cross_to(SOUND_MUSIC_A);
 
     hero_place(160, 112);   /* centre of screen */
+    /* The moveset showcase is the one chapter that deliberately runs the
+     * hero at the largest preset (~154px tall) so the poses read clearly.
+     * Stated explicitly rather than inherited from chap_header()'s reset -
+     * this was the only chapter whose hero size depended on that default,
+     * which made it look like an oversight next to every other chapter's
+     * explicit hero_scale() call. */
+    hero_scale(U_SCALE_FULL);
 
     /*
      * Five-phase showcase (96 frames each, total 480 frames = 8 sec):
@@ -1457,11 +1647,11 @@ static uint8_t NEOGEO_USER chap_chars(void)
         }
 
         switch (phase) {
-        case 0: frame = s_hero_stand[(t / 12u) % 8u]; break;
-        case 1: frame = s_hero_walk[(t / 6u) % 8u];   break;
-        case 2: frame = s_hero_strike[(t / 6u) % 8u]; break;
-        case 3: frame = s_hero_specA[(t / 6u) % 8u];  break;
-        default:frame = s_hero_specB[(t / 8u) % 6u];  break;
+        case 0: frame = s_hero_stand[(t / HERO_CAD_STAND) % 8u]; break;
+        case 1: frame = s_hero_walk[(t / HERO_CAD_WALK) % 8u];   break;
+        case 2: frame = s_hero_strike[(t / HERO_CAD_STRIKE) % 8u]; break;
+        case 3: frame = s_hero_specA[(t / HERO_CAD_SPECIAL) % 8u];  break;
+        default:frame = s_hero_specB[(t / HERO_CAD_SPECIAL_B) % 6u];  break;
         }
 
         hero_draw(frame);
@@ -1634,11 +1824,14 @@ static uint8_t NEOGEO_USER chap_physics(void)
     clearFix();
     setBACKDROP(BLACK);
 
-    /* Re-draw header text after the clear */
+    /* Re-draw header text after the clear.  clearFix() wipes the whole
+     * FIX layer, row 26's separator rule included, so restore that too -
+     * without it this was the one chapter missing the bottom rule every
+     * other chapter draws. */
     demo_fix_puts(2u,  0u, "CH.06",        2u);
     demo_fix_puts(8u,  0u, "PHYSICS",      2u);
     demo_fix_puts(2u,  1u, "GRAVITY  SOLIDS  GROUNDED", 1u);
-    demo_fix_puts(2u, 27u, "A: NEXT",      0u);
+    chap_hint(0);
 
     demo_fix_puts(2u, 2u, "WATCHING - PRESS START TO PLAY", 1u);
     demo_fix_puts(2u, 3u, "FLOOR Y=184  BAR Y=184",      0u);
@@ -2097,7 +2290,7 @@ static uint8_t NEOGEO_USER chap_camera(void)
         /* --- player draw ----------------------------------------- */
         frame = (vx_logical || vy_logical)
               ? s_hero_walk [(t / 6u)  % 8u]
-              : s_hero_stand[(t / 12u) % 8u];
+              : s_hero_stand[(t / HERO_CAD_STAND) % 8u];
         {
             int16_t saved_x = s_hero_x;
             int16_t saved_y = s_hero_y;
@@ -2194,12 +2387,12 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
         }
 
         demo_load_screen_palette(pose);
-        draw_asset_bottom_center(fx_left, 124u, 70, 98, U_SCALE_55, U_SCALE_55);
-        draw_asset_bottom_center(fx_mid, 148u, 160, 86, U_SCALE_55, U_SCALE_55);
-        draw_asset_bottom_center(fx_right, 172u, 250, 98, U_SCALE_55, U_SCALE_55);
+        draw_asset_bottom_center(fx_left, DEMO_PROP_FX_A_SLOT, 70, 98, U_SCALE_55, U_SCALE_55);
+        draw_asset_bottom_center(fx_mid, DEMO_PROP_FX_B_SLOT, 160, 86, U_SCALE_55, U_SCALE_55);
+        draw_asset_bottom_center(fx_right, DEMO_PROP_FX_C_SLOT, 250, 98, U_SCALE_55, U_SCALE_55);
         draw_asset_bottom_center(pose, HERO_SLOT_FIRST, 160,
                                  FX_HERO_LIFT_Y, U_SCALE_55, U_SCALE_55);
-        draw_asset_bottom_center((s_selected_char == 0u) ? 68u : 75u, 180u,
+        draw_asset_bottom_center((s_selected_char == 0u) ? 68u : 75u, DEMO_PROP_CAMEO_SLOT,
                                  36, 210, U_SCALE_30, U_SCALE_30);
 
         if (uframe()) return 1u;
@@ -2339,7 +2532,7 @@ static uint8_t NEOGEO_USER chap_particles(void)
 
         /* The other picked face watches from the side, standing at
          * rest - this scene otherwise showed only the acting hero. */
-        draw_asset_bottom_center((s_selected_char == 0u) ? 68u : 75u, 184u,
+        draw_asset_bottom_center((s_selected_char == 0u) ? 68u : 75u, DEMO_PROP_CAMEO_SLOT,
                                  258, FX_HERO_LIFT_Y, U_SCALE_45, U_SCALE_45);
 
         if (uframe()) return 1u;
@@ -2520,7 +2713,7 @@ static uint8_t NEOGEO_USER chap_feedback(void)
         }
 
         ng_camera_apply(&cam, 160, 112, 0);
-        draw_asset_bottom_center(fx_frame, 124u,
+        draw_asset_bottom_center(fx_frame, DEMO_PROP_FX_A_SLOT,
                                  (int16_t)(60 + (int16_t)((t * 3u) % 220u)),
                                  92, U_SCALE_60, U_SCALE_60);
         draw_asset_bottom_center(hero_frame, HERO_SLOT_FIRST,
@@ -2552,7 +2745,7 @@ static uint8_t NEOGEO_USER chap_depthfx(void)
 
     for (t = 0u; t < 720u; t++) {
         char buf[4];
-        uint8_t frame = s_hero_stand[(t / 12u) % 8u];
+        uint8_t frame = s_hero_stand[(t / HERO_CAD_STAND) % 8u];
         uint8_t strips = demo_screen_strips(frame);
         uint8_t rows = demo_screen_rows(frame);
         uint8_t scale = (uint8_t)(0x58u + (uint16_t)((96 - z) * 0xA7u) / 84u);
@@ -2822,7 +3015,7 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
         if (p_x > 296) p_x = 296;
 
         switch (p_state) {
-        case 0:  p_frame = s_hero_stand[(t / 14u) % 8u]; break;
+        case 0:  p_frame = s_hero_stand[(t / HERO_CAD_STAND) % 8u]; break;
         case 1:  p_frame = s_hero_walk [(t /  6u) % 8u]; break;
         default: p_frame = s_hero_strike[(p_t / 3u) % 8u]; break;
         }
@@ -2869,7 +3062,7 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
                 c_t = 0u;
                 playSFX(SOUND_SFX_9);  /* clone wakes up cue */
             }
-            c_frame = s_hero_stand[(t / 14u) % 8u];
+            c_frame = s_hero_stand[(t / HERO_CAD_STAND) % 8u];
             break;
 
         case CLONE_AGGRO: {
@@ -2884,7 +3077,7 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
                 c_strike_landed = 0u;
                 playSFX(SOUND_SFX_7);
             }
-            c_frame = s_hero_walk[(t / 6u) % 8u];
+            c_frame = s_hero_walk[(t / HERO_CAD_WALK) % 8u];
             break;
         }
 
@@ -2917,7 +3110,7 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
 
         case CLONE_RECOVER:
         default:
-            c_frame = s_hero_stand[(t / 14u) % 8u];
+            c_frame = s_hero_stand[(t / HERO_CAD_STAND) % 8u];
             c_t++;
             if (c_t >= 90u) {
                 c_state = CLONE_IDLE;
@@ -2998,6 +3191,12 @@ static uint8_t NEOGEO_USER chap_joystick(void)
     char buf[8];
 
     chap_header(14u, "JOYSTICK", "LIVE INPUT  TWO-BUTTON SPECIALS");
+    /* The one chapter that cannot take the global C restart: C is jump
+     * here, and B+C is one of the two-button specials this chapter
+     * exists to demonstrate.  Restarting on C would make both
+     * impossible to show. */
+    s_restart_enabled = 0u;
+    chap_hint("A:NEXT ONLY");
     demo_fix_puts(2u, 2u, "ARROWS MOVE  B STRIKE  C JUMP",   1u);
     demo_fix_puts(2u, 3u, "B+C TOGETHER SPECIAL  B+D FINISHER", 0u);
     snd_cross_to(SOUND_MUSIC_A);
@@ -3165,11 +3364,11 @@ static uint8_t NEOGEO_USER chap_joystick(void)
         else if (strike_t > 0u)
             frame = s_hero_strike[((24u - strike_t) / 3u) % 8u];
         else if (vy != 0)
-            frame = s_hero_walk[(t / 5u) % 8u];   /* jump pose */
+            frame = s_hero_walk[(t / HERO_CAD_WALK) % 8u];   /* jump pose */
         else if (down & (JOY_LEFT | JOY_RIGHT))
-            frame = s_hero_walk[(t / 5u) % 8u];
+            frame = s_hero_walk[(t / HERO_CAD_WALK) % 8u];
         else
-            frame = s_hero_stand[(t / 14u) % 8u];
+            frame = s_hero_stand[(t / HERO_CAD_STAND) % 8u];
 
         /* HITS counter on HUD */
         {
@@ -3185,8 +3384,15 @@ static uint8_t NEOGEO_USER chap_joystick(void)
         hero_draw(frame);
 
         /* Was x=276/U_SCALE_57 - pulled in from the screen edge and
-         * sized up, matching the hit-test window above. */
-        draw_asset_bottom_center(U_HITBOX, 100u, 250, 136,
+         * sized up, matching the hit-test window above.
+         *
+         * Note for anyone re-tuning this: U_HITBOX's metadata reports
+         * content 256x256, but that is the padded tile canvas, not the
+         * ink - the source art is a 32x32 box centred in it, so this
+         * renders as a small (~18px) target rather than anything close
+         * to the canvas size.  Sizing it from the metadata alone gives
+         * an answer about 8x too large. */
+        draw_asset_bottom_center(U_HITBOX, DEMO_PROP_HITBOX_SLOT, 250, 136,
                                  box_flash ? U_SCALE_FULL : U_SCALE_70,
                                  box_flash ? U_SCALE_FULL : U_SCALE_70);
 
@@ -3251,9 +3457,9 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
         if ((t % 180u) > 50u && (t % 180u) < 126u) {
             uint16_t jt = (uint16_t)((t % 180u) - 50u);
             jump = (int16_t)((jt < 38u) ? jt : (76u - jt));
-            frame = s_hero_specA[(t / 4u) % 8u];
+            frame = s_hero_specA[(t / HERO_CAD_SPECIAL) % 8u];
         } else {
-            frame = s_hero_walk[(t / 5u) % 8u];
+            frame = s_hero_walk[(t / HERO_CAD_WALK) % 8u];
         }
 
         ng_camera_update(&cam, world_x, U_FLOOR_Y, 2);
@@ -3271,7 +3477,7 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
         level_text[1] = '\0';
         demo_fix_puts(8u, 24u, level_text, 2u);
         demo_fix_puts(20u, 24u, s_level_name[level_idx], 2u);
-        draw_asset_bottom_center(s_level_marker[level_idx], 220u,
+        draw_asset_bottom_center(s_level_marker[level_idx], DEMO_PROP_MARKER_SLOT,
                                  292, 40, U_SCALE_30, U_SCALE_30);
 
         /* Hero stays at a fixed screen X — camera shows the world scroll */
@@ -3596,7 +3802,9 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
          * that scale here instead of continuing to patch the bigger,
          * more failure-prone version. */
         FORM_ROWS = 3,
-        FORM_COLS = 6,
+        FORM_COLS = 4,   /* 3x4 = 12 - keeps all three colour tiers while
+                          * holding the whole formation inside the slot
+                          * range that actually renders (see below) */
         SHOOTER_ENEMIES = FORM_ROWS * FORM_COLS,   /* 18 - Galaxian-style grid */
         DIVER_MAX    = 2,      /* concurrent divers detached from formation */
         PBULLET_MAX  = 3,
@@ -3621,11 +3829,34 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
          * hit-spark/shake calls anywhere in it), so its slots are
          * free to run past NG_SPR_CHAR_LAST (223) into the otherwise
          * idle FX pool without colliding with anything. */
-        SHOOTER_SLOT_ENEMY   = 96,   /* 18 * 8 strips = 144 slots -> 96..239 */
-        SHOOTER_SLOT_PLAYER  = 240,  /* 6 strips      -> 240..245 */
-        SHOOTER_SLOT_BOOM    = 246,  /* 3 * 4 strips  -> 246..257 */
-        SHOOTER_SLOT_PBULLET = 258,  /* 3 * 2 strips  -> 258..263 */
-        SHOOTER_SLOT_EBULLET = 264,  /* 4 * 2 strips  -> 264..271 */
+        /*
+         * Everything this chapter draws is kept below slot 192.
+         *
+         * Measured on hardware-accurate emulation: with this chapter's
+         * sprite load, nothing placed at a slot at or above roughly 192
+         * reaches the screen at all.  The old layout ran the formation
+         * up to 239 and put the player at 240, the explosions at 246
+         * and the bullets past 258 - so the entire back formation row,
+         * the player vessel and every bullet were silently invisible,
+         * which is why the chapter looked unplayable.  Confirmed it is
+         * the slot and not the art: drawing a known-good enemy sprite
+         * at slot 240 is equally invisible, while the same asset draws
+         * fine at 96..191.  Slot 220 does render in a lighter chapter,
+         * so this is a per-chapter capacity effect, not a fixed ceiling.
+         *
+         * The player sits below the formation so it can never be the
+         * one pushed out; sprite priority comes from the slot number,
+         * and the player never overlaps the formation on screen.
+         *
+         * Bullet strides were also wrong: both bullet assets are 4
+         * strips, but the pools advanced by 2, so consecutive bullets
+         * overlapped each other's slots.
+         */
+        SHOOTER_SLOT_PLAYER  = 32,   /* 6 strips      -> 32..37   */
+        SHOOTER_SLOT_BOOM    = 40,   /* 3 * 4 strips  -> 40..51   */
+        SHOOTER_SLOT_PBULLET = 56,   /* 3 * 4 strips  -> 56..67   */
+        SHOOTER_SLOT_EBULLET = 72,   /* 4 * 4 strips  -> 72..87   */
+        SHOOTER_SLOT_ENEMY   = 96,   /* 12 * 8 strips = 96 slots -> 96..191 */
         SHOOTER_TIME = 1200
     };
     /* Back row (row 0) is worth the most, matching classic Galaxian
@@ -3645,6 +3876,16 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     uint8_t eb_active[EBULLET_MAX];
     int16_t boom_x[BOOM_MAX], boom_y[BOOM_MAX];
     uint8_t boom_timer[BOOM_MAX];
+
+    /* "Is this entity's sprite currently on screen?"  Used to park a
+     * sprite exactly once, on the frame it becomes inactive, instead of
+     * re-uploading an already-parked sprite every frame - see the note
+     * above the player draw for why the per-frame upload budget matters
+     * in this chapter. */
+    uint8_t enemy_shown[SHOOTER_ENEMIES];
+    uint8_t pb_shown[PBULLET_MAX];
+    uint8_t eb_shown[EBULLET_MAX];
+    uint8_t boom_shown[BOOM_MAX];
 
     enum { IDLE_ADVANCE_FRAMES = 600u };  /* ~10s idle -> advance to credits.
                                             * Was 300 (5s) - too short for a
@@ -3668,17 +3909,21 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     char buf[8];
 
     chap_header(18u, "SSG ARCADE", "GALAXIAN FORMATION MINI");
-    demo_fix_puts(2u, 2u, "ARROWS MOVE   B FIRE", 1u);
-    demo_fix_puts(2u, 3u, "IMAGE SPRITES + SSG + ADPCM", 0u);
+    /* The restart control lives up here in the HUD band rather than in
+     * the usual chap_hint() slot on row 26.  In this chapter the bottom
+     * two FIX rows are not readable: the full-screen starfield spans
+     * x=32..288 and nothing drawn on rows 26/27 shows through inside
+     * that span - the shared caption bar is clipped to its first two
+     * and last two cells here for the same reason.  Rows 0..6 render
+     * normally (SCORE/WAVE/LIFE sit there), so the hint goes where it
+     * can actually be read. */
+    demo_fix_puts(2u, 2u, "ARROWS MOVE  B FIRE  C:RESTART", 1u);
+    demo_fix_puts(2u, 3u, "IMAGE SPRITES + MUSIC + ADPCM", 0u);
 
     /* Starfield backdrop - was plain black (the forest background
      * didn't fit a space shooter, and no space background existed in
      * the pipeline at the time). */
     demo_load_screen_palette(U_SSG_STARFIELD);
-    /* U_SHOOTER_ENEMY (plain single-colour enemy, superseded by the
-     * row_ufo[] variants below) and U_SHOOTER_SHIP_ALT (the flicker
-     * frame removed earlier - see the note further down) were still
-     * being palette-loaded despite never being drawn. */
     demo_load_screen_palette(U_SHOOTER_ENEMY_BULLET);
     demo_load_screen_palette(U_SHOOTER_EXPLOSION);
     demo_load_screen_palette(U_SHOOTER_PLAYER_BULLET);
@@ -3686,28 +3931,18 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     demo_load_screen_palette(U_ENEMYSHIP_BLUE);
     demo_load_screen_palette(U_ENEMYSHIP_GREEN);
     demo_load_screen_palette(U_ENEMYSHIP_PINK);
-    /* Was draw_background(), which derives strips/rows from the
-     * pipeline's auto-detected content bounding box - it mistook the
-     * starfield's mostly-black space content for empty margin and
-     * cropped it to content_width=172 of the full 256px canvas, so
-     * only a narrow strip painted instead of the whole play area, with
-     * white gaps down both sides.  Forcing the full 16x16 strips/rows
-     * here draws the entire canvas regardless of that mis-detection. */
+    /* Keep the starfield slightly inset so it reads as a fitted
+     * backdrop instead of a hard edge-to-edge block. */
     demo_draw_sprite_screen(U_SSG_STARFIELD, DEMO_BG_BACK_SLOT, 32, 16,
-                            16u, 16u, 0xFFu, 0xFFu);
+                            16u, 16u, 0xF0u, 0xF0u);
 
-    /* SSG-only music - the ADPCM-B game-loop track was playing prominent
-     * (0xB8) alongside SSG at near-silent (0x05), so SSG never actually
-     * read as the music.  Dropped the ADPCM-B loop and gave SSG the
-     * volume instead. */
+    /* Stable single-bed music plus ADPCM-A SFX keeps this chapter
+     * readable without layering SSG/FM on top of the same loop. */
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
+    /* SSG-only bed: ADPCM-A stays up for the shooting/explosion SFX,
+     * ADPCM-B and FM are muted so nothing but the SSG carries the tune. */
     soundApplyMix(0x34u, 0x00u, 0x0Eu, 0x00u); snd_step();
-    /* Was SOUND_SSG_B ("mix bass pulse" - plain root-note thump, no
-     * real melody, same track just replaced in the sound tour's own
-     * showcase for being the weak link).  SOUND_SSG_C ("red alert
-     * climb", the demo sound chapter's "SSG 3") is far more energetic
-     * and fits a Galaxian-style shooter much better. */
     playSSGTrack(SOUND_SSG_C);                 snd_step();
 
     /* Play-area border - rows 0..6 are the HUD (title/status text,
@@ -3736,17 +3971,18 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     for (i = 0u; i < SHOOTER_ENEMIES; i++) {
         uint8_t row = (uint8_t)(i / FORM_COLS);
         uint8_t col = (uint8_t)(i % FORM_COLS);
-        home_x[i] = (int16_t)(60 + col * 40);
+        home_x[i] = (int16_t)(84 + col * 48);
         /* Was 40 (inside the HUD band above) - 64 sits just below the
          * play-area border's top edge (row 7 / y=56). */
-        home_y[i] = (int16_t)(64 + row * 22);
+        home_y[i] = (int16_t)(68 + row * 20);
         enemy_alive[i] = 1u;
+        enemy_shown[i] = 0u;
         enemy_x[i] = home_x[i];
         enemy_y[i] = home_y[i];
     }
-    for (j = 0u; j < PBULLET_MAX; j++) pb_active[j] = 0u;
-    for (j = 0u; j < EBULLET_MAX; j++) eb_active[j] = 0u;
-    for (j = 0u; j < BOOM_MAX; j++) boom_timer[j] = 0u;
+    for (j = 0u; j < PBULLET_MAX; j++) { pb_active[j] = 0u; pb_shown[j] = 0u; }
+    for (j = 0u; j < EBULLET_MAX; j++) { eb_active[j] = 0u; eb_shown[j] = 0u; }
+    for (j = 0u; j < BOOM_MAX; j++)    { boom_timer[j] = 0u; boom_shown[j] = 0u; }
 
     for (t = 0u; t < SHOOTER_TIME; t++) {
         uint16_t joy = poll_joystick();
@@ -3757,16 +3993,21 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
          * read as enemies spawning above the play area/HUD instead of
          * inside it. */
         uint16_t settled_t = wave_t;
-        int16_t sway = (int16_t)((int16_t)((settled_t >> 2) & 31u) - 15);
+        int16_t sway = (int16_t)((int16_t)((settled_t >> 3) & 15u) - 8);
         uint8_t diver[DIVER_MAX];
 
-        dive_interval = (uint16_t)(160u - (uint16_t)(stage - 1u) * 20u);
+        dive_interval = (uint16_t)(180u - (uint16_t)(stage - 1u) * 18u);
         for (j = 0u; j < DIVER_MAX; j++) {
             uint16_t phase = (uint16_t)(settled_t + (uint16_t)j * (dive_interval / DIVER_MAX));
             diver[j] = (uint8_t)((phase / dive_interval) % SHOOTER_ENEMIES);
         }
 
         prev_joy = joy;
+
+        /* C restart is handled centrally now - uframe() unwinds the
+         * chapter and run_chapter() calls it again from the top, which
+         * rebuilds sound, formation and score without this chapter
+         * needing to maintain its own duplicate reset. */
 
         if (joy) idle_frames = 0u;
         else if (idle_frames < 0xFFFFu) idle_frames++;
@@ -3779,8 +4020,8 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
          * graceful fade the other exits already get. */
         if (idle_frames >= IDLE_ADVANCE_FRAMES) { snd_silence(); return 1u; }
 
-        if ((joy & JOY_LEFT) && ship_x > 54) ship_x = (int16_t)(ship_x - 3);
-        if ((joy & JOY_RIGHT) && ship_x < 266) ship_x = (int16_t)(ship_x + 3);
+        if ((joy & JOY_LEFT) && ship_x > 54) ship_x = (int16_t)(ship_x - 2);
+        if ((joy & JOY_RIGHT) && ship_x < 266) ship_x = (int16_t)(ship_x + 2);
 
         if ((edge & BUTTON_B) || ((t & 31u) == 20u)) {
             for (j = 0u; j < PBULLET_MAX; j++) {
@@ -3795,7 +4036,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         }
         for (j = 0u; j < PBULLET_MAX; j++) {
             if (!pb_active[j]) continue;
-            pb_y[j] = (int16_t)(pb_y[j] - 5);
+            pb_y[j] = (int16_t)(pb_y[j] - 4);
             if (pb_y[j] < 28) pb_active[j] = 0u;
         }
 
@@ -3817,7 +4058,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         }
         for (j = 0u; j < EBULLET_MAX; j++) {
             if (!eb_active[j]) continue;
-            eb_y[j] = (int16_t)(eb_y[j] + 3);
+            eb_y[j] = (int16_t)(eb_y[j] + 2);
             if (eb_y[j] > 190) { eb_active[j] = 0u; continue; }
             if (eb_y[j] > 158 && eb_y[j] < 184 &&
                 eb_x[j] > (int16_t)(ship_x - 18) &&
@@ -3838,7 +4079,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
 
         for (i = 0u; i < SHOOTER_ENEMIES; i++) {
             uint8_t is_diver = 0u;
-            int16_t y_wave = (int16_t)((i & 1u) ? ((settled_t >> 3) & 7u) : -((settled_t >> 3) & 7u));
+            int16_t y_wave = (int16_t)((i & 1u) ? ((settled_t >> 4) & 3u) : -((settled_t >> 4) & 3u));
 
             enemy_x[i] = (int16_t)(home_x[i] + sway);
             enemy_y[i] = (int16_t)(home_y[i] + y_wave);
@@ -3916,6 +4157,32 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
             }
         }
 
+        /*
+         * Player first, deliberately.
+         *
+         * Every draw here is a real VRAM upload performed inside the
+         * vblank window by demo_flush_sprite_queue(), and an 8-strip
+         * ship costs on the order of a hundred VRAM writes.  This
+         * chapter queues far more per frame than any other, and the
+         * draws that lose that race are simply the ones queued last -
+         * which is why the player vessel (queued after all 18 enemies)
+         * and the whole back formation row were missing from the
+         * screen entirely while the first two rows drew fine.  The
+         * player is the one sprite that must never be dropped, so it
+         * goes first.  Sprite priority is set by slot number, not draw
+         * order, so moving it here does not change what overlaps what.
+         *
+         * Was alternating U_SHOOTER_SHIP/U_SHOOTER_SHIP_ALT every 16
+         * frames for an engine-flicker look, but the two source sprites
+         * aren't the same width (40px vs 43px) - swapping them on the
+         * same slot left a sliver of the wider one un-cleared, reading
+         * as a small icon stuck to the ship. One consistent sprite.
+         */
+        draw_asset_bottom_center(U_PLAYER_VESSEL,
+                                 SHOOTER_SLOT_PLAYER,
+                                 ship_x, 184,
+                                 U_SCALE_55, U_SCALE_55);
+
         for (i = 0u; i < SHOOTER_ENEMIES; i++) {
             uint16_t slot = (uint16_t)(SHOOTER_SLOT_ENEMY + (uint16_t)i * 8u);
             /* One ship colour per row - back row (highest row_score) is
@@ -3930,40 +4197,48 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
                 draw_asset_bottom_center(enemy_frame, slot,
                                          enemy_x[i], (int16_t)(enemy_y[i] + 22),
                                          U_SCALE_30, U_SCALE_30);
-            } else {
+                enemy_shown[i] = 1u;
+            } else if (enemy_shown[i]) {
+                /* Park once, on the frame it dies.  A parked sprite's
+                 * VRAM does not change afterwards, so re-uploading it
+                 * every frame only burns upload budget (see the note
+                 * above the player draw). */
                 draw_asset_bottom_center(enemy_frame, slot,
                                          -220, -220,
                                          U_SCALE_30, U_SCALE_30);
+                enemy_shown[i] = 0u;
             }
         }
-
-        /* Was alternating U_SHOOTER_SHIP/U_SHOOTER_SHIP_ALT every 16
-         * frames for an engine-flicker look, but the two source sprites
-         * aren't the same width (40px vs 43px) - swapping them on the
-         * same slot left a sliver of the wider one un-cleared, reading
-         * as a small icon stuck to the ship. One consistent sprite. */
-        draw_asset_bottom_center(U_PLAYER_VESSEL,
-                                 SHOOTER_SLOT_PLAYER,
-                                 ship_x, 184,
-                                 U_SCALE_45, U_SCALE_45);
 
         /* Bullets were drawn at U_SCALE_FULL - the single largest
          * scale in the whole preset table, meant for full character
          * portraits, not small projectiles.  That alone made the
          * whole formation read as oversized next to them. */
         for (j = 0u; j < PBULLET_MAX; j++) {
-            uint16_t slot = (uint16_t)(SHOOTER_SLOT_PBULLET + (uint16_t)j * 2u);
-            draw_asset_bottom_center(U_SHOOTER_PLAYER_BULLET, slot,
-                                     pb_active[j] ? pb_x[j] : -220,
-                                     pb_active[j] ? pb_y[j] : -220,
-                                     U_SCALE_30, U_SCALE_30);
+            uint16_t slot = (uint16_t)(SHOOTER_SLOT_PBULLET + (uint16_t)j * 4u);
+            if (pb_active[j]) {
+                draw_asset_bottom_center(U_SHOOTER_PLAYER_BULLET, slot,
+                                         pb_x[j], pb_y[j],
+                                         U_SCALE_30, U_SCALE_30);
+                pb_shown[j] = 1u;
+            } else if (pb_shown[j]) {
+                draw_asset_bottom_center(U_SHOOTER_PLAYER_BULLET, slot,
+                                         -220, -220, U_SCALE_30, U_SCALE_30);
+                pb_shown[j] = 0u;
+            }
         }
         for (j = 0u; j < EBULLET_MAX; j++) {
-            uint16_t slot = (uint16_t)(SHOOTER_SLOT_EBULLET + (uint16_t)j * 2u);
-            draw_asset_bottom_center(U_SHOOTER_ENEMY_BULLET, slot,
-                                     eb_active[j] ? eb_x[j] : -220,
-                                     eb_active[j] ? eb_y[j] : -220,
-                                     U_SCALE_30, U_SCALE_30);
+            uint16_t slot = (uint16_t)(SHOOTER_SLOT_EBULLET + (uint16_t)j * 4u);
+            if (eb_active[j]) {
+                draw_asset_bottom_center(U_SHOOTER_ENEMY_BULLET, slot,
+                                         eb_x[j], eb_y[j],
+                                         U_SCALE_30, U_SCALE_30);
+                eb_shown[j] = 1u;
+            } else if (eb_shown[j]) {
+                draw_asset_bottom_center(U_SHOOTER_ENEMY_BULLET, slot,
+                                         -220, -220, U_SCALE_30, U_SCALE_30);
+                eb_shown[j] = 0u;
+            }
         }
         for (j = 0u; j < BOOM_MAX; j++) {
             uint16_t slot = (uint16_t)(SHOOTER_SLOT_BOOM + (uint16_t)j * 4u);
@@ -3972,10 +4247,12 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
                                          boom_x[j], (int16_t)(boom_y[j] + 18),
                                          U_SCALE_45, U_SCALE_45);
                 boom_timer[j]--;
-            } else {
+                boom_shown[j] = 1u;
+            } else if (boom_shown[j]) {
                 draw_asset_bottom_center(U_SHOOTER_EXPLOSION, slot,
                                          -220, -220,
                                          U_SCALE_45, U_SCALE_45);
+                boom_shown[j] = 0u;
             }
         }
 
@@ -4158,8 +4435,8 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
         }
 
         hero_frame = (down & (JOY_LEFT | JOY_RIGHT))
-                   ? s_hero_walk[(t / 5u) % 8u]
-                   : s_hero_stand[(t / 14u) % 8u];
+                   ? s_hero_walk[(t / HERO_CAD_WALK) % 8u]
+                   : s_hero_stand[(t / HERO_CAD_STAND) % 8u];
         s_hero_x = hero_world_x;
         s_hero_y = 180;
         hero_draw(hero_frame);
@@ -4343,35 +4620,57 @@ static uint8_t NEOGEO_USER chap_fix_fx(void)
     return 0u;
 }
 
+/*
+ * Run one chapter, honouring a C restart request.
+ *
+ * The chapter function is simply called again from the top, so its own
+ * chap_header() and setup re-run and every bit of state it owns is
+ * rebuilt - no chapter needs its own reset path.  s_chapter_view_index
+ * is rewound first because chap_header() increments it, and a restart
+ * should redraw the same chapter number rather than counting upward.
+ */
+static void NEOGEO_USER run_chapter(uint8_t (*fn)(void))
+{
+    uint8_t index_before = s_chapter_view_index;
+
+    do {
+        s_chapter_view_index = index_before;
+        s_restart_requested  = 0u;
+        (void)fn();
+    } while (s_restart_requested);
+
+    s_restart_requested = 0u;
+}
+
 /* ================================================================== */
 /*  Public entry — 21-chapter linear flow                                */
 /* ================================================================== */
 void NEOGEO_USER demo_unified_run(void)
 {
-    (void)chap_boot();
-    (void)chap_title();
-    (void)chap_fix();
-    (void)chap_fix_fx();
-    (void)chap_sprite();
-    (void)chap_chars();
-    (void)chap_char_select();
-    (void)chap_physics();
-    (void)chap_camera();
-    (void)chap_palette_fx();
-    (void)chap_particles();
-    (void)chap_particle_showcase();
-    (void)chap_feedback();
-    (void)chap_depthfx();
-    (void)chap_depth_parallax();
-    (void)chap_npcs();
-    (void)chap_mini_game();
-    (void)chap_joystick();
-    (void)chap_scrolling_level();
-    (void)chap_char_2d();
-    (void)chap_raytrace3d();
-    (void)chap_garden3d();
-    (void)chap_sound();
-    (void)chap_ssg_arcade();    /* last playable chapter - idles straight
+    run_chapter(chap_boot);
+    run_chapter(chap_title);
+    run_chapter(chap_fix);
+    run_chapter(chap_fix_fx);
+    run_chapter(chap_sprite);
+    run_chapter(chap_chars);
+    run_chapter(chap_char_select);
+    run_chapter(chap_physics);
+    run_chapter(chap_camera);
+    run_chapter(chap_palette_fx);
+    run_chapter(chap_particles);
+    run_chapter(chap_particle_showcase);
+    run_chapter(chap_feedback);
+    run_chapter(chap_depthfx);
+    run_chapter(chap_depth_parallax);
+    run_chapter(chap_npcs);
+    run_chapter(chap_mini_game);
+    run_chapter(chap_joystick);
+    run_chapter(chap_scrolling_level);
+    run_chapter(chap_char_2d);
+    run_chapter(chap_raytrace3d);
+    run_chapter(chap_garden3d);
+    run_chapter(chap_sound);
+    run_chapter(chap_ssg_arcade);    /* last playable chapter - idles straight
                                   * into the credits below              */
-    (void)chap_credits();
+    run_chapter(chap_credits);
 }
