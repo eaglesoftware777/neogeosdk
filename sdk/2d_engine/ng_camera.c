@@ -148,6 +148,8 @@ void NEOGEO_USER ng_camera_update(NGCamera *cam,
     NGFixed new_fp_y;
     int8_t  sx;
     int8_t  sy;
+    uint8_t hold_x = 0u;
+    uint8_t hold_y = 0u;
 
     if (!cam) return;
 
@@ -240,8 +242,22 @@ void NEOGEO_USER ng_camera_update(NGCamera *cam,
         if (off_x < 0) off_x = (int16_t)-off_x;
         if (off_y < 0) off_y = (int16_t)-off_y;
 
-        if (off_x <= (int16_t)cam->dead_zone_x && off_y <= (int16_t)cam->dead_zone_y) {
-            /* Target inside dead zone — hold camera */
+        /*
+         * The dead zone is per-axis: an axis holds while the target is
+         * inside its own margin, and the other axis keeps following.
+         *
+         * This used to require BOTH axes to be inside before it held
+         * anything, which made the common case - a horizontal-only dead
+         * zone, set as (margin, 0) - impossible to trigger: it needed
+         * the target to sit exactly on the vertical centre line at the
+         * same time, so the dead zone effectively never engaged and the
+         * camera behaved like plain follow.
+         */
+        hold_x = (uint8_t)(off_x <= (int16_t)cam->dead_zone_x);
+        hold_y = (uint8_t)(off_y <= (int16_t)cam->dead_zone_y);
+
+        if (hold_x && hold_y) {
+            /* Target inside the dead zone on both axes — hold camera */
             cam->x = (int16_t)(NGFX_TO_INT(cam->x_fp) + cam->shake_offset_x);
             cam->y = (int16_t)(NGFX_TO_INT(cam->y_fp) + cam->shake_offset_y);
             return;
@@ -261,6 +277,11 @@ void NEOGEO_USER ng_camera_update(NGCamera *cam,
     /* (delta * speed) >> 8 — equivalent to dividing speed by 256 */
     step_x   = (delta_x * (int32_t)cam->follow_speed) >> 8;
     step_y   = (delta_y * (int32_t)cam->follow_speed) >> 8;
+
+    /* An axis inside its own dead zone does not move at all, while the
+     * other axis keeps following normally. */
+    if (hold_x) { delta_x = 0; step_x = 0; }
+    if (hold_y) { delta_y = 0; step_y = 0; }
 
     /* Minimum 1 sub-pixel step to ensure the camera eventually converges */
     if (step_x == 0 && delta_x != 0) step_x = (delta_x > 0) ?  1 : -1;

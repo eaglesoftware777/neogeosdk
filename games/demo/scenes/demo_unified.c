@@ -2256,11 +2256,24 @@ static uint8_t NEOGEO_USER chap_camera(void)
 
         /* --- background ------------------------------------------- */
         bg_x = -(int16_t)((uint16_t)cam.x & 0x00FFu);
-        /* In VERTICAL mode also tie BG Y to cam.y so the world looks
-         * like it's scrolling, not just the player.  Modulo 32 keeps
-         * the offset inside one tile so the strips don't tear. */
+        /*
+         * In VERTICAL mode tie BG Y to cam.y so the world looks like it
+         * is scrolling, not just the player.
+         *
+         * This used to mask cam.y with 0x1F, which wrapped the offset
+         * back to zero every 32 pixels: as the camera swept its full
+         * 0..96 range the background snapped back to the top three
+         * times instead of scrolling, so the vertical scroll read as
+         * broken.  The background is 256px tall against a 224px screen,
+         * so it has exactly 32px of vertical slack - map the camera's
+         * whole range onto that slack instead of wrapping through it.
+         */
         if (mode == CAMLAB_MODE_VERTICAL) {
-            bg_y = -(int16_t)((uint16_t)cam.y & 0x001Fu);
+            int16_t span = (int16_t)(WORLD_BOTTOM - NG_SCREEN_H);   /* 96 */
+            int16_t cy   = cam.y;
+            if (cy < 0) cy = 0;
+            if (cy > span) cy = span;
+            bg_y = (int16_t)(-(((int32_t)cy * 32) / span));
         } else {
             bg_y = 0;
         }
