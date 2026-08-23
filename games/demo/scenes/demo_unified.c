@@ -3931,10 +3931,32 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     demo_load_screen_palette(U_ENEMYSHIP_BLUE);
     demo_load_screen_palette(U_ENEMYSHIP_GREEN);
     demo_load_screen_palette(U_ENEMYSHIP_PINK);
-    /* Keep the starfield slightly inset so it reads as a fitted
-     * backdrop instead of a hard edge-to-edge block. */
-    demo_draw_sprite_screen(U_SSG_STARFIELD, DEMO_BG_BACK_SLOT, 32, 16,
-                            16u, 16u, 0xF0u, 0xF0u);
+    /*
+     * Crop the starfield to the play area only.
+     *
+     * It used to be drawn from y=16 at its full 16 tile rows, which at
+     * this vertical scale runs to about y=256 - past the bottom of the
+     * 224-line screen, straight over the separator rule on row 26 and
+     * the caption bar on row 27, so this chapter's bottom chrome was
+     * buried under the backdrop.
+     *
+     * Why it matters here specifically: the separator rule and the
+     * caption bar are drawn in palette 0, which is black text.  Over a
+     * light backdrop that reads fine, but over the black starfield it
+     * is black on black - which is why this chapter looked like its
+     * bottom chrome was missing entirely while the cyan play-area
+     * border right above it stayed perfectly visible.
+     *
+     * Measured on screen: each tile row of this asset renders a full
+     * 16px tall (the 0xF0 byte does not shrink it), so 9 rows from
+     * y=56 covers y=56..199 - the top border row through the last
+     * interior row of the box.  Rows 25..27 (the bottom border, the
+     * rule and the caption) then sit on the light backdrop where the
+     * black text is legible.  The art is a uniform starfield, so
+     * cropping its lower rows is not noticeable.
+     */
+    demo_draw_sprite_screen(U_SSG_STARFIELD, DEMO_BG_BACK_SLOT, 32, 56,
+                            16u, 9u, 0xF0u, 0xF0u);
 
     /* Stable single-bed music plus ADPCM-A SFX keeps this chapter
      * readable without layering SSG/FM on top of the same loop. */
