@@ -201,6 +201,10 @@ void NEOGEO_USER demo_title_attract_reel(void)
     setpal(fix_pal, 0x8000u, GREEN,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
+    /* Bank 3 = red, for the studio name below. */
+    setpal(fix_pal, 0x8000u, RED,    BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    load_palettes(fix_pal, PALETTES + PALOFFSET * 3u);
 
     /*
      * Outer "restart" loop — the entire attract reel re-arms its music
@@ -228,8 +232,11 @@ void NEOGEO_USER demo_title_attract_reel(void)
          */
         demo_safe_show(s_show[slide], 32, 24, 0xF, 0xAF, 16,
                        BLACK, DEMO_SHOWSCREEN_BASE);
-        demo_fix_puts(7u, 2u, "EAGLE SOFTWARE", 2u);
-        demo_fix_puts(2u, 4u, " PRESENTS: NEO GEO SDK V1.3.0", 1u);
+        /* Studio name in red (FIX bank 3), nudged down the screen and
+         * centred: "EAGLE SOFTWARE" is 14 cells wide and the strap is
+         * 28, so on a 40-cell row they start at 13 and 6. */
+        demo_fix_puts(13u, 5u, "EAGLE SOFTWARE", 3u);
+        demo_fix_puts(6u,  7u, "PRESENTS: NEO GEO SDK V1.7.0", 1u);
 
         while (hold < 900u) {
 #ifndef NG_AES
@@ -278,8 +285,11 @@ void NEOGEO_USER demo_title_attract_reel(void)
                 slide = (uint8_t)((slide + 1u) % 7u);
                 s_show[slide](32, 24, 0xF, 0xAF, 16,
                               BLACK, DEMO_SHOWSCREEN_BASE);
-        demo_fix_puts(7u, 2u, "EAGLE SOFTWARE", 2u);
-        demo_fix_puts(2u, 4u, " PRESENTS: NEO GEO SDK V1.3.0", 1u);
+        /* Studio name in red (FIX bank 3), nudged down the screen and
+         * centred: "EAGLE SOFTWARE" is 14 cells wide and the strap is
+         * 28, so on a 40-cell row they start at 13 and 6. */
+        demo_fix_puts(13u, 5u, "EAGLE SOFTWARE", 3u);
+        demo_fix_puts(6u,  7u, "PRESENTS: NEO GEO SDK V1.7.0", 1u);
             }
 
             ng_palette_fx_update();

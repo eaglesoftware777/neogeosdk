@@ -1,8 +1,8 @@
 # Artbox Graphics Pipeline
 
-> **v1.3.0 — Artbox Studio Pipeline tab + Asset Rules editor**
+> **v1.7.0 — Artbox Studio Pipeline tab + Asset Rules editor**
 >
-> `artbox/artbox_studio.py` gained EIGHT new tabs in v1.3.0:
+> `artbox/artbox_studio.py` gained EIGHT new tabs in v1.7.0:
 >
 > - **Hex Sprite Inspector** — pick any tile index, see its decoded
 >   16×16 pixel grid, the raw C1/C2 ROM bytes (4 rows × 16 hex
@@ -17,7 +17,7 @@
 >   are rendered as scaled thumbnails so you see exactly what's at
 >   each cell.  Export gives a `level_tile[LEVEL_H][LEVEL_W]` C array.
 >
-> Plus the five tabs from the previous v1.3.0 commits:
+> Plus the five tabs from the previous v1.7.0 commits:
 >
 > - **Pipeline** — run every step (img2neo / genscreens /
 >   gen_sprite_meta / fixtiles / romdbimgimport / romtiles /
@@ -37,7 +37,7 @@
 > - **Asset Rules** — editor for `artbox/assets.cfg` with save/reload
 >   buttons.
 >
-> **HD alt scripts** (introduced in v1.3.0):
+> **HD alt scripts** (introduced in v1.7.0):
 >
 > Two new scripts sit alongside the existing pipeline.  They do NOT
 > replace `img2neo.py` / `fixtiles.py` — they're opt-in alternatives:

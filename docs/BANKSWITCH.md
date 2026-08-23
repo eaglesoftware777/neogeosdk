@@ -1,6 +1,6 @@
 # NeoGeo P-ROM Bank Switching
 
-> **v1.3.0 status**
+> **v1.7.0 status**
 >
 > The unified 21-chapter demo (`games/demo`, ID 777) and the new
 > `games/demo_plus` (ID 778) both fit comfortably in the 512 KB P1

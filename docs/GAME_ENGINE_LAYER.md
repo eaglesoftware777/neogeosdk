@@ -1,6 +1,6 @@
 # NeoGeoSDK 2D Game Engine Layer
 
-> **v1.3.0 — engine occlusion direction**
+> **v1.7.0 — engine occlusion direction**
 >
 > The boxed rule at the top of `sdk/2d_engine/ng_sprite_pool.h` (and the
 > `sdk/2d_engine_plus/ng_sprite_pool.hpp` copy) is authoritative:
@@ -45,7 +45,7 @@ The layer is plain C. No float, no malloc during gameplay, no division in the fr
 | Game time | `ng_game_time.h` | Frame counter |
 | Interrupt | `ng_game_interupt.h` | Per-frame hook dispatch |
 
-### Deluxe 2D engine modules (v1.3.0+)
+### Deluxe 2D engine modules (v1.7.0+)
 
 | Module | Header | Purpose |
 |--------|--------|---------|

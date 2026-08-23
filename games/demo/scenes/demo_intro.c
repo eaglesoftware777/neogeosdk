@@ -135,7 +135,7 @@ void NEOGEO_USER demo_intro_system_banner(void)
 #else
     demo_fix_puts(10u, 9u,  "MVS ARCADE MODE",  2u);
 #endif
-    demo_fix_puts(10u, 11u, "ROM: NEOGEOSDK V1.3.0",  1u);
+    demo_fix_puts(10u, 11u, "ROM: NEOGEOSDK V1.7.0",  1u);
     demo_fix_puts(4u,  15u, "CPU: MC68000 / SOUND: YM2610", 0u);
     demo_fix_puts(2u,  27u, "A: NEXT", 1u);
 
@@ -261,7 +261,7 @@ void NEOGEO_USER demo_intro_sdk_title(void)
 
     /* Character-by-character scroll in — title line */
     {
-        const char *title = "NEO GEO SDK V1.3.0";
+        const char *title = "NEO GEO SDK V1.7.0";
         const char *sub1  = "POWERED BY 2D ENGINE";
         const char *sub2  = "60 FPS  REAL HARDWARE + MAME";
         uint8_t col;
@@ -294,7 +294,7 @@ void NEOGEO_USER demo_intro_sdk_title(void)
     /* Pulse the title with color cycling */
     for (t = 0u; t < 150u; t++) {
         uint8_t pal = (uint8_t)((t >> 4) % 3u);
-        demo_fix_puts(14u, 11u, "NEO GEO SDK V1.3.0", pal);
+        demo_fix_puts(14u, 11u, "NEO GEO SDK V1.7.0", pal);
         if (demo_frame()) goto title_done;
     }
 

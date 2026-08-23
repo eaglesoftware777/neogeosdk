@@ -1,6 +1,6 @@
 # Build Dependencies
 
-> **v1.3.0 — extra dependencies**
+> **v1.7.0 — extra dependencies**
 >
 > - The HD artbox alt scripts (`artbox/img2neo_hd.py`,
 >   `artbox/fixtiles_hd.py`) require the same packages as the main
@@ -86,7 +86,7 @@ Download the pre-built `x-tools-v2.tar` from the release page and place it next 
 ```bash
 mkdir -p $HOME/neogeo
 cd $HOME/neogeo
-curl -L -o x-tools-v2.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.3.0/x-tools-v2.tar
+curl -L -o x-tools-v2.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.0/x-tools-v2.tar
 tar -xf x-tools-v2.tar
 ```
 

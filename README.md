@@ -3,11 +3,11 @@
 Neo Geo development SDK for SNK hardware.
 
 - Repository: https://github.com/eaglesoftware777/neogeosdk
-- Current release target: `v1.3.0` (in-progress on `neo_universal_2d`)
+- Current release target: `v1.7.0` (in-progress on `neo_universal_2d`)
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 
-## What's new in v1.3.0
+## What's new in v1.7.0
 
 - **Unified 21-chapter demo** (`games/demo`) covering every public engine
   subsystem in one linear flow; top-right chapter number on every scene
@@ -348,9 +348,9 @@ run `dist/run_neogeosdk.bat`.
 
 ## Release Assets
 
-The `v1.3.0` release publishes these attached assets:
+The `v1.7.0` release publishes these attached assets:
 
-- `neogeosdkv1.3.0.tar.gz`  
+- `neogeosdkv1.7.0.tar.gz`  
   source snapshot for the SDK
 - `neogeosdk.zip`  
   generated demo ROM set for MAME (`777-p1.p1`, `777-m1.m1`, `777-s1.s1`, `777-v1.v1`, `777-c1.c1`, `777-c2.c2`)
@@ -361,7 +361,7 @@ release updates are published.
 
 Current release page:
 
-- `https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.3.0`
+- `https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.7.0`
 
 ## Documentation
 
@@ -522,7 +522,7 @@ next to the repository:
 
 ```bash
 cd $HOME/neogeo
-curl -L -o x-tools-v2.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.3.0/x-tools-v2.tar
+curl -L -o x-tools-v2.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.0/x-tools-v2.tar
 tar -xf x-tools-v2.tar
 ```
 
@@ -568,7 +568,7 @@ python3 -m pip install --user pypng
 mkdir -p $HOME/neogeo
 cd $HOME/neogeo
 git clone https://github.com/eaglesoftware777/neogeosdk.git
-curl -L -o x-tools-v2.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.3.0/x-tools-v2.tar
+curl -L -o x-tools-v2.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.0/x-tools-v2.tar
 tar -xf x-tools-v2.tar
 
 export SDKHOME=$HOME/neogeo
