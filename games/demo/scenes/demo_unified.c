@@ -575,6 +575,39 @@ static void NEOGEO_USER snd_silence(void)
 /* ------------------------------------------------------------------ */
 #define CHAP_RULE_W  36u   /* cols 2..37 - the separator/hint field */
 
+/*
+ * Shared FIX-layer flourishes.
+ *
+ * Both reuse the technique the FIX-FX chapter's palette-cycle phase
+ * already proves out: restamp the same cells each frame at a rotating
+ * palette index.  It is the cheapest attract-mode trick on this
+ * hardware - no tile churn, no extra VRAM, one mess_out per frame - and
+ * it is what gives arcade select screens and credit rolls their
+ * shimmer instead of flat static text.
+ */
+static const uint8_t s_fix_cycle_pal[4] = { 2u, 1u, 3u, 1u };
+
+/* Marquee text: same string, palette advancing every `speed` frames. */
+static void NEOGEO_USER fix_cycle_puts(uint8_t x, uint8_t y,
+                                       const char *text,
+                                       uint16_t t, uint8_t speed)
+{
+    if (speed == 0u) speed = 1u;
+    demo_fix_puts(x, y, text, s_fix_cycle_pal[(t / speed) & 3u]);
+}
+
+/* Blinking selection brackets around a label, the way a fighting-game
+ * select screen marks the active pick. */
+static void NEOGEO_USER fix_select_marks(uint8_t x, uint8_t y,
+                                         uint8_t width,
+                                         uint8_t active,
+                                         uint16_t t)
+{
+    uint8_t pal = active ? s_fix_cycle_pal[(t / 6u) & 3u] : 0u;
+    demo_fix_puts(x, y, active ? ">" : " ", pal);
+    demo_fix_puts((uint8_t)(x + width + 1u), y, active ? "<" : " ", pal);
+}
+
 static void NEOGEO_USER chap_hint(const char *hint)
 {
     char rule[CHAP_RULE_W + 1u];
@@ -1782,8 +1815,17 @@ static uint8_t NEOGEO_USER chap_char_select(void)
             playSFX(SOUND_SFX_5);
         }
 
-        demo_fix_puts(6u,  8u, sel == 0u ? "[ GIRL  ]" : "  GIRL   ", sel == 0u ? 2u : 1u);
-        demo_fix_puts(22u, 8u, sel == 1u ? "[ EAGLE ]" : "  EAGLE  ", sel == 1u ? 2u : 1u);
+        /* Selection readout with the attract-mode shimmer: the chosen
+         * name cycles palettes and gets blinking arrow marks, the
+         * unchosen one stays flat.  Previously both were static text
+         * and the only cue was a pair of square brackets. */
+        demo_fix_puts(7u,  8u, "  GIRL  ", (uint8_t)(sel == 0u ? 2u : 1u));
+        demo_fix_puts(23u, 8u, " EAGLE  ", (uint8_t)(sel == 1u ? 2u : 1u));
+        if (sel == 0u) fix_cycle_puts(7u,  8u, "  GIRL  ", t, 6u);
+        else           fix_cycle_puts(23u, 8u, " EAGLE  ", t, 6u);
+        fix_select_marks(6u,  8u, 8u, (uint8_t)(sel == 0u), t);
+        fix_select_marks(22u, 8u, 8u, (uint8_t)(sel == 1u), t);
+        fix_cycle_puts(13u, 6u, "SELECT YOUR FIGHTER", t, 8u);
 
         girl_frame  = (sel == 0u) ? girl_frames[(anim_t / 8u) % GIRL_FRAME_COUNT]   : girl_frames[0];
         eagle_frame = (sel == 1u) ? eagle_frames[(anim_t / 8u) % EAGLE_FRAME_COUNT] : eagle_ground;
@@ -4208,7 +4250,12 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         for (j = 0u; j < PBULLET_MAX; j++) {
             if (!pb_active[j]) continue;
             pb_y[j] = (int16_t)(pb_y[j] - 7);   /* was 4 */
-            if (pb_y[j] < 28) pb_active[j] = 0u;
+            /* Retire the shot at the top of the play box (row 8,
+             * y=64) rather than y=28.  The box is drawn on FIX rows
+             * 7..25, so a bullet allowed to reach y=28 flew up out of
+             * the arena and across the SCORE/WAVE/LIFE readout before
+             * disappearing - the game has to stay inside its frame. */
+            if (pb_y[j] < 64) pb_active[j] = 0u;
         }
 
         if ((wave_t % dive_interval) == 30u) {
@@ -4230,7 +4277,8 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         for (j = 0u; j < EBULLET_MAX; j++) {
             if (!eb_active[j]) continue;
             eb_y[j] = (int16_t)(eb_y[j] + 4);   /* was 2 */
-            if (eb_y[j] > 190) { eb_active[j] = 0u; continue; }
+            /* Matching floor: row 25 of the box is y=200. */
+            if (eb_y[j] > 198) { eb_active[j] = 0u; continue; }
             if (eb_y[j] > 158 && eb_y[j] < 184 &&
                 eb_x[j] > (int16_t)(ship_x - 18) &&
                 eb_x[j] < (int16_t)(ship_x + 18)) {
@@ -4640,8 +4688,32 @@ static uint8_t NEOGEO_USER chap_credits(void)
     demo_fix_puts(4u, 15u, "RAYTRACE 3D  SSG ARCADE",  1u);
 
 
-    demo_fix_puts(2u, 24u, "THANKS FOR PLAYING.", 2u);
-    if (uwait(240u)) return 1u;
+    /*
+     * Animated sign-off instead of a static line: the studio name and
+     * the thanks both ride the palette-cycle shimmer, and a rule wipes
+     * in underneath them a cell at a time.  Same restamp-with-rotating-
+     * palette technique the FIX-FX chapter demonstrates, which is how
+     * an arcade credit roll earns its shine without extra tiles.
+     */
+    {
+        uint16_t t;
+        for (t = 0u; t < 240u; t++) {
+            fix_cycle_puts(10u, 20u, "EAGLE SOFTWARE 2026", t, 7u);
+            fix_cycle_puts(10u, 24u, "THANKS FOR PLAYING.", t, 5u);
+
+            /* Rule wipes outward from the centre as the credits hold. */
+            {
+                uint8_t half = (uint8_t)((t < 120u) ? (t / 8u) : 15u);
+                uint8_t k;
+                for (k = 0u; k <= half; k++) {
+                    demo_fix_puts((uint8_t)(19u - k), 22u, "-", 1u);
+                    demo_fix_puts((uint8_t)(20u + k), 22u, "-", 1u);
+                }
+            }
+
+            if (uframe()) return 1u;
+        }
+    }
 
     soundFadeOutSpeed(4u); snd_step();
     if (uwait(40u)) return 1u;
