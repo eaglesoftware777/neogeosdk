@@ -2867,11 +2867,35 @@ static uint8_t NEOGEO_USER chap_depth_parallax(void)
     uint16_t t;
 
     chap_header(22u, "DEPTH PARALLAX", "TWO SCROLLING BG LAYERS");
-    demo_fix_puts(2u, 2u, "FAR BG LAYER MOVES AT 0.5X", 1u);
-    demo_fix_puts(2u, 3u, "NEAR BG LAYER MOVES AT 1.0X", 0u);
+    demo_fix_puts(2u, 2u, "FAR LAYER  0.33X ACROSS  0.5X DOWN", 1u);
+    demo_fix_puts(2u, 3u, "NEAR LAYER 1.0X ACROSS  1.0X DOWN",  0u);
     snd_cross_to(SOUND_MUSIC_A);
 
-    for (t = 0u; t < 480u; t++) {
+    /*
+     * 240 frames (4s), down from 480.  The horizontal rates are also
+     * doubled, and the near layer is deliberately capped so that at
+     * 1px per frame it travels 240px over the chapter - just under the
+     * 256px wrap point, so the seam this art has (these are one-off
+     * scenic images, not tiling textures) never comes around.
+     */
+    for (t = 0u; t < 240u; t++) {
+        /*
+         * Vertical parallax.  Both layers used to be pinned at y=0 for
+         * the whole chapter, so "two scrolling layers" only ever
+         * scrolled horizontally and the vertical axis did nothing at
+         * all.  Each layer now rides its own triangle wave, at
+         * different periods and depths, through the 32px of vertical
+         * slack a 256px-tall background has against the 224px screen.
+         */
+        uint16_t fph    = (uint16_t)(t % 240u);
+        uint16_t nph    = (uint16_t)(t % 120u);
+        int16_t  far_y  = (int16_t)-(int16_t)((fph < 120u)
+                              ? (fph * 16u) / 120u
+                              : ((240u - fph) * 16u) / 120u);
+        int16_t  near_y = (int16_t)-(int16_t)((nph < 60u)
+                              ? (nph * 32u) / 60u
+                              : ((120u - nph) * 32u) / 60u);
+
         /* These backgrounds are one-off scenic images, not seamless
          * tiling textures - the wrap-around seam (source's right edge
          * jump-cutting back to its left edge) is genuinely visible at
@@ -2880,21 +2904,21 @@ static uint8_t NEOGEO_USER chap_depth_parallax(void)
          * runtime read as "blinking/flashing".  Slowed to a quarter/
          * half speed (moving only every 4th/2nd frame) so neither
          * layer completes a full wrap during the chapter at all. */
-        if ((t & 3u) == 0u) far_x  = (int16_t)(far_x  - 1);
-        if ((t & 1u) == 0u) near_x = (int16_t)(near_x - 1);
+        if ((t % 3u) == 0u) far_x = (int16_t)(far_x - 1);
+        near_x = (int16_t)(near_x - 1);
         while (far_x  >  32) far_x  = (int16_t)(far_x  - 256);
         while (far_x  < -192) far_x = (int16_t)(far_x  + 256);
         while (near_x >  32) near_x = (int16_t)(near_x - 256);
         while (near_x < -192) near_x = (int16_t)(near_x + 256);
 
-        demo_draw_sprite_screen(1u, SLOT_FAR_A, far_x, 0,
+        demo_draw_sprite_screen(1u, SLOT_FAR_A, far_x, far_y,
                                 far_strips, far_rows, 0xFFu, 0xFFu);
-        demo_draw_sprite_screen(1u, SLOT_FAR_B, (int16_t)(far_x + 256), 0,
+        demo_draw_sprite_screen(1u, SLOT_FAR_B, (int16_t)(far_x + 256), far_y,
                                 far_strips, far_rows, 0xFFu, 0xFFu);
 
-        demo_draw_sprite_screen(2u, SLOT_NEAR_A, near_x, 0,
+        demo_draw_sprite_screen(2u, SLOT_NEAR_A, near_x, near_y,
                                 near_strips, near_rows, 0xFFu, 0xFFu);
-        demo_draw_sprite_screen(2u, SLOT_NEAR_B, (int16_t)(near_x + 256), 0,
+        demo_draw_sprite_screen(2u, SLOT_NEAR_B, (int16_t)(near_x + 256), near_y,
                                 near_strips, near_rows, 0xFFu, 0xFFu);
 
         if (uframe()) return 1u;
@@ -3497,7 +3521,7 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
     demo_fix_puts(2u, 24u, "LEVEL 1  HP [####################]", 1u);
     demo_fix_puts(2u, 25u, "GATE: HORIZONTAL ROAD", 2u);
 
-    for (t = 0u; t < 780u; t++) {
+    for (t = 0u; t < 520u; t++) {
         uint8_t level = (uint8_t)(1u + (t / 195u));
         uint8_t level_idx = (uint8_t)((level - 1u) & 3u);
         int16_t bg_x;
@@ -3630,20 +3654,34 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
         Z_NEAR = 16,
         Z_FAR = 112,
         RETICLE_MIN = 60,
-        RETICLE_MAX = 260
+        RETICLE_MAX = 260,
+        /* Vertical aim range, in pixels.  Kept inside the range frame so
+         * the reticle cannot wander into the HUD rows. */
+        RETICLE_Y_MIN = 88,
+        RETICLE_Y_MAX = 168,
+        RETICLE_STEP  = 4
     };
     static const int16_t lane_x[TARGET_COUNT] = { -72, -26, 30, 78 };
     /* Was reusing hero/effect frames 49/50/51/53, which read as random
      * character art rather than actual "targets."  Real duck-shooting-
      * gallery sprites (U_DUCK_*) instead - the last lane uses the
      * rear-facing duck as a "sneaky" bonus variant. */
+    /*
+     * The lanes now run the square hitbox target used for shooting
+     * practice rather than the duck art.  A duck reads as a decoration
+     * that happens to be in the way; a hitbox reads as something you
+     * are meant to put the reticle on, which is what this chapter is
+     * demonstrating.
+     */
     static const uint8_t target_frame[TARGET_COUNT] = {
-        U_DUCK_TARGET_YELLOW, U_DUCK_TARGET_WHITE,
-        U_DUCK_TARGET_BROWN,  U_DUCK_BACK
+        U_HITBOX, U_HITBOX, U_HITBOX, U_HITBOX
     };
     int16_t target_z[TARGET_COUNT] = { 36, 62, 88, 108 };
     uint8_t target_flash[TARGET_COUNT] = { 0u, 0u, 0u, 0u };
     int16_t reticle_x = 160;
+    int16_t reticle_y = 128;
+    uint8_t prev_col  = 0xFFu;
+    uint8_t prev_row  = 0xFFu;
     uint8_t fire_timer = 0u;
     uint8_t ammo = 24u;
     uint16_t score = 0u;
@@ -3652,8 +3690,8 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
     char buf[4];
 
     chap_header(16u, "TARGET RANGE", "DUCK SHOOT  SPRITE DEPTH");
-    demo_fix_puts(2u, 2u, "D-PAD AIM  B FIRE", 1u);
-    demo_fix_puts(2u, 3u, "STATIC FRAME + DUCK TARGETS", 0u);
+    demo_fix_puts(2u, 2u, "D-PAD AIMS X AND Y   B FIRE", 1u);
+    demo_fix_puts(2u, 3u, "MOVING HITBOX TARGETS + DEPTH", 0u);
     snd_cross_to(SOUND_MUSIC_F);
 
     for (i = 0u; i < TARGET_COUNT; i++) {
@@ -3683,23 +3721,46 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
         down = ng_joy_down();
         pressed = ng_joy_pressed();
 
+        /* Two-axis aim.  Up/down did nothing before, so the reticle
+         * could only slide along one line and the chapter did not
+         * really respond to the stick. */
         if (down & JOY_LEFT) {
-            reticle_x = (int16_t)((reticle_x > RETICLE_MIN + 3) ? reticle_x - 3 : RETICLE_MIN);
+            reticle_x = (int16_t)((reticle_x > RETICLE_MIN + RETICLE_STEP)
+                                  ? reticle_x - RETICLE_STEP : RETICLE_MIN);
         }
         if (down & JOY_RIGHT) {
-            reticle_x = (int16_t)((reticle_x < RETICLE_MAX - 3) ? reticle_x + 3 : RETICLE_MAX);
+            reticle_x = (int16_t)((reticle_x < RETICLE_MAX - RETICLE_STEP)
+                                  ? reticle_x + RETICLE_STEP : RETICLE_MAX);
+        }
+        if (down & JOY_UP) {
+            reticle_y = (int16_t)((reticle_y > RETICLE_Y_MIN + RETICLE_STEP)
+                                  ? reticle_y - RETICLE_STEP : RETICLE_Y_MIN);
+        }
+        if (down & JOY_DOWN) {
+            reticle_y = (int16_t)((reticle_y < RETICLE_Y_MAX - RETICLE_STEP)
+                                  ? reticle_y + RETICLE_STEP : RETICLE_Y_MAX);
         }
         reticle_col = (uint8_t)(reticle_x >> 3);
 
         for (i = 0u; i < TARGET_COUNT; i++) {
             int16_t sx;
+            int16_t sy;
             int16_t dx;
+            int16_t dy;
             if (target_flash[i]) continue;
             sx = (int16_t)(160 + ((lane_x[i] * (Z_FAR - target_z[i])) /
                                   (Z_FAR - Z_NEAR)));
+            /* Same depth mapping the draw pass below uses, so the lock
+             * follows where the target actually appears. */
+            sy = (int16_t)(116 + (((Z_FAR - target_z[i]) * 64) /
+                                  (Z_FAR - Z_NEAR)));
             dx = (int16_t)(sx - reticle_x);
+            dy = (int16_t)(sy - reticle_y);
             if (dx < 0) dx = (int16_t)-dx;
-            if (dx < best_dx) {
+            if (dy < 0) dy = (int16_t)-dy;
+            /* Aim is two-axis now, so a target only counts as the
+             * closest one when the reticle is near it vertically too. */
+            if (dy < 34 && dx < best_dx) {
                 best_dx = dx;
                 locked_idx = (int8_t)i;
             }
@@ -3718,9 +3779,29 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
             }
         }
 
-        raytrace_put((uint8_t)(reticle_col - 1u), 13u, '[', is_locked ? 2u : 1u);
-        raytrace_put(reticle_col, 13u, '+', is_locked ? 2u : 1u);
-        raytrace_put((uint8_t)(reticle_col + 1u), 13u, ']', is_locked ? 2u : 1u);
+        {
+            uint8_t reticle_row = (uint8_t)(reticle_y >> 3);
+
+            /* Blank the cells the reticle occupied last frame before
+             * drawing it in its new place - it can move on both axes
+             * now, so without this it smears a trail across the range. */
+            if (prev_col != 0xFFu &&
+                (prev_col != reticle_col || prev_row != reticle_row)) {
+                raytrace_put((uint8_t)(prev_col - 1u), prev_row,
+                             NGFIX_DEFAULT_BLANK_TILE, 0u);
+                raytrace_put(prev_col, prev_row,
+                             NGFIX_DEFAULT_BLANK_TILE, 0u);
+                raytrace_put((uint8_t)(prev_col + 1u), prev_row,
+                             NGFIX_DEFAULT_BLANK_TILE, 0u);
+            }
+
+            raytrace_put((uint8_t)(reticle_col - 1u), reticle_row, '[', is_locked ? 2u : 1u);
+            raytrace_put(reticle_col, reticle_row, '+', is_locked ? 2u : 1u);
+            raytrace_put((uint8_t)(reticle_col + 1u), reticle_row, ']', is_locked ? 2u : 1u);
+
+            prev_col = reticle_col;
+            prev_row = reticle_row;
+        }
 
         if (fire_timer) {
             raytrace_put(18u, 22u, '/', 2u);
@@ -3792,6 +3873,8 @@ static uint8_t NEOGEO_USER chap_char_2d(void)
 {
     uint16_t t;
 
+    enum { EAGLE_BASE_Y = 150 };   /* was 186 - down at ground level */
+
     chap_header(17u, "CHAR 2D", "EAGLE FLIGHT ARC");
     demo_fix_puts(2u, 2u, "EAGLE FLYING FRAME BIND", 1u);
     demo_fix_puts(2u, 3u, "076 -> 077 -> 078 AT 70%", 0u);
@@ -3799,35 +3882,47 @@ static uint8_t NEOGEO_USER chap_char_2d(void)
 
     draw_background(U_BG_FOREST, 32, 16);
 
-    for (t = 0u; t < 600u; t++) {
-        uint16_t p = (uint16_t)(t % 300u);
+    /*
+     * Was 600 frames with a 300-frame flight period; 400/200 keeps the
+     * same two full passes across the screen in two thirds of the time.
+     */
+    for (t = 0u; t < 400u; t++) {
+        uint16_t p = (uint16_t)(t % 200u);
         uint8_t frame = s_flight_frames[(t / 8u) % 3u];
         int16_t x;
         int16_t y;
         uint16_t altitude;
         char buf[8];
 
-        if (t < 200u) {
+        if (t < 133u) {
             demo_fix_puts(2u, 6u, "PHASE: ARC WALK        ", 2u);
-        } else if (t < 420u) {
+        } else if (t < 280u) {
             demo_fix_puts(2u, 6u, "PHASE: HOP AND RECOVER ", 2u);
         } else {
             demo_fix_puts(2u, 6u, "PHASE: READY LOOP      ", 2u);
         }
 
-        if (p < 150u) {
-            x = (int16_t)(64 + ((uint16_t)p * 192u) / 150u);
+        if (p < 100u) {
+            x = (int16_t)(64 + ((uint16_t)p * 192u) / 100u);
         } else {
-            x = (int16_t)(256 - (((uint16_t)(p - 150u) * 192u) / 150u));
+            x = (int16_t)(256 - (((uint16_t)(p - 100u) * 192u) / 100u));
         }
-        y = (int16_t)(186 - (int16_t)((p < 80u) ? (p >> 2)
-                                                : ((p < 160u) ? ((160u - p) >> 2) : 0u)));
+        /*
+         * Flight arc.  The eagle used to sit on a y=186 baseline and
+         * climb at most 20px out of it, so it skimmed along just above
+         * the ground for the whole "flight".  The baseline is now 150
+         * and the arc is 56px deep, which puts it up in the canopy and
+         * makes the climb and descent actually read as flight.
+         */
+        y = (int16_t)(EAGLE_BASE_Y - (int16_t)((p < 100u)
+                          ? ((uint16_t)p * 56u) / 100u
+                          : ((uint16_t)(200u - p) * 56u) / 100u));
 
         /* Replaces a raw "[###----]" progress bar that didn't tell the
          * viewer anything about what it was tracking - an altitude
          * readout actually reflects what's happening on screen (the
          * eagle rising through the arc/hop phases). */
-        altitude = (uint16_t)(186 - y);
+        altitude = (uint16_t)(EAGLE_BASE_Y - y);
         demo_fix_puts(2u, 23u, "ALTITUDE:", 1u);
         digit3(buf, altitude);
         demo_fix_puts(12u, 23u, buf, 2u);
@@ -4395,7 +4490,7 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
         hero_scale(U_SCALE_30);
         hero_place(160, 96);
 
-        for (t = 0u; t < 840u; t++) {
+        for (t = 0u; t < 560u; t++) {
             uint8_t frame = s_flight_frames[(t / 8u) % 3u];
 
             for (i = 0u; i < OBJ_COUNT; i++) {
@@ -4467,7 +4562,7 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
 
     ng_joystick_init();
 
-    for (t = 0u; t < 900u; t++) {            /* 15 sec */
+    for (t = 0u; t < 600u; t++) {            /* 15 sec */
         uint16_t down;
         uint8_t  hero_frame;
 
