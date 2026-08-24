@@ -3324,6 +3324,26 @@ static uint8_t NEOGEO_USER chap_joystick(void)
     hero_scale(U_SCALE_70);
 
     /* Static HUD labels — once */
+    /* Frame the live-input readout as its own panel so it reads as an
+     * instrument rather than loose text floating over the forest. */
+    {
+        char rule[18];
+        uint8_t p;
+        uint8_t row;
+        rule[0] = '+';
+        for (p = 1u; p < 16u; p++) rule[p] = '-';
+        rule[16] = '+';
+        rule[17] = '\0';
+        demo_fix_puts(1u, 4u, rule, 1u);
+        /* Interior spans rows 5..13 - the B+C / B+D combo readouts sit
+         * on 12 and 13, so the closing rule goes on 14. */
+        for (row = 5u; row <= 13u; row++) {
+            demo_fix_puts(1u,  row, "|", 1u);
+            demo_fix_puts(17u, row, "|", 1u);
+        }
+        demo_fix_puts(1u, 14u, rule, 1u);
+    }
+
     demo_fix_puts(2u,  5u, "PAD:",        2u);
     demo_fix_puts(2u,  6u, "BTN:",        2u);
     demo_fix_puts(2u,  7u, "HELD A:",     2u);
@@ -3586,6 +3606,9 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
             bg_x = -(int16_t)((uint16_t)cam.x & 0x00FFu);
             draw_scrolling_background(U_BG_FOREST, bg_x, 0);
             demo_fix_puts(2u, 25u, "GATE: HORIZONTAL ROAD", 2u);
+        /* Marquee banner over the level readout - same restamp-with-
+         * rotating-palette trick the FIX-FX chapter demonstrates. */
+        fix_cycle_puts(12u, 4u, "SCROLLING LEVEL", t, 7u);
         } else {
             bg_y = -(int16_t)(((t - 390u) / 4u) & 31u);
             draw_vertical_background(U_BG_FOREST, 32, bg_y);
@@ -4524,6 +4547,7 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
         chap_header(19u, "DEPTH RIDE", "ROAD DEPTH  SCALE OBJECTS");
         demo_fix_puts(2u, 2u, "BACKGROUND 2 + SMALL DEPTH OBJECTS", 1u);
         demo_fix_puts(2u, 3u, "EAGLE CENTERED UPPER SCREEN 30%", 0u);
+        demo_fix_puts(13u, 5u, "DEPTH RIDE", 2u);
         snd_cross_to(SOUND_MUSIC_C);
 
         /* Was the forest background plus a crude ASCII "\"/"/" overlay
