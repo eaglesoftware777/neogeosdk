@@ -132,6 +132,17 @@ for spec in image_specs:
 
     x = "x0"
     y = "496-y0"
+    # The backdrop is one register holding one colour for the whole
+    # screen, and `backdrop` does not change across the strips - so
+    # emitting the write inside the loop repeated it once per strip
+    # (16+ times) interleaved with the vram_sprite() bursts below.
+    # That whole sequence is far too long to fit in vblank, so those
+    # repeats land partway down a visible frame: the raster draws the
+    # rows above the write in the old colour and the rows below in the
+    # new one, which is the black bar that flashes across the top of
+    # the screen for a single frame on the way into a scene.  Write it
+    # once, before any of the VRAM traffic starts.
+    print("setBACKDROP(backdrop);")
     for sprt_index in range(sprt_sz):
         print("SCB2    = setSCB2(xr,yr);")
         if sprt_index == 0:
@@ -139,7 +150,6 @@ for spec in image_specs:
         else:
             print("SCB3    = setSCB3(%s,1,min_crt_sz);" % y)
         print("SCB4    = setSCB4(%s);" % x)
-        print("setBACKDROP(backdrop);")
         print(
             "vram_sprite(sprite_base + 64*%d,1,(sprite_base>>6)+%d,spriteMapS%d_%d,spal%d_%d,%d,SCB2,SCB3,SCB4);"
             % (sprt_index, sprt_index, image_index, sprt_index + 1, image_index, sprt_index + 1, crt_sz)
