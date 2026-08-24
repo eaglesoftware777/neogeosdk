@@ -305,6 +305,12 @@ static uint8_t  s_draw_particles  = 0u;
  * finished - 0 = girl, 1 = eagle.  Later chapters that want to reflect the
  * player's choice (e.g. palette FX) read this instead of hardcoding a
  * character. */
+/* The effects chapters always show the eagle cameo.  They used to
+ * follow s_selected_char and show the girl portrait (asset 68) when
+ * she was picked, which put a face in scenes that are about the
+ * particle and palette effects themselves. */
+#define U_CAMEO_EAGLE  75u
+
 static uint8_t  s_selected_char   = 1u;   /* defaults to eagle if select
                                             * chapter never runs first */
 
@@ -2375,13 +2381,18 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
      * select chapter (s_selected_char) - this scene otherwise had no
      * link back to that choice at all. */
     {
-        uint8_t badge_frame = (s_selected_char == 0u) ? 68u : 75u;
+        uint8_t badge_frame = U_CAMEO_EAGLE;
         demo_load_screen_palette(badge_frame);
-        demo_fix_puts(2u, 20u, "PLAYING AS:", 1u);
+        /* Was row 20, which put the label and its portrait down in the
+         * lower third where the effects themselves play out.  Both now
+         * sit in the top band, clear of the action - row 4 rather than
+         * row 2, which the EFFECTS listing already fills across. */
+        demo_fix_puts(27u, 4u, "PLAYING AS:", 1u);
     }
 
-    for (t = 0u; t < 660u; t++) {
-        uint8_t next_stage = (uint8_t)(t / 132u);
+    /* Was 660 frames (11s) at 132 per stage - trimmed to 8s. */
+    for (t = 0u; t < 480u; t++) {
+        uint8_t next_stage = (uint8_t)(t / 96u);
         uint8_t pose = s_fx_char_frames[(t / 12u) % 5u];
         uint8_t fx_left = s_fx_effect_frames[(t / 16u) & 3u];
         uint8_t fx_mid = s_fx_effect_frames[((t / 16u) + 1u) & 3u];
@@ -2427,8 +2438,8 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
         draw_asset_bottom_center(fx_right, DEMO_PROP_FX_C_SLOT, 250, 98, U_SCALE_55, U_SCALE_55);
         draw_asset_bottom_center(pose, HERO_SLOT_FIRST, 160,
                                  FX_HERO_LIFT_Y, U_SCALE_55, U_SCALE_55);
-        draw_asset_bottom_center((s_selected_char == 0u) ? 68u : 75u, DEMO_PROP_CAMEO_SLOT,
-                                 36, 210, U_SCALE_30, U_SCALE_30);
+        draw_asset_bottom_center(U_CAMEO_EAGLE, DEMO_PROP_CAMEO_SLOT,
+                                 300, 56, U_SCALE_30, U_SCALE_30);
 
         if (uframe()) return 1u;
     }
@@ -2476,11 +2487,11 @@ static uint8_t NEOGEO_USER chap_particles(void)
     demo_load_screen_palette(U_PARTICLE_HITSPARK);
     demo_load_screen_palette(U_PARTICLE_EXPLOSION);
     demo_load_screen_palette(U_PARTICLE_SMOKE);
-    demo_load_screen_palette((s_selected_char == 0u) ? 68u : 75u);
+    demo_load_screen_palette(U_CAMEO_EAGLE);
 
     s_draw_particles = 1u;
 
-    for (t = 0u; t < 540u; t++) {
+    for (t = 0u; t < 360u; t++) {
         /*
          * Phase machine — 3 special-move beats:
          *   [  0..160) WIND-UP        : faint dust around feet
@@ -2567,7 +2578,7 @@ static uint8_t NEOGEO_USER chap_particles(void)
 
         /* The other picked face watches from the side, standing at
          * rest - this scene otherwise showed only the acting hero. */
-        draw_asset_bottom_center((s_selected_char == 0u) ? 68u : 75u, DEMO_PROP_CAMEO_SLOT,
+        draw_asset_bottom_center(U_CAMEO_EAGLE, DEMO_PROP_CAMEO_SLOT,
                                  258, FX_HERO_LIFT_Y, U_SCALE_45, U_SCALE_45);
 
         if (uframe()) return 1u;
@@ -2610,7 +2621,7 @@ static uint8_t NEOGEO_USER chap_particle_showcase(void)
 
     s_draw_particles = 1u;
 
-    for (t = 0u; t < 600u; t++) {
+    for (t = 0u; t < 400u; t++) {
         if (t < 140u) {
             /* Phase 1: 8-way hit-spark bursts. */
             if ((t % 40u) == 0u) {
@@ -2716,7 +2727,7 @@ static uint8_t NEOGEO_USER chap_feedback(void)
 
     s_draw_particles = 1u;
 
-    for (t = 0u; t < 540u; t++) {
+    for (t = 0u; t < 360u; t++) {
         uint8_t fx_frame = s_fx_effect_frames[(t / 8u) & 3u];
         uint8_t hero_frame = s_fx_char_frames[(t / 14u) % 5u];
         int16_t bob = (int16_t)(((t & 31u) < 16u) ? 1 : -1);
@@ -2783,7 +2794,14 @@ static uint8_t NEOGEO_USER chap_depthfx(void)
         uint8_t frame = s_hero_stand[(t / HERO_CAD_STAND) % 8u];
         uint8_t strips = demo_screen_strips(frame);
         uint8_t rows = demo_screen_rows(frame);
-        uint8_t scale = (uint8_t)(0x58u + (uint16_t)((96 - z) * 0xA7u) / 84u);
+        /*
+         * Z-to-scale ramp.  Was 0x58 + (96-z)*0xA7/84, which reaches
+         * 0xFF at the near end - the hardware maximum, i.e. the art at
+         * its full 256px, towering over the screen when she approaches.
+         * 0x40..0xA0 keeps the same sense of depth (a 2.5x swing between
+         * far and near) with the near end at a sane ~63%.
+         */
+        uint8_t scale = (uint8_t)(0x40u + (uint16_t)((96 - z) * 0x60u) / 84u);
         int16_t draw_x = (int16_t)(160 - (strips * 16 * scale / 256) / 2
                                   - demo_screen_x_offset(frame));
         int16_t draw_y = (int16_t)(132 - (rows * 16 * scale / 256) / 2
