@@ -20,19 +20,19 @@
         <part name="cart" interface="neo_cart">
             <feature name="slot" value="rom_fatfur2" />
             <dataarea name="maincpu" width="16" endianness="big" size="0x100000">
-                <rom loadflag="load16_word_swap" name="777-p1.p1" offset="0x000000" size="0x080000" crc="ecee75ab" sha1="d96586157eb59b6da871f72838525872e6f6378d" />
+                <rom loadflag="load16_word_swap" name="777-p1.p1" offset="0x000000" size="0x080000" crc="c5085c3c" sha1="099667b75afd700a3499a53a9fb6f924dfafdfd2" />
             </dataarea>
             <dataarea name="fixed" size="0x020000">
                 <rom offset="0x000000" size="0x020000" name="777-s1.s1" crc="375809b8" sha1="8e66116eeb64654ef5617b982cd5725d084653a1" />
             </dataarea>
             <dataarea name="audiocpu" size="0x020000">
-                <rom offset="0x000000" size="0x020000" name="777-m1.m1" crc="a6d2c10d" sha1="18c1ff01ffec9e91474b95e43b0c3c321fcf9e7b" />
+                <rom offset="0x000000" size="0x020000" name="777-m1.m1" crc="8468bbcc" sha1="cab6aa1d7ee562861ba57aaa800af3c94e5ab2e8" />
             </dataarea>
             <dataarea name="ymsnd:adpcma" size="0x3f1c00">
                 <rom name="777-v1.v1" offset="0x000000" size="0x3f1c00" crc="65e4004f" sha1="7b91a1feba8ec72c9ae589d278d0223a422d1efe" />
             </dataarea>
             <dataarea name="sprites" size="0x1000000">
-                <rom loadflag="load16_byte" name="777-c1.c1" offset="0x000000" size="0x800000" crc="0e88fbae" sha1="76e721b2630dbef698881060aa74800e7247a1a1" />
+                <rom loadflag="load16_byte" name="777-c1.c1" offset="0x000000" size="0x800000" crc="ce86d399" sha1="a38f0c755b27d9813cad2d0eeb56d9783b3dfe81" />
                 <rom loadflag="load16_byte" name="777-c2.c2" offset="0x000001" size="0x800000" crc="df1b60b5" sha1="4a457548049652919ceacf77703de3b35272d959" />
             </dataarea>
         </part>

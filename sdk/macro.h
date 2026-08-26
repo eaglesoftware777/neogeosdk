@@ -102,7 +102,12 @@
 //Zones:
 #define RAMSTART         0x100000   //68k work RAM
 #define PALETTES         0x400000   //Palette RAM
-#define BACKDROP         PALETTES+(16*2*256)
+/* Backdrop colour register.  It is the LAST word of palette RAM
+ * (palette 255, colour 15), i.e. PALETTES + 16*2*256 - 2 = 0x401FFE,
+ * not one word past the end of it.  0x402000 is decoded as a mirror
+ * of palette RAM, so the old value silently wrote palette 0 colour 0
+ * and every setBACKDROP() call in the SDK did nothing to the screen. */
+#define BACKDROP         (PALETTES+(16*2*256)-2)
 #define PALOFFSET		 0x20
 #define MEMCARD          0x800000   //Memory card
 #define SYSROM           0xC00000   //System ROM

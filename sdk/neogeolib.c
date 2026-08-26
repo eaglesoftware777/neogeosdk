@@ -295,9 +295,23 @@ int NEOGEO_USER strlen(const char *s) {
 	return (s - p);
 }
 
+/*
+ * The FIX map is 40x32 cells but the CRT only shows 28 of those rows:
+ * map rows 0, 1, 30 and 31 sit in the vertical blanking area and never
+ * reach the screen.  Every helper below addresses the *visible* grid -
+ * row 0 is the top line you can actually see - so the map row is
+ * y + FIX_ROW0.  fix_svalue()/fix_svalue1() further down always used
+ * this convention; the text helpers did not, which pushed every line
+ * two rows up the screen: text written to row 0 landed in the blanking
+ * area and never appeared, and the bottom two visible rows could not be
+ * addressed at all.
+ */
+#define FIX_ROW0    2u
+#define FIX_ROWS    28u
+
 void NEOGEO_USER fixtext_out(uint16_t x, uint16_t y,char *mess, short pal) {
 	int len = strlen(mess);
-	NEO_REGISTER(VRAM_ADDR) = FIXMAP+y+x*32;
+	NEO_REGISTER(VRAM_ADDR) = FIXMAP+y+FIX_ROW0+x*32;
 	NEO_REGISTER(VRAM_INC) = 0x20;
 	for (int i=0; i<len; i++) NEO_REGISTER(VRAM_RW) = (uint16_t)((pal << 12) | mess[i]);
 }
@@ -370,9 +384,9 @@ void NEOGEO_USER mess_out_vram(uint16_t vram_addr, uint16_t vram_inc,
 void NEOGEO_USER mess_out_clipped(uint16_t x, uint16_t y, const char *text,
                                   short pal, uint16_t max_chars)
 {
-	if (!text || x >= 40u || y >= 32u) return;
+	if (!text || x >= 40u || y >= FIX_ROWS) return;
 	if (max_chars > (uint16_t)(40u - x)) max_chars = (uint16_t)(40u - x);
-	mess_out_vram((uint16_t)(FIXMAP + y + x * 32u), 0x20u, text, pal, max_chars);
+	mess_out_vram((uint16_t)(FIXMAP + y + FIX_ROW0 + x * 32u), 0x20u, text, pal, max_chars);
 }
 
 void NEOGEO_USER mess_out(uint16_t x, uint16_t y, const char *text, short pal)
@@ -382,7 +396,7 @@ void NEOGEO_USER mess_out(uint16_t x, uint16_t y, const char *text, short pal)
 }
 
 void NEOGEO_USER fixtext_out1(uint16_t x, uint16_t y,uint16_t *mess,short pal,int objsz) {
-	NEO_REGISTER(VRAM_ADDR) = FIXMAP+y+x*32;
+	NEO_REGISTER(VRAM_ADDR) = FIXMAP+y+FIX_ROW0+x*32;
 	NEO_REGISTER(VRAM_INC) = 0x20;
 	for (int i=0; i<objsz; i++) NEO_REGISTER(VRAM_RW) = (uint16_t)((pal << 12) | mess[i]);
 }
