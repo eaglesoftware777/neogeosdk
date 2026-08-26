@@ -1,0 +1,16 @@
+# These files are written by the art/sound build.  The Windows makefile
+# emits them with CRLF and the Linux/WSL one with LF, so without this a
+# rebuild on the other host shows every line of every one of them as
+# changed - tens of thousands of lines of pure noise on top of whatever
+# actually changed.  Normalising to LF in the repository makes a rebuild
+# on either host a no-op unless the content really moved.
+games/demo/artbox/assets.cfg            text eol=lf
+games/demo/artbox/assets_manifest.json  text eol=lf
+games/demo/artbox/infix_palettes.h      text eol=lf
+games/demo/artbox/map                   text eol=lf
+games/demo/artbox/out.srt               text eol=lf
+games/demo/artbox/output1.txt           text eol=lf
+games/demo/artbox/screens.c             text eol=lf
+games/demo/artbox/sprite_meta.h         text eol=lf
+games/demo/eyecatcher.c                 text eol=lf
+games/demo/main.c                       text eol=lf

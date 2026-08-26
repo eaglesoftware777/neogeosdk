@@ -6,3 +6,8 @@ snap/
 mame_capture/*
 !mame_capture/full_run.lua
 __pycache__/
+# SQLite journals left next to the artbox database while it is open
+games/demo/artbox/neorom.db-shm
+games/demo/artbox/neorom.db-wal
+artbox/neorom.db-shm
+artbox/neorom.db-wal
