@@ -58,11 +58,33 @@ static void NEOGEO_USER ng_sprite_kill_slot(uint16_t spr)
      *    is all-zero pixel data) makes the worst-case render a
      *    fully transparent 16x32 area instead of last frame's
      *    artwork. */
+    /*    Streamed straight at VRAM_RW rather than through 64
+     *    vram_sfix1() calls.  The SDK builds at -O0, so each of those
+     *    was a real out-of-line call and a stack frame for a single
+     *    word store, and this runs for all 381 slots on every scene
+     *    clear - PC sampling put a third of the ~3s black gap between
+     *    the eyecatcher and the first intro frame right here.  The
+     *    write sequence is identical (VRAM_ADDR, VRAM_INC=1, then 64
+     *    consecutive words); only the call overhead is gone. */
     scb1_base = (uint16_t)(64u * spr);
-    vram_init(scb1_base, 1u);
-    for (i = 0u; i < 32u; i++) {
-        vram_sfix1(NG_SPRITE_BLANK_TILE);
-        vram_sfix1(NG_SPRITE_BLANK_ATTR);
+    NEO_REGISTER(VRAM_ADDR) = scb1_base;
+    NEO_REGISTER(VRAM_INC)  = 1u;
+    {
+        volatile uint16_t *rw = (volatile uint16_t *)VRAM_RW;
+
+        /* Eight rows per pass: at -O0 the loop counter arithmetic costs
+         * as much as the stores themselves, so unrolling is most of the
+         * win here. */
+        for (i = 0u; i < 4u; i++) {
+            rw[0] = NG_SPRITE_BLANK_TILE; rw[0] = NG_SPRITE_BLANK_ATTR;
+            rw[0] = NG_SPRITE_BLANK_TILE; rw[0] = NG_SPRITE_BLANK_ATTR;
+            rw[0] = NG_SPRITE_BLANK_TILE; rw[0] = NG_SPRITE_BLANK_ATTR;
+            rw[0] = NG_SPRITE_BLANK_TILE; rw[0] = NG_SPRITE_BLANK_ATTR;
+            rw[0] = NG_SPRITE_BLANK_TILE; rw[0] = NG_SPRITE_BLANK_ATTR;
+            rw[0] = NG_SPRITE_BLANK_TILE; rw[0] = NG_SPRITE_BLANK_ATTR;
+            rw[0] = NG_SPRITE_BLANK_TILE; rw[0] = NG_SPRITE_BLANK_ATTR;
+            rw[0] = NG_SPRITE_BLANK_TILE; rw[0] = NG_SPRITE_BLANK_ATTR;
+        }
     }
 }
 

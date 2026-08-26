@@ -1782,9 +1782,13 @@ static uint8_t NEOGEO_USER chap_char_select(void)
         rule[33] = '+';
         rule[34] = '\0';
         demo_fix_puts(3u, 5u, rule, 1u);
+        /* ':' and not '|' for the uprights: the FIX tile at the ASCII
+         * code for '|' is not a bar in this S-ROM's font and renders as
+         * a broken glyph, while ':' gives a clean dotted rule that reads
+         * as the vertical partner of the '-' dashes above and below. */
         for (row = 6u; row < 24u; row++) {
-            demo_fix_puts(3u,  row, "|", 1u);
-            demo_fix_puts(35u, row, "|", 1u);
+            demo_fix_puts(3u,  row, ":", 1u);
+            demo_fix_puts(35u, row, ":", 1u);
         }
         demo_fix_puts(3u, 24u, rule, 1u);
     }
@@ -3338,8 +3342,8 @@ static uint8_t NEOGEO_USER chap_joystick(void)
         /* Interior spans rows 5..13 - the B+C / B+D combo readouts sit
          * on 12 and 13, so the closing rule goes on 14. */
         for (row = 5u; row <= 13u; row++) {
-            demo_fix_puts(1u,  row, "|", 1u);
-            demo_fix_puts(17u, row, "|", 1u);
+            demo_fix_puts(1u,  row, ":", 1u);
+            demo_fix_puts(17u, row, ":", 1u);
         }
         demo_fix_puts(1u, 14u, rule, 1u);
     }
@@ -4122,14 +4126,11 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     char buf[8];
 
     chap_header(18u, "SSG ARCADE", "GALAXIAN FORMATION MINI");
-    /* The restart control lives up here in the HUD band rather than in
-     * the usual chap_hint() slot on row 26.  In this chapter the bottom
-     * two FIX rows are not readable: the full-screen starfield spans
-     * x=32..288 and nothing drawn on rows 26/27 shows through inside
-     * that span - the shared caption bar is clipped to its first two
-     * and last two cells here for the same reason.  Rows 0..6 render
-     * normally (SCORE/WAVE/LIFE sit there), so the hint goes where it
-     * can actually be read. */
+    /* The restart control is repeated up here in the HUD band as well
+     * as in the usual chap_hint() slot on row 26.  This is the one
+     * chapter with its own live controls, so it is worth spelling the
+     * whole control set out in one line where the player is already
+     * looking (the SCORE/WAVE/LIFE readout is right below it). */
     demo_fix_puts(2u, 2u, "ARROWS MOVE  B FIRE  C:RESTART", 1u);
     demo_fix_puts(2u, 3u, "IMAGE SPRITES + MUSIC + ADPCM", 0u);
 
@@ -4153,12 +4154,9 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
      * the caption bar on row 27, so this chapter's bottom chrome was
      * buried under the backdrop.
      *
-     * Why it matters here specifically: the separator rule and the
-     * caption bar are drawn in palette 0, which is black text.  Over a
-     * light backdrop that reads fine, but over the black starfield it
-     * is black on black - which is why this chapter looked like its
-     * bottom chrome was missing entirely while the cyan play-area
-     * border right above it stayed perfectly visible.
+     * The chapter's bottom chrome also has to sit clear of it: the
+     * separator rule and the caption bar are drawn in FIX palette 0,
+     * and a full-height starfield simply covered them.
      *
      * Measured on screen: each tile row of this asset renders a full
      * 16px tall (the 0xF0 byte does not shrink it), so 9 rows from
@@ -4194,8 +4192,8 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
             demo_fix_puts(bx, 25u, "-", 1u);
         }
         for (by = 7u; by <= 25u; by++) {
-            demo_fix_puts(3u,  by, "|", 1u);
-            demo_fix_puts(36u, by, "|", 1u);
+            demo_fix_puts(3u,  by, ":", 1u);
+            demo_fix_puts(36u, by, ":", 1u);
         }
         demo_fix_puts(3u,  7u,  "+", 1u);
         demo_fix_puts(36u, 7u,  "+", 1u);
@@ -4228,10 +4226,24 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
          * read as enemies spawning above the play area/HUD instead of
          * inside it. */
         uint16_t settled_t = wave_t;
-        int16_t sway = (int16_t)((int16_t)((settled_t >> 2) & 15u) - 8);  /* was >>3 */
+        /* Formation drift.  This used to be a sawtooth
+         * (((settled_t >> 2) & 15) - 8): it walked the whole formation
+         * 15px to the right and then teleported it back to the left in
+         * a single frame, which reads as a twitch rather than motion.
+         * A triangle over the same 16px covers the sweep in both
+         * directions continuously, and at >>1 it takes ~1s per full
+         * left-right-left cycle instead of crawling. */
+        uint8_t  sway_phase = (uint8_t)((settled_t >> 1) & 31u);
+        int16_t  sway = (int16_t)((sway_phase < 16u)
+                                  ? ((int16_t)sway_phase - 8)
+                                  : (23 - (int16_t)sway_phase));
         uint8_t diver[DIVER_MAX];
 
-        dive_interval = (uint16_t)(120u - (uint16_t)(stage - 1u) * 18u);  /* was 180 */
+        /* Dive cadence.  Was 180, then 120; at 120 frames (2s) between
+         * dives with only two divers the formation still spent most of
+         * the chapter sitting still.  84 frames opens with a dive
+         * roughly every 1.4s and tightens to 0.9s by the last stage. */
+        dive_interval = (uint16_t)(84u - (uint16_t)(stage - 1u) * 14u);
         for (j = 0u; j < DIVER_MAX; j++) {
             uint16_t phase = (uint16_t)(settled_t + (uint16_t)j * (dive_interval / DIVER_MAX));
             diver[j] = (uint8_t)((phase / dive_interval) % SHOOTER_ENEMIES);
@@ -4255,11 +4267,16 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
          * graceful fade the other exits already get. */
         if (idle_frames >= IDLE_ADVANCE_FRAMES) { snd_silence(); return 1u; }
 
-        /* Was 2px/frame, which read as sluggish for an arcade shooter. */
-        if ((joy & JOY_LEFT) && ship_x > 54) ship_x = (int16_t)(ship_x - 4);
-        if ((joy & JOY_RIGHT) && ship_x < 266) ship_x = (int16_t)(ship_x + 4);
+        /* Was 2px/frame, then 4; 6px crosses the 212px play area in
+         * about 35 frames, which is the response an arcade shooter
+         * needs to feel driven rather than dragged. */
+        if ((joy & JOY_LEFT) && ship_x > 54) ship_x = (int16_t)(ship_x - 6);
+        if ((joy & JOY_RIGHT) && ship_x < 266) ship_x = (int16_t)(ship_x + 6);
 
-        if ((edge & BUTTON_B) || ((t & 15u) == 10u)) {   /* was every 32 frames */
+        /* Auto-fire cadence: every 32 frames, then 16, now 8 - with a
+         * 3-shot pool and a 10px/frame shot this keeps two shots in the
+         * air at once instead of one lonely bullet per second. */
+        if ((edge & BUTTON_B) || ((t & 7u) == 4u)) {
             for (j = 0u; j < PBULLET_MAX; j++) {
                 if (!pb_active[j]) {
                     pb_active[j] = 1u;
@@ -4272,7 +4289,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         }
         for (j = 0u; j < PBULLET_MAX; j++) {
             if (!pb_active[j]) continue;
-            pb_y[j] = (int16_t)(pb_y[j] - 7);   /* was 4 */
+            pb_y[j] = (int16_t)(pb_y[j] - 10);  /* was 4, then 7 */
             /* Retire the shot at the top of the play box (row 8,
              * y=64) rather than y=28.  The box is drawn on FIX rows
              * 7..25, so a bullet allowed to reach y=28 flew up out of
@@ -4299,7 +4316,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         }
         for (j = 0u; j < EBULLET_MAX; j++) {
             if (!eb_active[j]) continue;
-            eb_y[j] = (int16_t)(eb_y[j] + 4);   /* was 2 */
+            eb_y[j] = (int16_t)(eb_y[j] + 6);   /* was 2, then 4 */
             /* Matching floor: row 25 of the box is y=200. */
             if (eb_y[j] > 198) { eb_active[j] = 0u; continue; }
             if (eb_y[j] > 158 && eb_y[j] < 184 &&
@@ -4321,7 +4338,12 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
 
         for (i = 0u; i < SHOOTER_ENEMIES; i++) {
             uint8_t is_diver = 0u;
-            int16_t y_wave = (int16_t)((i & 1u) ? ((settled_t >> 4) & 3u) : -((settled_t >> 4) & 3u));
+            /* Same fix as sway above: (settled_t >> 4) & 3 stepped
+             * 0-1-2-3 then snapped back to 0.  Triangle 0-3-0, odd and
+             * even columns in opposite phase so the grid breathes. */
+            uint8_t bob_phase = (uint8_t)((settled_t >> 3) & 7u);
+            int16_t bob = (int16_t)((bob_phase < 4u) ? bob_phase : (7 - bob_phase));
+            int16_t y_wave = (int16_t)((i & 1u) ? bob : -bob);
 
             enemy_x[i] = (int16_t)(home_x[i] + sway);
             enemy_y[i] = (int16_t)(home_y[i] + y_wave);
@@ -4330,7 +4352,9 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
                 if (diver[j] == i) is_diver = 1u;
             }
             if (is_diver && enemy_alive[i]) {
-                uint8_t dive_step = (uint8_t)((settled_t % dive_interval) / 3u);
+                /* /2 rather than /3: the diver now crosses its full
+                 * 31px drop in 64 frames instead of 96. */
+                uint8_t dive_step = (uint8_t)((settled_t % dive_interval) / 2u);
                 if (dive_step < 32u) {
                     enemy_y[i] = (int16_t)(enemy_y[i] + dive_step);
                     enemy_x[i] = (int16_t)(enemy_x[i] + ((dive_step & 1u) ? dive_step : -dive_step));
@@ -4377,15 +4401,18 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
             wave_t++;
         }
 
-        demo_fix_puts(2u, 5u, "SCORE", 1u);
+        /* Readout on row 4 and the wave bar on row 5, so row 6 stays
+         * empty as a gutter between the HUD block and the arena border
+         * on row 7 instead of the two touching. */
+        demo_fix_puts(2u, 4u, "SCORE", 1u);
         digit3(buf, (uint16_t)(score % 1000u));
-        demo_fix_puts(9u, 5u, buf, 2u);
-        demo_fix_puts(15u, 5u, "WAVE", 1u);
+        demo_fix_puts(9u, 4u, buf, 2u);
+        demo_fix_puts(15u, 4u, "WAVE", 1u);
         digit3(buf, wave);
-        demo_fix_puts(21u, 5u, buf, 2u);
-        demo_fix_puts(27u, 5u, "LIFE", 1u);
+        demo_fix_puts(21u, 4u, buf, 2u);
+        demo_fix_puts(27u, 4u, "LIFE", 1u);
         digit3(buf, lives);
-        demo_fix_puts(33u, 5u, buf, 2u);
+        demo_fix_puts(33u, 4u, buf, 2u);
 
         /* Wave-clear progress bar. */
         {
@@ -4395,7 +4422,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
             cell[1] = '\0';
             for (p = 0u; p < 18u; p++) {
                 cell[0] = (p < (uint8_t)((done * 18u) / SHOOTER_ENEMIES)) ? '#' : '-';
-                demo_fix_puts((uint8_t)(2u + p), 6u, cell, (uint8_t)(cell[0] == '#' ? 2u : 1u));
+                demo_fix_puts((uint8_t)(2u + p), 5u, cell, (uint8_t)(cell[0] == '#' ? 2u : 1u));
             }
         }
 

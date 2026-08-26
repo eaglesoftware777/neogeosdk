@@ -80,7 +80,9 @@ const NGFixBoxTiles* NEOGEO_USER ngfix_get_box_tiles(void)
 
 uint16_t NEOGEO_USER ngfix_addr(uint8_t x, uint8_t y)
 {
-    return (uint16_t)(FIXMAP + (uint16_t)y + ((uint16_t)x * 32u));
+    /* Visible row y is map row y + 2: rows 0/1 (and 30/31) of the
+     * 40x32 FIX map fall in vertical blanking and never reach the CRT. */
+    return (uint16_t)(FIXMAP + (uint16_t)y + 2u + ((uint16_t)x * 32u));
 }
 
 uint16_t NEOGEO_USER ngfix_cell(uint16_t tile, uint8_t pal)

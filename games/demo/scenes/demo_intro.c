@@ -37,7 +37,7 @@ void NEOGEO_USER cyclexms(int ms);
 void NEOGEO_USER showScreen107(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen108(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 
-#define PAL_BLACK   0
+#define PAL_WHITE   0   /* body-text bank, light on the black backdrop */
 #define PAL_CYAN    1
 #define PAL_GREEN   2
 #define PAL_RED     3
@@ -60,8 +60,12 @@ void NEOGEO_USER demo_intro_eagle(void)
 
     setBACKDROP(BLACK);
 
-    /* FIX palette 0 = black, 1 = cyan, 2 = green, 3 = red */
-    setpal(fix_pal, 0x8000u, BLACK,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+    /* FIX palette 0 = white, 1 = cyan, 2 = green, 3 = red.
+     * Bank 0 is the body-text bank and used to be black, which only
+     * read because the backdrop register was being written to the
+     * wrong address and the screen stayed on the boot-time white.
+     * With the backdrop actually black, bank 0 has to be light. */
+    setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES);
 
@@ -78,8 +82,8 @@ void NEOGEO_USER demo_intro_eagle(void)
     load_palettes(fix_pal, PALETTES + PALOFFSET * 3u);
 
     /* Flash in the text */
-    demo_fix_puts(17u, 13u, "EAGLE",    PAL_BLACK);
-    demo_fix_puts(16u, 15u, "SOFTWARE", PAL_BLACK);
+    demo_fix_puts(17u, 13u, "EAGLE",    PAL_WHITE);
+    demo_fix_puts(16u, 15u, "SOFTWARE", PAL_WHITE);
 
     playVoiceCue(SOUND_VOICE_1);
     cyclexms(400);
@@ -119,7 +123,7 @@ void NEOGEO_USER demo_intro_system_banner(void)
 
     {
         uint16_t fix_pal[16];
-        setpal(fix_pal, 0x8000u, BLACK,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+        setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
                BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
         load_palettes(fix_pal, PALETTES);
         setpal(fix_pal, 0x8000u, CYAN,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
@@ -166,7 +170,7 @@ void NEOGEO_USER demo_intro_loading(void)
 
     {
         uint16_t fix_pal[16];
-        setpal(fix_pal, 0x8000u, BLACK,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+        setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
                BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
         load_palettes(fix_pal, PALETTES);
         setpal(fix_pal, 0x8000u, CYAN,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
@@ -238,7 +242,7 @@ void NEOGEO_USER demo_intro_sdk_title(void)
 
     setBACKDROP(BLACK);
 
-    setpal(fix_pal, 0x8000u, BLACK,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
+    setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
            BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
     load_palettes(fix_pal, PALETTES);
 
@@ -283,7 +287,7 @@ void NEOGEO_USER demo_intro_sdk_title(void)
 
         demo_fix_puts(7u, 13u, sub1, PAL_RED);
         demo_wait(8u);
-        demo_fix_puts(6u, 15u, sub2, PAL_BLACK);
+        demo_fix_puts(6u, 15u, sub2, PAL_WHITE);
         demo_wait(8u);
 
         playSFX(SOUND_SFX_9);
