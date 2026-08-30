@@ -1,98 +1,405 @@
 # Changelog
 
-## v1.7.0 - Unified Demo, Demo Plus, Engine Occlusion Docs, and HD Artbox
+## v1.7.0 - The 2D Engine Release
 
-Release date: TBD (in-progress on `neo_universal_2d`)
+Release date: 2026-08-30
 
-### Highlights
+This entry covers the whole `neo_universal_2d` branch - 164 commits since the
+last mainline release.  It is the largest release the SDK has had: a complete
+2D game engine in two languages, a rebuilt art pipeline, a rebuilt audio
+stack, a multi-game build system, native Windows support, desktop authoring
+tools, one-shot installers, three new games, and the documentation set that
+explains all of it.  The v1.7.0-pre entry below remains as the record of the
+mid-branch pre-release.
 
-- **Unified 21-chapter demo** (`games/demo`) — single linear flow exercising
-  every public engine subsystem in order: boot, title, FIX, sound, FIX FX,
-  sprites, characters, physics, camera, palette FX, particles, feedback,
-  depth FX, NPCs, mini-game, joystick, scroll level, 3D effect, 2D render,
-  Eagle Invaders (Galaxian-style), Garden 3D, credits.  Top-right chapter
-  indicator on every scene so issues can be reported by number.
-- **`games/demo_plus`** — new game (ID 778) that builds exclusively against
-  `sdk/2d_engine_plus` (C++14 engine).  Smoke-test sub-scenes (TITLE /
-  PARTICLES / MARQUEE) that exercise the render queue, palette FX, and
-  particle pool through the C++ API.  Shares the demo's artbox via a new
-  `GAME_EXTRA_INCLUDES` Makefile hook.
-- **Engine occlusion documented** in both `sdk/2d_engine/ng_sprite_pool.h`
-  and `sdk/2d_engine_plus/ng_sprite_pool.hpp`.  Hardware-observed rule —
-  LOWER slot is drawn IN FRONT — captured explicitly, including the
-  common mistake of placing a BG at slot 1 expecting it to sit behind.
-- **HD artbox conversion** — alternative scripts
-  `artbox/img2neo_hd.py` (bilateral + CLAHE + unsharp + blue-noise
-  dither) and `artbox/fixtiles_hd.py` (per-tile palette pick, sharp-text
-  mode) sit alongside the existing pipeline without changing it.
+### Headline features
 
-### New Demo Chapters
-
-| Ch | Name | What it shows |
-|----|------|---------------|
-| 00 | BOOT | Engine ready / chapter index |
-| 01 | TITLE | Centred attract reel (auto-positions any sprite) |
-| 02 | FIX LAYER | White backdrop, 3-palette demo, dirty-cell cache, INFIX pages |
-| 03 | SOUND | Z80 mix + music tracks + SFX trigger sequence (no FM noise) |
-| 04 | SPRITE SCREENS | Generated screen reel |
-| 05 | CHARACTERS | Full warrior moveset cycle (STAND / WALK / STRIKE / SPEC A / SPEC B) |
-| 06 | PHYSICS | Eagle falls under gentle gravity, lands on visible bar |
-| 07 | CAMERA | Follow + dead-zone + shake with BG parallax |
-| 08 | PALETTE FX | Drawn diamond in middle, palette 15 sandbox cycles; BG untouched |
-| 09 | PARTICLES | Hero special-move sequence with synced particle beats |
-| 10 | FEEDBACK | Head-targeted impact bursts at 4 intensities |
-| 11 | DEPTH FX | 3 warriors at varying Z drawn via `ng_depthfx_project` |
-| 12 | NPCS | Patrol AI on unique kinds |
-| 13 | MINI-GAME | Arrows + B strike to hit a colourful FIX target (no jump) |
-| 14 | JOYSTICK | Live input + B / C / B+C / B+D two-button specials |
-| 15 | SCROLL LEVEL | World 768, camera follows, jump arc |
-| 16 | 3D EFFECT | FIX perspective road with full strips + sweeping highlight |
-| 17 | 2D RENDER | FIX blitter patterns |
-| 18 | SSG ARCADE | EAGLE INVADERS — diving enemies, return fire, score popups, debris |
-| 19 | GARDEN 3D | Sprite-scaling pseudo-3D walk |
-| 20 | CREDITS | Module roll + fade-out |
-| 21 | FIX FX | Big animated Z motif with sequential strokes + palette cycle |
-
-### Mini-game / Joystick Specifics
-
-- **Mini-game** (ch 13): no jump, arrows + B only.  Sword arc is a 3-row ×
-  6-col multi-glyph slash with per-frame palette shimmer.  Hit window
-  widened to 22 frames.  Visible "STRIKE!" indicator confirms B detection.
-- **Joystick** (ch 14): QCF / DP motion specials replaced with simple
-  TWO-BUTTON COMBOS — hold B+C together = light special, B+D = heavy
-  finisher, B alone = basic strike.  HUD lights OK / --- per combo.
-- **Galaxian → Eagle Invaders** (ch 18): 4×6 formation, two enemy types
-  (BOSS / WORKER), dive attacks with return fire, multi-bullet pool,
-  gravity-affected debris, score popups, 3-wave campaign with VICTORY /
-  GAME OVER endings.
-- **C-jump fix**: position update was `y -= vy` instead of `y += vy` so
-  the hero descended on jump-start and immediately landed on frame 1.
-  Mini-game and joystick both corrected.
-
-### Engine
-
-- `sdk/2d_engine/ng_sprite_pool.h` and `sdk/2d_engine_plus/ng_sprite_pool.hpp`:
-  pool layout doc rewritten with an unambiguous priority box and a
-  callout for the "draw BG at slot 1" trap.
-- Demo's chap_header now performs `ng_clear_screen_full() + clearSprs() +
-  setBACKDROP(0x8001)` so no state can leak across chapter transitions.
-- `Makefile` gained `GAME_EXTRA_INCLUDES` for games that need to pull in
-  another game's headers (used by `games/demo_plus` to share the demo's
-  artbox tables without duplicating ~3600 lines of asset data).
-
-### Attract Mode
-
-- `chap_title_attract_reel` (`games/demo/scenes/demo_title.c`) now loops
-  `SOUND_MUSIC_E` for the full attract, fades out on
-  coin-insert + plays `SOUND_SFX_1` for audible feedback.
-- Teaser banners describe the real unified-demo content.
-
-### Validation
-
-- `make GAME=demo p1 USE_2D_PLUS=1` → clean (`roms/demo/777-p1.p1`)
-- `make GAME=demo_plus p1 USE_2D_PLUS=1` → clean (`roms/demo_plus/778-p1.p1`)
+- **A complete 2D game engine**, in plain C (`sdk/2d_engine/`) and C++14
+  (`sdk/2d_engine_plus/`) with an identical public ABI - 35 modules covering
+  characters, actions, physics, NPCs, camera, level, particles, feedback,
+  depth effects, palette effects, sprite groups, the render queue, the FIX
+  layer, input, timers, events and fixed-point math.
+- **A multi-game build system** - one repository, any number of independent
+  games, each with its own id, ROM folder, artbox, sound tree and MAME hash
+  set.  Six games ship with it.
+- **A rebuilt art pipeline** - a perceptual quantiser that works in CIE-Lab
+  on the Neo Geo's actual 5-bit colour lattice, with blue-noise dithering,
+  per-tile palettes, master sprite palettes, sprite halo removal and a
+  content-preserving screen fit.
+- **A rebuilt audio stack** - nine ADPCM-B beds, eight FM tracks, nine SSG
+  tracks, a recorded voice bank with `speakText()`, live FM tempo, LFO, pan,
+  noise and CSM control, and a fade engine that actually fades.
+- **Sky Lance** - a complete vertical arcade shooter, the SDK's worked
+  example of a finished game.
+- **A 25-chapter demo reel** exercising every public subsystem in order.
+- **Native Windows builds**, one-shot installers for four host setups, and a
+  documented WSL audio path.
+- **Two PyQt6 desktop tools** - Artbox Studio and Sound Studio.
+- **A documentation set written for the end user**, including generated API
+  references and a printable manual.
 
 ---
+
+### The 2D engine
+
+Added on this branch, from nothing, in thirteen staged passes.
+
+**Core** - `ng_game_interupt` runs the whole frame tick in a fixed order
+(timers, characters, actions, physics, NPCs, camera, particles, palette
+effects, events) and flushes the render queue inside VBlank, with five hook
+points for game code.  `ng_scene`, `ng_game_time`, `ng_timers`,
+`ng_progress`, `ng_status`, `ng_properties` and `ng_game_events` carry the
+state primitives.
+
+**Characters** - `ng_chars` is a 64-object pool with movement, animation
+clips, asset binding, body and hit rectangles, cull margins, priority bands,
+damage and healing, plus scene arenas and a fixed-step update mode.
+`ng_actions` adds table-driven action scripts with sound and FX hooks;
+`ng_npcs` adds patrol bounds, home positions and think callbacks;
+`ng_physics` adds gravity, drag, solid rectangles and grounded tests;
+`ng_border_constraints` keeps characters inside declared regions.
+
+**Video** - `ng_render_queue` is a 128-slot deferred write queue drained in
+VBlank, so no engine module writes VRAM from the logic path.
+`ng_sprite_group` implements dirty-flag sticky-bit sprite chains that write
+only what changed.  `ng_sprite_window` tracks the strips a variable-size
+sprite occupies so shrinking one actively hides the strips it vacates.
+`ng_bg` gives two scrolling sprite background layers with parallax factors.
+`ng_fix` is the FIX text layer with a dirty-cell cache.  `ng_palette_fx`
+runs fades, flashes, pulses and colour cycles, all queue-safe.
+`ng_depthfx` projects `NGVec3` positions to screen with a Z-to-shrink table,
+fog palette banding, and starfield advance.
+
+**Effects** - `ng_particles` is a 32-slot fixed pool with typed spawns (hit
+spark, dust, smoke, explosion, slash trail, magic spark) and three-tier
+priority eviction, so a flood of dust cannot push out an explosion.
+`ng_feedback` packages hitstop, screen shake, palette flash and a sound hook
+into a single `ng_impact_event()` call, plus slow motion.
+
+**World and input** - `ng_camera` provides follow, dead zone, look-ahead,
+shake, cinematic pan and bounds clamping.  `ng_level` carries world bounds,
+scroll and camera helpers.  `ng_joystick` provides edge detection, auto
+repeat, held-frame counting, numpad-notation direction history, QCF and
+dragon-punch motion recognition, and direct character control.
+
+**Math** - `ng_fixed` supplies 16.16 fixed-point, `ng_sin_tab[]`,
+`ng_cos_tab[]` and `ng_shrink_tab[]`.  No float, no division in the frame
+loop.
+
+**C++14 port** - `sdk/2d_engine_plus/` is the same engine with member
+methods and singletons (`CharManager::instance()`, `cam.follow(...)`), built
+under `-std=c++14 -fno-exceptions -fno-rtti -fno-threadsafe-statics
+-ffreestanding`.  The public surface stays `extern "C"`, so a C game can
+link the C++ build and vice versa.  Select with `USE_2D_PLUS=1`.
+
+**Supporting SDK layers** - `sdk/ng_fix` (a standalone FIX SDK usable
+without the engine), plus `sdk/ng_audio`, `sdk/ng_scene`, `sdk/ng_show`,
+`sdk/ng_video` and `sdk/bsp`.
+
+### Engine correctness work
+
+A long arc of hardware-behaviour fixes, each found by observation rather
+than from documentation.
+
+- **Sprite teardown rewritten.**  `ng_sprite_disable_hw()` now performs a
+  real hardware-level teardown: a full 64-word SCB1 wipe with blank tile
+  `0xFFFF` (not tile 0, which may carry art), sprites parked off-screen,
+  a two-tier teardown with a previous-strips tail clear, and SCB1 row 0
+  blanked as height-wrap defence.  Ghost sprites persisting across scene
+  transitions were the visible symptom.
+- **Per-window VRAM footprint tracking** with stable per-frame anchoring, so
+  a sprite that changes size between frames leaves nothing behind.
+- **Demo sprite uploads queued to drain inside VBlank** instead of writing
+  VRAM from the logic path.
+- **Sprite slot priority reversed.**  The observed hardware direction is
+  **HIGHER slot number = drawn IN FRONT**.  The earlier claim was the
+  opposite, and the result was backgrounds parked at "behind" slots drawing
+  over characters.  Backgrounds now belong at slots 1-32, characters at
+  96-223, foreground effects at 288+.
+- **`REG_PALBANK0` / `REG_PALBANK1` address swap fixed.**
+- **The backdrop register corrected** to the last word of palette RAM,
+  `$401FFE`.  `$402000` is a mirror that silently does nothing.
+- **The FIX layer's visible row origin corrected** - 28 rows are visible and
+  visible row *y* is map row *y + 2*.
+- **Per-axis camera dead zone fixed**, along with vertical scroll in the
+  camera chapter.
+- **Sprite-group dirty bits and the render contract** documented and fixed.
+- **Sub-tile offset included in `used_tile_cols` / `used_tile_rows`** so a
+  painted bounding box actually fits its art.
+- **`START_GAME` syncs to VBlank before clearing sprites**, eliminating the
+  black-box flash on entry.
+- **Particle sprite budget reporting corrected** and stale particle slots
+  cleared on expiry.
+- **Weak fallbacks for `ng_screen_table[]` / `ng_screen_count`** added to
+  `ng_bg.c` and `ng_bg.cpp`.  The artbox emits the real table into each
+  game's `main.c`; a game shipping no screen art had no table, and because
+  `ng_bg` is always linked the reference was always present - so a minimal
+  game could not link at all.
+- **`ng_chars_count()` is an active count, not an array bound.**  Loops
+  bounded by it silently skipped the tail once a slot freed.
+- **`NG_CHAR_LIFE_DESTROY_PENDING` is not acted on by the engine.**  Objects
+  marked with it stayed active until the pool filled permanently; use
+  `ng_chars_remove()`.
+
+### Build system
+
+- **Multi-game builds.**  Each game lives in `games/<name>/` with its own
+  `game.mk` (`GAME_NAME`, `GAME_ID`, `GAME_SCENES`, `GAME_EXTRA_INCLUDES`),
+  `game.cfg`, linker script, BIOS hooks, artbox and sound tree.
+  `GAME_ID` propagates through every stage and becomes the ROM prefix.
+- **Per-game ROM folders** (`roms/<game>/`) and **per-game MAME hash sets**
+  (`hash_eagle/<game>/neogeo.xml`), regenerated on every `p1` with correct
+  CRC/SHA1 and `loadflag="load16_word_swap"`.
+- **`game.cfg` cross-check** - the build stops if `GAME=` and `CURRENT_GAME`
+  disagree, so one game's art cannot be silently built into another's ROM.
+  In v1.7.0 all six games carry their own cfg, so the invocation is uniform.
+- **`GAME_EXTRA_INCLUDES`** lets a game pull in another game's artbox or
+  headers without duplicating data (used by `demo_plus` to share the demo's
+  artbox).
+- **`GAME_SCENES` is an explicit list**, not a wildcard, so helper files that
+  are `#include`d elsewhere are not compiled twice - the cause of a run of
+  multiple-definition link errors.
+- **Native Windows builds** through `MakefileWin32.mak`: quoted `GAME_ID`
+  filenames in `romts.bat` / `romfx.bat` so `romtool` stops parsing hyphens
+  as flags, `SHELL=cmd.exe`, backslashed sound paths, correct source-list
+  expansion for `fm` / `mml` / `ssg`, correct 128 KB S-ROM format from
+  `sfix`, and catch-all data/bss patterns in every linker script for Windows
+  `ld` compatibility.  v1.7.0 also builds the shipped ROMs from the Windows
+  toolchain and stops the CRLF churn in generated files.
+- **Toolchain default moved to x-tools-v2.**
+- **P1 generation crops to the full 512 KB window before byte swap and
+  padding** - the format both MAME and hardware require.
+- **Debug and trace builds**: `debug-build`, `debug-artifacts` (size, nm,
+  readelf, map, disassembly), `gdb`, `gdb-trace`, `gdb-remote`, plus MAME
+  launch support and `bios-list` / `games-list` / `menu`.
+- **`make dist`** packages `dist/roms/<game>.zip` with ROM files at the
+  archive root.
+- **One-shot installers** for Linux, Ubuntu, native Windows and WSL under
+  `install/`.
+
+### Art pipeline
+
+The artbox went through a long series of quantiser revisions on this branch.
+The end state is `artbox/img2neo_tile.py`, the default for every build via
+`ARTBOX_TILE=1` in both makefiles.
+
+**Asset routing and fitting**
+
+- Unified asset pipeline with **background vs. sprite routing** and a
+  **derived master palette** shared by the `characters` and `npcs` groups.
+- **Non-destructive screen fitting** - `fit=contain` / `pad` / `letterbox`
+  alongside the original `crop`, with padded area transparent, transparent
+  pixels mapped to palette index 0 and visible pixels to 1..15.  Metadata
+  now records the real content box for screen assets.  Default fit changed
+  from `crop` to `contain`.
+- Category rule mismatch fixed (`match_category = npc` -> `npcs`).
+
+**Colour**
+
+- **CIE-Lab clustering** replaced the sepia-collapsing RGB path.
+- **Per-tile Lab k-means with per-tile palettes**, greedy MAE bank dedup, and
+  a Lab-nearest remap into a representative palette derived from the
+  weighted union of banks - preserving per-tile dither detail end to end.
+- **Context windows plus global Floyd-Steinberg** killed tile-boundary seams.
+- **Decoupled scanline dithering** removed Z-order traversal noise.
+- **Alpha preservation, a SHA256 conversion cache, and the "luma trap" fix**,
+  followed by the "teflon routing" fix for the shattered wavefront it caused.
+- **Atkinson dithering** replaced Floyd-Steinberg for a period to kill
+  speckle; the v1.7.0 quantiser replaces both with blue noise.
+- **Photocopy variance gate** for flat-source protection.
+- **Auto-scaling epsilon** in `cluster_and_remap` and pre-allocated output
+  lists.
+
+**v1.7.0 quantiser**
+
+- **Lab throughout** - palette selection, refinement and the final per-pixel
+  remap all run in CIE-Lab through a precomputed 32^3 lattice LUT.  An
+  earlier attempt that matched in luma-weighted YCbCr while measuring in Lab
+  made sprites measurably worse.
+- **Lattice refitting** - `refine_palette_on_lattice()` runs Lloyd iterations
+  with the hardware snap *inside* the update step, keeps a move only when
+  total error drops, and re-seeds duplicate or unowned slots from the
+  worst-served pixels.
+- **Void-and-cluster blue noise** - a 32 x 32 mask (0.04 % low-frequency
+  energy) orders the mix between the two nearest palette entries along a
+  serpentine scan, with a dead band that skips the mix within 18 % of either
+  endpoint.  This removed the speckle in flat regions.
+- **Pre-cluster contrast and saturation push with a `tanh` soft knee**, tuned
+  separately for sprites and backgrounds.  Clipping folds boosted highlights
+  onto pure white, throwing colour detail away before k-means sees it.
+- Measured across the reference assets: mean dE 9.10 -> 8.33, p95 18.19 ->
+  15.66, dither speckle down a third.
+- `_VIVID_CACHE_VERSION = "v11-lattice-refit-bluenoise"`.
+
+**Alternative pipelines and sprite fixes**
+
+- **CRT pipeline** (`img2neo_crt.py`) - Lab k-means, horizontal-biased
+  dither, gamma 1.20 / contrast 1.10 pre-boost.  `make art-crt` or
+  `ARTBOX_CRT=1`.
+- **HD alt scripts** - `img2neo_hd.py` (bilateral filter, CLAHE on the Lab L
+  channel, unsharp mask, blue-noise dither) and `fixtiles_hd.py` (per-tile
+  palette FIX conversion, `--sharp-text` binarisation).
+- **`ARTBOX_LEGACY=1`** keeps the original nearest-neighbour path for
+  diffing.
+- **Sprite halo fix** - `alpha_bleed()` runs after `fit_sprite_rgba` so
+  anti-aliased contours stop baking the source PNG's hidden
+  transparent-pixel RGB (usually near-white) into the indexed sprite.
+- **Configurable halo strip on sprite contours** with per-category thresholds
+  and a post-convert transparency audit.
+- **GIMP plugins** for the art pipeline under `tools/gimp-plugins/`.
+
+### Audio
+
+**Driver and protocol**
+
+- **Z80 polling race condition fixed.**  `soundCommand` called
+  `isZ80Ready()` twice; the trailing call wrote 0 to `REG_DIPSW`, triggering
+  an NMI whose handler clears `REG_SOUND`, so the 68000 polling loop read 0,
+  re-triggered, and deadlocked permanently - a frozen white screen with no
+  sound.  The trailing call was removed.
+- **Driver restored to the verified-working assembly baseline** and the M1
+  ROM rebuilt through the pure assembler path.  `make compare-driver` builds
+  the ASM and experimental C drivers and diffs the ROM images.
+
+**New chip-level control**
+
+- **ADPCM-B L/R pan** (cmd `$15`, reg `$11`), and `play_adpcmb_index` now
+  writes `$11 = $C0` explicitly so stereo is guaranteed after a reset.
+- **FM LFO control** (cmd `$17`, reg `$22`), and `fm_apply_patch` no longer
+  writes reg `$22` - the LFO is a global register and per-patch resets were
+  clobbering every user setting.
+- **SSG noise period** (cmd `$19`, reg `$06`).
+- **Live FM tempo** (cmd `$1A`, `soundFMSetTempo()`).
+- **FM CSM** - Composite Sine Mode on FM channel 2 (cmds `$1B` / `$1C`),
+  with `soundFMCSMBegin()`, `soundFMCSMEnd()` and a `soundFMCSMSweep()`
+  helper for formant slides.  `stop_all` ends CSM so the mode cannot bleed
+  across scenes.
+
+**Content and tracks**
+
+- **Track ids realigned and names made generic** - `N_<kind>_example_<x>`
+  filenames, letter-suffixed canonical ids (`SOUND_MUSIC_A`..`H`), and
+  1-based `TRACK_N` aliases.  All legacy semantic names dropped.
+- **Nine ADPCM-B beds**, eight FM tracks, nine SSG tracks.  TRACK 4 is
+  reserved for the eyecatcher.
+- **All FM and SSG tracks rewritten** in arcade style, with octave shifts
+  balanced so no note clamps to MIDI 127 - the earlier octave drift produced
+  identical stuck-high notes.
+- **`soundPlayGameLoop` dispatcher** and the scene helpers
+  `soundPlayDemoFM` / `soundPlayTitleMusic`.
+- **Fade engine fixed.**  The driver formula is `COUNTER = $FF - speed`, so
+  the old 2/8/20 speed values meant almost no fade; and the per-step
+  decrement was 1, so a fade from `$B8` took 22.6 s.  Speeds corrected and
+  the decrement raised, giving audible ~1.4 s fades.
+- **SSG MML envelope directive renamed `E` -> `K`** - it collided with the
+  musical note E, so every melodic SSG track containing an E note compiled
+  as an envelope-mode flip instead of a note.
+
+**Voice**
+
+- **Voice alphabet pipeline** - `in_wav_a_voice/*.wav` -> 16-bit PCM ->
+  ADPCM-A, bundled into the V-ROM right after the SFX bank by `vrom.py`.
+  `sample_table.inc` exports `ADPCMA_VOICE_BASE` / `ADPCMA_VOICE_COUNT`, and
+  `sdk/sound_voice_ids.h` is generated with `SOUND_VOICE_*` constants.
+- **`speakText()` / `speakWord()`** prefer whole-word samples, then fall back
+  to letters, digits and punctuation.  `playVoiceLetter()`,
+  `playVoiceWord()`, `playVoiceNumber()` and the prebuilt cues
+  (`playGetReadyVoice`, `playAttackVoice`, `playCoinThenReady`) route through
+  the same bank.
+- The **Windows sample pipeline mirrors the shell scripts** and skips
+  cleanly when the voice directories are absent.
+- An **SSG envelope and three-formant phoneme speech engine** was built,
+  evaluated on hardware, and **removed**: a pure YM2610 SSG path cannot
+  synthesise intelligible speech regardless of driver tricks.  Recorded
+  ADPCM-A samples are the shipping answer.  The driver was reverted to the
+  confirmed-working FM baseline with only the three new register commands
+  layered back.
+
+### Games
+
+- **`games/skylance`** (id 779) - Sky Lance, a complete vertical arcade
+  shooter.  Three pilots (ROOK / BLUE LANCE, KIRA / GREEN WING, BLAZE / RED
+  STRIKER) differentiated by fire rate, speed and single vs. twin bolt.
+  Seven stages, each running 5-7 squadrons before a named boss: CRIMSON
+  KEEP, IRON TIDE, SOL CORE, NIGHT RAZOR, ROTOR NEST, EARTH HAMMER, SPIRE
+  GOD.  Attract reel, pilot select, scoring, lives, energy and a continue
+  flow.  `sky_fix_palettes_init()` folds 18 INFIX palettes into FIX banks
+  4..15, because the FIX map word carries only four palette bits and banks
+  19-21 had been wrapping onto text inks.
+- **`games/demo`** (id 777) - grown from a 13-scene showcase into the
+  **25-chapter reel**, with the chapter number printed top-right on every
+  scene, **A** to advance and **C** to restart.  Chapters added over the
+  branch include the camera lab auto-tour, the FIX FX infix-photo animation,
+  char select, particle load, depth parallax, target range, garden 3D
+  (sprite-scaling pseudo-3D), char 2D and Sky Lance.  The mini-game was
+  rewritten as a player-vs-clone fight; the shooter chapter went Galaxian ->
+  Eagle Invaders -> Sky Lance.  `chap_header()` performs a full hardware and
+  engine reset per chapter, including the sprite-window tracking cache,
+  which is global across the ROM run and was starving later slot-heavy
+  chapters.
+- **`games/demo_plus`** (id 778) - links exclusively against the C++ engine
+  and exists to keep the two builds ABI-compatible; three smoke-test
+  sub-scenes driving the render queue, palette effects and the particle
+  pool.
+- **`games/neogeogame`** (id 775) - blank template, plus a sprite shooter
+  demo added mid-branch.
+- **`games/tutorial`** (id 555) - the minimal engine loop.  Fixed in v1.7.0:
+  it still included the long-removed `sdk/2d_engine/ng_game_engine.h` and
+  called `game_engine_init()` / `game_engine_frame()`.
+- **`games/helloworld`** (id 772) - minimal FIX text and one sample.
+- All six verified building to a ROM from a clean invocation.
+
+### Desktop tools
+
+- **Artbox Studio** (`artbox/artbox_studio.py`) - Pipeline runner with a
+  status pill per step and a live log, Asset Browser, Hex Sprite Inspector
+  (decoded tile grid, raw C1/C2 bytes, live palette swap), Movement Designer
+  (frame sequences exported as C arrays), Level Designer (20 x 14 tilemap
+  painter), HD Compare, ROM Inventory, and an Asset Rules editor for
+  `assets.cfg`.
+- **Sound Studio** (`sound/sound_studio.py`) - Track, Mix and ROM tabs, a
+  live waveform view, and an MML designer.
+
+### Documentation
+
+New in v1.7.0:
+
+- `docs/INTRODUCTION.md` - what the SDK is, what the machine is, what is in
+  the box, and the reading order.
+- `docs/PROGRAMMERS_MANUAL.md` - build system, project layout, the game
+  contract, the engine tick, assets, the frame budget, register and
+  interrupt appendices, and a symptom-to-cause table.
+- `docs/HELLO_WORLD.md` - first ROM in ten minutes, then how to grow it into
+  your own game.
+- `docs/SOUND_DRIVER.md` - architecture, the 68000-side API, the raw command
+  protocol, the content pipelines, and the practices that keep audio stable.
+- `docs/GAMES.md` - what each of the six shipped games demonstrates.
+- `docs/TOOLS.md` - every helper script in the tree: the artbox conversion
+  cores and pipeline stages, `romtool`, the asset validators, the sound
+  compilers and ADPCM encoders, the M1 driver build and compare scripts, the
+  verification tools, the launchers and installers, the Windows helper
+  binaries, the GIMP plug-ins, and the debug artefacts.
+- `docs/DEMO_CHAPTERS.md` - the 25 chapters, and the per-chapter reset worth
+  copying.
+- `docs/API_2D_ENGINE_C.md` and `docs/API_2D_ENGINE_CPP.md` - generated from
+  the headers by `tools/gen_api_reference.py`, so they cannot drift.
+- `NEOGEOSDK_v1.7.0.md` - the single-file release overview.
+- `docs/neogeosdk_v1.7.0_manual.pdf` - the printable manual, built by
+  `tools/make_manual_pdf.py`.
+
+Updated:
+
+- `docs/ARTBOX_PIPELINE.md` rewritten around the quantiser, the colour
+  target, asset ordering and the Artbox Studio tabs.
+- `SDK_API_GUIDE.md` quick reference corrected - it still carried the
+  inverted sprite-priority claim.
+- `README.md` - v1.7.0 summary, games table, documentation index.
+- Earlier on the branch: engine layer docs, `docs/ADDING_A_GAME.md`,
+  `docs/GDB_GUIDE.md`, `docs/BANKSWITCH.md`, `docs/DEPENDENCIES.md`,
+  `docs/MAKEFILE_INTEGRATION.md`, the per-module docs
+  (`sprite_groups`, `render_queue`, `camera`, `palette_fx`, `particles`,
+  `depthfx`, `performance_rules`), the sound readmes, and the WSL2 +
+  Ubuntu 24.04 + PulseAudio audio walkthrough.
 
 ## v1.7.0-pre - Bug Fixes, Per-Game ROM Folders, Z80 Sound Fix, and Demo Overhaul
 

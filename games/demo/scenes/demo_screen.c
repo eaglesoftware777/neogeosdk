@@ -1,4 +1,5 @@
 #include "demo_screen.h"
+#include "demo.h"
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
 #include "sdk/2d_engine/ng_sprite_group.h"
@@ -70,13 +71,13 @@ static void NEOGEO_USER screen_title_showcase(void)
 
     demo_clear_scene();
     soundSceneReset();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
     soundSetADPCMAVolume(0x3C);
     soundSetADPCMBVolume(0xB0);
     soundSetSSGVolume(0x00);
 
     demo_scene_caption("TITLE SCREEN", "NEO GEO SDK DEMO", "SAFE SHOWSCREEN BASE 0040H");
-    demo_safe_show(showScreen108, 32, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
+    demo_safe_show(showScreen108, 32, 24, 0xF, 0xAF, 16, DEMO_BG, DEMO_SHOWSCREEN_BASE);
     playSFX(SOUND_SFX_3);
     if (demo_wait_frames_or_a(180)) {
         demo_clear_scene();
@@ -85,7 +86,7 @@ static void NEOGEO_USER screen_title_showcase(void)
 
     demo_clear_scene();
     demo_scene_caption("TITLE SCREEN", "EAGLE SOFTWARE FALLBACK", "SECOND TITLE ASSET BYPASSED");
-    demo_safe_show(showScreen107, 32, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
+    demo_safe_show(showScreen107, 32, 24, 0xF, 0xAF, 16, DEMO_BG, DEMO_SHOWSCREEN_BASE);
     playSFX(SOUND_SFX_10);
 
     for (i = 0; i < 180; i++) {

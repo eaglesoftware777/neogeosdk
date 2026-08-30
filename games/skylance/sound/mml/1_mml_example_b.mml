@@ -1,0 +1,28 @@
+; 1_mml_example_b — action stage loop (A minor, driving)
+
+T150
+@p2
+@b1
+@f4
+V13
+O5
+L8
+
+; melody A — minor riff
+A > C E < A  G E C < G
+A > C E G  A4 R4
+
+; melody B — push up
+> C E G > C  < B G E < B
+> D F A > D  < C A F < C
+
+; melody C — descend
+> E < A > C E  D < A > C D
+< E > C < A E  A4 R4
+
+; bridge — staccato
+L16
+A R A R > C R E R  < G R G R > B R D R
+< F R F R > A R C R  < E R E R > G R B R
+
+~

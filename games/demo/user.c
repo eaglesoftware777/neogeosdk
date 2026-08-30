@@ -398,24 +398,20 @@ void NEOGEO_USER DISPLAY_INIT(void) {
 	ASM_END
 }
 
-/* FIX text palette banks 0-2: green / green / cyan on black. */
+/* FIX text palette banks 0-3, all dark inks so they read on DEMO_BG. */
 void NEOGEO_USER setup_fix_palettes(void) {
 	uint16_t fix_pal[16];
 	uint8_t  i, j;
 
-	setpal(fix_pal, 0x8000, GREEN, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-	       BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+	setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_BODY));
 	load_palettes(fix_pal, PALETTES);
-	setpal(fix_pal, 0x8000, GREEN, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-	       BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+	setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_SUB));
 	load_palettes(fix_pal, PALETTES + PALOFFSET);
-	setpal(fix_pal, 0x8000, CYAN, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-	       BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+	setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_ACCENT));
 	load_palettes(fix_pal, PALETTES + PALOFFSET * 2);
-	/* Bank 3 = red, used by the title/insert-coin prompts.  Bank 4 up
-	 * is the infix image range (INFIX_PAL_BANK_BASE), so 3 is free. */
-	setpal(fix_pal, 0x8000, RED, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-	       BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+	/* Bank 3 = the title/insert-coin prompts.  Bank 4 up is the infix
+	 * image range (INFIX_PAL_BANK_BASE), so 3 is free. */
+	setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_PROMPT));
 	load_palettes(fix_pal, PALETTES + PALOFFSET * 3);
 
 	/* Banks 4..(4+N-1): per-image FIX palettes for infix photos.

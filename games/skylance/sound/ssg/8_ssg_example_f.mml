@@ -1,0 +1,19 @@
+; 8_ssg_example_f - fanfare charge
+
+T240
+P0
+V14
+O4
+L16
+
+G B > D < B  G B > D < B
+A > C E C < A  F A > C < A
+
+D F A F  D F A F
+E G > C < G  E G > C < G
+
+L8
+D E F G  A B > C < B
+G4 R8 G8 D8 > G4
+
+~

@@ -157,3 +157,20 @@ void NEOGEO_USER ng_bg_draw(int16_t camera_x, int16_t camera_y)
         }
     }
 }
+
+/*
+ * Weak fallback for the generated screen dispatch table.
+ *
+ * ng_bg_set_by_id() resolves a screen id through ng_screen_table[],
+ * which the artbox emits into the game's own main.c alongside
+ * ng_screen_count.  A game that ships no screen art - the hello-world
+ * skeleton, a text-only tool ROM - has no such table, and because this
+ * module is always linked the reference is always present, so the link
+ * failed on games that never call the function at all.
+ *
+ * These weak definitions give the linker something to bind to.  A game
+ * that defines the real table overrides them, and ng_screen_count == 0
+ * keeps the id range empty so the stub array is never indexed.
+ */
+__attribute__((weak)) const NGShowScreenFn ng_screen_table[1] = { 0 };
+__attribute__((weak)) const uint16_t       ng_screen_count    = 0;

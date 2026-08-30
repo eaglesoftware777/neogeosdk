@@ -10,6 +10,50 @@
 #endif
 
 /* ------------------------------------------------------------------ */
+/*  Screen background                                                   */
+/* ------------------------------------------------------------------ */
+/*
+ * The backdrop register is the last word of palette RAM: it is what the
+ * CRT shows wherever no sprite and no opaque FIX pixel is drawn, so it
+ * is the demo's page colour.
+ *
+ * A scene clear is done on DEMO_BG_CLEAR (black) so that half-written
+ * FIX cells and stale sprite rows cannot flash as bright rectangles
+ * while VRAM is being wiped, and the backdrop is switched to DEMO_BG
+ * on the very next vblank once the screen is quiet.  Change DEMO_BG
+ * alone to re-colour every scene in the demo.
+ */
+#define DEMO_BG_CLEAR    BLACK
+#define DEMO_BG          WHITE
+
+/*
+ * FIX text inks, one colour per FIX palette bank.  They have to be dark
+ * because they are read against DEMO_BG - the light inks this demo used
+ * on a black page (WHITE / CYAN / GREEN) are unreadable on a white one.
+ * Bank layout matches setup_fix_palettes() in games/demo/user.c:
+ *   0 = body text, 1 = subtitle/secondary, 2 = accent, 3 = prompts.
+ */
+#define DEMO_INK_BODY    BLACK
+#define DEMO_INK_SUB     BLUE
+#define DEMO_INK_ACCENT  MIDGREEN
+#define DEMO_INK_PROMPT  RED
+
+/*
+ * A whole 16-entry FIX text palette from one ink colour.
+ *
+ * Entry 0 is never drawn (pixel value 0 is hardwired transparent on the
+ * FIX layer), 1 is the glyph body and 3 a handful of accent pixels, so
+ * both get the ink.  Everything else - entry 2 above all - is painted in
+ * the page colour: the BIOS font draws each glyph, and the whole of its
+ * space character, as an OPAQUE entry-2 field, so an entry 2 that does
+ * not match the backdrop puts a visible box behind every character.
+ */
+#define DEMO_FIX_PAL(ink)  0x8000u, (ink), DEMO_BG, (ink), \
+                           DEMO_BG, DEMO_BG, DEMO_BG, DEMO_BG, \
+                           DEMO_BG, DEMO_BG, DEMO_BG, DEMO_BG, \
+                           DEMO_BG, DEMO_BG, DEMO_BG, DEMO_BG
+
+/* ------------------------------------------------------------------ */
 /*  Sprite VRAM layout for demo scenes                                  */
 /* ------------------------------------------------------------------ */
 /*

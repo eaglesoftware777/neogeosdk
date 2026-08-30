@@ -57,7 +57,7 @@ static void NEOGEO_USER depth_starfield(void)
     uint16_t     t;
 
     clearFix();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
     demo_fix_puts(2u, 0u, "STARFIELD WARP", 2u);
     demo_fix_puts(2u, 1u, "Z-PROJECTION  SHRINK TABLE  NO DIVISION", 1u);
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);
@@ -181,7 +181,7 @@ static void NEOGEO_USER depth_zsort(void)
     static const int16_t start_y[ZSORT_N] = { 0, -10, 10, -5, 5, 0, -8, 12 };
 
     clearFix();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
     demo_fix_puts(2u, 0u, "Z-SORTED DEPTH: 8 OBJECTS", 2u);
     demo_fix_puts(2u, 1u, "PAINTER ALGORITHM  Z-FOG  8-STEP ORBIT", 1u);
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);
@@ -277,7 +277,7 @@ static void NEOGEO_USER depth_ground_plane(void)
     static const uint8_t  strip_sc[GPLANE_STRIPS]  = { 0x40u, 0x60u, 0x90u, 0xC0u };
 
     clearFix();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
     demo_fix_puts(2u, 0u, "DEPTH PARALLAX / Z-SCALE TABLE", 2u);
     demo_fix_puts(2u, 1u, "4 GROUND STRIPS  NG_SHRINK_TAB SCALE", 1u);
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);

@@ -26,7 +26,7 @@ typedef struct {
 #define NG_ASSET_CATEGORY_OPPONENT 2
 #define NG_ASSET_CATEGORY_NPC 3
 
-#define NG_ASSET_META_COUNT 150
+#define NG_ASSET_META_COUNT 160
 
 static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 0, 16, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* 0.png */
@@ -179,6 +179,16 @@ static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 37632, 163, 4, 6, 6, 10, 0, 0, 64, 96, 1, 3 }, /* zzzzzzzzz_balloon_green.png */
     { 37888, 164, 4, 6, 6, 10, 0, 0, 64, 96, 1, 3 }, /* zzzzzzzzz_balloon_red.png */
     { 38144, 165, 4, 6, 6, 10, 0, 0, 64, 96, 1, 3 }, /* zzzzzzzzz_balloon_yellow.png */
+    { 38400, 166, 12, 16, 2, 0, 1, 0, 190, 256, 1, 3 }, /* zzzzzzzzzz_sky_boss.png */
+    { 38656, 167, 2, 5, 7, 11, 8, 0, 16, 80, 1, 3 }, /* zzzzzzzzzz_sky_bullet.png */
+    { 38912, 168, 8, 9, 4, 7, 0, 0, 128, 144, 1, 3 }, /* zzzzzzzzzz_sky_enemy_a.png */
+    { 39168, 169, 6, 10, 5, 6, 12, 0, 72, 160, 1, 3 }, /* zzzzzzzzzz_sky_enemy_b.png */
+    { 39424, 170, 4, 4, 6, 12, 4, 8, 56, 56, 1, 3 }, /* zzzzzzzzzz_sky_enemy_c.png */
+    { 39680, 171, 2, 2, 7, 14, 0, 0, 32, 32, 1, 3 }, /* zzzzzzzzzz_sky_orb.png */
+    { 39936, 172, 8, 10, 4, 6, 8, 0, 112, 160, 1, 3 }, /* zzzzzzzzzz_sky_plane.png */
+    { 40192, 173, 14, 15, 1, 1, 0, 0, 224, 240, 1, 3 }, /* zzzzzzzzzzz_crate.png */
+    { 40448, 174, 14, 15, 1, 1, 0, 0, 224, 240, 1, 3 }, /* zzzzzzzzzzz_crate_broken.png */
+    { 40704, 175, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* 0.png */
 };
 
 #endif

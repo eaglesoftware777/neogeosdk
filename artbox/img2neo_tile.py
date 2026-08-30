@@ -149,6 +149,234 @@ def rgb_to_weighted_ycbcr(rgb_uint8: np.ndarray) -> np.ndarray:
     return ycc
 
 
+def weighted_ycbcr_palette(palette_u8: np.ndarray) -> np.ndarray:
+    """Palette (K, 3) uint8 -> (K, 3) float32 in weighted-YCbCr."""
+    return rgb_to_weighted_ycbcr(np.asarray(palette_u8, dtype=np.uint8))
+
+
+# ---------------------------------------------------------------------------
+# CIE-Lab lookup over the Neo Geo colour lattice
+# ---------------------------------------------------------------------------
+# Palettes are clustered in Lab, so pixels should be assigned in Lab too -
+# matching in a different space than the one the clusters were built in is
+# what lets a pixel land on an entry its own cluster never claimed, and it
+# shows up as colour noise inside flat regions.
+#
+# Doing that honestly means a Lab conversion per pixel per candidate, which
+# is far too slow for a per-pixel Python loop.  The hardware only has 32
+# levels per channel, so the entire reachable colour space is 32^3 = 32768
+# entries: precompute Lab for all of them once (~400 KB) and every lookup
+# afterwards is an array index.  Rounding an error-laden accumulator onto
+# that lattice before lookup costs at most half a step, which is an order
+# of magnitude below the spacing between palette entries.
+
+_LAB_LUT = None
+
+
+def lab_lattice_lut() -> np.ndarray:
+    """(32, 32, 32, 3) float32 Lab for every Neo Geo-representable colour."""
+    global _LAB_LUT
+    if _LAB_LUT is None:
+        levels = (np.arange(32, dtype=np.uint8) * 8)
+        grid = np.stack(np.meshgrid(levels, levels, levels, indexing="ij"),
+                        axis=-1).astype(np.uint8)
+        _LAB_LUT = rgb_to_lab(grid.reshape(-1, 3)).reshape(32, 32, 32, 3)
+    return _LAB_LUT
+
+
+def lab_palette(palette_u8: np.ndarray) -> np.ndarray:
+    """Palette (K, 3) uint8 -> (K, 3) float32 Lab, via the lattice LUT."""
+    lut = lab_lattice_lut()
+    p = snap_neogeo(np.asarray(palette_u8, dtype=np.uint8).reshape(-1, 3)) >> 3
+    return lut[p[:, 0], p[:, 1], p[:, 2]]
+
+
+# ---------------------------------------------------------------------------
+# Blue-noise threshold mask (void-and-cluster)
+# ---------------------------------------------------------------------------
+# Ordered dithering needs a threshold mask.  Bayer is the usual choice and
+# is wrong here: its 45-degree cross-hatch is a strong periodic signal, and
+# on a 15-colour palette covering a whole sky it reads as visible weave.
+#
+# A blue-noise mask has its energy pushed to high spatial frequencies, so
+# the same amount of dithering disappears into texture instead of forming
+# a pattern.  Void-and-cluster (Ulichney) builds one deterministically:
+# repeatedly find the largest "void" (sparsest spot) and the tightest
+# "cluster" in a binary pattern, and rank every pixel by the order in which
+# it is filled.  Ranking gives a uniform threshold field with no low
+# frequencies.
+#
+# 32x32 is large enough that the tile grid (16px) does not alias with it,
+# and small enough to build in a fraction of a second at import.
+
+_BLUE_NOISE_SIZE = 32
+
+
+def _void_and_cluster_mask(size: int = _BLUE_NOISE_SIZE,
+                            seed: int = 0) -> np.ndarray:
+    """
+    Deterministic void-and-cluster blue-noise mask, values in [0, 1).
+
+    Returns (size, size) float32.  The filter is a wrapped Gaussian, so
+    the mask tiles seamlessly - important because it is indexed modulo
+    its size across the whole image.
+    """
+    n = size * size
+    rng = np.random.default_rng(seed)
+
+    # Wrapped Gaussian energy kernel in the frequency domain: filtering
+    # by multiplication in FFT space keeps the toroidal wrap exact.
+    ax = np.minimum(np.arange(size), size - np.arange(size)).astype(np.float32)
+    d2 = ax[:, None] ** 2 + ax[None, :] ** 2
+    kernel = np.exp(-d2 / (2.0 * (1.5 ** 2))).astype(np.float32)
+    kernel_f = np.fft.rfft2(kernel)
+
+    def energy(binary: np.ndarray) -> np.ndarray:
+        return np.fft.irfft2(np.fft.rfft2(binary.astype(np.float32)) * kernel_f,
+                              s=(size, size))
+
+    # Initial binary pattern: 10% ones, then relaxed by repeatedly moving
+    # the tightest cluster into the largest void until it is stable.
+    initial = np.zeros((size, size), dtype=bool)
+    flat = rng.permutation(n)[: max(1, n // 10)]
+    initial.flat[flat] = True
+
+    for _ in range(n):
+        e = energy(initial)
+        cluster = np.argmax(np.where(initial, e, -np.inf))
+        initial.flat[cluster] = False
+        e = energy(initial)
+        void = np.argmin(np.where(initial, np.inf, e))
+        if void == cluster:
+            initial.flat[cluster] = True
+            break
+        initial.flat[void] = True
+
+    rank = np.zeros((size, size), dtype=np.int32)
+    prototype = initial.copy()
+    ones = int(prototype.sum())
+
+    # Phase 1: remove the tightest cluster repeatedly, ranking downward.
+    work = prototype.copy()
+    for r in range(ones - 1, -1, -1):
+        e = energy(work)
+        cluster = np.argmax(np.where(work, e, -np.inf))
+        work.flat[cluster] = False
+        rank.flat[cluster] = r
+
+    # Phase 2 and 3: fill the largest void repeatedly, ranking upward.
+    work = prototype.copy()
+    for r in range(ones, n):
+        e = energy(work)
+        void = np.argmin(np.where(work, np.inf, e))
+        work.flat[void] = True
+        rank.flat[void] = r
+
+    return (rank.astype(np.float32) + 0.5) / float(n)
+
+
+_BLUE_NOISE = None
+
+
+def blue_noise_mask() -> np.ndarray:
+    """Lazily-built module-level blue-noise threshold mask."""
+    global _BLUE_NOISE
+    if _BLUE_NOISE is None:
+        _BLUE_NOISE = _void_and_cluster_mask()
+    return _BLUE_NOISE
+
+
+# ---------------------------------------------------------------------------
+# Lattice-constrained palette refinement
+# ---------------------------------------------------------------------------
+
+def refine_palette_on_lattice(palette_u8: np.ndarray,
+                              pixels_u8: np.ndarray,
+                              iters: int = 6) -> np.ndarray:
+    """
+    Re-fit a palette to its pixels *on the Neo Geo 5-bit colour lattice*.
+
+    Lab k-means picks centroids in continuous space and the result is then
+    snapped to the hardware grid, which moves every entry by up to half a
+    step in each channel and leaves it sitting somewhere that is no longer
+    the mean of anything.  Nobody re-fits afterwards, so the palette that
+    ships is a rounded version of the right answer rather than the right
+    answer for the colours the hardware can actually show.
+
+    This runs Lloyd iterations where the update step is followed by a snap
+    back onto the lattice, and keeps a move only when it lowers total
+    error - so it can never make the palette worse than what came in.
+
+    It also reclaims dead slots.  Snapping collapses near-identical
+    centroids onto the same grid point, and _dedupe_and_pad_palette()
+    pads the gap by repeating the last colour, so an image can ship with
+    several of its fifteen slots doing no work at all.  Any duplicate or
+    unused entry is re-seeded on the pixel that is currently worst served,
+    which is the standard split-the-worst-cluster move.
+    """
+    pal = snap_neogeo(np.asarray(palette_u8, dtype=np.uint8).reshape(-1, 3))
+    px = np.asarray(pixels_u8, dtype=np.uint8).reshape(-1, 3)
+    if px.size == 0 or pal.size == 0:
+        return pal
+
+    # Cap the working set: the refit is O(N*K) per iteration and a full
+    # 256x256 background is 65k pixels against 15 entries.
+    if px.shape[0] > 24576:
+        rng = np.random.default_rng(0)
+        px = px[rng.choice(px.shape[0], 24576, replace=False)]
+
+    k = pal.shape[0]
+    px_f = lab_palette(px)
+
+    def total_error(p_u8):
+        d = np.sum((px_f[:, None, :] - lab_palette(p_u8)[None, :, :]) ** 2,
+                   axis=2)
+        return float(d.min(axis=1).sum()), d.argmin(axis=1), d.min(axis=1)
+
+    best_err, labels, per_px = total_error(pal)
+
+    for _ in range(iters):
+        cand = pal.copy()
+
+        # --- update step, snapped back onto the lattice ---
+        for j in range(k):
+            m = labels == j
+            if m.any():
+                cand[j] = snap_neogeo(px[m].mean(axis=0).round().astype(np.uint8))
+
+        # --- reclaim slots that ended up duplicated or unowned ---
+        seen = {}
+        dead = []
+        for j in range(k):
+            key = tuple(int(v) for v in cand[j])
+            if key in seen or not (labels == j).any():
+                dead.append(j)
+            else:
+                seen[key] = j
+        if dead:
+            order = np.argsort(-per_px)
+            taken = set(seen.keys())
+            pick = 0
+            for j in dead:
+                while pick < order.shape[0]:
+                    c = snap_neogeo(px[order[pick]])
+                    pick += 1
+                    key = tuple(int(v) for v in c)
+                    if key not in taken:
+                        cand[j] = c
+                        taken.add(key)
+                        break
+                else:
+                    break
+
+        err, new_labels, new_per_px = total_error(cand)
+        if err >= best_err:
+            break
+        pal, best_err, labels, per_px = cand, err, new_labels, new_per_px
+
+    return pal
+
+
 def _luma(rgb: np.ndarray) -> np.ndarray:
     rgb_f = rgb.astype(np.float32)
     return (rgb_f[..., 0] * 0.299 +
@@ -179,13 +407,31 @@ def _neo_palette_pop(rgb: np.ndarray,
         if hi - lo > 18.0:
             cur_lum = _luma(out)
             target_lum = np.clip((cur_lum - lo) * (255.0 / (hi - lo)), 0.0, 255.0)
-            blend = 0.26 if asset_type == "sprite" else 0.18
+            blend = 0.30 if asset_type == "sprite" else 0.24
             scale = (cur_lum * (1.0 - blend) + target_lum * blend + 1.0) / (cur_lum + 1.0)
             out *= scale[..., None]
 
-    sat = 1.10 if asset_type == "sprite" else 1.06
+    # Saturation.  Fifteen colours across a whole image pulls everything
+    # toward the middle of the gamut - the average of a cluster is always
+    # less saturated than its members - so the source is pushed out before
+    # clustering to land back at roughly the original vividness.  Arcade
+    # art is also authored to read at a distance on a CRT, which wants
+    # more separation than a fidelity-optimal match gives.
+    sat = 1.16 if asset_type == "sprite" else 1.13
     gray = _luma(out)[..., None]
     out = gray + (out - gray) * sat
+
+    # Soft knee instead of a hard clip.  Clipping folds every value above
+    # 255 onto pure white and every negative onto pure black, so a boosted
+    # highlight loses the shading that distinguished it - which is colour
+    # detail thrown away before k-means ever sees it.  Compressing the top
+    # and bottom eighth keeps those tones distinct and orderable.
+    knee = 32.0
+    hi_mask = out > (255.0 - knee)
+    out[hi_mask] = (255.0 - knee) + knee * np.tanh(
+        (out[hi_mask] - (255.0 - knee)) / knee)
+    lo_mask = out < knee
+    out[lo_mask] = knee * np.tanh(out[lo_mask] / knee)
     return np.clip(out, 0.0, 255.0).astype(np.uint8)
 
 
@@ -1372,59 +1618,129 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
                 ).astype(np.float32)
 
     # ---------------------------------------------------------
-    # PASS 2: GLOBAL SCANLINE DITHER (alpha-aware, Atkinson)
+    # PASS 1b: RE-FIT EVERY PALETTE ONTO THE HARDWARE COLOUR GRID
     # ---------------------------------------------------------
-    # Pad right + bottom by 2 so the Atkinson 6-neighbour kernel never
-    # indexes past the canvas for the last two columns / rows (it
-    # writes to gx+1, gx+2, gy+1, gy+2).  FS only needed +1; Atkinson
-    # reaches further.
-    global_error_canvas = np.pad(rgb_np, ((0, 2), (0, 2), (0, 0)),
-                                   mode='edge')
+    # The k-means above works in continuous Lab and the result is snapped
+    # to the Neo Geo 5-bit grid on the way out, which leaves each entry up
+    # to half a step away from the mean of the pixels it represents - and
+    # nothing re-fits it afterwards.  refine_palette_on_lattice() runs the
+    # update step again with the snap inside the loop, so the palette that
+    # ships is optimal for the colours the hardware can actually show, and
+    # it re-seeds slots that snapping collapsed into duplicates.
+    #
+    # Skipped when the caller supplied a master palette: those frames must
+    # keep a byte-identical palette to avoid flicker between them, so the
+    # refit belongs to whoever derived the master, not to each frame.
+    if master_palette is None:
+        refit_cache: dict = {}
+        for key, pal in local_luts.items():
+            pal_u8 = pal.astype(np.uint8)
+            ck = pal_u8.tobytes()
+            if asset_type == "sprite":
+                # One palette shared by every tile - refit once against
+                # the whole image rather than once per tile.
+                if ck not in refit_cache:
+                    px = rgb_np[solid_mask if solid_mask.any() else opaque_mask]
+                    refit_cache[ck] = refine_palette_on_lattice(
+                        pal_u8, px.astype(np.uint8))
+                local_luts[key] = refit_cache[ck].astype(np.float32)
+            else:
+                ty_idx, tx_idx = key
+                y, x = ty_idx * 16, tx_idx * 16
+                m = opaque_mask[y:y + 16, x:x + 16]
+                if not m.any():
+                    continue
+                px = rgb_np[y:y + 16, x:x + 16][m].astype(np.uint8)
+                local_luts[key] = refine_palette_on_lattice(
+                    pal_u8, px).astype(np.float32)
+
+    # Matching happens in the same perceptually-weighted space the palette
+    # was clustered in.  It used to be plain RGB Euclidean while the
+    # clustering was Lab, so pixels were routinely assigned to a different
+    # entry than the one their cluster had been built around - which shows
+    # up as colour noise inside otherwise flat regions.
+    local_ycc = {key: lab_palette(pal.astype(np.uint8))
+                 for key, pal in local_luts.items()}
+    lab_lut = lab_lattice_lut()
+
+    # Largest gap between two palette entries that is still worth mixing.
+    #
+    # Ordered dithering between the two nearest entries only reads as an
+    # intermediate colour when those entries are close together.  Mix two
+    # entries that are far apart and the eye resolves them separately, so
+    # a gradient turns into visible two-colour speckle - which is exactly
+    # how the first version of this pass regressed sprite quality.  The
+    # limit is derived per palette from its own spacing (twice the median
+    # nearest-neighbour distance) rather than being a fixed constant, so
+    # a tightly-packed palette mixes freely and a sparse one mostly snaps.
+    local_mix_limit = {}
+    for key, ycc in local_ycc.items():
+        dd = np.sum((ycc[:, None, :] - ycc[None, :, :]) ** 2, axis=2)
+        np.fill_diagonal(dd, np.inf)
+        nn = dd.min(axis=1)
+        nn = nn[np.isfinite(nn)]
+        local_mix_limit[key] = (4.0 * float(np.median(nn))) if nn.size else 0.0
+
+    # ---------------------------------------------------------
+    # PASS 2: SERPENTINE DITHER (alpha-aware)
+    # ---------------------------------------------------------
+    # Two regimes, chosen per pixel by local turbulence:
+    #
+    #   Detail  - Floyd-Steinberg error diffusion, scanned serpentine.
+    #             Alternating the scan direction each row cancels the
+    #             directional bias that makes single-direction diffusion
+    #             grow diagonal "worms" across large areas.
+    #
+    #   Smooth  - ordered dithering between the two nearest palette
+    #             entries, thresholded by a blue-noise mask.  The old
+    #             pipeline turned dithering OFF here, which is what put
+    #             hard bands across every sky and every gradient: with
+    #             fifteen colours over a whole image there is simply not
+    #             an entry close enough to snap to.  Mixing the two
+    #             nearest entries at the ratio the true colour sits
+    #             between them reproduces the gradient, and doing it
+    #             against blue noise rather than a Bayer matrix keeps the
+    #             mix from reading as a pattern.
+    #
+    # Error is still accumulated in RGB - the canvas is RGB - while the
+    # nearest-entry search runs in weighted YCbCr.
+    error_canvas = np.pad(rgb_np, ((0, 2), (0, 2), (0, 0)), mode='edge')
     global_indices = np.full((target_h, target_w), 255, dtype=np.uint8)
     # Sentinel 255 = transparent.  Opaque pixels get 0..14, then the
     # +1 shift in Pass 3 maps them to NeoGeo slots 1..15.
 
+    noise = blue_noise_mask()
+    noise_n = noise.shape[0]
+    mix_ok = (asset_type != "sprite")
+    # Sprite art is authored flat: broad single-colour fields with hard
+    # edges.  Letting mildly-textured sprite interiors into the error
+    # diffusion branch sprinkles them with speckle that was never in the
+    # source, so sprites snap over a wider band of local turbulence than
+    # photographic material does.
+    smooth_cut = 26.0 if asset_type == "sprite" else 15.0
+
     for gy in range(target_h):
-        for gx in range(target_w):
-            # Alpha skip: transparent source pixels short-circuit
-            # straight to the transparency sentinel.  No palette
-            # lookup, no error diffusion — error from neighbours
-            # propagating INTO a transparent pixel just sits in the
-            # canvas, which is fine since we never read it.
+        left_to_right = (gy & 1) == 0
+        xs = range(target_w) if left_to_right else range(target_w - 1, -1, -1)
+        for gx in xs:
+            # Alpha skip: transparent source pixels short-circuit straight
+            # to the transparency sentinel.  Error diffused INTO a
+            # transparent pixel just sits in the canvas unread.
             if not opaque_mask[gy, gx]:
                 continue
 
             ty_idx = gy // 16
             tx_idx = gx // 16
-            active_palette = local_luts[(ty_idx, tx_idx)]
+            pal_rgb = local_luts[(ty_idx, tx_idx)]
+            pal_ycc = local_ycc[(ty_idx, tx_idx)]
+            mix_limit = local_mix_limit[(ty_idx, tx_idx)]
 
-            # PHOTOCOPY VARIANCE GATE + TEFLON ROUTING.
-            #
-            # Compute local turbulence from the ORIGINAL source (not
-            # the error-laden canvas) as the sum of absolute RGB diffs
-            # with the left + top neighbours.  Smooth gradients (sky,
-            # skin, large flat fills) have variance ≈ 0; high-detail
-            # regions (textures, hair, line art) shoot well past 15.
-            #
-            # Smooth mode (variance < 15 OR pure-white / pure-black
-            # luma trap):
-            #   - match_px = pristine source RGB (ignore upstream
-            #     error → no inherited noise bleed)
-            #   - apply_dither = False (don't propagate new error →
-            #     smooth surfaces stay pure, no compounding speckle)
-            #
-            # Detail mode (everything else):
-            #   - match_px = error-laden canvas value
-            #   - apply_dither = True (Floyd-Steinberg with 0.75
-            #     dampener; equivalent to Atkinson's 25% retention
-            #     drop, distributed via the classic 4-neighbour
-            #     7/3/5/1 diamond for tighter texture preservation)
-            px = np.clip(global_error_canvas[gy, gx, :], 0.0, 255.0)
+            px = np.clip(error_canvas[gy, gx, :], 0.0, 255.0)
             orig_px = rgb_np[gy, gx]
-            orig_luma = (orig_px[0] * 0.299
-                          + orig_px[1] * 0.587
-                          + orig_px[2] * 0.114)
 
+            # Turbulence from the ORIGINAL source, not the error-laden
+            # canvas, so inherited error cannot promote a flat area into
+            # the detail branch.
             variance = 0.0
             if gx > 0 and gy > 0:
                 left = rgb_np[gy, gx - 1]
@@ -1436,29 +1752,61 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
                              abs(orig_px[1] - top[1]) +
                              abs(orig_px[2] - top[2]))
 
+            # A sprite's semi-transparent contour pixels keep the clean
+            # source colour: they are anti-aliasing, and diffusing error
+            # along an outline smears it.
             edge_mode = (asset_type == "sprite" and alpha_np[gy, gx] < 250.0)
-            smooth_mode = (edge_mode
-                            or variance < 15.0
-                            or orig_luma > 240.0
-                            or orig_luma < 15.0)
-            match_px = np.clip(orig_px, 0.0, 255.0) if smooth_mode else px
+            smooth_mode = edge_mode or variance < smooth_cut
 
-            distances = np.sum((active_palette - match_px) ** 2, axis=1)
-            best_idx = int(np.argmin(distances))
+            if smooth_mode:
+                q = snap_neogeo(np.clip(orig_px, 0.0, 255.0).astype(np.uint8)) >> 3
+                target = lab_lut[q[0], q[1], q[2]]
+                d = np.sum((pal_ycc - target) ** 2, axis=1)
+                order = np.argsort(d)
+                a = int(order[0])
+                best_idx = a
+                # Only photographic / painted material gets the ordered
+                # mix.  Sprite art is cel-shaded: its flat fields are flat
+                # on purpose, and dithering them adds noise the artist did
+                # not put there.
+                if (mix_ok and not edge_mode and order.shape[0] > 1):
+                    b = int(order[1])
+                    seg = pal_ycc[b] - pal_ycc[a]
+                    seg2 = float(seg @ seg)
+                    if 1e-6 < seg2 <= mix_limit:
+                        # How far along a->b the true colour actually sits.
+                        t = float((target - pal_ycc[a]) @ seg) / seg2
+                        # Only mix when the colour genuinely sits BETWEEN
+                        # the two entries.  Without the dead band, a pixel
+                        # that the nearest entry already reproduces almost
+                        # exactly still flips to the neighbour a fifth of
+                        # the time, and those isolated flips are what read
+                        # as speckle across an otherwise clean surface.
+                        if 0.18 < t < 0.82:
+                            if t > noise[gy % noise_n, gx % noise_n]:
+                                best_idx = b
+                global_indices[gy, gx] = best_idx
+                continue
+
+            q = snap_neogeo(px.astype(np.uint8)) >> 3
+            target = lab_lut[q[0], q[1], q[2]]
+            d = np.sum((pal_ycc - target) ** 2, axis=1)
+            best_idx = int(np.argmin(d))
             global_indices[gy, gx] = best_idx
 
-            if not smooth_mode:
-                # Floyd-Steinberg 7/3/5/1 with 0.75 leak-dampener.
-                # 75% retention is the same total energy as Atkinson
-                # but the 4-neighbour diamond keeps texture tighter
-                # for detail regions (smooth regions never reach this
-                # branch — they snap clean above).
-                quant_error = (px - active_palette[best_idx]) * 0.75
-                global_error_canvas[gy, gx + 1, :] += quant_error * (7.0 / 16.0)
-                if gx > 0:
-                    global_error_canvas[gy + 1, gx - 1, :] += quant_error * (3.0 / 16.0)
-                global_error_canvas[gy + 1, gx,     :] += quant_error * (5.0 / 16.0)
-                global_error_canvas[gy + 1, gx + 1, :] += quant_error * (1.0 / 16.0)
+            # Floyd-Steinberg 7/3/5/1 with a 0.75 leak dampener, mirrored
+            # when the row runs right-to-left.
+            quant_error = (px - pal_rgb[best_idx]) * 0.75
+            step = 1 if left_to_right else -1
+            nx = gx + step
+            if 0 <= nx < target_w:
+                error_canvas[gy, nx, :] += quant_error * (7.0 / 16.0)
+            bx = gx - step
+            if 0 <= bx < target_w:
+                error_canvas[gy + 1, bx, :] += quant_error * (3.0 / 16.0)
+            error_canvas[gy + 1, gx, :] += quant_error * (5.0 / 16.0)
+            if 0 <= nx < target_w:
+                error_canvas[gy + 1, nx, :] += quant_error * (1.0 / 16.0)
 
     # ---------------------------------------------------------
     # PASS 3: SLICE BACK TO NEO GEO HARDWARE BLOCKS
@@ -1498,7 +1846,7 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
 
 _VIVID_CACHE_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), ".cache", "vivid")
-_VIVID_CACHE_VERSION = "v10-edge-anchor-palette"
+_VIVID_CACHE_VERSION = "v11-lattice-refit-bluenoise"
 
 
 def _vivid_cache_key(image_path: str, target_w: int, target_h: int,

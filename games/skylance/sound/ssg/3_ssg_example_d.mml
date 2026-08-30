@@ -1,0 +1,20 @@
+; 3_ssg_example_d - spare low pulse
+
+T190
+P1
+V10
+O4
+L8
+
+A R A R  C R E R
+G R E R  C R A R
+
+L16
+A C E A  C E A > C
+< G B > D G  < B > D G B
+
+L8
+A G E C  D E G A
+C4 R4 A4 R4
+
+~

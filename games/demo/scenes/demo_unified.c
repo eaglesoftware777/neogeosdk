@@ -47,6 +47,7 @@ void NEOGEO_USER clearFix(void);
 void NEOGEO_USER clearSprs(void);
 void NEOGEO_USER setBACKDROP(uint16_t backdrop_color);
 void NEOGEO_USER soundSceneReset(void);
+void NEOGEO_USER soundReset(void);
 void NEOGEO_USER soundStopAll(void);
 void NEOGEO_USER soundPlayGameLoop(uint8_t track);
 void NEOGEO_USER soundSetADPCMAVolume(uint8_t v);
@@ -112,24 +113,20 @@ void NEOGEO_USER demo_sprite_window_cache_reset(void);
  *   124..147  FX prop A                       DEMO_PROP_FX_A_SLOT
  *   148..171  FX prop B                       DEMO_PROP_FX_B_SLOT
  *   172..183  FX prop C                       DEMO_PROP_FX_C_SLOT
- *   184..219  character cameo                 DEMO_PROP_CAMEO_SLOT
  *   220..239  scrolling-level marker          DEMO_PROP_MARKER_SLOT
  *   256..287  particle pool                   NG_SPR_PART_FIRST
  *
  * Measured worst cases against those windows (asset -> strips):
  *   hitbox 136        -> 16, fits 100..115
  *   FX frames 89..92  -> up to 10, fit the A/B/C windows
- *   cameo 68/75       -> up to 14, fits 184..197
  *   markers 132..135  -> up to 8,  fits 220..227
  *   hero frames       -> up to 16, exactly fills 64..79 up to ENEMY at 80
  *
- * The cameo window starts at 184 rather than 180 because of a real
- * collision: chap_palette_fx draws FX prop C and the cameo in the same
- * frame, and the FX frames run to 10 strips, so prop C spans 172..181
- * and overlapped the cameo's first two slots.  Two sprites writing the
- * same SCB slots every frame is the same failure that corrupted the
- * shooter's formation.  Keep a window's start at least max-strips past
- * the previous window's start.
+ * Keep every window's start at least max-strips past the previous
+ * window's start.  Two sprites writing the same SCB slots every frame is
+ * the failure that corrupted the shooter's formation, and it is easy to
+ * reintroduce: the FX frames run to 10 strips, so prop C alone spans
+ * 172..181.
  *
  * The shooter chapter deliberately reuses 96..271 wholesale for its
  * formation; it draws none of the props above, so that overlap is by
@@ -143,7 +140,6 @@ void NEOGEO_USER demo_sprite_window_cache_reset(void);
 #define DEMO_PROP_FX_A_SLOT    124u
 #define DEMO_PROP_FX_B_SLOT    148u
 #define DEMO_PROP_FX_C_SLOT    172u
-#define DEMO_PROP_CAMEO_SLOT   184u
 #define DEMO_PROP_MARKER_SLOT  220u
 
 #define U_BG_FOREST        2u
@@ -238,6 +234,47 @@ void NEOGEO_USER demo_sprite_window_cache_reset(void);
 #define U_BALLOON_YELLOW         150u
 
 /*
+ * Sky Lance mini — the vertical-shooter slice of games/skylance, drawn
+ * from that game's own art imported into this ROM's npcs page.  These
+ * seven were deliberately named to sort last inside artbox/in/npcs so
+ * every asset id above stays exactly where it was; verified against the
+ * regenerated sprite_meta.h, ids 1..150 are byte-identical.
+ */
+#define U_SKY_BOSS               151u
+#define U_SKY_BULLET             152u
+#define U_SKY_ENEMY_A            153u
+#define U_SKY_ENEMY_B            154u
+#define U_SKY_ENEMY_C            155u
+#define U_SKY_ORB                156u
+#define U_SKY_PLANE              157u
+
+/*
+ * Wooden crate props, intact and smashed.  These replace the abstract
+ * U_HITBOX square wherever a chapter needs something to shoot or punch:
+ * a crate reads as a target at a glance, and having a broken state means
+ * a hit can be shown rather than just scored.
+ */
+#define U_CRATE                  158u
+#define U_CRATE_BROKEN           159u
+
+/*
+ * Sky page for the Sky Lance mini.
+ *
+ * It lives in artbox/in/zz_bg/ as 0.png, which is deliberate on both
+ * counts: a subdirectory outside CATEGORY_ORDER is appended last, so no
+ * existing asset id moves, and the numeric filename is the only thing
+ * that matches the legacy_screens rule - the one rule with no category -
+ * which routes it through the SCREEN converter.  Dropped into in/npcs/
+ * instead it would have been quantised as a sprite against the palette
+ * shared with the cats, balloons and particles, and a sky has no business
+ * sharing fifteen colours with a cat.
+ *
+ * The page repeats a 144-px vertical loop, matching the 9-tile-row band
+ * the chapter shows - see the backdrop draw in chap_image_shooter().
+ */
+#define U_SKY_BG                 160u
+
+/*
  * Char rendering scale presets.  The NeoGeo sprite chip can only
  * shrink, not stretch, so 0xFFu is the hardware ceiling; every
  * preset below (including U_SCALE_FULL) is scaled down from the
@@ -280,8 +317,17 @@ static const uint8_t s_fx_effect_frames[4] = {
     89u, 90u, 91u, 92u
 };
 
+/*
+ * The acting character for the palette-FX, particle and feedback
+ * chapters: the warrior's sword-spin special (sprite_033..sprite_037).
+ *
+ * These used to be 49..53, which are the purple spirit-eagle frames.
+ * That put a bird on screen in three chapters that are about what the
+ * palette and particle systems do to a CHARACTER - and chap_feedback
+ * captions itself "WARRIOR TAKES HITS" while showing one.
+ */
 static const uint8_t s_fx_char_frames[5] = {
-    49u, 50u, 51u, 52u, 53u
+    35u, 36u, 37u, 38u, 39u
 };
 
 static const uint8_t s_flight_frames[3] = {
@@ -301,16 +347,11 @@ static const uint16_t s_palfx_base[16] = {
 static uint8_t  s_draw_chars      = 0u;
 static uint8_t  s_draw_particles  = 0u;
 
-/* Whichever face was picked (or left on, in AI mode) when chap_char_select()
- * finished - 0 = girl, 1 = eagle.  Later chapters that want to reflect the
- * player's choice (e.g. palette FX) read this instead of hardcoding a
- * character. */
-/* The effects chapters always show the eagle cameo.  They used to
- * follow s_selected_char and show the girl portrait (asset 68) when
- * she was picked, which put a face in scenes that are about the
- * particle and palette effects themselves. */
-#define U_CAMEO_EAGLE  75u
-
+/* Whichever face was picked (or left on, in AI mode) when
+ * chap_char_select() finished - 0 = girl, 1 = eagle.  Recorded for any
+ * later chapter that wants to reflect the choice; the palette FX and
+ * particle chapters used to draw a cameo portrait from it and no longer
+ * do, so nothing reads it at present. */
 static uint8_t  s_selected_char   = 1u;   /* defaults to eagle if select
                                             * chapter never runs first */
 
@@ -348,6 +389,18 @@ static uint8_t  s_chapter_view_index = 0u;
 
 static uint8_t  s_restart_requested = 0u;
 static uint8_t  s_restart_enabled   = 1u;
+
+/*
+ * Skip/restart press that arrived while a sound transition was running.
+ *
+ * The cross-fade waits below pump uframe() like any other wait, but they
+ * cannot return early - they still have Z80 commands to send.  They used
+ * to just discard whatever uframe() reported, and a chapter change is the
+ * exact moment a player leans on A, so every press that landed inside the
+ * ~0.6s fade did nothing at all.  snd_wait() latches it here instead and
+ * the chapter's next uframe() reports it as if it had just happened.
+ */
+static uint8_t  s_pending_req = 0u;
 
 /*
  * ADPCM-B streamed TRACKs have no hardware loop - the chip plays from
@@ -454,6 +507,13 @@ static uint8_t NEOGEO_USER uframe(void)
     {
         uint8_t req = demo_advance_requested();
 
+        if (req == 0u) {
+            /* Nothing pressed this frame - hand over anything snd_wait()
+             * caught during the last sound transition. */
+            req = s_pending_req;
+            s_pending_req = 0u;
+        }
+
         if (req == CHAP_REQ_RESTART) {
             /* A chapter that uses C as a gameplay button opts out, and
              * for it C must not end the chapter either - swallow the
@@ -508,6 +568,66 @@ static void NEOGEO_USER snd_step(void)
 #define SND_FADE_SPEED    0xFEu
 #define SND_FADE_FRAMES   36u   /* ~0.6s - about 5 of the -16 steps */
 #define SND_SILENCE_FRAMES 48u  /* ~0.8s - a fuller fade before silence */
+#define SND_SKIP_TAIL      4u   /* fade frames still owed once A is pending */
+
+/*
+ * Vblank wait for the sound transitions.
+ *
+ * Two things this does that a plain uwait() cannot: it never abandons the
+ * caller half-way through a command sequence, and it does not throw away
+ * the skip the player just asked for - see s_pending_req.  Once a request
+ * is pending the remaining fade is cut to SND_SKIP_TAIL frames, so
+ * hammering A walks the reel at the player's pace instead of paying
+ * 0.6s of cross-fade per chapter.
+ */
+static void NEOGEO_USER snd_wait(uint16_t frames)
+{
+    uint16_t t;
+    uint16_t limit = frames;
+
+    for (t = 0u; t < limit; t++) {
+        uint8_t req = uframe();
+
+        if (req != 0u) {
+            if (s_pending_req == 0u) s_pending_req = req;
+            if ((uint16_t)(limit - t) > SND_SKIP_TAIL) {
+                limit = (uint16_t)(t + SND_SKIP_TAIL);
+            }
+        }
+    }
+}
+
+/*
+ * Start a chapter's background bed.
+ *
+ * This is soundPlayGameLoop()'s exact sequence - stop, driver reset, the
+ * four mixer levels, then the ADPCM-B TRACK trigger - but with a vblank
+ * between every step.  The library version fires all seven commands back
+ * to back, and the whole reason every other Z80 command in this file is
+ * separated by snd_step() is that the driver drops commands that arrive
+ * while it is still busy with the previous one.  The trigger is the LAST
+ * of the seven, so it is the one that gets lost, and the symptom is
+ * precisely the outgoing chapter's music carrying on into the next
+ * chapter - which is what a fast skip, arriving while the driver is
+ * still working through the outgoing chapter's stop, used to produce.
+ *
+ * The mixer levels and the TRACK table below mirror soundPlayGameLoop()
+ * and s_bgm_track_id[] respectively; both are ADPCM-B forward, FM and SSG
+ * silent.
+ */
+static void NEOGEO_USER snd_start_bed(uint8_t track)
+{
+    uint8_t slot = (uint8_t)(track & 0x07u);
+
+    soundStopAll();               snd_step();
+    soundReset();                 snd_step();
+    soundSetADPCMAVolume(0x30u);  snd_step();
+    soundSetADPCMBVolume(0xB8u);  snd_step();
+    soundSetSSGVolume(0x00u);     snd_step();
+    soundSetFMVolume(0x00u);      snd_step();
+    playSFXB(s_bgm_track_id[slot]);
+    snd_step();
+}
 
 /*
  * Restore the live volume registers after a fade.
@@ -530,12 +650,11 @@ static void NEOGEO_USER snd_restore_mix(void)
 static void NEOGEO_USER snd_cross_to(uint8_t track)
 {
     soundFadeOutSpeed(SND_FADE_SPEED);
-    (void)uwait(SND_FADE_FRAMES);
+    snd_wait(SND_FADE_FRAMES);
     soundStopAll();
     snd_step();
     snd_restore_mix();
-    soundPlayGameLoop(track);
-    snd_step();
+    snd_start_bed(track);
     s_bgm_track = (uint8_t)(track & 0x07u);
     s_bgm_frames_left = s_bgm_loop_frames[s_bgm_track];
 }
@@ -543,7 +662,7 @@ static void NEOGEO_USER snd_cross_to(uint8_t track)
 static void NEOGEO_USER snd_silence(void)
 {
     soundFadeOutSpeed(SND_FADE_SPEED);
-    (void)uwait(SND_SILENCE_FRAMES);
+    snd_wait(SND_SILENCE_FRAMES);
     soundStopAll();
     snd_step();
     /* Leave the mixer at the chapter's configured levels, not at the
@@ -644,7 +763,8 @@ static void NEOGEO_USER chap_header(uint8_t n,
 {
     char tag[6];
 
-    /* hard reset hardware + char/physics/particles/feedback/palette FX */
+    /* hard reset hardware + char/physics/particles/feedback/palette FX
+     * (it runs the wipe on DEMO_BG_CLEAR and restores DEMO_BG itself) */
     ng_clear_screen_full();
     /* The sprite-window tracking cache (demo.c) is separate from VRAM/
      * SCB state and is NOT touched by ng_clear_screen_full() - it's
@@ -656,14 +776,12 @@ static void NEOGEO_USER chap_header(uint8_t n,
      * shooter) of room and causing sprite thrashing/corruption. */
     demo_sprite_window_cache_reset();
     /*
-     * Pure black keeps transparent padding and freshly-cleared FIX cells
-     * from reading as large pale rectangles during chapter transitions.
      * clearSprs() is intentionally omitted here: ng_clear_screen_full()
      * already does a full ng_sprite_hide_all() kill (SCB3=0x8000, full
      * SCB1 wipe with blank-tile 0xFFFF).  A second clearSprs() would
      * overwrite that safe blank-tile fill with tile-0, which may carry art.
      */
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
     ng_level_set_scroll(0, 0);
     ng_particles_init();
     ng_feedback_init();
@@ -677,6 +795,12 @@ static void NEOGEO_USER chap_header(uint8_t n,
     /* Restart is available by default; a chapter that needs C for its
      * own input clears this after calling us. */
     s_restart_enabled = 1u;
+
+    /* A skip latched by the outgoing chapter's fade-to-silence has done
+     * its job already - it ended that chapter.  Drop it here so it cannot
+     * also skip this one; snd_cross_to() below runs after this point, so
+     * presses made during THIS chapter's cross-fade still survive. */
+    s_pending_req = 0u;
 
     /* Disarm the BGM loop watchdog - re-armed only if this chapter calls
      * snd_cross_to() itself, so chapters managing sound manually (the
@@ -853,6 +977,14 @@ static int16_t NEOGEO_USER asset_scaled_px(uint8_t cells, uint8_t scale)
     return (int16_t)(((uint32_t)px * (uint32_t)scale + 127u) >> 8);
 }
 
+/* Same shrink as asset_scaled_px(), but for a pixel count rather than a
+ * tile-cell count. */
+static int16_t NEOGEO_USER asset_scaled_px_u16(uint16_t px, uint8_t scale)
+{
+    if (scale >= 0xFFu) return (int16_t)px;
+    return (int16_t)(((uint32_t)px * (uint32_t)scale + 127u) >> 8);
+}
+
 static void NEOGEO_USER draw_asset_bottom_center(uint8_t frame,
                                                  uint16_t first_sprite,
                                                  int16_t cx,
@@ -879,6 +1011,45 @@ static void NEOGEO_USER draw_asset_bottom_center(uint8_t frame,
     demo_draw_sprite_screen(frame, first_sprite,
                             draw_x, draw_y,
                             strips, rows, scale_x, scale_y);
+}
+
+/*
+ * Centre anchor.
+ *
+ * draw_asset_bottom_center() puts the artwork's painted BOTTOM edge on
+ * the given y, which is what a character standing on a floor wants; a
+ * flying object wants its middle there instead, so this anchors on
+ * (y_pad + content_height/2).
+ *
+ * Note what it does NOT do: pass cx/cy straight to
+ * demo_draw_sprite_screen().  That call takes the origin of the whole
+ * 16x16 PAGE, and demo_perform_sprite_draw() adds the artwork's
+ * tile-grid offset back on - so a sprite whose art starts six tile rows
+ * down its page lands 96 px below where the caller asked, which is off
+ * the bottom of the screen for anything already in the lower half.
+ * The tile-grid part is unscaled and the in-tile padding is scaled, for
+ * the same reason spelled out over demo_anchor_bottom_center().
+ */
+static void NEOGEO_USER draw_asset_center(uint8_t frame,
+                                          uint16_t first_sprite,
+                                          int16_t cx,
+                                          int16_t cy,
+                                          uint8_t scale_x,
+                                          uint8_t scale_y)
+{
+    uint16_t pad_x = (uint16_t)(demo_screen_x_pad(frame)
+                                + (demo_screen_content_width(frame) >> 1));
+    uint16_t pad_y = (uint16_t)(demo_screen_y_pad(frame)
+                                + (demo_screen_content_height(frame) >> 1));
+
+    demo_draw_sprite_screen(frame, first_sprite,
+                            (int16_t)(cx - demo_screen_x_offset(frame)
+                                         - asset_scaled_px_u16(pad_x, scale_x)),
+                            (int16_t)(cy - demo_screen_y_offset(frame)
+                                         - asset_scaled_px_u16(pad_y, scale_y)),
+                            demo_screen_strips(frame),
+                            demo_screen_rows(frame),
+                            scale_x, scale_y);
 }
 
 static void NEOGEO_USER draw_asset_bottom_center_flip(uint8_t frame,
@@ -999,15 +1170,14 @@ static uint8_t NEOGEO_USER chap_title(void)
     uint16_t t;
     uint8_t last_frame = 0xFFu;
 
- soundSceneReset();   waitVbl();
-        soundSetADPCMAVolume(0x3Cu);  waitVbl();
-        soundSetADPCMBVolume(0xBCu);  waitVbl();
-        soundSetSSGVolume(0x00u);     waitVbl();
-        soundSetFMVolume(0x00u);      waitVbl();
-        soundPlayGameLoop(SOUND_MUSIC_E);
-        waitVbl();
-
     chap_header(1u, "TITLE", "ATTRACT REEL");
+    /* Was a hand-rolled soundSceneReset + mixer + soundPlayGameLoop block
+     * running BEFORE chap_header().  Two problems: soundPlayGameLoop()
+     * re-applies its own mixer levels, so the ones set just above it never
+     * survived, and nothing faded or stopped the outgoing chapter's TRACK
+     * first.  snd_cross_to() does both, and arms the loop watchdog so the
+     * bed does not die part-way through the 450-frame parade. */
+    snd_cross_to(SOUND_MUSIC_E);
     demo_fix_puts(2u, 2u, "TITLE / EYECATCHER", 1u);
 	
 	
@@ -1068,11 +1238,10 @@ static uint8_t NEOGEO_USER chap_fix(void)
 
     chap_header(2u, "FIX LAYER", "TEXT  PALETTES");
     /*
-     * Black backdrop keeps cleared FIX cells fully invisible.  Using a
-     * bright backdrop here made transparent areas read as yellow/white
-     * blocks when switching between FIX pages.
+     * Re-assert the page colour: this chapter swaps FIX pages several
+     * times and each swap leaves transparent cells showing the backdrop.
      */
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
     /*
      * Re-write the header tag and status row after the backdrop change.
      */
@@ -1890,11 +2059,11 @@ static uint8_t NEOGEO_USER chap_physics(void)
     /*
      * EXPLICIT SCREEN CLEAR before drawing anything.
      * Even though chap_header runs ng_clear_screen_full(), we re-clear
-     * the FIX layer and force the backdrop back to black here so
-     * previous chapter colours cannot bleed through.
+     * the FIX layer and re-assert the page colour here so previous
+     * chapter colours cannot bleed through.
      */
     clearFix();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
 
     /* Re-draw header text after the clear.  clearFix() wipes the whole
      * FIX layer, row 26's separator rule included, so restore that too -
@@ -1906,17 +2075,22 @@ static uint8_t NEOGEO_USER chap_physics(void)
     chap_hint(0);
 
     demo_fix_puts(2u, 2u, "WATCHING - PRESS START TO PLAY", 1u);
-    demo_fix_puts(2u, 3u, "FLOOR Y=184  BAR Y=184",      0u);
+    demo_fix_puts(2u, 3u, "FLOOR Y=184  BAR Y=184  FEET Y=184", 0u);
     snd_cross_to(SOUND_MUSIC_A);
 
     /*
-     * Bar drawn at row 25 (Y=200..207).  Row 23 (the solid's own top,
-     * Y=184) visibly cut across the eagle; row 24 (Y=192) was still
-     * reported as crossing it - the eagle's actual rendered sprite
-     * bottom must be sitting a bit below its physics-grounded Y, so
-     * one more row down.
+     * The bar goes on row 23, which is the solid's own top edge
+     * (Y = 184..191).
+     *
+     * It was on row 25 (Y=200) on the theory that the rendered sprite
+     * bottom sat below the physics Y.  It does not: the eagle's grounded
+     * body bottom is exactly Y=184, and sprite_offset_y is
+     * -(active_rows * 16 * scale) which for this asset equals
+     * -(y_pad + content_height) * scale to the pixel - so the painted
+     * feet land on 184 too, and the bar two rows lower left the bird
+     * hanging 16 px in the air.
      */
-    demo_fix_puts(0u, 25u, "========================================", 2u);
+    demo_fix_puts(0u, 23u, "========================================", 2u);
 
     /*
      * EXTRA hard clear before physics setup — kills any stale strip
@@ -2218,14 +2392,11 @@ static uint8_t NEOGEO_USER chap_camera(void)
                 "AUTO TOUR: HARD SMOOTH SHAKE PAN VERT DEADZONE");
 
     /* Sound: ADPCM-B carries the loop the whole chapter.  FM/SSG muted,
-     * ADPCM-A reserved for the per-mode SFX chirps. */
-    soundSceneReset();              waitVbl();
-    soundSetADPCMAVolume(0x3Cu);    waitVbl();
-    soundSetADPCMBVolume(0xBCu);    waitVbl();
-    soundSetSSGVolume(0x00u);       waitVbl();
-    soundSetFMVolume(0x00u);        waitVbl();
-    soundPlayGameLoop(SOUND_MUSIC_E);
-    waitVbl();
+     * ADPCM-A reserved for the per-mode SFX chirps - which is exactly the
+     * mix snd_cross_to() sets, and unlike the hand-rolled block that used
+     * to be here it fades the outgoing chapter out first and arms the
+     * loop watchdog for the full 18s tour. */
+    snd_cross_to(SOUND_MUSIC_E);
 
     ng_camera_init(&cam);
     ng_camera_set_bounds(&cam, 0, 0, WORLD_RIGHT, WORLD_BOTTOM);
@@ -2414,7 +2585,7 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
      * footprint happens to be narrower than the old one. */
     ng_sprite_park_off_range(HERO_SLOT_FIRST, 16u);
     demo_fix_puts(2u, 2u, "EFFECTS: 040 / 041 / 048 / 050", 1u);
-    demo_fix_puts(2u, 3u, "CHAR: 047R05C06 -> 051R05C10", 0u);
+    demo_fix_puts(2u, 3u, "CHAR: 033R04C03 -> 037R04C07", 0u);
     snd_cross_to(SOUND_MUSIC_G);
 
     demo_load_screen_palette(s_fx_effect_frames[0]);
@@ -2422,19 +2593,6 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
     demo_load_screen_palette(s_fx_effect_frames[2]);
     demo_load_screen_palette(s_fx_effect_frames[3]);
     demo_fix_puts(2u, 6u, "ACTIVE:", 1u);
-
-    /* Corner portrait of whichever face the player picked in the char
-     * select chapter (s_selected_char) - this scene otherwise had no
-     * link back to that choice at all. */
-    {
-        uint8_t badge_frame = U_CAMEO_EAGLE;
-        demo_load_screen_palette(badge_frame);
-        /* Was row 20, which put the label and its portrait down in the
-         * lower third where the effects themselves play out.  Both now
-         * sit in the top band, clear of the action - row 4 rather than
-         * row 2, which the EFFECTS listing already fills across. */
-        demo_fix_puts(27u, 4u, "PLAYING AS:", 1u);
-    }
 
     /* Was 660 frames (11s) at 132 per stage - trimmed to 8s. */
     for (t = 0u; t < 480u; t++) {
@@ -2484,8 +2642,6 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
         draw_asset_bottom_center(fx_right, DEMO_PROP_FX_C_SLOT, 250, 98, U_SCALE_55, U_SCALE_55);
         draw_asset_bottom_center(pose, HERO_SLOT_FIRST, 160,
                                  FX_HERO_LIFT_Y, U_SCALE_55, U_SCALE_55);
-        draw_asset_bottom_center(U_CAMEO_EAGLE, DEMO_PROP_CAMEO_SLOT,
-                                 300, 56, U_SCALE_30, U_SCALE_30);
 
         if (uframe()) return 1u;
     }
@@ -2533,7 +2689,6 @@ static uint8_t NEOGEO_USER chap_particles(void)
     demo_load_screen_palette(U_PARTICLE_HITSPARK);
     demo_load_screen_palette(U_PARTICLE_EXPLOSION);
     demo_load_screen_palette(U_PARTICLE_SMOKE);
-    demo_load_screen_palette(U_CAMEO_EAGLE);
 
     s_draw_particles = 1u;
 
@@ -2621,11 +2776,6 @@ static uint8_t NEOGEO_USER chap_particles(void)
 
         draw_asset_bottom_center(hero_frame, HERO_SLOT_FIRST,
                                  160, FX_HERO_LIFT_Y, U_SCALE_55, U_SCALE_55);
-
-        /* The other picked face watches from the side, standing at
-         * rest - this scene otherwise showed only the acting hero. */
-        draw_asset_bottom_center(U_CAMEO_EAGLE, DEMO_PROP_CAMEO_SLOT,
-                                 258, FX_HERO_LIFT_Y, U_SCALE_45, U_SCALE_45);
 
         if (uframe()) return 1u;
     }
@@ -3359,7 +3509,8 @@ static uint8_t NEOGEO_USER chap_joystick(void)
     demo_fix_puts(2u, 25u, "HIT BOX ON RIGHT  B STRIKE",        0u);
     demo_fix_puts(2u, 26u, "HITS:",                            2u);
 
-    demo_load_screen_palette(U_HITBOX);
+    demo_load_screen_palette(U_CRATE);
+    demo_load_screen_palette(U_CRATE_BROKEN);
     draw_background(U_BG_FOREST, 32, 16);
 
     for (t = 0u; t < 1200u; t++) {
@@ -3526,18 +3677,16 @@ static uint8_t NEOGEO_USER chap_joystick(void)
         s_hero_y = hero_world_y;
         hero_draw(frame);
 
-        /* Was x=276/U_SCALE_57 - pulled in from the screen edge and
-         * sized up, matching the hit-test window above.
-         *
-         * Note for anyone re-tuning this: U_HITBOX's metadata reports
-         * content 256x256, but that is the padded tile canvas, not the
-         * ink - the source art is a 32x32 box centred in it, so this
-         * renders as a small (~18px) target rather than anything close
-         * to the canvas size.  Sizing it from the metadata alone gives
-         * an answer about 8x too large. */
-        draw_asset_bottom_center(U_HITBOX, DEMO_PROP_HITBOX_SLOT, 250, 136,
-                                 box_flash ? U_SCALE_FULL : U_SCALE_70,
-                                 box_flash ? U_SCALE_FULL : U_SCALE_70);
+        /* A crate rather than the old abstract hitbox square, and it
+         * visibly breaks on contact: box_flash is already the "just got
+         * hit" window, so it selects the smashed frame instead of only
+         * bumping the scale. */
+        /* 0x2Cu is ~17%: the crate art is 224x240, so anything near the
+         * character presets renders a box two thirds the height of the
+         * play area. */
+        draw_asset_bottom_center(box_flash ? U_CRATE_BROKEN : U_CRATE,
+                                 DEMO_PROP_HITBOX_SLOT, 250, 150,
+                                 0x2Cu, 0x2Cu);
 
         if (uframe()) return 1u;
     }
@@ -3731,19 +3880,14 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
         RETICLE_STEP  = 4
     };
     static const int16_t lane_x[TARGET_COUNT] = { -72, -26, 30, 78 };
-    /* Was reusing hero/effect frames 49/50/51/53, which read as random
-     * character art rather than actual "targets."  Real duck-shooting-
-     * gallery sprites (U_DUCK_*) instead - the last lane uses the
-     * rear-facing duck as a "sneaky" bonus variant. */
     /*
-     * The lanes now run the square hitbox target used for shooting
-     * practice rather than the duck art.  A duck reads as a decoration
-     * that happens to be in the way; a hitbox reads as something you
-     * are meant to put the reticle on, which is what this chapter is
-     * demonstrating.
+     * All four lanes run the square hitbox target.  Character art was
+     * tried here first and read as random scenery that happened to be
+     * in the way; a hitbox reads as something you are meant to put the
+     * reticle on, which is what this chapter demonstrates.
      */
     static const uint8_t target_frame[TARGET_COUNT] = {
-        U_HITBOX, U_HITBOX, U_HITBOX, U_HITBOX
+        U_CRATE, U_CRATE, U_CRATE, U_CRATE
     };
     int16_t target_z[TARGET_COUNT] = { 36, 62, 88, 108 };
     uint8_t target_flash[TARGET_COUNT] = { 0u, 0u, 0u, 0u };
@@ -3758,14 +3902,15 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
     uint8_t i;
     char buf[4];
 
-    chap_header(16u, "TARGET RANGE", "DUCK SHOOT  SPRITE DEPTH");
+    chap_header(16u, "TARGET RANGE", "MOVING TARGETS  SPRITE DEPTH");
     demo_fix_puts(2u, 2u, "D-PAD AIMS X AND Y   B FIRE", 1u);
-    demo_fix_puts(2u, 3u, "MOVING HITBOX TARGETS + DEPTH", 0u);
+    demo_fix_puts(2u, 3u, "MOVING CRATE TARGETS + DEPTH", 0u);
     snd_cross_to(SOUND_MUSIC_F);
 
     for (i = 0u; i < TARGET_COUNT; i++) {
         demo_load_screen_palette(target_frame[i]);
     }
+    demo_load_screen_palette(U_CRATE_BROKEN);
 
     /* AMMO/SCORE/LOCK are the only values this chapter actually tracks -
      * a previous static "HP [########]" bar never moved (no damage
@@ -3892,12 +4037,17 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
             int16_t bottom_y;
 
             if (target_flash[i]) {
-                draw_asset_bottom_center(s_fx_effect_frames[(target_flash[i] >> 1) & 3u],
-                                         (uint16_t)(224u + i * 12u),
+                /* Show the crate coming apart where it was hit, instead
+                 * of a generic effect sprite standing in for the kill.
+                 * Drawn into the lane's OWN sprite window rather than a
+                 * separate flash range: the crate is 14 strips and the
+                 * old flash slots were only 12 apart, so a second lane
+                 * breaking at the same time would have written over it. */
+                draw_asset_bottom_center(U_CRATE_BROKEN,
+                                         (uint16_t)(128u + i * 20u),
                                          (int16_t)(160 + lane_x[i] / 3),
                                          130,
-                                         U_SCALE_45,
-                                         U_SCALE_45);
+                                         0x30u, 0x30u);
                 target_flash[i]--;
                 continue;
             }
@@ -3909,10 +4059,10 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
                                   (Z_FAR - Z_NEAR)));
             bottom_y = (int16_t)(116 + (((Z_FAR - target_z[i]) * 64) /
                                         (Z_FAR - Z_NEAR)));
-            /* Capped well below native size (was up to ~83% at closest
-             * approach) so a close target no longer blots out most of
-             * the FIX-layer raycast scene behind it. */
-            scale = (uint8_t)(0x20u + (((uint16_t)(Z_FAR - target_z[i]) * 0x50u) /
+            /* Range 0x12..0x36 (~7%..21%).  The old 0x20..0x70 was tuned
+             * for the 32x32 hitbox square; the crate art is 224x240, so
+             * the same numbers put a box across most of the screen. */
+            scale = (uint8_t)(0x12u + (((uint16_t)(Z_FAR - target_z[i]) * 0x24u) /
                                         (Z_FAR - Z_NEAR)));
             draw_asset_bottom_center(target_frame[i],
                                      (uint16_t)(128u + i * 20u),
@@ -4007,533 +4157,520 @@ static uint8_t NEOGEO_USER chap_char_2d(void)
 }
 
 /* ================================================================== */
-/*  Chapter 18 — SSG arcade (vblank-spaced Z80 setup)                    */
+/*  Chapter 18 — Sky Lance mini (vertical shooter slice)                 */
 /* ================================================================== */
+static int16_t NEOGEO_USER u_abs16(int16_t v)
+{
+    return (int16_t)((v < 0) ? -v : v);
+}
+
+/* Claim the first free blast slot, if any.  Blasts are cosmetic, so a
+ * full pool just means this kill goes unmarked rather than stealing a
+ * slot that is still animating. */
+static void NEOGEO_USER sky_boom_spawn(int16_t *bx, int16_t *by, uint8_t *bt,
+                                       uint8_t count, int16_t x, int16_t y)
+{
+    uint8_t i;
+    for (i = 0u; i < count; i++) {
+        if (!bt[i]) { bx[i] = x; by[i] = y; bt[i] = 10u; return; }
+    }
+}
+
+/*
+ * A playable slice of games/skylance, not the whole game: one stage of
+ * squadron waves and one boss, using that game's own art (U_SKY_*)
+ * imported into this ROM.  What is deliberately left out is everything
+ * that needs its own front end - the three-pilot select, the seven-stage
+ * run and the energy/lives economy - because a demo chapter has to be
+ * enterable and finishable inside a reel that also has to keep moving.
+ *
+ * It replaces the Galaxian formation mini that used to sit here.  The
+ * two are different games: this one scrolls, its enemies arrive in
+ * squadrons on flight paths instead of sitting in a grid, and it ends
+ * on a boss rather than on a cleared formation.
+ */
 static uint8_t NEOGEO_USER chap_image_shooter(void)
 {
     enum {
-        /* Was 4x6 (24 enemies) with a formation fly-in animation on
-         * top - games/neogeogame/main.c (a separate, proven, actually-
-         * working standalone shooter ROM in this SDK) uses 3x6 (18)
-         * with no fly-in at all and reads far cleaner, so matching
-         * that scale here instead of continuing to patch the bigger,
-         * more failure-prone version. */
-        FORM_ROWS = 3,
-        FORM_COLS = 4,   /* 3x4 = 12 - keeps all three colour tiers while
-                          * holding the whole formation inside the slot
-                          * range that actually renders (see below) */
-        SHOOTER_ENEMIES = FORM_ROWS * FORM_COLS,   /* 18 - Galaxian-style grid */
-        DIVER_MAX    = 2,      /* concurrent divers detached from formation */
-        PBULLET_MAX  = 3,
-        EBULLET_MAX  = 4,
-        BOOM_MAX     = 3,
-        STAGE_MAX    = 3,
-        /* The enemy/player art (U_ENEMYSHIP_* and U_PLAYER_VESSEL) was
-         * regenerated at a much higher source resolution than the
-         * placeholder art these slot budgets were sized for - the
-         * pipeline was compiling them to 16 strips (enemies) / 12
-         * strips (player) instead of the assumed 4, so adjacent
-         * entities' real sprite footprints overlapped and stomped
-         * each other's VRAM every frame (flickering/half-visible
-         * enemies, an invisible player whenever an explosion's slots
-         * landed on top of it).  Rather than lose art detail by
-         * cropping, the 4 source images were rescaled down (LANCZOS,
-         * aspect-preserved, full artwork kept) to a size that
-         * compiles to a modest, budget-fitting strip count - 8 for
-         * the enemies, 6 for the player - confirmed against the
-         * rebuilt games/demo/artbox/screens.c asset table below.
-         * This chapter never triggers ng_particles/ng_feedback (no
-         * hit-spark/shake calls anywhere in it), so its slots are
-         * free to run past NG_SPR_CHAR_LAST (223) into the otherwise
-         * idle FX pool without colliding with anything. */
         /*
-         * Everything this chapter draws is kept below slot 192.
-         *
-         * Measured on hardware-accurate emulation: with this chapter's
-         * sprite load, nothing placed at a slot at or above roughly 192
-         * reaches the screen at all.  The old layout ran the formation
-         * up to 239 and put the player at 240, the explosions at 246
-         * and the bullets past 258 - so the entire back formation row,
-         * the player vessel and every bullet were silently invisible,
-         * which is why the chapter looked unplayable.  Confirmed it is
-         * the slot and not the art: drawing a known-good enemy sprite
-         * at slot 240 is equally invisible, while the same asset draws
-         * fine at 96..191.  Slot 220 does render in a lighter chapter,
-         * so this is a per-chapter capacity effect, not a fixed ceiling.
-         *
-         * The player sits below the formation so it can never be the
-         * one pushed out; sprite priority comes from the slot number,
-         * and the player never overlaps the formation on screen.
-         *
-         * Bullet strides were also wrong: both bullet assets are 4
-         * strips, but the pools advanced by 2, so consecutive bullets
-         * overlapped each other's slots.
+         * Slot map.  The hard rule inherited from the chapter that used
+         * to live here: with this chapter's sprite load, nothing at or
+         * above roughly slot 192 reaches the screen, so everything below
+         * stays well under it.  Strip counts are from the regenerated
+         * asset table - plane and both jets 8, boss 12, drone 4, bolt
+         * and orb 2 - and each pool advances by its own asset's width so
+         * consecutive entries cannot overlap each other's VRAM.
          */
-        SHOOTER_SLOT_PLAYER  = 32,   /* 6 strips      -> 32..37   */
-        SHOOTER_SLOT_BOOM    = 40,   /* 3 * 4 strips  -> 40..51   */
-        SHOOTER_SLOT_PBULLET = 56,   /* 3 * 4 strips  -> 56..67   */
-        SHOOTER_SLOT_EBULLET = 72,   /* 4 * 4 strips  -> 72..87   */
-        SHOOTER_SLOT_ENEMY   = 96,   /* 12 * 8 strips = 96 slots -> 96..191 */
-        SHOOTER_TIME = 1200
+        SKY_SLOT_PLAYER  = 34,   /* 8 strips        -> 34..41   */
+        SKY_SLOT_PBULLET = 44,   /* 4 * 2 strips    -> 44..51   */
+        SKY_SLOT_EBULLET = 54,   /* 6 * 2 strips    -> 54..65   */
+        SKY_SLOT_BOOM    = 68,   /* 3 * 2 strips    -> 68..73   */
+        SKY_SLOT_ENEMY   = 80,   /* 6 * 8 strips    -> 80..127  */
+        SKY_SLOT_BOSS    = 132,  /* 12 strips       -> 132..143 */
+
+        SKY_ENEMY_MAX   = 6,
+        SKY_PBULLET_MAX = 4,
+        SKY_EBULLET_MAX = 6,
+        SKY_BOOM_MAX    = 3,
+
+        /* Play area, in pixels, matching the FIX box drawn below. */
+        SKY_LEFT   = 40,
+        SKY_RIGHT  = 280,
+        SKY_TOP    = 60,
+        SKY_BOTTOM = 162,
+
+        SKY_TIME = 1800,             /* ~30s, then the chapter moves on   */
+        SKY_IDLE_ADVANCE = 600,      /* ~10s untouched -> skip ahead      */
+        SKY_WAVES_TO_BOSS = 4
     };
-    /* Back row (row 0) is worth the most, matching classic Galaxian
-     * scoring where the deeper formation rows are harder to clear a
-     * path to. */
-    static const uint16_t row_score[FORM_ROWS] = { 150u, 100u, 70u };
 
-    int16_t home_x[SHOOTER_ENEMIES];
-    int16_t home_y[SHOOTER_ENEMIES];
-    uint8_t enemy_alive[SHOOTER_ENEMIES];
-    int16_t enemy_x[SHOOTER_ENEMIES];
-    int16_t enemy_y[SHOOTER_ENEMIES];
-
-    int16_t pb_x[PBULLET_MAX], pb_y[PBULLET_MAX];
-    uint8_t pb_active[PBULLET_MAX];
-    int16_t eb_x[EBULLET_MAX], eb_y[EBULLET_MAX];
-    uint8_t eb_active[EBULLET_MAX];
-    int16_t boom_x[BOOM_MAX], boom_y[BOOM_MAX];
-    uint8_t boom_timer[BOOM_MAX];
-
-    /* "Is this entity's sprite currently on screen?"  Used to park a
-     * sprite exactly once, on the frame it becomes inactive, instead of
-     * re-uploading an already-parked sprite every frame - see the note
-     * above the player draw for why the per-frame upload budget matters
-     * in this chapter. */
-    uint8_t enemy_shown[SHOOTER_ENEMIES];
-    uint8_t pb_shown[PBULLET_MAX];
-    uint8_t eb_shown[EBULLET_MAX];
-    uint8_t boom_shown[BOOM_MAX];
-
-    enum { IDLE_ADVANCE_FRAMES = 600u };  /* ~10s idle -> advance to credits.
-                                            * Was 300 (5s) - too short for a
-                                            * player to even register the
-                                            * chapter and reach for the
-                                            * controls, so it read as the
-                                            * chapter never showing anything
-                                            * at all before jumping straight
-                                            * to credits. */
-    int16_t ship_x = 160;
-    uint16_t prev_joy = 0u;
-    uint8_t wave = 1u;
-    uint8_t stage = 1u;
-    uint8_t lives = 3u;
-    uint16_t score = 0u;
-    uint16_t t;
-    uint16_t wave_t = 0u;
-    uint16_t dive_interval;
-    uint16_t idle_frames = 0u;
-    uint8_t i, j;
-    char buf[8];
-
-    chap_header(18u, "SSG ARCADE", "GALAXIAN FORMATION MINI");
-    /* The restart control is repeated up here in the HUD band as well
-     * as in the usual chap_hint() slot on row 26.  This is the one
-     * chapter with its own live controls, so it is worth spelling the
-     * whole control set out in one line where the player is already
-     * looking (the SCORE/WAVE/LIFE readout is right below it). */
-    demo_fix_puts(2u, 2u, "ARROWS MOVE  B FIRE  C:RESTART", 1u);
-    demo_fix_puts(2u, 3u, "IMAGE SPRITES + MUSIC + ADPCM", 0u);
-
-    /* Starfield backdrop - was plain black (the forest background
-     * didn't fit a space shooter, and no space background existed in
-     * the pipeline at the time). */
-    demo_load_screen_palette(U_SSG_STARFIELD);
-    demo_load_screen_palette(U_SHOOTER_ENEMY_BULLET);
-    demo_load_screen_palette(U_SHOOTER_EXPLOSION);
-    demo_load_screen_palette(U_SHOOTER_PLAYER_BULLET);
-    demo_load_screen_palette(U_PLAYER_VESSEL);
-    demo_load_screen_palette(U_ENEMYSHIP_BLUE);
-    demo_load_screen_palette(U_ENEMYSHIP_GREEN);
-    demo_load_screen_palette(U_ENEMYSHIP_PINK);
+    /* Squadron roster.  Two jets and a drone: different speeds and
+     * scores, but all readable as "a formation of the same thing" for
+     * the few seconds each squadron is on screen. */
+    static const uint8_t  sq_asset[3] = { U_SKY_ENEMY_A, U_SKY_ENEMY_B, U_SKY_ENEMY_C };
+    static const uint8_t  sq_hp[3]    = { 2u, 3u, 1u };
+    static const uint16_t sq_score[3] = { 100u, 150u, 50u };
     /*
-     * Crop the starfield to the play area only.
-     *
-     * It used to be drawn from y=16 at its full 16 tile rows, which at
-     * this vertical scale runs to about y=256 - past the bottom of the
-     * 224-line screen, straight over the separator rule on row 26 and
-     * the caption bar on row 27, so this chapter's bottom chrome was
-     * buried under the backdrop.
-     *
-     * The chapter's bottom chrome also has to sit clear of it: the
-     * separator rule and the caption bar are drawn in FIX palette 0,
-     * and a full-height starfield simply covered them.
-     *
-     * Measured on screen: each tile row of this asset renders a full
-     * 16px tall (the 0xF0 byte does not shrink it), so 9 rows from
-     * y=56 covers y=56..199 - the top border row through the last
-     * interior row of the box.  Rows 25..27 (the bottom border, the
-     * rule and the caption) then sit on the light backdrop where the
-     * black text is legible.  The art is a uniform starfield, so
-     * cropping its lower rows is not noticeable.
+     * Drawn at the same fractions games/skylance uses, not at this
+     * reel's character presets: those were globally shrunk to 60% so a
+     * warrior reads at the right size in a walk-cycle chapter, and an
+     * aircraft at 30% of an already-small page is a speck.
      */
-    demo_draw_sprite_screen(U_SSG_STARFIELD, DEMO_BG_BACK_SLOT, 32, 56,
-                            16u, 9u, 0xF0u, 0xF0u);
+    static const uint8_t  sq_scale[3] = { 0x9Fu, 0x9Fu, 0xBFu };   /* 5/8, 3/4 */
+    enum { SKY_SCALE_SHIP = 0x5Fu, SKY_SCALE_BOSS = 0x9Fu };       /* 3/8, 5/8 */
 
-    /* Stable single-bed music plus ADPCM-A SFX keeps this chapter
-     * readable without layering SSG/FM on top of the same loop. */
-    soundStopAll();                            snd_step();
-    soundSceneReset();                         snd_step();
-    /* SSG-only bed: ADPCM-A stays up for the shooting/explosion SFX,
-     * ADPCM-B and FM are muted so nothing but the SSG carries the tune. */
-    soundApplyMix(0x34u, 0x00u, 0x0Eu, 0x00u); snd_step();
-    playSSGTrack(SOUND_SSG_C);                 snd_step();
+    int16_t  en_x[SKY_ENEMY_MAX], en_y[SKY_ENEMY_MAX];
+    uint8_t  en_alive[SKY_ENEMY_MAX], en_shown[SKY_ENEMY_MAX];
+    uint8_t  en_type[SKY_ENEMY_MAX], en_hp[SKY_ENEMY_MAX];
+    uint16_t en_phase[SKY_ENEMY_MAX];
 
-    /* Play-area border - rows 0..6 are the HUD (title/status text,
-     * SCORE/WAVE/LIFE, progress bar); the formation used to start at
-     * home_y=40, which is INSIDE that HUD band (row 5) instead of
-     * below it.  This box marks exactly where the game itself lives,
-     * starting right after the HUD, and the formation is placed with
-     * clearance below it instead of overlapping. */
+    int16_t  pb_x[SKY_PBULLET_MAX], pb_y[SKY_PBULLET_MAX];
+    uint8_t  pb_active[SKY_PBULLET_MAX], pb_shown[SKY_PBULLET_MAX];
+    int16_t  eb_x[SKY_EBULLET_MAX], eb_y[SKY_EBULLET_MAX];
+    int16_t  eb_vx[SKY_EBULLET_MAX], eb_vy[SKY_EBULLET_MAX];
+    uint8_t  eb_active[SKY_EBULLET_MAX], eb_shown[SKY_EBULLET_MAX];
+    int16_t  bm_x[SKY_BOOM_MAX], bm_y[SKY_BOOM_MAX];
+    uint8_t  bm_timer[SKY_BOOM_MAX], bm_shown[SKY_BOOM_MAX];
+
+    int16_t  ship_x = 160;
+    int16_t  ship_y = SKY_BOTTOM;
+    uint16_t score = 0u;
+    uint8_t  lives = 3u;
+    uint8_t  wave = 1u;
+    uint8_t  fire_cd = 0u;
+    uint8_t  hit_cd = 0u;
+
+    uint8_t  squad_left = 0u;
+    uint8_t  squad_type = 0u;
+    uint8_t  squad_gap = 0u;
+    uint16_t wave_timer = 60u;
+
+    uint8_t  boss_on = 0u, boss_shown = 0u;
+    uint8_t  boss_hp = 0u, boss_hp_max = 1u;
+    int16_t  boss_x = 160, boss_y = -40;
+    int16_t  boss_vx = 1;
+    uint16_t boss_t = 0u;
+
+    uint16_t bg_y = 0u;
+    uint16_t idle_frames = 0u;
+    uint16_t rng = 0x2F1Du;
+    uint16_t t;
+    uint8_t  i;
+    char     buf[8];
+
+    chap_header(18u, "SKY LANCE", "VERTICAL SHOOTER MINI");
+    demo_fix_puts(2u, 2u, "ARROWS MOVE  B FIRE  C:RESTART", 1u);
+
+    demo_load_screen_palette(U_SKY_BG);
+    demo_load_screen_palette(U_SKY_PLANE);
+    demo_load_screen_palette(U_SKY_BULLET);
+    demo_load_screen_palette(U_SKY_ORB);
+    demo_load_screen_palette(U_SKY_ENEMY_A);
+    demo_load_screen_palette(U_SKY_ENEMY_B);
+    demo_load_screen_palette(U_SKY_ENEMY_C);
+    demo_load_screen_palette(U_SKY_BOSS);
+
+    snd_cross_to(SOUND_MUSIC_D);
+
+    /* Play-area border.  Rows 0..3 are the chapter header and the
+     * control line, 4..5 are the readouts, so the box opens on row 7
+     * and the game lives strictly inside it. */
     {
-        uint8_t bx;
-        uint8_t by;
+        uint8_t bx, by;
         for (bx = 3u; bx <= 36u; bx++) {
-            demo_fix_puts(bx, 7u,  "-", 1u);
-            demo_fix_puts(bx, 25u, "-", 1u);
+            demo_fix_puts(bx, 5u,  "-", 1u);
+            demo_fix_puts(bx, 23u, "-", 1u);
         }
-        for (by = 7u; by <= 25u; by++) {
+        for (by = 5u; by <= 23u; by++) {
             demo_fix_puts(3u,  by, ":", 1u);
             demo_fix_puts(36u, by, ":", 1u);
         }
-        demo_fix_puts(3u,  7u,  "+", 1u);
-        demo_fix_puts(36u, 7u,  "+", 1u);
-        demo_fix_puts(3u,  25u, "+", 1u);
-        demo_fix_puts(36u, 25u, "+", 1u);
+        demo_fix_puts(3u,  5u,  "+", 1u);
+        demo_fix_puts(36u, 5u,  "+", 1u);
+        demo_fix_puts(3u,  23u, "+", 1u);
+        demo_fix_puts(36u, 23u, "+", 1u);
     }
 
-    for (i = 0u; i < SHOOTER_ENEMIES; i++) {
-        uint8_t row = (uint8_t)(i / FORM_COLS);
-        uint8_t col = (uint8_t)(i % FORM_COLS);
-        home_x[i] = (int16_t)(84 + col * 48);
-        /* Was 40 (inside the HUD band above) - 64 sits just below the
-         * play-area border's top edge (row 7 / y=56). */
-        home_y[i] = (int16_t)(68 + row * 20);
-        enemy_alive[i] = 1u;
-        enemy_shown[i] = 0u;
-        enemy_x[i] = home_x[i];
-        enemy_y[i] = home_y[i];
-    }
-    for (j = 0u; j < PBULLET_MAX; j++) { pb_active[j] = 0u; pb_shown[j] = 0u; }
-    for (j = 0u; j < EBULLET_MAX; j++) { eb_active[j] = 0u; eb_shown[j] = 0u; }
-    for (j = 0u; j < BOOM_MAX; j++)    { boom_timer[j] = 0u; boom_shown[j] = 0u; }
+    for (i = 0u; i < SKY_ENEMY_MAX; i++)   { en_alive[i] = 0u; en_shown[i] = 0u; }
+    for (i = 0u; i < SKY_PBULLET_MAX; i++) { pb_active[i] = 0u; pb_shown[i] = 0u; }
+    for (i = 0u; i < SKY_EBULLET_MAX; i++) { eb_active[i] = 0u; eb_shown[i] = 0u; }
+    for (i = 0u; i < SKY_BOOM_MAX; i++)    { bm_timer[i] = 0u; bm_shown[i] = 0u; }
 
-    for (t = 0u; t < SHOOTER_TIME; t++) {
+    for (t = 0u; t < SKY_TIME; t++) {
         uint16_t joy = poll_joystick();
-        uint16_t edge = (uint16_t)(joy & (uint16_t)(~prev_joy));
-        uint8_t alive_count = 0u;
-        /* Formation appears in place from frame 0 - was a fly-in lerp
-         * from y=-30 (off the top of the screen) up to home_y, which
-         * read as enemies spawning above the play area/HUD instead of
-         * inside it. */
-        uint16_t settled_t = wave_t;
-        /* Formation drift.  This used to be a sawtooth
-         * (((settled_t >> 2) & 15) - 8): it walked the whole formation
-         * 15px to the right and then teleported it back to the left in
-         * a single frame, which reads as a twitch rather than motion.
-         * A triangle over the same 16px covers the sweep in both
-         * directions continuously, and at >>1 it takes ~1s per full
-         * left-right-left cycle instead of crawling. */
-        uint8_t  sway_phase = (uint8_t)((settled_t >> 1) & 31u);
-        int16_t  sway = (int16_t)((sway_phase < 16u)
-                                  ? ((int16_t)sway_phase - 8)
-                                  : (23 - (int16_t)sway_phase));
-        uint8_t diver[DIVER_MAX];
 
-        /* Dive cadence.  Was 180, then 120; at 120 frames (2s) between
-         * dives with only two divers the formation still spent most of
-         * the chapter sitting still.  84 frames opens with a dive
-         * roughly every 1.4s and tightens to 0.9s by the last stage. */
-        dive_interval = (uint16_t)(84u - (uint16_t)(stage - 1u) * 14u);
-        for (j = 0u; j < DIVER_MAX; j++) {
-            uint16_t phase = (uint16_t)(settled_t + (uint16_t)j * (dive_interval / DIVER_MAX));
-            diver[j] = (uint8_t)((phase / dive_interval) % SHOOTER_ENEMIES);
-        }
+        rng = (uint16_t)(rng * 2053u + 13849u);
 
-        prev_joy = joy;
+        /* ---- backdrop -------------------------------------------- */
+        /*
+         * Two copies of the sky page sliding down, one wrapping in behind
+         * the other.  A starfield stood in here while there was no sky in
+         * this ROM's art set; there is one now, and a plane belongs over
+         * sky rather than over space.
+         *
+         * Only the top 9 tile rows are drawn - 144 px, y = 40..184 - so
+         * the box floor, the separator rule and the caption bar all sit
+         * on the plain page colour rather than on artwork.  The page is
+         * built to repeat every 144 px precisely so this cropped window
+         * still wraps without a seam.
+         */
+        bg_y = (uint16_t)((bg_y + 1u) % 144u);
+        demo_draw_sprite_screen(U_SKY_BG, DEMO_BG_BACK_SLOT,
+                                32, (int16_t)(40 + (int16_t)bg_y - 144),
+                                16u, 9u, 0xFFu, 0xFFu);
+        demo_draw_sprite_screen(U_SKY_BG, NG_SPR_BG1_FIRST,
+                                32, (int16_t)(40 + (int16_t)bg_y),
+                                16u, 9u, 0xFFu, 0xFFu);
 
-        /* C restart is handled centrally now - uframe() unwinds the
-         * chapter and run_chapter() calls it again from the top, which
-         * rebuilds sound, formation and score without this chapter
-         * needing to maintain its own duplicate reset. */
+        /* ---- player ---------------------------------------------- */
+        if (joy & (JOY_LEFT | JOY_RIGHT | JOY_UP | JOY_DOWN | BUTTON_B)) idle_frames = 0u;
+        else if (idle_frames < 0xFFF0u) idle_frames++;
 
-        if (joy) idle_frames = 0u;
-        else if (idle_frames < 0xFFFFu) idle_frames++;
-        /* Was a bare `return 1u` - every other exit from this chapter
-         * (the SHOOTER_TIME loop falling through below, and the skip
-         * check further down) fades the SSG track out before leaving,
-         * but this one didn't, so idling out cut the music dead the
-         * instant the next chapter's own soundStopAll() ran - the
-         * "SSG cutting" symptom.  snd_silence() gives it the same
-         * graceful fade the other exits already get. */
-        if (idle_frames >= IDLE_ADVANCE_FRAMES) { snd_silence(); return 1u; }
+        if ((joy & JOY_LEFT)  && ship_x > SKY_LEFT)   ship_x = (int16_t)(ship_x - 4);
+        if ((joy & JOY_RIGHT) && ship_x < SKY_RIGHT)  ship_x = (int16_t)(ship_x + 4);
+        if ((joy & JOY_UP)    && ship_y > SKY_TOP)    ship_y = (int16_t)(ship_y - 3);
+        if ((joy & JOY_DOWN)  && ship_y < SKY_BOTTOM) ship_y = (int16_t)(ship_y + 3);
 
-        /* Was 2px/frame, then 4; 6px crosses the 212px play area in
-         * about 35 frames, which is the response an arcade shooter
-         * needs to feel driven rather than dragged. */
-        if ((joy & JOY_LEFT) && ship_x > 54) ship_x = (int16_t)(ship_x - 6);
-        if ((joy & JOY_RIGHT) && ship_x < 266) ship_x = (int16_t)(ship_x + 6);
-
-        /* Auto-fire cadence: every 32 frames, then 16, now 8 - with a
-         * 3-shot pool and a 10px/frame shot this keeps two shots in the
-         * air at once instead of one lonely bullet per second. */
-        if ((edge & BUTTON_B) || ((t & 7u) == 4u)) {
-            for (j = 0u; j < PBULLET_MAX; j++) {
-                if (!pb_active[j]) {
-                    pb_active[j] = 1u;
-                    pb_x[j] = ship_x;
-                    pb_y[j] = 158;
-                    playSFX(SOUND_SFX_7);
+        if (fire_cd) fire_cd--;
+        if (hit_cd)  hit_cd--;
+        /* Auto-fire on hold; B alone is the trigger so the joystick
+         * hand never has to leave the stick. */
+        if ((joy & BUTTON_B) && !fire_cd) {
+            for (i = 0u; i < SKY_PBULLET_MAX; i++) {
+                if (!pb_active[i]) {
+                    pb_active[i] = 1u;
+                    pb_x[i] = ship_x;
+                    pb_y[i] = (int16_t)(ship_y - 14);
+                    fire_cd = 7u;
+                    playSFX(SOUND_SFX_4);
                     break;
                 }
             }
         }
-        for (j = 0u; j < PBULLET_MAX; j++) {
-            if (!pb_active[j]) continue;
-            pb_y[j] = (int16_t)(pb_y[j] - 10);  /* was 4, then 7 */
-            /* Retire the shot at the top of the play box (row 8,
-             * y=64) rather than y=28.  The box is drawn on FIX rows
-             * 7..25, so a bullet allowed to reach y=28 flew up out of
-             * the arena and across the SCORE/WAVE/LIFE readout before
-             * disappearing - the game has to stay inside its frame. */
-            if (pb_y[j] < 64) pb_active[j] = 0u;
-        }
 
-        if ((wave_t % dive_interval) == 30u) {
-            for (j = 0u; j < DIVER_MAX; j++) {
-                uint8_t idx = diver[j];
-                uint8_t k;
-                uint8_t slot_found = 0xFFu;
-                if (!enemy_alive[idx]) continue;
-                for (k = 0u; k < EBULLET_MAX; k++) {
-                    if (!eb_active[k]) { slot_found = k; break; }
-                }
-                if (slot_found != 0xFFu) {
-                    eb_active[slot_found] = 1u;
-                    eb_x[slot_found] = enemy_x[idx];
-                    eb_y[slot_found] = (int16_t)(enemy_y[idx] + 22);
-                }
-            }
-        }
-        for (j = 0u; j < EBULLET_MAX; j++) {
-            if (!eb_active[j]) continue;
-            eb_y[j] = (int16_t)(eb_y[j] + 6);   /* was 2, then 4 */
-            /* Matching floor: row 25 of the box is y=200. */
-            if (eb_y[j] > 198) { eb_active[j] = 0u; continue; }
-            if (eb_y[j] > 158 && eb_y[j] < 184 &&
-                eb_x[j] > (int16_t)(ship_x - 18) &&
-                eb_x[j] < (int16_t)(ship_x + 18)) {
-                eb_active[j] = 0u;
-                if (lives > 0u) lives--;
-                for (i = 0u; i < BOOM_MAX; i++) {
-                    if (boom_timer[i] == 0u) {
-                        boom_x[i] = ship_x;
-                        boom_y[i] = 166;
-                        boom_timer[i] = 32u;
+        /* ---- squadron director ----------------------------------- */
+        if (!boss_on) {
+            if (squad_left) {
+                if (squad_gap) {
+                    squad_gap--;
+                } else {
+                    for (i = 0u; i < SKY_ENEMY_MAX; i++) {
+                        if (en_alive[i]) continue;
+                        en_alive[i] = 1u;
+                        en_type[i]  = squad_type;
+                        en_hp[i]    = sq_hp[squad_type];
+                        en_phase[i] = (uint16_t)(rng & 63u);
+                        /* Fixed lanes: a squadron has to read as a
+                         * formation, not as scatter. */
+                        en_x[i] = (int16_t)(SKY_LEFT + 24
+                                            + (int16_t)((squad_left & 3u)
+                                                        * ((SKY_RIGHT - SKY_LEFT - 48) / 3)));
+                        en_y[i] = (int16_t)(SKY_TOP - 20);
+                        squad_left--;
+                        squad_gap = 12u;
                         break;
                     }
                 }
-                playSFX(SOUND_SFX_10);
+            } else if (wave_timer) {
+                wave_timer--;
+            } else if (wave <= SKY_WAVES_TO_BOSS) {
+                squad_type = (uint8_t)(rng % 3u);
+                squad_left = 4u;
+                squad_gap  = 0u;
+                wave_timer = 100u;
+                wave++;
+            } else {
+                uint8_t any = 0u;
+                for (i = 0u; i < SKY_ENEMY_MAX; i++) if (en_alive[i]) any = 1u;
+                if (!any) {
+                    boss_on = 1u;
+                    boss_hp = boss_hp_max = 40u;
+                    boss_x = 160; boss_y = -40; boss_vx = 1; boss_t = 0u;
+                    playSFX(SOUND_SFX_2);
+                }
             }
         }
 
-        for (i = 0u; i < SHOOTER_ENEMIES; i++) {
-            uint8_t is_diver = 0u;
-            /* Same fix as sway above: (settled_t >> 4) & 3 stepped
-             * 0-1-2-3 then snapped back to 0.  Triangle 0-3-0, odd and
-             * even columns in opposite phase so the grid breathes. */
-            uint8_t bob_phase = (uint8_t)((settled_t >> 3) & 7u);
-            int16_t bob = (int16_t)((bob_phase < 4u) ? bob_phase : (7 - bob_phase));
-            int16_t y_wave = (int16_t)((i & 1u) ? bob : -bob);
-
-            enemy_x[i] = (int16_t)(home_x[i] + sway);
-            enemy_y[i] = (int16_t)(home_y[i] + y_wave);
-
-            for (j = 0u; j < DIVER_MAX; j++) {
-                if (diver[j] == i) is_diver = 1u;
+        /* ---- enemies --------------------------------------------- */
+        for (i = 0u; i < SKY_ENEMY_MAX; i++) {
+            if (!en_alive[i]) {
+                if (en_shown[i]) {
+                    ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(SKY_SLOT_ENEMY + i * 8u), 8u);
+                    en_shown[i] = 0u;
+                }
+                continue;
             }
-            if (is_diver && enemy_alive[i]) {
-                /* /2 rather than /3: the diver now crosses its full
-                 * 31px drop in 64 frames instead of 96. */
-                uint8_t dive_step = (uint8_t)((settled_t % dive_interval) / 2u);
-                if (dive_step < 32u) {
-                    enemy_y[i] = (int16_t)(enemy_y[i] + dive_step);
-                    enemy_x[i] = (int16_t)(enemy_x[i] + ((dive_step & 1u) ? dive_step : -dive_step));
+            en_phase[i]++;
+            /* Triangle-wave weave - a sine table would cost more than
+             * the effect is worth at this amplitude. */
+            {
+                uint8_t ph = (uint8_t)(en_phase[i] & 63u);
+                int16_t sway = (int16_t)((ph < 32u) ? ((int16_t)ph - 16) : (47 - (int16_t)ph));
+                en_x[i] = (int16_t)(en_x[i] + (sway >> 3));
+            }
+            en_y[i] = (int16_t)(en_y[i] + ((en_type[i] == 2u) ? 3 : 2));
+            if (en_x[i] < SKY_LEFT)  en_x[i] = SKY_LEFT;
+            if (en_x[i] > SKY_RIGHT) en_x[i] = SKY_RIGHT;
+
+            if (en_type[i] != 2u && (rng % 140u) == 0u) {
+                uint8_t k;
+                for (k = 0u; k < SKY_EBULLET_MAX; k++) {
+                    if (!eb_active[k]) {
+                        eb_active[k] = 1u;
+                        eb_x[k] = en_x[i];
+                        eb_y[k] = (int16_t)(en_y[i] + 10);
+                        eb_vx[k] = 0;
+                        eb_vy[k] = 3;
+                        break;
+                    }
                 }
             }
 
-            if (enemy_alive[i]) {
-                for (j = 0u; j < PBULLET_MAX; j++) {
-                    if (!pb_active[j]) continue;
-                    if (pb_y[j] > (int16_t)(enemy_y[i] - 20) &&
-                        pb_y[j] < (int16_t)(enemy_y[i] + 18) &&
-                        pb_x[j] > (int16_t)(enemy_x[i] - 20) &&
-                        pb_x[j] < (int16_t)(enemy_x[i] + 20)) {
-                        uint8_t row = (uint8_t)(i / FORM_COLS);
+            if (en_y[i] > SKY_BOTTOM + 24) en_alive[i] = 0u;
+        }
+
+        /* ---- boss ------------------------------------------------- */
+        if (boss_on) {
+            boss_t++;
+            if (boss_y < SKY_TOP + 4) {
+                boss_y = (int16_t)(boss_y + 2);
+            } else {
+                boss_x = (int16_t)(boss_x + boss_vx);
+                if (boss_x < SKY_LEFT + 40)  boss_vx =  1;
+                if (boss_x > SKY_RIGHT - 40) boss_vx = -1;
+                /* Spread of three, tightening once it is below half
+                 * health so the last stretch actually threatens. */
+                if ((boss_t % (uint16_t)((boss_hp * 2u < boss_hp_max) ? 40u : 70u)) == 0u) {
+                    int16_t d;
+                    for (d = -1; d <= 1; d++) {
                         uint8_t k;
-                        enemy_alive[i] = 0u;
-                        pb_active[j] = 0u;
-                        for (k = 0u; k < BOOM_MAX; k++) {
-                            if (boom_timer[k] == 0u) {
-                                boom_x[k] = enemy_x[i];
-                                boom_y[k] = enemy_y[i];
-                                boom_timer[k] = 24u;
+                        for (k = 0u; k < SKY_EBULLET_MAX; k++) {
+                            if (!eb_active[k]) {
+                                eb_active[k] = 1u;
+                                eb_x[k] = boss_x;
+                                eb_y[k] = (int16_t)(boss_y + 20);
+                                eb_vx[k] = (int16_t)(d * 2);
+                                eb_vy[k] = 3;
                                 break;
                             }
                         }
-                        score = (uint16_t)(score + row_score[row]);
-                        playSFX(SOUND_SFX_8);
-                        break;
                     }
                 }
             }
-
-            if (enemy_alive[i]) alive_count++;
         }
 
-        if (alive_count == 0u) {
-            wave++;
-            if (stage < STAGE_MAX) stage++;
-            score = (uint16_t)(score + 500u);
-            wave_t = 0u;
-            for (i = 0u; i < SHOOTER_ENEMIES; i++) enemy_alive[i] = 1u;
-            playSFX(SOUND_SFX_9);
+        /* ---- bullets --------------------------------------------- */
+        for (i = 0u; i < SKY_PBULLET_MAX; i++) {
+            if (!pb_active[i]) continue;
+            pb_y[i] = (int16_t)(pb_y[i] - 9);
+            if (pb_y[i] < SKY_TOP - 16) pb_active[i] = 0u;
+        }
+        for (i = 0u; i < SKY_EBULLET_MAX; i++) {
+            if (!eb_active[i]) continue;
+            eb_x[i] = (int16_t)(eb_x[i] + eb_vx[i]);
+            eb_y[i] = (int16_t)(eb_y[i] + eb_vy[i]);
+            if (eb_y[i] > SKY_BOTTOM + 16 || eb_x[i] < SKY_LEFT - 16 ||
+                eb_x[i] > SKY_RIGHT + 16) eb_active[i] = 0u;
+        }
+
+        /* ---- collisions ------------------------------------------ */
+        for (i = 0u; i < SKY_PBULLET_MAX; i++) {
+            uint8_t k;
+            if (!pb_active[i]) continue;
+
+            for (k = 0u; k < SKY_ENEMY_MAX; k++) {
+                if (!en_alive[k]) continue;
+                if (u_abs16((int16_t)(pb_x[i] - en_x[k])) > 16) continue;
+                if (u_abs16((int16_t)(pb_y[i] - en_y[k])) > 16) continue;
+                pb_active[i] = 0u;
+                if (en_hp[k] > 1u) {
+                    en_hp[k]--;
+                } else {
+                    en_alive[k] = 0u;
+                    score = (uint16_t)(score + sq_score[en_type[k]]);
+                    sky_boom_spawn(bm_x, bm_y, bm_timer, SKY_BOOM_MAX, en_x[k], en_y[k]);
+                    playSFX(SOUND_SFX_5);
+                }
+                break;
+            }
+            if (!pb_active[i]) continue;
+
+            if (boss_on && boss_y > SKY_TOP - 20 &&
+                u_abs16((int16_t)(pb_x[i] - boss_x)) <= 40 &&
+                u_abs16((int16_t)(pb_y[i] - boss_y)) <= 28) {
+                pb_active[i] = 0u;
+                if (boss_hp) boss_hp--;
+                sky_boom_spawn(bm_x, bm_y, bm_timer, SKY_BOOM_MAX, pb_x[i], pb_y[i]);
+                if (!boss_hp) {
+                    boss_on = 0u;
+                    score = (uint16_t)(score + 2000u);
+                    sky_boom_spawn(bm_x, bm_y, bm_timer, SKY_BOOM_MAX, boss_x, boss_y);
+                    playSFX(SOUND_SFX_5);
+                }
+            }
+        }
+
+        if (!hit_cd) {
+            uint8_t hit = 0u;
+            for (i = 0u; i < SKY_EBULLET_MAX; i++) {
+                if (!eb_active[i]) continue;
+                if (u_abs16((int16_t)(eb_x[i] - ship_x)) > 10) continue;
+                if (u_abs16((int16_t)(eb_y[i] - ship_y)) > 10) continue;
+                eb_active[i] = 0u;
+                hit = 1u;
+                break;
+            }
+            if (!hit) {
+                for (i = 0u; i < SKY_ENEMY_MAX; i++) {
+                    if (!en_alive[i]) continue;
+                    if (u_abs16((int16_t)(en_x[i] - ship_x)) > 16) continue;
+                    if (u_abs16((int16_t)(en_y[i] - ship_y)) > 16) continue;
+                    en_alive[i] = 0u;
+                    hit = 1u;
+                    break;
+                }
+            }
+            if (hit) {
+                sky_boom_spawn(bm_x, bm_y, bm_timer, SKY_BOOM_MAX, ship_x, ship_y);
+                playSFX(SOUND_SFX_2);
+                hit_cd = 90u;
+                if (lives) lives--;
+                ship_x = 160;
+                ship_y = SKY_BOTTOM;
+                if (!lives) {
+                    demo_fix_puts(15u, 14u, "SQUAD DOWN", 2u);
+                    if (uwait(150u)) { snd_silence(); return 1u; }
+                    lives = 3u;
+                    score = 0u;
+                    wave = 1u;
+                    boss_on = 0u;
+                    demo_fix_puts(15u, 14u, "          ", 2u);
+                }
+            }
+        }
+
+        for (i = 0u; i < SKY_BOOM_MAX; i++) if (bm_timer[i]) bm_timer[i]--;
+
+        /* ---- draw ------------------------------------------------- */
+        for (i = 0u; i < SKY_ENEMY_MAX; i++) {
+            if (!en_alive[i]) continue;
+            draw_asset_center(sq_asset[en_type[i]],
+                              (uint16_t)(SKY_SLOT_ENEMY + i * 8u),
+                              en_x[i], en_y[i],
+                              sq_scale[en_type[i]], sq_scale[en_type[i]]);
+            en_shown[i] = 1u;
+        }
+
+        if (boss_on) {
+            draw_asset_center(U_SKY_BOSS, SKY_SLOT_BOSS, boss_x, boss_y,
+                              SKY_SCALE_BOSS, SKY_SCALE_BOSS);
+            boss_shown = 1u;
+        } else if (boss_shown) {
+            ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(SKY_SLOT_BOSS), 12u);
+            boss_shown = 0u;
+        }
+
+        /* The plane blinks through its invulnerability window so a hit
+         * reads as a hit and not as a dropped sprite. */
+        if (!hit_cd || (hit_cd & 4u)) {
+            draw_asset_center(U_SKY_PLANE, SKY_SLOT_PLAYER, ship_x, ship_y,
+                              SKY_SCALE_SHIP, SKY_SCALE_SHIP);
         } else {
-            wave_t++;
+            ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(SKY_SLOT_PLAYER), 8u);
         }
 
-        /* Readout on row 4 and the wave bar on row 5, so row 6 stays
-         * empty as a gutter between the HUD block and the arena border
-         * on row 7 instead of the two touching. */
-        demo_fix_puts(2u, 4u, "SCORE", 1u);
-        digit3(buf, (uint16_t)(score % 1000u));
-        demo_fix_puts(9u, 4u, buf, 2u);
-        demo_fix_puts(15u, 4u, "WAVE", 1u);
-        digit3(buf, wave);
-        demo_fix_puts(21u, 4u, buf, 2u);
-        demo_fix_puts(27u, 4u, "LIFE", 1u);
+        for (i = 0u; i < SKY_PBULLET_MAX; i++) {
+            uint16_t slot = (uint16_t)(SKY_SLOT_PBULLET + i * 2u);
+            if (pb_active[i]) {
+                /* Full width, half height: the art was doubled so the
+                 * bolt would be wide enough to see, and at full scale it
+                 * came out 80 px long - a bar reaching most of the way up
+                 * the playfield. */
+                draw_asset_center(U_SKY_BULLET, slot, pb_x[i], pb_y[i],
+                                  0xFFu, 0x80u);
+                pb_shown[i] = 1u;
+            } else if (pb_shown[i]) {
+                ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(slot), 2u);
+                pb_shown[i] = 0u;
+            }
+        }
+        for (i = 0u; i < SKY_EBULLET_MAX; i++) {
+            uint16_t slot = (uint16_t)(SKY_SLOT_EBULLET + i * 2u);
+            if (eb_active[i]) {
+                draw_asset_center(U_SKY_ORB, slot, eb_x[i], eb_y[i],
+                                  0xFFu, 0xFFu);
+                eb_shown[i] = 1u;
+            } else if (eb_shown[i]) {
+                ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(slot), 2u);
+                eb_shown[i] = 0u;
+            }
+        }
+        for (i = 0u; i < SKY_BOOM_MAX; i++) {
+            uint16_t slot = (uint16_t)(SKY_SLOT_BOOM + i * 2u);
+            if (bm_timer[i]) {
+                /* No explosion frame exists in this art set, so the orb
+                 * doubles as one, growing as it fades. */
+                uint8_t sc = (uint8_t)(0x40u + (uint8_t)((10u - bm_timer[i]) * 18u));
+                draw_asset_center(U_SKY_ORB, slot, bm_x[i], bm_y[i], sc, sc);
+                bm_shown[i] = 1u;
+            } else if (bm_shown[i]) {
+                ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(slot), 2u);
+                bm_shown[i] = 0u;
+            }
+        }
+
+        /* ---- readouts --------------------------------------------- */
+        demo_fix_puts(2u, 3u, "SCORE", 1u);
+        digit3(buf, score);
+        demo_fix_puts(8u, 3u, buf, 2u);
+        demo_fix_puts(14u, 3u, boss_on ? "BOSS" : "WAVE", 1u);
+        digit3(buf, boss_on ? (uint16_t)boss_hp : (uint16_t)wave);
+        demo_fix_puts(19u, 3u, buf, 2u);
+        demo_fix_puts(25u, 3u, "LIFE", 1u);
         digit3(buf, lives);
-        demo_fix_puts(33u, 4u, buf, 2u);
+        demo_fix_puts(30u, 3u, buf, 2u);
 
-        /* Wave-clear progress bar. */
         {
-            uint8_t done = (uint8_t)(SHOOTER_ENEMIES - alive_count);
-            uint8_t p;
-            char cell[2];
-            cell[1] = '\0';
-            for (p = 0u; p < 18u; p++) {
-                cell[0] = (p < (uint8_t)((done * 18u) / SHOOTER_ENEMIES)) ? '#' : '-';
-                demo_fix_puts((uint8_t)(2u + p), 5u, cell, (uint8_t)(cell[0] == '#' ? 2u : 1u));
+            /* Row 5 doubles as a boss health bar once the boss is up and
+             * as a stage progress bar before that. */
+            char bar[26];
+            uint8_t n, k;
+            if (boss_on) {
+                n = (uint8_t)(((uint16_t)boss_hp * 24u) / boss_hp_max);
+            } else {
+                n = (uint8_t)(((uint16_t)(wave - 1u) * 24u) / SKY_WAVES_TO_BOSS);
             }
+            if (n > 24u) n = 24u;
+            for (k = 0u; k < 24u; k++) bar[k] = (char)(k < n ? '#' : '.');
+            bar[24] = '\0';
+            demo_fix_puts(8u, 4u, bar, boss_on ? 3u : 0u);
         }
 
-        /*
-         * Player first, deliberately.
-         *
-         * Every draw here is a real VRAM upload performed inside the
-         * vblank window by demo_flush_sprite_queue(), and an 8-strip
-         * ship costs on the order of a hundred VRAM writes.  This
-         * chapter queues far more per frame than any other, and the
-         * draws that lose that race are simply the ones queued last -
-         * which is why the player vessel (queued after all 18 enemies)
-         * and the whole back formation row were missing from the
-         * screen entirely while the first two rows drew fine.  The
-         * player is the one sprite that must never be dropped, so it
-         * goes first.  Sprite priority is set by slot number, not draw
-         * order, so moving it here does not change what overlaps what.
-         *
-         * Was alternating U_SHOOTER_SHIP/U_SHOOTER_SHIP_ALT every 16
-         * frames for an engine-flicker look, but the two source sprites
-         * aren't the same width (40px vs 43px) - swapping them on the
-         * same slot left a sliver of the wider one un-cleared, reading
-         * as a small icon stuck to the ship. One consistent sprite.
-         */
-        draw_asset_bottom_center(U_PLAYER_VESSEL,
-                                 SHOOTER_SLOT_PLAYER,
-                                 ship_x, 184,
-                                 U_SCALE_55, U_SCALE_55);
-
-        for (i = 0u; i < SHOOTER_ENEMIES; i++) {
-            uint16_t slot = (uint16_t)(SHOOTER_SLOT_ENEMY + (uint16_t)i * 8u);
-            /* One ship colour per row - back row (highest row_score) is
-             * pink, then blue, green - instead of the same plain enemy
-             * sprite repeated across every formation slot, so the
-             * score tiers actually look distinct. */
-            static const uint8_t row_ufo[FORM_ROWS] = {
-                U_ENEMYSHIP_PINK, U_ENEMYSHIP_BLUE, U_ENEMYSHIP_GREEN
-            };
-            uint8_t enemy_frame = row_ufo[i / FORM_COLS];
-            if (enemy_alive[i]) {
-                draw_asset_bottom_center(enemy_frame, slot,
-                                         enemy_x[i], (int16_t)(enemy_y[i] + 22),
-                                         U_SCALE_30, U_SCALE_30);
-                enemy_shown[i] = 1u;
-            } else if (enemy_shown[i]) {
-                /* Park once, on the frame it dies.  A parked sprite's
-                 * VRAM does not change afterwards, so re-uploading it
-                 * every frame only burns upload budget (see the note
-                 * above the player draw). */
-                draw_asset_bottom_center(enemy_frame, slot,
-                                         -220, -220,
-                                         U_SCALE_30, U_SCALE_30);
-                enemy_shown[i] = 0u;
-            }
-        }
-
-        /* Bullets were drawn at U_SCALE_FULL - the single largest
-         * scale in the whole preset table, meant for full character
-         * portraits, not small projectiles.  That alone made the
-         * whole formation read as oversized next to them. */
-        for (j = 0u; j < PBULLET_MAX; j++) {
-            uint16_t slot = (uint16_t)(SHOOTER_SLOT_PBULLET + (uint16_t)j * 4u);
-            if (pb_active[j]) {
-                draw_asset_bottom_center(U_SHOOTER_PLAYER_BULLET, slot,
-                                         pb_x[j], pb_y[j],
-                                         U_SCALE_30, U_SCALE_30);
-                pb_shown[j] = 1u;
-            } else if (pb_shown[j]) {
-                draw_asset_bottom_center(U_SHOOTER_PLAYER_BULLET, slot,
-                                         -220, -220, U_SCALE_30, U_SCALE_30);
-                pb_shown[j] = 0u;
-            }
-        }
-        for (j = 0u; j < EBULLET_MAX; j++) {
-            uint16_t slot = (uint16_t)(SHOOTER_SLOT_EBULLET + (uint16_t)j * 4u);
-            if (eb_active[j]) {
-                draw_asset_bottom_center(U_SHOOTER_ENEMY_BULLET, slot,
-                                         eb_x[j], eb_y[j],
-                                         U_SCALE_30, U_SCALE_30);
-                eb_shown[j] = 1u;
-            } else if (eb_shown[j]) {
-                draw_asset_bottom_center(U_SHOOTER_ENEMY_BULLET, slot,
-                                         -220, -220, U_SCALE_30, U_SCALE_30);
-                eb_shown[j] = 0u;
-            }
-        }
-        for (j = 0u; j < BOOM_MAX; j++) {
-            uint16_t slot = (uint16_t)(SHOOTER_SLOT_BOOM + (uint16_t)j * 4u);
-            if (boom_timer[j] > 0u) {
-                draw_asset_bottom_center(U_SHOOTER_EXPLOSION, slot,
-                                         boom_x[j], (int16_t)(boom_y[j] + 18),
-                                         U_SCALE_45, U_SCALE_45);
-                boom_timer[j]--;
-                boom_shown[j] = 1u;
-            } else if (boom_shown[j]) {
-                draw_asset_bottom_center(U_SHOOTER_EXPLOSION, slot,
-                                         -220, -220,
-                                         U_SCALE_45, U_SCALE_45);
-                boom_shown[j] = 0u;
-            }
-        }
-
-        if ((t & 127u) == 0u) playSFX(SOUND_SFX_5);
-        /* Same hard-cut issue as the idle-advance check above - the
-         * global chapter-skip request bypassed the fade entirely. */
+        if (idle_frames >= SKY_IDLE_ADVANCE) { snd_silence(); return 1u; }
         if (uframe()) { snd_silence(); return 1u; }
     }
 
-    soundFadeOutSpeed(8u);
-    (void)uwait(12u);
-    soundStopAll();
+    snd_silence();
     return 0u;
 }
 
