@@ -1,5 +1,6 @@
 #include "demo_3d.h"
 #include "demo_screen.h"
+#include "demo.h"
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
 #include <stdint.h>
@@ -81,7 +82,7 @@ void NEOGEO_USER showPseudo3DLoop(void)
     uint16_t frame;
 
     demo_clear_scene();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
     demo_scene_caption("OPTICAL 3D IDEA", "FIX FLOOR ONLY / NO SCB SHRINK", "STABLE PREVIEW - NO SPRITE FLICKER");
     demo_3d_audio(SOUND_MUSIC_A);
     playSFX(SOUND_SFX_9);
@@ -123,7 +124,7 @@ void NEOGEO_USER show3DRaycaster(void)
     uint16_t frame;
 
     demo_clear_scene();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
     demo_scene_caption("DEPTH COLUMN IDEA", "DESIGN PREVIEW ONLY", "NO SPRITE WALLS / NO SHRINK YET");
     demo_3d_audio(SOUND_MUSIC_B);
     playSFX(SOUND_SFX_3);

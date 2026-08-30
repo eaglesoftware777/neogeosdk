@@ -239,7 +239,7 @@ static void NEOGEO_USER spr_raw_api(void)
     };
 
     clearFix();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
 
     demo_fix_puts(2u, 0u,  "RAW NEO GEO API / DIRECT SCB WRITES", 2u);
     demo_fix_puts(2u, 1u,  "NO NG_* WRAPPERS  PURE HARDWARE", 1u);
@@ -323,7 +323,7 @@ static void NEOGEO_USER spr_action_fsm(void)
     static const uint8_t s_attack_frames[5] = { 26u, 27u, 28u, 29u, 30u };
 
     clearFix();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
 
     demo_fix_puts(2u, 0u,  "ANIMATION STATE MACHINE", 2u);
     demo_fix_puts(2u, 1u,  "RUNNING FULL SEQUENCE", 1u);
@@ -638,7 +638,7 @@ void NEOGEO_USER demo_sprites_parade(void)
 
     for (i = 0u; i < PARADE_COUNT; i++) {
         demo_caption("MASCOT PARADE", "EYECATCHER ANIMATION FRAMES", "SLOW FRAME TIMING");
-        demo_safe_show(0, 72, 62, 0xF, 0xAF, 10, BLACK, DEMO_SHOWSCREEN_BASE);
+        demo_safe_show(0, 72, 62, 0xF, 0xAF, 10, DEMO_BG, DEMO_SHOWSCREEN_BASE);
         demo_load_screen_palette(s_parade_screens[i]);
         demo_draw_sprite_screen(s_parade_screens[i], 1u,
                                 72, 62, 16u, 16u, 0xFFu, 0xFFu);
@@ -704,8 +704,13 @@ void NEOGEO_USER ng_clear_screen_full(void)
 {
     ng_physics_clear_solids();
     ng_chars_init();
+
+    /* Black page for the duration of the wipe: FIX and every sprite slot
+     * are rewritten below, and on a light backdrop each half-written cell
+     * shows up as a bright block while that happens.  The page colour
+     * goes back on at the bottom, once there is nothing left to rewrite. */
+    setBACKDROP(DEMO_BG_CLEAR);
     clearFix();
-    setBACKDROP(BLACK);
 
     ng_sprite_hide_all();
 
@@ -713,4 +718,5 @@ void NEOGEO_USER ng_clear_screen_full(void)
     demo_frame();
 
     clearFix();
+    setBACKDROP(DEMO_BG);
 }

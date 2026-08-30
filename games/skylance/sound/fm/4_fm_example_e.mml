@@ -1,0 +1,26 @@
+; 4_fm_example_e — Final Fight style brawler verse (E minor)
+;
+; Syncopated motif with brief silence — driving but with breathing
+; room.  Classic CPS-1/M68k arcade FM brawler feel.
+
+T220
+I4
+V13
+O4
+L16
+
+; A — main motif (3-note climb + descent)
+E G B  > D < B G  E G B4
+F+ A > C  > E < C < A  F+ A > C4
+
+; B — call/response
+G G E E  D D < B B
+> C C < A A  G G E E
+
+; C — long arc
+E F+ G A  B > C < B A
+G F+ E D  C < B A G
+F+ G A B  > C D E F+
+> G4 R4 R2
+
+~

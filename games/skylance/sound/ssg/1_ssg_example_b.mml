@@ -1,0 +1,18 @@
+; 1_ssg_example_b - mix bass pulse
+
+T210
+P1
+V10
+O3
+L8
+
+C R C G  C R G R
+B- R B- F  B- R F R
+C R C G  E- R G R
+F R F C  F R C R
+
+L4
+C C B- B-
+A- A- G2
+
+~

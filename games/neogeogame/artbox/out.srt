@@ -57,13 +57,14 @@ note=effects and transitions  (aggressive halo strip: bright outer ring is almos
 [009] npcs/020_enemy.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
-source=38x28 canvas=256x256 content=38x28 offset=(109,228)
-screen_id=9 palette_bank=24 tile_base=2048 reserved_last=2303 used_cols=4 used_rows=2 start_col=6 start_row=14 x_pad=13 y_pad=4 used_tiles=8 strips=4 active_rows=2
+source=1238x800 canvas=256x256 content=256x165 offset=(0,91)
+screen_id=9 palette_bank=24 tile_base=2048 reserved_last=2303 used_cols=16 used_rows=11 start_col=0 start_row=5 x_pad=0 y_pad=11 used_tiles=176 strips=16 active_rows=11
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [010] npcs/032_life.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
 source=22x13 canvas=256x256 content=22x13 offset=(117,243)
-screen_id=10 palette_bank=25 tile_base=2304 reserved_last=2559 used_cols=4 used_rows=2 start_col=6 start_row=14 x_pad=5 y_pad=3 used_tiles=8 strips=4 active_rows=2
+screen_id=10 palette_bank=25 tile_base=2304 reserved_last=2559 used_cols=2 used_rows=1 start_col=7 start_row=15 x_pad=5 y_pad=3 used_tiles=2 strips=2 active_rows=1
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+

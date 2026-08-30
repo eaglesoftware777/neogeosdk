@@ -1,0 +1,12 @@
+; 5_voice_lets_go - short launch sting
+
+T230
+P2
+V13
+O4
+L16
+
+E G B > E  < B G E8
+G B > D G  > C4
+
+~

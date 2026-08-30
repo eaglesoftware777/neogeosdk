@@ -125,7 +125,7 @@ static void NEOGEO_USER stress_full_scene(void)
     };
 
     clearFix();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
     demo_fix_puts(2u, 0u, "FULL SCENE / ALL MODULES LIVE", 2u);
     demo_fix_puts(2u, 1u, "CAM + NPCs + PARTICLES + PULSE + MUSIC", 1u);
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);
@@ -261,7 +261,7 @@ static void NEOGEO_USER stress_boss(void)
     };
 
     clearFix();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
     demo_fix_puts(2u, 0u, "BOSS ENCOUNTER", 2u);
     demo_fix_puts(2u, 1u, "PHASE 2 AT 50% HP  HITSTOP + SHAKE", 1u);
     demo_fix_puts(2u, 27u, "A: NEXT", 0u);

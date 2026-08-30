@@ -1,0 +1,23 @@
+; 3_fm_example_d — Strider-style heroic theme (G minor)
+
+T220
+I3
+V13
+O4
+L16
+
+; A — heroic stab + answer
+G G B- > D  < G B- > D G
+F+ F+ A > C  < F+ A > C F+
+
+; B — climbing motif
+G A B- > C  < D E- F G
+F E- D < B-  > A G F+ G
+
+; C — wide-interval finale
+> D < G > D < G  > D < G > D < G
+> C < F > C < F  > C < F > C < F
+B- F A E-  G D F C
+> G2
+
+~

@@ -3,49 +3,63 @@
 Neo Geo development SDK for SNK hardware.
 
 - Repository: https://github.com/eaglesoftware777/neogeosdk
-- Current release target: `v1.7.0` (in-progress on `neo_universal_2d`)
+- Current release: `v1.7.0`
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 
-## What's new in v1.7.0
+## What's new in v1.7.0 — the 2D engine release
 
-- **Unified 21-chapter demo** (`games/demo`) covering every public engine
-  subsystem in one linear flow; top-right chapter number on every scene
-- **`games/demo_plus`** (ID 778) — a new game that links exclusively
-  against `sdk/2d_engine_plus` (C++14 engine); shares the demo's artbox
-  via the new `GAME_EXTRA_INCLUDES` makefile hook
-- **Engine occlusion documented** in both `ng_sprite_pool.h` and
-  `ng_sprite_pool.hpp` (LOWER slot = drawn IN FRONT)
-- **HD artbox alt-pipeline** — `artbox/img2neo_hd.py` and
-  `artbox/fixtiles_hd.py` add bilateral / CLAHE / unsharp / blue-noise
-  dither (alongside the existing pipeline, not replacing it)
-- **Default screen pipeline is tile-local** — `artbox/img2neo_tile.py`:
-  per-tile k-means++ + per-tile Floyd-Steinberg dither + greedy MAE
-  bank dedup + Lab-nearest pixel remap into a representative palette
-  derived from the weighted union of banks.  Both `make art GAME=...`
-  (Linux) and `make -f MakefileWin32.mak art GAME=...` (Windows)
-  export `ARTBOX_TILE=1` so this is the route every build takes.
-  Preserves the per-tile dither micro-detail end-to-end (no global
-  re-quantisation).  When `genscreens` learns to emit per-tile
-  palette attributes, the module's `cluster_and_remap_tile_palettes()`
-  + `extract_tile_data_for_dedup()` plug straight in for real
-  multi-bank backgrounds.
-- **CRT pipeline as the `art-crt` target** — `artbox/img2neo_crt.py`:
-  CIE-Lab k-means + horizontal-biased Floyd-Steinberg + gamma 1.20 /
-  contrast 1.10 pre-boost.  Use `make art-crt` / `make -f
-  MakefileWin32.mak art-crt` when you specifically want the CRT
-  preprocessing (or export `ARTBOX_CRT=1`).
-- `ARTBOX_LEGACY=1` falls back to the original nearest-neighbour path
-  (kept for diffing / sanity-check builds).
-- **Sprite halo fix** — `artbox/img2neo.py` exposes `alpha_bleed()` and
-  the sprite path uses it after `fit_sprite_rgba` so anti-aliased
-  contours stop baking the source PNG's hidden transparent-pixel RGB
-  (typically near-white) into the indexed sprite
-- Mini-game = arrows + B strike (no jump).  Joystick chapter B+C / B+D
-  two-button specials replace QCF / DP motion inputs
-- Galaxian → **Eagle Invaders**: dive attacks, return fire, debris,
-  score popups, 3-wave campaign
+v1.7.0 consolidates the whole `neo_universal_2d` line of work. It is the
+largest release the SDK has had.
 
+- **A complete 2D game engine**, in plain C (`sdk/2d_engine/`) and C++14
+  (`sdk/2d_engine_plus/`) with an identical public ABI — 35 modules covering
+  characters, actions, physics, NPCs, camera, level, particles, feedback,
+  depth effects, palette effects, sprite groups, the render queue, the FIX
+  layer, input, timers, events and fixed-point math. Select the C++ build
+  with `USE_2D_PLUS=1`.
+- **A multi-game build system** — one repository, any number of independent
+  games, each with its own id, ROM folder, artbox, sound tree and MAME hash
+  set. Six games ship with it, and all six build the same way.
+- **A rebuilt art pipeline** — a perceptual quantiser working in CIE-Lab on
+  the Neo Geo's actual 5-bit colour lattice, with void-and-cluster blue-noise
+  dithering, per-tile palettes, master sprite palettes, sprite halo removal
+  and a content-preserving screen fit. Mean colour error across the reference
+  assets fell from dE 9.10 to 8.33, p95 from 18.19 to 15.66.
+- **A rebuilt audio stack** — nine ADPCM-B beds, eight FM tracks, nine SSG
+  tracks, a recorded voice bank with `speakText()`, live FM tempo, LFO, pan,
+  noise and CSM control, and a fade engine that actually fades. The Z80
+  polling race that deadlocked the 68000 is fixed.
+- **Sky Lance** (`games/skylance`, id 779) — a complete vertical arcade
+  shooter: three pilots, seven stages, a named boss per stage, attract reel,
+  pilot select, scoring, lives, energy and a continue flow.
+- **A 25-chapter demo reel** (`games/demo`, id 777) exercising every public
+  subsystem in order, ending on a playable Sky Lance slice. Chapter number
+  printed top-right; **A** advances, **C** restarts.
+- **Native Windows builds**, one-shot installers for Linux / Ubuntu /
+  Windows / WSL, and a documented WSL2 + PulseAudio audio path.
+- **Two PyQt6 desktop tools** — Artbox Studio (pipeline runner, hex sprite
+  inspector, movement designer, level designer, HD compare, ROM inventory,
+  asset-rule editor) and Sound Studio (track / mix / ROM tabs, live waveform,
+  MML designer).
+- **A documentation set written for the end user** — introduction,
+  programmer's manual, hello-world tutorial, sound driver reference, art
+  pipeline, shipped-game guide, chapter guide, generated C and C++ API
+  references, a single-file overview, and a printable PDF manual.
+
+Corrections worth knowing about if you have code on an earlier revision:
+
+- **Sprite priority: HIGHER slot number is drawn IN FRONT.** Backgrounds
+  belong at slots 1–32, characters at 96–223, foreground effects at 288+.
+  Earlier revisions claimed the opposite.
+- **The backdrop register is `$401FFE`**, the last word of palette RAM.
+  `$402000` is a mirror that silently does nothing.
+- **The FIX layer has 28 visible rows**; visible row *y* is map row *y + 2*.
+- **`REG_PALBANK0` / `REG_PALBANK1`** had their addresses swapped.
+- **A minimal game can link again** — `ng_bg.c` / `ng_bg.cpp` now carry weak
+  fallbacks for `ng_screen_table[]` / `ng_screen_count`.
+
+Full detail, commit by commit: [`CHANGELOG.md`](./CHANGELOG.md).
 
 A hardware-centered SDK for Neo Geo arcade and home systems, with direct 68000-side control over VRAM, palettes, sprites, DMA, FIX tiles, and a custom YM2610 sound stack driven by a Z80 sound driver.
 
@@ -188,12 +202,23 @@ with `GAME=<name>`.
 
 ### Included games
 
-| Folder | Game ID | ROM prefix | Description |
-|--------|---------|------------|-------------|
-| `games/demo` | 777 | `777-*` | Full SDK showcase — 13 scenes, all engine features |
-| `games/helloworld` | 772 | `772-*` | Minimal FIX-text "Hello World" starting point |
-| `games/tutorial` | 555 | `555-*` | Tutorial template with working BIOS hooks |
-| `games/neogeogame` | 775 | `775-*` | Blank game template for new projects |
+| Folder | Game ID | ROM prefix | Engine | Description |
+|--------|---------|------------|--------|-------------|
+| `games/demo` | 777 | `777-*` | C | The 25-chapter engine reel — every subsystem, in order |
+| `games/demo_plus` | 778 | `778-*` | C++ | The same engine through the C++ API (`USE_2D_PLUS=1`) |
+| `games/skylance` | 779 | `779-*` | C | Sky Lance — a complete vertical shooter |
+| `games/helloworld` | 772 | `772-*` | — | Minimal FIX-text and one sample; the tutorial target |
+| `games/tutorial` | 555 | `555-*` | C | The minimal engine loop, nothing else |
+| `games/neogeogame` | 775 | `775-*` | C | Blank template for new projects |
+
+Every game carries its own `game.cfg`, so all six build the same way:
+
+```bash
+make GAME=<name> GAME_CFG_FILE=games/<name>/game.cfg all
+make GAME=<name> GAME_CFG_FILE=games/<name>/game.cfg test
+```
+
+What each one demonstrates: [`docs/GAMES.md`](./docs/GAMES.md).
 
 ### Building a specific game
 
@@ -365,10 +390,33 @@ Current release page:
 
 ## Documentation
 
+**Start here**
+
+| Document | For |
+|---|---|
+| [`docs/INTRODUCTION.md`](./docs/INTRODUCTION.md) | What the SDK is, what the machine is, and the reading order |
+| [`docs/HELLO_WORLD.md`](./docs/HELLO_WORLD.md) | Your first ROM, in ten minutes |
+| [`docs/PROGRAMMERS_MANUAL.md`](./docs/PROGRAMMERS_MANUAL.md) | The working manual — build, layout, engine tick, assets, frame budget |
+| [`NEOGEOSDK_v1.7.0.md`](./NEOGEOSDK_v1.7.0.md) | The single-file release overview |
+| [`docs/neogeosdk_v1.7.0_manual.pdf`](./docs/neogeosdk_v1.7.0_manual.pdf) | The printable manual and API reference |
+
+**Reference**
+
+| Document | Covers |
+|---|---|
+| [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md) | The bare-metal 68000 helpers in `sdk/neogeo.h` |
+| [`docs/API_2D_ENGINE_C.md`](./docs/API_2D_ENGINE_C.md) | Every call in the C 2D engine |
+| [`docs/API_2D_ENGINE_CPP.md`](./docs/API_2D_ENGINE_CPP.md) | The C++14 build of the same engine |
+| [`docs/SOUND_DRIVER.md`](./docs/SOUND_DRIVER.md) | The Z80 driver, the YM2610, and the audio pipelines |
+| [`docs/ARTBOX_PIPELINE.md`](./docs/ARTBOX_PIPELINE.md) | PNG to C-ROM, the quantiser, and Artbox Studio |
+| [`docs/GAMES.md`](./docs/GAMES.md) | What each of the six shipped games demonstrates |
+| [`docs/DEMO_CHAPTERS.md`](./docs/DEMO_CHAPTERS.md) | The 25 demo chapters |
+| [`docs/TOOLS.md`](./docs/TOOLS.md) | Every helper script — art, sound, verification, launchers, GIMP plug-ins |
+
 Primary repository docs:
 
 - [`README.md`](./README.md)
-- [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
+- [`docs/ADDING_A_GAME.md`](./docs/ADDING_A_GAME.md)
 - [`docs/GAME_ENGINE_LAYER.md`](./docs/GAME_ENGINE_LAYER.md)
 - [`docs/sprite_groups.md`](./docs/sprite_groups.md)
 - [`docs/render_queue.md`](./docs/render_queue.md)

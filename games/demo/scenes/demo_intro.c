@@ -37,7 +37,7 @@ void NEOGEO_USER cyclexms(int ms);
 void NEOGEO_USER showScreen107(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen108(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 
-#define PAL_WHITE   0   /* body-text bank, light on the black backdrop */
+#define PAL_BODY    0   /* body-text bank, dark ink on the page colour */
 #define PAL_CYAN    1
 #define PAL_GREEN   2
 #define PAL_RED     3
@@ -58,32 +58,28 @@ void NEOGEO_USER demo_intro_eagle(void)
     soundSetSSGVolume(0x00u);
     soundSetFMVolume(0x00u);
 
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
 
-    /* FIX palette 0 = white, 1 = cyan, 2 = green, 3 = red.
+    /* FIX palette 0 = body, 1 = subtitle, 2 = accent, 3 = prompt.
      * Bank 0 is the body-text bank and used to be black, which only
      * read because the backdrop register was being written to the
      * wrong address and the screen stayed on the boot-time white.
      * With the backdrop actually black, bank 0 has to be light. */
-    setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_BODY));
     load_palettes(fix_pal, PALETTES);
 
-    setpal(fix_pal, 0x8000u, BLUE,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_SUB));
     load_palettes(fix_pal, PALETTES + PALOFFSET);
 
-    setpal(fix_pal, 0x8000u, GREEN,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_ACCENT));
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
 
-    setpal(fix_pal, 0x8000u, RED,    BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_PROMPT));
     load_palettes(fix_pal, PALETTES + PALOFFSET * 3u);
 
     /* Flash in the text */
-    demo_fix_puts(17u, 13u, "EAGLE",    PAL_WHITE);
-    demo_fix_puts(16u, 15u, "SOFTWARE", PAL_WHITE);
+    demo_fix_puts(17u, 13u, "EAGLE",    PAL_BODY);
+    demo_fix_puts(16u, 15u, "SOFTWARE", PAL_BODY);
 
     playVoiceCue(SOUND_VOICE_1);
     cyclexms(400);
@@ -100,7 +96,7 @@ void NEOGEO_USER demo_intro_eagle(void)
     clearFix();
     clearSprs();
     playSFX(SOUND_SFX_3);
-    demo_safe_show(showScreen107, 32, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
+    demo_safe_show(showScreen107, 32, 24, 0xF, 0xAF, 16, DEMO_BG, DEMO_SHOWSCREEN_BASE);
 
     if (demo_wait(60u)) goto intro_done;
     if (demo_wait(60u)) goto intro_done;
@@ -119,18 +115,15 @@ intro_done:
 void NEOGEO_USER demo_intro_system_banner(void)
 {
     demo_clear_scene();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
 
     {
         uint16_t fix_pal[16];
-        setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-               BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+        setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_BODY));
         load_palettes(fix_pal, PALETTES);
-        setpal(fix_pal, 0x8000u, CYAN,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-               BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+        setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_SUB));
         load_palettes(fix_pal, PALETTES + PALOFFSET);
-        setpal(fix_pal, 0x8000u, GREEN,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-               BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+        setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_ACCENT));
         load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
     }
 
@@ -166,18 +159,15 @@ void NEOGEO_USER demo_intro_loading(void)
     char bar[14];
 
     demo_clear_scene();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
 
     {
         uint16_t fix_pal[16];
-        setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-               BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+        setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_BODY));
         load_palettes(fix_pal, PALETTES);
-        setpal(fix_pal, 0x8000u, CYAN,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-               BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+        setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_SUB));
         load_palettes(fix_pal, PALETTES + PALOFFSET);
-        setpal(fix_pal, 0x8000u, GREEN,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-               BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+        setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_ACCENT));
         load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
     }
 
@@ -240,26 +230,21 @@ void NEOGEO_USER demo_intro_sdk_title(void)
     soundSetSSGVolume(0x00u);
     soundSetFMVolume(0x0Cu);
 
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
 
-    setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_BODY));
     load_palettes(fix_pal, PALETTES);
 
-    setpal(fix_pal, 0x8000u, CYAN,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_SUB));
     load_palettes(fix_pal, PALETTES + PALOFFSET);
 
-    setpal(fix_pal, 0x8000u, GREEN,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_ACCENT));
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
 	
-	   setpal(fix_pal, 0x8000u, RED,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+	   setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_PROMPT));
     load_palettes(fix_pal, PALETTES + PALOFFSET * 3u);
 	
-		   setpal(fix_pal, 0x8000u, BLUE,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+		   setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_SUB));
     load_palettes(fix_pal, PALETTES + PALOFFSET * 4u);
 
 
@@ -287,7 +272,7 @@ void NEOGEO_USER demo_intro_sdk_title(void)
 
         demo_fix_puts(7u, 13u, sub1, PAL_RED);
         demo_wait(8u);
-        demo_fix_puts(6u, 15u, sub2, PAL_WHITE);
+        demo_fix_puts(6u, 15u, sub2, PAL_BODY);
         demo_wait(8u);
 
         playSFX(SOUND_SFX_9);

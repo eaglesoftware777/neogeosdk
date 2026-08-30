@@ -1,0 +1,23 @@
+; 2_fm_example_c - short mix piano accent
+
+T210
+I2
+V10
+O4
+L8
+
+; A - simple minor piano comp, leaves room for ADPCM-B
+C E- G > C  < B- G E- C
+D F A > D  < C A F D
+
+; B - answer phrase
+E- G B- > E-  < D B- G E-
+F A > C F  < E- C A F
+
+; C - short cadence for mix overlay
+L4
+G E- C R
+F D < B- R
+> C2 R2
+
+~

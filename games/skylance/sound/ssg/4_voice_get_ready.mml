@@ -1,0 +1,14 @@
+; 4_voice_get_ready - short ready sting
+
+T220
+P0
+V12
+O4
+L16
+
+G B > D8
+< A > C E8
+< G > D G4
+R4
+
+~

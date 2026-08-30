@@ -1,0 +1,28 @@
+; 0_mml_example_a — bright arcade menu loop (C major)
+; SSG carries the melody, ADPCM-B TRACK under, FM lead on top.
+
+T140
+@p1
+@b0
+@f0
+V12
+O5
+L8
+
+; phrase A — call
+C E G E  C E G4
+< G E C E  G E C4
+
+; phrase B — answer
+> D F A F  D F A4
+< A F D F  A F D4
+
+; phrase C — lift
+> E G > C < G  E G > C4
+< F A > C < A  F A > C4
+
+; phrase D — resolve
+< C E G E  D F A F
+E G > C < G  > C4 R4
+
+~

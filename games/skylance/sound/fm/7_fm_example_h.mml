@@ -1,0 +1,23 @@
+; 7_fm_example_h — Metal Slug boss-style intense theme (B minor)
+
+T220
+I7
+V13
+O4
+L16
+
+; A — galloping octaves
+B B B F+  B B B F+
+A A A E  A A A E
+
+; B — chromatic ascent in octave 4
+B > D < F+ B  > A < C+ F+ A
+> G+ < B > D < G+  > F+ < A > C+ < F+
+
+; C — pursue motif (stays in O4)
+B A G+ F+  E F+ G+ A
+B A G+ F+  E D C+ < B
+> B A G+ F+  E G+ < B > E
+> D < B G+ E  > B2
+
+~

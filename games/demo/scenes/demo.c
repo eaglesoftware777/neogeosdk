@@ -245,9 +245,14 @@ void NEOGEO_USER demo_clear_scene(void)
      * does right after START), so this was the far more common source
      * of it. */
     waitVbl();
+    /* Wipe on a black page: ng_scene_begin() rewrites FIX and sprite VRAM
+     * in bulk, and a light backdrop would let every half-written cell show
+     * up as a bright block for the frames the wipe takes.  The real page
+     * colour goes back on the next vblank, once the screen is quiet. */
+    setBACKDROP(DEMO_BG_CLEAR);
     ng_scene_begin(NG_SCENE_CLEAN_DEFAULT, 0u);
-    setBACKDROP(BLACK);
     waitVbl();
+    setBACKDROP(DEMO_BG);
 }
 
 /* ------------------------------------------------------------------ */

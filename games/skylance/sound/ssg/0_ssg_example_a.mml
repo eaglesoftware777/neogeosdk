@@ -1,0 +1,19 @@
+; 0_ssg_example_a - star coin ladder
+
+T210
+P0
+V13
+O5
+L16
+
+C G > C < G  E G > C < E
+F A > C < A  E G B G
+
+G B > D < B  A > C E < A
+G E C E  G > C < G E
+
+L8
+F G A > C  < B A G E
+C4 R8 C8 G8 > C4
+
+~

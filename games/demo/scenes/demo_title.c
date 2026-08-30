@@ -60,7 +60,7 @@ void NEOGEO_USER demo_title_screen(void)
     uint16_t i;
 
     demo_clear_scene();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
 
         soundSceneReset();   waitVbl();
         soundSetADPCMAVolume(0x3Cu);  waitVbl();
@@ -68,21 +68,18 @@ void NEOGEO_USER demo_title_screen(void)
         soundSetSSGVolume(0x00u);     waitVbl();
         soundSetFMVolume(0x00u);      waitVbl();
 
-    /* FIX palette 0 = white, 1 = cyan, 2 = green */
-    setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    /* FIX palette 0 = body, 1 = subtitle, 2 = accent */
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_BODY));
     load_palettes(fix_pal, PALETTES);
 
-    setpal(fix_pal, 0x8000u, CYAN,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_SUB));
     load_palettes(fix_pal, PALETTES + PALOFFSET);
 
-    setpal(fix_pal, 0x8000u, GREEN,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_ACCENT));
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
 
     demo_caption("TITLE SCREEN", "NEO GEO SDK DEMO", "SAFE SHOWSCREEN BASE 0040H");
-    demo_safe_show(showScreen108, 32, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
+    demo_safe_show(showScreen108, 32, 24, 0xF, 0xAF, 16, DEMO_BG, DEMO_SHOWSCREEN_BASE);
     playSFX(SOUND_SFX_3);
 
     if (demo_wait(180u)) {
@@ -93,7 +90,7 @@ void NEOGEO_USER demo_title_screen(void)
     /* Second title with PRESS START blink */
     demo_clear_scene();
     demo_caption("TITLE SCREEN", "EAGLE SOFTWARE", "PRESS START");
-    demo_safe_show(showScreen107, 32, 24, 0xF, 0xAF, 16, BLACK, DEMO_SHOWSCREEN_BASE);
+    demo_safe_show(showScreen107, 32, 24, 0xF, 0xAF, 16, DEMO_BG, DEMO_SHOWSCREEN_BASE);
     playSFX(SOUND_SFX_10);
 
     for (i = 0u; i < 180u; i++) {
@@ -124,13 +121,11 @@ void NEOGEO_USER demo_title_game_over(void)
 
     soundStopAll();
     demo_clear_scene();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
 
-    setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_BODY));
     load_palettes(fix_pal, PALETTES);
-    setpal(fix_pal, 0x8000u, RED,    BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_PROMPT));
     load_palettes(fix_pal, PALETTES + PALOFFSET * 3u);
 
     ng_palfx_flash_red(0u, s_go_pal, 30u);
@@ -190,20 +185,16 @@ void NEOGEO_USER demo_title_attract_reel(void)
     uint8_t  user_started = 0u;
 
     demo_clear_scene();
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
 
-    setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_BODY));
     load_palettes(fix_pal, PALETTES);
-    setpal(fix_pal, 0x8000u, CYAN,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_SUB));
     load_palettes(fix_pal, PALETTES + PALOFFSET);
-    setpal(fix_pal, 0x8000u, GREEN,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_ACCENT));
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
     /* Bank 3 = red, for the studio name below. */
-    setpal(fix_pal, 0x8000u, RED,    BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_PROMPT));
     load_palettes(fix_pal, PALETTES + PALOFFSET * 3u);
 
     /*
@@ -231,7 +222,7 @@ void NEOGEO_USER demo_title_attract_reel(void)
          * is preserved and she keeps walking without a hiccup.
          */
         demo_safe_show(s_show[slide], 32, 24, 0xF, 0xAF, 16,
-                       BLACK, DEMO_SHOWSCREEN_BASE);
+                       DEMO_BG, DEMO_SHOWSCREEN_BASE);
         /* Studio name in red (FIX bank 3), nudged down the screen and
          * centred: "EAGLE SOFTWARE" is 14 cells wide and the strap is
          * 28, so on a 40-cell row they start at 13 and 6. */
@@ -284,7 +275,7 @@ void NEOGEO_USER demo_title_attract_reel(void)
             if ((hold % 10u) == 0u) {
                 slide = (uint8_t)((slide + 1u) % 7u);
                 s_show[slide](32, 24, 0xF, 0xAF, 16,
-                              BLACK, DEMO_SHOWSCREEN_BASE);
+                              DEMO_BG, DEMO_SHOWSCREEN_BASE);
         /* Studio name in red (FIX bank 3), nudged down the screen and
          * centred: "EAGLE SOFTWARE" is 14 cells wide and the strap is
          * 28, so on a 40-cell row they start at 13 and 6. */
@@ -329,18 +320,15 @@ void NEOGEO_USER demo_title_end_card(void)
     soundSetSSGVolume(0x00u);
     soundSetFMVolume(0x0Cu);
 
-    setBACKDROP(BLACK);
+    setBACKDROP(DEMO_BG);
 
-    setpal(fix_pal, 0x8000u, WHITE,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_BODY));
     load_palettes(fix_pal, PALETTES);
 
-    setpal(fix_pal, 0x8000u, CYAN,   BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_SUB));
     load_palettes(fix_pal, PALETTES + PALOFFSET);
 
-    setpal(fix_pal, 0x8000u, GREEN,  BLACK, BLACK, BLACK, BLACK, BLACK, BLACK,
-           BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK);
+    setpal(fix_pal, DEMO_FIX_PAL(DEMO_INK_ACCENT));
     load_palettes(fix_pal, PALETTES + PALOFFSET * 2u);
 
     playFMTrack(SOUND_FM_F);

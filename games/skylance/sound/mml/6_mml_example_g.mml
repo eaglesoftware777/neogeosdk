@@ -1,0 +1,27 @@
+; 6_mml_example_g — shop / town jingle (C major, light)
+
+T120
+@p0
+@b2
+@f1
+V11
+O5
+L8
+
+; phrase A — bouncy arpeggio
+C E G E  C E G4
+D F A F  D F A4
+
+; phrase B — answer
+> E < A > C E  G E C < A
+F D < B > C  E C < G4
+
+; phrase C — playful
+> G > C E G  E C < G > C
+A F D < A  > F D < A4
+
+; phrase D — turnaround
+< C E G > C  < G E C < G
+> C E G > C  > C2
+
+~

@@ -1,0 +1,23 @@
+; 0_fm_example_a — Arcade FM lead hook (C minor)
+;
+; Catchy 4-bar phrase with clear pitch movement on every beat.
+
+T220
+I0
+V13
+O5
+L16
+
+; phrase A — opening hook
+G E- C E-  G > C E- G
+F D < B- D  F A- > C F
+
+; phrase B — descend
+> C < B- A- G  F E- D C
+> C < A- G F  E- D < B- > C
+
+; phrase C — call/answer
+G > C E- G  < B- > D F < B-
+A- > C E- A-  G E- C2
+
+~

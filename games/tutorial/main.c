@@ -9,13 +9,13 @@
  */
 
 #include <stdint.h>
-#include "sdk/2d_engine/ng_game_engine.h"
+#include "sdk/2d_engine/ng_engine.h"
 #include "sdk/neogeo.h"
 #include "sdk/macro.h"
 
 /* Called once at game boot.  Initialise the game engine and sound. */
 void game_boot(void) {
-    game_engine_init();
+    ng_game_engine_init();
     /* Set up the audio driver.  This enables the use of playSFX() and
      * other sound functions provided by the SDK. */
     soundInit();
@@ -29,7 +29,7 @@ void game_boot(void) {
 void game_frame(void) {
     static uint8_t played = 0;
     waitVbl();
-    game_engine_frame();
+    ng_game_engine_frame();
     /* Trigger a simple sample on the first frame after boot.  This
      * uses ADPCM-A sample index 0 which must be provided in
      * sound/samples/in_wav_a/1.wav. */

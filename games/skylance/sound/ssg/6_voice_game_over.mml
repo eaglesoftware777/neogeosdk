@@ -1,0 +1,13 @@
+; 6_voice_game_over - short fall sting
+
+T170
+P1
+V11
+O4
+L8
+
+G E C < G
+> F D < B- G
+> E- C < G2
+
+~

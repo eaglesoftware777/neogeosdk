@@ -11,3 +11,11 @@ games/demo/artbox/neorom.db-shm
 games/demo/artbox/neorom.db-wal
 artbox/neorom.db-shm
 artbox/neorom.db-wal
+
+# Generated artbox intermediates for the two template games.  These are
+# build outputs - `make GAME=<name> art` recreates them - and the source
+# art they come from is tracked under games/<name>/artbox/in/.
+games/helloworld/artbox/*
+!games/helloworld/artbox/in/
+games/tutorial/artbox/*
+!games/tutorial/artbox/in/

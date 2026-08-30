@@ -1048,3 +1048,73 @@ source=64x96 canvas=256x256 content=64x96 offset=(96,160)
 screen_id=150 palette_bank=165 tile_base=38144 reserved_last=38399 used_cols=4 used_rows=6 start_col=6 start_row=10 x_pad=0 y_pad=0 used_tiles=24 strips=4 active_rows=6
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
+[151] npcs/zzzzzzzzzz_sky_boss.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+category=npcs
+source=208x280 canvas=256x256 content=190x256 offset=(33,0)
+screen_id=151 palette_bank=166 tile_base=38400 reserved_last=38655 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=1 y_pad=0 used_tiles=192 strips=12 active_rows=16
+note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+
+[152] npcs/zzzzzzzzzz_sky_bullet.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+category=npcs
+source=16x80 canvas=256x256 content=16x80 offset=(120,176)
+screen_id=152 palette_bank=167 tile_base=38656 reserved_last=38911 used_cols=2 used_rows=5 start_col=7 start_row=11 x_pad=8 y_pad=0 used_tiles=10 strips=2 active_rows=5
+note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+
+[153] npcs/zzzzzzzzzz_sky_enemy_a.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+category=npcs
+source=128x144 canvas=256x256 content=128x144 offset=(64,112)
+screen_id=153 palette_bank=168 tile_base=38912 reserved_last=39167 used_cols=8 used_rows=9 start_col=4 start_row=7 x_pad=0 y_pad=0 used_tiles=72 strips=8 active_rows=9
+note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+
+[154] npcs/zzzzzzzzzz_sky_enemy_b.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+category=npcs
+source=72x160 canvas=256x256 content=72x160 offset=(92,96)
+screen_id=154 palette_bank=169 tile_base=39168 reserved_last=39423 used_cols=6 used_rows=10 start_col=5 start_row=6 x_pad=12 y_pad=0 used_tiles=60 strips=6 active_rows=10
+note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+
+[155] npcs/zzzzzzzzzz_sky_enemy_c.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+category=npcs
+source=56x56 canvas=256x256 content=56x56 offset=(100,200)
+screen_id=155 palette_bank=170 tile_base=39424 reserved_last=39679 used_cols=4 used_rows=4 start_col=6 start_row=12 x_pad=4 y_pad=8 used_tiles=16 strips=4 active_rows=4
+note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+
+[156] npcs/zzzzzzzzzz_sky_orb.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+category=npcs
+source=32x32 canvas=256x256 content=32x32 offset=(112,224)
+screen_id=156 palette_bank=171 tile_base=39680 reserved_last=39935 used_cols=2 used_rows=2 start_col=7 start_row=14 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
+note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+
+[157] npcs/zzzzzzzzzz_sky_plane.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+category=npcs
+source=112x160 canvas=256x256 content=112x160 offset=(72,96)
+screen_id=157 palette_bank=172 tile_base=39936 reserved_last=40191 used_cols=8 used_rows=10 start_col=4 start_row=6 x_pad=8 y_pad=0 used_tiles=80 strips=8 active_rows=10
+note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+
+[158] npcs/zzzzzzzzzzz_crate.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+category=npcs
+source=224x240 canvas=256x256 content=224x240 offset=(16,16)
+screen_id=158 palette_bank=173 tile_base=40192 reserved_last=40447 used_cols=14 used_rows=15 start_col=1 start_row=1 x_pad=0 y_pad=0 used_tiles=210 strips=14 active_rows=15
+note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+
+[159] npcs/zzzzzzzzzzz_crate_broken.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+category=npcs
+source=224x240 canvas=256x256 content=224x240 offset=(16,16)
+screen_id=159 palette_bank=174 tile_base=40448 reserved_last=40703 used_cols=14 used_rows=15 start_col=1 start_row=1 x_pad=0 y_pad=0 used_tiles=210 strips=14 active_rows=15
+note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+
+[160] zz_bg/0.png
+mode=screen fit=contain anchor=center rule=legacy_screens
+category=zz_bg
+source=256x256 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=160 palette_bank=175 tile_base=40704 reserved_last=40959 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=legacy flat layout support
+
