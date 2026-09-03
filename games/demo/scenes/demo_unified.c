@@ -289,7 +289,7 @@ const uint16_t * NEOGEO_USER ng_get_screen_palette(uint16_t screen_id);
 #define U_SCALE_57         0x91u
 #define U_SCALE_60         0x99u
 #define U_SCALE_70         0xB2u
-#define U_SCALE_FULL       0xFFu
+#define U_SCALE_FULL       0x99u
 
 /*
  * Clean-ratio scales.
@@ -3428,8 +3428,8 @@ static uint8_t NEOGEO_USER chap_joystick(void)
     demo_fix_puts(2u, 25u, "HIT BOX ON RIGHT  B STRIKE",        0u);
     demo_fix_puts(2u, 26u, "HITS:",                            2u);
 
-    demo_load_screen_palette(U_NPC_OLD_FIRST);
-    demo_load_screen_palette(U_PARTICLE_EXPLOSION);
+    demo_load_screen_palette(U_CRATE);
+    demo_load_screen_palette(U_CRATE_BROKEN);
     demo_load_screen_palette(U_PARTICLE_HITSPARK);
     draw_background(U_BG_FOREST, 32, 16);
     s_draw_particles = 1u;
@@ -3604,8 +3604,8 @@ static uint8_t NEOGEO_USER chap_joystick(void)
                                       U_SCALE_CHARACTER, U_SCALE_CHARACTER,
                                       hero_flip);
 
-        /* Replace the ugly hit box crate with an old NPC. */
-        draw_asset_bottom_center(box_flash ? U_PARTICLE_EXPLOSION : U_NPC_OLD_FIRST,
+        /* Replace the ugly hit box crate with a beautiful new AI generated crate. */
+        draw_asset_bottom_center(box_flash ? U_CRATE_BROKEN : U_CRATE,
                                  DEMO_PROP_HITBOX_SLOT, 250, HERO_GROUND_Y,
                                  0xFFu, 0xFFu);
 
@@ -3795,10 +3795,10 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
      * reticle on, which is what this chapter demonstrates.
      */
     static const uint8_t target_frame[TARGET_COUNT] = {
-        U_NPC_OLD_FIRST,
-        (uint8_t)(U_NPC_OLD_FIRST + 4u),
-        (uint8_t)(U_NPC_OLD_FIRST + 8u),
-        (uint8_t)(U_NPC_OLD_FIRST + 1u)
+        U_NPC_FIRST,
+        (uint8_t)(U_NPC_FIRST + 4u),
+        (uint8_t)(U_NPC_FIRST + 8u),
+        (uint8_t)(U_NPC_FIRST + 1u)
     };
     int16_t target_z[TARGET_COUNT] = { 36, 62, 88, 108 };
     uint8_t target_flash[TARGET_COUNT] = { 0u, 0u, 0u, 0u };
