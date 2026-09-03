@@ -1,19 +1,18 @@
-; 8_ssg_example_f - fanfare charge
+; 8_ssg_example_f - moonlit victory melody
 
-T240
+T160
 P0
-V14
+V12
 O4
-L16
-
-G B > D < B  G B > D < B
-A > C E C < A  F A > C < A
-
-D F A F  D F A F
-E G > C < G  E G > C < G
-
 L8
-D E F G  A B > C < B
-G4 R8 G8 D8 > G4
+
+C E G B  A G F E
+D F A > C  < B A G F
+E G B > D  C < B A G
+F A > C E  D C < B A
+
+L4
+G B > D F  E D C < B
+A2 G2 C1
 
 ~
