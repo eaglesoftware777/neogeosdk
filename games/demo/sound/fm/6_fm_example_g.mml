@@ -1,22 +1,16 @@
-; 6_fm_example_g — Sonic-style fast bouncy (G major, mid range)
+; 6_fm_example_g - sustained hero lead for audible LFO tests
 
-T220
+T100
 I6
-V13
+V12
 O4
-L16
 
-G B D G  D B G D
-F+ A C F+  C A F+ C
-
-L16
-G A B C  D E F+ G  A G F+ E  D C B A
-G A B C  D E F+ G  C B A G  C G E G
-L16
-
-G F+ E D  G B D G
-F+ E D B  C E G B
-A G F+ E  D B G D
-G2 R2
+; Extremely long notes to clearly hear the LFO (vibrato) kick in.
+L1
+C
+F
+G
+> C <
+D2 R2
 
 ~

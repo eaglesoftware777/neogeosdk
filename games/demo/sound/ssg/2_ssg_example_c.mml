@@ -1,7 +1,7 @@
 ; 2_ssg_example_c - red alert climb
 
 T240
-P2
+P0
 V12
 O4
 L16
