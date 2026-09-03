@@ -1,16 +1,14 @@
-; 6_fm_example_g - sustained hero lead for audible LFO tests
+; 6_fm_example_g - melodic hero lead with sustained notes for LFO tests
 
-T100
+T130
 I6
 V12
 O4
 
-; Extremely long notes to clearly hear the LFO (vibrato) kick in.
-L1
-C
-F
-G
-> C <
-D2 R2
+L4
+E G B > D2 < B G E2
+F A > C E2 < C A F2
+G B > D F2 < B G2
+A > C E A1
 
 ~
