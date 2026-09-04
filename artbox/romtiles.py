@@ -46,9 +46,36 @@ def write_palette(palette, std_file, neogeo_file, image_index, packed_palettes):
         blue_24 = int(rgb[2])
         color_24 = np.uint32((red_24 << 16) | (green_24 << 8) | blue_24)
 
-        red_16 = (color_24 & 0xF80000) >> 19
-        green_16 = (color_24 & 0x00F800) >> 11
-        blue_16 = (color_24 & 0x0000F8) >> 3
+        # Six bits per channel, not five: the word holds five, and the top
+        # bit supplies a sixth, least significant one that all three
+        # channels share, inverted -
+        #     channel6 = (channel5 << 1) | (1 - dark)
+        # so the darkest colour a palette can express is 0 rather than the
+        # 4/255 that leaving the bit clear pins it to, and the reachable
+        # colours are two interleaved lattices instead of one.
+        #
+        # The quantiser only emits colours that are already on that lattice,
+        # where the three channels agree on parity.  Anything else - a
+        # hand-authored palette, or one from an older tool - is placed on
+        # whichever parity reproduces it more closely instead of being
+        # truncated onto the odd one.
+        chan6 = [(c * 63 + 127) // 255 for c in (red_24, green_24, blue_24)]
+        best = None
+        for parity in (0, 1):
+            cand = [min(62 + parity, max(parity,
+                                         int(round((c - parity) / 2.0)) * 2 + parity))
+                    for c in chan6]
+            err = sum(w * ((v << 2 | v >> 4) - c8) ** 2
+                      for w, v, c8 in zip((0.299, 0.587, 0.114), cand,
+                                          (red_24, green_24, blue_24)))
+            if best is None or err < best[0]:
+                best = (err, cand)
+        red_6, green_6, blue_6 = best[1]
+
+        dark = 1 - (red_6 & 1)
+        red_16 = red_6 >> 1
+        green_16 = green_6 >> 1
+        blue_16 = blue_6 >> 1
 
         std_word = np.uint16((red_16 << 10) | (green_16 << 5) | blue_16)
         std_word.tofile(std_file)
@@ -72,7 +99,7 @@ def write_palette(palette, std_file, neogeo_file, image_index, packed_palettes):
         blue_0 = (blue_16 >> 4) & 1
 
         ng_word = np.uint16(
-            (0 << 15)
+            (dark << 15)
             | (red_lsb << 14)
             | (green_lsb << 13)
             | (blue_lsb << 12)

@@ -256,20 +256,14 @@ void NEOGEO_USER ng_camera_update(NGCamera *cam,
         hold_x = (uint8_t)(off_x <= (int16_t)cam->dead_zone_x);
         hold_y = (uint8_t)(off_y <= (int16_t)cam->dead_zone_y);
 
-        if (hold_x && hold_y) {
-            /* Target inside the dead zone on both axes — hold camera */
-            cam->x = (int16_t)(NGFX_TO_INT(cam->x_fp) + cam->shake_offset_x);
-            cam->y = (int16_t)(NGFX_TO_INT(cam->y_fp) + cam->shake_offset_y);
-            return;
-        }
     }
 
     /*
      * Smooth follow: step = (desired - current) * follow_speed / 256.
      * One 32-bit multiply per axis.  At follow_speed=64, converges in ~16 frames.
      */
-    new_fp_x = NGFX_FROM_INT(desired_x);
-    new_fp_y = NGFX_FROM_INT(desired_y);
+    new_fp_x = hold_x ? cam->x_fp : NGFX_FROM_INT(desired_x);
+    new_fp_y = hold_y ? cam->y_fp : NGFX_FROM_INT(desired_y);
 
     delta_x  = (int32_t)(new_fp_x - cam->x_fp);
     delta_y  = (int32_t)(new_fp_y - cam->y_fp);

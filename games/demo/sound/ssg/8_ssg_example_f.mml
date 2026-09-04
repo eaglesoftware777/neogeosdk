@@ -1,18 +1,19 @@
-; 8_ssg_example_f - moonlit victory melody
+; 8_ssg_example_f - moonlit victory theme
 
-T160
-P0
-V12
-O4
+T132
+P1
+V9
+O3
 L8
 
-C E G B  A G F E
-D F A > C  < B A G F
-E G B > D  C < B A G
-F A > C E  D C < B A
+A C E A  G E C A
+F A C F  E C A F
+G B- D G  F D B- G
+A C E A  B- A G E
 
 L4
-G B > D F  E D C < B
-A2 G2 C1
+F A > C < A  G B- > D < B-
+A G E C  D2 E2
+A1
 
 ~

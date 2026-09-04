@@ -210,7 +210,8 @@ NGParticle * NEOGEO_USER ng_particle_spawn(uint8_t type, uint8_t priority,
             return p;
         }
         /* Track weakest candidate to evict */
-        if (ng_part_pool[i].priority > drop_pri ||
+        if (drop_idx == 0xffu ||
+            ng_part_pool[i].priority > drop_pri ||
             (ng_part_pool[i].priority == drop_pri &&
              ng_part_pool[i].lifetime < ng_part_pool[drop_idx].lifetime)) {
             drop_pri = ng_part_pool[i].priority;

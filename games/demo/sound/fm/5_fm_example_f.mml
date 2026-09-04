@@ -1,29 +1,22 @@
-; 5_fm_example_f — Castlevania-style dramatic minor theme (D minor)
-;
-; Slower than typical arcade-FM, sustained notes with quarter-rest
-; for tension.  Boss-fight feel.
+; 5_fm_example_f - battle brass theme (D minor)
 
-T220
+T156
 I5
 V12
 O4
+L8
+
+D F A > D  < A F D A
+B- > D F D  < A F E C
+D F A > D  C < A G E
+F A > C < A  G F E D
+
 L16
+D F A D  F A > D < A  G B- > D < B-  G E C A
+D F A > D  < C A F D  E G B- > E  < D A F D
 
-; A — sustained intro
-D4 F A  > D4 < A F
-D4 F A  > D2
-< E4 G B-  > E4 < B- G
-E4 G B-  > E2
-
-; B — main theme
-> A4 G4  F4 E4
-D4 < A4  F4 D2
-> A4 G4  F4 E4
-> D2 R4 R4
-
-; C — finale
-L4
-> A G F E  D < A F D
-< F A > C E  D2
+L8
+> D C < B- A  G F E D
+F A > D < A  D2 R4 R4
 
 ~

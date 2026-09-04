@@ -289,7 +289,7 @@ const uint16_t * NEOGEO_USER ng_get_screen_palette(uint16_t screen_id);
 #define U_SCALE_57         0x91u
 #define U_SCALE_60         0x99u
 #define U_SCALE_70         0xB2u
-#define U_SCALE_FULL       0x99u
+#define U_SCALE_FULL       0xFFu
 
 /*
  * Clean-ratio scales.
@@ -310,7 +310,7 @@ const uint16_t * NEOGEO_USER ng_get_screen_palette(uint16_t screen_id);
 #define U_SCALE_3_8        0x5Fu   /* 96/256  = 3/8   = 37.5% */
 #define U_SCALE_7_16       0x6Fu   /* 112/256 = 7/16  = 43.8% */
 #define U_SCALE_1_2        0x7Fu   /* 128/256 = 1/2   = 50.0% */
-#define U_SCALE_CHARACTER  U_SCALE_FULL
+#define U_SCALE_CHARACTER  U_SCALE_1_2
 
 static const uint8_t s_fx_effect_frames[4] = {
     89u, 90u, 91u, 92u
@@ -527,16 +527,9 @@ static uint8_t NEOGEO_USER uwait(uint16_t frames)
 
 static uint8_t NEOGEO_USER fm_lfo_hold(uint8_t value, uint16_t frames)
 {
-    uint16_t t;
-
-    for (t = 0u; t < frames; t++) {
-        if ((t & 15u) == 0u) {
-            soundFMSetLFO(value);
-        }
-        if (uframe()) return 1u;
-    }
-
-    return 0u;
+    soundFMSetLFO(value);
+    waitVbl();
+    return uwait(frames);
 }
 
 /* ------------------------------------------------------------------ */
@@ -1089,15 +1082,15 @@ static void NEOGEO_USER draw_scrolling_background(uint8_t frame, int16_t x, int1
 
 static void NEOGEO_USER draw_vertical_background(uint8_t frame, int16_t x, int16_t y)
 {
-    while (y > 32) y = (int16_t)(y - 256);
-    while (y < -192) y = (int16_t)(y + 256);
+    while (y > 0) y = (int16_t)(y - 256);
+    while (y <= -256) y = (int16_t)(y + 256);
 
     demo_draw_sprite_screen(frame, DEMO_BG_BACK_SLOT, x, y,
                             demo_screen_strips(frame),
                             demo_screen_rows(frame),
                             0xFFu, 0xFFu);
     demo_draw_sprite_screen(frame, NG_SPR_BG1_FIRST,
-                            x, (int16_t)(y - 256),
+                            x, (int16_t)(y + 256),
                             demo_screen_strips(frame),
                             demo_screen_rows(frame),
                             0xFFu, 0xFFu);
@@ -1431,7 +1424,7 @@ static uint8_t NEOGEO_USER chap_sound(void)
     for (i = 0u; i < 2u; i++) {
         uint8_t fm_track = (i == 0u) ? SOUND_FM_D : SOUND_FM_F;
         demo_fix_puts(2u, 13u,
-                      (i == 0u) ? "FM 4  DUEL SUSPENSE" :
+                      (i == 0u) ? "FM 4  WARM BELL     " :
                                   "FM 6  BATTLE BRASS  ", 1u);
         soundStopAll();                            snd_step();
         soundSceneReset();                         snd_step();
@@ -1463,28 +1456,25 @@ static uint8_t NEOGEO_USER chap_sound(void)
     playFMTrack(SOUND_FM_G);                  snd_step();
 
     demo_fix_puts(2u, 15u, "LFO OFF      (flat reference)     ", 1u);
-    soundFMSetLFO(0x00u); snd_step();
     if (fm_lfo_hold(0x00u, 120u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=0   (slow LFO)           ", 1u);
-    soundFMSetLFO(0x08u); snd_step();
     if (fm_lfo_hold(0x08u, 120u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=4   (medium vibrato)     ", 1u);
-    soundFMSetLFO(0x0Cu); snd_step();
     if (fm_lfo_hold(0x0Cu, 120u)) return 1u;
     demo_fix_puts(2u, 15u, "LFO rate=7   (fast vibrato)       ", 1u);
-    soundFMSetLFO(0x0Fu); snd_step();
     if (fm_lfo_hold(0x0Fu, 120u)) return 1u;
     soundFMSetLFO(0x00u); snd_step();
 
-    demo_fix_puts(2u, 15u, "TEMPO period=1  (fast)            ", 1u);
-    soundFMSetTempo(1u); snd_step();
-    if (uwait(140u)) return 1u;
-    demo_fix_puts(2u, 15u, "TEMPO period=6  (slow)            ", 1u);
-    soundFMSetTempo(6u); snd_step();
-    if (uwait(140u)) return 1u;
-    demo_fix_puts(2u, 15u, "TEMPO period=1  (back to fast)    ", 1u);
-    soundFMSetTempo(1u); snd_step();
-    if (uwait(120u)) return 1u;
+    demo_fix_puts(2u, 15u, "TEMPO period=2  (quick)           ", 1u);
+    soundStopMusic(); snd_step();
+    playFMTrack(SOUND_FM_G); snd_step();
+    soundFMSetTempo(2u); snd_step();
+    if (uwait(180u)) return 1u;
+    demo_fix_puts(2u, 15u, "TEMPO period=5  (slow)            ", 1u);
+    soundStopMusic(); snd_step();
+    playFMTrack(SOUND_FM_G); snd_step();
+    soundFMSetTempo(5u); snd_step();
+    if (uwait(180u)) return 1u;
 
     soundStopAll();          snd_step();
     soundSceneReset();       snd_step();
@@ -1841,19 +1831,19 @@ static uint8_t NEOGEO_USER chap_chars(void)
 }
 
 /* ================================================================== */
-/*  Chapter 24 — Character Select (portrait animation, AI or joystick)  */
+/*  Chapter 24 — Character Select (portrait animation or joystick)     */
 /* ================================================================== */
 /*
  * Two portraits shown side by side: the girl's 7-frame idle-animation
  * face (screen ids 68-74, already-imported frames sitting right before
- * the eagle's own frames in the same character sheet) and the eagle's
- * existing ground/flying poses (already used by chap_physics/chap_char_2d,
- * reused here rather than sourcing new art).  Plays as an attract-mode
- * AI demo by default, auto-swapping the selection and animating whichever
- * one is highlighted; the moment the joystick moves left/right, the
- * player owns the cursor for the rest of the chapter (same pattern as
- * the shooter and physics chapters), with the same idle-advance once
- * player-controlled.
+ * the eagle's own frames in the same character sheet) and
+ * the eagle's existing ground/flying poses (already used by
+ * chap_physics/chap_char_2d, reused here rather than sourcing new art).
+ * Plays as an attract-mode demo by default, auto-swapping the
+ * selection and animating whichever one is highlighted; the moment the
+ * joystick moves left/right, the player owns the cursor for the rest of
+ * the chapter (same pattern as the shooter and physics chapters), with
+ * the same idle-advance once player-controlled.
  */
 static uint8_t NEOGEO_USER chap_char_select(void)
 {
@@ -1949,8 +1939,9 @@ static uint8_t NEOGEO_USER chap_char_select(void)
         girl_frame  = (sel == 0u) ? girl_frames[(anim_t / 8u) % GIRL_FRAME_COUNT]   : girl_frames[0];
         eagle_frame = (sel == 1u) ? eagle_frames[(anim_t / 8u) % EAGLE_FRAME_COUNT] : eagle_ground;
         draw_asset_bottom_center(girl_frame,  SLOT_GIRL,  110, 180,
-                                 U_SCALE_CHARACTER, U_SCALE_CHARACTER);
-        draw_asset_bottom_center(eagle_frame, SLOT_EAGLE, 210, 180, U_SCALE_45, U_SCALE_45);
+                                 U_SCALE_3_8, U_SCALE_3_8);
+        draw_asset_bottom_center(eagle_frame, SLOT_EAGLE, 210, 180,
+                                 U_SCALE_5_16, U_SCALE_5_16);
         anim_t++;
         s_selected_char = sel;
 
@@ -1980,7 +1971,7 @@ static uint8_t NEOGEO_USER chap_physics(void)
     enum {
         EAGLE_STRIDE     = 16,
         EAGLE_OFFSET_X   = 3,
-        EAGLE_SCALE      = U_SCALE_3_8,
+        EAGLE_SCALE      = U_SCALE_5_16,
         EAGLE_BODY_W     = 24,
         EAGLE_BODY_H     = 36,
         EAGLE_START_X    = 160,
@@ -2049,7 +2040,7 @@ static uint8_t NEOGEO_USER chap_physics(void)
                        demo_screen_strips(frame),
                        demo_screen_rows(frame),
                        DEMO_SCREEN_TILE(frame),
-                       DEMO_SCREEN_PALETTE(s_eagle_ground));
+                       DEMO_SCREEN_PALETTE(frame));
     ng_char_set_tile_stride(eagle, EAGLE_STRIDE);
     eagle->sprite_offset_x = EAGLE_OFFSET_X;
     eagle->sprite_offset_y = -(int16_t)(((uint16_t)demo_screen_rows(frame) * 16u * EAGLE_SCALE) >> 8);
@@ -2118,7 +2109,7 @@ static uint8_t NEOGEO_USER chap_physics(void)
                                demo_screen_strips(want),
                                demo_screen_rows(want),
                                DEMO_SCREEN_TILE(want),
-                               DEMO_SCREEN_PALETTE(s_eagle_ground));
+                               DEMO_SCREEN_PALETTE(want));
             ng_char_set_tile_stride(eagle, EAGLE_STRIDE);
             eagle->sprite_offset_y = -(int16_t)(((uint16_t)demo_screen_rows(want) * 16u * EAGLE_SCALE) >> 8);
             frame = want;
@@ -2766,18 +2757,18 @@ static uint8_t NEOGEO_USER chap_particle_showcase(void)
                 playSFX(SOUND_SFX_8);
             }
         } else if (t < 280u) {
-            /* Phase 2: ambient dust + smoke drift. */
-            demo_fix_puts(2u, 5u, "PHASE: DUST + SMOKE   ", 1u);
+            /* Phase 2: particles fall from the screen centre. */
+            demo_fix_puts(2u, 5u, "PHASE: CENTRE RAIN    ", 1u);
             if ((t % 8u) == 0u) {
-                int16_t dx = (int16_t)(40 + (int16_t)((t * 3u) & 0xFFu));
+                int16_t dx = (int16_t)(160 + (int16_t)((int16_t)(t & 31u) - 16));
                 ng_particle_spawn(NG_PART_DUST, NG_PART_PRI_NORMAL,
-                                  dx, 160, 0, -(1L << (NG_FP_SHIFT - 1)),
-                                  24u, dust_tile, dust_pal, 1u, 1u);
+                                  dx, 88, 0, 1L << (NG_FP_SHIFT - 1),
+                                  48u, dust_tile, dust_pal, 1u, 1u);
                 if ((t % 24u) == 0u) {
                     ng_particle_spawn(NG_PART_SMOKE, NG_PART_PRI_NORMAL,
-                                      (int16_t)(dx + 16), 150,
-                                      0, -(1L << (NG_FP_SHIFT - 1)),
-                                      40u, smoke_tile, smoke_pal, 1u, 1u);
+                                      (int16_t)(dx + 12), 80,
+                                      0, 1L << (NG_FP_SHIFT - 2),
+                                      56u, smoke_tile, smoke_pal, 1u, 1u);
                 }
             }
         } else if (t < 420u) {
@@ -3004,8 +2995,6 @@ static uint8_t NEOGEO_USER chap_depth_parallax(void)
     snd_cross_to(SOUND_MUSIC_A);
     demo_load_screen_palette(U_BG_MOUNTAIN);
     demo_load_screen_palette(U_BG_FOREGROUND);
-    hero_scale(U_SCALE_CHARACTER);
-
     for (t = 0u; t < 360u; t++) {
         uint16_t phase = (uint16_t)(t % 180u);
         int16_t far_x = -(int16_t)(t / 4u);
@@ -3014,8 +3003,6 @@ static uint8_t NEOGEO_USER chap_depth_parallax(void)
                                                         : (180u - phase) / 6u);
         int16_t near_y = (int16_t)(-16 - ((phase < 90u) ? phase / 3u
                                                               : (180u - phase) / 3u));
-        uint8_t frame = s_hero_walk[(t / HERO_CAD_WALK) % 8u];
-
         demo_draw_sprite_screen(U_BG_MOUNTAIN, SLOT_FAR_A, far_x, far_y,
                                 far_strips, far_rows, 0xFFu, 0xFFu);
         demo_draw_sprite_screen(U_BG_MOUNTAIN, SLOT_FAR_B,
@@ -3027,10 +3014,6 @@ static uint8_t NEOGEO_USER chap_depth_parallax(void)
         demo_draw_sprite_screen(U_BG_FOREGROUND, SLOT_NEAR_B,
                                 (int16_t)(near_x + 256), near_y,
                                 near_strips, near_rows, 0xFFu, 0xFFu);
-
-        draw_asset_bottom_center(frame, HERO_SLOT_FIRST,
-                                 160, 194,
-                                 U_SCALE_CHARACTER, U_SCALE_CHARACTER);
 
         if (uframe()) return 1u;
     }
@@ -3054,8 +3037,6 @@ static uint8_t NEOGEO_USER chap_npcs(void)
     demo_fix_puts(2u, 2u, "RESTORED 4-FRAME ARCADE WALK CYCLES", 1u);
     demo_fix_puts(2u, 3u, "ENGINE THINK FN HANDLES PATROL + FACING", 0u);
     snd_cross_to(SOUND_MUSIC_B);
-    draw_background(U_BG_FOREST, 32, 16);
-
     ng_npcs_init();
     reset_palette_memo();
 
@@ -3070,7 +3051,7 @@ static uint8_t NEOGEO_USER chap_npcs(void)
         c = npc_char(npcs[i]);
         if (!c) continue;
 
-        bind_character_asset(c, asset, 0xBFu, 0xBFu);
+        bind_character_asset(c, asset, U_SCALE_1_2, U_SCALE_1_2);
         c->vx_fp = (i & 1u) ? NG_TO_FP(-1) : NG_TO_FP(1);
         ng_npc_set_home(npcs[i], home_x[i], NPC_FLOOR_Y);
         ng_npc_set_patrol_bounds(npcs[i],
@@ -3096,7 +3077,7 @@ static uint8_t NEOGEO_USER chap_npcs(void)
             asset = (uint8_t)((c->facing ? U_NPC_OLD_FIRST + 8u
                                          : U_NPC_OLD_FIRST + 4u) + phase);
             if (!npcs[i] || asset == last_asset[i]) continue;
-            bind_character_asset(c, asset, 0xBFu, 0xBFu);
+            bind_character_asset(c, asset, U_SCALE_1_2, U_SCALE_1_2);
             last_asset[i] = asset;
         }
         ng_npcs_update();
@@ -3604,10 +3585,9 @@ static uint8_t NEOGEO_USER chap_joystick(void)
                                       U_SCALE_CHARACTER, U_SCALE_CHARACTER,
                                       hero_flip);
 
-        /* Replace the ugly hit box crate with a beautiful new AI generated crate. */
         draw_asset_bottom_center(box_flash ? U_CRATE_BROKEN : U_CRATE,
                                  DEMO_PROP_HITBOX_SLOT, 250, HERO_GROUND_Y,
-                                 0xFFu, 0xFFu);
+                                 U_SCALE_3_8, U_SCALE_3_8);
 
         if (uframe()) return 1u;
     }
@@ -3676,9 +3656,9 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
             int16_t climb = (int16_t)((phase_t < 120u)
                                       ? phase_t / 2u
                                       : (240u - phase_t) / 2u);
-            int16_t bg_y = (int16_t)(((uint16_t)climb * 32u) / 60u);
+            int16_t bg_y = -(int16_t)(((uint16_t)climb * 64u) / 60u);
             draw_vertical_background(U_BG_MOUNTAIN, 0, bg_y);
-            hero_bottom = (int16_t)(194 - climb);
+            hero_bottom = 194;
         }
 
         fill = (uint8_t)(phase_t / 12u);
@@ -3795,10 +3775,7 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
      * reticle on, which is what this chapter demonstrates.
      */
     static const uint8_t target_frame[TARGET_COUNT] = {
-        U_NPC_FIRST,
-        (uint8_t)(U_NPC_FIRST + 4u),
-        (uint8_t)(U_NPC_FIRST + 8u),
-        (uint8_t)(U_NPC_FIRST + 1u)
+        U_CRATE, U_CRATE, U_CRATE, U_CRATE
     };
     int16_t target_z[TARGET_COUNT] = { 36, 62, 88, 108 };
     uint8_t target_flash[TARGET_COUNT] = { 0u, 0u, 0u, 0u };
@@ -3825,6 +3802,7 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
     for (i = 0u; i < TARGET_COUNT; i++) {
         demo_load_screen_palette(target_frame[i]);
     }
+    demo_load_screen_palette(U_CRATE_BROKEN);
     demo_load_screen_palette(U_PARTICLE_EXPLOSION);
     demo_load_screen_palette(U_PARTICLE_MAGIC);
     demo_load_screen_palette(U_PARTICLE_HITSPARK);
@@ -3951,6 +3929,10 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
             int16_t sx;
             int16_t bottom_y;
 
+            scale = (uint8_t)(0x28u +
+                              (((uint16_t)(Z_FAR - target_z[i]) * 0x68u) /
+                               (Z_FAR - Z_NEAR)));
+
             if (target_flash[i]) {
                 /* Show the crate coming apart where it was hit, instead
                  * of a generic effect sprite standing in for the kill.
@@ -3958,14 +3940,14 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
                  * separate flash range: the crate is 14 strips and the
                  * old flash slots were only 12 apart, so a second lane
                  * breaking at the same time would have written over it. */
-                draw_asset_bottom_center(U_PARTICLE_EXPLOSION,
+                draw_asset_bottom_center(U_CRATE_BROKEN,
                                          (uint16_t)(128u + i * 20u),
                                          (int16_t)(160 + ((lane_x[i] *
                                                           (Z_FAR - target_z[i])) /
                                                          (Z_FAR - Z_NEAR))),
                                          (int16_t)(116 + (((Z_FAR - target_z[i]) * 64) /
                                                           (Z_FAR - Z_NEAR))),
-                                         0xB0u, 0xB0u);
+                                         scale, scale);
                 target_flash[i]--;
                 if (!target_flash[i]) target_z[i] = Z_FAR;
                 continue;
@@ -3978,10 +3960,11 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
                                   (Z_FAR - Z_NEAR)));
             bottom_y = (int16_t)(116 + (((Z_FAR - target_z[i]) * 64) /
                                         (Z_FAR - Z_NEAR)));
-            /* The source prop is a compact 48x48 page, so it can use a
+            /* The source prop is compact, so it can use a
              * broad, readable far-to-near hardware scale range. */
-            scale = (uint8_t)(0x40u + (((uint16_t)(Z_FAR - target_z[i]) * 0x90u) /
-                                        (Z_FAR - Z_NEAR)));
+            scale = (uint8_t)(0x28u +
+                              (((uint16_t)(Z_FAR - target_z[i]) * 0x68u) /
+                               (Z_FAR - Z_NEAR)));
             draw_asset_bottom_center(target_frame[i],
                                      (uint16_t)(128u + i * 20u),
                                      sx,
@@ -4068,7 +4051,7 @@ static uint8_t NEOGEO_USER chap_char_2d(void)
         demo_fix_puts(12u, 23u, buf, 2u);
 
         draw_asset_bottom_center(frame, HERO_SLOT_FIRST,
-                                 x, y, U_SCALE_1_2, U_SCALE_1_2);
+                                 x, y, U_SCALE_3_8, U_SCALE_3_8);
 
         if ((t % 60u) == 0u) playSFX(SOUND_SFX_5);
         if (uframe()) return 1u;
@@ -4622,18 +4605,16 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
             Z_FAR = 104
         };
         static const uint8_t obj_frame[OBJ_COUNT] = {
-            U_NPC_OLD_FIRST,
-            (uint8_t)(U_NPC_OLD_FIRST + 4u),
-            (uint8_t)(U_NPC_OLD_FIRST + 8u)
+            89u, 90u, 91u
         };
-        static const int16_t lane_x[OBJ_COUNT] = { -82, 0, 82 };
+        static const int16_t lane_x[OBJ_COUNT] = { -68, 0, 68 };
         int16_t z[OBJ_COUNT] = { 36, 72, 104 };
         uint16_t t;
         uint8_t i;
 
         chap_header(19u, "DEPTH RIDE", "ROAD DEPTH  SCALE OBJECTS");
-        demo_fix_puts(2u, 2u, "THREE NPC LANES APPROACH THE CAMERA", 1u);
-        demo_fix_puts(2u, 3u, "EAGLE HOLDS ALTITUDE AS DEPTH CHANGES", 0u);
+        demo_fix_puts(2u, 2u, "THREE EFFECT LANES APPROACH CAMERA", 1u);
+        demo_fix_puts(2u, 3u, "EAGLE AT 30%  HARDWARE DEPTH SCALE", 0u);
         demo_fix_puts(13u, 5u, "DEPTH RIDE", 2u);
         snd_cross_to(SOUND_MUSIC_C);
 
@@ -4645,8 +4626,8 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
          * background already sitting in the pipeline instead. */
         demo_load_screen_palette(U_BG_MOUNTAIN);
         for (i = 0u; i < OBJ_COUNT; i++) demo_load_screen_palette(obj_frame[i]);
-        hero_scale(U_SCALE_CHARACTER);
-        hero_place(160, 82);
+        hero_scale(U_SCALE_30);
+        hero_place(160, 96);
 
         for (t = 0u; t < 560u; t++) {
             uint8_t frame = s_flight_frames[(t / 8u) % 3u];
@@ -4662,12 +4643,12 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
                 z[i] = (int16_t)(z[i] - 1);
                 if (z[i] < Z_NEAR) z[i] = Z_FAR;
 
-                scale = (uint8_t)(0x50u + (((uint16_t)(Z_FAR - z[i]) * 0xA0u) / (Z_FAR - Z_NEAR)));
+                scale = (uint8_t)(0x30u + (((uint16_t)(Z_FAR - z[i]) * 0x80u) / (Z_FAR - Z_NEAR)));
                 sx = (int16_t)(160 + ((lane_x[i] * (Z_FAR - z[i])) / (Z_FAR - Z_NEAR)));
-                sy = (int16_t)(96 + ((Z_FAR - z[i]) * 92) / (Z_FAR - Z_NEAR));
+                sy = (int16_t)(74 + ((Z_FAR - z[i]) * 70) / (Z_FAR - Z_NEAR));
 
                 draw_asset_bottom_center(obj_frame[i],
-                                         (uint16_t)(110u + i * 12u),
+                                         (uint16_t)(110u + i * 24u),
                                          sx, sy, scale, scale);
             }
 

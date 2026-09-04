@@ -705,10 +705,9 @@ void NEOGEO_USER ng_clear_screen_full(void)
     ng_physics_clear_solids();
     ng_chars_init();
 
-    /* Black page for the duration of the wipe: FIX and every sprite slot
-     * are rewritten below, and on a light backdrop each half-written cell
-     * shows up as a bright block while that happens.  The page colour
-     * goes back on at the bottom, once there is nothing left to rewrite. */
+    /* Keep the page white throughout teardown.  FIX tile 0x00FF and
+     * sprite pixel index 0 are transparent, so cleared cells expose this
+     * backdrop without a black transition frame. */
     setBACKDROP(DEMO_BG_CLEAR);
     clearFix();
 

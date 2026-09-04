@@ -26,7 +26,7 @@ typedef struct {
 #define NG_ASSET_CATEGORY_OPPONENT 2
 #define NG_ASSET_CATEGORY_NPC 3
 
-#define NG_ASSET_META_COUNT 160
+#define NG_ASSET_META_COUNT 173
 
 static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 0, 16, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* 0.png */
@@ -165,11 +165,11 @@ static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 34048, 149, 8, 6, 4, 10, 14, 1, 99, 95, 1, 3 }, /* zzzz_duck_target_white.png */
     { 34304, 150, 8, 6, 4, 10, 14, 1, 99, 95, 1, 3 }, /* zzzz_duck_target_yellow.png */
     { 34560, 151, 2, 2, 7, 14, 0, 0, 32, 32, 1, 3 }, /* zzzzz_hitbox.png */
-    { 34816, 152, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzz_particle_dust.png */
-    { 35072, 153, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzz_particle_explosion.png */
-    { 35328, 154, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzz_particle_hitspark.png */
-    { 35584, 155, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzz_particle_magic.png */
-    { 35840, 156, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzz_particle_smoke.png */
+    { 34816, 152, 1, 1, 0, 15, 0, 0, 16, 16, 1, 3 }, /* zzzzzz_particle_dust.png */
+    { 35072, 153, 1, 1, 0, 15, 0, 0, 16, 16, 1, 3 }, /* zzzzzz_particle_explosion.png */
+    { 35328, 154, 1, 1, 0, 15, 0, 0, 16, 16, 1, 3 }, /* zzzzzz_particle_hitspark.png */
+    { 35584, 155, 1, 1, 0, 15, 0, 0, 16, 16, 1, 3 }, /* zzzzzz_particle_magic.png */
+    { 35840, 156, 1, 1, 0, 15, 0, 0, 16, 16, 1, 3 }, /* zzzzzz_particle_smoke.png */
     { 36096, 157, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzzz_ssg_starfield.png */
     { 36352, 158, 8, 7, 4, 9, 8, 0, 112, 112, 1, 3 }, /* zzzzzzzz_enemyship_blue.png */
     { 36608, 159, 8, 7, 4, 9, 8, 0, 112, 112, 1, 3 }, /* zzzzzzzz_enemyship_green.png */
@@ -179,16 +179,29 @@ static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 37632, 163, 4, 6, 6, 10, 0, 0, 64, 96, 1, 3 }, /* zzzzzzzzz_balloon_green.png */
     { 37888, 164, 4, 6, 6, 10, 0, 0, 64, 96, 1, 3 }, /* zzzzzzzzz_balloon_red.png */
     { 38144, 165, 4, 6, 6, 10, 0, 0, 64, 96, 1, 3 }, /* zzzzzzzzz_balloon_yellow.png */
-    { 38400, 166, 12, 16, 2, 0, 1, 0, 190, 256, 1, 3 }, /* zzzzzzzzzz_sky_boss.png */
-    { 38656, 167, 2, 5, 7, 11, 8, 0, 16, 80, 1, 3 }, /* zzzzzzzzzz_sky_bullet.png */
-    { 38912, 168, 8, 9, 4, 7, 0, 0, 128, 144, 1, 3 }, /* zzzzzzzzzz_sky_enemy_a.png */
-    { 39168, 169, 6, 10, 5, 6, 12, 0, 72, 160, 1, 3 }, /* zzzzzzzzzz_sky_enemy_b.png */
-    { 39424, 170, 4, 4, 6, 12, 4, 8, 56, 56, 1, 3 }, /* zzzzzzzzzz_sky_enemy_c.png */
-    { 39680, 171, 2, 2, 7, 14, 0, 0, 32, 32, 1, 3 }, /* zzzzzzzzzz_sky_orb.png */
-    { 39936, 172, 8, 10, 4, 6, 8, 0, 112, 160, 1, 3 }, /* zzzzzzzzzz_sky_plane.png */
-    { 40192, 173, 14, 15, 1, 1, 0, 0, 224, 240, 1, 3 }, /* zzzzzzzzzzz_crate.png */
-    { 40448, 174, 14, 15, 1, 1, 0, 0, 224, 240, 1, 3 }, /* zzzzzzzzzzz_crate_broken.png */
+    { 38400, 166, 8, 8, 4, 8, 0, 0, 128, 128, 1, 3 }, /* zzzzzzzzzz_sky_boss.png */
+    { 38656, 167, 2, 1, 7, 15, 8, 0, 16, 16, 1, 3 }, /* zzzzzzzzzz_sky_bullet.png */
+    { 38912, 168, 2, 2, 7, 14, 0, 0, 32, 32, 1, 3 }, /* zzzzzzzzzz_sky_enemy_a.png */
+    { 39168, 169, 2, 2, 7, 14, 0, 0, 32, 32, 1, 3 }, /* zzzzzzzzzz_sky_enemy_b.png */
+    { 39424, 170, 2, 2, 7, 14, 0, 0, 32, 32, 1, 3 }, /* zzzzzzzzzz_sky_enemy_c.png */
+    { 39680, 171, 2, 1, 7, 15, 8, 0, 16, 16, 1, 3 }, /* zzzzzzzzzz_sky_orb.png */
+    { 39936, 172, 2, 1, 7, 15, 8, 0, 16, 16, 1, 3 }, /* zzzzzzzzzz_sky_plane.png */
+    { 40192, 173, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzzzzzzz_crate.png */
+    { 40448, 174, 16, 16, 0, 0, 0, 0, 256, 256, 1, 3 }, /* zzzzzzzzzzz_crate_broken.png */
     { 40704, 175, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* 0.png */
+    { 40960, 176, 16, 16, 0, 0, 0, 0, 256, 256, 1, 0 }, /* 1.png */
+    { 41216, 177, 6, 6, 5, 10, 0, 0, 96, 96, 1, 0 }, /* z_npc_84.png */
+    { 41472, 178, 6, 6, 5, 10, 0, 0, 96, 96, 1, 0 }, /* z_npc_85.png */
+    { 41728, 179, 6, 6, 5, 10, 0, 0, 96, 96, 1, 0 }, /* z_npc_86.png */
+    { 41984, 180, 6, 6, 5, 10, 0, 0, 96, 96, 1, 0 }, /* z_npc_87.png */
+    { 42240, 181, 6, 6, 5, 10, 0, 0, 96, 96, 1, 0 }, /* z_npc_88.png */
+    { 42496, 182, 6, 6, 5, 10, 0, 0, 96, 96, 1, 0 }, /* z_npc_89.png */
+    { 42752, 183, 6, 6, 5, 10, 0, 0, 96, 96, 1, 0 }, /* z_npc_90.png */
+    { 43008, 184, 6, 6, 5, 10, 0, 0, 96, 96, 1, 0 }, /* z_npc_91.png */
+    { 43264, 185, 6, 6, 5, 10, 0, 0, 96, 96, 1, 0 }, /* z_npc_92.png */
+    { 43520, 186, 6, 6, 5, 10, 0, 0, 96, 96, 1, 0 }, /* z_npc_93.png */
+    { 43776, 187, 6, 6, 5, 10, 0, 0, 96, 96, 1, 0 }, /* z_npc_94.png */
+    { 44032, 188, 6, 6, 5, 10, 0, 0, 96, 96, 1, 0 }, /* z_npc_95.png */
 };
 
 #endif

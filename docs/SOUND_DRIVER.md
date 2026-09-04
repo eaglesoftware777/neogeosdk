@@ -128,9 +128,10 @@ soundFadeOutSpeed(speed);  soundFadeInSpeed(speed);
 | `soundFMSetLFO(rateEn)` | `$22` LFO — bit 3 enables, bits 0–2 set the rate |
 | `soundSetSSGNoise(period)` | `$06` noise period, 5 bits |
 
-The LFO register is global to the chip, so patch changes deliberately leave
-it alone: a `soundFMSetLFO()` setting survives every patch switch and
-note-on.
+The LFO register is global to the chip, but loading an FM patch writes that
+patch's LFO byte. Call `soundFMSetLFO()` after `playFMTrack()` when changing
+the LFO at runtime. The setting remains active until another patch is loaded
+or the driver is reset.
 
 ### CSM — Composite Sine Mode
 

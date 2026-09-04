@@ -4,6 +4,7 @@
 import io
 import math
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -274,6 +275,12 @@ def fit_sprite_rgba(img, target_w, target_h, anchor):
     top = (th - img.height) // 2
     if anchor == "bottom-center":
         top = th - img.height
+    elif anchor == "bottom-left":
+        left = 0
+        top = th - img.height
+    elif anchor == "top-left":
+        left = 0
+        top = 0
     if left < 0:
         left = 0
     if top < 0:
@@ -415,17 +422,45 @@ def load_sprite_asset(spec, shared_palette15=None):
     return indexed, palette
 
 
+def sprite_palette_group_key(spec):
+    """Return the palette-sharing family for one sprite asset."""
+    subdir = spec.get("subdir", "")
+    if subdir == "characters":
+        name = spec.get("name", "")
+        match = re.search(r"_r(\d+)_c(\d+)", name)
+        if not match:
+            return "characters:misc"
+
+        row = int(match.group(1))
+        col = int(match.group(2))
+        if row <= 5:
+            return "characters:warrior"
+        if row == 7 and col <= 7:
+            return "characters:select"
+        if row == 7:
+            return "characters:eagle"
+        return f"characters:row{row:02d}"
+
+    stem = os.path.splitext(spec.get("name", ""))[0]
+    if stem.endswith("_alt"):
+        stem = stem[:-4]
+    while stem and stem[-1].isdigit():
+        stem = stem[:-1]
+    stem = stem.rstrip("_")
+    return f"{subdir}:{stem}"
+
+
 def build_shared_sprite_palettes(specs):
     shared = {}
     if not HAS_IMG2NEO or not HAS_PIL:
         return shared
 
-    for group in ("characters", "npcs"):
-        group_specs = [
-            spec for spec in specs
-            if spec["mode"] == "sprite"
-            and (spec.get("subdir") == group or spec.get("category") == group)
-        ]
+    groups = {}
+    for spec in specs:
+        if spec["mode"] == "sprite":
+            groups.setdefault(sprite_palette_group_key(spec), []).append(spec)
+
+    for group, group_specs in groups.items():
         if len(group_specs) <= 1:
             continue
 
@@ -457,9 +492,9 @@ def build_shared_sprite_palettes(specs):
 def build_master_sprite_palettes(specs):
     """
     Vivid-pipeline replacement for build_shared_sprite_palettes.
-    Groups sprite specs by subdir / category (characters, npcs) and
-    derives ONE CIE-Lab k-means++ master palette per group from the
-    union of every group sprite's opaque pixels.  Used by
+    Groups sprite specs by animation family and derives one CIE-Lab
+    k-means++ master palette from the union of each family's opaque
+    pixels.  Used by
     load_sprite_asset_vivid: every frame of one character renders
     against the same 15-colour palette, so animations cannot flicker
     or shift hues between frames.
@@ -467,12 +502,12 @@ def build_master_sprite_palettes(specs):
     shared = {}
     if not HAS_VIVID_SPRITES or not HAS_PIL:
         return shared
-    for group in ("characters", "npcs"):
-        group_specs = [
-            spec for spec in specs
-            if spec["mode"] == "sprite"
-            and (spec.get("subdir") == group or spec.get("category") == group)
-        ]
+    groups = {}
+    for spec in specs:
+        if spec["mode"] == "sprite":
+            groups.setdefault(sprite_palette_group_key(spec), []).append(spec)
+
+    for group, group_specs in groups.items():
         if len(group_specs) <= 1:
             continue
         paths = [spec["path"] for spec in group_specs]
@@ -798,10 +833,9 @@ def main():
         # ARTBOX_LEGACY=1 -> legacy build_shared_sprite_palettes +
         # load_sprite_asset (naive nearest-colour, no dither).
         # default       -> vivid pipeline: build_master_sprite_palettes
-        # derives ONE CIE-Lab master per group (characters / npcs) and
-        # load_sprite_asset_vivid quantises every frame against that
-        # master with scanline FS + Teflon Routing.  Animations are
-        # bit-stable across frames by construction (single palette).
+        # derives one CIE-Lab master per animation family.  Main
+        # characters remain one family; unrelated NPC props and effects
+        # no longer compete for the same 15 visible colors.
         if USE_LEGACY or not HAS_VIVID_SPRITES:
             shared_palettes = build_shared_sprite_palettes(specs)
             sprite_loader = load_sprite_asset
@@ -811,7 +845,7 @@ def main():
         for spec in specs:
             print(f"  [{spec['db_index']:3d}] {spec['name']}  mode={spec['mode']}")
             if spec["mode"] == "sprite":
-                shared = shared_palettes.get(spec.get("subdir"))
+                shared = shared_palettes.get(sprite_palette_group_key(spec))
                 indexed, palette = sprite_loader(spec, shared)
             else:
                 indexed, palette = load_screen_asset(spec)

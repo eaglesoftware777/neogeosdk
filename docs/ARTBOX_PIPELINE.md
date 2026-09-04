@@ -104,10 +104,13 @@ in the middle of a category renumbers everything after it, and your game
 code refers to assets by id. The shipped games pad filenames to control
 placement, and you should too.
 
-`characters` and `npcs` share **one derived 15-colour master palette per
-group** (`build_master_sprite_palettes()`); every other category gets
-per-asset palettes. A sprite that looks wrong after being moved between
-categories is almost always hitting this, not a conversion bug.
+Animated sprites share a derived 15-colour master palette per animation
+family (`build_master_sprite_palettes()`).  The demo keeps the warrior,
+selection portraits, eagle, and each remaining character row in separate
+families.  NPC filenames are grouped by their stable name prefix.  This keeps
+colors stable within an animation without forcing unrelated artwork into one
+15-color budget.  A sprite that looks wrong after being renamed or moved
+between categories may have entered the wrong palette family.
 
 Rule matching in `assets.cfg` has three priorities; the lowest is a rule
 with an empty `match_category` plus a filename pattern, which is how the
