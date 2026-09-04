@@ -1,19 +1,19 @@
-; 0_ssg_example_a - star coin ladder
+; 0_ssg_example_a - temple road melody
 
-T210
+T148
 P0
-V13
-O5
-L16
-
-C G > C < G  E G > C < E
-F A > C < A  E G B G
-
-G B > D < B  A > C E < A
-G E C E  G > C < G E
-
+V10
+O3
 L8
-F G A > C  < B A G E
-C4 R8 C8 G8 > C4
+
+C E- G C  D F A D
+E- G B- E-  D F A D
+C E- G > C  < B- G F E-
+D F A > D  < C B- G4
+
+L16
+G A B- > C  < B- A G F  E- F G A  G F E- D
+L8
+C E- G > C  < G E- C4
 
 ~

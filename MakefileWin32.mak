@@ -103,7 +103,9 @@ PY?=py
 SOX?=
 MAME?=mame
 DEBUG?=0
-GDB_REMOTE?=localhost:1234
+GDB_HOST?=127.0.0.1
+GDB_PORT?=23946
+GDB_REMOTE?=$(GDB_HOST):$(GDB_PORT)
 
 FM_MMLS:=$(wildcard $(GAME_SOUND)/fm/*.mml)
 MML_TRACKS:=$(wildcard $(GAME_SOUND)/mml/*.mml)
@@ -545,6 +547,8 @@ menu:
 	@echo   make -f MakefileWin32.mak test-build
 	@echo   make -f MakefileWin32.mak debug
 	@echo   make -f MakefileWin32.mak mame-trace
+	@echo   make -f MakefileWin32.mak gdb-server
+	@echo   make -f MakefileWin32.mak gdb-remote
 	@echo.
 	@echo Packaging:
 	@echo   make -f MakefileWin32.mak dist
@@ -566,8 +570,15 @@ debug: all
 debug-aes:
 	$(MAKE) -f MakefileWin32.mak PLATFORM=aes GAME=$(GAME) debug
 
+.PHONY: mame-trace-script
+mame-trace-script:
+	if not exist $(DUMP_DIR) mkdir $(DUMP_DIR)
+	@echo trace $(DUMP_DIR)\m68k_trace.txt,maincpu> $(DUMP_DIR)\mame_trace.mds
+	@echo trace $(DUMP_DIR)\z80_trace.txt,audiocpu>> $(DUMP_DIR)\mame_trace.mds
+	@echo go>> $(DUMP_DIR)\mame_trace.mds
+
 .PHONY: mame-trace
-mame-trace: all
+mame-trace: all mame-trace-script
 	$(LOG_CTX)
 	if not exist $(DUMP_DIR) mkdir $(DUMP_DIR)
 	$(NM) -n out\game > $(DUMP_DIR)\game.sym
@@ -617,3 +628,9 @@ gdb: debug-build
 .PHONY: gdb-remote
 gdb-remote: debug-build
 	$(GDB) -ex "target remote $(GDB_REMOTE)" out\game
+
+.PHONY: gdb-server
+gdb-server: all debug-build
+	$(LOG_CTX)
+	@echo GDB server: $(GDB_REMOTE) ^(68000 main CPU^)
+	$(MAME_COMMON) -debug -debugger gdbstub -debugger_host $(GDB_HOST) -debugger_port $(GDB_PORT) -output console -nofilter -window

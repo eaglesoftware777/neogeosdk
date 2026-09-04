@@ -101,13 +101,13 @@ from pathlib import Path
 
 import numpy as np
 import png
-from PIL import Image
+from PIL import Image, ImageFilter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Reuse the NeoGeo 5-bit grid snap and Lab conversion from img2neo —
 # keeps the module dependency-free of scikit-learn / scikit-image.
-from img2neo import snap_neogeo, rgb_to_lab, kmeans_palette as _img2neo_kmeans_palette, alpha_bleed
+from img2neo import rgb_to_lab, kmeans_palette as _img2neo_kmeans_palette, alpha_bleed
 
 
 TILE_SIZE = 16
@@ -115,6 +115,104 @@ COLORS_PER_TILE = 15
 PIXELS_PER_TILE = TILE_SIZE * TILE_SIZE   # 256
 ALPHA_OPAQUE_THRESHOLD = 128
 ALPHA_SOLID_THRESHOLD = 240
+
+# How much local turbulence a pixel needs before it is treated as detail and
+# error-diffused rather than snapped to its nearest palette entry.
+#
+# Sprite art on this hardware is drawn the way the arcade originals drew it:
+# flat colour fields separated by deliberate shading bands and a hard
+# outline.  Error diffusion across a field like that invents texture the
+# artist never put there, and on an LCD or over HDMI - where there is no
+# CRT spot bloom to average it away - that texture reads as dirt on the
+# character's skin.  Photographic and painted backdrops are the opposite
+# case: they have real continuous gradients that need the dither to avoid
+# banding, so they cross into detail far sooner.
+#
+# The sprite cut used to be much higher than the backdrop one, to hold flat
+# fields out of a diffusion pass that was all-or-nothing.  Now that the
+# strength ramps in (see the dither loop), the wide band is no longer needed
+# and it cost accuracy: measured against the source both per pixel and
+# through a display blur, ramping from the lower cut beats the old hard
+# switch at the higher one on every one of those measures at once.
+SPRITE_SMOOTH_CUT = 15.0
+BACKGROUND_SMOOTH_CUT = 15.0
+# Ordered blue-noise mixing between the two nearest entries.  Backdrops want
+# it (it is what keeps a sky from banding); flat sprite fields do not.
+SPRITE_ORDERED_MIX = False
+
+
+# ---------------------------------------------------------------------------
+# The hardware colour lattice
+# ---------------------------------------------------------------------------
+# A palette word is  D | R0 G0 B0 | R4..R1 | G4..G1 | B4..B1.  Each channel
+# carries SIX bits: the five held in the word, plus a sixth and least
+# significant one that all three channels share and that D supplies
+# inverted -
+#
+#     channel6 = (channel5 << 1) | (1 - D)
+#
+# which is why the word with D set and nothing else is true black, and the
+# word with D clear and everything else set is full white.  Because that
+# sixth bit is shared, the three channels always come out on the same
+# parity, so the reachable set is two interleaved 32^3 sub-lattices - 65536
+# colours - rather than a free 64^3.
+#
+# This module used to quantise to 32 evenly spaced levels per channel
+# (step 8, 0..248) and leave D clear for every entry.  That threw away the
+# whole second sub-lattice, and it put the darkest colour the palette could
+# express at 4/255 instead of 0 - black line art and black backdrops shipped
+# as a very dark grey, which reads as washed-out on an LCD or over HDMI
+# where there is no CRT falloff to hide it.  It also meant every entry sat
+# half a step away from the colour the quantiser believed it had chosen, so
+# the error being diffused was measured against the wrong target.
+#
+# Working on the real lattice costs nothing: it is the same number of
+# palette entries, packed into the same 16-bit word.
+
+_NG_LUMA_WEIGHT = np.array([0.299, 0.587, 0.114], dtype=np.float32)
+
+
+def ng_expand6(v6: np.ndarray) -> np.ndarray:
+    """6-bit channel value -> the 8-bit value the hardware actually shows."""
+    v = np.asarray(v6, dtype=np.int32)
+    return ((v << 2) | (v >> 4)).astype(np.uint8)
+
+
+def ng_snap(rgb_u8: np.ndarray) -> np.ndarray:
+    """
+    Round RGB onto the nearest colour the hardware can display.
+
+    Both parities are tried and the closer one wins, judged by
+    luminance-weighted squared error - the two candidates are never more
+    than one lattice step apart, so a full Lab round trip would not change
+    the outcome often enough to pay for itself here.
+
+    The returned values are the 8-bit colours the hardware displays, so
+    `>> 2` recovers the exact 6-bit channel the packer needs.
+    """
+    src = np.asarray(rgb_u8, dtype=np.float32)
+    shape = src.shape
+    flat = src.reshape(-1, 3)
+    exact = flat * (63.0 / 255.0)
+
+    best = None
+    best_err = None
+    for parity in (0, 1):
+        # Clamp inside the parity, not to the raw 0..63 span: rounding a
+        # near-white channel up to 64 and then clipping it to 63 would hand
+        # back an odd value on the even pass, and a triple whose channels
+        # disagree on parity is not a colour the hardware can hold.
+        v6 = np.clip(np.round((exact - parity) * 0.5) * 2.0 + parity,
+                     float(parity), float(62 + parity))
+        cand = ng_expand6(v6.astype(np.int32)).astype(np.float32)
+        err = (((cand - flat) ** 2) * _NG_LUMA_WEIGHT).sum(axis=1)
+        if best is None:
+            best, best_err = cand, err
+        else:
+            take = err < best_err
+            best = np.where(take[:, None], cand, best)
+            best_err = np.where(take, err, best_err)
+    return best.astype(np.uint8).reshape(shape)
 
 
 # ---------------------------------------------------------------------------
@@ -163,31 +261,32 @@ def weighted_ycbcr_palette(palette_u8: np.ndarray) -> np.ndarray:
 # shows up as colour noise inside flat regions.
 #
 # Doing that honestly means a Lab conversion per pixel per candidate, which
-# is far too slow for a per-pixel Python loop.  The hardware only has 32
-# levels per channel, so the entire reachable colour space is 32^3 = 32768
-# entries: precompute Lab for all of them once (~400 KB) and every lookup
-# afterwards is an array index.  Rounding an error-laden accumulator onto
-# that lattice before lookup costs at most half a step, which is an order
-# of magnitude below the spacing between palette entries.
+# is far too slow for a per-pixel Python loop.  Each channel only has 64
+# distinguishable levels, so the whole space is 64^3 = 262144 entries:
+# precompute Lab for all of them once (~3 MB) and every lookup afterwards is
+# an array index.  The grid is indexed by `rgb >> 2`, which is exact for any
+# colour the hardware can show and costs at most one level of rounding for
+# the error-laden accumulator values that get looked up mid-dither - an
+# order of magnitude below the spacing between palette entries.
 
 _LAB_LUT = None
 
 
 def lab_lattice_lut() -> np.ndarray:
-    """(32, 32, 32, 3) float32 Lab for every Neo Geo-representable colour."""
+    """(64, 64, 64, 3) float32 Lab, indexed by the 6-bit channel triple."""
     global _LAB_LUT
     if _LAB_LUT is None:
-        levels = (np.arange(32, dtype=np.uint8) * 8)
+        levels = ng_expand6(np.arange(64))
         grid = np.stack(np.meshgrid(levels, levels, levels, indexing="ij"),
                         axis=-1).astype(np.uint8)
-        _LAB_LUT = rgb_to_lab(grid.reshape(-1, 3)).reshape(32, 32, 32, 3)
+        _LAB_LUT = rgb_to_lab(grid.reshape(-1, 3)).reshape(64, 64, 64, 3)
     return _LAB_LUT
 
 
 def lab_palette(palette_u8: np.ndarray) -> np.ndarray:
     """Palette (K, 3) uint8 -> (K, 3) float32 Lab, via the lattice LUT."""
     lut = lab_lattice_lut()
-    p = snap_neogeo(np.asarray(palette_u8, dtype=np.uint8).reshape(-1, 3)) >> 3
+    p = ng_snap(np.asarray(palette_u8, dtype=np.uint8).reshape(-1, 3)) >> 2
     return lut[p[:, 0], p[:, 1], p[:, 2]]
 
 
@@ -314,7 +413,7 @@ def refine_palette_on_lattice(palette_u8: np.ndarray,
     unused entry is re-seeded on the pixel that is currently worst served,
     which is the standard split-the-worst-cluster move.
     """
-    pal = snap_neogeo(np.asarray(palette_u8, dtype=np.uint8).reshape(-1, 3))
+    pal = ng_snap(np.asarray(palette_u8, dtype=np.uint8).reshape(-1, 3))
     px = np.asarray(pixels_u8, dtype=np.uint8).reshape(-1, 3)
     if px.size == 0 or pal.size == 0:
         return pal
@@ -342,7 +441,7 @@ def refine_palette_on_lattice(palette_u8: np.ndarray,
         for j in range(k):
             m = labels == j
             if m.any():
-                cand[j] = snap_neogeo(px[m].mean(axis=0).round().astype(np.uint8))
+                cand[j] = ng_snap(px[m].mean(axis=0).round().astype(np.uint8))
 
         # --- reclaim slots that ended up duplicated or unowned ---
         seen = {}
@@ -359,7 +458,7 @@ def refine_palette_on_lattice(palette_u8: np.ndarray,
             pick = 0
             for j in dead:
                 while pick < order.shape[0]:
-                    c = snap_neogeo(px[order[pick]])
+                    c = ng_snap(px[order[pick]])
                     pick += 1
                     key = tuple(int(v) for v in c)
                     if key not in taken:
@@ -450,18 +549,31 @@ def _reserved_anchor_colors(rgb: np.ndarray,
     if np.any(lum < 18.0):
         anchors.append(np.array([0, 0, 0], dtype=np.uint8))
     if len(anchors) < max_anchors and np.any(lum > 236.0):
-        anchors.append(np.array([248, 248, 248], dtype=np.uint8))
+        # Both ends are exact hardware colours: black is the word with only
+        # the dark bit set, white the word with every other bit set.  The
+        # white anchor used to be 248 because that was the top of the old
+        # step-8 grid, which cost the brightest highlight in the image a
+        # level it did not have to lose.
+        anchors.append(np.array([255, 255, 255], dtype=np.uint8))
     return anchors
 
 
 def _lab_kmeans_palette_with_anchors(rgb: np.ndarray,
                                      n_colors: int = 15,
-                                     asset_type: str = "background"
+                                     asset_type: str = "background",
+                                     pre_toned: bool = False
                                      ) -> np.ndarray:
     """
     CIE-Lab k-means palette with optional black/white slot reservation.
 
-    Returns exactly n_colors RGB entries snapped to the Neo Geo colour grid.
+    Returns exactly n_colors RGB entries on the hardware colour lattice.
+
+    `pre_toned` says the caller has already run _neo_palette_pop over these
+    pixels.  It matters: the quantiser dithers against the toned canvas, so
+    a palette derived from a second helping of tone lands somewhere the
+    pixels it has to serve never go, and every pixel is then matched to an
+    entry pulled away from it.  Callers that hand over raw source pixels
+    leave this False and get the tone pass applied once, here.
     """
     rgb = np.asarray(rgb, dtype=np.uint8).reshape(-1, 3)
     if rgb.size == 0:
@@ -474,25 +586,28 @@ def _lab_kmeans_palette_with_anchors(rgb: np.ndarray,
         rng = np.random.default_rng(0)
         rgb = rgb[rng.choice(rgb.shape[0], 16384, replace=False)]
 
-    source = _neo_palette_pop(rgb.reshape(-1, 1, 3),
-                              np.ones((rgb.shape[0], 1), dtype=bool),
-                              asset_type=asset_type).reshape(-1, 3)
+    if pre_toned:
+        source = rgb
+    else:
+        source = _neo_palette_pop(rgb.reshape(-1, 1, 3),
+                                  np.ones((rgb.shape[0], 1), dtype=bool),
+                                  asset_type=asset_type).reshape(-1, 3)
     lab = rgb_to_lab(source).astype(np.float32)
     centres = _kmeans_pp_weighted_vivid(lab, k)
     from img2neo import lab_to_rgb
-    palette = snap_neogeo(lab_to_rgb(centres))
+    palette = ng_snap(lab_to_rgb(centres))
 
     if anchors:
         palette = np.vstack([palette, np.stack(anchors, axis=0)])
 
     palette = _dedupe_and_pad_palette(palette, source, n_colors)
-    return snap_neogeo(palette)
+    return ng_snap(palette)
 
 
 def _dedupe_and_pad_palette(palette: np.ndarray,
                             fallback_rgb: np.ndarray,
                             n_colors: int = 15) -> np.ndarray:
-    palette = snap_neogeo(np.asarray(palette, dtype=np.uint8).reshape(-1, 3))
+    palette = ng_snap(np.asarray(palette, dtype=np.uint8).reshape(-1, 3))
     unique = []
     seen = set()
     for color in palette:
@@ -507,7 +622,7 @@ def _dedupe_and_pad_palette(palette: np.ndarray,
         unique.append(np.array([0, 0, 0], dtype=np.uint8))
 
     if len(unique) < n_colors and fallback_rgb.size:
-        fallback = snap_neogeo(np.asarray(fallback_rgb, dtype=np.uint8).reshape(-1, 3))
+        fallback = ng_snap(np.asarray(fallback_rgb, dtype=np.uint8).reshape(-1, 3))
         vals, counts = np.unique(fallback, axis=0, return_counts=True)
         order = np.argsort(-counts)
         for idx in order:
@@ -692,7 +807,7 @@ def _quantize_tile(tile_rgba: np.ndarray,
 
     # Snap to the NeoGeo 5-bit grid so the palette is ROM-storable
     # without further rounding loss.
-    palette_rgb = snap_neogeo(palette_rgb)
+    palette_rgb = ng_snap(palette_rgb)
 
     # Dither the tile against this snapped local palette.
     raw_indices = _floyd_steinberg_perceptual(rgb, palette_rgb, alpha_mask)
@@ -1007,7 +1122,7 @@ def cluster_and_remap_tile_palettes(
             # Fits in budget — accept this clustering.
             bank_palettes_arr = np.stack(bank_palettes,
                                           axis=0).astype(np.uint8)
-            bank_palettes_arr = snap_neogeo(bank_palettes_arr)
+            bank_palettes_arr = ng_snap(bank_palettes_arr)
             tile_to_bank = candidate_assignments.astype(np.uint16)
             break
         # Overflow: widen tolerance and retry the entire pass.
@@ -1019,7 +1134,7 @@ def cluster_and_remap_tile_palettes(
         # at least colours stay close to their original cluster.
         bank_palettes_arr = np.stack(bank_palettes,
                                       axis=0).astype(np.uint8)
-        bank_palettes_arr = snap_neogeo(bank_palettes_arr)
+        bank_palettes_arr = ng_snap(bank_palettes_arr)
         tile_to_bank = np.zeros(n_tiles, dtype=np.uint16)
         for ti in range(n_tiles):
             if candidate_assignments[ti] != -1:
@@ -1114,7 +1229,7 @@ def derive_global_palette_from_tile_palettes(
         if len(unique_colors) < k:
             most_common = unique_colors[counts.argmax()]
             out[len(unique_colors):] = most_common
-        return snap_neogeo(out)
+        return ng_snap(out)
 
     # k-means++ in Lab space, sample-weighted by `counts`.
     unique_lab = rgb_to_lab(unique_colors)
@@ -1161,7 +1276,7 @@ def derive_global_palette_from_tile_palettes(
     # skimage; import locally so the rest of the module is unaffected
     # if img2neo isn't available.
     from img2neo import lab_to_rgb
-    palette_rgb = snap_neogeo(lab_to_rgb(centres))
+    palette_rgb = ng_snap(lab_to_rgb(centres))
     return palette_rgb
 
 
@@ -1552,6 +1667,27 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
         asset_type=asset_type,
     ).astype(np.float32)
 
+    # Painted/rendered source art (as opposed to art authored pixel-by-
+    # pixel) carries fine per-pixel grain that has nothing to do with
+    # genuine shading edges - every adjacent pair of pixels differs by a
+    # little even across what reads, to the eye, as a single flat tone.
+    # The turbulence test below decides "detail" vs "smooth" from raw
+    # adjacent-pixel deltas, so that grain alone was enough to push
+    # almost an entire flat face or sky into the Floyd-Steinberg branch,
+    # sprinkling speckle nothing in the source actually called for.
+    # A light blur, sampled only for the turbulence test (never for the
+    # colour that gets quantised), tells flat-but-grainy apart from
+    # genuinely shaded: real shading bands and outlines survive a small
+    # blur with most of their contrast intact, single-pixel grain does
+    # not.
+    if asset_type == "sprite":
+        rgb_for_turbulence = np.asarray(
+            Image.fromarray(np.clip(rgb_np, 0, 255).astype(np.uint8))
+                 .filter(ImageFilter.GaussianBlur(radius=2.0)),
+            dtype=np.float32)
+    else:
+        rgb_for_turbulence = rgb_np
+
     tile_rows = target_h // 16
     tile_cols = target_w // 16
 
@@ -1591,7 +1727,7 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
             palette_mask = solid_mask if solid_mask.any() else opaque_mask
             opaque_rgb = rgb_np[palette_mask].astype(np.uint8)
             master_rgb = _lab_kmeans_palette_with_anchors(
-                opaque_rgb, n_colors=15, asset_type="sprite"
+                opaque_rgb, n_colors=15, asset_type="sprite", pre_toned=True
             ).astype(np.float32)
         else:
             master_rgb = np.zeros((15, 3), dtype=np.float32)
@@ -1614,7 +1750,8 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
 
                 opaque_rgb = tile_rgb[tile_alpha].astype(np.uint8)
                 local_luts[(ty_idx, tx_idx)] = _lab_kmeans_palette_with_anchors(
-                    opaque_rgb, n_colors=15, asset_type="background"
+                    opaque_rgb, n_colors=15, asset_type="background",
+                    pre_toned=True
                 ).astype(np.float32)
 
     # ---------------------------------------------------------
@@ -1711,13 +1848,9 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
 
     noise = blue_noise_mask()
     noise_n = noise.shape[0]
-    mix_ok = (asset_type != "sprite")
-    # Sprite art is authored flat: broad single-colour fields with hard
-    # edges.  Letting mildly-textured sprite interiors into the error
-    # diffusion branch sprinkles them with speckle that was never in the
-    # source, so sprites snap over a wider band of local turbulence than
-    # photographic material does.
-    smooth_cut = 26.0 if asset_type == "sprite" else 15.0
+    mix_ok = (SPRITE_ORDERED_MIX if asset_type == "sprite" else True)
+    smooth_cut = (SPRITE_SMOOTH_CUT if asset_type == "sprite"
+                  else BACKGROUND_SMOOTH_CUT)
 
     for gy in range(target_h):
         left_to_right = (gy & 1) == 0
@@ -1738,19 +1871,20 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
             px = np.clip(error_canvas[gy, gx, :], 0.0, 255.0)
             orig_px = rgb_np[gy, gx]
 
-            # Turbulence from the ORIGINAL source, not the error-laden
-            # canvas, so inherited error cannot promote a flat area into
-            # the detail branch.
+            # Turbulence from the (lightly denoised) ORIGINAL source, not
+            # the error-laden canvas, so inherited error cannot promote a
+            # flat area into the detail branch.
             variance = 0.0
             if gx > 0 and gy > 0:
-                left = rgb_np[gy, gx - 1]
-                top = rgb_np[gy - 1, gx]
-                variance = (abs(orig_px[0] - left[0]) +
-                             abs(orig_px[1] - left[1]) +
-                             abs(orig_px[2] - left[2]) +
-                             abs(orig_px[0] - top[0]) +
-                             abs(orig_px[1] - top[1]) +
-                             abs(orig_px[2] - top[2]))
+                left = rgb_for_turbulence[gy, gx - 1]
+                top = rgb_for_turbulence[gy - 1, gx]
+                orig_t = rgb_for_turbulence[gy, gx]
+                variance = (abs(orig_t[0] - left[0]) +
+                             abs(orig_t[1] - left[1]) +
+                             abs(orig_t[2] - left[2]) +
+                             abs(orig_t[0] - top[0]) +
+                             abs(orig_t[1] - top[1]) +
+                             abs(orig_t[2] - top[2]))
 
             # A sprite's semi-transparent contour pixels keep the clean
             # source colour: they are anti-aliasing, and diffusing error
@@ -1759,7 +1893,7 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
             smooth_mode = edge_mode or variance < smooth_cut
 
             if smooth_mode:
-                q = snap_neogeo(np.clip(orig_px, 0.0, 255.0).astype(np.uint8)) >> 3
+                q = np.clip(orig_px, 0.0, 255.0).astype(np.uint8) >> 2
                 target = lab_lut[q[0], q[1], q[2]]
                 d = np.sum((pal_ycc - target) ** 2, axis=1)
                 order = np.argsort(d)
@@ -1788,7 +1922,7 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
                 global_indices[gy, gx] = best_idx
                 continue
 
-            q = snap_neogeo(px.astype(np.uint8)) >> 3
+            q = px.astype(np.uint8) >> 2
             target = lab_lut[q[0], q[1], q[2]]
             d = np.sum((pal_ycc - target) ** 2, axis=1)
             best_idx = int(np.argmin(d))
@@ -1796,7 +1930,21 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
 
             # Floyd-Steinberg 7/3/5/1 with a 0.75 leak dampener, mirrored
             # when the row runs right-to-left.
-            quant_error = (px - pal_rgb[best_idx]) * 0.75
+            #
+            # The dampener is ramped in over the turbulence just above the
+            # cut rather than applied at full strength the moment a pixel
+            # crosses it.  With a hard switch, two regimes end up side by
+            # side inside one surface - a pixel a hair over the line pushes
+            # three quarters of its error into its neighbours while the one
+            # next to it pushes none - and that interleaving is itself the
+            # speckle the split was meant to prevent.  Ramping means a
+            # barely-textured area diffuses barely anything, so it stays as
+            # flat as the artist drew it, while real detail still gets the
+            # full treatment.
+            ramp = (variance - smooth_cut) / (smooth_cut * 1.5)
+            if ramp > 1.0:
+                ramp = 1.0
+            quant_error = (px - pal_rgb[best_idx]) * (0.75 * ramp)
             step = 1 if left_to_right else -1
             nx = gx + step
             if 0 <= nx < target_w:
@@ -1846,7 +1994,7 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
 
 _VIVID_CACHE_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), ".cache", "vivid")
-_VIVID_CACHE_VERSION = "v11-lattice-refit-bluenoise"
+_VIVID_CACHE_VERSION = "v13-six-bit-lattice-single-pass-screens"
 
 
 def _vivid_cache_key(image_path: str, target_w: int, target_h: int,
@@ -2033,54 +2181,61 @@ def convert_screen_via_vivid_pipeline(
     if cached is not None:
         return cached
 
-    # 3-Pass Context-Insulated Quantizer: Lab kmeans palettes per tile
-    # + unified global error matrix (no per-tile FS reset = no seams)
-    # + scanline FS with alpha skip.
-    ready_tiles, final_palettes = execute_final_vivid_pipeline(
-        image_path, target_w, target_h)
-
+    # A screen gets ONE palette bank on the hardware, so it gets one
+    # palette here, derived from the pixels and applied in a single
+    # quantisation.
+    #
+    # This used to run the per-tile quantiser first, rebuild an RGB canvas
+    # out of its output, cluster a global palette from the per-tile
+    # PALETTES, and then dither that rebuilt canvas a second time.  Three
+    # things went wrong with it.  Quantising twice meant the second pass
+    # was dithering a picture that was already dithered, so its own error
+    # diffusion piled noise on top of noise instead of on top of the
+    # photograph.  Clustering over palette entries threw away how many
+    # pixels each colour actually covered - a shade held by one pixel in
+    # one tile counted for exactly as much as the sky - which is the one
+    # weight a palette must respect.  And the second dither matched in
+    # plain RGB while the palette had been clustered in Lab, the same
+    # mismatch that puts colour noise into flat regions.
     tile_cols = target_w // 16
     tile_rows = target_h // 16
-    n_tiles = len(ready_tiles)
+    n_tiles = tile_cols * tile_rows
 
-    # 2. Reconstruct the per-pixel RGB canvas + alpha mask from the
-    # per-tile output.  Transparent pixels (index 0) propagate the
-    # transparency through the final global FS pass.
-    canvas_rgb = np.zeros((target_h, target_w, 3), dtype=np.uint8)
-    alpha_mask = np.zeros((target_h, target_w), dtype=bool)
-    for ti in range(n_tiles):
+    src = Image.open(image_path).convert("RGBA")
+    src = src.resize((target_w, target_h), Image.Resampling.LANCZOS)
+    rgba = np.array(src, dtype=np.uint8)
+
+    # Cluster on the toned pixels, because the toned canvas is what the
+    # dither below has to reproduce.
+    opaque = rgba[:, :, 3] >= ALPHA_OPAQUE_THRESHOLD
+    toned = _neo_palette_pop(rgba[:, :, :3], opaque, asset_type="background")
+    pixels = toned[opaque] if opaque.any() else toned.reshape(-1, 3)
+
+    global_palette = _lab_kmeans_palette_with_anchors(
+        pixels, n_colors=n_colors, asset_type="background", pre_toned=True)
+    global_palette = refine_palette_on_lattice(global_palette, pixels)
+
+    master = np.zeros((COLORS_PER_TILE, 3), dtype=np.float32)
+    fill = min(COLORS_PER_TILE, global_palette.shape[0])
+    master[:fill] = global_palette[:fill]
+    if fill < COLORS_PER_TILE:
+        master[fill:] = global_palette[fill - 1]
+
+    ready_tiles, _ = _vivid_pipeline_from_rgba(
+        rgba.astype(np.float32),
+        asset_type="background",
+        master_palette=master,
+    )
+
+    indexed = np.zeros((target_h, target_w), dtype=np.uint16)
+    for ti, tile_row in enumerate(ready_tiles):
         ty, tx = divmod(ti, tile_cols)
-        y0, x0 = ty * 16, tx * 16
-        indices_u8 = np.array(ready_tiles[ti], dtype=np.uint8).reshape(16, 16)
-        palette_u8 = np.array(final_palettes[ti], dtype=np.uint8).reshape(15, 3)
-        opaque_tile = indices_u8 != 0
-        idx_local = (indices_u8.astype(np.int16) - 1).clip(0, 14).astype(np.uint8)
-        tile_rgb = palette_u8[idx_local]
-        canvas_rgb[y0:y0 + 16, x0:x0 + 16] = tile_rgb
-        alpha_mask[y0:y0 + 16, x0:x0 + 16] = opaque_tile
-
-    # 3. Single global palette from the union of per-tile palettes.
-    all_pal_rgb = np.concatenate([
-        np.array(p, dtype=np.uint8).reshape(15, 3) for p in final_palettes
-    ], axis=0)
-    nonzero = all_pal_rgb.sum(axis=1) > 0
-    candidates = all_pal_rgb[nonzero] if nonzero.any() else all_pal_rgb
-    candidates = snap_neogeo(candidates)
-    cand_lab = rgb_to_lab(candidates).astype(np.float32)
-    global_centres_lab = _kmeans_pp_weighted_local(cand_lab, n_colors)
-    from img2neo import lab_to_rgb
-    global_palette = snap_neogeo(lab_to_rgb(global_centres_lab))
-
-    # 4. Global RGB-Euclidean Floyd-Steinberg dither.  Transparent
-    # pixels skip the dither entirely so the alpha mask survives the
-    # final pass and the output's slot-0 transparency is preserved.
-    raw_idx = _floyd_steinberg_global(canvas_rgb, global_palette, alpha_mask)
-    indexed = np.where(alpha_mask,
-                        (raw_idx + 1).astype(np.uint16),
-                        np.uint16(0))
+        indexed[ty * 16:(ty + 1) * 16, tx * 16:(tx + 1) * 16] = np.array(
+            tile_row, dtype=np.uint8).reshape(16, 16)
+    global_palette = master.astype(np.uint8)
 
     palette16 = np.zeros((16, 3), dtype=np.uint16)
-    palette16[1:1 + n_colors] = global_palette.astype(np.uint16)
+    palette16[1:1 + COLORS_PER_TILE] = global_palette.astype(np.uint16)
 
     metadata = {
         "source_width":   int(target_w),
@@ -2137,7 +2292,7 @@ def _kmeans_palette_from_context(context_rgb: np.ndarray,
     centres_lab = _kmeans_pp_weighted(opaque_lab.astype(np.float32),
                                         n_clusters=n_colors)
     from img2neo import lab_to_rgb
-    return snap_neogeo(lab_to_rgb(centres_lab))
+    return ng_snap(lab_to_rgb(centres_lab))
 
 
 def convert_screen_via_tile_palette(
@@ -2213,7 +2368,7 @@ def convert_screen_via_tile_palette(
     # --- Step 1: CRT pre-boost (gamma + contrast) ---------------------
     rgb_f = arr[:, :, :3].astype(np.float32) / 255.0
     rgb_f = apply_crt_tone(rgb_f, gamma=gamma, contrast=contrast)
-    rgb_corrected = snap_neogeo((rgb_f * 255.0).astype(np.uint8))
+    rgb_corrected = ng_snap((rgb_f * 255.0).astype(np.uint8))
     alpha_full = arr[:, :, 3]
     opaque_full = alpha_full >= alpha_threshold
 
@@ -2363,7 +2518,7 @@ def convert_screen_via_tile_palette(
             break
 
     from img2neo import lab_to_rgb
-    rep_palette = snap_neogeo(lab_to_rgb(centres))         # (15, 3) u8
+    rep_palette = ng_snap(lab_to_rgb(centres))         # (15, 3) u8
     # No single source bank now corresponds to rep_palette — fix the
     # rep_bank value to a sentinel so the equality check in the tile
     # loop below never short-circuits the second remap pass (every
@@ -2493,7 +2648,7 @@ def cluster_palette_banks(palettes: np.ndarray,
     for bi, members in enumerate(bank_members):
         member_palettes = palettes[members]
         bank_palettes[bi] = np.median(member_palettes, axis=0).astype(np.uint8)
-    bank_palettes = snap_neogeo(bank_palettes)
+    bank_palettes = ng_snap(bank_palettes)
     return bank_palettes, tile_to_bank
 
 

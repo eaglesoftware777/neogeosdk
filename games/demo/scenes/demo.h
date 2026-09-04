@@ -17,13 +17,11 @@
  * CRT shows wherever no sprite and no opaque FIX pixel is drawn, so it
  * is the demo's page colour.
  *
- * A scene clear is done on DEMO_BG_CLEAR (black) so that half-written
- * FIX cells and stale sprite rows cannot flash as bright rectangles
- * while VRAM is being wiped, and the backdrop is switched to DEMO_BG
- * on the very next vblank once the screen is quiet.  Change DEMO_BG
- * alone to re-colour every scene in the demo.
+ * Transparent FIX and sprite pixels expose the backdrop.  Keep the
+ * transition backdrop identical to the scene backdrop so a teardown
+ * cannot flash a black frame between two white-backed chapters.
  */
-#define DEMO_BG_CLEAR    BLACK
+#define DEMO_BG_CLEAR    WHITE
 #define DEMO_BG          WHITE
 
 /*

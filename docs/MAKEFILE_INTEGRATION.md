@@ -148,7 +148,8 @@ make debug-build
 make debug-artifacts
 make gdb-trace
 make gdb
-make gdb-remote GDB_REMOTE=localhost:1234
+make gdb-server
+make gdb-remote GDB_REMOTE=127.0.0.1:23946
 ```
 
 Windows:

@@ -19,7 +19,6 @@ void NEOGEO_USER ng_scene_clean(uint8_t flags)
     }
 
     if (flags & NG_SCENE_CLEAN_SPRITES) {
-        clearSprs();
         ng_sprite_hide_all();
     }
 

@@ -951,39 +951,39 @@ screen_id=136 palette_bank=151 tile_base=34560 reserved_last=34815 used_cols=2 u
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [137] npcs/zzzzzz_particle_dust.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-left rule=cat_particle_tiles
 category=npcs
-source=512x512 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=137 palette_bank=152 tile_base=34816 reserved_last=35071 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=16x16 canvas=256x256 content=16x16 offset=(0,240)
+screen_id=137 palette_bank=152 tile_base=34816 reserved_last=35071 used_cols=1 used_rows=1 start_col=0 start_row=15 x_pad=0 y_pad=0 used_tiles=1 strips=1 active_rows=1
+note=tile-aligned 16x16 transparent particle
 
 [138] npcs/zzzzzz_particle_explosion.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-left rule=cat_particle_tiles
 category=npcs
-source=512x512 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=138 palette_bank=153 tile_base=35072 reserved_last=35327 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=16x16 canvas=256x256 content=16x16 offset=(0,240)
+screen_id=138 palette_bank=153 tile_base=35072 reserved_last=35327 used_cols=1 used_rows=1 start_col=0 start_row=15 x_pad=0 y_pad=0 used_tiles=1 strips=1 active_rows=1
+note=tile-aligned 16x16 transparent particle
 
 [139] npcs/zzzzzz_particle_hitspark.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-left rule=cat_particle_tiles
 category=npcs
-source=512x512 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=139 palette_bank=154 tile_base=35328 reserved_last=35583 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=16x16 canvas=256x256 content=16x16 offset=(0,240)
+screen_id=139 palette_bank=154 tile_base=35328 reserved_last=35583 used_cols=1 used_rows=1 start_col=0 start_row=15 x_pad=0 y_pad=0 used_tiles=1 strips=1 active_rows=1
+note=tile-aligned 16x16 transparent particle
 
 [140] npcs/zzzzzz_particle_magic.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-left rule=cat_particle_tiles
 category=npcs
-source=512x512 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=140 palette_bank=155 tile_base=35584 reserved_last=35839 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=16x16 canvas=256x256 content=16x16 offset=(0,240)
+screen_id=140 palette_bank=155 tile_base=35584 reserved_last=35839 used_cols=1 used_rows=1 start_col=0 start_row=15 x_pad=0 y_pad=0 used_tiles=1 strips=1 active_rows=1
+note=tile-aligned 16x16 transparent particle
 
 [141] npcs/zzzzzz_particle_smoke.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-left rule=cat_particle_tiles
 category=npcs
-source=512x512 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=141 palette_bank=156 tile_base=35840 reserved_last=36095 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=16x16 canvas=256x256 content=16x16 offset=(0,240)
+screen_id=141 palette_bank=156 tile_base=35840 reserved_last=36095 used_cols=1 used_rows=1 start_col=0 start_row=15 x_pad=0 y_pad=0 used_tiles=1 strips=1 active_rows=1
+note=tile-aligned 16x16 transparent particle
 
 [142] npcs/zzzzzzz_ssg_starfield.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
@@ -1051,70 +1051,161 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [151] npcs/zzzzzzzzzz_sky_boss.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
-source=208x280 canvas=256x256 content=190x256 offset=(33,0)
-screen_id=151 palette_bank=166 tile_base=38400 reserved_last=38655 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=1 y_pad=0 used_tiles=192 strips=12 active_rows=16
+source=128x128 canvas=256x256 content=128x128 offset=(64,128)
+screen_id=151 palette_bank=166 tile_base=38400 reserved_last=38655 used_cols=8 used_rows=8 start_col=4 start_row=8 x_pad=0 y_pad=0 used_tiles=64 strips=8 active_rows=8
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [152] npcs/zzzzzzzzzz_sky_bullet.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
-source=16x80 canvas=256x256 content=16x80 offset=(120,176)
-screen_id=152 palette_bank=167 tile_base=38656 reserved_last=38911 used_cols=2 used_rows=5 start_col=7 start_row=11 x_pad=8 y_pad=0 used_tiles=10 strips=2 active_rows=5
+source=16x16 canvas=256x256 content=16x16 offset=(120,240)
+screen_id=152 palette_bank=167 tile_base=38656 reserved_last=38911 used_cols=2 used_rows=1 start_col=7 start_row=15 x_pad=8 y_pad=0 used_tiles=2 strips=2 active_rows=1
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [153] npcs/zzzzzzzzzz_sky_enemy_a.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
-source=128x144 canvas=256x256 content=128x144 offset=(64,112)
-screen_id=153 palette_bank=168 tile_base=38912 reserved_last=39167 used_cols=8 used_rows=9 start_col=4 start_row=7 x_pad=0 y_pad=0 used_tiles=72 strips=8 active_rows=9
+source=32x32 canvas=256x256 content=32x32 offset=(112,224)
+screen_id=153 palette_bank=168 tile_base=38912 reserved_last=39167 used_cols=2 used_rows=2 start_col=7 start_row=14 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [154] npcs/zzzzzzzzzz_sky_enemy_b.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
-source=72x160 canvas=256x256 content=72x160 offset=(92,96)
-screen_id=154 palette_bank=169 tile_base=39168 reserved_last=39423 used_cols=6 used_rows=10 start_col=5 start_row=6 x_pad=12 y_pad=0 used_tiles=60 strips=6 active_rows=10
+source=32x32 canvas=256x256 content=32x32 offset=(112,224)
+screen_id=154 palette_bank=169 tile_base=39168 reserved_last=39423 used_cols=2 used_rows=2 start_col=7 start_row=14 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [155] npcs/zzzzzzzzzz_sky_enemy_c.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
-source=56x56 canvas=256x256 content=56x56 offset=(100,200)
-screen_id=155 palette_bank=170 tile_base=39424 reserved_last=39679 used_cols=4 used_rows=4 start_col=6 start_row=12 x_pad=4 y_pad=8 used_tiles=16 strips=4 active_rows=4
+source=32x32 canvas=256x256 content=32x32 offset=(112,224)
+screen_id=155 palette_bank=170 tile_base=39424 reserved_last=39679 used_cols=2 used_rows=2 start_col=7 start_row=14 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [156] npcs/zzzzzzzzzz_sky_orb.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
-source=32x32 canvas=256x256 content=32x32 offset=(112,224)
-screen_id=156 palette_bank=171 tile_base=39680 reserved_last=39935 used_cols=2 used_rows=2 start_col=7 start_row=14 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
+source=16x16 canvas=256x256 content=16x16 offset=(120,240)
+screen_id=156 palette_bank=171 tile_base=39680 reserved_last=39935 used_cols=2 used_rows=1 start_col=7 start_row=15 x_pad=8 y_pad=0 used_tiles=2 strips=2 active_rows=1
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [157] npcs/zzzzzzzzzz_sky_plane.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
-source=112x160 canvas=256x256 content=112x160 offset=(72,96)
-screen_id=157 palette_bank=172 tile_base=39936 reserved_last=40191 used_cols=8 used_rows=10 start_col=4 start_row=6 x_pad=8 y_pad=0 used_tiles=80 strips=8 active_rows=10
+source=16x16 canvas=256x256 content=16x16 offset=(120,240)
+screen_id=157 palette_bank=172 tile_base=39936 reserved_last=40191 used_cols=2 used_rows=1 start_col=7 start_row=15 x_pad=8 y_pad=0 used_tiles=2 strips=2 active_rows=1
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [158] npcs/zzzzzzzzzzz_crate.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-left rule=cat_crate_props
 category=npcs
-source=224x240 canvas=256x256 content=224x240 offset=(16,16)
-screen_id=158 palette_bank=173 tile_base=40192 reserved_last=40447 used_cols=14 used_rows=15 start_col=1 start_row=1 x_pad=0 y_pad=0 used_tiles=210 strips=14 active_rows=15
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=1254x1254 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=158 palette_bank=173 tile_base=40192 reserved_last=40447 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=tile-aligned collision prop
 
 [159] npcs/zzzzzzzzzzz_crate_broken.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-left rule=cat_crate_props
 category=npcs
-source=224x240 canvas=256x256 content=224x240 offset=(16,16)
-screen_id=159 palette_bank=174 tile_base=40448 reserved_last=40703 used_cols=14 used_rows=15 start_col=1 start_row=1 x_pad=0 y_pad=0 used_tiles=210 strips=14 active_rows=15
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=1254x1254 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=159 palette_bank=174 tile_base=40448 reserved_last=40703 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=tile-aligned collision prop
 
 [160] zz_bg/0.png
-mode=screen fit=contain anchor=center rule=legacy_screens
+mode=screen fit=contain anchor=center rule=cat_sky_background
 category=zz_bg
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=160 palette_bank=175 tile_base=40704 reserved_last=40959 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
-note=legacy flat layout support
+note=full-screen vertical shooter background
+
+[161] zz_bg/1.png
+mode=sprite fit=pad anchor=top-left rule=cat_foreground_layer
+category=zz_bg
+source=256x256 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=161 palette_bank=176 tile_base=40960 reserved_last=41215 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=transparent near-field parallax layer
+
+[162] zz_npcs_old/z_npc_84.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
+category=zz_npcs_old
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=162 palette_bank=177 tile_base=41216 reserved_last=41471 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
+note=compact classic NPC animation frames
+
+[163] zz_npcs_old/z_npc_85.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
+category=zz_npcs_old
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=163 palette_bank=178 tile_base=41472 reserved_last=41727 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
+note=compact classic NPC animation frames
+
+[164] zz_npcs_old/z_npc_86.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
+category=zz_npcs_old
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=164 palette_bank=179 tile_base=41728 reserved_last=41983 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
+note=compact classic NPC animation frames
+
+[165] zz_npcs_old/z_npc_87.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
+category=zz_npcs_old
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=165 palette_bank=180 tile_base=41984 reserved_last=42239 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
+note=compact classic NPC animation frames
+
+[166] zz_npcs_old/z_npc_88.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
+category=zz_npcs_old
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=166 palette_bank=181 tile_base=42240 reserved_last=42495 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
+note=compact classic NPC animation frames
+
+[167] zz_npcs_old/z_npc_89.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
+category=zz_npcs_old
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=167 palette_bank=182 tile_base=42496 reserved_last=42751 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
+note=compact classic NPC animation frames
+
+[168] zz_npcs_old/z_npc_90.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
+category=zz_npcs_old
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=168 palette_bank=183 tile_base=42752 reserved_last=43007 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
+note=compact classic NPC animation frames
+
+[169] zz_npcs_old/z_npc_91.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
+category=zz_npcs_old
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=169 palette_bank=184 tile_base=43008 reserved_last=43263 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
+note=compact classic NPC animation frames
+
+[170] zz_npcs_old/z_npc_92.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
+category=zz_npcs_old
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=170 palette_bank=185 tile_base=43264 reserved_last=43519 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
+note=compact classic NPC animation frames
+
+[171] zz_npcs_old/z_npc_93.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
+category=zz_npcs_old
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=171 palette_bank=186 tile_base=43520 reserved_last=43775 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
+note=compact classic NPC animation frames
+
+[172] zz_npcs_old/z_npc_94.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
+category=zz_npcs_old
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=172 palette_bank=187 tile_base=43776 reserved_last=44031 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
+note=compact classic NPC animation frames
+
+[173] zz_npcs_old/z_npc_95.png
+mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
+category=zz_npcs_old
+source=96x96 canvas=256x256 content=96x96 offset=(80,160)
+screen_id=173 palette_bank=188 tile_base=44032 reserved_last=44287 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
+note=compact classic NPC animation frames
 

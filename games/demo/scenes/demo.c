@@ -630,11 +630,14 @@ static void NEOGEO_USER demo_perform_sprite_draw(const DemoSpriteDraw *cmd)
     ng_sprite_window_set_shape(window, strips, rows);
     ng_sprite_window_clear_tail(window);
 
-    demo_load_screen_palette(cmd->screen_id);
+    uint8_t pal_id = cmd->screen_id;
+    if (pal_id >= 76u && pal_id <= 80u) pal_id = 75u;
+
+    demo_load_screen_palette(pal_id);
 
     ng_sprite_group_init(&g, cmd->first_sprite, strips, meta_rows,
                          DEMO_SCREEN_TILE(cmd->screen_id),
-                         DEMO_SCREEN_PALETTE(cmd->screen_id));
+                         DEMO_SCREEN_PALETTE(pal_id));
     ng_sprite_group_set_tile_stride(&g, 16u);
     ng_sprite_group_set_active_rows(&g, rows);
     ng_sprite_group_set_pos(&g,

@@ -386,8 +386,8 @@ void NEOGEO_USER WORK_INIT(void) {
 
 void NEOGEO_USER DISPLAY_INIT(void) {
 	ASM_START
-	ASM_MVW(#0x8000,PALETTES)
-	ASM_MVW(#0x8000,PALETTES+8190)   /* backdrop = black */
+	ASM_MVW(#0x7FFF,PALETTES)
+	ASM_MVW(#0x7FFF,PALETTES+8190)   /* backdrop = black */
 	ASM_JSR(SYS_FIX_CLEAR) // jump to the FIX_CLEAR subroutine
 	ASM_JSR(SYS_LSP_1ST) // jump to the LSP_1st subroutine
 	ASM_JSR(clearSprs)

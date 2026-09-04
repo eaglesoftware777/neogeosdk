@@ -74,7 +74,9 @@ WLALINK?=wlalink
 PYTHON?=python3
 SOX?=
 DEBUG?=0
-GDB_REMOTE?=localhost:1234
+GDB_HOST?=127.0.0.1
+GDB_PORT?=23946
+GDB_REMOTE?=$(GDB_HOST):$(GDB_PORT)
 CROP=-crop 0x000000 0x080000
 SCAT=srec_cat
 INFO=xxd -g 2
@@ -497,6 +499,8 @@ menu:
 	@echo "  make test-build              # build then run"
 	@echo "  make debug                   # build then run with debugger flags"
 	@echo "  make mame-trace              # build + MAME trace script"
+	@echo "  make gdb-server              # MAME 68000 GDB server on port 23946"
+	@echo "  make gdb-remote              # connect cross-GDB to that server"
 	@echo ""
 	@echo "Packaging:"
 	@echo "  make dist                    # full build + dist package for GAME"
@@ -518,8 +522,13 @@ debug: all
 debug-aes:
 	$(MAKE) debug
 
+.PHONY: mame-trace-script
+mame-trace-script:
+	mkdir -p $(DUMP_DIR)
+	printf "trace $(DUMP_DIR)/m68k_trace.txt,maincpu\ntrace $(DUMP_DIR)/z80_trace.txt,audiocpu\ngo\n" > $(DUMP_DIR)/mame_trace.mds
+
 .PHONY: mame-trace
-mame-trace: all
+mame-trace: all mame-trace-script
 	$(LOG_CTX)
 	mkdir -p $(DUMP_DIR)
 	$(NM) -n out/game > $(DUMP_DIR)/game.sym
@@ -564,3 +573,9 @@ gdb: debug-build
 .PHONY: gdb-remote
 gdb-remote: debug-build
 	$(GDB) -ex "target remote $(GDB_REMOTE)" out/game
+
+.PHONY: gdb-server
+gdb-server: all debug-build
+	$(LOG_CTX)
+	@echo "GDB server: $(GDB_REMOTE) (68000 main CPU)"
+	$(MAME_COMMON) -debug -debugger gdbstub -debugger_host $(GDB_HOST) -debugger_port $(GDB_PORT) -output console -nofilter -window

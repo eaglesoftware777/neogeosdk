@@ -111,7 +111,7 @@ uint32_t NEOGEO_USER __udivsi3(uint32_t a, uint32_t b)
     if (b == 0) return 0;
 
     /* Optimize for 16-bit divisors */
-    if (b <= 0xFFFF && a < 0x80000000UL && (a >> 16) < b) {
+    if (b <= 0xFFFF && a < 0x7FFF0000UL && (a >> 16) < b) {
         asm volatile (
         "move.l %[a], %%d0\n\t"
         "move.w %[b], %%d1\n\t"
@@ -144,7 +144,7 @@ uint32_t NEOGEO_USER __umodsi3(uint32_t a, uint32_t b)
     if (b == 0) return 0;
 
     /* Optimize for 16-bit divisors */
-    if (b <= 0xFFFF && a < 0x80000000UL && (a >> 16) < b) {
+    if (b <= 0xFFFF && a < 0x7FFF0000UL && (a >> 16) < b) {
         asm volatile (
         "move.l %[a], %%d0\n\t"
         "move.w %[b], %%d1\n\t"
