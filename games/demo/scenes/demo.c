@@ -649,7 +649,14 @@ static void NEOGEO_USER demo_perform_sprite_draw(const DemoSpriteDraw *cmd)
     meta_strips = demo_screen_strips(cmd->screen_id);
     meta_rows   = demo_screen_rows(cmd->screen_id);
     if (strips > meta_strips) strips = meta_strips;
-    /* Do not clamp rows to meta_rows if we are scrolling vertically */
+
+    /* An asset owns meta_rows of tiles and no more.  A scrolled draw
+     * starts tile_y rows into it, so what is left from there is the
+     * ceiling for the map as well as for the row count - reaching past
+     * it addresses the next asset's tiles. */
+    if (cmd->tile_y >= meta_rows) return;
+    meta_rows = (uint8_t)(meta_rows - cmd->tile_y);
+    if (rows > meta_rows) rows = meta_rows;
 
     window = demo_sprite_window_find(cmd->first_sprite);
     if (!window || cmd->first_sprite + strips > NG_SPR_TOTAL) return;
@@ -660,10 +667,8 @@ static void NEOGEO_USER demo_perform_sprite_draw(const DemoSpriteDraw *cmd)
 
     if (!demo_palette_loaded[cmd->screen_id]) demo_load_screen_palette(cmd->screen_id);
 
-    /* Use meta_rows for VRAM allocation height to ensure we don't under-allocate */
-    uint8_t alloc_rows = (rows > meta_rows) ? rows : meta_rows;
-    if (!demo_sprite_group_ready[index] || g->strips != strips || g->heightTiles != alloc_rows) {
-        ng_sprite_group_init(g, cmd->first_sprite, strips, alloc_rows,
+    if (!demo_sprite_group_ready[index] || g->strips != strips || g->heightTiles != meta_rows) {
+        ng_sprite_group_init(g, cmd->first_sprite, strips, meta_rows,
                              (uint16_t)(DEMO_SCREEN_TILE(cmd->screen_id) + cmd->tile_y),
                              DEMO_SCREEN_PALETTE(cmd->screen_id));
         demo_sprite_group_ready[index] = 1u;
