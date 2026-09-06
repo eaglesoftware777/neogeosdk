@@ -31,11 +31,46 @@ kmeans_samples = 16384
 kmeans_iters = 35
 note = background layer or multi-level backdrop
 
+[rule:cat_sky_planes]
+match_category = characters
+pattern = sprite_p*_plane.png
+mode = sprite
+category = characters
+# Sky Lance's player craft, drawn about 28x40 in the playfield.  Imported
+# at the 128 ceiling it arrives 90x128 and the sprite chip then throws
+# three pixels in four away to fit the playfield - and what it throws away
+# is a dither the quantiser chose for pixels it thought were final, which
+# is why the ship read as a smear of colour rather than a plane.  Import
+# it at the size it is drawn and there is nothing left to throw away.
+fit = pad
+anchor = bottom-center
+target_width = 40
+target_height = 40
+dither = none
+contrast = 1.00
+saturation = 1.05
+sharpen_radius = 0.0
+sharpen_percent = 0
+sharpen_threshold = 0
+kmeans_samples = 2048
+kmeans_iters = 16
+halo_strip = true
+halo_luma_threshold = 220
+note = player craft, imported at playfield size
+
 [rule:cat_characters]
 match_category = characters
 pattern = *.png
 mode = sprite
 category = characters
+# Importing these at the size they are drawn - 128 rather than 256, with
+# the demo's U_SCALE_* fractions doubled to match - is the right idea and
+# measurably sharper, but it moves every character's strip count and tile
+# stride, and the demo's character binding rejects the new geometry
+# silently: ng_char_set_sprite() drops a bind whose asset window fails
+# validation, so four chapters came up with stale or missing art.  The
+# ceiling stays at 256 until that path reports the rejection instead of
+# swallowing it.  See cat_sky_planes for the same idea where it does work.
 fit = pad
 anchor = bottom-center
 target_width = 256
@@ -143,14 +178,19 @@ category = npc
 # 256-wide canvas it needs 16 hardware sprite strips, and a formation shooter
 # that puts 18 of them on screen has nowhere near that many sprites to spend.
 #
-# The formation spaces enemies 34 px apart across and 22 px down, so each one
-# is drawn about 32x21.  Importing at exactly that size lets it be drawn at
+# The formation spaces enemies 50 px apart across and 34 px down, so each one
+# is drawn about 48x31.  Importing at exactly that size lets it be drawn at
 # full scale: shrinking it in hardware from a larger canvas would resample it
 # a second time, dropping columns unevenly and smearing the detail.
+#
+# 32x21 was the old size and it was too small to read as a ship at all - a
+# 1238x800 source reduced by 38x has nothing left of itself.  48 px wide is
+# three hardware strips, which the enemy pool's four-strip stride already
+# reserves, so the slot map does not move.
 fit = pad
 anchor = bottom-center
-target_width = 32
-target_height = 32
+target_width = 48
+target_height = 48
 dither = none
 contrast = 1.00
 saturation = 1.05
@@ -162,6 +202,51 @@ kmeans_iters = 16
 halo_strip = true
 halo_luma_threshold = 220
 note = single large opponent, imported small enough to fit the sprite budget
+
+[rule:cat_sky_bosses]
+match_category = npcs
+pattern = opponent_boss_*.png
+mode = sprite
+category = npc
+# Bosses fill a good part of the playfield, so they keep a large import -
+# but no larger than they are drawn, for the same reason as the planes.
+fit = pad
+anchor = bottom-center
+target_width = 112
+target_height = 112
+dither = none
+contrast = 1.00
+saturation = 1.05
+sharpen_radius = 0.0
+sharpen_percent = 0
+sharpen_threshold = 0
+kmeans_samples = 2048
+kmeans_iters = 16
+halo_strip = true
+halo_luma_threshold = 220
+note = boss, imported at playfield size
+
+[rule:cat_sky_opponents]
+match_category = npcs
+pattern = opponent_*.png
+mode = sprite
+category = npc
+# Standard opponents, drawn about the size of the player's craft.
+fit = pad
+anchor = bottom-center
+target_width = 40
+target_height = 40
+dither = none
+contrast = 1.00
+saturation = 1.05
+sharpen_radius = 0.0
+sharpen_percent = 0
+sharpen_threshold = 0
+kmeans_samples = 2048
+kmeans_iters = 16
+halo_strip = true
+halo_luma_threshold = 220
+note = standard opponent, imported at playfield size
 
 [rule:cat_npcs]
 match_category = npcs
