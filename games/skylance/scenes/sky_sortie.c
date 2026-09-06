@@ -359,9 +359,9 @@ static uint8_t NEOGEO_USER sky_select(void)
     for (i = 0u; i < SKY_PILOTS; i++) {
         int16_t cx = (int16_t)(SKY_FIELD_X + 48 + i * 80);
         face[i]  = sky_spawn(SKY_KIND_FACE,   k_pilot[i].face,  cx,  90,
-                             SKY_SCALE_SMALL, NG_RENDER_BAND_NPC);
+                             SKY_SCALE_PORTRAIT, NG_RENDER_BAND_NPC);
         plane[i] = sky_spawn(SKY_KIND_PLAYER, k_pilot[i].plane, cx, 170,
-                             SKY_SCALE_SMALL, NG_RENDER_BAND_PLAYER);
+                             SKY_SCALE_ROSTER, NG_RENDER_BAND_PLAYER);
     }
 
     for (;;) {
@@ -381,7 +381,7 @@ static uint8_t NEOGEO_USER sky_select(void)
             for (i = 0u; i < SKY_PILOTS; i++) {
                 uint8_t sel = (uint8_t)(i == s_pick);
                 if (plane[i]) {
-                    plane[i]->scale_x = sel ? SKY_SCALE_PLAYER : SKY_SCALE_SMALL;
+                    plane[i]->scale_x = sel ? SKY_SCALE_PLAYER : SKY_SCALE_ROSTER;
                     plane[i]->scale_y = plane[i]->scale_x;
                     plane[i]->sprite_dirty = 1u;
                 }
@@ -543,9 +543,9 @@ void NEOGEO_USER sky_run_attract(void)
         for (i = 0u; i < SKY_PILOTS; i++) {
             int16_t cx = (int16_t)(SKY_FIELD_X + 48 + i * 80);
             sky_spawn(SKY_KIND_FACE,   k_pilot[i].face,  cx,  90,
-                      SKY_SCALE_SMALL, NG_RENDER_BAND_NPC);
+                      SKY_SCALE_PORTRAIT, NG_RENDER_BAND_NPC);
             sky_spawn(SKY_KIND_PLAYER, k_pilot[i].plane, cx, 170,
-                      SKY_SCALE_SMALL, NG_RENDER_BAND_PLAYER);
+                      SKY_SCALE_ROSTER, NG_RENDER_BAND_PLAYER);
             sky_puts((uint8_t)(4u + i * 10u), 24u, k_pilot[i].name, SKY_PAL_BODY);
         }
 
