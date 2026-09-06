@@ -137,6 +137,7 @@ void NEOGEO_USER demo_safe_show(DemoShowScreenFn fn,
 /* Per-frame pump: waitVbl + flush queue + update subsystems + poll input.
  * Returns 1 if A-button pressed (scene should exit early). */
 uint8_t NEOGEO_USER demo_frame(void);
+void NEOGEO_USER demo_sprite_window_cache_reset(void);
 
 /* Load palette for a given screen_id into hardware */
 void NEOGEO_USER demo_load_screen_palette(uint8_t screen_id);
