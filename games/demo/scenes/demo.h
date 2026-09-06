@@ -149,6 +149,12 @@ void NEOGEO_USER demo_draw_sprite_screen(uint8_t screen_id,
                                          int16_t x, int16_t y,
                                          uint8_t strips, uint8_t rows,
                                          uint8_t scale_x, uint8_t scale_y);
+void NEOGEO_USER demo_draw_sprite_screen_scroll(uint8_t screen_id, \
+                                                uint16_t first_sprite, \
+                                                int16_t x, int16_t y, \
+                                                uint8_t strips, uint8_t rows, \
+                                                uint8_t scale_x, uint8_t scale_y, \
+                                                uint8_t hflip, uint8_t tile_y);
 void NEOGEO_USER demo_draw_sprite_screen_flip(uint8_t screen_id,
                                               uint16_t first_sprite,
                                               int16_t x, int16_t y,
