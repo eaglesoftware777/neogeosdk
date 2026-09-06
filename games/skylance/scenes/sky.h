@@ -73,26 +73,47 @@
 /*  Hardware scale presets (SCB2 shrink, 0xFF = full size)              */
 /* ------------------------------------------------------------------ */
 /*
- * The art set was authored far larger than a 320x224 playfield wants, so the
- * whole game runs shrunk.  These are the only four values used; keeping them
- * named makes a global re-tune one edit rather than a hunt through every
- * draw call.
+ * Draw scales - all full size.
  *
- * The hardware shrinks the two axes differently: X shows ((value >> 4) + 1)/16
- * of the width, Y shows (value + 1)/256 of the height.  Those agree only when
- * the low nibble is F, so every value here ends in F - anything else squashes
- * the sprite horizontally and desyncs sky_scaled(), which uses value/256 for
+ * The art set was authored far larger than a 320x224 playfield wants, and
+ * the whole game used to run shrunk to compensate.  That is the wrong
+ * place to lose the size: the sprite chip does not resample when it
+ * shrinks, it drops rows and columns, and the rows it drops carry a
+ * dither the quantiser laid down for pixels it expected to survive.  A
+ * plane reduced to a quarter of its imported height arrives on screen as
+ * a smear of colour with the shape mostly gone.
+ *
+ * The art is imported at the size it is drawn now - the artbox rules
+ * cat_sky_planes, cat_sky_opponents and cat_sky_bosses set the ceilings -
+ * so there is nothing left between the pipeline's resampling and the
+ * screen.  These stay named so a global re-tune is still one edit.
+ *
+ * If any of them goes back below full size, keep the low nibble at F: the
+ * hardware shows ((value >> 4) + 1)/16 of the width but (value + 1)/256 of
+ * the height, and those agree nowhere else - anything else squashes the
+ * sprite horizontally and desyncs sky_scaled(), which uses value/256 for
  * both axes when it positions the artwork.
  *
  * Sizes these produce on a 320x224 screen:
- *   player plane 112x160 -> 30x43     enemy fighter 128x144 -> 26x29
- *   drone         56x56  -> 15x15     boss gold core 240x240 -> 96x97
+ *   player craft 28x40    standard opponent ~31x40    boss up to 112 px
  */
-#define SKY_SCALE_PLAYER   0x4Fu   /* 5/16 - player ship, 22% of screen height */
-#define SKY_SCALE_ENEMY    0x3Fu   /* 4/16 - standard opponents                 */
-#define SKY_SCALE_SMALL    0x4Fu   /* 5/16 - already-small art (drone, props)   */
-#define SKY_SCALE_BOSS     0x6Fu   /* 7/16 - bosses, 47% of screen height       */
+#define SKY_SCALE_PLAYER   0xFFu
+#define SKY_SCALE_ENEMY    0xFFu
+#define SKY_SCALE_SMALL    0xFFu
+#define SKY_SCALE_BOSS     0xFFu
 #define SKY_SCALE_FULL     0xFFu
+
+/*
+ * Two exceptions, both on the select screen.
+ *
+ * The pilot portraits are not playfield art and have no import rule of
+ * their own, so they arrive at the 256 px character ceiling - 170x256,
+ * against the 80 px column they sit in.  And the roster wants the
+ * unselected planes visibly smaller than the one under the cursor, which
+ * is a deliberate difference in size rather than a fit to the artwork.
+ */
+#define SKY_SCALE_PORTRAIT NG_SCALE(5)    /* 53x80 in an 80 px column   */
+#define SKY_SCALE_ROSTER   NG_SCALE(9)    /* unselected plane, 16x23    */
 
 /* ------------------------------------------------------------------ */
 /*  Entry points                                                        */
