@@ -76,6 +76,8 @@ make dist            package dist/roms/<game>.zip
 make test            run in MAME (MVS, sp-s2.sp1 BIOS)
 make test-aes        run in MAME (AES, unibios22)
 make test BIOS=unibios40
+make unit-tests      host-side sprite renderer tests (no emulator)
+make check           unit tests plus a complete ROM set
 make debug           run MAME with the debugger attached
 make debug-build     P1 with debug symbols and a linker map
 make debug-artifacts size, symbols, readelf, map and disassembly dumps

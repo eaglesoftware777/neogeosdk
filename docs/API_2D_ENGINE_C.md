@@ -409,11 +409,62 @@ c->scale_x = c->scale_y = NG_SCALE(5);                     /* 5/16       */
 Code that positions artwork by scaling an offset (`offset * scale / 256`) is
 assuming the Y rule, so it is only correct for `0xNF` values as well.
 
+### Shrinking a sprite changes how many characters it is
+
+SCB3 carries the number of **active characters**, and that field is the
+sprite's height on screen: the hardware covers exactly `rows * 16` scanlines
+with it and never consults the shrink register to decide otherwise. Vertical
+shrink only chooses which source row of the SCB1 map each of those scanlines
+reads.
+
+So the count is not a property of the artwork, it is a property of the
+artwork *at the size you are drawing it*. A sixteen-character image drawn at
+half height is eight active characters. Leave it at sixteen and the picture
+finishes half way down a window built for twice its height, and the rest of
+the window repeats it.
+
+Both engines derive this for you — `ng_sprite_group_set_scale()` and the
+character scale fields feed it — so you never write the count yourself. What
+you do have to know is the consequence for the tilemap: because the row
+lookup can land past the last row of real art, **every map row it can reach
+must hold the transparent tile**, or the sprite grows a band of whatever the
+previous frame left in VRAM. `ng_sprite_group_upload()` and
+`ng_sprite_group_flush()` blank those rows.
+
+That reach is bounded, which is what keeps the cost down. The lookup reads a
+source row inside the first sixteen, and reaches rows 16..31 only through the
+mirror it applies once a sprite spans more than 256 scanlines. Under
+seventeen active characters that mirror never engages, so the upload stops at
+sixteen rows — half the VRAM traffic of blanking all thirty-two.
+
+One practical consequence for scrolling: a sprite is a whole number of
+characters tall, so a backdrop cropped to a window whose edge is not on a
+character boundary always overhangs it, by up to 15 px. The overhang is not
+optional; only its destination is. Either run the backdrop edge to edge so
+the overhang leaves the screen, or cover it with the FIX layer, which draws
+in front of every sprite.
+
+### Shrink is not a substitute for importing at the right size
+
+`ng_sprite_group_set_scale()` and the character scale fields shrink in
+hardware, and the hardware shrink drops rows and columns rather than
+resampling them. What it drops is a dither the art pipeline chose for the
+pixels it expected to reach the screen, so a sprite drawn at half its
+imported size loses half of that pattern and one drawn at a quarter loses
+the shape with it.
+
+Use the shrink for what it is good at — an effect that changes over time,
+depth, a boss growing as it approaches — and import static art at the size
+it is actually drawn. See "Import size" in the artbox pipeline reference.
+
 ### Uploading versus flushing
 
 `ng_sprite_group_upload()` rewrites everything, including the tilemap — one
 write per tile per strip. `ng_sprite_group_flush()` writes only what the dirty
-flags say changed, so a group that merely moved costs three words per strip.
+flags say changed, and a group that merely moved costs **two words in total**,
+not two per strip: the hardware reads no position from a chained strip, so a
+move touches the driver strip alone. A show has to write them all, because
+parking a slot clears its chain bit.
 
 Upload once when a group is built; flush every frame after that. Calling
 `upload()` per frame for a scrolling backdrop is enough VRAM traffic to overrun

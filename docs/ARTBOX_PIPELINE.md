@@ -73,20 +73,155 @@ noise against a moving background), backgrounds get the full treatment.
 Results are cached; `_VIVID_CACHE_VERSION` invalidates the cache when the
 algorithm changes.
 
+## Resampling
+
+Every resize in the pipeline goes through `resize_rgba_linear()`
+(`img2neo.py`), not `PIL.Image.resize()` directly.
+
+PIL resizes gamma-encoded sRGB: it takes the arithmetic mean of the stored
+numbers, and those numbers are roughly the 1/2.2 power of the light they
+stand for. Averaging in that space is not averaging light. A checkerboard
+of black and white, which should resolve to a mid grey of 188, resolves to
+128 instead — and the same loss, smaller but in the same direction, applies
+to every downscale. Measured across the demo's character art, gamma-space
+downscaling was throwing away 8–22% of each sprite's luminance before the
+quantiser ever saw it, which is most of what "the scaled sprite looks
+washed out next to the source" means.
+
+`resize_rgba_linear()` converts to linear light, resizes there, and converts
+back. Alpha gets the same care: RGB is premultiplied before the filter so a
+transparent pixel's colour cannot leak into its opaque neighbours, and
+unpremultiplied afterwards.
+
+It also runs `alpha_bleed()` at **source** resolution first. That order
+matters. A sprite cut out against white has white sitting under its
+transparent pixels; a filter run before the bleed mixes that white into the
+contour, baking in the halo `alpha_bleed()` exists to remove — by the time
+the bleed runs, the halo is opaque pixels and it can no longer see it.
+
+## Palette banks
+
+Per-tile palettes have to collapse into shared hardware banks, and how two
+palettes are compared decides how much colour survives that.
+
+`cluster_and_remap_tile_palettes()` compares them as **sets**, with a
+symmetric mean-nearest-neighbour distance in Lab: how far each colour of one
+palette sits from its closest counterpart in the other, averaged both ways.
+
+The reason is that these palettes come out of k-means, so their slot order
+is whatever the seeding happened to produce. Comparing slot *i* against slot
+*i* — the obvious thing to do — means two tiles holding the same fifteen
+colours in a different order score as maximally different. They take a bank
+each, the bank budget runs out on duplicates, the tolerance widens to
+compensate, and palettes that really *are* different get merged. Order
+sensitivity spends the budget on duplicates and pays for it in fidelity.
+
+Each bank is then re-fitted to every colour its members hold, with a few
+Lloyd iterations in Lab. A greedy pass has to name a bank before it knows
+who will join it, so without this a bank is one tile's palette and every
+other member is quantised onto it.
+
+Mean dE against the pre-clustering (per-tile optimal) reference, measured on
+three of the demo's sources:
+
+| Source | Before | After |
+|---|---|---|
+| `zz_bg/0.png` | 11.39 | 1.88 |
+| `backgrounds/0.png` | 11.71 | 2.25 |
+| `npcs/…_sky_boss.png` | 28.18 | 5.37 |
+
+`epsilon` is in dE, so a threshold means something; the default is 6.
+
+## Import size
+
+**Import an asset at the size it is drawn.** This matters more than any
+single setting in the quantiser.
+
+The sprite chip can shrink, and it is tempting to import large and let the
+hardware fit the art to the scene. But the hardware does not resample when
+it shrinks — it drops whole rows and columns, and what it drops is a dither
+pattern the quantiser chose for pixels it expected to survive. Halve a
+sprite in hardware and half of that pattern is gone; quarter it and the
+shape goes with it. The source can be flawless and the result still arrives
+as a smear of colour.
+
+The pipeline's own resampling is linear-light Lanczos followed by a
+quantiser that dithers against the pixels it is actually producing. So the
+rule is: set each rule's `target_width`/`target_height` to the largest size
+that asset is ever drawn, and draw it at full scale.
+
+Two further benefits fall out of it: the asset costs proportionally less
+C ROM, and it needs fewer hardware sprite strips, which is the scarcer
+budget in a busy scene.
+
+`cat_sky_planes`, `cat_sky_opponents`, `cat_sky_bosses` and `cat_big_enemy`
+exist for exactly this — per-asset ceilings for sprites whose scene size is
+known.
+
+One caveat before lowering a ceiling on art that is already in use: changing
+it moves that asset's strip count and tile stride, and
+`ng_char_set_sprite()` silently drops a bind whose asset window fails
+validation. A character bound through that path then keeps whatever it had
+before, which shows up as stale or missing art rather than as an error. The
+demo's own `cat_characters` ceiling is still 256 for that reason. Check what
+a ceiling change does to `NG_ASSET_STRIPS_*` and to any slot map built
+around it before assuming it is free.
+
+## Synthesised backdrops
+
+`artbox/gen_starfield.py` generates a tiling deep-space page — a multi-hue
+nebula from wrapping fractal noise, dust lanes, and three layers of stars.
+The noise lattice wraps, so the page joins itself exactly rather than
+approximately, and a backdrop scrolled as two copies shows no line at the
+wrap.
+
+```
+python3 artbox/gen_starfield.py left.png right.png --seed 7
+```
+
+Given several outputs it generates one page at the combined width and cuts
+it into columns, so pages laid side by side join without a seam down the
+middle. Everything is synthesised, so the result carries no licence.
+
+## HD conditioning
+
+`ARTBOX_ENHANCE=0`, or `img2neo_tile.py --no-enhance`, turns off two passes
+that otherwise run before quantisation:
+
+- an edge-preserving **bilateral** smooth, which calms the compression noise
+  and gradient banding that fifteen colours turn into blotches without
+  softening outlines — a plain blur would take the outlines with it;
+- **CLAHE** on the Lab lightness channel only, so local contrast survives the
+  quantisation while hue and chroma stay where the artist put them.
+
+They are **on by default**, because the source art in this tree is HD —
+photographs, renders and upscaled scans, where noise and a wide tonal range
+both survive the resize and then fight the 15-colour budget. Turn them off
+for art authored at the target size, which has neither problem: running them
+over it rewrites the artist's tone choices for nothing.
+
 ## Alternative pipelines
 
 | Route | Script | When |
 |---|---|---|
-| Default (tile-local) | `img2neo_tile.py` | Every build. Per-tile k-means++, per-tile dither, greedy MAE bank dedup, Lab-nearest remap. |
+| Default (tile-local) | `img2neo_tile.py` | Every build. Per-tile k-means++, per-tile dither, Lab set-distance bank dedup, Lab-nearest remap. |
 | CRT | `img2neo_crt.py` | `make art-crt` or `ARTBOX_CRT=1`. Lab k-means, horizontal-biased dither, gamma 1.20 / contrast 1.10 pre-boost. |
 | HD | `img2neo_hd.py` | Opt-in. Bilateral filter, CLAHE on the Lab L channel, unsharp mask, blue-noise dither. Best for photographs. |
 | Legacy | `ARTBOX_LEGACY=1` | The original nearest-neighbour path, kept for diffing. |
 | FIX HD | `fixtiles_hd.py` | Per-tile palette FIX conversion; `--sharp-text` binarises glyph sources. |
 
-`img2neo.py` also exposes `alpha_bleed()`, applied after `fit_sprite_rgba`
-so anti-aliased contours stop baking the source PNG's hidden
-transparent-pixel RGB (usually near-white) into the indexed sprite. That is
-the fix for the pale halo around sprite edges.
+`img2neo.py` also exposes `alpha_bleed()`, which stops anti-aliased contours
+baking the source PNG's hidden transparent-pixel RGB (usually near-white)
+into the indexed sprite. That is the fix for the pale halo around sprite
+edges, and `resize_rgba_linear()` runs it before any resize so the halo
+never gets a chance to become opaque.
+
+A sprite whose background is opaque instead of transparent is a different
+problem and no filter can fix it: index 0 is transparency on this hardware,
+so an opaque matte is not a colour that happens to be wrong, it is a solid
+block the sprite carries around with it. Repair the source with
+`artbox/fix_sprite_alpha.py PATH`, which flood-fills only background
+connected to the image border and leaves interior colour alone.
 
 ## Asset ordering and ids
 

@@ -54,7 +54,7 @@ chapter needs its own reset path.
 | 21 | TARGET RANGE | MOVING TARGETS · SPRITE DEPTH | Crates approaching down depth lanes, breaking apart where they are hit |
 | 22 | DEPTH RIDE | OBJECTS APPROACH AS YOU WALK | Sprite-scaling pseudo-3D: NPCs approach from the horizon, L/R to move |
 | 23 | SOUND | YM2610 TOUR · ADPCM-B / FM / SSG / SPEECH | Every audio subsystem in turn, with labels naming the active driver call |
-| 24 | SKY LANCE | VERTICAL SHOOTER MINI | A playable slice of the full Sky Lance game — waves, boss, scoring |
+| 24 | SKY LANCE | VERTICAL SHOOTER MINI | A playable slice of the full Sky Lance game — waves, boss, scoring. Full-screen scrolling sky with the HUD letterboxed onto opaque FIX bands |
 | 25 | CREDITS | EAGLE SOFTWARE 2026 | Module roll with a palette fade-out |
 
 ## Reading the reel as documentation
