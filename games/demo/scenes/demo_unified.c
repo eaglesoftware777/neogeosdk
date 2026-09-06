@@ -4257,20 +4257,37 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
          * the other.  A starfield stood in here while there was no sky in
          * this ROM's art set; there is one now, and a plane belongs over
          * sky rather than over space.
-         *
-         * Only the top 9 tile rows are drawn - 144 px, y = 40..184 - so
-         * the box floor, the separator rule and the caption bar all sit
-         * on the plain page colour rather than on artwork.  The page is
-         * built to repeat every 144 px precisely so this cropped window
-         * still wraps without a seam.
+        /*
+         * Proper viewport scrolling: we change the tile_y offset and the sprite's
+         * y coordinate without letting it wrap around the 512-px coordinate space
+         * and draw into the header.
+         * The playfield height is 144px (9 tiles). The asset is 144px (9 tiles).
+         * We draw it twice: one for the visible top portion, one for the bottom.
          */
         bg_y = (uint16_t)((bg_y + 1u) % 144u);
-        demo_draw_sprite_screen(U_SKY_BG, DEMO_BG_BACK_SLOT,
-                                32, (int16_t)(40 + (int16_t)bg_y - 144),
-                                16u, 9u, 0xFFu, 0xFFu);
-        demo_draw_sprite_screen(U_SKY_BG, NG_SPR_BG1_FIRST,
-                                32, (int16_t)(40 + (int16_t)bg_y),
-                                16u, 9u, 0xFFu, 0xFFu);
+
+        /* The top part of the background, scrolling down. */
+        uint8_t top_rows = (uint8_t)(9u - (bg_y / 16u));
+        uint8_t tile_offset = (uint8_t)(bg_y / 16u);
+        uint16_t pixel_y = (uint16_t)(bg_y % 16u);
+
+        if (top_rows > 0) {
+            demo_draw_sprite_screen_scroll(U_SKY_BG, DEMO_BG_BACK_SLOT,
+                                           32, (int16_t)(40 + pixel_y),
+                                           16u, top_rows, 0xFFu, 0xFFu,
+                                           0u, tile_offset);
+        }
+
+        /* The wrapped part of the background, filling the rest of the 144px playfield. */
+        uint8_t bottom_rows = (uint8_t)(9u - top_rows);
+        if (bottom_rows > 0) {
+            demo_draw_sprite_screen_scroll(U_SKY_BG, NG_SPR_BG1_FIRST,
+                                           32, (int16_t)(40 + pixel_y + top_rows * 16u),
+                                           16u, bottom_rows, 0xFFu, 0xFFu,
+                                           0u, 0u);
+        } else {
+            demo_hide_sprite_range(NG_SPR_BG1_FIRST, 16u);
+        }
 
         /* ---- player ---------------------------------------------- */
         if (joy & (JOY_LEFT | JOY_RIGHT | JOY_UP | JOY_DOWN | BUTTON_B)) idle_frames = 0u;
