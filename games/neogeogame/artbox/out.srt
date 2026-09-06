@@ -8,7 +8,7 @@ note=background layer or multi-level backdrop
 [002] backgrounds/002_space_bg.png
 mode=screen fit=crop anchor=center rule=cat_backgrounds
 category=backgrounds
-source=600x360 canvas=256x256 content=256x256 offset=(0,0)
+source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=2 palette_bank=17 tile_base=256 reserved_last=511 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=background layer or multi-level backdrop
 
@@ -57,8 +57,8 @@ note=effects and transitions  (aggressive halo strip: bright outer ring is almos
 [009] npcs/020_enemy.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_big_enemy
 category=npcs
-source=1238x800 canvas=32x32 content=32x21 offset=(0,11)
-screen_id=9 palette_bank=24 tile_base=2048 reserved_last=2303 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=11 used_tiles=4 strips=2 active_rows=2
+source=1238x800 canvas=48x48 content=48x31 offset=(0,17)
+screen_id=9 palette_bank=24 tile_base=2048 reserved_last=2303 used_cols=3 used_rows=2 start_col=0 start_row=1 x_pad=0 y_pad=1 used_tiles=6 strips=3 active_rows=2
 note=single large opponent, imported small enough to fit the sprite budget
 
 [010] npcs/032_life.png
