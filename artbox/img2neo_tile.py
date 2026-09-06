@@ -32,7 +32,7 @@ collapses near-identical palettes into shared banks.
 
 Algorithm summary
 -----------------
-1. LANCZOS resize the input to a target divisible by 16.
+1. Linear-light Lanczos resize to a target divisible by 16.
 2. For each 16x16 tile (raster scan):
    a. Convert tile RGB -> luminance-weighted YCbCr (Y * 4, Cb, Cr).
       The 4x weight on Y means k-means and the error-diffusion
@@ -107,7 +107,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Reuse the NeoGeo 5-bit grid snap and Lab conversion from img2neo —
 # keeps the module dependency-free of scikit-learn / scikit-image.
-from img2neo import rgb_to_lab, kmeans_palette as _img2neo_kmeans_palette, alpha_bleed
+from img2neo import (rgb_to_lab, lab_to_rgb,
+                     kmeans_palette as _img2neo_kmeans_palette,
+                     alpha_bleed, resize_rgba_linear,
+                     enhance_for_quantisation, enhance_enabled)
 
 
 TILE_SIZE = 16
@@ -224,7 +227,7 @@ def fit_screen_for_display(img: Image.Image,
         elif anchor.startswith("bottom"):
             top = src_h - keep_h
         img = img.crop((left, top, left + keep_w, top + keep_h))
-        img = img.resize((canvas_w, canvas_h), Image.LANCZOS)
+        img = resize_rgba_linear(img, canvas_w, canvas_h)
         return img, 0, 0, canvas_w, canvas_h
 
     # "contain": the content keeps its own proportions, so its width and
@@ -240,7 +243,7 @@ def fit_screen_for_display(img: Image.Image,
     content_w = max(1, min(canvas_w, content_w))
     content_h = max(1, min(canvas_h, content_h))
 
-    scaled = img.resize((content_w, content_h), Image.LANCZOS)
+    scaled = resize_rgba_linear(img, content_w, content_h)
     canvas = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
     cl = (canvas_w - content_w) // 2
     ct = (canvas_h - content_h) // 2
@@ -360,11 +363,6 @@ def rgb_to_weighted_ycbcr(rgb_uint8: np.ndarray) -> np.ndarray:
     ycc = rgb @ _M_RGB_YCBCR.T
     ycc[..., 0] *= LUMA_WEIGHT
     return ycc
-
-
-def weighted_ycbcr_palette(palette_u8: np.ndarray) -> np.ndarray:
-    """Palette (K, 3) uint8 -> (K, 3) float32 in weighted-YCbCr."""
-    return rgb_to_weighted_ycbcr(np.asarray(palette_u8, dtype=np.uint8))
 
 
 # ---------------------------------------------------------------------------
@@ -709,7 +707,6 @@ def _lab_kmeans_palette_with_anchors(rgb: np.ndarray,
                                   asset_type=asset_type).reshape(-1, 3)
     lab = rgb_to_lab(source).astype(np.float32)
     centres = _kmeans_pp_weighted_vivid(lab, k)
-    from img2neo import lab_to_rgb
     palette = ng_snap(lab_to_rgb(centres))
 
     if anchors:
@@ -946,7 +943,7 @@ def _fit_to_tile_grid(img: Image.Image,
                       fit: str = "contain"
                       ) -> tuple[Image.Image, int, int, int, int]:
     """
-    LANCZOS-resize / letterbox `img` onto a canvas whose dimensions
+    Linear-light resize / letterbox `img` onto a canvas whose dimensions
     are multiples of TILE_SIZE.  Returns (canvas, content_left,
     content_top, content_width, content_height).
 
@@ -974,13 +971,16 @@ def _fit_to_tile_grid(img: Image.Image,
                     nh = int(sw * th / tw)
                     top = (sh - nh) // 2
                     img = img.crop((0, top, sw, top + nh))
-            img = img.resize((tw, th), Image.LANCZOS)
+            img = resize_rgba_linear(img, tw, th)
             canvas = Image.new("RGBA", (tw, th), (0, 0, 0, 0))
             canvas.alpha_composite(img, (0, 0))
             return canvas, 0, 0, tw, th
         # "contain"
         if img.width > tw or img.height > th:
-            img.thumbnail((tw, th), Image.LANCZOS)
+            k = min(tw / img.width, th / img.height)
+            img = resize_rgba_linear(img,
+                                     max(1, int(img.width * k)),
+                                     max(1, int(img.height * k)))
         canvas = Image.new("RGBA", (tw, th), (0, 0, 0, 0))
         cl = (tw - img.width) // 2
         ct = (th - img.height) // 2
@@ -1020,6 +1020,8 @@ def convert_png_to_neogeo_tile_palettes(
     img = Image.open(image_path).convert("RGBA")
     canvas, cl, ct, cw, ch = _fit_to_tile_grid(img, target_w, target_h, fit)
     arr = np.array(canvas, dtype=np.uint8)
+    if enhance_enabled():
+        arr = enhance_for_quantisation(arr)
     canvas_h, canvas_w = arr.shape[:2]
 
     tile_cols = canvas_w // TILE_SIZE
@@ -1149,14 +1151,86 @@ def extract_tile_data_for_dedup(
 # Greedy palette-bank packer with smart pixel remap
 # ---------------------------------------------------------------------------
 
+def _palette_set_distance(bank_lab: np.ndarray,
+                          tile_lab: np.ndarray) -> np.ndarray:
+    """
+    Perceptual distance between a tile palette and each candidate bank,
+    treating both as SETS of colours rather than ordered lists.
+
+    Comparing slot i of one palette against slot i of another is the
+    obvious thing to do and it is wrong here: these palettes come out of
+    k-means, so their slot order is whatever the seeding happened to
+    produce.  Two tiles holding the same fifteen colours in a different
+    order score as maximally different under a slot-wise metric, so they
+    each take a bank of their own, the bank budget runs out, the
+    tolerance is widened to compensate, and palettes that really are
+    different get merged instead.  Order sensitivity spends the budget
+    on duplicates and pays for it in fidelity.
+
+    The metric here is symmetric mean-nearest-neighbour in Lab: how far
+    each colour of one set sits from its closest counterpart in the
+    other, averaged both ways.  Reordering a palette cannot change it,
+    and it stays in units of dE, so a threshold means something.  Earth
+    mover's distance would also work and would cost an assignment solve
+    per comparison; at fifteen points against fifteen the two agree
+    closely enough that the solve buys nothing.
+
+    bank_lab : (B, 15, 3) float32
+    tile_lab : (15, 3) float32
+    returns  : (B,) float32
+    """
+    d2 = np.sum((bank_lab[:, None, :, :] - tile_lab[None, :, None, :]) ** 2,
+                axis=3)                       # (B, tile_i, bank_j)
+    d = np.sqrt(np.maximum(d2, 0.0))
+    return 0.5 * (d.min(axis=2).mean(axis=1) + d.min(axis=1).mean(axis=1))
+
+
+def _refit_bank(member_lab: np.ndarray,
+                seed_lab: np.ndarray,
+                iters: int = 8) -> np.ndarray:
+    """
+    Re-derive a bank's fifteen colours from every colour its members
+    actually contain, instead of keeping whichever member arrived first.
+
+    A greedy pass has to name a bank before it knows who will join it,
+    so without this step a bank is one tile's palette and every other
+    member is quantised to it.  A few Lloyd iterations in Lab, seeded
+    from that first palette, move each entry to the centre of what it is
+    being asked to represent.  Cheap, and it strictly lowers the error
+    of the remap that follows.
+
+    member_lab : (M, 3) float32 - every colour from every member palette
+    seed_lab   : (15, 3) float32
+    """
+    centres = seed_lab.astype(np.float32).copy()
+    if member_lab.shape[0] == 0:
+        return centres
+    for _ in range(iters):
+        d2 = np.sum((member_lab[:, None, :] - centres[None, :, :]) ** 2,
+                    axis=2)
+        owner = d2.argmin(axis=1)
+        moved = False
+        for k in range(centres.shape[0]):
+            hit = member_lab[owner == k]
+            if hit.shape[0] == 0:
+                continue
+            new_c = hit.mean(axis=0)
+            if not np.allclose(new_c, centres[k], atol=1e-3):
+                moved = True
+            centres[k] = new_c
+        if not moved:
+            break
+    return centres
+
+
 def cluster_and_remap_tile_palettes(
         indices_per_tile: np.ndarray,
         palettes_per_tile: np.ndarray,
         max_banks: int = 32,
-        epsilon: float = 15.0,
+        epsilon: float = 6.0,
         ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
-    Greedy MAE clustering of N per-tile palettes into <= max_banks
+    Greedy perceptual clustering of N per-tile palettes into <= max_banks
     shared hardware banks, followed by a perceptually-correct LOCAL
     -> BANK pixel-index remap.
 
@@ -1179,9 +1253,10 @@ def cluster_and_remap_tile_palettes(
                        (0 = transparent, 1..15 = local palette slot)
     palettes_per_tile : (N, 15, 3) uint8 NeoGeo-grid RGB
     max_banks         : hard ceiling on emitted shared banks
-    epsilon           : MAE threshold for "close enough to existing
-                        bank".  Lower = more banks, higher fidelity;
-                        higher = fewer banks, more colour compromise.
+    epsilon           : dE threshold for "close enough to an existing
+                        bank", measured with _palette_set_distance().
+                        Lower = more banks, higher fidelity; higher =
+                        fewer banks, more colour compromise.
 
     Returns
     -------
@@ -1196,9 +1271,12 @@ def cluster_and_remap_tile_palettes(
         raise ValueError("indices/palettes tile-count mismatch")
 
     n_tiles = palettes_per_tile.shape[0]
-    pal_f32 = palettes_per_tile.astype(np.float32)
 
-    # --- 1. Greedy MAE clustering with auto-scaling epsilon ----------
+    # Everything below compares colours in Lab, so convert once.
+    pal_lab = rgb_to_lab(
+        palettes_per_tile.reshape(-1, 3)).reshape(n_tiles, -1, 3)
+
+    # --- 1. Greedy perceptual clustering with auto-scaling epsilon ---
     # The eps tolerance for "close enough to existing bank" is the
     # tuning knob: too low and we run out of bank budget before all
     # tiles are clustered (forcing a brute-force "nearest existing
@@ -1210,57 +1288,59 @@ def cluster_and_remap_tile_palettes(
     # Geometric growth (eps *= 1.5) converges in <8 attempts even on
     # extremely colourful sources.
     cur_eps = float(epsilon)
-    bank_palettes_arr = None
+    bank_lab_arr = None
     tile_to_bank = None
-    eps_history = [cur_eps]
     for _attempt in range(8):
-        bank_palettes: list[np.ndarray] = []
+        bank_seed_lab: list[np.ndarray] = []
         candidate_assignments = np.full(n_tiles, -1, dtype=np.int32)
         overflowed = False
         for ti in range(n_tiles):
-            pal = pal_f32[ti]
             matched = -1
-            for bi, bank in enumerate(bank_palettes):
-                mae = float(np.mean(np.abs(pal - bank)))
-                if mae < cur_eps:
-                    matched = bi
-                    break
+            if bank_seed_lab:
+                d = _palette_set_distance(np.stack(bank_seed_lab, axis=0),
+                                          pal_lab[ti])
+                best = int(d.argmin())
+                if d[best] < cur_eps:
+                    matched = best
             if matched == -1:
-                if len(bank_palettes) < max_banks:
-                    bank_palettes.append(pal.copy())
-                    matched = len(bank_palettes) - 1
+                if len(bank_seed_lab) < max_banks:
+                    bank_seed_lab.append(pal_lab[ti].copy())
+                    matched = len(bank_seed_lab) - 1
                 else:
                     overflowed = True
                     break
             candidate_assignments[ti] = matched
         if not overflowed:
-            # Fits in budget — accept this clustering.
-            bank_palettes_arr = np.stack(bank_palettes,
-                                          axis=0).astype(np.uint8)
-            bank_palettes_arr = ng_snap(bank_palettes_arr)
+            bank_lab_arr = np.stack(bank_seed_lab, axis=0)
             tile_to_bank = candidate_assignments.astype(np.uint16)
             break
         # Overflow: widen tolerance and retry the entire pass.
         cur_eps *= 1.5
-        eps_history.append(cur_eps)
-    if bank_palettes_arr is None:
+    if bank_lab_arr is None:
         # 8 attempts and still overflowing.  Fall back to the brute-
         # force nearest-bank assignment with the last attempted eps;
         # at least colours stay close to their original cluster.
-        bank_palettes_arr = np.stack(bank_palettes,
-                                      axis=0).astype(np.uint8)
-        bank_palettes_arr = ng_snap(bank_palettes_arr)
+        bank_lab_arr = np.stack(bank_seed_lab, axis=0)
         tile_to_bank = np.zeros(n_tiles, dtype=np.uint16)
         for ti in range(n_tiles):
             if candidate_assignments[ti] != -1:
                 tile_to_bank[ti] = candidate_assignments[ti]
                 continue
-            pal = pal_f32[ti]
-            dists = np.array([
-                float(np.mean(np.abs(pal - b.astype(np.float32))))
-                for b in bank_palettes_arr
-            ])
-            tile_to_bank[ti] = int(dists.argmin())
+            d = _palette_set_distance(bank_lab_arr, pal_lab[ti])
+            tile_to_bank[ti] = int(d.argmin())
+
+    # --- 1b. Re-fit every bank to the members it ended up with -------
+    # The greedy pass names a bank after the first palette that reaches
+    # it and never revisits the choice, so an unrefined bank is one
+    # tile's colours with everyone else rounded onto them.
+    for bi in range(bank_lab_arr.shape[0]):
+        members = np.flatnonzero(tile_to_bank == bi)
+        if members.size <= 1:
+            continue
+        bank_lab_arr[bi] = _refit_bank(
+            pal_lab[members].reshape(-1, 3), bank_lab_arr[bi])
+
+    bank_palettes_arr = ng_snap(lab_to_rgb(bank_lab_arr))
 
     # --- 2. Smart LOCAL -> BANK pixel remap --------------------------
     # For each tile, pre-compute a 15-entry lookup that maps each
@@ -1276,10 +1356,9 @@ def cluster_and_remap_tile_palettes(
     }
 
     for ti in range(n_tiles):
-        local_pal = palettes_per_tile[ti]                  # (15, 3) u8
         assigned_bank = int(tile_to_bank[ti])
 
-        local_lab = rgb_to_lab(local_pal)                  # (15, 3) f32
+        local_lab = pal_lab[ti]                            # (15, 3) f32
         bank_lab = bank_lab_cache[assigned_bank]           # (15, 3) f32
 
         # (15, 15) squared distance matrix — local i to bank j.
@@ -1558,7 +1637,7 @@ def process_vivid_artbox_pipeline(image_path,
                      15 RGB palette colours flat (R,G,B,R,G,B,...).
     """
     src = Image.open(image_path).convert("RGB")
-    src = src.resize((target_w, target_h), Image.Resampling.LANCZOS)
+    src = resize_rgba_linear(src, target_w, target_h)
     src_np = np.array(src, dtype=np.float32)
 
     ready_tiles = []
@@ -1741,7 +1820,7 @@ def execute_final_vivid_pipeline(image_path,
     final_palettes : list of flat 45-int lists, 15 RGB triples each.
     """
     src = Image.open(image_path).convert("RGBA")
-    src = src.resize((target_w, target_h), Image.Resampling.LANCZOS)
+    src = resize_rgba_linear(src, target_w, target_h)
     return _vivid_pipeline_from_rgba(
         np.array(src, dtype=np.float32),
         asset_type=asset_type,
@@ -1767,7 +1846,9 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
     if asset_type == "sprite":
         rgba = alpha_bleed(rgba.astype(np.uint8),
                            opaque_alpha=ALPHA_OPAQUE_THRESHOLD)
-    src_np = rgba.astype(np.float32, copy=False)
+    if enhance_enabled():
+        rgba = enhance_for_quantisation(np.asarray(rgba, dtype=np.uint8))
+    src_np = np.asarray(rgba).astype(np.float32, copy=False)
     target_h, target_w = src_np.shape[:2]
     if (target_h % 16) or (target_w % 16):
         raise ValueError(f"input dims must be multiples of 16; got "
@@ -2109,7 +2190,7 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
 
 _VIVID_CACHE_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), ".cache", "vivid")
-_VIVID_CACHE_VERSION = "v14-display-aspect-screens"
+_VIVID_CACHE_VERSION = "v16-hd-conditioning-default"
 
 
 def _vivid_cache_key(image_path: str, target_w: int, target_h: int,
@@ -2326,8 +2407,7 @@ def convert_screen_via_vivid_pipeline(
     # wider than it is tall arrives noticeably too tall and too narrow.
     src = Image.open(image_path)
     if display_shrink_y is None:
-        src = src.convert("RGBA").resize((target_w, target_h),
-                                         Image.Resampling.LANCZOS)
+        src = resize_rgba_linear(src.convert("RGBA"), target_w, target_h)
         content_left, content_top = 0, 0
         content_w, content_h = target_w, target_h
     else:
@@ -2436,7 +2516,7 @@ def convert_screen_via_tile_palette(
         n_colors: int = COLORS_PER_TILE,
         alpha_threshold: int = ALPHA_OPAQUE_THRESHOLD,
         max_banks: int = 32,
-        epsilon: float = 15.0,
+        epsilon: float = 6.0,
         context_pad: int = 4,
         gamma: float = 1.20,
         contrast: float = 1.10,
@@ -2448,7 +2528,7 @@ def convert_screen_via_tile_palette(
     Pipeline (eliminates tile-boundary seams by combining context-
     window palette derivation with a single image-wide dither pass):
 
-      1. LANCZOS-resize / pad source to a 16-aligned canvas, then
+      1. Linear-light resize / pad source to a 16-aligned canvas, then
          apply the CRT pre-boost (gamma 1.20 + 1.10x contrast) so
          the rest of the pipeline operates in arcade-luminance space.
 
@@ -2691,7 +2771,7 @@ def convert_screen_via_tile_palette(
         "n_banks_pre_collapse":  int(n_banks_pre),
         "n_banks_used":          int(nonzero_bank_mask.sum()),
         "max_banks_budget":      int(max_banks),
-        "epsilon_mae":           float(epsilon),
+        "epsilon_de":            float(epsilon),
         "context_pad":           int(pad),
         "context_window":        int(win_size),
         "gamma":                 float(gamma),
@@ -2712,13 +2792,16 @@ def cluster_palette_banks(palettes: np.ndarray,
     Collapse near-identical per-tile palettes into shared banks so the
     final set fits in NeoGeo palette RAM (256 banks of 16 colours).
 
-    Strategy: convert each palette's 15 colours to Lab, take the mean
-    Lab vector as the palette's "centroid", then greedy-cluster tiles
-    whose centroids fall within `lab_eps` of an existing bank's
-    centroid.  Each bank's palette is the elementwise median of its
-    member palettes (more robust than mean against single-tile
-    outliers).  If the greedy pass exceeds `max_banks`, the eps is
-    doubled and retried until the bank budget is met.
+    Strategy: greedy-cluster tiles whose palettes fall within `lab_eps`
+    of an existing bank under _palette_set_distance(), then re-fit each
+    bank to every colour its members hold.
+
+    An earlier version compared the MEAN Lab of a palette's 15 colours.
+    That is not a comparison of palettes: a tile carrying a red and a
+    blue gradient averages to purple, a tile of flat purple averages to
+    the same purple, and the two get merged - taking the gradient with
+    them.  Averaging discards exactly the structure the bank has to
+    reproduce, so the distance looks at where the colours actually sit.
 
     Parameters
     ----------
@@ -2741,46 +2824,47 @@ def cluster_palette_banks(palettes: np.ndarray,
     # to whichever bank ends up at index 0, contents irrelevant since
     # their indices are all 0 (transparent).
     palette_lab = rgb_to_lab(palettes.reshape(-1, 3)).reshape(n_tiles, -1, 3)
-    centroids = palette_lab.mean(axis=1).astype(np.float32)
 
     eps = float(lab_eps)
     for _attempt in range(8):
-        bank_centroids: list[np.ndarray] = []
+        bank_lab: list[np.ndarray] = []
         bank_members: list[list[int]] = []
         tile_to_bank = np.full(n_tiles, -1, dtype=np.int32)
 
         for ti in range(n_tiles):
-            if not bank_centroids:
-                bank_centroids.append(centroids[ti])
+            if not bank_lab:
+                bank_lab.append(palette_lab[ti].copy())
                 bank_members.append([ti])
                 tile_to_bank[ti] = 0
                 continue
-            arr = np.stack(bank_centroids, axis=0)
-            d = np.sqrt(np.sum((arr - centroids[ti]) ** 2, axis=1))
+            d = _palette_set_distance(np.stack(bank_lab, axis=0),
+                                      palette_lab[ti])
             best = int(d.argmin())
             if d[best] <= eps:
                 bank_members[best].append(ti)
                 tile_to_bank[ti] = best
             else:
-                bank_centroids.append(centroids[ti])
+                bank_lab.append(palette_lab[ti].copy())
                 bank_members.append([ti])
-                tile_to_bank[ti] = len(bank_centroids) - 1
+                tile_to_bank[ti] = len(bank_lab) - 1
 
-        if len(bank_centroids) <= max_banks:
+        if len(bank_lab) <= max_banks:
             break
         eps *= 1.5
     else:
         raise RuntimeError(f"Could not fit palette banks under "
                            f"{max_banks} even at eps={eps:.1f}")
 
-    # Median-merge each bank's member palettes.  Median is robust to
-    # single outliers and preserves the most-common colour in each slot.
-    n_banks = len(bank_centroids)
-    bank_palettes = np.zeros((n_banks, palettes.shape[1], 3), dtype=np.uint8)
+    # Re-fit each bank to every colour its members hold, rather than
+    # keeping the palette of whichever tile reached it first.
+    bank_lab_arr = np.stack(bank_lab, axis=0)
     for bi, members in enumerate(bank_members):
-        member_palettes = palettes[members]
-        bank_palettes[bi] = np.median(member_palettes, axis=0).astype(np.uint8)
-    bank_palettes = ng_snap(bank_palettes)
+        if len(members) <= 1:
+            continue
+        bank_lab_arr[bi] = _refit_bank(
+            palette_lab[members].reshape(-1, 3), bank_lab_arr[bi])
+
+    bank_palettes = ng_snap(lab_to_rgb(bank_lab_arr))
     return bank_palettes, tile_to_bank
 
 
@@ -2841,7 +2925,17 @@ def main():
     ap.add_argument("--merge-banks", type=int, default=0, metavar="N",
                     help="Run cluster_palette_banks() with max_banks=N "
                          "and write bank_palettes.bin + tile_to_bank.bin")
+    ap.add_argument("--no-enhance", action="store_true",
+                    help="Skip the HD conditioning before quantisation "
+                         "(bilateral smooth then lightness CLAHE).  It is on "
+                         "by default because the source art here is HD; turn "
+                         "it off for art drawn at the target size that does "
+                         "not want its tone touched.  Same as "
+                         "ARTBOX_ENHANCE=0.")
     args = ap.parse_args()
+
+    if args.no_enhance:
+        os.environ["ARTBOX_ENHANCE"] = "0"
 
     if not 1 <= args.colors <= 15:
         ap.error("--colors must be 1..15")
