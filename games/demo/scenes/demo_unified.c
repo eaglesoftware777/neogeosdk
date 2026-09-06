@@ -728,6 +728,57 @@ static void NEOGEO_USER fix_select_marks(uint8_t x, uint8_t y,
     demo_fix_puts((uint8_t)(x + width + 1u), y, active ? "<" : " ", pal);
 }
 
+/*
+ * Solid FIX band.
+ *
+ * FIX tile 0 is a full 8x8 block of colour index 1 - the one cell in the
+ * set with no transparent pixel in it.  Laid down in the text palette it
+ * gives an opaque backing that the FIX layer draws in front of every
+ * sprite, which is how a HUD stays legible over a full-screen backdrop.
+ */
+static void NEOGEO_USER fix_band(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
+                                 uint8_t pal)
+{
+    uint8_t row;
+    uint8_t col;
+
+    for (row = 0u; row < h; row++) {
+        uint8_t py = (uint8_t)(y + row);
+        if (py >= 28u) break;
+
+        for (col = 0u; col < w; col++) {
+            uint8_t px = (uint8_t)(x + col);
+            if (px >= 40u) break;
+            ngfix_write_tile(px, py, 0x0000u, pal);
+        }
+    }
+}
+
+/*
+ * A chapter that runs its backdrop edge to edge asks for a letterbox
+ * before it calls chap_header(): the bands have to go down after the
+ * screen clear and before any text, or they wipe the header they exist
+ * to make readable.  Cleared on use so it cannot leak into the chapter
+ * that follows.
+ */
+static uint8_t s_letterbox_top    = 0u;
+static uint8_t s_letterbox_bottom = 0u;
+
+/* "CH.nn" for the chapter now running, as chap_header numbered it. */
+static char s_chapter_tag[6] = "CH.00";
+
+static const char * NEOGEO_USER chap_tag(void)
+{
+    return s_chapter_tag;
+}
+
+static void NEOGEO_USER chap_letterbox_next(uint8_t top_rows,
+                                            uint8_t bottom_rows)
+{
+    s_letterbox_top    = top_rows;
+    s_letterbox_bottom = bottom_rows;
+}
+
 static void NEOGEO_USER chap_hint(const char *hint)
 {
     char rule[CHAP_RULE_W + 1u];
@@ -821,6 +872,18 @@ static void NEOGEO_USER chap_header(uint8_t n,
     tag[3] = (char)('0' + (s_chapter_view_index / 10u));
     tag[4] = (char)('0' + (s_chapter_view_index % 10u));
     tag[5] = '\0';
+
+    /* Kept so a chapter that repaints its own header row restates the
+     * running count rather than spelling a number out again. */
+    s_chapter_tag[0] = tag[0]; s_chapter_tag[1] = tag[1];
+    s_chapter_tag[2] = tag[2]; s_chapter_tag[3] = tag[3];
+    s_chapter_tag[4] = tag[4]; s_chapter_tag[5] = tag[5];
+
+    if (s_letterbox_top)    fix_band(0u, 0u, 40u, s_letterbox_top, 0u);
+    if (s_letterbox_bottom) fix_band(0u, (uint8_t)(28u - s_letterbox_bottom),
+                                     40u, s_letterbox_bottom, 0u);
+    s_letterbox_top    = 0u;
+    s_letterbox_bottom = 0u;
 
     demo_fix_puts(2u,  0u, tag,   0u);
     demo_fix_puts(8u,  0u, title, 2u);
@@ -1216,25 +1279,46 @@ static uint8_t NEOGEO_USER chap_title(void)
 /* ================================================================== */
 /*  Chapter 02 — FIX layer  (no mid-chapter screen flashes)              */
 /* ================================================================== */
+/* Every label on row 2 shares the field, so each has to overwrite the
+ * whole of it - a shorter caption written over a longer one otherwise
+ * keeps the tail of its predecessor ("SFIX SHEET" reading as
+ * "SFIX SHEETE"). */
+static void NEOGEO_USER chap_fix_label(const char *text)
+{
+    char line[35];
+    uint8_t i = 0u;
+
+    while (text[i] != '\0' && i < 34u) { line[i] = text[i]; i++; }
+    while (i < 34u) line[i++] = ' ';
+    line[34] = '\0';
+    demo_fix_puts(2u, 2u, line, 1u);
+}
+
+/*
+ * Draw one of the generated INFIX images with the palette bank it was
+ * generated for.
+ *
+ * Each image carries its own 16-colour bank (INFIX_PALETTES, banks 4
+ * upwards).  Drawing one in a text palette instead does not merely
+ * recolour it: the text banks are built for glyphs, so most of the
+ * image's colour indices land on entries that are transparent or
+ * near-identical, and a full-width banner comes out as a few scattered
+ * letters.  That is what this chapter was showing.
+ */
+static void NEOGEO_USER chap_fix_infix(uint8_t idx, uint8_t x, uint8_t y,
+                                       uint8_t rows)
+{
+    const InfixImage *a;
+
+    if (idx >= INFIX_IMAGE_COUNT) return;
+    a = &INFIX_IMAGES[idx];
+    draw_infix_block(a->tile_base, a->cols,
+                     rows && rows < a->rows ? rows : a->rows,
+                     x, y, a->pal_bank);
+}
+
 static uint8_t NEOGEO_USER chap_fix(void)
 {
-    typedef struct {
-        uint16_t tile_base;
-        uint8_t cols;
-        uint8_t rows;
-    } FixImage;
-    static const FixImage infix[10] = {
-        { 256u, 20u, 4u },
-        { 336u, 40u, 2u },
-        { 416u, 20u, 3u },
-        { 476u,  8u, 2u },
-        { 492u, 32u, 4u },
-        { 620u, 24u, 5u },
-        { 740u, 16u, 2u },
-        { 772u, 32u, 4u },
-        { 900u, 12u, 4u },
-        { 948u, 32u, 5u }
-    };
     uint16_t t;
     char buf[8];
 
@@ -1245,27 +1329,19 @@ static uint8_t NEOGEO_USER chap_fix(void)
      */
     setBACKDROP(DEMO_BG);
     /*
-     * Re-write the header tag and status row after the backdrop change.
+     * Restate the header tag in the accent palette so it holds against
+     * the re-asserted backdrop.  The digits come from chap_header's own
+     * running count - spelling them out here is how the header came to
+     * read CH.02 while the caption bar read 03.
      */
-    {
-        char tag[6];
-        tag[0] = 'C'; tag[1] = 'H'; tag[2] = '.';
-        tag[3] = '0'; tag[4] = '2'; tag[5] = '\0';
-        demo_fix_puts(2u,  0u, tag,        2u);
-        demo_fix_puts(36u, 0u, "02",       2u);
-        /* The "A: NEXT" hint that used to be written to row 27 here was
-         * overwritten by uframe()'s caption bar every frame; the caption
-         * bar already ends in A:NEXT, so it was pure dead weight. */
-    }
-    demo_fix_puts(2u, 2u, "FIX = 40x32 CELL OVERLAY", 1u);
+    demo_fix_puts(2u,  0u, chap_tag(),  2u);
+    demo_fix_puts(36u, 0u, chap_tag() + 3, 2u);
+    chap_fix_label("FIX = 40x32 CELL OVERLAY");
     snd_cross_to(SOUND_MUSIC_G);
 
     demo_fix_puts(2u,  6u, "PALETTE 0  STANDARD",   0u);
-    demo_fix_puts(2u,  6u, "PALETTE 0  STANDARD",   0u);
     demo_fix_puts(2u,  7u, "PALETTE 1  ACCENT",     1u);
     demo_fix_puts(2u,  8u, "PALETTE 2  GREEN",      2u);
-
-
 
     for (t = 0u; t < 180u; t++) {
         digit3(buf, t);
@@ -1276,40 +1352,28 @@ static uint8_t NEOGEO_USER chap_fix(void)
     /* Clear only working rows; avoid reprinting blank strings over art. */
     clear_fix_rect_force(0u, 5u, 40u, 21u);
 
-    /* Every block in this section used to hardcode palette 0, reading
-     * flat/monochrome next to the palette-cycling counter above it.
-     * Spreading the same 3 palettes (0/1/2) across the blocks keeps
-     * this section just as colourful. */
-    demo_fix_puts(2u, 2u, "INFIX 0..3  MULTI-PALETTE", 1u);
-    draw_infix_block(infix[0].tile_base, infix[0].cols, infix[0].rows,
-                     1u,  5u, 1u);
-    draw_infix_block(infix[3].tile_base, infix[3].cols, infix[3].rows,
-                     27u, 6u, 2u);
-    draw_infix_block(infix[2].tile_base, infix[2].cols, infix[2].rows,
-                     1u, 11u, 0u);
-    draw_infix_block(infix[1].tile_base, infix[1].cols, infix[1].rows,
-                     0u, 20u, 1u);
+    chap_fix_label("INFIX 0..3  MULTI-PALETTE");
+    chap_fix_infix(0u,  1u,  5u, 0u);
+    chap_fix_infix(3u, 27u,  6u, 0u);
+    chap_fix_infix(2u,  1u, 11u, 0u);
+    chap_fix_infix(1u,  0u, 20u, 0u);
     if (uwait(120u)) return 1u;
 
     clear_fix_rect_force(0u, 5u, 40u, 21u);
-    demo_fix_puts(2u, 2u, "INFIX 4..7  MULTI-PALETTE", 1u);
-    draw_infix_block(infix[4].tile_base, infix[4].cols, infix[4].rows,
-                     4u,  5u, 2u);
-    draw_infix_block(infix[5].tile_base, infix[5].cols, infix[5].rows,
-                     2u, 11u, 0u);
-    draw_infix_block(infix[6].tile_base, infix[6].cols, infix[6].rows,
-                     24u, 12u, 1u);
-    draw_infix_block(infix[7].tile_base, infix[7].cols, infix[7].rows,
-                     4u, 19u, 2u);
+    chap_fix_label("INFIX 4..7  MULTI-PALETTE");
+    chap_fix_infix(4u,  4u,  5u, 0u);
+    chap_fix_infix(5u,  0u, 11u, 0u);
+    chap_fix_infix(6u, 24u, 12u, 0u);
+    chap_fix_infix(7u,  4u, 19u, 0u);
     if (uwait(120u)) return 1u;
 
     clear_fix_rect_force(0u, 5u, 40u, 21u);
-    demo_fix_puts(2u, 2u, "INFIX 8..9 + SFIX SHEET", 1u);
-    draw_infix_block(infix[8].tile_base, infix[8].cols, infix[8].rows,
-                     2u,  6u, 1u);
-    draw_infix_block(infix[9].tile_base, infix[9].cols, infix[9].rows,
-                     4u, 12u, 2u);
-    draw_infix_block(1108u, 16u, 8u, 12u, 19u, 0u);
+    chap_fix_label("INFIX 8..9 + SFIX SHEET");
+    chap_fix_infix(8u,  2u,  6u, 0u);
+    chap_fix_infix(9u,  4u, 12u, 0u);
+    /* The sheet is 16 rows tall; six of them is all that fits above the
+     * separator rule. */
+    chap_fix_infix(10u, 12u, 18u, 6u);
     if (uwait(120u)) return 1u;
 
     return 0u;
@@ -2920,6 +2984,7 @@ static uint8_t NEOGEO_USER chap_depthfx(void)
     int16_t dz = -1;
     uint16_t t;
 
+    chap_letterbox_next(5u, 3u);
     chap_header(11u, "DEPTH FX", "ONE WARRIOR  CLEAN Z SCALE");
     demo_fix_puts(2u, 2u, "CENTERED SPRITE APPROACHES AND RECEDES", 1u);
     demo_fix_puts(2u, 3u, "NO PALETTE ROTATION  NO EXTRA STRIPES", 0u);
@@ -3043,7 +3108,14 @@ static uint8_t NEOGEO_USER chap_npcs(void)
 {
     enum { N = 4 };
     enum { NPC_FLOOR_Y = 190 };
-    static const int16_t home_x[N] = { 64, 128, 192, 256 };
+    /*
+     * 80 px apart, patrolling 22 either side.  At 64 apart and 44 either
+     * side the lanes overlapped by 24 px, so neighbouring NPCs walked
+     * through each other and the middle of the line read as one smeared
+     * sprite.  Two NPCs stay 36 px apart at their closest here, which
+     * clears the widest of these at this scale.
+     */
+    static const int16_t home_x[N] = { 40, 120, 200, 280 };
     NGNpc *npcs[N];
     uint8_t last_asset[N];
     uint16_t t;
@@ -3071,8 +3143,8 @@ static uint8_t NEOGEO_USER chap_npcs(void)
         c->vx_fp = (i & 1u) ? NG_TO_FP(-1) : NG_TO_FP(1);
         ng_npc_set_home(npcs[i], home_x[i], NPC_FLOOR_Y);
         ng_npc_set_patrol_bounds(npcs[i],
-                                 (int16_t)(home_x[i] - 44),
-                                 (int16_t)(home_x[i] + 44),
+                                 (int16_t)(home_x[i] - 22),
+                                 (int16_t)(home_x[i] + 22),
                                  NPC_FLOOR_Y, NPC_FLOOR_Y);
         npcs[i]->flags = NG_NPC_FLAG_PATROL_X | NG_NPC_FLAG_FACE_MOTION;
         ng_npc_set_think(npcs[i], ng_npc_think_patrol, 2u);
@@ -3154,6 +3226,7 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
 
     char buf[6];
 
+    chap_letterbox_next(5u, 3u);
     chap_header(13u, "MINI-GAME", "FIGHT THE CLONE  B STRIKE");
     demo_fix_puts(2u, 2u, "CP CLOSES IN, STRIKES, RECOVERS", 1u);
     demo_fix_puts(2u, 3u, "PLAYER CAN STILL WALK + B",       0u);
@@ -3379,6 +3452,7 @@ static uint8_t NEOGEO_USER chap_joystick(void)
     uint8_t  box_flash = 0u;     /* >0 briefly after a hit - scale pulse */
     char buf[8];
 
+    chap_letterbox_next(5u, 3u);
     chap_header(14u, "JOYSTICK", "LIVE INPUT  TWO-BUTTON SPECIALS");
     /* The one chapter that cannot take the global C restart: C is jump
      * here, and B+C is one of the two-button specials this chapter
@@ -4011,6 +4085,14 @@ static uint8_t NEOGEO_USER chap_char_2d(void)
 
     enum { EAGLE_BASE_Y = 146 };
 
+    /*
+     * The forest page starts at the top of the screen, so every line of
+     * the header used to be printed straight onto the canopy.  The FIX
+     * layer draws in front of every sprite, so a band under the header
+     * is all it takes - and it costs the artwork nothing that was not
+     * already covered in text.
+     */
+    chap_letterbox_next(5u, 3u);
     chap_header(17u, "CHAR 2D", "EAGLE FLIGHT ARC");
     demo_fix_puts(2u, 2u, "EAGLE FLYING FRAME BIND", 1u);
     demo_fix_puts(2u, 3u, "076 -> 077 -> 078 AT 70%", 0u);
@@ -4034,11 +4116,11 @@ static uint8_t NEOGEO_USER chap_char_2d(void)
         char buf[8];
 
         if (t < 133u) {
-            demo_fix_puts(2u, 6u, "PHASE: ARC WALK        ", 2u);
+            demo_fix_puts(2u, 4u, "PHASE: ARC WALK        ", 2u);
         } else if (t < 280u) {
-            demo_fix_puts(2u, 6u, "PHASE: HOP AND RECOVER ", 2u);
+            demo_fix_puts(2u, 4u, "PHASE: HOP AND RECOVER ", 2u);
         } else {
-            demo_fix_puts(2u, 6u, "PHASE: READY LOOP      ", 2u);
+            demo_fix_puts(2u, 4u, "PHASE: READY LOOP      ", 2u);
         }
 
         if (p < 100u) {
@@ -4062,9 +4144,9 @@ static uint8_t NEOGEO_USER chap_char_2d(void)
          * readout actually reflects what's happening on screen (the
          * eagle rising through the arc/hop phases). */
         altitude = (uint16_t)(EAGLE_BASE_Y - y);
-        demo_fix_puts(2u, 23u, "ALTITUDE:", 1u);
+        demo_fix_puts(24u, 4u, "ALT:", 1u);
         digit3(buf, altitude);
-        demo_fix_puts(12u, 23u, buf, 2u);
+        demo_fix_puts(29u, 4u, buf, 2u);
 
         draw_asset_bottom_center(frame, HERO_SLOT_FIRST,
                                  x, y, U_SCALE_3_8, U_SCALE_3_8);
@@ -4123,23 +4205,33 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
          * still cannot overlap each other's VRAM) and leaves room if the art
          * is ever re-imported larger, so they are left as they are.
          */
-        SKY_SLOT_PLAYER  = 34,   /* 8 strips        -> 34..41   */
-        SKY_SLOT_PBULLET = 44,   /* 4 * 2 strips    -> 44..51   */
-        SKY_SLOT_EBULLET = 54,   /* 6 * 2 strips    -> 54..65   */
-        SKY_SLOT_BOOM    = 68,   /* 3 * 2 strips    -> 68..73   */
-        SKY_SLOT_ENEMY   = 80,   /* 6 * 8 strips    -> 80..127  */
-        SKY_SLOT_BOSS    = 132,  /* 12 strips       -> 132..143 */
+        SKY_SLOT_BG0     = NG_SPR_BG0_FIRST,  /* 16 strips  -> 1..16     */
+        SKY_SLOT_BG1     = NG_SPR_BG1_FIRST,  /* 16 strips  -> 17..32    */
+        SKY_SLOT_BG2     = 33,   /* 16 strips       -> 33..48   */
+        SKY_SLOT_PLAYER  = 50,   /* 8 strips        -> 50..57   */
+        SKY_SLOT_PBULLET = 60,   /* 4 * 2 strips    -> 60..67   */
+        SKY_SLOT_EBULLET = 70,   /* 6 * 2 strips    -> 70..81   */
+        SKY_SLOT_BOOM    = 84,   /* 3 * 2 strips    -> 84..89   */
+        SKY_SLOT_ENEMY   = 96,   /* 6 * 8 strips    -> 96..143  */
+        SKY_SLOT_BOSS    = 148,  /* 12 strips       -> 148..159 */
+
+        /* The sky page: 256 px of art across, of which the top 144 px
+         * loop seamlessly, which is why the page is nine characters
+         * tall and not the sixteen the asset holds. */
+        SKY_FIELD_X   = 32,
+        SKY_PAGE_H    = 144,
+        SKY_PAGE_ROWS = 9,
 
         SKY_ENEMY_MAX   = 6,
         SKY_PBULLET_MAX = 4,
         SKY_EBULLET_MAX = 6,
         SKY_BOOM_MAX    = 3,
 
-        /* Play area, in pixels, matching the FIX box drawn below. */
+        /* Play area, in pixels, between the two HUD bands. */
         SKY_LEFT   = 32,
         SKY_RIGHT  = 288,
-        SKY_TOP    = 60,
-        SKY_BOTTOM = 162,
+        SKY_TOP    = 56,
+        SKY_BOTTOM = 190,
 
         SKY_TIME = 1800,             /* ~30s, then the chapter moves on   */
         SKY_IDLE_ADVANCE = 600,      /* ~10s untouched -> skip ahead      */
@@ -4206,6 +4298,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     uint8_t  i;
     char     buf[8];
 
+    chap_letterbox_next(5u, 3u);
     chap_header(18u, "SKY LANCE", "VERTICAL SHOOTER MINI");
     demo_fix_puts(2u, 2u, "ARROWS MOVE  B FIRE  C:RESTART", 1u);
 
@@ -4221,24 +4314,13 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
 
     snd_cross_to(SOUND_MUSIC_D);
 
-    /* Play-area border.  Rows 0..3 are the chapter header and the
-     * control line, 4..5 are the readouts, so the box opens on row 7
-     * and the game lives strictly inside it. */
-    {
-        uint8_t bx, by;
-        for (bx = 3u; bx <= 36u; bx++) {
-            demo_fix_puts(bx, 5u,  "-", 1u);
-            demo_fix_puts(bx, 23u, "-", 1u);
-        }
-        for (by = 5u; by <= 23u; by++) {
-            demo_fix_puts(3u,  by, ":", 1u);
-            demo_fix_puts(36u, by, ":", 1u);
-        }
-        demo_fix_puts(3u,  5u,  "+", 1u);
-        demo_fix_puts(36u, 5u,  "+", 1u);
-        demo_fix_puts(3u,  23u, "+", 1u);
-        demo_fix_puts(36u, 23u, "+", 1u);
-    }
+    /*
+     * The sky runs edge to edge, so the chapter is letterboxed rather
+     * than boxed: an opaque band under the header and another under the
+     * caption bar.  A dotted outline drawn straight onto the sky was
+     * what the old cropped backdrop needed, and over a full-screen one
+     * it reads as leftovers.
+     */
 
     for (i = 0u; i < SKY_ENEMY_MAX; i++)   { en_alive[i] = 0u; en_shown[i] = 0u; }
     for (i = 0u; i < SKY_PBULLET_MAX; i++) { pb_active[i] = 0u; pb_shown[i] = 0u; }
@@ -4252,41 +4334,29 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
 
         /* ---- backdrop -------------------------------------------- */
         /*
-         * Two copies of the sky page sliding down, one wrapping in behind
-         * the other.  A starfield stood in here while there was no sky in
-         * this ROM's art set; there is one now, and a plane belongs over
-         * sky rather than over space.
-        /*
-         * Proper viewport scrolling: we change the tile_y offset and the sprite's
-         * y coordinate without letting it wrap around the 512-px coordinate space
-         * and draw into the header.
-         * The playfield height is 144px (9 tiles). The asset is 144px (9 tiles).
-         * We draw it twice: one for the visible top portion, one for the bottom.
+         * Three copies of a page that loops every 144 px, stacked one
+         * page apart, so whatever the scroll offset is their union
+         * always covers the whole screen and both seams sit outside it.
+         *
+         * Cropping the sky to a window instead is the thing the hardware
+         * will not do.  A sprite is a whole number of characters tall,
+         * so a window whose edge is not on a character boundary always
+         * overhangs it by up to 15 px - the overhang is not optional,
+         * only its destination is, and off-screen is the one place it
+         * costs nothing.  Covering the screen is also cheaper than
+         * cropping: the pages are uploaded once and a frame moves each
+         * of them for two words.
          */
-        bg_y = (uint16_t)((bg_y + 1u) % 144u);
-
-        /* The top part of the background, scrolling down. */
-        uint8_t top_rows = (uint8_t)(9u - (bg_y / 16u));
-        uint8_t tile_offset = (uint8_t)(bg_y / 16u);
-        uint16_t pixel_y = (uint16_t)(bg_y % 16u);
-
-        if (top_rows > 0) {
-            demo_draw_sprite_screen_scroll(U_SKY_BG, DEMO_BG_BACK_SLOT,
-                                           32, (int16_t)(40 + pixel_y),
-                                           16u, top_rows, 0xFFu, 0xFFu,
-                                           0u, tile_offset);
-        }
-
-        /* The wrapped part of the background, filling the rest of the 144px playfield. */
-        uint8_t bottom_rows = (uint8_t)(9u - top_rows);
-        if (bottom_rows > 0) {
-            demo_draw_sprite_screen_scroll(U_SKY_BG, NG_SPR_BG1_FIRST,
-                                           32, (int16_t)(40 + pixel_y + top_rows * 16u),
-                                           16u, bottom_rows, 0xFFu, 0xFFu,
-                                           0u, 0u);
-        } else {
-            demo_hide_sprite_range(NG_SPR_BG1_FIRST, 16u);
-        }
+        bg_y = (uint16_t)((bg_y + 1u) % SKY_PAGE_H);
+        demo_draw_sprite_screen(U_SKY_BG, SKY_SLOT_BG0, SKY_FIELD_X,
+                                (int16_t)((int16_t)bg_y - SKY_PAGE_H),
+                                16u, SKY_PAGE_ROWS, 0xFFu, 0xFFu);
+        demo_draw_sprite_screen(U_SKY_BG, SKY_SLOT_BG1, SKY_FIELD_X,
+                                (int16_t)bg_y,
+                                16u, SKY_PAGE_ROWS, 0xFFu, 0xFFu);
+        demo_draw_sprite_screen(U_SKY_BG, SKY_SLOT_BG2, SKY_FIELD_X,
+                                (int16_t)((int16_t)bg_y + SKY_PAGE_H),
+                                16u, SKY_PAGE_ROWS, 0xFFu, 0xFFu);
 
         /* ---- player ---------------------------------------------- */
         if (joy & (JOY_LEFT | JOY_RIGHT | JOY_UP | JOY_DOWN | BUTTON_B)) idle_frames = 0u;
@@ -4738,6 +4808,7 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
     uint8_t  i;
     int16_t  hero_world_x = 160;
 
+    chap_letterbox_next(5u, 3u);
     chap_header(19u, "DEPTH RIDE", "OBJECTS APPROACH AS YOU WALK");
     demo_fix_puts(2u, 2u, "NPCS APPROACH FROM HORIZON",   1u);
     demo_fix_puts(2u, 3u, "L/R MOVE  HARDWARE-SCALE NPCS", 0u);
