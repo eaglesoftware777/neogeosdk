@@ -469,7 +469,7 @@ test: game-check test-precheck hash
 	$(MAME_COMMON) -output console -nofilter -waitvsync -window
 
 .PHONY: test-precheck
-test-precheck: game-check
+test-precheck: game-check unit-tests
 	$(LOG_CTX)
 	@[ -f "$(ROM_DIR)/$(GAME_ID)-p1.p1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-p1.p1. Build first with: make all" && exit 1)
 	@[ -f "$(ROM_DIR)/$(GAME_ID)-m1.m1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-m1.m1. Build first with: make all" && exit 1)
@@ -629,3 +629,6 @@ gdb-server: all debug-build
 	$(LOG_CTX)
 	@echo "GDB server: $(GDB_REMOTE) (68000 main CPU)"
 	$(MAME_COMMON) -debug -debugger gdbstub -debugger_host $(GDB_HOST) -debugger_port $(GDB_PORT) -output console -nofilter -window
+.PHONY: unit-tests
+unit-tests:
+	$(MAKE) -C tests test
