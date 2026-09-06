@@ -28,6 +28,33 @@ typedef struct {
 
 #define NG_ASSET_META_COUNT 25
 
+/* Hardware sprite strips each asset needs, by 1-based asset id. */
+#define NG_ASSET_STRIPS_1 16  /* background_coast_city.png */
+#define NG_ASSET_STRIPS_2 16  /* background_sky_mountains.png */
+#define NG_ASSET_STRIPS_3 10  /* sprite_p1_pilot.png */
+#define NG_ASSET_STRIPS_4 8  /* sprite_p1_plane.png */
+#define NG_ASSET_STRIPS_5 10  /* sprite_p2_pilot.png */
+#define NG_ASSET_STRIPS_6 8  /* sprite_p2_plane.png */
+#define NG_ASSET_STRIPS_7 10  /* sprite_p3_pilot.png */
+#define NG_ASSET_STRIPS_8 8  /* sprite_p3_plane.png */
+#define NG_ASSET_STRIPS_9 2  /* sprite_shot_player.png */
+#define NG_ASSET_STRIPS_10 10  /* opponent_bomber_olive.png */
+#define NG_ASSET_STRIPS_11 10  /* opponent_boss_crimson_cathedral.png */
+#define NG_ASSET_STRIPS_12 16  /* opponent_boss_gold_core.png */
+#define NG_ASSET_STRIPS_13 14  /* opponent_boss_heli_carrier.png */
+#define NG_ASSET_STRIPS_14 8  /* opponent_boss_navy_battleship.png */
+#define NG_ASSET_STRIPS_15 12  /* opponent_boss_red_fortress.png */
+#define NG_ASSET_STRIPS_16 14  /* opponent_boss_stealth_bomber.png */
+#define NG_ASSET_STRIPS_17 11  /* opponent_boss_tank_fortress.png */
+#define NG_ASSET_STRIPS_18 4  /* opponent_drone_red.png */
+#define NG_ASSET_STRIPS_19 8  /* opponent_fighter_grayred.png */
+#define NG_ASSET_STRIPS_20 8  /* opponent_heli_gunship.png */
+#define NG_ASSET_STRIPS_21 8  /* opponent_interceptor_blackgold.png */
+#define NG_ASSET_STRIPS_22 6  /* opponent_missile_boat.png */
+#define NG_ASSET_STRIPS_23 2  /* opponent_shot_orb.png */
+#define NG_ASSET_STRIPS_24 4  /* opponent_shot_ring.png */
+#define NG_ASSET_STRIPS_25 6  /* opponent_tank_camo.png */
+
 static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 0, 16, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* background_coast_city.png */
     { 256, 17, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* background_sky_mountains.png */

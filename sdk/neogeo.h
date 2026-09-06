@@ -6,6 +6,10 @@
 #include "macro.h"
 #include "sound_ids.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Sprite control block helpers.
  *
@@ -180,4 +184,8 @@ void soundPlayDemoFM(uint8_t fm_track);
 void soundPlayTitleMusic(uint8_t music_track);
 void soundPlayGameLoop(uint8_t music_track);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

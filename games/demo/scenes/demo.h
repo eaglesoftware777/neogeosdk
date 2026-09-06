@@ -5,6 +5,10 @@
 #include "sdk/macro.h"
 #include "sdk/2d_engine/ng_sprite_pool.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NEOGEO_USER
 #define NEOGEO_USER
 #endif
@@ -170,4 +174,8 @@ void NEOGEO_USER showTitleScreen(void);
 void NEOGEO_USER showCharacterParade(void);
 void NEOGEO_USER showWalkDemo(int loops, int delay_frames);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* DEMO_H */

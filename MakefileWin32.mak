@@ -27,8 +27,17 @@ ifeq ($(strip $(GAME)),)
 endif
 -include games/$(GAME)/game.mk
 
-# Per-game sound folder — defined early so FM_MMLS wildcards resolve correctly
-GAME_SOUND = games/$(GAME)/sound
+# Per-game sound folder — defined early so FM_MMLS wildcards resolve correctly.
+# GAME_SOUND_FROM lets a game.mk name another game to take its tracks and
+# samples from; the M1/V ROMs are still emitted under this game's own ID.
+GAME_SOUND_FROM ?=
+GAME_SOUND = games/$(or $(GAME_SOUND_FROM),$(GAME))/sound
+
+# Optional per-game extra include paths and art source, matching the Linux
+# Makefile: GAME_EXTRA_INCLUDES adds include directories, GAME_ART_FROM names
+# another game whose artbox/in and artbox/infix supply the source artwork.
+GAME_EXTRA_INCLUDES ?=
+GAME_ART_FROM ?=
 
 ifndef SDKHOME
 SDKHOME := $(abspath $(CURDIR)/..)
@@ -77,16 +86,32 @@ ifeq ($(USE_2D_PLUS),1)
   ENGINE_DIR  := sdk\2d_engine_plus
   ENGINE_EXT  := cpp
   ENGINE_CC   := $(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-g++.exe
-  CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine_plus -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox -Wa,-march=68000,-mcpu=68000,-W,--warn
-  CXXFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=c++14 -fno-exceptions -fno-rtti -fno-threadsafe-statics -I. -Isdk -Isdk/2d_engine_plus -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox -Wa,-march=68000,-mcpu=68000,-W,--warn
+  # sdk/2d_engine trails sdk/2d_engine_plus because the plus engine ships only
+  # .hpp headers, while game code written in C includes the matching ng_*.h.
+  # Those declare the same extern "C" entry points the plus engine defines.
+  CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine_plus -Isdk/2d_engine -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox $(GAME_EXTRA_INCLUDES) -Wa,-march=68000,-mcpu=68000,-W,--warn
+  CXXFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=c++14 -fno-exceptions -fno-rtti -fno-threadsafe-statics -I. -Isdk -Isdk/2d_engine_plus -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox $(GAME_EXTRA_INCLUDES) -Wa,-march=68000,-mcpu=68000,-W,--warn
 else
   ENGINE_DIR  := sdk\2d_engine
   ENGINE_EXT  := c
   ENGINE_CC   := $(CC)
-  CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox -Wa,-march=68000,-mcpu=68000,-W,--warn
+  CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox $(GAME_EXTRA_INCLUDES) -Wa,-march=68000,-mcpu=68000,-W,--warn
   CXXFLAGS= $(CFLAGS)
 endif
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
+
+# Which compiler builds the game's own sources (main.c, user.c, the scene files,
+# the SDK support .c files).  A USE_2D_PLUS game is a C++ build all the way
+# through, not just in the engine, so its .c sources go through g++ as C++.
+# The SDK headers carry extern "C" guards, so the declarations they provide keep
+# C linkage and match what the engine and the cart entry vectors expect.
+ifeq ($(USE_2D_PLUS),1)
+  GAME_CC     := $(ENGINE_CC)
+  GAME_CFLAGS := $(CXXFLAGS) -Isdk/2d_engine -x c++
+else
+  GAME_CC     := $(CC)
+  GAME_CFLAGS := $(CFLAGS)
+endif
 LD=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-ld.exe
 LDFLAGS=  -nostdlib
 OBJCP=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-objcopy.exe
@@ -117,6 +142,12 @@ INFO=$(REPO_WIN)\win\xxd.exe -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
 NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_vram0.o out\ng_sprite_window0.o out\ng_art_asset0.o out\ng_palette_assets0.o out\ng_bg0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o out\ng_scene0.o out\ng_depthfx0.o out\ng_render_queue0.o out\ng_fixed0.o out\ng_camera0.o out\ng_palette_fx0.o out\ng_particles0.o out\ng_feedback0.o out\ng_debug0.o out\ng_joystick0.o out\ng_demo_advanced0.o
+# A game.mk may set GAME_SCENES_FROM to other game names; each scene is looked
+# for in this game's scenes directory first and in those after, so a game can
+# reuse another game's scene sources without copying them.
+GAME_SCENES_FROM ?=
+GAME_SCENE_DIRS := games/$(GAME)/scenes $(foreach g,$(GAME_SCENES_FROM),games/$(g)/scenes)
+GAME_SCENE_SRCS := $(foreach s,$(GAME_SCENES),$(firstword $(wildcard $(addsuffix /$(s).c,$(GAME_SCENE_DIRS)))))
 GAME_SCENE_OBJS := $(addprefix out/,$(addsuffix 0.o,$(GAME_SCENES)))
 NG_FIX_SDK_OBJ0=out\ng_fix_sdk0.o
 
@@ -186,11 +217,11 @@ p1: game-check game $(GAME_ID)-p1.p1
 
 game: game-check
 	$(LOG_CTX)
-	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS) $(GAME_NEOGEO_C) -o out\neogeo0.o
-	$(CC) $(CFLAGS) $(PLATFORM_CFLAGS) games\$(GAME)\user.c -o out\user0.o
-	$(CC) $(CFLAGS) games\$(GAME)\main.c -o out\main0.o
-	$(CC) $(CFLAGS) sdk\neogeolib.c -o out\neogeolib0.o
-	$(CC) $(CFLAGS) sdk\ng_fix\ng_fix.c -o out\ng_fix_sdk0.o
+	$(GAME_CC) $(GAME_CFLAGS) $(PLATFORM_CFLAGS) $(GAME_NEOGEO_C) -o out\neogeo0.o
+	$(GAME_CC) $(GAME_CFLAGS) $(PLATFORM_CFLAGS) games\$(GAME)\user.c -o out\user0.o
+	$(GAME_CC) $(GAME_CFLAGS) games\$(GAME)\main.c -o out\main0.o
+	$(GAME_CC) $(GAME_CFLAGS) sdk\neogeolib.c -o out\neogeolib0.o
+	$(GAME_CC) $(GAME_CFLAGS) sdk\ng_fix\ng_fix.c -o out\ng_fix_sdk0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_defs.$(ENGINE_EXT) -o out\ng_defs0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_properties.$(ENGINE_EXT) -o out\ng_properties0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_game_time.$(ENGINE_EXT) -o out\ng_game_time0.o
@@ -223,8 +254,8 @@ game: game-check
 	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_debug.$(ENGINE_EXT) -o out\ng_debug0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_joystick.$(ENGINE_EXT) -o out\ng_joystick0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_demo_advanced.$(ENGINE_EXT) -o out\ng_demo_advanced0.o
-	$(if $(GAME_SCENES),for %%f in ($(GAME_SCENES)) do $(CC) $(CFLAGS) games\$(GAME)\scenes\%%f.c -o out\%%f0.o)
-	$(CC) $(CFLAGS) games\$(GAME)\eyecatcher.c -o out\eyecatcher0.o
+	$(foreach src,$(GAME_SCENE_SRCS),$(GAME_CC) $(GAME_CFLAGS) $(src) -o out/$(notdir $(basename $(src)))0.o &&) rem scenes compiled
+	$(GAME_CC) $(GAME_CFLAGS) games\$(GAME)\eyecatcher.c -o out\eyecatcher0.o
 	$(OBJCP) $(STRIP_SECTS) out\neogeo0.o out\neogeo.o
 	$(OBJCP) $(STRIP_SECTS) out\user0.o out\user.o
 	$(OBJCP) $(STRIP_SECTS) out\main0.o out\main.o
@@ -255,29 +286,29 @@ samples:
 
 .PHONY: vrom
 vrom:
-	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& call sound\tools\vrom.bat
+	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& set GAME_SOUND=$(GAME_SOUND)&& call sound\tools\vrom.bat
 	if not exist $(ROM_DIR) mkdir $(ROM_DIR)
 	copy /Y out\$(GAME_ID)-v1.v1 $(ROM_DIR)\$(GAME_ID)-v1.v1
 
 .PHONY: fmpatches
 fmpatches:
-	$(if $(wildcard $(GAME_SOUND)/fm/patches.fm),$(PY) sound\tools\fm_patch_compile.py $(GAME_SOUND)\fm\patches.fm -o sound\driver\fm_patch_table.inc,@echo fmpatches: no patches.fm in $(GAME_SOUND)\fm\, skipping)
+	$(if $(wildcard $(GAME_SOUND)/fm/patches.fm),$(PY) sound\tools\fm_patch_compile.py $(GAME_SOUND)\fm\patches.fm -o sound\driver\fm_patch_table.inc,$(PY) sound\tools\fm_patch_compile.py --empty -o sound\driver\fm_patch_table.inc)
 
 .PHONY: fm
 fm:
-	$(if $(FM_MMLS),$(PY) sound/tools/fm_compile.py $(FM_MMLS) -o sound/driver/fm_data.inc,@echo fm: no MML files in $(GAME_SOUND)\fm\, skipping)
+	$(if $(FM_MMLS),$(PY) sound/tools/fm_compile.py $(FM_MMLS) -o sound/driver/fm_data.inc,$(PY) sound/tools/fm_compile.py -o sound/driver/fm_data.inc)
 
 .PHONY: mml
 mml:
-	$(if $(MML_TRACKS),$(PY) sound/tools/mml_compile.py $(MML_TRACKS) -o sound/driver/music_data.inc,@echo mml: no MML files in $(GAME_SOUND)\mml\, skipping)
+	$(if $(MML_TRACKS),$(PY) sound/tools/mml_compile.py $(MML_TRACKS) -o sound/driver/music_data.inc,$(PY) sound/tools/mml_compile.py -o sound/driver/music_data.inc)
 
 .PHONY: ssgconfig
 ssgconfig:
-	$(if $(wildcard $(GAME_SOUND)/ssg/config.ssg),$(PY) sound\tools\ssg_config_compile.py $(GAME_SOUND)\ssg\config.ssg -o sound\driver\ssg_config.inc,@echo ssgconfig: no config.ssg in $(GAME_SOUND)\ssg\, skipping)
+	$(if $(wildcard $(GAME_SOUND)/ssg/config.ssg),$(PY) sound\tools\ssg_config_compile.py $(GAME_SOUND)\ssg\config.ssg -o sound\driver\ssg_config.inc,$(PY) sound\tools\ssg_config_compile.py --empty -o sound\driver\ssg_config.inc)
 
 .PHONY: ssg
 ssg:
-	$(if $(SSG_MMLS),$(PY) sound/tools/ssg_compile.py $(SSG_MMLS) -o sound/driver/ssg_data.inc,@echo ssg: no MML files in $(GAME_SOUND)\ssg\, skipping)
+	$(if $(SSG_MMLS),$(PY) sound/tools/ssg_compile.py $(SSG_MMLS) -o sound/driver/ssg_data.inc,$(PY) sound/tools/ssg_compile.py -o sound/driver/ssg_data.inc)
 
 .PHONY: m1rom
 m1rom: fmpatches fm mml ssgconfig ssg
@@ -310,7 +341,7 @@ sound-all: sound
 sfix: game-check
 	$(LOG_CTX)
 	if not exist games\$(GAME)\artbox mkdir games\$(GAME)\artbox
-	cd games\$(GAME)\artbox && set ARTBOX_DATA_DIR=$(REPO_WIN)\games\$(GAME)\artbox&& set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) $(REPO_WIN)\artbox\romdbfiximport.py && $(PY) $(REPO_WIN)\artbox\fixtiles.py && call $(REPO_WIN)\artbox\romfx.bat
+	cd games\$(GAME)\artbox && set ARTBOX_DATA_DIR=$(REPO_WIN)\games\$(GAME)\artbox&& set ARTBOX_INFIX_DIR=$(REPO_WIN)\games\$(or $(GAME_ART_FROM),$(GAME))\artbox\infix&& set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) $(REPO_WIN)\artbox\romdbfiximport.py && $(PY) $(REPO_WIN)\artbox\fixtiles.py && call $(REPO_WIN)\artbox\romfx.bat
 	$(PY) tools\verify_sfix_output.py --root "$(CURDIR)" --game "$(GAME)" --game-id "$(GAME_ID)"
 	if not exist $(ROM_DIR) mkdir $(ROM_DIR)
 	if not exist games\$(GAME)\artbox\$(GAME_ID)-s1.s1 (echo ERROR: missing games\$(GAME)\artbox\$(GAME_ID)-s1.s1 & exit /b 1)
@@ -337,6 +368,7 @@ art-clean:
 	if exist artbox\neopal.bin del /Q artbox\neopal.bin
 	if exist artbox\1p.c1 del /Q artbox\1p.c1
 	if exist artbox\2p.c2 del /Q artbox\2p.c2
+	if exist artbox\assets.cfg del /Q artbox\assets.cfg
 	if exist artbox\1c.c1 del /Q artbox\1c.c1
 	if exist artbox\2c.c2 del /Q artbox\2c.c2
 	if exist artbox\1c.s1 del /Q artbox\1c.s1
@@ -354,8 +386,9 @@ art-clean:
 # nearest-neighbour-against-global-palette path.
 art: game-check
 	$(LOG_CTX)
-	set ARTBOX_TILE=1&& set GAME_ID=$(GAME_ID)&& call artbox\makeartbox.bat $(GAME)
+	set ARTBOX_TILE=1&& set GAME_ID=$(GAME_ID)&& set GAME_ART_FROM=$(GAME_ART_FROM)&& call artbox\makeartbox.bat $(GAME)
 	$(PY) tools\verify_artbox_palettes.py --root "$(CURDIR)" --game "$(GAME)"
+	if exist artbox\assets.cfg del /Q artbox\assets.cfg
 	if exist artbox\1c.c1 del /Q artbox\1c.c1
 	if exist artbox\2c.c2 del /Q artbox\2c.c2
 	if exist artbox\$(GAME_ID)-s1.s1 del /Q artbox\$(GAME_ID)-s1.s1
@@ -377,8 +410,9 @@ art: game-check
 .PHONY: art-crt
 art-crt: game-check
 	$(LOG_CTX)
-	set ARTBOX_CRT=1&& set GAME_ID=$(GAME_ID)&& call artbox\makeartbox.bat $(GAME)
+	set ARTBOX_CRT=1&& set GAME_ID=$(GAME_ID)&& set GAME_ART_FROM=$(GAME_ART_FROM)&& call artbox\makeartbox.bat $(GAME)
 	$(PY) tools\verify_artbox_palettes.py --root "$(CURDIR)" --game "$(GAME)"
+	if exist artbox\assets.cfg del /Q artbox\assets.cfg
 	if exist artbox\1c.c1 del /Q artbox\1c.c1
 	if exist artbox\2c.c2 del /Q artbox\2c.c2
 	if exist artbox\$(GAME_ID)-s1.s1 del /Q artbox\$(GAME_ID)-s1.s1

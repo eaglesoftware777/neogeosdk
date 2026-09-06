@@ -4,6 +4,10 @@
 #include "ng_defs.h"
 #include "ng_chars.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Event IDs emitted by joystick helpers through ng_game_events_send(). */
 #define NG_EVENT_JOY_JUMP            0x5001
 #define NG_EVENT_JOY_FIRE_LIGHT      0x5002
@@ -81,4 +85,8 @@ typedef void (*NGJoyEventHandler)(uint16_t event_id, uint16_t a, uint16_t b, uin
 void NEOGEO_USER ng_joy_set_event_handler(NGJoyEventHandler fn);
 uint8_t NEOGEO_USER ng_joy_pop_command(NGJoyCommand *out);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

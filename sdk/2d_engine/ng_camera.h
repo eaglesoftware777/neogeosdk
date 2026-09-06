@@ -19,6 +19,10 @@
 #include "ng_defs.h"
 #include "ng_fixed.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Screen dimensions */
 #define NG_SCREEN_W   320
 #define NG_SCREEN_H   224
@@ -126,4 +130,8 @@ void NEOGEO_USER ng_camera_apply(NGCamera *cam,
 #define ng_camera_world_to_screen_x(cam, world_x) ((int16_t)((world_x) - (cam)->x))
 #define ng_camera_world_to_screen_y(cam, world_y) ((int16_t)((world_y) - (cam)->y))
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

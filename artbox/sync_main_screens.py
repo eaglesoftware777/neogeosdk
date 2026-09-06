@@ -41,9 +41,20 @@ def main():
         flags=re.MULTILINE,
     )
     if not match:
-        raise RuntimeError(f"showScreen1() implementation not found in {main_c_path}")
+        # A game that does not draw generated screens has no showScreen1() to
+        # anchor to.  There is nothing to splice in, and the rewrite below cuts
+        # main.c at that anchor, so bailing out here leaves the file intact.
+        print(f"No showScreen1() in {main_c_path}; nothing to sync.")
+        return
 
-    updated = main_text[: match.start()].rstrip() + "\n\n" + screens_text + "\n"
+    # main.c may open an `extern "C" {` block before showScreen1 so a C++
+    # build keeps C linkage on the generated bodies.  That opening brace
+    # survives the truncation below but its closing one does not, so
+    # re-emit it after the spliced-in screens.
+    head = main_text[: match.start()].rstrip()
+    tail = '\n\n#ifdef __cplusplus\n}  /* extern "C" */\n#endif\n' \
+        if 'extern "C" {' in head else "\n"
+    updated = head + "\n\n" + screens_text + tail
     main_c_path.write_text(updated, encoding="utf-8")
 
 

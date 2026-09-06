@@ -16,6 +16,10 @@
 
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Maximum commands buffered per frame.
  * Each command costs 6 bytes; 128 commands = 768 bytes in RAM.
  * Tune this if RAM is tight — 64 is safe minimum, 256 is comfortable max. */
@@ -72,4 +76,8 @@ uint8_t NEOGEO_USER ng_rq_free(void);
 /* How many palette upload slots are still free. */
 uint8_t NEOGEO_USER ng_rq_pal_free(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

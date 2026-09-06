@@ -21,6 +21,10 @@
 #include "ng_camera.h"
 #include "ng_particles.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Maximum simultaneous feedback events */
 #define NG_FEEDBACK_MAX_EVENTS  4
 
@@ -92,4 +96,8 @@ uint8_t NEOGEO_USER ng_feedback_hitstop_remaining(void);
 /* Get remaining slow motion frames. */
 uint8_t NEOGEO_USER ng_feedback_slow_motion_remaining(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

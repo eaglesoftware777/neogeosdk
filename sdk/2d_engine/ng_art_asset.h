@@ -3,6 +3,10 @@
 
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define NG_ART_TYPE_SCREEN      0u
 #define NG_ART_TYPE_SPRITE      1u
 #define NG_ART_TYPE_BACKGROUND  2u
@@ -30,4 +34,8 @@ const NGArtAsset * NEOGEO_USER ng_art_asset_find(const NGArtAsset *assets,
                                                  uint16_t asset_id);
 uint8_t NEOGEO_USER ng_art_asset_is_type(const NGArtAsset *asset, uint8_t type);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

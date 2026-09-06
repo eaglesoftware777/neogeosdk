@@ -1,12 +1,12 @@
 [001] backgrounds/background_coast_city.png
-mode=screen fit=contain anchor=center rule=cat_backgrounds
+mode=screen fit=crop anchor=center rule=cat_backgrounds
 category=backgrounds
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=1 palette_bank=16 tile_base=0 reserved_last=255 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=background layer or multi-level backdrop
 
 [002] backgrounds/background_sky_mountains.png
-mode=screen fit=contain anchor=center rule=cat_backgrounds
+mode=screen fit=crop anchor=center rule=cat_backgrounds
 category=backgrounds
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=2 palette_bank=17 tile_base=256 reserved_last=511 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16

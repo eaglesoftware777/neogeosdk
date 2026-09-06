@@ -7,6 +7,10 @@
 
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void NEOGEO_USER demo_sticky_character(void);
 void NEOGEO_USER demo_smooth_camera(void);
 void NEOGEO_USER demo_palette_flash_cycle(void);
@@ -19,4 +23,8 @@ void NEOGEO_USER demo_boss_depth_shrink(void);
 void NEOGEO_USER demo_perf_hud(void);
 #endif
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

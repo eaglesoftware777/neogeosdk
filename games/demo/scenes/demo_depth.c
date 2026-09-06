@@ -16,6 +16,13 @@
 #include "sdk/2d_engine/ng_sprite_group.h"
 #include "sdk/2d_engine/ng_fixed.h"
 #include <stdint.h>
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  Everything here is
+ * reached from inline asm, the cart entry vectors or the BIOS by its
+ * plain symbol name, so it must keep C linkage and not be mangled. */
+extern "C" {
+#endif
+
 
 void NEOGEO_USER clearFix(void);
 void NEOGEO_USER setBACKDROP(uint16_t backdrop_color);
@@ -53,6 +60,7 @@ static void NEOGEO_USER depth_starfield(void)
 {
     NGVec3       stars[STAR_COUNT];
     NGSpriteGroup star_grp[STAR_COUNT];
+    uint8_t       star_palette[STAR_COUNT];
     uint8_t      i;
     uint16_t     t;
 
@@ -70,9 +78,17 @@ static void NEOGEO_USER depth_starfield(void)
         stars[i].y = (int16_t)((int16_t)(depth_rand8() & 0x7Fu) - 64 + NG_DEPTH_CY);
         stars[i].z = (int16_t)(depth_rand8() & 0x7Fu);
 
+        /* Build the group once, with the tile data it will actually use.  The
+         * per-frame work below is then position and shrink only, which
+         * ng_sprite_group_flush() writes without touching the tilemap. */
         ng_sprite_group_init(&star_grp[i], (uint16_t)(STAR_SLOT_0 + i),
-                             1u, 1u, 0u, 0u);
-        star_grp[i].visible = 1u;
+                             DEPTH_NPC_STRIPS, DEPTH_NPC_ROWS,
+                             DEPTH_NPC_TILE, DEPTH_NPC_PAL);
+        ng_sprite_group_set_tile_stride(&star_grp[i], 16u);
+        ng_sprite_group_set_active_rows(&star_grp[i], DEPTH_NPC_ROWS);
+        ng_sprite_group_set_visible(&star_grp[i], 1u);
+        ng_sprite_group_upload(&star_grp[i]);
+        star_palette[i] = DEPTH_NPC_PAL;
     }
 
     demo_load_screen_palette(DEPTH_NPC_SCREEN);
@@ -93,15 +109,17 @@ static void NEOGEO_USER depth_starfield(void)
                 sz = proj.shrink_y;
                 if (sz < 0x20u) sz = 0x20u;
 
-                ng_sprite_group_init(&star_grp[i], (uint16_t)(STAR_SLOT_0 + i),
-                                     DEPTH_NPC_STRIPS, DEPTH_NPC_ROWS,
-                                     DEPTH_NPC_TILE, proj.palette);
-                ng_sprite_group_set_tile_stride(&star_grp[i], 16u);
-                ng_sprite_group_set_active_rows(&star_grp[i], DEPTH_NPC_ROWS);
+                /* Only the palette needs the tilemap rewritten, so ask for it
+                 * when the depth band actually changes rather than every
+                 * frame; the rest is three words per strip. */
+                if (star_palette[i] != proj.palette) {
+                    ng_sprite_group_set_palette(&star_grp[i], proj.palette);
+                    star_palette[i] = proj.palette;
+                }
                 ng_sprite_group_set_scale(&star_grp[i], sz, sz);
                 ng_sprite_group_set_pos(&star_grp[i], proj.screen_x, proj.screen_y);
                 ng_sprite_group_set_visible(&star_grp[i], 1u);
-                ng_sprite_group_upload(&star_grp[i]);
+                ng_sprite_group_flush(&star_grp[i]);
             } else {
                 ng_sprite_group_hide(&star_grp[i]);
             }
@@ -335,3 +353,7 @@ void NEOGEO_USER demo_depth_run(void)
     soundStopAll();
     demo_clear_scene();
 }
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif

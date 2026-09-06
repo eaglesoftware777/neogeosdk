@@ -32,6 +32,18 @@ with open("sprite_meta.h", "w", encoding="utf-8") as out:
     out.write("#define NG_ASSET_CATEGORY_OPPONENT 2\n")
     out.write("#define NG_ASSET_CATEGORY_NPC 3\n\n")
     out.write("#define NG_ASSET_META_COUNT %d\n\n" % len(assets))
+
+    # The strip count is also emitted as a macro so a game can size its
+    # hardware-sprite slot map against it at compile time.  A sprite costs one
+    # hardware sprite per 16-pixel column of tile data, so a slot map that
+    # reserves fewer than this runs one entity's strips into the next one's
+    # slots - which shows up as flicker and wrong art, not as a build error.
+    out.write("/* Hardware sprite strips each asset needs, by 1-based asset id. */\n")
+    for index, spec in enumerate(assets):
+        out.write("#define NG_ASSET_STRIPS_%d %d  /* %s */\n"
+                  % (index + 1, spec["sprite_strips"], spec["name"]))
+    out.write("\n")
+
     out.write("static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {\n")
     def infer_category(spec):
         category_name = spec.get("category")

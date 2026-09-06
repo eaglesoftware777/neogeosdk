@@ -14,6 +14,12 @@ if not os.path.isfile(CFG_PATH):
 MANIFEST_PATH = os.path.join(DATA_ROOT, "assets_manifest.json")
 OUT_SRT_PATH = os.path.join(DATA_ROOT, "out.srt")
 
+# Source art normally sits beside the generated files, but a game that reuses
+# another game's artwork points these at that game's directories while still
+# writing its own tables and ROMs into its own artbox.
+IN_DIR = os.environ.get("ARTBOX_IN_DIR", os.path.join(DATA_ROOT, "in"))
+INFIX_DIR = os.environ.get("ARTBOX_INFIX_DIR", os.path.join(DATA_ROOT, "infix"))
+
 # Canonical category order — determines tile/palette assignment order
 CATEGORY_ORDER = [
     "backgrounds",
@@ -69,6 +75,14 @@ def load_rules(cfg_path=CFG_PATH):
                 "halo_luma_threshold": int(_rule_value(section,
                                                        "halo_luma_threshold",
                                                        "220")),
+                # SCB2 vertical shrink this screen is drawn with (0..255).
+                # A screen is stored square but drawn squashed, so the
+                # importer needs the draw-time value to fit the artwork to
+                # the proportions it will actually be seen in.  255 means
+                # "drawn at full height", i.e. no correction.
+                "display_shrink_y": int(_rule_value(section,
+                                                    "display_shrink_y",
+                                                    "255")),
                 "note": _rule_value(section, "note", "").strip(),
             }
         )
@@ -156,11 +170,13 @@ def match_rule(name, rules, category=""):
         "kmeans_iters": 25,
         "halo_strip": False,
         "halo_luma_threshold": 220,
+        "display_shrink_y": 255,
         "note": "",
     }
 
 
-def build_asset_specs(in_dir="in", cfg_path=CFG_PATH):
+def build_asset_specs(in_dir=None, cfg_path=CFG_PATH):
+    in_dir = IN_DIR if in_dir is None else in_dir
     entries = _collect_subdir_files(in_dir)
     rules   = load_rules(cfg_path)
     specs   = []
@@ -191,6 +207,7 @@ def build_asset_specs(in_dir="in", cfg_path=CFG_PATH):
             "kmeans_iters": rule["kmeans_iters"],
             "halo_strip": rule["halo_strip"],
             "halo_luma_threshold": rule["halo_luma_threshold"],
+            "display_shrink_y": rule["display_shrink_y"],
             "note": rule["note"],
             "tile_base": db_index * 256,
             "tile_reserved_count": 256,

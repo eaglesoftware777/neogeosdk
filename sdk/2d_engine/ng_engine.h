@@ -1,6 +1,10 @@
 #ifndef NG_ENGINE_H
 #define NG_ENGINE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Core engine */
 #include "ng_defs.h"
 #include "sound_ids.h"
@@ -38,4 +42,8 @@
 #include "ng_debug.h"
 #include "ng_joystick.h"
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -3,6 +3,10 @@
 
 #include "sdk/macro.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NEOGEO_USER
 #define NEOGEO_USER
 #endif
@@ -13,4 +17,8 @@ void NEOGEO_USER demo_sound_run(void);
 /* Legacy compatibility entry point */
 void NEOGEO_USER showSoundDemo(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* DEMO_SOUND_H */

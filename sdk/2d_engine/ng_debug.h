@@ -26,6 +26,10 @@
 
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Column for debug overlay (right side, FIX safe area = 1..38) */
 #define NG_DBG_X   22
 /* First row for debug overlay */
@@ -84,4 +88,8 @@ extern uint8_t  ng_dbg_vblank_overflow;
 
 #endif /* NG_DEBUG_PERF */
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* NG_DEBUG_H */

@@ -33,6 +33,13 @@
 #include "sdk/2d_engine/ng_sprite_pool.h"
 #include "sprite_meta.h"
 #include <stdint.h>
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  Everything here is
+ * reached from inline asm, the cart entry vectors or the BIOS by its
+ * plain symbol name, so it must keep C linkage and not be mangled. */
+extern "C" {
+#endif
+
 
 const NGArtAsset * NEOGEO_USER ng_screen_art_asset(uint16_t screen_id);
 
@@ -778,3 +785,7 @@ void NEOGEO_USER demo_run_full_flow(void)
     demo_intro_loading();
     demo_unified_run();
 }
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif

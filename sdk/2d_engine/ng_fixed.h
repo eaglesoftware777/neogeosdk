@@ -26,6 +26,10 @@
 #include <stdint.h>
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* 16.16 fixed-point type */
 typedef int32_t NGFixed;
 
@@ -94,4 +98,8 @@ extern const uint8_t ng_shrink_tab[NGFX_SHRINK_ENTRIES];
  * because this is only for pre-baked distance calculations. */
 uint16_t NEOGEO_USER ng_isqrt(uint32_t n);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

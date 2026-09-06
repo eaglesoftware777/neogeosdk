@@ -1,12 +1,12 @@
 [001] backgrounds/001_starfield.png
-mode=screen fit=contain anchor=center rule=cat_backgrounds
+mode=screen fit=crop anchor=center rule=cat_backgrounds
 category=backgrounds
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=1 palette_bank=16 tile_base=0 reserved_last=255 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=background layer or multi-level backdrop
 
 [002] backgrounds/002_space_bg.png
-mode=screen fit=contain anchor=center rule=cat_backgrounds
+mode=screen fit=crop anchor=center rule=cat_backgrounds
 category=backgrounds
 source=600x360 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=2 palette_bank=17 tile_base=256 reserved_last=511 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
@@ -55,11 +55,11 @@ screen_id=8 palette_bank=23 tile_base=1792 reserved_last=2047 used_cols=4 used_r
 note=effects and transitions  (aggressive halo strip: bright outer ring is almost always a matte artefact on glow / spark FX)
 
 [009] npcs/020_enemy.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_big_enemy
 category=npcs
-source=1238x800 canvas=256x256 content=256x165 offset=(0,91)
-screen_id=9 palette_bank=24 tile_base=2048 reserved_last=2303 used_cols=16 used_rows=11 start_col=0 start_row=5 x_pad=0 y_pad=11 used_tiles=176 strips=16 active_rows=11
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=1238x800 canvas=32x32 content=32x21 offset=(0,11)
+screen_id=9 palette_bank=24 tile_base=2048 reserved_last=2303 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=11 used_tiles=4 strips=2 active_rows=2
+note=single large opponent, imported small enough to fit the sprite budget
 
 [010] npcs/032_life.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs

@@ -19,3 +19,8 @@ games/helloworld/artbox/*
 !games/helloworld/artbox/in/
 games/tutorial/artbox/*
 !games/tutorial/artbox/in/
+
+# demo_plus builds its art from games/demo via GAME_ART_FROM, so everything
+# under here is derived twice over - generated output from source art that is
+# already tracked somewhere else.  `make GAME=demo_plus art` recreates it.
+games/demo_plus/artbox/*

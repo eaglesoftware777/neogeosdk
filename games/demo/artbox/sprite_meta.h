@@ -28,6 +28,181 @@ typedef struct {
 
 #define NG_ASSET_META_COUNT 173
 
+/* Hardware sprite strips each asset needs, by 1-based asset id. */
+#define NG_ASSET_STRIPS_1 16  /* 0.png */
+#define NG_ASSET_STRIPS_2 16  /* 1.png */
+#define NG_ASSET_STRIPS_3 12  /* sprite_001_r01_c01.png */
+#define NG_ASSET_STRIPS_4 12  /* sprite_002_r01_c02.png */
+#define NG_ASSET_STRIPS_5 12  /* sprite_003_r01_c03.png */
+#define NG_ASSET_STRIPS_6 12  /* sprite_004_r01_c04.png */
+#define NG_ASSET_STRIPS_7 12  /* sprite_005_r01_c05.png */
+#define NG_ASSET_STRIPS_8 12  /* sprite_006_r01_c06.png */
+#define NG_ASSET_STRIPS_9 12  /* sprite_007_r01_c07.png */
+#define NG_ASSET_STRIPS_10 12  /* sprite_008_r01_c08.png */
+#define NG_ASSET_STRIPS_11 12  /* sprite_009_r01_c09.png */
+#define NG_ASSET_STRIPS_12 12  /* sprite_010_r01_c10.png */
+#define NG_ASSET_STRIPS_13 12  /* sprite_011_r01_c11.png */
+#define NG_ASSET_STRIPS_14 12  /* sprite_012_r01_c12.png */
+#define NG_ASSET_STRIPS_15 14  /* sprite_013_r02_c01.png */
+#define NG_ASSET_STRIPS_16 16  /* sprite_014_r02_c02.png */
+#define NG_ASSET_STRIPS_17 14  /* sprite_015_r02_c03.png */
+#define NG_ASSET_STRIPS_18 14  /* sprite_016_r02_c04.png */
+#define NG_ASSET_STRIPS_19 14  /* sprite_017_r02_c05.png */
+#define NG_ASSET_STRIPS_20 14  /* sprite_018_r02_c06.png */
+#define NG_ASSET_STRIPS_21 14  /* sprite_019_r02_c07.png */
+#define NG_ASSET_STRIPS_22 14  /* sprite_020_r02_c08.png */
+#define NG_ASSET_STRIPS_23 14  /* sprite_021_r02_c09.png */
+#define NG_ASSET_STRIPS_24 14  /* sprite_022_r02_c10.png */
+#define NG_ASSET_STRIPS_25 12  /* sprite_023_r03_c01.png */
+#define NG_ASSET_STRIPS_26 16  /* sprite_024_r03_c02.png */
+#define NG_ASSET_STRIPS_27 16  /* sprite_025_r03_c03.png */
+#define NG_ASSET_STRIPS_28 16  /* sprite_026_r03_c04.png */
+#define NG_ASSET_STRIPS_29 16  /* sprite_027_r03_c05.png */
+#define NG_ASSET_STRIPS_30 16  /* sprite_028_r03_c06.png */
+#define NG_ASSET_STRIPS_31 16  /* sprite_029_r03_c07.png */
+#define NG_ASSET_STRIPS_32 16  /* sprite_030_r03_c08.png */
+#define NG_ASSET_STRIPS_33 16  /* sprite_031_r04_c01.png */
+#define NG_ASSET_STRIPS_34 16  /* sprite_032_r04_c02.png */
+#define NG_ASSET_STRIPS_35 14  /* sprite_033_r04_c03.png */
+#define NG_ASSET_STRIPS_36 16  /* sprite_034_r04_c04.png */
+#define NG_ASSET_STRIPS_37 16  /* sprite_035_r04_c05.png */
+#define NG_ASSET_STRIPS_38 16  /* sprite_036_r04_c06.png */
+#define NG_ASSET_STRIPS_39 14  /* sprite_037_r04_c07.png */
+#define NG_ASSET_STRIPS_40 12  /* sprite_038_r04_c08.png */
+#define NG_ASSET_STRIPS_41 16  /* sprite_039_r04_c09.png */
+#define NG_ASSET_STRIPS_42 12  /* sprite_040_r04_c10.png */
+#define NG_ASSET_STRIPS_43 16  /* sprite_041_r04_c11.png */
+#define NG_ASSET_STRIPS_44 12  /* sprite_042_r05_c01.png */
+#define NG_ASSET_STRIPS_45 16  /* sprite_043_r05_c02.png */
+#define NG_ASSET_STRIPS_46 4  /* sprite_044_r05_c03.png */
+#define NG_ASSET_STRIPS_47 12  /* sprite_045_r05_c04.png */
+#define NG_ASSET_STRIPS_48 6  /* sprite_046_r05_c05.png */
+#define NG_ASSET_STRIPS_49 16  /* sprite_047_r05_c06.png */
+#define NG_ASSET_STRIPS_50 14  /* sprite_048_r05_c07.png */
+#define NG_ASSET_STRIPS_51 8  /* sprite_049_r05_c08.png */
+#define NG_ASSET_STRIPS_52 16  /* sprite_050_r05_c09.png */
+#define NG_ASSET_STRIPS_53 16  /* sprite_051_r05_c10.png */
+#define NG_ASSET_STRIPS_54 16  /* sprite_052_r05_c11.png */
+#define NG_ASSET_STRIPS_55 16  /* sprite_053_r05_c12.png */
+#define NG_ASSET_STRIPS_56 16  /* sprite_054_r06_c01.png */
+#define NG_ASSET_STRIPS_57 16  /* sprite_055_r06_c02.png */
+#define NG_ASSET_STRIPS_58 16  /* sprite_056_r06_c03.png */
+#define NG_ASSET_STRIPS_59 14  /* sprite_057_r06_c04.png */
+#define NG_ASSET_STRIPS_60 14  /* sprite_058_r06_c05.png */
+#define NG_ASSET_STRIPS_61 14  /* sprite_059_r06_c06.png */
+#define NG_ASSET_STRIPS_62 6  /* sprite_060_r06_c07.png */
+#define NG_ASSET_STRIPS_63 10  /* sprite_061_r06_c08.png */
+#define NG_ASSET_STRIPS_64 12  /* sprite_062_r06_c09.png */
+#define NG_ASSET_STRIPS_65 10  /* sprite_063_r06_c10.png */
+#define NG_ASSET_STRIPS_66 10  /* sprite_064_r06_c11.png */
+#define NG_ASSET_STRIPS_67 4  /* sprite_065_r06_c12.png */
+#define NG_ASSET_STRIPS_68 14  /* sprite_066_r07_c01.png */
+#define NG_ASSET_STRIPS_69 14  /* sprite_067_r07_c02.png */
+#define NG_ASSET_STRIPS_70 14  /* sprite_068_r07_c03.png */
+#define NG_ASSET_STRIPS_71 14  /* sprite_069_r07_c04.png */
+#define NG_ASSET_STRIPS_72 10  /* sprite_070_r07_c05.png */
+#define NG_ASSET_STRIPS_73 12  /* sprite_071_r07_c06.png */
+#define NG_ASSET_STRIPS_74 12  /* sprite_072_r07_c07.png */
+#define NG_ASSET_STRIPS_75 12  /* sprite_073_r07_c08.png */
+#define NG_ASSET_STRIPS_76 12  /* sprite_074_r07_c09.png */
+#define NG_ASSET_STRIPS_77 12  /* sprite_075_r07_c10.png */
+#define NG_ASSET_STRIPS_78 16  /* sprite_076_r07_c11.png */
+#define NG_ASSET_STRIPS_79 14  /* sprite_077_r07_c12.png */
+#define NG_ASSET_STRIPS_80 14  /* sprite_078_r07_c13.png */
+#define NG_ASSET_STRIPS_81 8  /* sprite_079_r07_c14.png */
+#define NG_ASSET_STRIPS_82 14  /* sprite_080_r08_c01.png */
+#define NG_ASSET_STRIPS_83 14  /* sprite_081_r08_c02.png */
+#define NG_ASSET_STRIPS_84 14  /* sprite_082_r08_c03.png */
+#define NG_ASSET_STRIPS_85 14  /* sprite_083_r08_c04.png */
+#define NG_ASSET_STRIPS_86 14  /* sprite_084_r08_c05.png */
+#define NG_ASSET_STRIPS_87 16  /* sprite_085_r08_c06.png */
+#define NG_ASSET_STRIPS_88 14  /* sprite_086_r08_c07.png */
+#define NG_ASSET_STRIPS_89 6  /* sprite_040.png */
+#define NG_ASSET_STRIPS_90 6  /* sprite_041.png */
+#define NG_ASSET_STRIPS_91 10  /* sprite_048.png */
+#define NG_ASSET_STRIPS_92 10  /* sprite_050.png */
+#define NG_ASSET_STRIPS_93 4  /* sprite_062.png */
+#define NG_ASSET_STRIPS_94 16  /* 1.png */
+#define NG_ASSET_STRIPS_95 16  /* 2.png */
+#define NG_ASSET_STRIPS_96 16  /* 3.png */
+#define NG_ASSET_STRIPS_97 16  /* 4.png */
+#define NG_ASSET_STRIPS_98 16  /* 5.png */
+#define NG_ASSET_STRIPS_99 16  /* 6.png */
+#define NG_ASSET_STRIPS_100 16  /* 7.png */
+#define NG_ASSET_STRIPS_101 16  /* 1.png */
+#define NG_ASSET_STRIPS_102 16  /* 2.png */
+#define NG_ASSET_STRIPS_103 16  /* 3.png */
+#define NG_ASSET_STRIPS_104 16  /* 4.png */
+#define NG_ASSET_STRIPS_105 16  /* 5.png */
+#define NG_ASSET_STRIPS_106 16  /* 6.png */
+#define NG_ASSET_STRIPS_107 16  /* 7.png */
+#define NG_ASSET_STRIPS_108 12  /* 8.png */
+#define NG_ASSET_STRIPS_109 10  /* 9.png */
+#define NG_ASSET_STRIPS_110 12  /* cat_01.png */
+#define NG_ASSET_STRIPS_111 12  /* cat_02.png */
+#define NG_ASSET_STRIPS_112 12  /* cat_03.png */
+#define NG_ASSET_STRIPS_113 12  /* cat_04.png */
+#define NG_ASSET_STRIPS_114 12  /* cat_05.png */
+#define NG_ASSET_STRIPS_115 12  /* cat_06.png */
+#define NG_ASSET_STRIPS_116 12  /* cat_07.png */
+#define NG_ASSET_STRIPS_117 12  /* cat_08.png */
+#define NG_ASSET_STRIPS_118 12  /* cat_09.png */
+#define NG_ASSET_STRIPS_119 12  /* cat_10.png */
+#define NG_ASSET_STRIPS_120 12  /* cat_11.png */
+#define NG_ASSET_STRIPS_121 12  /* cat_12.png */
+#define NG_ASSET_STRIPS_122 4  /* zz_shooter_enemy.png */
+#define NG_ASSET_STRIPS_123 2  /* zz_shooter_enemy_bullet.png */
+#define NG_ASSET_STRIPS_124 4  /* zz_shooter_explosion.png */
+#define NG_ASSET_STRIPS_125 2  /* zz_shooter_player_bullet.png */
+#define NG_ASSET_STRIPS_126 4  /* zz_shooter_ship.png */
+#define NG_ASSET_STRIPS_127 4  /* zz_shooter_ship_alt.png */
+#define NG_ASSET_STRIPS_128 8  /* zzz_ufo_blue.png */
+#define NG_ASSET_STRIPS_129 8  /* zzz_ufo_green.png */
+#define NG_ASSET_STRIPS_130 8  /* zzz_ufo_pink.png */
+#define NG_ASSET_STRIPS_131 8  /* zzz_ufo_yellow.png */
+#define NG_ASSET_STRIPS_132 8  /* zzzz_duck_back.png */
+#define NG_ASSET_STRIPS_133 8  /* zzzz_duck_target_brown.png */
+#define NG_ASSET_STRIPS_134 8  /* zzzz_duck_target_white.png */
+#define NG_ASSET_STRIPS_135 8  /* zzzz_duck_target_yellow.png */
+#define NG_ASSET_STRIPS_136 2  /* zzzzz_hitbox.png */
+#define NG_ASSET_STRIPS_137 1  /* zzzzzz_particle_dust.png */
+#define NG_ASSET_STRIPS_138 1  /* zzzzzz_particle_explosion.png */
+#define NG_ASSET_STRIPS_139 1  /* zzzzzz_particle_hitspark.png */
+#define NG_ASSET_STRIPS_140 1  /* zzzzzz_particle_magic.png */
+#define NG_ASSET_STRIPS_141 1  /* zzzzzz_particle_smoke.png */
+#define NG_ASSET_STRIPS_142 16  /* zzzzzzz_ssg_starfield.png */
+#define NG_ASSET_STRIPS_143 8  /* zzzzzzzz_enemyship_blue.png */
+#define NG_ASSET_STRIPS_144 8  /* zzzzzzzz_enemyship_green.png */
+#define NG_ASSET_STRIPS_145 8  /* zzzzzzzz_enemyship_pink.png */
+#define NG_ASSET_STRIPS_146 6  /* zzzzzzzz_player_vessel.png */
+#define NG_ASSET_STRIPS_147 4  /* zzzzzzzzz_balloon_blue.png */
+#define NG_ASSET_STRIPS_148 4  /* zzzzzzzzz_balloon_green.png */
+#define NG_ASSET_STRIPS_149 4  /* zzzzzzzzz_balloon_red.png */
+#define NG_ASSET_STRIPS_150 4  /* zzzzzzzzz_balloon_yellow.png */
+#define NG_ASSET_STRIPS_151 8  /* zzzzzzzzzz_sky_boss.png */
+#define NG_ASSET_STRIPS_152 2  /* zzzzzzzzzz_sky_bullet.png */
+#define NG_ASSET_STRIPS_153 2  /* zzzzzzzzzz_sky_enemy_a.png */
+#define NG_ASSET_STRIPS_154 2  /* zzzzzzzzzz_sky_enemy_b.png */
+#define NG_ASSET_STRIPS_155 2  /* zzzzzzzzzz_sky_enemy_c.png */
+#define NG_ASSET_STRIPS_156 2  /* zzzzzzzzzz_sky_orb.png */
+#define NG_ASSET_STRIPS_157 2  /* zzzzzzzzzz_sky_plane.png */
+#define NG_ASSET_STRIPS_158 16  /* zzzzzzzzzzz_crate.png */
+#define NG_ASSET_STRIPS_159 16  /* zzzzzzzzzzz_crate_broken.png */
+#define NG_ASSET_STRIPS_160 16  /* 0.png */
+#define NG_ASSET_STRIPS_161 16  /* 1.png */
+#define NG_ASSET_STRIPS_162 6  /* z_npc_84.png */
+#define NG_ASSET_STRIPS_163 6  /* z_npc_85.png */
+#define NG_ASSET_STRIPS_164 6  /* z_npc_86.png */
+#define NG_ASSET_STRIPS_165 6  /* z_npc_87.png */
+#define NG_ASSET_STRIPS_166 6  /* z_npc_88.png */
+#define NG_ASSET_STRIPS_167 6  /* z_npc_89.png */
+#define NG_ASSET_STRIPS_168 6  /* z_npc_90.png */
+#define NG_ASSET_STRIPS_169 6  /* z_npc_91.png */
+#define NG_ASSET_STRIPS_170 6  /* z_npc_92.png */
+#define NG_ASSET_STRIPS_171 6  /* z_npc_93.png */
+#define NG_ASSET_STRIPS_172 6  /* z_npc_94.png */
+#define NG_ASSET_STRIPS_173 6  /* z_npc_95.png */
+
 static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 0, 16, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* 0.png */
     { 256, 17, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* 1.png */
@@ -136,8 +311,8 @@ static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 26624, 120, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* 5.png */
     { 26880, 121, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* 6.png */
     { 27136, 122, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* 7.png */
-    { 27392, 123, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* 8.png */
-    { 27648, 124, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* 9.png */
+    { 27392, 123, 12, 16, 2, 0, 1, 0, 189, 256, 0, 0 }, /* 8.png */
+    { 27648, 124, 10, 16, 3, 0, 10, 0, 140, 256, 0, 0 }, /* 9.png */
     { 27904, 125, 12, 15, 2, 1, 0, 15, 191, 225, 1, 3 }, /* cat_01.png */
     { 28160, 126, 12, 15, 2, 1, 2, 13, 187, 227, 1, 3 }, /* cat_02.png */
     { 28416, 127, 12, 15, 2, 1, 1, 14, 190, 226, 1, 3 }, /* cat_03.png */

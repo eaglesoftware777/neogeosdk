@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include "macro.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Neo Geo FIX SDK
  *
@@ -98,4 +102,8 @@ void NEOGEO_USER ngfix_box(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t p
 void NEOGEO_USER ngfix_fill_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t tile, uint8_t pal);
 void NEOGEO_USER ngfix_bar_u8(uint8_t x, uint8_t y, uint8_t w, uint8_t value, uint8_t max, uint8_t pal, uint16_t fill_tile, uint16_t empty_tile);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -4,6 +4,10 @@
 #include "sdk/macro.h"
 #include "sdk/neogeo.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Contract: every game's user.c must define all symbols below.
  * The BIOS and interrupt vector table reference these by name at link time.
@@ -44,4 +48,8 @@ void NEOGEO_USER GAME_ATTRACT(void);    /* attract / demo loop                  
 void NEOGEO_USER START_GAME(void);      /* credit accepted — run the game                  */
 void NEOGEO_USER DEMO_GAME(void);       /* BIOS demo mode hook                             */
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

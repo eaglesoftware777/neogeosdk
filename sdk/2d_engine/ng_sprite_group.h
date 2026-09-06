@@ -3,6 +3,10 @@
 
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Hardware sprite group.
  *
@@ -157,4 +161,8 @@ void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count);
 void NEOGEO_USER ng_sprite_park_off(uint16_t spr);
 void NEOGEO_USER ng_sprite_park_off_range(uint16_t first, uint16_t count);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

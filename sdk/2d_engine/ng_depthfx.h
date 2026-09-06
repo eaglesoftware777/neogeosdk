@@ -34,6 +34,10 @@
 #include "ng_sprite_group.h"
 #include "ng_fixed.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Screen vanishing point (default: screen centre) */
 #define NG_DEPTH_CX   160
 #define NG_DEPTH_CY   112
@@ -95,4 +99,8 @@ void NEOGEO_USER ng_depthfx_set_fog_palettes(uint8_t near_offset,
 void NEOGEO_USER ng_depthfx_advance_star(NGVec3 *p, int16_t speed, int16_t z_max,
                                           int16_t spread_x, int16_t spread_y);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

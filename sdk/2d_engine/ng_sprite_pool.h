@@ -3,6 +3,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Hardware sprite slot priority layout.
  *
@@ -42,4 +46,8 @@
 /* sprite_base value for showScreenN: slot * 64 */
 #define NG_SPR_VRAM_BASE(slot)   ((uint16_t)((uint16_t)(slot) * 64u))
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

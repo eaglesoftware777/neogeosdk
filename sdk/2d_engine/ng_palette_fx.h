@@ -25,6 +25,10 @@
 #include "ng_defs.h"
 #include "ng_render_queue.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Maximum number of palette slots that can have active FX simultaneously.
  * Each active slot costs 32 bytes (one 16-colour palette) + 4 bytes state. */
 #define NG_PALFX_MAX_SLOTS   8
@@ -96,4 +100,8 @@ void NEOGEO_USER ng_palfx_stop(uint8_t palette_slot);
 /* Query: is any effect active on this slot? */
 uint8_t NEOGEO_USER ng_palfx_active(uint8_t palette_slot);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

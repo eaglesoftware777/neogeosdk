@@ -22,11 +22,34 @@
 #define NGG_DIVE_NONE     0xFFu
 #define NGG_BG_SLOT       1u
 #define NGG_BG_SIDE_SLOT  17u
+/* Second copy of the pair, stacked above the first so the backdrop can scroll
+ * and wrap.  Each page is 16 strips, so the four occupy slots 1..64, still
+ * clear of the player at 80. */
+#define NGG_BG2_SLOT      33u
+#define NGG_BG2_SIDE_SLOT 49u
+/* Vertical shrink the backdrop is drawn with, and the on-screen height that
+ * gives: 16 tile rows * 16 px * (0xAF + 1) / 256 = 176.  The scroll wraps on
+ * that height so the two stacked copies meet without a gap. */
+#define NGG_BG_YSCALE     0xAFu
+#define NGG_BG_PAGE_H     176
 #define NGG_PLAYER_SLOT   80u
 #define NGG_ENEMY_SLOT    96u
 #define NGG_PBULLET_SLOT  232u
 #define NGG_EBULLET_SLOT  240u
 #define NGG_BOOM_SLOT     252u
+
+/*
+ * Hardware sprites reserved per entity.  A sprite costs one hardware sprite
+ * per 16-pixel column of tile data - its "strips" in sprite_meta.h - and that
+ * count comes from how large the artwork was imported, not from how small it
+ * is drawn on screen.  Reserve fewer than an asset needs and its strips run
+ * into the next entity's slots, which shows up as sprites flickering, drawing
+ * the wrong art, or vanishing.  The checks below fail the build rather than
+ * let that happen silently.
+ */
+#define NGG_ENEMY_STRIDE   4u
+#define NGG_PBULLET_STRIDE 2u
+#define NGG_EBULLET_STRIDE 2u
 
 #define NGG_ASSET_BG_STAR        1u
 #define NGG_ASSET_BG_SPACE       2u
@@ -126,18 +149,63 @@ static void NEOGEO_USER ngg_place_sprite(NGCharacter *c,
     ng_char_set_pos(c, x, y);
 }
 
-static void NEOGEO_USER ngg_draw_background(void)
+/*
+ * Scrolling backdrop.
+ *
+ * Two 256-wide pages side by side cover the 320-px screen, and a second copy
+ * of that pair sits one page-height above it so the field can slide down and
+ * wrap.  The four pages are built once and only their Y is written per frame:
+ * ng_sprite_group_flush() writes SCB2/3/4 alone unless the tiles are marked
+ * dirty, where re-running the generated showScreenN would rewrite the whole
+ * tilemap - far more than a vblank has room for.
+ *
+ * The four pages live on the caller's stack, not at file scope: the ROM link
+ * strips .text/.data/.bss from this translation unit and keeps only
+ * neogeo_user, so a `static` here would be dropped and the link would fail.
+ */
+static void NEOGEO_USER ngg_bg_page_init(NGSpriteGroup *g, uint16_t slot,
+                                         uint8_t asset_id, int16_t x)
 {
-    if (NGG_ASSET_BG_SPACE <= ng_screen_count &&
-        ng_screen_table[NGG_ASSET_BG_SPACE]) {
-        ng_screen_table[NGG_ASSET_BG_SPACE](0, 0, 0x0F, 0xAF, 16, BLACK,
-                            (uint16_t)(NGG_BG_SLOT << 6));
-    }
-    if (NGG_ASSET_BG_STAR <= ng_screen_count &&
-        ng_screen_table[NGG_ASSET_BG_STAR]) {
-        ng_screen_table[NGG_ASSET_BG_STAR](256, 0, 0x0F, 0xAF, 16, BLACK,
-                            (uint16_t)(NGG_BG_SIDE_SLOT << 6));
-    }
+    const NGSpriteAssetMeta *m;
+
+    if (asset_id == 0u || asset_id > NG_ASSET_META_COUNT) return;
+    m = &g_ng_asset_meta[(uint8_t)(asset_id - 1u)];
+    ngg_load_asset_palette(asset_id);
+    ng_sprite_group_init(g, slot, 16u, 16u, m->tile_base, m->palette_bank);
+    ng_sprite_group_set_tile_stride(g, 16u);
+    ng_sprite_group_set_active_rows(g, 16u);
+    ng_sprite_group_set_scale(g, 0xFFu, NGG_BG_YSCALE);
+    ng_sprite_group_set_pos(g, x, 0);
+    ng_sprite_group_upload(g);
+}
+
+static void NEOGEO_USER ngg_draw_background(NGSpriteGroup *page)
+{
+    ngg_bg_page_init(&page[0], NGG_BG_SLOT,       NGG_ASSET_BG_SPACE, 0);
+    ngg_bg_page_init(&page[1], NGG_BG_SIDE_SLOT,  NGG_ASSET_BG_STAR,  256);
+    ngg_bg_page_init(&page[2], NGG_BG2_SLOT,      NGG_ASSET_BG_SPACE, 0);
+    ngg_bg_page_init(&page[3], NGG_BG2_SIDE_SLOT, NGG_ASSET_BG_STAR,  256);
+}
+
+static void NEOGEO_USER ngg_scroll_background(NGSpriteGroup *page,
+                                              uint16_t *scroll,
+                                              uint8_t pixels)
+{
+    int16_t upper;
+    int16_t lower;
+
+    *scroll = (uint16_t)((*scroll + pixels) % NGG_BG_PAGE_H);
+    upper = (int16_t)((int16_t)*scroll - NGG_BG_PAGE_H);
+    lower = (int16_t)*scroll;
+
+    ng_sprite_group_set_pos(&page[0], 0,   upper);
+    ng_sprite_group_set_pos(&page[1], 256, upper);
+    ng_sprite_group_set_pos(&page[2], 0,   lower);
+    ng_sprite_group_set_pos(&page[3], 256, lower);
+    ng_sprite_group_flush(&page[0]);
+    ng_sprite_group_flush(&page[1]);
+    ng_sprite_group_flush(&page[2]);
+    ng_sprite_group_flush(&page[3]);
 }
 
 static void NEOGEO_USER ngg_load_game_palettes(void)
@@ -184,6 +252,23 @@ static void NEOGEO_USER ngg_draw_hud_numbers(uint16_t score,
     }
 }
 
+/* Each entity's reserved stride must cover the strips its asset really uses,
+ * and no block may run into the one above it. */
+typedef char ngg_slot_check_enemy[
+    (NG_ASSET_STRIPS_9 <= NGG_ENEMY_STRIDE) ? 1 : -1];
+typedef char ngg_slot_check_pbullet[
+    (NG_ASSET_STRIPS_6 <= NGG_PBULLET_STRIDE) ? 1 : -1];
+typedef char ngg_slot_check_ebullet[
+    (NG_ASSET_STRIPS_7 <= NGG_EBULLET_STRIDE) ? 1 : -1];
+typedef char ngg_slot_check_player[
+    (NGG_PLAYER_SLOT + NG_ASSET_STRIPS_3 <= NGG_ENEMY_SLOT) ? 1 : -1];
+typedef char ngg_slot_check_enemy_block[
+    (NGG_ENEMY_SLOT + NGG_ENEMIES * NGG_ENEMY_STRIDE <= NGG_PBULLET_SLOT) ? 1 : -1];
+typedef char ngg_slot_check_pbullet_block[
+    (NGG_PBULLET_SLOT + NGG_PBULLETS * NGG_PBULLET_STRIDE <= NGG_EBULLET_SLOT) ? 1 : -1];
+typedef char ngg_slot_check_ebullet_block[
+    (NGG_EBULLET_SLOT + NGG_EBULLETS * NGG_EBULLET_STRIDE <= NGG_BOOM_SLOT) ? 1 : -1];
+
 static void NEOGEO_USER ngg_init_sprites(NGCharacter **player,
                                          NGCharacter **enemy_sprite,
                                          NGCharacter **player_bullet_sprite,
@@ -196,16 +281,19 @@ static void NEOGEO_USER ngg_init_sprites(NGCharacter **player,
     *player = chars_add(1u, 160, 204);
     if (*player) {
         (*player)->sprite_first = NGG_PLAYER_SLOT;
-        ngg_bind_sprite(*player, NGG_ASSET_SHIP, NGG_PLAYER_SLOT, 0xC0u);
+        ngg_bind_sprite(*player, NGG_ASSET_SHIP, NGG_PLAYER_SLOT, 0xCFu);
         (*player)->priority_band = NG_RENDER_BAND_PLAYER;
     }
 
     for (i = 0u; i < NGG_ENEMIES; i++) {
         enemy_sprite[i] = chars_add(2u, 0, 0);
         if (enemy_sprite[i]) {
-            enemy_sprite[i]->sprite_first = (uint16_t)(NGG_ENEMY_SLOT + i * 4u);
+            enemy_sprite[i]->sprite_first = (uint16_t)(NGG_ENEMY_SLOT + i * NGG_ENEMY_STRIDE);
+            /* Full scale: the artwork is imported at the size it is drawn,
+             * so no hardware shrink is needed and none of its detail is
+             * resampled away. */
             ngg_bind_sprite(enemy_sprite[i], NGG_ASSET_ENEMY,
-                            enemy_sprite[i]->sprite_first, 0x90u);
+                            enemy_sprite[i]->sprite_first, 0xFFu);
             enemy_sprite[i]->priority_band = NG_RENDER_BAND_ENEMY;
         }
     }
@@ -213,9 +301,9 @@ static void NEOGEO_USER ngg_init_sprites(NGCharacter **player,
     for (i = 0u; i < NGG_PBULLETS; i++) {
         player_bullet_sprite[i] = chars_add(3u, 0, 0);
         if (player_bullet_sprite[i]) {
-            player_bullet_sprite[i]->sprite_first = (uint16_t)(NGG_PBULLET_SLOT + i * 2u);
+            player_bullet_sprite[i]->sprite_first = (uint16_t)(NGG_PBULLET_SLOT + i * NGG_PBULLET_STRIDE);
             ngg_bind_sprite(player_bullet_sprite[i], NGG_ASSET_PLAYER_BULLET,
-                            player_bullet_sprite[i]->sprite_first, 0x80u);
+                            player_bullet_sprite[i]->sprite_first, 0x8Fu);
             player_bullet_sprite[i]->priority_band = NG_RENDER_BAND_FX;
         }
     }
@@ -223,9 +311,9 @@ static void NEOGEO_USER ngg_init_sprites(NGCharacter **player,
     for (i = 0u; i < NGG_EBULLETS; i++) {
         enemy_bullet_sprite[i] = chars_add(4u, 0, 0);
         if (enemy_bullet_sprite[i]) {
-            enemy_bullet_sprite[i]->sprite_first = (uint16_t)(NGG_EBULLET_SLOT + i * 2u);
+            enemy_bullet_sprite[i]->sprite_first = (uint16_t)(NGG_EBULLET_SLOT + i * NGG_EBULLET_STRIDE);
             ngg_bind_sprite(enemy_bullet_sprite[i], NGG_ASSET_ENEMY_BULLET,
-                            enemy_bullet_sprite[i]->sprite_first, 0x80u);
+                            enemy_bullet_sprite[i]->sprite_first, 0x8Fu);
             enemy_bullet_sprite[i]->priority_band = NG_RENDER_BAND_FX;
         }
     }
@@ -233,7 +321,7 @@ static void NEOGEO_USER ngg_init_sprites(NGCharacter **player,
     *boom = chars_add(5u, 0, 0);
     if (*boom) {
         (*boom)->sprite_first = NGG_BOOM_SLOT;
-        ngg_bind_sprite(*boom, NGG_ASSET_EXPLOSION, NGG_BOOM_SLOT, 0xB0u);
+        ngg_bind_sprite(*boom, NGG_ASSET_EXPLOSION, NGG_BOOM_SLOT, 0xBFu);
         (*boom)->priority_band = NG_RENDER_BAND_FRONT;
     }
 }
@@ -338,6 +426,8 @@ void NEOGEO_USER neogeogame_run(void)
     uint16_t prev_joy = 0u;
     uint16_t idle = 0u;
     uint8_t i;
+    NGSpriteGroup bg_page[4];
+    uint16_t bg_scroll = 0u;
 
     clearFix();
     clearSprs();
@@ -350,7 +440,7 @@ void NEOGEO_USER neogeogame_run(void)
     ngg_init_sprites(&player, enemy_sprite, player_bullet_sprite,
                      enemy_bullet_sprite, &boom);
     ngg_load_game_palettes();
-    ngg_draw_background();
+    ngg_draw_background(bg_page);
     ngg_draw_hud_static();
     ngg_reset_wave(enemy, player_bullet, enemy_bullet, &dive_idx);
 
@@ -518,8 +608,13 @@ void NEOGEO_USER neogeogame_run(void)
             ngg_place_sprite(boom, 0u, 0, 0, 0u);
         }
 
-        ng_chars_draw();
+        /* Wait for vblank first, then write the sprite VRAM inside it.  The
+         * other way round - drawing and then waiting - puts every sprite
+         * write into active display, which is what makes the ships and
+         * enemies tear and flicker. */
         waitVbl();
+        ngg_scroll_background(bg_page, &bg_scroll, 1u);
+        ng_chars_draw();
         frame++;
     }
 
@@ -533,7 +628,7 @@ uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
 uint16_t  SCB4    = 0x0;
 uint16_t  pal1[16];
-setpal(pal1,0x0,0x5899,0x2bbc,0x5566,0x789,0x7cde,0x288a,0x1677,0x3fff,0x5789,0x3aab,0x4567,0x5788,0x4abc,0x1abc,0xbcd);
+setpal(pal1,0x0,0x59aa,0xbccd,0x4789,0x5abb,0x7678,0x2eef,0x7cde,0x3bbc,0x3889,0x3aab,0xb99a,0x69ac,0x49ab,0xcde,0x4eff);
 uint16_t spriteMapS1_1[16] = {0x0,0x10,0x20,0x30,0x40,0x50,0x60,0x70,0x80,0x90,0xa0,0xb0,0xc0,0xd0,0xe0,0xf0};
 uint16_t spriteMapS1_2[16] = {0x1,0x11,0x21,0x31,0x41,0x51,0x61,0x71,0x81,0x91,0xa1,0xb1,0xc1,0xd1,0xe1,0xf1};
 uint16_t spriteMapS1_3[16] = {0x2,0x12,0x22,0x32,0x42,0x52,0x62,0x72,0x82,0x92,0xa2,0xb2,0xc2,0xd2,0xe2,0xf2};
@@ -642,7 +737,7 @@ uint16_t  SCB2    = 0x0;
 uint16_t  SCB3    = 0x0;
 uint16_t  SCB4    = 0x0;
 uint16_t  pal2[16];
-setpal(pal2,0x0,0x1000,0x333,0x222,0x4131,0x666,0x6674,0x7000,0x7255,0x3332,0x5632,0x7444,0x7100,0x111,0x311,0x5243);
+setpal(pal2,0x0,0x8000,0xf222,0x9000,0x7200,0xf563,0xa355,0xf666,0xf611,0xe232,0x8111,0x1121,0x8422,0x5453,0x8444,0xc000);
 uint16_t spriteMapS2_1[16] = {0x100,0x110,0x120,0x130,0x140,0x150,0x160,0x170,0x180,0x190,0x1a0,0x1b0,0x1c0,0x1d0,0x1e0,0x1f0};
 uint16_t spriteMapS2_2[16] = {0x101,0x111,0x121,0x131,0x141,0x151,0x161,0x171,0x181,0x191,0x1a1,0x1b1,0x1c1,0x1d1,0x1e1,0x1f1};
 uint16_t spriteMapS2_3[16] = {0x102,0x112,0x122,0x132,0x142,0x152,0x162,0x172,0x182,0x192,0x1a2,0x1b2,0x1c2,0x1d2,0x1e2,0x1f2};
@@ -748,7 +843,7 @@ vram_sprite(sprite_base + 64*15,1,(sprite_base>>6)+15,spriteMapS2_16,spal2_16,16
 void NEOGEO_USER showScreen3(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 3 ******************************************/
 uint16_t  pal3[16];
-setpal(pal3,0x0,0x6f10,0x223,0x6679,0x2346,0x3b0,0x4fe0,0x6f80,0x304e,0x6ddd,0x29e0,0x3050,0x57ee,0x80,0x0,0x7fff);
+setpal(pal3,0x0,0x6f10,0x8223,0x679,0xa346,0x83b0,0xcfe0,0x4f80,0xb04e,0xdddc,0x48e0,0x9050,0xb7de,0x8080,0x8000,0x7fff);
 load_palettes(pal3,PALETTES+PALOFFSET*18);
 }
 
@@ -756,7 +851,7 @@ load_palettes(pal3,PALETTES+PALOFFSET*18);
 void NEOGEO_USER showScreen4(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 4 ******************************************/
 uint16_t  pal4[16];
-setpal(pal4,0x0,0x6f10,0x223,0x6679,0x2346,0x3b0,0x4fe0,0x6f80,0x304e,0x6ddd,0x29e0,0x3050,0x57ee,0x80,0x0,0x7fff);
+setpal(pal4,0x0,0x6f10,0x8223,0x679,0xa346,0x83b0,0xcfe0,0x4f80,0xb04e,0xdddc,0x48e0,0x9050,0xb7de,0x8080,0x8000,0x7fff);
 load_palettes(pal4,PALETTES+PALOFFSET*19);
 }
 
@@ -764,7 +859,7 @@ load_palettes(pal4,PALETTES+PALOFFSET*19);
 void NEOGEO_USER showScreen5(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 5 ******************************************/
 uint16_t  pal5[16];
-setpal(pal5,0x0,0x6f10,0x223,0x6679,0x2346,0x3b0,0x4fe0,0x6f80,0x304e,0x6ddd,0x29e0,0x3050,0x57ee,0x80,0x0,0x7fff);
+setpal(pal5,0x0,0x6f10,0x8223,0x679,0xa346,0x83b0,0xcfe0,0x4f80,0xb04e,0xdddc,0x48e0,0x9050,0xb7de,0x8080,0x8000,0x7fff);
 load_palettes(pal5,PALETTES+PALOFFSET*20);
 }
 
@@ -772,7 +867,7 @@ load_palettes(pal5,PALETTES+PALOFFSET*20);
 void NEOGEO_USER showScreen6(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 6 ******************************************/
 uint16_t  pal6[16];
-setpal(pal6,0x0,0xde8,0x7bc6,0x1ef9,0x3782,0x2875,0x1653,0x1653,0x1653,0x1653,0x1653,0x1653,0x1653,0x1653,0x1653,0x1653);
+setpal(pal6,0x0,0xecd8,0xbc6,0x7de9,0x4682,0x875,0x5682,0x7cd7,0x7cd7,0x7cd7,0x7cd7,0x7cd7,0x7cd7,0x7cd7,0x7cd7,0x7cd7);
 load_palettes(pal6,PALETTES+PALOFFSET*21);
 }
 
@@ -780,7 +875,7 @@ load_palettes(pal6,PALETTES+PALOFFSET*21);
 void NEOGEO_USER showScreen7(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 7 ******************************************/
 uint16_t  pal7[16];
-setpal(pal7,0x0,0xf70,0x6fff,0x6e30,0xf50,0x6fc1,0x6c00,0x7fe4,0x2f80,0x4d20,0x4c00,0x6fb0,0x4e33,0xe22,0x6ffc,0xd11);
+setpal(pal7,0x0,0x6e60,0x1ffe,0x8d11,0xce50,0xefc1,0xcd20,0xfe4,0xaf80,0x8e33,0xafb0,0xae30,0xc00,0x1ffb,0xcd22,0xffe);
 load_palettes(pal7,PALETTES+PALOFFSET*22);
 }
 
@@ -788,7 +883,7 @@ load_palettes(pal7,PALETTES+PALOFFSET*22);
 void NEOGEO_USER showScreen8(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 8 ******************************************/
 uint16_t  pal8[16];
-setpal(pal8,0x0,0x7ff7,0x6f10,0x6f90,0x400,0x4500,0x4700,0x6ffc,0x6fc0,0x6ff1,0x4d00,0x4fb0,0xa00,0x4f70,0x200,0x6fff);
+setpal(pal8,0x0,0xff9,0xefb0,0xcb00,0x2f60,0x1ffe,0x8400,0xcff1,0xff6,0x1ffb,0x8d00,0xef10,0x8900,0x8600,0xc100,0xcf90);
 load_palettes(pal8,PALETTES+PALOFFSET*23);
 }
 
@@ -796,7 +891,7 @@ load_palettes(pal8,PALETTES+PALOFFSET*23);
 void NEOGEO_USER showScreen9(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 9 ******************************************/
 uint16_t  pal9[16];
-setpal(pal9,0x0,0x112f,0x5015,0x6f50,0x7ccd,0x779,0x3500,0x4fe0,0x19ff,0x1000,0x317f,0x32af,0x9,0x105f,0x0,0x7fff);
+setpal(pal9,0x0,0x4015,0xa38d,0x417f,0x6889,0x503e,0xd05e,0x402a,0x6e60,0x2d81,0xa24a,0xe545,0x7bbd,0xe447,0x8742,0xe454);
 load_palettes(pal9,PALETTES+PALOFFSET*24);
 }
 
@@ -804,26 +899,35 @@ load_palettes(pal9,PALETTES+PALOFFSET*24);
 void NEOGEO_USER showScreen10(int x0,int y0,int xr,int yr,int min_crt_sz,uint16_t backdrop,uint16_t sprite_base) {
 /****************************************** screen 10 ******************************************/
 uint16_t  pal10[16];
-setpal(pal10,0x0,0x112f,0x5015,0x6f50,0x7ccd,0x779,0x3500,0x4fe0,0x19ff,0x1000,0x317f,0x32af,0x9,0x105f,0x0,0x7fff);
+setpal(pal10,0x0,0x4789,0xd358,0x6001,0xe89c,0x7334,0xe557,0xc69d,0xf124,0xd246,0xb113,0x7679,0x957a,0x9112,0x3aab,0xeccd);
 load_palettes(pal10,PALETTES+PALOFFSET*25);
 }
 
 static const NGPaletteAsset ng_screen_palette_assets[] = {
-    {1,16,{0x0,0x5899,0x2bbc,0x5566,0x789,0x7cde,0x288a,0x1677,0x3fff,0x5789,0x3aab,0x4567,0x5788,0x4abc,0x1abc,0xbcd}},
-    {2,17,{0x0,0x1000,0x333,0x222,0x4131,0x666,0x6674,0x7000,0x7255,0x3332,0x5632,0x7444,0x7100,0x111,0x311,0x5243}},
-    {3,18,{0x0,0x6f10,0x223,0x6679,0x2346,0x3b0,0x4fe0,0x6f80,0x304e,0x6ddd,0x29e0,0x3050,0x57ee,0x80,0x0,0x7fff}},
-    {4,19,{0x0,0x6f10,0x223,0x6679,0x2346,0x3b0,0x4fe0,0x6f80,0x304e,0x6ddd,0x29e0,0x3050,0x57ee,0x80,0x0,0x7fff}},
-    {5,20,{0x0,0x6f10,0x223,0x6679,0x2346,0x3b0,0x4fe0,0x6f80,0x304e,0x6ddd,0x29e0,0x3050,0x57ee,0x80,0x0,0x7fff}},
-    {6,21,{0x0,0xde8,0x7bc6,0x1ef9,0x3782,0x2875,0x1653,0x1653,0x1653,0x1653,0x1653,0x1653,0x1653,0x1653,0x1653,0x1653}},
-    {7,22,{0x0,0xf70,0x6fff,0x6e30,0xf50,0x6fc1,0x6c00,0x7fe4,0x2f80,0x4d20,0x4c00,0x6fb0,0x4e33,0xe22,0x6ffc,0xd11}},
-    {8,23,{0x0,0x7ff7,0x6f10,0x6f90,0x400,0x4500,0x4700,0x6ffc,0x6fc0,0x6ff1,0x4d00,0x4fb0,0xa00,0x4f70,0x200,0x6fff}},
-    {9,24,{0x0,0x112f,0x5015,0x6f50,0x7ccd,0x779,0x3500,0x4fe0,0x19ff,0x1000,0x317f,0x32af,0x9,0x105f,0x0,0x7fff}},
-    {10,25,{0x0,0x112f,0x5015,0x6f50,0x7ccd,0x779,0x3500,0x4fe0,0x19ff,0x1000,0x317f,0x32af,0x9,0x105f,0x0,0x7fff}},
+    {1,16,{0x0,0x59aa,0xbccd,0x4789,0x5abb,0x7678,0x2eef,0x7cde,0x3bbc,0x3889,0x3aab,0xb99a,0x69ac,0x49ab,0xcde,0x4eff}},
+    {2,17,{0x0,0x8000,0xf222,0x9000,0x7200,0xf563,0xa355,0xf666,0xf611,0xe232,0x8111,0x1121,0x8422,0x5453,0x8444,0xc000}},
+    {3,18,{0x0,0x6f10,0x8223,0x679,0xa346,0x83b0,0xcfe0,0x4f80,0xb04e,0xdddc,0x48e0,0x9050,0xb7de,0x8080,0x8000,0x7fff}},
+    {4,19,{0x0,0x6f10,0x8223,0x679,0xa346,0x83b0,0xcfe0,0x4f80,0xb04e,0xdddc,0x48e0,0x9050,0xb7de,0x8080,0x8000,0x7fff}},
+    {5,20,{0x0,0x6f10,0x8223,0x679,0xa346,0x83b0,0xcfe0,0x4f80,0xb04e,0xdddc,0x48e0,0x9050,0xb7de,0x8080,0x8000,0x7fff}},
+    {6,21,{0x0,0xecd8,0xbc6,0x7de9,0x4682,0x875,0x5682,0x7cd7,0x7cd7,0x7cd7,0x7cd7,0x7cd7,0x7cd7,0x7cd7,0x7cd7,0x7cd7}},
+    {7,22,{0x0,0x6e60,0x1ffe,0x8d11,0xce50,0xefc1,0xcd20,0xfe4,0xaf80,0x8e33,0xafb0,0xae30,0xc00,0x1ffb,0xcd22,0xffe}},
+    {8,23,{0x0,0xff9,0xefb0,0xcb00,0x2f60,0x1ffe,0x8400,0xcff1,0xff6,0x1ffb,0x8d00,0xef10,0x8900,0x8600,0xc100,0xcf90}},
+    {9,24,{0x0,0x4015,0xa38d,0x417f,0x6889,0x503e,0xd05e,0x402a,0x6e60,0x2d81,0xa24a,0xe545,0x7bbd,0xe447,0x8742,0xe454}},
+    {10,25,{0x0,0x4789,0xd358,0x6001,0xe89c,0x7334,0xe557,0xc69d,0xf124,0xd246,0xb113,0x7679,0x957a,0x9112,0x3aab,0xeccd}},
 };
 const uint16_t ng_screen_palette_count = 10;
 
 uint8_t NEOGEO_USER ng_load_screen_palette(uint16_t screen_id) {
     return ng_palette_load_asset(ng_screen_palette_assets, ng_screen_palette_count, screen_id);
+}
+
+const uint16_t * NEOGEO_USER ng_get_screen_palette(uint16_t screen_id) {
+    uint16_t i;
+    for (i = 0; i < ng_screen_palette_count; i++) {
+        if (ng_screen_palette_assets[i].asset_id == screen_id)
+            return ng_screen_palette_assets[i].colors;
+    }
+    return 0;
 }
 
 const NGArtAsset ng_screen_art_assets[] = {
@@ -835,7 +939,7 @@ const NGArtAsset ng_screen_art_assets[] = {
     {6,NG_ART_TYPE_SPRITE,21,1399,1535,2,2,2,16,112,112,5,11},
     {7,NG_ART_TYPE_SPRITE,22,1655,1791,2,2,2,16,112,112,5,11},
     {8,NG_ART_TYPE_SPRITE,23,1894,2047,4,4,4,16,96,96,37,37},
-    {9,NG_ART_TYPE_SPRITE,24,2128,2303,16,11,11,16,0,80,256,165},
+    {9,NG_ART_TYPE_SPRITE,24,2048,2303,2,2,2,2,0,0,32,21},
     {10,NG_ART_TYPE_SPRITE,25,2551,2559,2,1,1,16,112,240,22,13},
 };
 const uint16_t ng_screen_art_asset_count = 10;

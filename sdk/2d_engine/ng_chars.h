@@ -4,6 +4,10 @@
 #include "ng_defs.h"
 #include "ng_sprite_group.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Public character handle.
  *
@@ -166,4 +170,8 @@ void NEOGEO_USER ng_char_heal(NGCharacter *c, uint8_t amount);
 NGRect NEOGEO_USER ng_char_body_rect(NGCharacter *c);
 NGRect NEOGEO_USER ng_char_hit_rect(NGCharacter *c);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

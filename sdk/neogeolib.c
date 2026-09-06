@@ -1,6 +1,13 @@
 #include <stdint.h>
 #include "macro.h"
 #include "sound_ids.h"
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  Everything here is
+ * reached from inline asm, the cart entry vectors or the BIOS by its
+ * plain symbol name, so it must keep C linkage and not be mangled. */
+extern "C" {
+#endif
+
 
 uint16_t  setSCB2(uint16_t,uint16_t);
 uint16_t  setSCB3(uint16_t,uint16_t,uint16_t);
@@ -752,6 +759,11 @@ static char NEOGEO_USER voice_upper(char c) {
 	return c;
 }
 
+/* Every caller sits behind a SOUND_VOICE_WORD_* guard, so a sound set that
+ * defines none of them leaves this with no users.  That is a valid
+ * configuration, not a mistake worth a warning. */
+static uint8_t NEOGEO_USER voice_match_phrase(const char *text,
+                                              const char *phrase) __attribute__((unused));
 static uint8_t NEOGEO_USER voice_match_phrase(const char *text,
                                               const char *phrase) {
 	uint8_t i = 0u;
@@ -765,7 +777,8 @@ static uint8_t NEOGEO_USER voice_match_phrase(const char *text,
 static uint8_t NEOGEO_USER voice_direct_phrase(const char *text,
                                                uint8_t *sample,
                                                uint8_t *advance) {
-	uint8_t n;
+	/* Unused when the sound set defines no voice words at all. */
+	uint8_t n __attribute__((unused));
 
 #ifdef SOUND_VOICE_WORD_INSERT_COIN
 	n = voice_match_phrase(text, "INSERT COIN");
@@ -1340,3 +1353,7 @@ void *memcpy(void *dest, const void *src, int count) {
     while (count--) *d++ = *s++;
     return dest;
 }
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif

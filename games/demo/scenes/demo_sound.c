@@ -12,6 +12,13 @@
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
 #include <stdint.h>
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  Everything here is
+ * reached from inline asm, the cart entry vectors or the BIOS by its
+ * plain symbol name, so it must keep C linkage and not be mangled. */
+extern "C" {
+#endif
+
 
 void NEOGEO_USER waitVbl(void);
 void NEOGEO_USER clearFix(void);
@@ -186,3 +193,7 @@ void NEOGEO_USER showSoundDemo(void)
 {
     demo_sound_run();
 }
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif

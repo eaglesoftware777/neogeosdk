@@ -18,6 +18,10 @@
 #include "ng_defs.h"
 #include "ng_sprite_group.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Total particle slots — must not exceed hardware sprite budget */
 #define NG_PART_MAX_PARTICLES   32
 
@@ -103,4 +107,8 @@ NGParticle * NEOGEO_USER ng_particle_spawn(uint8_t type, uint8_t priority,
 uint8_t NEOGEO_USER ng_particles_count(void);
 uint8_t NEOGEO_USER ng_particles_count_priority(uint8_t priority);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif
