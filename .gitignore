@@ -24,3 +24,5 @@ games/tutorial/artbox/*
 # under here is derived twice over - generated output from source art that is
 # already tracked somewhere else.  `make GAME=demo_plus art` recreates it.
 games/demo_plus/artbox/*
+tests/test_c
+tests/test_cpp
