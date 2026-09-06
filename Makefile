@@ -433,12 +433,35 @@ clean:
 	rm -f hash_eagle/$(GAME)/neogeo.xml
 
 .PHONY: sound-clean
+# Encoded samples are deleted only where the WAVs that produce them are
+# present.  `make samples` skips an encode whose in_wav_* directory is
+# missing, so for a game that ships ADPCM without source in the tree -
+# skylance has none at all, and only demo has voice or B-channel WAVs -
+# removing them is not a clean, it is a loss with no way back.  This
+# target is reached by clean-all, which is the first thing test.bat runs.
 sound-clean:
 	rm -f out/$(GAME_ID)-m1.m1 out/$(GAME_ID)-v1.v1 out/driver.gen.asm
 	rm -f $(ROM_DIR)/$(GAME_ID)-m1.m1 $(ROM_DIR)/$(GAME_ID)-v1.v1
-	rm -f $(GAME_SOUND)/samples/out_16el_a/*.wav $(GAME_SOUND)/samples/out_16el_b/*.wav
-	rm -f $(GAME_SOUND)/samples/out_sr_a/*.wav $(GAME_SOUND)/samples/out_sr_b/*.wav
-	rm -f $(GAME_SOUND)/samples/out_a/*.adpcma $(GAME_SOUND)/samples/out_b/*.adpcmb
+	@if [ -d "$(GAME_SOUND)/samples/in_wav_a" ]; then \
+	    rm -f $(GAME_SOUND)/samples/out_16el_a/*.wav \
+	          $(GAME_SOUND)/samples/out_sr_a/*.wav \
+	          $(GAME_SOUND)/samples/out_a/*.adpcma; \
+	  else \
+	    echo "sound-clean: keeping out_a, no in_wav_a to rebuild it from"; \
+	  fi
+	@if [ -d "$(GAME_SOUND)/samples/in_wav_a_voice" ]; then \
+	    rm -f $(GAME_SOUND)/samples/out_16el_a_voice/*.wav \
+	          $(GAME_SOUND)/samples/out_a_voice/*.adpcma; \
+	  else \
+	    echo "sound-clean: keeping out_a_voice, no in_wav_a_voice to rebuild it from"; \
+	  fi
+	@if [ -d "$(GAME_SOUND)/samples/in_wav_b" ]; then \
+	    rm -f $(GAME_SOUND)/samples/out_16el_b/*.wav \
+	          $(GAME_SOUND)/samples/out_sr_b/*.wav \
+	          $(GAME_SOUND)/samples/out_b/*.adpcmb; \
+	  else \
+	    echo "sound-clean: keeping out_b, no in_wav_b to rebuild it from"; \
+	  fi
 	rm -f sound/driver/fm_data.inc sound/driver/music_data.inc sound/driver/fm_patch_table.inc sound/driver/sample_table.inc sound/driver/ssg_config.inc sound/driver/ssg_data.inc
 
 
@@ -469,7 +492,7 @@ test: game-check test-precheck hash
 	$(MAME_COMMON) -output console -nofilter -waitvsync -window
 
 .PHONY: test-precheck
-test-precheck: game-check unit-tests
+test-precheck: game-check
 	$(LOG_CTX)
 	@[ -f "$(ROM_DIR)/$(GAME_ID)-p1.p1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-p1.p1. Build first with: make all" && exit 1)
 	@[ -f "$(ROM_DIR)/$(GAME_ID)-m1.m1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-m1.m1. Build first with: make all" && exit 1)
@@ -629,6 +652,14 @@ gdb-server: all debug-build
 	$(LOG_CTX)
 	@echo "GDB server: $(GDB_REMOTE) (68000 main CPU)"
 	$(MAME_COMMON) -debug -debugger gdbstub -debugger_host $(GDB_HOST) -debugger_port $(GDB_PORT) -output console -nofilter -window
+
+# Host-side sprite renderer tests.  Deliberately NOT a prerequisite of
+# "make test": launching the ROM in MAME must not depend on a host C++
+# toolchain being installed.  Use "make check" to gate on both.
 .PHONY: unit-tests
 unit-tests:
 	$(MAKE) -C tests test
+
+.PHONY: check
+check: unit-tests test-precheck
+	@echo "check: unit tests and ROM set OK"
