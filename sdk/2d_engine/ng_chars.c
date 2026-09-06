@@ -513,7 +513,19 @@ void NEOGEO_USER ng_chars_draw(void)
         }
         next_slot = (uint16_t)(next_slot + visibleStrips);
     }
-    count = i;
+    {
+        uint8_t drawn = i;
+        /* Evicted objects must release their previous slots before any
+         * newly allocated object is uploaded into those slots. */
+        for (; i < count; i++) {
+            uint8_t idx = order[i];
+            if (ng_char_uploaded_first[idx] != 0xffffu) chars_hide_uploaded(idx);
+            ng_char_uploaded_first[idx] = 0xffffu;
+            ng_char_uploaded_strips[idx] = 0u;
+            ng_chars[idx].sprite_dirty = 1u;
+        }
+        count = drawn;
+    }
 
     /* Phase 2 – draw each char in depth-sorted order (back-to-front). */
     for (i = 0; i < count; i++) {
@@ -605,16 +617,8 @@ void NEOGEO_USER ng_char_set_sprite(NGCharacter *c, uint16_t firstSprite, uint8_
     if (c->sprite_first == 0xffff)
         c->sprite_first = firstSprite;   /* initial seed — sorter overrides next frame */
 
-    if (c->sprite_strips != new_strips) {
-        /* Width changed: the old VRAM slot allocation is stale — hide it now
-         * so the sorter can repack slots cleanly on the next draw. */
-        uint8_t idx = ng_chars_index(c);
-        if (idx != 0xff && ng_char_uploaded_first[idx] != 0xffff) {
-            chars_hide_uploaded(idx);
-            ng_char_uploaded_strips[idx] = 0;
-            ng_char_uploaded_first[idx]  = 0xffff;
-        }
-    }
+    /* This is a logic-side setter. Reallocation and tail hides belong to
+     * ng_chars_draw(), at the caller's controlled VRAM flush point. */
 
     c->sprite_strips      = new_strips;
     c->sprite_height      = new_height;

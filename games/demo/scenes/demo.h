@@ -160,6 +160,8 @@ void NEOGEO_USER demo_draw_sprite_screen_flip(uint8_t screen_id,
  * window (right after waitVbl, before ng_render_queue_flush).
  * Without this, queued draws never reach hardware. */
 void NEOGEO_USER demo_flush_sprite_queue(void);
+/* Queued hide; invalidates the affected draw cache on the VBlank flush. */
+void NEOGEO_USER demo_hide_sprite_range(uint16_t first, uint8_t strips);
 
 /* ------------------------------------------------------------------ */
 /*  Top-level demo flow — called from user.c                            */

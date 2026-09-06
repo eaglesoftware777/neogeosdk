@@ -258,7 +258,9 @@ void NEOGEO_USER setpal(uint16_t *pal_tile,uint16_t t0, uint16_t t1, uint16_t t2
 	pal_tile[12] = t12; pal_tile[13] = t13; pal_tile[14] = t14; pal_tile[15] = t15;
 }
 
-void NEOGEO_USER vram_SCB1(uint16_t *SCB1_1 , uint16_t *SCB1_2 ,uint8_t tiles_number) {
+/* Keep the sequential MMIO loop compact even in an otherwise -O0 build.
+ * A 68000 move.w from memory to memory takes the required 12 clocks. */
+void NEOGEO_USER __attribute__((optimize("O2"))) vram_SCB1(uint16_t *SCB1_1 , uint16_t *SCB1_2 ,uint8_t tiles_number) {
 	for (int i = 0 ; i <  tiles_number  ; i++) {
 		NEO_REGISTER(VRAM_RW) = SCB1_1[i];
 		NEO_REGISTER(VRAM_RW) = SCB1_2[i];

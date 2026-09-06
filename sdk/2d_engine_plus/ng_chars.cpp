@@ -470,7 +470,17 @@ void CharManager::draw()
         }
         next_slot = (uint16_t)(next_slot + vis_strips);
     }
-    count = i;
+    {
+        uint8_t drawn = i;
+        for (; i < count; i++) {
+            uint8_t idx = order[i];
+            if (uploaded_first[idx] != 0xffffu) hideUploaded(idx);
+            uploaded_first[idx] = 0xffffu;
+            uploaded_strips[idx] = 0u;
+            pool[idx].sprite_dirty = 1u;
+        }
+        count = drawn;
+    }
 
     /* Phase 2 — upload or transform-only update each visible char */
     for (i = 0; i < count; i++) {
@@ -549,7 +559,6 @@ void NGCharacter::setSprite(uint16_t first, uint8_t strips_arg, uint8_t h, uint1
 {
     uint8_t ns = strips_arg ? strips_arg : 1;
     uint8_t nh = h          ? h          : 1;
-    CharManager& mgr = CharManager::instance();
 
     if (ns > NG_SPRITE_MAX_STRIPS)      ns = NG_SPRITE_MAX_STRIPS;
     if (nh > NG_SPRITE_MAX_HEIGHT_TILES) nh = NG_SPRITE_MAX_HEIGHT_TILES;
@@ -568,13 +577,7 @@ void NGCharacter::setSprite(uint16_t first, uint8_t strips_arg, uint8_t h, uint1
     if (sprite_first == 0xffff)
         sprite_first = first;
 
-    if (sprite_strips != ns) {
-        uint8_t idx = mgr.indexOf(this);
-        if (idx != 0xff && mgr.uploaded_first[idx] != 0xffff) {
-            mgr.hideUploaded(idx);
-            mgr.clearUploadSlot(idx);
-        }
-    }
+    /* CharManager::draw owns all hardware changes during the frame flush. */
 
     sprite_strips      = ns;
     sprite_height      = nh;

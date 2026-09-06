@@ -172,14 +172,21 @@ void NEOGEO_USER demo_caption(const char *line1, const char *line2, const char *
 #define DEMO_SPRITE_WINDOWS 48u
 
 static NGSpriteWindow demo_sprite_windows[DEMO_SPRITE_WINDOWS];
+static NGSpriteGroup demo_sprite_groups[DEMO_SPRITE_WINDOWS];
+static uint8_t demo_sprite_group_ready[DEMO_SPRITE_WINDOWS];
+static uint8_t demo_palette_loaded[256];
+static uint8_t demo_sprite_queue_count;
 
 static void NEOGEO_USER demo_reset_sprite_window_cache(void)
 {
     uint8_t i;
 
     for (i = 0u; i < DEMO_SPRITE_WINDOWS; i++) {
-        ng_sprite_window_init(&demo_sprite_windows[i], 0u, 0xffffu, NG_SPRITE_MAX_STRIPS);
+        ng_sprite_window_init(&demo_sprite_windows[i], 0u, 0xffffu, 16u);
+        demo_sprite_group_ready[i] = 0u;
     }
+    for (i = 0u; i < NG_ASSET_META_COUNT; i++) demo_palette_loaded[i + 1u] = 0u;
+    demo_sprite_queue_count = 0u;
 }
 
 /* Public entry point for chap_header() (demo_unified.c) to call at the
@@ -219,21 +226,15 @@ static NGSpriteWindow * NEOGEO_USER demo_sprite_window_find(uint16_t first_sprit
         ng_sprite_window_init(&demo_sprite_windows[free_slot],
                               1u,
                               first_sprite,
-                              NG_SPRITE_MAX_STRIPS);
+                              16u);
         return &demo_sprite_windows[free_slot];
     }
 
-    ng_sprite_window_clear(&demo_sprite_windows[0]);
-    ng_sprite_window_init(&demo_sprite_windows[0],
-                          1u,
-                          first_sprite,
-                          NG_SPRITE_MAX_STRIPS);
-    return &demo_sprite_windows[0];
+    return 0;
 }
 
 void NEOGEO_USER demo_clear_all_sprites(void)
 {
-    clearSprs();
     ng_sprite_hide_all();
     demo_reset_sprite_window_cache();
 }
@@ -252,6 +253,8 @@ void NEOGEO_USER demo_clear_scene(void)
      * does right after START), so this was the far more common source
      * of it. */
     waitVbl();
+    demo_sprite_window_cache_reset();
+    ng_render_queue_init();
     /* Wipe on a black page: ng_scene_begin() rewrites FIX and sprite VRAM
      * in bulk, and a light backdrop would let every half-written cell show
      * up as a bright block for the frames the wipe takes.  The real page
@@ -541,6 +544,7 @@ void NEOGEO_USER demo_load_screen_palette(uint8_t screen_id)
 {
     if (screen_id == 0u || screen_id > ng_screen_count) return;
     ng_load_screen_palette(screen_id);
+    demo_palette_loaded[screen_id] = 1u;
 }
 
 /* ------------------------------------------------------------------ */
@@ -610,18 +614,31 @@ typedef struct {
 } DemoSpriteDraw;
 
 static DemoSpriteDraw demo_sprite_queue[DEMO_SPRITE_QUEUE_MAX];
-static uint8_t        demo_sprite_queue_count = 0u;
 
 static void NEOGEO_USER demo_perform_sprite_draw(const DemoSpriteDraw *cmd)
 {
-    NGSpriteGroup g;
+    NGSpriteGroup *g;
     uint8_t meta_strips;
     uint8_t meta_rows;
     uint8_t strips;
     uint8_t rows;
     NGSpriteWindow *window;
+    uint8_t index;
 
-    if (!cmd || cmd->screen_id == 0u) return;
+    if (!cmd || cmd->first_sprite == 0u || cmd->first_sprite >= NG_SPR_TOTAL) return;
+    if (cmd->screen_id == 0u) {
+        uint16_t end = (uint16_t)(cmd->first_sprite + cmd->strips);
+        ng_sprite_hide_range(cmd->first_sprite, cmd->strips);
+        for (index = 0u; index < DEMO_SPRITE_WINDOWS; index++) {
+            window = &demo_sprite_windows[index];
+            if (window->first_slot < end &&
+                window->first_slot + window->current_strips > cmd->first_sprite) {
+                demo_sprite_group_ready[index] = 0u;
+            }
+        }
+        return;
+    }
+    if (cmd->screen_id > ng_screen_count) return;
 
     strips = cmd->strips ? cmd->strips : 1u;
     rows   = cmd->rows   ? cmd->rows   : 1u;
@@ -634,27 +651,33 @@ static void NEOGEO_USER demo_perform_sprite_draw(const DemoSpriteDraw *cmd)
     if (rows   > meta_rows)   rows   = meta_rows;
 
     window = demo_sprite_window_find(cmd->first_sprite);
+    if (!window || cmd->first_sprite + strips > NG_SPR_TOTAL) return;
+    index = (uint8_t)(window - demo_sprite_windows);
+    g = &demo_sprite_groups[index];
     ng_sprite_window_set_shape(window, strips, rows);
     ng_sprite_window_clear_tail(window);
 
-    uint8_t pal_id = cmd->screen_id;
-    if (pal_id >= 76u && pal_id <= 80u) pal_id = 75u;
+    if (!demo_palette_loaded[cmd->screen_id]) demo_load_screen_palette(cmd->screen_id);
 
-    demo_load_screen_palette(pal_id);
-
-    ng_sprite_group_init(&g, cmd->first_sprite, strips, meta_rows,
-                         DEMO_SCREEN_TILE(cmd->screen_id),
-                         DEMO_SCREEN_PALETTE(pal_id));
-    ng_sprite_group_set_tile_stride(&g, 16u);
-    ng_sprite_group_set_active_rows(&g, rows);
-    ng_sprite_group_set_pos(&g,
+    if (!demo_sprite_group_ready[index] || g->strips != strips || g->heightTiles != meta_rows) {
+        ng_sprite_group_init(g, cmd->first_sprite, strips, meta_rows,
+                             DEMO_SCREEN_TILE(cmd->screen_id),
+                             DEMO_SCREEN_PALETTE(cmd->screen_id));
+        demo_sprite_group_ready[index] = 1u;
+    } else {
+        ng_sprite_group_set_tile_base(g, DEMO_SCREEN_TILE(cmd->screen_id));
+        ng_sprite_group_set_palette(g, DEMO_SCREEN_PALETTE(cmd->screen_id));
+    }
+    ng_sprite_group_set_tile_stride(g, 16u);
+    ng_sprite_group_set_active_rows(g, rows);
+    ng_sprite_group_set_pos(g,
                             (int16_t)(cmd->x + demo_screen_x_offset(cmd->screen_id)),
                             (int16_t)(cmd->y + demo_screen_y_offset(cmd->screen_id)));
-    ng_sprite_group_set_scale(&g,
+    ng_sprite_group_set_scale(g,
                               demo_normalize_x_scale(cmd->scale_x),
                               cmd->scale_y);
-    ng_sprite_group_set_flip(&g, cmd->hflip, 0u);
-    ng_sprite_group_upload(&g);
+    ng_sprite_group_set_flip(g, cmd->hflip, 0u);
+    ng_sprite_group_flush(g);
 }
 
 void NEOGEO_USER demo_flush_sprite_queue(void)
@@ -678,7 +701,7 @@ void NEOGEO_USER demo_draw_sprite_screen_flip(uint8_t screen_id,
 {
     DemoSpriteDraw *slot;
 
-    if (screen_id == 0u) return;
+    if (first_sprite == 0u || first_sprite >= NG_SPR_TOTAL) return;
 
     /* Coalesce: if the queue already has an entry for this slot this
      * frame, overwrite it.  Chapters that call draw_asset_bottom_center
@@ -696,13 +719,7 @@ void NEOGEO_USER demo_draw_sprite_screen_flip(uint8_t screen_id,
     }
 
     if (demo_sprite_queue_count >= DEMO_SPRITE_QUEUE_MAX) {
-        /* Queue full — fall back to an immediate, unsynced write.  This
-         * reintroduces tearing for the overflow sprites, so it should
-         * never trigger in practice; DEMO_SPRITE_QUEUE_MAX must stay
-         * above every chapter's real per-frame draw count. */
-        DemoSpriteDraw tmp = {1u, screen_id, first_sprite, x, y,
-                              strips, rows, scale_x, scale_y, hflip};
-        demo_perform_sprite_draw(&tmp);
+        /* Keep the last complete frame if the caller exceeds its budget. */
         return;
     }
 
@@ -719,6 +736,11 @@ fill:
     slot->scale_x      = scale_x;
     slot->scale_y      = scale_y;
     slot->hflip        = hflip;
+}
+
+void NEOGEO_USER demo_hide_sprite_range(uint16_t first, uint8_t strips)
+{
+    demo_draw_sprite_screen_flip(0u, first, 0, 0, strips, 0u, 0u, 0u, 0u);
 }
 
 /* ------------------------------------------------------------------ */
