@@ -460,14 +460,26 @@ sound-clean:
 	if exist out\driver.gen.asm del /Q out\driver.gen.asm
 	if exist $(ROM_DIR)\$(GAME_ID)-m1.m1 del /Q $(ROM_DIR)\$(GAME_ID)-m1.m1
 	if exist $(ROM_DIR)\$(GAME_ID)-v1.v1 del /Q $(ROM_DIR)\$(GAME_ID)-v1.v1
-	if exist $(subst /,\,$(GAME_SOUND))\samples\out_16el_a\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_16el_a\*.wav
-	if exist $(subst /,\,$(GAME_SOUND))\samples\out_16el_a_voice\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_16el_a_voice\*.wav
-	if exist $(subst /,\,$(GAME_SOUND))\samples\out_16el_b\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_16el_b\*.wav
-	if exist $(subst /,\,$(GAME_SOUND))\samples\out_sr_a\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_sr_a\*.wav
-	if exist $(subst /,\,$(GAME_SOUND))\samples\out_sr_b\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_sr_b\*.wav
-	if exist $(subst /,\,$(GAME_SOUND))\samples\out_a\*.adpcma del /Q $(subst /,\,$(GAME_SOUND))\samples\out_a\*.adpcma
-	if exist $(subst /,\,$(GAME_SOUND))\samples\out_a_voice\*.adpcma del /Q $(subst /,\,$(GAME_SOUND))\samples\out_a_voice\*.adpcma
-	if exist $(subst /,\,$(GAME_SOUND))\samples\out_b\*.adpcmb del /Q $(subst /,\,$(GAME_SOUND))\samples\out_b\*.adpcmb
+	@rem Encoded samples go only where the WAVs that produce them exist.
+	@rem `make samples` skips an encode whose in_wav_* directory is missing,
+	@rem so for a game shipping ADPCM without source in the tree - skylance
+	@rem has none, and only demo has voice or B-channel WAVs - deleting them
+	@rem is a loss with no way back.  clean-all reaches here, and clean-all
+	@rem is the first thing test.bat runs.
+	@if exist $(subst /,\,$(GAME_SOUND))\samples\in_wav_a ( \
+	    if exist $(subst /,\,$(GAME_SOUND))\samples\out_16el_a\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_16el_a\*.wav & \
+	    if exist $(subst /,\,$(GAME_SOUND))\samples\out_sr_a\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_sr_a\*.wav & \
+	    if exist $(subst /,\,$(GAME_SOUND))\samples\out_a\*.adpcma del /Q $(subst /,\,$(GAME_SOUND))\samples\out_a\*.adpcma \
+	  ) else ( echo sound-clean: keeping out_a, no in_wav_a to rebuild it from )
+	@if exist $(subst /,\,$(GAME_SOUND))\samples\in_wav_a_voice ( \
+	    if exist $(subst /,\,$(GAME_SOUND))\samples\out_16el_a_voice\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_16el_a_voice\*.wav & \
+	    if exist $(subst /,\,$(GAME_SOUND))\samples\out_a_voice\*.adpcma del /Q $(subst /,\,$(GAME_SOUND))\samples\out_a_voice\*.adpcma \
+	  ) else ( echo sound-clean: keeping out_a_voice, no in_wav_a_voice to rebuild it from )
+	@if exist $(subst /,\,$(GAME_SOUND))\samples\in_wav_b ( \
+	    if exist $(subst /,\,$(GAME_SOUND))\samples\out_16el_b\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_16el_b\*.wav & \
+	    if exist $(subst /,\,$(GAME_SOUND))\samples\out_sr_b\*.wav del /Q $(subst /,\,$(GAME_SOUND))\samples\out_sr_b\*.wav & \
+	    if exist $(subst /,\,$(GAME_SOUND))\samples\out_b\*.adpcmb del /Q $(subst /,\,$(GAME_SOUND))\samples\out_b\*.adpcmb \
+	  ) else ( echo sound-clean: keeping out_b, no in_wav_b to rebuild it from )
 	if exist sound\driver\fm_data.inc del /Q sound\driver\fm_data.inc
 	if exist sound\driver\music_data.inc del /Q sound\driver\music_data.inc
 	if exist sound\driver\fm_patch_table.inc del /Q sound\driver\fm_patch_table.inc
@@ -505,7 +517,7 @@ test: game-check test-precheck hash
 	$(MAME_COMMON) -output console -nofilter -waitvsync -window
 
 .PHONY: test-precheck
-test-precheck: game-check unit-tests
+test-precheck: game-check
 	$(LOG_CTX)
 	@if not exist $(ROM_DIR)\$(GAME_ID)-p1.p1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-p1.p1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
 	@if not exist $(ROM_DIR)\$(GAME_ID)-m1.m1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-m1.m1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
@@ -668,6 +680,14 @@ gdb-server: all debug-build
 	$(LOG_CTX)
 	@echo GDB server: $(GDB_REMOTE) ^(68000 main CPU^)
 	$(MAME_COMMON) -debug -debugger gdbstub -debugger_host $(GDB_HOST) -debugger_port $(GDB_PORT) -output console -nofilter -window
+
+# Host-side sprite renderer tests.  Deliberately NOT a prerequisite of
+# "make test": launching the ROM in MAME must not depend on a host C++
+# toolchain being installed.  Use "make check" to gate on both.
 .PHONY: unit-tests
 unit-tests:
 	$(MAKE) -C tests test
+
+.PHONY: check
+check: unit-tests test-precheck
+	@echo check: unit tests and ROM set OK
