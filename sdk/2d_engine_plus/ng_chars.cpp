@@ -436,9 +436,12 @@ void CharManager::draw()
                 hideUploaded(i);
                 uploaded_strips[i] = 0;
                 uploaded_first[i]  = 0xffff;
-            }
-            if (c->active && c->visible)
+                /* Releasing the slots means the next draw must upload
+                 * again, whatever the reason for hiding - a char that
+                 * blinked off otherwise returns through the
+                 * transform-only path with no map and no chain bits. */
                 c->sprite_dirty = 1;
+            }
         }
     }
 

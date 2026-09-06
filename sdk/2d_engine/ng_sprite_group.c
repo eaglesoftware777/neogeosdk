@@ -5,7 +5,18 @@
 #include "ng_vram.h"
 #include "ng_sprite_hw.h"
 
-/* These routines use volatile MMIO and no register-dependent inline asm. */
+/*
+ * Built at -O2 while the rest of the tree is -O0.
+ *
+ * These are the routines a frame runs most: the map fill below is a
+ * tight loop over up to sixteen rows for every strip of every sprite
+ * that moved, and at -O0 it reloads its bounds from the stack on each
+ * iteration.  Raising it here is safe because nothing in this file
+ * depends on -O0 to be correct - every hardware access goes through the
+ * vram_* helpers in another translation unit, so the compiler can
+ * neither reorder nor elide one, and there is no inline asm holding an
+ * opinion about register allocation.
+ */
 #pragma GCC optimize ("O2")
 
 static uint16_t ngsg_tiles[NG_SPRITE_MAX_HEIGHT_TILES];
@@ -225,10 +236,11 @@ void NEOGEO_USER ng_sprite_group_set_active_rows(NGSpriteGroup *g, uint8_t activ
 
     if (g->activeRows != activeRows) {
         g->activeRows = activeRows;
-        /* SCB3 holds (driver) height = activeRows and chained-strip
-         * height = 0x40 | activeRows.  Both must be re-emitted, which
-         * sits inside the DIRTY_POS flush path. */
-        g->dirty |= NG_SGF_DIRTY_POS;
+        /* The driver strip and every chained strip carry a copy of the
+         * active-character count, so this has to reach both.  SHRINK is
+         * the flag that means "the count moved" - the vertical shrink is
+         * the other thing it is derived from. */
+        g->dirty |= NG_SGF_DIRTY_POS | NG_SGF_DIRTY_SHRINK;
     }
 }
 
@@ -255,7 +267,7 @@ void NEOGEO_USER ng_sprite_group_set_scale(NGSpriteGroup *g, uint8_t xScale, uin
     if (g && (g->xScale != xScale || g->yScale != yScale)) {
         g->xScale = xScale;
         g->yScale = yScale;
-        g->dirty |= NG_SGF_DIRTY_SHRINK | NG_SGF_DIRTY_POS;
+        g->dirty |= NG_SGF_DIRTY_SHRINK;
     }
 }
 
@@ -304,6 +316,7 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
     uint8_t strip;
     uint8_t row;
     uint8_t activeRows;
+    uint8_t mapRows;
     uint8_t xNibble;
     uint16_t driverScb3;
     uint16_t driverScb4;
@@ -322,6 +335,7 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
     if (activeRows > NG_SPRITE_MAX_HEIGHT_TILES) activeRows = NG_SPRITE_MAX_HEIGHT_TILES;
 
     activeRows = ng_sprite_display_rows(activeRows, g->yScale);
+    mapRows = ng_sprite_map_rows(activeRows);
     xNibble = ngsg_x_shrink_nibble(g->xScale);
     scb2 = setSCB2(xNibble, g->yScale);
     driverScb3 = setSCB3((uint16_t)(496 - g->y), 0, activeRows);
@@ -341,7 +355,7 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
         uint16_t scb3;
         uint16_t scb4;
 
-        for (row = 0; row < NG_SPRITE_MAX_HEIGHT_TILES; row++) {
+        for (row = 0; row < mapRows; row++) {
             ngsg_tiles[row] = row < g->heightTiles ? ngsg_tile_for(g, strip, row) : NG_SPRITE_BLANK_TILE;
             ngsg_attrs[row] = row < g->heightTiles ? attr : NG_SPRITE_BLANK_ATTR;
         }
@@ -368,7 +382,7 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
             spriteIndex,
             ngsg_tiles,
             ngsg_attrs,
-            NG_SPRITE_MAX_HEIGHT_TILES,
+            mapRows,
             scb2,
             scb3,
             scb4
@@ -463,6 +477,7 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
 {
     uint8_t strip;
     uint8_t activeRows;
+    uint8_t mapRows;
     uint8_t xNibble;
     uint16_t scb2;
     uint16_t driverScb3;
@@ -485,6 +500,7 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
     if (activeRows > NG_SPRITE_MAX_HEIGHT_TILES) activeRows = NG_SPRITE_MAX_HEIGHT_TILES;
 
     activeRows = ng_sprite_display_rows(activeRows, g->yScale);
+    mapRows = ng_sprite_map_rows(activeRows);
     /* Compute values once even if some are not needed — branch avoidance */
     xNibble    = ngsg_x_shrink_nibble(g->xScale);
     scb2       = setSCB2(xNibble, g->yScale);
@@ -497,13 +513,13 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
         for (strip = 0; strip < g->strips; strip++) {
             uint16_t scb1Addr = (uint16_t)(64u * (uint16_t)(g->firstSprite + strip));
 
-            for (row = 0; row < NG_SPRITE_MAX_HEIGHT_TILES; row++) {
+            for (row = 0; row < mapRows; row++) {
                 ngsg_tiles[row] = row < g->heightTiles ? ngsg_tile_for(g, strip, row) : NG_SPRITE_BLANK_TILE;
                 ngsg_attrs[row] = row < g->heightTiles ? attr : NG_SPRITE_BLANK_ATTR;
             }
 
             vram_init(scb1Addr, 1);
-            vram_SCB1(ngsg_tiles, ngsg_attrs, NG_SPRITE_MAX_HEIGHT_TILES);
+            vram_SCB1(ngsg_tiles, ngsg_attrs, mapRows);
         }
     }
 
@@ -515,18 +531,26 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
         }
     }
 
-    /* SCB3/4 position upload */
-    if (g->dirty & (NG_SGF_DIRTY_POS | NG_SGF_DIRTY_VIS)) {
+    /*
+     * SCB3/4.  The driver strip carries X, Y and the active-character count,
+     * so it is rewritten for a move, a show, or a scale change - the count is
+     * derived from the vertical shrink and goes stale with it.
+     */
+    if (g->dirty & (NG_SGF_DIRTY_POS | NG_SGF_DIRTY_VIS | NG_SGF_DIRTY_SHRINK)) {
         vram_SCB234((uint16_t)(SCB3_ADDR + g->firstSprite), driverScb3);
         vram_SCB234((uint16_t)(SCB4_ADDR + g->firstSprite), driverScb4);
+    }
 
+    /*
+     * Chained strips hold only the chain bit and a copy of the count; the
+     * hardware reads neither position from them.  A move therefore leaves
+     * them alone - re-stamping thirty-odd slots every time a background
+     * scrolls one pixel was most of what a scroll cost.  A show still has to
+     * write them, because parking a slot clears its chain bit.
+     */
+    if (g->dirty & (NG_SGF_DIRTY_VIS | NG_SGF_DIRTY_SHRINK)) {
         for (strip = 1; strip < g->strips; strip++) {
             uint16_t spriteIndex = (uint16_t)(g->firstSprite + strip);
-            /*
-             * Sticky chain strips: SCB3 bit 6 = chain bit.
-             * Only the driver strip needs full SCB3; chained strips just need
-             * the chain bit set and height in bits [5:0].
-             */
             vram_SCB234((uint16_t)(SCB3_ADDR + spriteIndex), (uint16_t)(0x0040 | activeRows));
             vram_SCB234((uint16_t)(SCB4_ADDR + spriteIndex), 0);
         }

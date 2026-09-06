@@ -4,6 +4,18 @@
 #include "ng_vram.hpp"
 #include "../2d_engine/ng_sprite_hw.h"
 
+/*
+ * Built at -O2 while the rest of the tree is -O0.
+ *
+ * These are the routines a frame runs most: the map fill below is a
+ * tight loop over up to sixteen rows for every strip of every sprite
+ * that moved, and at -O0 it reloads its bounds from the stack on each
+ * iteration.  Raising it here is safe because nothing in this file
+ * depends on -O0 to be correct - every hardware access goes through the
+ * vram_* helpers in another translation unit, so the compiler can
+ * neither reorder nor elide one, and there is no inline asm holding an
+ * opinion about register allocation.
+ */
 #pragma GCC optimize ("O2")
 
 static uint16_t ngsg_tiles[NG_SPRITE_MAX_HEIGHT_TILES];
@@ -190,10 +202,11 @@ void NGSpriteGroup::setActiveRows(uint8_t rows)
     if (rows > NG_SPRITE_MAX_HEIGHT_TILES) rows = NG_SPRITE_MAX_HEIGHT_TILES;
     if (activeRows != rows) {
         activeRows = rows;
-        /* activeRows is encoded into SCB3 height (driver) and
-         * 0x40 | activeRows (chained strips); both ride the POS
-         * flush path. */
-        dirty |= NG_SGF_DIRTY_POS;
+        /* The driver strip and every chained strip carry a copy of the
+         * active-character count, so this has to reach both.  SHRINK is
+         * the flag meaning "the count moved"; the vertical shrink is the
+         * other thing it is derived from. */
+        dirty |= NG_SGF_DIRTY_POS | NG_SGF_DIRTY_SHRINK;
     }
 }
 
@@ -214,7 +227,7 @@ void NGSpriteGroup::setScale(uint8_t sx, uint8_t sy)
 {
     if (xScale == sx && yScale == sy) return;
     xScale = sx; yScale = sy;
-    dirty |= NG_SGF_DIRTY_SHRINK | NG_SGF_DIRTY_POS;
+    dirty |= NG_SGF_DIRTY_SHRINK;
 }
 
 void NGSpriteGroup::setFlip(uint8_t h, uint8_t v)
@@ -258,7 +271,7 @@ void NGSpriteGroup::hide()
 
 void NGSpriteGroup::upload()
 {
-    uint8_t strip, row, ar;
+    uint8_t strip, row, ar, mapRows;
     uint8_t xn;
     uint16_t scb2, driverScb3, driverScb4, attr;
 
@@ -269,6 +282,7 @@ void NGSpriteGroup::upload()
     if (ar > NG_SPRITE_MAX_HEIGHT_TILES) ar = NG_SPRITE_MAX_HEIGHT_TILES;
 
     ar = ng_sprite_display_rows(ar, yScale);
+    mapRows     = ng_sprite_map_rows(ar);
     xn          = xShrinkNibble(xScale);
     scb2        = setSCB2(xn, yScale);
     driverScb3  = setSCB3((uint16_t)(496 - y), 0, ar);
@@ -280,7 +294,7 @@ void NGSpriteGroup::upload()
         uint16_t scb1Addr    = (uint16_t)(64u * spriteIndex);
         uint16_t scb3, scb4;
 
-        for (row = 0; row < NG_SPRITE_MAX_HEIGHT_TILES; row++) {
+        for (row = 0; row < mapRows; row++) {
             ngsg_tiles[row] = row < heightTiles ? tileFor(strip, row) : NG_SPRITE_BLANK_TILE;
             ngsg_attrs[row] = row < heightTiles ? attr : NG_SPRITE_BLANK_ATTR;
         }
@@ -294,7 +308,7 @@ void NGSpriteGroup::upload()
         }
 
         vram_sprite(scb1Addr, 1, spriteIndex,
-                    ngsg_tiles, ngsg_attrs, NG_SPRITE_MAX_HEIGHT_TILES,
+                    ngsg_tiles, ngsg_attrs, mapRows,
                     scb2, scb3, scb4);
     }
     dirty = 0u;
@@ -330,7 +344,7 @@ void NGSpriteGroup::updateTransform()
 
 void NGSpriteGroup::flush()
 {
-    uint8_t strip, row, ar, xn;
+    uint8_t strip, row, ar, mapRows, xn;
     uint16_t scb2, driverScb3, driverScb4, attr;
 
     if (!dirty) return;
@@ -346,6 +360,7 @@ void NGSpriteGroup::flush()
     if (ar > NG_SPRITE_MAX_HEIGHT_TILES) ar = NG_SPRITE_MAX_HEIGHT_TILES;
 
     ar = ng_sprite_display_rows(ar, yScale);
+    mapRows    = ng_sprite_map_rows(ar);
     xn         = xShrinkNibble(xScale);
     scb2       = setSCB2(xn, yScale);
     driverScb3 = setSCB3((uint16_t)(496 - y), 0, ar);
@@ -355,12 +370,12 @@ void NGSpriteGroup::flush()
     if (dirty & (NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_PALETTE)) {
         for (strip = 0; strip < strips; strip++) {
             uint16_t scb1Addr = (uint16_t)(64u * (uint16_t)(firstSprite + strip));
-            for (row = 0; row < NG_SPRITE_MAX_HEIGHT_TILES; row++) {
+            for (row = 0; row < mapRows; row++) {
                 ngsg_tiles[row] = row < heightTiles ? tileFor(strip, row) : NG_SPRITE_BLANK_TILE;
                 ngsg_attrs[row] = row < heightTiles ? attr : NG_SPRITE_BLANK_ATTR;
             }
             vram_init(scb1Addr, 1);
-            vram_SCB1(ngsg_tiles, ngsg_attrs, NG_SPRITE_MAX_HEIGHT_TILES);
+            vram_SCB1(ngsg_tiles, ngsg_attrs, mapRows);
         }
     }
 
@@ -371,9 +386,17 @@ void NGSpriteGroup::flush()
         }
     }
 
-    if (dirty & (NG_SGF_DIRTY_POS | NG_SGF_DIRTY_VIS)) {
+    /* The driver strip carries X, Y and the active-character count, so a
+     * move, a show or a scale change all invalidate it. */
+    if (dirty & (NG_SGF_DIRTY_POS | NG_SGF_DIRTY_VIS | NG_SGF_DIRTY_SHRINK)) {
         vram_SCB234((uint16_t)(SCB3_ADDR + firstSprite), driverScb3);
         vram_SCB234((uint16_t)(SCB4_ADDR + firstSprite), driverScb4);
+    }
+
+    /* Chained strips hold only the chain bit and a copy of the count, and
+     * the hardware reads no position from them, so a move can skip them.
+     * A show cannot: parking a slot clears its chain bit. */
+    if (dirty & (NG_SGF_DIRTY_VIS | NG_SGF_DIRTY_SHRINK)) {
         for (strip = 1; strip < strips; strip++) {
             uint16_t si = (uint16_t)(firstSprite + strip);
             vram_SCB234((uint16_t)(SCB3_ADDR + si), (uint16_t)(0x0040 | ar));

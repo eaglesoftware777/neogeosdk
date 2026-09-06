@@ -475,9 +475,17 @@ void NEOGEO_USER ng_chars_draw(void)
                 chars_hide_uploaded(i);
                 ng_char_uploaded_strips[i] = 0;
                 ng_char_uploaded_first[i] = 0xffff;
-            }
-            if (c->active && c->visible)
+                /*
+                 * Giving the slots up means the next draw has to upload
+                 * again, whatever the reason for hiding.  The old test
+                 * here asked for active AND visible, which is the one
+                 * case where nothing was hidden - so a char that blinked
+                 * off, the invulnerability flash after a hit being the
+                 * obvious one, came back through the transform-only path
+                 * with no map and no chain bits and stayed invisible.
+                 */
                 c->sprite_dirty = 1;
+            }
         }
     }
 

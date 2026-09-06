@@ -1,3 +1,13 @@
+/*
+ * Sprite renderer regression tests.
+ *
+ * The engine sources are compiled against a stand-in VRAM array so the
+ * hardware-facing rules can be checked on the host: how many active
+ * characters end up in SCB3 once a sprite is shrunk, how much of the SCB1
+ * map an upload has to blank, and which slots a partial flush is allowed to
+ * touch.  Both renderers are built from this one file - the C engine as C,
+ * the C++ engine as C++ - so the two cannot drift apart silently.
+ */
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -13,6 +23,8 @@
 static uint16_t ram[0x8800];
 static uint16_t address, increment;
 static unsigned writes;
+
+#define UNTOUCHED 0x5a5au
 
 uint16_t setSCB2(uint16_t x, uint16_t y) { return (uint16_t)(((x & 15u) << 8) | (y & 255u)); }
 uint16_t setSCB3(uint16_t y, uint16_t chain, uint16_t rows) { return (uint16_t)(((y & 511u) << 7) | (chain << 6) | rows); }
@@ -31,58 +43,185 @@ void vram_sprite(uint16_t a, uint16_t inc, uint16_t slot, uint16_t *tiles,
     vram_SCB234(SCB2_ADDR + slot, s2); vram_SCB234(SCB3_ADDR + slot, s3); vram_SCB234(SCB4_ADDR + slot, s4);
 }
 
-int main(void)
+static uint16_t map_tile(unsigned slot, unsigned row) { return ram[slot * 64 + row * 2]; }
+static uint16_t act_of(unsigned slot) { return (uint16_t)(ram[SCB3_ADDR + slot] & 63u); }
+
+/*
+ * A six-tile sprite at half height occupies three characters, not six: the
+ * active-character count is the sprite's height on screen, and the shrink
+ * only chooses which source row each scanline reads.  Leave it at six and
+ * the picture repeats in the lower half of its own window.
+ */
+static void test_shrink_sets_active_characters(NGSpriteGroup *g)
 {
-    NGSpriteGroup g;
-    NGSpriteWindow window;
-    unsigned strip, row, before;
-    memset(ram, 0x5a, sizeof(ram));
-    ng_sprite_group_init(&g, 64u, 8u, 6u, 1000u, 19u);
-    ng_sprite_group_set_tile_stride(&g, 16u);
-    ng_sprite_group_set_scale(&g, 0x7fu, 0x7fu);
-    ng_sprite_group_set_pos(&g, 80, 112);
-    ng_sprite_group_upload(&g);
-    assert((ram[0x8240] & 63u) == 3u);
-    assert(ram[0x8440] == (80u << 7));
+    unsigned strip, row;
+
+    ng_sprite_group_init(g, 64u, 8u, 6u, 1000u, 19u);
+    ng_sprite_group_set_tile_stride(g, 16u);
+    ng_sprite_group_set_scale(g, 0x7fu, 0x7fu);
+    ng_sprite_group_set_pos(g, 80, 112);
+    ng_sprite_group_upload(g);
+
+    assert(act_of(64) == 3u);
+    assert(ram[SCB4_ADDR + 64] == (80u << 7));
+
     for (strip = 0; strip < 8; strip++) {
-        for (row = 0; row < 32; row++) {
-            assert(ram[(64 + strip) * 64 + row * 2] == (row < 6 ? 1000 + row * 16 + strip : 0xffffu));
-        }
-        assert((ram[0x8240 + strip] & 0x40u) == (strip ? 0x40u : 0u));
+        /* Rows the lookup can reach hold art, then the transparent tile. */
+        for (row = 0; row < 16; row++)
+            assert(map_tile(64 + strip, row) == (row < 6 ? 1000 + row * 16 + strip : 0xffffu));
+        /* Rows 16..31 are only reachable past 256 scanlines, which three
+         * active characters cannot span, so an upload must not pay for them. */
+        for (row = 16; row < 32; row++)
+            assert(map_tile(64 + strip, row) == UNTOUCHED);
+        assert((ram[SCB3_ADDR + 64 + strip] & 0x40u) == (strip ? 0x40u : 0u));
     }
+}
+
+/* Past sixteen active characters the sprite spans more than 256 scanlines,
+ * the lookup mirrors into the upper half of the map, and all 32 rows have to
+ * be laid down. */
+static void test_tall_sprite_blanks_whole_map(NGSpriteGroup *g)
+{
+    unsigned row;
+
+    ng_sprite_group_init(g, 200u, 1u, 20u, 2000u, 3u);
+    ng_sprite_group_set_tile_stride(g, 16u);
+    ng_sprite_group_set_scale(g, 0xffu, 0xffu);
+    ng_sprite_group_set_pos(g, 32, 200);
+    ng_sprite_group_upload(g);
+
+    assert(act_of(200) == 20u);
+    for (row = 0; row < 32; row++)
+        assert(map_tile(200, row) == (row < 20 ? 2000 + row * 16 : 0xffffu));
+}
+
+/* A scale change moves the active-character count, so it has to reach SCB3
+ * and not only the shrink register. */
+static void test_scale_change_refreshes_scb3(NGSpriteGroup *g)
+{
+    unsigned before = writes;
+
+    ng_sprite_group_flush(g);
+    assert(writes == before);                 /* nothing dirty, nothing written */
+
+    ng_sprite_group_set_scale(g, 0x3fu, 0x3fu);
+    ng_sprite_group_flush(g);
+    assert(ram[SCB2_ADDR + 64] == 0x033fu);
+    assert(act_of(64) == 2u);
+    assert((ram[SCB3_ADDR + 65] & 63u) == 2u); /* chained copies follow */
+}
+
+/* Cropping a page to fewer rows moves the active-character count, which
+ * every chained strip carries a copy of. */
+static void test_active_rows_reach_chained_strips(NGSpriteGroup *g)
+{
+    ng_sprite_group_set_scale(g, 0xffu, 0xffu);
+    ng_sprite_group_set_active_rows(g, 4u);
+    ng_sprite_group_flush(g);
+    assert(act_of(64) == 4u);
+    assert((ram[SCB3_ADDR + 71] & 127u) == (0x40u | 4u));
+
+    ng_sprite_group_set_active_rows(g, 6u);
+    ng_sprite_group_set_scale(g, 0x3fu, 0x3fu);
+    ng_sprite_group_flush(g);
+    assert(act_of(64) == 2u);
+    assert((ram[SCB3_ADDR + 71] & 127u) == (0x40u | 2u));
+}
+
+/* A move is the hot path.  The hardware reads no position from a chained
+ * slot, so a scroll must cost two words, not two per strip. */
+static void test_move_touches_driver_only(NGSpriteGroup *g)
+{
+    unsigned before;
+
+    ram[SCB3_ADDR + 65] = UNTOUCHED;
     before = writes;
-    ng_sprite_group_flush(&g);
-    assert(writes == before);
-    ng_sprite_group_set_scale(&g, 0x3fu, 0x3fu);
-    ng_sprite_group_flush(&g);
-    assert((ram[0x8240] & 63u) == 2u);
-    ng_sprite_group_set_visible(&g, 0u);
-    ng_sprite_group_flush(&g);
-    assert((ram[0x8240] & 127u) == 0u);
+    ng_sprite_group_set_pos(g, 88, 100);
+    ng_sprite_group_flush(g);
+    assert(writes == before + 2u);
+    assert(ram[SCB3_ADDR + 65] == UNTOUCHED);
+    assert(ram[SCB4_ADDR + 64] == (88u << 7));
+}
+
+/* Hiding parks every strip; showing again has to put the chain bits back,
+ * because parking a slot clears them. */
+static void test_hide_and_show_restore_the_chain(NGSpriteGroup *g)
+{
+    unsigned before;
+
+    ng_sprite_group_set_visible(g, 0u);
+    ng_sprite_group_flush(g);
+    assert((ram[SCB3_ADDR + 64] & 127u) == 0u);
+    assert(ram[SCB4_ADDR + 64] == setSCB4(496u));
+
     before = writes;
-    ng_sprite_group_set_pos(&g, 88, 100);
-    ng_sprite_group_flush(&g);
-    assert(writes == before);
-    ng_sprite_group_set_visible(&g, 1u);
-    ng_sprite_group_flush(&g);
-    assert((ram[0x8240] & 63u) == 2u);
-    assert(ram[0x8040] == 0x033fu);
-    ng_sprite_group_set_flip(&g, 1u, 0u);
-    ng_sprite_group_flush(&g);
-    assert(ram[64 * 64] == 1007u);
+    ng_sprite_group_set_pos(g, 40, 40);
+    ng_sprite_group_flush(g);
+    assert(writes == before);                 /* invisible groups stay quiet */
+
+    ng_sprite_group_set_visible(g, 1u);
+    ng_sprite_group_flush(g);
+    assert(act_of(64) == 2u);
+    assert((ram[SCB3_ADDR + 65] & 0x40u) == 0x40u);
+    assert(map_tile(64, 0) == 1000u);
+}
+
+static void test_flip_rewrites_the_map(NGSpriteGroup *g)
+{
+    ng_sprite_group_set_flip(g, 1u, 0u);
+    ng_sprite_group_flush(g);
+    assert(map_tile(64, 0) == 1007u);         /* strip order reverses */
     assert((ram[64 * 64 + 1] & 1u) == 1u);
+}
+
+/*
+ * A window only owns the strips it is using.  Shrinking one must park the
+ * strips it gave up and nothing beyond them, or it takes the neighbouring
+ * sprite's slots with it.
+ */
+static void test_window_parks_only_its_own_tail(void)
+{
+    NGSpriteWindow window;
+    unsigned before;
+
     ng_sprite_window_init(&window, 1u, 64u, 16u);
     ng_sprite_window_set_shape(&window, 8u, 6u);
     before = writes;
     ng_sprite_window_clear_tail(&window);
-    assert(writes == before);
+    assert(writes == before);                 /* nothing given up yet */
+
     ng_sprite_window_set_shape(&window, 6u, 4u);
     ng_sprite_window_clear_tail(&window);
-    assert(writes == before + 6u);
-    assert((ram[0x8246] & 127u) == 0u);
-    assert(ram[0x8446] == setSCB4(496u));
-    assert(ram[0x8250] == 0x5a5au);
-    assert(ram[0x8040] == 0x033fu);
-    puts("sprite maps, shrinking, visibility, sticky tails and adjacent ownership: PASS");
+    assert(writes == before + 6u);            /* two strips parked, 3 words each */
+    assert((ram[SCB3_ADDR + 70] & 127u) == 0u);
+    assert(ram[SCB4_ADDR + 70] == setSCB4(496u));
+    assert(ram[SCB2_ADDR + 80] == UNTOUCHED); /* the neighbour is untouched */
+
+    /* A full teardown is bounded the same way.  This window reserved 16
+     * strips but has never drawn into more than 8, so parking all 16
+     * would take the neighbour allocated at slot 72 with it. */
+    before = writes;
+    ng_sprite_window_hide(&window);
+    assert(writes == before + 8u * 3u);
+    assert(ram[SCB2_ADDR + 72] == UNTOUCHED);
+}
+
+int main(void)
+{
+    NGSpriteGroup g;
+    NGSpriteGroup tall;
+
+    memset(ram, 0x5a, sizeof(ram));
+
+    test_shrink_sets_active_characters(&g);
+    test_tall_sprite_blanks_whole_map(&tall);
+    test_scale_change_refreshes_scb3(&g);
+    test_active_rows_reach_chained_strips(&g);
+    test_move_touches_driver_only(&g);
+    test_hide_and_show_restore_the_chain(&g);
+    test_flip_rewrites_the_map(&g);
+    test_window_parks_only_its_own_tail();
+
+    puts("active characters, map padding, partial flushes and window tails: PASS");
     return 0;
 }

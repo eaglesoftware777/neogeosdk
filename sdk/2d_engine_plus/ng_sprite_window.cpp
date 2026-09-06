@@ -51,7 +51,7 @@ void NGSpriteWindow::setShape(uint8_t count, uint8_t rows)
 
 void NGSpriteWindow::clear()
 {
-    ng_vram_clear_sprite_range(first_slot, max_strips);
+    ng_sprite_park_off_range(first_slot, footprint());
     previous_strips = 0u;
     current_strips = 0u;
     previous_rows = 0u;
@@ -69,9 +69,17 @@ void NGSpriteWindow::clearTail()
     }
 }
 
+/* A window owns what it has drawn into, not the whole reservation:
+ * parking the reservation takes slots the next sprite was allocated,
+ * and that reads as the neighbour splitting apart for a frame. */
+uint8_t NGSpriteWindow::footprint() const
+{
+    return max_used_strips ? max_used_strips : max_strips;
+}
+
 void NGSpriteWindow::hide()
 {
-    ng_vram_clear_sprite_range(first_slot, max_strips);
+    ng_sprite_park_off_range(first_slot, footprint());
     visible = 0u;
     previous_strips = current_strips;
     current_strips = 0u;
