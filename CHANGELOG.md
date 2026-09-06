@@ -1,5 +1,78 @@
 # Changelog
 
+## v1.7.1 - Rendering and platform fixes
+
+Release date: 2026-09-06
+
+A correctness pass over sprite scaling, per-frame VRAM traffic, the AES build
+and the per-game build plumbing.  No API was removed; one macro was added.
+
+### Sprite scaling
+
+The hardware does not shrink the two axes alike: X is taken from the top nibble
+as `((value >> 4) + 1) / 16`, Y from the whole byte as `(value + 1) / 256`.
+Those agree only when the low nibble is `F`, so scale bytes written as `0xN0`
+drew sprites up to 12% shorter than they were wide.  Every affected constant and
+call site has been corrected, and `NG_SCALE(sixteenths)` in `ng_defs.h` now
+builds a byte whose axes match.  The rule is documented in the C engine API
+reference.
+
+- Corrected 29 scale literals across the demo scenes and `neogeogame`.
+- Corrected the demo's named `U_SCALE_*` presets, which had been tuned as
+  percentages and so were right on Y and quantised too wide on X.
+- Corrected Sky Lance's four scale presets and re-sized them against the
+  playfield: the player ship took 35% of the screen height and bosses 66-71%.
+
+### Per-frame VRAM traffic
+
+`ng_sprite_group_upload()` rewrites the tilemap; `ng_sprite_group_flush()`
+writes only what changed.  Several places called `upload()` every frame for
+artwork that had only moved, which is enough traffic to overrun vblank and
+corrupt the sprite writes that follow it.
+
+- Sky Lance's scrolling backdrop now uploads once and flushes position only.
+- The demo's starfield chapter builds its groups once and flushes per frame,
+  re-uploading the tilemap only when a depth band actually changes the palette.
+- The demo's sprite-screen chapter no longer re-uploads a static image 180
+  times.
+- `neogeogame` wrote its sprite VRAM *before* waiting for vblank, putting every
+  write into active display.  The order is now wait, then draw.
+
+### Sprite budgets
+
+- `neogeogame`'s enemy artwork needed 16 hardware sprite strips while the slot
+  map reserved 4, so 18 enemies demanded 288 sprites from a 136-slot range and
+  overran the bullet and explosion pools.  The art is now imported at the size
+  it is drawn, and the strides are checked against the asset table at compile
+  time - `gen_sprite_meta.py` emits `NG_ASSET_STRIPS_n` for that purpose.
+
+### AES
+
+- `neogeo_aes.c` was missing the pointer casts its MVS counterpart had, so
+  `PLATFORM=aes` did not compile for any game.  Fixed for all six.
+- `helloworld` never called the `game_boot()` / `game_frame()` in its own
+  `main.c`, and its attract loop waited on a BIOS flag it never returned to let
+  the BIOS set, so START did nothing.  Both fixed, on MVS and AES.
+
+### Build system
+
+- `GAME_SCENES_FROM`, `GAME_ART_FROM` and `GAME_SOUND_FROM` let a game reuse
+  another game's scenes, artwork or audio without a second copy.
+- `USE_2D_PLUS=1` now builds the game's own sources as C++ too, not just the
+  engine.  The SDK headers carry `extern "C"` guards for this.
+- A game with no fix layer, no screens, no art or no sound assets now builds
+  instead of failing: the generated `.inc` files the Z80 driver includes
+  unconditionally are always written, empty if there is nothing to put in them.
+
+### Gameplay
+
+- Sky Lance stages could hang before the boss: enemies on a holding pattern
+  never left the field, and the boss waits for the field to clear.  Holders now
+  break station after a bounded time, and the director sends the boss anyway if
+  stragglers remain.
+- Sky Lance and the demo's shooter chapter now aim their shots at the player and
+  drift toward the player's column rather than flying fixed lanes.
+
 ## v1.7.0 - The 2D Engine Release
 
 Release date: 2026-08-30

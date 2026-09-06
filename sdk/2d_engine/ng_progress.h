@@ -3,6 +3,10 @@
 
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     uint8_t active;
     uint16_t current;
@@ -18,4 +22,8 @@ uint8_t NEOGEO_USER ng_progress_percent(uint8_t id);
 uint8_t NEOGEO_USER ng_progress_done(uint8_t id);
 void NEOGEO_USER ng_progress_update(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -162,9 +162,19 @@ def main():
         type=Path,
         default=Path("sound/driver/fm_patch_table.inc"),
     )
+    ap.add_argument(
+        "--empty",
+        action="store_true",
+        help="emit a zero-entry table without reading a source file, for a "
+             "game that defines no FM patches of its own",
+    )
     args = ap.parse_args()
 
-    patches = parse_config(args.input)
+    # driver.asm includes this file unconditionally, so a game with no
+    # patches.fm still needs one on disk.  --empty writes the table with no
+    # entries; without it a source that parses to nothing is still an error,
+    # since that means a real patches.fm failed to yield any patches.
+    patches = [] if args.empty else parse_config(args.input)
     emit_inc(patches, args.output)
     print(f"Built {args.output} ({len(patches)} patches)")
 

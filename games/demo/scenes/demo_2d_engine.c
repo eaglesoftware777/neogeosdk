@@ -4,6 +4,13 @@
 #include "sdk/sound_ids.h"
 #include "sdk/2d_engine/ng_engine.h"
 #include <stdint.h>
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  Everything here is
+ * reached from inline asm, the cart entry vectors or the BIOS by its
+ * plain symbol name, so it must keep C linkage and not be mangled. */
+extern "C" {
+#endif
+
 
 void NEOGEO_USER soundSceneReset(void);
 void NEOGEO_USER soundStopAll(void);
@@ -200,8 +207,8 @@ static void NEOGEO_USER demo_npc_scene(void)
                            DEMO_NPC_TILE(0), DEMO_NPC_PALETTE(0));
         ng_char_set_tile_stride(ca, DEMO_NPC_STRIDE);
         ca->sprite_offset_y = DEMO_NPC_OFFSET_Y;
-        ca->scale_x = 0x70;
-        ca->scale_y = 0x70;
+        ca->scale_x = 0x7F;
+        ca->scale_y = 0x7F;
     }
     if (cb) {
         demo_preload_npc_palette(6);
@@ -211,8 +218,8 @@ static void NEOGEO_USER demo_npc_scene(void)
         cb->sprite_offset_y = DEMO_NPC_OFFSET_Y;
         cb->flip_x = 1;
         cb->sprite_dirty = 1;
-        cb->scale_x = 0x70;
-        cb->scale_y = 0x70;
+        cb->scale_x = 0x7F;
+        cb->scale_y = 0x7F;
     }
 
     for (t = 0; t < 420u; t++) {
@@ -563,3 +570,7 @@ void NEOGEO_USER demo_2d_engine_advanced_animation(void)
     soundStopAll();
     demo_clear_scene();
 }
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif

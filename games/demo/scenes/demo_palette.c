@@ -15,6 +15,13 @@
 #include "sdk/2d_engine/ng_palette_fx.h"
 #include "sdk/2d_engine/ng_sprite_group.h"
 #include <stdint.h>
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  Everything here is
+ * reached from inline asm, the cart entry vectors or the BIOS by its
+ * plain symbol name, so it must keep C linkage and not be mangled. */
+extern "C" {
+#endif
+
 
 void NEOGEO_USER clearFix(void);
 void NEOGEO_USER soundSceneReset(void);
@@ -163,3 +170,7 @@ void NEOGEO_USER demo_palette_run(void)
     soundStopAll();
     demo_clear_scene();
 }
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif

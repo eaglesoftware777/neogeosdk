@@ -1,5 +1,12 @@
 #include "ng_fix/ng_fix.h"
 #include "neogeo.h"
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  Everything here is
+ * reached from inline asm, the cart entry vectors or the BIOS by its
+ * plain symbol name, so it must keep C linkage and not be mangled. */
+extern "C" {
+#endif
+
 
 extern void setsfix(void);
 extern void clearFix(void);
@@ -387,3 +394,7 @@ void NEOGEO_USER ngfix_bar_u8(uint8_t x, uint8_t y, uint8_t w, uint8_t value, ui
         ngfix_put_tile((uint8_t)(x + i), y, (i < filled) ? fill_tile : empty_tile, pal);
     }
 }
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif

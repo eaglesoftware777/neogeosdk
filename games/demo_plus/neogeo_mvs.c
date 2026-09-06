@@ -1,5 +1,12 @@
 #include <stdint.h>
 #include "macro.h"
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  Everything here is
+ * reached from inline asm, the cart entry vectors or the BIOS by its
+ * plain symbol name, so it must keep C linkage and not be mangled. */
+extern "C" {
+#endif
+
 void ZD_ENTRY(void);
 void CHK_ENTRY(void);
 void TRAPV_ENTRY(void);
@@ -329,3 +336,7 @@ uint16_t ID2END __attribute__ ((section ("neogeo_id2"))) = 0x4e75;
 	{0x57 , 0x49 , 0x54 , 0x48 , 0x20 , 0x20 , 0x20 , 0x20 , 0x20 , 0x20 , 0x20 , 0x20},
 	{0x57 , 0x49 , 0x54 , 0x48 , 0x4f , 0x55 , 0x54 , 0x20 , 0x20 , 0x20 , 0x20 , 0x20}
 	};
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif

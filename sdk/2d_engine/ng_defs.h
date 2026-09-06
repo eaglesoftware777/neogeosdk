@@ -4,6 +4,10 @@
 #include <stdint.h>
 #include "macro.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NEOGEO_USER
 #define NEOGEO_USER
 #endif
@@ -84,6 +88,18 @@
 
 #define NG_SPRITE_MAX_STRIPS        32
 #define NG_SPRITE_MAX_HEIGHT_TILES  32
+/*
+ * Sprite shrink bytes.
+ *
+ * The hardware does not treat the two axes alike: X shows ((value >> 4) + 1)
+ * sixteenths of the sprite's width, while Y shows (value + 1) / 256 of its
+ * height.  Those agree only when the low nibble is F, so a scale byte written
+ * as 0xN0 - the obvious thing to write - leaves the sprite up to 12% shorter
+ * than it is wide.  NG_SCALE() builds a byte whose axes match: the argument is
+ * how many sixteenths of full size to draw, 1..16.
+ */
+#define NG_SCALE(sixteenths)  ((uint8_t)((((sixteenths) - 1) << 4) | 0x0F))
+
 #define NG_SPRITE_FULL_XSCALE       0xff
 #define NG_SPRITE_FULL_YSCALE       0xff
 
@@ -106,4 +122,8 @@ typedef struct {
 uint8_t NEOGEO_USER ng_rect_hit(NGRect a, NGRect b);
 uint16_t NEOGEO_USER ng_abs16(int16_t v);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

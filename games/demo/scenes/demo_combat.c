@@ -24,6 +24,13 @@
 #include "sdk/2d_engine/ng_joystick.h"
 #include "sdk/2d_engine/ng_defs.h"
 #include <stdint.h>
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  Everything here is
+ * reached from inline asm, the cart entry vectors or the BIOS by its
+ * plain symbol name, so it must keep C linkage and not be mangled. */
+extern "C" {
+#endif
+
 
 void NEOGEO_USER clearFix(void);
 void NEOGEO_USER soundSceneReset(void);
@@ -115,8 +122,8 @@ static void NEOGEO_USER combat_hitbox_visual(void)
         ng_char_set_tile_stride(defender, COMBAT_NPC_STRIDE);
         ng_char_set_body(defender, -20, -90, 40, 90);
         defender->sprite_offset_y = COMBAT_NPC_OFFSET_Y;
-        defender->scale_x = 0x80u;
-        defender->scale_y = 0x80u;
+        defender->scale_x = 0x8Fu;
+        defender->scale_y = 0x8Fu;
         defender->hp     = 10u;
         defender->max_hp = 10u;
     }
@@ -223,8 +230,8 @@ static void NEOGEO_USER combat_border_trigger(void)
         ng_char_set_tile_stride(walker, COMBAT_NPC_STRIDE);
         ng_char_set_body(walker, -20, -90, 40, 90);
         walker->sprite_offset_y = COMBAT_NPC_OFFSET_Y;
-        walker->scale_x = 0x80u;
-        walker->scale_y = 0x80u;
+        walker->scale_x = 0x8Fu;
+        walker->scale_y = 0x8Fu;
     }
 
     s_bc_triggered = 0u;
@@ -270,7 +277,7 @@ static void NEOGEO_USER combat_border_trigger(void)
         if (demo_frame()) break;
     }
 
-    ng_game_events_set_handler((void*)0u);
+    ng_game_events_set_handler(0);
     ng_chars_init();
 }
 
@@ -303,8 +310,8 @@ static void NEOGEO_USER combat_npc_basic(void)
                                    COMBAT_NPC_TILE(i * 2u), COMBAT_NPC_PAL(i * 2u));
                 ng_char_set_tile_stride(c, COMBAT_NPC_STRIDE);
                 c->sprite_offset_y = COMBAT_NPC_OFFSET_Y;
-                c->scale_x = 0x80u;
-                c->scale_y = 0x80u;
+                c->scale_x = 0x8Fu;
+                c->scale_y = 0x8Fu;
             }
             ng_npc_set_home(npcs[i], npc_x[i], 180);
             ng_npc_set_patrol_bounds(npcs[i],
@@ -399,8 +406,8 @@ static void NEOGEO_USER combat_npc_advanced(void)
                                COMBAT_NPC_TILE(0u), COMBAT_NPC_PAL(0u));
             ng_char_set_tile_stride(bc, COMBAT_NPC_STRIDE);
             bc->sprite_offset_y = COMBAT_NPC_OFFSET_Y;
-            bc->scale_x = 0xB0u;
-            bc->scale_y = 0xB0u;
+            bc->scale_x = 0xBFu;
+            bc->scale_y = 0xBFu;
             bc->hp     = 10u;
             bc->max_hp = 10u;
         }
@@ -510,8 +517,8 @@ static void NEOGEO_USER combat_special_moves(void)
         ng_char_set_tile_stride(defender, COMBAT_NPC_STRIDE);
         ng_char_set_body(defender, -20, -90, 40, 90);
         defender->sprite_offset_y = COMBAT_NPC_OFFSET_Y;
-        defender->scale_x = 0x80u;
-        defender->scale_y = 0x80u;
+        defender->scale_x = 0x8Fu;
+        defender->scale_y = 0x8Fu;
     }
 
     show_label  = 0u;
@@ -762,3 +769,7 @@ void NEOGEO_USER demo_combat_run(void)
     soundStopAll();
     demo_clear_scene();
 }
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif

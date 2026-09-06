@@ -34,7 +34,7 @@ def adapt_array(arr):
     return sqlite3.Binary(out.read())
 
 DATA_DIR  = os.path.abspath(os.environ.get("ARTBOX_DATA_DIR", os.path.dirname(os.path.abspath(__file__))))
-INFIX_DIR = os.path.join(DATA_DIR, 'infix')
+INFIX_DIR = os.environ.get("ARTBOX_INFIX_DIR", os.path.join(DATA_DIR, 'infix'))
 DB_PATH   = os.path.join(DATA_DIR, 'neorom.db')
 
 
@@ -82,9 +82,16 @@ def convert_fix_png(path):
     palette16[1:] = snap_neogeo(palette15).astype(np.uint16)
     return indexed, palette16
 
-# Collect all numeric PNG files, then any remaining named ones
-pngs = sorted(f for f in os.listdir(INFIX_DIR)
-              if f.endswith('.png') and os.path.isfile(os.path.join(INFIX_DIR, f)))
+# Collect all numeric PNG files, then any remaining named ones.
+# A game with no fix-layer art of its own has no infix directory at all.  That
+# is a valid setup - the FIX ROM still gets built from the font and the sfix
+# seed - so read a missing directory the same way as an empty one.
+if os.path.isdir(INFIX_DIR):
+    pngs = sorted(f for f in os.listdir(INFIX_DIR)
+                  if f.endswith('.png') and os.path.isfile(os.path.join(INFIX_DIR, f)))
+else:
+    print(f"No infix directory at {INFIX_DIR}; leaving the fix layer to the font.")
+    pngs = []
 
 rows = []
 for i, fname in enumerate(pngs):

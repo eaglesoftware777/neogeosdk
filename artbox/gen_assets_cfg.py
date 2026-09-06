@@ -12,10 +12,15 @@ match_category = backgrounds
 pattern = *.png
 mode = screen
 category = backgrounds
-fit = contain
+# Backdrops are drawn with the vertical shrink below, so the square canvas
+# they are stored in covers a wide rectangle on the screen.  fit = crop
+# fills that rectangle edge to edge and trims the overhang; contain would
+# keep the whole picture but leave transparent bands across the backdrop.
+fit = crop
 anchor = center
 target_width = 256
 target_height = 256
+display_shrink_y = 175
 dither = ordered
 contrast = 1.20
 saturation = 1.25
@@ -129,6 +134,35 @@ halo_strip = false
 halo_luma_threshold = 240
 note = tile-aligned collision prop
 
+[rule:cat_big_enemy]
+match_category = npcs
+pattern = 020_enemy.png
+mode = sprite
+category = npc
+# This one is a single large enemy drawn at 1238x800.  Imported onto the usual
+# 256-wide canvas it needs 16 hardware sprite strips, and a formation shooter
+# that puts 18 of them on screen has nowhere near that many sprites to spend.
+#
+# The formation spaces enemies 34 px apart across and 22 px down, so each one
+# is drawn about 32x21.  Importing at exactly that size lets it be drawn at
+# full scale: shrinking it in hardware from a larger canvas would resample it
+# a second time, dropping columns unevenly and smearing the detail.
+fit = pad
+anchor = bottom-center
+target_width = 32
+target_height = 32
+dither = none
+contrast = 1.00
+saturation = 1.05
+sharpen_radius = 0.0
+sharpen_percent = 0
+sharpen_threshold = 0
+kmeans_samples = 2048
+kmeans_iters = 16
+halo_strip = true
+halo_luma_threshold = 220
+note = single large opponent, imported small enough to fit the sprite budget
+
 [rule:cat_npcs]
 match_category = npcs
 pattern = *.png
@@ -216,10 +250,14 @@ match_category = screens
 pattern = *.png
 mode = screen
 category = screens
-fit = contain
+# Drawn with the same vertical shrink as a backdrop.  These hold a figure
+# against a plain field with a wide margin, so filling the screen and
+# trimming the overhang costs only margin.
+fit = crop
 anchor = center
 target_width = 256
 target_height = 256
+display_shrink_y = 175
 dither = ordered
 contrast = 1.20
 saturation = 1.30
@@ -235,10 +273,16 @@ match_category = titles
 pattern = *.png
 mode = screen
 category = titles
+# Title art runs to its own edges - a logo that fills the frame, a portrait
+# poster - so there is no margin to spend and cropping would cut into the
+# artwork.  Fitting the whole picture instead leaves the backdrop showing
+# down either side, which is what a correctly proportioned picture on a
+# wider screen is supposed to look like.
 fit = contain
 anchor = center
 target_width = 256
 target_height = 256
+display_shrink_y = 175
 dither = ordered
 contrast = 1.15
 saturation = 1.20

@@ -7,6 +7,13 @@
 #include "sdk/neogeo.h"
 #include <stdint.h>
 
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  The showScreenN
+ * bodies it calls live in main.c and keep C linkage, so these
+ * declarations must too. */
+extern "C" {
+#endif
+
 #define EC_SPRITE_BASE 0x0040u
 
 #pragma GCC push_options
@@ -65,3 +72,7 @@ void NEOGEO_USER showEyeCatcherMVS(void) {
 }
 
 #pragma GCC pop_options
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif

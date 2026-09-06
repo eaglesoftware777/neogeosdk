@@ -17,7 +17,7 @@
  * initialise the Neo Geo sound driver and trigger a sample when the
  * player presses a button.  See neogeo.h for soundInit() and playSFX().
  */
-void game_boot(void) {
+void NEOGEO_USER game_boot(void) {
     /* Initialise the FIX text layer */
     ng_fix_init();
     /* Clear the entire FIX layer so nothing from previous games remains */
@@ -33,25 +33,27 @@ void game_boot(void) {
     soundInit();
 }
 
-/* State used to detect button edges.  Placed at file scope so it
- * persists between frames. */
-static uint16_t prev_joy = 0;
-
 /* Called once per frame.  Poll the joystick and play a sound on an
- * edge-triggered Button A press.  Nothing else is drawn here since
- * the FIX layer was set up in game_boot(). */
-void game_frame(void) {
-    /* Read the current joystick state.  poll_joystick() returns a
-     * bitfield of JOY_* and BUTTON_* flags defined in macro.h. */
-    uint16_t joy = poll_joystick();
+ * edge-triggered Button A press.  Nothing else is drawn here since
+ * the FIX layer was set up in game_boot().
+ *
+ * There is deliberately no file-scope state here: the ROM link strips
+ * .text/.data/.bss from this translation unit and keeps only the
+ * neogeo_user section, so a `static` would be dropped and the link would
+ * fail with "symbol `.data' required but not present".  The BIOS already
+ * tracks which buttons changed this frame, so poll_joystick_edge() gives
+ * the edge without storing anything. */
+void NEOGEO_USER game_frame(void) {
+    /* poll_joystick() is the current state, poll_joystick_edge() the bits
+     * that changed since last frame; their intersection is "pressed now".
+     * Both return a bitfield of JOY_* and BUTTON_* flags from macro.h. */
+    uint16_t joy     = poll_joystick();
+    uint16_t pressed = (uint16_t)(joy & poll_joystick_edge());
 
-    /* Detect a rising edge on Button A (pressed this frame but not
-     * last frame).  If detected, trigger sample 0.  The first ADPCM-A
+    /* On a fresh Button A press, trigger sample 0.  The first ADPCM-A
      * sample for this game is encoded from 1.wav in sound/samples/in_wav_a.
      */
-    if (!(prev_joy & BUTTON_A) && (joy & BUTTON_A)) {
+    if (pressed & BUTTON_A) {
         playSFX(0);
     }
-    /* Save for next frame */
-    prev_joy = joy;
 }

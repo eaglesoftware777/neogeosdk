@@ -146,12 +146,47 @@ NGCharacter * NEOGEO_USER sky_spawn(uint8_t kind, uint8_t id,
 static uint8_t  s_bg_id     = 0u;
 static uint16_t s_bg_scroll = 0u;
 
+/*
+ * The two pages are kept here rather than rebuilt each frame.  Scrolling only
+ * changes their Y, and ng_sprite_group_flush() writes SCB2/3/4 alone unless
+ * the tiles are marked dirty - where ng_sprite_group_upload() rewrites the
+ * whole tilemap.  Two 16x16 pages is 512 tilemap words, far more than a vblank
+ * has room for, so uploading them every frame both judders the scroll and eats
+ * the budget the character sprites drawn afterwards need.
+ */
+static NGSpriteGroup s_bg_page[2];
+static uint8_t       s_bg_ready = 0u;
+
 void NEOGEO_USER sky_bg_select(uint8_t id)
 {
+    const NGSpriteAssetMeta *m;
+    uint8_t i;
+
     if (s_bg_id == id) return;
     s_bg_id = id;
     s_bg_scroll = 0u;
-    if (id) ng_load_screen_palette(id);
+    s_bg_ready = 0u;
+    if (!id) return;
+
+    ng_load_screen_palette(id);
+
+    m = sky_meta(id);
+    if (!m) return;
+
+    /* Build both pages once and push the tile data now, while the scene is
+     * still being set up and there is time for it. */
+    for (i = 0u; i < 2u; i++) {
+        NGSpriteGroup *g = &s_bg_page[i];
+        ng_sprite_group_init(g, (i == 0u) ? NG_SPR_BG0_FIRST : NG_SPR_BG1_FIRST,
+                             16u, 16u, m->tile_base, m->palette_bank);
+        ng_sprite_group_set_tile_stride(g, 16u);
+        ng_sprite_group_set_active_rows(g, 16u);
+        ng_sprite_group_set_scale(g, SKY_SCALE_FULL, SKY_SCALE_FULL);
+        ng_sprite_group_set_pos(g, SKY_FIELD_X,
+                                (i == 0u) ? -SKY_BG_PAGE_H : 0);
+        ng_sprite_group_upload(g);
+    }
+    s_bg_ready = 1u;
 }
 
 void NEOGEO_USER sky_bg_advance(uint8_t pixels)
@@ -159,31 +194,24 @@ void NEOGEO_USER sky_bg_advance(uint8_t pixels)
     s_bg_scroll = (uint16_t)((s_bg_scroll + pixels) % SKY_BG_PAGE_H);
 }
 
-static void NEOGEO_USER sky_bg_page(uint16_t slot, int16_t y)
-{
-    const NGSpriteAssetMeta *m = sky_meta(s_bg_id);
-    NGSpriteGroup g;
-
-    if (!m) return;
-    ng_sprite_group_init(&g, slot, 16u, 16u, m->tile_base, m->palette_bank);
-    ng_sprite_group_set_tile_stride(&g, 16u);
-    ng_sprite_group_set_active_rows(&g, 16u);
-    ng_sprite_group_set_pos(&g, SKY_FIELD_X, y);
-    ng_sprite_group_set_scale(&g, SKY_SCALE_FULL, SKY_SCALE_FULL);
-    ng_sprite_group_upload(&g);
-}
-
 void NEOGEO_USER sky_bg_draw(void)
 {
-    if (!s_bg_id) return;
-    sky_bg_page(NG_SPR_BG0_FIRST, (int16_t)((int16_t)s_bg_scroll - SKY_BG_PAGE_H));
-    sky_bg_page(NG_SPR_BG1_FIRST, (int16_t)s_bg_scroll);
+    if (!s_bg_id || !s_bg_ready) return;
+
+    /* Position only - the tiles are already in VRAM and are not marked
+     * dirty, so each flush writes three words per strip and nothing more. */
+    ng_sprite_group_set_pos(&s_bg_page[0], SKY_FIELD_X,
+                            (int16_t)((int16_t)s_bg_scroll - SKY_BG_PAGE_H));
+    ng_sprite_group_set_pos(&s_bg_page[1], SKY_FIELD_X, (int16_t)s_bg_scroll);
+    ng_sprite_group_flush(&s_bg_page[0]);
+    ng_sprite_group_flush(&s_bg_page[1]);
 }
 
 void NEOGEO_USER sky_bg_hide(void)
 {
     ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(NG_SPR_BG0_FIRST), 32u);
     s_bg_id = 0u;
+    s_bg_ready = 0u;
 }
 
 /* ------------------------------------------------------------------ */

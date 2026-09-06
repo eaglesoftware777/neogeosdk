@@ -6,6 +6,10 @@
 #include "sdk/2d_engine/ng_sprite_pool.h"
 #include "demo.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NEOGEO_USER
 #define NEOGEO_USER
 #endif
@@ -150,4 +154,8 @@ void NEOGEO_USER showScreen107(int x0, int y0, int xr, int yr, int min_crt_sz, u
 void NEOGEO_USER showScreen108(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 void NEOGEO_USER showScreen109(int x0, int y0, int xr, int yr, int min_crt_sz, uint16_t backdrop, uint16_t sprite_base);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

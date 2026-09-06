@@ -53,9 +53,9 @@ typedef struct {
  */
 #define SKY_PILOTS 3u
 static const SkyPilot k_pilot[SKY_PILOTS] = {
-    { SKY_P1_PLANE, SKY_P1_PILOT, "ROOK",  "BLUE LANCE",  8u, 3u, 0u },
-    { SKY_P2_PLANE, SKY_P2_PILOT, "KIRA",  "GREEN WING", 11u, 3u, 1u },
-    { SKY_P3_PLANE, SKY_P3_PILOT, "BLAZE", "RED STRIKER", 6u, 4u, 0u }
+    { SKY_P1_PLANE, SKY_P1_PILOT, "ROOK",  "BLUE LANCE",  8u, 5u, 0u },
+    { SKY_P2_PLANE, SKY_P2_PILOT, "KIRA",  "GREEN WING", 11u, 5u, 1u },
+    { SKY_P3_PLANE, SKY_P3_PILOT, "BLAZE", "RED STRIKER", 6u, 7u, 0u }
 };
 
 /* ------------------------------------------------------------------ */

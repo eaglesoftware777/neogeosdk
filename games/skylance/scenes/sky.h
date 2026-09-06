@@ -73,15 +73,25 @@
 /*  Hardware scale presets (SCB2 shrink, 0xFF = full size)              */
 /* ------------------------------------------------------------------ */
 /*
- * Everything in the art set was authored at roughly twice the size a
- * 320x224 playfield wants, so the whole game runs shrunk.  These are the
- * only four values used; keeping them named makes a global re-tune one
- * edit rather than a hunt through every draw call.
+ * The art set was authored far larger than a 320x224 playfield wants, so the
+ * whole game runs shrunk.  These are the only four values used; keeping them
+ * named makes a global re-tune one edit rather than a hunt through every
+ * draw call.
+ *
+ * The hardware shrinks the two axes differently: X shows ((value >> 4) + 1)/16
+ * of the width, Y shows (value + 1)/256 of the height.  Those agree only when
+ * the low nibble is F, so every value here ends in F - anything else squashes
+ * the sprite horizontally and desyncs sky_scaled(), which uses value/256 for
+ * both axes when it positions the artwork.
+ *
+ * Sizes these produce on a 320x224 screen:
+ *   player plane 112x160 -> 30x43     enemy fighter 128x144 -> 26x29
+ *   drone         56x56  -> 15x15     boss gold core 240x240 -> 96x97
  */
-#define SKY_SCALE_PLAYER   0x7Fu   /* 1/2  */
-#define SKY_SCALE_ENEMY    0x6Fu   /* 7/16 */
-#define SKY_SCALE_SMALL    0x5Fu   /* 3/8  */
-#define SKY_SCALE_BOSS     0x9Fu   /* 5/8  */
+#define SKY_SCALE_PLAYER   0x4Fu   /* 5/16 - player ship, 22% of screen height */
+#define SKY_SCALE_ENEMY    0x3Fu   /* 4/16 - standard opponents                 */
+#define SKY_SCALE_SMALL    0x4Fu   /* 5/16 - already-small art (drone, props)   */
+#define SKY_SCALE_BOSS     0x6Fu   /* 7/16 - bosses, 47% of screen height       */
 #define SKY_SCALE_FULL     0xFFu
 
 /* ------------------------------------------------------------------ */

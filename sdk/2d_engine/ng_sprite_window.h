@@ -3,6 +3,10 @@
 
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     uint8_t owner;
     uint16_t first_slot;
@@ -34,4 +38,8 @@ void NEOGEO_USER ng_sprite_window_clear(NGSpriteWindow *window);
 void NEOGEO_USER ng_sprite_window_clear_tail(NGSpriteWindow *window);
 void NEOGEO_USER ng_sprite_window_hide(NGSpriteWindow *window);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

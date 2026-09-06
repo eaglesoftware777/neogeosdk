@@ -1,5 +1,9 @@
 #ifndef MACRO_H
 #define MACRO_H
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define LN10 2.3025850929940456840179914546844
 #define lsize sizeof(uint32_t)
 #define lmask (lsize - 1)
@@ -422,4 +426,8 @@
 #define NEOGEO_USER __attribute__ ((section ("neogeo_user")))
 #define NEOGEO_INTERRUPT __attribute__ ((interrupt))
 #define CALLNEOGEOF(sym1)  ((void(*)(void))sym1)()
+
+#ifdef __cplusplus
+}
+#endif
 #endif

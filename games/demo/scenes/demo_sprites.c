@@ -18,6 +18,13 @@
 #include "sdk/2d_engine/ng_physics.h"
 #include "sdk/2d_engine/ng_fixed.h"
 #include <stdint.h>
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  Everything here is
+ * reached from inline asm, the cart entry vectors or the BIOS by its
+ * plain symbol name, so it must keep C linkage and not be mangled. */
+extern "C" {
+#endif
+
 
 void NEOGEO_USER waitVbl(void);
 void NEOGEO_USER clearFix(void);
@@ -258,11 +265,13 @@ static void NEOGEO_USER spr_raw_api(void)
     ng_sprite_group_set_tile_stride(&g, 16u);
     ng_sprite_group_set_active_rows(&g, SPR_ROWS);
     ng_sprite_group_set_scale(&g, 0xFFu, 0xFFu);
+    ng_sprite_group_set_pos(&g, CENTER_X, CENTER_Y);
+    /* Upload once.  The sprite never moves, and ng_sprite_group_upload()
+     * rewrites the whole tilemap - doing that every frame for a static image
+     * burns the vblank budget that the rest of the frame needs. */
+    ng_sprite_group_upload(&g);
 
     for (t = 0u; t < 180u; t++) {
-        ng_sprite_group_set_pos(&g, CENTER_X, CENTER_Y);
-        ng_sprite_group_upload(&g);
-
         if (demo_frame()) break;
     }
 
@@ -520,8 +529,8 @@ static void NEOGEO_USER spr_physics(void)
         /*
          * Shrink so the full eagle fits and landing is readable.
          */
-        eagle->scale_x = 0x80u;
-        eagle->scale_y = 0x80u;
+        eagle->scale_x = 0x8Fu;
+        eagle->scale_y = 0x8Fu;
 
         ng_physics_attach(eagle,
             (uint16_t)(NG_PHYSICS_GRAVITY | NG_PHYSICS_SOLIDS));
@@ -719,3 +728,7 @@ void NEOGEO_USER ng_clear_screen_full(void)
     clearFix();
     setBACKDROP(DEMO_BG);
 }
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif

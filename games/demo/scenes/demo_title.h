@@ -3,6 +3,10 @@
 
 #include "sdk/macro.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NEOGEO_USER
 #define NEOGEO_USER
 #endif
@@ -19,4 +23,8 @@ void NEOGEO_USER demo_title_game_over(void);
 /* Attract reel: title card + teaser screenshots + coin detect */
 void NEOGEO_USER demo_title_attract_reel(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* DEMO_TITLE_H */

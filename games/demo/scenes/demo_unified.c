@@ -41,6 +41,13 @@
 #include "infix_palettes.h"
 #include <stddef.h>
 #include <stdint.h>
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  Everything here is
+ * reached from inline asm, the cart entry vectors or the BIOS by its
+ * plain symbol name, so it must keep C linkage and not be mangled. */
+extern "C" {
+#endif
+
 
 void NEOGEO_USER waitVbl(void);
 void NEOGEO_USER clearFix(void);
@@ -280,16 +287,26 @@ const uint16_t * NEOGEO_USER ng_get_screen_palette(uint16_t screen_id);
 #define U_NPC_OLD_FIRST          162u
 #define U_NPC_OLD_COUNT           12u
 
-/* Object-specific scale presets.  Playable warrior scenes use the exact
- * 1/2 scale below; only chapters that explicitly demonstrate depth or
- * hardware shrinking vary character scale at runtime. */
-#define U_SCALE_30         0x4Du
-#define U_SCALE_45         0x73u
-#define U_SCALE_55         0x8Cu
-#define U_SCALE_57         0x91u
-#define U_SCALE_60         0x99u
-#define U_SCALE_70         0xB2u
-#define U_SCALE_FULL       0xFFu
+/*
+ * Object-specific scale presets.  Only chapters that explicitly demonstrate
+ * depth or hardware shrinking vary character scale at runtime.
+ *
+ * These were originally written as a percentage of full size, which sets the
+ * height correctly but not the width: the hardware takes X from the top nibble
+ * alone, so it quantises to sixteenths while Y keeps the full byte.  A value
+ * like 0x73 therefore drew 50% wide and 45% tall - a 9% stretch on every
+ * character wearing it.  NG_SCALE() picks the nearest sixteenth and matches
+ * both axes to it, so the names below are now the true drawn size.
+ *
+ * 55% and 57% land on the same sixteenth; the hardware cannot separate them.
+ */
+#define U_SCALE_30         NG_SCALE(5)    /* 31.25% */
+#define U_SCALE_45         NG_SCALE(7)    /* 43.75% */
+#define U_SCALE_55         NG_SCALE(9)    /* 56.25% */
+#define U_SCALE_57         NG_SCALE(9)    /* 56.25% */
+#define U_SCALE_60         NG_SCALE(10)   /* 62.50% */
+#define U_SCALE_70         NG_SCALE(11)   /* 68.75% */
+#define U_SCALE_FULL       NG_SCALE(16)   /* 100%   */
 
 /*
  * Clean-ratio scales.
@@ -4099,10 +4116,13 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
          * Slot map.  The hard rule inherited from the chapter that used
          * to live here: with this chapter's sprite load, nothing at or
          * above roughly slot 192 reaches the screen, so everything below
-         * stays well under it.  Strip counts are from the regenerated
-         * asset table - plane and both jets 8, boss 12, drone 4, bolt
-         * and orb 2 - and each pool advances by its own asset's width so
-         * consecutive entries cannot overlap each other's VRAM.
+         * stays well under it.
+         *
+         * The strides below were sized for a larger import of the sky art and
+         * are now more generous than it needs - plane 2 strips, jets and drone
+         * 2, boss 8, bolt and orb 2.  Over-reserving is harmless (the pools
+         * still cannot overlap each other's VRAM) and leaves room if the art
+         * is ever re-imported larger, so they are left as they are.
          */
         SKY_SLOT_PLAYER  = 34,   /* 8 strips        -> 34..41   */
         SKY_SLOT_PBULLET = 44,   /* 4 * 2 strips    -> 44..51   */
@@ -4134,13 +4154,19 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     static const uint8_t  sq_hp[3]    = { 2u, 3u, 1u };
     static const uint16_t sq_score[3] = { 100u, 150u, 50u };
     /*
-     * Drawn at the same fractions games/skylance uses, not at this
-     * reel's character presets: those were globally shrunk to 60% so a
-     * warrior reads at the right size in a walk-cycle chapter, and an
-     * aircraft at 30% of an already-small page is a speck.
+     * Sizes are set against the art as it is actually imported, not against
+     * this reel's character presets.  The sky page is small: the plane and the
+     * bolts are 16x16, the jets and the drone 32x32, the boss 128x128.  Drawn
+     * at the half-scale this chapter used to ask for, the player came out 8x7
+     * pixels - too small to find on the playfield, let alone aim.
+     *
+     * The play area is 256x102, so the target sizes are a 16x16 player, jets a
+     * shade smaller so the player reads as the focus, and a boss that fills
+     * about half the band without covering it.
      */
-    static const uint8_t  sq_scale[3] = { 0x80u, 0x80u, 0xA0u };
-    enum { SKY_SCALE_SHIP = 0x70u, SKY_SCALE_BOSS = 0x90u };
+    static const uint8_t  sq_scale[3] = { NG_SCALE(7), NG_SCALE(7), NG_SCALE(6) };
+    enum { SKY_SCALE_SHIP = NG_SCALE(16),   /* 16x16 - drawn 1:1 */
+           SKY_SCALE_BOSS = NG_SCALE(6) };  /* 128x128 -> 48x48  */
 
     int16_t  en_x[SKY_ENEMY_MAX], en_y[SKY_ENEMY_MAX];
     uint8_t  en_alive[SKY_ENEMY_MAX], en_shown[SKY_ENEMY_MAX];
@@ -4326,25 +4352,45 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
             }
             en_phase[i]++;
             /* Triangle-wave weave - a sine table would cost more than
-             * the effect is worth at this amplitude. */
+             * the effect is worth at this amplitude - plus a drift toward the
+             * player's column, so a pass threatens where the player actually
+             * is rather than the lane the squadron happened to enter in.  This
+             * is the behaviour the full game gives its diving enemies. */
             {
                 uint8_t ph = (uint8_t)(en_phase[i] & 63u);
                 int16_t sway = (int16_t)((ph < 32u) ? ((int16_t)ph - 16) : (47 - (int16_t)ph));
-                en_x[i] = (int16_t)(en_x[i] + (sway >> 3));
+                int16_t chase = (ship_x > en_x[i]) ? 1 : ((ship_x < en_x[i]) ? -1 : 0);
+                en_x[i] = (int16_t)(en_x[i] + (sway >> 3) + chase);
             }
             en_y[i] = (int16_t)(en_y[i] + ((en_type[i] == 2u) ? 3 : 2));
             if (en_x[i] < SKY_LEFT)  en_x[i] = SKY_LEFT;
             if (en_x[i] > SKY_RIGHT) en_x[i] = SKY_RIGHT;
 
-            if (en_type[i] != 2u && (rng % 140u) == 0u) {
+            if (en_type[i] != 2u && (rng % 90u) == 0u) {
                 uint8_t k;
                 for (k = 0u; k < SKY_EBULLET_MAX; k++) {
                     if (!eb_active[k]) {
+                        /*
+                         * Aim at the player rather than firing straight down.
+                         * A shot that ignores where the player is only ever
+                         * hits by accident, which reads as scenery instead of
+                         * as opposition.  Manhattan distance is close enough
+                         * for a normaliser at this range and costs no divide
+                         * beyond the two here.
+                         */
+                        int16_t dx  = (int16_t)(ship_x - en_x[i]);
+                        int16_t dy  = (int16_t)(ship_y - en_y[i]);
+                        int16_t mag = (int16_t)(u_abs16(dx) + u_abs16(dy));
+
+                        if (mag < 1) mag = 1;
                         eb_active[k] = 1u;
                         eb_x[k] = en_x[i];
                         eb_y[k] = (int16_t)(en_y[i] + 10);
-                        eb_vx[k] = 0;
-                        eb_vy[k] = 3;
+                        eb_vx[k] = (int16_t)(((int32_t)dx * 3) / mag);
+                        eb_vy[k] = (int16_t)(((int32_t)dy * 3) / mag);
+                        /* Always carry some downward travel so a shot fired
+                         * from level with the player still clears its owner. */
+                        if (eb_vy[k] < 1) eb_vy[k] = 1;
                         break;
                     }
                 }
@@ -4998,3 +5044,7 @@ void NEOGEO_USER demo_unified_run(void)
                                   * into the credits below              */
     run_chapter(chap_credits);
 }
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif

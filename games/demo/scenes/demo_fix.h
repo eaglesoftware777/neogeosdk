@@ -3,6 +3,10 @@
 
 #include "sdk/macro.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NEOGEO_USER
 #define NEOGEO_USER
 #endif
@@ -13,4 +17,8 @@ void NEOGEO_USER demo_fix_run(void);
 /* Legacy compat */
 void NEOGEO_USER demo_fix_showcase(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* DEMO_FIX_H */

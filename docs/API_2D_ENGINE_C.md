@@ -378,6 +378,49 @@ void ng_sprite_park_off(uint16_t spr);
 void ng_sprite_park_off_range(uint16_t first, uint16_t count);
 ```
 
+### Scale bytes: the two axes are not the same width
+
+`ng_sprite_group_set_scale()` and `NGCharacter.scale_x` / `.scale_y` take a byte
+per axis, but the hardware reads them differently:
+
+| axis | field | drawn fraction |
+|---|---|---|
+| X | top nibble only | `((value >> 4) + 1) / 16` |
+| Y | whole byte | `(value + 1) / 256` |
+
+X has sixteen steps, Y has 256. The two only land on the same fraction when the
+low nibble is `F`. Passing the same byte to both axes — the obvious thing to do —
+therefore does **not** give a square scale unless you picked the value carefully:
+
+```c
+ng_sprite_group_set_scale(&g, 0x80u, 0x80u);   /* 56.25% wide, 50.4% tall */
+ng_sprite_group_set_scale(&g, 0x8Fu, 0x8Fu);   /* 56.25% both — correct   */
+```
+
+A byte written as `0xN0` leaves the sprite up to 12% shorter than it is wide.
+Use `NG_SCALE(n)` from `ng_defs.h`, which takes the size in sixteenths and
+builds a byte whose axes match:
+
+```c
+ng_sprite_group_set_scale(&g, NG_SCALE(8), NG_SCALE(8));   /* half size  */
+c->scale_x = c->scale_y = NG_SCALE(5);                     /* 5/16       */
+```
+
+Code that positions artwork by scaling an offset (`offset * scale / 256`) is
+assuming the Y rule, so it is only correct for `0xNF` values as well.
+
+### Uploading versus flushing
+
+`ng_sprite_group_upload()` rewrites everything, including the tilemap — one
+write per tile per strip. `ng_sprite_group_flush()` writes only what the dirty
+flags say changed, so a group that merely moved costs three words per strip.
+
+Upload once when a group is built; flush every frame after that. Calling
+`upload()` per frame for a scrolling backdrop is enough VRAM traffic to overrun
+vblank, and the sprite writes that follow it then land during active display,
+which shows up as tearing and flicker on everything drawn afterwards — not just
+on the background.
+
 | Constant | Value |
 |---|---|
 | `NG_SGF_DIRTY_POS` | `0x01` |

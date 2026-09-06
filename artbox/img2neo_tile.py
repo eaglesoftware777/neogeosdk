@@ -142,6 +142,121 @@ SPRITE_ORDERED_MIX = False
 
 
 # ---------------------------------------------------------------------------
+# Screen display geometry
+# ---------------------------------------------------------------------------
+# A screen asset is stored as a square 256x256 canvas, and that is not the
+# shape anybody sees it in.  The strips are placed with a vertical shrink, so
+# the 256 stored rows land on fewer scanlines than they occupy in the file,
+# and the console's 320x224 output is itself shown on a 4:3 screen, so one
+# pixel is not square either.  A 256x256 canvas drawn with the usual
+# background shrink covers 256x176 pixels, which on a 4:3 screen is about
+# 1.36:1 - so fitting artwork to the square canvas preserves its proportions
+# only on a surface nobody looks at, and guarantees they are wrong on the one
+# they do.
+#
+# These convert between the stored canvas and the screen so a fit can target
+# the shape the player actually sees.
+
+NG_ACTIVE_W = 320
+NG_ACTIVE_H = 224
+# Width of one pixel relative to its height, once the active area is shown
+# on a 4:3 screen.
+NG_PIXEL_ASPECT = (4.0 / 3.0) / (float(NG_ACTIVE_W) / float(NG_ACTIVE_H))
+# SCB2 vertical shrink meaning "keep every line".
+NG_SHRINK_Y_NONE = 255
+
+
+def ng_vertical_scale(shrink_y: int = NG_SHRINK_Y_NONE) -> float:
+    """Fraction of its stored height a strip keeps for an SCB2 shrink value."""
+    return (float(int(shrink_y)) + 1.0) / 256.0
+
+
+def screen_display_aspect(canvas_w: int, canvas_h: int,
+                          shrink_y: int = NG_SHRINK_Y_NONE) -> float:
+    """Width:height that a stored canvas actually occupies on the screen."""
+    return ((float(canvas_w) * NG_PIXEL_ASPECT) /
+            (float(canvas_h) * ng_vertical_scale(shrink_y)))
+
+
+def fit_screen_for_display(img: Image.Image,
+                           canvas_w: int,
+                           canvas_h: int,
+                           shrink_y: int = NG_SHRINK_Y_NONE,
+                           fit: str = "crop",
+                           anchor: str = "center"
+                           ) -> tuple[Image.Image, int, int, int, int]:
+    """
+    Place `img` on a canvas_w x canvas_h canvas so it is undistorted ON THE
+    SCREEN, pre-compensating for the vertical shrink and the pixel aspect.
+
+    fit="crop"    fills the canvas edge to edge and trims whatever does not
+                  fit, which is what a backdrop wants - a letterboxed
+                  background is transparent bands over the backdrop colour.
+    fit="contain" keeps the whole picture and pads instead.
+
+    Returns (canvas RGBA, left, top, content_w, content_h).
+    """
+    img = img.convert("RGBA")
+    src_w, src_h = img.size
+    if src_w <= 0 or src_h <= 0:
+        return (Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0)),
+                0, 0, 0, 0)
+
+    src_ar = float(src_w) / float(src_h)
+    vscale = ng_vertical_scale(shrink_y)
+
+    if fit == "crop":
+        # Crop the source to the shape the whole canvas will be shown in,
+        # then let it fill the canvas.
+        want = screen_display_aspect(canvas_w, canvas_h, shrink_y)
+        if src_ar > want:
+            keep_w = int(round(src_h * want))
+            keep_h = src_h
+        else:
+            keep_w = src_w
+            keep_h = int(round(src_w / want))
+        keep_w = max(1, min(src_w, keep_w))
+        keep_h = max(1, min(src_h, keep_h))
+        left = (src_w - keep_w) // 2
+        top = (src_h - keep_h) // 2
+        if anchor.startswith("top"):
+            top = 0
+        elif anchor.startswith("bottom"):
+            top = src_h - keep_h
+        img = img.crop((left, top, left + keep_w, top + keep_h))
+        img = img.resize((canvas_w, canvas_h), Image.LANCZOS)
+        return img, 0, 0, canvas_w, canvas_h
+
+    # "contain": the content keeps its own proportions, so its width and
+    # height in canvas space have to be pre-distorted by the same shrink the
+    # hardware is about to apply.
+    want_ratio = src_ar * vscale / NG_PIXEL_ASPECT
+    if want_ratio >= (float(canvas_w) / float(canvas_h)):
+        content_w = canvas_w
+        content_h = int(round(canvas_w / want_ratio))
+    else:
+        content_h = canvas_h
+        content_w = int(round(canvas_h * want_ratio))
+    content_w = max(1, min(canvas_w, content_w))
+    content_h = max(1, min(canvas_h, content_h))
+
+    scaled = img.resize((content_w, content_h), Image.LANCZOS)
+    canvas = Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0))
+    cl = (canvas_w - content_w) // 2
+    ct = (canvas_h - content_h) // 2
+    if anchor.startswith("top"):
+        ct = 0
+    elif anchor.startswith("bottom"):
+        ct = canvas_h - content_h
+    if anchor.endswith("left"):
+        cl = 0
+    elif anchor.endswith("right"):
+        cl = canvas_w - content_w
+    canvas.alpha_composite(scaled, (cl, ct))
+    return canvas, cl, ct, content_w, content_h
+
+
+# ---------------------------------------------------------------------------
 # The hardware colour lattice
 # ---------------------------------------------------------------------------
 # A palette word is  D | R0 G0 B0 | R4..R1 | G4..G1 | B4..B1.  Each channel
@@ -1994,13 +2109,14 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
 
 _VIVID_CACHE_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), ".cache", "vivid")
-_VIVID_CACHE_VERSION = "v13-six-bit-lattice-single-pass-screens"
+_VIVID_CACHE_VERSION = "v14-display-aspect-screens"
 
 
 def _vivid_cache_key(image_path: str, target_w: int, target_h: int,
                       fit: str, anchor: str, n_colors: int,
                       asset_type: str = "background",
-                      master_palette: np.ndarray | None = None) -> str:
+                      master_palette: np.ndarray | None = None,
+                      shrink_y: int | None = None) -> str:
     """
     SHA256 of source bytes + params + pipeline version tag.
 
@@ -2022,7 +2138,7 @@ def _vivid_cache_key(image_path: str, target_w: int, target_h: int,
     except OSError:
         return ""
     h.update(f"|{target_w}|{target_h}|{fit}|{anchor}|{n_colors}|"
-              f"{asset_type}|{_VIVID_CACHE_VERSION}".encode())
+              f"{asset_type}|{shrink_y}|{_VIVID_CACHE_VERSION}".encode())
     if master_palette is not None:
         h.update(b"|master:")
         h.update(np.ascontiguousarray(
@@ -2152,6 +2268,7 @@ def convert_screen_via_vivid_pipeline(
         fit: str = "contain",
         anchor: str = "center",
         n_colors: int = COLORS_PER_TILE,
+        display_shrink_y: int | None = None,
         **kwargs,
         ) -> tuple[np.ndarray, np.ndarray, dict]:
     """
@@ -2176,7 +2293,8 @@ def convert_screen_via_vivid_pipeline(
     # Cache hot-path: SHA256 of source bytes + params + version tag.
     cache_key = _vivid_cache_key(str(image_path), target_w, target_h,
                                    fit, anchor, n_colors,
-                                   asset_type="background")
+                                   asset_type="background",
+                                   shrink_y=display_shrink_y)
     cached = _vivid_cache_load(cache_key)
     if cached is not None:
         return cached
@@ -2201,8 +2319,22 @@ def convert_screen_via_vivid_pipeline(
     tile_rows = target_h // 16
     n_tiles = tile_cols * tile_rows
 
-    src = Image.open(image_path).convert("RGBA")
-    src = src.resize((target_w, target_h), Image.Resampling.LANCZOS)
+    # When the caller knows how the game draws this screen, fit to the shape
+    # it will be seen in rather than to the square canvas it is stored in.
+    # Without it the source is simply stretched to 256x256 and then squashed
+    # again by the hardware on the way to the screen, and a backdrop drawn
+    # wider than it is tall arrives noticeably too tall and too narrow.
+    src = Image.open(image_path)
+    if display_shrink_y is None:
+        src = src.convert("RGBA").resize((target_w, target_h),
+                                         Image.Resampling.LANCZOS)
+        content_left, content_top = 0, 0
+        content_w, content_h = target_w, target_h
+    else:
+        src, content_left, content_top, content_w, content_h = (
+            fit_screen_for_display(src, target_w, target_h,
+                                   shrink_y=display_shrink_y,
+                                   fit=fit, anchor=anchor))
     rgba = np.array(src, dtype=np.uint8)
 
     # Cluster on the toned pixels, because the toned canvas is what the
@@ -2242,10 +2374,10 @@ def convert_screen_via_vivid_pipeline(
         "source_height":  int(target_h),
         "canvas_width":   int(target_w),
         "canvas_height":  int(target_h),
-        "content_left":   0,
-        "content_top":    0,
-        "content_width":  int(target_w),
-        "content_height": int(target_h),
+        "content_left":   int(content_left),
+        "content_top":    int(content_top),
+        "content_width":  int(content_w),
+        "content_height": int(content_h),
         "n_colors":       int(n_colors),
         "tile_cols":      int(tile_cols),
         "tile_rows":      int(tile_rows),

@@ -3,6 +3,10 @@
 
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     uint16_t id;
     uint16_t a;
@@ -19,4 +23,8 @@ uint8_t NEOGEO_USER ng_game_events_read(NGGameEvent *out);
 void NEOGEO_USER ng_game_events_update(void);
 uint8_t NEOGEO_USER ng_game_events_count(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

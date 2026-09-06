@@ -12,6 +12,13 @@ https://github.com/eaglesoftware777/neogeosdk
 #include "games/demo/scenes/demo_sound.h"
 #include "games/demo/scenes/demo_fix.h"
 #include "infix_palettes.h"
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  Everything here is
+ * reached from inline asm, the cart entry vectors or the BIOS by its
+ * plain symbol name, so it must keep C linkage and not be mangled. */
+extern "C" {
+#endif
+
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 
@@ -475,3 +482,7 @@ void NEOGEO_USER START_GAME(void) {
 
 
 #pragma GCC pop_options
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif

@@ -23,6 +23,13 @@
 #include "sdk/2d_engine/ng_debug.h"
 #include "sdk/2d_engine/ng_render_queue.h"
 #include <stdint.h>
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  Everything here is
+ * reached from inline asm, the cart entry vectors or the BIOS by its
+ * plain symbol name, so it must keep C linkage and not be mangled. */
+extern "C" {
+#endif
+
 
 void NEOGEO_USER clearFix(void);
 void NEOGEO_USER setBACKDROP(uint16_t backdrop_color);
@@ -153,8 +160,8 @@ static void NEOGEO_USER stress_full_scene(void)
                            STRESS_NPC_TILE(0u), STRESS_NPC_PAL(0u));
         ng_char_set_tile_stride(player, STRESS_NPC_STRIDE);
         player->sprite_offset_y = STRESS_NPC_OFFSET_Y;
-        player->scale_x = 0xA0u;
-        player->scale_y = 0xA0u;
+        player->scale_x = 0xAFu;
+        player->scale_y = 0xAFu;
     }
 
     for (i = 0u; i < 4u; i++) {
@@ -166,8 +173,8 @@ static void NEOGEO_USER stress_full_scene(void)
                                    STRESS_NPC_TILE((uint8_t)(i * 3u)), STRESS_NPC_PAL((uint8_t)(i * 3u)));
                 ng_char_set_tile_stride(nc, STRESS_NPC_STRIDE);
                 nc->sprite_offset_y = STRESS_NPC_OFFSET_Y;
-                nc->scale_x = 0x70u;
-                nc->scale_y = 0x70u;
+                nc->scale_x = 0x7Fu;
+                nc->scale_y = 0x7Fu;
             }
             ng_npc_set_home(npcs[i], npc_sx[i], 160);
             ng_npc_set_patrol_bounds(npcs[i],
@@ -283,8 +290,8 @@ static void NEOGEO_USER stress_boss(void)
                            STRESS_NPC_TILE(0u), STRESS_NPC_PAL(0u));
         ng_char_set_tile_stride(boss, STRESS_NPC_STRIDE);
         boss->sprite_offset_y = STRESS_NPC_OFFSET_Y;
-        boss->scale_x = 0xD0u;
-        boss->scale_y = 0xD0u;
+        boss->scale_x = 0xDFu;
+        boss->scale_y = 0xDFu;
         boss->hp     = 10u;
         boss->max_hp = 10u;
     }
@@ -330,7 +337,7 @@ static void NEOGEO_USER stress_boss(void)
         ng_camera_update(&cam, 0, 0, 0);
 
         if (boss) {
-            if (boss->scale_x < 0xD0u) boss->scale_x = 0xD0u;
+            if (boss->scale_x < 0xD0u) boss->scale_x = 0xDFu;
             ng_chars_draw();
         }
 
@@ -409,8 +416,8 @@ void NEOGEO_USER demo_stress_run(void)
                                STRESS_NPC_TILE(fn), STRESS_NPC_PAL(fn));
             ng_char_set_tile_stride(chars[i], STRESS_NPC_STRIDE);
             chars[i]->sprite_offset_y = STRESS_NPC_OFFSET_Y;
-            chars[i]->scale_x = 0x70u;
-            chars[i]->scale_y = 0x70u;
+            chars[i]->scale_x = 0x7Fu;
+            chars[i]->scale_y = 0x7Fu;
         }
     }
 
@@ -467,3 +474,7 @@ void NEOGEO_USER demo_stress_run(void)
     soundStopAll();
     demo_clear_scene();
 }
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif

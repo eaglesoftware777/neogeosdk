@@ -1,6 +1,10 @@
 #ifndef SOUND_IDS_H
 #define SOUND_IDS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Sound track IDs — MUST match the leading integer in each MML / SSG
  * filename under games/<game>/sound/.  All filenames follow a fully
@@ -141,4 +145,8 @@ enum {
 /* ---------------------------------------------------------------- */
 #include "sound_voice_ids.h"
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

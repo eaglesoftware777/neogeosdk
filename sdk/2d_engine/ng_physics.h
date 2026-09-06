@@ -3,6 +3,10 @@
 
 #include "ng_chars.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     int16_t x;
     int16_t y;
@@ -41,4 +45,8 @@ void NEOGEO_USER ng_physics_update_pre(void);
 void NEOGEO_USER ng_physics_resolve(void);
 uint8_t NEOGEO_USER ng_physics_is_grounded(NGCharacter *c);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

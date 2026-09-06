@@ -14,6 +14,13 @@
 #include "sdk/2d_engine/ng_progress.h"
 #include "sdk/2d_engine/ng_status.h"
 #include <stdint.h>
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  Everything here is
+ * reached from inline asm, the cart entry vectors or the BIOS by its
+ * plain symbol name, so it must keep C linkage and not be mangled. */
+extern "C" {
+#endif
+
 
 void NEOGEO_USER waitVbl(void);
 void NEOGEO_USER ngfix_write_tile(uint8_t x, uint8_t y, uint16_t tile, uint8_t pal);
@@ -304,3 +311,7 @@ void NEOGEO_USER demo_fix_showcase(void)
 {
     demo_fix_run();
 }
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif

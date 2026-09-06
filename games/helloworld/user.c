@@ -14,6 +14,11 @@ https://github.com/eaglesoftware777/neogeosdk
 
 #define NGO_START_FLAG  0xD00100
 
+/* Supplied by games/helloworld/main.c.  NEOGEO_USER puts them in the section
+ * the ROM link keeps; in plain .text they would be stripped before linking. */
+void NEOGEO_USER game_boot(void);
+void NEOGEO_USER game_frame(void);
+
 NEOGEO_INTERRUPT void NEOGEO_USER ZD_ENTRY(void) {}
 NEOGEO_INTERRUPT void NEOGEO_USER CHK_ENTRY(void) {}
 NEOGEO_INTERRUPT void NEOGEO_USER TRAPV_ENTRY(void) {}
@@ -205,22 +210,77 @@ void NEOGEO_USER GAME_DISPATCH(void) {
 
 void NEOGEO_USER DEMO_GAME(void)    { GAME_ATTRACT(); }
 
+/*
+ * Attract loop.
+ *
+ * The BIOS only calls PLAYER_START once it has decided the player may begin,
+ * and it cannot decide that while the game sits in a loop of its own and never
+ * returns.  So the start button is polled here too: on MVS it only counts once
+ * a credit is in, and PLAYER_START is called so the credit is actually spent;
+ * on AES there is no coin slot, so start is accepted straight away.
+ */
 void NEOGEO_USER GAME_ATTRACT(void) {
     int i;
     clearFix(); clearSprs(); setBACKDROP(BLACK);
     fixtext_out(11, 13, "HELLO WORLD", 0);
-    fixtext_out(8,  15, "INSERT COIN", 0);
+#ifdef NG_AES
+    fixtext_out(11, 15, "PUSH START", 0);
+#endif
     for (i = 0; ; i++) {
+        uint16_t joy;
+
         if (NEO_REGISTER8(NGO_START_FLAG)) break;
+
+#ifndef NG_AES
+        /* Blink INSERT COIN until there is credit, then ask for START. */
+        if (read_p1credit() > 0) {
+            fixtext_out(10, 15, "  PUSH START  ", 0);
+        } else if ((i >> 4) & 1) {
+            fixtext_out(10, 15, " INSERT COIN  ", 0);
+        } else {
+            fixtext_out(10, 15, "              ", 0);
+        }
+#endif
+
+        joy = poll_joystick();
+        if (joy & START1) {
+#ifndef NG_AES
+            if (read_p1credit() > 0) {
+                PLAYER_START();   /* spends the credit and sets the flags */
+                break;
+            }
+#else
+            NEO_REGISTER8(BIOS_USER_MODE) = 2;
+            NEO_REGISTER8(NGO_START_FLAG) = 1;
+            break;
+#endif
+        }
         waitVbl();
     }
 }
 
+/*
+ * The game proper.  main.c supplies game_boot()/game_frame(); without this
+ * loop calling them the sample logic in that file never runs at all.
+ * START returns to attract, so the flow can be exercised repeatedly.
+ */
 void NEOGEO_USER START_GAME(void) {
-    int i;
+    uint16_t prev = poll_joystick();
+
     clearFix(); clearSprs(); setBACKDROP(BLACK);
-    fixtext_out(9, 13, "PRESS START", 0);
-    for (i = 0; i < 300; i++) waitVbl();
+    game_boot();
+
+    for (;;) {
+        uint16_t joy;
+        waitVbl();
+        game_frame();
+        joy = poll_joystick();
+        /* Edge-triggered, so the press that started the game does not
+         * immediately end it. */
+        if ((joy & START1) && !(prev & START1)) break;
+        prev = joy;
+    }
+
     NEO_REGISTER8(NGO_START_FLAG) = 0;
     NEO_REGISTER8(BIOS_USER_MODE) = 1;
     ASM_START ASM_JMP(SYS_RETURN) ::: ASM_END

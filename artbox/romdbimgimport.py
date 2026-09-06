@@ -28,6 +28,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 ROOT = Path(os.environ.get("ARTBOX_DATA_DIR", str(Path(__file__).resolve().parent))).resolve()
 
 try:
+    import asset_rules
     from asset_rules import build_asset_specs, save_manifest, write_out_srt
 except ImportError:
     build_asset_specs = None
@@ -658,6 +659,9 @@ def load_screen_asset(spec):
             fit=spec.get("fit", "contain"),
             anchor=spec.get("anchor", "center"),
             n_colors=15,
+            display_shrink_y=(spec.get("display_shrink_y", 255)
+                              if int(spec.get("display_shrink_y", 255)) < 255
+                              else None),
         )
         spec["transparent_zero"] = 1
         spec["palette_has_zero"] = 1
@@ -812,9 +816,15 @@ def main():
     if build_asset_specs is None or save_manifest is None or write_out_srt is None:
         raise RuntimeError("asset_rules import failed; ensure artbox/asset_rules.py is present and valid.")
 
-    specs = build_asset_specs(str(ROOT / "in"))
+    specs = build_asset_specs()
     if not specs:
-        print("No PNG files found in in")
+        # Still write the (empty) manifest and index.  A game with no art is a
+        # valid state, and the rest of the pipeline reads these two files to
+        # learn there is nothing to place rather than to find out they are
+        # missing.
+        print(f"No PNG files found in {asset_rules.IN_DIR}")
+        save_manifest(specs, str(ROOT / "assets_manifest.json"))
+        write_out_srt(specs, str(ROOT / "out.srt"))
         return
 
     print(f"Importing {len(specs)} images (rule-driven order):")

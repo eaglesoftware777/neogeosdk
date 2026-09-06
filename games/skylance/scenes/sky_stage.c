@@ -27,6 +27,14 @@ void NEOGEO_USER playSFX(uint8_t n);
 #define PAT_STRAFE   1u   /* crosses the screen, drifting down slowly    */
 #define PAT_HOLD     2u   /* descends to a firing line and sits there    */
 
+/* How long a PAT_HOLD enemy keeps its station before resuming the descent,
+ * in frames.  Bounded so a stage cannot stall waiting for it to leave. */
+#define SKY_HOLD_FRAMES  300u
+
+/* Frames the director will wait for leftover enemies once the waves are spent
+ * before sending the boss in regardless. */
+#define SKY_BOSS_WAIT_MAX  420u
+
 typedef struct {
     uint8_t asset;
     uint8_t hp;
@@ -83,6 +91,7 @@ static uint8_t  s_squad_type;
 static uint8_t  s_squad_side;
 static uint16_t s_squad_gap;
 static uint8_t  s_boss_on;
+static uint16_t s_boss_wait;
 static uint8_t  s_boss_hp_max;
 static uint16_t s_kills;
 static uint16_t s_tick;
@@ -110,6 +119,7 @@ void NEOGEO_USER sky_stage_begin(uint8_t stage)
     s_squad_left  = 0u;
     s_squad_gap   = 0u;
     s_boss_on     = 0u;
+    s_boss_wait   = 0u;
     s_boss_hp_max = 1u;
     s_kills       = 0u;
     s_tick        = 0u;
@@ -259,7 +269,13 @@ static void NEOGEO_USER sky_enemy_step(NGCharacter *c, int16_t px, int16_t py)
         uint8_t phase = (uint8_t)(c->data1 & 63u);
         int16_t sway  = (int16_t)((phase < 32u) ? ((int16_t)phase - 16)
                                                 : (47 - (int16_t)phase));
-        ng_char_set_speed_fp(c, (int32_t)sway * (NG_FP_ONE / 12), c->vy_fp);
+        /* Weave, but drift toward the player's column while doing it, so a
+         * dive threatens where the player actually is instead of whichever
+         * lane it happened to spawn in. */
+        int32_t chase = (px > c->x) ? (NG_FP_ONE / 3)
+                      : (px < c->x) ? -(NG_FP_ONE / 3) : 0;
+        ng_char_set_speed_fp(c, (int32_t)sway * (NG_FP_ONE / 12) + chase,
+                             c->vy_fp);
         break;
     }
     case PAT_STRAFE:
@@ -269,18 +285,41 @@ static void NEOGEO_USER sky_enemy_step(NGCharacter *c, int16_t px, int16_t py)
         }
         break;
     case PAT_HOLD:
-        /* Descend to a firing line, then hold station and shoot. */
+        /* Descend to a firing line, then hold it while sliding after the
+         * player, so sitting directly underneath one is no longer safe.
+         *
+         * The hold is deliberately not forever.  A holder that never leaves
+         * also never stops counting as a live enemy, and the stage waits on
+         * that count reaching zero before it sends in the boss - so a single
+         * survivor parked on its line would stall the stage indefinitely. */
         if (c->y > SKY_FIELD_TOP + 40) {
-            ng_char_set_speed(c, 0, 0);
+            if (c->data1 < SKY_HOLD_FRAMES) {
+                int32_t track = (px > c->x) ? (NG_FP_ONE / 2)
+                              : (px < c->x) ? -(NG_FP_ONE / 2) : 0;
+                ng_char_set_speed_fp(c, track, 0);
+            } else {
+                /* Time up: break station and fly out of the bottom. */
+                ng_char_set_speed_fp(c, 0,
+                                     ((int32_t)e->speed << NG_FP_SHIFT) / 16);
+            }
         }
         break;
     default:
         break;
     }
 
-    if (e->fire_odds && (sky_rand() % e->fire_odds) == 0u) {
-        sky_fire_aimed(c->x, (int16_t)(c->y + 8), px, py,
-                       (int16_t)(2 + (s_stage >> 1)));
+    if (e->fire_odds) {
+        /* fire_odds is a 1-in-N chance per frame.  Halve N outright so the
+         * opening stage already shoots back, then shrink it further as the
+         * stages climb - with a floor so it never becomes a solid wall. */
+        uint16_t odds = (uint16_t)(e->fire_odds >> 1);
+        uint16_t ramp = (uint16_t)(s_stage * 6u);
+        odds = (odds > ramp) ? (uint16_t)(odds - ramp) : 12u;
+        if (odds < 12u) odds = 12u;
+        if ((sky_rand() % odds) == 0u) {
+            sky_fire_aimed(c->x, (int16_t)(c->y + 8), px, py,
+                           (int16_t)(2 + (s_stage >> 1)));
+        }
     }
 
     /* Off the bottom: gone, no explosion, no score. */
@@ -421,7 +460,15 @@ uint8_t NEOGEO_USER sky_stage_tick(int16_t player_x, int16_t player_y)
         sky_start_squad();
         s_wave_timer = (uint16_t)(150u - (uint16_t)(s_stage * 10u));
     } else if (!sky_count_kind(SKY_KIND_ENEMY)) {
+        s_boss_wait = 0u;
         sky_spawn_boss();
+    } else if (s_boss_wait >= SKY_BOSS_WAIT_MAX) {
+        /* Waves are done but something is still on screen.  Send the boss in
+         * anyway rather than leave the player with no way to finish. */
+        s_boss_wait = 0u;
+        sky_spawn_boss();
+    } else {
+        s_boss_wait++;
     }
 
     return 0u;

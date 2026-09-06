@@ -28,6 +28,18 @@ typedef struct {
 
 #define NG_ASSET_META_COUNT 10
 
+/* Hardware sprite strips each asset needs, by 1-based asset id. */
+#define NG_ASSET_STRIPS_1 16  /* 001_starfield.png */
+#define NG_ASSET_STRIPS_2 16  /* 002_space_bg.png */
+#define NG_ASSET_STRIPS_3 4  /* 010_ship.png */
+#define NG_ASSET_STRIPS_4 4  /* 011_ship_alt.png */
+#define NG_ASSET_STRIPS_5 4  /* i_are_spaceship.png */
+#define NG_ASSET_STRIPS_6 2  /* 030_player_bullet.png */
+#define NG_ASSET_STRIPS_7 2  /* 031_enemy_bullet.png */
+#define NG_ASSET_STRIPS_8 4  /* 040_explosion.png */
+#define NG_ASSET_STRIPS_9 2  /* 020_enemy.png */
+#define NG_ASSET_STRIPS_10 2  /* 032_life.png */
+
 static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 0, 16, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* 001_starfield.png */
     { 256, 17, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0 }, /* 002_space_bg.png */
@@ -37,7 +49,7 @@ static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 1280, 21, 2, 2, 7, 7, 13, 10, 5, 11, 1, 0 }, /* 030_player_bullet.png */
     { 1536, 22, 2, 2, 7, 7, 13, 10, 5, 11, 1, 0 }, /* 031_enemy_bullet.png */
     { 1792, 23, 4, 4, 6, 6, 13, 13, 37, 37, 1, 0 }, /* 040_explosion.png */
-    { 2048, 24, 16, 11, 0, 5, 0, 11, 256, 165, 1, 3 }, /* 020_enemy.png */
+    { 2048, 24, 2, 2, 0, 0, 0, 11, 32, 21, 1, 3 }, /* 020_enemy.png */
     { 2304, 25, 2, 1, 7, 15, 5, 3, 22, 13, 1, 3 }, /* 032_life.png */
 };
 

@@ -3,6 +3,10 @@
 
 #include "sdk/macro.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef NEOGEO_USER
 #define NEOGEO_USER
 #endif
@@ -19,4 +23,8 @@ void NEOGEO_USER demo_intro_system_banner(void);
 /* Scene 7.0 — Loading scene with progress bar */
 void NEOGEO_USER demo_intro_loading(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif /* DEMO_INTRO_H */

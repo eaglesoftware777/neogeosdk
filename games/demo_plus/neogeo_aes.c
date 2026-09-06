@@ -1,5 +1,12 @@
 #include <stdint.h>
 #include "macro.h"
+#ifdef __cplusplus
+/* A USE_2D_PLUS build compiles this file as C++.  Everything here is
+ * reached from inline asm, the cart entry vectors or the BIOS by its
+ * plain symbol name, so it must keep C linkage and not be mangled. */
+extern "C" {
+#endif
+
 void ZD_ENTRY(void);
 void CHK_ENTRY(void);
 void TRAPV_ENTRY(void);
@@ -221,13 +228,13 @@ uint8_t bioslogotile __attribute__ ((section ("neogeo_init"))) = 	0x00;
 /********************************************************************/
 /* neogeo_entry */
 uint32_t NEOGEO_ENT0[]  __attribute__ ((section ("neogeo_entry"))) = {0x00000200, 0x00000280, 0x00000300};
-uint32_t NEOGEO_ENT1[]  __attribute__ ((section ("neogeo_entry"))) = {0x4EFA0000+(USER-0x124)};
+uint32_t NEOGEO_ENT1[]  __attribute__ ((section ("neogeo_entry"))) = {0x4EFA0000 + ((uint32_t)(uintptr_t)USER - 0x124)};
 uint16_t nop1  __attribute__ ((section ("neogeo_entry"))) = 0x4e71;
-uint32_t NEOGEO_ENT2[]  __attribute__ ((section ("neogeo_entry"))) = {0x4EFA0000+(PLAYER_START-0x12a)};
+uint32_t NEOGEO_ENT2[]  __attribute__ ((section ("neogeo_entry"))) = {0x4EFA0000 + ((uint32_t)(uintptr_t)PLAYER_START - 0x12a)};
 uint16_t nop2  __attribute__ ((section ("neogeo_entry"))) = 0x4e71;
-uint32_t NEOGEO_ENT3[]  __attribute__ ((section ("neogeo_entry"))) = { 0x4EFA0000+(DEMO_END-0x130)};
+uint32_t NEOGEO_ENT3[]  __attribute__ ((section ("neogeo_entry"))) = {0x4EFA0000 + ((uint32_t)(uintptr_t)DEMO_END - 0x130)};
 uint16_t nop3  __attribute__ ((section ("neogeo_entry"))) = 0x4e71;
-uint32_t NEOGEO_ENT4[]  __attribute__ ((section ("neogeo_entry"))) = { 0x4EFA0000+(COIN_SOUND-0x136)};
+uint32_t NEOGEO_ENT4[]  __attribute__ ((section ("neogeo_entry"))) = {0x4EFA0000 + ((uint32_t)(uintptr_t)COIN_SOUND - 0x136)};
 /********************************************************************/
 uint32_t padds[] __attribute__ ((section ("neogeo_padds"))) = {
 	                 0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,0xFFFFFFFF,
@@ -329,3 +336,7 @@ uint16_t ID2END __attribute__ ((section ("neogeo_id2"))) = 0x4e75;
 	{0x57 , 0x49 , 0x54 , 0x48 , 0x20 , 0x20 , 0x20 , 0x20 , 0x20 , 0x20 , 0x20 , 0x20},
 	{0x57 , 0x49 , 0x54 , 0x48 , 0x4f , 0x55 , 0x54 , 0x20 , 0x20 , 0x20 , 0x20 , 0x20}
 	};
+
+#ifdef __cplusplus
+}  /* extern "C" */
+#endif
