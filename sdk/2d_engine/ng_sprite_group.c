@@ -3,6 +3,10 @@
 #include "ng_sprite_group.h"
 #include "ng_sprite_pool.h"
 #include "ng_vram.h"
+#include "ng_sprite_hw.h"
+
+/* These routines use volatile MMIO and no register-dependent inline asm. */
+#pragma GCC optimize ("O2")
 
 static uint16_t ngsg_tiles[NG_SPRITE_MAX_HEIGHT_TILES];
 static uint16_t ngsg_attrs[NG_SPRITE_MAX_HEIGHT_TILES];
@@ -49,7 +53,7 @@ static void NEOGEO_USER ng_sprite_kill_slot(uint16_t spr)
 
     /* 2. Normalise scale (full size) and park X off-screen right. */
     vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
-    vram_SCB234((uint16_t)(SCB4_ADDR + spr), NG_SPRITE_DISABLED_X);
+    vram_SCB234((uint16_t)(SCB4_ADDR + spr), setSCB4(NG_SPRITE_DISABLED_X));
 
     /* 3. FULL SCB1 clear — every one of the 32 (tile, attr) rows.
      *    If hardware ever wraps the height field or some later
@@ -111,15 +115,12 @@ void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count)
 
 void NEOGEO_USER ng_sprite_park_off(uint16_t spr)
 {
-    /* Same full teardown as ng_sprite_disable_hw — a partial
-     * "park only SCB3" left rows 1..31 of SCB1 carrying last
-     * frame's tile data, which the LSPC happily rendered as
-     * horizontal strips/boxes whenever ACT or chain accidentally
-     * resurrected.  Correctness over speed; callers cap the
-     * tail-clear count to actual shrinks (sprite_window's
-     * max_used_strips, chars Phase 2's prev_strips), so the
-     * per-frame VRAM cost stays bounded. */
-    ng_sprite_kill_slot(spr);
+    if (spr >= NG_SPR_TOTAL) return;
+    /* Break the chain and disable height before touching its transform.
+     * Map padding is guaranteed by upload/flush, not by a per-frame wipe. */
+    vram_SCB234((uint16_t)(SCB3_ADDR + spr), NG_SPRITE_DISABLED_SCB3);
+    vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
+    vram_SCB234((uint16_t)(SCB4_ADDR + spr), setSCB4(NG_SPRITE_DISABLED_X));
 }
 
 void NEOGEO_USER ng_sprite_park_off_range(uint16_t first, uint16_t count)
@@ -149,12 +150,14 @@ void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint16_t count)
 
 void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count)
 {
-    ng_vram_clear_sprite_vram_base(spriteBase, count);
+    ng_sprite_park_off_range(ng_vram_scb1_to_sprite_slot(spriteBase), count);
 }
 
 void NEOGEO_USER ng_sprite_hide_all(void)
 {
-    ng_vram_clear_all_sprites();
+    /* Slot zero is the hardware's empty-list filler. */
+    ng_sprite_disable_hw(0u);
+    ng_sprite_park_off_range(1u, NG_SPR_TOTAL - 1u);
 }
 
 void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette)
@@ -190,7 +193,7 @@ void NEOGEO_USER ng_sprite_group_mark_dirty(NGSpriteGroup *g, uint8_t dirty_flag
 
 void NEOGEO_USER ng_sprite_group_set_tile_base(NGSpriteGroup *g, uint16_t tileBase)
 {
-    if (g) { g->tileBase = tileBase; g->dirty |= NG_SGF_DIRTY_TILE; }
+    if (g && g->tileBase != tileBase) { g->tileBase = tileBase; g->dirty |= NG_SGF_DIRTY_TILE; }
 }
 
 void NEOGEO_USER ng_sprite_group_set_tile_stride(NGSpriteGroup *g, uint16_t tileStride)
@@ -209,7 +212,7 @@ void NEOGEO_USER ng_sprite_group_set_tile_stride(NGSpriteGroup *g, uint16_t tile
 
 void NEOGEO_USER ng_sprite_group_set_palette(NGSpriteGroup *g, uint8_t palette)
 {
-    if (g) { g->palette = palette; g->dirty |= NG_SGF_DIRTY_PALETTE; }
+    if (g && g->palette != palette) { g->palette = palette; g->dirty |= NG_SGF_DIRTY_PALETTE; }
 }
 
 void NEOGEO_USER ng_sprite_group_set_active_rows(NGSpriteGroup *g, uint8_t activeRows)
@@ -231,7 +234,7 @@ void NEOGEO_USER ng_sprite_group_set_active_rows(NGSpriteGroup *g, uint8_t activ
 
 void NEOGEO_USER ng_sprite_group_set_pos(NGSpriteGroup *g, int16_t x, int16_t y)
 {
-    if (g) {
+    if (g && (g->x != x || g->y != y)) {
         g->x = x;
         g->y = y;
         g->dirty |= NG_SGF_DIRTY_POS;
@@ -249,10 +252,10 @@ void NEOGEO_USER ng_sprite_group_move(NGSpriteGroup *g, int16_t dx, int16_t dy)
 
 void NEOGEO_USER ng_sprite_group_set_scale(NGSpriteGroup *g, uint8_t xScale, uint8_t yScale)
 {
-    if (g) {
+    if (g && (g->xScale != xScale || g->yScale != yScale)) {
         g->xScale = xScale;
         g->yScale = yScale;
-        g->dirty |= NG_SGF_DIRTY_SHRINK;
+        g->dirty |= NG_SGF_DIRTY_SHRINK | NG_SGF_DIRTY_POS;
     }
 }
 
@@ -290,9 +293,9 @@ void NEOGEO_USER ng_sprite_group_set_auto_anim(NGSpriteGroup *g, uint8_t autoAni
 
 void NEOGEO_USER ng_sprite_group_set_visible(NGSpriteGroup *g, uint8_t visible)
 {
-    if (g) {
+    if (g && g->visible != (visible ? 1 : 0)) {
         g->visible = visible ? 1 : 0;
-        g->dirty |= NG_SGF_DIRTY_VIS;
+        g->dirty |= visible ? NG_SGF_DIRTY_ALL : NG_SGF_DIRTY_VIS;
     }
 }
 
@@ -318,6 +321,7 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
     if (activeRows > g->heightTiles) activeRows = g->heightTiles;
     if (activeRows > NG_SPRITE_MAX_HEIGHT_TILES) activeRows = NG_SPRITE_MAX_HEIGHT_TILES;
 
+    activeRows = ng_sprite_display_rows(activeRows, g->yScale);
     xNibble = ngsg_x_shrink_nibble(g->xScale);
     scb2 = setSCB2(xNibble, g->yScale);
     driverScb3 = setSCB3((uint16_t)(496 - g->y), 0, activeRows);
@@ -337,9 +341,9 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
         uint16_t scb3;
         uint16_t scb4;
 
-        for (row = 0; row < g->heightTiles; row++) {
-            ngsg_tiles[row] = ngsg_tile_for(g, strip, row);
-            ngsg_attrs[row] = attr;
+        for (row = 0; row < NG_SPRITE_MAX_HEIGHT_TILES; row++) {
+            ngsg_tiles[row] = row < g->heightTiles ? ngsg_tile_for(g, strip, row) : NG_SPRITE_BLANK_TILE;
+            ngsg_attrs[row] = row < g->heightTiles ? attr : NG_SPRITE_BLANK_ATTR;
         }
 
         if (strip == 0) {
@@ -364,12 +368,13 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
             spriteIndex,
             ngsg_tiles,
             ngsg_attrs,
-            g->heightTiles,
+            NG_SPRITE_MAX_HEIGHT_TILES,
             scb2,
             scb3,
             scb4
         );
     }
+    g->dirty = 0u;
 }
 
 void NEOGEO_USER ng_sprite_group_update_transform(NGSpriteGroup *g)
@@ -392,6 +397,7 @@ void NEOGEO_USER ng_sprite_group_update_transform(NGSpriteGroup *g)
     if (activeRows > g->heightTiles) activeRows = g->heightTiles;
     if (activeRows > NG_SPRITE_MAX_HEIGHT_TILES) activeRows = NG_SPRITE_MAX_HEIGHT_TILES;
 
+    activeRows = ng_sprite_display_rows(activeRows, g->yScale);
     xNibble = ngsg_x_shrink_nibble(g->xScale);
     scb2 = setSCB2(xNibble, g->yScale);
     /* Guide specifies 496-Y is the internal coordinate system for vertical pos */
@@ -468,8 +474,8 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
     if (!g->dirty) return;
 
     /* Visibility change: hide and return if not visible */
-    if ((g->dirty & NG_SGF_DIRTY_VIS) && !g->visible) {
-        ng_sprite_group_hide(g);
+    if (!g->visible) {
+        if (g->dirty & NG_SGF_DIRTY_VIS) ng_sprite_group_hide(g);
         g->dirty = 0;
         return;
     }
@@ -478,6 +484,7 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
     if (activeRows > g->heightTiles) activeRows = g->heightTiles;
     if (activeRows > NG_SPRITE_MAX_HEIGHT_TILES) activeRows = NG_SPRITE_MAX_HEIGHT_TILES;
 
+    activeRows = ng_sprite_display_rows(activeRows, g->yScale);
     /* Compute values once even if some are not needed — branch avoidance */
     xNibble    = ngsg_x_shrink_nibble(g->xScale);
     scb2       = setSCB2(xNibble, g->yScale);
@@ -490,13 +497,13 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
         for (strip = 0; strip < g->strips; strip++) {
             uint16_t scb1Addr = (uint16_t)(64u * (uint16_t)(g->firstSprite + strip));
 
-            for (row = 0; row < g->heightTiles; row++) {
-                ngsg_tiles[row] = ngsg_tile_for(g, strip, row);
-                ngsg_attrs[row] = attr;
+            for (row = 0; row < NG_SPRITE_MAX_HEIGHT_TILES; row++) {
+                ngsg_tiles[row] = row < g->heightTiles ? ngsg_tile_for(g, strip, row) : NG_SPRITE_BLANK_TILE;
+                ngsg_attrs[row] = row < g->heightTiles ? attr : NG_SPRITE_BLANK_ATTR;
             }
 
             vram_init(scb1Addr, 1);
-            vram_SCB1(ngsg_tiles, ngsg_attrs, g->heightTiles);
+            vram_SCB1(ngsg_tiles, ngsg_attrs, NG_SPRITE_MAX_HEIGHT_TILES);
         }
     }
 

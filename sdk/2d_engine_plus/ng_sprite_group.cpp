@@ -2,6 +2,9 @@
 #include "ng_sprite_group.hpp"
 #include "ng_sprite_pool.hpp"
 #include "ng_vram.hpp"
+#include "../2d_engine/ng_sprite_hw.h"
+
+#pragma GCC optimize ("O2")
 
 static uint16_t ngsg_tiles[NG_SPRITE_MAX_HEIGHT_TILES];
 static uint16_t ngsg_attrs[NG_SPRITE_MAX_HEIGHT_TILES];
@@ -43,7 +46,7 @@ static void NEOGEO_USER ng_sprite_kill_slot(uint16_t spr)
     vram_SCB234((uint16_t)(SCB3_ADDR + spr), NG_SPRITE_DISABLED_SCB3);
     /* Scale + X off-screen right. */
     vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
-    vram_SCB234((uint16_t)(SCB4_ADDR + spr), NG_SPRITE_DISABLED_X);
+    vram_SCB234((uint16_t)(SCB4_ADDR + spr), setSCB4(NG_SPRITE_DISABLED_X));
 
     /* FULL SCB1 wipe — all 32 (tile, attr) rows replaced with
      * the project's reserved blank tile.  See the C engine
@@ -81,11 +84,10 @@ void NEOGEO_USER ng_sprite_disable_hw_range(uint16_t first, uint16_t count)
 
 void NEOGEO_USER ng_sprite_park_off(uint16_t spr)
 {
-    /* Same full teardown as disable_hw; per-slot vocabulary only.
-     * Leaving rows 1..31 of SCB1 with last frame's data is what
-     * was producing the horizontal strips and boxes around
-     * moving chars. */
-    ng_sprite_kill_slot(spr);
+    if (spr >= NG_SPR_TOTAL) return;
+    vram_SCB234((uint16_t)(SCB3_ADDR + spr), NG_SPRITE_DISABLED_SCB3);
+    vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
+    vram_SCB234((uint16_t)(SCB4_ADDR + spr), setSCB4(NG_SPRITE_DISABLED_X));
 }
 
 void NEOGEO_USER ng_sprite_park_off_range(uint16_t first, uint16_t count)
@@ -113,12 +115,13 @@ void NGSpriteGroup::hideRange(uint16_t first, uint16_t count)
 
 void NGSpriteGroup::hideVramBase(uint16_t spriteBase, uint16_t count)
 {
-    ng_vram_clear_sprite_vram_base(spriteBase, count);
+    ng_sprite_park_off_range((uint16_t)(spriteBase >> 6), count);
 }
 
 void NGSpriteGroup::hideAll()
 {
-    ng_vram_clear_all_sprites();
+    ng_sprite_disable_hw(0u);
+    ng_sprite_park_off_range(1u, NG_SPR_TOTAL - 1u);
 }
 
 void NGSpriteGroup::initHardware(uint16_t transparentTile)
@@ -157,6 +160,7 @@ void NGSpriteGroup::markDirty(uint8_t flags) { dirty |= flags; }
 
 void NGSpriteGroup::setTileBase(uint16_t tb)
 {
+    if (tileBase == tb) return;
     tileBase = tb;
     dirty |= NG_SGF_DIRTY_TILE;
 }
@@ -174,6 +178,7 @@ void NGSpriteGroup::setTileStride(uint16_t ts)
 
 void NGSpriteGroup::setPalette(uint8_t pal)
 {
+    if (palette == pal) return;
     palette = pal;
     dirty |= NG_SGF_DIRTY_PALETTE;
 }
@@ -194,6 +199,7 @@ void NGSpriteGroup::setActiveRows(uint8_t rows)
 
 void NGSpriteGroup::setPos(int16_t px, int16_t py)
 {
+    if (x == px && y == py) return;
     x = px; y = py;
     dirty |= NG_SGF_DIRTY_POS;
 }
@@ -206,8 +212,9 @@ void NGSpriteGroup::move(int16_t dx, int16_t dy)
 
 void NGSpriteGroup::setScale(uint8_t sx, uint8_t sy)
 {
+    if (xScale == sx && yScale == sy) return;
     xScale = sx; yScale = sy;
-    dirty |= NG_SGF_DIRTY_SHRINK;
+    dirty |= NG_SGF_DIRTY_SHRINK | NG_SGF_DIRTY_POS;
 }
 
 void NGSpriteGroup::setFlip(uint8_t h, uint8_t v)
@@ -239,8 +246,9 @@ void NGSpriteGroup::setAutoAnim(uint8_t aa4, uint8_t aa8)
 
 void NGSpriteGroup::setVisible(uint8_t v)
 {
+    if (visible == (v ? 1 : 0)) return;
     visible = v ? 1 : 0;
-    dirty |= NG_SGF_DIRTY_VIS;
+    dirty |= visible ? NG_SGF_DIRTY_ALL : NG_SGF_DIRTY_VIS;
 }
 
 void NGSpriteGroup::hide()
@@ -260,6 +268,7 @@ void NGSpriteGroup::upload()
     if (ar > heightTiles) ar = heightTiles;
     if (ar > NG_SPRITE_MAX_HEIGHT_TILES) ar = NG_SPRITE_MAX_HEIGHT_TILES;
 
+    ar = ng_sprite_display_rows(ar, yScale);
     xn          = xShrinkNibble(xScale);
     scb2        = setSCB2(xn, yScale);
     driverScb3  = setSCB3((uint16_t)(496 - y), 0, ar);
@@ -271,9 +280,9 @@ void NGSpriteGroup::upload()
         uint16_t scb1Addr    = (uint16_t)(64u * spriteIndex);
         uint16_t scb3, scb4;
 
-        for (row = 0; row < heightTiles; row++) {
-            ngsg_tiles[row] = tileFor(strip, row);
-            ngsg_attrs[row] = attr;
+        for (row = 0; row < NG_SPRITE_MAX_HEIGHT_TILES; row++) {
+            ngsg_tiles[row] = row < heightTiles ? tileFor(strip, row) : NG_SPRITE_BLANK_TILE;
+            ngsg_attrs[row] = row < heightTiles ? attr : NG_SPRITE_BLANK_ATTR;
         }
 
         if (strip == 0) {
@@ -285,9 +294,10 @@ void NGSpriteGroup::upload()
         }
 
         vram_sprite(scb1Addr, 1, spriteIndex,
-                    ngsg_tiles, ngsg_attrs, heightTiles,
+                    ngsg_tiles, ngsg_attrs, NG_SPRITE_MAX_HEIGHT_TILES,
                     scb2, scb3, scb4);
     }
+    dirty = 0u;
 }
 
 void NGSpriteGroup::updateTransform()
@@ -301,6 +311,7 @@ void NGSpriteGroup::updateTransform()
     if (ar > heightTiles) ar = heightTiles;
     if (ar > NG_SPRITE_MAX_HEIGHT_TILES) ar = NG_SPRITE_MAX_HEIGHT_TILES;
 
+    ar = ng_sprite_display_rows(ar, yScale);
     xn          = xShrinkNibble(xScale);
     scb2        = setSCB2(xn, yScale);
     driverScb3  = setSCB3((uint16_t)(496 - y), 0, ar);
@@ -324,8 +335,8 @@ void NGSpriteGroup::flush()
 
     if (!dirty) return;
 
-    if ((dirty & NG_SGF_DIRTY_VIS) && !visible) {
-        hide();
+    if (!visible) {
+        if (dirty & NG_SGF_DIRTY_VIS) hide();
         dirty = 0;
         return;
     }
@@ -334,6 +345,7 @@ void NGSpriteGroup::flush()
     if (ar > heightTiles) ar = heightTiles;
     if (ar > NG_SPRITE_MAX_HEIGHT_TILES) ar = NG_SPRITE_MAX_HEIGHT_TILES;
 
+    ar = ng_sprite_display_rows(ar, yScale);
     xn         = xShrinkNibble(xScale);
     scb2       = setSCB2(xn, yScale);
     driverScb3 = setSCB3((uint16_t)(496 - y), 0, ar);
@@ -343,12 +355,12 @@ void NGSpriteGroup::flush()
     if (dirty & (NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_PALETTE)) {
         for (strip = 0; strip < strips; strip++) {
             uint16_t scb1Addr = (uint16_t)(64u * (uint16_t)(firstSprite + strip));
-            for (row = 0; row < heightTiles; row++) {
-                ngsg_tiles[row] = tileFor(strip, row);
-                ngsg_attrs[row] = attr;
+            for (row = 0; row < NG_SPRITE_MAX_HEIGHT_TILES; row++) {
+                ngsg_tiles[row] = row < heightTiles ? tileFor(strip, row) : NG_SPRITE_BLANK_TILE;
+                ngsg_attrs[row] = row < heightTiles ? attr : NG_SPRITE_BLANK_ATTR;
             }
             vram_init(scb1Addr, 1);
-            vram_SCB1(ngsg_tiles, ngsg_attrs, heightTiles);
+            vram_SCB1(ngsg_tiles, ngsg_attrs, NG_SPRITE_MAX_HEIGHT_TILES);
         }
     }
 

@@ -1,5 +1,6 @@
 #include "ng_sprite_window.hpp"
 #include "ng_vram.hpp"
+#include "ng_sprite_group.hpp"
 
 static uint8_t ngsw_clamp_count(uint8_t value, uint8_t max_value)
 {
@@ -60,23 +61,9 @@ void NGSpriteWindow::clear()
 
 void NGSpriteWindow::clearTail()
 {
-    /* Only wipe the range this window has ever actually occupied;
-     * see C engine for the full rationale. */
-    uint8_t footprint = max_used_strips;
-    if (footprint == 0u) footprint = max_strips;
-
-    if (previous_strips == 0u) {
-        ng_vram_clear_sprite_range(first_slot, footprint);
-        return;
-    }
-
-    if (previous_rows != current_rows) {
-        ng_vram_clear_sprite_range(first_slot, footprint);
-        return;
-    }
-
+    /* Map uploads pad source rows; hide only the old strip tail. */
     if (previous_strips > current_strips) {
-        ng_vram_clear_sprite_range(
+        ng_sprite_park_off_range(
             (uint16_t)(first_slot + current_strips),
             (uint16_t)(previous_strips - current_strips));
     }

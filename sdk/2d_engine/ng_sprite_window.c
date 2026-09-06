@@ -76,29 +76,9 @@ void NEOGEO_USER ng_sprite_window_clear(NGSpriteWindow *window)
 
 void NEOGEO_USER ng_sprite_window_clear_tail(NGSpriteWindow *window)
 {
-    uint8_t footprint;
-
     if (!window) return;
-
-    /* Only wipe the range this window has ever actually written to.
-     * Using max_strips (typically NG_SPRITE_MAX_STRIPS = 32) here was
-     * trashing neighbouring sprite groups: e.g. HERO at slot 64 with
-     * 5 strips would zero slots 64..95, taking the ENEMY at slot 80
-     * with it.  The neighbour then had to re-upload from scratch,
-     * which manifested as split sprites and a one-frame blink. */
-    footprint = window->max_used_strips;
-    if (footprint == 0u) footprint = window->max_strips;
-
-    if (window->previous_strips == 0u) {
-        ng_sprite_park_off_range(window->first_slot, footprint);
-        return;
-    }
-
-    if (window->previous_rows != window->current_rows) {
-        ng_sprite_park_off_range(window->first_slot, footprint);
-        return;
-    }
-
+    /* Upload replaces and pads the current map. Only strips no longer
+     * occupied by this frame need to be disabled. */
     if (window->previous_strips > window->current_strips) {
         ng_sprite_park_off_range(
             (uint16_t)(window->first_slot + window->current_strips),

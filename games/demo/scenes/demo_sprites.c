@@ -711,21 +711,22 @@ void NEOGEO_USER demo_sprites_walk(int loops, int delay_frames)
  */
 void NEOGEO_USER ng_clear_screen_full(void)
 {
+    /* Discard pending work before clearing; an outgoing frame must never
+     * be replayed into the next chapter, nor consume its first A/C press. */
+    demo_sprite_window_cache_reset();
+    ng_render_queue_init();
     ng_physics_clear_solids();
     ng_chars_init();
 
     /* Keep the page white throughout teardown.  FIX tile 0x00FF and
      * sprite pixel index 0 are transparent, so cleared cells expose this
      * backdrop without a black transition frame. */
+    waitVbl();
     setBACKDROP(DEMO_BG_CLEAR);
     clearFix();
 
     ng_sprite_hide_all();
 
-    ng_chars_draw();
-    demo_frame();
-
-    clearFix();
     setBACKDROP(DEMO_BG);
 }
 

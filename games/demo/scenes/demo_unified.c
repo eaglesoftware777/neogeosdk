@@ -4345,7 +4345,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         for (i = 0u; i < SKY_ENEMY_MAX; i++) {
             if (!en_alive[i]) {
                 if (en_shown[i]) {
-                    ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(SKY_SLOT_ENEMY + i * 8u), 8u);
+                    demo_hide_sprite_range(SKY_SLOT_ENEMY + i * 8u, 8u);
                     en_shown[i] = 0u;
                 }
                 continue;
@@ -4536,7 +4536,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
                               SKY_SCALE_BOSS, SKY_SCALE_BOSS);
             boss_shown = 1u;
         } else if (boss_shown) {
-            ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(SKY_SLOT_BOSS), 12u);
+            demo_hide_sprite_range(SKY_SLOT_BOSS, 12u);
             boss_shown = 0u;
         }
 
@@ -4546,7 +4546,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
             draw_asset_center(U_SKY_PLANE, SKY_SLOT_PLAYER, ship_x, ship_y,
                               SKY_SCALE_SHIP, SKY_SCALE_SHIP);
         } else {
-            ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(SKY_SLOT_PLAYER), 8u);
+            demo_hide_sprite_range(SKY_SLOT_PLAYER, 8u);
         }
 
         for (i = 0u; i < SKY_PBULLET_MAX; i++) {
@@ -4560,7 +4560,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
                                   0xFFu, 0x80u);
                 pb_shown[i] = 1u;
             } else if (pb_shown[i]) {
-                ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(slot), 2u);
+                demo_hide_sprite_range(slot, 2u);
                 pb_shown[i] = 0u;
             }
         }
@@ -4571,7 +4571,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
                                   0xFFu, 0xFFu);
                 eb_shown[i] = 1u;
             } else if (eb_shown[i]) {
-                ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(slot), 2u);
+                demo_hide_sprite_range(slot, 2u);
                 eb_shown[i] = 0u;
             }
         }
@@ -4584,7 +4584,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
                                   bm_x[i], bm_y[i], sc, sc);
                 bm_shown[i] = 1u;
             } else if (bm_shown[i]) {
-                ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(slot), 2u);
+                demo_hide_sprite_range(slot, 2u);
                 bm_shown[i] = 0u;
             }
         }
