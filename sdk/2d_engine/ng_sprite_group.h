@@ -142,13 +142,14 @@ void NEOGEO_USER ng_sprite_hide_all(void);
  * 1..31 of SCB1 still hold last-frame artwork and reappear as
  * horizontal strips / black boxes around the active chars.
  *
- * The pair is kept as a vocabulary distinction (disable_hw at
- * scene boundaries, park_off in per-frame tail clears) but the
- * VRAM cost is the same — ~67 writes per slot.  Correctness over
- * speed: vblank can absorb the cost so long as callers bound the
- * tail-clear count to the actual shrink (see ng_chars_draw
- * Phase 2 using prev_strips - vis_strips, and sprite_window's
- * max_used_strips), which they now do.
+ * The pair is a real distinction now: disable_hw is the full ~67-write
+ * teardown for scene boundaries, park_off is the three-word per-frame
+ * hide.  park_off can skip the SCB1 wipe because upload and flush
+ * guarantee the map's padding, and because a parked slot's X sits
+ * off-screen right, where the hardware skips it outright.  Either way
+ * callers bound the count to what they actually own (ng_chars_draw
+ * Phase 2 uses prev_strips - vis_strips; a sprite window uses its
+ * max_used_strips high-water mark).
  *
  * Per slot the teardown writes:
  *   SCB3       = NG_SPRITE_DISABLED_SCB3 (ACT=0, chain=0, Y off-screen)

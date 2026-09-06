@@ -62,11 +62,27 @@ void NEOGEO_USER ng_sprite_window_set_shape(NGSpriteWindow *window,
     }
 }
 
+/*
+ * How many slots this window is entitled to tear down.
+ *
+ * Its reservation is max_strips, but it only ever owns what it has
+ * actually drawn into.  Parking the full reservation of a window that
+ * has never grown past five strips takes eleven slots that belong to
+ * whoever was allocated after it - which reads on screen as the
+ * neighbour splitting apart and blinking for a frame while it uploads
+ * itself again.
+ */
+static uint8_t NEOGEO_USER ngsw_footprint(const NGSpriteWindow *window)
+{
+    return window->max_used_strips ? window->max_used_strips
+                                   : window->max_strips;
+}
+
 void NEOGEO_USER ng_sprite_window_clear(NGSpriteWindow *window)
 {
     if (!window) return;
 
-    ng_sprite_park_off_range(window->first_slot, window->max_strips);
+    ng_sprite_park_off_range(window->first_slot, ngsw_footprint(window));
     window->previous_strips = 0u;
     window->current_strips = 0u;
     window->previous_rows = 0u;
@@ -90,7 +106,7 @@ void NEOGEO_USER ng_sprite_window_hide(NGSpriteWindow *window)
 {
     if (!window) return;
 
-    ng_sprite_park_off_range(window->first_slot, window->max_strips);
+    ng_sprite_park_off_range(window->first_slot, ngsw_footprint(window));
     window->visible = 0u;
     window->previous_strips = window->current_strips;
     window->current_strips = 0u;
