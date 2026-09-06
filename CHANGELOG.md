@@ -1,5 +1,162 @@
 # Changelog
 
+## v1.7.3 - Sprites at the size they are drawn
+
+Release date: 2026-09-06
+
+### Import at display size, do not shrink in hardware
+
+The sprite chip does not resample when it shrinks.  It drops whole rows and
+columns, and what it drops is a dither the quantiser laid down for pixels it
+expected to survive - so a sprite imported at twice its on-screen size and
+halved by hardware arrives as a smear, however good the source was.  Every
+asset that was being reduced at draw time is now imported at the size it is
+actually drawn.
+
+- Sky Lance draws its playfield art at full size now.  Its craft were
+  imported at up to 240 px and shrunk to a quarter; new artbox rules import
+  the player craft and standard opponents at 40 px and bosses at 112.  The
+  player also comes down from 35x50 to 28x40, which is what it should have
+  been for the playfield.
+- The `neogeogame` opponent imports at 48 px instead of 32.  A 1238x800 source
+  reduced by 38x had nothing left of itself; the formation opens from 34 px
+  spacing to 50 to carry it, which the enemy pool's existing four-strip stride
+  already had room for.
+- The same treatment for the demo's own characters is **not** in this release.
+  Importing them at 128 with the `U_SCALE_*` fractions doubled is measurably
+  sharper, but it moves every character's strip count and tile stride, and
+  `ng_char_set_sprite()` drops a bind whose asset window fails validation
+  without saying so - four chapters came up with stale or missing art.  The
+  ceiling stays at 256 until that path reports a rejection instead of
+  swallowing it.
+
+### Fixed in the art
+
+- Sky Lance's three pilot portraits had a chroma-key magenta background baked
+  in with no alpha channel, so the select and roster screens drew a solid pink
+  slab where each pilot should be.  `artbox/fix_sprite_alpha.py` keys it out:
+  it flood-fills only background reachable from the image border, so the
+  figures are untouched.
+
+### Fixed
+
+- **A character that blinked off never came back.**  Hiding a char released
+  its VRAM slots but only marked it for re-upload when it was active AND
+  visible - which is the one case where nothing was hidden.  So a char hidden
+  *because* it turned invisible returned through the transform-only path with
+  no tilemap and no chain bits, and stayed gone.  Sky Lance's invulnerability
+  flash after a hit is what this looked like in practice: get hit, lose the
+  plane.
+- **The `neogeogame` player alternated between two different ships.**  It
+  swapped `010_ship` and `011_ship_alt` every sixteen frames as if they were
+  two frames of a thrust animation.  They are two different craft, so the
+  player read as morphing.
+- **NPC patrol lanes overlapped.**  Four NPCs 64 px apart each patrolled 44 px
+  either side, so neighbours walked through each other and the middle of the
+  line read as one smeared sprite.  80 px apart, 22 either side.
+- Six chapters printed their whole header onto a full-bleed backdrop.  They
+  letterbox now - the FIX layer draws in front of every sprite, so a band
+  under the header costs the artwork nothing that was not already covered in
+  text.
+
+### Art pipeline
+
+- The HD conditioning passes are **on by default**.  The source art in this
+  tree is HD, so conditioning is the normal case here rather than the
+  exception; `ARTBOX_ENHANCE=0` or `--no-enhance` turns it off for art drawn
+  at the target size that does not want its tone touched.
+- `artbox/gen_starfield.py` synthesises the shooter's backdrop: a tiling
+  nebula and three layers of stars, with the noise lattice wrapping so the
+  page joins itself exactly rather than approximately.  Pass several outputs
+  and it generates one wide page and cuts it into columns, so backdrops laid
+  side by side join without a line down the middle.  The two black pages with
+  a scatter of dots that `neogeogame` was using are replaced by it.
+
+## v1.7.2 - Active characters, art fidelity, and a testable build
+
+Release date: 2026-09-06
+
+### Sprite height on screen
+
+SCB3 carries the number of ACTIVE CHARACTERS, and that field is the sprite's
+height on screen: the hardware covers exactly `rows * 16` scanlines with it and
+does not consult the shrink register.  Vertical shrink only decides which
+source row of the SCB1 map each of those scanlines reads.  A shrunk sprite that
+keeps its full-size count therefore repeats itself inside a window too tall for
+it, and the row lookup can reach past the last row of real art into whatever the
+previous frame left there.
+
+- Both engines now derive the active-character count from the source rows and
+  the vertical shrink, and blank every map row the lookup can reach.
+- That reach is bounded.  The lookup reads the first sixteen rows and only gets
+  to rows 16..31 through the mirror it applies once a sprite spans more than 256
+  scanlines, so under seventeen active characters half the map is unreachable.
+  Uploads now stop at sixteen rows there, which is half the VRAM traffic of
+  writing all thirty-two.
+- `ng_sprite_group_flush()` refreshes SCB3 when the shrink or the row count
+  changes - the count is derived from both, and writing SCB2 alone left it
+  stale.
+- A move now writes the driver strip only.  The hardware reads no position from
+  a chained strip, so re-stamping every strip was most of what a scrolling
+  background cost per frame.
+- `tests/sprite_render_test.c` covers all of the above against a stand-in VRAM
+  array, and builds both engines from the same source file so they cannot drift.
+
+### Sky Lance chapter
+
+The mini shooter cropped a scrolling sky into a boxed playfield.  A sprite is a
+whole number of characters tall, so a window whose edge is not on a character
+boundary always overhangs it by up to 15 px; the overhang is not optional, only
+its destination is.  The chapter now runs the sky edge to edge, where the
+overhang lands off-screen, and letterboxes the HUD onto opaque FIX bands
+instead of drawing a dotted outline over the artwork.
+
+### Art pipeline
+
+- **Resampling in linear light.**  Every resize converted gamma-encoded sRGB
+  with an arithmetic mean, which is not an average of light.  Measured across
+  the demo's character set, downscaling was losing 8-22% of each sprite's
+  luminance.  `resize_rgba_linear()` converts to linear light, premultiplies by
+  alpha, resizes, and converts back; the same sprites now land within 2%.
+- **Alpha bled before the resize, not after.**  A sprite cut out against white
+  has white sitting under its transparent pixels, and a filter run before the
+  bleed mixes that white into the contour - baking in the halo `alpha_bleed()`
+  exists to remove.  The bleed now runs at source resolution.
+- **Palette banks compared as sets.**  Bank clustering compared slot i of one
+  palette against slot i of another.  These palettes come out of k-means, so
+  slot order is whatever the seeding produced: two tiles holding the same
+  colours in a different order scored as maximally different, took a bank each,
+  exhausted the budget, and the tolerance widened until palettes that really
+  were different got merged.  Clustering now uses a symmetric mean-nearest-
+  neighbour distance in Lab, which reordering cannot change, and re-fits each
+  bank to every colour its members hold instead of keeping whichever palette
+  arrived first.  Mean dE against the pre-clustering reference, over three
+  reference images: 11.4 -> 1.9, 11.7 -> 2.2, 28.2 -> 5.4.
+- **Optional HD conditioning.**  `ARTBOX_ENHANCE=1` (or `--enhance`) runs an
+  edge-preserving bilateral smooth and a lightness CLAHE before quantisation.
+  Off by default: these are for photographic or rendered source, and running
+  them over art drawn at the target size rewrites the artist's tone choices for
+  no gain.
+- `artbox/fix_sprite_alpha.py` accepts paths, so art under a game's own artbox
+  can be repaired.  The demo's Sky Lance enemy shipped with an opaque white
+  matte and drew as a white box; it now has an alpha channel like its siblings.
+
+### Build and test
+
+- The host-side renderer tests are no longer a prerequisite of `make test`.
+  Launching a ROM in MAME should not require a host C++ toolchain, and on
+  Windows it was failing the whole run.  `make unit-tests` runs them, `make
+  check` gates on tests plus a complete ROM set.
+- `tests/Makefile` suffixes its binaries with the platform's executable
+  extension, so a tree shared between WSL and Windows cannot run the other
+  side's build.
+- `sound-clean` deletes encoded samples only where the WAVs that produce them
+  are present.  `make samples` skips an encode whose `in_wav_*` directory is
+  missing, so for the four games that ship ADPCM without source in the tree
+  the old rule was not a clean but an unrecoverable loss - and `clean-all`
+  reaches it, which is the first thing `test.bat` runs.  Verified: a
+  `sound-clean` on Sky Lance now leaves all 110 sample files in place.
+
 ## v1.7.1 - Rendering and platform fixes
 
 Release date: 2026-09-06

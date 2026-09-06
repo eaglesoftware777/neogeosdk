@@ -1005,6 +1005,11 @@ make sound-clean     : remove sound build outputs
 make art-clean       : remove artbox-generated outputs
 make clean-all       : full clean
 make test            : run the generated ROM set in MAME
+make unit-tests      : host-side sprite renderer tests (no emulator, no cross
+                       toolchain).  Deliberately not a prerequisite of
+                       `make test`: launching a ROM must not depend on a host
+                       C++ compiler being installed.
+make check           : unit tests plus a complete ROM set for this GAME
 make debug           : run MAME with debugger
 make debug-build     : build P1 with debug symbols and linker map
 make debug-artifacts : write size, symbols, readelf, map, and disassembly files
