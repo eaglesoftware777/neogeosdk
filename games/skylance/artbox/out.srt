@@ -20,11 +20,11 @@ screen_id=3 palette_bank=18 tile_base=512 reserved_last=767 used_cols=10 used_ro
 note=16x16 character sprite sheet
 
 [004] characters/sprite_p1_plane.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_characters
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_planes
 category=characters
-source=112x160 canvas=256x256 content=112x160 offset=(72,96)
-screen_id=4 palette_bank=19 tile_base=768 reserved_last=1023 used_cols=8 used_rows=10 start_col=4 start_row=6 x_pad=8 y_pad=0 used_tiles=80 strips=8 active_rows=10
-note=16x16 character sprite sheet
+source=112x160 canvas=32x32 content=22x32 offset=(5,0)
+screen_id=4 palette_bank=19 tile_base=768 reserved_last=1023 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=5 y_pad=0 used_tiles=4 strips=2 active_rows=2
+note=player craft, imported at playfield size
 
 [005] characters/sprite_p2_pilot.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
@@ -34,11 +34,11 @@ screen_id=5 palette_bank=20 tile_base=1024 reserved_last=1279 used_cols=10 used_
 note=16x16 character sprite sheet
 
 [006] characters/sprite_p2_plane.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_characters
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_planes
 category=characters
-source=112x144 canvas=256x256 content=112x144 offset=(72,112)
-screen_id=6 palette_bank=21 tile_base=1280 reserved_last=1535 used_cols=8 used_rows=9 start_col=4 start_row=7 x_pad=8 y_pad=0 used_tiles=72 strips=8 active_rows=9
-note=16x16 character sprite sheet
+source=112x144 canvas=32x32 content=25x32 offset=(3,0)
+screen_id=6 palette_bank=21 tile_base=1280 reserved_last=1535 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=3 y_pad=0 used_tiles=4 strips=2 active_rows=2
+note=player craft, imported at playfield size
 
 [007] characters/sprite_p3_pilot.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
@@ -48,11 +48,11 @@ screen_id=7 palette_bank=22 tile_base=1536 reserved_last=1791 used_cols=10 used_
 note=16x16 character sprite sheet
 
 [008] characters/sprite_p3_plane.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_characters
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_planes
 category=characters
-source=112x144 canvas=256x256 content=112x144 offset=(72,112)
-screen_id=8 palette_bank=23 tile_base=1792 reserved_last=2047 used_cols=8 used_rows=9 start_col=4 start_row=7 x_pad=8 y_pad=0 used_tiles=72 strips=8 active_rows=9
-note=16x16 character sprite sheet
+source=112x144 canvas=32x32 content=25x32 offset=(3,0)
+screen_id=8 palette_bank=23 tile_base=1792 reserved_last=2047 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=3 y_pad=0 used_tiles=4 strips=2 active_rows=2
+note=player craft, imported at playfield size
 
 [009] characters/sprite_shot_player.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
@@ -62,114 +62,114 @@ screen_id=9 palette_bank=24 tile_base=2048 reserved_last=2303 used_cols=2 used_r
 note=16x16 character sprite sheet
 
 [010] npcs/opponent_bomber_olive.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-source=144x160 canvas=256x256 content=144x160 offset=(56,96)
-screen_id=10 palette_bank=25 tile_base=2304 reserved_last=2559 used_cols=10 used_rows=10 start_col=3 start_row=6 x_pad=8 y_pad=0 used_tiles=100 strips=10 active_rows=10
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=144x160 canvas=32x32 content=29x32 offset=(1,0)
+screen_id=10 palette_bank=25 tile_base=2304 reserved_last=2559 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=1 y_pad=0 used_tiles=4 strips=2 active_rows=2
+note=standard opponent, imported at playfield size
 
 [011] npcs/opponent_boss_crimson_cathedral.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-source=160x280 canvas=256x256 content=146x256 offset=(55,0)
-screen_id=11 palette_bank=26 tile_base=2560 reserved_last=2815 used_cols=10 used_rows=16 start_col=3 start_row=0 x_pad=7 y_pad=0 used_tiles=160 strips=10 active_rows=16
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=160x280 canvas=112x112 content=64x112 offset=(24,0)
+screen_id=11 palette_bank=26 tile_base=2560 reserved_last=2815 used_cols=5 used_rows=7 start_col=1 start_row=0 x_pad=8 y_pad=0 used_tiles=35 strips=5 active_rows=7
+note=boss, imported at playfield size
 
 [012] npcs/opponent_boss_gold_core.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-source=240x240 canvas=256x256 content=240x240 offset=(8,16)
-screen_id=12 palette_bank=27 tile_base=2816 reserved_last=3071 used_cols=16 used_rows=15 start_col=0 start_row=1 x_pad=8 y_pad=0 used_tiles=240 strips=16 active_rows=15
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=240x240 canvas=112x112 content=112x112 offset=(0,0)
+screen_id=12 palette_bank=27 tile_base=2816 reserved_last=3071 used_cols=7 used_rows=7 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=49 strips=7 active_rows=7
+note=boss, imported at playfield size
 
 [013] npcs/opponent_boss_heli_carrier.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-source=216x280 canvas=256x256 content=197x256 offset=(29,0)
-screen_id=13 palette_bank=28 tile_base=3072 reserved_last=3327 used_cols=14 used_rows=16 start_col=1 start_row=0 x_pad=13 y_pad=0 used_tiles=224 strips=14 active_rows=16
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=216x280 canvas=112x112 content=86x112 offset=(13,0)
+screen_id=13 palette_bank=28 tile_base=3072 reserved_last=3327 used_cols=7 used_rows=7 start_col=0 start_row=0 x_pad=13 y_pad=0 used_tiles=49 strips=7 active_rows=7
+note=boss, imported at playfield size
 
 [014] npcs/opponent_boss_navy_battleship.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-source=136x280 canvas=256x256 content=124x256 offset=(66,0)
-screen_id=14 palette_bank=29 tile_base=3328 reserved_last=3583 used_cols=8 used_rows=16 start_col=4 start_row=0 x_pad=2 y_pad=0 used_tiles=128 strips=8 active_rows=16
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=136x280 canvas=112x112 content=54x112 offset=(29,0)
+screen_id=14 palette_bank=29 tile_base=3328 reserved_last=3583 used_cols=5 used_rows=7 start_col=1 start_row=0 x_pad=13 y_pad=0 used_tiles=35 strips=5 active_rows=7
+note=boss, imported at playfield size
 
 [015] npcs/opponent_boss_red_fortress.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-source=208x280 canvas=256x256 content=190x256 offset=(33,0)
-screen_id=15 palette_bank=30 tile_base=3584 reserved_last=3839 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=1 y_pad=0 used_tiles=192 strips=12 active_rows=16
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=208x280 canvas=112x112 content=83x112 offset=(14,0)
+screen_id=15 palette_bank=30 tile_base=3584 reserved_last=3839 used_cols=7 used_rows=7 start_col=0 start_row=0 x_pad=14 y_pad=0 used_tiles=49 strips=7 active_rows=7
+note=boss, imported at playfield size
 
 [016] npcs/opponent_boss_stealth_bomber.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-source=224x280 canvas=256x256 content=205x256 offset=(25,0)
-screen_id=16 palette_bank=31 tile_base=3840 reserved_last=4095 used_cols=14 used_rows=16 start_col=1 start_row=0 x_pad=9 y_pad=0 used_tiles=224 strips=14 active_rows=16
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=224x280 canvas=112x112 content=90x112 offset=(11,0)
+screen_id=16 palette_bank=31 tile_base=3840 reserved_last=4095 used_cols=7 used_rows=7 start_col=0 start_row=0 x_pad=11 y_pad=0 used_tiles=49 strips=7 active_rows=7
+note=boss, imported at playfield size
 
 [017] npcs/opponent_boss_tank_fortress.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-source=176x280 canvas=256x256 content=161x256 offset=(47,0)
-screen_id=17 palette_bank=32 tile_base=4096 reserved_last=4351 used_cols=11 used_rows=16 start_col=2 start_row=0 x_pad=15 y_pad=0 used_tiles=176 strips=11 active_rows=16
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=176x280 canvas=112x112 content=70x112 offset=(21,0)
+screen_id=17 palette_bank=32 tile_base=4096 reserved_last=4351 used_cols=5 used_rows=7 start_col=1 start_row=0 x_pad=5 y_pad=0 used_tiles=35 strips=5 active_rows=7
+note=boss, imported at playfield size
 
 [018] npcs/opponent_drone_red.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-source=56x56 canvas=256x256 content=56x56 offset=(100,200)
-screen_id=18 palette_bank=33 tile_base=4352 reserved_last=4607 used_cols=4 used_rows=4 start_col=6 start_row=12 x_pad=4 y_pad=8 used_tiles=16 strips=4 active_rows=4
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=56x56 canvas=32x32 content=32x32 offset=(0,0)
+screen_id=18 palette_bank=33 tile_base=4352 reserved_last=4607 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
+note=standard opponent, imported at playfield size
 
 [019] npcs/opponent_fighter_grayred.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-source=128x144 canvas=256x256 content=128x144 offset=(64,112)
-screen_id=19 palette_bank=34 tile_base=4608 reserved_last=4863 used_cols=8 used_rows=9 start_col=4 start_row=7 x_pad=0 y_pad=0 used_tiles=72 strips=8 active_rows=9
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=128x144 canvas=32x32 content=28x32 offset=(2,0)
+screen_id=19 palette_bank=34 tile_base=4608 reserved_last=4863 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=2 y_pad=0 used_tiles=4 strips=2 active_rows=2
+note=standard opponent, imported at playfield size
 
 [020] npcs/opponent_heli_gunship.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-source=112x144 canvas=256x256 content=112x144 offset=(72,112)
-screen_id=20 palette_bank=35 tile_base=4864 reserved_last=5119 used_cols=8 used_rows=9 start_col=4 start_row=7 x_pad=8 y_pad=0 used_tiles=72 strips=8 active_rows=9
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=112x144 canvas=32x32 content=25x32 offset=(3,0)
+screen_id=20 palette_bank=35 tile_base=4864 reserved_last=5119 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=3 y_pad=0 used_tiles=4 strips=2 active_rows=2
+note=standard opponent, imported at playfield size
 
 [021] npcs/opponent_interceptor_blackgold.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-source=104x144 canvas=256x256 content=104x144 offset=(76,112)
-screen_id=21 palette_bank=36 tile_base=5120 reserved_last=5375 used_cols=8 used_rows=9 start_col=4 start_row=7 x_pad=12 y_pad=0 used_tiles=72 strips=8 active_rows=9
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=104x144 canvas=32x32 content=23x32 offset=(4,0)
+screen_id=21 palette_bank=36 tile_base=5120 reserved_last=5375 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=4 y_pad=0 used_tiles=4 strips=2 active_rows=2
+note=standard opponent, imported at playfield size
 
 [022] npcs/opponent_missile_boat.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-source=72x160 canvas=256x256 content=72x160 offset=(92,96)
-screen_id=22 palette_bank=37 tile_base=5376 reserved_last=5631 used_cols=6 used_rows=10 start_col=5 start_row=6 x_pad=12 y_pad=0 used_tiles=60 strips=6 active_rows=10
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=72x160 canvas=32x32 content=14x32 offset=(9,0)
+screen_id=22 palette_bank=37 tile_base=5376 reserved_last=5631 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=9 y_pad=0 used_tiles=4 strips=2 active_rows=2
+note=standard opponent, imported at playfield size
 
 [023] npcs/opponent_shot_orb.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-source=32x32 canvas=256x256 content=32x32 offset=(112,224)
-screen_id=23 palette_bank=38 tile_base=5632 reserved_last=5887 used_cols=2 used_rows=2 start_col=7 start_row=14 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=32x32 canvas=32x32 content=32x32 offset=(0,0)
+screen_id=23 palette_bank=38 tile_base=5632 reserved_last=5887 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
+note=standard opponent, imported at playfield size
 
 [024] npcs/opponent_shot_ring.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-source=40x40 canvas=256x256 content=40x40 offset=(108,216)
-screen_id=24 palette_bank=39 tile_base=5888 reserved_last=6143 used_cols=4 used_rows=3 start_col=6 start_row=13 x_pad=12 y_pad=8 used_tiles=12 strips=4 active_rows=3
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=40x40 canvas=32x32 content=32x32 offset=(0,0)
+screen_id=24 palette_bank=39 tile_base=5888 reserved_last=6143 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
+note=standard opponent, imported at playfield size
 
 [025] npcs/opponent_tank_camo.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-source=80x120 canvas=256x256 content=80x120 offset=(88,136)
-screen_id=25 palette_bank=40 tile_base=6144 reserved_last=6399 used_cols=6 used_rows=8 start_col=5 start_row=8 x_pad=8 y_pad=8 used_tiles=48 strips=6 active_rows=8
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=80x120 canvas=32x32 content=21x32 offset=(5,0)
+screen_id=25 palette_bank=40 tile_base=6144 reserved_last=6399 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=5 y_pad=0 used_tiles=4 strips=2 active_rows=2
+note=standard opponent, imported at playfield size
 
