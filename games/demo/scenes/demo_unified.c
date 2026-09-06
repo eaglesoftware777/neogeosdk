@@ -81,7 +81,6 @@ void NEOGEO_USER playSFXB(uint8_t n);
 void NEOGEO_USER playSFX(uint8_t n);
 void NEOGEO_USER playVoiceCue(uint8_t n);
 void NEOGEO_USER ng_clear_screen_full(void);
-void NEOGEO_USER demo_sprite_window_cache_reset(void);
 const uint16_t * NEOGEO_USER ng_get_screen_palette(uint16_t screen_id);
 
 #define U_FLOOR_Y       192
