@@ -1,19 +1,5 @@
-/*
- * ng_palette_fx.c — Palette effects implementation (Stage 7)
- *
- * NeoGeo colour encoding (1-5-5-5):
- *   bit 15   = dark flag
- *   bits 14-10 = red (0..31)
- *   bits  9-5  = green (0..31)
- *   bits  4-0  = blue (0..31)
- *
- * Colour index 0 in any palette is always transparent — we never write to it.
- *
- * Performance:
- *   Palette blending is 15 colours × 3 channels = 45 integer operations.
- *   This runs once per affected slot per frame — well within VBlank budget.
- *   No multiply needed for fade: we shift the channel value right.
- */
+/* Palette effects use the Neo Geo split-component color encoding.
+ * Index zero is preserved; uploads are deferred to the render queue. */
 
 #include "ng_palette_fx.h"
 #include "macro.h"
@@ -21,97 +7,17 @@
 
 static NGPalFxSlot ng_palfx_slots[NG_PALFX_MAX_SLOTS];
 
-/* Extract colour channels from a NeoGeo colour word */
-#define PAL_R(c)   (uint8_t)(((c) >> 10) & 0x1F)
-#define PAL_G(c)   (uint8_t)(((c) >>  5) & 0x1F)
-#define PAL_B(c)   (uint8_t)((c) & 0x1F)
-#define PAL_DARK(c) (uint8_t)(((c) >> 15) & 1)
+#include "ng_palette_math.h"
 
-/* Pack channels back to NeoGeo colour word (dark flag cleared by default) */
-#define PAL_PACK(r,g,b) (uint16_t)(((uint16_t)(r) << 10) | ((uint16_t)(g) << 5) | (uint16_t)(b))
-
-/*
- * Scale a colour value by factor (0..255 maps to 0..31 output).
- * factor=255 → full brightness, factor=0 → black.
- * Uses shift to avoid multiply: (v * factor) >> 8.
- * 68000: one MULS (16x16) per channel.
- */
-static uint8_t NEOGEO_USER palfx_scale_channel(uint8_t v, uint8_t factor)
-{
-    return (uint8_t)(((uint16_t)v * (uint16_t)factor) >> 8);
-}
-
-/*
- * Blend a 16-colour base palette towards a tint colour.
- * blend=0 → pure base, blend=255 → pure tint.
- * Skips index 0 (transparent).
- */
 static void NEOGEO_USER palfx_blend_to(uint16_t *out, const uint16_t *base,
-                                        uint8_t tr, uint8_t tg, uint8_t tb,
-                                        uint8_t blend)
+                                      uint8_t r, uint8_t g, uint8_t b, uint8_t blend)
 {
-    uint8_t i;
-    uint8_t inv = (uint8_t)(255 - blend);
-
-    out[0] = 0x8000; /* transparent — always preserved */
-
-    for (i = 1; i < 16; i++) {
-        uint16_t src = base[i];
-        uint8_t r, g, b;
-        uint16_t rb, gb, bb;
-
-        if (src == 0x8000) {
-            out[i] = 0x8000;
-            continue;
-        }
-        /*
-         * Blend formula (per channel, 0..31 range):
-         *   result = (src_channel * inv + tint_channel * blend) / 256
-         * tint_channel tr/tg/tb are in 0..255 range; we map to 0..31 by >>3.
-         * Both terms are already scaled by 0..255 in palfx_scale_channel, which
-         * returns a value 0..31.  Sum before normalising avoids a second divide.
-         */
-        rb = (uint16_t)((uint16_t)palfx_scale_channel(PAL_R(src), inv) +
-                        (uint16_t)palfx_scale_channel((uint8_t)(tr >> 3), blend));
-        gb = (uint16_t)((uint16_t)palfx_scale_channel(PAL_G(src), inv) +
-                        (uint16_t)palfx_scale_channel((uint8_t)(tg >> 3), blend));
-        bb = (uint16_t)((uint16_t)palfx_scale_channel(PAL_B(src), inv) +
-                        (uint16_t)palfx_scale_channel((uint8_t)(tb >> 3), blend));
-
-        /* Normalise: both terms are 0..31 scaled by 0..255 and added; max ~62.
-         * Divide by 2 to get back to 0..31 range. */
-        r = (uint8_t)(rb >> 1);
-        g = (uint8_t)(gb >> 1);
-        b = (uint8_t)(bb >> 1);
-        if (r > 31) r = 31;
-        if (g > 31) g = 31;
-        if (b > 31) b = 31;
-        out[i] = PAL_PACK(r, g, b);
-    }
+    ng_palette_tint_colors(out, base, r, g, b, blend);
 }
 
-/*
- * Scale a 16-colour palette by brightness (0..255).
- * brightness=255 → full, brightness=0 → black.
- */
 static void NEOGEO_USER palfx_scale(uint16_t *out, const uint16_t *base, uint8_t brightness)
 {
-    uint8_t i;
-
-    out[0] = 0x8000;
-
-    for (i = 1; i < 16; i++) {
-        uint16_t src = base[i];
-        uint8_t r, g, b;
-        if (src == 0x8000) {
-            out[i] = 0x8000;
-            continue;
-        }
-        r = palfx_scale_channel(PAL_R(src), brightness);
-        g = palfx_scale_channel(PAL_G(src), brightness);
-        b = palfx_scale_channel(PAL_B(src), brightness);
-        out[i] = PAL_PACK(r, g, b);
-    }
+    ng_palette_scale_colors(out, base, brightness);
 }
 
 static NGPalFxSlot * NEOGEO_USER palfx_find_or_alloc(uint8_t palette_slot)
@@ -159,6 +65,13 @@ uint8_t NEOGEO_USER ng_palette_load_asset(const NGPaletteAsset *assets,
 
     if (!assets) return 0u;
 
+    if (asset_id != 0u && asset_id <= count &&
+        assets[asset_id - 1u].asset_id == asset_id) {
+        ng_palette_load_bank(assets[asset_id - 1u].palette_slot,
+                              assets[asset_id - 1u].colors);
+        return 1u;
+    }
+
     for (i = 0u; i < count; i++) {
         if (assets[i].asset_id == asset_id) {
             ng_palette_load_bank(assets[i].palette_slot, assets[i].colors);
@@ -177,7 +90,7 @@ void NEOGEO_USER ng_palfx_upload_base(uint8_t palette_slot, const uint16_t *pal)
 
 void NEOGEO_USER ng_palfx_fade_in(uint8_t palette_slot, const uint16_t *base_pal, uint8_t duration)
 {
-    NGPalFxSlot *s = palfx_find_or_alloc(palette_slot);
+    NGPalFxSlot *s = base_pal ? palfx_find_or_alloc(palette_slot) : 0;
     if (!s) return;
     s->fx_type   = NG_PALFX_FADE_IN;
     s->base_pal  = base_pal;
@@ -187,7 +100,7 @@ void NEOGEO_USER ng_palfx_fade_in(uint8_t palette_slot, const uint16_t *base_pal
 
 void NEOGEO_USER ng_palfx_fade_out(uint8_t palette_slot, const uint16_t *base_pal, uint8_t duration)
 {
-    NGPalFxSlot *s = palfx_find_or_alloc(palette_slot);
+    NGPalFxSlot *s = base_pal ? palfx_find_or_alloc(palette_slot) : 0;
     if (!s) return;
     s->fx_type   = NG_PALFX_FADE_OUT;
     s->base_pal  = base_pal;
@@ -197,7 +110,7 @@ void NEOGEO_USER ng_palfx_fade_out(uint8_t palette_slot, const uint16_t *base_pa
 
 void NEOGEO_USER ng_palfx_flash_white(uint8_t palette_slot, const uint16_t *base_pal, uint8_t duration)
 {
-    NGPalFxSlot *s = palfx_find_or_alloc(palette_slot);
+    NGPalFxSlot *s = base_pal ? palfx_find_or_alloc(palette_slot) : 0;
     if (!s) return;
     s->fx_type   = NG_PALFX_FLASH_WHITE;
     s->base_pal  = base_pal;
@@ -207,7 +120,7 @@ void NEOGEO_USER ng_palfx_flash_white(uint8_t palette_slot, const uint16_t *base
 
 void NEOGEO_USER ng_palfx_flash_red(uint8_t palette_slot, const uint16_t *base_pal, uint8_t duration)
 {
-    NGPalFxSlot *s = palfx_find_or_alloc(palette_slot);
+    NGPalFxSlot *s = base_pal ? palfx_find_or_alloc(palette_slot) : 0;
     if (!s) return;
     s->fx_type   = NG_PALFX_FLASH_RED;
     s->base_pal  = base_pal;
@@ -217,7 +130,7 @@ void NEOGEO_USER ng_palfx_flash_red(uint8_t palette_slot, const uint16_t *base_p
 
 void NEOGEO_USER ng_palfx_flash_blue(uint8_t palette_slot, const uint16_t *base_pal, uint8_t duration)
 {
-    NGPalFxSlot *s = palfx_find_or_alloc(palette_slot);
+    NGPalFxSlot *s = base_pal ? palfx_find_or_alloc(palette_slot) : 0;
     if (!s) return;
     s->fx_type   = NG_PALFX_FLASH_BLUE;
     s->base_pal  = base_pal;
@@ -227,22 +140,22 @@ void NEOGEO_USER ng_palfx_flash_blue(uint8_t palette_slot, const uint16_t *base_
 
 void NEOGEO_USER ng_palfx_pulse(uint8_t palette_slot, const uint16_t *base_pal, uint8_t period)
 {
-    NGPalFxSlot *s = palfx_find_or_alloc(palette_slot);
+    NGPalFxSlot *s = base_pal ? palfx_find_or_alloc(palette_slot) : 0;
     if (!s) return;
     s->fx_type   = NG_PALFX_PULSE;
     s->base_pal  = base_pal;
     s->timer     = 0;
-    s->duration  = period ? period : 16;
+    s->duration  = period ? (period < 2u ? 2u : period) : 16;
 }
 
 void NEOGEO_USER ng_palfx_cycle(uint8_t palette_slot, const uint16_t *base_pal,
                                   uint8_t start, uint8_t end)
 {
-    NGPalFxSlot *s = palfx_find_or_alloc(palette_slot);
+    NGPalFxSlot *s = base_pal ? palfx_find_or_alloc(palette_slot) : 0;
     if (!s) return;
-    if (start >= 16) start = 1;
+    if (start == 0u || start > 15u) start = 1u;
     if (end >= 16) end = 15;
-    if (end <= start) end = (uint8_t)(start + 1);
+    if (end < start) end = start;
     s->fx_type    = NG_PALFX_CYCLE;
     s->base_pal   = base_pal;
     s->cycle_start = start;
@@ -299,7 +212,6 @@ void NEOGEO_USER ng_palette_fx_update(void)
             s->timer++;
             bright_n   = (uint16_t)((uint16_t)s->timer * 255u);
             brightness = (uint8_t)(bright_n / (uint16_t)s->duration);
-            if (brightness > 255) brightness = 255;
 
             palfx_scale(s->work_pal, s->base_pal, brightness);
             ng_rq_palette_upload(s->palette_slot, s->work_pal);
@@ -338,7 +250,7 @@ void NEOGEO_USER ng_palette_fx_update(void)
 
             blend = (uint8_t)(((uint16_t)s->timer * 255u) / (uint16_t)s->duration);
             /* White: R=31, G=31, B=31 → pass as scaled 0..255: 255 */
-            palfx_blend_to(s->work_pal, s->base_pal, 255, 255, 255, (uint8_t)(255 - blend));
+            palfx_blend_to(s->work_pal, s->base_pal, 255, 255, 255, blend);
             ng_rq_palette_upload(s->palette_slot, s->work_pal);
 
             if (s->timer == 0) {
@@ -354,7 +266,7 @@ void NEOGEO_USER ng_palette_fx_update(void)
             uint8_t blend;
 
             blend = (uint8_t)(((uint16_t)s->timer * 200u) / (uint16_t)s->duration);
-            palfx_blend_to(s->work_pal, s->base_pal, 255, 0, 0, (uint8_t)(200 - blend));
+            palfx_blend_to(s->work_pal, s->base_pal, 255, 0, 0, blend);
             ng_rq_palette_upload(s->palette_slot, s->work_pal);
 
             if (s->timer == 0) {
@@ -370,7 +282,7 @@ void NEOGEO_USER ng_palette_fx_update(void)
             uint8_t blend;
 
             blend = (uint8_t)(((uint16_t)s->timer * 180u) / (uint16_t)s->duration);
-            palfx_blend_to(s->work_pal, s->base_pal, 0, 64, 255, (uint8_t)(180 - blend));
+            palfx_blend_to(s->work_pal, s->base_pal, 0, 64, 255, blend);
             ng_rq_palette_upload(s->palette_slot, s->work_pal);
 
             if (s->timer == 0) {
@@ -399,7 +311,7 @@ void NEOGEO_USER ng_palette_fx_update(void)
             if (s->timer < half) {
                 phase = (uint8_t)((uint16_t)s->timer * 127u / (uint16_t)half);
             } else {
-                phase = (uint8_t)(127u - (uint16_t)(s->timer - half) * 127u / (uint16_t)half);
+                phase = (uint8_t)(127u - (uint16_t)(s->timer - half) * 127u / (uint16_t)(s->duration - half));
             }
             brightness = (uint8_t)(128 + phase);
 

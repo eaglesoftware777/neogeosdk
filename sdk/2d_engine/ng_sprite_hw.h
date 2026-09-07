@@ -1,6 +1,23 @@
 #ifndef NG_SPRITE_HW_H
 #define NG_SPRITE_HW_H
 
+#include <stdint.h>
+
+static inline uint16_t ng_sprite_scaled_x(uint16_t pixels, uint8_t scale)
+{
+    return (uint16_t)(((uint32_t)pixels * ((scale >> 4) + 1u)) >> 4);
+}
+
+static inline uint16_t ng_sprite_scaled_y(uint16_t pixels, uint8_t scale)
+{
+    return (uint16_t)(((uint32_t)pixels * ((uint16_t)scale + 1u)) >> 8);
+}
+
+static inline uint16_t ng_sprite_row_tile(uint16_t base, uint16_t stride, uint8_t row)
+{
+    return (uint16_t)(base + (uint16_t)row * stride);
+}
+
 /*
  * Shared sprite geometry rules for the C and C++ renderers.
  *
