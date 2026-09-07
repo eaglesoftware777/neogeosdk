@@ -183,6 +183,43 @@ Given several outputs it generates one page at the combined width and cuts
 it into columns, so pages laid side by side join without a seam down the
 middle. Everything is synthesised, so the result carries no licence.
 
+## Tile stride
+
+Every asset carries a `tile_stride` in its metadata: the width of the
+canvas it was imported onto, in tiles. Row *n* of the artwork begins that
+many tiles after row *n-1*.
+
+Anything binding an asset has to use it — `ng_char_set_tile_stride()`, or
+`ng_sprite_group_set_tile_stride()`. **Do not assume 16.** Sixteen is the
+stride of a 256 px canvas and nothing more; an asset imported onto a
+narrower one has a narrower stride, and binding it with 16 reads every
+row after the first from further along the C ROM than the artwork is. The
+symptom is the right palette over the wrong art — a recognisable shape in
+plausible colours that is not the asset you asked for, which is easy to
+mistake for a quantiser problem.
+
+Both engines validate the window an asset bind describes, and both now
+validate it against the stride the character will actually be drawn with
+rather than its strip count. A bind that would walk past the asset is
+refused. Note that it is refused *silently* — the character keeps what it
+had — so a wrong stride still shows up as stale art rather than as an
+error. Check `tile_stride` first when art comes out wrong after an import
+setting changes.
+
+## Palette anchors
+
+Pure black and pure white are reserved as palette entries when the asset
+has a real population at either end — currently 0.4% of its opaque
+pixels. k-means will not choose either on its own, because both sit at
+the end of a distribution where a centroid always lands short, and the
+result is line art whose outline comes back grey.
+
+The threshold matters because a reserved slot is one of fifteen. An
+existence test spends two slots on almost every asset, since an
+anti-aliased contour bled inward nearly always leaves one dark pixel
+somewhere. Requiring a population means an asset with no true black keeps
+all fifteen slots for colours it is actually made of.
+
 ## HD conditioning
 
 `ARTBOX_ENHANCE=0`, or `img2neo_tile.py --no-enhance`, turns off two passes

@@ -1,5 +1,48 @@
 # Changelog
 
+## v1.7.4 - Tile stride, and what the palette is actually spending
+
+Release date: 2026-09-07
+
+### Every asset publishes its tile stride
+
+An asset's rows are `tile_stride` tiles apart, and that stride is the
+canvas width in tiles - 16 only for a 256 px import.  Six places in the
+tree hardcoded 16, which was true until v1.7.3 gave Sky Lance's craft a
+32 px canvas, its bosses 112, and the `neogeogame` opponent 48.  From
+that point those assets were drawn by reading each row from sixteen
+tiles on instead of two, seven or three: the right palette over whatever
+else lives at that address.  Nineteen assets across two games.
+
+- `tile_stride` is now a field in `NGSpriteAssetMeta`, emitted from the
+  canvas width, and every bind takes it from there.
+- Both engines validate an asset window against the stride the character
+  will be drawn with, not against its strip count.  The two are equal
+  only for an asset that fills its canvas, so the old check under-measured
+  the window and passed exactly the binds it exists to catch.
+- `demo_asset_scale()` converts a `U_SCALE_*` fraction - written against
+  a 256 px import - into the hardware scale that asset needs from its own
+  canvas, so a call site can say how big a figure should look without
+  knowing what it was imported at.
+
+### Palette
+
+- Pure black and white are reserved only when the asset has a real
+  population at that end, currently 0.4% of its opaque pixels.  A single
+  dark pixel used to be enough, and an anti-aliased contour bled inward
+  almost always leaves one, so two of fifteen slots went on colours
+  nothing wanted.  Character art earns both; backgrounds mostly do not.
+
+### Not done
+
+Importing the demo's own characters at the size they are drawn - the
+change that would halve what the sprite chip decimates - was attempted
+twice and reverted twice.  The tile stride was one blocker and is fixed;
+something else in the demo's binding still assumes a 16-tile canvas, and
+the char-select portraits and the NPC chapter render wrongly without it.
+`cat_sky_planes` shows the same idea working where the binding is
+simpler.
+
 ## v1.7.3 - Sprites at the size they are drawn
 
 Release date: 2026-09-06
