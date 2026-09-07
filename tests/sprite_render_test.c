@@ -12,10 +12,16 @@
 #include <stdio.h>
 #include <string.h>
 #include "neogeo.h"
+#include "../sdk/2d_engine/ng_sprite_hw.h"
+#include "../sdk/2d_engine/ng_palette_math.h"
 #ifdef __cplusplus
+#include "ng_art_asset.hpp"
+#include "ng_palette_fx.hpp"
 #include "ng_sprite_group.hpp"
 #include "ng_sprite_window.hpp"
 #else
+#include "ng_art_asset.h"
+#include "ng_palette_fx.h"
 #include "ng_sprite_group.h"
 #include "ng_sprite_window.h"
 #endif
@@ -23,6 +29,19 @@
 static uint16_t ram[0x8800];
 static uint16_t address, increment;
 static unsigned writes;
+static uint16_t uploaded_palette[16];
+
+void ng_rq_palette_upload(uint16_t slot, const uint16_t *data)
+{
+    (void)slot;
+    memcpy(uploaded_palette, data, sizeof(uploaded_palette));
+}
+
+void load_palettes(uint16_t *palette, uintptr_t destination)
+{
+    (void)destination;
+    memcpy(uploaded_palette, palette, sizeof(uploaded_palette));
+}
 
 #define UNTOUCHED 0x5a5au
 
@@ -206,10 +225,68 @@ static void test_window_parks_only_its_own_tail(void)
     assert(ram[SCB2_ADDR + 72] == UNTOUCHED);
 }
 
+static void test_palette_effects(void)
+{
+    uint16_t base[16] = {0x1234u, 0x4f00u, 0x20f0u, 0x100fu, 0x8000u};
+    uint16_t result[16];
+    unsigned color, i;
+
+    for (color = 0; color <= 0xffffu; color++) {
+        base[15] = (uint16_t)color;
+        ng_palette_scale_colors(result, base, 255u);
+        assert(result[15] == color);
+        ng_palette_tint_colors(result, base, 255u, 0u, 0u, 0u);
+        assert(result[15] == color);
+    }
+    assert(ng_color_pack(31u, 0u, 0u) == 0x4f00u);
+    assert(ng_color_pack(0u, 31u, 0u) == 0x20f0u);
+    assert(ng_color_pack(0u, 0u, 31u) == 0x100fu);
+
+    ng_palette_fx_init();
+    ng_palfx_flash_white(12u, base, 4u);
+    ng_palette_fx_update();
+    assert(uploaded_palette[0] == base[0]);
+    for (i = 1; i < 16; i++) assert(uploaded_palette[i] == 0x7fffu);
+    for (i = 0; i < 4; i++) ng_palette_fx_update();
+    assert(memcmp(base, uploaded_palette, sizeof(base)) == 0);
+
+    ng_palfx_fade_in(12u, base, 2u);
+    ng_palette_fx_update();
+    assert(ng_color_g(uploaded_palette[1]) == 0u);
+    assert(ng_color_b(uploaded_palette[1]) == 0u);
+    ng_palette_fx_update();
+    assert(memcmp(base, uploaded_palette, sizeof(base)) == 0);
+
+    ng_palfx_cycle(12u, base, 15u, 15u);
+    for (i = 0; i < 20; i++) ng_palette_fx_update();
+    assert(memcmp(base, uploaded_palette, sizeof(base)) == 0);
+    ng_palfx_cycle(12u, base, 0u, 255u);
+    for (i = 0; i < 20; i++) {
+        ng_palette_fx_update();
+        assert(uploaded_palette[0] == base[0]);
+    }
+    for (i = 1; i < 8; i++) {
+        ng_palfx_pulse(12u, base, (uint8_t)i);
+        ng_palette_fx_update();
+    }
+    ng_palfx_stop(12u);
+    ng_palfx_fade_in(12u, 0, 1u);
+    assert(!ng_palfx_active(12u));
+}
+
 int main(void)
 {
     NGSpriteGroup g;
     NGSpriteGroup tall;
+    NGArtAsset assets[3];
+    memset(assets, 0, sizeof(assets));
+    assets[0].asset_id = 1u;
+    assets[1].asset_id = 2u;
+    assets[2].asset_id = 90u;
+    assert(ng_art_asset_find(assets, 3u, 2u) == &assets[1]);
+    assert(ng_art_asset_find(assets, 3u, 90u) == &assets[2]);
+    assert(!ng_art_asset_find(assets, 3u, 4u));
+    assert(!ng_art_asset_find(0, 3u, 1u));
 
     memset(ram, 0x5a, sizeof(ram));
 
@@ -221,7 +298,12 @@ int main(void)
     test_hide_and_show_restore_the_chain(&g);
     test_flip_rewrites_the_map(&g);
     test_window_parks_only_its_own_tail();
+    test_palette_effects();
+    assert(ng_sprite_scaled_x(256u, 0x7fu) == 128u);
+    assert(ng_sprite_scaled_y(256u, 0x7fu) == 128u);
+    assert(ng_sprite_scaled_y(256u, 0xffu) == 256u);
+    assert(ng_sprite_row_tile(100u, 3u, 2u) == 106u);
 
-    puts("active characters, map padding, partial flushes and window tails: PASS");
+    puts("sprite geometry, map padding, window tails and palette effects: PASS");
     return 0;
 }

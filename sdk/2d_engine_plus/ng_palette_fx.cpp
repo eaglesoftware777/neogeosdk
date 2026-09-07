@@ -1,10 +1,7 @@
 #include "ng_palette_fx.hpp"
 #include "ng_hw.hpp"
 
-#define PAL_R(c)    (uint8_t)(((c) >> 10) & 0x1F)
-#define PAL_G(c)    (uint8_t)(((c) >>  5) & 0x1F)
-#define PAL_B(c)    (uint8_t)((c) & 0x1F)
-#define PAL_PACK(r,g,b) (uint16_t)(((uint16_t)(r) << 10) | ((uint16_t)(g) << 5) | (uint16_t)(b))
+#include "../2d_engine/ng_palette_math.h"
 
 /* --- PaletteFxSystem singleton --- */
 
@@ -16,44 +13,15 @@ PaletteFxSystem& PaletteFxSystem::instance()
 
 /* --- PaletteFxSystem private helpers --- */
 
-uint8_t PaletteFxSystem::scaleChannel(uint8_t v, uint8_t factor)
-{
-    return (uint8_t)(((uint16_t)v * (uint16_t)factor) >> 8);
-}
-
 void PaletteFxSystem::blendTo(uint16_t *out, const uint16_t *base,
-                               uint8_t tr, uint8_t tg, uint8_t tb, uint8_t blend)
+                               uint8_t r, uint8_t g, uint8_t b, uint8_t blend)
 {
-    uint8_t i, inv = (uint8_t)(255 - blend);
-    out[0] = 0x8000;
-    for (i = 1; i < 16; i++) {
-        uint16_t src = base[i];
-        uint8_t r, g, b;
-        uint16_t rb, gb, bb;
-        if (src == 0x8000) { out[i] = 0x8000; continue; }
-        rb = (uint16_t)(scaleChannel(PAL_R(src), inv) + scaleChannel((uint8_t)(tr >> 3), blend));
-        gb = (uint16_t)(scaleChannel(PAL_G(src), inv) + scaleChannel((uint8_t)(tg >> 3), blend));
-        bb = (uint16_t)(scaleChannel(PAL_B(src), inv) + scaleChannel((uint8_t)(tb >> 3), blend));
-        r = (uint8_t)(rb >> 1); if (r > 31) r = 31;
-        g = (uint8_t)(gb >> 1); if (g > 31) g = 31;
-        b = (uint8_t)(bb >> 1); if (b > 31) b = 31;
-        out[i] = PAL_PACK(r, g, b);
-    }
+    ng_palette_tint_colors(out, base, r, g, b, blend);
 }
 
 void PaletteFxSystem::scalePal(uint16_t *out, const uint16_t *base, uint8_t brightness)
 {
-    uint8_t i;
-    out[0] = 0x8000;
-    for (i = 1; i < 16; i++) {
-        uint16_t src = base[i];
-        uint8_t r, g, b;
-        if (src == 0x8000) { out[i] = 0x8000; continue; }
-        r = scaleChannel(PAL_R(src), brightness);
-        g = scaleChannel(PAL_G(src), brightness);
-        b = scaleChannel(PAL_B(src), brightness);
-        out[i] = PAL_PACK(r, g, b);
-    }
+    ng_palette_scale_colors(out, base, brightness);
 }
 
 NGPalFxSlot* PaletteFxSystem::findOrAlloc(uint8_t palette_slot)
@@ -84,7 +52,7 @@ void PaletteFxSystem::uploadBase(uint8_t palette_slot, const uint16_t *pal)
 
 void PaletteFxSystem::fadeIn(uint8_t palette_slot, const uint16_t *base_pal, uint8_t duration)
 {
-    NGPalFxSlot *s = findOrAlloc(palette_slot);
+    NGPalFxSlot *s = base_pal ? findOrAlloc(palette_slot) : 0;
     if (!s) return;
     s->fx_type = NG_PALFX_FADE_IN; s->base_pal = base_pal;
     s->timer = 0; s->duration = duration ? duration : 1;
@@ -92,7 +60,7 @@ void PaletteFxSystem::fadeIn(uint8_t palette_slot, const uint16_t *base_pal, uin
 
 void PaletteFxSystem::fadeOut(uint8_t palette_slot, const uint16_t *base_pal, uint8_t duration)
 {
-    NGPalFxSlot *s = findOrAlloc(palette_slot);
+    NGPalFxSlot *s = base_pal ? findOrAlloc(palette_slot) : 0;
     if (!s) return;
     s->fx_type = NG_PALFX_FADE_OUT; s->base_pal = base_pal;
     s->timer = 0; s->duration = duration ? duration : 1;
@@ -100,7 +68,7 @@ void PaletteFxSystem::fadeOut(uint8_t palette_slot, const uint16_t *base_pal, ui
 
 void PaletteFxSystem::flashWhite(uint8_t palette_slot, const uint16_t *base_pal, uint8_t duration)
 {
-    NGPalFxSlot *s = findOrAlloc(palette_slot);
+    NGPalFxSlot *s = base_pal ? findOrAlloc(palette_slot) : 0;
     if (!s) return;
     s->fx_type = NG_PALFX_FLASH_WHITE; s->base_pal = base_pal;
     s->timer = duration ? duration : 4; s->duration = s->timer;
@@ -108,7 +76,7 @@ void PaletteFxSystem::flashWhite(uint8_t palette_slot, const uint16_t *base_pal,
 
 void PaletteFxSystem::flashRed(uint8_t palette_slot, const uint16_t *base_pal, uint8_t duration)
 {
-    NGPalFxSlot *s = findOrAlloc(palette_slot);
+    NGPalFxSlot *s = base_pal ? findOrAlloc(palette_slot) : 0;
     if (!s) return;
     s->fx_type = NG_PALFX_FLASH_RED; s->base_pal = base_pal;
     s->timer = duration ? duration : 6; s->duration = s->timer;
@@ -116,7 +84,7 @@ void PaletteFxSystem::flashRed(uint8_t palette_slot, const uint16_t *base_pal, u
 
 void PaletteFxSystem::flashBlue(uint8_t palette_slot, const uint16_t *base_pal, uint8_t duration)
 {
-    NGPalFxSlot *s = findOrAlloc(palette_slot);
+    NGPalFxSlot *s = base_pal ? findOrAlloc(palette_slot) : 0;
     if (!s) return;
     s->fx_type = NG_PALFX_FLASH_BLUE; s->base_pal = base_pal;
     s->timer = duration ? duration : 6; s->duration = s->timer;
@@ -124,20 +92,20 @@ void PaletteFxSystem::flashBlue(uint8_t palette_slot, const uint16_t *base_pal, 
 
 void PaletteFxSystem::pulse(uint8_t palette_slot, const uint16_t *base_pal, uint8_t period)
 {
-    NGPalFxSlot *s = findOrAlloc(palette_slot);
+    NGPalFxSlot *s = base_pal ? findOrAlloc(palette_slot) : 0;
     if (!s) return;
     s->fx_type = NG_PALFX_PULSE; s->base_pal = base_pal;
-    s->timer = 0; s->duration = period ? period : 16;
+    s->timer = 0; s->duration = period ? (period < 2u ? 2u : period) : 16;
 }
 
 void PaletteFxSystem::cycle(uint8_t palette_slot, const uint16_t *base_pal,
                              uint8_t start, uint8_t end)
 {
-    NGPalFxSlot *s = findOrAlloc(palette_slot);
+    NGPalFxSlot *s = base_pal ? findOrAlloc(palette_slot) : 0;
     if (!s) return;
-    if (start >= 16) start = 1;
+    if (start == 0u || start > 15u) start = 1u;
     if (end >= 16)   end   = 15;
-    if (end <= start) end  = (uint8_t)(start + 1);
+    if (end < start) end = start;
     s->fx_type    = NG_PALFX_CYCLE; s->base_pal = base_pal;
     s->cycle_start = start; s->cycle_end = end; s->cycle_pos = 0;
     s->timer = 0; s->duration = 1;
@@ -175,7 +143,6 @@ void PaletteFxSystem::update()
             uint8_t brightness;
             s->timer++;
             brightness = (uint8_t)((uint16_t)((uint16_t)s->timer * 255u) / (uint16_t)s->duration);
-            if (brightness > 255) brightness = 255;
             scalePal(s->work_pal, s->base_pal, brightness);
             ng_rq_palette_upload(s->palette_slot, s->work_pal);
             if (s->timer >= s->duration) { ng_rq_palette_upload(s->palette_slot, s->base_pal); s->active = 0; }
@@ -193,7 +160,7 @@ void PaletteFxSystem::update()
         }
         case NG_PALFX_FLASH_WHITE: {
             uint8_t blend = (uint8_t)(((uint16_t)s->timer * 255u) / (uint16_t)s->duration);
-            blendTo(s->work_pal, s->base_pal, 255, 255, 255, (uint8_t)(255 - blend));
+            blendTo(s->work_pal, s->base_pal, 255, 255, 255, blend);
             ng_rq_palette_upload(s->palette_slot, s->work_pal);
             if (s->timer == 0) { ng_rq_palette_upload(s->palette_slot, s->base_pal); s->active = 0; }
             else s->timer--;
@@ -201,7 +168,7 @@ void PaletteFxSystem::update()
         }
         case NG_PALFX_FLASH_RED: {
             uint8_t blend = (uint8_t)(((uint16_t)s->timer * 200u) / (uint16_t)s->duration);
-            blendTo(s->work_pal, s->base_pal, 255, 0, 0, (uint8_t)(200 - blend));
+            blendTo(s->work_pal, s->base_pal, 255, 0, 0, blend);
             ng_rq_palette_upload(s->palette_slot, s->work_pal);
             if (s->timer == 0) { ng_rq_palette_upload(s->palette_slot, s->base_pal); s->active = 0; }
             else s->timer--;
@@ -209,7 +176,7 @@ void PaletteFxSystem::update()
         }
         case NG_PALFX_FLASH_BLUE: {
             uint8_t blend = (uint8_t)(((uint16_t)s->timer * 180u) / (uint16_t)s->duration);
-            blendTo(s->work_pal, s->base_pal, 0, 64, 255, (uint8_t)(180 - blend));
+            blendTo(s->work_pal, s->base_pal, 0, 64, 255, blend);
             ng_rq_palette_upload(s->palette_slot, s->work_pal);
             if (s->timer == 0) { ng_rq_palette_upload(s->palette_slot, s->base_pal); s->active = 0; }
             else s->timer--;
@@ -223,7 +190,7 @@ void PaletteFxSystem::update()
             if (s->timer < half)
                 phase = (uint8_t)((uint16_t)s->timer * 127u / (uint16_t)half);
             else
-                phase = (uint8_t)(127u - (uint16_t)(s->timer - half) * 127u / (uint16_t)half);
+                phase = (uint8_t)(127u - (uint16_t)(s->timer - half) * 127u / (uint16_t)(s->duration - half));
             brightness = (uint8_t)(128 + phase);
             scalePal(s->work_pal, s->base_pal, brightness);
             ng_rq_palette_upload(s->palette_slot, s->work_pal);
@@ -266,6 +233,13 @@ uint8_t NEOGEO_USER ng_palette_load_asset(const NGPaletteAsset *assets,
     uint16_t i;
 
     if (!assets) return 0u;
+
+    if (asset_id != 0u && asset_id <= count &&
+        assets[asset_id - 1u].asset_id == asset_id) {
+        ng_palette_load_bank(assets[asset_id - 1u].palette_slot,
+                              assets[asset_id - 1u].colors);
+        return 1u;
+    }
 
     for (i = 0u; i < count; i++) {
         if (assets[i].asset_id == asset_id) {

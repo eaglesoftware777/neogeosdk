@@ -2,7 +2,7 @@
  * ng_palette_fx.hpp — Palette effects system.
  *
  * All writes go through ng_rq_palette_upload() → posted at VBlank.
- * NeoGeo colour: bit15=dark, [14:10]=R, [9:5]=G, [4:0]=B.
+ * NeoGeo color: D R0 G0 B0 R4..R1 G4..G1 B4..B1.
  * Index 0 is always transparent.
  */
 
@@ -70,7 +70,6 @@ private:
 
     NGPalFxSlot* findOrAlloc(uint8_t palette_slot);
 
-    static uint8_t  scaleChannel(uint8_t v, uint8_t factor);
     static void     blendTo(uint16_t *out, const uint16_t *base,
                             uint8_t tr, uint8_t tg, uint8_t tb, uint8_t blend);
     static void     scalePal(uint16_t *out, const uint16_t *base, uint8_t brightness);

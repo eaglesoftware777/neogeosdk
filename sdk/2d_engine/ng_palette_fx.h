@@ -3,15 +3,12 @@
  *
  * NeoGeo palette RAM layout:
  *   0x400000 + slot * 32:  16 colours × 2 bytes = 32 bytes per slot.
- *   16 slots per bank, 2 banks.  Sprites use palettes 0..15 in bank 0.
- *   Each colour word: 0xRGB in 1-5-5-5 format with bit 15 as dark flag.
+ *   256 slots per bank, 2 banks. Sprites select palettes 0..255.
  *
  * NeoGeo colour word format:
- *   bit 15 = dark (halves all channels)
- *   bits 14-10 = red (5 bits)
- *   bits  9- 5 = green (5 bits)
- *   bits  4- 0 = blue (5 bits)
- *   Special: value 0x8000 = transparent (colour index 0 is transparent).
+ *   bit 15 = common dark bit; bits 14/13/12 = R/G/B low bits.
+ *   bits 11..8, 7..4, 3..0 = R/G/B upper four bits.
+ *   Only pixel index 0 is transparent, regardless of its color word.
  *
  * Safety: No direct palette RAM writes during game logic.
  * All writes are posted to ng_render_queue palettes → flushed at VBlank.
