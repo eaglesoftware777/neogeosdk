@@ -63,14 +63,15 @@ match_category = characters
 pattern = *.png
 mode = sprite
 category = characters
-# Importing these at the size they are drawn - 128 rather than 256, with
-# the demo's U_SCALE_* fractions doubled to match - is the right idea and
-# measurably sharper, but it moves every character's strip count and tile
-# stride, and the demo's character binding rejects the new geometry
-# silently: ng_char_set_sprite() drops a bind whose asset window fails
-# validation, so four chapters came up with stale or missing art.  The
-# ceiling stays at 256 until that path reports the rejection instead of
-# swallowing it.  See cat_sky_planes for the same idea where it does work.
+# 256, deliberately, though the demo never draws one above half size.
+#
+# Importing them at the size they are drawn would be sharper - it is what
+# cat_sky_planes does, and the tile-stride plumbing that makes it
+# possible is in place now.  Two attempts at it still came back with the
+# char-select portraits and the NPC chapter rendering wrongly, in ways
+# that survived fixing the stride and the draw scale, so something else
+# in the demo's binding still assumes a 16-tile canvas.  Until that is
+# found, this stays where the artwork is known good.
 fit = pad
 anchor = bottom-center
 target_width = 256
