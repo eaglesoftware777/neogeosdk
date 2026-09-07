@@ -648,25 +648,36 @@ def _neo_palette_pop(rgb: np.ndarray,
 
 
 def _reserved_anchor_colors(rgb: np.ndarray,
-                            max_anchors: int = 2) -> list[np.ndarray]:
+                            max_anchors: int = 2,
+                            min_fraction: float = 0.004) -> list:
     """
     Reserve hard contrast colours when the asset actually uses them.
 
-    This protects FIX/UI text and sprite line art from losing pure black
-    or bright white when the remaining colours are busy.
+    Pure black and pure white are what line art and speculars are drawn
+    with, and k-means will not choose either: they sit at the end of a
+    distribution, so a centroid always lands short of them and the
+    outline comes back grey.  Reserving the two ends protects that.
+
+    But a reserved slot is one of fifteen, and it has to earn it.  An
+    existence test does not: a single dark pixel anywhere in the image -
+    and an anti-aliased contour bled inward almost always leaves one -
+    was enough to spend a slot on a colour nothing else wanted, which is
+    two of fifteen gone on most assets for nothing.  Requiring a real
+    population at the end means the slot goes to a colour the picture is
+    actually made of, and an asset that has no true black keeps all
+    fifteen for the colours it does have.
     """
     if rgb.size == 0 or max_anchors <= 0:
         return []
     lum = _luma(rgb)
+    if lum.size == 0:
+        return []
     anchors: list[np.ndarray] = []
-    if np.any(lum < 18.0):
+    if float(np.mean(lum < 18.0)) >= min_fraction:
         anchors.append(np.array([0, 0, 0], dtype=np.uint8))
-    if len(anchors) < max_anchors and np.any(lum > 236.0):
+    if len(anchors) < max_anchors and float(np.mean(lum > 236.0)) >= min_fraction:
         # Both ends are exact hardware colours: black is the word with only
-        # the dark bit set, white the word with every other bit set.  The
-        # white anchor used to be 248 because that was the top of the old
-        # step-8 grid, which cost the brightest highlight in the image a
-        # level it did not have to lose.
+        # the dark bit set, white the word with every other bit set.
         anchors.append(np.array([255, 255, 255], dtype=np.uint8))
     return anchors
 

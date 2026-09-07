@@ -24,6 +24,16 @@ with open("sprite_meta.h", "w", encoding="utf-8") as out:
     out.write("    uint16_t content_height;\n")
     out.write("    uint8_t mode;\n")
     out.write("    uint8_t category;\n")
+    out.write("    /* Tiles per row of this asset's canvas.  Row n of the\n")
+    out.write("     * artwork starts tile_stride tiles after row n-1, so a\n")
+    out.write("     * sprite group or character bound to this asset has to be\n")
+    out.write("     * given this as its tile stride.  It is not always 16: it\n")
+    out.write("     * is the canvas width in tiles, and an asset imported onto\n")
+    out.write("     * a narrower canvas has a narrower stride.  Assuming 16\n")
+    out.write("     * reads each row from 16 tiles on instead of this many,\n")
+    out.write("     * which draws whatever is at that address - the right\n")
+    out.write("     * palette over the wrong art. */\n")
+    out.write("    uint8_t tile_stride;\n")
     out.write("} NGSpriteAssetMeta;\n\n")
     out.write("#define NG_ASSET_MODE_SCREEN 0\n")
     out.write("#define NG_ASSET_MODE_SPRITE 1\n\n")
@@ -68,8 +78,9 @@ with open("sprite_meta.h", "w", encoding="utf-8") as out:
             "npcs": 3,
             "background": 0,
         }.get(category_name, 0)
+        tile_stride = max(1, int(spec.get("canvas_width", 256)) // 16)
         out.write(
-            "    { %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d }, /* %s */\n"
+            "    { %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d }, /* %s */\n"
             % (
                 spec["tile_base"],
                 spec["palette_bank"],
@@ -83,6 +94,7 @@ with open("sprite_meta.h", "w", encoding="utf-8") as out:
                 spec["content_height"],
                 mode,
                 category,
+                tile_stride,
                 spec["name"],
             )
         )
