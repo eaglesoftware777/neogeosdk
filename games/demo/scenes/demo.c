@@ -305,7 +305,7 @@ uint16_t NEOGEO_USER demo_screen_tile(uint8_t screen_id)
     if (screen_id == 0u) return 0u;
     if (!meta) return (uint16_t)(((uint16_t)(screen_id - 1u)) * 256u);
     return (uint16_t)(meta->tile_base +
-                      ((uint16_t)meta->tile_row_start * 16u) +
+                      ((uint16_t)meta->tile_row_start * meta->tile_stride) +
                       meta->tile_col_start);
 }
 
@@ -326,6 +326,49 @@ uint8_t NEOGEO_USER demo_screen_strips(uint8_t screen_id)
     if (asset && asset->strips != 0u) return asset->strips;
     if (!meta || meta->strips == 0u) return 1u;
     return meta->strips;
+}
+
+/*
+ * Tiles per row of the asset's canvas.
+ *
+ * Row n of the artwork sits this many tiles after row n-1, so anything
+ * bound to the asset has to use it as the tile stride.  It is not always
+ * 16 - that is just the stride of a 256 px canvas.  Assuming 16 for an
+ * asset imported narrower reads each row from further along the C ROM
+ * than the artwork actually is, which draws the right palette over
+ * whatever happens to live there.
+ */
+uint8_t NEOGEO_USER demo_screen_tile_stride(uint8_t screen_id)
+{
+    const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
+    if (!meta || meta->tile_stride == 0u) return 16u;
+    return meta->tile_stride;
+}
+
+/*
+ * Convert a "fraction of a 256 px import" scale into the hardware scale
+ * this particular asset needs to reach that size on screen.
+ *
+ * Assets are imported at the size they are drawn, so they do not all
+ * arrive on the same canvas: a character imported at 128 needs twice the
+ * hardware scale of one imported at 256 to cover the same pixels.  The
+ * canvas width in tiles is the asset's tile stride, so that is what the
+ * conversion divides by.
+ *
+ * Scale bytes count sixteenths in their top nibble and must keep the low
+ * nibble at F, or the two axes disagree - see NG_SCALE().
+ */
+uint8_t NEOGEO_USER demo_asset_scale(uint8_t screen_id, uint8_t scale_256)
+{
+    uint16_t stride = demo_screen_tile_stride(screen_id);
+    uint16_t sixteenths;
+
+    if (stride == 0u || stride == 16u) return scale_256;
+
+    sixteenths = (uint16_t)(((uint16_t)(scale_256 >> 4) + 1u) * 16u / stride);
+    if (sixteenths < 1u)  sixteenths = 1u;
+    if (sixteenths > 16u) sixteenths = 16u;
+    return (uint8_t)(((sixteenths - 1u) << 4) | 0x0Fu);
 }
 
 uint8_t NEOGEO_USER demo_screen_rows(uint8_t screen_id)
@@ -676,14 +719,15 @@ static void NEOGEO_USER demo_perform_sprite_draw(const DemoSpriteDraw *cmd)
         ng_sprite_group_set_tile_base(g, (uint16_t)(DEMO_SCREEN_TILE(cmd->screen_id) + cmd->tile_y));
         ng_sprite_group_set_palette(g, DEMO_SCREEN_PALETTE(cmd->screen_id));
     }
-    ng_sprite_group_set_tile_stride(g, 16u);
+    ng_sprite_group_set_tile_stride(g, demo_screen_tile_stride(cmd->screen_id));
     ng_sprite_group_set_active_rows(g, rows);
     ng_sprite_group_set_pos(g,
                             (int16_t)(cmd->x + demo_screen_x_offset(cmd->screen_id)),
                             (int16_t)(cmd->y + demo_screen_y_offset(cmd->screen_id)));
     ng_sprite_group_set_scale(g,
-                              demo_normalize_x_scale(cmd->scale_x),
-                              cmd->scale_y);
+                              demo_normalize_x_scale(
+                                  demo_asset_scale(cmd->screen_id, cmd->scale_x)),
+                              demo_asset_scale(cmd->screen_id, cmd->scale_y));
     ng_sprite_group_set_flip(g, cmd->hflip, 0u);
     ng_sprite_group_flush(g);
 }

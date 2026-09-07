@@ -74,6 +74,11 @@ uint16_t NEOGEO_USER demo_screen_tile(uint8_t screen_id);
 uint8_t  NEOGEO_USER demo_screen_palette(uint8_t screen_id);
 uint8_t  NEOGEO_USER demo_screen_strips(uint8_t screen_id);
 uint8_t  NEOGEO_USER demo_screen_rows(uint8_t screen_id);
+/* Tiles per row of the asset's canvas - the tile stride to bind with. */
+uint8_t  NEOGEO_USER demo_screen_tile_stride(uint8_t screen_id);
+/* A U_SCALE_* fraction of a 256 px import, converted to the hardware
+ * scale this asset needs to reach that size from its own canvas. */
+uint8_t  NEOGEO_USER demo_asset_scale(uint8_t screen_id, uint8_t scale_256);
 int16_t  NEOGEO_USER demo_screen_x_offset(uint8_t screen_id);
 int16_t  NEOGEO_USER demo_screen_y_offset(uint8_t screen_id);
 uint8_t  NEOGEO_USER demo_screen_x_pad(uint8_t screen_id);

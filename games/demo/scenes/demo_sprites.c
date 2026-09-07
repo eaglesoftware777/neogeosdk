@@ -351,7 +351,7 @@ static void NEOGEO_USER spr_action_fsm(void)
                            DEMO_SCREEN_TILE(s_run_frames[0]),
                            DEMO_SCREEN_PALETTE(s_run_frames[0]));
 
-        ng_char_set_tile_stride(c, 16u);
+        ng_char_set_tile_stride(c, demo_screen_tile_stride(s_run_frames[0]));
 
         c->sprite_offset_y = -SPR_H;
         c->scale_x = 0xFFu;

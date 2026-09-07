@@ -79,13 +79,15 @@ void NEOGEO_USER sky_bind(NGCharacter *c, uint8_t id, uint8_t scale, uint8_t ban
     if (strips > NG_SPRITE_MAX_STRIPS) strips = NG_SPRITE_MAX_STRIPS;
     if (rows > NG_SPRITE_MAX_HEIGHT_TILES) rows = NG_SPRITE_MAX_HEIGHT_TILES;
 
-    /* First tile of the artwork inside its 16x16 page. */
+    /* First tile of the artwork inside its page.  The stride is the
+     * canvas width in tiles, which is 16 only for a full-width import -
+     * the playfield craft are imported far narrower than that. */
     tile = (uint16_t)(m->tile_base
-                      + (uint16_t)m->tile_row_start * 16u
+                      + (uint16_t)m->tile_row_start * m->tile_stride
                       + (uint16_t)m->tile_col_start);
 
     ng_char_set_sprite(c, 0u, strips, rows, tile, m->palette_bank);
-    ng_char_set_tile_stride(c, 16u);
+    ng_char_set_tile_stride(c, m->tile_stride);
     c->scale_x = scale;
     c->scale_y = scale;
 
@@ -179,7 +181,7 @@ void NEOGEO_USER sky_bg_select(uint8_t id)
         NGSpriteGroup *g = &s_bg_page[i];
         ng_sprite_group_init(g, (i == 0u) ? NG_SPR_BG0_FIRST : NG_SPR_BG1_FIRST,
                              16u, 16u, m->tile_base, m->palette_bank);
-        ng_sprite_group_set_tile_stride(g, 16u);
+        ng_sprite_group_set_tile_stride(g, m->tile_stride);
         ng_sprite_group_set_active_rows(g, 16u);
         ng_sprite_group_set_scale(g, SKY_SCALE_FULL, SKY_SCALE_FULL);
         ng_sprite_group_set_pos(g, SKY_FIELD_X,

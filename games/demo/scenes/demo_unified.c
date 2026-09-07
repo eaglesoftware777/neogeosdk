@@ -321,6 +321,17 @@ const uint16_t * NEOGEO_USER ng_get_screen_palette(uint16_t screen_id);
  * These are the exact binary fractions, where the table drops every
  * Nth line evenly and the art stays coherent:
  */
+/*
+ * Draw scales, expressed as a fraction of a 256 px import.
+ *
+ * They are not fed to the hardware as they stand.  Assets are imported
+ * at the size they are drawn, so different categories arrive on
+ * different canvases, and the same on-screen size needs a different
+ * hardware scale from each.  demo_asset_scale() converts one of these
+ * into the scale that asset actually needs, so a call site can go on
+ * saying how big the figure should look without knowing what canvas it
+ * came in on.
+ */
 #define U_SCALE_1_4        0x3Fu   /* 64/256  = 1/4   = 25.0% */
 #define U_SCALE_5_16       0x4Fu   /* 80/256  = 5/16  = 31.2% */
 #define U_SCALE_3_8        0x5Fu   /* 96/256  = 3/8   = 37.5% */
@@ -962,10 +973,10 @@ static void NEOGEO_USER bind_character_asset(NGCharacter *c,
 
     ng_char_set_sprite(c, first, strips, rows,
                        DEMO_SCREEN_TILE(frame), pal);
-    ng_char_set_tile_stride(c, 16u);
+    ng_char_set_tile_stride(c, demo_screen_tile_stride(frame));
 
-    c->scale_x = scale_x;
-    c->scale_y = scale_y;
+    c->scale_x = demo_asset_scale(frame, scale_x);
+    c->scale_y = demo_asset_scale(frame, scale_y);
 
     /* Content-bottom-center anchoring.  DEMO_SCREEN_TILE points at the
      * content's top-left tile, so the sprite group's origin (g->x,
