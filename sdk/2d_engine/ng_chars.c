@@ -602,7 +602,20 @@ void NEOGEO_USER ng_char_set_sprite(NGCharacter *c, uint16_t firstSprite, uint8_
     if (new_height > NG_SPRITE_MAX_HEIGHT_TILES) new_height = NG_SPRITE_MAX_HEIGHT_TILES;
 
     if (c->asset_bounds_enabled) {
-        uint16_t use_stride = new_strips;
+        /*
+         * Validate against the stride this char is actually going to be
+         * drawn with, not against its strip count.
+         *
+         * The two are only the same for an asset that fills its canvas.
+         * Every other asset is one window inside a wider page, so its
+         * rows are tile_stride apart and the last tile the sprite reads
+         * is further out than strips alone suggests.  Checking with the
+         * strip count therefore under-measures the window and passes
+         * binds that read past the asset, which is the failure this
+         * function exists to catch.
+         */
+        uint16_t use_stride = c->sprite_stride ? c->sprite_stride : new_strips;
+        if (use_stride < new_strips) use_stride = new_strips;
         if (!ng_char_validate_asset_window(tileBase,
                                            new_strips,
                                            new_height,
@@ -715,10 +728,41 @@ void NEOGEO_USER ng_palette_release(uint8_t palette_slot, uint8_t owner_kind)
     }
 }
 
+/*
+ * Set the tile stride - how many tiles apart the artwork's rows are.
+ *
+ * This is the asset's canvas width in tiles, and it is not always 16.
+ * An asset imported onto a narrower canvas has a narrower stride, and
+ * binding it with 16 reads every row after the first from further along
+ * the C ROM than the artwork is: the right palette over whatever
+ * happens to live at that address.  Take it from the asset metadata
+ * rather than assuming.
+ *
+ * Callers normally set the stride after ng_char_set_sprite(), so this
+ * re-checks the window the pair now describes.  A stride that walks the
+ * sprite past its asset is refused and the previous one kept, which is
+ * the same answer ng_char_set_sprite() gives and for the same reason.
+ */
 void NEOGEO_USER ng_char_set_tile_stride(NGCharacter *c, uint16_t stride)
 {
+    uint16_t use_stride;
+
     if (!c) return;
-    c->sprite_stride = stride ? stride : (uint16_t)c->sprite_strips;
+
+    use_stride = stride ? stride : (uint16_t)c->sprite_strips;
+    if (use_stride < c->sprite_strips) use_stride = c->sprite_strips;
+
+    if (c->asset_bounds_enabled &&
+        !ng_char_validate_asset_window(c->sprite_tile,
+                                       c->sprite_strips,
+                                       c->sprite_height,
+                                       use_stride,
+                                       c->asset_tile_start,
+                                       c->asset_tile_end)) {
+        return;
+    }
+
+    c->sprite_stride = use_stride;
     c->sprite_dirty = 1;
 }
 

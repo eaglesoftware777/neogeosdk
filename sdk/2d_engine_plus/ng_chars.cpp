@@ -566,7 +566,13 @@ void NGCharacter::setSprite(uint16_t first, uint8_t strips_arg, uint8_t h, uint1
     if (ns > NG_SPRITE_MAX_STRIPS)      ns = NG_SPRITE_MAX_STRIPS;
     if (nh > NG_SPRITE_MAX_HEIGHT_TILES) nh = NG_SPRITE_MAX_HEIGHT_TILES;
     if (asset_bounds_enabled) {
-        uint16_t use_stride = ns;
+        /* Validate against the stride this char will be drawn with, not
+         * its strip count.  The two match only for an asset that fills
+         * its canvas; every other one has its rows tile_stride apart, so
+         * checking with the strip count under-measures the window and
+         * lets through exactly the bind this is here to catch. */
+        uint16_t use_stride = sprite_stride ? sprite_stride : (uint16_t)ns;
+        if (use_stride < ns) use_stride = ns;
         if (!ng_char_validate_asset_window_impl(tb,
                                                 ns,
                                                 nh,
@@ -645,9 +651,33 @@ void NGCharacter::animUpdate()
     }
 }
 
+/*
+ * How many tiles apart the artwork's rows are - the asset's canvas width
+ * in tiles, which is not always 16.  An asset imported onto a narrower
+ * canvas has a narrower stride, and binding it with 16 reads every row
+ * after the first from further along the C ROM than the artwork is.
+ * Take it from the asset metadata rather than assuming.
+ *
+ * Callers normally set it after setSprite(), so this re-checks the
+ * window the pair now describes and refuses a stride that would walk
+ * the sprite past its asset.
+ */
 void NGCharacter::setTileStride(uint16_t stride)
 {
-    sprite_stride = stride ? stride : (uint16_t)sprite_strips;
+    uint16_t use_stride = stride ? stride : (uint16_t)sprite_strips;
+    if (use_stride < sprite_strips) use_stride = sprite_strips;
+
+    if (asset_bounds_enabled &&
+        !ng_char_validate_asset_window_impl(sprite_tile,
+                                            sprite_strips,
+                                            sprite_height,
+                                            use_stride,
+                                            asset_tile_start,
+                                            asset_tile_end)) {
+        return;
+    }
+
+    sprite_stride = use_stride;
     sprite_dirty  = 1;
 }
 
