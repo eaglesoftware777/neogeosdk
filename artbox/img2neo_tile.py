@@ -649,7 +649,7 @@ def clahe_luminance(img_uint8: np.ndarray,
             tile = L8[y0:y1, x0:x1]
             hist, _ = np.histogram(tile, bins=256, range=(0, 256))
             clip_val = max(1, int(clip_limit * (tile.size / 256.0)))
-            excess = max(0, hist - clip_val).sum()
+            excess = np.maximum(0, hist - clip_val).sum()
             hist = np.minimum(hist, clip_val) + (excess // 256)
             cdf = hist.cumsum().astype(np.float32)
             if cdf[-1] > 0:
