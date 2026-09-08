@@ -11,6 +11,10 @@ local profile = {}
 local chapter, started, next_capture = 0, 0, 0
 local frame = 0
 local seen = {}
+local controls = os.getenv('DEMO_CAPTURE_CONTROLS') == '1'
+local control_phase, control_time, previous_elapsed = 0, 0, 0
+local control_report = assert(io.open(output .. '/controls.tsv', 'w'))
+control_report:write('chapter\taction\ttime\n')
 local report = assert(io.open(output .. '/frames.tsv', 'w'))
 report:write('time\tchapter\telapsed\tvisible_strips\tmax_scanline_strips\n')
 
@@ -43,6 +47,17 @@ local function sample(now, current)
     report:write(string.format('%.3f\t%d\t%d\t%d\t%d\n', now, current, elapsed, total, peak))
     report:flush()
     screen:snapshot(string.format('%s/ch%02d_%06d.png', output, current, frame))
+    local state = assert(io.open(string.format('%s/ch%02d_%06d.tsv', output, current, frame), 'w'))
+    state:write('slot\tscb2\tscb3\tscb4\ttile\tattr\n')
+    for slot = 1, 381 do
+        local scb3 = vram:read(0x8200 + slot)
+        if (scb3 & 63) > 0 then
+            state:write(string.format('%d\t%04x\t%04x\t%04x\t%04x\t%04x\n', slot,
+                vram:read(0x8000 + slot), scb3, vram:read(0x8400 + slot),
+                vram:read(slot * 64), vram:read(slot * 64 + 1)))
+        end
+    end
+    state:close()
 end
 
 emu.register_frame_done(function()
@@ -51,24 +66,63 @@ emu.register_frame_done(function()
     input(':AUDIO_COIN', 'Coin 1', (now >= 7 and now < 7.25) and 1 or 0)
     input(':edge:joy:START', '1 Player Start', (now >= 9 and now < 9.25) and 1 or 0)
     local current = chapter_address and memory:read_u8(chapter_address) or 0
-    if current > 25 then current = 0 end
+    if current > 26 then current = 0 end
+    -- run_chapter temporarily rewinds the view index during a restart.
+    -- Wait for the header to publish its original index before assessing it.
+    if controls and (control_phase == 1 or control_phase == 2) and current == chapter - 1 then
+        input(':edge:joy:JOY1', 'P1 C', 0)
+        return
+    end
     local pc = pc_item:read(0)
     local key = string.format('%d\t%06x', current, pc)
     profile[key] = (profile[key] or 0) + 1
     if current ~= chapter then
+        if controls and chapter > 0 then
+            control_report:write(string.format('%d\t%s\t%.3f\n', chapter,
+                control_phase == 4 and 'A_PASS' or 'UNEXPECTED_ADVANCE', now))
+            control_report:flush()
+        end
         print(string.format('CHAPTER %02d at %.2fs', current, now))
         chapter, started, next_capture = current, now, now + 0.5
+        control_phase, control_time, previous_elapsed = 0, now, 0
         seen[current] = true
+    end
+    if controls and current > 0 then
+        local elapsed = memory:read_u16(elapsed_address)
+        local a, c = 0, 0
+        if control_phase == 0 and elapsed >= 90 then
+            control_phase, control_time = 1, now
+        elseif control_phase == 1 and elapsed < previous_elapsed then
+            control_phase, control_time = 2, now
+            control_report:write(string.format('%d\tC_PASS\t%.3f\n', current, now))
+            control_report:flush()
+        elseif control_phase == 1 and now - control_time > 8 then
+            control_report:write(string.format('%d\tC_FAIL\t%.3f\n', current, now))
+            control_phase, control_time = 2, now
+        elseif control_phase == 2 and elapsed >= (current == 24 and 480 or 110) then
+            control_phase, control_time = 4, now
+        end
+        if control_phase == 1 and now - control_time < 0.25 then c = 1 end
+        if control_phase == 4 and ((now - control_time) % 2) < 0.25 then a = 1 end
+        input(':edge:joy:JOY1', 'P1 A', a)
+        input(':edge:joy:JOY1', 'P1 C', c)
+        -- Exercise movement and firing after restart, including the mini shooter.
+        local play = control_phase == 2 and (current == 17 or current == 18 or current == 21 or current == 24 or current == 25)
+        input(':edge:joy:JOY1', 'P1 B', play and (elapsed % 30 < 15) and 1 or 0)
+        input(':edge:joy:JOY1', 'P1 Left', play and (elapsed % 120 < 40) and 1 or 0)
+        input(':edge:joy:JOY1', 'P1 Right', play and (elapsed % 120 >= 60 and elapsed % 120 < 100) and 1 or 0)
+        previous_elapsed = elapsed
     end
     if now >= next_capture then
         sample(now, current)
         next_capture = now + 2.0
     end
-    if (current == 25 and now - started > 4) or (current == 0 and seen[25]) then
+    if (current == 26 and (not controls and now - started > 4 or controls and control_phase == 4)) or (current == 0 and seen[26]) then
         local p = assert(io.open(output .. '/profile.tsv', 'w'))
         for key, count in pairs(profile) do p:write(key .. '\t' .. count .. '\n') end
         p:close()
         report:close()
+        control_report:close()
         machine:exit()
     end
 end)

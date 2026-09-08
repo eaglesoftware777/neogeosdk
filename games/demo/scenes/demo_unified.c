@@ -37,6 +37,7 @@
 #include "sdk/sound_ids.h"
 #include "sdk/ng_fix/ng_fix.h"
 #include "sdk/2d_engine/ng_engine.h"
+#include "sdk/2d_engine/ng_sprite_hw.h"
 #include "sprite_meta.h"
 #include "infix_palettes.h"
 #include <stddef.h>
@@ -775,6 +776,33 @@ static void NEOGEO_USER fix_band(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
 static uint8_t s_letterbox_top    = 0u;
 static uint8_t s_letterbox_bottom = 0u;
 
+/* The opaque background tiles and a private flat palette provide a
+ * matte behind transparent FIX text. Slots 288..327 belong to the HUD. */
+static void NEOGEO_USER chap_hud_matte(uint8_t top_rows, uint8_t bottom_rows)
+{
+    NGSpriteGroup band;
+    uint16_t colors[16];
+    uint8_t i;
+    uint8_t edge;
+    for (i = 0u; i < 16u; i++) colors[i] = DEMO_BG;
+    ng_palette_load_bank(255u, colors);
+    for (edge = 0u; edge < 2u; edge++) {
+        uint8_t height = edge ? bottom_rows : top_rows;
+        int16_t y = edge ? (int16_t)(224u - height * 8u) : 0;
+        uint16_t slot = (uint16_t)(288u + edge * 20u);
+        if (!height) continue;
+        for (i = 0u; i < 2u; i++) {
+            ng_sprite_group_init(&band, (uint16_t)(slot + i * 16u),
+                                  i ? 4u : 16u, height,
+                                  DEMO_SCREEN_TILE(U_BG_MOUNTAIN), 255u);
+            ng_sprite_group_set_tile_stride(&band, demo_screen_tile_stride(U_BG_MOUNTAIN));
+            ng_sprite_group_set_pos(&band, i ? 256 : 0, y);
+            ng_sprite_group_set_scale(&band, 0xffu, 0x7fu);
+            ng_sprite_group_upload(&band);
+        }
+    }
+}
+
 /* "CH.nn" for the chapter now running, as chap_header numbered it. */
 static char s_chapter_tag[6] = "CH.00";
 
@@ -890,9 +918,12 @@ static void NEOGEO_USER chap_header(uint8_t n,
     s_chapter_tag[2] = tag[2]; s_chapter_tag[3] = tag[3];
     s_chapter_tag[4] = tag[4]; s_chapter_tag[5] = tag[5];
 
-    if (s_letterbox_top)    fix_band(0u, 0u, 40u, s_letterbox_top, 0u);
-    if (s_letterbox_bottom) fix_band(0u, (uint8_t)(28u - s_letterbox_bottom),
-                                     40u, s_letterbox_bottom, 0u);
+    if (s_letterbox_top || s_letterbox_bottom) {
+        chap_hud_matte(s_letterbox_top, s_letterbox_bottom);
+    } else {
+        /* Park any previous letterbox matte strips so they don't leak into non-letterboxed scenes */
+        ng_sprite_park_off_range(288u, 40u);
+    }
     s_letterbox_top    = 0u;
     s_letterbox_bottom = 0u;
 
@@ -999,8 +1030,8 @@ static void NEOGEO_USER bind_character_asset(NGCharacter *c,
     if (anchor_x == 0u) anchor_x = (uint16_t)(((uint16_t)strips * 16u) >> 1);
     if (anchor_y == 0u) anchor_y = (uint16_t)((uint16_t)rows * 16u);
 
-    c->sprite_offset_x = -(int16_t)((anchor_x * scale_x) >> 8);
-    c->sprite_offset_y = -(int16_t)((anchor_y * scale_y) >> 8);
+    c->sprite_offset_x = -(int16_t)ng_sprite_scaled_x(anchor_x, c->scale_x);
+    c->sprite_offset_y = -(int16_t)ng_sprite_scaled_y(anchor_y, c->scale_y);
 }
 
 static void NEOGEO_USER draw_infix_block(uint16_t tile_base,
@@ -1047,17 +1078,14 @@ static void NEOGEO_USER clear_fix_rect_force(uint8_t x,
 
 static int16_t NEOGEO_USER asset_scaled_px(uint8_t cells, uint8_t scale)
 {
-    uint16_t px = (uint16_t)cells * 16u;
-    if (scale >= 0xFFu) return (int16_t)px;
-    return (int16_t)(((uint32_t)px * (uint32_t)scale + 127u) >> 8);
+    return (int16_t)ng_sprite_scaled_y((uint16_t)cells * 16u, scale);
 }
 
 /* Same shrink as asset_scaled_px(), but for a pixel count rather than a
  * tile-cell count. */
 static int16_t NEOGEO_USER asset_scaled_px_u16(uint16_t px, uint8_t scale)
 {
-    if (scale >= 0xFFu) return (int16_t)px;
-    return (int16_t)(((uint32_t)px * (uint32_t)scale + 127u) >> 8);
+    return (int16_t)ng_sprite_scaled_y(px, scale);
 }
 
 static void NEOGEO_USER draw_asset_bottom_center(uint8_t frame,
@@ -1119,9 +1147,9 @@ static void NEOGEO_USER draw_asset_center(uint8_t frame,
 
     demo_draw_sprite_screen(frame, first_sprite,
                             (int16_t)(cx - demo_screen_x_offset(frame)
-                                         - asset_scaled_px_u16(pad_x, scale_x)),
+                                         - ng_sprite_scaled_x(pad_x, demo_asset_scale(frame, scale_x))),
                             (int16_t)(cy - demo_screen_y_offset(frame)
-                                         - asset_scaled_px_u16(pad_y, scale_y)),
+                                         - ng_sprite_scaled_y(pad_y, demo_asset_scale(frame, scale_y))),
                             demo_screen_strips(frame),
                             demo_screen_rows(frame),
                             scale_x, scale_y);
@@ -1137,12 +1165,16 @@ static void NEOGEO_USER draw_asset_bottom_center_flip(uint8_t frame,
 {
     uint8_t strips = demo_screen_strips(frame);
     uint8_t rows = demo_screen_rows(frame);
-    int16_t w = asset_scaled_px(strips, scale_x);
-    int16_t h = asset_scaled_px(rows, scale_y);
+    uint16_t anchor_x = demo_screen_x_pad(frame) + demo_screen_content_width(frame) / 2u;
+    uint16_t anchor_y = demo_screen_y_pad(frame) + demo_screen_content_height(frame);
+    uint8_t hw_x = demo_asset_scale(frame, scale_x);
+    uint8_t hw_y = demo_asset_scale(frame, scale_y);
+
+    if (flip) anchor_x = (uint16_t)(strips * 16u - anchor_x);
 
     demo_draw_sprite_screen_flip(frame, first_sprite,
-                                 (int16_t)(cx - (w >> 1) - demo_screen_x_offset(frame)),
-                                 (int16_t)(bottom_y - h - demo_screen_y_offset(frame)),
+                                 (int16_t)(cx - ng_sprite_scaled_x(anchor_x, hw_x) - demo_screen_x_offset(frame)),
+                                 (int16_t)(bottom_y - ng_sprite_scaled_y(anchor_y, hw_y) - demo_screen_y_offset(frame)),
                                  strips, rows, scale_x, scale_y, flip);
 }
 
@@ -1830,8 +1862,8 @@ static void NEOGEO_USER hero_draw(uint8_t frame)
      * vblank-safe queue (see demo_draw_sprite_screen). */
     int16_t strips = demo_screen_strips(frame);
     int16_t rows   = demo_screen_rows(frame);
-    int16_t grid_w = asset_scaled_px((uint8_t)strips, s_hero_scale_x);
-    int16_t grid_h = asset_scaled_px((uint8_t)rows, s_hero_scale_y);
+    int16_t grid_w = ng_sprite_scaled_x((uint16_t)strips * 16u, demo_asset_scale(frame, s_hero_scale_x));
+    int16_t grid_h = ng_sprite_scaled_y((uint16_t)rows * 16u, demo_asset_scale(frame, s_hero_scale_y));
     int16_t off_x  = demo_screen_x_offset(frame);
     int16_t off_y  = demo_screen_y_offset(frame);
     int16_t draw_x = (int16_t)(s_hero_x - (grid_w / 2) - off_x);
@@ -2030,7 +2062,7 @@ static uint8_t NEOGEO_USER chap_char_select(void)
         girl_frame  = (sel == 0u) ? girl_frames[(anim_t / 8u) % GIRL_FRAME_COUNT]   : girl_frames[0];
         eagle_frame = (sel == 1u) ? eagle_frames[(anim_t / 8u) % EAGLE_FRAME_COUNT] : eagle_ground;
         draw_asset_bottom_center(girl_frame,  SLOT_GIRL,  110, 180,
-                                 U_SCALE_3_8, U_SCALE_3_8);
+                                 U_SCALE_5_16, U_SCALE_5_16);
         draw_asset_bottom_center(eagle_frame, SLOT_EAGLE, 210, 180,
                                  U_SCALE_5_16, U_SCALE_5_16);
         anim_t++;
@@ -2371,7 +2403,7 @@ static uint8_t NEOGEO_USER chap_camera(void)
     /* Was 156 - chap_mini_game uses GROUND_Y=204 against this same
      * U_BG_FOREST background, and 156 left the hero floating ~48px
      * above that same ground line instead of standing on it. */
-    const int16_t  HERO_Y_REST  = 204;             /* matches U_BG_FOREST's
+    const int16_t  HERO_Y_REST  = 188;             /* matches U_BG_FOREST's
                                                     * ground line          */
     const uint16_t MODE_FRAMES  = 180u;            /* 3 sec per mode -> 18 s
                                                     * total for 6 modes    */
@@ -2386,8 +2418,8 @@ static uint8_t NEOGEO_USER chap_camera(void)
     int16_t  vy_logical     = 0;
     char     hud[6];
 
-    chap_header(7u, "CAMERA LAB",
-                "AUTO TOUR: HARD SMOOTH SHAKE PAN VERT DEADZONE");
+    chap_letterbox_next(7u, 4u);
+    chap_header(7u, "CAMERA LAB", "FOLLOW  SHAKE  PAN  VERTICAL  DEADZONE");
 
     /* Sound: ADPCM-B carries the loop the whole chapter.  FM/SSG muted,
      * ADPCM-A reserved for the per-mode SFX chirps - which is exactly the
@@ -2400,7 +2432,7 @@ static uint8_t NEOGEO_USER chap_camera(void)
     ng_camera_set_bounds(&cam, 0, 0, WORLD_RIGHT, WORLD_BOTTOM);
     /* Was U_SCALE_60 (39.8%, an uneven fraction) - smaller now, and an
      * exact 3/8 so the shrink drops lines evenly. */
-    hero_scale(U_SCALE_CHARACTER);
+    hero_scale(U_SCALE_3_8);
 
     for (t = 0u; t < TOTAL_FRAMES; t++) {
         uint8_t  next_mode = (uint8_t)((t / MODE_FRAMES) % CAMLAB_MODE_COUNT);
@@ -2555,7 +2587,8 @@ static uint8_t NEOGEO_USER chap_camera(void)
             int16_t saved_y = s_hero_y;
             s_hero_x = screen_x;
             s_hero_y = screen_y;
-            hero_draw(frame);
+            draw_asset_bottom_center(frame, HERO_SLOT_FIRST, screen_x,
+                                     screen_y, U_SCALE_3_8, U_SCALE_3_8);
             s_hero_x = saved_x;
             s_hero_y = saved_y;
         }
@@ -2581,10 +2614,9 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
     const uint16_t *base_pal = ng_get_screen_palette(s_fx_effect_frames[0]);
 
     chap_header(8u, "PALETTE FX", "SPRITE PALETTE STAGES");
-    /* One-shot hard clear of the lower-hero sprite window before the
-     * first pose draw — kills any stale strips left from the prior
-     * chapter that would otherwise stay attached when the new frame's
-     * footprint happens to be narrower than the old one. */
+    /* One-shot hard clear of the effect and lower-hero sprite windows before
+     * the first pose draw — kills any stale strips left from prior chapters. */
+    ng_sprite_park_off_range(48u, 16u);
     ng_sprite_park_off_range(HERO_SLOT_FIRST, 16u);
     demo_fix_puts(2u, 2u, "EFFECTS: 040 / 041 / 048 / 050", 1u);
     demo_fix_puts(2u, 3u, "CHAR: 033R04C03 -> 037R04C07", 0u);
@@ -2638,16 +2670,23 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
         }
 
         demo_load_screen_palette(pose);
-        draw_asset_bottom_center(active_fx, DEMO_PROP_FX_A_SLOT,
+        /* Draw aura/effect at slot 48 behind character at slot 64 so it does not occlude the hero */
+        draw_asset_bottom_center(active_fx, 48u,
                                  160, 112, U_SCALE_5_16, U_SCALE_5_16);
         draw_asset_bottom_center(pose, HERO_SLOT_FIRST, 160,
                                  FX_HERO_LIFT_Y,
                                  U_SCALE_CHARACTER, U_SCALE_CHARACTER);
 
-        if (uframe()) return 1u;
+        if (uframe()) {
+            ng_sprite_park_off_range(48u, 16u);
+            ng_sprite_park_off_range(HERO_SLOT_FIRST, 16u);
+            return 1u;
+        }
     }
 
     ng_palfx_stop(active_pal);
+    ng_sprite_park_off_range(48u, 16u);
+    ng_sprite_park_off_range(HERO_SLOT_FIRST, 16u);
     return 0u;
 }
 
@@ -3018,10 +3057,10 @@ static uint8_t NEOGEO_USER chap_depthfx(void)
          * 0x40..0xA0 keeps the same sense of depth (a 2.5x swing between
          * far and near) with the near end at a sane ~63%.
          */
-        uint8_t scale = (uint8_t)(0x40u + (uint16_t)((96 - z) * 0x60u) / 84u);
+        uint8_t scale = (uint8_t)(0x30u + (uint16_t)((96 - z) * 0x4fu) / 84u);
         int16_t draw_x = (int16_t)(160 - (strips * 16 * scale / 256) / 2
                                   - demo_screen_x_offset(frame));
-        int16_t draw_y = (int16_t)(132 - (rows * 16 * scale / 256) / 2
+        int16_t draw_y = (int16_t)(124 - (rows * 16 * scale / 256) / 2
                                   - demo_screen_y_offset(frame));
 
         z = (int16_t)(z + dz);
@@ -3081,6 +3120,7 @@ static uint8_t NEOGEO_USER chap_depth_parallax(void)
     uint8_t near_rows   = demo_screen_rows(U_BG_FOREGROUND);
     uint16_t t;
 
+    chap_letterbox_next(4u, 4u);
     chap_header(22u, "DEPTH PARALLAX", "TWO SCROLLING BG LAYERS");
     demo_fix_puts(2u, 2u, "MOUNTAIN FAR  FOREST FOREGROUND", 1u);
     demo_fix_puts(2u, 3u, "NEAR LAYER MOVES 2X + VERTICAL REVEAL", 0u);
@@ -3210,11 +3250,12 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
      * different-but-still-generic sprite standing in for an impact. */
     const uint16_t spark_tile  = DEMO_SCREEN_TILE(U_PARTICLE_HITSPARK);
     const uint8_t  spark_pal   = DEMO_SCREEN_PALETTE(U_PARTICLE_HITSPARK);
-    const int16_t  GROUND_Y    = 204;
+    const int16_t  GROUND_Y    = 188;
     const uint16_t TOTAL       = 1800u;
     const uint16_t AGGRO_AFTER = 45u;
     const int16_t  REACH_PX    = 70;
-    const uint8_t  CLONE_SLOT  = ENEMY_SLOT_FIRST;
+    const uint8_t  CLONE_SLOT  = 64u;
+    const uint8_t  PLAYER_SLOT = 80u;
 
     uint16_t t;
     /* Player state */
@@ -3416,25 +3457,34 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
         demo_fix_puts((uint8_t)(c_x / 8), 9u, "CP", 1u);
 
         /* ============================================================
-         * Render clone first, then the player.  The player window uses
-         * the lower front slot so it stays over the clone and backdrop.
+         * Render clone at slot 64, player at slot 80.  On Neo Geo hardware,
+         * higher slot numbers render in front, so the player stays cleanly
+         * in front of the clone and backdrop.
          * ============================================================ */
         draw_asset_bottom_center_flip(c_frame, CLONE_SLOT,
                                       c_x, GROUND_Y,
                                       U_SCALE_CHARACTER, U_SCALE_CHARACTER, c_flip);
-        draw_asset_bottom_center_flip(p_frame, HERO_SLOT_FIRST,
+        draw_asset_bottom_center_flip(p_frame, PLAYER_SLOT,
                                       p_x, GROUND_Y,
                                       U_SCALE_CHARACTER, U_SCALE_CHARACTER, p_flip);
 
         /* Game over on HP exhausted */
         if (hp == 0u) {
             demo_fix_puts(13u, 13u, "  KNOCKED OUT  ", 2u);
-            if (demo_wait(120u)) return 1u;
+            if (demo_wait(120u)) {
+                ng_sprite_park_off_range(64u, 32u);
+                return 1u;
+            }
+            ng_sprite_park_off_range(64u, 32u);
             return 0u;
         }
 
-        if (uframe()) return 1u;
+        if (uframe()) {
+            ng_sprite_park_off_range(64u, 32u);
+            return 1u;
+        }
     }
+    ng_sprite_park_off_range(64u, 32u);
     return 0u;
 }
 
@@ -3447,7 +3497,7 @@ static uint8_t NEOGEO_USER chap_joystick(void)
     uint16_t t;
     int16_t  hero_world_x = U_CENTRE_X;
     int16_t  hero_world_y = 194;
-    const int16_t HERO_GROUND_Y = 194;
+    const int16_t HERO_GROUND_Y = 188;
     uint8_t  hero_flip = 0u;
     int16_t  vy = 0;
     /*
@@ -3703,6 +3753,7 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
     uint16_t t;
     uint8_t previous_phase = 0xffu;
 
+    chap_letterbox_next(5u, 4u);
     chap_header(15u, "SCROLL LEVEL", "WORLD MAP  H/V STAGES");
     demo_fix_puts(2u, 2u, "MOUNTAIN -> FOREST -> VERTICAL CLIMB", 1u);
     demo_fix_puts(2u, 3u, "BACKGROUND CHANGES AT CLEAN GATES", 0u);
@@ -3718,7 +3769,7 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
         uint8_t phase = (uint8_t)(t / 240u);
         uint16_t phase_t = (uint16_t)(t % 240u);
         int16_t jump = 0;
-        int16_t hero_bottom = 194;
+        int16_t hero_bottom = 188;
         uint8_t frame;
         char bar[21];
         uint8_t fill;
@@ -3759,7 +3810,7 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
                                       : (240u - phase_t) / 2u);
             int16_t bg_y = -(int16_t)(((uint16_t)climb * 64u) / 60u);
             draw_vertical_background(U_BG_MOUNTAIN, 0, bg_y);
-            hero_bottom = 194;
+            hero_bottom = 188;
         }
 
         fill = (uint8_t)(phase_t / 12u);
@@ -4256,19 +4307,14 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     static const uint8_t  sq_hp[3]    = { 2u, 3u, 1u };
     static const uint16_t sq_score[3] = { 100u, 150u, 50u };
     /*
-     * Sizes are set against the art as it is actually imported, not against
-     * this reel's character presets.  The sky page is small: the plane and the
-     * bolts are 16x16, the jets and the drone 32x32, the boss 128x128.  Drawn
-     * at the half-scale this chapter used to ask for, the player came out 8x7
-     * pixels - too small to find on the playfield, let alone aim.
-     *
-     * The play area is 256x102, so the target sizes are a 16x16 player, jets a
-     * shade smaller so the player reads as the focus, and a boss that fills
-     * about half the band without covering it.
+     * Full, accurate arcade sprite scales without shrink distortion.
+     * Enemies are 32x32 sprites drawn 1:1 with NG_SCALE(16) so every pixel
+     * and line is preserved without ugly scanline dropping.
+     * Player is 16x16 1:1, and boss is an imposing 96x96 flagship.
      */
-    static const uint8_t  sq_scale[3] = { NG_SCALE(7), NG_SCALE(7), NG_SCALE(6) };
+    static const uint8_t  sq_scale[3] = { NG_SCALE(16), NG_SCALE(16), NG_SCALE(16) };
     enum { SKY_SCALE_SHIP = NG_SCALE(16),   /* 16x16 - drawn 1:1 */
-           SKY_SCALE_BOSS = NG_SCALE(6) };  /* 128x128 -> 48x48  */
+           SKY_SCALE_BOSS = NG_SCALE(12) }; /* 128x128 -> 96x96 crisp arcade boss */
 
     int16_t  en_x[SKY_ENEMY_MAX], en_y[SKY_ENEMY_MAX];
     uint8_t  en_alive[SKY_ENEMY_MAX], en_shown[SKY_ENEMY_MAX];
@@ -4727,6 +4773,491 @@ static uint8_t NEOGEO_USER chap_ssg_arcade(void)
 }
 
 /* ================================================================== */
+/*  Chapter 25 — Star Raid Lance (Combined Galaxy + Sky Lance Arcade)   */
+/* ================================================================== */
+/*
+ * Combined arcade combat minigame fusing Star Raid (neogeogame)
+ * formation swoop dynamics with Sky Lance tactical craft and boss combat.
+ *
+ * Uses crisp, un-distorted arcade scales (1:1 NG_SCALE(16) on 32x32 craft,
+ * NG_SCALE(8) on 112x112 flagship cruisers, and NG_SCALE(12) on boss)
+ * to ensure pixel-perfect rendering without line-dropping distortion.
+ *
+ * Sprites are layered strictly:
+ * Background starfield -> Bullets -> Enemies -> Player -> Explosions
+ * completely eliminating occlusion artifacts.
+ */
+static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
+{
+    enum {
+        GALAXY_SLOT_BG0      = 1,   /* 16 strips -> 1..16 */
+        GALAXY_SLOT_BG1      = 17,  /* 16 strips -> 17..32 */
+        GALAXY_SLOT_PBULLET  = 34,  /* 4 * 2 strips -> 34..41 */
+        GALAXY_SLOT_EBULLET  = 42,  /* 6 * 2 strips -> 42..53 */
+        GALAXY_SLOT_ENEMY    = 54,  /* 6 * 8 strips -> 54..101 */
+        GALAXY_SLOT_BOSS     = 102, /* 8 strips -> 102..109 */
+        GALAXY_SLOT_PLAYER   = 110, /* 6 strips -> 110..115 (front of enemies) */
+        GALAXY_SLOT_BOOM     = 116, /* 4 * 2 strips -> 116..123 */
+
+        GALAXY_PBULLET_MAX   = 4,
+        GALAXY_EBULLET_MAX   = 6,
+        GALAXY_ENEMY_MAX     = 6,
+        GALAXY_BOOM_MAX      = 4,
+
+        GALAXY_LEFT          = 36,
+        GALAXY_RIGHT         = 284,
+        GALAXY_TOP           = 52,
+        GALAXY_BOTTOM        = 186,
+
+        GALAXY_TIME          = 1800,
+        GALAXY_IDLE_ADVANCE  = 600,
+        GALAXY_WAVES_TO_BOSS = 3
+    };
+
+    /* Squadron roster: Galaxy Cruisers + Sky Lance Interceptors */
+    static const uint8_t  gx_asset[6] = {
+        U_ENEMYSHIP_BLUE, U_ENEMYSHIP_GREEN, U_ENEMYSHIP_PINK,
+        U_SKY_ENEMY_A,    U_SKY_ENEMY_B,     U_SKY_ENEMY_C
+    };
+    static const uint8_t  gx_hp[6]    = { 2u, 3u, 2u, 1u, 3u, 1u };
+    static const uint16_t gx_score[6] = { 200u, 250u, 200u, 100u, 150u, 100u };
+    static const uint8_t  gx_scale[6] = {
+        NG_SCALE(8), NG_SCALE(8), NG_SCALE(8),
+        NG_SCALE(16), NG_SCALE(16), NG_SCALE(16)
+    };
+
+    enum {
+        GALAXY_SCALE_PLAYER = NG_SCALE(8),   /* 75x112 -> 37x56 crisp 50% */
+        GALAXY_SCALE_BOSS   = NG_SCALE(12)   /* 128x128 -> 96x96 flagship */
+    };
+
+    int16_t  en_x[GALAXY_ENEMY_MAX], en_y[GALAXY_ENEMY_MAX];
+    uint8_t  en_alive[GALAXY_ENEMY_MAX], en_shown[GALAXY_ENEMY_MAX];
+    uint8_t  en_type[GALAXY_ENEMY_MAX], en_hp[GALAXY_ENEMY_MAX];
+    uint16_t en_phase[GALAXY_ENEMY_MAX];
+
+    int16_t  pb_x[GALAXY_PBULLET_MAX], pb_y[GALAXY_PBULLET_MAX];
+    uint8_t  pb_active[GALAXY_PBULLET_MAX], pb_shown[GALAXY_PBULLET_MAX];
+    int16_t  eb_x[GALAXY_EBULLET_MAX], eb_y[GALAXY_EBULLET_MAX];
+    int16_t  eb_vx[GALAXY_EBULLET_MAX], eb_vy[GALAXY_EBULLET_MAX];
+    uint8_t  eb_active[GALAXY_EBULLET_MAX], eb_shown[GALAXY_EBULLET_MAX];
+    int16_t  bm_x[GALAXY_BOOM_MAX], bm_y[GALAXY_BOOM_MAX];
+    uint8_t  bm_timer[GALAXY_BOOM_MAX], bm_shown[GALAXY_BOOM_MAX];
+
+    int16_t  ship_x = 160;
+    int16_t  ship_y = GALAXY_BOTTOM - 8;
+    uint16_t score = 0u;
+    uint8_t  lives = 3u;
+    uint8_t  wave = 1u;
+    uint8_t  fire_cd = 0u;
+    uint8_t  hit_cd = 0u;
+
+    uint8_t  squad_left = 0u;
+    uint8_t  squad_type = 0u;
+    uint8_t  squad_gap = 0u;
+    uint16_t wave_timer = 60u;
+
+    uint8_t  boss_on = 0u, boss_shown = 0u;
+    uint8_t  boss_hp = 0u, boss_hp_max = 1u;
+    int16_t  boss_x = 160, boss_y = -40;
+    int16_t  boss_vx = 1;
+    uint16_t boss_t = 0u;
+
+    int16_t  bg_y = 0;
+    uint16_t t;
+    uint16_t idle_frames = 0u;
+    uint8_t  i;
+    char     buf[12];
+
+    chap_letterbox_next(4u, 4u);
+    chap_header(25u, "STAR RAID LANCE", "GALAXY  SKY LANCE COMBAT");
+    demo_fix_puts(2u, 2u, "COMBINED ARCADE: GALAXY FORMATION + SKY BOSS", 1u);
+
+    demo_load_screen_palette(U_SSG_STARFIELD);
+    demo_load_screen_palette(U_PLAYER_VESSEL);
+    for (i = 0u; i < 6u; i++) demo_load_screen_palette(gx_asset[i]);
+    demo_load_screen_palette(U_SKY_BOSS);
+    demo_load_screen_palette(U_SKY_BULLET);
+    demo_load_screen_palette(U_SKY_ORB);
+    demo_load_screen_palette(U_PARTICLE_EXPLOSION);
+
+    for (i = 0u; i < GALAXY_ENEMY_MAX; i++)   en_alive[i] = en_shown[i] = 0u;
+    for (i = 0u; i < GALAXY_PBULLET_MAX; i++) pb_active[i] = pb_shown[i] = 0u;
+    for (i = 0u; i < GALAXY_EBULLET_MAX; i++) eb_active[i] = eb_shown[i] = 0u;
+    for (i = 0u; i < GALAXY_BOOM_MAX; i++)    bm_timer[i] = bm_shown[i] = 0u;
+
+    snd_cross_to(SOUND_MUSIC_A);
+
+    for (t = 0u; t < GALAXY_TIME; t++) {
+        uint16_t joy = poll_joystick();
+        uint16_t rng = (uint16_t)(t * 11035u + 12345u);
+
+        /* ---- scroll starfield ------------------------------------- */
+        bg_y = (int16_t)((bg_y + 2) % 256);
+        draw_vertical_background(U_SSG_STARFIELD, 32, -bg_y);
+
+        /* ---- player controls -------------------------------------- */
+        if (joy & (JOY_LEFT | JOY_RIGHT | JOY_UP | JOY_DOWN | BUTTON_A | BUTTON_B)) {
+            idle_frames = 0u;
+        } else if (idle_frames < 0xFFF0u) {
+            idle_frames++;
+        }
+
+        if ((joy & JOY_LEFT)  && ship_x > GALAXY_LEFT)   ship_x = (int16_t)(ship_x - 3);
+        if ((joy & JOY_RIGHT) && ship_x < GALAXY_RIGHT)  ship_x = (int16_t)(ship_x + 3);
+        if ((joy & JOY_UP)    && ship_y > GALAXY_TOP)    ship_y = (int16_t)(ship_y - 3);
+        if ((joy & JOY_DOWN)  && ship_y < GALAXY_BOTTOM) ship_y = (int16_t)(ship_y + 3);
+
+        if (fire_cd) fire_cd--;
+        if (hit_cd)  hit_cd--;
+
+        if ((joy & (BUTTON_A | BUTTON_B)) && !fire_cd) {
+            for (i = 0u; i < GALAXY_PBULLET_MAX; i++) {
+                if (!pb_active[i]) {
+                    pb_active[i] = 1u;
+                    pb_x[i] = ship_x;
+                    pb_y[i] = (int16_t)(ship_y - 18);
+                    fire_cd = 8u;
+                    playSFX(SOUND_SFX_4);
+                    break;
+                }
+            }
+        }
+
+        /* ---- wave / squadron manager ------------------------------ */
+        if (!boss_on) {
+            if (squad_left) {
+                if (squad_gap) {
+                    squad_gap--;
+                } else {
+                    for (i = 0u; i < GALAXY_ENEMY_MAX; i++) {
+                        if (en_alive[i]) continue;
+                        en_alive[i] = 1u;
+                        en_type[i]  = squad_type;
+                        en_hp[i]    = gx_hp[squad_type];
+                        en_phase[i] = (uint16_t)(rng & 63u);
+                        en_x[i] = (int16_t)(GALAXY_LEFT + 24
+                                            + (int16_t)((squad_left & 3u)
+                                                        * ((GALAXY_RIGHT - GALAXY_LEFT - 48) / 3)));
+                        en_y[i] = (int16_t)(GALAXY_TOP - 20);
+                        squad_left--;
+                        squad_gap = 14u;
+                        break;
+                    }
+                }
+            } else if (wave_timer) {
+                wave_timer--;
+            } else if (wave <= GALAXY_WAVES_TO_BOSS) {
+                /* Cycle between cruisers (0..2) and interceptors (3..5) */
+                squad_type = (uint8_t)((wave == 1u) ? (rng % 3u)
+                                     : ((wave == 2u) ? (3u + (rng % 3u))
+                                                     : (rng % 6u)));
+                squad_left = 4u;
+                squad_gap  = 0u;
+                wave_timer = 120u;
+                wave++;
+            } else {
+                uint8_t any = 0u;
+                for (i = 0u; i < GALAXY_ENEMY_MAX; i++) if (en_alive[i]) any = 1u;
+                if (!any) {
+                    boss_on = 1u;
+                    boss_hp = boss_hp_max = 36u;
+                    boss_x = 160;
+                    boss_y = (int16_t)(GALAXY_TOP - 30);
+                    boss_vx = 1;
+                    boss_t = 0u;
+                    demo_fix_puts(14u, 4u, "WARNING: BOSS", 3u);
+                    playSFX(SOUND_SFX_10);
+                }
+            }
+        }
+
+        /* ---- enemy behavior & movement ---------------------------- */
+        for (i = 0u; i < GALAXY_ENEMY_MAX; i++) {
+            if (!en_alive[i]) {
+                if (en_shown[i]) {
+                    demo_hide_sprite_range((uint16_t)(GALAXY_SLOT_ENEMY + i * 8u), 8u);
+                    en_shown[i] = 0u;
+                }
+                continue;
+            }
+            en_phase[i]++;
+            {
+                uint8_t ph = (uint8_t)(en_phase[i] & 63u);
+                int16_t sway = (int16_t)((ph < 32u) ? ((int16_t)ph - 16) : (47 - (int16_t)ph));
+                int16_t chase = (ship_x > en_x[i]) ? 1 : ((ship_x < en_x[i]) ? -1 : 0);
+                en_x[i] = (int16_t)(en_x[i] + (sway >> 2) + chase);
+            }
+            en_y[i] = (int16_t)(en_y[i] + ((en_type[i] >= 3u) ? 3 : 2));
+            if (en_x[i] < GALAXY_LEFT)  en_x[i] = GALAXY_LEFT;
+            if (en_x[i] > GALAXY_RIGHT) en_x[i] = GALAXY_RIGHT;
+
+            if ((rng % 80u) == 0u) {
+                uint8_t k;
+                for (k = 0u; k < GALAXY_EBULLET_MAX; k++) {
+                    if (!eb_active[k]) {
+                        int16_t dx = (int16_t)(ship_x - en_x[i]);
+                        int16_t dy = (int16_t)(ship_y - en_y[i]);
+                        int16_t mag = (int16_t)(u_abs16(dx) + u_abs16(dy));
+                        if (mag < 1) mag = 1;
+                        eb_active[k] = 1u;
+                        eb_x[k] = en_x[i];
+                        eb_y[k] = (int16_t)(en_y[i] + 12);
+                        eb_vx[k] = (int16_t)(((int32_t)dx * 3) / mag);
+                        eb_vy[k] = (int16_t)(((int32_t)dy * 3) / mag);
+                        if (eb_vy[k] < 1) eb_vy[k] = 1;
+                        break;
+                    }
+                }
+            }
+
+            if (en_y[i] > GALAXY_BOTTOM + 24) en_alive[i] = 0u;
+        }
+
+        /* ---- boss behavior ---------------------------------------- */
+        if (boss_on) {
+            boss_t++;
+            if (boss_y < GALAXY_TOP + 12) {
+                boss_y = (int16_t)(boss_y + 1);
+            } else {
+                boss_x = (int16_t)(boss_x + boss_vx);
+                if (boss_x < GALAXY_LEFT + 36)  boss_vx = 1;
+                if (boss_x > GALAXY_RIGHT - 36) boss_vx = -1;
+
+                if ((boss_t % ((boss_hp * 2u < boss_hp_max) ? 35u : 60u)) == 0u) {
+                    int16_t d;
+                    for (d = -1; d <= 1; d++) {
+                        uint8_t k;
+                        for (k = 0u; k < GALAXY_EBULLET_MAX; k++) {
+                            if (!eb_active[k]) {
+                                eb_active[k] = 1u;
+                                eb_x[k] = boss_x;
+                                eb_y[k] = (int16_t)(boss_y + 24);
+                                eb_vx[k] = (int16_t)(d * 2);
+                                eb_vy[k] = 3;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /* ---- bullet movement -------------------------------------- */
+        for (i = 0u; i < GALAXY_PBULLET_MAX; i++) {
+            if (!pb_active[i]) continue;
+            pb_y[i] = (int16_t)(pb_y[i] - 8);
+            if (pb_y[i] < GALAXY_TOP - 16) pb_active[i] = 0u;
+        }
+        for (i = 0u; i < GALAXY_EBULLET_MAX; i++) {
+            if (!eb_active[i]) continue;
+            eb_x[i] = (int16_t)(eb_x[i] + eb_vx[i]);
+            eb_y[i] = (int16_t)(eb_y[i] + eb_vy[i]);
+            if (eb_y[i] > GALAXY_BOTTOM + 16 || eb_x[i] < GALAXY_LEFT - 16 ||
+                eb_x[i] > GALAXY_RIGHT + 16) eb_active[i] = 0u;
+        }
+
+        /* ---- collisions ------------------------------------------- */
+        for (i = 0u; i < GALAXY_PBULLET_MAX; i++) {
+            uint8_t k;
+            if (!pb_active[i]) continue;
+
+            for (k = 0u; k < GALAXY_ENEMY_MAX; k++) {
+                if (!en_alive[k]) continue;
+                if (u_abs16((int16_t)(pb_x[i] - en_x[k])) > 18) continue;
+                if (u_abs16((int16_t)(pb_y[i] - en_y[k])) > 18) continue;
+                pb_active[i] = 0u;
+                if (en_hp[k] > 1u) {
+                    en_hp[k]--;
+                    playSFX(SOUND_SFX_2);
+                } else {
+                    en_alive[k] = 0u;
+                    score = (uint16_t)(score + gx_score[en_type[k]]);
+                    sky_boom_spawn(bm_x, bm_y, bm_timer, GALAXY_BOOM_MAX, en_x[k], en_y[k]);
+                    playSFX(SOUND_SFX_10);
+                }
+                break;
+            }
+            if (!pb_active[i]) continue;
+
+            if (boss_on && boss_y > GALAXY_TOP - 20 &&
+                u_abs16((int16_t)(pb_x[i] - boss_x)) <= 40 &&
+                u_abs16((int16_t)(pb_y[i] - boss_y)) <= 28) {
+                pb_active[i] = 0u;
+                if (boss_hp) boss_hp--;
+                sky_boom_spawn(bm_x, bm_y, bm_timer, GALAXY_BOOM_MAX, pb_x[i], pb_y[i]);
+                playSFX(SOUND_SFX_2);
+                if (!boss_hp) {
+                    boss_on = 0u;
+                    score = (uint16_t)(score + 3000u);
+                    sky_boom_spawn(bm_x, bm_y, bm_timer, GALAXY_BOOM_MAX, boss_x, boss_y);
+                    playSFX(SOUND_SFX_10);
+                }
+            }
+        }
+
+        /* Player collision check */
+        if (!hit_cd) {
+            uint8_t hit = 0u;
+            for (i = 0u; i < GALAXY_EBULLET_MAX; i++) {
+                if (!eb_active[i]) continue;
+                if (u_abs16((int16_t)(eb_x[i] - ship_x)) > 12) continue;
+                if (u_abs16((int16_t)(eb_y[i] - ship_y)) > 16) continue;
+                eb_active[i] = 0u;
+                hit = 1u;
+                break;
+            }
+            if (!hit) {
+                for (i = 0u; i < GALAXY_ENEMY_MAX; i++) {
+                    if (!en_alive[i]) continue;
+                    if (u_abs16((int16_t)(en_x[i] - ship_x)) > 18) continue;
+                    if (u_abs16((int16_t)(en_y[i] - ship_y)) > 18) continue;
+                    en_alive[i] = 0u;
+                    hit = 1u;
+                    break;
+                }
+            }
+            if (hit) {
+                sky_boom_spawn(bm_x, bm_y, bm_timer, GALAXY_BOOM_MAX, ship_x, ship_y);
+                playSFX(SOUND_SFX_2);
+                hit_cd = 90u;
+                if (lives) lives--;
+                ship_x = 160;
+                ship_y = GALAXY_BOTTOM - 8;
+                if (!lives) {
+                    demo_fix_puts(15u, 14u, "FLEET LOST", 2u);
+                    if (uwait(150u)) { snd_silence(); return 1u; }
+                    lives = 3u;
+                    score = 0u;
+                    wave = 1u;
+                    boss_on = 0u;
+                    demo_fix_puts(15u, 14u, "          ", 2u);
+                }
+            }
+        }
+
+        for (i = 0u; i < GALAXY_BOOM_MAX; i++) if (bm_timer[i]) bm_timer[i]--;
+
+        /* ---- draw entities (strictly ordered for correct priority) -- */
+        /* 1. Bullets (behind craft) */
+        for (i = 0u; i < GALAXY_PBULLET_MAX; i++) {
+            uint16_t slot = (uint16_t)(GALAXY_SLOT_PBULLET + i * 2u);
+            if (pb_active[i]) {
+                draw_asset_center(U_SKY_BULLET, slot, pb_x[i], pb_y[i], 0xFFu, 0x80u);
+                pb_shown[i] = 1u;
+            } else if (pb_shown[i]) {
+                demo_hide_sprite_range(slot, 2u);
+                pb_shown[i] = 0u;
+            }
+        }
+        for (i = 0u; i < GALAXY_EBULLET_MAX; i++) {
+            uint16_t slot = (uint16_t)(GALAXY_SLOT_EBULLET + i * 2u);
+            if (eb_active[i]) {
+                draw_asset_center(U_SKY_ORB, slot, eb_x[i], eb_y[i], 0xFFu, 0xFFu);
+                eb_shown[i] = 1u;
+            } else if (eb_shown[i]) {
+                demo_hide_sprite_range(slot, 2u);
+                pb_shown[i] = 0u;
+            }
+        }
+
+        /* 2. Enemies */
+        for (i = 0u; i < GALAXY_ENEMY_MAX; i++) {
+            if (!en_alive[i]) continue;
+            draw_asset_center(gx_asset[en_type[i]],
+                              (uint16_t)(GALAXY_SLOT_ENEMY + i * 8u),
+                              en_x[i], en_y[i],
+                              gx_scale[en_type[i]], gx_scale[en_type[i]]);
+            en_shown[i] = 1u;
+        }
+
+        /* 3. Boss */
+        if (boss_on) {
+            draw_asset_center(U_SKY_BOSS, GALAXY_SLOT_BOSS, boss_x, boss_y,
+                              GALAXY_SCALE_BOSS, GALAXY_SCALE_BOSS);
+            boss_shown = 1u;
+        } else if (boss_shown) {
+            demo_hide_sprite_range(GALAXY_SLOT_BOSS, 8u);
+            boss_shown = 0u;
+        }
+
+        /* 4. Player Ship (drawn at slot 110 in front of enemies) */
+        if (!hit_cd || (hit_cd & 4u)) {
+            draw_asset_center(U_PLAYER_VESSEL, GALAXY_SLOT_PLAYER, ship_x, ship_y,
+                              GALAXY_SCALE_PLAYER, GALAXY_SCALE_PLAYER);
+        } else {
+            demo_hide_sprite_range(GALAXY_SLOT_PLAYER, 6u);
+        }
+
+        /* 5. Explosions (drawn at slot 116 topmost) */
+        for (i = 0u; i < GALAXY_BOOM_MAX; i++) {
+            uint16_t slot = (uint16_t)(GALAXY_SLOT_BOOM + i * 2u);
+            if (bm_timer[i]) {
+                uint8_t sc = (uint8_t)(0x70u + (uint8_t)((10u - bm_timer[i]) * 12u));
+                draw_asset_center(U_PARTICLE_EXPLOSION, slot,
+                                  bm_x[i], bm_y[i], sc, sc);
+                bm_shown[i] = 1u;
+            } else if (bm_shown[i]) {
+                demo_hide_sprite_range(slot, 2u);
+                bm_shown[i] = 0u;
+            }
+        }
+
+        /* ---- readouts --------------------------------------------- */
+        demo_fix_puts(2u, 3u, "SCORE", 1u);
+        digit3(buf, score);
+        demo_fix_puts(8u, 3u, buf, 2u);
+        demo_fix_puts(14u, 3u, boss_on ? "BOSS" : "WAVE", 1u);
+        digit3(buf, boss_on ? (uint16_t)boss_hp : (uint16_t)wave);
+        demo_fix_puts(19u, 3u, buf, 2u);
+        demo_fix_puts(25u, 3u, "LIFE", 1u);
+        digit3(buf, lives);
+        demo_fix_puts(30u, 3u, buf, 2u);
+
+        {
+            char bar[26];
+            uint8_t n, k;
+            if (boss_on) {
+                n = (uint8_t)(((uint16_t)boss_hp * 24u) / boss_hp_max);
+            } else {
+                n = (uint8_t)(((uint16_t)(wave - 1u) * 24u) / GALAXY_WAVES_TO_BOSS);
+            }
+            if (n > 24u) n = 24u;
+            for (k = 0u; k < 24u; k++) bar[k] = (char)(k < n ? '#' : '.');
+            bar[24] = '\0';
+            demo_fix_puts(8u, 4u, bar, boss_on ? 3u : 0u);
+        }
+
+        /* Boss defeated check */
+        if (!boss_on && wave > GALAXY_WAVES_TO_BOSS && score >= 3000u) {
+            demo_fix_puts(13u, 14u, "MISSION COMPLETE", 2u);
+            demo_fix_puts(14u, 15u, "ALL CLEAR!!", 1u);
+            if (uwait(180u)) {
+                ng_sprite_park_off_range(1u, 130u);
+                snd_silence();
+                return 1u;
+            }
+            break;
+        }
+
+        if (idle_frames >= GALAXY_IDLE_ADVANCE) {
+            ng_sprite_park_off_range(1u, 130u);
+            snd_silence();
+            return 1u;
+        }
+        if (uframe()) {
+            ng_sprite_park_off_range(1u, 130u);
+            snd_silence();
+            return 1u;
+        }
+    }
+
+    ng_sprite_park_off_range(1u, 130u);
+    snd_silence();
+    return 0u;
+}
+
+/* ================================================================== */
 /*  Chapter 19 — Garden 3D (sprite-scaling pseudo-3D walk)               */
 /* ================================================================== */
 /*
@@ -4755,6 +5286,7 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
         uint16_t t;
         uint8_t i;
 
+        chap_letterbox_next(5u, 4u);
         chap_header(19u, "DEPTH RIDE", "ROAD DEPTH  SCALE OBJECTS");
         demo_fix_puts(2u, 2u, "THREE EFFECT LANES APPROACH CAMERA", 1u);
         demo_fix_puts(2u, 3u, "EAGLE AT 30%  HARDWARE DEPTH SCALE", 0u);
@@ -5115,6 +5647,7 @@ static void NEOGEO_USER run_chapter(uint8_t (*fn)(void))
 /* ================================================================== */
 void NEOGEO_USER demo_unified_run(void)
 {
+    s_chapter_view_index = 0u;
     run_chapter(chap_boot);
     run_chapter(chap_title);
     run_chapter(chap_fix);
@@ -5138,8 +5671,8 @@ void NEOGEO_USER demo_unified_run(void)
     run_chapter(chap_raytrace3d);
     run_chapter(chap_garden3d);
     run_chapter(chap_sound);
-    run_chapter(chap_ssg_arcade);    /* last playable chapter - idles straight
-                                  * into the credits below              */
+    run_chapter(chap_ssg_arcade);
+    run_chapter(chap_galaxy_skylance); /* combined arcade shooter */
     run_chapter(chap_credits);
 }
 

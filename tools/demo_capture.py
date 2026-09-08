@@ -2,6 +2,7 @@
 """Run the MAME showcase through its real input path and capture each chapter."""
 
 import argparse
+import csv
 import os
 from pathlib import Path
 import shutil
@@ -32,6 +33,7 @@ def main():
     if not nm:
         parser.error("pass --nm with the cross-toolchain nm executable")
     result = subprocess.check_output([nm, "-n", str(root / "out/game")], text=True)
+    (output / "symbols.txt").write_text(result, encoding="utf-8")
     symbols = {line.split()[2]: line.split()[0] for line in result.splitlines() if len(line.split()) == 3}
     env = os.environ.copy()
     env.update(DEMO_CAPTURE_DIR=str(output),
@@ -49,7 +51,19 @@ def main():
                "-autoboot_script", str(root / "tools/demo_capture.lua")]
     with (output / "mame.log").open("w", encoding="utf-8") as log:
         subprocess.run(command, env=env, cwd=root, stdout=log, stderr=subprocess.STDOUT, check=True)
-    print(f"Capture complete: {output}")
+    with (output / "frames.tsv").open(encoding="utf-8") as stream:
+        visited = {int(row["chapter"]) for row in csv.DictReader(stream, delimiter="\t")}
+    missing = set(range(1, 27)) - visited
+    if missing:
+        raise SystemExit(f"Incomplete tour; missing chapters: {sorted(missing)}")
+    if args.controls:
+        with (output / "controls.tsv").open(encoding="utf-8") as stream:
+            checks = {(int(row["chapter"]), row["action"]) for row in csv.DictReader(stream, delimiter="\t")}
+        expected = {(chapter, "C_PASS") for chapter in range(1, 27)}
+        expected |= {(chapter, "A_PASS") for chapter in range(1, 26)}
+        if expected - checks:
+            raise SystemExit(f"Controls not verified: {sorted(expected - checks)}")
+    print(f"All 26 chapters captured: {output}")
 
 
 if __name__ == "__main__":
