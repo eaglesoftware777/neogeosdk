@@ -514,7 +514,7 @@ dump:
 .PHONY: test
 test: game-check test-precheck hash
 	$(LOG_CTX)
-	$(MAME_COMMON) -output console -nofilter -waitvsync -window
+	$(MAME_COMMON) -output console -nofilter -throttle -waitvsync -window
 
 .PHONY: test-precheck
 test-precheck: game-check
@@ -610,7 +610,7 @@ help: menu
 .PHONY: debug
 debug: all
 	$(LOG_CTX)
-	$(MAME_COMMON) -output console -debug -verbose -nofilter -waitvsync -window
+	$(MAME_COMMON) -output console -debug -verbose -nofilter -throttle -waitvsync -window
 
 .PHONY: debug-aes
 debug-aes:
