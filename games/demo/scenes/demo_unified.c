@@ -776,32 +776,6 @@ static void NEOGEO_USER fix_band(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
 static uint8_t s_letterbox_top    = 0u;
 static uint8_t s_letterbox_bottom = 0u;
 
-/* The opaque background tiles and a private flat palette provide a
- * matte behind transparent FIX text. Slots 288..327 belong to the HUD. */
-static void NEOGEO_USER chap_hud_matte(uint8_t top_rows, uint8_t bottom_rows)
-{
-    NGSpriteGroup band;
-    uint16_t colors[16];
-    uint8_t i;
-    uint8_t edge;
-    for (i = 0u; i < 16u; i++) colors[i] = DEMO_BG;
-    ng_palette_load_bank(255u, colors);
-    for (edge = 0u; edge < 2u; edge++) {
-        uint8_t height = edge ? bottom_rows : top_rows;
-        int16_t y = edge ? (int16_t)(224u - height * 8u) : 0;
-        uint16_t slot = (uint16_t)(288u + edge * 20u);
-        if (!height) continue;
-        for (i = 0u; i < 2u; i++) {
-            ng_sprite_group_init(&band, (uint16_t)(slot + i * 16u),
-                                  i ? 4u : 16u, height,
-                                  DEMO_SCREEN_TILE(U_BG_MOUNTAIN), 255u);
-            ng_sprite_group_set_tile_stride(&band, demo_screen_tile_stride(U_BG_MOUNTAIN));
-            ng_sprite_group_set_pos(&band, i ? 256 : 0, y);
-            ng_sprite_group_set_scale(&band, 0xffu, 0x7fu);
-            ng_sprite_group_upload(&band);
-        }
-    }
-}
 
 /* "CH.nn" for the chapter now running, as chap_header numbered it. */
 static char s_chapter_tag[6] = "CH.00";
@@ -918,14 +892,12 @@ static void NEOGEO_USER chap_header(uint8_t n,
     s_chapter_tag[2] = tag[2]; s_chapter_tag[3] = tag[3];
     s_chapter_tag[4] = tag[4]; s_chapter_tag[5] = tag[5];
 
-    if (s_letterbox_top || s_letterbox_bottom) {
-        chap_hud_matte(s_letterbox_top, s_letterbox_bottom);
-    } else {
-        /* Park any previous letterbox matte strips so they don't leak into non-letterboxed scenes */
-        ng_sprite_park_off_range(288u, 40u);
-    }
+    if (s_letterbox_top)    fix_band(0u, 0u, 40u, s_letterbox_top, 0u);
+    if (s_letterbox_bottom) fix_band(0u, (uint8_t)(28u - s_letterbox_bottom),
+                                     40u, s_letterbox_bottom, 0u);
     s_letterbox_top    = 0u;
     s_letterbox_bottom = 0u;
+    ng_sprite_park_off_range(288u, 40u);
 
     demo_fix_puts(2u,  0u, tag,   0u);
     demo_fix_puts(8u,  0u, title, 2u);
@@ -1030,8 +1002,8 @@ static void NEOGEO_USER bind_character_asset(NGCharacter *c,
     if (anchor_x == 0u) anchor_x = (uint16_t)(((uint16_t)strips * 16u) >> 1);
     if (anchor_y == 0u) anchor_y = (uint16_t)((uint16_t)rows * 16u);
 
-    c->sprite_offset_x = -(int16_t)ng_sprite_scaled_x(anchor_x, c->scale_x);
-    c->sprite_offset_y = -(int16_t)ng_sprite_scaled_y(anchor_y, c->scale_y);
+    c->sprite_offset_x = -(int16_t)((anchor_x * scale_x) >> 8);
+    c->sprite_offset_y = -(int16_t)((anchor_y * scale_y) >> 8);
 }
 
 static void NEOGEO_USER draw_infix_block(uint16_t tile_base,
@@ -1078,14 +1050,17 @@ static void NEOGEO_USER clear_fix_rect_force(uint8_t x,
 
 static int16_t NEOGEO_USER asset_scaled_px(uint8_t cells, uint8_t scale)
 {
-    return (int16_t)ng_sprite_scaled_y((uint16_t)cells * 16u, scale);
+    uint16_t px = (uint16_t)cells * 16u;
+    if (scale >= 0xFFu) return (int16_t)px;
+    return (int16_t)(((uint32_t)px * (uint32_t)scale + 127u) >> 8);
 }
 
 /* Same shrink as asset_scaled_px(), but for a pixel count rather than a
  * tile-cell count. */
 static int16_t NEOGEO_USER asset_scaled_px_u16(uint16_t px, uint8_t scale)
 {
-    return (int16_t)ng_sprite_scaled_y(px, scale);
+    if (scale >= 0xFFu) return (int16_t)px;
+    return (int16_t)(((uint32_t)px * (uint32_t)scale + 127u) >> 8);
 }
 
 static void NEOGEO_USER draw_asset_bottom_center(uint8_t frame,
@@ -1147,9 +1122,9 @@ static void NEOGEO_USER draw_asset_center(uint8_t frame,
 
     demo_draw_sprite_screen(frame, first_sprite,
                             (int16_t)(cx - demo_screen_x_offset(frame)
-                                         - ng_sprite_scaled_x(pad_x, demo_asset_scale(frame, scale_x))),
+                                         - asset_scaled_px_u16(pad_x, scale_x)),
                             (int16_t)(cy - demo_screen_y_offset(frame)
-                                         - ng_sprite_scaled_y(pad_y, demo_asset_scale(frame, scale_y))),
+                                         - asset_scaled_px_u16(pad_y, scale_y)),
                             demo_screen_strips(frame),
                             demo_screen_rows(frame),
                             scale_x, scale_y);
@@ -1165,16 +1140,12 @@ static void NEOGEO_USER draw_asset_bottom_center_flip(uint8_t frame,
 {
     uint8_t strips = demo_screen_strips(frame);
     uint8_t rows = demo_screen_rows(frame);
-    uint16_t anchor_x = demo_screen_x_pad(frame) + demo_screen_content_width(frame) / 2u;
-    uint16_t anchor_y = demo_screen_y_pad(frame) + demo_screen_content_height(frame);
-    uint8_t hw_x = demo_asset_scale(frame, scale_x);
-    uint8_t hw_y = demo_asset_scale(frame, scale_y);
-
-    if (flip) anchor_x = (uint16_t)(strips * 16u - anchor_x);
+    int16_t w = asset_scaled_px(strips, scale_x);
+    int16_t h = asset_scaled_px(rows, scale_y);
 
     demo_draw_sprite_screen_flip(frame, first_sprite,
-                                 (int16_t)(cx - ng_sprite_scaled_x(anchor_x, hw_x) - demo_screen_x_offset(frame)),
-                                 (int16_t)(bottom_y - ng_sprite_scaled_y(anchor_y, hw_y) - demo_screen_y_offset(frame)),
+                                 (int16_t)(cx - (w >> 1) - demo_screen_x_offset(frame)),
+                                 (int16_t)(bottom_y - h - demo_screen_y_offset(frame)),
                                  strips, rows, scale_x, scale_y, flip);
 }
 
@@ -1862,8 +1833,8 @@ static void NEOGEO_USER hero_draw(uint8_t frame)
      * vblank-safe queue (see demo_draw_sprite_screen). */
     int16_t strips = demo_screen_strips(frame);
     int16_t rows   = demo_screen_rows(frame);
-    int16_t grid_w = ng_sprite_scaled_x((uint16_t)strips * 16u, demo_asset_scale(frame, s_hero_scale_x));
-    int16_t grid_h = ng_sprite_scaled_y((uint16_t)rows * 16u, demo_asset_scale(frame, s_hero_scale_y));
+    int16_t grid_w = asset_scaled_px((uint8_t)strips, s_hero_scale_x);
+    int16_t grid_h = asset_scaled_px((uint8_t)rows, s_hero_scale_y);
     int16_t off_x  = demo_screen_x_offset(frame);
     int16_t off_y  = demo_screen_y_offset(frame);
     int16_t draw_x = (int16_t)(s_hero_x - (grid_w / 2) - off_x);

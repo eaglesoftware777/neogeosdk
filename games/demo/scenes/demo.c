@@ -31,6 +31,7 @@
 #include "sdk/2d_engine/ng_camera.h"
 #include "sdk/2d_engine/ng_feedback.h"
 #include "sdk/2d_engine/ng_sprite_pool.h"
+#include "sdk/2d_engine/ng_sprite_hw.h"
 #include "sprite_meta.h"
 #include <stdint.h>
 #ifdef __cplusplus
@@ -119,8 +120,14 @@ uint8_t NEOGEO_USER demo_advance_requested(void)
      * Callers that only care "should this scene stop" keep working
      * unchanged: both codes are simply non-zero.
      */
-    if ((edge & BUTTON_C) || (bios_edge & (uint8_t)(1u << CNT_C))) return 2u;
-    if ((edge & BUTTON_A) || (bios_edge & (uint8_t)(1u << CNT_A))) return 1u;
+    if ((edge & BUTTON_C) || (bios_edge & (uint8_t)(1u << CNT_C))) {
+        NEO_REGISTER8(BIOS_P1CHANGE) &= (uint8_t)~(1u << CNT_C);
+        return 2u;
+    }
+    if ((edge & BUTTON_A) || (bios_edge & (uint8_t)(1u << CNT_A))) {
+        NEO_REGISTER8(BIOS_P1CHANGE) &= (uint8_t)~(1u << CNT_A);
+        return 1u;
+    }
     return 0u;
 }
 
@@ -668,6 +675,7 @@ static void NEOGEO_USER demo_perform_sprite_draw(const DemoSpriteDraw *cmd)
     uint8_t rows;
     NGSpriteWindow *window;
     uint8_t index;
+    uint16_t tile_base;
 
     if (!cmd || cmd->first_sprite == 0u || cmd->first_sprite >= NG_SPR_TOTAL) return;
     if (cmd->screen_id == 0u) {
@@ -710,13 +718,16 @@ static void NEOGEO_USER demo_perform_sprite_draw(const DemoSpriteDraw *cmd)
 
     if (!demo_palette_loaded[cmd->screen_id]) demo_load_screen_palette(cmd->screen_id);
 
+    tile_base = ng_sprite_row_tile(DEMO_SCREEN_TILE(cmd->screen_id),
+                                   demo_screen_tile_stride(cmd->screen_id), cmd->tile_y);
+
     if (!demo_sprite_group_ready[index] || g->strips != strips || g->heightTiles != meta_rows) {
         ng_sprite_group_init(g, cmd->first_sprite, strips, meta_rows,
-                             (uint16_t)(DEMO_SCREEN_TILE(cmd->screen_id) + cmd->tile_y),
+                             tile_base,
                              DEMO_SCREEN_PALETTE(cmd->screen_id));
         demo_sprite_group_ready[index] = 1u;
     } else {
-        ng_sprite_group_set_tile_base(g, (uint16_t)(DEMO_SCREEN_TILE(cmd->screen_id) + cmd->tile_y));
+        ng_sprite_group_set_tile_base(g, tile_base);
         ng_sprite_group_set_palette(g, DEMO_SCREEN_PALETTE(cmd->screen_id));
     }
     ng_sprite_group_set_tile_stride(g, demo_screen_tile_stride(cmd->screen_id));
