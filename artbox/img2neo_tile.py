@@ -596,18 +596,107 @@ def _luma(rgb: np.ndarray) -> np.ndarray:
             rgb_f[..., 2] * 0.114)
 
 
+def bilateral_filter(img_uint8: np.ndarray,
+                     spatial_sigma: float = 2.0,
+                     range_sigma: float = 28.0,
+                     radius: int = 2) -> np.ndarray:
+    """
+    Bilateral filter — smooths flat areas, preserves sharp edges.
+    """
+    h, w, c = img_uint8.shape
+    src = img_uint8.astype(np.float32)
+    out = np.zeros_like(src)
+    weight = np.zeros((h, w, 1), dtype=np.float32)
+
+    yy, xx = np.mgrid[-radius:radius + 1, -radius:radius + 1]
+    spatial = np.exp(-(yy * yy + xx * xx) / (2.0 * spatial_sigma * spatial_sigma))
+    inv_range2 = 1.0 / (2.0 * range_sigma * range_sigma)
+
+    for dy in range(-radius, radius + 1):
+        for dx in range(-radius, radius + 1):
+            n = np.roll(np.roll(src, dy, axis=0), dx, axis=1)
+            diff = n - src
+            rng = np.exp(-np.sum(diff * diff, axis=-1, keepdims=True) * inv_range2)
+            sw  = spatial[dy + radius, dx + radius] * rng
+            out += n * sw
+            weight += sw
+    return np.clip(out / (weight + 1e-6), 0.0, 255.0).astype(np.uint8)
+
+
+def clahe_luminance(img_uint8: np.ndarray,
+                    tile_grid: int = 4,
+                    clip_limit: float = 1.8) -> np.ndarray:
+    """
+    Apply CLAHE to the luminance channel in Lab space to preserve and enhance
+    local contrast across shadows and highlights.
+    """
+    h, w, _ = img_uint8.shape
+    lab = rgb_to_lab(img_uint8)
+    L = lab[..., 0]   # 0..100
+
+    th = h // tile_grid
+    tw = w // tile_grid
+    if th == 0 or tw == 0:
+        return img_uint8
+
+    luts = np.zeros((tile_grid, tile_grid, 256), dtype=np.float32)
+    L8   = np.clip(L * 2.55, 0, 255).astype(np.uint8)
+
+    for ty in range(tile_grid):
+        for tx in range(tile_grid):
+            y0 = ty * th; y1 = (ty + 1) * th if ty < tile_grid - 1 else h
+            x0 = tx * tw; x1 = (tx + 1) * tw if tx < tile_grid - 1 else w
+            tile = L8[y0:y1, x0:x1]
+            hist, _ = np.histogram(tile, bins=256, range=(0, 256))
+            clip_val = max(1, int(clip_limit * (tile.size / 256.0)))
+            excess = max(0, hist - clip_val).sum()
+            hist = np.minimum(hist, clip_val) + (excess // 256)
+            cdf = hist.cumsum().astype(np.float32)
+            if cdf[-1] > 0:
+                cdf = (cdf - cdf[0]) * 255.0 / (cdf[-1] - cdf[0] + 1e-6)
+            luts[ty, tx] = cdf
+
+    out_L = np.zeros_like(L, dtype=np.float32)
+    for y in range(h):
+        ty = min(tile_grid - 1, max(0, int((y - th / 2) / th)))
+        fy = (y - (ty + 0.5) * th) / th
+        fy = min(1.0, max(0.0, fy))
+        ty1 = min(tile_grid - 1, ty + 1)
+        for x in range(w):
+            tx = min(tile_grid - 1, max(0, int((x - tw / 2) / tw)))
+            fx = (x - (tx + 0.5) * tw) / tw
+            fx = min(1.0, max(0.0, fx))
+            tx1 = min(tile_grid - 1, tx + 1)
+            v = L8[y, x]
+            val = ((1 - fy) * (1 - fx) * luts[ty, tx, v] +
+                   (1 - fy) * fx * luts[ty, tx1, v] +
+                   fy * (1 - fx) * luts[ty1, tx, v] +
+                   fy * fx * luts[ty1, tx1, v])
+            out_L[y, x] = val / 2.55
+
+    new_lab = lab.copy()
+    new_lab[..., 0] = np.clip(out_L, 0.0, 100.0)
+    return lab_to_rgb(new_lab)
+
+
 def _neo_palette_pop(rgb: np.ndarray,
                      mask: np.ndarray | None,
                      asset_type: str = "background") -> np.ndarray:
     """
-    Small pre-quantisation tone pass for palette selection.
+    Enhanced pre-quantisation tone and contrast pass for palette selection.
 
-    The Neo Geo palette is only 15 visible colours per bank.  This pass
-    slightly separates shadows, highlights and chroma before k-means so
-    the limited palette keeps the crisp arcade contrast instead of
-    collapsing into middle tones.
+    Uses bilateral edge-preserving filtering + CLAHE local contrast on
+    backgrounds, and perceptual shadow/highlight separation with saturation
+    pop to ensure 15-colour palettes preserve the vibrant feeling of HD original art.
     """
     out = rgb.astype(np.float32).copy()
+
+    if asset_type == "background" and out.ndim == 3 and out.shape[0] >= 16 and out.shape[1] >= 16:
+        # Edge-preserving bilateral filter + CLAHE luminance expansion
+        u8 = bilateral_filter(np.clip(out, 0.0, 255.0).astype(np.uint8), radius=2)
+        u8 = clahe_luminance(u8, tile_grid=4, clip_limit=1.8)
+        out = u8.astype(np.float32)
+
     if mask is None:
         sample = out.reshape(-1, 3)
     else:
@@ -1943,10 +2032,26 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
                 local_luts[(ty_idx, tx_idx)] = master_rgb
 
     else:  # asset_type == "background"
+        # Context padding (4px) + global dominant sample so adjacent 16x16 tiles
+        # produce aligned palette candidates and smooth gradients across tile seams.
+        pad = 4
+        padded_rgb = np.pad(rgb_np, ((pad, pad), (pad, pad), (0, 0)), mode="edge")
+        padded_mask = np.pad(opaque_mask, ((pad, pad), (pad, pad)), mode="edge")
+
+        # Global dominant colors across the entire background image
+        global_dominant = None
+        if opaque_mask.any():
+            all_opq = rgb_np[opaque_mask].astype(np.uint8)
+            if all_opq.shape[0] > 8000:
+                rng = np.random.RandomState(42)
+                all_opq = all_opq[rng.choice(all_opq.shape[0], 8000, replace=False)]
+            global_dominant = _lab_kmeans_palette_with_anchors(
+                all_opq, n_colors=15, asset_type="background", pre_toned=True
+            ).astype(np.float32)
+
         for ty_idx in range(tile_rows):
             for tx_idx in range(tile_cols):
                 y, x = ty_idx * 16, tx_idx * 16
-                tile_rgb = rgb_np[y:y + 16, x:x + 16]
                 tile_alpha = opaque_mask[y:y + 16, x:x + 16]
 
                 if not tile_alpha.any():
@@ -1955,11 +2060,31 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
                                                               dtype=np.float32)
                     continue
 
-                opaque_rgb = tile_rgb[tile_alpha].astype(np.uint8)
-                local_luts[(ty_idx, tx_idx)] = _lab_kmeans_palette_with_anchors(
-                    opaque_rgb, n_colors=15, asset_type="background",
+                center_rgb = rgb_np[y:y + 16, x:x + 16][tile_alpha].astype(np.uint8)
+
+                # Sample context window (24x24)
+                py, px = y + pad, x + pad
+                ctx_rgb = padded_rgb[py - pad:py + 16 + pad, px - pad:px + 16 + pad]
+                ctx_mask = padded_mask[py - pad:py + 16 + pad, px - pad:px + 16 + pad]
+                ctx_opq = ctx_rgb[ctx_mask].astype(np.uint8)
+
+                # Center tile pixels get double weight so local details are sharp,
+                # while context pixels ensure smooth palette transitions at edges.
+                if ctx_opq.shape[0] > 0:
+                    combined = np.vstack([center_rgb, center_rgb, ctx_opq])
+                else:
+                    combined = center_rgb
+
+                local_pal = _lab_kmeans_palette_with_anchors(
+                    combined, n_colors=15, asset_type="background",
                     pre_toned=True
                 ).astype(np.float32)
+
+                if local_pal.shape[0] < 15 and global_dominant is not None:
+                    needed = 15 - local_pal.shape[0]
+                    local_pal = np.vstack([local_pal, global_dominant[:needed]])
+
+                local_luts[(ty_idx, tx_idx)] = local_pal[:15]
 
     # ---------------------------------------------------------
     # PASS 1b: RE-FIT EVERY PALETTE ONTO THE HARDWARE COLOUR GRID
@@ -2201,7 +2326,7 @@ def _vivid_pipeline_from_rgba(rgba: np.ndarray,
 
 _VIVID_CACHE_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), ".cache", "vivid")
-_VIVID_CACHE_VERSION = "v16-hd-conditioning-default"
+_VIVID_CACHE_VERSION = "v18-hd-bilateral-clahe-context-global"
 
 
 def _vivid_cache_key(image_path: str, target_w: int, target_h: int,
