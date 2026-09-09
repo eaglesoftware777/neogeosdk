@@ -27,12 +27,14 @@ TEST_C   := test_c$(EXE)
 TEST_CPP := test_cpp$(EXE)
 
 C_SRCS   = sprite_render_test.c \
+           ../sdk/2d_engine/ng_camera.c \
            ../sdk/2d_engine/ng_art_asset.c \
            ../sdk/2d_engine/ng_palette_fx.c \
            ../sdk/2d_engine/ng_sprite_group.c \
            ../sdk/2d_engine/ng_sprite_window.c \
            ../sdk/2d_engine/ng_vram.c
 CPP_SRCS = sprite_render_test.c \
+           ../sdk/2d_engine_plus/ng_camera.cpp \
            ../sdk/2d_engine_plus/ng_art_asset.cpp \
            ../sdk/2d_engine_plus/ng_palette_fx.cpp \
            ../sdk/2d_engine_plus/ng_sprite_group.cpp \

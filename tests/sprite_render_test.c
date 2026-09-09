@@ -16,11 +16,15 @@
 #include "../sdk/2d_engine/ng_palette_math.h"
 #ifdef __cplusplus
 #include "ng_art_asset.hpp"
+#include "ng_camera.hpp"
+#include "ng_level.hpp"
 #include "ng_palette_fx.hpp"
 #include "ng_sprite_group.hpp"
 #include "ng_sprite_window.hpp"
 #else
 #include "ng_art_asset.h"
+#include "ng_camera.h"
+#include "ng_level.h"
 #include "ng_palette_fx.h"
 #include "ng_sprite_group.h"
 #include "ng_sprite_window.h"
@@ -30,6 +34,31 @@ static uint16_t ram[0x8800];
 static uint16_t address, increment;
 static unsigned writes;
 static uint16_t uploaded_palette[16];
+
+const NGLevelState *level_state(void) { return 0; }
+void ng_level_set_scroll(int16_t x, int16_t y) { (void)x; (void)y; }
+
+static void test_camera_pan(void)
+{
+    NGCamera cam;
+    unsigned frame;
+    ng_camera_init(&cam);
+    ng_camera_set_bounds(&cam, 0, 0, 768, 768);
+    ng_camera_snap(&cam, 20, 31);
+    ng_camera_pan_to(&cam, 100, 31, 32);
+    for (frame = 0; frame < 100 && cam.mode == NG_CAM_CINEMATIC; frame++) {
+        ng_camera_update(&cam, 0, 0, 0);
+        assert(cam.y_fp == NGFX_FROM_INT(31));
+        assert(cam.x <= 100);
+    }
+    assert(cam.mode == NG_CAM_FOLLOW && cam.x == 100 && cam.y == 31);
+    ng_camera_pan_to(&cam, -10, 999, 255);
+    for (frame = 0; frame < 200 && cam.mode == NG_CAM_CINEMATIC; frame++) {
+        ng_camera_update(&cam, 0, 0, 0);
+        assert(cam.x >= 0 && cam.y <= cam.bound_bottom);
+    }
+    assert(cam.mode == NG_CAM_FOLLOW && cam.x == 0 && cam.y == cam.bound_bottom);
+}
 
 void ng_rq_palette_upload(uint16_t slot, const uint16_t *data)
 {
@@ -327,11 +356,12 @@ int main(void)
     test_window_parks_only_its_own_tail();
     test_palette_effects();
     test_tile_palette_maps();
+    test_camera_pan();
     assert(ng_sprite_scaled_x(256u, 0x7fu) == 128u);
     assert(ng_sprite_scaled_y(256u, 0x7fu) == 128u);
     assert(ng_sprite_scaled_y(256u, 0xffu) == 256u);
     assert(ng_sprite_row_tile(100u, 3u, 2u) == 106u);
 
-    puts("sprite geometry, map padding, window tails and palette effects: PASS");
+    puts("sprite geometry, map padding, window tails, palettes and camera pan: PASS");
     return 0;
 }
