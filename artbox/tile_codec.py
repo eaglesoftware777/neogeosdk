@@ -2,6 +2,26 @@
 
 import numpy as np
 
+HALF_SOLID_TILE = 0xFFFD
+SOLID_TILE = 0xFFFE
+BLANK_TILE = 0xFFFF
+
+
+def write_utility_tiles(c1_file, c2_file):
+    """Reserve opaque/half-height HUD tiles and the engine's transparent tile."""
+    start = HALF_SOLID_TILE * 64
+    if c1_file.tell() != c2_file.tell() or c1_file.tell() > start:
+        raise ValueError("C-ROM assets overlap reserved utility tiles FFFD-FFFF")
+    gap = bytes(start - c1_file.tell())
+    c1_file.write(gap)
+    c2_file.write(gap)
+    pixels = np.zeros((16, 48), dtype=np.uint8)
+    pixels[:8, :16] = 1
+    pixels[:, 16:32] = 1
+    c1, c2 = encode_image(pixels, 3)
+    c1_file.write(c1)
+    c2_file.write(c2)
+
 
 def encode_image(indexed, reserved_tiles=256):
     indexed = np.asarray(indexed)

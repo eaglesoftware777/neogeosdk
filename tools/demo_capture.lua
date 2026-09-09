@@ -58,6 +58,9 @@ local function sample(now, current)
         end
     end
     state:close()
+    local palette = assert(io.open(string.format('%s/ch%02d_%06d.palette.bin', output, current, frame), 'wb'))
+    for word = 0, 4095 do palette:write(string.pack('>I2', memory:read_u16(0x400000 + word * 2))) end
+    palette:close()
 end
 
 emu.register_frame_done(function()
@@ -90,7 +93,7 @@ emu.register_frame_done(function()
     if controls and current > 0 then
         local elapsed = memory:read_u16(elapsed_address)
         local a, c = 0, 0
-        if control_phase == 0 and elapsed >= 90 then
+        if control_phase == 0 and now - started >= 2 and elapsed >= 90 then
             control_phase, control_time = 1, now
         elseif control_phase == 1 and elapsed < previous_elapsed then
             control_phase, control_time = 2, now
