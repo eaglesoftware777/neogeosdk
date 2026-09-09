@@ -433,10 +433,21 @@ uint16_t NEOGEO_USER demo_screen_content_height(uint8_t screen_id)
     return meta->content_height;
 }
 
-static int16_t NEOGEO_USER demo_scale_px_u16(uint16_t px, uint8_t scale)
+void NEOGEO_USER demo_asset_anchor_offset(uint8_t screen_id,
+    uint8_t scale_x, uint8_t scale_y, uint8_t bottom, uint8_t hflip,
+    int16_t *out_x, int16_t *out_y)
 {
-    if (scale >= 0xFFu) return (int16_t)px;
-    return (int16_t)(((uint32_t)px * (uint32_t)scale + 127u) >> 8);
+    uint16_t x = (uint16_t)(demo_screen_x_pad(screen_id)
+                           + demo_screen_content_width(screen_id) / 2u);
+    uint16_t y = (uint16_t)(demo_screen_y_pad(screen_id)
+                           + demo_screen_content_height(screen_id) / (bottom ? 1u : 2u));
+    uint8_t sx = demo_asset_scale(screen_id, scale_x);
+    uint8_t sy = demo_asset_scale(screen_id, scale_y);
+    if (hflip) x = (uint16_t)(demo_screen_strips(screen_id) * 16u - x);
+    /* The legacy direct draw API also accepts a horizontal nibble. */
+    if (sx <= 0x0fu) sx = (uint8_t)((sx << 4) | sx);
+    *out_x = (int16_t)((x * ((sx >> 4) + 1u) + 8u) >> 4);
+    *out_y = (int16_t)(((uint32_t)y * ((uint16_t)sy + 1u) + 128u) >> 8);
 }
 
 void NEOGEO_USER demo_anchor_bottom_center(uint8_t screen_id,
@@ -448,8 +459,6 @@ void NEOGEO_USER demo_anchor_bottom_center(uint8_t screen_id,
                                            int16_t *out_y)
 {
     const NGSpriteAssetMeta *meta = demo_screen_meta(screen_id);
-    uint16_t pad_x;
-    uint16_t pad_y;
     int16_t  off_x;
     int16_t  off_y;
 
@@ -467,16 +476,13 @@ void NEOGEO_USER demo_anchor_bottom_center(uint8_t screen_id,
      * STABLE position of the art inside whatever tile bounding box
      * the artist drew this frame in, so anchoring on them removes
      * the per-frame jitter the demo was exhibiting. */
-    pad_x = (uint16_t)meta->x_pad + (meta->content_width >> 1);
-    pad_y = (uint16_t)meta->y_pad + meta->content_height;
 
     /* The tile-grid origin offset (tile_col_start * 16) is added
      * UNSCALED by demo_draw_sprite_screen when computing the SCB4
      * X position, so we subtract it unscaled here too.  Only the
      * in-tile component lives inside the shrinking sprite, so only
      * that part is multiplied by the SCB2 scale factor. */
-    off_x = demo_scale_px_u16(pad_x, scale_x);
-    off_y = demo_scale_px_u16(pad_y, scale_y);
+    demo_asset_anchor_offset(screen_id, scale_x, scale_y, 1u, 0u, &off_x, &off_y);
 
     if (out_x) *out_x = (int16_t)(cx
                                   - (int16_t)((uint16_t)meta->tile_col_start * 16u)

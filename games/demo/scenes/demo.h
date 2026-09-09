@@ -85,6 +85,10 @@ uint8_t  NEOGEO_USER demo_screen_x_pad(uint8_t screen_id);
 uint8_t  NEOGEO_USER demo_screen_y_pad(uint8_t screen_id);
 uint16_t NEOGEO_USER demo_screen_content_width(uint8_t screen_id);
 uint16_t NEOGEO_USER demo_screen_content_height(uint8_t screen_id);
+/* Offset within the active tile grid, using the actual SCB2 shrink ratio. */
+void NEOGEO_USER demo_asset_anchor_offset(uint8_t screen_id,
+    uint8_t scale_x, uint8_t scale_y, uint8_t bottom, uint8_t hflip,
+    int16_t *out_x, int16_t *out_y);
 
 /*
  * Stable bottom-center anchor for an animated sprite asset.
