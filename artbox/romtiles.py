@@ -8,6 +8,7 @@ import os
 import struct as st
 
 import numpy as np
+from tile_codec import encode_image
 
 try:
     import pysqlite3 as db
@@ -219,7 +220,7 @@ try:
     conn = db.connect("neorom.db", detect_types=db.PARSE_DECLTYPES)
     conn.execute("PRAGMA journal_mode=WAL")
     cur = conn.cursor()
-    cur.execute("select idx,data,palette from image")
+    cur.execute("select idx,data,palette from image order by idx")
     raw = cur.fetchall()
     for row in raw:
         idx = row[0]
@@ -268,22 +269,16 @@ st.pack_into(
 )
 
 for image_index, indexed, palette in data:
-    height, width = indexed.shape[:2]
-    sprite_count = width // 16
-    character_count = height // 16
-    sprites = np.uint8(np.vsplit(indexed, sprite_count))
-
-    for sprite in sprites:
-        characters = np.hsplit(sprite, character_count)
-        for character in characters:
-            block3 = character[0:8, 0:8]
-            block4 = character[8:16, 0:8]
-            block1 = character[0:8, 8:16]
-            block2 = character[8:16, 8:16]
-            encode_block(block1, f_c1rom, f_c2rom)
-            encode_block(block2, f_c1rom, f_c2rom)
-            encode_block(block3, f_c1rom, f_c2rom)
-            encode_block(block4, f_c1rom, f_c2rom)
+    spec = manifest.get(image_index, {})
+    first_byte = int(spec.get("tile_base", image_index * 256)) * 64
+    if f_c1rom.tell() > first_byte:
+        raise ValueError(f"Asset {image_index} overlaps the previous tile reservation")
+    gap = bytes(first_byte - f_c1rom.tell())
+    f_c1rom.write(gap)
+    f_c2rom.write(gap)
+    c1, c2 = encode_image(indexed, int(spec.get("tile_reserved_count", 256)))
+    f_c1rom.write(c1)
+    f_c2rom.write(c2)
 
     write_palette(palette, f_std, f_neo, image_index + 1, packed_palettes)
 

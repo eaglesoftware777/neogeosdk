@@ -10,6 +10,7 @@ from pathlib import Path
 
 import numpy as np
 import png
+from palette_banks import fit_palette, palette_words, quantize, training_mask
 
 try:
     import pysqlite3 as sqlite3
@@ -491,15 +492,7 @@ def build_shared_sprite_palettes(specs):
 
 
 def build_master_sprite_palettes(specs):
-    """
-    Vivid-pipeline replacement for build_shared_sprite_palettes.
-    Groups sprite specs by animation family and derives one CIE-Lab
-    k-means++ master palette from the union of each family's opaque
-    pixels.  Used by
-    load_sprite_asset_vivid: every frame of one character renders
-    against the same 15-colour palette, so animations cannot flicker
-    or shift hues between frames.
-    """
+    """Train an animation palette on the same fitted pixels used at import."""
     shared = {}
     if not HAS_VIVID_SPRITES or not HAS_PIL:
         return shared
@@ -511,9 +504,87 @@ def build_master_sprite_palettes(specs):
     for group, group_specs in groups.items():
         if len(group_specs) <= 1:
             continue
-        paths = [spec["path"] for spec in group_specs]
-        shared[group] = _derive_master_sprite_palette(paths, n_colors=15)
+        chunks = []
+        for spec in group_specs:
+            rgba, _ = prepare_source_sprite(spec)
+            core = training_mask(rgba)
+            if core.any():
+                chunks.append(rgba[:, :, :3][core])
+        if chunks:
+            shared[group] = fit_palette(np.concatenate(chunks))
     return shared
+
+
+def prepare_source_sprite(spec):
+    with Image.open(spec["path"]) as img:
+        source_size = img.size
+        canvas, left, top, width, height = fit_sprite_rgba(
+            img, spec["target_width"], spec["target_height"], spec["anchor"]
+        )
+    rgba = np.array(canvas)
+    if spec.get("halo_strip"):
+        rgba = strip_halo_edges(rgba, int(spec.get("halo_luma_threshold", 220)))
+    if alpha_bleed is not None:
+        rgba = alpha_bleed(rgba, opaque_alpha=128)
+    geometry = {
+        "source_width": source_size[0], "source_height": source_size[1],
+        "canvas_width": canvas.width, "canvas_height": canvas.height,
+        "content_left": left, "content_top": top,
+        "content_width": width, "content_height": height,
+    }
+    return rgba, geometry
+
+
+def load_source_sprite(spec, shared_master=None):
+    rgba, geometry = prepare_source_sprite(spec)
+    indexed, banks, _ = quantize(rgba, master=shared_master, dither=spec["dither"])
+    spec.update(geometry)
+    spec["_keep_mask"] = rgba[:, :, 3] >= 128
+    return indexed.astype(np.uint16), banks[0].astype(np.uint16)
+
+
+def load_source_screen(spec):
+    from img2neo_tile import fit_screen_for_display
+
+    with Image.open(spec["path"]) as img:
+        source_size = img.size
+        canvas, left, top, width, height = fit_screen_for_display(
+            img, spec["target_width"], spec["target_height"],
+            shrink_y=int(spec.get("display_shrink_y", 255)),
+            fit=spec.get("fit", "contain"), anchor=spec.get("anchor", "center")
+        )
+    rgba = np.array(canvas)
+    if alpha_bleed is not None:
+        rgba = alpha_bleed(rgba, opaque_alpha=128)
+    indexed, banks, tile_banks = quantize(
+        rgba, bank_limit=int(spec.get("palette_banks", 1)), dither=spec["dither"]
+    )
+    spec.update({
+        "source_width": source_size[0], "source_height": source_size[1],
+        "canvas_width": canvas.width, "canvas_height": canvas.height,
+        "content_left": left, "content_top": top,
+        "content_width": width, "content_height": height,
+        "transparent_zero": 1, "palette_has_zero": 1,
+    })
+    if len(banks) > 1:
+        spec["extra_palettes"] = [palette_words(bank) for bank in banks[1:]]
+        spec["tile_palette_offsets"] = tile_banks.reshape(-1).tolist()
+    return indexed.astype(np.uint16), banks[0].astype(np.uint16)
+
+
+def allocate_extra_palettes(specs):
+    """Keep legacy base banks stable; allocate extras above the asset range."""
+    next_slot = 16 + len(specs)
+    for spec in specs:
+        count = len(spec.get("extra_palettes", []))
+        if next_slot + count > 255:
+            raise ValueError("Palette RAM budget exceeded; reduce palette_banks in assets.cfg")
+        slots = [spec["palette_bank"]] + list(range(next_slot, next_slot + count))
+        spec["palette_slots"] = slots
+        if count:
+            spec["tile_palette_banks"] = [slots[i] for i in spec.pop("tile_palette_offsets")]
+        next_slot += count
+    print(f"Palette RAM: {next_slot - 16}/239 asset banks; FIX 0..15 and bank 255 reserved")
 
 
 def load_sprite_asset_vivid(spec, shared_master=None):
@@ -851,14 +922,15 @@ def main():
             sprite_loader = load_sprite_asset
         else:
             shared_palettes = build_master_sprite_palettes(specs)
-            sprite_loader = load_sprite_asset_vivid
+            sprite_loader = load_source_sprite
         for spec in specs:
             print(f"  [{spec['db_index']:3d}] {spec['name']}  mode={spec['mode']}")
             if spec["mode"] == "sprite":
                 shared = shared_palettes.get(sprite_palette_group_key(spec))
                 indexed, palette = sprite_loader(spec, shared)
             else:
-                indexed, palette = load_screen_asset(spec)
+                indexed, palette = (load_screen_asset(spec) if USE_LEGACY or USE_CRT
+                                    else load_source_screen(spec))
 
             finalize_spec(spec)
 
@@ -882,6 +954,7 @@ def main():
             db_rows.append((spec["db_index"], indexed, palette))
 
         normalize_sequence_bounds(specs)
+        allocate_extra_palettes(specs)
         cur.executemany("INSERT INTO image (idx,data,palette) VALUES (?,?,?)", db_rows)
         conn.commit()
         save_manifest(specs, str(ROOT / "assets_manifest.json"))

@@ -1,5 +1,6 @@
 # Usage: GAME_ID=777 ./artbox/makeartbox.sh [GAME]
 # GAME defaults to "demo". GAME_ID is read from env (set by Makefile).
+set -eu
 GAME=${1:-demo}
 : "${GAME_ID:=777}"
 export GAME GAME_ID

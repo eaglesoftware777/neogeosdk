@@ -60,6 +60,7 @@ def load_rules(cfg_path=CFG_PATH):
                 "target_width": int(_rule_value(section, "target_width", "256")),
                 "target_height": int(_rule_value(section, "target_height", "256")),
                 "dither": _rule_value(section, "dither", "ordered").strip().lower(),
+                "palette_banks": int(_rule_value(section, "palette_banks", "1")),
                 "contrast": float(_rule_value(section, "contrast", "1.0")),
                 "saturation": float(_rule_value(section, "saturation", "1.0")),
                 "sharpen_radius": float(_rule_value(section, "sharpen_radius", "0.0")),
@@ -161,6 +162,7 @@ def match_rule(name, rules, category=""):
         "target_width": 256,
         "target_height": 256,
         "dither": "floyd",
+        "palette_banks": 1,
         "contrast": 1.0,
         "saturation": 1.0,
         "sharpen_radius": 0.0,
@@ -198,6 +200,7 @@ def build_asset_specs(in_dir=None, cfg_path=CFG_PATH):
             "target_width": rule["target_width"],
             "target_height": rule["target_height"],
             "dither": rule["dither"],
+            "palette_banks": rule["palette_banks"],
             "contrast": rule["contrast"],
             "saturation": rule["saturation"],
             "sharpen_radius": rule["sharpen_radius"],
@@ -239,6 +242,7 @@ def write_out_srt(specs, out_path=OUT_SRT_PATH):
                 f"mode={spec['mode']} fit={spec['fit']} anchor={spec['anchor']} rule={spec['rule_name']}\n"
             )
             handle.write(f"category={spec.get('category', 'background')}\n")
+            handle.write(f"palette_slots={spec.get('palette_slots', [spec['palette_bank']])}\n")
             handle.write(
                 f"source={spec['source_width']}x{spec['source_height']} "
                 f"canvas={spec['canvas_width']}x{spec['canvas_height']} "
