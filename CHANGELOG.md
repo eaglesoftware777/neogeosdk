@@ -1,5 +1,37 @@
 # Changelog
 
+## v1.7.6 - The eagle was two eagles
+
+Release date: 2026-09-09
+
+### The flight animation changed colour every third frame
+
+It looked like a palette fault and it was not one.  The three flight
+assets share a byte-identical palette, that palette is loaded into three
+banks before the chapter runs, and reading palette RAM live out of the
+emulator shows all three banks holding the same words and staying that
+way.  Decoding the artwork back out of both C-ROMs matches the indices
+the pipeline built, so nothing was lost between the quantiser and the
+hardware either.
+
+The sheet simply holds two different birds.  Assets 78 and 79 are an
+olive-brown eagle in flight; asset 80 is the rust-brown one that assets
+75 to 77 perch, in a flying pose.  Cycling all three animated one bird
+into another and back, every twenty-four frames.
+
+Every flight cycle - the flight arc chapter, the character select and
+the joystick chapter - now uses the two poses of a single bird.  The
+rust bird keeps the perched pose it was already used for.
+
+### Camera
+
+- Panning clamps its destination to the camera bounds, so a pan aimed
+  outside them no longer parks the camera against an edge it can never
+  reach and stays in cinematic mode.
+- Each axis clamps its own step, so an axis that has arrived holds still
+  while the other catches up instead of oscillating around the target.
+  Covered by a new host test.
+
 ## v1.7.5 - Budgeted palette banks
 
 Release date: 2026-09-08

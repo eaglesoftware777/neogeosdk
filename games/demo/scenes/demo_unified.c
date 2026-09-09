@@ -28,7 +28,7 @@
  * Every chapter starts with chap_header() which calls
  * ng_clear_screen_full() — that clears all sprite SCB position/scale tables,
  * resets the character pool and physics, clears FIX, and sets the backdrop
- * black. No state leaks across chapters.
+ * to the white page colour. No state leaks across chapters.
  */
 
 #include "demo_unified.h"
@@ -95,7 +95,7 @@ const uint16_t * NEOGEO_USER ng_get_screen_palette(uint16_t screen_id);
  * sprite-window strip that was sometimes left attached when the
  * pose frame was uploaded at the old higher Y of 208/210/202. */
 #define FX_HERO_BOTTOM_Y 200
-#define FX_HERO_LIFT_Y   180
+#define FX_HERO_LIFT_Y   200
 
 /*
  * Sprite slot plan.
@@ -113,7 +113,7 @@ const uint16_t * NEOGEO_USER ng_get_screen_palette(uint16_t screen_id);
  * to the next literal; that is the exact condition that produced the
  * shooter's sprite-slot overlap, so they are named and measured here.
  *
- *   1..32     backgrounds / parallax strips   DEMO_BG_BACK_SLOT, NG_SPR_BG*
+ *   1..48     backgrounds / parallax strips   DEMO_BG_BACK_SLOT, NG_SPR_BG*
  *   64..79    hero                (16 wide)   HERO_SLOT_FIRST
  *   80..95    enemy / clone       (16 wide)   ENEMY_SLOT_FIRST
  *   100..123  joystick hitbox prop            DEMO_PROP_HITBOX_SLOT
@@ -122,6 +122,7 @@ const uint16_t * NEOGEO_USER ng_get_screen_palette(uint16_t screen_id);
  *   172..183  FX prop C                       DEMO_PROP_FX_C_SLOT
  *   220..239  scrolling-level marker          DEMO_PROP_MARKER_SLOT
  *   256..287  particle pool                   NG_SPR_PART_FIRST
+ *   340..379  optional HUD letterbox          two 20-strip bands
  *
  * Measured worst cases against those windows (asset -> strips):
  *   hitbox 136        -> 16, fits 100..115
@@ -357,8 +358,17 @@ static const uint8_t s_fx_char_frames[5] = {
     35u, 36u, 37u, 38u, 39u
 };
 
-static const uint8_t s_flight_frames[3] = {
-    78u, 79u, 80u
+/*
+ * Flight cycle: two poses of one bird.
+ *
+ * Asset 80 is a flying pose too, but of the OTHER eagle in the sheet -
+ * the rust-brown one that assets 75..77 perch.  Cycling 78, 79, 80
+ * therefore changed the bird's colour every third frame, which reads as
+ * a palette fault and is not one: all three assets share a palette and
+ * the artwork itself is simply two different birds.
+ */
+static const uint8_t s_flight_frames[2] = {
+    78u, 79u
 };
 
 /* ------------------------------------------------------------------ */
@@ -740,29 +750,34 @@ static void NEOGEO_USER fix_select_marks(uint8_t x, uint8_t y,
     demo_fix_puts((uint8_t)(x + width + 1u), y, active ? "<" : " ", pal);
 }
 
-/*
- * Solid FIX band.
- *
- * FIX tile 0 is a full 8x8 block of colour index 1 - the one cell in the
- * set with no transparent pixel in it.  Laid down in the text palette it
- * gives an opaque backing that the FIX layer draws in front of every
- * sprite, which is how a HUD stays legible over a full-screen backdrop.
- */
-static void NEOGEO_USER fix_band(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
-                                 uint8_t pal)
+/* Static sprite letterbox, independent of transparent FIX glyphs. */
+static void NEOGEO_USER hud_band(uint16_t first, uint8_t y, uint8_t rows)
 {
     uint8_t row;
     uint8_t col;
-
-    for (row = 0u; row < h; row++) {
-        uint8_t py = (uint8_t)(y + row);
-        if (py >= 28u) break;
-
-        for (col = 0u; col < w; col++) {
-            uint8_t px = (uint8_t)(x + col);
-            if (px >= 40u) break;
-            ngfix_write_tile(px, py, 0x0000u, pal);
+    uint16_t tiles[32];
+    uint16_t attrs[32];
+    uint8_t height = (uint8_t)((rows + 1u) / 2u);
+    /* FIX glyphs stay transparent. An independently owned sprite band
+     * supplies their backing without leaving solid cells between words.
+     * FFFD is half solid, FFFE solid, FFFF transparent in Artbox C-ROMs. */
+    NEO_REGISTER(0x401fe2u) = DEMO_BG;
+    for (row = 0u; row < 32u; row++) {
+        tiles[row] = row < rows / 2u ? 0xfffeu : 0xffffu;
+        if ((rows & 1u) && row == rows / 2u) tiles[row] = 0xfffdu;
+        attrs[row] = 0xff00u;
+    }
+    for (col = 0u; col < 20u; col++) {
+        uint16_t slot = (uint16_t)(first + col);
+        NEO_REGISTER(VRAM_ADDR) = (uint16_t)(slot * 64u);
+        NEO_REGISTER(VRAM_INC) = 1u;
+        for (row = 0u; row < 32u; row++) {
+            NEO_REGISTER(VRAM_RW) = tiles[row];
+            NEO_REGISTER(VRAM_RW) = attrs[row];
         }
+        vram_SCB234((uint16_t)(SCB2_ADDR + slot), 0x0fffu);
+        vram_SCB234((uint16_t)(SCB4_ADDR + slot), setSCB4(col * 16u));
+        vram_SCB234((uint16_t)(SCB3_ADDR + slot), setSCB3((uint16_t)(496u - y), 0u, height));
     }
 }
 
@@ -892,9 +907,9 @@ static void NEOGEO_USER chap_header(uint8_t n,
     s_chapter_tag[2] = tag[2]; s_chapter_tag[3] = tag[3];
     s_chapter_tag[4] = tag[4]; s_chapter_tag[5] = tag[5];
 
-    if (s_letterbox_top)    fix_band(0u, 0u, 40u, s_letterbox_top, 0u);
-    if (s_letterbox_bottom) fix_band(0u, (uint8_t)(28u - s_letterbox_bottom),
-                                     40u, s_letterbox_bottom, 0u);
+    if (s_letterbox_top) hud_band(340u, 0u, s_letterbox_top);
+    if (s_letterbox_bottom) hud_band(360u, (uint8_t)((28u - s_letterbox_bottom) * 8u),
+                                    s_letterbox_bottom);
     s_letterbox_top    = 0u;
     s_letterbox_bottom = 0u;
     ng_sprite_park_off_range(288u, 40u);
@@ -955,8 +970,8 @@ static void NEOGEO_USER bind_character_asset(NGCharacter *c,
     uint8_t rows;
     uint8_t pal;
     uint8_t idx;
-    uint16_t anchor_x;
-    uint16_t anchor_y;
+    int16_t anchor_x;
+    int16_t anchor_y;
 
     if (!c) return;
 
@@ -994,16 +1009,10 @@ static void NEOGEO_USER bind_character_asset(NGCharacter *c,
      * For hero animation frames the artbox already aligns
      *   tile_row_start*16 + y_pad + content_height = canvas_bottom_y
      * for every frame, so this anchor is rock-stable. */
-    anchor_x = (uint16_t)((uint16_t)demo_screen_x_pad(frame)
-                          + (demo_screen_content_width(frame) >> 1));
-    anchor_y = (uint16_t)((uint16_t)demo_screen_y_pad(frame)
-                          + demo_screen_content_height(frame));
-
-    if (anchor_x == 0u) anchor_x = (uint16_t)(((uint16_t)strips * 16u) >> 1);
-    if (anchor_y == 0u) anchor_y = (uint16_t)((uint16_t)rows * 16u);
-
-    c->sprite_offset_x = -(int16_t)((anchor_x * scale_x) >> 8);
-    c->sprite_offset_y = -(int16_t)((anchor_y * scale_y) >> 8);
+    demo_asset_anchor_offset(frame, scale_x, scale_y, 1u, c->flip_x,
+                              &anchor_x, &anchor_y);
+    c->sprite_offset_x = -anchor_x;
+    c->sprite_offset_y = -anchor_y;
 }
 
 static void NEOGEO_USER draw_infix_block(uint16_t tile_base,
@@ -1051,14 +1060,6 @@ static void NEOGEO_USER clear_fix_rect_force(uint8_t x,
 static int16_t NEOGEO_USER asset_scaled_px(uint8_t cells, uint8_t scale)
 {
     uint16_t px = (uint16_t)cells * 16u;
-    if (scale >= 0xFFu) return (int16_t)px;
-    return (int16_t)(((uint32_t)px * (uint32_t)scale + 127u) >> 8);
-}
-
-/* Same shrink as asset_scaled_px(), but for a pixel count rather than a
- * tile-cell count. */
-static int16_t NEOGEO_USER asset_scaled_px_u16(uint16_t px, uint8_t scale)
-{
     if (scale >= 0xFFu) return (int16_t)px;
     return (int16_t)(((uint32_t)px * (uint32_t)scale + 127u) >> 8);
 }
@@ -1115,16 +1116,15 @@ static void NEOGEO_USER draw_asset_center(uint8_t frame,
                                           uint8_t scale_x,
                                           uint8_t scale_y)
 {
-    uint16_t pad_x = (uint16_t)(demo_screen_x_pad(frame)
-                                + (demo_screen_content_width(frame) >> 1));
-    uint16_t pad_y = (uint16_t)(demo_screen_y_pad(frame)
-                                + (demo_screen_content_height(frame) >> 1));
+    int16_t pad_x;
+    int16_t pad_y;
+    demo_asset_anchor_offset(frame, scale_x, scale_y, 0u, 0u, &pad_x, &pad_y);
 
     demo_draw_sprite_screen(frame, first_sprite,
                             (int16_t)(cx - demo_screen_x_offset(frame)
-                                         - asset_scaled_px_u16(pad_x, scale_x)),
+                                         - pad_x),
                             (int16_t)(cy - demo_screen_y_offset(frame)
-                                         - asset_scaled_px_u16(pad_y, scale_y)),
+                                         - pad_y),
                             demo_screen_strips(frame),
                             demo_screen_rows(frame),
                             scale_x, scale_y);
@@ -1140,12 +1140,13 @@ static void NEOGEO_USER draw_asset_bottom_center_flip(uint8_t frame,
 {
     uint8_t strips = demo_screen_strips(frame);
     uint8_t rows = demo_screen_rows(frame);
-    int16_t w = asset_scaled_px(strips, scale_x);
-    int16_t h = asset_scaled_px(rows, scale_y);
+    int16_t anchor_x;
+    int16_t anchor_y;
+    demo_asset_anchor_offset(frame, scale_x, scale_y, 1u, flip, &anchor_x, &anchor_y);
 
     demo_draw_sprite_screen_flip(frame, first_sprite,
-                                 (int16_t)(cx - (w >> 1) - demo_screen_x_offset(frame)),
-                                 (int16_t)(bottom_y - h - demo_screen_y_offset(frame)),
+                                 (int16_t)(cx - anchor_x - demo_screen_x_offset(frame)),
+                                 (int16_t)(bottom_y - anchor_y - demo_screen_y_offset(frame)),
                                  strips, rows, scale_x, scale_y, flip);
 }
 
@@ -1155,22 +1156,44 @@ static void NEOGEO_USER draw_background(uint8_t frame, int16_t x, int16_t y)
     demo_draw_sprite_screen(frame, DEMO_BG_BACK_SLOT, x, y,
                             demo_screen_strips(frame),
                             demo_screen_rows(frame),
-                            0xFFu, 0xFFu);
+                            0xFFu, 0xAFu);
 }
 
 static void NEOGEO_USER draw_scrolling_background(uint8_t frame, int16_t x, int16_t y)
 {
-    while (x > 32) x = (int16_t)(x - 256);
-    while (x < -192) x = (int16_t)(x + 256);
-    demo_draw_sprite_screen(frame, DEMO_BG_BACK_SLOT, x, y,
-                            demo_screen_strips(frame),
-                            demo_screen_rows(frame),
-                            0xFFu, 0xFFu);
-    demo_draw_sprite_screen(frame, NG_SPR_BG1_FIRST,
-                            (int16_t)(x + 256), y,
-                            demo_screen_strips(frame),
-                            demo_screen_rows(frame),
-                            0xFFu, 0xFFu);
+    uint8_t page;
+    while (x > 0) x = (int16_t)(x - 256);
+    while (x <= -256) x = (int16_t)(x + 256);
+    /* Three pages cover 320 pixels at every sub-page offset. The
+     * imported terrain was precompensated for 176/256 vertical scale. */
+    for (page = 0u; page < 3u; page++) {
+        demo_draw_sprite_screen(frame, (uint16_t)(1u + page * 16u),
+                                 (int16_t)(x + page * 256), (int16_t)(y + 24),
+                                 16u, 16u, 0xffu, 0xafu);
+    }
+}
+
+/* Adjacent level pages use distinct art and palettes, not a repeated
+ * offset into one image. All six windows remain below character slot 64. */
+static void NEOGEO_USER draw_level_background(uint16_t distance, uint8_t vertical)
+{
+    uint16_t span = vertical ? 176u : 256u;
+    uint16_t cell = (uint16_t)(distance / span);
+    int16_t offset = -(int16_t)(distance % span);
+    uint8_t page;
+    for (page = 0u; page < 3u; page++) {
+        uint8_t frame = ((cell + page) & 1u) ? U_BG_FOREST : U_BG_MOUNTAIN;
+        uint16_t slot = (uint16_t)(1u + page * 20u);
+        int16_t x = vertical ? 0 : (int16_t)(offset + page * 256);
+        int16_t y = vertical ? (int16_t)(offset + page * 176) : 24;
+        demo_draw_sprite_screen(frame, slot, x, y, 16u, 16u, 0xffu, 0xafu);
+        if (vertical) {
+            demo_draw_sprite_screen(frame, (uint16_t)(slot + 16u),
+                                     256, y, 4u, 16u, 0xffu, 0xafu);
+        } else {
+            demo_hide_sprite_range((uint16_t)(slot + 16u), 4u);
+        }
+    }
 }
 
 static void NEOGEO_USER draw_vertical_background(uint8_t frame, int16_t x, int16_t y)
@@ -1945,13 +1968,14 @@ static uint8_t NEOGEO_USER chap_char_select(void)
         IDLE_ADVANCE_FRAMES = 300u,   /* ~5s idle once player-controlled */
         ATTRACT_SWITCH_FRAMES = 150u,
         GIRL_FRAME_COUNT    = 7,
-        EAGLE_FRAME_COUNT   = 3,
+        EAGLE_FRAME_COUNT   = 2,
         SLOT_GIRL           = 40u,
         SLOT_EAGLE          = 56u
     };
     static const uint8_t girl_frames[GIRL_FRAME_COUNT]  = { 68u, 69u, 70u, 71u, 72u, 73u, 74u };
     static const uint8_t eagle_ground                   = 75u;
-    static const uint8_t eagle_frames[EAGLE_FRAME_COUNT] = { 78u, 79u, 80u };
+    /* One bird - see s_flight_frames on why 80 is not in the cycle. */
+    static const uint8_t eagle_frames[EAGLE_FRAME_COUNT] = { 78u, 79u };
     uint16_t prev_joy = 0u;
     uint16_t idle_frames = 0u;
     uint8_t  player_controlled = 0u;
@@ -2060,7 +2084,8 @@ static uint8_t NEOGEO_USER chap_physics(void)
      * That is the path the previous "Fix sprite sticking" commit (fa7587b)
      * cleared up — replicate it verbatim here.
      */
-    static const uint8_t s_eagle_fly[3] = { 78u, 79u, 80u };
+    /* One bird - see s_flight_frames on why 80 is not in the cycle. */
+    static const uint8_t s_eagle_fly[2] = { 78u, 79u };
     static const uint8_t s_eagle_ground = 75u;
     enum {
         EAGLE_STRIDE     = 16,
@@ -2103,7 +2128,7 @@ static uint8_t NEOGEO_USER chap_physics(void)
 
     reset_palette_memo();
     demo_load_screen_palette(s_eagle_ground);
-    for (i = 0u; i < 3u; i++) demo_load_screen_palette(s_eagle_fly[i]);
+    for (i = 0u; i < 2u; i++) demo_load_screen_palette(s_eagle_fly[i]);
     frame = s_eagle_fly[0];
 
     eagle = chars_add(0u, EAGLE_START_X, EAGLE_START_Y);
@@ -2188,7 +2213,7 @@ static uint8_t NEOGEO_USER chap_physics(void)
         ng_physics_resolve();
 
         grounded = ng_physics_is_grounded(eagle);
-        want = grounded ? s_eagle_ground : s_eagle_fly[(t / 6u) % 3u];
+        want = grounded ? s_eagle_ground : s_eagle_fly[(t / 6u) % 2u];
 
         /*
          * Full re-set (sprite + stride + offset_y) on every frame change.
@@ -2248,70 +2273,40 @@ static const char *const CAMLAB_LABEL[CAMLAB_MODE_COUNT] = {
 static void NEOGEO_USER camlab_apply_mode(NGCamera *cam, uint8_t mode,
                                           int16_t pan_dest_x)
 {
+    cam->mode = NG_CAM_FOLLOW;
     switch (mode) {
     case CAMLAB_MODE_HARD_FOLLOW:
-        ng_camera_set_follow_speed(cam, 16u);
+        ng_camera_set_follow_speed(cam, 255u);
         ng_camera_set_dead_zone(cam, 0u, 0u);
         ng_camera_set_look_ahead(cam, 0, 0, 0u);
         break;
     case CAMLAB_MODE_SMOOTH:
-        ng_camera_set_follow_speed(cam, 4u);
+        ng_camera_set_follow_speed(cam, 96u);
         ng_camera_set_dead_zone(cam, 0u, 0u);
         ng_camera_set_look_ahead(cam, 0, 0, 0u);
         break;
     case CAMLAB_MODE_SHAKE:
-        ng_camera_set_follow_speed(cam, 8u);
+        ng_camera_set_follow_speed(cam, 128u);
         ng_camera_set_dead_zone(cam, 0u, 0u);
         ng_camera_set_look_ahead(cam, 0, 0, 0u);
         ng_camera_shake(cam, 6u, 30u);
         break;
     case CAMLAB_MODE_PAN:
         ng_camera_set_follow_speed(cam, 6u);
-        ng_camera_pan_to(cam, pan_dest_x, 0, 6u);
+        ng_camera_pan_to(cam, pan_dest_x, 0, 32u);
         break;
     case CAMLAB_MODE_VERTICAL:
-        ng_camera_set_follow_speed(cam, 8u);
+        ng_camera_set_follow_speed(cam, 128u);
         ng_camera_set_dead_zone(cam, 0u, 0u);
         ng_camera_set_look_ahead(cam, 0, 0, 0u);
         break;
     case CAMLAB_MODE_DEADZONE:
-        ng_camera_set_follow_speed(cam, 8u);
+        ng_camera_set_follow_speed(cam, 128u);
         ng_camera_set_dead_zone(cam, 48u, 28u);
         ng_camera_set_look_ahead(cam, 0, 0, 0u);
         break;
     default:
         break;
-    }
-}
-
-/*
- * Two-line world ruler painted into the FIX layer along rows 8..9.
- * Tracks the camera so the labelled markers slide past as the
- * camera scrolls — visible proof that the world coordinates the
- * char is using ARE actually scrolling under the camera, not just
- * the background image.
- */
-static void NEOGEO_USER camlab_world_markers(int16_t cam_x)
-{
-    static const int16_t markers[5] = { 0, 192, 384, 576, 768 };
-    static const char  *labels[5]   = { "S", "1", "2", "3", "E" };
-    uint8_t i;
-
-    /* Solid track row. */
-    demo_fix_puts(0u, 8u,
-                  "----------------------------------------",
-                  0u);
-
-    /* Marker labels on the row below. */
-    demo_fix_puts(0u, 9u,
-                  "                                        ",
-                  0u);
-    for (i = 0u; i < 5u; i++) {
-        int16_t sx = (int16_t)(markers[i] - cam_x);
-        if (sx >= 0 && sx < 320) {
-            uint8_t col = (uint8_t)(sx >> 3);
-            demo_fix_puts(col, 9u, labels[i], 2u);
-        }
     }
 }
 
@@ -2369,8 +2364,7 @@ static uint8_t NEOGEO_USER chap_camera(void)
 {
     NGCamera cam;
     const int16_t  WORLD_RIGHT  = 768;
-    const int16_t  WORLD_BOTTOM = 320;             /* > 224 -> Y can scroll */
-    const int16_t  PAN_DEST_X   = 384;             /* world centre          */
+    const int16_t  WORLD_BOTTOM = 768;
     /* Was 156 - chap_mini_game uses GROUND_Y=204 against this same
      * U_BG_FOREST background, and 156 left the hero floating ~48px
      * above that same ground line instead of standing on it. */
@@ -2411,17 +2405,16 @@ static uint8_t NEOGEO_USER chap_camera(void)
         uint8_t  frame;
         int16_t  screen_x;
         int16_t  screen_y;
-        int16_t  bg_x;
-        int16_t  bg_y;
 
         /* --- transition into a new mode --------------------------- */
         if (next_mode != prev_mode) {
             mode = next_mode;
-            camlab_apply_mode(&cam, mode, PAN_DEST_X);
+            camlab_apply_mode(&cam, mode, (int16_t)(player_world_x - 112));
             /* Snap player Y back to the resting band whenever the
              * vertical mode releases. */
             if (prev_mode == CAMLAB_MODE_VERTICAL) {
                 player_world_y = HERO_Y_REST;
+                ng_camera_snap(&cam, cam.x, 0);
             }
             playSFX(SOUND_SFX_5);
             prev_mode = mode;
@@ -2431,14 +2424,14 @@ static uint8_t NEOGEO_USER chap_camera(void)
          * Skip in PAN mode so the camera drift to the centre isn't
          * masked by the player chasing it. */
         vx_logical = 0;
-        if (mode != CAMLAB_MODE_PAN) {
-            uint16_t phase = (uint16_t)(mode_t % 120u);   /* 2 s period */
-            if (phase < 60u) {
+        if (mode != CAMLAB_MODE_PAN && mode != CAMLAB_MODE_VERTICAL) {
+            uint16_t phase = (uint16_t)(t % 600u);
+            if (phase < 300u) {
                 vx_logical = +2;
-                if (player_world_x < WORLD_RIGHT - 16) player_world_x += 2;
+                if (player_world_x < WORLD_RIGHT - 80) player_world_x += 2;
             } else {
                 vx_logical = -2;
-                if (player_world_x > 16) player_world_x -= 2;
+                if (player_world_x > 80) player_world_x -= 2;
             }
         }
 
@@ -2447,13 +2440,8 @@ static uint8_t NEOGEO_USER chap_camera(void)
          * floor BG slides up/down behind the player. */
         vy_logical = 0;
         if (mode == CAMLAB_MODE_VERTICAL) {
-            if (mode_t < (MODE_FRAMES / 2u)) {
-                vy_logical = +1;
-                if (player_world_y < 220) player_world_y += 1;
-            } else {
-                vy_logical = -1;
-                if (player_world_y > 100) player_world_y -= 1;
-            }
+            vy_logical = mode_t < 150u ? 2 : 0;
+            player_world_y = (int16_t)(player_world_y + vy_logical);
         }
 
         /* Mode-specific scripted events */
@@ -2466,45 +2454,28 @@ static uint8_t NEOGEO_USER chap_camera(void)
         }
         if (mode == CAMLAB_MODE_PAN) {
             if (mode_t == 20u) {
-                ng_camera_pan_to(&cam, PAN_DEST_X, 0, 6u);
+                ng_camera_pan_to(&cam, (int16_t)(player_world_x - 112), 0, 32u);
                 playSFX(SOUND_SFX_7);
             }
             if (mode_t == 110u) {
-                ng_camera_pan_to(&cam, player_world_x, 0, 6u);
+                ng_camera_pan_to(&cam, (int16_t)(player_world_x - 160), 0, 32u);
                 playSFX(SOUND_SFX_7);
             }
         }
 
         /* --- camera update ---------------------------------------- */
-        ng_camera_update(&cam, player_world_x, player_world_y, vx_logical);
+        /* Follow a point inside the actor, not its feet. Horizontal modes
+         * keep the stage floor fixed; vertical mode follows between pages. */
+        ng_camera_update(&cam, player_world_x,
+            mode == CAMLAB_MODE_VERTICAL ? (int16_t)(player_world_y - 76) : 112,
+            vx_logical);
 
         /* --- background ------------------------------------------- */
-        bg_x = -(int16_t)((uint16_t)cam.x & 0x00FFu);
-        /*
-         * In VERTICAL mode tie BG Y to cam.y so the world looks like it
-         * is scrolling, not just the player.
-         *
-         * This used to mask cam.y with 0x1F, which wrapped the offset
-         * back to zero every 32 pixels: as the camera swept its full
-         * 0..96 range the background snapped back to the top three
-         * times instead of scrolling, so the vertical scroll read as
-         * broken.  The background is 256px tall against a 224px screen,
-         * so it has exactly 32px of vertical slack - map the camera's
-         * whole range onto that slack instead of wrapping through it.
-         */
         if (mode == CAMLAB_MODE_VERTICAL) {
-            int16_t span = (int16_t)(WORLD_BOTTOM - NG_SCREEN_H);   /* 96 */
-            int16_t cy   = cam.y;
-            if (cy < 0) cy = 0;
-            if (cy > span) cy = span;
-            bg_y = (int16_t)(-(((int32_t)cy * 32) / span));
+            draw_level_background((uint16_t)(cam.y < 0 ? 0 : cam.y), 1u);
         } else {
-            bg_y = 0;
+            draw_level_background((uint16_t)(cam.x < 0 ? 0 : cam.x), 0u);
         }
-        draw_scrolling_background((uint8_t)(mode < CAMLAB_MODE_PAN
-                                             ? U_BG_MOUNTAIN
-                                             : U_BG_FOREST),
-                                  bg_x, bg_y);
 
         /* --- screen position of the player ------------------------ */
         screen_x = (int16_t)(player_world_x - cam.x);
@@ -2539,12 +2510,16 @@ static uint8_t NEOGEO_USER chap_camera(void)
         }
 
         /* World ruler with S/1/2/3/E markers sliding under the camera. */
-        camlab_world_markers(cam.x);
+        digit3(hud, (uint16_t)(1u + (mode == CAMLAB_MODE_VERTICAL
+                                    ? (uint16_t)cam.y / 176u : (uint16_t)(cam.x < 0 ? 0 : cam.x) / 256u)));
+        demo_fix_puts(2u, 24u, "LEVEL", 1u);
+        demo_fix_puts(8u, 24u, hud, 2u);
+        demo_fix_puts(18u, 24u, "LIFE [##########]", 1u);
 
         /* Dead-zone box only on the dead-zone mode itself. */
         if (mode == CAMLAB_MODE_DEADZONE) {
             camlab_deadzone_box(160,
-                                112,
+                                140,
                                 cam.dead_zone_x,
                                 cam.dead_zone_y);
         }
@@ -2642,11 +2617,11 @@ static uint8_t NEOGEO_USER chap_palette_fx(void)
 
         demo_load_screen_palette(pose);
         /* Draw aura/effect at slot 48 behind character at slot 64 so it does not occlude the hero */
-        draw_asset_bottom_center(active_fx, 48u,
-                                 160, 112, U_SCALE_5_16, U_SCALE_5_16);
-        draw_asset_bottom_center(pose, HERO_SLOT_FIRST, 160,
+        draw_asset_center(active_fx, 48u,
+                           95, 106, U_SCALE_3_8, U_SCALE_3_8);
+        draw_asset_bottom_center(pose, HERO_SLOT_FIRST, 224,
                                  FX_HERO_LIFT_Y,
-                                 U_SCALE_CHARACTER, U_SCALE_CHARACTER);
+                                 U_SCALE_3_8, U_SCALE_3_8);
 
         if (uframe()) {
             ng_sprite_park_off_range(48u, 16u);
@@ -2787,7 +2762,7 @@ static uint8_t NEOGEO_USER chap_particles(void)
 
         draw_asset_bottom_center(hero_frame, HERO_SLOT_FIRST,
                                  160, FX_HERO_LIFT_Y,
-                                 U_SCALE_CHARACTER, U_SCALE_CHARACTER);
+                                 U_SCALE_3_8, U_SCALE_3_8);
 
         if (uframe()) return 1u;
     }
@@ -2953,7 +2928,7 @@ static uint8_t NEOGEO_USER chap_feedback(void)
     s_draw_particles = 1u;
 
     for (t = 0u; t < 540u; t++) {
-        uint8_t hero_frame = s_fx_char_frames[(t / 14u) % 5u];
+        uint8_t hero_frame = s_hero_stand[(t / HERO_CAD_STAND) % 8u];
         int16_t bob = (int16_t)(((t & 31u) < 16u) ? 1 : -1);
 
         if (t == 28u || t == 148u || t == 288u || t == 428u) {
@@ -2990,7 +2965,7 @@ static uint8_t NEOGEO_USER chap_feedback(void)
         draw_asset_bottom_center(hero_frame, HERO_SLOT_FIRST,
                                  (int16_t)(160 + bob + cam.shake_offset_x),
                                  (int16_t)(FX_HERO_LIFT_Y + cam.shake_offset_y),
-                                 U_SCALE_CHARACTER, U_SCALE_CHARACTER);
+                                 U_SCALE_3_8, U_SCALE_3_8);
         if (uframe()) return 1u;
     }
     return 0u;
@@ -3727,7 +3702,7 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
     chap_letterbox_next(5u, 4u);
     chap_header(15u, "SCROLL LEVEL", "WORLD MAP  H/V STAGES");
     demo_fix_puts(2u, 2u, "MOUNTAIN -> FOREST -> VERTICAL CLIMB", 1u);
-    demo_fix_puts(2u, 3u, "BACKGROUND CHANGES AT CLEAN GATES", 0u);
+    demo_fix_puts(2u, 3u, "CONNECTED PAGES  HORIZONTAL / VERTICAL", 0u);
     snd_cross_to(SOUND_MUSIC_B);
     demo_load_screen_palette(U_BG_MOUNTAIN);
     demo_load_screen_palette(U_BG_FOREST);
@@ -3769,20 +3744,8 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
             frame = s_hero_walk[(t / HERO_CAD_WALK) % 8u];
         }
 
-        if (phase < 2u) {
-            int16_t bg_x = -(int16_t)((phase_t * 3u) / 4u);
-            draw_scrolling_background((uint8_t)(phase == 0u
-                                                 ? U_BG_MOUNTAIN
-                                                 : U_BG_FOREST),
-                                      bg_x, 0);
-        } else {
-            int16_t climb = (int16_t)((phase_t < 120u)
-                                      ? phase_t / 2u
-                                      : (240u - phase_t) / 2u);
-            int16_t bg_y = -(int16_t)(((uint16_t)climb * 64u) / 60u);
-            draw_vertical_background(U_BG_MOUNTAIN, 0, bg_y);
-            hero_bottom = 188;
-        }
+        draw_level_background(phase < 2u ? (uint16_t)(t * 2u)
+                                         : (uint16_t)(phase_t * 2u), phase == 2u);
 
         fill = (uint8_t)(phase_t / 12u);
         if (fill > 20u) fill = 20u;
@@ -3793,7 +3756,7 @@ static uint8_t NEOGEO_USER chap_scrolling_level(void)
 
         draw_asset_bottom_center(frame, HERO_SLOT_FIRST,
                                  160, (int16_t)(hero_bottom - jump),
-                                 U_SCALE_CHARACTER, U_SCALE_CHARACTER);
+                                 U_SCALE_3_8, U_SCALE_3_8);
 
         if ((t % 90u) == 0u) playSFX(SOUND_SFX_5);
         if (uframe()) return 1u;
@@ -3901,6 +3864,9 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
         U_CRATE, U_CRATE, U_CRATE, U_CRATE
     };
     int16_t target_z[TARGET_COUNT] = { 36, 62, 88, 108 };
+    int16_t target_x[TARGET_COUNT];
+    int16_t target_y[TARGET_COUNT];
+    uint8_t target_scale[TARGET_COUNT];
     uint8_t target_flash[TARGET_COUNT] = { 0u, 0u, 0u, 0u };
     int16_t reticle_x = 160;
     int16_t reticle_y = 128;
@@ -3975,30 +3941,44 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
         }
         reticle_col = (uint8_t)(reticle_x >> 3);
 
+        /* Project once for both hit testing and drawing. The source crate
+         * is 256 pixels, so 1/8..1/4 gives readable 32..64 pixel targets. */
+        for (i = 0u; i < TARGET_COUNT; i++) {
+            uint16_t approach;
+            if (!target_flash[i]) {
+                target_z[i]--;
+                if (target_z[i] < Z_NEAR) target_z[i] = Z_FAR;
+            }
+            approach = (uint16_t)(Z_FAR - target_z[i]);
+            target_scale[i] = (uint8_t)((0x1fu + approach / 3u) | 0x0fu);
+            target_x[i] = (int16_t)(160 + lane_x[i] * (64 + approach / 2) / 112);
+            target_y[i] = (int16_t)(104 + approach / 3);
+        }
+
         for (i = 0u; i < TARGET_COUNT; i++) {
             int16_t sx;
             int16_t sy;
             int16_t dx;
             int16_t dy;
             if (target_flash[i]) continue;
-            sx = (int16_t)(160 + ((lane_x[i] * (Z_FAR - target_z[i])) /
-                                  (Z_FAR - Z_NEAR)));
+            sx = target_x[i];
             /* Same depth mapping the draw pass below uses, so the lock
              * follows where the target actually appears. */
-            sy = (int16_t)(116 + (((Z_FAR - target_z[i]) * 64) /
-                                  (Z_FAR - Z_NEAR)));
+            sy = target_y[i];
             dx = (int16_t)(sx - reticle_x);
             dy = (int16_t)(sy - reticle_y);
             if (dx < 0) dx = (int16_t)-dx;
             if (dy < 0) dy = (int16_t)-dy;
             /* Aim is two-axis now, so a target only counts as the
              * closest one when the reticle is near it vertically too. */
-            if (dy < 34 && dx < best_dx) {
+            if (dy < (int16_t)(ng_sprite_scaled_y(demo_screen_content_height(U_CRATE), target_scale[i]) / 2u)
+                && dx < (int16_t)(ng_sprite_scaled_x(demo_screen_content_width(U_CRATE), target_scale[i]) / 2u)
+                && dx < best_dx) {
                 best_dx = dx;
                 locked_idx = (int8_t)i;
             }
         }
-        is_locked = (uint8_t)(locked_idx >= 0 && best_dx < 28);
+        is_locked = (uint8_t)(locked_idx >= 0);
 
         if ((pressed & BUTTON_B) && ammo > 0u) {
             int16_t shot_vx = (int16_t)((reticle_x - 160) / 16);
@@ -4048,52 +4028,13 @@ static uint8_t NEOGEO_USER chap_raytrace3d(void)
         }
 
         for (i = 0u; i < TARGET_COUNT; i++) {
-            uint8_t scale;
-            int16_t sx;
-            int16_t bottom_y;
-
-            scale = (uint8_t)(0x28u +
-                              (((uint16_t)(Z_FAR - target_z[i]) * 0x68u) /
-                               (Z_FAR - Z_NEAR)));
-
+            draw_asset_center(target_flash[i] ? U_CRATE_BROKEN : target_frame[i],
+                              (uint16_t)(128u + i * 20u), target_x[i], target_y[i],
+                              target_scale[i], target_scale[i]);
             if (target_flash[i]) {
-                /* Show the crate coming apart where it was hit, instead
-                 * of a generic effect sprite standing in for the kill.
-                 * Drawn into the lane's OWN sprite window rather than a
-                 * separate flash range: the crate is 14 strips and the
-                 * old flash slots were only 12 apart, so a second lane
-                 * breaking at the same time would have written over it. */
-                draw_asset_bottom_center(U_CRATE_BROKEN,
-                                         (uint16_t)(128u + i * 20u),
-                                         (int16_t)(160 + ((lane_x[i] *
-                                                          (Z_FAR - target_z[i])) /
-                                                         (Z_FAR - Z_NEAR))),
-                                         (int16_t)(116 + (((Z_FAR - target_z[i]) * 64) /
-                                                          (Z_FAR - Z_NEAR))),
-                                         scale, scale);
                 target_flash[i]--;
                 if (!target_flash[i]) target_z[i] = Z_FAR;
-                continue;
             }
-
-            target_z[i] = (int16_t)(target_z[i] - 1);
-            if (target_z[i] < Z_NEAR) target_z[i] = Z_FAR;
-
-            sx = (int16_t)(160 + ((lane_x[i] * (Z_FAR - target_z[i])) /
-                                  (Z_FAR - Z_NEAR)));
-            bottom_y = (int16_t)(116 + (((Z_FAR - target_z[i]) * 64) /
-                                        (Z_FAR - Z_NEAR)));
-            /* The source prop is compact, so it can use a
-             * broad, readable far-to-near hardware scale range. */
-            scale = (uint8_t)(0x28u +
-                              (((uint16_t)(Z_FAR - target_z[i]) * 0x68u) /
-                               (Z_FAR - Z_NEAR)));
-            draw_asset_bottom_center(target_frame[i],
-                                     (uint16_t)(128u + i * 20u),
-                                     sx,
-                                     bottom_y,
-                                     scale,
-                                     scale);
         }
 
         digit3(buf, score);
@@ -4128,13 +4069,12 @@ static uint8_t NEOGEO_USER chap_char_2d(void)
     chap_letterbox_next(5u, 3u);
     chap_header(17u, "CHAR 2D", "EAGLE FLIGHT ARC");
     demo_fix_puts(2u, 2u, "EAGLE FLYING FRAME BIND", 1u);
-    demo_fix_puts(2u, 3u, "076 -> 077 -> 078 AT 70%", 0u);
+    demo_fix_puts(2u, 3u, "076 -> 077 FLAP CYCLE AT 70%", 0u);
     snd_cross_to(SOUND_MUSIC_G);
 
     draw_background(U_BG_FOREST, 32, 16);
     demo_load_screen_palette(s_flight_frames[0]);
     demo_load_screen_palette(s_flight_frames[1]);
-    demo_load_screen_palette(s_flight_frames[2]);
 
     /*
      * Was 600 frames with a 300-frame flight period; 400/200 keeps the
@@ -4142,7 +4082,7 @@ static uint8_t NEOGEO_USER chap_char_2d(void)
      */
     for (t = 0u; t < 400u; t++) {
         uint16_t p = (uint16_t)(t % 200u);
-        uint8_t frame = s_flight_frames[(t / 8u) % 3u];
+        uint8_t frame = s_flight_frames[(t / 8u) % 2u];
         int16_t x;
         int16_t y;
         uint16_t altitude;
@@ -4840,9 +4780,9 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
     uint8_t  i;
     char     buf[12];
 
-    chap_letterbox_next(4u, 4u);
-    chap_header(25u, "STAR RAID LANCE", "GALAXY  SKY LANCE COMBAT");
-    demo_fix_puts(2u, 2u, "COMBINED ARCADE: GALAXY FORMATION + SKY BOSS", 1u);
+    chap_letterbox_next(5u, 4u);
+    chap_header(25u, "STAR RAID LANCE", "FORMATION ASSAULT");
+    demo_fix_puts(2u, 2u, "D-PAD MOVE   B FIRE   C RESTART", 1u);
 
     demo_load_screen_palette(U_SSG_STARFIELD);
     demo_load_screen_palette(U_PLAYER_VESSEL);
@@ -5276,7 +5216,7 @@ static uint8_t NEOGEO_USER chap_garden3d(void)
         hero_place(160, 96);
 
         for (t = 0u; t < 560u; t++) {
-            uint8_t frame = s_flight_frames[(t / 8u) % 3u];
+            uint8_t frame = s_flight_frames[(t / 8u) % 2u];
             int16_t bg_x = -(int16_t)(t % 256u);
 
             draw_scrolling_background(U_BG_MOUNTAIN, bg_x, 0);
