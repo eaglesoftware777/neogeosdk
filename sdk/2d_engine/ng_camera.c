@@ -19,6 +19,8 @@
  */
 static const int8_t ng_shake_pattern_x[8] = {  1, -1,  2, -2,  1, -1,  0,  0 };
 static const int8_t ng_shake_pattern_y[8] = {  0,  1, -1,  0,  1, -1,  1,  0 };
+static NGFixed ng_cam_clamp_x(const NGCamera *cam, NGFixed v);
+static NGFixed ng_cam_clamp_y(const NGCamera *cam, NGFixed v);
 
 void NEOGEO_USER ng_camera_init(NGCamera *cam)
 {
@@ -106,8 +108,8 @@ void NEOGEO_USER ng_camera_pan_to(NGCamera *cam, int16_t dest_x, int16_t dest_y,
 {
     if (!cam) return;
 
-    cam->pan_dest_x = NGFX_FROM_INT(dest_x);
-    cam->pan_dest_y = NGFX_FROM_INT(dest_y);
+    cam->pan_dest_x = ng_cam_clamp_x(cam, NGFX_FROM_INT(dest_x));
+    cam->pan_dest_y = ng_cam_clamp_y(cam, NGFX_FROM_INT(dest_y));
     cam->pan_speed  = speed ? speed : 1;
     cam->mode       = NG_CAM_CINEMATIC;
 }
@@ -187,9 +189,10 @@ void NEOGEO_USER ng_camera_update(NGCamera *cam,
             cam->y_fp  = cam->pan_dest_y;
             cam->mode  = NG_CAM_FOLLOW;
         } else {
-            /* Move towards destination at pan_speed */
-            cam->x_fp += (dx_fp > 0) ? step : -step;
-            cam->y_fp += (dy_fp > 0) ? step : -step;
+            /* An axis that arrived must not oscillate while the other
+             * catches up. Clamp each step independently. */
+            cam->x_fp += NGFX_ABS(dx_fp) <= step ? dx_fp : (dx_fp > 0 ? step : -step);
+            cam->y_fp += NGFX_ABS(dy_fp) <= step ? dy_fp : (dy_fp > 0 ? step : -step);
         }
 
         cam->x_fp = ng_cam_clamp_x(cam, cam->x_fp);

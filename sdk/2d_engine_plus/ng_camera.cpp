@@ -96,8 +96,8 @@ void NGCamera::shake(uint8_t amp, uint8_t frames)
 
 void NGCamera::panTo(int16_t dest_x, int16_t dest_y, uint8_t speed)
 {
-    pan_dest_x = NGFX_FROM_INT(dest_x);
-    pan_dest_y = NGFX_FROM_INT(dest_y);
+    pan_dest_x = clampX(NGFX_FROM_INT(dest_x));
+    pan_dest_y = clampY(NGFX_FROM_INT(dest_y));
     pan_speed  = speed ? speed : 1;
     mode       = NG_CAM_CINEMATIC;
 }
@@ -131,8 +131,8 @@ void NGCamera::update(int16_t target_x, int16_t target_y, int16_t target_vx)
             y_fp = pan_dest_y;
             mode = NG_CAM_FOLLOW;
         } else {
-            x_fp += (dx_fp > 0) ? step : -step;
-            y_fp += (dy_fp > 0) ? step : -step;
+            x_fp += NGFX_ABS(dx_fp) <= step ? dx_fp : (dx_fp > 0 ? step : -step);
+            y_fp += NGFX_ABS(dy_fp) <= step ? dy_fp : (dy_fp > 0 ? step : -step);
         }
         x_fp = clampX(x_fp);
         y_fp = clampY(y_fp);
