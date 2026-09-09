@@ -274,6 +274,33 @@ static void test_palette_effects(void)
     assert(!ng_palfx_active(12u));
 }
 
+static void test_tile_palette_maps(void)
+{
+    NGSpriteGroup g;
+    static const uint8_t banks[] = {17, 18, 99, 20, 21, 99};
+    unsigned before;
+    ng_sprite_group_init(&g, 300u, 2u, 2u, 100u, 7u);
+    ng_sprite_group_set_tile_stride(&g, 3u);
+    ng_sprite_group_set_palette_map(&g, banks);
+    ng_sprite_group_flush(&g);
+    assert(ram[300u * 64u + 1u] == 0x1100u);
+    assert(ram[301u * 64u + 3u] == 0x1500u);
+    assert(ram[301u * 64u + 5u] == NG_SPRITE_BLANK_ATTR);
+    before = writes;
+    ng_sprite_group_set_palette_map(&g, banks);
+    ng_sprite_group_flush(&g);
+    assert(writes == before);
+    ng_sprite_group_set_flip(&g, 1u, 1u);
+    ng_sprite_group_flush(&g);
+    assert(ram[300u * 64u + 1u] == 0x1503u);
+    assert(ram[301u * 64u + 3u] == 0x1103u);
+    ng_sprite_group_set_palette_map(&g, 0);
+    ng_sprite_group_flush(&g);
+    assert(ram[300u * 64u + 1u] == 0x0703u);
+    ng_sprite_group_init(&g, 300u, 1u, 1u, 5u, 6u);
+    assert(!g.tilePalettes);
+}
+
 int main(void)
 {
     NGSpriteGroup g;
@@ -299,6 +326,7 @@ int main(void)
     test_flip_rewrites_the_map(&g);
     test_window_parks_only_its_own_tail();
     test_palette_effects();
+    test_tile_palette_maps();
     assert(ng_sprite_scaled_x(256u, 0x7fu) == 128u);
     assert(ng_sprite_scaled_y(256u, 0x7fu) == 128u);
     assert(ng_sprite_scaled_y(256u, 0xffu) == 256u);
