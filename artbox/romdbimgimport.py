@@ -435,12 +435,16 @@ def sprite_palette_group_key(spec):
 
         row = int(match.group(1))
         col = int(match.group(2))
+        if row == 5 and col >= 4:
+            return "characters:transformation"
         if row <= 5:
             return "characters:warrior"
         if row == 7 and col <= 7:
             return "characters:select"
-        if row == 7:
+        if row == 7 and col <= 13:
             return "characters:eagle"
+        if row == 7:
+            return "characters:eagle_effect"
         return f"characters:row{row:02d}"
 
     stem = os.path.splitext(spec.get("name", ""))[0]

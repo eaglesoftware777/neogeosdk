@@ -8,7 +8,7 @@ import os
 import struct as st
 
 import numpy as np
-from tile_codec import encode_image
+from tile_codec import encode_image, write_utility_tiles
 
 try:
     import pysqlite3 as db
@@ -282,6 +282,7 @@ for image_index, indexed, palette in data:
 
     write_palette(palette, f_std, f_neo, image_index + 1, packed_palettes)
 
+write_utility_tiles(f_c1rom, f_c2rom)
 os.fsync(f_c1rom)
 os.fsync(f_c2rom)
 f_c1rom.close()

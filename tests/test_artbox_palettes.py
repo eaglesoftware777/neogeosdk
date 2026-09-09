@@ -1,5 +1,6 @@
 """Hardware format, palette budget, and source-fidelity regression checks."""
 
+import io
 import sys
 import unittest
 from pathlib import Path
@@ -10,10 +11,27 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "artbox"))
 from img2neo import rgb_to_lab
 from img2neo_tile import ng_snap
 from palette_banks import fit_palette, palette_words, quantize, reconstruct
-from tile_codec import decode_image, encode_image
+from tile_codec import HALF_SOLID_TILE, decode_image, encode_image, write_utility_tiles
 
 
 class PaletteTests(unittest.TestCase):
+    def test_utility_tiles_preserve_art_and_blank_padding(self):
+        c1, c2 = io.BytesIO(), io.BytesIO()
+        c1.write(b"\x12" * 64)
+        c2.write(b"\x34" * 64)
+        write_utility_tiles(c1, c2)
+        self.assertEqual(c1.getvalue()[:64], b"\x12" * 64)
+        start = HALF_SOLID_TILE * 64
+        pixels = decode_image(c1.getvalue()[start:], c2.getvalue()[start:], 48, 16)
+        self.assertTrue(np.all(pixels[:8, :16] == 1))
+        self.assertTrue(np.all(pixels[8:, :16] == 0))
+        self.assertTrue(np.all(pixels[:, 16:32] == 1))
+        self.assertTrue(np.all(pixels[:, 32:] == 0))
+        c1.seek(start + 1)
+        c2.seek(start + 1)
+        with self.assertRaises(ValueError):
+            write_utility_tiles(c1, c2)
+
     def test_transparent_padding_and_opaque_black(self):
         rgba = np.zeros((32, 48, 4), dtype=np.uint8)
         rgba[:, :, :3] = (255, 0, 255)
