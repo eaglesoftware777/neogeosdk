@@ -1,5 +1,63 @@
 # Changelog
 
+## v1.7.5 - Budgeted palette banks
+
+Release date: 2026-09-08
+
+### One palette per image was the ceiling, and it has been lifted
+
+Artwork was analysed per tile and then collapsed back to a single
+15-colour palette for the whole image, so most of the analysis was
+discarded on the way to the ROM.  Assets now carry a budget of palette
+banks: bank zero is fitted to the whole image and kept as a fallback,
+and each additional bank is fitted to the tiles carrying the most
+remaining error.  Tile boundaries only ever change which bank a tile
+selects; they never change the source colours.
+
+Measured against the source pixels, decoded back out of the C-ROMs
+rather than from a preview, over the demo's 173 assets:
+
+| | before | after |
+|---|---|---|
+| mean dE | 16.22 | 8.00 |
+| median dE | 15.95 | 9.35 |
+| worst dE | 51.99 | 25.46 |
+
+Every asset improved and none regressed.  Backgrounds gain most - the
+mountain page goes 8.96 to 3.11 and the forest 12.60 to 3.83 - because
+their colour variety is spread across tiles, which is exactly what extra
+banks address.
+
+- `artbox/palette_banks.py` fits palettes to original pixel frequencies
+  and refines them on the hardware lattice.
+- `artbox/tile_codec.py` encodes and decodes C-ROM planar data, so the
+  build can verify that what the ROM holds is what the pipeline meant.
+- Both sprite engines take an optional per-tile palette map, so multiple
+  banks reach the hardware instead of being flattened on the way.
+- `tools/artbox_quality_report.py` decodes both C-ROMs, checks every
+  asset against the indices it was built from, and reports colour error
+  against the source.
+
+### Where the budget stops
+
+Extra banks are spent where they pay.  Backgrounds saturate at eight -
+sixteen banks moves the mountain page from 3.18 to 3.16 - so the budget
+stays there.  Sprites stay on one bank: a character's colour variety is
+*within* each tile rather than spread across tiles, so eight banks move
+a portrait only from 11.4 to 10.2, which does not justify the palette
+RAM.  Dithering them is worse still, on both raw and blur-averaged
+error, because these sources are pixel art with flat regions rather than
+photographic gradients.  The engine support exists either way.
+
+### Fixed
+
+- The generated screen code is spliced into a game's `main.c` at a
+  marker now, not at the first `showScreen1`.  The generated region grew
+  file-scope palette tables that sit ahead of that function, so they
+  landed on the keep side of the cut and every pipeline run left another
+  copy behind - four runs in, `main.c` had four sets of every table and
+  would not compile.  Repeated syncs are idempotent again.
+
 ## v1.7.4 - Tile stride, and what the palette is actually spending
 
 Release date: 2026-09-07
