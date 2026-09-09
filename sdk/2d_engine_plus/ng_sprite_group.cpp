@@ -45,6 +45,28 @@ uint16_t NGSpriteGroup::tileFor(uint8_t strip, uint8_t row) const
     return (uint16_t)(tileBase + ((uint16_t)r * tileStride) + s);
 }
 
+uint16_t NGSpriteGroup::attrFor(uint8_t strip, uint8_t row, uint16_t attr) const
+{
+    if (!tilePalettes) return attr;
+    if (hflip) strip = (uint8_t)(strips - 1u - strip);
+    if (vflip) row = (uint8_t)(heightTiles - 1u - row);
+    return (uint16_t)((attr & 0x00ffu) |
+        ((uint16_t)tilePalettes[(uint16_t)row * tileStride + strip] << 8));
+}
+
+void NGSpriteGroup::setPaletteMap(const uint8_t *banks)
+{
+    if (tilePalettes != banks) {
+        tilePalettes = banks;
+        dirty |= NG_SGF_DIRTY_PALETTE;
+    }
+}
+
+void NEOGEO_USER ng_sprite_group_set_palette_map(NGSpriteGroup *g, const uint8_t *banks)
+{
+    if (g) g->setPaletteMap(banks);
+}
+
 /* --- NGSpriteGroup static methods --- */
 
 static void NEOGEO_USER ng_sprite_kill_slot(uint16_t spr)
@@ -157,6 +179,7 @@ void NGSpriteGroup::init(uint16_t first, uint8_t s, uint8_t h, uint16_t tb, uint
     tileBase    = tb;
     tileStride  = s;
     palette     = pal;
+    tilePalettes = 0;
     x = 0; y = 0;
     xScale     = NG_SPRITE_FULL_XSCALE;
     yScale     = NG_SPRITE_FULL_YSCALE;
@@ -296,7 +319,7 @@ void NGSpriteGroup::upload()
 
         for (row = 0; row < mapRows; row++) {
             ngsg_tiles[row] = row < heightTiles ? tileFor(strip, row) : NG_SPRITE_BLANK_TILE;
-            ngsg_attrs[row] = row < heightTiles ? attr : NG_SPRITE_BLANK_ATTR;
+            ngsg_attrs[row] = row < heightTiles ? attrFor(strip, row, attr) : NG_SPRITE_BLANK_ATTR;
         }
 
         if (strip == 0) {
@@ -372,7 +395,7 @@ void NGSpriteGroup::flush()
             uint16_t scb1Addr = (uint16_t)(64u * (uint16_t)(firstSprite + strip));
             for (row = 0; row < mapRows; row++) {
                 ngsg_tiles[row] = row < heightTiles ? tileFor(strip, row) : NG_SPRITE_BLANK_TILE;
-                ngsg_attrs[row] = row < heightTiles ? attr : NG_SPRITE_BLANK_ATTR;
+                ngsg_attrs[row] = row < heightTiles ? attrFor(strip, row, attr) : NG_SPRITE_BLANK_ATTR;
             }
             vram_init(scb1Addr, 1);
             vram_SCB1(ngsg_tiles, ngsg_attrs, mapRows);

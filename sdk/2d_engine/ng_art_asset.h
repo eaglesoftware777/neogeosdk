@@ -27,6 +27,8 @@ typedef struct {
     int16_t offset_y;
     uint16_t content_width;
     uint16_t content_height;
+    /* Optional absolute bank per source tile, starting at tile_base. */
+    const uint8_t *tile_palettes;
 } NGArtAsset;
 
 const NGArtAsset * NEOGEO_USER ng_art_asset_find(const NGArtAsset *assets,

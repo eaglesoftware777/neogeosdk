@@ -36,6 +36,7 @@ struct NGSpriteGroup {
     uint8_t  autoAnim8;
     uint8_t  visible;
     uint8_t  dirty;
+    const uint8_t *tilePalettes;
 
     void NEOGEO_USER init(uint16_t firstSprite, uint8_t strips, uint8_t heightTiles,
                           uint16_t tileBase, uint8_t palette);
@@ -44,6 +45,7 @@ struct NGSpriteGroup {
     void NEOGEO_USER setTileBase(uint16_t tileBase);
     void NEOGEO_USER setTileStride(uint16_t tileStride);
     void NEOGEO_USER setPalette(uint8_t palette);
+    void NEOGEO_USER setPaletteMap(const uint8_t *banks);
     void NEOGEO_USER setActiveRows(uint8_t rows);
     void NEOGEO_USER setPos(int16_t x, int16_t y);
     void NEOGEO_USER move(int16_t dx, int16_t dy);
@@ -64,6 +66,7 @@ private:
     static uint8_t  clampU8(uint8_t v, uint8_t mn, uint8_t mx);
     static uint8_t  xShrinkNibble(uint8_t xScale);
     uint16_t tileFor(uint8_t strip, uint8_t row) const;
+    uint16_t attrFor(uint8_t strip, uint8_t row, uint16_t attr) const;
 };
 
 #ifdef __cplusplus
@@ -76,6 +79,7 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_group_set_tile_base(NGSpriteGroup *g, uint16_t tileBase);
 void NEOGEO_USER ng_sprite_group_set_tile_stride(NGSpriteGroup *g, uint16_t tileStride);
 void NEOGEO_USER ng_sprite_group_set_palette(NGSpriteGroup *g, uint8_t palette);
+void NEOGEO_USER ng_sprite_group_set_palette_map(NGSpriteGroup *g, const uint8_t *banks);
 void NEOGEO_USER ng_sprite_group_set_active_rows(NGSpriteGroup *g, uint8_t activeRows);
 void NEOGEO_USER ng_sprite_group_set_pos(NGSpriteGroup *g, int16_t x, int16_t y);
 void NEOGEO_USER ng_sprite_group_move(NGSpriteGroup *g, int16_t dx, int16_t dy);
