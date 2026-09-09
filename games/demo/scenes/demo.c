@@ -676,6 +676,7 @@ static void NEOGEO_USER demo_perform_sprite_draw(const DemoSpriteDraw *cmd)
     NGSpriteWindow *window;
     uint8_t index;
     uint16_t tile_base;
+    const NGArtAsset *asset;
 
     if (!cmd || cmd->first_sprite == 0u || cmd->first_sprite >= NG_SPR_TOTAL) return;
     if (cmd->screen_id == 0u) {
@@ -731,6 +732,9 @@ static void NEOGEO_USER demo_perform_sprite_draw(const DemoSpriteDraw *cmd)
         ng_sprite_group_set_palette(g, DEMO_SCREEN_PALETTE(cmd->screen_id));
     }
     ng_sprite_group_set_tile_stride(g, demo_screen_tile_stride(cmd->screen_id));
+    asset = ng_screen_art_asset(cmd->screen_id);
+    ng_sprite_group_set_palette_map(g, asset && asset->tile_palettes
+        ? asset->tile_palettes + (uint16_t)cmd->tile_y * asset->tile_stride : 0);
     ng_sprite_group_set_active_rows(g, rows);
     ng_sprite_group_set_pos(g,
                             (int16_t)(cmd->x + demo_screen_x_offset(cmd->screen_id)),
