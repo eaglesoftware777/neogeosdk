@@ -40,12 +40,30 @@ def main() -> int:
     if not manifest:
         return fail(f"{manifest_path} is empty")
 
-    manifest_banks = {int(x["palette_bank"]) for x in manifest if "palette_bank" in x}
+    manifest_banks = set()
+    owners = {}
+    for spec in manifest:
+        slots = spec.get("palette_slots", [spec["palette_bank"]])
+        if len(slots) != 1 + len(spec.get("extra_palettes", [])):
+            return fail(f"palette count mismatch for {spec['name']}")
+        for slot in slots:
+            if not 16 <= slot < 255:
+                return fail(f"asset bank {slot} overlaps reserved palette RAM")
+            if slot in owners:
+                return fail(f"asset bank {slot} shared by {owners[slot]} and {spec['name']}")
+            owners[slot] = spec["name"]
+        manifest_banks.update(slots)
+        mapping = spec.get("tile_palette_banks")
+        if mapping is not None:
+            expected = spec["canvas_width"] * spec["canvas_height"] // 256
+            if len(mapping) != expected or not set(mapping).issubset(slots):
+                return fail(f"invalid tile palette map for {spec['name']}")
     if not manifest_banks:
         return fail("no palette_bank entries in assets_manifest.json")
 
     text = screens_path.read_text(encoding="utf-8", errors="replace")
     loads = {int(m.group(1)) for m in re.finditer(r"load_palettes\([^)]*PALOFFSET\*(\d+)\)", text)}
+    loads.update(int(m.group(1)) for m in re.finditer(r"ng_palette_load_bank\((\d+),", text))
     if not loads:
         return fail(f"no load_palettes(...PALOFFSET*X) entries in {screens_path}")
 
