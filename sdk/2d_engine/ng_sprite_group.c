@@ -50,6 +50,23 @@ static uint16_t NEOGEO_USER ngsg_tile_for(NGSpriteGroup *g, uint8_t strip, uint8
     return (uint16_t)(g->tileBase + ((uint16_t)sourceRow * g->tileStride) + sourceStrip);
 }
 
+static uint16_t NEOGEO_USER ngsg_attr_for(NGSpriteGroup *g, uint8_t strip, uint8_t row, uint16_t attr)
+{
+    if (!g->tilePalettes) return attr;
+    if (g->hflip) strip = (uint8_t)(g->strips - 1u - strip);
+    if (g->vflip) row = (uint8_t)(g->heightTiles - 1u - row);
+    return (uint16_t)((attr & 0x00ffu) |
+        ((uint16_t)g->tilePalettes[(uint16_t)row * g->tileStride + strip] << 8));
+}
+
+void NEOGEO_USER ng_sprite_group_set_palette_map(NGSpriteGroup *g, const uint8_t *banks)
+{
+    if (g && g->tilePalettes != banks) {
+        g->tilePalettes = banks;
+        g->dirty |= NG_SGF_DIRTY_PALETTE;
+    }
+}
+
 static void NEOGEO_USER ng_sprite_kill_slot(uint16_t spr)
 {
     uint16_t i;
@@ -185,6 +202,7 @@ void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, ui
     g->tileBase = tileBase;
     g->tileStride = strips;
     g->palette = palette;
+    g->tilePalettes = 0;
     g->x = 0;
     g->y = 0;
     g->xScale = NG_SPRITE_FULL_XSCALE;
@@ -357,7 +375,7 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
 
         for (row = 0; row < mapRows; row++) {
             ngsg_tiles[row] = row < g->heightTiles ? ngsg_tile_for(g, strip, row) : NG_SPRITE_BLANK_TILE;
-            ngsg_attrs[row] = row < g->heightTiles ? attr : NG_SPRITE_BLANK_ATTR;
+            ngsg_attrs[row] = row < g->heightTiles ? ngsg_attr_for(g, strip, row, attr) : NG_SPRITE_BLANK_ATTR;
         }
 
         if (strip == 0) {
@@ -515,7 +533,7 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
 
             for (row = 0; row < mapRows; row++) {
                 ngsg_tiles[row] = row < g->heightTiles ? ngsg_tile_for(g, strip, row) : NG_SPRITE_BLANK_TILE;
-                ngsg_attrs[row] = row < g->heightTiles ? attr : NG_SPRITE_BLANK_ATTR;
+                ngsg_attrs[row] = row < g->heightTiles ? ngsg_attr_for(g, strip, row, attr) : NG_SPRITE_BLANK_ATTR;
             }
 
             vram_init(scb1Addr, 1);
