@@ -1,6 +1,7 @@
 [001] backgrounds/0.png
 mode=screen fit=crop anchor=center rule=cat_backgrounds
 category=backgrounds
+palette_slots=[16, 189, 190, 191, 192, 193, 194, 195]
 source=1032x624 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=1 palette_bank=16 tile_base=0 reserved_last=255 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=background layer or multi-level backdrop
@@ -8,6 +9,7 @@ note=background layer or multi-level backdrop
 [002] backgrounds/1.png
 mode=screen fit=crop anchor=center rule=cat_backgrounds
 category=backgrounds
+palette_slots=[17, 196, 197, 198, 199, 200]
 source=368x240 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=2 palette_bank=17 tile_base=256 reserved_last=511 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=background layer or multi-level backdrop
@@ -15,6 +17,7 @@ note=background layer or multi-level backdrop
 [003] characters/sprite_001_r01_c01.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[18]
 source=226x346 canvas=256x256 content=167x256 offset=(44,0)
 screen_id=3 palette_bank=18 tile_base=512 reserved_last=767 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=12 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=16x16 character sprite sheet
@@ -22,6 +25,7 @@ note=16x16 character sprite sheet
 [004] characters/sprite_002_r01_c02.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[19]
 source=226x346 canvas=256x256 content=167x256 offset=(44,0)
 screen_id=4 palette_bank=19 tile_base=768 reserved_last=1023 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=12 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=16x16 character sprite sheet
@@ -29,6 +33,7 @@ note=16x16 character sprite sheet
 [005] characters/sprite_003_r01_c03.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[20]
 source=226x346 canvas=256x256 content=167x256 offset=(44,0)
 screen_id=5 palette_bank=20 tile_base=1024 reserved_last=1279 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=12 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=16x16 character sprite sheet
@@ -36,6 +41,7 @@ note=16x16 character sprite sheet
 [006] characters/sprite_004_r01_c04.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[21]
 source=226x346 canvas=256x256 content=167x256 offset=(44,0)
 screen_id=6 palette_bank=21 tile_base=1280 reserved_last=1535 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=12 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=16x16 character sprite sheet
@@ -43,6 +49,7 @@ note=16x16 character sprite sheet
 [007] characters/sprite_005_r01_c05.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[22]
 source=226x346 canvas=256x256 content=167x256 offset=(44,0)
 screen_id=7 palette_bank=22 tile_base=1536 reserved_last=1791 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=12 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=16x16 character sprite sheet
@@ -50,6 +57,7 @@ note=16x16 character sprite sheet
 [008] characters/sprite_006_r01_c06.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[23]
 source=226x346 canvas=256x256 content=167x256 offset=(44,0)
 screen_id=8 palette_bank=23 tile_base=1792 reserved_last=2047 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=12 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=16x16 character sprite sheet
@@ -57,6 +65,7 @@ note=16x16 character sprite sheet
 [009] characters/sprite_007_r01_c07.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[24]
 source=226x346 canvas=256x256 content=167x256 offset=(44,0)
 screen_id=9 palette_bank=24 tile_base=2048 reserved_last=2303 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=12 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=16x16 character sprite sheet
@@ -64,6 +73,7 @@ note=16x16 character sprite sheet
 [010] characters/sprite_008_r01_c08.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[25]
 source=226x346 canvas=256x256 content=167x256 offset=(44,0)
 screen_id=10 palette_bank=25 tile_base=2304 reserved_last=2559 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=12 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=16x16 character sprite sheet
@@ -71,6 +81,7 @@ note=16x16 character sprite sheet
 [011] characters/sprite_009_r01_c09.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[26]
 source=226x346 canvas=256x256 content=167x256 offset=(44,0)
 screen_id=11 palette_bank=26 tile_base=2560 reserved_last=2815 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=12 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=16x16 character sprite sheet
@@ -78,6 +89,7 @@ note=16x16 character sprite sheet
 [012] characters/sprite_010_r01_c10.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[27]
 source=226x346 canvas=256x256 content=167x256 offset=(44,0)
 screen_id=12 palette_bank=27 tile_base=2816 reserved_last=3071 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=12 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=16x16 character sprite sheet
@@ -85,6 +97,7 @@ note=16x16 character sprite sheet
 [013] characters/sprite_011_r01_c11.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[28]
 source=226x346 canvas=256x256 content=167x256 offset=(44,0)
 screen_id=13 palette_bank=28 tile_base=3072 reserved_last=3327 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=12 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=16x16 character sprite sheet
@@ -92,6 +105,7 @@ note=16x16 character sprite sheet
 [014] characters/sprite_012_r01_c12.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[29]
 source=226x346 canvas=256x256 content=167x256 offset=(44,0)
 screen_id=14 palette_bank=29 tile_base=3328 reserved_last=3583 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=12 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=16x16 character sprite sheet
@@ -99,6 +113,7 @@ note=16x16 character sprite sheet
 [015] characters/sprite_013_r02_c01.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[30]
 source=278x346 canvas=256x256 content=206x256 offset=(25,0)
 screen_id=15 palette_bank=30 tile_base=3584 reserved_last=3839 used_cols=14 used_rows=16 start_col=1 start_row=0 x_pad=9 y_pad=0 used_tiles=224 strips=14 active_rows=16
 note=16x16 character sprite sheet
@@ -106,6 +121,7 @@ note=16x16 character sprite sheet
 [016] characters/sprite_014_r02_c02.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[31]
 source=258x236 canvas=256x256 content=256x234 offset=(0,22)
 screen_id=16 palette_bank=31 tile_base=3840 reserved_last=4095 used_cols=16 used_rows=15 start_col=0 start_row=1 x_pad=0 y_pad=6 used_tiles=240 strips=16 active_rows=15
 note=16x16 character sprite sheet
@@ -113,6 +129,7 @@ note=16x16 character sprite sheet
 [017] characters/sprite_015_r02_c03.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[32]
 source=278x346 canvas=256x256 content=206x256 offset=(25,0)
 screen_id=17 palette_bank=32 tile_base=4096 reserved_last=4351 used_cols=14 used_rows=16 start_col=1 start_row=0 x_pad=9 y_pad=0 used_tiles=224 strips=14 active_rows=16
 note=16x16 character sprite sheet
@@ -120,6 +137,7 @@ note=16x16 character sprite sheet
 [018] characters/sprite_016_r02_c04.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[33]
 source=278x346 canvas=256x256 content=206x256 offset=(25,0)
 screen_id=18 palette_bank=33 tile_base=4352 reserved_last=4607 used_cols=14 used_rows=16 start_col=1 start_row=0 x_pad=9 y_pad=0 used_tiles=224 strips=14 active_rows=16
 note=16x16 character sprite sheet
@@ -127,6 +145,7 @@ note=16x16 character sprite sheet
 [019] characters/sprite_017_r02_c05.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[34]
 source=278x346 canvas=256x256 content=206x256 offset=(25,0)
 screen_id=19 palette_bank=34 tile_base=4608 reserved_last=4863 used_cols=14 used_rows=16 start_col=1 start_row=0 x_pad=9 y_pad=0 used_tiles=224 strips=14 active_rows=16
 note=16x16 character sprite sheet
@@ -134,6 +153,7 @@ note=16x16 character sprite sheet
 [020] characters/sprite_018_r02_c06.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[35]
 source=278x346 canvas=256x256 content=206x256 offset=(25,0)
 screen_id=20 palette_bank=35 tile_base=4864 reserved_last=5119 used_cols=14 used_rows=16 start_col=1 start_row=0 x_pad=9 y_pad=0 used_tiles=224 strips=14 active_rows=16
 note=16x16 character sprite sheet
@@ -141,6 +161,7 @@ note=16x16 character sprite sheet
 [021] characters/sprite_019_r02_c07.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[36]
 source=278x346 canvas=256x256 content=206x256 offset=(25,0)
 screen_id=21 palette_bank=36 tile_base=5120 reserved_last=5375 used_cols=14 used_rows=16 start_col=1 start_row=0 x_pad=9 y_pad=0 used_tiles=224 strips=14 active_rows=16
 note=16x16 character sprite sheet
@@ -148,6 +169,7 @@ note=16x16 character sprite sheet
 [022] characters/sprite_020_r02_c08.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[37]
 source=278x346 canvas=256x256 content=206x256 offset=(25,0)
 screen_id=22 palette_bank=37 tile_base=5376 reserved_last=5631 used_cols=14 used_rows=16 start_col=1 start_row=0 x_pad=9 y_pad=0 used_tiles=224 strips=14 active_rows=16
 note=16x16 character sprite sheet
@@ -155,6 +177,7 @@ note=16x16 character sprite sheet
 [023] characters/sprite_021_r02_c09.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[38]
 source=278x346 canvas=256x256 content=206x256 offset=(25,0)
 screen_id=23 palette_bank=38 tile_base=5632 reserved_last=5887 used_cols=14 used_rows=16 start_col=1 start_row=0 x_pad=9 y_pad=0 used_tiles=224 strips=14 active_rows=16
 note=16x16 character sprite sheet
@@ -162,6 +185,7 @@ note=16x16 character sprite sheet
 [024] characters/sprite_022_r02_c10.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[39]
 source=278x346 canvas=256x256 content=206x256 offset=(25,0)
 screen_id=24 palette_bank=39 tile_base=5888 reserved_last=6143 used_cols=14 used_rows=16 start_col=1 start_row=0 x_pad=9 y_pad=0 used_tiles=224 strips=14 active_rows=16
 note=16x16 character sprite sheet
@@ -169,6 +193,7 @@ note=16x16 character sprite sheet
 [025] characters/sprite_023_r03_c01.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[40]
 source=228x340 canvas=256x256 content=172x256 offset=(42,0)
 screen_id=25 palette_bank=40 tile_base=6144 reserved_last=6399 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=10 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=16x16 character sprite sheet
@@ -176,6 +201,7 @@ note=16x16 character sprite sheet
 [026] characters/sprite_024_r03_c02.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[41]
 source=298x332 canvas=256x256 content=230x256 offset=(13,0)
 screen_id=26 palette_bank=41 tile_base=6400 reserved_last=6655 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=13 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=16x16 character sprite sheet
@@ -183,6 +209,7 @@ note=16x16 character sprite sheet
 [027] characters/sprite_025_r03_c03.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[42]
 source=350x348 canvas=256x256 content=256x255 offset=(0,1)
 screen_id=27 palette_bank=42 tile_base=6656 reserved_last=6911 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=1 used_tiles=256 strips=16 active_rows=16
 note=16x16 character sprite sheet
@@ -190,6 +217,7 @@ note=16x16 character sprite sheet
 [028] characters/sprite_026_r03_c04.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[43]
 source=350x348 canvas=256x256 content=256x255 offset=(0,1)
 screen_id=28 palette_bank=43 tile_base=6912 reserved_last=7167 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=1 used_tiles=256 strips=16 active_rows=16
 note=16x16 character sprite sheet
@@ -197,6 +225,7 @@ note=16x16 character sprite sheet
 [029] characters/sprite_027_r03_c05.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[44]
 source=388x348 canvas=256x256 content=256x230 offset=(0,26)
 screen_id=29 palette_bank=44 tile_base=7168 reserved_last=7423 used_cols=16 used_rows=15 start_col=0 start_row=1 x_pad=0 y_pad=10 used_tiles=240 strips=16 active_rows=15
 note=16x16 character sprite sheet
@@ -204,6 +233,7 @@ note=16x16 character sprite sheet
 [030] characters/sprite_028_r03_c06.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[45]
 source=448x276 canvas=256x256 content=256x158 offset=(0,98)
 screen_id=30 palette_bank=45 tile_base=7424 reserved_last=7679 used_cols=16 used_rows=10 start_col=0 start_row=6 x_pad=0 y_pad=2 used_tiles=160 strips=16 active_rows=10
 note=16x16 character sprite sheet
@@ -211,6 +241,7 @@ note=16x16 character sprite sheet
 [031] characters/sprite_029_r03_c07.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[46]
 source=388x348 canvas=256x256 content=256x230 offset=(0,26)
 screen_id=31 palette_bank=46 tile_base=7680 reserved_last=7935 used_cols=16 used_rows=15 start_col=0 start_row=1 x_pad=0 y_pad=10 used_tiles=240 strips=16 active_rows=15
 note=16x16 character sprite sheet
@@ -218,6 +249,7 @@ note=16x16 character sprite sheet
 [032] characters/sprite_030_r03_c08.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[47]
 source=362x346 canvas=256x256 content=256x245 offset=(0,11)
 screen_id=32 palette_bank=47 tile_base=7936 reserved_last=8191 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=11 used_tiles=256 strips=16 active_rows=16
 note=16x16 character sprite sheet
@@ -225,6 +257,7 @@ note=16x16 character sprite sheet
 [033] characters/sprite_031_r04_c01.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[48]
 source=246x278 canvas=256x256 content=227x256 offset=(14,0)
 screen_id=33 palette_bank=48 tile_base=8192 reserved_last=8447 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=14 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=16x16 character sprite sheet
@@ -232,6 +265,7 @@ note=16x16 character sprite sheet
 [034] characters/sprite_032_r04_c02.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[49]
 source=262x270 canvas=256x256 content=248x256 offset=(4,0)
 screen_id=34 palette_bank=49 tile_base=8448 reserved_last=8703 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=4 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=16x16 character sprite sheet
@@ -239,6 +273,7 @@ note=16x16 character sprite sheet
 [035] characters/sprite_033_r04_c03.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[50]
 source=220x262 canvas=256x256 content=215x256 offset=(20,0)
 screen_id=35 palette_bank=50 tile_base=8704 reserved_last=8959 used_cols=14 used_rows=16 start_col=1 start_row=0 x_pad=4 y_pad=0 used_tiles=224 strips=14 active_rows=16
 note=16x16 character sprite sheet
@@ -246,6 +281,7 @@ note=16x16 character sprite sheet
 [036] characters/sprite_034_r04_c04.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[51]
 source=270x256 canvas=256x256 content=256x243 offset=(0,13)
 screen_id=36 palette_bank=51 tile_base=8960 reserved_last=9215 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=13 used_tiles=256 strips=16 active_rows=16
 note=16x16 character sprite sheet
@@ -253,6 +289,7 @@ note=16x16 character sprite sheet
 [037] characters/sprite_035_r04_c05.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[52]
 source=298x244 canvas=256x256 content=256x210 offset=(0,46)
 screen_id=37 palette_bank=52 tile_base=9216 reserved_last=9471 used_cols=16 used_rows=14 start_col=0 start_row=2 x_pad=0 y_pad=14 used_tiles=224 strips=16 active_rows=14
 note=16x16 character sprite sheet
@@ -260,6 +297,7 @@ note=16x16 character sprite sheet
 [038] characters/sprite_036_r04_c06.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[53]
 source=398x250 canvas=256x256 content=256x161 offset=(0,95)
 screen_id=38 palette_bank=53 tile_base=9472 reserved_last=9727 used_cols=16 used_rows=11 start_col=0 start_row=5 x_pad=0 y_pad=15 used_tiles=176 strips=16 active_rows=11
 note=16x16 character sprite sheet
@@ -267,6 +305,7 @@ note=16x16 character sprite sheet
 [039] characters/sprite_037_r04_c07.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[54]
 source=222x254 canvas=256x256 content=222x254 offset=(17,2)
 screen_id=39 palette_bank=54 tile_base=9728 reserved_last=9983 used_cols=14 used_rows=16 start_col=1 start_row=0 x_pad=1 y_pad=2 used_tiles=224 strips=14 active_rows=16
 note=16x16 character sprite sheet
@@ -274,6 +313,7 @@ note=16x16 character sprite sheet
 [040] characters/sprite_038_r04_c08.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[55]
 source=166x88 canvas=256x256 content=166x88 offset=(45,168)
 screen_id=40 palette_bank=55 tile_base=9984 reserved_last=10239 used_cols=12 used_rows=6 start_col=2 start_row=10 x_pad=13 y_pad=8 used_tiles=72 strips=12 active_rows=6
 note=16x16 character sprite sheet
@@ -281,6 +321,7 @@ note=16x16 character sprite sheet
 [041] characters/sprite_039_r04_c09.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[56]
 source=226x244 canvas=256x256 content=226x244 offset=(15,12)
 screen_id=41 palette_bank=56 tile_base=10240 reserved_last=10495 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=15 y_pad=12 used_tiles=256 strips=16 active_rows=16
 note=16x16 character sprite sheet
@@ -288,6 +329,7 @@ note=16x16 character sprite sheet
 [042] characters/sprite_040_r04_c10.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[57]
 source=186x98 canvas=256x256 content=186x98 offset=(35,158)
 screen_id=42 palette_bank=57 tile_base=10496 reserved_last=10751 used_cols=12 used_rows=7 start_col=2 start_row=9 x_pad=3 y_pad=14 used_tiles=84 strips=12 active_rows=7
 note=16x16 character sprite sheet
@@ -295,6 +337,7 @@ note=16x16 character sprite sheet
 [043] characters/sprite_041_r04_c11.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[58]
 source=298x260 canvas=256x256 content=256x223 offset=(0,33)
 screen_id=43 palette_bank=58 tile_base=10752 reserved_last=11007 used_cols=16 used_rows=14 start_col=0 start_row=2 x_pad=0 y_pad=1 used_tiles=224 strips=16 active_rows=14
 note=16x16 character sprite sheet
@@ -302,6 +345,7 @@ note=16x16 character sprite sheet
 [044] characters/sprite_042_r05_c01.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[59]
 source=190x238 canvas=256x256 content=190x238 offset=(33,18)
 screen_id=44 palette_bank=59 tile_base=11008 reserved_last=11263 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=1 y_pad=2 used_tiles=180 strips=12 active_rows=15
 note=16x16 character sprite sheet
@@ -309,6 +353,7 @@ note=16x16 character sprite sheet
 [045] characters/sprite_043_r05_c02.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[60]
 source=262x238 canvas=256x256 content=256x233 offset=(0,23)
 screen_id=45 palette_bank=60 tile_base=11264 reserved_last=11519 used_cols=16 used_rows=15 start_col=0 start_row=1 x_pad=0 y_pad=7 used_tiles=240 strips=16 active_rows=15
 note=16x16 character sprite sheet
@@ -316,6 +361,7 @@ note=16x16 character sprite sheet
 [046] characters/sprite_044_r05_c03.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[61]
 source=46x68 canvas=256x256 content=46x68 offset=(105,188)
 screen_id=46 palette_bank=61 tile_base=11520 reserved_last=11775 used_cols=4 used_rows=5 start_col=6 start_row=11 x_pad=9 y_pad=12 used_tiles=20 strips=4 active_rows=5
 note=16x16 character sprite sheet
@@ -323,6 +369,7 @@ note=16x16 character sprite sheet
 [047] characters/sprite_045_r05_c04.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[62]
 source=180x182 canvas=256x256 content=180x182 offset=(38,74)
 screen_id=47 palette_bank=62 tile_base=11776 reserved_last=12031 used_cols=12 used_rows=12 start_col=2 start_row=4 x_pad=6 y_pad=10 used_tiles=144 strips=12 active_rows=12
 note=16x16 character sprite sheet
@@ -330,6 +377,7 @@ note=16x16 character sprite sheet
 [048] characters/sprite_046_r05_c05.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[63]
 source=80x58 canvas=256x256 content=80x58 offset=(88,198)
 screen_id=48 palette_bank=63 tile_base=12032 reserved_last=12287 used_cols=6 used_rows=4 start_col=5 start_row=12 x_pad=8 y_pad=6 used_tiles=24 strips=6 active_rows=4
 note=16x16 character sprite sheet
@@ -337,6 +385,7 @@ note=16x16 character sprite sheet
 [049] characters/sprite_047_r05_c06.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[64]
 source=286x224 canvas=256x256 content=256x201 offset=(0,55)
 screen_id=49 palette_bank=64 tile_base=12288 reserved_last=12543 used_cols=16 used_rows=13 start_col=0 start_row=3 x_pad=0 y_pad=7 used_tiles=208 strips=16 active_rows=13
 note=16x16 character sprite sheet
@@ -344,6 +393,7 @@ note=16x16 character sprite sheet
 [050] characters/sprite_048_r05_c07.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[65]
 source=220x206 canvas=256x256 content=220x206 offset=(18,50)
 screen_id=50 palette_bank=65 tile_base=12544 reserved_last=12799 used_cols=14 used_rows=13 start_col=1 start_row=3 x_pad=2 y_pad=2 used_tiles=182 strips=14 active_rows=13
 note=16x16 character sprite sheet
@@ -351,6 +401,7 @@ note=16x16 character sprite sheet
 [051] characters/sprite_049_r05_c08.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[66]
 source=114x36 canvas=256x256 content=114x36 offset=(71,220)
 screen_id=51 palette_bank=66 tile_base=12800 reserved_last=13055 used_cols=8 used_rows=3 start_col=4 start_row=13 x_pad=7 y_pad=12 used_tiles=24 strips=8 active_rows=3
 note=16x16 character sprite sheet
@@ -358,6 +409,7 @@ note=16x16 character sprite sheet
 [052] characters/sprite_050_r05_c09.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[67]
 source=486x200 canvas=256x256 content=256x105 offset=(0,151)
 screen_id=52 palette_bank=67 tile_base=13056 reserved_last=13311 used_cols=16 used_rows=7 start_col=0 start_row=9 x_pad=0 y_pad=7 used_tiles=112 strips=16 active_rows=7
 note=16x16 character sprite sheet
@@ -365,6 +417,7 @@ note=16x16 character sprite sheet
 [053] characters/sprite_051_r05_c10.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[68]
 source=362x238 canvas=256x256 content=256x168 offset=(0,88)
 screen_id=53 palette_bank=68 tile_base=13312 reserved_last=13567 used_cols=16 used_rows=11 start_col=0 start_row=5 x_pad=0 y_pad=8 used_tiles=176 strips=16 active_rows=11
 note=16x16 character sprite sheet
@@ -372,6 +425,7 @@ note=16x16 character sprite sheet
 [054] characters/sprite_052_r05_c11.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[69]
 source=320x138 canvas=256x256 content=256x110 offset=(0,146)
 screen_id=54 palette_bank=69 tile_base=13568 reserved_last=13823 used_cols=16 used_rows=7 start_col=0 start_row=9 x_pad=0 y_pad=2 used_tiles=112 strips=16 active_rows=7
 note=16x16 character sprite sheet
@@ -379,6 +433,7 @@ note=16x16 character sprite sheet
 [055] characters/sprite_053_r05_c12.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[70]
 source=344x230 canvas=256x256 content=256x171 offset=(0,85)
 screen_id=55 palette_bank=70 tile_base=13824 reserved_last=14079 used_cols=16 used_rows=11 start_col=0 start_row=5 x_pad=0 y_pad=5 used_tiles=176 strips=16 active_rows=11
 note=16x16 character sprite sheet
@@ -386,6 +441,7 @@ note=16x16 character sprite sheet
 [056] characters/sprite_054_r06_c01.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[71]
 source=338x252 canvas=256x256 content=256x191 offset=(0,65)
 screen_id=56 palette_bank=71 tile_base=14080 reserved_last=14335 used_cols=16 used_rows=12 start_col=0 start_row=4 x_pad=0 y_pad=1 used_tiles=192 strips=16 active_rows=12
 note=16x16 character sprite sheet
@@ -393,6 +449,7 @@ note=16x16 character sprite sheet
 [057] characters/sprite_055_r06_c02.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[72]
 source=360x252 canvas=256x256 content=256x179 offset=(0,77)
 screen_id=57 palette_bank=72 tile_base=14336 reserved_last=14591 used_cols=16 used_rows=12 start_col=0 start_row=4 x_pad=0 y_pad=13 used_tiles=192 strips=16 active_rows=12
 note=16x16 character sprite sheet
@@ -400,6 +457,7 @@ note=16x16 character sprite sheet
 [058] characters/sprite_056_r06_c03.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[73]
 source=290x252 canvas=256x256 content=256x222 offset=(0,34)
 screen_id=58 palette_bank=73 tile_base=14592 reserved_last=14847 used_cols=16 used_rows=14 start_col=0 start_row=2 x_pad=0 y_pad=2 used_tiles=224 strips=16 active_rows=14
 note=16x16 character sprite sheet
@@ -407,6 +465,7 @@ note=16x16 character sprite sheet
 [059] characters/sprite_057_r06_c04.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[74]
 source=208x232 canvas=256x256 content=208x232 offset=(24,24)
 screen_id=59 palette_bank=74 tile_base=14848 reserved_last=15103 used_cols=14 used_rows=15 start_col=1 start_row=1 x_pad=8 y_pad=8 used_tiles=210 strips=14 active_rows=15
 note=16x16 character sprite sheet
@@ -414,6 +473,7 @@ note=16x16 character sprite sheet
 [060] characters/sprite_058_r06_c05.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[75]
 source=202x238 canvas=256x256 content=202x238 offset=(27,18)
 screen_id=60 palette_bank=75 tile_base=15104 reserved_last=15359 used_cols=14 used_rows=15 start_col=1 start_row=1 x_pad=11 y_pad=2 used_tiles=210 strips=14 active_rows=15
 note=16x16 character sprite sheet
@@ -421,6 +481,7 @@ note=16x16 character sprite sheet
 [061] characters/sprite_059_r06_c06.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[76]
 source=200x154 canvas=256x256 content=200x154 offset=(28,102)
 screen_id=61 palette_bank=76 tile_base=15360 reserved_last=15615 used_cols=14 used_rows=10 start_col=1 start_row=6 x_pad=12 y_pad=6 used_tiles=140 strips=14 active_rows=10
 note=16x16 character sprite sheet
@@ -428,6 +489,7 @@ note=16x16 character sprite sheet
 [062] characters/sprite_060_r06_c07.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[77]
 source=94x53 canvas=256x256 content=94x53 offset=(81,203)
 screen_id=62 palette_bank=77 tile_base=15616 reserved_last=15871 used_cols=6 used_rows=4 start_col=5 start_row=12 x_pad=1 y_pad=11 used_tiles=24 strips=6 active_rows=4
 note=16x16 character sprite sheet
@@ -435,6 +497,7 @@ note=16x16 character sprite sheet
 [063] characters/sprite_061_r06_c08.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[78]
 source=154x252 canvas=256x256 content=154x252 offset=(51,4)
 screen_id=63 palette_bank=78 tile_base=15872 reserved_last=16127 used_cols=10 used_rows=16 start_col=3 start_row=0 x_pad=3 y_pad=4 used_tiles=160 strips=10 active_rows=16
 note=16x16 character sprite sheet
@@ -442,6 +505,7 @@ note=16x16 character sprite sheet
 [064] characters/sprite_062_r06_c09.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[79]
 source=176x258 canvas=256x256 content=175x256 offset=(40,0)
 screen_id=64 palette_bank=79 tile_base=16128 reserved_last=16383 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=8 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=16x16 character sprite sheet
@@ -449,6 +513,7 @@ note=16x16 character sprite sheet
 [065] characters/sprite_063_r06_c10.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[80]
 source=134x248 canvas=256x256 content=134x248 offset=(61,8)
 screen_id=65 palette_bank=80 tile_base=16384 reserved_last=16639 used_cols=10 used_rows=16 start_col=3 start_row=0 x_pad=13 y_pad=8 used_tiles=160 strips=10 active_rows=16
 note=16x16 character sprite sheet
@@ -456,6 +521,7 @@ note=16x16 character sprite sheet
 [066] characters/sprite_064_r06_c11.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[81]
 source=154x206 canvas=256x256 content=154x206 offset=(51,50)
 screen_id=66 palette_bank=81 tile_base=16640 reserved_last=16895 used_cols=10 used_rows=13 start_col=3 start_row=3 x_pad=3 y_pad=2 used_tiles=130 strips=10 active_rows=13
 note=16x16 character sprite sheet
@@ -463,6 +529,7 @@ note=16x16 character sprite sheet
 [067] characters/sprite_065_r06_c12.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[82]
 source=60x56 canvas=256x256 content=60x56 offset=(98,200)
 screen_id=67 palette_bank=82 tile_base=16896 reserved_last=17151 used_cols=4 used_rows=4 start_col=6 start_row=12 x_pad=2 y_pad=8 used_tiles=16 strips=4 active_rows=4
 note=16x16 character sprite sheet
@@ -470,6 +537,7 @@ note=16x16 character sprite sheet
 [068] characters/sprite_066_r07_c01.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[83]
 source=194x188 canvas=256x256 content=194x188 offset=(31,68)
 screen_id=68 palette_bank=83 tile_base=17152 reserved_last=17407 used_cols=14 used_rows=12 start_col=1 start_row=4 x_pad=15 y_pad=4 used_tiles=168 strips=14 active_rows=12
 note=16x16 character sprite sheet
@@ -477,6 +545,7 @@ note=16x16 character sprite sheet
 [069] characters/sprite_067_r07_c02.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[84]
 source=206x188 canvas=256x256 content=206x188 offset=(25,68)
 screen_id=69 palette_bank=84 tile_base=17408 reserved_last=17663 used_cols=14 used_rows=12 start_col=1 start_row=4 x_pad=9 y_pad=4 used_tiles=168 strips=14 active_rows=12
 note=16x16 character sprite sheet
@@ -484,6 +553,7 @@ note=16x16 character sprite sheet
 [070] characters/sprite_068_r07_c03.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[85]
 source=202x188 canvas=256x256 content=202x188 offset=(27,68)
 screen_id=70 palette_bank=85 tile_base=17664 reserved_last=17919 used_cols=14 used_rows=12 start_col=1 start_row=4 x_pad=11 y_pad=4 used_tiles=168 strips=14 active_rows=12
 note=16x16 character sprite sheet
@@ -491,6 +561,7 @@ note=16x16 character sprite sheet
 [071] characters/sprite_069_r07_c04.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[86]
 source=202x188 canvas=256x256 content=202x188 offset=(27,68)
 screen_id=71 palette_bank=86 tile_base=17920 reserved_last=18175 used_cols=14 used_rows=12 start_col=1 start_row=4 x_pad=11 y_pad=4 used_tiles=168 strips=14 active_rows=12
 note=16x16 character sprite sheet
@@ -498,6 +569,7 @@ note=16x16 character sprite sheet
 [072] characters/sprite_070_r07_c05.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[87]
 source=152x188 canvas=256x256 content=152x188 offset=(52,68)
 screen_id=72 palette_bank=87 tile_base=18176 reserved_last=18431 used_cols=10 used_rows=12 start_col=3 start_row=4 x_pad=4 y_pad=4 used_tiles=120 strips=10 active_rows=12
 note=16x16 character sprite sheet
@@ -505,6 +577,7 @@ note=16x16 character sprite sheet
 [073] characters/sprite_071_r07_c06.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[88]
 source=178x188 canvas=256x256 content=178x188 offset=(39,68)
 screen_id=73 palette_bank=88 tile_base=18432 reserved_last=18687 used_cols=12 used_rows=12 start_col=2 start_row=4 x_pad=7 y_pad=4 used_tiles=144 strips=12 active_rows=12
 note=16x16 character sprite sheet
@@ -512,6 +585,7 @@ note=16x16 character sprite sheet
 [074] characters/sprite_072_r07_c07.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[89]
 source=180x166 canvas=256x256 content=180x166 offset=(38,90)
 screen_id=74 palette_bank=89 tile_base=18688 reserved_last=18943 used_cols=12 used_rows=11 start_col=2 start_row=5 x_pad=6 y_pad=10 used_tiles=132 strips=12 active_rows=11
 note=16x16 character sprite sheet
@@ -519,6 +593,7 @@ note=16x16 character sprite sheet
 [075] characters/sprite_073_r07_c08.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[90]
 source=190x168 canvas=256x256 content=190x168 offset=(33,88)
 screen_id=75 palette_bank=90 tile_base=18944 reserved_last=19199 used_cols=12 used_rows=11 start_col=2 start_row=5 x_pad=1 y_pad=8 used_tiles=132 strips=12 active_rows=11
 note=16x16 character sprite sheet
@@ -526,6 +601,7 @@ note=16x16 character sprite sheet
 [076] characters/sprite_074_r07_c09.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[91]
 source=190x168 canvas=256x256 content=190x168 offset=(33,88)
 screen_id=76 palette_bank=91 tile_base=19200 reserved_last=19455 used_cols=12 used_rows=11 start_col=2 start_row=5 x_pad=1 y_pad=8 used_tiles=132 strips=12 active_rows=11
 note=16x16 character sprite sheet
@@ -533,6 +609,7 @@ note=16x16 character sprite sheet
 [077] characters/sprite_075_r07_c10.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[92]
 source=186x168 canvas=256x256 content=186x168 offset=(35,88)
 screen_id=77 palette_bank=92 tile_base=19456 reserved_last=19711 used_cols=12 used_rows=11 start_col=2 start_row=5 x_pad=3 y_pad=8 used_tiles=132 strips=12 active_rows=11
 note=16x16 character sprite sheet
@@ -540,6 +617,7 @@ note=16x16 character sprite sheet
 [078] characters/sprite_076_r07_c11.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[93]
 source=244x180 canvas=256x256 content=244x180 offset=(6,76)
 screen_id=78 palette_bank=93 tile_base=19712 reserved_last=19967 used_cols=16 used_rows=12 start_col=0 start_row=4 x_pad=6 y_pad=12 used_tiles=192 strips=16 active_rows=12
 note=16x16 character sprite sheet
@@ -547,6 +625,7 @@ note=16x16 character sprite sheet
 [079] characters/sprite_077_r07_c12.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[94]
 source=200x186 canvas=256x256 content=200x186 offset=(28,70)
 screen_id=79 palette_bank=94 tile_base=19968 reserved_last=20223 used_cols=14 used_rows=12 start_col=1 start_row=4 x_pad=12 y_pad=6 used_tiles=168 strips=14 active_rows=12
 note=16x16 character sprite sheet
@@ -554,6 +633,7 @@ note=16x16 character sprite sheet
 [080] characters/sprite_078_r07_c13.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[95]
 source=194x188 canvas=256x256 content=194x188 offset=(31,68)
 screen_id=80 palette_bank=95 tile_base=20224 reserved_last=20479 used_cols=14 used_rows=12 start_col=1 start_row=4 x_pad=15 y_pad=4 used_tiles=168 strips=14 active_rows=12
 note=16x16 character sprite sheet
@@ -561,6 +641,7 @@ note=16x16 character sprite sheet
 [081] characters/sprite_079_r07_c14.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[96]
 source=100x108 canvas=256x256 content=100x108 offset=(78,148)
 screen_id=81 palette_bank=96 tile_base=20480 reserved_last=20735 used_cols=8 used_rows=7 start_col=4 start_row=9 x_pad=14 y_pad=4 used_tiles=56 strips=8 active_rows=7
 note=16x16 character sprite sheet
@@ -568,6 +649,7 @@ note=16x16 character sprite sheet
 [082] characters/sprite_080_r08_c01.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[97]
 source=214x166 canvas=256x256 content=214x166 offset=(21,90)
 screen_id=82 palette_bank=97 tile_base=20736 reserved_last=20991 used_cols=14 used_rows=11 start_col=1 start_row=5 x_pad=5 y_pad=10 used_tiles=154 strips=14 active_rows=11
 note=16x16 character sprite sheet
@@ -575,6 +657,7 @@ note=16x16 character sprite sheet
 [083] characters/sprite_081_r08_c02.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[98]
 source=212x166 canvas=256x256 content=212x166 offset=(22,90)
 screen_id=83 palette_bank=98 tile_base=20992 reserved_last=21247 used_cols=14 used_rows=11 start_col=1 start_row=5 x_pad=6 y_pad=10 used_tiles=154 strips=14 active_rows=11
 note=16x16 character sprite sheet
@@ -582,6 +665,7 @@ note=16x16 character sprite sheet
 [084] characters/sprite_082_r08_c03.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[99]
 source=210x166 canvas=256x256 content=210x166 offset=(23,90)
 screen_id=84 palette_bank=99 tile_base=21248 reserved_last=21503 used_cols=14 used_rows=11 start_col=1 start_row=5 x_pad=7 y_pad=10 used_tiles=154 strips=14 active_rows=11
 note=16x16 character sprite sheet
@@ -589,6 +673,7 @@ note=16x16 character sprite sheet
 [085] characters/sprite_083_r08_c04.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[100]
 source=216x166 canvas=256x256 content=216x166 offset=(20,90)
 screen_id=85 palette_bank=100 tile_base=21504 reserved_last=21759 used_cols=14 used_rows=11 start_col=1 start_row=5 x_pad=4 y_pad=10 used_tiles=154 strips=14 active_rows=11
 note=16x16 character sprite sheet
@@ -596,6 +681,7 @@ note=16x16 character sprite sheet
 [086] characters/sprite_084_r08_c05.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[101]
 source=210x166 canvas=256x256 content=210x166 offset=(23,90)
 screen_id=86 palette_bank=101 tile_base=21760 reserved_last=22015 used_cols=14 used_rows=11 start_col=1 start_row=5 x_pad=7 y_pad=10 used_tiles=154 strips=14 active_rows=11
 note=16x16 character sprite sheet
@@ -603,6 +689,7 @@ note=16x16 character sprite sheet
 [087] characters/sprite_085_r08_c06.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[102]
 source=236x166 canvas=256x256 content=236x166 offset=(10,90)
 screen_id=87 palette_bank=102 tile_base=22016 reserved_last=22271 used_cols=16 used_rows=11 start_col=0 start_row=5 x_pad=10 y_pad=10 used_tiles=176 strips=16 active_rows=11
 note=16x16 character sprite sheet
@@ -610,6 +697,7 @@ note=16x16 character sprite sheet
 [088] characters/sprite_086_r08_c07.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
+palette_slots=[103]
 source=210x166 canvas=256x256 content=210x166 offset=(23,90)
 screen_id=88 palette_bank=103 tile_base=22272 reserved_last=22527 used_cols=14 used_rows=11 start_col=1 start_row=5 x_pad=7 y_pad=10 used_tiles=154 strips=14 active_rows=11
 note=16x16 character sprite sheet
@@ -617,90 +705,103 @@ note=16x16 character sprite sheet
 [089] effects/sprite_040.png
 mode=sprite fit=pad anchor=center rule=cat_effects
 category=effects
+palette_slots=[104]
 source=93x48 canvas=256x256 content=93x48 offset=(81,104)
 screen_id=89 palette_bank=104 tile_base=22528 reserved_last=22783 used_cols=6 used_rows=4 start_col=5 start_row=6 x_pad=1 y_pad=8 used_tiles=24 strips=6 active_rows=4
-note=effects and transitions  (aggressive halo strip: bright outer ring is almost always a matte artefact on glow / spark FX)
+note=effects and transitions; preserve bright outlines
 
 [090] effects/sprite_041.png
 mode=sprite fit=pad anchor=center rule=cat_effects
 category=effects
+palette_slots=[105]
 source=83x44 canvas=256x256 content=83x44 offset=(86,106)
 screen_id=90 palette_bank=105 tile_base=22784 reserved_last=23039 used_cols=6 used_rows=4 start_col=5 start_row=6 x_pad=6 y_pad=10 used_tiles=24 strips=6 active_rows=4
-note=effects and transitions  (aggressive halo strip: bright outer ring is almost always a matte artefact on glow / spark FX)
+note=effects and transitions; preserve bright outlines
 
 [091] effects/sprite_048.png
 mode=sprite fit=pad anchor=center rule=cat_effects
 category=effects
+palette_slots=[106]
 source=159x82 canvas=256x256 content=159x82 offset=(48,87)
 screen_id=91 palette_bank=106 tile_base=23040 reserved_last=23295 used_cols=10 used_rows=6 start_col=3 start_row=5 x_pad=0 y_pad=7 used_tiles=60 strips=10 active_rows=6
-note=effects and transitions  (aggressive halo strip: bright outer ring is almost always a matte artefact on glow / spark FX)
+note=effects and transitions; preserve bright outlines
 
 [092] effects/sprite_050.png
 mode=sprite fit=pad anchor=center rule=cat_effects
 category=effects
+palette_slots=[107]
 source=137x65 canvas=256x256 content=137x65 offset=(59,95)
 screen_id=92 palette_bank=107 tile_base=23296 reserved_last=23551 used_cols=10 used_rows=5 start_col=3 start_row=5 x_pad=11 y_pad=15 used_tiles=50 strips=10 active_rows=5
-note=effects and transitions  (aggressive halo strip: bright outer ring is almost always a matte artefact on glow / spark FX)
+note=effects and transitions; preserve bright outlines
 
 [093] effects/sprite_062.png
 mode=sprite fit=pad anchor=center rule=cat_effects
 category=effects
+palette_slots=[108]
 source=34x39 canvas=256x256 content=34x39 offset=(111,108)
 screen_id=93 palette_bank=108 tile_base=23552 reserved_last=23807 used_cols=4 used_rows=4 start_col=6 start_row=6 x_pad=15 y_pad=12 used_tiles=16 strips=4 active_rows=4
-note=effects and transitions  (aggressive halo strip: bright outer ring is almost always a matte artefact on glow / spark FX)
+note=effects and transitions; preserve bright outlines
 
 [094] eyecatcher/1.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=94 palette_bank=109 tile_base=23808 reserved_last=24063 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+palette_slots=[109]
+source=1536x1024 canvas=256x256 content=256x159 offset=(0,48)
+screen_id=94 palette_bank=109 tile_base=23808 reserved_last=24063 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=0 used_tiles=160 strips=16 active_rows=10
 note=eyecatcher sequence
 
 [095] eyecatcher/2.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=95 palette_bank=110 tile_base=24064 reserved_last=24319 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+palette_slots=[110]
+source=1536x1024 canvas=256x256 content=256x159 offset=(0,48)
+screen_id=95 palette_bank=110 tile_base=24064 reserved_last=24319 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=0 used_tiles=160 strips=16 active_rows=10
 note=eyecatcher sequence
 
 [096] eyecatcher/3.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=96 palette_bank=111 tile_base=24320 reserved_last=24575 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+palette_slots=[111]
+source=1536x1024 canvas=256x256 content=256x159 offset=(0,48)
+screen_id=96 palette_bank=111 tile_base=24320 reserved_last=24575 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=0 used_tiles=160 strips=16 active_rows=10
 note=eyecatcher sequence
 
 [097] eyecatcher/4.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=97 palette_bank=112 tile_base=24576 reserved_last=24831 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+palette_slots=[112]
+source=1536x1024 canvas=256x256 content=256x159 offset=(0,48)
+screen_id=97 palette_bank=112 tile_base=24576 reserved_last=24831 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=0 used_tiles=160 strips=16 active_rows=10
 note=eyecatcher sequence
 
 [098] eyecatcher/5.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=98 palette_bank=113 tile_base=24832 reserved_last=25087 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+palette_slots=[113]
+source=1536x1024 canvas=256x256 content=256x159 offset=(0,48)
+screen_id=98 palette_bank=113 tile_base=24832 reserved_last=25087 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=0 used_tiles=160 strips=16 active_rows=10
 note=eyecatcher sequence
 
 [099] eyecatcher/6.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=99 palette_bank=114 tile_base=25088 reserved_last=25343 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+palette_slots=[114]
+source=1536x1024 canvas=256x256 content=256x159 offset=(0,48)
+screen_id=99 palette_bank=114 tile_base=25088 reserved_last=25343 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=0 used_tiles=160 strips=16 active_rows=10
 note=eyecatcher sequence
 
 [100] eyecatcher/7.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-source=1536x1024 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=100 palette_bank=115 tile_base=25344 reserved_last=25599 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+palette_slots=[115]
+source=1536x1024 canvas=256x256 content=256x159 offset=(0,48)
+screen_id=100 palette_bank=115 tile_base=25344 reserved_last=25599 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=0 used_tiles=160 strips=16 active_rows=10
 note=eyecatcher sequence
 
 [101] screens/1.png
 mode=screen fit=crop anchor=center rule=cat_screens
 category=screens
+palette_slots=[116, 201, 202, 203]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=101 palette_bank=116 tile_base=25600 reserved_last=25855 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen scenes
@@ -708,6 +809,7 @@ note=full screen scenes
 [102] screens/2.png
 mode=screen fit=crop anchor=center rule=cat_screens
 category=screens
+palette_slots=[117, 204, 205, 206]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=102 palette_bank=117 tile_base=25856 reserved_last=26111 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen scenes
@@ -715,6 +817,7 @@ note=full screen scenes
 [103] screens/3.png
 mode=screen fit=crop anchor=center rule=cat_screens
 category=screens
+palette_slots=[118, 207, 208]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=103 palette_bank=118 tile_base=26112 reserved_last=26367 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen scenes
@@ -722,6 +825,7 @@ note=full screen scenes
 [104] screens/4.png
 mode=screen fit=crop anchor=center rule=cat_screens
 category=screens
+palette_slots=[119, 209, 210, 211]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=104 palette_bank=119 tile_base=26368 reserved_last=26623 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen scenes
@@ -729,6 +833,7 @@ note=full screen scenes
 [105] screens/5.png
 mode=screen fit=crop anchor=center rule=cat_screens
 category=screens
+palette_slots=[120, 212]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=105 palette_bank=120 tile_base=26624 reserved_last=26879 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen scenes
@@ -736,6 +841,7 @@ note=full screen scenes
 [106] screens/6.png
 mode=screen fit=crop anchor=center rule=cat_screens
 category=screens
+palette_slots=[121, 213, 214]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=106 palette_bank=121 tile_base=26880 reserved_last=27135 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen scenes
@@ -743,6 +849,7 @@ note=full screen scenes
 [107] screens/7.png
 mode=screen fit=crop anchor=center rule=cat_screens
 category=screens
+palette_slots=[122, 215, 216, 217]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=107 palette_bank=122 tile_base=27136 reserved_last=27391 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen scenes
@@ -750,6 +857,7 @@ note=full screen scenes
 [108] titles/8.png
 mode=screen fit=contain anchor=center rule=cat_titles
 category=titles
+palette_slots=[123, 218, 219, 220, 221, 222, 223, 224]
 source=1024x1024 canvas=256x256 content=189x256 offset=(33,0)
 screen_id=108 palette_bank=123 tile_base=27392 reserved_last=27647 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=1 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=title and logo screens
@@ -757,6 +865,7 @@ note=title and logo screens
 [109] titles/9.png
 mode=screen fit=contain anchor=center rule=cat_titles
 category=titles
+palette_slots=[124, 225, 226, 227, 228, 229, 230, 231]
 source=880x1184 canvas=256x256 content=140x256 offset=(58,0)
 screen_id=109 palette_bank=124 tile_base=27648 reserved_last=27903 used_cols=10 used_rows=16 start_col=3 start_row=0 x_pad=10 y_pad=0 used_tiles=160 strips=10 active_rows=16
 note=title and logo screens
@@ -764,6 +873,7 @@ note=title and logo screens
 [110] npcs/cat_01.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[125]
 source=191x225 canvas=256x256 content=191x225 offset=(32,31)
 screen_id=110 palette_bank=125 tile_base=27904 reserved_last=28159 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=0 y_pad=15 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -771,6 +881,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [111] npcs/cat_02.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[126]
 source=187x227 canvas=256x256 content=187x227 offset=(34,29)
 screen_id=111 palette_bank=126 tile_base=28160 reserved_last=28415 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=2 y_pad=13 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -778,6 +889,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [112] npcs/cat_03.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[127]
 source=190x226 canvas=256x256 content=190x226 offset=(33,30)
 screen_id=112 palette_bank=127 tile_base=28416 reserved_last=28671 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=1 y_pad=14 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -785,6 +897,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [113] npcs/cat_04.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[128]
 source=190x228 canvas=256x256 content=190x228 offset=(33,28)
 screen_id=113 palette_bank=128 tile_base=28672 reserved_last=28927 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=1 y_pad=12 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -792,6 +905,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [114] npcs/cat_05.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[129]
 source=191x227 canvas=256x256 content=191x227 offset=(32,29)
 screen_id=114 palette_bank=129 tile_base=28928 reserved_last=29183 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=0 y_pad=13 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -799,6 +913,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [115] npcs/cat_06.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[130]
 source=187x225 canvas=256x256 content=187x225 offset=(34,31)
 screen_id=115 palette_bank=130 tile_base=29184 reserved_last=29439 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=2 y_pad=15 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -806,6 +921,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [116] npcs/cat_07.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[131]
 source=189x208 canvas=256x256 content=189x208 offset=(33,48)
 screen_id=116 palette_bank=131 tile_base=29440 reserved_last=29695 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=1 y_pad=0 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -813,6 +929,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [117] npcs/cat_08.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[132]
 source=182x201 canvas=256x256 content=182x201 offset=(37,55)
 screen_id=117 palette_bank=132 tile_base=29696 reserved_last=29951 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=5 y_pad=7 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -820,6 +937,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [118] npcs/cat_09.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[133]
 source=180x199 canvas=256x256 content=180x199 offset=(38,57)
 screen_id=118 palette_bank=133 tile_base=29952 reserved_last=30207 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=6 y_pad=9 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -827,6 +945,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [119] npcs/cat_10.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[134]
 source=189x200 canvas=256x256 content=189x200 offset=(33,56)
 screen_id=119 palette_bank=134 tile_base=30208 reserved_last=30463 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=1 y_pad=8 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -834,6 +953,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [120] npcs/cat_11.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[135]
 source=185x202 canvas=256x256 content=185x202 offset=(35,54)
 screen_id=120 palette_bank=135 tile_base=30464 reserved_last=30719 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=3 y_pad=6 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -841,6 +961,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [121] npcs/cat_12.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[136]
 source=187x198 canvas=256x256 content=187x198 offset=(34,58)
 screen_id=121 palette_bank=136 tile_base=30720 reserved_last=30975 used_cols=12 used_rows=15 start_col=2 start_row=1 x_pad=2 y_pad=10 used_tiles=180 strips=12 active_rows=15
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -848,6 +969,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [122] npcs/zz_shooter_enemy.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[137]
 source=38x28 canvas=256x256 content=38x28 offset=(109,228)
 screen_id=122 palette_bank=137 tile_base=30976 reserved_last=31231 used_cols=4 used_rows=2 start_col=6 start_row=14 x_pad=13 y_pad=4 used_tiles=8 strips=4 active_rows=2
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -855,6 +977,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [123] npcs/zz_shooter_enemy_bullet.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[138]
 source=5x11 canvas=256x256 content=5x11 offset=(125,245)
 screen_id=123 palette_bank=138 tile_base=31232 reserved_last=31487 used_cols=2 used_rows=1 start_col=7 start_row=15 x_pad=13 y_pad=5 used_tiles=2 strips=2 active_rows=1
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -862,6 +985,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [124] npcs/zz_shooter_explosion.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[139]
 source=37x37 canvas=256x256 content=37x37 offset=(109,219)
 screen_id=124 palette_bank=139 tile_base=31488 reserved_last=31743 used_cols=4 used_rows=3 start_col=6 start_row=13 x_pad=13 y_pad=11 used_tiles=12 strips=4 active_rows=3
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -869,6 +993,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [125] npcs/zz_shooter_player_bullet.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[140]
 source=5x11 canvas=256x256 content=5x11 offset=(125,245)
 screen_id=125 palette_bank=140 tile_base=31744 reserved_last=31999 used_cols=2 used_rows=1 start_col=7 start_row=15 x_pad=13 y_pad=5 used_tiles=2 strips=2 active_rows=1
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -876,6 +1001,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [126] npcs/zz_shooter_ship.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[141]
 source=40x26 canvas=256x256 content=40x26 offset=(108,230)
 screen_id=126 palette_bank=141 tile_base=32000 reserved_last=32255 used_cols=4 used_rows=2 start_col=6 start_row=14 x_pad=12 y_pad=6 used_tiles=8 strips=4 active_rows=2
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -883,6 +1009,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [127] npcs/zz_shooter_ship_alt.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[142]
 source=43x26 canvas=256x256 content=43x26 offset=(106,230)
 screen_id=127 palette_bank=142 tile_base=32256 reserved_last=32511 used_cols=4 used_rows=2 start_col=6 start_row=14 x_pad=10 y_pad=6 used_tiles=8 strips=4 active_rows=2
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -890,6 +1017,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [128] npcs/zzz_ufo_blue.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[143]
 source=124x90 canvas=256x256 content=124x90 offset=(66,166)
 screen_id=128 palette_bank=143 tile_base=32512 reserved_last=32767 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=2 y_pad=6 used_tiles=48 strips=8 active_rows=6
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -897,6 +1025,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [129] npcs/zzz_ufo_green.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[144]
 source=124x68 canvas=256x256 content=124x68 offset=(66,188)
 screen_id=129 palette_bank=144 tile_base=32768 reserved_last=33023 used_cols=8 used_rows=5 start_col=4 start_row=11 x_pad=2 y_pad=12 used_tiles=40 strips=8 active_rows=5
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -904,6 +1033,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [130] npcs/zzz_ufo_pink.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[145]
 source=124x72 canvas=256x256 content=124x72 offset=(66,184)
 screen_id=130 palette_bank=145 tile_base=33024 reserved_last=33279 used_cols=8 used_rows=5 start_col=4 start_row=11 x_pad=2 y_pad=8 used_tiles=40 strips=8 active_rows=5
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -911,6 +1041,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [131] npcs/zzz_ufo_yellow.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[146]
 source=124x62 canvas=256x256 content=124x62 offset=(66,194)
 screen_id=131 palette_bank=146 tile_base=33280 reserved_last=33535 used_cols=8 used_rows=4 start_col=4 start_row=12 x_pad=2 y_pad=2 used_tiles=32 strips=8 active_rows=4
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -918,6 +1049,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [132] npcs/zzzz_duck_back.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[147]
 source=99x95 canvas=256x256 content=99x95 offset=(78,161)
 screen_id=132 palette_bank=147 tile_base=33536 reserved_last=33791 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=14 y_pad=1 used_tiles=48 strips=8 active_rows=6
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -925,6 +1057,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [133] npcs/zzzz_duck_target_brown.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[148]
 source=99x95 canvas=256x256 content=99x95 offset=(78,161)
 screen_id=133 palette_bank=148 tile_base=33792 reserved_last=34047 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=14 y_pad=1 used_tiles=48 strips=8 active_rows=6
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -932,6 +1065,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [134] npcs/zzzz_duck_target_white.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[149]
 source=99x95 canvas=256x256 content=99x95 offset=(78,161)
 screen_id=134 palette_bank=149 tile_base=34048 reserved_last=34303 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=14 y_pad=1 used_tiles=48 strips=8 active_rows=6
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -939,6 +1073,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [135] npcs/zzzz_duck_target_yellow.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[150]
 source=99x95 canvas=256x256 content=99x95 offset=(78,161)
 screen_id=135 palette_bank=150 tile_base=34304 reserved_last=34559 used_cols=8 used_rows=6 start_col=4 start_row=10 x_pad=14 y_pad=1 used_tiles=48 strips=8 active_rows=6
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -946,6 +1081,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [136] npcs/zzzzz_hitbox.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[151]
 source=32x32 canvas=256x256 content=32x32 offset=(112,224)
 screen_id=136 palette_bank=151 tile_base=34560 reserved_last=34815 used_cols=2 used_rows=2 start_col=7 start_row=14 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -953,6 +1089,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [137] npcs/zzzzzz_particle_dust.png
 mode=sprite fit=pad anchor=bottom-left rule=cat_particle_tiles
 category=npcs
+palette_slots=[152]
 source=16x16 canvas=256x256 content=16x16 offset=(0,240)
 screen_id=137 palette_bank=152 tile_base=34816 reserved_last=35071 used_cols=1 used_rows=1 start_col=0 start_row=15 x_pad=0 y_pad=0 used_tiles=1 strips=1 active_rows=1
 note=tile-aligned 16x16 transparent particle
@@ -960,6 +1097,7 @@ note=tile-aligned 16x16 transparent particle
 [138] npcs/zzzzzz_particle_explosion.png
 mode=sprite fit=pad anchor=bottom-left rule=cat_particle_tiles
 category=npcs
+palette_slots=[153]
 source=16x16 canvas=256x256 content=16x16 offset=(0,240)
 screen_id=138 palette_bank=153 tile_base=35072 reserved_last=35327 used_cols=1 used_rows=1 start_col=0 start_row=15 x_pad=0 y_pad=0 used_tiles=1 strips=1 active_rows=1
 note=tile-aligned 16x16 transparent particle
@@ -967,6 +1105,7 @@ note=tile-aligned 16x16 transparent particle
 [139] npcs/zzzzzz_particle_hitspark.png
 mode=sprite fit=pad anchor=bottom-left rule=cat_particle_tiles
 category=npcs
+palette_slots=[154]
 source=16x16 canvas=256x256 content=16x16 offset=(0,240)
 screen_id=139 palette_bank=154 tile_base=35328 reserved_last=35583 used_cols=1 used_rows=1 start_col=0 start_row=15 x_pad=0 y_pad=0 used_tiles=1 strips=1 active_rows=1
 note=tile-aligned 16x16 transparent particle
@@ -974,6 +1113,7 @@ note=tile-aligned 16x16 transparent particle
 [140] npcs/zzzzzz_particle_magic.png
 mode=sprite fit=pad anchor=bottom-left rule=cat_particle_tiles
 category=npcs
+palette_slots=[155]
 source=16x16 canvas=256x256 content=16x16 offset=(0,240)
 screen_id=140 palette_bank=155 tile_base=35584 reserved_last=35839 used_cols=1 used_rows=1 start_col=0 start_row=15 x_pad=0 y_pad=0 used_tiles=1 strips=1 active_rows=1
 note=tile-aligned 16x16 transparent particle
@@ -981,6 +1121,7 @@ note=tile-aligned 16x16 transparent particle
 [141] npcs/zzzzzz_particle_smoke.png
 mode=sprite fit=pad anchor=bottom-left rule=cat_particle_tiles
 category=npcs
+palette_slots=[156]
 source=16x16 canvas=256x256 content=16x16 offset=(0,240)
 screen_id=141 palette_bank=156 tile_base=35840 reserved_last=36095 used_cols=1 used_rows=1 start_col=0 start_row=15 x_pad=0 y_pad=0 used_tiles=1 strips=1 active_rows=1
 note=tile-aligned 16x16 transparent particle
@@ -988,6 +1129,7 @@ note=tile-aligned 16x16 transparent particle
 [142] npcs/zzzzzzz_ssg_starfield.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[157]
 source=512x512 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=142 palette_bank=157 tile_base=36096 reserved_last=36351 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -995,6 +1137,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [143] npcs/zzzzzzzz_enemyship_blue.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[158]
 source=112x112 canvas=256x256 content=112x112 offset=(72,144)
 screen_id=143 palette_bank=158 tile_base=36352 reserved_last=36607 used_cols=8 used_rows=7 start_col=4 start_row=9 x_pad=8 y_pad=0 used_tiles=56 strips=8 active_rows=7
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -1002,6 +1145,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [144] npcs/zzzzzzzz_enemyship_green.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[159]
 source=112x112 canvas=256x256 content=112x112 offset=(72,144)
 screen_id=144 palette_bank=159 tile_base=36608 reserved_last=36863 used_cols=8 used_rows=7 start_col=4 start_row=9 x_pad=8 y_pad=0 used_tiles=56 strips=8 active_rows=7
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -1009,6 +1153,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [145] npcs/zzzzzzzz_enemyship_pink.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[160]
 source=112x112 canvas=256x256 content=112x112 offset=(72,144)
 screen_id=145 palette_bank=160 tile_base=36864 reserved_last=37119 used_cols=8 used_rows=7 start_col=4 start_row=9 x_pad=8 y_pad=0 used_tiles=56 strips=8 active_rows=7
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -1016,6 +1161,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [146] npcs/zzzzzzzz_player_vessel.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[161]
 source=75x112 canvas=256x256 content=75x112 offset=(90,144)
 screen_id=146 palette_bank=161 tile_base=37120 reserved_last=37375 used_cols=6 used_rows=7 start_col=5 start_row=9 x_pad=10 y_pad=0 used_tiles=42 strips=6 active_rows=7
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -1023,6 +1169,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [147] npcs/zzzzzzzzz_balloon_blue.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[162]
 source=64x96 canvas=256x256 content=64x96 offset=(96,160)
 screen_id=147 palette_bank=162 tile_base=37376 reserved_last=37631 used_cols=4 used_rows=6 start_col=6 start_row=10 x_pad=0 y_pad=0 used_tiles=24 strips=4 active_rows=6
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -1030,6 +1177,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [148] npcs/zzzzzzzzz_balloon_green.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[163]
 source=64x96 canvas=256x256 content=64x96 offset=(96,160)
 screen_id=148 palette_bank=163 tile_base=37632 reserved_last=37887 used_cols=4 used_rows=6 start_col=6 start_row=10 x_pad=0 y_pad=0 used_tiles=24 strips=4 active_rows=6
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -1037,6 +1185,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [149] npcs/zzzzzzzzz_balloon_red.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[164]
 source=64x96 canvas=256x256 content=64x96 offset=(96,160)
 screen_id=149 palette_bank=164 tile_base=37888 reserved_last=38143 used_cols=4 used_rows=6 start_col=6 start_row=10 x_pad=0 y_pad=0 used_tiles=24 strips=4 active_rows=6
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -1044,6 +1193,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [150] npcs/zzzzzzzzz_balloon_yellow.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[165]
 source=64x96 canvas=256x256 content=64x96 offset=(96,160)
 screen_id=150 palette_bank=165 tile_base=38144 reserved_last=38399 used_cols=4 used_rows=6 start_col=6 start_row=10 x_pad=0 y_pad=0 used_tiles=24 strips=4 active_rows=6
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -1051,6 +1201,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [151] npcs/zzzzzzzzzz_sky_boss.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[166]
 source=128x128 canvas=256x256 content=128x128 offset=(64,128)
 screen_id=151 palette_bank=166 tile_base=38400 reserved_last=38655 used_cols=8 used_rows=8 start_col=4 start_row=8 x_pad=0 y_pad=0 used_tiles=64 strips=8 active_rows=8
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -1058,6 +1209,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [152] npcs/zzzzzzzzzz_sky_bullet.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[167]
 source=16x16 canvas=256x256 content=16x16 offset=(120,240)
 screen_id=152 palette_bank=167 tile_base=38656 reserved_last=38911 used_cols=2 used_rows=1 start_col=7 start_row=15 x_pad=8 y_pad=0 used_tiles=2 strips=2 active_rows=1
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -1065,6 +1217,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [153] npcs/zzzzzzzzzz_sky_enemy_a.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[168]
 source=32x32 canvas=256x256 content=32x32 offset=(112,224)
 screen_id=153 palette_bank=168 tile_base=38912 reserved_last=39167 used_cols=2 used_rows=2 start_col=7 start_row=14 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -1072,6 +1225,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [154] npcs/zzzzzzzzzz_sky_enemy_b.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[169]
 source=32x32 canvas=256x256 content=32x32 offset=(112,224)
 screen_id=154 palette_bank=169 tile_base=39168 reserved_last=39423 used_cols=2 used_rows=2 start_col=7 start_row=14 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -1079,6 +1233,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [155] npcs/zzzzzzzzzz_sky_enemy_c.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[170]
 source=32x32 canvas=256x256 content=32x32 offset=(112,224)
 screen_id=155 palette_bank=170 tile_base=39424 reserved_last=39679 used_cols=2 used_rows=2 start_col=7 start_row=14 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -1086,6 +1241,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [156] npcs/zzzzzzzzzz_sky_orb.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[171]
 source=16x16 canvas=256x256 content=16x16 offset=(120,240)
 screen_id=156 palette_bank=171 tile_base=39680 reserved_last=39935 used_cols=2 used_rows=1 start_col=7 start_row=15 x_pad=8 y_pad=0 used_tiles=2 strips=2 active_rows=1
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -1093,6 +1249,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [157] npcs/zzzzzzzzzz_sky_plane.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
+palette_slots=[172]
 source=16x16 canvas=256x256 content=16x16 offset=(120,240)
 screen_id=157 palette_bank=172 tile_base=39936 reserved_last=40191 used_cols=2 used_rows=1 start_col=7 start_row=15 x_pad=8 y_pad=0 used_tiles=2 strips=2 active_rows=1
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
@@ -1100,6 +1257,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [158] npcs/zzzzzzzzzzz_crate.png
 mode=sprite fit=pad anchor=bottom-left rule=cat_crate_props
 category=npcs
+palette_slots=[173]
 source=1254x1254 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=158 palette_bank=173 tile_base=40192 reserved_last=40447 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=tile-aligned collision prop
@@ -1107,6 +1265,7 @@ note=tile-aligned collision prop
 [159] npcs/zzzzzzzzzzz_crate_broken.png
 mode=sprite fit=pad anchor=bottom-left rule=cat_crate_props
 category=npcs
+palette_slots=[174]
 source=1254x1254 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=159 palette_bank=174 tile_base=40448 reserved_last=40703 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=tile-aligned collision prop
@@ -1114,13 +1273,15 @@ note=tile-aligned collision prop
 [160] zz_bg/0.png
 mode=screen fit=contain anchor=center rule=cat_sky_background
 category=zz_bg
-source=256x256 canvas=256x256 content=256x256 offset=(0,0)
-screen_id=160 palette_bank=175 tile_base=40704 reserved_last=40959 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+palette_slots=[175, 232, 233, 234]
+source=256x256 canvas=256x256 content=256x239 offset=(0,8)
+screen_id=160 palette_bank=175 tile_base=40704 reserved_last=40959 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=8 used_tiles=256 strips=16 active_rows=16
 note=full-screen vertical shooter background
 
 [161] zz_bg/1.png
 mode=sprite fit=pad anchor=top-left rule=cat_foreground_layer
 category=zz_bg
+palette_slots=[176]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=161 palette_bank=176 tile_base=40960 reserved_last=41215 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=transparent near-field parallax layer
@@ -1128,6 +1289,7 @@ note=transparent near-field parallax layer
 [162] zz_npcs_old/z_npc_84.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
 category=zz_npcs_old
+palette_slots=[177]
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=162 palette_bank=177 tile_base=41216 reserved_last=41471 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=compact classic NPC animation frames
@@ -1135,6 +1297,7 @@ note=compact classic NPC animation frames
 [163] zz_npcs_old/z_npc_85.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
 category=zz_npcs_old
+palette_slots=[178]
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=163 palette_bank=178 tile_base=41472 reserved_last=41727 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=compact classic NPC animation frames
@@ -1142,6 +1305,7 @@ note=compact classic NPC animation frames
 [164] zz_npcs_old/z_npc_86.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
 category=zz_npcs_old
+palette_slots=[179]
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=164 palette_bank=179 tile_base=41728 reserved_last=41983 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=compact classic NPC animation frames
@@ -1149,6 +1313,7 @@ note=compact classic NPC animation frames
 [165] zz_npcs_old/z_npc_87.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
 category=zz_npcs_old
+palette_slots=[180]
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=165 palette_bank=180 tile_base=41984 reserved_last=42239 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=compact classic NPC animation frames
@@ -1156,6 +1321,7 @@ note=compact classic NPC animation frames
 [166] zz_npcs_old/z_npc_88.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
 category=zz_npcs_old
+palette_slots=[181]
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=166 palette_bank=181 tile_base=42240 reserved_last=42495 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=compact classic NPC animation frames
@@ -1163,6 +1329,7 @@ note=compact classic NPC animation frames
 [167] zz_npcs_old/z_npc_89.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
 category=zz_npcs_old
+palette_slots=[182]
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=167 palette_bank=182 tile_base=42496 reserved_last=42751 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=compact classic NPC animation frames
@@ -1170,6 +1337,7 @@ note=compact classic NPC animation frames
 [168] zz_npcs_old/z_npc_90.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
 category=zz_npcs_old
+palette_slots=[183]
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=168 palette_bank=183 tile_base=42752 reserved_last=43007 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=compact classic NPC animation frames
@@ -1177,6 +1345,7 @@ note=compact classic NPC animation frames
 [169] zz_npcs_old/z_npc_91.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
 category=zz_npcs_old
+palette_slots=[184]
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=169 palette_bank=184 tile_base=43008 reserved_last=43263 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=compact classic NPC animation frames
@@ -1184,6 +1353,7 @@ note=compact classic NPC animation frames
 [170] zz_npcs_old/z_npc_92.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
 category=zz_npcs_old
+palette_slots=[185]
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=170 palette_bank=185 tile_base=43264 reserved_last=43519 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=compact classic NPC animation frames
@@ -1191,6 +1361,7 @@ note=compact classic NPC animation frames
 [171] zz_npcs_old/z_npc_93.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
 category=zz_npcs_old
+palette_slots=[186]
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=171 palette_bank=186 tile_base=43520 reserved_last=43775 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=compact classic NPC animation frames
@@ -1198,6 +1369,7 @@ note=compact classic NPC animation frames
 [172] zz_npcs_old/z_npc_94.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
 category=zz_npcs_old
+palette_slots=[187]
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=172 palette_bank=187 tile_base=43776 reserved_last=44031 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=compact classic NPC animation frames
@@ -1205,6 +1377,7 @@ note=compact classic NPC animation frames
 [173] zz_npcs_old/z_npc_95.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_legacy_npcs
 category=zz_npcs_old
+palette_slots=[188]
 source=96x96 canvas=256x256 content=96x96 offset=(80,160)
 screen_id=173 palette_bank=188 tile_base=44032 reserved_last=44287 used_cols=6 used_rows=6 start_col=5 start_row=10 x_pad=0 y_pad=0 used_tiles=36 strips=6 active_rows=6
 note=compact classic NPC animation frames
