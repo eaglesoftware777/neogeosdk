@@ -1257,7 +1257,7 @@ note=NPC sprite pages  (cats / animals share the character-tier threshold so sof
 [158] npcs/zzzzzzzzzzz_crate.png
 mode=sprite fit=pad anchor=bottom-left rule=cat_crate_props
 category=npcs
-palette_slots=[78]
+palette_slots=[78, 205, 206, 207]
 source=1254x1254 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=158 palette_bank=78 tile_base=40192 reserved_last=40447 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=tile-aligned collision prop
@@ -1265,7 +1265,7 @@ note=tile-aligned collision prop
 [159] npcs/zzzzzzzzzzz_crate_broken.png
 mode=sprite fit=pad anchor=bottom-left rule=cat_crate_props
 category=npcs
-palette_slots=[79]
+palette_slots=[79, 208, 209, 210]
 source=1254x1254 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=159 palette_bank=79 tile_base=40448 reserved_last=40703 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=tile-aligned collision prop
@@ -1273,7 +1273,7 @@ note=tile-aligned collision prop
 [160] zz_bg/0.png
 mode=screen fit=contain anchor=center rule=cat_sky_background
 category=zz_bg
-palette_slots=[80, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215]
+palette_slots=[80, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221]
 source=256x256 canvas=256x256 content=256x239 offset=(0,8)
 screen_id=160 palette_bank=80 tile_base=40704 reserved_last=40959 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=8 used_tiles=256 strips=16 active_rows=16
 note=full-screen vertical shooter background

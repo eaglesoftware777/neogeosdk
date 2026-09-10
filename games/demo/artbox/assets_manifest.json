@@ -321,7 +321,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "43f1b48e",
+    "palette_key": "b13b7363a7450cb79bfb192c9199659add24e21dcbf68e72118b7bfc18174713",
     "palette_slots": [
       16,
       83,
@@ -921,7 +921,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "3b5c5686",
+    "palette_key": "fb1feb3001ec08f09d09f99aa5aa1505936415f06d01b1329d319ec4f93bd8a2",
     "palette_slots": [
       17,
       98,
@@ -1249,7 +1249,7 @@
     "used_tile_count": 192,
     "sprite_strips": 12,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -1304,7 +1304,7 @@
     "used_tile_count": 192,
     "sprite_strips": 12,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -1359,7 +1359,7 @@
     "used_tile_count": 192,
     "sprite_strips": 12,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -1414,7 +1414,7 @@
     "used_tile_count": 192,
     "sprite_strips": 12,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -1469,7 +1469,7 @@
     "used_tile_count": 192,
     "sprite_strips": 12,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -1524,7 +1524,7 @@
     "used_tile_count": 192,
     "sprite_strips": 12,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -1579,7 +1579,7 @@
     "used_tile_count": 192,
     "sprite_strips": 12,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -1634,7 +1634,7 @@
     "used_tile_count": 192,
     "sprite_strips": 12,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -1689,7 +1689,7 @@
     "used_tile_count": 192,
     "sprite_strips": 12,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -1744,7 +1744,7 @@
     "used_tile_count": 192,
     "sprite_strips": 12,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -1799,7 +1799,7 @@
     "used_tile_count": 192,
     "sprite_strips": 12,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -1854,7 +1854,7 @@
     "used_tile_count": 192,
     "sprite_strips": 12,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -1909,7 +1909,7 @@
     "used_tile_count": 224,
     "sprite_strips": 14,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -1964,7 +1964,7 @@
     "used_tile_count": 240,
     "sprite_strips": 16,
     "sprite_active_rows": 15,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2019,7 +2019,7 @@
     "used_tile_count": 224,
     "sprite_strips": 14,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2074,7 +2074,7 @@
     "used_tile_count": 224,
     "sprite_strips": 14,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2129,7 +2129,7 @@
     "used_tile_count": 224,
     "sprite_strips": 14,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2184,7 +2184,7 @@
     "used_tile_count": 224,
     "sprite_strips": 14,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2239,7 +2239,7 @@
     "used_tile_count": 224,
     "sprite_strips": 14,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2294,7 +2294,7 @@
     "used_tile_count": 224,
     "sprite_strips": 14,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2349,7 +2349,7 @@
     "used_tile_count": 224,
     "sprite_strips": 14,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2404,7 +2404,7 @@
     "used_tile_count": 224,
     "sprite_strips": 14,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2459,7 +2459,7 @@
     "used_tile_count": 192,
     "sprite_strips": 12,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2514,7 +2514,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2569,7 +2569,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2624,7 +2624,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2679,7 +2679,7 @@
     "used_tile_count": 240,
     "sprite_strips": 16,
     "sprite_active_rows": 15,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2734,7 +2734,7 @@
     "used_tile_count": 160,
     "sprite_strips": 16,
     "sprite_active_rows": 10,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2789,7 +2789,7 @@
     "used_tile_count": 240,
     "sprite_strips": 16,
     "sprite_active_rows": 15,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2844,7 +2844,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2899,7 +2899,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -2954,7 +2954,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -3009,7 +3009,7 @@
     "used_tile_count": 224,
     "sprite_strips": 14,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -3064,7 +3064,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -3119,7 +3119,7 @@
     "used_tile_count": 224,
     "sprite_strips": 16,
     "sprite_active_rows": 14,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -3174,7 +3174,7 @@
     "used_tile_count": 176,
     "sprite_strips": 16,
     "sprite_active_rows": 11,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -3229,7 +3229,7 @@
     "used_tile_count": 224,
     "sprite_strips": 14,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -3284,7 +3284,7 @@
     "used_tile_count": 72,
     "sprite_strips": 12,
     "sprite_active_rows": 6,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -3339,7 +3339,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -3394,7 +3394,7 @@
     "used_tile_count": 84,
     "sprite_strips": 12,
     "sprite_active_rows": 7,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -3449,7 +3449,7 @@
     "used_tile_count": 224,
     "sprite_strips": 16,
     "sprite_active_rows": 14,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -3504,7 +3504,7 @@
     "used_tile_count": 180,
     "sprite_strips": 12,
     "sprite_active_rows": 15,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -3559,7 +3559,7 @@
     "used_tile_count": 240,
     "sprite_strips": 16,
     "sprite_active_rows": 15,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -3614,7 +3614,7 @@
     "used_tile_count": 20,
     "sprite_strips": 4,
     "sprite_active_rows": 5,
-    "palette_key": "b360a53a",
+    "palette_key": "145b01556bc7313ef8f37fe8577b700f8dc335a979ffe1046780ef2b7d45f1c6",
     "palette_slots": [
       18
     ]
@@ -3669,7 +3669,7 @@
     "used_tile_count": 144,
     "sprite_strips": 12,
     "sprite_active_rows": 12,
-    "palette_key": "416549f0",
+    "palette_key": "d5cd6b2d5a3b51f398b44671f06d82f221c011757b48f92390caab2447131e54",
     "palette_slots": [
       19
     ]
@@ -3724,7 +3724,7 @@
     "used_tile_count": 24,
     "sprite_strips": 6,
     "sprite_active_rows": 4,
-    "palette_key": "416549f0",
+    "palette_key": "d5cd6b2d5a3b51f398b44671f06d82f221c011757b48f92390caab2447131e54",
     "palette_slots": [
       19
     ]
@@ -3779,7 +3779,7 @@
     "used_tile_count": 208,
     "sprite_strips": 16,
     "sprite_active_rows": 13,
-    "palette_key": "416549f0",
+    "palette_key": "d5cd6b2d5a3b51f398b44671f06d82f221c011757b48f92390caab2447131e54",
     "palette_slots": [
       19
     ]
@@ -3834,7 +3834,7 @@
     "used_tile_count": 182,
     "sprite_strips": 14,
     "sprite_active_rows": 13,
-    "palette_key": "416549f0",
+    "palette_key": "d5cd6b2d5a3b51f398b44671f06d82f221c011757b48f92390caab2447131e54",
     "palette_slots": [
       19
     ]
@@ -3889,7 +3889,7 @@
     "used_tile_count": 24,
     "sprite_strips": 8,
     "sprite_active_rows": 3,
-    "palette_key": "416549f0",
+    "palette_key": "d5cd6b2d5a3b51f398b44671f06d82f221c011757b48f92390caab2447131e54",
     "palette_slots": [
       19
     ]
@@ -3944,7 +3944,7 @@
     "used_tile_count": 112,
     "sprite_strips": 16,
     "sprite_active_rows": 7,
-    "palette_key": "416549f0",
+    "palette_key": "d5cd6b2d5a3b51f398b44671f06d82f221c011757b48f92390caab2447131e54",
     "palette_slots": [
       19
     ]
@@ -3999,7 +3999,7 @@
     "used_tile_count": 176,
     "sprite_strips": 16,
     "sprite_active_rows": 11,
-    "palette_key": "416549f0",
+    "palette_key": "d5cd6b2d5a3b51f398b44671f06d82f221c011757b48f92390caab2447131e54",
     "palette_slots": [
       19
     ]
@@ -4054,7 +4054,7 @@
     "used_tile_count": 112,
     "sprite_strips": 16,
     "sprite_active_rows": 7,
-    "palette_key": "416549f0",
+    "palette_key": "d5cd6b2d5a3b51f398b44671f06d82f221c011757b48f92390caab2447131e54",
     "palette_slots": [
       19
     ]
@@ -4109,7 +4109,7 @@
     "used_tile_count": 176,
     "sprite_strips": 16,
     "sprite_active_rows": 11,
-    "palette_key": "416549f0",
+    "palette_key": "d5cd6b2d5a3b51f398b44671f06d82f221c011757b48f92390caab2447131e54",
     "palette_slots": [
       19
     ]
@@ -4164,7 +4164,7 @@
     "used_tile_count": 192,
     "sprite_strips": 16,
     "sprite_active_rows": 12,
-    "palette_key": "8f7fb7ff",
+    "palette_key": "8b3dc47c7f8c2be25ac4bb125d541e53303d915dbf9221810891080b8c286c74",
     "palette_slots": [
       20
     ]
@@ -4219,7 +4219,7 @@
     "used_tile_count": 192,
     "sprite_strips": 16,
     "sprite_active_rows": 12,
-    "palette_key": "8f7fb7ff",
+    "palette_key": "8b3dc47c7f8c2be25ac4bb125d541e53303d915dbf9221810891080b8c286c74",
     "palette_slots": [
       20
     ]
@@ -4274,7 +4274,7 @@
     "used_tile_count": 224,
     "sprite_strips": 16,
     "sprite_active_rows": 14,
-    "palette_key": "8f7fb7ff",
+    "palette_key": "8b3dc47c7f8c2be25ac4bb125d541e53303d915dbf9221810891080b8c286c74",
     "palette_slots": [
       20
     ]
@@ -4329,7 +4329,7 @@
     "used_tile_count": 210,
     "sprite_strips": 14,
     "sprite_active_rows": 15,
-    "palette_key": "8f7fb7ff",
+    "palette_key": "8b3dc47c7f8c2be25ac4bb125d541e53303d915dbf9221810891080b8c286c74",
     "palette_slots": [
       20
     ]
@@ -4384,7 +4384,7 @@
     "used_tile_count": 210,
     "sprite_strips": 14,
     "sprite_active_rows": 15,
-    "palette_key": "8f7fb7ff",
+    "palette_key": "8b3dc47c7f8c2be25ac4bb125d541e53303d915dbf9221810891080b8c286c74",
     "palette_slots": [
       20
     ]
@@ -4439,7 +4439,7 @@
     "used_tile_count": 140,
     "sprite_strips": 14,
     "sprite_active_rows": 10,
-    "palette_key": "8f7fb7ff",
+    "palette_key": "8b3dc47c7f8c2be25ac4bb125d541e53303d915dbf9221810891080b8c286c74",
     "palette_slots": [
       20
     ]
@@ -4494,7 +4494,7 @@
     "used_tile_count": 24,
     "sprite_strips": 6,
     "sprite_active_rows": 4,
-    "palette_key": "8f7fb7ff",
+    "palette_key": "8b3dc47c7f8c2be25ac4bb125d541e53303d915dbf9221810891080b8c286c74",
     "palette_slots": [
       20
     ]
@@ -4549,7 +4549,7 @@
     "used_tile_count": 160,
     "sprite_strips": 10,
     "sprite_active_rows": 16,
-    "palette_key": "8f7fb7ff",
+    "palette_key": "8b3dc47c7f8c2be25ac4bb125d541e53303d915dbf9221810891080b8c286c74",
     "palette_slots": [
       20
     ]
@@ -4604,7 +4604,7 @@
     "used_tile_count": 192,
     "sprite_strips": 12,
     "sprite_active_rows": 16,
-    "palette_key": "8f7fb7ff",
+    "palette_key": "8b3dc47c7f8c2be25ac4bb125d541e53303d915dbf9221810891080b8c286c74",
     "palette_slots": [
       20
     ]
@@ -4659,7 +4659,7 @@
     "used_tile_count": 160,
     "sprite_strips": 10,
     "sprite_active_rows": 16,
-    "palette_key": "8f7fb7ff",
+    "palette_key": "8b3dc47c7f8c2be25ac4bb125d541e53303d915dbf9221810891080b8c286c74",
     "palette_slots": [
       20
     ]
@@ -4714,7 +4714,7 @@
     "used_tile_count": 130,
     "sprite_strips": 10,
     "sprite_active_rows": 13,
-    "palette_key": "8f7fb7ff",
+    "palette_key": "8b3dc47c7f8c2be25ac4bb125d541e53303d915dbf9221810891080b8c286c74",
     "palette_slots": [
       20
     ]
@@ -4769,7 +4769,7 @@
     "used_tile_count": 16,
     "sprite_strips": 4,
     "sprite_active_rows": 4,
-    "palette_key": "8f7fb7ff",
+    "palette_key": "8b3dc47c7f8c2be25ac4bb125d541e53303d915dbf9221810891080b8c286c74",
     "palette_slots": [
       20
     ]
@@ -4824,7 +4824,7 @@
     "used_tile_count": 168,
     "sprite_strips": 14,
     "sprite_active_rows": 12,
-    "palette_key": "3c335415",
+    "palette_key": "18f4752c8dbf387c97a21f7c850df020a6f597bd768edc4bc6136da8f31eac34",
     "palette_slots": [
       21
     ]
@@ -4879,7 +4879,7 @@
     "used_tile_count": 168,
     "sprite_strips": 14,
     "sprite_active_rows": 12,
-    "palette_key": "3c335415",
+    "palette_key": "18f4752c8dbf387c97a21f7c850df020a6f597bd768edc4bc6136da8f31eac34",
     "palette_slots": [
       21
     ]
@@ -4934,7 +4934,7 @@
     "used_tile_count": 168,
     "sprite_strips": 14,
     "sprite_active_rows": 12,
-    "palette_key": "3c335415",
+    "palette_key": "18f4752c8dbf387c97a21f7c850df020a6f597bd768edc4bc6136da8f31eac34",
     "palette_slots": [
       21
     ]
@@ -4989,7 +4989,7 @@
     "used_tile_count": 168,
     "sprite_strips": 14,
     "sprite_active_rows": 12,
-    "palette_key": "3c335415",
+    "palette_key": "18f4752c8dbf387c97a21f7c850df020a6f597bd768edc4bc6136da8f31eac34",
     "palette_slots": [
       21
     ]
@@ -5044,7 +5044,7 @@
     "used_tile_count": 120,
     "sprite_strips": 10,
     "sprite_active_rows": 12,
-    "palette_key": "3c335415",
+    "palette_key": "18f4752c8dbf387c97a21f7c850df020a6f597bd768edc4bc6136da8f31eac34",
     "palette_slots": [
       21
     ]
@@ -5099,7 +5099,7 @@
     "used_tile_count": 144,
     "sprite_strips": 12,
     "sprite_active_rows": 12,
-    "palette_key": "3c335415",
+    "palette_key": "18f4752c8dbf387c97a21f7c850df020a6f597bd768edc4bc6136da8f31eac34",
     "palette_slots": [
       21
     ]
@@ -5154,7 +5154,7 @@
     "used_tile_count": 132,
     "sprite_strips": 12,
     "sprite_active_rows": 11,
-    "palette_key": "3c335415",
+    "palette_key": "18f4752c8dbf387c97a21f7c850df020a6f597bd768edc4bc6136da8f31eac34",
     "palette_slots": [
       21
     ]
@@ -5209,7 +5209,7 @@
     "used_tile_count": 132,
     "sprite_strips": 12,
     "sprite_active_rows": 11,
-    "palette_key": "d9cb67aa",
+    "palette_key": "7979b8992d68f66b20251ee86272b9722c131772ebda23cebb8b13f6efcc37f0",
     "palette_slots": [
       22
     ]
@@ -5264,7 +5264,7 @@
     "used_tile_count": 132,
     "sprite_strips": 12,
     "sprite_active_rows": 11,
-    "palette_key": "d9cb67aa",
+    "palette_key": "7979b8992d68f66b20251ee86272b9722c131772ebda23cebb8b13f6efcc37f0",
     "palette_slots": [
       22
     ]
@@ -5319,7 +5319,7 @@
     "used_tile_count": 132,
     "sprite_strips": 12,
     "sprite_active_rows": 11,
-    "palette_key": "d9cb67aa",
+    "palette_key": "7979b8992d68f66b20251ee86272b9722c131772ebda23cebb8b13f6efcc37f0",
     "palette_slots": [
       22
     ]
@@ -5374,7 +5374,7 @@
     "used_tile_count": 192,
     "sprite_strips": 16,
     "sprite_active_rows": 12,
-    "palette_key": "d9cb67aa",
+    "palette_key": "7979b8992d68f66b20251ee86272b9722c131772ebda23cebb8b13f6efcc37f0",
     "palette_slots": [
       22
     ]
@@ -5429,7 +5429,7 @@
     "used_tile_count": 168,
     "sprite_strips": 14,
     "sprite_active_rows": 12,
-    "palette_key": "d9cb67aa",
+    "palette_key": "7979b8992d68f66b20251ee86272b9722c131772ebda23cebb8b13f6efcc37f0",
     "palette_slots": [
       22
     ]
@@ -5484,7 +5484,7 @@
     "used_tile_count": 168,
     "sprite_strips": 14,
     "sprite_active_rows": 12,
-    "palette_key": "d9cb67aa",
+    "palette_key": "7979b8992d68f66b20251ee86272b9722c131772ebda23cebb8b13f6efcc37f0",
     "palette_slots": [
       22
     ]
@@ -5539,7 +5539,7 @@
     "used_tile_count": 56,
     "sprite_strips": 8,
     "sprite_active_rows": 7,
-    "palette_key": "f04aae24",
+    "palette_key": "7fccaadea5169e309b7d638166359e027177af2d4b93b117858335fbd2614418",
     "palette_slots": [
       23
     ]
@@ -5594,7 +5594,7 @@
     "used_tile_count": 154,
     "sprite_strips": 14,
     "sprite_active_rows": 11,
-    "palette_key": "67822013",
+    "palette_key": "cd76fb8f8be4faf7a1453e3122addc1355fcbcd18721d95303c2181407c03249",
     "palette_slots": [
       24
     ]
@@ -5649,7 +5649,7 @@
     "used_tile_count": 154,
     "sprite_strips": 14,
     "sprite_active_rows": 11,
-    "palette_key": "67822013",
+    "palette_key": "cd76fb8f8be4faf7a1453e3122addc1355fcbcd18721d95303c2181407c03249",
     "palette_slots": [
       24
     ]
@@ -5704,7 +5704,7 @@
     "used_tile_count": 154,
     "sprite_strips": 14,
     "sprite_active_rows": 11,
-    "palette_key": "67822013",
+    "palette_key": "cd76fb8f8be4faf7a1453e3122addc1355fcbcd18721d95303c2181407c03249",
     "palette_slots": [
       24
     ]
@@ -5759,7 +5759,7 @@
     "used_tile_count": 154,
     "sprite_strips": 14,
     "sprite_active_rows": 11,
-    "palette_key": "67822013",
+    "palette_key": "cd76fb8f8be4faf7a1453e3122addc1355fcbcd18721d95303c2181407c03249",
     "palette_slots": [
       24
     ]
@@ -5814,7 +5814,7 @@
     "used_tile_count": 154,
     "sprite_strips": 14,
     "sprite_active_rows": 11,
-    "palette_key": "67822013",
+    "palette_key": "cd76fb8f8be4faf7a1453e3122addc1355fcbcd18721d95303c2181407c03249",
     "palette_slots": [
       24
     ]
@@ -5869,7 +5869,7 @@
     "used_tile_count": 176,
     "sprite_strips": 16,
     "sprite_active_rows": 11,
-    "palette_key": "67822013",
+    "palette_key": "cd76fb8f8be4faf7a1453e3122addc1355fcbcd18721d95303c2181407c03249",
     "palette_slots": [
       24
     ]
@@ -5924,7 +5924,7 @@
     "used_tile_count": 154,
     "sprite_strips": 14,
     "sprite_active_rows": 11,
-    "palette_key": "67822013",
+    "palette_key": "cd76fb8f8be4faf7a1453e3122addc1355fcbcd18721d95303c2181407c03249",
     "palette_slots": [
       24
     ]
@@ -5979,7 +5979,7 @@
     "used_tile_count": 24,
     "sprite_strips": 6,
     "sprite_active_rows": 4,
-    "palette_key": "149ba574",
+    "palette_key": "ff006575a4d7db7e122d20efdc9f58d9a9482713b5b935e402287036230d3d2d",
     "palette_slots": [
       25
     ]
@@ -6034,7 +6034,7 @@
     "used_tile_count": 24,
     "sprite_strips": 6,
     "sprite_active_rows": 4,
-    "palette_key": "149ba574",
+    "palette_key": "ff006575a4d7db7e122d20efdc9f58d9a9482713b5b935e402287036230d3d2d",
     "palette_slots": [
       25
     ]
@@ -6089,7 +6089,7 @@
     "used_tile_count": 60,
     "sprite_strips": 10,
     "sprite_active_rows": 6,
-    "palette_key": "149ba574",
+    "palette_key": "ff006575a4d7db7e122d20efdc9f58d9a9482713b5b935e402287036230d3d2d",
     "palette_slots": [
       25
     ]
@@ -6144,7 +6144,7 @@
     "used_tile_count": 50,
     "sprite_strips": 10,
     "sprite_active_rows": 5,
-    "palette_key": "149ba574",
+    "palette_key": "ff006575a4d7db7e122d20efdc9f58d9a9482713b5b935e402287036230d3d2d",
     "palette_slots": [
       25
     ]
@@ -6199,7 +6199,7 @@
     "used_tile_count": 16,
     "sprite_strips": 4,
     "sprite_active_rows": 4,
-    "palette_key": "149ba574",
+    "palette_key": "ff006575a4d7db7e122d20efdc9f58d9a9482713b5b935e402287036230d3d2d",
     "palette_slots": [
       25
     ]
@@ -6310,7 +6310,7 @@
     "used_tile_count": 160,
     "sprite_strips": 16,
     "sprite_active_rows": 10,
-    "palette_key": "8358bf9c",
+    "palette_key": "df2bfd5916cfc7282813162294b25a96084c3370f6b4acaf64c0ea1c03141108",
     "palette_slots": [
       26,
       113,
@@ -6682,7 +6682,7 @@
     "used_tile_count": 160,
     "sprite_strips": 16,
     "sprite_active_rows": 10,
-    "palette_key": "1eedb98f",
+    "palette_key": "edf9ea9303cc9c045a1a1586cf3615678972670d7b5f6cf841b9c1238f0dc67d",
     "palette_slots": [
       27,
       116,
@@ -7054,7 +7054,7 @@
     "used_tile_count": 160,
     "sprite_strips": 16,
     "sprite_active_rows": 10,
-    "palette_key": "10508810",
+    "palette_key": "3b7b83359cfaf84678a5d2bd14b83fbb9154c2f0cd332332320adfd49eb69821",
     "palette_slots": [
       28,
       119,
@@ -7426,7 +7426,7 @@
     "used_tile_count": 160,
     "sprite_strips": 16,
     "sprite_active_rows": 10,
-    "palette_key": "c4bd49bd",
+    "palette_key": "3f5efc875b117f6a869a101e4449528c1bb6e27c5b1725e696b783fa23aa4851",
     "palette_slots": [
       29,
       122,
@@ -7798,7 +7798,7 @@
     "used_tile_count": 160,
     "sprite_strips": 16,
     "sprite_active_rows": 10,
-    "palette_key": "3fac28ac",
+    "palette_key": "2ffab6874749cd15c5ea8a64735101760d2134623ef68de6a79695b2a09622b0",
     "palette_slots": [
       30,
       125,
@@ -8170,7 +8170,7 @@
     "used_tile_count": 160,
     "sprite_strips": 16,
     "sprite_active_rows": 10,
-    "palette_key": "fb67a074",
+    "palette_key": "b1108487bc8a31f5644aad450bb7e57ec2a38d24b8a27f3a9321c96178c0b711",
     "palette_slots": [
       31,
       128,
@@ -8542,7 +8542,7 @@
     "used_tile_count": 160,
     "sprite_strips": 16,
     "sprite_active_rows": 10,
-    "palette_key": "0fe2a2e4",
+    "palette_key": "dc60abe847bafa5e94bf8828a4f7106d9e58b88767f1cc777048bdcc07b37984",
     "palette_slots": [
       32,
       131,
@@ -8986,7 +8986,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "c8328569",
+    "palette_key": "c1d53e544f74133734256d2db3caba36b4becff2252a4182ffc23bb33a7b19a3",
     "palette_slots": [
       33,
       134,
@@ -9434,7 +9434,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "91c725f3",
+    "palette_key": "a40d53e1b6bd47857d5c910d1c82e0724deb0e5304ef887926b707aadb2c5e6d",
     "palette_slots": [
       34,
       141,
@@ -9882,7 +9882,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "01c450fe",
+    "palette_key": "a95caa80384fe005b7d34d128c211ee4e968966fc7023b86e6de98a63baf3ae9",
     "palette_slots": [
       35,
       148,
@@ -10330,7 +10330,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "9dcf914c",
+    "palette_key": "f07064dd357651af31b174dc2eb82f9e1392ee0b33aac7c032a301e6efd14694",
     "palette_slots": [
       36,
       155,
@@ -10778,7 +10778,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "7719dd3f",
+    "palette_key": "e64d512ea32687538b61c99ac1e2f8487dff4e88e499a1c032d7646c87d1384a",
     "palette_slots": [
       37,
       162,
@@ -11226,7 +11226,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "83937109",
+    "palette_key": "645fcc6a7c7a0f902e310ff4807e1be837d471e714b12ca17b4ba2131385be60",
     "palette_slots": [
       38,
       169,
@@ -11674,7 +11674,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "3bb12a3a",
+    "palette_key": "96de11405932b656c8b8007a6ac54dfc9335e9622d80a383869dd648b7ac3c0f",
     "palette_slots": [
       39,
       176,
@@ -12194,7 +12194,7 @@
     "used_tile_count": 192,
     "sprite_strips": 12,
     "sprite_active_rows": 16,
-    "palette_key": "a00a29c7",
+    "palette_key": "7c6b332ae3e64e86d619ea9f43a00ade8880bf8b36376003fb3845e2b280df2e",
     "palette_slots": [
       40,
       183,
@@ -12718,7 +12718,7 @@
     "used_tile_count": 160,
     "sprite_strips": 10,
     "sprite_active_rows": 16,
-    "palette_key": "2f6d7e7c",
+    "palette_key": "7ea4f08e49ce6f0538582bf450df169410904296086b1d0222393a47a9e2eb1e",
     "palette_slots": [
       41,
       194,
@@ -13042,7 +13042,7 @@
     "used_tile_count": 180,
     "sprite_strips": 12,
     "sprite_active_rows": 15,
-    "palette_key": "2e95c8d1",
+    "palette_key": "7c8cf105910322d86f886005b989821eabdff7906857b8ff0a304c3dda9fd769",
     "palette_slots": [
       42
     ]
@@ -13097,7 +13097,7 @@
     "used_tile_count": 180,
     "sprite_strips": 12,
     "sprite_active_rows": 15,
-    "palette_key": "2e95c8d1",
+    "palette_key": "7c8cf105910322d86f886005b989821eabdff7906857b8ff0a304c3dda9fd769",
     "palette_slots": [
       42
     ]
@@ -13152,7 +13152,7 @@
     "used_tile_count": 180,
     "sprite_strips": 12,
     "sprite_active_rows": 15,
-    "palette_key": "2e95c8d1",
+    "palette_key": "7c8cf105910322d86f886005b989821eabdff7906857b8ff0a304c3dda9fd769",
     "palette_slots": [
       42
     ]
@@ -13207,7 +13207,7 @@
     "used_tile_count": 180,
     "sprite_strips": 12,
     "sprite_active_rows": 15,
-    "palette_key": "2e95c8d1",
+    "palette_key": "7c8cf105910322d86f886005b989821eabdff7906857b8ff0a304c3dda9fd769",
     "palette_slots": [
       42
     ]
@@ -13262,7 +13262,7 @@
     "used_tile_count": 180,
     "sprite_strips": 12,
     "sprite_active_rows": 15,
-    "palette_key": "2e95c8d1",
+    "palette_key": "7c8cf105910322d86f886005b989821eabdff7906857b8ff0a304c3dda9fd769",
     "palette_slots": [
       42
     ]
@@ -13317,7 +13317,7 @@
     "used_tile_count": 180,
     "sprite_strips": 12,
     "sprite_active_rows": 15,
-    "palette_key": "2e95c8d1",
+    "palette_key": "7c8cf105910322d86f886005b989821eabdff7906857b8ff0a304c3dda9fd769",
     "palette_slots": [
       42
     ]
@@ -13372,7 +13372,7 @@
     "used_tile_count": 180,
     "sprite_strips": 12,
     "sprite_active_rows": 15,
-    "palette_key": "2e95c8d1",
+    "palette_key": "7c8cf105910322d86f886005b989821eabdff7906857b8ff0a304c3dda9fd769",
     "palette_slots": [
       42
     ]
@@ -13427,7 +13427,7 @@
     "used_tile_count": 180,
     "sprite_strips": 12,
     "sprite_active_rows": 15,
-    "palette_key": "2e95c8d1",
+    "palette_key": "7c8cf105910322d86f886005b989821eabdff7906857b8ff0a304c3dda9fd769",
     "palette_slots": [
       42
     ]
@@ -13482,7 +13482,7 @@
     "used_tile_count": 180,
     "sprite_strips": 12,
     "sprite_active_rows": 15,
-    "palette_key": "2e95c8d1",
+    "palette_key": "7c8cf105910322d86f886005b989821eabdff7906857b8ff0a304c3dda9fd769",
     "palette_slots": [
       42
     ]
@@ -13537,7 +13537,7 @@
     "used_tile_count": 180,
     "sprite_strips": 12,
     "sprite_active_rows": 15,
-    "palette_key": "2e95c8d1",
+    "palette_key": "7c8cf105910322d86f886005b989821eabdff7906857b8ff0a304c3dda9fd769",
     "palette_slots": [
       42
     ]
@@ -13592,7 +13592,7 @@
     "used_tile_count": 180,
     "sprite_strips": 12,
     "sprite_active_rows": 15,
-    "palette_key": "2e95c8d1",
+    "palette_key": "7c8cf105910322d86f886005b989821eabdff7906857b8ff0a304c3dda9fd769",
     "palette_slots": [
       42
     ]
@@ -13647,7 +13647,7 @@
     "used_tile_count": 180,
     "sprite_strips": 12,
     "sprite_active_rows": 15,
-    "palette_key": "2e95c8d1",
+    "palette_key": "7c8cf105910322d86f886005b989821eabdff7906857b8ff0a304c3dda9fd769",
     "palette_slots": [
       42
     ]
@@ -13702,7 +13702,7 @@
     "used_tile_count": 8,
     "sprite_strips": 4,
     "sprite_active_rows": 2,
-    "palette_key": "79bedec4",
+    "palette_key": "b7fb9001d59591b80d5ba77ee7e351848f1ee311723a991b9e34a857e7338a00",
     "palette_slots": [
       43
     ]
@@ -13757,7 +13757,7 @@
     "used_tile_count": 2,
     "sprite_strips": 2,
     "sprite_active_rows": 1,
-    "palette_key": "93a38564",
+    "palette_key": "ab335b34d53a9fed27f8f2318b562a59c8f27b64a91f7d06c6dc4ae79da6d4c9",
     "palette_slots": [
       44
     ]
@@ -13812,7 +13812,7 @@
     "used_tile_count": 12,
     "sprite_strips": 4,
     "sprite_active_rows": 3,
-    "palette_key": "98c52a03",
+    "palette_key": "e664c4aa32d3b76eb13c7fce1444cf30b0676271c06bda2c76638273e2ba690d",
     "palette_slots": [
       45
     ]
@@ -13867,7 +13867,7 @@
     "used_tile_count": 2,
     "sprite_strips": 2,
     "sprite_active_rows": 1,
-    "palette_key": "80ec3157",
+    "palette_key": "4b5e0c14b15a5d426be0bec97774a49e3dafa0b2f1d24d14dc575e6050f4061b",
     "palette_slots": [
       46
     ]
@@ -13922,7 +13922,7 @@
     "used_tile_count": 8,
     "sprite_strips": 4,
     "sprite_active_rows": 2,
-    "palette_key": "89b775d0",
+    "palette_key": "24ba7f169334ab1f9d73fd356b8f75864095f751d69f2c3ce766d7d0de8091fa",
     "palette_slots": [
       47
     ]
@@ -13977,7 +13977,7 @@
     "used_tile_count": 8,
     "sprite_strips": 4,
     "sprite_active_rows": 2,
-    "palette_key": "89b775d0",
+    "palette_key": "24ba7f169334ab1f9d73fd356b8f75864095f751d69f2c3ce766d7d0de8091fa",
     "palette_slots": [
       47
     ]
@@ -14032,7 +14032,7 @@
     "used_tile_count": 48,
     "sprite_strips": 8,
     "sprite_active_rows": 6,
-    "palette_key": "1b00ebf2",
+    "palette_key": "59e129b77cdf085a182bf935bf1c59b96da49661596f1f45a72bca56afce9540",
     "palette_slots": [
       48
     ]
@@ -14087,7 +14087,7 @@
     "used_tile_count": 40,
     "sprite_strips": 8,
     "sprite_active_rows": 5,
-    "palette_key": "0fdc58a6",
+    "palette_key": "b60c5ed9600b9dec05ee1a63e11ff4240ff3008e30c09403c1292d6de0c398b2",
     "palette_slots": [
       49
     ]
@@ -14142,7 +14142,7 @@
     "used_tile_count": 40,
     "sprite_strips": 8,
     "sprite_active_rows": 5,
-    "palette_key": "187c5354",
+    "palette_key": "d5041dfa3abe9c885c831d0e10b08b07e3391179ffde28142cd87b914c4c829b",
     "palette_slots": [
       50
     ]
@@ -14197,7 +14197,7 @@
     "used_tile_count": 32,
     "sprite_strips": 8,
     "sprite_active_rows": 4,
-    "palette_key": "6be8c3c4",
+    "palette_key": "a06364d817e1b51319edd391c9a8a86b8fba21ac8b0eec14d09ebf0c2cd05a7b",
     "palette_slots": [
       51
     ]
@@ -14252,7 +14252,7 @@
     "used_tile_count": 48,
     "sprite_strips": 8,
     "sprite_active_rows": 6,
-    "palette_key": "33bcad22",
+    "palette_key": "2b19956fffc560d76be8f76793249426df3cc9ab4efae4262fcad128b915c761",
     "palette_slots": [
       52
     ]
@@ -14307,7 +14307,7 @@
     "used_tile_count": 48,
     "sprite_strips": 8,
     "sprite_active_rows": 6,
-    "palette_key": "29687da9",
+    "palette_key": "c58999e50731aa10d15231845390aa09704c3bcd2e78be861bce1fa55625aa7a",
     "palette_slots": [
       53
     ]
@@ -14362,7 +14362,7 @@
     "used_tile_count": 48,
     "sprite_strips": 8,
     "sprite_active_rows": 6,
-    "palette_key": "9048c7db",
+    "palette_key": "b820399084843ce089d7730cd1053e405438f8f813fa4ac1d0b152ab5059a360",
     "palette_slots": [
       54
     ]
@@ -14417,7 +14417,7 @@
     "used_tile_count": 48,
     "sprite_strips": 8,
     "sprite_active_rows": 6,
-    "palette_key": "f46538b7",
+    "palette_key": "af0bbcc6d8628a642c5777a22f701480c50ac998d618c3d92f670d6a24e861c1",
     "palette_slots": [
       55
     ]
@@ -14472,7 +14472,7 @@
     "used_tile_count": 4,
     "sprite_strips": 2,
     "sprite_active_rows": 2,
-    "palette_key": "dc539d48",
+    "palette_key": "d803a8fa7781524e506bb534472e560f7281c8bd28c27afba11dd09b5b319c3a",
     "palette_slots": [
       56
     ]
@@ -14527,7 +14527,7 @@
     "used_tile_count": 1,
     "sprite_strips": 1,
     "sprite_active_rows": 1,
-    "palette_key": "73c1339a",
+    "palette_key": "63e530c34762fdeedc23671327d19a43b0f0933f53393a26be87fb1e0c430f90",
     "palette_slots": [
       57
     ]
@@ -14582,7 +14582,7 @@
     "used_tile_count": 1,
     "sprite_strips": 1,
     "sprite_active_rows": 1,
-    "palette_key": "b6cb327a",
+    "palette_key": "2932305d8d70a2b1a4014babf7238a28871e81aa102eec82a1adc031522b6605",
     "palette_slots": [
       58
     ]
@@ -14637,7 +14637,7 @@
     "used_tile_count": 1,
     "sprite_strips": 1,
     "sprite_active_rows": 1,
-    "palette_key": "bc354721",
+    "palette_key": "9143ea5925e764b395b585809a13e13be0deb124015e4659644b382a70570514",
     "palette_slots": [
       59
     ]
@@ -14692,7 +14692,7 @@
     "used_tile_count": 1,
     "sprite_strips": 1,
     "sprite_active_rows": 1,
-    "palette_key": "ee8c032d",
+    "palette_key": "61fa6e3b8407788c6739278844a9b5feb88f272dc13800128217732b37f97419",
     "palette_slots": [
       60
     ]
@@ -14747,7 +14747,7 @@
     "used_tile_count": 1,
     "sprite_strips": 1,
     "sprite_active_rows": 1,
-    "palette_key": "cb2e3ab9",
+    "palette_key": "146f258ab3e3185686995ed34627f2331c08b96663f3c2bde21d65b4cfbbdd48",
     "palette_slots": [
       61
     ]
@@ -14802,7 +14802,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "9e6de519",
+    "palette_key": "336e6f180d22852fc7f5254f455c79da5bbc8523c1a8febebc49546c4d106159",
     "palette_slots": [
       62
     ]
@@ -14857,7 +14857,7 @@
     "used_tile_count": 56,
     "sprite_strips": 8,
     "sprite_active_rows": 7,
-    "palette_key": "f030adc7",
+    "palette_key": "2f4566c583750e582e52b8950c06ef438712ac5540b5fb11f56bd31025b0b160",
     "palette_slots": [
       63
     ]
@@ -14912,7 +14912,7 @@
     "used_tile_count": 56,
     "sprite_strips": 8,
     "sprite_active_rows": 7,
-    "palette_key": "909841bf",
+    "palette_key": "237ad33d8b4072e05d8b9b6f4c187026545d6f67d3ef6f12fc09274173463b23",
     "palette_slots": [
       64
     ]
@@ -14967,7 +14967,7 @@
     "used_tile_count": 56,
     "sprite_strips": 8,
     "sprite_active_rows": 7,
-    "palette_key": "86e4d10f",
+    "palette_key": "f42e1db19c019d31b5bc4663b74eeae93b030b021d439c9fa934ef86a3477ed6",
     "palette_slots": [
       65
     ]
@@ -15022,7 +15022,7 @@
     "used_tile_count": 42,
     "sprite_strips": 6,
     "sprite_active_rows": 7,
-    "palette_key": "f618f3cf",
+    "palette_key": "ef576409f6794b021e4381321adec20db3a939877cd1f15bed913468ff0e108f",
     "palette_slots": [
       66
     ]
@@ -15077,7 +15077,7 @@
     "used_tile_count": 24,
     "sprite_strips": 4,
     "sprite_active_rows": 6,
-    "palette_key": "6f6e60cb",
+    "palette_key": "63ac0fe35e611d2edaab905234163dd3c419a8ad2a3e75e397f5e9b0a9453539",
     "palette_slots": [
       67
     ]
@@ -15132,7 +15132,7 @@
     "used_tile_count": 24,
     "sprite_strips": 4,
     "sprite_active_rows": 6,
-    "palette_key": "e0606643",
+    "palette_key": "402d90ecc73a8c3804d5db60d69513784870ae166dbffd54167e3ef916163396",
     "palette_slots": [
       68
     ]
@@ -15187,7 +15187,7 @@
     "used_tile_count": 24,
     "sprite_strips": 4,
     "sprite_active_rows": 6,
-    "palette_key": "3cfc8d0c",
+    "palette_key": "5cb4e327dce8925c49050b28b4da90eeaa25c40b21d7b8d867237b4360e78592",
     "palette_slots": [
       69
     ]
@@ -15242,7 +15242,7 @@
     "used_tile_count": 24,
     "sprite_strips": 4,
     "sprite_active_rows": 6,
-    "palette_key": "4e075ae4",
+    "palette_key": "101b40a5a9a305af8047ad046beef2fabb0f05ff0100b10eb2e32b14a7a2787b",
     "palette_slots": [
       70
     ]
@@ -15297,7 +15297,7 @@
     "used_tile_count": 64,
     "sprite_strips": 8,
     "sprite_active_rows": 8,
-    "palette_key": "7bb77064",
+    "palette_key": "6b5e5a6e132198cb411224e8b416d4afb7da27f5efa75ce5019345cb88e84b31",
     "palette_slots": [
       71
     ]
@@ -15352,7 +15352,7 @@
     "used_tile_count": 2,
     "sprite_strips": 2,
     "sprite_active_rows": 1,
-    "palette_key": "d0463ca8",
+    "palette_key": "22c5725b0afe37e04c967be8b67636a8f31535b7de091b1f0a6f87f10aef2f0a",
     "palette_slots": [
       72
     ]
@@ -15407,7 +15407,7 @@
     "used_tile_count": 4,
     "sprite_strips": 2,
     "sprite_active_rows": 2,
-    "palette_key": "b6d2bc8f",
+    "palette_key": "c73bf96bc862f41515e171930229b9ff2dcab3b04a8d907fc5f7356b0de5bde4",
     "palette_slots": [
       73
     ]
@@ -15462,7 +15462,7 @@
     "used_tile_count": 4,
     "sprite_strips": 2,
     "sprite_active_rows": 2,
-    "palette_key": "f26f1698",
+    "palette_key": "9ad1fb3c64f446df5dbf321d2bdeabc1868e2f3c9bf805858c7a216a816c8bf3",
     "palette_slots": [
       74
     ]
@@ -15517,7 +15517,7 @@
     "used_tile_count": 4,
     "sprite_strips": 2,
     "sprite_active_rows": 2,
-    "palette_key": "2a28b724",
+    "palette_key": "48503f5d0bc1f5adbb1514e9d2ddda01b2cd67aca6a663eb403986b2331d6689",
     "palette_slots": [
       75
     ]
@@ -15572,7 +15572,7 @@
     "used_tile_count": 2,
     "sprite_strips": 2,
     "sprite_active_rows": 1,
-    "palette_key": "5ff18d3f",
+    "palette_key": "491b420b9ba0fde57ebaa473c4c4be364ac5a43b2584236df68a31de45be6c4e",
     "palette_slots": [
       76
     ]
@@ -15627,7 +15627,7 @@
     "used_tile_count": 2,
     "sprite_strips": 2,
     "sprite_active_rows": 1,
-    "palette_key": "24d59160",
+    "palette_key": "21fd582af99977b464aa1400f979c8445834228eacafc4dfe155f4ff9c974b3e",
     "palette_slots": [
       77
     ]
@@ -15673,6 +15673,62 @@
     "content_top": 0,
     "content_width": 256,
     "content_height": 256,
+    "extra_palettes": [
+      [
+        0,
+        32768,
+        59216,
+        61439,
+        4089,
+        4032,
+        48000,
+        58416,
+        3253,
+        43126,
+        55617,
+        45036,
+        57318,
+        25104,
+        2709,
+        22320
+      ],
+      [
+        0,
+        0,
+        57316,
+        48209,
+        21296,
+        26996,
+        53241,
+        36771,
+        38705,
+        40896,
+        55937,
+        17728,
+        42001,
+        65137,
+        57335,
+        8132
+      ],
+      [
+        0,
+        32768,
+        40289,
+        42273,
+        53171,
+        26673,
+        47937,
+        58980,
+        37392,
+        7844,
+        38705,
+        16257,
+        61696,
+        62224,
+        34897,
+        58982
+      ]
+    ],
     "used_tile_cols": 16,
     "used_tile_rows": 16,
     "used_tile_col_start": 0,
@@ -15682,8 +15738,269 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "f5c29fc9",
+    "palette_key": "c000858acbf44c0e4a31bdd951c2c0637534d7f87d088650813ae2fb212daa18",
     "palette_slots": [
+      78,
+      205,
+      206,
+      207
+    ],
+    "tile_palette_banks": [
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      205,
+      205,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      205,
+      205,
+      205,
+      78,
+      78,
+      78,
+      78,
+      205,
+      205,
+      206,
+      78,
+      78,
+      78,
+      78,
+      207,
+      78,
+      78,
+      206,
+      78,
+      78,
+      78,
+      78,
+      78,
+      205,
+      78,
+      78,
+      78,
+      207,
+      78,
+      78,
+      207,
+      207,
+      78,
+      78,
+      206,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      205,
+      205,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      205,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      205,
+      205,
+      78,
+      207,
+      207,
+      78,
+      207,
+      207,
+      78,
+      205,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      207,
+      78,
+      78,
+      78,
+      207,
+      78,
+      207,
+      207,
+      207,
+      205,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      207,
+      207,
+      78,
+      78,
+      78,
+      78,
+      207,
+      78,
+      207,
+      205,
+      78,
+      78,
+      78,
+      78,
+      207,
+      78,
+      207,
+      207,
+      207,
+      78,
+      78,
+      207,
+      78,
+      207,
+      207,
+      205,
+      78,
+      78,
+      205,
+      78,
+      207,
+      78,
+      207,
+      78,
+      78,
+      78,
+      207,
+      207,
+      78,
+      78,
+      207,
+      205,
+      78,
+      78,
+      205,
+      78,
+      207,
+      78,
+      207,
+      78,
+      78,
+      207,
+      78,
+      207,
+      78,
+      78,
+      207,
+      205,
+      78,
+      78,
+      205,
+      78,
+      207,
+      78,
+      207,
+      207,
+      78,
+      78,
+      78,
+      207,
+      78,
+      78,
+      207,
+      205,
+      78,
+      78,
+      78,
+      205,
+      78,
+      205,
+      205,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      205,
+      78,
+      78,
+      78,
+      78,
+      78,
+      205,
+      205,
+      205,
+      78,
+      78,
+      78,
+      207,
+      207,
+      78,
+      78,
+      205,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
+      78,
       78
     ]
   },
@@ -15728,6 +16045,62 @@
     "content_top": 0,
     "content_width": 256,
     "content_height": 256,
+    "extra_palettes": [
+      [
+        0,
+        0,
+        4016,
+        10048,
+        65530,
+        25376,
+        35393,
+        60325,
+        24548,
+        22387,
+        5664,
+        19328,
+        65532,
+        58672,
+        40916,
+        57336
+      ],
+      [
+        0,
+        0,
+        65443,
+        2097,
+        61417,
+        62224,
+        19809,
+        42562,
+        45011,
+        11686,
+        8133,
+        55873,
+        12162,
+        19042,
+        18787,
+        58913
+      ],
+      [
+        0,
+        0,
+        12162,
+        34865,
+        28631,
+        38755,
+        27457,
+        32437,
+        61968,
+        22865,
+        62513,
+        5680,
+        15969,
+        65443,
+        3220,
+        19570
+      ]
+    ],
     "used_tile_cols": 16,
     "used_tile_rows": 16,
     "used_tile_col_start": 0,
@@ -15737,8 +16110,269 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "ec43420b",
+    "palette_key": "813ab0efa15784a09af0877aaf2e8eaa46038fee952e5cc6106c2d64d0eacdcd",
     "palette_slots": [
+      79,
+      208,
+      209,
+      210
+    ],
+    "tile_palette_banks": [
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      210,
+      210,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      208,
+      79,
+      210,
+      210,
+      210,
+      209,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      208,
+      209,
+      209,
+      79,
+      79,
+      210,
+      210,
+      208,
+      209,
+      209,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      209,
+      79,
+      209,
+      79,
+      209,
+      209,
+      210,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      208,
+      79,
+      79,
+      79,
+      209,
+      210,
+      79,
+      210,
+      79,
+      79,
+      79,
+      79,
+      209,
+      79,
+      209,
+      79,
+      79,
+      79,
+      79,
+      79,
+      209,
+      210,
+      79,
+      208,
+      79,
+      79,
+      79,
+      79,
+      209,
+      79,
+      209,
+      209,
+      79,
+      209,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      210,
+      79,
+      79,
+      79,
+      209,
+      79,
+      79,
+      79,
+      210,
+      79,
+      79,
+      79,
+      79,
+      210,
+      79,
+      79,
+      208,
+      79,
+      79,
+      209,
+      209,
+      79,
+      209,
+      79,
+      79,
+      209,
+      209,
+      209,
+      209,
+      210,
+      79,
+      79,
+      79,
+      79,
+      210,
+      209,
+      79,
+      208,
+      79,
+      79,
+      79,
+      79,
+      79,
+      209,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      210,
+      210,
+      208,
+      79,
+      79,
+      210,
+      79,
+      210,
+      210,
+      79,
+      208,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      210,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
+      79,
       79
     ]
   },
@@ -15992,278 +16626,278 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "8e1b1da7",
+    "palette_key": "4f50e56d37780b137e7307f9f8b36bb4254d7d023256a5652ec1136bc9d68ba2",
     "palette_slots": [
       80,
-      205,
-      206,
-      207,
-      208,
-      209,
-      210,
       211,
       212,
       213,
       214,
-      215
+      215,
+      216,
+      217,
+      218,
+      219,
+      220,
+      221
     ],
     "tile_palette_banks": [
+      217,
+      217,
+      217,
+      217,
+      217,
+      217,
+      217,
+      217,
+      217,
+      217,
+      217,
+      217,
+      217,
+      217,
+      217,
+      217,
       211,
       211,
       211,
+      212,
+      212,
+      217,
+      212,
+      217,
+      212,
+      212,
+      212,
+      212,
+      212,
+      212,
       211,
       211,
-      211,
-      211,
-      211,
-      211,
-      211,
-      211,
-      211,
-      211,
-      211,
-      211,
-      211,
-      205,
-      205,
-      205,
-      206,
-      206,
-      211,
-      206,
-      211,
-      206,
-      206,
-      206,
-      206,
-      206,
-      206,
-      205,
-      205,
-      207,
-      207,
-      207,
-      213,
-      213,
-      207,
       213,
       213,
       213,
+      219,
+      219,
+      213,
+      219,
+      219,
+      219,
+      219,
+      219,
+      219,
+      219,
+      219,
       213,
       213,
       213,
       213,
       213,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      215,
-      207,
-      207,
-      207,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      221,
+      213,
+      213,
+      213,
       80,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      210,
-      210,
-      210,
-      210,
-      210,
-      210,
-      210,
-      210,
-      210,
-      210,
-      210,
-      210,
-      210,
-      210,
-      210,
-      210,
-      205,
-      205,
-      205,
-      211,
-      211,
-      211,
-      211,
-      211,
-      211,
-      211,
-      211,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
       214,
-      206,
-      205,
-      205,
-      205,
-      209,
-      209,
-      205,
-      209,
-      209,
-      209,
-      206,
-      206,
-      206,
-      206,
-      209,
-      209,
-      209,
-      209,
-      209,
-      205,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      216,
+      216,
+      216,
+      216,
+      216,
+      216,
+      216,
+      216,
+      216,
+      216,
+      216,
+      216,
+      216,
+      216,
+      216,
+      216,
+      211,
+      211,
+      211,
+      217,
+      217,
+      217,
+      217,
+      217,
+      217,
+      217,
+      217,
+      220,
+      212,
+      211,
+      211,
+      211,
+      215,
+      215,
+      211,
+      215,
+      215,
+      215,
+      212,
+      212,
+      212,
+      212,
+      215,
+      215,
+      215,
+      215,
+      215,
+      211,
       213,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      207,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      208,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      215,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      208,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      212,
-      208,
-      212,
-      208,
-      208,
-      208
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      219,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      213,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      214,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      221,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      214,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      218,
+      214,
+      218,
+      214,
+      214,
+      214
     ]
   },
   {
@@ -16316,7 +16950,7 @@
     "used_tile_count": 256,
     "sprite_strips": 16,
     "sprite_active_rows": 16,
-    "palette_key": "baa1ab5c",
+    "palette_key": "a936e98fdfc014f746d28fe9e9367c814282a7417258f32cf313f79547c12bea",
     "palette_slots": [
       81
     ]
@@ -16371,7 +17005,7 @@
     "used_tile_count": 36,
     "sprite_strips": 6,
     "sprite_active_rows": 6,
-    "palette_key": "7d7266e1",
+    "palette_key": "f38181953034ec6ddecebc581c230af171f07e363a641454de8ce3efba958f2e",
     "palette_slots": [
       82
     ]
@@ -16426,7 +17060,7 @@
     "used_tile_count": 36,
     "sprite_strips": 6,
     "sprite_active_rows": 6,
-    "palette_key": "7d7266e1",
+    "palette_key": "f38181953034ec6ddecebc581c230af171f07e363a641454de8ce3efba958f2e",
     "palette_slots": [
       82
     ]
@@ -16481,7 +17115,7 @@
     "used_tile_count": 36,
     "sprite_strips": 6,
     "sprite_active_rows": 6,
-    "palette_key": "7d7266e1",
+    "palette_key": "f38181953034ec6ddecebc581c230af171f07e363a641454de8ce3efba958f2e",
     "palette_slots": [
       82
     ]
@@ -16536,7 +17170,7 @@
     "used_tile_count": 36,
     "sprite_strips": 6,
     "sprite_active_rows": 6,
-    "palette_key": "7d7266e1",
+    "palette_key": "f38181953034ec6ddecebc581c230af171f07e363a641454de8ce3efba958f2e",
     "palette_slots": [
       82
     ]
@@ -16591,7 +17225,7 @@
     "used_tile_count": 36,
     "sprite_strips": 6,
     "sprite_active_rows": 6,
-    "palette_key": "7d7266e1",
+    "palette_key": "f38181953034ec6ddecebc581c230af171f07e363a641454de8ce3efba958f2e",
     "palette_slots": [
       82
     ]
@@ -16646,7 +17280,7 @@
     "used_tile_count": 36,
     "sprite_strips": 6,
     "sprite_active_rows": 6,
-    "palette_key": "7d7266e1",
+    "palette_key": "f38181953034ec6ddecebc581c230af171f07e363a641454de8ce3efba958f2e",
     "palette_slots": [
       82
     ]
@@ -16701,7 +17335,7 @@
     "used_tile_count": 36,
     "sprite_strips": 6,
     "sprite_active_rows": 6,
-    "palette_key": "7d7266e1",
+    "palette_key": "f38181953034ec6ddecebc581c230af171f07e363a641454de8ce3efba958f2e",
     "palette_slots": [
       82
     ]
@@ -16756,7 +17390,7 @@
     "used_tile_count": 36,
     "sprite_strips": 6,
     "sprite_active_rows": 6,
-    "palette_key": "7d7266e1",
+    "palette_key": "f38181953034ec6ddecebc581c230af171f07e363a641454de8ce3efba958f2e",
     "palette_slots": [
       82
     ]
@@ -16811,7 +17445,7 @@
     "used_tile_count": 36,
     "sprite_strips": 6,
     "sprite_active_rows": 6,
-    "palette_key": "7d7266e1",
+    "palette_key": "f38181953034ec6ddecebc581c230af171f07e363a641454de8ce3efba958f2e",
     "palette_slots": [
       82
     ]
@@ -16866,7 +17500,7 @@
     "used_tile_count": 36,
     "sprite_strips": 6,
     "sprite_active_rows": 6,
-    "palette_key": "7d7266e1",
+    "palette_key": "f38181953034ec6ddecebc581c230af171f07e363a641454de8ce3efba958f2e",
     "palette_slots": [
       82
     ]
@@ -16921,7 +17555,7 @@
     "used_tile_count": 36,
     "sprite_strips": 6,
     "sprite_active_rows": 6,
-    "palette_key": "7d7266e1",
+    "palette_key": "f38181953034ec6ddecebc581c230af171f07e363a641454de8ce3efba958f2e",
     "palette_slots": [
       82
     ]
@@ -16976,7 +17610,7 @@
     "used_tile_count": 36,
     "sprite_strips": 6,
     "sprite_active_rows": 6,
-    "palette_key": "7d7266e1",
+    "palette_key": "f38181953034ec6ddecebc581c230af171f07e363a641454de8ce3efba958f2e",
     "palette_slots": [
       82
     ]
