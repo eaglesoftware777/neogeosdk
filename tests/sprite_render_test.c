@@ -15,15 +15,19 @@
 #include "../sdk/2d_engine/ng_sprite_hw.h"
 #include "../sdk/2d_engine/ng_palette_math.h"
 #ifdef __cplusplus
+#include "ng_actions.hpp"
 #include "ng_art_asset.hpp"
 #include "ng_camera.hpp"
+#include "ng_chars.hpp"
 #include "ng_level.hpp"
 #include "ng_palette_fx.hpp"
 #include "ng_sprite_group.hpp"
 #include "ng_sprite_window.hpp"
 #else
+#include "ng_actions.h"
 #include "ng_art_asset.h"
 #include "ng_camera.h"
+#include "ng_chars.h"
 #include "ng_level.h"
 #include "ng_palette_fx.h"
 #include "ng_sprite_group.h"
@@ -37,6 +41,7 @@ static uint16_t uploaded_palette[16];
 
 const NGLevelState *level_state(void) { return 0; }
 void ng_level_set_scroll(int16_t x, int16_t y) { (void)x; (void)y; }
+void ng_actions_update(NGCharacter *c) { (void)c; }
 
 static void test_camera_pan(void)
 {
@@ -330,6 +335,51 @@ static void test_tile_palette_maps(void)
     assert(!g.tilePalettes);
 }
 
+static void test_character_palette_binding(void)
+{
+    NGCharacter *c;
+    NGCharacter previous;
+    NGSpriteAssetView asset;
+    static const uint8_t banks[] = {17u, 18u, 99u, 20u, 21u, 99u};
+    uint16_t slot;
+    ng_chars_init();
+    c = chars_add(0u, 80, 80);
+    assert(c && !c->sprite_palette_map);
+    ng_char_set_sprite(c, 1u, 2u, 2u, 100u, 7u);
+    ng_char_set_tile_stride(c, 16u);
+    memset(&asset, 0, sizeof(asset));
+    asset.tile_base = asset.tile_start = 100u;
+    asset.tile_end = 104u;
+    asset.strips = asset.rows = 2u;
+    asset.tile_stride = 3u;
+    asset.palette = 7u;
+    asset.tile_palettes = banks;
+    assert(ng_char_bind_asset(c, &asset));
+    assert(c->sprite_stride == 3u && c->sprite_palette_map == banks);
+    ng_chars_draw();
+    slot = c->sprite_first;
+    assert(ram[slot * 64u + 1u] == 0x1100u);
+    assert(ram[(slot + 1u) * 64u + 3u] == 0x1500u);
+    ng_char_set_palette_map(c, banks);
+    assert(!c->sprite_dirty);
+    c->flip_x = c->flip_y = c->sprite_dirty = 1u;
+    ng_chars_draw();
+    assert(ram[slot * 64u + 1u] == 0x1503u);
+    previous = *c;
+    asset.tile_end = 103u;
+    assert(!ng_char_bind_asset(c, &asset));
+    assert(memcmp(c, &previous, sizeof(*c)) == 0);
+    ng_char_set_palette_map(c, 0);
+    ng_chars_draw();
+    assert(ram[slot * 64u + 1u] == 0x0703u);
+    ng_char_set_palette_map(c, banks);
+    ng_char_set_sprite(c, slot, 2u, 2u, 100u, 8u);
+    assert(!c->sprite_palette_map);
+    ng_chars_init();
+    c = chars_add(0u, 80, 80);
+    assert(c && !c->sprite_palette_map);
+}
+
 int main(void)
 {
     NGSpriteGroup g;
@@ -357,6 +407,7 @@ int main(void)
     test_palette_effects();
     test_tile_palette_maps();
     test_camera_pan();
+    test_character_palette_binding();
     assert(ng_sprite_scaled_x(256u, 0x7fu) == 128u);
     assert(ng_sprite_scaled_y(256u, 0x7fu) == 128u);
     assert(ng_sprite_scaled_y(256u, 0xffu) == 256u);

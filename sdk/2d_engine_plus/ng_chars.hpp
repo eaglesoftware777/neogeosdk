@@ -34,6 +34,7 @@ typedef struct {
     uint16_t tile_stride;
     uint16_t tile_start;
     uint16_t tile_end;
+    const uint8_t *tile_palettes;
 } NGSpriteAssetView;
 
 typedef struct {
@@ -108,6 +109,7 @@ struct NGCharacter {
     const NGAnimClip *anim_clip;
     uint8_t  anim_frame;
     uint8_t  anim_timer;
+    const uint8_t *sprite_palette_map;
 
     void NEOGEO_USER setPos(int16_t x, int16_t y);
     void NEOGEO_USER setSpeed(int16_t vx_px, int16_t vy_px);
@@ -116,6 +118,7 @@ struct NGCharacter {
     void NEOGEO_USER setSprite(uint16_t firstSprite, uint8_t strips, uint8_t heightTiles,
                                uint16_t tileBase, uint8_t palette);
     void NEOGEO_USER setAssetBounds(uint16_t tileStart, uint16_t tileEnd);
+    void NEOGEO_USER setPaletteMap(const uint8_t *banks);
     uint8_t NEOGEO_USER bindAsset(const NGSpriteAssetView *asset);
     void NEOGEO_USER setCullMargin(int16_t l, int16_t r, int16_t t, int16_t b);
     void NEOGEO_USER setAnimClip(const NGAnimClip *clip);
@@ -205,6 +208,7 @@ void        NEOGEO_USER ng_chars_draw(void);
 void NEOGEO_USER ng_char_set_sprite(NGCharacter *c, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette);
 void NEOGEO_USER ng_char_set_asset_bounds(NGCharacter *c, uint16_t tileStart, uint16_t tileEnd);
 uint8_t NEOGEO_USER ng_char_bind_asset(NGCharacter *c, const NGSpriteAssetView *asset);
+void NEOGEO_USER ng_char_set_palette_map(NGCharacter *c, const uint8_t *banks);
 void NEOGEO_USER ng_char_set_cull_margin(NGCharacter *c, int16_t l, int16_t r, int16_t t, int16_t b);
 void NEOGEO_USER ng_char_set_anim_clip(NGCharacter *c, const NGAnimClip *clip);
 void NEOGEO_USER ng_char_anim_update(NGCharacter *c);
