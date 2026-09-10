@@ -206,6 +206,60 @@ had — so a wrong stride still shows up as stale art rather than as an
 error. Check `tile_stride` first when art comes out wrong after an import
 setting changes.
 
+## Palette RAM budget
+
+There are 239 usable palette banks: 0..15 belong to the FIX layer and 255
+holds the backdrop. Every bank is 16 entries of which entry 0 is
+transparent on this hardware, so a bank carries 15 colours and the whole
+of palette RAM carries 3585 at once.
+
+That budget is global to a game — an asset owns its banks for the life of
+the ROM, so every asset's banks have to coexist. Two things keep it from
+being wasted:
+
+**Assets holding the same palette share a bank.** Base banks used to be
+positional, one per asset, so an animation whose frames all render
+against one shared palette occupied a bank per frame holding the same
+colours. Sharing them cut the demo from 219 banks to 119. `palette_key`
+in the manifest records that a share was deliberate; the verifier still
+rejects two assets landing on one bank by accident, and extra banks are
+never shared.
+
+**Extra banks go to what covers the screen.** A background occupies the
+whole frame and a sprite occupies a fraction of it, so the budget is
+weighted accordingly — `palette_banks` is 16 for backgrounds, 12 for
+titles and the Sky Lance sky, 8 for screens, 6 for bosses, 1 for ordinary
+sprites.
+
+Raising an asset's bank count roughly scales the colours it can show: a
+background at 8 banks renders about 105 distinct colours, at 16 about
+189.
+
+### What extra banks cannot fix
+
+A tile reads one palette. Extra banks help where the variety is *between*
+tiles and not at all where it is *within* one, which is why they transform
+a background and barely move a character:
+
+| | 1 bank | 8 banks | 16 banks | one per tile |
+|---|---|---|---|---|
+| background | 3.93 | 3.18 | 2.99 | 2.29 |
+| boss sprite | 11.78 | 9.30 | 8.23 | 5.85 |
+| character | 11.39 | 10.16 | 9.77 | 8.06 |
+
+A bank per tile is the floor this hardware allows, and it is out of reach
+for a game with 86 character frames — that alone would want more palette
+RAM than exists.
+
+### The second hardware palette bank
+
+The hardware has two complete palette sets, selected by a write to
+`REG_PALBANK0` / `REG_PALBANK1`, so 8192 entries can be resident and 4096
+displayed. Nothing here uses it, deliberately: a demo frame shows under
+200 distinct colours, so the first set is nowhere near spent. It becomes
+worth reaching for when a single frame genuinely needs more than 3585
+colours, or for swapping a whole scene's palette in one write.
+
 ## Palette anchors
 
 Pure black and pure white are reserved as palette entries when the asset

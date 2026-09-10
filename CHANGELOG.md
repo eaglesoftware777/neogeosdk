@@ -1,5 +1,64 @@
 # Changelog
 
+## v1.7.7 - Spending the palette
+
+Release date: 2026-09-10
+
+A frame of the demo was showing at most 193 distinct colours against a
+hardware ceiling of 3840, and 108 of the 219 palette banks in use held a
+copy of a palette another bank already had.
+
+### Assets sharing a palette now share a bank
+
+Base banks were positional - one per asset, whether or not two assets
+held the same colours - so a 53-frame animation whose frames all render
+against one shared palette occupied 53 banks holding 53 copies of it.
+Assets whose base palette is identical now name the same bank.  Demo
+usage falls from 219 banks to 119.
+
+The verifier still rejects two assets sharing a bank, except where they
+were deduplicated: a `palette_key` in the manifest distinguishes a
+deliberate share from a collision, and extra banks may never be shared
+at all.
+
+### The allocator spends the budget it is given
+
+Extra banks are seeded from the worst-fitting tile.  If that tile had no
+fully opaque pixels there was nothing to fit a palette from, and the
+allocator gave up there - abandoning every bank it had left because of
+whichever tile happened to be worst.  A large sprite given sixteen banks
+would stop at eight.  Seeds that cannot pay are skipped now, not fatal.
+
+Sky Lance's boss, at a sixteen-bank budget: dE 9.45 with eight banks
+used, now 8.23 with all sixteen.
+
+### Budgets raised where they show
+
+The freed banks go to what covers the screen: backgrounds 8 to 16,
+titles 8 to 12, screens 4 to 8, the Sky Lance sky 4 to 12, the
+eyecatcher 1 to 4, bosses 1 to 6.  Demo usage lands at 200 of 239 banks
+- 67 base, 133 extra, against 46 extra before - and is still lower
+overall than it was.
+
+Twelve assets improved and none regressed.  The Sky Lance sky goes 3.37
+to 2.59, the mountain page 3.11 to 2.81, the forest 3.83 to 3.42, and
+the colour count of a background roughly doubles with its bank count.
+
+### Where the ceiling actually is
+
+Two things measured and deliberately not built:
+
+- **The second hardware palette bank.**  It would make 8192 entries
+  resident instead of 4096.  A frame currently uses under 200 distinct
+  colours, so the first 4096 are nowhere near spent and a bank switch
+  would buy nothing.
+- **More banks for character sprites.**  A character improves from dE
+  11.4 to 10.2 across eight banks and 8.1 with a bank per tile, but at
+  86 character assets that costs more palette RAM than the whole budget
+  holds.  Their remaining error is variety *within* each tile, which
+  extra banks cannot address - a tile reads one palette whatever else is
+  resident.
+
 ## v1.7.6 - The eagle was two eagles
 
 Release date: 2026-09-09
