@@ -73,7 +73,7 @@
 /*  Hardware scale presets (SCB2 shrink, 0xFF = full size)              */
 /* ------------------------------------------------------------------ */
 /*
- * Draw scales - all full size.
+ * Craft and bosses draw at full size; shots and bursts use separate presets.
  *
  * The art set was authored far larger than a 320x224 playfield wants, and
  * the whole game used to run shrunk to compensate.  That is the wrong
@@ -91,17 +91,19 @@
  * If any of them goes back below full size, keep the low nibble at F: the
  * hardware shows ((value >> 4) + 1)/16 of the width but (value + 1)/256 of
  * the height, and those agree nowhere else - anything else squashes the
- * sprite horizontally and desyncs sky_scaled(), which uses value/256 for
- * both axes when it positions the artwork.
+ * sprite horizontally. Content anchoring follows the two hardware ratios.
  *
  * Sizes these produce on a 320x224 screen:
- *   player craft 28x40    standard opponent ~31x40    boss up to 112 px
+ *   craft up to 32 px (40 px rules round down to tile multiples), bosses 112 px
  */
 #define SKY_SCALE_PLAYER   0xFFu
 #define SKY_SCALE_ENEMY    0xFFu
 #define SKY_SCALE_SMALL    0xFFu
 #define SKY_SCALE_BOSS     0xFFu
 #define SKY_SCALE_FULL     0xFFu
+#define SKY_SCALE_PROJECTILE NG_SCALE(6)
+#define SKY_BURST_STEPS       6u
+#define SKY_BURST_SCALE(step) NG_SCALE(6u + (step))
 
 /*
  * Two exceptions, both on the select screen.

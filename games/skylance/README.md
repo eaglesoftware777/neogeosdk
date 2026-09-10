@@ -46,3 +46,15 @@ and seamless at the join.
 The arena is the 256-px-wide column the backdrop covers, centred on the 320-px
 screen, with the 32 px either side left as backdrop.  That is a hardware
 consequence, not a style choice - see `scenes/sky.h`.
+
+## Colour and effects
+
+Each game's `artbox/assets.cfg` owns its palette budgets. This game's large
+bosses can use up to 16 banks, ordinary opponents 4 and player craft 3.
+Pilots and aircraft no longer share an unrelated animation palette. Bindings
+in `sky_draw.c` carry the per-tile map for characters and both background pages.
+
+Enemy shots use a compact independent shrink preset and a 6x6 collision core.
+Explosion rings expand through six bounded sizes around the impact position;
+their scale never wraps from 255 back to zero. These are visual/gameplay-side
+changes; the sound driver and sample ROMs are unchanged.

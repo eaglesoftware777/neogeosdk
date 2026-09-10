@@ -13,6 +13,8 @@
 #include "sdk/neogeo.h"
 #include "sdk/2d_engine/ng_sprite_group.h"
 #include "sdk/2d_engine/ng_sprite_window.h"
+#include "sdk/2d_engine/ng_art_asset.h"
+#include "sdk/2d_engine/ng_sprite_hw.h"
 #include "sprite_meta.h"
 #include "infix_palettes.h"
 
@@ -25,6 +27,7 @@ void NEOGEO_USER mess_out_clipped(uint16_t x, uint16_t y, const char *text,
                                   short pal, uint16_t max_chars);
 void NEOGEO_USER ngfix_write_tile(uint8_t x, uint8_t y, uint16_t tile, uint8_t pal);
 uint8_t NEOGEO_USER ng_load_screen_palette(uint16_t screen_id);
+const NGArtAsset * NEOGEO_USER ng_screen_art_asset(uint16_t screen_id);
 void NEOGEO_USER load_palettes(uint16_t *pal, uintptr_t dest);
 
 /* ------------------------------------------------------------------ */
@@ -42,30 +45,24 @@ static const NGSpriteAssetMeta * NEOGEO_USER sky_meta(uint8_t id)
     return &g_ng_asset_meta[id - 1u];
 }
 
-/* Shrink a pixel count by an SCB2 scale byte (0xFF = full size). */
-static int16_t NEOGEO_USER sky_scaled(uint16_t px, uint8_t scale)
-{
-    if (scale >= 0xFFu) return (int16_t)px;
-    return (int16_t)(((uint32_t)px * (uint32_t)scale + 127u) >> 8);
-}
-
 int16_t NEOGEO_USER sky_width(uint8_t id, uint8_t scale)
 {
     const NGSpriteAssetMeta *m = sky_meta(id);
     if (!m) return 0;
-    return sky_scaled(m->content_width, scale);
+    return (int16_t)ng_sprite_scaled_x(m->content_width, scale);
 }
 
 int16_t NEOGEO_USER sky_height(uint8_t id, uint8_t scale)
 {
     const NGSpriteAssetMeta *m = sky_meta(id);
     if (!m) return 0;
-    return sky_scaled(m->content_height, scale);
+    return (int16_t)ng_sprite_scaled_y(m->content_height, scale);
 }
 
 void NEOGEO_USER sky_bind(NGCharacter *c, uint8_t id, uint8_t scale, uint8_t band)
 {
     const NGSpriteAssetMeta *m = sky_meta(id);
+    const NGArtAsset *art = ng_screen_art_asset(id);
     uint8_t  strips;
     uint8_t  rows;
     uint16_t tile;
@@ -88,16 +85,17 @@ void NEOGEO_USER sky_bind(NGCharacter *c, uint8_t id, uint8_t scale, uint8_t ban
 
     ng_char_set_sprite(c, 0u, strips, rows, tile, m->palette_bank);
     ng_char_set_tile_stride(c, m->tile_stride);
+    ng_char_set_palette_map(c, art ? art->tile_palettes : 0);
     c->scale_x = scale;
     c->scale_y = scale;
 
     /*
      * (x_pad + content_width/2) is the distance from the artwork's first
      * TILE to the centre of the painted pixels.  It lives inside the
-     * sprite, so it shrinks with the sprite - hence sky_scaled().
+     * sprite, so it follows the hardware's separate X and Y shrink ratios.
      */
-    half_w = sky_scaled((uint16_t)(m->x_pad + (m->content_width  >> 1)), scale);
-    half_h = sky_scaled((uint16_t)(m->y_pad + (m->content_height >> 1)), scale);
+    half_w = (int16_t)ng_sprite_scaled_x((uint16_t)(m->x_pad + (m->content_width >> 1)), scale);
+    half_h = (int16_t)ng_sprite_scaled_y((uint16_t)(m->y_pad + (m->content_height >> 1)), scale);
     c->sprite_offset_x = (int16_t)(-half_w);
     c->sprite_offset_y = (int16_t)(-half_h);
 
@@ -108,8 +106,8 @@ void NEOGEO_USER sky_bind(NGCharacter *c, uint8_t id, uint8_t scale, uint8_t ban
      * to the player rather than pixel-accurate.
      */
     {
-        int16_t w = sky_scaled(m->content_width,  scale);
-        int16_t h = sky_scaled(m->content_height, scale);
+        int16_t w = (int16_t)ng_sprite_scaled_x(m->content_width, scale);
+        int16_t h = (int16_t)ng_sprite_scaled_y(m->content_height, scale);
         ng_char_set_body(c, (int16_t)(-(w >> 2)), (int16_t)(-(h >> 2)),
                          (int16_t)(w >> 1), (int16_t)(h >> 1));
     }
@@ -162,6 +160,7 @@ static uint8_t       s_bg_ready = 0u;
 void NEOGEO_USER sky_bg_select(uint8_t id)
 {
     const NGSpriteAssetMeta *m;
+    const NGArtAsset *art;
     uint8_t i;
 
     if (s_bg_id == id) return;
@@ -174,6 +173,7 @@ void NEOGEO_USER sky_bg_select(uint8_t id)
 
     m = sky_meta(id);
     if (!m) return;
+    art = ng_screen_art_asset(id);
 
     /* Build both pages once and push the tile data now, while the scene is
      * still being set up and there is time for it. */
@@ -182,6 +182,7 @@ void NEOGEO_USER sky_bg_select(uint8_t id)
         ng_sprite_group_init(g, (i == 0u) ? NG_SPR_BG0_FIRST : NG_SPR_BG1_FIRST,
                              16u, 16u, m->tile_base, m->palette_bank);
         ng_sprite_group_set_tile_stride(g, m->tile_stride);
+        ng_sprite_group_set_palette_map(g, art ? art->tile_palettes : 0);
         ng_sprite_group_set_active_rows(g, 16u);
         ng_sprite_group_set_scale(g, SKY_SCALE_FULL, SKY_SCALE_FULL);
         ng_sprite_group_set_pos(g, SKY_FIELD_X,

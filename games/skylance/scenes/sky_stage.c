@@ -156,7 +156,7 @@ NGCharacter * NEOGEO_USER sky_spawn_blast(int16_t x, int16_t y)
      * ring doubles as one: spawned at the kill point, it expands over
      * six frames via SCB2 and is then dropped.  data0 carries the age.
      */
-    c = sky_spawn(SKY_KIND_BLAST, SKY_SHOT_RING, x, y, SKY_SCALE_SMALL, NG_RENDER_BAND_FX);
+    c = sky_spawn(SKY_KIND_BLAST, SKY_SHOT_RING, x, y, SKY_BURST_SCALE(0), NG_RENDER_BAND_FX);
     if (c) c->data0 = 0u;
     return c;
 }
@@ -166,10 +166,10 @@ static void NEOGEO_USER sky_spawn_eshot(int16_t x, int16_t y, int16_t vx, int16_
     NGCharacter *s;
 
     if (sky_count_kind(SKY_KIND_ESHOT) >= SKY_MAX_ESHOTS) return;
-    s = sky_spawn(SKY_KIND_ESHOT, SKY_SHOT_ORB, x, y, SKY_SCALE_SMALL, NG_RENDER_BAND_FX);
+    s = sky_spawn(SKY_KIND_ESHOT, SKY_SHOT_ORB, x, y, SKY_SCALE_PROJECTILE, NG_RENDER_BAND_FX);
     if (!s) return;
     ng_char_set_speed(s, vx, vy);
-    ng_char_set_body(s, -5, -5, 10, 10);
+    ng_char_set_body(s, -3, -3, 6, 6);
 }
 
 /* Fire one orb from (x,y) towards the player, at a fixed speed. */
@@ -367,13 +367,14 @@ static void NEOGEO_USER sky_boss_step(NGCharacter *c, int16_t px, int16_t py)
 
 static void NEOGEO_USER sky_blast_step(NGCharacter *c)
 {
-    /* Expand and fade out.  Six frames is short enough that several can
-     * overlap on a busy screen without eating the sprite budget. */
+    /* Bound the expansion before converting to an 8-bit hardware scale.
+     * Adding to full scale wrapped to zero and displaced the old anchor. */
     c->data0++;
-    c->scale_x = (uint8_t)(SKY_SCALE_SMALL + (uint8_t)(c->data0 * 16u));
-    c->scale_y = c->scale_x;
-    c->sprite_dirty = 1u;
-    if (c->data0 >= 6u) ng_chars_remove(c);
+    if (c->data0 >= SKY_BURST_STEPS) {
+        ng_chars_remove(c);
+        return;
+    }
+    sky_bind(c, SKY_SHOT_RING, SKY_BURST_SCALE(c->data0), NG_RENDER_BAND_FX);
 }
 
 /* ------------------------------------------------------------------ */
