@@ -1,7 +1,7 @@
 [001] backgrounds/background_coast_city.png
 mode=screen fit=crop anchor=center rule=cat_backgrounds
 category=backgrounds
-palette_slots=[16, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49]
+palette_slots=[16, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=1 palette_bank=16 tile_base=0 reserved_last=255 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=background layer or multi-level backdrop
@@ -9,7 +9,7 @@ note=background layer or multi-level backdrop
 [002] backgrounds/background_sky_mountains.png
 mode=screen fit=crop anchor=center rule=cat_backgrounds
 category=backgrounds
-palette_slots=[17, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]
+palette_slots=[17, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=2 palette_bank=17 tile_base=256 reserved_last=511 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=background layer or multi-level backdrop
@@ -17,7 +17,7 @@ note=background layer or multi-level backdrop
 [003] characters/sprite_p1_pilot.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
-palette_slots=[18]
+palette_slots=[18, 71, 72, 73]
 source=160x240 canvas=256x256 content=160x240 offset=(48,16)
 screen_id=3 palette_bank=18 tile_base=512 reserved_last=767 used_cols=10 used_rows=15 start_col=3 start_row=1 x_pad=0 y_pad=0 used_tiles=150 strips=10 active_rows=15
 note=16x16 character sprite sheet
@@ -25,176 +25,176 @@ note=16x16 character sprite sheet
 [004] characters/sprite_p1_plane.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_planes
 category=characters
-palette_slots=[18]
+palette_slots=[19, 74, 75]
 source=112x160 canvas=32x32 content=22x32 offset=(5,0)
-screen_id=4 palette_bank=18 tile_base=768 reserved_last=1023 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=5 y_pad=0 used_tiles=4 strips=2 active_rows=2
+screen_id=4 palette_bank=19 tile_base=768 reserved_last=1023 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=5 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=player craft, imported at playfield size
 
 [005] characters/sprite_p2_pilot.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
-palette_slots=[18]
+palette_slots=[20, 76, 77, 78]
 source=160x240 canvas=256x256 content=160x240 offset=(48,16)
-screen_id=5 palette_bank=18 tile_base=1024 reserved_last=1279 used_cols=10 used_rows=15 start_col=3 start_row=1 x_pad=0 y_pad=0 used_tiles=150 strips=10 active_rows=15
+screen_id=5 palette_bank=20 tile_base=1024 reserved_last=1279 used_cols=10 used_rows=15 start_col=3 start_row=1 x_pad=0 y_pad=0 used_tiles=150 strips=10 active_rows=15
 note=16x16 character sprite sheet
 
 [006] characters/sprite_p2_plane.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_planes
 category=characters
-palette_slots=[18]
+palette_slots=[21, 79]
 source=112x144 canvas=32x32 content=25x32 offset=(3,0)
-screen_id=6 palette_bank=18 tile_base=1280 reserved_last=1535 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=3 y_pad=0 used_tiles=4 strips=2 active_rows=2
+screen_id=6 palette_bank=21 tile_base=1280 reserved_last=1535 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=3 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=player craft, imported at playfield size
 
 [007] characters/sprite_p3_pilot.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
-palette_slots=[18]
+palette_slots=[22, 80, 81, 82]
 source=160x240 canvas=256x256 content=160x240 offset=(48,16)
-screen_id=7 palette_bank=18 tile_base=1536 reserved_last=1791 used_cols=10 used_rows=15 start_col=3 start_row=1 x_pad=0 y_pad=0 used_tiles=150 strips=10 active_rows=15
+screen_id=7 palette_bank=22 tile_base=1536 reserved_last=1791 used_cols=10 used_rows=15 start_col=3 start_row=1 x_pad=0 y_pad=0 used_tiles=150 strips=10 active_rows=15
 note=16x16 character sprite sheet
 
 [008] characters/sprite_p3_plane.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_planes
 category=characters
-palette_slots=[18]
+palette_slots=[23]
 source=112x144 canvas=32x32 content=25x32 offset=(3,0)
-screen_id=8 palette_bank=18 tile_base=1792 reserved_last=2047 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=3 y_pad=0 used_tiles=4 strips=2 active_rows=2
+screen_id=8 palette_bank=23 tile_base=1792 reserved_last=2047 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=3 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=player craft, imported at playfield size
 
 [009] characters/sprite_shot_player.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
-palette_slots=[18]
+palette_slots=[24]
 source=8x40 canvas=256x256 content=8x40 offset=(124,216)
-screen_id=9 palette_bank=18 tile_base=2048 reserved_last=2303 used_cols=2 used_rows=3 start_col=7 start_row=13 x_pad=12 y_pad=8 used_tiles=6 strips=2 active_rows=3
+screen_id=9 palette_bank=24 tile_base=2048 reserved_last=2303 used_cols=2 used_rows=3 start_col=7 start_row=13 x_pad=12 y_pad=8 used_tiles=6 strips=2 active_rows=3
 note=16x16 character sprite sheet
 
 [010] npcs/opponent_bomber_olive.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[19]
+palette_slots=[25, 83, 84, 85]
 source=144x160 canvas=32x32 content=29x32 offset=(1,0)
-screen_id=10 palette_bank=19 tile_base=2304 reserved_last=2559 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=1 y_pad=0 used_tiles=4 strips=2 active_rows=2
+screen_id=10 palette_bank=25 tile_base=2304 reserved_last=2559 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=1 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
 
 [011] npcs/opponent_boss_crimson_cathedral.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-palette_slots=[20]
+palette_slots=[26, 86, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100]
 source=160x280 canvas=112x112 content=64x112 offset=(24,0)
-screen_id=11 palette_bank=20 tile_base=2560 reserved_last=2815 used_cols=5 used_rows=7 start_col=1 start_row=0 x_pad=8 y_pad=0 used_tiles=35 strips=5 active_rows=7
+screen_id=11 palette_bank=26 tile_base=2560 reserved_last=2815 used_cols=5 used_rows=7 start_col=1 start_row=0 x_pad=8 y_pad=0 used_tiles=35 strips=5 active_rows=7
 note=boss, imported at playfield size
 
 [012] npcs/opponent_boss_gold_core.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-palette_slots=[21]
+palette_slots=[27, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115]
 source=240x240 canvas=112x112 content=112x112 offset=(0,0)
-screen_id=12 palette_bank=21 tile_base=2816 reserved_last=3071 used_cols=7 used_rows=7 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=49 strips=7 active_rows=7
+screen_id=12 palette_bank=27 tile_base=2816 reserved_last=3071 used_cols=7 used_rows=7 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=49 strips=7 active_rows=7
 note=boss, imported at playfield size
 
 [013] npcs/opponent_boss_heli_carrier.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-palette_slots=[22]
+palette_slots=[28, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130]
 source=216x280 canvas=112x112 content=86x112 offset=(13,0)
-screen_id=13 palette_bank=22 tile_base=3072 reserved_last=3327 used_cols=7 used_rows=7 start_col=0 start_row=0 x_pad=13 y_pad=0 used_tiles=49 strips=7 active_rows=7
+screen_id=13 palette_bank=28 tile_base=3072 reserved_last=3327 used_cols=7 used_rows=7 start_col=0 start_row=0 x_pad=13 y_pad=0 used_tiles=49 strips=7 active_rows=7
 note=boss, imported at playfield size
 
 [014] npcs/opponent_boss_navy_battleship.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-palette_slots=[23]
+palette_slots=[29, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145]
 source=136x280 canvas=112x112 content=54x112 offset=(29,0)
-screen_id=14 palette_bank=23 tile_base=3328 reserved_last=3583 used_cols=5 used_rows=7 start_col=1 start_row=0 x_pad=13 y_pad=0 used_tiles=35 strips=5 active_rows=7
+screen_id=14 palette_bank=29 tile_base=3328 reserved_last=3583 used_cols=5 used_rows=7 start_col=1 start_row=0 x_pad=13 y_pad=0 used_tiles=35 strips=5 active_rows=7
 note=boss, imported at playfield size
 
 [015] npcs/opponent_boss_red_fortress.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-palette_slots=[24]
+palette_slots=[30, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160]
 source=208x280 canvas=112x112 content=83x112 offset=(14,0)
-screen_id=15 palette_bank=24 tile_base=3584 reserved_last=3839 used_cols=7 used_rows=7 start_col=0 start_row=0 x_pad=14 y_pad=0 used_tiles=49 strips=7 active_rows=7
+screen_id=15 palette_bank=30 tile_base=3584 reserved_last=3839 used_cols=7 used_rows=7 start_col=0 start_row=0 x_pad=14 y_pad=0 used_tiles=49 strips=7 active_rows=7
 note=boss, imported at playfield size
 
 [016] npcs/opponent_boss_stealth_bomber.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-palette_slots=[25]
+palette_slots=[31, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174]
 source=224x280 canvas=112x112 content=90x112 offset=(11,0)
-screen_id=16 palette_bank=25 tile_base=3840 reserved_last=4095 used_cols=7 used_rows=7 start_col=0 start_row=0 x_pad=11 y_pad=0 used_tiles=49 strips=7 active_rows=7
+screen_id=16 palette_bank=31 tile_base=3840 reserved_last=4095 used_cols=7 used_rows=7 start_col=0 start_row=0 x_pad=11 y_pad=0 used_tiles=49 strips=7 active_rows=7
 note=boss, imported at playfield size
 
 [017] npcs/opponent_boss_tank_fortress.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-palette_slots=[26]
+palette_slots=[32, 175, 176, 177, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189]
 source=176x280 canvas=112x112 content=70x112 offset=(21,0)
-screen_id=17 palette_bank=26 tile_base=4096 reserved_last=4351 used_cols=5 used_rows=7 start_col=1 start_row=0 x_pad=5 y_pad=0 used_tiles=35 strips=5 active_rows=7
+screen_id=17 palette_bank=32 tile_base=4096 reserved_last=4351 used_cols=5 used_rows=7 start_col=1 start_row=0 x_pad=5 y_pad=0 used_tiles=35 strips=5 active_rows=7
 note=boss, imported at playfield size
 
 [018] npcs/opponent_drone_red.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[27]
+palette_slots=[33, 190, 191, 192]
 source=56x56 canvas=32x32 content=32x32 offset=(0,0)
-screen_id=18 palette_bank=27 tile_base=4352 reserved_last=4607 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
+screen_id=18 palette_bank=33 tile_base=4352 reserved_last=4607 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
 
 [019] npcs/opponent_fighter_grayred.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[28]
+palette_slots=[34, 193, 194, 195]
 source=128x144 canvas=32x32 content=28x32 offset=(2,0)
-screen_id=19 palette_bank=28 tile_base=4608 reserved_last=4863 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=2 y_pad=0 used_tiles=4 strips=2 active_rows=2
+screen_id=19 palette_bank=34 tile_base=4608 reserved_last=4863 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=2 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
 
 [020] npcs/opponent_heli_gunship.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[29]
+palette_slots=[35, 196, 197]
 source=112x144 canvas=32x32 content=25x32 offset=(3,0)
-screen_id=20 palette_bank=29 tile_base=4864 reserved_last=5119 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=3 y_pad=0 used_tiles=4 strips=2 active_rows=2
+screen_id=20 palette_bank=35 tile_base=4864 reserved_last=5119 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=3 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
 
 [021] npcs/opponent_interceptor_blackgold.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[30]
+palette_slots=[36, 198, 199]
 source=104x144 canvas=32x32 content=23x32 offset=(4,0)
-screen_id=21 palette_bank=30 tile_base=5120 reserved_last=5375 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=4 y_pad=0 used_tiles=4 strips=2 active_rows=2
+screen_id=21 palette_bank=36 tile_base=5120 reserved_last=5375 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=4 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
 
 [022] npcs/opponent_missile_boat.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[31]
+palette_slots=[37, 200, 201, 202]
 source=72x160 canvas=32x32 content=14x32 offset=(9,0)
-screen_id=22 palette_bank=31 tile_base=5376 reserved_last=5631 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=9 y_pad=0 used_tiles=4 strips=2 active_rows=2
+screen_id=22 palette_bank=37 tile_base=5376 reserved_last=5631 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=9 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
 
 [023] npcs/opponent_shot_orb.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[32]
+palette_slots=[38, 203, 204, 205]
 source=32x32 canvas=32x32 content=32x32 offset=(0,0)
-screen_id=23 palette_bank=32 tile_base=5632 reserved_last=5887 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
+screen_id=23 palette_bank=38 tile_base=5632 reserved_last=5887 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
 
 [024] npcs/opponent_shot_ring.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[33]
+palette_slots=[39, 206, 207, 208]
 source=40x40 canvas=32x32 content=32x32 offset=(0,0)
-screen_id=24 palette_bank=33 tile_base=5888 reserved_last=6143 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
+screen_id=24 palette_bank=39 tile_base=5888 reserved_last=6143 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
 
 [025] npcs/opponent_tank_camo.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[34]
+palette_slots=[40, 209, 210, 211]
 source=80x120 canvas=32x32 content=21x32 offset=(5,0)
-screen_id=25 palette_bank=34 tile_base=6144 reserved_last=6399 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=5 y_pad=0 used_tiles=4 strips=2 active_rows=2
+screen_id=25 palette_bank=40 tile_base=6144 reserved_last=6399 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=5 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
 
