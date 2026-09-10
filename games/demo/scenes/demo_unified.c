@@ -83,6 +83,7 @@ void NEOGEO_USER playSFX(uint8_t n);
 void NEOGEO_USER playVoiceCue(uint8_t n);
 void NEOGEO_USER ng_clear_screen_full(void);
 const uint16_t * NEOGEO_USER ng_get_screen_palette(uint16_t screen_id);
+const NGArtAsset * NEOGEO_USER ng_screen_art_asset(uint16_t screen_id);
 
 #define U_FLOOR_Y       192
 #define U_CENTRE_X      160
@@ -992,6 +993,10 @@ static void NEOGEO_USER bind_character_asset(NGCharacter *c,
     ng_char_set_sprite(c, first, strips, rows,
                        DEMO_SCREEN_TILE(frame), pal);
     ng_char_set_tile_stride(c, demo_screen_tile_stride(frame));
+    {
+        const NGArtAsset *art = ng_screen_art_asset(frame);
+        ng_char_set_palette_map(c, art ? art->tile_palettes : 0);
+    }
 
     c->scale_x = demo_asset_scale(frame, scale_x);
     c->scale_y = demo_asset_scale(frame, scale_y);
