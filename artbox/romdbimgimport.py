@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import io
+import hashlib
 import math
 import os
 import re
 import sys
+import struct
 from pathlib import Path
 
 import numpy as np
@@ -52,21 +54,9 @@ except ImportError:
     HAS_IMG2NEO = False
     alpha_bleed = None
 
-# Screen-converter dispatch.  Both makefiles' `art` target exports
-# ARTBOX_TILE=1 so the default route is the tile-local pipeline
-# (img2neo_tile): per-tile k-means + per-tile Floyd-Steinberg + greedy
-# MAE bank dedup + Lab-nearest pixel remap into a representative
-# palette derived from the weighted union of banks.  Preserves the
-# per-tile dither micro-detail through to the final indices.
-#
-# Precedence (highest first):
-#   ARTBOX_LEGACY=1  -> original nearest-neighbour-against-global-palette
-#                        path (kept for diffing / sanity-check builds).
-#   ARTBOX_CRT=1     -> CRT-tuned pipeline (img2neo_crt: Lab k-means +
-#                        horizontal-biased FS + gamma 1.20 / contrast
-#                        1.10 pre-boost).  Set by `make art-crt`.
-#   ARTBOX_TILE=1    -> tile-local pipeline (default; set by `make art`).
-#   (none set)       -> tile-local if available, else CRT, else legacy.
+# Normal imports use load_source_screen/load_source_sprite below. These
+# switches retain the optional older screen routes for comparison builds;
+# ARTBOX_TILE is also consumed by those legacy conversion helpers.
 USE_CRT    = os.environ.get("ARTBOX_CRT",    "").strip() in ("1", "true", "yes", "on")
 USE_TILE   = os.environ.get("ARTBOX_TILE",   "").strip() in ("1", "true", "yes", "on")
 USE_LEGACY = os.environ.get("ARTBOX_LEGACY", "").strip() in ("1", "true", "yes", "on")
@@ -431,7 +421,12 @@ def sprite_palette_group_key(spec):
         name = spec.get("name", "")
         match = re.search(r"_r(\d+)_c(\d+)", name)
         if not match:
-            return "characters:misc"
+            # Unrelated craft and portrait files are not animation frames.
+            # Keep an explicitly named alternate with its original ship.
+            stem = re.sub(r"^\d+_", "", os.path.splitext(name)[0])
+            if stem.endswith("_alt"):
+                stem = stem[:-4]
+            return f"characters:{stem}"
 
         row = int(match.group(1))
         col = int(match.group(2))
@@ -541,9 +536,15 @@ def prepare_source_sprite(spec):
 
 def load_source_sprite(spec, shared_master=None):
     rgba, geometry = prepare_source_sprite(spec)
-    indexed, banks, _ = quantize(rgba, master=shared_master, dither=spec["dither"])
+    indexed, banks, tile_banks = quantize(
+        rgba, bank_limit=int(spec.get("palette_banks", 1)),
+        master=shared_master, dither=spec["dither"]
+    )
     spec.update(geometry)
     spec["_keep_mask"] = rgba[:, :, 3] >= 128
+    if len(banks) > 1:
+        spec["extra_palettes"] = [palette_words(bank) for bank in banks[1:]]
+        spec["tile_palette_offsets"] = tile_banks.reshape(-1).tolist()
     return indexed.astype(np.uint16), banks[0].astype(np.uint16)
 
 
@@ -587,8 +588,9 @@ def allocate_extra_palettes(specs, base_palettes=None):
     that is the budget extra banks come out of, so the duplicates were
     being paid for in the fidelity of everything else.
 
-    Assets whose base palette is identical now name the same bank.  Extras
-    are allocated above the compacted base range.
+    Identical ordered palette words share a bank, including extra palettes.
+    Colors must match by index, not merely as an unordered set, because the
+    tile pixels already refer to those indices.
     """
     shared = {}
     next_slot = 16
@@ -607,20 +609,28 @@ def allocate_extra_palettes(specs, base_palettes=None):
             if key is not None:
                 shared[key] = next_slot
             next_slot += 1
-        # Recorded so the verifier can tell a deliberate share from a
-        # collision: two assets may name one bank only if this matches.
-        spec["palette_key"] = "%08x" % (hash(key) & 0xffffffff) if key is not None else None
+        spec["palette_key"] = (hashlib.sha256(struct.pack(">16H", *key)).hexdigest()
+                               if key is not None else None)
 
     base_used = next_slot - 16
     for spec in specs:
-        count = len(spec.get("extra_palettes", []))
-        if next_slot + count > 255:
-            raise ValueError("Palette RAM budget exceeded; reduce palette_banks in assets.cfg")
-        slots = [spec["palette_bank"]] + list(range(next_slot, next_slot + count))
+        slots = [spec["palette_bank"]]
+        for words in spec.get("extra_palettes", []):
+            key = tuple(int(w) for w in words)
+            if len(key) != 16 or any(w < 0 or w > 65535 for w in key):
+                raise ValueError(f"Invalid extra palette for {spec['name']}")
+            if key not in shared:
+                if next_slot >= 255:
+                    raise ValueError("Palette RAM budget exceeded; reduce palette_banks in assets.cfg")
+                shared[key] = next_slot
+                next_slot += 1
+            slots.append(shared[key])
         spec["palette_slots"] = slots
-        if count:
-            spec["tile_palette_banks"] = [slots[i] for i in spec.pop("tile_palette_offsets")]
-        next_slot += count
+        if len(slots) > 1:
+            offsets = spec.pop("tile_palette_offsets")
+            if any(i < 0 or i >= len(slots) for i in offsets):
+                raise ValueError(f"Invalid tile palette offsets for {spec['name']}")
+            spec["tile_palette_banks"] = [slots[i] for i in offsets]
     print(f"Palette RAM: {next_slot - 16}/239 asset banks "
           f"({base_used} base after sharing, {next_slot - 16 - base_used} extra); "
           f"FIX 0..15 and bank 255 reserved")
@@ -952,10 +962,8 @@ def main():
         # Sprite import dispatch matches the screen-import dispatch:
         # ARTBOX_LEGACY=1 -> legacy build_shared_sprite_palettes +
         # load_sprite_asset (naive nearest-colour, no dither).
-        # default       -> vivid pipeline: build_master_sprite_palettes
-        # derives one CIE-Lab master per animation family.  Main
-        # characters remain one family; unrelated NPC props and effects
-        # no longer compete for the same 15 visible colors.
+        # default -> whole-source fitting, with one shared CIE-Lab master
+        # per animation family. Static sprites may use extra palette banks.
         if USE_LEGACY or not HAS_VIVID_SPRITES:
             shared_palettes = build_shared_sprite_palettes(specs)
             sprite_loader = load_sprite_asset

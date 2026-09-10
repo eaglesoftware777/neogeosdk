@@ -11,126 +11,73 @@ than treating as a black box.
 
 ## The colour target
 
-A Neo Geo colour word is not RGB444. Bit 15 is the "dark" bit, bits 14-12
-carry the least-significant bit of each channel, and bits 11-0 carry the
-top four bits of R, G and B. The result is **5 bits per channel, 32 levels,
-in steps of 8**. Every colour the pipeline emits is snapped onto that
-lattice.
+A Neo Geo colour word is not RGB444. Bit 15 is the common "dark" bit,
+bits 14-12 carry the low bit of each five-bit channel, and bits 11-0
+carry their upper four bits. The common dark bit produces two interleaved
+intensity grids; it is not an independent sixth bit for each channel.
+The converter fits on this hardware lattice and verifies the packed words.
 
 Each sprite or tile can use **15 colours plus transparent** — 4 bits of
 index, where index 0 is transparent.
 
-## The v1.7.0 quantiser
+## Default quantiser
 
-`artbox/img2neo_tile.py` is the default conversion path for every build;
-both `make art` (Linux) and `make -f MakefileWin32.mak art` export
-`ARTBOX_TILE=1` so this is the route every ROM takes.
+`artbox/romdbimgimport.py` routes normal builds through
+`artbox/palette_banks.py`. Both makefiles use this path. Older experimental
+converters remain available, but their contrast enhancement, CLAHE and
+per-tile diffusion are not part of the default import.
 
-The v1.7.0 pass rebuilt it around four ideas. Together they moved mean
-colour error (CIE-Lab dE) from 9.10 to 8.33 and p95 error from 18.19 to
-15.66 across the reference asset set, while cutting measured dither
-speckle by a third.
+1. Fit the first 15-colour palette to the whole image's visible content,
+   weighted by source pixel frequency. Refine in CIE-Lab, snapping to the
+   hardware grid during refinement rather than only after fitting.
+2. Preserve that whole-image palette as a fallback. For each extra bank,
+   fit the worst remaining tile, then consider refitting the whole region
+   that benefits. Accept a bank only when it reduces nearest-colour error.
+3. Select one bank per 16x16 tile. Keep the indices and that bank map
+   together through C-ROM encoding, generated metadata and runtime binding.
+4. Apply no dither to normal sprite art. Backgrounds may use low-amplitude,
+   image-aligned ordered dither; no diffusion wave crosses sprite contours.
 
-**Match in Lab, not in RGB.** Palette selection, the k-means refinement,
-and the final per-pixel remap all run in CIE-Lab through a precomputed
-32³ lattice LUT (`lab_lattice_lut()`, `lab_palette()`). Matching in one
-space and measuring in another is what makes a quantiser that scores well
-look wrong; doing everything in Lab is what makes the numbers mean
-something. An earlier attempt that matched in luma-weighted YCbCr while
-measuring in Lab made sprites measurably *worse*.
+Solid core pixels train sprite palettes where sufficient core coverage
+exists. Tiny antialiased craft fall back to visible pixels so their palette
+is not fitted to a few highlights alone. Alpha below 128 becomes index zero.
+Opaque black remains a nonzero index. The default path does not force extra
+contrast or saturation onto the artist's colours.
 
-**Refit the palette onto the hardware grid, then re-optimise.** k-means
-picks colours in continuous space, and snapping them to the 32-level
-lattice afterwards moves every centroid slightly — so the result is no
-longer optimal for the colours it was chosen for.
-`refine_palette_on_lattice()` runs Lloyd iterations with the snap *inside*
-the update step, keeps a move only when total error actually drops, and
-re-seeds duplicate or unowned slots from the worst-served pixels. Nothing
-is wasted on a colour no pixel wants.
-
-**Dither with blue noise, and only where dithering helps.**
-`_void_and_cluster_mask()` builds a 32 × 32 void-and-cluster blue-noise
-mask (0.04 % of its energy in the low frequencies), used to order the mix
-between the two nearest palette entries along a serpentine scan. A dead
-band skips the mix entirely when a pixel sits within 18 % of either
-endpoint — those are the pixels where dithering adds visible speckle
-without adding colour. This is what removed the "noise dots" from flat
-regions.
-
-**Push contrast and saturation before clustering, with a soft knee.**
-Fifteen colours across a whole image pull everything toward the middle of
-the gamut, because the average of a cluster is always less saturated than
-its members. `_neo_palette_pop()` compensates before clustering — a
-contrast blend and a saturation push, both stronger for sprites than for
-backgrounds — and compresses the top and bottom eighth with a `tanh` knee
-instead of clipping. Clipping folds every boosted highlight onto pure
-white, which throws colour detail away before k-means ever sees it.
-
-Sprite and background paths are tuned separately: sprites get a wider
-smoothing cut and no ordered mixing (a dithered sprite edge reads as
-noise against a moving background), backgrounds get the full treatment.
-
-Results are cached; `_VIVID_CACHE_VERSION` invalidates the cache when the
-algorithm changes.
+`palette_banks = 1..16` is an upper limit, not a promise to consume every
+bank. Static sprites now honour it as screens do. Animation families retain
+one shared master palette; raising their budget alone does not enable
+per-frame extra banks, which could introduce colour changes during motion.
 
 ## Resampling
 
-Every resize in the pipeline goes through `resize_rgba_linear()`
-(`img2neo.py`), not `PIL.Image.resize()` directly.
+Screen fitting uses `fit_screen_for_display()` and accounts for the chosen
+vertical hardware shrink. Sprite fitting uses `fit_sprite_rgba()`: preserve
+aspect ratio, reduce only when necessary, then pad transparently at the
+requested anchor. The current sprite fitter rounds canvas dimensions down
+to multiples of 16, so choose explicit multiples for predictable output.
+It uses Pillow's RGBA Lanczos thumbnail path, not the optional linear-light
+helper available in `img2neo.py`.
 
-PIL resizes gamma-encoded sRGB: it takes the arithmetic mean of the stored
-numbers, and those numbers are roughly the 1/2.2 power of the light they
-stand for. Averaging in that space is not averaging light. A checkerboard
-of black and white, which should resolve to a mid grey of 188, resolves to
-128 instead — and the same loss, smaller but in the same direction, applies
-to every downscale. Measured across the demo's character art, gamma-space
-downscaling was throwing away 8–22% of each sprite's luminance before the
-quantiser ever saw it, which is most of what "the scaled sprite looks
-washed out next to the source" means.
-
-`resize_rgba_linear()` converts to linear light, resizes there, and converts
-back. Alpha gets the same care: RGB is premultiplied before the filter so a
-transparent pixel's colour cannot leak into its opaque neighbours, and
-unpremultiplied afterwards.
-
-It also runs `alpha_bleed()` at **source** resolution first. That order
-matters. A sprite cut out against white has white sitting under its
-transparent pixels; a filter run before the bleed mixes that white into the
-contour, baking in the halo `alpha_bleed()` exists to remove — by the time
-the bleed runs, the halo is opaque pixels and it can no longer see it.
+`prepare_source_sprite()` applies optional border-connected halo cleanup
+and alpha-edge colour bleeding after fitting. Original PNG files are not
+rewritten. Avoid global halo stripping on luminous effects: bright pixels
+can be intentional art, not a matte defect.
 
 ## Palette banks
 
-Per-tile palettes have to collapse into shared hardware banks, and how two
-palettes are compared decides how much colour survives that.
+`allocate_extra_palettes()` assigns absolute hardware banks after fitting.
+Byte-identical ordered colour words share one slot, including extra banks.
+This step does not approximate or reorder colours: pixel indices are already
+encoded, so two palettes containing the same colours in a different order
+are not interchangeable. The verifier compares the actual words, not only
+the manifest's `palette_key` hash.
 
-`cluster_and_remap_tile_palettes()` compares them as **sets**, with a
-symmetric mean-nearest-neighbour distance in Lab: how far each colour of one
-palette sits from its closest counterpart in the other, averaged both ways.
-
-The reason is that these palettes come out of k-means, so their slot order
-is whatever the seeding happened to produce. Comparing slot *i* against slot
-*i* — the obvious thing to do — means two tiles holding the same fifteen
-colours in a different order score as maximally different. They take a bank
-each, the bank budget runs out on duplicates, the tolerance widens to
-compensate, and palettes that really *are* different get merged. Order
-sensitivity spends the budget on duplicates and pays for it in fidelity.
-
-Each bank is then re-fitted to every colour its members hold, with a few
-Lloyd iterations in Lab. A greedy pass has to name a bank before it knows
-who will join it, so without this a bank is one tile's palette and every
-other member is quantised onto it.
-
-Mean dE against the pre-clustering (per-tile optimal) reference, measured on
-three of the demo's sources:
-
-| Source | Before | After |
-|---|---|---|
-| `zz_bg/0.png` | 11.39 | 1.88 |
-| `backgrounds/0.png` | 11.71 | 2.25 |
-| `npcs/…_sky_boss.png` | 28.18 | 5.37 |
-
-`epsilon` is in dE, so a threshold means something; the default is 6.
+The generated `NGArtAsset.tile_palettes` pointer starts at the artwork's
+first active tile. It uses the same row stride as the tile data. Bind it
+with `ng_sprite_group_set_palette_map()` or `ng_char_set_palette_map()`;
+loading the banks without binding this map renders the right pixels in the
+wrong colours. Neither setter loads palettes or writes VRAM immediately.
 
 ## Import size
 
@@ -145,14 +92,13 @@ sprite in hardware and half of that pattern is gone; quarter it and the
 shape goes with it. The source can be flawless and the result still arrives
 as a smear of colour.
 
-The pipeline's own resampling is linear-light Lanczos followed by a
-quantiser that dithers against the pixels it is actually producing. So the
+The pipeline fits and quantises against the pixels it actually produces. The
 rule is: set each rule's `target_width`/`target_height` to the largest size
 that asset is ever drawn, and draw it at full scale.
 
-Two further benefits fall out of it: the asset costs proportionally less
-C ROM, and it needs fewer hardware sprite strips, which is the scarcer
-budget in a busy scene.
+Smaller assets need fewer hardware sprite strips. This ROM layout still
+reserves 256 tiles per asset, so smaller imports currently leave transparent
+C-ROM padding rather than reducing the reserved allocation.
 
 `cat_sky_planes`, `cat_sky_opponents`, `cat_sky_bosses` and `cat_big_enemy`
 exist for exactly this — per-asset ceilings for sprites whose scene size is
@@ -198,20 +144,34 @@ symptom is the right palette over the wrong art — a recognisable shape in
 plausible colours that is not the asset you asked for, which is easy to
 mistake for a quantiser problem.
 
-Both engines validate the window an asset bind describes, and both now
-validate it against the stride the character will actually be drawn with
-rather than its strip count. A bind that would walk past the asset is
-refused. Note that it is refused *silently* — the character keeps what it
-had — so a wrong stride still shows up as stale art rather than as an
-error. Check `tile_stride` first when art comes out wrong after an import
-setting changes.
+Both engines validate `ng_char_bind_asset()` against the incoming asset's
+stride and bounds before modifying the character. It returns zero on
+failure and leaves the previous frame intact; check its return value.
+The lower-level `ng_char_set_sprite()` returns void and retains its existing
+bounds checks. Bind the map after setting sprite geometry and stride:
+
+```c
+ng_char_set_sprite(character, first_slot, asset->strips, asset->active_rows,
+                   asset->tile_base, asset->palette_bank);
+ng_char_set_tile_stride(character, asset->tile_stride);
+ng_char_set_palette_map(character, asset->tile_palettes);
+```
+
+For an atomic bind, zero-initialize `NGSpriteAssetView`, fill its geometry,
+range, offsets and `tile_palettes`, then call `ng_char_bind_asset()`.
+The map contains absolute bank numbers and must remain alive while bound;
+generated ROM tables satisfy that lifetime. NULL selects the single bank in
+`character->palette`. `ng_char_set_sprite()` resets the map, so set it again
+after changing the asset. The C++ method is `NGCharacter::setPaletteMap()`;
+the same C entry point is available in both engines. Rebuild all game objects
+when updating the SDK because NGCharacter and NGSpriteAssetView gained a field.
 
 ## Palette RAM budget
 
-There are 239 usable palette banks: 0..15 belong to the FIX layer and 255
-holds the backdrop. Every bank is 16 entries of which entry 0 is
-transparent on this hardware, so a bank carries 15 colours and the whole
-of palette RAM carries 3585 at once.
+The SDK allocates 239 asset banks: 16..254. It reserves 0..15 for FIX and
+255 for backdrop/HUD use. Each asset bank has 15 visible entries plus
+transparent index zero, so the asset budget is 3585 visible colour entries.
+That is an allocation ceiling, not a guarantee of that many distinct colours.
 
 That budget is global to a game — an asset owns its banks for the life of
 the ROM, so every asset's banks have to coexist. Two things keep it from
@@ -220,26 +180,27 @@ being wasted:
 **Assets holding the same palette share a bank.** Base banks used to be
 positional, one per asset, so an animation whose frames all render
 against one shared palette occupied a bank per frame holding the same
-colours. Sharing them cut the demo from 219 banks to 119. `palette_key`
-in the manifest records that a share was deliberate; the verifier still
-rejects two assets landing on one bank by accident, and extra banks are
-never shared.
+colours. Base and extra banks now share only when all sixteen ordered words
+match. `palette_key` is a stable diagnostic fingerprint; the verifier reads
+the actual base words from neopal.bin and extra words from the manifest.
+Changing a shared bank for a palette effect changes every object using it.
+Copy to a separately reserved effect bank before an independent colour effect.
 
 **Extra banks go to what covers the screen.** A background occupies the
 whole frame and a sprite occupies a fraction of it, so the budget is
-weighted accordingly — `palette_banks` is 16 for backgrounds, 12 for
-titles and the Sky Lance sky, 8 for screens, 6 for bosses, 1 for ordinary
-sprites.
-
-Raising an asset's bank count roughly scales the colours it can show: a
-background at 8 banks renders about 105 distinct colours, at 16 about
-189.
+weighted accordingly. Budgets live in each game's `artbox/assets.cfg`, not
+only in the shared generator defaults. Existing configs are preserved.
+Sky Lance has enough capacity for 16-bank bosses, 4-bank opponents and
+3-bank player craft. The demo retains conservative single-bank animation
+families. Do not copy one game's budgets into another without rebuilding
+and checking total occupancy. Additional banks are used only when beneficial.
 
 ### What extra banks cannot fix
 
 A tile reads one palette. Extra banks help where the variety is *between*
 tiles and not at all where it is *within* one, which is why they transform
-a background and barely move a character:
+a background more than a small character. An earlier isolated fitting study
+measured these mean dE values; they are examples, not current build totals:
 
 | | 1 bank | 8 banks | 16 banks | one per tile |
 |---|---|---|---|---|
@@ -255,49 +216,34 @@ RAM than exists.
 
 The hardware has two complete palette sets, selected by a write to
 `REG_PALBANK0` / `REG_PALBANK1`, so 8192 entries can be resident and 4096
-displayed. Nothing here uses it, deliberately: a demo frame shows under
-200 distinct colours, so the first set is nowhere near spent. It becomes
-worth reaching for when a single frame genuinely needs more than 3585
-colours, or for swapping a whole scene's palette in one write.
+displayed. The allocator currently uses one set. The second set may be
+useful for prepared whole-scene palette switches, but it does not remove
+the 15-visible-colours-per-tile limit.
 
 ## Palette anchors
 
-Pure black and pure white are reserved as palette entries when the asset
-has a real population at either end — currently 0.4% of its opaque
-pixels. k-means will not choose either on its own, because both sit at
-the end of a distribution where a centroid always lands short, and the
-result is line art whose outline comes back grey.
-
-The threshold matters because a reserved slot is one of fifteen. An
-existence test spends two slots on almost every asset, since an
-anti-aliased contour bled inward nearly always leaves one dark pixel
-somewhere. Requiring a population means an asset with no true black keeps
-all fifteen slots for colours it is actually made of.
+Index zero is always transparent, independently of its RGB value. The
+default quantiser preserves all distinct hardware colours when they fit
+within fifteen entries. More complex sources use frequency-weighted fitting;
+there is no automatic UI detector or unconditional black/white reservation.
+The optional older converters have separate anchor heuristics.
 
 ## HD conditioning
 
-`ARTBOX_ENHANCE=0`, or `img2neo_tile.py --no-enhance`, turns off two passes
-that otherwise run before quantisation:
-
-- an edge-preserving **bilateral** smooth, which calms the compression noise
-  and gradient banding that fifteen colours turn into blotches without
-  softening outlines — a plain blur would take the outlines with it;
-- **CLAHE** on the Lab lightness channel only, so local contrast survives the
-  quantisation while hue and chroma stay where the artist put them.
-
-They are **on by default**, because the source art in this tree is HD —
-photographs, renders and upscaled scans, where noise and a wide tonal range
-both survive the resize and then fight the 15-colour budget. Turn them off
-for art authored at the target size, which has neither problem: running them
-over it rewrites the artist's tone choices for nothing.
+The older `img2neo_tile.py` and optional HD tools expose bilateral filtering,
+CLAHE and sharpening. Those controls do not run in the default source-faithful
+path. Compare any optional converter against the source and actual C-ROMs
+before adopting it; stronger contrast or more dither is not automatically
+more accurate. No converter can recover detail removed by resizing or make
+the hardware display unrestricted RGB per pixel.
 
 ## Alternative pipelines
 
 | Route | Script | When |
 |---|---|---|
-| Default (tile-local) | `img2neo_tile.py` | Every build. Per-tile k-means++, per-tile dither, Lab set-distance bank dedup, Lab-nearest remap. |
+| Default | `palette_banks.py` via `romdbimgimport.py` | Whole-image fallback, error-driven extra banks, stable animation masters. |
 | CRT | `img2neo_crt.py` | `make art-crt` or `ARTBOX_CRT=1`. Lab k-means, horizontal-biased dither, gamma 1.20 / contrast 1.10 pre-boost. |
-| HD | `img2neo_hd.py` | Opt-in. Bilateral filter, CLAHE on the Lab L channel, unsharp mask, blue-noise dither. Best for photographs. |
+| HD | `img2neo_hd.py` | Opt-in conditioning; measure against the source before adopting it. |
 | Legacy | `ARTBOX_LEGACY=1` | The original nearest-neighbour path, kept for diffing. |
 | FIX HD | `fixtiles_hd.py` | Per-tile palette FIX conversion; `--sharp-text` binarises glyph sources. |
 
@@ -369,6 +315,32 @@ python3 artbox/validate_assets.py
 
 `make art` runs the palette check itself and fails the build on a mismatch.
 
+Host regressions and captured runtime checks:
+
+```sh
+make unit-tests
+python3 -m unittest discover -s tests -p 'test_artbox*.py' -v
+python3 tools/game_capture.py --game skylance --output /tmp/sky-capture --seconds 180
+python3 tools/artbox_runtime_report.py --game skylance --capture /tmp/sky-capture --strict
+```
+
+The capture stores screenshots, SCB VRAM and palette RAM. The runtime report
+compares populated tile entries with generated bank assignments and colour
+words. Palette-effect scenes intentionally change colours and are not suitable
+for an unconditional strict comparison. Captures mute audio and cannot verify
+sound quality. Rebuild P1 after rebuilding art so runtime tables match C-ROMs.
+
+For source fidelity, retain `assets_manifest.json` and `neorom.db` from the
+previous build in a separate folder, then run:
+
+```sh
+python3 tools/artbox_quality_report.py --game skylance --before /tmp/sky-before --output /tmp/sky-quality
+```
+
+This decodes both C-ROMs, checks them against the importer indices and writes
+source/before/after comparisons plus per-asset Lab error. Matching asset lists
+are required. It accepts manifests produced on either Windows or WSL.
+
 ## Artbox Studio
 
 `artbox/artbox_studio.py` is the PyQt6 desktop front end for everything
@@ -405,7 +377,11 @@ Each `[rule:name]` section in `artbox/assets.cfg` can define:
 - `fit`: `crop` or `pad`
 - `anchor`: placement anchor such as `center` or `bottom-center`
 - `target_width` / `target_height`: output canvas size
-- palette and image-processing settings such as `dither`, `contrast`, and `kmeans_iters`
+- `palette_banks`: maximum 1..16 banks for static art; shared animation masters remain single-bank
+- `dither`: use `none` for sprites or `ordered` for gentle background dithering
+- `halo_strip` / `halo_luma_threshold`: optional sprite border cleanup
+- `display_shrink_y`: the screen fitting ratio expected at runtime
+- older image-processing settings such as `contrast` and `kmeans_iters` affect optional converters, not the default fitter
 
 ## Categories
 

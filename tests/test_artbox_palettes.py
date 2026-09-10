@@ -3,6 +3,7 @@
 import io
 import sys
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 import numpy as np
@@ -12,9 +13,70 @@ from img2neo import rgb_to_lab
 from img2neo_tile import ng_snap
 from palette_banks import fit_palette, palette_words, quantize, reconstruct
 from tile_codec import HALF_SOLID_TILE, decode_image, encode_image, write_utility_tiles
+from romdbimgimport import allocate_extra_palettes, load_source_sprite, sprite_palette_group_key
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+from verify_artbox_palettes import validate_palette_ownership
 
 
 class PaletteTests(unittest.TestCase):
+    def test_sprite_import_honors_budget_without_changing_geometry(self):
+        rgba = np.full((32, 64, 4), 255, dtype=np.uint8)
+        rgba[:, :, :3] = np.random.default_rng(31).integers(0, 256, (32, 64, 3), dtype=np.uint8)
+        rgba[:2] = 0
+        spec = {"name": "boss.png", "dither": "none", "palette_banks": 4}
+        with patch("romdbimgimport.prepare_source_sprite", return_value=(rgba, {})):
+            pixels, _ = load_source_sprite(spec)
+        self.assertEqual(pixels.shape, (32, 64))
+        self.assertTrue(np.all(pixels[:2] == 0))
+        self.assertGreater(len(spec["extra_palettes"]), 0)
+        self.assertLessEqual(len(spec["extra_palettes"]), 3)
+        self.assertEqual(len(spec["tile_palette_offsets"]), 8)
+
+    def test_animation_master_stays_single_bank(self):
+        rgba = np.full((16, 16, 4), 255, dtype=np.uint8)
+        master = fit_palette(rgba[:, :, :3])
+        spec = {"dither": "none", "palette_banks": 8}
+        with patch("romdbimgimport.prepare_source_sprite", return_value=(rgba, {})):
+            _, palette = load_source_sprite(spec, master)
+        np.testing.assert_array_equal(palette[1:], master)
+        self.assertNotIn("extra_palettes", spec)
+
+    def test_unrelated_pilots_and_craft_do_not_share_an_animation_palette(self):
+        def key(name):
+            return sprite_palette_group_key({"subdir": "characters", "name": name})
+        self.assertNotEqual(key("sprite_p1_plane.png"), key("sprite_p1_pilot.png"))
+        self.assertNotEqual(key("sprite_p1_plane.png"), key("sprite_p2_plane.png"))
+        self.assertEqual(key("010_ship.png"), key("011_ship_alt.png"))
+        self.assertEqual(key("sprite_076_r07_c11.png"), key("sprite_077_r07_c12.png"))
+
+    def test_base_and_extra_banks_share_only_identical_ordered_words(self):
+        first, second = list(range(16)), list(range(16, 32))
+        third = list(reversed(second))
+        specs = [{"db_index": i, "name": str(i), "canvas_width": 32,
+                  "canvas_height": 32} for i in range(2)]
+        specs[0].update(extra_palettes=[second, third], tile_palette_offsets=[0, 1, 2, 1])
+        specs[1].update(extra_palettes=[first, third], tile_palette_offsets=[1, 0, 2, 1])
+        bases = {0: first, 1: second}
+        allocate_extra_palettes(specs, bases)
+        self.assertEqual(specs[0]["palette_slots"], [16, 17, 18])
+        self.assertEqual(specs[1]["palette_slots"], [17, 16, 18])
+        self.assertEqual(validate_palette_ownership(specs, bases), {16, 17, 18})
+        specs[1]["extra_palettes"][1] = second
+        with self.assertRaisesRegex(ValueError, "different palettes"):
+            validate_palette_ownership(specs, bases)
+
+    def test_claimed_hash_does_not_allow_conflicting_palettes(self):
+        specs = [{"db_index": i, "name": str(i), "palette_bank": 16,
+                  "palette_key": "same claimed hash"} for i in range(2)]
+        with self.assertRaisesRegex(ValueError, "different palettes"):
+            validate_palette_ownership(specs, {0: list(range(16)), 1: list(range(16, 32))})
+
+    def test_palette_budget_cannot_overwrite_backdrop(self):
+        specs = [{"db_index": i, "name": str(i)} for i in range(240)]
+        with self.assertRaisesRegex(ValueError, "budget exceeded"):
+            allocate_extra_palettes(specs)
+
     def test_utility_tiles_preserve_art_and_blank_padding(self):
         c1, c2 = io.BytesIO(), io.BytesIO()
         c1.write(b"\x12" * 64)

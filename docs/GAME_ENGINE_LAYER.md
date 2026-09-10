@@ -234,6 +234,13 @@ That callback is executed once per frame for each active character of that kind.
 
 Attach a Neo Geo sprite strip group to a character:
 
+For generated multi-palette artwork, also bind the asset's tile stride and
+`tile_palettes` map using `ng_char_set_tile_stride()` followed by
+`ng_char_set_palette_map()`. The latter accepts NULL for single-bank art.
+`ng_char_bind_asset()` validates an entire `NGSpriteAssetView` atomically.
+See [Artbox Graphics Pipeline](ARTBOX_PIPELINE.md#tile-stride) for lifetime,
+reset and C++ API details. Recompile game objects after updating these structs.
+
 ```c
 char_set_sprite(c, 32, 6, 16, tile_base, NG_PAL_PLAYER_BASE);
 char_set_body(c, -8, -24, 16, 32);

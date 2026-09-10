@@ -32,13 +32,16 @@ def main():
                 break
     if not nm:
         parser.error("pass --nm with the cross-toolchain nm executable")
-    result = subprocess.check_output([nm, "-n", str(root / "out/game")], text=True)
+    result = subprocess.check_output([nm, "-n", "-C", str(root / "out/game")], text=True)
     (output / "symbols.txt").write_text(result, encoding="utf-8")
     symbols = {line.split()[2]: line.split()[0] for line in result.splitlines() if len(line.split()) == 3}
+    if not {"s_chapter_view_index", "s_chapter_elapsed", "s_restart_enabled"}.issubset(symbols):
+        parser.error("out/game has no demo chapter symbols; build the matching demo P1 first")
     env = os.environ.copy()
     env.update(DEMO_CAPTURE_DIR=str(output),
                DEMO_CHAPTER_ADDRESS=symbols["s_chapter_view_index"],
                DEMO_ELAPSED_ADDRESS=symbols["s_chapter_elapsed"],
+               DEMO_RESTART_ADDRESS=symbols["s_restart_enabled"],
                DEMO_CAPTURE_CONTROLS="1" if args.controls else "0")
     if os.name != "nt":
         env.update(DISPLAY="", SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy")
@@ -59,7 +62,8 @@ def main():
     if args.controls:
         with (output / "controls.tsv").open(encoding="utf-8") as stream:
             checks = {(int(row["chapter"]), row["action"]) for row in csv.DictReader(stream, delimiter="\t")}
-        expected = {(chapter, "C_PASS") for chapter in range(1, 27)}
+        expected = {(chapter, "C_PASS") for chapter in range(1, 27) if chapter != 18}
+        expected.add((18, "C_RESERVED"))
         expected |= {(chapter, "A_PASS") for chapter in range(1, 26)}
         if expected - checks:
             raise SystemExit(f"Controls not verified: {sorted(expected - checks)}")

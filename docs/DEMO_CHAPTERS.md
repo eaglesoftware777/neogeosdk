@@ -1,8 +1,8 @@
-# The Demo Reel — 25 Chapters
+# The Demo Reel - 26 Chapters
 
 **Eagle Software · Neo Geo SDK v1.7.0 · `games/demo`, id 777**
 
-The demo ROM is a single linear flow of 25 chapters. Each one isolates a
+The demo ROM is a single linear flow of 26 chapters. Each one isolates a
 subsystem, prints its own title and a one-line caption, and shows the
 chapter number in the top-right corner of the screen — so a problem can be
 reported as "chapter 14" rather than described.
@@ -54,8 +54,23 @@ chapter needs its own reset path.
 | 21 | TARGET RANGE | MOVING TARGETS · SPRITE DEPTH | Crates approaching down depth lanes, breaking apart where they are hit |
 | 22 | DEPTH RIDE | OBJECTS APPROACH AS YOU WALK | Sprite-scaling pseudo-3D: NPCs approach from the horizon, L/R to move |
 | 23 | SOUND | YM2610 TOUR · ADPCM-B / FM / SSG / SPEECH | Every audio subsystem in turn, with labels naming the active driver call |
-| 24 | SKY LANCE | VERTICAL SHOOTER MINI | A playable slice of the full Sky Lance game — waves, boss, scoring. Full-screen scrolling sky with the HUD letterboxed onto opaque FIX bands |
-| 25 | CREDITS | EAGLE SOFTWARE 2026 | Module roll with a palette fade-out |
+| 24 | SKY LANCE | VERTICAL SHOOTER MINI | Waves, boss and scoring over a scrolling sky; separate sprite bands keep the FIX HUD readable |
+| 25 | STAR RAID LANCE | FORMATION ASSAULT | Combined formation shooter, B fire, movement and C restart before the closing chapter |
+| 26 | CREDITS | EAGLE SOFTWARE 2026 | Module roll with a palette fade-out |
+
+Characters bind both the generated tile stride and per-tile palette map.
+Palettes are loaded separately; there are no hidden screen draws for loading
+character colours. The current verification tools capture every chapter and
+can exercise A-next/C-restart through real emulated controller inputs:
+
+```sh
+python3 tools/demo_capture.py --output /tmp/demo-tour --seconds 1100
+python3 tools/demo_capture_report.py /tmp/demo-tour
+python3 tools/demo_capture.py --output /tmp/demo-controls --seconds 1100 --controls
+```
+
+Build the matching demo P1 immediately before capture: the script resolves
+chapter addresses from `out/game`. Do not build another game during a capture.
 
 ## Reading the reel as documentation
 
