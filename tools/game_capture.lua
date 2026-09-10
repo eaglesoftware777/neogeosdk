@@ -5,6 +5,8 @@
 -- a gentle input pattern so a game that waits for the stick still moves.
 local machine = manager.machine
 local screen = machine.screens[':screen']
+local memory = machine.devices[':maincpu'].spaces['program']
+local vram = emu.item(machine.devices[':spritegen'].items['0/m_videoram'])
 local output = os.getenv('GAME_CAPTURE_DIR') or '/tmp/neogeo-qa'
 local every = tonumber(os.getenv('GAME_CAPTURE_EVERY') or '2.0')
 local play = os.getenv('GAME_CAPTURE_PLAY') ~= '0'
@@ -43,7 +45,16 @@ emu.register_frame_done(function()
     end
 
     if now >= next_capture then
-        screen:snapshot(string.format('%s/t%06.1f_%06d.png', output, now, frame))
+        local name = string.format('%s/t%06.1f_%06d', output, now, frame)
+        screen:snapshot(name .. '.png')
+        -- Keep the actual SCB tile attributes and palette RAM with the image.
+        -- A correct ROM preview alone cannot catch a missing runtime binding.
+        local state = assert(io.open(name .. '.vram.bin', 'wb'))
+        for word = 0, 0x87ff do state:write(string.pack('>I2', vram:read(word))) end
+        state:close()
+        local palette = assert(io.open(name .. '.palette.bin', 'wb'))
+        for word = 0, 4095 do palette:write(string.pack('>I2', memory:read_u16(0x400000 + word * 2))) end
+        palette:close()
         next_capture = now + every
     end
 end)

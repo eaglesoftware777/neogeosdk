@@ -5,6 +5,7 @@ local screen = machine.screens[':screen']
 local output = os.getenv('DEMO_CAPTURE_DIR') or '/tmp/neogeo-qa'
 local chapter_address = tonumber(os.getenv('DEMO_CHAPTER_ADDRESS'), 16)
 local elapsed_address = tonumber(os.getenv('DEMO_ELAPSED_ADDRESS'), 16)
+local restart_address = tonumber(os.getenv('DEMO_RESTART_ADDRESS'), 16)
 local vram = emu.item(machine.devices[':spritegen'].items['0/m_videoram'])
 local pc_item = emu.item(machine.devices[':maincpu'].items['0/m_pc'])
 local profile = {}
@@ -61,6 +62,9 @@ local function sample(now, current)
     local palette = assert(io.open(string.format('%s/ch%02d_%06d.palette.bin', output, current, frame), 'wb'))
     for word = 0, 4095 do palette:write(string.pack('>I2', memory:read_u16(0x400000 + word * 2))) end
     palette:close()
+    local raw = assert(io.open(string.format('%s/ch%02d_%06d.vram.bin', output, current, frame), 'wb'))
+    for word = 0, 0x87ff do raw:write(string.pack('>I2', vram:read(word))) end
+    raw:close()
 end
 
 emu.register_frame_done(function()
@@ -94,7 +98,13 @@ emu.register_frame_done(function()
         local elapsed = memory:read_u16(elapsed_address)
         local a, c = 0, 0
         if control_phase == 0 and now - started >= 2 and elapsed >= 90 then
-            control_phase, control_time = 1, now
+            if current == 18 and restart_address and memory:read_u8(restart_address) == 0 then
+                control_phase, control_time = 2, now
+                control_report:write(string.format('%d\tC_RESERVED\t%.3f\n', current, now))
+                control_report:flush()
+            else
+                control_phase, control_time = 1, now
+            end
         elseif control_phase == 1 and elapsed < previous_elapsed then
             control_phase, control_time = 2, now
             control_report:write(string.format('%d\tC_PASS\t%.3f\n', current, now))
@@ -102,7 +112,7 @@ emu.register_frame_done(function()
         elseif control_phase == 1 and now - control_time > 8 then
             control_report:write(string.format('%d\tC_FAIL\t%.3f\n', current, now))
             control_phase, control_time = 2, now
-        elseif control_phase == 2 and elapsed >= (current == 24 and 480 or 110) then
+        elseif control_phase == 2 and elapsed >= (current == 24 and 480 or current == 18 and 300 or 110) then
             control_phase, control_time = 4, now
         end
         if control_phase == 1 and now - control_time < 0.25 then c = 1 end
@@ -111,6 +121,9 @@ emu.register_frame_done(function()
         input(':edge:joy:JOY1', 'P1 C', c)
         -- Exercise movement and firing after restart, including the mini shooter.
         local play = control_phase == 2 and (current == 17 or current == 18 or current == 21 or current == 24 or current == 25)
+        if play and current == 18 then
+            input(':edge:joy:JOY1', 'P1 C', (elapsed % 90 < 10) and 1 or 0)
+        end
         input(':edge:joy:JOY1', 'P1 B', play and (elapsed % 30 < 15) and 1 or 0)
         input(':edge:joy:JOY1', 'P1 Left', play and (elapsed % 120 < 40) and 1 or 0)
         input(':edge:joy:JOY1', 'P1 Right', play and (elapsed % 120 >= 60 and elapsed % 120 < 100) and 1 or 0)

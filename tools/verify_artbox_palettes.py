@@ -3,6 +3,7 @@
 import argparse
 import json
 import re
+import struct
 import sys
 from pathlib import Path
 
@@ -13,6 +14,36 @@ NEOPAL_RECORD_SIZE = 136  # int32 index + 16*uint64 palette words
 def fail(msg: str) -> int:
     print(f"ERROR: {msg}", file=sys.stderr)
     return 1
+
+
+def validate_palette_ownership(manifest, base_palettes):
+    """Compare actual ordered words, not a manifest's claimed hash."""
+    owners = {}
+    for spec in manifest:
+        slots = spec.get("palette_slots", [spec["palette_bank"]])
+        palettes = [base_palettes[spec["db_index"]]] + spec.get("extra_palettes", [])
+        if len(slots) != len(palettes) or slots[0] != spec["palette_bank"]:
+            raise ValueError(f"palette count or base mismatch for {spec['name']}")
+        for slot, palette in zip(slots, palettes):
+            if not 16 <= slot < 255:
+                raise ValueError(f"asset bank {slot} overlaps reserved palette RAM")
+            words = tuple(int(word) for word in palette)
+            if len(words) != 16 or any(word < 0 or word > 65535 for word in words):
+                raise ValueError(f"invalid palette words for {spec['name']}")
+            if slot in owners and owners[slot][1] != words:
+                raise ValueError(f"asset bank {slot} shared by {owners[slot][0]} "
+                                 f"and {spec['name']} with different palettes")
+            owners[slot] = spec["name"], words
+        mapping = spec.get("tile_palette_banks")
+        if len(slots) > 1 and mapping is None:
+            raise ValueError(f"missing tile palette map for {spec['name']}")
+        if mapping is not None:
+            width, height = spec["canvas_width"], spec["canvas_height"]
+            if (width <= 0 or height <= 0 or width % 16 or height % 16
+                    or len(mapping) != width * height // 256
+                    or not set(mapping).issubset(slots)):
+                raise ValueError(f"invalid tile palette map for {spec['name']}")
+    return set(owners)
 
 
 def main() -> int:
@@ -40,33 +71,16 @@ def main() -> int:
     if not manifest:
         return fail(f"{manifest_path} is empty")
 
-    manifest_banks = set()
-    owners = {}
-    for spec in manifest:
-        slots = spec.get("palette_slots", [spec["palette_bank"]])
-        if len(slots) != 1 + len(spec.get("extra_palettes", [])):
-            return fail(f"palette count mismatch for {spec['name']}")
-        for index, slot in enumerate(slots):
-            if not 16 <= slot < 255:
-                return fail(f"asset bank {slot} overlaps reserved palette RAM")
-            # A base bank may be shared, but only between assets holding
-            # the same palette - that is the whole point of sharing it.
-            # An extra bank is private to its asset and sharing one is a
-            # collision: two different palettes would fight over the slot.
-            key = spec.get("palette_key") if index == 0 else None
-            if slot in owners:
-                prev_name, prev_key = owners[slot]
-                if key is None or prev_key is None or key != prev_key:
-                    return fail(f"asset bank {slot} shared by {prev_name} "
-                                f"and {spec['name']} with different palettes")
-            else:
-                owners[slot] = (spec["name"], key)
-        manifest_banks.update(slots)
-        mapping = spec.get("tile_palette_banks")
-        if mapping is not None:
-            expected = spec["canvas_width"] * spec["canvas_height"] // 256
-            if len(mapping) != expected or not set(mapping).issubset(slots):
-                return fail(f"invalid tile palette map for {spec['name']}")
+    data = neopal_bin_path.read_bytes()
+    if len(data) != (len(manifest) + 1) * NEOPAL_RECORD_SIZE:
+        return fail("neopal.bin record count does not match the manifest")
+    try:
+        bases = {spec["db_index"]: struct.unpack_from(
+            "<16Q", data, spec["screen_id"] * NEOPAL_RECORD_SIZE + 8)
+            for spec in manifest}
+        manifest_banks = validate_palette_ownership(manifest, bases)
+    except (ValueError, KeyError, struct.error) as exc:
+        return fail(str(exc))
     if not manifest_banks:
         return fail("no palette_bank entries in assets_manifest.json")
 

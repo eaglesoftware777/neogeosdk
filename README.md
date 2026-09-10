@@ -21,11 +21,12 @@ largest release the SDK has had.
 - **A multi-game build system** — one repository, any number of independent
   games, each with its own id, ROM folder, artbox, sound tree and MAME hash
   set. Six games ship with it, and all six build the same way.
-- **A rebuilt art pipeline** — a perceptual quantiser working in CIE-Lab on
-  the Neo Geo's actual 5-bit colour lattice, with void-and-cluster blue-noise
-  dithering, per-tile palettes, master sprite palettes, sprite halo removal
-  and a content-preserving screen fit. Mean colour error across the reference
-  assets fell from dE 9.10 to 8.33, p95 from 18.19 to 15.66.
+- **A source-faithful art pipeline** with whole-image palette fitting,
+  error-driven extra banks, stable animation palettes and transparent sprite
+  padding. Characters and backgrounds bind per-tile palettes in both engines.
+  Bank budgets are configured per game; tests verify encoded C-ROM pixels
+  and captured hardware palette assignments. See
+  [Artbox Graphics Pipeline](docs/ARTBOX_PIPELINE.md).
 - **A rebuilt audio stack** — nine ADPCM-B beds, eight FM tracks, nine SSG
   tracks, a recorded voice bank with `speakText()`, live FM tempo, LFO, pan,
   noise and CSM control, and a fade engine that actually fades. The Z80
@@ -33,8 +34,8 @@ largest release the SDK has had.
 - **Sky Lance** (`games/skylance`, id 779) — a complete vertical arcade
   shooter: three pilots, seven stages, a named boss per stage, attract reel,
   pilot select, scoring, lives, energy and a continue flow.
-- **A 25-chapter demo reel** (`games/demo`, id 777) exercising every public
-  subsystem in order, ending on a playable Sky Lance slice. Chapter number
+- **A 26-chapter demo reel** (`games/demo`, id 777) exercising the engine,
+  with playable shooter chapters before the credits. Chapter number
   printed top-right; **A** advances, **C** restarts.
 - **Native Windows builds**, one-shot installers for Linux / Ubuntu /
   Windows / WSL, and a documented WSL2 + PulseAudio audio path.
