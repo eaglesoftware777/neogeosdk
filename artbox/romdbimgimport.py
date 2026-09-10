@@ -576,9 +576,42 @@ def load_source_screen(spec):
     return indexed.astype(np.uint16), banks[0].astype(np.uint16)
 
 
-def allocate_extra_palettes(specs):
-    """Keep legacy base banks stable; allocate extras above the asset range."""
-    next_slot = 16 + len(specs)
+def allocate_extra_palettes(specs, base_palettes=None):
+    """
+    Assign every asset its palette banks, sharing identical ones.
+
+    Base banks used to be positional - one per asset, whether or not two
+    assets held the same colours.  A 53-frame animation whose frames all
+    render against one shared palette therefore occupied 53 banks holding
+    53 copies of it.  Palette RAM is 239 banks for the whole game, and
+    that is the budget extra banks come out of, so the duplicates were
+    being paid for in the fidelity of everything else.
+
+    Assets whose base palette is identical now name the same bank.  Extras
+    are allocated above the compacted base range.
+    """
+    shared = {}
+    next_slot = 16
+    for spec in specs:
+        key = None
+        if base_palettes is not None:
+            words = base_palettes.get(spec["db_index"])
+            if words is not None:
+                key = tuple(int(w) for w in words)
+        if key is not None and key in shared:
+            spec["palette_bank"] = shared[key]
+        else:
+            if next_slot > 254:
+                raise ValueError("Palette RAM budget exceeded by base palettes alone")
+            spec["palette_bank"] = next_slot
+            if key is not None:
+                shared[key] = next_slot
+            next_slot += 1
+        # Recorded so the verifier can tell a deliberate share from a
+        # collision: two assets may name one bank only if this matches.
+        spec["palette_key"] = "%08x" % (hash(key) & 0xffffffff) if key is not None else None
+
+    base_used = next_slot - 16
     for spec in specs:
         count = len(spec.get("extra_palettes", []))
         if next_slot + count > 255:
@@ -588,7 +621,9 @@ def allocate_extra_palettes(specs):
         if count:
             spec["tile_palette_banks"] = [slots[i] for i in spec.pop("tile_palette_offsets")]
         next_slot += count
-    print(f"Palette RAM: {next_slot - 16}/239 asset banks; FIX 0..15 and bank 255 reserved")
+    print(f"Palette RAM: {next_slot - 16}/239 asset banks "
+          f"({base_used} base after sharing, {next_slot - 16 - base_used} extra); "
+          f"FIX 0..15 and bank 255 reserved")
 
 
 def load_sprite_asset_vivid(spec, shared_master=None):
@@ -958,7 +993,8 @@ def main():
             db_rows.append((spec["db_index"], indexed, palette))
 
         normalize_sequence_bounds(specs)
-        allocate_extra_palettes(specs)
+        allocate_extra_palettes(
+            specs, {idx: palette_words(pal) for idx, _data, pal in db_rows})
         cur.executemany("INSERT INTO image (idx,data,palette) VALUES (?,?,?)", db_rows)
         conn.commit()
         save_manifest(specs, str(ROOT / "assets_manifest.json"))

@@ -46,12 +46,21 @@ def main() -> int:
         slots = spec.get("palette_slots", [spec["palette_bank"]])
         if len(slots) != 1 + len(spec.get("extra_palettes", [])):
             return fail(f"palette count mismatch for {spec['name']}")
-        for slot in slots:
+        for index, slot in enumerate(slots):
             if not 16 <= slot < 255:
                 return fail(f"asset bank {slot} overlaps reserved palette RAM")
+            # A base bank may be shared, but only between assets holding
+            # the same palette - that is the whole point of sharing it.
+            # An extra bank is private to its asset and sharing one is a
+            # collision: two different palettes would fight over the slot.
+            key = spec.get("palette_key") if index == 0 else None
             if slot in owners:
-                return fail(f"asset bank {slot} shared by {owners[slot]} and {spec['name']}")
-            owners[slot] = spec["name"]
+                prev_name, prev_key = owners[slot]
+                if key is None or prev_key is None or key != prev_key:
+                    return fail(f"asset bank {slot} shared by {prev_name} "
+                                f"and {spec['name']} with different palettes")
+            else:
+                owners[slot] = (spec["name"], key)
         manifest_banks.update(slots)
         mapping = spec.get("tile_palette_banks")
         if mapping is not None:
