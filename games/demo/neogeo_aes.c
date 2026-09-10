@@ -1,5 +1,8 @@
 #include <stdint.h>
 #include "macro.h"
+#ifdef __cplusplus
+extern "C" {
+#endif
 void ZD_ENTRY(void);
 void CHK_ENTRY(void);
 void TRAPV_ENTRY(void);
@@ -14,6 +17,9 @@ void USER(void);
 void PLAYER_START(void);
 void DEMO_END(void);
 void COIN_SOUND(void);
+#ifdef __cplusplus
+}
+#endif
 ASM_START0
 	"\t.cpu 68000\t\n"
 	"\t.equ	DIPSW_SETTINGS,	0\t\n"
