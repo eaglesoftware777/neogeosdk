@@ -139,6 +139,7 @@ void CharManager::init()
 
     for (i = 0; i < NG_MAX_CHARS; i++) {
         pool[i].active        = 0;
+        pool[i].sprite_palette_map = 0;
         uploaded_strips[i]    = 0;
         uploaded_first[i]     = 0xffff;
     }
@@ -219,6 +220,7 @@ NGCharacter* CharManager::add(uint8_t kind, int16_t px, int16_t py)
             c->anim_clip = 0;
             c->anim_frame = 0;
             c->anim_timer = 0;
+            c->sprite_palette_map = 0;
 
             if ((uint8_t)(i + 1u) > active_top)
                 active_top = (uint8_t)(i + 1u);
@@ -388,6 +390,7 @@ static void NEOGEO_USER ng_char_reset_fields(NGCharacter *c)
     c->anim_clip = 0;
     c->anim_frame = 0;
     c->anim_timer = 0;
+    c->sprite_palette_map = 0;
 }
 
 void CharManager::clearUploadSlot(uint8_t index)
@@ -501,6 +504,7 @@ void CharManager::draw()
                c->sprite_tile,
                c->palette);
         g.setTileStride(c->sprite_stride ? c->sprite_stride : vis_strips);
+        g.setPaletteMap(c->sprite_palette_map);
         g.setActiveRows(c->sprite_active_rows ? c->sprite_active_rows : g.heightTiles);
         g.setPos((int16_t)(c->x + c->sprite_offset_x - cam_x),
                  (int16_t)(c->y + c->sprite_offset_y - cam_y));
@@ -594,8 +598,17 @@ void NGCharacter::setSprite(uint16_t first, uint8_t strips_arg, uint8_t h, uint1
     sprite_tile        = tb;
     sprite_stride      = ns;
     palette            = pal;
+    sprite_palette_map = 0;
     sprite_dirty       = 1;
     life_state = visible ? NG_CHAR_LIFE_VISIBLE : NG_CHAR_LIFE_HIDDEN;
+}
+
+void NGCharacter::setPaletteMap(const uint8_t *banks)
+{
+    if (sprite_palette_map != banks) {
+        sprite_palette_map = banks;
+        sprite_dirty = 1u;
+    }
 }
 
 void NGCharacter::setAssetBounds(uint16_t tileStart, uint16_t tileEnd)
@@ -615,9 +628,14 @@ void NGCharacter::setAssetBounds(uint16_t tileStart, uint16_t tileEnd)
 uint8_t NGCharacter::bindAsset(const NGSpriteAssetView *asset)
 {
     if (!asset) return 0u;
+    uint16_t stride = asset->tile_stride ? asset->tile_stride : asset->strips;
+    if (!ng_char_validate_asset_window_impl(asset->tile_base, asset->strips,
+            asset->rows, stride, asset->tile_start, asset->tile_end)) return 0u;
     setAssetBounds(asset->tile_start, asset->tile_end);
+    sprite_stride = stride;
     setSprite(sprite_first, asset->strips, asset->rows, asset->tile_base, asset->palette);
     setTileStride(asset->tile_stride ? asset->tile_stride : asset->strips);
+    setPaletteMap(asset->tile_palettes);
     sprite_offset_x = asset->offset_x;
     sprite_offset_y = asset->offset_y;
     return 1u;
@@ -832,6 +850,11 @@ void NEOGEO_USER ng_chars_draw(void)
 void NEOGEO_USER ng_char_set_sprite(NGCharacter *c, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette)
 {
     if (c) c->setSprite(firstSprite, strips, heightTiles, tileBase, palette);
+}
+
+void NEOGEO_USER ng_char_set_palette_map(NGCharacter *c, const uint8_t *banks)
+{
+    if (c) c->setPaletteMap(banks);
 }
 
 void NEOGEO_USER ng_char_set_asset_bounds(NGCharacter *c, uint16_t tileStart, uint16_t tileEnd)
