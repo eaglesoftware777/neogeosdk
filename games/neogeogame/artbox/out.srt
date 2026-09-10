@@ -1,7 +1,7 @@
 [001] backgrounds/001_starfield.png
 mode=screen fit=crop anchor=center rule=cat_backgrounds
 category=backgrounds
-palette_slots=[16]
+palette_slots=[16, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=1 palette_bank=16 tile_base=0 reserved_last=255 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=background layer or multi-level backdrop
@@ -9,7 +9,7 @@ note=background layer or multi-level backdrop
 [002] backgrounds/002_space_bg.png
 mode=screen fit=crop anchor=center rule=cat_backgrounds
 category=backgrounds
-palette_slots=[17]
+palette_slots=[17, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=2 palette_bank=17 tile_base=256 reserved_last=511 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=background layer or multi-level backdrop
@@ -25,56 +25,56 @@ note=16x16 character sprite sheet
 [004] characters/011_ship_alt.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
-palette_slots=[19]
+palette_slots=[18]
 source=43x26 canvas=256x256 content=43x26 offset=(106,230)
-screen_id=4 palette_bank=19 tile_base=768 reserved_last=1023 used_cols=4 used_rows=2 start_col=6 start_row=14 x_pad=10 y_pad=6 used_tiles=8 strips=4 active_rows=2
+screen_id=4 palette_bank=18 tile_base=768 reserved_last=1023 used_cols=4 used_rows=2 start_col=6 start_row=14 x_pad=10 y_pad=6 used_tiles=8 strips=4 active_rows=2
 note=16x16 character sprite sheet
 
 [005] characters/i_are_spaceship.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_characters
 category=characters
-palette_slots=[20]
+palette_slots=[18]
 source=64x64 canvas=256x256 content=64x64 offset=(96,192)
-screen_id=5 palette_bank=20 tile_base=1024 reserved_last=1279 used_cols=4 used_rows=4 start_col=6 start_row=12 x_pad=0 y_pad=0 used_tiles=16 strips=4 active_rows=4
+screen_id=5 palette_bank=18 tile_base=1024 reserved_last=1279 used_cols=4 used_rows=4 start_col=6 start_row=12 x_pad=0 y_pad=0 used_tiles=16 strips=4 active_rows=4
 note=16x16 character sprite sheet
 
 [006] effects/030_player_bullet.png
 mode=sprite fit=pad anchor=center rule=cat_effects
 category=effects
-palette_slots=[21]
+palette_slots=[19]
 source=5x11 canvas=256x256 content=5x11 offset=(125,122)
-screen_id=6 palette_bank=21 tile_base=1280 reserved_last=1535 used_cols=2 used_rows=2 start_col=7 start_row=7 x_pad=13 y_pad=10 used_tiles=4 strips=2 active_rows=2
-note=effects and transitions  (aggressive halo strip: bright outer ring is almost always a matte artefact on glow / spark FX)
+screen_id=6 palette_bank=19 tile_base=1280 reserved_last=1535 used_cols=2 used_rows=2 start_col=7 start_row=7 x_pad=13 y_pad=10 used_tiles=4 strips=2 active_rows=2
+note=effects and transitions; preserve bright outlines
 
 [007] effects/031_enemy_bullet.png
 mode=sprite fit=pad anchor=center rule=cat_effects
 category=effects
-palette_slots=[22]
+palette_slots=[20]
 source=5x11 canvas=256x256 content=5x11 offset=(125,122)
-screen_id=7 palette_bank=22 tile_base=1536 reserved_last=1791 used_cols=2 used_rows=2 start_col=7 start_row=7 x_pad=13 y_pad=10 used_tiles=4 strips=2 active_rows=2
-note=effects and transitions  (aggressive halo strip: bright outer ring is almost always a matte artefact on glow / spark FX)
+screen_id=7 palette_bank=20 tile_base=1536 reserved_last=1791 used_cols=2 used_rows=2 start_col=7 start_row=7 x_pad=13 y_pad=10 used_tiles=4 strips=2 active_rows=2
+note=effects and transitions; preserve bright outlines
 
 [008] effects/040_explosion.png
 mode=sprite fit=pad anchor=center rule=cat_effects
 category=effects
-palette_slots=[23]
+palette_slots=[21]
 source=37x37 canvas=256x256 content=37x37 offset=(109,109)
-screen_id=8 palette_bank=23 tile_base=1792 reserved_last=2047 used_cols=4 used_rows=4 start_col=6 start_row=6 x_pad=13 y_pad=13 used_tiles=16 strips=4 active_rows=4
-note=effects and transitions  (aggressive halo strip: bright outer ring is almost always a matte artefact on glow / spark FX)
+screen_id=8 palette_bank=21 tile_base=1792 reserved_last=2047 used_cols=4 used_rows=4 start_col=6 start_row=6 x_pad=13 y_pad=13 used_tiles=16 strips=4 active_rows=4
+note=effects and transitions; preserve bright outlines
 
 [009] npcs/020_enemy.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_big_enemy
 category=npcs
-palette_slots=[24]
+palette_slots=[22]
 source=1238x800 canvas=48x48 content=48x31 offset=(0,17)
-screen_id=9 palette_bank=24 tile_base=2048 reserved_last=2303 used_cols=3 used_rows=2 start_col=0 start_row=1 x_pad=0 y_pad=1 used_tiles=6 strips=3 active_rows=2
+screen_id=9 palette_bank=22 tile_base=2048 reserved_last=2303 used_cols=3 used_rows=2 start_col=0 start_row=1 x_pad=0 y_pad=1 used_tiles=6 strips=3 active_rows=2
 note=single large opponent, imported small enough to fit the sprite budget
 
 [010] npcs/032_life.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
 category=npcs
-palette_slots=[25]
+palette_slots=[23]
 source=22x13 canvas=256x256 content=22x13 offset=(117,243)
-screen_id=10 palette_bank=25 tile_base=2304 reserved_last=2559 used_cols=2 used_rows=1 start_col=7 start_row=15 x_pad=5 y_pad=3 used_tiles=2 strips=2 active_rows=1
+screen_id=10 palette_bank=23 tile_base=2304 reserved_last=2559 used_cols=2 used_rows=1 start_col=7 start_row=15 x_pad=5 y_pad=3 used_tiles=2 strips=2 active_rows=1
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
