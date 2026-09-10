@@ -122,12 +122,30 @@ def quantize(rgba, bank_limit=1, master=None, dither="none"):
 
     labels, best_errors = evaluate(first)
     index_planes = [labels]
-    for _ in range(1, bank_limit if master is None else 1):
-        worst = int(best_errors.argmax())
-        mask = (tile_ids == worst) & core
-        if not mask.any() or best_errors[worst] < 1e-4:
+    budget = bank_limit if master is None else 1
+    # A seed is only tried once, which both bounds the loop and stops it
+    # returning to a tile that has already failed to earn a bank.
+    tried = np.zeros(tile_count, dtype=bool)
+
+    while len(palettes) < budget:
+        # Take the worst tile that can still seed a palette.  Skipping to
+        # the next one matters: a tile whose pixels are all soft edges has
+        # nothing to fit a palette from, and abandoning the whole
+        # allocation there left large sprites using a fraction of the
+        # banks they were given - the budget was spent by whichever tile
+        # happened to be worst, not by the picture.
+        seed = -1
+        for candidate_tile in np.argsort(-best_errors):
+            if tried[candidate_tile] or best_errors[candidate_tile] < 1e-4:
+                continue
+            if ((tile_ids == candidate_tile) & core).any():
+                seed = int(candidate_tile)
+                break
+        if seed < 0:
             break
-        candidate = fit_palette(rgb[mask])
+        tried[seed] = True
+
+        candidate = fit_palette(rgb[(tile_ids == seed) & core])
         new_labels, new_errors = evaluate(candidate)
         selected = new_errors < best_errors
         # Fit the entire region that benefits, not isolated tile averages.
@@ -139,7 +157,8 @@ def quantize(rgba, bank_limit=1, master=None, dither="none"):
                 candidate, new_labels, new_errors = refit, refit_labels, refit_errors
                 selected = new_errors < best_errors
         if not selected.any():
-            break
+            # This seed buys nothing; the next worst tile may still.
+            continue
         assignment[selected] = len(palettes)
         best_errors = np.minimum(best_errors, new_errors)
         palettes.append(candidate)
