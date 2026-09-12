@@ -196,6 +196,11 @@ python3 tools/sound_capture_report.py ../showcase-qa/audio
 ```
 
 On Windows use `make -f MakefileWin32.mak` and `py` in place of `python3`.
+The report checks recorded audio as well as register traffic. Sustained-note
+pitch measurements distinguish LFO-off from the enabled rates; writing `$22`
+alone is not considered proof of audible modulation. Rate sidecars use LF
+line endings on both platforms so a rebuild does not churn their contents.
+
 `m1rom` packs matching V1/sample tables before assembly. Data tables are placed
 contiguously below `$8000`; overlapping writes and fixed-bank overflow fail
 the build. These timing and rate extensions currently target `driver.asm`;
