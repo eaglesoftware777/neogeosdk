@@ -1,5 +1,5 @@
 ; this file was created with wlalink by ville helin <ville.helin@iki.fi>.
-; wla symbolic information for "/mnt/c/neogeo/neogeosdk/out/777-m1.m1".
+; wla symbolic information for "c:\neogeo\neogeosdk\out\777-m1.m1".
 
 [information]
 version 3
@@ -261,9 +261,9 @@ wlasymbol true
 00:2033 sound_data_end
 
 [definitions]
-00000004 _sizeof_reset
-00000007 _sizeof_ym_wait_ready
-00000000 _sizeof_irq_end
+00000008 _sizeof_reset
+00000050 _sizeof_ym_wait_ready
+00000078 _sizeof_irq_end
 00000023 _sizeof_main
 00000006 _sizeof_main_loop
 0000007f _sizeof_driver_init
@@ -513,4 +513,3 @@ wlasymbol true
 00000068 _sizeof_ssg_track_8
 000001b8 _sizeof_sample_address_table
 00000012 _sizeof_adpcmb_delta_n_table
-00000000 _sizeof_sound_data_end
