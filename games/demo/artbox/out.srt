@@ -1215,28 +1215,28 @@ screen_id=152 palette_bank=72 tile_base=38656 reserved_last=38911 used_cols=2 us
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [153] npcs/zzzzzzzzzz_sky_enemy_a.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=center rule=cat_demo_interceptors
 category=npcs
 palette_slots=[73]
-source=32x32 canvas=256x256 content=32x32 offset=(112,224)
-screen_id=153 palette_bank=73 tile_base=38912 reserved_last=39167 used_cols=2 used_rows=2 start_col=7 start_row=14 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=93x84 canvas=32x32 content=32x29 offset=(0,1)
+screen_id=153 palette_bank=73 tile_base=38912 reserved_last=39167 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=1 used_tiles=4 strips=2 active_rows=2
+note=opaque hull highlights and transparent space, native playfield size
 
 [154] npcs/zzzzzzzzzz_sky_enemy_b.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=center rule=cat_demo_interceptors
 category=npcs
 palette_slots=[74]
-source=32x32 canvas=256x256 content=32x32 offset=(112,224)
-screen_id=154 palette_bank=74 tile_base=39168 reserved_last=39423 used_cols=2 used_rows=2 start_col=7 start_row=14 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=104x84 canvas=32x32 content=32x26 offset=(0,3)
+screen_id=154 palette_bank=74 tile_base=39168 reserved_last=39423 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=3 used_tiles=4 strips=2 active_rows=2
+note=opaque hull highlights and transparent space, native playfield size
 
 [155] npcs/zzzzzzzzzz_sky_enemy_c.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=center rule=cat_demo_interceptors
 category=npcs
 palette_slots=[75]
-source=32x32 canvas=256x256 content=32x32 offset=(112,224)
-screen_id=155 palette_bank=75 tile_base=39424 reserved_last=39679 used_cols=2 used_rows=2 start_col=7 start_row=14 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=97x84 canvas=32x32 content=32x28 offset=(0,2)
+screen_id=155 palette_bank=75 tile_base=39424 reserved_last=39679 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=2 used_tiles=4 strips=2 active_rows=2
+note=opaque hull highlights and transparent space, native playfield size
 
 [156] npcs/zzzzzzzzzz_sky_orb.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
@@ -1271,12 +1271,12 @@ screen_id=159 palette_bank=79 tile_base=40448 reserved_last=40703 used_cols=16 u
 note=tile-aligned collision prop
 
 [160] zz_bg/0.png
-mode=screen fit=contain anchor=center rule=cat_sky_background
+mode=screen fit=native anchor=center rule=cat_sky_background
 category=zz_bg
 palette_slots=[80, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221]
-source=256x256 canvas=256x256 content=256x239 offset=(0,8)
-screen_id=160 palette_bank=80 tile_base=40704 reserved_last=40959 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=8 used_tiles=256 strips=16 active_rows=16
-note=full-screen vertical shooter background
+source=256x256 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=160 palette_bank=80 tile_base=40704 reserved_last=40959 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+note=native tiled sky, 144-pixel repeat without aspect padding
 
 [161] zz_bg/1.png
 mode=sprite fit=pad anchor=top-left rule=cat_foreground_layer

@@ -46,7 +46,7 @@ chapter needs its own reset path.
 | 13 | FEEDBACK | SHAKE · PARTICLE IMPACTS | Hitstop + shake + palette flash + sound in one `ng_impact_event()` call, at four intensities |
 | 14 | DEPTH FX | ONE WARRIOR · CLEAN Z SCALE | `ng_depthfx_project()` — perspective projection and Z → shrink |
 | 15 | DEPTH PARALLAX | TWO SCROLLING BG LAYERS | Two independently scrolled sprite background layers at different rates |
-| 16 | NPCS | PATROL + THINK CALLBACK | NPC patrol bounds and the periodic think callback |
+| 16 | NPCS | PATROL + THINK CALLBACK | Three compact walking NPCs with distinct pacing, patrol bounds and facing |
 | 17 | MINI-GAME | FIGHT THE CLONE · B STRIKE | Arrows + B. A multi-glyph sword arc with per-frame palette shimmer |
 | 18 | JOYSTICK | LIVE INPUT · TWO-BUTTON SPECIALS | Live input readout; B+C light special, B+D heavy finisher, B basic strike, against a crate hitbox target |
 | 19 | SCROLL LEVEL | WORLD MAP · H/V STAGES | A 768-px world with the camera following a jump arc |
@@ -59,6 +59,15 @@ chapter needs its own reset path.
 | 26 | CREDITS | EAGLE SOFTWARE 2026 | Module roll with a palette fade-out |
 
 Characters bind both the generated tile stride and per-tile palette map.
+Sky Lance and Star Raid Lance share three CC0 interceptor images imported
+at 32 pixels, with transparent edges and opaque hull highlights. Their source
+and license are recorded in `games/demo/artbox/INTERCEPTOR_CREDITS.txt`.
+Interactive MAME targets explicitly select normal speed and throttling;
+headless capture tools deliberately run unthrottled for testing.
+The repeating sky uses `fit=native` so its 144-pixel source repeat stays
+tile-aligned, without transparent resize padding at scroll wraps. Character
+colours and other screen-fit rules are unchanged. Chapter music beds use
+ADPCM-B hardware repeat instead of a scene-frame countdown that cut endings.
 Palettes are loaded separately; there are no hidden screen draws for loading
 character colours. The current verification tools capture every chapter and
 can exercise A-next/C-restart through real emulated controller inputs:
@@ -67,10 +76,18 @@ can exercise A-next/C-restart through real emulated controller inputs:
 python3 tools/demo_capture.py --output /tmp/demo-tour --seconds 1100
 python3 tools/demo_capture_report.py /tmp/demo-tour
 python3 tools/demo_capture.py --output /tmp/demo-controls --seconds 1100 --controls
+python3 tools/demo_capture.py --output /tmp/demo-shooter --chapter 25 --interval 0.016
+python3 tools/sound_capture.py --output /tmp/demo-audio
+python3 tools/sound_capture_report.py /tmp/demo-audio
 ```
 
 Build the matching demo P1 immediately before capture: the script resolves
 chapter addresses from `out/game`. Do not build another game during a capture.
+`--chapter` advances earlier chapters with A, then records the selected one;
+use it separately from `--controls`. The audio probe boots the real ROM,
+isolates the 68000 in a watchdog-serviced RAM loop, and sends a fixed command
+sequence to the Z80. It records a WAV plus YM2610 writes to check tempo,
+LFO persistence, sample rate, six A voices, B repeat, fades and muting.
 
 ## Reading the reel as documentation
 

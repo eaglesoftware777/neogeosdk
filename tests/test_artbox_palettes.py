@@ -7,10 +7,11 @@ from unittest.mock import patch
 from pathlib import Path
 
 import numpy as np
+from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "artbox"))
 from img2neo import rgb_to_lab
-from img2neo_tile import ng_snap
+from img2neo_tile import fit_screen_for_display, ng_snap
 from palette_banks import fit_palette, palette_words, quantize, reconstruct
 from tile_codec import HALF_SOLID_TILE, decode_image, encode_image, write_utility_tiles
 from romdbimgimport import allocate_extra_palettes, load_source_sprite, sprite_palette_group_key
@@ -20,6 +21,16 @@ from verify_artbox_palettes import validate_palette_ownership
 
 
 class PaletteTests(unittest.TestCase):
+    def test_native_tiled_screen_preserves_pixels_and_repeat(self):
+        band = np.random.default_rng(5).integers(0, 256, (144, 256, 4), dtype=np.uint8)
+        source = np.concatenate((band, band[:112]), axis=0)
+        canvas, left, top, width, height = fit_screen_for_display(
+            Image.fromarray(source), 256, 256, fit="native")
+        np.testing.assert_array_equal(np.array(canvas), source)
+        self.assertEqual((left, top, width, height), (0, 0, 256, 256))
+        with self.assertRaisesRegex(ValueError, "match the target canvas"):
+            fit_screen_for_display(Image.fromarray(source), 128, 256, fit="native")
+
     def test_sprite_import_honors_budget_without_changing_geometry(self):
         rgba = np.full((32, 64, 4), 255, dtype=np.uint8)
         rgba[:, :, :3] = np.random.default_rng(31).integers(0, 256, (32, 64, 3), dtype=np.uint8)

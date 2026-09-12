@@ -303,7 +303,7 @@ match_category = zz_bg
 pattern = 0.png
 mode = screen
 category = background
-fit = contain
+fit = native
 anchor = center
 target_width = 256
 target_height = 256
@@ -315,7 +315,7 @@ sharpen_percent = 100
 sharpen_threshold = 2
 kmeans_samples = 16384
 kmeans_iters = 35
-note = full-screen vertical shooter background
+note = native tiled sky, 144-pixel repeat without aspect padding
 
 [rule:cat_foreground_layer]
 match_category = zz_bg

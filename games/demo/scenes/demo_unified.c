@@ -433,30 +433,12 @@ static uint8_t  s_restart_enabled   = 1u;
  */
 static uint8_t  s_pending_req = 0u;
 
-/*
- * ADPCM-B streamed TRACKs have no hardware loop - the chip plays from
- * start address to end address once and stops.  soundPlayGameLoop()'s
- * name is aspirational: nothing on the Z80 side re-triggers it, so any
- * chapter that runs longer than the selected TRACK's raw sample length
- * goes completely silent for the rest of the chapter (confirmed against
- * games/demo/sound/samples/in_wav_b - the wav files there run 11..82s,
- * while several chapters run well past that once a player lingers or
- * plays for a while).  This table (frames at 60Hz, ~0.5s short of the
- * real length as a retrigger margin) lets uframe() restart the current
- * TRACK from the top just before it would run out, so background music
- * actually loops instead of playing once and dying.  Order matches
- * soundPlayGameLoop's own TRACK_pool (games/demo/sound/samples/in_wav_b,
- * skipping TRACK_E which is reserved for the eyecatcher: A/B/C/D/F/G/H/I).
- */
-static const uint16_t s_bgm_loop_frames[8] = {
-    647u, 4425u, 4884u, 2649u, 3570u, 2010u, 2130u, 3150u
-};
+/* Chapter beds use hardware repeat, independent of rendering frame rate.
+ * TRACK_E stays reserved for the eyecatcher. */
 static const uint8_t s_bgm_track_id[8] = {
     SOUND_TRACK_A, SOUND_TRACK_B, SOUND_TRACK_C, SOUND_TRACK_D,
     SOUND_TRACK_F, SOUND_TRACK_G, SOUND_TRACK_H, SOUND_TRACK_I
 };
-static uint8_t  s_bgm_track       = 0xFFu;   /* 0xFF = watchdog disarmed */
-static uint16_t s_bgm_frames_left = 0u;
 
 static void NEOGEO_USER hero_scale(uint8_t scale);
 
@@ -506,22 +488,11 @@ static uint8_t NEOGEO_USER uframe(void)
         demo_fix_puts(2u, 27u, line, 0u);
     }
 
-    /* Background-music loop watchdog - see s_bgm_loop_frames above.
-     * Only armed while a chapter is using snd_cross_to()'s TRACK bed;
-     * chap_sound()'s manual TRACK-cycling demo never calls
-     * snd_cross_to(), so s_bgm_track stays 0xFF and this is a no-op
-     * there. */
-    if (s_bgm_track != 0xFFu) {
-        if (s_bgm_frames_left > 0u) {
-            s_bgm_frames_left--;
-        } else {
-            playSFXB(s_bgm_track_id[s_bgm_track]);
-            s_bgm_frames_left = s_bgm_loop_frames[s_bgm_track];
-        }
-    }
-
     perf_hud_draw();
-    waitVbl();                          /* arrive at vblank start */
+    /* Discard a stale interrupt latch after a long update. A previous frame's
+     * VBlank must not authorize SCB writes partway down the current screen. */
+    NEO_REGISTER(USER_WORKRAM) = 0u;
+    waitVbl();
     /* Drain queued sprite-group uploads while the screen is blanked.
      * Chapters call demo_draw_sprite_screen() during active video to
      * queue work; this is where it actually reaches SCB.  Without
@@ -581,17 +552,13 @@ static void NEOGEO_USER snd_step(void)
 }
 
 /*
- * The driver's fade "speed" is an INTERVAL, not a rate: its fade engine
- * reloads a counter with (255 - speed) Timer-B ticks between each -16
- * volume step, and Timer B runs at ~8.1 Hz (123ms).  The old speed of 6
- * therefore meant 249 ticks -> ~30 SECONDS per step, so across the old
- * 12-frame (0.2s) wait below not one step ever ran and the "cross-fade"
- * was really an abrupt cut.  0xFE is the fastest the driver can express
- * (1 tick, ~123ms per step), which makes the dip actually audible.
+ * Fade speed selects an interval of (255 - speed) legacy ticks. The
+ * 14.4076 Hz divider also includes the legacy music divider. Background
+ * beds select divider 1 so 0xFE drops one -16 level step every 69.4 ms.
  */
 #define SND_FADE_SPEED    0xFEu
-#define SND_FADE_FRAMES   36u   /* ~0.6s - about 5 of the -16 steps */
-#define SND_SILENCE_FRAMES 48u  /* ~0.8s - a fuller fade before silence */
+#define SND_FADE_FRAMES   54u   /* enough to reach zero from a $B8 bed */
+#define SND_SILENCE_FRAMES 54u
 #define SND_SKIP_TAIL      4u   /* fade frames still owed once A is pending */
 
 /*
@@ -649,6 +616,8 @@ static void NEOGEO_USER snd_start_bed(uint8_t track)
     soundSetADPCMBVolume(0xB8u);  snd_step();
     soundSetSSGVolume(0x00u);     snd_step();
     soundSetFMVolume(0x00u);      snd_step();
+    soundSetTempo(1u);            snd_step();
+    soundSetADPCMBLoop(1u);       snd_step();
     playSFXB(s_bgm_track_id[slot]);
     snd_step();
 }
@@ -679,8 +648,6 @@ static void NEOGEO_USER snd_cross_to(uint8_t track)
     snd_step();
     snd_restore_mix();
     snd_start_bed(track);
-    s_bgm_track = (uint8_t)(track & 0x07u);
-    s_bgm_frames_left = s_bgm_loop_frames[s_bgm_track];
 }
 
 static void NEOGEO_USER snd_silence(void)
@@ -693,7 +660,6 @@ static void NEOGEO_USER snd_silence(void)
      * faded-down ones - the next chapter to start a track inherits
      * these registers. */
     snd_restore_mix();
-    s_bgm_track = 0xFFu;
 }
 
 /* ------------------------------------------------------------------ */
@@ -882,11 +848,6 @@ static void NEOGEO_USER chap_header(uint8_t n,
      * also skip this one; snd_cross_to() below runs after this point, so
      * presses made during THIS chapter's cross-fade still survive. */
     s_pending_req = 0u;
-
-    /* Disarm the BGM loop watchdog - re-armed only if this chapter calls
-     * snd_cross_to() itself, so chapters managing sound manually (the
-     * sound tour, the SSG-only shooter) aren't second-guessed. */
-    s_bgm_track = 0xFFu;
 
     /* Displayed number is the chapter's position in actual viewing order
      * (1, 2, 3...), not the `n` id argument — call sites number by source
@@ -1255,7 +1216,7 @@ static uint8_t NEOGEO_USER chap_boot(void)
     demo_fix_puts(2u,  4u, "2026  EAGLESOFTWARE.BIZ", 0u);
 
     demo_fix_puts(2u,  7u, "SDK SHOWCASE", 2u);
-    demo_fix_puts(2u,  9u, "20 CHAPTERS  FULL SDK DEMO", 1u);
+    demo_fix_puts(2u,  9u, "26 CHAPTERS  FULL SDK DEMO", 1u);
 
     demo_fix_puts(2u, 12u, "SHOWCASE FLOW:",         2u);
     demo_fix_puts(4u, 13u, "AUTOMATIC CHAPTERS",     1u);
@@ -1466,15 +1427,14 @@ static uint8_t NEOGEO_USER chap_sound(void)
     demo_fix_puts(2u, 5u, "1. ADPCM-B STREAMED TRACKS        ", 2u);
     for (i = 0u; i < 8u; i++) {
         demo_fix_puts(2u, 7u, s_adpcmb_names[i], 1u);
-        soundFadeOutSpeed(8u);                     snd_step();
-        if (uwait(6u)) return 1u;
         soundStopAll();                            snd_step();
         soundApplyMix(0x30u, 0xC0u, 0x00u, 0x00u); snd_step();
+        soundSetTempo(1u);                        snd_step();
         playSFXB(s_adpcmb_list[i]);                snd_step();
-        if (uwait(110u)) return 1u;
+        if (uwait(150u)) return 1u;
+        soundFadeOutSpeed(SND_FADE_SPEED);        snd_step();
+        if (uwait(SND_SILENCE_FRAMES)) return 1u;
     }
-    soundFadeOutSpeed(8u); snd_step();
-    if (uwait(8u)) return 1u;
     soundStopAll();        snd_step();
     demo_fix_puts(2u, 7u, "                  ", 0u);
 
@@ -1487,6 +1447,7 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0xC0u, 0x00u, 0x00u); snd_step();
+    soundSetTempo(1u);                        snd_step();
     playSFXB(SOUND_TRACK_A);                   snd_step();
 
     demo_fix_puts(2u, 9u, "pan = 0xC0  (L+R stereo)          ", 1u);
@@ -1501,8 +1462,8 @@ static uint8_t NEOGEO_USER chap_sound(void)
     demo_fix_puts(2u, 9u, "pan = 0xC0  (back to stereo)      ", 1u);
     soundSetADPCMBPan(0xC0u); snd_step();
     if (uwait(80u)) return 1u;
-    soundFadeOutSpeed(8u); snd_step();
-    if (uwait(40u)) return 1u;
+    soundFadeOutSpeed(SND_FADE_SPEED); snd_step();
+    if (uwait(SND_SILENCE_FRAMES)) return 1u;
     soundStopAll();        snd_step();
     demo_fix_puts(2u, 9u, "                                  ", 0u);
 
@@ -1547,7 +1508,7 @@ static uint8_t NEOGEO_USER chap_sound(void)
         uint8_t fm_track = (i == 0u) ? SOUND_FM_D : SOUND_FM_F;
         demo_fix_puts(2u, 13u,
                       (i == 0u) ? "FM 4  WARM BELL     " :
-                                  "FM 6  BATTLE BRASS  ", 1u);
+                                  "FM 6  WARM REED     ", 1u);
         soundStopAll();                            snd_step();
         soundSceneReset();                         snd_step();
         soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
@@ -1572,7 +1533,7 @@ static uint8_t NEOGEO_USER chap_sound(void)
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
-    /* Patch 6 carries maximum pitch-modulation sensitivity.  Its long
+    /* Patch 6 carries a moderate pitch-modulation sensitivity. Its long
      * notes make register $22 rate changes audible without confusing
      * note attacks with vibrato. */
     playFMTrack(SOUND_FM_G);                  snd_step();
@@ -1587,15 +1548,13 @@ static uint8_t NEOGEO_USER chap_sound(void)
     if (fm_lfo_hold(0x0Fu, 120u)) return 1u;
     soundFMSetLFO(0x00u); snd_step();
 
-    demo_fix_puts(2u, 15u, "TEMPO period=2  (quick)           ", 1u);
+    demo_fix_puts(2u, 15u, "TEMPO 150 BPM                    ", 1u);
     soundStopMusic(); snd_step();
-    playFMTrack(SOUND_FM_G); snd_step();
-    soundFMSetTempo(2u); snd_step();
+    playFMTrack(SOUND_FM_D); snd_step();
+    soundFMSetBPM(150u); snd_step();
     if (uwait(180u)) return 1u;
-    demo_fix_puts(2u, 15u, "TEMPO period=5  (slow)            ", 1u);
-    soundStopMusic(); snd_step();
-    playFMTrack(SOUND_FM_G); snd_step();
-    soundFMSetTempo(5u); snd_step();
+    demo_fix_puts(2u, 15u, "TEMPO 90 BPM                     ", 1u);
+    soundFMSetBPM(90u); snd_step();
     if (uwait(180u)) return 1u;
 
     soundStopAll();          snd_step();
@@ -1685,11 +1644,9 @@ static uint8_t NEOGEO_USER chap_sound(void)
      *  - CancelFade: mid-fade, the volume INSTANTLY snaps back to
      *    the base level instead of continuing the fade.
      *
-     * The driver's fade engine decrements/increments all master
-     * volumes (music, ADPCM-A, ADPCM-B) by 8 per step at every Timer-B
-     * IRQ when SPEED >= $FE.  Earlier values like SPEED=8 took ~70 s
-     * to fade — essentially inaudible — which is why this section
-     * sticks to $FF/$FE/$FD. */
+     * Mixer levels change by 16 per fade step. These examples keep
+     * the default legacy divider of three, so the $B8 bed fades out
+     * in approximately 2.5 seconds at speed $FF/$FE. */
     demo_fix_puts(2u, 5u, "10. FADE TESTS (ADPCM-B only)     ", 2u);
 
     /* --- FadeOut fast --- */
@@ -2669,7 +2626,7 @@ static uint8_t NEOGEO_USER chap_particles(void)
      * next pose is narrower than the previous one. */
     ng_sprite_park_off_range(HERO_SLOT_FIRST, 16u);
     demo_fix_puts(2u, 2u, "EFFECTS STAY ABOVE  CHARACTER BELOW", 1u);
-    demo_fix_puts(2u, 3u, "DUST / MAGIC / SPARK / EXPLOSION / SMOKE",0u);
+    demo_fix_puts(2u, 3u, "DUST MAGIC SPARK EXPLOSION SMOKE", 0u);
     demo_fix_puts(2u, 4u, "ACTIVE: ",                    2u);
     snd_cross_to(SOUND_MUSIC_F);
 
@@ -3108,31 +3065,25 @@ static uint8_t NEOGEO_USER chap_depth_parallax(void)
 /* ================================================================== */
 static uint8_t NEOGEO_USER chap_npcs(void)
 {
-    enum { N = 4 };
-    enum { NPC_FLOOR_Y = 190 };
-    /*
-     * 80 px apart, patrolling 22 either side.  At 64 apart and 44 either
-     * side the lanes overlapped by 24 px, so neighbouring NPCs walked
-     * through each other and the middle of the line read as one smeared
-     * sprite.  Two NPCs stay 36 px apart at their closest here, which
-     * clears the widest of these at this scale.
-     */
-    static const int16_t home_x[N] = { 40, 120, 200, 280 };
+    enum { N = 3 };
+    enum { NPC_FLOOR_Y = 180, CAT_FIRST = 110 };
+    /* Separate 44-pixel patrol lanes leave room for each 25%-scale frame. */
+    static const int16_t home_x[N] = { 64, 160, 256 };
     NGNpc *npcs[N];
     uint8_t last_asset[N];
     uint16_t t;
     uint8_t i;
 
     chap_header(12u, "NPCS", "PATROL + THINK CALLBACK");
-    demo_fix_puts(2u, 2u, "RESTORED 4-FRAME ARCADE WALK CYCLES", 1u);
-    demo_fix_puts(2u, 3u, "ENGINE THINK FN HANDLES PATROL + FACING", 0u);
+    demo_fix_puts(2u, 2u, "THREE PATROLS / THREE WALK PACES", 1u);
+    demo_fix_puts(2u, 3u, "THINK CALLBACK: PATROL + FACING", 0u);
     snd_cross_to(SOUND_MUSIC_B);
     ng_npcs_init();
     reset_palette_memo();
 
     for (i = 0u; i < (uint8_t)N; i++) {
         NGCharacter *c;
-        uint8_t asset = (uint8_t)(U_NPC_OLD_FIRST + 4u + (i & 3u));
+        uint8_t asset = (uint8_t)(CAT_FIRST + i * 4u);
         last_asset[i] = asset;
 
         /* npc_kind = char_kind = i (unique) so chars_find / chars_at work */
@@ -3141,8 +3092,9 @@ static uint8_t NEOGEO_USER chap_npcs(void)
         c = npc_char(npcs[i]);
         if (!c) continue;
 
-        bind_character_asset(c, asset, U_SCALE_1_2, U_SCALE_1_2);
-        c->vx_fp = (i & 1u) ? NG_TO_FP(-1) : NG_TO_FP(1);
+        bind_character_asset(c, asset, U_SCALE_1_4, U_SCALE_1_4);
+        c->vx_fp = (int16_t)((i & 1u) ? -NG_FP_FROM_FRAC(3, 4)
+                                      : NG_FP_FROM_FRAC(i + 2, 4));
         ng_npc_set_home(npcs[i], home_x[i], NPC_FLOOR_Y);
         ng_npc_set_patrol_bounds(npcs[i],
                                  (int16_t)(home_x[i] - 22),
@@ -3155,7 +3107,7 @@ static uint8_t NEOGEO_USER chap_npcs(void)
     s_draw_chars = 1u;
 
     for (t = 0u; t < 480u; t++) {
-        /* Bind the left/right cycle selected by the live facing state. */
+        /* Keep each NPC in its own four-frame family and mirror its facing. */
         for (i = 0u; i < (uint8_t)N; i++) {
             NGCharacter *c;
             uint8_t phase;
@@ -3163,11 +3115,11 @@ static uint8_t NEOGEO_USER chap_npcs(void)
             if (!npcs[i]) continue;
             c = npc_char(npcs[i]);
             if (!c) continue;
-            phase = (uint8_t)((t / 8u + i) & 3u);
-            asset = (uint8_t)((c->facing ? U_NPC_OLD_FIRST + 8u
-                                         : U_NPC_OLD_FIRST + 4u) + phase);
-            if (!npcs[i] || asset == last_asset[i]) continue;
-            bind_character_asset(c, asset, U_SCALE_1_2, U_SCALE_1_2);
+            phase = (uint8_t)((t / (12u - i * 2u) + i) & 3u);
+            asset = (uint8_t)(CAT_FIRST + i * 4u + phase);
+            if (asset == last_asset[i] && c->flip_x == c->facing) continue;
+            c->flip_x = c->facing;
+            bind_character_asset(c, asset, U_SCALE_1_4, U_SCALE_1_4);
             last_asset[i] = asset;
         }
         ng_npcs_update();
@@ -3244,7 +3196,7 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
     demo_fix_puts(2u, 25u,  "SCORE:", 2u);
     demo_fix_puts(13u, 25u, "HITS:",  2u);
     demo_fix_puts(22u, 25u, "HP:",    2u);
-    demo_fix_puts(30u, 25u, "STATE:", 2u);
+    demo_fix_puts(30u, 25u, "CP:",    2u);
 
     s_draw_particles = 1u;
 
@@ -3393,14 +3345,14 @@ static uint8_t NEOGEO_USER chap_mini_game(void)
          * HUD
          * ============================================================ */
         digit3(buf, score);     demo_fix_puts(9u, 25u, buf, 1u);
-        digit3(buf, hits_done); demo_fix_puts(19u, 25u, buf, 1u);
+        digit3(buf, hits_done); demo_fix_puts(18u, 25u, buf, 1u);
         digit3(buf, hp);        demo_fix_puts(26u, 25u, buf,
                                               (uint8_t)(hp < 30u ? 2u : 1u));
-        demo_fix_puts(36u, 25u,
-                      (c_state == CLONE_IDLE)     ? "IDLE  " :
-                      (c_state == CLONE_AGGRO)    ? "ANGRY " :
-                      (c_state == CLONE_STRIKING) ? "ATTK! " :
-                                                    "REST  ",
+        demo_fix_puts(33u, 25u,
+                      (c_state == CLONE_IDLE)     ? "IDLE " :
+                      (c_state == CLONE_AGGRO)    ? "CHASE" :
+                      (c_state == CLONE_STRIKING) ? "HIT  " :
+                                                    "REST ",
                       (uint8_t)(c_state == CLONE_STRIKING ? 2u : 1u));
 
         demo_fix_puts(0u, 9u, "                                        ", 0u);
@@ -4309,7 +4261,8 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         /*
          * Three copies of a page that loops every 144 px, stacked one
          * page apart, so whatever the scroll offset is their union
-         * always covers the whole screen and both seams sit outside it.
+         * always covers the playfield. Native-size import preserves the
+         * original 144-pixel repeat without introducing transparent bands.
          *
          * Cropping the sky to a window instead is the thing the hardware
          * will not do.  A sprite is a whole number of characters tall,
@@ -4335,10 +4288,10 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         if (joy & (JOY_LEFT | JOY_RIGHT | JOY_UP | JOY_DOWN | BUTTON_B)) idle_frames = 0u;
         else if (idle_frames < 0xFFF0u) idle_frames++;
 
-        if ((joy & JOY_LEFT)  && ship_x > SKY_LEFT)   ship_x = (int16_t)(ship_x - 8);
-        if ((joy & JOY_RIGHT) && ship_x < SKY_RIGHT)  ship_x = (int16_t)(ship_x + 8);
-        if ((joy & JOY_UP)    && ship_y > SKY_TOP)    ship_y = (int16_t)(ship_y - 7);
-        if ((joy & JOY_DOWN)  && ship_y < SKY_BOTTOM) ship_y = (int16_t)(ship_y + 7);
+        if ((joy & JOY_LEFT)  && ship_x > SKY_LEFT)   ship_x = (int16_t)(ship_x - 3);
+        if ((joy & JOY_RIGHT) && ship_x < SKY_RIGHT)  ship_x = (int16_t)(ship_x + 3);
+        if ((joy & JOY_UP)    && ship_y > SKY_TOP)    ship_y = (int16_t)(ship_y - 3);
+        if ((joy & JOY_DOWN)  && ship_y < SKY_BOTTOM) ship_y = (int16_t)(ship_y + 3);
 
         if (fire_cd) fire_cd--;
         if (hit_cd)  hit_cd--;
@@ -4809,7 +4762,7 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
         uint16_t rng = (uint16_t)(t * 11035u + 12345u);
 
         /* ---- scroll starfield ------------------------------------- */
-        bg_y = (int16_t)((bg_y + 2) % 256);
+        bg_y = (int16_t)((bg_y + 1) % 256);
         draw_vertical_background(U_SSG_STARFIELD, 32, -bg_y);
 
         /* ---- player controls -------------------------------------- */
@@ -4827,7 +4780,7 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
         if (fire_cd) fire_cd--;
         if (hit_cd)  hit_cd--;
 
-        if ((joy & (BUTTON_A | BUTTON_B)) && !fire_cd) {
+        if ((joy & BUTTON_B) && !fire_cd) {
             for (i = 0u; i < GALAXY_PBULLET_MAX; i++) {
                 if (!pb_active[i]) {
                     pb_active[i] = 1u;
