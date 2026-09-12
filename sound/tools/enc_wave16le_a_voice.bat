@@ -22,8 +22,11 @@ for %%f in ("%SAMPLES_IN%\*.wav") do (
     echo Processing %%f
     if defined USE_SOX (
         "%SOX%" "%%f" -b 16 -c 1 -r 18500 -e signed-integer -t raw "%SAMPLES_OUT%\%%~nf.wav"
+        if errorlevel 1 exit /b 1
+        "%PY%" pcm_metadata.py "%SAMPLES_OUT%\%%~nf.wav" --rate 18500
     ) else (
         "%PY%" wav_to_raw_pcm.py "%%f" "%SAMPLES_OUT%\%%~nf.wav" --rate 18500
     )
+    if errorlevel 1 exit /b 1
 )
 endlocal

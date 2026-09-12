@@ -142,9 +142,13 @@ void playVoiceGameOver(void);
 
 /* YM2610 chip-level controls. */
 void soundSetADPCMBPan(uint8_t pan);     /* $C0 stereo, $80 L, $40 R, $00 mute */
+void soundSetADPCMBLoop(uint8_t enable); /* 0 one-shot, 1 repeat on subsequent B starts */
 void soundFMSetLFO(uint8_t rate_enable); /* bit3 enable, bits0-2 rate */
+/* Live BPM override, 1..255, retained across loops until another track starts. */
+void soundFMSetBPM(uint8_t bpm);
+void soundSSGSetBPM(uint8_t bpm);
 void soundSetSSGNoise(uint8_t period);   /* 5-bit noise period */
-void soundFMSetTempo(uint8_t period);    /* Timer-B IRQs per FM step, 1..8 */
+void soundFMSetTempo(uint8_t period);    /* Legacy 69.4 ms units per FM step, 1..8 */
 
 /* Voice alphabet — ADPCM-A samples bundled from in_wav_a_voice/. */
 void playVoiceSample(uint8_t sample_index);  /* SOUND_VOICE_* full ADPCM-A index */

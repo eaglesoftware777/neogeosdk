@@ -1065,6 +1065,12 @@ void NEOGEO_USER soundSetADPCMBPan(uint8_t pan) {
 	isZ80Ready(); soundCommand(0x15); isZ80Ready(); soundCommand(pan & 0xC0);
 }
 
+/* Configure subsequent B starts. Stop-all/reset restores one-shot mode. */
+void NEOGEO_USER soundSetADPCMBLoop(uint8_t enable) {
+	soundCommand(0x18);
+	soundCommand(enable ? 1u : 0u);
+}
+
 /*
  * FM LFO control (YM2610 register $22).
  *   bit 3 = LFO enable
@@ -1077,30 +1083,30 @@ void NEOGEO_USER soundFMSetLFO(uint8_t rate_enable) {
 	isZ80Ready(); soundCommand(0x17); isZ80Ready(); soundCommand(rate_enable & 0x0F);
 }
 
+/* Set quarter-note BPM after starting a track; zero is clamped to one. */
+void NEOGEO_USER soundFMSetBPM(uint8_t bpm) {
+	soundCommand(0x1E);
+	soundCommand(bpm ? bpm : 1u);
+}
+
+void NEOGEO_USER soundSSGSetBPM(uint8_t bpm) {
+	soundCommand(0x1F);
+	soundCommand(bpm ? bpm : 1u);
+}
+
 /*
  * SSG noise period (YM2610 register $06, 5 bits).
- * Higher value = lower noise frequency.  Range 1..31; 0 silences the
- * noise generator (per chip behaviour).  Useful for tuning consonant
- * "colour" in voice cues or for noise-only SFX.
+ * Higher value = lower noise frequency, 0..31. To silence noise, disable
+ * it in the preset mixer or mute its channels; period zero is not mute.
  */
 void NEOGEO_USER soundSetSSGNoise(uint8_t period) {
 	isZ80Ready(); soundCommand(0x19); isZ80Ready(); soundCommand(period & 0x1F);
 }
 
 /*
- * FM tempo override (writes VAR_FM_TEMPO directly).
- *
- * period_frames = Timer-B IRQs per FM music step.  Timer B fires
- * at ~8.1 Hz on the YM2610, so:
- *
- *   period_frames=1 → step every ~123 ms (fastest, sub-jingle pace)
- *   period_frames=2 → step every ~246 ms
- *   period_frames=4 → step every ~493 ms (relaxed)
- *   period_frames=8 → step every ~986 ms (very slow)
- *
- * Takes effect immediately on the currently-playing FM track and
- * persists until either the next F0 directive in the MML or the
- * next call to this function.  Range 1..8.
+ * Legacy FM step interval, 1..8 units of approximately 69.4 ms.
+ * Overrides loop-header tempos until another track starts. For a musical
+ * tempo independent of note length, use soundFMSetBPM() instead.
  */
 void NEOGEO_USER soundFMSetTempo(uint8_t period_frames) {
 	if (period_frames == 0u) {

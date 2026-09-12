@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eu
 PYTHON_BIN="${PYTHON:-python3}"
 SOX_BIN="${SOX:-}"
 SAMPLES_IN="${GAME_SOUND:-..}/samples/in_wav_a"

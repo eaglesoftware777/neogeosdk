@@ -40,15 +40,15 @@ op3=03,48,1F,14,0C,BF,00
 op4=01,00,1F,12,0A,AF,00
 
 [patch 3]
-name=Right Bell Answer
-alg=7
-fb=3
-stereo=40
+name=Warm Bell
+alg=4
+fb=1
+stereo=C0
 lfo=00
-op1=01,38,1F,08,04,AF,00
-op2=03,40,1F,08,04,AF,00
-op3=05,48,1F,08,04,AF,00
-op4=02,00,1F,06,03,9F,00
+op1=01,32,1F,0B,06,58,00
+op2=03,3C,1F,0C,05,68,00
+op3=01,08,1B,08,04,58,00
+op4=02,10,1B,09,04,68,00
 
 [patch 4]
 name=Minor Samurai Lead
@@ -62,28 +62,27 @@ op3=01,30,1F,0C,08,AF,00
 op4=01,00,1F,0A,06,9F,00
 
 [patch 5]
-name=Dark Reed Vibrato
+name=Warm Reed
 alg=4
-fb=6
-stereo=C7
+fb=2
+stereo=C2
 lfo=00
-op1=01,24,1F,08,04,7F,00
-op2=02,1C,1F,08,04,7F,00
-op3=01,30,1F,08,04,8F,00
-op4=01,00,1F,06,03,7F,00
+op1=01,30,1C,08,02,47,00
+op2=02,38,1C,08,02,47,00
+op3=01,0C,18,06,01,37,00
+op4=01,14,18,06,01,37,00
 
 [patch 6]
-name=Vibrato Hero Lead
-alg=7
-fb=6
-; stereo byte $C7 = L + R + AMS=0 + PMS=7.  The sound demo uses this
-; patch specifically to make live register $22 LFO changes obvious.
-stereo=C7
-lfo=0E
-op1=01,24,1F,0A,06,9F,00
-op2=02,30,1F,0A,06,9F,00
-op3=01,38,1F,0A,06,9F,00
-op4=01,00,1F,08,05,8F,00
+name=Sustained Vibrato Lead
+alg=4
+fb=1
+; PMS=5 gives an audible reference without the maximum-depth siren effect.
+stereo=C5
+lfo=00
+op1=01,38,1C,04,00,37,00
+op2=02,44,1C,04,00,37,00
+op3=01,08,18,04,00,27,00
+op4=01,10,18,04,00,27,00
 
 [patch 7]
 name=Strong Mod Arcade Lead

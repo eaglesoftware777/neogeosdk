@@ -36,15 +36,21 @@ fi
 if [ -f "$GAME_SOUND/fm/patches.fm" ]; then
     python3 "$SDK_ROOT/sound/tools/fm_patch_compile.py" "$GAME_SOUND/fm/patches.fm" -o "$SDK_ROOT/sound/driver/fm_patch_table.inc"
 fi
-FM_MMLS=$(ls "$GAME_SOUND"/fm/*.mml 2>/dev/null || true)
-[ -n "$FM_MMLS" ] && python3 "$SDK_ROOT/sound/tools/fm_compile.py" $FM_MMLS -o "$SDK_ROOT/sound/driver/fm_data.inc"
-MML_TRACKS=$(ls "$GAME_SOUND"/mml/*.mml 2>/dev/null || true)
-[ -n "$MML_TRACKS" ] && python3 "$SDK_ROOT/sound/tools/mml_compile.py" $MML_TRACKS -o "$SDK_ROOT/sound/driver/music_data.inc"
+set -- "$GAME_SOUND"/fm/*.mml
+if [ -f "$1" ]; then
+    python3 "$SCRIPT_DIR/fm_compile.py" "$@" -o "$SDK_ROOT/sound/driver/fm_data.inc"
+fi
+set -- "$GAME_SOUND"/mml/*.mml
+if [ -f "$1" ]; then
+    python3 "$SCRIPT_DIR/mml_compile.py" "$@" -o "$SDK_ROOT/sound/driver/music_data.inc"
+fi
 if [ -f "$GAME_SOUND/ssg/config.ssg" ]; then
     python3 "$SDK_ROOT/sound/tools/ssg_config_compile.py" "$GAME_SOUND/ssg/config.ssg" -o "$SDK_ROOT/sound/driver/ssg_config.inc"
 fi
-SSG_MMLS=$(ls "$GAME_SOUND"/ssg/*.mml 2>/dev/null || true)
-[ -n "$SSG_MMLS" ] && python3 "$SDK_ROOT/sound/tools/ssg_compile.py" $SSG_MMLS -o "$SDK_ROOT/sound/driver/ssg_data.inc"
+set -- "$GAME_SOUND"/ssg/*.mml
+if [ -f "$1" ]; then
+    python3 "$SCRIPT_DIR/ssg_compile.py" "$@" -o "$SDK_ROOT/sound/driver/ssg_data.inc"
+fi
 
 if [ "$USE_Z80C" = "1" ]; then
     echo "Compiling C driver with $Z80CC from $Z80C_SRC"
@@ -57,7 +63,7 @@ if [ "$USE_Z80C" = "1" ] && [ "$LINK_C_DRIVER" = "1" ]; then
         "$SDK_ROOT/sound/driver/driver_prelude.asm" \
         "$ASM_C" \
         "$ASM_COMBINED"
-    "$WLAZ80" -I "$SDK_ROOT/sound/driver" -o "$OBJ_C" "$ASM_COMBINED"
+    python3 "$SCRIPT_DIR/checked_wla.py" "$WLAZ80" -I "$SDK_ROOT/sound/driver" -o "$OBJ_C" "$ASM_COMBINED"
     printf "[objects]\n%s\n" "$OBJ_C" > "$LINKFILE"
 else
     if [ "$USE_Z80C" = "1" ]; then
@@ -65,15 +71,17 @@ else
     else
         echo "Assembling ASM driver with $WLAZ80"
     fi
-    "$WLAZ80" -I "$SDK_ROOT/sound/driver" -o "$OBJ" "$SDK_ROOT/sound/m1/m1.asm"
+    python3 "$SCRIPT_DIR/checked_wla.py" "$WLAZ80" -I "$SDK_ROOT/sound/driver" -o "$OBJ" "$SDK_ROOT/sound/m1/m1.asm"
     printf "[objects]\n%s\n" "$OBJ" > "$LINKFILE"
 fi
-"$WLALINK" -r "$LINKFILE" "$M1ROM"
+python3 "$SCRIPT_DIR/checked_wla.py" "$WLALINK" -S -r "$LINKFILE" "$M1ROM"
 
 current_size=$(wc -c < "$M1ROM" | tr -d ' ')
 target_size=131072
 if [ "$current_size" -lt "$target_size" ]; then
-  truncate -s "$target_size" "$M1ROM"
+  # Pad with the erased-flash value, as the Windows wrapper does, so the two
+  # builds produce the same bytes.
+  head -c $((target_size - current_size)) /dev/zero | tr '\000' '\377' >> "$M1ROM"
 fi
 
 mkdir -p "$ROM_DIR"

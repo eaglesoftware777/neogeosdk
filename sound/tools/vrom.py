@@ -1,6 +1,7 @@
 import os
 import glob
 import sys
+from pcm_metadata import read_rate, delta_n
 
 def c_symbol_suffix(stem):
     out = []
@@ -69,13 +70,24 @@ def build_vrom():
     adpcmb_count = 0
     samples_info = []
     voice_files_written = []
+    adpcmb_rates = []
 
-    def write_adpcma(vrom, path):
+    def write_adpcma(vrom, path, is_b=False):
         """Append one ADPCM-A sample, 256-byte aligned.  Returns True on success."""
         nonlocal offset
         size = os.path.getsize(path)
         if size == 0:
             return False
+        if size % 256:
+            raise ValueError(f"Unaligned ADPCM sample: {path}; re-encode it first")
+        # ADPCM-A compares only the low 20 address bits at sample end.
+        if not is_b:
+            if size > 0x100000:
+                raise ValueError(f"ADPCM-A sample exceeds 1 MiB: {path}")
+            if offset // 0x100000 != (offset + size - 1) // 0x100000:
+                gap = 0x100000 - (offset % 0x100000)
+                vrom.write(b'\x00' * gap)
+                offset += gap
         pad = (256 - (offset % 256)) % 256
         if pad > 0:
             vrom.write(b'\x08' * pad)
@@ -85,6 +97,8 @@ def build_vrom():
             vrom.write(sf.read())
         offset += size
         end_page = (offset - 1) // 256
+        if end_page > 0xFFFF:
+            raise ValueError("Sample bank exceeds the 16 MiB address window")
         samples_info.append((start_page, end_page, os.path.basename(path), offset - size, size))
         return True
 
@@ -108,8 +122,9 @@ def build_vrom():
         # Process ADPCM-B
         files_b = sorted(glob.glob(os.path.join(game_sound, "samples", "out_b", "*.adpcmb")), key=sample_sort_key)
         for f in files_b:
-            if write_adpcma(vrom, f):
+            if write_adpcma(vrom, f, is_b=True):
                 adpcmb_count += 1
+                adpcmb_rates.append(read_rate(f))
 
         # Pad to 2MB (standard for test)
         target_size = 2 * 1024 * 1024
@@ -131,6 +146,9 @@ def build_vrom():
         t.write("sample_address_table:\n")
         for start, end, name, off, sz in samples_info:
             t.write(f"  .db ${start & 0xFF:02X}, ${(start >> 8) & 0xFF:02X}, ${end & 0xFF:02X}, ${(end >> 8) & 0xFF:02X} ; {name} (start=${off:06X} size={sz})\n")
+        t.write("adpcmb_delta_n_table:\n")
+        for rate in adpcmb_rates:
+            t.write(f"  .dw ${delta_n(rate):04X} ; {rate} Hz\n")
 
     with open(voice_header_path, "w", newline="\n") as h:
         h.write("#ifndef SOUND_VOICE_IDS_H\n")
