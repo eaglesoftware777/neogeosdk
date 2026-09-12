@@ -67,6 +67,47 @@ def inspect(directory):
     check(any(p == 0 and r == 0xB5 and v & 7 for t, p, r, v in writes
               if starts["lfo_off"] < t < starts["ssg_120"]), "LFO patch has no pitch sensitivity")
 
+    # Isolate sustained fundamentals, excluding attack/release. Register writes
+    # alone cannot prove that the rendered pitch is modulated.
+    notes, frequency_regs = [], {0xA1: 0, 0xA5: 0}
+    for t, p, r, v in writes:
+        if p != 0:
+            continue
+        if r in frequency_regs:
+            frequency_regs[r] = v
+        if r == 0x28 and v == 0xF1:
+            high = frequency_regs[0xA5]
+            fnum = frequency_regs[0xA1] | ((high & 7) << 8)
+            hz = fnum * 8000000 / (144 * 2 ** (21 - (high >> 3)))
+            notes.append((t, hz))
+    pitch_spread = {}
+    for name, next_name in (("lfo_off", "lfo_0"), ("lfo_0", "lfo_4"),
+                            ("lfo_4", "lfo_7"), ("lfo_7", "ssg_120")):
+        measures = []
+        for (start, hz), (stop, _) in zip(notes, notes[1:]):
+            stop = min(stop, starts[next_name])
+            if start < ends[name] + 0.15 or stop - start < 0.72 or hz <= 0:
+                continue
+            signal = pcm[int(start * rate):int(stop * rate)].mean(axis=1)
+            frequencies = np.fft.fftfreq(len(signal), 1 / rate)
+            distance = np.abs(frequencies / hz - 1)
+            # Keep only the positive-frequency fundamental and its sidebands.
+            # Taper the band edge to reduce ringing from finite note windows.
+            weight = np.clip((0.35 - distance) / 0.1, 0, 1)
+            weight = (1 - np.cos(np.pi * weight)) * (frequencies > 0)
+            analytic = np.fft.ifft(np.fft.fft(signal) * weight)
+            phase = np.unwrap(np.angle(analytic))
+            pitch = np.diff(phase) * rate / (2 * np.pi)
+            pitch = pitch[int(0.15 * rate):-int(0.15 * rate)]
+            cents = 1200 * np.log2(np.maximum(pitch, 1) / hz)
+            measures.append(float(np.std(cents)))
+        check(bool(measures), f"no sustained note for waveform verification in {name}")
+        spread = float(np.median(measures)) if measures else 0
+        pitch_spread[name] = spread
+        check(spread < 3 if name == "lfo_off" else spread > 6,
+              f"unexpected waveform pitch modulation in {name}")
+    report["lfo_pitch_spread_cents"] = pitch_spread
+
     rates = {r: v for t, p, r, v in writes if p == 0 and r in (0x19, 0x1A)
              and starts["adpcmb_32k"] < t < starts["ssg_formant"]}
     check(rates == {0x19: 0x75, 0x1A: 0x93}, "wrong 32 kHz ADPCM-B Delta-N")

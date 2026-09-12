@@ -18,6 +18,9 @@ def main():
         for row in csv.DictReader(stream, delimiter="\t"):
             chapters[int(row["chapter"])].append(row)
     for chapter, rows in sorted(chapters.items()):
+        if chapter == 0:
+            print(f"Boot: {len(rows)} diagnostic captures (excluded from chapter sprite budgets)")
+            continue
         peak = max(int(row["max_scanline_strips"]) for row in rows)
         print(f"Chapter {chapter:02}: {len(rows):3} captures, peak {peak:2}/96 strips")
 

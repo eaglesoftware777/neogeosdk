@@ -10,6 +10,7 @@ local vram = emu.item(machine.devices[':spritegen'].items['0/m_videoram'])
 local pc_item = emu.item(machine.devices[':maincpu'].items['0/m_pc'])
 local profile = {}
 local chapter, started, next_capture = 0, 0, 0
+local reel_started = false
 local frame = 0
 local seen = {}
 local controls = os.getenv('DEMO_CAPTURE_CONTROLS') == '1'
@@ -76,6 +77,12 @@ emu.register_frame_done(function()
     input(':edge:joy:START', '1 Player Start', (now >= 9 and now < 9.25) and 1 or 0)
     local current = chapter_address and memory:read_u8(chapter_address) or 0
     if current > 26 then current = 0 end
+    -- BIOS RAM tests can resemble a chapter index before game initialization.
+    -- The capture enters through coin/start, so wait for the first real chapter.
+    if not reel_started then
+        reel_started = now >= 9.25 and current == 1
+        if not reel_started then current = 0 end
+    end
     -- run_chapter temporarily rewinds the view index during a restart.
     -- Wait for the header to publish its original index before assessing it.
     if controls and (control_phase == 1 or control_phase == 2) and current == chapter - 1 then

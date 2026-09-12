@@ -87,7 +87,9 @@ chapter addresses from `out/game`. Do not build another game during a capture.
 use it separately from `--controls`. The audio probe boots the real ROM,
 isolates the 68000 in a watchdog-serviced RAM loop, and sends a fixed command
 sequence to the Z80. It records a WAV plus YM2610 writes to check tempo,
-LFO persistence, sample rate, six A voices, B repeat, fades and muting.
+LFO persistence and audible pitch modulation, sample rate, six A voices,
+B repeat, fades and muting. The scene probe waits for the first chapter after
+coin/start before interpreting chapter indices, excluding BIOS RAM-test values.
 
 ## Reading the reel as documentation
 
