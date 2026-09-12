@@ -16,7 +16,9 @@ def read_rate(path, fallback=16000):
 
 def write_rate(path, rate):
     Path(str(path) + ".json").write_text(
-        json.dumps({"sample_rate": rate}, indent=2) + "\n", encoding="ascii"
+        json.dumps({"sample_rate": rate}, indent=2) + "\n",
+        encoding="ascii",
+        newline="\n",
     )
 
 
