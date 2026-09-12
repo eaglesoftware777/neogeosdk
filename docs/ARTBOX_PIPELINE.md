@@ -374,7 +374,7 @@ Each `[rule:name]` section in `artbox/assets.cfg` can define:
 - `pattern`: filename glob, such as `sprite_*.png`
 - `mode`: `screen` or `sprite`
 - `category`: gameplay category written into generated metadata
-- `fit`: `crop` or `pad`
+- `fit`: `crop`/`contain` for screens, `pad` for sprites, or `native` for pre-tiled screens
 - `anchor`: placement anchor such as `center` or `bottom-center`
 - `target_width` / `target_height`: output canvas size
 - `palette_banks`: maximum 1..16 banks for static art; shared animation masters remain single-bank
@@ -382,6 +382,12 @@ Each `[rule:name]` section in `artbox/assets.cfg` can define:
 - `halo_strip` / `halo_luma_threshold`: optional sprite border cleanup
 - `display_shrink_y`: the screen fitting ratio expected at runtime
 - older image-processing settings such as `contrast` and `kmeans_iters` affect optional converters, not the default fitter
+
+`fit = native` bypasses screen aspect compensation and requires the source
+dimensions to equal the target canvas. Use it for pixel art that already has
+a tile-aligned repeat, such as the demo's 144-pixel Sky Lance sky loop.
+Applying `contain` to that art adds transparent bands and changes the repeat
+distance. Other screens retain their existing fitting and colour algorithms.
 
 ## Categories
 

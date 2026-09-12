@@ -1,5 +1,83 @@
 # Changelog
 
+## v1.7.8 - The sound driver keeps time
+
+Release date: 2026-09-12
+
+The Z80 driver's generated data tables were laid out with fixed origins,
+and the music data had grown past the FM table's origin at `$7800`: the
+assembler overwrote one with the other and still exited zero.  Fixing
+that opened the rest of the driver up for a pass.
+
+### Data placed, not positioned
+
+Generated FM, MML and SSG includes no longer set `.org`.  The data is
+contiguous below `$8000`, the assembler asserts it stays there, and an
+overwrite diagnostic from `wla-z80` or `wlalink` fails the build even on
+an assembler version that reports it as a warning.
+
+### A clock a musician can count
+
+Timer B ticks at 124.008 Hz.  FM, standalone SSG and MML each keep a
+fractional BPM clock with twelve steps per quarter note, so `T120` means
+120 BPM.  `soundFMSetBPM()` and `soundSSGSetBPM()` change it live, and
+the override survives loop headers until another track starts.  Timed
+effects keep the legacy 14.4 Hz divider, so fades run as they did.
+
+Queued commands execute with maskable interrupts off while the shared
+YM address and data latches are being written; the NMI only queues.
+Inline sample cues preserve the music cursor.  MML durations no longer
+run one tick long.  FM volume changes reach carriers only, and the four
+channel key-off codes are the right ones.
+
+### Beds that repeat in hardware
+
+ADPCM-B has a hardware repeat bit.  `soundSetADPCMBLoop(1)` before a
+start makes the bed loop at its end address, so the demo no longer
+restarts music from a frame-count watchdog that drifted with the render
+rate.  ADPCM-A voices use their own end addresses and all six channels;
+the global short timeout is gone.  SSG tuning uses the right octave
+reference, saturates instead of wrapping, and mutes at zero.
+
+### Samples converted like samples
+
+WAV conversion resamples through a band-limited polyphase filter - a
+windowed sinc, pure numpy, so the build does not depend on a package the
+Windows Python may not have.  The ADPCM-A encoder now matches the chip's
+single-rounded deltas and 12-bit wrap; the synthetic pre-roll that used
+to click at the head of every effect is gone, and both codecs encode
+their alignment tails towards silence through the live predictor.
+
+Beds default to 32 kHz.  Every raw and encoded sample carries a
+`.json` sidecar with its rate, and the V-ROM packer emits a Delta-N per
+sample.  A file without a sidecar is treated as 16 kHz rather than
+played fast.  The packer enforces 256-byte alignment, keeps ADPCM-A
+samples inside a 1 MiB page and the whole bank inside 16 MiB.  The shell
+and batch wrappers now pad the M1 with the same byte, so the two
+platforms produce identical ROMs from identical sources.
+
+### On screen
+
+- The Sky Lance sky repeats every 144 source pixels.  `fit=contain` was
+  resizing it to 239 rows and padding, which broke the repeat and left a
+  white seam scrolling through the combined shooter.  `fit=native` keeps
+  a canvas pixel for pixel and refuses a size mismatch.
+- `uframe()` clears the stale vblank latch before waiting, so a long
+  update cannot inherit last frame's interrupt and write SCB mid-screen.
+- The demo interceptors are new art; the NPC chapter runs three separate
+  four-frame families at three paces; the sky player moves at 3 px per
+  frame; HUD labels that were clipped are shortened; the boot screen
+  counts 26 chapters.
+- The interactive MAME targets run throttled at normal speed again.
+  Headless capture stays unthrottled.
+
+Verified on the built ROM set: all 26 chapters captured, VRAM and
+palette RAM checked against the manifest with no mismatches outside the
+intentional palette-effects chapter; Timer B measured at 124.012 Hz;
+FM, SSG, six ADPCM-A voices, the 32 kHz bed, repeat, fades and mute all
+pass the capture checks.  These are numerical checks, not a listening
+session.
+
 ## v1.7.7 - Spending the palette
 
 Release date: 2026-09-10

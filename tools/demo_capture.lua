@@ -13,6 +13,8 @@ local chapter, started, next_capture = 0, 0, 0
 local frame = 0
 local seen = {}
 local controls = os.getenv('DEMO_CAPTURE_CONTROLS') == '1'
+local focus = tonumber(os.getenv('DEMO_CAPTURE_CHAPTER')) or 0
+local interval = tonumber(os.getenv('DEMO_CAPTURE_INTERVAL')) or 2
 local control_phase, control_time, previous_elapsed = 0, 0, 0
 local control_report = assert(io.open(output .. '/controls.tsv', 'w'))
 control_report:write('chapter\taction\ttime\n')
@@ -94,6 +96,10 @@ emu.register_frame_done(function()
         control_phase, control_time, previous_elapsed = 0, now, 0
         seen[current] = true
     end
+    if focus > 0 then
+        input(':edge:joy:JOY1', 'P1 A',
+            current ~= focus and now - started >= 2 and ((now - started) % 2) < 0.25 and 1 or 0)
+    end
     if controls and current > 0 then
         local elapsed = memory:read_u16(elapsed_address)
         local a, c = 0, 0
@@ -129,11 +135,12 @@ emu.register_frame_done(function()
         input(':edge:joy:JOY1', 'P1 Right', play and (elapsed % 120 >= 60 and elapsed % 120 < 100) and 1 or 0)
         previous_elapsed = elapsed
     end
-    if now >= next_capture then
+    if now >= next_capture and (focus == 0 or current == focus) then
         sample(now, current)
-        next_capture = now + 2.0
+        next_capture = now + interval
     end
-    if (current == 26 and (not controls and now - started > 4 or controls and control_phase == 4)) or (current == 0 and seen[26]) then
+    if (focus > 0 and seen[focus] and current ~= focus) or
+       (current == 26 and (not controls and now - started > 4 or controls and control_phase == 4)) or (current == 0 and seen[26]) then
         local p = assert(io.open(output .. '/profile.tsv', 'w'))
         for key, count in pairs(profile) do p:write(key .. '\t' .. count .. '\n') end
         p:close()

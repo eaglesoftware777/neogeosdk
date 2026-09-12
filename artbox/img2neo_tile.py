@@ -196,11 +196,17 @@ def fit_screen_for_display(img: Image.Image,
                   fit, which is what a backdrop wants - a letterboxed
                   background is transparent bands over the backdrop colour.
     fit="contain" keeps the whole picture and pads instead.
+    fit="native" keeps an already tiled canvas pixel-for-pixel, without CRT
+                  aspect compensation. Its source size must match the canvas.
 
     Returns (canvas RGBA, left, top, content_w, content_h).
     """
     img = img.convert("RGBA")
     src_w, src_h = img.size
+    if fit == "native":
+        if (src_w, src_h) != (canvas_w, canvas_h):
+            raise ValueError("native screen assets must match the target canvas size")
+        return img, 0, 0, canvas_w, canvas_h
     if src_w <= 0 or src_h <= 0:
         return (Image.new("RGBA", (canvas_w, canvas_h), (0, 0, 0, 0)),
                 0, 0, 0, 0)
