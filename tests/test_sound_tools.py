@@ -36,6 +36,8 @@ class SoundToolsTests(unittest.TestCase):
             self.assertEqual(read_rate(path), 16000)
             write_rate(path, 32000)
             self.assertEqual(read_rate(path), 32000)
+            self.assertEqual(Path(str(path) + ".json").read_bytes(),
+                             b'{\n  "sample_rate": 32000\n}\n')
             self.assertEqual(delta_n(read_rate(path)), 0x9375)
             self.assertEqual(delta_n(16000), 0x49BA)
             with self.assertRaises(ValueError):
