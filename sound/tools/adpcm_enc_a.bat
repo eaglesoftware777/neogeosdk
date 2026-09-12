@@ -7,4 +7,5 @@ for %%f in ("%SAMPLES_BASE%\out_16el_a\*.wav") do (
     echo %%f
     echo %SAMPLES_BASE%\out_a\%%~nf.adpcma
     "%PY%" adpcm_enc.py a "%%f" "%SAMPLES_BASE%\out_a\%%~nf.adpcma"
+    if errorlevel 1 exit /b 1
 )

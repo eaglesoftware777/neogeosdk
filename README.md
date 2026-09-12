@@ -28,9 +28,11 @@ largest release the SDK has had.
   and captured hardware palette assignments. See
   [Artbox Graphics Pipeline](docs/ARTBOX_PIPELINE.md).
 - **A rebuilt audio stack** — nine ADPCM-B beds, eight FM tracks, nine SSG
-  tracks, a recorded voice bank with `speakText()`, live FM tempo, LFO, pan,
-  noise and CSM control, and a fade engine that actually fades. The Z80
-  polling race that deadlocked the 68000 is fixed.
+  tracks, a recorded voice bank with `speakText()`, live FM/SSG BPM, persistent
+  LFO control and hardware sample repeat. Sample conversion uses band-limited
+  resampling, with per-sample ADPCM-B rates and 32 kHz beds by default. The
+  default ASM driver and its matching V1 are rebuilt together; see the
+  [sound guide](docs/SOUND_DRIVER.md) for loop/fade usage and capture tests.
 - **Sky Lance** (`games/skylance`, id 779) — a complete vertical arcade
   shooter: three pilots, seven stages, a named boss per stage, attract reel,
   pilot select, scoring, lives, energy and a continue flow.

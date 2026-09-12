@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eu
 PYTHON_BIN="${PYTHON:-python3}"
 BASE="${GAME_SOUND:-..}/samples"
 mkdir -p "$BASE/out_a"

@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eu
 # Voice WAV -> 16-bit PCM (intermediate step before ADPCM-A encoding).
 # Mirrors enc_wave16le_a.sh but reads from samples/in_wav_a_voice and
 # writes to samples/out_16el_a_voice.

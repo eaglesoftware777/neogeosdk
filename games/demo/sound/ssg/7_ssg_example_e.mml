@@ -1,9 +1,9 @@
 ; 7_ssg_example_e - river crossing answer
 
-T154
-P0
-V10
-O4
+T120
+P2
+V8
+O3
 L8
 
 D F A F  E G B- G

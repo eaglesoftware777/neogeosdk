@@ -1,4 +1,5 @@
 #!/bin/sh
+set -eu
 # Voice 16-bit PCM -> ADPCM-A. Mirrors adpcm_enc_a.sh but operates on
 # samples/out_16el_a_voice -> samples/out_a_voice.
 PYTHON_BIN="${PYTHON:-python3}"

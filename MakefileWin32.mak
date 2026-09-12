@@ -180,7 +180,8 @@ HASHPATH:=$(REPO_WIN)\hash_eagle\$(GAME);$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
 BIOS?=euro
 ROM_DIR = roms\$(GAME)
 DUMP_DIR = dump\$(GAME)
-MAME_COMMON=$(MAME) neogeo -rompath $(REPO_WIN)\roms -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME)
+MAME_PLAYBACK ?= -throttle -speed 1.0 -noautoframeskip -frameskip 0 -norefreshspeed
+MAME_COMMON=$(MAME) neogeo -rompath $(REPO_WIN)\roms -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME) $(MAME_PLAYBACK)
 LOG_CTX=@echo [neogeosdk] target=$@ game=$(GAME) game_id=$(GAME_ID) platform=$(PLATFORM) rom_dir=$(ROM_DIR) hashpath=$(HASHPATH)
 
 # PLATFORM: mvs (default) or aes
@@ -311,7 +312,7 @@ ssg:
 	$(if $(SSG_MMLS),$(PY) sound/tools/ssg_compile.py $(SSG_MMLS) -o sound/driver/ssg_data.inc,$(PY) sound/tools/ssg_compile.py -o sound/driver/ssg_data.inc)
 
 .PHONY: m1rom
-m1rom: fmpatches fm mml ssgconfig ssg
+m1rom: vrom fmpatches fm mml ssgconfig ssg
 	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& set GAME_SOUND=$(subst /,\,$(GAME_SOUND))&& set WLAZ80=$(WLAZ80)&& set WLALINK=$(WLALINK)&& set USE_Z80C=$(USE_Z80C)&& set Z80C_SRC=$(Z80C_SRC_WIN)&& call sound\tools\m1rom.bat
 
 .PHONY: m1rom-asm
@@ -331,7 +332,8 @@ compare-driver: m1rom-asm m1rom-c
 	$(PY) sound\tools\compare_m1.py out\compare\$(GAME_ID)-m1-asm.m1 out\compare\$(GAME_ID)-m1-c.m1
 
 .PHONY: sound
-sound: game-check samples vrom fmpatches fm mml ssgconfig ssg m1rom
+sound: game-check samples
+	$(MAKE) -f MakefileWin32.mak m1rom GAME=$(GAME)
 	$(LOG_CTX)
 
 .PHONY: sound-all

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 from pathlib import Path
+from mml_inputs import ordered_inputs
 
 NOTE_BASE = {"c": 0, "d": 2, "e": 4, "f": 5, "g": 7, "a": 9, "b": 11}
 
@@ -183,7 +184,7 @@ def main():
     ap.add_argument("-o", "--output", type=Path, default=Path("sound/driver/ssg_data.inc"))
     args = ap.parse_args()
 
-    inputs = args.inputs or sorted(Path("sound/ssg").glob("*.mml"))
+    inputs = ordered_inputs(args.inputs or Path("sound/ssg").glob("*.mml"))
 
     tracks = []
     for idx, path in enumerate(inputs):

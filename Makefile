@@ -141,7 +141,8 @@ HASHPATH:=$(CURDIR)/hash_eagle/$(GAME);$(CURDIR)/hash_eagle;$(CURDIR)/hash
 BIOS?=euro
 ROM_DIR = roms/$(GAME)
 DUMP_DIR = dump/$(GAME)
-MAME_COMMON=mame neogeo -rompath $(CURDIR)/roms -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME)
+MAME_PLAYBACK ?= -throttle -speed 1.0 -noautoframeskip -frameskip 0 -norefreshspeed
+MAME_COMMON=mame neogeo -rompath $(CURDIR)/roms -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME) $(MAME_PLAYBACK)
 LOG_CTX=@echo "[neogeosdk] target=$@ game=$(GAME) game_id=$(GAME_ID) platform=$(PLATFORM) rom_dir=$(ROM_DIR) hashpath=$(HASHPATH)"
 
 # PLATFORM: mvs (default) or aes
@@ -315,15 +316,15 @@ ssg:
 
 .PHONY: samples
 samples:
-	@[ -d "$(GAME_SOUND)/samples/in_wav_a" ] && \
-	  (cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_a.sh) || \
-	  echo "samples: no in_wav_a in $(GAME_SOUND)/samples/, skipping a"
-	@[ -d "$(GAME_SOUND)/samples/in_wav_a_voice" ] && \
-	  (cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_a_voice.sh) || \
-	  echo "samples: no in_wav_a_voice in $(GAME_SOUND)/samples/, skipping voice"
-	@[ -d "$(GAME_SOUND)/samples/in_wav_b" ] && \
-	  (cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_b.sh) || \
-	  echo "samples: no in_wav_b in $(GAME_SOUND)/samples/, skipping b"
+	@if [ -d "$(GAME_SOUND)/samples/in_wav_a" ]; then \
+	  cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_a.sh; \
+	  else echo "samples: no in_wav_a, skipping a"; fi
+	@if [ -d "$(GAME_SOUND)/samples/in_wav_a_voice" ]; then \
+	  cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_a_voice.sh; \
+	  else echo "samples: no in_wav_a_voice, skipping voice"; fi
+	@if [ -d "$(GAME_SOUND)/samples/in_wav_b" ]; then \
+	  cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_b.sh; \
+	  else echo "samples: no in_wav_b, skipping b"; fi
 	@cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) ./adpcm_enc_process.sh
 
 .PHONY: vrom
@@ -333,7 +334,7 @@ vrom:
 	cp -f out/$(GAME_ID)-v1.v1 $(ROM_DIR)/$(GAME_ID)-v1.v1
 
 .PHONY: m1rom
-m1rom: fmpatches fm mml ssgconfig ssg
+m1rom: vrom fmpatches fm mml ssgconfig ssg
 	WLAZ80=$(WLAZ80) WLALINK=$(WLALINK) USE_Z80C=$(USE_Z80C) Z80C_SRC=$(Z80C_SRC_LINUX) GAME=$(GAME) GAME_SOUND=$(GAME_SOUND) GAME_ID=$(GAME_ID) ./sound/tools/m1rom.sh
 
 .PHONY: m1rom-asm
@@ -353,7 +354,8 @@ compare-driver: m1rom-asm m1rom-c
 	python3 sound/tools/compare_m1.py out/compare/$(GAME_ID)-m1-asm.m1 out/compare/$(GAME_ID)-m1-c.m1
 
 .PHONY: sound
-sound: game-check samples vrom fmpatches fm mml ssgconfig ssg m1rom
+sound: game-check samples
+	$(MAKE) m1rom GAME=$(GAME)
 	$(LOG_CTX)
 
 
