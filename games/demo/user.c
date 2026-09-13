@@ -177,8 +177,8 @@ void NEOGEO_USER DEMO_END (void) {
 // NeoGeo COIN_SOUND handler
 void NEOGEO_USER COIN_SOUND (void) {
 
-	isZ80Ready();
-	soundStopAll();
+	/* A coin is a cue on top of whatever is playing, not a scene change:
+	 * the music keeps going and the effect lands over it. */
 	isZ80Ready();
 	soundSetADPCMAVolume(0x3C);
 	isZ80Ready();

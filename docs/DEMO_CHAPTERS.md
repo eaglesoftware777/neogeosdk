@@ -79,6 +79,8 @@ python3 tools/demo_capture.py --output /tmp/demo-controls --seconds 1100 --contr
 python3 tools/demo_capture.py --output /tmp/demo-shooter --chapter 25 --interval 0.016
 python3 tools/sound_capture.py --output /tmp/demo-audio
 python3 tools/sound_capture_report.py /tmp/demo-audio
+python3 tools/demo_audio_capture.py --output /tmp/demo-live --press-every 9
+python3 tools/demo_audio_report.py /tmp/demo-live --strict
 ```
 
 Build the matching demo P1 immediately before capture: the script resolves
@@ -88,7 +90,10 @@ use it separately from `--controls`. The audio probe boots the real ROM,
 isolates the 68000 in a watchdog-serviced RAM loop, and sends a fixed command
 sequence to the Z80. It records a WAV plus YM2610 writes to check tempo,
 LFO persistence and audible pitch modulation, sample rate, six A voices,
-B repeat, fades and muting. The scene probe waits for the first chapter after
+B repeat, fades and muting. It says nothing about whether the demo itself
+gets its commands through: the live capture does, by booting the ROM set,
+leaving the 68000 in charge, recording the mix and failing on any chapter
+that goes quiet. The scene probe waits for the first chapter after
 coin/start before interpreting chapter indices, excluding BIOS RAM-test values.
 
 ## Reading the reel as documentation
