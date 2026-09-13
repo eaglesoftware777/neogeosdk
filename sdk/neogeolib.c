@@ -623,7 +623,39 @@ void NEOGEO_USER display_digit(uint16_t X, uint16_t Y,uint32_t value,short pal,u
 int NEOGEO_USER read_p1credit(void) { return *(volatile uint8_t *)P1_CREDITS; }
 
 void NEOGEO_USER playSoundtest(uint16_t index) { isZ80Ready(); soundCommand((uint8_t)(index & 0xFF)); }
-void NEOGEO_USER soundCommand(uint8_t command) { isZ80Ready(); NEO_REGISTER8(REG_SOUND) = command; }
+/*
+ * Send one byte to the Z80 and do not return until the driver has taken it.
+ *
+ * The driver answers through the reply port: its NMI handler drops the
+ * port to 0 the moment it has read the byte out of the latch, and raises
+ * it to 1 again once the byte is in its queue.  At rest the port reads 1,
+ * and the BIOS insists on that - it re-initialises the driver if it ever
+ * finds anything else there - so 1 alone cannot mean "your byte arrived":
+ * it is also what the port held before we wrote.  A caller that sends a
+ * second byte on that stale 1 overwrites the latch before the Z80 has read
+ * the first, or lands a second NMI inside the handler, which then files
+ * both bytes into the same queue slot.  Either way one byte is gone, and
+ * for a two-byte command that means the parameter is lost and the next
+ * command is swallowed as the parameter instead: a bed that never starts.
+ *
+ * So wait for the drop.  The handler holds the port at 0 for a few dozen
+ * microseconds, which a 68000 polling flat out cannot miss; the bound only
+ * guards the theoretical case of the drop and the rise both landing
+ * between two polls, in which case the byte is already queued anyway.
+ */
+#define Z80_REPLY_READY  1u
+#define Z80_BUSY_POLLS   256u
+
+void NEOGEO_USER soundCommand(uint8_t command) {
+	uint16_t polls;
+	isZ80Ready();
+	NEO_REGISTER8(REG_SOUND) = command;
+	for (polls = 0u; polls < Z80_BUSY_POLLS; polls++) {
+		kickWatchDog();
+		if (NEO_REGISTER8(REG_SOUND) != Z80_REPLY_READY) break;
+	}
+	isZ80Ready();
+}
 void NEOGEO_USER soundInit(void) { soundCommand(0x01); }
 void NEOGEO_USER soundReset(void) { soundCommand(0x03); }
 void NEOGEO_USER soundStopAll(void) { soundCommand(0x04); }

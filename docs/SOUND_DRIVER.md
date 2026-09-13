@@ -266,18 +266,55 @@ wrapper yet — `playSoundtest(index)` in `sdk/neogeolib.c` sends one directly.
 | `$40`+n | ADPCM-A sample *n*, compact range 0–63 |
 | `$80`+n | ADPCM-B sample *n* |
 
-### Multi-byte commands need spacing
+### How a byte is acknowledged
 
-A prefix byte and its parameter are two separate NMIs on the Z80. Sending
-them back to back from a tight 68000 loop can drop the second one. In the
-demo's sound and shooter chapters every multi-step setup is separated by a
-`waitVbl()`, and that is the pattern to copy:
+Every byte is one NMI on the Z80. The handler reads the latch, drops the
+reply port (`$320000` read from the 68000) to `0`, files the byte in a
+32-byte queue, and raises the reply to `1` again. The driver's main loop
+executes queued commands afterwards, so the acknowledgement means
+*accepted*, not *done*.
+
+At rest the reply reads `1`, and it has to: the BIOS reads that port before
+it sends its own `$03` and re-initialises the driver if it finds anything
+else there. That is also why `1` on its own cannot prove a byte arrived -
+it is what the port held before the write. `soundCommand()` therefore
+waits for the reply to drop to `0` after writing, and only then for the
+`1` that follows. Writing the next byte on the stale `1` overwrites the
+latch before the Z80 has read it, or fires a second NMI inside the handler,
+which files both bytes into the same queue slot; either way one byte is
+lost, and for a prefixed command that means the next command is swallowed
+as the missing parameter. The demo's beds failed to start exactly that way
+until the wait was added.
+
+All SDK wrappers go through `soundCommand()`, so a prefix byte and its
+parameter can be sent back to back. Between *commands* the demo still
+leaves a `waitVbl()` so the driver has finished the previous one before
+the next arrives - a stop-all and a start in the same frame race the
+driver's own busy-waits:
 
 ```c
 soundSetSSGPreset(3);
 waitVbl();
 playSSGTrack(SOUND_SSG_B);
 ```
+
+### Isolated and live audio checks are different tests
+
+`tools/sound_capture.py` parks the 68000 and feeds the driver one byte per
+frame from Lua: it proves the driver, the tables and the samples, and it
+would have passed while every chapter of the demo was silent. Run
+`tools/demo_audio_capture.py` as well - it boots the real ROM set, lets the
+68000 send its own commands, records the mix and every latch byte, and
+`tools/demo_audio_report.py --strict` fails if any chapter goes quiet:
+
+```sh
+python3 tools/demo_audio_capture.py --output ../showcase-qa/live --press-every 9
+python3 tools/demo_audio_report.py ../showcase-qa/live --strict
+```
+
+`--press-every` walks the reel with A the way a player does; `--coin-at`
+drops a coin mid-reel to check the cue lands over the music; `--trace-z80`
+adds the driver's queue traffic to `events.tsv` when a byte goes missing.
 
 ## 4. Content pipelines
 

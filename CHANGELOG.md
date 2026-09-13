@@ -1,5 +1,43 @@
 # Changelog
 
+## v1.7.9 - The byte that got lost
+
+Release date: 2026-09-12
+
+Every chapter of the demo was starting its music bed and most of them
+were silent.  The isolated sound check passed throughout, because it
+feeds the driver one byte per frame from a script; the demo sends its
+bytes from a 68000, and that is where they went missing.
+
+### One acknowledgement means one byte
+
+The Z80 answers each byte by dropping its reply port to 0 while it reads
+the latch and raising it to 1 once the byte is queued.  At rest the port
+reads 1 - the BIOS requires that and re-initialises the driver if it sees
+anything else - so a 68000 that only waits for 1 is trusting the previous
+byte's acknowledgement.  Sent that early, the second byte of a two-byte
+command either overwrote the first in the latch or fired a second NMI
+inside the handler, which filed both bytes into the same queue slot.  The
+repeat command lost its parameter, the start command that followed was
+swallowed as that parameter, and the bed never played.  Older wrappers
+polled twice between bytes and mostly got away with it; the new ones
+polled once and did not.
+
+`soundCommand()` now waits for the drop before it waits for the rise.
+Every wrapper goes through it, so prefixed commands are safe back to
+back.  A driver soft reset no longer empties the command queue behind
+itself, and a coin plays its cue over the music instead of stopping it.
+
+### A live check that hears what the player hears
+
+`tools/demo_audio_capture.py` boots the real ROM set with the 68000 in
+charge, records the mix, logs every latch byte with the program counter
+that wrote it, and can press A through the reel and drop a coin mid-way.
+`tools/demo_audio_report.py --strict` fails when a chapter goes quiet.
+Before the fix it reported nineteen of twenty-five chapters silent; after,
+none, with A pressed every nine seconds and again across the natural
+chapter lengths, beds looping past their sample ends.
+
 ## v1.7.8 - The sound driver keeps time
 
 Release date: 2026-09-12

@@ -1208,8 +1208,10 @@ driver_soft_reset:
     ld (VAR_WAIT_TEMPO),a
     ld (VAR_PARAM_MODE),a
     ld (VAR_TICK),a
-    ld (FIFO_READ),a
-    ld (FIFO_WRITE),a
+    ; The queue is left alone.  This command was itself taken out of it,
+    ; and anything queued behind it was sent after it on purpose; zeroing
+    ; the pointers here would throw those bytes away.  Cold boot clears the
+    ; queue when it clears work RAM.
     ld (VAR_ADPCMA_CH),a
     ld (VAR_MUSIC_START_LO),a
     ld (VAR_MUSIC_START_HI),a
