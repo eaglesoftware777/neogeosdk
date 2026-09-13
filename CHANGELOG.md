@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.8.0 - Toolchain 3.0
+## v1.7.0 - Toolchain 3.0
 
 Release date: 2026-09-13
 
