@@ -27,6 +27,18 @@ What it adds over the previous bundle:
 bundle and fall back to the previous one.  The capture tools find the
 cross `nm` in the same order.
 
+`x-tools-v3-win` is the same toolchain for 64-bit Windows - same versions,
+same configuration, `.exe` files that import only system DLLs.
+`MakefileWin32.mak` looks for it first, then `x-tools-v2-win`, then
+`M68K_ELF_ROOT`, and the Windows installer fetches it with the previous
+bundle as fallback.
+
+The Windows link step now passes forward-slash object paths.  The linker
+script places sections by object file name, and the backslash spellings
+never matched, so every Windows build had been putting a kilobyte of
+tables in a different place from the Linux build.  A Windows build of any
+of the six games is now byte-identical to the Linux build.
+
 All six games build with no warnings.  The demo's text is 369,785 bytes
 against 377,973 from the previous compiler at the same `-O0`.  The ROM
 set built with it passes the 26-chapter tour, the controller run, the

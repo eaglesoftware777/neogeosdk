@@ -17,8 +17,15 @@ machine it runs on.
 | libstdc++ | 16.2.0 | full C++ standard library, quiet `terminate` (no demangler or stdio pulled in) |
 | libgcc | 16.2.0 | software integer division, multiplication and floating point for the 68000 |
 
-Target triplet: `m68k-unknown-elf`. Host: `x86_64-linux`, static.
-Installed size: 280 MB. Archive: `x-tools-v3.tar.xz`, 58 MB.
+Target triplet: `m68k-unknown-elf`.
+
+| Bundle | Host | Archive | Installed |
+|---|---|---|---|
+| `x-tools-v3` | x86-64 Linux, static binaries | `x-tools-v3.tar.xz`, 58 MB | 280 MB |
+| `x-tools-v3-win` | 64-bit Windows, `.exe` files importing only system DLLs | `x-tools-v3-win.zip`, 106 MB | 250 MB |
+
+Both bundles are built from the same sources with the same configuration
+and produce byte-identical ROMs from the same input.
 
 ## Code generation
 
@@ -81,7 +88,13 @@ The bundle is relocatable: unpack it anywhere and point `SDKHOME` (or
 3. `$(SDKHOME)/x-tools`
 
 or set `XTOOLS_ROOT=<directory containing m68k-unknown-elf/>` on the make
-command line. The Windows makefile keeps its own `x-tools-v2-win` bundle.
+command line.
+
+`MakefileWin32.mak` looks for `x-tools-v3-win` first, then `x-tools-v2-win`,
+then `M68K_ELF_ROOT`. Its link step now hands the linker forward-slash object
+paths, because the linker script places sections by object file name
+(`out/ng_*0.o`) and backslash spellings never matched those patterns; with
+that, a Windows build of any game is byte-identical to the Linux build.
 
 ## Verified
 
@@ -94,3 +107,7 @@ command line. The Windows makefile keeps its own `x-tools-v2-win` bundle.
   run, and the live audio check.
 - `-flto` links a multi-file program with cross-unit inlining.
 - `gdb` loads the demo's ELF, resolves symbols and disassembles 68000 code.
+- The Windows bundle builds all six games through `MakefileWin32.mak` with
+  no warnings; every program ROM matches the Linux build byte for byte, and
+  every `.exe` imports only `KERNEL32`, `msvcrt`, `ADVAPI32`, `USER32`,
+  `WS2_32` and `bcrypt`.

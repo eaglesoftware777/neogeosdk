@@ -45,11 +45,13 @@ endif
 
 # Toolchain selection order:
 # - TOOLCHAIN=legacy: force existing M68K_ELF_ROOT fallback (e.g. SysGCC)
-# - TOOLCHAIN=auto (default):
-#   1) $(SDKHOME)\x-tools-v2-win\m68k-unknown-elf\bin
-#   2) $(SDKHOME)\x-tools-v2-win\m68k-elf\bin
-#   3) existing M68K_ELF_ROOT fallback (e.g. SysGCC)
+# - TOOLCHAIN=auto (default), first one found wins:
+#   1) $(SDKHOME)\x-tools-v3-win\m68k-unknown-elf\bin  (GCC 16, static)
+#   2) $(SDKHOME)\x-tools-v2-win\m68k-unknown-elf\bin
+#   3) $(SDKHOME)\x-tools-v2-win\m68k-elf\bin
+#   4) existing M68K_ELF_ROOT fallback (e.g. SysGCC)
 TOOLCHAIN?=auto
+XTOOLS_V3_WIN_U1:=$(SDKHOME)/x-tools-v3-win/m68k-unknown-elf/bin
 XTOOLS_V2_WIN_U1:=$(SDKHOME)/x-tools-v2-win/m68k-unknown-elf/bin
 XTOOLS_V2_WIN_U2:=$(SDKHOME)/x-tools-v2-win/m68k-elf/bin
 
@@ -57,20 +59,19 @@ ifeq ($(TOOLCHAIN),legacy)
   M68K_ELF_ROOT?=C:\SysGCC\m68k-elf
   M68K_ELF_BIN=$(M68K_ELF_ROOT)\bin
   M68K_ELF_PREFIX=m68k-elf
+else ifneq ($(wildcard $(XTOOLS_V3_WIN_U1)/m68k-unknown-elf-gcc.exe),)
+  M68K_ELF_BIN:=$(subst /,\,$(XTOOLS_V3_WIN_U1))
+  M68K_ELF_PREFIX=m68k-unknown-elf
+else ifneq ($(wildcard $(XTOOLS_V2_WIN_U1)/m68k-unknown-elf-gcc.exe),)
+  M68K_ELF_BIN:=$(subst /,\,$(XTOOLS_V2_WIN_U1))
+  M68K_ELF_PREFIX=m68k-unknown-elf
+else ifneq ($(wildcard $(XTOOLS_V2_WIN_U2)/m68k-elf-gcc.exe),)
+  M68K_ELF_BIN:=$(subst /,\,$(XTOOLS_V2_WIN_U2))
+  M68K_ELF_PREFIX=m68k-elf
 else
-  ifeq ($(wildcard $(XTOOLS_V2_WIN_U1)/m68k-unknown-elf-gcc.exe),)
-    ifeq ($(wildcard $(XTOOLS_V2_WIN_U2)/m68k-elf-gcc.exe),)
-      M68K_ELF_ROOT?=C:\SysGCC\m68k-elf
-      M68K_ELF_BIN=$(M68K_ELF_ROOT)\bin
-      M68K_ELF_PREFIX=m68k-elf
-    else
-      M68K_ELF_BIN:=$(subst /,\,$(XTOOLS_V2_WIN_U2))
-      M68K_ELF_PREFIX=m68k-elf
-    endif
-  else
-    M68K_ELF_BIN:=$(subst /,\,$(XTOOLS_V2_WIN_U1))
-    M68K_ELF_PREFIX=m68k-unknown-elf
-  endif
+  M68K_ELF_ROOT?=C:\SysGCC\m68k-elf
+  M68K_ELF_BIN=$(M68K_ELF_ROOT)\bin
+  M68K_ELF_PREFIX=m68k-elf
 endif
 
 REPO_WIN=$(subst /,\,$(CURDIR))
@@ -262,7 +263,10 @@ game: game-check
 	$(OBJCP) $(STRIP_SECTS) out\main0.o out\main.o
 	$(OBJCP) $(STRIP_SECTS) out\neogeolib0.o out\neogeolib.o
 	$(OBJCP) $(STRIP_SECTS) out\eyecatcher0.o out\eyecatcher.o
-	$(LD) $(LDFLAGS) -T games/$(GAME)/neogeo.ld -o out\game out\neogeo.o out\user.o out\main.o out\neogeolib.o out\eyecatcher.o $(NG_FIX_SDK_OBJ0) $(NG_ENGINE_OBJ0) $(GAME_SCENE_OBJS)
+	@rem The linker script places sections by object file name (out/ng_*0.o),
+	@rem so the objects must reach ld spelled with forward slashes or those
+	@rem patterns never match and the tables land elsewhere in the ROM.
+	$(LD) $(LDFLAGS) -T games/$(GAME)/neogeo.ld -o out/game out/neogeo.o out/user.o out/main.o out/neogeolib.o out/eyecatcher.o $(subst \,/,$(NG_FIX_SDK_OBJ0)) $(subst \,/,$(NG_ENGINE_OBJ0)) $(GAME_SCENE_OBJS)
 
 $(GAME_ID)-p1.p1: game
 	$(OBJCP) -O ihex out\game out\game0

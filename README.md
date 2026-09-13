@@ -508,9 +508,10 @@ Linux 68000 compiler:
 Windows 68000 compiler:
 
 - default search order in `MakefileWin32.mak`:
-  1. `$(SDKHOME)\x-tools-v2-win\m68k-unknown-elf\bin`
-  2. `$(SDKHOME)\x-tools-v2-win\m68k-elf\bin`
-  3. `M68K_ELF_ROOT` fallback (default `C:\SysGCC\m68k-elf`)
+  1. `$(SDKHOME)\x-tools-v3-win\m68k-unknown-elf\bin` (GCC 16.2, static, no DLLs)
+  2. `$(SDKHOME)\x-tools-v2-win\m68k-unknown-elf\bin`
+  3. `$(SDKHOME)\x-tools-v2-win\m68k-elf\bin`
+  4. `M68K_ELF_ROOT` fallback (default `C:\SysGCC\m68k-elf`)
 - if your fallback toolchain is installed elsewhere, set `M68K_ELF_ROOT` when invoking `make`
 - you do not need to clone the SDK into a fixed drive or fixed folder name beyond
   keeping `neogeosdk/` under the chosen `SDKHOME` parent
@@ -528,7 +529,8 @@ SDKHOME/
   x-tools-v3/         # Linux default
   x-tools-v2/         # Linux, previous bundle
   x-tools/            # Linux legacy fallback
-  x-tools-v2-win/     # Windows default
+  x-tools-v3-win/     # Windows default
+  x-tools-v2-win/     # Windows, previous bundle
 ```
 
 If `SDKHOME` is not set, both makefiles default to the parent directory of the
@@ -867,10 +869,13 @@ Recommended layout:
 
 ```text
 <sdk root>\neogeosdk
-<sdk root>\x-tools-v2-win
+<sdk root>\x-tools-v3-win
 ```
 
-The Win32 makefile auto-detects `x-tools-v2-win` first. If not present, it accepts
+`x-tools-v3-win.zip` from the release page is the same toolchain as the Linux
+bundle - GCC 16.2, binutils 2.47, gdb 17.2, newlib 4.6, libstdc++ - built for
+64-bit Windows with no DLL dependencies. The Win32 makefile auto-detects
+`x-tools-v3-win` first, then `x-tools-v2-win`. If neither is present, it accepts
 a configurable `M68K_ELF_ROOT` fallback. Example fallback layout:
 
 - `C:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe`

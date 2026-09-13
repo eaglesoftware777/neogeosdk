@@ -138,19 +138,23 @@ Or build from source: https://www.mamedev.org/
 
 ### m68k toolchain (Windows)
 
-The Win32 makefile (`MakefileWin32.mak`) auto-detects this default first:
+Unpack `x-tools-v3-win.zip` from the release page next to the repository. It
+holds the same toolchain as the Linux bundle (see [TOOLCHAIN.md](TOOLCHAIN.md))
+built for 64-bit Windows, with no DLL dependencies. The Win32 makefile
+(`MakefileWin32.mak`) auto-detects it first:
+
+```text
+<sdk root>\x-tools-v3-win\m68k-unknown-elf\bin\m68k-unknown-elf-gcc.exe
+```
+
+Then the previous bundle:
 
 ```text
 <sdk root>\x-tools-v2-win\m68k-unknown-elf\bin\m68k-unknown-elf-gcc.exe
-```
-
-Then this alternate default:
-
-```text
 <sdk root>\x-tools-v2-win\m68k-elf\bin\m68k-elf-gcc.exe
 ```
 
-If neither exists, it falls back to a SysGCC-style `M68K_ELF_ROOT`:
+If none exists, it falls back to a SysGCC-style `M68K_ELF_ROOT`:
 
 ```text
 C:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe

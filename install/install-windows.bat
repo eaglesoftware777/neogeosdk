@@ -18,7 +18,7 @@ REM      install-windows.bat C:\dev\neogeo           custom SDKHOME
 REM
 REM  Defaults:
 REM      SDKHOME      %USERPROFILE%\neogeo
-REM      m68k root    %SDKHOME%\x-tools-v2-win
+REM      m68k root    %SDKHOME%\x-tools-v3-win (x-tools-v2-win accepted)
 REM      sdk repo     %SDKHOME%\neogeosdk
 REM ============================================================
 
@@ -26,7 +26,8 @@ cd /d "%~dp0"
 
 set "SDKHOME=%~1"
 if "%SDKHOME%"=="" set "SDKHOME=%USERPROFILE%\neogeo"
-set "M68K_ROOT=%SDKHOME%\x-tools-v2-win"
+set "M68K_ROOT=%SDKHOME%\x-tools-v3-win"
+set "M68K_ROOT_V2=%SDKHOME%\x-tools-v2-win"
 set "SDK_DIR=%SDKHOME%\neogeosdk"
 
 echo.
@@ -87,14 +88,16 @@ if errorlevel 1 (
 REM ------------------------------------------------------------
 REM 5. m68k cross compiler
 REM ------------------------------------------------------------
-REM The release ships x-tools-v2-win.tar containing m68k-elf-gcc.exe
-REM and a sibling m68k-unknown-elf layout; the Win32 makefile detects
+REM The release page ships x-tools-v3-win.zip (GCC 16, static .exe files)
+REM and, from v1.3.0, x-tools-v2-win.tar; the Win32 makefile detects
 REM either.  We try the auto-download first; if no curl + tar.exe
 REM available, we fall through to the SysGCC fallback below.
-set "WIN_TC_URL=https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.3.0/x-tools-v2-win.tar"
+set "WIN_TC_URL=https://github.com/eaglesoftware777/neogeosdk/releases/latest/download/x-tools-v3-win.zip"
+set "WIN_TC_URL_V2=https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.3.0/x-tools-v2-win.tar"
 
-if exist "%M68K_ROOT%\bin\m68k-elf-gcc.exe" goto :tc_done
 if exist "%M68K_ROOT%\m68k-unknown-elf\bin\m68k-unknown-elf-gcc.exe" goto :tc_done
+if exist "%M68K_ROOT_V2%\bin\m68k-elf-gcc.exe" goto :tc_done
+if exist "%M68K_ROOT_V2%\m68k-unknown-elf\bin\m68k-unknown-elf-gcc.exe" goto :tc_done
 
 echo [install] m68k toolchain not at %M68K_ROOT%; attempting auto-fetch...
 where curl >nul 2>&1
@@ -109,18 +112,26 @@ if errorlevel 1 (
 )
 if not exist "%SDKHOME%" mkdir "%SDKHOME%"
 pushd "%SDKHOME%"
-curl -fL -o x-tools-v2-win.tar "%WIN_TC_URL%"
+curl -fL -o x-tools-v3-win.zip "%WIN_TC_URL%"
 if errorlevel 1 (
-    echo [install]   download failed; trying SysGCC fallback.
-    popd
-    goto :tc_fallback
+    echo [install]   x-tools-v3-win.zip not available; trying the previous bundle.
+    curl -fL -o x-tools-v2-win.tar "%WIN_TC_URL_V2%"
+    if errorlevel 1 (
+        echo [install]   download failed; trying SysGCC fallback.
+        popd
+        goto :tc_fallback
+    )
+    tar -xf x-tools-v2-win.tar
+    del /q x-tools-v2-win.tar 2>nul
+) else (
+    tar -xf x-tools-v3-win.zip
+    del /q x-tools-v3-win.zip 2>nul
 )
-tar -xf x-tools-v2-win.tar
-del /q x-tools-v2-win.tar 2>nul
 popd
 
-if exist "%M68K_ROOT%\bin\m68k-elf-gcc.exe" goto :tc_done
 if exist "%M68K_ROOT%\m68k-unknown-elf\bin\m68k-unknown-elf-gcc.exe" goto :tc_done
+if exist "%M68K_ROOT_V2%\bin\m68k-elf-gcc.exe" goto :tc_done
+if exist "%M68K_ROOT_V2%\m68k-unknown-elf\bin\m68k-unknown-elf-gcc.exe" goto :tc_done
 echo [install]   extraction did not produce expected gcc; trying fallback.
 
 :tc_fallback
@@ -133,7 +144,7 @@ if exist "C:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe" (
 echo.
 echo [install] m68k cross compiler not found.  Install one of:
 echo [install]   * SysGCC m68k-elf:  http://gnutoolchains.com/m68k-elf/
-echo [install]   * extract release x-tools-v2-win.tar into %M68K_ROOT%:
+echo [install]   * extract release x-tools-v3-win.zip into %SDKHOME%:
 echo [install]     %WIN_TC_URL%
 echo [install] Then re-run this script ^(it is safe to re-run^).
 set "TOOLCHAIN_MISSING=1"
@@ -176,8 +187,12 @@ call :need mame
 call :need sox
 call :need srec_cat
 py -c "import numpy, PIL, png" 2>nul && echo   python deps  OK   || echo   python deps  MISSING
-if exist "%M68K_ROOT%\bin\m68k-elf-gcc.exe" (
-    echo   m68k-gcc     OK   ^(%M68K_ROOT%\bin\m68k-elf-gcc.exe^)
+if exist "%M68K_ROOT%\m68k-unknown-elf\bin\m68k-unknown-elf-gcc.exe" (
+    echo   m68k-gcc     OK   ^(%M68K_ROOT%\m68k-unknown-elf\bin\m68k-unknown-elf-gcc.exe^)
+) else if exist "%M68K_ROOT_V2%\m68k-unknown-elf\bin\m68k-unknown-elf-gcc.exe" (
+    echo   m68k-gcc     OK   ^(%M68K_ROOT_V2%\m68k-unknown-elf\bin\m68k-unknown-elf-gcc.exe^)
+) else if exist "%M68K_ROOT_V2%\bin\m68k-elf-gcc.exe" (
+    echo   m68k-gcc     OK   ^(%M68K_ROOT_V2%\bin\m68k-elf-gcc.exe^)
 ) else if defined M68K_ELF_ROOT (
     echo   m68k-gcc     OK   ^(%M68K_ELF_ROOT%\bin\m68k-elf-gcc.exe^)
 ) else (
