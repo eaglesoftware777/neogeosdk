@@ -7,7 +7,7 @@ set GAME=%~1
 if "%GAME%"=="" set GAME=demo
 if "%GAME_ID%"=="" set GAME_ID=777
 
-REM Resolve absolute repo root — %~dp0 includes trailing \, so ".." alone would give "artbox\.."
+REM Resolve absolute repo root - %~dp0 includes trailing \, so ".." alone would give "artbox\.."
 for %%i in ("%~dp0..") do set REPO_DIR=%%~fi
 
 REM GAME_ART_FROM names another game whose source artwork this game draws on.
@@ -31,6 +31,8 @@ cd /d "%GAME_ARTBOX_DIR%"
 
 set ARTBOX_DATA_DIR=%GAME_ARTBOX_DIR%
 set PYTHONDONTWRITEBYTECODE=1
+REM A game that draws on another game's artwork takes that game's import rules too.
+if not "%ART_SRC_GAME%"=="%GAME%" if exist "%REPO_DIR%\games\%ART_SRC_GAME%\artbox\assets.cfg" copy /y "%REPO_DIR%\games\%ART_SRC_GAME%\artbox\assets.cfg" "%GAME_ARTBOX_DIR%\assets.cfg" >nul
 py "%~dp0gen_assets_cfg.py"
 if errorlevel 1 goto :cleanup_fail
 py "%~dp0createromdb.py"

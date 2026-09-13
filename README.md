@@ -38,11 +38,13 @@ over the mainline. It is the largest release the SDK has had.
   executables with no DLL dependencies; both produce identical ROMs. See
   [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md).
 - **Sky Lance** (`games/skylance`, id 779) — a complete vertical arcade
-  shooter: three pilots, seven stages, a named boss per stage, attract reel,
-  pilot select, scoring, lives, energy and a continue flow.
-- **A 26-chapter demo reel** (`games/demo`, id 777) exercising the engine,
-  with playable shooter chapters before the credits. Chapter number
-  printed top-right; **A** advances, **C** restarts.
+  shooter: three pilots, seven stages over three terrains, boats and tanks
+  that fire from the ground, a named boss per stage, pick-ups and a super
+  missile, attract reel, pilot select, scoring, lives, energy, a continue
+  flow, and credits with a victory flight at the end.
+- **A 25-chapter demo reel** (`games/demo`, id 777) exercising the engine,
+  with a playable two-stage Sky Lance chapter before the credits. Chapter
+  number printed top-right; **A** advances, **C** restarts.
 - **Native Windows builds**, one-shot installers for Linux / Ubuntu /
   Windows / WSL, and a documented WSL2 + PulseAudio audio path.
 - **Two PyQt6 desktop tools** — Artbox Studio (pipeline runner, hex sprite

@@ -55,7 +55,10 @@ def inspect(directory):
             report[name + "_max_grid_error_ms"] = float(error.max() * 1000)
             check(error.max() < 0.015, f"notes drift off the tempo grid in {name}")
             if bpm == 120:
-                check(np.max(np.abs(intervals - 0.25)) < 0.012,
+                # The shortest note in the opening is an eighth; at 120 BPM
+                # that is a quarter of a second.  Longer notes are multiples
+                # of it and already covered by the grid check above.
+                check(abs(float(np.min(intervals)) - 0.25) < 0.012,
                       "the opening eighth notes are not 120 BPM")
 
     for name, next_name, value in (("lfo_off", "lfo_0", 0), ("lfo_0", "lfo_4", 8),

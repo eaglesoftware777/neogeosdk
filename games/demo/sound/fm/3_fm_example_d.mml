@@ -1,32 +1,33 @@
-; 3_fm_example_d - Korobeiniki (traditional Russian folk song, E minor)
-; The tune everyone knows from the falling-blocks arcade: a driving
-; sixteen-bar loop that suits a bell as well as it suits a square wave.
+; 3_fm_example_d - In the Hall of the Mountain King (Grieg, A minor)
+; The arcade chase tune: a four-bar creep, answered a fifth higher, both
+; played twice.  FM 4 in the sound tour and the lead of MML track D,
+; whose SSG bass walks the same sixteen bars.
 
-T144
-I3
+T150
+I7
 V12
-O5
+O3
 L8
 
-; A
-E4 < B > C D4 C < B
-A4 A > C E4 D C
-< B4 B > C D4 E4
-C4 < A4 A4 R4
+; first strain, twice
+a b > c d e c e4
+d+ < b > d+4 d < b > d4
+< a b > c d e c e a
+g e c e g2
+< a b > c d e c e4
+d+ < b > d+4 d < b > d4
+< a b > c d e c e a
+g e c e g2
 
-R8 > D4 F A4 G F
-E4 E C E4 D C
-< B4 B > C D4 E4
-C4 < A4 A4 R4
-
-; B
-E2 C2
-D2 < B2
-> C2 < A2
-G+2 B4 R4
-> E2 C2
-D2 < B2
-> C4 E4 A2
-G+1
+; the answer a fifth up, twice
+O4
+e f+ g a b g b4
+a+ f+ a+4 a f+ a4
+e f+ g a b g b > e
+d < b g b > e2 <
+e f+ g a b g b4
+a+ f+ a+4 a f+ a4
+e f+ g a b g b > e
+d < b g b > e2 <
 
 ~

@@ -1,15 +1,20 @@
-; 5_fm_example_f - Ode to Joy (Beethoven, D major) on the battle brass
-; Sixteen bars of the theme from the Ninth, straight and square.
+; 5_fm_example_f - Fur Elise (Beethoven, A minor) on the warm bell patch
+; The opening theme and its answer; the bell decay carries the rests.
 
-T112
-I5
+T100
+I1
 V12
-O4
-L4
+O5
+L16
 
-F+ F+ G A  A G F+ E  D D E F+  F+4 E8 E8 E2
-F+ F+ G A  A G F+ E  D D E F+  E4 D8 D8 D2
-E E F+ D  E F+8 G8 F+ D  E F+8 G8 F+ E  D E A2
-F+ F+ G A  A G F+ E  D D E F+  E4 D8 D8 D2
+; theme
+e d+ e d+ e < b > d c < a8 r16 c e a b8 r16 e g+ b > c8 r16 < e > e d+
+e d+ e < b > d c < a8 r16 c e a b8 r16 e > c < b a8 r16
+; answer
+b > c d e8 r16 < g > f e d8 r16 < f > e d c8 r16 < e > d c < b8 r16 e > e r16
+e > e < d+ e r16 d+
+; theme again, closing on the tonic
+e d+ e < b > d c < a8 r16 c e a b8 r16 e g+ b > c8 r16 < e > e d+
+e d+ e < b > d c < a8 r16 c e a b8 r16 e > c < b a4 r8
 
 ~

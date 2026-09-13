@@ -1,8 +1,8 @@
-# The Demo Reel - 26 Chapters
+# The Demo Reel - 25 Chapters
 
 **Eagle Software · Neo Geo SDK v1.7.0 · `games/demo`, id 777**
 
-The demo ROM is a single linear flow of 26 chapters. Each one isolates a
+The demo ROM is a single linear flow of 25 chapters. Each one isolates a
 subsystem, prints its own title and a one-line caption, and shows the
 chapter number in the top-right corner of the screen — so a problem can be
 reported as "chapter 14" rather than described.
@@ -54,31 +54,40 @@ chapter needs its own reset path.
 | 21 | TARGET RANGE | MOVING TARGETS · SPRITE DEPTH | Crates approaching down depth lanes, breaking apart where they are hit |
 | 22 | DEPTH RIDE | OBJECTS APPROACH AS YOU WALK | Sprite-scaling pseudo-3D: NPCs approach from the horizon, L/R to move |
 | 23 | SOUND | YM2610 TOUR · ADPCM-B / FM / SSG / SPEECH | Every audio subsystem in turn, with labels naming the active driver call |
-| 24 | SKY LANCE | VERTICAL SHOOTER MINI | Waves, boss and levels over a scrolling sky: B fires, D launches a super missile, pick-ups fall from kills, and the readout shows missiles, speed and level |
-| 25 | STAR RAID LANCE | FORMATION ASSAULT | The formation shooter with the same arcade furniture, before the closing chapter |
-| 26 | CREDITS | EAGLE SOFTWARE 2026 | Module roll with a palette fade-out |
+| 24 | SKY LANCE | STAGE 1  MOUNTAIN DAWN / STAGE 2  COASTAL INVASION | Two stages of the vertical shooter over the game's own terrain: B fires, D launches a super missile, pick-ups fall from kills, the readout shows missiles, speed and level, and the boss on the coast ends the game with the credits and a victory flight |
+| 25 | CREDITS | EAGLE SOFTWARE 2026 | Module roll with a palette fade-out |
 
 Characters bind both the generated tile stride and per-tile palette map.
-Sky Lance and Star Raid Lance share three CC0 interceptor images imported
-at 32 pixels, with transparent edges and opaque hull highlights. Their source
-and license are recorded in `games/demo/artbox/INTERCEPTOR_CREDITS.txt`.
-Headless capture tools deliberately run unthrottled for testing.
+The valley squadrons are three CC0 interceptor images imported at 32
+pixels, with transparent edges and opaque hull highlights; their source and
+license are recorded in `games/demo/artbox/INTERCEPTOR_CREDITS.txt`. The
+coast is defended by the Sky Lance game's own gunboats, bombers, gunships
+and anti-air tanks, imported from `games/demo/artbox/in/zzzz_skylance/`
+next to the two terrain pages, and the lead plane is the game's own jet at
+the size the chapter draws it. Headless capture tools deliberately run
+unthrottled for testing.
 
-Both shooters carry the same arcade furniture, shared in one block of
-helpers in `demo_unified.c`: a super missile on D that kills a craft
-outright and always shakes loot out of it (six points of boss health a
-hit, and a drop every time), pick-ups that sink and sway so they can be
-caught on purpose - a speed step up to three, two missiles for the rack,
-a spare plane - and a second readout row of `MSL`, `SPD`, `LV` and the
-stage bar.  A boss kill no longer summons another boss: the plane flies
-itself through a loop, a barrel roll and a climb out of the top, a card
-names the game, the studio and the controls, and the next level begins
-with faster squadrons and a tougher boss.  The badges and the missile are
-drawn by `artbox/gen_shooter_items.py` at the size they are displayed.
-The repeating sky uses `fit=native` so its 144-pixel source repeat stays
-tile-aligned, without transparent resize padding at scroll wraps. Character
-colours and other screen-fit rules are unchanged. Chapter music beds use
-ADPCM-B hardware repeat instead of a scene-frame countdown that cut endings.
+The chapter is a two-stage slice of the game.  Stage 1 is four squadrons
+over the valley and ends on its own; stage 2 is five squadrons over the
+coast, with the boats riding the sea lanes and the tanks the shore road,
+all of them shooting, and then a siren, a flashing WARNING and the boss.
+The boss goes down in a chain of explosions, the credits card holds for
+eight seconds over the coast, and the plane flies its loop, barrel roll
+and climb-out before the reel moves on.  Losing the last plane restarts
+the current stage with a fresh squad, the way a continue would.  The
+arcade furniture is one block of helpers in `demo_unified.c`: a super
+missile on D that kills a craft outright and always shakes loot out of it
+(six points of boss health a hit, and a drop every time), pick-ups that
+sink and sway so they can be caught on purpose - a speed step up to three,
+two missiles for the rack, a spare plane - a second readout row of `MSL`,
+`SPD`, `LV` and the stage bar, and a page-coloured band behind every card
+so it reads over any terrain.  The badges and the missile are drawn by
+`artbox/gen_shooter_items.py` at the size they are displayed.  The terrain
+pages are 256 by 256, drawn through `games/skylance/scenes/sky_terrain.h`
+as two copies with the second flipped, so the join is seamless whatever
+the page's edges look like. Character colours and other screen-fit rules
+are unchanged. Chapter music beds use ADPCM-B hardware repeat instead of a
+scene-frame countdown that cut endings.
 Palettes are loaded separately; there are no hidden screen draws for loading
 character colours. The current verification tools capture every chapter and
 can exercise A-next/C-restart through real emulated controller inputs:
@@ -87,7 +96,7 @@ can exercise A-next/C-restart through real emulated controller inputs:
 python3 tools/demo_capture.py --output /tmp/demo-tour --seconds 1100
 python3 tools/demo_capture_report.py /tmp/demo-tour
 python3 tools/demo_capture.py --output /tmp/demo-controls --seconds 1100 --controls
-python3 tools/demo_capture.py --output /tmp/demo-shooter --chapter 25 --interval 0.016
+python3 tools/demo_capture.py --output /tmp/demo-shooter --chapter 24 --interval 0.016
 python3 tools/sound_capture.py --output /tmp/demo-audio
 python3 tools/sound_capture_report.py /tmp/demo-audio
 python3 tools/demo_audio_capture.py --output /tmp/demo-live --press-every 9

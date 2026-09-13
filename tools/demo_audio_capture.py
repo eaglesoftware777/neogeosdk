@@ -35,7 +35,7 @@ def main():
     parser.add_argument("--seconds", type=int, default=600)
     parser.add_argument("--press-every", type=float, default=0.0,
                         help="press A this many seconds into every chapter (0 = never)")
-    parser.add_argument("--stop-chapter", type=int, default=26)
+    parser.add_argument("--stop-chapter", type=int, default=25)
     parser.add_argument("--coin-at", type=float, default=0.0,
                         help="insert a second coin at this many seconds (0 = never)")
     parser.add_argument("--mame", default="mame")

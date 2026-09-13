@@ -1,29 +1,15 @@
-; 0_ssg_example_a - Korobeiniki (traditional Russian folk song, E minor)
+; 0_ssg_example_a - Rondo alla Turca (Mozart, A minor), the opening phrase
 ; The SSG sounds an octave above these octave marks.
 
-T150
+T126
 P0
 V11
-O4
-L8
+O3
+L16
 
-E4 < B > C D4 C < B
-A4 A > C E4 D C
-< B4 B > C D4 E4
-C4 < A4 A4 R4
-
-R8 > D4 F A4 G F
-E4 E C E4 D C
-< B4 B > C D4 E4
-C4 < A4 A4 R4
-
-E2 C2
-D2 < B2
-> C2 < A2
-G+2 B4 R4
-> E2 C2
-D2 < B2
-> C4 E4 A2
-G+1
+b a g+ a > c8 r8 d c < b > c e8 r8 f e d+ e
+< b a g+ a b a g+ a > c4 r8
+< b a g+ a > c8 r8 d c < b > c e8 r8 f e d+ e
+< b a g+ a b a g+ a > c8 < a8 r4
 
 ~

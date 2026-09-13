@@ -22,7 +22,7 @@ def main():
     parser.add_argument("--gap", type=float, default=1.5, help="seconds of silence worth reporting")
     parser.add_argument("--settle", type=float, default=2.5, help="seconds after a chapter start to ignore")
     parser.add_argument("--strict", action="store_true")
-    parser.add_argument("--quiet-chapters", default="1,23,26",
+    parser.add_argument("--quiet-chapters", default="1,23,25",
                         help="chapters allowed to be silent (boot, sound tour, credits)")
     args = parser.parse_args()
     allowed = {int(c) for c in args.quiet_chapters.split(",") if c}

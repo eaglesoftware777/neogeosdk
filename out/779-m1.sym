@@ -257,8 +257,8 @@ wlasymbol true
 00:1deb ssg_track_7
 00:1e7f ssg_track_8
 00:1ee5 sample_address_table
-00:209d adpcmb_delta_n_table
-00:20af sound_data_end
+00:20ad adpcmb_delta_n_table
+00:20bf sound_data_end
 
 [definitions]
 00000004 _sizeof_reset
@@ -511,6 +511,6 @@ wlasymbol true
 00000020 _sizeof_ssg_track_6
 00000094 _sizeof_ssg_track_7
 00000066 _sizeof_ssg_track_8
-000001b8 _sizeof_sample_address_table
+000001c8 _sizeof_sample_address_table
 00000012 _sizeof_adpcmb_delta_n_table
 00000000 _sizeof_sound_data_end

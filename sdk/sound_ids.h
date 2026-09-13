@@ -52,9 +52,13 @@ enum {
 	SOUND_SFX_9  = 8,    /*  9.wav */
 	SOUND_SFX_10 = 9,    /* 10.wav */
 	SOUND_SFX_11 = 10,   /* 11.wav */
-	SOUND_SFX_12 = 11    /* 12.wav */
+	SOUND_SFX_12 = 11,   /* 12.wav */
+	SOUND_SFX_13 = 12,   /* 13.wav  laser shot     */
+	SOUND_SFX_14 = 13,   /* 14.wav  explosion      */
+	SOUND_SFX_15 = 14,   /* 15.wav  pick-up chime  */
+	SOUND_SFX_16 = 15    /* 16.wav  warning siren  */
 };
-#define SOUND_SFX_COUNT  12
+#define SOUND_SFX_COUNT  16
 
 /* ---------------------------------------------------------------- */
 /*  TRACKs (ADPCM-B streams) — sound/samples/in_wav_b/<N+1>.wav        */
