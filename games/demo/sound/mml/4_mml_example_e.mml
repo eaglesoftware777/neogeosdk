@@ -1,0 +1,22 @@
+; 4_mml_example_e — title fanfare (F major, mid range)
+
+T155
+@p0
+@b0
+@f0
+V13
+O4
+L8
+
+F A C F  C A F4
+G B D G  D B G4
+
+F A C F  A C F A
+G B D G  B D G B
+
+F A C F  E D C A
+G F E D  C E G C
+F A C F  G B D G
+F A C2
+
+~

@@ -1,5 +1,51 @@
 # Sound Studio Guide
 
+> **v1.7.0 — new tabs**
+>
+> Sound Studio gained SEVEN new tabs in v1.7.0:
+>
+> - **Live Waveform** — generate a clip (C major arpeggio / step pattern
+>   / MML phrase) and watch the WAVEFORM + FFT SPECTRUM animate as the
+>   clip plays through `QAudioSink`.  Spectrum is colour-graded (green
+>   low-freq → yellow mid → red high) so the harmonic balance is read
+>   at a glance.
+> - **MML Designer** — visual piano-roll MML editor.  Click cells in a
+>   2-octave × N-step grid to place notes; the corresponding `t### l# o#
+>   c d e ...` text is generated live and can be saved to
+>   `sound/mml/`.  Step count, tempo, and step length are adjustable.
+>
+> Plus the five tabs from the previous v1.7.0 commits:
+>
+> - **Pipeline** — runs every audio build step (samples / vrom /
+>   fmpatches / mml / ssg / ssgconfig / fm / m1rom) with a status pill
+>   per step and a shared live log.  "Run Full Pipeline" chains them
+>   sequentially and stops on the first failure.
+> - **Track Browser** — tree of every audio asset in `sound/` (MML
+>   scripts, SSG presets, WAV samples).  Click a file to preview its
+>   content (text files inline, binaries reported by size).
+> - **Audio Mix** — live mixer for `soundApplyMix(adpcma, adpcmb,
+>   ssg, fm)`.  Four sliders, five preset buttons (Default game / FM
+>   showcase / Pure SSG / Stage mix / Mute) and an auto-updated C call
+>   you can copy into your game init.
+> - **ROM Inspector** — table of every ROM kind (p1 / m1 / s1 / v1 /
+>   c1 / c2) for every game folder, with size + mtime + present/absent
+>   colour-coded.
+> - **Identifiers** — read-only side-by-side view of `sdk/sound_ids.h`
+>   and `sound/driver/driver_defs.h` so you don't have to grep when
+>   wiring code or MML.
+>
+> The unified demo's chapter 03 (SOUND) replaces the noisy raw FM-patch
+> demo with a clean MML music intro (`SOUND_MUSIC_E`).
+> When auditioning patches through Sound Studio, prefer the
+> MML/composition path over `playFMTrack(SOUND_FM_H)`
+> alone — the patch table doesn't carry sequencing.
+>
+> Sound Studio's panels map 1-to-1 to the on-ROM channels: FM (4 ch),
+> SSG (3 ch), ADPCM-A (6 ch sampled), ADPCM-B (1 ch streamed).  The
+> identifier headers `sdk/sound_ids.h` and `sound/driver/driver_defs.h`
+> remain the source of truth for what each command does on the Z80
+> side.
+
 `sound/sound_studio.py` is a PyQt6 desktop tool for composing and previewing
 NeoGeo YM2610 audio without leaving your dev environment.
 
@@ -42,7 +88,7 @@ After saving, rebuild the patch table:
 
 ```bash
 make fmpatches          # Linux
-nmake -f MakefileWin32.mak fmpatches   # Windows
+make -f MakefileWin32.mak fmpatches   # Windows
 ```
 
 ---
@@ -80,7 +126,7 @@ After compiling, rebuild the M1 ROM:
 
 ```bash
 make m1rom          # Linux
-nmake -f MakefileWin32.mak m1rom   # Windows
+make -f MakefileWin32.mak m1rom   # Windows
 ```
 
 ---
@@ -120,7 +166,7 @@ After adding or replacing samples, re-encode and rebuild the VROM:
 
 ```bash
 make samples vrom       # Linux
-nmake -f MakefileWin32.mak samples vrom   # Windows
+make -f MakefileWin32.mak samples vrom   # Windows
 ```
 
 **Channel limits:**

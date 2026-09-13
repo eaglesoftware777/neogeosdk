@@ -1,6 +1,19 @@
 NEO GEO Z80 SOUND DRIVER (YM2610)
 =================================
 
+v1.3.1 notes
+------------
+- The polling-race fix in `soundCommand` (sdk/neogeolib.c) from v1.3.0
+  remains in place — only the LEADING `isZ80Ready()` is called, not
+  the trailing one that triggered a perpetual NMI loop.
+- The unified demo's chap_sound (ch 03) replaces the noisy raw FM-patch
+  showcase with MML music (SOUND_MUSIC_E) for the intro
+  line.  Z80 commands inside the demo are spaced by waitVbl() so the
+  driver gets a full frame to apply mix / preset / track changes.
+- Galaxian / Eagle Invaders (ch 18) drives a pure-SSG mix:
+  `soundApplyMix(0x20, 0x00, 0x0F, 0x00) + soundSetSSGPreset(2)`
+  before `playSSGTrack(SOUND_SSG_B)`.
+
 Custom Z80 driver for the YM2610 (OPNB) chip.  Handles all four audio subsystems:
 ADPCM-A (6-channel samples), ADPCM-B (delta-T stream), SSG/MML (melody), FM (6 op channels).
 
@@ -52,9 +65,16 @@ queues the command in a 32-byte FIFO, and processes it on the next timer tick.
   playGetReadyVoice()       Plays ADPCM-A sample 10. No arguments.
   playAttackVoice()         Plays ADPCM-A sample 11. No arguments.
   playCoinThenReady()       playInsertCoinSSG + 250ms wait + playGetReadyVoice.
+  playVoiceGetReady()       Command $50
+                            SSG-synthesised "GET READY!" voice cue
+                            (dispatches SSG voice track 4).
+  playVoiceLetsGo()         Command $51
+                            SSG-synthesised "LET'S GO!" voice cue (SSG track 5).
+  playVoiceGameOver()       Command $52
+                            SSG-synthesised "GAME OVER" voice cue (SSG track 6).
   soundPlayDemoFM(n)        soundSceneReset + soundSetFMVolume(0x0C) + playFMTrack(n).
   soundPlayTitleMusic(n)    soundSceneReset + title gong + ADPCM-B title theme.
-                            Current helper ignores n and always uses the title-theme bed.
+                            Current helper ignores n and always uses the title-theme TRACK.
   soundPlayGameLoop(n)      soundSceneReset + direct ADPCM-B theme select.
                             n=0 stage loop 1, n=1 stage loop 2, n=2 ending/results.
   soundSetTempo(n)          Command $0E + n

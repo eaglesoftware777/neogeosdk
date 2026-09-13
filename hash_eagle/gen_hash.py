@@ -5,21 +5,46 @@
 #https://github.com/eaglesoftware777/neogeosdk
 #######
 """
-Regenerates hash_eagle/neogeo.xml from the current ROM files in roms/neogeosdk/.
-Must be run before launching MAME whenever any ROM is rebuilt.
+Regenerates hash_eagle/<GAME>/neogeo.xml from the current ROM files in
+roms/<GAME>/.  Must be run before launching MAME whenever any ROM is rebuilt.
+
+Each game gets its own subdirectory so multiple builds can coexist on disk:
+  hash_eagle/demo/neogeo.xml
+  hash_eagle/helloworld/neogeo.xml
+  ...
+
+MAME resolves the correct XML via -hashpath which is set to
+hash_eagle/<GAME>;hash_eagle;hash (game-specific dir first).
 
 Usage:
   python3 hash_eagle/gen_hash.py          # update XML only
   python3 hash_eagle/gen_hash.py --dist   # update XML + build dist/ package
+
+Environment:
+  GAME    - game folder name (default: demo)
+  GAME_ID - ROM file prefix  (default: 777)
 """
 import argparse, binascii, hashlib, os, shutil, sys, zipfile
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT   = os.path.dirname(SCRIPT_DIR)
-ROM_DIR     = os.path.join(REPO_ROOT, "roms", "neogeosdk")
-OUT_XML     = os.path.join(SCRIPT_DIR, "neogeo.xml")
 
-ROM_NAMES = ["777-p1.p1", "777-m1.m1", "777-s1.s1", "777-v1.v1", "777-c1.c1", "777-c2.c2"]
+GAME    = os.environ.get("GAME",    "demo")
+GAME_ID = os.environ.get("GAME_ID", "777")
+
+ROM_DIR    = os.path.join(REPO_ROOT, "roms", GAME)
+# Per-game hash directory: hash_eagle/<GAME>/neogeo.xml
+HASH_GAME_DIR = os.path.join(SCRIPT_DIR, GAME)
+OUT_XML       = os.path.join(HASH_GAME_DIR, "neogeo.xml")
+
+ROM_NAMES = [
+    f"{GAME_ID}-p1.p1",
+    f"{GAME_ID}-m1.m1",
+    f"{GAME_ID}-s1.s1",
+    f"{GAME_ID}-v1.v1",
+    f"{GAME_ID}-c1.c1",
+    f"{GAME_ID}-c2.c2",
+]
 
 def file_info(name):
     path = os.path.join(ROM_DIR, name)
@@ -36,40 +61,36 @@ def area_size(name):
     return os.path.getsize(path) if os.path.exists(path) else 0
 
 def gen_xml():
-    p1_sz, p1_crc, p1_sha = file_info("777-p1.p1")
-    m1_sz, m1_crc, m1_sha = file_info("777-m1.m1")
-    s1_sz, s1_crc, s1_sha = file_info("777-s1.s1")
-    v1_sz, v1_crc, v1_sha = file_info("777-v1.v1")
-    c1_sz, c1_crc, c1_sha = file_info("777-c1.c1")
-    c2_sz, c2_crc, c2_sha = file_info("777-c2.c2")
+    os.makedirs(HASH_GAME_DIR, exist_ok=True)
+
+    p1_sz, p1_crc, p1_sha = file_info(f"{GAME_ID}-p1.p1")
+    m1_sz, m1_crc, m1_sha = file_info(f"{GAME_ID}-m1.m1")
+    s1_sz, s1_crc, s1_sha = file_info(f"{GAME_ID}-s1.s1")
+    v1_sz, v1_crc, v1_sha = file_info(f"{GAME_ID}-v1.v1")
+    c1_sz, c1_crc, c1_sha = file_info(f"{GAME_ID}-c1.c1")
+    c2_sz, c2_crc, c2_sha = file_info(f"{GAME_ID}-c2.c2")
 
     def sz(n): return f"0x{n:06x}" if n else "0x000000"
 
-    # maincpu window is always 1 MB on Neo Geo regardless of P1 size
     maincpu_area = 0x100000
-    # sprite area = c1 + c2 interleaved (each ROM covers half the words)
     sprites_area = (c1_sz or 0) + (c2_sz or 0)
-
-    # continue entries fill the gap when sprite ROMs don't cover the full bank set
-    # for our ROMs c1 == c2 in size so no gap; include continue block only if needed
-    c_continue = sprites_area < maincpu_area  # heuristic: add if sprites < 1 MB
 
     xml = f"""\
 <?xml version="1.0"?>
 <!DOCTYPE softwarelist PUBLIC "-//MAME//DTD Software List//EN" "https://raw.githubusercontent.com/mamedev/mame/master/src/mame/mame.dtd">
 <softwarelist name="neogeo" description="SNK Neo-Geo cartridges">
     <!--
-    ID-0777
-    . NGM-777
+    ID-0{GAME_ID}
+    . NGM-{GAME_ID}
     NEO-MVS PROG-G2 (SNK-9201) / NEO-MVS CHA 42G-2
-    . NGH-777
+    . NGH-{GAME_ID}
     -->
 
-    <software name="neogeosdk">
-        <description>NeoGeo SDK Demo v1.2.1 / Eagle Software</description>
+    <software name="{GAME}">
+        <description>NeoGeo SDK {GAME} v1.2.0 / Eagle Software</description>
         <year>2026</year>
         <publisher>Eagle Software</publisher>
-        <info name="serial" value="NGM-777 (MVS), NGH-777 (AES)"/>
+        <info name="serial" value="NGM-{GAME_ID} (MVS), NGH-{GAME_ID} (AES)"/>
         <info name="release" value="20260101 (MVS), 20260101 (AES)"/>
         <info name="alt_title" value="Eagle SDK"/>
         <sharedfeat name="release" value="MVS,AES" />
@@ -77,20 +98,20 @@ def gen_xml():
         <part name="cart" interface="neo_cart">
             <feature name="slot" value="rom_fatfur2" />
             <dataarea name="maincpu" width="16" endianness="big" size="{sz(maincpu_area)}">
-                <rom loadflag="load16_word_swap" name="777-p1.p1" offset="0x000000" size="{sz(p1_sz)}" crc="{p1_crc}" sha1="{p1_sha}" />
+                <rom loadflag="load16_word_swap" name="{GAME_ID}-p1.p1" offset="0x000000" size="{sz(p1_sz)}" crc="{p1_crc}" sha1="{p1_sha}" />
             </dataarea>
             <dataarea name="fixed" size="{sz(s1_sz)}">
-                <rom offset="0x000000" size="{sz(s1_sz)}" name="777-s1.s1" crc="{s1_crc}" sha1="{s1_sha}" />
+                <rom offset="0x000000" size="{sz(s1_sz)}" name="{GAME_ID}-s1.s1" crc="{s1_crc}" sha1="{s1_sha}" />
             </dataarea>
             <dataarea name="audiocpu" size="{sz(m1_sz)}">
-                <rom offset="0x000000" size="{sz(m1_sz)}" name="777-m1.m1" crc="{m1_crc}" sha1="{m1_sha}" />
+                <rom offset="0x000000" size="{sz(m1_sz)}" name="{GAME_ID}-m1.m1" crc="{m1_crc}" sha1="{m1_sha}" />
             </dataarea>
             <dataarea name="ymsnd:adpcma" size="{sz(v1_sz)}">
-                <rom name="777-v1.v1" offset="0x000000" size="{sz(v1_sz)}" crc="{v1_crc}" sha1="{v1_sha}" />
+                <rom name="{GAME_ID}-v1.v1" offset="0x000000" size="{sz(v1_sz)}" crc="{v1_crc}" sha1="{v1_sha}" />
             </dataarea>
             <dataarea name="sprites" size="{sz(sprites_area)}">
-                <rom loadflag="load16_byte" name="777-c1.c1" offset="0x000000" size="{sz(c1_sz)}" crc="{c1_crc}" sha1="{c1_sha}" />
-                <rom loadflag="load16_byte" name="777-c2.c2" offset="0x000001" size="{sz(c2_sz)}" crc="{c2_crc}" sha1="{c2_sha}" />
+                <rom loadflag="load16_byte" name="{GAME_ID}-c1.c1" offset="0x000000" size="{sz(c1_sz)}" crc="{c1_crc}" sha1="{c1_sha}" />
+                <rom loadflag="load16_byte" name="{GAME_ID}-c2.c2" offset="0x000001" size="{sz(c2_sz)}" crc="{c2_crc}" sha1="{c2_sha}" />
             </dataarea>
         </part>
     </software>
@@ -103,11 +124,14 @@ def gen_xml():
 def build_dist():
     dist_dir  = os.path.join(REPO_ROOT, "dist")
     roms_dir  = os.path.join(dist_dir, "roms")
-    hash_dir  = os.path.join(dist_dir, "hash_eagle")
+    hash_root = os.path.join(dist_dir, "hash_eagle")
+    # Per-game hash directory in dist mirrors the hash_eagle layout
+    hash_dir  = os.path.join(dist_dir, "hash_eagle", GAME)
     os.makedirs(roms_dir, exist_ok=True)
+    os.makedirs(hash_root, exist_ok=True)
     os.makedirs(hash_dir, exist_ok=True)
 
-    zip_path = os.path.join(roms_dir, "neogeosdk.zip")
+    zip_path = os.path.join(roms_dir, f"{GAME}.zip")
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_STORED) as zf:
         for rom in ROM_NAMES:
             src = os.path.join(ROM_DIR, rom)
@@ -118,25 +142,42 @@ def build_dist():
     print(f"Created {zip_path}")
 
     shutil.copy2(OUT_XML, os.path.join(hash_dir, "neogeo.xml"))
+    legacy_hash = os.path.join(hash_root, "neogeo.xml")
+    if os.path.exists(legacy_hash):
+        os.remove(legacy_hash)
+
+    # Remove legacy single-game launchers from older dist layouts.
+    for legacy in (
+        "run_neogeosdk.bat",
+        "run_neogeosdk_debug.bat",
+        "run_neogeosdk.sh",
+        "run_neogeosdk_debug.sh",
+    ):
+        legacy_path = os.path.join(dist_dir, legacy)
+        if os.path.exists(legacy_path):
+            os.remove(legacy_path)
 
     _write_dist_bat(dist_dir, debug=False)
     _write_dist_bat(dist_dir, debug=True)
     _write_dist_sh(dist_dir, debug=False)
     _write_dist_sh(dist_dir, debug=True)
+    _write_multi_game_bat(dist_dir, debug=False)
+    _write_multi_game_bat(dist_dir, debug=True)
+    _write_multi_game_sh(dist_dir, debug=False)
+    _write_multi_game_sh(dist_dir, debug=True)
     print(f"Dist ready: {dist_dir}")
 
 def _write_dist_bat(dist_dir, debug):
-    name = "run_neogeosdk_debug.bat" if debug else "run_neogeosdk.bat"
+    name = f"run_{GAME}_debug.bat" if debug else f"run_{GAME}.bat"
     debug_flags = " ^\n    -debug" if debug else ""
     content = f"""\
 @echo off
 setlocal
-REM NeoGeo SDK - {'Debug ' if debug else ''}Release Launcher
+REM NeoGeo SDK - {'Debug ' if debug else ''}Release Launcher ({GAME})
 REM Place neogeo.zip (BIOS) inside the roms\\ folder before running.
-REM Correct launch: mame neogeo -cart1 neogeosdk (NOT mame neogeosdk)
-mame neogeo -cart1 neogeosdk ^
+mame neogeo -cart1 {GAME} ^
     -rompath "%~dp0roms" ^
-    -hashpath "%~dp0hash_eagle;%~dp0hash" ^
+    -hashpath "%~dp0hash_eagle\\{GAME};%~dp0hash_eagle;%~dp0hash" ^
     -bios unibios22 ^
     -window ^
     -console ^
@@ -149,18 +190,79 @@ endlocal
     print(f"Written {path}")
 
 def _write_dist_sh(dist_dir, debug):
-    name = "run_neogeosdk_debug.sh" if debug else "run_neogeosdk.sh"
+    name = f"run_{GAME}_debug.sh" if debug else f"run_{GAME}.sh"
     extra = " \\\n    -debug" if debug else ""
     content = f"""\
 #!/bin/bash
-# NeoGeo SDK - {'Debug ' if debug else ''}Release Launcher (Linux)
+# NeoGeo SDK - {'Debug ' if debug else ''}Release Launcher ({GAME})
 # Place neogeo.zip (BIOS) inside roms/ before running.
-# Correct launch: mame neogeo -cart1 neogeosdk  (NOT mame neogeosdk)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 exec mame neogeo \\
-    -cart1 neogeosdk \\
+    -cart1 {GAME} \\
     -rompath "$SCRIPT_DIR/roms" \\
-    -hashpath "$SCRIPT_DIR/hash_eagle:$SCRIPT_DIR/hash" \\
+    -hashpath "$SCRIPT_DIR/hash_eagle/{GAME};$SCRIPT_DIR/hash_eagle;$SCRIPT_DIR/hash" \\
+    -bios unibios22 \\
+    -window \\
+    -console \\
+    -verbose{extra}
+"""
+    path = os.path.join(dist_dir, name)
+    with open(path, "w", newline="\n") as f:
+        f.write(content)
+    os.chmod(path, 0o755)
+    print(f"Written {path}")
+
+def _write_multi_game_bat(dist_dir, debug):
+    name = "run_game_debug.bat" if debug else "run_game.bat"
+    debug_flags = " ^\n    -debug" if debug else ""
+    content = f"""\
+@echo off
+setlocal
+if "%~1"=="" (
+    echo Usage: %~nx0 ^<game^>
+    echo Example: %~nx0 demo
+    exit /b 1
+)
+set GAME=%~1
+if not exist "%~dp0hash_eagle\\%GAME%\\neogeo.xml" (
+    echo ERROR: missing "%~dp0hash_eagle\\%GAME%\\neogeo.xml"
+    exit /b 1
+)
+mame neogeo -cart1 %GAME% ^
+    -rompath "%~dp0roms" ^
+    -hashpath "%~dp0hash_eagle\\%GAME%;%~dp0hash_eagle;%~dp0hash" ^
+    -bios unibios22 ^
+    -window ^
+    -console ^
+    -verbose{debug_flags}
+endlocal
+"""
+    path = os.path.join(dist_dir, name)
+    with open(path, "w", newline="\r\n") as f:
+        f.write(content)
+    print(f"Written {path}")
+
+def _write_multi_game_sh(dist_dir, debug):
+    name = "run_game_debug.sh" if debug else "run_game.sh"
+    extra = " \\\n    -debug" if debug else ""
+    content = f"""\
+#!/bin/bash
+set -e
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+GAME="${{1:-}}"
+if [ -z "$GAME" ]; then
+    echo "Usage: $0 <game>"
+    echo "Example: $0 demo"
+    exit 1
+fi
+if [ ! -f "$SCRIPT_DIR/hash_eagle/$GAME/neogeo.xml" ]; then
+    echo "ERROR: missing $SCRIPT_DIR/hash_eagle/$GAME/neogeo.xml"
+    exit 1
+fi
+exec mame neogeo \\
+    -cart1 "$GAME" \\
+    -rompath "$SCRIPT_DIR/roms" \\
+    -hashpath "$SCRIPT_DIR/hash_eagle/$GAME;$SCRIPT_DIR/hash_eagle;$SCRIPT_DIR/hash" \\
     -bios unibios22 \\
     -window \\
     -console \\

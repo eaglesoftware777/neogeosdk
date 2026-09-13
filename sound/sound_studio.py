@@ -1369,7 +1369,7 @@ class ADPCMTab(QWidget):
             "  → packed into 777-v1.v1\n\n"
             "Rebuild VROM:\n"
             "  make vrom  (Linux)\n"
-            "  nmake -f MakefileWin32.mak vrom\n\n"
+            "  make -f MakefileWin32.mak vrom\n\n"
             "YM2610 ADPCM-A specs:\n"
             "  Sample rate: up to ~18.5 kHz\n"
             "  Max channels: 6 simultaneous\n"
@@ -1853,6 +1853,912 @@ class YM2610SimTab(QWidget):
 # ---------------------------------------------------------------------------
 # Main window
 # ---------------------------------------------------------------------------
+###############################################################################
+#  Pipeline Runner Tab
+#  ---------------------------------------------------------------------------
+#  Run every sound-pipeline step from inside the studio.  Each step has a
+#  Run button, a status pill (idle / running / ok / fail), and a shared
+#  scrollback log pane.  A "Run All" button chains the steps in order.
+#
+#  Steps wired up:
+#    1. samples         (re-encode WAVs → ADPCM-A / ADPCM-B blocks)
+#    2. vrom            (pack samples into V ROM <GAME_ID>-v1.v1)
+#    3. fmpatches       (build FM patch table)
+#    4. mml             (compile MML files)
+#    5. ssg             (compile SSG track tables)
+#    6. ssgconfig       (rebuild SSG presets)
+#    7. fm              (link FM bank into driver)
+#    8. m1rom           (assemble Z80 M1 ROM)
+#    9. sound (alias)   (the full chain via `make sound`)
+###############################################################################
+import subprocess as _sp_sub
+import shlex      as _sp_shlex
+from PyQt6.QtCore    import QProcess, QProcessEnvironment
+from PyQt6.QtWidgets import QSplitter as _QSplit
+
+PIPELINE_STEPS = [
+    ("samples",     ["make", "samples"],     "Re-encode WAVs → ADPCM-A / ADPCM-B"),
+    ("vrom",        ["make", "vrom"],        "Pack samples → V ROM (<ID>-v1.v1)"),
+    ("fmpatches",   ["make", "fmpatches"],   "Compile FM patch table"),
+    ("mml",         ["make", "mml"],         "Compile MML music tracks"),
+    ("ssg",         ["make", "ssg"],         "Compile SSG track tables"),
+    ("ssgconfig",   ["make", "ssgconfig"],   "Rebuild SSG presets"),
+    ("fm",          ["make", "fm"],          "Link FM bank into driver"),
+    ("m1rom",       ["make", "m1rom"],       "Assemble Z80 M1 ROM"),
+    ("ALL (sound)", ["make", "sound"],       "Full sound pipeline (alias)"),
+]
+
+
+class _StatusPill(QLabel):
+    """Tiny coloured status indicator (IDLE / RUNNING / OK / FAIL)."""
+    def __init__(self):
+        super().__init__("IDLE")
+        self.setFixedWidth(72)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.set_state("idle")
+
+    def set_state(self, state: str):
+        styles = {
+            "idle":    ("#3a3a48", "#bababa", "IDLE"),
+            "running": ("#0066aa", "#ffffff", "RUNNING"),
+            "ok":      ("#00aa55", "#ffffff", "OK"),
+            "fail":    ("#aa3333", "#ffffff", "FAIL"),
+        }
+        bg, fg, txt = styles.get(state, styles["idle"])
+        self.setText(txt)
+        self.setStyleSheet(
+            f"QLabel {{ background:{bg}; color:{fg}; padding:2px 6px;"
+            f" border-radius:6px; font-weight:bold; font-size:10px; }}")
+
+
+class PipelineRunnerTab(QWidget):
+    """
+    Tab that exposes every sound-pipeline step as a runnable button +
+    status pill, with a shared live log.  Steps are run via QProcess
+    so the UI stays responsive and stdout/stderr stream into the log.
+    """
+    def __init__(self):
+        super().__init__()
+        self._proc      = None
+        self._queue     = []        # remaining steps in a "Run All" batch
+        self._step_rows = []        # list of (name, btn, pill) per row
+
+        # --- top: title / intro ----------------------------------------
+        title = QLabel("<b>Sound Pipeline Runner</b>")
+        intro = QLabel(
+            "Runs the make targets that build the M1 ROM, V ROM, FM, MML, "
+            "and SSG tables.  Output streams below.  GAME selection is "
+            "honoured from games/$(CURRENT_GAME)/."
+        )
+        intro.setWordWrap(True)
+
+        # --- middle: step grid -----------------------------------------
+        grid_box = QGroupBox("Pipeline Steps")
+        grid     = QGridLayout(grid_box)
+        grid.addWidget(QLabel("<b>Step</b>"),    0, 0)
+        grid.addWidget(QLabel("<b>Status</b>"),  0, 1)
+        grid.addWidget(QLabel("<b>Description</b>"), 0, 2)
+        grid.addWidget(QLabel("<b>Action</b>"),  0, 3)
+
+        for row, (name, cmd, desc) in enumerate(PIPELINE_STEPS, start=1):
+            grid.addWidget(QLabel(name), row, 0)
+            pill = _StatusPill()
+            grid.addWidget(pill, row, 1)
+            grid.addWidget(QLabel(desc), row, 2)
+            btn  = QPushButton("Run")
+            btn.clicked.connect(lambda _, n=name, c=cmd: self._run_one(n, c))
+            grid.addWidget(btn, row, 3)
+            self._step_rows.append((name, btn, pill, cmd))
+
+        # --- bottom: actions + log -------------------------------------
+        action_row = QHBoxLayout()
+        self.btn_all   = QPushButton("Run Full Pipeline (sequential)")
+        self.btn_clear = QPushButton("Clear Log")
+        self.btn_stop  = QPushButton("Stop")
+        self.btn_all  .clicked.connect(self._run_all)
+        self.btn_clear.clicked.connect(lambda: self.log.clear())
+        self.btn_stop .clicked.connect(self._stop)
+        self.btn_stop.setEnabled(False)
+        action_row.addWidget(self.btn_all)
+        action_row.addWidget(self.btn_clear)
+        action_row.addWidget(self.btn_stop)
+        action_row.addStretch()
+
+        self.log = QPlainTextEdit()
+        self.log.setReadOnly(True)
+        self.log.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#cfcf80;"
+            " font-family:'Space Mono','Courier New',monospace; }")
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(title)
+        layout.addWidget(intro)
+        layout.addWidget(grid_box)
+        layout.addLayout(action_row)
+        layout.addWidget(self.log, 1)
+
+    # --- run helpers ---------------------------------------------------
+    def _log(self, text: str, colour=None):
+        if colour:
+            self.log.appendPlainText(f"[{colour}] {text}")
+        else:
+            self.log.appendPlainText(text)
+
+    def _set_pill(self, name: str, state: str):
+        for n, _btn, pill, _cmd in self._step_rows:
+            if n == name:
+                pill.set_state(state)
+                return
+
+    def _set_buttons_enabled(self, enabled: bool):
+        for _n, btn, _pill, _cmd in self._step_rows:
+            btn.setEnabled(enabled)
+        self.btn_all.setEnabled(enabled)
+        self.btn_stop.setEnabled(not enabled)
+
+    def _run_one(self, name: str, cmd_list: list):
+        if self._proc is not None:
+            self._log("(busy — finish or stop the current step first)")
+            return
+        self._set_pill(name, "running")
+        self._set_buttons_enabled(False)
+        self._current_name = name
+        self._log(f"=== {name} ===")
+        self._log("$ " + " ".join(_sp_shlex.quote(c) for c in cmd_list))
+
+        proc = QProcess(self)
+        proc.setWorkingDirectory(str(REPO_ROOT))
+        proc.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+        proc.readyReadStandardOutput.connect(self._on_stdout)
+        proc.finished.connect(self._on_finished)
+        env = QProcessEnvironment.systemEnvironment()
+        proc.setProcessEnvironment(env)
+        self._proc = proc
+        proc.start(cmd_list[0], cmd_list[1:])
+
+    def _on_stdout(self):
+        if self._proc is None:
+            return
+        data = self._proc.readAllStandardOutput().data().decode(errors="replace")
+        for line in data.splitlines():
+            self._log(line)
+
+    def _on_finished(self, code, _status):
+        name = getattr(self, "_current_name", "?")
+        if code == 0:
+            self._set_pill(name, "ok")
+            self._log(f"--- {name} OK ---")
+        else:
+            self._set_pill(name, "fail")
+            self._log(f"--- {name} FAILED (exit {code}) ---")
+            self._queue = []   # abort batch on failure
+        self._proc = None
+        if self._queue:
+            next_name, next_cmd = self._queue.pop(0)
+            self._run_one(next_name, next_cmd)
+        else:
+            self._set_buttons_enabled(True)
+
+    def _run_all(self):
+        if self._proc is not None:
+            return
+        # Reset all pills to idle
+        for n, _btn, pill, _cmd in self._step_rows:
+            pill.set_state("idle")
+        # Queue every step EXCEPT the trailing "ALL (sound)" alias, which
+        # would re-do everything via `make sound` and be redundant
+        self._queue = [(n, c) for n, _b, _p, c in self._step_rows
+                       if not n.startswith("ALL")]
+        if not self._queue:
+            return
+        name, cmd = self._queue.pop(0)
+        self._run_one(name, cmd)
+
+    def _stop(self):
+        if self._proc is None:
+            return
+        self._proc.kill()
+        self._queue = []
+
+
+class DriverDefsTab(QWidget):
+    """Browse the named identifiers from sdk/sound_ids.h and
+    sound/driver/driver_defs.h — useful when wiring code or MML."""
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>SDK & Driver Identifiers</b>"))
+
+        splitter = _QSplit(Qt.Orientation.Horizontal)
+
+        for header_path in [REPO_ROOT / "sdk" / "sound_ids.h",
+                            REPO_ROOT / "sound" / "driver" / "driver_defs.h"]:
+            box = QGroupBox(str(header_path.relative_to(REPO_ROOT)))
+            box_l = QVBoxLayout(box)
+            text = QPlainTextEdit()
+            text.setReadOnly(True)
+            text.setStyleSheet(
+                "QPlainTextEdit { background:#0c0c10; color:#a0c0e0;"
+                " font-family:'Space Mono','Courier New',monospace; }")
+            try:
+                text.setPlainText(header_path.read_text(errors="replace"))
+            except Exception as e:
+                text.setPlainText(f"(could not read: {e})")
+            box_l.addWidget(text)
+            splitter.addWidget(box)
+
+        layout.addWidget(splitter, 1)
+
+
+###############################################################################
+#  Track Browser — discover everything in sound/mml, sound/ssg, sound/samples
+###############################################################################
+class TrackBrowserTab(QWidget):
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Audio Asset Browser</b>"))
+        layout.addWidget(QLabel(
+            "Every audio source file in sound/ — MML scripts, SSG presets, "
+            "and WAV samples for ADPCM encoding."))
+
+        splitter = _QSplit(Qt.Orientation.Horizontal)
+
+        # Left: tree of folders
+        from PyQt6.QtWidgets import QTreeWidget, QTreeWidgetItem
+        self.tree = QTreeWidget()
+        self.tree.setHeaderLabels(["File", "Size"])
+        self.tree.setColumnWidth(0, 280)
+        self.tree.itemSelectionChanged.connect(self._on_select)
+        splitter.addWidget(self.tree)
+
+        # Right: details
+        right = QWidget()
+        rl = QVBoxLayout(right)
+        rl.addWidget(QLabel("<b>Details</b>"))
+        self.detail = QPlainTextEdit()
+        self.detail.setReadOnly(True)
+        self.detail.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#cfcf80;"
+            " font-family:'Courier New',monospace; }")
+        rl.addWidget(self.detail, 1)
+
+        btn_refresh = QPushButton("Refresh")
+        btn_refresh.clicked.connect(self._populate)
+        rl.addWidget(btn_refresh)
+
+        splitter.addWidget(right)
+        splitter.setSizes([350, 600])
+        layout.addWidget(splitter, 1)
+
+        self._populate()
+
+    def _populate(self):
+        from PyQt6.QtWidgets import QTreeWidgetItem
+        self.tree.clear()
+        for label, folder in [
+            ("MML music",      SOUND_DIR / "mml"),
+            ("MML music (fm)", SOUND_DIR / "fm"),
+            ("SSG presets",    SOUND_DIR / "ssg"),
+            ("WAV samples A",  SAMPLES_DIR),
+            ("WAV samples B",  SOUND_DIR / "samples" / "in_wav_b"),
+            ("Driver source",  SOUND_DIR / "driver"),
+            ("Tools",          SOUND_DIR / "tools"),
+        ]:
+            root = QTreeWidgetItem([label, ""])
+            self.tree.addTopLevelItem(root)
+            if not folder.exists():
+                root.setText(1, "(missing)")
+                continue
+            try:
+                for entry in sorted(folder.iterdir()):
+                    if entry.is_file():
+                        sz = entry.stat().st_size
+                        item = QTreeWidgetItem([entry.name, f"{sz} B"])
+                        item.setData(0, Qt.ItemDataRole.UserRole, str(entry))
+                        root.addChild(item)
+            except Exception as e:
+                root.setText(1, f"(error: {e})")
+            root.setExpanded(True)
+
+    def _on_select(self):
+        items = self.tree.selectedItems()
+        if not items:
+            self.detail.clear()
+            return
+        path_str = items[0].data(0, Qt.ItemDataRole.UserRole)
+        if not path_str:
+            self.detail.clear()
+            return
+        p = Path(path_str)
+        info = [
+            f"Path:  {p}",
+            f"Size:  {p.stat().st_size} bytes",
+            f"Suffix:{p.suffix}",
+            "",
+        ]
+        # Text files: preview content
+        if p.suffix.lower() in (".mml", ".cfg", ".inc", ".h", ".c",
+                                ".asm", ".txt", ".md", ".py"):
+            try:
+                info.append(p.read_text(errors="replace"))
+            except Exception as e:
+                info.append(f"(read error: {e})")
+        else:
+            info.append("(binary file — no preview)")
+        self.detail.setPlainText("\n".join(info))
+
+
+###############################################################################
+#  Audio Mix — global mixer that emits the corresponding soundApplyMix call
+###############################################################################
+class AudioMixTab(QWidget):
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Global Audio Mix</b>"))
+        layout.addWidget(QLabel(
+            "Build a `soundApplyMix(adpcma, adpcmb, ssg, fm)` call and copy "
+            "it into your game / MML init.  Each slider is 0..255."))
+
+        form = QFormLayout()
+        self.sl = {}
+        for name, default in [("ADPCM-A", 0x30), ("ADPCM-B", 0xB8),
+                              ("SSG", 0x08), ("FM", 0x08)]:
+            s = QSlider(Qt.Orientation.Horizontal)
+            s.setRange(0, 255)
+            s.setValue(default)
+            lbl = QLabel(f"0x{default:02X}")
+            s.valueChanged.connect(
+                lambda v, l=lbl: l.setText(f"0x{v:02X}"))
+            s.valueChanged.connect(self._update_call)
+            row = QHBoxLayout()
+            row.addWidget(s)
+            row.addWidget(lbl)
+            w = QWidget()
+            w.setLayout(row)
+            form.addRow(name, w)
+            self.sl[name] = s
+        layout.addLayout(form)
+
+        layout.addWidget(QLabel("<b>Emitted C call:</b>"))
+        self.call = QPlainTextEdit()
+        self.call.setReadOnly(True)
+        self.call.setMaximumHeight(80)
+        self.call.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#a0e0a0;"
+            " font-family:'Courier New',monospace; font-size:14px; }")
+        layout.addWidget(self.call)
+
+        # Preset row
+        preset_row = QHBoxLayout()
+        for name, vals in [
+            ("Default game",   (0x30, 0xB8, 0x08, 0x08)),
+            ("FM showcase",    (0x00, 0x00, 0x00, 0x0D)),
+            ("Pure SSG",       (0x20, 0x00, 0x0F, 0x00)),
+            ("Stage mix",      (0x3C, 0xBC, 0x10, 0x0C)),
+            ("Mute",           (0x00, 0x00, 0x00, 0x00)),
+        ]:
+            btn = QPushButton(name)
+            btn.clicked.connect(
+                lambda _, v=vals: self._apply_preset(v))
+            preset_row.addWidget(btn)
+        layout.addLayout(preset_row)
+
+        layout.addStretch()
+        self._update_call()
+
+    def _apply_preset(self, vals):
+        names = ["ADPCM-A", "ADPCM-B", "SSG", "FM"]
+        for n, v in zip(names, vals):
+            self.sl[n].setValue(v)
+
+    def _update_call(self):
+        a = self.sl["ADPCM-A"].value()
+        b = self.sl["ADPCM-B"].value()
+        s = self.sl["SSG"].value()
+        f = self.sl["FM"].value()
+        self.call.setPlainText(
+            f"soundApplyMix(0x{a:02X}u, 0x{b:02X}u, 0x{s:02X}u, 0x{f:02X}u);")
+
+
+###############################################################################
+#  ROM Inspector — show built ROM files (sizes, timestamps, presence)
+###############################################################################
+class RomInspectorTab(QWidget):
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Built ROM Inspector</b>"))
+        layout.addWidget(QLabel(
+            "Status of every ROM file under roms/<game>/.  Refresh to "
+            "pick up new builds."))
+
+        from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
+        self.table = QTableWidget(0, 5)
+        self.table.setHorizontalHeaderLabels(
+            ["Game", "File", "Size (B)", "Modified", "Present"])
+        self.table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents)
+        layout.addWidget(self.table, 1)
+
+        btn_refresh = QPushButton("Refresh")
+        btn_refresh.clicked.connect(self._refresh)
+        layout.addWidget(btn_refresh)
+
+        self._refresh()
+
+    def _refresh(self):
+        from PyQt6.QtWidgets import QTableWidgetItem
+        roms_dir = REPO_ROOT / "roms"
+        rows = []
+        if not roms_dir.exists():
+            self.table.setRowCount(0)
+            return
+        # For each game folder, list every expected ROM kind
+        for game_dir in sorted(roms_dir.iterdir()):
+            if not game_dir.is_dir():
+                continue
+            game = game_dir.name
+            # Find the GAME_ID by reading the game's game.mk if available
+            game_id = "???"
+            mk = REPO_ROOT / "games" / game / "game.mk"
+            if mk.exists():
+                for line in mk.read_text(errors="replace").splitlines():
+                    if line.strip().startswith("GAME_ID"):
+                        parts = line.split("=")
+                        if len(parts) > 1:
+                            game_id = parts[1].strip()
+                            break
+            for kind in ("p1", "m1", "s1", "v1", "c1", "c2"):
+                fname = f"{game_id}-{kind}.{kind}"
+                fpath = game_dir / fname
+                if fpath.exists():
+                    st = fpath.stat()
+                    import datetime
+                    mtime = datetime.datetime.fromtimestamp(
+                        st.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                    rows.append((game, fname, str(st.st_size), mtime, "yes"))
+                else:
+                    rows.append((game, fname, "—", "—", "no"))
+        self.table.setRowCount(len(rows))
+        for r, row_data in enumerate(rows):
+            for c, val in enumerate(row_data):
+                item = QTableWidgetItem(val)
+                if c == 4 and val == "no":
+                    item.setForeground(QColor("#aa6666"))
+                elif c == 4 and val == "yes":
+                    item.setForeground(QColor("#66aa66"))
+                self.table.setItem(r, c, item)
+
+
+###############################################################################
+#  MML Designer — piano-roll style visual MML editor with text sync
+#  ---------------------------------------------------------------------------
+#  Click cells in a 2-octave × N-step grid to place notes; the MML text
+#  preview updates live and can be saved.  Step length is configurable.
+###############################################################################
+class MMLDesignerTab(QWidget):
+    """Visual MML designer.  Builds a single-voice phrase by clicking
+    notes into a step grid; the corresponding `o4 t### l# c d e ...` MML
+    text is shown live and can be saved into sound/mml/."""
+    NOTE_NAMES = ["C", "C+", "D", "D+", "E", "F",
+                  "F+", "G", "G+", "A", "A+", "B"]
+
+    def __init__(self):
+        super().__init__()
+        self._steps = 16              # number of grid columns
+        self._cell_px = 28
+        self._octaves = 2             # rows = 12 * octaves
+        self._base_midi = 60          # row 0 = top = C5
+        # grid[row][col] in {0: rest, 1: note-on, 2: tie/hold}
+        self._grid = [[0] * self._steps
+                      for _ in range(12 * self._octaves)]
+        self._tempo = 120
+        self._step_len = 8            # MML "l8" = eighth note default
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>MML Visual Designer</b>"))
+        layout.addWidget(QLabel(
+            "Click a cell to place a note; click again to clear it.  "
+            "MML text below updates live.  Designed for quick single-voice "
+            "lead-line sketching; for full multi-channel work use MML "
+            "Composer."))
+
+        # Top controls
+        ctrl = QHBoxLayout()
+        ctrl.addWidget(QLabel("Steps"))
+        self.sp_steps = QSpinBox()
+        self.sp_steps.setRange(4, 64)
+        self.sp_steps.setValue(self._steps)
+        self.sp_steps.valueChanged.connect(self._on_steps)
+        ctrl.addWidget(self.sp_steps)
+        ctrl.addWidget(QLabel("Tempo"))
+        self.sp_bpm = QSpinBox()
+        self.sp_bpm.setRange(40, 280)
+        self.sp_bpm.setValue(self._tempo)
+        self.sp_bpm.valueChanged.connect(lambda v: setattr(self, "_tempo", v) or self._render())
+        ctrl.addWidget(self.sp_bpm)
+        ctrl.addWidget(QLabel("Step len (l)"))
+        self.sp_len = QSpinBox()
+        self.sp_len.setRange(2, 32)
+        self.sp_len.setValue(self._step_len)
+        self.sp_len.valueChanged.connect(lambda v: setattr(self, "_step_len", v) or self._render())
+        ctrl.addWidget(self.sp_len)
+        btn_clear = QPushButton("Clear Grid")
+        btn_clear.clicked.connect(self._clear)
+        ctrl.addWidget(btn_clear)
+        btn_save = QPushButton("Save .mml…")
+        btn_save.clicked.connect(self._save)
+        ctrl.addWidget(btn_save)
+        ctrl.addStretch()
+        layout.addLayout(ctrl)
+
+        # Grid canvas
+        self.canvas = QLabel()
+        self.canvas.setStyleSheet("background:#0c0c10; border:1px solid #333;")
+        self.canvas.mousePressEvent = self._on_mouse
+        layout.addWidget(self.canvas)
+
+        # MML text preview
+        layout.addWidget(QLabel("<b>MML text (auto-generated):</b>"))
+        self.text = QPlainTextEdit()
+        self.text.setReadOnly(True)
+        self.text.setMaximumHeight(120)
+        self.text.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#a0e0a0;"
+            " font-family:'Courier New',monospace; font-size:14px; }")
+        layout.addWidget(self.text)
+
+        self._render()
+
+    def _on_steps(self, v):
+        # Resize grid preserving existing content
+        for row in self._grid:
+            if v > len(row):
+                row.extend([0] * (v - len(row)))
+            else:
+                del row[v:]
+        self._steps = v
+        self._render()
+
+    def _on_mouse(self, evt):
+        x = int(evt.position().x())
+        y = int(evt.position().y())
+        col = x // self._cell_px
+        row = y // self._cell_px
+        if col < 0 or col >= self._steps:
+            return
+        if row < 0 or row >= 12 * self._octaves:
+            return
+        # toggle note: clear other notes in this column, set this one
+        # (monophonic single-voice convention).
+        cur = self._grid[row][col]
+        for r in range(12 * self._octaves):
+            self._grid[r][col] = 0
+        if cur == 0:
+            self._grid[row][col] = 1
+        self._render()
+
+    def _clear(self):
+        for row in self._grid:
+            for i in range(len(row)):
+                row[i] = 0
+        self._render()
+
+    def _render(self):
+        n_rows = 12 * self._octaves
+        w = self._steps * self._cell_px
+        h = n_rows * self._cell_px
+        img = QImage(w + 60, h, QImage.Format.Format_RGB32)
+        img.fill(QColor(12, 12, 16))
+        painter = QPainter(img)
+        # Note labels on the left
+        f = QFont("Courier New", 9)
+        painter.setFont(f)
+        for r in range(n_rows):
+            midi = self._base_midi + (n_rows - 1 - r)
+            label = f"{self.NOTE_NAMES[midi % 12]}{midi // 12 - 1}"
+            painter.setPen(QColor(140, 140, 160))
+            painter.drawText(2, r * self._cell_px + 18, label)
+        # Cells
+        for r in range(n_rows):
+            midi = self._base_midi + (n_rows - 1 - r)
+            is_black = (midi % 12) in (1, 3, 6, 8, 10)
+            row_bg = QColor(24, 24, 30) if is_black else QColor(34, 34, 42)
+            for c in range(self._steps):
+                rect_x = 60 + c * self._cell_px
+                rect_y = r * self._cell_px
+                painter.fillRect(rect_x, rect_y,
+                                 self._cell_px - 1, self._cell_px - 1,
+                                 row_bg)
+                if self._grid[r][c]:
+                    painter.fillRect(rect_x + 2, rect_y + 2,
+                                     self._cell_px - 5,
+                                     self._cell_px - 5,
+                                     QColor(0, 200, 120))
+                painter.setPen(QColor(50, 50, 60))
+                painter.drawRect(rect_x, rect_y,
+                                 self._cell_px - 1, self._cell_px - 1)
+        painter.end()
+        from PyQt6.QtGui import QPixmap
+        self.canvas.setFixedSize(w + 60, h)
+        self.canvas.setPixmap(QPixmap.fromImage(img))
+        self._update_text()
+
+    def _update_text(self):
+        # Build MML from grid columns
+        events = []
+        cur_octave = self._base_midi // 12 - 1 + 1
+        for c in range(self._steps):
+            note_row = None
+            for r in range(12 * self._octaves):
+                if self._grid[r][c]:
+                    note_row = r
+                    break
+            if note_row is None:
+                events.append("r")
+                continue
+            midi = self._base_midi + (12 * self._octaves - 1 - note_row)
+            octave = midi // 12 - 1
+            pitch = self.NOTE_NAMES[midi % 12].lower().replace("+", "+")
+            # Add octave change if needed
+            prefix = ""
+            if octave != cur_octave:
+                prefix = f"o{octave} "
+                cur_octave = octave
+            events.append(f"{prefix}{pitch}")
+        tokens = " ".join(events)
+        text = (f";; Generated by Sound Studio — MML Designer\n"
+                f"t{self._tempo} l{self._step_len} o{cur_octave}\n"
+                f"{tokens}\n")
+        self.text.setPlainText(text)
+
+    def _save(self):
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Save MML",
+            str(SOUND_DIR / "mml"),
+            "MML (*.mml);;All Files (*)")
+        if not path:
+            return
+        try:
+            Path(path).write_text(self.text.toPlainText())
+            QMessageBox.information(self, "Saved",
+                                    f"Wrote {path}")
+        except Exception as e:
+            QMessageBox.warning(self, "Save failed", str(e))
+
+
+###############################################################################
+#  Live Waveform tab — generate audio, play it, show waveform + spectrum
+#  scrolling as the buffer streams to the audio sink.
+###############################################################################
+class _SpectrumWidget(QWidget):
+    """FFT-based spectrum analyzer for the current display buffer."""
+    def __init__(self):
+        super().__init__()
+        self.samples = np.zeros(1024, dtype=np.float32)
+        self.setMinimumHeight(120)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding,
+                           QSizePolicy.Policy.Fixed)
+
+    def set_samples(self, samples: np.ndarray):
+        # Take a power-of-two window for FFT
+        n = min(len(samples), 1024)
+        if n < 64:
+            return
+        # round down to nearest power of two
+        n2 = 1 << int(np.log2(n))
+        win = samples[-n2:].astype(np.float32) * np.hanning(n2)
+        spec = np.abs(np.fft.rfft(win))
+        if spec.max() > 0:
+            spec = spec / spec.max()
+        self.samples = spec
+        self.update()
+
+    def paintEvent(self, _evt):
+        p = QPainter(self)
+        p.fillRect(self.rect(), QColor(10, 15, 25))
+        w = self.width(); h = self.height()
+        n = len(self.samples)
+        if n < 2:
+            return
+        bar_w = max(1, w // n)
+        for i in range(n):
+            mag = float(self.samples[i])
+            bar_h = int(mag * (h - 4))
+            # Spectrum colour: green low, yellow mid, red high freq
+            if i < n / 3:
+                colour = QColor(0, 220, 120)
+            elif i < 2 * n / 3:
+                colour = QColor(220, 200, 50)
+            else:
+                colour = QColor(220, 80, 40)
+            p.fillRect(int(i * w / n), h - bar_h, bar_w, bar_h, colour)
+
+
+class LiveWaveformTab(QWidget):
+    """
+    Live-render waveform and spectrum.  Generates a short audio clip
+    (from the current FM patches / SSG presets / MML), plays it through
+    QAudioSink, and animates the waveform + spectrum displays as the
+    clip streams.
+    """
+    def __init__(self, fm_tab=None, ssg_tab=None, mml_tab=None):
+        super().__init__()
+        self._fm_tab  = fm_tab
+        self._ssg_tab = ssg_tab
+        self._mml_tab = mml_tab
+        self._audio   = None
+        self._io      = None
+        self._buffer  = np.zeros(0, dtype=np.float32)
+        self._cursor  = 0
+        self._sr      = 22050      # match QAudioSink default for low-CPU draw
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Live Waveform + Spectrum</b>"))
+        layout.addWidget(QLabel(
+            "Generate a short clip from the current patches / MML / SSG "
+            "presets and watch the waveform + spectrum animate as it "
+            "plays.  Useful for sanity-checking new patches."))
+
+        # ---- source picker --------------------------------------------------
+        src_row = QHBoxLayout()
+        src_row.addWidget(QLabel("Source:"))
+        self.cb_source = QComboBox()
+        self.cb_source.addItems([
+            "Demo scale (C major arpeggio)",
+            "Demo step pattern (FM kick + SSG snare)",
+            "Demo MML phrase (single voice)",
+        ])
+        src_row.addWidget(self.cb_source, 1)
+        src_row.addWidget(QLabel("Duration:"))
+        self.sb_dur = QDoubleSpinBox()
+        self.sb_dur.setRange(0.2, 8.0)
+        self.sb_dur.setSingleStep(0.5)
+        self.sb_dur.setValue(2.0)
+        self.sb_dur.setSuffix(" s")
+        src_row.addWidget(self.sb_dur)
+        self.btn_play = QPushButton("Play && Visualise")
+        self.btn_play.clicked.connect(self._play)
+        self.btn_stop = QPushButton("Stop")
+        self.btn_stop.clicked.connect(self._stop)
+        self.btn_stop.setEnabled(False)
+        src_row.addWidget(self.btn_play)
+        src_row.addWidget(self.btn_stop)
+        layout.addLayout(src_row)
+
+        # ---- waveform + spectrum -------------------------------------------
+        wave_box = QGroupBox("Waveform (scrolls left-to-right)")
+        wave_l = QVBoxLayout(wave_box)
+        self.wave = WaveformWidget()
+        self.wave.setMinimumHeight(180)
+        wave_l.addWidget(self.wave)
+        layout.addWidget(wave_box)
+
+        spec_box = QGroupBox("Spectrum (FFT, green=lo / yellow=mid / red=hi)")
+        spec_l = QVBoxLayout(spec_box)
+        self.spec = _SpectrumWidget()
+        self.spec.setMinimumHeight(140)
+        spec_l.addWidget(self.spec)
+        layout.addWidget(spec_box)
+
+        # Status row
+        self.status = QLabel("Idle.")
+        layout.addWidget(self.status)
+        layout.addStretch()
+
+        # Timer for animating the display while playback streams
+        self.timer = QTimer(self)
+        self.timer.setInterval(33)        # ~30 fps display refresh
+        self.timer.timeout.connect(self._tick)
+
+    # ------------------------------------------------------------------
+    def _synthesize(self) -> np.ndarray:
+        """Build a clip according to the source picker."""
+        dur = self.sb_dur.value()
+        choice = self.cb_source.currentIndex()
+        # Pull current patches / presets if the tabs are available
+        patches = []
+        if self._fm_tab is not None and hasattr(self._fm_tab, "patches"):
+            patches = self._fm_tab.patches
+        presets = []
+        if self._ssg_tab is not None and hasattr(self._ssg_tab, "presets"):
+            presets = self._ssg_tab.presets
+
+        if choice == 0:
+            # C major arpeggio across 8 notes
+            events = []
+            t = 0.0
+            note_dur = max(0.05, dur / 8.0)
+            for n in [60, 62, 64, 65, 67, 69, 71, 72]:
+                events.append({"time": t, "note": n, "dur": note_dur,
+                               "patch": 0, "channel": "FM"})
+                t += note_dur
+            return synthesize_track(events, patches, presets, sr=self._sr,
+                                    total_duration=dur)
+        elif choice == 1:
+            # Step pattern: kick + snare alternating
+            grid = []
+            steps = 16
+            for i in range(steps):
+                grid.append({"FM1": (i % 4 == 0), "SSG1": (i % 4 == 2)})
+            channels = [
+                {"name": "FM1",  "type": "FM",  "patch": 0, "note": 36},
+                {"name": "SSG1", "type": "SSG", "preset": 0, "note": 72},
+            ]
+            return synthesize_step_pattern(channels, grid, bpm=120,
+                                           patches=patches,
+                                           ssg_presets=presets,
+                                           sr=self._sr,
+                                           total_duration=dur)
+        else:
+            # MML phrase
+            mml_text = "o4 t120 l8 c d e f g a b > c2"
+            events = parse_mml_events(mml_text)
+            return synthesize_track(events, patches, presets, sr=self._sr,
+                                    total_duration=dur)
+
+    def _play(self):
+        try:
+            clip = self._synthesize()
+        except Exception as e:
+            self.status.setText(f"Synthesis failed: {e}")
+            return
+        if clip.size == 0:
+            self.status.setText("Empty clip.")
+            return
+        # Normalise + convert to int16 for QAudioSink
+        clip = np.clip(clip, -1.0, 1.0)
+        self._buffer = clip.astype(np.float32)
+        self._cursor = 0
+
+        fmt = QAudioFormat()
+        fmt.setSampleRate(self._sr)
+        fmt.setChannelCount(1)
+        fmt.setSampleFormat(QAudioFormat.SampleFormat.Int16)
+
+        self._audio = QAudioSink(fmt)
+        self._io = self._audio.start()
+        if self._io is None:
+            self.status.setText("Failed to open audio sink.")
+            return
+
+        # Push as int16 little-endian
+        int_clip = (clip * 32700).astype(np.int16).tobytes()
+        self._io.write(int_clip)
+        self.timer.start()
+        self.btn_play.setEnabled(False)
+        self.btn_stop.setEnabled(True)
+        self.status.setText(
+            f"Playing {clip.size} samples @ {self._sr} Hz "
+            f"({clip.size / self._sr:.2f}s).")
+
+    def _stop(self):
+        if self._audio is not None:
+            try:
+                self._audio.stop()
+            except Exception:
+                pass
+            self._audio = None
+        self.timer.stop()
+        self.btn_play.setEnabled(True)
+        self.btn_stop.setEnabled(False)
+        self.status.setText("Stopped.")
+
+    def _tick(self):
+        # Advance the display cursor in lock-step with audio
+        chunk = 2048
+        end = min(self._cursor + chunk, len(self._buffer))
+        if self._cursor >= len(self._buffer):
+            self._stop()
+            return
+        window = self._buffer[self._cursor:end]
+        self.wave.set_samples(window)
+        self.spec.set_samples(window)
+        self._cursor += chunk // 2     # 50% overlap so the eye sees motion
+
+
 class SoundStudio(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -1867,13 +2773,28 @@ class SoundStudio(QMainWindow):
         self.adpcm_tab    = ADPCMTab()
         self.composer_tab = ComposerTab()
         self.sim_tab      = YM2610SimTab()
+        self.pipe_tab     = PipelineRunnerTab()
+        self.defs_tab     = DriverDefsTab()
+        self.tracks_tab   = TrackBrowserTab()
+        self.mix_tab      = AudioMixTab()
+        self.rom_tab      = RomInspectorTab()
+        self.live_tab     = LiveWaveformTab(
+            fm_tab=self.fm_tab, ssg_tab=self.ssg_tab, mml_tab=self.mml_tab)
+        self.mml_design_tab = MMLDesignerTab()
 
         tabs.addTab(self.fm_tab,       "FM Patches")
         tabs.addTab(self.mml_tab,      "MML Composer")
+        tabs.addTab(self.mml_design_tab, "MML Designer")
         tabs.addTab(self.ssg_tab,      "SSG Presets")
         tabs.addTab(self.adpcm_tab,    "ADPCM Samples")
         tabs.addTab(self.composer_tab, "Composer")
         tabs.addTab(self.sim_tab,      "YM2610 Simulator")
+        tabs.addTab(self.live_tab,     "Live Waveform")
+        tabs.addTab(self.tracks_tab,   "Track Browser")
+        tabs.addTab(self.mix_tab,      "Audio Mix")
+        tabs.addTab(self.pipe_tab,     "Pipeline")
+        tabs.addTab(self.rom_tab,      "ROM Inspector")
+        tabs.addTab(self.defs_tab,     "Identifiers")
         self.setCentralWidget(tabs)
 
         self._build_menu()

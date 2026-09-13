@@ -1,5 +1,14 @@
 # Build Dependencies
 
+> **v1.7.0 — extra dependencies**
+>
+> - The HD artbox alt scripts (`artbox/img2neo_hd.py`,
+>   `artbox/fixtiles_hd.py`) require the same packages as the main
+>   pipeline (`numpy`, `pypng`, `Pillow`).  No new dependencies, but
+>   they're slower because of the bilateral filter + CLAHE numpy passes.
+> - The C++ engine (`USE_2D_PLUS=1`) is built by the same
+>   `m68k-unknown-elf-g++` shipped with `x-tools-v2`.  No extra toolchain.
+
 This document lists every tool and library required to build the NeoGeoSDK on Linux, WSL, and Windows.
 
 ---
@@ -72,13 +81,13 @@ wlalink --version
 
 ### m68k-unknown-elf toolchain (Linux)
 
-Download the pre-built `x-tools.tar` from the release page and place it next to the repository:
+Download the pre-built `x-tools-v2.tar` from the release page and place it next to the repository:
 
 ```bash
 mkdir -p $HOME/neogeo
 cd $HOME/neogeo
-curl -L -o x-tools.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.2.0/x-tools.tar
-tar -xf x-tools.tar
+curl -L -o x-tools-v2.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.0/x-tools-v2.tar
+tar -xf x-tools-v2.tar
 ```
 
 Expected layout:
@@ -86,7 +95,7 @@ Expected layout:
 ```text
 $HOME/neogeo/
   neogeosdk/
-  x-tools/
+  x-tools-v2/
     m68k-unknown-elf/
       bin/
         m68k-unknown-elf-gcc
@@ -104,7 +113,11 @@ Verify:
 
 ```bash
 export SDKHOME=$HOME/neogeo
-$SDKHOME/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gcc --version
+$SDKHOME/x-tools-v2/m68k-unknown-elf/bin/m68k-unknown-elf-gcc --version
+
+The Linux makefile fallback order is:
+1. `$SDKHOME/x-tools-v2`
+2. `$SDKHOME/x-tools` (legacy)
 ```
 
 ### MAME
@@ -119,9 +132,21 @@ Or build from source: https://www.mamedev.org/
 
 ## Windows
 
-### m68k-elf toolchain (Windows)
+### m68k toolchain (Windows)
 
-The Win32 makefile (`MakefileWin32.mak`) expects a SysGCC-style layout by default:
+The Win32 makefile (`MakefileWin32.mak`) auto-detects this default first:
+
+```text
+<sdk root>\x-tools-v2-win\m68k-unknown-elf\bin\m68k-unknown-elf-gcc.exe
+```
+
+Then this alternate default:
+
+```text
+<sdk root>\x-tools-v2-win\m68k-elf\bin\m68k-elf-gcc.exe
+```
+
+If neither exists, it falls back to a SysGCC-style `M68K_ELF_ROOT`:
 
 ```text
 C:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe
@@ -152,10 +177,24 @@ py --version
 Install required packages:
 
 ```bat
+py -0p
+py -m pip --version
+py -m pip install --upgrade pip
 py -m pip install numpy pillow pypng
 ```
 
 The same module table applies as on Linux (see above).
+
+Important: use `py -m pip` instead of `pip` or `pip3`. The Windows build
+scripts call `py`, so using the same launcher avoids interpreter/package
+mismatch errors.
+
+Quick verification:
+
+```bat
+cd artbox
+py -c "import sys; print(sys.executable); import PIL, numpy, png, img2neo; print('OK')"
+```
 
 ### GNU Make
 

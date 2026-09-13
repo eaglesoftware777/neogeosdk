@@ -1,0 +1,19 @@
+; 3_mml_example_d - seven-bar G minor accompaniment to FM track 3
+; Both sequences use T112 and 28 quarter notes per loop.
+
+T112
+@p0
+@f3
+V6
+O2
+L2
+
+G D
+A E-
+B- F
+@a9 G D
+G F
+E- D
+G R4 G4
+
+~

@@ -1,0 +1,22 @@
+; 5_fm_example_f - warm reed theme (D minor)
+
+T120
+I5
+V14
+O3
+L8
+
+D F A > D  < A F D A
+B- > D F D  < A F E C
+D F A > D  C < A G E
+F A > C < A  G F E D
+
+L16
+D F A D  F A > D < A  G B- > D < B-  G E C A
+D F A > D  < C A F D  E G B- > E  < D A F D
+
+L8
+> D C < B- A  G F E D
+F A > D < A  D2 R4 R4
+
+~

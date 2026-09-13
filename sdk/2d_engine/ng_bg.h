@@ -4,6 +4,10 @@
 #include "ng_defs.h"
 #include "ng_sprite_pool.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Background layers */
 #define NG_BG_LAYERS     2
 #define NG_BG_LAYER0     0   /* main background (behind everything) */
@@ -64,4 +68,8 @@ void NEOGEO_USER ng_bg_mark_dirty(uint8_t layer);
  * only updates; re-uploads tile data when dirty. */
 void NEOGEO_USER ng_bg_draw(int16_t camera_x, int16_t camera_y);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

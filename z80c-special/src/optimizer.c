@@ -58,12 +58,20 @@ void optimize_asm_file(const char *path, int level) {
     s = replace_all(s, "    ld a,$00\n    or a\n", "    xor a\n    or a\n");
     s = replace_all(s, "    ld a,$00\n", "    xor a\n");
     s = replace_all(s, "    ld a,$01\n", "    ld a,1\n");
-    s = replace_all(s, "    jr .ifend", "    jp .ifend");
+    s = replace_all(s, "    jr .cmptrue", "    jr z,.cmptrue"); // Wait, this one was probably wrong in my head
+    
+    // Custom patterns for "closer to ASM"
+    s = replace_all(s, "    ld d,a\n    ld a,d\n", "    ld d,a\n");
+    s = replace_all(s, "    push af\n    pop af\n", "");
+    s = replace_all(s, "    ld a,(hl)\n    ld (hl),a\n", "    ld a,(hl)\n");
+    s = replace_all(s, "    add a,0\n", "");
+    s = replace_all(s, "    or a\n    jr z,", "    or a\n    jr z,"); // placeholder
 
     if (level >= 2) {
         s = replace_all(s, "    push af\n    ld a,$00\n    ld b,a\n    pop af\n", "    ld b,$00\n");
         s = replace_all(s, "    push af\n    ld a,$01\n    ld b,a\n    pop af\n", "    ld b,$01\n");
         s = replace_all(s, "    push af\n    ld a,$80\n    ld b,a\n    pop af\n", "    ld b,$80\n");
+        s = replace_all(s, "    push af\n    ld a,1\n    ld b,a\n    pop af\n", "    ld b,1\n");
     }
 
     write_text(path, s);

@@ -1,0 +1,14 @@
+; 6_fm_example_g - melodic hero lead with sustained notes for LFO tests
+
+T130
+I6
+V14
+O4
+
+L4
+E G B > D2 < B G E2
+F A > C E2 < C A F2
+G B > D F2 < B G2
+A > C E A1
+
+~

@@ -3,10 +3,66 @@
 Neo Geo development SDK for SNK hardware.
 
 - Repository: https://github.com/eaglesoftware777/neogeosdk
-- Current release target: `v1.2.0`
+- Current release: `v1.7.0`
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 
+## What's new in v1.7.0 — the 2D engine release
+
+v1.7.0 consolidates the whole `neo_universal_2d` line of work. It is the
+largest release the SDK has had.
+
+- **A complete 2D game engine**, in plain C (`sdk/2d_engine/`) and C++14
+  (`sdk/2d_engine_plus/`) with an identical public ABI — 35 modules covering
+  characters, actions, physics, NPCs, camera, level, particles, feedback,
+  depth effects, palette effects, sprite groups, the render queue, the FIX
+  layer, input, timers, events and fixed-point math. Select the C++ build
+  with `USE_2D_PLUS=1`.
+- **A multi-game build system** — one repository, any number of independent
+  games, each with its own id, ROM folder, artbox, sound tree and MAME hash
+  set. Six games ship with it, and all six build the same way.
+- **A source-faithful art pipeline** with whole-image palette fitting,
+  error-driven extra banks, stable animation palettes and transparent sprite
+  padding. Characters and backgrounds bind per-tile palettes in both engines.
+  Bank budgets are configured per game; tests verify encoded C-ROM pixels
+  and captured hardware palette assignments. See
+  [Artbox Graphics Pipeline](docs/ARTBOX_PIPELINE.md).
+- **A rebuilt audio stack** — nine ADPCM-B beds, eight FM tracks, nine SSG
+  tracks, a recorded voice bank with `speakText()`, live FM/SSG BPM, persistent
+  LFO control and hardware sample repeat. Sample conversion uses band-limited
+  resampling, with per-sample ADPCM-B rates and 32 kHz beds by default. The
+  default ASM driver and its matching V1 are rebuilt together; see the
+  [sound guide](docs/SOUND_DRIVER.md) for loop/fade usage and capture tests.
+- **Sky Lance** (`games/skylance`, id 779) — a complete vertical arcade
+  shooter: three pilots, seven stages, a named boss per stage, attract reel,
+  pilot select, scoring, lives, energy and a continue flow.
+- **A 26-chapter demo reel** (`games/demo`, id 777) exercising the engine,
+  with playable shooter chapters before the credits. Chapter number
+  printed top-right; **A** advances, **C** restarts.
+- **Native Windows builds**, one-shot installers for Linux / Ubuntu /
+  Windows / WSL, and a documented WSL2 + PulseAudio audio path.
+- **Two PyQt6 desktop tools** — Artbox Studio (pipeline runner, hex sprite
+  inspector, movement designer, level designer, HD compare, ROM inventory,
+  asset-rule editor) and Sound Studio (track / mix / ROM tabs, live waveform,
+  MML designer).
+- **A documentation set written for the end user** — introduction,
+  programmer's manual, hello-world tutorial, sound driver reference, art
+  pipeline, shipped-game guide, chapter guide, generated C and C++ API
+  references, a single-file overview, and a printable PDF manual.
+
+Corrections worth knowing about if you have code on an earlier revision:
+
+- **Sprite priority: HIGHER slot number is drawn IN FRONT.** Backgrounds
+  belong at slots 1–32, characters at 96–223, foreground effects at 288+.
+  Earlier revisions claimed the opposite.
+- **The backdrop register is `$401FFE`**, the last word of palette RAM.
+  `$402000` is a mirror that silently does nothing.
+- **The FIX layer has 28 visible rows**; visible row *y* is map row *y + 2*.
+- **`REG_PALBANK0` / `REG_PALBANK1`** had their addresses swapped.
+- **A minimal game can link again** — `ng_bg.c` / `ng_bg.cpp` now carry weak
+  fallbacks for `ng_screen_table[]` / `ng_screen_count`.
+
+Full detail, commit by commit: [`CHANGELOG.md`](./CHANGELOG.md).
 
 A hardware-centered SDK for Neo Geo arcade and home systems, with direct 68000-side control over VRAM, palettes, sprites, DMA, FIX tiles, and a custom YM2610 sound stack driven by a Z80 sound driver.
 
@@ -27,34 +83,49 @@ real Neo Geo development practical on current Linux, WSL, and Windows setups.
 
 The repository includes a reusable 2D game engine layer under `sdk/2d_engine/ng_*`.
 
-It is a plain-C 2D engine built around:
+It is a plain-C engine targeting **NeoGeo Deluxe 2D**: huge animated characters, large bosses, smooth camera movement, parallax depth, sprite-scaling depth effects, palette lighting, hit sparks, particles, cinematic transitions, and stable 60 FPS — no float, no malloc during gameplay, no division in the frame loop.
 
-- characters
-- actions
+### Core engine modules
+
+- characters and action scripts
 - level state and camera scroll
 - per-frame `game_engine_frame()`
-- small `game_events`
-- border constraints
-- NPC helpers
-- physics bodies and solids
+- game events, border constraints
+- NPC helpers, physics bodies and solids
 - cached FIX-layer text output
-- status flags
-- timers
-- progress counters
-- a properties matrix
+- status flags, timers, progress counters, properties matrix
 
-Important current state:
+### Deluxe 2D engine modules
 
-- the source files live in `sdk/2d_engine/ng_*.c` and `sdk/2d_engine/ng_*.h`
-- the linker scripts reserve `game_engine_bss` for the engine state objects
-- `Makefile` and `MakefileWin32.mak` compile and link the `sdk/2d_engine/ng_*` modules by default
+| Module | Header | What it does |
+|--------|--------|-------------|
+| Render queue | `ng_render_queue.h` | 128-slot VBlank-safe deferred VRAM/palette write queue |
+| Fixed-point math | `ng_fixed.h` | 16.16 fixed-point, sin/cos/shrink lookup tables |
+| Camera | `ng_camera.h` | Smooth follow, dead zone, look-ahead, shake, cinematic pan, border clamp |
+| Palette FX | `ng_palette_fx.h` | Fade, flash (white/red/blue), pulse, color cycle — queue-safe |
+| Particles | `ng_particles.h` | 32-slot fixed pool, 8 types, priority eviction |
+| Feedback | `ng_feedback.h` | Hitstop + screen shake + palette flash + sound hook in one call |
+| Depth FX | `ng_depthfx.h` | NGVec3 perspective projection, Z→shrink lookup, starfield |
+| Sprite groups | `ng_sprite_group.h` | Dirty-flag sticky-bit sprite chains, write-only-what-changed |
+| Debug HUD | `ng_debug.h` | Fix-layer perf overlay (`#define NG_DEBUG_PERF 1`) |
+
+### Important build notes
+
+- source files live in `sdk/2d_engine/ng_*.c` and `sdk/2d_engine/ng_*.h`
+- linker scripts reserve `game_engine_bss` for the engine state objects
+- `Makefile` and `MakefileWin32.mak` compile and link all `sdk/2d_engine/ng_*` modules automatically
 - sprite drawing uses world-space character coordinates minus the current level camera scroll
-- joystick camera helpers support horizontal, vertical, and both-axis scrolling
-- action scripts are used by the demo for idle, run, jump, hit, and attack state changes
 
 Use these docs for the current integration path:
 
 - [`docs/GAME_ENGINE_LAYER.md`](./docs/GAME_ENGINE_LAYER.md)
+- [`docs/sprite_groups.md`](./docs/sprite_groups.md)
+- [`docs/render_queue.md`](./docs/render_queue.md)
+- [`docs/camera.md`](./docs/camera.md)
+- [`docs/palette_fx.md`](./docs/palette_fx.md)
+- [`docs/particles.md`](./docs/particles.md)
+- [`docs/depthfx.md`](./docs/depthfx.md)
+- [`docs/performance_rules.md`](./docs/performance_rules.md)
 - [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
 - [`docs/DEPENDENCIES.md`](./docs/DEPENDENCIES.md)
 - [`docs/GDB_GUIDE.md`](./docs/GDB_GUIDE.md)
@@ -96,7 +167,7 @@ Build the MVS program ROM and launch in MAME (default BIOS: EUROPE MVS):
 make test
 
 # Windows
-nmake /f MakefileWin32.mak test
+make -f MakefileWin32.mak test
 ```
 
 Test with a specific BIOS:
@@ -108,23 +179,159 @@ make test BIOS=unibios40
 make test BIOS=japan
 
 # Windows
-nmake /f MakefileWin32.mak test BIOS=euro
+make -f MakefileWin32.mak test BIOS=euro
 ```
 
 List all supported BIOS names:
 
 ```bash
 make bios-list
-# Windows: nmake /f MakefileWin32.mak bios-list
+# Windows: make -f MakefileWin32.mak bios-list
 ```
 
 Build AES cartridge ROM instead:
 
 ```bash
 make test-aes
-# Windows: nmake /f MakefileWin32.mak test-aes
+# Windows: make -f MakefileWin32.mak test-aes
 ```
 
+
+## Multi-Game Build System
+
+The SDK supports multiple independent games under a single repository.  Each game
+lives in its own subdirectory under `games/` and produces its own ROM when built
+with `GAME=<name>`.
+
+### Included games
+
+| Folder | Game ID | ROM prefix | Engine | Description |
+|--------|---------|------------|--------|-------------|
+| `games/demo` | 777 | `777-*` | C | The 25-chapter engine reel — every subsystem, in order |
+| `games/demo_plus` | 778 | `778-*` | C++ | The same engine through the C++ API (`USE_2D_PLUS=1`) |
+| `games/skylance` | 779 | `779-*` | C | Sky Lance — a complete vertical shooter |
+| `games/helloworld` | 772 | `772-*` | — | Minimal FIX-text and one sample; the tutorial target |
+| `games/tutorial` | 555 | `555-*` | C | The minimal engine loop, nothing else |
+| `games/neogeogame` | 775 | `775-*` | C | Blank template for new projects |
+
+Every game carries its own `game.cfg`, so all six build the same way:
+
+```bash
+make GAME=<name> GAME_CFG_FILE=games/<name>/game.cfg all
+make GAME=<name> GAME_CFG_FILE=games/<name>/game.cfg test
+```
+
+What each one demonstrates: [`docs/GAMES.md`](./docs/GAMES.md).
+
+### Building a specific game
+
+`demo` is the default when `GAME` is not specified.
+
+```bash
+# Linux / WSL
+make game                          # build demo (default)
+make GAME=helloworld game          # build helloworld
+make GAME=tutorial p1              # build + package tutorial ROM
+make GAME=neogeogame p1            # build + package neogeogame ROM
+
+# Windows
+make -f MakefileWin32.mak game
+make -f MakefileWin32.mak GAME=helloworld game
+make -f MakefileWin32.mak GAME=tutorial p1
+make -f MakefileWin32.mak GAME=neogeogame p1
+```
+
+Full build (art + sound + program ROM):
+
+```bash
+# Linux / WSL
+make GAME=helloworld all
+
+# Windows
+make -f MakefileWin32.mak GAME=helloworld all
+```
+
+### Game folder layout
+
+Each game under `games/<name>/` contains:
+
+```text
+games/<name>/
+  game.mk          — GAME_NAME, GAME_ID, GAME_SCENES (required)
+  main.c           — ng_screen_table, ng_screen_count stubs
+  user.c           — all BIOS dispatch and interrupt handlers
+  eyecatcher.c     — eye-catcher animation
+  neogeo_mvs.c     — MVS ROM header with game ID
+  neogeo_aes.c     — AES ROM header with game ID
+  neogeo.ld        — linker script listing this game's object files
+  artbox/
+    in/            — sprite and background source images
+    infix/         — FIX tile source images
+  sound/
+    fm/            — FM patch and music MML files
+    mml/           — SSG/MML music files
+    ssg/           — SSG configuration and data
+    samples/
+      in_wav_a/    — ADPCM-A source WAV files
+      in_wav_b/    — ADPCM-B source WAV files
+  scenes/          — scene source files (listed in GAME_SCENES)
+```
+
+### `game.mk` format
+
+Every game must provide a `game.mk`:
+
+```makefile
+GAME_NAME  = My Game Title
+GAME_ID    = 775
+GAME_SCENES = scene_main scene_title scene_game
+```
+
+`GAME_SCENES` is an explicit space-separated list of scene base names (no `.c`
+extension, no path prefix). Files that are `#include`-d from other scene files
+should be omitted to avoid multiple-definition errors.
+
+If the game has no scene files (e.g. `helloworld`), omit `GAME_SCENES` entirely.
+
+### Art and sound pipelines
+
+The art and sound pipelines read per-game asset folders automatically:
+
+```bash
+# Linux / WSL
+make GAME=helloworld art          # runs artbox on games/helloworld/artbox/
+make GAME=tutorial sound          # compiles games/tutorial/sound/{fm,mml,ssg,samples}
+
+# Windows
+make -f MakefileWin32.mak GAME=helloworld art
+make -f MakefileWin32.mak GAME=tutorial sound
+```
+
+On Linux, `artbox/makeartbox.sh` uses temporary symlinks (`ln -sfn`) to redirect
+the pipeline to the per-game asset folder.  On Windows, `artbox/makeartbox.bat`
+uses directory junctions (`mklink /J`), which do not require administrator
+privileges on Windows Vista and later.
+
+### Interactive launcher
+
+Both launcher scripts include a game-selection step:
+
+```bash
+# Linux / WSL
+./neogeosdk.sh          # press g to change the active game
+
+# Windows
+neogeosdk.bat           # press g to change the active game
+```
+
+### Adding a new game
+
+1. Copy `games/neogeogame/` to `games/<yourname>/`.
+2. Edit `games/<yourname>/game.mk` — set `GAME_NAME`, `GAME_ID`, and `GAME_SCENES`.
+3. Edit `games/<yourname>/neogeo_mvs.c` and `neogeo_aes.c` — update the `id` field to your unique game ID (hex).
+4. Edit `games/<yourname>/neogeo.ld` — add any new scene object file patterns.
+5. Implement your scenes in `games/<yourname>/scenes/`.
+6. Build: `make GAME=<yourname> p1`
 
 ## Running the ROM in MAME
 
@@ -138,7 +345,7 @@ The cartridge is loaded through the Neo Geo software list as `neogeosdk`.
 **Correct command:**
 
 ```
-mame neogeo -cart1 neogeosdk -rompath roms -hashpath hash_eagle;hash -bios unibios22
+mame neogeo -cart1 demo -rompath roms/demo;roms -hashpath hash_eagle/demo;hash_eagle;hash -bios unibios22
 ```
 
 **Windows quick-start:**
@@ -157,11 +364,11 @@ run_neogeosdk.bat
 
 ```
 make dist                          # Linux
-nmake -f MakefileWin32.mak dist   # Windows
+make -f MakefileWin32.mak dist    # Windows
 ```
 
-This builds the P1 ROM, regenerates `hash_eagle/neogeo.xml`, creates `dist/roms/neogeosdk.zip`
-(ROM files at archive root), copies `hash_eagle/neogeo.xml` to `dist/hash_eagle/`, and writes
+This builds the ROM set, regenerates `hash_eagle/<game>/neogeo.xml`, creates `dist/roms/<game>.zip`
+(ROM files at archive root), copies `hash_eagle/<game>/neogeo.xml` to `dist/hash_eagle/<game>/`, and writes
 `dist/run_neogeosdk.bat` and `dist/run_neogeosdk_debug.bat`.
 
 Distribute `dist/` as-is. End users place their `neogeo.zip` BIOS inside `dist/roms/` and
@@ -169,9 +376,9 @@ run `dist/run_neogeosdk.bat`.
 
 ## Release Assets
 
-The `v1.2.1` release publishes these attached assets:
+The `v1.7.0` release publishes these attached assets:
 
-- `neogeosdkv1.2.1.tar.gz`  
+- `neogeosdkv1.7.0.tar.gz`  
   source snapshot for the SDK
 - `neogeosdk.zip`  
   generated demo ROM set for MAME (`777-p1.p1`, `777-m1.m1`, `777-s1.s1`, `777-v1.v1`, `777-c1.c1`, `777-c2.c2`)
@@ -182,15 +389,45 @@ release updates are published.
 
 Current release page:
 
-- `https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.2.1`
+- `https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.7.0`
 
 ## Documentation
+
+**Start here**
+
+| Document | For |
+|---|---|
+| [`docs/INTRODUCTION.md`](./docs/INTRODUCTION.md) | What the SDK is, what the machine is, and the reading order |
+| [`docs/HELLO_WORLD.md`](./docs/HELLO_WORLD.md) | Your first ROM, in ten minutes |
+| [`docs/PROGRAMMERS_MANUAL.md`](./docs/PROGRAMMERS_MANUAL.md) | The working manual — build, layout, engine tick, assets, frame budget |
+| [`NEOGEOSDK_v1.7.0.md`](./NEOGEOSDK_v1.7.0.md) | The single-file release overview |
+| [`docs/neogeosdk_v1.7.0_manual.pdf`](./docs/neogeosdk_v1.7.0_manual.pdf) | The printable manual and API reference |
+
+**Reference**
+
+| Document | Covers |
+|---|---|
+| [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md) | The bare-metal 68000 helpers in `sdk/neogeo.h` |
+| [`docs/API_2D_ENGINE_C.md`](./docs/API_2D_ENGINE_C.md) | Every call in the C 2D engine |
+| [`docs/API_2D_ENGINE_CPP.md`](./docs/API_2D_ENGINE_CPP.md) | The C++14 build of the same engine |
+| [`docs/SOUND_DRIVER.md`](./docs/SOUND_DRIVER.md) | The Z80 driver, the YM2610, and the audio pipelines |
+| [`docs/ARTBOX_PIPELINE.md`](./docs/ARTBOX_PIPELINE.md) | PNG to C-ROM, the quantiser, and Artbox Studio |
+| [`docs/GAMES.md`](./docs/GAMES.md) | What each of the six shipped games demonstrates |
+| [`docs/DEMO_CHAPTERS.md`](./docs/DEMO_CHAPTERS.md) | The 25 demo chapters |
+| [`docs/TOOLS.md`](./docs/TOOLS.md) | Every helper script — art, sound, verification, launchers, GIMP plug-ins |
 
 Primary repository docs:
 
 - [`README.md`](./README.md)
-- [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
+- [`docs/ADDING_A_GAME.md`](./docs/ADDING_A_GAME.md)
 - [`docs/GAME_ENGINE_LAYER.md`](./docs/GAME_ENGINE_LAYER.md)
+- [`docs/sprite_groups.md`](./docs/sprite_groups.md)
+- [`docs/render_queue.md`](./docs/render_queue.md)
+- [`docs/camera.md`](./docs/camera.md)
+- [`docs/palette_fx.md`](./docs/palette_fx.md)
+- [`docs/particles.md`](./docs/particles.md)
+- [`docs/depthfx.md`](./docs/depthfx.md)
+- [`docs/performance_rules.md`](./docs/performance_rules.md)
 - [`docs/ARTBOX_PIPELINE.md`](./docs/ARTBOX_PIPELINE.md)
 - [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
 - [`docs/DEPENDENCIES.md`](./docs/DEPENDENCIES.md)
@@ -260,31 +497,35 @@ back to the bundled `sound/tools/wav_to_raw_pcm.py` converter. No separate Pytho
 
 Linux 68000 compiler:
 
-- the default Linux `Makefile` expects an `x-tools/` directory under `SDKHOME`
-- the current release page includes `x-tools.tar`
-- after extraction, the compiler should exist at:
-  - `$(SDKHOME)/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gcc`
+- default search order in `Makefile`:
+  1. `$(SDKHOME)/x-tools-v2`
+  2. `$(SDKHOME)/x-tools` (legacy fallback)
+- after extraction, compiler path is:
+  - `$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-gcc`
 
 Windows 68000 compiler:
 
-- the Win32 makefile expects a Windows `m68k-elf` GCC toolchain
-- the tested default is a SysGCC-style layout under:
-  - `C:\SysGCC\m68k-elf`
-- if your toolchain is installed elsewhere, set `M68K_ELF_ROOT` when invoking `make`
+- default search order in `MakefileWin32.mak`:
+  1. `$(SDKHOME)\x-tools-v2-win\m68k-unknown-elf\bin`
+  2. `$(SDKHOME)\x-tools-v2-win\m68k-elf\bin`
+  3. `M68K_ELF_ROOT` fallback (default `C:\SysGCC\m68k-elf`)
+- if your fallback toolchain is installed elsewhere, set `M68K_ELF_ROOT` when invoking `make`
 - you do not need to clone the SDK into a fixed drive or fixed folder name beyond
   keeping `neogeosdk/` under the chosen `SDKHOME` parent
 
 ## SDKHOME Layout
 
-Both makefiles expect `SDKHOME` to point to the directory that contains both
-`neogeosdk/` and `x-tools/`.
+Both makefiles expect `SDKHOME` to point to the directory that contains `neogeosdk/`
+and toolchain folders.
 
 Expected layout:
 
 ```text
 SDKHOME/
   neogeosdk/
-  x-tools/
+  x-tools-v2/         # Linux default
+  x-tools/            # Linux legacy fallback
+  x-tools-v2-win/     # Windows default
 ```
 
 If `SDKHOME` is not set, both makefiles default to the parent directory of the
@@ -323,22 +564,23 @@ Recommended layout:
 
 ```text
 $HOME/neogeo/neogeosdk   -> this repository
-$HOME/neogeo/x-tools     -> m68k Linux cross compiler bundle
+$HOME/neogeo/x-tools-v2  -> m68k Linux cross compiler bundle (default)
+$HOME/neogeo/x-tools     -> legacy fallback bundle
 ```
 
-Install the Linux 68000 toolchain from the release asset so that `x-tools/` lands
+Install the Linux 68000 toolchain from the release asset so that `x-tools-v2/` lands
 next to the repository:
 
 ```bash
 cd $HOME/neogeo
-curl -L -o x-tools.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.2.0/x-tools.tar
-tar -xf x-tools.tar
+curl -L -o x-tools-v2.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.0/x-tools-v2.tar
+tar -xf x-tools-v2.tar
 ```
 
 After extraction, verify:
 
 ```bash
-$HOME/neogeo/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gcc --version
+$HOME/neogeo/x-tools-v2/m68k-unknown-elf/bin/m68k-unknown-elf-gcc --version
 ```
 
 Set `SDKHOME` to the parent of both:
@@ -360,7 +602,7 @@ Use the Linux `Makefile`, not `MakefileWin32.mak`.
 
 WSL should use the Linux toolchain layout:
 
-- `$(SDKHOME)/x-tools/...` for the `m68k-unknown-elf` binaries
+- `$(SDKHOME)/x-tools-v2/...` (or legacy `x-tools/...`) for `m68k-unknown-elf` binaries
 - Linux `python3`
 - Linux `wla-z80` / `wlalink`
 
@@ -377,8 +619,8 @@ python3 -m pip install --user pypng
 mkdir -p $HOME/neogeo
 cd $HOME/neogeo
 git clone https://github.com/eaglesoftware777/neogeosdk.git
-curl -L -o x-tools.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.2.0/x-tools.tar
-tar -xf x-tools.tar
+curl -L -o x-tools-v2.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.0/x-tools-v2.tar
+tar -xf x-tools-v2.tar
 
 export SDKHOME=$HOME/neogeo
 cd $SDKHOME/neogeosdk
@@ -393,16 +635,237 @@ cd /mnt/c/neogeo/neogeosdk
 make sound
 ```
 
+### WSL2 + Ubuntu 24.04 + PulseAudio - Working Audio Guide
+
+#### The Problem
+
+WSLg ships PulseAudio `17.0`, but Ubuntu 24.04 only has `16.1` in its
+repositories. The version mismatch can cause connections to hang or fail with
+protocol errors. This can affect both WSL terminal sessions and SSH sessions.
+
+#### Part 1 - Fix WSL Terminal Audio Through WSLg
+
+Disable the conflicting systemd PulseAudio units:
+
+```bash
+systemctl --user disable --now pulseaudio.service pulseaudio.socket
+systemctl --user mask pulseaudio.service pulseaudio.socket
+```
+
+Clean broken symlinks:
+
+```bash
+rm -rf /run/user/1000/pulse
+mkdir -p /run/user/1000/pulse
+```
+
+Test WSLg directly:
+
+```bash
+PULSE_SERVER=unix:/mnt/wslg/PulseServer pactl info
+```
+
+The output should report `Server Version: 17.0` and `Default Sink: RDPSink`.
+
+#### Part 2 - Build PulseAudio 17.0 From Source
+
+Ubuntu repositories only have PulseAudio `16.1`; build `17.0` to match WSLg.
+
+Install build dependencies:
+
+```bash
+sudo apt install -y build-essential meson ninja-build git \
+    libsndfile1-dev libspeexdsp-dev libtdb-dev \
+    libdbus-1-dev libcap-dev libasyncns-dev \
+    libglib2.0-dev libavahi-client-dev \
+    libssl-dev check libsoxr-dev \
+    libfftw3-dev libwebrtc-audio-processing-dev
+```
+
+Clone and build:
+
+```bash
+mkdir -p ~/pulseaudio && cd ~/pulseaudio
+git clone --depth=1 --branch v17.0 \
+    https://gitlab.freedesktop.org/pulseaudio/pulseaudio.git .
+
+meson setup build --prefix=/usr/local \
+    -Ddaemon=true \
+    -Dclient=true \
+    -Dtests=false \
+    -Ddoxygen=false \
+    -Dbluez5=disabled \
+    -Djack=disabled \
+    -Dlirc=disabled \
+    -Dgcov=false
+
+cd build
+ninja
+sudo ninja install
+```
+
+Fix library linking:
+
+```bash
+echo '/usr/local/lib' | sudo tee /etc/ld.so.conf.d/pulseaudio-local.conf
+sudo ldconfig /usr/local/lib
+```
+
+Verify:
+
+```bash
+/usr/local/bin/pactl --version
+# Should show: pactl 17.0
+
+ldd /usr/local/bin/pactl | grep pulse
+# Should show: /usr/local/lib/... instead of /usr/lib/...
+
+PULSE_SERVER=unix:/mnt/wslg/PulseServer /usr/local/bin/pactl info
+# Should connect and show Server Version: 17.0
+```
+
+#### Part 3 - Expose Audio Over TCP for SSH Sessions
+
+SSH sessions cannot access WSLg's Unix socket directly, so expose it over TCP.
+Use this only on a trusted local WSL instance.
+
+Load the TCP module into WSLg:
+
+```bash
+PULSE_SERVER=unix:/mnt/wslg/PulseServer /usr/local/bin/pactl \
+    load-module module-native-protocol-tcp auth-anonymous=1 port=4713
+```
+
+Test from an SSH session:
+
+```bash
+PULSE_SERVER=tcp:127.0.0.1:4713 /usr/local/bin/pactl info
+# Should connect and show RDPSink
+```
+
+Fix the ALSA-to-PulseAudio bridge:
+
+```bash
+cat > ~/.asoundrc << 'EOF'
+pcm.!default {
+    type pulse
+    server "tcp:127.0.0.1:4713"
+}
+ctl.!default {
+    type pulse
+    server "tcp:127.0.0.1:4713"
+}
+EOF
+```
+
+Make the environment permanent:
+
+```bash
+cat >> ~/.bashrc << 'EOF'
+export PULSE_SERVER=tcp:127.0.0.1:4713
+export SDL_AUDIODRIVER=pulse
+export PATH=/usr/local/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+EOF
+
+cat >> ~/.profile << 'EOF'
+export PULSE_SERVER=tcp:127.0.0.1:4713
+export SDL_AUDIODRIVER=pulse
+export PATH=/usr/local/bin:$PATH
+export LD_LIBRARY_PATH=/usr/local/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH
+EOF
+
+source ~/.bashrc
+```
+
+#### Part 4 - Auto-load the TCP Module on WSL Start
+
+First get your username:
+
+```bash
+whoami
+```
+
+Then edit `/etc/wsl.conf`. Replace `YOUR_USERNAME` with the output from
+`whoami`:
+
+```bash
+sudo tee /etc/wsl.conf << 'EOF'
+[boot]
+systemd=true
+command = su - YOUR_USERNAME -c "PULSE_SERVER=unix:/mnt/wslg/PulseServer /usr/local/bin/pactl load-module module-native-protocol-tcp auth-anonymous=1 port=4713"
+
+[user]
+default=YOUR_USERNAME
+
+[interop]
+enabled=true
+appendWindowsPath=true
+EOF
+```
+
+Or fill it in automatically:
+
+```bash
+MYUSER=$(whoami)
+sudo tee /etc/wsl.conf << EOF
+[boot]
+systemd=true
+command = su - $MYUSER -c "PULSE_SERVER=unix:/mnt/wslg/PulseServer /usr/local/bin/pactl load-module module-native-protocol-tcp auth-anonymous=1 port=4713"
+
+[user]
+default=$MYUSER
+
+[interop]
+enabled=true
+appendWindowsPath=true
+EOF
+```
+
+Restart WSL from Windows PowerShell:
+
+```powershell
+wsl --shutdown
+```
+
+Reopen WSL and SSH. Audio should work automatically.
+
+#### Quick Verification Checklist
+
+```bash
+# 1. WSLg socket exists
+ls /mnt/wslg/PulseServer
+
+# 2. TCP port is listening
+ss -tlnp | grep 4713
+
+# 3. pactl works over TCP
+PULSE_SERVER=tcp:127.0.0.1:4713 /usr/local/bin/pactl info
+
+# 4. Play a test sound
+paplay /usr/share/sounds/freedesktop/stereo/bell.oga
+```
+
+Key facts:
+
+- WSLg runs PulseAudio `17.0`, while Ubuntu 24.04 ships `16.1`.
+- The WSLg Unix socket at `/mnt/wslg/PulseServer` works from the WSL terminal,
+  but not from SSH sessions.
+- The TCP module bridges SSH sessions to WSLg audio.
+- Building PulseAudio `17.0` from source keeps the client and WSLg server
+  protocol versions aligned on Ubuntu 24.04.
+
 ## Installation on Windows
 
 Recommended layout:
 
 ```text
 <sdk root>\neogeosdk
-<sdk root>\x-tools
+<sdk root>\x-tools-v2-win
 ```
 
-The Win32 makefile accepts a configurable `M68K_ELF_ROOT`. The tested default is:
+The Win32 makefile auto-detects `x-tools-v2-win` first. If not present, it accepts
+a configurable `M68K_ELF_ROOT` fallback. Example fallback layout:
 
 - `C:\SysGCC\m68k-elf\bin\m68k-elf-gcc.exe`
 - `C:\SysGCC\m68k-elf\bin\m68k-elf-ld.exe`
@@ -425,7 +888,20 @@ Also make sure these are callable from `PATH`:
 Install the Python packages once:
 
 ```bat
+py -0p
+py -m pip --version
+py -m pip install --upgrade pip
 py -m pip install numpy pillow pypng
+```
+
+Use `py -m pip` (not `pip`/`pip3`) so packages are installed into the same
+interpreter used by `makeartbox.bat`.
+
+Verify with:
+
+```bat
+cd artbox
+py -c "import sys; print(sys.executable); import PIL, numpy, png, img2neo; print('OK')"
 ```
 
 Install Python itself from python.org or the Microsoft Store so that the `py`
@@ -512,6 +988,8 @@ make p1              : build only the 68000 game ROM
 make sound           : samples + vrom + fmpatches + fm + mml + ssgconfig + ssg + m1rom
 make sound-all       : alias for make sound
 make art             : rebuild sprite C ROMs from artbox
+make art-crt         : same as 'art' but routes screens through the
+                       CRT-optimised pipeline (img2neo_crt.py)
 make sfix            : rebuild S1 FIX ROM
 make srom            : alias for make sfix
 make vrom            : rebuild V ROM from ADPCM assets
@@ -530,13 +1008,18 @@ make sound-clean     : remove sound build outputs
 make art-clean       : remove artbox-generated outputs
 make clean-all       : full clean
 make test            : run the generated ROM set in MAME
+make unit-tests      : host-side sprite renderer tests (no emulator, no cross
+                       toolchain).  Deliberately not a prerequisite of
+                       `make test`: launching a ROM must not depend on a host
+                       C++ compiler being installed.
+make check           : unit tests plus a complete ROM set for this GAME
 make debug           : run MAME with debugger
 make debug-build     : build P1 with debug symbols and linker map
 make debug-artifacts : write size, symbols, readelf, map, and disassembly files
 make gdb-trace       : generate dump/gdb_trace.txt from a batch GDB script
 make gdb             : open GDB on out/game
 make gdb-remote      : open GDB and connect to GDB_REMOTE=host:port
-make dist            : build p1 + package dist/roms/neogeosdk.zip release layout
+make dist            : build p1 + package dist/roms/<game>.zip release layout
 make test            : run in MAME (MVS, sp-s2.sp1 BIOS by default)
 make test-aes        : run in MAME (AES, unibios22 BIOS)
 make test BIOS=unibios22 : run with specific BIOS
@@ -544,15 +1027,16 @@ make test BIOS=unibios22 : run with specific BIOS
 
 Important recent build behavior:
 
-- `make sound`, `make vrom`, and `make m1rom` sync generated outputs into `roms/neogeosdk/`
-- all ROM files use the `777-` prefix: `777-m1.m1`, `777-v1.v1`, `777-p1.p1`, `777-s1.s1`, `777-c1.c1`, `777-c2.c2`
+- `make sound`, `make vrom`, and `make m1rom` sync generated outputs into `roms/<game>/`
+- ROM files are written to `roms/<game>/` — e.g. `roms/demo/777-p1.p1`, `roms/helloworld/772-p1.p1`
 - `make samples` uses the bundled Python WAV converter by default on Linux and Windows
 - set `SOX=/path/to/sox` only when you explicitly want the SoX conversion path
 - Windows `make fm`, `make mml`, and `make ssg` expand source file lists correctly
-- Windows `make sfix` produces `777-s1.s1` in the correct 128 KB FIX-ROM format
+- Windows `make sfix` produces `<GAME_ID>-s1.s1` in the correct 128 KB FIX-ROM format
 - P1 generation crops to the full 512 KB program ROM window (0x080000) before byte swap and padding; this is the required ROM format for MAME and hardware
-- `hash_eagle/neogeo.xml` is auto-regenerated on every `make p1` build with correct CRC/SHA1 and `loadflag="load16_word_swap"` for the P-ROM
-- `make dist` packages everything into `dist/roms/neogeosdk.zip` with ROM files at archive root (no subfolder)
+- `hash_eagle/<game>/neogeo.xml` is auto-regenerated on every `make p1` build with correct CRC/SHA1 and `loadflag="load16_word_swap"` for the P-ROM
+- `make dist` packages everything into `dist/roms/<game>.zip` with ROM files at archive root (no subfolder)
+- `make m1rom-asm` is the authoritative M1 build path (`USE_Z80C=0`); the experimental C path (`make m1rom-c`) is for comparison only
 
 ## Debug and Trace Builds
 
@@ -565,7 +1049,8 @@ make debug-build
 make debug-artifacts
 make gdb-trace
 make gdb
-make gdb-remote GDB_REMOTE=localhost:1234
+make gdb-server                         # terminal 1
+make gdb-remote GDB_REMOTE=127.0.0.1:23946  # terminal 2
 ```
 
 Windows:
@@ -730,13 +1215,13 @@ Key sound-side paths:
 
 Current ADPCM-B theme mapping:
 
-- `playSFXB(0)` / `SOUND_BED_TITLE_THEME`
+- `playSFXB(0)` / `SOUND_TRACK_A`
   - title theme
-- `playSFXB(1)` / `SOUND_BED_STAGE_ONE`
+- `playSFXB(1)` / `SOUND_TRACK_B`
   - stage loop 1
-- `playSFXB(2)` / `SOUND_BED_STAGE_TWO`
+- `playSFXB(2)` / `SOUND_TRACK_C`
   - stage loop 2
-- `playSFXB(3)` / `SOUND_BED_ENDING_THEME`
+- `playSFXB(3)` / `SOUND_TRACK_D`
   - ending / results theme
 
 68k-side sound API highlights:
@@ -760,7 +1245,7 @@ Current live 68000-side flow:
 - `COIN_SOUND()` uses an ADPCM-A coin chime
 - `PLAYER_START()` uses an ADPCM-A start cue
 - `soundPlayTitleMusic()` resets the scene, plays the title gong, then starts the ADPCM-B title theme
-- `soundPlayGameLoop()` resets the scene and selects an ADPCM-B stage or ending bed directly
+- `soundPlayGameLoop()` resets the scene and selects an ADPCM-B stage or ending TRACK directly
 - `playMusic()` remains available for explicit MML/SSG playback, but the shipped title/game helpers now prefer direct ADPCM-B playback for cleaner live behavior
 
 Detailed sound usage:
@@ -788,25 +1273,27 @@ Highlights from the recent commit line:
 - 2026-04-26  
   artbox pipeline migrated to Python 3 and installation docs updated
 - 2026-05-04  
-  custom Neo Geo sound system added:
-  - Z80 YM2610 driver
-  - MML / FM / SSG build chain
-  - cross-platform Python ADPCM encoder
-  - Windows sound build parity
+  custom Neo Geo sound system added: Z80 YM2610 driver, MML/FM/SSG build chain, cross-platform Python ADPCM encoder, Windows sound build parity
 - 2026-05-05  
   experimental C migration of the Z80 sound driver and `z80c-special` compiler work
 - 2026-05-06  
   higher-level sound workflow, named sound IDs, improved multi-layer demo mix, and compare flow for ASM vs C M1 builds
-- 2026-05-07
+- 2026-05-07  
   softfloat removal, SDK API docs refresh, Windows sound-build parity fixes, and corrected Win32 FIX-ROM generation
-- 2026-05-08
+- 2026-05-08  
   2D game engine layer sources added under `sdk/2d_engine/ng_*`, with linker-space reservation for engine state
-- 2026-05-09
-  Python became the default sample-conversion path, and the live title/game flow was remapped around the current ADPCM-B theme set
-- 2026-05-10
-  2D engine camera scroll, level/NPC/physics/fix modules, artbox asset categories, joystick-driven main-character actions, opponent hazards, forest-alley final scene work; demo scene rendering fixes (duel backdrop, portrait tracking, phase 1 background); P1 ROM enforced to 128 KB; FIX palette white-on-black; GDB guide, dependency docs, and bankswitch stub API added
+- 2026-05-09  
+  Python became the default sample-conversion path; live title/game flow remapped around the ADPCM-B theme set
+- 2026-05-10  
+  2D engine camera scroll, level/NPC/physics/fix modules, artbox asset categories, joystick-driven main-character actions; GDB guide, dependency docs, and bankswitch stub API added
+- 2026-05-13 – 2026-05-15  
+  per-game ROM folders (`roms/<game>/`), full `GAME_ID` propagation, multi-game build path refactor, Windows build path bugs fixed, 15 SDK bugs fixed
+- 2026-05-16  
+  FIX layer BRDFIX bug fixed in `clearFix()` — game S ROM now always restored after clear; demo rewritten as 13-scene cinematic showcase; particle slot and budget reporting corrected
+- 2026-05-17  
+  Z80 communication race condition in `soundCommand` fixed — trailing `isZ80Ready()` removed to prevent 68k deadlock; sound driver (`driver.asm`) restored to last known-good working version
 
-See [`CHANGELOG.md`](./CHANGELOG.md) for release-level notes.
+See [`CHANGELOG.md`](./CHANGELOG.md) for full release-level notes.
 
 ## Repository Overview
 
@@ -816,7 +1303,7 @@ docs/             — game-engine and build integration docs
 main.c            — demo/game presentation flow on 68000 side
 user.c            — Neo Geo BIOS hook handlers and startup flow
 sdk/              — headers, linker scripts, support library
-  sound_ids.h         — named sound IDs for music, SFX, beds, FM, and SSG tracks
+  sound_ids.h         — named sound IDs for music, SFX, TRACKs, FM, and SSG tracks
   ng_*.h/.c           — 2D game engine layer modules
   ng_bankswitch.h/.c  — P-ROM bank switching stub (not used in demo)
 artbox/           — graphics conversion pipeline
@@ -829,7 +1316,7 @@ sound/            — sound driver, tracks, samples, tools
   ssg/            — standalone SSG tracks and presets
   samples/        — raw and converted sample assets
   tools/          — sound build utilities
-roms/neogeosdk/   — synced ROM outputs for MAME (777-p1.p1 … 777-c2.c2)
+roms/<game>/      — per-game ROM outputs for MAME (e.g. roms/demo/777-p1.p1 … 777-c2.c2)
 out/              — intermediate and generated build artifacts
 win/              — Windows-side helper binaries used by the build
 z80c-special/     — experimental Z80 C compiler used by the C-driver path
@@ -921,8 +1408,8 @@ Purpose:        NeoGeoSDK homebrew validation
 Recommended first capacity:
 ```text
 P1  = 1 MB
-C1  = 2 MB
-C2  = 2 MB
+C1  = 8 MB
+C2  = 8 MB
 S1  = 128 KB
 M1  = 128 KB
 V1  = 2 MB
@@ -1125,12 +1612,12 @@ P1 region:
 
 C1 region:
   width: according to CHA bus wiring
-  size: 2 MB minimum
+  size: up to 8 MB in current SDK build flow
   device: parallel NOR flash
 
 C2 region:
   width: according to CHA bus wiring
-  size: 2 MB minimum
+  size: up to 8 MB in current SDK build flow
   device: parallel NOR flash
 
 S1 region:
@@ -1164,8 +1651,8 @@ V1 region:
 The SDK output must be padded to the exact hardware region size using `0xFF`.
 ```text
 P1  -> 0x100000
-C1  -> 0x200000
-C2  -> 0x200000
+C1  -> 0x800000
+C2  -> 0x800000
 S1  -> 0x020000
 M1  -> 0x020000
 V1  -> 0x200000
@@ -1174,8 +1661,8 @@ Example region table:
 ```text
 REGION  FILE EXTENSION  SIZE       FUNCTION
 P1      .p1             1 MB       main program
-C1      .c1             2 MB       sprite data
-C2      .c2             2 MB       sprite data
+C1      .c1             8 MB       sprite data
+C2      .c2             8 MB       sprite data
 S1      .s1             128 KB     fix/text data
 M1      .m1             128 KB     sound program
 V1      .v1             2 MB       sample data

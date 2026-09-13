@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 from pathlib import Path
+from mml_inputs import ordered_inputs
 
 NOTE_BASE = {"c": 0, "d": 2, "e": 4, "f": 5, "g": 7, "a": 9, "b": 11}
 
@@ -54,6 +55,43 @@ def parse_mml(text):
             i += 1
             preset, i = read_number(s, i, preset)
             events.append((0xF2, preset & 0x0F))
+            continue
+
+        # Envelope shape (YM2149 register $0D).  Writing this register
+        # always retriggers the envelope generator — so emitting `K n`
+        # at the start of every "syllable" gives a fresh attack/decay
+        # shape per syllable, which is what real arcade voice synth
+        # does on AY/SSG.  The directive ALSO forces channel A into
+        # envelope-amplitude mode (M=1) on the driver side.
+        #
+        # CRITICAL: this directive used to be `E n` but `e` collides
+        # with the musical note E.  All melodic SSG tracks that
+        # contained the note "E" were being compiled as envelope-shape
+        # writes instead of E notes — that's the "empty click no note"
+        # SSG bug.  `K` is reserved (not a note letter A-G) so it is
+        # safe alongside notes.
+        if c == 'k':
+            i += 1
+            n, i = read_number(s, i, 0)
+            events.append((0xF7, n & 0x0F))
+            continue
+
+        # Envelope period (low byte of $0B/$0C).  Smaller value = faster
+        # envelope sweep.  Useful for setting syllable-rate amplitude
+        # decay.
+        if c == 'q':
+            i += 1
+            n, i = read_number(s, i, 0)
+            events.append((0xF8, n & 0xFF))
+            continue
+
+        # Channel A fixed-amplitude mode reset (turn envelope off).
+        # `Y0` returns to manual volume control; subsequent V directives
+        # set the fixed volume again.
+        if c == 'y':
+            i += 1
+            n, i = read_number(s, i, 0)
+            events.append((0xF9, n & 0x01))
             continue
 
         if c == 'o':
@@ -146,7 +184,7 @@ def main():
     ap.add_argument("-o", "--output", type=Path, default=Path("sound/driver/ssg_data.inc"))
     args = ap.parse_args()
 
-    inputs = args.inputs or sorted(Path("sound/ssg").glob("*.mml"))
+    inputs = ordered_inputs(args.inputs or Path("sound/ssg").glob("*.mml"))
 
     tracks = []
     for idx, path in enumerate(inputs):

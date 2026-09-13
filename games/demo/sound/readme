@@ -1,0 +1,58 @@
+SOUND SAMPLES (V ROM)
+=====================
+
+Raw and processed audio samples for the YM2610 ADPCM-A and ADPCM-B channels.
+
+DIRECTORY LAYOUT
+----------------
+  in_wav_a/        — Source WAV files for ADPCM-A (6-channel samples)
+  in_wav_a_voice/  — Source WAV files for generated ADPCM-A voice samples
+  in_wav_b/        — Source WAV files for ADPCM-B (delta-T streaming)
+  out_16el_a/      — Intermediate 16-bit LE WAVs for ADPCM-A
+  out_16el_a_voice/— Intermediate 16-bit LE WAVs for voice samples
+  out_16el_b/      — Intermediate 16-bit LE WAVs for ADPCM-B
+  out_a/           — Final .adpcma encoded files
+  out_a_voice/     — Final .adpcma voice files packed after regular SFX
+  out_b/           — Final .adpcmb encoded files
+  downloads/       — Downloaded raw sample sources
+
+ENCODING PIPELINE
+-----------------
+1. Place WAV source files in in_wav_a/ (ADPCM-A), in_wav_a_voice/
+   (ADPCM-A voice bank), or in_wav_b/ (ADPCM-B).
+2. Run: make samples
+   (runs the ADPCM-A, voice, and ADPCM-B conversion steps)
+3. Run: make vrom
+   (packs all .adpcm* files into 777-v1.v1, regenerates sample_table.inc,
+   and writes sdk/sound_voice_ids.h)
+
+SAMPLE INDICES
+--------------
+vrom.py generates sound/driver/sample_table.inc automatically.
+
+  ADPCM-A regular SFX: index 0-11 -> playSFX(n)
+  ADPCM-A voice bank:  generated SOUND_VOICE_* constants -> speakText(),
+                       playVoiceSample(), playVoiceWord(), playVoiceNumber()
+  ADPCM-B streams:     index 0-8 -> playSFXB(n)
+
+The SDK automatically switches ADPCM-A samples above 63 to the parameterized
+driver command, so generated voice IDs can be passed directly.
+
+Current ADPCM-B live roles:
+
+  0 = title theme
+  1 = stage loop 1
+  2 = stage loop 2
+  3 = ending / results theme
+
+ADPCM-A VOLUME
+--------------
+Per-channel TL register (port B, regs $08-$0D):
+  Bits 7:6 = pan (11 = both speakers)
+  Bits 5:0 = TL attenuation (0 = max volume, 63 = silent, 0.75 dB/step)
+Driver default: $C0 = pan both, TL=0 (maximum volume).
+
+AUTO-STOP
+---------
+The driver uses software timers to cut ADPCM-A playback and prevent noise tails.
+To adjust: edit the adpcma_stop_ticks table in sound/driver/driver.asm.

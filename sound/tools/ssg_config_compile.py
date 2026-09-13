@@ -114,9 +114,17 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("input", nargs="?", type=Path, default=Path("sound/ssg/config.ssg"))
     ap.add_argument("-o", "--output", type=Path, default=Path("sound/driver/ssg_config.inc"))
+    ap.add_argument(
+        "--empty",
+        action="store_true",
+        help="emit a zero-entry table without reading a source file, for a "
+             "game that defines no SSG presets of its own",
+    )
     args = ap.parse_args()
 
-    presets = parse_config(args.input)
+    # driver.asm includes this file unconditionally, so a game with no
+    # config.ssg still needs one on disk.
+    presets = [] if args.empty else parse_config(args.input)
     emit_inc(presets, args.output)
     print(f"Built {args.output} ({len(presets)} presets)")
 

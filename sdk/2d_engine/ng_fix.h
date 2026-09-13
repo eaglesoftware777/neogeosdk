@@ -3,6 +3,10 @@
 
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define NG_FIX_SAFE_X       1
 #define NG_FIX_SAFE_Y       2
 #define NG_FIX_SAFE_WIDTH   38
@@ -20,4 +24,8 @@ void NEOGEO_USER ng_fix_put_u32(uint8_t x, uint8_t y, uint32_t value, uint8_t pa
 /* Direct hardware blank using tile $00FF, matching the BIOS clear pattern. */
 void NEOGEO_USER ng_fix_blank_cell(uint8_t x, uint8_t y);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

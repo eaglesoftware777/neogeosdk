@@ -1,7 +1,11 @@
 @echo off
 if not defined PY set "PY=py"
-for %%f in (..\samples\out_16el_a\*.wav) do (
+if not defined GAME_SOUND set "GAME_SOUND=.."
+set "SAMPLES_BASE=%GAME_SOUND%\samples"
+if not exist "%SAMPLES_BASE%\out_a" mkdir "%SAMPLES_BASE%\out_a"
+for %%f in ("%SAMPLES_BASE%\out_16el_a\*.wav") do (
     echo %%f
-    echo ..\samples\out_a\%%~nf.adpcma
-    "%PY%" adpcm_enc.py a "%%f" "..\samples\out_a\%%~nf.adpcma"
+    echo %SAMPLES_BASE%\out_a\%%~nf.adpcma
+    "%PY%" adpcm_enc.py a "%%f" "%SAMPLES_BASE%\out_a\%%~nf.adpcma"
+    if errorlevel 1 exit /b 1
 )

@@ -106,6 +106,8 @@ static int prec(int k) {
     if (k == '&') return 5;
     if (k == '^') return 4;
     if (k == '|') return 3;
+    if (k == TOK_LAND) return 2;
+    if (k == TOK_LOR) return 1;
     return 0;
 }
 
@@ -156,6 +158,7 @@ static Type *parse_decl(Parser *p, Type *base, char **name) {
 }
 
 static Stmt *statement(Parser *p, Program *prog) {
+    if (peek(p, ';')) { take(p); return stmt_new(ST_BLOCK); }
     if (peek(p, TOK_ASM)) { Stmt *s = stmt_new(ST_ASM); s->text = take(p).text; return s; }
     if (peek(p, '{')) return block(p, prog);
     if (peek(p, TOK_WHILE)) {
@@ -184,6 +187,18 @@ static Stmt *statement(Parser *p, Program *prog) {
     if (peek(p, '=')) {
         take(p); Stmt *s = stmt_new(ST_ASSIGN); s->a = lhs; s->b = expr(p, prog); expect(p, ';'); return s;
     }
+    if (peek(p, TOK_INC)) {
+        take(p); Stmt *s = stmt_new(ST_ASSIGN); s->a = lhs;
+        s->b = expr_new(EX_BIN); s->b->op = '+'; s->b->left = lhs;
+        s->b->right = expr_new(EX_NUM); s->b->right->value = 1; s->b->type = type_char();
+        expect(p, ';'); return s;
+    }
+    if (peek(p, TOK_DEC)) {
+        take(p); Stmt *s = stmt_new(ST_ASSIGN); s->a = lhs;
+        s->b = expr_new(EX_BIN); s->b->op = '-'; s->b->left = lhs;
+        s->b->right = expr_new(EX_NUM); s->b->right->value = 1; s->b->type = type_char();
+        expect(p, ';'); return s;
+    }
     Stmt *s = stmt_new(ST_EXPR); s->a = lhs; expect(p, ';'); return s;
 }
 
@@ -206,7 +221,11 @@ static Item *function(Parser *p, Program *prog, Type *ret, char *name) {
         }
     }
     expect(p, ')');
-    it->body = block(p, prog)->body;
+    if (peek(p, ';')) {
+        take(p); it->body = NULL;
+    } else {
+        it->body = block(p, prog)->body;
+    }
     return it;
 }
 

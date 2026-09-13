@@ -1,0 +1,18 @@
+; 1_ssg_example_b - clean adventure answer
+
+T184
+P0
+V11
+O4
+L8
+
+D F A F  D A F D
+E G B- G  E B- G E
+F A > C < A  G B- > D < B-
+A G F E  D4 A4
+
+L16
+D E F A  G F E D  C D E G  F E D C
+L8 D F A > D  < A F D4
+
+~

@@ -1,5 +1,18 @@
 # GDB Guide for NeoGeoSDK
 
+> **v1.7.0 note**
+>
+> Debug builds work the same way for both engine variants.  With
+> `USE_2D_PLUS=1`, the engine source files are `.cpp` and you can step
+> through C++ methods directly; GDB will demangle the symbols for you.
+>
+> Set a breakpoint in a demo chapter with:
+>
+> ```
+> break demo_unified.c:chap_mini_game
+> break demo_plus_main.c:demo_plus_main_run
+> ```
+
 This guide covers how to use the cross-GDB (`m68k-unknown-elf-gdb` on Linux, `m68k-elf-gdb.exe` on Windows) with NeoGeoSDK builds.
 
 ---
@@ -8,10 +21,11 @@ This guide covers how to use the cross-GDB (`m68k-unknown-elf-gdb` on Linux, `m6
 
 The NeoGeoSDK makefile produces a standard ELF object (`out/game`) from the 68000 source.  When built with `DEBUG=1`, it carries full DWARF-2 debug information including source line numbers, function names, and variable locations.
 
-GDB can:
+The debugging tools can:
 
 - read symbols from `out/game` without a connected target
-- connect to MAME's built-in GDB stub and step live 68000 code
+- connect to MAME's GDB debugger module and step live 68000 code
+- inspect, break, and trace both the 68000 and Z80 with MAME's debugger
 - run batch scripts to dump symbol tables, section layout, and function lists
 
 ---
@@ -20,10 +34,10 @@ GDB can:
 
 ### Linux / WSL
 
-The cross-GDB is included in the `x-tools.tar` release asset alongside the compiler:
+The cross-GDB is included in the `x-tools-v2` release asset alongside the compiler:
 
 ```text
-$SDKHOME/x-tools/m68k-unknown-elf/bin/m68k-unknown-elf-gdb
+$SDKHOME/x-tools-v2/m68k-unknown-elf/bin/m68k-unknown-elf-gdb
 ```
 
 If the bundled GDB cannot start because of missing host libraries (common on newer Ubuntu), install a system GDB that understands the m68k ELF format:
@@ -37,12 +51,20 @@ Then override the GDB path in the makefile:
 ```bash
 make gdb-trace GDB=gdb-multiarch
 make gdb GDB=gdb-multiarch
-make gdb-remote GDB=gdb-multiarch GDB_REMOTE=localhost:1234
+make gdb-remote GDB=gdb-multiarch GDB_REMOTE=127.0.0.1:23946
 ```
 
 ### Windows
 
-The cross-GDB is `m68k-elf-gdb.exe` inside the SysGCC toolchain tree:
+On Windows, the makefile resolves `GDB` from the selected compiler prefix.
+With `x-tools-v2-win`, it is typically one of:
+
+```text
+<sdk root>\x-tools-v2-win\m68k-unknown-elf\bin\m68k-unknown-elf-gdb.exe
+<sdk root>\x-tools-v2-win\m68k-elf\bin\m68k-elf-gdb.exe
+```
+
+SysGCC fallback:
 
 ```text
 C:\SysGCC\m68k-elf\bin\m68k-elf-gdb.exe
@@ -101,7 +123,8 @@ Inside GDB:
 
 ## make gdb-remote
 
-Connects to a running target (typically MAME) that exposes a GDB stub.  MAME's GDB stub listens on `localhost:1234` by default:
+Connects to a running target that exposes a GDB stub.  NeoGeoSDK uses MAME's
+documented default port, `23946`:
 
 ```bash
 make gdb-remote
@@ -110,32 +133,29 @@ make gdb-remote
 Or with an explicit address:
 
 ```bash
-make gdb-remote GDB_REMOTE=localhost:1234
+make gdb-remote GDB_REMOTE=127.0.0.1:23946
 ```
 
-Steps to use with MAME:
-
-1. Start MAME with the debug flag:
+Use two terminals.  In terminal 1, build the debug ELF and start MAME's GDB
+server:
 
 ```bash
-mame -rompath roms -debug -window ssideki
+make gdb-server
 ```
 
-2. In the MAME debugger window, type:
+On Windows:
 
+```bat
+make -f MakefileWin32.mak gdb-server
 ```
-gdbstub
-```
 
-MAME now listens on `localhost:1234`.
-
-3. In a second terminal, run:
+In terminal 2, connect GDB:
 
 ```bash
-make gdb-remote GDB_REMOTE=localhost:1234
+make gdb-remote
 ```
 
-4. GDB connects and you can set breakpoints, step, and inspect registers:
+GDB connects to the 68000 main CPU and can use the symbols in `out/game`:
 
 ```gdb
 (gdb) break playgame
@@ -145,6 +165,58 @@ make gdb-remote GDB_REMOTE=localhost:1234
 (gdb) next
 (gdb) print ng_level_state.scroll_x
 ```
+
+Override the listening address or port when needed:
+
+```bash
+make gdb-server GDB_HOST=127.0.0.1 GDB_PORT=24000
+make gdb-remote GDB_REMOTE=127.0.0.1:24000
+```
+
+MAME's GDB module attaches to the first CPU, which is the 68000 on Neo Geo.
+Use MAME's native debugger for live Z80 stepping and breakpoints.
+
+---
+
+## Debugging both CPUs
+
+Start the native debugger:
+
+```bash
+make debug
+```
+
+The relevant Neo Geo device tags are `maincpu` for the 68000 and `audiocpu`
+for the Z80.  In the MAME debugger console:
+
+```text
+focus maincpu
+bp 100000:maincpu
+go
+
+focus audiocpu
+bp 0038:audiocpu
+bp 0066:audiocpu
+go
+```
+
+`focus` controls which CPU is shown and observed.  A device suffix on `bp`
+sets a breakpoint without relying on the currently selected CPU.
+
+For terminal trace files from both CPUs:
+
+```bash
+make mame-trace
+```
+
+This generates and runs `dump/<game>/mame_trace.mds`, writing:
+
+| File | CPU |
+|---|---|
+| `dump/<game>/m68k_trace.txt` | Motorola 68000 |
+| `dump/<game>/z80_trace.txt` | Z80 sound CPU |
+
+Press F5 or enter `go` if the debugger remains paused after the script loads.
 
 ---
 
@@ -208,7 +280,7 @@ Both makefiles accept a `GDB` variable:
 ```bash
 make gdb GDB=/usr/bin/gdb-multiarch
 make gdb-trace GDB=/usr/bin/gdb-multiarch
-make gdb-remote GDB=gdb-multiarch GDB_REMOTE=localhost:1234
+make gdb-remote GDB=gdb-multiarch GDB_REMOTE=127.0.0.1:23946
 ```
 
 ```bat
@@ -220,5 +292,7 @@ make -f MakefileWin32.mak gdb GDB=D:\tools\m68k-gdb.exe
 ## Notes
 
 - The 68000 is big-endian; byte and word reads in GDB reflect that.
-- MAME's GDB stub does not support all GDB features.  Single-step (`stepi`) and register reads work reliably.  Memory watchpoints may not.
+- MAME's GDB module does not support all GDB features.  Single-step (`stepi`)
+  and register reads are the primary workflow; use the native MAME debugger
+  for the Z80 and device-specific watchpoints.
 - `out/game` is the ELF target used by GDB.  `out/game.rom` and `out/777-p1.p1` are the final ROM images for MAME; GDB does not load those directly.

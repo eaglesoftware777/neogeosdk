@@ -1,31 +1,103 @@
 # NeoGeoSDK 2D Game Engine Layer
 
+> **v1.7.0 — engine occlusion direction**
+>
+> The boxed rule at the top of `sdk/2d_engine/ng_sprite_pool.h` (and the
+> `sdk/2d_engine_plus/ng_sprite_pool.hpp` copy) is authoritative:
+> **LOWER hardware slot = drawn BEHIND higher-numbered sprites** when
+> they overlap.  The Neo Geo LSPC walks the sprite control blocks
+> sequentially from slot 0 upward, so a sprite at slot 1 is written
+> first and any later slot covers it.  Backgrounds belong at low
+> slots 1–32 (`NG_SPR_BG0_FIRST=1`, `NG_SPR_BG1_FIRST=17`); characters
+> at 96–223 (`NG_SPR_CHAR_FIRST..NG_SPR_CHAR_LAST`); FX, particles
+> and temporary front effects at higher slots so they draw on top.
+> See `sdk/2d_engine/ng_sprite_pool.h` for the canonical layout.
+>
+> Both `sdk/2d_engine/` (C, `gnu99`) and `sdk/2d_engine_plus/` (C++14,
+> `-fno-exceptions -fno-rtti -fno-threadsafe-statics`) ship with the
+> same public API surface.  Select with `USE_2D_PLUS=0` or
+> `USE_2D_PLUS=1` on the `make` line.
+
 This repository carries a reusable 2D game engine layer under `sdk/2d_engine/ng_*`.
 
-The layer is plain C. It is not a C++ object system and it is not an
-entity-component framework. The model is simple:
+The layer is plain C. No float, no malloc during gameplay, no division in the frame loop. It is not a C++ object system and not an entity-component framework.
 
-- fixed-size arrays
-- character pool
-- action scripts
-- timers
-- status flags
-- progress slots
-- properties matrix
-- level state and camera scroll
-- cached FIX-layer text
-- NPC helpers
-- physics bodies and solids
-- event queue
-- border constraints
-- one per-frame game engine entry point
+## Module overview
+
+### Core engine modules
+
+| Module | Header | Purpose |
+|--------|--------|---------|
+| Definitions | `ng_defs.h` | Shared types, constants, pool sizes |
+| Characters | `ng_chars.h` | Fixed-size character pool, per-kind callbacks |
+| Actions | `ng_actions.h` | Action script execution (FRAME, WAIT, MOVE, SFX, …) |
+| Level | `ng_level.h` | Level bounds, camera scroll, joystick camera helpers |
+| Background | `ng_bg.h` | Sprite-based background layer with parallax ratios |
+| FIX cache | `ng_fix.h` | Cached FIX tile writes — only rewrites changed cells |
+| NPCs | `ng_npcs.h` | NPC pool with patrol, think hooks, home/bounds |
+| Physics | `ng_physics.h` | Fixed-point velocity, gravity, collision solids |
+| Game events | `ng_game_events.h` | Fixed ring-buffer event queue |
+| Border constraints | `ng_border_constraints.h` | Trigger rects that emit events on enter |
+| Status | `ng_status.h` | Bit-flag status set |
+| Timers | `ng_timers.h` | Fixed-size timer pool |
+| Progress | `ng_progress.h` | Named progress counters |
+| Properties | `ng_properties.h` | Runtime shared-value matrix |
+| Game time | `ng_game_time.h` | Frame counter |
+| Interrupt | `ng_game_interupt.h` | Per-frame hook dispatch |
+
+### Deluxe 2D engine modules (v1.7.0+)
+
+| Module | Header | Purpose |
+|--------|--------|---------|
+| Sprite groups | `ng_sprite_group.h` | Dirty-flag sticky-bit sprite chains |
+| Render queue | `ng_render_queue.h` | 128-slot VBlank-safe deferred VRAM/palette writes |
+| Fixed-point | `ng_fixed.h` | 16.16 fixed-point math, sin/cos/shrink lookup tables |
+| Camera | `ng_camera.h` | Smooth follow, dead zone, shake, cinematic pan |
+| Palette FX | `ng_palette_fx.h` | Fade, flash, pulse, color cycle — queue-safe |
+| Particles | `ng_particles.h` | 32-slot pool, 8 types, priority eviction |
+| Feedback | `ng_feedback.h` | Hitstop + shake + flash + sound hook in one call |
+| Depth FX | `ng_depthfx.h` | NGVec3 perspective projection, Z→shrink/fog |
+| Debug HUD | `ng_debug.h` | Fix-layer perf overlay (`NG_DEBUG_PERF=1`) |
+
+## VRAM and CRAM write contract
+
+The Neo Geo LSPC and the 68000 share the VRAM and CRAM buses.  Writes
+that land during active video can collide with the LSPC's per-scanline
+reads and show up as torn sprites, partial palettes, or "snow" on the
+display.
+
+### Current (v1.3.x) contract
+
+| Subsystem | Where it writes | Status |
+|---|---|---|
+| `ng_bg_draw()` | Direct SCB1/SCB2/SCB3/SCB4 writes | Direct, must run inside the vblank window after `waitVbl()` |
+| `ng_chars_draw()` | Direct SCB1/SCB2/SCB3/SCB4 writes | Direct, must run inside the vblank window after `waitVbl()` |
+| `ng_particles_draw()` | Direct SCB writes | Direct, must run inside the vblank window |
+| `ng_render_queue_flush()` | Drains queued SCB / palette commands | Vblank-safe by design |
+| `ng_palette_fx_*` | Queues via `ng_render_queue` | Vblank-safe |
+| `ng_feedback_*` | State only; rendering rides ng_render_queue | Vblank-safe |
+| `demo_draw_sprite_screen{,_flip}` | Queues into the demo's sprite queue | Vblank-safe (drained at uframe top) |
+
+What this means in practice:
+
+* **CRAM writes (palette RAM at `0x400000`) MUST go through the render
+  queue.**  Use `ng_rq_palette_upload()` or `ng_palette_fx_*`.  Writing
+  the palette directly from game logic during active video produces
+  rolling "snow" pixels on every line currently being scanned out.
+* **The big draws (`ng_bg_draw`, `ng_chars_draw`, `ng_particles_draw`)
+  are still direct VRAM writes**, but the engine drives them only from
+  inside the per-frame pump immediately after `waitVbl()` returns, so
+  the writes complete before the LSPC starts scanning the next frame.
+* A future v1.4.0 may move those big draws fully through the queue;
+  until then, keep custom rendering code aligned with the pump order
+  (`waitVbl()` -> draws -> `ng_render_queue_flush()` -> updates).
 
 ## Headers
 
 Use the aggregate include:
 
 ```c
-#include "sdk/2d_engine/ng_game_engine.h"
+#include "sdk/2d_engine/ng_engine.h"
 ```
 
 Or include only the modules you need:
@@ -46,6 +118,14 @@ Or include only the modules you need:
 - `sdk/2d_engine/ng_timers.h`
 - `sdk/2d_engine/ng_border_constraints.h`
 - `sdk/2d_engine/ng_sprite_group.h`
+- `sdk/2d_engine/ng_render_queue.h`
+- `sdk/2d_engine/ng_fixed.h`
+- `sdk/2d_engine/ng_camera.h`
+- `sdk/2d_engine/ng_palette_fx.h`
+- `sdk/2d_engine/ng_particles.h`
+- `sdk/2d_engine/ng_feedback.h`
+- `sdk/2d_engine/ng_depthfx.h`
+- `sdk/2d_engine/ng_debug.h`
 
 ## Startup
 
@@ -153,6 +233,13 @@ That callback is executed once per frame for each active character of that kind.
 ## Sprite binding
 
 Attach a Neo Geo sprite strip group to a character:
+
+For generated multi-palette artwork, also bind the asset's tile stride and
+`tile_palettes` map using `ng_char_set_tile_stride()` followed by
+`ng_char_set_palette_map()`. The latter accepts NULL for single-bank art.
+`ng_char_bind_asset()` validates an entire `NGSpriteAssetView` atomically.
+See [Artbox Graphics Pipeline](ARTBOX_PIPELINE.md#tile-stride) for lifetime,
+reset and C++ API details. Recompile game objects after updating these structs.
 
 ```c
 char_set_sprite(c, 32, 6, 16, tile_base, NG_PAL_PLAYER_BASE);

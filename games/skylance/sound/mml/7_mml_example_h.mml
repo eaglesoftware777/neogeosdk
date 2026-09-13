@@ -1,0 +1,25 @@
+; 7_mml_example_h — ending credits (A minor, reflective)
+
+T95
+@p1
+@b3
+@f5
+V10
+O5
+L4
+
+; phrase A — descending
+A G E < A  G E C < G
+F E D C  < A G F E
+
+; phrase B — gentle climb
+L8
+> C E G > C  < B G E < B
+A > C E A  G E C < A
+
+; phrase C — resolve
+L4
+A E C < A  G E < B G
+> C < A F > C  < A2
+
+~

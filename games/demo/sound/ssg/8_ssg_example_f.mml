@@ -1,0 +1,19 @@
+; 8_ssg_example_f - moonlit victory theme
+
+T104
+P0
+V8
+O3
+L8
+
+A C E A  G E C A
+F A C F  E C A F
+G B- D G  F D B- G
+A C E A  B- A G E
+
+L4
+F A > C < A  G B- > D < B-
+A G E C  D2 E2
+A1
+
+~

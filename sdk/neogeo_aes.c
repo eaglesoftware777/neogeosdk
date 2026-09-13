@@ -62,8 +62,8 @@ ASM_START0
 	"\t.equ	REG_SHADOW,	0x3A0011\t\n"
 	"\t.equ	REG_BRDFIX,	0x3A000B\t\n"
 	"\t.equ	REG_CRTFIX,	0x3A001B\t\n"
-	"\t.equ	REG_PALBANK1,	0x3A000F\t\n"
-	"\t.equ	REG_PALBANK0,	0x3A001F\t\n"
+	"\t.equ	REG_PALBANK0,	0x3A000F\t\n"
+	"\t.equ	REG_PALBANK1,	0x3A001F\t\n"
 	"\t.equ	VRAM_ADDR,	0x3C0000\t\n"
 	"\t.equ	VRAM_RW,	0x3C0002\t\n"
 	"\t.equ	VRAM_MOD,	0x3C0004\t\n"
@@ -216,7 +216,7 @@ uint16_t id __attribute__ ((section ("neogeo_init"))) = 			0x0777;
 uint32_t psize  __attribute__ ((section ("neogeo_init"))) = 		0x80000;
 uint32_t pbcks __attribute__ ((section ("neogeo_init"))) = 		0x108000;  /* backup start = start of work RAM */
 uint16_t dipsize  __attribute__ ((section ("neogeo_init"))) = 		0x1000;
-uint8_t bioslogoflag __attribute__ ((section ("neogeo_init"))) = 	0x00;  /* 0 = show BIOS startup logo + call EYE_CATCHER (AES standard) */
+uint8_t bioslogoflag __attribute__ ((section ("neogeo_init"))) = 	0x02;  /* 2 = no eye-catcher, no BIOS logo, no sound */
 uint8_t bioslogotile __attribute__ ((section ("neogeo_init"))) = 	0x00;
 /********************************************************************/
 /* neogeo_entry */

@@ -1,48 +1,41 @@
-SOUND SAMPLES (V ROM)
-=====================
+Neo Geo SDK · sound/samples/
+============================
 
-Raw and processed audio samples for the YM2610 ADPCM-A and ADPCM-B channels.
+WAV sample sources for ADPCM-A and ADPCM-B playback on the YM2610.
 
-DIRECTORY LAYOUT
-----------------
-  in_wav_a/        — Source WAV files for ADPCM-A (6-channel samples)
-  in_wav_b/        — Source WAV files for ADPCM-B (delta-T streaming)
-  out_16el_a/      — Intermediate 16-bit LE WAVs for ADPCM-A
-  out_16el_b/      — Intermediate 16-bit LE WAVs for ADPCM-B
-  out_a/           — Final .adpcma encoded files
-  out_b/           — Final .adpcmb encoded files
-  downloads/       — Downloaded raw sample sources
+Layout
+------
 
-ENCODING PIPELINE
------------------
-1. Place WAV source files in in_wav_a/ (ADPCM-A) or in_wav_b/ (ADPCM-B).
-2. Run: make samples
-   (runs enc_wave16le_a.sh, enc_wave16le_b.sh, adpcm_enc_process.sh)
-3. Run: make vrom
-   (packs all .adpcm* files into 777-v1.v1 and regenerates sample_table.inc)
+  in_wav_a/      WAV inputs that will be encoded to ADPCM-A
+                 (6 short trigger-and-forget channels, percussion-like)
+  in_wav_b/      WAV inputs that will be encoded to ADPCM-B
+                 (1 streamed channel, music TRACKs / long voices)
 
-SAMPLE INDICES
---------------
-vrom.py generates sound/driver/sample_table.inc automatically.
+Pipeline
+--------
 
-  ADPCM-A: index 0-11 →  playSFX(n)   (driver command $40+n, 12 samples)
-  ADPCM-B: index 0-3  →  playSFXB(n)  (driver command $80+n, 4 samples)
+  in_wav_a/*.wav   --enc_wave16le_a-->  ADPCM-A blocks
+  in_wav_b/*.wav   --enc_wave16le_b-->  ADPCM-B stream
 
-Current ADPCM-B live roles:
+Both encoders are pure-Python (see sound/tools/) so no native binary is
+required.  SoX is optional for WAV resampling but the pipeline runs
+without it.
 
-  0 = title theme
-  1 = stage loop 1
-  2 = stage loop 2
-  3 = ending / results theme
+Build
+-----
 
-ADPCM-A VOLUME
---------------
-Per-channel TL register (port B, regs $08-$0D):
-  Bits 7:6 = pan (11 = both speakers)
-  Bits 5:0 = TL attenuation (0 = max volume, 63 = silent, 0.75 dB/step)
-Driver default: $C0 = pan both, TL=0 (maximum volume).
+  make samples    # re-encode all WAV inputs
+  make vrom       # bundle the V ROM
+  make sound      # full audio pipeline
 
-AUTO-STOP
----------
-The driver uses software timers to cut ADPCM-A playback and prevent noise tails.
-To adjust: edit the adpcma_stop_ticks table in sound/driver/driver.asm.
+SDK identifiers
+---------------
+
+  ADPCM-A trigger samples (sdk/sound_ids.h):
+    SOUND_SFX_1 .. SOUND_SFX_12   (maps to in_wav_a/1.wav .. 12.wav)
+
+  ADPCM-B streamed TRACKs:
+    SOUND_TRACK_A .. SOUND_TRACK_I    (maps to in_wav_b/1.wav .. 9.wav)
+    SOUND_TRACK_E (= 5.wav) is reserved for the eyecatcher screen.
+
+See SOURCES.md for the licensing + provenance of each WAV.

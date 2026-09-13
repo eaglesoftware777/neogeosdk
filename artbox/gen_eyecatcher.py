@@ -7,23 +7,46 @@ and writes eyecatcher.c containing showEyeCatcherMVS() — an animation
 function that sequences through the frames.  The function is compiled into
 the game via the main Makefile.
 
-Each frame is displayed for FRAME_DELAY seconds, using the same sprite-
-display convention as showScreenN() in screens.c (x=16, y=24, full-screen
-16-strip layout).
+Each frame is displayed for FRAME_DELAY seconds through showScreenN().
+The generated call uses slot 1; slot 0 is reserved by the runtime.
 """
 
+import argparse
 import json
 import os
 import pathlib
 
-MANIFEST  = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets_manifest.json")
-OUT_C     = pathlib.Path(__file__).resolve().parents[1] / "eyecatcher.c"
+DATA_DIR = os.environ.get("ARTBOX_DATA_DIR", os.path.dirname(os.path.abspath(__file__)))
+MANIFEST  = os.path.join(DATA_DIR, "assets_manifest.json")
+_DEFAULT_OUT_C = pathlib.Path(__file__).resolve().parents[1] / "eyecatcher.c"
 
-# Seconds each frame is displayed (cyclexs units = 1 s at 60 fps)
-FRAME_DELAY = 2
+# Eyecatcher pacing:
+# - short lead hold
+# - one fast animation pass
+# - one confirm pass
+# - short final hold
+LEAD_HOLD_MS = 80
+ANIM_FRAME_MS = 50
+FLASH_FRAME_MS = 35
+FINAL_HOLD_MS = 100
+
+# 256px wide generated art centered in the 320x224 display.
+EC_X0 = 32
+EC_Y0 = 24
+EC_XR = 0xF
+EC_YR = 0xFF
+EC_MIN_CRT = 11
+
+# Filenames that should use a shorter transition delay.
+FLASH_FRAMES = {"4.png"}
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--out", default=None, help="Output path for eyecatcher.c")
+    args = parser.parse_args()
+    OUT_C = pathlib.Path(args.out) if args.out else _DEFAULT_OUT_C
+
     if not os.path.exists(MANIFEST):
         print("gen_eyecatcher: no manifest found, skipping.")
         return
@@ -48,6 +71,15 @@ def main():
         '#include "sdk/neogeo.h"',
         '#include <stdint.h>',
         "",
+        "#ifdef __cplusplus",
+        "/* A USE_2D_PLUS build compiles this file as C++.  The showScreenN",
+        " * bodies it calls live in main.c and keep C linkage, so these",
+        " * declarations must too. */",
+        'extern "C" {',
+        "#endif",
+        "",
+        "#define EC_SPRITE_BASE 0x0040u",
+        "",
         "#pragma GCC push_options",
         "#pragma GCC optimize (\"O0\")",
         "",
@@ -66,15 +98,35 @@ def main():
         "void NEOGEO_USER showEyeCatcherMVS(void) {",
     ]
 
-    for spec in frames:
-        sid = spec["screen_id"]
-        lines += [
-            f"    clearFix();",
-            f"    clearSprs();",
-            f"    showScreen{sid}(16, 24, 0xF, 0xAF, 16, 0x0000, 0);",
-            f"    cyclexs({FRAME_DELAY});",
-            "",
-        ]
+    lines += [
+        "    clearFix();",
+        "    clearSprs();",
+        "",
+    ]
+
+    first = frames[0]
+    lines += [
+        f"    showScreen{first['screen_id']}({EC_X0}, {EC_Y0}, {hex(EC_XR)}, {hex(EC_YR)}, {EC_MIN_CRT}, 0x0000, EC_SPRITE_BASE);",
+        f"    cyclexms({LEAD_HOLD_MS});",
+        "",
+    ]
+
+    for _ in range(2):
+        for spec in frames:
+            sid = spec["screen_id"]
+            delay = FLASH_FRAME_MS if spec["name"] in FLASH_FRAMES else ANIM_FRAME_MS
+            lines += [
+                f"    showScreen{sid}({EC_X0}, {EC_Y0}, {hex(EC_XR)}, {hex(EC_YR)}, {EC_MIN_CRT}, 0x0000, EC_SPRITE_BASE);",
+                f"    cyclexms({delay});",
+            ]
+        lines.append("")
+
+    last = frames[-1]
+    lines += [
+        f"    showScreen{last['screen_id']}({EC_X0}, {EC_Y0}, {hex(EC_XR)}, {hex(EC_YR)}, {EC_MIN_CRT}, 0x0000, EC_SPRITE_BASE);",
+        f"    cyclexms({FINAL_HOLD_MS});",
+        "",
+    ]
 
     lines += [
         "    clearFix();",
@@ -82,6 +134,10 @@ def main():
         "}",
         "",
         "#pragma GCC pop_options",
+        "",
+        "#ifdef __cplusplus",
+        '}  /* extern "C" */',
+        "#endif",
         "",
     ]
 

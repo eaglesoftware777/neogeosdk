@@ -9,11 +9,19 @@ REM NeoGeo SDK - Interactive build menu (Windows)
 
 cd /d "%~dp0"
 
+REM Default game selection
+set CURRENT_GAME=demo
+
 :menu
 cls
 echo =============================================
 echo    NeoGeo SDK - Build Menu
+echo    Game: %CURRENT_GAME%
 echo =============================================
+echo.
+echo   -- GAME SELECTION --
+echo    g) Select game  [current: %CURRENT_GAME%]
+echo       Available: demo (777)  helloworld (772)  tutorial (555)  neogeogame (775)
 echo.
 echo   -- FULL BUILD (start here) --
 echo    1) make clean-all ^&^& make all               Full clean rebuild MVS  [recommended]
@@ -68,6 +76,7 @@ echo    q) Quit
 echo.
 set /p "choice=Enter choice: "
 
+if /i "%choice%"=="g"  goto select_game
 if "%choice%"=="1"  goto run1
 if "%choice%"=="2"  goto run2
 if "%choice%"=="3"  goto run3
@@ -105,116 +114,130 @@ if /i "%choice%"=="q" goto quit
 echo Unknown choice: %choice%
 goto pause_return
 
+:select_game
+echo.
+echo Available games:
+echo   demo       - Full SDK showcase demo  (ID 777)
+echo   helloworld - Minimal FIX-text hello world (ID 772)
+echo   tutorial   - Tutorial template game  (ID 555)
+echo   neogeogame - Blank game template     (ID 775)
+echo.
+set /p "gamename=Enter game name [current: %CURRENT_GAME%]: "
+if "%gamename%"=="" goto menu
+set CURRENT_GAME=%gamename%
+echo Game set to: %CURRENT_GAME%
+goto pause_return
+
 :run1
 echo.
-echo ^>^>^> make -f MakefileWin32.mak clean-all ^&^& make -f MakefileWin32.mak all
-make -f MakefileWin32.mak clean-all
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% clean-all ^&^& make -f MakefileWin32.mak GAME=%CURRENT_GAME% all
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% clean-all
 if errorlevel 1 goto done
-make -f MakefileWin32.mak all
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% all
 goto done
 
 :run2
 echo.
-echo ^>^>^> make -f MakefileWin32.mak clean-all ^&^& make -f MakefileWin32.mak PLATFORM=aes all
-make -f MakefileWin32.mak clean-all
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% clean-all ^&^& make -f MakefileWin32.mak GAME=%CURRENT_GAME% PLATFORM=aes all
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% clean-all
 if errorlevel 1 goto done
-make -f MakefileWin32.mak PLATFORM=aes all
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% PLATFORM=aes all
 goto done
 
 :run3
 echo.
-echo ^>^>^> make -f MakefileWin32.mak all
-make -f MakefileWin32.mak all
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% all
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% all
 goto done
 
 :run4
 echo.
-echo ^>^>^> make -f MakefileWin32.mak PLATFORM=aes all
-make -f MakefileWin32.mak PLATFORM=aes all
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% PLATFORM=aes all
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% PLATFORM=aes all
 goto done
 
 :run5
 echo.
-echo ^>^>^> make -f MakefileWin32.mak p1
-make -f MakefileWin32.mak p1
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% p1
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% p1
 goto done
 
 :run6
 echo.
-echo ^>^>^> make -f MakefileWin32.mak PLATFORM=aes p1
-make -f MakefileWin32.mak PLATFORM=aes p1
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% PLATFORM=aes p1
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% PLATFORM=aes p1
 goto done
 
 :run7
 echo.
-echo ^>^>^> make -f MakefileWin32.mak sfix
-make -f MakefileWin32.mak sfix
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% sfix
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% sfix
 goto done
 
 :run8
 echo.
-echo ^>^>^> make -f MakefileWin32.mak art
-make -f MakefileWin32.mak art
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% art
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% art
 goto done
 
 :run9
 echo.
-echo ^>^>^> make -f MakefileWin32.mak sound
-make -f MakefileWin32.mak sound
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% sound
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% sound
 goto done
 
 :run10
 echo.
-echo ^>^>^> make -f MakefileWin32.mak m1rom
-make -f MakefileWin32.mak m1rom
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% m1rom
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% m1rom
 goto done
 
 :run11
 echo.
-echo ^>^>^> make -f MakefileWin32.mak vrom
-make -f MakefileWin32.mak vrom
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% vrom
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% vrom
 goto done
 
 :run12
 echo.
-echo ^>^>^> make -f MakefileWin32.mak mml
-make -f MakefileWin32.mak mml
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% mml
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% mml
 goto done
 
 :run13
 echo.
-echo ^>^>^> make -f MakefileWin32.mak fm
-make -f MakefileWin32.mak fm
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% fm
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% fm
 goto done
 
 :run14
 echo.
-echo ^>^>^> make -f MakefileWin32.mak fmpatches
-make -f MakefileWin32.mak fmpatches
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% fmpatches
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% fmpatches
 goto done
 
 :run15
 echo.
-echo ^>^>^> make -f MakefileWin32.mak ssg
-make -f MakefileWin32.mak ssg
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% ssg
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% ssg
 goto done
 
 :run16
 echo.
-echo ^>^>^> make -f MakefileWin32.mak test
-make -f MakefileWin32.mak test
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% test
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% test
 goto done
 
 :run17
 echo.
-echo ^>^>^> make -f MakefileWin32.mak test-aes
-make -f MakefileWin32.mak test-aes
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% test-aes
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% test-aes
 goto done
 
 :run18
 echo.
-echo ^>^>^> make -f MakefileWin32.mak test-mvs
-make -f MakefileWin32.mak test-mvs
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% test-mvs
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% test-mvs
 goto done
 
 :run19
@@ -223,8 +246,8 @@ make -f MakefileWin32.mak bios-list
 echo.
 set /p "biosname=Enter BIOS name: "
 echo.
-echo ^>^>^> make -f MakefileWin32.mak test BIOS=%biosname%
-make -f MakefileWin32.mak test BIOS=%biosname%
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% test BIOS=%biosname%
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% test BIOS=%biosname%
 goto done
 
 :run20
@@ -235,80 +258,80 @@ goto done
 
 :run21
 echo.
-echo ^>^>^> make -f MakefileWin32.mak dist
-make -f MakefileWin32.mak dist
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% dist
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% dist
 goto done
 
 :run22
 echo.
-echo ^>^>^> make -f MakefileWin32.mak clean
-make -f MakefileWin32.mak clean
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% clean
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% clean
 goto done
 
 :run23
 echo.
-echo ^>^>^> make -f MakefileWin32.mak sound-clean
-make -f MakefileWin32.mak sound-clean
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% sound-clean
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% sound-clean
 goto done
 
 :run24
 echo.
-echo ^>^>^> make -f MakefileWin32.mak art-clean
-make -f MakefileWin32.mak art-clean
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% art-clean
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% art-clean
 goto done
 
 :run25
 echo.
-echo ^>^>^> make -f MakefileWin32.mak clean-all
-make -f MakefileWin32.mak clean-all
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% clean-all
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% clean-all
 goto done
 
 :run26
 echo.
-echo ^>^>^> make -f MakefileWin32.mak debug
-make -f MakefileWin32.mak debug
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% debug
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% debug
 goto done
 
 :run27
 echo.
-echo ^>^>^> make -f MakefileWin32.mak debug-aes
-make -f MakefileWin32.mak debug-aes
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% debug-aes
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% debug-aes
 goto done
 
 :run28
 echo.
-echo ^>^>^> make -f MakefileWin32.mak mame-trace
-make -f MakefileWin32.mak mame-trace
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% mame-trace
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% mame-trace
 goto done
 
 :run29
 echo.
-echo ^>^>^> make -f MakefileWin32.mak debug-build
-make -f MakefileWin32.mak debug-build
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% debug-build
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% debug-build
 goto done
 
 :run30
 echo.
-echo ^>^>^> make -f MakefileWin32.mak gdb-trace
-make -f MakefileWin32.mak gdb-trace
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% gdb-trace
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% gdb-trace
 goto done
 
 :run31
 echo.
-echo ^>^>^> make -f MakefileWin32.mak gdb
-make -f MakefileWin32.mak gdb
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% gdb
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% gdb
 goto done
 
 :run32
 echo.
-echo ^>^>^> make -f MakefileWin32.mak gdb-remote
-make -f MakefileWin32.mak gdb-remote
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% gdb-remote
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% gdb-remote
 goto done
 
 :run33
 echo.
-echo ^>^>^> make -f MakefileWin32.mak dump
-make -f MakefileWin32.mak dump
+echo ^>^>^> make -f MakefileWin32.mak GAME=%CURRENT_GAME% dump
+make -f MakefileWin32.mak GAME=%CURRENT_GAME% dump
 goto done
 
 :done

@@ -1,0 +1,20 @@
+; 3_fm_example_d - warm arcade bell theme in G minor
+
+T112
+I3
+V14
+O3
+L8
+
+G B- D G  F D B- G
+A C E- A  G E- C A
+B- D F B-  A F D C
+G B- > D < B-  G4 D4
+
+L16
+G A B- D  C B- A G  F G A C  B- A G F
+L8
+E- G B- > E-  < D B- G D
+G2 R4 G4
+
+~

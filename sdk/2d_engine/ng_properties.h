@@ -3,6 +3,10 @@
 
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Properties Matrix: live game values at time T.
  * Status answers "did this happen?"; properties answer "what is the value now?".
@@ -81,4 +85,8 @@ int32_t NEOGEO_USER ng_prop_get(uint8_t group, uint8_t id);
 void NEOGEO_USER ng_prop_add(uint8_t group, uint8_t id, int32_t amount);
 void NEOGEO_USER ng_prop_clear_group(uint8_t group);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

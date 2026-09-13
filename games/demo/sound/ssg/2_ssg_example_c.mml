@@ -1,0 +1,19 @@
+; 2_ssg_example_c - red alert climb
+
+T240
+P0
+V12
+O4
+L16
+
+E R E G  B R > E < B
+D R D F+ A R > D < A
+
+E G B > E  < G B > E < B
+D F+ A > D  < F+ A > D < A
+
+L8
+C D E G  F+ E D < B
+E4 R8 E8 B8 > E4
+
+~
