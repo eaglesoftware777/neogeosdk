@@ -30,7 +30,8 @@ from PyQt6.QtWidgets import (QApplication, QComboBox, QDockWidget,
                               QSlider, QSpinBox, QSplitter, QStatusBar,
                               QTabWidget, QToolBar, QTreeWidget,
                               QTreeWidgetItem, QVBoxLayout, QWidget,
-                              QDialog, QDialogButtonBox, QPlainTextEdit)
+                              QDialog, QDialogButtonBox, QPlainTextEdit,
+                              QCheckBox)
 
 from studio_project import StudioProject, FileSnapshot, game_names
 from studio_widgets import mount_workspace, update_workspace_project, BuildPanel, save_document
@@ -1808,110 +1809,243 @@ class AssetBrowserTab(QWidget):
 #  HD Compare — convert any PNG through standard AND HD pipelines, A/B view
 ###############################################################################
 class HdCompareTab(QWidget):
-    def __init__(self):
+    def __init__(self, project=None):
         super().__init__()
+        self.project = project
+        self._std_out = None
+        self._hd_out = None
+        self._curr_src = None
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("<b>HD Conversion Compare</b>"))
+        layout.addWidget(QLabel("<b>HD Conversion & Quality Workbench</b>"))
         layout.addWidget(QLabel(
-            "Convert a PNG with BOTH the standard and HD pipelines, "
-            "then view the indexed outputs side by side.  Originals "
-            "untouched on disk — outputs land in artbox/out/_hd_cmp/."))
+            "Compare source artwork against Standard and HD (Bilateral/CLAHE/Blue-Noise) "
+            "pipelines. Measure PSNR, unique DAC colors, and deploy directly to the game project."))
 
         # Source picker row
         pick_row = QHBoxLayout()
+        pick_row.addWidget(QLabel("Project Source:"))
+        self.combo_project_img = QComboBox()
+        self.combo_project_img.setMinimumWidth(200)
+        self.combo_project_img.currentTextChanged.connect(self._on_combo_selected)
+        pick_row.addWidget(self.combo_project_img)
+
         self.src_line = QLineEdit()
-        self.src_line.setPlaceholderText(
-            "Pick a PNG (e.g. artbox/in/characters/sprite_001_*.png)")
+        self.src_line.setPlaceholderText("Select PNG from project or Browse…")
+        pick_row.addWidget(self.src_line, 1)
+
         btn_pick = QPushButton("Browse…")
         btn_pick.clicked.connect(self._pick_src)
-        btn_run  = QPushButton("Convert (both pipelines)")
-        btn_run.clicked.connect(self._convert)
-        pick_row.addWidget(self.src_line, 1)
         pick_row.addWidget(btn_pick)
-        pick_row.addWidget(btn_run)
         layout.addLayout(pick_row)
 
-        # Side-by-side previews
+        # Pipeline Options Row
+        opt_row = QHBoxLayout()
+        opt_row.addWidget(QLabel("Dither:"))
+        self.combo_dither = QComboBox()
+        self.combo_dither.addItems(["Blue Noise", "Floyd-Steinberg", "None"])
+        opt_row.addWidget(self.combo_dither)
+
+        self.chk_clahe = QCheckBox("CLAHE Contrast")
+        self.chk_clahe.setChecked(True)
+        opt_row.addWidget(self.chk_clahe)
+
+        self.chk_unsharp = QCheckBox("Unsharp Mask")
+        self.chk_unsharp.setChecked(True)
+        opt_row.addWidget(self.chk_unsharp)
+
+        self.chk_bilateral = QCheckBox("Bilateral Filter")
+        self.chk_bilateral.setChecked(True)
+        opt_row.addWidget(self.chk_bilateral)
+
+        btn_run = QPushButton("▶ Run Comparison")
+        btn_run.setStyleSheet("font-weight:bold; background:#1b4f72; color:white; padding:4px 12px;")
+        btn_run.clicked.connect(self._convert)
+        opt_row.addWidget(btn_run)
+
+        btn_deploy = QPushButton("Deploy HD to Game")
+        btn_deploy.setToolTip("Copy the HD converted result into this game's art_source/ directory")
+        btn_deploy.clicked.connect(self._deploy_to_game)
+        opt_row.addWidget(btn_deploy)
+        opt_row.addStretch()
+        layout.addLayout(opt_row)
+
+        # 3-Way Previews (Original | Standard | HD)
         previews = QHBoxLayout()
-        self.std_label = QLabel("(standard output)")
-        self.hd_label  = QLabel("(HD output)")
-        for lbl in (self.std_label, self.hd_label):
+        self.orig_label = QLabel("(original source)")
+        self.std_label  = QLabel("(standard output)")
+        self.hd_label   = QLabel("(HD output)")
+        for lbl in (self.orig_label, self.std_label, self.hd_label):
             lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            lbl.setStyleSheet(
-                "background:#1a1a1a; border:1px solid #333; min-height:280px;")
-        std_box = QGroupBox("Standard (img2neo.py)")
-        hd_box  = QGroupBox("HD (img2neo_hd.py)")
-        for box, lbl in [(std_box, self.std_label), (hd_box, self.hd_label)]:
+            lbl.setStyleSheet("background:#141419; border:1px solid #333; min-height:240px;")
+
+        orig_box = QGroupBox("1. Original 32-bit Source")
+        std_box  = QGroupBox("2. Standard (img2neo.py)")
+        hd_box   = QGroupBox("3. HD Enhanced (img2neo_hd.py)")
+        for box, lbl in [(orig_box, self.orig_label), (std_box, self.std_label), (hd_box, self.hd_label)]:
             bl = QVBoxLayout(box)
             bl.addWidget(lbl, 1)
+
+        previews.addWidget(orig_box, 1)
         previews.addWidget(std_box, 1)
         previews.addWidget(hd_box, 1)
-        layout.addLayout(previews, 1)
+        layout.addLayout(previews, 2)
+
+        # Metrics Card
+        self.metrics_label = QLabel("Quality Metrics: Select an image and run comparison.")
+        self.metrics_label.setStyleSheet("background:#202028; color:#99eebb; padding:6px; border-radius:4px; font-family:'Monospace';")
+        layout.addWidget(self.metrics_label)
 
         # Log
         self.log = QPlainTextEdit()
         self.log.setReadOnly(True)
-        self.log.setMaximumHeight(150)
+        self.log.setMaximumHeight(110)
         self.log.setStyleSheet(
             "QPlainTextEdit { background:#0c0c10; color:#cfcf80;"
             " font-family:'Courier New',monospace; }")
         layout.addWidget(self.log)
 
+        self._populate_project_images()
+
+    def set_project(self, project):
+        self.project = project
+        self._populate_project_images()
+
+    def _populate_project_images(self):
+        self.combo_project_img.blockSignals(True)
+        self.combo_project_img.clear()
+        if self.project and hasattr(self.project, "art_source") and self.project.art_source.exists():
+            pngs = sorted([p.name for p in self.project.art_source.glob("*.png")])
+            if pngs:
+                self.combo_project_img.addItems(pngs)
+                first = self.project.art_source / pngs[0]
+                self.src_line.setText(str(first))
+                self._show_original(str(first))
+        self.combo_project_img.blockSignals(False)
+
+    def _on_combo_selected(self, text):
+        if not text or not self.project:
+            return
+        path = self.project.art_source / text
+        if path.exists():
+            self.src_line.setText(str(path))
+            self._show_original(str(path))
+
+    def _show_original(self, path):
+        if os.path.exists(path):
+            img = QImage(path)
+            if not img.isNull():
+                pix = QPixmap.fromImage(img)
+                sz = self.orig_label.size()
+                pix = pix.scaled(sz, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.FastTransformation)
+                self.orig_label.setPixmap(pix)
+
     def _pick_src(self):
+        initial = str(self.project.art_source) if self.project and self.project.art_source.exists() else str(_AX_ARTBOX)
         path, _ = QFileDialog.getOpenFileName(
-            self, "Pick source PNG",
-            str(_AX_ARTBOX / "in"), "PNG (*.png);;All Files (*)")
+            self, "Pick source PNG", initial, "PNG (*.png);;All Files (*)")
         if path:
             self.src_line.setText(path)
+            self._show_original(path)
 
     def _convert(self):
         src = self.src_line.text().strip()
         if not src or not os.path.exists(src):
             self.log.appendPlainText("(no source selected)")
             return
+        self._curr_src = Path(src)
         out_dir = _AX_ARTBOX / "out" / "_hd_cmp"
         out_dir.mkdir(parents=True, exist_ok=True)
-        base = os.path.splitext(os.path.basename(src))[0]
+        base = self._curr_src.stem
         std_out = out_dir / f"{base}_std.png"
         hd_out  = out_dir / f"{base}_hd.png"
-        for label, script, out in [
-            ("standard", _AX_ARTBOX / "img2neo.py", std_out),
-            ("HD",       _AX_ARTBOX / "img2neo_hd.py", hd_out),
-        ]:
-            if not script.exists():
-                self.log.appendPlainText(f"--- {label} SKIPPED ({script} missing) ---")
-                continue
-            cmd = ["python3", str(script), src, str(out)]
+        self._std_out = std_out
+        self._hd_out = hd_out
+
+        std_cmd = ["python3", str(_AX_ARTBOX / "img2neo.py"), src, str(std_out)]
+        hd_cmd  = ["python3", str(_AX_ARTBOX / "img2neo_hd.py"), src, str(hd_out)]
+
+        dither = self.combo_dither.currentText()
+        if dither == "Floyd-Steinberg":
+            hd_cmd.extend(["--dither", "fs"])
+        elif dither == "None":
+            hd_cmd.extend(["--dither", "none"])
+
+        if not self.chk_clahe.isChecked():
+            hd_cmd.append("--no-clahe")
+        if not self.chk_unsharp.isChecked():
+            hd_cmd.append("--no-unsharp")
+
+        self.log.clear()
+        self._show_original(src)
+
+        for label, cmd, out in [("Standard", std_cmd, std_out), ("HD", hd_cmd, hd_out)]:
             self.log.appendPlainText(f"$ {' '.join(cmd)}")
             try:
                 r = _ax_sub.run(cmd, capture_output=True, text=True, timeout=120)
-                self.log.appendPlainText(r.stdout)
+                if r.stdout: self.log.appendPlainText(r.stdout.strip())
                 if r.returncode != 0:
-                    self.log.appendPlainText(f"!! {label} failed: {r.stderr}")
-                    continue
+                    self.log.appendPlainText(f"!! {label} failed: {r.stderr.strip()}")
             except Exception as e:
-                self.log.appendPlainText(f"!! {label} error: {e}")
-                continue
-            # Load result image into the preview
+                self.log.appendPlainText(f"!! {label} execution error: {e}")
+
             if out.exists():
                 img = QImage(str(out))
                 if not img.isNull():
-                    from PyQt6.QtGui import QPixmap
                     pix = QPixmap.fromImage(img)
-                    target = self.std_label if label == "standard" else self.hd_label
+                    target = self.std_label if label == "Standard" else self.hd_label
                     sz = target.size()
-                    pix = pix.scaled(sz,
-                                     Qt.AspectRatioMode.KeepAspectRatio,
-                                     Qt.TransformationMode.FastTransformation)
+                    pix = pix.scaled(sz, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.FastTransformation)
                     target.setPixmap(pix)
+
+        # Compute quality metrics
+        try:
+            from PIL import Image
+            orig_im = Image.open(src).convert("RGB")
+            w, h = orig_im.size
+            orig_arr = np.array(orig_im, dtype=np.float64)
+
+            metrics = [f"Source: {w}x{h} ({w//16}x{h//16} tiles)"]
+            if std_out.exists():
+                s_im = Image.open(std_out).convert("RGB")
+                s_arr = np.array(s_im.resize((w, h), Image.Resampling.NEAREST), dtype=np.float64)
+                s_mse = np.mean((orig_arr - s_arr) ** 2)
+                s_psnr = 99.0 if s_mse == 0 else 10.0 * math.log10((255.0 ** 2) / max(1e-9, s_mse))
+                s_cols = len(set(tuple(p) for p in s_arr.reshape(-1, 3)))
+                metrics.append(f"Standard: PSNR {s_psnr:.2f} dB (MSE {s_mse:.1f}, {s_cols} colors)")
+
+            if hd_out.exists():
+                h_im = Image.open(hd_out).convert("RGB")
+                h_arr = np.array(h_im.resize((w, h), Image.Resampling.NEAREST), dtype=np.float64)
+                h_mse = np.mean((orig_arr - h_arr) ** 2)
+                h_psnr = 99.0 if h_mse == 0 else 10.0 * math.log10((255.0 ** 2) / max(1e-9, h_mse))
+                h_cols = len(set(tuple(p) for p in h_arr.reshape(-1, 3)))
+                metrics.append(f"HD Enhanced: PSNR {h_psnr:.2f} dB (MSE {h_mse:.1f}, {h_cols} colors)")
+
+            self.metrics_label.setText("   |   ".join(metrics))
+        except Exception as exc:
+            self.metrics_label.setText(f"Metrics error: {exc}")
+
+    def _deploy_to_game(self):
+        if not self._hd_out or not self._hd_out.exists():
+            QMessageBox.warning(self, "No HD Output", "Run conversion first before deploying.")
+            return
+        if not self.project:
+            QMessageBox.warning(self, "No Project", "No active game project.")
+            return
+        dest_name = self._curr_src.name if self._curr_src else "imported_hd.png"
+        dest = self.project.art_source / dest_name
+        import shutil
+        shutil.copy(self._hd_out, dest)
+        QMessageBox.information(self, "Deployed", f"Copied HD converted image to game art:\n{dest}")
 
 
 ###############################################################################
 #  ROM Inspector — show built ROM file inventory
 ###############################################################################
 class RomInventoryTab(QWidget):
-    def __init__(self):
+    def __init__(self, project=None):
         super().__init__()
+        self.project = project
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("<b>Built ROM Inventory</b>"))
         layout.addWidget(QLabel(
@@ -1929,6 +2063,10 @@ class RomInventoryTab(QWidget):
         btn = QPushButton("Refresh")
         btn.clicked.connect(self._refresh)
         layout.addWidget(btn)
+        self._refresh()
+
+    def set_project(self, project):
+        self.project = project
         self._refresh()
 
     def _refresh(self):
@@ -2559,10 +2697,10 @@ class ArtboxStudio(QMainWindow):
         self.tab_rules = AssetRulesTab(cfg_path if cfg_path.exists() else None)
         tabs.addTab(self.tab_rules, "Asset Rules")
 
-        self.tab_hd = HdCompareTab()
+        self.tab_hd = HdCompareTab(self.project)
         tabs.addTab(self.tab_hd, "HD Compare")
 
-        self.tab_inv = RomInventoryTab()
+        self.tab_inv = RomInventoryTab(self.project)
         tabs.addTab(self.tab_inv, "ROM Inventory")
 
         self.tab_build = BuildPanel(self.project, "art")
