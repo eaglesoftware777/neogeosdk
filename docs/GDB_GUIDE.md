@@ -57,7 +57,13 @@ make gdb-remote GDB=gdb-multiarch GDB_REMOTE=127.0.0.1:23946
 ### Windows
 
 On Windows, the makefile resolves `GDB` from the selected compiler prefix.
-With `x-tools-v2-win`, it is typically one of:
+With `x-tools-v3-win` it is:
+
+```text
+<sdk root>\x-tools-v3-win\m68k-unknown-elf\bin\m68k-unknown-elf-gdb.exe
+```
+
+and with the previous `x-tools-v2-win` one of:
 
 ```text
 <sdk root>\x-tools-v2-win\m68k-unknown-elf\bin\m68k-unknown-elf-gdb.exe
