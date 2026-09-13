@@ -19,19 +19,28 @@ from PyQt6.QtWidgets import (
     QTextEdit, QPlainTextEdit, QSplitter, QScrollArea,
     QListWidget, QListWidgetItem, QGroupBox, QCheckBox,
     QFileDialog, QMessageBox, QSizePolicy, QFrame,
-    QAbstractItemView, QToolButton, QDoubleSpinBox,
+    QAbstractItemView, QToolButton, QDoubleSpinBox, QStatusBar,
 )
-from PyQt6.QtCore import Qt, QBuffer, QByteArray, QIODevice, QTimer, pyqtSignal
+from PyQt6.QtCore import Qt, QBuffer, QByteArray, QIODevice, QTimer, pyqtSignal, QUrl
 from PyQt6.QtGui import (
-    QPainter, QColor, QPen, QFont, QFontMetrics, QPixmap,
-    QSyntaxHighlighter, QTextCharFormat, QBrush,
+    QPainter, QColor, QPen, QFont, QFontMetrics, QPixmap, QImage,
+    QSyntaxHighlighter, QTextCharFormat, QBrush, QDesktopServices,
 )
 from PyQt6.QtMultimedia import QAudioSink, QAudioFormat
+
+_STUDIO_DIR = Path(__file__).resolve().parent
+_REPO_ROOT = _STUDIO_DIR.parent
+for _p in (_REPO_ROOT / "tools", _STUDIO_DIR, _REPO_ROOT):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
+
+from studio_project import StudioProject, FileSnapshot, game_names
+from studio_widgets import mount_workspace, update_workspace_project, BuildPanel, save_document
 
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
-REPO_ROOT = Path(__file__).resolve().parent.parent
+REPO_ROOT = _REPO_ROOT
 SOUND_DIR  = REPO_ROOT / "sound"
 FM_DIR     = SOUND_DIR / "fm"
 SSG_DIR    = SOUND_DIR / "ssg"
@@ -40,6 +49,36 @@ TOOLS_DIR  = SOUND_DIR / "tools"
 SAMPLES_DIR = SOUND_DIR / "samples" / "in_wav_a"
 PATCHES_FILE = FM_DIR / "patches.fm"
 SSG_CONFIG   = SSG_DIR / "config.ssg"
+
+
+def get_sound_dir(project=None):
+    if project and hasattr(project, "sound_dir"):
+        return project.sound_dir
+    return SOUND_DIR
+
+
+def get_patches_file(project=None):
+    if project and hasattr(project, "patches_path"):
+        return project.patches_path()
+    return FM_DIR / "patches.fm"
+
+
+def get_ssg_config(project=None):
+    if project and hasattr(project, "ssg_config_path"):
+        return project.ssg_config_path()
+    return SSG_DIR / "config.ssg"
+
+
+def get_samples_dir(project=None, channel="a"):
+    if project and hasattr(project, "samples_dir"):
+        return project.samples_dir(channel)
+    return SOUND_DIR / "samples" / f"in_wav_{channel.lower()}"
+
+
+def get_mml_dir(project=None):
+    if project and hasattr(project, "mml_dir"):
+        return project.mml_dir()
+    return SOUND_DIR / "mml"
 
 SAMPLE_RATE = 44100
 ZOOM_DEFAULT = 2
@@ -315,7 +354,7 @@ def parse_patches(path: Path) -> list:
         patches.append(current)
     return patches
 
-def write_patches(patches: list, path: Path):
+def format_patches_text(patches: list) -> str:
     lines = [
         "; ==========================================================",
         "; NeoGeo YM2610 FM Patch Bank",
@@ -334,7 +373,15 @@ def write_patches(patches: list, path: Path):
             vals = p["ops"].get(op, [0x01, 0x20, 0x1F, 0x08, 0x05, 0xAF, 0x00])
             lines.append(f"{op}={','.join(f'{v:02X}' for v in vals)}")
         lines.append("")
-    path.write_text("\n".join(lines))
+    return "\n".join(lines)
+
+
+def write_patches(patches: list, path: Path, parent=None):
+    text = format_patches_text(patches)
+    if parent is not None:
+        return save_document(parent, path, text)
+    path.write_text(text)
+    return True
 
 # ---------------------------------------------------------------------------
 # SSG config parser/writer
@@ -372,7 +419,8 @@ def parse_ssg_presets(path: Path) -> list:
         presets.append(current)
     return presets
 
-def write_ssg_presets(presets: list, path: Path):
+
+def format_ssg_presets_text(presets: list) -> str:
     lines = ["; NeoGeo YM2610 SSG preset/config bank", ""]
     for p in presets:
         lines.append(f"[preset {p['id']}]")
@@ -383,7 +431,15 @@ def write_ssg_presets(presets: list, path: Path):
         lines.append(f"vol_c={p['vol_c']:02X}")
         lines.append(f"noise_freq={p['noise_freq']:02X}")
         lines.append("")
-    path.write_text("\n".join(lines))
+    return "\n".join(lines)
+
+
+def write_ssg_presets(presets: list, path: Path, parent=None):
+    text = format_ssg_presets_text(presets)
+    if parent is not None:
+        return save_document(parent, path, text)
+    path.write_text(text)
+    return True
 
 # ---------------------------------------------------------------------------
 # MML parser (for piano roll preview) — mirrors fm_compile.py logic
@@ -692,12 +748,17 @@ class AlgorithmDiagram(QWidget):
             y += 14
 
 class FMPatchTab(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, project=None, parent=None):
         super().__init__(parent)
+        self.project = project
         self.patches = []
         self._current_idx = 0
         self._audio_sink = None
         self._build_ui()
+        self._load_patches()
+
+    def set_project(self, project):
+        self.project = project
         self._load_patches()
 
     def _build_ui(self):
@@ -799,8 +860,11 @@ class FMPatchTab(QWidget):
         layout.addLayout(right)
 
     def _load_patches(self):
-        if PATCHES_FILE.exists():
-            self.patches = parse_patches(PATCHES_FILE)
+        target = get_patches_file(self.project)
+        if target.exists():
+            self.patches = parse_patches(target)
+        else:
+            self.patches = []
         if not self.patches:
             self.patches = [{"id": 0, "name": "Default", "alg": 7, "fb": 2,
                              "stereo": 0xC0, "lfo": 0,
@@ -914,8 +978,9 @@ class FMPatchTab(QWidget):
         self.patch_list.setCurrentRow(len(self.patches) - 1)
 
     def _save_patches(self):
-        write_patches(self.patches, PATCHES_FILE)
-        QMessageBox.information(self, "Saved", f"Saved {len(self.patches)} patches to\n{PATCHES_FILE}")
+        target = get_patches_file(self.project)
+        if write_patches(self.patches, target, parent=self):
+            QMessageBox.information(self, "Saved", f"Saved {len(self.patches)} patches to\n{target}")
 
 # ---------------------------------------------------------------------------
 # MML Composer Tab (FM and SSG)
@@ -937,8 +1002,9 @@ class MmlHighlighter(QSyntaxHighlighter):
             self.setFormat(m.start(), m.end() - m.start(), note_fmt)
 
 class MmlComposerTab(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, project=None, parent=None):
         super().__init__(parent)
+        self.project = project
         self._current_file = None
         self._current_mode = "fm"
         self._audio_sink = None
@@ -947,6 +1013,24 @@ class MmlComposerTab(QWidget):
         self._build_ui()
         self._load_file_list()
         self._reload_patches()
+
+    def set_project(self, project):
+        self.project = project
+        self._load_file_list()
+        self._reload_patches()
+        self._current_file = None
+        self.editor.clear()
+
+    def _mode_dir(self):
+        snd = get_sound_dir(self.project)
+        if self._current_mode == "fm":
+            d = snd / "mml"
+            if not d.exists() or not any(d.glob("*.mml")):
+                d = snd / "fm"
+            return d if d.exists() else FM_DIR
+        else:
+            d = snd / "ssg"
+            return d if d.exists() else SSG_DIR
 
     def _build_ui(self):
         layout = QHBoxLayout(self)
@@ -1043,10 +1127,11 @@ class MmlComposerTab(QWidget):
         layout.addLayout(right)
 
     def _load_file_list(self):
-        mode_dir = FM_DIR if self._current_mode == "fm" else SSG_DIR
+        mode_dir = self._mode_dir()
         self.file_list.clear()
-        for f in sorted(mode_dir.glob("*.mml")):
-            self.file_list.addItem(f.name)
+        if mode_dir.exists():
+            for f in sorted(mode_dir.glob("*.mml")):
+                self.file_list.addItem(f.name)
 
     def _on_mode_changed(self, mode_text: str):
         self._current_mode = mode_text.lower()
@@ -1057,11 +1142,14 @@ class MmlComposerTab(QWidget):
     def _on_file_selected(self, item, prev):
         if item is None:
             return
-        mode_dir = FM_DIR if self._current_mode == "fm" else SSG_DIR
+        mode_dir = self._mode_dir()
         path = mode_dir / item.text()
         self._current_file = path
         self.editor.blockSignals(True)
-        self.editor.setPlainText(path.read_text())
+        try:
+            self.editor.setPlainText(path.read_text(encoding="utf-8", errors="replace"))
+        except Exception:
+            self.editor.setPlainText("")
         self.editor.blockSignals(False)
         self._refresh_roll()
 
@@ -1086,10 +1174,12 @@ class MmlComposerTab(QWidget):
         self._audio_sink = play_samples(samples)
 
     def _reload_patches(self):
-        if PATCHES_FILE.exists():
-            self._patches = parse_patches(PATCHES_FILE)
-        if SSG_CONFIG.exists():
-            self._ssg_presets = parse_ssg_presets(SSG_CONFIG)
+        patches_path = get_patches_file(self.project)
+        if patches_path.exists():
+            self._patches = parse_patches(patches_path)
+        ssg_path = get_ssg_config(self.project)
+        if ssg_path.exists():
+            self._ssg_presets = parse_ssg_presets(ssg_path)
 
     def _play_track(self):
         self._stop_track()
@@ -1114,22 +1204,23 @@ class MmlComposerTab(QWidget):
         self.btn_play_track.setEnabled(True)
 
     def _new_track(self):
-        mode_dir = FM_DIR if self._current_mode == "fm" else SSG_DIR
+        mode_dir = self._mode_dir()
+        mode_dir.mkdir(parents=True, exist_ok=True)
         count = len(list(mode_dir.glob("*.mml")))
         path = mode_dir / f"{count}_new_track.mml"
-        path.write_text("; New track\nT120\nV12\nO4\nL8\nC E G\n")
-        self._load_file_list()
-        for i in range(self.file_list.count()):
-            if self.file_list.item(i).text() == path.name:
-                self.file_list.setCurrentRow(i)
-                break
+        if save_document(self, path, "; New track\nT120\nV12\nO4\nL8\nC E G\n"):
+            self._load_file_list()
+            for i in range(self.file_list.count()):
+                if self.file_list.item(i).text() == path.name:
+                    self.file_list.setCurrentRow(i)
+                    break
 
     def _save_track(self):
         if self._current_file is None:
             QMessageBox.warning(self, "No File", "Select or create a track first.")
             return
-        self._current_file.write_text(self.editor.toPlainText())
-        QMessageBox.information(self, "Saved", f"Saved {self._current_file.name}")
+        if save_document(self, self._current_file, self.editor.toPlainText()):
+            QMessageBox.information(self, "Saved", f"Saved {self._current_file.name}")
 
     def _compile_all(self):
         import subprocess
@@ -1160,12 +1251,17 @@ class MmlComposerTab(QWidget):
 # SSG Preset Editor Tab
 # ---------------------------------------------------------------------------
 class SSGPresetTab(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, project=None, parent=None):
         super().__init__(parent)
+        self.project = project
         self.presets = []
         self._current_idx = 0
         self._audio_sink = None
         self._build_ui()
+        self._load_presets()
+
+    def set_project(self, project):
+        self.project = project
         self._load_presets()
 
     def _build_ui(self):
@@ -1240,8 +1336,11 @@ class SSGPresetTab(QWidget):
         layout.addLayout(right)
 
     def _load_presets(self):
-        if SSG_CONFIG.exists():
-            self.presets = parse_ssg_presets(SSG_CONFIG)
+        target = get_ssg_config(self.project)
+        if target.exists():
+            self.presets = parse_ssg_presets(target)
+        else:
+            self.presets = []
         if not self.presets:
             self.presets = [{"id": 0, "name": "Default", "tone_mask": 0x38,
                              "vol_a": 10, "vol_b": 6, "vol_c": 0, "noise_freq": 0}]
@@ -1292,19 +1391,29 @@ class SSGPresetTab(QWidget):
         self.preset_list.setCurrentRow(len(self.presets) - 1)
 
     def _save_presets(self):
-        write_ssg_presets(self.presets, SSG_CONFIG)
-        QMessageBox.information(self, "Saved", f"Saved {len(self.presets)} presets to\n{SSG_CONFIG}")
+        target = get_ssg_config(self.project)
+        if write_ssg_presets(self.presets, target, parent=self):
+            QMessageBox.information(self, "Saved", f"Saved {len(self.presets)} presets to\n{target}")
 
 # ---------------------------------------------------------------------------
 # ADPCM Manager Tab
 # ---------------------------------------------------------------------------
 class ADPCMTab(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, project=None, parent=None):
         super().__init__(parent)
+        self.project = project
         self._audio_sink = None
         self._current_samples = None
         self._build_ui()
         self._load_samples()
+
+    def set_project(self, project):
+        self.project = project
+        self._load_samples()
+
+    def _samples_dir(self):
+        ch = self.chan_combo.currentIndex()
+        return get_samples_dir(self.project, "a" if ch == 0 else "b")
 
     def _build_ui(self):
         layout = QHBoxLayout(self)
@@ -1381,10 +1490,6 @@ class ADPCMTab(QWidget):
         )
         right.addWidget(info)
         layout.addLayout(right)
-
-    def _samples_dir(self):
-        ch = self.chan_combo.currentIndex()
-        return SOUND_DIR / "samples" / ("in_wav_a" if ch == 0 else "in_wav_b")
 
     def _load_samples(self):
         d = self._samples_dir()
@@ -1549,8 +1654,9 @@ class ComposerTab(QWidget):
     CH_NAMES = ["FM 1","FM 2","FM 3","FM 4","SSG A","SSG B","SSG C"]
     DEF_NOTES = [60, 64, 67, 72, 60, 64, 67]
 
-    def __init__(self, parent=None):
+    def __init__(self, project=None, parent=None):
         super().__init__(parent)
+        self.project = project
         self._patches = []
         self._ssg_presets = []
         self._sink = None
@@ -1558,6 +1664,10 @@ class ComposerTab(QWidget):
         self._timer = QTimer()
         self._timer.timeout.connect(self._tick)
         self._build_ui()
+        self._reload_data()
+
+    def set_project(self, project):
+        self.project = project
         self._reload_data()
 
     def _build_ui(self):
@@ -1641,10 +1751,12 @@ class ComposerTab(QWidget):
         main.addWidget(self.status_lbl)
 
     def _reload_data(self):
-        if PATCHES_FILE.exists():
-            self._patches = parse_patches(PATCHES_FILE)
-        if SSG_CONFIG.exists():
-            self._ssg_presets = parse_ssg_presets(SSG_CONFIG)
+        target_p = get_patches_file(self.project)
+        if target_p.exists():
+            self._patches = parse_patches(target_p)
+        target_s = get_ssg_config(self.project)
+        if target_s.exists():
+            self._ssg_presets = parse_ssg_presets(target_s)
 
     def _channels(self):
         return [{"type": self.CH_TYPES[ch], "note": self._ch_note[ch].value(),
@@ -1711,12 +1823,17 @@ class ComposerTab(QWidget):
 class YM2610SimTab(QWidget):
     """Interactive YM2610 channel overview and multi-channel sequencer preview."""
 
-    def __init__(self, parent=None):
+    def __init__(self, project=None, parent=None):
         super().__init__(parent)
+        self.project = project
         self._sinks = []
         self._patches = []
         self._ssg_presets = []
         self._build_ui()
+        self._reload_data()
+
+    def set_project(self, project):
+        self.project = project
         self._reload_data()
 
     def _build_ui(self):
@@ -1788,10 +1905,12 @@ class YM2610SimTab(QWidget):
         layout.addStretch()
 
     def _reload_data(self):
-        if PATCHES_FILE.exists():
-            self._patches = parse_patches(PATCHES_FILE)
-        if SSG_CONFIG.exists():
-            self._ssg_presets = parse_ssg_presets(SSG_CONFIG)
+        target_p = get_patches_file(self.project)
+        if target_p.exists():
+            self._patches = parse_patches(target_p)
+        target_s = get_ssg_config(self.project)
+        if target_s.exists():
+            self._ssg_presets = parse_ssg_presets(target_s)
 
     def _play_channel(self, ch_idx: int, ch_type: str):
         if ch_idx >= len(self._channel_rows):
@@ -2062,18 +2181,24 @@ class PipelineRunnerTab(QWidget):
 
 
 class DriverDefsTab(QWidget):
-    """Browse the named identifiers from sdk/sound_ids.h and
-    sound/driver/driver_defs.h — useful when wiring code or MML."""
+    """Browse the named identifiers from sdk/sound_ids.h,
+    sound/driver/driver_defs.h, and sound/SOUND_DRIVER_GUIDE.txt."""
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("<b>SDK & Driver Identifiers</b>"))
+        layout.addWidget(QLabel("<b>SDK & Driver Architecture Reference</b>"))
 
         splitter = _QSplit(Qt.Orientation.Horizontal)
 
         for header_path in [REPO_ROOT / "sdk" / "sound_ids.h",
-                            REPO_ROOT / "sound" / "driver" / "driver_defs.h"]:
-            box = QGroupBox(str(header_path.relative_to(REPO_ROOT)))
+                            REPO_ROOT / "sound" / "driver" / "driver_defs.h",
+                            REPO_ROOT / "sound" / "SOUND_DRIVER_GUIDE.txt"]:
+            title = header_path.name
+            try:
+                title = str(header_path.relative_to(REPO_ROOT))
+            except Exception:
+                pass
+            box = QGroupBox(title)
             box_l = QVBoxLayout(box)
             text = QPlainTextEdit()
             text.setReadOnly(True)
@@ -2081,7 +2206,7 @@ class DriverDefsTab(QWidget):
                 "QPlainTextEdit { background:#0c0c10; color:#a0c0e0;"
                 " font-family:'Space Mono','Courier New',monospace; }")
             try:
-                text.setPlainText(header_path.read_text(errors="replace"))
+                text.setPlainText(header_path.read_text(encoding="utf-8", errors="replace"))
             except Exception as e:
                 text.setPlainText(f"(could not read: {e})")
             box_l.addWidget(text)
@@ -2094,12 +2219,13 @@ class DriverDefsTab(QWidget):
 #  Track Browser — discover everything in sound/mml, sound/ssg, sound/samples
 ###############################################################################
 class TrackBrowserTab(QWidget):
-    def __init__(self):
+    def __init__(self, project=None):
         super().__init__()
+        self.project = project
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("<b>Audio Asset Browser</b>"))
         layout.addWidget(QLabel(
-            "Every audio source file in sound/ — MML scripts, SSG presets, "
+            "Audio source files in project — MML scripts, SSG presets, "
             "and WAV samples for ADPCM encoding."))
 
         splitter = _QSplit(Qt.Orientation.Horizontal)
@@ -2133,18 +2259,24 @@ class TrackBrowserTab(QWidget):
 
         self._populate()
 
+    def set_project(self, project):
+        self.project = project
+        self._populate()
+
     def _populate(self):
         from PyQt6.QtWidgets import QTreeWidgetItem
         self.tree.clear()
-        for label, folder in [
-            ("MML music",      SOUND_DIR / "mml"),
-            ("MML music (fm)", SOUND_DIR / "fm"),
-            ("SSG presets",    SOUND_DIR / "ssg"),
-            ("WAV samples A",  SAMPLES_DIR),
-            ("WAV samples B",  SOUND_DIR / "samples" / "in_wav_b"),
-            ("Driver source",  SOUND_DIR / "driver"),
-            ("Tools",          SOUND_DIR / "tools"),
-        ]:
+        snd = get_sound_dir(self.project)
+        folders = [
+            ("MML music",           snd / "mml"),
+            ("FM tracks & patches", snd / "fm"),
+            ("SSG presets & tracks", snd / "ssg"),
+            ("WAV samples A (SFX)", get_samples_dir(self.project, "a")),
+            ("WAV samples B (Stream)", get_samples_dir(self.project, "b")),
+            ("Driver source",       REPO_ROOT / "sound" / "driver"),
+            ("Sound tools",         REPO_ROOT / "sound" / "tools"),
+        ]
+        for label, folder in folders:
             root = QTreeWidgetItem([label, ""])
             self.tree.addTopLevelItem(root)
             if not folder.exists():
@@ -2266,8 +2398,9 @@ class AudioMixTab(QWidget):
 #  ROM Inspector — show built ROM files (sizes, timestamps, presence)
 ###############################################################################
 class RomInspectorTab(QWidget):
-    def __init__(self):
+    def __init__(self, project=None):
         super().__init__()
+        self.project = project
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("<b>Built ROM Inspector</b>"))
         layout.addWidget(QLabel(
@@ -2286,6 +2419,10 @@ class RomInspectorTab(QWidget):
         btn_refresh.clicked.connect(self._refresh)
         layout.addWidget(btn_refresh)
 
+        self._refresh()
+
+    def set_project(self, project):
+        self.project = project
         self._refresh()
 
     def _refresh(self):
@@ -2345,8 +2482,9 @@ class MMLDesignerTab(QWidget):
     NOTE_NAMES = ["C", "C+", "D", "D+", "E", "F",
                   "F+", "G", "G+", "A", "A+", "B"]
 
-    def __init__(self):
+    def __init__(self, project=None):
         super().__init__()
+        self.project = project
         self._steps = 16              # number of grid columns
         self._cell_px = 28
         self._octaves = 2             # rows = 12 * octaves
@@ -2411,6 +2549,9 @@ class MMLDesignerTab(QWidget):
         layout.addWidget(self.text)
 
         self._render()
+
+    def set_project(self, project):
+        self.project = project
 
     def _on_steps(self, v):
         # Resize grid preserving existing content
@@ -2515,18 +2656,15 @@ class MMLDesignerTab(QWidget):
         self.text.setPlainText(text)
 
     def _save(self):
+        default_dir = get_mml_dir(self.project)
         path, _ = QFileDialog.getSaveFileName(
             self, "Save MML",
-            str(SOUND_DIR / "mml"),
+            str(default_dir),
             "MML (*.mml);;All Files (*)")
         if not path:
             return
-        try:
-            Path(path).write_text(self.text.toPlainText())
-            QMessageBox.information(self, "Saved",
-                                    f"Wrote {path}")
-        except Exception as e:
-            QMessageBox.warning(self, "Save failed", str(e))
+        if save_document(self, path, self.text.toPlainText()):
+            QMessageBox.information(self, "Saved", f"Wrote {path}")
 
 
 ###############################################################################
@@ -2584,8 +2722,9 @@ class LiveWaveformTab(QWidget):
     QAudioSink, and animates the waveform + spectrum displays as the
     clip streams.
     """
-    def __init__(self, fm_tab=None, ssg_tab=None, mml_tab=None):
+    def __init__(self, project=None, fm_tab=None, ssg_tab=None, mml_tab=None):
         super().__init__()
+        self.project  = project
         self._fm_tab  = fm_tab
         self._ssg_tab = ssg_tab
         self._mml_tab = mml_tab
@@ -2652,6 +2791,9 @@ class LiveWaveformTab(QWidget):
         self.timer = QTimer(self)
         self.timer.setInterval(33)        # ~30 fps display refresh
         self.timer.timeout.connect(self._tick)
+
+    def set_project(self, project):
+        self.project = project
 
     # ------------------------------------------------------------------
     def _synthesize(self) -> np.ndarray:
@@ -2760,42 +2902,49 @@ class LiveWaveformTab(QWidget):
 
 
 class SoundStudio(QMainWindow):
-    def __init__(self):
+    def __init__(self, game=None):
         super().__init__()
-        self.setWindowTitle("NeoGeo YM2610 Sound Studio")
+        self.repo_root = REPO_ROOT
+        self.project = StudioProject.open(self.repo_root, game)
+        self.setWindowTitle(f"NeoGeo YM2610 Sound Studio — {self.project.game}")
         self.resize(1200, 780)
         self._apply_theme()
 
         tabs = QTabWidget()
-        self.fm_tab       = FMPatchTab()
-        self.mml_tab      = MmlComposerTab()
-        self.ssg_tab      = SSGPresetTab()
-        self.adpcm_tab    = ADPCMTab()
-        self.composer_tab = ComposerTab()
-        self.sim_tab      = YM2610SimTab()
-        self.pipe_tab     = PipelineRunnerTab()
-        self.defs_tab     = DriverDefsTab()
-        self.tracks_tab   = TrackBrowserTab()
-        self.mix_tab      = AudioMixTab()
-        self.rom_tab      = RomInspectorTab()
-        self.live_tab     = LiveWaveformTab(
-            fm_tab=self.fm_tab, ssg_tab=self.ssg_tab, mml_tab=self.mml_tab)
-        self.mml_design_tab = MMLDesignerTab()
+        tabs.setDocumentMode(True)
+        self.fm_tab         = FMPatchTab(self.project)
+        self.mml_tab        = MmlComposerTab(self.project)
+        self.mml_design_tab = MMLDesignerTab(self.project)
+        self.ssg_tab        = SSGPresetTab(self.project)
+        self.adpcm_tab      = ADPCMTab(self.project)
+        self.composer_tab   = ComposerTab(self.project)
+        self.sim_tab        = YM2610SimTab(self.project)
+        self.live_tab       = LiveWaveformTab(
+            self.project, fm_tab=self.fm_tab, ssg_tab=self.ssg_tab, mml_tab=self.mml_tab)
+        self.tracks_tab     = TrackBrowserTab(self.project)
+        self.mix_tab        = AudioMixTab()
+        self.build_panel    = BuildPanel(self.project, "sound")
+        self.rom_tab        = RomInspectorTab(self.project)
+        self.defs_tab       = DriverDefsTab()
 
-        tabs.addTab(self.fm_tab,       "FM Patches")
-        tabs.addTab(self.mml_tab,      "MML Composer")
+        tabs.addTab(self.fm_tab,         "FM Patches")
+        tabs.addTab(self.mml_tab,        "MML Composer")
         tabs.addTab(self.mml_design_tab, "MML Designer")
-        tabs.addTab(self.ssg_tab,      "SSG Presets")
-        tabs.addTab(self.adpcm_tab,    "ADPCM Samples")
-        tabs.addTab(self.composer_tab, "Composer")
-        tabs.addTab(self.sim_tab,      "YM2610 Simulator")
-        tabs.addTab(self.live_tab,     "Live Waveform")
-        tabs.addTab(self.tracks_tab,   "Track Browser")
-        tabs.addTab(self.mix_tab,      "Audio Mix")
-        tabs.addTab(self.pipe_tab,     "Pipeline")
-        tabs.addTab(self.rom_tab,      "ROM Inspector")
-        tabs.addTab(self.defs_tab,     "Identifiers")
-        self.setCentralWidget(tabs)
+        tabs.addTab(self.ssg_tab,        "SSG Presets")
+        tabs.addTab(self.adpcm_tab,      "ADPCM Samples")
+        tabs.addTab(self.composer_tab,   "Composer")
+        tabs.addTab(self.sim_tab,        "YM2610 Simulator")
+        tabs.addTab(self.live_tab,       "Live Waveform")
+        tabs.addTab(self.tracks_tab,     "Track Browser")
+        tabs.addTab(self.mix_tab,        "Audio Mix")
+        tabs.addTab(self.build_panel,    "Build & Make")
+        tabs.addTab(self.rom_tab,        "ROM Inspector")
+        tabs.addTab(self.defs_tab,       "Identifiers")
+
+        self.setStatusBar(QStatusBar())
+        mount_workspace(self, tabs, self.project, "sound", self._switch_game, self._reload)
+        self.statusBar().showMessage(
+            f"{self.project.game} (ID {self.project.game_id})  |  Sound Studio Ready")
 
         self._build_menu()
 
@@ -2821,6 +2970,7 @@ class SoundStudio(QMainWindow):
     def _build_menu(self):
         menu = self.menuBar()
         file_menu = menu.addMenu("File")
+        file_menu.addAction("Reload Project", self._reload)
         file_menu.addAction("Reload Patches", self.fm_tab._load_patches)
         file_menu.addAction("Reload SSG Presets", self.ssg_tab._load_presets)
         file_menu.addAction("Reload Samples", self.adpcm_tab._load_samples)
@@ -2829,6 +2979,34 @@ class SoundStudio(QMainWindow):
 
         help_menu = menu.addMenu("Help")
         help_menu.addAction("YM2610 Overview", self._show_ym2610_docs)
+        help_menu.addAction("Desktop Studios Manual",
+            lambda: QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.project.root / "docs" / "DESKTOP_STUDIOS.md"))))
+
+    def _switch_game(self, game_name):
+        if not game_name or game_name == self.project.game:
+            return
+        try:
+            self.project = StudioProject.open(self.repo_root, game_name)
+            self._update_project_all_tabs()
+            update_workspace_project(self, self.project, "sound")
+            self.setWindowTitle(f"NeoGeo YM2610 Sound Studio — {self.project.game}")
+            self.statusBar().showMessage(
+                f"Switched to {self.project.game} (ID {self.project.game_id})")
+        except Exception as exc:
+            QMessageBox.warning(self, "Project Switch Error", str(exc))
+
+    def _reload(self):
+        self._update_project_all_tabs()
+        update_workspace_project(self, self.project, "sound")
+        self.statusBar().showMessage(f"Project '{self.project.game}' reloaded from disk.")
+
+    def _update_project_all_tabs(self):
+        for tab in [self.fm_tab, self.mml_tab, self.mml_design_tab,
+                    self.ssg_tab, self.adpcm_tab, self.composer_tab,
+                    self.sim_tab, self.live_tab, self.tracks_tab,
+                    self.build_panel, self.rom_tab]:
+            if hasattr(tab, "set_project"):
+                tab.set_project(self.project)
 
     def _show_ym2610_docs(self):
         msg = QMessageBox(self)
@@ -2869,10 +3047,13 @@ class SoundStudio(QMainWindow):
 
 
 def main():
+    game = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else None
     app = QApplication(sys.argv)
-    win = SoundStudio()
+    app.setApplicationName("Sound Studio")
+    win = SoundStudio(game)
     win.show()
     sys.exit(app.exec())
+
 
 if __name__ == "__main__":
     main()
