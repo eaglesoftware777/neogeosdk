@@ -1,6 +1,6 @@
 ; 4_voice_get_ready - short ready sting
 
-T220
+T72
 P0
 V12
 O4

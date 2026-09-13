@@ -1,9 +1,9 @@
-; 5_fm_example_f - warm reed theme (D minor)
+; 5_fm_example_f - battle brass theme (D minor)
 
-T120
+T24
 I5
-V14
-O3
+V12
+O4
 L8
 
 D F A > D  < A F D A

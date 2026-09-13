@@ -1508,7 +1508,7 @@ static uint8_t NEOGEO_USER chap_sound(void)
         uint8_t fm_track = (i == 0u) ? SOUND_FM_D : SOUND_FM_F;
         demo_fix_puts(2u, 13u,
                       (i == 0u) ? "FM 4  WARM BELL     " :
-                                  "FM 6  WARM REED     ", 1u);
+                                  "FM 6  BATTLE BRASS  ", 1u);
         soundStopAll();                            snd_step();
         soundSceneReset();                         snd_step();
         soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
@@ -1548,13 +1548,13 @@ static uint8_t NEOGEO_USER chap_sound(void)
     if (fm_lfo_hold(0x0Fu, 120u)) return 1u;
     soundFMSetLFO(0x00u); snd_step();
 
-    demo_fix_puts(2u, 15u, "TEMPO 150 BPM                    ", 1u);
+    demo_fix_puts(2u, 15u, "TEMPO 72 BPM  (quick)             ", 1u);
     soundStopMusic(); snd_step();
-    playFMTrack(SOUND_FM_D); snd_step();
-    soundFMSetBPM(150u); snd_step();
+    playFMTrack(SOUND_FM_G); snd_step();
+    soundFMSetBPM(72u); snd_step();
     if (uwait(180u)) return 1u;
-    demo_fix_puts(2u, 15u, "TEMPO 90 BPM                     ", 1u);
-    soundFMSetBPM(90u); snd_step();
+    demo_fix_puts(2u, 15u, "TEMPO 24 BPM  (slow)              ", 1u);
+    soundFMSetBPM(24u); snd_step();
     if (uwait(180u)) return 1u;
 
     soundStopAll();          snd_step();

@@ -193,7 +193,13 @@ Hardware behaviour established on this branch and built into both engines:
 - **Content**: nine ADPCM-B beds, eight FM tracks and nine SSG tracks with
   generic names and letter ids; a recorded voice bank behind `speakText()`
   and `speakWord()`, with whole words preferred and letters, digits and
-  punctuation as fallback; softer FM patches and lower, slower SSG melodies.
+  punctuation as fallback.  The tracks play at the pace and pitch they were
+  tuned at: their tempos are written as the 9-72 BPM they were always
+  stepped at, and the SSG voice sits an octave above its MIDI number, where
+  a square wave carries over the beds.
+- **Inline MML cues start what they name.**  `@a`, `@b`, `@f` and `@s`
+  loaded their number into A and then stored the cursor, which overwrote
+  it; the menu loop's bed and FM lead had never started.
 - An SSG formant speech engine was built, evaluated on hardware and removed:
   a pure SSG path cannot produce intelligible speech.
 - Measured on the built ROMs: Timer B 124.012 Hz; tempo, LFO pitch,

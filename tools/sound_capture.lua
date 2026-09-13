@@ -27,28 +27,30 @@ local events = {
     {4, {4, 0x31, 3, 0x1e, 120}, 'fm_120'},
     {10, {0x1e, 90}, 'fm_90'},
     {16, {0x1e, 150}, 'fm_150'},
+    -- The LFO track holds quarter notes 2.5 s apart with a rest, so each
+    -- stage gets eight seconds to be sure a sustained note starts inside it.
     {22, {4, 0x31, 6, 0x17, 0}, 'lfo_off'},
-    {26, {0x17, 8}, 'lfo_0'},
-    {30, {0x17, 12}, 'lfo_4'},
-    {34, {0x17, 15}, 'lfo_7'},
-    {38, {4, 0x32, 0, 0x1f, 120}, 'ssg_120'},
-    {44, {0x07, 0}, 'ssg_mute'},
-    {46, {4, 0x05, 0x3f, 0x40}, 'coin'},
-    {48, {0x16, 92}, 'voice'},
-    {51, {4, 0x06, 0xb8, 0x80}, 'adpcmb_32k'},
-    {64, {4, 0x32, 4}, 'ssg_formant'},
-    {69, {4}, 'stop'},
-    {70, {0x31, 3, 0x13, 0}, 'fm_mute'},
-    {72, {4, 0x05, 0x28, 0x16, 92, 0x16, 93, 0x16, 94,
+    {30, {0x17, 8}, 'lfo_0'},
+    {38, {0x17, 12}, 'lfo_4'},
+    {46, {0x17, 15}, 'lfo_7'},
+    {54, {4, 0x32, 0, 0x1f, 120}, 'ssg_120'},
+    {60, {0x07, 0}, 'ssg_mute'},
+    {62, {4, 0x05, 0x3f, 0x40}, 'coin'},
+    {64, {0x16, 92}, 'voice'},
+    {67, {4, 0x06, 0xb8, 0x80}, 'adpcmb_32k'},
+    {80, {4, 0x32, 4}, 'ssg_formant'},
+    {85, {4}, 'stop'},
+    {86, {0x31, 3, 0x13, 0}, 'fm_mute'},
+    {88, {4, 0x05, 0x28, 0x16, 92, 0x16, 93, 0x16, 94,
            0x16, 95, 0x16, 96, 0x16, 97}, 'six_voices'},
-    {75, {4}, 'final_stop'},
-    {76, {4, 0x06, 0xa8, 0x18, 1, 0x80}, 'b_loop'},
-    {89, {0x0e, 1, 0x0a, 0xfe}, 'b_fade'},
-    {92, {4, 0x06, 0xb8, 0x80}, 'b_one_shot'},
-    {106, {4}, 'end_stop'},
-    {108, {1, 0x23}, 'mml_mix'},
-    {141, {4, 0x20}, 'mml_inline_b'},
-    {144, {4}, 'mml_stop'},
+    {91, {4}, 'final_stop'},
+    {92, {4, 0x06, 0xa8, 0x18, 1, 0x80}, 'b_loop'},
+    {105, {0x0e, 1, 0x0a, 0xfe}, 'b_fade'},
+    {108, {4, 0x06, 0xb8, 0x80}, 'b_one_shot'},
+    {122, {4}, 'end_stop'},
+    {124, {1, 0x20}, 'mml_mix'},
+    {157, {4, 0x20}, 'mml_inline_b'},
+    {165, {4}, 'mml_stop'},
 }
 local event, byte = 1, 1
 emu.register_frame_done(function()
@@ -82,7 +84,7 @@ emu.register_frame_done(function()
         if byte > #e[2] then event, byte = event + 1, 1 end
     end
     log:flush()
-    if now - origin >= 145 then
+    if now - origin >= 166 then
         tap:remove()
         log:close()
         commands:close()

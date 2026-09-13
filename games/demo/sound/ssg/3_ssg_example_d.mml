@@ -1,6 +1,6 @@
 ; 3_ssg_example_d - spare low pulse
 
-T190
+T36
 P1
 V10
 O4

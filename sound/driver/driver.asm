@@ -1882,17 +1882,23 @@ music_step_continue:
 music_play_adpcma:
     ld a,(hl)
     inc hl
+    ; store_music_ptr returns with A holding the cursor's high byte, which
+    ; the play routine would then take for the sample number.  Keep the
+    ; number in C across it and keep the event cursor across the lookup.
+    ld c,a
     call store_music_ptr
-    ; Sample address lookup uses HL; keep the following MML event cursor.
     push hl
+    ld a,c
     call play_adpcma_index
     pop hl
     jp music_step_next
 music_play_adpcmb:
     ld a,(hl)
     inc hl
+    ld c,a
     call store_music_ptr
     push hl
+    ld a,c
     call play_adpcmb_index
     pop hl
     jp music_step_next
@@ -1938,9 +1944,10 @@ music_stop:
 music_play_fm:
     ld a,(hl)
     inc hl
-    ; Save music stream pointer before starting FM
+    ld c,a
     call store_music_ptr
     push hl
+    ld a,c
     call play_fm_index
     pop hl
     jp music_step_next
@@ -1948,9 +1955,10 @@ music_play_fm:
 music_play_ssg:
     ld a,(hl)
     inc hl
-    ; Save music stream pointer before starting standalone SSG
+    ld c,a
     call store_music_ptr
     push hl
+    ld a,c
     call play_ssg_index
     pop hl
     jp music_step_next
@@ -2643,13 +2651,17 @@ ssg_note_index:
     ld d,(hl)
 
     ; Shift period for octave
-    ; MML uses MIDI numbering: C5 is 72, hence octave index 6 here.
+    ; The SSG voice sits one octave above its MIDI number: an O4 note in
+    ; an SSG track sounds at what a piano calls octave 5.  That is where
+    ; the SSG carries over the FM and ADPCM beds, and every track in the
+    ; tree was tuned by ear against it - so the reference is octave
+    ; index 5, not the 6 that MIDI numbering alone would suggest.
     ld a,c
-    cp 6
+    cp 5
     jr z,ssg_period_ready
     jr c,ssg_shift_left
 ssg_shift_right:
-    sub 6
+    sub 5
     jr z,ssg_period_ready
 ssg_shift_right_loop:
     srl d
@@ -2658,7 +2670,7 @@ ssg_shift_right_loop:
     jr nz,ssg_shift_right_loop
     jr ssg_period_ready
 ssg_shift_left:
-    ld a,6
+    ld a,5
     sub c
     jr z,ssg_period_ready
 ssg_shift_left_loop:

@@ -1,5 +1,5 @@
 ; this file was created with wlalink by ville helin <ville.helin@iki.fi>.
-; wla symbolic information for "/mnt/c/neogeo/neogeosdk/out/777-m1.m1".
+; wla symbolic information for "/mnt/c/neogeo/neogeosdk/out/779-m1.m1".
 
 [information]
 version 3
@@ -234,31 +234,31 @@ wlasymbol true
 00:1519 fm_track_3
 00:1595 fm_track_4
 00:1619 fm_track_5
-00:16c1 fm_track_6
-00:16fb fm_track_7
-00:177f music_track_table
-00:178f music_track_0
-00:180d music_track_1
-00:18b3 music_track_2
-00:1919 music_track_3
-00:1933 music_track_4
-00:19b3 music_track_5
-00:1a55 music_track_6
-00:1ad5 music_track_7
-00:1b3d ssg_preset_table
-00:1b5b ssg_track_table
-00:1b6d ssg_track_0
-00:1be3 ssg_track_1
-00:1c57 ssg_track_2
-00:1cbb ssg_track_3
-00:1d1d ssg_track_4
-00:1d3b ssg_track_5
-00:1d5d ssg_track_6
-00:1d7d ssg_track_7
-00:1df1 ssg_track_8
-00:1e59 sample_address_table
-00:2011 adpcmb_delta_n_table
-00:2023 sound_data_end
+00:1683 fm_track_6
+00:1721 fm_track_7
+00:17a5 music_track_table
+00:17b5 music_track_0
+00:1833 music_track_1
+00:18d9 music_track_2
+00:193f music_track_3
+00:19cf music_track_4
+00:1a4f music_track_5
+00:1af1 music_track_6
+00:1b71 music_track_7
+00:1bd9 ssg_preset_table
+00:1bf7 ssg_track_table
+00:1c09 ssg_track_0
+00:1c6d ssg_track_1
+00:1cc5 ssg_track_2
+00:1d29 ssg_track_3
+00:1d8b ssg_track_4
+00:1da9 ssg_track_5
+00:1dcb ssg_track_6
+00:1deb ssg_track_7
+00:1e7f ssg_track_8
+00:1ee5 sample_address_table
+00:209d adpcmb_delta_n_table
+00:20af sound_data_end
 
 [definitions]
 00000004 _sizeof_reset
@@ -488,29 +488,29 @@ wlasymbol true
 0000005e _sizeof_fm_track_2
 0000007c _sizeof_fm_track_3
 00000084 _sizeof_fm_track_4
-000000a8 _sizeof_fm_track_5
-0000003a _sizeof_fm_track_6
+0000006a _sizeof_fm_track_5
+0000009e _sizeof_fm_track_6
 00000084 _sizeof_fm_track_7
 00000010 _sizeof_music_track_table
 0000007e _sizeof_music_track_0
 000000a6 _sizeof_music_track_1
 00000066 _sizeof_music_track_2
-0000001a _sizeof_music_track_3
+00000090 _sizeof_music_track_3
 00000080 _sizeof_music_track_4
 000000a2 _sizeof_music_track_5
 00000080 _sizeof_music_track_6
 00000068 _sizeof_music_track_7
 0000001e _sizeof_ssg_preset_table
 00000012 _sizeof_ssg_track_table
-00000076 _sizeof_ssg_track_0
-00000074 _sizeof_ssg_track_1
+00000064 _sizeof_ssg_track_0
+00000058 _sizeof_ssg_track_1
 00000064 _sizeof_ssg_track_2
 00000062 _sizeof_ssg_track_3
 0000001e _sizeof_ssg_track_4
 00000022 _sizeof_ssg_track_5
 00000020 _sizeof_ssg_track_6
-00000074 _sizeof_ssg_track_7
-00000068 _sizeof_ssg_track_8
+00000094 _sizeof_ssg_track_7
+00000066 _sizeof_ssg_track_8
 000001b8 _sizeof_sample_address_table
 00000012 _sizeof_adpcmb_delta_n_table
 00000000 _sizeof_sound_data_end
