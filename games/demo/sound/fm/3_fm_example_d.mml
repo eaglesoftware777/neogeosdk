@@ -1,20 +1,32 @@
-; 3_fm_example_d - warm arcade bell theme in G minor
+; 3_fm_example_d - Korobeiniki (traditional Russian folk song, E minor)
+; The tune everyone knows from the falling-blocks arcade: a driving
+; sixteen-bar loop that suits a bell as well as it suits a square wave.
 
-T24
+T144
 I3
-V10
-O3
+V12
+O5
 L8
 
-G B- D G  F D B- G
-A C E- A  G E- C A
-B- D F B-  A F D C
-G B- > D < B-  G4 D4
+; A
+E4 < B > C D4 C < B
+A4 A > C E4 D C
+< B4 B > C D4 E4
+C4 < A4 A4 R4
 
-L16
-G A B- D  C B- A G  F G A C  B- A G F
-L8
-E- G B- > E-  < D B- G D
-G2 R4 G4
+R8 > D4 F A4 G F
+E4 E C E4 D C
+< B4 B > C D4 E4
+C4 < A4 A4 R4
+
+; B
+E2 C2
+D2 < B2
+> C2 < A2
+G+2 B4 R4
+> E2 C2
+D2 < B2
+> C4 E4 A2
+G+1
 
 ~

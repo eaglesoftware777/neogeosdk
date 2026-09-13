@@ -212,7 +212,9 @@ Hardware behaviour established on this branch and built into both engines:
   stages ending at CRIMSON KEEP, IRON TIDE, SOL CORE, NIGHT RAZOR, ROTOR
   NEST, EARTH HAMMER and SPIRE GOD; enemies that aim at the player; holders
   that break station so a stage cannot hang before its boss; bounded
-  explosion scale; the playfield drawn at full size with keyed pilot mattes.
+  explosion scale; the playfield drawn at full size with keyed pilot
+  mattes; the chosen pilot's portrait beside the playfield for the whole
+  sortie.
 - **The demo** (`games/demo`, 777) - 26 chapters: boot, title, FIX layer,
   FIX FX, sprite screens, characters, char select, physics, camera lab,
   palette FX, particles, particle load, feedback, depth FX, depth parallax,
@@ -220,6 +222,18 @@ Hardware behaviour established on this branch and built into both engines:
   ride, sound, Sky Lance, Star Raid Lance, credits.  Every chapter resets
   the hardware and the engine on entry; beds loop in hardware; the attract
   screen spells the version.
+- **The two shooter chapters play like arcade games.**  A super missile on
+  D that kills outright and always drops loot; pick-ups for speed,
+  missiles and spare planes; a readout row of missiles, speed, level and
+  the stage bar; and a boss kill that earns a loop, a barrel roll and a
+  climb out, a card naming the game and the studio, and a harder level -
+  instead of another boss.  The badges and missile are drawn by
+  `artbox/gen_shooter_items.py`.
+- **The sound chapter plays tunes people know**, all traditional or long
+  out of copyright: Korobeiniki on the FM bell and again as the MML
+  arrangement with an SSG bass, Ode to Joy on the brass and as a
+  square-wave fanfare, Greensleeves under the LFO, The Entertainer on the
+  SSG.
 - **`demo_plus`** (778) - the demo on the C++ engine, sharing scenes, art
   and sound through `GAME_SCENES_FROM`, `GAME_ART_FROM` and
   `GAME_SOUND_FROM`.

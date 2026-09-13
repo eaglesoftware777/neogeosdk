@@ -1,12 +1,24 @@
-; 3_mml_example_d - adventure game item get effect
+; 3_mml_example_d - Korobeiniki, the harmony line under the FM lead
+; @f3 starts the FM Korobeiniki at the same 144 BPM; this voice walks the
+; bass underneath and both loop over the same sixteen bars.
 
-T36
-@f1
-V12
-O5
-L16
+T144
+@p1
+@f3
+V9
+O2
+L8
 
-C E G > C  E G > C4
-R1
+; A: two bars each of E minor, A minor, E minor, A minor - twice
+E B E B E B E B  E B E B E B E B
+A > E < A > E < A > E < A > E  A > E < A > E < A > E < A > E
+E B E B E B E B  E B E B E B E B
+A > E < A > E < A > E < A > E  A > E < A > E < A > E < A > E
+
+; B: one chord a bar - Em C D B7, Em C D E(B7)
+E B E B E B E B  C G C G C G C G
+D A D A D A D A  B > F+ < B > F+ < B > F+ < B > F+
+E B E B E B E B  C G C G C G C G
+D A D A D A D A  E B E B G+ B G+ B
 
 ~

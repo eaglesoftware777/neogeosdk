@@ -1,19 +1,15 @@
-; 8_ssg_example_f - moonlit victory theme
+; 8_ssg_example_f - Ode to Joy (Beethoven, C major) as a square-wave fanfare
+; The SSG sounds an octave above these octave marks.
 
-T24
-P1
-V9
+T120
+P0
+V11
 O3
-L8
-
-A C E A  G E C A
-F A C F  E C A F
-G B- D G  F D B- G
-A C E A  B- A G E
-
 L4
-F A > C < A  G B- > D < B-
-A G E C  D2 E2
-A1
+
+E E F G  G F E D  C C D E  E4 D8 D8 D2
+E E F G  G F E D  C C D E  D4 C8 C8 C2
+D D E C  D E8 F8 E C  D E8 F8 E D  C D G2
+E E F G  G F E D  C C D E  D4 C8 C8 C2
 
 ~

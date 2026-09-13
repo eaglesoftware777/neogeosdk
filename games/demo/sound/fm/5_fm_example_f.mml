@@ -1,22 +1,15 @@
-; 5_fm_example_f - battle brass theme (D minor)
+; 5_fm_example_f - Ode to Joy (Beethoven, D major) on the battle brass
+; Sixteen bars of the theme from the Ninth, straight and square.
 
-T24
+T112
 I5
 V12
 O4
-L8
+L4
 
-D F A > D  < A F D A
-B- > D F D  < A F E C
-D F A > D  C < A G E
-F A > C < A  G F E D
-
-L16
-D F A D  F A > D < A  G B- > D < B-  G E C A
-D F A > D  < C A F D  E G B- > E  < D A F D
-
-L8
-> D C < B- A  G F E D
-F A > D < A  D2 R4 R4
+F+ F+ G A  A G F+ E  D D E F+  F+4 E8 E8 E2
+F+ F+ G A  A G F+ E  D D E F+  E4 D8 D8 D2
+E E F+ D  E F+8 G8 F+ D  E F+8 G8 F+ E  D E A2
+F+ F+ G A  A G F+ E  D D E F+  E4 D8 D8 D2
 
 ~

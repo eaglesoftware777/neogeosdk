@@ -128,6 +128,10 @@ Sky Lance also ships without its own sample set, so its audio path is
 `vrom m1rom` rather than the full `sound` target — see
 `games/skylance/sound/README.md`.
 
+During a sortie the pilot chosen at the roster rides along in the margin
+beside the playfield, in the back render band so a crowded frame can never
+drop it.
+
 A slice of Sky Lance also appears as chapter 24 of the demo reel, so you can
 see the same code driven two ways.
 

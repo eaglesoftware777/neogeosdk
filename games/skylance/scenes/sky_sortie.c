@@ -417,6 +417,16 @@ static uint8_t NEOGEO_USER sky_fly_stage(uint8_t stage)
     sky_stage_begin(stage);
     sky_hud_static();
 
+    /* The pilot chosen at the roster rides along in the margin beside
+     * the playfield for the whole sortie, the way the arcade cabinet
+     * keeps the character you picked in view.  The margin is 32 px wide,
+     * which three sixteenths of the portrait fills exactly.  It sits in
+     * the back band: characters are allotted sprite slots back to front,
+     * so on a crowded frame the front-most are the ones dropped, and
+     * nothing else is ever drawn in the margin for it to be behind. */
+    sky_spawn(SKY_KIND_FACE, k_pilot[s_pick % SKY_PILOTS].face,
+              SKY_FIELD_X / 2, 56, NG_SCALE(3), NG_RENDER_BAND_BACK);
+
     s_player = sky_spawn(SKY_KIND_PLAYER, k_pilot[s_pick % SKY_PILOTS].plane,
                          SKY_FIELD_X + SKY_FIELD_W / 2, SKY_FIELD_BOTTOM - 24,
                          SKY_SCALE_PLAYER, NG_RENDER_BAND_PLAYER);
