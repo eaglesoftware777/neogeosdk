@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 """
-Artbox Studio — NeoGeoSDK visual tool
-Tabs: Tile Grid Viewer | Sprite Designer | Hitbox Editor | Pixel Paint
-Run from the artbox/ directory.
+Artbox Studio — NeoGeoSDK professional visual authoring suite
+Reconstruction, Sprites, Strips, Hitboxes, Palettes, Tiles, and Asset Comparison.
 """
 
 import json
 import math
 import os
+from pathlib import Path
 import struct
 import sys
+
+# Ensure tools, artbox, and root directories are on Python search path
+_STUDIO_DIR = Path(__file__).resolve().parent
+_REPO_ROOT = _STUDIO_DIR.parent
+for _p in (_REPO_ROOT / "tools", _STUDIO_DIR, _REPO_ROOT):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
 
 import numpy as np
 from PyQt6.QtCore import (QPoint, QRect, QSize, Qt, QTimer, pyqtSignal)
@@ -25,6 +32,12 @@ from PyQt6.QtWidgets import (QApplication, QComboBox, QDockWidget,
                               QTreeWidgetItem, QVBoxLayout, QWidget,
                               QDialog, QDialogButtonBox, QPlainTextEdit)
 
+from studio_project import StudioProject, FileSnapshot, game_names
+from studio_widgets import mount_workspace, update_workspace_project, BuildPanel, save_document
+from studio_assets import (
+    ng_rgb, rgb_word, PaletteBook, AssetWorkbench, reconstruct, frame_geometry, ImageView
+)
+
 # ---------------------------------------------------------------------------
 # NeoGeo C-ROM tile codec
 # ---------------------------------------------------------------------------
@@ -33,66 +46,13 @@ TILE_PX = 16        # tile size in pixels
 ZOOM_DEFAULT = 3    # display zoom factor
 
 def ng_color_to_rgb(ng_word: int):
-    """Convert a 16-bit NeoGeo palette word to (r, g, b) each 0-255."""
-    dark      = (ng_word >> 15) & 1
-    red_lsb   = (ng_word >> 14) & 1
-    green_lsb = (ng_word >> 13) & 1
-    blue_lsb  = (ng_word >> 12) & 1
-    red_0     = (ng_word >> 11) & 1
-    red_1     = (ng_word >> 10) & 1
-    red_2     = (ng_word >>  9) & 1
-    red_3     = (ng_word >>  8) & 1
-    green_0   = (ng_word >>  7) & 1
-    green_1   = (ng_word >>  6) & 1
-    green_2   = (ng_word >>  5) & 1
-    green_3   = (ng_word >>  4) & 1
-    blue_0    = (ng_word >>  3) & 1
-    blue_1    = (ng_word >>  2) & 1
-    blue_2    = (ng_word >>  1) & 1
-    blue_3    =  ng_word        & 1
-
-    r5 = (red_0   << 4) | (red_1   << 3) | (red_2   << 2) | (red_3   << 1) | red_lsb
-    g5 = (green_0 << 4) | (green_1 << 3) | (green_2 << 2) | (green_3 << 1) | green_lsb
-    b5 = (blue_0  << 4) | (blue_1  << 3) | (blue_2  << 2) | (blue_3  << 1) | blue_lsb
-
-    r = (r5 << 3) | (r5 >> 2)
-    g = (g5 << 3) | (g5 >> 2)
-    b = (b5 << 3) | (b5 >> 2)
-
-    if dark:
-        r >>= 1
-        g >>= 1
-        b >>= 1
-
-    return (r & 0xFF, g & 0xFF, b & 0xFF)
+    """Convert a 16-bit NeoGeo palette word to (r, g, b) each 0-255 using exact hardware DAC scaling."""
+    return ng_rgb(ng_word)
 
 
 def rgb_to_ng_color(r: int, g: int, b: int) -> int:
-    """Convert (r, g, b) 8-bit each to 16-bit NeoGeo palette word."""
-    r5 = r >> 3
-    g5 = g >> 3
-    b5 = b >> 3
-    red_lsb   = r5 & 1
-    red_0     = (r5 >> 4) & 1
-    red_1     = (r5 >> 3) & 1
-    red_2     = (r5 >> 2) & 1
-    red_3     = (r5 >> 1) & 1
-    green_lsb = g5 & 1
-    green_0   = (g5 >> 4) & 1
-    green_1   = (g5 >> 3) & 1
-    green_2   = (g5 >> 2) & 1
-    green_3   = (g5 >> 1) & 1
-    blue_lsb  = b5 & 1
-    blue_0    = (b5 >> 4) & 1
-    blue_1    = (b5 >> 3) & 1
-    blue_2    = (b5 >> 2) & 1
-    blue_3    = (b5 >> 1) & 1
-    return (
-        (red_lsb << 14) | (green_lsb << 13) | (blue_lsb << 12) |
-        (red_0 << 11) | (red_1 << 10) | (red_2 << 9) | (red_3 << 8) |
-        (green_0 << 7) | (green_1 << 6) | (green_2 << 5) | (green_3 << 4) |
-        (blue_0 << 3) | (blue_1 << 2) | (blue_2 << 1) | blue_3
-    )
+    """Convert (r, g, b) 8-bit each to optimal 16-bit NeoGeo palette word with dark bit calculation."""
+    return rgb_word(r, g, b)
 
 
 def decode_block(c1: bytes, c2: bytes, offset: int):
@@ -163,24 +123,9 @@ def tile_to_pixmap(tile_idx: np.ndarray, palette_rgb: list, zoom=1,
 # ---------------------------------------------------------------------------
 # Palette / neopal.bin helpers
 # ---------------------------------------------------------------------------
-PALETTE_RECORD_SIZE = 136  # 4 (index) + 16*8 (uint64 colours) in neopal.bin
-
-def load_neopal(path="neopal.bin"):
-    """Return dict[image_index] → list of 16 (r,g,b) tuples."""
-    result = {}
-    if not os.path.exists(path):
-        return result
-    data = open(path, "rb").read()
-    n = len(data) // PALETTE_RECORD_SIZE
-    for i in range(n):
-        off = i * PALETTE_RECORD_SIZE
-        img_idx = struct.unpack_from("i", data, off)[0]
-        colors = []
-        for c in range(16):
-            ng = struct.unpack_from("Q", data, off + 4 + c * 8)[0]
-            colors.append(ng_color_to_rgb(ng & 0xFFFF))
-        result[img_idx] = colors
-    return result
+def load_neopal(path="neopal.bin", manifest=()):
+    """Return PaletteBook mapping image IDs and palette banks to 16-color RGB tuples."""
+    return PaletteBook(path, manifest)
 
 
 def load_manifest(path="assets_manifest.json"):
@@ -1690,22 +1635,19 @@ class PipelineRunnerTab(QWidget):
 
 
 class AssetRulesTab(QWidget):
-    """Browse / edit artbox/assets.cfg — the file that drives per-category
+    """Browse / edit assets.cfg — the file that drives per-category
     fit and category bucketing for the pipeline."""
-    def __init__(self):
+    def __init__(self, path=None):
         super().__init__()
         layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("<b>artbox/assets.cfg</b>"))
+        self._path = Path(path) if path else (_AX_ARTBOX / "assets.cfg")
+        layout.addWidget(QLabel(f"<b>{self._path.name}</b> ({self._path.parent})"))
 
         self.editor = QPlainTextEdit()
         self.editor.setStyleSheet(
             "QPlainTextEdit { background:#0c0c10; color:#cfcf80;"
             " font-family:'Courier New',monospace; }")
-        self._path = _AX_ARTBOX / "assets.cfg"
-        try:
-            self.editor.setPlainText(self._path.read_text(errors="replace"))
-        except Exception as e:
-            self.editor.setPlainText(f"(could not read: {e})")
+        self._reload()
         layout.addWidget(self.editor, 1)
 
         btn_row = QHBoxLayout()
@@ -1719,14 +1661,15 @@ class AssetRulesTab(QWidget):
         layout.addLayout(btn_row)
 
     def _save(self):
-        try:
-            self._path.write_text(self.editor.toPlainText())
-        except Exception as e:
-            QMessageBox.warning(self, "Save Failed", str(e))
+        if save_document(self, self._path, self.editor.toPlainText()):
+            QMessageBox.information(self, "Saved", f"Configuration written to:\n{self._path}")
 
     def _reload(self):
         try:
-            self.editor.setPlainText(self._path.read_text(errors="replace"))
+            if self._path.exists():
+                self.editor.setPlainText(self._path.read_text(encoding="utf-8", errors="replace"))
+            else:
+                self.editor.setPlainText(f"; New configuration for {self._path}\n")
         except Exception as e:
             QMessageBox.warning(self, "Reload Failed", str(e))
 
@@ -1735,14 +1678,14 @@ class AssetRulesTab(QWidget):
 #  Asset Browser — recursively list every PNG in artbox/in/* with thumbnail
 ###############################################################################
 class AssetBrowserTab(QWidget):
-    def __init__(self):
+    def __init__(self, art_dir=None):
         super().__init__()
         from PyQt6.QtWidgets import QTreeWidget, QTreeWidgetItem
+        self.art_dir = Path(art_dir) if art_dir else _AX_ARTBOX
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("<b>Source Asset Browser</b>"))
         layout.addWidget(QLabel(
-            "Every PNG under artbox/in/ + artbox/infix/.  Click a file "
-            "to preview at native size."))
+            f"Browsing source PNGs under {self.art_dir}. Click a file to preview at native size."))
 
         splitter = QSplitter(Qt.Orientation.Horizontal)
 
@@ -1779,19 +1722,27 @@ class AssetBrowserTab(QWidget):
 
         self._populate()
 
+    def set_art_dir(self, art_dir):
+        self.art_dir = Path(art_dir)
+        self._populate()
+
     def _populate(self):
         from PyQt6.QtWidgets import QTreeWidgetItem
         self.tree.clear()
-        for label, folder in [
-            ("in/backgrounds",         _AX_ARTBOX / "in" / "backgrounds"),
-            ("in/characters",          _AX_ARTBOX / "in" / "characters"),
-            ("in/effects",             _AX_ARTBOX / "in" / "effects"),
-            ("in/eyecatcher",          _AX_ARTBOX / "in" / "eyecatcher"),
-            ("in/npcs",                _AX_ARTBOX / "in" / "npcs"),
-            ("in/screens",             _AX_ARTBOX / "in" / "screens"),
-            ("in/titles",              _AX_ARTBOX / "in" / "titles"),
-            ("infix (FIX-layer art)",  _AX_ARTBOX / "infix"),
-        ]:
+        folders = []
+        in_root = self.art_dir / "in" if not self.art_dir.name == "in" else self.art_dir
+        if in_root.exists():
+            for child in sorted(in_root.iterdir()):
+                if child.is_dir():
+                    folders.append((f"in/{child.name}", child))
+        else:
+            folders.append(("in (missing)", in_root))
+
+        infix_dir = self.art_dir.parent / "artbox" / "infix" if self.art_dir.name == "in" else self.art_dir / "infix"
+        if infix_dir.exists():
+            folders.append(("infix (FIX-layer art)", infix_dir))
+
+        for label, folder in folders:
             root = QTreeWidgetItem([label, "", ""])
             self.tree.addTopLevelItem(root)
             if not folder.exists():
@@ -2526,27 +2477,48 @@ class ArtboxStudio(QMainWindow):
         self.resize(1200, 800)
 
         self.c1: bytearray = bytearray()
+class ArtboxStudio(QMainWindow):
+    def __init__(self, game=None):
+        super().__init__()
+        self.setWindowTitle("Artbox Studio — NeoGeo Universal 2D")
+        self.resize(1280, 840)
+
+        self.repo_root = _REPO_ROOT
+        try:
+            self.project = StudioProject.open(self.repo_root, game)
+        except Exception:
+            self.project = StudioProject.open(self.repo_root, "demo")
+
+        self.c1: bytearray = bytearray()
         self.c2: bytearray = bytearray()
-        self.palettes: dict = {}
+        self.palettes = PaletteBook()
         self.manifest: list = []
+        self._dark_bg = True
 
         self._load_data()
         self._build_ui()
         self._build_menu()
 
     def _load_data(self):
-        # Load C-ROMs (use 777-c1.c1 / 777-c2.c2 in artbox directory)
-        for fname, attr in (("777-c1.c1", "c1"), ("777-c2.c2", "c2")):
-            if os.path.exists(fname):
-                with open(fname, "rb") as f:
-                    setattr(self, attr, bytearray(f.read()))
-        self.palettes = load_neopal("neopal.bin")
-        self.manifest = load_manifest("assets_manifest.json")
+        c1_path, c2_path = self.project.c_rom_paths()
+        for path, attr in ((c1_path, "c1"), (c2_path, "c2")):
+            if path and path.exists():
+                setattr(self, attr, bytearray(path.read_bytes()))
+            else:
+                setattr(self, attr, bytearray(4194304))  # 4MB default empty ROM buffer
+
+        manifest_path = self.project.manifest_path()
+        self.manifest = load_manifest(str(manifest_path)) if manifest_path.exists() else []
+
+        neopal_path = self.project.neopal_path()
+        self.palettes = load_neopal(str(neopal_path), self.manifest) if neopal_path.exists() else PaletteBook()
 
     def _build_ui(self):
         tabs = QTabWidget()
         tabs.setDocumentMode(True)
-        self.setCentralWidget(tabs)
+
+        self.tab_workbench = AssetWorkbench(self.project, self.c1, self.c2, self.palettes, self.manifest)
+        tabs.addTab(self.tab_workbench, "Asset Inspector")
 
         self.tab_grid = TileGridTab(self.c1, self.c2, self.palettes, self.manifest)
         tabs.addTab(self.tab_grid, "Tile Grid")
@@ -2569,7 +2541,8 @@ class ArtboxStudio(QMainWindow):
         self.tab_paled = ManualPaletteEditorTab(self.palettes)
         tabs.addTab(self.tab_paled, "Palette Editor")
 
-        self.tab_browser = AssetBrowserTab()
+        in_dir = self.project.art_source if self.project.art_source.exists() else None
+        self.tab_browser = AssetBrowserTab(in_dir)
         tabs.addTab(self.tab_browser, "Asset Browser")
 
         self.tab_hex = HexSpriteInspectorTab(self.c1, self.c2, self.palettes)
@@ -2582,8 +2555,9 @@ class ArtboxStudio(QMainWindow):
         self.tab_level = LevelDesignerTab(self.c1, self.c2, self.palettes)
         tabs.addTab(self.tab_level, "Level Designer")
 
-        self.tab_pipeline = PipelineRunnerTab()
-        tabs.addTab(self.tab_pipeline, "Pipeline")
+        cfg_path = self.project.art_data / "assets.cfg"
+        self.tab_rules = AssetRulesTab(cfg_path if cfg_path.exists() else None)
+        tabs.addTab(self.tab_rules, "Asset Rules")
 
         self.tab_hd = HdCompareTab()
         tabs.addTab(self.tab_hd, "HD Compare")
@@ -2591,20 +2565,21 @@ class ArtboxStudio(QMainWindow):
         self.tab_inv = RomInventoryTab()
         tabs.addTab(self.tab_inv, "ROM Inventory")
 
-        self.tab_rules = AssetRulesTab()
-        tabs.addTab(self.tab_rules, "Asset Rules")
+        self.tab_build = BuildPanel(self.project, "art")
+        tabs.addTab(self.tab_build, "Build & Make")
 
         self.setStatusBar(QStatusBar())
+        mount_workspace(self, tabs, self.project, "art", self._switch_game, self._reload)
         total = len(self.c1) // 64
         self.statusBar().showMessage(
-            f"Loaded {total} tiles from C-ROMs  |  {len(self.manifest)} assets  |  "
-            f"{len(self.palettes)} palettes")
+            f"{self.project.game} (ID {self.project.game_id})  |  {total} tiles loaded  |  "
+            f"{len(self.manifest)} assets  |  {len(self.palettes)} palettes")
 
     def _build_menu(self):
         mb = self.menuBar()
         fm = mb.addMenu("File")
 
-        act_reload = fm.addAction("Reload ROMs")
+        act_reload = fm.addAction("Reload project")
         act_reload.triggered.connect(self._reload)
 
         act_save = fm.addAction("Save ROMs (write painted tiles to disk)")
@@ -2617,38 +2592,58 @@ class ArtboxStudio(QMainWindow):
         vm = mb.addMenu("View")
         act_dark = vm.addAction("Toggle dark/light background")
         act_dark.triggered.connect(self._toggle_bg)
-        self._dark_bg = True
+
+        hm = mb.addMenu("Help")
+        act_manual = hm.addAction("Desktop Studios Manual")
+        act_manual.triggered.connect(
+            lambda: from_local_file_url(self.project.root / "docs" / "DESKTOP_STUDIOS.md")
+        )
+
+    def _switch_game(self, game_name):
+        if not game_name or game_name == self.project.game:
+            return
+        try:
+            self.project = StudioProject.open(self.repo_root, game_name)
+            self._load_data()
+            self._build_ui()
+            update_workspace_project(self, self.project, "art")
+        except Exception as exc:
+            QMessageBox.warning(self, "Project Switch Error", str(exc))
 
     def _reload(self):
         self._load_data()
-        # refresh tabs by rebuilding
         self._build_ui()
-        self.statusBar().showMessage("ROMs reloaded.")
+        update_workspace_project(self, self.project, "art")
+        self.statusBar().showMessage(f"Project '{self.project.game}' reloaded from disk.")
 
     def _save_roms(self):
-        for fname, attr in (("777-c1.c1", "c1"), ("777-c2.c2", "c2")):
-            with open(fname, "wb") as f:
-                f.write(getattr(self, attr))
-        self.statusBar().showMessage("C-ROMs saved to disk.")
+        c1_path, c2_path = self.project.c_rom_paths()
+        ok1 = save_document(self, c1_path, self.c1)
+        ok2 = save_document(self, c2_path, self.c2)
+        if ok1 and ok2:
+            self.statusBar().showMessage(f"C-ROMs saved to {c1_path.parent}")
 
     def _toggle_bg(self):
         self._dark_bg = not self._dark_bg
         bg = QColor(48, 48, 60) if self._dark_bg else QColor(200, 200, 200)
-        if hasattr(self.tab_sprite, "preview"):
+        if hasattr(self, "tab_sprite") and hasattr(self.tab_sprite, "preview"):
             self.tab_sprite.preview.bg = bg
             self.tab_sprite.preview.update()
 
 
+def from_local_file_url(path):
+    from PyQt6.QtCore import QUrl
+    from PyQt6.QtGui import QDesktopServices
+    QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
+
+
 def main():
-    # Run from artbox directory
-    artbox_dir = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(artbox_dir)
+    game = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else None
 
     app = QApplication(sys.argv)
     app.setApplicationName("Artbox Studio")
     app.setStyle("Fusion")
 
-    # Dark palette
     from PyQt6.QtGui import QPalette
     pal = app.palette()
     pal.setColor(QPalette.ColorRole.Window,          QColor(45, 45, 48))
@@ -2662,7 +2657,7 @@ def main():
     pal.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
     app.setPalette(pal)
 
-    win = ArtboxStudio()
+    win = ArtboxStudio(game)
     win.show()
     sys.exit(app.exec())
 
