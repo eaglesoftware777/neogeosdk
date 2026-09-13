@@ -133,7 +133,7 @@ neogeosdk/
 │  ├─ neogeo.h macro.h   hardware registers and inline helpers
 │  └─ sound_ids.h        named music / SFX / FM / SSG ids
 ├─ games/                one directory per game, each self-contained
-│  ├─ demo/              the 25-chapter engine reel        (id 777)
+│  ├─ demo/              the 26-chapter engine reel        (id 777)
 │  ├─ demo_plus/         C++-engine smoke test             (id 778)
 │  ├─ skylance/          Sky Lance, a complete shooter     (id 779)
 │  ├─ helloworld/        minimal FIX-text + one sample     (id 772)

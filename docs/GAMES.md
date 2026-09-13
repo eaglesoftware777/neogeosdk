@@ -10,7 +10,7 @@ how you do X", one of these games is doing X.
 
 | Game | Id | Engine | What it is |
 |---|---|---|---|
-| `demo` | 777 | C | The 25-chapter engine reel — every subsystem, in order |
+| `demo` | 777 | C | The 26-chapter engine reel — every subsystem, in order |
 | `demo_plus` | 778 | C++ | The same engine through the C++ API, as a smoke test |
 | `skylance` | 779 | C | Sky Lance — a complete vertical shooter |
 | `helloworld` | 772 | — | FIX text and one sample. The tutorial target. |
@@ -31,7 +31,7 @@ passing `GAME_CFG_FILE=` lets you build any other without editing it.
 
 ## demo — the engine reel (id 777)
 
-A single linear flow of **25 chapters**, each demonstrating one subsystem,
+A single linear flow of **26 chapters**, each demonstrating one subsystem,
 with the chapter number printed in the top-right corner of every scene so a
 problem can be reported by number. **A** advances, **C** restarts the current
 chapter.

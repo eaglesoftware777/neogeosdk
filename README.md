@@ -9,8 +9,8 @@ Neo Geo development SDK for SNK hardware.
 
 ## What's new in v1.7.0 — the 2D engine release
 
-v1.7.0 consolidates the whole `neo_universal_2d` line of work. It is the
-largest release the SDK has had.
+v1.7.0 consolidates the whole `neo_universal_2d` line of work — 226 commits
+over the mainline. It is the largest release the SDK has had.
 
 - **A complete 2D game engine**, in plain C (`sdk/2d_engine/`) and C++14
   (`sdk/2d_engine_plus/`) with an identical public ABI — 35 modules covering
@@ -33,6 +33,10 @@ largest release the SDK has had.
   resampling, with per-sample ADPCM-B rates and 32 kHz beds by default. The
   default ASM driver and its matching V1 are rebuilt together; see the
   [sound guide](docs/SOUND_DRIVER.md) for loop/fade usage and capture tests.
+- **Toolchain 3.0** — GCC 16.2.0, binutils 2.47, gdb 17.2, newlib 4.6.0 and
+  libstdc++ for `m68k-unknown-elf`, as static Linux binaries and as Windows
+  executables with no DLL dependencies; both produce identical ROMs. See
+  [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md).
 - **Sky Lance** (`games/skylance`, id 779) — a complete vertical arcade
   shooter: three pilots, seven stages, a named boss per stage, attract reel,
   pilot select, scoring, lives, energy and a continue flow.
@@ -45,10 +49,14 @@ largest release the SDK has had.
   inspector, movement designer, level designer, HD compare, ROM inventory,
   asset-rule editor) and Sound Studio (track / mix / ROM tabs, live waveform,
   MML designer).
+- **A verification suite** — host-side renderer tests for both engines, art
+  and sound tool tests, and emulator captures that check VRAM, palette RAM,
+  controller handling and the recorded audio of the built ROMs.
 - **A documentation set written for the end user** — introduction,
   programmer's manual, hello-world tutorial, sound driver reference, art
-  pipeline, shipped-game guide, chapter guide, generated C and C++ API
-  references, a single-file overview, and a printable PDF manual.
+  pipeline, toolchain specification, shipped-game guide, chapter guide,
+  generated C and C++ API references, a single-file overview, and a
+  printable PDF manual.
 
 Corrections worth knowing about if you have code on an earlier revision:
 
@@ -58,6 +66,13 @@ Corrections worth knowing about if you have code on an earlier revision:
 - **The backdrop register is `$401FFE`**, the last word of palette RAM.
   `$402000` is a mirror that silently does nothing.
 - **The FIX layer has 28 visible rows**; visible row *y* is map row *y + 2*.
+- **SCB3 holds a sprite's height on screen in characters**, whatever the
+  shrink register says; the two shrink axes are read differently (X from the
+  top nibble, Y from the whole byte), so use `NG_SCALE()` for a byte whose
+  axes agree.
+- **A sound byte is acknowledged by the reply port dropping to 0 and rising
+  to 1**; the port idles at 1, so waiting for 1 alone is not enough.
+  `soundCommand()` handles it — send through the SDK wrappers.
 - **`REG_PALBANK0` / `REG_PALBANK1`** had their addresses swapped.
 - **A minimal game can link again** — `ng_bg.c` / `ng_bg.cpp` now carry weak
   fallbacks for `ng_screen_table[]` / `ng_screen_count`.
@@ -207,7 +222,7 @@ with `GAME=<name>`.
 
 | Folder | Game ID | ROM prefix | Engine | Description |
 |--------|---------|------------|--------|-------------|
-| `games/demo` | 777 | `777-*` | C | The 25-chapter engine reel — every subsystem, in order |
+| `games/demo` | 777 | `777-*` | C | The 26-chapter engine reel — every subsystem, in order |
 | `games/demo_plus` | 778 | `778-*` | C++ | The same engine through the C++ API (`USE_2D_PLUS=1`) |
 | `games/skylance` | 779 | `779-*` | C | Sky Lance — a complete vertical shooter |
 | `games/helloworld` | 772 | `772-*` | — | Minimal FIX-text and one sample; the tutorial target |

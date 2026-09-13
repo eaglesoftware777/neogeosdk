@@ -210,7 +210,7 @@ neogeosdk/
 │  ├─ neogeo.h macro.h   hardware registers and inline helpers
 │  └─ sound_ids.h        named music / SFX / FM / SSG ids
 ├─ games/                one directory per game, each self-contained
-│  ├─ demo/              the 25-chapter engine reel        (id 777)
+│  ├─ demo/              the 26-chapter engine reel        (id 777)
 │  ├─ demo_plus/         C++-engine smoke test             (id 778)
 │  ├─ skylance/          Sky Lance, a complete shooter     (id 779)
 │  ├─ helloworld/        minimal FIX text + one sample     (id 772)
@@ -266,7 +266,7 @@ In day-to-day work you run `p1` almost exclusively. It takes seconds.
 
 | Component | Tool |
 |---|---|
-| 68000 C / C++ | `m68k-unknown-elf-gcc`, freestanding, `-march=68000` |
+| 68000 C / C++ | `m68k-unknown-elf-gcc` 16.2.0 (toolchain 3.0: binutils 2.47, gdb 17.2, newlib 4.6.0, libstdc++), freestanding, `-march=68000` |
 | 68000 link | `m68k-unknown-elf-ld` with a per-game `neogeo.ld` |
 | ROM shaping | `objcopy` → `srec_cat` crop / byte-swap / pad |
 | Z80 sound driver | `wla-z80` + `wlalink` |
@@ -276,8 +276,11 @@ In day-to-day work you run `p1` almost exclusively. It takes seconds.
 | Debug | GDB, MAME debugger, MAME Lua scripting |
 
 C++ builds use `-std=c++14 -fno-exceptions -fno-rtti
--fno-threadsafe-statics`. No standard library, no `malloc`, no floating
-point, no order-dependent global constructors.
+-fno-threadsafe-statics`. The games use no standard library, no `malloc`,
+no floating point and no order-dependent global constructors; the toolchain
+ships newlib and libstdc++ for code that wants them. The same toolchain is
+provided for Linux (static) and Windows (no DLL dependencies) and the two
+produce identical ROMs; see `docs/TOOLCHAIN.md`.
 
 ---
 
@@ -496,7 +499,7 @@ has a dirty-cell cache.
 
 | Game | Id | Engine | What it is |
 |---|---|---|---|
-| `demo` | 777 | C | The 25-chapter engine reel |
+| `demo` | 777 | C | The 26-chapter engine reel |
 | `demo_plus` | 778 | C++ | The same engine through the C++ API |
 | `skylance` | 779 | C | Sky Lance — a complete vertical shooter |
 | `helloworld` | 772 | — | FIX text and one sample; the tutorial target |
@@ -518,14 +521,15 @@ because the sprite chip can shrink but never stretch.
 
 ### The demo reel
 
-25 chapters, each isolating one subsystem, with the chapter number printed
+26 chapters, each isolating one subsystem, with the chapter number printed
 top-right so a problem can be reported by number. **A** advances, **C**
 restarts.
 
 `BOOT · TITLE · FIX LAYER · FIX FX · SPRITE SCREENS · CHARACTERS · CHAR
 SELECT · PHYSICS · CAMERA LAB · PALETTE FX · PARTICLES · PARTICLE LOAD ·
 FEEDBACK · DEPTH FX · DEPTH PARALLAX · NPCS · MINI-GAME · JOYSTICK · SCROLL
-LEVEL · CHAR 2D · TARGET RANGE · DEPTH RIDE · SOUND · SKY LANCE · CREDITS`
+LEVEL · CHAR 2D · TARGET RANGE · DEPTH RIDE · SOUND · SKY LANCE · STAR RAID
+LANCE · CREDITS`
 
 ---
 
@@ -595,22 +599,24 @@ PulseAudio walkthrough for working audio under WSL.
 
 ## 24 / RELEASE — What v1.7.0 adds
 
-v1.7.0 consolidates the whole `neo_universal_2d` line of work — 164 commits.
-It is the largest release the SDK has had.
+v1.7.0 consolidates the whole `neo_universal_2d` line of work — 226 commits
+over the mainline. It is the largest release the SDK has had.
 
 ### The big pieces
 
 | Area | What arrived |
 |---|---|
+| **Toolchain 3.0** | GCC 16.2.0, binutils 2.47, gdb 17.2, newlib 4.6.0, libstdc++; static Linux binaries and DLL-free Windows executables that build identical ROMs |
 | **2D engine** | 35 modules, built from nothing in thirteen staged passes: characters, actions, physics, NPCs, camera, level, particles, feedback, depth FX, palette FX, sprite groups, render queue, FIX layer, input, timers, events, fixed-point math |
 | **C++14 engine** | The same engine with member methods and singletons, identical `extern "C"` ABI, selected with `USE_2D_PLUS=1` |
 | **Supporting layers** | `sdk/ng_fix` (a standalone FIX SDK), plus `ng_audio`, `ng_scene`, `ng_show`, `ng_video`, `bsp` |
 | **Multi-game builds** | Per-game id, ROM folder, artbox, sound tree, linker script and MAME hash set, with a `game.cfg` cross-check that stops one game's art building into another's ROM |
 | **Windows** | Native `MakefileWin32.mak` builds, the shipped ROMs built from the Windows toolchain, CRLF churn stopped |
 | **Installers** | One-shot setup for Linux, Ubuntu, native Windows and WSL |
-| **Art pipeline** | Lab clustering, per-tile palettes, master sprite palettes, blue-noise dithering, halo removal, non-destructive screen fitting, CRT and HD alternative routes |
-| **Audio** | Nine ADPCM-B beds, eight FM tracks, nine SSG tracks, a recorded voice bank, pan / LFO / noise / tempo / CSM control, and a working fade engine |
-| **Games** | Sky Lance, the 25-chapter reel, `demo_plus`, and a working template set |
+| **Art pipeline** | Lab clustering on the hardware lattice, blue-noise dithering, budgeted per-tile palette banks carried through both engines, linear-light resampling, import at display size, halo removal, non-destructive screen fitting, CRT and HD alternative routes, and verification that decodes the built C-ROMs |
+| **Audio** | A driver that keeps musical time (124 Hz tick, live BPM), nine ADPCM-B beds with hardware repeat, eight FM tracks, nine SSG tracks, a recorded voice bank, pan / LFO / noise / tempo / CSM control, a working fade engine, hardware-exact ADPCM encoders, and the 68000-side acknowledgement rule |
+| **Games** | Sky Lance, the 26-chapter reel, `demo_plus`, `neogeogame`, and a working template set |
+| **Verification** | Host renderer tests for both engines, art and sound tool tests, emulator captures of VRAM, palette RAM, controls and recorded audio |
 | **Desktop tools** | Artbox Studio and Sound Studio, both PyQt6 |
 | **Documentation** | The set listed in section 23, including generated API references and this document |
 
@@ -641,6 +647,14 @@ behaves rather than only how it reads.
   twice; the trailing call triggered an NMI whose handler cleared the sound
   port, so the 68000 polling loop read 0, re-triggered, and deadlocked
   permanently. A frozen white screen with no sound.
+- **The acknowledgement rule** — the reply port drops to 0 while the driver
+  reads a byte and rises to 1 once it is queued, and it idles at 1 because
+  the BIOS requires it. `soundCommand()` now waits for the drop before the
+  rise; sent on the stale 1, a two-byte command lost its parameter and the
+  music bed that followed never started.
+- **SCB3 is the sprite's height on screen in characters**, whatever the
+  shrink register says, and the two shrink axes are read differently — X
+  from the top nibble, Y from the whole byte.
 
 ### One thing that was tried and removed
 
