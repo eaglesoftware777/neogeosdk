@@ -1,5 +1,9 @@
 #ifndef MACRO_H
 #define MACRO_H
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define LN10 2.3025850929940456840179914546844
 #define lsize sizeof(uint32_t)
 #define lmask (lsize - 1)
@@ -102,7 +106,12 @@
 //Zones:
 #define RAMSTART         0x100000   //68k work RAM
 #define PALETTES         0x400000   //Palette RAM
-#define BACKDROP         PALETTES+(16*2*256)
+/* Backdrop colour register.  It is the LAST word of palette RAM
+ * (palette 255, colour 15), i.e. PALETTES + 16*2*256 - 2 = 0x401FFE,
+ * not one word past the end of it.  0x402000 is decoded as a mirror
+ * of palette RAM, so the old value silently wrote palette 0 colour 0
+ * and every setBACKDROP() call in the SDK did nothing to the screen. */
+#define BACKDROP         (PALETTES+(16*2*256)-2)
 #define PALOFFSET		 0x20
 #define MEMCARD          0x800000   //Memory card
 #define SYSROM           0xC00000   //System ROM
@@ -121,8 +130,8 @@
 #define REG_SHADOW       0x3A0011
 #define REG_BRDFIX       0x3A000B   //Use embedded fix tileset
 #define REG_CRTFIX       0x3A001B   //Use game fix tileset
-#define REG_PALBANK1     0x3A000F   //Use palette bank 1
-#define REG_PALBANK0     0x3A001F   //Use palette bank 0 (default);
+#define REG_PALBANK0     0x3A000F   //Use palette bank 0 (default)
+#define REG_PALBANK1     0x3A001F   //Use palette bank 1
  
 #define VRAM_ADDR        0x3C0000
 #define VRAM_RW          0x3C0002
@@ -160,13 +169,15 @@
 #define BIOS_P1CHANGE    0x10FD97
 #define BIOS_P1REPEAT    0x10FD98
 #define BIOS_P1TIMER     0x10FD99
+#define BIOS_P1REPTIMER  0x10FD99
  
 #define BIOS_P2STATUS    0x10FD9A
 #define BIOS_P2PREVIOUS  0x10FD9B
 #define BIOS_P2CURRENT   0x10FD9C
 #define BIOS_P2CHANGE    0x10FD9D
 #define BIOS_P2REPEAT    0x10FD9E
-#define BIOS_P2TIMER     0x10FD99
+#define BIOS_P2TIMER     0x10FD9F
+#define BIOS_P2REPTIMER  0x10FD9F
  
 #define BIOS_STATCURNT     0x10FDAC
 #define BIOS_STATCHANGE    0x10FDAD
@@ -176,7 +187,7 @@
 #define BIOS_PLAYER1_MODE	0x10FDB6
 #define BIOS_PLAYER2_MODE	0x10FDB7
 #define BIOS_PLAYER3_MODE	0x10FDB8
-#define BIOS_PLAYER4_MODE	0x10FDB6
+#define BIOS_PLAYER4_MODE	0x10FDB9
 #define BIOS_MESS_POINT    0x10FDBE
 #define BIOS_MESS_BUSY     0x10FDC2
 #define BIOS_MESS_BUFFER   0x10FF00
@@ -415,4 +426,8 @@
 #define NEOGEO_USER __attribute__ ((section ("neogeo_user")))
 #define NEOGEO_INTERRUPT __attribute__ ((interrupt))
 #define CALLNEOGEOF(sym1)  ((void(*)(void))sym1)()
+
+#ifdef __cplusplus
+}
+#endif
 #endif

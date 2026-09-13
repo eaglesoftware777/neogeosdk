@@ -1,0 +1,13 @@
+Sky Lance Interceptor Artwork
+============================
+
+Source pack: Space Shooter Remastered by Kenney.
+License: Creative Commons CC0 1.0 Universal (public-domain dedication).
+
+The demo imports these original PNG assets at a 32-pixel playfield size:
+  enemyBlue1.png  -> zzzzzzzzzz_sky_enemy_a.png
+  enemyRed2.png   -> zzzzzzzzzz_sky_enemy_b.png
+  enemyGreen5.png -> zzzzzzzzzz_sky_enemy_c.png
+
+Original alpha is retained. White hull highlights are not a transparency key.
+The SDK's art conversion produces the Neo Geo tile and palette data.

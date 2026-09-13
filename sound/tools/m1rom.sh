@@ -4,13 +4,19 @@ set -eu
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 SDK_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd)
 OUT_DIR="$SDK_ROOT/out"
-ROM_DIR="$SDK_ROOT/roms/neogeosdk"
+: "${GAME:=demo}"
+ROM_DIR="$SDK_ROOT/roms/$GAME"
 OBJ="$OUT_DIR/driver.o"
 OBJ_C="$OUT_DIR/driver_c.o"
 ASM_C="$OUT_DIR/driver.gen.asm"
 ASM_COMBINED="$OUT_DIR/driver_combined.asm"
 LINKFILE="$OUT_DIR/m1.link"
-M1ROM="$OUT_DIR/777-m1.m1"
+
+# Per-game overrides: Makefile passes GAME_SOUND and GAME_ID; fall back to defaults for standalone use
+: "${GAME_SOUND:=$SDK_ROOT/sound}"
+: "${GAME_ID:=777}"
+
+M1ROM="$OUT_DIR/${GAME_ID}-m1.m1"
 
 mkdir -p "$OUT_DIR"
 
@@ -26,11 +32,25 @@ if [ "$USE_Z80C" = "1" ] && [ ! -f "$Z80CC" ]; then
     make -C "$SDK_ROOT/z80c-special"
 fi
 
-python3 "$SDK_ROOT/sound/tools/fm_patch_compile.py" "$SDK_ROOT/sound/fm/patches.fm" -o "$SDK_ROOT/sound/driver/fm_patch_table.inc"
-python3 "$SDK_ROOT/sound/tools/fm_compile.py" "$SDK_ROOT"/sound/fm/*.mml -o "$SDK_ROOT/sound/driver/fm_data.inc"
-python3 "$SDK_ROOT/sound/tools/mml_compile.py" "$SDK_ROOT"/sound/mml/*.mml -o "$SDK_ROOT/sound/driver/music_data.inc"
-python3 "$SDK_ROOT/sound/tools/ssg_config_compile.py" "$SDK_ROOT/sound/ssg/config.ssg" -o "$SDK_ROOT/sound/driver/ssg_config.inc"
-python3 "$SDK_ROOT/sound/tools/ssg_compile.py" "$SDK_ROOT"/sound/ssg/*.mml -o "$SDK_ROOT/sound/driver/ssg_data.inc"
+# Compile sound data (skipped gracefully when files are absent)
+if [ -f "$GAME_SOUND/fm/patches.fm" ]; then
+    python3 "$SDK_ROOT/sound/tools/fm_patch_compile.py" "$GAME_SOUND/fm/patches.fm" -o "$SDK_ROOT/sound/driver/fm_patch_table.inc"
+fi
+set -- "$GAME_SOUND"/fm/*.mml
+if [ -f "$1" ]; then
+    python3 "$SCRIPT_DIR/fm_compile.py" "$@" -o "$SDK_ROOT/sound/driver/fm_data.inc"
+fi
+set -- "$GAME_SOUND"/mml/*.mml
+if [ -f "$1" ]; then
+    python3 "$SCRIPT_DIR/mml_compile.py" "$@" -o "$SDK_ROOT/sound/driver/music_data.inc"
+fi
+if [ -f "$GAME_SOUND/ssg/config.ssg" ]; then
+    python3 "$SDK_ROOT/sound/tools/ssg_config_compile.py" "$GAME_SOUND/ssg/config.ssg" -o "$SDK_ROOT/sound/driver/ssg_config.inc"
+fi
+set -- "$GAME_SOUND"/ssg/*.mml
+if [ -f "$1" ]; then
+    python3 "$SCRIPT_DIR/ssg_compile.py" "$@" -o "$SDK_ROOT/sound/driver/ssg_data.inc"
+fi
 
 if [ "$USE_Z80C" = "1" ]; then
     echo "Compiling C driver with $Z80CC from $Z80C_SRC"
@@ -43,7 +63,7 @@ if [ "$USE_Z80C" = "1" ] && [ "$LINK_C_DRIVER" = "1" ]; then
         "$SDK_ROOT/sound/driver/driver_prelude.asm" \
         "$ASM_C" \
         "$ASM_COMBINED"
-    "$WLAZ80" -I "$SDK_ROOT/sound/driver" -o "$OBJ_C" "$ASM_COMBINED"
+    python3 "$SCRIPT_DIR/checked_wla.py" "$WLAZ80" -I "$SDK_ROOT/sound/driver" -o "$OBJ_C" "$ASM_COMBINED"
     printf "[objects]\n%s\n" "$OBJ_C" > "$LINKFILE"
 else
     if [ "$USE_Z80C" = "1" ]; then
@@ -51,19 +71,21 @@ else
     else
         echo "Assembling ASM driver with $WLAZ80"
     fi
-    "$WLAZ80" -I "$SDK_ROOT/sound/driver" -o "$OBJ" "$SDK_ROOT/sound/m1/m1.asm"
+    python3 "$SCRIPT_DIR/checked_wla.py" "$WLAZ80" -I "$SDK_ROOT/sound/driver" -o "$OBJ" "$SDK_ROOT/sound/m1/m1.asm"
     printf "[objects]\n%s\n" "$OBJ" > "$LINKFILE"
 fi
-"$WLALINK" -r "$LINKFILE" "$M1ROM"
+python3 "$SCRIPT_DIR/checked_wla.py" "$WLALINK" -S -r "$LINKFILE" "$M1ROM"
 
 current_size=$(wc -c < "$M1ROM" | tr -d ' ')
 target_size=131072
 if [ "$current_size" -lt "$target_size" ]; then
-  truncate -s "$target_size" "$M1ROM"
+  # Pad with the erased-flash value, as the Windows wrapper does, so the two
+  # builds produce the same bytes.
+  head -c $((target_size - current_size)) /dev/zero | tr '\000' '\377' >> "$M1ROM"
 fi
 
 mkdir -p "$ROM_DIR"
-cp "$M1ROM" "$ROM_DIR/777-m1.m1"
+cp "$M1ROM" "$ROM_DIR/${GAME_ID}-m1.m1"
 rm -f "$OBJ" "$OBJ_C" "$ASM_C" "$ASM_COMBINED" "$LINKFILE"
 
 echo "Built $M1ROM"

@@ -3,11 +3,21 @@
 Fix Neo Geo sprite transparency before C1/C2 generation.
 
 Run from the repository root:
-    python3 artbox/fix_sprite_alpha.py
+    python3 artbox/fix_sprite_alpha.py                 # the default set
+    python3 artbox/fix_sprite_alpha.py PATH [PATH ...] # named files or dirs
 
-It processes:
+With no arguments it processes:
     artbox/in/sprite_*.png
     artbox/in/z_npc_*.png
+
+Given paths, it processes those PNGs, walking directories recursively.
+That is how art living under a game's own artbox is repaired, e.g.
+    python3 artbox/fix_sprite_alpha.py games/demo/artbox/in/npcs
+
+A sprite whose background is opaque instead of transparent does not
+degrade gracefully on this hardware: index 0 is transparency, so the
+matte is not a colour that happens to be wrong, it is a solid block the
+sprite carries around with it.
 
 It does NOT erase black clothing/internal pixels.  It only flood-fills
 background/padding pixels connected to the image border, using the corner
@@ -75,10 +85,28 @@ def process(path: Path) -> bool:
         img.save(path)
     return changed
 
-def main():
+def collect(paths):
     files = []
-    for pattern in PATTERNS:
-        files.extend(sorted(IN_DIR.glob(pattern)))
+    for raw in paths:
+        path = Path(raw)
+        if path.is_dir():
+            files.extend(sorted(path.rglob("*.png")))
+        elif path.is_file():
+            files.append(path)
+        else:
+            print("skipped (not found)", path)
+    return files
+
+
+def main():
+    import sys
+
+    if len(sys.argv) > 1:
+        files = collect(sys.argv[1:])
+    else:
+        files = []
+        for pattern in PATTERNS:
+            files.extend(sorted(IN_DIR.glob(pattern)))
 
     changed = 0
     for path in files:

@@ -3,6 +3,10 @@
 
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     uint8_t active;
     uint16_t value;
@@ -18,4 +22,8 @@ uint8_t NEOGEO_USER ng_timer_done(uint8_t id);
 uint16_t NEOGEO_USER ng_timer_value(uint8_t id);
 uint8_t NEOGEO_USER ng_timer_percent_left(uint8_t id);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -1,0 +1,22 @@
+; 8_ssg_example_f - Toccata in D minor (Bach), the opening flourishes
+; The organ mordent and its two lower echoes, then the rolled chord.
+; The SSG sounds an octave above these octave marks.
+
+T104
+P0
+V11
+O4
+L16
+
+a g a2 r8
+g f e d c+8 d2 r4
+O3
+a g a2 r8
+e f c+ d2 r4
+O2
+a g a2 r8
+e f c+ d2 r4
+c+ e g a+ > c+ e g a+ > c+1
+r2
+
+~

@@ -3,6 +3,10 @@
 
 #include "ng_chars.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct NGNpc NGNpc;
 typedef void(*NGNpcThink)(NGNpc *npc, NGCharacter *c);
 
@@ -45,4 +49,8 @@ void NEOGEO_USER ng_npcs_update(void);
 void NEOGEO_USER ng_npc_think_patrol(NGNpc *npc, NGCharacter *c);
 void NEOGEO_USER ng_npc_think_hover(NGNpc *npc, NGCharacter *c);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

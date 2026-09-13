@@ -15,7 +15,11 @@ void NEOGEO_USER ng_fix_blank_cell(uint8_t x, uint8_t y)
      * a real tile number.  Some S-ROMs have visible pixels in that tile.
      * Use tile $00FF for an explicit blank cell, as BIOS clear routines do.
      */
-    addrfix = (uint16_t)(FIXMAP + y + ((uint16_t)x * 32u));
+    /* +2: rows 0/1 of the 32-row FIX map are in vertical blanking, so
+     * visible row y is map row y + 2 - the same convention fixtext_out()
+     * (which ng_fix_putc writes through) uses.  Without it this blanked
+     * a cell two rows above the one it had drawn. */
+    addrfix = (uint16_t)(FIXMAP + y + 2u + ((uint16_t)x * 32u));
     vram_sfix(0x20, addrfix, 0x00FF);
 
     ng_fix_chars[y][x] = ' ';

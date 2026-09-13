@@ -1,91 +1,183 @@
 import os
 import glob
 import sys
+from pcm_metadata import read_rate, delta_n
+
+def c_symbol_suffix(stem):
+    out = []
+    prev_underscore = False
+    for ch in stem.upper():
+        if ("A" <= ch <= "Z") or ("0" <= ch <= "9"):
+            out.append(ch)
+            prev_underscore = False
+        elif not prev_underscore:
+            out.append("_")
+            prev_underscore = True
+    return "".join(out).strip("_") or "SAMPLE"
+
+def voice_define_name(path):
+    stem = os.path.splitext(os.path.basename(path))[0]
+    if len(stem) == 1 and stem.isalpha():
+        return f"SOUND_VOICE_LETTER_{stem.upper()}"
+    if stem.startswith("word_"):
+        return f"SOUND_VOICE_WORD_{c_symbol_suffix(stem[5:])}"
+    if stem.startswith("num_"):
+        return f"SOUND_VOICE_NUM_{c_symbol_suffix(stem[4:])}"
+    if stem.startswith("char_"):
+        return f"SOUND_VOICE_CHAR_{c_symbol_suffix(stem[5:])}"
+    return f"SOUND_VOICE_{c_symbol_suffix(stem)}"
 
 def sample_sort_key(path):
     stem = os.path.splitext(os.path.basename(path))[0]
     try:
         return (0, int(stem))
     except ValueError:
+        pass
+    if len(stem) == 1 and stem.isalpha():
         return (1, stem)
+    if stem.startswith("char_"):
+        return (2, stem)
+    if stem.startswith("num_"):
+        parts = stem.split("_", 2)
+        try:
+            return (3, int(parts[1]), stem)
+        except (IndexError, ValueError):
+            return (3, 9999, stem)
+    if stem.startswith("word_"):
+        return (4, stem)
+    return (5, stem)
 
 def build_vrom():
     script_dir = os.path.dirname(os.path.abspath(__file__))
     sdk_root = os.path.abspath(os.path.join(script_dir, "..", ".."))
     out_dir = os.path.join(sdk_root, "out")
-    rom_dir = os.path.join(sdk_root, "roms", "neogeosdk")
+    game = os.environ.get("GAME", "demo")
+    game_sound = os.environ.get("GAME_SOUND", os.path.join("games", game, "sound"))
+    if not os.path.isabs(game_sound):
+        game_sound = os.path.join(sdk_root, game_sound)
+    rom_dir = os.path.join(sdk_root, "roms", game)
     table_path = os.path.join(sdk_root, "sound", "driver", "sample_table.inc")
-    vrom_path = os.path.join(out_dir, "777-v1.v1")
+    voice_header_path = os.path.join(sdk_root, "sdk", "sound_voice_ids.h")
+    game_id = os.environ.get("GAME_ID", "777")
+    vrom_path = os.path.join(out_dir, f"{game_id}-v1.v1")
 
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
     offset = 0
     adpcma_count = 0
+    adpcma_voice_count = 0
     adpcmb_count = 0
     samples_info = []
+    voice_files_written = []
+    adpcmb_rates = []
+
+    def write_adpcma(vrom, path, is_b=False):
+        """Append one ADPCM-A sample, 256-byte aligned.  Returns True on success."""
+        nonlocal offset
+        size = os.path.getsize(path)
+        if size == 0:
+            return False
+        if size % 256:
+            raise ValueError(f"Unaligned ADPCM sample: {path}; re-encode it first")
+        # ADPCM-A compares only the low 20 address bits at sample end.
+        if not is_b:
+            if size > 0x100000:
+                raise ValueError(f"ADPCM-A sample exceeds 1 MiB: {path}")
+            if offset // 0x100000 != (offset + size - 1) // 0x100000:
+                gap = 0x100000 - (offset % 0x100000)
+                vrom.write(b'\x00' * gap)
+                offset += gap
+        pad = (256 - (offset % 256)) % 256
+        if pad > 0:
+            vrom.write(b'\x08' * pad)
+            offset += pad
+        start_page = offset // 256
+        with open(path, "rb") as sf:
+            vrom.write(sf.read())
+        offset += size
+        end_page = (offset - 1) // 256
+        if end_page > 0xFFFF:
+            raise ValueError("Sample bank exceeds the 16 MiB address window")
+        samples_info.append((start_page, end_page, os.path.basename(path), offset - size, size))
+        return True
 
     with open(vrom_path, "wb") as vrom:
-        # Process ADPCM-A
-        files_a = sorted(glob.glob(os.path.join(sdk_root, "sound", "samples", "out_a", "*.adpcma")), key=sample_sort_key)
+        # Process ADPCM-A SFX bank (out_a/) — numbered 1.wav..N.wav
+        files_a = sorted(glob.glob(os.path.join(game_sound, "samples", "out_a", "*.adpcma")), key=sample_sort_key)
         for f in files_a:
-            size = os.path.getsize(f)
-            if size == 0: continue
+            if write_adpcma(vrom, f):
+                adpcma_count += 1
 
-            # Align to 256 bytes
-            pad = (256 - (offset % 256)) % 256
-            if pad > 0:
-                vrom.write(b'\x08' * pad)
-                offset += pad
-
-            start_page = offset // 256
-            with open(f, "rb") as sf:
-                vrom.write(sf.read())
-
-            offset += size
-            end_page = (offset - 1) // 256
-            samples_info.append((start_page, end_page, os.path.basename(f), offset-size, size))
-            adpcma_count += 1
+        # Process ADPCM-A VOICE bank (out_a_voice/) — alphabet a.wav..z.wav.
+        # Same on-chip format as SFX, just a different input folder so the
+        # SDK can address them by letter rather than number.  Voice indices
+        # are continguous after the SFX bank (e.g. SFX 0..11, voice 12..37).
+        files_a_voice = sorted(glob.glob(os.path.join(game_sound, "samples", "out_a_voice", "*.adpcma")), key=sample_sort_key)
+        for f in files_a_voice:
+            if write_adpcma(vrom, f):
+                voice_files_written.append(f)
+                adpcma_voice_count += 1
 
         # Process ADPCM-B
-        files_b = sorted(glob.glob(os.path.join(sdk_root, "sound", "samples", "out_b", "*.adpcmb")), key=sample_sort_key)
+        files_b = sorted(glob.glob(os.path.join(game_sound, "samples", "out_b", "*.adpcmb")), key=sample_sort_key)
         for f in files_b:
-            size = os.path.getsize(f)
-            if size == 0: continue
-
-            pad = (256 - (offset % 256)) % 256
-            if pad > 0:
-                vrom.write(b'\x08' * pad)
-                offset += pad
-
-            start_page = offset // 256
-            with open(f, "rb") as sf:
-                vrom.write(sf.read())
-
-            offset += size
-            end_page = (offset - 1) // 256
-            samples_info.append((start_page, end_page, os.path.basename(f), offset-size, size))
-            adpcmb_count += 1
+            if write_adpcma(vrom, f, is_b=True):
+                adpcmb_count += 1
+                adpcmb_rates.append(read_rate(f))
 
         # Pad to 2MB (standard for test)
         target_size = 2 * 1024 * 1024
         if offset < target_size:
             vrom.write(b'\xFF' * (target_size - offset))
 
-    # Write sample_table.inc
+    # Write sample_table.inc.  ADPCMA_COUNT is the TOTAL count of
+    # ADPCM-A samples (SFX bank + voice bank) since both share the
+    # same hardware playback path.  ADPCMA_VOICE_BASE marks the first
+    # index of the voice bank so the driver / SDK can address letters
+    # by offset.
     with open(table_path, "w", newline="\n") as t:
         t.write("; Generated by sound/tools/vrom.py\n")
-        t.write(f".define ADPCMA_COUNT {adpcma_count}\n")
+        t.write(f".define ADPCMA_COUNT {adpcma_count + adpcma_voice_count}\n")
+        t.write(f".define ADPCMA_SFX_COUNT {adpcma_count}\n")
+        t.write(f".define ADPCMA_VOICE_BASE {adpcma_count}\n")
+        t.write(f".define ADPCMA_VOICE_COUNT {adpcma_voice_count}\n")
         t.write(f".define ADPCMB_COUNT {adpcmb_count}\n")
         t.write("sample_address_table:\n")
         for start, end, name, off, sz in samples_info:
             t.write(f"  .db ${start & 0xFF:02X}, ${(start >> 8) & 0xFF:02X}, ${end & 0xFF:02X}, ${(end >> 8) & 0xFF:02X} ; {name} (start=${off:06X} size={sz})\n")
+        t.write("adpcmb_delta_n_table:\n")
+        for rate in adpcmb_rates:
+            t.write(f"  .dw ${delta_n(rate):04X} ; {rate} Hz\n")
+
+    with open(voice_header_path, "w", newline="\n") as h:
+        h.write("#ifndef SOUND_VOICE_IDS_H\n")
+        h.write("#define SOUND_VOICE_IDS_H\n\n")
+        h.write("/* Generated by sound/tools/vrom.py from samples/out_a_voice. */\n")
+        h.write("#define SOUND_VOICE_BANK_BASE  SOUND_SFX_COUNT\n")
+        h.write(f"#define SOUND_VOICE_COUNT      {adpcma_voice_count}\n")
+        h.write("#define SOUND_VOICE_BANK_END   (SOUND_VOICE_BANK_BASE + SOUND_VOICE_COUNT)\n")
+        h.write("#define SOUND_VOICE_LETTER_BASE SOUND_VOICE_BANK_BASE\n\n")
+
+        used_names = set()
+        letter_count = 0
+        for idx, path in enumerate(voice_files_written):
+            name = voice_define_name(path)
+            if name in used_names:
+                name = f"{name}_{idx}"
+            used_names.add(name)
+            if name.startswith("SOUND_VOICE_LETTER_"):
+                letter_count += 1
+            h.write(f"#define {name:<38} (SOUND_VOICE_BANK_BASE + {idx:2d})")
+            h.write(f"  /* {os.path.basename(path)} */\n")
+        h.write(f"\n#define SOUND_VOICE_LETTER_COUNT {letter_count}\n\n")
+        h.write("#endif\n")
 
     if not os.path.exists(rom_dir):
         os.makedirs(rom_dir)
 
     import shutil
-    shutil.copy2(vrom_path, os.path.join(rom_dir, "777-v1.v1"))
+    shutil.copy2(vrom_path, os.path.join(rom_dir, f"{game_id}-v1.v1"))
 
     print(f"Built {vrom_path} ({len(samples_info)} samples)")
     print(f"Updated {table_path}")

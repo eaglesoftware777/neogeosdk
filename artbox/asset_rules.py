@@ -6,10 +6,19 @@ import json
 import os
 
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
-CFG_PATH = os.path.join(ROOT, "assets.cfg")
-MANIFEST_PATH = os.path.join(ROOT, "assets_manifest.json")
-OUT_SRT_PATH = os.path.join(ROOT, "out.srt")
+SCRIPT_ROOT = os.path.dirname(os.path.abspath(__file__))
+DATA_ROOT = os.environ.get("ARTBOX_DATA_DIR", SCRIPT_ROOT)
+CFG_PATH = os.path.join(DATA_ROOT, "assets.cfg")
+if not os.path.isfile(CFG_PATH):
+    CFG_PATH = os.path.join(SCRIPT_ROOT, "assets.cfg")
+MANIFEST_PATH = os.path.join(DATA_ROOT, "assets_manifest.json")
+OUT_SRT_PATH = os.path.join(DATA_ROOT, "out.srt")
+
+# Source art normally sits beside the generated files, but a game that reuses
+# another game's artwork points these at that game's directories while still
+# writing its own tables and ROMs into its own artbox.
+IN_DIR = os.environ.get("ARTBOX_IN_DIR", os.path.join(DATA_ROOT, "in"))
+INFIX_DIR = os.environ.get("ARTBOX_INFIX_DIR", os.path.join(DATA_ROOT, "infix"))
 
 # Canonical category order — determines tile/palette assignment order
 CATEGORY_ORDER = [
@@ -46,11 +55,12 @@ def load_rules(cfg_path=CFG_PATH):
                 "pattern": _rule_value(section, "pattern", "*.png"),
                 "mode": _rule_value(section, "mode", "screen").strip().lower(),
                 "category": _rule_value(section, "category", "background").strip().lower(),
-                "fit": _rule_value(section, "fit", "crop").strip().lower(),
+                "fit": _rule_value(section, "fit", "contain").strip().lower(),
                 "anchor": _rule_value(section, "anchor", "center").strip().lower(),
                 "target_width": int(_rule_value(section, "target_width", "256")),
                 "target_height": int(_rule_value(section, "target_height", "256")),
                 "dither": _rule_value(section, "dither", "ordered").strip().lower(),
+                "palette_banks": int(_rule_value(section, "palette_banks", "1")),
                 "contrast": float(_rule_value(section, "contrast", "1.0")),
                 "saturation": float(_rule_value(section, "saturation", "1.0")),
                 "sharpen_radius": float(_rule_value(section, "sharpen_radius", "0.0")),
@@ -58,6 +68,22 @@ def load_rules(cfg_path=CFG_PATH):
                 "sharpen_threshold": int(_rule_value(section, "sharpen_threshold", "0")),
                 "kmeans_samples": int(_rule_value(section, "kmeans_samples", "4096")),
                 "kmeans_iters": int(_rule_value(section, "kmeans_iters", "16")),
+                # Outer-ring halo strip (sprite-mode only).  Off by default;
+                # opt-in per category so legitimate glow / highlight sprites
+                # don't lose their bright outlines.
+                "halo_strip": _rule_value(section, "halo_strip", "false")
+                                  .strip().lower() in ("1", "true", "yes", "on"),
+                "halo_luma_threshold": int(_rule_value(section,
+                                                       "halo_luma_threshold",
+                                                       "220")),
+                # SCB2 vertical shrink this screen is drawn with (0..255).
+                # A screen is stored square but drawn squashed, so the
+                # importer needs the draw-time value to fit the artwork to
+                # the proportions it will actually be seen in.  255 means
+                # "drawn at full height", i.e. no correction.
+                "display_shrink_y": int(_rule_value(section,
+                                                    "display_shrink_y",
+                                                    "255")),
                 "note": _rule_value(section, "note", "").strip(),
             }
         )
@@ -131,11 +157,12 @@ def match_rule(name, rules, category=""):
         "pattern": "*.png",
         "mode": "screen",
         "category": "background",
-        "fit": "crop",
+        "fit": "contain",
         "anchor": "center",
         "target_width": 256,
         "target_height": 256,
         "dither": "floyd",
+        "palette_banks": 1,
         "contrast": 1.0,
         "saturation": 1.0,
         "sharpen_radius": 0.0,
@@ -143,11 +170,15 @@ def match_rule(name, rules, category=""):
         "sharpen_threshold": 0,
         "kmeans_samples": 8192,
         "kmeans_iters": 25,
+        "halo_strip": False,
+        "halo_luma_threshold": 220,
+        "display_shrink_y": 255,
         "note": "",
     }
 
 
-def build_asset_specs(in_dir="in", cfg_path=CFG_PATH):
+def build_asset_specs(in_dir=None, cfg_path=CFG_PATH):
+    in_dir = IN_DIR if in_dir is None else in_dir
     entries = _collect_subdir_files(in_dir)
     rules   = load_rules(cfg_path)
     specs   = []
@@ -169,6 +200,7 @@ def build_asset_specs(in_dir="in", cfg_path=CFG_PATH):
             "target_width": rule["target_width"],
             "target_height": rule["target_height"],
             "dither": rule["dither"],
+            "palette_banks": rule["palette_banks"],
             "contrast": rule["contrast"],
             "saturation": rule["saturation"],
             "sharpen_radius": rule["sharpen_radius"],
@@ -176,6 +208,9 @@ def build_asset_specs(in_dir="in", cfg_path=CFG_PATH):
             "sharpen_threshold": rule["sharpen_threshold"],
             "kmeans_samples": rule["kmeans_samples"],
             "kmeans_iters": rule["kmeans_iters"],
+            "halo_strip": rule["halo_strip"],
+            "halo_luma_threshold": rule["halo_luma_threshold"],
+            "display_shrink_y": rule["display_shrink_y"],
             "note": rule["note"],
             "tile_base": db_index * 256,
             "tile_reserved_count": 256,
@@ -207,6 +242,7 @@ def write_out_srt(specs, out_path=OUT_SRT_PATH):
                 f"mode={spec['mode']} fit={spec['fit']} anchor={spec['anchor']} rule={spec['rule_name']}\n"
             )
             handle.write(f"category={spec.get('category', 'background')}\n")
+            handle.write(f"palette_slots={spec.get('palette_slots', [spec['palette_bank']])}\n")
             handle.write(
                 f"source={spec['source_width']}x{spec['source_height']} "
                 f"canvas={spec['canvas_width']}x{spec['canvas_height']} "

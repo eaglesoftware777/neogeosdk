@@ -3,6 +3,10 @@
 
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct NGCharacter;
 
 /*
@@ -86,4 +90,8 @@ void NEOGEO_USER ng_actions_set_fx_hook(NGActionFxHook fx_hook);
 void NEOGEO_USER ng_char_action(struct NGCharacter *c, uint16_t action_id);
 void NEOGEO_USER ng_actions_update(struct NGCharacter *c);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

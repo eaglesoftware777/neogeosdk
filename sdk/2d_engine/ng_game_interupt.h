@@ -3,6 +3,10 @@
 
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void(*NGInteruptHook)(void);
 
 void NEOGEO_USER ng_game_engine_init(void);
@@ -24,4 +28,8 @@ void NEOGEO_USER ng_game_interupt_set_hooks(
 void NEOGEO_USER ng_game_engine_frame(void);
 void NEOGEO_USER ng_game_interupt(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

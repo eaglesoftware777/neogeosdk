@@ -1,0 +1,18 @@
+; 7_ssg_example_e - Also sprach Zarathustra (Strauss), the sunrise fanfare
+; Three rising calls, each answered by the timpani pulse.
+; The SSG sounds an octave above these octave marks.
+
+T112
+P0
+V11
+O3
+L4
+
+c2 g2 > c1 e2 d+1 < r2
+O2 c8 g8 c8 g8 c8 g8 c8 g8
+O3 c2 g2 > c1 d+2 e1 < r2
+O2 c8 g8 c8 g8 c8 g8 c8 g8
+O3 c2 g2 > c1 e2 f2 g1 < r2
+O2 c8 g8 c8 g8 c8 g8 c8 g8 r1
+
+~

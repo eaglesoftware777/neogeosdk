@@ -1,53 +1,51 @@
-MUSIC MACRO LANGUAGE (MML)
-==========================
+Neo Geo SDK · sound/mml/
+========================
 
-MML source files define music tracks for the SSG and FM channels of the YM2610.
-Tracks are compiled by sound/tools/mml_compile.py into Z80 data tables
-(sound/driver/music_data.inc) that the driver's Timer B engine executes.
-The music engine can layer SSG notes with inline ADPCM-A, ADPCM-B, and FM
-triggers inside a single looping track.
+MML (Music Macro Language) source files for FM and SSG music tracks.
 
-MML SOURCE FILES
-----------------
-  0_samurai_game_loop.mml   — Stage loop 1 / samurai gameplay motif
-  1_samurai_battle_loop.mml — Stage loop 2 / battle motif
-  2_samurai_night_scene.mml — Ending / results motif
-  3_warrior_battle.mml      — Optional extra battle cue source
-  4_eagle_fanfare.mml       — Optional Eagle Software fanfare source
+Files
+-----
 
-Track numbers come from alphabetical sort of filenames.
-Adding or renaming files changes the track number mapping.
+Each track file has the extension .mml and is compiled into a YM2610
+sequence consumed by the Z80 sound driver via the `playMusic` /
+`soundPlayGameLoop` / `playFMTrack` SDK helpers.
 
-Current shipped 68000 flow:
+Layout
+------
 
-- `soundPlayTitleMusic()` uses direct ADPCM-B playback for title
-- `soundPlayGameLoop()` uses direct ADPCM-B playback for stage and ending beds
-- `playMusic()` remains the explicit path when you want MML/SSG ownership of a scene
+  fm/        FM channel MML (4 channels: FM1..FM4)
+  ssg/       SSG channel MML (3 channels: SSG1..SSG3)
+  ../mml     this directory — high-level music sequencing that
+             references FM patches and SSG presets
 
-COMMAND REFERENCE
------------------
-  A-G [n]    : Note with optional length suffix (e.g. C4 = quarter, C8 = eighth)
-  + or #     : Sharp modifier after note letter
-  -          : Flat modifier after note letter
-  R [n]      : Rest for duration n
-  O n        : Set octave (0-7)
-  < / >      : Decrease / increase octave by one
-  L n        : Set default note length (4=quarter, 8=eighth, 16=sixteenth, etc.)
-  T n        : Set tempo
-  V n        : Set SSG volume (0-15)
-  ~          : Loop back to start of track
-  @aN        : Trigger ADPCM-A sample N inline
-  @bN        : Trigger ADPCM-B sample N inline
-  @fN        : Trigger FM track N inline (N = 0..FM_TRACK_COUNT-1)
+Track ID map (sdk/sound_ids.h)
+------------------------------
 
-LAYERING NOTES
---------------
-  Use one `playMusic(n)` call as the owner of the musical scene.
-  Put long ADPCM-B beds and FM counter-lines inline in that music track.
-  Avoid starting standalone SSG tracks from inside normal music flow; the main
-  music engine already owns the SSG side.
+  SOUND_MUSIC_A = 0   /* 0_mml_example_a.mml */
+  SOUND_MUSIC_B = 1   /* 1_mml_example_b.mml */
+  SOUND_MUSIC_C = 2   /* 2_mml_example_c.mml */
+  SOUND_MUSIC_D = 3   /* 3_mml_example_d.mml */
+  SOUND_MUSIC_E = 4   /* 4_mml_example_e.mml */
+  SOUND_MUSIC_F = 5   /* 5_mml_example_f.mml */
+  SOUND_MUSIC_G = 6   /* 6_mml_example_g.mml */
+  SOUND_MUSIC_H = 7   /* 7_mml_example_h.mml */
 
-BUILDING
---------
-  make mml               : compile all .mml files
-  make sound / sound-all : full sound rebuild including MML
+The indexed aliases SOUND_MUSIC_TRACK_1 .. SOUND_MUSIC_TRACK_8 map to
+SOUND_MUSIC_A .. SOUND_MUSIC_H.
+
+Build
+-----
+
+  make sound         # full audio pipeline (samples + vrom + fm + mml + ssg + m1rom)
+  make mml           # only re-compile MML files
+
+The compiled music data lands in sound/driver/music_data.inc which the
+Z80 driver pulls in when assembling the M1 ROM.
+
+Notes
+-----
+
+  - Demo chapter 03 (SOUND) uses MML-sequenced music (SOUND_MUSIC_E)
+    for its intro line instead of the raw FM patch player.
+  - Attract mode (games/demo/scenes/demo_title.c) loops SOUND_MUSIC_E
+    for the full attract, fades out on coin-insert.

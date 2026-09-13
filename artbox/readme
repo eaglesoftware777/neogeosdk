@@ -16,10 +16,10 @@ romtiles.py
 
 fixtiles.py
     S1 (FIX) ROM builder. Generates the 128 KB 777-s1.s1 from three sources:
-      1. Existing 777-s1.s1 - all non-empty tiles preserved at original addresses.
-      2. sfix.sfix system ROM - fills empty slots with standard NeoGeo fonts.
-      3. infix/*.png images  - custom tiles written into remaining empty slots
-                               starting at tile position 256.
+      1. sfix.sfix system ROM - standard NeoGeo font area.
+      2. Existing 777-s1.s1 - non-infix base font tiles preserved.
+      3. infix/*.png images - custom tiles written deterministically
+                              starting at tile position 256.
     Outputs 777-s1.s1 in hardware format directly (no post-processing required).
 
 createromdb.py
@@ -47,7 +47,7 @@ USAGE
 2. Run:  make art    (rebuild C ROMs from sprites)
           make sfix   (rebuild S1 FIX ROM from infix images)
           make srom   (alias for make sfix)
-3. ROMs are written to roms/neogeosdk/.
+3. ROMs are written to roms/<game>/.
 
 FIX LAYER IMAGE REQUIREMENTS
 -----------------------------

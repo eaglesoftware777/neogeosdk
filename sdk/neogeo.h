@@ -6,6 +6,10 @@
 #include "macro.h"
 #include "sound_ids.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Sprite control block helpers.
  *
@@ -51,6 +55,10 @@ void fixtext_out(uint16_t x, uint16_t y, char *text, short pal);
 void fixtext_out1(uint16_t x, uint16_t y, uint16_t *tiles, short pal, int count);
 void fixtext_out2(uint16_t x, uint16_t y, uint16_t a, uint16_t b, uint16_t c, uint16_t mod,
                   uint16_t *tiles, short pal, int count);
+void mess_out(uint16_t x, uint16_t y, const char *text, short pal);
+void mess_out_clipped(uint16_t x, uint16_t y, const char *text, short pal, uint16_t max_chars);
+void mess_out_vram(uint16_t vram_addr, uint16_t vram_inc, const char *text, short pal,
+                   uint16_t max_chars);
 void fix_svalue1(uint16_t x, uint16_t y, uint16_t value, short pal, uint16_t offset);
 void fix_svalue(uint16_t x, uint16_t y, uint16_t value, short pal);
 void display_digit(uint16_t x, uint16_t y, uint32_t value, short pal, uint16_t offset);
@@ -86,8 +94,9 @@ void sleep1FFF(void);
  * reads the hardware input ports directly.
  */
 uint16_t poll_joystick(void);
+uint16_t poll_joystick_edge(void);
 int read_p1credit(void);
-int read_joy1(void);
+uint16_t read_joy1(void);
 
 /* Low-level sound command helpers. */
 void playSoundtest(uint16_t index);
@@ -116,12 +125,50 @@ void soundSetFMVolume(uint8_t volume);
 void playSSGTrack(uint8_t track);
 void soundSetSSGPreset(uint8_t preset);
 void playInsertCoinSSG(void);
+void playSSGVoiceGetReady(void);
+void playSSGVoiceLetsGo(void);
+void playSSGVoiceGameOver(void);
 
 /* Voice and cue helpers. */
 void playVoiceCue(uint8_t cue);
 void playGetReadyVoice(void);
 void playAttackVoice(void);
 void playCoinThenReady(void);
+
+/* SSG-synthesised voice cues (driver $50 / $51 / $52). */
+void playVoiceGetReady(void);
+void playVoiceLetsGo(void);
+void playVoiceGameOver(void);
+
+/* YM2610 chip-level controls. */
+void soundSetADPCMBPan(uint8_t pan);     /* $C0 stereo, $80 L, $40 R, $00 mute */
+void soundSetADPCMBLoop(uint8_t enable); /* 0 one-shot, 1 repeat on subsequent B starts */
+void soundFMSetLFO(uint8_t rate_enable); /* bit3 enable, bits0-2 rate */
+/* Live BPM override, 1..255, retained across loops until another track starts. */
+void soundFMSetBPM(uint8_t bpm);
+void soundSSGSetBPM(uint8_t bpm);
+void soundSetSSGNoise(uint8_t period);   /* 5-bit noise period */
+void soundFMSetTempo(uint8_t period);    /* Legacy 69.4 ms units per FM step, 1..8 */
+
+/* Voice alphabet — ADPCM-A samples bundled from in_wav_a_voice/. */
+void playVoiceSample(uint8_t sample_index);  /* SOUND_VOICE_* full ADPCM-A index */
+void playVoiceLetter(uint8_t letter_index);  /* SOUND_VOICE_LETTER_X */
+void playVoiceWord(uint8_t word_sample);     /* SOUND_VOICE_WORD_X */
+void playVoiceNumber(uint16_t value);        /* direct number sample or digit fallback */
+void speakWord(const char *text);            /* compatibility alias for speakText */
+void speakText(const char *text);            /* direct words, then letters/digits */
+
+/* CSM (Composite Sine Mode) — FM channel 3 auto-keyed by Timer A.
+ * Begin/End drive reg $27 + Timer A regs $24/$25 via driver cmds $1B/$1C.
+ * Sweep slides the Timer A high byte for a formant-glide effect.
+ * Channel 3 has no patch/pitch of its own until soundFMCSMLoadVoice()
+ * loads one — playFMTrack() loads channel 2 instead, which CSM never
+ * auto-keys. */
+void soundFMCSMBegin(uint8_t period_hi);
+void soundFMCSMEnd(void);
+void soundFMCSMSweep(uint8_t hi_start, uint8_t hi_end, uint8_t step_ms);
+void soundFMCSMLoadVoice(uint8_t patch);
+void playFMSpeechRobot(void);
 
 /* Fades. */
 void soundFadeOut(void);
@@ -141,4 +188,8 @@ void soundPlayDemoFM(uint8_t fm_track);
 void soundPlayTitleMusic(uint8_t music_track);
 void soundPlayGameLoop(uint8_t music_track);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

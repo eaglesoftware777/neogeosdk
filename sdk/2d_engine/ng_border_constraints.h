@@ -3,6 +3,10 @@
 
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * Border Constraint: invisible rectangle/area that sends a game_event.
  * It uses the Properties Matrix player values at time T.
@@ -24,4 +28,8 @@ void NEOGEO_USER ng_border_constraints_load(NGBorderConstraint *list, uint16_t c
 void NEOGEO_USER ng_border_constraints_update(void);
 void NEOGEO_USER ng_border_constraints_reset_used(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

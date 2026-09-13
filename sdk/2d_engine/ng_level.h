@@ -3,6 +3,10 @@
 
 #include "ng_defs.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct {
     uint8_t level_id;
     uint8_t mode;
@@ -41,4 +45,8 @@ void NEOGEO_USER ng_level_camera_joystick(int16_t speed, uint8_t axes, int16_t s
 const NGLevelState *level_state(void);
 void NEOGEO_USER ng_level_update(void);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

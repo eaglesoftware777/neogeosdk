@@ -1,5 +1,12 @@
 # NeoGeo P-ROM Bank Switching
 
+> **v1.7.0 status**
+>
+> The unified 21-chapter demo (`games/demo`, ID 777) and the new
+> `games/demo_plus` (ID 778) both fit comfortably in the 512 KB P1
+> window without banking.  Bank switching remains an advisory feature
+> for future games that need more program space.
+
 This document describes the NeoGeo P-ROM banking mechanism and the `ng_bankswitch` API stub provided in `sdk/2d_engine/ng_bankswitch.h`.
 
 **The current NeoGeoSDK demo does not use bank switching.**  The P1 ROM is kept within the fixed 128 KB window.  This document is advisory for future cartridge builds that need more than 512 KB of program space.

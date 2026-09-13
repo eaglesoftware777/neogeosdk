@@ -1,16 +1,19 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-set SCRIPT_DIR=%~dp0
-set SDK_ROOT=%SCRIPT_DIR%..\..
+for %%i in ("%~dp0..\..") do set SDK_ROOT=%%~fi
+if "%GAME_ID%"=="" set GAME_ID=777
+if "%GAME%"=="" set GAME=demo
+if "%GAME_SOUND%"=="" set GAME_SOUND=%SDK_ROOT%\sound
 set OUT_DIR=%SDK_ROOT%\out
-set ROM_DIR=%SDK_ROOT%\roms\neogeosdk
+set ROM_DIR=%SDK_ROOT%\roms\%GAME%
 set OBJ=%OUT_DIR%\driver.o
 set OBJ_C=%OUT_DIR%\driver_c.o
-set ASM=%OUT_DIR%\driver.gen.asm
+set ASM_GENERATED=%OUT_DIR%\driver.gen.asm
+set ASM=%ASM_GENERATED%
 set ASM_COMBINED=%OUT_DIR%\driver_combined.asm
 set LINKFILE=%OUT_DIR%\m1.link
-set M1ROM=%OUT_DIR%\777-m1.m1
+set M1ROM=%OUT_DIR%\%GAME_ID%-m1.m1
 
 if not exist "%OUT_DIR%" mkdir "%OUT_DIR%"
 
@@ -62,6 +65,7 @@ if "%USE_WSL_Z80CC%"=="1" (
     for /f "usebackq delims=" %%I in (`wsl.exe wslpath -a "!Z80CC_ROOT!"`) do set Z80CC_ROOT_WSL=%%I
     for /f "usebackq delims=" %%I in (`wsl.exe wslpath -a "!DRIVER_WIN!"`) do set DRIVER_WSL=%%I
     wsl.exe /bin/bash -lc "make -C '!Z80CC_ROOT_WSL!' >/dev/null && '!Z80CC_ROOT_WSL!/build/z80cc' --target neogeo -DDRIVER_SPLIT_PRELUDE=1 -I'!DRIVER_WSL!/../' -S -o '!DRIVER_WSL!.asm' '!DRIVER_WSL!'"
+    if errorlevel 1 exit /b 1
     copy /Y "%Z80C_SRC%.asm" "%ASM%" >nul
 ) else (
     "%Z80CC%" --target neogeo -DDRIVER_SPLIT_PRELUDE=1 -I"%SDK_ROOT%\sound\driver" -S -o "%ASM%" "%Z80C_SRC%"
@@ -76,7 +80,7 @@ set ASM=%SDK_ROOT%\sound\m1\m1.asm
 
 :assemble
 echo Assembling %ASM%
-%WLAZ80% -I "%SDK_ROOT%\sound\driver" -o "%OBJ%" "%ASM%"
+%PY% "%SDK_ROOT%\sound\tools\checked_wla.py" "%WLAZ80%" -I "%SDK_ROOT%\sound\driver" -o "%OBJ%" "%ASM%"
 if errorlevel 1 exit /b 1
 
 echo [objects] > "%LINKFILE%"
@@ -88,7 +92,7 @@ echo Linking experimental C driver core
 %PY% "%SDK_ROOT%\sound\tools\combine_split_driver.py" "%SDK_ROOT%\sound\driver\driver_prelude.asm" "%ASM%" "%ASM_COMBINED%"
 if errorlevel 1 exit /b 1
 echo Assembling %ASM_COMBINED%
-%WLAZ80% -I "%SDK_ROOT%\sound\driver" -o "%OBJ_C%" "%ASM_COMBINED%"
+%PY% "%SDK_ROOT%\sound\tools\checked_wla.py" "%WLAZ80%" -I "%SDK_ROOT%\sound\driver" -o "%OBJ_C%" "%ASM_COMBINED%"
 if errorlevel 1 exit /b 1
 
 echo [objects] > "%LINKFILE%"
@@ -96,7 +100,7 @@ echo %OBJ_C% >> "%LINKFILE%"
 
 :link_rom
 echo Linking %M1ROM%
-%WLALINK% -r "%LINKFILE%" "%M1ROM%"
+%PY% "%SDK_ROOT%\sound\tools\checked_wla.py" "%WLALINK%" -S -r "%LINKFILE%" "%M1ROM%"
 if errorlevel 1 exit /b 1
 
 REM Padding to 128KB using srec_cat if available
@@ -104,15 +108,17 @@ set SCAT=%SDK_ROOT%\win\srec_cat.exe
 if exist "%SCAT%" (
     echo Padding %M1ROM% to 128KB
     "%SCAT%" "%M1ROM%" -binary -fill 0xFF 0x00000 0x20000 -o "%M1ROM%" -binary
+    if errorlevel 1 exit /b 1
 )
 
 if not exist "%ROM_DIR%" mkdir "%ROM_DIR%"
-copy /y "%M1ROM%" "%ROM_DIR%\777-m1.m1"
+copy /y "%M1ROM%" "%ROM_DIR%\%GAME_ID%-m1.m1"
+if errorlevel 1 exit /b 1
 
 if exist "%OBJ%" del "%OBJ%"
 if exist "%OBJ_C%" del "%OBJ_C%"
 if exist "%ASM_COMBINED%" del "%ASM_COMBINED%"
-if exist "%ASM%" if "%USE_Z80C%"=="1" del "%ASM%"
+if exist "%ASM_GENERATED%" if "%USE_Z80C%"=="1" del "%ASM_GENERATED%"
 del "%LINKFILE%"
 
 echo Built %M1ROM%

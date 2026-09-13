@@ -8,9 +8,9 @@
 Neo Geo FIX ROM (S1) tile generator.
 
 Builds the 128 KB 777-s1.s1 from:
-  1. Existing 777-s1.s1  (all 4096 tiles preserved at their original addresses)
-  2. sfix.sfix system-font ROM  (fills any empty slots not covered by step 1)
-  3. infix/*.png images imported via the imagefix DB table
+  1. sfix.sfix system-font ROM  (standard ASCII/FIX tiles)
+  2. Existing 777-s1.s1  (non-infix area preserved at original addresses)
+  3. infix/*.png images imported via the imagefix DB table at tile 256+
 
 Hardware tile format (after romtool /f or direct from this script):
   Each 8×8 / 4-bpp tile = 32 bytes.
@@ -34,12 +34,34 @@ ROM_SIZE   = 131072          # 128 KB
 NUM_TILES  = ROM_SIZE // TILE_BYTES   # 4096
 
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
-ROMS_DIR    = os.path.join(SCRIPT_DIR, '..', 'roms', 'neogeosdk')
-GAME_S1     = os.path.join(ROMS_DIR, '777-s1.s1')
+DATA_DIR    = os.path.abspath(os.environ.get("ARTBOX_DATA_DIR", SCRIPT_DIR))
+_GAME_ID    = os.environ.get('GAME_ID', '777')
+_GAME       = os.environ.get('GAME', 'demo')
+ROMS_DIR    = os.path.join(SCRIPT_DIR, '..', 'roms', _GAME)
+GAME_S1     = os.path.join(ROMS_DIR, f'{_GAME_ID}-s1.s1')
 SFIX_ROM    = os.path.join(ROMS_DIR, 'sfix.sfix')
-OUT_S1      = os.path.join(SCRIPT_DIR, '777-s1.s1')   # written here, Makefile copies
-DB_PATH     = os.path.join(SCRIPT_DIR, 'neorom.db')
-INFIX_DIR   = os.path.join(SCRIPT_DIR, 'infix')
+SFIX_FALLBACK = os.path.join(SCRIPT_DIR, '..', 'roms', 'neogeo', 'sfix.sfix')
+OUT_S1      = os.path.join(DATA_DIR, f'{_GAME_ID}-s1.s1')
+DB_PATH     = os.path.join(DATA_DIR, 'neorom.db')
+INFIX_DIR   = os.path.join(DATA_DIR, 'infix')
+INFIX_REGION_START = int(os.environ.get("INFIX_TILE_BASE", "256"), 0)
+INFIX_PAL_HDR = os.path.join(DATA_DIR, 'infix_palettes.h')
+
+# Each infix image gets its own FIX palette bank, starting at this slot.
+# Banks 0..3 are reserved (0..2 = text, 3 = padding/future use).
+INFIX_PAL_BANK_BASE = 4
+
+def _rgb_to_neogeo_word(r8, g8, b8):
+    """Pack an 8-bit RGB triple to a NeoGeo palette word.
+
+    Bit layout: [D][R0][G0][B0][R4..R1][G4..G1][B4..B1]
+    where Rn is bit n of the 5-bit channel value.
+    """
+    r5 = max(0, min(31, int(r8) >> 3))
+    g5 = max(0, min(31, int(g8) >> 3))
+    b5 = max(0, min(31, int(b8) >> 3))
+    return (((r5 & 1) << 14) | ((g5 & 1) << 13) | ((b5 & 1) << 12) |
+            ((r5 >> 1) << 8)  | ((g5 >> 1) << 4)  | ((b5 >> 1)))
 
 # ── tile encoding / decoding ───────────────────────────────────────────────────
 _COL_PAIRS  = [(4,5),(6,7),(0,1),(2,3)]
@@ -66,6 +88,18 @@ def decode_tile(raw32):
 
 def is_empty_tile(raw32):
     return all(b in (0x00, 0x11) for b in raw32)
+
+def remap_tile_pen(raw32, src_pen, dst_pen):
+    px = decode_tile(raw32)
+    px[px == src_pen] = dst_pen
+    return encode_tile(px)
+
+def make_base_font_transparent():
+    end = min(INFIX_REGION_START, 256, NUM_TILES)
+    for slot in range(end):
+        start = slot * TILE_BYTES
+        raw = bytes(rom[start:start + TILE_BYTES])
+        rom[start:start + TILE_BYTES] = remap_tile_pen(raw, 2, 0)
 
 # ── image → tile list ──────────────────────────────────────────────────────────
 def image_to_tiles(indexed_2d):
@@ -104,37 +138,78 @@ def read_rom(path):
 rom = bytearray(ROM_SIZE)   # transparent = all 0x00
 
 # Step 1: seed with sfix.sfix so standard NeoGeo fonts are available everywhere
-sfix_tiles = read_rom(SFIX_ROM)
+sfix_path = SFIX_ROM if os.path.exists(SFIX_ROM) else SFIX_FALLBACK
+sfix_tiles = read_rom(sfix_path)
 if sfix_tiles:
     for i, t in enumerate(sfix_tiles[:NUM_TILES]):
         rom[i*TILE_BYTES:(i+1)*TILE_BYTES] = t
-    print(f"Seeded {len(sfix_tiles[:NUM_TILES])} tiles from sfix.sfix")
+    print(f"Seeded {len(sfix_tiles[:NUM_TILES])} tiles from {os.path.basename(sfix_path)}")
+else:
+    print(f"Warning: no sfix.sfix found in {SFIX_ROM} or {SFIX_FALLBACK}")
 
-# Step 2: overlay the existing game S1 ROM (preserve all non-empty tiles in place)
+# Step 2: overlay the existing game S1 ROM outside the generated infix region.
+# Tiles 0-255 remain the normal font area.  Tiles 256+ are deterministic
+# generated art slots so runtime code can address infix images by fixed tile
+# numbers without depending on old ROM contents.
 game_tiles = read_rom(GAME_S1)
 preserved  = 0
 for i, t in enumerate(game_tiles[:NUM_TILES]):
+    if i >= INFIX_REGION_START:
+        continue
     if not is_empty_tile(t):
         rom[i*TILE_BYTES:(i+1)*TILE_BYTES] = t
         preserved += 1
 if preserved:
-    print(f"Preserved {preserved} non-empty tiles from {os.path.basename(GAME_S1)}")
+    print(f"Preserved {preserved} non-empty base-font tiles from {os.path.basename(GAME_S1)}")
+
+make_base_font_transparent()
+print("Made base FIX font background transparent")
 
 # ── collect infix tiles from DB ───────────────────────────────────────────────
 infix_tiles = []
+# Per-image metadata for the generated palette header:
+#   (idx, cols, rows, tile_base, [16 NeoGeo palette words])
+infix_meta = []
+
+def _pack_image_palette(pal_arr):
+    """Convert an imagefix.palette blob (uint16 array) to 16 NeoGeo words.
+
+    The PNG-imported rows store a (256, 4) RGBA palette; convert_fix_png
+    rows store a (16, 3) RGB palette pre-snapped to the NeoGeo grid.
+    Either way we only need the first 16 entries, and index 0 must be
+    transparent (word=0).
+    """
+    words = [0] * 16
+    if pal_arr.ndim != 2 or pal_arr.shape[0] < 1:
+        return words
+    n = min(16, pal_arr.shape[0])
+    for i in range(1, n):  # leave entry 0 transparent
+        row = pal_arr[i]
+        r = int(row[0]); g = int(row[1]); b = int(row[2])
+        words[i] = _rgb_to_neogeo_word(r, g, b)
+    return words
 
 try:
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA journal_mode=WAL")
     cur = conn.cursor()
-    cur.execute("SELECT idx, data FROM imagefix ORDER BY idx")
+    cur.execute("SELECT idx, data, palette FROM imagefix ORDER BY idx")
     for row in cur.fetchall():
         try:
             arr = _np_from_blob(row[1])
             if arr.ndim == 1:
                 side = int(np.sqrt(len(arr)))
                 arr = arr.reshape(side, -1)
-            infix_tiles.extend(image_to_tiles(arr.astype(np.uint8)))
+            arr = arr.astype(np.uint8)
+            tile_base_for_image = INFIX_REGION_START + len(infix_tiles)
+            cols = arr.shape[1] // 8
+            rows_ = arr.shape[0] // 8
+            tiles = image_to_tiles(arr)
+            infix_tiles.extend(tiles)
+
+            pal_arr = _np_from_blob(row[2]) if row[2] is not None else np.zeros((16,3), np.uint16)
+            words = _pack_image_palette(pal_arr)
+            infix_meta.append((int(row[0]), cols, rows_, tile_base_for_image, words))
         except Exception as e:
             print(f"  skip DB row {row[0]}: {e}")
     conn.close()
@@ -160,24 +235,58 @@ if not infix_tiles:
     except ImportError:
         print("pypng not available; no infix tiles loaded")
 
-# ── find empty slots and write infix tiles ────────────────────────────────────
-# Write into empty slots from tile 256 onward (0-255 = standard font area)
-INFIX_REGION_START = 256
-empty_slots = [i for i in range(INFIX_REGION_START, NUM_TILES)
-               if is_empty_tile(rom[i*TILE_BYTES:(i+1)*TILE_BYTES])]
-
+# ── write infix tiles at deterministic tile numbers ───────────────────────────
+# The demo and generated docs expect the first infix tile to start at tile 256.
+# This region deliberately overwrites the system font copy above tile 255.
 written = 0
+max_infix_tiles = NUM_TILES - INFIX_REGION_START
 for tile_data in infix_tiles:
-    if written >= len(empty_slots):
-        print(f"Warning: ROM full ({len(empty_slots)} empty slots), "
-              f"{len(infix_tiles)-written} infix tiles not written")
+    if written >= max_infix_tiles:
+        print(f"Warning: ROM full ({max_infix_tiles} infix slots), "
+              f"{len(infix_tiles) - written} infix tiles not written")
         break
-    slot = empty_slots[written]
+    slot = INFIX_REGION_START + written
     rom[slot*TILE_BYTES:(slot+1)*TILE_BYTES] = tile_data
     written += 1
 
 if written:
-    print(f"Wrote {written} infix tiles into empty slots starting at tile {empty_slots[0]}")
+    print(f"Wrote {written} infix tiles starting at tile {INFIX_REGION_START}")
+
+# ── emit per-image palette header ─────────────────────────────────────────────
+if infix_meta:
+    lines = []
+    lines.append("/* Auto-generated by artbox/fixtiles.py — do not edit. */")
+    lines.append("#ifndef INFIX_PALETTES_H")
+    lines.append("#define INFIX_PALETTES_H")
+    lines.append("")
+    lines.append("#include <stdint.h>")
+    lines.append("")
+    lines.append(f"#define INFIX_IMAGE_COUNT     {len(infix_meta)}u")
+    lines.append(f"#define INFIX_PAL_BANK_BASE   {INFIX_PAL_BANK_BASE}u")
+    lines.append("")
+    lines.append("typedef struct {")
+    lines.append("    uint16_t tile_base;")
+    lines.append("    uint8_t  cols;")
+    lines.append("    uint8_t  rows;")
+    lines.append("    uint8_t  pal_bank;   /* FIX palette bank index */")
+    lines.append("} InfixImage;")
+    lines.append("")
+    lines.append("static const InfixImage INFIX_IMAGES[INFIX_IMAGE_COUNT] = {")
+    for n, (idx, cols, rows_, tb, _w) in enumerate(infix_meta):
+        bank = INFIX_PAL_BANK_BASE + n
+        lines.append(f"    {{ {tb:4d}u, {cols:3d}u, {rows_:2d}u, {bank:2d}u }},  /* idx {idx} */")
+    lines.append("};")
+    lines.append("")
+    lines.append("static const uint16_t INFIX_PALETTES[INFIX_IMAGE_COUNT][16] = {")
+    for n, (idx, _c, _r, _tb, words) in enumerate(infix_meta):
+        body = ", ".join(f"0x{w:04X}" for w in words)
+        lines.append(f"    {{ {body} }},  /* idx {idx} */")
+    lines.append("};")
+    lines.append("")
+    lines.append("#endif /* INFIX_PALETTES_H */")
+    with open(INFIX_PAL_HDR, 'w') as f:
+        f.write("\n".join(lines) + "\n")
+    print(f"Wrote {len(infix_meta)} infix palettes → {INFIX_PAL_HDR}")
 
 # ── write output ───────────────────────────────────────────────────────────────
 with open(OUT_S1, 'wb') as f:
