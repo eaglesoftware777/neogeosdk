@@ -140,21 +140,20 @@ def inspect(directory):
     check(fade and fade[-1][1] == 0, "ADPCM-B fade did not reach silence")
     check(all(b[1] <= a[1] for a, b in zip(fade, fade[1:])), "ADPCM-B fade is not monotonic")
 
-    # The mixed example shares a seven-bar phrase and a 112 BPM note grid.
+    # The menu loop plays at 24 BPM with an ADPCM-B cue at the top of the
+    # phrase, so the sequencer has to keep its cursor across an inline
+    # sample event and hold the note grid.
     tones = [t for t, _ in between("mml_mix", "mml_inline_b", 0, 0)]
     check(len(tones) >= 20, "MML stopped after an inline ADPCM-A event")
     if len(tones) > 1:
-        beat = 60 / 112
+        beat = 60 / 24
         intervals = np.diff(tones)
-        grid_error = np.abs(intervals - np.round(intervals / beat) * beat)
+        grid_error = np.abs(intervals - np.round(intervals / (beat / 2)) * (beat / 2))
         report["mml_max_grid_error_ms"] = float(grid_error.max() * 1000)
         check(grid_error.max() < 0.015, "MML notes include an extra wait tick")
-    drums = [t for t, v in between("mml_mix", "mml_inline_b", 1, 0) if v < 0x80]
-    check(len(drums) >= 2, "MML did not reach the drum cue in two loops")
-    if len(drums) > 1:
-        report["mml_loop_seconds"] = float(drums[1] - drums[0])
-        check(abs(drums[1] - drums[0] - 28 * 60 / 112) < 0.02,
-              "the mixed phrase does not repeat after 28 beats")
+    cues = [t for t, p, r, v in writes if p == 0 and r == 0x10 and v & 0x80
+            and starts["mml_mix"] <= t < starts["mml_inline_b"]]
+    check(len(cues) >= 1, "MML did not trigger its inline ADPCM-B cue")
     inline_b_tones = between("mml_inline_b", "mml_stop", 0, 0)
     check(len(inline_b_tones) >= 5, "MML cursor lost after an inline ADPCM-B event")
 

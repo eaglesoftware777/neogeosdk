@@ -22,7 +22,7 @@ def main():
     command = [args.mame, "neogeo", "-noreadconfig", "-rompath", str(root / "roms"),
                "-hashpath", ";".join(str(root / p) for p in ("hash_eagle/demo", "hash_eagle", "hash")),
                "-bios", "euro", "-cart1", "demo", "-video", "none", "-sound", "none",
-               "-nothrottle", "-seconds_to_run", "165", "-skip_gameinfo", "-nonvram_save",
+               "-nothrottle", "-seconds_to_run", "188", "-skip_gameinfo", "-nonvram_save",
                "-samplerate", "48000", "-wavwrite", str(output / "sound.wav"),
                "-cfg_directory", str(output / "cfg"), "-nvram_directory", str(output / "nvram"),
                "-autoboot_delay", "0", "-autoboot_script", str(root / "tools/sound_capture.lua")]

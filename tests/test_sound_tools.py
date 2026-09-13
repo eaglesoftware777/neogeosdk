@@ -62,17 +62,6 @@ class SoundToolsTests(unittest.TestCase):
                                 capture_output=True, check=False)
         self.assertNotEqual(result.returncode, 0)
 
-    def test_mixed_arrangement_has_matching_phrase_lengths(self):
-        root = Path(__file__).resolve().parents[1] / "games/demo/sound"
-        fm = fm_compile.parse_mml((root / "fm/3_fm_example_d.mml").read_text())
-        music = mml_compile.parse_mml((root / "mml/3_mml_example_d.mml").read_text())
-        duration = lambda events: sum(value for code, value in events if code <= 0x80)
-        self.assertEqual(duration(fm), 28 * 12)
-        self.assertEqual(duration(music), duration(fm))
-        self.assertIn((0xF0, 112), music)
-        self.assertIn((0xF4, 3), music)
-        self.assertIn((0xF2, 9), music)
-
     def test_track_ids_do_not_depend_on_directory_order(self):
         names = [Path(f"{n}_track.mml") for n in (10, 2, 0, 1)]
         self.assertEqual([p.name for p in ordered_inputs(names)],

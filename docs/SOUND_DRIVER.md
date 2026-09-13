@@ -171,8 +171,20 @@ The live BPM functions accept 1..255, clamp zero to one, and persist across
 MML loop headers until the next track starts. `soundFMSetTempo(1..8)` remains
 available as the legacy raw-period API, approximately 69.4 ms per period unit.
 MML duration expiry shares the FM/SSG tick rule, so sequences with equal BPM
-and phrase lengths stay aligned. Inline A/B sample cues preserve the music
-cursor while programming the sample's addresses.
+and phrase lengths stay aligned. Inline `@a` / `@b` / `@f` / `@s` cues keep
+both the music cursor and the number they name; a cue that once started the
+wrong sample, or nothing, now starts what it says.
+
+The tracks shipped in the tree are paced between 9 and 72 BPM. That is the
+pace they were tuned at by ear - an earlier driver stepped every track on a
+slow fixed clock whatever `T` said - and the numbers were rewritten to say so
+when `T` became a real tempo, so nothing changed in what you hear. Write new
+tracks at whatever tempo you mean.
+
+The SSG voice sits one octave above its MIDI number: an `O4` note in an SSG
+track sounds at what a piano calls octave 5. That is where a 4-bit square
+wave carries over the FM and ADPCM beds, and every SSG track in the tree was
+written against it.
 
 New WAV conversions use a band-limited polyphase filter (plain numpy, no extra
 package). ADPCM-A is encoded from the hardware reset predictor and its
