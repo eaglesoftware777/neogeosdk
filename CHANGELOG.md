@@ -1,52 +1,279 @@
 # Changelog
 
-## v1.7.0 - Toolchain 3.0
+## v1.7.0 - The 2D Engine Release
 
 Release date: 2026-09-13
 
-The SDK now builds with `x-tools-v3`: GCC 16.2.0, GNU binutils 2.47,
-gdb 17.2, newlib 4.6.0 and libstdc++, targeting `m68k-unknown-elf` with
-the 68000 as the default CPU.  Every host program in the bundle is a
-static x86-64 Linux binary, so one archive runs on any distribution
-without installing anything beside it.  The specification is in
-`docs/TOOLCHAIN.md`.
+This release is the whole of the `neo_universal_2d` branch: 226 commits over
+the mainline, 100 of them since the v1.3.0 pre-release.  It brings a complete
+2D game engine in two languages, a source-faithful art pipeline, a rebuilt
+audio stack and driver, a multi-game build system with native Windows
+support, a new compiler toolchain, three new games including a finished
+arcade shooter, a 26-chapter demonstration reel, desktop authoring tools,
+a verification suite that checks ROMs in the emulator, and the documentation
+that explains all of it.  The sections below summarise everything that
+changed since v1.3.0; the dated development notes that follow this entry
+record how each piece arrived.
 
-What it adds over the previous bundle:
+### Headline features
 
-- A C library and the full C++ standard library.  `<array>`, `<span>`,
-  `<bit>`, `<algorithm>`, `<ranges>` and the rest compile in freestanding
-  mode; C++23 and C++26 are accepted, C23 for C.
-- Link-time optimisation (`-flto`) and the Graphite loop optimiser.
-- A debugger with the TUI, XML target descriptions and its own readline,
-  statically linked like everything else.
-- Code generation for the 68000 by default; the 15.2 bundle defaulted to
-  CPU32.
+- **A complete 2D game engine**, in plain C (`sdk/2d_engine/`) and C++14
+  (`sdk/2d_engine_plus/`) with an identical `extern "C"` ABI - 35 modules
+  covering characters, actions, physics, NPCs, camera, level, particles,
+  feedback, depth effects, palette effects, sprite groups, a VBlank render
+  queue, the FIX layer, input, timers, events and fixed-point math.  Select
+  the C++ build with `USE_2D_PLUS=1`; both engines are built from one test
+  source so they cannot drift.
+- **Toolchain 3.0** - GCC 16.2.0, binutils 2.47, gdb 17.2, newlib 4.6.0 and
+  libstdc++ for `m68k-unknown-elf`, shipped as static Linux binaries and as
+  Windows executables with no DLL dependencies.
+- **A multi-game build system** - one repository, any number of games, each
+  with its own id, ROM folder, artbox, sound tree, linker script and MAME
+  hash set.  Six games ship and all build the same way on Linux and
+  Windows, to byte-identical program ROMs.
+- **A source-faithful art pipeline** - CIE-Lab quantisation on the
+  hardware's colour lattice, blue-noise dithering, budgeted per-tile palette
+  banks carried through both engines, and verification that decodes the
+  built C-ROMs rather than trusting a preview.
+- **A rebuilt audio stack** - a driver that keeps musical time, nine ADPCM-B
+  beds with hardware repeat, eight FM and nine SSG tracks, a recorded voice
+  bank with `speakText()`, pan, LFO, noise, tempo and CSM control, and a
+  fade engine that fades.
+- **Sky Lance** - a complete vertical arcade shooter: three pilots, seven
+  stages, a named boss per stage, attract reel, pilot select, scoring, lives,
+  energy and a continue flow.
+- **A 26-chapter demo reel** exercising every public subsystem, with two
+  playable shooter chapters, chapter numbers on screen, A to advance and C
+  to restart.
+- **Native Windows builds**, one-shot installers for Linux, Ubuntu, Windows
+  and WSL, and a documented WSL2 audio path.
+- **Artbox Studio and Sound Studio**, two PyQt6 desktop tools.
+- **A verification suite** - host-side renderer tests for both engines, art
+  and sound tool tests, and emulator captures that check VRAM, palette RAM,
+  controller handling and the recorded audio of the built ROMs.
+- **A documentation set written for the end user**, including generated API
+  references, a single-file overview and a printable manual.
 
-`Makefile` looks for `x-tools-v3` first, then `x-tools-v2`, then
-`x-tools`; `XTOOLS_ROOT` still overrides.  The installers fetch the new
-bundle and fall back to the previous one.  The capture tools find the
-cross `nm` in the same order.
+### Toolchain 3.0
 
-`x-tools-v3-win` is the same toolchain for 64-bit Windows - same versions,
-same configuration, `.exe` files that import only system DLLs.
-`MakefileWin32.mak` looks for it first, then `x-tools-v2-win`, then
-`M68K_ELF_ROOT`, and the Windows installer fetches it with the previous
-bundle as fallback.
+| Component | Version |
+|---|---|
+| GCC (C, C++) | 16.2.0 |
+| GNU binutils | 2.47 |
+| GNU gdb | 17.2, TUI, XML target descriptions |
+| newlib | 4.6.0 |
+| libstdc++ | 16.2.0 |
 
-The Windows link step now passes forward-slash object paths.  The linker
-script places sections by object file name, and the backslash spellings
-never matched, so every Windows build had been putting a kilobyte of
-tables in a different place from the Linux build.  A Windows build of any
-of the six games is now byte-identical to the Linux build.
+- Default CPU 68000; one library set built `-Os`; LTO and the Graphite loop
+  optimiser available; C23 and C++26 accepted; the C++ standard library
+  headers usable in freestanding mode.
+- `x-tools-v3.tar.xz` for x86-64 Linux, every binary static; `x-tools-v3-win.zip`
+  for 64-bit Windows, every executable importing only system DLLs.  Both
+  bundles produce identical ROMs.  Specification in `docs/TOOLCHAIN.md`.
+- `Makefile` looks for `x-tools-v3`, then `x-tools-v2`, then `x-tools`;
+  `MakefileWin32.mak` for `x-tools-v3-win`, then `x-tools-v2-win`, then
+  `M68K_ELF_ROOT`.  The installers fetch the new bundles and fall back to
+  the previous ones.
+- All six games build with no warnings; the demo's program text is 2%
+  smaller than with the previous compiler at the same optimisation level.
 
-All six games build with no warnings.  The demo's text is 369,785 bytes
-against 377,973 from the previous compiler at the same `-O0`.  The ROM
-set built with it passes the 26-chapter tour, the controller run, the
-live audio check, and the Sky Lance and neogeogame gameplay captures with
-VRAM and palette RAM checked against the manifests.  Two attract loops
-that counted frames into a variable nothing read now just wait.
+### The 2D engine
 
-## v1.7.9 - The byte that got lost
+- **Core** - `ng_game_interupt` runs the frame tick in a fixed order and
+  flushes the render queue inside VBlank, with five hook points for game
+  code; `ng_scene`, `ng_game_time`, `ng_timers`, `ng_progress`, `ng_status`,
+  `ng_properties` and `ng_game_events` carry state.
+- **Characters** - a 64-object pool with movement, animation clips, asset
+  binding, body and hit rectangles, cull margins, priority bands, damage and
+  healing; table-driven action scripts; NPC patrols with think callbacks;
+  gravity, drag, solids and grounded tests; border constraints.
+- **Video** - a 128-slot deferred VRAM write queue; dirty-flag sprite chains
+  that write only what changed; sprite windows that hide the strips a
+  shrinking sprite vacates; two scrolling background layers with parallax;
+  the FIX text layer with a dirty-cell cache; fades, flashes, pulses and
+  colour cycles; Z-to-shrink projection with fog banding and starfields.
+- **Effects** - a 32-slot particle pool with typed spawns and three-tier
+  priority eviction; hitstop, screen shake, palette flash and slow motion in
+  one impact call.
+- **World and input** - camera follow, dead zone, look-ahead, shake,
+  cinematic pan and bounds; level bounds and scroll; joystick edge detection,
+  auto-repeat, direction history and motion recognition.
+- **Math** - 16.16 fixed point with sine, cosine and shrink tables.  No
+  float and no division in the frame loop.
+
+Hardware behaviour established on this branch and built into both engines:
+
+- **SCB3 holds the sprite's height on screen in characters**, regardless of
+  shrink.  Both engines derive it from the source rows and the vertical
+  shrink, blank every map row the lookup can reach, and stop uploads at 16
+  rows where rows 16..31 are unreachable - half the VRAM traffic.
+- **Higher sprite slot is drawn in front.**  Backgrounds at 1-32,
+  characters at 96-223, foreground effects at 288+.
+- **The two shrink axes are not alike**: X from the top nibble, Y from the
+  whole byte.  `NG_SCALE()` builds a byte whose axes agree; 29 literals and
+  every named preset were corrected.
+- **The backdrop register is `$401FFE`**; `$402000` is a silent mirror.
+  **The FIX layer shows 28 rows**, visible row *y* being map row *y + 2*.
+- **Every asset publishes its tile stride** - the canvas width in tiles,
+  not always 16 - and each engine validates an asset window against the
+  stride it will be drawn with.
+- **Per-tile palette maps** travel from the artbox through `NGArtAsset`,
+  `NGSpriteGroup` and `NGCharacter`, so a character with several banks is
+  drawn with all of them.
+- Sprite teardown is a real hardware wipe (blank tile `0xFFFF`, off-screen
+  park, previous-strip tail clear); a move writes the driver strip only; a
+  scale change refreshes SCB3; a character hidden because it turned invisible
+  comes back; a camera pan stays inside its bounds and never oscillates;
+  `REG_PALBANK0/1` and the per-axis dead zone were corrected.
+
+### Art pipeline
+
+- **Quantisation in CIE-Lab** on the hardware's 5-bit lattice through a
+  precomputed LUT, with Lloyd refinement that snaps inside the update step
+  and void-and-cluster blue-noise dithering: mean dE 9.10 to 8.33, p95
+  18.19 to 15.66, dither speckle down a third.
+- **Budgeted palette banks.**  Bank 0 is fitted to the whole image and never
+  discarded; each extra bank is seeded from the worst tile and refitted to
+  the tiles it helps; assets holding the same palette share one bank.  On
+  the demo: peak distinct colours in a frame 193 to 323, banks in use 219
+  to 200 with the 108 duplicates gone, mean dE over 173 assets 16.22 to
+  7.65.  Sky Lance mean dE 8.12 to 4.38, neogeogame 4.88 to 3.38.
+- **Palette banks compared as sets**, so two tiles holding the same colours
+  in a different order no longer take a bank each: against the reference,
+  11.4 to 1.9, 11.7 to 2.2, 28.2 to 5.4 dE.
+- **Resampling in linear light** with alpha bled at source resolution -
+  downscaling had been losing 8-22% of a sprite's luminance and baking the
+  transparent pixels' white into every contour.
+- **Import at display size.**  The sprite chip drops rows and columns when
+  it shrinks, so art is imported at the size it is drawn; Sky Lance's craft
+  and bosses, the neogeogame opponent and the demo interceptors follow it.
+- `fit=native` keeps an already tiled canvas pixel for pixel; `contain`,
+  `pad`, `letterbox` and `crop` remain.  HD conditioning (bilateral smooth,
+  lightness CLAHE) is on by default for this tree's HD sources.
+- Rectangular assets encode correctly; generated screen tables splice into
+  `main.c` at a marker so repeated runs stay idempotent; pure black and white
+  are reserved only when the asset has a real population there.
+- `gen_starfield.py` synthesises tiling shooter backdrops; `fix_sprite_alpha.py`
+  keys a chroma matte out of border-reachable background only.
+- `tools/artbox_quality_report.py` decodes both C-ROMs and reports dE against
+  the source; `tools/verify_artbox_palettes.py` rejects bank collisions and
+  malformed maps at build time; `tools/artbox_runtime_report.py` checks
+  captured VRAM and palette RAM against the manifest.
+- CRT and HD alternative routes, a legacy path for diffing, and GIMP plug-ins.
+
+### Audio
+
+- **Driver data placed contiguously** below `$8000`, asserted at assembly;
+  an overwrite diagnostic from the assembler or linker fails the build.
+- **A clock a musician can count**: Timer B at 124.008 Hz, FM, SSG and MML
+  each on a fractional BPM clock with twelve steps per quarter note, live
+  `soundFMSetBPM()` / `soundSSGSetBPM()`, and the legacy divider kept for
+  fades and timed effects.
+- **Beds repeat in hardware** (`soundSetADPCMBLoop()`); ADPCM-A voices use
+  their own end addresses on all six channels; fades step every interval
+  and reach zero; SSG tuning uses the right octave reference, saturates and
+  mutes at zero; MML durations no longer run a tick long; queued commands
+  execute with interrupts masked while the YM latches are written.
+- **The acknowledgement rule.**  The driver drops its reply to 0 while it
+  reads a byte and raises it to 1 once queued, and the port idles at 1
+  because the BIOS requires it - so `soundCommand()` now waits for the drop
+  before trusting the rise.  Sent on the stale 1, a two-byte command lost
+  its parameter and the start that followed was swallowed; nineteen of the
+  demo's twenty-five chapters were silent.  A driver soft reset no longer
+  purges the queue, and a coin plays its cue over the music.
+- **Samples converted like samples**: band-limited polyphase resampling in
+  plain numpy, an ADPCM-A encoder matching the chip's single-rounded deltas
+  and 12-bit wrap without a pre-roll, alignment tails encoded towards
+  silence, 32 kHz beds with a rate sidecar per sample and a Delta-N per
+  sample in the V-ROM, and a packer that enforces alignment, the 1 MiB page
+  and the 16 MiB window.
+- **Chip-level control**: ADPCM-B pan, FM LFO (persistent across patch
+  reloads and loops), SSG noise period, FM tempo, and CSM with a formant
+  sweep helper.
+- **Content**: nine ADPCM-B beds, eight FM tracks and nine SSG tracks with
+  generic names and letter ids; a recorded voice bank behind `speakText()`
+  and `speakWord()`, with whole words preferred and letters, digits and
+  punctuation as fallback; softer FM patches and lower, slower SSG melodies.
+- An SSG formant speech engine was built, evaluated on hardware and removed:
+  a pure SSG path cannot produce intelligible speech.
+- Measured on the built ROMs: Timer B 124.012 Hz; tempo, LFO pitch,
+  sample rate, six voices, repeat, fades, MML and mute pass the capture
+  checks; the live capture hears every chapter's music.
+
+### Games
+
+- **Sky Lance** (`games/skylance`, 779) - pilots ROOK, KIRA and BLAZE;
+  stages ending at CRIMSON KEEP, IRON TIDE, SOL CORE, NIGHT RAZOR, ROTOR
+  NEST, EARTH HAMMER and SPIRE GOD; enemies that aim at the player; holders
+  that break station so a stage cannot hang before its boss; bounded
+  explosion scale; the playfield drawn at full size with keyed pilot mattes.
+- **The demo** (`games/demo`, 777) - 26 chapters: boot, title, FIX layer,
+  FIX FX, sprite screens, characters, char select, physics, camera lab,
+  palette FX, particles, particle load, feedback, depth FX, depth parallax,
+  NPCs, mini-game, joystick, scroll level, char 2D, target range, depth
+  ride, sound, Sky Lance, Star Raid Lance, credits.  Every chapter resets
+  the hardware and the engine on entry; beds loop in hardware; the attract
+  screen spells the version.
+- **`demo_plus`** (778) - the demo on the C++ engine, sharing scenes, art
+  and sound through `GAME_SCENES_FROM`, `GAME_ART_FROM` and
+  `GAME_SOUND_FROM`.
+- **`neogeogame`** (775) - a sprite shooter: one ship, readable opponents
+  imported at their drawn size, a synthesised starfield.
+- **`tutorial`** (555) and **`helloworld`** (772) - the minimal engine loop
+  and minimal FIX text; helloworld's START works on MVS and AES.
+
+### Build, platforms and verification
+
+- Per-game `game.mk`, `game.cfg`, ROM folder and MAME hash set; the build
+  stops when `GAME=` and `CURRENT_GAME` disagree; `GAME_EXTRA_INCLUDES` and
+  the `_FROM` variables share assets between games without copies.
+- `USE_2D_PLUS=1` builds the game's own sources as C++ too; the SDK headers
+  carry `extern "C"` guards and the cartridge entry points keep C linkage.
+- `PLATFORM=aes` builds for all six games.
+- Windows: `MakefileWin32.mak` with quoted ids, `cmd.exe` shell, correct
+  S-ROM format, the same MAME launch settings as Linux, and a link step
+  that hands the linker forward-slash object paths so the linker script's
+  file-name patterns match - a Windows build is now byte-identical to a
+  Linux build.
+- `sound-clean` deletes only what it can rebuild; a game with no FIX layer,
+  screens, art or sound still builds; `make dist` packages per-game zips;
+  debug, trace and gdb targets; `make unit-tests` and `make check`.
+- Tests: `tests/sprite_render_test.c` builds both engines against a
+  stand-in VRAM; 16 art pipeline tests; 10 sound tool tests.  Emulator
+  tools: `demo_capture.py` (chapter tour, controller run, per-chapter
+  frames), `game_capture.py` (any game), `sound_capture.py` (driver in
+  isolation), `demo_audio_capture.py` (the real audio path, with A presses
+  and a mid-reel coin), and reports that fail a build on a wrong palette
+  bank or a silent chapter.
+
+### Desktop tools
+
+- **Artbox Studio** - pipeline runner, asset browser, hex sprite inspector,
+  movement designer, level designer, HD compare, ROM inventory and an asset
+  rules editor.
+- **Sound Studio** - track, mix and ROM tabs, a live waveform view and an
+  MML designer.
+
+### Documentation
+
+`docs/INTRODUCTION.md`, `docs/PROGRAMMERS_MANUAL.md`, `docs/HELLO_WORLD.md`,
+`docs/SOUND_DRIVER.md`, `docs/ARTBOX_PIPELINE.md`, `docs/TOOLCHAIN.md`,
+`docs/GAMES.md`, `docs/TOOLS.md`, `docs/DEMO_CHAPTERS.md`, `docs/GDB_GUIDE.md`,
+`docs/DEPENDENCIES.md`, the generated `docs/API_2D_ENGINE_C.md` and
+`docs/API_2D_ENGINE_CPP.md`, the single-file `NEOGEOSDK_v1.7.0.md`, and the
+printable `docs/neogeosdk_v1.7.0_manual.pdf`.  The sound guide documents the
+acknowledgement rule and distinguishes the isolated audio check from the
+live one; the art guide documents the palette RAM budget and where extra
+banks stop helping.
+
+---
+
+## Development notes toward v1.7.0
+
+The dated entries below were written as the work landed on the branch and
+are kept as its record.  Everything in them is summarised above.
+
+### v1.7.9 - The byte that got lost
 
 Release date: 2026-09-12
 
@@ -55,7 +282,7 @@ were silent.  The isolated sound check passed throughout, because it
 feeds the driver one byte per frame from a script; the demo sends its
 bytes from a 68000, and that is where they went missing.
 
-### One acknowledgement means one byte
+#### One acknowledgement means one byte
 
 The Z80 answers each byte by dropping its reply port to 0 while it reads
 the latch and raising it to 1 once the byte is queued.  At rest the port
@@ -74,7 +301,7 @@ Every wrapper goes through it, so prefixed commands are safe back to
 back.  A driver soft reset no longer empties the command queue behind
 itself, and a coin plays its cue over the music instead of stopping it.
 
-### A live check that hears what the player hears
+#### A live check that hears what the player hears
 
 `tools/demo_audio_capture.py` boots the real ROM set with the 68000 in
 charge, records the mix, logs every latch byte with the program counter
@@ -84,7 +311,7 @@ Before the fix it reported nineteen of twenty-five chapters silent; after,
 none, with A pressed every nine seconds and again across the natural
 chapter lengths, beds looping past their sample ends.
 
-## v1.7.8 - The sound driver keeps time
+### v1.7.8 - The sound driver keeps time
 
 Release date: 2026-09-12
 
@@ -93,14 +320,14 @@ and the music data had grown past the FM table's origin at `$7800`: the
 assembler overwrote one with the other and still exited zero.  Fixing
 that opened the rest of the driver up for a pass.
 
-### Data placed, not positioned
+#### Data placed, not positioned
 
 Generated FM, MML and SSG includes no longer set `.org`.  The data is
 contiguous below `$8000`, the assembler asserts it stays there, and an
 overwrite diagnostic from `wla-z80` or `wlalink` fails the build even on
 an assembler version that reports it as a warning.
 
-### A clock a musician can count
+#### A clock a musician can count
 
 Timer B ticks at 124.008 Hz.  FM, standalone SSG and MML each keep a
 fractional BPM clock with twelve steps per quarter note, so `T120` means
@@ -114,7 +341,7 @@ Inline sample cues preserve the music cursor.  MML durations no longer
 run one tick long.  FM volume changes reach carriers only, and the four
 channel key-off codes are the right ones.
 
-### Beds that repeat in hardware
+#### Beds that repeat in hardware
 
 ADPCM-B has a hardware repeat bit.  `soundSetADPCMBLoop(1)` before a
 start makes the bed loop at its end address, so the demo no longer
@@ -123,7 +350,7 @@ rate.  ADPCM-A voices use their own end addresses and all six channels;
 the global short timeout is gone.  SSG tuning uses the right octave
 reference, saturates instead of wrapping, and mutes at zero.
 
-### Samples converted like samples
+#### Samples converted like samples
 
 WAV conversion resamples through a band-limited polyphase filter - a
 windowed sinc, pure numpy, so the build does not depend on a package the
@@ -140,7 +367,7 @@ samples inside a 1 MiB page and the whole bank inside 16 MiB.  The shell
 and batch wrappers now pad the M1 with the same byte, so the two
 platforms produce identical ROMs from identical sources.
 
-### On screen
+#### On screen
 
 - The Sky Lance sky repeats every 144 source pixels.  `fit=contain` was
   resizing it to 239 rows and padding, which broke the repeat and left a
@@ -162,7 +389,7 @@ FM, SSG, six ADPCM-A voices, the 32 kHz bed, repeat, fades and mute all
 pass the capture checks.  These are numerical checks, not a listening
 session.
 
-## v1.7.7 - Spending the palette
+### v1.7.7 - Spending the palette
 
 Release date: 2026-09-10
 
@@ -170,7 +397,7 @@ A frame of the demo was showing at most 193 distinct colours against a
 hardware ceiling of 3840, and 108 of the 219 palette banks in use held a
 copy of a palette another bank already had.
 
-### Assets sharing a palette now share a bank
+#### Assets sharing a palette now share a bank
 
 Base banks were positional - one per asset, whether or not two assets
 held the same colours - so a 53-frame animation whose frames all render
@@ -183,7 +410,7 @@ were deduplicated: a `palette_key` in the manifest distinguishes a
 deliberate share from a collision, and extra banks may never be shared
 at all.
 
-### The allocator spends the budget it is given
+#### The allocator spends the budget it is given
 
 Extra banks are seeded from the worst-fitting tile.  If that tile had no
 fully opaque pixels there was nothing to fit a palette from, and the
@@ -194,7 +421,7 @@ would stop at eight.  Seeds that cannot pay are skipped now, not fatal.
 Sky Lance's boss, at a sixteen-bank budget: dE 9.45 with eight banks
 used, now 8.23 with all sixteen.
 
-### Budgets raised where they show
+#### Budgets raised where they show
 
 The freed banks go to what covers the screen: backgrounds 8 to 16,
 titles 8 to 12, screens 4 to 8, the Sky Lance sky 4 to 12, the
@@ -206,7 +433,7 @@ Twelve assets improved and none regressed.  The Sky Lance sky goes 3.37
 to 2.59, the mountain page 3.11 to 2.81, the forest 3.83 to 3.42, and
 the colour count of a background roughly doubles with its bank count.
 
-### Where the ceiling actually is
+#### Where the ceiling actually is
 
 Two things measured and deliberately not built:
 
@@ -221,11 +448,11 @@ Two things measured and deliberately not built:
   extra banks cannot address - a tile reads one palette whatever else is
   resident.
 
-## v1.7.6 - The eagle was two eagles
+### v1.7.6 - The eagle was two eagles
 
 Release date: 2026-09-09
 
-### The flight animation changed colour every third frame
+#### The flight animation changed colour every third frame
 
 It looked like a palette fault and it was not one.  The three flight
 assets share a byte-identical palette, that palette is loaded into three
@@ -244,7 +471,7 @@ Every flight cycle - the flight arc chapter, the character select and
 the joystick chapter - now uses the two poses of a single bird.  The
 rust bird keeps the perched pose it was already used for.
 
-### Camera
+#### Camera
 
 - Panning clamps its destination to the camera bounds, so a pan aimed
   outside them no longer parks the camera against an edge it can never
@@ -253,11 +480,11 @@ rust bird keeps the perched pose it was already used for.
   while the other catches up instead of oscillating around the target.
   Covered by a new host test.
 
-## v1.7.5 - Budgeted palette banks
+### v1.7.5 - Budgeted palette banks
 
 Release date: 2026-09-08
 
-### One palette per image was the ceiling, and it has been lifted
+#### One palette per image was the ceiling, and it has been lifted
 
 Artwork was analysed per tile and then collapsed back to a single
 15-colour palette for the whole image, so most of the analysis was
@@ -291,7 +518,7 @@ banks address.
   asset against the indices it was built from, and reports colour error
   against the source.
 
-### Where the budget stops
+#### Where the budget stops
 
 Extra banks are spent where they pay.  Backgrounds saturate at eight -
 sixteen banks moves the mountain page from 3.18 to 3.16 - so the budget
@@ -302,7 +529,7 @@ RAM.  Dithering them is worse still, on both raw and blur-averaged
 error, because these sources are pixel art with flat regions rather than
 photographic gradients.  The engine support exists either way.
 
-### Fixed
+#### Fixed
 
 - The generated screen code is spliced into a game's `main.c` at a
   marker now, not at the first `showScreen1`.  The generated region grew
@@ -311,11 +538,11 @@ photographic gradients.  The engine support exists either way.
   copy behind - four runs in, `main.c` had four sets of every table and
   would not compile.  Repeated syncs are idempotent again.
 
-## v1.7.4 - Tile stride, and what the palette is actually spending
+### v1.7.4 - Tile stride, and what the palette is actually spending
 
 Release date: 2026-09-07
 
-### Every asset publishes its tile stride
+#### Every asset publishes its tile stride
 
 An asset's rows are `tile_stride` tiles apart, and that stride is the
 canvas width in tiles - 16 only for a 256 px import.  Six places in the
@@ -336,7 +563,7 @@ else lives at that address.  Nineteen assets across two games.
   canvas, so a call site can say how big a figure should look without
   knowing what it was imported at.
 
-### Palette
+#### Palette
 
 - Pure black and white are reserved only when the asset has a real
   population at that end, currently 0.4% of its opaque pixels.  A single
@@ -344,7 +571,7 @@ else lives at that address.  Nineteen assets across two games.
   almost always leaves one, so two of fifteen slots went on colours
   nothing wanted.  Character art earns both; backgrounds mostly do not.
 
-### Not done
+#### Not done
 
 Importing the demo's own characters at the size they are drawn - the
 change that would halve what the sprite chip decimates - was attempted
@@ -354,11 +581,11 @@ the char-select portraits and the NPC chapter render wrongly without it.
 `cat_sky_planes` shows the same idea working where the binding is
 simpler.
 
-## v1.7.3 - Sprites at the size they are drawn
+### v1.7.3 - Sprites at the size they are drawn
 
 Release date: 2026-09-06
 
-### Import at display size, do not shrink in hardware
+#### Import at display size, do not shrink in hardware
 
 The sprite chip does not resample when it shrinks.  It drops whole rows and
 columns, and what it drops is a dither the quantiser laid down for pixels it
@@ -384,7 +611,7 @@ actually drawn.
   ceiling stays at 256 until that path reports a rejection instead of
   swallowing it.
 
-### Fixed in the art
+#### Fixed in the art
 
 - Sky Lance's three pilot portraits had a chroma-key magenta background baked
   in with no alpha channel, so the select and roster screens drew a solid pink
@@ -392,7 +619,7 @@ actually drawn.
   it flood-fills only background reachable from the image border, so the
   figures are untouched.
 
-### Fixed
+#### Fixed
 
 - **A character that blinked off never came back.**  Hiding a char released
   its VRAM slots but only marked it for re-upload when it was active AND
@@ -413,7 +640,7 @@ actually drawn.
   under the header costs the artwork nothing that was not already covered in
   text.
 
-### Art pipeline
+#### Art pipeline
 
 - The HD conditioning passes are **on by default**.  The source art in this
   tree is HD, so conditioning is the normal case here rather than the
@@ -426,11 +653,11 @@ actually drawn.
   side by side join without a line down the middle.  The two black pages with
   a scatter of dots that `neogeogame` was using are replaced by it.
 
-## v1.7.2 - Active characters, art fidelity, and a testable build
+### v1.7.2 - Active characters, art fidelity, and a testable build
 
 Release date: 2026-09-06
 
-### Sprite height on screen
+#### Sprite height on screen
 
 SCB3 carries the number of ACTIVE CHARACTERS, and that field is the sprite's
 height on screen: the hardware covers exactly `rows * 16` scanlines with it and
@@ -456,7 +683,7 @@ previous frame left there.
 - `tests/sprite_render_test.c` covers all of the above against a stand-in VRAM
   array, and builds both engines from the same source file so they cannot drift.
 
-### Sky Lance chapter
+#### Sky Lance chapter
 
 The mini shooter cropped a scrolling sky into a boxed playfield.  A sprite is a
 whole number of characters tall, so a window whose edge is not on a character
@@ -465,7 +692,7 @@ its destination is.  The chapter now runs the sky edge to edge, where the
 overhang lands off-screen, and letterboxes the HUD onto opaque FIX bands
 instead of drawing a dotted outline over the artwork.
 
-### Art pipeline
+#### Art pipeline
 
 - **Resampling in linear light.**  Every resize converted gamma-encoded sRGB
   with an arithmetic mean, which is not an average of light.  Measured across
@@ -495,7 +722,7 @@ instead of drawing a dotted outline over the artwork.
   can be repaired.  The demo's Sky Lance enemy shipped with an opaque white
   matte and drew as a white box; it now has an alpha channel like its siblings.
 
-### Build and test
+#### Build and test
 
 - The host-side renderer tests are no longer a prerequisite of `make test`.
   Launching a ROM in MAME should not require a host C++ toolchain, and on
@@ -511,14 +738,14 @@ instead of drawing a dotted outline over the artwork.
   reaches it, which is the first thing `test.bat` runs.  Verified: a
   `sound-clean` on Sky Lance now leaves all 110 sample files in place.
 
-## v1.7.1 - Rendering and platform fixes
+### v1.7.1 - Rendering and platform fixes
 
 Release date: 2026-09-06
 
 A correctness pass over sprite scaling, per-frame VRAM traffic, the AES build
 and the per-game build plumbing.  No API was removed; one macro was added.
 
-### Sprite scaling
+#### Sprite scaling
 
 The hardware does not shrink the two axes alike: X is taken from the top nibble
 as `((value >> 4) + 1) / 16`, Y from the whole byte as `(value + 1) / 256`.
@@ -534,7 +761,7 @@ reference.
 - Corrected Sky Lance's four scale presets and re-sized them against the
   playfield: the player ship took 35% of the screen height and bosses 66-71%.
 
-### Per-frame VRAM traffic
+#### Per-frame VRAM traffic
 
 `ng_sprite_group_upload()` rewrites the tilemap; `ng_sprite_group_flush()`
 writes only what changed.  Several places called `upload()` every frame for
@@ -549,7 +776,7 @@ corrupt the sprite writes that follow it.
 - `neogeogame` wrote its sprite VRAM *before* waiting for vblank, putting every
   write into active display.  The order is now wait, then draw.
 
-### Sprite budgets
+#### Sprite budgets
 
 - `neogeogame`'s enemy artwork needed 16 hardware sprite strips while the slot
   map reserved 4, so 18 enemies demanded 288 sprites from a 136-slot range and
@@ -557,7 +784,7 @@ corrupt the sprite writes that follow it.
   it is drawn, and the strides are checked against the asset table at compile
   time - `gen_sprite_meta.py` emits `NG_ASSET_STRIPS_n` for that purpose.
 
-### AES
+#### AES
 
 - `neogeo_aes.c` was missing the pointer casts its MVS counterpart had, so
   `PLATFORM=aes` did not compile for any game.  Fixed for all six.
@@ -565,7 +792,7 @@ corrupt the sprite writes that follow it.
   `main.c`, and its attract loop waited on a BIOS flag it never returned to let
   the BIOS set, so START did nothing.  Both fixed, on MVS and AES.
 
-### Build system
+#### Build system
 
 - `GAME_SCENES_FROM`, `GAME_ART_FROM` and `GAME_SOUND_FROM` let a game reuse
   another game's scenes, artwork or audio without a second copy.
@@ -575,7 +802,7 @@ corrupt the sprite writes that follow it.
   instead of failing: the generated `.inc` files the Z80 driver includes
   unconditionally are always written, empty if there is nothing to put in them.
 
-### Gameplay
+#### Gameplay
 
 - Sky Lance stages could hang before the boss: enemies on a holding pattern
   never left the field, and the boss waits for the field to clear.  Holders now
@@ -584,9 +811,9 @@ corrupt the sprite writes that follow it.
 - Sky Lance and the demo's shooter chapter now aim their shots at the player and
   drift toward the player's column rather than flying fixed lanes.
 
-## v1.7.0 - The 2D Engine Release
+### v1.7.0 (branch release) - The 2D Engine Release
 
-Release date: 2026-08-30
+Written 2026-08-30
 
 This entry covers the whole `neo_universal_2d` branch - 164 commits since the
 last mainline release.  It is the largest release the SDK has had: a complete
@@ -596,7 +823,7 @@ tools, one-shot installers, three new games, and the documentation set that
 explains all of it.  The v1.7.0-pre entry below remains as the record of the
 mid-branch pre-release.
 
-### Headline features
+#### Headline features
 
 - **A complete 2D game engine**, in plain C (`sdk/2d_engine/`) and C++14
   (`sdk/2d_engine_plus/`) with an identical public ABI - 35 modules covering
@@ -624,7 +851,7 @@ mid-branch pre-release.
 
 ---
 
-### The 2D engine
+#### The 2D engine
 
 Added on this branch, from nothing, in thirteen staged passes.
 
@@ -680,7 +907,7 @@ link the C++ build and vice versa.  Select with `USE_2D_PLUS=1`.
 without the engine), plus `sdk/ng_audio`, `sdk/ng_scene`, `sdk/ng_show`,
 `sdk/ng_video` and `sdk/bsp`.
 
-### Engine correctness work
+#### Engine correctness work
 
 A long arc of hardware-behaviour fixes, each found by observation rather
 than from documentation.
@@ -725,7 +952,7 @@ than from documentation.
   marked with it stayed active until the pool filled permanently; use
   `ng_chars_remove()`.
 
-### Build system
+#### Build system
 
 - **Multi-game builds.**  Each game lives in `games/<name>/` with its own
   `game.mk` (`GAME_NAME`, `GAME_ID`, `GAME_SCENES`, `GAME_EXTRA_INCLUDES`),
@@ -761,7 +988,7 @@ than from documentation.
 - **One-shot installers** for Linux, Ubuntu, native Windows and WSL under
   `install/`.
 
-### Art pipeline
+#### Art pipeline
 
 The artbox went through a long series of quantiser revisions on this branch.
 The end state is `artbox/img2neo_tile.py`, the default for every build via
@@ -832,7 +1059,7 @@ The end state is `artbox/img2neo_tile.py`, the default for every build via
   and a post-convert transparency audit.
 - **GIMP plugins** for the art pipeline under `tools/gimp-plugins/`.
 
-### Audio
+#### Audio
 
 **Driver and protocol**
 
@@ -899,7 +1126,7 @@ The end state is `artbox/img2neo_tile.py`, the default for every build via
   confirmed-working FM baseline with only the three new register commands
   layered back.
 
-### Games
+#### Games
 
 - **`games/skylance`** (id 779) - Sky Lance, a complete vertical arcade
   shooter.  Three pilots (ROOK / BLUE LANCE, KIRA / GREEN WING, BLAZE / RED
@@ -933,7 +1160,7 @@ The end state is `artbox/img2neo_tile.py`, the default for every build via
 - **`games/helloworld`** (id 772) - minimal FIX text and one sample.
 - All six verified building to a ROM from a clean invocation.
 
-### Desktop tools
+#### Desktop tools
 
 - **Artbox Studio** (`artbox/artbox_studio.py`) - Pipeline runner with a
   status pill per step and a live log, Asset Browser, Hex Sprite Inspector
@@ -944,7 +1171,7 @@ The end state is `artbox/img2neo_tile.py`, the default for every build via
 - **Sound Studio** (`sound/sound_studio.py`) - Track, Mix and ROM tabs, a
   live waveform view, and an MML designer.
 
-### Documentation
+#### Documentation
 
 New in v1.7.0:
 
@@ -985,9 +1212,9 @@ Updated:
   `depthfx`, `performance_rules`), the sound readmes, and the WSL2 +
   Ubuntu 24.04 + PulseAudio audio walkthrough.
 
-## v1.7.0-pre - Bug Fixes, Per-Game ROM Folders, Z80 Sound Fix, and Demo Overhaul
+## v1.3.0 - Bug Fixes, Per-Game ROM Folders, Z80 Sound Fix, and Demo Overhaul
 
-Release date: 2026-05-17 (pre-release; superseded by v1.7.0 above)
+Release date: 2026-05-20 (pre-release, published as v1.3.0; superseded by v1.7.0 above)
 
 ### Highlights
 
