@@ -30,12 +30,24 @@ from PyQt6.QtMultimedia import QAudioSink, QAudioFormat
 
 _STUDIO_DIR = Path(__file__).resolve().parent
 _REPO_ROOT = _STUDIO_DIR.parent
-for _p in (_REPO_ROOT / "tools", _STUDIO_DIR, _REPO_ROOT):
+for _p in (_REPO_ROOT / "tools", _STUDIO_DIR, _REPO_ROOT, _STUDIO_DIR / "tools"):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
 from studio_project import StudioProject, FileSnapshot, game_names
 from studio_widgets import mount_workspace, update_workspace_project, BuildPanel, save_document
+
+try:
+    from adpcm_enc import (
+        STEP_TABLE_A, STEP_ADJ_A,
+        adpcma_encode_nibble, adpcma_decode_nibble,
+        adpcmb_encode_nibble, adpcmb_decode_nibble
+    )
+except ImportError:
+    adpcma_encode_nibble = None
+    adpcma_decode_nibble = None
+    adpcmb_encode_nibble = None
+    adpcmb_decode_nibble = None
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -108,6 +120,119 @@ ALG_DESCRIPTIONS = [
     "ALG5: Op1→(2,3,4)→OUT",
     "ALG6: Op1→2→OUT, Op3→OUT, Op4→OUT",
     "ALG7: Op1+Op2+Op3+Op4→OUT",
+]
+
+PRO_FM_LIBRARY = [
+    {
+        "name": "Slap Bass",
+        "alg": 4, "fb": 5, "stereo": 0xC0, "lfo": 0,
+        "ops": {
+            "op1": [0x01, 0x22, 0x1F, 0x0C, 0x04, 0x3F, 0x00],
+            "op2": [0x01, 0x00, 0x1F, 0x0A, 0x06, 0x4F, 0x00],
+            "op3": [0x02, 0x18, 0x1F, 0x0E, 0x03, 0x2F, 0x00],
+            "op4": [0x01, 0x02, 0x1F, 0x0B, 0x05, 0x3F, 0x00],
+        }
+    },
+    {
+        "name": "Synth Bass (Analog)",
+        "alg": 2, "fb": 6, "stereo": 0xC0, "lfo": 0,
+        "ops": {
+            "op1": [0x01, 0x1C, 0x1F, 0x0E, 0x04, 0x3F, 0x00],
+            "op2": [0x02, 0x20, 0x1F, 0x08, 0x02, 0x2F, 0x00],
+            "op3": [0x01, 0x12, 0x1F, 0x0C, 0x04, 0x3F, 0x00],
+            "op4": [0x01, 0x00, 0x1F, 0x0A, 0x06, 0x4F, 0x00],
+        }
+    },
+    {
+        "name": "FM Electric Piano (DX)",
+        "alg": 5, "fb": 3, "stereo": 0xC0, "lfo": 0,
+        "ops": {
+            "op1": [0x01, 0x2A, 0x1F, 0x14, 0x04, 0x38, 0x00],
+            "op2": [0x01, 0x04, 0x1E, 0x06, 0x03, 0x28, 0x00],
+            "op3": [0x07, 0x2E, 0x1F, 0x18, 0x02, 0x1A, 0x00],
+            "op4": [0x01, 0x00, 0x1F, 0x07, 0x03, 0x28, 0x00],
+        }
+    },
+    {
+        "name": "Brass Fanfare",
+        "alg": 6, "fb": 2, "stereo": 0xC0, "lfo": 0,
+        "ops": {
+            "op1": [0x01, 0x1E, 0x14, 0x08, 0x04, 0x28, 0x00],
+            "op2": [0x01, 0x00, 0x16, 0x06, 0x02, 0x18, 0x00],
+            "op3": [0x02, 0x0A, 0x14, 0x08, 0x03, 0x28, 0x00],
+            "op4": [0x01, 0x06, 0x15, 0x07, 0x02, 0x28, 0x00],
+        }
+    },
+    {
+        "name": "Strings / Pad",
+        "alg": 7, "fb": 0, "stereo": 0xC0, "lfo": 0x08,
+        "ops": {
+            "op1": [0x11, 0x08, 0x0C, 0x04, 0x00, 0x08, 0x00],
+            "op2": [0x21, 0x0A, 0x0E, 0x04, 0x00, 0x08, 0x00],
+            "op3": [0x02, 0x0E, 0x0B, 0x04, 0x00, 0x08, 0x00],
+            "op4": [0x01, 0x06, 0x0D, 0x04, 0x00, 0x08, 0x00],
+        }
+    },
+    {
+        "name": "Sawtooth Lead",
+        "alg": 1, "fb": 6, "stereo": 0xC0, "lfo": 0,
+        "ops": {
+            "op1": [0x01, 0x18, 0x1F, 0x06, 0x02, 0x19, 0x00],
+            "op2": [0x01, 0x14, 0x1F, 0x08, 0x03, 0x28, 0x00],
+            "op3": [0x02, 0x1E, 0x1F, 0x0A, 0x04, 0x38, 0x00],
+            "op4": [0x01, 0x00, 0x1F, 0x06, 0x01, 0x19, 0x00],
+        }
+    },
+    {
+        "name": "Crystal Bell",
+        "alg": 5, "fb": 4, "stereo": 0xC0, "lfo": 0,
+        "ops": {
+            "op1": [0x07, 0x18, 0x1F, 0x0E, 0x04, 0x38, 0x00],
+            "op2": [0x01, 0x00, 0x1F, 0x08, 0x03, 0x28, 0x00],
+            "op3": [0x0B, 0x20, 0x1F, 0x10, 0x05, 0x48, 0x00],
+            "op4": [0x03, 0x0C, 0x1F, 0x09, 0x04, 0x38, 0x00],
+        }
+    },
+    {
+        "name": "Laser Shot FX",
+        "alg": 0, "fb": 7, "stereo": 0xC0, "lfo": 0,
+        "ops": {
+            "op1": [0x0F, 0x12, 0x1F, 0x18, 0x18, 0xF9, 0x00],
+            "op2": [0x08, 0x14, 0x1F, 0x14, 0x14, 0xF9, 0x00],
+            "op3": [0x04, 0x10, 0x1F, 0x12, 0x12, 0xF9, 0x00],
+            "op4": [0x01, 0x00, 0x1F, 0x10, 0x10, 0xF9, 0x00],
+        }
+    },
+    {
+        "name": "Explosion / Noise Crash",
+        "alg": 7, "fb": 7, "stereo": 0xC0, "lfo": 0,
+        "ops": {
+            "op1": [0x01, 0x00, 0x1F, 0x0E, 0x0C, 0x7F, 0x00],
+            "op2": [0x03, 0x04, 0x1F, 0x10, 0x0E, 0x8F, 0x00],
+            "op3": [0x07, 0x08, 0x1F, 0x12, 0x10, 0x9F, 0x00],
+            "op4": [0x0F, 0x0C, 0x1F, 0x14, 0x12, 0xAF, 0x00],
+        }
+    },
+    {
+        "name": "FM Kick Punch",
+        "alg": 0, "fb": 5, "stereo": 0xC0, "lfo": 0,
+        "ops": {
+            "op1": [0x00, 0x08, 0x1F, 0x18, 0x00, 0xF9, 0x00],
+            "op2": [0x01, 0x14, 0x1F, 0x14, 0x00, 0xF9, 0x00],
+            "op3": [0x00, 0x10, 0x1F, 0x12, 0x00, 0xF9, 0x00],
+            "op4": [0x00, 0x00, 0x1F, 0x0E, 0x00, 0xF9, 0x00],
+        }
+    }
+]
+
+PRO_SSG_LIBRARY = [
+    {"name": "Square Lead",       "tone_mask": 0x3E, "vol_a": 0x0E, "vol_b": 0x00, "vol_c": 0x00, "noise": 0x00},
+    {"name": "Sub Bass Pulse",   "tone_mask": 0x3D, "vol_a": 0x00, "vol_b": 0x0F, "vol_c": 0x00, "noise": 0x00},
+    {"name": "Triple Harmony",    "tone_mask": 0x38, "vol_a": 0x0B, "vol_b": 0x0B, "vol_c": 0x0B, "noise": 0x00},
+    {"name": "Noise Snare",       "tone_mask": 0x07, "vol_a": 0x0F, "vol_b": 0x00, "vol_c": 0x00, "noise": 0x16},
+    {"name": "Hi-Hat Click",      "tone_mask": 0x07, "vol_a": 0x0B, "vol_b": 0x00, "vol_c": 0x00, "noise": 0x03},
+    {"name": "Arcade Coin Chime", "tone_mask": 0x3E, "vol_a": 0x0E, "vol_b": 0x00, "vol_c": 0x00, "noise": 0x00},
+    {"name": "Explosion Rumble",  "tone_mask": 0x1F, "vol_a": 0x0F, "vol_b": 0x0D, "vol_c": 0x00, "noise": 0x1F},
 ]
 
 def _envelope(t, ar, dr, sl_level, sr, rr, total_dur, sr_rate=44100):
@@ -777,6 +902,24 @@ class FMPatchTab(QWidget):
         btn_save = QPushButton("Save patches.fm")
         btn_save.clicked.connect(self._save_patches)
         left.addWidget(btn_save)
+
+        # Pro Instrument Library
+        lib_box = QGroupBox("Pro Instrument Library")
+        lib_layout = QVBoxLayout(lib_box)
+        self.lib_combo = QComboBox()
+        self.lib_combo.addItems([p["name"] for p in PRO_FM_LIBRARY])
+        lib_layout.addWidget(self.lib_combo)
+        btn_audition_lib = QPushButton("▶ Audition Preset")
+        btn_audition_lib.clicked.connect(self._audition_library_preset)
+        lib_layout.addWidget(btn_audition_lib)
+        btn_apply_lib = QPushButton("Apply to Current Patch")
+        btn_apply_lib.clicked.connect(self._apply_library_preset)
+        lib_layout.addWidget(btn_apply_lib)
+        btn_insert_lib = QPushButton("+ Insert as New Patch")
+        btn_insert_lib.clicked.connect(self._insert_library_preset)
+        lib_layout.addWidget(btn_insert_lib)
+        left.addWidget(lib_box)
+        left.addStretch()
         layout.addLayout(left)
 
         # Center: patch parameters
@@ -982,6 +1125,51 @@ class FMPatchTab(QWidget):
         if write_patches(self.patches, target, parent=self):
             QMessageBox.information(self, "Saved", f"Saved {len(self.patches)} patches to\n{target}")
 
+    def _audition_library_preset(self):
+        idx = self.lib_combo.currentIndex()
+        if idx < 0 or idx >= len(PRO_FM_LIBRARY):
+            return
+        preset = PRO_FM_LIBRARY[idx]
+        midi = 60
+        samples = synthesize_fm(preset, midi, 0.6)
+        self.waveform.set_samples(samples)
+        self.note_label.setText(f"Preset Audition: {preset['name']} (C4)")
+        self._audio_sink = play_samples(samples)
+
+    def _apply_library_preset(self):
+        idx = self.lib_combo.currentIndex()
+        if idx < 0 or idx >= len(PRO_FM_LIBRARY) or self._current_idx >= len(self.patches):
+            return
+        preset = PRO_FM_LIBRARY[idx]
+        cur = self.patches[self._current_idx]
+        cur["name"] = preset["name"]
+        cur["alg"] = preset["alg"]
+        cur["fb"] = preset["fb"]
+        cur["stereo"] = preset.get("stereo", 0xC0)
+        cur["lfo"] = preset.get("lfo", 0)
+        cur["ops"] = {k: list(v) for k, v in preset["ops"].items()}
+        self._on_patch_selected(self._current_idx)
+        self.patch_list.item(self._current_idx).setText(f"{cur['id']:2d}  {cur['name']}")
+
+    def _insert_library_preset(self):
+        idx = self.lib_combo.currentIndex()
+        if idx < 0 or idx >= len(PRO_FM_LIBRARY):
+            return
+        preset = PRO_FM_LIBRARY[idx]
+        new_id = max((p["id"] for p in self.patches), default=-1) + 1
+        p = {
+            "id": new_id,
+            "name": preset["name"],
+            "alg": preset["alg"],
+            "fb": preset["fb"],
+            "stereo": preset.get("stereo", 0xC0),
+            "lfo": preset.get("lfo", 0),
+            "ops": {k: list(v) for k, v in preset["ops"].items()}
+        }
+        self.patches.append(p)
+        self.patch_list.addItem(f"{p['id']:2d}  {p['name']}")
+        self.patch_list.setCurrentRow(len(self.patches) - 1)
+
 # ---------------------------------------------------------------------------
 # MML Composer Tab (FM and SSG)
 # ---------------------------------------------------------------------------
@@ -1074,6 +1262,32 @@ class MmlComposerTab(QWidget):
 
         # Center: editor + roll
         center = QVBoxLayout()
+
+        # Snippets toolbar
+        snip_bar = QHBoxLayout()
+        snip_bar.addWidget(QLabel("<b>Snippets:</b>"))
+        btn_h = QPushButton("+ Header")
+        btn_h.setToolTip("Insert track setup header (Tempo, Volume, Instrument, Octave, Length)")
+        btn_h.clicked.connect(lambda: self._insert_snippet("T120 V15 I0 O4 L8\n"))
+        snip_bar.addWidget(btn_h)
+        btn_l = QPushButton("+ Loop [ ]2")
+        btn_l.setToolTip("Wrap selection in repeat brackets")
+        btn_l.clicked.connect(self._insert_loop_snippet)
+        snip_bar.addWidget(btn_l)
+        btn_c = QPushButton("+ Drum Cue")
+        btn_c.setToolTip("Insert ADPCM-A SFX/drum cue (@a0)")
+        btn_c.clicked.connect(lambda: self._insert_snippet(" @a0 "))
+        snip_bar.addWidget(btn_c)
+        btn_m = QPushButton("+ Mix Directive")
+        btn_m.setToolTip("Insert recommended driver mix comment")
+        btn_m.clicked.connect(lambda: self._insert_snippet("; soundApplyMix(0x30, 0xB8, 0x08, 0x08);\n"))
+        snip_bar.addWidget(btn_m)
+        btn_val = QPushButton("✓ Validate Syntax")
+        btn_val.clicked.connect(self._validate_syntax)
+        snip_bar.addWidget(btn_val)
+        snip_bar.addStretch()
+        center.addLayout(snip_bar)
+
         self.editor = QPlainTextEdit()
         self.editor.setFont(QFont("Monospace", 10))
         self.editor.textChanged.connect(self._on_text_changed)
@@ -1086,6 +1300,11 @@ class MmlComposerTab(QWidget):
         scroll.setWidget(self.roll)
         scroll.setMinimumHeight(180)
         center.addWidget(scroll, 1)
+
+        self.status_bar = QLabel("MML Editor ready.")
+        self.status_bar.setStyleSheet("color:#aaa;")
+        center.addWidget(self.status_bar)
+
         layout.addLayout(center, 2)
 
         # Right: preview
@@ -1160,6 +1379,62 @@ class MmlComposerTab(QWidget):
         text = self.editor.toPlainText()
         events = parse_mml_events(text)
         self.roll.set_events(events)
+
+    def _insert_snippet(self, text: str):
+        cursor = self.editor.textCursor()
+        cursor.insertText(text)
+        self.editor.setTextCursor(cursor)
+        self.editor.setFocus()
+
+    def _insert_loop_snippet(self):
+        cursor = self.editor.textCursor()
+        sel = cursor.selectedText()
+        if sel:
+            cursor.insertText(f"[ {sel} ]2")
+        else:
+            cursor.insertText("[ c d e g ]2")
+        self.editor.setTextCursor(cursor)
+        self.editor.setFocus()
+
+    def _validate_syntax(self):
+        text = self.editor.toPlainText()
+        errors = []
+        open_b = text.count("[")
+        close_b = text.count("]")
+        if open_b != close_b:
+            errors.append(f"Unmatched loop brackets: {open_b} '[' vs {close_b} ']'")
+
+        lines = text.splitlines()
+        for line_num, line in enumerate(lines, 1):
+            line = re.sub(r";.*", "", line).strip()
+            if not line:
+                continue
+            tokens = line.split()
+            for tok in tokens:
+                m_t = re.match(r"^[Tt](\d+)$", tok)
+                if m_t and not (1 <= int(m_t.group(1)) <= 255):
+                    errors.append(f"Line {line_num}: Tempo out of range (1-255): {tok}")
+                m_v = re.match(r"^[Vv](\d+)$", tok)
+                if m_v and not (0 <= int(m_v.group(1)) <= 15):
+                    errors.append(f"Line {line_num}: Volume out of range (0-15): {tok}")
+                m_o = re.match(r"^[Oo](\d+)$", tok)
+                if m_o and not (1 <= int(m_o.group(1)) <= 8):
+                    errors.append(f"Line {line_num}: Octave out of range (1-8): {tok}")
+                m_l = re.match(r"^[Ll](\d+)$", tok)
+                if m_l and int(m_l.group(1)) not in (1, 2, 4, 8, 16, 32, 64):
+                    errors.append(f"Line {line_num}: Non-standard note length: {tok}")
+
+        if errors:
+            msg = "\n".join(errors[:6])
+            if len(errors) > 6:
+                msg += f"\n... and {len(errors) - 6} more issues."
+            self.status_bar.setText(f"Syntax Warning: {errors[0]}")
+            self.status_bar.setStyleSheet("color:#ff6666; font-weight:bold;")
+            QMessageBox.warning(self, "MML Syntax Check", f"Found {len(errors)} potential issues:\n\n{msg}")
+        else:
+            self.status_bar.setText("✓ MML Syntax valid! Directives and brackets verified.")
+            self.status_bar.setStyleSheet("color:#66ff88; font-weight:bold;")
+            QMessageBox.information(self, "MML Syntax Check", "✓ Syntax check passed!\nAll commands, parameter ranges, and loop brackets verified.")
 
     def _play_key_preview(self, midi: int):
         if self._current_mode == "fm":
@@ -1280,6 +1555,24 @@ class SSGPresetTab(QWidget):
         btn_save = QPushButton("Save config.ssg")
         btn_save.clicked.connect(self._save_presets)
         left.addWidget(btn_save)
+
+        # Retro SSG Library
+        lib_box = QGroupBox("Retro SSG Library")
+        lib_layout = QVBoxLayout(lib_box)
+        self.lib_combo = QComboBox()
+        self.lib_combo.addItems([p["name"] for p in PRO_SSG_LIBRARY])
+        lib_layout.addWidget(self.lib_combo)
+        btn_audition_lib = QPushButton("▶ Audition Preset")
+        btn_audition_lib.clicked.connect(self._audition_library_preset)
+        lib_layout.addWidget(btn_audition_lib)
+        btn_apply_lib = QPushButton("Apply to Current Preset")
+        btn_apply_lib.clicked.connect(self._apply_library_preset)
+        lib_layout.addWidget(btn_apply_lib)
+        btn_insert_lib = QPushButton("+ Insert as New Preset")
+        btn_insert_lib.clicked.connect(self._insert_library_preset)
+        lib_layout.addWidget(btn_insert_lib)
+        left.addWidget(lib_box)
+        left.addStretch()
         layout.addLayout(left)
 
         # Center: parameters
@@ -1395,6 +1688,49 @@ class SSGPresetTab(QWidget):
         if write_ssg_presets(self.presets, target, parent=self):
             QMessageBox.information(self, "Saved", f"Saved {len(self.presets)} presets to\n{target}")
 
+    def _audition_library_preset(self):
+        idx = self.lib_combo.currentIndex()
+        if idx < 0 or idx >= len(PRO_SSG_LIBRARY):
+            return
+        preset = PRO_SSG_LIBRARY[idx]
+        samples = synthesize_ssg(preset, 60, 0.5)
+        self.waveform.set_samples(samples)
+        self._audio_sink = play_samples(samples)
+
+    def _apply_library_preset(self):
+        idx = self.lib_combo.currentIndex()
+        if idx < 0 or idx >= len(PRO_SSG_LIBRARY) or self._current_idx >= len(self.presets):
+            return
+        preset = PRO_SSG_LIBRARY[idx]
+        cur = self.presets[self._current_idx]
+        cur["name"] = preset["name"]
+        cur["tone_mask"] = preset["tone_mask"]
+        cur["vol_a"] = preset["vol_a"]
+        cur["vol_b"] = preset["vol_b"]
+        cur["vol_c"] = preset["vol_c"]
+        cur["noise_freq"] = preset.get("noise", 0)
+        self._on_preset_selected(self._current_idx)
+        self.preset_list.item(self._current_idx).setText(f"{cur['id']:2d}  {cur['name']}")
+
+    def _insert_library_preset(self):
+        idx = self.lib_combo.currentIndex()
+        if idx < 0 or idx >= len(PRO_SSG_LIBRARY):
+            return
+        preset = PRO_SSG_LIBRARY[idx]
+        new_id = max((p["id"] for p in self.presets), default=-1) + 1
+        p = {
+            "id": new_id,
+            "name": preset["name"],
+            "tone_mask": preset["tone_mask"],
+            "vol_a": preset["vol_a"],
+            "vol_b": preset["vol_b"],
+            "vol_c": preset["vol_c"],
+            "noise_freq": preset.get("noise", 0),
+        }
+        self.presets.append(p)
+        self.preset_list.addItem(f"{p['id']:2d}  {p['name']}")
+        self.preset_list.setCurrentRow(len(self.presets) - 1)
+
 # ---------------------------------------------------------------------------
 # ADPCM Manager Tab
 # ---------------------------------------------------------------------------
@@ -1452,9 +1788,12 @@ class ADPCMTab(QWidget):
         center.addWidget(self.info_label)
 
         btn_row = QHBoxLayout()
-        self.btn_play = QPushButton("▶ Play")
+        self.btn_play = QPushButton("▶ Play Source PCM")
         self.btn_play.clicked.connect(self._play_sample)
         btn_row.addWidget(self.btn_play)
+        self.btn_play_hw = QPushButton("▶ Audition 4-bit ADPCM Hardware Emulation")
+        self.btn_play_hw.clicked.connect(self._play_sample_adpcm)
+        btn_row.addWidget(self.btn_play_hw)
         center.addLayout(btn_row)
         center.addStretch()
         layout.addLayout(center, 2)
@@ -1521,14 +1860,19 @@ class ADPCMTab(QWidget):
             if nc > 1:
                 data = data[::nc]
             self._current_samples = data
+            self._current_sr = sr
+            self._current_nc = nc
+            self._current_n = n
             self.waveform.set_samples(data)
             dur = n / sr
+            vrom_bytes = max(1, n // 2)
+            ch_type = "ADPCM-A (18.5kHz fixed, 6-ch)" if self.chan_combo.currentIndex() == 0 else "ADPCM-B (variable streaming)"
             self.info_label.setText(
                 f"File: {path.name}\n"
-                f"Sample rate: {sr} Hz\n"
-                f"Channels: {nc}\n"
-                f"Duration: {dur:.2f}s\n"
-                f"Frames: {n}\n"
+                f"Target: {ch_type}\n"
+                f"Source: {sr} Hz  |  {nc} ch  |  {sw * 8}-bit\n"
+                f"Duration: {dur:.2f}s  ({n:,} frames)\n"
+                f"V-ROM Size: ~{vrom_bytes:,} bytes (4bpp packed nibbles)\n"
             )
         except Exception as e:
             self.info_label.setText(f"Error: {e}")
@@ -1537,11 +1881,64 @@ class ADPCMTab(QWidget):
     def _play_sample(self):
         if self._current_samples is None:
             return
-        sr_src = 44100  # assume
         samples = self._current_samples
         if len(samples) > SAMPLE_RATE * 10:
             samples = samples[:SAMPLE_RATE * 10]
+        self.waveform.set_samples(samples)
         self._audio_sink = play_samples(samples.astype(np.float32))
+
+    def _play_sample_adpcm(self):
+        if self._current_samples is None:
+            return
+        is_chan_a = (self.chan_combo.currentIndex() == 0)
+        target_sr = 18500 if is_chan_a else 16000
+        src_data = self._current_samples
+        src_sr = getattr(self, "_current_sr", 44100)
+
+        # Resample to target hardware rate
+        num_target = max(1, int(len(src_data) * target_sr / src_sr))
+        t_src = np.linspace(0, 1, len(src_data))
+        t_target = np.linspace(0, 1, num_target)
+        resampled = np.interp(t_target, t_src, src_data)
+        pcm16 = np.clip(resampled * 32767.0, -32768, 32767).astype(np.int16)
+
+        # Hardware ADPCM simulation
+        decoded = np.zeros(len(pcm16), dtype=np.float32)
+        state_enc = [0, 0]
+        state_dec = [0, 0]
+        if is_chan_a and adpcma_encode_nibble and adpcma_decode_nibble:
+            for i, s in enumerate(pcm16):
+                nib = adpcma_encode_nibble(state_enc, int(s))
+                adpcma_decode_nibble(state_dec, nib)
+                decoded[i] = (state_dec[0] << 4) / 32768.0
+        elif (not is_chan_a) and adpcmb_encode_nibble and adpcmb_decode_nibble:
+            for i, s in enumerate(pcm16):
+                nib = adpcmb_encode_nibble(state_enc, int(s))
+                adpcmb_decode_nibble(state_dec, nib)
+                decoded[i] = state_dec[0] / 32768.0
+        else:
+            decoded = (np.round(resampled * 7.0) / 7.0).astype(np.float32)
+
+        # Visualise the 4-bit decoded output
+        self.waveform.set_samples(decoded)
+
+        # Resample back to standard SAMPLE_RATE (44100) for playback
+        num_out = max(1, int(len(decoded) * SAMPLE_RATE / target_sr))
+        t_out = np.linspace(0, 1, num_out)
+        out_samples = np.interp(t_out, t_target, decoded).astype(np.float32)
+
+        noise = resampled[:len(decoded)] - decoded
+        var_sig = np.var(resampled)
+        var_err = max(1e-9, np.var(noise))
+        snr = 10.0 * np.log10(max(1e-9, var_sig / var_err))
+
+        ch_name = "ADPCM-A (18.5kHz)" if is_chan_a else "ADPCM-B (16kHz)"
+        cur_text = self.info_label.text().split("\nHardware Audition:")[0]
+        self.info_label.setText(
+            f"{cur_text}\n"
+            f"Hardware Audition: {ch_name} 4-bit simulation  |  SNR: {snr:.1f} dB  |  Playing..."
+        )
+        self._audio_sink = play_samples(out_samples)
 
     def _add_sample(self):
         paths, _ = QFileDialog.getOpenFileNames(

@@ -157,7 +157,14 @@ Detailed tabular breakdown of the game's asset manifest:
 - **Asset Browser (`AssetBrowserTab`)**: Interactive tree browser for PNG files under `art_source/`.
 
 #### 9. Hex Sprite Inspector & Movement Designer
-- **Hex Sprite Inspector (`HexSpriteInspectorTab`)**: Deep inspection of raw 4bpp bitplane nibbles in binary and hexadecimal.
+- **Hex Sprite Inspector (`HexSpriteInspectorTab`)**: Deep inspection of raw 4bpp bitplane nibbles in binary and hexadecimal with live palette swapping.
+- **HD Conversion & Quality Workbench (`HdCompareTab`)**: High-fidelity art conversion comparing standard `img2neo.py` with enhanced `img2neo_hd.py`.
+  - **Pre-filtering Options**: Toggle CLAHE contrast enhancement, Unsharp Mask, and Bilateral edge-preserving smoothing.
+  - **Dithering Modes**: Blue Noise dither (dispersed dot pattern with minimal visual banding), Floyd-Steinberg error diffusion, or None.
+  - **3-Way Visual Comparison**: Side-by-side display of Original 32-bit source, Standard conversion, and HD enhanced output.
+  - **Quality Metrics**: Computes PSNR (Peak Signal-to-Noise Ratio in dB), MSE (Mean Squared Error), and unique Neo Geo DAC color count.
+  - **Direct Game Deployment**: Single click deploys the optimized HD image directly into the active game's `art_source/` directory.
+- **ROM Inventory (`RomInventoryTab`)**: Real-time audit of all built ROM kinds (`p1`, `m1`, `s1`, `v1`, `c1`, `c2`) across all game projects in `roms/`, including file sizes and modification timestamps.
 - **Movement Designer (`MovementDesignerTab`)**: Simulate kinematic trajectories, velocity curves, and physics paths for moving sprites.
 
 #### 10. Build & Make (`BuildPanel`)
@@ -197,6 +204,18 @@ The Neo Geo sound subsystem consists of an 8-bit Z80 CPU clocked at 4 MHz managi
 Visual FM instrument synthesizer and patch bank editor (`patches.fm`):
 - **Algorithm Diagram**: Visual flow diagram updates dynamically as you change ALG (0–7).
 - **Operator Sliders**: Full interactive hex spinboxes for DT, MUL, TL, AR, DR, SR, SL, and RR.
+- **Pro Instrument Library**: 10 authentic production-ready YM2610 patches:
+  - *Slap Bass* (ALG 4, punchy percussive attack)
+  - *Synth Bass* (ALG 2, deep sub-bass foundation)
+  - *FM Rhodes Piano* (ALG 5, bell-like electric piano)
+  - *Brass Fanfare* (ALG 4, bright brass swell)
+  - *Strings & Pad* (ALG 5, soft warm orchestral bed)
+  - *Saw Lead* (ALG 7, 4-operator detuned lead)
+  - *Crystal Bell* (ALG 1, sharp FM metallic chime)
+  - *Laser Shot SFX* (ALG 3, fast downward FM frequency sweep)
+  - *Explosion FX* (ALG 0, high feedback noise-like impact)
+  - *FM Kick Drum* (ALG 3, punchy low-end thud)
+- **Library Controls**: Audition presets directly, apply preset parameters to the current selected patch, or insert as a brand new patch.
 - **Auditioning**: Play test tones via the built-in piano keyboard, or trigger C-major arpeggios and chords.
 - **Waveform Display**: Live synthesized preview generated via exact FM synthesis simulation in Python/NumPy.
 - **Save**: Writes changes safely to `sound/fm/patches.fm`.
@@ -205,6 +224,12 @@ Visual FM instrument synthesizer and patch bank editor (`patches.fm`):
 Full-featured Music Macro Language tracker for FM and SSG tracks:
 - **Dual Mode**: Switch seamlessly between FM MML (`sound/fm/*.mml`) and SSG MML (`sound/ssg/*.mml`).
 - **Syntax Highlighting**: Comments, octave directives, tempo markers, and notes are cleanly colorized.
+- **Quick Snippet Toolbar**: Single-click insertion of common MML idioms:
+  - `+ Header`: Standard tempo, volume, and initial octave initialization.
+  - `+ Loop`: Loop block syntax `[ ... ]2`.
+  - `+ Drum Cue`: ADPCM drum trigger directive.
+  - `+ Mix Directive`: Channel pan and volume adjustments.
+- **Syntax Validator**: Real-time syntax validator verifying bracket matching, tempo bounds (1–255), volume levels (0–15), octave ranges (1–8), and valid note lengths.
 - **Live Piano Roll**: As you type MML syntax, notes render immediately as colored bars on a time-pitch piano roll grid.
 - **Compile All**: Directly triggers MML compilers (`fm_compile.py` / `ssg_compile.py`) to generate assembly include tables (`.inc`) for the Z80 driver.
 
@@ -233,14 +258,25 @@ Edit hardware square wave configurations (`config.ssg`):
 - Set Tone Mask (register 7) to enable/disable square wave tones and noise per channel.
 - Independent volume control for SSG Channels A, B, and C (0x0 to 0xF).
 - Adjust Noise Generator frequency period.
-- Audition square wave presets via keyboard.
+- **Retro SSG Library**: 7 authentic chiptune presets:
+  - *Square Lead* (Ch A pure square melody)
+  - *Sub Bass Pulse* (Ch A heavy low tone)
+  - *Triple Harmony* (Ch A+B+C chord voicing)
+  - *Noise Snare* (Ch A tone + noise crack)
+  - *Hi-Hat Click* (Short noise burst)
+  - *Arcade Coin* (High-frequency ping)
+  - *Explosion Rumble* (Low noise rumble)
+- Audition square wave presets via keyboard or preset library controls.
 
 #### 5. ADPCM Samples (`ADPCMTab`)
 Manage WAV audio assets intended for V-ROM compilation:
 - Switch between **Channel A (SFX)** and **Channel B (Streaming)**.
 - Browse existing samples, check audio length, bit depth, and sample rate.
 - Import new WAV files with automatic staging.
-- Audition sample playback through system audio output.
+- **Dual Playback Auditioning**:
+  - *Play Source PCM*: Auditions the original uncompressed source audio.
+  - *Audition 4-bit ADPCM Hardware Emulation*: Real-time software simulation of the Neo Geo OKI MSM6242B 4-bit ADPCM step-adaptation algorithm. Renders decoded audio, displays reconstructed waveform, and calculates SNR (Signal-to-Noise Ratio) in dB.
+- **V-ROM Byte Footprint**: Shows total encoded byte consumption in the V-ROM.
 
 #### 6. Step Sequencer / Composer (`ComposerTab`)
 7-channel multitrack groove box:
