@@ -22,7 +22,7 @@ def find_nm(root):
             return found
     sdkhome = Path(os.environ.get("SDKHOME", root.parent))
     suffix = ".exe" if os.name == "nt" else ""
-    for name in ("x-tools-v2-win" if os.name == "nt" else "x-tools-v2", "x-tools"):
+    for name in (("x-tools-v2-win",) if os.name == "nt" else ("x-tools-v3", "x-tools-v2", "x-tools")):
         candidate = sdkhome / name / "m68k-unknown-elf/bin" / ("m68k-unknown-elf-nm" + suffix)
         if candidate.exists():
             return str(candidate)

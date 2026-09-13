@@ -498,8 +498,10 @@ back to the bundled `sound/tools/wav_to_raw_pcm.py` converter. No separate Pytho
 Linux 68000 compiler:
 
 - default search order in `Makefile`:
-  1. `$(SDKHOME)/x-tools-v2`
-  2. `$(SDKHOME)/x-tools` (legacy fallback)
+  1. `$(SDKHOME)/x-tools-v3` (GCC 16.2, binutils 2.47, gdb 17.2, newlib 4.6,
+     libstdc++; static x86-64 Linux binaries - see [docs/TOOLCHAIN.md](docs/TOOLCHAIN.md))
+  2. `$(SDKHOME)/x-tools-v2`
+  3. `$(SDKHOME)/x-tools` (legacy fallback)
 - after extraction, compiler path is:
   - `$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-gcc`
 
@@ -523,7 +525,8 @@ Expected layout:
 ```text
 SDKHOME/
   neogeosdk/
-  x-tools-v2/         # Linux default
+  x-tools-v3/         # Linux default
+  x-tools-v2/         # Linux, previous bundle
   x-tools/            # Linux legacy fallback
   x-tools-v2-win/     # Windows default
 ```
@@ -564,24 +567,28 @@ Recommended layout:
 
 ```text
 $HOME/neogeo/neogeosdk   -> this repository
-$HOME/neogeo/x-tools-v2  -> m68k Linux cross compiler bundle (default)
+$HOME/neogeo/x-tools-v3  -> m68k Linux cross compiler bundle (default)
+$HOME/neogeo/x-tools-v2  -> previous bundle, still accepted
 $HOME/neogeo/x-tools     -> legacy fallback bundle
 ```
 
-Install the Linux 68000 toolchain from the release asset so that `x-tools-v2/` lands
-next to the repository:
+Install the Linux 68000 toolchain from the release page so that `x-tools-v3/`
+lands next to the repository:
 
 ```bash
 cd $HOME/neogeo
-curl -L -o x-tools-v2.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.0/x-tools-v2.tar
-tar -xf x-tools-v2.tar
+tar -xf x-tools-v3.tar.xz
 ```
 
 After extraction, verify:
 
 ```bash
-$HOME/neogeo/x-tools-v2/m68k-unknown-elf/bin/m68k-unknown-elf-gcc --version
+$HOME/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc --version
 ```
+
+The binaries are static, so the same bundle works on any x86-64 Linux.
+The previous `x-tools-v2.tar` remains on the release page and is picked
+up when `x-tools-v3` is absent.
 
 Set `SDKHOME` to the parent of both:
 
@@ -602,7 +609,7 @@ Use the Linux `Makefile`, not `MakefileWin32.mak`.
 
 WSL should use the Linux toolchain layout:
 
-- `$(SDKHOME)/x-tools-v2/...` (or legacy `x-tools/...`) for `m68k-unknown-elf` binaries
+- `$(SDKHOME)/x-tools-v3/...` (or `x-tools-v2/...`, or legacy `x-tools/...`) for `m68k-unknown-elf` binaries
 - Linux `python3`
 - Linux `wla-z80` / `wlalink`
 
@@ -619,8 +626,7 @@ python3 -m pip install --user pypng
 mkdir -p $HOME/neogeo
 cd $HOME/neogeo
 git clone https://github.com/eaglesoftware777/neogeosdk.git
-curl -L -o x-tools-v2.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.0/x-tools-v2.tar
-tar -xf x-tools-v2.tar
+tar -xf x-tools-v3.tar.xz        # the toolchain bundle from the release page
 
 export SDKHOME=$HOME/neogeo
 cd $SDKHOME/neogeosdk

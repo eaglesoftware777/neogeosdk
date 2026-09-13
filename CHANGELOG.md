@@ -1,5 +1,39 @@
 # Changelog
 
+## v1.8.0 - Toolchain 3.0
+
+Release date: 2026-09-13
+
+The SDK now builds with `x-tools-v3`: GCC 16.2.0, GNU binutils 2.47,
+gdb 17.2, newlib 4.6.0 and libstdc++, targeting `m68k-unknown-elf` with
+the 68000 as the default CPU.  Every host program in the bundle is a
+static x86-64 Linux binary, so one archive runs on any distribution
+without installing anything beside it.  The specification is in
+`docs/TOOLCHAIN.md`.
+
+What it adds over the previous bundle:
+
+- A C library and the full C++ standard library.  `<array>`, `<span>`,
+  `<bit>`, `<algorithm>`, `<ranges>` and the rest compile in freestanding
+  mode; C++23 and C++26 are accepted, C23 for C.
+- Link-time optimisation (`-flto`) and the Graphite loop optimiser.
+- A debugger with the TUI, XML target descriptions and its own readline,
+  statically linked like everything else.
+- Code generation for the 68000 by default; the 15.2 bundle defaulted to
+  CPU32.
+
+`Makefile` looks for `x-tools-v3` first, then `x-tools-v2`, then
+`x-tools`; `XTOOLS_ROOT` still overrides.  The installers fetch the new
+bundle and fall back to the previous one.  The capture tools find the
+cross `nm` in the same order.
+
+All six games build with no warnings.  The demo's text is 369,785 bytes
+against 377,973 from the previous compiler at the same `-O0`.  The ROM
+set built with it passes the 26-chapter tour, the controller run, the
+live audio check, and the Sky Lance and neogeogame gameplay captures with
+VRAM and palette RAM checked against the manifests.  Two attract loops
+that counted frames into a variable nothing read now just wait.
+
 ## v1.7.9 - The byte that got lost
 
 Release date: 2026-09-12

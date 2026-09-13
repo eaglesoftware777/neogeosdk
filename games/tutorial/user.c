@@ -206,14 +206,10 @@ void NEOGEO_USER GAME_DISPATCH(void) {
 void NEOGEO_USER DEMO_GAME(void)    { GAME_ATTRACT(); }
 
 void NEOGEO_USER GAME_ATTRACT(void) {
-    int i;
     clearFix(); clearSprs(); setBACKDROP(BLACK);
     fixtext_out(11, 13, "HELLO WORLD", 0);
     fixtext_out(8,  15, "INSERT COIN", 0);
-    for (i = 0; ; i++) {
-        if (NEO_REGISTER8(NGO_START_FLAG)) break;
-        waitVbl();
-    }
+    while (!NEO_REGISTER8(NGO_START_FLAG)) waitVbl();
 }
 
 void NEOGEO_USER START_GAME(void) {

@@ -7,7 +7,7 @@
 >   pipeline (`numpy`, `pypng`, `Pillow`).  No new dependencies, but
 >   they're slower because of the bilateral filter + CLAHE numpy passes.
 > - The C++ engine (`USE_2D_PLUS=1`) is built by the same
->   `m68k-unknown-elf-g++` shipped with `x-tools-v2`.  No extra toolchain.
+>   `m68k-unknown-elf-g++` shipped with `x-tools-v3`.  No extra toolchain.
 
 This document lists every tool and library required to build the NeoGeoSDK on Linux, WSL, and Windows.
 
@@ -81,21 +81,24 @@ wlalink --version
 
 ### m68k-unknown-elf toolchain (Linux)
 
-Download the pre-built `x-tools-v2.tar` from the release page and place it next to the repository:
+Download the pre-built `x-tools-v3.tar.xz` from the release page and place it next to the repository:
 
 ```bash
 mkdir -p $HOME/neogeo
 cd $HOME/neogeo
-curl -L -o x-tools-v2.tar https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.0/x-tools-v2.tar
-tar -xf x-tools-v2.tar
+tar -xf x-tools-v3.tar.xz
 ```
+
+What is in it - GCC 16.2, binutils 2.47, gdb 17.2, newlib 4.6, libstdc++,
+all as static x86-64 Linux binaries - is specified in
+[TOOLCHAIN.md](TOOLCHAIN.md).
 
 Expected layout:
 
 ```text
 $HOME/neogeo/
   neogeosdk/
-  x-tools-v2/
+  x-tools-v3/
     m68k-unknown-elf/
       bin/
         m68k-unknown-elf-gcc
@@ -113,11 +116,12 @@ Verify:
 
 ```bash
 export SDKHOME=$HOME/neogeo
-$SDKHOME/x-tools-v2/m68k-unknown-elf/bin/m68k-unknown-elf-gcc --version
+$SDKHOME/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc --version
 
 The Linux makefile fallback order is:
-1. `$SDKHOME/x-tools-v2`
-2. `$SDKHOME/x-tools` (legacy)
+1. `$SDKHOME/x-tools-v3`
+2. `$SDKHOME/x-tools-v2`
+3. `$SDKHOME/x-tools` (legacy)
 ```
 
 ### MAME

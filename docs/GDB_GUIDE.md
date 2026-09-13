@@ -34,10 +34,10 @@ The debugging tools can:
 
 ### Linux / WSL
 
-The cross-GDB is included in the `x-tools-v2` release asset alongside the compiler:
+The cross-GDB is included in the `x-tools-v3` release asset alongside the compiler (gdb 17.2 with TUI):
 
 ```text
-$SDKHOME/x-tools-v2/m68k-unknown-elf/bin/m68k-unknown-elf-gdb
+$SDKHOME/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gdb
 ```
 
 If the bundled GDB cannot start because of missing host libraries (common on newer Ubuntu), install a system GDB that understands the m68k ELF format:

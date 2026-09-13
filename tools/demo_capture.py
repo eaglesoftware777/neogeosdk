@@ -31,7 +31,7 @@ def main():
     if not nm:
         suffix = ".exe" if os.name == "nt" else ""
         sdkhome = Path(os.environ.get("SDKHOME", root.parent))
-        for name in ("x-tools-v2-win", "x-tools-v2", "x-tools"):
+        for name in ("x-tools-v2-win", "x-tools-v3", "x-tools-v2", "x-tools"):
             candidate = sdkhome / name / "m68k-unknown-elf/bin" / ("m68k-unknown-elf-nm" + suffix)
             if candidate.exists():
                 nm = str(candidate)
