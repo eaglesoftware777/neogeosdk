@@ -21,15 +21,20 @@ ifndef SDKHOME
 SDKHOME := $(abspath $(CURDIR)/..)
 endif
 
-# Toolchain selection:
-# 1) $(SDKHOME)/x-tools-v2 (default)
-# 2) $(SDKHOME)/x-tools (legacy fallback)
+# Toolchain selection, first one found wins:
+# 1) $(SDKHOME)/x-tools-v3 (default: GCC 16, static host binaries)
+# 2) $(SDKHOME)/x-tools-v2
+# 3) $(SDKHOME)/x-tools (legacy fallback)
+# Override with XTOOLS_ROOT=<dir containing m68k-unknown-elf/>.
+XTOOLS_V3 := $(SDKHOME)/x-tools-v3
 XTOOLS_V2 := $(SDKHOME)/x-tools-v2
 XTOOLS_OLD := $(SDKHOME)/x-tools
-ifeq ($(wildcard $(XTOOLS_V2)/m68k-unknown-elf/bin/m68k-unknown-elf-gcc),)
-XTOOLS_ROOT ?= $(XTOOLS_OLD)
-else
+ifneq ($(wildcard $(XTOOLS_V3)/m68k-unknown-elf/bin/m68k-unknown-elf-gcc),)
+XTOOLS_ROOT ?= $(XTOOLS_V3)
+else ifneq ($(wildcard $(XTOOLS_V2)/m68k-unknown-elf/bin/m68k-unknown-elf-gcc),)
 XTOOLS_ROOT ?= $(XTOOLS_V2)
+else
+XTOOLS_ROOT ?= $(XTOOLS_OLD)
 endif
 
 CC=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-gcc

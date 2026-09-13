@@ -226,16 +226,12 @@ void NEOGEO_USER DEMO_GAME(void)    { GAME_ATTRACT(); }
 void NEOGEO_USER neogeogame_run(void);
 
 void NEOGEO_USER GAME_ATTRACT(void) {
-    int i;
     clearFix(); clearSprs(); setBACKDROP(BLACK);
     fixtext_out(8,  9, "EAGLE SOFTWARE", 0);
     fixtext_out(11, 12, "STAR RAID", 1);
     fixtext_out(7,  15, "INSERT COIN / START", 0);
     fixtext_out(6,  18, "B FIRE   ARROWS MOVE", 1);
-    for (i = 0; ; i++) {
-        if (NEO_REGISTER8(NGO_START_FLAG)) break;
-        waitVbl();
-    }
+    while (!NEO_REGISTER8(NGO_START_FLAG)) waitVbl();
 }
 
 void NEOGEO_USER START_GAME(void) {

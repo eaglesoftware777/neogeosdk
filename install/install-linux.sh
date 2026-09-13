@@ -12,7 +12,7 @@
 # Usage:
 #   install-linux.sh [--prefix DIR] [--no-toolchain] [--no-wladx] [--yes]
 #
-#   --prefix DIR     Root that holds neogeosdk/ + x-tools-v2/ (default: $HOME/neogeo)
+#   --prefix DIR     Root that holds neogeosdk/ + x-tools-v3/ (default: $HOME/neogeo)
 #   --no-toolchain   Skip the m68k cross toolchain download
 #   --no-wladx       Skip the WLA-DX build
 #   --yes            Pass -y to the package manager (non-interactive)
@@ -132,20 +132,32 @@ fi
 # ---------------------------------------------------------------------------
 mkdir -p "$PREFIX"
 if [ "$DO_TOOLCHAIN" -eq 1 ]; then
-    TC_DIR="$PREFIX/x-tools-v2"
-    TC_GCC="$TC_DIR/m68k-unknown-elf/bin/m68k-unknown-elf-gcc"
-    if [ -x "$TC_GCC" ]; then
-        log "m68k toolchain already at $TC_DIR; skipping"
-    else
+    TC_GCC=""
+    for tc in x-tools-v3 x-tools-v2; do
+        if [ -x "$PREFIX/$tc/m68k-unknown-elf/bin/m68k-unknown-elf-gcc" ]; then
+            TC_GCC="$PREFIX/$tc/m68k-unknown-elf/bin/m68k-unknown-elf-gcc"
+            log "m68k toolchain already at $PREFIX/$tc; skipping"
+            break
+        fi
+    done
+    if [ -z "$TC_GCC" ]; then
         log "fetching m68k cross toolchain into $PREFIX..."
         cd "$PREFIX"
-        # v1.3.0 release ships x-tools-v2.tar (Linux) and
-        # x-tools-v2-win.tar (Windows).
-        curl -fL -o x-tools-v2.tar \
-            "https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.3.0/x-tools-v2.tar" \
-            || die "toolchain download failed"
-        tar -xf x-tools-v2.tar
-        rm -f x-tools-v2.tar
+        # x-tools-v3.tar.xz is the current bundle (static binaries, any
+        # x86-64 Linux); x-tools-v2.tar from v1.3.0 is the fallback.
+        if curl -fL -o x-tools-v3.tar.xz \
+            "https://github.com/eaglesoftware777/neogeosdk/releases/latest/download/x-tools-v3.tar.xz"; then
+            tar -xf x-tools-v3.tar.xz
+            rm -f x-tools-v3.tar.xz
+            TC_GCC="$PREFIX/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc"
+        else
+            curl -fL -o x-tools-v2.tar \
+                "https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.3.0/x-tools-v2.tar" \
+                || die "toolchain download failed"
+            tar -xf x-tools-v2.tar
+            rm -f x-tools-v2.tar
+            TC_GCC="$PREFIX/x-tools-v2/m68k-unknown-elf/bin/m68k-unknown-elf-gcc"
+        fi
         [ -x "$TC_GCC" ] || die "toolchain GCC not found at $TC_GCC after extract"
         log "toolchain extracted: $($TC_GCC --version | head -1)"
     fi
@@ -199,12 +211,15 @@ python3 -c 'import numpy, PIL, png' 2>/dev/null \
     && echo "  python deps  OK   (numpy/PIL/png)" \
     || { echo "  python deps  MISSING"; ok=0; }
 
-if [ -x "$PREFIX/x-tools-v2/m68k-unknown-elf/bin/m68k-unknown-elf-gcc" ]; then
+if [ -x "$PREFIX/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc" ]; then
+    printf '  m68k-gcc     OK   (%s)\n' \
+        "$($PREFIX/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc --version | head -1)"
+elif [ -x "$PREFIX/x-tools-v2/m68k-unknown-elf/bin/m68k-unknown-elf-gcc" ]; then
     printf '  m68k-gcc     OK   (%s)\n' \
         "$($PREFIX/x-tools-v2/m68k-unknown-elf/bin/m68k-unknown-elf-gcc --version | head -1)"
 else
     printf '  m68k-gcc     MISSING (expected at %s)\n' \
-        "$PREFIX/x-tools-v2/m68k-unknown-elf/bin/m68k-unknown-elf-gcc"
+        "$PREFIX/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc"
     ok=0
 fi
 
