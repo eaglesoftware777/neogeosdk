@@ -8,7 +8,7 @@ REM #######
 REM NeoGeo SDK - Lua Console Launcher (Windows)
 REM Place neogeo.zip (BIOS) inside roms\ before running.
 REM Opens MAME with the Lua scripting console (interactive, no CPU debugger).
-REM Do NOT combine -console with -debug — they conflict.
+REM Do NOT combine -console with -debug - they conflict.
 
 py "%~dp0hash_eagle\gen_hash.py"
 if errorlevel 1 goto :eof

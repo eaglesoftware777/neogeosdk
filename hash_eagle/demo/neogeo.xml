@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!DOCTYPE softwarelist PUBLIC "-//MAME//DTD Software List//EN" "https://raw.githubusercontent.com/mamedev/mame/master/src/mame/mame.dtd">
+<softwarelist name="neogeo" description="SNK Neo-Geo cartridges">
+    <!--
+    ID-0777
+    . NGM-777
+    NEO-MVS PROG-G2 (SNK-9201) / NEO-MVS CHA 42G-2
+    . NGH-777
+    -->
+
+    <software name="demo">
+        <description>NeoGeo SDK demo v1.2.0 / Eagle Software</description>
+        <year>2026</year>
+        <publisher>Eagle Software</publisher>
+        <info name="serial" value="NGM-777 (MVS), NGH-777 (AES)"/>
+        <info name="release" value="20260101 (MVS), 20260101 (AES)"/>
+        <info name="alt_title" value="Eagle SDK"/>
+        <sharedfeat name="release" value="MVS,AES" />
+        <sharedfeat name="compatibility" value="MVS,AES" />
+        <part name="cart" interface="neo_cart">
+            <feature name="slot" value="rom_fatfur2" />
+            <dataarea name="maincpu" width="16" endianness="big" size="0x100000">
+                <rom loadflag="load16_word_swap" name="777-p1.p1" offset="0x000000" size="0x080000" crc="bb24b668" sha1="32e9cf74514c4776f6fcabe39e1844892e863337" />
+            </dataarea>
+            <dataarea name="fixed" size="0x020000">
+                <rom offset="0x000000" size="0x020000" name="777-s1.s1" crc="375809b8" sha1="8e66116eeb64654ef5617b982cd5725d084653a1" />
+            </dataarea>
+            <dataarea name="audiocpu" size="0x020000">
+                <rom offset="0x000000" size="0x020000" name="777-m1.m1" crc="7fca1d07" sha1="5cfd435161de15397535896dcabd34edae88eb45" />
+            </dataarea>
+            <dataarea name="ymsnd:adpcma" size="0x708700">
+                <rom name="777-v1.v1" offset="0x000000" size="0x708700" crc="bb2f8632" sha1="eb1b4bfccda6da4aa753c8da6acba00c2296282a" />
+            </dataarea>
+            <dataarea name="sprites" size="0x1000000">
+                <rom loadflag="load16_byte" name="777-c1.c1" offset="0x000000" size="0x800000" crc="b61b6077" sha1="f044b00d6d90ce192d5b2aac450b7bb151163ae3" />
+                <rom loadflag="load16_byte" name="777-c2.c2" offset="0x000001" size="0x800000" crc="f92e6907" sha1="f83a9a334c7c0019faf5894e7dd22a89ad875934" />
+            </dataarea>
+        </part>
+    </software>
+</softwarelist>

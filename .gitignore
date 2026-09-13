@@ -1,3 +1,28 @@
 cfg/
 nvram/
 artbox/__pycache__
+artbox/.cache/
+snap/
+mame_capture/*
+!mame_capture/full_run.lua
+__pycache__/
+# SQLite journals left next to the artbox database while it is open
+games/demo/artbox/neorom.db-shm
+games/demo/artbox/neorom.db-wal
+artbox/neorom.db-shm
+artbox/neorom.db-wal
+
+# Generated artbox intermediates for the two template games.  These are
+# build outputs - `make GAME=<name> art` recreates them - and the source
+# art they come from is tracked under games/<name>/artbox/in/.
+games/helloworld/artbox/*
+!games/helloworld/artbox/in/
+games/tutorial/artbox/*
+!games/tutorial/artbox/in/
+
+# demo_plus builds its art from games/demo via GAME_ART_FROM, so everything
+# under here is derived twice over - generated output from source art that is
+# already tracked somewhere else.  `make GAME=demo_plus art` recreates it.
+games/demo_plus/artbox/*
+tests/test_c
+tests/test_cpp

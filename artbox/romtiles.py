@@ -8,6 +8,7 @@ import os
 import struct as st
 
 import numpy as np
+from tile_codec import encode_image, write_utility_tiles
 
 try:
     import pysqlite3 as db
@@ -34,22 +35,48 @@ def convert_array(text):
     return np.load(out)
 
 
-def write_palette(palette, std_file, neogeo_file, image_index, packed_palettes, palette_has_zero):
+def write_palette(palette, std_file, neogeo_file, image_index, packed_palettes):
     palette_words = [0x0] * 16
     palette_words[0] = 0x0
 
-    palette_start = 1 if palette_has_zero else 0
-    visible_colors = min(len(palette) - palette_start, 15)
-    for slot in range(visible_colors):
-        rgb = palette[palette_start + slot]
+    visible_colors = min(len(palette), 16)
+    for slot in range(1, visible_colors):
+        rgb = palette[slot]
         red_24 = int(rgb[0])
         green_24 = int(rgb[1])
         blue_24 = int(rgb[2])
         color_24 = np.uint32((red_24 << 16) | (green_24 << 8) | blue_24)
 
-        red_16 = (color_24 & 0xF80000) >> 19
-        green_16 = (color_24 & 0x00F800) >> 11
-        blue_16 = (color_24 & 0x0000F8) >> 3
+        # Six bits per channel, not five: the word holds five, and the top
+        # bit supplies a sixth, least significant one that all three
+        # channels share, inverted -
+        #     channel6 = (channel5 << 1) | (1 - dark)
+        # so the darkest colour a palette can express is 0 rather than the
+        # 4/255 that leaving the bit clear pins it to, and the reachable
+        # colours are two interleaved lattices instead of one.
+        #
+        # The quantiser only emits colours that are already on that lattice,
+        # where the three channels agree on parity.  Anything else - a
+        # hand-authored palette, or one from an older tool - is placed on
+        # whichever parity reproduces it more closely instead of being
+        # truncated onto the odd one.
+        chan6 = [(c * 63 + 127) // 255 for c in (red_24, green_24, blue_24)]
+        best = None
+        for parity in (0, 1):
+            cand = [min(62 + parity, max(parity,
+                                         int(round((c - parity) / 2.0)) * 2 + parity))
+                    for c in chan6]
+            err = sum(w * ((v << 2 | v >> 4) - c8) ** 2
+                      for w, v, c8 in zip((0.299, 0.587, 0.114), cand,
+                                          (red_24, green_24, blue_24)))
+            if best is None or err < best[0]:
+                best = (err, cand)
+        red_6, green_6, blue_6 = best[1]
+
+        dark = 1 - (red_6 & 1)
+        red_16 = red_6 >> 1
+        green_16 = green_6 >> 1
+        blue_16 = blue_6 >> 1
 
         std_word = np.uint16((red_16 << 10) | (green_16 << 5) | blue_16)
         std_word.tofile(std_file)
@@ -73,7 +100,7 @@ def write_palette(palette, std_file, neogeo_file, image_index, packed_palettes, 
         blue_0 = (blue_16 >> 4) & 1
 
         ng_word = np.uint16(
-            (0 << 15)
+            (dark << 15)
             | (red_lsb << 14)
             | (green_lsb << 13)
             | (blue_lsb << 12)
@@ -91,7 +118,7 @@ def write_palette(palette, std_file, neogeo_file, image_index, packed_palettes, 
             | blue_3
         )
         ng_word.tofile(neogeo_file)
-        palette_words[slot + 1] = int(ng_word)
+        palette_words[slot] = int(ng_word)
 
     st.pack_into(
         "i16Q",
@@ -117,13 +144,10 @@ def write_palette(palette, std_file, neogeo_file, image_index, packed_palettes, 
     )
 
 
-def encode_block(block, c1_file, c2_file, transparent_zero):
+def encode_block(block, c1_file, c2_file):
     for row in range(8):
         pixels = block[row, :]
-        if transparent_zero:
-            colors = [int(pixel) for pixel in pixels]
-        else:
-            colors = [int(pixel) + 1 for pixel in pixels]
+        colors = [int(pixel) & 0x0F for pixel in pixels]
 
         plane_d = (
             ((colors[7] >> 3) & 1) << 7
@@ -196,7 +220,7 @@ try:
     conn = db.connect("neorom.db", detect_types=db.PARSE_DECLTYPES)
     conn.execute("PRAGMA journal_mode=WAL")
     cur = conn.cursor()
-    cur.execute("select idx,data,palette from image")
+    cur.execute("select idx,data,palette from image order by idx")
     raw = cur.fetchall()
     for row in raw:
         idx = row[0]
@@ -245,28 +269,20 @@ st.pack_into(
 )
 
 for image_index, indexed, palette in data:
-    asset_info = manifest.get(int(image_index), {})
-    transparent_zero = bool(asset_info.get("transparent_zero", 0))
-    palette_has_zero = bool(asset_info.get("palette_has_zero", 0))
-    height, width = indexed.shape[:2]
-    sprite_count = width // 16
-    character_count = height // 16
-    sprites = np.uint8(np.vsplit(indexed, sprite_count))
+    spec = manifest.get(image_index, {})
+    first_byte = int(spec.get("tile_base", image_index * 256)) * 64
+    if f_c1rom.tell() > first_byte:
+        raise ValueError(f"Asset {image_index} overlaps the previous tile reservation")
+    gap = bytes(first_byte - f_c1rom.tell())
+    f_c1rom.write(gap)
+    f_c2rom.write(gap)
+    c1, c2 = encode_image(indexed, int(spec.get("tile_reserved_count", 256)))
+    f_c1rom.write(c1)
+    f_c2rom.write(c2)
 
-    for sprite in sprites:
-        characters = np.hsplit(sprite, character_count)
-        for character in characters:
-            block3 = character[0:8, 0:8]
-            block4 = character[8:16, 0:8]
-            block1 = character[0:8, 8:16]
-            block2 = character[8:16, 8:16]
-            encode_block(block1, f_c1rom, f_c2rom, transparent_zero)
-            encode_block(block2, f_c1rom, f_c2rom, transparent_zero)
-            encode_block(block3, f_c1rom, f_c2rom, transparent_zero)
-            encode_block(block4, f_c1rom, f_c2rom, transparent_zero)
+    write_palette(palette, f_std, f_neo, image_index + 1, packed_palettes)
 
-    write_palette(palette, f_std, f_neo, image_index + 1, packed_palettes, palette_has_zero)
-
+write_utility_tiles(f_c1rom, f_c2rom)
 os.fsync(f_c1rom)
 os.fsync(f_c2rom)
 f_c1rom.close()

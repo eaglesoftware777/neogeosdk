@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 """
-Artbox Studio — NeoGeoSDK visual tool
-Tabs: Tile Grid Viewer | Sprite Designer | Hitbox Editor | Pixel Paint
-Run from the artbox/ directory.
+Artbox Studio — NeoGeoSDK professional visual authoring suite
+Reconstruction, Sprites, Strips, Hitboxes, Palettes, Tiles, and Asset Comparison.
 """
 
 import json
 import math
 import os
+from pathlib import Path
 import struct
 import sys
+
+# Ensure tools, artbox, and root directories are on Python search path
+_STUDIO_DIR = Path(__file__).resolve().parent
+_REPO_ROOT = _STUDIO_DIR.parent
+for _p in (_REPO_ROOT / "tools", _STUDIO_DIR, _REPO_ROOT):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
 
 import numpy as np
 from PyQt6.QtCore import (QPoint, QRect, QSize, Qt, QTimer, pyqtSignal)
@@ -23,7 +30,14 @@ from PyQt6.QtWidgets import (QApplication, QComboBox, QDockWidget,
                               QSlider, QSpinBox, QSplitter, QStatusBar,
                               QTabWidget, QToolBar, QTreeWidget,
                               QTreeWidgetItem, QVBoxLayout, QWidget,
-                              QDialog, QDialogButtonBox, QPlainTextEdit)
+                              QDialog, QDialogButtonBox, QPlainTextEdit,
+                              QCheckBox)
+
+from studio_project import StudioProject, FileSnapshot, game_names
+from studio_widgets import mount_workspace, update_workspace_project, BuildPanel, save_document
+from studio_assets import (
+    ng_rgb, rgb_word, PaletteBook, AssetWorkbench, reconstruct, frame_geometry, ImageView
+)
 
 # ---------------------------------------------------------------------------
 # NeoGeo C-ROM tile codec
@@ -33,66 +47,13 @@ TILE_PX = 16        # tile size in pixels
 ZOOM_DEFAULT = 3    # display zoom factor
 
 def ng_color_to_rgb(ng_word: int):
-    """Convert a 16-bit NeoGeo palette word to (r, g, b) each 0-255."""
-    dark      = (ng_word >> 15) & 1
-    red_lsb   = (ng_word >> 14) & 1
-    green_lsb = (ng_word >> 13) & 1
-    blue_lsb  = (ng_word >> 12) & 1
-    red_0     = (ng_word >> 11) & 1
-    red_1     = (ng_word >> 10) & 1
-    red_2     = (ng_word >>  9) & 1
-    red_3     = (ng_word >>  8) & 1
-    green_0   = (ng_word >>  7) & 1
-    green_1   = (ng_word >>  6) & 1
-    green_2   = (ng_word >>  5) & 1
-    green_3   = (ng_word >>  4) & 1
-    blue_0    = (ng_word >>  3) & 1
-    blue_1    = (ng_word >>  2) & 1
-    blue_2    = (ng_word >>  1) & 1
-    blue_3    =  ng_word        & 1
-
-    r5 = (red_0   << 4) | (red_1   << 3) | (red_2   << 2) | (red_3   << 1) | red_lsb
-    g5 = (green_0 << 4) | (green_1 << 3) | (green_2 << 2) | (green_3 << 1) | green_lsb
-    b5 = (blue_0  << 4) | (blue_1  << 3) | (blue_2  << 2) | (blue_3  << 1) | blue_lsb
-
-    r = (r5 << 3) | (r5 >> 2)
-    g = (g5 << 3) | (g5 >> 2)
-    b = (b5 << 3) | (b5 >> 2)
-
-    if dark:
-        r >>= 1
-        g >>= 1
-        b >>= 1
-
-    return (r & 0xFF, g & 0xFF, b & 0xFF)
+    """Convert a 16-bit NeoGeo palette word to (r, g, b) each 0-255 using exact hardware DAC scaling."""
+    return ng_rgb(ng_word)
 
 
 def rgb_to_ng_color(r: int, g: int, b: int) -> int:
-    """Convert (r, g, b) 8-bit each to 16-bit NeoGeo palette word."""
-    r5 = r >> 3
-    g5 = g >> 3
-    b5 = b >> 3
-    red_lsb   = r5 & 1
-    red_0     = (r5 >> 4) & 1
-    red_1     = (r5 >> 3) & 1
-    red_2     = (r5 >> 2) & 1
-    red_3     = (r5 >> 1) & 1
-    green_lsb = g5 & 1
-    green_0   = (g5 >> 4) & 1
-    green_1   = (g5 >> 3) & 1
-    green_2   = (g5 >> 2) & 1
-    green_3   = (g5 >> 1) & 1
-    blue_lsb  = b5 & 1
-    blue_0    = (b5 >> 4) & 1
-    blue_1    = (b5 >> 3) & 1
-    blue_2    = (b5 >> 2) & 1
-    blue_3    = (b5 >> 1) & 1
-    return (
-        (red_lsb << 14) | (green_lsb << 13) | (blue_lsb << 12) |
-        (red_0 << 11) | (red_1 << 10) | (red_2 << 9) | (red_3 << 8) |
-        (green_0 << 7) | (green_1 << 6) | (green_2 << 5) | (green_3 << 4) |
-        (blue_0 << 3) | (blue_1 << 2) | (blue_2 << 1) | blue_3
-    )
+    """Convert (r, g, b) 8-bit each to optimal 16-bit NeoGeo palette word with dark bit calculation."""
+    return rgb_word(r, g, b)
 
 
 def decode_block(c1: bytes, c2: bytes, offset: int):
@@ -163,24 +124,9 @@ def tile_to_pixmap(tile_idx: np.ndarray, palette_rgb: list, zoom=1,
 # ---------------------------------------------------------------------------
 # Palette / neopal.bin helpers
 # ---------------------------------------------------------------------------
-PALETTE_RECORD_SIZE = 136  # 4 (index) + 16*8 (uint64 colours) in neopal.bin
-
-def load_neopal(path="neopal.bin"):
-    """Return dict[image_index] → list of 16 (r,g,b) tuples."""
-    result = {}
-    if not os.path.exists(path):
-        return result
-    data = open(path, "rb").read()
-    n = len(data) // PALETTE_RECORD_SIZE
-    for i in range(n):
-        off = i * PALETTE_RECORD_SIZE
-        img_idx = struct.unpack_from("i", data, off)[0]
-        colors = []
-        for c in range(16):
-            ng = struct.unpack_from("Q", data, off + 4 + c * 8)[0]
-            colors.append(ng_color_to_rgb(ng & 0xFFFF))
-        result[img_idx] = colors
-    return result
+def load_neopal(path="neopal.bin", manifest=()):
+    """Return PaletteBook mapping image IDs and palette banks to 16-color RGB tuples."""
+    return PaletteBook(path, manifest)
 
 
 def load_manifest(path="assets_manifest.json"):
@@ -1460,6 +1406,1208 @@ class ManualPaletteEditorTab(QWidget):
 # ---------------------------------------------------------------------------
 # Main Window
 # ---------------------------------------------------------------------------
+###############################################################################
+#  Pipeline Runner Tab
+#  ---------------------------------------------------------------------------
+#  Run every artbox-pipeline step from inside the studio.  Each step has a
+#  Run button, a status pill, and a shared scrollback log pane.
+#
+#  Steps wired up:
+#    1. img2neo          (PNGs → indexed NeoGeo palettes / dithered)
+#    2. img2neo --hd     (HD pipeline: bilateral + CLAHE + blue-noise)
+#    3. genscreens       (generate showScreenN bodies)
+#    4. gen_sprite_meta  (sprite metadata table)
+#    5. fixtiles         (FIX-layer tiles → S1 ROM)
+#    6. fixtiles --hd    (per-tile palette + sharp-text)
+#    7. romdbimgimport   (PNG → C-ROM blocks)
+#    8. romtiles         (C1/C2 ROM packer)
+#    9. romdbfiximport   (FIX ROM packer)
+#   10. createromdb      (regenerate ROM database)
+#   11. ALL (art)        (full pipeline via `make art`)
+###############################################################################
+import subprocess as _ax_sub
+import shlex      as _ax_shlex
+from pathlib       import Path as _AxPath
+from PyQt6.QtCore    import QProcess, QProcessEnvironment
+
+# Repository root (one level up from artbox/)
+_AX_REPO_ROOT = _AxPath(__file__).resolve().parent.parent
+_AX_ARTBOX    = _AX_REPO_ROOT / "artbox"
+
+PIPELINE_STEPS = [
+    ("img2neo",         ["python3", str(_AX_ARTBOX / "img2neo.py"), "--batch"],
+                        "Convert source PNGs → NeoGeo palettes (Floyd-Steinberg)"),
+    ("img2neo HD",      ["python3", str(_AX_ARTBOX / "img2neo_hd.py")],
+                        "HD photo pipeline (bilateral + CLAHE + blue-noise)"),
+    ("genscreens",      ["python3", str(_AX_ARTBOX / "genscreens.py")],
+                        "Generate showScreenN bodies + screens.c"),
+    ("gen_sprite_meta", ["python3", str(_AX_ARTBOX / "gen_sprite_meta.py")],
+                        "Build sprite metadata table (sprite_meta.h)"),
+    ("fixtiles",        ["python3", str(_AX_ARTBOX / "fixtiles.py")],
+                        "Pack FIX-layer 8x8 tiles → S1 ROM"),
+    ("fixtiles HD",     ["python3", str(_AX_ARTBOX / "fixtiles_hd.py")],
+                        "HD FIX pipeline (per-tile palette + sharp-text)"),
+    ("romdbimgimport",  ["python3", str(_AX_ARTBOX / "romdbimgimport.py")],
+                        "PNG → C-ROM blocks (sprite image data)"),
+    ("romtiles",        ["python3", str(_AX_ARTBOX / "romtiles.py")],
+                        "Pack C1/C2 ROM blocks into final C ROMs"),
+    ("romdbfiximport",  ["python3", str(_AX_ARTBOX / "romdbfiximport.py")],
+                        "Import FIX tiles into ROM database"),
+    ("createromdb",     ["python3", str(_AX_ARTBOX / "createromdb.py")],
+                        "Regenerate the ROM database (neorom.db)"),
+    ("ALL (art)",       ["make", "art"],
+                        "Full art pipeline via the top-level Makefile"),
+]
+
+
+class _ArtStatusPill(QLabel):
+    """Tiny coloured status indicator (IDLE / RUNNING / OK / FAIL)."""
+    def __init__(self):
+        super().__init__("IDLE")
+        self.setFixedWidth(72)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.set_state("idle")
+
+    def set_state(self, state: str):
+        styles = {
+            "idle":    ("#3a3a48", "#bababa", "IDLE"),
+            "running": ("#0066aa", "#ffffff", "RUNNING"),
+            "ok":      ("#00aa55", "#ffffff", "OK"),
+            "fail":    ("#aa3333", "#ffffff", "FAIL"),
+            "skip":    ("#665533", "#ffcc66", "MISSING"),
+        }
+        bg, fg, txt = styles.get(state, styles["idle"])
+        self.setText(txt)
+        self.setStyleSheet(
+            f"QLabel {{ background:{bg}; color:{fg}; padding:2px 6px;"
+            f" border-radius:6px; font-weight:bold; font-size:10px; }}")
+
+
+class PipelineRunnerTab(QWidget):
+    """
+    Tab that runs each artbox pipeline step independently or all in
+    sequence.  Pipes the live output of every step into a single
+    scrollback so the user can see exactly what tool failed and where.
+    """
+    def __init__(self):
+        super().__init__()
+        self._proc      = None
+        self._queue     = []
+        self._step_rows = []
+
+        title = QLabel("<b>Artbox Pipeline Runner</b>")
+        intro = QLabel(
+            "Run any single step or chain the lot.  Stops on the first "
+            "failure to surface the error.  GAME selection is honoured "
+            "from games/$(CURRENT_GAME)/."
+        )
+        intro.setWordWrap(True)
+
+        grid_box = QGroupBox("Pipeline Steps")
+        grid     = QGridLayout(grid_box)
+        grid.addWidget(QLabel("<b>Step</b>"),    0, 0)
+        grid.addWidget(QLabel("<b>Status</b>"),  0, 1)
+        grid.addWidget(QLabel("<b>Description</b>"), 0, 2)
+        grid.addWidget(QLabel("<b>Action</b>"),  0, 3)
+
+        for row, (name, cmd, desc) in enumerate(PIPELINE_STEPS, start=1):
+            grid.addWidget(QLabel(name), row, 0)
+            pill = _ArtStatusPill()
+            # Auto-mark missing scripts so the user sees what's installed
+            if cmd[0] == "python3" and not os.path.exists(cmd[1]):
+                pill.set_state("skip")
+            grid.addWidget(pill, row, 1)
+            grid.addWidget(QLabel(desc), row, 2)
+            btn  = QPushButton("Run")
+            btn.clicked.connect(lambda _, n=name, c=cmd: self._run_one(n, c))
+            grid.addWidget(btn, row, 3)
+            self._step_rows.append((name, btn, pill, cmd))
+
+        action_row = QHBoxLayout()
+        self.btn_all   = QPushButton("Run Full Pipeline (sequential)")
+        self.btn_clear = QPushButton("Clear Log")
+        self.btn_stop  = QPushButton("Stop")
+        self.btn_all  .clicked.connect(self._run_all)
+        self.btn_clear.clicked.connect(lambda: self.log.clear())
+        self.btn_stop .clicked.connect(self._stop)
+        self.btn_stop.setEnabled(False)
+        action_row.addWidget(self.btn_all)
+        action_row.addWidget(self.btn_clear)
+        action_row.addWidget(self.btn_stop)
+        action_row.addStretch()
+
+        self.log = QPlainTextEdit()
+        self.log.setReadOnly(True)
+        self.log.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#cfcf80;"
+            " font-family:'Courier New',monospace; }")
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(title)
+        layout.addWidget(intro)
+        layout.addWidget(grid_box)
+        layout.addLayout(action_row)
+        layout.addWidget(self.log, 1)
+
+    def _log(self, text: str):
+        self.log.appendPlainText(text)
+
+    def _set_pill(self, name: str, state: str):
+        for n, _btn, pill, _cmd in self._step_rows:
+            if n == name:
+                pill.set_state(state)
+                return
+
+    def _set_buttons_enabled(self, enabled: bool):
+        for _n, btn, _pill, _cmd in self._step_rows:
+            btn.setEnabled(enabled)
+        self.btn_all.setEnabled(enabled)
+        self.btn_stop.setEnabled(not enabled)
+
+    def _run_one(self, name: str, cmd_list: list):
+        if self._proc is not None:
+            self._log("(busy — finish or stop the current step first)")
+            return
+        # Skip if a Python tool doesn't exist on disk
+        if cmd_list[0] == "python3" and not os.path.exists(cmd_list[1]):
+            self._set_pill(name, "skip")
+            self._log(f"--- {name} SKIPPED (script not found: {cmd_list[1]}) ---")
+            if self._queue:
+                next_name, next_cmd = self._queue.pop(0)
+                self._run_one(next_name, next_cmd)
+            return
+        self._set_pill(name, "running")
+        self._set_buttons_enabled(False)
+        self._current_name = name
+        self._log(f"=== {name} ===")
+        self._log("$ " + " ".join(_ax_shlex.quote(c) for c in cmd_list))
+
+        proc = QProcess(self)
+        proc.setWorkingDirectory(str(_AX_REPO_ROOT))
+        proc.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+        proc.readyReadStandardOutput.connect(self._on_stdout)
+        proc.finished.connect(self._on_finished)
+        proc.setProcessEnvironment(QProcessEnvironment.systemEnvironment())
+        self._proc = proc
+        proc.start(cmd_list[0], cmd_list[1:])
+
+    def _on_stdout(self):
+        if self._proc is None:
+            return
+        data = self._proc.readAllStandardOutput().data().decode(errors="replace")
+        for line in data.splitlines():
+            self._log(line)
+
+    def _on_finished(self, code, _status):
+        name = getattr(self, "_current_name", "?")
+        if code == 0:
+            self._set_pill(name, "ok")
+            self._log(f"--- {name} OK ---")
+        else:
+            self._set_pill(name, "fail")
+            self._log(f"--- {name} FAILED (exit {code}) ---")
+            self._queue = []
+        self._proc = None
+        if self._queue:
+            next_name, next_cmd = self._queue.pop(0)
+            self._run_one(next_name, next_cmd)
+        else:
+            self._set_buttons_enabled(True)
+
+    def _run_all(self):
+        if self._proc is not None:
+            return
+        for n, _btn, pill, _cmd in self._step_rows:
+            pill.set_state("idle")
+        # Exclude HD variants (they're explicit opt-ins) and the
+        # trailing "ALL (art)" alias from the chained sequence.
+        self._queue = [(n, c) for n, _b, _p, c in self._step_rows
+                       if "HD" not in n and not n.startswith("ALL")]
+        if not self._queue:
+            return
+        name, cmd = self._queue.pop(0)
+        self._run_one(name, cmd)
+
+    def _stop(self):
+        if self._proc is None:
+            return
+        self._proc.kill()
+        self._queue = []
+
+
+class AssetRulesTab(QWidget):
+    """Browse / edit assets.cfg — the file that drives per-category
+    fit and category bucketing for the pipeline."""
+    def __init__(self, path=None):
+        super().__init__()
+        layout = QVBoxLayout(self)
+        self._path = Path(path) if path else (_AX_ARTBOX / "assets.cfg")
+        layout.addWidget(QLabel(f"<b>{self._path.name}</b> ({self._path.parent})"))
+
+        self.editor = QPlainTextEdit()
+        self.editor.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#cfcf80;"
+            " font-family:'Courier New',monospace; }")
+        self._reload()
+        layout.addWidget(self.editor, 1)
+
+        btn_row = QHBoxLayout()
+        btn_save = QPushButton("Save")
+        btn_reload = QPushButton("Reload from Disk")
+        btn_save.clicked.connect(self._save)
+        btn_reload.clicked.connect(self._reload)
+        btn_row.addWidget(btn_save)
+        btn_row.addWidget(btn_reload)
+        btn_row.addStretch()
+        layout.addLayout(btn_row)
+
+    def _save(self):
+        if save_document(self, self._path, self.editor.toPlainText()):
+            QMessageBox.information(self, "Saved", f"Configuration written to:\n{self._path}")
+
+    def _reload(self):
+        try:
+            if self._path.exists():
+                self.editor.setPlainText(self._path.read_text(encoding="utf-8", errors="replace"))
+            else:
+                self.editor.setPlainText(f"; New configuration for {self._path}\n")
+        except Exception as e:
+            QMessageBox.warning(self, "Reload Failed", str(e))
+
+
+###############################################################################
+#  Asset Browser — recursively list every PNG in artbox/in/* with thumbnail
+###############################################################################
+class AssetBrowserTab(QWidget):
+    def __init__(self, art_dir=None):
+        super().__init__()
+        from PyQt6.QtWidgets import QTreeWidget, QTreeWidgetItem
+        self.art_dir = Path(art_dir) if art_dir else _AX_ARTBOX
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Source Asset Browser</b>"))
+        layout.addWidget(QLabel(
+            f"Browsing source PNGs under {self.art_dir}. Click a file to preview at native size."))
+
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+
+        self.tree = QTreeWidget()
+        self.tree.setHeaderLabels(["Asset", "Size", "Dim"])
+        self.tree.setColumnWidth(0, 240)
+        self.tree.itemSelectionChanged.connect(self._on_select)
+        splitter.addWidget(self.tree)
+
+        right = QWidget()
+        rl = QVBoxLayout(right)
+        rl.addWidget(QLabel("<b>Preview</b>"))
+        self.preview = QLabel()
+        self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.preview.setStyleSheet("background:#1a1a1a; border:1px solid #333;")
+        self.preview.setMinimumSize(256, 256)
+        rl.addWidget(self.preview, 1)
+
+        self.info = QPlainTextEdit()
+        self.info.setReadOnly(True)
+        self.info.setMaximumHeight(120)
+        self.info.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#a0c0e0;"
+            " font-family:'Courier New',monospace; }")
+        rl.addWidget(self.info)
+
+        btn = QPushButton("Refresh")
+        btn.clicked.connect(self._populate)
+        rl.addWidget(btn)
+
+        splitter.addWidget(right)
+        splitter.setSizes([320, 600])
+        layout.addWidget(splitter, 1)
+
+        self._populate()
+
+    def set_art_dir(self, art_dir):
+        self.art_dir = Path(art_dir)
+        self._populate()
+
+    def _populate(self):
+        from PyQt6.QtWidgets import QTreeWidgetItem
+        self.tree.clear()
+        folders = []
+        in_root = self.art_dir / "in" if not self.art_dir.name == "in" else self.art_dir
+        if in_root.exists():
+            for child in sorted(in_root.iterdir()):
+                if child.is_dir():
+                    folders.append((f"in/{child.name}", child))
+        else:
+            folders.append(("in (missing)", in_root))
+
+        infix_dir = self.art_dir.parent / "artbox" / "infix" if self.art_dir.name == "in" else self.art_dir / "infix"
+        if infix_dir.exists():
+            folders.append(("infix (FIX-layer art)", infix_dir))
+
+        for label, folder in folders:
+            root = QTreeWidgetItem([label, "", ""])
+            self.tree.addTopLevelItem(root)
+            if not folder.exists():
+                root.setText(1, "missing")
+                continue
+            try:
+                for entry in sorted(folder.iterdir()):
+                    if entry.is_file() and entry.suffix.lower() == ".png":
+                        sz = entry.stat().st_size
+                        dim = self._png_dim(entry)
+                        item = QTreeWidgetItem(
+                            [entry.name, f"{sz}", dim])
+                        item.setData(
+                            0, Qt.ItemDataRole.UserRole, str(entry))
+                        root.addChild(item)
+            except Exception as e:
+                root.setText(1, f"err: {e}")
+            root.setExpanded(False)
+
+    def _png_dim(self, path):
+        try:
+            img = QImage(str(path))
+            if img.isNull():
+                return "?"
+            return f"{img.width()}x{img.height()}"
+        except Exception:
+            return "?"
+
+    def _on_select(self):
+        items = self.tree.selectedItems()
+        if not items:
+            return
+        p_str = items[0].data(0, Qt.ItemDataRole.UserRole)
+        if not p_str:
+            self.preview.clear()
+            self.info.clear()
+            return
+        path = _AxPath(p_str)
+        img = QImage(p_str)
+        if img.isNull():
+            self.preview.setText("(failed to load)")
+            self.info.setPlainText(f"{path}\n(invalid PNG)")
+            return
+        # Scale preview to fit
+        from PyQt6.QtGui import QPixmap
+        pix = QPixmap.fromImage(img)
+        max_size = self.preview.size()
+        if pix.width() > max_size.width() or pix.height() > max_size.height():
+            pix = pix.scaled(max_size,
+                             Qt.AspectRatioMode.KeepAspectRatio,
+                             Qt.TransformationMode.SmoothTransformation)
+        self.preview.setPixmap(pix)
+        self.info.setPlainText(
+            f"Path:   {path}\n"
+            f"Dim:    {img.width()}x{img.height()}\n"
+            f"Size:   {path.stat().st_size} bytes\n"
+            f"Format: {img.format()}\n"
+            f"Colors: {'paletted' if img.format() == QImage.Format.Format_Indexed8 else 'RGB(A)'}"
+        )
+
+
+###############################################################################
+#  HD Compare — convert any PNG through standard AND HD pipelines, A/B view
+###############################################################################
+class HdCompareTab(QWidget):
+    def __init__(self, project=None):
+        super().__init__()
+        self.project = project
+        self._std_out = None
+        self._hd_out = None
+        self._curr_src = None
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>HD Conversion & Quality Workbench</b>"))
+        layout.addWidget(QLabel(
+            "Compare source artwork against Standard and HD (Bilateral/CLAHE/Blue-Noise) "
+            "pipelines. Measure PSNR, unique DAC colors, and deploy directly to the game project."))
+
+        # Source picker row
+        pick_row = QHBoxLayout()
+        pick_row.addWidget(QLabel("Project Source:"))
+        self.combo_project_img = QComboBox()
+        self.combo_project_img.setMinimumWidth(200)
+        self.combo_project_img.currentTextChanged.connect(self._on_combo_selected)
+        pick_row.addWidget(self.combo_project_img)
+
+        self.src_line = QLineEdit()
+        self.src_line.setPlaceholderText("Select PNG from project or Browse…")
+        pick_row.addWidget(self.src_line, 1)
+
+        btn_pick = QPushButton("Browse…")
+        btn_pick.clicked.connect(self._pick_src)
+        pick_row.addWidget(btn_pick)
+        layout.addLayout(pick_row)
+
+        # Pipeline Options Row
+        opt_row = QHBoxLayout()
+        opt_row.addWidget(QLabel("Dither:"))
+        self.combo_dither = QComboBox()
+        self.combo_dither.addItems(["Blue Noise", "Floyd-Steinberg", "None"])
+        opt_row.addWidget(self.combo_dither)
+
+        self.chk_clahe = QCheckBox("CLAHE Contrast")
+        self.chk_clahe.setChecked(True)
+        opt_row.addWidget(self.chk_clahe)
+
+        self.chk_unsharp = QCheckBox("Unsharp Mask")
+        self.chk_unsharp.setChecked(True)
+        opt_row.addWidget(self.chk_unsharp)
+
+        self.chk_bilateral = QCheckBox("Bilateral Filter")
+        self.chk_bilateral.setChecked(True)
+        opt_row.addWidget(self.chk_bilateral)
+
+        btn_run = QPushButton("▶ Run Comparison")
+        btn_run.setStyleSheet("font-weight:bold; background:#1b4f72; color:white; padding:4px 12px;")
+        btn_run.clicked.connect(self._convert)
+        opt_row.addWidget(btn_run)
+
+        btn_deploy = QPushButton("Deploy HD to Game")
+        btn_deploy.setToolTip("Copy the HD converted result into this game's art_source/ directory")
+        btn_deploy.clicked.connect(self._deploy_to_game)
+        opt_row.addWidget(btn_deploy)
+        opt_row.addStretch()
+        layout.addLayout(opt_row)
+
+        # 3-Way Previews (Original | Standard | HD)
+        previews = QHBoxLayout()
+        self.orig_label = QLabel("(original source)")
+        self.std_label  = QLabel("(standard output)")
+        self.hd_label   = QLabel("(HD output)")
+        for lbl in (self.orig_label, self.std_label, self.hd_label):
+            lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            lbl.setStyleSheet("background:#141419; border:1px solid #333; min-height:240px;")
+
+        orig_box = QGroupBox("1. Original 32-bit Source")
+        std_box  = QGroupBox("2. Standard (img2neo.py)")
+        hd_box   = QGroupBox("3. HD Enhanced (img2neo_hd.py)")
+        for box, lbl in [(orig_box, self.orig_label), (std_box, self.std_label), (hd_box, self.hd_label)]:
+            bl = QVBoxLayout(box)
+            bl.addWidget(lbl, 1)
+
+        previews.addWidget(orig_box, 1)
+        previews.addWidget(std_box, 1)
+        previews.addWidget(hd_box, 1)
+        layout.addLayout(previews, 2)
+
+        # Metrics Card
+        self.metrics_label = QLabel("Quality Metrics: Select an image and run comparison.")
+        self.metrics_label.setStyleSheet("background:#202028; color:#99eebb; padding:6px; border-radius:4px; font-family:'Monospace';")
+        layout.addWidget(self.metrics_label)
+
+        # Log
+        self.log = QPlainTextEdit()
+        self.log.setReadOnly(True)
+        self.log.setMaximumHeight(110)
+        self.log.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#cfcf80;"
+            " font-family:'Courier New',monospace; }")
+        layout.addWidget(self.log)
+
+        self._populate_project_images()
+
+    def set_project(self, project):
+        self.project = project
+        self._populate_project_images()
+
+    def _populate_project_images(self):
+        self.combo_project_img.blockSignals(True)
+        self.combo_project_img.clear()
+        if self.project and hasattr(self.project, "art_source") and self.project.art_source.exists():
+            pngs = sorted([p.name for p in self.project.art_source.glob("*.png")])
+            if pngs:
+                self.combo_project_img.addItems(pngs)
+                first = self.project.art_source / pngs[0]
+                self.src_line.setText(str(first))
+                self._show_original(str(first))
+        self.combo_project_img.blockSignals(False)
+
+    def _on_combo_selected(self, text):
+        if not text or not self.project:
+            return
+        path = self.project.art_source / text
+        if path.exists():
+            self.src_line.setText(str(path))
+            self._show_original(str(path))
+
+    def _show_original(self, path):
+        if os.path.exists(path):
+            img = QImage(path)
+            if not img.isNull():
+                pix = QPixmap.fromImage(img)
+                sz = self.orig_label.size()
+                pix = pix.scaled(sz, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.FastTransformation)
+                self.orig_label.setPixmap(pix)
+
+    def _pick_src(self):
+        initial = str(self.project.art_source) if self.project and self.project.art_source.exists() else str(_AX_ARTBOX)
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Pick source PNG", initial, "PNG (*.png);;All Files (*)")
+        if path:
+            self.src_line.setText(path)
+            self._show_original(path)
+
+    def _convert(self):
+        src = self.src_line.text().strip()
+        if not src or not os.path.exists(src):
+            self.log.appendPlainText("(no source selected)")
+            return
+        self._curr_src = Path(src)
+        out_dir = _AX_ARTBOX / "out" / "_hd_cmp"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        base = self._curr_src.stem
+        std_out = out_dir / f"{base}_std.png"
+        hd_out  = out_dir / f"{base}_hd.png"
+        self._std_out = std_out
+        self._hd_out = hd_out
+
+        std_cmd = ["python3", str(_AX_ARTBOX / "img2neo.py"), src, str(std_out)]
+        hd_cmd  = ["python3", str(_AX_ARTBOX / "img2neo_hd.py"), src, str(hd_out)]
+
+        dither = self.combo_dither.currentText()
+        if dither == "Floyd-Steinberg":
+            hd_cmd.extend(["--dither", "fs"])
+        elif dither == "None":
+            hd_cmd.extend(["--dither", "none"])
+
+        if not self.chk_clahe.isChecked():
+            hd_cmd.append("--no-clahe")
+        if not self.chk_unsharp.isChecked():
+            hd_cmd.append("--no-unsharp")
+
+        self.log.clear()
+        self._show_original(src)
+
+        for label, cmd, out in [("Standard", std_cmd, std_out), ("HD", hd_cmd, hd_out)]:
+            self.log.appendPlainText(f"$ {' '.join(cmd)}")
+            try:
+                r = _ax_sub.run(cmd, capture_output=True, text=True, timeout=120)
+                if r.stdout: self.log.appendPlainText(r.stdout.strip())
+                if r.returncode != 0:
+                    self.log.appendPlainText(f"!! {label} failed: {r.stderr.strip()}")
+            except Exception as e:
+                self.log.appendPlainText(f"!! {label} execution error: {e}")
+
+            if out.exists():
+                img = QImage(str(out))
+                if not img.isNull():
+                    pix = QPixmap.fromImage(img)
+                    target = self.std_label if label == "Standard" else self.hd_label
+                    sz = target.size()
+                    pix = pix.scaled(sz, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.FastTransformation)
+                    target.setPixmap(pix)
+
+        # Compute quality metrics
+        try:
+            from PIL import Image
+            orig_im = Image.open(src).convert("RGB")
+            w, h = orig_im.size
+            orig_arr = np.array(orig_im, dtype=np.float64)
+
+            metrics = [f"Source: {w}x{h} ({w//16}x{h//16} tiles)"]
+            if std_out.exists():
+                s_im = Image.open(std_out).convert("RGB")
+                s_arr = np.array(s_im.resize((w, h), Image.Resampling.NEAREST), dtype=np.float64)
+                s_mse = np.mean((orig_arr - s_arr) ** 2)
+                s_psnr = 99.0 if s_mse == 0 else 10.0 * math.log10((255.0 ** 2) / max(1e-9, s_mse))
+                s_cols = len(set(tuple(p) for p in s_arr.reshape(-1, 3)))
+                metrics.append(f"Standard: PSNR {s_psnr:.2f} dB (MSE {s_mse:.1f}, {s_cols} colors)")
+
+            if hd_out.exists():
+                h_im = Image.open(hd_out).convert("RGB")
+                h_arr = np.array(h_im.resize((w, h), Image.Resampling.NEAREST), dtype=np.float64)
+                h_mse = np.mean((orig_arr - h_arr) ** 2)
+                h_psnr = 99.0 if h_mse == 0 else 10.0 * math.log10((255.0 ** 2) / max(1e-9, h_mse))
+                h_cols = len(set(tuple(p) for p in h_arr.reshape(-1, 3)))
+                metrics.append(f"HD Enhanced: PSNR {h_psnr:.2f} dB (MSE {h_mse:.1f}, {h_cols} colors)")
+
+            self.metrics_label.setText("   |   ".join(metrics))
+        except Exception as exc:
+            self.metrics_label.setText(f"Metrics error: {exc}")
+
+    def _deploy_to_game(self):
+        if not self._hd_out or not self._hd_out.exists():
+            QMessageBox.warning(self, "No HD Output", "Run conversion first before deploying.")
+            return
+        if not self.project:
+            QMessageBox.warning(self, "No Project", "No active game project.")
+            return
+        dest_name = self._curr_src.name if self._curr_src else "imported_hd.png"
+        dest = self.project.art_source / dest_name
+        import shutil
+        shutil.copy(self._hd_out, dest)
+        QMessageBox.information(self, "Deployed", f"Copied HD converted image to game art:\n{dest}")
+
+
+###############################################################################
+#  ROM Inspector — show built ROM file inventory
+###############################################################################
+class RomInventoryTab(QWidget):
+    def __init__(self, project=None):
+        super().__init__()
+        self.project = project
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Built ROM Inventory</b>"))
+        layout.addWidget(QLabel(
+            "Every ROM kind (p1 / m1 / s1 / v1 / c1 / c2) for every game "
+            "under roms/.  Refresh to pick up new builds."))
+
+        from PyQt6.QtWidgets import QTableWidget, QTableWidgetItem, QHeaderView
+        self.table = QTableWidget(0, 5)
+        self.table.setHorizontalHeaderLabels(
+            ["Game", "File", "Size (B)", "Modified", "Present"])
+        self.table.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.ResizeToContents)
+        layout.addWidget(self.table, 1)
+
+        btn = QPushButton("Refresh")
+        btn.clicked.connect(self._refresh)
+        layout.addWidget(btn)
+        self._refresh()
+
+    def set_project(self, project):
+        self.project = project
+        self._refresh()
+
+    def _refresh(self):
+        from PyQt6.QtWidgets import QTableWidgetItem
+        roms_dir = _AX_REPO_ROOT / "roms"
+        rows = []
+        if roms_dir.exists():
+            for game_dir in sorted(roms_dir.iterdir()):
+                if not game_dir.is_dir():
+                    continue
+                game = game_dir.name
+                game_id = "???"
+                mk = _AX_REPO_ROOT / "games" / game / "game.mk"
+                if mk.exists():
+                    for line in mk.read_text(errors="replace").splitlines():
+                        if line.strip().startswith("GAME_ID"):
+                            parts = line.split("=")
+                            if len(parts) > 1:
+                                game_id = parts[1].strip()
+                                break
+                for kind in ("p1", "m1", "s1", "v1", "c1", "c2"):
+                    fname = f"{game_id}-{kind}.{kind}"
+                    fpath = game_dir / fname
+                    if fpath.exists():
+                        st = fpath.stat()
+                        import datetime
+                        mtime = datetime.datetime.fromtimestamp(
+                            st.st_mtime).strftime("%Y-%m-%d %H:%M:%S")
+                        rows.append((game, fname, str(st.st_size), mtime, "yes"))
+                    else:
+                        rows.append((game, fname, "—", "—", "no"))
+        self.table.setRowCount(len(rows))
+        for r, row_data in enumerate(rows):
+            for c, val in enumerate(row_data):
+                item = QTableWidgetItem(val)
+                if c == 4 and val == "no":
+                    item.setForeground(QColor("#aa6666"))
+                elif c == 4 and val == "yes":
+                    item.setForeground(QColor("#66aa66"))
+                self.table.setItem(r, c, item)
+
+
+###############################################################################
+#  Hex Sprite Inspector — view a tile's raw C-ROM bytes + decoded pixels +
+#  let the user swap palette and instantly recolour
+###############################################################################
+class HexSpriteInspectorTab(QWidget):
+    def __init__(self, c1, c2, palettes):
+        super().__init__()
+        self.c1 = c1
+        self.c2 = c2
+        self.palettes = palettes
+        self._tile_idx = 0
+        self._zoom = 8
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Hex Sprite Inspector</b>"))
+        layout.addWidget(QLabel(
+            "Pick a tile index, view its raw bytes from C1/C2, the "
+            "decoded 16×16 pixel grid, and swap palettes live."))
+
+        # Control row
+        ctrl = QHBoxLayout()
+        ctrl.addWidget(QLabel("Tile #"))
+        max_tiles = max(1, len(self.c1) // 64)
+        self.sp_tile = QSpinBox()
+        self.sp_tile.setRange(0, max_tiles - 1)
+        self.sp_tile.valueChanged.connect(self._on_tile)
+        ctrl.addWidget(self.sp_tile)
+        ctrl.addWidget(QLabel("Zoom"))
+        self.sp_zoom = QSpinBox()
+        self.sp_zoom.setRange(1, 24)
+        self.sp_zoom.setValue(self._zoom)
+        self.sp_zoom.valueChanged.connect(self._on_zoom)
+        ctrl.addWidget(self.sp_zoom)
+        ctrl.addWidget(QLabel("Palette"))
+        self.cb_pal = QComboBox()
+        for k in sorted(self.palettes.keys()):
+            self.cb_pal.addItem(f"{k}", k)
+        self.cb_pal.currentIndexChanged.connect(lambda _: self._refresh())
+        ctrl.addWidget(self.cb_pal, 1)
+        layout.addLayout(ctrl)
+
+        # Big preview + hex panel splitter
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+
+        # LEFT: preview + palette strip
+        left = QWidget()
+        left_l = QVBoxLayout(left)
+        left_l.addWidget(QLabel("<b>Decoded pixels</b>"))
+        self.preview = QLabel()
+        self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.preview.setStyleSheet(
+            "background:#1a1a1a; border:1px solid #333;")
+        self.preview.setMinimumSize(256, 256)
+        left_l.addWidget(self.preview, 1)
+        left_l.addWidget(QLabel("<b>Palette (current)</b>"))
+        self.pal_strip = QLabel()
+        self.pal_strip.setFixedHeight(28)
+        self.pal_strip.setStyleSheet("background:#1a1a1a; border:1px solid #333;")
+        left_l.addWidget(self.pal_strip)
+        splitter.addWidget(left)
+
+        # RIGHT: hex dumps + tile palette indices
+        right = QWidget()
+        right_l = QVBoxLayout(right)
+        right_l.addWidget(QLabel("<b>C1 ROM bytes (64 B / tile)</b>"))
+        self.hex_c1 = QPlainTextEdit()
+        self.hex_c1.setReadOnly(True)
+        self.hex_c1.setMaximumHeight(140)
+        self.hex_c1.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#a0e0a0;"
+            " font-family:'Courier New',monospace; }")
+        right_l.addWidget(self.hex_c1)
+        right_l.addWidget(QLabel("<b>C2 ROM bytes (64 B / tile)</b>"))
+        self.hex_c2 = QPlainTextEdit()
+        self.hex_c2.setReadOnly(True)
+        self.hex_c2.setMaximumHeight(140)
+        self.hex_c2.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#a0c0e0;"
+            " font-family:'Courier New',monospace; }")
+        right_l.addWidget(self.hex_c2)
+        right_l.addWidget(QLabel("<b>Pixel palette indices (16×16)</b>"))
+        self.idx_grid = QPlainTextEdit()
+        self.idx_grid.setReadOnly(True)
+        self.idx_grid.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#cfcf80;"
+            " font-family:'Courier New',monospace; font-size:11px; }")
+        right_l.addWidget(self.idx_grid, 1)
+        splitter.addWidget(right)
+        splitter.setSizes([400, 600])
+
+        layout.addWidget(splitter, 1)
+        self._refresh()
+
+    def _on_tile(self, v):
+        self._tile_idx = v
+        self._refresh()
+
+    def _on_zoom(self, v):
+        self._zoom = v
+        self._refresh()
+
+    def _refresh(self):
+        if not self.c1 or not self.c2:
+            self.preview.setText("(no C-ROM loaded)")
+            return
+        tile = decode_tile(self.c1, self.c2, self._tile_idx)
+        # Palette
+        pal_key = self.cb_pal.currentData()
+        pal_rgb = self.palettes.get(pal_key, [(0, 0, 0)] * 16)
+        if len(pal_rgb) < 16:
+            pal_rgb = list(pal_rgb) + [(0, 0, 0)] * (16 - len(pal_rgb))
+
+        # Render preview
+        pix = tile_to_pixmap(tile, pal_rgb, zoom=self._zoom)
+        self.preview.setPixmap(pix)
+
+        # Render palette strip (16 swatches)
+        strip = QImage(16 * 16, 24, QImage.Format.Format_RGB32)
+        strip.fill(QColor(20, 20, 30))
+        painter = QPainter(strip)
+        for i, (r, g, b) in enumerate(pal_rgb[:16]):
+            painter.fillRect(i * 16, 0, 16, 24, QColor(r, g, b))
+            painter.setPen(QColor(60, 60, 60))
+            painter.drawRect(i * 16, 0, 15, 23)
+        painter.end()
+        from PyQt6.QtGui import QPixmap
+        self.pal_strip.setPixmap(QPixmap.fromImage(strip))
+
+        # Hex dump
+        base = self._tile_idx * 64
+        def hex_block(buf):
+            out = []
+            for r in range(4):
+                row = buf[base + r * 16:base + (r + 1) * 16]
+                out.append(" ".join(f"{b:02X}" for b in row))
+            return "\n".join(out)
+        self.hex_c1.setPlainText(hex_block(self.c1))
+        self.hex_c2.setPlainText(hex_block(self.c2))
+
+        # Pixel grid as palette indices
+        rows = []
+        for y in range(16):
+            rows.append(" ".join(f"{tile[y, x]:X}" for x in range(16)))
+        self.idx_grid.setPlainText("\n".join(rows))
+
+
+###############################################################################
+#  Movement / Animation Designer
+#  ---------------------------------------------------------------------------
+#  Build a frame sequence (a list of tile-group indices each with a duration)
+#  and watch it loop in the preview at the chosen FPS.
+###############################################################################
+class MovementDesignerTab(QWidget):
+    def __init__(self, c1, c2, palettes, manifest):
+        super().__init__()
+        self.c1 = c1
+        self.c2 = c2
+        self.palettes = palettes
+        self.manifest = manifest
+        self._frames = []     # list of dicts {"tile": int, "dur_ms": int}
+        self._cursor = 0
+        self._elapsed = 0
+        self._anim_running = False
+        self._zoom = 6
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Movement / Animation Designer</b>"))
+        layout.addWidget(QLabel(
+            "Build a frame sequence — tile index + duration per frame — "
+            "and preview it looping.  Export prints C arrays you can "
+            "paste into a scene."))
+
+        # Top row: frame controls
+        ctrl = QHBoxLayout()
+        ctrl.addWidget(QLabel("Tile"))
+        self.sp_tile = QSpinBox()
+        max_tiles = max(1, len(self.c1) // 64)
+        self.sp_tile.setRange(0, max_tiles - 1)
+        ctrl.addWidget(self.sp_tile)
+        ctrl.addWidget(QLabel("Dur (ms)"))
+        self.sp_dur = QSpinBox()
+        self.sp_dur.setRange(16, 4000)
+        self.sp_dur.setSingleStep(33)
+        self.sp_dur.setValue(100)
+        ctrl.addWidget(self.sp_dur)
+        ctrl.addWidget(QLabel("Palette"))
+        self.cb_pal = QComboBox()
+        for k in sorted(self.palettes.keys()):
+            self.cb_pal.addItem(str(k), k)
+        ctrl.addWidget(self.cb_pal, 1)
+        btn_add = QPushButton("+ Add Frame")
+        btn_add.clicked.connect(self._add_frame)
+        ctrl.addWidget(btn_add)
+        btn_del = QPushButton("- Remove Sel")
+        btn_del.clicked.connect(self._del_frame)
+        ctrl.addWidget(btn_del)
+        layout.addLayout(ctrl)
+
+        # Splitter: frame list + preview
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+
+        # LEFT: frame list
+        left = QWidget()
+        ll = QVBoxLayout(left)
+        ll.addWidget(QLabel("<b>Frame sequence</b>"))
+        self.lst = QListWidget()
+        self.lst.setSelectionMode(QListWidget.SelectionMode.SingleSelection)
+        ll.addWidget(self.lst, 1)
+        ll_btn = QHBoxLayout()
+        for label, fn in [("↑ Up", self._move_up),
+                          ("↓ Down", self._move_down),
+                          ("Clear", self._clear_all)]:
+            b = QPushButton(label)
+            b.clicked.connect(fn)
+            ll_btn.addWidget(b)
+        ll.addLayout(ll_btn)
+        splitter.addWidget(left)
+
+        # RIGHT: animation preview + export
+        right = QWidget()
+        rl = QVBoxLayout(right)
+        rl.addWidget(QLabel("<b>Loop preview</b>"))
+        self.preview = QLabel()
+        self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.preview.setStyleSheet(
+            "background:#1a1a1a; border:1px solid #333; min-height:200px;")
+        rl.addWidget(self.preview, 1)
+        play_row = QHBoxLayout()
+        self.btn_play = QPushButton("▶ Play")
+        self.btn_play.clicked.connect(self._toggle)
+        self.btn_step = QPushButton("Step →")
+        self.btn_step.clicked.connect(self._step_one)
+        play_row.addWidget(self.btn_play)
+        play_row.addWidget(self.btn_step)
+        play_row.addStretch()
+        rl.addLayout(play_row)
+        rl.addWidget(QLabel("<b>Export (C array)</b>"))
+        self.exp = QPlainTextEdit()
+        self.exp.setReadOnly(True)
+        self.exp.setMaximumHeight(120)
+        self.exp.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#a0c0e0;"
+            " font-family:'Courier New',monospace; font-size:11px; }")
+        rl.addWidget(self.exp)
+        splitter.addWidget(right)
+        splitter.setSizes([280, 600])
+
+        layout.addWidget(splitter, 1)
+
+        self.timer = QTimer(self)
+        self.timer.setInterval(33)
+        self.timer.timeout.connect(self._tick)
+
+    def _add_frame(self):
+        f = {"tile": self.sp_tile.value(),
+             "dur_ms": self.sp_dur.value(),
+             "pal": self.cb_pal.currentData()}
+        self._frames.append(f)
+        self.lst.addItem(f"#{len(self._frames)-1}  tile={f['tile']}  {f['dur_ms']}ms  pal={f['pal']}")
+        self._update_export()
+
+    def _del_frame(self):
+        row = self.lst.currentRow()
+        if row < 0 or row >= len(self._frames):
+            return
+        del self._frames[row]
+        self.lst.takeItem(row)
+        self._update_export()
+
+    def _clear_all(self):
+        self._frames.clear()
+        self.lst.clear()
+        self._update_export()
+
+    def _move_up(self):
+        row = self.lst.currentRow()
+        if row <= 0:
+            return
+        self._frames[row], self._frames[row-1] = self._frames[row-1], self._frames[row]
+        self._rebuild_list()
+        self.lst.setCurrentRow(row - 1)
+
+    def _move_down(self):
+        row = self.lst.currentRow()
+        if row < 0 or row >= len(self._frames) - 1:
+            return
+        self._frames[row], self._frames[row+1] = self._frames[row+1], self._frames[row]
+        self._rebuild_list()
+        self.lst.setCurrentRow(row + 1)
+
+    def _rebuild_list(self):
+        self.lst.clear()
+        for i, f in enumerate(self._frames):
+            self.lst.addItem(
+                f"#{i}  tile={f['tile']}  {f['dur_ms']}ms  pal={f['pal']}")
+        self._update_export()
+
+    def _toggle(self):
+        if self._anim_running:
+            self.timer.stop()
+            self._anim_running = False
+            self.btn_play.setText("▶ Play")
+        elif self._frames:
+            self._cursor = 0
+            self._elapsed = 0
+            self.timer.start()
+            self._anim_running = True
+            self.btn_play.setText("⏸ Pause")
+            self._draw_frame()
+
+    def _step_one(self):
+        if not self._frames:
+            return
+        self._cursor = (self._cursor + 1) % len(self._frames)
+        self._draw_frame()
+
+    def _tick(self):
+        if not self._frames:
+            self.timer.stop()
+            self._anim_running = False
+            return
+        self._elapsed += 33
+        cur = self._frames[self._cursor]
+        if self._elapsed >= cur["dur_ms"]:
+            self._cursor = (self._cursor + 1) % len(self._frames)
+            self._elapsed = 0
+            self._draw_frame()
+
+    def _draw_frame(self):
+        if not self._frames:
+            return
+        f = self._frames[self._cursor]
+        if not self.c1 or not self.c2:
+            return
+        tile = decode_tile(self.c1, self.c2, f["tile"])
+        pal = self.palettes.get(f["pal"], [(0, 0, 0)] * 16)
+        if len(pal) < 16:
+            pal = list(pal) + [(0, 0, 0)] * (16 - len(pal))
+        self.preview.setPixmap(tile_to_pixmap(tile, pal, zoom=self._zoom))
+
+    def _update_export(self):
+        if not self._frames:
+            self.exp.setPlainText("/* (empty — add frames first) */")
+            return
+        lines = [
+            "/* Generated by Artbox Studio — Movement Designer */",
+            f"static const uint16_t anim_frame_tile[{len(self._frames)}] = {{",
+            "    " + ", ".join(f"{f['tile']}u" for f in self._frames),
+            "};",
+            f"static const uint8_t  anim_frame_dur[{len(self._frames)}] = {{",
+            "    " + ", ".join(f"{max(1, f['dur_ms']//16)}u" for f in self._frames)
+                + "  /* duration in vblank frames (1/60s) */",
+            "};",
+        ]
+        self.exp.setPlainText("\n".join(lines))
+
+
+###############################################################################
+#  Level Designer — paint a tilemap, export as a C array of tile indices
+###############################################################################
+class LevelDesignerTab(QWidget):
+    def __init__(self, c1, c2, palettes):
+        super().__init__()
+        self.c1 = c1
+        self.c2 = c2
+        self.palettes = palettes
+        self._cols = 20
+        self._rows = 14
+        self._cell_px = 24
+        self._brush_tile = 0
+        self._brush_pal = 0
+        self._map = [[0] * self._cols for _ in range(self._rows)]
+        self._pal_idx = [[0] * self._cols for _ in range(self._rows)]
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel("<b>Level / Tilemap Designer</b>"))
+        layout.addWidget(QLabel(
+            f"Paint a {self._cols}×{self._rows} tilemap.  Click to paint, "
+            "right-click to erase.  Export gives you a ready-to-paste C array."))
+
+        # Control row
+        ctrl = QHBoxLayout()
+        ctrl.addWidget(QLabel("Brush tile"))
+        self.sp_tile = QSpinBox()
+        self.sp_tile.setRange(0, max(0, (len(self.c1) // 64) - 1))
+        self.sp_tile.valueChanged.connect(
+            lambda v: setattr(self, "_brush_tile", v))
+        ctrl.addWidget(self.sp_tile)
+        ctrl.addWidget(QLabel("Brush pal"))
+        self.cb_pal = QComboBox()
+        for k in sorted(self.palettes.keys()):
+            self.cb_pal.addItem(str(k), k)
+        self.cb_pal.currentIndexChanged.connect(
+            lambda _: setattr(self, "_brush_pal",
+                              self.cb_pal.currentData()))
+        ctrl.addWidget(self.cb_pal, 1)
+        btn_clear = QPushButton("Clear Map")
+        btn_clear.clicked.connect(self._clear)
+        ctrl.addWidget(btn_clear)
+        btn_export = QPushButton("Update Export")
+        btn_export.clicked.connect(self._refresh_export)
+        ctrl.addWidget(btn_export)
+        layout.addLayout(ctrl)
+
+        # Splitter: canvas + export
+        splitter = QSplitter(Qt.Orientation.Vertical)
+
+        # Canvas
+        self.canvas = QLabel()
+        self.canvas.setStyleSheet("background:#0c0c10; border:1px solid #333;")
+        self.canvas.setFixedSize(self._cols * self._cell_px,
+                                 self._rows * self._cell_px)
+        self.canvas.setAlignment(Qt.AlignmentFlag.AlignTop |
+                                 Qt.AlignmentFlag.AlignLeft)
+        self.canvas.mousePressEvent  = self._on_mouse
+        self.canvas.mouseMoveEvent   = self._on_mouse
+        splitter.addWidget(self.canvas)
+
+        self.exp = QPlainTextEdit()
+        self.exp.setReadOnly(True)
+        self.exp.setStyleSheet(
+            "QPlainTextEdit { background:#0c0c10; color:#a0e0a0;"
+            " font-family:'Courier New',monospace; font-size:11px; }")
+        splitter.addWidget(self.exp)
+        splitter.setSizes([400, 200])
+        layout.addWidget(splitter, 1)
+
+        self._render()
+        self._refresh_export()
+
+    def _on_mouse(self, evt):
+        x = int(evt.position().x()) // self._cell_px
+        y = int(evt.position().y()) // self._cell_px
+        if x < 0 or x >= self._cols or y < 0 or y >= self._rows:
+            return
+        if evt.buttons() & Qt.MouseButton.LeftButton:
+            self._map[y][x] = self._brush_tile
+            self._pal_idx[y][x] = self._brush_pal
+        elif evt.buttons() & Qt.MouseButton.RightButton:
+            self._map[y][x] = 0
+            self._pal_idx[y][x] = 0
+        self._render()
+
+    def _clear(self):
+        for y in range(self._rows):
+            for x in range(self._cols):
+                self._map[y][x] = 0
+                self._pal_idx[y][x] = 0
+        self._render()
+        self._refresh_export()
+
+    def _render(self):
+        canvas = QImage(self._cols * self._cell_px,
+                        self._rows * self._cell_px,
+                        QImage.Format.Format_RGB32)
+        canvas.fill(QColor(12, 12, 16))
+        painter = QPainter(canvas)
+        pen = QPen(QColor(40, 40, 50), 1)
+        painter.setPen(pen)
+        # grid + tile thumbnails
+        for y in range(self._rows):
+            for x in range(self._cols):
+                rect_x = x * self._cell_px
+                rect_y = y * self._cell_px
+                t = self._map[y][x]
+                if t > 0 and self.c1 and self.c2:
+                    pal_key = self._pal_idx[y][x]
+                    pal_rgb = self.palettes.get(pal_key, [(0, 0, 0)] * 16)
+                    if len(pal_rgb) < 16:
+                        pal_rgb = list(pal_rgb) + [(0, 0, 0)] * (16 - len(pal_rgb))
+                    tile = decode_tile(self.c1, self.c2, t)
+                    pix = tile_to_pixmap(tile, pal_rgb, zoom=1)
+                    if pix and not pix.isNull():
+                        scaled = pix.toImage().scaled(
+                            self._cell_px, self._cell_px,
+                            Qt.AspectRatioMode.IgnoreAspectRatio,
+                            Qt.TransformationMode.FastTransformation)
+                        painter.drawImage(rect_x, rect_y, scaled)
+                painter.drawRect(rect_x, rect_y,
+                                 self._cell_px - 1, self._cell_px - 1)
+        painter.end()
+        from PyQt6.QtGui import QPixmap
+        self.canvas.setPixmap(QPixmap.fromImage(canvas))
+
+    def _refresh_export(self):
+        lines = [
+            "/* Generated by Artbox Studio — Level Designer */",
+            f"#define LEVEL_W {self._cols}",
+            f"#define LEVEL_H {self._rows}",
+            "",
+            f"static const uint16_t level_tile[LEVEL_H][LEVEL_W] = {{"
+        ]
+        for y in range(self._rows):
+            row = ", ".join(f"{t:3d}u" for t in self._map[y])
+            lines.append(f"    {{ {row} }}{',' if y < self._rows-1 else ''}")
+        lines.append("};")
+        self.exp.setPlainText("\n".join(lines))
+
+
 class ArtboxStudio(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -1467,27 +2615,48 @@ class ArtboxStudio(QMainWindow):
         self.resize(1200, 800)
 
         self.c1: bytearray = bytearray()
+class ArtboxStudio(QMainWindow):
+    def __init__(self, game=None):
+        super().__init__()
+        self.setWindowTitle("Artbox Studio — NeoGeo Universal 2D")
+        self.resize(1280, 840)
+
+        self.repo_root = _REPO_ROOT
+        try:
+            self.project = StudioProject.open(self.repo_root, game)
+        except Exception:
+            self.project = StudioProject.open(self.repo_root, "demo")
+
+        self.c1: bytearray = bytearray()
         self.c2: bytearray = bytearray()
-        self.palettes: dict = {}
+        self.palettes = PaletteBook()
         self.manifest: list = []
+        self._dark_bg = True
 
         self._load_data()
         self._build_ui()
         self._build_menu()
 
     def _load_data(self):
-        # Load C-ROMs (use 777-c1.c1 / 777-c2.c2 in artbox directory)
-        for fname, attr in (("777-c1.c1", "c1"), ("777-c2.c2", "c2")):
-            if os.path.exists(fname):
-                with open(fname, "rb") as f:
-                    setattr(self, attr, bytearray(f.read()))
-        self.palettes = load_neopal("neopal.bin")
-        self.manifest = load_manifest("assets_manifest.json")
+        c1_path, c2_path = self.project.c_rom_paths()
+        for path, attr in ((c1_path, "c1"), (c2_path, "c2")):
+            if path and path.exists():
+                setattr(self, attr, bytearray(path.read_bytes()))
+            else:
+                setattr(self, attr, bytearray(4194304))  # 4MB default empty ROM buffer
+
+        manifest_path = self.project.manifest_path()
+        self.manifest = load_manifest(str(manifest_path)) if manifest_path.exists() else []
+
+        neopal_path = self.project.neopal_path()
+        self.palettes = load_neopal(str(neopal_path), self.manifest) if neopal_path.exists() else PaletteBook()
 
     def _build_ui(self):
         tabs = QTabWidget()
         tabs.setDocumentMode(True)
-        self.setCentralWidget(tabs)
+
+        self.tab_workbench = AssetWorkbench(self.project, self.c1, self.c2, self.palettes, self.manifest)
+        tabs.addTab(self.tab_workbench, "Asset Inspector")
 
         self.tab_grid = TileGridTab(self.c1, self.c2, self.palettes, self.manifest)
         tabs.addTab(self.tab_grid, "Tile Grid")
@@ -1510,17 +2679,45 @@ class ArtboxStudio(QMainWindow):
         self.tab_paled = ManualPaletteEditorTab(self.palettes)
         tabs.addTab(self.tab_paled, "Palette Editor")
 
+        in_dir = self.project.art_source if self.project.art_source.exists() else None
+        self.tab_browser = AssetBrowserTab(in_dir)
+        tabs.addTab(self.tab_browser, "Asset Browser")
+
+        self.tab_hex = HexSpriteInspectorTab(self.c1, self.c2, self.palettes)
+        tabs.addTab(self.tab_hex, "Hex Sprite Inspector")
+
+        self.tab_move = MovementDesignerTab(
+            self.c1, self.c2, self.palettes, self.manifest)
+        tabs.addTab(self.tab_move, "Movement Designer")
+
+        self.tab_level = LevelDesignerTab(self.c1, self.c2, self.palettes)
+        tabs.addTab(self.tab_level, "Level Designer")
+
+        cfg_path = self.project.art_data / "assets.cfg"
+        self.tab_rules = AssetRulesTab(cfg_path if cfg_path.exists() else None)
+        tabs.addTab(self.tab_rules, "Asset Rules")
+
+        self.tab_hd = HdCompareTab(self.project)
+        tabs.addTab(self.tab_hd, "HD Compare")
+
+        self.tab_inv = RomInventoryTab(self.project)
+        tabs.addTab(self.tab_inv, "ROM Inventory")
+
+        self.tab_build = BuildPanel(self.project, "art")
+        tabs.addTab(self.tab_build, "Build & Make")
+
         self.setStatusBar(QStatusBar())
+        mount_workspace(self, tabs, self.project, "art", self._switch_game, self._reload)
         total = len(self.c1) // 64
         self.statusBar().showMessage(
-            f"Loaded {total} tiles from C-ROMs  |  {len(self.manifest)} assets  |  "
-            f"{len(self.palettes)} palettes")
+            f"{self.project.game} (ID {self.project.game_id})  |  {total} tiles loaded  |  "
+            f"{len(self.manifest)} assets  |  {len(self.palettes)} palettes")
 
     def _build_menu(self):
         mb = self.menuBar()
         fm = mb.addMenu("File")
 
-        act_reload = fm.addAction("Reload ROMs")
+        act_reload = fm.addAction("Reload project")
         act_reload.triggered.connect(self._reload)
 
         act_save = fm.addAction("Save ROMs (write painted tiles to disk)")
@@ -1533,38 +2730,58 @@ class ArtboxStudio(QMainWindow):
         vm = mb.addMenu("View")
         act_dark = vm.addAction("Toggle dark/light background")
         act_dark.triggered.connect(self._toggle_bg)
-        self._dark_bg = True
+
+        hm = mb.addMenu("Help")
+        act_manual = hm.addAction("Desktop Studios Manual")
+        act_manual.triggered.connect(
+            lambda: from_local_file_url(self.project.root / "docs" / "DESKTOP_STUDIOS.md")
+        )
+
+    def _switch_game(self, game_name):
+        if not game_name or game_name == self.project.game:
+            return
+        try:
+            self.project = StudioProject.open(self.repo_root, game_name)
+            self._load_data()
+            self._build_ui()
+            update_workspace_project(self, self.project, "art")
+        except Exception as exc:
+            QMessageBox.warning(self, "Project Switch Error", str(exc))
 
     def _reload(self):
         self._load_data()
-        # refresh tabs by rebuilding
         self._build_ui()
-        self.statusBar().showMessage("ROMs reloaded.")
+        update_workspace_project(self, self.project, "art")
+        self.statusBar().showMessage(f"Project '{self.project.game}' reloaded from disk.")
 
     def _save_roms(self):
-        for fname, attr in (("777-c1.c1", "c1"), ("777-c2.c2", "c2")):
-            with open(fname, "wb") as f:
-                f.write(getattr(self, attr))
-        self.statusBar().showMessage("C-ROMs saved to disk.")
+        c1_path, c2_path = self.project.c_rom_paths()
+        ok1 = save_document(self, c1_path, self.c1)
+        ok2 = save_document(self, c2_path, self.c2)
+        if ok1 and ok2:
+            self.statusBar().showMessage(f"C-ROMs saved to {c1_path.parent}")
 
     def _toggle_bg(self):
         self._dark_bg = not self._dark_bg
         bg = QColor(48, 48, 60) if self._dark_bg else QColor(200, 200, 200)
-        if hasattr(self.tab_sprite, "preview"):
+        if hasattr(self, "tab_sprite") and hasattr(self.tab_sprite, "preview"):
             self.tab_sprite.preview.bg = bg
             self.tab_sprite.preview.update()
 
 
+def from_local_file_url(path):
+    from PyQt6.QtCore import QUrl
+    from PyQt6.QtGui import QDesktopServices
+    QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
+
+
 def main():
-    # Run from artbox directory
-    artbox_dir = os.path.dirname(os.path.abspath(__file__))
-    os.chdir(artbox_dir)
+    game = sys.argv[1] if len(sys.argv) > 1 and not sys.argv[1].startswith("-") else None
 
     app = QApplication(sys.argv)
     app.setApplicationName("Artbox Studio")
     app.setStyle("Fusion")
 
-    # Dark palette
     from PyQt6.QtGui import QPalette
     pal = app.palette()
     pal.setColor(QPalette.ColorRole.Window,          QColor(45, 45, 48))
@@ -1578,7 +2795,7 @@ def main():
     pal.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
     app.setPalette(pal)
 
-    win = ArtboxStudio()
+    win = ArtboxStudio(game)
     win.show()
     sys.exit(app.exec())
 

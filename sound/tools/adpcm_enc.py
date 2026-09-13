@@ -16,6 +16,7 @@ import sys
 import os
 import struct
 import math
+from pcm_metadata import read_rate, write_rate
 
 
 # ─── ADPCM-A (OKI / MSM5205 compatible) ───────────────────────────────────
@@ -31,11 +32,7 @@ STEP_ADJ_A = [-1, -1, -1, -1, 2, 5, 7, 9]
 
 
 def _adpcma_delta(step, mag):
-    d = step >> 3
-    if mag & 4: d += step
-    if mag & 2: d += step >> 1
-    if mag & 1: d += step >> 2
-    return d
+    return ((2 * mag + 1) * step) // 8
 
 
 def adpcma_decode_nibble(state, code):
@@ -47,8 +44,7 @@ def adpcma_decode_nibble(state, code):
         state[0] -= delta
     else:
         state[0] += delta
-    if state[0] > 2047:    state[0] = 2047
-    elif state[0] < -2048: state[0] = -2048
+    state[0] = ((state[0] + 2048) & 4095) - 2048
     state[1] += STEP_ADJ_A[mag]
     if state[1] < 0:  state[1] = 0
     elif state[1] > 48: state[1] = 48
@@ -57,18 +53,16 @@ def adpcma_decode_nibble(state, code):
 def adpcma_encode_nibble(state, sample16):
     """Encode one 16-bit sample. state = [acc, step_idx]. Returns nibble 0-15."""
     target = sample16 >> 4
-    diff = target - state[0]
     step = STEP_TABLE_A[state[1]]
-    code = 8 if diff < 0 else 0
-    diff = abs(diff)
-    mag = 0
-    if diff >= step:
-        mag |= 4; diff -= step
-    if diff >= (step >> 1):
-        mag |= 2; diff -= (step >> 1)
-    if diff >= (step >> 2):
-        mag |= 1
-    code |= mag
+    # Score the actual wrapped predictor, not an OKI-style saturated surrogate.
+    code, error = 0, 8192
+    for candidate in range(16):
+        delta = _adpcma_delta(step, candidate & 7)
+        predicted = state[0] + (-delta if candidate & 8 else delta)
+        predicted = ((predicted + 2048) & 4095) - 2048
+        distance = abs(target - predicted)
+        if distance < error:
+            code, error = candidate, distance
     adpcma_decode_nibble(state, code)
     return code
 
@@ -112,18 +106,18 @@ def adpcma_make_preroll(target_idx):
 
 
 def encode_adpcma(samples):
-    """Full ADPCM-A encode with pre-roll. Returns bytearray."""
-    target_idx = adpcma_find_start_step(samples)
-    preroll_nibs, state = adpcma_make_preroll(target_idx)
+    """Encode from the hardware reset state without an audible step-ramp prefix."""
+    state = [0, 0]
 
     # Encode all audio samples
-    all_nibs = list(preroll_nibs)
+    all_nibs = []
     for s in samples:
         all_nibs.append(adpcma_encode_nibble(state, s))
 
-    # Pad to even
-    if len(all_nibs) % 2:
-        all_nibs.append(0x08)
+    # Encode the alignment tail toward zero using the current predictor state.
+    # Repeating a fixed byte can preserve a DC offset or create a noisy tail.
+    while len(all_nibs) % 512:
+        all_nibs.append(adpcma_encode_nibble(state, 0))
 
     # Pack nibbles
     out = bytearray()
@@ -135,7 +129,7 @@ def encode_adpcma(samples):
     if r:
         out.extend(b'\x80' * (256 - r))
 
-    return out, len(preroll_nibs)
+    return out, 0
 
 
 # ─── ADPCM-B (Yamaha datasheet codec) ─────────────────────────────────────
@@ -164,7 +158,7 @@ def adpcmb_encode_nibble(state, sample16):
     code = 8 if diff < 0 else 0
     diff = abs(diff)
     if state[1] > 0:
-        mag = (diff * 8 // state[1] - 1) // 2
+        mag = diff * 4 // state[1]
     else:
         mag = 7
     mag = max(0, min(7, mag))
@@ -179,8 +173,8 @@ def encode_adpcmb(samples):
     nibs = []
     for s in samples:
         nibs.append(adpcmb_encode_nibble(state, s))
-    if len(nibs) % 2:
-        nibs.append(0x08)
+    while len(nibs) % 512:
+        nibs.append(adpcmb_encode_nibble(state, 0))
     out = bytearray()
     for i in range(0, len(nibs), 2):
         out.append(((nibs[i] & 0xF) << 4) | (nibs[i+1] & 0xF))
@@ -253,7 +247,7 @@ def verify_adpcma(encoded, orig_samples, preroll_count):
     errors = [decoded[i] - (orig_samples[i] >> 4) for i in range(n)]
     sig = sum((orig_samples[i] >> 4)**2 for i in range(n)) / n
     noi = sum(e*e for e in errors) / n
-    snr = 10 * math.log10(sig / noi) if noi > 0 else 999
+    snr = 10 * math.log10(sig / noi) if noi > 0 and sig > 0 else 0.0
     mx = max(abs(e) for e in errors)
     av = sum(abs(e) for e in errors) / n
     print(f"  Verify: SNR={snr:.1f}dB  max_err={mx}  avg_err={av:.1f}")
@@ -279,6 +273,8 @@ def main():
         print(f"Not found: {inp}"); sys.exit(1)
 
     samples, rate = read_input(inp)
+    if not rate:
+        rate = read_rate(inp, 18500 if mode == 'a' else 16000)
     if rate and mode == 'a' and rate != 18500:
         print(f"WARNING: ADPCM-A expects 18500Hz, got {rate}Hz")
 
@@ -293,6 +289,7 @@ def main():
 
     with open(outp, 'wb') as f:
         f.write(encoded)
+    write_rate(outp, rate)
     print(f"Written to {outp}")
 
 

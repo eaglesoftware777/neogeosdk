@@ -1,5 +1,27 @@
 # Game Engine Makefile Integration for `sdk/2d_engine/ng_*`
 
+> **v1.7.0 additions**
+>
+> - `USE_2D_PLUS=1` switches the engine source set to
+>   `sdk/2d_engine_plus/ng_*.cpp` (C++14, no exceptions, no RTTI, no
+>   threadsafe statics).  Default (`USE_2D_PLUS=0`) builds the
+>   `sdk/2d_engine/ng_*.c` modules.
+> - `GAME_EXTRA_INCLUDES` is a per-game variable that game.mk can set
+>   to add additional `-I…` paths to both CFLAGS and CXXFLAGS without
+>   modifying the top-level `Makefile`.  Used by `games/demo_plus` to
+>   pull in `games/demo`'s artbox tables via `#include "../demo/main.c"`.
+>
+> ```make
+> # games/demo_plus/game.mk
+> GAME_NAME           = NeoGeo SDK Demo Plus
+> GAME_ID             = 778
+> GAME_SCENES         = demo_plus_main
+> GAME_EXTRA_INCLUDES = -Igames/demo -Igames/demo/artbox
+> ```
+>
+> - New game `games/demo_plus` (ID 778) — builds clean with
+>   `make GAME=demo_plus p1 USE_2D_PLUS=1`.
+
 The 2D game engine layer is built from the `sdk/2d_engine/ng_*.c` modules.
 
 Current state on `main`:
@@ -126,7 +148,8 @@ make debug-build
 make debug-artifacts
 make gdb-trace
 make gdb
-make gdb-remote GDB_REMOTE=localhost:1234
+make gdb-server
+make gdb-remote GDB_REMOTE=127.0.0.1:23946
 ```
 
 Windows:

@@ -7,7 +7,7 @@ from asset_rules import build_asset_specs
 
 
 def main():
-    specs = build_asset_specs("in")
+    specs = build_asset_specs()
     print(len(specs))
 
 

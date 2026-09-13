@@ -1,5 +1,30 @@
 # SDK API Guide
 
+> **v1.7.0 quick reference**
+>
+> - Sprite slot priority: **HIGHER slot number = drawn IN FRONT.** This is
+>   the observed hardware direction; earlier revisions of this guide and of
+>   `ng_sprite_pool.h` claimed the opposite, and the result was backgrounds
+>   parked at "behind" slots drawing over characters. Backgrounds belong at
+>   slots 1-32, characters at 96-223, foreground effects at 288+.
+> - The backdrop register is the **last word of palette RAM, `$401FFE`**.
+>   `$402000` is a mirror that silently does nothing.
+> - The FIX layer is 40 x 32 cells with **28 rows visible**; visible row
+>   *y* is map row *y + 2*. The FIX map word is `(pal << 12) | tile`, so
+>   there are only **16 palette banks**.
+> - The BIOS SFIX font draws its space glyph as an **opaque** colour-index-2
+>   plate. Use `ng_fix_blank_cell()` to leave a cell genuinely empty.
+> - SCB2 can only **shrink**, never stretch. SCB3's Y field is `496 - y` in
+>   nine bits, so `y` and `y + 512` are identical and negative Y wraps.
+> - C++14 engine: build with `USE_2D_PLUS=1` (engine in
+>   `sdk/2d_engine_plus/`). `games/demo_plus` (id 778) links only against
+>   the C++ engine and exists to keep the two builds ABI-compatible.
+> - `Makefile` accepts `GAME_EXTRA_INCLUDES` (set by a game's `game.mk`) so
+>   a game can pull in another game's artbox/header path without
+>   duplicating data.
+> - Every game carries its own `game.cfg`, so all six build the same way:
+>   `make GAME=<name> GAME_CFG_FILE=games/<name>/game.cfg all`.
+
 This guide covers the public 68000-side SDK helpers declared in [`sdk/neogeo.h`](./sdk/neogeo.h).
 
 For installation, `SDKHOME` layout, WSL usage, and Makefile targets, see:
@@ -7,8 +32,11 @@ For installation, `SDKHOME` layout, WSL usage, and Makefile targets, see:
 - [`README.md`](./README.md)
 - [`docs/GAME_ENGINE_LAYER.md`](./docs/GAME_ENGINE_LAYER.md)
 - [`docs/ARTBOX_PIPELINE.md`](./docs/ARTBOX_PIPELINE.md)
+- [`docs/INTRODUCTION.md`](./docs/INTRODUCTION.md)
+- [`docs/PROGRAMMERS_MANUAL.md`](./docs/PROGRAMMERS_MANUAL.md)
+- [`docs/API_2D_ENGINE_C.md`](./docs/API_2D_ENGINE_C.md)
+- [`docs/API_2D_ENGINE_CPP.md`](./docs/API_2D_ENGINE_CPP.md)
 - [`docs/MAKEFILE_INTEGRATION.md`](./docs/MAKEFILE_INTEGRATION.md)
-- the repository wiki home page
 
 The SDK is organized in five layers:
 
@@ -71,7 +99,7 @@ Use these helpers for text, counters, debug overlays, and BIOS message coordinat
 | --- | --- |
 | `clearRAM()` | Clear the SDK work RAM area. |
 | `clearSprs()` | Clear the visible sprite list. |
-| `clearFix()` | Clear the FIX layer. |
+| `clearFix()` | Clear the FIX layer. Restores BRDFIX (game S ROM) after the BIOS clear call. |
 | `waitVbl()` | Wait for the next VBlank. |
 | `cycle10ms()` | Rough 10 ms delay helper. |
 | `cycle1s()` | Rough 1 second delay helper. |
@@ -112,7 +140,7 @@ High-level sound control categories:
 Current shipped helper behavior:
 
 - `soundPlayTitleMusic(track)` resets the scene, plays the title gong, then starts the ADPCM-B title theme
-- `soundPlayGameLoop(track)` resets the scene and maps the requested loop to a direct ADPCM-B stage or ending bed
+- `soundPlayGameLoop(track)` resets the scene and maps the requested loop to a direct ADPCM-B stage or ending TRACK
 - `playMusic(track)` remains the explicit path for MML/SSG playback when you want the music engine directly
 
 ## 2D Game Engine Layer
@@ -250,7 +278,7 @@ display_digit(20, 15, score, 0, 48);
 
 ```c
 soundPlayTitleMusic(0);
-soundPlayGameLoop(SOUND_MUSIC_SAMURAI_GAME_LOOP);
+soundPlayGameLoop(SOUND_MUSIC_A);
 ```
 
 ### Manual layered sound scene
@@ -262,15 +290,17 @@ soundSetADPCMBVolume(0xB8);
 soundSetSSGVolume(0x08);
 soundSetFMVolume(0x0C);
 
-playSFX(SOUND_SFX_COIN_CHIME);
-playMusic(SOUND_MUSIC_SAMURAI_GAME_LOOP);
-playFMTrack(SOUND_FM_SAMURAI_MINOR);
+playSFX(SOUND_SFX_1);
+playMusic(SOUND_MUSIC_A);
+playFMTrack(SOUND_FM_B);
 ```
 
 ## Notes
 
 - `sdk/neogeo.h` is the intended public call surface for the 68000 side.
-- The playable sound driver remains the assembler implementation in `sound/driver/driver.asm`.
-- `make m1rom` builds the authoritative ASM sound runtime.
-- `make m1rom-c` builds the experimental C-linked sound runtime.
+- The playable sound driver is the assembler implementation in `sound/driver/driver.asm`.
+- `make m1rom` / `make m1rom-asm` builds the authoritative ASM sound runtime.
+- `make m1rom-c` builds the experimental C-linked sound runtime for comparison only.
 - The current 68000 build no longer links the legacy `softfloat/` runtime by default.
+- `clearFix()` calls the BIOS `SYS_FIX_CLEAR` routine which resets BRDFIX to 0. The SDK now restores BRDFIX (`BSET.B #0,REG_BRDFIX`) immediately after that call so the game S ROM is always selected. Never call `clearFix()` without following up with text draws — the game S ROM is restored automatically.
+- `soundCommand()` no longer calls `isZ80Ready()` after writing the command byte. The trailing poll created a race condition with the Z80 NMI handler that caused a permanent 68k deadlock. Callers that need to verify Z80 readiness before sending a second command should call `isZ80Ready()` explicitly between commands.

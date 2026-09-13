@@ -34,6 +34,69 @@ def snap_neogeo(arr):
     return np.clip(((arr.astype(np.int32) + 4) // 8) * 8, 0, 248).astype(np.uint8)
 
 
+def alpha_bleed(rgba: np.ndarray,
+                opaque_alpha: int = 128,
+                max_passes: int = 32) -> np.ndarray:
+    """
+    Eliminate white/colour halos around sprite contours.
+
+    For every pixel whose alpha is below `opaque_alpha`, replace its RGB
+    with the average RGB of the nearest fully-opaque pixels (8-neighbour
+    iterative dilation).  The alpha channel itself is left untouched, so
+    downstream alpha thresholding still produces the same shape — only
+    the RGB of edge / transparent pixels is sanitised.
+
+    Why: PNG sprites often have anti-aliased contours where the edge
+    pixels are semi-transparent with raw RGB biased toward whatever the
+    artist composited against (commonly white).  Once alpha thresholding
+    promotes those pixels to fully opaque, that washed-out RGB gets
+    quantised into a near-white palette entry — the halo the user sees.
+    Bleeding the interior colour outward eliminates the problem.
+
+    Returns a new (H, W, 4) uint8 array.  No-op when every pixel is
+    either fully opaque or there are no opaque pixels at all.
+    """
+    rgba = np.asarray(rgba, dtype=np.uint8)
+    if rgba.ndim != 3 or rgba.shape[2] != 4:
+        return rgba
+    rgb = rgba[:, :, :3].astype(np.int32).copy()
+    alpha = rgba[:, :, 3]
+    known = alpha >= opaque_alpha
+
+    if known.all() or not known.any():
+        return rgba.copy()
+
+    for _ in range(max_passes):
+        if known.all():
+            break
+        pad_rgb = np.pad(rgb, ((1, 1), (1, 1), (0, 0)), mode='edge')
+        pad_known = np.pad(known, ((1, 1), (1, 1)),
+                           mode='constant', constant_values=False)
+        sum_rgb = np.zeros_like(rgb)
+        count = np.zeros(rgb.shape[:2], dtype=np.int32)
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                if dy == 0 and dx == 0:
+                    continue
+                y0, y1 = 1 + dy, 1 + dy + rgb.shape[0]
+                x0, x1 = 1 + dx, 1 + dx + rgb.shape[1]
+                nrgb = pad_rgb[y0:y1, x0:x1]
+                nk = pad_known[y0:y1, x0:x1]
+                sum_rgb += nrgb * nk[..., None]
+                count += nk.astype(np.int32)
+        newly = (~known) & (count > 0)
+        if not newly.any():
+            break
+        safe_count = np.maximum(count, 1)[..., None]
+        avg = sum_rgb // safe_count
+        rgb[newly] = avg[newly]
+        known = known | newly
+
+    out = rgba.copy()
+    out[:, :, :3] = np.clip(rgb, 0, 255).astype(np.uint8)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # CIE-Lab colour conversion (D65, no scipy dependency)
 # ---------------------------------------------------------------------------
@@ -47,6 +110,253 @@ def _linear_to_srgb(c: np.ndarray) -> np.ndarray:
     """sRGB gamma-compress, input float (may be negative/clipped)."""
     c = np.maximum(c, 0.0)
     return np.where(c <= 0.0031308, 12.92 * c, 1.055 * c ** (1.0 / 2.4) - 0.055)
+
+
+def bilateral_rgb(rgb_u8: np.ndarray,
+                  radius: int = 2,
+                  sigma_space: float = 1.6,
+                  sigma_range: float = 24.0) -> np.ndarray:
+    """
+    Edge-preserving smooth, in linear light.
+
+    A plain blur before quantisation is a bad trade: it does calm the
+    compression noise and gradient banding that a 15-colour palette
+    turns into blotches, but it also softens the outlines, and an
+    outline is the one thing a sprite cannot afford to lose.  A
+    bilateral filter weights neighbours by how far away they are AND by
+    how different they are, so it averages within a flat region and
+    stops at the edge of it.
+
+    Pure numpy, small fixed window - the radii that help before
+    quantisation are 1-3 px, and a separable approximation is not worth
+    the accuracy it gives up at that size.
+    """
+    lin = _srgb_to_linear(np.asarray(rgb_u8, dtype=np.float32) / 255.0)
+    h, w = lin.shape[:2]
+    pad = np.pad(lin, ((radius, radius), (radius, radius), (0, 0)), mode="edge")
+
+    acc = np.zeros_like(lin)
+    wsum = np.zeros((h, w, 1), dtype=np.float32)
+    # Range weights compare 8-bit-ish differences, so scale back up.
+    inv_range = 1.0 / (2.0 * (sigma_range / 255.0) ** 2)
+    inv_space = 1.0 / (2.0 * sigma_space ** 2)
+
+    for dy in range(-radius, radius + 1):
+        for dx in range(-radius, radius + 1):
+            shifted = pad[radius + dy:radius + dy + h,
+                          radius + dx:radius + dx + w]
+            spatial = np.exp(-(dy * dy + dx * dx) * inv_space)
+            diff = shifted - lin
+            rng = np.exp(-np.sum(diff * diff, axis=2, keepdims=True) * inv_range)
+            weight = spatial * rng
+            acc += shifted * weight
+            wsum += weight
+
+    out = acc / np.maximum(wsum, 1e-8)
+    return np.clip(_linear_to_srgb(np.clip(out, 0.0, 1.0)) * 255.0 + 0.5,
+                   0.0, 255.0).astype(np.uint8)
+
+
+def clahe_lab(rgb_u8: np.ndarray,
+              grid: int = 8,
+              clip_limit: float = 2.0) -> np.ndarray:
+    """
+    Contrast-limited adaptive histogram equalisation on lightness only.
+
+    Quantising to fifteen colours flattens whatever local contrast the
+    source had: a face lit from one side and a face in shade can land on
+    the same handful of entries, and the picture reads as a single
+    muddy tone.  Equalising per region before the palette is chosen
+    keeps the differences that the eye reads as form, and doing it on L
+    alone leaves hue and chroma exactly where the artist put them.
+
+    The clip limit is what makes it usable: an unclipped equalisation
+    amplifies noise in flat regions without limit.  Excess histogram
+    mass above the limit is redistributed uniformly instead.
+    """
+    rgb = np.asarray(rgb_u8, dtype=np.uint8)
+    lab = rgb_to_lab(rgb)
+    L = lab[..., 0]
+    h, w = L.shape
+    if h < grid or w < grid:
+        return rgb.copy()
+
+    # Per-region clipped CDFs over a 0..100 lightness axis in 256 bins.
+    bins = 256
+    ys = np.linspace(0, h, grid + 1).astype(int)
+    xs = np.linspace(0, w, grid + 1).astype(int)
+    maps = np.zeros((grid, grid, bins), dtype=np.float32)
+    for gy in range(grid):
+        for gx in range(grid):
+            block = L[ys[gy]:ys[gy + 1], xs[gx]:xs[gx + 1]]
+            if block.size == 0:
+                maps[gy, gx] = np.linspace(0.0, 100.0, bins)
+                continue
+            hist, _ = np.histogram(np.clip(block, 0.0, 100.0),
+                                   bins=bins, range=(0.0, 100.0))
+            hist = hist.astype(np.float32)
+            limit = max(1.0, clip_limit * block.size / bins)
+            excess = np.maximum(hist - limit, 0.0).sum()
+            hist = np.minimum(hist, limit) + excess / bins
+            cdf = np.cumsum(hist)
+            cdf /= max(cdf[-1], 1e-6)
+            maps[gy, gx] = cdf * 100.0
+
+    # Bilinear blend between the four surrounding region maps, so the
+    # region grid leaves no seams.
+    cy = (ys[:-1] + ys[1:] - 1) * 0.5
+    cx = (xs[:-1] + xs[1:] - 1) * 0.5
+    yy = np.arange(h, dtype=np.float32)
+    xx = np.arange(w, dtype=np.float32)
+    fy = np.clip(np.interp(yy, cy, np.arange(grid, dtype=np.float32)),
+                 0, grid - 1)
+    fx = np.clip(np.interp(xx, cx, np.arange(grid, dtype=np.float32)),
+                 0, grid - 1)
+    y0 = np.floor(fy).astype(int); y1 = np.minimum(y0 + 1, grid - 1)
+    x0 = np.floor(fx).astype(int); x1 = np.minimum(x0 + 1, grid - 1)
+    wy = (fy - y0)[:, None]; wx = (fx - x0)[None, :]
+
+    b = np.clip((np.clip(L, 0.0, 100.0) / 100.0 * (bins - 1)).astype(int),
+                0, bins - 1)
+    def lookup(gy_idx, gx_idx):
+        return maps[gy_idx[:, None], gx_idx[None, :], b]
+    top = lookup(y0, x0) * (1 - wx) + lookup(y0, x1) * wx
+    bot = lookup(y1, x0) * (1 - wx) + lookup(y1, x1) * wx
+    lab[..., 0] = top * (1 - wy) + bot * wy
+    return lab_to_rgb(lab)
+
+
+def enhance_for_quantisation(rgba_u8: np.ndarray,
+                             bilateral: bool = True,
+                             clahe: bool = True) -> np.ndarray:
+    """
+    Optional pre-quantisation conditioning: bilateral, then CLAHE.
+
+    OFF by default, and it should stay that way for art that was drawn
+    for this palette.  These passes are for HD source - photographs,
+    renders, upscaled scans - where compression noise and a wide tonal
+    range both survive the resize and then fight the 15-colour budget.
+    Art authored at the target size has neither problem, and running
+    them over it changes an artist's tone choices for no gain.
+
+    Enable per run with ARTBOX_ENHANCE=1, or per call.
+    """
+    arr = np.asarray(rgba_u8, dtype=np.uint8)
+    has_alpha = arr.ndim == 3 and arr.shape[2] == 4
+    rgb = arr[..., :3]
+    if bilateral:
+        rgb = bilateral_rgb(rgb)
+    if clahe:
+        rgb = clahe_lab(rgb)
+    if has_alpha:
+        return np.concatenate([rgb, arr[..., 3:4]], axis=-1)
+    return rgb
+
+
+def enhance_enabled() -> bool:
+    """
+    Whether to run the HD conditioning passes.  On unless switched off.
+
+    The source art in this tree is HD - photographs, renders and upscaled
+    scans - so the conditioning is the normal case here, not the
+    exception.  ARTBOX_ENHANCE=0 turns it off for art that was drawn at
+    the target size and does not want its tone touched.
+    """
+    return os.environ.get("ARTBOX_ENHANCE", "1").strip().lower() not in (
+        "0", "false", "no", "off")
+
+
+def resize_rgba_linear(image,
+                       target_w: int,
+                       target_h: int,
+                       bleed_first: bool = True,
+                       resample=None):
+    """
+    Resample an image the way light actually averages.
+
+    PIL resizes gamma-encoded sRGB: it takes the arithmetic mean of the
+    stored numbers, which are roughly the 1/2.2 power of the light they
+    stand for.  Averaging in that space is not averaging light - the mean
+    of a bright and a dark pixel comes out darker than the two together
+    really are - so every downscale bleeds a little energy out of the
+    picture.  A checkerboard of black and white, which should resolve to
+    a mid grey of 188, resolves to 128.
+
+    So convert to linear light first, resize there, and convert back.
+    Alpha gets the same care: RGB is premultiplied before the filter so a
+    transparent pixel's colour cannot leak into its opaque neighbours,
+    and unpremultiplied afterwards.
+
+    `bleed_first` runs alpha_bleed() at SOURCE resolution.  That order
+    matters: a sprite cut out against white has white sitting under its
+    transparent pixels, and a filter run before the bleed mixes that
+    white into the contour, baking a halo in where alpha_bleed can no
+    longer see it.
+
+    Accepts a PIL Image or an (H, W, 3|4) uint8 array; returns the same
+    kind it was given.
+    """
+    from PIL import Image as _Image
+
+    if resample is None:
+        resample = _Image.Resampling.LANCZOS
+
+    was_pil = isinstance(image, _Image.Image)
+    if was_pil:
+        mode = image.mode
+        want_alpha = mode in ("RGBA", "LA", "P") and (
+            mode != "P" or "transparency" in image.info)
+        arr = np.asarray(image.convert("RGBA" if want_alpha else "RGB"),
+                         dtype=np.uint8)
+    else:
+        arr = np.asarray(image, dtype=np.uint8)
+        want_alpha = arr.ndim == 3 and arr.shape[2] == 4
+
+    if arr.ndim != 3 or arr.shape[2] not in (3, 4):
+        raise ValueError("resize_rgba_linear expects RGB or RGBA")
+
+    if want_alpha and bleed_first:
+        arr = alpha_bleed(arr)
+
+    lin = _srgb_to_linear(arr[..., :3].astype(np.float32) / 255.0)
+
+    if want_alpha:
+        alpha = arr[..., 3].astype(np.float32) / 255.0
+        lin = lin * alpha[..., None]
+
+    def _resize_plane(plane):
+        img = _Image.fromarray(plane.astype(np.float32), mode="F")
+        # PIL hands back a read-only view; callers below write in place.
+        return np.array(img.resize((target_w, target_h), resample),
+                        dtype=np.float32, copy=True)
+
+    out_lin = np.stack([_resize_plane(lin[..., c]) for c in range(3)],
+                       axis=-1)
+
+    if want_alpha:
+        out_a = _resize_plane(alpha)
+        np.clip(out_a, 0.0, 1.0, out=out_a)
+        # Unpremultiply.  Below this coverage the colour is noise anyway
+        # and dividing it back out only amplifies the noise.
+        safe = out_a > (1.0 / 255.0)
+        out_lin = np.where(safe[..., None], out_lin / np.where(safe, out_a, 1.0)[..., None], 0.0)
+
+    out_rgb = np.clip(_linear_to_srgb(np.clip(out_lin, 0.0, 1.0)) * 255.0 + 0.5,
+                      0.0, 255.0).astype(np.uint8)
+
+    if want_alpha:
+        out = np.concatenate(
+            [out_rgb, np.clip(out_a * 255.0 + 0.5, 0.0, 255.0).astype(np.uint8)[..., None]],
+            axis=-1)
+        # A resampled contour is soft; bleeding again keeps the new
+        # partly-covered pixels carrying interior colour, not black.
+        out = alpha_bleed(out)
+    else:
+        out = out_rgb
+
+    if was_pil:
+        return _Image.fromarray(out, mode="RGBA" if want_alpha else "RGB")
+    return out
 
 
 _M_RGB_XYZ = np.array([
@@ -301,24 +611,34 @@ def open_as_rgb(path):
 # Main conversion
 # ---------------------------------------------------------------------------
 
-def convert(src, dst, W=256, H=256, n_colors=15):
+def convert(src, dst, W=256, H=256, n_colors=15, dither='ordered'):
+    """
+    dither: 'ordered' (Bayer 4×4, calmer grain — recommended for logos/sprites),
+            'fs' (serpentine Floyd-Steinberg, maximum diffusion),
+            'none' (nearest colour only, cleanest solid areas).
+    """
     W = (W // 16) * 16
     H = (H // 16) * 16
-    print(f"  {os.path.basename(src)}  →  {os.path.basename(dst)}  ({W}x{H}, {n_colors} colours)")
+    print(f"  {os.path.basename(src)}  →  {os.path.basename(dst)}  ({W}x{H}, {n_colors} colours, dither={dither})")
 
     img = open_as_rgb(src)
     img = crop_center(img, W, H)
-    img = ImageEnhance.Contrast(img).enhance(1.2)
-    img = ImageEnhance.Color(img).enhance(1.3)
-    img = img.filter(ImageFilter.UnsharpMask(radius=1.5, percent=150, threshold=2))
+    img = ImageEnhance.Contrast(img).enhance(1.15)
+    img = ImageEnhance.Color(img).enhance(1.25)
+    img = img.filter(ImageFilter.UnsharpMask(radius=1.2, percent=120, threshold=3))
 
     arr = snap_neogeo(np.array(img, dtype=np.uint8))
 
     print(f"    k-means palette extraction (CIE-Lab)…")
-    palette = kmeans_palette(arr, n=n_colors, iters=35, sample_limit=16384)
+    palette = kmeans_palette(arr, n=n_colors, iters=40, sample_limit=20480)
 
-    print(f"    serpentine Floyd-Steinberg dithering…")
-    indexed = floyd_steinberg(arr, palette)
+    print(f"    {dither} dithering…")
+    if dither == 'none':
+        indexed = nearest_palette_indices(arr, palette)
+    elif dither == 'fs':
+        indexed = floyd_steinberg(arr, palette)
+    else:  # 'ordered' — default
+        indexed = ordered_dither(arr, palette, strength=0.45)
 
     print(f"    quality refinement pass…")
     palette, indexed = quality_second_pass(indexed, palette, arr)
@@ -371,6 +691,8 @@ if __name__ == '__main__':
     ap.add_argument('-H', '--height', type=int, default=256)
     ap.add_argument('-c', '--colors', type=int, default=15,
                     help='Number of palette colours (default 15)')
+    ap.add_argument('--dither', choices=['ordered', 'fs', 'none'], default='ordered',
+                    help='Dithering method: ordered (default, Bayer 4x4), fs (Floyd-Steinberg), none')
     ap.add_argument('--batch', action='store_true',
                     help='Convert the standard docs/img set to artbox/in/')
     args = ap.parse_args()
@@ -378,7 +700,7 @@ if __name__ == '__main__':
     if args.batch:
         run_batch()
     elif args.src and args.dst:
-        convert(args.src, args.dst, args.width, args.height, args.colors)
+        convert(args.src, args.dst, args.width, args.height, args.colors, args.dither)
     else:
         ap.print_help()
         sys.exit(1)

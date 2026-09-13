@@ -119,8 +119,13 @@ void NEOGEO_USER ng_bg_draw(int16_t camera_x, int16_t camera_y)
              * Full tile + palette upload.  sprite_base = NG_SPR_VRAM_BASE(slot)
              * ensures the generated showScreenN uses sprite slots [slot..slot+strips-1]
              * for SCB2/3/4 as well (after the genscreens.py fix).
-             * These high-numbered slots have lower display priority than character
-             * sprites at slots 0-299, so backgrounds appear behind game objects.
+             *
+             * Background layers live at the LOW slots NG_SPR_BG0_FIRST (1) and
+             * NG_SPR_BG1_FIRST (17).  In this engine's render contract the LSPC
+             * walks slots from 0 upward and later writes cover earlier ones, so
+             * the low BG slots are drawn FIRST and characters at slots 96..223
+             * (NG_SPR_CHAR_*) end up rendered on top — see ng_sprite_pool.h
+             * for the canonical layout.
              */
             bg->show_fn((int)draw_x, (int)bg->y0,
                         (int)bg->xr, (int)bg->yr,
@@ -152,3 +157,20 @@ void NEOGEO_USER ng_bg_draw(int16_t camera_x, int16_t camera_y)
         }
     }
 }
+
+/*
+ * Weak fallback for the generated screen dispatch table.
+ *
+ * ng_bg_set_by_id() resolves a screen id through ng_screen_table[],
+ * which the artbox emits into the game's own main.c alongside
+ * ng_screen_count.  A game that ships no screen art - the hello-world
+ * skeleton, a text-only tool ROM - has no such table, and because this
+ * module is always linked the reference is always present, so the link
+ * failed on games that never call the function at all.
+ *
+ * These weak definitions give the linker something to bind to.  A game
+ * that defines the real table overrides them, and ng_screen_count == 0
+ * keeps the id range empty so the stub array is never indexed.
+ */
+__attribute__((weak)) const NGShowScreenFn ng_screen_table[1] = { 0 };
+__attribute__((weak)) const uint16_t       ng_screen_count    = 0;

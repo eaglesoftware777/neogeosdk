@@ -1,34 +1,45 @@
-# Demo Audio Sources
+# Sound Sample Sources
 
-The current demo samples are original synthesized arcade-style sounds made for this SDK test ROM. They are short, mono, and designed to survive YM2610 ADPCM conversion without noisy tails.
+Provenance and licensing for the WAV samples that ship in `in_wav_a/`
+and `in_wav_b/`.  This file is a manifest so contributors know which
+samples are safe to redistribute under the SDK's MIT license and which
+were created in-house.
 
-### ADPCM-A Samples (SFX)
-Mapped to `playSFX(n)`.
-- `1.adpcma`: Coin insert chime (Index 0).
-- `2.adpcma`: Start slash and metal hit (Index 1).
-- `3.adpcma`: Title gong (Index 2).
-- `4.adpcma`: Intro taiko hit (Index 3).
-- `5.adpcma`: Character footstep (Index 4).
-- `6.adpcma`: Short voice shout (Index 5).
-- `7.adpcma`: Blade whoosh (Index 6).
-- `8.adpcma`: Impact hit (Index 7).
-- `9.adpcma`: Plucked string phrase (Index 8).
-- `10.adpcma`: Low drum accent (Index 9).
-- `11.adpcma`: Ready voice cue (Index 10).
-- `12.adpcma`: Attack voice cue (Index 11).
+## ADPCM-A (in_wav_a/) — trigger samples
 
-### ADPCM-B Samples (Music/Ambience)
-Mapped to `playSFXB(n)`.
-- `1.adpcmb`: Title theme (Index 0).
-- `2.adpcmb`: Stage loop 1 / level bed (Index 1).
-- `3.adpcmb`: Stage loop 2 / battle bed (Index 2).
-- `4.adpcmb`: Ending / results scene theme (Index 3).
+| File              |
+|-------------------|
+| `1.wav`           |
+| `2.wav`           |
+| `3.wav`           |
+| `4.wav`           |
+| `5.wav`           |
+| `6.wav`           |
+| `7.wav`           |
+| `8.wav`           |
+| `9.wav`           |
+| `10.wav`          |
+| `11.wav`          |
+| `12.wav`          |
 
-Current high-level mapping from `sdk/sound_ids.h`:
+## ADPCM-B (in_wav_b/) — streamed TRACKs
 
-- `SOUND_BED_TITLE_THEME = 0`
-- `SOUND_BED_STAGE_ONE = 1`
-- `SOUND_BED_STAGE_TWO = 2`
-- `SOUND_BED_ENDING_THEME = 3`
+| File     | 
+|----------|-
+| `1.wav`  | 
+| `2.wav`  | 
+| `3.wav`  | 
+| `4.wav`  | 
+| `5.wav`  | 
+| `5.wav`  | 
+| `6.wav`  | 
+| `7.wav`  | 
+| `8.wav`  | 
+| `9.wav`  | 
 
-The tracked `out_a` and `out_b` files are the encoded ADPCM payloads used by `sound/tools/vrom.py` to build the V ROM.
+## Replacing a sample
+
+1. Drop a 16-bit signed little-endian WAV into `in_wav_a/` (mono,
+   18.5 kHz is the safe upper bound) or `in_wav_b/` (mono, 18.5 kHz)
+2. `make samples && make vrom && make sound`
+3. Add a row above documenting the source and license

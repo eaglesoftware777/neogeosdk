@@ -1,0 +1,185 @@
+; ==========================================================
+; NeoGeo YM2610 FM Patch Bank - Artistic Arcade Demo
+; Patch format:
+; lfo = register $22
+; stereo = register $B5: L/R + AMS/PMS
+; op = DT/MUL, TL, AR, DR, SR, SL/RR, ENV
+; ==========================================================
+
+[patch 0]
+name=Soft Arcade Lead
+alg=7
+fb=2
+stereo=C0
+lfo=00
+op1=01,38,1F,08,05,AF,00
+op2=02,44,1F,08,05,AF,00
+op3=01,50,1F,08,05,AF,00
+op4=01,08,1F,07,04,9F,00
+
+[patch 1]
+name=Warm Bell Answer
+alg=7
+fb=1
+stereo=C0
+lfo=00
+op1=01,48,1F,06,03,AF,00
+op2=03,50,1F,06,03,AF,00
+op3=05,58,1F,06,03,AF,00
+op4=02,10,1F,05,02,9F,00
+
+[patch 2]
+name=Left Pluck Answer
+alg=7
+fb=4
+stereo=80
+lfo=00
+op1=02,38,1F,14,0C,BF,00
+op2=01,40,1F,14,0C,BF,00
+op3=03,48,1F,14,0C,BF,00
+op4=01,00,1F,12,0A,AF,00
+
+[patch 3]
+name=Right Bell Answer
+alg=7
+fb=3
+stereo=40
+lfo=00
+op1=01,38,1F,08,04,AF,00
+op2=03,40,1F,08,04,AF,00
+op3=05,48,1F,08,04,AF,00
+op4=02,00,1F,06,03,9F,00
+
+[patch 4]
+name=Minor Samurai Lead
+alg=5
+fb=6
+stereo=C0
+lfo=00
+op1=01,20,1F,0C,08,AF,00
+op2=02,28,1F,0C,08,AF,00
+op3=01,30,1F,0C,08,AF,00
+op4=01,00,1F,0A,06,9F,00
+
+[patch 5]
+name=Dark Reed Vibrato
+alg=4
+fb=6
+stereo=C7
+lfo=00
+op1=01,24,1F,08,04,7F,00
+op2=02,1C,1F,08,04,7F,00
+op3=01,30,1F,08,04,8F,00
+op4=01,00,1F,06,03,7F,00
+
+[patch 6]
+name=Vibrato Hero Lead
+alg=7
+fb=6
+; stereo byte $C7 = L + R + AMS=0 + PMS=7.  The sound demo uses this
+; patch specifically to make live register $22 LFO changes obvious.
+stereo=C7
+lfo=0E
+op1=01,24,1F,0A,06,9F,00
+op2=02,30,1F,0A,06,9F,00
+op3=01,38,1F,0A,06,9F,00
+op4=01,00,1F,08,05,8F,00
+
+[patch 7]
+name=Strong Mod Arcade Lead
+alg=7
+fb=7
+stereo=E2
+lfo=0B
+op1=01,20,1F,10,08,AF,00
+op2=02,30,1F,10,08,AF,00
+op3=04,40,1F,10,08,AF,00
+op4=01,00,1F,0E,06,9F,00
+
+[patch 8]
+name=Mono Arcade Bass
+alg=1
+fb=7
+stereo=C0
+lfo=00
+op1=01,28,1F,08,04,8F,00
+op2=01,00,1F,08,04,8F,00
+op3=01,38,1F,08,04,9F,00
+op4=01,00,1F,08,04,8F,00
+
+[patch 9]
+name=Round Bass Soft
+alg=0
+fb=4
+stereo=C0
+lfo=00
+op1=01,18,1F,06,03,7F,00
+op2=01,08,1F,06,03,7F,00
+op3=01,18,1F,06,03,7F,00
+op4=01,00,1F,06,03,7F,00
+
+[patch 10]
+name=Sharp UI Blip
+alg=7
+fb=3
+stereo=C0
+lfo=00
+op1=01,40,1F,18,10,CF,00
+op2=02,48,1F,18,10,CF,00
+op3=03,50,1F,18,10,CF,00
+op4=01,00,1F,16,0E,BF,00
+
+[patch 11]
+name=Coin Spark
+alg=7
+fb=7
+stereo=E2
+lfo=0C
+op1=04,30,1F,18,12,DF,00
+op2=06,38,1F,18,12,DF,00
+op3=08,48,1F,18,12,DF,00
+op4=02,00,1F,16,10,CF,00
+
+[patch 12]
+name=Temple Gong FM
+alg=3
+fb=7
+stereo=C1
+lfo=08
+op1=01,10,1F,04,02,4A,00
+op2=03,18,1F,04,02,5A,00
+op3=05,20,1F,04,02,6A,00
+op4=01,00,1F,04,02,4A,00
+
+[patch 13]
+name=Windy Metallic Lead
+alg=6
+fb=6
+stereo=F3
+lfo=0B
+op1=03,28,1F,08,06,8F,00
+op2=07,38,1F,08,06,9F,00
+op3=02,48,1F,08,06,AF,00
+op4=01,00,1F,06,04,7F,00
+
+[patch 14]
+name=Soft Pad Mono
+alg=7
+fb=1
+stereo=D0
+lfo=08
+op1=01,48,18,04,00,66,00
+op2=02,50,18,04,00,66,00
+op3=01,58,18,04,00,66,00
+op4=01,10,18,04,00,66,00
+
+[patch 15]
+name=Danger Siren Lead
+alg=7
+fb=7
+stereo=F3
+lfo=0F
+op1=02,20,1F,0C,08,AF,00
+op2=04,30,1F,0C,08,AF,00
+op3=06,40,1F,0C,08,AF,00
+op4=01,00,1F,0A,06,9F,00

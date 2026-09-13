@@ -1,0 +1,32 @@
+; 3_mml_example_d - Mountain King, the bass under the FM lead
+; @f3 starts the FM Mountain King at the same 150 BPM; this voice walks
+; the root and fifth underneath and both loop over the same sixteen bars.
+
+T150
+@p1
+@f3
+V9
+O2
+L8
+
+; first strain, twice: A minor with the B7 turn in the second bar
+A > E < A > E < A > E < A > E
+B > F+ < B > F+ < B > F+ < B > F+
+A > E < A > E < A > E < A > E
+A > E < A > E < A > E < A > E
+A > E < A > E < A > E < A > E
+B > F+ < B > F+ < B > F+ < B > F+
+A > E < A > E < A > E < A > E
+A > E < A > E < A > E < A > E
+
+; the answer a fifth up, twice
+E B E B E B E B
+F+ > C+ < F+ > C+ < F+ > C+ < F+ > C+
+E B E B E B E B
+E B E B E B E B
+E B E B E B E B
+F+ > C+ < F+ > C+ < F+ > C+ < F+ > C+
+E B E B E B E B
+E B E B E B E B
+
+~
