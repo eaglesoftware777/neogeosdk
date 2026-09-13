@@ -146,7 +146,7 @@ HASHPATH:=$(CURDIR)/hash_eagle/$(GAME);$(CURDIR)/hash_eagle;$(CURDIR)/hash
 BIOS?=euro
 ROM_DIR = roms/$(GAME)
 DUMP_DIR = dump/$(GAME)
-MAME_PLAYBACK ?= -throttle -speed 1.0 -noautoframeskip -frameskip 0 -norefreshspeed
+MAME_PLAYBACK ?= -noautoframeskip -frameskip 0
 MAME_COMMON=mame neogeo -rompath $(CURDIR)/roms -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME) $(MAME_PLAYBACK)
 LOG_CTX=@echo "[neogeosdk] target=$@ game=$(GAME) game_id=$(GAME_ID) platform=$(PLATFORM) rom_dir=$(ROM_DIR) hashpath=$(HASHPATH)"
 
@@ -496,7 +496,7 @@ dump:
 .PHONY: test
 test: game-check test-precheck hash
 	$(LOG_CTX)
-	$(MAME_COMMON) -output console -nofilter -throttle -waitvsync -window
+	$(MAME_COMMON) -output console
 
 .PHONY: test-precheck
 test-precheck: game-check

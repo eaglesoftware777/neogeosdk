@@ -36,7 +36,7 @@ typedef struct {
 #define NG_ASSET_CATEGORY_OPPONENT 2
 #define NG_ASSET_CATEGORY_NPC 3
 
-#define NG_ASSET_META_COUNT 173
+#define NG_ASSET_META_COUNT 177
 
 /* Hardware sprite strips each asset needs, by 1-based asset id. */
 #define NG_ASSET_STRIPS_1 16  /* 0.png */
@@ -212,6 +212,10 @@ typedef struct {
 #define NG_ASSET_STRIPS_171 6  /* z_npc_93.png */
 #define NG_ASSET_STRIPS_172 6  /* z_npc_94.png */
 #define NG_ASSET_STRIPS_173 6  /* z_npc_95.png */
+#define NG_ASSET_STRIPS_174 1  /* item_life.png */
+#define NG_ASSET_STRIPS_175 1  /* item_missile.png */
+#define NG_ASSET_STRIPS_176 1  /* item_speed.png */
+#define NG_ASSET_STRIPS_177 1  /* missile.png */
 
 static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 0, 16, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0, 16 }, /* 0.png */
@@ -387,6 +391,10 @@ static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 43520, 82, 6, 6, 5, 10, 0, 0, 96, 96, 1, 0, 16 }, /* z_npc_93.png */
     { 43776, 82, 6, 6, 5, 10, 0, 0, 96, 96, 1, 0, 16 }, /* z_npc_94.png */
     { 44032, 82, 6, 6, 5, 10, 0, 0, 96, 96, 1, 0, 16 }, /* z_npc_95.png */
+    { 44288, 83, 1, 1, 0, 0, 0, 0, 16, 16, 1, 0, 1 }, /* item_life.png */
+    { 44544, 84, 1, 1, 0, 0, 0, 0, 16, 16, 1, 0, 1 }, /* item_missile.png */
+    { 44800, 85, 1, 1, 0, 0, 0, 0, 16, 16, 1, 0, 1 }, /* item_speed.png */
+    { 45056, 86, 1, 2, 0, 0, 0, 0, 16, 32, 1, 0, 1 }, /* missile.png */
 };
 
 #endif

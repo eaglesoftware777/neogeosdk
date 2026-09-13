@@ -288,6 +288,10 @@ const NGArtAsset * NEOGEO_USER ng_screen_art_asset(uint16_t screen_id);
  * IDs 162..165 face forward, 166..169 move right, 170..173 move left. */
 #define U_NPC_OLD_FIRST          162u
 #define U_NPC_OLD_COUNT           12u
+#define U_ITEM_LIFE              174u
+#define U_ITEM_MISSILE           175u
+#define U_ITEM_SPEED             176u
+#define U_MISSILE                177u
 
 /*
  * Object-specific scale presets.  Only chapters that explicitly demonstrate
@@ -449,6 +453,17 @@ static void NEOGEO_USER digit3(char *buf, uint16_t n)
     buf[1] = (char)('0' + ((n / 10u) % 10u));
     buf[2] = (char)('0' + (n % 10u));
     buf[3] = '\0';
+}
+
+/* Five digits: a shooter score passes 999 on its first boss. */
+static void NEOGEO_USER digit5(char *buf, uint16_t n)
+{
+    buf[0] = (char)('0' + (n / 10000u));
+    buf[1] = (char)('0' + ((n / 1000u) % 10u));
+    buf[2] = (char)('0' + ((n / 100u) % 10u));
+    buf[3] = (char)('0' + ((n / 10u) % 10u));
+    buf[4] = (char)('0' + (n % 10u));
+    buf[5] = '\0';
 }
 
 static void NEOGEO_USER perf_hud_draw(void)
@@ -1116,6 +1131,26 @@ static void NEOGEO_USER draw_asset_bottom_center_flip(uint8_t frame,
                                  strips, rows, scale_x, scale_y, flip);
 }
 
+static void NEOGEO_USER draw_asset_center_flip(uint8_t frame,
+                                               uint16_t first_sprite,
+                                               int16_t cx,
+                                               int16_t cy,
+                                               uint8_t scale_x,
+                                               uint8_t scale_y,
+                                               uint8_t flip)
+{
+    int16_t pad_x;
+    int16_t pad_y;
+    demo_asset_anchor_offset(frame, scale_x, scale_y, 0u, flip, &pad_x, &pad_y);
+
+    demo_draw_sprite_screen_flip(frame, first_sprite,
+                                 (int16_t)(cx - demo_screen_x_offset(frame) - pad_x),
+                                 (int16_t)(cy - demo_screen_y_offset(frame) - pad_y),
+                                 demo_screen_strips(frame),
+                                 demo_screen_rows(frame),
+                                 scale_x, scale_y, flip);
+}
+
 static void NEOGEO_USER draw_background(uint8_t frame, int16_t x, int16_t y)
 {
     /* Background slot range stays behind characters and effects. */
@@ -1507,8 +1542,8 @@ static uint8_t NEOGEO_USER chap_sound(void)
     for (i = 0u; i < 2u; i++) {
         uint8_t fm_track = (i == 0u) ? SOUND_FM_D : SOUND_FM_F;
         demo_fix_puts(2u, 13u,
-                      (i == 0u) ? "FM 4  WARM BELL     " :
-                                  "FM 6  BATTLE BRASS  ", 1u);
+                      (i == 0u) ? "FM 4  KOROBEINIKI   " :
+                                  "FM 6  ODE TO JOY    ", 1u);
         soundStopAll();                            snd_step();
         soundSceneReset();                         snd_step();
         soundApplyMix(0x30u, 0x00u, 0x00u, 0x0Eu); snd_step();
@@ -1548,13 +1583,13 @@ static uint8_t NEOGEO_USER chap_sound(void)
     if (fm_lfo_hold(0x0Fu, 120u)) return 1u;
     soundFMSetLFO(0x00u); snd_step();
 
-    demo_fix_puts(2u, 15u, "TEMPO 72 BPM  (quick)             ", 1u);
+    demo_fix_puts(2u, 15u, "TEMPO 144 BPM  (quick)            ", 1u);
     soundStopMusic(); snd_step();
     playFMTrack(SOUND_FM_G); snd_step();
-    soundFMSetBPM(72u); snd_step();
+    soundFMSetBPM(144u); snd_step();
     if (uwait(180u)) return 1u;
-    demo_fix_puts(2u, 15u, "TEMPO 24 BPM  (slow)              ", 1u);
-    soundFMSetBPM(24u); snd_step();
+    demo_fix_puts(2u, 15u, "TEMPO 72 BPM  (slow)              ", 1u);
+    soundFMSetBPM(72u); snd_step();
     if (uwait(180u)) return 1u;
 
     soundStopAll();          snd_step();
@@ -1575,10 +1610,12 @@ static uint8_t NEOGEO_USER chap_sound(void)
         static const uint8_t s_ssg_presets[3] = { 0u, 2u, 0u };
         for (i = 0u; i < 3u; i++) {
             uint8_t track = s_ssg_showcase[i];
-            char lbl[8];
-            lbl[0] = 'S'; lbl[1] = 'S'; lbl[2] = 'G'; lbl[3] = ' ';
-            lbl[4] = (char)('0' + (i + 1u)); lbl[5] = '\0';
-            demo_fix_puts(2u, 17u, lbl, 1u);
+            static const char *const s_ssg_names[3] = {
+                "SSG 1  KOROBEINIKI     ",
+                "SSG 2  THE ENTERTAINER ",
+                "SSG 3  ODE TO JOY      "
+            };
+            demo_fix_puts(2u, 17u, s_ssg_names[i], 1u);
             soundStopMusic();             snd_step();
             /* playSSGTrack's driver handler (play_ssg_index) unconditionally
              * resets VAR_SSG_PRESET to 0 as part of loading the track, so a
@@ -1704,8 +1741,8 @@ static uint8_t NEOGEO_USER chap_sound(void)
 
     /* --- 11) MML MUSIC — one coordinated FM + SSG arrangement ------ */
     demo_fix_puts(2u, 5u, "11. MML MUSIC (driver-native loop) ", 2u);
-    demo_fix_puts(2u, 22u, "Listen: FM lead + SSG harmony loop", 0u);
-    demo_fix_puts(2u, 23u, "MML D  DUEL THEME                 ", 1u);
+    demo_fix_puts(2u, 22u, "Listen: FM lead + SSG bass, one loop", 0u);
+    demo_fix_puts(2u, 23u, "MML D  KOROBEINIKI  FM + SSG     ", 1u);
     soundStopAll();                            snd_step();
     soundSceneReset();                         snd_step();
     soundApplyMix(0x30u, 0x00u, 0x09u, 0x0Bu); snd_step();
@@ -4107,6 +4144,303 @@ static void NEOGEO_USER sky_boom_spawn(int16_t *bx, int16_t *by, uint8_t *bt,
     }
 }
 
+
+/* ------------------------------------------------------------------ */
+/*  Shared by the two arcade shooter chapters: pick-ups, the super       */
+/*  missile, the stats readout and the victory sequence.                 */
+/* ------------------------------------------------------------------ */
+/*
+ * Both shooters keep their own enemy, bullet and boss pools - they are
+ * different games - but the arcade furniture is the same in each: things
+ * to catch, a heavy weapon that earns them, a readout that says what you
+ * hold, and a boss kill that is worth a moment rather than another boss.
+ */
+enum {
+    SHOOT_ITEM_MAX    = 4,
+    SHOOT_MISSILE_MAX = 2,
+
+    SHOOT_ITEM_SPEED   = 0,
+    SHOOT_ITEM_MISSILE = 1,
+    SHOOT_ITEM_LIFE    = 2,
+
+    SHOOT_SPEED_MAX    = 3,
+    SHOOT_MISSILES_MAX = 9,
+    SHOOT_LIVES_MAX    = 5,
+    SHOOT_MISSILE_DAMAGE = 6,
+
+    /* Victory: a loop, a barrel roll, a climb out, then the card. */
+    SHOOT_VICTORY_LOOP  = 96,
+    SHOOT_VICTORY_ROLL  = 192,
+    SHOOT_VICTORY_CLIMB = 240,
+    SHOOT_VICTORY_CARD  = 480
+};
+
+typedef struct {
+    int16_t  x[SHOOT_ITEM_MAX], y[SHOOT_ITEM_MAX];
+    uint8_t  type[SHOOT_ITEM_MAX], active[SHOOT_ITEM_MAX], shown[SHOOT_ITEM_MAX];
+    uint16_t phase[SHOOT_ITEM_MAX];
+} ShootItems;
+
+typedef struct {
+    int16_t x[SHOOT_MISSILE_MAX], y[SHOOT_MISSILE_MAX];
+    uint8_t active[SHOOT_MISSILE_MAX], shown[SHOOT_MISSILE_MAX];
+} ShootMissiles;
+
+typedef struct {
+    uint8_t lives;      /* spare planes */
+    uint8_t missiles;   /* super missiles in the rack */
+    uint8_t speed;      /* 1..SHOOT_SPEED_MAX, pixels per frame = 2 + speed */
+    uint8_t level;      /* 1 on entry; every boss kill adds one */
+    uint8_t missile_cd;
+} ShootStats;
+
+static const uint8_t k_shoot_item_asset[3] = {
+    U_ITEM_SPEED, U_ITEM_MISSILE, U_ITEM_LIFE
+};
+
+static void NEOGEO_USER shoot_stats_init(ShootStats *s)
+{
+    s->lives = 3u; s->missiles = 2u; s->speed = 1u; s->level = 1u;
+    s->missile_cd = 0u;
+}
+
+static void NEOGEO_USER shoot_items_init(ShootItems *it, ShootMissiles *m)
+{
+    uint8_t i;
+    for (i = 0u; i < SHOOT_ITEM_MAX; i++)    it->active[i] = it->shown[i] = 0u;
+    for (i = 0u; i < SHOOT_MISSILE_MAX; i++) m->active[i] = m->shown[i] = 0u;
+}
+
+/*
+ * Drop something where a craft died.  Missile kills always pay out; a
+ * plain kill pays one time in four.  Speed and missiles are the common
+ * finds, a spare plane the rare one.
+ */
+static void NEOGEO_USER shoot_item_drop(ShootItems *it, int16_t x, int16_t y,
+                                        uint16_t rng, uint8_t certain)
+{
+    uint8_t i;
+    if (!certain && (rng & 3u) != 0u) return;
+    for (i = 0u; i < SHOOT_ITEM_MAX; i++) {
+        if (it->active[i]) continue;
+        it->active[i] = 1u;
+        it->x[i] = x;
+        it->y[i] = y;
+        it->phase[i] = (uint16_t)(rng & 63u);
+        it->type[i] = (uint8_t)(((rng >> 4) % 5u) < 2u ? SHOOT_ITEM_SPEED
+                              : ((rng >> 4) % 5u) < 4u ? SHOOT_ITEM_MISSILE
+                                                        : SHOOT_ITEM_LIFE);
+        return;
+    }
+}
+
+/* Items sink slowly and sway, so they can be caught on purpose. */
+static void NEOGEO_USER shoot_items_step(ShootItems *it, int16_t left, int16_t right,
+                                         int16_t bottom)
+{
+    uint8_t i;
+    for (i = 0u; i < SHOOT_ITEM_MAX; i++) {
+        uint8_t ph;
+        if (!it->active[i]) continue;
+        it->phase[i]++;
+        ph = (uint8_t)(it->phase[i] & 63u);
+        if ((it->phase[i] & 1u) == 0u) it->y[i]++;
+        it->x[i] = (int16_t)(it->x[i] + ((ph < 32u) ? ((ph & 7u) == 0u) : -((ph & 7u) == 0u)));
+        if (it->x[i] < left)  it->x[i] = left;
+        if (it->x[i] > right) it->x[i] = right;
+        if (it->y[i] > bottom + 12) it->active[i] = 0u;
+    }
+}
+
+/* Touching an item takes it.  Returns the score it was worth. */
+static uint16_t NEOGEO_USER shoot_items_collect(ShootItems *it, ShootStats *s,
+                                                int16_t ship_x, int16_t ship_y)
+{
+    uint16_t bonus = 0u;
+    uint8_t i;
+    for (i = 0u; i < SHOOT_ITEM_MAX; i++) {
+        if (!it->active[i]) continue;
+        if (u_abs16((int16_t)(it->x[i] - ship_x)) > 14) continue;
+        if (u_abs16((int16_t)(it->y[i] - ship_y)) > 14) continue;
+        it->active[i] = 0u;
+        switch (it->type[i]) {
+        case SHOOT_ITEM_SPEED:
+            if (s->speed < SHOOT_SPEED_MAX) s->speed++;
+            bonus = (uint16_t)(bonus + 300u);
+            playSFX(SOUND_SFX_3);
+            break;
+        case SHOOT_ITEM_MISSILE:
+            s->missiles = (uint8_t)(s->missiles + 2u);
+            if (s->missiles > SHOOT_MISSILES_MAX) s->missiles = SHOOT_MISSILES_MAX;
+            bonus = (uint16_t)(bonus + 200u);
+            playSFX(SOUND_SFX_3);
+            break;
+        default:
+            if (s->lives < SHOOT_LIVES_MAX) s->lives++;
+            bonus = (uint16_t)(bonus + 500u);
+            playSFX(SOUND_SFX_10);
+            break;
+        }
+    }
+    return bonus;
+}
+
+static void NEOGEO_USER shoot_items_draw(ShootItems *it, uint16_t slot_base)
+{
+    uint8_t i;
+    for (i = 0u; i < SHOOT_ITEM_MAX; i++) {
+        uint16_t slot = (uint16_t)(slot_base + i * 2u);
+        if (it->active[i]) {
+            draw_asset_center(k_shoot_item_asset[it->type[i]], slot,
+                              it->x[i], it->y[i], 0xFFu, 0xFFu);
+            it->shown[i] = 1u;
+        } else if (it->shown[i]) {
+            demo_hide_sprite_range(slot, 2u);
+            it->shown[i] = 0u;
+        }
+    }
+}
+
+/* D launches a super missile if the rack holds one. */
+static void NEOGEO_USER shoot_missile_fire(ShootMissiles *m, ShootStats *s,
+                                           uint16_t joy, int16_t x, int16_t y)
+{
+    uint8_t i;
+    if (s->missile_cd) { s->missile_cd--; return; }
+    if (!(joy & BUTTON_D) || !s->missiles) return;
+    for (i = 0u; i < SHOOT_MISSILE_MAX; i++) {
+        if (m->active[i]) continue;
+        m->active[i] = 1u;
+        m->x[i] = x;
+        m->y[i] = (int16_t)(y - 20);
+        s->missiles--;
+        s->missile_cd = 24u;
+        playSFX(SOUND_SFX_7);
+        return;
+    }
+}
+
+static void NEOGEO_USER shoot_missiles_step(ShootMissiles *m, int16_t top)
+{
+    uint8_t i;
+    for (i = 0u; i < SHOOT_MISSILE_MAX; i++) {
+        if (!m->active[i]) continue;
+        m->y[i] = (int16_t)(m->y[i] - 6);
+        if (m->y[i] < top - 24) m->active[i] = 0u;
+    }
+}
+
+static void NEOGEO_USER shoot_missiles_draw(ShootMissiles *m, uint16_t slot_base)
+{
+    uint8_t i;
+    for (i = 0u; i < SHOOT_MISSILE_MAX; i++) {
+        uint16_t slot = (uint16_t)(slot_base + i * 2u);
+        if (m->active[i]) {
+            draw_asset_center(U_MISSILE, slot, m->x[i], m->y[i], 0xFFu, 0xFFu);
+            m->shown[i] = 1u;
+        } else if (m->shown[i]) {
+            demo_hide_sprite_range(slot, 2u);
+            m->shown[i] = 0u;
+        }
+    }
+}
+
+/*
+ * Row 4 of the HUD band: what the plane holds, then the stage bar - the
+ * boss's health while it is up, progress to the boss before that.
+ */
+static void NEOGEO_USER shoot_hud_stats(const ShootStats *s, uint8_t boss_on,
+                                        uint8_t boss_hp, uint8_t boss_hp_max,
+                                        uint8_t wave, uint8_t waves_to_boss)
+{
+    char line[40];
+    uint8_t n, k;
+
+    line[0] = 'M'; line[1] = 'S'; line[2] = 'L'; line[3] = ' ';
+    line[4] = (char)('0' + s->missiles);
+    line[5] = ' '; line[6] = ' ';
+    line[7] = 'S'; line[8] = 'P'; line[9] = 'D'; line[10] = ' ';
+    for (k = 0u; k < SHOOT_SPEED_MAX; k++) line[11u + k] = (char)(k < s->speed ? '>' : '.');
+    line[14] = ' '; line[15] = ' ';
+    line[16] = 'L'; line[17] = 'V'; line[18] = ' ';
+    line[19] = (char)('0' + s->level);
+    line[20] = ' '; line[21] = ' ';
+    if (boss_on) {
+        n = (uint8_t)(((uint16_t)boss_hp * 16u) / boss_hp_max);
+    } else {
+        n = (uint8_t)(((uint16_t)(wave - 1u) * 16u) / waves_to_boss);
+    }
+    if (n > 16u) n = 16u;
+    for (k = 0u; k < 16u; k++) line[22u + k] = (char)(k < n ? '#' : '.');
+    line[38] = '\0';
+    demo_fix_puts(2u, 4u, line, boss_on ? 3u : 0u);
+}
+
+/*
+ * Where the plane is on frame t of its victory flight, as a centre
+ * position and a scale in sixteenths per axis.  A loop-the-loop, then a
+ * barrel roll across the field, then a climb out of the top.  The
+ * sprite chip cannot rotate, so the loop leans on the sine table for
+ * the path and squeezes the vertical scale near the top of the circle,
+ * and the roll squeezes the horizontal one and mirrors at the half.
+ */
+static void NEOGEO_USER shoot_victory_pose(uint16_t t, int16_t cx, int16_t base_y,
+                                           int16_t *x, int16_t *y,
+                                           uint8_t *sx16, uint8_t *sy16, uint8_t *flip)
+{
+    *flip = 0u;
+    *sx16 = 16u; *sy16 = 16u;
+    if (t < SHOOT_VICTORY_LOOP) {
+        uint8_t a = (uint8_t)((t * 256u) / SHOOT_VICTORY_LOOP);
+        int16_t s = (int16_t)(ng_sin_tab[a] >> 9);            /* +-63 */
+        int16_t c = (int16_t)(ng_cos_tab[a] >> 9);
+        *x = (int16_t)(cx + (s * 48) / 64);
+        *y = (int16_t)(base_y - 52 + (c * 52) / 64);
+        *sy16 = (uint8_t)(6u + (uint8_t)((c + 64) * 10 / 128));   /* thin at the top */
+        *flip = (uint8_t)(s < 0);
+    } else if (t < SHOOT_VICTORY_ROLL) {
+        uint16_t u = (uint16_t)(t - SHOOT_VICTORY_LOOP);           /* 0..95 */
+        uint8_t a = (uint8_t)((u * 256u) / 96u);
+        int16_t c = (int16_t)(ng_cos_tab[(uint8_t)(a * 2u)] >> 9); /* two rolls */
+        *x = (int16_t)(cx - 96 + (int16_t)(u * 2u));
+        *y = (int16_t)(base_y - 40);
+        *sx16 = (uint8_t)(4u + (uint8_t)((u_abs16(c) * 12) / 64));
+        *flip = (uint8_t)(c < 0);
+    } else {
+        uint16_t u = (uint16_t)(t - SHOOT_VICTORY_ROLL);           /* 0..47 */
+        *x = cx;
+        *y = (int16_t)(base_y - 40 - (int16_t)(u * 5u));
+        *sx16 = (uint8_t)(16u - u / 4u);
+        *sy16 = (uint8_t)(16u - u / 4u);
+    }
+}
+
+/* The card that follows the flight. */
+static void NEOGEO_USER shoot_victory_card(const char *title, uint8_t next_level)
+{
+    char lv[20];
+    uint8_t n = 0u;
+    while (title[n] != '\0' && n < 30u) n++;
+    demo_fix_puts((uint8_t)(20u - (n + 1u) / 2u), 9u, title, 2u);
+    demo_fix_puts(7u, 11u, "A NEO GEO SDK ARCADE DEMO", 1u);
+    demo_fix_puts(10u, 12u, "EAGLE SOFTWARE 2026", 2u);
+    demo_fix_puts(5u, 14u, "ENGINE  NEO GEO SDK 2D ENGINE", 1u);
+    demo_fix_puts(5u, 15u, "SOUND   YM2610 FM SSG ADPCM", 1u);
+    demo_fix_puts(5u, 16u, "ART     ARTBOX PIPELINE", 1u);
+    demo_fix_puts(5u, 18u, "D-PAD MOVE  B FIRE  D MISSILE", 1u);
+    lv[0] = 'L'; lv[1] = 'E'; lv[2] = 'V'; lv[3] = 'E'; lv[4] = 'L'; lv[5] = ' ';
+    lv[6] = (char)('0' + next_level); lv[7] = ' '; lv[8] = ' ';
+    lv[9] = 'G'; lv[10] = 'E'; lv[11] = 'T'; lv[12] = ' ';
+    lv[13] = 'R'; lv[14] = 'E'; lv[15] = 'A'; lv[16] = 'D'; lv[17] = 'Y'; lv[18] = '\0';
+    demo_fix_puts(11u, 20u, lv, 3u);
+}
+
+static void NEOGEO_USER shoot_victory_card_clear(void)
+{
+    uint8_t r;
+    for (r = 8u; r <= 20u; r++) demo_fix_puts(2u, r, "                                    ", 0u);
+}
+
 /*
  * A playable slice of games/skylance, not the whole game: one stage of
  * squadron waves and one boss, using that game's own art (U_SKY_*)
@@ -4144,6 +4478,8 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         SKY_SLOT_BOOM    = 84,   /* 3 * 2 strips    -> 84..89   */
         SKY_SLOT_ENEMY   = 96,   /* 6 * 8 strips    -> 96..143  */
         SKY_SLOT_BOSS    = 148,  /* 12 strips       -> 148..159 */
+        SKY_SLOT_ITEM    = 160,  /* 4 * 2 strips    -> 160..167 */
+        SKY_SLOT_MISSILE = 168,  /* 2 * 2 strips    -> 168..171 */
 
         /* The sky page: 256 px of art across, of which the top 144 px
          * loop seamlessly, which is why the page is nine characters
@@ -4163,7 +4499,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
         SKY_TOP    = 56,
         SKY_BOTTOM = 190,
 
-        SKY_TIME = 1800,             /* ~30s, then the chapter moves on   */
+        SKY_TIME = 7200,             /* two minutes of play at most       */
         SKY_IDLE_ADVANCE = 600,      /* ~10s untouched -> skip ahead      */
         SKY_WAVES_TO_BOSS = 4
     };
@@ -4200,7 +4536,6 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     int16_t  ship_x = 160;
     int16_t  ship_y = SKY_BOTTOM;
     uint16_t score = 0u;
-    uint8_t  lives = 3u;
     uint8_t  wave = 1u;
     uint8_t  fire_cd = 0u;
     uint8_t  hit_cd = 0u;
@@ -4216,6 +4551,13 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     int16_t  boss_vx = 1;
     uint16_t boss_t = 0u;
 
+    /* Pick-ups, the missile rack and the readout, plus the victory
+     * flight that a boss kill earns before the next level starts. */
+    ShootItems    items;
+    ShootMissiles missiles;
+    ShootStats    stats;
+    uint16_t      victory_t = 0u;
+
     uint16_t bg_y = 0u;
     uint16_t idle_frames = 0u;
     uint16_t rng = 0x2F1Du;
@@ -4225,7 +4567,9 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
 
     chap_letterbox_next(5u, 3u);
     chap_header(18u, "SKY LANCE", "VERTICAL SHOOTER MINI");
-    demo_fix_puts(2u, 2u, "ARROWS MOVE  B FIRE  C:RESTART", 1u);
+    demo_fix_puts(2u, 2u, "MOVE  B FIRE  D MISSILE  C RESTART", 1u);
+    shoot_stats_init(&stats);
+    shoot_items_init(&items, &missiles);
 
     demo_load_screen_palette(U_SKY_BG);
     demo_load_screen_palette(U_SKY_PLANE);
@@ -4236,6 +4580,10 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
     demo_load_screen_palette(U_SKY_ENEMY_C);
     demo_load_screen_palette(U_SKY_BOSS);
     demo_load_screen_palette(U_PARTICLE_EXPLOSION);
+    demo_load_screen_palette(U_ITEM_LIFE);
+    demo_load_screen_palette(U_ITEM_MISSILE);
+    demo_load_screen_palette(U_ITEM_SPEED);
+    demo_load_screen_palette(U_MISSILE);
 
     snd_cross_to(SOUND_MUSIC_D);
 
@@ -4285,13 +4633,21 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
                                 16u, SKY_PAGE_ROWS, 0xFFu, 0xFFu);
 
         /* ---- player ---------------------------------------------- */
-        if (joy & (JOY_LEFT | JOY_RIGHT | JOY_UP | JOY_DOWN | BUTTON_B)) idle_frames = 0u;
+        if (joy & (JOY_LEFT | JOY_RIGHT | JOY_UP | JOY_DOWN | BUTTON_B | BUTTON_D)) idle_frames = 0u;
         else if (idle_frames < 0xFFF0u) idle_frames++;
 
-        if ((joy & JOY_LEFT)  && ship_x > SKY_LEFT)   ship_x = (int16_t)(ship_x - 3);
-        if ((joy & JOY_RIGHT) && ship_x < SKY_RIGHT)  ship_x = (int16_t)(ship_x + 3);
-        if ((joy & JOY_UP)    && ship_y > SKY_TOP)    ship_y = (int16_t)(ship_y - 3);
-        if ((joy & JOY_DOWN)  && ship_y < SKY_BOTTOM) ship_y = (int16_t)(ship_y + 3);
+        if (victory_t) joy = 0u;                     /* the plane flies itself */
+        {
+            int16_t v = (int16_t)(2 + stats.speed);
+            if ((joy & JOY_LEFT)  && ship_x > SKY_LEFT)   ship_x = (int16_t)(ship_x - v);
+            if ((joy & JOY_RIGHT) && ship_x < SKY_RIGHT)  ship_x = (int16_t)(ship_x + v);
+            if ((joy & JOY_UP)    && ship_y > SKY_TOP)    ship_y = (int16_t)(ship_y - v);
+            if ((joy & JOY_DOWN)  && ship_y < SKY_BOTTOM) ship_y = (int16_t)(ship_y + v);
+            if (ship_x < SKY_LEFT)   ship_x = SKY_LEFT;
+            if (ship_x > SKY_RIGHT)  ship_x = SKY_RIGHT;
+            if (ship_y < SKY_TOP)    ship_y = SKY_TOP;
+            if (ship_y > SKY_BOTTOM) ship_y = SKY_BOTTOM;
+        }
 
         if (fire_cd) fire_cd--;
         if (hit_cd)  hit_cd--;
@@ -4309,9 +4665,10 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
                 }
             }
         }
+        shoot_missile_fire(&missiles, &stats, joy, ship_x, ship_y);
 
         /* ---- squadron director ----------------------------------- */
-        if (!boss_on) {
+        if (!boss_on && !victory_t) {
             if (squad_left) {
                 if (squad_gap) {
                     squad_gap--;
@@ -4346,7 +4703,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
                 for (i = 0u; i < SKY_ENEMY_MAX; i++) if (en_alive[i]) any = 1u;
                 if (!any) {
                     boss_on = 1u;
-                    boss_hp = boss_hp_max = 40u;
+                    boss_hp = boss_hp_max = (uint8_t)(40u + 12u * (stats.level - 1u));
                     boss_x = 160; boss_y = -40; boss_vx = 1; boss_t = 0u;
                     playSFX(SOUND_SFX_2);
                 }
@@ -4374,7 +4731,8 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
                 int16_t chase = (ship_x > en_x[i]) ? 1 : ((ship_x < en_x[i]) ? -1 : 0);
                 en_x[i] = (int16_t)(en_x[i] + (sway >> 3) + chase);
             }
-            en_y[i] = (int16_t)(en_y[i] + ((en_type[i] == 2u) ? 3 : 2));
+            en_y[i] = (int16_t)(en_y[i] + ((en_type[i] == 2u) ? 3 : 2)
+                                + (int16_t)((stats.level - 1u) >> 1));
             if (en_x[i] < SKY_LEFT)  en_x[i] = SKY_LEFT;
             if (en_x[i] > SKY_RIGHT) en_x[i] = SKY_RIGHT;
 
@@ -4447,6 +4805,8 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
             pb_y[i] = (int16_t)(pb_y[i] - 9);
             if (pb_y[i] < SKY_TOP - 16) pb_active[i] = 0u;
         }
+        shoot_missiles_step(&missiles, SKY_TOP);
+        shoot_items_step(&items, SKY_LEFT, SKY_RIGHT, SKY_BOTTOM);
         for (i = 0u; i < SKY_EBULLET_MAX; i++) {
             if (!eb_active[i]) continue;
             eb_x[i] = (int16_t)(eb_x[i] + eb_vx[i]);
@@ -4471,6 +4831,7 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
                     en_alive[k] = 0u;
                     score = (uint16_t)(score + sq_score[en_type[k]]);
                     sky_boom_spawn(bm_x, bm_y, bm_timer, SKY_BOOM_MAX, en_x[k], en_y[k]);
+                    shoot_item_drop(&items, en_x[k], en_y[k], rng, 0u);
                     playSFX(SOUND_SFX_5);
                 }
                 break;
@@ -4492,7 +4853,44 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
             }
         }
 
-        if (!hit_cd) {
+        /* A super missile kills a craft outright and shakes loot out of
+         * it; on the boss it takes a slab of health and drops something
+         * every time, which is what makes the rack worth filling. */
+        for (i = 0u; i < SHOOT_MISSILE_MAX; i++) {
+            uint8_t k;
+            if (!missiles.active[i]) continue;
+            for (k = 0u; k < SKY_ENEMY_MAX; k++) {
+                if (!en_alive[k]) continue;
+                if (u_abs16((int16_t)(missiles.x[i] - en_x[k])) > 22) continue;
+                if (u_abs16((int16_t)(missiles.y[i] - en_y[k])) > 22) continue;
+                missiles.active[i] = 0u;
+                en_alive[k] = 0u;
+                score = (uint16_t)(score + sq_score[en_type[k]] * 2u);
+                sky_boom_spawn(bm_x, bm_y, bm_timer, SKY_BOOM_MAX, en_x[k], en_y[k]);
+                shoot_item_drop(&items, en_x[k], en_y[k], rng, 1u);
+                playSFX(SOUND_SFX_10);
+                break;
+            }
+            if (!missiles.active[i]) continue;
+            if (boss_on && boss_y > SKY_TOP - 20 &&
+                u_abs16((int16_t)(missiles.x[i] - boss_x)) <= 44 &&
+                u_abs16((int16_t)(missiles.y[i] - boss_y)) <= 32) {
+                missiles.active[i] = 0u;
+                boss_hp = (uint8_t)(boss_hp > SHOOT_MISSILE_DAMAGE ? boss_hp - SHOOT_MISSILE_DAMAGE : 0u);
+                sky_boom_spawn(bm_x, bm_y, bm_timer, SKY_BOOM_MAX, missiles.x[i], missiles.y[i]);
+                shoot_item_drop(&items, (int16_t)(boss_x + (int16_t)(rng % 40u) - 20), (int16_t)(boss_y + 30), rng, 1u);
+                playSFX(SOUND_SFX_10);
+                if (!boss_hp) {
+                    boss_on = 0u;
+                    score = (uint16_t)(score + 2000u);
+                    sky_boom_spawn(bm_x, bm_y, bm_timer, SKY_BOOM_MAX, boss_x, boss_y);
+                    playSFX(SOUND_SFX_5);
+                }
+            }
+        }
+        score = (uint16_t)(score + shoot_items_collect(&items, &stats, ship_x, ship_y));
+
+        if (!hit_cd && !victory_t) {
             uint8_t hit = 0u;
             for (i = 0u; i < SKY_EBULLET_MAX; i++) {
                 if (!eb_active[i]) continue;
@@ -4516,18 +4914,45 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
                 sky_boom_spawn(bm_x, bm_y, bm_timer, SKY_BOOM_MAX, ship_x, ship_y);
                 playSFX(SOUND_SFX_2);
                 hit_cd = 90u;
-                if (lives) lives--;
+                if (stats.lives) stats.lives--;
                 ship_x = 160;
                 ship_y = SKY_BOTTOM;
-                if (!lives) {
+                if (!stats.lives) {
                     demo_fix_puts(15u, 14u, "SQUAD DOWN", 2u);
                     if (uwait(150u)) { snd_silence(); return 1u; }
-                    lives = 3u;
+                    shoot_stats_init(&stats);
+                    shoot_items_init(&items, &missiles);
                     score = 0u;
                     wave = 1u;
                     boss_on = 0u;
                     demo_fix_puts(15u, 14u, "          ", 2u);
                 }
+            }
+        }
+
+        /* ---- the boss is down: the plane takes a bow -------------- */
+        if (!boss_on && !victory_t && wave > SKY_WAVES_TO_BOSS) {
+            victory_t = 1u;
+            for (i = 0u; i < SKY_EBULLET_MAX; i++) eb_active[i] = 0u;
+            for (i = 0u; i < SKY_ENEMY_MAX; i++)   en_alive[i] = 0u;
+            hit_cd = 0u;
+            playSFX(SOUND_SFX_10);
+        }
+        if (victory_t) {
+            victory_t++;
+            if (victory_t == SHOOT_VICTORY_CLIMB + 1u) {
+                shoot_victory_card("SKY LANCE", (uint8_t)(stats.level + 1u));
+                playSFX(SOUND_SFX_3);
+            }
+            if (victory_t > SHOOT_VICTORY_CARD) {
+                shoot_victory_card_clear();
+                victory_t = 0u;
+                stats.level++;
+                wave = 1u;
+                wave_timer = 90u;
+                ship_x = 160;
+                ship_y = SKY_BOTTOM;
+                hit_cd = 60u;
             }
         }
 
@@ -4554,12 +4979,22 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
 
         /* The plane blinks through its invulnerability window so a hit
          * reads as a hit and not as a dropped sprite. */
-        if (!hit_cd || (hit_cd & 4u)) {
+        if (victory_t && victory_t <= SHOOT_VICTORY_CLIMB) {
+            int16_t px, py; uint8_t sx, sy, flip;
+            shoot_victory_pose((uint16_t)(victory_t - 1u), 160, SKY_BOTTOM,
+                               &px, &py, &sx, &sy, &flip);
+            draw_asset_center_flip(U_SKY_PLANE, SKY_SLOT_PLAYER, px, py,
+                                   NG_SCALE(sx), NG_SCALE(sy), flip);
+        } else if (victory_t) {
+            demo_hide_sprite_range(SKY_SLOT_PLAYER, 8u);
+        } else if (!hit_cd || (hit_cd & 4u)) {
             draw_asset_center(U_SKY_PLANE, SKY_SLOT_PLAYER, ship_x, ship_y,
                               SKY_SCALE_SHIP, SKY_SCALE_SHIP);
         } else {
             demo_hide_sprite_range(SKY_SLOT_PLAYER, 8u);
         }
+        shoot_items_draw(&items, SKY_SLOT_ITEM);
+        shoot_missiles_draw(&missiles, SKY_SLOT_MISSILE);
 
         for (i = 0u; i < SKY_PBULLET_MAX; i++) {
             uint16_t slot = (uint16_t)(SKY_SLOT_PBULLET + i * 2u);
@@ -4603,30 +5038,15 @@ static uint8_t NEOGEO_USER chap_image_shooter(void)
 
         /* ---- readouts --------------------------------------------- */
         demo_fix_puts(2u, 3u, "SCORE", 1u);
-        digit3(buf, score);
+        digit5(buf, score);
         demo_fix_puts(8u, 3u, buf, 2u);
-        demo_fix_puts(14u, 3u, boss_on ? "BOSS" : "WAVE", 1u);
+        demo_fix_puts(16u, 3u, boss_on ? "BOSS" : "WAVE", 1u);
         digit3(buf, boss_on ? (uint16_t)boss_hp : (uint16_t)wave);
-        demo_fix_puts(19u, 3u, buf, 2u);
-        demo_fix_puts(25u, 3u, "LIFE", 1u);
-        digit3(buf, lives);
-        demo_fix_puts(30u, 3u, buf, 2u);
-
-        {
-            /* Row 5 doubles as a boss health bar once the boss is up and
-             * as a stage progress bar before that. */
-            char bar[26];
-            uint8_t n, k;
-            if (boss_on) {
-                n = (uint8_t)(((uint16_t)boss_hp * 24u) / boss_hp_max);
-            } else {
-                n = (uint8_t)(((uint16_t)(wave - 1u) * 24u) / SKY_WAVES_TO_BOSS);
-            }
-            if (n > 24u) n = 24u;
-            for (k = 0u; k < 24u; k++) bar[k] = (char)(k < n ? '#' : '.');
-            bar[24] = '\0';
-            demo_fix_puts(8u, 4u, bar, boss_on ? 3u : 0u);
-        }
+        demo_fix_puts(21u, 3u, buf, 2u);
+        demo_fix_puts(27u, 3u, "LIFE", 1u);
+        digit3(buf, stats.lives);
+        demo_fix_puts(32u, 3u, buf, 2u);
+        shoot_hud_stats(&stats, boss_on, boss_hp, boss_hp_max, wave, SKY_WAVES_TO_BOSS);
 
         if (idle_frames >= SKY_IDLE_ADVANCE) { snd_silence(); return 1u; }
         if (uframe()) { snd_silence(); return 1u; }
@@ -4667,6 +5087,8 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
         GALAXY_SLOT_BOSS     = 102, /* 8 strips -> 102..109 */
         GALAXY_SLOT_PLAYER   = 110, /* 6 strips -> 110..115 (front of enemies) */
         GALAXY_SLOT_BOOM     = 116, /* 4 * 2 strips -> 116..123 */
+        GALAXY_SLOT_ITEM     = 124, /* 4 * 2 strips -> 124..131 */
+        GALAXY_SLOT_MISSILE  = 132, /* 2 * 2 strips -> 132..135 */
 
         GALAXY_PBULLET_MAX   = 4,
         GALAXY_EBULLET_MAX   = 6,
@@ -4678,7 +5100,7 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
         GALAXY_TOP           = 52,
         GALAXY_BOTTOM        = 186,
 
-        GALAXY_TIME          = 1800,
+        GALAXY_TIME          = 7200,
         GALAXY_IDLE_ADVANCE  = 600,
         GALAXY_WAVES_TO_BOSS = 3
     };
@@ -4716,10 +5138,14 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
     int16_t  ship_x = 160;
     int16_t  ship_y = GALAXY_BOTTOM - 8;
     uint16_t score = 0u;
-    uint8_t  lives = 3u;
     uint8_t  wave = 1u;
     uint8_t  fire_cd = 0u;
     uint8_t  hit_cd = 0u;
+
+    ShootItems    items;
+    ShootMissiles missiles;
+    ShootStats    stats;
+    uint16_t      victory_t = 0u;
 
     uint8_t  squad_left = 0u;
     uint8_t  squad_type = 0u;
@@ -4740,7 +5166,9 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
 
     chap_letterbox_next(5u, 4u);
     chap_header(25u, "STAR RAID LANCE", "FORMATION ASSAULT");
-    demo_fix_puts(2u, 2u, "D-PAD MOVE   B FIRE   C RESTART", 1u);
+    demo_fix_puts(2u, 2u, "MOVE  B FIRE  D MISSILE  C RESTART", 1u);
+    shoot_stats_init(&stats);
+    shoot_items_init(&items, &missiles);
 
     demo_load_screen_palette(U_SSG_STARFIELD);
     demo_load_screen_palette(U_PLAYER_VESSEL);
@@ -4749,6 +5177,10 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
     demo_load_screen_palette(U_SKY_BULLET);
     demo_load_screen_palette(U_SKY_ORB);
     demo_load_screen_palette(U_PARTICLE_EXPLOSION);
+    demo_load_screen_palette(U_ITEM_LIFE);
+    demo_load_screen_palette(U_ITEM_MISSILE);
+    demo_load_screen_palette(U_ITEM_SPEED);
+    demo_load_screen_palette(U_MISSILE);
 
     for (i = 0u; i < GALAXY_ENEMY_MAX; i++)   en_alive[i] = en_shown[i] = 0u;
     for (i = 0u; i < GALAXY_PBULLET_MAX; i++) pb_active[i] = pb_shown[i] = 0u;
@@ -4766,16 +5198,24 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
         draw_vertical_background(U_SSG_STARFIELD, 32, -bg_y);
 
         /* ---- player controls -------------------------------------- */
-        if (joy & (JOY_LEFT | JOY_RIGHT | JOY_UP | JOY_DOWN | BUTTON_A | BUTTON_B)) {
+        if (joy & (JOY_LEFT | JOY_RIGHT | JOY_UP | JOY_DOWN | BUTTON_A | BUTTON_B | BUTTON_D)) {
             idle_frames = 0u;
         } else if (idle_frames < 0xFFF0u) {
             idle_frames++;
         }
 
-        if ((joy & JOY_LEFT)  && ship_x > GALAXY_LEFT)   ship_x = (int16_t)(ship_x - 3);
-        if ((joy & JOY_RIGHT) && ship_x < GALAXY_RIGHT)  ship_x = (int16_t)(ship_x + 3);
-        if ((joy & JOY_UP)    && ship_y > GALAXY_TOP)    ship_y = (int16_t)(ship_y - 3);
-        if ((joy & JOY_DOWN)  && ship_y < GALAXY_BOTTOM) ship_y = (int16_t)(ship_y + 3);
+        if (victory_t) joy = 0u;                     /* the ship flies itself */
+        {
+            int16_t v = (int16_t)(2 + stats.speed);
+            if ((joy & JOY_LEFT)  && ship_x > GALAXY_LEFT)   ship_x = (int16_t)(ship_x - v);
+            if ((joy & JOY_RIGHT) && ship_x < GALAXY_RIGHT)  ship_x = (int16_t)(ship_x + v);
+            if ((joy & JOY_UP)    && ship_y > GALAXY_TOP)    ship_y = (int16_t)(ship_y - v);
+            if ((joy & JOY_DOWN)  && ship_y < GALAXY_BOTTOM) ship_y = (int16_t)(ship_y + v);
+            if (ship_x < GALAXY_LEFT)   ship_x = GALAXY_LEFT;
+            if (ship_x > GALAXY_RIGHT)  ship_x = GALAXY_RIGHT;
+            if (ship_y < GALAXY_TOP)    ship_y = GALAXY_TOP;
+            if (ship_y > GALAXY_BOTTOM) ship_y = GALAXY_BOTTOM;
+        }
 
         if (fire_cd) fire_cd--;
         if (hit_cd)  hit_cd--;
@@ -4792,9 +5232,10 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
                 }
             }
         }
+        shoot_missile_fire(&missiles, &stats, joy, ship_x, ship_y);
 
         /* ---- wave / squadron manager ------------------------------ */
-        if (!boss_on) {
+        if (!boss_on && !victory_t) {
             if (squad_left) {
                 if (squad_gap) {
                     squad_gap--;
@@ -4830,7 +5271,7 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
                 for (i = 0u; i < GALAXY_ENEMY_MAX; i++) if (en_alive[i]) any = 1u;
                 if (!any) {
                     boss_on = 1u;
-                    boss_hp = boss_hp_max = 36u;
+                    boss_hp = boss_hp_max = (uint8_t)(36u + 12u * (stats.level - 1u));
                     boss_x = 160;
                     boss_y = (int16_t)(GALAXY_TOP - 30);
                     boss_vx = 1;
@@ -4857,7 +5298,8 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
                 int16_t chase = (ship_x > en_x[i]) ? 1 : ((ship_x < en_x[i]) ? -1 : 0);
                 en_x[i] = (int16_t)(en_x[i] + (sway >> 2) + chase);
             }
-            en_y[i] = (int16_t)(en_y[i] + ((en_type[i] >= 3u) ? 3 : 2));
+            en_y[i] = (int16_t)(en_y[i] + ((en_type[i] >= 3u) ? 3 : 2)
+                                + (int16_t)((stats.level - 1u) >> 1));
             if (en_x[i] < GALAXY_LEFT)  en_x[i] = GALAXY_LEFT;
             if (en_x[i] > GALAXY_RIGHT) en_x[i] = GALAXY_RIGHT;
 
@@ -4918,6 +5360,8 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
             pb_y[i] = (int16_t)(pb_y[i] - 8);
             if (pb_y[i] < GALAXY_TOP - 16) pb_active[i] = 0u;
         }
+        shoot_missiles_step(&missiles, GALAXY_TOP);
+        shoot_items_step(&items, GALAXY_LEFT, GALAXY_RIGHT, GALAXY_BOTTOM);
         for (i = 0u; i < GALAXY_EBULLET_MAX; i++) {
             if (!eb_active[i]) continue;
             eb_x[i] = (int16_t)(eb_x[i] + eb_vx[i]);
@@ -4943,6 +5387,7 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
                     en_alive[k] = 0u;
                     score = (uint16_t)(score + gx_score[en_type[k]]);
                     sky_boom_spawn(bm_x, bm_y, bm_timer, GALAXY_BOOM_MAX, en_x[k], en_y[k]);
+                    shoot_item_drop(&items, en_x[k], en_y[k], rng, 0u);
                     playSFX(SOUND_SFX_10);
                 }
                 break;
@@ -4965,8 +5410,42 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
             }
         }
 
+        for (i = 0u; i < SHOOT_MISSILE_MAX; i++) {
+            uint8_t k;
+            if (!missiles.active[i]) continue;
+            for (k = 0u; k < GALAXY_ENEMY_MAX; k++) {
+                if (!en_alive[k]) continue;
+                if (u_abs16((int16_t)(missiles.x[i] - en_x[k])) > 24) continue;
+                if (u_abs16((int16_t)(missiles.y[i] - en_y[k])) > 24) continue;
+                missiles.active[i] = 0u;
+                en_alive[k] = 0u;
+                score = (uint16_t)(score + gx_score[en_type[k]] * 2u);
+                sky_boom_spawn(bm_x, bm_y, bm_timer, GALAXY_BOOM_MAX, en_x[k], en_y[k]);
+                shoot_item_drop(&items, en_x[k], en_y[k], rng, 1u);
+                playSFX(SOUND_SFX_10);
+                break;
+            }
+            if (!missiles.active[i]) continue;
+            if (boss_on && boss_y > GALAXY_TOP - 20 &&
+                u_abs16((int16_t)(missiles.x[i] - boss_x)) <= 44 &&
+                u_abs16((int16_t)(missiles.y[i] - boss_y)) <= 32) {
+                missiles.active[i] = 0u;
+                boss_hp = (uint8_t)(boss_hp > SHOOT_MISSILE_DAMAGE ? boss_hp - SHOOT_MISSILE_DAMAGE : 0u);
+                sky_boom_spawn(bm_x, bm_y, bm_timer, GALAXY_BOOM_MAX, missiles.x[i], missiles.y[i]);
+                shoot_item_drop(&items, (int16_t)(boss_x + (int16_t)(rng % 40u) - 20), (int16_t)(boss_y + 34), rng, 1u);
+                playSFX(SOUND_SFX_10);
+                if (!boss_hp) {
+                    boss_on = 0u;
+                    score = (uint16_t)(score + 3000u);
+                    sky_boom_spawn(bm_x, bm_y, bm_timer, GALAXY_BOOM_MAX, boss_x, boss_y);
+                    playSFX(SOUND_SFX_10);
+                }
+            }
+        }
+        score = (uint16_t)(score + shoot_items_collect(&items, &stats, ship_x, ship_y));
+
         /* Player collision check */
-        if (!hit_cd) {
+        if (!hit_cd && !victory_t) {
             uint8_t hit = 0u;
             for (i = 0u; i < GALAXY_EBULLET_MAX; i++) {
                 if (!eb_active[i]) continue;
@@ -4990,18 +5469,45 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
                 sky_boom_spawn(bm_x, bm_y, bm_timer, GALAXY_BOOM_MAX, ship_x, ship_y);
                 playSFX(SOUND_SFX_2);
                 hit_cd = 90u;
-                if (lives) lives--;
+                if (stats.lives) stats.lives--;
                 ship_x = 160;
                 ship_y = GALAXY_BOTTOM - 8;
-                if (!lives) {
+                if (!stats.lives) {
                     demo_fix_puts(15u, 14u, "FLEET LOST", 2u);
                     if (uwait(150u)) { snd_silence(); return 1u; }
-                    lives = 3u;
+                    shoot_stats_init(&stats);
+                    shoot_items_init(&items, &missiles);
                     score = 0u;
                     wave = 1u;
                     boss_on = 0u;
                     demo_fix_puts(15u, 14u, "          ", 2u);
                 }
+            }
+        }
+
+        /* ---- the boss is down: the ship takes a bow --------------- */
+        if (!boss_on && !victory_t && wave > GALAXY_WAVES_TO_BOSS) {
+            victory_t = 1u;
+            for (i = 0u; i < GALAXY_EBULLET_MAX; i++) eb_active[i] = 0u;
+            for (i = 0u; i < GALAXY_ENEMY_MAX; i++)   en_alive[i] = 0u;
+            hit_cd = 0u;
+            playSFX(SOUND_SFX_10);
+        }
+        if (victory_t) {
+            victory_t++;
+            if (victory_t == SHOOT_VICTORY_CLIMB + 1u) {
+                shoot_victory_card("STAR RAID LANCE", (uint8_t)(stats.level + 1u));
+                playSFX(SOUND_SFX_3);
+            }
+            if (victory_t > SHOOT_VICTORY_CARD) {
+                shoot_victory_card_clear();
+                victory_t = 0u;
+                stats.level++;
+                wave = 1u;
+                wave_timer = 90u;
+                ship_x = 160;
+                ship_y = GALAXY_BOTTOM - 8;
+                hit_cd = 60u;
             }
         }
 
@@ -5051,12 +5557,24 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
         }
 
         /* 4. Player Ship (drawn at slot 110 in front of enemies) */
-        if (!hit_cd || (hit_cd & 4u)) {
+        if (victory_t && victory_t <= SHOOT_VICTORY_CLIMB) {
+            int16_t px, py; uint8_t sx, sy, flip;
+            shoot_victory_pose((uint16_t)(victory_t - 1u), 160, (int16_t)(GALAXY_BOTTOM - 8),
+                               &px, &py, &sx, &sy, &flip);
+            /* The vessel is drawn at half size, so its pose scales are
+             * halved too. */
+            draw_asset_center_flip(U_PLAYER_VESSEL, GALAXY_SLOT_PLAYER, px, py,
+                                   NG_SCALE((sx + 1u) / 2u), NG_SCALE((sy + 1u) / 2u), flip);
+        } else if (victory_t) {
+            demo_hide_sprite_range(GALAXY_SLOT_PLAYER, 6u);
+        } else if (!hit_cd || (hit_cd & 4u)) {
             draw_asset_center(U_PLAYER_VESSEL, GALAXY_SLOT_PLAYER, ship_x, ship_y,
                               GALAXY_SCALE_PLAYER, GALAXY_SCALE_PLAYER);
         } else {
             demo_hide_sprite_range(GALAXY_SLOT_PLAYER, 6u);
         }
+        shoot_items_draw(&items, GALAXY_SLOT_ITEM);
+        shoot_missiles_draw(&missiles, GALAXY_SLOT_MISSILE);
 
         /* 5. Explosions (drawn at slot 116 topmost) */
         for (i = 0u; i < GALAXY_BOOM_MAX; i++) {
@@ -5074,54 +5592,29 @@ static uint8_t NEOGEO_USER chap_galaxy_skylance(void)
 
         /* ---- readouts --------------------------------------------- */
         demo_fix_puts(2u, 3u, "SCORE", 1u);
-        digit3(buf, score);
+        digit5(buf, score);
         demo_fix_puts(8u, 3u, buf, 2u);
-        demo_fix_puts(14u, 3u, boss_on ? "BOSS" : "WAVE", 1u);
+        demo_fix_puts(16u, 3u, boss_on ? "BOSS" : "WAVE", 1u);
         digit3(buf, boss_on ? (uint16_t)boss_hp : (uint16_t)wave);
-        demo_fix_puts(19u, 3u, buf, 2u);
-        demo_fix_puts(25u, 3u, "LIFE", 1u);
-        digit3(buf, lives);
-        demo_fix_puts(30u, 3u, buf, 2u);
-
-        {
-            char bar[26];
-            uint8_t n, k;
-            if (boss_on) {
-                n = (uint8_t)(((uint16_t)boss_hp * 24u) / boss_hp_max);
-            } else {
-                n = (uint8_t)(((uint16_t)(wave - 1u) * 24u) / GALAXY_WAVES_TO_BOSS);
-            }
-            if (n > 24u) n = 24u;
-            for (k = 0u; k < 24u; k++) bar[k] = (char)(k < n ? '#' : '.');
-            bar[24] = '\0';
-            demo_fix_puts(8u, 4u, bar, boss_on ? 3u : 0u);
-        }
-
-        /* Boss defeated check */
-        if (!boss_on && wave > GALAXY_WAVES_TO_BOSS && score >= 3000u) {
-            demo_fix_puts(13u, 14u, "MISSION COMPLETE", 2u);
-            demo_fix_puts(14u, 15u, "ALL CLEAR!!", 1u);
-            if (uwait(180u)) {
-                ng_sprite_park_off_range(1u, 130u);
-                snd_silence();
-                return 1u;
-            }
-            break;
-        }
+        demo_fix_puts(21u, 3u, buf, 2u);
+        demo_fix_puts(27u, 3u, "LIFE", 1u);
+        digit3(buf, stats.lives);
+        demo_fix_puts(32u, 3u, buf, 2u);
+        shoot_hud_stats(&stats, boss_on, boss_hp, boss_hp_max, wave, GALAXY_WAVES_TO_BOSS);
 
         if (idle_frames >= GALAXY_IDLE_ADVANCE) {
-            ng_sprite_park_off_range(1u, 130u);
+            ng_sprite_park_off_range(1u, 140u);
             snd_silence();
             return 1u;
         }
         if (uframe()) {
-            ng_sprite_park_off_range(1u, 130u);
+            ng_sprite_park_off_range(1u, 140u);
             snd_silence();
             return 1u;
         }
     }
 
-    ng_sprite_park_off_range(1u, 130u);
+    ng_sprite_park_off_range(1u, 140u);
     snd_silence();
     return 0u;
 }
