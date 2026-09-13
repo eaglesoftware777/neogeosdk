@@ -12,7 +12,7 @@ local z80 = machine.devices[':audiocpu']
 local output = assert(os.getenv('DEMO_AUDIO_DIR'))
 local chapter_address = tonumber(os.getenv('DEMO_CHAPTER_ADDRESS'), 16)
 local press_every = tonumber(os.getenv('DEMO_AUDIO_PRESS_EVERY') or '0')
-local stop_at = tonumber(os.getenv('DEMO_AUDIO_STOP_CHAPTER') or '26')
+local stop_at = tonumber(os.getenv('DEMO_AUDIO_STOP_CHAPTER') or '25')
 local extra_coin = tonumber(os.getenv('DEMO_AUDIO_COIN_AT') or '0')
 local pc_item = emu.item(main.items['0/m_pc'])
 local log = assert(io.open(output .. '/events.tsv', 'w'))
@@ -73,7 +73,7 @@ emu.register_frame_done(function()
         (extra_coin > 0 and now >= extra_coin and now < extra_coin + 0.25)) and 1 or 0)
     input(':edge:joy:START', '1 Player Start', (now >= 9 and now < 9.25) and 1 or 0)
     local current = memory:read_u8(chapter_address)
-    if current > 26 then current = 0 end
+    if current > 25 then current = 0 end
     if current ~= chapter then
         chapter, started = current, now
         log:write(string.format('%.4f\tchapter\t%d\t\n', now, current))

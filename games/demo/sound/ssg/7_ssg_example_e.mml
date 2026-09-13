@@ -1,15 +1,18 @@
-; 7_ssg_example_e - The Entertainer (Scott Joplin, 1902), C major
-; The ragtime opening strain: a square wave was made for this.
+; 7_ssg_example_e - Also sprach Zarathustra (Strauss), the sunrise fanfare
+; Three rising calls, each answered by the timpani pulse.
+; The SSG sounds an octave above these octave marks.
 
-T104
-P2
+T112
+P0
 V11
-O4
-L16
+O3
+L4
 
-D D+ E > C8 < E > C8 < E > C4 C D D+ E C D E8 < B > D8 C4 R8
-< D D+ E > C8 < E > C8 < E > C4 R8 A G F+ A > C8 < E8 D8 C4 R8
-< D D+ E > C8 < E > C8 < E > C4 C D D+ E C D E8 < B > D8 C4 R8
-C D E C D E8 C D C E C D E8 C D C E C D E8 C D E C4 R4
+c2 g2 > c1 e2 d+1 < r2
+O2 c8 g8 c8 g8 c8 g8 c8 g8
+O3 c2 g2 > c1 d+2 e1 < r2
+O2 c8 g8 c8 g8 c8 g8 c8 g8
+O3 c2 g2 > c1 e2 f2 g1 < r2
+O2 c8 g8 c8 g8 c8 g8 c8 g8 r1
 
 ~

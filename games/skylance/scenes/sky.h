@@ -68,6 +68,10 @@
 #define SKY_SHOT_ORB        23u
 #define SKY_SHOT_RING       24u
 #define SKY_E_TANK          25u
+#define SKY_ITEM_LIFE       26u
+#define SKY_ITEM_MISSILE    27u
+#define SKY_ITEM_SPEED      28u
+#define SKY_BG_OPEN_SEA     29u
 
 /* ------------------------------------------------------------------ */
 /*  Hardware scale presets (SCB2 shrink, 0xFF = full size)              */

@@ -9,7 +9,7 @@ the mainline, 100 of them since the v1.3.0 pre-release.  It brings a complete
 2D game engine in two languages, a source-faithful art pipeline, a rebuilt
 audio stack and driver, a multi-game build system with native Windows
 support, a new compiler toolchain, three new games including a finished
-arcade shooter, a 26-chapter demonstration reel, desktop authoring tools,
+arcade shooter, a 25-chapter demonstration reel, desktop authoring tools,
 a verification suite that checks ROMs in the emulator, and the documentation
 that explains all of it.  The sections below summarise everything that
 changed since v1.3.0; the dated development notes that follow this entry
@@ -40,11 +40,14 @@ record how each piece arrived.
   bank with `speakText()`, pan, LFO, noise, tempo and CSM control, and a
   fade engine that fades.
 - **Sky Lance** - a complete vertical arcade shooter: three pilots, seven
-  stages, a named boss per stage, attract reel, pilot select, scoring, lives,
-  energy and a continue flow.
-- **A 26-chapter demo reel** exercising every public subsystem, with two
-  playable shooter chapters, chapter numbers on screen, A to advance and C
-  to restart.
+  stages over three terrains, gunboats, tanks, gunships and bombers that
+  shoot back, a named boss per stage with its own attack, pick-ups and a
+  super missile, attract reel, pilot select, scoring, lives, energy, a
+  continue flow, and a credits roll and victory flight after the seventh
+  boss.
+- **A 25-chapter demo reel** exercising every public subsystem, with a
+  playable two-stage Sky Lance chapter, chapter numbers on screen, A to
+  advance and C to restart.
 - **Native Windows builds**, one-shot installers for Linux, Ubuntu, Windows
   and WSL, and a documented WSL2 audio path.
 - **Artbox Studio and Sound Studio**, two PyQt6 desktop tools.
@@ -209,31 +212,40 @@ Hardware behaviour established on this branch and built into both engines:
 ### Games
 
 - **Sky Lance** (`games/skylance`, 779) - pilots ROOK, KIRA and BLAZE;
-  stages ending at CRIMSON KEEP, IRON TIDE, SOL CORE, NIGHT RAZOR, ROTOR
-  NEST, EARTH HAMMER and SPIRE GOD; enemies that aim at the player; holders
-  that break station so a stage cannot hang before its boss; bounded
-  explosion scale; the playfield drawn at full size with keyed pilot
-  mattes; the chosen pilot's portrait beside the playfield for the whole
-  sortie.
-- **The demo** (`games/demo`, 777) - 26 chapters: boot, title, FIX layer,
+  seven stages with their own subtitles over the valley, the harbour and
+  the open sea; a named boss for each - CRIMSON KEEP, IRON TIDE, SOL CORE,
+  NIGHT RAZOR, ROTOR NEST, EARTH HAMMER and CRIMSON CITADEL - with its own
+  attack pattern; gunboats in the sea lanes and tanks on the valley road
+  that ride the scroll and fire, gunships that hold a firing line, bombers
+  that dive; pick-ups for speed, missiles and spare planes every fourth
+  kill; a super missile on D; the impact ring cycled through its palette;
+  the chosen pilot's portrait beside the playfield for the whole sortie;
+  and, after the seventh boss, the credits and the plane's victory flight.
+- **The demo** (`games/demo`, 777) - 25 chapters: boot, title, FIX layer,
   FIX FX, sprite screens, characters, char select, physics, camera lab,
   palette FX, particles, particle load, feedback, depth FX, depth parallax,
   NPCs, mini-game, joystick, scroll level, char 2D, target range, depth
-  ride, sound, Sky Lance, Star Raid Lance, credits.  Every chapter resets
-  the hardware and the engine on entry; beds loop in hardware; the attract
-  screen spells the version.
-- **The two shooter chapters play like arcade games.**  A super missile on
-  D that kills outright and always drops loot; pick-ups for speed,
-  missiles and spare planes; a readout row of missiles, speed, level and
-  the stage bar; and a boss kill that earns a loop, a barrel roll and a
-  climb out, a card naming the game and the studio, and a harder level -
-  instead of another boss.  The badges and missile are drawn by
-  `artbox/gen_shooter_items.py`.
-- **The sound chapter plays tunes people know**, all traditional or long
-  out of copyright: Korobeiniki on the FM bell and again as the MML
-  arrangement with an SSG bass, Ode to Joy on the brass and as a
-  square-wave fanfare, Greensleeves under the LFO, The Entertainer on the
-  SSG.
+  ride, sound, Sky Lance, credits.  Every chapter resets the hardware and
+  the engine on entry; beds loop in hardware; the attract screen spells
+  the version.
+- **The Sky Lance chapter is a two-stage arcade game.**  The valley, then
+  the coast with the game's own boats, bombers, gunships and tanks, a siren
+  and a flashing WARNING before the boss, a super missile on D that kills
+  outright and always drops loot, pick-ups for speed, missiles and spare
+  planes, five planes to start, a readout row of missiles, speed, level and
+  the stage bar, an arcade continue when the last plane goes, and a boss
+  kill that goes down in a chain of explosions, rolls the credits and sends
+  the plane through a loop, a barrel roll and a climb out.  The badges and
+  missile are drawn by `artbox/gen_shooter_items.py`.
+- **The sound chapter plays tunes people know from the arcades**, all long
+  out of copyright: In the Hall of the Mountain King on the FM lead and
+  again as the MML arrangement with an SSG bass, Fur Elise on the bell,
+  Rondo alla Turca and the Toccata in D minor on the square wave,
+  Greensleeves under the LFO.
+- **Four synthesised shooter sound effects** - a laser shot, an explosion,
+  a pick-up chime and a warning siren - generated by
+  `sound/tools/gen_arcade_sfx.py` as `SOUND_SFX_13..16`, used by both the
+  demo chapter and Sky Lance.
 - **`demo_plus`** (778) - the demo on the C++ engine, sharing scenes, art
   and sound through `GAME_SCENES_FROM`, `GAME_ART_FROM` and
   `GAME_SOUND_FROM`.
@@ -292,6 +304,72 @@ banks stop helping.
 
 The dated entries below were written as the work landed on the branch and
 are kept as its record.  Everything in them is summarised above.
+
+### v1.7.10 - Sky Lance, front to back
+
+Release date: 2026-09-13
+
+#### The demo's shooter is a game with an ending
+
+The Sky Lance chapter used to loop: one stage, one boss, another stage
+one notch harder, for as long as the player lasted.  It is now two
+stages and done.  Stage 1 is four squadrons over the valley; stage 2 is
+five over the coast, and the enemies change with the ground - the game's
+own gunboats ride the sea lanes and its tanks the shore road, both
+firing from where they are, gunships come down to a firing line and slew
+toward the player before diving on, bombers run straight down the field.
+When the last squadron is gone a siren sounds, WARNING flashes and the
+boss comes down from the top of the screen at 112 pixels, drawn from the
+same art the game uses.  It fires a fan and a pair of aimed shots in
+turn, both quicker below half health, and flying into it is a hit.  Its
+death is a chain of explosions over the hull with the sprite flickering
+under them, then the credits card holds for eight seconds, then the plane
+flies its loop, barrel roll and climb-out, and the reel moves on.
+
+Losing the last plane no longer ends the chapter: the stage restarts
+with three planes and two missiles, the way a continue would.  Five
+planes to start, one back at the stage change.  The enemy pool holds
+eight craft instead of six, and the cards sit on a page-coloured band so
+they read over any terrain.
+
+The Star Raid chapter is gone; it was the same furniture on a second
+game, and the reel is one chapter shorter for it.  The boot screen, the
+docs and the capture tools count twenty-five.
+
+#### Sky Lance, the game
+
+Seven stages, each with a subtitle on the stage card, over three
+terrains: the valley, the harbour and the open sea, imported at 256 by
+256 and drawn as two pages with the second flipped so the join is
+seamless.  The boats and tanks are surface units now - they ride the
+scroll and never chase - and every squadron in a stage's roster gets its
+turn, so a sortie always meets the units its subtitle promises.  Each
+boss has its own attack: a fan with escape lanes, converging naval guns,
+a core that alternates the safe side, a carrier fan that leaves the
+centre open.  The player's ceiling keeps the plane under the boss
+station, so a boss is always fought from below.  Every fourth kill drops
+a pick-up - speed, two missiles, or a spare plane, energy when the rack
+is full - and D fires a missile worth six hits.  The impact ring cycles
+through its palette bank.  After the seventh boss the credits name the
+pilot and the score, and the plane flies a victory lap before the attract
+loop returns.
+
+The route line under the playfield names the stage and the missile
+count.  It is written as a constant string and two digits, because a
+string built on the stack costs a `memcpy` the freestanding build does
+not have.
+
+#### Sounds
+
+Four new ADPCM-A samples, `SOUND_SFX_13..16`: a laser shot, an
+explosion, a pick-up chime and a warning siren.  They are synthesised by
+`sound/tools/gen_arcade_sfx.py` so the bank stays free of third-party
+material, and Sky Lance carries the encoded copies.  The sound chapter's
+tunes are now the ones the arcades borrowed from the concert hall: In
+the Hall of the Mountain King (FM 4 and the MML duet), Fur Elise (FM 6),
+Rondo alla Turca (SSG 1) and the Toccata in D minor (SSG 2).  The SSG
+labels clear their whole row when the section ends, so no title lingers
+into the next one.
 
 ### v1.7.9 - The byte that got lost
 

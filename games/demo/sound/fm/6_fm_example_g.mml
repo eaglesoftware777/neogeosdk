@@ -1,7 +1,8 @@
 ; 6_fm_example_g - Greensleeves (traditional English, A minor), for the LFO
-; Long held notes in 6/8, so the vibrato has something to sit on.
+; Long held notes in 6/8, so the vibrato has something to sit on: at this
+; pace a quarter is close to a second, long enough to measure the pitch.
 
-T96
+T64
 I6
 V12
 O4

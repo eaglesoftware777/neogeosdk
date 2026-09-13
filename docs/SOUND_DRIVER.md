@@ -79,7 +79,7 @@ boot before anything else.
 | Call | Plays |
 |---|---|
 | `playMusic(track)` | MML music track (`SOUND_MUSIC_A`…`_H`, 8 tracks) |
-| `playSFX(n)` | ADPCM-A one-shot (`SOUND_SFX_1`…`_12`, plus the voice bank) |
+| `playSFX(n)` | ADPCM-A one-shot (`SOUND_SFX_1`…`_16`, plus the voice bank) |
 | `playSFXB(n)` | ADPCM-B sample (`SOUND_TRACK_*`, 9 tracks; index 4 / `SOUND_TRACK_E` / `5.wav` is reserved for the eyecatcher) |
 | `playFMTrack(n)` | Compiled FM track (`SOUND_FM_A`…`_H`, 8 tracks) |
 | `playFMDebug()` | FM track 0 as a bring-up tone |

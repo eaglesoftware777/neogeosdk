@@ -76,7 +76,7 @@ emu.register_frame_done(function()
     input(':AUDIO_COIN', 'Coin 1', (now >= 7 and now < 7.25) and 1 or 0)
     input(':edge:joy:START', '1 Player Start', (now >= 9 and now < 9.25) and 1 or 0)
     local current = chapter_address and memory:read_u8(chapter_address) or 0
-    if current > 26 then current = 0 end
+    if current > 25 then current = 0 end
     -- BIOS RAM tests can resemble a chapter index before game initialization.
     -- The capture enters through coin/start, so wait for the first real chapter.
     if not reel_started then
@@ -133,7 +133,7 @@ emu.register_frame_done(function()
         input(':edge:joy:JOY1', 'P1 A', a)
         input(':edge:joy:JOY1', 'P1 C', c)
         -- Exercise movement and firing after restart, including the mini shooter.
-        local play = control_phase == 2 and (current == 17 or current == 18 or current == 21 or current == 24 or current == 25)
+        local play = control_phase == 2 and (current == 17 or current == 18 or current == 21 or current == 24)
         if play and current == 18 then
             input(':edge:joy:JOY1', 'P1 C', (elapsed % 90 < 10) and 1 or 0)
         end
@@ -147,7 +147,7 @@ emu.register_frame_done(function()
         next_capture = now + interval
     end
     if (focus > 0 and seen[focus] and current ~= focus) or
-       (current == 26 and (not controls and now - started > 4 or controls and control_phase == 4)) or (current == 0 and seen[26]) then
+       (current == 25 and (not controls and now - started > 4 or controls and control_phase == 4)) or (current == 0 and seen[25]) then
         local p = assert(io.open(output .. '/profile.tsv', 'w'))
         for key, count in pairs(profile) do p:write(key .. '\t' .. count .. '\n') end
         p:close()

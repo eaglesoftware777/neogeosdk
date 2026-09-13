@@ -15,6 +15,7 @@
 #include "sdk/sound_ids.h"
 #include "sdk/2d_engine/ng_defs.h"
 #include "sdk/2d_engine/ng_chars.h"
+#include "sdk/2d_engine/ng_fixed.h"
 
 void NEOGEO_USER waitVbl(void);
 void NEOGEO_USER clearFix(void);
@@ -70,10 +71,15 @@ static uint8_t  s_stage;
 static uint32_t s_score;
 static uint32_t s_hiscore;
 static NGCharacter *s_player;
+static uint8_t s_missiles;
+static uint8_t s_speed_bonus;
+static uint32_t s_hud_score, s_hud_high;
+static uint8_t s_hud_lives, s_hud_energy, s_hud_missiles, s_hud_boss;
 
 #define SKY_ENERGY_MAX   100u
 #define SKY_ENERGY_HIT    34u
-#define SKY_START_LIVES    2u
+#define SKY_START_LIVES    3u
+#define SKY_LIVES_MAX      4u
 
 /* ------------------------------------------------------------------ */
 /*  HUD                                                                 */
@@ -87,9 +93,18 @@ static NGCharacter *s_player;
  */
 static void NEOGEO_USER sky_hud_static(void)
 {
+    char digit[2];
     sky_infix(1u,  0u, SKY_INFIX_SCORE);
     sky_infix(24u, 0u, SKY_INFIX_HI);
     sky_infix(1u, 26u, (uint8_t)(SKY_INFIX_1P + (s_pick % 3u)));
+    /* The route line: which of the seven this is, and the missile rack.
+     * The digits are written on their own so no string is built here. */
+    sky_puts(8u, 24u, "STAGE  /7  D MISSILE", SKY_PAL_BODY);
+    digit[1] = '\0';
+    digit[0] = (char)('1' + s_stage);
+    sky_puts(14u, 24u, digit, SKY_PAL_BODY);
+    s_hud_score = s_hud_high = 0xFFFFFFFFu;
+    s_hud_lives = s_hud_energy = s_hud_missiles = s_hud_boss = 0xFFu;
 }
 
 static void NEOGEO_USER sky_hud_draw(void)
@@ -97,23 +112,37 @@ static void NEOGEO_USER sky_hud_draw(void)
     uint8_t i;
     uint8_t cells = (uint8_t)(s_energy / 10u);
 
-    sky_infix_number(7u,  0u, s_score,   6u);
-    sky_infix_number(27u, 0u, s_hiscore, 6u);
+    if (s_hud_score != s_score) {
+        sky_infix_number(7u, 0u, s_score, 6u);
+        s_hud_score = s_score;
+    }
+    if (s_hud_high != s_hiscore) {
+        sky_infix_number(27u, 0u, s_hiscore, 6u);
+        s_hud_high = s_hiscore;
+    }
+    if (s_hud_missiles != s_missiles) {
+        char ammo[2];
+        ammo[0] = (char)('0' + s_missiles); ammo[1] = '\0';
+        sky_puts(28u, 24u, ammo, SKY_PAL_SCORE);
+        s_hud_missiles = s_missiles;
+    }
 
     /* Lives pips: one per spare plane, blanked back out as they go. */
-    for (i = 0u; i < 3u; i++) {
+    if (s_hud_lives != s_lives) for (i = 0u; i < SKY_LIVES_MAX; i++) {
         if (i < s_lives) sky_infix((uint8_t)(4u + i * 2u), 26u, SKY_INFIX_LIFE);
         else {
             sky_fix_blank((uint8_t)(4u + i * 2u), 26u, 2u);
             sky_fix_blank((uint8_t)(4u + i * 2u), 27u, 2u);
         }
     }
+    s_hud_lives = s_lives;
 
     if (cells > 10u) cells = 10u;
-    for (i = 0u; i < 10u; i++) {
+    if (s_hud_energy != cells) for (i = 0u; i < 10u; i++) {
         sky_infix((uint8_t)(14u + i * 2u), 26u,
                   (uint8_t)(i < cells ? SKY_INFIX_ENERGY : SKY_INFIX_ENERGY_MT));
     }
+    s_hud_energy = cells;
 }
 
 static void NEOGEO_USER sky_hud_boss(void)
@@ -121,6 +150,9 @@ static void NEOGEO_USER sky_hud_boss(void)
     char bar[26];
     uint8_t n = sky_stage_boss_bar();
     uint8_t i;
+
+    if (s_hud_boss == n) return;
+    s_hud_boss = n;
 
     for (i = 0u; i < 24u; i++) bar[i] = (char)(i < n ? '#' : '.');
     bar[24] = '\0';
@@ -136,7 +168,7 @@ static void NEOGEO_USER sky_fire(void)
     int16_t y;
 
     if (!s_player || s_fire_cd) return;
-    if (sky_count_kind(SKY_KIND_PSHOT) >= SKY_MAX_PSHOTS) return;
+    if (sky_count_kind(SKY_KIND_PSHOT) + (p->twin ? 2u : 1u) > SKY_MAX_PSHOTS) return;
 
     y = (int16_t)(s_player->y - 16);
     if (p->twin) {
@@ -186,25 +218,41 @@ static void NEOGEO_USER sky_player_step(void)
 {
     const SkyPilot *p = &k_pilot[s_pick % SKY_PILOTS];
     uint16_t joy = sky_joy();
-    int16_t  x, y;
+    int16_t x, y, dx, dy, speed;
 
     if (!s_player || !s_player->active) return;
 
     x = s_player->x;
     y = s_player->y;
-    if (joy & JOY_LEFT)  x = (int16_t)(x - p->speed);
-    if (joy & JOY_RIGHT) x = (int16_t)(x + p->speed);
-    if (joy & JOY_UP)    y = (int16_t)(y - p->speed);
-    if (joy & JOY_DOWN)  y = (int16_t)(y + p->speed);
+    speed = (int16_t)(p->speed - 1u + s_speed_bonus);
+    dx = (joy & JOY_RIGHT ? 1 : 0) - (joy & JOY_LEFT ? 1 : 0);
+    dy = (joy & JOY_DOWN ? 1 : 0) - (joy & JOY_UP ? 1 : 0);
+    if (dx && dy) speed = (int16_t)(speed * 3 / 4);
+    x = (int16_t)(x + dx * speed);
+    y = (int16_t)(y + dy * speed);
 
     ng_char_set_pos(s_player,
                     (int16_t)NG_CLAMP(x, SKY_FIELD_LEFT, SKY_FIELD_RIGHT),
-                    (int16_t)NG_CLAMP(y, SKY_FIELD_TOP + 8, SKY_FIELD_BOTTOM));
+                    /* The ceiling keeps the plane under the boss station,
+                     * so a boss is always fought from below. */
+                    (int16_t)NG_CLAMP(y, SKY_FIELD_TOP + 40, SKY_FIELD_BOTTOM - 28));
 
     /* Auto-fire on hold, like the arcade board: A is a trigger, not a
      * typing test. */
     if (joy & (BUTTON_A | BUTTON_B)) sky_fire();
     if (s_fire_cd) s_fire_cd--;
+    if ((sky_joy_pressed() & BUTTON_D) && s_missiles &&
+        sky_count_kind(SKY_KIND_PSHOT) < SKY_MAX_PSHOTS) {
+        NGCharacter *missile = sky_spawn(SKY_KIND_PSHOT, SKY_ITEM_MISSILE,
+            s_player->x, s_player->y - 16, 0xFFu, NG_RENDER_BAND_FX);
+        if (missile) {
+            missile->data0 = 1u;
+            ng_char_set_speed(missile, 0, -5);
+            ng_char_set_body(missile, -5, -7, 10, 14);
+            s_missiles--;
+            playSFX(SOUND_SFX_7);
+        }
+    }
 
     if (s_invuln) {
         s_invuln--;
@@ -229,6 +277,22 @@ static void NEOGEO_USER sky_player_step(void)
  * up for collision.  Gathering first makes the inner loop bolts x targets,
  * which is at most six by seven.
  */
+static void NEOGEO_USER sky_drop_pickup(int16_t x, int16_t y)
+{
+    static const uint8_t assets[3] = { SKY_ITEM_SPEED, SKY_ITEM_MISSILE, SKY_ITEM_LIFE };
+    uint16_t kills = sky_stage_kills();
+    uint8_t type;
+    NGCharacter *pickup;
+    if (!kills || (kills % 4u) || sky_count_kind(SKY_KIND_PICKUP) >= SKY_MAX_PICKUPS) return;
+    type = (uint8_t)((kills / 4u - 1u) % 3u);
+    pickup = sky_spawn(SKY_KIND_PICKUP, assets[type], x, y, 0xFFu, NG_RENDER_BAND_FX);
+    if (!pickup) return;
+    pickup->data0 = type;
+    pickup->data1 = 0u;
+    ng_char_set_speed_fp(pickup, 0, NG_FP_ONE / 2);
+    ng_char_set_body(pickup, -10, -10, 20, 20);
+}
+
 static uint8_t NEOGEO_USER sky_collide(void)
 {
     uint8_t bolts[SKY_MAX_PSHOTS + 2u];
@@ -252,21 +316,30 @@ static uint8_t NEOGEO_USER sky_collide(void)
     /* Player bolts against enemies and the boss. */
     for (i = 0u; i < nbolts; i++) {
         NGCharacter *a = chars_at(bolts[i]);
-        if (!a || !a->active) continue;
+        if (!a || !a->active || a->kind != SKY_KIND_PSHOT) continue;
 
         for (j = 0u; j < nmarks; j++) {
             NGCharacter *b = chars_at(marks[j]);
-            if (!b || !b->active) continue;
+            if (!b || !b->active ||
+                (b->kind != SKY_KIND_ENEMY && b->kind != SKY_KIND_BOSS)) continue;
             if (!ng_rect_hit(ng_char_body_rect(a), ng_char_body_rect(b))) continue;
 
-            ng_char_damage(b, 1u);
+            ng_char_damage(b, a->data0 ? 6u : 1u);
             if (b->hp == 0u) {
                 int16_t bx = b->x, by = b->y;
                 uint8_t was_boss = (uint8_t)(b->kind == SKY_KIND_BOSS);
+                s_score += sky_stage_defeated(b);
                 ng_chars_remove(b);
                 sky_spawn_blast(bx, by);
-                s_score += was_boss ? 5000u : 150u;
-                playSFX(SOUND_SFX_5);
+                if (was_boss) {
+                    sky_spawn_blast((int16_t)(bx - 24), (int16_t)(by - 16));
+                    sky_spawn_blast((int16_t)(bx + 24), (int16_t)(by - 12));
+                    sky_spawn_blast((int16_t)(bx - 12), (int16_t)(by + 20));
+                    playSFX(SOUND_SFX_10);
+                } else {
+                    sky_drop_pickup(bx, by);
+                    playSFX(SOUND_SFX_5);
+                }
             } else {
                 sky_spawn_blast(a->x, a->y);
             }
@@ -289,6 +362,18 @@ static uint8_t NEOGEO_USER sky_collide(void)
         }
     }
 
+    if (s_player && s_player->active) for (i = 0u; i < NG_MAX_CHARS; i++) {
+        NGCharacter *pickup = chars_at(i);
+        if (!pickup || !pickup->active || pickup->kind != SKY_KIND_PICKUP) continue;
+        if (!ng_rect_hit(ng_char_body_rect(pickup), ng_char_body_rect(s_player))) continue;
+        if (pickup->data0 == 0u) s_speed_bonus = 1u;
+        else if (pickup->data0 == 1u) s_missiles = (uint8_t)NG_MIN(9u, s_missiles + 2u);
+        else if (s_lives < SKY_LIVES_MAX) s_lives++;
+        else s_energy = SKY_ENERGY_MAX;
+        s_score += 250u;
+        ng_chars_remove(pickup);
+        playSFX(SOUND_SFX_1);
+    }
     if (s_score > s_hiscore) s_hiscore = s_score;
     return dead;
 }
@@ -308,16 +393,6 @@ static void NEOGEO_USER sky_music(uint8_t track)
     waitVbl();
 }
 
-/* Wait `frames`, or until a button lands.  1 = the player pressed. */
-static uint8_t NEOGEO_USER sky_hold(uint16_t frames)
-{
-    uint16_t t;
-    for (t = 0u; t < frames; t++) {
-        sky_frame();
-        if (sky_joy_pressed() & (BUTTON_A | BUTTON_B | BUTTON_C | BUTTON_D)) return 1u;
-    }
-    return 0u;
-}
 
 static void NEOGEO_USER sky_title_card(void)
 {
@@ -329,7 +404,7 @@ static void NEOGEO_USER sky_title_card(void)
     sky_puts(15u,  7u, "SKY  LANCE",            SKY_PAL_TITLE);
     sky_puts( 9u,  9u, "NEO GEO 2D  SORTIE 01", SKY_PAL_BODY);
     sky_puts(11u, 20u, "PRESS A TO SORTIE",     SKY_PAL_SCORE);
-    sky_puts( 9u, 22u, "JOYSTICK MOVE   A FIRE", SKY_PAL_BODY);
+    sky_puts( 6u, 22u, "MOVE  A/B FIRE  D MISSILE", SKY_PAL_BODY);
 
     for (t = 0u; t < 420u; t++) {
         sky_frame();
@@ -381,9 +456,8 @@ static uint8_t NEOGEO_USER sky_select(void)
             for (i = 0u; i < SKY_PILOTS; i++) {
                 uint8_t sel = (uint8_t)(i == s_pick);
                 if (plane[i]) {
-                    plane[i]->scale_x = sel ? SKY_SCALE_PLAYER : SKY_SCALE_ROSTER;
-                    plane[i]->scale_y = plane[i]->scale_x;
-                    plane[i]->sprite_dirty = 1u;
+                    sky_bind(plane[i], k_pilot[i].plane,
+                             sel ? SKY_SCALE_PLAYER : SKY_SCALE_ROSTER, NG_RENDER_BAND_PLAYER);
                 }
                 if (face[i]) {
                     face[i]->visible = sel;
@@ -428,8 +502,9 @@ static uint8_t NEOGEO_USER sky_fly_stage(uint8_t stage)
               SKY_FIELD_X / 2, 56, NG_SCALE(3), NG_RENDER_BAND_BACK);
 
     s_player = sky_spawn(SKY_KIND_PLAYER, k_pilot[s_pick % SKY_PILOTS].plane,
-                         SKY_FIELD_X + SKY_FIELD_W / 2, SKY_FIELD_BOTTOM - 24,
+                         SKY_FIELD_X + SKY_FIELD_W / 2, SKY_FIELD_BOTTOM - 32,
                          SKY_SCALE_PLAYER, NG_RENDER_BAND_PLAYER);
+    if (!s_player) return 0u;
     if (s_player) {
         /* The plane's hitbox is deliberately tiny - a shmup is read from
          * the nose of the aircraft, not from its wingspan. */
@@ -441,12 +516,14 @@ static uint8_t NEOGEO_USER sky_fly_stage(uint8_t stage)
     tag[0] = 'S'; tag[1] = 'T'; tag[2] = 'A'; tag[3] = 'G'; tag[4] = 'E';
     tag[5] = ' '; tag[6] = (char)('0' + ((stage + 1u) / 10u));
     tag[7] = (char)('0' + ((stage + 1u) % 10u)); tag[8] = '\0';
-    sky_puts(16u, 12u, tag, SKY_PAL_TITLE);
+    sky_puts(16u, 11u, tag, SKY_PAL_TITLE);
+    sky_puts(7u, 13u, sky_stage_subtitle(stage), SKY_PAL_SCORE);
+    playSFX(SOUND_SFX_3);
 
     for (;;) {
         sky_frame();
 
-        sky_bg_advance((uint8_t)(1u + (stage >> 2)));
+        sky_bg_advance(1u);
         sky_bg_draw();
 
         sky_player_step();
@@ -466,14 +543,107 @@ static uint8_t NEOGEO_USER sky_fly_stage(uint8_t stage)
 
         if (banner) {
             banner--;
-            if (!banner) sky_fix_blank(13u, 12u, 14u);
+            if (!banner) {
+                sky_fix_blank(6u, 11u, 28u);
+                sky_fix_blank(6u, 13u, 28u);
+            }
         }
 
         if (cleared) {
+            sky_fix_blank(8u, 2u, 24u);          /* the boss bar */
             sky_puts(13u, 12u, "STAGE CLEAR", SKY_PAL_SCORE);
-            if (!sky_hold(180u)) { /* let the last blasts play out */ }
+            playSFX(SOUND_SFX_11);
+            {
+                uint16_t t;
+                uint8_t i;
+                for (i = 0u; i < NG_MAX_CHARS; i++) {
+                    NGCharacter *c = chars_at(i);
+                    if (c && c->active && c->kind != SKY_KIND_PLAYER &&
+                        c->kind != SKY_KIND_FACE && c->kind != SKY_KIND_BLAST) ng_chars_remove(c);
+                }
+                for (t = 0u; t < 150u; t++) {
+                    sky_frame();
+                    sky_bg_advance(1u);
+                    sky_bg_draw();
+                    sky_stage_effects_tick();
+                    ng_chars_draw();
+                }
+            }
             return 1u;
         }
+    }
+}
+
+static void NEOGEO_USER sky_victory_credits(void)
+{
+    uint16_t t;
+
+    sky_scene_begin();
+    sky_bg_select(SKY_BG_COAST);
+
+    sky_puts(12u,  2u, "MISSION COMPLETE",          SKY_PAL_TITLE);
+    sky_puts( 7u,  4u, "ALL SEVEN SECTORS SECURED", SKY_PAL_WARN);
+
+    sky_puts( 6u,  7u, "PILOT",                     SKY_PAL_SCORE);
+    sky_puts(13u,  7u, k_pilot[s_pick % SKY_PILOTS].name, SKY_PAL_BODY);
+    sky_puts(20u,  7u, k_pilot[s_pick % SKY_PILOTS].call, SKY_PAL_SCORE);
+
+    sky_puts( 6u,  9u, "SCORE",                     SKY_PAL_SCORE);
+    sky_infix_number(13u, 9u, s_score, 6u);
+
+    sky_puts(14u, 12u, "- CREDITS -",               SKY_PAL_TITLE);
+    sky_puts( 6u, 14u, "DESIGN   EAGLE SOFTWARE 2026", SKY_PAL_BODY);
+    sky_puts( 6u, 16u, "ENGINE   NEO GEO SDK 2D",      SKY_PAL_BODY);
+    sky_puts( 6u, 18u, "ART      ARTBOX PIPELINE",     SKY_PAL_BODY);
+    sky_puts( 6u, 20u, "SOUND    YM2610 FM SSG ADPCM", SKY_PAL_BODY);
+    sky_puts( 9u, 23u, "THANK YOU FOR PLAYING",        SKY_PAL_SCORE);
+
+    playSFX(SOUND_SFX_3);
+
+    /* Ten seconds to read it; a button skips ahead once the first
+     * few have passed, so a held trigger from the last fight cannot
+     * blow straight through it. */
+    for (t = 0u; t < 600u; t++) {
+        sky_frame();
+        sky_bg_advance(1u);
+        sky_bg_draw();
+        if (t > 240u && (sky_joy_pressed() & (BUTTON_A | BUTTON_B | BUTTON_C | BUTTON_D))) {
+            break;
+        }
+    }
+}
+
+static void NEOGEO_USER sky_happy_win_moves(void)
+{
+    NGCharacter *plane;
+    uint16_t t;
+    const int16_t cx = SKY_FIELD_X + SKY_FIELD_W / 2;
+
+    sky_scene_begin();
+    sky_bg_select(SKY_BG_MOUNTAIN);
+    sky_puts(11u, 2u, "ACE VICTORY FLIGHT", SKY_PAL_TITLE);
+    plane = sky_spawn(SKY_KIND_PLAYER, k_pilot[s_pick % SKY_PILOTS].plane,
+                      cx, 176, SKY_SCALE_PLAYER, NG_RENDER_BAND_PLAYER);
+    if (!plane) return;
+    playSFX(SOUND_SFX_7);
+
+    for (t = 0u; t < 360u; t++) {
+        sky_frame();
+        sky_bg_advance(1u);
+        sky_bg_draw();
+        if (t < 90u) {
+            ng_char_set_pos(plane, cx, (int16_t)(176 - t * 40u / 90u));
+        } else if (t < 270u) {
+            uint8_t a = (uint8_t)((t - 90u) * 256u / 180u);
+            ng_char_set_pos(plane,
+                (int16_t)(cx + ((int32_t)ng_sin_tab[a] * 52 / 32768)),
+                (int16_t)(96 + ((int32_t)ng_cos_tab[a] * 40 / 32768)));
+            if ((t % 30u) == 0u) sky_spawn_blast(plane->x, plane->y + 16);
+        } else {
+            ng_char_set_pos(plane, cx, (int16_t)(136 - (t - 270u) * 2u));
+        }
+        sky_stage_effects_tick();
+        ng_chars_draw();
     }
 }
 
@@ -506,28 +676,38 @@ void NEOGEO_USER sky_run(void)
     s_energy = SKY_ENERGY_MAX;
     s_score  = 0u;
     s_stage  = 0u;
+    s_missiles = 3u;
+    s_speed_bonus = 0u;
 
     soundSceneReset();
     sky_music(SOUND_TRACK_A);
     (void)sky_select();
 
     for (;;) {
-        /* TRACK_E is reserved for the eyecatcher, so the stage beds walk
-         * an explicit table rather than an arithmetic run. */
-        static const uint8_t k_stage_track[4] = {
-            SOUND_TRACK_B, SOUND_TRACK_C, SOUND_TRACK_D, SOUND_TRACK_F
+        static const uint8_t k_stage_track[SKY_STAGE_COUNT] = {
+            SOUND_TRACK_B, SOUND_TRACK_C, SOUND_TRACK_D, SOUND_TRACK_F,
+            SOUND_TRACK_B, SOUND_TRACK_C, SOUND_TRACK_D
         };
-        sky_music(k_stage_track[s_stage & 3u]);
-        if (!sky_fly_stage(s_stage)) break;
-        s_stage = (uint8_t)((s_stage + 1u) % SKY_STAGE_COUNT);
-        /* A cleared stage tops the energy back up but never the lives -
-         * the run has to stay finite. */
+        sky_music(k_stage_track[s_stage % SKY_STAGE_COUNT]);
+        if (!sky_fly_stage(s_stage)) {
+            sky_music(SOUND_TRACK_H);
+            sky_game_over();
+            soundStopAll();
+            return;
+        }
+
+        /* The standalone campaign ends only after its seventh boss. */
+        if (s_stage >= (SKY_STAGE_COUNT - 1u)) {
+            sky_music(SOUND_TRACK_A);
+            sky_victory_credits();
+            sky_happy_win_moves();
+            soundStopAll();
+            return;
+        }
+
+        s_stage++;
         s_energy = SKY_ENERGY_MAX;
     }
-
-    sky_music(SOUND_TRACK_H);
-    sky_game_over();
-    soundStopAll();
 }
 
 /*

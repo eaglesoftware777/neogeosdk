@@ -31,7 +31,7 @@ passing `GAME_CFG_FILE=` lets you build any other without editing it.
 
 ## demo — the engine reel (id 777)
 
-A single linear flow of **26 chapters**, each demonstrating one subsystem,
+A single linear flow of **25 chapters**, each demonstrating one subsystem,
 with the chapter number printed in the top-right corner of every scene so a
 problem can be reported by number. **A** advances, **C** restarts the current
 chapter.
@@ -73,9 +73,11 @@ fails to build.
 
 ## skylance — Sky Lance (id 779)
 
-A complete vertical arcade shooter: three pilots, seven stages, one named
-boss per stage, attract reel, pilot select, scoring, lives, energy, and a
-game-over/continue flow.
+A complete vertical arcade shooter: three pilots, seven stages over three
+terrains, one named boss per stage with its own attack, gunboats and tanks
+that fire from the ground, pick-ups and a super missile, attract reel,
+pilot select, scoring, lives, energy, a game-over/continue flow, and the
+credits with a victory flight after the seventh boss.
 
 ### Pilots
 
@@ -90,17 +92,34 @@ by damage numbers.
 
 ### Stages
 
-| # | Backdrop | Boss |
-|---|---|---|
-| 1 | Mountain | CRIMSON KEEP |
-| 2 | Coast | IRON TIDE |
-| 3 | Mountain | SOL CORE |
-| 4 | Coast | NIGHT RAZOR |
-| 5 | Mountain | ROTOR NEST |
-| 6 | Coast | EARTH HAMMER |
-| 7 | Mountain | SPIRE GOD |
+| # | Subtitle | Terrain | Roster | Boss |
+|---|---|---|---|---|
+| 1 | MOUNTAIN DAWN | Valley | drones, fighters, interceptors | CRIMSON KEEP |
+| 2 | HARBOR ASSAULT | Harbour | gunboats, fighters, bombers | IRON TIDE |
+| 3 | VALLEY CONVOY | Valley | tanks, interceptors, drones, bombers | SOL CORE |
+| 4 | REEF INTERCEPT | Open sea | interceptors, gunboats, fighters, bombers | NIGHT RAZOR |
+| 5 | FOREST OUTPOST | Valley | gunships, tanks, bombers | ROTOR NEST |
+| 6 | ARMORED COLUMN | Valley | tanks, interceptors, bombers | EARTH HAMMER |
+| 7 | FINAL APPROACH | Harbour | gunboats, interceptors, gunships, bombers | CRIMSON CITADEL |
 
-Each stage runs 5–7 squadrons of enemies from its own roster, then the boss.
+Each stage runs 5–7 squadrons, every roster entry in turn, then the boss.
+Gunboats and tanks are surface units: they ride the scroll along the sea
+lanes or the valley road and fire from where they are, never chasing.
+Gunships come down to a firing line and hold it; bombers dive.  Each boss
+has its own volley - a fan with escape lanes, converging naval guns, a core
+that alternates the safe side, a carrier fan that leaves the centre open -
+and the player's ceiling keeps the plane under the boss station so a boss
+is always fought from below.
+
+Every fourth kill drops a pick-up: a speed step, two missiles for the rack,
+or a spare plane (energy, once the rack of planes is full).  **D** fires a
+super missile worth six hits.  The route line under the playfield names the
+stage and the missile count; the impact ring cycles through its palette
+bank every few frames.
+
+After the seventh boss the credits name the pilot and the score, and the
+plane flies a victory lap - a climb, a loop with the burst ring trailing,
+a dive off the top - before the attract loop returns.
 
 ### Layout
 
@@ -119,10 +138,15 @@ backdrop covers, centred on the screen, with 32 px of backdrop either side.
 That is a consequence of the backdrop being exactly one 16 × 16-tile page
 wide, not a style choice.
 
-**The backdrop had to be authored to tile.** A page is 16 × 16 tiles and the
-sprite chip can only shrink, never stretch, so a vertically scrolling
-backdrop has to be exactly one page tall and seamless at the join. Both
-backdrops were resized to 256 × 256 and cross-faded across the wrap.
+**The backdrop does not have to be authored to tile.** A page is 16 × 16
+tiles and the sprite chip can only shrink, never stretch, so a vertically
+scrolling backdrop is exactly one page tall.  `scenes/sky_terrain.h` draws
+each terrain as two copies of the page with the second flipped vertically,
+so the join always meets the same source row from either side and any
+256 × 256 picture scrolls seamlessly.  The three terrains - the valley,
+the harbour and the open sea - are imported from
+`artbox/in/backgrounds/` and `artbox/in/zzzz_terrain/` at 256 × 256 with
+sixteen palette banks each.
 
 Sky Lance also ships without its own sample set, so its audio path is
 `vrom m1rom` rather than the full `sound` target — see
@@ -132,8 +156,8 @@ During a sortie the pilot chosen at the roster rides along in the margin
 beside the playfield, in the back render band so a crowded frame can never
 drop it.
 
-A slice of Sky Lance also appears as chapter 24 of the demo reel, so you can
-see the same code driven two ways.
+A two-stage slice of Sky Lance also appears as chapter 24 of the demo reel,
+built from the same art, so you can see the same game driven two ways.
 
 ## helloworld (id 772)
 

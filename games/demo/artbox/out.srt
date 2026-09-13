@@ -1,7 +1,7 @@
 [001] backgrounds/0.png
 mode=screen fit=crop anchor=center rule=cat_backgrounds
 category=backgrounds
-palette_slots=[16, 87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101]
+palette_slots=[16, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106]
 source=1032x624 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=1 palette_bank=16 tile_base=0 reserved_last=255 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=background layer or multi-level backdrop
@@ -9,7 +9,7 @@ note=background layer or multi-level backdrop
 [002] backgrounds/1.png
 mode=screen fit=crop anchor=center rule=cat_backgrounds
 category=backgrounds
-palette_slots=[17, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116]
+palette_slots=[17, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121]
 source=368x240 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=2 palette_bank=17 tile_base=256 reserved_last=511 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=background layer or multi-level backdrop
@@ -745,7 +745,7 @@ note=effects and transitions; preserve bright outlines
 [094] eyecatcher/1.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-palette_slots=[26, 117, 118, 119]
+palette_slots=[26, 122, 123, 124]
 source=1536x1024 canvas=256x256 content=256x159 offset=(0,48)
 screen_id=94 palette_bank=26 tile_base=23808 reserved_last=24063 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=0 used_tiles=160 strips=16 active_rows=10
 note=eyecatcher sequence
@@ -753,7 +753,7 @@ note=eyecatcher sequence
 [095] eyecatcher/2.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-palette_slots=[27, 120, 121, 122]
+palette_slots=[27, 125, 126, 127]
 source=1536x1024 canvas=256x256 content=256x159 offset=(0,48)
 screen_id=95 palette_bank=27 tile_base=24064 reserved_last=24319 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=0 used_tiles=160 strips=16 active_rows=10
 note=eyecatcher sequence
@@ -761,7 +761,7 @@ note=eyecatcher sequence
 [096] eyecatcher/3.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-palette_slots=[28, 123, 124, 125]
+palette_slots=[28, 128, 129, 130]
 source=1536x1024 canvas=256x256 content=256x159 offset=(0,48)
 screen_id=96 palette_bank=28 tile_base=24320 reserved_last=24575 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=0 used_tiles=160 strips=16 active_rows=10
 note=eyecatcher sequence
@@ -769,7 +769,7 @@ note=eyecatcher sequence
 [097] eyecatcher/4.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-palette_slots=[29, 126, 127, 128]
+palette_slots=[29, 131, 132, 133]
 source=1536x1024 canvas=256x256 content=256x159 offset=(0,48)
 screen_id=97 palette_bank=29 tile_base=24576 reserved_last=24831 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=0 used_tiles=160 strips=16 active_rows=10
 note=eyecatcher sequence
@@ -777,7 +777,7 @@ note=eyecatcher sequence
 [098] eyecatcher/5.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-palette_slots=[30, 129, 130, 131]
+palette_slots=[30, 134, 135, 136]
 source=1536x1024 canvas=256x256 content=256x159 offset=(0,48)
 screen_id=98 palette_bank=30 tile_base=24832 reserved_last=25087 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=0 used_tiles=160 strips=16 active_rows=10
 note=eyecatcher sequence
@@ -785,7 +785,7 @@ note=eyecatcher sequence
 [099] eyecatcher/6.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-palette_slots=[31, 132, 133, 134]
+palette_slots=[31, 137, 138, 139]
 source=1536x1024 canvas=256x256 content=256x159 offset=(0,48)
 screen_id=99 palette_bank=31 tile_base=25088 reserved_last=25343 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=0 used_tiles=160 strips=16 active_rows=10
 note=eyecatcher sequence
@@ -793,7 +793,7 @@ note=eyecatcher sequence
 [100] eyecatcher/7.png
 mode=screen fit=contain anchor=center rule=cat_eyecatcher
 category=eyecatcher
-palette_slots=[32, 135, 136, 137]
+palette_slots=[32, 140, 141, 142]
 source=1536x1024 canvas=256x256 content=256x159 offset=(0,48)
 screen_id=100 palette_bank=32 tile_base=25344 reserved_last=25599 used_cols=16 used_rows=10 start_col=0 start_row=3 x_pad=0 y_pad=0 used_tiles=160 strips=16 active_rows=10
 note=eyecatcher sequence
@@ -801,7 +801,7 @@ note=eyecatcher sequence
 [101] screens/1.png
 mode=screen fit=crop anchor=center rule=cat_screens
 category=screens
-palette_slots=[33, 138, 139, 140, 141, 142, 143, 144]
+palette_slots=[33, 143, 144, 145, 146, 147, 148, 149]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=101 palette_bank=33 tile_base=25600 reserved_last=25855 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen scenes
@@ -809,7 +809,7 @@ note=full screen scenes
 [102] screens/2.png
 mode=screen fit=crop anchor=center rule=cat_screens
 category=screens
-palette_slots=[34, 145, 146, 147, 148, 149, 150, 151]
+palette_slots=[34, 150, 151, 152, 153, 154, 155, 156]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=102 palette_bank=34 tile_base=25856 reserved_last=26111 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen scenes
@@ -817,7 +817,7 @@ note=full screen scenes
 [103] screens/3.png
 mode=screen fit=crop anchor=center rule=cat_screens
 category=screens
-palette_slots=[35, 152, 153, 154, 155, 156, 157, 158]
+palette_slots=[35, 157, 158, 159, 160, 161, 162, 163]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=103 palette_bank=35 tile_base=26112 reserved_last=26367 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen scenes
@@ -825,7 +825,7 @@ note=full screen scenes
 [104] screens/4.png
 mode=screen fit=crop anchor=center rule=cat_screens
 category=screens
-palette_slots=[36, 159, 160, 161, 162, 163, 164, 165]
+palette_slots=[36, 164, 165, 166, 167, 168, 169, 170]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=104 palette_bank=36 tile_base=26368 reserved_last=26623 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen scenes
@@ -833,7 +833,7 @@ note=full screen scenes
 [105] screens/5.png
 mode=screen fit=crop anchor=center rule=cat_screens
 category=screens
-palette_slots=[37, 166, 167, 168, 169, 170, 171, 172]
+palette_slots=[37, 171, 172, 173, 174, 175, 176, 177]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=105 palette_bank=37 tile_base=26624 reserved_last=26879 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen scenes
@@ -841,7 +841,7 @@ note=full screen scenes
 [106] screens/6.png
 mode=screen fit=crop anchor=center rule=cat_screens
 category=screens
-palette_slots=[38, 173, 174, 175, 176, 177, 178, 179]
+palette_slots=[38, 178, 179, 180, 181, 182, 183, 184]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=106 palette_bank=38 tile_base=26880 reserved_last=27135 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen scenes
@@ -849,7 +849,7 @@ note=full screen scenes
 [107] screens/7.png
 mode=screen fit=crop anchor=center rule=cat_screens
 category=screens
-palette_slots=[39, 180, 181, 182, 183, 184, 185, 186]
+palette_slots=[39, 185, 186, 187, 188, 189, 190, 191]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=107 palette_bank=39 tile_base=27136 reserved_last=27391 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=full screen scenes
@@ -857,7 +857,7 @@ note=full screen scenes
 [108] titles/8.png
 mode=screen fit=contain anchor=center rule=cat_titles
 category=titles
-palette_slots=[40, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197]
+palette_slots=[40, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202]
 source=1024x1024 canvas=256x256 content=189x256 offset=(33,0)
 screen_id=108 palette_bank=40 tile_base=27392 reserved_last=27647 used_cols=12 used_rows=16 start_col=2 start_row=0 x_pad=1 y_pad=0 used_tiles=192 strips=12 active_rows=16
 note=title and logo screens
@@ -865,7 +865,7 @@ note=title and logo screens
 [109] titles/9.png
 mode=screen fit=contain anchor=center rule=cat_titles
 category=titles
-palette_slots=[41, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208]
+palette_slots=[41, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213]
 source=880x1184 canvas=256x256 content=140x256 offset=(58,0)
 screen_id=109 palette_bank=41 tile_base=27648 reserved_last=27903 used_cols=10 used_rows=16 start_col=3 start_row=0 x_pad=10 y_pad=0 used_tiles=160 strips=10 active_rows=16
 note=title and logo screens
@@ -1207,12 +1207,11 @@ screen_id=151 palette_bank=71 tile_base=38400 reserved_last=38655 used_cols=8 us
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [152] npcs/zzzzzzzzzz_sky_bullet.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=center rule=sky_compact_bullet
 category=npcs
 palette_slots=[72]
-source=16x16 canvas=256x256 content=16x16 offset=(120,240)
-screen_id=152 palette_bank=72 tile_base=38656 reserved_last=38911 used_cols=2 used_rows=1 start_col=7 start_row=15 x_pad=8 y_pad=0 used_tiles=2 strips=2 active_rows=1
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+source=16x16 canvas=16x16 content=16x16 offset=(0,0)
+screen_id=152 palette_bank=72 tile_base=38656 reserved_last=38911 used_cols=1 used_rows=1 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=1 strips=1 active_rows=1
 
 [153] npcs/zzzzzzzzzz_sky_enemy_a.png
 mode=sprite fit=pad anchor=center rule=cat_demo_interceptors
@@ -1247,17 +1246,17 @@ screen_id=156 palette_bank=76 tile_base=39680 reserved_last=39935 used_cols=2 us
 note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
 
 [157] npcs/zzzzzzzzzz_sky_plane.png
-mode=sprite fit=pad anchor=bottom-center rule=cat_npcs
+mode=sprite fit=pad anchor=center rule=cat_demo_sky_plane
 category=npcs
-palette_slots=[77]
-source=16x16 canvas=256x256 content=16x16 offset=(120,240)
-screen_id=157 palette_bank=77 tile_base=39936 reserved_last=40191 used_cols=2 used_rows=1 start_col=7 start_row=15 x_pad=8 y_pad=0 used_tiles=2 strips=2 active_rows=1
-note=NPC sprite pages  (cats / animals share the character-tier threshold so soft fur outlines stay intact)
+palette_slots=[77, 214]
+source=32x32 canvas=32x32 content=32x32 offset=(0,0)
+screen_id=157 palette_bank=77 tile_base=39936 reserved_last=40191 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
+note=the Sky Lance lead plane at the size the chapter draws it
 
 [158] npcs/zzzzzzzzzzz_crate.png
 mode=sprite fit=pad anchor=bottom-left rule=cat_crate_props
 category=npcs
-palette_slots=[78, 209, 210, 211]
+palette_slots=[78, 215, 216, 217]
 source=1254x1254 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=158 palette_bank=78 tile_base=40192 reserved_last=40447 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=tile-aligned collision prop
@@ -1265,7 +1264,7 @@ note=tile-aligned collision prop
 [159] npcs/zzzzzzzzzzz_crate_broken.png
 mode=sprite fit=pad anchor=bottom-left rule=cat_crate_props
 category=npcs
-palette_slots=[79, 212, 213, 214]
+palette_slots=[79, 218, 219, 220]
 source=1254x1254 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=159 palette_bank=79 tile_base=40448 reserved_last=40703 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=tile-aligned collision prop
@@ -1273,7 +1272,7 @@ note=tile-aligned collision prop
 [160] zz_bg/0.png
 mode=screen fit=native anchor=center rule=cat_sky_background
 category=zz_bg
-palette_slots=[80, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225]
+palette_slots=[80, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231]
 source=256x256 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=160 palette_bank=80 tile_base=40704 reserved_last=40959 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=native tiled sky, 144-pixel repeat without aspect padding
@@ -1409,8 +1408,50 @@ note=shooter pick-up badge at display size
 [177] zzz_shooter/missile.png
 mode=sprite fit=pad anchor=center rule=cat_shooter_missile
 category=zzz_shooter
-palette_slots=[86]
-source=16x32 canvas=16x32 content=16x32 offset=(0,0)
-screen_id=177 palette_bank=86 tile_base=45056 reserved_last=45311 used_cols=1 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=2 strips=1 active_rows=2
+palette_slots=[84]
+source=16x16 canvas=16x32 content=16x16 offset=(0,8)
+screen_id=177 palette_bank=84 tile_base=45056 reserved_last=45311 used_cols=1 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=8 used_tiles=2 strips=1 active_rows=2
 note=super missile projectile at display size
+
+[178] zzzz_skylance/background_coast.png
+mode=screen fit=crop anchor=center rule=sky_campaign_terrain
+category=zzzz_skylance
+palette_slots=[86, 232, 233, 234, 235, 236, 237, 238]
+source=512x512 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=178 palette_bank=86 tile_base=45312 reserved_last=45567 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+
+[179] zzzz_skylance/background_valley.png
+mode=screen fit=crop anchor=center rule=sky_campaign_terrain
+category=zzzz_skylance
+palette_slots=[87, 239, 240, 241, 242, 243, 244, 245]
+source=512x512 canvas=256x256 content=256x256 offset=(0,0)
+screen_id=179 palette_bank=87 tile_base=45568 reserved_last=45823 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
+
+[180] zzzz_skylance/enemy_boat.png
+mode=sprite fit=pad anchor=center rule=sky_campaign_enemy
+category=zzzz_skylance
+palette_slots=[88, 246]
+source=72x160 canvas=32x32 content=14x32 offset=(9,0)
+screen_id=180 palette_bank=88 tile_base=45824 reserved_last=46079 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=9 y_pad=0 used_tiles=4 strips=2 active_rows=2
+
+[181] zzzz_skylance/enemy_bomber.png
+mode=sprite fit=pad anchor=center rule=sky_campaign_enemy
+category=zzzz_skylance
+palette_slots=[89, 247]
+source=144x160 canvas=32x32 content=29x32 offset=(1,0)
+screen_id=181 palette_bank=89 tile_base=46080 reserved_last=46335 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=1 y_pad=0 used_tiles=4 strips=2 active_rows=2
+
+[182] zzzz_skylance/enemy_heli.png
+mode=sprite fit=pad anchor=center rule=sky_campaign_enemy
+category=zzzz_skylance
+palette_slots=[90, 248]
+source=112x144 canvas=32x32 content=25x32 offset=(3,0)
+screen_id=182 palette_bank=90 tile_base=46336 reserved_last=46591 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=3 y_pad=0 used_tiles=4 strips=2 active_rows=2
+
+[183] zzzz_skylance/enemy_tank.png
+mode=sprite fit=pad anchor=center rule=sky_campaign_enemy
+category=zzzz_skylance
+palette_slots=[91, 249]
+source=80x120 canvas=32x32 content=21x32 offset=(5,0)
+screen_id=183 palette_bank=91 tile_base=46592 reserved_last=46847 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=5 y_pad=0 used_tiles=4 strips=2 active_rows=2
 

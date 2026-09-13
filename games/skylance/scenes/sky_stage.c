@@ -26,6 +26,7 @@ void NEOGEO_USER playSFX(uint8_t n);
 #define PAT_DIVE     0u   /* straight down, weaving                      */
 #define PAT_STRAFE   1u   /* crosses the screen, drifting down slowly    */
 #define PAT_HOLD     2u   /* descends to a firing line and sits there    */
+#define PAT_SURFACE  3u   /* terrain-bound vehicle, no airborne chase   */
 
 /* How long a PAT_HOLD enemy keeps its station before resuming the descent,
  * in frames.  Bounded so a stage cannot stall waiting for it to leave. */
@@ -52,8 +53,8 @@ static const SkyEnemy k_enemy[ENEMY_COUNT] = {
     { SKY_E_FIGHTER,       3u, SKY_SCALE_ENEMY, PAT_DIVE,   24u, 150u,  100u },
     { SKY_E_INTERCEPTOR,   4u, SKY_SCALE_ENEMY, PAT_STRAFE, 30u, 130u,  150u },
     { SKY_E_HELI,          5u, SKY_SCALE_ENEMY, PAT_HOLD,   18u,  90u,  180u },
-    { SKY_E_MISSILE_BOAT,  7u, SKY_SCALE_ENEMY, PAT_HOLD,   14u,  80u,  200u },
-    { SKY_E_TANK,          6u, SKY_SCALE_ENEMY, PAT_HOLD,   12u, 100u,  120u },
+    { SKY_E_MISSILE_BOAT,  7u, SKY_SCALE_ENEMY, PAT_SURFACE,16u, 120u,  200u },
+    { SKY_E_TANK,          6u, SKY_SCALE_ENEMY, PAT_SURFACE,16u, 140u,  120u },
     { SKY_E_BOMBER,        8u, SKY_SCALE_ENEMY, PAT_DIVE,   16u, 110u,  250u }
 };
 
@@ -65,19 +66,28 @@ typedef struct {
     uint8_t  boss;
     uint8_t  boss_hp;
     uint16_t boss_score;
-    uint8_t  roster[4];      /* indices into k_enemy      */
-    uint8_t  waves;          /* squadrons before the boss */
+    uint8_t  has_boss;       /* 1 if stage ends with boss battle */
+    uint8_t  roster[4];      /* indices into k_enemy */
+    uint8_t  waves;          /* squadrons before boss / stage clear */
     const char *boss_name;
+    const char *subtitle;
 } SkyStage;
 
 static const SkyStage k_stage[SKY_STAGE_COUNT] = {
-    { SKY_BG_MOUNTAIN, SKY_B_RED_FORTRESS, 60u, 5000u, {0u,1u,1u,2u}, 5u, "CRIMSON KEEP" },
-    { SKY_BG_COAST,    SKY_B_BATTLESHIP,   70u, 6000u, {1u,2u,4u,4u}, 5u, "IRON TIDE"    },
-    { SKY_BG_MOUNTAIN, SKY_B_GOLD_CORE,    65u, 4500u, {0u,2u,3u,6u}, 6u, "SOL CORE"     },
-    { SKY_BG_COAST,    SKY_B_STEALTH,      75u, 5500u, {1u,2u,2u,6u}, 6u, "NIGHT RAZOR"  },
-    { SKY_BG_MOUNTAIN, SKY_B_HELI_CARRIER, 70u, 4800u, {3u,3u,1u,6u}, 6u, "ROTOR NEST"   },
-    { SKY_BG_COAST,    SKY_B_TANK_FORT,    85u, 6200u, {5u,5u,2u,6u}, 7u, "EARTH HAMMER" },
-    { SKY_BG_MOUNTAIN, SKY_B_CATHEDRAL,    95u, 8000u, {2u,3u,6u,6u}, 7u, "SPIRE GOD"    }
+    { SKY_BG_MOUNTAIN, SKY_B_RED_FORTRESS, 48u, 5000u, 1u, {0u,1u,2u,1u}, 5u,
+      "CRIMSON KEEP", "01 / 07  MOUNTAIN DAWN" },
+    { SKY_BG_COAST, SKY_B_BATTLESHIP, 60u, 6000u, 1u, {4u,1u,4u,6u}, 5u,
+      "IRON TIDE", "02 / 07  HARBOR ASSAULT" },
+    { SKY_BG_MOUNTAIN, SKY_B_GOLD_CORE, 64u, 6500u, 1u, {5u,2u,0u,6u}, 6u,
+      "SOL CORE", "03 / 07  VALLEY CONVOY" },
+    { SKY_BG_OPEN_SEA, SKY_B_STEALTH, 68u, 7000u, 1u, {2u,4u,1u,6u}, 6u,
+      "NIGHT RAZOR", "04 / 07  REEF INTERCEPT" },
+    { SKY_BG_MOUNTAIN, SKY_B_HELI_CARRIER, 76u, 7500u, 1u, {3u,5u,3u,6u}, 6u,
+      "ROTOR NEST", "05 / 07  FOREST OUTPOST" },
+    { SKY_BG_MOUNTAIN, SKY_B_TANK_FORT, 84u, 8000u, 1u, {5u,2u,5u,6u}, 7u,
+      "EARTH HAMMER", "06 / 07  ARMORED COLUMN" },
+    { SKY_BG_COAST, SKY_B_CATHEDRAL, 96u, 10000u, 1u, {4u,2u,3u,6u}, 7u,
+      "CRIMSON CITADEL", "07 / 07  FINAL APPROACH" }
 };
 
 /* ------------------------------------------------------------------ */
@@ -101,13 +111,32 @@ uint8_t NEOGEO_USER sky_stage_bg(uint8_t stage)
     return k_stage[stage % SKY_STAGE_COUNT].bg;
 }
 
+uint8_t NEOGEO_USER sky_stage_has_boss(uint8_t stage)
+{
+    return k_stage[stage % SKY_STAGE_COUNT].has_boss;
+}
+
 const char * NEOGEO_USER sky_stage_boss_name(uint8_t stage)
 {
     return k_stage[stage % SKY_STAGE_COUNT].boss_name;
 }
 
+const char * NEOGEO_USER sky_stage_subtitle(uint8_t stage)
+{
+    return k_stage[stage % SKY_STAGE_COUNT].subtitle;
+}
+
 uint8_t NEOGEO_USER sky_stage_boss_active(void) { return s_boss_on; }
 uint16_t NEOGEO_USER sky_stage_kills(void)      { return s_kills; }
+
+uint16_t NEOGEO_USER sky_stage_defeated(const NGCharacter *c)
+{
+    if (!c) return 0u;
+    if (c->kind == SKY_KIND_BOSS) return k_stage[s_stage].boss_score;
+    if (c->kind != SKY_KIND_ENEMY) return 0u;
+    s_kills++;
+    return k_enemy[c->data2 % ENEMY_COUNT].score;
+}
 
 void NEOGEO_USER sky_stage_begin(uint8_t stage)
 {
@@ -190,20 +219,20 @@ static void NEOGEO_USER sky_fire_aimed(int16_t x, int16_t y,
                     (int16_t)((int32_t)dy * speed / mag));
 }
 
-static void NEOGEO_USER sky_spawn_enemy(uint8_t type, int16_t x, int16_t y, int16_t side)
+static uint8_t NEOGEO_USER sky_spawn_enemy(uint8_t type, int16_t x, int16_t y, int16_t side)
 {
     const SkyEnemy *e = &k_enemy[type % ENEMY_COUNT];
     NGCharacter *c;
 
-    if (sky_count_kind(SKY_KIND_ENEMY) >= SKY_MAX_ENEMIES) return;
+    if (sky_count_kind(SKY_KIND_ENEMY) >= SKY_MAX_ENEMIES) return 0u;
 
     c = sky_spawn(SKY_KIND_ENEMY, e->asset, x, y, e->scale, NG_RENDER_BAND_ENEMY);
-    if (!c) return;
+    if (!c) return 0u;
 
     c->hp     = (uint8_t)(e->hp + (s_stage >> 1));
     c->max_hp = c->hp;
     c->data0  = e->pattern;
-    c->data1  = (uint16_t)(sky_rand() & 63u);      /* weave phase */
+    c->data1  = 0u;
     c->data2  = type;
 
     switch (e->pattern) {
@@ -219,14 +248,17 @@ static void NEOGEO_USER sky_spawn_enemy(uint8_t type, int16_t x, int16_t y, int1
         ng_char_set_speed_fp(c, 0, ((int32_t)e->speed << NG_FP_SHIFT) / 16);
         break;
     }
+    return 1u;
 }
 
 static void NEOGEO_USER sky_spawn_boss(void)
 {
-    const SkyStage *st = &k_stage[s_stage];
-    NGCharacter *c = sky_spawn(SKY_KIND_BOSS, st->boss,
-                               SKY_FIELD_X + SKY_FIELD_W / 2, -40,
-                               SKY_SCALE_BOSS, NG_RENDER_BAND_ENEMY);
+    const SkyStage *st = &k_stage[s_stage % SKY_STAGE_COUNT];
+    NGCharacter *c;
+    if (!st->has_boss) return;
+    c = sky_spawn(SKY_KIND_BOSS, st->boss,
+                  SKY_FIELD_X + SKY_FIELD_W / 2, -40,
+                  SKY_SCALE_BOSS, NG_RENDER_BAND_ENEMY);
     if (!c) return;
 
     c->hp     = st->boss_hp;
@@ -234,9 +266,10 @@ static void NEOGEO_USER sky_spawn_boss(void)
     s_boss_hp_max = st->boss_hp;
     c->data0  = 0u;    /* 0 = entering, 1 = engaged */
     c->data1  = 0u;    /* burst timer               */
+    c->data2  = 0u;    /* volley phase              */
     ng_char_set_speed(c, 0, 1);
     s_boss_on = 1u;
-    playSFX(SOUND_SFX_2);
+    playSFX(SOUND_SFX_12); /* warning siren */
 }
 
 uint8_t NEOGEO_USER sky_stage_boss_bar(void)
@@ -280,7 +313,8 @@ static void NEOGEO_USER sky_enemy_step(NGCharacter *c, int16_t px, int16_t py)
     }
     case PAT_STRAFE:
         /* Turn around at the field edge instead of flying off it. */
-        if (c->x < SKY_FIELD_LEFT || c->x > SKY_FIELD_RIGHT) {
+        if ((c->x <= SKY_FIELD_LEFT && c->vx_fp < 0) ||
+            (c->x >= SKY_FIELD_RIGHT && c->vx_fp > 0)) {
             c->vx_fp = -c->vx_fp;
         }
         break;
@@ -304,21 +338,21 @@ static void NEOGEO_USER sky_enemy_step(NGCharacter *c, int16_t px, int16_t py)
             }
         }
         break;
+    case PAT_SURFACE:
+        ng_char_set_speed(c, 0, 1);
+        break;
     default:
         break;
     }
 
     if (e->fire_odds) {
-        /* fire_odds is a 1-in-N chance per frame.  Halve N outright so the
-         * opening stage already shoots back, then shrink it further as the
-         * stages climb - with a floor so it never becomes a solid wall. */
-        uint16_t odds = (uint16_t)(e->fire_odds >> 1);
-        uint16_t ramp = (uint16_t)(s_stage * 6u);
-        odds = (odds > ramp) ? (uint16_t)(odds - ramp) : 12u;
-        if (odds < 12u) odds = 12u;
-        if ((sky_rand() % odds) == 0u) {
+        /* Fixed warm-up: no offscreen or point-blank surprise volleys. */
+        uint16_t interval = (uint16_t)(e->fire_odds - s_stage * 6u);
+        if (interval < 54u) interval = 54u;
+        if (c->y >= SKY_FIELD_TOP + 12 && c->y < py - 16 &&
+            (c->data1 % interval) == 0u) {
             sky_fire_aimed(c->x, (int16_t)(c->y + 8), px, py,
-                           (int16_t)(2 + (s_stage >> 1)));
+                           (int16_t)(2 + (s_stage >= 3u)));
         }
     }
 
@@ -333,7 +367,7 @@ static void NEOGEO_USER sky_boss_step(NGCharacter *c, int16_t px, int16_t py)
 
     if (c->data0 == 0u) {
         /* Entry: slide down to the top of the arena, then engage. */
-        if (c->y >= SKY_FIELD_TOP + 28) {
+        if (c->y >= SKY_FIELD_TOP + 44) {
             c->data0 = 1u;
             ng_char_set_speed(c, 1, 0);
         }
@@ -344,23 +378,54 @@ static void NEOGEO_USER sky_boss_step(NGCharacter *c, int16_t px, int16_t py)
     if (c->x >= right) ng_char_set_speed(c, -1, 0);
 
     c->data1++;
-    /*
-     * Two attacks, alternating: a spread of five orbs across the arena,
-     * and a single aimed shot that punishes the player for parking under
-     * the boss.  The interval tightens as the boss loses health.
-     */
     {
-        uint16_t interval = (uint16_t)(96u - (uint16_t)(s_stage * 6u));
-        if (c->hp * 2u < c->max_hp) interval = (uint16_t)(interval >> 1);
-        if (interval < 24u) interval = 24u;
-
-        if ((c->data1 % interval) == 0u) {
-            int16_t i;
-            for (i = -2; i <= 2; i++) {
-                sky_spawn_eshot(c->x, (int16_t)(c->y + 24), (int16_t)(i * 2), 3);
+        uint16_t interval = (uint16_t)(108u - s_stage * 6u);
+        int16_t muzzle = (int16_t)(c->y + 36);
+        if (c->hp * 2u < c->max_hp) interval = (uint16_t)(interval * 3u / 4u);
+        if (c->data1 >= interval) {
+            c->data1 = 0u;
+            c->data2++;
+            switch (s_stage) {
+            case 0u: /* Opening fan leaves wide escape lanes. */
+                sky_spawn_eshot(c->x, muzzle, -2, 2);
+                sky_spawn_eshot(c->x, muzzle, 0, 3);
+                sky_spawn_eshot(c->x, muzzle, 2, 2);
+                break;
+            case 1u: /* Two naval guns converge on different points. */
+                sky_fire_aimed(c->x - 28, muzzle, px - 16, py, 3);
+                sky_fire_aimed(c->x + 28, muzzle, px + 16, py, 3);
+                break;
+            case 2u: /* The rotating core alternates the safe side. */
+                sky_spawn_eshot(c->x, muzzle, (c->data2 & 1u) ? -3 : 3, 2);
+                sky_spawn_eshot(c->x, muzzle, (c->data2 & 1u) ? -1 : 1, 3);
+                break;
+            case 3u:
+                if (c->data2 & 1u) sky_fire_aimed(c->x, muzzle, px, py, 4);
+                else {
+                    sky_spawn_eshot(c->x - 24, muzzle, 0, 3);
+                    sky_spawn_eshot(c->x + 24, muzzle, 0, 3);
+                }
+                break;
+            case 4u: /* Carrier fan deliberately leaves the centre open. */
+                sky_spawn_eshot(c->x - 16, muzzle, -2, 3);
+                sky_spawn_eshot(c->x - 16, muzzle, -1, 3);
+                sky_spawn_eshot(c->x + 16, muzzle, 1, 3);
+                sky_spawn_eshot(c->x + 16, muzzle, 2, 3);
+                break;
+            case 5u:
+                sky_fire_aimed(c->x + ((c->data2 & 1u) ? -24 : 24), muzzle, px, py, 4);
+                sky_spawn_eshot(c->x, muzzle, 0, 2);
+                break;
+            default:
+                if (c->data2 & 1u) {
+                    int16_t d;
+                    for (d = -2; d <= 2; d++) sky_spawn_eshot(c->x, muzzle, d, 3);
+                } else {
+                    sky_fire_aimed(c->x - 24, muzzle, px - 16, py, 3);
+                    sky_fire_aimed(c->x + 24, muzzle, px + 16, py, 3);
+                }
+                break;
             }
-        } else if ((c->data1 % (uint16_t)(interval >> 1)) == 0u) {
-            sky_fire_aimed(c->x, (int16_t)(c->y + 24), px, py, 4);
         }
     }
 }
@@ -370,11 +435,21 @@ static void NEOGEO_USER sky_blast_step(NGCharacter *c)
     /* Bound the expansion before converting to an 8-bit hardware scale.
      * Adding to full scale wrapped to zero and displaced the old anchor. */
     c->data0++;
-    if (c->data0 >= SKY_BURST_STEPS) {
+    if (c->data0 >= SKY_BURST_STEPS * 3u) {
         ng_chars_remove(c);
         return;
     }
-    sky_bind(c, SKY_SHOT_RING, SKY_BURST_SCALE(c->data0), NG_RENDER_BAND_FX);
+    if ((c->data0 % 3u) == 0u)
+        sky_bind(c, SKY_SHOT_RING, SKY_BURST_SCALE(c->data0 / 3u), NG_RENDER_BAND_FX);
+}
+
+void NEOGEO_USER sky_stage_effects_tick(void)
+{
+    uint8_t i;
+    for (i = 0u; i < NG_MAX_CHARS; i++) {
+        NGCharacter *c = chars_at(i);
+        if (c && c->active && c->kind == SKY_KIND_BLAST) sky_blast_step(c);
+    }
 }
 
 /* ------------------------------------------------------------------ */
@@ -382,13 +457,16 @@ static void NEOGEO_USER sky_blast_step(NGCharacter *c)
 /* ------------------------------------------------------------------ */
 static void NEOGEO_USER sky_release_next(void)
 {
-    const SkyStage *st = &k_stage[s_stage];
     int16_t x;
 
     if (!s_squad_left) return;
     if (s_squad_gap) { s_squad_gap--; return; }
 
-    if (k_enemy[s_squad_type % ENEMY_COUNT].pattern == PAT_STRAFE) {
+    if (s_squad_type == 5u) {
+        x = SKY_FIELD_X + 68; /* the valley road */
+    } else if (s_squad_type == 4u) {
+        x = (int16_t)(SKY_FIELD_X + 112 + (s_squad_left & 1u) * 72);
+    } else if (k_enemy[s_squad_type % ENEMY_COUNT].pattern == PAT_STRAFE) {
         x = (int16_t)(s_squad_side > 0 ? SKY_FIELD_LEFT : SKY_FIELD_RIGHT);
     } else {
         /* Spread the squadron across the arena on a fixed lane so the
@@ -397,20 +475,20 @@ static void NEOGEO_USER sky_release_next(void)
         x = (int16_t)(SKY_FIELD_LEFT + 24 + lane * ((SKY_FIELD_W - 72) / 3));
     }
 
-    sky_spawn_enemy(s_squad_type, x, (int16_t)(SKY_FIELD_TOP - 24),
-                    (int16_t)(s_squad_side > 0 ? 1 : -1));
+    if (!sky_spawn_enemy(s_squad_type, x, (int16_t)(SKY_FIELD_TOP - 24),
+                        (int16_t)(s_squad_side > 0 ? 1 : -1))) return;
     s_squad_left--;
-    s_squad_gap = 18u;
-    NG_UNUSED(st);
+    s_squad_gap = (uint16_t)((s_squad_type == 4u || s_squad_type == 5u) ? 48u : 24u);
 }
 
 static void NEOGEO_USER sky_start_squad(void)
 {
     const SkyStage *st = &k_stage[s_stage];
 
-    s_squad_type = st->roster[sky_rand() & 3u];
+    /* Every sortie includes its advertised surface and aircraft squadrons. */
+    s_squad_type = st->roster[(st->waves - s_waves_left) & 3u];
     s_squad_side = (uint8_t)(sky_rand() & 1u);
-    s_squad_left = (uint8_t)(3u + (sky_rand() % 2u));
+    s_squad_left = (uint8_t)((s_squad_type == 4u || s_squad_type == 5u) ? 2u : 3u);
     s_squad_gap  = 0u;
     if (s_waves_left) s_waves_left--;
 }
@@ -431,6 +509,10 @@ uint8_t NEOGEO_USER sky_stage_tick(int16_t player_x, int16_t player_y)
         case SKY_KIND_ENEMY: sky_enemy_step(c, player_x, player_y); break;
         case SKY_KIND_BOSS:  sky_boss_step(c, player_x, player_y);  break;
         case SKY_KIND_BLAST: sky_blast_step(c);                     break;
+        case SKY_KIND_PICKUP:
+            c->data1++;
+            if (c->y > SKY_FIELD_BOTTOM + 20 || c->data1 > 480u) ng_chars_remove(c);
+            break;
         case SKY_KIND_PSHOT:
             if (c->y < SKY_FIELD_TOP - 24) ng_chars_remove(c);
             break;
@@ -461,11 +543,17 @@ uint8_t NEOGEO_USER sky_stage_tick(int16_t player_x, int16_t player_y)
         sky_start_squad();
         s_wave_timer = (uint16_t)(150u - (uint16_t)(s_stage * 10u));
     } else if (!sky_count_kind(SKY_KIND_ENEMY)) {
+        if (!k_stage[s_stage % SKY_STAGE_COUNT].has_boss) {
+            cleared = 1u;
+            return cleared;
+        }
         s_boss_wait = 0u;
         sky_spawn_boss();
     } else if (s_boss_wait >= SKY_BOSS_WAIT_MAX) {
-        /* Waves are done but something is still on screen.  Send the boss in
-         * anyway rather than leave the player with no way to finish. */
+        if (!k_stage[s_stage % SKY_STAGE_COUNT].has_boss) {
+            cleared = 1u;
+            return cleared;
+        }
         s_boss_wait = 0u;
         sky_spawn_boss();
     } else {

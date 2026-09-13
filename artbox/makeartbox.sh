@@ -30,6 +30,12 @@ mkdir -p "$GAME_ARTBOX_DIR"
 mkdir -p "$GAME_ARTBOX_IN" "$GAME_ARTBOX_INFIX"
 cd "$GAME_ARTBOX_DIR"
 
+# A game that draws on another game's artwork takes that game's import rules
+# too: the rules are part of the art, and a default set here would import the
+# shared pictures at different sizes and palettes.
+if [ "$ART_SRC_GAME" != "$GAME" ] && [ -f "$REPO_DIR/games/$ART_SRC_GAME/artbox/assets.cfg" ]; then
+    cp -f "$REPO_DIR/games/$ART_SRC_GAME/artbox/assets.cfg" "$GAME_ARTBOX_DIR/assets.cfg"
+fi
 PYTHONDONTWRITEBYTECODE=1 ARTBOX_DATA_DIR="$GAME_ARTBOX_DIR" python3 "$SCRIPT_DIR/gen_assets_cfg.py"
 PYTHONDONTWRITEBYTECODE=1 ARTBOX_DATA_DIR="$GAME_ARTBOX_DIR" python3 "$SCRIPT_DIR/createromdb.py"
 PYTHONDONTWRITEBYTECODE=1 ARTBOX_DATA_DIR="$GAME_ARTBOX_DIR" python3 "$SCRIPT_DIR/romdbimgimport.py"

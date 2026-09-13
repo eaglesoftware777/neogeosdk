@@ -10,6 +10,8 @@
  */
 
 #include "sky_draw.h"
+#include "sky_terrain.h"
+#include "sky_stage.h"
 #include "sdk/neogeo.h"
 #include "sdk/2d_engine/ng_sprite_group.h"
 #include "sdk/2d_engine/ng_sprite_window.h"
@@ -17,6 +19,9 @@
 #include "sdk/2d_engine/ng_sprite_hw.h"
 #include "sprite_meta.h"
 #include "infix_palettes.h"
+
+const uint16_t * NEOGEO_USER ng_get_screen_palette(uint16_t screen_id);
+static uint8_t s_palette_loaded[256];
 
 void NEOGEO_USER waitVbl(void);
 void NEOGEO_USER clearFix(void);
@@ -113,7 +118,10 @@ void NEOGEO_USER sky_bind(NGCharacter *c, uint8_t id, uint8_t scale, uint8_t ban
     }
 
     ng_char_set_priority(c, band, 0);
-    ng_load_screen_palette(id);
+    if (!s_palette_loaded[id]) {
+        ng_load_screen_palette(id);
+        s_palette_loaded[id] = 1u;
+    }
 }
 
 NGCharacter * NEOGEO_USER sky_spawn(uint8_t kind, uint8_t id,
@@ -131,90 +139,35 @@ NGCharacter * NEOGEO_USER sky_spawn(uint8_t kind, uint8_t id,
 /* ------------------------------------------------------------------ */
 /*  Scrolling background                                                */
 /* ------------------------------------------------------------------ */
-/*
- * Two copies of one 256x256 page, stacked and slid downward.  The pages
- * were made vertically tileable when the art was imported, so page A at
- * (scroll - 256) and page B at (scroll) meet without a seam and the pair
- * wraps every 256 px.
- *
- * The negative Y on page A is deliberate and safe: SCB3 stores 496 - y
- * in a 9-bit field, so y and y+512 are the same position to the
- * hardware, and both readings of y = -256 leave the page off-screen.
- */
-#define SKY_BG_PAGE_H  256
-
-static uint8_t  s_bg_id     = 0u;
-static uint16_t s_bg_scroll = 0u;
-
-/*
- * The two pages are kept here rather than rebuilt each frame.  Scrolling only
- * changes their Y, and ng_sprite_group_flush() writes SCB2/3/4 alone unless
- * the tiles are marked dirty - where ng_sprite_group_upload() rewrites the
- * whole tilemap.  Two 16x16 pages is 512 tilemap words, far more than a vblank
- * has room for, so uploading them every frame both judders the scroll and eats
- * the budget the character sprites drawn afterwards need.
- */
-static NGSpriteGroup s_bg_page[2];
-static uint8_t       s_bg_ready = 0u;
+/* Resident terrain pages occupy slots 1..32, below all craft. */
+static uint8_t s_bg_id;
+static uint8_t s_bg_advance;
+static SkyTerrain s_terrain;
 
 void NEOGEO_USER sky_bg_select(uint8_t id)
 {
-    const NGSpriteAssetMeta *m;
-    const NGArtAsset *art;
-    uint8_t i;
-
-    if (s_bg_id == id) return;
+    if (s_bg_id == id && s_terrain.ready) return;
     s_bg_id = id;
-    s_bg_scroll = 0u;
-    s_bg_ready = 0u;
-    if (!id) return;
-
-    ng_load_screen_palette(id);
-
-    m = sky_meta(id);
-    if (!m) return;
-    art = ng_screen_art_asset(id);
-
-    /* Build both pages once and push the tile data now, while the scene is
-     * still being set up and there is time for it. */
-    for (i = 0u; i < 2u; i++) {
-        NGSpriteGroup *g = &s_bg_page[i];
-        ng_sprite_group_init(g, (i == 0u) ? NG_SPR_BG0_FIRST : NG_SPR_BG1_FIRST,
-                             16u, 16u, m->tile_base, m->palette_bank);
-        ng_sprite_group_set_tile_stride(g, m->tile_stride);
-        ng_sprite_group_set_palette_map(g, art ? art->tile_palettes : 0);
-        ng_sprite_group_set_active_rows(g, 16u);
-        ng_sprite_group_set_scale(g, SKY_SCALE_FULL, SKY_SCALE_FULL);
-        ng_sprite_group_set_pos(g, SKY_FIELD_X,
-                                (i == 0u) ? -SKY_BG_PAGE_H : 0);
-        ng_sprite_group_upload(g);
-    }
-    s_bg_ready = 1u;
+    s_bg_advance = 0u;
+    sky_terrain_init(&s_terrain, id, NG_SPR_BG0_FIRST, SKY_FIELD_X);
 }
 
 void NEOGEO_USER sky_bg_advance(uint8_t pixels)
 {
-    s_bg_scroll = (uint16_t)((s_bg_scroll + pixels) % SKY_BG_PAGE_H);
+    s_bg_advance = pixels;
 }
 
 void NEOGEO_USER sky_bg_draw(void)
 {
-    if (!s_bg_id || !s_bg_ready) return;
-
-    /* Position only - the tiles are already in VRAM and are not marked
-     * dirty, so each flush writes three words per strip and nothing more. */
-    ng_sprite_group_set_pos(&s_bg_page[0], SKY_FIELD_X,
-                            (int16_t)((int16_t)s_bg_scroll - SKY_BG_PAGE_H));
-    ng_sprite_group_set_pos(&s_bg_page[1], SKY_FIELD_X, (int16_t)s_bg_scroll);
-    ng_sprite_group_flush(&s_bg_page[0]);
-    ng_sprite_group_flush(&s_bg_page[1]);
+    sky_terrain_draw(&s_terrain, s_bg_advance, SKY_FIELD_X);
+    s_bg_advance = 0u;
 }
 
 void NEOGEO_USER sky_bg_hide(void)
 {
     ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(NG_SPR_BG0_FIRST), 32u);
     s_bg_id = 0u;
-    s_bg_ready = 0u;
+    s_terrain.ready = 0u;
 }
 
 /* ------------------------------------------------------------------ */
@@ -228,6 +181,7 @@ static uint16_t s_rng      = 0x1234u;
 
 void NEOGEO_USER sky_scene_begin(void)
 {
+    uint16_t i;
     waitVbl();
     setBACKDROP(SKY_BG_CLEAR);
     clearFix();
@@ -235,6 +189,7 @@ void NEOGEO_USER sky_scene_begin(void)
     ng_sprite_hide_all();
     ng_chars_init();
     sky_bg_hide();
+    for (i = 0u; i < 256u; i++) s_palette_loaded[i] = 0u;
     s_joy = 0u;
     s_joy_prev = 0u;
     s_pressed = 0u;
@@ -248,6 +203,19 @@ uint16_t NEOGEO_USER sky_frame(void)
     s_joy = poll_joystick();
     s_pressed = (uint16_t)(s_joy & (uint16_t)~s_joy_prev);
     s_frames++;
+    /* Only the impact-ring asset is cycled; index zero and HUD inks stay intact. */
+    if ((s_frames % 6u) == 0u && s_palette_loaded[SKY_SHOT_RING]) {
+        const uint16_t *base = ng_get_screen_palette(SKY_SHOT_RING);
+        const NGSpriteAssetMeta *m = sky_meta(SKY_SHOT_RING);
+        if (base && m) {
+            uint16_t colors[16];
+            uint8_t i, phase = (uint8_t)((s_frames / 6u) % 15u);
+            colors[0] = base[0];
+            for (i = 1u; i < 16u; i++)
+                colors[i] = base[1u + (i - 1u + phase) % 15u];
+            load_palettes(colors, PALETTES + PALOFFSET * m->palette_bank);
+        }
+    }
     /* Stir the generator every frame so enemy spawns don't fall into a
      * visible pattern when the player holds a steady input. */
     s_rng ^= (uint16_t)(s_joy + s_frames);

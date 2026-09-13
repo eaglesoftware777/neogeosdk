@@ -13,6 +13,7 @@
 #define SKY_KIND_ESHOT    5u
 #define SKY_KIND_BLAST    6u
 #define SKY_KIND_FACE     7u
+#define SKY_KIND_PICKUP   8u
 
 #define SKY_STAGE_COUNT   7u
 
@@ -24,10 +25,13 @@
 #define SKY_MAX_PSHOTS    6u
 #define SKY_MAX_ESHOTS    10u
 #define SKY_MAX_BLASTS    4u
+#define SKY_MAX_PICKUPS   3u
 
 void NEOGEO_USER sky_stage_begin(uint8_t stage);
 uint8_t NEOGEO_USER sky_stage_bg(uint8_t stage);
+uint8_t NEOGEO_USER sky_stage_has_boss(uint8_t stage);
 const char * NEOGEO_USER sky_stage_boss_name(uint8_t stage);
+const char * NEOGEO_USER sky_stage_subtitle(uint8_t stage);
 
 /* One director step: enemy/boss AI, wave spawning, enemy fire.
  * Returns 1 on the frame the stage's boss dies. */
@@ -36,6 +40,9 @@ uint8_t NEOGEO_USER sky_stage_tick(int16_t player_x, int16_t player_y);
 uint8_t  NEOGEO_USER sky_stage_boss_active(void);
 uint8_t  NEOGEO_USER sky_stage_boss_bar(void);   /* 0..24 cells */
 uint16_t NEOGEO_USER sky_stage_kills(void);
+/* Record a defeated target before removal and return its score award. */
+uint16_t NEOGEO_USER sky_stage_defeated(const NGCharacter *c);
+void NEOGEO_USER sky_stage_effects_tick(void);
 
 /* Shared spawns used by both the director and the player code. */
 NGCharacter * NEOGEO_USER sky_spawn_blast(int16_t x, int16_t y);

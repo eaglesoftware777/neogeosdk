@@ -1,15 +1,22 @@
-; 8_ssg_example_f - Ode to Joy (Beethoven, C major) as a square-wave fanfare
+; 8_ssg_example_f - Toccata in D minor (Bach), the opening flourishes
+; The organ mordent and its two lower echoes, then the rolled chord.
 ; The SSG sounds an octave above these octave marks.
 
-T120
+T104
 P0
 V11
-O3
-L4
+O4
+L16
 
-E E F G  G F E D  C C D E  E4 D8 D8 D2
-E E F G  G F E D  C C D E  D4 C8 C8 C2
-D D E C  D E8 F8 E C  D E8 F8 E D  C D G2
-E E F G  G F E D  C C D E  D4 C8 C8 C2
+a g a2 r8
+g f e d c+8 d2 r4
+O3
+a g a2 r8
+e f c+ d2 r4
+O2
+a g a2 r8
+e f c+ d2 r4
+c+ e g a+ > c+ e g a+ > c+1
+r2
 
 ~

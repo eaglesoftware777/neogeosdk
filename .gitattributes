@@ -14,3 +14,11 @@ games/demo/artbox/screens.c             text eol=lf
 games/demo/artbox/sprite_meta.h         text eol=lf
 games/demo/eyecatcher.c                 text eol=lf
 games/demo/main.c                       text eol=lf
+
+# Windows command scripts must be CRLF on disk: cmd.exe mis-reads a file
+# whose lines end in a bare LF and drops the first characters of lines
+# ("REM" runs as "M", "setlocal" as "tlocal"), which is how the art build
+# ended up importing from games\artbox\in.  Store them as CRLF and check
+# them out as CRLF on every host, whatever core.autocrlf says.
+*.bat text eol=crlf
+*.cmd text eol=crlf

@@ -17,7 +17,7 @@ def main():
     parser.add_argument("--nm", default=None)
     parser.add_argument("--mame", default="mame")
     parser.add_argument("--controls", action="store_true")
-    parser.add_argument("--chapter", type=int, choices=range(1, 27),
+    parser.add_argument("--chapter", type=int, choices=range(1, 26),
                         help="advance with A until this chapter, then capture it normally")
     parser.add_argument("--interval", type=float, default=2.0,
                         help="seconds between screenshots; 0.016 captures every video frame")
@@ -64,18 +64,18 @@ def main():
         subprocess.run(command, env=env, cwd=root, stdout=log, stderr=subprocess.STDOUT, check=True)
     with (output / "frames.tsv").open(encoding="utf-8") as stream:
         visited = {int(row["chapter"]) for row in csv.DictReader(stream, delimiter="\t")}
-    missing = ({args.chapter} if args.chapter else set(range(1, 27))) - visited
+    missing = ({args.chapter} if args.chapter else set(range(1, 26))) - visited
     if missing:
         raise SystemExit(f"Incomplete tour; missing chapters: {sorted(missing)}")
     if args.controls:
         with (output / "controls.tsv").open(encoding="utf-8") as stream:
             checks = {(int(row["chapter"]), row["action"]) for row in csv.DictReader(stream, delimiter="\t")}
-        expected = {(chapter, "C_PASS") for chapter in range(1, 27) if chapter != 18}
+        expected = {(chapter, "C_PASS") for chapter in range(1, 26) if chapter != 18}
         expected.add((18, "C_RESERVED"))
-        expected |= {(chapter, "A_PASS") for chapter in range(1, 26)}
+        expected |= {(chapter, "A_PASS") for chapter in range(1, 25)}
         if expected - checks:
             raise SystemExit(f"Controls not verified: {sorted(expected - checks)}")
-    print(f"Captured {'chapter ' + str(args.chapter) if args.chapter else 'all 26 chapters'}: {output}")
+    print(f"Captured {'chapter ' + str(args.chapter) if args.chapter else 'all 25 chapters'}: {output}")
 
 
 if __name__ == "__main__":

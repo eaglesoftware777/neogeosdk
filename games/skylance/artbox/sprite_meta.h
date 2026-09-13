@@ -36,7 +36,7 @@ typedef struct {
 #define NG_ASSET_CATEGORY_OPPONENT 2
 #define NG_ASSET_CATEGORY_NPC 3
 
-#define NG_ASSET_META_COUNT 25
+#define NG_ASSET_META_COUNT 29
 
 /* Hardware sprite strips each asset needs, by 1-based asset id. */
 #define NG_ASSET_STRIPS_1 16  /* background_coast_city.png */
@@ -47,7 +47,7 @@ typedef struct {
 #define NG_ASSET_STRIPS_6 2  /* sprite_p2_plane.png */
 #define NG_ASSET_STRIPS_7 10  /* sprite_p3_pilot.png */
 #define NG_ASSET_STRIPS_8 2  /* sprite_p3_plane.png */
-#define NG_ASSET_STRIPS_9 2  /* sprite_shot_player.png */
+#define NG_ASSET_STRIPS_9 1  /* sprite_shot_player.png */
 #define NG_ASSET_STRIPS_10 2  /* opponent_bomber_olive.png */
 #define NG_ASSET_STRIPS_11 5  /* opponent_boss_crimson_cathedral.png */
 #define NG_ASSET_STRIPS_12 7  /* opponent_boss_gold_core.png */
@@ -64,6 +64,10 @@ typedef struct {
 #define NG_ASSET_STRIPS_23 2  /* opponent_shot_orb.png */
 #define NG_ASSET_STRIPS_24 2  /* opponent_shot_ring.png */
 #define NG_ASSET_STRIPS_25 2  /* opponent_tank_camo.png */
+#define NG_ASSET_STRIPS_26 1  /* item_life.png */
+#define NG_ASSET_STRIPS_27 1  /* item_missile.png */
+#define NG_ASSET_STRIPS_28 1  /* item_speed.png */
+#define NG_ASSET_STRIPS_29 16  /* background_open_sea.png */
 
 static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 0, 16, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0, 16 }, /* background_coast_city.png */
@@ -74,7 +78,7 @@ static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 1280, 21, 2, 2, 0, 0, 3, 0, 25, 32, 1, 0, 2 }, /* sprite_p2_plane.png */
     { 1536, 22, 10, 15, 3, 1, 0, 0, 160, 240, 1, 0, 16 }, /* sprite_p3_pilot.png */
     { 1792, 23, 2, 2, 0, 0, 3, 0, 25, 32, 1, 0, 2 }, /* sprite_p3_plane.png */
-    { 2048, 24, 2, 3, 7, 13, 12, 8, 8, 40, 1, 0, 16 }, /* sprite_shot_player.png */
+    { 2048, 24, 1, 1, 0, 0, 0, 0, 16, 16, 1, 0, 1 }, /* sprite_shot_player.png */
     { 2304, 25, 2, 2, 0, 0, 1, 0, 29, 32, 1, 3, 2 }, /* opponent_bomber_olive.png */
     { 2560, 26, 5, 7, 1, 0, 8, 0, 64, 112, 1, 3, 7 }, /* opponent_boss_crimson_cathedral.png */
     { 2816, 27, 7, 7, 0, 0, 0, 0, 112, 112, 1, 3, 7 }, /* opponent_boss_gold_core.png */
@@ -91,6 +95,10 @@ static const NGSpriteAssetMeta g_ng_asset_meta[NG_ASSET_META_COUNT] = {
     { 5632, 38, 2, 2, 0, 0, 0, 0, 32, 32, 1, 3, 2 }, /* opponent_shot_orb.png */
     { 5888, 39, 2, 2, 0, 0, 0, 0, 32, 32, 1, 3, 2 }, /* opponent_shot_ring.png */
     { 6144, 40, 2, 2, 0, 0, 5, 0, 21, 32, 1, 3, 2 }, /* opponent_tank_camo.png */
+    { 6400, 41, 1, 1, 0, 0, 0, 0, 16, 16, 1, 0, 1 }, /* item_life.png */
+    { 6656, 42, 1, 1, 0, 0, 0, 0, 16, 16, 1, 0, 1 }, /* item_missile.png */
+    { 6912, 43, 1, 1, 0, 0, 0, 0, 16, 16, 1, 0, 1 }, /* item_speed.png */
+    { 7168, 44, 16, 16, 0, 0, 0, 0, 256, 256, 0, 0, 16 }, /* background_open_sea.png */
 };
 
 #endif
