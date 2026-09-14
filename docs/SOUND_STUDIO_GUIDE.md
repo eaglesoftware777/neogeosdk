@@ -1,5 +1,11 @@
 # Sound Studio Guide
 
+For v1.7.0 installation, project switching, shared asset paths, and build safety,
+start with the [Desktop Studios Manual](DESKTOP_STUDIOS.md). The tab additions
+below describe the development sequence, not a fixed count of current tabs.
+Desktop FM/SSG synthesis and ADPCM auditions are approximate previews; validate
+the compiled M1/V-ROM pair in MAME or on hardware.
+
 > **v1.7.0 — new tabs**
 >
 > Sound Studio gained SEVEN new tabs in v1.7.0:
@@ -40,8 +46,8 @@
 > MML/composition path over `playFMTrack(SOUND_FM_H)`
 > alone — the patch table doesn't carry sequencing.
 >
-> Sound Studio's panels map 1-to-1 to the on-ROM channels: FM (4 ch),
-> SSG (3 ch), ADPCM-A (6 ch sampled), ADPCM-B (1 ch streamed).  The
+> The hardware provides FM (4 ch), SSG (3 ch), ADPCM-A (6 ch sampled),
+> and ADPCM-B (1 ch sampled). Individual preview panels may expose a subset. The
 > identifier headers `sdk/sound_ids.h` and `sound/driver/driver_defs.h`
 > remain the source of truth for what each command does on the Z80
 > side.
@@ -53,11 +59,15 @@ NeoGeo YM2610 audio without leaving your dev environment.
 python3 sound/sound_studio.py
 ```
 
-**Requirements:** Python 3, PyQt6, numpy, scipy.
+**Requirements:** Python 3.10+, PyQt6, numpy, scipy, Pillow, pypng.
 
 ```bash
-pip install PyQt6 numpy scipy
+python3 -m pip install PyQt6 numpy scipy Pillow pypng
 ```
+
+Use an activated virtual environment on Linux/WSL. On Windows, install with
+`py -m pip install PyQt6 numpy scipy Pillow pypng` and launch with
+`py sound\sound_studio.py demo` so the interpreter matches the installation.
 
 ---
 

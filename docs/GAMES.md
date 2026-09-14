@@ -2,20 +2,18 @@
 
 **Eagle Software · Neo Geo SDK v1.7.0**
 
-Six complete games live in `games/`. They are not samples in the "toy
-fragment" sense — every one of them builds to a real ROM that runs in MAME
-and on hardware, and between them they exercise every public subsystem in the
-SDK. They are the reference implementations: when a document says "this is
-how you do X", one of these games is doing X.
+Six buildable projects live in `games/`: the showcase, its C++ counterpart,
+two shooters, and two minimal examples. Use their source as reference
+implementations for the SDK features they demonstrate.
 
 | Game | Id | Engine | What it is |
 |---|---|---|---|
-| `demo` | 777 | C | The 26-chapter engine reel — every subsystem, in order |
-| `demo_plus` | 778 | C++ | The same engine through the C++ API, as a smoke test |
+| `demo` | 777 | C | The 25-chapter engine reel |
+| `demo_plus` | 778 | C++ | The same demo scenes, art, and sound on the C++ engine |
 | `skylance` | 779 | C | Sky Lance — a complete vertical shooter |
 | `helloworld` | 772 | — | FIX text and one sample. The tutorial target. |
 | `tutorial` | 555 | C | The minimal engine loop, nothing else |
-| `neogeogame` | 775 | C | An empty starting point to copy |
+| `neogeogame` | 775 | C | A sprite-based formation shooter |
 
 Every game carries its own `game.cfg`, so all six build the same way:
 
@@ -58,25 +56,26 @@ The same engine, linked from `sdk/2d_engine_plus/` instead of
 make GAME=demo_plus GAME_CFG_FILE=games/demo_plus/game.cfg USE_2D_PLUS=1 all
 ```
 
-Three sub-scenes — TITLE, PARTICLES, MARQUEE — driving the render queue,
-palette effects, and the particle pool through the C++ API. It shares the
-demo's artbox rather than duplicating the data, via the `GAME_EXTRA_INCLUDES`
-hook in its `game.mk`:
+The default build uses the same 25-chapter reel as `demo`. Its `game.mk`
+shares scene sources, graphics inputs, and sound inputs while retaining
+separate 778 ROM outputs:
 
 ```make
-GAME_EXTRA_INCLUDES = -Igames/demo -Igames/demo/artbox
+GAME_SCENES_FROM = demo
+GAME_ART_FROM = demo
+GAME_SOUND_FROM = demo
 ```
 
-Its purpose is to prove the two engine builds stay ABI-compatible. If a
-change to the C engine is not mirrored in the C++ one, this is the ROM that
-fails to build.
+The old three-scene smoke test remains as an alternative source file, but
+is not part of the default build. Run both demo builds when checking engine
+parity; successful compilation alone does not prove identical behavior.
 
 ## skylance — Sky Lance (id 779)
 
 A complete vertical arcade shooter: three pilots, seven stages over three
 terrains, one named boss per stage with its own attack, gunboats and tanks
 that fire from the ground, pick-ups and a super missile, attract reel,
-pilot select, scoring, lives, energy, a game-over/continue flow, and the
+pilot select, scoring, lives, energy, game-over handling, and the
 credits with a victory flight after the seventh boss.
 
 ### Pilots
@@ -181,9 +180,10 @@ engine tick, and as the skeleton to grow an engine-based game from.
 
 ## neogeogame (id 775)
 
-An empty game — the BIOS hooks, the linker script, an artbox directory, and
-nothing else. Rename it, set `GAME_ID` and `GAME_NAME` in its `game.mk`,
-and start writing. See [`ADDING_A_GAME.md`](./ADDING_A_GAME.md).
+A formation shooter with player and enemy sprites, a scrolling starfield,
+bullets, collision handling, score, waves, and lives. The game loop is in
+`games/neogeogame/main.c`. For a minimal new project, start from `helloworld`
+or `tutorial` instead; see [`ADDING_A_GAME.md`](./ADDING_A_GAME.md).
 
 ---
 
@@ -193,7 +193,7 @@ and start writing. See [`ADDING_A_GAME.md`](./ADDING_A_GAME.md).
 |---|---|
 | Talk to the hardware directly | `helloworld` |
 | Get an engine tick running immediately | `tutorial` |
-| Start from a blank slate with the layout already right | `neogeogame` |
+| Start from a minimal project with the layout already right | `helloworld` or `tutorial` |
 | See how a finished game is structured | `skylance` |
 | Look up how one subsystem is actually driven | `demo` |
 | Write the game in C++ | `demo_plus` |

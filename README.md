@@ -7,10 +7,16 @@ Neo Geo development SDK for SNK hardware.
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 
+**NeoGeoSDK v1.7.0 is released.** Download the
+[release assets](https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.7.0),
+including the [ready-to-run demo ROM package (777)](https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.0/neogeosdk_v1.7.0_demo_777.zip).
+See [release and demo installation notes](docs/RELEASE_v1.7.0.md) for the
+matching MAME manifest, BIOS requirements, and checksum verification.
+
 ## What's new in v1.7.0 — the 2D engine release
 
-v1.7.0 consolidates the whole `neo_universal_2d` line of work — 226 commits
-over the mainline. It is the largest release the SDK has had.
+v1.7.0 consolidates the `neo_universal_2d` line of work, including the
+2D engine, game-specific asset pipelines, desktop studios, and demo reel.
 
 - **A complete 2D game engine**, in plain C (`sdk/2d_engine/`) and C++14
   (`sdk/2d_engine_plus/`) with an identical public ABI — 35 modules covering
@@ -40,8 +46,8 @@ over the mainline. It is the largest release the SDK has had.
 - **Sky Lance** (`games/skylance`, id 779) — a complete vertical arcade
   shooter: three pilots, seven stages over three terrains, boats and tanks
   that fire from the ground, a named boss per stage, pick-ups and a super
-  missile, attract reel, pilot select, scoring, lives, energy, a continue
-  flow, and credits with a victory flight at the end.
+  missile, attract reel, pilot select, scoring, lives, energy, game-over
+  handling, and credits with a victory flight at the end.
 - **A 25-chapter demo reel** (`games/demo`, id 777) exercising the engine,
   with a playable two-stage Sky Lance chapter before the credits. Chapter
   number printed top-right; **A** advances, **C** restarts.
@@ -158,7 +164,10 @@ Two PyQt6 graphical tools ship with the SDK for visual asset editing and sound c
 python3 artbox/artbox_studio.py
 ```
 
-Four tabs: C-ROM tile grid viewer, sprite designer with C-snippet export, hitbox editor with draggable rects, and 16-color pixel paint editor that writes back to the ROM buffer.  See [`docs/ARTBOX_PIPELINE.md`](./docs/ARTBOX_PIPELINE.md).
+The project-aware workspace includes source/C-ROM comparison, frame playback,
+tile and palette inspectors, sprite and hitbox editors, pixel painting,
+movement and level design, asset rules, and a guarded build panel. See
+[`docs/DESKTOP_STUDIOS.md`](./docs/DESKTOP_STUDIOS.md).
 
 ### Sound Studio
 
@@ -166,12 +175,19 @@ Four tabs: C-ROM tile grid viewer, sprite designer with C-snippet export, hitbox
 python3 sound/sound_studio.py
 ```
 
-Five tabs: FM patch editor (4-operator, all parameters), MML composer with piano roll and one-click compile, SSG preset editor, ADPCM sample manager with waveform preview, and a YM2610 simulator for mixed FM+SSG channel playback.  See [`docs/SOUND_STUDIO_GUIDE.md`](./docs/SOUND_STUDIO_GUIDE.md).
+The workspace includes FM patch and SSG preset libraries, MML composition,
+sample auditions, waveform inspection, mixer controls, ROM inspection, and
+Make-delegated builds. Desktop synthesis is an authoring preview; verify the
+compiled result in MAME. See [`docs/SOUND_STUDIO_GUIDE.md`](./docs/SOUND_STUDIO_GUIDE.md)
+and the [desktop manual](docs/DESKTOP_STUDIOS.md).
 
-**Requirements:** Python 3, PyQt6, numpy, scipy.
+**Requirements:** Python 3, PyQt6, numpy, scipy, Pillow, pypng.
 
 ```bash
-pip install PyQt6 numpy scipy
+# Linux / WSL: run inside your Python virtual environment
+python3 -m pip install PyQt6 numpy scipy Pillow pypng
+# Windows: use the same interpreter that launches the tools
+py -m pip install PyQt6 numpy scipy Pillow pypng
 ```
 
 
@@ -224,12 +240,12 @@ with `GAME=<name>`.
 
 | Folder | Game ID | ROM prefix | Engine | Description |
 |--------|---------|------------|--------|-------------|
-| `games/demo` | 777 | `777-*` | C | The 26-chapter engine reel — every subsystem, in order |
-| `games/demo_plus` | 778 | `778-*` | C++ | The same engine through the C++ API (`USE_2D_PLUS=1`) |
+| `games/demo` | 777 | `777-*` | C | The 25-chapter engine reel — every subsystem, in order |
+| `games/demo_plus` | 778 | `778-*` | C/C++ | The same shared demo scenes and assets, with the C++ engine linked (`USE_2D_PLUS=1`) |
 | `games/skylance` | 779 | `779-*` | C | Sky Lance — a complete vertical shooter |
 | `games/helloworld` | 772 | `772-*` | — | Minimal FIX-text and one sample; the tutorial target |
 | `games/tutorial` | 555 | `555-*` | C | The minimal engine loop, nothing else |
-| `games/neogeogame` | 775 | `775-*` | C | Blank template for new projects |
+| `games/neogeogame` | 775 | `775-*` | C | Sprite-based formation shooter |
 
 Every game carries its own `game.cfg`, so all six build the same way:
 
@@ -395,14 +411,19 @@ run `dist/run_neogeosdk.bat`.
 
 The `v1.7.0` release publishes these attached assets:
 
-- `neogeosdkv1.7.0.tar.gz`  
-  source snapshot for the SDK
-- `neogeosdk.zip`  
-  generated demo ROM set for MAME (`777-p1.p1`, `777-m1.m1`, `777-s1.s1`, `777-v1.v1`, `777-c1.c1`, `777-c2.c2`)
+- `neogeosdk_v1.7.0_demo_777.zip`: the six demo ROMs, matching MAME software
+  list, checksums, and installation instructions. No BIOS or emulator is included.
+- `neogeosdk_v1.7.0_demo_777.sha256`: checksum of the demo ZIP.
+- `neogeosdk_v1.7.0_manual.pdf`: printable programming manual.
+- `neogeosdk_v1.7.0_overview.pdf`: release overview.
+- `x-tools-v3.tar.xz`: Linux toolchain bundle.
+- `x-tools-v3-win.zip`: Windows toolchain bundle.
+- `SHA256SUMS.txt`: existing toolchain checksums, separate from the demo checksum.
 
-The release page also carries `x-tools.tar` for the Linux toolchain layout used by
-the default `Makefile`. That asset is kept as-is when documentation-only or ROM-only
-release updates are published.
+GitHub also provides source ZIP and tar.gz downloads from the release tag.
+The existing toolchain bundles and PDFs are preserved during this publication
+update. See [release notes and PDF addendum](docs/RELEASE_v1.7.0.md) for the
+current documentation and prebuilt demo installation steps.
 
 Current release page:
 
@@ -573,14 +594,20 @@ Install the base packages:
 
 ```bash
 sudo apt-get update
-sudo apt-get install git mame srecord cmake build-essential python3 python3-pip python3-numpy python3-pil sqlite3 sox
-python3 -m pip install --user pypng
+sudo apt-get install git mame srecord cmake build-essential python3 python3-pip python3-venv sqlite3
+python3 -m venv "$HOME/.venvs/neogeosdk"
+source "$HOME/.venvs/neogeosdk/bin/activate"
+python3 -m pip install numpy Pillow pypng
 git clone https://github.com/vhelin/wla-dx
 cd wla-dx
 cmake -S . -B build
 cmake --build build -j
 sudo cp build/binaries/wla-z80 build/binaries/wlalink /usr/local/bin/
 ```
+
+Keep this Python environment active when building. For the desktop studios,
+also install `PyQt6 scipy` in it. SoX is optional; sample conversion uses the
+bundled Python implementation unless explicitly selected otherwise.
 
 Recommended layout:
 
@@ -606,8 +633,8 @@ $HOME/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc --version
 ```
 
 The binaries are static, so the same bundle works on any x86-64 Linux.
-The previous `x-tools-v2.tar` remains on the release page and is picked
-up when `x-tools-v3` is absent.
+An already-installed `x-tools-v2` bundle is still picked up when `x-tools-v3`
+is absent; the current release downloads are the v3 bundles listed above.
 
 Set `SDKHOME` to the parent of both:
 
@@ -639,8 +666,10 @@ Typical WSL setup:
 
 ```bash
 sudo apt-get update
-sudo apt-get install git mame srecord cmake build-essential python3 python3-pip python3-numpy python3-pil sqlite3
-python3 -m pip install --user pypng
+sudo apt-get install git mame srecord cmake build-essential python3 python3-pip python3-venv sqlite3
+python3 -m venv "$HOME/.venvs/neogeosdk"
+source "$HOME/.venvs/neogeosdk/bin/activate"
+python3 -m pip install numpy Pillow pypng
 
 mkdir -p $HOME/neogeo
 cd $HOME/neogeo
@@ -1355,8 +1384,7 @@ z80c-special/     — experimental Z80 C compiler used by the C-driver path
 - the authoritative playable sound driver remains `sound/driver/driver.asm`
 - the experimental C-driver path is built for comparison and incremental migration work
 - release assets include generated ROM data because this repository tracks and tests them directly
-- `x-tools.tar` remains on the release page for the Linux toolchain layout, but it
-  is not refreshed by every documentation or ROM update
+- the attached v3 toolchain bundles are not refreshed by documentation or ROM-only updates
 
 License
 

@@ -36,10 +36,11 @@ Run it with `-cart1 skylance` and the hash path `hash_eagle/skylance`.
 `characters/`, `npcs/` - because the flat layout falls through to the
 screen-mode fallback rule and sprites lose their transparency handling.
 
-The two backdrops were resized to 256x256 and cross-faded across the wrap so
-they tile top-to-bottom: a page is 16x16 tiles and the sprite chip can only
-shrink, never stretch, so a scrolling backdrop has to be exactly one page tall
-and seamless at the join.
+Three terrains cover the valley, harbour, and open sea. Each is imported
+at 256x256 and drawn through `scenes/sky_terrain.h` as two resident pages,
+with the second page reflected vertically. This joins matching source rows
+without requiring a hand-painted seamless wrap. Scrolling updates positions
+without re-uploading the entire tilemap every frame.
 
 ## Playfield
 
