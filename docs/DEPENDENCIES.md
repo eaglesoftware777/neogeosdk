@@ -29,12 +29,14 @@ sudo apt-get install \
     build-essential \
     python3 \
     python3-pip \
+    python3-venv \
     python3-numpy \
     python3-pil \
     sqlite3
 ```
 
-`sox` is optional.  The build falls back to the bundled Python converter when it is not present:
+`sox` is optional. The bundled Python WAV converter is the default, even when
+SoX is installed. Select the SoX path explicitly with `SOX=/path/to/sox`:
 
 ```bash
 sudo apt-get install sox   # optional
@@ -43,7 +45,18 @@ sudo apt-get install sox   # optional
 ### Python packages
 
 ```bash
-python3 -m pip install --user pypng
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install numpy Pillow pypng
+python3 -c "import numpy, PIL, png; print('Build dependencies OK')"
+```
+
+Run these commands from the checkout and keep the environment active for
+`make`. This avoids modifying an externally managed system Python on recent
+Ubuntu/WSL installations. The desktop studios additionally need:
+
+```bash
+python3 -m pip install PyQt6 scipy
 ```
 
 Core modules used by the build scripts:
@@ -117,12 +130,12 @@ Verify:
 ```bash
 export SDKHOME=$HOME/neogeo
 $SDKHOME/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc --version
+```
 
 The Linux makefile fallback order is:
 1. `$SDKHOME/x-tools-v3`
 2. `$SDKHOME/x-tools-v2`
 3. `$SDKHOME/x-tools` (legacy)
-```
 
 ### MAME
 
@@ -190,6 +203,10 @@ py -m pip --version
 py -m pip install --upgrade pip
 py -m pip install numpy pillow pypng
 ```
+
+For Artbox Studio and Sound Studio, also run `py -m pip install PyQt6 scipy`.
+Launch them with `py`, not a different Python installation. See the
+[desktop studios manual](DESKTOP_STUDIOS.md).
 
 The same module table applies as on Linux (see above).
 
