@@ -14,11 +14,27 @@ Both tools share a common architecture for workspace discovery, game switching, 
 
 The studios require **Python 3.10+** and the following libraries:
 
+Use the same interpreter to install dependencies and launch the studios. On
+Linux/WSL, create and activate a virtual environment first:
+
 ```bash
-pip install PyQt6 numpy scipy
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install PyQt6 numpy scipy Pillow pypng
 ```
 
-Ensure standard build tools (`make`, `gcc`, `wla-dx`) are on your `PATH`.
+On Windows CMD:
+
+```bat
+py -m pip install PyQt6 numpy scipy Pillow pypng
+py -c "import PyQt6, numpy, scipy, PIL, png; print('Studio dependencies OK')"
+py artbox\artbox_studio.py demo
+py sound\sound_studio.py demo
+```
+
+Viewing/editing assets does not require the 68000 compiler. ROM builds require
+GNU Make, the configured 68000 cross-toolchain, and `wla-z80`/`wlalink` for sound.
+See [build installation](../README.md#installation-on-linux) and [dependencies](DEPENDENCIES.md).
 
 ### Launching the Studios
 
@@ -53,12 +69,12 @@ The SDK supports multiple simultaneous games in `games/<game_name>/`. The `Studi
 | Attribute / Method | Description | Fallback Location |
 |---|---|---|
 | `project.game` | Name of current game folder (e.g. `demo`, `skylance`) | Derived from `games/` or `CURRENT_GAME` |
-| `project.game_id` | 3-digit hex/decimal ROM ID (e.g. `777`, `779`) | Read from `games/<game>/game.mk` |
-| `project.art_source` | Directory containing source PNG graphics | `games/<game>/art_source` |
-| `project.art_data` | Directory containing `assets.cfg`, palettes, and manifests | `games/<game>/art_data` or `artbox/art_data` |
-| `project.sound` | Directory containing game-specific audio sources | `games/<game>/sound` or shared `sound/` |
-| `project.c_rom_paths()` | Paths to game's C1 and C2 ROM binaries | `roms/<game>/<ID>-c1.c1` & `c2.c2` |
-| `project.make_command(target)` | Formats standard make invocation | `make -j4 GAME=<game> <target>` |
+| `project.game_id` | Literal decimal ROM ID (e.g. `777`, `779`) | Read from `games/<game>/game.mk` |
+| `project.art_source` | Source owner's art root; PNGs under `in/`, FIX images under `infix/` | `games/<GAME_ART_FROM or game>/artbox` |
+| `project.art_data` | Selected game's generated art root | `games/<game>/artbox` |
+| `project.sound` | Sound owner's audio root | `games/<GAME_SOUND_FROM or game>/sound`; `sound_dir` falls back to root `sound/` |
+| `project.c_rom_paths()` | First available C1/C2 pair | Selected game's artbox, then ROM directory, then demo fallback; inspect the loaded paths |
+| `project.make_command(target)` | Formats the platform-specific make invocation | `make -f Makefile GAME=<game> <target>`; `MakefileWin32.mak` on Windows |
 
 ### Workspace Sidebar & Game Switching
 
@@ -73,9 +89,10 @@ Each studio features a unified sidebar (`mount_workspace`):
 
 ### Safe Document Saving (`save_document`)
 
-To prevent accidental file clobbering when editing concurrently, all file saves utilize `save_document`:
+The shared `save_document` helper supports safer document writes:
 - **Atomic File Writing**: Edits are staged through `QSaveFile` (written to a temporary file and atomically renamed upon flush).
-- **Conflict Checking (`FileSnapshot`)**: A cryptographic SHA-256 snapshot is compared before saving. If another process or developer modified the file on disk while the studio had it open, an overwrite confirmation dialog is displayed, showing timestamp differences.
+- **Conflict Checking (`FileSnapshot`)**: Callers that supply a snapshot compare the file's SHA-256 before saving and request confirmation if it changed. This is not a guarantee for every editor; reload before editing files changed by another session.
+- **Generated ROMs**: Direct ROM edits are replaced by a subsequent art build. Keep lasting changes in source PNGs and conversion rules.
 
 ### Build Delegation (`BuildPanel`)
 
@@ -99,16 +116,17 @@ Artbox Studio is designed around the actual hardware specifications of the Neo G
 3. **Hardware Palette DAC (16-bit Color Word)**:
    The Neo Geo video DAC uses a 6-bit per channel RGB architecture packed into a 16-bit word, with an inverted shared low bit in bit 15:
    ```
-   Word format: [D15 | R4-R1 | G4-G1 | B4-B1 | R0 | G0 | B0]
+   Word format: [D15 | R-low | G-low | B-low | R-high(4) | G-high(4) | B-high(4)]
    where:
      low_bit = 1 - ((word >> 15) & 1)
-     Red   (0..63) = (((word >> 11) & 0x0F) << 2) | (((word >> 8) & 1) << 1) | low_bit
-     Green (0..63) = (((word >>  7) & 0x0F) << 2) | (((word >> 9) & 1) << 1) | low_bit
-     Blue  (0..63) = (((word >>  3) & 0x0F) << 2) | (((word >> 10) & 1) << 1) | low_bit
+     Red   (0..63) = (((word >> 8) & 0x0F) << 2) | (((word >> 14) & 1) << 1) | low_bit
+     Green (0..63) = (((word >> 4) & 0x0F) << 2) | (((word >> 13) & 1) << 1) | low_bit
+     Blue  (0..63) = (( word       & 0x0F) << 2) | (((word >> 12) & 1) << 1) | low_bit
    ```
-   Artbox Studio faithfully implements this DAC scaling in `artbox/studio_assets.py` (`ng_rgb` and `rgb_word`), ensuring preview fidelity identical to real Neo Geo hardware.
-4. **C-ROM Interleaving**: Tile bitplanes 0 & 1 are stored in the C1 ROM (`.c1`), while bitplanes 2 & 3 are stored in the C2 ROM (`.c2`). In memory, every 64 bytes form one complete 16×16 4bpp tile (32 bytes from C1, 32 bytes from C2).
-5. **Sprite Strips & Hardware Shrinking**: Neo Geo sprites are arranged as vertical columns of 16×16 tiles (up to 32 tiles high). The video hardware allows continuous shrinking along X and Y axes via register control.
+   This is the conversion implemented by `ng_rgb` and `rgb_word` in
+   `artbox/studio_assets.py`; monitor and CRT presentation can still differ.
+4. **C-ROM Interleaving**: One 16x16 4bpp tile occupies 128 bytes total: 64 in C1 and 64 in C2. Use `artbox/tile_codec.py` for bitplane layout and ROM byte ordering rather than treating the data as packed pixel nibbles.
+5. **Sprite Strips & Hardware Shrinking**: Neo Geo sprites are vertical columns of 16x16 tiles (up to 32 rows). Horizontal shrink has 16 hardware steps and vertical shrink has 256; scaling is discrete, not continuous.
 
 ### Workbenches & Tabs
 
@@ -154,7 +172,7 @@ Detailed tabular breakdown of the game's asset manifest:
 
 #### 8. Asset Rules & Browser
 - **Asset Rules (`AssetRulesTab`)**: Edit `assets.cfg` rules (palette sharing, tile alignment, quantization options, trimming rules) with atomic file saving.
-- **Asset Browser (`AssetBrowserTab`)**: Interactive tree browser for PNG files under `art_source/`.
+- **Asset Browser (`AssetBrowserTab`)**: Interactive tree browser for PNG files under the selected source owner's `artbox/in/`.
 
 #### 9. Hex Sprite Inspector & Movement Designer
 - **Hex Sprite Inspector (`HexSpriteInspectorTab`)**: Deep inspection of raw 4bpp bitplane nibbles in binary and hexadecimal with live palette swapping.
@@ -163,20 +181,23 @@ Detailed tabular breakdown of the game's asset manifest:
   - **Dithering Modes**: Blue Noise dither (dispersed dot pattern with minimal visual banding), Floyd-Steinberg error diffusion, or None.
   - **3-Way Visual Comparison**: Side-by-side display of Original 32-bit source, Standard conversion, and HD enhanced output.
   - **Quality Metrics**: Computes PSNR (Peak Signal-to-Noise Ratio in dB), MSE (Mean Squared Error), and unique Neo Geo DAC color count.
-  - **Direct Game Deployment**: Single click deploys the optimized HD image directly into the active game's `art_source/` directory.
+  - **Direct Game Deployment**: Writes a selected conversion to the source art directory. Inspect its destination and preserve the original PNG before replacing it.
 - **ROM Inventory (`RomInventoryTab`)**: Real-time audit of all built ROM kinds (`p1`, `m1`, `s1`, `v1`, `c1`, `c2`) across all game projects in `roms/`, including file sizes and modification timestamps.
 - **Movement Designer (`MovementDesignerTab`)**: Simulate kinematic trajectories, velocity curves, and physics paths for moving sprites.
 
 #### 10. Build & Make (`BuildPanel`)
 Execute graphics build targets directly:
-- `art`: Converts all source PNGs in `art_source/` into interleaved C-ROMs (`<game_id>-c1.c1` and `<game_id>-c2.c2`) and generates C header manifests.
+- `art`: Converts configured PNGs under `games/<art_owner>/artbox/in/` into interleaved C-ROMs (`<game_id>-c1.c1` and `<game_id>-c2.c2`) and generates C header manifests.
 - `sfix`: Builds the S-ROM fix layer tiles (`<game_id>-s1.s1`).
 
 ---
 
 ## 4. Sound Studio
 
-Sound Studio (`sound/sound_studio.py`) is the complete audio authoring suite for the Yamaha YM2610 (OPN2) sound processor and Z80 sound driver.
+Sound Studio (`sound/sound_studio.py`) authors audio for the Yamaha YM2610 (OPNB)
+and Z80 sound driver. Desktop synthesis and ADPCM auditions are previews, not
+cycle-accurate hardware validation. Compile and listen in MAME or on hardware
+before approving a sound for a game.
 
 ### Yamaha YM2610 Sound Architecture
 
@@ -192,11 +213,11 @@ The Neo Geo sound subsystem consists of an 8-bit Z80 CPU clocked at 4 MHz managi
    - Three independent square wave channels (SSG A, SSG B, SSG C).
    - Hardware noise generator (period 0–31) assignable to any channel.
 3. **ADPCM-A (6 Channels, Sampled SFX)**:
-   - 18.5 kHz maximum sample rate, 4-bit OKI ADPCM encoding.
+   - Fixed approximately 18.5 kHz sample rate (8 MHz / 432), Yamaha 4-bit ADPCM-A encoding.
    - Stored in the V-ROM (`<game_id>-v1.v1`).
    - All 6 channels can trigger and mix simultaneously for sound effects and percussion.
 4. **ADPCM-B (1 Channel, Streaming Audio)**:
-   - Variable sample rate OKI ADPCM streaming for voice lines, long intro tracks, or speech synthesis.
+   - Variable-rate Yamaha ADPCM-B playback from V-ROM for voice lines and long tracks. The encoded format differs from ADPCM-A; do not substitute arbitrary OKI ADPCM files.
 
 ### Workbenches & Tabs
 
@@ -204,7 +225,7 @@ The Neo Geo sound subsystem consists of an 8-bit Z80 CPU clocked at 4 MHz managi
 Visual FM instrument synthesizer and patch bank editor (`patches.fm`):
 - **Algorithm Diagram**: Visual flow diagram updates dynamically as you change ALG (0–7).
 - **Operator Sliders**: Full interactive hex spinboxes for DT, MUL, TL, AR, DR, SR, SL, and RR.
-- **Pro Instrument Library**: 10 authentic production-ready YM2610 patches:
+- **Instrument Library**: 10 starting-point patches to audition and tune in-game:
   - *Slap Bass* (ALG 4, punchy percussive attack)
   - *Synth Bass* (ALG 2, deep sub-bass foundation)
   - *FM Rhodes Piano* (ALG 5, bell-like electric piano)
@@ -217,7 +238,7 @@ Visual FM instrument synthesizer and patch bank editor (`patches.fm`):
   - *FM Kick Drum* (ALG 3, punchy low-end thud)
 - **Library Controls**: Audition presets directly, apply preset parameters to the current selected patch, or insert as a brand new patch.
 - **Auditioning**: Play test tones via the built-in piano keyboard, or trigger C-major arpeggios and chords.
-- **Waveform Display**: Live synthesized preview generated via exact FM synthesis simulation in Python/NumPy.
+- **Waveform Display**: Synthesized audition generated in Python/NumPy; envelope, modulation, and mixing can differ from the running driver.
 - **Save**: Writes changes safely to `sound/fm/patches.fm`.
 
 #### 2. MML Composer (`MmlComposerTab`)
@@ -226,7 +247,7 @@ Full-featured Music Macro Language tracker for FM and SSG tracks:
 - **Syntax Highlighting**: Comments, octave directives, tempo markers, and notes are cleanly colorized.
 - **Quick Snippet Toolbar**: Single-click insertion of common MML idioms:
   - `+ Header`: Standard tempo, volume, and initial octave initialization.
-  - `+ Loop`: Loop block syntax `[ ... ]2`.
+  - `+ Loop`: Inserts a loop template. Check the selected compiler's syntax; the FM compiler uses `~` to restart and does not accept bracket-repeat blocks.
   - `+ Drum Cue`: ADPCM drum trigger directive.
   - `+ Mix Directive`: Channel pan and volume adjustments.
 - **Syntax Validator**: Real-time syntax validator verifying bracket matching, tempo bounds (1–255), volume levels (0–15), octave ranges (1–8), and valid note lengths.
@@ -236,8 +257,8 @@ Full-featured Music Macro Language tracker for FM and SSG tracks:
 **Standard MML Syntax:**
 ```text
 ; Example FM Lead Theme
-T135 V14 I2 O4 L8
-c d e f g4. a8 b > c2
+T135 V10 I2 O4 L8
+c d e f g4 a8 b > c2
 ```
 - `T<bpm>`: Tempo in beats per minute.
 - `V<vol>`: Volume level (0–15).
@@ -246,6 +267,7 @@ c d e f g4. a8 b > c2
 - `L<len>`: Default note duration (4 = quarter, 8 = eighth, 16 = sixteenth).
 - `<` / `>`: Step octave down / up.
 - `R`: Rest.
+- `~`: Restart an FM track. Dotted durations and bracket repeats are not supported by `fm_compile.py`; desktop snippets are not a substitute for compiling.
 
 #### 3. MML Designer (`MMLDesignerTab`)
 Interactive step-grid piano roll for quickly sketching melodies:
@@ -275,7 +297,7 @@ Manage WAV audio assets intended for V-ROM compilation:
 - Import new WAV files with automatic staging.
 - **Dual Playback Auditioning**:
   - *Play Source PCM*: Auditions the original uncompressed source audio.
-  - *Audition 4-bit ADPCM Hardware Emulation*: Real-time software simulation of the Neo Geo OKI MSM6242B 4-bit ADPCM step-adaptation algorithm. Renders decoded audio, displays reconstructed waveform, and calculates SNR (Signal-to-Noise Ratio) in dB.
+  - *Audition 4-bit ADPCM Hardware Emulation*: Software audition of sample quantization, with reconstructed waveform and SNR (Signal-to-Noise Ratio). Validate the actual A/B encoder output and playback rate in the built V-ROM; the desktop label does not imply cycle-accurate YM2610 emulation.
 - **V-ROM Byte Footprint**: Shows total encoded byte consumption in the V-ROM.
 
 #### 6. Step Sequencer / Composer (`ComposerTab`)
@@ -287,7 +309,8 @@ Manage WAV audio assets intended for V-ROM compilation:
 - Export groove patterns directly into MML tracks.
 
 #### 7. YM2610 Simulator (`YM2610SimTab`)
-Audition all 10 hardware channels running concurrently:
+Audition the panel's ten preview lanes concurrently. The hardware has fourteen
+voices (4 FM, 3 SSG, 6 ADPCM-A, 1 ADPCM-B); the panel shows only two ADPCM-A lanes:
 - Adjust pitch and instrument assignment for FM 1–4, SSG A–C, ADPCM-A 1–2, and ADPCM-B.
 - Master audition button triggers synchronized synthesis across all channels.
 - Output waveform visualization checks for signal clipping or balance issues.
@@ -328,7 +351,8 @@ Run audio compilation targets without leaving the studio:
 - `samples`: Re-encodes WAVs into ADPCM-A and ADPCM-B binary blocks.
 - `vrom`: Packs encoded samples into the V-ROM (`<game_id>-v1.v1`).
 - `fmpatches`: Compiles `patches.fm` into assembly tables.
-- `mml`: Compiles all MML scripts into driver track tables.
+- `mml`: Compiles the main MML music data.
+- `fm` and `ssg`: Compile the separate FM and standalone SSG track banks.
 - `ssgconfig`: Rebuilds SSG preset tables from `config.ssg`.
 - `m1rom`: Assembles the complete Z80 M1 ROM (`<game_id>-m1.m1`).
 - `sound`: Executes the complete audio build pipeline.
@@ -340,7 +364,10 @@ Run audio compilation targets without leaving the studio:
 ### Graphics Workflow: From Sprite Sheet to Neo Geo ROM
 
 1. **Source Preparation**:
-   Place your 32-bit RGBA source PNGs in your game's art folder (`games/<game_name>/art_source/`). Ensure sprites are positioned on 16×16 pixel grid boundaries.
+   Place RGBA PNGs under `games/<art_owner>/artbox/in/`, and FIX sources under
+   `infix/`. Configure `assets.cfg` for screen, sprite, or background handling;
+   the importer pads to tile boundaries. Preserve transparent margins and
+   inspect the generated metadata instead of guessing tile addresses.
 2. **Launch Artbox Studio**:
    ```bash
    python3 artbox/artbox_studio.py <game_name>
@@ -377,10 +404,14 @@ Run audio compilation targets without leaving the studio:
 5. **Trigger in Game Code**:
    In your 68000 C engine code:
    ```c
-   // Send sound trigger command to Z80 driver
-   soundPlayMusic(SOUND_MUSIC_STAGE1);
-   soundPlaySfx(SOUND_SFX_EXPLOSION);
+   playSFXB(SOUND_TRACK_B);
+   playSFX(SOUND_SFX_1);
    ```
+   Initialize sound once through the normal game startup first. Include
+   `sdk/neogeo.h` and `sdk/sound_ids.h`; the constants above are zero-based
+   sample indices, not raw Z80 command bytes. Match them to the active game's
+   sample table. See [driver guide](../sound/SOUND_DRIVER_GUIDE.txt) for looping,
+   stop, mixing, and scene-transition calls.
 
 ---
 
