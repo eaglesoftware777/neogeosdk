@@ -87,11 +87,11 @@ def gen_xml():
     -->
 
     <software name="{GAME}">
-        <description>NeoGeo SDK {GAME} v1.2.0 / Eagle Software</description>
+        <description>NeoGeo SDK {GAME} v1.7.0 / Eagle Software</description>
         <year>2026</year>
         <publisher>Eagle Software</publisher>
         <info name="serial" value="NGM-{GAME_ID} (MVS), NGH-{GAME_ID} (AES)"/>
-        <info name="release" value="20260101 (MVS), 20260101 (AES)"/>
+        <info name="release" value="20260914 (MVS), 20260914 (AES)"/>
         <info name="alt_title" value="Eagle SDK"/>
         <sharedfeat name="release" value="MVS,AES" />
         <sharedfeat name="compatibility" value="MVS,AES" />

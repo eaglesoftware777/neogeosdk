@@ -2,10 +2,9 @@
 
 ## v1.7.0 - The 2D Engine Release
 
-Release date: 2026-09-13
+Release date: 2026-09-14
 
-This release is the whole of the `neo_universal_2d` branch: 226 commits over
-the mainline, 100 of them since the v1.3.0 pre-release.  It brings a complete
+This release brings together the `neo_universal_2d` development branch. It brings a complete
 2D game engine in two languages, a source-faithful art pipeline, a rebuilt
 audio stack and driver, a multi-game build system with native Windows
 support, a new compiler toolchain, three new games including a finished
@@ -15,6 +14,23 @@ that explains all of it.  The sections below summarise everything that
 changed since v1.3.0; the dated development notes that follow this entry
 record how each piece arrived.
 
+### Release publication
+
+- Announce NeoGeoSDK v1.7.0 and tag this publication commit as `v1.7.0`.
+- Include `neogeosdk_v1.7.0_demo_777.zip`: the six committed demo ROMs,
+  their matching MAME software list, checksums, and launch instructions.
+  BIOS files and the emulator are not included.
+- Align the documentation with the 25-chapter reel, the shared `demo_plus`
+  implementation, the current Sky Lance stages, and the expanded desktop studios.
+- Preserve the existing Toolchain 3.0 downloads and PDF documentation assets.
+- Refresh the project wiki with release-pinned references, current installation
+  instructions, and desktop studio workflows.
+- This publication packages the existing build; it does not rebuild gameplay,
+  graphics, or audio. Earlier measurements below describe development captures,
+  not a new full-game verification of this publication.
+
+Download and installation details: [`docs/RELEASE_v1.7.0.md`](docs/RELEASE_v1.7.0.md).
+
 ### Headline features
 
 - **A complete 2D game engine**, in plain C (`sdk/2d_engine/`) and C++14
@@ -23,7 +39,7 @@ record how each piece arrived.
   feedback, depth effects, palette effects, sprite groups, a VBlank render
   queue, the FIX layer, input, timers, events and fixed-point math.  Select
   the C++ build with `USE_2D_PLUS=1`; both engines are built from one test
-  source so they cannot drift.
+  source to check that their behavior stays aligned.
 - **Toolchain 3.0** - GCC 16.2.0, binutils 2.47, gdb 17.2, newlib 4.6.0 and
   libstdc++ for `m68k-unknown-elf`, shipped as static Linux binaries and as
   Windows executables with no DLL dependencies.
@@ -42,8 +58,8 @@ record how each piece arrived.
 - **Sky Lance** - a complete vertical arcade shooter: three pilots, seven
   stages over three terrains, gunboats, tanks, gunships and bombers that
   shoot back, a named boss per stage with its own attack, pick-ups and a
-  super missile, attract reel, pilot select, scoring, lives, energy, a
-  continue flow, and a credits roll and victory flight after the seventh
+  super missile, attract reel, pilot select, scoring, lives, energy,
+  game-over handling, and a credits roll and victory flight after the seventh
   boss.
 - **A 25-chapter demo reel** exercising every public subsystem, with a
   playable two-stage Sky Lance chapter, chapter numbers on screen, A to
@@ -280,18 +296,21 @@ Hardware behaviour established on this branch and built into both engines:
 
 ### Desktop tools
 
-- **Artbox Studio** - pipeline runner, asset browser, hex sprite inspector,
-  movement designer, level designer, HD compare, ROM inventory and an asset
-  rules editor.
-- **Sound Studio** - track, mix and ROM tabs, a live waveform view and an
-  MML designer.
+- **Artbox Studio** - project switching, source/C-ROM comparison and frame
+  playback, asset and palette inspection, sprite/hitbox editing, movement
+  and level design, HD comparison, and guarded Make builds.
+- **Sound Studio** - project switching, FM and SSG preset libraries, MML
+  composition, sample auditions, waveform and mix views, ROM inspection,
+  and guarded Make builds. Desktop auditions are previews, not a substitute
+  for testing the compiled driver.
 
 ### Documentation
 
 `docs/INTRODUCTION.md`, `docs/PROGRAMMERS_MANUAL.md`, `docs/HELLO_WORLD.md`,
 `docs/SOUND_DRIVER.md`, `docs/ARTBOX_PIPELINE.md`, `docs/TOOLCHAIN.md`,
 `docs/GAMES.md`, `docs/TOOLS.md`, `docs/DEMO_CHAPTERS.md`, `docs/GDB_GUIDE.md`,
-`docs/DEPENDENCIES.md`, the generated `docs/API_2D_ENGINE_C.md` and
+`docs/DEPENDENCIES.md`, `docs/DESKTOP_STUDIOS.md`, `docs/RELEASE_v1.7.0.md`,
+the generated `docs/API_2D_ENGINE_C.md` and
 `docs/API_2D_ENGINE_CPP.md`, the single-file `NEOGEOSDK_v1.7.0.md`, and the
 printable `docs/neogeosdk_v1.7.0_manual.pdf`.  The sound guide documents the
 acknowledgement rule and distinguishes the isolated audio check from the

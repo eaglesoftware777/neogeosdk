@@ -210,12 +210,12 @@ neogeosdk/
 │  ├─ neogeo.h macro.h   hardware registers and inline helpers
 │  └─ sound_ids.h        named music / SFX / FM / SSG ids
 ├─ games/                one directory per game, each self-contained
-│  ├─ demo/              the 26-chapter engine reel        (id 777)
-│  ├─ demo_plus/         C++-engine smoke test             (id 778)
+│  ├─ demo/              the 25-chapter engine reel        (id 777)
+│  ├─ demo_plus/         shared demo on the C++ engine     (id 778)
 │  ├─ skylance/          Sky Lance, a complete shooter     (id 779)
 │  ├─ helloworld/        minimal FIX text + one sample     (id 772)
 │  ├─ tutorial/          minimal engine loop               (id 555)
-│  └─ neogeogame/        empty starting point              (id 775)
+│  └─ neogeogame/        sprite-based formation shooter    (id 775)
 ├─ artbox/               PNG → sprite / FIX / C-ROM pipeline + Artbox Studio
 ├─ sound/                YM2610 stack: Z80 driver, MML, FM, SSG, samples
 ├─ docs/                 the documentation set
@@ -499,12 +499,12 @@ has a dirty-cell cache.
 
 | Game | Id | Engine | What it is |
 |---|---|---|---|
-| `demo` | 777 | C | The 26-chapter engine reel |
-| `demo_plus` | 778 | C++ | The same engine through the C++ API |
+| `demo` | 777 | C | The 25-chapter engine reel |
+| `demo_plus` | 778 | C++ | Shared demo scenes, art, and sound on the C++ engine |
 | `skylance` | 779 | C | Sky Lance — a complete vertical shooter |
 | `helloworld` | 772 | — | FIX text and one sample; the tutorial target |
 | `tutorial` | 555 | C | The minimal engine loop |
-| `neogeogame` | 775 | C | An empty starting point |
+| `neogeogame` | 775 | C | A sprite-based formation shooter |
 
 ### Sky Lance
 
@@ -512,24 +512,23 @@ Three pilots — ROOK (BLUE LANCE), KIRA (GREEN WING), BLAZE (RED STRIKER) —
 differentiated by fire rate, speed and single vs. twin bolt rather than by
 damage numbers. Seven stages, each running 5–7 squadrons before its boss:
 CRIMSON KEEP, IRON TIDE, SOL CORE, NIGHT RAZOR, ROTOR NEST, EARTH HAMMER,
-SPIRE GOD.
+CRIMSON CITADEL.
 
 Two hardware lessons are visible in its source: the playfield is the 256 px
 column the backdrop covers, not the full 320 px screen, because a page is
-16 × 16 tiles; and the backdrops had to be authored to tile seamlessly,
-because the sprite chip can shrink but never stretch.
+16 × 16 tiles; and resident terrain pages use a reflected vertical repeat,
+so scrolling changes positions without re-uploading the full tilemap.
 
 ### The demo reel
 
-26 chapters, each isolating one subsystem, with the chapter number printed
+25 chapters, each isolating one subsystem, with the chapter number printed
 top-right so a problem can be reported by number. **A** advances, **C**
 restarts.
 
 `BOOT · TITLE · FIX LAYER · FIX FX · SPRITE SCREENS · CHARACTERS · CHAR
 SELECT · PHYSICS · CAMERA LAB · PALETTE FX · PARTICLES · PARTICLE LOAD ·
 FEEDBACK · DEPTH FX · DEPTH PARALLAX · NPCS · MINI-GAME · JOYSTICK · SCROLL
-LEVEL · CHAR 2D · TARGET RANGE · DEPTH RIDE · SOUND · SKY LANCE · STAR RAID
-LANCE · CREDITS`
+LEVEL · CHAR 2D · TARGET RANGE · DEPTH RIDE · SOUND · SKY LANCE · CREDITS`
 
 ---
 
@@ -599,8 +598,9 @@ PulseAudio walkthrough for working audio under WSL.
 
 ## 24 / RELEASE — What v1.7.0 adds
 
-v1.7.0 consolidates the whole `neo_universal_2d` line of work — 226 commits
-over the mainline. It is the largest release the SDK has had.
+v1.7.0 consolidates the `neo_universal_2d` development line. The release
+includes the current demo ROM package, toolchains, and documentation; see
+[`docs/RELEASE_v1.7.0.md`](docs/RELEASE_v1.7.0.md) for downloads and installation.
 
 ### The big pieces
 
@@ -615,7 +615,7 @@ over the mainline. It is the largest release the SDK has had.
 | **Installers** | One-shot setup for Linux, Ubuntu, native Windows and WSL |
 | **Art pipeline** | Lab clustering on the hardware lattice, blue-noise dithering, budgeted per-tile palette banks carried through both engines, linear-light resampling, import at display size, halo removal, non-destructive screen fitting, CRT and HD alternative routes, and verification that decodes the built C-ROMs |
 | **Audio** | A driver that keeps musical time (124 Hz tick, live BPM), nine ADPCM-B beds with hardware repeat, eight FM tracks, nine SSG tracks, a recorded voice bank, pan / LFO / noise / tempo / CSM control, a working fade engine, hardware-exact ADPCM encoders, and the 68000-side acknowledgement rule |
-| **Games** | Sky Lance, the 26-chapter reel, `demo_plus`, `neogeogame`, and a working template set |
+| **Games** | Sky Lance, the 25-chapter reel, `demo_plus`, `neogeogame`, and a working template set |
 | **Verification** | Host renderer tests for both engines, art and sound tool tests, emulator captures of VRAM, palette RAM, controls and recorded audio |
 | **Desktop tools** | Artbox Studio and Sound Studio, both PyQt6 |
 | **Documentation** | The set listed in section 23, including generated API references and this document |
