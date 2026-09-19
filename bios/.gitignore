@@ -2,6 +2,8 @@ out/
 *.rom
 *.sp1
 *.bin
+*.sm1
+*.wav
 test_captures*
 test_roms/
 *.tmp
