@@ -40,18 +40,24 @@ OBJS      = out/bios_entry.o \
 
 TARGET_ELF = out/eagle_bios.elf
 TARGET_RAW = out/eagle_bios_raw.bin
-TARGET_ROM = eagle_bios.rom
-TARGET_SP1 = sp-s2.sp1
-TARGET_SM1 = sm1.sm1
+TARGET_ROM  = eagle_bios.rom
+TARGET_SP1  = sp-s2.sp1
+TARGET_SM1  = sm1.sm1
+TARGET_SFIX = sfix.sfix
+TARGET_LO   = 000-lo.lo
+
+PYTHON     ?= python3
 
 .PHONY: all clean test
 
-all: $(TARGET_SP1) $(TARGET_SM1)
+all: $(TARGET_SP1) $(TARGET_SM1) $(TARGET_SFIX) $(TARGET_LO)
 	@echo "========================================================"
-	@echo " EagleBIOS successfully built!"
+	@echo " EagleBIOS Firmware Suite successfully built!"
 	@echo " Output 1 (Big-Endian Linear): bios/$(TARGET_ROM) (128 KB)"
 	@echo " Output 2 (Byte-Swapped MVS):  bios/$(TARGET_SP1) (128 KB)"
 	@echo " Output 3 (Open Sound SM1):    bios/$(TARGET_SM1) (128 KB)"
+	@echo " Output 4 (Open System SFIX):  bios/$(TARGET_SFIX) (128 KB)"
+	@echo " Output 5 (Open Scaling LO):   bios/$(TARGET_LO) (128 KB)"
 	@echo "========================================================"
 
 out:
@@ -88,5 +94,11 @@ out/sm1_raw.bin: out/sm1.link out/bios_sound.o
 $(TARGET_SM1): out/sm1_raw.bin
 	$(SREC_CAT) $< -binary -fill 0xFF 0x000000 0x020000 -o $@ -binary
 
+$(TARGET_SFIX): tools/gen_sfix.py
+	$(PYTHON) tools/gen_sfix.py $@
+
+$(TARGET_LO): tools/gen_lo.py
+	$(PYTHON) tools/gen_lo.py $@
+
 clean:
-	rm -rf out $(TARGET_ROM) $(TARGET_SP1) $(TARGET_SM1) eagle_bios_swapped.rom
+	rm -rf out $(TARGET_ROM) $(TARGET_SP1) $(TARGET_SM1) $(TARGET_SFIX) $(TARGET_LO) eagle_bios_swapped.rom

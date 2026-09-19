@@ -41,27 +41,20 @@ def main():
     test_roms = bios_dir / "test_roms" / "neogeo"
     test_roms.mkdir(parents=True, exist_ok=True)
 
-    # 1. Copy generated EagleBIOS sp-s2.sp1 and sm1.sm1 into test_roms
-    sp1_src = bios_dir / "sp-s2.sp1"
-    if not sp1_src.exists():
-        print(f"Error: {sp1_src} not found. Run 'make -C bios' first.")
-        sys.exit(1)
-    sp1_dst = test_roms / "sp-s2.sp1"
-    sp1_dst.write_bytes(sp1_src.read_bytes())
-
-    sm1_src = bios_dir / "sm1.sm1"
-    if not sm1_src.exists():
-        print(f"Error: {sm1_src} not found. Run 'make -C bios' first.")
-        sys.exit(1)
-    sm1_dst = test_roms / "sm1.sm1"
-    sm1_dst.write_bytes(sm1_src.read_bytes())
-
-    # Copy required support ROMs (000-lo.lo, sfix.sfix)
-    for sup in ["000-lo.lo", "sfix.sfix"]:
-        src = root / "roms" / "neogeo" / sup
-        dst = test_roms / sup
-        if src.exists() and not dst.exists():
-            dst.write_bytes(src.read_bytes())
+    # 1. Copy all four EagleBIOS firmware suite ROMs into test_roms:
+    #    - sp-s2.sp1 (68000 System Firmware)
+    #    - sm1.sm1   (Z80 Sound Firmware)
+    #    - sfix.sfix (Fix Layer System Font ROM)
+    #    - 000-lo.lo (LSPC Sprite Scaling Lookup ROM)
+    # Completely independent from any proprietary Neo-Geo system ROM files.
+    required_bios_roms = ["sp-s2.sp1", "sm1.sm1", "sfix.sfix", "000-lo.lo"]
+    for rom_name in required_bios_roms:
+        src = bios_dir / rom_name
+        if not src.exists():
+            print(f"Error: {src} not found. Run 'make -C bios' first.")
+            sys.exit(1)
+        dst = test_roms / rom_name
+        dst.write_bytes(src.read_bytes())
 
     # 2. Output directory
     capture_dir = bios_dir / "test_captures"
