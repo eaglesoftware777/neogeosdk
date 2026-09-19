@@ -1,0 +1,8 @@
+out/
+*.rom
+*.sp1
+*.bin
+test_captures*
+test_roms/
+*.tmp
+*.log
