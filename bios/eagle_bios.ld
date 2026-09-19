@@ -23,21 +23,21 @@ SECTIONS
 
     . = 0xC00400;
 
-    .jump_table :
+    .jump_table 0xC00400 :
     {
         KEEP(*(.jump_table))
     } > sysrom
 
     . = 0xC004E0;
 
-    .header :
+    .header 0xC004E0 :
     {
         KEEP(*(.header))
     } > sysrom
 
-    . = 0xC00500;
+    . = 0xC00520;
 
-    .text :
+    .text 0xC00520 :
     {
         *(.text)
         *(.text.*)
@@ -51,15 +51,20 @@ SECTIONS
 
     .data :
     {
+        __data_start = .;
         *(.data)
         *(.data.*)
+        __data_end = .;
     } > bios_ram AT > sysrom
+    __data_load = LOADADDR(.data);
 
     .bss (NOLOAD) :
     {
+        __bss_start = .;
         *(.bss)
         *(.bss.*)
         *(COMMON)
+        __bss_end = .;
     } > bios_ram
 
     /DISCARD/ :
@@ -69,3 +74,7 @@ SECTIONS
         *(.eh_frame)
     }
 }
+ASSERT(SIZEOF(.vectors) == 0x400, "vector table size changed")
+ASSERT(SIZEOF(.jump_table) == 0xE0, "BIOS service addresses changed")
+ASSERT(SIZEOF(.header) <= 0x40, "BIOS header overlaps code")
+ASSERT(__bss_end <= 0x10FC00, "BIOS private RAM overflow")

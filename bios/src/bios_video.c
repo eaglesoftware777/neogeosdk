@@ -9,7 +9,8 @@
 /*
  * SYS_FIX_CLEAR: Clear FIX layer in VRAM.
  * The FIX map is 40 columns x 32 rows = 1280 words at VRAM 0x7000.
- * Writing 0x00FF sets each tile to transparent blank space.
+ * Every cell becomes tile 0x20, the space glyph of any text font, which is
+ * the state a game program is promised on entry.
  */
 void sys_fix_clear_c(void)
 {
@@ -19,8 +20,20 @@ void sys_fix_clear_c(void)
     REG_VRAM_INC = 1;
 
     for (i = 0; i < 1280; i++) {
-        REG_VRAM_RW = 0x00FFu;
+        REG_VRAM_RW = FIX_BLANK;
     }
+}
+
+/* Both palette banks to black: the other promise made to a game on entry. */
+void bios_palettes_clear(void)
+{
+    for (uint8_t bank = 0; bank < 2; bank++) {
+        volatile uint16_t *pal = (volatile uint16_t *)ADDR_PALETTES;
+        if (bank) REG_PALBANK1 = 0; else REG_PALBANK0 = 0;
+        for (uint16_t i = 0; i < 4096; i++) *pal++ = 0;
+        *(volatile uint16_t *)ADDR_BACKDROP = COLOR_BLACK;
+    }
+    REG_PALBANK0 = 0;
 }
 
 /*
@@ -44,7 +57,7 @@ void sys_lsp_1st_c(void)
     REG_VRAM_ADDR = VRAM_SCB2;
     REG_VRAM_INC = 1;
     for (i = 0; i < 512; i++) {
-        REG_VRAM_RW = 0x000Fu; /* Full size */
+        REG_VRAM_RW = 0x0FFFu; /* Full size */
     }
 
     /* Clear SCB4: X position (512 words) */
@@ -55,63 +68,115 @@ void sys_lsp_1st_c(void)
     }
 }
 
-/*
- * SYS_MESS_OUT: Process formatted text command stream.
- * Supported commands:
- *   0x0301 (COMMAND1WL): word length, followed by inc command (0x2002)
- *   0x0003 (COMMAND3): target VRAM address
- *   0x0004 (COMMAND4): pointer (32-bit) to word data
- *   0x0000 (COMMAND0): end of message stream
- */
+/* MESS_POINT is the END of a queue of stream pointers, not a stream.
+ * Bound work per call so malformed cartridge data cannot wedge VBlank. */
+static uint8_t readable(uint32_t address, uint16_t bytes)
+{
+    uint32_t end = address + bytes;
+    if (end < address) return 0;
+    return end <= 0x100000u ||
+           (address >= 0x100000u && end <= 0x110000u) ||
+           (address >= 0x200000u && end <= 0x300000u) ||
+           (address >= 0xC00000u && end <= 0xC20000u);
+}
+
+static uint16_t get_word(uint32_t address)
+{
+    const volatile uint8_t *p = (const volatile uint8_t *)address;
+    return (uint16_t)((p[0] << 8) | p[1]);
+}
+
+static uint32_t get_long(uint32_t address)
+{
+    return ((uint32_t)get_word(address) << 16) | get_word(address + 2);
+}
+
+static void mess_stream(uint32_t pc)
+{
+    uint32_t stack[4], data = 0;
+    uint16_t parameter = 0x00FFu, anchor = VRAM_FIXMAP, limit = 4096;
+    uint8_t format = 0, depth = 0;
+    REG_VRAM_INC = 32;
+    for (uint16_t commands = 0; commands < 1024 && limit; commands++) {
+        if ((pc & 1u) || !readable(pc, 2)) return;
+        uint16_t instruction = get_word(pc);
+        uint8_t opcode = (uint8_t)instruction, arg = (uint8_t)(instruction >> 8);
+        pc += 2;
+        if (!opcode) return;
+        if (opcode == 1 || opcode == 3 || opcode == 5 || opcode == 12 || opcode == 13) {
+            if (!readable(pc, 2)) return;
+            uint16_t value = get_word(pc);
+            pc += 2;
+            if (opcode == 1) { format = arg & 3; parameter = value; }
+            else if (opcode == 3) { anchor = value; REG_VRAM_ADDR = anchor; }
+            else if (opcode == 5) { anchor += value; REG_VRAM_ADDR = anchor; }
+            else for (uint16_t i = 0; i < arg && limit; i++, limit--) {
+                REG_VRAM_RW = value;
+                if (opcode == 13) value = (value & 0xFF00u) | ((value + 1u) & 0xFFu);
+            }
+        } else if (opcode == 2) {
+            REG_VRAM_INC = (uint16_t)(int16_t)(int8_t)arg;
+        } else if (opcode == 10) {
+            if (depth == 4 || !readable(pc, 4)) return;
+            stack[depth++] = pc + 4;
+            pc = get_long(pc);
+        } else if (opcode == 11) {
+            if (!depth) return;
+            pc = stack[--depth];
+        } else if (opcode == 8) {
+            REG_VRAM_INC = 32;
+            uint16_t x = anchor;
+            while (limit && readable(pc, 1)) {
+                uint8_t ch = *(const volatile uint8_t *)pc++;
+                if (ch == 255) break;
+                REG_VRAM_ADDR = x;
+                REG_VRAM_RW = ((uint16_t)arg << 8) | ch;
+                REG_VRAM_ADDR = x + 1u;
+                REG_VRAM_RW = ((uint16_t)(arg + 1u) << 8) | ch;
+                x += 32;
+                limit--;
+            }
+            pc = (pc + 1u) & ~1u;
+        } else if (opcode == 4 || opcode == 6 || opcode == 7) {
+            if (opcode == 4) {
+                if (!readable(pc, 4)) return;
+                data = get_long(pc);
+                pc += 4;
+            } else if (opcode == 7) data = pc;
+            uint16_t count = (format & 2) ? parameter : parameter & 255u;
+            uint16_t n = 0;
+            while (limit && (!(format & 1) || n < count)) {
+                uint8_t bytes = (format & 2) ? 2 : 1;
+                if (!readable(data, bytes)) return;
+                uint16_t value = bytes == 2 ? get_word(data) : *(const volatile uint8_t *)data;
+                data += bytes;
+                if (!(format & 1) && value == count) break;
+                REG_VRAM_RW = bytes == 2 ? value : (parameter & 0xFF00u) | value;
+                n++;
+                limit--;
+            }
+            if (opcode == 7) pc = (data + 1u) & ~1u;
+        } else {
+            /* Japanese common-FIX translation (9) is not provided. */
+            return;
+        }
+    }
+}
+
 void sys_mess_out_c(void)
 {
-    const volatile uint16_t *cmd = BIOS_MESS_BUFFER;
-    uint16_t len = 0;
-    uint16_t inc = 0x20;
-    uint16_t vram_addr = VRAM_FIXMAP;
-    const uint16_t *data_ptr = 0;
-    uint8_t has_work = 0;
-
-    if (BIOS_MESS_POINT != 0) {
-        /* If point points within RAM, use it if buffer not used */
+    uint32_t end = BIOS_MESS_POINT;
+    if (BIOS_MESS_BUSY) return;
+    if (end < 0x10FF00u || end > 0x110000u || (end & 3u)) {
+        BIOS_MESS_POINT = 0x10FF00u;
+        return;
     }
-
-    while (*cmd != 0x0000u) {
-        uint16_t opcode = *cmd++;
-
-        if (opcode == 0x0301u) {
-            /* COMMAND1WL: length, increment */
-            len = *cmd++;
-            uint16_t inc_cmd = *cmd++;
-            inc = (uint16_t)((inc_cmd >> 8) & 0xFFu);
-            if (inc == 0) inc = 0x20;
-            has_work = 1;
-        } else if (opcode == 0x0003u) {
-            /* COMMAND3: VRAM address */
-            vram_addr = *cmd++;
-        } else if (opcode == 0x0004u) {
-            /* COMMAND4: 32-bit data address */
-            uint32_t hi = *cmd++;
-            uint32_t lo = *cmd++;
-            data_ptr = (const uint16_t *)((hi << 16) | lo);
-        } else if (opcode == 0x2002u) {
-            inc = 0x20;
-        } else {
-            /* Unknown or skip */
-            cmd++;
-        }
-
-        if (has_work && data_ptr && len > 0) {
-            REG_VRAM_ADDR = vram_addr;
-            REG_VRAM_INC = inc;
-            for (uint16_t i = 0; i < len; i++) {
-                REG_VRAM_RW = data_ptr[i];
-            }
-            has_work = 0;
-            data_ptr = 0;
-            len = 0;
-        }
+    for (uint32_t entry = 0x10FF00u; entry < end; entry += 4) {
+        uint32_t stream = get_long(entry);
+        if (!stream) { mess_stream(entry + 4); break; }
+        mess_stream(stream);
     }
+    BIOS_MESS_POINT = 0x10FF00u;
 }
 
 /*
@@ -128,7 +193,7 @@ void bios_fix_putc(uint8_t x, uint8_t y, char ch, uint8_t pal)
     REG_VRAM_INC = 1;
 
     if (ch == ' ') {
-        REG_VRAM_RW = 0x00FFu; /* Blank tile */
+        REG_VRAM_RW = FIX_BLANK;
     } else {
         uint16_t tile = (uint16_t)(((pal & 0x0Fu) << 12) | ((uint8_t)ch));
         REG_VRAM_RW = tile;
@@ -182,12 +247,26 @@ void bios_fix_clear_area(uint8_t x, uint8_t y, uint8_t w, uint8_t h)
     }
 }
 
+/*
+ * Copy one 16 colour bank into palette RAM.
+ *
+ * Kept in assembly on purpose.  The C loop was compiled to
+ * "move.w (a0)+,(0,a0,d0.l)", and a 68000 computes that destination with
+ * the already incremented a0, so every colour landed one entry late and
+ * index 0 (transparent) took the ink.  Two address registers, no surprise.
+ */
+__attribute__((noinline))
 void bios_set_palette(uint8_t bank, const uint16_t *colors)
 {
     volatile uint16_t *pal_dst = (volatile uint16_t *)(ADDR_PALETTES + ((uint32_t)bank * 32u));
-    for (uint8_t i = 0; i < 16; i++) {
-        pal_dst[i] = colors[i];
-    }
+    uint16_t count = 15;
+    asm volatile (
+        "1:\n\t"
+        "move.w (%0)+,(%1)+\n\t"
+        "dbf %2,1b"
+        : "+a" (colors), "+a" (pal_dst), "+d" (count)
+        :
+        : "memory");
 }
 
 void bios_set_backdrop(uint16_t color)
@@ -263,4 +342,3 @@ void bios_init_palette_banks(void)
     bios_set_palette(6, pal_blue);
     bios_set_palette(7, pal_gray);
 }
-

@@ -31,7 +31,7 @@ static void menu_system_info(void)
     bios_fix_puts(4, 10, "AUDIO CPU:     ZILOG Z80 @ 4.0 MHz", 1);
     bios_fix_puts(4, 12, "SOUND CHIP:    YAMAHA YM2610 (OPNB)", 1);
     bios_fix_puts(4, 14, "WORK RAM:      64 KBYTES (0x100000)", 1);
-    bios_fix_puts(4, 16, "COLOR PALETTE: 4096 COLORS (16 BITS/RGB)", 1);
+    bios_fix_puts(4, 16, "4096 ENTRIES / 65536 COLORS", 1);
 
     if (CART_HEADER->magic[0] == 'N' && CART_HEADER->magic[1] == 'E' &&
         CART_HEADER->magic[2] == 'O' && CART_HEADER->magic[3] == '-') {
@@ -46,7 +46,6 @@ static void menu_system_info(void)
 
     for (;;) {
         bios_wait_vbl();
-        sys_io_c();
         if (BIOS_P1CHANGE & BTN_A) break;
     }
 }
@@ -55,11 +54,10 @@ static void menu_system_info(void)
 static void menu_input_test(void)
 {
     menu_draw_frame("[ CONTROLLER & INPUT TEST ]");
-    bios_fix_puts(4, 25, "HOLD START + SELECT TO EXIT", 2);
+    bios_fix_puts(4, 25, "HOLD C + D TO EXIT", 2);
 
     for (;;) {
         bios_wait_vbl();
-        sys_io_c();
 
         /* Player 1 */
         bios_fix_puts(4,  9, "P1: ", 3);
@@ -94,7 +92,7 @@ static void menu_input_test(void)
         bios_fix_puts(28, 21, (BIOS_STATCURNT & STAT_TEST)    ? "[TEST]"    : " TEST ",    (BIOS_STATCURNT & STAT_TEST)    ? 2 : 1);
 
         /* Exit condition: Start 1 + Select 1 together */
-        if ((BIOS_STATCURNT & STAT_START1) && (BIOS_STATCURNT & STAT_SELECT1)) {
+        if ((BIOS_P1CURRENT & (BTN_C | BTN_D)) == (BTN_C | BTN_D)) {
             break;
         }
     }
@@ -130,7 +128,6 @@ static void menu_color_test(void)
 
     for (;;) {
         bios_wait_vbl();
-        sys_io_c();
         if (BIOS_P1CHANGE & BTN_A) break;
     }
 }
@@ -138,7 +135,7 @@ static void menu_color_test(void)
 /* 4. Audio Sound Test */
 static void menu_sound_test(void)
 {
-    uint8_t sfx_code = 1;
+    uint8_t sfx_code = 2;
     menu_draw_frame("[ AUDIO / SOUND HARDWARE TEST ]");
 
     bios_fix_puts(4,  9, "TEST SFX / BGM CODE: 0x", 1);
@@ -149,7 +146,6 @@ static void menu_sound_test(void)
 
     for (;;) {
         bios_wait_vbl();
-        sys_io_c();
 
         bios_fix_put_hex16(26, 9, sfx_code, 2);
 
@@ -163,7 +159,7 @@ static void menu_sound_test(void)
             REG_SOUND = sfx_code;
         }
         if (BIOS_P1CHANGE & BTN_B) {
-            REG_SOUND = 0x00; /* Sound stop */
+            REG_SOUND = 0x03;
         }
         if (BIOS_P1CHANGE & (BTN_C | BTN_D)) {
             break;
@@ -188,7 +184,7 @@ static void menu_settings(void)
         else bios_fix_puts(22, 12, "EUROPE", 3);
 
         bios_fix_puts(4, 15, selected == 2 ? "> FREE PLAY:"    : "  FREE PLAY:", selected == 2 ? 2 : 1);
-        bios_fix_puts(22, 15, (REG_DIPSW & 0x40) ? "ENABLED" : "DISABLED", 3);
+        bios_fix_puts(22, 15, bios_free_play() ? "ENABLED" : "DISABLED", 3);
 
         bios_fix_puts(4, 18, selected == 3 ? "> RETURN TO MENU" : "  RETURN TO MENU", selected == 3 ? 2 : 1);
 
@@ -196,8 +192,7 @@ static void menu_settings(void)
 
         for (;;) {
             bios_wait_vbl();
-            sys_io_c();
-
+    
             if (BIOS_P1CHANGE & JOY_UP) {
                 selected = (uint8_t)(selected > 0 ? selected - 1 : 3);
                 break;
@@ -208,13 +203,13 @@ static void menu_settings(void)
             }
             if (BIOS_P1CHANGE & BTN_A) {
                 if (selected == 0) {
-                    BIOS_MVS_FLAG = (uint8_t)(BIOS_MVS_FLAG ? 0 : 1);
+                    /* Physical mode is detected, not a writable DIP. */
                 } else if (selected == 1) {
                     uint8_t ccode = (uint8_t)(BIOS_COUNTRY_CODE + 1);
                     if (ccode > 2) ccode = 0;
                     BIOS_COUNTRY_CODE = ccode;
                 } else if (selected == 2) {
-                    REG_DIPSW ^= 0x40;
+                    bios_free_play_override ^= 1;
                 } else if (selected == 3) {
                     return;
                 }
@@ -255,8 +250,7 @@ void bios_test_menu(void)
 
         for (;;) {
             bios_wait_vbl();
-            sys_io_c();
-
+    
             if (BIOS_P1CHANGE & JOY_UP) {
                 cur = (uint8_t)(cur > 0 ? cur - 1 : 5);
                 break;
@@ -265,7 +259,7 @@ void bios_test_menu(void)
                 cur = (uint8_t)(cur < 5 ? cur + 1 : 0);
                 break;
             }
-            if (BIOS_P1CHANGE & (BTN_A | STAT_START1)) {
+            if ((BIOS_P1CHANGE & BTN_A) || (BIOS_STATCHANGE & STAT_START1)) {
                 if (cur == 0) menu_system_info();
                 else if (cur == 1) menu_input_test();
                 else if (cur == 2) menu_color_test();

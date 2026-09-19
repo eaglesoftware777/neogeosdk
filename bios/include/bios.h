@@ -22,6 +22,7 @@
 /* Hardware I/O Registers */
 #define REG_P1CNT           (*(volatile uint8_t  *)0x300000u)
 #define REG_DIPSW           (*(volatile uint8_t  *)0x300001u)  /* Also watchdog kick */
+#define REG_SYSTYPE         (*(volatile uint8_t  *)0x300081u)
 #define REG_SOUND           (*(volatile uint8_t  *)0x320000u)  /* Sound code to Z80 */
 #define REG_STATUS_A        (*(volatile uint8_t  *)0x320001u)  /* Coins, Service, Test */
 #define REG_P2CNT           (*(volatile uint8_t  *)0x340000u)
@@ -71,6 +72,8 @@
 #define BIOS_P2CHANGE       (*(volatile uint8_t  *)0x10FD9Du)
 #define BIOS_P2REPEAT       (*(volatile uint8_t  *)0x10FD9Eu)
 #define BIOS_P2TIMER        (*(volatile uint8_t  *)0x10FD9Fu)
+#define BIOS_CREDIT_DEC     ((volatile uint8_t *)0x10FDB0u)
+#define BIOS_FRAME_COUNTER  (*(volatile uint32_t *)0x10FE88u)
 
 #define BIOS_STATCURNT      (*(volatile uint8_t  *)0x10FDACu)
 #define BIOS_STATCHANGE     (*(volatile uint8_t  *)0x10FDADu)
@@ -101,9 +104,16 @@
 #define BIOS_HOUR           (*(volatile uint8_t  *)0x10FDD6u)
 #define BIOS_MINUTE         (*(volatile uint8_t  *)0x10FDD7u)
 #define BIOS_SECOND         (*(volatile uint8_t  *)0x10FDD8u)
-#define BIOS_SELECT_TIMER   (*(volatile uint8_t  *)0x10FDDAut)
+#define BIOS_SELECT_TIMER   (*(volatile uint8_t  *)0x10FDDAu)
 
 #define BIOS_VBL_TICK       (*(volatile uint32_t *)0x10FD00u)
+
+extern uint8_t bios_coin_state, bios_coin_change, bios_free_play_override;
+extern uint8_t bios_cart_active;
+uint8_t bios_free_play(void);
+uint8_t bios_cart_valid(void);
+void bios_cart_prepare(void);
+void bios_controller_setup(void);
 
 /* Credits in Backup RAM / System RAM */
 #define P1_CREDITS          (*(volatile uint8_t  *)0xD00034u)
@@ -141,6 +151,9 @@
 #define COLOR_GOLD          0x6FE0u
 #define COLOR_DARKGRAY      0x7333u
 #define COLOR_MIDGRAY       0x7777u
+
+/* Blank FIX cell: the space glyph, present in every text font. */
+#define FIX_BLANK           0x0020u
 
 /* VRAM Layout */
 #define VRAM_SCB1           0x0000u  /* Sprite tile indices (0x0000..0x6FFF) */
@@ -217,9 +230,11 @@ void bios_fix_clear_area(uint8_t x, uint8_t y, uint8_t w, uint8_t h);
 void bios_set_palette(uint8_t bank, const uint16_t *colors);
 void bios_set_backdrop(uint16_t color);
 void bios_init_palette_banks(void);
+void bios_palettes_clear(void);
 
 /* Sub-systems */
 void bios_splash_show(void);
+void bios_eyecatcher(void);
 void bios_test_menu(void);
 
 #endif /* EAGLE_BIOS_H */

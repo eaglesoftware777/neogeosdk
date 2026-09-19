@@ -41,7 +41,7 @@ vectors_start:
     .long   0x00C00432          /* 0x060: Spurious Interrupt                 */
     .long   0x00C00438          /* 0x064: Level 1 IRQ (VBlank) -> SYS_INT1   */
     .long   0x00C0043E          /* 0x068: Level 2 IRQ (Timer/HBlank)         */
-    .long   0x00C00426          /* 0x06C: Level 3 IRQ                        */
+    .long   irq3_wrap           /* 0x06C: Power-on interrupt                 */
     .long   0x00C00426          /* 0x070: Level 4 IRQ                        */
     .long   0x00C00426          /* 0x074: Level 5 IRQ                        */
     .long   0x00C00426          /* 0x078: Level 6 IRQ                        */
@@ -59,7 +59,7 @@ vectors_start:
     .section .jump_table, "a"
     .global jump_table_start
 jump_table_start:
-    .word   0x8002              /* 0xC00400: System alignment marker         */
+    .word   BIOS_ID             /* 0xC00400: Platform and region             */
     jmp     bios_reset          /* 0xC00402: Cold / Warm Boot Reset          */
     jmp     bios_bus_err_wrap   /* 0xC00408: Bus Error Handler               */
     jmp     bios_addr_err_wrap  /* 0xC0040E: Address Error Handler           */
@@ -95,8 +95,8 @@ jump_table_start:
     jmp     sys_fix_clear_wrap  /* 0xC004C2: SYS_FIX_CLEAR                   */
     jmp     sys_lsp_1st_wrap    /* 0xC004C8: SYS_LSP_1ST                     */
     jmp     sys_mess_out_wrap   /* 0xC004CE: SYS_MESS_OUT                    */
-    jmp     sys_stub_rts        /* 0xC004D4: Reserved                        */
-    .word   0xFFFF, 0xFFFF, 0xFFFF /* 0xC004DA: Pad to 0xC004E0              */
+    jmp     controller_wrap     /* 0xC004D4: Controller setup                */
+    jmp     sys_int2_wrap       /* 0xC004DA: Timer interrupt                 */
 
 /* -------------------------------------------------------------------------
  *  Section 3: BIOS Identification Header (0xC004E0)
@@ -140,6 +140,24 @@ bios_bus_err_wrap:
 sys_stub_rts:
     rts
 
+    .global bios_call_cart
+bios_call_cart:
+    movem.l %d0-%d7/%a0-%a6, -(%sp)
+    movea.l 64(%sp), %a0
+    jsr     (%a0)
+    movem.l (%sp)+, %d0-%d7/%a0-%a6
+    rts
+
+irq3_wrap:
+    move.w  #1, 0x3C000C
+    rte
+
+controller_wrap:
+    movem.l %d0-%d7/%a0-%a6, -(%sp)
+    jsr     bios_controller_setup
+    movem.l (%sp)+, %d0-%d7/%a0-%a6
+    rts
+
 sys_int1_wrap:
     movem.l %d0-%d7/%a0-%a6, -(%sp)
     jsr     sys_int1_c
@@ -153,9 +171,9 @@ sys_int2_wrap:
     rte
 
 sys_return_wrap:
+    move.w  #0x2700, %sr
     /* 1. Restore BIOS vector table and unprotect backup RAM (keep CRTFIX/M1 active) */
     move.b  %d0, 0x3A0003       /* REG_SWPBIOS: map BIOS vectors at 0x00..0x7F */
-    move.b  %d0, 0x3A001D       /* REG_SRAMUNLOCK: unprotect backup RAM */
 
     /* 2. Restore BIOS supervisor stack pointer */
     movea.l #0x0010F300, %sp
@@ -165,9 +183,8 @@ sys_return_wrap:
 
 .global call_cart_user_asm
 call_cart_user_asm:
-    /* 1. Select slot 0, map cartridge vectors, cartridge S-ROM & M1, and lock SRAM */
-    clr.b   0x380021            /* REG_SLOT: select slot 0 */
-    move.b  %d0, 0x3A001B       /* REG_CRTFIX: use cartridge S-ROM & M1 */
+    /* Cartridge graphics and sound have already been selected safely. */
+    move.w  #0x2700, %sr
     move.b  %d0, 0x3A0013       /* REG_SWPROM: map cartridge vectors at 0x00..0x7F */
     move.b  %d0, 0x3A000D       /* REG_SRAMLOCK: write-protect backup RAM */
 
@@ -194,8 +211,8 @@ call_cart_user_asm:
     suba.l  %a5, %a5
     suba.l  %a6, %a6
 
-    /* 5. Enable interrupts (Level 0, SR = 0x2000) */
-    move.w  #0x2000, %sr
+    /* USER enters with interrupts masked; the game installs its VBlank path. */
+    move.w  #0x2700, %sr
 
     /* 6. Jump directly to Cartridge USER dispatcher */
     jmp     0x000122

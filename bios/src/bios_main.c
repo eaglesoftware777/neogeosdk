@@ -1,12 +1,6 @@
 #include "bios.h"
 
-/*
- * ============================================================================
- *  EagleBIOS Main Boot, Dispatcher & Exception Handlers
- * ============================================================================
- */
-
-
+uint8_t bios_cart_active;
 
 void bios_watchdog(void)
 {
@@ -15,199 +9,169 @@ void bios_watchdog(void)
 
 void bios_wait_vbl(void)
 {
-    bios_watchdog();
-    uint32_t cur = BIOS_VBL_TICK;
-    uint32_t timeout = 500000;
-    while (BIOS_VBL_TICK == cur && --timeout) {
-        bios_watchdog();
-    }
+    uint32_t tick = BIOS_VBL_TICK;
+    while (BIOS_VBL_TICK == tick) bios_watchdog();
 }
 
 void bios_delay_frames(uint16_t frames)
 {
-    while (frames--) {
-        bios_wait_vbl();
-    }
+    while (frames--) bios_wait_vbl();
 }
 
-extern void call_cart_user_asm(void);
+uint8_t bios_cart_valid(void)
+{
+    static const char signature[] = "NEO-GEO";
+    const volatile uint8_t *rom = (const volatile uint8_t *)0x100u;
+    for (uint8_t i = 0; i < 7; i++)
+        if (rom[i] != (uint8_t)signature[i]) return 0;
+    return 1;
+}
+
+extern uint8_t __data_load[], __data_start[], __data_end[];
+extern void call_cart_user_asm(void) __attribute__((noreturn));
+
+void bios_cart_prepare(void)
+{
+    if (BIOS_MVS_FLAG) {
+        /* The system sound program moves entirely into RAM before replying.
+         * Its RAM handoff polls RESET, so cartridge NMIs need not implement
+         * the original slot-switch convention. Never switch live ROM code. */
+        REG_SOUND = 1;
+        bios_delay_frames(2);
+        uint16_t wait = 120;
+        while (REG_SOUND != 1 && wait--) bios_wait_vbl();
+        if (REG_SOUND != 1) {
+            bios_fix_puts(8, 22, "SOUND HANDOFF TIMEOUT", 4);
+            for (;;) bios_watchdog();
+        }
+    }
+    REG_CRTFIX = 0;
+    REG_SOUND = 3;
+    bios_delay_frames(6);
+    bios_cart_active = 1;
+}
 
 static void call_cart_user(void)
 {
+    asm volatile ("move.w #0x2700, %sr");
+    BIOS_SYSTEM_MODE = 0;
+    BIOS_MESS_POINT = 0x10FF00u;
+    BIOS_MESS_BUSY = 0;
+    REG_LSPCMODE = 0x4000;
+    REG_IRQACK = 7;
+    sys_fix_clear_c();
+    sys_lsp_1st_c();
+    bios_palettes_clear();
     call_cart_user_asm();
 }
 
-/*
- * Cold / Warm Boot Reset Sequence (Entry at 0xC00402)
- */
 void bios_reset(void)
 {
-    /* 1. Disable interrupts during boot */
     asm volatile ("move.w #0x2700, %sr");
-
-    /* 2. Kick hardware watchdog */
     bios_watchdog();
-
-    /* 3. Hardware subsystem reset */
-    REG_LSPCMODE = 0x0000u;
-    REG_IRQACK   = 7u; /* Acknowledge IRQ 1, 2, 3 */
+    REG_SWPBIOS = 0;
+    REG_LSPCMODE = 0;
+    REG_IRQACK = 7;
     REG_NOSHADOW = 0;
     REG_PALBANK0 = 0;
-    REG_BRDFIX   = 0;
 
-    /* 4. Clear 68000 User Work RAM (0x100000 .. 0x10EFFF) without touching stack at 0x10F300 */
+    /* Do not clear the live supervisor stack below 10F300. */
     volatile uint32_t *ram = (volatile uint32_t *)ADDR_USER_RAM;
     for (uint32_t i = 0; i < 15360u; i++) {
         *ram++ = 0;
+        if ((i & 255u) == 0) bios_watchdog();
     }
+    ram = (volatile uint32_t *)0x10F400u;
+    for (uint16_t i = 0; i < 0xC00u / 4u; i++) *ram++ = 0;
+    uint8_t *dst = __data_start;
+    const uint8_t *src = __data_load;
+    while (dst < __data_end) *dst++ = *src++;
 
-    /* 5. Initialize BIOS Work RAM variables */
-    BIOS_VBL_TICK     = 0;
-    BIOS_SYSTEM_MODE  = 0x00;
-    /* Hardware MVS vs AES detection: REG_STATUS_B bit 7 is 1 for MVS Arcade, 0 for AES Console */
-    if (REG_STATUS_B & 0x80) {
-        BIOS_MVS_FLAG = 1;  /* MVS Arcade mode */
-        P1_CREDITS    = 0;
-        P2_CREDITS    = 0;
+    BIOS_MVS_FLAG = (REG_STATUS_B & 0x80u) ? 0x80 : 0;
+    BIOS_COUNTRY_CODE = *(const volatile uint8_t *)0xC00401u;
+    BIOS_MESS_POINT = 0x10FF00u;
+    BIOS_SELECT_TIMER = 0x30;
+    bios_controller_setup();
+    if (BIOS_MVS_FLAG) {
+        REG_BRDFIX = 0;
+        REG_SLOT = 0;
+        /* Release both coin lockouts and leave counter coils inactive. */
+        *(volatile uint8_t *)0x380061u = 0;
+        *(volatile uint8_t *)0x380063u = 0;
+        *(volatile uint8_t *)0x380065u = 0;
+        *(volatile uint8_t *)0x380067u = 0;
+        REG_SRAMUNLOCK = 0;
+        P1_CREDITS = P2_CREDITS = 0;
+        *(volatile uint8_t *)0xD00046u = 0;
+        *(volatile uint8_t *)0xD00047u = 1;
+        REG_SRAMLOCK = 0;
     } else {
-        BIOS_MVS_FLAG = 0;  /* AES Home Console mode */
-        P1_CREDITS    = 99;
-        P2_CREDITS    = 99;
+        /* AES has no motherboard SFIX/SM1; use the cartridge font and M1. */
+        REG_CRTFIX = 0;
     }
-    BIOS_COUNTRY_CODE = 2;  /* Default Europe */
-    BIOS_USER_REQUEST = 0;  /* Initial request = POWER_ON */
-    BIOS_USER_MODE    = 0;  /* Initial mode = Boot */
-    BIOS_START_FLAG   = 0;
-    BIOS_PLAYER1_MODE = 0;
-    BIOS_PLAYER2_MODE = 0;
-    BIOS_MESS_POINT   = 0;
-    BIOS_MESS_BUSY    = 0;
-
-    /* 6. Video subsystem initialization */
     sys_lsp_1st_c();
     sys_fix_clear_c();
     bios_set_backdrop(COLOR_BLACK);
     bios_init_palette_banks();
-
-    /* 7. Enable interrupts so VBlank and timers run */
     asm volatile ("move.w #0x2000, %sr");
 
-    /* 8. Check Test switch on cabinet (MVS only: DIP switch 1 active low: REG_DIPSW bit 0, or Service bit 2) */
-    if (BIOS_MVS_FLAG) {
-        if (!(REG_DIPSW & 0x01) || !(REG_STATUS_A & 0x04)) {
-            bios_test_menu();
-        }
+    if (BIOS_MVS_FLAG && (!(REG_DIPSW & 1) || !(REG_SYSTYPE & 0x80)))
+        bios_test_menu();
+
+    while (!bios_cart_valid()) {
+        bios_fix_puts(15, 10, "EAGLE BIOS", 1);
+        bios_fix_puts(10, 14, "NO CARTRIDGE DETECTED", 3);
+        bios_wait_vbl();
+        if (BIOS_P1CHANGE & BTN_A) bios_test_menu();
     }
 
-    /* 9. Verify cartridge header */
-    if (CART_HEADER->magic[0] == 'N' && CART_HEADER->magic[1] == 'E' &&
-        CART_HEADER->magic[2] == 'O' && CART_HEADER->magic[3] == '-' &&
-        CART_HEADER->magic[4] == 'G' && CART_HEADER->magic[5] == 'E' &&
-        CART_HEADER->magic[6] == 'O') {
-
-        /* BIOS animated splash on cold boot */
-        bios_splash_show();
-
-        /* Dispatch initial request: POWER_ON (Request 0) */
-        BIOS_USER_REQUEST = 0;
-        BIOS_USER_MODE    = 0;
-        call_cart_user();
-
-    } else {
-        /* No valid cartridge detected */
-        sys_fix_clear_c();
-        bios_init_palette_banks();
-        bios_fix_puts(4,  6, "==================================", 4);
-        bios_fix_puts(11, 8, "E A G L E   B I O S", 1);
-        bios_fix_puts(9, 10, "NO CARTRIDGE DETECTED", 4);
-        bios_fix_puts(4, 12, "==================================", 4);
-
-        bios_fix_puts(6, 16, "PLEASE INSERT A NEO-GEO CARTRIDGE", 1);
-        bios_fix_puts(8, 18, "OR HOLD TEST SWITCH FOR MENU", 2);
-
-        for (;;) {
-            bios_wait_vbl();
-            sys_io_c();
-            if ((BIOS_P1CHANGE & BTN_A) || (BIOS_MVS_FLAG && (!(REG_DIPSW & 0x01) || !(REG_STATUS_A & 0x04)))) {
-                bios_test_menu();
-                break;
-            }
-        }
+    /* Load the cartridge's documented regional soft-DIP defaults. */
+    uint32_t ptr = CART_HEADER->reserved0[BIOS_COUNTRY_CODE];
+    if (ptr >= 0x140u && ptr < 0xFFFFE0u && !(ptr & 1u)) {
+        const volatile uint8_t *defaults = (const volatile uint8_t *)(ptr + 16u);
+        for (uint8_t i = 0; i < 16; i++) BIOS_GAME_DIP[i] = defaults[i];
     }
 
-    /* Fallback return loop */
-    sys_return_c();
+    /* An arcade board greets the room once at power-on.  A console shows
+     * the eye-catcher after the cartridge's own power-on step, the order a
+     * home cartridge is written for. */
+    if (BIOS_MVS_FLAG) bios_splash_show();
+    bios_cart_prepare();
+    BIOS_USER_REQUEST = 0;
+    BIOS_USER_MODE = 0;
+    call_cart_user();
 }
 
-/*
- * SYS_RETURN: Cartridge return dispatcher (Entry at 0xC00444)
- * Handles state transitions between POWER_ON, EYE_CATCHER, TITLE, and GAME.
- * Supports both MVS Arcade flow and AES Console direct boot.
- */
 void sys_return_c(void)
 {
-    for (;;) {
-        bios_watchdog();
-
-        uint8_t req = BIOS_USER_REQUEST;
-
-        if (req == 0) {
-            /* POWER_ON finished -> transition to EYE_CATCHER, TITLE (MVS) or GAME (AES) */
-            if (CART_HEADER->logoflag != 0) {
-                BIOS_USER_REQUEST = 1; /* EYE_CATCHER */
-                BIOS_USER_MODE    = 1; /* Attract */
-            } else if (BIOS_MVS_FLAG) {
-                BIOS_USER_REQUEST = 3; /* TITLE (MVS) */
-                BIOS_USER_MODE    = 1; /* Attract */
-            } else {
-                BIOS_USER_REQUEST = 2; /* GAME (AES Home) */
-                BIOS_USER_MODE    = 1; /* Attract */
-            }
-            call_cart_user();
-
-        } else if (req == 1) {
-            /* EYE_CATCHER finished -> transition to TITLE (MVS) or GAME (AES) */
-            if (BIOS_MVS_FLAG) {
-                BIOS_USER_REQUEST = 3; /* TITLE */
-                BIOS_USER_MODE    = 1; /* Attract */
-            } else {
-                BIOS_USER_REQUEST = 2; /* GAME */
-                BIOS_USER_MODE    = 1; /* Attract */
-            }
-            call_cart_user();
-
-        } else if (req == 3) {
-            /* TITLE loop returned (MVS only) */
-            if (BIOS_START_FLAG != 0 || BIOS_USER_MODE == 2) {
-                /* Player started game! */
-                BIOS_USER_REQUEST = 2; /* GAME */
-                BIOS_USER_MODE    = 2; /* Game playing */
-                call_cart_user();
-            } else {
-                /* Attract timeout: loop back to EYE_CATCHER or TITLE */
-                BIOS_USER_REQUEST = 1; /* EYE_CATCHER */
-                BIOS_USER_MODE    = 1;
-                call_cart_user();
-            }
-
-        } else if (req == 2) {
-            /* GAME finished (Game Over / Returned to Attract) */
-            BIOS_START_FLAG   = 0;
-            if (BIOS_MVS_FLAG) {
-                BIOS_USER_REQUEST = 3; /* TITLE (MVS) */
-            } else {
-                BIOS_USER_REQUEST = 2; /* GAME (AES) */
-            }
-            BIOS_USER_MODE    = 1; /* Attract */
-            call_cart_user();
-
-        } else {
-            /* Default fallback */
-            BIOS_USER_REQUEST = BIOS_MVS_FLAG ? 3 : 2;
-            BIOS_USER_MODE    = 1;
-            call_cart_user();
+    uint8_t previous = BIOS_USER_REQUEST;
+    BIOS_START_FLAG = 0;
+    BIOS_PLAYER1_MODE = BIOS_PLAYER2_MODE = 0;
+    if (previous == 0 && !BIOS_MVS_FLAG && CART_HEADER->logoflag == 1) {
+        /* The cartridge draws its own eye-catcher. */
+        BIOS_USER_REQUEST = 1;
+        BIOS_USER_MODE = 0;
+    } else {
+        /* Flag 0 leaves the eye-catcher to the system; flag 2 wants none.
+         * SYS_RETURN arrives with interrupts masked: the system vectors are
+         * back in place, so let VBlank run for the presentation. */
+        if (previous == 0 && !BIOS_MVS_FLAG && CART_HEADER->logoflag == 0) {
+            asm volatile ("move.w #0x2000, %sr");
+            bios_eyecatcher();
         }
+        /* Command 2 is attract/game. Command 3 is not a cold-boot entry. */
+        BIOS_USER_REQUEST = 2;
+        BIOS_USER_MODE = 1;
     }
+    call_cart_user();
+}
+
+void bios_enter_title(void)
+{
+    BIOS_USER_REQUEST = 3;
+    BIOS_USER_MODE = 1;
+    BIOS_SELECT_TIMER = 0x30;
+    call_cart_user();
 }
 
 /*
