@@ -36,10 +36,6 @@ void bios_splash_show(void)
         bios_fix_puts(10, 20, "NO CARTRIDGE INSERTED", 4); /* Red */
     }
 
-    /* Sound initialization: send 0x03 to soft-reset Z80 sound driver */
-    REG_CRTFIX = 0;
-    REG_SOUND = 0x03;
-
     /* Hold splash for 60 frames (~1.0 second) or until any button is pressed */
     for (frame = 0; frame < 60; frame++) {
         bios_wait_vbl();

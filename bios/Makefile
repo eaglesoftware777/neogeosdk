@@ -10,6 +10,9 @@ LD        = $(TOOLCHAIN)/m68k-unknown-elf-ld
 OBJCOPY   = $(TOOLCHAIN)/m68k-unknown-elf-objcopy
 SREC_CAT ?= /usr/bin/srec_cat
 
+WLAZ80   ?= wla-z80
+WLALINK  ?= wlalink
+
 INCLUDES  = -Iinclude -I.
 CFLAGS    = -O2 -fomit-frame-pointer -Wall -Wextra -Wno-array-bounds -march=68000 -mcpu=68000 -m68000 \
             -ffreestanding -nostdlib -fno-builtin $(INCLUDES)
@@ -39,14 +42,16 @@ TARGET_ELF = out/eagle_bios.elf
 TARGET_RAW = out/eagle_bios_raw.bin
 TARGET_ROM = eagle_bios.rom
 TARGET_SP1 = sp-s2.sp1
+TARGET_SM1 = sm1.sm1
 
 .PHONY: all clean test
 
-all: $(TARGET_SP1)
+all: $(TARGET_SP1) $(TARGET_SM1)
 	@echo "========================================================"
 	@echo " EagleBIOS successfully built!"
 	@echo " Output 1 (Big-Endian Linear): bios/$(TARGET_ROM) (128 KB)"
 	@echo " Output 2 (Byte-Swapped MVS):  bios/$(TARGET_SP1) (128 KB)"
+	@echo " Output 3 (Open Sound SM1):    bios/$(TARGET_SM1) (128 KB)"
 	@echo "========================================================"
 
 out:
@@ -71,5 +76,17 @@ $(TARGET_SP1): $(TARGET_ROM)
 	$(SREC_CAT) $< -binary -byte-swap 2 -o $@ -binary
 	cp -f $@ eagle_bios_swapped.rom
 
+out/bios_sound.o: src/bios_sound.s | out
+	$(WLAZ80) -o $@ $<
+
+out/sm1.link: out/bios_sound.o | out
+	printf "[objects]\n%s\n" "$<" > $@
+
+out/sm1_raw.bin: out/sm1.link out/bios_sound.o
+	$(WLALINK) -S -r $< $@
+
+$(TARGET_SM1): out/sm1_raw.bin
+	$(SREC_CAT) $< -binary -fill 0xFF 0x000000 0x020000 -o $@ -binary
+
 clean:
-	rm -rf out $(TARGET_ROM) $(TARGET_SP1) eagle_bios_swapped.rom
+	rm -rf out $(TARGET_ROM) $(TARGET_SP1) $(TARGET_SM1) eagle_bios_swapped.rom
