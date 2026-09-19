@@ -20,6 +20,9 @@ void NEOGEO_USER game_boot(void);
 void NEOGEO_USER game_frame(void);
 void NEOGEO_USER maiya_title(void);
 uint8_t NEOGEO_USER maiya_session_over(void);
+void NEOGEO_USER maiya_demo_begin(void);
+void NEOGEO_USER maiya_demo_end(void);
+uint8_t NEOGEO_USER maiya_demo_spent(void);
 void NEOGEO_USER GAME_ATTRACT(void);
 void NEOGEO_USER TITLE_WAIT(void);
 void NEOGEO_USER START_GAME(void);
@@ -233,31 +236,57 @@ void NEOGEO_USER GAME_DISPATCH(void) {
 
 void NEOGEO_USER DEMO_GAME(void)    { GAME_ATTRACT(); }
 
+/* A credit, or Start on a console, ends whatever the cabinet is showing. */
+static int NEOGEO_USER attract_interrupted(void) {
+    if (NEO_REGISTER8(NGO_START_FLAG)) return 1;
+#ifndef NG_AES
+    return read_p1credit() > 0;
+#else
+    if (NEO_REGISTER8(BIOS_P1CHANGE) & 0x01) {
+        NEO_REGISTER8(BIOS_USER_MODE) = 2;
+        NEO_REGISTER8(NGO_START_FLAG) = 1;
+        return 1;
+    }
+    return 0;
+#endif
+}
+
 /*
  * Attract loop.
  *
- * The title screen with INSERT COIN blinking.  A credit or a start ends it
- * and hands control back to the BIOS, which then asks for TITLE: the
- * "hit start" wait below.  On MVS the BIOS calls PLAYER_START itself when
- * Start is pressed with a credit in, so the button is not polled here.
+ * The cabinet alternates between the game playing itself -- a different
+ * valley each time round -- and the title screen with INSERT COIN.  A credit
+ * or a start ends it and hands control back to the BIOS, which then asks for
+ * TITLE: the "hit start" wait below.  On MVS the BIOS calls PLAYER_START
+ * itself when Start is pressed with a credit in, so the button is not polled
+ * here.
  */
 void NEOGEO_USER GAME_ATTRACT(void) {
     int i;
-    clearFix(); clearSprs(); setBACKDROP(BLACK);
-    maiya_title();
-    for (i = 0; ; i++) {
-        if (NEO_REGISTER8(NGO_START_FLAG)) break;
-#ifndef NG_AES
-        if (read_p1credit() > 0) break;
-#else
-        fixtext_out(14, 25, "PUSH START", 1);
-        if (NEO_REGISTER8(BIOS_P1CHANGE) & 0x01) {
-            NEO_REGISTER8(BIOS_USER_MODE) = 2;
-            NEO_REGISTER8(NGO_START_FLAG) = 1;
-            break;
+    int round;
+
+    for (round = 0; ; round++) {
+        /* --- a slice of the game, played by the machine --------------- */
+        clearFix(); clearSprs(); setBACKDROP(BLACK);
+        maiya_demo_begin();
+        for (i = 0; i < 60 * 22; i++) {
+            waitVbl();
+            game_frame();
+            if (attract_interrupted()) { maiya_demo_end(); return; }
+            if (maiya_demo_spent()) break;
         }
+        maiya_demo_end();
+
+        /* --- then the title card -------------------------------------- */
+        clearFix(); clearSprs(); setBACKDROP(BLACK);
+        maiya_title();
+        for (i = 0; i < 60 * 12; i++) {
+#ifdef NG_AES
+            fixtext_out(14, 25, "PUSH START", 1);
 #endif
-        waitVbl();
+            if (attract_interrupted()) return;
+            waitVbl();
+        }
     }
 }
 

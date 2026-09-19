@@ -219,6 +219,112 @@ def draw_countdown():
     im.save(INFIX_DIR / "5.png")
 
 
+
+
+# ---------------------------------------------------------------------------
+#  HUD glyphs injected straight into the FIX ROM
+#
+#  fixtext_out() can only address FIX tiles 0..255, and the imported infix
+#  sheets land far above that, so the handful of icons the HUD prints as text
+#  (lives, roses, the Sun Key, coins) are written into the low, unused codes
+#  here.  They are drawn on pen 1 alone: the HUD palettes are flat inks, so a
+#  silhouette takes whatever colour it is printed in.
+#
+#  Re-run this script after any `make art` rebuild of 780-s1.s1.
+# ---------------------------------------------------------------------------
+
+S1_PATH = GAME / "artbox/780-s1.s1"
+
+GLYPHS = {
+    0x01: (  # heart: one life
+        " ##  ## ",
+        "########",
+        "########",
+        "########",
+        " ###### ",
+        "  ####  ",
+        "   ##   ",
+        "        ",
+    ),
+    0x02: (  # rose: one Secret Art charge
+        "  ####  ",
+        " ###### ",
+        "########",
+        " ###### ",
+        "  ####  ",
+        "   ##   ",
+        "  #### ",
+        "   ##   ",
+    ),
+    0x03: (  # the Golden Sun Key
+        "  ####  ",
+        " ##  ## ",
+        " ##  ## ",
+        "  ####  ",
+        "   ##   ",
+        "   ###  ",
+        "   ##   ",
+        "   ###  ",
+    ),
+    0x04: (  # coin
+        "  ####  ",
+        " ###### ",
+        "## ## ##",
+        "## ## ##",
+        "## ## ##",
+        "## ## ##",
+        " ###### ",
+        "  ####  ",
+    ),
+    0x05: (  # leaf: swiftness
+        "     ###",
+        "   #####",
+        "  ######",
+        " ### ###",
+        "#### ## ",
+        "###  #  ",
+        "##   #  ",
+        "#    #  ",
+    ),
+    0x06: (  # spark
+        "   ##   ",
+        "   ##   ",
+        "## ## ##",
+        " ###### ",
+        " ###### ",
+        "## ## ##",
+        "   ##   ",
+        "   ##   ",
+    ),
+}
+
+_COL_PAIRS = [(4, 5), (6, 7), (0, 1), (2, 3)]
+
+
+def encode_fix_tile(rows):
+    """8 rows of text art -> a 32 byte Neo Geo FIX tile on pen 1."""
+    px = np.zeros((8, 8), dtype=np.uint8)
+    for y, row in enumerate(rows):
+        for x, ch in enumerate(row[:8]):
+            px[y, x] = 1 if ch != ' ' else 0
+    out = bytearray(32)
+    for gi, (cl, cr) in enumerate(_COL_PAIRS):
+        for row in range(8):
+            out[gi * 8 + row] = ((int(px[row, cr]) & 0xF) << 4) | (int(px[row, cl]) & 0xF)
+    return bytes(out)
+
+
+def inject_hud_glyphs():
+    if not S1_PATH.exists():
+        print(f"  (no {S1_PATH.name} yet; run the art build first)")
+        return
+    rom = bytearray(S1_PATH.read_bytes())
+    for code, rows in GLYPHS.items():
+        rom[code * 32:(code + 1) * 32] = encode_fix_tile(rows)
+    S1_PATH.write_bytes(bytes(rom))
+    print(f"  Injected {len(GLYPHS)} HUD glyphs into {S1_PATH.name}")
+
+
 def main():
     print("== Generating Cute Kawaii FIX Layer Assets ==")
     draw_hud()
@@ -228,6 +334,7 @@ def main():
     draw_cleansing_banner()
     draw_countdown()
     print(f"Generated 6 indexed FIX PNGs in {INFIX_DIR}")
+    inject_hud_glyphs()
 
 
 if __name__ == "__main__":

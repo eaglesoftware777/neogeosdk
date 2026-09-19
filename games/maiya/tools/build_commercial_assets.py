@@ -36,22 +36,34 @@ sys.path.insert(0, str(ROOT / "artbox"))
 from palette_banks import fit_palette, palette_words, quantize, reconstruct, training_mask  # noqa: E402
 from tile_codec import encode_image, decode_image, write_utility_tiles  # noqa: E402
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import nature_art  # noqa: E402
+
 SOURCE = GAME / "assets/source_art"
 CHARACTERS = ROOT / "games/demo/artbox/in/characters"
 
-HERO_CANVAS = (112, 96)
-HERO_STRIPS = 7
-HERO_ROWS = 6
-HERO_STRIDE = 7
+# Playfield scale.  Maiya stands 52 px on a 224-line screen so a mission reads
+# as an arcade adventure -- long roads, tall canopies, room for a crowd --
+# instead of two giant fighters filling the frame.
+HERO_CANVAS = (80, 64)
+HERO_STRIPS = 5
+HERO_ROWS = 4
+HERO_STRIDE = 5
+HERO_HEIGHT = 52
 
-EAGLE_CANVAS = (64, 48)
-EAGLE_STRIPS = 4
-EAGLE_ROWS = 3
+EAGLE_CANVAS = (48, 32)
+EAGLE_STRIPS = 3
+EAGLE_ROWS = 2
+EAGLE_HEIGHT = 26
 
-BOSS_CANVAS = (128, 128)
-BOSS_STRIPS = 8
-BOSS_ROWS = 8
-BOSS_STRIDE = 8
+BOSS_CANVAS = (96, 96)
+BOSS_STRIPS = 6
+BOSS_ROWS = 6
+BOSS_STRIDE = 6
+BOSS_HEIGHT = 86
+
+NPC_CANVAS = (32, 48)
+NPC_HEIGHT = 44
 
 # Tool tiles (16 columns, 32 rows total = 2 rows of 16x16 tiles)
 TOOL_COLUMNS = 16
@@ -126,6 +138,89 @@ def crop_and_fit(img, box, canvas, anchor="feet", bg_color="white", pad=2, max_s
     return arr_out
 
 
+def _cutout_bbox(img, box, bg_color):
+    """Crop a source box, drop its flat background, return the tight sprite."""
+    cut = extract_cutout(img.crop(box), bg_color=bg_color)
+    arr = np.array(cut)
+    alpha = arr[:, :, 3] >= 128
+    if not alpha.any():
+        return None
+    ys, xs = np.where(alpha)
+    return cut.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))
+
+
+def _foot_center(arr):
+    """Horizontal centre of the lowest quarter of a sprite: its stance."""
+    alpha = arr[:, :, 3] >= 128
+    ys, xs = np.where(alpha)
+    if not len(ys):
+        return arr.shape[1] // 2
+    cut = ys.max() - max(1, (ys.max() - ys.min()) // 4)
+    feet = xs[ys >= cut]
+    return int(round(feet.mean())) if len(feet) else int(round(xs.mean()))
+
+
+def fit_group(img, boxes, canvas, target_h, bg_color="white", pad=2):
+    """Scale a whole animation by ONE factor and stand every frame on its feet.
+
+    Fitting each frame to the canvas on its own made the character swell and
+    shrink between poses; a shared scale plus a foot-centre anchor keeps the
+    walk, the whip and the leap the same girl.
+    """
+    sprites = {name: _cutout_bbox(img, box, bg_color) for name, box in boxes.items()}
+    heights = [sp.height for sp in sprites.values() if sp is not None]
+    if not heights:
+        return {name: np.zeros((canvas[1], canvas[0], 4), dtype=np.uint8) for name in boxes}
+
+    reference = float(np.median(heights))
+    scale = target_h / reference
+    scale = min(scale, (canvas[1] - pad) / max(heights))
+
+    frames = {}
+    for name, sprite in sprites.items():
+        out = np.zeros((canvas[1], canvas[0], 4), dtype=np.uint8)
+        if sprite is None:
+            frames[name] = out
+            continue
+        w = max(1, int(round(sprite.width * scale)))
+        h = max(1, int(round(sprite.height * scale)))
+        scaled = np.asarray(sprite.resize((w, h), Image.Resampling.LANCZOS))
+        scaled = scaled.copy()
+        scaled[:, :, 3] = np.where(scaled[:, :, 3] >= 128, 255, 0)
+
+        ox = canvas[0] // 2 - _foot_center(scaled)
+        oy = canvas[1] - pad - h
+        sx0, sy0 = max(0, -ox), max(0, -oy)
+        dx0, dy0 = max(0, ox), max(0, oy)
+        cw = min(w - sx0, canvas[0] - dx0)
+        ch = min(h - sy0, canvas[1] - dy0)
+        if cw > 0 and ch > 0:
+            out[dy0:dy0 + ch, dx0:dx0 + cw] = scaled[sy0:sy0 + ch, sx0:sx0 + cw]
+        frames[name] = out
+    return frames
+
+
+def squash(frame, factor=0.62, lean=0):
+    """Compress a standing frame onto its heels: a crouch, or a seated rest."""
+    alpha = frame[:, :, 3] >= 128
+    if not alpha.any():
+        return frame.copy()
+    ys, xs = np.where(alpha)
+    y0, y1 = ys.min(), ys.max() + 1
+    x0, x1 = xs.min(), xs.max() + 1
+    body = Image.fromarray(frame[y0:y1, x0:x1], "RGBA")
+    new_h = max(1, int(round(body.height * factor)))
+    body = body.resize((body.width, new_h), Image.Resampling.LANCZOS)
+    arr = np.asarray(body).copy()
+    arr[:, :, 3] = np.where(arr[:, :, 3] >= 128, 255, 0)
+
+    out = np.zeros_like(frame)
+    dy = y1 - new_h
+    dx = min(max(0, x0 + lean), frame.shape[1] - arr.shape[1])
+    out[dy:dy + new_h, dx:dx + arr.shape[1]] = arr
+    return out
+
+
 def hsv_map(rgb, fn):
     out = []
     for r, g, b in rgb:
@@ -137,11 +232,17 @@ def hsv_map(rgb, fn):
     return np.asarray(out, dtype=np.uint8)
 
 
-def corrupt(colors, kind):
-    hue, sat, val = {"smog": (275, 0.30, 0.62), "toxic": (85, 0.45, 0.66),
-                     "rust": (22, 0.45, 0.70), "oil": (225, 0.35, 0.52), "ash": (285, 0.25, 0.48)}[kind]
+def corrupt(colors, hue=286.0, pull=0.26, sat=0.74, val=0.88):
+    """Blight a scene without erasing it.
+
+    Repainting every colour in one flat hue turned the forest into a purple
+    smear.  Pulling each hue part of the way toward the blight and draining
+    some life keeps the place recognisable, so cleansing it reads as the same
+    valley waking up.
+    """
     def fn(h, s, v):
-        return hue, min(1.0, sat * (0.6 + s)), v * val
+        delta = ((hue - h + 540.0) % 360.0) - 180.0
+        return h + delta * pull, s * sat, v * val
     return hsv_map(colors, fn)
 
 
@@ -327,18 +428,19 @@ def build():
         header.append(c_array(f"mg_{prefix}_pal", palette_words(palette)))
         return master
 
-    print("== 1. Compiling 6 HD Stage Environments ==", flush=True)
+    print("== 1. Compiling 6 Nature Stage Environments ==", flush=True)
     sn = Image.open(find_file("stages_nature*.jpg")).convert("RGBA")
-    sc = Image.open(find_file("stages_citadel*.jpg")).convert("RGBA")
+    env = Image.open(GAME / "assets/environments.png").convert("RGBA")
 
-    # 6 Worlds: 0:Forest, 1:Marsh, 2:City, 3:Drylands, 4:Peaks, 5:Citadel
+    # Six valleys of the living world.  Every box keeps the 320:140 playfield
+    # ratio so nothing is squeezed on its way to a 512 x 224 wrap.
     panels = [
-        sn.crop((45, 0, 1376, 256)),
-        sn.crop((45, 256, 1376, 512)),
-        sn.crop((45, 512, 1376, 768)),
-        sc.crop((0, 0, 1376, 256)),
-        sc.crop((0, 256, 1376, 512)),
-        sc.crop((0, 512, 1376, 768)),
+        sn.crop((45, 0, 630, 256)),          # 0 Emerald Forest
+        env.crop((768, 0, 1536, 336)),       # 1 Valley of Sacred Falls
+        env.crop((0, 341, 768, 677)),        # 2 Azure Coral Coast
+        env.crop((0, 0, 768, 336)),          # 3 Golden Autumn Grove
+        env.crop((768, 683, 1536, 1019)),    # 4 Crystal Grotto
+        sn.crop((45, 256, 630, 512)),        # 5 Ancient World Tree
     ]
 
     for i, panel in enumerate(panels):
@@ -356,13 +458,12 @@ def build():
         store(f"bg{i}", indices[:192], palettes, assignments[:12], panel[:192])
         store(f"ground{i}", indices[192:], palettes, assignments[12:], panel[192:])
         header.append(c_array(f"mg_bg{i}_pal", [v for p in palettes for v in palette_words(p)]))
-        for kind in ("smog", "toxic", "rust", "oil", "ash"):
-            words = []
-            for p in palettes:
-                dark = np.asarray(p, dtype=np.uint8).copy()
-                dark[1:] = corrupt(dark[1:], kind)
-                words.extend(palette_words(dark))
-            header.append(c_array(f"mg_bg{i}_{kind}_pal", words))
+        blighted = []
+        for p in palettes:
+            dark = np.asarray(p, dtype=np.uint8).copy()
+            dark[1:] = corrupt(dark[1:])
+            blighted.extend(palette_words(dark))
+        header.append(c_array(f"mg_bg{i}_blight_pal", blighted))
         header.append(c_array(f"mg_bg{i}_map", assignments[:12].flatten() + 16, "uint8_t"))
         header.append(c_array(f"mg_ground{i}_map", assignments[12:].flatten() + 16, "uint8_t"))
         header.append(f"#define MG_BG{i}_BANKS {len(palettes)}u")
@@ -371,49 +472,41 @@ def build():
     print("== 2. Compiling Maiya Heroine Moveset ==", flush=True)
     m_img = Image.open(find_file("maiya_heroine*.jpg")).convert("RGB")
 
-    # Crop frames from the HD Maiya sheet
-    # Row 0: idle / run
-    f_idle0 = crop_and_fit(m_img, (27, 70, 144, 268), HERO_CANVAS)
-    f_idle1 = crop_and_fit(m_img, (185, 70, 300, 268), HERO_CANVAS)
-    f_idle2 = crop_and_fit(m_img, (27, 70, 144, 268), HERO_CANVAS)
-    f_run0  = crop_and_fit(m_img, (354, 70, 488, 268), HERO_CANVAS)
-    f_run1  = crop_and_fit(m_img, (515, 70, 664, 268), HERO_CANVAS)
-    f_run2  = crop_and_fit(m_img, (682, 70, 834, 268), HERO_CANVAS)
-    f_run3  = crop_and_fit(m_img, (852, 70, 997, 268), HERO_CANVAS)
+    hero_boxes = {
+        "idle0": (27, 70, 144, 268), "idle1": (185, 70, 300, 268),
+        "run0": (354, 70, 488, 268), "run1": (515, 70, 664, 268),
+        "run2": (682, 70, 834, 268), "run3": (852, 70, 997, 268),
+        "jump0": (37, 310, 156, 520), "jump1": (189, 310, 341, 520),
+        "jump2": (367, 310, 488, 520), "jump3": (525, 310, 656, 520),
+        "jump4": (686, 310, 824, 520), "land": (846, 310, 983, 520),
+        "atk0": (29, 551, 216, 740), "atk1": (231, 555, 470, 740),
+        "atk2": (480, 555, 720, 740), "atk3": (730, 555, 960, 740),
+        "cast0": (30, 780, 231, 990), "cast1": (256, 780, 465, 990),
+        "cast2": (473, 780, 763, 990), "win": (810, 780, 964, 990),
+    }
+    hf = fit_group(m_img, hero_boxes, HERO_CANVAS, HERO_HEIGHT)
 
-    # Row 1: jump / crouch
-    f_jump0 = crop_and_fit(m_img, (37, 310, 156, 520), HERO_CANVAS)
-    f_jump1 = crop_and_fit(m_img, (189, 310, 341, 520), HERO_CANVAS)
-    f_jump2 = crop_and_fit(m_img, (367, 310, 488, 520), HERO_CANVAS)
-    f_jump3 = crop_and_fit(m_img, (525, 310, 656, 520), HERO_CANVAS)
-    f_jump4 = crop_and_fit(m_img, (686, 310, 824, 520), HERO_CANVAS)
-    f_land  = crop_and_fit(m_img, (846, 310, 983, 520), HERO_CANVAS)
-    f_crouch = crop_and_fit(m_img, (830, 340, 983, 520), HERO_CANVAS)
-
-    # Row 2: whip combat
-    f_atk0 = crop_and_fit(m_img, (29, 551, 216, 740), HERO_CANVAS)
-    f_atk1 = crop_and_fit(m_img, (231, 555, 470, 740), HERO_CANVAS)
-    f_atk2 = crop_and_fit(m_img, (480, 555, 720, 740), HERO_CANVAS)
-    f_atk3 = crop_and_fit(m_img, (730, 555, 960, 740), HERO_CANVAS)
-
-    # Row 3: throw / win
-    f_cast0 = crop_and_fit(m_img, (30, 780, 231, 990), HERO_CANVAS)
-    f_cast1 = crop_and_fit(m_img, (256, 780, 465, 990), HERO_CANVAS)
-    f_cast2 = crop_and_fit(m_img, (473, 780, 763, 990), HERO_CANVAS)
-    f_win   = crop_and_fit(m_img, (810, 780, 964, 990), HERO_CANVAS)
+    # Resting poses are not on the sheet: fold a standing frame onto its heels
+    # so Maiya can duck under a swoop, take a knee, or sit down and listen.
+    hf["crouch"] = squash(hf["land"], 0.70)
+    hf["low"] = squash(hf["idle0"], 0.60)
+    hf["sit"] = squash(hf["idle1"], 0.54)
+    hf["down"] = squash(hf["land"], 0.44)
 
     maiya_frames = {
-        "idle0": f_idle0, "idle1": f_idle1, "idle2": f_idle2,
-        "walk0": f_run0, "walk1": f_run1, "walk2": f_run2, "walk3": f_run3,
-        "walk4": f_run0, "walk5": f_run1, "walk6": f_run2, "walk7": f_run3,
-        "crouch": f_crouch,
-        "run0": f_run0, "run1": f_run1, "run2": f_run2,
-        "jump0": f_jump0, "jump1": f_jump1, "jump2": f_jump2, "jump3": f_jump3, "jump4": f_jump4, "land": f_land,
-        "atk0": f_atk0, "atk1": f_atk1, "atk2": f_atk2, "atk3": f_atk3,
-        "sweep0": f_atk0, "sweep1": f_atk1, "sweep2": f_atk2, "sweep3": f_atk3,
-        "low": f_crouch, "spin": f_jump3,
-        "cast0": f_cast0, "cast1": f_cast1, "cast2": f_cast2,
-        "hurt0": f_jump4, "hurt1": f_jump2, "down": f_land, "sit": f_crouch, "win": f_win,
+        "idle0": hf["idle0"], "idle1": hf["idle1"], "idle2": hf["idle0"],
+        "walk0": hf["run0"], "walk1": hf["run1"], "walk2": hf["run2"], "walk3": hf["run3"],
+        "walk4": hf["run0"], "walk5": hf["run1"], "walk6": hf["run2"], "walk7": hf["run3"],
+        "crouch": hf["crouch"],
+        "run0": hf["run0"], "run1": hf["run1"], "run2": hf["run2"],
+        "jump0": hf["jump0"], "jump1": hf["jump1"], "jump2": hf["jump2"],
+        "jump3": hf["jump3"], "jump4": hf["jump4"], "land": hf["land"],
+        "atk0": hf["atk0"], "atk1": hf["atk1"], "atk2": hf["atk2"], "atk3": hf["atk3"],
+        "sweep0": hf["atk0"], "sweep1": hf["atk1"], "sweep2": hf["atk2"], "sweep3": hf["atk3"],
+        "low": hf["low"], "spin": hf["jump3"],
+        "cast0": hf["cast0"], "cast1": hf["cast1"], "cast2": hf["cast2"],
+        "hurt0": hf["jump4"], "hurt1": hf["jump2"], "down": hf["down"],
+        "sit": hf["sit"], "win": hf["win"],
     }
 
     # Fit master palette for Maiya
@@ -441,58 +534,62 @@ def build():
 
     # Eagle (guardian sun bird)
     eagle_src = Image.open(find_file("iron_vulture*.jpg")).convert("RGB")
-    eagle_frames = {
-        "perch0": crop_and_fit(eagle_src, (4, 4, 208, 177), EAGLE_CANVAS),
-        "perch1": crop_and_fit(eagle_src, (222, 21, 404, 177), EAGLE_CANVAS),
-        "perch2": crop_and_fit(eagle_src, (4, 4, 208, 177), EAGLE_CANVAS),
-        "fly0":   crop_and_fit(eagle_src, (4, 181, 197, 347), EAGLE_CANVAS),
-        "fly1":   crop_and_fit(eagle_src, (200, 181, 390, 347), EAGLE_CANVAS),
-        "fly2":   crop_and_fit(eagle_src, (4, 181, 197, 347), EAGLE_CANVAS),
-    }
+    eagle_frames = fit_group(eagle_src, {
+        "perch0": (4, 4, 208, 177), "perch1": (222, 21, 404, 177),
+        "perch2": (4, 4, 208, 177), "fly0": (4, 181, 197, 347),
+        "fly1": (200, 181, 390, 347), "fly2": (4, 181, 197, 347),
+    }, EAGLE_CANVAS, EAGLE_HEIGHT)
     shared_set("eagle", eagle_frames)
 
     # Face HUD icon and portrait
     face = crop_and_fit(m_img, (40, 75, 130, 165), (32, 32), anchor="center")
     append("face", face, master=hero_master)
 
-    portrait = crop_and_fit(m_img, (27, 70, 144, 268), (112, 96), anchor="center")
+    portrait = crop_and_fit(m_img, (27, 70, 144, 268), (96, 96), anchor="center")
     append("portrait", portrait, banks=2, bank_base=13)
     print(f"  Maiya compiled ({len(maiya_frames)} frames)", flush=True)
 
     print("== 3. Compiling 6 Corrupted Blight Enemies ==", flush=True)
     en_img = Image.open(find_file("corrupted_enemies*.jpg")).convert("RGB")
 
+    # Blight creatures at playfield scale: a slime comes up to Maiya's knee,
+    # a goblin to her shoulder, so a crowd of them still fits the screen.
     creatures = {
         "slime": {
-            "canvas": (48, 32),
+            "canvas": (32, 32), "height": 24,
             "boxes": [(12, 37, 165, 170), (184, 37, 335, 170), (353, 37, 505, 170), (522, 37, 666, 170)],
         },
         "beetle": {
-            "canvas": (64, 48),
+            "canvas": (48, 32), "height": 26,
             "boxes": [(8, 216, 170, 339), (180, 216, 345, 339), (360, 216, 515, 339)],
         },
         "crow": {
-            "canvas": (64, 48),
-            "boxes": [(8, 350, 185, 508), (190, 350, 345, 508)],
+            "canvas": (48, 32), "height": 26, "lift": 1.35,
+            "boxes": [(10, 374, 180, 508), (188, 374, 350, 508)],
         },
         "goblin": {
-            "canvas": (48, 64),
+            "canvas": (32, 48), "height": 40,
             "boxes": [(10, 547, 170, 682), (180, 547, 340, 682), (350, 547, 510, 682), (520, 547, 680, 682)],
         },
         "worm": {
-            "canvas": (32, 80),
-            "boxes": [(20, 690, 160, 851), (170, 690, 310, 851)],
+            "canvas": (32, 48), "height": 42,
+            "boxes": [(22, 716, 160, 845), (168, 716, 306, 845)],
         },
         "robot": {
-            "canvas": (48, 48),
-            "boxes": [(20, 886, 140, 1011), (150, 886, 270, 1011), (270, 886, 390, 1011)],
+            "canvas": (32, 32), "height": 28,
+            "boxes": [(22, 908, 140, 1014), (152, 908, 270, 1014), (282, 908, 400, 1014)],
         },
     }
 
     for cname, spec in creatures.items():
-        frames = {}
-        for k, box in enumerate(spec["boxes"]):
-            frames[str(k)] = crop_and_fit(en_img, box, spec["canvas"])
+        boxes = {str(k): box for k, box in enumerate(spec["boxes"])}
+        frames = fit_group(en_img, boxes, spec["canvas"], spec["height"])
+        if "lift" in spec:
+            # Night-black art turns to mud at 26 px: lift it until the
+            # silhouette reads against a dark canopy.
+            for name, f in frames.items():
+                rgb = np.clip(f[:, :, :3].astype(np.float32) * spec["lift"] + 14.0, 0, 255)
+                frames[name] = np.dstack((rgb.astype(np.uint8), f[:, :, 3]))
         shared_set(cname, frames)
         header.append(f"#define MG_{cname.upper()}_FRAMES {len(frames)}u")
         header.append(f"#define MG_{cname.upper()}_W {spec['canvas'][0]}u")
@@ -503,23 +600,24 @@ def build():
     allies_img = Image.open(find_file("maiya_allies*.jpg")).convert("RGB")
 
     npcs = {
-        "sunboy": [(25, 35, 230, 290), (270, 35, 490, 290), (510, 35, 740, 290)],
-        "spirit": [(790, 45, 960, 250), (45, 320, 180, 520)],
+        "sunboy": [(270, 35, 490, 290), (510, 35, 740, 290), (25, 35, 230, 290)],
+        "spirit": [(790, 45, 960, 250), (45, 320, 180, 520), (190, 320, 330, 520)],
         "elder":  [(550, 315, 730, 560), (550, 315, 730, 560)],
         "girl":   [(780, 315, 960, 560), (780, 315, 960, 560)],
     }
 
     for nname, boxes in npcs.items():
-        frames = {str(k): crop_and_fit(allies_img, box, (48, 64)) for k, box in enumerate(boxes)}
+        frames = fit_group(allies_img, {str(k): box for k, box in enumerate(boxes)},
+                           NPC_CANVAS, NPC_HEIGHT)
         shared_set(nname, frames)
         header.append(f"#define MG_{nname.upper()}_FRAMES {len(frames)}u")
-        header.append(f"#define MG_{nname.upper()}_W 48u")
-        header.append(f"#define MG_{nname.upper()}_H 64u")
+        header.append(f"#define MG_{nname.upper()}_W {NPC_CANVAS[0]}u")
+        header.append(f"#define MG_{nname.upper()}_H {NPC_CANVAS[1]}u")
         print(f"  NPC {nname} compiled", flush=True)
 
-    print("== 5. Compiling 7 Biomechanical Bosses (128x128) ==", flush=True)
+    print("== 5. Compiling 6 Blight Guardians (96x96) ==", flush=True)
     boss_specs = [
-        ("beetle", "chainsaw_beetle*.jpg", "black", [(40, 15, 480, 500), (510, 500, 740, 750)]),
+        ("beetle", "chainsaw_beetle*.jpg", "white", [(40, 15, 480, 500), (510, 500, 740, 750)]),
         ("toad", "sludge_toad*.jpg", "white", [(5, 6, 349, 336), (430, 520, 740, 680)]),
         ("vulture", "iron_vulture*.jpg", "white", [(4, 4, 208, 177), (200, 180, 390, 347)]),
         ("jackal", "inferno_jackal*.jpg", "white", [(34, 23, 273, 183), (220, 350, 480, 520)]),
@@ -530,28 +628,21 @@ def build():
 
     for bname, pattern, bg, boxes in boss_specs:
         b_img = Image.open(find_file(pattern)).convert("RGB")
-        frames = {str(k): crop_and_fit(b_img, box, BOSS_CANVAS, bg_color=bg) for k, box in enumerate(boxes)}
+        frames = fit_group(b_img, {str(k): box for k, box in enumerate(boxes)},
+                           BOSS_CANVAS, BOSS_HEIGHT, bg_color=bg)
         shared_set(f"boss_{bname}", frames)
-        print(f"  Boss {bname} compiled (128x128, 2 frames)", flush=True)
+        print(f"  Boss {bname} compiled (96x96, 2 frames)", flush=True)
 
-    print("== 6. Compiling Props, Hazards, and Pickups ==", flush=True)
+    print("== 6. Compiling Props, Hazards, Pickups and Decoration ==", flush=True)
     prop_boxes = {
         "chest": (680, 640, 830, 760),
         "chest_open": (840, 610, 990, 770),
         "spikes": (40, 840, 180, 980),
         "lava": (680, 840, 970, 970),
         "sludge": (360, 840, 600, 960),
-        "bush": (30, 640, 160, 760),
-        "mushroom": (170, 640, 290, 760),
-        "plant": (430, 640, 550, 760),
-        "torch0": (40, 840, 180, 980),
-        "torch1": (40, 840, 180, 980),
-        "door_top": (680, 640, 830, 760),
-        "door_mid": (680, 640, 830, 760),
-        "water": (360, 840, 600, 960),
-        "sign": (680, 640, 830, 760),
     }
-    props = {pname: crop_and_fit(allies_img, box, (32, 32), anchor="fill") for pname, box in prop_boxes.items()}
+    props = {pname: crop_and_fit(allies_img, box, (32, 32), anchor="fill")
+             for pname, box in prop_boxes.items()}
     shared_set("prop", props)
     for k, pname in enumerate(props.keys()):
         header.append(f"#define MG_P_{pname.upper()} {k}u")
@@ -563,28 +654,34 @@ def build():
         "seed":      (430, 640, 550, 760),
         "gem":       (560, 640, 670, 760),
     }
-    items = {iname: crop_and_fit(allies_img, box, (32, 32), anchor="fill") for iname, box in item_boxes.items()}
+    items = {iname: crop_and_fit(allies_img, box, (32, 32), anchor="fill")
+             for iname, box in item_boxes.items()}
     shared_set("item", items)
     for k, iname in enumerate(items.keys()):
         header.append(f"#define MG_I_{iname.upper()} {k}u")
 
-    # Ground platform blocks (one 3-piece set per world: Left, Mid, Right)
-    grounds = ["grass", "sand", "stone", "planet", "snow", "dirt", "metal"]
-    for gname in grounds:
-        # 3 distinct 32x32 block tiles
-        blocks = {}
-        for k in range(3):
-            blk = np.zeros((32, 32, 4), dtype=np.uint8)
-            # Create textured block tile
-            blk[4:, :] = [70, 130, 60, 255] if "grass" in gname else [120, 100, 80, 255]
-            if k == 0:
-                blk[2:, 2:] = [90, 160, 80, 255]
-            elif k == 2:
-                blk[2:, :-2] = [90, 160, 80, 255]
-            else:
-                blk[2:, :] = [100, 180, 90, 255]
-            blocks[str(k)] = blk
+    # Scenery the missions are dressed with: grass, blossoms, saplings, stone
+    # lanterns, signposts, lily pads, waterfalls, climbing vines and doors.
+    decor = {name: painter() for name, painter in nature_art.DECOR}
+    shared_set("decor", decor)
+    for k, name in enumerate(decor.keys()):
+        header.append(f"#define MG_D_{name.upper()} {k}u")
+
+    # Trinkets: coins, cut flowers, freed forest friends, extra lives and the
+    # three power-ups Maiya eats on the run.
+    trinkets = {name: painter() for name, painter in nature_art.TRINKETS}
+    shared_set("trinket", trinkets)
+    for k, name in enumerate(trinkets.keys()):
+        header.append(f"#define MG_K_{name.upper()} {k}u")
+
+    # The Ancient Nature Gate, sealed and open (32 x 48).
+    shared_set("gate", {"shut": nature_art.gate(False), "open": nature_art.gate(True)})
+
+    # One ledge set per valley: left cap, middle, right cap.
+    for gname in ("grass", "moss", "sand", "autumn", "snow", "bark"):
+        blocks = {str(k): nature_art.ledge_block(gname, k) for k in range(3)}
         shared_set(f"block_{gname}", blocks)
+    print("  Props, pickups, decoration and ledges compiled", flush=True)
 
     print("== 7. Compiling Projectile and HUD Tools Sheet ==", flush=True)
     tool, colors = draw_tools()
