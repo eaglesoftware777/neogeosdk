@@ -143,11 +143,19 @@ HASHPATH:=$(CURDIR)/hash_eagle/$(GAME);$(CURDIR)/hash_eagle;$(CURDIR)/hash
 # under the Universe BIOS, which skips the self-test - so
 #   make test BIOS=unibios40
 # boots straight into the cart if you would rather not sit through it.
-BIOS?=euro
+# Experimental EagleBIOS option: 0 = disabled (default, uses stock BIOS), 1 = enabled
+USE_EAGLE_BIOS ?= 0
+ifeq ($(USE_EAGLE_BIOS),1)
+ROMPATH ?= $(CURDIR)/bios/test_roms;$(CURDIR)/roms
+BIOS := euro
+else
+ROMPATH ?= $(CURDIR)/roms
+BIOS ?= euro
+endif
 ROM_DIR = roms/$(GAME)
 DUMP_DIR = dump/$(GAME)
 MAME_PLAYBACK ?= -noautoframeskip -frameskip 0
-MAME_COMMON=mame neogeo -rompath $(CURDIR)/roms -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME) $(MAME_PLAYBACK)
+MAME_COMMON=mame neogeo -rompath "$(ROMPATH)" -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME) $(MAME_PLAYBACK)
 LOG_CTX=@echo "[neogeosdk] target=$@ game=$(GAME) game_id=$(GAME_ID) platform=$(PLATFORM) rom_dir=$(ROM_DIR) hashpath=$(HASHPATH)"
 
 # PLATFORM: mvs (default) or aes
@@ -501,6 +509,12 @@ test: game-check test-precheck hash
 .PHONY: test-precheck
 test-precheck: game-check
 	$(LOG_CTX)
+ifeq ($(USE_EAGLE_BIOS),1)
+	@mkdir -p bios/test_roms/neogeo bios/test_roms/aes
+	@[ -f "bios/sp-s2.sp1" ] && [ -f "bios/neo-epo.bin" ] && [ -f "bios/sm1.sm1" ] && [ -f "bios/sfix.sfix" ] && [ -f "bios/000-lo.lo" ] || $(MAKE) -C bios
+	@cp -f bios/sp-s2.sp1 bios/sm1.sm1 bios/sfix.sfix bios/000-lo.lo bios/test_roms/neogeo/
+	@cp -f bios/neo-epo.bin bios/sm1.sm1 bios/sfix.sfix bios/000-lo.lo bios/test_roms/aes/
+endif
 	@[ -f "$(ROM_DIR)/$(GAME_ID)-p1.p1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-p1.p1. Build first with: make all" && exit 1)
 	@[ -f "$(ROM_DIR)/$(GAME_ID)-m1.m1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-m1.m1. Build first with: make all" && exit 1)
 	@[ -f "$(ROM_DIR)/$(GAME_ID)-s1.s1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-s1.s1. Build first with: make all" && exit 1)

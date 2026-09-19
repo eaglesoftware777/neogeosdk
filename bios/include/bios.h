@@ -151,23 +151,23 @@
 
 /* Cartridge Header Structure at 0x000100 */
 typedef struct {
-    char     magic[8];       /* "NEO-GEO\0" */
-    uint16_t ngh_id;         /* Game unique ID */
-    uint32_t psize;          /* Program ROM size in bytes */
-    uint32_t pbcks;          /* Backup RAM address */
-    uint16_t dipsize;        /* Soft DIP settings size */
-    uint8_t  logoflag;       /* 0 = BIOS animated logo, 1 = Cartridge eye-catcher */
-    uint8_t  logotile;       /* Reserved */
-    uint32_t reserved0[3];   /* Jump table headers */
-    uint16_t entry_user;     /* bra.w USER */
-    uint16_t nop0;
-    uint16_t entry_start;    /* bra.w PLAYER_START */
-    uint16_t nop1;
-    uint16_t entry_demoend;  /* bra.w DEMO_END */
-    uint16_t nop2;
-    uint16_t entry_coinsnd;  /* bra.w COIN_SOUND */
-    uint16_t nop3;
-} CartHeader;
+    char     magic[8];       /* 0x100: "NEO-GEO\0" */
+    uint16_t ngh_id;         /* 0x108: Game unique ID */
+    uint32_t psize;          /* 0x10A: Program ROM size in bytes */
+    uint32_t pbcks;          /* 0x10E: Backup RAM address */
+    uint16_t dipsize;        /* 0x112: Soft DIP settings size */
+    uint8_t  logoflag;       /* 0x114: 0 = BIOS animated logo, 1 = Cartridge eye-catcher */
+    uint8_t  logotile;       /* 0x115: Reserved */
+    uint32_t reserved0[3];   /* 0x116..0x121: Jump table headers */
+    uint32_t entry_user;     /* 0x122: bra.w USER */
+    uint16_t nop0;           /* 0x126: nop */
+    uint32_t entry_start;    /* 0x128: bra.w PLAYER_START */
+    uint16_t nop1;           /* 0x12C: nop */
+    uint32_t entry_demoend;  /* 0x12E: bra.w DEMO_END */
+    uint16_t nop2;           /* 0x132: nop */
+    uint32_t entry_coinsnd;  /* 0x134: bra.w COIN_SOUND */
+    uint16_t nop3;           /* 0x138: nop */
+} __attribute__((packed)) CartHeader;
 
 static inline const CartHeader *get_cart_header(void)
 {

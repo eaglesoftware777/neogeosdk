@@ -64,7 +64,16 @@ void bios_reset(void)
     /* 5. Initialize BIOS Work RAM variables */
     BIOS_VBL_TICK     = 0;
     BIOS_SYSTEM_MODE  = 0x00;
-    BIOS_MVS_FLAG     = 1;  /* Default MVS Arcade mode */
+    /* Hardware MVS vs AES detection: REG_STATUS_B bit 7 is 1 for MVS Arcade, 0 for AES Console */
+    if (REG_STATUS_B & 0x80) {
+        BIOS_MVS_FLAG = 1;  /* MVS Arcade mode */
+        P1_CREDITS    = 0;
+        P2_CREDITS    = 0;
+    } else {
+        BIOS_MVS_FLAG = 0;  /* AES Home Console mode */
+        P1_CREDITS    = 99;
+        P2_CREDITS    = 99;
+    }
     BIOS_COUNTRY_CODE = 2;  /* Default Europe */
     BIOS_USER_REQUEST = 0;  /* Initial request = POWER_ON */
     BIOS_USER_MODE    = 0;  /* Initial mode = Boot */
@@ -73,8 +82,6 @@ void bios_reset(void)
     BIOS_PLAYER2_MODE = 0;
     BIOS_MESS_POINT   = 0;
     BIOS_MESS_BUSY    = 0;
-    P1_CREDITS        = 0;
-    P2_CREDITS        = 0;
 
     /* 6. Video subsystem initialization */
     sys_lsp_1st_c();
@@ -85,9 +92,11 @@ void bios_reset(void)
     /* 7. Enable interrupts so VBlank and timers run */
     asm volatile ("move.w #0x2000, %sr");
 
-    /* 8. Check Test switch on cabinet (DIP switch 1 active low: REG_DIPSW bit 0, or Service bit 2) */
-    if (!(REG_DIPSW & 0x01) || !(REG_STATUS_A & 0x04)) {
-        bios_test_menu();
+    /* 8. Check Test switch on cabinet (MVS only: DIP switch 1 active low: REG_DIPSW bit 0, or Service bit 2) */
+    if (BIOS_MVS_FLAG) {
+        if (!(REG_DIPSW & 0x01) || !(REG_STATUS_A & 0x04)) {
+            bios_test_menu();
+        }
     }
 
     /* 9. Verify cartridge header */
@@ -119,7 +128,7 @@ void bios_reset(void)
         for (;;) {
             bios_wait_vbl();
             sys_io_c();
-            if ((BIOS_P1CHANGE & BTN_A) || !(REG_DIPSW & 0x01) || !(REG_STATUS_A & 0x04)) {
+            if ((BIOS_P1CHANGE & BTN_A) || (BIOS_MVS_FLAG && (!(REG_DIPSW & 0x01) || !(REG_STATUS_A & 0x04)))) {
                 bios_test_menu();
                 break;
             }
@@ -133,6 +142,7 @@ void bios_reset(void)
 /*
  * SYS_RETURN: Cartridge return dispatcher (Entry at 0xC00444)
  * Handles state transitions between POWER_ON, EYE_CATCHER, TITLE, and GAME.
+ * Supports both MVS Arcade flow and AES Console direct boot.
  */
 void sys_return_c(void)
 {
@@ -142,24 +152,32 @@ void sys_return_c(void)
         uint8_t req = BIOS_USER_REQUEST;
 
         if (req == 0) {
-            /* POWER_ON finished -> transition to EYE_CATCHER or TITLE */
+            /* POWER_ON finished -> transition to EYE_CATCHER, TITLE (MVS) or GAME (AES) */
             if (CART_HEADER->logoflag != 0) {
                 BIOS_USER_REQUEST = 1; /* EYE_CATCHER */
                 BIOS_USER_MODE    = 1; /* Attract */
+            } else if (BIOS_MVS_FLAG) {
+                BIOS_USER_REQUEST = 3; /* TITLE (MVS) */
+                BIOS_USER_MODE    = 1; /* Attract */
             } else {
-                BIOS_USER_REQUEST = 3; /* TITLE */
+                BIOS_USER_REQUEST = 2; /* GAME (AES Home) */
                 BIOS_USER_MODE    = 1; /* Attract */
             }
             call_cart_user();
 
         } else if (req == 1) {
-            /* EYE_CATCHER finished -> transition to TITLE */
-            BIOS_USER_REQUEST = 3; /* TITLE */
-            BIOS_USER_MODE    = 1; /* Attract */
+            /* EYE_CATCHER finished -> transition to TITLE (MVS) or GAME (AES) */
+            if (BIOS_MVS_FLAG) {
+                BIOS_USER_REQUEST = 3; /* TITLE */
+                BIOS_USER_MODE    = 1; /* Attract */
+            } else {
+                BIOS_USER_REQUEST = 2; /* GAME */
+                BIOS_USER_MODE    = 1; /* Attract */
+            }
             call_cart_user();
 
         } else if (req == 3) {
-            /* TITLE loop returned */
+            /* TITLE loop returned (MVS only) */
             if (BIOS_START_FLAG != 0 || BIOS_USER_MODE == 2) {
                 /* Player started game! */
                 BIOS_USER_REQUEST = 2; /* GAME */
@@ -175,13 +193,17 @@ void sys_return_c(void)
         } else if (req == 2) {
             /* GAME finished (Game Over / Returned to Attract) */
             BIOS_START_FLAG   = 0;
-            BIOS_USER_REQUEST = 3; /* TITLE */
+            if (BIOS_MVS_FLAG) {
+                BIOS_USER_REQUEST = 3; /* TITLE (MVS) */
+            } else {
+                BIOS_USER_REQUEST = 2; /* GAME (AES) */
+            }
             BIOS_USER_MODE    = 1; /* Attract */
             call_cart_user();
 
         } else {
             /* Default fallback */
-            BIOS_USER_REQUEST = 3;
+            BIOS_USER_REQUEST = BIOS_MVS_FLAG ? 3 : 2;
             BIOS_USER_MODE    = 1;
             call_cart_user();
         }

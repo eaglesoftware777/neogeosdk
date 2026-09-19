@@ -82,44 +82,27 @@ void sys_io_c(void)
     BIOS_STATCHANGE = (uint8_t)(current_stat & (uint8_t)(~BIOS_STATCURNT));
     BIOS_STATCURNT  = current_stat;
 
-    /* 4. Coin detection */
-    if (BIOS_STATCHANGE & STAT_COIN1) {
-        REG_SRAMUNLOCK = 0;
-        if (P1_CREDITS < 99) {
-            P1_CREDITS++;
-        }
-        REG_SRAMLOCK = 0;
-        if (CART_HEADER->magic[0] == 'N') {
-            call_cart_entry(0x000134u);
-        }
-    }
-
-    if (BIOS_STATCHANGE & STAT_COIN2) {
-        REG_SRAMUNLOCK = 0;
-        if (P2_CREDITS < 99) {
-            P2_CREDITS++;
-        }
-        REG_SRAMLOCK = 0;
-        if (CART_HEADER->magic[0] == 'N') {
-            call_cart_entry(0x000134u);
-        }
-    }
-
-    /* 5. Start button handling */
-    if (BIOS_STATCHANGE & STAT_START1) {
-        if ((REG_DIPSW & 0x40) || P1_CREDITS > 0) {
-            BIOS_START_FLAG |= 1u;
-            if (CART_HEADER->magic[0] == 'N') {
-                call_cart_entry(0x000128u);
+    /* 4. Coin detection (MVS Arcade mode only) */
+    if (BIOS_MVS_FLAG) {
+        if (BIOS_STATCHANGE & STAT_COIN1) {
+            REG_SRAMUNLOCK = 0;
+            if (P1_CREDITS < 99) {
+                P1_CREDITS++;
+            }
+            REG_SRAMLOCK = 0;
+            if (CART_HEADER->magic[0] == 'N' && CART_HEADER->magic[1] == 'E') {
+                call_cart_entry(0x000134u);
             }
         }
-    }
 
-    if (BIOS_STATCHANGE & STAT_START2) {
-        if ((REG_DIPSW & 0x40) || P2_CREDITS > 0) {
-            BIOS_START_FLAG |= 2u;
-            if (CART_HEADER->magic[0] == 'N') {
-                call_cart_entry(0x000128u);
+        if (BIOS_STATCHANGE & STAT_COIN2) {
+            REG_SRAMUNLOCK = 0;
+            if (P2_CREDITS < 99) {
+                P2_CREDITS++;
+            }
+            REG_SRAMLOCK = 0;
+            if (CART_HEADER->magic[0] == 'N' && CART_HEADER->magic[1] == 'E') {
+                call_cart_entry(0x000134u);
             }
         }
     }
@@ -131,8 +114,8 @@ void sys_io_c(void)
  */
 uint32_t sys_credit_check_c(void)
 {
-    /* Check Free Play dipswitch (bit 6) */
-    if (REG_DIPSW & 0x40) {
+    /* In AES Console mode or Free Play (DIP switch bit 6): always sufficient credits */
+    if (BIOS_MVS_FLAG == 0 || (REG_DIPSW & 0x40)) {
         return 99;
     }
     return P1_CREDITS;
@@ -143,14 +126,15 @@ uint32_t sys_credit_check_c(void)
  */
 void sys_credit_down_c(void)
 {
-    /* If not Free Play, decrement */
-    if (!(REG_DIPSW & 0x40)) {
-        REG_SRAMUNLOCK = 0;
-        if (P1_CREDITS > 0) {
-            P1_CREDITS--;
-        }
-        REG_SRAMLOCK = 0;
+    /* In AES Console mode or Free Play: do not decrement credits */
+    if (BIOS_MVS_FLAG == 0 || (REG_DIPSW & 0x40)) {
+        return;
     }
+    REG_SRAMUNLOCK = 0;
+    if (P1_CREDITS > 0) {
+        P1_CREDITS--;
+    }
+    REG_SRAMLOCK = 0;
 }
 
 /*
@@ -173,19 +157,20 @@ void sys_int1_c(void)
 
     /* In Attract mode (BIOS_USER_MODE == 1): check for Start button */
     if (BIOS_USER_MODE == 1) {
-        uint8_t can_start = (P1_CREDITS > 0) || (REG_DIPSW & 0x40) || (BIOS_MVS_FLAG == 0);
+        uint8_t can_start_p1 = (BIOS_MVS_FLAG == 0) || (REG_DIPSW & 0x40) || (P1_CREDITS > 0);
+        uint8_t can_start_p2 = (BIOS_MVS_FLAG == 0) || (REG_DIPSW & 0x40) || (P2_CREDITS > 0);
 
-        if (can_start && (BIOS_STATCHANGE & STAT_START1)) {
+        if (can_start_p1 && (BIOS_STATCHANGE & STAT_START1)) {
             BIOS_START_FLAG |= 1;
             BIOS_PLAYER1_MODE = 1;
             /* Call cartridge PLAYER_START entry point at 0x128 */
-            if (CART_HEADER->entry_start == 0x4EFA) {
+            if (CART_HEADER->magic[0] == 'N' && CART_HEADER->magic[1] == 'E') {
                 call_cart_entry(0x000128u);
             }
-        } else if (can_start && (BIOS_STATCHANGE & STAT_START2)) {
+        } else if (can_start_p2 && (BIOS_STATCHANGE & STAT_START2)) {
             BIOS_START_FLAG |= 2;
             BIOS_PLAYER2_MODE = 1;
-            if (CART_HEADER->entry_start == 0x4EFA) {
+            if (CART_HEADER->magic[0] == 'N' && CART_HEADER->magic[1] == 'E') {
                 call_cart_entry(0x000128u);
             }
         }

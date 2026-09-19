@@ -178,11 +178,19 @@ HASHPATH:=$(REPO_WIN)\hash_eagle\$(GAME);$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
 # under the Universe BIOS, which skips the self-test - so
 #   make test BIOS=unibios40
 # boots straight into the cart if you would rather not sit through it.
-BIOS?=euro
+# Experimental EagleBIOS option: 0 = disabled (default, uses stock BIOS), 1 = enabled
+USE_EAGLE_BIOS ?= 0
+ifeq ($(USE_EAGLE_BIOS),1)
+ROMPATH ?= $(REPO_WIN)\bios\test_roms;$(REPO_WIN)\roms
+BIOS := euro
+else
+ROMPATH ?= $(REPO_WIN)\roms
+BIOS ?= euro
+endif
 ROM_DIR = roms\$(GAME)
 DUMP_DIR = dump\$(GAME)
 MAME_PLAYBACK ?= -noautoframeskip -frameskip 0
-MAME_COMMON=$(MAME) neogeo -rompath $(REPO_WIN)\roms -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME) $(MAME_PLAYBACK)
+MAME_COMMON=$(MAME) neogeo -rompath "$(ROMPATH)" -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME) $(MAME_PLAYBACK)
 LOG_CTX=@echo [neogeosdk] target=$@ game=$(GAME) game_id=$(GAME_ID) platform=$(PLATFORM) rom_dir=$(ROM_DIR) hashpath=$(HASHPATH)
 
 # PLATFORM: mvs (default) or aes
@@ -525,6 +533,18 @@ test: game-check test-precheck hash
 .PHONY: test-precheck
 test-precheck: game-check
 	$(LOG_CTX)
+ifeq ($(USE_EAGLE_BIOS),1)
+	@if not exist $(REPO_WIN)\bios\test_roms\neogeo mkdir $(REPO_WIN)\bios\test_roms\neogeo
+	@if not exist $(REPO_WIN)\bios\test_roms\aes mkdir $(REPO_WIN)\bios\test_roms\aes
+	@copy /y $(REPO_WIN)\bios\sp-s2.sp1 $(REPO_WIN)\bios\test_roms\neogeo\ >nul 2>&1
+	@copy /y $(REPO_WIN)\bios\neo-epo.bin $(REPO_WIN)\bios\test_roms\aes\ >nul 2>&1
+	@copy /y $(REPO_WIN)\bios\sm1.sm1 $(REPO_WIN)\bios\test_roms\neogeo\ >nul 2>&1
+	@copy /y $(REPO_WIN)\bios\sm1.sm1 $(REPO_WIN)\bios\test_roms\aes\ >nul 2>&1
+	@copy /y $(REPO_WIN)\bios\sfix.sfix $(REPO_WIN)\bios\test_roms\neogeo\ >nul 2>&1
+	@copy /y $(REPO_WIN)\bios\sfix.sfix $(REPO_WIN)\bios\test_roms\aes\ >nul 2>&1
+	@copy /y $(REPO_WIN)\bios\000-lo.lo $(REPO_WIN)\bios\test_roms\neogeo\ >nul 2>&1
+	@copy /y $(REPO_WIN)\bios\000-lo.lo $(REPO_WIN)\bios\test_roms\aes\ >nul 2>&1
+endif
 	@if not exist $(ROM_DIR)\$(GAME_ID)-p1.p1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-p1.p1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
 	@if not exist $(ROM_DIR)\$(GAME_ID)-m1.m1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-m1.m1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
 	@if not exist $(ROM_DIR)\$(GAME_ID)-s1.s1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-s1.s1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
