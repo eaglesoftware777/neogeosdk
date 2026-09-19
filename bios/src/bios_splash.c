@@ -23,8 +23,8 @@ void bios_splash_show(void)
     bios_fix_puts(6,  9, "OPEN SOURCE NEO-GEO FIRMWARE", 3);     /* Cyan subtitle */
     bios_fix_puts(4, 11, "==================================", 2);
 
-    bios_fix_puts(8, 14, "MVS ARCADE & AES COMPATIBLE", 1);
-    bios_fix_puts(10, 16, "(C) 1996 EAGLE SOFTWARE", 2);
+    bios_fix_puts(7, 14, BIOS_MVS_FLAG ? "MODE: MVS ARCADE SYSTEM" : "MODE: AES CONSOLE SYSTEM", 1);
+    bios_fix_puts(10, 16, "(C) 2026 EAGLE SOFTWARE", 2);
 
     /* Display detected cartridge info */
     if (CART_HEADER->magic[0] == 'N' && CART_HEADER->magic[1] == 'E' &&

@@ -42,6 +42,7 @@ TARGET_ELF = out/eagle_bios.elf
 TARGET_RAW = out/eagle_bios_raw.bin
 TARGET_ROM  = eagle_bios.rom
 TARGET_SP1  = sp-s2.sp1
+TARGET_AES  = neo-epo.bin
 TARGET_SM1  = sm1.sm1
 TARGET_SFIX = sfix.sfix
 TARGET_LO   = 000-lo.lo
@@ -55,9 +56,10 @@ all: $(TARGET_SP1) $(TARGET_SM1) $(TARGET_SFIX) $(TARGET_LO)
 	@echo " EagleBIOS Firmware Suite successfully built!"
 	@echo " Output 1 (Big-Endian Linear): bios/$(TARGET_ROM) (128 KB)"
 	@echo " Output 2 (Byte-Swapped MVS):  bios/$(TARGET_SP1) (128 KB)"
-	@echo " Output 3 (Open Sound SM1):    bios/$(TARGET_SM1) (128 KB)"
-	@echo " Output 4 (Open System SFIX):  bios/$(TARGET_SFIX) (128 KB)"
-	@echo " Output 5 (Open Scaling LO):   bios/$(TARGET_LO) (128 KB)"
+	@echo " Output 3 (Byte-Swapped AES):  bios/$(TARGET_AES) (128 KB)"
+	@echo " Output 4 (Open Sound SM1):    bios/$(TARGET_SM1) (128 KB)"
+	@echo " Output 5 (Open System SFIX):  bios/$(TARGET_SFIX) (128 KB)"
+	@echo " Output 6 (Open Scaling LO):   bios/$(TARGET_LO) (128 KB)"
 	@echo "========================================================"
 
 out:
@@ -81,6 +83,7 @@ $(TARGET_ROM): $(TARGET_RAW)
 $(TARGET_SP1): $(TARGET_ROM)
 	$(SREC_CAT) $< -binary -byte-swap 2 -o $@ -binary
 	cp -f $@ eagle_bios_swapped.rom
+	cp -f $@ $(TARGET_AES)
 
 out/bios_sound.o: src/bios_sound.s | out
 	$(WLAZ80) -o $@ $<
@@ -101,4 +104,4 @@ $(TARGET_LO): tools/gen_lo.py
 	$(PYTHON) tools/gen_lo.py $@
 
 clean:
-	rm -rf out $(TARGET_ROM) $(TARGET_SP1) $(TARGET_SM1) $(TARGET_SFIX) $(TARGET_LO) eagle_bios_swapped.rom
+	rm -rf out $(TARGET_ROM) $(TARGET_SP1) $(TARGET_AES) $(TARGET_SM1) $(TARGET_SFIX) $(TARGET_LO) eagle_bios_swapped.rom
