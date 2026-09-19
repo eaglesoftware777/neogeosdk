@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!DOCTYPE softwarelist PUBLIC "-//MAME//DTD Software List//EN" "https://raw.githubusercontent.com/mamedev/mame/master/src/mame/mame.dtd">
+<softwarelist name="neogeo" description="SNK Neo-Geo cartridges">
+    <!--
+    ID-0780
+    . NGM-780
+    NEO-MVS PROG-G2 (SNK-9201) / NEO-MVS CHA 42G-2
+    . NGH-780
+    -->
+
+    <software name="maiya">
+        <description>NeoGeo SDK maiya v1.7.0 / Eagle Software</description>
+        <year>2026</year>
+        <publisher>Eagle Software</publisher>
+        <info name="serial" value="NGM-780 (MVS), NGH-780 (AES)"/>
+        <info name="release" value="20260914 (MVS), 20260914 (AES)"/>
+        <info name="alt_title" value="Eagle SDK"/>
+        <sharedfeat name="release" value="MVS,AES" />
+        <sharedfeat name="compatibility" value="MVS,AES" />
+        <part name="cart" interface="neo_cart">
+            <feature name="slot" value="rom_fatfur2" />
+            <dataarea name="maincpu" width="16" endianness="big" size="0x100000">
+                <rom loadflag="load16_word_swap" name="780-p1.p1" offset="0x000000" size="0x080000" crc="35509d1c" sha1="cf1c7320439731c04c6ebca0825ab6d3b8f8d3a3" />
+            </dataarea>
+            <dataarea name="fixed" size="0x020000">
+                <rom offset="0x000000" size="0x020000" name="780-s1.s1" crc="b3a5dc6a" sha1="5b9d468cc56f75252712c26731b87a1662c71475" />
+            </dataarea>
+            <dataarea name="audiocpu" size="0x020000">
+                <rom offset="0x000000" size="0x020000" name="780-m1.m1" crc="ae61eb75" sha1="8446ed1d6813d2fd9f3ac8470d1aa2fd5726a9c2" />
+            </dataarea>
+            <dataarea name="ymsnd:adpcma" size="0x6b1d00">
+                <rom name="780-v1.v1" offset="0x000000" size="0x6b1d00" crc="3ca473df" sha1="a115bf4b9e63e2855748b269a4e5f1838bfda215" />
+            </dataarea>
+            <dataarea name="sprites" size="0x800000">
+                <rom loadflag="load16_byte" name="780-c1.c1" offset="0x000000" size="0x400000" crc="f500b679" sha1="ff03ee249fb6077f992a1140324dc75db4b0c309" />
+                <rom loadflag="load16_byte" name="780-c2.c2" offset="0x000001" size="0x400000" crc="dc1a7fcb" sha1="9e5c8e5c7334af4090bdf8eb8ef3b7087244f701" />
+            </dataarea>
+        </part>
+    </software>
+</softwarelist>

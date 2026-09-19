@@ -1,0 +1,5 @@
+build/
+artbox/generated/
+artbox/in/generated/
+__pycache__/
+*.pyc

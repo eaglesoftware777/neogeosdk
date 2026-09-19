@@ -322,7 +322,10 @@ void NEOGEO_USER fixtext_out(uint16_t x, uint16_t y,char *mess, short pal) {
 	int len = strlen(mess);
 	NEO_REGISTER(VRAM_ADDR) = FIXMAP+y+FIX_ROW0+x*32;
 	NEO_REGISTER(VRAM_INC) = 0x20;
-	for (int i=0; i<len; i++) NEO_REGISTER(VRAM_RW) = (uint16_t)((pal << 12) | mess[i]);
+	for (int i=0; i<len; i++) {
+		uint8_t ch = (uint8_t)mess[i];
+		NEO_REGISTER(VRAM_RW) = (ch == ' ') ? 0x00FFu : (uint16_t)(((pal & 0x0F) << 12) | ch);
+	}
 }
 
 static uint16_t NEOGEO_USER mess_out_strlen_clipped(const char *text, uint16_t max_chars)
