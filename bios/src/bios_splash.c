@@ -32,7 +32,7 @@ enum {
     LINE_PAL = 7,        /* grey rule                                      */
     TEXT_PAL = 1,        /* white                                          */
     REVEAL_FRAMES = 9,   /* one letter every nine frames                   */
-    HOLD_FRAMES = 96,
+    HOLD_FRAMES = 60,
     COOL_STEPS = 8        /* eight steps of two shades: sixteen levels    */
 };
 
@@ -102,8 +102,8 @@ void bios_eyecatcher(void)
 
     for (uint8_t letter = 0; letter < 5 && !skipped; letter++) {
         draw_letter(letter);
-        /* The system sound program is only in charge on an MVS motherboard. */
-        if (BIOS_MVS_FLAG && !bios_cart_active) REG_SOUND = 2;
+        /* A tick per letter, from the system sound program when it is live. */
+        if (BIOS_MVS_FLAG && !bios_cart_active) REG_SOUND = 4;
         for (uint8_t frame = 0; frame < REVEAL_FRAMES; frame++) {
             bios_wait_vbl();
             if (skip_pressed()) { skipped = 1; break; }
@@ -135,8 +135,41 @@ void bios_eyecatcher(void)
     bios_wait_vbl();
 }
 
-/* Power-on presentation on the arcade board: the same wordmark, briefly. */
+/*
+ * Power-on title screen: the firmware banner, the board it found and the
+ * cartridge it is about to start.  Holds a moment; any button moves on.
+ */
 void bios_splash_show(void)
 {
-    bios_eyecatcher();
+    sys_fix_clear_c();
+    sys_lsp_1st_c();
+    bios_set_backdrop(COLOR_BLACK);
+    bios_init_palette_banks();
+    bios_wait_vbl();
+
+    bios_fix_puts(4,  5, "==================================", 2);
+    bios_fix_puts(9,  7, "E A G L E   B I O S", 1);
+    bios_fix_puts(6,  9, "OPEN SOURCE NEO-GEO FIRMWARE", 3);
+    bios_fix_puts(4, 11, "==================================", 2);
+
+    bios_fix_puts(7, 14, BIOS_MVS_FLAG ? "MODE: MVS ARCADE SYSTEM" : "MODE: AES CONSOLE SYSTEM", 1);
+    bios_fix_puts(10, 16, "(C) 2026 EAGLE SOFTWARE", 2);
+
+    if (bios_cart_valid()) {
+        bios_fix_puts(8, 20, "CARTRIDGE NGH ID:  0x", 3);
+        bios_fix_put_hex16(29, 20, CART_HEADER->ngh_id, 2);
+        bios_fix_puts(12, 23, "SYSTEM INITIALIZED", 1);
+    } else {
+        bios_fix_puts(10, 20, "NO CARTRIDGE INSERTED", 4);
+    }
+
+    /* The Eagle fanfare, from the system sound program on an arcade board. */
+    if (BIOS_MVS_FLAG && !bios_cart_active) REG_SOUND = 2;
+    for (uint16_t frame = 0; frame < 66; frame++) {
+        bios_wait_vbl();
+        if (skip_pressed() || (BIOS_STATCHANGE & STAT_COIN1)) break;
+    }
+
+    sys_fix_clear_c();
+    bios_wait_vbl();
 }

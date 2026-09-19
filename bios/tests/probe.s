@@ -45,6 +45,18 @@ user:
     move.l #message,0x10FF00
     move.l #0x10FF04,0x10FDBE
     jsr 0xC004CE
+    lea 0x10FF00,%a0
+    clr.l (%a0)+
+    move.w #0x0301,(%a0)+
+    move.w #2,(%a0)+
+    move.w #0x2002,(%a0)+
+    move.w #0x0003,(%a0)+
+    move.w #0x7318,(%a0)+
+    move.w #0x0004,(%a0)+
+    move.l #inline_text,(%a0)+
+    clr.w (%a0)+
+    move.l %a0,0x10FDBE
+    jsr 0xC004CE
     move.w #0x2000,%sr
 idle:
     move.b %d0,0x300001
@@ -88,3 +100,6 @@ message:
 text:
     .ascii "EAGLE BIOS READY"
     .byte 255
+    .balign 2
+inline_text:
+    .word 0x104F, 0x104B

@@ -132,10 +132,11 @@ void bios_reset(void)
         for (uint8_t i = 0; i < 16; i++) BIOS_GAME_DIP[i] = defaults[i];
     }
 
-    /* An arcade board greets the room once at power-on.  A console shows
-     * the eye-catcher after the cartridge's own power-on step, the order a
-     * home cartridge is written for. */
-    if (BIOS_MVS_FLAG) bios_splash_show();
+    /* The title screen greets both boards at power-on.  A console then also
+     * shows the eye-catcher after the cartridge's own power-on step, the
+     * order a home cartridge is written for. */
+    bios_splash_show();
+    if (BIOS_MVS_FLAG) bios_eyecatcher();
     bios_cart_prepare();
     BIOS_USER_REQUEST = 0;
     BIOS_USER_MODE = 0;

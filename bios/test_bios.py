@@ -125,6 +125,7 @@ def check_probe(samples, platform, logoflag):
     assert last["mvs"] == (128 if platform == "mvs" else 0), "Wrong hardware identity"
     assert last["pad_status"] == 1, "Idle pad lost its connected status"
     assert last["message"] == 69 and last["increment"] == 0, "MESS_OUT output is incorrect"
+    assert last["inline"] == 0x104B, "MESS_OUT inline command stream was not run"
     assert last["mess_point"] == 0x10FF00, "Message queue was not reset"
     if platform == "mvs":
         assert last["coins"] == 10 and last["credit"] == 9, "BCD coin accounting failed"
@@ -140,12 +141,13 @@ def check_probe(samples, platform, logoflag):
 
 def check_game(samples, platform):
     """An SDK cartridge must reach attract, then take a coin and a start."""
-    attract = [s for s in samples if s["request"] == 2 and s["mode"] == 1]
+    # A console cartridge on free play may go straight into its game (mode 2).
+    attract = [s for s in samples if s["request"] == 2 and s["mode"] in ((1,) if platform == "mvs" else (1, 2))]
     assert attract, "Cartridge never reached its attract mode"
-    assert attract[0]["time"] <= 5.0, "Attract mode came up too late"
+    assert attract[0]["time"] <= 5.5, "Attract mode came up too late"
     assert all(s["mvs"] == (128 if platform == "mvs" else 0) for s in samples[1:]), "Hardware identity changed"
     if platform == "mvs":
-        before = [s["credit"] for s in samples if 4.5 <= s["time"] < 9.0]
+        before = [s["credit"] for s in samples if 6.5 <= s["time"] < 11.0]
         assert before and max(before) >= 1, "Coin was not credited"
         # Credits are BCD; a start must have spent exactly one of them.
         spent = int(f"{max(before):x}") - int(f"{samples[-1]['credit']:x}")
@@ -193,14 +195,14 @@ def main():
     parser.add_argument("--game", default="probe",
                         help="probe, probe0 (system eye-catcher), ssideki, or an SDK game under roms/")
     parser.add_argument("--platform", choices=("mvs", "aes", "both"), default="both")
-    parser.add_argument("--seconds", type=int, default=14)
+    parser.add_argument("--seconds", type=int, default=16)
     parser.add_argument("--mame", default=shutil.which("mame") or "/usr/games/mame")
     parser.add_argument("--cartridge", type=Path)
     parser.add_argument("--p1", type=Path, help="alternate program ROM for an SDK game (an AES build)")
     parser.add_argument("--toolchain", default=os.getenv("TOOLCHAIN", str(ROOT.parent / "x-tools-v3/m68k-unknown-elf/bin")))
     args = parser.parse_args()
-    if args.seconds < 14:
-        parser.error("Use at least 14 seconds to exercise coin and start transitions")
+    if args.seconds < 16:
+        parser.error("Use at least 16 seconds to exercise coin and start transitions")
     for platform in (("mvs", "aes") if args.platform == "both" else (args.platform,)):
         run(args, platform)
 

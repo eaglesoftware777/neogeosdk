@@ -56,9 +56,10 @@ From the repository root, `make test USE_EAGLE_BIOS=1 GAME=<game>` and
 4. **Cartridge check.**  The `NEO-GEO` signature at `000100` must be present;
    otherwise the screen says so and waits.  The cartridge's regional soft
    DIP defaults are copied to `10FD84`.
-5. **Eye-catcher** on the arcade board (see below), then the sound handoff:
-   the system sound program parks itself in Z80 RAM and answers, the
-   cartridge sound program is switched in and sent the reset code.
+5. **Title screen** with the Eagle fanfare (below), and on the arcade board
+   the eye-catcher straight after it.  Then the sound handoff: the system
+   sound program parks itself in Z80 RAM and answers, the cartridge sound
+   program is switched in and sent the reset code.
 6. **USER request 0** (power-on initialisation) is issued to the cartridge.
 
 ## The USER contract
@@ -88,20 +89,42 @@ system vectors and stack, decides the next request and enters USER again.
 Cartridge byte `114` selects the eye-catcher: `0` the system draws its own,
 `1` the cartridge draws it on request 1, `2` none at all.
 
-## The eye-catcher
+## Title screen, eye-catcher and fanfare
 
-Deliberately plain, the way an old home computer announced itself: no
-sprites, no tile art, no palette ROM.  The wordmark is five block letters
-laid out on the FIX layer, every "pixel" a cell of the ordinary text font,
-so it draws identically from the system font on an MVS and from whatever
-font the cartridge carries on an AES.  Letters land one at a time to a
-short chime from the system sound program (arcade only; on a console the
-cartridge's sound program is already in charge), the wordmark holds for a
-moment, then the ink cools to black.  Any button skips it.
+The **title screen** is the firmware banner: name, the board it found, the
+cartridge id it is about to start, and the Eagle fanfare.  It holds for
+about a second; any button, START or a coin moves on.
 
-On an arcade board it is shown once at power-on.  On a console it is shown
-between request 0 and request 2 when the cartridge asks for the system
-eye-catcher, the order a home cartridge is written for.
+The **eye-catcher** is deliberately plain, the way an old home computer
+announced itself: no sprites, no tile art, no palette ROM.  The wordmark is
+five block letters laid out on the FIX layer, every "pixel" a cell of the
+ordinary text font, so it draws identically from the system font on an MVS
+and from whatever font the cartridge carries on an AES.  Letters land one at
+a time to a tick, the wordmark holds for a moment, then the ink cools to
+black.  Any button skips it.
+
+The **fanfare** lives in the system sound program: three rising notes
+(C5, E5, G5), the top C held, a breath, and a short answer, on SSG channel
+A with a root under it on channel B, each note fading in three steps.  It
+plays on an arcade board, where the system sound program is in charge at
+power-on; a console has no system sound program, so its cartridge driver
+is already live and the presentation there is silent.
+
+On an arcade board the title screen and the eye-catcher run back to back at
+power-on.  On a console the title screen runs at power-on and the
+eye-catcher between request 0 and request 2 when the cartridge asks for the
+system eye-catcher, the order a home cartridge is written for.
+
+### System sound program codes
+
+| Code | Effect                                                              |
+|------|---------------------------------------------------------------------|
+| 1    | Park: move to Z80 RAM, mute, answer `01`, then wait for the reset code and restart from the cartridge program |
+| 2    | The Eagle fanfare                                                   |
+| 3    | Mute (the reset code)                                               |
+| 4    | One short tick                                                      |
+
+A new code interrupts a tune within 10 ms.
 
 ## Services (jump table at `C00400`)
 
@@ -122,7 +145,7 @@ eye-catcher, the order a home cartridge is written for.
 | `C0046E` | SYS_CARD_ERROR    | no-op                                                                      |
 | `C00474` | SYS_HOWTOPLAY     | no-op                                                                      |
 | `C004C2` | SYS_FIX_CLEAR     | FIX map to `0020`                                                          |
-| `C004C8` | SYS_LSP_1ST       | every sprite off screen, full size                                         |
+| `C004C8` | SYS_LSP_1ST       | every sprite height 0, full size, parked at x = 496 off the right edge     |
 | `C004CE` | SYS_MESS_OUT      | run the message queue ending at `10FDBE`                                   |
 | `C004D4` | controller setup  | reset pad status bytes                                                     |
 | `C004DA` | timer entry       | same as SYS_INT2                                                           |
@@ -146,9 +169,11 @@ SYS_MESS_OUT walks the pointer queue that ends at `10FDBE`, running each
 stream: format and parameter (1), increment (2), absolute and relative
 addressing (3, 5), data blocks (4, 6, 7), text runs on the FIX map with the
 next palette on the second row (8), subroutine call and return (10, 11) and
-fills (12, 13).  Work per call is bounded so a bad pointer from a cartridge
-cannot wedge the VBlank.  The Japanese common-FIX translation (9) is not
-provided.
+fills (12, 13).  A zero pointer means the stream itself continues inline in
+the buffer, which is how the SDK's `mess_out` writes text, so the queue end
+may sit on any word boundary.  Work per call is bounded so a bad pointer
+from a cartridge cannot wedge the VBlank.  The Japanese common-FIX
+translation (9) is not provided.
 
 ## Service menu
 
@@ -205,6 +230,10 @@ Captures land in `out/tests/<game>-<board>/`.
   computes that destination with the already incremented register, which
   shifted every colour by one entry.  Keep that in mind for any 68000 code
   that reads and writes through the same register.
+* The display chip walks sprite strip 0 on every line even when no sprite
+  is active, so a strip with height 0 but x = 0 still paints its first tile
+  down the left edge.  Park unused strips off screen, as SYS_LSP_1ST does,
+  rather than relying on height alone.
 
 ## Limitations
 
