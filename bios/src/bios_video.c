@@ -40,7 +40,11 @@ void bios_palettes_clear(void)
  * SYS_LSP_1ST: Initialize and hide all sprite strips in VRAM.
  * - SCB3 (0x8200): Sets sprite strip heights to 0, hiding all sprites.
  * - SCB2 (0x8000): Clears zoom/shrink attributes.
- * - SCB4 (0x8400): Clears horizontal positions.
+ * - SCB4 (0x8400): Parks every strip off the right edge of the screen.
+ *
+ * Height 0 is not enough on its own: the display chip still walks strip 0
+ * on every line, and its first tile would paint a column down the left
+ * edge.  Off screen it paints nothing, whatever tile it holds.
  */
 void sys_lsp_1st_c(void)
 {
@@ -60,11 +64,11 @@ void sys_lsp_1st_c(void)
         REG_VRAM_RW = 0x0FFFu; /* Full size */
     }
 
-    /* Clear SCB4: X position (512 words) */
+    /* SCB4: X position (512 words), x = 496 is past the last visible pixel */
     REG_VRAM_ADDR = VRAM_SCB4;
     REG_VRAM_INC = 1;
     for (i = 0; i < 512; i++) {
-        REG_VRAM_RW = 0x0000u;
+        REG_VRAM_RW = (uint16_t)(496u << 7);
     }
 }
 
@@ -163,15 +167,20 @@ static void mess_stream(uint32_t pc)
     }
 }
 
+/*
+ * The queue holds stream addresses; a zero entry means the stream itself
+ * continues inline from the next word, so MESS_POINT may legitimately end
+ * on any word boundary, not only a long one.
+ */
 void sys_mess_out_c(void)
 {
     uint32_t end = BIOS_MESS_POINT;
     if (BIOS_MESS_BUSY) return;
-    if (end < 0x10FF00u || end > 0x110000u || (end & 3u)) {
+    if (end < 0x10FF00u || end > 0x110000u || (end & 1u)) {
         BIOS_MESS_POINT = 0x10FF00u;
         return;
     }
-    for (uint32_t entry = 0x10FF00u; entry < end; entry += 4) {
+    for (uint32_t entry = 0x10FF00u; entry + 4u <= end; entry += 4) {
         uint32_t stream = get_long(entry);
         if (!stream) { mess_stream(entry + 4); break; }
         mess_stream(stream);

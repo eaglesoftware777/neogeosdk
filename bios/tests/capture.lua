@@ -26,25 +26,25 @@ end
 emu.register_frame_done(function()
     frame = frame + 1
     local t = machine.time:as_double()
-    -- The power-on presentation owns the first three seconds.  Ten coin
+    -- The power-on presentation owns the first four seconds.  Ten coin
     -- edges then exercise the BCD 09 -> 10 carry before one start.
-    local coin = t >= 4 and t < 8 and ((t - 4) % 0.4) < 0.12
+    local coin = t >= 6 and t < 10 and ((t - 6) % 0.4) < 0.12
     press('Coin 1', coin and 1 or 0)
-    press('1 Player Start', (t >= 9 and t < 9.2) and 1 or 0)
-    press('P1 Start', (t >= 9 and t < 9.2) and 1 or 0)
-    press('P1 A', (not probe and t >= 11 and (math.floor(t) % 3 == 0)) and 1 or 0)
+    press('1 Player Start', (t >= 11 and t < 11.2) and 1 or 0)
+    press('P1 Start', (t >= 11 and t < 11.2) and 1 or 0)
+    press('P1 A', (not probe and t >= 13 and (math.floor(t) % 3 == 0)) and 1 or 0)
     if frame % 60 == 1 then
         screen:snapshot(string.format('%s/frame-%04d.png', output, frame))
         log:write(string.format(
             '{"time":%.2f,"pc":%d,"z80_pc":%d,"request":%d,"mode":%d,"mvs":%d,' ..
             '"credit":%d,"sentinel":%d,"requests":%d,"starts":%d,"coins":%d,' ..
-            '"entry_sr":%d,"pad_status":%d,"mess_point":%d,"message":%d,"increment":%d,"ticks":%d,"status":%d}\n',
+            '"entry_sr":%d,"pad_status":%d,"mess_point":%d,"message":%d,"increment":%d,"ticks":%d,"status":%d,"inline":%d}\n',
             t, pc(cpu), pc(machine.devices[':audiocpu']),
             memory:read_u8(0x10fdae), memory:read_u8(0x10fdaf), memory:read_u8(0x10fd82),
             memory:read_u8(0xd00034), memory:read_u32(0x100000), memory:read_u16(0x100004),
             memory:read_u16(0x100006), memory:read_u16(0x100008), memory:read_u16(0x100010),
             memory:read_u8(0x10fd94), memory:read_u32(0x10fdbe), vram:read(0x720e), vram:read(0x7242),
-            memory:read_u32(0x10000c), memory:read_u8(0x320001)))
+            memory:read_u32(0x10000c), memory:read_u8(0x320001), vram:read(0x7338)))
         log:flush()
     end
 end)
