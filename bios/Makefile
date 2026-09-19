@@ -49,9 +49,9 @@ TARGET_LO   = 000-lo.lo
 
 PYTHON     ?= python3
 
-.PHONY: all clean test
+.PHONY: all clean test test-games install
 
-all: $(TARGET_SP1) $(TARGET_SM1) $(TARGET_SFIX) $(TARGET_LO)
+all: $(TARGET_SP1) $(TARGET_AES) $(TARGET_SM1) $(TARGET_SFIX) $(TARGET_LO)
 	@echo "========================================================"
 	@echo " EagleBIOS Firmware Suite successfully built!"
 	@echo " Output 1 (Big-Endian Linear): bios/$(TARGET_ROM) (128 KB)"
@@ -66,9 +66,12 @@ out:
 	mkdir -p out
 
 out/bios_entry.o: src/bios_entry.s | out
-	$(AS) $(ASFLAGS) $< -o $@
+	$(AS) $(ASFLAGS) --defsym BIOS_ID=0x8002 $< -o $@
 
-out/%.o: src/%.c | out
+out/bios_entry_aes.o: src/bios_entry.s | out
+	$(AS) $(ASFLAGS) --defsym BIOS_ID=0x0002 $< -o $@
+
+out/%.o: src/%.c include/bios.h | out
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(TARGET_ELF): $(OBJS) eagle_bios.ld
@@ -83,7 +86,15 @@ $(TARGET_ROM): $(TARGET_RAW)
 $(TARGET_SP1): $(TARGET_ROM)
 	$(SREC_CAT) $< -binary -byte-swap 2 -o $@ -binary
 	cp -f $@ eagle_bios_swapped.rom
-	cp -f $@ $(TARGET_AES)
+
+out/eagle_aes.elf: out/bios_entry_aes.o $(filter-out out/bios_entry.o,$(OBJS)) eagle_bios.ld
+	$(LD) $(LDFLAGS) out/bios_entry_aes.o $(filter-out out/bios_entry.o,$(OBJS)) -o $@
+
+out/eagle_aes_raw.bin: out/eagle_aes.elf
+	$(OBJCOPY) -O binary $< $@
+
+$(TARGET_AES): out/eagle_aes_raw.bin
+	$(SREC_CAT) $< -binary -fill 0xFF 0x000000 0x020000 -byte-swap 2 -o $@ -binary
 
 out/bios_sound.o: src/bios_sound.s | out
 	$(WLAZ80) -o $@ $<
@@ -102,6 +113,23 @@ $(TARGET_SFIX): tools/gen_sfix.py
 
 $(TARGET_LO): tools/gen_lo.py
 	$(PYTHON) tools/gen_lo.py $@
+
+# Firmware contract on both boards, then the system eye-catcher path.
+test: all
+	$(PYTHON) test_bios.py --game probe --platform both
+	$(PYTHON) test_bios.py --game probe0 --platform aes
+
+# Every SDK cartridge built into ../roms, on the arcade firmware.
+test-games: all
+	@for game in helloworld demo tutorial neogeogame skylance; do \
+	    [ -f ../roms/$$game/*-p1.p1 ] && $(PYTHON) test_bios.py --game $$game --platform mvs || true; \
+	done
+
+# Copy the fresh firmware where the launch scripts and MAME look for it.
+install: all
+	mkdir -p test_roms/neogeo test_roms/aes
+	cp -f $(TARGET_SP1) $(TARGET_SM1) $(TARGET_SFIX) $(TARGET_LO) test_roms/neogeo/
+	cp -f $(TARGET_AES) $(TARGET_SM1) $(TARGET_SFIX) $(TARGET_LO) test_roms/aes/
 
 clean:
 	rm -rf out $(TARGET_ROM) $(TARGET_SP1) $(TARGET_AES) $(TARGET_SM1) $(TARGET_SFIX) $(TARGET_LO) eagle_bios_swapped.rom

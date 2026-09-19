@@ -1,137 +1,209 @@
 #!/usr/bin/env python3
-"""Test EagleBIOS in MAME with headless simulation, frame capture, and audio analysis."""
+"""Isolated MVS/AES firmware tests; never searches installed system ROM sets.
 
-import os
-import sys
-import wave
-import struct
+    python3 bios/test_bios.py                      # firmware contract probe, both boards
+    python3 bios/test_bios.py --game helloworld    # an SDK cartridge from roms/helloworld
+    python3 bios/test_bios.py --game probe0 --platform aes   # system eye-catcher path
+    python3 bios/test_bios.py --game helloworld --platform aes --p1 <console build of 772-p1.p1>
+
+The probe is a purpose-built cartridge that records what the firmware handed
+it (registers, request order, coin and start bookkeeping, message output).
+Any SDK game in roms/<name>/ can be booted the same way to check that it
+reaches its attract mode, takes a coin and a start, and returns to attract.
+"""
+
 import argparse
-import subprocess
+import hashlib
+import json
+import os
 from pathlib import Path
+import shutil
+import subprocess
+import wave
+import xml.etree.ElementTree as ET
+import zipfile
+import zlib
 
-def analyze_audio(wav_path: Path):
-    if not wav_path.exists():
-        print(f"Audio file {wav_path} not found.")
-        return
+BIOS = Path(__file__).resolve().parent
+ROOT = BIOS.parent
+PARTS = ("p1", "s1", "m1", "v1", "c1", "c2")
 
-    with wave.open(str(wav_path), "rb") as w:
-        nframes = w.getnframes()
-        rate = w.getframerate()
-        nch = w.getnchannels()
-        raw = w.readframes(nframes)
 
-    samples = struct.unpack(f"<{nframes * nch}h", raw)
-    peak = max(abs(s) for s in samples) if samples else 0
-    non_zero = sum(1 for s in samples if abs(s) > 100) if samples else 0
-    duration = nframes / rate if rate > 0 else 0.0
-    pct = (non_zero / len(samples) * 100.0) if samples else 0.0
+def probe_rom(out, toolchain, logoflag):
+    prefix = str(Path(toolchain) / "m68k-unknown-elf-")
+    subprocess.run([prefix + "as", "-m68000", f"--defsym=LOGOFLAG={logoflag}",
+                    str(BIOS / "tests/probe.s"), "-o", str(out / "probe.o")], check=True)
+    subprocess.run([prefix + "ld", "-Ttext=0", "-e", "0x122", str(out / "probe.o"),
+                    "-o", str(out / "probe.elf")], check=True)
+    subprocess.run([prefix + "objcopy", "-O", "binary", str(out / "probe.elf"),
+                    str(out / "probe.bin")], check=True)
+    data = (out / "probe.bin").read_bytes().ljust(0x100000, b"\xff")
+    swapped = bytearray(data)
+    swapped[0::2], swapped[1::2] = data[1::2], data[0::2]
+    return bytes(swapped)
 
-    print("--- Audio Analysis ---")
-    print(f"  Duration:       {duration:.2f}s ({nframes} frames @ {rate} Hz, {nch} ch)")
-    print(f"  Peak Amplitude: {peak} / 32767 ({peak / 32767.0 * 100.0:.1f}%)")
-    print(f"  Active Samples: {non_zero} / {len(samples)} ({pct:.1f}%)")
-    if peak > 500 and non_zero > 1000:
-        print("  Status:         AUDIO ACTIVE (playback verified)")
+
+def sdk_rom_set(name):
+    """The six ROM files of an SDK game built into roms/<name>/."""
+    directory = ROOT / "roms" / name
+    p1 = sorted(directory.glob("*-p1.p1"))
+    if not p1:
+        raise SystemExit(f"No <id>-p1.p1 in {directory}; build the game first")
+    game_id = p1[0].name.split("-")[0]
+    data = {}
+    for part in PARTS:
+        path = directory / f"{game_id}-{part}.{part}"
+        if not path.exists():
+            raise SystemExit(f"Missing {path}; build the whole ROM set first")
+        data[part] = path.read_bytes()
+    return data
+
+
+def prepare(args, out):
+    roms = out / "roms"
+    for machine in ("neogeo", "aes"):
+        directory = roms / machine
+        directory.mkdir(parents=True, exist_ok=True)
+        for filename in ("sp-s2.sp1", "neo-epo.bin", "sfix.sfix", "sm1.sm1", "000-lo.lo"):
+            shutil.copyfile(BIOS / filename, directory / filename)
+    cart = roms / args.game
+    cart.mkdir(exist_ok=True)
+    if args.game.startswith("probe"):
+        logoflag = 0 if args.game == "probe0" else 1
+        data = {"p1": probe_rom(out, args.toolchain, logoflag), "s1": (BIOS / "sfix.sfix").read_bytes(),
+                "m1": (BIOS / "sm1.sm1").read_bytes(), "v1": bytes(0x20000),
+                "c1": bytes(0x20000), "c2": bytes(0x20000)}
+    elif args.game == "ssideki":
+        if not args.cartridge:
+            raise SystemExit("--game ssideki requires --cartridge PATH to your cartridge ZIP")
+        with zipfile.ZipFile(args.cartridge) as archive:
+            data = {}
+            for part in PARTS:
+                names = [n for n in archive.namelist() if Path(n).name.startswith("052-" + part)]
+                if len(names) != 1:
+                    raise SystemExit(f"Expected exactly one 052-{part} cartridge member")
+                data[part] = archive.read(names[0])
     else:
-        print("  Status:         SILENT / INACTIVE")
+        data = sdk_rom_set(args.game)
+        if args.p1:
+            # A console build of the same game (make PLATFORM=aes p1) shares
+            # every ROM but the program; swap only that one in.
+            data["p1"] = Path(args.p1).read_bytes()
+    listing = ET.Element("softwarelist", name="neogeo", description="EagleBIOS validation")
+    software = ET.SubElement(listing, "software", name=args.game)
+    for tag, text in (("description", "EagleBIOS test cartridge"), ("year", "2026"),
+                      ("publisher", "Eagle Software")):
+        ET.SubElement(software, tag).text = text
+    ET.SubElement(software, "sharedfeat", name="compatibility", value="MVS,AES")
+    part = ET.SubElement(software, "part", name="cart", interface="neo_cart")
+    ET.SubElement(part, "feature", name="slot", value="rom")
+    for area_name, members, flags in (
+        ("maincpu", ["p1"], {"width": "16", "endianness": "big"}),
+        ("fixed", ["s1"], {}), ("audiocpu", ["m1"], {}),
+        ("ymsnd:adpcma", ["v1"], {}), ("sprites", ["c1", "c2"], {}),
+    ):
+        area = ET.SubElement(part, "dataarea", name=area_name,
+                             size=hex(sum(len(data[m]) for m in members)), **flags)
+        for i, member in enumerate(members):
+            payload = data[member]
+            filename = f"cart-{member}.bin"
+            (cart / filename).write_bytes(payload)
+            options = {"loadflag": "load16_byte"} if member.startswith("c") else {}
+            if member == "p1":
+                options["loadflag"] = "load16_word_swap"
+            ET.SubElement(area, "rom", name=filename, offset=hex(i), size=hex(len(payload)),
+                          crc=f"{zlib.crc32(payload):08x}", sha1=hashlib.sha1(payload).hexdigest(), **options)
+    (out / "hash").mkdir(exist_ok=True)
+    ET.ElementTree(listing).write(out / "hash/neogeo.xml", encoding="utf-8", xml_declaration=True)
+
+
+def check_probe(samples, platform, logoflag):
+    last = samples[-1]
+    assert last["sentinel"] == 0xDEADBEEF, "BIOS wrote into cartridge work RAM"
+    assert last["entry_sr"] == 0x2700, "Incorrect USER entry interrupt mask"
+    assert last["mode"] == 2 and last["starts"] == 1, "START was not accepted exactly once"
+    assert last["mvs"] == (128 if platform == "mvs" else 0), "Wrong hardware identity"
+    assert last["pad_status"] == 1, "Idle pad lost its connected status"
+    assert last["message"] == 69 and last["increment"] == 0, "MESS_OUT output is incorrect"
+    assert last["mess_point"] == 0x10FF00, "Message queue was not reset"
+    if platform == "mvs":
+        assert last["coins"] == 10 and last["credit"] == 9, "BCD coin accounting failed"
+        assert last["requests"] == 13, "MVS request flow must be INIT, DEMO, TITLE"
+    elif logoflag == 1:
+        assert last["coins"] == 0 and last["requests"] == 7, "AES cartridge eye-catcher flow failed"
+    else:
+        assert last["requests"] == 5, "AES system eye-catcher must skip request 1"
+        first_demo = next(s["time"] for s in samples if s["request"] == 2)
+        assert first_demo >= 2.5, "System eye-catcher was not shown before the demo"
+    print("Firmware contract assertions passed")
+
+
+def check_game(samples, platform):
+    """An SDK cartridge must reach attract, then take a coin and a start."""
+    attract = [s for s in samples if s["request"] == 2 and s["mode"] == 1]
+    assert attract, "Cartridge never reached its attract mode"
+    assert attract[0]["time"] <= 5.0, "Attract mode came up too late"
+    assert all(s["mvs"] == (128 if platform == "mvs" else 0) for s in samples[1:]), "Hardware identity changed"
+    if platform == "mvs":
+        before = [s["credit"] for s in samples if 4.5 <= s["time"] < 9.0]
+        assert before and max(before) >= 1, "Coin was not credited"
+        # Credits are BCD; a start must have spent exactly one of them.
+        spent = int(f"{max(before):x}") - int(f"{samples[-1]['credit']:x}")
+        assert spent == 1, f"Start should spend one credit, spent {spent}"
+        assert any(s["request"] == 3 for s in samples), "Coin did not bring up the title"
+    print("Cartridge compatibility assertions passed")
+
+
+def run(args, platform):
+    out = BIOS / "out/tests" / f"{args.game}-{platform}"
+    out.mkdir(parents=True, exist_ok=True)
+    prepare(args, out)
+    env = dict(os.environ, DISPLAY="", SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy",
+               EAGLE_TEST_DIR=str(out), EAGLE_TEST_GAME=args.game,
+               EAGLE_TEST_PLATFORM=platform)
+    machine = "neogeo" if platform == "mvs" else "aes"
+    command = [args.mame, machine, "-noreadconfig", "-rompath", str(out / "roms"),
+               "-hashpath", str(out / "hash"), "-bios", "euro" if platform == "mvs" else "asia",
+               "-cart1", args.game, "-video", "none", "-nothrottle", "-skip_gameinfo",
+               "-seconds_to_run", str(args.seconds), "-nonvram_save", "-autoboot_delay", "0",
+               "-cfg_directory", str(out / "cfg"), "-nvram_directory", str(out / "nvram"),
+               "-snapshot_directory", str(out), "-autoboot_script", str(BIOS / "tests/capture.lua"),
+               "-wavwrite", str(out / "audio.wav")]
+    with (out / "mame.log").open("w") as log:
+        result = subprocess.run(command, env=env, cwd=out, stdout=log, stderr=subprocess.STDOUT,
+                                timeout=max(120, args.seconds * 10))
+    if result.returncode:
+        raise SystemExit((out / "mame.log").read_text()[-6000:])
+    samples = [json.loads(line) for line in (out / "state.jsonl").read_text().splitlines()]
+    if not samples or "[LUA ERROR]" in (out / "mame.log").read_text():
+        raise SystemExit(f"Capture failed; inspect {out / 'mame.log'}")
+    print(f"{args.game} {platform}: {samples[-1]}")
+    if args.game.startswith("probe"):
+        check_probe(samples, platform, 0 if args.game == "probe0" else 1)
+    elif args.game != "ssideki":
+        check_game(samples, platform)
+    with wave.open(str(out / "audio.wav")) as audio:
+        import array
+        pcm = array.array("h", audio.readframes(audio.getnframes()))
+        print(f"Audio peak: {max(map(abs, pcm), default=0)}; captures: {out}")
+
 
 def main():
-    root = Path(__file__).resolve().parents[1]
-    bios_dir = root / "bios"
-    test_roms = bios_dir / "test_roms" / "neogeo"
-    test_roms.mkdir(parents=True, exist_ok=True)
-
-    # 1. Copy all four EagleBIOS firmware suite ROMs into test_roms:
-    #    - sp-s2.sp1 (68000 System Firmware)
-    #    - sm1.sm1   (Z80 Sound Firmware)
-    #    - sfix.sfix (Fix Layer System Font ROM)
-    #    - 000-lo.lo (LSPC Sprite Scaling Lookup ROM)
-    # Completely independent from any proprietary Neo-Geo system ROM files.
-    required_bios_roms = ["sp-s2.sp1", "sm1.sm1", "sfix.sfix", "000-lo.lo"]
-    for rom_name in required_bios_roms:
-        src = bios_dir / rom_name
-        if not src.exists():
-            print(f"Error: {src} not found. Run 'make -C bios' first.")
-            sys.exit(1)
-        dst = test_roms / rom_name
-        dst.write_bytes(src.read_bytes())
-
-    # 2. Output directory
-    capture_dir = bios_dir / "test_captures"
-    capture_dir.mkdir(parents=True, exist_ok=True)
-
-    # 3. Environment
-    env = os.environ.copy()
-    env.update(
-        DISPLAY="",
-        SDL_VIDEODRIVER="dummy",
-        SDL_AUDIODRIVER="dummy",
-        GAME_CAPTURE_DIR=str(capture_dir),
-        GAME_CAPTURE_EVERY="1.0",
-        GAME_CAPTURE_PLAY="1"
-    )
-
-    parser = argparse.ArgumentParser(description="Test EagleBIOS with MAME")
-    parser.add_argument("--game", default="maiya", choices=["maiya", "demo"], help="Game to test")
-    parser.add_argument("--seconds", type=int, default=12, help="Seconds to run")
-    parser.add_argument("--no-audio", action="store_true", help="Disable audio synthesis and analysis")
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--game", default="probe",
+                        help="probe, probe0 (system eye-catcher), ssideki, or an SDK game under roms/")
+    parser.add_argument("--platform", choices=("mvs", "aes", "both"), default="both")
+    parser.add_argument("--seconds", type=int, default=14)
+    parser.add_argument("--mame", default=shutil.which("mame") or "/usr/games/mame")
+    parser.add_argument("--cartridge", type=Path)
+    parser.add_argument("--p1", type=Path, help="alternate program ROM for an SDK game (an AES build)")
+    parser.add_argument("--toolchain", default=os.getenv("TOOLCHAIN", str(ROOT.parent / "x-tools-v3/m68k-unknown-elf/bin")))
     args = parser.parse_args()
+    if args.seconds < 14:
+        parser.error("Use at least 14 seconds to exercise coin and start transitions")
+    for platform in (("mvs", "aes") if args.platform == "both" else (args.platform,)):
+        run(args, platform)
 
-    game = args.game
-    seconds = str(args.seconds)
-    audio_enabled = not args.no_audio
-    wav_path = capture_dir / f"{game}_test_audio.wav"
-
-    # 4. MAME Command
-    rompath = f"{bios_dir / 'test_roms'};{root / 'roms'}"
-    if game == "demo":
-        hashpath = f"{root / 'hash_eagle' / 'demo'};{root / 'hash_eagle'};{root / 'hash'}"
-    else:
-        hashpath = f"{root / 'hash_eagle' / 'maiya'};{root / 'hash_eagle'};{root / 'hash'}"
-
-    cmd = [
-        "mame", "neogeo",
-        "-noreadconfig",
-        "-rompath", rompath,
-        "-hashpath", hashpath,
-        "-bios", "euro",
-        "-cart1", game,
-        "-video", "none",
-        "-nothrottle",
-        "-seconds_to_run", seconds,
-        "-skip_gameinfo",
-        "-nonvram_save",
-        "-cfg_directory", str(capture_dir / "cfg"),
-        "-nvram_directory", str(capture_dir / "nvram"),
-        "-snapshot_directory", str(capture_dir),
-        "-autoboot_delay", "0",
-        "-autoboot_script", str(root / "tools" / "game_capture.lua")
-    ]
-
-    if audio_enabled:
-        cmd.extend(["-wavwrite", str(wav_path)])
-    else:
-        cmd.extend(["-sound", "none"])
-
-    print(f"Running MAME with EagleBIOS on {game} ({seconds}s)...")
-    log_file = capture_dir / "mame.log"
-    with open(log_file, "w", encoding="utf-8") as log:
-        res = subprocess.run(cmd, env=env, cwd=root, stdout=log, stderr=subprocess.STDOUT)
-
-    print(f"MAME finished with exit code {res.returncode}")
-    pngs = sorted(capture_dir.rglob("*.png"))
-    print(f"Captured {len(pngs)} frames in {capture_dir}:")
-    for p in pngs:
-        print(f"  {p.name} ({p.stat().st_size} bytes)")
-
-    if audio_enabled:
-        analyze_audio(wav_path)
-
-    if res.returncode != 0:
-        print("MAME log tail:")
-        lines = log_file.read_text(encoding="utf-8", errors="replace").splitlines()
-        for line in lines[-20:]:
-            print(" ", line)
 
 if __name__ == "__main__":
     main()
