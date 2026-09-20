@@ -25,7 +25,7 @@ from pathlib import Path
 import sys
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 import scipy.ndimage as ndi
 
 GAME = Path(__file__).resolve().parents[1]
@@ -160,7 +160,34 @@ def _foot_center(arr):
     return int(round(feet.mean())) if len(feet) else int(round(xs.mean()))
 
 
-def fit_group(img, boxes, canvas, target_h, bg_color="white", pad=2):
+def sharpen_sprite(arr, amount=1.5, outline=0.55):
+    """Put the bite back into a sprite that has been shrunk by four.
+
+    A single Lanczos pass from 200 px down to 40 loses the line work the art
+    was drawn with: edges go soft and the whole figure turns to mush at
+    arcade size.  An unsharp pass restores the interior detail, and darkening
+    the rim pixels gives the silhouette its outline back.
+    """
+    rgb = arr[:, :, :3].astype(np.uint8)
+    alpha = arr[:, :, 3]
+    sharp = np.asarray(Image.fromarray(rgb).filter(
+        ImageFilter.UnsharpMask(radius=1.2, percent=int(amount * 100), threshold=2)))
+
+    solid = alpha >= 128
+    if solid.any() and outline > 0.0:
+        pad_mask = np.pad(solid, 1)
+        rim = solid & ~(pad_mask[:-2, 1:-1] & pad_mask[2:, 1:-1] &
+                        pad_mask[1:-1, :-2] & pad_mask[1:-1, 2:])
+        sharp = sharp.astype(np.float32)
+        sharp[rim] *= (1.0 - outline)
+        sharp = np.clip(sharp, 0, 255)
+
+    out = arr.copy()
+    out[:, :, :3] = sharp.astype(np.uint8)
+    return out
+
+
+def fit_group(img, boxes, canvas, target_h, bg_color="white", pad=2, sharpen=True):
     """Scale a whole animation by ONE factor and stand every frame on its feet.
 
     Fitting each frame to the canvas on its own made the character swell and
@@ -187,6 +214,9 @@ def fit_group(img, boxes, canvas, target_h, bg_color="white", pad=2):
         scaled = np.asarray(sprite.resize((w, h), Image.Resampling.LANCZOS))
         scaled = scaled.copy()
         scaled[:, :, 3] = np.where(scaled[:, :, 3] >= 128, 255, 0)
+
+        if sharpen:
+            scaled = sharpen_sprite(scaled)
 
         ox = canvas[0] // 2 - _foot_center(scaled)
         oy = canvas[1] - pad - h
@@ -581,6 +611,18 @@ def build():
         },
     }
 
+    # Each valley fields its own creatures: the same bodies wearing the
+    # colours of the place they live in -- moss, river blue, coast sand,
+    # autumn amber, grotto ice, and the blight of the world tree.
+    valley_tint = [
+        (0.0, 1.00, 1.00),      # 1 Emerald Forest: as painted
+        (-40.0, 0.95, 0.96),    # 2 Valley of Falls: river blues
+        (-95.0, 0.85, 1.06),    # 3 Azure Coast: teal and sand
+        (95.0, 1.05, 1.02),     # 4 Autumn Grove: amber
+        (-60.0, 0.55, 1.14),    # 5 Crystal Grotto: pale ice
+        (150.0, 0.90, 0.82),    # 6 World Tree: blight violet
+    ]
+
     for cname, spec in creatures.items():
         boxes = {str(k): box for k, box in enumerate(spec["boxes"])}
         frames = fit_group(en_img, boxes, spec["canvas"], spec["height"])
@@ -590,7 +632,14 @@ def build():
             for name, f in frames.items():
                 rgb = np.clip(f[:, :, :3].astype(np.float32) * spec["lift"] + 14.0, 0, 255)
                 frames[name] = np.dstack((rgb.astype(np.uint8), f[:, :, 3]))
-        shared_set(cname, frames)
+        master = shared_set(cname, frames)
+        words = []
+        for shift, sat, val in valley_tint:
+            tinted = np.zeros((16, 3), dtype=np.uint8)
+            tinted[1:] = hsv_map(master, lambda h, s, v, _s=shift, _a=sat, _b=val:
+                                 (h + _s, min(1.0, s * _a), min(1.0, v * _b)))
+            words.extend(palette_words(tinted))
+        header.append(c_array(f"mg_{cname}_valley_pal", words))
         header.append(f"#define MG_{cname.upper()}_FRAMES {len(frames)}u")
         header.append(f"#define MG_{cname.upper()}_W {spec['canvas'][0]}u")
         header.append(f"#define MG_{cname.upper()}_H {spec['canvas'][1]}u")
@@ -673,6 +722,14 @@ def build():
     shared_set("trinket", trinkets)
     for k, name in enumerate(trinkets.keys()):
         header.append(f"#define MG_K_{name.upper()} {k}u")
+
+    # The front plane: boulders and fronds that pass in front of the road.
+    front = {"fern": nature_art.fern_frond()}
+    for gname in ("grass", "moss", "sand", "autumn", "snow", "bark"):
+        front[f"stone_{gname}"] = nature_art.standing_stone(gname)
+    shared_set("front", front)
+    for k, name in enumerate(front.keys()):
+        header.append(f"#define MG_FR_{name.upper()} {k}u")
 
     # The Ancient Nature Gate, sealed and open (32 x 48).
     shared_set("gate", {"shut": nature_art.gate(False), "open": nature_art.gate(True)})
