@@ -3,12 +3,14 @@
 #  Compiles, links, and produces 128KB Neo Geo compatible BIOS ROM images
 # ============================================================================
 
-TOOLCHAIN ?= /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin
-CC        = $(TOOLCHAIN)/m68k-unknown-elf-gcc
-AS        = $(TOOLCHAIN)/m68k-unknown-elf-as
-LD        = $(TOOLCHAIN)/m68k-unknown-elf-ld
-OBJCOPY   = $(TOOLCHAIN)/m68k-unknown-elf-objcopy
-SREC_CAT ?= /usr/bin/srec_cat
+SDKHOME ?= $(abspath ../..)
+TOOLCHAIN ?= $(firstword $(foreach version,x-tools-v3 x-tools-v2 x-tools,$(wildcard $(SDKHOME)/$(version)/m68k-unknown-elf/bin)))
+CROSS     = $(if $(strip $(TOOLCHAIN)),$(TOOLCHAIN)/)m68k-unknown-elf-
+CC        = $(CROSS)gcc
+AS        = $(CROSS)as
+LD        = $(CROSS)ld
+OBJCOPY   = $(CROSS)objcopy
+SREC_CAT ?= srec_cat
 
 WLAZ80   ?= wla-z80
 WLALINK  ?= wlalink
@@ -121,8 +123,8 @@ test: all
 
 # Every SDK cartridge built into ../roms, on the arcade firmware.
 test-games: all
-	@for game in helloworld demo tutorial neogeogame skylance; do \
-	    [ -f ../roms/$$game/*-p1.p1 ] && $(PYTHON) test_bios.py --game $$game --platform mvs || true; \
+	@set -e; for game in helloworld demo tutorial neogeogame skylance maiya; do \
+	    if [ -f ../roms/$$game/*-p1.p1 ]; then $(PYTHON) test_bios.py --game $$game --platform mvs; fi; \
 	done
 
 # Copy the fresh firmware where the launch scripts and MAME look for it.

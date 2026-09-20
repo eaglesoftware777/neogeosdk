@@ -24,6 +24,37 @@ firmware makes its own choice and says so below.
 
 ## Building
 
+The recommended entry point is the repository Makefile, which reuses its
+selected toolchain and works in Linux/WSL and Windows CMD:
+
+```sh
+make eagle-bios
+make GAME=maiya all USE_EAGLE_BIOS=1
+make GAME=maiya test USE_EAGLE_BIOS=1
+make GAME=maiya bios-package
+```
+
+On Windows add `-f MakefileWin32.mak` to each command. The portable builder
+uses Python 3, the configured m68k GCC/binutils and `wla-z80`/`wlalink`; it
+does not require Unix shell commands or `srec_cat`. Keep these tools on PATH
+or override the root Makefile's toolchain and WLA variables.
+
+`USE_EAGLE_BIOS` defaults to **0**. Enabling it builds fresh firmware and
+copies only the required files into `bios/test_roms/{neogeo,aes}`. MAME
+searches that directory before the cartridge directory, leaving installed
+vendor BIOS files untouched. AES uses machine `aes` and BIOS selector `asia`;
+MVS uses `neogeo` and `euro`. Compile the game with the same `PLATFORM` used
+for testing. MAME checksum warnings for replacement system firmware are
+expected, but missing files and startup failures are not.
+
+`bios-package` produces `dist/<game>-eagle-bios.zip` containing the freshly
+built cartridge, both generated system firmware sets, the software list,
+license, manual and launch instructions. The option selects motherboard
+firmware; it does not embed a BIOS inside the game's P1 ROM. This works with
+any game following the SDK's six-ROM layout. `demo` remains the default game.
+
+### Standalone Linux Build
+
 Requirements: the SDK's `m68k-unknown-elf` toolchain (`TOOLCHAIN=` points at
 its `bin`), `wla-z80` and `wlalink` for the sound program, `srec_cat` for
 the ROM images, Python 3 for the generators.
@@ -182,8 +213,9 @@ translation (9) is not provided.
 
 Reached with the test switch or test DIP at boot, or button A on the "no
 cartridge" screen: hardware information, pad and system button test, colour
-bars, a sound code sender for the cartridge driver, and settings (region,
-free play).
+bars, system sound codes 2-4, and settings (region, free play). The sound
+selector excludes code 1, which is reserved for the cartridge handoff;
+leaving the test mutes the system sound program.
 
 ## Memory
 
@@ -217,8 +249,14 @@ screenshot every second and logs the firmware variables.
   and, on the console, that the eye-catcher hands over to the game.  An AES
   build of a game (`make PLATFORM=aes p1` at the root) can be substituted
   with `--p1`.
+* `--game ssideki --cartridge PATH --software-list PATH` requires the
+  unmodified cartridge ZIP and MAME's `hash/neogeo.xml`. Every ROM is checked
+  against its CRC and SHA1, and the test keeps MAME's board type and sprite
+  layout. A homebrew set renamed to `ssideki` is rejected, not reported as
+  retail compatibility. No cartridge data is included with this project.
 
-Captures land in `out/tests/<game>-<board>/`.
+Captures land in `out/tests/<game>-<board>/`. Pass `--output PATH` to keep
+screenshots, copied test ROMs and audio on another drive.
 
 ## Notes for cartridge authors
 
@@ -243,3 +281,14 @@ Captures land in `out/tests/<game>-<board>/`.
 No memory card support, no clock (the calendar answers a fixed date), no
 HOWTOPLAY screen, no Japanese common-FIX text, one cartridge slot, region
 fixed by the firmware id word.
+
+Passing the firmware probes does not establish universal retail cartridge
+compatibility or verification on physical hardware. Cartridge timing, fonts,
+sound handoff assumptions and optional BIOS services must still be tested
+per game. The AES probe uses a cartridge font and is silent during firmware
+presentation, since AES has no separate system sound ROM.
+
+Maiya's movement, vine climbing, arena limits and bonus transitions are tested
+in MAME using its own regression harness. Retail compatibility remains
+unverified: the locally available `ssideki` archive was a replacement homebrew
+set, not the retail cartridge.
