@@ -138,7 +138,7 @@ static void menu_sound_test(void)
     uint8_t sfx_code = 2;
     menu_draw_frame("[ AUDIO / SOUND HARDWARE TEST ]");
 
-    bios_fix_puts(4,  9, "TEST SFX / BGM CODE: 0x", 1);
+    bios_fix_puts(4,  9, "SYSTEM SOUND CODE: 0x", 1);
     bios_fix_puts(4, 12, "LEFT / RIGHT:  CHANGE SOUND CODE", 3);
     bios_fix_puts(4, 14, "BUTTON A:      TRIGGER SOUND", 2);
     bios_fix_puts(4, 16, "BUTTON B:      STOP ALL SOUND", 4);
@@ -150,10 +150,10 @@ static void menu_sound_test(void)
         bios_fix_put_hex16(26, 9, sfx_code, 2);
 
         if (BIOS_P1CHANGE & JOY_LEFT) {
-            sfx_code = (uint8_t)(sfx_code > 1 ? sfx_code - 1 : 255);
+            sfx_code = (uint8_t)(sfx_code > 2 ? sfx_code - 1 : 4);
         }
         if (BIOS_P1CHANGE & JOY_RIGHT) {
-            sfx_code = (uint8_t)(sfx_code < 255 ? sfx_code + 1 : 1);
+            sfx_code = (uint8_t)(sfx_code < 4 ? sfx_code + 1 : 2);
         }
         if (BIOS_P1CHANGE & BTN_A) {
             REG_SOUND = sfx_code;
@@ -162,6 +162,7 @@ static void menu_sound_test(void)
             REG_SOUND = 0x03;
         }
         if (BIOS_P1CHANGE & (BTN_C | BTN_D)) {
+            REG_SOUND = 0x03;
             break;
         }
     }

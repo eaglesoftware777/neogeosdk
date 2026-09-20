@@ -59,6 +59,32 @@ def sdk_rom_set(name):
     return data
 
 
+def prepare_retail(args, out, cart):
+    """Use the emulator's verified board layout, including protection and gaps."""
+    if not args.cartridge:
+        raise SystemExit("--game ssideki requires --cartridge PATH to your cartridge ZIP")
+    if not args.software_list.is_file():
+        raise SystemExit("Provide MAME's hash/neogeo.xml with --software-list PATH")
+    reference = ET.parse(args.software_list).getroot().find("software[@name='ssideki']")
+    if reference is None:
+        raise SystemExit("The software list has no ssideki entry")
+    with zipfile.ZipFile(args.cartridge) as archive:
+        for rom in reference.findall("./part/dataarea/rom[@crc]"):
+            candidates = [entry for entry in archive.infolist()
+                          if entry.CRC == int(rom.get("crc"), 16)]
+            if len(candidates) != 1:
+                raise SystemExit(f"Not the verified retail cartridge: {rom.get('name')} CRC mismatch. "
+                                 "A replacement homebrew set is not a retail compatibility test.")
+            data = archive.read(candidates[0])
+            if hashlib.sha1(data).hexdigest() != rom.get("sha1"):
+                raise SystemExit(f"Cartridge SHA1 mismatch: {rom.get('name')}")
+            (cart / Path(rom.get("name")).name).write_bytes(data)
+    listing = ET.Element("softwarelist", name="neogeo", description="EagleBIOS validation")
+    listing.append(reference)
+    (out / "hash").mkdir(exist_ok=True)
+    ET.ElementTree(listing).write(out / "hash/neogeo.xml", encoding="utf-8", xml_declaration=True)
+
+
 def prepare(args, out):
     roms = out / "roms"
     for machine in ("neogeo", "aes"):
@@ -74,15 +100,8 @@ def prepare(args, out):
                 "m1": (BIOS / "sm1.sm1").read_bytes(), "v1": bytes(0x20000),
                 "c1": bytes(0x20000), "c2": bytes(0x20000)}
     elif args.game == "ssideki":
-        if not args.cartridge:
-            raise SystemExit("--game ssideki requires --cartridge PATH to your cartridge ZIP")
-        with zipfile.ZipFile(args.cartridge) as archive:
-            data = {}
-            for part in PARTS:
-                names = [n for n in archive.namelist() if Path(n).name.startswith("052-" + part)]
-                if len(names) != 1:
-                    raise SystemExit(f"Expected exactly one 052-{part} cartridge member")
-                data[part] = archive.read(names[0])
+        prepare_retail(args, out, cart)
+        return
     else:
         data = sdk_rom_set(args.game)
         if args.p1:
@@ -157,7 +176,7 @@ def check_game(samples, platform):
 
 
 def run(args, platform):
-    out = BIOS / "out/tests" / f"{args.game}-{platform}"
+    out = args.output.resolve() / f"{args.game}-{platform}"
     out.mkdir(parents=True, exist_ok=True)
     prepare(args, out)
     env = dict(os.environ, DISPLAY="", SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy",
@@ -182,7 +201,7 @@ def run(args, platform):
     print(f"{args.game} {platform}: {samples[-1]}")
     if args.game.startswith("probe"):
         check_probe(samples, platform, 0 if args.game == "probe0" else 1)
-    elif args.game != "ssideki":
+    else:
         check_game(samples, platform)
     with wave.open(str(out / "audio.wav")) as audio:
         import array
@@ -196,8 +215,12 @@ def main():
                         help="probe, probe0 (system eye-catcher), ssideki, or an SDK game under roms/")
     parser.add_argument("--platform", choices=("mvs", "aes", "both"), default="both")
     parser.add_argument("--seconds", type=int, default=18)
+    parser.add_argument("--output", type=Path, default=BIOS / "out/tests")
     parser.add_argument("--mame", default=shutil.which("mame") or "/usr/games/mame")
     parser.add_argument("--cartridge", type=Path)
+    parser.add_argument("--software-list", type=Path,
+                        default=Path("/usr/share/games/mame/hash/neogeo.xml"),
+                        help="MAME software list used to verify retail ROMs and board layout")
     parser.add_argument("--p1", type=Path, help="alternate program ROM for an SDK game (an AES build)")
     parser.add_argument("--toolchain", default=os.getenv("TOOLCHAIN", str(ROOT.parent / "x-tools-v3/m68k-unknown-elf/bin")))
     args = parser.parse_args()
