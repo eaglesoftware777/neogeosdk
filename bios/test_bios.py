@@ -144,10 +144,10 @@ def check_game(samples, platform):
     # A console cartridge on free play may go straight into its game (mode 2).
     attract = [s for s in samples if s["request"] == 2 and s["mode"] in ((1,) if platform == "mvs" else (1, 2))]
     assert attract, "Cartridge never reached its attract mode"
-    assert attract[0]["time"] <= 5.5, "Attract mode came up too late"
+    assert attract[0]["time"] <= 7.5, "Attract mode came up too late"
     assert all(s["mvs"] == (128 if platform == "mvs" else 0) for s in samples[1:]), "Hardware identity changed"
     if platform == "mvs":
-        before = [s["credit"] for s in samples if 6.5 <= s["time"] < 11.0]
+        before = [s["credit"] for s in samples if 8.5 <= s["time"] < 13.0]
         assert before and max(before) >= 1, "Coin was not credited"
         # Credits are BCD; a start must have spent exactly one of them.
         spent = int(f"{max(before):x}") - int(f"{samples[-1]['credit']:x}")
@@ -195,14 +195,14 @@ def main():
     parser.add_argument("--game", default="probe",
                         help="probe, probe0 (system eye-catcher), ssideki, or an SDK game under roms/")
     parser.add_argument("--platform", choices=("mvs", "aes", "both"), default="both")
-    parser.add_argument("--seconds", type=int, default=16)
+    parser.add_argument("--seconds", type=int, default=18)
     parser.add_argument("--mame", default=shutil.which("mame") or "/usr/games/mame")
     parser.add_argument("--cartridge", type=Path)
     parser.add_argument("--p1", type=Path, help="alternate program ROM for an SDK game (an AES build)")
     parser.add_argument("--toolchain", default=os.getenv("TOOLCHAIN", str(ROOT.parent / "x-tools-v3/m68k-unknown-elf/bin")))
     args = parser.parse_args()
-    if args.seconds < 16:
-        parser.error("Use at least 16 seconds to exercise coin and start transitions")
+    if args.seconds < 18:
+        parser.error("Use at least 18 seconds to exercise coin and start transitions")
     for platform in (("mvs", "aes") if args.platform == "both" else (args.platform,)):
         run(args, platform)
 

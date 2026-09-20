@@ -132,11 +132,17 @@ void bios_reset(void)
         for (uint8_t i = 0; i < 16; i++) BIOS_GAME_DIP[i] = defaults[i];
     }
 
-    /* The title screen greets both boards at power-on.  A console then also
-     * shows the eye-catcher after the cartridge's own power-on step, the
-     * order a home cartridge is written for. */
-    bios_splash_show();
-    if (BIOS_MVS_FLAG) bios_eyecatcher();
+    /* An arcade board gets the eye-catcher and then the title at power-on.
+     * A console shows both after the cartridge's own power-on step when it
+     * asks for the system eye-catcher, the order a home cartridge is
+     * written for; a cartridge that brings its own, or wants none, still
+     * gets the title here. */
+    if (BIOS_MVS_FLAG) {
+        bios_eyecatcher();
+        bios_splash_show();
+    } else if (CART_HEADER->logoflag != 0) {
+        bios_splash_show();
+    }
     bios_cart_prepare();
     BIOS_USER_REQUEST = 0;
     BIOS_USER_MODE = 0;
@@ -159,6 +165,7 @@ void sys_return_c(void)
         if (previous == 0 && !BIOS_MVS_FLAG && CART_HEADER->logoflag == 0) {
             asm volatile ("move.w #0x2000, %sr");
             bios_eyecatcher();
+            bios_splash_show();
         }
         /* Command 2 is attract/game. Command 3 is not a cold-boot entry. */
         BIOS_USER_REQUEST = 2;

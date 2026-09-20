@@ -26,13 +26,13 @@ end
 emu.register_frame_done(function()
     frame = frame + 1
     local t = machine.time:as_double()
-    -- The power-on presentation owns the first four seconds.  Ten coin
+    -- The power-on presentation owns the first six seconds.  Ten coin
     -- edges then exercise the BCD 09 -> 10 carry before one start.
-    local coin = t >= 6 and t < 10 and ((t - 6) % 0.4) < 0.12
+    local coin = t >= 8 and t < 12 and ((t - 8) % 0.4) < 0.12
     press('Coin 1', coin and 1 or 0)
-    press('1 Player Start', (t >= 11 and t < 11.2) and 1 or 0)
-    press('P1 Start', (t >= 11 and t < 11.2) and 1 or 0)
-    press('P1 A', (not probe and t >= 13 and (math.floor(t) % 3 == 0)) and 1 or 0)
+    press('1 Player Start', (t >= 13 and t < 13.2) and 1 or 0)
+    press('P1 Start', (t >= 13 and t < 13.2) and 1 or 0)
+    press('P1 A', (not probe and t >= 15 and (math.floor(t) % 3 == 0)) and 1 or 0)
     if frame % 60 == 1 then
         screen:snapshot(string.format('%s/frame-%04d.png', output, frame))
         log:write(string.format(
