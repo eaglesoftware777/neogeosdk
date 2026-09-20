@@ -4,6 +4,8 @@ Neo Geo development SDK for SNK hardware.
 
 - Repository: https://github.com/eaglesoftware777/neogeosdk
 - Current release: `v1.7.0`
+- In development: `v1.7.1` — Maiya: Super Nature Girl and EagleBIOS
+  (see the changelog)
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 

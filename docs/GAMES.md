@@ -1,6 +1,6 @@
 # The Shipped Games
 
-**Eagle Software · Neo Geo SDK v1.7.0**
+**Eagle Software · Neo Geo SDK v1.7.0 (Maiya arrives in v1.7.1)**
 
 Seven projects are listed here: the showcase, its C++ counterpart,
 two shooters, a platform adventure and two minimal examples. Use their source as reference
