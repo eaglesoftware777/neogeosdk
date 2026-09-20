@@ -14,7 +14,7 @@ static void menu_draw_frame(const char *title)
     bios_init_palette_banks();
 
     bios_fix_puts(2, 2, "====================================", 2);
-    bios_fix_puts(4, 3, "EAGLE OPEN BIOS - SERVICE SUITE", 1);
+    bios_fix_puts(6, 3, "EAGLE BIOS - SERVICE SUITE", 1);
     bios_fix_puts(2, 4, "====================================", 2);
 
     if (title) {

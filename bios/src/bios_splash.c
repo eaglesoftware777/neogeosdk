@@ -200,7 +200,7 @@ void bios_splash_show(void)
 
     bios_fix_puts(4,  5, "==================================", 2);
     bios_fix_puts(9,  7, "E A G L E   B I O S", 1);
-    bios_fix_puts(6,  9, "OPEN SOURCE NEO-GEO FIRMWARE", 3);
+    bios_fix_puts(8,  9, "NEO-GEO SYSTEM FIRMWARE", 3);
     bios_fix_puts(4, 11, "==================================", 2);
 
     bios_fix_puts(7, 14, BIOS_MVS_FLAG ? "MODE: MVS ARCADE SYSTEM" : "MODE: AES CONSOLE SYSTEM", 1);
