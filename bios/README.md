@@ -56,10 +56,10 @@ From the repository root, `make test USE_EAGLE_BIOS=1 GAME=<game>` and
 4. **Cartridge check.**  The `NEO-GEO` signature at `000100` must be present;
    otherwise the screen says so and waits.  The cartridge's regional soft
    DIP defaults are copied to `10FD84`.
-5. **Title screen** with the Eagle fanfare (below), and on the arcade board
-   the eye-catcher straight after it.  Then the sound handoff: the system
-   sound program parks itself in Z80 RAM and answers, the cartridge sound
-   program is switched in and sent the reset code.
+5. **Eye-catcher, then title screen** (below) on the arcade board.  Then
+   the sound handoff: the system sound program parks itself in Z80 RAM and
+   answers, the cartridge sound program is switched in and sent the reset
+   code.
 6. **USER request 0** (power-on initialisation) is issued to the cartridge.
 
 ## The USER contract
@@ -89,19 +89,21 @@ system vectors and stack, decides the next request and enters USER again.
 Cartridge byte `114` selects the eye-catcher: `0` the system draws its own,
 `1` the cartridge draws it on request 1, `2` none at all.
 
-## Title screen, eye-catcher and fanfare
+## Eye-catcher, title screen and fanfare
 
-The **title screen** is the firmware banner: name, the board it found, the
-cartridge id it is about to start, and the Eagle fanfare.  It holds for
-about a second; any button, START or a coin moves on.
+The **eye-catcher** comes first, the way a console announces itself: no
+sprites, no tile art, no palette ROM.  The wordmark is five block letters
+laid out on the FIX layer, every "pixel" a cell of the ordinary text font,
+so it draws identically from the system font on an MVS and from whatever
+font the cartridge carries on an AES.  Each letter is a plate turning on a
+vertical axis: it opens from its back, narrows to a dim edge and turns its
+face to the room, one plate after another to the fanfare.  The wordmark
+then holds for three seconds with a glint running along it, and the ink
+cools to black.  Any button skips it.
 
-The **eye-catcher** is deliberately plain, the way an old home computer
-announced itself: no sprites, no tile art, no palette ROM.  The wordmark is
-five block letters laid out on the FIX layer, every "pixel" a cell of the
-ordinary text font, so it draws identically from the system font on an MVS
-and from whatever font the cartridge carries on an AES.  Letters land one at
-a time to a tick, the wordmark holds for a moment, then the ink cools to
-black.  Any button skips it.
+The **title screen** follows: the firmware banner, the board it found and
+the cartridge id it is about to start.  It holds for a second and a half;
+any button, START or a coin moves on.
 
 The **fanfare** lives in the system sound program: three rising notes
 (C5, E5, G5), the top C held, a breath, and a short answer, on SSG channel
@@ -110,10 +112,11 @@ plays on an arcade board, where the system sound program is in charge at
 power-on; a console has no system sound program, so its cartridge driver
 is already live and the presentation there is silent.
 
-On an arcade board the title screen and the eye-catcher run back to back at
-power-on.  On a console the title screen runs at power-on and the
-eye-catcher between request 0 and request 2 when the cartridge asks for the
-system eye-catcher, the order a home cartridge is written for.
+On an arcade board both screens run at power-on.  On a console they run
+between request 0 and request 2 when the cartridge asks for the system
+eye-catcher, the order a home cartridge is written for; a cartridge that
+brings its own eye-catcher, or wants none, gets the title screen at
+power-on only.
 
 ### System sound program codes
 
