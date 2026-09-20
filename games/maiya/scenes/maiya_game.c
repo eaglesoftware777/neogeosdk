@@ -38,9 +38,9 @@ void *NEOGEO_USER memset(void *destination, int value, size_t count)
 /*  Budgets and slots                                                 */
 /* ------------------------------------------------------------------ */
 enum {
-    MG_ENEMIES = 5, MG_SHOTS = 8, MG_SPARKS = 6, MG_ITEMS = 4,
-    MG_LEDGE_BLOCKS = 12, MG_HAZARD_BLOCKS = 5, MG_DECOR_SLOTS = 8,
-    MG_NPC_SLOTS = 2,
+    MG_ENEMIES = 4, MG_SHOTS = 6, MG_SPARKS = 6, MG_ITEMS = 4,
+    MG_LEDGE_BLOCKS = 9, MG_HAZARD_BLOCKS = 4, MG_DECOR_SLOTS = 6,
+    MG_NPC_SLOTS = 2, MG_FRONT_SLOTS = 3,
 
     /*
      * Sprite slots.  Higher slots draw in front, and a scanline can only
@@ -58,15 +58,18 @@ enum {
     SLOT_HAZARD = 250,   /* 5 blocks (10 strips) fire/spikes/sludge */
     SLOT_DECOR = 260,    /* 8 pieces (16 strips) of scenery         */
     SLOT_VINE = 276,     /* 3 climbing vines (2 strips each)        */
-    SLOT_HUD = 284,      /* face avatar, hearts, roses, key         */
-    SLOT_TITLE = 304,    /* attract mode key visual                 */
+    SLOT_FRONT = 282,    /* 3 foreground props, in front of the cast */
+    SLOT_HUD = 290,      /* face avatar, hearts, roses, key         */
+    SLOT_TITLE = 310,    /* attract mode key visual                 */
 
     /* Palette banks. */
     PAL_TEXT = 0, PAL_GOLD = 1, PAL_WARN = 2, PAL_SKY = 3,
     PAL_HERO = 4, PAL_ENEMY0 = 5, PAL_ENEMY1 = 6, PAL_ENEMY2 = 7,
+    PAL_ENEMY3 = 38, PAL_ENEMY4 = 39, PAL_ENEMY5 = 40,
     PAL_BOSS = 8, PAL_ALLY = 9, PAL_BLOCK = 10, PAL_EAGLE = 11,
     PAL_TOOL = 12, PAL_PORTRAIT = 13, PAL_DECOR = 14, PAL_PROP = 15,
-    PAL_ITEM = 32, PAL_NPC = 33, PAL_GATE = 34, PAL_TRINKET = 36, PAL_BG = 16,
+    PAL_ITEM = 32, PAL_NPC = 33, PAL_GATE = 34, PAL_TRINKET = 36,
+    PAL_FRONT = 37, PAL_BG = 16,
 
     /* Character kinds. */
     K_PLAYER = 0, K_ENEMY = 1, K_BOSS = 2, K_ALLY = 3, K_EAGLE = 4,
@@ -81,6 +84,8 @@ enum {
 
     WALK_SPEED = 512, DASH_SPEED = 1088, JUMP_SPEED = 5 * NG_FP_ONE + 160,
     CLIMB_SPEED = 320,
+    WALK_ACCEL = 64,     /* she leans into a run instead of snapping to it */
+    WALK_BRAKE = 96,
     MAX_HP = 5, MAX_LIVES = 7, MAX_ART = 3,
 
     /* FIX rows: 2..29 are visible (8 px each). */
@@ -88,11 +93,12 @@ enum {
 
     /* HUD glyphs written into the low FIX codes by build_fix_assets.py. */
     GLYPH_HEART = 1, GLYPH_ROSE = 2, GLYPH_KEY = 3, GLYPH_COIN = 4,
-    GLYPH_LEAF = 5, GLYPH_SPARK = 6,
+    GLYPH_LEAF = 5, GLYPH_SPARK = 6, GLYPH_BLOCK = 7, GLYPH_DOT = 8,
     HURT_LOCK = 60,      /* frames of mg.hurt above this lock the controls */
     SIT_DELAY = 70,      /* frames of crouching before Maiya sits down    */
     TALK_RANGE = 34,     /* how close a villager will speak up            */
     POWER_TIME = 480,    /* swiftness and might last eight seconds        */
+    STOMP_KICK = 4 * NG_FP_ONE,  /* the hop she takes off a squashed slime */
     VEIL_TIME = 300,     /* the mist veil hides her for five              */
     ANGEL_TIME = 150,    /* how long she rises before the valley resets   */
     MAX_CONTINUES = 3,   /* the cabinet allows three, then the run is over */
@@ -131,6 +137,7 @@ typedef struct {
     NGSpriteGroup hazards[MG_HAZARD_BLOCKS];
     NGSpriteGroup decor[MG_DECOR_SLOTS];
     NGSpriteGroup vines[MG_VINE_COUNT];
+    NGSpriteGroup front[MG_FRONT_SLOTS];
     NGSpriteGroup gate;
     const uint16_t *block_tiles;
     NGCharacter *npcs[MG_NPC_SLOTS];
@@ -152,10 +159,12 @@ typedef struct {
     uint8_t  has_key, gate_unlocked, gate_shown, key_taken;
     uint8_t  climbing, crouch_timer, npc_mask, npc_live, npc_here;
     uint16_t swift, might, veil;      /* power-ups, in frames              */
+    uint16_t spring, crown;           /* higher jump, bigger thorns        */
     uint8_t  flash;                   /* frames of Secret Art palette      */
     uint8_t  angel;                   /* rising-to-the-sky death           */
     uint8_t  flowers, critters;       /* bonus tally for the mission end   */
-    uint8_t  power_tag;
+    uint8_t  power_tag, hurt_lit, shake;
+    int16_t  shake_x;
     uint8_t  demo;                    /* attract mode plays it herself     */
     uint8_t  entrance;                /* her drop-in at the start of a run */
     uint8_t  next_stage;              /* what the interlude leads into     */
@@ -456,6 +465,32 @@ static void NEOGEO_USER mg_draw_gate(int16_t camera_x)
     ng_sprite_group_flush(&mg.gate);
 }
 
+/*
+ * The front plane.  Boulders and fern fronds pass between the player and
+ * the road at a quarter again the camera's speed: the valley gains a near
+ * edge, and the ledges stop looking pasted onto the painting.
+ */
+static void NEOGEO_USER mg_draw_front(int16_t camera_x)
+{
+    static const uint16_t period = 420;
+    int16_t plane = (int16_t)(camera_x + camera_x / 4);
+    uint8_t i;
+
+    for (i = 0; i < MG_FRONT_SLOTS; i++) {
+        int16_t spacing = (int16_t)(i * 140);
+        int16_t world = (int16_t)(((plane + spacing) / period) * period + spacing);
+        int16_t scr = (int16_t)(world - plane);
+
+        if (scr < -40 || scr > 340) {
+            ng_sprite_group_set_visible(&mg.front[i], 0);
+        } else {
+            ng_sprite_group_set_pos(&mg.front[i], scr, (int16_t)(MG_GROUND_Y - 16));
+            ng_sprite_group_set_visible(&mg.front[i], 1);
+        }
+        ng_sprite_group_flush(&mg.front[i]);
+    }
+}
+
 /* The vine column Maiya is standing in, if any. */
 static const MGVine *NEOGEO_USER mg_vine_at(int16_t x, int16_t y)
 {
@@ -572,16 +607,52 @@ static void NEOGEO_USER mg_collision_hook(void)
  * Engine hook, runs right before the characters are drawn: follow the
  * heroine with the camera and move every world-space sprite with it.
  */
+/*
+ * The camera.
+ *
+ * ng_camera_update() multiplies the error by follow_speed in 16.16, which
+ * overflows a 32-bit int once the camera is more than about 128 px from its
+ * target: at a tight follow speed one knock-back sent it the wrong way and
+ * left Maiya parked off the left edge of the screen.  A side-scroller only
+ * needs her kept a little left of centre, so do it here, in whole pixels,
+ * with a step small enough to stay smooth and a shake of our own.
+ */
+static void NEOGEO_USER mg_camera_follow(void)
+{
+    const MGLevel *level = &mg_levels[mg.stage];
+    int16_t want = (int16_t)(mg.player->x - 140);
+    int16_t max = (int16_t)(level->width - NG_SCREEN_W);
+    int16_t have = (int16_t)(mg.camera.x - mg.shake_x);
+    int16_t step;
+
+    if (want < 0) want = 0;
+    if (want > max) want = max;
+
+    step = (int16_t)(want - have);
+    if (step > 8) step = 8;
+    else if (step < -8) step = -8;
+    have = (int16_t)(have + step);
+
+    if (mg.shake) {
+        mg.shake--;
+        mg.shake_x = (int16_t)((mg.shake & 2u) ? 2 : -2);
+    } else {
+        mg.shake_x = 0;
+    }
+
+    ng_camera_snap(&mg.camera, (int16_t)(have + mg.shake_x), 0);
+}
+
 static void NEOGEO_USER mg_before_draw_hook(void)
 {
-    NGCharacter *p = mg.player;
-    if (p) ng_camera_update(&mg.camera, p->x, 112, (int16_t)(p->vx_fp >> 8));
+    if (mg.player) mg_camera_follow();
     ng_level_set_scroll(mg.camera.x, 0);
     mg_scroll_scenery(mg.camera.x);
     mg_draw_ledges(mg.camera.x);
     mg_draw_hazards(mg.camera.x);
     mg_draw_vines(mg.camera.x);
     mg_draw_decor(mg.camera.x);
+    mg_draw_front(mg.camera.x);
     mg_draw_gate(mg.camera.x);
     mg_draw_cage(mg.camera.x);
     mg_update_sparks(mg.camera.x);
@@ -623,6 +694,23 @@ static const uint16_t *NEOGEO_USER mg_enemy_tiles(uint8_t type)
     case MG_E_WORM:   return mg_worm_tiles;
     case MG_E_DRONE:  return mg_robot_tiles;
     default:          return mg_slime_tiles;
+    }
+}
+
+/*
+ * Every creature has its own palette bank.  Sharing one left the goblins,
+ * worms and drones wearing the slime's colours, which is why half the
+ * roster looked wrong.
+ */
+static uint8_t NEOGEO_USER mg_enemy_palette(uint8_t type)
+{
+    switch (type) {
+    case MG_E_BEETLE: return PAL_ENEMY1;
+    case MG_E_CROW:   return PAL_ENEMY2;
+    case MG_E_GOBLIN: return PAL_ENEMY3;
+    case MG_E_WORM:   return PAL_ENEMY4;
+    case MG_E_DRONE:  return PAL_ENEMY5;
+    default:          return PAL_ENEMY0;
     }
 }
 
@@ -732,11 +820,31 @@ static NGCharacter *NEOGEO_USER mg_character(uint8_t kind, int16_t x, int16_t y,
 /* ------------------------------------------------------------------ */
 /*  Shots, Sparks, Items & Hazards                                    */
 /* ------------------------------------------------------------------ */
+static void NEOGEO_USER mg_sparks(int16_t x, int16_t y);
+
+/* A curtain of rose petals across the playfield: the Secret Art you see. */
+static void NEOGEO_USER mg_petal_sweep(void)
+{
+    uint8_t i;
+    int16_t left = (int16_t)(mg.camera.x + 16);
+
+    for (i = 0; i < MG_SPARKS; i++) {
+        MGSpark *p = &mg.sparks[i];
+        p->x = (int16_t)(left + i * 52);
+        p->y = (int16_t)(40 + (i & 3) * 34);
+        p->vx = (int16_t)(mg.facing ? -3 : 3);
+        p->vy = (int16_t)((i & 1) ? -2 : 2);
+        p->life = 46;
+        ng_sprite_group_set_tile_base(&p->sprite, MG_TOOL_TILE + MG_T_PETAL);
+    }
+}
+
 static void NEOGEO_USER mg_sparks(int16_t x, int16_t y)
 {
     uint8_t i;
     for (i = 0; i < MG_SPARKS; i++) {
         MGSpark *p = &mg.sparks[i];
+        ng_sprite_group_set_tile_base(&p->sprite, MG_TOOL_TILE + MG_T_SPARK);
         p->x = x; p->y = y;
         p->vx = (int16_t)((i % 3) - 1);
         p->vy = -(int16_t)(1 + i / 2);
@@ -828,10 +936,13 @@ static void NEOGEO_USER mg_enemy_damage(MGEnemy *e, uint8_t damage)
         switch (mg.kills % 12u) {
         case 3:  mg_drop_trinket(x, (int16_t)(y - 20), MG_K_SILVER); break;
         case 6:  mg_drop_trinket(x, (int16_t)(y - 20), MG_K_GOLD); break;
+        case 2:
         case 4:  mg_drop(x, (int16_t)(y - 20), MG_I_HEART); break;
         case 8:  mg_drop(x, (int16_t)(y - 20), MG_I_ROSE_RED); break;
         case 9:  mg_drop_trinket(x, (int16_t)(y - 20), MG_K_SWIFT); break;
         case 10: mg_drop_trinket(x, (int16_t)(y - 20), MG_K_MIGHT); break;
+        case 5:  mg_drop_trinket(x, (int16_t)(y - 20), MG_K_SPRING); break;
+        case 7:  mg_drop_trinket(x, (int16_t)(y - 20), MG_K_CROWN); break;
         case 0:  mg_drop_trinket(x, (int16_t)(y - 20), MG_K_VEIL); break;
         default: break;
         }
@@ -867,6 +978,13 @@ static void NEOGEO_USER mg_boss_damage(uint8_t damage)
     }
 }
 
+/* Slimes, beetles and goblins can be landed on; the flier, the worm and
+ * the drone cannot -- they are all edge, spark or altitude. */
+static uint8_t NEOGEO_USER mg_soft_enemy(uint8_t type)
+{
+    return (uint8_t)(type == MG_E_SLIME || type == MG_E_BEETLE || type == MG_E_GOBLIN);
+}
+
 static uint8_t NEOGEO_USER mg_strike(void)
 {
     return (uint8_t)(mg.might ? 4 : 2);
@@ -881,7 +999,7 @@ static void NEOGEO_USER mg_player_damage(void)
     mg.hud_dirty = 1;
     playSFX(SOUND_SFX_16); /* player hurt */
     mg_sparks(p->x, (int16_t)(p->y - 30));
-    ng_camera_shake(&mg.camera, 3, 10);
+    mg.shake = 10;
     p->vx_fp = mg.facing ? 640 : -640;
 
     if (--p->hp == 0) {
@@ -892,7 +1010,7 @@ static void NEOGEO_USER mg_player_damage(void)
         mg.state = MG_DEAD;
         mg.state_timer = ANGEL_TIME;
         mg.angel = 1;
-        mg.swift = mg.might = mg.veil = 0;
+        mg.swift = mg.might = mg.veil = mg.spring = mg.crown = 0;
         p->vx_fp = p->vy_fp = 0;
         ng_physics_detach(p);
         mg_palette(PAL_HERO, mg_hero_sun_pal);
@@ -914,18 +1032,24 @@ static void NEOGEO_USER mg_secret_art(void)
     mg.hud_dirty = 1;
     playSFX(SOUND_SFX_13); /* art power surge */
 
+    /*
+     * Petals sweep the whole screen and the valley shakes.  Her own colours
+     * only lift for a moment -- a long recolour read as a costume change and
+     * made it hard to tell what had actually happened.
+     */
+    mg.flash = 10;
     mg_palette(PAL_HERO, mg_hero_sun_pal);
-    mg.flash = 30;
-    mg.attack = 16;
-    ng_camera_shake(&mg.camera, 4, 16);
+    mg.attack = 18;
+    mg.shake = 20;
+    mg_petal_sweep();
 
+    /* No hit sparks here: they would overwrite the sweep in the same pool,
+     * which is why the art looked like nothing happened at all. */
     for (i = 0; i < MG_ENEMIES; i++) {
-        if (mg.enemies[i].body) {
-            mg_sparks(mg.enemies[i].body->x, (int16_t)(mg.enemies[i].body->y - 20));
-            mg_enemy_damage(&mg.enemies[i], 10);
-        }
+        if (mg.enemies[i].body) mg_enemy_damage(&mg.enemies[i], 10);
     }
     if (mg.boss) mg_boss_damage(6);
+    mg_petal_sweep();
 
     mg_hint(mg_art_name[mg.stage], PAL_GOLD, 90);
 }
@@ -960,7 +1084,8 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint16_t checkpoint)
     mg.climbing = 0; mg.crouch_timer = 0; mg.sitting = 0;
     mg.has_key = 0; mg.gate_unlocked = 0; mg.gate_shown = 0; mg.key_taken = 0;
     mg.npc_mask = 0; mg.npc_live = 0; mg.npc_here = 0; mg.pick_mask = 0;
-    mg.swift = mg.might = mg.veil = 0; mg.flash = 0; mg.angel = 0;
+    mg.swift = mg.might = mg.veil = 0; mg.spring = mg.crown = 0;
+    mg.flash = 0; mg.angel = 0; mg.hurt_lit = 0;
     mg.power_tag = 0;
     for (i = 0; i < MG_NPC_SLOTS; i++) mg.npcs[i] = 0;
     mg.notice = 0; mg.facing = 0; mg.checkpoint = checkpoint; mg.kills = 0;
@@ -971,11 +1096,17 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint16_t checkpoint)
     ng_level_set_world_bounds(0, 0, (int16_t)level->width, 224);
     ng_physics_add_solid(0, MG_GROUND_Y, (int16_t)level->width, 32, 0);
 
-    /* Load entity palettes */
+    /* Load entity palettes.  The creatures wear this valley's colours. */
     mg_palette(PAL_HERO, mg_hero_pal);
-    mg_palette(PAL_ENEMY0, mg_slime_pal);
-    mg_palette(PAL_ENEMY1, mg_beetle_pal);
-    mg_palette(PAL_ENEMY2, mg_crow_pal);
+    {
+        uint16_t tint = (uint16_t)(stage * 16u);
+        mg_palette(PAL_ENEMY0, mg_slime_valley_pal + tint);
+        mg_palette(PAL_ENEMY1, mg_beetle_valley_pal + tint);
+        mg_palette(PAL_ENEMY2, mg_crow_valley_pal + tint);
+        mg_palette(PAL_ENEMY3, mg_goblin_valley_pal + tint);
+        mg_palette(PAL_ENEMY4, mg_worm_valley_pal + tint);
+        mg_palette(PAL_ENEMY5, mg_robot_valley_pal + tint);
+    }
     mg_palette(PAL_BOSS, mg_boss_pal(level->boss_style));
     mg_palette(PAL_ALLY, mg_ally_pal(level->rescue_type[0]));
     mg_palette(PAL_EAGLE, mg_eagle_pal);
@@ -1015,8 +1146,12 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint16_t checkpoint)
     /* Camera setup */
     ng_camera_init(&mg.camera);
     ng_camera_set_bounds(&mg.camera, 0, 0, (int16_t)level->width, 224);
-    ng_camera_set_dead_zone(&mg.camera, 24, 24);
-    ng_camera_set_follow_speed(&mg.camera, 96);
+    /* A tight, quick camera: a lazy one lurched a few pixels every third
+     * frame, which read as the whole valley juddering. */
+    ng_camera_set_dead_zone(&mg.camera, 0, 24);
+    ng_camera_set_follow_speed(&mg.camera, 64);
+    mg.shake = 0;
+    mg.shake_x = 0;
     ng_camera_snap(&mg.camera, checkpoint > 128 ? (int16_t)(checkpoint - 128) : 0, 0);
     ng_level_set_scroll(mg.camera.x, 0);
 
@@ -1063,6 +1198,16 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint16_t checkpoint)
         ng_sprite_group_set_active_rows(&mg.vines[i], rows);
         ng_sprite_group_set_visible(&mg.vines[i], 0);
     }
+    mg_palette(PAL_FRONT, mg_front_pal);
+    for (i = 0; i < MG_FRONT_SLOTS; i++) {
+        /* A frond, then the valley's own stone, then a frond again. */
+        uint16_t tile = (i == 1) ? mg_front_tiles[MG_FR_STONE_GRASS + stage]
+                                 : mg_front_tiles[MG_FR_FERN];
+        ng_sprite_group_init(&mg.front[i], (uint16_t)(SLOT_FRONT + i * 2), 2, 3,
+                             tile, PAL_FRONT);
+        ng_sprite_group_set_visible(&mg.front[i], 0);
+    }
+
     ng_sprite_group_init(&mg.gate, SLOT_GATE, 2, 3, mg_gate_tiles[0], PAL_GATE);
     ng_sprite_group_set_visible(&mg.gate, 0);
 
@@ -1138,10 +1283,9 @@ void NEOGEO_USER maiya_demo_begin(void)
     mg.continues = 0;
     mg.session_over = 0;
     mg_scene(demo_stage, 0);
-    ng_fix_clear_rect(1, ROW_CARD, 38, 7, PAL_TEXT);
-    mg_centre(ROW_CARD, "ATTRACT MODE", PAL_GOLD);
-    mg_centre(ROW_CARD + 2, mg_levels[demo_stage].name, PAL_SKY);
-    mg.state_timer = 60;
+    ng_fix_clear_rect(1, ROW_HINT, 38, 9, PAL_TEXT);
+    mg_centre(ROW_CARD + 2, "ATTRACT MODE", PAL_GOLD);
+    mg.state_timer = 80;
 
     demo_stage = (uint8_t)(demo_stage + 1);
     if (demo_stage >= MG_LEVEL_COUNT) demo_stage = 0;
@@ -1161,6 +1305,107 @@ uint8_t NEOGEO_USER maiya_demo_spent(void)
 {
     return (uint8_t)(mg.state == MG_OVER || mg.state == MG_DONE ||
                      mg.state == MG_ENDING);
+}
+
+/* ------------------------------------------------------------------ */
+/*  Company Eyecatcher                                                */
+/* ------------------------------------------------------------------ */
+
+/*
+ * EAGLE SOFTWARE, built out of the solid FIX block at code 7.  Three cells
+ * wide and five tall per letter, drawn a column at a time so the name
+ * assembles itself while the theme plays.
+ */
+static const uint8_t mg_logo_glyph[13][5] = {
+    { 7, 4, 6, 4, 7 },   /*  0 E */
+    { 2, 5, 7, 5, 5 },   /*  1 A */
+    { 3, 4, 5, 5, 3 },   /*  2 G */
+    { 4, 4, 4, 4, 7 },   /*  3 L */
+    { 3, 4, 2, 1, 6 },   /*  4 S */
+    { 2, 5, 5, 5, 2 },   /*  5 O */
+    { 7, 4, 6, 4, 4 },   /*  6 F */
+    { 7, 2, 2, 2, 2 },   /*  7 T */
+    { 5, 5, 5, 7, 5 },   /*  8 W */
+    { 6, 5, 6, 5, 5 },   /*  9 R */
+    { 0, 0, 0, 0, 0 },   /* 10 space */
+    { 5, 5, 5, 5, 2 },   /* 11 U */
+    { 7, 1, 2, 4, 7 },   /* 12 Z (spare) */
+};
+
+/* EAGLE / SOFTWARE as indices into the table above. */
+static const uint8_t mg_logo_eagle[5] = { 0, 1, 2, 3, 0 };
+static const uint8_t mg_logo_software[8] = { 4, 5, 6, 7, 8, 1, 9, 0 };
+
+static void NEOGEO_USER mg_logo_word(const uint8_t *word, uint8_t len,
+                                     uint8_t left, uint8_t top, uint8_t pal)
+{
+    uint8_t i, row, col;
+
+    for (i = 0; i < len; i++) {
+        const uint8_t *glyph = mg_logo_glyph[word[i]];
+        for (row = 0; row < 5; row++) {
+            for (col = 0; col < 3; col++) {
+                if (glyph[row] & (uint8_t)(4u >> col)) {
+                    ng_fix_putc((uint8_t)(left + i * 4 + col),
+                                (uint8_t)(top + row), (char)GLYPH_BLOCK, pal);
+                }
+            }
+        }
+        waitVbl();
+        waitVbl();
+        waitVbl();
+    }
+}
+
+void NEOGEO_USER maiya_eyecatcher(void)
+{
+    uint16_t i;
+
+    /*
+     * The eyecatcher runs before the game has a screen: the palette bank is
+     * wherever the BIOS left it and VRAM still holds whatever was there, so
+     * take the screen over properly -- bank 0, our own inks, a black
+     * backdrop, and an empty FIX layer -- before drawing a single block.
+     */
+    NEO_REGISTER8(REG_PALBANK0) = 0;
+    clearSprs();
+    clearFix();
+    setBACKDROP(BLACK);
+    ng_fix_init();
+    ng_fix_clear();
+    mg_ui_palettes();
+    waitVbl();
+
+    /*
+     * FM and SSG only under the logo: soundPlayGameLoop() is an ADPCM-B
+     * stream dispatcher, and the house theme is meant to be the chip.
+     */
+    soundStopAll();
+    soundSetADPCMAVolume(0x30);
+    soundSetADPCMBVolume(0x00);
+    soundSetFMVolume(0x0C);
+    playFMTrack(SOUND_FM_TRACK_1);
+    playSSGTrack(SOUND_SSG_A);
+
+    mg_logo_word(mg_logo_eagle, 5, 10, 10, PAL_GOLD);
+    mg_logo_word(mg_logo_software, 8, 4, 17, PAL_TEXT);
+
+    for (i = 0; i < 8; i++) {
+        ng_fix_putc((uint8_t)(9 + i * 3), 24, (char)GLYPH_SPARK, PAL_GOLD);
+        if (i == 4) playSSGTrack(SOUND_SSG_B);
+        waitVbl();
+        waitVbl();
+    }
+    ng_fix_puts(16, 27, "PRESENTS", PAL_SKY);
+
+    for (i = 0; i < 150; i++) {
+        if (i == 60) playFMTrack(SOUND_FM_TRACK_2);
+        waitVbl();
+    }
+
+    soundStopAll();
+    ng_fix_clear();
+    waitVbl();
 }
 
 /* ------------------------------------------------------------------ */
@@ -1186,11 +1431,18 @@ void NEOGEO_USER maiya_title(void)
 /* ------------------------------------------------------------------ */
 /*  Spawning: Enemies, Allies & Guardians                             */
 /* ------------------------------------------------------------------ */
+/* How hard the creatures push, by valley: 1 is a stroll, 4 is the citadel. */
+static int16_t NEOGEO_USER mg_pace(int16_t base)
+{
+    int16_t scale = (int16_t)(10 + mg.stage * 2);   /* 10/12/14/16/18/20 */
+    return (int16_t)((base * scale) / 16);
+}
+
 static MGEnemy *NEOGEO_USER mg_spawn_enemy(uint8_t type, int16_t x, int16_t y, uint8_t posted)
 {
     uint8_t slot;
     MGEnemy *e;
-    uint8_t pal = type == MG_E_BEETLE ? PAL_ENEMY1 : (type == MG_E_CROW ? PAL_ENEMY2 : PAL_ENEMY0);
+    uint8_t pal = mg_enemy_palette(type);
 
     for (slot = 0; slot < MG_ENEMIES; slot++) if (!mg.enemies[slot].body) break;
     if (slot == MG_ENEMIES) return 0;
@@ -1201,7 +1453,14 @@ static MGEnemy *NEOGEO_USER mg_spawn_enemy(uint8_t type, int16_t x, int16_t y, u
     e->body = mg_character(K_ENEMY, x, y, pal, NG_RENDER_BAND_ENEMY, type);
     if (!e->body) return 0;
 
-    e->body->hp = (uint8_t)(type == MG_E_BEETLE ? 4 : (type == MG_E_DRONE ? 3 : 2));
+    /*
+     * Difficulty is the valley's job, not the creature's.  In the first two
+     * missions everything is softer and slower; by the world tree they take
+     * a beating and come at her properly.
+     */
+    e->body->hp = (uint8_t)(type == MG_E_BEETLE ? 3 : (type == MG_E_DRONE ? 2 : 1));
+    if (mg.stage >= 2) e->body->hp++;
+    if (mg.stage >= 4) e->body->hp++;
     e->body->max_hp = e->body->hp;
 
     if (!posted) {
@@ -1240,7 +1499,11 @@ static void NEOGEO_USER mg_spawn(void)
         const MGArcher *a = &level->archers[i];
         uint16_t bit = (uint16_t)(1u << i);
         if (!a->x || (mg.archer_mask & bit) || a->x > px + 300 || a->x + 300 < px) continue;
-        if (mg_spawn_enemy(MG_E_DRONE, a->x, a->y, 1)) mg.archer_mask |= bit;
+        /* No drones until the coast: the early shelves hold goblins, and
+         * the first valley posts nothing at all. */
+        if (mg.stage == 0) { mg.archer_mask |= bit; continue; }
+        if (mg_spawn_enemy((uint8_t)(mg.stage < 3 ? MG_E_GOBLIN : MG_E_DRONE),
+                           a->x, a->y, 1)) mg.archer_mask |= bit;
     }
 
     /* Coins, flowers, charms and the hidden life, handed out as she nears them. */
@@ -1420,7 +1683,7 @@ static void NEOGEO_USER mg_controls(void)
             mg.hud_dirty = 1;
             playSFX(SOUND_SFX_13);
             playSFX(SOUND_SFX_10);
-            ng_camera_shake(&mg.camera, 3, 20);
+            mg.shake = 20;
             mg_hint("THE GATE OPENS. THE GUARDIAN WAITS", PAL_GOLD, 150);
             mg.previous_joy = joy;
             return;
@@ -1432,16 +1695,32 @@ static void NEOGEO_USER mg_controls(void)
     if (pressed & JOY_DOWN) { mg.combo_buffer[0] = 1; mg.combo_timer = 24; }
     if ((pressed & (JOY_LEFT | JOY_RIGHT)) && mg.combo_buffer[0]) mg.combo_buffer[1] = 1;
 
-    /* Walk / Run -- the swiftness leaf lends her half a step again. */
+    /*
+     * Walk and run.  She leans into a step and coasts out of it instead of
+     * snapping between nought and full speed, which is what made her look
+     * like a sprite being dragged rather than a girl running.
+     */
     {
         int16_t speed = (int16_t)(mg.swift ? (WALK_SPEED * 3) / 2 : WALK_SPEED);
+        int16_t want = 0;
+        int16_t have = (int16_t)p->vx_fp;
+
         if (joy & JOY_LEFT) {
-            vx = (int16_t)-speed;
+            want = (int16_t)-speed;
             mg.facing = 1;
         } else if (joy & JOY_RIGHT) {
-            vx = speed;
+            want = speed;
             mg.facing = 0;
         }
+
+        if (want > have) {
+            have = (int16_t)(have + (want > 0 ? WALK_ACCEL : WALK_BRAKE));
+            if (have > want) have = want;
+        } else if (want < have) {
+            have = (int16_t)(have - (want < 0 ? WALK_ACCEL : WALK_BRAKE));
+            if (have < want) have = want;
+        }
+        vx = have;
     }
 
     /* ---- Kneel, then sit ------------------------------------------- */
@@ -1458,8 +1737,8 @@ static void NEOGEO_USER mg_controls(void)
     if (pressed & BUTTON_A) {
         if ((joy & JOY_DOWN) && mg.on_ledge) {
             mg.drop = 12;
-        } else if (ng_physics_is_grounded(p) || p->y >= MG_GROUND_Y - 4) {
-            p->vy_fp = -JUMP_SPEED;
+        } else if (ng_physics_is_grounded(p) || mg.on_ledge || p->y >= MG_GROUND_Y - 4) {
+            p->vy_fp = mg.spring ? -((JUMP_SPEED * 5) / 4) : -JUMP_SPEED;
             playSFX(SOUND_SFX_15);
         }
     }
@@ -1482,20 +1761,35 @@ static void NEOGEO_USER mg_controls(void)
             if (!melee) {
                 uint8_t i;
                 for (i = 0; i < MG_ENEMIES; i++) {
-                    if (mg.enemies[i].body && mg_abs((int16_t)(mg.enemies[i].body->x - p->x)) < 44) {
-                        mg_enemy_damage(&mg.enemies[i], mg_strike());
-                        melee = 1;
-                        break;
+                    NGCharacter *e = mg.enemies[i].body;
+                    if (!e || mg_abs((int16_t)(e->x - p->x)) >= 44) continue;
+                    /* Standing, she cuts at chest height; kneeling, at the
+                     * ground, where the low creatures actually are. */
+                    if (mg.crouch_timer) {
+                        if (e->y < p->y - 26) continue;
+                    } else if (e->y < p->y - 52) {
+                        continue;
                     }
+                    mg_enemy_damage(&mg.enemies[i], mg_strike());
+                    melee = 1;
+                    break;
                 }
             }
             if (melee) {
                 mg.attack = 12;
                 playSFX(SOUND_SFX_1); /* whip crack */
-            } else if (mg_shots_in_flight() < 3) {
-                /* Throw rose thorn projectile */
+            } else if (mg_shots_in_flight() < (mg.crown ? 4 : 3)) {
+                /*
+                 * The throw leaves her hand where her hand is: kneeling, it
+                 * skims the road, which is the only way to reach a slime.
+                 * The thorn crown sends it out faster and heavier.
+                 */
+                int16_t high = (int16_t)(mg.crouch_timer ? -8 : -26);
+                int16_t rate = (int16_t)(mg.crown ? 9 : 6);
                 mg.cast = 10;
-                mg_fire(p->x, (int16_t)(p->y - 32), (int16_t)(mg.facing ? -6 : 6), 0, 0, MG_T_THORN0);
+                mg_fire(p->x, (int16_t)(p->y + high),
+                        (int16_t)(mg.facing ? -rate : rate), 0, 0,
+                        (uint8_t)(mg.crown ? MG_T_THORN1 : MG_T_THORN0));
                 playSFX(SOUND_SFX_2); /* thorn toss */
             }
         }
@@ -1598,51 +1892,73 @@ static void NEOGEO_USER mg_update_entities(void)
             it->life = 0;
             ng_sprite_group_set_visible(&it->sprite, 0);
             ng_sprite_group_flush(&it->sprite);
-            playSFX(SOUND_SFX_11);
             if (it->key) {
                 mg.has_key = 1;
                 mg.score += 2000u;
                 playSFX(SOUND_SFX_13);
                 mg_hint("THE GOLDEN SUN KEY IS YOURS", PAL_GOLD, 150);
             } else if (it->trinket) {
+                /* Every kind of thing she picks up says a different word. */
                 switch (it->kind) {
                 case MG_K_GOLD:
                     mg.score += 500u;
+                    playSFX(SOUND_SFX_11);
                     break;
                 case MG_K_SILVER:
                     mg.score += 200u;
+                    playSFX(SOUND_SFX_11);
                     break;
                 case MG_K_FLOWER:
                     mg.score += 250u;
                     if (mg.flowers < 99) mg.flowers++;
+                    playSFX(SOUND_SFX_12);
                     break;
                 case MG_K_CRITTER:
                     mg.score += 750u;
                     if (mg.critters < 99) mg.critters++;
+                    playSFX(SOUND_SFX_9);
                     mg_hint("A FOREST FRIEND IS FREE", PAL_SKY, 90);
                     break;
                 case MG_K_LIFE:
                     if (mg.lives < MAX_LIVES) mg.lives++;
                     playSFX(SOUND_SFX_13);
+                    playSFX(SOUND_SFX_12);
                     mg_hint("EXTRA LIFE!", PAL_GOLD, 120);
                     break;
                 case MG_K_SWIFT:
                     mg.swift = POWER_TIME;
                     mg.power_tag = 1;
+                    playSFX(SOUND_SFX_15);
                     mg_hint("SWIFT WIND: SHE RUNS LIGHT", PAL_SKY, 90);
                     break;
                 case MG_K_MIGHT:
                     mg.might = POWER_TIME;
                     mg.power_tag = 1;
+                    playSFX(SOUND_SFX_4);
                     mg_hint("THORN MIGHT: HER STRIKE BITES", PAL_GOLD, 90);
                     break;
                 case MG_K_VEIL:
                     mg.veil = VEIL_TIME;
                     mg.power_tag = 1;
+                    playSFX(SOUND_SFX_8);
                     mg_hint("MIST VEIL: NOTHING CAN TOUCH HER", PAL_SKY, 90);
+                    break;
+                case MG_K_SPRING:
+                    mg.spring = POWER_TIME;
+                    mg.power_tag = 1;
+                    playSFX(SOUND_SFX_15);
+                    playSFX(SOUND_SFX_11);
+                    mg_hint("SPRING BUD: SHE JUMPS THE CANOPY", PAL_SKY, 90);
+                    break;
+                case MG_K_CROWN:
+                    mg.crown = POWER_TIME;
+                    mg.power_tag = 1;
+                    playSFX(SOUND_SFX_13);
+                    mg_hint("THORN CROWN: HER THROW GROWS", PAL_GOLD, 90);
                     break;
                 default:  /* the elder's charm */
                     mg.score += 300u;
+                    playSFX(SOUND_SFX_6);
                     mg_hint(mg.boss_active ? mg_boss_hint[mg.stage]
                                            : mg_secret_hint[mg.stage], PAL_GOLD, 180);
                     break;
@@ -1650,11 +1966,14 @@ static void NEOGEO_USER mg_update_entities(void)
             } else if (it->kind == MG_I_HEART) {
                 if (p->hp < MAX_HP) p->hp++;
                 mg.score += 200u;
+                playSFX(SOUND_SFX_12);
             } else if (it->kind == MG_I_ROSE_RED) {
                 if (mg.art < MAX_ART) mg.art++;
                 mg.score += 500u;
+                playSFX(SOUND_SFX_13);
             } else {
                 mg.score += 1000u;
+                playSFX(SOUND_SFX_11);
             }
             mg.hud_dirty = 1;
             continue;
@@ -1675,23 +1994,24 @@ static void NEOGEO_USER mg_update_entities(void)
         int16_t dx = (int16_t)(p->x - e->body->x);
         if (!e->posted) {
             if (e->type == MG_E_BEETLE) {
-                e->body->vx_fp = dx < 0 ? -320 : 320;
+                e->body->vx_fp = dx < 0 ? -mg_pace(320) : mg_pace(320);
                 mg_frame(e->body, (uint8_t)(MG_F_WALK0 + ((e->timer / 8) % 2)), (uint8_t)(dx < 0));
             } else if (e->type == MG_E_CROW) {
-                e->body->vx_fp = dx < 0 ? -480 : 480;
+                e->body->vx_fp = dx < 0 ? -mg_pace(420) : mg_pace(420);
                 e->body->vy_fp = (int32_t)((e->timer & 32) ? -120 : 120);
                 mg_frame(e->body, (uint8_t)((e->timer / 6) % 2), (uint8_t)(dx < 0));
             } else if (e->type == MG_E_DRONE) {
-                e->body->vx_fp = dx < 0 ? -180 : 180;
+                e->body->vx_fp = dx < 0 ? -mg_pace(180) : mg_pace(180);
                 mg_frame(e->body, (uint8_t)((e->timer / 10) % 2), (uint8_t)(dx < 0));
                 if ((e->timer % 120) == 60 && mg_abs(dx) < 180) {
                     mg_fire(e->body->x, e->body->y, (int16_t)(dx < 0 ? -4 : 4), 0, 1, MG_T_BOLT);
                     playSFX(SOUND_SFX_6);
                 }
             } else {
-                if ((e->timer % 60) == 0 && (ng_physics_is_grounded(e->body) || e->body->y >= MG_GROUND_Y - 4)) {
+                if ((e->timer % (uint16_t)(78 - mg.stage * 4)) == 0 &&
+                    (ng_physics_is_grounded(e->body) || e->body->y >= MG_GROUND_Y - 4)) {
                     e->body->vy_fp = -4 * NG_FP_ONE;
-                    e->body->vx_fp = dx < 0 ? -240 : 240;
+                    e->body->vx_fp = dx < 0 ? -mg_pace(240) : mg_pace(240);
                 }
                 mg_frame(e->body, (uint8_t)((e->timer / 12) % 2), (uint8_t)(dx < 0));
                 if (e->type == MG_E_SLIME && (e->timer % 150) == 75 && mg_abs(dx) < 160) {
@@ -1701,12 +2021,25 @@ static void NEOGEO_USER mg_update_entities(void)
             }
         }
 
-        if (!e->hurt && mg_abs((int16_t)(e->body->x - p->x)) < 18 &&
-            mg_abs((int16_t)(e->body->y - p->y)) < 24) {
-            mg_player_damage();
-            /* Shove the creature off: being cornered by one slime was death. */
-            e->body->vx_fp = dx < 0 ? 900 : -900;
-            e->hurt = 20;
+        if (mg_abs((int16_t)(e->body->x - p->x)) < 20 &&
+            mg_abs((int16_t)(e->body->y - p->y)) < 26) {
+            /*
+             * Coming down on top of a soft creature squashes it and bounces
+             * her back up; anything else is a hit she has to answer for.
+             */
+            int16_t feet = (int16_t)(p->y - mg.player_prev_y);
+            if (!e->hurt && mg_soft_enemy(e->type) && p->vy_fp > 0 && feet >= 0 &&
+                p->y < e->body->y - 6) {
+                mg_enemy_damage(e, 10);
+                p->vy_fp = -STOMP_KICK;
+                mg.score += 150u;
+                playSFX(SOUND_SFX_3);
+            } else if (!e->hurt) {
+                mg_player_damage();
+                /* Shove the creature off: being cornered by one slime was death. */
+                e->body->vx_fp = dx < 0 ? 900 : -900;
+                e->hurt = 20;
+            }
         }
     }
 
@@ -1735,22 +2068,34 @@ static void NEOGEO_USER mg_update_entities(void)
     }
 
     /*
-     * Invulnerability read-out.  A two-frame blink made her strobe, so the
-     * flicker is slow, and the last half-second is solid again.
+     * Invulnerability read-out.  Blinking her in and out looked like a
+     * dropped sprite, so she stays on screen and her palette pulses to the
+     * sunlight one instead: readable, and it never hides where she is.
      */
+    p->visible = 1;
     if (mg.hurt) {
         mg.hurt--;
-        p->visible = (mg.hurt > 30 && (mg.hurt & 8)) ? 0 : 1;
+        if (mg.hurt > 20) {
+            uint8_t lit = (uint8_t)((mg.hurt & 8) != 0);
+            if (lit != mg.hurt_lit) {
+                mg.hurt_lit = lit;
+                mg_palette(PAL_HERO, lit ? mg_hero_sun_pal : mg_hero_pal);
+            }
+        } else if (mg.hurt_lit) {
+            mg.hurt_lit = 0;
+            mg_palette(PAL_HERO, mg_hero_pal);
+        }
     } else if (mg.veil) {
-        p->visible = (mg.veil & 8) ? 0 : 1;
-    } else {
-        p->visible = 1;
+        /* The mist veil: she fades in and out slowly, on purpose. */
+        p->visible = (uint8_t)((mg.veil & 16) ? 0 : 1);
     }
 
     /* Power-ups run down whether or not she is fighting. */
     if (mg.swift) mg.swift--;
     if (mg.might) mg.might--;
     if (mg.veil) mg.veil--;
+    if (mg.spring) mg.spring--;
+    if (mg.crown) mg.crown--;
     if (mg.flash && --mg.flash == 0) mg_palette(PAL_HERO, mg_hero_pal);
 }
 
@@ -1803,11 +2148,14 @@ static void NEOGEO_USER mg_draw_lives(void)
 /* What Maiya is carrying right now: swiftness, might, the mist veil. */
 static void NEOGEO_USER mg_draw_powers(void)
 {
-    ng_fix_clear_rect(20, ROW_POWER, 19, 1, PAL_TEXT);
-    if (mg.swift) ng_fix_puts(22, ROW_POWER, "SWIFT", PAL_SKY);
-    if (mg.might) ng_fix_puts(28, ROW_POWER, "MIGHT", PAL_GOLD);
-    if (mg.veil)  ng_fix_puts(34, ROW_POWER, "VEIL", PAL_SKY);
-    mg.power_tag = (uint8_t)((mg.swift || mg.might || mg.veil) ? 1 : 0);
+    ng_fix_clear_rect(14, ROW_POWER, 25, 1, PAL_TEXT);
+    if (mg.swift)  ng_fix_puts(15, ROW_POWER, "SWIFT", PAL_SKY);
+    if (mg.might)  ng_fix_puts(21, ROW_POWER, "MIGHT", PAL_GOLD);
+    if (mg.veil)   ng_fix_puts(27, ROW_POWER, "VEIL", PAL_SKY);
+    if (mg.spring) ng_fix_puts(32, ROW_POWER, "SPRING", PAL_SKY);
+    if (mg.crown)  ng_fix_puts(15, (uint8_t)(ROW_POWER + 1), "CROWN", PAL_GOLD);
+    mg.power_tag = (uint8_t)((mg.swift || mg.might || mg.veil ||
+                              mg.spring || mg.crown) ? 1 : 0);
 }
 
 static void NEOGEO_USER mg_update_hud(void)
@@ -1860,7 +2208,13 @@ static void NEOGEO_USER mg_animate_player(void)
     uint8_t grounded = ng_physics_is_grounded(p) || mg.on_ledge || (p->y >= MG_GROUND_Y - 4);
 
     if (mg.climbing) {
-        mg_frame(p, (uint8_t)(MG_F_JUMP0 + ((mg.tick / 10) % 2)), mg.facing);
+        /*
+         * Hand over hand: the frame follows how far up the vine she is, so
+         * she only moves when she is actually climbing, and stops still
+         * when the stick is centred.
+         */
+        static const uint8_t reach[4] = { MG_F_JUMP0, MG_F_CAST0, MG_F_JUMP1, MG_F_CAST2 };
+        mg_frame(p, reach[((uint8_t)(p->y >> 3)) & 3u], (uint8_t)((p->y >> 4) & 1u));
         return;
     }
     if (mg.sitting) {
@@ -1901,13 +2255,18 @@ static void NEOGEO_USER mg_npc_check(void)
 
         which = (uint8_t)n->data1;
         mg_frame(n, (uint8_t)((mg.tick / 32) % 2), (uint8_t)(n->x > mg.player->x ? 1 : 0));
+
+        /* Walk away and come back and he will tell her again, every time. */
+        if (mg_abs((int16_t)(n->x - mg.player->x)) > TALK_RANGE) {
+            mg.npc_mask &= (uint8_t)~(1u << which);
+            continue;
+        }
         if (mg.npc_mask & (uint8_t)(1u << which)) continue;
-        if (mg_abs((int16_t)(n->x - mg.player->x)) > TALK_RANGE) continue;
 
         mg.npc_mask |= (uint8_t)(1u << which);
         mg_hint(mg_npcs[mg.stage][which].line, PAL_SKY, 150);
-        playSFX(SOUND_SFX_11);
-        mg.score += 100u;
+        playSFX(SOUND_SFX_6);
+        if (mg.score < 0xFFFF0000u) mg.score += 100u;
         mg.hud_dirty = 1;
     }
 }
@@ -2076,7 +2435,7 @@ void NEOGEO_USER maiya_frame(void)
             if (mg.player->y >= MG_GROUND_Y - 2) {
                 mg.entrance = 0;
                 playSFX(SOUND_SFX_9);
-                ng_camera_shake(&mg.camera, 2, 8);
+                mg.shake = 8;
                 mg_frame(mg.player, MG_F_LAND, mg.facing);
             } else {
                 mg_frame(mg.player, MG_F_JUMP3, mg.facing);
@@ -2116,7 +2475,8 @@ void NEOGEO_USER maiya_frame(void)
             mg_update_hud();
             mg.hud_dirty = 0;
         }
-        if (mg.power_tag || mg.swift || mg.might || mg.veil) mg_draw_powers();
+        if (mg.power_tag || mg.swift || mg.might || mg.veil ||
+            mg.spring || mg.crown) mg_draw_powers();
         return;
     }
 

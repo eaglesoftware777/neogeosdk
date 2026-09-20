@@ -19,6 +19,7 @@ https://github.com/eaglesoftware777/neogeosdk
 void NEOGEO_USER game_boot(void);
 void NEOGEO_USER game_frame(void);
 void NEOGEO_USER maiya_title(void);
+void NEOGEO_USER maiya_eyecatcher(void);
 uint8_t NEOGEO_USER maiya_session_over(void);
 void NEOGEO_USER maiya_demo_begin(void);
 void NEOGEO_USER maiya_demo_end(void);
@@ -116,15 +117,18 @@ void NEOGEO_USER POWER_ON(void) {
     ::: ASM_END
 }
 
+/*
+ * The BIOS eyecatcher slot.  The FIX layer is not on screen in this phase,
+ * so the house logo is drawn at the head of the attract loop instead, where
+ * the game owns the display; this just leaves a clean black screen.
+ */
 void NEOGEO_USER EYE_CATCHER(void) {
+    int i;
     soundStopAll();
     clearFix();
     clearSprs();
     setBACKDROP(BLACK);
-    fixtext_out(14, 13, "MAIYA", 0);
-    int i;
-    for (i = 0; i < 180; i++) waitVbl();
-    soundStopAll();
+    for (i = 0; i < 30; i++) waitVbl();
 }
 
 void NEOGEO_USER GAME(void) {
@@ -266,18 +270,13 @@ void NEOGEO_USER GAME_ATTRACT(void) {
     int round;
 
     for (round = 0; ; round++) {
-        /* --- a slice of the game, played by the machine --------------- */
-        clearFix(); clearSprs(); setBACKDROP(BLACK);
-        maiya_demo_begin();
-        for (i = 0; i < 60 * 22; i++) {
-            waitVbl();
-            game_frame();
-            if (attract_interrupted()) { maiya_demo_end(); return; }
-            if (maiya_demo_spent()) break;
+        /* --- the house logo, once per power-on ------------------------ */
+        if (round == 0) {
+            maiya_eyecatcher();
+            if (attract_interrupted()) return;
         }
-        maiya_demo_end();
 
-        /* --- then the title card -------------------------------------- */
+        /* --- the title card comes first ------------------------------- */
         clearFix(); clearSprs(); setBACKDROP(BLACK);
         maiya_title();
         for (i = 0; i < 60 * 12; i++) {
@@ -287,6 +286,17 @@ void NEOGEO_USER GAME_ATTRACT(void) {
             if (attract_interrupted()) return;
             waitVbl();
         }
+
+        /* --- then a slice of the game, played by the machine ---------- */
+        clearFix(); clearSprs(); setBACKDROP(BLACK);
+        maiya_demo_begin();
+        for (i = 0; i < 60 * 22; i++) {
+            waitVbl();
+            game_frame();
+            if (attract_interrupted()) { maiya_demo_end(); return; }
+            if (maiya_demo_spent()) break;
+        }
+        maiya_demo_end();
     }
 }
 

@@ -300,37 +300,63 @@ BIOMES = {
 
 
 def ledge_block(biome, piece):
-    """piece: 0 left cap, 1 middle, 2 right cap."""
+    """A ledge block with a face, not a flat sticker.
+
+    piece: 0 left cap, 1 middle, 2 right cap.
+
+    The top is a lit surface in perspective, the body a shaded front face
+    with a bevel down the lit side and a dark cast shadow under the lip, so
+    a shelf reads as something standing out of the valley rather than a
+    rectangle pasted onto it.
+    """
     top_l, top_m, body_m, body_d, speck_c = BIOMES[biome]
-    pal = np.array([(0, 0, 0), (28, 22, 32), top_l, top_m, body_m, body_d, speck_c],
-                   dtype=np.uint8)
+    pal = np.array([
+        (0, 0, 0),
+        (24, 20, 28),                                   # 1 outline
+        top_l,                                          # 2 lit top
+        top_m,                                          # 3 top shade
+        body_m,                                         # 4 front face
+        body_d,                                         # 5 deep shadow
+        speck_c,                                        # 6 speckle
+        tuple(min(255, int(c * 1.18) + 12) for c in top_l),    # 7 crest highlight
+        tuple(int(c * 0.72) for c in body_m),                  # 8 face shade
+        tuple(int(c * 0.52) for c in body_d),                  # 9 cast shadow
+    ], dtype=np.uint8)
     a = canvas()
-
-    a[2:32, :] = 4                      # body
-    a[2:9, :] = 3                       # crest band
-    a[2:5, :] = 2                       # lit crest
-    a[27:32, :] = 5                     # shaded underside
-
     ys, xs = np.mgrid[0:32, 0:32]
+
+    a[2:32, :] = 4            # front face
+    a[2:6, :] = 2             # the top surface, seen at a shallow angle
+    a[6:9, :] = 3             # the far edge of that surface rolling over
+    a[2:3, :] = 7             # crest highlight
+    a[9:12, :] = 8            # the face immediately under the lip: in shade
+    a[27:32, :] = 5
+    a[30:32, :] = 9           # the block's own shadow on what is below
+
     body = a == 4
     a[body & (((xs * 3 + ys * 5) % 13) == 0)] = 6
-    a[body & (((xs * 7 + ys * 11) % 23) == 0)] = 5
+    a[body & (((xs * 7 + ys * 11) % 23) == 0)] = 8
 
-    # Crest fringe: blades of grass (or icicles of snow) dipping into the body.
+    # Crest fringe: grass (or snow, or bark) hanging over the lip.
     for x in range(0, 32, 4):
         drop = 2 + ((x // 4) % 3)
         a[9:9 + drop, x:x + 2] = 3
         a[9:9 + drop - 1, x + 1:x + 2] = 2
 
-    # Rounded caps so a ledge reads as one soft island, not a cut brick.
+    # A bevel down the lit side of the face, and depth on the shaded side.
+    a[6:30, 0:2] = np.where(a[6:30, 0:2] == 0, 0, 8)
+    a[6:30, 30:32] = np.where(a[6:30, 30:32] == 0, 0, 5)
+
     if piece == 0:
-        corner = ((xs < 6) & (ys < 8)) & (((xs - 6) ** 2 / 36 + (ys - 8) ** 2 / 36) > 1)
+        corner = ((xs < 6) & (ys < 9)) & (((xs - 6) ** 2 / 36 + (ys - 9) ** 2 / 49) > 1)
         a[corner] = 0
-        a[2:32, 0:1][a[2:32, 0:1] > 0] = 5
+        a[2:32, 0:2][a[2:32, 0:2] > 0] = 5
+        a[4:30, 2:3][a[4:30, 2:3] > 0] = 8
     if piece == 2:
-        corner = ((xs > 25) & (ys < 8)) & (((xs - 25) ** 2 / 36 + (ys - 8) ** 2 / 36) > 1)
+        corner = ((xs > 25) & (ys < 9)) & (((xs - 25) ** 2 / 36 + (ys - 9) ** 2 / 49) > 1)
         a[corner] = 0
-        a[2:32, 31:32][a[2:32, 31:32] > 0] = 5
+        a[2:32, 30:32][a[2:32, 30:32] > 0] = 5
+        a[4:30, 29:30][a[4:30, 29:30] > 0] = 8
 
     solid = a > 0
     pad = np.pad(solid, 1)
@@ -340,9 +366,66 @@ def ledge_block(biome, piece):
         a[:, 0][a[:, 0] == 1] = 0
     if piece != 2:
         a[:, 31][a[:, 31] == 1] = 0
+
     rgb = pal[a]
     alpha = np.where(a > 0, 255, 0).astype(np.uint8)
     return np.dstack((rgb, alpha)).astype(np.uint8)
+
+
+def standing_stone(biome):
+    """A mossy boulder the ledges sit on: pure foreground depth."""
+    top_l, top_m, body_m, body_d, speck_c = BIOMES[biome]
+    pal = np.array([
+        (0, 0, 0), (22, 18, 26),
+        tuple(min(255, int(c * 1.14)) for c in body_m),
+        body_m, body_d,
+        tuple(int(c * 0.6) for c in body_d),
+        top_m, top_l,
+    ], dtype=np.uint8)
+    a = canvas(32, 48)
+    disc(a, 16, 31, 15, 16, 3)
+    disc(a, 11, 25, 8.5, 9, 2)
+    disc(a, 23, 38, 9, 8, 4)
+    a[42:48, :][a[42:48, :] > 0] = 5
+    ys, xs = np.mgrid[0:48, 0:32]
+    a[(a == 3) & (((xs * 5 + ys * 3) % 17) == 0)] = 4
+
+    # moss follows the crown of the stone rather than a straight line 
+    for x in range(32):
+        column = np.nonzero(a[:, x])[0]
+        if not len(column):
+            continue
+        top = column[0]
+        if top > 26:
+            continue
+        depth = 3 + ((x * 7) % 3)
+        a[top:top + depth, x] = 6
+        a[top:top + 1, x] = 7
+    solid = a > 0
+    pad = np.pad(solid, 1)
+    edge = (pad[:-2, 1:-1] | pad[2:, 1:-1] | pad[1:-1, :-2] | pad[1:-1, 2:])
+    a[(~solid) & edge] = 1
+    rgb = pal[a]
+    return np.dstack((rgb, np.where(a > 0, 255, 0).astype(np.uint8))).astype(np.uint8)
+
+
+def fern_frond():
+    """A big leaf for the front plane, scrolling faster than the road."""
+    a = canvas(32, 48)
+    for y in range(4, 46):
+        t = (y - 4) / 42.0
+        bend = int(4.0 * np.sin(t * 2.2))
+        half = int(12.0 * np.sin(t * np.pi) ** 0.7)
+        if half <= 0:
+            continue
+        cx = 16 + bend
+        a[y, max(0, cx - half):min(32, cx + half)] = LF_M
+        if (y % 4) == 0:
+            a[y, max(0, cx - half):min(32, cx - half + 4)] = LF_D
+            a[y, max(0, cx + half - 4):min(32, cx + half)] = LF_L
+        a[y, max(0, cx - 1):min(32, cx + 1)] = LF_D
+    speckle(a, a == LF_M, LF_L, step=11, offset=2)
+    return to_rgba(outline(a))
 
 
 # --------------------------------------------------------------------------
@@ -458,8 +541,40 @@ def wizard_charm():
     return to_rgba(outline(a))
 
 
+def spring_bud():
+    """A coiled fern bud: it gives her legs for a while."""
+    a = canvas()
+    for k in range(9):
+        t = k / 9.0
+        r = 11.0 - t * 9.0
+        ang = t * 7.2
+        cx = 16 + int(np.cos(ang) * (11 - r))
+        cy = 20 + int(np.sin(ang) * (11 - r) * 0.7)
+        disc(a, cx, cy, r * 0.5, r * 0.5, LF_M if k % 2 else LF_L)
+    disc(a, 16, 20, 2.4, 2.4, GOLD)
+    a[24:32, 15:18] = LF_D
+    disc(a, 11, 28, 4.5, 2.2, LF_M)
+    disc(a, 22, 29, 4.5, 2.2, LF_M)
+    return to_rgba(outline(a))
+
+
+def thorn_crown():
+    """A ring of rose thorns: her throw comes out bigger and faster."""
+    a = canvas()
+    disc(a, 16, 18, 10, 8, BLOSSOM)
+    disc(a, 16, 18, 6.5, 5.0, 0)
+    for ang in range(0, 360, 45):
+        r = np.deg2rad(ang)
+        x = int(16 + np.cos(r) * 12)
+        y = int(18 + np.sin(r) * 10)
+        disc(a, x, y, 2.6, 2.6, GOLD)
+    disc(a, 16, 18, 3.4, 2.6, AMBER)
+    return to_rgba(outline(a))
+
+
 TRINKETS = (
     ("gold", gold_coin), ("silver", silver_coin), ("flower", cut_flower),
     ("critter", critter), ("life", life_heart), ("swift", swift_leaf),
     ("might", might_berry), ("veil", veil_orb), ("charm", wizard_charm),
+    ("spring", spring_bud), ("crown", thorn_crown),
 )

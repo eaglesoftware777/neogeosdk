@@ -41,8 +41,13 @@ glyphs (heart, rose, key, coin, leaf, spark) into the low FIX codes of
 
 ## Audio
 
-The YM2610 bank is the SDK's own sound data, used without modifying the
-driver or its samples.  Its credits are in `games/demo/sound/SOURCES.md`.
+Maiya has her own YM2610 bank, not the demo's: `tools/build_sound_bank.py`
+synthesises the sixteen ADPCM-A effects (whip crack, thorn toss, squish,
+clank, spit, pulse, saw, flame, shatter, blast, pick-up chimes, art surge,
+guardian roar, dash, hurt) and writes the eight FM/SSG MML tracks -- the
+valley theme the eyecatcher plays, one per world, and the guardian battle.
+`game.mk` points the sound build at `games/maiya/sound`, so nothing in the
+ROM comes from another game's bank.
 
 ## Provenance
 
