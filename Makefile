@@ -6,7 +6,9 @@
 
 # Game selection from game.cfg (override with GAME=...).
 # Usage: make GAME=helloworld / make GAME=tutorial / make GAME=neogeogame
-GAME_CFG_FILE ?= game.cfg
+ifeq ($(origin GAME_CFG_FILE),undefined)
+GAME_CFG_FILE := $(if $(strip $(GAME)),$(or $(wildcard games/$(GAME)/game.cfg),game.cfg),game.cfg)
+endif
 -include $(GAME_CFG_FILE)
 ifeq ($(strip $(GAME)),)
   ifneq ($(strip $(CURRENT_GAME)),)
@@ -147,15 +149,16 @@ HASHPATH:=$(CURDIR)/hash_eagle/$(GAME);$(CURDIR)/hash_eagle;$(CURDIR)/hash
 USE_EAGLE_BIOS ?= 0
 ifeq ($(USE_EAGLE_BIOS),1)
 ROMPATH ?= $(CURDIR)/bios/test_roms;$(CURDIR)/roms
-BIOS := euro
+override BIOS = $(if $(filter aes,$(PLATFORM)),asia,euro)
 else
 ROMPATH ?= $(CURDIR)/roms
-BIOS ?= euro
+BIOS ?= $(if $(filter aes,$(PLATFORM)),asia,euro)
 endif
 ROM_DIR = roms/$(GAME)
 DUMP_DIR = dump/$(GAME)
 MAME_PLAYBACK ?= -noautoframeskip -frameskip 0
-MAME_COMMON=mame neogeo -rompath "$(ROMPATH)" -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME) $(MAME_PLAYBACK)
+MAME ?= mame
+MAME_COMMON=$(MAME) $(if $(filter aes,$(PLATFORM)),aes,neogeo) -rompath "$(ROMPATH)" -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME) $(MAME_PLAYBACK)
 LOG_CTX=@echo "[neogeosdk] target=$@ game=$(GAME) game_id=$(GAME_ID) platform=$(PLATFORM) rom_dir=$(ROM_DIR) hashpath=$(HASHPATH)"
 
 # PLATFORM: mvs (default) or aes
@@ -169,6 +172,7 @@ PLATFORM_CFLAGS=-DNG_AES=1
 endif
 
 .DEFAULT_GOAL := p1
+.NOTPARALLEL: all bios-package
 
 .PHONY: game-check
 game-check:
@@ -177,6 +181,17 @@ game-check:
 .PHONY: all
 all: game-check art sfix sound p1
 	$(LOG_CTX)
+
+.PHONY: eagle-bios bios-package
+eagle-bios:
+	$(PYTHON) bios/tools/build.py --cc "$(CC)" --wlaz80 "$(WLAZ80)" --wlalink "$(WLALINK)" --install bios/test_roms
+
+ifeq ($(USE_EAGLE_BIOS),1)
+p1 test-precheck: eagle-bios
+endif
+
+bios-package: all hash eagle-bios
+	$(PYTHON) bios/tools/build.py --no-build --game "$(GAME)" --game-id "$(GAME_ID)" --package "dist/$(GAME)-eagle-bios.zip"
 
 .PHONY: aes
 aes:
@@ -379,6 +394,9 @@ sound-all: sound
 .PHONY: sfix
 sfix: game-check
 	$(LOG_CTX)
+ifneq ($(strip $(GAME_ART_BUILDER)),)
+	$(PYTHON) $(GAME_ART_BUILDER) --fix-only
+else
 	mkdir -p games/$(GAME)/artbox
 	cd games/$(GAME)/artbox && ARTBOX_DATA_DIR="$(CURDIR)/games/$(GAME)/artbox" ARTBOX_INFIX_DIR="$(CURDIR)/games/$(or $(GAME_ART_FROM),$(GAME))/artbox/infix" GAME=$(GAME) GAME_ID=$(GAME_ID) python3 "$(CURDIR)/artbox/romdbfiximport.py" && ARTBOX_DATA_DIR="$(CURDIR)/games/$(GAME)/artbox" GAME=$(GAME) GAME_ID=$(GAME_ID) python3 "$(CURDIR)/artbox/fixtiles.py" && GAME=$(GAME) GAME_ID=$(GAME_ID) "$(CURDIR)/artbox/romfx.sh"
 	python3 tools/verify_sfix_output.py --root "$(CURDIR)" --game "$(GAME)" --game-id "$(GAME_ID)"
@@ -394,6 +412,7 @@ sfix: game-check
 			exit 1; \
 		fi; \
 	done
+endif
 
 .PHONY: srom
 srom: sfix
@@ -416,10 +435,14 @@ art-clean:
 # original nearest-neighbour-against-global-palette path.
 art: game-check
 	$(LOG_CTX)
+ifneq ($(strip $(GAME_ART_BUILDER)),)
+	$(PYTHON) $(GAME_ART_BUILDER)
+else
 	ARTBOX_TILE=1 GAME_ID=$(GAME_ID) GAME_ART_FROM="$(GAME_ART_FROM)" ./artbox/makeartbox.sh $(GAME)
 	python3 tools/verify_artbox_palettes.py --root "$(CURDIR)" --game "$(GAME)"
 	rm -f artbox/assets.cfg artbox/1c.c1 artbox/2c.c2 artbox/$(GAME_ID)-s1.s1 artbox/assets_manifest.json artbox/map artbox/neo.pal artbox/std.pal artbox/neopal.bin artbox/neorom.db artbox/out.srt artbox/output1.txt artbox/screens.c artbox/sprite_meta.h
 	rm -rf artbox/__pycache__
+endif
 
 # art-crt: same pipeline as `art` but flips ARTBOX_CRT=1 so romdbimgimport
 # routes screen conversions through artbox/img2neo_crt.py (CIE-Lab k-means
@@ -430,10 +453,14 @@ art: game-check
 .PHONY: art-crt
 art-crt: game-check
 	$(LOG_CTX)
+ifneq ($(strip $(GAME_ART_BUILDER)),)
+	$(PYTHON) $(GAME_ART_BUILDER)
+else
 	ARTBOX_CRT=1 GAME_ID=$(GAME_ID) GAME_ART_FROM="$(GAME_ART_FROM)" ./artbox/makeartbox.sh $(GAME)
 	python3 tools/verify_artbox_palettes.py --root "$(CURDIR)" --game "$(GAME)"
 	rm -f artbox/assets.cfg artbox/1c.c1 artbox/2c.c2 artbox/$(GAME_ID)-s1.s1 artbox/assets_manifest.json artbox/map artbox/neo.pal artbox/std.pal artbox/neopal.bin artbox/neorom.db artbox/out.srt artbox/output1.txt artbox/screens.c artbox/sprite_meta.h
 	rm -rf artbox/__pycache__
+endif
 
 .PHONY: dist
 dist: game-check all
@@ -509,12 +536,6 @@ test: game-check test-precheck hash
 .PHONY: test-precheck
 test-precheck: game-check
 	$(LOG_CTX)
-ifeq ($(USE_EAGLE_BIOS),1)
-	@mkdir -p bios/test_roms/neogeo bios/test_roms/aes
-	@[ -f "bios/sp-s2.sp1" ] && [ -f "bios/neo-epo.bin" ] && [ -f "bios/sm1.sm1" ] && [ -f "bios/sfix.sfix" ] && [ -f "bios/000-lo.lo" ] || $(MAKE) -C bios
-	@cp -f bios/sp-s2.sp1 bios/sm1.sm1 bios/sfix.sfix bios/000-lo.lo bios/test_roms/neogeo/
-	@cp -f bios/neo-epo.bin bios/sm1.sm1 bios/sfix.sfix bios/000-lo.lo bios/test_roms/aes/
-endif
 	@[ -f "$(ROM_DIR)/$(GAME_ID)-p1.p1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-p1.p1. Build first with: make all" && exit 1)
 	@[ -f "$(ROM_DIR)/$(GAME_ID)-m1.m1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-m1.m1. Build first with: make all" && exit 1)
 	@[ -f "$(ROM_DIR)/$(GAME_ID)-s1.s1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-s1.s1. Build first with: make all" && exit 1)

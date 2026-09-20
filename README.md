@@ -243,18 +243,42 @@ with `GAME=<name>`.
 | `games/demo` | 777 | `777-*` | C | The 25-chapter engine reel — every subsystem, in order |
 | `games/demo_plus` | 778 | `778-*` | C/C++ | The same shared demo scenes and assets, with the C++ engine linked (`USE_2D_PLUS=1`) |
 | `games/skylance` | 779 | `779-*` | C | Sky Lance — a complete vertical shooter |
+| `games/maiya` | 780 | `780-*` | C | Maiya: Super Nature Girl, a six-valley platform adventure with guarded arenas and bonus rounds |
 | `games/helloworld` | 772 | `772-*` | — | Minimal FIX-text and one sample; the tutorial target |
 | `games/tutorial` | 555 | `555-*` | C | The minimal engine loop, nothing else |
 | `games/neogeogame` | 775 | `775-*` | C | Sprite-based formation shooter |
 
-Every game carries its own `game.cfg`, so all six build the same way:
+Every game carries its own `game.cfg`. An explicit `GAME=<name>` now selects
+that configuration automatically; the default remains `demo`:
 
 ```bash
-make GAME=<name> GAME_CFG_FILE=games/<name>/game.cfg all
-make GAME=<name> GAME_CFG_FILE=games/<name>/game.cfg test
+make GAME=<name> all
+make GAME=<name> test
 ```
 
 What each one demonstrates: [`docs/GAMES.md`](./docs/GAMES.md).
+
+Maiya's controls, art layout and regression checks are in
+[`games/maiya/README.md`](./games/maiya/README.md).
+
+### Optional System Firmware
+
+EagleBIOS is opt-in; normal builds and tests still use the installed Neo Geo
+firmware. On Linux/WSL:
+
+```sh
+make GAME=maiya all USE_EAGLE_BIOS=1
+make GAME=maiya test USE_EAGLE_BIOS=1
+make GAME=maiya bios-package
+```
+
+On Windows CMD, add `-f MakefileWin32.mak` to each command. These targets use
+the already selected cross compiler, Python and WLA-DX. `eagle-bios` builds
+the firmware alone; `bios-package` creates `dist/<game>-eagle-bios.zip` with
+the cartridge, generated firmware, license and MAME software list. Original
+system ROMs are not replaced. Use `PLATFORM=aes` for both compilation and
+testing on the console machine. Read the [firmware manual](./bios/README.md)
+for supported services and limitations before distributing a game with it.
 
 ### Building a specific game
 
