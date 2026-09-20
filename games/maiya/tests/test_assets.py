@@ -41,7 +41,7 @@ class AssetsTest(unittest.TestCase):
             np.testing.assert_array_equal(pixels == 0, rgba[:, :, 3] < 128)
         frames = [e for e in manifest if e["name"].startswith("hero_")]
         self.assertEqual(len(frames), 39)
-        self.assertTrue(all(e["strips"] == 7 and e["rows"] == 6 for e in frames))
+        self.assertTrue(all(e["strips"] == 5 and e["rows"] == 4 for e in frames))
         eagle = [e for e in manifest if e["name"].startswith("eagle_")]
         self.assertEqual(len(eagle), 6)
         for i in range(6):
@@ -50,6 +50,18 @@ class AssetsTest(unittest.TestCase):
             self.assertEqual((far["strips"], far["rows"]), (32, 12))
             self.assertEqual((road["strips"], road["rows"]), (32, 2))
             self.assertEqual(far["palette_count"], road["palette_count"])
+
+    def test_guardian_scale_and_feet(self):
+        directory = GAME / "artbox/generated"
+        for name in ("beetle", "toad", "jackal", "owl", "leviathan", "smoggar"):
+            extents = []
+            for frame in range(2):
+                image = Image.open(directory / f"boss_{name}_{frame}.png").convert("RGBA")
+                box = image.getchannel("A").getbbox()
+                self.assertIsNotNone(box)
+                self.assertEqual(box[3], 94)
+                extents.append(max(box[2] - box[0], box[3] - box[1]))
+            self.assertLessEqual(abs(extents[0] - extents[1]), 2, name)
 
 
 if __name__ == "__main__":

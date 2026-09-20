@@ -160,7 +160,7 @@ def _foot_center(arr):
     return int(round(feet.mean())) if len(feet) else int(round(xs.mean()))
 
 
-def sharpen_sprite(arr, amount=1.5, outline=0.55):
+def sharpen_sprite(arr, amount=1.0, outline=0.20):
     """Put the bite back into a sprite that has been shrunk by four.
 
     A single Lanczos pass from 200 px down to 40 loses the line work the art
@@ -187,7 +187,8 @@ def sharpen_sprite(arr, amount=1.5, outline=0.55):
     return out
 
 
-def fit_group(img, boxes, canvas, target_h, bg_color="white", pad=2, sharpen=True):
+def fit_group(img, boxes, canvas, target_h, bg_color="white", pad=2, sharpen=True,
+              normalize_extent=False):
     """Scale a whole animation by ONE factor and stand every frame on its feet.
 
     Fitting each frame to the canvas on its own made the character swell and
@@ -209,8 +210,11 @@ def fit_group(img, boxes, canvas, target_h, bg_color="white", pad=2, sharpen=Tru
         if sprite is None:
             frames[name] = out
             continue
-        w = max(1, int(round(sprite.width * scale)))
-        h = max(1, int(round(sprite.height * scale)))
+        # Guardian sheets mix a large pose and a thumbnail. Match their
+        # silhouette extent, not their unrelated source-sheet resolution.
+        frame_scale = target_h / max(sprite.size) if normalize_extent else scale
+        w = max(1, int(round(sprite.width * frame_scale)))
+        h = max(1, int(round(sprite.height * frame_scale)))
         scaled = np.asarray(sprite.resize((w, h), Image.Resampling.LANCZOS))
         scaled = scaled.copy()
         scaled[:, :, 3] = np.where(scaled[:, :, 3] >= 128, 255, 0)
@@ -218,7 +222,7 @@ def fit_group(img, boxes, canvas, target_h, bg_color="white", pad=2, sharpen=Tru
         if sharpen:
             scaled = sharpen_sprite(scaled)
 
-        ox = canvas[0] // 2 - _foot_center(scaled)
+        ox = (canvas[0] - w) // 2 if normalize_extent else canvas[0] // 2 - _foot_center(scaled)
         oy = canvas[1] - pad - h
         sx0, sy0 = max(0, -ox), max(0, -oy)
         dx0, dy0 = max(0, ox), max(0, oy)
@@ -576,7 +580,7 @@ def build():
     append("face", face, master=hero_master)
 
     portrait = crop_and_fit(m_img, (27, 70, 144, 268), (96, 96), anchor="center")
-    append("portrait", portrait, banks=2, bank_base=13)
+    append("portrait", portrait, banks=2, bank_base=41)
     print(f"  Maiya compiled ({len(maiya_frames)} frames)", flush=True)
 
     print("== 3. Compiling 6 Corrupted Blight Enemies ==", flush=True)
@@ -678,7 +682,7 @@ def build():
     for bname, pattern, bg, boxes in boss_specs:
         b_img = Image.open(find_file(pattern)).convert("RGB")
         frames = fit_group(b_img, {str(k): box for k, box in enumerate(boxes)},
-                           BOSS_CANVAS, BOSS_HEIGHT, bg_color=bg)
+                           BOSS_CANVAS, BOSS_HEIGHT, bg_color=bg, normalize_extent=True)
         shared_set(f"boss_{bname}", frames)
         print(f"  Boss {bname} compiled (96x96, 2 frames)", flush=True)
 
@@ -766,7 +770,7 @@ def build():
     title_raw = Image.open(find_file("maiya_title*.jpg")).convert("RGBA")
     title_fit = title_raw.resize((304, 224), Image.Resampling.LANCZOS)
     title_arr = np.asarray(title_fit, dtype=np.uint8)
-    title_base, title_pals = append("title", title_arr, banks=2, bank_base=13)
+    title_base, title_pals = append("title", title_arr, banks=2, bank_base=41)
 
     write_utility_tiles(c1, c2)
 

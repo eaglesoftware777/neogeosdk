@@ -12,6 +12,11 @@ one shared scale per animation, a foot-centre anchor so a walk and a whip
 stay the same girl, a fitted 15-colour palette per group, and the C-ROM pair
 (`780-c1.c1`, `780-c2.c2`) plus `maiya_assets.h`.
 
+Guardian sheets contain both large drawings and thumbnails; guardian frames
+normalize their longest silhouette dimension to 86 pixels on a 96x96 canvas.
+The hero keeps a shared scale on an 80x64 canvas. Both paths preserve a
+two-pixel foot margin and one palette for the entire animation.
+
 Six valleys take their far layer and road strip from the painted panels:
 
 | Mission | Valley | Panel |

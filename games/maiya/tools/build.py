@@ -118,6 +118,10 @@ def quick_build(toolchain):
     swapped = bytearray(len(data))
     swapped[0::2], swapped[1::2] = data[1::2], data[0::2]
     (WORK / "roms/maiya/780-p1.p1").write_bytes(swapped)
+    for part in ("c1", "c2"):
+        name = f"780-{part}.{part}"
+        shutil.copyfile(GAME / "artbox/generated" / name, WORK / "roms/maiya" / name)
+    shutil.copyfile(GAME / "artbox/780-s1.s1", WORK / "roms/maiya/780-s1.s1")
     subprocess.run([sys.executable, "hash_eagle/gen_hash.py"], cwd=WORK,
                    env=dict(os.environ, GAME="maiya", GAME_ID="780"), check=True)
 
@@ -134,7 +138,7 @@ def main():
     args = parser.parse_args()
     if not args.run_only:
         if args.rebuild_art or not (GAME / "artbox/generated/maiya_assets.h").is_file():
-            subprocess.run([sys.executable, str(GAME / "tools/prepare_assets.py")], check=True)
+            subprocess.run([sys.executable, str(GAME / "tools/build_commercial_assets.py")], check=True)
         if args.quick:
             toolchain = args.toolchain
             if toolchain is None:
