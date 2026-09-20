@@ -156,7 +156,6 @@ void bios_eyecatcher(void)
     bios_fix_puts(MARK_X, MARK_Y + 8, "-----------------------------", LINE_PAL);
     bios_fix_puts(12, MARK_Y + 10, "SYSTEM ROM  2026", TEXT_PAL);
     bios_fix_puts(12, MARK_Y + 12, "EAGLE SOFTWARE", TEXT_PAL);
-    bios_fix_puts(14, MARK_Y + 15, BIOS_MVS_FLAG ? "MVS ARCADE" : "AES CONSOLE", LINE_PAL);
 
     /* Hold, with a glint running left to right across the plates. */
     for (uint16_t frame = 0; frame < HOLD_FRAMES && !skipped; frame++) {
