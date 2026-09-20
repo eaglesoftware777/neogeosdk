@@ -16,7 +16,9 @@ SHELL = $(COMSPEC)
 # Usage: make -f MakefileWin32.mak GAME=helloworld p1
 #        make -f MakefileWin32.mak GAME=tutorial p1
 #        make -f MakefileWin32.mak GAME=neogeogame p1
-GAME_CFG_FILE ?= game.cfg
+ifeq ($(origin GAME_CFG_FILE),undefined)
+GAME_CFG_FILE := $(if $(strip $(GAME)),$(or $(wildcard games/$(GAME)/game.cfg),game.cfg),game.cfg)
+endif
 -include $(GAME_CFG_FILE)
 ifeq ($(strip $(GAME)),)
   ifneq ($(strip $(CURRENT_GAME)),)
@@ -182,15 +184,15 @@ HASHPATH:=$(REPO_WIN)\hash_eagle\$(GAME);$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
 USE_EAGLE_BIOS ?= 0
 ifeq ($(USE_EAGLE_BIOS),1)
 ROMPATH ?= $(REPO_WIN)\bios\test_roms;$(REPO_WIN)\roms
-BIOS := euro
+override BIOS = $(if $(filter aes,$(PLATFORM)),asia,euro)
 else
 ROMPATH ?= $(REPO_WIN)\roms
-BIOS ?= euro
+BIOS ?= $(if $(filter aes,$(PLATFORM)),asia,euro)
 endif
 ROM_DIR = roms\$(GAME)
 DUMP_DIR = dump\$(GAME)
 MAME_PLAYBACK ?= -noautoframeskip -frameskip 0
-MAME_COMMON=$(MAME) neogeo -rompath "$(ROMPATH)" -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME) $(MAME_PLAYBACK)
+MAME_COMMON=$(MAME) $(if $(filter aes,$(PLATFORM)),aes,neogeo) -rompath "$(ROMPATH)" -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME) $(MAME_PLAYBACK)
 LOG_CTX=@echo [neogeosdk] target=$@ game=$(GAME) game_id=$(GAME_ID) platform=$(PLATFORM) rom_dir=$(ROM_DIR) hashpath=$(HASHPATH)
 
 # PLATFORM: mvs (default) or aes
@@ -204,6 +206,7 @@ PLATFORM_CFLAGS=-DNG_AES=1
 endif
 
 .DEFAULT_GOAL := p1
+.NOTPARALLEL: all bios-package
 
 .PHONY: game-check
 game-check:
@@ -212,6 +215,17 @@ game-check:
 .PHONY: all
 all: game-check art sfix sound p1
 	$(LOG_CTX)
+
+.PHONY: eagle-bios bios-package
+eagle-bios:
+	$(PY) bios\tools\build.py --cc "$(CC)" --wlaz80 "$(WLAZ80)" --wlalink "$(WLALINK)" --install bios\test_roms
+
+ifeq ($(USE_EAGLE_BIOS),1)
+p1 test-precheck: eagle-bios
+endif
+
+bios-package: all hash eagle-bios
+	$(PY) bios\tools\build.py --no-build --game "$(GAME)" --game-id "$(GAME_ID)" --package "dist\$(GAME)-eagle-bios.zip"
 
 .PHONY: aes
 aes:
@@ -354,6 +368,9 @@ sound-all: sound
 .PHONY: sfix
 sfix: game-check
 	$(LOG_CTX)
+ifneq ($(strip $(GAME_ART_BUILDER)),)
+	$(PY) $(GAME_ART_BUILDER) --fix-only
+else
 	if not exist games\$(GAME)\artbox mkdir games\$(GAME)\artbox
 	cd games\$(GAME)\artbox && set ARTBOX_DATA_DIR=$(REPO_WIN)\games\$(GAME)\artbox&& set ARTBOX_INFIX_DIR=$(REPO_WIN)\games\$(or $(GAME_ART_FROM),$(GAME))\artbox\infix&& set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) $(REPO_WIN)\artbox\romdbfiximport.py && $(PY) $(REPO_WIN)\artbox\fixtiles.py && call $(REPO_WIN)\artbox\romfx.bat
 	$(PY) tools\verify_sfix_output.py --root "$(CURDIR)" --game "$(GAME)" --game-id "$(GAME_ID)"
@@ -364,6 +381,7 @@ sfix: game-check
 	copy /Y games\$(GAME)\artbox\$(GAME_ID)-s1.s1 $(ROM_DIR)\$(GAME_ID)-s1.s1
 	copy /Y games\$(GAME)\artbox\$(GAME_ID)-c1.c1 $(ROM_DIR)\$(GAME_ID)-c1.c1
 	copy /Y games\$(GAME)\artbox\$(GAME_ID)-c2.c2 $(ROM_DIR)\$(GAME_ID)-c2.c2
+endif
 
 .PHONY: srom
 srom: sfix
@@ -400,6 +418,9 @@ art-clean:
 # nearest-neighbour-against-global-palette path.
 art: game-check
 	$(LOG_CTX)
+ifneq ($(strip $(GAME_ART_BUILDER)),)
+	$(PY) $(GAME_ART_BUILDER)
+else
 	set ARTBOX_TILE=1&& set GAME_ID=$(GAME_ID)&& set GAME_ART_FROM=$(GAME_ART_FROM)&& call artbox\makeartbox.bat $(GAME)
 	$(PY) tools\verify_artbox_palettes.py --root "$(CURDIR)" --game "$(GAME)"
 	if exist artbox\assets.cfg del /Q artbox\assets.cfg
@@ -417,6 +438,7 @@ art: game-check
 	if exist artbox\screens.c del /Q artbox\screens.c
 	if exist artbox\sprite_meta.h del /Q artbox\sprite_meta.h
 	if exist artbox\__pycache__ rmdir /S /Q artbox\__pycache__
+endif
 
 # art-crt: same as `art` but exports ARTBOX_CRT=1 so romdbimgimport routes
 # screen conversions through artbox\img2neo_crt.py (CIE-Lab quantisation +
@@ -424,6 +446,9 @@ art: game-check
 .PHONY: art-crt
 art-crt: game-check
 	$(LOG_CTX)
+ifneq ($(strip $(GAME_ART_BUILDER)),)
+	$(PY) $(GAME_ART_BUILDER)
+else
 	set ARTBOX_CRT=1&& set GAME_ID=$(GAME_ID)&& set GAME_ART_FROM=$(GAME_ART_FROM)&& call artbox\makeartbox.bat $(GAME)
 	$(PY) tools\verify_artbox_palettes.py --root "$(CURDIR)" --game "$(GAME)"
 	if exist artbox\assets.cfg del /Q artbox\assets.cfg
@@ -441,6 +466,7 @@ art-crt: game-check
 	if exist artbox\screens.c del /Q artbox\screens.c
 	if exist artbox\sprite_meta.h del /Q artbox\sprite_meta.h
 	if exist artbox\__pycache__ rmdir /S /Q artbox\__pycache__
+endif
 
 .PHONY: dist
 dist: game-check all
@@ -533,18 +559,6 @@ test: game-check test-precheck hash
 .PHONY: test-precheck
 test-precheck: game-check
 	$(LOG_CTX)
-ifeq ($(USE_EAGLE_BIOS),1)
-	@if not exist $(REPO_WIN)\bios\test_roms\neogeo mkdir $(REPO_WIN)\bios\test_roms\neogeo
-	@if not exist $(REPO_WIN)\bios\test_roms\aes mkdir $(REPO_WIN)\bios\test_roms\aes
-	@copy /y $(REPO_WIN)\bios\sp-s2.sp1 $(REPO_WIN)\bios\test_roms\neogeo\ >nul 2>&1
-	@copy /y $(REPO_WIN)\bios\neo-epo.bin $(REPO_WIN)\bios\test_roms\aes\ >nul 2>&1
-	@copy /y $(REPO_WIN)\bios\sm1.sm1 $(REPO_WIN)\bios\test_roms\neogeo\ >nul 2>&1
-	@copy /y $(REPO_WIN)\bios\sm1.sm1 $(REPO_WIN)\bios\test_roms\aes\ >nul 2>&1
-	@copy /y $(REPO_WIN)\bios\sfix.sfix $(REPO_WIN)\bios\test_roms\neogeo\ >nul 2>&1
-	@copy /y $(REPO_WIN)\bios\sfix.sfix $(REPO_WIN)\bios\test_roms\aes\ >nul 2>&1
-	@copy /y $(REPO_WIN)\bios\000-lo.lo $(REPO_WIN)\bios\test_roms\neogeo\ >nul 2>&1
-	@copy /y $(REPO_WIN)\bios\000-lo.lo $(REPO_WIN)\bios\test_roms\aes\ >nul 2>&1
-endif
 	@if not exist $(ROM_DIR)\$(GAME_ID)-p1.p1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-p1.p1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
 	@if not exist $(ROM_DIR)\$(GAME_ID)-m1.m1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-m1.m1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
 	@if not exist $(ROM_DIR)\$(GAME_ID)-s1.s1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-s1.s1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
