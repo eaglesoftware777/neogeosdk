@@ -120,7 +120,7 @@ note=boss, imported at playfield size
 [016] npcs/opponent_boss_stealth_bomber.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-palette_slots=[31, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178]
+palette_slots=[31, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177]
 source=224x280 canvas=112x112 content=90x112 offset=(11,0)
 screen_id=16 palette_bank=31 tile_base=3840 reserved_last=4095 used_cols=7 used_rows=7 start_col=0 start_row=0 x_pad=11 y_pad=0 used_tiles=49 strips=7 active_rows=7
 note=boss, imported at playfield size
@@ -128,7 +128,7 @@ note=boss, imported at playfield size
 [017] npcs/opponent_boss_tank_fortress.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_bosses
 category=npcs
-palette_slots=[32, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193]
+palette_slots=[32, 178, 179, 180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192]
 source=176x280 canvas=112x112 content=70x112 offset=(21,0)
 screen_id=17 palette_bank=32 tile_base=4096 reserved_last=4351 used_cols=5 used_rows=7 start_col=1 start_row=0 x_pad=5 y_pad=0 used_tiles=35 strips=5 active_rows=7
 note=boss, imported at playfield size
@@ -136,7 +136,7 @@ note=boss, imported at playfield size
 [018] npcs/opponent_drone_red.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[33, 194, 195, 196]
+palette_slots=[33, 193, 194, 195]
 source=56x56 canvas=32x32 content=32x32 offset=(0,0)
 screen_id=18 palette_bank=33 tile_base=4352 reserved_last=4607 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
@@ -144,7 +144,7 @@ note=standard opponent, imported at playfield size
 [019] npcs/opponent_fighter_grayred.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[34, 197, 198, 199]
+palette_slots=[34, 196, 197, 198]
 source=128x144 canvas=32x32 content=28x32 offset=(2,0)
 screen_id=19 palette_bank=34 tile_base=4608 reserved_last=4863 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=2 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
@@ -152,7 +152,7 @@ note=standard opponent, imported at playfield size
 [020] npcs/opponent_heli_gunship.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[35, 200, 201]
+palette_slots=[35, 199]
 source=112x144 canvas=32x32 content=25x32 offset=(3,0)
 screen_id=20 palette_bank=35 tile_base=4864 reserved_last=5119 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=3 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
@@ -160,7 +160,7 @@ note=standard opponent, imported at playfield size
 [021] npcs/opponent_interceptor_blackgold.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[36, 202, 203]
+palette_slots=[36, 200, 201, 202]
 source=104x144 canvas=32x32 content=23x32 offset=(4,0)
 screen_id=21 palette_bank=36 tile_base=5120 reserved_last=5375 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=4 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
@@ -168,7 +168,7 @@ note=standard opponent, imported at playfield size
 [022] npcs/opponent_missile_boat.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[37, 204, 205, 206]
+palette_slots=[37, 203, 204, 205]
 source=72x160 canvas=32x32 content=14x32 offset=(9,0)
 screen_id=22 palette_bank=37 tile_base=5376 reserved_last=5631 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=9 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
@@ -176,7 +176,7 @@ note=standard opponent, imported at playfield size
 [023] npcs/opponent_shot_orb.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[38, 207, 208, 209]
+palette_slots=[38, 206, 207, 208]
 source=32x32 canvas=32x32 content=32x32 offset=(0,0)
 screen_id=23 palette_bank=38 tile_base=5632 reserved_last=5887 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
@@ -184,7 +184,7 @@ note=standard opponent, imported at playfield size
 [024] npcs/opponent_shot_ring.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[39, 210, 211, 212]
+palette_slots=[39, 209, 210, 211]
 source=40x40 canvas=32x32 content=32x32 offset=(0,0)
 screen_id=24 palette_bank=39 tile_base=5888 reserved_last=6143 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
@@ -192,7 +192,7 @@ note=standard opponent, imported at playfield size
 [025] npcs/opponent_tank_camo.png
 mode=sprite fit=pad anchor=bottom-center rule=cat_sky_opponents
 category=npcs
-palette_slots=[40, 213, 214, 215]
+palette_slots=[40, 212, 213, 214]
 source=80x120 canvas=32x32 content=21x32 offset=(5,0)
 screen_id=25 palette_bank=40 tile_base=6144 reserved_last=6399 used_cols=2 used_rows=2 start_col=0 start_row=0 x_pad=5 y_pad=0 used_tiles=4 strips=2 active_rows=2
 note=standard opponent, imported at playfield size
@@ -221,7 +221,7 @@ screen_id=28 palette_bank=43 tile_base=6912 reserved_last=7167 used_cols=1 used_
 [029] zzzz_terrain/background_open_sea.png
 mode=screen fit=crop anchor=center rule=sky_open_sea
 category=zzzz_terrain
-palette_slots=[44, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229, 230]
+palette_slots=[44, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228, 229]
 source=1024x1024 canvas=256x256 content=256x256 offset=(0,0)
 screen_id=29 palette_bank=44 tile_base=7168 reserved_last=7423 used_cols=16 used_rows=16 start_col=0 start_row=0 x_pad=0 y_pad=0 used_tiles=256 strips=16 active_rows=16
 note=extra terrain page appended after the pickups so earlier ids stay put
