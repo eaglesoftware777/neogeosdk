@@ -1,5 +1,7 @@
 # EagleBIOS
 
+**Eagle Software · Neo Geo SDK v1.7.1**
+
 An original system ROM set for Neo Geo hardware, built from source in this
 directory.  It boots the SDK's homebrew cartridges on an MVS arcade board
 and on an AES console without any vendor system ROM: the 68000 firmware,

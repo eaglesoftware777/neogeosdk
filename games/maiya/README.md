@@ -2,6 +2,7 @@
 
 An original six-valley side-scrolling adventure using the SDK's C 2D engine.
 Game name: `maiya`. Cartridge ID: `780`. The repository default remains `demo`.
+New in SDK v1.7.1.
 
 ## Build and Play
 
