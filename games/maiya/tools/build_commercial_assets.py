@@ -69,6 +69,7 @@ NPC_HEIGHT = 44
 TOOL_COLUMNS = 16
 TOOL_THORN0, TOOL_THORN1, TOOL_TRASH, TOOL_SPIT, TOOL_BOLT, TOOL_FIRE, TOOL_ICE, TOOL_OIL = range(8)
 TOOL_SPARK, TOOL_HEART, TOOL_ROSE, TOOL_PETAL, TOOL_LANE, TOOL_CURSOR, TOOL_DRIP, TOOL_LEAF = range(8, 16)
+TOOL_HALO, TOOL_DUST, TOOL_STAR = 16, 17, 18     # second row of the sheet
 
 
 def c_array(name, values, ctype="uint16_t"):
@@ -398,6 +399,30 @@ def draw_tools():
             if (i - 8) ** 2 / 5 + (j - 8) ** 2 / 2.2 <= 6 and (i + j) > 4:
                 leaf[i, j] = 4 if (i - j) % 4 else 5
 
+    # Second row: the halo she rises under, a puff of road dust, a star.
+    halo = cell(TOOL_HALO - TOOL_COLUMNS, 1)
+    for i in range(16):
+        for j in range(16):
+            d = ((j - 7.5) / 7.0) ** 2 + ((i - 7.5) / 3.2) ** 2
+            if 0.55 <= d <= 1.0:
+                halo[i, j] = 7 if i < 8 else 15
+
+    dust = cell(TOOL_DUST - TOOL_COLUMNS, 1)
+    for cx, cy, r in ((4, 11, 3.0), (9, 9, 3.6), (13, 12, 2.6)):
+        for i in range(16):
+            for j in range(16):
+                if (j - cx) ** 2 + (i - cy) ** 2 <= r * r:
+                    dust[i, j] = 1 if (i + j) % 3 else 8
+
+    star = cell(TOOL_STAR - TOOL_COLUMNS, 1)
+    for k in range(-5, 6):
+        star[7 + k, 7] = 7 if abs(k) < 3 else 1
+        star[7, 7 + k] = 7 if abs(k) < 3 else 1
+    for k in range(-2, 3):
+        star[7 + k, 7 + k] = 1
+        star[7 + k, 7 - k] = 1
+    star[7, 7] = 15
+
     return tool, colors
 
 
@@ -475,7 +500,19 @@ def build():
         env.crop((0, 0, 768, 336)),          # 3 Golden Autumn Grove
         env.crop((768, 683, 1536, 1019)),    # 4 Crystal Grotto
         sn.crop((45, 256, 630, 512)),        # 5 Ancient World Tree
+        None,                                # 6 Rio Negro Works, composed below
     ]
+
+    # The works: the old plant's furnaces and gantries stand over the swamp
+    # river's bank -- the painted factory for the far layer, the painted
+    # marsh water for the road.
+    works = np.asarray(sn.crop((600, 512, 1185, 768)).resize((512, 224), Image.Resampling.LANCZOS))
+    river = np.asarray(sn.crop((45, 256, 630, 512)).resize((512, 224), Image.Resampling.LANCZOS))
+    composed = works.copy()
+    composed[192:] = river[192:]
+    fade = np.linspace(0.0, 1.0, 12)[:, None, None]
+    composed[180:192] = (works[180:192] * (1 - fade) + river[180:192] * fade).astype(np.uint8)
+    panels[6] = Image.fromarray(composed)
 
     for i, panel in enumerate(panels):
         panel = np.asarray(panel.resize((512, 224), Image.Resampling.LANCZOS)).astype(np.float32)
@@ -491,17 +528,26 @@ def build():
         indices, palettes, assignments = quantize(panel, 16, None, dither="none")
         store(f"bg{i}", indices[:192], palettes, assignments[:12], panel[:192])
         store(f"ground{i}", indices[192:], palettes, assignments[12:], panel[192:])
-        header.append(c_array(f"mg_bg{i}_pal", [v for p in palettes for v in palette_words(p)]))
-        blighted = []
-        for p in palettes:
-            dark = np.asarray(p, dtype=np.uint8).copy()
-            dark[1:] = corrupt(dark[1:])
-            blighted.extend(palette_words(dark))
-        header.append(c_array(f"mg_bg{i}_blight_pal", blighted))
+        if i == 6:
+            healed = []
+            for p in palettes:
+                green = np.asarray(p, dtype=np.uint8).copy()
+                green[1:] = hsv_map(green[1:], lambda h, s, v: (h + (110.0 - h) * 0.35, min(1.0, s * 1.15), min(1.0, v * 1.08)))
+                healed.extend(palette_words(green))
+            header.append(c_array(f"mg_bg{i}_pal", healed))
+            header.append(c_array(f"mg_bg{i}_blight_pal", [v for p in palettes for v in palette_words(p)]))
+        else:
+            header.append(c_array(f"mg_bg{i}_pal", [v for p in palettes for v in palette_words(p)]))
+            blighted = []
+            for p in palettes:
+                dark = np.asarray(p, dtype=np.uint8).copy()
+                dark[1:] = corrupt(dark[1:])
+                blighted.extend(palette_words(dark))
+            header.append(c_array(f"mg_bg{i}_blight_pal", blighted))
         header.append(c_array(f"mg_bg{i}_map", assignments[:12].flatten() + 16, "uint8_t"))
         header.append(c_array(f"mg_ground{i}_map", assignments[12:].flatten() + 16, "uint8_t"))
         header.append(f"#define MG_BG{i}_BANKS {len(palettes)}u")
-        print(f"  Stage {i + 1}/6 compiled (512x224)", flush=True)
+        print(f"  Stage {i + 1}/7 compiled (512x224)", flush=True)
 
     print("== 2. Compiling Maiya Heroine Moveset ==", flush=True)
     m_img = Image.open(find_file("maiya_heroine*.jpg")).convert("RGB")
@@ -566,6 +612,21 @@ def build():
     sun_pal[1:] = hsv_map(hero_master, sun_tint)
     header.append(c_array("mg_hero_sun_pal", palette_words(sun_pal)))
 
+    # A second heroine to choose at the title: same sprites, a different
+    # girl.  Blonde and green becomes black-haired and blue -- classed by
+    # hue and saturation rather than by index, so it survives any future
+    # repaint of the source art.  Skin, the rose whip and outlines are left
+    # exactly as painted; only the hair and the dress move.
+    def alt_tint(h, s, v):
+        if 25.0 <= h <= 65.0 and s > 0.5:            # blonde hair -> near-black
+            return (250.0, min(1.0, s * 0.55), v * 0.30)
+        if 80.0 <= h <= 170.0:                        # green dress -> blue
+            return (226.0, min(1.0, s * 1.05), v)
+        return (h, s, v)
+    alt_pal = np.zeros((16, 3), dtype=np.uint8)
+    alt_pal[1:] = hsv_map(hero_master, alt_tint)
+    header.append(c_array("mg_hero_alt_pal", palette_words(alt_pal)))
+
     # Eagle (guardian sun bird)
     eagle_src = Image.open(find_file("iron_vulture*.jpg")).convert("RGB")
     eagle_frames = fit_group(eagle_src, {
@@ -625,6 +686,10 @@ def build():
         (95.0, 1.05, 1.02),     # 4 Autumn Grove: amber
         (-60.0, 0.55, 1.14),    # 5 Crystal Grotto: pale ice
         (150.0, 0.90, 0.82),    # 6 World Tree: blight violet
+        (40.0, 1.10, 0.78),     # 7 Rio Negro Works: rust and oil
+        (-110.0, 0.80, 0.98),   # 8 Sunken Reef: deep aqua
+        (170.0, 0.45, 1.05),    # 9 Silver Cave: pale cave violet
+        (60.0, 1.00, 1.10),     # 10 Golden Savanna: dusty tan
     ]
 
     for cname, spec in creatures.items():
@@ -679,12 +744,29 @@ def build():
         ("smoggar", "lord_smoggar*.jpg", "white", [(21, 12, 218, 301), (680, 290, 990, 560)]),
     ]
 
+    boss_masters = {}
     for bname, pattern, bg, boxes in boss_specs:
         b_img = Image.open(find_file(pattern)).convert("RGB")
         frames = fit_group(b_img, {str(k): box for k, box in enumerate(boxes)},
                            BOSS_CANVAS, BOSS_HEIGHT, bg_color=bg, normalize_extent=True)
-        shared_set(f"boss_{bname}", frames)
+        boss_masters[bname] = shared_set(f"boss_{bname}", frames)
         print(f"  Boss {bname} compiled (96x96, 2 frames)", flush=True)
+
+    # Three more valleys, three more guardians -- the same painted bodies in
+    # new colours rather than new source photos: an eel wearing the
+    # Leviathan's shape for the reef, a pale wyrm wearing the Toad's for the
+    # cave, a spotted hyena wearing the Jackal's for the savanna.
+    reused_boss_tint = [
+        ("eel", "leviathan", -70.0, 0.85, 1.05),
+        ("wyrm", "toad", 150.0, 0.70, 1.15),
+        ("hyena", "jackal", 25.0, 1.05, 1.00),
+    ]
+    for new_name, source, shift, sat, val in reused_boss_tint:
+        tinted = np.zeros((16, 3), dtype=np.uint8)
+        tinted[1:] = hsv_map(boss_masters[source], lambda h, s, v, _s=shift, _a=sat, _b=val:
+                             (h + _s, min(1.0, s * _a), min(1.0, v * _b)))
+        header.append(c_array(f"mg_boss_{new_name}_pal", palette_words(tinted)))
+        print(f"  Boss {new_name} recoloured from {source}", flush=True)
 
     print("== 6. Compiling Props, Hazards, Pickups and Decoration ==", flush=True)
     prop_boxes = {
@@ -729,7 +811,7 @@ def build():
 
     # The front plane: boulders and fronds that pass in front of the road.
     front = {"fern": nature_art.fern_frond()}
-    for gname in ("grass", "moss", "sand", "autumn", "snow", "bark"):
+    for gname in ("grass", "moss", "sand", "autumn", "snow", "bark", "rust"):
         front[f"stone_{gname}"] = nature_art.standing_stone(gname)
     shared_set("front", front)
     for k, name in enumerate(front.keys()):
@@ -739,7 +821,7 @@ def build():
     shared_set("gate", {"shut": nature_art.gate(False), "open": nature_art.gate(True)})
 
     # One ledge set per valley: left cap, middle, right cap.
-    for gname in ("grass", "moss", "sand", "autumn", "snow", "bark"):
+    for gname in ("grass", "moss", "sand", "autumn", "snow", "bark", "rust"):
         blocks = {str(k): nature_art.ledge_block(gname, k) for k in range(3)}
         shared_set(f"block_{gname}", blocks)
     print("  Props, pickups, decoration and ledges compiled", flush=True)
@@ -757,7 +839,8 @@ def build():
         ("SPIT", TOOL_SPIT), ("BOLT", TOOL_BOLT), ("FIRE", TOOL_FIRE), ("ICE", TOOL_ICE),
         ("OIL", TOOL_OIL), ("SPARK", TOOL_SPARK), ("HEART", TOOL_HEART), ("ROSE", TOOL_ROSE),
         ("PETAL", TOOL_PETAL), ("LANE", TOOL_LANE), ("CURSOR", TOOL_CURSOR),
-        ("DRIP", TOOL_DRIP), ("LEAF", TOOL_LEAF)
+        ("DRIP", TOOL_DRIP), ("LEAF", TOOL_LEAF),
+        ("HALO", TOOL_HALO), ("DUST", TOOL_DUST), ("STAR", TOOL_STAR)
     )
     for name, col in tool_names:
         header.append(f"#define MG_T_{name} {col}u")

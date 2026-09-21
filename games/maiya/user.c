@@ -9,10 +9,16 @@ https://github.com/eaglesoftware777/neogeosdk
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
 #include "sdk/bsp/bsp.h"
+#include "games/maiya/scenes/maiya_game.h"
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 
-#define NGO_START_FLAG  0xD00100
+#ifdef NG_AES
+/* AES has no MVS backup RAM. Keep its title latch in retained game RAM. */
+#define MAIYA_START_LATCH maiya_console_start
+#else
+#define MAIYA_START_LATCH NEO_REGISTER8(0xD00100)
+#endif
 
 /* Supplied by games/maiya/main.c.  NEOGEO_USER puts them in the section
  * the ROM link keeps; in plain .text they would be stripped before linking. */
@@ -80,8 +86,12 @@ void NEOGEO_USER USER(void) {
 void NEOGEO_USER PLAYER_START(void) {
     uint16_t start_flag = NEO_REGISTER8(BIOS_START_FLAG);
     uint16_t country_code = NEO_REGISTER8(BIOS_COUNTRY_CODE);
+    if (!(start_flag & 1u)) {
+        NEO_REGISTER8(BIOS_START_FLAG) = 0;
+        return;
+    }
     NEO_REGISTER8(BIOS_USER_MODE) = 2;
-    NEO_REGISTER8(NGO_START_FLAG) = 1;
+    MAIYA_START_LATCH = 1;
     NEO_REGISTER8(BIOS_PLAYER1_MODE) = 1;
     NEO_REGISTER8(BIOS_START_FLAG) = start_flag | 1;
     if ((start_flag >> 1) & 1)
@@ -103,7 +113,7 @@ void NEOGEO_USER COIN_SOUND(void) {
 }
 
 void NEOGEO_USER POWER_ON(void) {
-    NEO_REGISTER8(NGO_START_FLAG) = 0;
+    MAIYA_START_LATCH = 0;
     ASM_START
     ASM_MVB(#0x00,BIOS_USER_MODE)
     ASM_LEA(USER_WORKRAM+64,%%a0)
@@ -220,18 +230,18 @@ void NEOGEO_USER INIT_GAME(void) {
 
 void NEOGEO_USER GAME_DISPATCH(void) {
 #ifndef NG_AES
-    if (!NEO_REGISTER8(NGO_START_FLAG)) {
+    if (!MAIYA_START_LATCH) {
         NEO_REGISTER8(BIOS_USER_MODE) = 1;
         GAME_ATTRACT();
     }
-    if (NEO_REGISTER8(NGO_START_FLAG)) {
+    if (MAIYA_START_LATCH) {
         NEO_REGISTER8(BIOS_USER_MODE) = 2;
         START_GAME();
     }
 #else
     NEO_REGISTER8(BIOS_USER_MODE) = 1;
     GAME_ATTRACT();
-    if (NEO_REGISTER8(NGO_START_FLAG)) {
+    if (MAIYA_START_LATCH) {
         NEO_REGISTER8(BIOS_USER_MODE) = 2;
         START_GAME();
     }
@@ -242,13 +252,13 @@ void NEOGEO_USER DEMO_GAME(void)    { GAME_ATTRACT(); }
 
 /* A credit, or Start on a console, ends whatever the cabinet is showing. */
 static int NEOGEO_USER attract_interrupted(void) {
-    if (NEO_REGISTER8(NGO_START_FLAG)) return 1;
+    if (MAIYA_START_LATCH) return 1;
 #ifndef NG_AES
     return read_p1credit() > 0;
 #else
-    if (NEO_REGISTER8(BIOS_P1CHANGE) & 0x01) {
+    if (NEO_REGISTER8(BIOS_STATCHANGE) & 0x01) {
         NEO_REGISTER8(BIOS_USER_MODE) = 2;
-        NEO_REGISTER8(NGO_START_FLAG) = 1;
+        MAIYA_START_LATCH = 1;
         return 1;
     }
     return 0;
@@ -307,7 +317,7 @@ void NEOGEO_USER TITLE_WAIT(void) {
     clearFix(); clearSprs(); setBACKDROP(BLACK);
     maiya_title();
     for (i = 0; ; i++) {
-        if (NEO_REGISTER8(NGO_START_FLAG) || NEO_REGISTER8(BIOS_USER_MODE) == 2) break;
+        if (MAIYA_START_LATCH || NEO_REGISTER8(BIOS_USER_MODE) == 2) break;
 #ifndef NG_AES
         if (read_p1credit() > 0) {
             char timer[10];
@@ -320,9 +330,10 @@ void NEOGEO_USER TITLE_WAIT(void) {
             fixtext_out(16, 27, timer, 3);
             if ((i >> 4) & 1) fixtext_out(13, 25, "PUSH 1P START", 1);
             else fixtext_out(13, 25, "             ", 1);
+            maiya_title_frame();   /* Left/Right picks who answers the call */
             if (auto_frames > 0) auto_frames--;
             else {
-                NEO_REGISTER8(NGO_START_FLAG) = 1;
+                MAIYA_START_LATCH = 1;
                 NEO_REGISTER8(BIOS_USER_MODE) = 2;
                 break;
             }
@@ -331,7 +342,9 @@ void NEOGEO_USER TITLE_WAIT(void) {
             fixtext_out(13, 25, "             ", 0);
         }
 #else
-        break;
+        fixtext_out(14, 25, "PUSH START", 1);
+        maiya_title_frame();
+        if (attract_interrupted()) break;
 #endif
         waitVbl();
     }
@@ -341,6 +354,7 @@ void NEOGEO_USER TITLE_WAIT(void) {
  * When the session ends the loop returns and the BIOS restarts the attract. */
 void NEOGEO_USER START_GAME(void) {
     NEO_REGISTER8(BIOS_USER_MODE) = 2;
+    NEO_REGISTER8(BIOS_PLAYER1_MODE) = 1;
     clearFix();
     clearSprs();
     game_boot();
@@ -350,7 +364,8 @@ void NEOGEO_USER START_GAME(void) {
         if (maiya_session_over()) break;
     }
     soundStopAll();
-    NEO_REGISTER8(NGO_START_FLAG) = 0;
+    MAIYA_START_LATCH = 0;
+    NEO_REGISTER8(BIOS_PLAYER1_MODE) = 3;
     NEO_REGISTER8(BIOS_USER_MODE) = 1;
 }
 #pragma GCC pop_options
