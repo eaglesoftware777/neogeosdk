@@ -396,3 +396,35 @@ and one drum cue over a matching seven-bar phrase at 112 BPM.
 Chapter 24 (`SKY LANCE`) drives a pure-SSG mix under gameplay, with every
 Z80 command spaced by `waitVbl()` so multi-step setup applies cleanly. See
 [`DEMO_CHAPTERS.md`](./DEMO_CHAPTERS.md).
+
+## 7. Looping a scene track
+
+`soundPlayGameLoop()` resets the driver before it starts an ADPCM-B track,
+and that reset clears the repeat flag along with the sequence clocks.  A
+`soundSetADPCMBLoop(1)` issued *before* the call is therefore lost, and the
+track plays once and stops.  The flag is latched when a track starts, so the
+order that loops is: reset, set the repeat flag, then start the track:
+
+```c
+isZ80Ready(); soundSceneReset();
+isZ80Ready(); soundApplyMix(0x40, 0xB8, 0x00, 0x00);
+isZ80Ready(); soundSetADPCMBLoop(1);
+isZ80Ready(); playSFXB(SOUND_TRACK_B);
+```
+
+Maiya wraps exactly this in one routine and names its tracks directly rather
+than through the eight-slot pool.
+
+## 8. Audio credits
+
+Every game carries its own sound bank; the demo's is original synthesized
+material and the SDK never shares a bank between games.
+
+**Juhani Junkala** released *The Essential Retro Video Game Sound Effects
+Collection*, the *Retro Game Music Pack* and *Chiptune Adventures* under the
+CC0 public-domain dedication.  Maiya: Super Nature Girl uses sixteen of his
+effects and nine of his tracks, converted for the YM2610; the file-by-file
+list is in `games/maiya/sound/SOURCES.md`.  His generosity is what lets an
+open SDK ship a game that sounds like an arcade cabinet, and it is
+acknowledged here with thanks.
+
