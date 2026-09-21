@@ -76,6 +76,8 @@ enum {
     PAL_TOOL = 12, PAL_PORTRAIT = 41, PAL_DECOR = 14, PAL_PROP = 15,
     PAL_ITEM = 32, PAL_NPC = 33, PAL_GATE = 35, PAL_TRINKET = 36,
     PAL_FRONT = 37, PAL_BG = 16,
+    /* HP bar tiers: bank 13 and 43 are otherwise unused. */
+    PAL_HP_HI = 13, PAL_HP_MID = 43,
 
     /* Character kinds. */
     K_PLAYER = 0, K_ENEMY = 1, K_BOSS = 2, K_ALLY = 3, K_EAGLE = 4,
@@ -93,8 +95,10 @@ enum {
     WALK_ACCEL = 112,    /* she leans into a run instead of snapping to it */
     WALK_BRAKE = 96,
     MAX_HP = 5, MAX_LIVES = 7, MAX_ART = 3,
+    MG_BOSS_BAR_WIDTH = 20, MG_BOSS_BAR_COL = 12, MG_BOSS_BAR_LABEL_COL = 7,
 
-    /* FIX rows: 2..29 are visible (8 px each). */
+    /* FIX rows: 2..29 are visible (8 px each). ROW_POWER was reserved but
+     * never used until the boss HP bar took it. */
     ROW_SCORE = 2, ROW_LIVES = 4, ROW_POWER = 5, ROW_HINT = 7, ROW_CARD = 8,
 
     /* HUD glyphs written into the low FIX codes by build_fix_assets.py. */
@@ -241,10 +245,12 @@ static void NEOGEO_USER mg_ink(uint8_t bank, uint16_t ink)
 
 static void NEOGEO_USER mg_ui_palettes(void)
 {
-    mg_ink(PAL_TEXT, 0x7FFFu);   /* white  */
-    mg_ink(PAL_GOLD, 0x6FE0u);   /* gold   */
-    mg_ink(PAL_WARN, 0x4F44u);   /* red    */
-    mg_ink(PAL_SKY,  0x39FFu);   /* cyan   */
+    mg_ink(PAL_TEXT,   0x7FFFu);   /* white          */
+    mg_ink(PAL_GOLD,   0x6FE0u);   /* gold           */
+    mg_ink(PAL_WARN,   0x4F44u);   /* red            */
+    mg_ink(PAL_SKY,    0x39FFu);   /* cyan           */
+    mg_ink(PAL_HP_HI,  0xA4F6u);   /* fluorescent green: full/high HP */
+    mg_ink(PAL_HP_MID, 0x6FB2u);   /* amber: medium HP                */
 }
 
 static void NEOGEO_USER mg_centre(uint8_t y, const char *text, uint8_t pal)
@@ -354,6 +360,12 @@ static void NEOGEO_USER mg_background(uint8_t id, uint8_t restored)
 
     for (i = 0; i < count; i++) mg_palette((uint8_t)(PAL_BG + i), pal + i * 16u);
 
+    /* The sky only breathes with sunlight once the valley is actually
+     * cleansed -- a slow brightness pulse on the farthest background bank.
+     * Blighted valleys stay flat and dead by contrast; scene setup already
+     * resets every palette FX slot, so nothing needs stopping here. */
+    if (restored) ng_palfx_pulse(PAL_BG, pal, 90u);
+
     ng_sprite_group_init(&mg.far, SLOT_FAR, 32, 12, far_tile, PAL_BG);
     ng_sprite_group_set_palette_map(&mg.far, far_map);
     ng_sprite_group_set_pos(&mg.far, 0, 0);
@@ -363,6 +375,28 @@ static void NEOGEO_USER mg_background(uint8_t id, uint8_t restored)
     ng_sprite_group_set_palette_map(&mg.road, road_map);
     ng_sprite_group_set_pos(&mg.road, 0, MG_GROUND_Y);
     ng_sprite_group_upload(&mg.road);
+}
+
+/* Waterfall shimmer.  The "fall" decor tile paints its curtain in exactly
+ * two dedicated palette slots (water, water-light -- NATURE indices 14/15),
+ * which nothing else in the shared decor palette touches, so swapping just
+ * those two every few frames reads as flowing water without recolouring
+ * any other scenery sharing PAL_DECOR. Cheap enough to leave running every
+ * scene; it is invisible wherever no falls decor is actually placed. */
+static void NEOGEO_USER mg_animate_water(void)
+{
+    static uint8_t phase = 0;
+    if ((mg.tick & 7u) == 0u) {
+        uint16_t buf[16];
+        uint8_t i;
+        phase ^= 1;
+        for (i = 0; i < 16; i++) buf[i] = mg_decor_pal[i];
+        if (phase) {
+            buf[14] = mg_decor_pal[15];
+            buf[15] = mg_decor_pal[14];
+        }
+        mg_palette(PAL_DECOR, buf);
+    }
 }
 
 static void NEOGEO_USER mg_scroll_scenery(int16_t camera_x)
@@ -1146,6 +1180,7 @@ static void NEOGEO_USER mg_boss_damage(uint8_t damage)
             }
         }
         b->hp = 0;
+        mg.hud_dirty = 1;
         mg.state = MG_CLEAR;
         mg.state_timer = 220;
         mg.clear_bonus = (uint16_t)(2000u + mg.stage * 1000u + (mg.player->hp * 200u));
@@ -1159,6 +1194,7 @@ static void NEOGEO_USER mg_boss_damage(uint8_t damage)
         mg_centre(ROW_CARD + 4, "THE BLIGHT IS CLEANSED", PAL_SKY);
     } else {
         b->hp -= damage;
+        mg.hud_dirty = 1;
     }
 }
 
@@ -1424,7 +1460,12 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
 
     waitVbl();
     mg_hud_static();
-    mg_draw_lives();
+    /* The bar, tray and key icon otherwise stay blank until something later
+     * flips hud_dirty (damage, a pickup, a power-up expiring) -- drawing
+     * them here means the HUD is fully correct from frame 1 of every scene,
+     * not just eventually. */
+    mg_update_hud();
+    mg.hud_dirty = 0;
     {
         char stage_msg[32];
         uint8_t k = 0;
@@ -2508,20 +2549,57 @@ static void NEOGEO_USER mg_draw_lives(void)
 
 /* Her health bar, beside "HP" at the top left: a solid run of blocks that
  * shrinks from the right as she takes damage, instead of hearts winking out
- * one by one. Red once she is down to her last hit. */
+ * one by one. It reads as a clear green -> amber -> red gradient instead of
+ * a single flat colour, so the exact point it turns dangerous is obvious at
+ * a glance rather than only at the very last hit. */
 static void NEOGEO_USER mg_draw_hp_bar(void)
 {
     uint8_t hp = mg.player ? mg.player->hp : 0;
-    uint8_t pal = (uint8_t)(hp <= 1 ? PAL_WARN : PAL_GOLD);
+    uint8_t pal = (uint8_t)(hp <= 1 ? PAL_WARN : (hp <= 3 ? PAL_HP_MID : PAL_HP_HI));
     uint8_t i;
     for (i = 0; i < MAX_HP; i++) {
         ng_fix_putc((uint8_t)(10 + i), 1, (char)(i < hp ? GLYPH_BLOCK : ' '), pal);
     }
 }
 
+/* The guardian's health, top centre, only while the arena fight is on: a
+ * proportional bar (the boss_hp scale differs per guardian, so a fixed
+ * block-per-point count like her own bar would not read consistently)
+ * using the same green -> amber -> red language as her HP bar, so a hit
+ * that matters reads the same way regardless of which guardian it is. It
+ * clears itself the moment the fight ends, instead of leaving a stale bar
+ * up through the victory card. */
+static void NEOGEO_USER mg_draw_boss_bar(void)
+{
+    static uint8_t shown = 0;
+    if (!mg.boss_active || !mg.boss || !mg.boss->max_hp) {
+        if (shown) {
+            ng_fix_clear_rect(0, ROW_POWER, 40, 1, PAL_TEXT);
+            shown = 0;
+        }
+        return;
+    }
+    if (!shown) {
+        ng_fix_puts(MG_BOSS_BAR_LABEL_COL, ROW_POWER, "BOSS", PAL_WARN);
+        shown = 1;
+    }
+    {
+        uint8_t hp = mg.boss->hp, max = mg.boss->max_hp;
+        uint8_t filled = (uint8_t)(((uint16_t)hp * MG_BOSS_BAR_WIDTH + max / 2) / max);
+        uint8_t pal = (uint8_t)(filled * 3 <= MG_BOSS_BAR_WIDTH ? PAL_WARN
+                      : (filled * 3 <= MG_BOSS_BAR_WIDTH * 2 ? PAL_HP_MID : PAL_HP_HI));
+        uint8_t i;
+        for (i = 0; i < MG_BOSS_BAR_WIDTH; i++) {
+            ng_fix_putc((uint8_t)(MG_BOSS_BAR_COL + i), ROW_POWER,
+                        (char)(i < filled ? GLYPH_BLOCK : ' '), pal);
+        }
+    }
+}
+
 static void NEOGEO_USER mg_update_hud(void)
 {
     mg_draw_hp_bar();
+    mg_draw_boss_bar();
     ng_sprite_group_set_visible(&mg.hud[9], mg.has_key && !mg.gate_unlocked);
     ng_sprite_group_flush(&mg.hud[9]);
     mg_number(28, ROW_SCORE, mg.score, 6, PAL_TEXT);
@@ -2888,6 +2966,7 @@ void NEOGEO_USER maiya_frame(void)
 {
     mg.tick++;
     if (!mg.player) return;
+    mg_animate_water();
 
     if (mg.state == MG_INTRO) {
         /* Mission card: the world is live behind it, any button skips. */
