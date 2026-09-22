@@ -24,7 +24,7 @@ int main(void)
             const MGEncounter *e = &level->encounters[j];
             if (!e->x) continue;
             assert(e->x < level->width);
-            assert(e->type <= MG_E_PAIR);
+            assert(e->type <= MG_E_SPOREGOB);
             if (j) assert(e->x > level->encounters[j - 1].x);
         }
         for (j = 0; j < MG_ARCHER_COUNT; j++) {
@@ -41,7 +41,7 @@ int main(void)
             const MGHazard *h = &level->hazards[j];
             if (!h->width) continue;
             assert(h->width % 16 == 0 && h->width <= 64);
-            assert(h->type >= MG_H_FIRE && h->type <= MG_H_SLUDGE);
+            assert(h->type >= MG_H_FIRE && h->type <= MG_H_TOXIC);
             assert(h->x + h->width < level->width - 320);
         }
         assert(level->rescue_x[0] < level->width / 2);
