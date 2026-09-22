@@ -170,6 +170,9 @@ def write_launchers(target_root, game):
     sh_path = target_root / f"run_{game}.sh"
     bat_path = target_root / f"run_{game}.bat"
 
+    # target_root is always a subfolder of the chosen MAME install (see
+    # install_game), so the mame/mame64 binary one level up is preferred
+    # over relying on PATH -- most Windows users never add MAME to PATH.
     with open(sh_path, "w", encoding="ascii", newline="\n") as f:
         f.write(
             "#!/bin/sh\n"
@@ -177,7 +180,10 @@ def write_launchers(target_root, game):
             'HERE="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"\n'
             'PLATFORM="${1:-mvs}"\n'
             'if [ "$PLATFORM" = "aes" ]; then DRIVER=aes; BIOS=asia; else DRIVER=neogeo; BIOS=euro; fi\n'
-            f'exec mame "$DRIVER" -rompath "$HERE/roms" -hashpath "$HERE/hash/{game}" '
+            'MAME_EXE="mame"\n'
+            'if [ -x "$HERE/../mame" ]; then MAME_EXE="$HERE/../mame"; '
+            'elif [ -x "$HERE/../mame64" ]; then MAME_EXE="$HERE/../mame64"; fi\n'
+            f'exec "$MAME_EXE" "$DRIVER" -rompath "$HERE/roms" -hashpath "$HERE/hash/{game}" '
             f'-bios "$BIOS" -cart1 {game}\n'
         )
     sh_path.chmod(0o755)
@@ -190,7 +196,10 @@ def write_launchers(target_root, game):
             'set "PLATFORM=%~1"\n'
             'if "%PLATFORM%"=="" set "PLATFORM=mvs"\n'
             'if /I "%PLATFORM%"=="aes" (set DRIVER=aes& set BIOS=asia) else (set DRIVER=neogeo& set BIOS=euro)\n'
-            f'mame %DRIVER% -rompath "%HERE%roms" -hashpath "%HERE%hash\\{game}" '
+            'set "MAME_EXE=mame"\n'
+            'if exist "%HERE%..\\mame.exe" set "MAME_EXE=%HERE%..\\mame.exe"\n'
+            'if not exist "%HERE%..\\mame.exe" if exist "%HERE%..\\mame64.exe" set "MAME_EXE=%HERE%..\\mame64.exe"\n'
+            f'"%MAME_EXE%" %DRIVER% -rompath "%HERE%roms" -hashpath "%HERE%hash\\{game}" '
             f'-bios %BIOS% -cart1 {game}\n'
         )
     (target_root / "README.txt").write_text(
@@ -198,11 +207,14 @@ def write_launchers(target_root, game):
         f"Run '{game}' directly with:\n"
         f"    run_{game}.sh          (Linux/macOS, MVS)\n"
         f"    run_{game}.sh aes      (Linux/macOS, AES)\n"
-        f"    run_{game}.bat         (Windows, MVS)\n"
+        f"    run_{game}.bat         (Windows, MVS -- double-click it)\n"
         f"    run_{game}.bat aes     (Windows, AES)\n\n"
-        "Or call MAME yourself:\n"
-        f"    mame neogeo -rompath roms -hashpath hash/{game} -bios euro -cart1 {game}\n"
-        f"    mame aes    -rompath roms -hashpath hash/{game} -bios asia -cart1 {game}\n\n"
+        "Those scripts find mame/mame.exe automatically in the folder one\n"
+        "level up (where this neogeosdk/ folder was installed) -- MAME does\n"
+        "not need to be on PATH. To call MAME yourself instead, from this\n"
+        "MAME installation's own folder:\n"
+        f"    mame neogeo -rompath neogeosdk/roms -hashpath neogeosdk/hash/{game} -bios euro -cart1 {game}\n"
+        f"    mame aes    -rompath neogeosdk/roms -hashpath neogeosdk/hash/{game} -bios asia -cart1 {game}\n\n"
         "Emulator checksum warnings are expected for replacement system firmware.\n",
         encoding="utf-8",
     )
