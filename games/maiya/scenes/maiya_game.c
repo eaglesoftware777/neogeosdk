@@ -1750,18 +1750,42 @@ void NEOGEO_USER maiya_eyecatcher(void)
 static NGSpriteGroup mg_chooser_face;
 static uint8_t mg_chooser_pick;
 
+/* Two fixed slots, left for Maiya and right for Luna, each wide enough
+ * that the name label and the 32px face portrait share a visual centre
+ * instead of the portrait sitting well to the left of whichever name is
+ * lit (as the original 78/154 sprite positions did against text columns
+ * 13/22 -- off by roughly 30px and 22px). The portrait also moves up
+ * above the instruction line instead of overlapping it. */
+#define MG_CHOOSER_LEFT_COL   9   /* "MAIYA" spans cols 9-13 */
+#define MG_CHOOSER_RIGHT_COL  27  /* "LUNA" spans cols 27-30 */
+#define MG_CHOOSER_FACE_ROW   13  /* 4 fix rows tall (32px) */
+#define MG_CHOOSER_NAME_ROW   18
+#define MG_CHOOSER_HINT_ROW   21
+/* 32px-wide portrait centred under each name's own text midpoint (cols
+ * 9-13 -> pixel centre 92; cols 27-30 -> pixel centre 232), not the raw
+ * column * 8 the name starts at. */
+#define MG_CHOOSER_LEFT_FACE_X   76
+#define MG_CHOOSER_RIGHT_FACE_X  216
+
 static void NEOGEO_USER mg_draw_chooser(void)
 {
-    ng_fix_clear_rect(9, 21, 22, 3, PAL_TEXT);
-    ng_fix_puts(9, 21, "CHOOSE YOUR GUARDIAN", PAL_GOLD);
-    ng_fix_puts(11, 22, mg_chooser_pick == 0 ? ">" : " ", PAL_GOLD);
-    ng_fix_puts(13, 22, "MAIYA", mg_chooser_pick == 0 ? PAL_GOLD : PAL_TEXT);
-    ng_fix_puts(20, 22, mg_chooser_pick == 1 ? ">" : " ", PAL_GOLD);
-    ng_fix_puts(22, 22, "LUNA", mg_chooser_pick == 1 ? PAL_GOLD : PAL_TEXT);
-    ng_fix_puts(9, 23, "LEFT / RIGHT, THEN START", PAL_SKY);
+    ng_fix_clear_rect(0, MG_CHOOSER_NAME_ROW, 40, 1, PAL_TEXT);
+    ng_fix_puts(10, 10, "CHOOSE YOUR GUARDIAN", PAL_GOLD);
+    ng_fix_puts(MG_CHOOSER_LEFT_COL - 2, MG_CHOOSER_NAME_ROW,
+                mg_chooser_pick == 0 ? ">" : " ", PAL_GOLD);
+    ng_fix_puts(MG_CHOOSER_LEFT_COL, MG_CHOOSER_NAME_ROW, "MAIYA",
+                mg_chooser_pick == 0 ? PAL_GOLD : PAL_TEXT);
+    ng_fix_puts(MG_CHOOSER_RIGHT_COL - 1, MG_CHOOSER_NAME_ROW,
+                mg_chooser_pick == 1 ? ">" : " ", PAL_GOLD);
+    ng_fix_puts(MG_CHOOSER_RIGHT_COL, MG_CHOOSER_NAME_ROW, "LUNA",
+                mg_chooser_pick == 1 ? PAL_GOLD : PAL_TEXT);
+    ng_fix_puts(8, MG_CHOOSER_HINT_ROW, "LEFT / RIGHT, THEN START", PAL_SKY);
 
-    mg_palette(PAL_HERO, mg_chooser_pick ? mg_hero_alt_pal : mg_hero_pal);
-    ng_sprite_group_set_pos(&mg_chooser_face, mg_chooser_pick == 0 ? 78 : 154, 172);
+    mg_hero_palette(mg_chooser_pick ? mg_hero_alt_pal : mg_hero_pal,
+                    mg_chooser_pick ? mg_hero_hair_alt_pal : mg_hero_hair_pal);
+    ng_sprite_group_set_pos(&mg_chooser_face,
+        mg_chooser_pick == 0 ? MG_CHOOSER_LEFT_FACE_X : MG_CHOOSER_RIGHT_FACE_X,
+        MG_CHOOSER_FACE_ROW * 8);
     ng_sprite_group_flush(&mg_chooser_face);
 }
 
