@@ -71,11 +71,6 @@ enum {
     /* Palette banks. */
     PAL_TEXT = 0, PAL_GOLD = 1, PAL_WARN = 2, PAL_SKY = 3,
     PAL_HERO = 4, PAL_ENEMY0 = 5, PAL_ENEMY1 = 6, PAL_ENEMY2 = 7,
-    /* Her hair, a second bank so a costume can recolour it without also
-     * recolouring skin/dress/boots -- see mg_hero_map. Bank 31 rather than
-     * PAL_HERO+1: 5-7 are already the enemy banks, live on screen with her
-     * at the same time. */
-    PAL_HERO2 = 31,
     PAL_ENEMY3 = 38, PAL_ENEMY4 = 39, PAL_ENEMY5 = 40,
     PAL_BOSS = 8, PAL_ALLY = 9, PAL_BLOCK = 10, PAL_EAGLE = 11,
     PAL_TOOL = 12, PAL_PORTRAIT = 41, PAL_DECOR = 14, PAL_PROP = 15,
@@ -326,20 +321,6 @@ static const uint16_t *NEOGEO_USER mg_hero_normal_pal(void)
     return mg.hero_choice ? mg_hero_alt_pal : mg_hero_pal;
 }
 
-/* Hair-bank counterpart of mg_hero_normal_pal() -- see PAL_HERO2. */
-static const uint16_t *NEOGEO_USER mg_hero_hair_normal_pal(void)
-{
-    return mg.hero_choice ? mg_hero_hair_alt_pal : mg_hero_hair_pal;
-}
-
-/* Loads both of her sprite's palette banks together, since PAL_HERO
- * (skin/dress/boots) and PAL_HERO2 (hair) always change in the same pairs:
- * normal <-> normal, sun form <-> sun form, Maiya <-> Luna. */
-static void NEOGEO_USER mg_hero_palette(const uint16_t *body, const uint16_t *hair)
-{
-    mg_palette(PAL_HERO, body);
-    mg_palette(PAL_HERO2, hair);
-}
 
 static void NEOGEO_USER mg_music(uint8_t track)
 {
@@ -943,18 +924,7 @@ static void NEOGEO_USER mg_frame(NGCharacter *c, uint8_t frame, uint8_t flip)
         const uint16_t *at = mg_ally_tiles(c->data0);
         tile = at[frame % 2u];
     } else {
-        uint8_t f = (uint8_t)(frame % MG_HERO_FRAMES);
-        tile = mg_hero_tiles[f];
-        /* Her sprite is split across two palette banks (PAL_HERO for
-         * skin/dress/boots, PAL_HERO2 for hair) so a costume can recolour
-         * just the hair -- see mg_hero_map in maiya_assets.h. Every frame
-         * has its own map, since which 16x16 tiles are "hair" moves with
-         * her pose. Called every tick regardless of whether the tile
-         * changed: ng_char_set_sprite() zeroes the map on (re)creation,
-         * and ng_char_set_palette_map() already no-ops when the pointer
-         * is unchanged, so this costs nothing once she's settled on a
-         * frame. */
-        ng_char_set_palette_map(c, &mg_hero_map[(uint16_t)f * (HERO_STRIPS * HERO_ROWS)]);
+        tile = mg_hero_tiles[frame % MG_HERO_FRAMES];
     }
 
     if (c->sprite_tile != tile || c->flip_x != flip) {
@@ -1339,7 +1309,7 @@ static void NEOGEO_USER mg_secret_art(void)
      * made it hard to tell what had actually happened.
      */
     mg.flash = 12;                 /* her colours lift, and come straight back */
-    mg_hero_palette(mg_hero_sun_pal, mg_hero_hair_sun_pal);
+    mg_palette(PAL_HERO, mg_hero_sun_pal);
     mg.attack = 22;
     mg.shake = 24;
     mg.art_wave = 24;              /* the second wave follows the first */
@@ -1419,7 +1389,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     ng_physics_add_solid(0, MG_GROUND_Y, (int16_t)level->width, 32, 0);
 
     /* Load entity palettes.  The creatures wear this valley's colours. */
-    mg_hero_palette(mg_hero_normal_pal(), mg_hero_hair_normal_pal());
+    mg_palette(PAL_HERO, mg_hero_normal_pal());
     {
         uint16_t tint = (uint16_t)(stage * 16u);
         mg_palette(PAL_ENEMY0, mg_slime_valley_pal + tint);
@@ -1781,8 +1751,7 @@ static void NEOGEO_USER mg_draw_chooser(void)
                 mg_chooser_pick == 1 ? PAL_GOLD : PAL_TEXT);
     ng_fix_puts(8, MG_CHOOSER_HINT_ROW, "LEFT / RIGHT, THEN START", PAL_SKY);
 
-    mg_hero_palette(mg_chooser_pick ? mg_hero_alt_pal : mg_hero_pal,
-                    mg_chooser_pick ? mg_hero_hair_alt_pal : mg_hero_hair_pal);
+    mg_palette(PAL_HERO, mg_chooser_pick ? mg_hero_alt_pal : mg_hero_pal);
     ng_sprite_group_set_pos(&mg_chooser_face,
         mg_chooser_pick == 0 ? MG_CHOOSER_LEFT_FACE_X : MG_CHOOSER_RIGHT_FACE_X,
         MG_CHOOSER_FACE_ROW * 8);
@@ -1864,6 +1833,37 @@ static void NEOGEO_USER mg_show_how_to_play(void)
 }
 
 /*
+ * The story, told once, between the control reminder and the first
+ * mission -- so a run opens on why she's walking into the forest, not
+ * straight onto a health bar with no context.
+ */
+static void NEOGEO_USER mg_show_intro_story(void)
+{
+    uint8_t i;
+    uint16_t joy;
+
+    ng_fix_clear();
+    mg_centre(7,  "A BLIGHT HAS FALLEN ON THE VALLEYS", PAL_WARN);
+    mg_centre(9,  "THE RIVERS RUN GREY.", PAL_TEXT);
+    mg_centre(10, "THE GROVES FALL SILENT.", PAL_TEXT);
+    mg_centre(13, "ONLY THE GOLDEN SUN KEY CAN SEAL", PAL_TEXT);
+    mg_centre(14, "EACH GUARDIAN'S POISONED GATE.", PAL_TEXT);
+    mg_centre(17, "MAIYA, DAUGHTER OF THE FOREST,", PAL_SKY);
+    mg_centre(18, "RISES TO CLEANSE THE LAND.", PAL_SKY);
+    mg_centre(22, "PRESS ANY BUTTON TO BEGIN", PAL_GOLD);
+
+    poll_joystick_edge();
+    for (i = 0; i < 20; i++) { waitVbl(); poll_joystick_edge(); }
+
+    for (;;) {
+        waitVbl();
+        joy = poll_joystick_edge();
+        if (joy & (BUTTON_A | BUTTON_B | BUTTON_C | BUTTON_D | START1 | START2)) break;
+    }
+    ng_fix_clear();
+}
+
+/*
  * The dedicated "CHOOSE YOUR GUARDIAN" screen: shown once, after Start is
  * pressed, not layered over the coin-insert prompt, and not over the
  * title's own logo art either -- her own screen, nothing else on it.
@@ -1912,8 +1912,10 @@ void NEOGEO_USER maiya_hero_select(void)
         }
     }
     ng_sprite_group_set_visible(&mg_chooser_face, 0);
+    ng_sprite_group_flush(&mg_chooser_face);
     ng_fix_clear();
     mg_show_how_to_play();
+    mg_show_intro_story();
 }
 
 /* ------------------------------------------------------------------ */
@@ -2746,12 +2748,11 @@ static void NEOGEO_USER mg_update_entities(void)
             uint8_t lit = (uint8_t)((mg.hurt & 8) != 0);
             if (lit != mg.hurt_lit) {
                 mg.hurt_lit = lit;
-                if (lit) mg_hero_palette(mg_hero_sun_pal, mg_hero_hair_sun_pal);
-                else mg_hero_palette(mg_hero_normal_pal(), mg_hero_hair_normal_pal());
+                mg_palette(PAL_HERO, lit ? mg_hero_sun_pal : mg_hero_normal_pal());
             }
         } else if (mg.hurt_lit) {
             mg.hurt_lit = 0;
-            mg_hero_palette(mg_hero_normal_pal(), mg_hero_hair_normal_pal());
+            mg_palette(PAL_HERO, mg_hero_normal_pal());
         }
     } else if (mg.veil) {
         /* The mist veil: she fades in and out slowly, on purpose. */
@@ -2764,7 +2765,7 @@ static void NEOGEO_USER mg_update_entities(void)
     if (mg.veil && --mg.veil == 0) mg.hud_dirty = 1;
     if (mg.spring && --mg.spring == 0) mg.hud_dirty = 1;
     if (mg.crown && --mg.crown == 0) mg.hud_dirty = 1;
-    if (mg.flash && --mg.flash == 0) mg_hero_palette(mg_hero_normal_pal(), mg_hero_hair_normal_pal());
+    if (mg.flash && --mg.flash == 0) mg_palette(PAL_HERO, mg_hero_normal_pal());
     if (mg.art_wave && --mg.art_wave == 0) mg_petal_sweep(1);
 }
 
@@ -2824,14 +2825,22 @@ static void NEOGEO_USER mg_draw_lives(void)
  * shrinks from the right as she takes damage, instead of hearts winking out
  * one by one. It reads as a clear green -> amber -> red gradient instead of
  * a single flat colour, so the exact point it turns dangerous is obvious at
- * a glance rather than only at the very last hit. */
+ * a glance rather than only at the very last hit.
+ *
+ * Missing HP is drawn as a dim dot rather than left blank: a bar that's
+ * just "GLYPH GLYPH space space space" reads as broken HUD as easily as it
+ * reads as half health, since blank fix cells are indistinguishable from
+ * "nothing drawn here." A dot keeps the five-slot container always
+ * visible, so a glance says both how much she has and how much she can
+ * ever have. */
 static void NEOGEO_USER mg_draw_hp_bar(void)
 {
     uint8_t hp = mg.player ? mg.player->hp : 0;
     uint8_t pal = (uint8_t)(hp <= 1 ? PAL_WARN : (hp <= 3 ? PAL_HP_MID : PAL_HP_HI));
     uint8_t i;
     for (i = 0; i < MAX_HP; i++) {
-        ng_fix_putc((uint8_t)(10 + i), 1, (char)(i < hp ? GLYPH_BLOCK : ' '), pal);
+        ng_fix_putc((uint8_t)(10 + i), 1,
+                    (char)(i < hp ? GLYPH_BLOCK : GLYPH_DOT), i < hp ? pal : PAL_TEXT);
     }
 }
 
@@ -3368,7 +3377,7 @@ void NEOGEO_USER maiya_frame(void)
             mg_frame(p, (uint8_t)(mg.state_timer > ANGEL_TIME + 20 ? MG_F_HURT1 : MG_F_DOWN), mg.facing);
         } else {
             if (mg.state_timer == ANGEL_TIME) {
-                mg_hero_palette(mg_hero_sun_pal, mg_hero_hair_sun_pal);
+                mg_palette(PAL_HERO, mg_hero_sun_pal);
                 playSFX(SOUND_SFX_13);
             }
             mg_frame(p, (uint8_t)((mg.tick / 14) & 1 ? MG_F_WIN : MG_F_JUMP3), mg.facing);

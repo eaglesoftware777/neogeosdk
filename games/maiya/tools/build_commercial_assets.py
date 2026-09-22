@@ -33,9 +33,8 @@ ROOT = GAME.parents[1]
 sys.dont_write_bytecode = True
 sys.path.insert(0, str(ROOT / "artbox"))
 
-from palette_banks import fit_palette, palette_words, quantize, reconstruct, training_mask, nearest  # noqa: E402
+from palette_banks import fit_palette, palette_words, quantize, reconstruct, training_mask  # noqa: E402
 from tile_codec import encode_image, decode_image, write_utility_tiles  # noqa: E402
-from img2neo import rgb_to_lab  # noqa: E402
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import nature_art  # noqa: E402
@@ -101,13 +100,6 @@ HERO_STRIPS = 5
 HERO_ROWS = 4
 HERO_STRIDE = 5
 HERO_HEIGHT = 52
-
-# Hero sprite palette banks: PAL_HERO (body) and PAL_HERO2 (hair), as defined
-# in games/maiya/scenes/maiya_game.c. Kept as plain numbers here the same way
-# every other multi-bank asset in this file addresses its hardware banks --
-# see mg_bg{i}_map (+16) and the portrait/title bank_base=41 pair.
-PAL_HERO_BANK = 4
-PAL_HERO2_BANK = 31
 
 EAGLE_CANVAS = (48, 32)
 EAGLE_STRIPS = 3
@@ -649,150 +641,42 @@ def build():
         "sit": hf["sit"], "win": hf["win"],
     }
 
-    # Maiya's hair and everything else (skin, dress, boots, rose, outline)
-    # are quantized into two SEPARATE palette banks instead of one shared
-    # 15-color set. On real hardware, only the tile-to-bank assignment
-    # varies per frame; the two palettes themselves stay fixed. This is
-    # what lets Luna's hair recolor to brown without also recoloring skin
-    # or boots, which a single shared bank can never do cleanly -- some of
-    # those tones are close enough in hue that one palette entry used to
-    # have to serve both hair and skin at once.
-    #
-    # The hair region is found per frame rather than hand-marked: the
-    # largest connected blob of warm (hue ~12-66, saturated) pixels. Skin
-    # is warm too, but it is split across the face, hands and legs, so it
-    # never forms a single blob as large as the hair.
-    def hair_mask(rgba):
-        rgb = rgba[:, :, :3].astype(np.float32) / 255.0
-        alpha = rgba[:, :, 3] >= 128
-        mx = rgb.max(axis=2)
-        mn = rgb.min(axis=2)
-        delta = mx - mn
-        sat = np.where(mx > 0, delta / np.maximum(mx, 1e-6), 0.0)
-        r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
-        hue = np.zeros(rgb.shape[:2], dtype=np.float32)
-        has_delta = delta > 1e-6
-        is_r = has_delta & (mx == r)
-        is_g = has_delta & (mx == g) & ~is_r
-        is_b = has_delta & (mx == b) & ~is_r & ~is_g
-        hue[is_r] = (((g[is_r] - b[is_r]) / delta[is_r]) % 6.0)
-        hue[is_g] = ((b[is_g] - r[is_g]) / delta[is_g]) + 2.0
-        hue[is_b] = ((r[is_b] - g[is_b]) / delta[is_b]) + 4.0
-        hue *= 60.0
-        warm = alpha & has_delta & (hue >= 12.0) & (hue <= 66.0) & (sat > 0.35)
-        labeled, count = ndi.label(warm)
-        if count == 0:
-            return np.zeros(rgb.shape[:2], dtype=bool)
-        sizes = ndi.sum(warm, labeled, range(1, count + 1))
-        biggest = 1 + int(np.argmax(sizes))
-        return labeled == biggest
-
-    def tile_bank_map(mask, visible, tiles_h, tiles_w):
-        """Per 16x16 tile: 1 if most of its VISIBLE pixels are hair, else 0.
-        Dividing by the full 256-pixel tile instead of just the drawn
-        pixels rounds every tile down to 0: most tiles are mostly
-        transparent margin around the sprite's silhouette."""
-        out = np.zeros((tiles_h, tiles_w), dtype=np.uint8)
-        for ty in range(tiles_h):
-            for tx in range(tiles_w):
-                block = mask[ty * 16:ty * 16 + 16, tx * 16:tx * 16 + 16]
-                block_visible = visible[ty * 16:ty * 16 + 16, tx * 16:tx * 16 + 16]
-                total = int(block_visible.sum())
-                # A boundary tile (crown/bangs against the forehead) splits
-                # closer to 30/70 than 50/50 in practice; leaning toward
-                # hair there reads better than leaving a stray gold patch
-                # at the top of an otherwise brown head.
-                if total and block.sum() / total > 0.22:
-                    out[ty, tx] = 1
-        return out
-
-    def quantize_fixed_banks(rgba, banks_rgb, tile_bank):
-        rgba = np.asarray(rgba, dtype=np.uint8)
-        height, width = rgba.shape[:2]
-        rgb = rgba[:, :, :3]
-        visible = rgba[:, :, 3] >= 128
-        lab = rgb_to_lab(rgb).reshape(-1, 3)
-        tiles_h, tiles_w = height // 16, width // 16
-        tile_ids = (np.arange(tiles_h * tiles_w).reshape(tiles_h, tiles_w)
-                    .repeat(16, 0).repeat(16, 1).reshape(-1))
-        flat_indices = np.zeros(height * width, dtype=np.uint8)
-        for bank_id, palette in enumerate(banks_rgb):
-            selected = tile_bank.reshape(-1)[tile_ids] == bank_id
-            if not selected.any():
-                continue
-            ids, _ = nearest(lab[selected], rgb_to_lab(np.asarray(palette, dtype=np.uint8)))
-            flat_indices[selected] = ids.astype(np.uint8) + 1
-        indices = flat_indices.reshape(height, width)
-        indices[~visible] = 0
-        banks_arr = np.zeros((len(banks_rgb), 16, 3), dtype=np.uint8)
-        for i, p in enumerate(banks_rgb):
-            banks_arr[i, 1:] = p
-        return indices, banks_arr, tile_bank
-
-    hero_masks = {name: hair_mask(f) for name, f in maiya_frames.items()}
-    hero_body_training = np.concatenate([
-        f[:, :, :3][training_mask(f) & ~hero_masks[name]] for name, f in maiya_frames.items()
-    ])
-    hero_hair_pixels = [
-        f[:, :, :3][training_mask(f) & hero_masks[name]] for name, f in maiya_frames.items()
-        if (training_mask(f) & hero_masks[name]).any()
-    ]
-    hero_body_master = fit_palette(hero_body_training)
-    hero_hair_master = fit_palette(np.concatenate(hero_hair_pixels))
-
+    # Fit master palette for Maiya
+    hero_training = np.concatenate([f[:, :, :3][training_mask(f)] for f in maiya_frames.values()])
+    hero_master = fit_palette(hero_training)
     hero_tiles = []
-    hero_map = []
     for name, f in maiya_frames.items():
-        tiles_h, tiles_w = f.shape[0] // 16, f.shape[1] // 16
-        tile_bank = tile_bank_map(hero_masks[name], f[:, :, 3] >= 128, tiles_h, tiles_w)
-        indices, banks_arr, assignments = quantize_fixed_banks(
-            f, [hero_body_master, hero_hair_master], tile_bank)
-        base = store(f"hero_{name}", indices, banks_arr, assignments, f)
+        base, _ = append(f"hero_{name}", f, master=hero_master, emit_palette=False)
         hero_tiles.append(base)
-        # PAL_HERO (body) or PAL_HERO2 (hair) -- see maiya_game.c. Not a
-        # contiguous +1 offset: PAL_HERO2 is a standalone bank, since the
-        # adjacent numbers are already claimed by other on-screen actors.
-        hero_map.extend(int(v) for v in np.where(assignments.flatten() == 0, PAL_HERO_BANK, PAL_HERO2_BANK))
     header.append(c_array("mg_hero_tiles", hero_tiles))
-    header.append(c_array("mg_hero_map", hero_map, "uint8_t"))
     header.append(f"#define MG_HERO_FRAMES {len(maiya_frames)}u")
     for k, name in enumerate(maiya_frames.keys()):
         header.append(f"#define MG_F_{name.upper()} {k}u")
 
     hero_pal = np.zeros((16, 3), dtype=np.uint8)
-    hero_pal[1:] = hero_body_master
+    hero_pal[1:] = hero_master
     header.append(c_array("mg_hero_pal", palette_words(hero_pal)))
-    hero_hair_pal = np.zeros((16, 3), dtype=np.uint8)
-    hero_hair_pal[1:] = hero_hair_master
-    header.append(c_array("mg_hero_hair_pal", palette_words(hero_hair_pal)))
 
-    # Sun form palette (golden glow) -- both banks get the same warm lift.
+    # Sun form palette (golden glow)
     def sun_tint(h, s, v):
         return (42, min(1.0, s * 1.1), min(1.0, v * 1.25))
     sun_pal = np.zeros((16, 3), dtype=np.uint8)
-    sun_pal[1:] = hsv_map(hero_body_master, sun_tint)
+    sun_pal[1:] = hsv_map(hero_master, sun_tint)
     header.append(c_array("mg_hero_sun_pal", palette_words(sun_pal)))
-    hair_sun_pal = np.zeros((16, 3), dtype=np.uint8)
-    hair_sun_pal[1:] = hsv_map(hero_hair_master, sun_tint)
-    header.append(c_array("mg_hero_hair_sun_pal", palette_words(hair_sun_pal)))
 
     # A second heroine to choose at the title: same sprites, a different
-    # girl. The hair bank moves to a warm brown; the body bank only moves
-    # its green dress to blue. Because hair and body are now separate
-    # banks, each transform only ever sees its own material -- there is no
-    # hue range to guess at, and skin/boots/outline never move.
-    def alt_tint_hair(h, s, v):
-        return (25.0, min(1.0, s * 1.3), v * 0.6)
-    alt_hair_pal = np.zeros((16, 3), dtype=np.uint8)
-    alt_hair_pal[1:] = hsv_map(hero_hair_master, alt_tint_hair)
-    header.append(c_array("mg_hero_hair_alt_pal", palette_words(alt_hair_pal)))
-
-    def alt_tint_body(h, s, v):
+    # girl.  Blonde and green becomes black-haired and blue -- classed by
+    # hue and saturation rather than by index, so it survives any future
+    # repaint of the source art.  Skin, the rose whip and outlines are left
+    # exactly as painted; only the hair and the dress move.
+    def alt_tint(h, s, v):
+        if 25.0 <= h <= 65.0 and s > 0.5:            # blonde hair -> near-black
+            return (250.0, min(1.0, s * 0.55), v * 0.30)
         if 80.0 <= h <= 170.0:                        # green dress -> blue
             return (226.0, min(1.0, s * 1.05), v)
         return (h, s, v)
     alt_pal = np.zeros((16, 3), dtype=np.uint8)
-    alt_pal[1:] = hsv_map(hero_body_master, alt_tint_body)
+    alt_pal[1:] = hsv_map(hero_master, alt_tint)
     header.append(c_array("mg_hero_alt_pal", palette_words(alt_pal)))
 
     # Eagle (guardian sun bird)
@@ -806,7 +690,7 @@ def build():
 
     # Face HUD icon and portrait
     face = crop_and_fit(m_img, (40, 75, 130, 165), (32, 32), anchor="center")
-    append("face", face, master=hero_body_master)
+    append("face", face, master=hero_master)
 
     portrait = crop_and_fit(m_img, (27, 70, 144, 268), (96, 96), anchor="center")
     append("portrait", portrait, banks=2, bank_base=41)

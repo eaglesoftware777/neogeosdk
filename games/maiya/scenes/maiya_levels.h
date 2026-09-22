@@ -107,7 +107,7 @@ static const MGLevel mg_levels[MG_LEVEL_COUNT] = {
      {{510,104},{1310,68},{1970,68},{2610,68},{3030,104},{0,0}},
      {{760,48,MG_H_SPIKES},{1600,48,MG_H_SPIKES},{2280,48,MG_H_SPIKES},{2900,48,MG_H_SPIKES},
       {0,0,0},{0,0,0},{0,0,0},{0,0,0}},
-     {750, 1650, 2450, 2950}, {0, 1, 2, 3}, /* Elder, Maiden, Spirit, Sunboy */
+     {650, 1650, 2450, 2950}, {0, 1, 2, 3}, /* Elder, Maiden, Spirit, Sunboy */
      {{440, 96, 2}, {700, 60, 0}, {1320, 60, 1}, {2000, 60, 2}, {2620, 60, 0}, {3040, 96, 1}}},
 
     /* Mission 2: Valley of Sacred Falls — Cascading mountain streams & misty crags */
@@ -152,7 +152,7 @@ static const MGLevel mg_levels[MG_LEVEL_COUNT] = {
      {{550,104},{1430,68},{2090,68},{2750,68},{3430,68},{0,0}},
      {{860,64,MG_H_FIRE},{1520,64,MG_H_FIRE},{2180,64,MG_H_FIRE},{2840,64,MG_H_FIRE},
       {0,0,0},{0,0,0},{0,0,0},{0,0,0}},
-     {1000, 1950, 2850, 3500}, {0, 2, 1, 3}, /* Elder, Spirit, Maiden, Sunboy */
+     {1000, 1950, 2750, 3500}, {0, 2, 1, 3}, /* Elder, Spirit, Maiden, Sunboy */
      {{340, 132, 2}, {780, 60, 0}, {1440, 60, 1}, {2100, 60, 2}, {2760, 60, 0}, {3440, 60, 1}}},
 
     /* Mission 5: Crystal Grotto Springs — Subterranean waters & glowing emerald crystals */
@@ -182,7 +182,7 @@ static const MGLevel mg_levels[MG_LEVEL_COUNT] = {
      {{590,104},{1310,104},{2030,104},{2750,104},{3470,104},{0,0}},
      {{920,48,MG_H_FIRE},{1640,48,MG_H_SPIKES},{2360,48,MG_H_FIRE},{3080,48,MG_H_SPIKES},
       {3800,48,MG_H_FIRE},{0,0,0},{0,0,0},{0,0,0}},
-     {1200, 2200, 3200, 3800}, {0, 1, 2, 3}, /* Elder, Maiden, Spirit, Sunboy */
+     {1200, 2200, 3200, 3700}, {0, 1, 2, 3}, /* Elder, Maiden, Spirit, Sunboy */
      {{360, 136, 2}, {840, 56, 0}, {1560, 56, 1}, {2280, 56, 2}, {3000, 56, 0}, {3740, 56, 1}}},
 
     /* Mission 7: Rio Negro Works -- an abandoned chemical plant deep in the
@@ -248,7 +248,7 @@ static const MGLevel mg_levels[MG_LEVEL_COUNT] = {
      {{550,104},{1430,68},{2090,68},{2750,68},{3430,68},{0,0}},
      {{860,64,MG_H_FIRE},{1520,64,MG_H_FIRE},{2180,64,MG_H_FIRE},{2840,64,MG_H_FIRE},
       {0,0,0},{0,0,0},{0,0,0},{0,0,0}},
-     {1000, 1950, 2850, 3500}, {0, 2, 1, 3}, /* Elder, Spirit, Maiden, Sunboy */
+     {1000, 1950, 2750, 3500}, {0, 2, 1, 3}, /* Elder, Spirit, Maiden, Sunboy */
      {{340, 132, 2}, {780, 60, 0}, {1440, 60, 1}, {2100, 60, 2}, {2760, 60, 0}, {3440, 60, 1}}},
 };
 
