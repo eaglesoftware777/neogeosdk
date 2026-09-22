@@ -59,6 +59,36 @@ the v1.7.1 release when it merges.  v1.7.0 remains the current release.
   were milestones on the way to v1.7.0, and had been labelled as though
   they came after it.
 
+### Multi-game build, MAME install, and customisation tooling
+
+- `make all-games` / `make dist-all` (and the `MakefileWin32.mak` equivalents)
+  build and package every game under `games/*/game.mk` in one command, so a
+  new game is picked up automatically with no Makefile changes.
+- `tools/mame_launcher.py`, wired into `make install-mame`, `make
+  install-mame-all` and `make run-mame`, and into `install/install-mame.sh` /
+  `install/install-mame.bat`: installs a packaged game's roms and MAME
+  software list into a self-contained `neogeosdk/` folder inside a
+  user-chosen MAME installation (asked for once, remembered afterwards) and
+  can launch it directly, without touching the user's own rom collection or
+  MAME ini files.
+- `make test-menu`: an interactive numbered menu over the same
+  build/package/install/run steps.
+- `make gui` (`tools/sdk_gui.py`): a desktop control panel with a game
+  picker, platform choice, and one-click build/package/install/run/full
+  pipeline/clean, with a live build log.
+- `make maiya-palette-studio` (`games/maiya/tools/maiya_palette_studio.py`):
+  edits Maiya's per-valley enemy recolour and boss-recolour tints, now
+  externalised into `games/maiya/artbox/palette_config.json` instead of
+  being hard-coded in `build_commercial_assets.py`, and rebuilds the art in
+  one click.
+- Fixed a Python-version incompatibility (`pathlib.Path.write_text`'s
+  `newline=` argument, only available on 3.10+) in the FM/SSG/MML/PCM sound
+  tool scripts, so the sound build works on older Python 3 installs.
+  Restored the executable bit on two ADPCM helper scripts, and made every
+  `make` recipe that runs a `.sh` build script invoke it through `sh`
+  instead of relying on the executable bit, so a checkout that loses file
+  permissions (a Windows filesystem, a zip export) can't break the build.
+
 ## v1.7.0 - The 2D Engine Release
 
 Release date: 2026-09-14

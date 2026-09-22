@@ -72,8 +72,11 @@ if [ "$DO_WLADX" -eq 1 ]; then
         WLA_TMP="$(mktemp -d)"
         trap 'rm -rf "$WLA_TMP"' EXIT
         git clone --depth 1 https://github.com/vhelin/wla-dx "$WLA_TMP/wla-dx"
-        cmake -S "$WLA_TMP/wla-dx" -B "$WLA_TMP/wla-dx/build"
-        cmake --build "$WLA_TMP/wla-dx/build" -j "$(nproc 2>/dev/null || echo 2)"
+        # Classic in-tree-build-dir invocation (not -S/-B, not --build -j):
+        # some Ubuntu LTS images still ship a CMake that predates those
+        # flags, and this form works on both old and new CMake.
+        mkdir -p "$WLA_TMP/wla-dx/build"
+        ( cd "$WLA_TMP/wla-dx/build" && cmake .. && make -j "$(nproc 2>/dev/null || echo 2)" )
         $SUDO cp "$WLA_TMP/wla-dx/build/binaries/wla-z80" \
                  "$WLA_TMP/wla-dx/build/binaries/wlalink" /usr/local/bin/
         trap - EXIT; rm -rf "$WLA_TMP"
@@ -126,6 +129,12 @@ if [ ! -d "$SDK_DIR/.git" ]; then
 else
     log "neogeosdk repo already at $SDK_DIR; skipping clone"
 fi
+
+# Belt-and-suspenders: a checkout from a Windows filesystem (WSL /mnt/c,
+# a zip export, some git configs) can silently drop the executable bit
+# git tracked for build-helper scripts, which then fail with "Permission
+# denied" deep inside `make`.  Restore it unconditionally.
+find "$SDK_DIR" -name '*.sh' -exec chmod +x {} +
 
 # ---------------------------------------------------------------------------
 # 5. setenv helper

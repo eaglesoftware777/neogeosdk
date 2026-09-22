@@ -227,6 +227,51 @@ endif
 bios-package: all hash eagle-bios
 	$(PY) bios\tools\build.py --no-build --game "$(GAME)" --game-id "$(GAME_ID)" --package "dist\$(GAME)-eagle-bios.zip"
 
+# All games known to the SDK (anything with a games/<name>/game.mk), so a
+# new game shows up in these targets and in tools\game_menu.py and
+# tools\sdk_gui.py automatically. See also: games-list.
+GAMES := $(patsubst games/%/game.mk,%,$(wildcard games/*/game.mk))
+
+# Chained with && so the whole line stops at the first failure, same as
+# `set -e` does on Linux; avoids a batch FOR loop's %-escaping entirely.
+.PHONY: all-games
+all-games:
+	$(foreach g,$(GAMES),echo == Building $(g) == && $(MAKE) -f MakefileWin32.mak all GAME=$(g) &&) echo all-games: done.
+
+.PHONY: dist-all
+dist-all:
+	$(foreach g,$(GAMES),echo == Packaging $(g) for MAME == && $(MAKE) -f MakefileWin32.mak bios-package GAME=$(g) &&) echo dist-all: done.
+
+# MAME install/run/menu/gui helpers -- see tools\mame_launcher.py,
+# tools\game_menu.py and tools\sdk_gui.py. install-mame/run-mame need a
+# dist zip already built (make bios-package GAME=<name> or make dist-all).
+.PHONY: install-mame
+install-mame:
+	$(PY) tools\mame_launcher.py install --game $(GAME)
+
+.PHONY: install-mame-all
+install-mame-all:
+	$(PY) tools\mame_launcher.py install --game all
+
+.PHONY: run-mame
+run-mame:
+	$(PY) tools\mame_launcher.py run --game $(GAME) --platform $(PLATFORM)
+
+.PHONY: test-menu
+test-menu:
+	$(PY) tools\game_menu.py
+
+.PHONY: gui
+gui:
+	$(PY) tools\sdk_gui.py
+
+# Maiya-specific: edit per-valley enemy recolours and boss-recolour tints
+# (games\maiya\artbox\palette_config.json) without touching Python, then
+# rebuild the game's art in one click. See games\maiya\tools\maiya_palette_studio.py.
+.PHONY: maiya-palette-studio
+maiya-palette-studio:
+	$(PY) games\maiya\tools\maiya_palette_studio.py
+
 .PHONY: aes
 aes:
 	$(MAKE) -f MakefileWin32.mak PLATFORM=aes GAME=$(GAME) p1
@@ -638,6 +683,17 @@ menu:
 	@echo.
 	@echo Packaging:
 	@echo   make -f MakefileWin32.mak dist
+	@echo   make -f MakefileWin32.mak bios-package GAME^=demo      (build + zip, ready for MAME)
+	@echo   make -f MakefileWin32.mak all-games                    (build every game under games\)
+	@echo   make -f MakefileWin32.mak dist-all                     (bios-package every game under games\)
+	@echo.
+	@echo MAME install/test:
+	@echo   make -f MakefileWin32.mak install-mame GAME^=demo      (copy a built dist zip into your MAME install)
+	@echo   make -f MakefileWin32.mak install-mame-all             (same, for every packaged game)
+	@echo   make -f MakefileWin32.mak run-mame GAME^=demo          (launch an installed game in MAME)
+	@echo   make -f MakefileWin32.mak test-menu                    (interactive text menu for the above)
+	@echo   make -f MakefileWin32.mak gui                          (desktop control panel for the same tasks)
+	@echo   make -f MakefileWin32.mak maiya-palette-studio         (edit maiya's enemy/boss recolour palettes)
 	@echo.
 	@echo Utilities:
 	@echo   make -f MakefileWin32.mak games-list

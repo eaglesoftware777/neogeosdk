@@ -193,6 +193,56 @@ endif
 bios-package: all hash eagle-bios
 	$(PYTHON) bios/tools/build.py --no-build --game "$(GAME)" --game-id "$(GAME_ID)" --package "dist/$(GAME)-eagle-bios.zip"
 
+# All games known to the SDK (anything with a games/<name>/game.mk), so a
+# new game shows up in these targets and in tools/game_menu.py and
+# tools/sdk_gui.py automatically. See also: games-list.
+GAMES := $(patsubst games/%/game.mk,%,$(wildcard games/*/game.mk))
+
+.PHONY: all-games
+all-games:
+	@for g in $(GAMES); do \
+	  echo "== Building $$g =="; \
+	  $(MAKE) all GAME=$$g || exit 1; \
+	done
+
+.PHONY: dist-all
+dist-all:
+	@for g in $(GAMES); do \
+	  echo "== Packaging $$g for MAME =="; \
+	  $(MAKE) bios-package GAME=$$g || exit 1; \
+	done
+	@echo "dist-all: packaged $(words $(GAMES)) game(s) into dist/"
+
+# MAME install/run/menu/gui helpers -- see tools/mame_launcher.py,
+# tools/game_menu.py and tools/sdk_gui.py. install-mame/run-mame need a
+# dist zip already built (make bios-package GAME=<name> or make dist-all).
+.PHONY: install-mame
+install-mame:
+	$(PYTHON) tools/mame_launcher.py install --game $(GAME)
+
+.PHONY: install-mame-all
+install-mame-all:
+	$(PYTHON) tools/mame_launcher.py install --game all
+
+.PHONY: run-mame
+run-mame:
+	$(PYTHON) tools/mame_launcher.py run --game $(GAME) --platform $(PLATFORM)
+
+.PHONY: test-menu
+test-menu:
+	$(PYTHON) tools/game_menu.py
+
+.PHONY: gui
+gui:
+	$(PYTHON) tools/sdk_gui.py
+
+# Maiya-specific: edit per-valley enemy recolours and boss-recolour tints
+# (games/maiya/artbox/palette_config.json) without touching Python, then
+# rebuild the game's art in one click. See games/maiya/tools/maiya_palette_studio.py.
+.PHONY: maiya-palette-studio
+maiya-palette-studio:
+	$(PYTHON) games/maiya/tools/maiya_palette_studio.py
+
 .PHONY: aes
 aes:
 	$(MAKE) PLATFORM=aes p1
@@ -345,25 +395,25 @@ ssg:
 .PHONY: samples
 samples:
 	@if [ -d "$(GAME_SOUND)/samples/in_wav_a" ]; then \
-	  cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_a.sh; \
+	  cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) sh ./enc_wave16le_a.sh; \
 	  else echo "samples: no in_wav_a, skipping a"; fi
 	@if [ -d "$(GAME_SOUND)/samples/in_wav_a_voice" ]; then \
-	  cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_a_voice.sh; \
+	  cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) sh ./enc_wave16le_a_voice.sh; \
 	  else echo "samples: no in_wav_a_voice, skipping voice"; fi
 	@if [ -d "$(GAME_SOUND)/samples/in_wav_b" ]; then \
-	  cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) ./enc_wave16le_b.sh; \
+	  cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) SOX=$(SOX) sh ./enc_wave16le_b.sh; \
 	  else echo "samples: no in_wav_b, skipping b"; fi
-	@cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) ./adpcm_enc_process.sh
+	@cd sound/tools && GAME_SOUND=../../$(GAME_SOUND) PYTHON=$(PYTHON) sh ./adpcm_enc_process.sh
 
 .PHONY: vrom
 vrom:
-	GAME=$(GAME) GAME_ID=$(GAME_ID) GAME_SOUND=$(GAME_SOUND) ./sound/tools/vrom.sh
+	GAME=$(GAME) GAME_ID=$(GAME_ID) GAME_SOUND=$(GAME_SOUND) sh ./sound/tools/vrom.sh
 	mkdir -p $(ROM_DIR)
 	cp -f out/$(GAME_ID)-v1.v1 $(ROM_DIR)/$(GAME_ID)-v1.v1
 
 .PHONY: m1rom
 m1rom: vrom fmpatches fm mml ssgconfig ssg
-	WLAZ80=$(WLAZ80) WLALINK=$(WLALINK) USE_Z80C=$(USE_Z80C) Z80C_SRC=$(Z80C_SRC_LINUX) GAME=$(GAME) GAME_SOUND=$(GAME_SOUND) GAME_ID=$(GAME_ID) ./sound/tools/m1rom.sh
+	WLAZ80=$(WLAZ80) WLALINK=$(WLALINK) USE_Z80C=$(USE_Z80C) Z80C_SRC=$(Z80C_SRC_LINUX) GAME=$(GAME) GAME_SOUND=$(GAME_SOUND) GAME_ID=$(GAME_ID) sh ./sound/tools/m1rom.sh
 
 .PHONY: m1rom-asm
 m1rom-asm:
@@ -419,7 +469,7 @@ srom: sfix
 
 .PHONY: art-clean
 art-clean:
-	./artbox/makeclean.sh
+	sh ./artbox/makeclean.sh
 	rm -f artbox/neorom.db artbox/map artbox/output1.txt artbox/out.srt artbox/screens.c artbox/sprite_meta.h
 	rm -f artbox/neo.pal artbox/std.pal artbox/neopal.bin artbox/1p.c1 artbox/2p.c2
 	rm -f artbox/1c.c1 artbox/2c.c2 artbox/1c.s1
@@ -438,7 +488,7 @@ art: game-check
 ifneq ($(strip $(GAME_ART_BUILDER)),)
 	$(PYTHON) $(GAME_ART_BUILDER)
 else
-	ARTBOX_TILE=1 GAME_ID=$(GAME_ID) GAME_ART_FROM="$(GAME_ART_FROM)" ./artbox/makeartbox.sh $(GAME)
+	ARTBOX_TILE=1 GAME_ID=$(GAME_ID) GAME_ART_FROM="$(GAME_ART_FROM)" sh ./artbox/makeartbox.sh $(GAME)
 	python3 tools/verify_artbox_palettes.py --root "$(CURDIR)" --game "$(GAME)"
 	rm -f artbox/assets.cfg artbox/1c.c1 artbox/2c.c2 artbox/$(GAME_ID)-s1.s1 artbox/assets_manifest.json artbox/map artbox/neo.pal artbox/std.pal artbox/neopal.bin artbox/neorom.db artbox/out.srt artbox/output1.txt artbox/screens.c artbox/sprite_meta.h
 	rm -rf artbox/__pycache__
@@ -456,7 +506,7 @@ art-crt: game-check
 ifneq ($(strip $(GAME_ART_BUILDER)),)
 	$(PYTHON) $(GAME_ART_BUILDER)
 else
-	ARTBOX_CRT=1 GAME_ID=$(GAME_ID) GAME_ART_FROM="$(GAME_ART_FROM)" ./artbox/makeartbox.sh $(GAME)
+	ARTBOX_CRT=1 GAME_ID=$(GAME_ID) GAME_ART_FROM="$(GAME_ART_FROM)" sh ./artbox/makeartbox.sh $(GAME)
 	python3 tools/verify_artbox_palettes.py --root "$(CURDIR)" --game "$(GAME)"
 	rm -f artbox/assets.cfg artbox/1c.c1 artbox/2c.c2 artbox/$(GAME_ID)-s1.s1 artbox/assets_manifest.json artbox/map artbox/neo.pal artbox/std.pal artbox/neopal.bin artbox/neorom.db artbox/out.srt artbox/output1.txt artbox/screens.c artbox/sprite_meta.h
 	rm -rf artbox/__pycache__
@@ -619,6 +669,17 @@ menu:
 	@echo ""
 	@echo "Packaging:"
 	@echo "  make dist                    # full build + dist package for GAME"
+	@echo "  make bios-package GAME=<name># build + zip <name> ready for MAME (dist/<name>-eagle-bios.zip)"
+	@echo "  make all-games               # build every game under games/"
+	@echo "  make dist-all                # bios-package every game under games/"
+	@echo ""
+	@echo "MAME install/test:"
+	@echo "  make install-mame GAME=<name># copy a built dist zip into your MAME install (prompts for its path once)"
+	@echo "  make install-mame-all        # same, for every packaged game"
+	@echo "  make run-mame GAME=<name>    # launch an installed game in MAME"
+	@echo "  make test-menu               # interactive text menu: build/package/install/run any game"
+	@echo "  make gui                     # desktop control panel for the same tasks"
+	@echo "  make maiya-palette-studio    # edit maiya's enemy/boss recolour palettes"
 	@echo ""
 	@echo "Utilities:"
 	@echo "  make games-list              # list game folders"
