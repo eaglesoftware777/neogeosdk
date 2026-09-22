@@ -1775,22 +1775,73 @@ uint8_t NEOGEO_USER maiya_hero_choice(void)
 }
 
 /*
+ * A quick reminder of the controls, shown once after she's chosen and
+ * skippable the moment a hand is on the stick -- nobody who already knows
+ * the game should have to sit through it twice in a session.
+ */
+static void NEOGEO_USER mg_show_how_to_play(void)
+{
+    uint8_t i;
+    uint16_t joy;
+
+    ng_fix_clear();
+    mg_centre(6,  "HOW TO PLAY", PAL_GOLD);
+    mg_centre(10, "LEFT / RIGHT: WALK", PAL_TEXT);
+    mg_centre(11, "UP: CLIMB A VINE, OR TURN THE KEY", PAL_TEXT);
+    mg_centre(13, "A: JUMP (HOLD FOR HEIGHT)", PAL_TEXT);
+    mg_centre(14, "B: THROW A THORN, OR STRIKE UP CLOSE", PAL_TEXT);
+    mg_centre(15, "C: DASH", PAL_TEXT);
+    mg_centre(16, "D: SECRET ART", PAL_TEXT);
+    mg_centre(18, "DOWN, FORWARD + B: ROSE BLOSSOM SURGE", PAL_SKY);
+    mg_centre(22, "PRESS ANY BUTTON TO BEGIN", PAL_GOLD);
+
+    poll_joystick_edge();
+    /* The confirm that brought her here shouldn't also skip this: give it
+     * a moment to let go before a press counts. */
+    for (i = 0; i < 20; i++) { waitVbl(); poll_joystick_edge(); }
+
+    for (;;) {
+        waitVbl();
+        joy = poll_joystick_edge();
+        if (joy & (BUTTON_A | BUTTON_B | BUTTON_C | BUTTON_D | START1 | START2)) break;
+    }
+    ng_fix_clear();
+}
+
+/*
  * The dedicated "CHOOSE YOUR GUARDIAN" screen: shown once, after Start is
- * pressed, not layered over the coin-insert prompt. Left/Right moves the
- * pick, A or Start confirms. If the credit that started the game came in
- * on the cabinet's second player side, Luna answers the call by default
- * instead of Maiya -- still just a starting point, still changeable
- * before confirming.
+ * pressed, not layered over the coin-insert prompt, and not over the
+ * title's own logo art either -- her own screen, nothing else on it.
+ * Left/Right moves the pick, A or Start confirms. If the credit that
+ * started the game came in on the cabinet's second player side, Luna
+ * answers the call by default instead of Maiya -- still just a starting
+ * point, still changeable before confirming.
  */
 void NEOGEO_USER maiya_hero_select(void)
 {
+    uint8_t i;
     uint16_t joy;
     mg_chooser_pick = (NEO_REGISTER8(BIOS_PLAYER2_MODE) != 0) ? 1 : 0;
 
+    ng_sprite_hide_all();
     ng_fix_clear();
     ng_sprite_group_set_visible(&mg_chooser_face, 1);
     mg_draw_chooser();
-    poll_joystick_edge();   /* clear whatever edge carried over from Start */
+
+    poll_joystick_edge();
+    /* The same Start press that opened this screen is still fresh on a
+     * real cabinet's own change-detection; without this pause it could
+     * read as an immediate confirm and blow straight through to
+     * gameplay, which looked exactly like Start not doing anything. */
+    for (i = 0; i < 20; i++) {
+        waitVbl();
+        joy = poll_joystick_edge();
+        if (joy & (JOY_LEFT | JOY_RIGHT)) {
+            mg_chooser_pick = (uint8_t)(mg_chooser_pick ^ 1u);
+            mg_draw_chooser();
+            playSFX(SOUND_SFX_11);
+        }
+    }
 
     for (;;) {
         waitVbl();
@@ -1807,6 +1858,7 @@ void NEOGEO_USER maiya_hero_select(void)
     }
     ng_sprite_group_set_visible(&mg_chooser_face, 0);
     ng_fix_clear();
+    mg_show_how_to_play();
 }
 
 /* ------------------------------------------------------------------ */
