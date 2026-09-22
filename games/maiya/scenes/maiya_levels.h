@@ -46,6 +46,9 @@
 #define MG_H_FIRE   1
 #define MG_H_SPIKES 2
 #define MG_H_SLUDGE 3
+/* Left behind in the last two valleys; unlike the other three, this one
+ * can be shut off for good -- see mg_hazard_disable_check(). */
+#define MG_H_TOXIC  4
 
 #define MG_GROUND_Y 192
 
@@ -230,8 +233,8 @@ static const MGLevel mg_levels[MG_LEVEL_COUNT] = {
       {2340,MG_E_SMOGBAT},{2500,MG_E_WORM},{2660,MG_E_PAIR},{2820,MG_E_GOBLIN},{2980,MG_E_SMOGBAT},{3140,MG_E_WORM},
       {3300,MG_E_DRONE},{3460,MG_E_GOBLIN},{3620,MG_E_SMOGBAT},{3780,MG_E_PAIR},{0,0},{0,0}},
      {{570,108},{1450,72},{2110,72},{2770,72},{3450,72},{0,0}},
-     {{880,32,MG_H_SPIKES},{1540,32,MG_H_SPIKES},{2200,32,MG_H_SPIKES},{2860,32,MG_H_SPIKES},
-      {3500,32,MG_H_SPIKES},{0,0,0},{0,0,0},{0,0,0}},
+     {{160,32,MG_H_TOXIC},{880,32,MG_H_SPIKES},{1540,32,MG_H_SPIKES},{2200,32,MG_H_SPIKES},
+      {2860,32,MG_H_SPIKES},{3500,32,MG_H_SPIKES},{0,0,0},{0,0,0}},
      {1100, 2100, 3050, 3650}, {2, 1, 0, 3}, /* Spirit, Maiden, Elder, Sunboy */
      {{360, 136, 1}, {800, 64, 2}, {1460, 64, 0}, {2120, 64, 1}, {2780, 64, 2}, {3460, 64, 0}}},
 
@@ -246,8 +249,8 @@ static const MGLevel mg_levels[MG_LEVEL_COUNT] = {
       {2480,MG_E_GOBLIN},{2640,MG_E_POACHDRONE},{2800,MG_E_PAIR},{3120,MG_E_WORM},{3280,MG_E_GOBLIN},{3440,MG_E_POACHDRONE},
       {3600,MG_E_BEETLE},{3760,MG_E_WORM},{0,0},{0,0},{0,0},{0,0}},
      {{550,104},{1430,68},{2090,68},{2750,68},{3430,68},{0,0}},
-     {{860,64,MG_H_FIRE},{1520,64,MG_H_FIRE},{2180,64,MG_H_FIRE},{2840,64,MG_H_FIRE},
-      {0,0,0},{0,0,0},{0,0,0},{0,0,0}},
+     {{160,32,MG_H_TOXIC},{860,64,MG_H_FIRE},{1520,64,MG_H_FIRE},{2180,64,MG_H_FIRE},
+      {2840,64,MG_H_FIRE},{0,0,0},{0,0,0},{0,0,0}},
      {1000, 1950, 2750, 3500}, {0, 2, 1, 3}, /* Elder, Spirit, Maiden, Sunboy */
      {{340, 132, 2}, {780, 60, 0}, {1440, 60, 1}, {2100, 60, 2}, {2760, 60, 0}, {3440, 60, 1}}},
 };
@@ -311,8 +314,8 @@ static const MGNpc mg_npcs[MG_LEVEL_COUNT][MG_NPC_COUNT] = {
     {{420,0,"THE WORLD TREE STILL BREATHES"}, {2080,3,"MAIYA! THE LAST GATE IS NEAR"}, {3640,2,"ONE ROOT, ONE VALLEY, ONE SUN"}},
     {{420,0,"THE WORKS POISON THE WHOLE RIVER"}, {2220,2,"TWO GUARDIANS HOLD THE GATE"}, {3920,3,"MAIYA, I AM RIGHT BEHIND IT"}},
     {{420,0,"THE REEF STILL FEELS THE POISON"}, {1850,2,"UP AT A VINE TO CLIMB IT"}, {3180,1,"THE KEY GLEAMS ABOVE THE SAND"}},
-    {{420,2,"BATS NEST WHERE THE LIGHT DIES"}, {1980,0,"THE KEY WAITS ON THE HIGH SHELF"}, {3440,1,"WARM STONES MARK THE SAFE PATH"}},
-    {{420,1,"HUNTERS SET SNARES IN THE GRASS"}, {1920,0,"STRIKE THE GUARDIAN'S CORE"}, {3320,2,"D CALLS THE ROSE WIND STRIKE"}},
+    {{420,2,"A SECRET FOUND CAN LIFT THE POISON"}, {1980,0,"THE KEY WAITS ON THE HIGH SHELF"}, {3440,1,"WARM STONES MARK THE SAFE PATH"}},
+    {{420,1,"A SECRET FOUND CAN LIFT THE POISON"}, {1920,0,"STRIKE THE GUARDIAN'S CORE"}, {3320,2,"D CALLS THE ROSE WIND STRIKE"}},
 };
 
 /* Where the Golden Sun Key waits: always on a high shelf, never on the road. */
