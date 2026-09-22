@@ -107,7 +107,8 @@ def emit_inc(presets, out):
         lines.append("  .db " + ",".join(f"${x:02X}" for x in data))
 
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text("\n".join(lines), newline="\n")
+    with open(out, "w", newline="\n") as f:
+        f.write("\n".join(lines))
 
 
 def main():

@@ -433,6 +433,74 @@ This builds the ROM set, regenerates `hash_eagle/<game>/neogeo.xml`, creates `di
 Distribute `dist/` as-is. End users place their `neogeo.zip` BIOS inside `dist/roms/` and
 run `dist/run_neogeosdk.bat`.
 
+## Building, packaging, and testing games
+
+Everything below works for every game under `games/` — current ones and any
+you add later — because it discovers games from `games/*/game.mk` instead of
+naming them.
+
+**Build every game:**
+
+```bash
+make all-games                                # Linux / WSL
+make -f MakefileWin32.mak all-games            # Windows
+```
+
+**Package every game as a MAME-ready zip** (`dist/<game>-eagle-bios.zip`,
+same layout as `make bios-package GAME=<name>` for one game — cartridge ROMs,
+firmware, MAME software list, and a `RUN.txt`):
+
+```bash
+make dist-all                                  # Linux / WSL
+make -f MakefileWin32.mak dist-all             # Windows
+```
+
+**Install a packaged game into your own MAME copy.** The first run asks for
+your MAME installation folder and remembers it; everything lands in a
+self-contained `neogeosdk/` folder inside that install, so your own rom
+collection and MAME's ini files are never touched:
+
+```bash
+make install-mame GAME=maiya                   # or: ./install/install-mame.sh --game maiya
+make install-mame-all                          # install every packaged game
+make run-mame GAME=maiya PLATFORM=mvs          # launch it
+```
+
+On Windows, use `make -f MakefileWin32.mak install-mame GAME=maiya` or
+`install\install-mame.bat --game maiya`.
+
+**Interactive text menu** for the same build/package/install/run steps,
+without remembering flags:
+
+```bash
+make test-menu                                 # Linux / WSL
+make -f MakefileWin32.mak test-menu            # Windows
+```
+
+**Desktop control panel** — one window with a game picker, platform choice,
+and buttons for build/package/install/run/full-pipeline/clean, with a live
+build log:
+
+```bash
+make gui                                       # Linux / WSL
+make -f MakefileWin32.mak gui                  # Windows
+```
+
+**Customizing Maiya's art palettes.** `games/maiya/tools/build_commercial_assets.py`
+reads its per-valley enemy recolours and boss-recolour tints from
+`games/maiya/artbox/palette_config.json` (auto-created with the shipped
+values on first build). Edit the JSON directly, or use the small editor that
+also rebuilds the art for you:
+
+```bash
+make maiya-palette-studio                      # Linux / WSL
+make -f MakefileWin32.mak maiya-palette-studio # Windows
+```
+
+See also `install/README.md` for `install-mame.sh` / `install-mame.bat`
+details, and `tools/mame_launcher.py --help` for scripting the same install
+and run steps directly.
+
 ## Release Assets
 
 The `v1.7.0` release publishes these attached assets:

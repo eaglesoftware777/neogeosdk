@@ -169,7 +169,8 @@ def emit_inc(tracks, out):
         lines.append("")
 
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text("\n".join(lines), newline="\n")
+    with open(out, "w", newline="\n") as f:
+        f.write("\n".join(lines))
 
 
 def main():
