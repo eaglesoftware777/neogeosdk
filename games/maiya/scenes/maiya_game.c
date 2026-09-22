@@ -78,6 +78,14 @@ enum {
     PAL_FRONT = 37, PAL_BG = 16,
     /* HP bar tiers: bank 13 and 43 are otherwise unused. */
     PAL_HP_HI = 13, PAL_HP_MID = 43,
+    /* Its own art, its own bank, not a recolour of one of the shared six. */
+    PAL_JELLYFISH = 17, PAL_TOXICCRAB = 18, PAL_ACIDMOTH = 19, PAL_SEWERRAT = 20,
+    PAL_SMOGBAT = 21, PAL_POACHDRONE = 22, PAL_CHEMFLY = 23, PAL_PLASTICBAT = 24,
+    PAL_SLAGGOLEM = 25, PAL_VINESTING = 26, PAL_SPOREGOB = 27,
+    /* The guardian's own bar reads dirty and toxic rather than the clean
+     * traffic-light colours her own bar uses -- it's the blight's health,
+     * not hers. */
+    PAL_BOSS_HP_HI = 28, PAL_BOSS_HP_MID = 29, PAL_BOSS_HP_LO = 30,
 
     /* Character kinds. */
     K_PLAYER = 0, K_ENEMY = 1, K_BOSS = 2, K_ALLY = 3, K_EAGLE = 4,
@@ -95,6 +103,13 @@ enum {
     WALK_ACCEL = 112,    /* she leans into a run instead of snapping to it */
     WALK_BRAKE = 96,
     MAX_HP = 5, MAX_LIVES = 7, MAX_ART = 3,
+    /* The hidden extra life is one trinket among ten, but unlike the rest
+     * it hands out a life -- worth capping across the whole run, not just
+     * the one mission it sits in, or a player who farms deaths-and-retries
+     * on an early valley could stack lives without ever earning them. */
+    MG_LIFE_PICKUP_LIMIT = 3,
+    MG_BONUS_LIFE_SCORE_STEP = 50000,
+    MG_BONUS_LIFE_SCORE_FIRST = 20000,
     MG_BOSS_BAR_WIDTH = 20, MG_BOSS_BAR_COL = 12, MG_BOSS_BAR_LABEL_COL = 7,
 
     /* FIX rows: 2..29 are visible (8 px each). ROW_POWER was reserved but
@@ -207,6 +222,8 @@ typedef struct {
     char     hint_text[36];
     uint8_t  hint_timer;
     uint16_t previous_joy;
+    uint8_t  life_pickups_used;      /* the hidden extra life, capped for the whole run */
+    uint32_t next_life_score;        /* next score milestone that hands out a bonus life */
 } MGState;
 
 static MGState mg;
@@ -251,6 +268,12 @@ static void NEOGEO_USER mg_ui_palettes(void)
     mg_ink(PAL_SKY,    0x39FFu);   /* cyan           */
     mg_ink(PAL_HP_HI,  0xA4F6u);   /* fluorescent green: full/high HP */
     mg_ink(PAL_HP_MID, 0x6FB2u);   /* amber: medium HP                */
+    /* The guardian's bar reads dirty and toxic rather than her own
+     * clean traffic-light colours -- it's the blight's health draining,
+     * not a status she'd want for herself. */
+    mg_ink(PAL_BOSS_HP_HI,  0x9782u);   /* murky olive: high guardian HP  */
+    mg_ink(PAL_BOSS_HP_MID, 0xc752u);   /* rust brown: medium guardian HP */
+    mg_ink(PAL_BOSS_HP_LO,  0xc411u);   /* oxidized dark red: near death  */
 }
 
 static void NEOGEO_USER mg_centre(uint8_t y, const char *text, uint8_t pal)
@@ -822,6 +845,17 @@ static const uint16_t *NEOGEO_USER mg_enemy_tiles(uint8_t type)
     case MG_E_GOBLIN: return mg_goblin_tiles;
     case MG_E_WORM:   return mg_worm_tiles;
     case MG_E_DRONE:  return mg_robot_tiles;
+    case MG_E_JELLYFISH: return mg_jellyfish_tiles;
+    case MG_E_TOXICCRAB: return mg_toxiccrab_tiles;
+    case MG_E_ACIDMOTH: return mg_acidmoth_tiles;
+    case MG_E_SEWERRAT: return mg_sewerrat_tiles;
+    case MG_E_SMOGBAT: return mg_smogbat_tiles;
+    case MG_E_POACHDRONE: return mg_poachdrone_tiles;
+    case MG_E_CHEMFLY: return mg_chemfly_tiles;
+    case MG_E_PLASTICBAT: return mg_plasticbat_tiles;
+    case MG_E_SLAGGOLEM: return mg_slaggolem_tiles;
+    case MG_E_VINESTING: return mg_vinesting_tiles;
+    case MG_E_SPOREGOB: return mg_sporegob_tiles;
     default:          return mg_slime_tiles;
     }
 }
@@ -839,6 +873,17 @@ static uint8_t NEOGEO_USER mg_enemy_palette(uint8_t type)
     case MG_E_GOBLIN: return PAL_ENEMY3;
     case MG_E_WORM:   return PAL_ENEMY4;
     case MG_E_DRONE:  return PAL_ENEMY5;
+    case MG_E_JELLYFISH: return PAL_JELLYFISH;
+    case MG_E_TOXICCRAB: return PAL_TOXICCRAB;
+    case MG_E_ACIDMOTH: return PAL_ACIDMOTH;
+    case MG_E_SEWERRAT: return PAL_SEWERRAT;
+    case MG_E_SMOGBAT: return PAL_SMOGBAT;
+    case MG_E_POACHDRONE: return PAL_POACHDRONE;
+    case MG_E_CHEMFLY: return PAL_CHEMFLY;
+    case MG_E_PLASTICBAT: return PAL_PLASTICBAT;
+    case MG_E_SLAGGOLEM: return PAL_SLAGGOLEM;
+    case MG_E_VINESTING: return PAL_VINESTING;
+    case MG_E_SPOREGOB: return PAL_SPOREGOB;
     default:          return PAL_ENEMY0;
     }
 }
@@ -1202,7 +1247,8 @@ static void NEOGEO_USER mg_boss_damage(uint8_t damage)
  * the drone cannot -- they are all edge, spark or altitude. */
 static uint8_t NEOGEO_USER mg_soft_enemy(uint8_t type)
 {
-    return (uint8_t)(type == MG_E_SLIME || type == MG_E_BEETLE || type == MG_E_GOBLIN);
+    return (uint8_t)(type == MG_E_SLIME || type == MG_E_BEETLE || type == MG_E_GOBLIN
+                      || type == MG_E_JELLYFISH);
 }
 
 static uint8_t NEOGEO_USER mg_strike(void)
@@ -1293,7 +1339,6 @@ static void NEOGEO_USER mg_spawn(void);
 static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
 {
     uint8_t i;
-    uint8_t respawn = 0;
     const MGLevel *level = &mg_levels[stage];
 
     soundStopAll();
@@ -1318,7 +1363,14 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.boss = mg.rescue = mg.eagle = 0; mg.ledges_used = 0; mg.eagle_timer = 0;
     mg.on_ledge = 0; mg.combo_timer = 0; mg.combo_buffer[0] = mg.combo_buffer[1] = 0;
     mg.climbing = 0; mg.crouch_timer = 0; mg.sitting = 0;
-    if (!respawn) {
+    /*
+     * A retry (death, or a continue) drops her back at the start of the
+     * same mission, but whatever she'd already collected -- coins, the
+     * charm, the hidden life -- stays collected. Without this, dying next
+     * to the life pickup and walking back to the same spot every time was
+     * a free, repeatable source of extra lives.
+     */
+    if (!retry) {
         mg.has_key = 0; mg.gate_unlocked = 0; mg.key_taken = 0;
         mg.pick_mask = 0; mg.secret_mask = 0;
     }
@@ -1349,6 +1401,17 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg_palette(PAL_BOSS, mg_boss_pal(level->boss_style));
     mg_palette(PAL_ALLY, mg_ally_pal(level->rescue_type[0]));
     mg_palette(PAL_EAGLE, mg_eagle_pal);
+    mg_palette(PAL_JELLYFISH, mg_jellyfish_pal);
+    mg_palette(PAL_TOXICCRAB, mg_toxiccrab_pal);
+    mg_palette(PAL_ACIDMOTH, mg_acidmoth_pal);
+    mg_palette(PAL_SEWERRAT, mg_sewerrat_pal);
+    mg_palette(PAL_SMOGBAT, mg_smogbat_pal);
+    mg_palette(PAL_POACHDRONE, mg_poachdrone_pal);
+    mg_palette(PAL_CHEMFLY, mg_chemfly_pal);
+    mg_palette(PAL_PLASTICBAT, mg_plasticbat_pal);
+    mg_palette(PAL_SLAGGOLEM, mg_slaggolem_pal);
+    mg_palette(PAL_VINESTING, mg_vinesting_pal);
+    mg_palette(PAL_SPOREGOB, mg_sporegob_pal);
     mg_palette(PAL_TOOL, mg_tool_pal);
     mg_palette(PAL_PORTRAIT, mg_portrait_pal);
     mg_palette(PAL_PORTRAIT + 1, mg_portrait_pal + 16);
@@ -1500,6 +1563,8 @@ void NEOGEO_USER maiya_boot(void)
     mg.coins = mg.flowers = mg.critters = 0;
     mg.hero_choice = maiya_hero_choice();
     mg.session_over = 0;
+    mg.life_pickups_used = 0;
+    mg.next_life_score = MG_BONUS_LIFE_SCORE_FIRST;
     mg_scene(0, 0);
 }
 
@@ -1523,6 +1588,8 @@ void NEOGEO_USER maiya_demo_begin(void)
     mg.coins = mg.flowers = mg.critters = 0;
     mg.continues = 0;
     mg.session_over = 0;
+    mg.life_pickups_used = 0;
+    mg.next_life_score = MG_BONUS_LIFE_SCORE_FIRST;
     mg_scene(demo_stage, 0);
     ng_fix_clear_rect(1, ROW_HINT, 38, 9, PAL_TEXT);
     mg_centre(ROW_CARD + 2, "ATTRACT MODE", PAL_GOLD);
@@ -1692,27 +1759,54 @@ void NEOGEO_USER maiya_title(void)
 }
 
 /*
- * Called once a credit is in and the cabinet is waiting on Start: shows
- * the chooser and lets Left/Right move it.  Whatever is picked when Start
- * lands becomes mg.hero_choice, read back in maiya_boot().
+ * Left over from an earlier layout that showed the chooser during the
+ * coin-wait, overlapping "PUSH START". No longer called there -- the
+ * chooser is now its own screen, shown after Start, in
+ * maiya_hero_select() below -- but kept as a no-op entry point since
+ * user.c still declares it.
  */
 void NEOGEO_USER maiya_title_frame(void)
 {
-    uint16_t joy = poll_joystick_edge();
-    if (mg_chooser_face.visible == 0) {
-        ng_sprite_group_set_visible(&mg_chooser_face, 1);
-        mg_draw_chooser();
-    }
-    if (joy & (JOY_LEFT | JOY_RIGHT)) {
-        mg_chooser_pick = (uint8_t)(mg_chooser_pick ^ 1u);
-        mg_draw_chooser();
-        playSFX(SOUND_SFX_11);
-    }
 }
 
 uint8_t NEOGEO_USER maiya_hero_choice(void)
 {
     return mg_chooser_pick;
+}
+
+/*
+ * The dedicated "CHOOSE YOUR GUARDIAN" screen: shown once, after Start is
+ * pressed, not layered over the coin-insert prompt. Left/Right moves the
+ * pick, A or Start confirms. If the credit that started the game came in
+ * on the cabinet's second player side, Luna answers the call by default
+ * instead of Maiya -- still just a starting point, still changeable
+ * before confirming.
+ */
+void NEOGEO_USER maiya_hero_select(void)
+{
+    uint16_t joy;
+    mg_chooser_pick = (NEO_REGISTER8(BIOS_PLAYER2_MODE) != 0) ? 1 : 0;
+
+    ng_fix_clear();
+    ng_sprite_group_set_visible(&mg_chooser_face, 1);
+    mg_draw_chooser();
+    poll_joystick_edge();   /* clear whatever edge carried over from Start */
+
+    for (;;) {
+        waitVbl();
+        joy = poll_joystick_edge();
+        if (joy & (JOY_LEFT | JOY_RIGHT)) {
+            mg_chooser_pick = (uint8_t)(mg_chooser_pick ^ 1u);
+            mg_draw_chooser();
+            playSFX(SOUND_SFX_11);
+        }
+        if (joy & (BUTTON_A | START1 | START2)) {
+            playSFX(SOUND_SFX_13);
+            break;
+        }
+    }
+    ng_sprite_group_set_visible(&mg_chooser_face, 0);
+    ng_fix_clear();
 }
 
 /* ------------------------------------------------------------------ */
@@ -1759,6 +1853,24 @@ static MGEnemy *NEOGEO_USER mg_spawn_enemy(uint8_t type, int16_t x, int16_t y, u
     return e;
 }
 
+/* Where an encounter at this X actually stands: on the elevated ledge
+ * that runs under it, if the level has one there, or the road below if
+ * not. Every encounter used to spawn flat on the road regardless of the
+ * platform tiers around it, so the high ground the level draws was
+ * never populated -- every fight looked the same no matter how varied
+ * the terrain was. Gravity and solid collision already make a spawned
+ * enemy land and stand wherever it's dropped, so this only changes
+ * where it starts, not how it moves. */
+static int16_t NEOGEO_USER mg_ledge_y_at(const MGLevel *level, int16_t x)
+{
+    uint8_t i;
+    for (i = 0; i < MG_PLATFORM_COUNT; i++) {
+        const MGPlatform *p = &level->platforms[i];
+        if (p->width && x >= p->x && x < (int16_t)(p->x + p->width)) return p->y;
+    }
+    return MG_GROUND_Y;
+}
+
 static void NEOGEO_USER mg_spawn(void)
 {
     const MGLevel *level = &mg_levels[mg.stage];
@@ -1775,10 +1887,11 @@ static void NEOGEO_USER mg_spawn(void)
         if (en->x + 200 < px) { mg.encounter_mask |= bit; continue; }
 
         if (en->type == MG_E_PAIR) {
-            mg_spawn_enemy(MG_E_SLIME, en->x, MG_GROUND_Y, 0);
-            mg_spawn_enemy(MG_E_BEETLE, (int16_t)(en->x + 40), MG_GROUND_Y, 0);
+            int16_t x2 = (int16_t)(en->x + 40);
+            mg_spawn_enemy(MG_E_SLIME, en->x, mg_ledge_y_at(level, en->x), 0);
+            mg_spawn_enemy(MG_E_BEETLE, x2, mg_ledge_y_at(level, x2), 0);
         } else {
-            mg_spawn_enemy(en->type, en->x, MG_GROUND_Y, 0);
+            mg_spawn_enemy(en->type, en->x, mg_ledge_y_at(level, en->x), 0);
         }
         mg.encounter_mask |= bit;
     }
@@ -1801,6 +1914,7 @@ static void NEOGEO_USER mg_spawn(void)
         uint16_t bit = (uint16_t)(1u << i);
         MGItem *item;
         if (!pk->x || (mg.pick_mask & bit)) continue;
+        if (pk->kind == MG_K_LIFE && mg.life_pickups_used >= MG_LIFE_PICKUP_LIMIT) continue;
         if (mg_abs((int16_t)(pk->x - px)) > 220) continue;
         if (mg_pickup_active((uint8_t)(i + 1))) continue;
         item = mg_drop_trinket(pk->x, (int16_t)pk->y, pk->kind);
@@ -2297,6 +2411,7 @@ static void NEOGEO_USER mg_update_entities(void)
                     break;
                 case MG_K_LIFE:
                     if (mg.lives < MAX_LIVES) mg.lives++;
+                    mg.life_pickups_used++;
                     playSFX(SOUND_SFX_13);
                     playSFX(SOUND_SFX_12);
                     mg_hint("EXTRA LIFE!", PAL_GOLD, 120);
@@ -2390,6 +2505,55 @@ static void NEOGEO_USER mg_update_entities(void)
                         playSFX(SOUND_SFX_6);
                     }
                 }
+            } else if (e->type == MG_E_JELLYFISH || e->type == MG_E_ACIDMOTH
+                       || e->type == MG_E_CHEMFLY) {
+                /* Never charges her: a slow, harmless-looking drift that
+                 * only hurts on contact, so she has to actually go around
+                 * it instead of just walking through another creature that
+                 * happens to be running straight at her. The moth drifts
+                 * wide and lazy, the firefly quick and tight. */
+                int16_t speed = (int16_t)(e->type == MG_E_CHEMFLY ? 130
+                               : (e->type == MG_E_ACIDMOTH ? 70 : 90));
+                uint8_t bob = (uint8_t)(e->type == MG_E_ACIDMOTH ? 96 : 56);
+                e->body->vx_fp = dx < 0 ? -mg_pace(speed) : mg_pace(speed);
+                e->body->vy_fp = (int32_t)((e->timer & bob) ? -50 : 50);
+                mg_frame(e->body, (uint8_t)((e->timer / 16) % 2), (uint8_t)(dx < 0));
+            } else if (e->type == MG_E_SMOGBAT || e->type == MG_E_PLASTICBAT) {
+                /* Swoops like the crow, but the plastic-tangled one also
+                 * drops a bomb straight down when she's roughly beneath it. */
+                e->body->vx_fp = dx < 0 ? -mg_pace(460) : mg_pace(460);
+                e->body->vy_fp = (int32_t)((e->timer & 32) ? -120 : 120);
+                mg_frame(e->body, (uint8_t)((e->timer / 6) % 2), (uint8_t)(dx < 0));
+                if (e->type == MG_E_PLASTICBAT && (e->timer % 130) == 65 && mg_abs(dx) < 40) {
+                    mg_fire(e->body->x, e->body->y, 0, 3, 1, MG_T_SPIT);
+                    playSFX(SOUND_SFX_5);
+                }
+            } else if (e->type == MG_E_TOXICCRAB || e->type == MG_E_SLAGGOLEM) {
+                /* The crab scuttles in fast bursts; the golem is slow and
+                 * takes a real beating, but hits hard when it connects. */
+                uint16_t speed = (uint16_t)(e->type == MG_E_SLAGGOLEM ? 140 : 360);
+                e->body->vx_fp = dx < 0 ? -mg_pace(speed) : mg_pace(speed);
+                mg_frame(e->body, (uint8_t)(MG_F_WALK0 + ((e->timer / 10) % 2)), (uint8_t)(dx < 0));
+            } else if (e->type == MG_E_POACHDRONE) {
+                /* A hunter's tool, not an animal: hovers on patrol and
+                 * fires a net instead of a laser bolt. */
+                e->body->vx_fp = dx < 0 ? -mg_pace(160) : mg_pace(160);
+                mg_frame(e->body, (uint8_t)((e->timer / 10) % 2), (uint8_t)(dx < 0));
+                if ((e->timer % 110) == 55 && mg_abs(dx) < 190) {
+                    mg_fire(e->body->x, e->body->y, (int16_t)(dx < 0 ? -4 : 4), 0, 1, MG_T_SPIT);
+                    playSFX(SOUND_SFX_6);
+                }
+            } else if (e->type == MG_E_VINESTING) {
+                /* Rooted where it grows: never moves, but lashes at
+                 * anything that gets close, so getting past it means
+                 * timing the pass rather than just walking through. */
+                e->body->vx_fp = 0;
+                e->body->vy_fp = 0;
+                mg_frame(e->body, (uint8_t)((e->timer / 20) % 2), 0);
+                if ((e->timer % 100) == 50 && mg_abs(dx) < 50) {
+                    mg_fire(e->body->x, (int16_t)(e->body->y - 20), (int16_t)(dx < 0 ? -3 : 3), 0, 1, MG_T_SPIT);
+                    playSFX(SOUND_SFX_5);
+                }
             } else {
                 if ((e->timer % (uint16_t)(78 - mg.stage * 4)) == 0 &&
                     (ng_physics_is_grounded(e->body) || e->body->y >= MG_GROUND_Y - 4)) {
@@ -2397,7 +2561,8 @@ static void NEOGEO_USER mg_update_entities(void)
                     e->body->vx_fp = dx < 0 ? -mg_pace(240) : mg_pace(240);
                 }
                 mg_frame(e->body, (uint8_t)((e->timer / 12) % 2), (uint8_t)(dx < 0));
-                if (e->type == MG_E_SLIME && (e->timer % 150) == 75 && mg_abs(dx) < 160) {
+                if ((e->type == MG_E_SLIME || e->type == MG_E_SPOREGOB)
+                    && (e->timer % 150) == 75 && mg_abs(dx) < 160) {
                     mg_fire(e->body->x, (int16_t)(e->body->y - 12), (int16_t)(dx < 0 ? -3 : 3), -1, 1, MG_T_SPIT);
                     playSFX(SOUND_SFX_5);
                 }
@@ -2564,11 +2729,12 @@ static void NEOGEO_USER mg_draw_hp_bar(void)
 
 /* The guardian's health, top centre, only while the arena fight is on: a
  * proportional bar (the boss_hp scale differs per guardian, so a fixed
- * block-per-point count like her own bar would not read consistently)
- * using the same green -> amber -> red language as her HP bar, so a hit
- * that matters reads the same way regardless of which guardian it is. It
- * clears itself the moment the fight ends, instead of leaving a stale bar
- * up through the victory card. */
+ * block-per-point count like her own bar would not read consistently).
+ * It deliberately does NOT share her clean green/amber/red language: this
+ * is the blight's own health draining, so it reads dirty and toxic --
+ * murky olive, rust, oxidized red -- instead of a status she'd want for
+ * herself. It clears itself the moment the fight ends, instead of leaving
+ * a stale bar up through the victory card. */
 static void NEOGEO_USER mg_draw_boss_bar(void)
 {
     static uint8_t shown = 0;
@@ -2586,8 +2752,8 @@ static void NEOGEO_USER mg_draw_boss_bar(void)
     {
         uint8_t hp = mg.boss->hp, max = mg.boss->max_hp;
         uint8_t filled = (uint8_t)(((uint16_t)hp * MG_BOSS_BAR_WIDTH + max / 2) / max);
-        uint8_t pal = (uint8_t)(filled * 3 <= MG_BOSS_BAR_WIDTH ? PAL_WARN
-                      : (filled * 3 <= MG_BOSS_BAR_WIDTH * 2 ? PAL_HP_MID : PAL_HP_HI));
+        uint8_t pal = (uint8_t)(filled * 3 <= MG_BOSS_BAR_WIDTH ? PAL_BOSS_HP_LO
+                      : (filled * 3 <= MG_BOSS_BAR_WIDTH * 2 ? PAL_BOSS_HP_MID : PAL_BOSS_HP_HI));
         uint8_t i;
         for (i = 0; i < MG_BOSS_BAR_WIDTH; i++) {
             ng_fix_putc((uint8_t)(MG_BOSS_BAR_COL + i), ROW_POWER,
@@ -3027,6 +3193,19 @@ void NEOGEO_USER maiya_frame(void)
         if (mg.score != mg.score_shown) {
             mg_number(28, ROW_SCORE, mg.score, 6, PAL_TEXT);
             mg.score_shown = mg.score;
+        }
+        /* Real skill earns more lives than the map ever hands out: a
+         * milestone every so many points, on top of the capped hidden
+         * pickup, however far that's already been spent. */
+        if (mg.score >= mg.next_life_score) {
+            mg.next_life_score += MG_BONUS_LIFE_SCORE_STEP;
+            if (mg.lives < MAX_LIVES) {
+                mg.lives++;
+                mg.hud_dirty = 1;
+                playSFX(SOUND_SFX_13);
+                playSFX(SOUND_SFX_12);
+                mg_hint("EXTRA LIFE!", PAL_GOLD, 120);
+            }
         }
         if ((mg.swift || mg.might || mg.veil || mg.spring || mg.crown) &&
             (mg.tick % 60u) == 0u) mg_draw_tray();

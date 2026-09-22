@@ -15,11 +15,11 @@ encoder:
 | `1.wav` | Retro Game Music Pack - Title Screen | title screen and attract |
 | `2.wav` | Chiptune Adventures - Stage 1 | Mission 1, Emerald Forest |
 | `3.wav` | Chiptune Adventures - Stage 2 | Mission 2, Valley of Sacred Falls |
-| `4.wav` | Retro Game Music Pack - Level 1 | Mission 3, Azure Coral Coast |
+| `4.wav` | Retro Game Music Pack - Level 1 | Mission 3, Azure Coral Coast; Mission 6, Sacred World Tree |
 | `5.wav` | Retro Game Music Pack - Level 2 | Mission 4, Golden Autumn Grove |
 | `6.wav` | Retro Game Music Pack - Level 3 | Mission 5, Crystal Grotto |
 | `7.wav` | Chiptune Adventures - Stage Select | bonus rounds |
-| `8.wav` | Chiptune Adventures - Boss Fight | every guardian, and Mission 6 |
+| `8.wav` | Chiptune Adventures - Boss Fight | every guardian, and Mission 7, Rio Negro Works |
 | `9.wav` | Retro Game Music Pack - Ending | Sunboy between missions, the ending |
 
 ## Sound effects (ADPCM-A, `samples/in_wav_a/`)

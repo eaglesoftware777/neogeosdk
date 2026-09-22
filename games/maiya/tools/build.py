@@ -53,8 +53,8 @@ def stage():
     roms = WORK / "roms/maiya"
     roms.mkdir(parents=True, exist_ok=True)
     (WORK / "out").mkdir(exist_ok=True)
-    # The initial game uses the exact tested demo sound and font bank. No
-    # assembler or shared sample table is rebuilt or modified by this tool.
+    # Reuse Maiya's built audio bank. This isolated P1 build does not assemble
+    # the driver or modify shared sample tables; run GAME=maiya sound first.
     provenance = {}
     for suffix in ("m1.m1", "v1.v1"):
         source = ROOT / "roms/maiya" / f"780-{suffix}"
@@ -72,22 +72,27 @@ def stage():
     (GAME / "build/bank-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
 
 
-def run(mame):
-    command = [mame, "neogeo", "-noreadconfig", "-rompath",
+def run(mame, platform):
+    command = [mame, "aes" if platform == "aes" else "neogeo", "-noreadconfig", "-rompath",
                f"{WORK / 'roms'};{ROOT / 'roms'}", "-hashpath",
                str(WORK / "hash_eagle/maiya"), "-cart1", "maiya",
-               "-bios", "euro", "-window", "-nofilter", "-waitvsync",
+               "-bios", "asia" if platform == "aes" else "euro", "-window", "-nofilter", "-waitvsync",
                "-noautoframeskip", "-frameskip", "0", "-skip_gameinfo",
                "-cfg_directory", str(GAME / "build/cfg"),
                "-nvram_directory", str(GAME / "build/nvram")]
     subprocess.run(command, cwd=GAME / "build", check=True)
 
 
-def quick_build(toolchain):
+def quick_build(toolchain, platform):
     """Recompile this game's scene against the previously staged SDK objects."""
     if not (WORK / "out/neogeolib.o").exists():
         raise SystemExit("Run a full build first.")
+    marker = WORK / "platform.txt"
+    staged_platform = marker.read_text().strip() if marker.exists() else "mvs"
+    if staged_platform != platform:
+        raise SystemExit(f"Run a full build with --platform {platform} before --quick")
     copy_source(GAME / "scenes/maiya_game.c", WORK / "games/maiya/scenes/maiya_game.c")
+    copy_source(GAME / "scenes/maiya_game.h", WORK / "games/maiya/scenes/maiya_game.h")
     copy_source(GAME / "scenes/maiya_levels.h", WORK / "games/maiya/scenes/maiya_levels.h")
     copy_source(GAME / "artbox/generated/maiya_assets.h",
                 WORK / "games/maiya/artbox/generated/maiya_assets.h")
@@ -97,11 +102,12 @@ def quick_build(toolchain):
         subprocess.run([str(binary / f"m68k-unknown-elf-{name}{suffix}"), *map(str, args)],
                        cwd=WORK, check=True)
     command("gcc", "-c", "-O2", "-g", "-m68000", "-ffreestanding", "-fomit-frame-pointer",
-            "-std=gnu99", "-Wall", "-I.", "-Isdk", "-Isdk/2d_engine", "-Igames/maiya",
+            "-std=gnu99", "-Wall", "-DNG_" + platform.upper() + "=1",
+            "-I.", "-Isdk", "-Isdk/2d_engine", "-Igames/maiya",
             "games/maiya/scenes/maiya_game.c", "-o", "out/maiya_game0.o")
     copy_source(GAME / "user.c", WORK / "games/maiya/user.c")
     command("gcc", "-c", "-O0", "-m68000", "-ffreestanding", "-fomit-frame-pointer",
-            "-std=gnu99", "-I.", "-Isdk", "-Isdk/2d_engine", "-DNG_MVS=1",
+            "-std=gnu99", "-I.", "-Isdk", "-Isdk/2d_engine", "-DNG_" + platform.upper() + "=1",
             "games/maiya/user.c", "-o", "out/user0.o")
     command("objcopy", "-R", ".comment", "-R", ".text", "-R", ".data", "-R", ".bss",
             "out/user0.o", "out/user.o")
@@ -133,6 +139,7 @@ def main():
     parser.add_argument("--rebuild-art", action="store_true")
     parser.add_argument("--quick", action="store_true", help="Rebuild scene code only, using the staged SDK")
     parser.add_argument("--mame", default="mame")
+    parser.add_argument("--platform", choices=("mvs", "aes"), default="mvs")
     parser.add_argument("--make", default="make")
     parser.add_argument("--toolchain", type=Path, help="Directory containing m68k-unknown-elf/")
     args = parser.parse_args()
@@ -146,16 +153,16 @@ def main():
                                   if (ROOT.parent / p).is_dir()), None)
             if toolchain is None:
                 raise SystemExit("Pass --toolchain with the cross compiler location")
-            quick_build(toolchain)
+            quick_build(toolchain, args.platform)
             if args.run:
-                run(args.mame)
+                run(args.mame, args.platform)
             return
         stage()
         command = [args.make]
         if os.name == "nt":
             command += ["-f", "MakefileWin32.mak"]
         command += ["GAME=maiya", "GAME_CFG_FILE=games/maiya/game.cfg",
-                    f"SDKHOME={ROOT.parent}", "p1"]
+                    f"SDKHOME={ROOT.parent}", f"PLATFORM={args.platform}", "p1"]
         if args.toolchain:
             command.append(f"XTOOLS_ROOT={args.toolchain.resolve()}")
         with (GAME / "build/build.log").open("w", encoding="utf-8") as log:
@@ -163,10 +170,11 @@ def main():
         if result.returncode:
             print((GAME / "build/build.log").read_text()[-12000:])
             raise SystemExit(result.returncode)
+        (WORK / "platform.txt").write_text(args.platform + "\n")
         print(f"Built {WORK / 'roms/maiya'}")
         print(f"Build log: {GAME / 'build/build.log'}")
     if args.run or args.run_only:
-        run(args.mame)
+        run(args.mame, args.platform)
 
 
 if __name__ == "__main__":

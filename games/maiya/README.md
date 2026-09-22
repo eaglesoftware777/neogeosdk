@@ -1,6 +1,6 @@
 # Maiya: Super Nature Girl
 
-An original six-valley side-scrolling adventure using the SDK's C 2D engine.
+An original seven-mission side-scrolling adventure using the SDK's C 2D engine.
 Game name: `maiya`. Cartridge ID: `780`. The repository default remains `demo`.
 New in SDK v1.7.1.
 
@@ -49,6 +49,33 @@ py -m pip install numpy pillow scipy
 The Sun Key is on a canopy shelf. Rescue the villagers, collect roses and
 reach the gate before entering the guardian arena.
 
+The bottom tray uses the actual pickup sprites at half size, with live counts
+for rose arts, coins, flowers and rescued friends. Active powers show their
+remaining seconds. The key appears only while it is carried. Ordinary road
+pickups are streamed near the player; leaving one behind does not permanently
+consume its spawn. High shelves hold the rarer treasures and extra lives.
+
+Climbing uses position-based reaching poses with stable facing. Release the
+stick to stop, or press A to detach. Release A during a jump for a shorter hop.
+
+## Lives and Continue
+
+Each run starts with three lives and three available continuations. A lethal
+hit costs one life: Maiya rises with a halo, then returns from the sky at her
+death position. Landing on either a shelf or the road restores control.
+Collected map items, rescued allies and key/gate progress survive that return;
+enemies and temporary powers reset.
+
+When no lives remain, a ten-second Continue countdown appears:
+
+- MVS: insert a coin, then press P1 Start. One credit buys three lives.
+  Gameplay buttons do not spend a credit.
+- AES: choose Continue or Exit with the directions and confirm with A, B, C
+  or D. There is no coin requirement. Timeout selects Exit.
+
+Exit returns to the title/attract flow. The console uses a game-RAM start latch
+and the BIOS start-button edge, not MVS backup RAM or joystick Up.
+
 ## Encounters and Transitions
 
 The last 320 pixels of each valley form a locked arena. The camera settles
@@ -61,6 +88,22 @@ After missions 2 and 4, a separate 25-second bonus playfield replaces the
 arena. Movement and attacks remain enabled, the timer and hit count are
 visible, and eight kills award a life. The interlude then leads to the next
 mission. Bonus mode does not reuse the defeated guardian or its collision state.
+
+Mission 7, Rio Negro Works, follows the six valleys. Its gantries, sludge and
+fire lead to a two-guardian encounter: Iron Vulture followed by Lord Smoggar.
+Both fights use the same locked arena and cover shelves.
+
+## Music and Effects
+
+The house eyecatcher has a short FM fanfare. Title, missions, guardians,
+bonus rounds and interludes use Maiya's own ADPCM-B music bank, with ADPCM-A
+effects mixed over it. Track changes reset the scene, restore the mix, enable
+the repeat flag, and only then start the track. Setting repeat before a scene
+reset loses it. ADPCM-A volume is six bits (0..63); 64 is not full volume.
+
+The music and effects are credited in [sound/SOURCES.md](sound/SOURCES.md).
+The copied voice bank has been removed; there are no voice sample commands in
+the game flow. Rebuild `make GAME=maiya sound` when changing that bank.
 
 ## Rendering and Art
 
@@ -106,6 +149,10 @@ python3 games/maiya/tools/build.py --quick
 python3 games/maiya/tools/regression.py --scenario climb
 python3 games/maiya/tools/regression.py --scenario boss
 python3 games/maiya/tools/regression.py --scenario bonus --seconds 65
+python3 games/maiya/tools/regression.py --scenario continue --seconds 28
+python3 games/maiya/tools/regression.py --scenario pickups --seconds 28
+python3 games/maiya/tools/regression.py --scenario factory --seconds 30
+python3 games/maiya/tools/regression.py --scenario tray --seconds 25
 ```
 
 The quick build requires a previously staged full build made with
@@ -116,3 +163,19 @@ scenario shortcuts are compiled into the game. `--output PATH` keeps captures
 on another drive, and `--eagle-bios` selects the separately installed firmware.
 The older `tools/capture.py` command delegates to the same harness; `--idle`
 captures startup without gameplay inputs. Telemetry is written as JSON lines.
+
+For AES checks, first stage and compile the console entry points:
+
+```sh
+python3 games/maiya/tools/build.py --platform aes
+python3 games/maiya/tools/build.py --quick --platform aes
+python3 games/maiya/tools/regression.py --platform aes --scenario continue --seconds 28
+python3 games/maiya/tools/regression.py --platform aes --scenario continue-exit --seconds 28
+python3 games/maiya/tools/regression.py --platform aes --scenario continue-timeout --seconds 38
+```
+
+The quick build and harness reject a platform different from the staged
+workspace. Run a full `--platform mvs` build to switch back. This isolated
+workspace builds P1 against existing Maiya M1/V1 banks; it does not regenerate
+audio. Continue tests exercise the real input and BIOS callbacks after placing
+a death scenario through debugger memory, including a respawn onto a ledge.

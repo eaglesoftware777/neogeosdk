@@ -330,7 +330,6 @@ void NEOGEO_USER TITLE_WAIT(void) {
             fixtext_out(16, 27, timer, 3);
             if ((i >> 4) & 1) fixtext_out(13, 25, "PUSH 1P START", 1);
             else fixtext_out(13, 25, "             ", 1);
-            maiya_title_frame();   /* Left/Right picks who answers the call */
             if (auto_frames > 0) auto_frames--;
             else {
                 MAIYA_START_LATCH = 1;
@@ -343,11 +342,11 @@ void NEOGEO_USER TITLE_WAIT(void) {
         }
 #else
         fixtext_out(14, 25, "PUSH START", 1);
-        maiya_title_frame();
         if (attract_interrupted()) break;
 #endif
         waitVbl();
     }
+    maiya_hero_select();   /* her own screen, now that Start has actually landed */
 }
 
 /* One frame boundary per loop; Start belongs to the game's pause state.
