@@ -665,13 +665,23 @@ def build():
     header.append(c_array("mg_hero_sun_pal", palette_words(sun_pal)))
 
     # A second heroine to choose at the title: same sprites, a different
-    # girl.  Blonde and green becomes black-haired and blue -- classed by
+    # girl.  Blonde and green becomes brown-haired and blue -- classed by
     # hue and saturation rather than by index, so it survives any future
     # repaint of the source art.  Skin, the rose whip and outlines are left
     # exactly as painted; only the hair and the dress move.
+    #
+    # The 15-color hero palette reuses a couple of warm mid/shadow tones
+    # across hair AND skin/boots (there's no spare palette space to give
+    # them separate entries), so this can't isolate "hair only" -- shifting
+    # those shared entries nudges a few skin/boot shadow pixels the same
+    # direction as the hair. That reads as a slightly warmer shadow, not a
+    # wrong color, and is far less visible than the alternative: leaving
+    # the lower end of the blonde hue range (~15-24, this source art's
+    # darker hair shadow) untouched, which used to show up as stray
+    # blonde/orange patches in an otherwise recolored head.
     def alt_tint(h, s, v):
-        if 25.0 <= h <= 65.0 and s > 0.5:            # blonde hair -> near-black
-            return (250.0, min(1.0, s * 0.55), v * 0.30)
+        if 15.0 <= h <= 65.0 and s > 0.5:             # blonde hair -> brown
+            return (25.0, min(1.0, s * 1.3), v * 0.6)
         if 80.0 <= h <= 170.0:                        # green dress -> blue
             return (226.0, min(1.0, s * 1.05), v)
         return (h, s, v)
