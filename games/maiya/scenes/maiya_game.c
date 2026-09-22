@@ -71,6 +71,11 @@ enum {
     /* Palette banks. */
     PAL_TEXT = 0, PAL_GOLD = 1, PAL_WARN = 2, PAL_SKY = 3,
     PAL_HERO = 4, PAL_ENEMY0 = 5, PAL_ENEMY1 = 6, PAL_ENEMY2 = 7,
+    /* Her hair, a second bank so a costume can recolour it without also
+     * recolouring skin/dress/boots -- see mg_hero_map. Bank 31 rather than
+     * PAL_HERO+1: 5-7 are already the enemy banks, live on screen with her
+     * at the same time. */
+    PAL_HERO2 = 31,
     PAL_ENEMY3 = 38, PAL_ENEMY4 = 39, PAL_ENEMY5 = 40,
     PAL_BOSS = 8, PAL_ALLY = 9, PAL_BLOCK = 10, PAL_EAGLE = 11,
     PAL_TOOL = 12, PAL_PORTRAIT = 41, PAL_DECOR = 14, PAL_PROP = 15,
@@ -319,6 +324,21 @@ static void NEOGEO_USER mg_number(uint8_t x, uint8_t y, uint32_t value, uint8_t 
 static const uint16_t *NEOGEO_USER mg_hero_normal_pal(void)
 {
     return mg.hero_choice ? mg_hero_alt_pal : mg_hero_pal;
+}
+
+/* Hair-bank counterpart of mg_hero_normal_pal() -- see PAL_HERO2. */
+static const uint16_t *NEOGEO_USER mg_hero_hair_normal_pal(void)
+{
+    return mg.hero_choice ? mg_hero_hair_alt_pal : mg_hero_hair_pal;
+}
+
+/* Loads both of her sprite's palette banks together, since PAL_HERO
+ * (skin/dress/boots) and PAL_HERO2 (hair) always change in the same pairs:
+ * normal <-> normal, sun form <-> sun form, Maiya <-> Luna. */
+static void NEOGEO_USER mg_hero_palette(const uint16_t *body, const uint16_t *hair)
+{
+    mg_palette(PAL_HERO, body);
+    mg_palette(PAL_HERO2, hair);
 }
 
 static void NEOGEO_USER mg_music(uint8_t track)
@@ -923,7 +943,18 @@ static void NEOGEO_USER mg_frame(NGCharacter *c, uint8_t frame, uint8_t flip)
         const uint16_t *at = mg_ally_tiles(c->data0);
         tile = at[frame % 2u];
     } else {
-        tile = mg_hero_tiles[frame % MG_HERO_FRAMES];
+        uint8_t f = (uint8_t)(frame % MG_HERO_FRAMES);
+        tile = mg_hero_tiles[f];
+        /* Her sprite is split across two palette banks (PAL_HERO for
+         * skin/dress/boots, PAL_HERO2 for hair) so a costume can recolour
+         * just the hair -- see mg_hero_map in maiya_assets.h. Every frame
+         * has its own map, since which 16x16 tiles are "hair" moves with
+         * her pose. Called every tick regardless of whether the tile
+         * changed: ng_char_set_sprite() zeroes the map on (re)creation,
+         * and ng_char_set_palette_map() already no-ops when the pointer
+         * is unchanged, so this costs nothing once she's settled on a
+         * frame. */
+        ng_char_set_palette_map(c, &mg_hero_map[(uint16_t)f * (HERO_STRIPS * HERO_ROWS)]);
     }
 
     if (c->sprite_tile != tile || c->flip_x != flip) {
@@ -1308,7 +1339,7 @@ static void NEOGEO_USER mg_secret_art(void)
      * made it hard to tell what had actually happened.
      */
     mg.flash = 12;                 /* her colours lift, and come straight back */
-    mg_palette(PAL_HERO, mg_hero_sun_pal);
+    mg_hero_palette(mg_hero_sun_pal, mg_hero_hair_sun_pal);
     mg.attack = 22;
     mg.shake = 24;
     mg.art_wave = 24;              /* the second wave follows the first */
@@ -1388,7 +1419,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     ng_physics_add_solid(0, MG_GROUND_Y, (int16_t)level->width, 32, 0);
 
     /* Load entity palettes.  The creatures wear this valley's colours. */
-    mg_palette(PAL_HERO, mg_hero_normal_pal());
+    mg_hero_palette(mg_hero_normal_pal(), mg_hero_hair_normal_pal());
     {
         uint16_t tint = (uint16_t)(stage * 16u);
         mg_palette(PAL_ENEMY0, mg_slime_valley_pal + tint);
@@ -2691,11 +2722,12 @@ static void NEOGEO_USER mg_update_entities(void)
             uint8_t lit = (uint8_t)((mg.hurt & 8) != 0);
             if (lit != mg.hurt_lit) {
                 mg.hurt_lit = lit;
-                mg_palette(PAL_HERO, lit ? mg_hero_sun_pal : mg_hero_normal_pal());
+                if (lit) mg_hero_palette(mg_hero_sun_pal, mg_hero_hair_sun_pal);
+                else mg_hero_palette(mg_hero_normal_pal(), mg_hero_hair_normal_pal());
             }
         } else if (mg.hurt_lit) {
             mg.hurt_lit = 0;
-            mg_palette(PAL_HERO, mg_hero_normal_pal());
+            mg_hero_palette(mg_hero_normal_pal(), mg_hero_hair_normal_pal());
         }
     } else if (mg.veil) {
         /* The mist veil: she fades in and out slowly, on purpose. */
@@ -2708,7 +2740,7 @@ static void NEOGEO_USER mg_update_entities(void)
     if (mg.veil && --mg.veil == 0) mg.hud_dirty = 1;
     if (mg.spring && --mg.spring == 0) mg.hud_dirty = 1;
     if (mg.crown && --mg.crown == 0) mg.hud_dirty = 1;
-    if (mg.flash && --mg.flash == 0) mg_palette(PAL_HERO, mg_hero_normal_pal());
+    if (mg.flash && --mg.flash == 0) mg_hero_palette(mg_hero_normal_pal(), mg_hero_hair_normal_pal());
     if (mg.art_wave && --mg.art_wave == 0) mg_petal_sweep(1);
 }
 
@@ -3312,7 +3344,7 @@ void NEOGEO_USER maiya_frame(void)
             mg_frame(p, (uint8_t)(mg.state_timer > ANGEL_TIME + 20 ? MG_F_HURT1 : MG_F_DOWN), mg.facing);
         } else {
             if (mg.state_timer == ANGEL_TIME) {
-                mg_palette(PAL_HERO, mg_hero_sun_pal);
+                mg_hero_palette(mg_hero_sun_pal, mg_hero_hair_sun_pal);
                 playSFX(SOUND_SFX_13);
             }
             mg_frame(p, (uint8_t)((mg.tick / 14) & 1 ? MG_F_WIN : MG_F_JUMP3), mg.facing);
