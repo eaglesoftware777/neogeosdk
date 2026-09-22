@@ -111,7 +111,7 @@ static const MGLevel mg_levels[MG_LEVEL_COUNT] = {
      {{760,48,MG_H_SPIKES},{1600,48,MG_H_SPIKES},{2280,48,MG_H_SPIKES},{2900,48,MG_H_SPIKES},
       {0,0,0},{0,0,0},{0,0,0},{0,0,0}},
      {650, 1650, 2450, 2950}, {0, 1, 2, 3}, /* Elder, Maiden, Spirit, Sunboy */
-     {{440, 96, 2}, {700, 60, 0}, {1320, 60, 1}, {2000, 60, 2}, {2620, 60, 0}, {3040, 96, 1}}},
+     {{510, 96, 2}, {700, 60, 0}, {1320, 60, 1}, {2000, 60, 2}, {2620, 60, 0}, {3040, 96, 1}}},
 
     /* Mission 2: Valley of Sacred Falls — Cascading mountain streams & misty crags */
     {"VALLEY OF FALLS", "SLUDGE TOAD", 4096, 1, 2, MG_B_TOAD, 18, 3450,
@@ -204,7 +204,7 @@ static const MGLevel mg_levels[MG_LEVEL_COUNT] = {
      {{640,64,MG_H_SLUDGE},{1120,48,MG_H_FIRE},{1600,64,MG_H_SLUDGE},{2080,48,MG_H_FIRE},
       {2560,64,MG_H_SLUDGE},{3040,48,MG_H_FIRE},{3520,64,MG_H_SLUDGE},{4000,48,MG_H_SLUDGE}},
      {900, 1900, 2900, 3900}, {2, 1, 0, 3}, /* Spirit, Maiden, Elder, Sunboy */
-     {{420, 136, 2}, {800, 56, 0}, {1500, 56, 1}, {2220, 56, 2}, {2940, 56, 0}, {3680, 56, 1}}},
+     {{350, 136, 2}, {800, 56, 0}, {1500, 56, 1}, {2220, 56, 2}, {2940, 56, 0}, {3680, 56, 1}}},
 
     /* Mission 8: Sunken Reef -- with Sunboy free, she keeps going: the tide
      * pools and coral where the works' runoff still settles. */
