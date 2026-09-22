@@ -1756,7 +1756,7 @@ static void NEOGEO_USER mg_draw_chooser(void)
                 mg_chooser_pick == 1 ? ">" : " ", PAL_GOLD);
     ng_fix_puts(MG_CHOOSER_RIGHT_COL, MG_CHOOSER_NAME_ROW, "LUNA",
                 mg_chooser_pick == 1 ? PAL_GOLD : PAL_TEXT);
-    ng_fix_puts(8, MG_CHOOSER_HINT_ROW, "LEFT / RIGHT, THEN START", PAL_SKY);
+    ng_fix_puts(8, MG_CHOOSER_HINT_ROW, "LEFT / RIGHT, THEN A", PAL_SKY);
 
     mg_palette(PAL_HERO, mg_chooser_pick ? mg_hero_alt_pal : mg_hero_pal);
     ng_sprite_group_set_pos(&mg_chooser_face,
@@ -1913,7 +1913,7 @@ void NEOGEO_USER maiya_hero_select(void)
             mg_draw_chooser();
             playSFX(SOUND_SFX_11);
         }
-        if (joy & (BUTTON_A | START1 | START2)) {
+        if (joy & BUTTON_A) {
             playSFX(SOUND_SFX_13);
             break;
         }
