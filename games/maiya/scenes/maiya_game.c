@@ -184,6 +184,7 @@ typedef struct {
     uint32_t encounter_mask;
     uint16_t tick, archer_mask, pick_mask;
     uint8_t secret_mask;
+    uint8_t hazard_warn_mask;          /* one bit per hazard: already warned */
     uint16_t boss_timer, state_timer, clear_bonus;
     int16_t  boss_home;
     int16_t arena_left, boss_direction;
@@ -1373,7 +1374,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
      */
     if (!retry) {
         mg.has_key = 0; mg.gate_unlocked = 0; mg.key_taken = 0;
-        mg.pick_mask = 0; mg.secret_mask = 0;
+        mg.pick_mask = 0; mg.secret_mask = 0; mg.hazard_warn_mask = 0;
     }
     mg.gate_shown = 0;
     mg.npc_mask = 0; mg.npc_live = 0; mg.npc_here = 0;
@@ -2966,6 +2967,33 @@ static void NEOGEO_USER mg_hazard_check(void)
     }
 }
 
+/* A clear callout before she's close enough to actually get hurt, once
+ * per hazard per visit -- checked from any height (a ledge above a fire
+ * patch still deserves the warning) rather than only while grounded, the
+ * way the damage check above needs to be. Sludge reads as "toxic" rather
+ * than a burn or a puncture, since it's the one that's meant to look like
+ * pollution rather than open flame or metal spikes. */
+static void NEOGEO_USER mg_hazard_warn_check(void)
+{
+    const MGLevel *level = &mg_levels[mg.stage];
+    NGCharacter *p = mg.player;
+    uint8_t i;
+
+    if (mg.state != MG_PLAY) return;
+    for (i = 0; i < MG_HAZARD_COUNT; i++) {
+        const MGHazard *hz = &level->hazards[i];
+        uint8_t bit = (uint8_t)(1u << i);
+        int16_t near_x = (int16_t)(hz->x - 50);
+        if (!hz->type || (mg.hazard_warn_mask & bit)) continue;
+        if (p->x < near_x || p->x > (int16_t)(hz->x + hz->width)) continue;
+        mg.hazard_warn_mask |= bit;
+        mg_hint(hz->type == MG_H_FIRE ? "HAZARD: OPEN FLAME AHEAD"
+              : hz->type == MG_H_SPIKES ? "HAZARD: SHARP SPIKES AHEAD"
+              : "TOXIC SLUDGE AHEAD - KEEP CLEAR", PAL_WARN, 90);
+        return;
+    }
+}
+
 /* Physics, character draw and world sprites for one frame. */
 static void NEOGEO_USER mg_world_step(void)
 {
@@ -3295,6 +3323,7 @@ void NEOGEO_USER maiya_frame(void)
         mg_world_step();
         mg_update_entities();
         mg_hazard_check();
+        mg_hazard_warn_check();
         mg_npc_check();
         mg_rescue_check();
 
