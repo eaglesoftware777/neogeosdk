@@ -44,7 +44,9 @@ class AssetsTest(unittest.TestCase):
         self.assertTrue(all(e["strips"] == 5 and e["rows"] == 4 for e in frames))
         eagle = [e for e in manifest if e["name"].startswith("eagle_")]
         self.assertEqual(len(eagle), 6)
-        for i in range(6):
+        backgrounds = [e for e in manifest if e["name"].startswith("bg")]
+        self.assertEqual(len(backgrounds), 7)
+        for i in range(len(backgrounds)):
             far = next(e for e in manifest if e["name"] == f"bg{i}")
             road = next(e for e in manifest if e["name"] == f"ground{i}")
             self.assertEqual((far["strips"], far["rows"]), (32, 12))
@@ -53,7 +55,7 @@ class AssetsTest(unittest.TestCase):
 
     def test_guardian_scale_and_feet(self):
         directory = GAME / "artbox/generated"
-        for name in ("beetle", "toad", "jackal", "owl", "leviathan", "smoggar"):
+        for name in ("beetle", "toad", "jackal", "owl", "leviathan", "vulture", "smoggar"):
             extents = []
             for frame in range(2):
                 image = Image.open(directory / f"boss_{name}_{frame}.png").convert("RGBA")

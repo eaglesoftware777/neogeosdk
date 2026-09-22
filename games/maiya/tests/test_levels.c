@@ -9,8 +9,8 @@ int main(void)
     for (i = 0; i < MG_LEVEL_COUNT; i++) {
         const MGLevel *level = &mg_levels[i];
         assert(level->width > 1500 && level->width < 32767);
-        assert(level->background < 6);
-        assert(level->music >= 1 && level->music <= 7);
+        assert(level->background < MG_LEVEL_COUNT);
+        assert(level->music >= 1 && level->music <= 8);
         assert(level->boss_hp > 0);
         for (j = 0; j < MG_PLATFORM_COUNT; j++) {
             const MGPlatform *p = &level->platforms[j];

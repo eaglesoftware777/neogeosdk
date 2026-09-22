@@ -11,6 +11,7 @@ void NEOGEO_USER maiya_boot(void);
 void NEOGEO_USER maiya_frame(void);
 void NEOGEO_USER maiya_title(void);
 void NEOGEO_USER maiya_title_frame(void);
+void NEOGEO_USER maiya_hero_select(void);
 uint8_t NEOGEO_USER maiya_hero_choice(void);
 void NEOGEO_USER maiya_eyecatcher(void);
 

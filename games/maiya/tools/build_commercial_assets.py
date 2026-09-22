@@ -714,6 +714,31 @@ def build():
         header.append(f"#define MG_{cname.upper()}_H {spec['canvas'][1]}u")
         print(f"  Enemy {cname} compiled ({len(frames)} frames)", flush=True)
 
+    # Genuinely new creatures rather than more recolours of the shared six:
+    # each of these is its own art, its own bank, so the roster finally has
+    # more than seven bodies to draw encounters from.
+    set1_img = Image.open(find_file("pollution_enemies_set1*.jpg")).convert("RGB")
+    set2_img = Image.open(find_file("more_enemies_set2*.jpg")).convert("RGB")
+
+    new_creatures = {
+        "jellyfish": (set1_img, (32, 32), 26, {"0": (10, 55, 205, 265), "1": (215, 55, 410, 265)}),
+        "toxiccrab": (set1_img, (48, 32), 28, {"0": (10, 345, 250, 540), "1": (250, 345, 490, 540)}),
+        "acidmoth":  (set1_img, (48, 32), 30, {"0": (10, 765, 250, 1020), "1": (250, 765, 490, 1020)}),
+        "sewerrat":  (set1_img, (32, 48), 40, {"0": (505, 790, 690, 1020), "1": (690, 790, 875, 1020)}),
+        "smogbat":   (set1_img, (32, 48), 40, {"0": (505, 60, 675, 290), "1": (675, 60, 845, 290)}),
+        "poachdrone":(set2_img, (48, 32), 28, {"0": (520, 398, 745, 528), "1": (750, 398, 975, 528)}),
+        "chemfly":   (set2_img, (32, 32), 20, {"0": (15, 398, 195, 528), "1": (200, 398, 380, 528)}),
+        "plasticbat":(set2_img, (32, 32), 28, {"0": (0, 60, 170, 210), "1": (170, 60, 340, 210)}),
+        "slaggolem": (set2_img, (32, 48), 40, {"0": (510, 60, 681, 210), "1": (681, 60, 852, 210)}),
+        "vinesting": (set2_img, (32, 64), 56, {"0": (250, 720, 375, 870), "1": (375, 720, 500, 870)}),
+        "sporegob":  (set2_img, (32, 48), 40, {"0": (510, 720, 681, 900), "1": (681, 720, 852, 900)}),
+    }
+    for cname, (src, canvas, height, boxes) in new_creatures.items():
+        frames = fit_group(src, boxes, canvas, height)
+        shared_set(cname, frames)
+        header.append(f"#define MG_{cname.upper()}_FRAMES {len(frames)}u")
+        print(f"  Enemy {cname} compiled ({len(frames)} frames)", flush=True)
+
     print("== 4. Compiling Allies & NPCs ==", flush=True)
     allies_img = Image.open(find_file("maiya_allies*.jpg")).convert("RGB")
 
