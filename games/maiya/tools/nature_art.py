@@ -798,17 +798,19 @@ HAZARDS = (
 # ---------------------------------------------------------------------------
 
 PIT_THEMES = {
-    # 1 outline, 2-5 earth light->dark, 6-7 wall, 8-12 content dark->light, 13-15 glints
-    "water": [(0, 0, 0), (18, 14, 20), (138, 100, 64), (104, 72, 44), (74, 50, 32), (48, 32, 22),
+    # 1 caution stripe (bright, the same in every theme -- a pit reads as a
+    # pit before it reads as water/toxic/fire/void), 2-5 earth light->dark,
+    # 6-7 wall, 8-12 content dark->light, 13-15 glints
+    "water": [(0, 0, 0), (255, 200, 30), (138, 100, 64), (104, 72, 44), (74, 50, 32), (48, 32, 22),
               (60, 48, 40), (34, 26, 24), (8, 24, 60), (14, 48, 110), (24, 88, 170), (70, 150, 220),
               (150, 210, 245), (230, 246, 255), (120, 190, 235), (40, 120, 200)],
-    "toxic": [(0, 0, 0), (18, 14, 20), (120, 104, 72), (92, 78, 54), (66, 54, 38), (44, 36, 26),
+    "toxic": [(0, 0, 0), (255, 200, 30), (120, 104, 72), (92, 78, 54), (66, 54, 38), (44, 36, 26),
               (56, 50, 40), (32, 28, 24), (12, 36, 8), (30, 78, 12), (70, 140, 20), (140, 210, 40),
               (210, 250, 110), (245, 255, 200), (170, 240, 70), (90, 170, 30)],
-    "fire":  [(0, 0, 0), (18, 12, 14), (132, 88, 56), (100, 64, 40), (72, 44, 28), (46, 28, 18),
+    "fire":  [(0, 0, 0), (255, 200, 30), (132, 88, 56), (100, 64, 40), (72, 44, 28), (46, 28, 18),
               (70, 40, 30), (40, 22, 18), (70, 10, 6), (150, 30, 10), (220, 80, 20), (250, 150, 40),
               (255, 220, 90), (255, 250, 210), (255, 190, 60), (200, 60, 20)],
-    "void":  [(0, 0, 0), (14, 12, 22), (120, 116, 140), (88, 84, 108), (60, 56, 80), (38, 34, 56),
+    "void":  [(0, 0, 0), (255, 200, 30), (120, 116, 140), (88, 84, 108), (60, 56, 80), (38, 34, 56),
               (46, 42, 64), (26, 22, 40), (4, 4, 10), (12, 10, 24), (26, 20, 48), (54, 40, 90),
               (100, 80, 150), (190, 170, 230), (140, 110, 200), (70, 56, 120)],
 }
@@ -832,7 +834,12 @@ def pit_hole(theme, width, frame):
                 a[y, x] = min(5, 2 + band)                      # far wall strata
             else:
                 a[y, x] = 8                                      # the depths
-        # a broken lip along the top
+        # a broken lip along the top, in the one color every pit theme now
+        # shares (bright caution yellow) -- at 32px wide there's no room
+        # for a black/yellow stripe to actually resolve, so a solid bright
+        # rim is what reads as "hazard" before the eye gets to the theme.
+        # Index 0 stays reserved for transparency (to_rgba keys on it), so
+        # the dark half of the old lip is gone rather than alternated.
         lip = 1 + (x * 5 % 7 == 0) + (x * 3 % 11 == 0)
         a[0:lip, x] = 1
     # rocks set into the far wall
