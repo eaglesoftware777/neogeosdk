@@ -1056,11 +1056,14 @@ def build():
     if pair.is_file():
         faces_img = Image.open(pair).convert("RGB")
         w2 = faces_img.width // 2
-        busts = fit_group(faces_img, {"maiya": (0, 0, w2, faces_img.height),
-                                      "luna": (w2, 0, faces_img.width, faces_img.height)},
-                          (96, 96), 92, bg_color="corner")
-        portrait = dehalo(np.asarray(busts["maiya"]))
-        luna_painted = dehalo(np.asarray(busts["luna"]))
+        # fit_group scales to the full painted figure, hair included -- her
+        # hair trails well past her sleeves, so the shared scale it picked
+        # left the short sleeves a sliver of nearly-invisible pixels right
+        # at the bottom edge. She read as a head with no arms. A fixed crop
+        # that ends just past the sleeve cuffs, fit on its own, keeps both
+        # shoulders in frame at a size that actually reads.
+        portrait = dehalo(crop_and_fit(faces_img, (0, 240, w2, 780), (96, 96), anchor="center", bg_color="corner"))
+        luna_painted = dehalo(crop_and_fit(faces_img, (w2, 240, faces_img.width, 780), (96, 96), anchor="center", bg_color="corner"))
     else:
         portrait = dehalo(tidy_face(crop_and_fit(m_img, (27, 70, 144, 268), (96, 96), anchor="center")))
     # Centre the icon on her face (the skin), with a little hair around it.

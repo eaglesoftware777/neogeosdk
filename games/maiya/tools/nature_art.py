@@ -819,7 +819,7 @@ def _pit_lean(y, half_w):
     than a wedge stamped into the tile. Shared by the wall pass and the
     contents fill so the water/fire/void inside never overruns the walls
     around it."""
-    return ((y / 31.0) ** 1.5) * half_w * 0.4
+    return ((y / 31.0) ** 1.5) * half_w * 0.5
 
 
 def pit_hole(theme, width, frame):
@@ -835,18 +835,19 @@ def pit_hole(theme, width, frame):
                 continue
             if edge <= lean + 2:
                 a[y, x] = 6 if edge - lean < 1 else 7           # side wall: lit face, then shadow
-            elif y < 15:
+            elif y < 10:
                 band = (y + (x * 3 + int(rng.integers(0, 3))) // 11) // 3
-                a[y, x] = min(5, 2 + band)                      # far wall strata
+                a[y, x] = min(5, 3 + band)                      # far wall strata, biased dark --
+                                                                 # a void first, bare earth second
             else:
                 a[y, x] = 8                                      # the depths, before contents fill it in
-        # A broken lip in caution yellow, then a hard dark crease right
-        # under it -- the ground doesn't fade into the hole, it stops, and
-        # the eye should catch that edge before anything else in the tile.
-        lip = 1 + (x * 5 % 7 == 0) + (x * 3 % 11 == 0)
-        a[0:lip, x] = 1
-        if edge >= 2:
-            a[lip:lip + 2, x] = 7
+        # A hard dark crease is the real edge -- the ground doesn't fade
+        # into the hole, it stops -- with only scattered flecks of caution
+        # paint left on it, not a solid rail that reads as something to
+        # stand on.
+        a[0:2, x] = 7
+        if edge >= 2 and ((x * 5 % 7 == 0) or (x * 3 % 11 == 0)):
+            a[0, x] = 1
     # rocks set into the far wall
     for x in range(4, width - 4, 9):
         y = 4 + (x * 13) % 7
