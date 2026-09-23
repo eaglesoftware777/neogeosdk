@@ -1064,18 +1064,30 @@ def build():
     else:
         portrait = dehalo(tidy_face(crop_and_fit(m_img, (27, 70, 144, 268), (96, 96), anchor="center")))
     # Centre the icon on her face (the skin), with a little hair around it.
-    rgb = portrait[..., :3].astype(np.int32)
-    skin = (portrait[..., 3] > 0) & (rgb[..., 0] > 190) & (rgb[..., 1] > 130) & (rgb[..., 0] > rgb[..., 2] + 40)
-    ys, xs = np.where(skin[:64])
-    cy, cx = int(np.median(ys)), int(np.median(xs))
+    # Each portrait gets its own skin-centre -- Luna is her own painting,
+    # not just Maiya recoloured, so reusing Maiya's crop coordinates on her
+    # cropped noticeably off-centre.
     side = 50
-    y0 = max(0, cy - side // 2 - 4)
-    head = Image.fromarray(portrait).crop((cx - side // 2, y0, cx + side // 2, y0 + side)).resize((32, 32), Image.Resampling.LANCZOS)
+
+    def face_crop(img):
+        rgb = img[..., :3].astype(np.int32)
+        skin = (img[..., 3] > 0) & (rgb[..., 0] > 190) & (rgb[..., 1] > 130) & (rgb[..., 0] > rgb[..., 2] + 40)
+        ys, xs = np.where(skin[:64])
+        cy, cx = int(np.median(ys)), int(np.median(xs))
+        y0 = max(0, cy - side // 2 - 4)
+        return Image.fromarray(img).crop((cx - side // 2, y0, cx + side // 2, y0 + side)).resize((32, 32), Image.Resampling.LANCZOS)
+
     def face_icon(img):
+        # tidy_face() is for cleaning scaling noise out of a photo crop --
+        # the painted portrait is already clean, and running it again on a
+        # face this small treated her smile line as noise and painted skin
+        # tone over it, leaving her looking flat, almost stern. The photo
+        # fallback below already tidies once at full portrait size, so
+        # there's nothing left here that needs a second pass either way.
         h = np.array(img)
         h[..., 3] = np.where(h[..., 3] >= 128, 255, 0)
-        return dehalo(tidy_face(h))
-    face = face_icon(head)
+        return dehalo(h)
+    face = face_icon(face_crop(portrait))
     # Its own palette: squeezed into the sprite's few skin tones the face
     # came out blotchy.
     append("face", face)
@@ -1090,9 +1102,7 @@ def build():
         lit = luna[..., 3] > 0
         luna[lit, :3] = hsv_map(luna[lit, :3], alt_tint)
     append("portrait_alt", luna, banks=2, bank_base=62)
-    luna_head = Image.fromarray(np.ascontiguousarray(luna)).crop(
-        (cx - side // 2, y0, cx + side // 2, y0 + side)).resize((32, 32), Image.Resampling.LANCZOS)
-    append("face_alt", face_icon(luna_head))
+    append("face_alt", face_icon(face_crop(np.ascontiguousarray(luna))))
     print(f"  Maiya compiled ({len(maiya_frames)} frames)", flush=True)
 
     print("== 3. Compiling 6 Corrupted Blight Enemies ==", flush=True)
