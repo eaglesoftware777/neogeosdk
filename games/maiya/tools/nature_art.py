@@ -759,6 +759,25 @@ def iron_spikes(frame):
     return to_rgba(outline(a, HZ_OUT), HAZARD)
 
 
+def warn_sign(frame):
+    """A caution board on a post, planted at the near edge of a pit: a
+    yellow triangle, dark banding, a mark that catches the light."""
+    a = canvas()
+    a[21:31, 15:18] = IR_D
+    a[21:31, 16] = IR_M
+    a[26:28, 13:20] = RUST
+    for y in range(4, 21):
+        half = int((y - 3) * 0.62)
+        a[y, 16 - half:17 + half] = FL_Y
+        a[y, 16 - half] = HZ_OUT
+        a[y, 16 + half] = HZ_OUT
+    a[20, 4:29] = HZ_OUT
+    a[8:15, 15:17] = HZ_OUT
+    a[17:19, 15:17] = HZ_OUT
+    a[7, 15] = FL_W if frame else FL_Y     # a glint that comes and goes
+    return to_rgba(outline(a, HZ_OUT), HAZARD)
+
+
 def pit(frame):
     """A break in the road: a crumbling lip of earth, rock walls falling
     away into the dark, and a thin mist drifting in the depths."""
@@ -787,6 +806,7 @@ HAZARDS = (
     ("sludge0", lambda: sludge_pool(0)), ("sludge1", lambda: sludge_pool(1)),
     ("toxic0", lambda: toxic_drum(0)), ("toxic1", lambda: toxic_drum(1)),
     ("spikes0", lambda: iron_spikes(0)), ("spikes1", lambda: iron_spikes(1)),
+    ("sign0", lambda: warn_sign(0)), ("sign1", lambda: warn_sign(1)),
 )
 
 

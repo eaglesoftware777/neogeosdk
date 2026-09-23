@@ -147,7 +147,7 @@ enum {
     GLYPH_HEART = 1, GLYPH_ROSE = 2, GLYPH_KEY = 3, GLYPH_COIN = 4,
     GLYPH_LEAF = 5, GLYPH_SPARK = 6, GLYPH_BLOCK = 7, GLYPH_DOT = 8,
     GLYPH_FLOWER = 9, GLYPH_FRIEND = 10, GLYPH_BERRY = 11, GLYPH_ORB = 12,
-    GLYPH_BUD = 13, GLYPH_CROWN = 14, GLYPH_WARN = 15,
+    GLYPH_BUD = 13, GLYPH_CROWN = 14,
     ROW_TRAY = 26,                   /* the collection tray, bottom left  */
     MG_TRAY_ICON_SCALE = 0x60,       /* small badge icons, not a HUD bar  */
     MG_TRAY_ICON_PX = 13,            /* ~32px source shrunk by the above  */
@@ -264,7 +264,6 @@ typedef struct {
     int16_t  bonus_cursor_x, bonus_cursor_y;
     char     hint_text[36];
     uint8_t  hint_timer;
-    uint8_t  pit_warn_timer;         /* the caution banner over a pit warning, its own clock  */
     uint16_t previous_joy;
     uint8_t  life_pickups_used;      /* the hidden extra life, capped for the whole run */
     uint32_t next_life_score;        /* next score milestone that hands out a bonus life */
@@ -746,6 +745,21 @@ static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
             ng_sprite_group_set_visible(g, 1);
             ng_sprite_group_flush(g);
             used++;
+        }
+        /* A pit reads as a texture change more than a hole at a glance, so
+         * a caution sign stands planted at its near edge -- a board and a
+         * post, not another line of HUD text. */
+        if (hz->type == MG_H_PIT && used < MG_HAZARD_BLOCKS) {
+            int16_t sx = (int16_t)(scr - 28);
+            if (sx >= -32 && sx <= 336) {
+                NGSpriteGroup *g = &mg.hazards[used];
+                ng_sprite_group_set_tile_base(g, mg_hazard_tiles[MG_HZ_SIGN0 + ((mg.tick >> 4) & 1)]);
+                ng_sprite_group_set_palette(g, PAL_HAZARD);
+                ng_sprite_group_set_pos(g, sx, (int16_t)(MG_GROUND_Y - 32));
+                ng_sprite_group_set_visible(g, 1);
+                ng_sprite_group_flush(g);
+                used++;
+            }
         }
     }
     for (; used < MG_HAZARD_BLOCKS; used++) {
@@ -1795,7 +1809,6 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.attempt_hits = 0;
     mg.clock = MG_LEVEL_SECONDS; mg.clock_sub = 0; mg.wraith_timer = 0;
     mg.hp_px = MG_HP_BAR_PX; mg.boss_px = 0; mg.cage_open = 0; mg.arena_bg = 0; mg.gust = 0;
-    mg.pit_warn_timer = 0;
     for (i = 0; i < MG_PLATFORM_COUNT; i++) { mg.ledge_stand[i] = 0; mg.ledge_gone[i] = 0; }
     mg.gate_shown = 0;
     mg.npc_mask = 0; mg.npc_live = 0; mg.npc_here = 0;
@@ -4244,14 +4257,9 @@ static void NEOGEO_USER mg_hazard_warn_check(void)
               : hz->type == MG_H_SPIKES ? "HAZARD: SHARP SPIKES AHEAD"
               : hz->type == MG_H_TOXIC ? "HAZARD: TOXIC - STAND CLOSE, PRESS UP"
               : "TOXIC SLUDGE AHEAD - KEEP CLEAR", PAL_WARN, 90);
-        /* A pit reads as a texture change more than a hazard at a glance,
-         * so it gets its own caution panel above the hint text, on the one
-         * FIX row (6) that sits idle during play -- a danger sign either
-         * side of the words, not just more text. */
-        if (hz->type == MG_H_PIT) {
-            mg_centre(6, "\x0F ATTENTION - YOU MAY FALL \x0F", PAL_WARN);
-            mg.pit_warn_timer = 90;
-        }
+        /* A pit also plants its own caution sign at its near edge (see
+         * mg_draw_hazards) -- a real board in the world, always there,
+         * rather than text that only shows up once and times out. */
         return;
     }
 }
@@ -4644,9 +4652,6 @@ void NEOGEO_USER maiya_frame(void)
         }
         if (mg.hint_timer && --mg.hint_timer == 0) {
             ng_fix_clear_rect(1, ROW_HINT, 38, 1, PAL_TEXT);
-        }
-        if (mg.pit_warn_timer && --mg.pit_warn_timer == 0) {
-            ng_fix_clear_rect(1, 6, 38, 1, PAL_TEXT);
         }
         if (mg.hud_dirty) {
             mg_update_hud();
