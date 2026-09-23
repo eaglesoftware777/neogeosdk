@@ -778,29 +778,6 @@ def warn_sign(frame):
     return to_rgba(outline(a, HZ_OUT), HAZARD)
 
 
-def pit(frame):
-    """A break in the road: a crumbling lip of earth, rock walls falling
-    away into the dark, and a thin mist drifting in the depths."""
-    a = canvas()
-    a[:, :] = HZ_OUT
-    for y in range(32):
-        shade = IR_D if y < 10 else HZ_OUT
-        a[y, 0:3] = shade
-        a[y, 29:32] = shade
-    for x in range(32):
-        lip = 2 + ((x * 7 + 3) % 5 == 0) + ((x * 3) % 7 == 0)
-        a[0:lip, x] = RUST
-        a[lip, x] = IR_D
-    for x in range(4, 28, 5):
-        a[4 + (x % 3), x] = IR_D
-        a[7 + (x % 2), x + 1] = IR_D
-    for k in range(3):
-        mx = (k * 11 + frame * 6) % 26 + 3
-        a[18 + k * 4, mx:mx + 5] = IR_D
-        a[19 + k * 4, mx + 1:mx + 4] = IR_M
-    return to_rgba(a, HAZARD)
-
-
 HAZARDS = (
     ("fire0", lambda: fire_bed(0)), ("fire1", lambda: fire_bed(1)),
     ("sludge0", lambda: sludge_pool(0)), ("sludge1", lambda: sludge_pool(1)),
@@ -836,54 +813,69 @@ PIT_THEMES = {
 }
 
 
+def _pit_lean(y, half_w):
+    """How far the walls have bowed in by row `y`: a curve, not a straight
+    diagonal, so the mouth reads as a hole receding in perspective rather
+    than a wedge stamped into the tile. Shared by the wall pass and the
+    contents fill so the water/fire/void inside never overruns the walls
+    around it."""
+    return ((y / 31.0) ** 1.5) * half_w * 0.4
+
+
 def pit_hole(theme, width, frame):
     """One pit, `width` pixels across and 32 deep, as an indexed image."""
     a = np.zeros((32, width), dtype=np.uint8)
     rng = np.random.default_rng(width * 7 + len(theme))
+    half_w = width / 2.0
     for x in range(width):
-        # the side walls lean in with depth, so the opening reads as a hole
         edge = min(x, width - 1 - x)
         for y in range(32):
-            lean = y // 6
+            lean = _pit_lean(y, half_w)
             if edge < lean:
                 continue
             if edge <= lean + 2:
-                a[y, x] = 6 if edge == lean + 2 else 7          # side wall face
-            elif y < 14:
+                a[y, x] = 6 if edge - lean < 1 else 7           # side wall: lit face, then shadow
+            elif y < 15:
                 band = (y + (x * 3 + int(rng.integers(0, 3))) // 11) // 3
                 a[y, x] = min(5, 2 + band)                      # far wall strata
             else:
-                a[y, x] = 8                                      # the depths
-        # a broken lip along the top, in the one color every pit theme now
-        # shares (bright caution yellow) -- at 32px wide there's no room
-        # for a black/yellow stripe to actually resolve, so a solid bright
-        # rim is what reads as "hazard" before the eye gets to the theme.
-        # Index 0 stays reserved for transparency (to_rgba keys on it), so
-        # the dark half of the old lip is gone rather than alternated.
+                a[y, x] = 8                                      # the depths, before contents fill it in
+        # A broken lip in caution yellow, then a hard dark crease right
+        # under it -- the ground doesn't fade into the hole, it stops, and
+        # the eye should catch that edge before anything else in the tile.
         lip = 1 + (x * 5 % 7 == 0) + (x * 3 % 11 == 0)
         a[0:lip, x] = 1
+        if edge >= 2:
+            a[lip:lip + 2, x] = 7
     # rocks set into the far wall
     for x in range(4, width - 4, 9):
         y = 4 + (x * 13) % 7
-        a[y:y + 2, x:x + 3] = 5
-        a[y, x] = 3
-    # the contents
+        if min(x, width - 1 - x) >= _pit_lean(y, half_w) + 3:
+            a[y:y + 2, x:x + 3] = 5
+            a[y, x] = 3
+    # The contents: bound by the same bowed walls as everything else above,
+    # so the water/fire/void sits inside the hole instead of squaring off
+    # underneath it.
     surf = 15 + (frame & 1)
-    for x in range(3, width - 3):
+    for x in range(width):
         edge = min(x, width - 1 - x)
-        if edge < 3:
-            continue
         if theme == "void":
             for y in range(14, 32):
+                if edge < _pit_lean(y, half_w) + 2:
+                    continue
                 a[y, x] = 8 if y > 24 else (9 if y > 19 else 10)
-            if (x + frame * 4) % 13 < 4:
+            if edge >= _pit_lean(20, half_w) + 2 and (x + frame * 4) % 13 < 4:
                 a[18 + (x % 3), x] = 11                         # drifting mist
-            if (x * 7 + frame * 5) % 23 == 0:
+            if edge >= _pit_lean(26, half_w) + 2 and (x * 7 + frame * 5) % 23 == 0:
                 a[26, x] = 13                                    # a far glint
         else:
+            if edge < _pit_lean(surf, half_w) + 2:
+                continue
             a[surf, x] = 12
             a[surf + 1, x] = 11
             for y in range(surf + 2, 32):
+                if edge < _pit_lean(y, half_w) + 2:
+                    continue
                 a[y, x] = 10 if y < surf + 6 else (9 if y < surf + 11 else 8)
             if theme == "water" and (x + frame * 3) % 7 == 0:
                 a[surf, x] = 13                                  # foam
