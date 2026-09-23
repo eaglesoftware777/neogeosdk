@@ -1,32 +1,21 @@
-; 1_fm_example_b — Sonic-style fast bouncy lead (G major)
+; 1_fm_example_b - Maiya's fanfare, played once when she is chosen
 ;
-; Quick arpeggiated runs alternating with staccato rests — the
-; classic Mega Drive arcade-FM platformer feel.
+; A bright rising call on the hero lead, C major: up the chord, a quick
+; turn at the top and a held high C. About two seconds, FM only, no loop
+; mark, so it answers the choice and gets out of the way.
 
-T72
-I1
+T120
+I6
 V13
-O5
+O4
 L16
 
-; A — leaping ascend
-G B > D G  > D < B G4
-F+ A > C F+  > C < A F+4
-
-; B — running 16ths then resolve
+G > C E G
+L8
+> C < G > E
 L16
-D E F+ G  A B > C D  E D C < B  A G F+ E
-L16
-D4 G2 R4
-
-; C — answer with grace notes
-> D < B G B  > D < B G4
-> C < A F+ A  > C < A F+4
-
-; D — descend to tonic
-L16
-> E D C < B  A G F+ E  D C < B A  G F+ E D
-L16
-G2 R4 R4
-
-~
+D E
+L4
+G
+L2
+> C

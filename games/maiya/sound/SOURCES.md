@@ -12,7 +12,7 @@ encoder:
 
 | File | Track | Where it plays |
 | --- | --- | --- |
-| `1.wav` | Retro Game Music Pack - Title Screen | (kept in the bank, currently unused) |
+| `1.wav` | Retro Game Music Pack - Title Screen | the hero select screen, the controls and the story |
 | `2.wav` | Chiptune Adventures - Stage 1 | Mission 1, Emerald Forest |
 | `3.wav` | Chiptune Adventures - Stage 2 | Mission 2, Valley of Sacred Falls |
 | `4.wav` | Retro Game Music Pack - Level 1 | Mission 3, Azure Coral Coast; Mission 6, Sacred World Tree |
@@ -49,5 +49,7 @@ and trimmed for the driver:
 
 ## FM and SSG (`fm/`, `ssg/`, `mml/`)
 
-The FM fanfare under the house eyecatcher and the remaining FM, SSG and MML
-tracks are written for this game in the repository.
+The FM fanfare under the house eyecatcher (`fm/0_fm_example_a.mml`), the
+two select-screen fanfares -- Maiya's (`fm/1_fm_example_b.mml`) and Luna's
+(`fm/2_fm_example_c.mml`) -- and the remaining FM, SSG and MML tracks are
+written for this game in the repository.

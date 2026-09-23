@@ -42,12 +42,12 @@ emu.register_frame_done(function()
     -- Between Start landing and real gameplay there are now three screens
     -- (hero-select, how-to-play, the intro story) that each need a real
     -- button, not just a direction -- mg.player does not exist until she is
-    -- through all three. Push through them here, unconditionally; once p is
-    -- valid this stops, so a stray press from this schedule can never land
-    -- during a scenario's own scripted inputs below.
+    -- through all three. Tap A every three quarters of a second until she
+    -- is: a fixed handful of presses missed a screen whenever one of them
+    -- took a little longer to come up. Once p is valid this stops, so a
+    -- stray press can never land during a scenario's own scripted inputs.
     if p == 0 then
-        input('P1 A', (t > 13.0 and t < 13.15) or (t > 14.5 and t < 14.65) or
-                       (t > 16.0 and t < 16.15) or (t > 17.5 and t < 17.65))
+        input('P1 A', t > 13.0 and ((t - 13.0) % 0.75) < 0.15)
     end
     local mode = memory:read_u8(0x10fdaf)
     if p ~= 0 and mode == 2 and u8('demo') == 0 then

@@ -182,9 +182,14 @@ def extract_cutout(img, bg_color="white", tol=26):
 
 
 def add_shadow(frame, pad=2, half_h=2.4, spread=0.42):
-    """A ground shadow tucked under the feet: a flat dark ellipse on the feet
+    """A ground shadow tucked under the feet: a dark ellipse on the feet
     line, drawn only where the frame is empty, so the figure stands on the
-    road instead of floating over it. Widest where the figure's stance is."""
+    road instead of floating over it. Widest where the figure's stance is.
+
+    Every other pixel only, in a checkerboard: the road shows through half
+    of it, which on the hardware reads as a see-through shade. Solid, it
+    was a hard black slab under everyone -- on snow or sand, a row of
+    black rectangles."""
     a = np.array(frame, dtype=np.uint8, copy=True)
     opaque = a[..., 3] > 0
     if not opaque.any():
@@ -197,6 +202,7 @@ def add_shadow(frame, pad=2, half_h=2.4, spread=0.42):
     feet = h - pad - 0.5
     yy, xx = np.mgrid[0:h, 0:w]
     shade = (((xx - cx) / half_w) ** 2 + ((yy - feet) / half_h) ** 2 <= 1.0) & ~opaque
+    shade &= ((xx + yy) % 2) == 0
     a[shade] = (24, 18, 30, 255)
     return a
 
@@ -1064,6 +1070,25 @@ def build():
         # shoulders in frame at a size that actually reads.
         portrait = dehalo(crop_and_fit(faces_img, (0, 240, w2, 780), (96, 96), anchor="center", bg_color="corner"))
         luna_painted = dehalo(crop_and_fit(faces_img, (w2, 240, faces_img.width, 780), (96, 96), anchor="center", bg_color="corner"))
+
+        # The select screen shows faces only: the painting is a bust with
+        # short sleeves and no arms, and at card size that read as a torso
+        # missing its arms. A square close-up from the hairline to just
+        # under the chin, set on a soft glow in each girl's colour -- forest
+        # green for Maiya, moonlit blue for Luna -- fills the whole card.
+        def closeup(box, inner, outer):
+            face = dehalo(crop_and_fit(faces_img, box, (96, 96), anchor="center", bg_color="corner", pad=0))
+            yy, xx = np.mgrid[0:96, 0:96]
+            d = np.sqrt(((xx - 48) / 60.0) ** 2 + ((yy - 40) / 60.0) ** 2).clip(0, 1)[..., None]
+            glow = np.array(inner, dtype=np.float32) * (1 - d) + np.array(outer, dtype=np.float32) * d
+            card = np.zeros((96, 96, 4), dtype=np.uint8)
+            card[..., :3] = (np.round(glow / 24) * 24).clip(0, 255)   # a few painted steps, not a smear
+            card[..., 3] = 255
+            lit = face[..., 3] > 0
+            card[lit, :3] = face[lit, :3]
+            return card
+        select_maiya = closeup((210, 262, 510, 562), (96, 176, 120), (16, 48, 40))
+        select_luna = closeup((560, 262, 860, 562), (120, 120, 200), (20, 20, 56))
     else:
         portrait = dehalo(tidy_face(crop_and_fit(m_img, (27, 70, 144, 268), (96, 96), anchor="center")))
     # Centre the icon on her face (the skin), with a little hair around it.
@@ -1095,7 +1120,6 @@ def build():
     # came out blotchy.
     append("face", face)
 
-    append("portrait", portrait, banks=2, bank_base=41)
     # Luna's own portrait for the select screen, beside Maiya's: the same
     # painting through the same hair and dress recolour as her sprites.
     if luna_painted is not None:
@@ -1104,7 +1128,9 @@ def build():
         luna = portrait.copy()
         lit = luna[..., 3] > 0
         luna[lit, :3] = hsv_map(luna[lit, :3], alt_tint)
-    append("portrait_alt", luna, banks=2, bank_base=62)
+        select_maiya, select_luna = portrait, luna
+    append("portrait", select_maiya, banks=2, bank_base=41)
+    append("portrait_alt", select_luna, banks=2, bank_base=62)
     append("face_alt", face_icon(face_crop(np.ascontiguousarray(luna))))
     print(f"  Maiya compiled ({len(maiya_frames)} frames)", flush=True)
 
