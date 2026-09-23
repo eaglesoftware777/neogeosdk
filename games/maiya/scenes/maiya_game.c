@@ -264,6 +264,7 @@ typedef struct {
     int16_t  bonus_cursor_x, bonus_cursor_y;
     char     hint_text[36];
     uint8_t  hint_timer;
+    uint8_t  pit_warn_timer;         /* the caution banner over a pit warning, its own clock  */
     uint16_t previous_joy;
     uint8_t  life_pickups_used;      /* the hidden extra life, capped for the whole run */
     uint32_t next_life_score;        /* next score milestone that hands out a bonus life */
@@ -872,10 +873,13 @@ static void NEOGEO_USER mg_draw_cage(int16_t camera_x)
                                 (int16_t)(mg.rescue->y - 32));
         ng_sprite_group_set_visible(&mg.cage, 1);
     } else if (mg.cage_open) {
+        /* Stays open and fully visible for its whole run, then simply
+         * clears -- it used to blink for its last 12 frames (toggling on
+         * bit 2 of the countdown), which read as broken, not as fading. */
         mg.cage_open--;
         ng_sprite_group_set_tile_base(&mg.cage, mg_prop_tiles[MG_P_CHEST_OPEN]);
         ng_sprite_group_set_pos(&mg.cage, (int16_t)(mg.cage_x - camera_x), mg.cage_y);
-        ng_sprite_group_set_visible(&mg.cage, (uint8_t)(mg.cage_open > 12 || (mg.cage_open & 2)));
+        ng_sprite_group_set_visible(&mg.cage, 1);
     } else {
         ng_sprite_group_set_visible(&mg.cage, 0);
     }
@@ -1253,29 +1257,21 @@ static void NEOGEO_USER mg_sparks(int16_t x, int16_t y);
  * in both directions, so everything standing on it is touched by the art.
  * Two waves: the first radiates from her, the second rains from the sky.
  */
-static void NEOGEO_USER mg_petal_sweep(uint8_t wave)
+static void NEOGEO_USER mg_petal_sweep(void)
 {
     static const uint8_t tiles[4] = { MG_T_PETAL, MG_T_LEAF, MG_T_DRIP, MG_T_SPARK };
     uint8_t i;
-    int16_t left = (int16_t)(mg.camera.x + 8);
 
     for (i = 0; i < MG_SPARKS; i++) {
         MGSpark *p = &mg.sparks[i];
-        if (wave == 0) {
-            /* out of her hands, fanning across the road */
-            p->x = mg.player->x;
-            p->y = (int16_t)(mg.player->y - 30);
-            p->vx = (int16_t)((i & 1) ? (2 + (i >> 1)) : -(2 + (i >> 1)));
-            p->vy = (int16_t)(-1 - (i % 3));
-        } else {
-            /* a curtain from the canopy, one column per particle */
-            p->x = (int16_t)(left + i * 26);
-            p->y = (int16_t)(20 + (i & 3) * 12);
-            p->vx = (int16_t)((i & 1) ? -1 : 1);
-            p->vy = 3;
-        }
+        /* out of her hands, fanning across the road */
+        p->x = mg.player->x;
+        p->y = (int16_t)(mg.player->y - 30);
+        p->vx = (int16_t)((i & 1) ? (2 + (i >> 1)) : -(2 + (i >> 1)));
+        p->vy = (int16_t)(-1 - (i % 3));
         p->life = (uint8_t)(50 + (i & 3) * 4);
         ng_sprite_group_set_tile_base(&p->sprite, (uint16_t)(MG_TOOL_TILE + tiles[i & 3]));
+        ng_sprite_group_set_palette(&p->sprite, PAL_TOOL);
     }
 }
 
@@ -1303,11 +1299,37 @@ static void NEOGEO_USER mg_burst(int16_t x, int16_t y, uint8_t tile, uint8_t cou
         MGSpark *p = &mg.sparks[i];
         if (p->life) continue;
         ng_sprite_group_set_tile_base(&p->sprite, (uint16_t)(MG_TOOL_TILE + tile));
+        /* Every ordinary burst is her tools' own colours -- explicit, so a
+         * particle slot the Secret Art borrowed for its gold ring doesn't
+         * carry that tint into the next dash puff or hit spark. */
+        ng_sprite_group_set_palette(&p->sprite, PAL_TOOL);
         p->x = (int16_t)(x + (int16_t)(k * 9) - (int16_t)(count * 4));
         p->y = y;
         p->vx = (int16_t)((k & 1) ? 1 : -1);
         p->vy = (int16_t)(rise - (k & 1));
         p->life = (uint8_t)(14 + k * 3);
+        k++;
+    }
+}
+
+/*
+ * The Secret Art's own signature: a ring of golden halos expanding out
+ * from her, distinct from the petal/leaf/dust particles every other
+ * effect in the game reuses. Same particle pool, borrowed palette.
+ */
+static void NEOGEO_USER mg_secret_art_ring(int16_t x, int16_t y)
+{
+    static const int8_t vx8[8] = { 0, 5, 7, 5, 0, -5, -7, -5 };
+    static const int8_t vy8[8] = { -7, -5, 0, 5, 7, 5, 0, -5 };
+    uint8_t i, k = 0;
+    for (i = 0; i < MG_SPARKS && k < 8; i++) {
+        MGSpark *p = &mg.sparks[i];
+        if (p->life) continue;
+        ng_sprite_group_set_tile_base(&p->sprite, (uint16_t)(MG_TOOL_TILE + MG_T_HALO));
+        ng_sprite_group_set_palette(&p->sprite, PAL_GOLD);
+        p->x = x; p->y = y;
+        p->vx = vx8[k]; p->vy = vy8[k];
+        p->life = 26;
         k++;
     }
 }
@@ -1660,7 +1682,7 @@ static void NEOGEO_USER mg_secret_art(void)
     mg.shake = 24;
     mg.art_wave = 24;              /* the second wave follows the first */
     playSFX(SOUND_SFX_9);          /* the clear ring of the purification */
-    mg_petal_sweep(0);
+    mg_petal_sweep();
 
     /* Everyone present takes the art -- no hit sparks, they would overwrite
      * the storm in the same particle pool. */
@@ -1748,6 +1770,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.attempt_hits = 0;
     mg.clock = MG_LEVEL_SECONDS; mg.clock_sub = 0; mg.wraith_timer = 0;
     mg.hp_px = MG_HP_BAR_PX; mg.boss_px = 0; mg.cage_open = 0; mg.arena_bg = 0; mg.gust = 0;
+    mg.pit_warn_timer = 0;
     for (i = 0; i < MG_PLATFORM_COUNT; i++) { mg.ledge_stand[i] = 0; mg.ledge_gone[i] = 0; }
     mg.gate_shown = 0;
     mg.npc_mask = 0; mg.npc_live = 0; mg.npc_here = 0;
@@ -2955,10 +2978,19 @@ static void NEOGEO_USER mg_controls(void)
         }
     }
 
-    /* A gust leans on her while she's on the ground: she walks into it more
-     * slowly, but it never touches a jump or drags her near a pit edge. */
-    if (mg.gust && !mg.climbing && !mg.airborne && !mg_over_pit(p->x, 80))
+    /*
+     * A gust leans on her while she's on the ground: she walks into it more
+     * slowly, but it never touches a jump or drags her near a pit edge.
+     * The push is capped at MG_GUST_PUSH itself -- without the cap, this
+     * subtracts every frame from a velocity that already carries last
+     * frame's subtraction, and since WALK_BRAKE (96) is smaller than
+     * MG_GUST_PUSH (120), standing still let it run away by 24 more each
+     * frame for the whole gust, sliding her backward off the screen.
+     */
+    if (mg.gust && !mg.climbing && !mg.airborne && !mg_over_pit(p->x, 80)) {
         vx = (int16_t)(vx - MG_GUST_PUSH);
+        if (vx < -MG_GUST_PUSH) vx = (int16_t)-MG_GUST_PUSH;
+    }
     p->vx_fp = vx;
     mg.previous_joy = joy;
 }
@@ -3801,7 +3833,11 @@ static void NEOGEO_USER mg_update_entities(void)
     if (mg.spring && --mg.spring == 0) mg.hud_dirty = 1;
     if (mg.crown && --mg.crown == 0) mg.hud_dirty = 1;
     if (mg.flash && --mg.flash == 0) mg_palette(PAL_HERO, mg_hero_normal_pal());
-    if (mg.art_wave && --mg.art_wave == 0) mg_petal_sweep(1);
+    /* The second wave used to repeat the same petal curtain as the first;
+     * now it's the Secret Art's own signature -- a ring of gold expanding
+     * from where she stands, nothing else in the game looks like it. */
+    if (mg.art_wave && --mg.art_wave == 0)
+        mg_secret_art_ring(mg.player->x, (int16_t)(mg.player->y - 30));
 }
 
 /* ------------------------------------------------------------------ */
@@ -4183,6 +4219,13 @@ static void NEOGEO_USER mg_hazard_warn_check(void)
               : hz->type == MG_H_SPIKES ? "HAZARD: SHARP SPIKES AHEAD"
               : hz->type == MG_H_TOXIC ? "HAZARD: TOXIC - STAND CLOSE, PRESS UP"
               : "TOXIC SLUDGE AHEAD - KEEP CLEAR", PAL_WARN, 90);
+        /* A pit reads as a texture change more than a hazard at a glance,
+         * so it gets its own caution line above the hint text, on the one
+         * FIX row (6) that sits idle during play. */
+        if (hz->type == MG_H_PIT) {
+            mg_centre(6, "!! DANGER: BOTTOMLESS PIT !!", PAL_WARN);
+            mg.pit_warn_timer = 90;
+        }
         return;
     }
 }
@@ -4575,6 +4618,9 @@ void NEOGEO_USER maiya_frame(void)
         }
         if (mg.hint_timer && --mg.hint_timer == 0) {
             ng_fix_clear_rect(1, ROW_HINT, 38, 1, PAL_TEXT);
+        }
+        if (mg.pit_warn_timer && --mg.pit_warn_timer == 0) {
+            ng_fix_clear_rect(1, 6, 38, 1, PAL_TEXT);
         }
         if (mg.hud_dirty) {
             mg_update_hud();
