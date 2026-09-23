@@ -573,9 +573,321 @@ def thorn_crown():
     return to_rgba(outline(a))
 
 
+def thorn_bundle():
+    """A sheaf of thorns tied with a leaf: more thorns to throw."""
+    a = canvas()
+    for i, x in enumerate(range(9, 24, 3)):
+        top = 5 + (i % 2) * 2
+        a[top:27, x:x + 2] = LF_D
+        a[top - 2:top, x] = BLOSSOM
+    disc(a, 16, 17, 8.0, 2.4, LF_M)
+    a[16:18, 9:24] = LF_L
+    return to_rgba(outline(a))
+
+
+def spread_fan():
+    """Three petals fanned from one stem: the spread throw."""
+    a = canvas()
+    for ang in (-40, 0, 40):
+        r = np.deg2rad(ang - 90)
+        cx = int(16 + np.cos(r) * 8)
+        cy = int(18 + np.sin(r) * 8)
+        disc(a, cx, cy, 4.2, 4.2, BLOSSOM)
+        disc(a, cx, cy, 1.8, 1.8, WATER_L)
+    a[18:29, 15:17] = LF_M
+    return to_rgba(outline(a))
+
+
+def pierce_seed():
+    """A hard golden seed with a trail: it passes straight through."""
+    a = canvas()
+    disc(a, 19, 16, 7.0, 5.0, GOLD)
+    disc(a, 17, 14, 2.6, 1.8, AMBER)
+    a[15:18, 4:12] = LF_L
+    a[13:14, 6:11] = LF_L
+    a[19:20, 6:11] = LF_L
+    return to_rgba(outline(a))
+
+
+def gale_leaf():
+    """A curled wind leaf: thrown, it swings out and comes back."""
+    a = canvas()
+    for t in np.linspace(0, 1.6 * np.pi, 60):
+        r = 3 + t * 2.2
+        x = int(16 + np.cos(t) * r)
+        y = int(16 + np.sin(t) * r)
+        disc(a, x, y, 1.6, 1.6, LF_M)
+    disc(a, 16, 16, 2.4, 2.4, LF_L)
+    return to_rgba(outline(a))
+
+
+def bloom_bud():
+    """A fat red bud about to burst: one more Secret Art."""
+    a = canvas()
+    disc(a, 16, 15, 8.0, 9.0, BLOSSOM)
+    disc(a, 13, 12, 2.4, 3.0, WATER_L)
+    disc(a, 10, 24, 5.0, 3.0, LF_M)
+    disc(a, 22, 24, 5.0, 3.0, LF_M)
+    a[24:30, 15:17] = LF_D
+    return to_rgba(outline(a))
+
+
 TRINKETS = (
     ("gold", gold_coin), ("silver", silver_coin), ("flower", cut_flower),
     ("critter", critter), ("life", life_heart), ("swift", swift_leaf),
     ("might", might_berry), ("veil", veil_orb), ("charm", wizard_charm),
     ("spring", spring_bud), ("crown", thorn_crown),
+    ("thorns", thorn_bundle), ("spread", spread_fan), ("pierce", pierce_seed),
+    ("gale", gale_leaf), ("bloom", bloom_bud),
 )
+
+
+# ---------------------------------------------------------------------------
+#  Ground hazards, on their own palette: fire, sludge, a leaking toxic drum
+#  and iron spikes. Each sits on the road along the bottom of a 32x32 block
+#  and has two frames the game alternates so the fire flickers, the sludge
+#  bubbles and the gas drifts.
+# ---------------------------------------------------------------------------
+
+HAZARD = np.array([
+    (0, 0, 0),          # 0  transparent
+    (30, 18, 22),       # 1  outline
+    (120, 20, 16),      # 2  ember
+    (208, 48, 24),      # 3  flame red
+    (248, 128, 32),     # 4  flame orange
+    (255, 216, 72),     # 5  flame yellow
+    (255, 248, 200),    # 6  white heat
+    (58, 56, 70),       # 7  iron shadow
+    (110, 106, 120),    # 8  iron
+    (176, 172, 186),    # 9  iron light
+    (150, 76, 40),      # 10 rust
+    (34, 70, 24),       # 11 sludge dark
+    (84, 150, 30),      # 12 sludge
+    (168, 224, 60),     # 13 sludge light
+    (130, 70, 160),     # 14 toxic gas
+    (196, 150, 220),    # 15 toxic gas light
+], dtype=np.uint8)
+
+HZ_OUT, EMBER, FL_R, FL_O, FL_Y, FL_W = 1, 2, 3, 4, 5, 6
+IR_D, IR_M, IR_L, RUST = 7, 8, 9, 10
+SL_D, SL_M, SL_L, GAS, GAS_L = 11, 12, 13, 14, 15
+
+
+def _flame(a, cx, height, lean):
+    """One tongue of flame rising from the ember bed: red skin, orange
+    body, a yellow core and a white-hot root."""
+    base = 27
+    for layer, (color, shrink) in enumerate(((FL_R, 0.0), (FL_O, 0.35), (FL_Y, 0.62))):
+        h = height * (1.0 - shrink * 0.55)
+        for y in range(int(base - h), base + 1):
+            t = min(1.0, (base - y) / max(h, 1.0))   # 0 at the root, 1 at the tip
+            half = (1.0 - shrink) * 4.2 * (1.0 - t) ** 0.8 + 0.4
+            x = cx + lean * t * t * 3.0
+            x0, x1 = int(round(x - half)), int(round(x + half))
+            if x1 >= x0:
+                a[y, max(0, x0):min(32, x1 + 1)] = color
+    a[base - 2:base + 1, cx - 1:cx + 2] = FL_W
+
+
+def fire_bed(frame):
+    a = canvas()
+    heights = ((17, 23, 14, 20), (21, 16, 22, 15))[frame]
+    leans = ((-1, 1, -1, 1), (1, -1, 1, -1))[frame]
+    for cx, h, lean in zip((6, 13, 20, 27), heights, leans):
+        _flame(a, cx, h, lean)
+    box(a, 0, 27, 32, 32, EMBER)
+    for x in range(0, 32, 3):
+        a[28 + (x + frame) % 3, x] = FL_O
+        a[30, (x + 1 + frame) % 32] = FL_Y
+    return to_rgba(outline(a, HZ_OUT), HAZARD)
+
+
+def sludge_pool(frame):
+    a = canvas()
+    disc(a, 16, 28, 16, 5, SL_D)
+    disc(a, 16, 27, 14, 3.6, SL_M)
+    a[25, 7:15] = SL_L
+    a[26, 18:23] = SL_L
+    bubbles = (((9, 24, 2.2), (22, 23, 1.6)), ((12, 21, 1.4), (24, 25, 2.4)))[frame]
+    for bx, by, r in bubbles:
+        disc(a, bx, by, r, r, SL_M)
+        a[int(by - r * 0.5), int(bx - r * 0.3)] = SL_L
+    if frame:
+        a[18, 11:14] = SL_L          # a bubble popping
+        a[17, 12] = SL_L
+    return to_rgba(outline(a, HZ_OUT), HAZARD)
+
+
+def toxic_drum(frame):
+    """A leaking waste drum: a rusted barrel, a hazard band, a green spill
+    at its foot and a violet cloud seeping from the lid."""
+    a = canvas()
+    box(a, 7, 12, 21, 30, IR_M)
+    box(a, 7, 12, 9, 30, IR_L)
+    box(a, 18, 12, 21, 30, IR_D)
+    for y in (15, 26):
+        box(a, 6, y, 22, y + 2, IR_D)
+    box(a, 7, 19, 21, 23, FL_Y)
+    for x in range(8, 21, 3):
+        a[19:23, x] = HZ_OUT
+    a[13, 11:15] = RUST
+    a[24, 16:19] = RUST
+    disc(a, 22, 30, 9, 2.4, SL_M)
+    a[29, 17:24] = SL_L
+    puffs = (((13, 8, 4.0), (19, 4, 3.0)), ((11, 5, 3.2), (18, 8, 4.2)))[frame]
+    for px, py, r in puffs:
+        disc(a, px, py, r, r * 0.8, GAS)
+        disc(a, px - 1, py - 1, r * 0.45, r * 0.4, GAS_L)
+    return to_rgba(outline(a, HZ_OUT), HAZARD)
+
+
+def iron_spikes(frame):
+    a = canvas()
+    box(a, 0, 27, 32, 32, IR_D)
+    a[27, :] = IR_M
+    for i, cx in enumerate((5, 16, 27)):
+        top = 8 + (i % 2) * 4
+        for y in range(top, 27):
+            half = (y - top) * 4.5 / (27 - top)
+            x0, x1 = int(round(cx - half)), int(round(cx + half))
+            a[y, x0:x1 + 1] = IR_M
+            a[y, x0:max(x0 + 1, cx)] = IR_L
+            a[y, x1] = IR_D
+        a[top, cx] = IR_L
+        a[top + 1, cx] = FL_W if frame else IR_L     # a glint that comes and goes
+        a[22:25, cx - 2:cx] = RUST
+    return to_rgba(outline(a, HZ_OUT), HAZARD)
+
+
+def pit(frame):
+    """A break in the road: a crumbling lip of earth, rock walls falling
+    away into the dark, and a thin mist drifting in the depths."""
+    a = canvas()
+    a[:, :] = HZ_OUT
+    for y in range(32):
+        shade = IR_D if y < 10 else HZ_OUT
+        a[y, 0:3] = shade
+        a[y, 29:32] = shade
+    for x in range(32):
+        lip = 2 + ((x * 7 + 3) % 5 == 0) + ((x * 3) % 7 == 0)
+        a[0:lip, x] = RUST
+        a[lip, x] = IR_D
+    for x in range(4, 28, 5):
+        a[4 + (x % 3), x] = IR_D
+        a[7 + (x % 2), x + 1] = IR_D
+    for k in range(3):
+        mx = (k * 11 + frame * 6) % 26 + 3
+        a[18 + k * 4, mx:mx + 5] = IR_D
+        a[19 + k * 4, mx + 1:mx + 4] = IR_M
+    return to_rgba(a, HAZARD)
+
+
+HAZARDS = (
+    ("fire0", lambda: fire_bed(0)), ("fire1", lambda: fire_bed(1)),
+    ("sludge0", lambda: sludge_pool(0)), ("sludge1", lambda: sludge_pool(1)),
+    ("toxic0", lambda: toxic_drum(0)), ("toxic1", lambda: toxic_drum(1)),
+    ("spikes0", lambda: iron_spikes(0)), ("spikes1", lambda: iron_spikes(1)),
+)
+
+
+# ---------------------------------------------------------------------------
+#  Pits: a hole cut into the road, seen from a little above -- a broken lip,
+#  the far wall's earth strata darkening with depth, side walls leaning in,
+#  and at the bottom whatever the valley holds: water, toxic sludge, fire or
+#  a bottomless void. Each theme has its own palette; widths 32, 48 and 64.
+# ---------------------------------------------------------------------------
+
+PIT_THEMES = {
+    # 1 outline, 2-5 earth light->dark, 6-7 wall, 8-12 content dark->light, 13-15 glints
+    "water": [(0, 0, 0), (18, 14, 20), (138, 100, 64), (104, 72, 44), (74, 50, 32), (48, 32, 22),
+              (60, 48, 40), (34, 26, 24), (8, 24, 60), (14, 48, 110), (24, 88, 170), (70, 150, 220),
+              (150, 210, 245), (230, 246, 255), (120, 190, 235), (40, 120, 200)],
+    "toxic": [(0, 0, 0), (18, 14, 20), (120, 104, 72), (92, 78, 54), (66, 54, 38), (44, 36, 26),
+              (56, 50, 40), (32, 28, 24), (12, 36, 8), (30, 78, 12), (70, 140, 20), (140, 210, 40),
+              (210, 250, 110), (245, 255, 200), (170, 240, 70), (90, 170, 30)],
+    "fire":  [(0, 0, 0), (18, 12, 14), (132, 88, 56), (100, 64, 40), (72, 44, 28), (46, 28, 18),
+              (70, 40, 30), (40, 22, 18), (70, 10, 6), (150, 30, 10), (220, 80, 20), (250, 150, 40),
+              (255, 220, 90), (255, 250, 210), (255, 190, 60), (200, 60, 20)],
+    "void":  [(0, 0, 0), (14, 12, 22), (120, 116, 140), (88, 84, 108), (60, 56, 80), (38, 34, 56),
+              (46, 42, 64), (26, 22, 40), (4, 4, 10), (12, 10, 24), (26, 20, 48), (54, 40, 90),
+              (100, 80, 150), (190, 170, 230), (140, 110, 200), (70, 56, 120)],
+}
+
+
+def pit_hole(theme, width, frame):
+    """One pit, `width` pixels across and 32 deep, as an indexed image."""
+    a = np.zeros((32, width), dtype=np.uint8)
+    rng = np.random.default_rng(width * 7 + len(theme))
+    for x in range(width):
+        # the side walls lean in with depth, so the opening reads as a hole
+        edge = min(x, width - 1 - x)
+        for y in range(32):
+            lean = y // 6
+            if edge < lean:
+                continue
+            if edge <= lean + 2:
+                a[y, x] = 6 if edge == lean + 2 else 7          # side wall face
+            elif y < 14:
+                band = (y + (x * 3 + int(rng.integers(0, 3))) // 11) // 3
+                a[y, x] = min(5, 2 + band)                      # far wall strata
+            else:
+                a[y, x] = 8                                      # the depths
+        # a broken lip along the top
+        lip = 1 + (x * 5 % 7 == 0) + (x * 3 % 11 == 0)
+        a[0:lip, x] = 1
+    # rocks set into the far wall
+    for x in range(4, width - 4, 9):
+        y = 4 + (x * 13) % 7
+        a[y:y + 2, x:x + 3] = 5
+        a[y, x] = 3
+    # the contents
+    surf = 15 + (frame & 1)
+    for x in range(3, width - 3):
+        edge = min(x, width - 1 - x)
+        if edge < 3:
+            continue
+        if theme == "void":
+            for y in range(14, 32):
+                a[y, x] = 8 if y > 24 else (9 if y > 19 else 10)
+            if (x + frame * 4) % 13 < 4:
+                a[18 + (x % 3), x] = 11                         # drifting mist
+            if (x * 7 + frame * 5) % 23 == 0:
+                a[26, x] = 13                                    # a far glint
+        else:
+            a[surf, x] = 12
+            a[surf + 1, x] = 11
+            for y in range(surf + 2, 32):
+                a[y, x] = 10 if y < surf + 6 else (9 if y < surf + 11 else 8)
+            if theme == "water" and (x + frame * 3) % 7 == 0:
+                a[surf, x] = 13                                  # foam
+                a[surf + 4, x - 1:x + 2] = 11                    # ripple
+            if theme == "toxic" and (x * 3 + frame * 5) % 11 == 0:
+                a[surf - 1, x] = 12                              # bubble
+                a[surf - 2, x] = 13
+                a[surf + 5, x] = 12
+            if theme == "fire" and (x + frame * 2) % 5 == 0:
+                h = 3 + (x * 7 + frame) % 5                      # flame tongues
+                a[surf - h:surf, x] = 12
+                a[surf - h, x] = 13
+                a[surf - 1:surf + 1, x - 1:x + 2] = 11
+    return a
+
+
+def pit_blocks(theme):
+    """The 32 x 32 blocks a pit of each width is drawn from, two frames each:
+    S (32), L48/R48 (48), L64/R64 (64). The right-hand 48 block is half
+    empty, so a 48-pixel pit ends exactly where it should."""
+    pal = np.array(PIT_THEMES[theme], dtype=np.uint8)
+    out = {}
+    for frame in (0, 1):
+        s = pit_hole(theme, 32, frame)
+        out[f"s{frame}"] = to_rgba(s, pal)
+        h48 = pit_hole(theme, 48, frame)
+        r48 = np.zeros((32, 32), dtype=np.uint8)
+        r48[:, :16] = h48[:, 32:]
+        out[f"l48_{frame}"] = to_rgba(h48[:, :32], pal)
+        out[f"r48_{frame}"] = to_rgba(r48, pal)
+        h64 = pit_hole(theme, 64, frame)
+        out[f"l64_{frame}"] = to_rgba(h64[:, :32], pal)
+        out[f"r64_{frame}"] = to_rgba(h64[:, 32:], pal)
+    return out

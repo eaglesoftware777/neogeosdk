@@ -20,10 +20,10 @@
         <part name="cart" interface="neo_cart">
             <feature name="slot" value="rom_fatfur2" />
             <dataarea name="maincpu" width="16" endianness="big" size="0x100000">
-                <rom loadflag="load16_word_swap" name="780-p1.p1" offset="0x000000" size="0x080000" crc="932a7f46" sha1="ce2b7e92097f254888dc4f109198f776c3040f69" />
+                <rom loadflag="load16_word_swap" name="780-p1.p1" offset="0x000000" size="0x080000" crc="e7d0ad27" sha1="a75ffdd4f10b42e2ed088f63284af197cb1cf05a" />
             </dataarea>
             <dataarea name="fixed" size="0x020000">
-                <rom offset="0x000000" size="0x020000" name="780-s1.s1" crc="6c696bfd" sha1="ff6a5cfae4747225f4439d96d3469584807e2b2d" />
+                <rom offset="0x000000" size="0x020000" name="780-s1.s1" crc="9cce2c24" sha1="2a9bbd9dc04fb47eafe6285ca80c6717b77896ca" />
             </dataarea>
             <dataarea name="audiocpu" size="0x020000">
                 <rom offset="0x000000" size="0x020000" name="780-m1.m1" crc="51497a6e" sha1="c495828fe2275a93539588709134b71f7c9ffccf" />
@@ -32,8 +32,8 @@
                 <rom name="780-v1.v1" offset="0x000000" size="0x762400" crc="8ebd9021" sha1="372285645430f23dc2a87ef5e10518ceb0605b92" />
             </dataarea>
             <dataarea name="sprites" size="0x800000">
-                <rom loadflag="load16_byte" name="780-c1.c1" offset="0x000000" size="0x400000" crc="5231c2a6" sha1="d1fed8d584dd9b0ba70fdcd32bafd62e3baea2b3" />
-                <rom loadflag="load16_byte" name="780-c2.c2" offset="0x000001" size="0x400000" crc="012622c8" sha1="e318d9c0f0bdde3b8d95dfaf94e7b3033f6499f5" />
+                <rom loadflag="load16_byte" name="780-c1.c1" offset="0x000000" size="0x400000" crc="cf529c16" sha1="9b726cc9c73b6c602a929239f9e8815c24142bb9" />
+                <rom loadflag="load16_byte" name="780-c2.c2" offset="0x000001" size="0x400000" crc="d934a87f" sha1="54bbb14008fe050f5a0ad5f5b26c2f60140260d5" />
             </dataarea>
         </part>
     </software>

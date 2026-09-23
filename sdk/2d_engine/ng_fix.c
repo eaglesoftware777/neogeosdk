@@ -118,6 +118,22 @@ void NEOGEO_USER ng_fix_putc(uint8_t x, uint8_t y, char ch, uint8_t pal)
     ng_fix_pals[y][x] = pal;
 }
 
+/*
+ * Any FIX tile by its full 12-bit number, not just the first 256 a char
+ * can name -- for HUD pieces drawn into the free space of a game's own S1
+ * ROM. The cell's text cache is marked stale so a later ng_fix_putc on the
+ * same cell always redraws instead of assuming its character is still up.
+ */
+void NEOGEO_USER ng_fix_put_tile(uint8_t x, uint8_t y, uint16_t tile, uint8_t pal)
+{
+    uint16_t addrfix;
+    if (x >= NG_FIX_WIDTH || y >= NG_FIX_HEIGHT) return;
+    addrfix = (uint16_t)(FIXMAP + y + 2u + ((uint16_t)x * 32u));
+    vram_sfix(0x20, addrfix, (uint16_t)(((uint16_t)(pal & 0x0f) << 12) | (tile & 0x0fffu)));
+    ng_fix_chars[y][x] = (char)0xFE;
+    ng_fix_pals[y][x] = 0xF0;
+}
+
 void NEOGEO_USER ng_fix_puts(uint8_t x, uint8_t y, const char *text, uint8_t pal)
 {
     uint8_t cursor = x;
