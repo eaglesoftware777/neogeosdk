@@ -14,7 +14,8 @@ def main():
     parser.add_argument("--seconds", type=int, default=50)
     parser.add_argument("--mame", default="mame")
     parser.add_argument("--scenario", choices=("idle", "walk", "climb", "boss", "bonus", "continue",
-                                              "continue-exit", "continue-timeout", "tray", "factory", "pickups"), default="walk")
+                                              "continue-exit", "continue-timeout", "tray", "factory",
+                                              "pickups", "pit"), default="walk")
     parser.add_argument("--idle", action="store_true", help="Capture startup without gameplay inputs")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--eagle-bios", action="store_true")
@@ -118,6 +119,12 @@ def main():
         assert any(s["pick_mask"] & 16 for s in active), "Uncollected shelf pickup was lost on backtracking"
         assert all(s["key_count"] == 1 for s in active if s["state"] == 1), "Mandatory key was discarded or duplicated"
         assert all(s["duplicate_items"] == 0 for s in active), "Map pickup spawned twice"
+    elif args.scenario == "pit":
+        falls = [s for s in active if s["stage"] == 1]
+        assert falls, "Never reached Valley of Falls"
+        assert max(s["x"] for s in falls) > 590, "Never walked past the first pit"
+        assert any(s["state"] == 4 for s in falls), "Falling into the pit never registered a death"
+        assert any(s["lives"] == 2 for s in falls), "Falling into the pit did not cost exactly one life"
     assert "LUA ERROR" not in (output / "mame.log").read_text(), "Capture script failed"
     print(f"PASS {args.scenario}: {output}")
 

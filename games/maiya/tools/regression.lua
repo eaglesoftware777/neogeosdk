@@ -9,6 +9,8 @@ local aes = os.getenv('MG_PLATFORM') == 'aes'
 local testing_continue = scenario:sub(1, 8) == 'continue'
 local log = assert(io.open(output .. '/telemetry.jsonl', 'w'))
 local next_capture, placed, play_frame, continue_frame = 0, false, 0, 0
+local pit_step, pit_wait = 0, 0
+local pit_after, pit_after_frame = false, 0
 local function u8(name) return memory:read_u8(a[name]) end
 local function w8(name, value) memory:write_u8(a[name], value) end
 local function s16(addr)
@@ -37,6 +39,16 @@ emu.register_frame_done(function()
     start(t > 12 and t < 12.25)
     local p = memory:read_u32(a.player)
     if p < 0x100000 or p > 0x10efff then p = 0 end
+    -- Between Start landing and real gameplay there are now three screens
+    -- (hero-select, how-to-play, the intro story) that each need a real
+    -- button, not just a direction -- mg.player does not exist until she is
+    -- through all three. Push through them here, unconditionally; once p is
+    -- valid this stops, so a stray press from this schedule can never land
+    -- during a scenario's own scripted inputs below.
+    if p == 0 then
+        input('P1 A', (t > 13.0 and t < 13.15) or (t > 14.5 and t < 14.65) or
+                       (t > 16.0 and t < 16.15) or (t > 17.5 and t < 17.65))
+    end
     local mode = memory:read_u8(0x10fdaf)
     if p ~= 0 and mode == 2 and u8('demo') == 0 then
         play_frame = play_frame + 1
@@ -78,6 +90,73 @@ emu.register_frame_done(function()
                 w8('state', 8)
                 memory:write_u16(a.state_timer, 1)
             end
+            -- Valley of Falls, same way the game reaches it after a boss:
+            -- the ordinary mission-to-mission interlude, not a shortcut
+            -- wired into the cartridge.
+            if scenario == 'pit' then
+                w8('next_stage', 1)
+                w8('state', 8)
+                memory:write_u16(a.state_timer, 1)
+            end
+        end
+        -- Once the interlude has dropped her into Valley of Falls, drive a
+        -- fixed sequence past its first pit (x=560, width=48): approach and
+        -- stand at the lip, jump it, then a second pass that walks straight
+        -- in without jumping, to confirm the fall (and the one-life cost)
+        -- actually happens.
+        if scenario == 'pit' and u8('stage') == 1 and u8('state') == 1 and p ~= 0 then
+            local x = s16(p + a.char_x)
+            if pit_step == 0 then
+                position(p, 460, 192)
+                memory:write_u8(p + a.char_hp, 5)
+                pit_step, pit_wait = 1, 0
+            elseif pit_step == 1 then
+                input('P1 Right', true)
+                if x >= 548 then pit_step, pit_wait = 15, 0 end
+            elseif pit_step == 15 then
+                input('P1 Right', false)   -- stop and stand at the lip first
+                pit_wait = pit_wait + 1
+                if pit_wait == 15 then screen:snapshot(output .. '/pit_01_at_lip.png') end
+                if pit_wait == 20 then pit_step, pit_wait = 2, 0 end
+            elseif pit_step == 2 then
+                input('P1 Right', true)
+                pit_wait = pit_wait + 1
+                if pit_wait == 6 then input('P1 A', true) end
+                if pit_wait == 12 then input('P1 A', false) end
+                if pit_wait == 20 then screen:snapshot(output .. '/pit_02_mid_jump.png') end
+                if pit_wait == 40 then
+                    screen:snapshot(output .. '/pit_03_after_jump.png')
+                    pit_step, pit_wait = 3, 0
+                end
+            elseif pit_step == 3 then
+                input('P1 Right', false)
+                position(p, 460, 192)
+                memory:write_u8(p + a.char_hp, 5)
+                w8('lives', 3)
+                pit_step, pit_wait = 4, 0
+            elseif pit_step == 4 then
+                input('P1 Right', true)
+                if x >= 555 then
+                    screen:snapshot(output .. '/pit_04_before_fall.png')
+                    pit_step, pit_wait = 5, 0
+                end
+            elseif pit_step == 5 then
+                input('P1 Right', true)
+                pit_wait = pit_wait + 1
+                if pit_wait == 24 then screen:snapshot(output .. '/pit_05_falling.png') end
+            end
+        end
+        -- The fall interrupts state==1, so the branch above stops running
+        -- (and pit_step freezes at 5) the instant she dies; catch the
+        -- after-death and respawn shots here instead, outside that gate.
+        if scenario == 'pit' and pit_step == 5 and u8('state') == 4 and not pit_after then
+            pit_after, pit_after_frame = true, play_frame
+        end
+        if pit_after and play_frame - pit_after_frame == 40 then
+            screen:snapshot(output .. '/pit_06_after_fall.png')
+        end
+        if pit_after and play_frame - pit_after_frame == 200 then
+            screen:snapshot(output .. '/pit_07_respawned.png')
         end
         input('P1 Right', scenario == 'walk' or (scenario == 'bonus' and play_frame % 240 < 120))
         input('P1 Left', scenario == 'boss' or (scenario == 'bonus' and play_frame % 240 >= 120))
