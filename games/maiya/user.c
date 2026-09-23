@@ -327,7 +327,7 @@ void NEOGEO_USER TITLE_WAIT(void) {
             timer[6] = (char)('0' + secs / 10);
             timer[7] = (char)('0' + secs % 10);
             timer[8] = '\0';
-            fixtext_out(16, 27, timer, 3);
+            fixtext_out(30, 3, timer, 3);   /* top right, clear of the painted copyright line */
             if ((i >> 4) & 1) fixtext_out(13, 25, "PUSH 1P START", 1);
             else fixtext_out(13, 25, "             ", 1);
             if (auto_frames > 0) auto_frames--;
@@ -337,7 +337,7 @@ void NEOGEO_USER TITLE_WAIT(void) {
                 break;
             }
         } else {
-            fixtext_out(16, 27, "        ", 0);
+            fixtext_out(30, 3, "        ", 0);
             fixtext_out(13, 25, "             ", 0);
         }
 #else

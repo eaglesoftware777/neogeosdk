@@ -41,7 +41,7 @@ int main(void)
             const MGHazard *h = &level->hazards[j];
             if (!h->width) continue;
             assert(h->width % 16 == 0 && h->width <= 64);
-            assert(h->type >= MG_H_FIRE && h->type <= MG_H_TOXIC);
+            assert(h->type >= MG_H_FIRE && h->type <= MG_H_PIT);
             assert(h->x + h->width < level->width - 320);
         }
         assert(level->rescue_x[0] < level->width / 2);

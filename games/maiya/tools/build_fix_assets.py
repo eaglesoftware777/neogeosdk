@@ -381,6 +381,76 @@ GLYPHS = {
 _COL_PAIRS = [(4, 5), (6, 7), (0, 1), (2, 3)]
 
 
+# ---------------------------------------------------------------------------
+#  Framed health bars. Unlike the glyphs above these use several pens, so a
+#  palette can shade them: 1 outline, 2 frame, 3 fill highlight, 4 fill,
+#  5 fill shadow, 6 empty track. The fill track is 4 pixels tall; the caps
+#  are rounded and carry the first and last five pixels of fill, so the bar
+#  drains a pixel at a time from end to end. They live above tile 255, in
+#  a run of the S1 ROM the art build leaves empty.
+# ---------------------------------------------------------------------------
+
+BAR_TILE_BASE = 0x180
+BAR_CAP_FILL = 5          # fill pixels carried by each cap
+BAR_CELL_FILL = 8         # fill pixels carried by each middle cell
+
+
+def _bar_interior(row, filled):
+    if not filled:
+        return 6
+    return 3 if row == 2 else (5 if row == 5 else 4)
+
+
+def _bar_left_cap(level):
+    px = np.zeros((8, 8), dtype=np.uint8)
+    px[0, 2:] = 1; px[7, 2:] = 1
+    px[1, 1] = 1; px[1, 2:] = 2; px[6, 1] = 1; px[6, 2:] = 2
+    for r in range(2, 6):
+        px[r, 0] = 1; px[r, 1] = 2; px[r, 2] = 1
+        for c in range(3, 8):
+            px[r, c] = _bar_interior(r, c - 3 < level)
+    return px
+
+
+def _bar_right_cap(level):
+    return _bar_left_cap(0)[:, ::-1].copy() if level == 0 else _bar_right_cap_filled(level)
+
+
+def _bar_right_cap_filled(level):
+    px = _bar_left_cap(0)[:, ::-1].copy()
+    for r in range(2, 6):
+        for c in range(0, 5):
+            px[r, c] = _bar_interior(r, c < level)
+    return px
+
+
+def _bar_cell(level):
+    px = np.zeros((8, 8), dtype=np.uint8)
+    px[0, :] = 1; px[7, :] = 1; px[1, :] = 2; px[6, :] = 2
+    for r in range(2, 6):
+        for c in range(8):
+            px[r, c] = _bar_interior(r, c < level)
+    return px
+
+
+def bar_tiles():
+    """Tile number -> 8x8 pen array, in the order the game expects:
+    left cap 0..5, middle cell 0..8, right cap 0..5."""
+    tiles = []
+    tiles += [_bar_left_cap(n) for n in range(BAR_CAP_FILL + 1)]
+    tiles += [_bar_cell(n) for n in range(BAR_CELL_FILL + 1)]
+    tiles += [_bar_right_cap(n) for n in range(BAR_CAP_FILL + 1)]
+    return {BAR_TILE_BASE + k: t for k, t in enumerate(tiles)}
+
+
+def encode_fix_pens(px):
+    out = bytearray(32)
+    for gi, (cl, cr) in enumerate(_COL_PAIRS):
+        for row in range(8):
+            out[gi * 8 + row] = ((int(px[row, cr]) & 0xF) << 4) | (int(px[row, cl]) & 0xF)
+    return bytes(out)
+
+
 def encode_fix_tile(rows):
     """8 rows of text art -> a 32 byte Neo Geo FIX tile on pen 1."""
     px = np.zeros((8, 8), dtype=np.uint8)
@@ -401,8 +471,17 @@ def inject_hud_glyphs():
     rom = bytearray(S1_PATH.read_bytes())
     for code, rows in GLYPHS.items():
         rom[code * 32:(code + 1) * 32] = encode_fix_tile(rows)
+    bars = bar_tiles()
+    for tile, px in bars.items():
+        new = encode_fix_pens(px)
+        old = bytes(rom[tile * 32:(tile + 1) * 32])
+        # Only ever overwrite empty space or a previous copy of our own bars:
+        # if the art build has started using this run, stop loudly.
+        if any(old) and old not in {encode_fix_pens(p) for p in bars.values()}:
+            raise SystemExit(f"FIX tile {tile:#x} is in use; move BAR_TILE_BASE")
+        rom[tile * 32:(tile + 1) * 32] = new
     S1_PATH.write_bytes(bytes(rom))
-    print(f"  Injected {len(GLYPHS)} HUD glyphs into {S1_PATH.name}")
+    print(f"  Injected {len(GLYPHS)} HUD glyphs and {len(bars)} bar tiles into {S1_PATH.name}")
 
 
 def main():

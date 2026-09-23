@@ -101,12 +101,12 @@ HERO_ROWS = 4
 HERO_STRIDE = 5
 HERO_HEIGHT = 52
 
-EAGLE_CANVAS = (48, 32)
+EAGLE_CANVAS = (64, 48)
 EAGLE_STRIPS = 3
 EAGLE_ROWS = 2
-EAGLE_HEIGHT = 26
+EAGLE_HEIGHT = 42
 
-BOSS_CANVAS = (96, 96)
+BOSS_CANVAS = (128, 96)
 BOSS_STRIPS = 6
 BOSS_ROWS = 6
 BOSS_STRIDE = 6
@@ -143,14 +143,152 @@ def extract_cutout(img, bg_color="white", tol=26):
     h, w = arr.shape[:2]
     if bg_color == "white":
         is_bg = (arr[:, :, 0] >= 255 - tol) & (arr[:, :, 1] >= 255 - tol) & (arr[:, :, 2] >= 255 - tol)
+        forced = np.zeros_like(is_bg)
+    elif bg_color == "corner":
+        # Generated sheets sit on a flat key colour (usually magenta) that
+        # drifts a little between images and picks up JPEG fringing, so key
+        # on this crop's own corner colour.
+        corners = np.array([arr[0, 0], arr[0, -1], arr[-1, 0], arr[-1, -1]], dtype=np.int32)
+        key = np.median(corners, axis=0)
+        dist = np.sqrt(((arr.astype(np.int32) - key) ** 2).sum(axis=2))
+        r, g, b = (arr[:, :, k].astype(np.int32) for k in range(3))
+        is_bg = dist < 80
+        forced = np.zeros_like(is_bg)
+        if key[0] > 150 and key[2] > 120 and key[1] < 110:
+            # A magenta key: the fringe it leaves on the outline is itself
+            # magenta-tinted, so a looser pass may reach in from the
+            # background through magenta-ish pixels only -- never through
+            # the sprite's own warm or neutral colours.
+            tinted = (r > g + 40) & (b > g + 40)
+            lab2, _ = ndi.label(is_bg | (tinted & (dist < 170)))
+            seeds = set(np.unique(lab2[is_bg])) - {0}
+            is_bg = np.isin(lab2, list(seeds))
+            # It also hides in holes the body encloses (the loop of a
+            # coiled tail), which no fill from the border can reach.
+            magenta = (r > g + 80) & (b > g + 60) & (np.abs(r - b) < 100)
+            forced = magenta & (dist < 110)
+            spill = magenta & ~is_bg & ~forced
+            arr = arr.copy()
+            arr[spill] = (40, 22, 32)
     else:
         is_bg = (arr[:, :, 0] <= tol) & (arr[:, :, 1] <= tol) & (arr[:, :, 2] <= tol)
+        forced = np.zeros_like(is_bg)
     labeled, num = ndi.label(is_bg)
     border = np.concatenate([labeled[0, :], labeled[-1, :], labeled[:, 0], labeled[:, -1]])
     border_labels = set(np.unique(border)) - {0}
-    bg_mask = np.isin(labeled, list(border_labels))
+    bg_mask = np.isin(labeled, list(border_labels)) | forced
     alpha = np.where(bg_mask, 0, 255).astype(np.uint8)
     return Image.fromarray(np.dstack((arr, alpha)))
+
+
+def add_shadow(frame, pad=2, half_h=2.4, spread=0.42):
+    """A ground shadow tucked under the feet: a flat dark ellipse on the feet
+    line, drawn only where the frame is empty, so the figure stands on the
+    road instead of floating over it. Widest where the figure's stance is."""
+    a = np.array(frame, dtype=np.uint8, copy=True)
+    opaque = a[..., 3] > 0
+    if not opaque.any():
+        return a
+    h, w = opaque.shape
+    ys, xs = np.where(opaque)
+    low = ys >= ys.max() - max(4, (ys.max() - ys.min()) // 4)
+    cx = float(np.median(xs[low]))
+    half_w = max(4.0, (xs.max() - xs.min()) * spread)
+    feet = h - pad - 0.5
+    yy, xx = np.mgrid[0:h, 0:w]
+    shade = (((xx - cx) / half_w) ** 2 + ((yy - feet) / half_h) ** 2 <= 1.0) & ~opaque
+    a[shade] = (24, 18, 30, 255)
+    return a
+
+
+def clean_sprite(a, white_area=None, island=24):
+    """Strip what keying on a white sheet leaves behind.
+
+    Flood-filling from the border only removes white that touches the edge,
+    so a whip's motion smear painted in white survived as solid white blobs
+    inside the frame, and slivers of neighbouring poses came along at the
+    crop edges. Near-white regions bigger than a highlight, and small loose
+    islands of pixels, are made transparent.
+    """
+    a = np.array(a, dtype=np.uint8, copy=True)
+    rgb = a[..., :3].astype(np.int32)
+    opaque = a[..., 3] > 0
+    hi, lo = rgb.max(axis=2), rgb.min(axis=2)
+    whiteish = opaque & (lo >= 200) & (hi - lo <= 40)
+    labels, n = ndi.label(whiteish) if white_area else (None, 0)
+    if n:
+        sizes = ndi.sum(whiteish, labels, range(1, n + 1))
+        big = [i + 1 for i, size in enumerate(sizes) if size >= white_area]
+        a[np.isin(labels, big), 3] = 0
+    opaque = a[..., 3] > 0
+    labels, n = ndi.label(opaque, structure=np.ones((3, 3)))
+    if n > 1:
+        sizes = ndi.sum(opaque, labels, range(1, n + 1))
+        main = int(np.argmax(sizes)) + 1
+        edge = set(np.unique(np.concatenate([labels[:, :4].ravel(), labels[:, -4:].ravel(),
+                                             labels[:4, :].ravel()]))) - {0}
+        # Keep the body and anything sizeable beside it; a secondary piece
+        # pressed against a side or the top edge is the next pose on the
+        # sheet or a caption from it.
+        keep = [i + 1 for i, size in enumerate(sizes)
+                if i + 1 == main or (size >= island and (i + 1) not in edge)]
+        a[~np.isin(labels, keep), 3] = 0
+    return dehalo(a)
+
+
+def dehalo(a):
+    """Keying a white sheet leaves a grey rim wherever the sprite was
+    blended into the paper; it reads as a dull halo. A light, colourless
+    pixel on the edge of a sprite becomes the dark outline the art is
+    drawn with. Coloured edges are left alone."""
+    a = np.array(a, dtype=np.uint8, copy=True)
+    opaque = a[..., 3] > 0
+    rgb = a[..., :3].astype(np.int32)
+    hi, lo = rgb.max(axis=2), rgb.min(axis=2)
+    clear = np.pad(~opaque, 1, constant_values=True)
+    h, w = opaque.shape
+    touches = np.zeros_like(opaque)
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            if dy or dx:
+                touches |= clear[1 + dy:h + 1 + dy, 1 + dx:w + 1 + dx]
+    halo = opaque & touches & (hi - lo < 40) & (hi > 80)
+    a[halo, :3] = (28, 18, 22)
+    return a
+
+
+def tidy_face(a):
+    """Scaling a small painted face leaves stray dark and grey pixels on the
+    skin -- a smear down the nose, grey at the mouth. Any pixel that is
+    mostly surrounded by skin, and isn't part of an eye, takes the skin
+    tone."""
+    a = np.array(a, dtype=np.uint8, copy=True)
+    rgb = a[..., :3].astype(np.int32)
+    opaque = a[..., 3] > 0
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    skin = opaque & (r > 190) & (g > 140) & (b > 90) & (r > g + 20) & (g > b + 10)
+    shade = opaque & (r > 150) & (r < 200) & (g > 80) & (g < 130) & (b > 50) & (b < 100) & (r > g)
+    if not skin.any():
+        return a
+    face = skin | shade
+    tone = np.median(rgb[skin], axis=0).astype(np.uint8)
+    h, w = face.shape
+    for _ in range(3):
+        pad = np.pad(face, 1)
+        n = sum(pad[1 + dy:h + 1 + dy, 1 + dx:w + 1 + dx].astype(np.int32)
+                for dy in (-1, 0, 1) for dx in (-1, 0, 1) if dy or dx)
+        odd = opaque & ~face & (n >= 4) & ~(g > r)
+        a[odd, :3] = tone
+        face = face | odd
+    # Lone shadow specks in the middle of the skin read as freckles.
+    rgb = a[..., :3].astype(np.int32)
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    skin = opaque & (r > 190) & (g > 140) & (b > 90) & (r > g + 20) & (g > b + 10)
+    pad = np.pad(skin, 1)
+    n = sum(pad[1 + dy:h + 1 + dy, 1 + dx:w + 1 + dx].astype(np.int32)
+            for dy in (-1, 0, 1) for dx in (-1, 0, 1) if dy or dx)
+    a[opaque & ~skin & (n >= 6) & ~(g > r), :3] = tone
+    return a
 
 
 def crop_and_fit(img, box, canvas, anchor="feet", bg_color="white", pad=2, max_scale=None):
@@ -189,6 +327,67 @@ def crop_and_fit(img, box, canvas, anchor="feet", bg_color="white", pad=2, max_s
     return arr_out
 
 
+def find_poses(img, close=3):
+    """The poses on a generated sheet, in reading order: flat key colour,
+    each separate figure its own box, small effect pieces (sparks, smoke,
+    a flame's tail) folded into the figure they belong to."""
+    a = np.asarray(img.convert("RGB")).astype(np.int32)
+    key = np.median([a[0, 0], a[0, -1], a[-1, 0], a[-1, -1], a[5, a.shape[1] // 2]], axis=0)
+    fg = np.sqrt(((a - key) ** 2).sum(axis=2)) > 90
+    fg = ndi.binary_opening(fg, iterations=1)
+    m = ndi.binary_closing(fg, structure=np.ones((3, 3)), iterations=close)
+    lab, n = ndi.label(m)
+    sizes = ndi.sum(m, lab, range(1, n + 1))
+    big = [i for i, sz in enumerate(sizes) if sz >= sizes.max() * 0.06]
+    boxes = {}
+    for i in big:
+        ys, xs = np.where(lab == i + 1)
+        boxes[i] = [int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1]
+    for i, sz in enumerate(sizes):
+        if i in boxes or sz <= 60:
+            continue
+        ys, xs = np.where(lab == i + 1)
+        cx, cy = xs.mean(), ys.mean()
+        def gap(j):
+            b = boxes[j]
+            return max(0, b[0] - cx, cx - b[2]) + max(0, b[1] - cy, cy - b[3])
+        best = min(boxes, key=gap)
+        if gap(best) < 40:
+            b = boxes[best]
+            boxes[best] = [min(b[0], int(xs.min())), min(b[1], int(ys.min())),
+                           max(b[2], int(xs.max()) + 1), max(b[3], int(ys.max()) + 1)]
+    bl = list(boxes.values())
+    areas = sorted((b[2] - b[0]) * (b[3] - b[1]) for b in bl)
+    med = areas[len(areas) // 2]
+    bl = [b for b in bl if (b[2] - b[0]) * (b[3] - b[1]) >= med * 0.18]
+    # A box far wider than the rest swallowed two neighbouring poses:
+    # split it at its emptiest column.
+    widths = sorted(b[2] - b[0] for b in bl)
+    mw = widths[len(widths) // 2]
+    split = []
+    for b in bl:
+        w = b[2] - b[0]
+        if w > 1.65 * mw:
+            col = fg[b[1]:b[3], b[0]:b[2]].sum(axis=0)
+            lo, hi = int(w * 0.3), int(w * 0.7)
+            cut = b[0] + lo + int(np.argmin(col[lo:hi]))
+            split += [[b[0], b[1], cut, b[3]], [cut, b[1], b[2], b[3]]]
+        else:
+            split.append(b)
+    bl = sorted(split, key=lambda b: (b[1] + b[3]) / 2)
+    rows = []
+    for b in bl:
+        cy = (b[1] + b[3]) / 2
+        if rows and abs(cy - rows[-1][0]) < (b[3] - b[1]) * 0.45:
+            rows[-1][1].append(b)
+        else:
+            rows.append([cy, [b]])
+    out = []
+    for _, rb in rows:
+        out += sorted(rb, key=lambda b: b[0])
+    return [tuple(b) for b in out]
+
+
 def _cutout_bbox(img, box, bg_color):
     """Crop a source box, drop its flat background, return the tight sprite."""
     cut = extract_cutout(img.crop(box), bg_color=bg_color)
@@ -196,6 +395,23 @@ def _cutout_bbox(img, box, bg_color):
     alpha = arr[:, :, 3] >= 128
     if not alpha.any():
         return None
+    # At source resolution, before anything is scaled: keep the body and any
+    # sizeable piece standing apart from it (a spit, a splash, a thrown
+    # rock), but drop captions and specks, and slivers of the neighbouring
+    # pose that the crop box clipped at its border. Dropping them before
+    # the bounding box is taken also stops them shrinking the sprite.
+    labels, n = ndi.label(alpha, structure=np.ones((3, 3)))
+    if n > 1:
+        sizes = ndi.sum(alpha, labels, range(1, n + 1))
+        main = int(np.argmax(sizes)) + 1
+        border = set(np.unique(np.concatenate([labels[0, :], labels[-1, :],
+                                               labels[:, 0], labels[:, -1]]))) - {0}
+        keep = [i + 1 for i, size in enumerate(sizes)
+                if i + 1 == main or (size >= sizes[main - 1] * 0.02 and (i + 1) not in border)]
+        drop = ~np.isin(labels, keep)
+        arr[drop, 3] = 0
+        cut = Image.fromarray(arr)
+        alpha = arr[:, :, 3] >= 128
     ys, xs = np.where(alpha)
     return cut.crop((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1))
 
@@ -239,7 +455,7 @@ def sharpen_sprite(arr, amount=1.0, outline=0.20):
 
 
 def fit_group(img, boxes, canvas, target_h, bg_color="white", pad=2, sharpen=True,
-              normalize_extent=False):
+              normalize_extent=False, clip_tall=False):
     """Scale a whole animation by ONE factor and stand every frame on its feet.
 
     Fitting each frame to the canvas on its own made the character swell and
@@ -253,7 +469,10 @@ def fit_group(img, boxes, canvas, target_h, bg_color="white", pad=2, sharpen=Tru
 
     reference = float(np.median(heights))
     scale = target_h / reference
-    scale = min(scale, (canvas[1] - pad) / max(heights))
+    # Normally the tallest pose sets a ceiling on the scale. With clip_tall
+    # the body keeps its size and a raised weapon's tip is cropped instead.
+    if not clip_tall:
+        scale = min(scale, (canvas[1] - pad) / max(heights))
 
     frames = {}
     for name, sprite in sprites.items():
@@ -281,7 +500,9 @@ def fit_group(img, boxes, canvas, target_h, bg_color="white", pad=2, sharpen=Tru
         ch = min(h - sy0, canvas[1] - dy0)
         if cw > 0 and ch > 0:
             out[dy0:dy0 + ch, dx0:dx0 + cw] = scaled[sy0:sy0 + ch, sx0:sx0 + cw]
-        frames[name] = out
+        # Every animated sprite loses the loose specks and slivers of
+        # neighbouring poses a crop box drags in; they read as flicker.
+        frames[name] = clean_sprite(out)
     return frames
 
 
@@ -473,6 +694,90 @@ def draw_tools():
         star[7 + k, 7 - k] = 1
     star[7, 7] = 15
 
+    # --- Repaints: the first versions of these read as the wrong thing (a
+    # rice-ball heart, a fried-egg spark, grey checkered dust, a floppy
+    # disk for trash). Palette: 1 cream, 2 pink, 3 deep rose, 4 leaf,
+    # 5 leaf shadow, 6 orange, 7 pale gold, 8 grey, 9 dark grey, 12 outline,
+    # 13 red, 15 gold.
+    yy, xx = np.mgrid[0:16, 0:16]
+
+    heart[:] = 0
+    heart_art = (
+        "................",
+        "................",
+        "...rrr....rrr...",
+        "..rrrrr..rrrrr..",
+        ".rwwrrrrrrrrrrd.",
+        ".rwwrrrrrrrrrrd.",
+        ".rwrrrrrrrrrrdd.",
+        ".rrrrrrrrrrrrdd.",
+        "..rrrrrrrrrrdd..",
+        "...rrrrrrrrdd...",
+        "....rrrrrrdd....",
+        ".....rrrrdd.....",
+        "......rrdd......",
+        ".......dd.......",
+        "................",
+        "................",
+    )
+    pens = {"r": 13, "d": 3, "w": 1}
+    for i, row in enumerate(heart_art):
+        for j, ch in enumerate(row):
+            if ch in pens:
+                heart[i, j] = pens[ch]
+
+    spark[:] = 0
+    for k in range(-6, 7):
+        spark[7 + k, 7] = 15 if abs(k) > 2 else 7
+        spark[7, 7 + k] = 15 if abs(k) > 2 else 7
+    for k in range(-3, 4):
+        spark[7 + k, 7 + k] = 6 if abs(k) > 1 else 7
+        spark[7 + k, 7 - k] = 6 if abs(k) > 1 else 7
+    spark[6:9, 6:9] = 1
+
+    petal[:] = 0
+    body = ((xx - 8) / 3.4) ** 2 + ((yy - 8) / 6.0) ** 2 <= 1.0
+    petal[body] = 2
+    petal[body & (xx > 8)] = 3
+    petal[4:9, 6] = 1
+
+    leaf[:] = 0
+    body = ((xx - 8) / 3.6) ** 2 + ((yy - 8) / 6.4) ** 2 <= 1.0
+    leaf[body] = 4
+    leaf[body & (xx > 8)] = 5
+    leaf[2:14, 8] = 5
+
+    dust[:] = 0
+    for cx, cy, r in ((4, 11, 3.2), (9, 9, 3.8), (13, 12, 2.8)):
+        puff = (xx - cx) ** 2 + (yy - cy) ** 2 <= r * r
+        dust[puff] = 7
+        dust[puff & ((xx - cx) + (yy - cy) > 1)] = 15
+    dust[5, 12] = 1
+    dust[3, 6] = 1
+    dust[8, 2] = 1
+
+    trash[:] = 0
+    trash[3:13, 4:12] = 8
+    trash[3:13, 9:12] = 9
+    trash[6:9, 4:12] = 13
+    trash[3, 4:12] = 1
+    trash[12, 5:11] = 9
+    trash[8:10, 3] = 8          # the crush in its side
+
+    # A dark rim on every projectile and effect, so each one reads cleanly
+    # against any background.
+    for column in (TOOL_THORN0, TOOL_THORN1, TOOL_TRASH, TOOL_SPIT, TOOL_BOLT, TOOL_FIRE,
+                   TOOL_ICE, TOOL_OIL, TOOL_HEART, TOOL_ROSE, TOOL_PETAL, TOOL_DRIP, TOOL_LEAF):
+        c = cell(column)
+        solid = c > 0
+        pad = np.pad(solid, 1)
+        edge = np.zeros_like(solid)
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                if dy or dx:
+                    edge |= pad[1 + dy:17 + dy, 1 + dx:17 + dx]
+        c[edge & ~solid] = 12
+
     return tool, colors
 
 
@@ -601,6 +906,39 @@ def build():
         header.append(f"#define MG_BG{i}_BANKS {len(palettes)}u")
         print(f"  Stage {i + 1}/7 compiled (512x224)", flush=True)
 
+    # Each guardian's own arena, shown while it fights: the painting fitted
+    # to the 320-pixel screen (its floor on the road strip), mirrored out to
+    # the 512-pixel layer width. Arena k follows the MG_B_* order.
+    arena_files = ("arena_beetle.png", "arena_toad.png", "arena_leviathan.png", "arena_jackal.png",
+                   "arena_owl.png", "arena_smoggar.png", "arena_vulture.png", "arena_eel.png",
+                   "arena_wyrm_0.jpg", "arena_hyena.jpg")
+    arenas_built = 0
+    for k, fname in enumerate(arena_files):
+        path = SOURCE / fname
+        if not path.is_file():
+            header.append(f"#define MG_ARENA{k}_READY 0u")
+            continue
+        art = Image.open(path).convert("RGBA")
+        scale = max(320 / art.width, 224 / art.height)
+        art = art.resize((max(320, round(art.width * scale)), max(224, round(art.height * scale))),
+                         Image.Resampling.LANCZOS)
+        x0 = (art.width - 320) // 2
+        art = np.asarray(art.crop((x0, art.height - 224, x0 + 320, art.height)))
+        panel = np.zeros((224, 512, 4), dtype=np.uint8)
+        panel[:, :320] = art
+        panel[:, 320:] = art[:, ::-1][:, :192]
+        panel[:, :, 3] = 255
+        indices, palettes, assignments = quantize(panel, 16, None, dither="none")
+        store(f"arena{k}", indices[:192], palettes, assignments[:12], panel[:192])
+        store(f"arenaground{k}", indices[192:], palettes, assignments[12:], panel[192:])
+        header.append(c_array(f"mg_arena{k}_pal", [v for p in palettes for v in palette_words(p)]))
+        header.append(c_array(f"mg_arena{k}_map", assignments[:12].flatten() + 16, "uint8_t"))
+        header.append(c_array(f"mg_arenaground{k}_map", assignments[12:].flatten() + 16, "uint8_t"))
+        header.append(f"#define MG_ARENA{k}_BANKS {len(palettes)}u")
+        header.append(f"#define MG_ARENA{k}_READY 1u")
+        arenas_built += 1
+    print(f"  {arenas_built} guardian arenas compiled", flush=True)
+
     print("== 2. Compiling Maiya Heroine Moveset ==", flush=True)
     m_img = Image.open(find_file("maiya_heroine*.jpg")).convert("RGB")
 
@@ -617,6 +955,7 @@ def build():
         "cast2": (473, 780, 763, 990), "win": (810, 780, 964, 990),
     }
     hf = fit_group(m_img, hero_boxes, HERO_CANVAS, HERO_HEIGHT)
+    hf = {name: clean_sprite(f, white_area=10) for name, f in hf.items()}
 
     # Resting poses are not on the sheet: fold a standing frame onto its heels
     # so Maiya can duck under a swoop, take a knee, or sit down and listen.
@@ -640,6 +979,11 @@ def build():
         "hurt0": hf["jump4"], "hurt1": hf["jump2"], "down": hf["down"],
         "sit": hf["sit"], "win": hf["win"],
     }
+
+    # Grounded poses stand on a shadow; in the air she doesn't.
+    for name in list(maiya_frames):
+        if not (name.startswith("jump") or name.startswith("hurt") or name == "spin"):
+            maiya_frames[name] = add_shadow(maiya_frames[name])
 
     # Fit master palette for Maiya
     hero_training = np.concatenate([f[:, :, :3][training_mask(f)] for f in maiya_frames.values()])
@@ -689,21 +1033,66 @@ def build():
     alt_pal[1:] = hsv_map(hero_master, alt_tint)
     header.append(c_array("mg_hero_alt_pal", palette_words(alt_pal)))
 
-    # Eagle (guardian sun bird)
-    eagle_src = Image.open(find_file("iron_vulture*.jpg")).convert("RGB")
+    # Eagle (guardian sun bird): its own white-and-gold painting -- wings
+    # up, spread, down and a level glide -- rather than the Iron Vulture's
+    # body shrunk down, which read as a brown smudge.
+    eagle_src = Image.open(find_file("flying_mount_eagle*.jpg")).convert("RGB")
+    up, spread, down, glide = (21, 19, 451, 465), (524, 203, 1282, 465), \
+        (65, 475, 651, 737), (693, 509, 1351, 737)
     eagle_frames = fit_group(eagle_src, {
-        "perch0": (4, 4, 208, 177), "perch1": (222, 21, 404, 177),
-        "perch2": (4, 4, 208, 177), "fly0": (4, 181, 197, 347),
-        "fly1": (200, 181, 390, 347), "fly2": (4, 181, 197, 347),
-    }, EAGLE_CANVAS, EAGLE_HEIGHT)
+        "perch0": glide, "perch1": spread, "perch2": glide,
+        "fly0": up, "fly1": spread, "fly2": down,
+    }, EAGLE_CANVAS, EAGLE_HEIGHT, bg_color="corner")
     shared_set("eagle", eagle_frames)
 
     # Face HUD icon and portrait
-    face = crop_and_fit(m_img, (40, 75, 130, 165), (32, 32), anchor="center")
-    append("face", face, master=hero_master)
+    # The select-screen portraits: the painted pair (Maiya, Luna) when it
+    # exists, otherwise Maiya cleaned up from the moveset sheet and Luna
+    # recoloured from her. The small HUD/face icon is taken from the
+    # portrait's head rather than the tiny in-game sprite, so it keeps real
+    # eyes and a face instead of a smudge.
+    pair = SOURCE / "faces_select.jpg"
+    luna_painted = None
+    if pair.is_file():
+        faces_img = Image.open(pair).convert("RGB")
+        w2 = faces_img.width // 2
+        busts = fit_group(faces_img, {"maiya": (0, 0, w2, faces_img.height),
+                                      "luna": (w2, 0, faces_img.width, faces_img.height)},
+                          (96, 96), 92, bg_color="corner")
+        portrait = dehalo(np.asarray(busts["maiya"]))
+        luna_painted = dehalo(np.asarray(busts["luna"]))
+    else:
+        portrait = dehalo(tidy_face(crop_and_fit(m_img, (27, 70, 144, 268), (96, 96), anchor="center")))
+    # Centre the icon on her face (the skin), with a little hair around it.
+    rgb = portrait[..., :3].astype(np.int32)
+    skin = (portrait[..., 3] > 0) & (rgb[..., 0] > 190) & (rgb[..., 1] > 130) & (rgb[..., 0] > rgb[..., 2] + 40)
+    ys, xs = np.where(skin[:64])
+    cy, cx = int(np.median(ys)), int(np.median(xs))
+    side = 50
+    y0 = max(0, cy - side // 2 - 4)
+    head = Image.fromarray(portrait).crop((cx - side // 2, y0, cx + side // 2, y0 + side)).resize((32, 32), Image.Resampling.LANCZOS)
+    def face_icon(img):
+        h = np.array(img)
+        h[..., 3] = np.where(h[..., 3] >= 128, 255, 0)
+        return dehalo(tidy_face(h))
+    face = face_icon(head)
+    # Its own palette: squeezed into the sprite's few skin tones the face
+    # came out blotchy.
+    append("face", face)
 
-    portrait = crop_and_fit(m_img, (27, 70, 144, 268), (96, 96), anchor="center")
     append("portrait", portrait, banks=2, bank_base=41)
+    # Luna's own portrait for the select screen, beside Maiya's: the same
+    # painting through the same hair and dress recolour as her sprites.
+    if luna_painted is not None:
+        luna = luna_painted
+    else:
+        luna = portrait.copy()
+        lit = luna[..., 3] > 0
+        luna[lit, :3] = hsv_map(luna[lit, :3], alt_tint)
+    append("portrait_alt", luna, banks=2, bank_base=62)
+    luna_head = Image.fromarray(np.ascontiguousarray(luna)).crop(
+        (cx - side // 2, y0, cx + side // 2, y0 + side)).resize((32, 32), Image.Resampling.LANCZOS)
+    append("face_alt", face_icon(luna_head))
     print(f"  Maiya compiled ({len(maiya_frames)} frames)", flush=True)
 
     print("== 3. Compiling 6 Corrupted Blight Enemies ==", flush=True)
@@ -721,7 +1110,10 @@ def build():
             "boxes": [(8, 216, 170, 339), (180, 216, 345, 339), (360, 216, 515, 339)],
         },
         "crow": {
-            "canvas": (48, 32), "height": 26, "lift": 1.35,
+            # Its own six-pose sheet: four wing-beats, a folded dive and a
+            # perch, instead of two stiff frames that snapped between.
+            "canvas": (48, 32), "height": 30, "lift": 1.2,
+            "sheet": "crow_moves.jpg", "poses": 6,
             "boxes": [(10, 374, 180, 508), (188, 374, 350, 508)],
         },
         "goblin": {
@@ -745,14 +1137,23 @@ def build():
     valley_tint = [(v["hue"], v["sat"], v["val"]) for v in palette_valley_cfg]
 
     for cname, spec in creatures.items():
-        boxes = {str(k): box for k, box in enumerate(spec["boxes"])}
-        frames = fit_group(en_img, boxes, spec["canvas"], spec["height"])
+        sheet = SOURCE / spec["sheet"] if "sheet" in spec else None
+        if sheet is not None and sheet.is_file():
+            src = Image.open(sheet).convert("RGB")
+            found = find_poses(src)[:spec["poses"]]
+            frames = fit_group(src, {str(k): box for k, box in enumerate(found)},
+                               spec["canvas"], spec["height"], bg_color="corner")
+        else:
+            boxes = {str(k): box for k, box in enumerate(spec["boxes"])}
+            frames = fit_group(en_img, boxes, spec["canvas"], spec["height"])
         if "lift" in spec:
             # Night-black art turns to mud at 26 px: lift it until the
             # silhouette reads against a dark canopy.
             for name, f in frames.items():
                 rgb = np.clip(f[:, :, :3].astype(np.float32) * spec["lift"] + 14.0, 0, 255)
                 frames[name] = np.dstack((rgb.astype(np.uint8), f[:, :, 3]))
+        if cname in ("slime", "beetle", "goblin", "worm"):
+            frames = {k: add_shadow(f) for k, f in frames.items()}
         master = shared_set(cname, frames)
         words = []
         for shift, sat, val in valley_tint:
@@ -810,39 +1211,47 @@ def build():
         header.append(f"#define MG_{nname.upper()}_H {NPC_CANVAS[1]}u")
         print(f"  NPC {nname} compiled", flush=True)
 
-    print("== 5. Compiling 6 Blight Guardians (96x96) ==", flush=True)
-    boss_specs = [
-        ("beetle", "chainsaw_beetle*.jpg", "white", [(40, 15, 480, 500), (510, 500, 740, 750)]),
-        ("toad", "sludge_toad*.jpg", "white", [(5, 6, 349, 336), (430, 520, 740, 680)]),
-        ("vulture", "iron_vulture*.jpg", "white", [(4, 4, 208, 177), (200, 180, 390, 347)]),
-        ("jackal", "inferno_jackal*.jpg", "white", [(34, 23, 273, 183), (220, 350, 480, 520)]),
-        ("owl", "blizzard_owl*.jpg", "white", [(13, 12, 258, 193), (400, 390, 620, 580)]),
-        ("leviathan", "toxic_leviathan*.jpg", "white", [(7, 5, 384, 162), (170, 550, 470, 680)]),
-        ("smoggar", "lord_smoggar*.jpg", "white", [(21, 12, 218, 301), (680, 290, 990, 560)]),
-    ]
-
+    print("== 5. Compiling 10 Blight Guardians (128x96, 8 poses) ==", flush=True)
+    # Each guardian's move sheet, eight poses in this order: idle, walk,
+    # wind-up, attack, special, jump, hurt, defeated. A pose is either an
+    # index into the poses found on the sheet (reading order) or a box; a
+    # pair of boxes is one pose drawn in two pieces (a body and its breath).
+    I = lambda k: k
+    boss_sheets = {
+        "beetle": ("boss_beetle_moves.jpg", [(13, 231, 288, 509), (292, 258, 497, 505), (501, 296, 751, 507),
+                   (756, 284, 1022, 505), (30, 610, 300, 895), (300, 535, 545, 875), (530, 590, 760, 895),
+                   (675, 845, 1022, 980)]),
+        "toad": ("boss_toad_moves2.jpg", [I(0), I(1), I(2), I(3), I(3), I(5), I(6), I(7)]),
+        "leviathan": ("boss_leviathan_moves.jpg", [I(0), I(1), I(2), I(3), I(4), I(5), I(6), I(7)]),
+        "jackal": ("boss_jackal_moves.jpg", [I(0), I(1), I(3), I(2), (408, 310, 1004, 509), I(7), I(8), I(9)]),
+        "owl": ("boss_owl_moves.jpg", [I(0), I(1), I(2), I(3), I(4), I(5), I(6), I(7)]),
+        "smoggar": ("boss_smoggar_moves.jpg", [(50, 135, 235, 440), (285, 140, 470, 440), (505, 150, 690, 440),
+                    (650, 110, 1010, 440), (10, 600, 335, 950), (330, 545, 510, 915), (515, 580, 735, 950),
+                    (735, 830, 1015, 975)]),
+        "vulture": ("boss_vulture_moves.jpg", [I(0), I(1), I(3), I(4), (53, 501, 595, 689), I(7), I(8), I(9)]),
+        "eel": ("boss_eel_moves.jpg", [I(0), I(1), I(2), I(3), (41, 366, 364, 715), I(6), I(7), I(8)]),
+        "wyrm": ("boss_wyrm_moves.jpg", [I(0), I(1), I(2), I(3), I(3), I(5), I(6), I(7)]),
+        "hyena": ("boss_hyena_moves.jpg", [I(0), I(1), I(2), I(3), I(4), I(5), I(6), I(7)]),
+    }
+    pose_names = ("idle", "walk", "windup", "attack", "special", "jump", "hurt", "dead")
     boss_masters = {}
-    for bname, pattern, bg, boxes in boss_specs:
-        b_img = Image.open(find_file(pattern)).convert("RGB")
-        frames = fit_group(b_img, {str(k): box for k, box in enumerate(boxes)},
-                           BOSS_CANVAS, BOSS_HEIGHT, bg_color=bg, normalize_extent=True)
+    for bname, (fname, spec) in boss_sheets.items():
+        b_img = Image.open(SOURCE / fname).convert("RGB")
+        found = find_poses(b_img)
+        boxes = {}
+        for k, item in enumerate(spec):
+            boxes[pose_names[k]] = found[item] if isinstance(item, int) else item
+        frames = fit_group(b_img, boxes, BOSS_CANVAS, BOSS_HEIGHT, bg_color="corner", clip_tall=True)
+        assert len(frames) == 8, bname
+        fliers = bname in ("owl", "vulture")
+        for pose in frames:
+            if pose == "dead" or (not fliers and pose != "jump"):
+                frames[pose] = add_shadow(frames[pose], half_h=3.2)
         boss_masters[bname] = shared_set(f"boss_{bname}", frames)
-        print(f"  Boss {bname} compiled (96x96, 2 frames)", flush=True)
-
-    # Three more valleys, three more guardians -- the same painted bodies in
-    # new colours rather than new source photos: an eel wearing the
-    # Leviathan's shape for the reef, a pale wyrm wearing the Toad's for the
-    # cave, a spotted hyena wearing the Jackal's for the savanna. Tunable in
-    # games/maiya/artbox/palette_config.json (see load_palette_config).
-    reused_boss_tint = [
-        (b["name"], b["source"], b["hue"], b["sat"], b["val"]) for b in palette_boss_cfg
-    ]
-    for new_name, source, shift, sat, val in reused_boss_tint:
-        tinted = np.zeros((16, 3), dtype=np.uint8)
-        tinted[1:] = hsv_map(boss_masters[source], lambda h, s, v, _s=shift, _a=sat, _b=val:
-                             (h + _s, min(1.0, s * _a), min(1.0, v * _b)))
-        header.append(c_array(f"mg_boss_{new_name}_pal", palette_words(tinted)))
-        print(f"  Boss {new_name} recoloured from {source}", flush=True)
+        print(f"  Boss {bname} compiled (128x96, 8 poses)", flush=True)
+    for k, name in enumerate(pose_names):
+        header.append(f"#define MG_BF_{name.upper()} {k}u")
+    header.append(f"#define MG_BOSS_FRAMES {len(pose_names)}u")
 
     print("== 6. Compiling Props, Hazards, Pickups and Decoration ==", flush=True)
     prop_boxes = {
@@ -885,6 +1294,17 @@ def build():
     for k, name in enumerate(trinkets.keys()):
         header.append(f"#define MG_K_{name.upper()} {k}u")
 
+    # Ground hazards on their own palette, two frames each for the game to
+    # alternate: flickering fire, bubbling sludge, a leaking drum, spikes.
+    hazards = {name: painter() for name, painter in nature_art.HAZARDS}
+    shared_set("hazard", hazards)
+    for k, name in enumerate(hazards.keys()):
+        header.append(f"#define MG_HZ_{name.upper()} {k}u")
+
+    # Pits, one art set and palette per theme: water, toxic, fire, void.
+    for theme in ("water", "toxic", "fire", "void"):
+        shared_set(f"pit_{theme}", nature_art.pit_blocks(theme))
+
     # The front plane: boulders and fronds that pass in front of the road.
     front = {"fern": nature_art.fern_frond()}
     for gname in ("grass", "moss", "sand", "autumn", "snow", "bark", "rust"):
@@ -926,10 +1346,17 @@ def build():
     Image.fromarray(preview).save(output / "tools.png")
 
     print("== 8. Compiling Title Screen Key Visual ==", flush=True)
-    title_raw = Image.open(find_file("maiya_title*.jpg")).convert("RGBA")
+    # The redrawn key visual when it's there (same composition, sharper,
+    # and without the coin prompts painted into it); the original otherwise.
+    title_hq = SOURCE / "title_hq.jpg"
+    title_raw = Image.open(title_hq if title_hq.is_file() else find_file("maiya_title*.jpg")).convert("RGBA")
     title_fit = title_raw.resize((304, 224), Image.Resampling.LANCZOS)
     title_arr = np.asarray(title_fit, dtype=np.uint8)
-    title_base, title_pals = append("title", title_arr, banks=2, bank_base=41)
+    # Sixteen palettes, one chosen per tile, instead of two for the whole
+    # picture: the title is the first thing anyone sees and 30 colours made
+    # it muddy. It borrows the stage-background banks, idle on the title.
+    title_base, title_pals = append("title", title_arr, banks=16, bank_base=16)
+    header.append("#define MG_TITLE_PAL_BANK 16u")
 
     write_utility_tiles(c1, c2)
 
