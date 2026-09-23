@@ -20,20 +20,20 @@
         <part name="cart" interface="neo_cart">
             <feature name="slot" value="rom_fatfur2" />
             <dataarea name="maincpu" width="16" endianness="big" size="0x100000">
-                <rom loadflag="load16_word_swap" name="780-p1.p1" offset="0x000000" size="0x080000" crc="29140cc7" sha1="80ec54aeae20fe502fbaaa3f9feba224d9255908" />
+                <rom loadflag="load16_word_swap" name="780-p1.p1" offset="0x000000" size="0x080000" crc="8d686fdd" sha1="fb096bb169d91056dd5ef566fd29def1a31529c9" />
             </dataarea>
             <dataarea name="fixed" size="0x020000">
-                <rom offset="0x000000" size="0x020000" name="780-s1.s1" crc="a80d2722" sha1="d6e46c7b132e26dcf4584bf8b84a6e7bc3feeb39" />
+                <rom offset="0x000000" size="0x020000" name="780-s1.s1" crc="53ee7999" sha1="d4af221ed91915f113e5b5cf79b66df1b63a9f8d" />
             </dataarea>
             <dataarea name="audiocpu" size="0x020000">
-                <rom offset="0x000000" size="0x020000" name="780-m1.m1" crc="51497a6e" sha1="c495828fe2275a93539588709134b71f7c9ffccf" />
+                <rom offset="0x000000" size="0x020000" name="780-m1.m1" crc="2faa7bf2" sha1="c7f44649ebd5b87d202a4f3d98bf196b19ea5532" />
             </dataarea>
             <dataarea name="ymsnd:adpcma" size="0x762400">
                 <rom name="780-v1.v1" offset="0x000000" size="0x762400" crc="8ebd9021" sha1="372285645430f23dc2a87ef5e10518ceb0605b92" />
             </dataarea>
             <dataarea name="sprites" size="0x800000">
-                <rom loadflag="load16_byte" name="780-c1.c1" offset="0x000000" size="0x400000" crc="b7e0abc2" sha1="1ba3679039a3f99440c5f2ecbb5c027b3d7d96b1" />
-                <rom loadflag="load16_byte" name="780-c2.c2" offset="0x000001" size="0x400000" crc="937671dc" sha1="ecff1049dc645d5f2ccd9bbc56979cf03124bc46" />
+                <rom loadflag="load16_byte" name="780-c1.c1" offset="0x000000" size="0x400000" crc="b601d76a" sha1="6950cae89c3af744acb235a823298614975cc632" />
+                <rom loadflag="load16_byte" name="780-c2.c2" offset="0x000001" size="0x400000" crc="feea2890" sha1="8dad3f83e3f20c9bd11801015d711ebae8b66d3e" />
             </dataarea>
         </part>
     </software>

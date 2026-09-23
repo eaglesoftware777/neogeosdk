@@ -443,6 +443,62 @@ def bar_tiles():
     return {BAR_TILE_BASE + k: t for k, t in enumerate(tiles)}
 
 
+# ---------------------------------------------------------------------------
+#  The select screen's card frame, drawn on the FIX layer around each
+#  portrait: a bevelled five-pixel band hugging the picture, with a jewel in
+#  each corner. Pens: 1 outline, 2 frame, 3 frame light, 4 frame shadow,
+#  5 jewel, 6 jewel light. Order: TL, T, TR, L, R, BL, B, BR -- the band sits
+#  on the side of each cell that touches the portrait.
+# ---------------------------------------------------------------------------
+
+FRAME_TILE_BASE = BAR_TILE_BASE + 21
+
+
+def frame_tiles():
+    top = np.zeros((8, 8), dtype=np.uint8)
+    for k, pen in enumerate([1, 3, 2, 2, 1]):
+        top[3 + k, :] = pen
+    bottom = np.zeros((8, 8), dtype=np.uint8)
+    for k, pen in enumerate([1, 2, 2, 4, 1]):
+        bottom[k, :] = pen
+    left = np.zeros((8, 8), dtype=np.uint8)
+    for k, pen in enumerate([1, 3, 2, 2, 1]):
+        left[:, 3 + k] = pen
+    right = np.zeros((8, 8), dtype=np.uint8)
+    for k, pen in enumerate([1, 2, 2, 4, 1]):
+        right[:, k] = pen
+
+    def corner(ox, oy):
+        px = np.zeros((8, 8), dtype=np.uint8)
+        px[oy:oy + 5, ox:ox + 5] = 2
+        px[oy, ox:ox + 5] = 1; px[oy + 4, ox:ox + 5] = 1
+        px[oy:oy + 5, ox] = 1; px[oy:oy + 5, ox + 4] = 1
+        cy, cx = oy + 2, ox + 2
+        px[cy, cx - 1:cx + 2] = 5; px[cy - 1:cy + 2, cx] = 5
+        px[cy - 1, cx] = 6
+        return px
+    tl, tr, bl, br = corner(3, 3), corner(0, 3), corner(3, 0), corner(0, 0)
+    # the corners' outer edges continue the straight runs beside them
+    tl[3:8, 7] = left[3:8, 7]; tl[7, 3:8] = top[7, 3:8]
+    tr[3:8, 0] = right[3:8, 0]; tr[7, 0:5] = top[7, 0:5]
+    bl[0:5, 7] = left[0:5, 7]; bl[0, 3:8] = bottom[0, 3:8]
+    br[0:5, 0] = right[0:5, 0]; br[0, 0:5] = bottom[0, 0:5]
+    tiles = [tl, top, tr, left, right, bl, bottom, br]
+    return {FRAME_TILE_BASE + k: t for k, t in enumerate(tiles)}
+
+
+def heart_pens():
+    """The heart glyph's own shape, with a one-pixel dark rim and a shine."""
+    fill = np.array([[1 if ch != ' ' else 0 for ch in row] for row in GLYPHS[0x01]], dtype=bool)
+    px = np.zeros((8, 8), dtype=np.uint8)
+    px[fill] = 4
+    pad = np.pad(fill, 1)
+    edge = fill & ~(pad[:-2, 1:-1] & pad[2:, 1:-1] & pad[1:-1, :-2] & pad[1:-1, 2:])
+    px[edge] = 1
+    px[1, 1] = 3; px[1, 2] = 3; px[2, 1] = 3
+    return px
+
+
 def encode_fix_pens(px):
     out = bytearray(32)
     for gi, (cl, cr) in enumerate(_COL_PAIRS):
@@ -471,17 +527,22 @@ def inject_hud_glyphs():
     rom = bytearray(S1_PATH.read_bytes())
     for code, rows in GLYPHS.items():
         rom[code * 32:(code + 1) * 32] = encode_fix_tile(rows)
+    # The life heart in three pens -- 1 outline, 4 fill, 3 shine -- drawn with
+    # the red health-bar palette, so it keeps an edge against a red sky.
+    rom[0x01 * 32:0x02 * 32] = encode_fix_pens(heart_pens())
     bars = bar_tiles()
+    bars.update(frame_tiles())
+    ours = {encode_fix_pens(p) for p in bars.values()}
     for tile, px in bars.items():
         new = encode_fix_pens(px)
         old = bytes(rom[tile * 32:(tile + 1) * 32])
-        # Only ever overwrite empty space or a previous copy of our own bars:
+        # Only ever overwrite empty space or a previous copy of our own tiles:
         # if the art build has started using this run, stop loudly.
-        if any(old) and old not in {encode_fix_pens(p) for p in bars.values()}:
+        if any(old) and old not in ours:
             raise SystemExit(f"FIX tile {tile:#x} is in use; move BAR_TILE_BASE")
         rom[tile * 32:(tile + 1) * 32] = new
     S1_PATH.write_bytes(bytes(rom))
-    print(f"  Injected {len(GLYPHS)} HUD glyphs and {len(bars)} bar tiles into {S1_PATH.name}")
+    print(f"  Injected {len(GLYPHS)} HUD glyphs and {len(bars)} bar and frame tiles into {S1_PATH.name}")
 
 
 def main():

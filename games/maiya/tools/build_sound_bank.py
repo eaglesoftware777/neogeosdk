@@ -21,9 +21,9 @@ Produces:
    - 15.wav: Wind dash whoosh / jump
    - 16.wav: Player hurt / impact
 
-2. 8 melodic Shinobi-inspired MML tracks in games/maiya/sound/mml:
+2. 8 melodic arcade-style MML tracks in games/maiya/sound/mml:
    - 0: Attract / Title ("Valley of the Rose")
-   - 1: World 1 Greenroot Forest (Fast funky Shinobi groove, pentatonic lead)
+   - 1: World 1 Greenroot Forest (Fast funky forest groove, pentatonic lead)
    - 2: World 2 Mudriver Marsh (Murky atmospheric minor groove)
    - 3: World 3 Smokestack City (Heavy industrial mechanical rhythm)
    - 4: World 4 Burning Drylands (Intense fiery pulse)
@@ -276,7 +276,7 @@ def build_sfx():
     print(f"Generated {len(sounds)} custom 16-bit WAV SFX in {WAV_A_DIR}")
 
 
-# Shinobi-inspired MML tracks for the 7 worlds, Title, and Boss
+# arcade-style MML tracks for the 7 worlds, Title, and Boss
 MML_TRACKS = {
     # Track 0: Attract / Title Screen ("Valley of the Rose")
     "0_mml_example_a.mml": """\
@@ -304,7 +304,7 @@ E G B > D < B G E4
 ~
 """,
 
-    # Track 1: World 1 - Greenroot Forest (Fast funky Shinobi groove)
+    # Track 1: World 1 - Greenroot Forest (Fast funky forest groove)
     "1_mml_example_b.mml": """\
 ; World 1: Greenroot Forest
 ; Iconic driving pentatonic bass and energetic arcade flute
@@ -315,7 +315,7 @@ V14
 O4
 L8
 
-; Funky Shinobi groove
+; Funky forest groove
 E G A B > D < B A G
 E E G E  A A B4
 ; High flute counter-melody
@@ -461,7 +461,7 @@ def build_mml():
     MML_DIR.mkdir(parents=True, exist_ok=True)
     for fname, content in MML_TRACKS.items():
         (MML_DIR / fname).write_text(content, encoding="ascii")
-    print(f"Generated {len(MML_TRACKS)} Shinobi-inspired MML tracks in {MML_DIR}")
+    print(f"Generated {len(MML_TRACKS)} arcade-style MML tracks in {MML_DIR}")
 
 
 def main():

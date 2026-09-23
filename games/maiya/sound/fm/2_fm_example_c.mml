@@ -1,23 +1,21 @@
-; 2_fm_example_c - short mix piano accent
+; 2_fm_example_c - Luna's fanfare, played once when she is chosen
+;
+; The same shape as Maiya's call, but night to her day: a bell phrase
+; that starts in A minor and resolves up to a bright A. About two
+; seconds, FM only, no loop mark.
 
-T72
-I2
-V10
+T110
+I1
+V13
 O4
+L16
+
+A > C E A
 L8
-
-; A - simple minor piano comp, leaves room for ADPCM-B
-C E- G > C  < B- G E- C
-D F A > D  < C A F D
-
-; B - answer phrase
-E- G B- > E-  < D B- G E-
-F A > C F  < E- C A F
-
-; C - short cadence for mix overlay
+> C < B > E
+L16
+D C
 L4
-G E- C R
-F D < B- R
-> C2 R2
-
-~
+< B
+L2
+> A

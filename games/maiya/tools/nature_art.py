@@ -795,8 +795,7 @@ HAZARDS = (
 # ---------------------------------------------------------------------------
 
 PIT_THEMES = {
-    # 1 caution stripe (bright, the same in every theme -- a pit reads as a
-    # pit before it reads as water/toxic/fire/void), 2-5 earth light->dark,
+    # 1 unused (was a caution stripe on the lip), 2-5 earth light->dark,
     # 6-7 wall, 8-12 content dark->light, 13-15 glints
     "water": [(0, 0, 0), (255, 200, 30), (138, 100, 64), (104, 72, 44), (74, 50, 32), (48, 32, 22),
               (60, 48, 40), (34, 26, 24), (8, 24, 60), (14, 48, 110), (24, 88, 170), (70, 150, 220),
@@ -814,12 +813,12 @@ PIT_THEMES = {
 
 
 def _pit_lean(y, half_w):
-    """How far the walls have bowed in by row `y`: a curve, not a straight
-    diagonal, so the mouth reads as a hole receding in perspective rather
-    than a wedge stamped into the tile. Shared by the wall pass and the
-    contents fill so the water/fire/void inside never overruns the walls
-    around it."""
-    return ((y / 31.0) ** 1.5) * half_w * 0.5
+    """How far the side walls step in by row `y`: not at all. The hole goes
+    straight down past the bottom of the screen at its full width -- the
+    width Maiya actually falls through. A mouth that bowed in to a point
+    left road showing under both of its corners, so the pit read as a cup
+    set into the ground rather than a gap in it."""
+    return 0.0
 
 
 def pit_hole(theme, width, frame):
@@ -842,12 +841,10 @@ def pit_hole(theme, width, frame):
             else:
                 a[y, x] = 8                                      # the depths, before contents fill it in
         # A hard dark crease is the real edge -- the ground doesn't fade
-        # into the hole, it stops -- with only scattered flecks of caution
-        # paint left on it, not a solid rail that reads as something to
-        # stand on.
+        # into the hole, it stops. No paint on it: the caution sign beside
+        # the pit does the warning, and flecks along the lip only showed as
+        # a dotted yellow line.
         a[0:2, x] = 7
-        if edge >= 2 and ((x * 5 % 7 == 0) or (x * 3 % 11 == 0)):
-            a[0, x] = 1
     # rocks set into the far wall
     for x in range(4, width - 4, 9):
         y = 4 + (x * 13) % 7
@@ -858,6 +855,9 @@ def pit_hole(theme, width, frame):
     # so the water/fire/void sits inside the hole instead of squaring off
     # underneath it.
     surf = 15 + (frame & 1)
+    # Foam, bubbles and flame tongues fall at scattered places, not every
+    # Nth pixel: evenly spaced they lined up into a dotted rule.
+    spot = np.random.default_rng(width * 31 + len(theme) * 7 + frame).random(width)
     for x in range(width):
         edge = min(x, width - 1 - x)
         if theme == "void":
@@ -878,14 +878,14 @@ def pit_hole(theme, width, frame):
                 if edge < _pit_lean(y, half_w) + 2:
                     continue
                 a[y, x] = 10 if y < surf + 6 else (9 if y < surf + 11 else 8)
-            if theme == "water" and (x + frame * 3) % 7 == 0:
+            if theme == "water" and spot[x] < 0.12:
                 a[surf, x] = 13                                  # foam
                 a[surf + 4, x - 1:x + 2] = 11                    # ripple
-            if theme == "toxic" and (x * 3 + frame * 5) % 11 == 0:
+            if theme == "toxic" and spot[x] < 0.09:
                 a[surf - 1, x] = 12                              # bubble
                 a[surf - 2, x] = 13
                 a[surf + 5, x] = 12
-            if theme == "fire" and (x + frame * 2) % 5 == 0:
+            if theme == "fire" and spot[x] < 0.22:
                 h = 3 + (x * 7 + frame) % 5                      # flame tongues
                 a[surf - h:surf, x] = 12
                 a[surf - h, x] = 13

@@ -33,6 +33,19 @@ the v1.7.1 release when it merges.  v1.7.0 remains the current release.
   speed, which had parked the camera ahead of her after a knock-back.
 - MAME regression captures for walking, climbing, arena limits and bonus
   progression.
+- A select screen of face cards in gold frames, each heroine standing under
+  her own over the forest drifting behind, with its own music and a
+  fanfare for whichever girl is chosen.
+- The guardian's gate is a door: walking into it fades the valley to white
+  and brings her out in the guardian's lair.
+- Hits knock her away from what struck her with a short eased stagger; a
+  guardian can no longer be walked through; heavy blows hold the scene for
+  a few frames; a red flash when she is hurt; after each guardian she hops
+  and holds her victory pose instead of flicking between two frames.
+- Bonus rounds end at the first touch. Beaten creatures pop up and drop off
+  the screen upside down; shadows are checkered and see-through; pits cut
+  straight down; the wind and tide gusts are gone; the camera keeps more
+  road ahead of her in the direction she walks.
 
 ### EagleBIOS (`bios/`)
 
@@ -50,6 +63,10 @@ the v1.7.1 release when it merges.  v1.7.0 remains the current release.
   Physical hardware and retail-cartridge compatibility are not yet verified.
 
 ### Build and documentation
+
+- 2D engine: `ng_game_engine_set_hitstop_freeze()` opts a game into a real
+  hitstop -- while `ng_feedback_is_hitstop()`, the engine frame skips logic,
+  physics and character movement but keeps drawing. Off by default.
 
 - Each `GAME=` selects its own `game.cfg` automatically; full builds that
   share generated files no longer run in parallel.
