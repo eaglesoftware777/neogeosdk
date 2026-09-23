@@ -147,7 +147,7 @@ enum {
     GLYPH_HEART = 1, GLYPH_ROSE = 2, GLYPH_KEY = 3, GLYPH_COIN = 4,
     GLYPH_LEAF = 5, GLYPH_SPARK = 6, GLYPH_BLOCK = 7, GLYPH_DOT = 8,
     GLYPH_FLOWER = 9, GLYPH_FRIEND = 10, GLYPH_BERRY = 11, GLYPH_ORB = 12,
-    GLYPH_BUD = 13, GLYPH_CROWN = 14,
+    GLYPH_BUD = 13, GLYPH_CROWN = 14, GLYPH_WARN = 15,
     ROW_TRAY = 26,                   /* the collection tray, bottom left  */
     MG_TRAY_ICON_SCALE = 0x60,       /* small badge icons, not a HUD bar  */
     MG_TRAY_ICON_PX = 13,            /* ~32px source shrunk by the above  */
@@ -1618,6 +1618,8 @@ static uint8_t NEOGEO_USER mg_strike(void)
     return (uint8_t)(mg.might ? 4 : 2);
 }
 
+static void NEOGEO_USER mg_sad_face_palette(void);
+
 static void NEOGEO_USER mg_player_damage(void)
 {
     NGCharacter *p = mg.player;
@@ -1639,6 +1641,7 @@ static void NEOGEO_USER mg_player_damage(void)
          * freezing at the last point when play stops for her fall. */
         mg.hp_px = 0;
         mg_draw_hp_bar();
+        mg_sad_face_palette();
         /*
          * Maiya does not fall over: the valley lifts her, and she rises
          * out of frame in the sunlight before the mission starts again.
@@ -1720,6 +1723,28 @@ static void NEOGEO_USER mg_ghost_palette(void)
     }
     pal[0] = mg_acidmoth_pal[0];
     mg_palette(PAL_WRAITH, pal);
+}
+
+/*
+ * Her HUD avatar, drained the same way as the wraith above, the moment she
+ * loses a life -- the same face, but pale and blue instead of her own warm
+ * colours, so the loss reads on her portrait and not just the HP bar.
+ * mg_hud_static() puts her own colours straight back the next time the
+ * scene starts, so nothing has to restore this explicitly.
+ */
+static void NEOGEO_USER mg_sad_face_palette(void)
+{
+    const uint16_t *base = mg.hero_choice ? mg_face_alt_pal : mg_face_pal;
+    uint16_t pal[16];
+    uint8_t i;
+    for (i = 0; i < 16; i++) {
+        uint16_t c = base[i];
+        uint8_t v = (uint8_t)((((c >> 8) & 15u) + ((c >> 4) & 15u) + (c & 15u)) / 3u);
+        uint8_t b = (uint8_t)(v + 4u > 15u ? 15u : v + 4u);
+        pal[i] = (uint16_t)((v << 8) | (v << 4) | b);
+    }
+    pal[0] = base[0];
+    mg_palette(PAL_FACE, pal);
 }
 
 static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
@@ -4220,10 +4245,11 @@ static void NEOGEO_USER mg_hazard_warn_check(void)
               : hz->type == MG_H_TOXIC ? "HAZARD: TOXIC - STAND CLOSE, PRESS UP"
               : "TOXIC SLUDGE AHEAD - KEEP CLEAR", PAL_WARN, 90);
         /* A pit reads as a texture change more than a hazard at a glance,
-         * so it gets its own caution line above the hint text, on the one
-         * FIX row (6) that sits idle during play. */
+         * so it gets its own caution panel above the hint text, on the one
+         * FIX row (6) that sits idle during play -- a danger sign either
+         * side of the words, not just more text. */
         if (hz->type == MG_H_PIT) {
-            mg_centre(6, "!! DANGER: BOTTOMLESS PIT !!", PAL_WARN);
+            mg_centre(6, "\x0F ATTENTION - YOU MAY FALL \x0F", PAL_WARN);
             mg.pit_warn_timer = 90;
         }
         return;
