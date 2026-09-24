@@ -154,8 +154,9 @@ enum {
     HURT_LOCK = 60,      /* frames of mg.hurt above this lock the controls */
     MG_KNOCK = 768,      /* her knockback: a short stagger, eased to a stop */
     MG_CAM_LEAD = 40,    /* the camera keeps this much more road ahead    */
-    MG_BOSS_BODY = 40,   /* how close a grounded guardian lets her stand    */
-    MG_BOSS_TOUCH = 42,  /* and closer than this, touching it hurts        */
+    MG_BOSS_TOUCH = 36,  /* closer than this on the ground, a guardian hurts */
+    MG_BOSS_TOUCH_AIR = 24, /* in the air only its body does: she can jump it */
+    MG_BOSS_BACKOFF = 40,   /* frames a guardian gives ground after a touch */
     MG_MOOD_DYING = 0xEE, /* a beaten creature on its way off the screen   */
     SIT_DELAY = 70,      /* frames of crouching before Maiya sits down    */
     TALK_RANGE = 34,     /* how close a villager will speak up            */
@@ -196,6 +197,9 @@ enum {
 typedef struct {
     int16_t x, y, vx, vy;
     uint8_t life;
+    uint8_t shrink;      /* dust: the life it started with -- it drifts, no
+                          * pull, and shrinks away as that runs out; 0 for a
+                          * full-size particle that falls */
     NGSpriteGroup sprite;
 } MGSpark;
 
@@ -292,6 +296,7 @@ typedef struct {
     uint8_t  wraith_side;            /* which screen edge the next one comes from     */
     uint8_t  win_step, win_wait;     /* her victory: landing, the hop, the held pose  */
     int16_t  cam_lead;               /* how far the camera looks ahead of her         */
+    uint8_t  boss_backoff;           /* a guardian that just struck her steps back    */
 } MGState;
 
 static MGState mg;
@@ -1028,13 +1033,31 @@ static void NEOGEO_USER mg_update_sparks(int16_t camera_x)
             p->life--;
             p->x = (int16_t)(p->x + p->vx);
             p->y = (int16_t)(p->y + p->vy);
-            if ((p->life & 3) == 0) p->vy++;
+            if (p->shrink) {
+                /* dust slows as it spreads, and never falls */
+                if ((p->life & 7) == 0) {
+                    p->vx = (int16_t)(p->vx / 2);
+                    p->vy = (int16_t)(p->vy / 2);
+                }
+            } else if ((p->life & 3) == 0) {
+                p->vy++;
+            }
         }
         scr_x = (int16_t)(p->x - camera_x);
         if (!p->life || scr_x < -16 || scr_x > 336) {
             p->life = 0;
+            p->shrink = 0;
+            ng_sprite_group_set_scale(&p->sprite, NG_SPRITE_FULL_XSCALE, NG_SPRITE_FULL_YSCALE);
             ng_sprite_group_set_visible(&p->sprite, 0);
+        } else if (p->shrink) {
+            /* Shrunk toward its own middle, not its corner. */
+            uint8_t sc = (uint8_t)(48u + ((uint16_t)p->life * 207u) / p->shrink);
+            int16_t in = (int16_t)(8 - (sc >> 5));
+            ng_sprite_group_set_scale(&p->sprite, sc, sc);
+            ng_sprite_group_set_pos(&p->sprite, (int16_t)(scr_x + in), (int16_t)(p->y + in));
+            ng_sprite_group_set_visible(&p->sprite, 1);
         } else {
+            ng_sprite_group_set_scale(&p->sprite, NG_SPRITE_FULL_XSCALE, NG_SPRITE_FULL_YSCALE);
             ng_sprite_group_set_pos(&p->sprite, scr_x, p->y);
             ng_sprite_group_set_visible(&p->sprite, 1);
         }
@@ -1419,6 +1442,7 @@ static void NEOGEO_USER mg_petal_sweep(void)
         p->life = (uint8_t)(50 + (i & 3) * 4);
         ng_sprite_group_set_tile_base(&p->sprite, (uint16_t)(MG_TOOL_TILE + tiles[i & 3]));
         ng_sprite_group_set_palette(&p->sprite, PAL_TOOL);
+        p->shrink = 0;
     }
 }
 
@@ -1428,6 +1452,7 @@ static void NEOGEO_USER mg_sparks(int16_t x, int16_t y)
     for (i = 0; i < MG_SPARKS; i++) {
         MGSpark *p = &mg.sparks[i];
         ng_sprite_group_set_tile_base(&p->sprite, MG_TOOL_TILE + MG_T_SPARK);
+        p->shrink = 0;
         p->x = x; p->y = y;
         p->vx = (int16_t)((i % 3) - 1);
         p->vy = -(int16_t)(1 + i / 2);
@@ -1450,6 +1475,7 @@ static void NEOGEO_USER mg_burst(int16_t x, int16_t y, uint8_t tile, uint8_t cou
          * particle slot the Secret Art borrowed for its gold ring doesn't
          * carry that tint into the next dash puff or hit spark. */
         ng_sprite_group_set_palette(&p->sprite, PAL_TOOL);
+        p->shrink = 0;
         p->x = (int16_t)(x + (int16_t)(k * 9) - (int16_t)(count * 4));
         p->y = y;
         p->vx = (int16_t)((k & 1) ? 1 : -1);
@@ -1474,6 +1500,7 @@ static void NEOGEO_USER mg_secret_art_ring(int16_t x, int16_t y)
         if (p->life) continue;
         ng_sprite_group_set_tile_base(&p->sprite, (uint16_t)(MG_TOOL_TILE + MG_T_HALO));
         ng_sprite_group_set_palette(&p->sprite, PAL_GOLD);
+        p->shrink = 0;
         p->x = x; p->y = y;
         p->vx = vx8[k]; p->vy = vy8[k];
         p->life = 26;
@@ -1498,11 +1525,66 @@ static void NEOGEO_USER mg_hit_burst(int16_t x, int16_t y)
         if (p->life) continue;
         ng_sprite_group_set_tile_base(&p->sprite,
                                       (uint16_t)(MG_TOOL_TILE + ((k & 1) ? MG_T_LEAF : MG_T_PETAL)));
+        p->shrink = 0;
         p->x = x; p->y = y;
         p->vx = vx[k]; p->vy = vy[k];
         p->life = (uint8_t)(10 + k * 2);
         k++;
     }
+}
+
+/*
+ * A creature of the blight coming apart: a puff of dust that blows out in
+ * a ring, each puff slowing, drifting and shrinking away to nothing, with
+ * a flash at the heart of it. The ring's turn, the puffs' speeds and
+ * lives are drawn fresh each time, and now and then a petal floats up out
+ * of it -- seen a hundred times a run, no two alike.
+ */
+static void NEOGEO_USER mg_dust_burst(int16_t x, int16_t y)
+{
+    static const int8_t rx[8] = { 3, 2, 0, -2, -3, -2, 0, 2 };
+    static const int8_t ry[8] = { 0, -2, -3, -2, 0, 1, 2, 1 };
+    uint8_t i, k = 0, turn = (uint8_t)(mg_rand() & 7u);
+    uint8_t want = (uint8_t)(6u + (mg_rand() & 1u));
+    uint8_t petal = (uint8_t)((mg_rand() & 3u) == 0u);
+    for (i = 0; i < MG_SPARKS && k < want + 1u + petal; i++) {
+        MGSpark *p = &mg.sparks[i];
+        if (p->life) continue;
+        ng_sprite_group_set_palette(&p->sprite, PAL_TOOL);
+        if (k == 0) {
+            /* the flash at the heart, gone almost at once */
+            ng_sprite_group_set_tile_base(&p->sprite, (uint16_t)(MG_TOOL_TILE + MG_T_SPARK));
+            p->x = (int16_t)(x - 8); p->y = (int16_t)(y - 8);
+            p->vx = 0; p->vy = 0;
+            p->life = 6;
+            p->shrink = 6;
+        } else if (k > want) {
+            /* the petal the valley gets back */
+            ng_sprite_group_set_tile_base(&p->sprite, (uint16_t)(MG_TOOL_TILE + ((mg_rand() & 1u) ? MG_T_PETAL : MG_T_LEAF)));
+            p->x = (int16_t)(x - 8); p->y = (int16_t)(y - 12);
+            p->vx = (int16_t)((mg_rand() & 1u) ? 1 : -1); p->vy = -2;
+            p->life = 34;
+            p->shrink = 0;
+        } else {
+            uint8_t d = (uint8_t)((k - 1u + turn) & 7u);
+            uint8_t fast = (uint8_t)(mg_rand() & 1u);
+            ng_sprite_group_set_tile_base(&p->sprite, (uint16_t)(MG_TOOL_TILE + MG_T_DUST));
+            p->x = (int16_t)(x - 8 + rx[d] * 2); p->y = (int16_t)(y - 8 + ry[d] * 2);
+            p->vx = (int16_t)(rx[d] + (fast ? rx[d] / 2 : 0));
+            p->vy = (int16_t)(ry[d] - 1);
+            p->life = (uint8_t)(16u + (mg_rand() % 12u));
+            p->shrink = p->life;
+        }
+        k++;
+    }
+}
+
+/* Beetles, crabs, moths and flies burst into dust when they're beaten:
+ * turned over on its back and falling, a bug read as a dead insect. */
+static uint8_t NEOGEO_USER mg_enemy_is_bug(uint8_t type)
+{
+    return (uint8_t)(type == MG_E_BEETLE || type == MG_E_TOXICCRAB ||
+                     type == MG_E_ACIDMOTH || type == MG_E_CHEMFLY);
 }
 
 /* The shot takes its own tile: spit looks like spit and fire like fire,
@@ -1614,19 +1696,26 @@ static void NEOGEO_USER mg_enemy_damage(MGEnemy *e, uint8_t damage)
     if (damage >= e->body->hp) {
         NGCharacter *b = e->body;
         int16_t x = b->x, y = b->y;
-        /*
-         * Beaten, the classic way: one spark where the blow landed, then
-         * the creature pops up, turns over and drops off the bottom of the
-         * screen. Its own sprite does it all -- no burst of extra art.
-         */
-        ng_physics_detach(b);
-        b->vx_fp = b->vy_fp = 0;
-        b->flip_y = 1;
-        b->sprite_dirty = 1;
-        e->mood = MG_MOOD_DYING;
-        e->move_timer = 0;
-        e->heading = (int8_t)(mg.player->x < x ? 1 : -1);
-        mg_burst(x, (int16_t)(y - 20), MG_T_SPARK, 1, -1);
+        if (mg_enemy_is_bug(e->type)) {
+            /* A bug bursts into dust where it stood. */
+            mg_dust_burst(x, (int16_t)(y - 14));
+            ng_chars_remove(b);
+            e->body = 0;
+        } else {
+            /*
+             * Anything else is beaten the classic way: one spark where the
+             * blow landed, then the creature pops up, turns over and drops
+             * off the bottom of the screen.
+             */
+            ng_physics_detach(b);
+            b->vx_fp = b->vy_fp = 0;
+            b->flip_y = 1;
+            b->sprite_dirty = 1;
+            e->mood = MG_MOOD_DYING;
+            e->move_timer = 0;
+            e->heading = (int8_t)(mg.player->x < x ? 1 : -1);
+            mg_burst(x, (int16_t)(y - 20), MG_T_SPARK, 1, -1);
+        }
         ng_feedback_hitstop(3);
         mg.score += 250u;
         mg.kills++;
@@ -1719,6 +1808,7 @@ static void NEOGEO_USER mg_boss_damage(uint8_t damage)
             if (mg.boss) {
                 mg.boss->hp = mg.boss->max_hp = 36;
                 mg.boss_timer = 0; mg.boss_rage = 0; mg.boss_direction = 0; mg.boss_px = 0;
+                mg.boss_backoff = 0;
                 ng_physics_attach(mg.boss, NG_PHYSICS_GRAVITY | NG_PHYSICS_SOLIDS);
                 ng_physics_set_gravity(mg.boss, 56, 6 * NG_FP_ONE);
                 mg.boss_hurt = 40;
@@ -2107,6 +2197,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     }
     for (i = 0; i < MG_SPARKS; i++) {
         mg.sparks[i].life = 0;
+        mg.sparks[i].shrink = 0;
         ng_sprite_group_init(&mg.sparks[i].sprite, (uint16_t)(SLOT_SPARK + i), 1, 1,
                              MG_TOOL_TILE + MG_T_SPARK, PAL_TOOL);
     }
@@ -2858,6 +2949,7 @@ static uint8_t NEOGEO_USER mg_boss_arrive(void)
     mg.boss_timer = 0;
     mg.boss_rage = 0;
     mg.boss_direction = 0;
+    mg.boss_backoff = 0;
     mg.boss_px = 0;          /* the guardian's bar fills in as it appears */
     mg_arena_setup(level->boss_style);
     mg_arena_background(level->boss_style);
@@ -3653,31 +3745,33 @@ static void NEOGEO_USER mg_boss_ai(NGCharacter *p)
     }
     mg_frame(b, frame, face);
 
-    if (!harmless && !mg.boss_hurt && mg_abs((int16_t)(b->x - p->x)) < MG_BOSS_TOUCH &&
-        mg_abs((int16_t)(b->y - p->y)) < 36) {
-        mg_player_hit(b->x);
-        /* thrown clear of it with a little hop, not pinned against it */
-        if (mg.state == MG_PLAY && mg.hurt == 90 && ng_physics_is_grounded(p)) p->vy_fp = -2 * NG_FP_ONE;
+    /*
+     * Having struck her, a guardian gives ground for a moment -- steps back
+     * and can't hurt her -- so a fight pinned in a corner opens up again
+     * instead of one touch following another.
+     */
+    if (mg.boss_backoff) {
+        mg.boss_backoff--;
+        harmless = 1;
+        if (style != MG_B_OWL && style != MG_B_VULTURE)
+            b->vx_fp = (b->x < p->x) ? -384 : 384;
     }
 
     /*
-     * Neither walks through the other. A guardian on the ground shoulders
-     * her out of its way, to whichever side of it she is on; backed against
-     * the arena wall, it is the guardian that gives instead. Fliers pass
-     * overhead and she can jump clear of anyone.
+     * Touching it hurts, and knocks her clear with a little hop. She is
+     * never pushed out of it: winded, or dashing, she passes straight
+     * through -- the way out of a corner -- and in the air only its body
+     * counts, so a jump can clear it.
      */
-    if (style != MG_B_OWL && style != MG_B_VULTURE && mg_abs((int16_t)(b->y - p->y)) < 40) {
-        int16_t dx = (int16_t)(p->x - b->x);
-        if (mg_abs(dx) < MG_BOSS_BODY) {
-            int16_t side = dx < 0 ? -1 : (dx > 0 ? 1 : (p->x < mg.arena_left + 160 ? 1 : -1));
-            int16_t want = (int16_t)(b->x + side * MG_BOSS_BODY);
-            if (want < mg.arena_left + 20 || want > mg.arena_left + 300) {
-                ng_char_set_pos(b, (int16_t)(p->x - side * MG_BOSS_BODY), b->y);
-            } else {
-                ng_char_set_pos(p, want, p->y);
+    {
+        int16_t reach = (mg.airborne || !ng_physics_is_grounded(p)) ? MG_BOSS_TOUCH_AIR : MG_BOSS_TOUCH;
+        if (!harmless && !mg.boss_hurt && mg_abs((int16_t)(b->x - p->x)) < reach &&
+            mg_abs((int16_t)(b->y - p->y)) < 36) {
+            mg_player_hit(b->x);
+            if (mg.state == MG_PLAY && mg.hurt == 90) {
+                if (ng_physics_is_grounded(p)) p->vy_fp = -2 * NG_FP_ONE;
+                mg.boss_backoff = MG_BOSS_BACKOFF;
             }
-            /* and it doesn't keep pressing into her after the push */
-            if ((side < 0 && b->vx_fp < 0) || (side > 0 && b->vx_fp > 0)) b->vx_fp = 0;
         }
     }
 }

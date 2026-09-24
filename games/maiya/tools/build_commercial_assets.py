@@ -753,14 +753,18 @@ def draw_tools():
     leaf[body & (xx > 8)] = 5
     leaf[2:14, 8] = 5
 
+    # Dust is the colour of the road, not of gold: grey puffs lit cream on
+    # top and shaded dark underneath. In pale gold a burst of it read as
+    # a handful of popcorn.
     dust[:] = 0
     for cx, cy, r in ((4, 11, 3.2), (9, 9, 3.8), (13, 12, 2.8)):
         puff = (xx - cx) ** 2 + (yy - cy) ** 2 <= r * r
-        dust[puff] = 7
-        dust[puff & ((xx - cx) + (yy - cy) > 1)] = 15
+        dust[puff] = 8
+        dust[puff & ((xx - cx) + (yy - cy) < -1)] = 1
+        dust[puff & ((xx - cx) + (yy - cy) > 2)] = 9
     dust[5, 12] = 1
-    dust[3, 6] = 1
-    dust[8, 2] = 1
+    dust[3, 6] = 8
+    dust[8, 2] = 8
 
     trash[:] = 0
     trash[3:13, 4:12] = 8
