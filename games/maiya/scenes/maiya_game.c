@@ -19,9 +19,7 @@
 
 void NEOGEO_USER waitVbl(void);
 
-#ifdef NG_AES
-volatile uint8_t maiya_console_start;
-#endif
+volatile uint8_t maiya_console_start;   /* Start pressed: see user.c */
 
 void *NEOGEO_USER memcpy(void *destination, const void *source, size_t count)
 {
@@ -296,6 +294,7 @@ typedef struct {
     uint8_t  wraith_side;            /* which screen edge the next one comes from     */
     uint8_t  win_step, win_wait;     /* her victory: landing, the hop, the held pose  */
     int16_t  cam_lead;               /* how far the camera looks ahead of her         */
+    uint8_t  difficulty;             /* the operator's setting: 0 easy .. 3 expert     */
     uint8_t  boss_backoff;           /* a guardian that just struck her steps back    */
 } MGState;
 
@@ -538,8 +537,11 @@ static void NEOGEO_USER mg_music(uint8_t track)
     mg.music_track = track;
     mg.music_on = 1;
     isZ80Ready(); soundSceneReset();
-    /* ADPCM-A level is six bits: 64 masks to 0 and mutes every effect. */
-    isZ80Ready(); soundApplyMix(0x3C, 0xB8, 0x00, 0x00);
+    /* ADPCM-A level is six bits: 64 masks to 0 and mutes every effect.
+     * The attract demo stays silent when the operator turned DEMO SOUND off. */
+    isZ80Ready();
+    if (mg.demo && !maiya_dip_demo_sound()) soundApplyMix(0x00, 0x00, 0x00, 0x00);
+    else soundApplyMix(0x3C, 0xB8, 0x00, 0x00);
     isZ80Ready(); soundSetADPCMBLoop(1);
     isZ80Ready(); playSFXB(track);
 }
@@ -2298,16 +2300,114 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
 
 uint8_t NEOGEO_USER maiya_hero_choice(void);
 
+/* ------------------------------------------------------------------ */
+/*  Saved data: the score table and a few totals                      */
+/* ------------------------------------------------------------------ */
+/*
+ * Kept in the header's save block (ng_save_*), which an arcade board's
+ * system ROM holds in backup RAM between sessions. Bump MG_SAVE_VERSION
+ * whenever MGSave changes shape: an old block then reads as not Maiya's
+ * and starts afresh instead of being misread.
+ */
+enum { MG_SAVE_VERSION = 1, MG_SCORES = 10 };
+
+typedef struct {
+    uint8_t  name[3];
+    uint8_t  stage;              /* the mission reached, from 1 */
+    uint32_t score;
+} MGScore;
+
+typedef struct {
+    MGScore  top[MG_SCORES];     /* best first */
+    uint8_t  best_stage;         /* furthest mission anyone has reached */
+    uint8_t  clears;             /* times the whole journey was finished */
+    uint16_t plays;              /* games started on this board */
+} MGSave;
+
+static MGSave *NEOGEO_USER mg_saved(void)
+{
+    return (MGSave *)ng_save_data();
+}
+
+void NEOGEO_USER maiya_save_reset(void)
+{
+    static const char names[MG_SCORES][3] = {
+        {'M','A','I'}, {'L','U','N'}, {'S','U','N'}, {'E','G','L'}, {'R','O','S'},
+        {'F','O','X'}, {'O','W','L'}, {'F','E','R'}, {'L','E','A'}, {'S','E','D'},
+    };
+    MGSave *sv;
+    uint8_t i;
+    ng_save_format(MG_SAVE_VERSION, (uint16_t)sizeof(MGSave));
+    sv = mg_saved();
+    for (i = 0; i < MG_SCORES; i++) {
+        sv->top[i].name[0] = (uint8_t)names[i][0];
+        sv->top[i].name[1] = (uint8_t)names[i][1];
+        sv->top[i].name[2] = (uint8_t)names[i][2];
+        sv->top[i].stage = (uint8_t)(i < 3 ? 3 - i : 1);
+        sv->top[i].score = (uint32_t)(50000u - (uint32_t)i * 5000u);
+    }
+    ng_save_commit();
+}
+
+void NEOGEO_USER maiya_save_check(void)
+{
+    if (!ng_save_valid(MG_SAVE_VERSION, (uint16_t)sizeof(MGSave))) maiya_save_reset();
+}
+
+/* ------------------------------------------------------------------ */
+/*  The operator's settings (software DIPs, see neogeo_mvs.c)         */
+/* ------------------------------------------------------------------ */
+/* A console always reads the defaults: 3 lives, 3 continues, NORMAL,
+ * demo sound on, how-to-play shown. */
+static uint8_t NEOGEO_USER mg_dip_lives(void)
+{
+    static const uint8_t lives[5] = { 1, 2, 3, 4, 5 };
+    uint8_t o = ng_dip_option(0);
+    return o < 5 ? lives[o] : 3;
+}
+
+static uint8_t NEOGEO_USER mg_dip_continues(void)
+{
+    static const uint8_t continues[4] = { 0, 1, 3, 5 };
+    uint8_t o = ng_dip_option(1);
+    return o < 4 ? continues[o] : MAX_CONTINUES;
+}
+
+/* 0 easy, 1 normal, 2 hard, 3 expert */
+static uint8_t NEOGEO_USER mg_dip_difficulty(void)
+{
+    uint8_t o = ng_dip_option(2);
+    return o < 4 ? o : 1;
+}
+
+uint8_t NEOGEO_USER maiya_dip_demo_sound(void)
+{
+    return (uint8_t)(ng_dip_option(3) == 0);
+}
+
+static uint8_t NEOGEO_USER mg_dip_how_to_play(void)
+{
+    return (uint8_t)(ng_dip_option(4) == 0);
+}
+
 void NEOGEO_USER maiya_boot(void)
 {
-    mg.lives = 3; mg.art = MAX_ART; mg.score = 0; mg.rescue_mask = 0;
-    mg.continues = MAX_CONTINUES;
+    mg.lives = mg_dip_lives(); mg.art = MAX_ART; mg.score = 0; mg.rescue_mask = 0;
+    mg.continues = mg_dip_continues();
+    mg.difficulty = mg_dip_difficulty();
     mg.coins = mg.flowers = mg.critters = 0;
     mg.hero_choice = maiya_hero_choice();
     mg.session_over = 0;
     mg.life_pickups_used = 0;
     mg.next_life_score = MG_BONUS_LIFE_SCORE_FIRST;
     mg.thorns = 0; mg.weapon = MG_W_NONE; mg.weapon_ammo = 0;
+    {
+        /* a real game (the attract demo starts through maiya_demo_begin) */
+        MGSave *sv = mg_saved();
+        maiya_save_check();
+        if (sv->plays < 0xFFFFu) sv->plays++;
+        ng_save_commit();
+    }
     mg_scene(0, 0);
 }
 
@@ -2388,8 +2488,20 @@ static const uint8_t mg_logo_glyph[13][5] = {
 static const uint8_t mg_logo_eagle[5] = { 0, 1, 2, 3, 0 };
 static const uint8_t mg_logo_software[8] = { 4, 5, 6, 7, 8, 1, 9, 0 };
 
-static void NEOGEO_USER mg_logo_word(const uint8_t *word, uint8_t len,
-                                     uint8_t left, uint8_t top, uint8_t pal)
+/* Waits out the logo a frame at a time; 1 as soon as a Start (or, on an
+ * arcade board, a credit) is waiting -- the logo gives way at once rather
+ * than swallowing the press. */
+static uint8_t NEOGEO_USER mg_logo_wait(uint8_t frames)
+{
+    while (frames--) {
+        waitVbl();
+        if (maiya_start_pending()) return 1;
+    }
+    return 0;
+}
+
+static uint8_t NEOGEO_USER mg_logo_word(const uint8_t *word, uint8_t len,
+                                        uint8_t left, uint8_t top, uint8_t pal)
 {
     uint8_t i, row, col;
 
@@ -2403,10 +2515,9 @@ static void NEOGEO_USER mg_logo_word(const uint8_t *word, uint8_t len,
                 }
             }
         }
-        waitVbl();
-        waitVbl();
-        waitVbl();
+        if (mg_logo_wait(3)) return 1;
     }
+    return 0;
 }
 
 void NEOGEO_USER maiya_eyecatcher(void)
@@ -2435,18 +2546,18 @@ void NEOGEO_USER maiya_eyecatcher(void)
     soundSetFMVolume(0x0C);
     playFMTrack(SOUND_FM_TRACK_1);
 
-    mg_logo_word(mg_logo_eagle, 5, 10, 10, PAL_GOLD);
-    mg_logo_word(mg_logo_software, 8, 4, 17, PAL_TEXT);
+    if (mg_logo_word(mg_logo_eagle, 5, 10, 10, PAL_GOLD) ||
+        mg_logo_word(mg_logo_software, 8, 4, 17, PAL_TEXT)) goto done;
 
     for (i = 0; i < 8; i++) {
         ng_fix_putc((uint8_t)(9 + i * 3), 24, (char)GLYPH_SPARK, PAL_GOLD);
-        waitVbl();
-        waitVbl();
+        if (mg_logo_wait(2)) goto done;
     }
     ng_fix_puts(16, 27, "PRESENTS", PAL_SKY);
 
-    for (i = 0; i < 120; i++) waitVbl();
+    mg_logo_wait(120);
 
+done:
     soundStopAll();
     ng_fix_clear();
     waitVbl();
@@ -2824,7 +2935,7 @@ void NEOGEO_USER maiya_hero_select(void)
     mg_ui_palettes();
     mg.music_on = 0;
     mg_music(SOUND_TRACK_A);
-    mg_show_how_to_play();
+    if (mg_dip_how_to_play()) mg_show_how_to_play();
     mg_show_intro_story();
 }
 
@@ -2834,7 +2945,10 @@ void NEOGEO_USER maiya_hero_select(void)
 /* How hard the creatures push, by valley: 1 is a stroll, 4 is the citadel. */
 static int16_t NEOGEO_USER mg_pace(int16_t base)
 {
-    int16_t scale = (int16_t)(10 + mg.stage * 2);   /* 10/12/14/16/18/20 */
+    /* 10/12/14/16/18/20 by valley at NORMAL; the operator's difficulty
+     * slows it two steps (EASY) or quickens it two or four (HARD, EXPERT). */
+    int16_t scale = (int16_t)(10 + mg.stage * 2 + ((int16_t)mg.difficulty - 1) * 2);
+    if (scale < 8) scale = 8;
     return (int16_t)((base * scale) / 16);
 }
 
@@ -2885,6 +2999,7 @@ static MGEnemy *NEOGEO_USER mg_spawn_enemy(uint8_t type, int16_t x, int16_t y, u
     e->body->hp = mg_enemy_base_hp(type);
     if (mg.stage >= 2) e->body->hp++;
     if (mg.stage >= 4) e->body->hp++;
+    if (mg.difficulty >= 2) e->body->hp++;   /* HARD and EXPERT */
     e->body->max_hp = e->body->hp;
 
     /*
@@ -2956,7 +3071,9 @@ static uint8_t NEOGEO_USER mg_boss_arrive(void)
     if (level->boss_style == MG_B_OWL || level->boss_style == MG_B_VULTURE) {
         ng_char_set_pos(mg.boss, mg.boss->x, MG_BOSS_SKY_Y);
     }
-    mg.boss->hp = mg.boss->max_hp = level->boss_hp;
+    /* the operator's difficulty: 80%, 100%, 120% or 140% of its health */
+    mg.boss->hp = mg.boss->max_hp =
+        (uint8_t)(((uint16_t)level->boss_hp * (8u + mg.difficulty * 2u)) / 10u);
     ng_physics_attach(mg.boss, NG_PHYSICS_GRAVITY | NG_PHYSICS_SOLIDS);
     if (level->boss_style == MG_B_OWL || level->boss_style == MG_B_VULTURE)
         ng_physics_set_gravity(mg.boss, 0, 8 * NG_FP_ONE);   /* they fight on the wing */
@@ -5559,7 +5676,7 @@ void NEOGEO_USER maiya_frame(void)
 
         if (go) {
             mg.continues--;
-            mg.lives = 3;
+            mg.lives = mg_dip_lives();
             mg.art = MAX_ART;
             NEO_REGISTER8(BIOS_PLAYER1_MODE) = 1;
             ng_fix_clear_rect(1, ROW_CARD, 38, 13, PAL_TEXT);

@@ -13,12 +13,15 @@ https://github.com/eaglesoftware777/neogeosdk
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 
-#ifdef NG_AES
-/* AES has no MVS backup RAM. Keep its title latch in retained game RAM. */
+/*
+ * "Start has been pressed": set by PLAYER_START (or the console's own
+ * Start check), read by the attract and title loops of the same USER
+ * call. It lives in work RAM on both boards. It used to live in backup RAM
+ * at D00100 on an arcade board -- the system ROM's own bookkeeping, and
+ * write-protected while the game runs on some system ROMs (the US one),
+ * where the write was simply lost and Start never started a game.
+ */
 #define MAIYA_START_LATCH maiya_console_start
-#else
-#define MAIYA_START_LATCH NEO_REGISTER8(0xD00100)
-#endif
 
 /* Supplied by games/maiya/main.c.  NEOGEO_USER puts them in the section
  * the ROM link keeps; in plain .text they would be stripped before linking. */
@@ -86,7 +89,12 @@ void NEOGEO_USER USER(void) {
 void NEOGEO_USER PLAYER_START(void) {
     uint16_t start_flag = NEO_REGISTER8(BIOS_START_FLAG);
     uint16_t country_code = NEO_REGISTER8(BIOS_COUNTRY_CODE);
-    if (!(start_flag & 1u)) {
+    /* Only player 1 plays, and only once per credit: a Start while she is
+     * already in the game (mode 1) is declined -- the system asks on every
+     * press and leaves the answer to the game, and saying yes again spent a
+     * second credit. The continue offer (2) and game over (3) still take
+     * one. */
+    if (!(start_flag & 1u) || NEO_REGISTER8(BIOS_PLAYER1_MODE) == 1) {
         NEO_REGISTER8(BIOS_START_FLAG) = 0;
         return;
     }
@@ -123,6 +131,7 @@ void NEOGEO_USER POWER_ON(void) {
     ASM_MVL(%%d0,(%%a0)+) ASM_MVL(%%d0,(%%a0)+)
     ASM_DBF(%%d1,.cl)
     ASM_MVB(%%d0,REG_DIPSW)
+    ASM_JSR(maiya_save_reset)       /* first power-on: the score table's defaults */
     ASM_JMP(SYS_RETURN)
     ::: ASM_END
 }
@@ -149,7 +158,7 @@ void NEOGEO_USER GAME(void) {
     ASM_MVW(#7,REG_IRQACK)
     ASM_ADDQB(#1,BIOS_MESS_BUSY)
     ASM_BCLRB(#7,BIOS_SYSTEM_MODE)
-    ASM_MVW(#0x2000,%%sr)
+    ASM_MVW(#0x2700,%%sr)
     ASM_SUBQB(#1,BIOS_MESS_BUSY)
     ASM_BSETB(#7,BIOS_SYSTEM_MODE)
     ASM_JSR(INIT_GAME)
@@ -166,8 +175,8 @@ void NEOGEO_USER TITLE(void) {
     ASM_MVW(#7,REG_IRQACK)
     ASM_ADDQB(#1,BIOS_MESS_BUSY)
     ASM_BCLRB(#7,BIOS_SYSTEM_MODE)
-    ASM_MVW(#0x2000,%%sr)
-    ASM_MVB(#0x03,BIOS_USER_MODE)
+    ASM_MVW(#0x2700,%%sr)
+    ASM_MVB(#0x01,BIOS_USER_MODE)   /* title: 1, the same as the demo */
     ASM_SUBQB(#1,BIOS_MESS_BUSY)
     ASM_BSETB(#7,BIOS_SYSTEM_MODE)
     ASM_JSR(INIT_GAME)
@@ -177,10 +186,19 @@ void NEOGEO_USER TITLE(void) {
     ::: ASM_END
 }
 
+/* Clears the game's work RAM -- all of it but the save block the header
+ * names, which holds what the system keeps for the game between sessions. */
 void NEOGEO_USER WORK_INIT(void) {
+    uint32_t keep_lo = NG_CART_SAVE_START();
+    uint32_t keep_hi = keep_lo + NG_CART_SAVE_SIZE();
     uint32_t *p = (uint32_t *)RAMSTART;
     int i;
-    for (i = 0; i < 15360; i++) *p++ = 0;
+    for (i = 0; i < 15360; i++, p++) {
+        uint32_t at = (uint32_t)(uintptr_t)p;
+        if ((i & 255) == 0) kickWatchDog();
+        if (at + 4u > keep_lo && at < keep_hi) continue;
+        *p = 0;
+    }
 }
 
 void NEOGEO_USER DISPLAY_INIT(void) {
@@ -221,31 +239,32 @@ void NEOGEO_USER setup_fix_palettes(void) {
 
 void NEOGEO_USER INIT_GAME(void) {
     ASM_START
-    ASM_JSR(soundInit)
+    /* No input callback may write into RAM while it is being cleared. */
+    ASM_MVW(#0x2700,%%sr)
     ASM_JSR(WORK_INIT)
+    ASM_JSR(maiya_save_check)
+    ASM_JSR(soundInit)
     ASM_JSR(DISPLAY_INIT)
     ASM_JSR(setup_fix_palettes)
+    ASM_MVB(#1,BIOS_USER_MODE)
+    ASM_MVW(#0x2000,%%sr)
     ::: ASM_END
 }
 
 void NEOGEO_USER GAME_DISPATCH(void) {
-#ifndef NG_AES
+    /* INIT_GAME cleared the latch before enabling input. Do not clear it
+     * again here: a VBlank may already have accepted a paid Start. */
     if (!MAIYA_START_LATCH) {
-        NEO_REGISTER8(BIOS_USER_MODE) = 1;
         GAME_ATTRACT();
     }
-    if (MAIYA_START_LATCH) {
-        NEO_REGISTER8(BIOS_USER_MODE) = 2;
-        START_GAME();
-    }
-#else
-    NEO_REGISTER8(BIOS_USER_MODE) = 1;
-    GAME_ATTRACT();
-    if (MAIYA_START_LATCH) {
-        NEO_REGISTER8(BIOS_USER_MODE) = 2;
-        START_GAME();
-    }
+    if (MAIYA_START_LATCH
+#ifndef NG_AES
+        || read_p1credit() > 0
 #endif
+    ) {
+        TITLE_WAIT();
+        START_GAME();
+    }
 }
 
 void NEOGEO_USER DEMO_GAME(void)    { GAME_ATTRACT(); }
@@ -265,6 +284,10 @@ static int NEOGEO_USER attract_interrupted(void) {
 #endif
 }
 
+uint8_t NEOGEO_USER maiya_start_pending(void) {
+    return (uint8_t)attract_interrupted();
+}
+
 /*
  * Attract loop.
  *
@@ -280,7 +303,11 @@ void NEOGEO_USER GAME_ATTRACT(void) {
     int round;
 
     for (round = 0; ; round++) {
-        /* --- the house logo, once per power-on ------------------------ */
+        /* --- the house logo, at the head of the attract -------------- */
+        /* Not when a credit or a start is already waiting: this would show
+         * the logo, see it and hand straight back to the system, which
+         * sends the demo round again -- the logo looping on its own. */
+        if (round == 0 && attract_interrupted()) return;
         if (round == 0) {
             maiya_eyecatcher();
             if (attract_interrupted()) return;
@@ -289,6 +316,7 @@ void NEOGEO_USER GAME_ATTRACT(void) {
         /* --- the title card comes first ------------------------------- */
         clearFix(); clearSprs(); setBACKDROP(BLACK);
         maiya_title();
+        if (!maiya_dip_demo_sound()) { isZ80Ready(); soundApplyMix(0x00, 0x00, 0x00, 0x00); }
         for (i = 0; i < 60 * 12; i++) {
 #ifdef NG_AES
             fixtext_out(14, 25, "PUSH START", 1);
@@ -332,20 +360,38 @@ void NEOGEO_USER TITLE_WAIT(void) {
             else fixtext_out(13, 25, "             ", 1);
             if (auto_frames > 0) auto_frames--;
             else {
-                MAIYA_START_LATCH = 1;
-                NEO_REGISTER8(BIOS_USER_MODE) = 2;
-                break;
+                uint16_t saved_sr;
+                /* Debit once, atomically with respect to PLAYER_START. */
+                __asm__ volatile ("move.w %%sr,%0\n\tmove.w #0x2700,%%sr"
+                                  : "=d" (saved_sr) : : "memory");
+                if (!MAIYA_START_LATCH) {
+                    NEO_REGISTER8(0x10FDB0) = 1;
+                    NEO_REGISTER8(0x10FDB1) = 0;
+                    NEO_REGISTER8(0x10FDB2) = 0;
+                    NEO_REGISTER8(0x10FDB3) = 0;
+                    CALLNEOGEOF(SYS_CREDIT_CHECK);
+                    if (NEO_REGISTER8(0x10FDB0)) {
+                        CALLNEOGEOF(SYS_CREDIT_DOWN);
+                        MAIYA_START_LATCH = 1;
+                        NEO_REGISTER8(BIOS_USER_MODE) = 2;
+                        NEO_REGISTER8(BIOS_PLAYER1_MODE) = 1;
+                    }
+                }
+                __asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
+                if (MAIYA_START_LATCH) break;
             }
         } else {
             fixtext_out(30, 3, "        ", 0);
             fixtext_out(13, 25, "             ", 0);
         }
 #else
+        (void)auto_frames;     /* the console title has no countdown */
         fixtext_out(14, 25, "PUSH START", 1);
         if (attract_interrupted()) break;
 #endif
         waitVbl();
     }
+    (void)i;
     maiya_hero_select();   /* her own screen, now that Start has actually landed */
 }
 
