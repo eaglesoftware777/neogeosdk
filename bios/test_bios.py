@@ -146,6 +146,8 @@ def check_probe(samples, platform, logoflag):
     assert last["message"] == 69 and last["increment"] == 0, "MESS_OUT output is incorrect"
     assert last["inline"] == 0x104B, "MESS_OUT inline command stream was not run"
     assert last["mess_point"] == 0x10FF00, "Message queue was not reset"
+    assert last["dips"] == [1, 0x30, 0xFF, 0xFF, 3, 0xFF,
+                            2, 2, 1, 0, 0, 0, 0, 0, 0, 0], "Soft-DIP defaults were not decoded"
     if platform == "mvs":
         assert last["coins"] == 10 and last["credit"] == 9, "BCD coin accounting failed"
         assert last["requests"] == 13, "MVS request flow must be INIT, DEMO, TITLE"

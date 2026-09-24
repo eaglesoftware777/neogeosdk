@@ -112,6 +112,8 @@ extern uint8_t bios_coin_state, bios_coin_change, bios_free_play_override;
 extern uint8_t bios_cart_active;
 uint8_t bios_free_play(void);
 uint8_t bios_cart_valid(void);
+uint8_t bios_backup_load(void);
+void bios_backup_save(void);
 void bios_cart_prepare(void);
 void bios_controller_setup(void);
 
