@@ -27,7 +27,8 @@ SRCS_C    = src/bios_main.c \
             src/bios_rtc.c \
             src/bios_card.c \
             src/bios_splash.c \
-            src/bios_menu.c
+            src/bios_menu.c \
+            src/bios_backup.c
 
 SRCS_S    = src/bios_entry.s
 
@@ -38,7 +39,8 @@ OBJS      = out/bios_entry.o \
             out/bios_rtc.o \
             out/bios_card.o \
             out/bios_splash.o \
-            out/bios_menu.o
+            out/bios_menu.o \
+            out/bios_backup.o
 
 TARGET_ELF = out/eagle_bios.elf
 TARGET_RAW = out/eagle_bios_raw.bin

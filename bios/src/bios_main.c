@@ -127,9 +127,17 @@ void bios_reset(void)
 
     /* Load the cartridge's documented regional soft-DIP defaults. */
     uint32_t ptr = CART_HEADER->reserved0[BIOS_COUNTRY_CODE];
-    if (ptr >= 0x140u && ptr < 0xFFFFE0u && !(ptr & 1u)) {
+    if (ptr >= 0x140u && ptr <= 0x0FFFE0u && !(ptr & 1u)) {
         const volatile uint8_t *defaults = (const volatile uint8_t *)(ptr + 16u);
-        for (uint8_t i = 0; i < 16; i++) BIOS_GAME_DIP[i] = defaults[i];
+        /* Time/count fields are literal; option descriptors pack the
+         * default selection above the number of available choices. */
+        for (uint8_t i = 0; i < 6; i++) BIOS_GAME_DIP[i] = defaults[i];
+        for (uint8_t i = 6; i < 16; i++) {
+            uint8_t descriptor = defaults[i];
+            uint8_t choice = descriptor >> 4;
+            uint8_t count = descriptor & 15u;
+            BIOS_GAME_DIP[i] = choice < count ? choice : 0u;
+        }
     }
 
     /* An arcade board gets the eye-catcher and then the title at power-on.
@@ -144,14 +152,30 @@ void bios_reset(void)
         bios_splash_show();
     }
     bios_cart_prepare();
-    BIOS_USER_REQUEST = 0;
-    BIOS_USER_MODE = 0;
+    /* The game's saved block comes back from backup RAM. Only a board that
+     * has never held this game's data asks it for its first power-on set-up
+     * (command 0); every other boot goes straight into the attract. */
+    if (bios_backup_load()) {
+        BIOS_USER_REQUEST = 2;
+        BIOS_USER_MODE = 1;
+    } else {
+        BIOS_USER_REQUEST = 0;
+        BIOS_USER_MODE = 0;
+    }
     call_cart_user();
+}
+
+/* Credits waiting on an arcade board that isn't on free play. */
+static uint8_t credits_waiting(void)
+{
+    return (uint8_t)(BIOS_MVS_FLAG && !bios_free_play() && (P1_CREDITS || P2_CREDITS));
 }
 
 void sys_return_c(void)
 {
     uint8_t previous = BIOS_USER_REQUEST;
+    /* Every return hands the game's block back to backup RAM. */
+    bios_backup_save();
     BIOS_START_FLAG = 0;
     BIOS_PLAYER1_MODE = BIOS_PLAYER2_MODE = 0;
     if (previous == 0 && !BIOS_MVS_FLAG && CART_HEADER->logoflag == 1) {
@@ -167,8 +191,17 @@ void sys_return_c(void)
             bios_eyecatcher();
             bios_splash_show();
         }
-        /* Command 2 is attract/game. Command 3 is not a cold-boot entry. */
-        BIOS_USER_REQUEST = 2;
+        /* Command 2 is attract/game; command 3 is the title a credit waits
+         * on. With credits already in, the demo would see them at once and
+         * hand straight back, and the pair would loop showing its opening
+         * over and over: go to the title instead. Command 3 is never a
+         * cold-boot entry. */
+        if (previous != 0 && credits_waiting()) {
+            BIOS_USER_REQUEST = 3;
+            BIOS_SELECT_TIMER = 0x30;
+        } else {
+            BIOS_USER_REQUEST = 2;
+        }
         BIOS_USER_MODE = 1;
     }
     call_cart_user();

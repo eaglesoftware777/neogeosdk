@@ -34,17 +34,19 @@ emu.register_frame_done(function()
     press('P1 Start', (t >= 13 and t < 13.2) and 1 or 0)
     press('P1 A', (not probe and t >= 15 and (math.floor(t) % 3 == 0)) and 1 or 0)
     if frame % 60 == 1 then
+        local dips = {}
+        for i = 0, 15 do dips[#dips + 1] = memory:read_u8(0x10fd84 + i) end
         screen:snapshot(string.format('%s/frame-%04d.png', output, frame))
         log:write(string.format(
             '{"time":%.2f,"pc":%d,"z80_pc":%d,"request":%d,"mode":%d,"mvs":%d,' ..
             '"credit":%d,"sentinel":%d,"requests":%d,"starts":%d,"coins":%d,' ..
-            '"entry_sr":%d,"pad_status":%d,"mess_point":%d,"message":%d,"increment":%d,"ticks":%d,"status":%d,"inline":%d}\n',
+            '"entry_sr":%d,"pad_status":%d,"mess_point":%d,"message":%d,"increment":%d,"ticks":%d,"status":%d,"inline":%d,"dips":[%s]}\n',
             t, pc(cpu), pc(machine.devices[':audiocpu']),
             memory:read_u8(0x10fdae), memory:read_u8(0x10fdaf), memory:read_u8(0x10fd82),
             memory:read_u8(0xd00034), memory:read_u32(0x100000), memory:read_u16(0x100004),
             memory:read_u16(0x100006), memory:read_u16(0x100008), memory:read_u16(0x100010),
             memory:read_u8(0x10fd94), memory:read_u32(0x10fdbe), vram:read(0x720e), vram:read(0x7242),
-            memory:read_u32(0x10000c), memory:read_u8(0x320001), vram:read(0x7338)))
+            memory:read_u32(0x10000c), memory:read_u8(0x320001), vram:read(0x7338), table.concat(dips, ',')))
         log:flush()
     end
 end)
