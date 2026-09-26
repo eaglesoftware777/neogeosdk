@@ -1164,6 +1164,8 @@ make unit-tests      : host-side sprite renderer tests (no emulator, no cross
                        `make test`: launching a ROM must not depend on a host
                        C++ compiler being installed.
 make check           : unit tests plus a complete ROM set for this GAME
+make level-check     : the game's level tables against placement rules
+                       (tools/level_check.py); make test runs it first
 make budget          : bytes each ROM (P, C, S, M, V) uses against the optional
                        BUDGET_* keys in games/<game>/game.cfg; with a budget
                        declared, every P build fails if a ROM outgrows it
