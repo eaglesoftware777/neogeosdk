@@ -23,22 +23,17 @@
 #include "ng_depthfx.h"
 #include "macro.h"
 #include "neogeo.h"
+#include "ng_rand.h"
 
 static uint8_t ng_df_fog_near;
 static uint8_t ng_df_fog_mid;
 static uint8_t ng_df_fog_far;
 static uint8_t ng_df_fog_very_far;
 
-/* Cheap xorshift16 for starfield — no stdlib rand */
-static uint16_t ng_df_noise = 0xACE1;
-
-static uint16_t NEOGEO_USER ng_df_xorshift(void)
-{
-    ng_df_noise ^= (uint16_t)(ng_df_noise << 7);
-    ng_df_noise ^= (uint16_t)(ng_df_noise >> 9);
-    ng_df_noise ^= (uint16_t)(ng_df_noise << 8);
-    return ng_df_noise;
-}
+/* The starfield's noise is drawn from the engine's one generator, so a
+ * game's ng_rand_seed() replays the stars too. An alias, not a wrapper
+ * function: every game links this module, and it stays no larger. */
+#define ng_df_xorshift() ng_rand()
 
 void NEOGEO_USER ng_depthfx_init(void)
 {

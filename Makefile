@@ -127,6 +127,10 @@ INFO=xxd -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
 NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_vram ng_sprite_window ng_art_asset ng_palette_assets ng_bg ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt ng_scene ng_depthfx ng_render_queue ng_fixed ng_camera ng_palette_fx ng_particles ng_feedback ng_debug ng_joystick ng_demo_advanced
+ifneq ($(USE_2D_PLUS),1)
+# ng_rand (C engine only): the one random generator, ng_depthfx included
+NG_ENGINE_NAMES+=ng_rand
+endif
 NG_ENGINE_STUBBED=ng_particles
 ifneq ($(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)),)
 $(error GAME_ENGINE_EXCLUDE: no stand-in for $(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)))
@@ -331,6 +335,7 @@ game: game-check
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_depthfx.$(ENGINE_EXT) -o out/ng_depthfx0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_render_queue.$(ENGINE_EXT) -o out/ng_render_queue0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_fixed.$(ENGINE_EXT) -o out/ng_fixed0.o
+	$(if $(filter ng_rand,$(NG_ENGINE_NAMES)),$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_rand.$(ENGINE_EXT) -o out/ng_rand0.o)
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_camera.$(ENGINE_EXT) -o out/ng_camera0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_palette_fx.$(ENGINE_EXT) -o out/ng_palette_fx0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/$(call ng_engine_mod,ng_particles).$(ENGINE_EXT) -o out/$(call ng_engine_mod,ng_particles)0.o
