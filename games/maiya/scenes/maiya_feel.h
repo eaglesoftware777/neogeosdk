@@ -27,6 +27,8 @@
 #define MG_HITSTOP_HURT        5    /* frames held when Maiya is struck                       */
 #define MG_HITSTOP_BOSS_DOWN   14   /* frames held on a guardian's last blow (on top of HEAVY) */
 
+#define MG_HURT_FLASH          12   /* frames of her red flash when struck (her bank only)    */
+
 #define MG_SHAKE_HURT          10   /* frames of Maiya's own 2 px shake when she is struck    */
 #define MG_SHAKE_BOSS_DOWN     16   /* ... and when a guardian falls                          */
 

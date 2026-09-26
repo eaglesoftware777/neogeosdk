@@ -83,14 +83,20 @@ def run(mame, platform):
     subprocess.run(command, cwd=GAME / "build", check=True)
 
 
+def game_setting(key):
+    """A setting's words from this game's game.mk, as the makefile reads it."""
+    words = []
+    for line in (GAME / "game.mk").read_text().splitlines():
+        name, _, value = line.partition("=")
+        if name.strip().rstrip("?:+") == key:
+            words += value.split()
+    return words
+
+
 def engine_objects():
     """The staged engine objects the makefile links: a module game.mk leaves
     out (GAME_ENGINE_EXCLUDE) goes in as its stand-in, <module>_none."""
-    excluded = set()
-    for line in (GAME / "game.mk").read_text().splitlines():
-        name, _, value = line.partition("=")
-        if name.strip().rstrip("?:+") == "GAME_ENGINE_EXCLUDE":
-            excluded.update(value.split())
+    excluded = set(game_setting("GAME_ENGINE_EXCLUDE"))
     names = sorted(p.name[:-3] for p in (WORK / "out").glob("ng_*0.o"))
     keep = []
     for name in names:
@@ -122,11 +128,13 @@ def quick_build(toolchain, platform):
                        cwd=WORK, check=True)
     command("gcc", "-c", "-O2", "-g", "-m68000", "-ffreestanding", "-fomit-frame-pointer",
             "-std=gnu99", "-Wall", "-DNG_" + platform.upper() + "=1",
+            *game_setting("GAME_ENGINE_DEFINES"),
             "-I.", "-Isdk", "-Isdk/2d_engine", "-Igames/maiya",
             "games/maiya/scenes/maiya_game.c", "-o", "out/maiya_game0.o")
     copy_source(GAME / "user.c", WORK / "games/maiya/user.c")
     command("gcc", "-c", "-O0", "-m68000", "-ffreestanding", "-fomit-frame-pointer",
             "-std=gnu99", "-I.", "-Isdk", "-Isdk/2d_engine", "-DNG_" + platform.upper() + "=1",
+            *game_setting("GAME_ENGINE_DEFINES"),
             "games/maiya/user.c", "-o", "out/user0.o")
     command("objcopy", "-R", ".comment", "-R", ".text", "-R", ".data", "-R", ".bss",
             "out/user0.o", "out/user.o")
