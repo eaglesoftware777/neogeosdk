@@ -14,23 +14,15 @@
 /* ------------------------------------------------------------------ */
 /*  The machine: arcade board or console, region, system ROM          */
 /* ------------------------------------------------------------------ */
-#define NG_REGION_JAPAN   0
-#define NG_REGION_USA     1
-#define NG_REGION_EUROPE  2
+/* ng_sys_is_mvs() and ng_sys_region() live in sdk/cabinet (ng_sys.h):
+ * 1 on an arcade board, 0 on a console -- the UniBIOS can switch this on
+ * the fly, so read it at run time rather than trusting the build -- and
+ * the region, with any unknown code read as the USA. */
+#include "cabinet/ng_sys.h"
 
-/* 1 on an arcade board (MVS), 0 on a console. The UniBIOS can switch this
- * on the fly, so read it at run time rather than trusting the build. */
-static inline uint8_t NEOGEO_USER ng_sys_is_mvs(void)
-{
-    return (*(volatile uint8_t *)BIOS_MVS_FLAG) ? 1u : 0u;
-}
-
-/* NG_REGION_JAPAN, NG_REGION_USA or NG_REGION_EUROPE. */
-static inline uint8_t NEOGEO_USER ng_sys_region(void)
-{
-    uint8_t region = *(volatile uint8_t *)BIOS_COUNTRY_CODE;
-    return region > NG_REGION_EUROPE ? (uint8_t)NG_REGION_EUROPE : region;
-}
+#define NG_REGION_JAPAN   NG_REGION_JP
+#define NG_REGION_USA     NG_REGION_US
+#define NG_REGION_EUROPE  NG_REGION_EU
 
 /*
  * 1 when the system ROM is the UniBIOS. It names itself in its ROM
