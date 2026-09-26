@@ -461,7 +461,7 @@ def sharpen_sprite(arr, amount=1.0, outline=0.20):
 
 
 def fit_group(img, boxes, canvas, target_h, bg_color="white", pad=2, sharpen=True,
-              normalize_extent=False, clip_tall=False):
+              normalize_extent=False, clip_tall=False, center_box=False):
     """Scale a whole animation by ONE factor and stand every frame on its feet.
 
     Fitting each frame to the canvas on its own made the character swell and
@@ -498,7 +498,9 @@ def fit_group(img, boxes, canvas, target_h, bg_color="white", pad=2, sharpen=Tru
         if sharpen:
             scaled = sharpen_sprite(scaled)
 
-        ox = (canvas[0] - w) // 2 if normalize_extent else canvas[0] // 2 - _foot_center(scaled)
+        # center_box: the whole outline centred, so a wide pose (a leap,
+        # a lunge) stays on the canvas instead of hanging off one side.
+        ox = (canvas[0] - w) // 2 if (normalize_extent or center_box) else canvas[0] // 2 - _foot_center(scaled)
         oy = canvas[1] - pad - h
         sx0, sy0 = max(0, -ox), max(0, -oy)
         dx0, dy0 = max(0, ox), max(0, oy)
@@ -1258,24 +1260,28 @@ def build():
     set1_img = Image.open(find_file("pollution_enemies_set1*.jpg")).convert("RGB")
     set2_img = Image.open(find_file("more_enemies_set2*.jpg")).convert("RGB")
 
+    # Each box is one whole sprite as found on the sheet (its outline on the
+    # plain background, clear of the sheet's captions): the first boxes cut
+    # sprites in half and caught letters from the labels. The canvases are
+    # sized for the creature to read at a glance next to her.
     new_creatures = {
-        "jellyfish": (set1_img, (32, 32), 26, {"0": (10, 55, 205, 265), "1": (215, 55, 410, 265)}),
-        "toxiccrab": (set1_img, (48, 32), 28, {"0": (10, 345, 250, 540), "1": (250, 345, 490, 540)}),
-        "acidmoth":  (set1_img, (48, 32), 30, {"0": (10, 765, 250, 1020), "1": (250, 765, 490, 1020)}),
-        "smogbat":   (set1_img, (32, 48), 40, {"0": (505, 60, 675, 290), "1": (675, 60, 845, 290)}),
-        "poachdrone":(set2_img, (48, 32), 28, {"0": (520, 398, 745, 528), "1": (750, 398, 975, 528)}),
-        "chemfly":   (set2_img, (32, 32), 20, {"0": (15, 398, 195, 528), "1": (200, 398, 380, 528)}),
-        "plasticbat":(set2_img, (32, 32), 28, {"0": (0, 60, 170, 210), "1": (170, 60, 340, 210)}),
-        "slaggolem": (set2_img, (32, 48), 40, {"0": (510, 60, 681, 210), "1": (681, 60, 852, 210)}),
-        "vinesting": (set2_img, (32, 64), 56, {"0": (250, 720, 375, 870), "1": (375, 720, 500, 870)}),
-        "sporegob":  (set2_img, (32, 48), 40, {"0": (510, 720, 681, 900), "1": (681, 720, 852, 900)}),
+        "jellyfish": (set1_img, (48, 48), 40, {"0": (51, 73, 210, 286), "1": (238, 70, 402, 276)}),
+        "toxiccrab": (set1_img, (64, 48), 40, {"0": (19, 381, 232, 528), "1": (243, 377, 457, 523)}),
+        "acidmoth":  (set1_img, (64, 48), 44, {"0": (36, 801, 235, 991), "1": (252, 823, 453, 975)}),
+        "smogbat":   (set1_img, (64, 48), 42, {"0": (486, 107, 636, 251), "1": (649, 69, 776, 256)}),
+        "poachdrone":(set2_img, (64, 48), 30, {"0": (550, 411, 773, 522), "1": (780, 407, 1004, 518)}),
+        "chemfly":   (set2_img, (48, 48), 34, {"0": (50, 412, 154, 503), "1": (182, 412, 285, 504)}),
+        "plasticbat":(set2_img, (64, 48), 40, {"0": (37, 75, 183, 176), "1": (216, 75, 330, 170)}),
+        "slaggolem": (set2_img, (64, 64), 58, {"0": (602, 62, 713, 187), "1": (736, 55, 848, 188)}),
+        "vinesting": (set2_img, (64, 64), 58, {"0": (230, 709, 351, 834), "1": (371, 711, 480, 831)}),
+        "sporegob":  (set2_img, (64, 64), 54, {"0": (622, 726, 733, 850), "1": (750, 727, 860, 872)}),
     }
     # The poison dart frog, in the sewer rat's place: the small-animal
     # sheet's green frog (sitting, then in mid-leap) turned the vivid blue
     # that warns off anything thinking of touching it.
     animals_img = Image.open(find_file("npc_small_animals*.jpg")).convert("RGB")
     frog = fit_group(animals_img, {"0": (40, 279, 136, 353), "1": (269, 252, 404, 349)},
-                     (48, 32), 22, bg_color="corner")
+                     (48, 32), 24, bg_color="corner", center_box=True)
 
     def dart_blue(h, s, v):
         if 55.0 <= h <= 175.0:          # the green skin: electric blue, deeper in shadow
@@ -1291,13 +1297,23 @@ def build():
             frames, canvas = spec, (spec["0"].shape[1], spec["0"].shape[0])
         else:
             src, canvas, height, boxes = spec
-            frames = fit_group(src, boxes, canvas, height)
+            frames = fit_group(src, boxes, canvas, height, center_box=True)
         shared_set(cname, frames)
         header.append(f"#define MG_{cname.upper()}_FRAMES {len(frames)}u")
         # The sprite's size in the game follows its canvas (tiles are
         # stored a row at a time, the canvas width apart).
         header.append(f"#define MG_{cname.upper()}_W {canvas[0]}u")
         header.append(f"#define MG_{cname.upper()}_H {canvas[1]}u")
+        # Its hit box, from what is actually drawn: three quarters of the
+        # widest frame across, its tallest frame high, standing on its feet.
+        opaque = np.zeros((canvas[1], canvas[0]), dtype=bool)
+        for rgba in frames.values():
+            opaque |= rgba[:, :, 3] > 0
+        ys, xs = np.nonzero(opaque)
+        bw = max(12, int((xs.max() - xs.min() + 1) * 3 // 4)) if len(xs) else canvas[0] // 2
+        bh = max(12, int(canvas[1] - ys.min() - 4)) if len(ys) else canvas[1] // 2
+        header.append(f"#define MG_{cname.upper()}_BODY_W {bw}u")
+        header.append(f"#define MG_{cname.upper()}_BODY_H {bh}u")
         print(f"  Enemy {cname} compiled ({len(frames)} frames)", flush=True)
 
     print("== 4. Compiling Allies & NPCs ==", flush=True)
