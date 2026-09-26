@@ -5304,20 +5304,18 @@ static void NEOGEO_USER mg_continue_card(void)
     ng_fix_clear_rect(1, ROW_CARD, 38, 13, PAL_TEXT);
     mg_centre(ROW_CARD + 2, "GAME OVER", PAL_WARN);
     mg_centre(ROW_CARD + 4, "CONTINUE?", PAL_GOLD);
-#ifdef NG_AES
-    ng_fix_puts(10, ROW_CARD + 8, mg.over_pick == 0 ? ">" : " ", PAL_GOLD);
-    ng_fix_puts(12, ROW_CARD + 8, "CONTINUE", mg.over_pick == 0 ? PAL_GOLD : PAL_TEXT);
-    ng_fix_puts(23, ROW_CARD + 8, mg.over_pick == 1 ? ">" : " ", PAL_GOLD);
-    ng_fix_puts(25, ROW_CARD + 8, "EXIT", mg.over_pick == 1 ? PAL_GOLD : PAL_TEXT);
-    mg_centre(ROW_CARD + 10, "SAVE THE EARTH: PRESS A BUTTON", PAL_SKY);
-#else
-    if (read_p1credit() > 0) {
+    if (!ng_sys_is_mvs()) {
+        ng_fix_puts(10, ROW_CARD + 8, mg.over_pick == 0 ? ">" : " ", PAL_GOLD);
+        ng_fix_puts(12, ROW_CARD + 8, "CONTINUE", mg.over_pick == 0 ? PAL_GOLD : PAL_TEXT);
+        ng_fix_puts(23, ROW_CARD + 8, mg.over_pick == 1 ? ">" : " ", PAL_GOLD);
+        ng_fix_puts(25, ROW_CARD + 8, "EXIT", mg.over_pick == 1 ? PAL_GOLD : PAL_TEXT);
+        mg_centre(ROW_CARD + 10, "SAVE THE EARTH: PRESS A BUTTON", PAL_SKY);
+    } else if (read_p1credit() > 0) {
         mg_centre(ROW_CARD + 8, "PRESS START: SAVE THE EARTH", PAL_GOLD);
     } else {
         mg_centre(ROW_CARD + 8, "PLEASE INSERT COIN", PAL_TEXT);
         mg_centre(ROW_CARD + 10, "SAVE THE EARTH", PAL_SKY);
     }
-#endif
     ng_fix_puts(14, ROW_CARD + 12, "CONTINUES LEFT", PAL_SKY);
     mg_number(29, ROW_CARD + 12, mg.continues, 1, PAL_GOLD);
     mg_number(19, ROW_CARD + 6, (mg.state_timer + 59u) / 60u, 2, PAL_WARN);
@@ -5610,9 +5608,7 @@ void NEOGEO_USER maiya_frame(void)
 
     if (mg.state == MG_OVER) {
         uint16_t joy = mg_input();
-#ifdef NG_AES
         uint16_t pressed = (uint16_t)(joy & (uint16_t)(~mg.previous_joy));
-#endif
         uint8_t go = 0;
         mg.previous_joy = joy;
 
@@ -5626,32 +5622,32 @@ void NEOGEO_USER maiya_frame(void)
             if (mg.state_timer) playSFX(SOUND_SFX_6);
         }
 
-#ifdef NG_AES
-        /* Console: pick CONTINUE or EXIT; the clock picks EXIT for you. */
-        if (pressed & (JOY_LEFT | JOY_RIGHT | JOY_UP | JOY_DOWN)) {
-            mg.over_pick ^= 1u;
-            mg_continue_card();
-            playSFX(SOUND_SFX_11);
+        if (!ng_sys_is_mvs()) {
+            /* Console: pick CONTINUE or EXIT; the clock picks EXIT for you. */
+            if (pressed & (JOY_LEFT | JOY_RIGHT | JOY_UP | JOY_DOWN)) {
+                mg.over_pick ^= 1u;
+                mg_continue_card();
+                playSFX(SOUND_SFX_11);
+            }
+            if (!mg.demo && (pressed & (BUTTON_A | BUTTON_B | BUTTON_C | BUTTON_D))) {
+                if (mg.over_pick == 0) go = 1;
+                else mg.state_timer = 1;
+            }
+        } else {
+            /*
+             * Arcade: a coin on the board, then Start, buys the run back.
+             *
+             * Start never reaches this loop as a joystick bit -- it is
+             * BIOS-level, not part of the P1 word -- so this does not poll for
+             * it directly.  Entering this state sets BIOS_PLAYER1_MODE to 2,
+             * and the BIOS's own VBlank IO poll watches Start on its own: on a
+             * real press with a credit in, it takes the credit, calls our
+             * PLAYER_START back, and PLAYER_START sets the mode to 1.  Seeing 1
+             * here again is exactly "she paid and pressed Start."
+             */
+            if (!mg.demo && NEO_REGISTER8(BIOS_PLAYER1_MODE) == 1) go = 1;
+            if (((mg.state_timer & 31u) == 0u) && !mg.demo) mg_continue_card();
         }
-        if (!mg.demo && (pressed & (BUTTON_A | BUTTON_B | BUTTON_C | BUTTON_D))) {
-            if (mg.over_pick == 0) go = 1;
-            else mg.state_timer = 1;
-        }
-#else
-        /*
-         * Arcade: a coin on the board, then Start, buys the run back.
-         *
-         * Start never reaches this loop as a joystick bit -- it is
-         * BIOS-level, not part of the P1 word -- so this does not poll for
-         * it directly.  Entering this state sets BIOS_PLAYER1_MODE to 2,
-         * and the BIOS's own VBlank IO poll watches Start on its own: on a
-         * real press with a credit in, it takes the credit, calls our
-         * PLAYER_START back, and PLAYER_START sets the mode to 1.  Seeing 1
-         * here again is exactly "she paid and pressed Start."
-         */
-        if (!mg.demo && NEO_REGISTER8(BIOS_PLAYER1_MODE) == 1) go = 1;
-        if (((mg.state_timer & 31u) == 0u) && !mg.demo) mg_continue_card();
-#endif
 
         if (go) {
             mg.continues--;

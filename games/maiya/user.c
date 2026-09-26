@@ -107,10 +107,10 @@ void NEOGEO_USER PLAYER_START(void) {
         NEO_REGISTER8(BIOS_PLAYER2_MODE) = (country_code == 1) ? 2 : 3;
     soundSetADPCMAVolume(0x3C);
     playSFX(SOUND_SFX_3);
-#ifndef NG_AES
-    CALLNEOGEOF(SYS_CREDIT_CHECK);
-    CALLNEOGEOF(SYS_CREDIT_DOWN);
-#endif
+    if (ng_sys_is_mvs()) {   /* an arcade board: the start was paid for */
+        CALLNEOGEOF(SYS_CREDIT_CHECK);
+        CALLNEOGEOF(SYS_CREDIT_DOWN);
+    }
 }
 
 void NEOGEO_USER DEMO_END(void)   { soundStopAll(); }
@@ -258,11 +258,7 @@ void NEOGEO_USER GAME_DISPATCH(void) {
     if (!MAIYA_START_LATCH) {
         GAME_ATTRACT();
     }
-    if (MAIYA_START_LATCH
-#ifndef NG_AES
-        || read_p1credit() > 0
-#endif
-    ) {
+    if (MAIYA_START_LATCH || (ng_sys_is_mvs() && read_p1credit() > 0)) {
         TITLE_WAIT();
         START_GAME();
     }
@@ -273,16 +269,13 @@ void NEOGEO_USER DEMO_GAME(void)    { GAME_ATTRACT(); }
 /* A credit, or Start on a console, ends whatever the cabinet is showing. */
 static int NEOGEO_USER attract_interrupted(void) {
     if (MAIYA_START_LATCH) return 1;
-#ifndef NG_AES
-    return read_p1credit() > 0;
-#else
+    if (ng_sys_is_mvs()) return read_p1credit() > 0;
     if (NEO_REGISTER8(BIOS_STATCHANGE) & 0x01) {
         NEO_REGISTER8(BIOS_USER_MODE) = 2;
         MAIYA_START_LATCH = 1;
         return 1;
     }
     return 0;
-#endif
 }
 
 uint8_t NEOGEO_USER maiya_start_pending(void) {
@@ -319,9 +312,7 @@ void NEOGEO_USER GAME_ATTRACT(void) {
         maiya_title();
         if (!maiya_dip_demo_sound()) { isZ80Ready(); soundApplyMix(0x00, 0x00, 0x00, 0x00); }
         for (i = 0; i < 60 * 12; i++) {
-#ifdef NG_AES
-            fixtext_out(14, 25, "PUSH START", 1);
-#endif
+            if (!ng_sys_is_mvs()) fixtext_out(14, 25, "PUSH START", 1);
             if (attract_interrupted()) return;
             maiya_vblank();
         }
@@ -347,8 +338,11 @@ void NEOGEO_USER TITLE_WAIT(void) {
     maiya_title();
     for (i = 0; ; i++) {
         if (MAIYA_START_LATCH || NEO_REGISTER8(BIOS_USER_MODE) == 2) break;
-#ifndef NG_AES
-        if (read_p1credit() > 0) {
+        if (!ng_sys_is_mvs()) {
+            /* a console: no credits and no countdown, Start alone */
+            fixtext_out(14, 25, "PUSH START", 1);
+            if (attract_interrupted()) break;
+        } else if (read_p1credit() > 0) {
             char timer[10];
             int secs = (auto_frames + 59) / 60;
             timer[0] = 'T'; timer[1] = 'I'; timer[2] = 'M'; timer[3] = 'E';
@@ -385,11 +379,6 @@ void NEOGEO_USER TITLE_WAIT(void) {
             fixtext_out(30, 3, "        ", 0);
             fixtext_out(13, 25, "             ", 0);
         }
-#else
-        (void)auto_frames;     /* the console title has no countdown */
-        fixtext_out(14, 25, "PUSH START", 1);
-        if (attract_interrupted()) break;
-#endif
         maiya_vblank();
     }
     (void)i;
