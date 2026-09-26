@@ -523,7 +523,7 @@ void NEOGEO_USER ng_palette_fx_update(void)
             /* Blend from base towards white; intensity decays over duration */
             uint8_t blend;
 
-            blend = (uint8_t)(((uint16_t)s->timer * 255u) / (uint16_t)s->duration);
+            blend = (uint8_t)((uint16_t)((uint16_t)s->timer * 255u) / (uint16_t)s->duration);
             /* White: R=31, G=31, B=31 → pass as scaled 0..255: 255 */
             palfx_blend_to(s->work_pal, s->base_pal, 255, 255, 255, blend);
             palfx_put(s->palette_slot, s->work_pal);
@@ -540,7 +540,7 @@ void NEOGEO_USER ng_palette_fx_update(void)
         case NG_PALFX_FLASH_RED: {
             uint8_t blend;
 
-            blend = (uint8_t)(((uint16_t)s->timer * 200u) / (uint16_t)s->duration);
+            blend = (uint8_t)((uint16_t)((uint16_t)s->timer * 200u) / (uint16_t)s->duration);
             palfx_blend_to(s->work_pal, s->base_pal, 255, 0, 0, blend);
             palfx_put(s->palette_slot, s->work_pal);
 
@@ -556,7 +556,7 @@ void NEOGEO_USER ng_palette_fx_update(void)
         case NG_PALFX_FLASH_BLUE: {
             uint8_t blend;
 
-            blend = (uint8_t)(((uint16_t)s->timer * 180u) / (uint16_t)s->duration);
+            blend = (uint8_t)((uint16_t)((uint16_t)s->timer * 180u) / (uint16_t)s->duration);
             palfx_blend_to(s->work_pal, s->base_pal, 0, 64, 255, blend);
             palfx_put(s->palette_slot, s->work_pal);
 
@@ -584,9 +584,9 @@ void NEOGEO_USER ng_palette_fx_update(void)
 
             /* Triangle wave: ramp up then ramp down */
             if (s->timer < half) {
-                phase = (uint8_t)((uint16_t)s->timer * 127u / (uint16_t)half);
+                phase = (uint8_t)((uint16_t)((uint16_t)s->timer * 127u) / (uint16_t)half);
             } else {
-                phase = (uint8_t)(127u - (uint16_t)(s->timer - half) * 127u / (uint16_t)(s->duration - half));
+                phase = (uint8_t)(127u - (uint16_t)((uint16_t)(s->timer - half) * 127u) / (uint16_t)(s->duration - half));
             }
             brightness = (uint8_t)(128 + phase);
 
