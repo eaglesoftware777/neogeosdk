@@ -154,6 +154,9 @@ GAME_ENGINE_DEFINES ?=
 # GAME_OPTIMIZE (see Makefile): a GCC level, such as -O2, for the engine,
 # the SDK library and the game's scenes; the start-up sources stay -O0.
 GAME_OPTIMIZE ?=
+# GAME_LEVEL_BUILDER (see Makefile): the script that turns a game's stage
+# files into the header its scenes include; run before compiling.
+GAME_LEVEL_BUILDER ?=
 NG_ENGINE_STUBBED=ng_particles
 ifneq ($(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)),)
 $(error GAME_ENGINE_EXCLUDE: no stand-in for $(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)))
@@ -318,6 +321,9 @@ p1: game-check game $(GAME_ID)-p1.p1
 
 game: game-check
 	$(LOG_CTX)
+ifneq ($(strip $(GAME_LEVEL_BUILDER)),)
+	$(PY) $(GAME_LEVEL_BUILDER)
+endif
 	$(GAME_CC) $(GAME_CFLAGS) $(PLATFORM_CFLAGS) $(GAME_NEOGEO_C) -o out\neogeo0.o
 	$(GAME_CC) $(GAME_CFLAGS) $(PLATFORM_CFLAGS) games\$(GAME)\user.c -o out\user0.o
 	$(GAME_CC) $(GAME_CFLAGS) games\$(GAME)\main.c -o out\main0.o

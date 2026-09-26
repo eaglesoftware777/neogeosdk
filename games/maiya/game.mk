@@ -4,6 +4,8 @@ GAME_SCENES = maiya_game
 GAME_SOUND_FROM = maiya
 GAME_EXTRA_INCLUDES = -Igames/maiya -Igames/maiya/artbox
 GAME_ART_BUILDER = games/maiya/tools/art.py
+# Her stages are authored as JSON in games/maiya/levels/ (docs/levels.md).
+GAME_LEVEL_BUILDER = games/maiya/tools/levels.py
 
 # Maiya draws her own sparks and dust (MGSpark), so the engine particle
 # pool is left out: no per-frame update, no pool RAM.

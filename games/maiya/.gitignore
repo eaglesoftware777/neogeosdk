@@ -3,3 +3,4 @@ artbox/generated/
 artbox/in/generated/
 __pycache__/
 *.pyc
+scenes/maiya_levels_data.h

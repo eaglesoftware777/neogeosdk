@@ -355,8 +355,9 @@ If the game has no scene files (e.g. `helloworld`), omit `GAME_SCENES` entirely.
 Optional keys: `GAME_ENGINE_EXCLUDE` (engine modules linked as do-nothing
 stand-ins), `GAME_ENGINE_DEFINES` (-D switches for optional engine code) and
 `GAME_OPTIMIZE` (a GCC level such as `-O2` for the engine, the SDK library
-and the game's scenes; see `docs/performance_rules.md`).  The makefile
-comments describe each.
+and the game's scenes; see `docs/performance_rules.md`) and
+`GAME_LEVEL_BUILDER` (a script that turns stage files into C before the
+build; see `docs/levels.md`).  The makefile comments describe each.
 
 ### Art and sound pipelines
 

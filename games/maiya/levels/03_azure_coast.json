@@ -1,0 +1,125 @@
+{
+  "name": "AZURE COAST",
+  "width": 4352,
+  "background": 2,
+  "music": 3,
+  "mechanic": "none",
+  "gate_x": 3700,
+  "key": {"x": 2112, "y": 46},
+  "guardian": {
+    "name": "TOXIC LEVIATHAN",
+    "style": "leviathan",
+    "hp": 20,
+    "hint": "THE LEVIATHAN RISES, THEN STALLS",
+    "taunt": "I FED THE LIVING REEF TO MY HUNGER!",
+    "reply": "THE TIDE WILL CARRY YOU OUT INSTEAD!"
+  },
+  "art": {"name": "TIDE BLOSSOM", "words": "MAIYA: TIDE, TAKE IT BACK!"},
+  "secret_hint": "THE OLD PIER HIDES A COIN HOARD",
+  "sunboy": ["THE SEA IS SINGING AGAIN", "THE GROVE IS BURNING. GO THERE"],
+  "platforms": [
+    {"x": 300, "y": 144, "w": 96},
+    {"x": 500, "y": 108, "w": 80},
+    {"x": 720, "y": 72, "w": 96},
+    {"x": 940, "y": 144, "w": 96},
+    {"x": 1160, "y": 108, "w": 80},
+    {"x": 1380, "y": 72, "w": 96},
+    {"x": 1600, "y": 144, "w": 96},
+    {"x": 1820, "y": 108, "w": 80},
+    {"x": 2040, "y": 72, "w": 96},
+    {"x": 2260, "y": 144, "w": 96},
+    {"x": 2480, "y": 108, "w": 80},
+    {"x": 2700, "y": 72, "w": 96},
+    {"x": 2920, "y": 144, "w": 96},
+    {"x": 3140, "y": 108, "w": 80},
+    {"x": 3380, "y": 72, "w": 96},
+    {"x": 3880, "y": 144, "w": 96}
+  ],
+  "encounters": [
+    {"x": 220, "enemy": "beetle"},
+    {"x": 380, "enemy": "goblin"},
+    {"x": 540, "enemy": "crow"},
+    {"x": 860, "enemy": "slime"},
+    {"x": 1020, "enemy": "beetle"},
+    {"x": 1180, "enemy": "goblin"},
+    {"x": 1500, "enemy": "crow"},
+    {"x": 1660, "enemy": "pair"},
+    {"x": 1820, "enemy": "beetle"},
+    {"x": 2140, "enemy": "goblin"},
+    {"x": 2300, "enemy": "crow"},
+    {"x": 2460, "enemy": "slime"},
+    {"x": 2780, "enemy": "beetle"},
+    {"x": 2940, "enemy": "goblin"},
+    {"x": 3100, "enemy": "pair"},
+    {"x": 3420, "enemy": "slime"},
+    {"x": 3580, "enemy": "beetle"},
+    {"x": 3740, "enemy": "goblin"}
+  ],
+  "archers": [
+    {"x": 530, "y": 108},
+    {"x": 1410, "y": 72},
+    {"x": 2070, "y": 72},
+    {"x": 2730, "y": 72},
+    {"x": 3410, "y": 72}
+  ],
+  "hazards": [
+    {"x": 840, "w": 48, "type": "spikes"},
+    {"x": 1500, "w": 48, "type": "spikes"},
+    {"x": 2160, "w": 48, "type": "spikes"},
+    {"x": 2820, "w": 48, "type": "spikes"},
+    {"x": 600, "w": 64, "type": "pit"},
+    {"x": 2328, "w": 64, "type": "pit"},
+    {"x": 2968, "w": 64, "type": "pit"}
+  ],
+  "rescues": [
+    {"x": 1060, "who": "maiden"},
+    {"x": 1906, "who": "elder"},
+    {"x": 2700, "who": "spirit"},
+    {"x": 3350, "who": "sunboy"}
+  ],
+  "secrets": [
+    {"x": 340, "y": 114, "type": "rose"},
+    {"x": 760, "y": 42, "type": "gem"},
+    {"x": 1420, "y": 42, "type": "chest"},
+    {"x": 2080, "y": 42, "type": "rose"},
+    {"x": 2740, "y": 42, "type": "gem"},
+    {"x": 3420, "y": 42, "type": "chest"}
+  ],
+  "pickups": [
+    {"x": 260, "y": 168, "kind": "silver"},
+    {"x": 1051, "y": 168, "kind": "spring"},
+    {"x": 1760, "y": 168, "kind": "crown"},
+    {"x": 2465, "y": 168, "kind": "silver"},
+    {"x": 532, "y": 74, "kind": "gold"},
+    {"x": 1208, "y": 74, "kind": "gold"},
+    {"x": 1255, "y": 166, "kind": "flower"},
+    {"x": 2466, "y": 164, "kind": "critter"},
+    {"x": 1940, "y": 166, "kind": "charm"},
+    {"x": 708, "y": 44, "kind": "life"}
+  ],
+  "decor": [
+    {"x": 150, "y": 160, "kind": "rock"},
+    {"x": 550, "y": 160, "kind": "grass"},
+    {"x": 950, "y": 160, "kind": "flowers"},
+    {"x": 1350, "y": 160, "kind": "sign"},
+    {"x": 1750, "y": 160, "kind": "lantern"},
+    {"x": 2240, "y": 160, "kind": "bush"},
+    {"x": 2550, "y": 160, "kind": "flowers"},
+    {"x": 3072, "y": 160, "kind": "rock"},
+    {"x": 3350, "y": 160, "kind": "rock"},
+    {"x": 524, "y": 76, "kind": "sign"},
+    {"x": 1192, "y": 76, "kind": "lantern"},
+    {"x": 1860, "y": 76, "kind": "bush"},
+    {"x": 3580, "y": 160, "kind": "lantern"}
+  ],
+  "vines": [
+    {"x": 752, "top": 72, "bottom": 192},
+    {"x": 1412, "top": 72, "bottom": 192},
+    {"x": 2072, "top": 72, "bottom": 192}
+  ],
+  "npcs": [
+    {"x": 420, "who": "elder", "line": "THE TIDE CARRIES THE BLIGHT IN"},
+    {"x": 1850, "who": "spirit", "line": "UP AT A VINE TO CLIMB IT"},
+    {"x": 3180, "who": "maiden", "line": "SEEK THE KEY ABOVE THE SAND"}
+  ]
+}

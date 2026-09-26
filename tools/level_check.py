@@ -6,7 +6,9 @@
 The tables are read from the game's own C headers: games/<game>/tools/
 level_export.c is built with the host C compiler and prints them as JSON,
 so nothing here parses C. A game without that exporter has nothing to
-check.
+check. A game whose game.mk names a GAME_LEVEL_BUILDER (stages authored
+outside C, as Maiya's JSON files are) has it run first, so the check sees
+what the build compiles; a finding then names the stage's file too.
 
 Rules (every one reported as: level, object and index, coordinates, rule):
   outside       any object outside the world (x beyond 0..width, y beyond
@@ -65,6 +67,29 @@ def export_levels(game_dir):
             raise SystemExit(f"level_check: building {source} failed:\n{build.stdout}{build.stderr}")
         out = subprocess.run([str(exe)], capture_output=True, text=True, check=True).stdout
     return json.loads(out)
+
+
+def game_setting(game_dir, key):
+    """A setting from the game's game.mk, as the makefile reads it."""
+    mk = game_dir / "game.mk"
+    if not mk.is_file():
+        return ""
+    for line in mk.read_text(encoding="utf-8").splitlines():
+        name, _, value = line.partition("=")
+        if name.strip().rstrip("?:+") == key:
+            return value.strip()
+    return ""
+
+
+def build_levels(game_dir):
+    """Run the game's level builder, if it has one; the stage files, in order."""
+    builder = game_setting(game_dir, "GAME_LEVEL_BUILDER")
+    if not builder:
+        return []
+    run = subprocess.run([sys.executable, builder], capture_output=True, text=True)
+    if run.returncode != 0:
+        raise SystemExit(f"level_check: {builder} failed:\n{run.stdout}{run.stderr}")
+    return sorted(p.name for p in (game_dir / "levels").glob("*.json"))
 
 
 def read_ignores(path):
@@ -176,6 +201,7 @@ def main():
     if not (game_dir / "tools" / "level_export.c").is_file():
         print(f"level_check: {opts.game} has no level exporter (games/{opts.game}/tools/level_export.c); nothing to check")
         return 0
+    stage_files = build_levels(game_dir)
     data = export_levels(game_dir)
     ignore_path = game_dir / "level_check.ignore"
     ignores = read_ignores(ignore_path)
@@ -183,7 +209,8 @@ def main():
     for level, kind, index, rule, where, message in check(data, opts):
         key = (level["index"], kind, index, rule)
         match = next((e for e in ignores if e["key"] == key), None)
-        line = f"{level['name']} (level {level['index']}), {kind} {index} at {where}: {rule} -- {message}"
+        source = f", {stage_files[level['index']]}" if level["index"] < len(stage_files) else ""
+        line = f"{level['name']} (level {level['index']}{source}), {kind} {index} at {where}: {rule} -- {message}"
         if match:
             match["used"] = True
             ignored += 1

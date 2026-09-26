@@ -19,7 +19,7 @@ import sys
 GAME = Path(__file__).resolve().parents[1]
 ROOT = GAME.parents[1]
 WORK = GAME / "build/workspace"
-TEXT_SUFFIXES = {".c", ".h", ".hpp", ".cpp", ".ld", ".py", ".sh", ".mk", ".mak", ".cfg"}
+TEXT_SUFFIXES = {".c", ".h", ".hpp", ".cpp", ".ld", ".py", ".sh", ".mk", ".mak", ".cfg", ".json"}
 
 
 def copy_source(source, destination):
@@ -119,6 +119,8 @@ def quick_build(toolchain, platform):
     copy_source(GAME / "scenes/maiya_game.c", WORK / "games/maiya/scenes/maiya_game.c")
     copy_source(GAME / "scenes/maiya_game.h", WORK / "games/maiya/scenes/maiya_game.h")
     copy_source(GAME / "scenes/maiya_levels.h", WORK / "games/maiya/scenes/maiya_levels.h")
+    subprocess.run([sys.executable, str(GAME / "tools/levels.py")], check=True)   # the stage files
+    copy_source(GAME / "scenes/maiya_levels_data.h", WORK / "games/maiya/scenes/maiya_levels_data.h")
     copy_source(GAME / "artbox/generated/maiya_assets.h",
                 WORK / "games/maiya/artbox/generated/maiya_assets.h")
     binary = toolchain / "m68k-unknown-elf/bin"
