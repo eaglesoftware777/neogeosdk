@@ -43,6 +43,7 @@ extern "C" {
 #include "ng_joystick.h"
 #include "ng_rand.h"
 #include "ng_pause.h"
+#include "ng_trig.h"
 
 
 #ifdef __cplusplus

@@ -2969,6 +2969,20 @@ static uint8_t NEOGEO_USER mg_enemy_base_hp(uint8_t type)
     }
 }
 
+/*
+ * A drift that rises and falls in a true sine wave (ng_trig) about a height:
+ * `swing` px each way, one beat a turn of `beat` (256 steps), at the wave's
+ * own speed -- 2 pi swing / period, in 8.8 -- plus a pull back onto the
+ * curve if it has wandered off it.
+ */
+static void NEOGEO_USER mg_wave(NGCharacter *b, int16_t centre, int16_t swing, int16_t speed, uint8_t beat)
+{
+    int16_t pull = (int16_t)(centre + ng_trig_mul(swing, ng_sin(beat)) - b->y);
+    if (pull > 16) pull = 16;
+    if (pull < -16) pull = -16;
+    b->vy_fp = (int16_t)(ng_trig_mul(speed, ng_cos(beat)) + (pull << 3));
+}
+
 static MGEnemy *NEOGEO_USER mg_spawn_enemy(uint8_t type, int16_t x, int16_t y, uint8_t posted)
 {
     uint8_t slot;
@@ -4155,7 +4169,10 @@ static void NEOGEO_USER mg_update_entities(void)
             continue;
         }
 
-        ng_sprite_group_set_pos(&it->sprite, scr_x, it->y);
+        /* A gentle bob, 2 px each way, out of step from one to the next;
+         * where it is picked up doesn't move. */
+        ng_sprite_group_set_pos(&it->sprite, scr_x,
+                                (int16_t)(it->y + ng_trig_mul(2, ng_sin((uint8_t)(mg.tick * 4u + (uint16_t)it->x)))));
         ng_sprite_group_set_visible(&it->sprite, 1);
         ng_sprite_group_upload(&it->sprite);
     }
@@ -4280,10 +4297,10 @@ static void NEOGEO_USER mg_update_entities(void)
                 }
                 case MG_E_DRONE: case MG_E_POACHDRONE:
                     if (e->type == MG_E_DRONE && mg.stage == 7) {
-                        /* Sunken Reef: the drone's body drifts as a jellyfish. */
-                        int16_t ty = (int16_t)(p->y - 40 + (((e->timer >> 5) & 1) ? -24 : 24));
+                        /* Sunken Reef: the drone's body drifts as a jellyfish,
+                         * 24 px up and down on a 64-frame beat. */
                         b->vx_fp = dir * mg_pace(110);
-                        b->vy_fp = (b->y < ty) ? 60 : -60;
+                        mg_wave(b, (int16_t)(p->y - 40), 24, 603, (uint8_t)(e->timer << 2));
                         mg_frame(b, (uint8_t)((e->timer / 14) % nf), flip);
                     } else {
                         /* Hover out of reach and keep a firing distance:
@@ -4294,8 +4311,11 @@ static void NEOGEO_USER mg_update_entities(void)
                         b->vy_fp = (b->y < ty - 4) ? 100 : ((b->y > ty + 4) ? -100 : 0);
                         mg_frame(b, (uint8_t)((e->timer / 10) % nf), flip);
                         if ((e->timer % (e->type == MG_E_DRONE ? 110 : 120)) == 55 && ad < 210) {
-                            int16_t aim = (int16_t)((p->y - 24) - b->y > 20 ? 1 : 0);
-                            mg_fire(b->x, b->y, (int16_t)(dir * 4), aim, 1,
+                            /* Straight at her middle, 4 px a frame whichever
+                             * way that is (each part rounded to the pixel). */
+                            uint8_t aim = ng_atan2((int16_t)((p->y - 24) - b->y), dx);
+                            mg_fire(b->x, b->y, (int16_t)((ng_trig_mul(8, ng_cos(aim)) + 1) >> 1),
+                                    (int16_t)((ng_trig_mul(8, ng_sin(aim)) + 1) >> 1), 1,
                                     (uint8_t)(e->type == MG_E_DRONE ? MG_T_BOLT : MG_T_SPIT));
                             playSFX(SOUND_SFX_6);
                         }
@@ -4304,13 +4324,26 @@ static void NEOGEO_USER mg_update_entities(void)
                 case MG_E_JELLYFISH: case MG_E_ACIDMOTH: case MG_E_CHEMFLY: {
                     /* Never charges her: a drift that hangs at head height,
                      * so she has to go around it or strike it down. The moth
-                     * swings wide and lazy, the fly quick and tight. */
+                     * rises and falls in a wide, lazy wave (40 px, a 128-frame
+                     * beat), the jellyfish in a gentler one (20 px, 64), and
+                     * the fly turns quick little loops (8 px, 32 frames) as
+                     * it goes -- true sine and cosine curves (ng_trig),
+                     * steered back to head height if they wander. */
                     int16_t speed = (int16_t)(e->type == MG_E_CHEMFLY ? 130 : (e->type == MG_E_ACIDMOTH ? 70 : 90));
-                    uint8_t period = (uint8_t)(e->type == MG_E_ACIDMOTH ? 6 : (e->type == MG_E_CHEMFLY ? 3 : 5));
-                    int16_t swing = (int16_t)(e->type == MG_E_ACIDMOTH ? 40 : 20);
-                    int16_t ty = (int16_t)(p->y - 40 + (((e->timer >> period) & 1) ? -swing : swing));
+                    int16_t head = (int16_t)(p->y - 40), pull;
                     b->vx_fp = dir * mg_pace(speed);
-                    b->vy_fp = (b->y < ty) ? 70 : -70;
+                    if (e->type == MG_E_CHEMFLY) {
+                        uint8_t turn = (uint8_t)(e->timer << 3);
+                        /* round the loop at 2 pi r / T = 1.57 px a frame (8.8) */
+                        b->vx_fp = (int16_t)(b->vx_fp + ng_trig_mul(402, ng_cos(turn)));
+                        pull = (int16_t)(head - b->y);
+                        b->vy_fp = (int16_t)(ng_trig_mul(402, ng_sin(turn)) +
+                                             (pull > 16 ? 48 : (pull < -16 ? -48 : 0)));
+                    } else if (e->type == MG_E_ACIDMOTH) {
+                        mg_wave(b, head, 40, 503, (uint8_t)(e->timer << 1));
+                    } else {
+                        mg_wave(b, head, 20, 503, (uint8_t)(e->timer << 2));
+                    }
                     mg_frame(b, (uint8_t)((e->timer / 12) % nf), flip);
                     break;
                 }
