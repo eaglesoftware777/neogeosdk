@@ -1398,24 +1398,27 @@ static const uint16_t *NEOGEO_USER mg_enemy_tiles(uint8_t type)
  * tiles are stored a row at a time, the canvas width apart, so drawing a
  * 48-wide crab two tiles wide scrambled it, and a tall one lost its feet.
  * The first six have their sizes set by hand in mg_character. */
-static void NEOGEO_USER mg_enemy_canvas(uint8_t type, uint8_t *w, uint8_t *h)
+/* ...and the body a hit is measured on, from what the art actually covers. */
+#define MG_CANVAS(K) *w = MG_##K##_W; *h = MG_##K##_H; *bw = MG_##K##_BODY_W; *bh = MG_##K##_BODY_H
+static void NEOGEO_USER mg_enemy_canvas(uint8_t type, uint8_t *w, uint8_t *h, uint8_t *bw, uint8_t *bh)
 {
     switch (type) {
-    case MG_E_JELLYFISH:  *w = MG_JELLYFISH_W;  *h = MG_JELLYFISH_H;  break;
-    case MG_E_TOXICCRAB:  *w = MG_TOXICCRAB_W;  *h = MG_TOXICCRAB_H;  break;
+    case MG_E_JELLYFISH:  MG_CANVAS(JELLYFISH);  break;
+    case MG_E_TOXICCRAB:  MG_CANVAS(TOXICCRAB);  break;
     case MG_E_ACIDMOTH:
-    case MG_E_WRAITH:     *w = MG_ACIDMOTH_W;   *h = MG_ACIDMOTH_H;   break;
-    case MG_E_DARTFROG:   *w = MG_DARTFROG_W;   *h = MG_DARTFROG_H;   break;
-    case MG_E_SMOGBAT:    *w = MG_SMOGBAT_W;    *h = MG_SMOGBAT_H;    break;
-    case MG_E_POACHDRONE: *w = MG_POACHDRONE_W; *h = MG_POACHDRONE_H; break;
-    case MG_E_CHEMFLY:    *w = MG_CHEMFLY_W;    *h = MG_CHEMFLY_H;    break;
-    case MG_E_PLASTICBAT: *w = MG_PLASTICBAT_W; *h = MG_PLASTICBAT_H; break;
-    case MG_E_SLAGGOLEM:  *w = MG_SLAGGOLEM_W;  *h = MG_SLAGGOLEM_H;  break;
-    case MG_E_VINESTING:  *w = MG_VINESTING_W;  *h = MG_VINESTING_H;  break;
-    case MG_E_SPOREGOB:   *w = MG_SPOREGOB_W;   *h = MG_SPOREGOB_H;   break;
-    default:              *w = 32u;             *h = 32u;             break;
+    case MG_E_WRAITH:     MG_CANVAS(ACIDMOTH);   break;
+    case MG_E_DARTFROG:   MG_CANVAS(DARTFROG);   break;
+    case MG_E_SMOGBAT:    MG_CANVAS(SMOGBAT);    break;
+    case MG_E_POACHDRONE: MG_CANVAS(POACHDRONE); break;
+    case MG_E_CHEMFLY:    MG_CANVAS(CHEMFLY);    break;
+    case MG_E_PLASTICBAT: MG_CANVAS(PLASTICBAT); break;
+    case MG_E_SLAGGOLEM:  MG_CANVAS(SLAGGOLEM);  break;
+    case MG_E_VINESTING:  MG_CANVAS(VINESTING);  break;
+    case MG_E_SPOREGOB:   MG_CANVAS(SPOREGOB);   break;
+    default:              *w = 32u; *h = 32u; *bw = 24u; *bh = 24u; break;
     }
 }
+#undef MG_CANVAS
 
 /* How many poses each creature's sheet actually has. Animating past the
  * end drew whatever tiles happened to follow in the ROM. */
@@ -1539,12 +1542,11 @@ static NGCharacter *NEOGEO_USER mg_character(uint8_t kind, int16_t x, int16_t y,
             strips = 2; rows = 3; ox = -16; oy = -46; bx = -11; by = -38; bw = 22; bh = 38;
         } else if (subtype >= MG_E_JELLYFISH) {
             /* Standing on its canvas's foot line, as the first six do. */
-            uint8_t w, h;
-            mg_enemy_canvas(subtype, &w, &h);
+            uint8_t w, h, body_w, body_h;
+            mg_enemy_canvas(subtype, &w, &h, &body_w, &body_h);
             strips = (uint8_t)(w >> 4); rows = (uint8_t)(h >> 4);
             ox = (int16_t)-(int16_t)(w >> 1); oy = (int16_t)(2 - (int16_t)h);
-            bw = (int16_t)(w - (w >> 2)); bh = (int16_t)(h - 8u);
-            if (subtype == MG_E_DARTFROG) { bw = 26; bh = 20; }   /* a small frog on a wide canvas */
+            bw = body_w; bh = body_h;
             bx = (int16_t)-(bw >> 1); by = (int16_t)-bh;
         }
 
@@ -3096,6 +3098,15 @@ static int16_t NEOGEO_USER mg_pace(int16_t base)
     return (int16_t)((base * scale) / 16);
 }
 
+/* How often a creature attacks, shortened by the valley: the same move
+ * comes round about 40% sooner by the last one, and a little sooner still
+ * on the harder settings. `base` in frames. */
+static uint16_t NEOGEO_USER mg_rate(uint16_t base)
+{
+    uint16_t cut = (uint16_t)(mg.stage * 4u + (mg.difficulty >= 2 ? 6u : 0u));
+    return (uint16_t)(base - (uint16_t)((base * cut) / 100u));
+}
+
 /* Creatures that live in the air: they hover and swoop instead of falling
  * to the road, so they're spawned without gravity. */
 static uint8_t NEOGEO_USER mg_enemy_flies(uint8_t type)
@@ -4620,7 +4631,7 @@ static void NEOGEO_USER mg_update_entities(void)
             flip = (uint8_t)(dir < 0);
             uint8_t flier = mg_enemy_flies(e->type);
 
-            if (e->mood == 0 && mg_abs(dx) >= 220 && e->type != MG_E_WRAITH) {
+            if (e->mood == 0 && mg_abs(dx) >= (int16_t)(220 - mg.stage * 8) && e->type != MG_E_WRAITH) {
                 /* Not noticed her yet: it keeps to its own patch of the
                  * valley instead of marching at her from off-screen. */
                 int16_t off = (int16_t)(b->x - e->home);
@@ -4673,7 +4684,7 @@ static void NEOGEO_USER mg_update_entities(void)
                         b->vy_fp = (b->y < ty - 6) ? 120 : ((b->y > ty + 6) ? -120 : 0);
                         if (e->move_timer) e->move_timer--;
                         else if (mg_abs(dx) < 80) { e->mood = 2; e->move_timer = 40; e->heading = dir; playSFX(SOUND_SFX_14); }
-                        if (e->type == MG_E_PLASTICBAT && mg_abs(dx) < 24 && (e->timer % 70) == 0) {
+                        if (e->type == MG_E_PLASTICBAT && mg_abs(dx) < 24 && (e->timer % mg_rate(70)) == 0) {
                             mg_fire(b->x, b->y, 0, 3, 1, MG_T_TRASH);
                             playSFX(SOUND_SFX_5);
                         }
@@ -4712,7 +4723,7 @@ static void NEOGEO_USER mg_update_entities(void)
                         b->vx_fp = ad < 100 ? -dir * mg_pace(200) : (ad > 170 ? dir * mg_pace(200) : 0);
                         b->vy_fp = (b->y < ty - 4) ? 100 : ((b->y > ty + 4) ? -100 : 0);
                         mg_frame(b, (uint8_t)((uint16_t)(e->timer / 10u) % (uint16_t)nf), flip);
-                        if ((e->timer % (e->type == MG_E_DRONE ? 110 : 120)) == 55 && ad < 210) {
+                        if ((e->timer % mg_rate(e->type == MG_E_DRONE ? 110 : 120)) == 55 && ad < 210) {
                             /* Straight at her middle, 4 px a frame whichever
                              * way that is (each part rounded to the pixel). */
                             uint8_t aim = ng_atan2((int16_t)((p->y - 24) - b->y), dx);
@@ -4795,7 +4806,7 @@ static void NEOGEO_USER mg_update_entities(void)
                         b->vx_fp = dir * mg_pace(300);
                     }
                     mg_frame(b, (uint8_t)(sitting ? 0 : 1), flip);
-                    if ((e->timer % 120u) == 60u && sitting && mg_abs(dx) < 120) {
+                    if ((e->timer % mg_rate(120)) == 60u && sitting && mg_abs(dx) < 120) {
                         mg_fire(b->x, (int16_t)(b->y - 10), (int16_t)(dir * 2), -2, 1, MG_T_SPIT);
                         playSFX(SOUND_SFX_5);
                     }
@@ -4807,7 +4818,7 @@ static void NEOGEO_USER mg_update_entities(void)
                     b->vx_fp = 0;
                     b->vy_fp = 0;
                     mg_frame(b, (uint8_t)((uint16_t)(e->timer / 20u) % (uint16_t)nf), flip);
-                    if ((e->timer % (mg_abs(dx) < 36 ? 60 : 100)) == 50 && mg_abs(dx) < 64) {
+                    if ((e->timer % mg_rate(mg_abs(dx) < 36 ? 60 : 100)) == 30u && mg_abs(dx) < 64) {
                         mg_fire(b->x, (int16_t)(b->y - 20), (int16_t)(dir * 3), 0, 1, MG_T_SPIT);
                         playSFX(SOUND_SFX_5);
                     }
@@ -4821,11 +4832,11 @@ static void NEOGEO_USER mg_update_entities(void)
                     }
                     mg_frame(b, (uint8_t)((uint16_t)(e->timer / 12u) % (uint16_t)nf), flip);
                     if ((e->type == MG_E_SLIME || e->type == MG_E_SPOREGOB)
-                        && (e->timer % 150) == 75 && mg_abs(dx) < 160) {
+                        && (e->timer % mg_rate(150)) == 75 && mg_abs(dx) < 160) {
                         mg_fire(b->x, (int16_t)(b->y - 12), (int16_t)(dir * 3), -1, 1, MG_T_SPIT);
                         playSFX(SOUND_SFX_5);
                     }
-                    if (e->type == MG_E_GOBLIN && mg.stage == 9 && (e->timer % 130) == 65 && mg_abs(dx) < 170) {
+                    if (e->type == MG_E_GOBLIN && mg.stage == 9 && (e->timer % mg_rate(130)) == 65 && mg_abs(dx) < 170) {
                         /* Golden Savanna: the poacher throws a snaring net. */
                         mg_fire(b->x, (int16_t)(b->y - 14), (int16_t)(dir * 3), 0, 1, MG_T_SPIT);
                         playSFX(SOUND_SFX_5);
