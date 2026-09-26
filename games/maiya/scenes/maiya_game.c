@@ -754,10 +754,7 @@ static uint16_t NEOGEO_USER mg_hazard_tile(uint8_t type)
  * grotto's ice, the world tree's crumbling bark, the reef underwater and
  * the cave's ice again. The falls, the coast and the savanna have none of
  * their own -- the wind and tide that used to shove her there are gone. */
-static const uint8_t mg_stage_mech[MG_LEVEL_COUNT] = {
-    MG_M_NONE, MG_M_NONE, MG_M_NONE, MG_M_CRUMBLE, MG_M_ICE,
-    MG_M_CRUMBLE, MG_M_NONE, MG_M_WATER, MG_M_ICE, MG_M_NONE,
-};
+static const uint8_t mg_stage_mech[MG_LEVEL_COUNT] = MG_STAGE_MECH_TABLE;   /* each stage file's "mechanic" */
 
 /* What lies at the bottom of each valley's pits. */
 static const uint16_t *NEOGEO_USER mg_pit_art(const uint16_t **pal)

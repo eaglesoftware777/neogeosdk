@@ -79,6 +79,13 @@ GAME_ENGINE_DEFINES ?=
 # the default, builds everything at -O0.
 GAME_OPTIMIZE ?=
 
+# Level data.  A game whose stages are authored outside C sets
+# GAME_LEVEL_BUILDER in its game.mk to the script that turns them into the
+# header its scenes include (Maiya: games/maiya/tools/levels.py, from
+# games/maiya/levels/*.json).  It runs before the game is compiled, and
+# level-check runs it first too.
+GAME_LEVEL_BUILDER ?=
+
 ifeq ($(USE_2D_PLUS),1)
   ENGINE_DIR  := sdk/2d_engine_plus
   ENGINE_EXT  := cpp
@@ -322,6 +329,9 @@ endif
 
 game: game-check
 	$(LOG_CTX)
+ifneq ($(strip $(GAME_LEVEL_BUILDER)),)
+	$(PYTHON) $(GAME_LEVEL_BUILDER)
+endif
 	$(GAME_CC) $(GAME_CFLAGS) $(PLATFORM_CFLAGS)   $(GAME_NEOGEO_C) -o out/neogeo0.o
 	$(GAME_CC) $(GAME_CFLAGS) $(PLATFORM_CFLAGS)   games/$(GAME)/user.c -o out/user0.o
 	$(GAME_CC) $(GAME_CFLAGS)   games/$(GAME)/main.c -o out/main0.o

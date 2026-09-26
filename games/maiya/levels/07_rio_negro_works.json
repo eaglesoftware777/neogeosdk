@@ -1,0 +1,133 @@
+{
+  "name": "RIO NEGRO WORKS",
+  "width": 5120,
+  "background": 6,
+  "music": 7,
+  "mechanic": "none",
+  "gate_x": 4440,
+  "key": {"x": 2252, "y": 38},
+  "guardian": {
+    "name": "IRON VULTURE",
+    "style": "vulture",
+    "hp": 30,
+    "hint": "THE VULTURE FALLS, THEN SMOGGAR",
+    "taunt": "I BUILT THIS PLANT TO CHOKE YOUR RIVER!",
+    "reply": "YOUR SMOKE ENDS HERE, IRON VULTURE!"
+  },
+  "art": {"name": "RIVER OF LIGHT", "words": "MAIYA: RIVER, RUN CLEAR AGAIN!"},
+  "secret_hint": "A LIFE HANGS ABOVE THE FIRST TANK",
+  "sunboy": ["YOU FREED ME! I FELT THE CHAINS BREAK", "THREE MORE VALLEYS NEED US. LET'S GO"],
+  "platforms": [
+    {"x": 300, "y": 144, "w": 96},
+    {"x": 520, "y": 104, "w": 96},
+    {"x": 760, "y": 64, "w": 96},
+    {"x": 1000, "y": 144, "w": 80},
+    {"x": 1220, "y": 104, "w": 96},
+    {"x": 1460, "y": 64, "w": 96},
+    {"x": 1700, "y": 144, "w": 96},
+    {"x": 1940, "y": 104, "w": 80},
+    {"x": 2180, "y": 64, "w": 96},
+    {"x": 2420, "y": 144, "w": 96},
+    {"x": 2660, "y": 104, "w": 96},
+    {"x": 2900, "y": 64, "w": 80},
+    {"x": 3140, "y": 144, "w": 96},
+    {"x": 3380, "y": 104, "w": 96},
+    {"x": 3640, "y": 64, "w": 96},
+    {"x": 4560, "y": 144, "w": 112}
+  ],
+  "encounters": [
+    {"x": 240, "enemy": "goblin"},
+    {"x": 400, "enemy": "drone"},
+    {"x": 560, "enemy": "worm"},
+    {"x": 720, "enemy": "pair"},
+    {"x": 880, "enemy": "crow"},
+    {"x": 1040, "enemy": "drone"},
+    {"x": 1200, "enemy": "worm"},
+    {"x": 1360, "enemy": "pair"},
+    {"x": 1520, "enemy": "goblin"},
+    {"x": 1680, "enemy": "crow"},
+    {"x": 1840, "enemy": "drone"},
+    {"x": 2000, "enemy": "pair"},
+    {"x": 2160, "enemy": "worm"},
+    {"x": 2320, "enemy": "crow"},
+    {"x": 2480, "enemy": "pair"},
+    {"x": 2640, "enemy": "drone"},
+    {"x": 2800, "enemy": "goblin"},
+    {"x": 2960, "enemy": "pair"},
+    {"x": 3120, "enemy": "worm"},
+    {"x": 3280, "enemy": "drone"},
+    {"x": 3440, "enemy": "pair"},
+    {"x": 3600, "enemy": "crow"},
+    {"x": 3760, "enemy": "pair"},
+    {"x": 4000, "enemy": "pair"}
+  ],
+  "archers": [
+    {"x": 550, "y": 104},
+    {"x": 1250, "y": 104},
+    {"x": 1970, "y": 104},
+    {"x": 2690, "y": 104},
+    {"x": 3410, "y": 104},
+    {"x": 4590, "y": 144}
+  ],
+  "hazards": [
+    {"x": 640, "w": 64, "type": "sludge"},
+    {"x": 1120, "w": 48, "type": "fire"},
+    {"x": 1600, "w": 64, "type": "sludge"},
+    {"x": 2080, "w": 48, "type": "fire"},
+    {"x": 2560, "w": 64, "type": "sludge"},
+    {"x": 3040, "w": 48, "type": "fire"},
+    {"x": 3520, "w": 64, "type": "sludge"},
+    {"x": 4000, "w": 48, "type": "sludge"}
+  ],
+  "rescues": [
+    {"x": 900, "who": "spirit"},
+    {"x": 1900, "who": "maiden"},
+    {"x": 2900, "who": "elder"},
+    {"x": 3860, "who": "sunboy"}
+  ],
+  "secrets": [
+    {"x": 350, "y": 114, "type": "chest"},
+    {"x": 800, "y": 34, "type": "rose"},
+    {"x": 1500, "y": 34, "type": "gem"},
+    {"x": 2220, "y": 34, "type": "chest"},
+    {"x": 2940, "y": 34, "type": "rose"},
+    {"x": 3680, "y": 34, "type": "gem"}
+  ],
+  "pickups": [
+    {"x": 260, "y": 168, "kind": "silver"},
+    {"x": 1100, "y": 168, "kind": "spring"},
+    {"x": 1925, "y": 168, "kind": "crown"},
+    {"x": 2780, "y": 168, "kind": "silver"},
+    {"x": 552, "y": 70, "kind": "gold"},
+    {"x": 1252, "y": 70, "kind": "gold"},
+    {"x": 1445, "y": 166, "kind": "flower"},
+    {"x": 2995, "y": 164, "kind": "critter"},
+    {"x": 2310, "y": 166, "kind": "charm"},
+    {"x": 748, "y": 36, "kind": "life"}
+  ],
+  "decor": [
+    {"x": 160, "y": 160, "kind": "mushroom"},
+    {"x": 520, "y": 160, "kind": "rock"},
+    {"x": 900, "y": 160, "kind": "sapling"},
+    {"x": 1280, "y": 160, "kind": "mushroom"},
+    {"x": 1696, "y": 160, "kind": "rock"},
+    {"x": 2160, "y": 160, "kind": "bush"},
+    {"x": 2420, "y": 160, "kind": "sapling"},
+    {"x": 2800, "y": 160, "kind": "flowers"},
+    {"x": 3180, "y": 160, "kind": "rock"},
+    {"x": 540, "y": 72, "kind": "mushroom"},
+    {"x": 1240, "y": 72, "kind": "bush"},
+    {"x": 2680, "y": 72, "kind": "sapling"},
+    {"x": 4320, "y": 160, "kind": "lantern"}
+  ],
+  "vines": [
+    {"x": 792, "top": 64, "bottom": 192},
+    {"x": 1492, "top": 64, "bottom": 192},
+    {"x": 2212, "top": 64, "bottom": 192}
+  ],
+  "npcs": [
+    {"x": 420, "who": "elder", "line": "THE WORKS POISON THE WHOLE RIVER"},
+    {"x": 2180, "who": "spirit", "line": "TWO GUARDIANS HOLD THE GATE"},
+    {"x": 3920, "who": "sunboy", "line": "MAIYA, I AM RIGHT BEHIND IT"}
+  ]
+}

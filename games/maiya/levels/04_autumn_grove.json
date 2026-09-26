@@ -1,0 +1,127 @@
+{
+  "name": "AUTUMN GROVE",
+  "width": 4480,
+  "background": 3,
+  "music": 4,
+  "mechanic": "crumble",
+  "gate_x": 3840,
+  "key": {"x": 2132, "y": 42},
+  "guardian": {
+    "name": "INFERNO JACKAL",
+    "style": "jackal",
+    "hp": 24,
+    "hint": "THE JACKAL BURNS OUT: THEN HIT",
+    "taunt": "I BURNED THE GROVE TO ASH AND RULE!",
+    "reply": "ASH IS WHERE NEW ROOTS BEGIN!"
+  },
+  "art": {"name": "SUNFLARE DANCE", "words": "MAIYA: SUN, BURN THE BLIGHT!"},
+  "secret_hint": "SHAKE THE BLOSSOM TREE FOR GOLD",
+  "sunboy": ["AUTUMN KEEPS ITS SEED. WELL DONE", "THE GROTTO HOLDS MY CRYSTAL"],
+  "platforms": [
+    {"x": 300, "y": 140, "w": 96},
+    {"x": 520, "y": 104, "w": 80},
+    {"x": 740, "y": 68, "w": 96},
+    {"x": 960, "y": 140, "w": 96},
+    {"x": 1180, "y": 104, "w": 80},
+    {"x": 1400, "y": 68, "w": 96},
+    {"x": 1620, "y": 140, "w": 96},
+    {"x": 1840, "y": 104, "w": 80},
+    {"x": 2060, "y": 68, "w": 96},
+    {"x": 2280, "y": 140, "w": 96},
+    {"x": 2500, "y": 104, "w": 80},
+    {"x": 2720, "y": 68, "w": 96},
+    {"x": 2940, "y": 140, "w": 96},
+    {"x": 3160, "y": 104, "w": 80},
+    {"x": 3400, "y": 68, "w": 96},
+    {"x": 4000, "y": 140, "w": 96}
+  ],
+  "encounters": [
+    {"x": 240, "enemy": "goblin"},
+    {"x": 400, "enemy": "crow"},
+    {"x": 560, "enemy": "beetle"},
+    {"x": 720, "enemy": "worm"},
+    {"x": 880, "enemy": "goblin"},
+    {"x": 1200, "enemy": "crow"},
+    {"x": 1360, "enemy": "beetle"},
+    {"x": 1520, "enemy": "pair"},
+    {"x": 1680, "enemy": "goblin"},
+    {"x": 1840, "enemy": "crow"},
+    {"x": 2160, "enemy": "beetle"},
+    {"x": 2320, "enemy": "worm"},
+    {"x": 2480, "enemy": "goblin"},
+    {"x": 2640, "enemy": "crow"},
+    {"x": 2800, "enemy": "pair"},
+    {"x": 3120, "enemy": "worm"},
+    {"x": 3280, "enemy": "goblin"},
+    {"x": 3440, "enemy": "crow"},
+    {"x": 3600, "enemy": "beetle"},
+    {"x": 3760, "enemy": "worm"}
+  ],
+  "archers": [
+    {"x": 550, "y": 104},
+    {"x": 1430, "y": 68},
+    {"x": 2090, "y": 68},
+    {"x": 2750, "y": 68},
+    {"x": 3430, "y": 68}
+  ],
+  "hazards": [
+    {"x": 860, "w": 64, "type": "fire"},
+    {"x": 1520, "w": 64, "type": "fire"},
+    {"x": 2180, "w": 64, "type": "fire"},
+    {"x": 2840, "w": 64, "type": "fire"},
+    {"x": 616, "w": 48, "type": "pit"},
+    {"x": 3176, "w": 48, "type": "pit"},
+    {"x": 3656, "w": 48, "type": "pit"}
+  ],
+  "rescues": [
+    {"x": 1080, "who": "elder"},
+    {"x": 1982, "who": "spirit"},
+    {"x": 2750, "who": "maiden"},
+    {"x": 3500, "who": "sunboy"}
+  ],
+  "secrets": [
+    {"x": 340, "y": 110, "type": "chest"},
+    {"x": 780, "y": 38, "type": "rose"},
+    {"x": 1440, "y": 38, "type": "gem"},
+    {"x": 2100, "y": 38, "type": "chest"},
+    {"x": 2760, "y": 38, "type": "rose"},
+    {"x": 3440, "y": 38, "type": "gem"}
+  ],
+  "pickups": [
+    {"x": 260, "y": 168, "kind": "silver"},
+    {"x": 1071, "y": 168, "kind": "spring"},
+    {"x": 1830, "y": 168, "kind": "crown"},
+    {"x": 2615, "y": 168, "kind": "silver"},
+    {"x": 552, "y": 70, "kind": "gold"},
+    {"x": 1228, "y": 70, "kind": "gold"},
+    {"x": 1280, "y": 166, "kind": "flower"},
+    {"x": 2595, "y": 164, "kind": "critter"},
+    {"x": 2010, "y": 166, "kind": "charm"},
+    {"x": 728, "y": 40, "kind": "life"}
+  ],
+  "decor": [
+    {"x": 150, "y": 160, "kind": "lantern"},
+    {"x": 567, "y": 160, "kind": "flowers"},
+    {"x": 985, "y": 160, "kind": "sign"},
+    {"x": 1402, "y": 160, "kind": "bush"},
+    {"x": 1820, "y": 160, "kind": "grass"},
+    {"x": 2276, "y": 160, "kind": "sapling"},
+    {"x": 2655, "y": 160, "kind": "mushroom"},
+    {"x": 3072, "y": 160, "kind": "lantern"},
+    {"x": 3490, "y": 160, "kind": "lantern"},
+    {"x": 544, "y": 72, "kind": "bush"},
+    {"x": 1212, "y": 72, "kind": "grass"},
+    {"x": 1880, "y": 72, "kind": "sapling"},
+    {"x": 3720, "y": 160, "kind": "lantern"}
+  ],
+  "vines": [
+    {"x": 772, "top": 68, "bottom": 192},
+    {"x": 1432, "top": 68, "bottom": 192},
+    {"x": 2092, "top": 68, "bottom": 192}
+  ],
+  "npcs": [
+    {"x": 420, "who": "maiden", "line": "AUTUMN KEEPS ITS SEEDS ALIVE"},
+    {"x": 1920, "who": "elder", "line": "STRIKE THE GUARDIAN'S CORE"},
+    {"x": 3320, "who": "spirit", "line": "D CALLS THE ROSE WIND STRIKE"}
+  ]
+}

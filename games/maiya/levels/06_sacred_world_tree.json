@@ -1,0 +1,132 @@
+{
+  "name": "SACRED WORLD TREE",
+  "width": 4800,
+  "background": 5,
+  "music": 3,
+  "mechanic": "crumble",
+  "gate_x": 4160,
+  "key": {"x": 2312, "y": 38},
+  "guardian": {
+    "name": "LORD SMOGGAR",
+    "style": "smoggar",
+    "hp": 32,
+    "hint": "SMOGGAR'S CORE OPENS AS IT ROARS",
+    "taunt": "I DRINK THE WORLD TREE DRY FOR POWER!",
+    "reply": "ITS ROOTS RUN DEEPER THAN YOUR GREED!"
+  },
+  "art": {"name": "WORLD TREE BLOOM", "words": "MAIYA: WORLD TREE, BLOOM!"},
+  "secret_hint": "THE ROOT HOLLOW HOLDS ONE LIFE",
+  "sunboy": ["THE TREE BREATHES. I AM SO CLOSE", "THE WORKS ON THE RIVER. LAST ONE"],
+  "platforms": [
+    {"x": 320, "y": 144, "w": 96},
+    {"x": 560, "y": 104, "w": 80},
+    {"x": 800, "y": 64, "w": 96},
+    {"x": 1040, "y": 144, "w": 96},
+    {"x": 1280, "y": 104, "w": 80},
+    {"x": 1520, "y": 64, "w": 96},
+    {"x": 1760, "y": 144, "w": 96},
+    {"x": 2000, "y": 104, "w": 80},
+    {"x": 2240, "y": 64, "w": 96},
+    {"x": 2480, "y": 144, "w": 96},
+    {"x": 2720, "y": 104, "w": 80},
+    {"x": 2960, "y": 64, "w": 96},
+    {"x": 3200, "y": 144, "w": 96},
+    {"x": 3440, "y": 104, "w": 80},
+    {"x": 3700, "y": 64, "w": 96},
+    {"x": 4300, "y": 144, "w": 96}
+  ],
+  "encounters": [
+    {"x": 280, "enemy": "drone"},
+    {"x": 460, "enemy": "worm"},
+    {"x": 640, "enemy": "pair"},
+    {"x": 820, "enemy": "crow"},
+    {"x": 1000, "enemy": "goblin"},
+    {"x": 1180, "enemy": "drone"},
+    {"x": 1360, "enemy": "worm"},
+    {"x": 1540, "enemy": "pair"},
+    {"x": 1720, "enemy": "crow"},
+    {"x": 1900, "enemy": "goblin"},
+    {"x": 2080, "enemy": "drone"},
+    {"x": 2260, "enemy": "worm"},
+    {"x": 2440, "enemy": "pair"},
+    {"x": 2620, "enemy": "crow"},
+    {"x": 2800, "enemy": "pair"},
+    {"x": 2980, "enemy": "drone"},
+    {"x": 3160, "enemy": "worm"},
+    {"x": 3340, "enemy": "pair"},
+    {"x": 3520, "enemy": "crow"},
+    {"x": 3700, "enemy": "goblin"},
+    {"x": 3880, "enemy": "drone"},
+    {"x": 4040, "enemy": "pair"},
+    {"x": 4200, "enemy": "pair"},
+    {"x": 4400, "enemy": "crow"}
+  ],
+  "archers": [
+    {"x": 590, "y": 104},
+    {"x": 1310, "y": 104},
+    {"x": 2030, "y": 104},
+    {"x": 2750, "y": 104},
+    {"x": 3470, "y": 104}
+  ],
+  "hazards": [
+    {"x": 920, "w": 48, "type": "fire"},
+    {"x": 1640, "w": 48, "type": "spikes"},
+    {"x": 2360, "w": 48, "type": "fire"},
+    {"x": 3080, "w": 48, "type": "spikes"},
+    {"x": 3800, "w": 48, "type": "fire"},
+    {"x": 520, "w": 48, "type": "pit"},
+    {"x": 2680, "w": 48, "type": "pit"},
+    {"x": 3400, "w": 48, "type": "pit"}
+  ],
+  "rescues": [
+    {"x": 1200, "who": "elder"},
+    {"x": 2200, "who": "maiden"},
+    {"x": 3176, "who": "spirit"},
+    {"x": 3700, "who": "sunboy"}
+  ],
+  "secrets": [
+    {"x": 360, "y": 114, "type": "chest"},
+    {"x": 840, "y": 34, "type": "rose"},
+    {"x": 1560, "y": 34, "type": "gem"},
+    {"x": 2280, "y": 34, "type": "chest"},
+    {"x": 3000, "y": 34, "type": "rose"},
+    {"x": 3740, "y": 34, "type": "gem"}
+  ],
+  "pickups": [
+    {"x": 260, "y": 168, "kind": "silver"},
+    {"x": 1151, "y": 168, "kind": "spring"},
+    {"x": 1990, "y": 168, "kind": "crown"},
+    {"x": 2855, "y": 168, "kind": "silver"},
+    {"x": 592, "y": 70, "kind": "gold"},
+    {"x": 1328, "y": 70, "kind": "gold"},
+    {"x": 1386, "y": 166, "kind": "flower"},
+    {"x": 2815, "y": 164, "kind": "critter"},
+    {"x": 2170, "y": 166, "kind": "charm"},
+    {"x": 788, "y": 36, "kind": "life"}
+  ],
+  "decor": [
+    {"x": 150, "y": 160, "kind": "mushroom"},
+    {"x": 607, "y": 160, "kind": "bush"},
+    {"x": 1065, "y": 160, "kind": "sapling"},
+    {"x": 1522, "y": 160, "kind": "grass"},
+    {"x": 1980, "y": 160, "kind": "flowers"},
+    {"x": 2437, "y": 160, "kind": "flowers"},
+    {"x": 2895, "y": 160, "kind": "lantern"},
+    {"x": 3352, "y": 160, "kind": "mushroom"},
+    {"x": 3880, "y": 160, "kind": "mushroom"},
+    {"x": 584, "y": 72, "kind": "grass"},
+    {"x": 1312, "y": 72, "kind": "flowers"},
+    {"x": 2040, "y": 72, "kind": "mushroom"},
+    {"x": 4040, "y": 160, "kind": "lantern"}
+  ],
+  "vines": [
+    {"x": 832, "top": 64, "bottom": 192},
+    {"x": 1552, "top": 64, "bottom": 192},
+    {"x": 2272, "top": 64, "bottom": 192}
+  ],
+  "npcs": [
+    {"x": 444, "who": "elder", "line": "THE WORLD TREE STILL BREATHES"},
+    {"x": 2080, "who": "sunboy", "line": "MAIYA! THE LAST GATE IS NEAR"},
+    {"x": 3640, "who": "spirit", "line": "ONE ROOT, ONE VALLEY, ONE SUN"}
+  ]
+}

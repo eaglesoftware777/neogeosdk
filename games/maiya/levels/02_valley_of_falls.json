@@ -1,0 +1,121 @@
+{
+  "name": "VALLEY OF FALLS",
+  "width": 4096,
+  "background": 1,
+  "music": 2,
+  "mechanic": "none",
+  "gate_x": 3450,
+  "key": {"x": 2052, "y": 46},
+  "guardian": {
+    "name": "SLUDGE TOAD",
+    "style": "toad",
+    "hp": 18,
+    "hint": "THE TOAD GULPS: HIT ITS THROAT",
+    "taunt": "I DROWNED YOUR SPRINGS IN MY OWN FILTH!",
+    "reply": "THE WATER REMEMBERS ITS OWN COLOR!"
+  },
+  "art": {"name": "PURIFYING RAIN", "words": "MAIYA: RAIN, WASH IT CLEAN!"},
+  "secret_hint": "BEHIND THE FALLS: A SUN SEED",
+  "sunboy": ["THE WATER RUNS CLEAR. I FELT IT", "TAKE THE COAST ROAD. I AM WEAKER"],
+  "platforms": [
+    {"x": 280, "y": 144, "w": 96},
+    {"x": 460, "y": 112, "w": 80},
+    {"x": 660, "y": 76, "w": 96},
+    {"x": 880, "y": 144, "w": 96},
+    {"x": 1100, "y": 108, "w": 80},
+    {"x": 1320, "y": 72, "w": 96},
+    {"x": 1540, "y": 144, "w": 96},
+    {"x": 1760, "y": 108, "w": 80},
+    {"x": 1980, "y": 72, "w": 96},
+    {"x": 2200, "y": 144, "w": 96},
+    {"x": 2420, "y": 108, "w": 80},
+    {"x": 2640, "y": 72, "w": 96},
+    {"x": 2860, "y": 144, "w": 96},
+    {"x": 3080, "y": 108, "w": 80},
+    {"x": 3300, "y": 72, "w": 96},
+    {"x": 3650, "y": 144, "w": 96}
+  ],
+  "encounters": [
+    {"x": 200, "enemy": "slime"},
+    {"x": 360, "enemy": "beetle"},
+    {"x": 680, "enemy": "goblin"},
+    {"x": 840, "enemy": "slime"},
+    {"x": 1160, "enemy": "beetle"},
+    {"x": 1480, "enemy": "goblin"},
+    {"x": 1640, "enemy": "slime"},
+    {"x": 1960, "enemy": "beetle"},
+    {"x": 2120, "enemy": "goblin"},
+    {"x": 2440, "enemy": "slime"},
+    {"x": 2760, "enemy": "beetle"},
+    {"x": 2920, "enemy": "goblin"},
+    {"x": 3240, "enemy": "slime"},
+    {"x": 3400, "enemy": "beetle"},
+    {"x": 3720, "enemy": "goblin"}
+  ],
+  "archers": [
+    {"x": 490, "y": 112},
+    {"x": 1350, "y": 72},
+    {"x": 2010, "y": 72},
+    {"x": 2670, "y": 72},
+    {"x": 3330, "y": 72}
+  ],
+  "hazards": [
+    {"x": 780, "w": 48, "type": "sludge"},
+    {"x": 1440, "w": 48, "type": "sludge"},
+    {"x": 2100, "w": 48, "type": "sludge"},
+    {"x": 2780, "w": 48, "type": "sludge"},
+    {"x": 560, "w": 48, "type": "pit"},
+    {"x": 2576, "w": 48, "type": "pit"}
+  ],
+  "rescues": [
+    {"x": 1002, "who": "spirit"},
+    {"x": 1668, "who": "maiden"},
+    {"x": 2500, "who": "elder"},
+    {"x": 3100, "who": "sunboy"}
+  ],
+  "secrets": [
+    {"x": 320, "y": 114, "type": "chest"},
+    {"x": 700, "y": 46, "type": "gem"},
+    {"x": 1360, "y": 42, "type": "rose"},
+    {"x": 2020, "y": 42, "type": "chest"},
+    {"x": 2680, "y": 42, "type": "gem"},
+    {"x": 3340, "y": 42, "type": "rose"}
+  ],
+  "pickups": [
+    {"x": 244, "y": 168, "kind": "silver"},
+    {"x": 991, "y": 168, "kind": "spring"},
+    {"x": 1651, "y": 168, "kind": "crown"},
+    {"x": 2322, "y": 168, "kind": "silver"},
+    {"x": 492, "y": 78, "kind": "gold"},
+    {"x": 1148, "y": 74, "kind": "gold"},
+    {"x": 1195, "y": 166, "kind": "flower"},
+    {"x": 2300, "y": 164, "kind": "critter"},
+    {"x": 1855, "y": 166, "kind": "charm"},
+    {"x": 648, "y": 48, "kind": "life"}
+  ],
+  "decor": [
+    {"x": 150, "y": 160, "kind": "bush"},
+    {"x": 518, "y": 160, "kind": "grass"},
+    {"x": 887, "y": 160, "kind": "flowers"},
+    {"x": 1256, "y": 160, "kind": "bush"},
+    {"x": 1625, "y": 160, "kind": "lantern"},
+    {"x": 1993, "y": 160, "kind": "rock"},
+    {"x": 2362, "y": 160, "kind": "flowers"},
+    {"x": 2731, "y": 160, "kind": "sapling"},
+    {"x": 3100, "y": 160, "kind": "bush"},
+    {"x": 484, "y": 80, "kind": "bush"},
+    {"x": 1132, "y": 76, "kind": "lantern"},
+    {"x": 1800, "y": 76, "kind": "bush"},
+    {"x": 3330, "y": 160, "kind": "lantern"}
+  ],
+  "vines": [
+    {"x": 692, "top": 76, "bottom": 192},
+    {"x": 1352, "top": 72, "bottom": 192},
+    {"x": 2012, "top": 72, "bottom": 192}
+  ],
+  "npcs": [
+    {"x": 420, "who": "maiden", "line": "THE FALLS HIDE A GOLDEN ROSE"},
+    {"x": 1725, "who": "elder", "line": "DOWN THEN FORWARD AND B: SURGE"},
+    {"x": 2978, "who": "spirit", "line": "SPIRITS GUARD THE HIGH LEDGES"}
+  ]
+}
