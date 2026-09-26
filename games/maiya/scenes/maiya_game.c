@@ -125,6 +125,7 @@ enum {
      * upper screen instead of hanging above the top edge. */
     MG_BOSS_SKY_Y = 110,
     ROW_CLOCK = 3,
+    MG_STAGE_TIME_COL = 22,         /* STAGE mm:ss:ff, right of the clock */
     /* What each valley throws at her besides its creatures. */
     MG_M_NONE = 0, MG_M_CRUMBLE = 3, MG_M_ICE = 4, MG_M_WATER = 5,
     MG_CRUMBLE_AFTER = 45, MG_CRUMBLE_BACK = 180,
@@ -302,6 +303,9 @@ typedef struct {
     uint8_t  difficulty;             /* the operator's setting: 0 easy .. 3 expert     */
     uint8_t  boss_backoff;           /* a guardian that just struck her steps back    */
     uint16_t held_press;             /* buttons pressed during a hitstop, not yet seen */
+    uint32_t time_seen;              /* the stage clock as the HUD last counted it    */
+    uint8_t  time_digit[6];          /* m m s s f f: carried a frame at a time          */
+    char     time_shown[14];         /* what the HUD's STAGE line shows now             */
 } MGState;
 
 static MGState mg;
@@ -1645,6 +1649,8 @@ static void NEOGEO_USER mg_hud_static(void);
 static void NEOGEO_USER mg_draw_lives(void);
 static void NEOGEO_USER mg_draw_tray(void);
 static void NEOGEO_USER mg_update_hud(void);
+static void NEOGEO_USER mg_stage_time_reset(void);
+static void NEOGEO_USER mg_stage_time_final(void);
 static void NEOGEO_USER mg_draw_hp_bar(void);
 static void NEOGEO_USER mg_draw_clock(void);
 static void NEOGEO_USER mg_arena_setup(uint8_t style);
@@ -1845,6 +1851,7 @@ static void NEOGEO_USER mg_boss_damage(uint8_t damage)
         if (!mg.arena_bg) mg_background(mg_levels[mg.stage].background, 1);
         mg_centre(ROW_CARD + 2, "EARTH RESTORED!", PAL_GOLD);
         mg_centre(ROW_CARD + 4, "THE BLIGHT IS CLEANSED", PAL_SKY);
+        if (!mg.demo) mg_stage_time_final();
     } else {
         b->hp -= damage;
         mg.hud_dirty = 1;
@@ -2069,6 +2076,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.clock = MG_LEVEL_SECONDS; mg.clock_sub = 0; mg.wraith_timer = 0;
     mg.hp_px = MG_HP_BAR_PX; mg.boss_px = 0; mg.cage_open = 0; mg.arena_bg = 0;
     ng_palfx_screen_stop(); mg.win_step = 0; mg.win_wait = 0; mg.cam_dir = 1;
+    mg_stage_time_reset();
     mg.held_press = 0;
     for (i = 0; i < MG_PLATFORM_COUNT; i++) { mg.ledge_stand[i] = 0; mg.ledge_gone[i] = 0; }
     mg.gate_shown = 0;
@@ -4612,6 +4620,103 @@ static void NEOGEO_USER mg_draw_clock(void)
     mg_number(12, ROW_CLOCK, mg.clock, 3, mg.clock <= MG_HURRY_AT ? PAL_WARN : PAL_TEXT);
 }
 
+/*
+ * The stage clear timer: the engine's stage clock (ng_game_time), which
+ * Maiya runs only while she is on the road -- not on the mission card, the
+ * warp, a guardian's entrance, a fall, the clear, a pause or a hitstop --
+ * shown as minutes, seconds and frames. It counts frames at 60 a second,
+ * so on a real board (about 59.18 frames a second) its seconds run a
+ * little slow against a wall clock: see docs/game_time.md.
+ */
+static uint32_t mg_best_time[MG_LEVEL_COUNT];   /* RAM only, 0 = none yet */
+
+/* Frames as "mm:ss:ff", by subtraction (at the clear, not every frame). */
+static void NEOGEO_USER mg_time_text(char *out, uint32_t frames)
+{
+    uint8_t mm = 0, ss = 0;
+    while (frames >= 3600u && mm < 99u) { frames -= 3600u; mm++; }
+    if (frames >= 3600u) frames = 3599u;
+    while (frames >= 60u) { frames -= 60u; ss++; }
+    out[0] = '0'; out[1] = '0'; out[3] = '0'; out[4] = '0'; out[6] = '0'; out[7] = '0';
+    while (mm >= 10u) { mm -= 10u; out[0]++; }
+    out[1] = (char)('0' + mm);
+    while (ss >= 10u) { ss -= 10u; out[3]++; }
+    out[4] = (char)('0' + ss);
+    while (frames >= 10u) { frames -= 10u; out[6]++; }
+    out[7] = (char)('0' + frames);
+    out[2] = ':'; out[5] = ':'; out[8] = 0;
+}
+
+/* The HUD's STAGE line starts over (a new scene, or the FIX was cleared). */
+static void NEOGEO_USER mg_stage_time_reset(void)
+{
+    uint8_t i;
+    mg.time_seen = 0;
+    for (i = 0; i < 6; i++) mg.time_digit[i] = 0;
+    for (i = 0; i < 14; i++) mg.time_shown[i] = 0;
+}
+
+/* The HUD's STAGE line: the clock is carried forward digit by digit (a
+ * frame at a time, no division) and only the characters that changed are
+ * written to the FIX layer -- normally one or two a frame. */
+static void NEOGEO_USER mg_draw_stage_time(void)
+{
+    static const char label[6] = "STAGE";
+    uint32_t now = ng_game_time_stage_frame();
+    uint8_t *d = mg.time_digit;
+    char text[14], one[2];
+    uint8_t i;
+
+    if (now < mg.time_seen) mg_stage_time_reset();
+    while (mg.time_seen < now) {
+        mg.time_seen++;
+        if (d[0] == 9 && d[1] == 9 && d[2] == 5 && d[3] == 9 && d[4] == 5 && d[5] == 9) continue;
+        if (++d[5] < 10) continue;
+        d[5] = 0;
+        if (++d[4] < 6) continue;
+        d[4] = 0;
+        if (++d[3] < 10) continue;
+        d[3] = 0;
+        if (++d[2] < 6) continue;
+        d[2] = 0;
+        if (++d[1] < 10) continue;
+        d[1] = 0;
+        d[0]++;
+    }
+    for (i = 0; i < 5; i++) text[i] = label[i];
+    text[5] = ' ';
+    text[6] = (char)('0' + d[0]); text[7] = (char)('0' + d[1]); text[8] = ':';
+    text[9] = (char)('0' + d[2]); text[10] = (char)('0' + d[3]); text[11] = ':';
+    text[12] = (char)('0' + d[4]); text[13] = (char)('0' + d[5]);
+    one[1] = 0;
+    for (i = 0; i < 14; i++) {
+        if (text[i] == mg.time_shown[i]) continue;
+        mg.time_shown[i] = one[0] = text[i];
+        ng_fix_puts((uint8_t)(MG_STAGE_TIME_COL + i), ROW_CLOCK, one, i < 5 ? PAL_GOLD : PAL_TEXT);
+    }
+}
+
+/* The clear: the final time under the victory lines, and the best. */
+static void NEOGEO_USER mg_stage_time_final(void)
+{
+    uint32_t t = ng_game_time_stage_frame();
+    char line[24] = "CLEAR TIME ";
+    char *p = line + 11;
+    uint8_t best = (uint8_t)(!mg_best_time[mg.stage] || t < mg_best_time[mg.stage]);
+
+    ng_game_time_stage_run(0);
+    mg_time_text(p, t);
+    mg_centre(ROW_CARD + 6, line, PAL_TEXT);
+    if (best) {
+        mg_best_time[mg.stage] = t;
+        mg_centre(ROW_CARD + 8, "NEW BEST TIME!", PAL_GOLD);
+    } else {
+        line[0] = 'B'; line[1] = 'E'; line[2] = 'S'; line[3] = 'T'; line[4] = ' ';
+        mg_time_text(line + 5, mg_best_time[mg.stage]);
+        mg_centre(ROW_CARD + 8, line, PAL_SKY);
+    }
+}
+
 static void NEOGEO_USER mg_update_hud(void)
 {
     mg_draw_clock();
@@ -5348,6 +5453,10 @@ void NEOGEO_USER maiya_frame(void)
 
     mg.tick++;
     if (!mg.player) return;
+    ng_game_time_stage_run((uint8_t)(mg.state == MG_PLAY));
+    if (!mg.demo && (mg.state == MG_PLAY || mg.state == MG_INTRO || mg.state == MG_CLEAR ||
+                     mg.state == MG_DEAD || mg.state == MG_WARP || mg.state == MG_BOSS_INTRO))
+        mg_draw_stage_time();
     mg_animate_water();
 
     if (mg.state == MG_INTRO) {
