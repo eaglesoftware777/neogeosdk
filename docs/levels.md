@@ -31,6 +31,7 @@ git), whose initialisers `maiya_levels.h` builds the stage tables from.
   "pit": "water",
   "blocks": "grass",
   "climb": "vine",
+  "upper": 0,
   "posted": "none",
   "gate_x": 3200,
   "key": {"x": 2012, "y": 42},
@@ -64,6 +65,13 @@ road, y 192), the key just above a ledge, and each climb's top on a ledge.
 
 A platform marked `"rotten": true` is drawn greyed and gives way under her:
 it trembles, drops out of sight and grows back a while later.
+
+`upper` (optional, 0 when left out) gives a valley an upper tier: how many
+pixels above the screen it reaches. Its ledges, pickups, secrets, key and
+hideout may then have y below 0 (a ledge down to 64 - upper, so she stands
+fully in view on the top one), and a vine may climb up to 256 px from the
+road to reach it. The view rises with her once she is above y 64 and eases
+back down as she comes down; the painted scenery behind stays put.
 
 Names stand for the game's constants, lower case without the prefix:
 
@@ -103,7 +111,7 @@ needs of a stage: ledges between y 64 and 144 in whole blocks of 16,
 encounters in x order, posted creatures standing on a ledge, hazards at
 most 64 wide and clear of the arena, four captives in order before the
 gate, the gate leaving room for the arena, vines from the road up at most
-128 px. `make level-check` then checks placement on what was built
+128 px (256 in a valley with an upper tier). `make level-check` then checks placement on what was built
 (`tools/level_check.py`: pickups inside, under or floating off ledges,
 ledges overlapping, two pickups drawn over each other), and names the stage
 file in each finding:

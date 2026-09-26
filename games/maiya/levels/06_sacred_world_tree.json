@@ -7,6 +7,7 @@
   "pit": "toxic",
   "blocks": "bark",
   "climb": "vine",
+  "upper": 256,
   "posted": "drone",
   "gate_x": 3864,
   "key": {"x": 2148, "y": 38},
@@ -38,7 +39,11 @@
     {"x": 2972, "y": 144, "w": 96},
     {"x": 3196, "y": 104, "w": 80},
     {"x": 3436, "y": 64, "w": 96, "rotten": true},
-    {"x": 3992, "y": 144, "w": 96}
+    {"x": 3992, "y": 144, "w": 96},
+    {"x": 2080, "y": -64, "w": 96},
+    {"x": 2248, "y": -104, "w": 96},
+    {"x": 2424, "y": -144, "w": 96},
+    {"x": 2600, "y": -184, "w": 96}
   ],
   "encounters": [
     {"x": 260, "enemy": "drone"},
@@ -93,7 +98,7 @@
     {"x": 336, "y": 114, "type": "chest"},
     {"x": 780, "y": 34, "type": "rose"},
     {"x": 1448, "y": 34, "type": "gem"},
-    {"x": 2116, "y": 34, "type": "chest"},
+    {"x": 2624, "y": -214, "type": "chest"},
     {"x": 2784, "y": 34, "type": "rose"},
     {"x": 3472, "y": 34, "type": "gem"}
   ],
@@ -103,11 +108,11 @@
     {"x": 1848, "y": 168, "kind": "veil"},
     {"x": 2652, "y": 168, "kind": "silver"},
     {"x": 548, "y": 70, "kind": "gold"},
-    {"x": 1232, "y": 70, "kind": "gold"},
+    {"x": 2276, "y": -138, "kind": "gold"},
     {"x": 1288, "y": 166, "kind": "flower"},
     {"x": 2612, "y": 164, "kind": "critter"},
     {"x": 2016, "y": 166, "kind": "charm"},
-    {"x": 732, "y": 36, "kind": "life"}
+    {"x": 2452, "y": -172, "kind": "life"}
   ],
   "decor": [
     {"x": 140, "y": 160, "kind": "mushroom"},
@@ -127,7 +132,7 @@
   "vines": [
     {"x": 772, "top": 64, "bottom": 192},
     {"x": 1440, "top": 64, "bottom": 192},
-    {"x": 2108, "top": 64, "bottom": 192}
+    {"x": 2108, "top": -64, "bottom": 192}
   ],
   "npcs": [
     {"x": 412, "who": "elder", "line": "THE WORLD TREE STILL BREATHES"},

@@ -12,7 +12,8 @@ what the build compiles; a finding then names the stage's file too.
 
 Rules (every one reported as: level, object and index, coordinates, rule):
   outside       any object outside the world (x beyond 0..width, y beyond
-                the 224-line screen)
+                the 224-line screen, or above it past the level's "top" where
+                the view rises up a tall climb)
   inside        a pickup overlapping a platform's drawn body, or sunk into
                 the ground, deeper than --sink px (resting on top is fine)
   under         a pickup tucked right under a platform: its top within
@@ -122,11 +123,12 @@ def check(data, opts):
 
     for lv in data["levels"]:
         width, plats = lv["width"], lv["platforms"]
+        world_top = lv.get("top", 0)
         pits = [h for h in lv["hazards"] if h["pit"]]
 
         # outside the world
         for p in plats:
-            if p["x"] < 0 or p["x"] + p["w"] > width or not 0 <= p["y"] < SCREEN_H:
+            if p["x"] < 0 or p["x"] + p["w"] > width or not world_top <= p["y"] < SCREEN_H:
                 add(lv, "platform", p["i"], "outside", p["x"], p["y"], f"spans x {p['x']}..{p['x'] + p['w']} in a {width} px world")
         for h in lv["hazards"]:
             if h["x"] < 0 or h["x"] + h["w"] > width:
@@ -136,7 +138,7 @@ def check(data, opts):
                 if not 0 <= o["x"] < width:
                     add(lv, kind[:-1], o["i"], "outside", o["x"], None, f"x {o['x']} in a {width} px world")
         for a in lv["archers"]:
-            if not 0 <= a["x"] < width or not 0 <= a["y"] < SCREEN_H:
+            if not 0 <= a["x"] < width or not world_top <= a["y"] < SCREEN_H:
                 add(lv, "archer", a["i"], "outside", a["x"], a["y"], "off the world")
         if not 0 <= lv["gate_x"] < width:
             add(lv, "gate", 0, "outside", lv["gate_x"], None, f"x {lv['gate_x']} in a {width} px world")
@@ -162,7 +164,7 @@ def check(data, opts):
             for it in items:
                 x, y = it["x"], it["y"]
                 top, bottom, left, right, mid = y, y + size, x, x + size, x + size // 2
-                if left < 0 or right > width or top < 0 or bottom > SCREEN_H:
+                if left < 0 or right > width or top < world_top or bottom > SCREEN_H:
                     add(lv, kind, it["i"], "outside", x, y, f"its {size} px box leaves the world")
                 over_pit = any(h["x"] <= mid < h["x"] + h["w"] for h in pits)
                 buried = False
