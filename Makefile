@@ -164,11 +164,11 @@ DEMO_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(DEMO_NAMES)))
 NG_FIX_SDK_OBJ0=out/ng_fix_sdk0.o
 # SDK modules a game links only if it calls them: sdk/cabinet (the machine,
 # region and the like) and the engine's on-demand modules (ng_trig and its
-# generated table; ng_pause, C engine only).  They are built as plain C into
-# a library at the end of the link, so a game that never uses one carries
-# none of its code.
+# generated table; ng_pause and ng_move, C engine only).  They are built as
+# plain C into a library at the end of the link, so a game that never uses
+# one carries none of its code.
 SDK_LIB_SRCS=$(wildcard sdk/cabinet/*.c) sdk/2d_engine/ng_trig.c sdk/2d_engine/ng_trig_table.c \
-             $(if $(filter 1,$(USE_2D_PLUS)),,sdk/2d_engine/ng_pause.c)
+             $(if $(filter 1,$(USE_2D_PLUS)),,sdk/2d_engine/ng_pause.c sdk/2d_engine/ng_move.c)
 SDK_LIB_OBJ0=$(addprefix out/lib_,$(addsuffix 0.o,$(notdir $(basename $(SDK_LIB_SRCS)))))
 SDK_LIB=out/libng_sdk.a
 

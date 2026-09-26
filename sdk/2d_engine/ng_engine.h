@@ -44,6 +44,7 @@ extern "C" {
 #include "ng_rand.h"
 #include "ng_pause.h"
 #include "ng_trig.h"
+#include "ng_move.h"
 
 
 #ifdef __cplusplus
