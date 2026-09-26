@@ -354,6 +354,7 @@ typedef struct {
     uint8_t  vault_done, charm_seen; /* the vault visited; the elder's charm found       */
     uint8_t  vault_left;             /* treasures still to come in the vault             */
     uint16_t vault_timer;            /* frames left in the vault                         */
+    int16_t  cam_y;                  /* the view's height: below 0 up a tall climb       */
     MGBullet bullets[MG_BULLETS];    /* the bonus round's cannon fire                   */
     NGSpriteGroup bullet_spr[MG_BULLETS];
     NGSpriteGroup cannon;            /* the blight cannon hovering over the bonus field */
@@ -362,6 +363,9 @@ typedef struct {
 } MGState;
 
 static MGState mg;
+
+/* A world height on the screen, with the view raised up a tall climb. */
+#define MG_SY(y) ((int16_t)((y) - mg.cam_y))
 
 /* ------------------------------------------------------------------ */
 /*  Math helpers (random numbers: the engine's ng_rand)               */
@@ -785,6 +789,9 @@ static void NEOGEO_USER mg_scroll_scenery(int16_t camera_x)
         ng_sprite_group_flush(&mg.road);
         return;
     }
+    /* Up a tall climb the painting stays put, its ground band included (it
+     * is the painting's own foot: dropped with the road, it would leave a
+     * gap under the sky); the ledges and the road's hazards scroll by. */
     ng_sprite_group_set_pos(&mg.far, (int16_t)(-(camera_x / 2) & 511), 0);
     ng_sprite_group_flush(&mg.far);
     ng_sprite_group_set_pos(&mg.road, (int16_t)(-camera_x & 511), MG_GROUND_Y);
@@ -835,6 +842,10 @@ static const uint8_t mg_stage_pit[MG_LEVEL_COUNT] = MG_PIT_TABLE;
 /* What a valley climbs: vines, a rope ladder, a wooden ladder, a chain,
  * kelp, a frozen vine (its stage file's "climb"). */
 static const uint8_t mg_stage_climb[MG_LEVEL_COUNT] = MG_CLIMB_TABLE;
+/* How far above the screen a valley's upper tier reaches (its stage file's
+ * "upper"); 0: the valley is one screen high. */
+static const uint16_t mg_stage_upper[MG_LEVEL_COUNT] = MG_UPPER_TABLE;
+
 
 /* Who stands posted on a valley's ledges (its stage file's "posted"). */
 static const uint8_t mg_stage_posted[MG_LEVEL_COUNT] = MG_POSTED_TABLE;
@@ -903,7 +914,7 @@ static void NEOGEO_USER mg_draw_ledges(int16_t camera_x)
 {
     uint8_t i, k, used = 0;
     uint8_t road = (uint8_t)(!mg.boss_active && mg.state != MG_BONUS);
-    uint16_t rotten = road ? mg_levels[mg.stage].rotten : 0u;
+    uint32_t rotten = road ? mg_levels[mg.stage].rotten : 0u;
 
     for (i = 0; i < MG_PLATFORM_COUNT; i++) {
         const MGPlatform *pl = mg_platform(i);
@@ -925,6 +936,9 @@ static void NEOGEO_USER mg_draw_ledges(int16_t camera_x)
         } else if (rot && mg.ledge_stand[i] > 12) {
             shake = (int16_t)((mg.tick & 2u) ? 1 : -1);   /* it trembles under her */
         }
+        /* Up a tall climb the ledges below are out of sight (and the other
+         * way round): they mustn't take blocks from the ones in view. */
+        if (MG_SY(y) > 224 || MG_SY(y) < -32) continue;
 
         blocks = (uint8_t)((pl->width + 16) / 32);
         if (blocks < 2) blocks = 2;
@@ -936,7 +950,7 @@ static void NEOGEO_USER mg_draw_ledges(int16_t camera_x)
             if (bx > 336 || bx < -32) continue;
             ng_sprite_group_set_tile_base(g, mg.block_tiles[piece]);
             ng_sprite_group_set_palette(g, rot ? PAL_BLOCK_ROT : PAL_BLOCK);
-            ng_sprite_group_set_pos(g, bx, y);
+            ng_sprite_group_set_pos(g, bx, MG_SY(y));
             ng_sprite_group_set_visible(g, 1);
             ng_sprite_group_flush(g);
             used++;
@@ -979,7 +993,7 @@ static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
                 ng_sprite_group_set_palette(g, PAL_HAZARD);
             }
             /* A pit is cut into the road itself; everything else stands on it. */
-            ng_sprite_group_set_pos(g, bx, (int16_t)(hz->type == MG_H_PIT ? MG_GROUND_Y : MG_GROUND_Y - 32));
+            ng_sprite_group_set_pos(g, bx, MG_SY(hz->type == MG_H_PIT ? MG_GROUND_Y : MG_GROUND_Y - 32));
             ng_sprite_group_set_visible(g, 1);
             ng_sprite_group_flush(g);
             used++;
@@ -994,7 +1008,7 @@ static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
             int16_t sx = (int16_t)(scr - 28);
             if (sx >= -32 && sx <= 336) {
                 NGSpriteGroup *g = &mg.signs[signs++];
-                ng_sprite_group_set_pos(g, sx, (int16_t)(MG_GROUND_Y - 32));
+                ng_sprite_group_set_pos(g, sx, MG_SY(MG_GROUND_Y - 32));
                 ng_sprite_group_set_visible(g, 1);
                 ng_sprite_group_flush(g);
             }
@@ -1027,7 +1041,7 @@ static void NEOGEO_USER mg_draw_decor(int16_t camera_x)
         if (!d->x || scr < -32 || scr > 336) continue;
         g = &mg.decor[used];
         ng_sprite_group_set_tile_base(g, mg_decor_tiles[d->kind]);
-        ng_sprite_group_set_pos(g, scr, (int16_t)d->y);
+        ng_sprite_group_set_pos(g, scr, MG_SY(d->y));
         ng_sprite_group_set_visible(g, 1);
         ng_sprite_group_flush(g);
         used++;
@@ -1050,7 +1064,7 @@ static void NEOGEO_USER mg_draw_vines(int16_t camera_x)
         if (!v->x || scr < -32 || scr > 336) {
             ng_sprite_group_set_visible(&mg.vines[i], 0);
         } else {
-            ng_sprite_group_set_pos(&mg.vines[i], scr, (int16_t)v->top);
+            ng_sprite_group_set_pos(&mg.vines[i], scr, MG_SY(v->top));
             ng_sprite_group_set_visible(&mg.vines[i], 1);
         }
         ng_sprite_group_flush(&mg.vines[i]);
@@ -1067,7 +1081,7 @@ static void NEOGEO_USER mg_draw_gate(int16_t camera_x)
         ng_sprite_group_set_visible(&mg.gate, 0);
     } else {
         ng_sprite_group_set_tile_base(&mg.gate, mg_gate_tiles[mg.gate_unlocked ? 1 : 0]);
-        ng_sprite_group_set_pos(&mg.gate, scr, (int16_t)(MG_GROUND_Y - 48));
+        ng_sprite_group_set_pos(&mg.gate, scr, MG_SY(MG_GROUND_Y - 48));
         ng_sprite_group_set_visible(&mg.gate, 1);
     }
     ng_sprite_group_flush(&mg.gate);
@@ -1093,7 +1107,7 @@ static void NEOGEO_USER mg_draw_front(int16_t camera_x)
         if (scr < -40 || scr > 340) {
             ng_sprite_group_set_visible(&mg.front[i], 0);
         } else {
-            ng_sprite_group_set_pos(&mg.front[i], scr, (int16_t)(MG_GROUND_Y - 16));
+            ng_sprite_group_set_pos(&mg.front[i], scr, MG_SY(MG_GROUND_Y - 16));
             ng_sprite_group_set_visible(&mg.front[i], 1);
         }
         ng_sprite_group_flush(&mg.front[i]);
@@ -1129,7 +1143,7 @@ static void NEOGEO_USER mg_draw_cage(int16_t camera_x)
     if (mg.rescue) {
         ng_sprite_group_set_tile_base(&mg.cage, mg_prop_tiles[MG_P_CHEST]);
         ng_sprite_group_set_pos(&mg.cage, (int16_t)(mg.rescue->x - 16 - camera_x),
-                                (int16_t)(mg.rescue->y - 32));
+                                MG_SY(mg.rescue->y - 32));
         ng_sprite_group_set_visible(&mg.cage, 1);
     } else if (mg.cage_open) {
         /* Stays open and fully visible for its whole run, then simply
@@ -1137,7 +1151,7 @@ static void NEOGEO_USER mg_draw_cage(int16_t camera_x)
          * bit 2 of the countdown), which read as broken, not as fading. */
         mg.cage_open--;
         ng_sprite_group_set_tile_base(&mg.cage, mg_prop_tiles[MG_P_CHEST_OPEN]);
-        ng_sprite_group_set_pos(&mg.cage, (int16_t)(mg.cage_x - camera_x), mg.cage_y);
+        ng_sprite_group_set_pos(&mg.cage, (int16_t)(mg.cage_x - camera_x), MG_SY(mg.cage_y));
         ng_sprite_group_set_visible(&mg.cage, 1);
     } else {
         ng_sprite_group_set_visible(&mg.cage, 0);
@@ -1177,11 +1191,11 @@ static void NEOGEO_USER mg_update_sparks(int16_t camera_x)
             uint8_t sc = (uint8_t)(48u + (uint16_t)((uint16_t)p->life * 207u) / (uint16_t)p->shrink);
             int16_t in = (int16_t)(8 - (sc >> 5));
             ng_sprite_group_set_scale(&p->sprite, sc, sc);
-            ng_sprite_group_set_pos(&p->sprite, (int16_t)(scr_x + in), (int16_t)(p->y + in));
+            ng_sprite_group_set_pos(&p->sprite, (int16_t)(scr_x + in), MG_SY(p->y + in));
             ng_sprite_group_set_visible(&p->sprite, 1);
         } else {
             ng_sprite_group_set_scale(&p->sprite, NG_SPRITE_FULL_XSCALE, NG_SPRITE_FULL_YSCALE);
-            ng_sprite_group_set_pos(&p->sprite, scr_x, p->y);
+            ng_sprite_group_set_pos(&p->sprite, scr_x, MG_SY(p->y));
             ng_sprite_group_set_visible(&p->sprite, 1);
         }
         ng_sprite_group_flush(&p->sprite);
@@ -1320,6 +1334,28 @@ static void NEOGEO_USER mg_camera_follow(void)
     mg.camera.x = (int16_t)(mg.camera.x + mg.shake_x);
     if (mg.camera.x < mg.camera.bound_left) mg.camera.x = mg.camera.bound_left;
     if (mg.camera.x > mg.camera.bound_right) mg.camera.x = mg.camera.bound_right;
+
+    /*
+     * Up a tall climb the view rises with her, easing, once she is above
+     * the ordinary ledges, and comes back down as she does; on the road,
+     * and on any valley one screen high, it never moves.
+     */
+    {
+        int16_t want = 0;
+        uint16_t upper = mg.stage < MG_LEVEL_COUNT ? mg_stage_upper[mg.stage] : 0u;
+        if (upper && !mg.boss_active && !mg.vault && mg.state == MG_PLAY) {
+            want = (int16_t)(p->y - 64);
+            if (want > 0) want = 0;
+            if (want < -(int16_t)upper) want = (int16_t)-upper;
+        }
+        /* A jump of the view (back out of the vault) is taken at once. */
+        if (mg_abs((int16_t)(want - mg.cam_y)) > 112) mg.cam_y = want;
+        if (want != mg.cam_y) {
+            int16_t step = (int16_t)((want - mg.cam_y) / 6);
+            if (!step) step = (int16_t)(want > mg.cam_y ? 1 : -1);
+            mg.cam_y = (int16_t)(mg.cam_y + step);
+        }
+    }
 }
 
 /*
@@ -1329,7 +1365,7 @@ static void NEOGEO_USER mg_camera_follow(void)
 static void NEOGEO_USER mg_before_draw_hook(void)
 {
     if (mg.player) mg_camera_follow();
-    ng_level_set_scroll(mg.camera.x, 0);
+    ng_level_set_scroll(mg.camera.x, mg.cam_y);
     mg_scroll_scenery(mg.camera.x);
     if (mg.state == MG_BONUS) {
         mg_update_sparks(mg.camera.x);
@@ -2338,6 +2374,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.shake_x = 0;
     mg.clear_bonus = 0;   /* no clear card up yet */
     mg.vault = 0;
+    mg.cam_y = 0;
     ng_camera_snap(&mg.camera, 0, 0);
     ng_level_set_scroll(mg.camera.x, 0);
 
@@ -2384,8 +2421,8 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     for (i = 0; i < MG_VINE_COUNT; i++) {
         const MGVine *v = &mg_vines[stage][i];
         uint8_t rows = v->x ? (uint8_t)((v->bottom - v->top + 15) / 16) : 1;
-        if (rows > 8) rows = 8;
-        ng_sprite_group_init(&mg.vines[i], (uint16_t)(SLOT_VINE + i * 2), 2, 8,
+        if (rows > 16) rows = 16;
+        ng_sprite_group_init(&mg.vines[i], (uint16_t)(SLOT_VINE + i * 2), 2, 16,
                              mg_decor_tiles[mg_stage_climb[stage]], PAL_DECOR);
         ng_sprite_group_set_active_rows(&mg.vines[i], rows);
         ng_sprite_group_set_visible(&mg.vines[i], 0);
@@ -3251,7 +3288,7 @@ static int16_t NEOGEO_USER mg_ledge_y_at(const MGLevel *level, int16_t x)
     uint8_t i;
     for (i = 0; i < MG_PLATFORM_COUNT; i++) {
         const MGPlatform *p = &level->platforms[i];
-        if (p->width && x >= p->x && x < (int16_t)(p->x + p->width)) return p->y;
+        if (p->width && p->y >= 64 && x >= p->x && x < (int16_t)(p->x + p->width)) return p->y;
     }
     return MG_GROUND_Y;
 }
@@ -4519,7 +4556,7 @@ static void NEOGEO_USER mg_update_entities(void)
         }
 
         if (s->life) {
-            ng_sprite_group_set_pos(&s->sprite, scr_x, s->y);
+            ng_sprite_group_set_pos(&s->sprite, scr_x, MG_SY(s->y));
             ng_sprite_group_set_visible(&s->sprite, 1);
             ng_sprite_group_flush(&s->sprite);
         } else {
@@ -4655,7 +4692,7 @@ static void NEOGEO_USER mg_update_entities(void)
         /* A gentle bob, 2 px each way, out of step from one to the next;
          * where it is picked up doesn't move. */
         ng_sprite_group_set_pos(&it->sprite, scr_x,
-                                (int16_t)(it->y + ng_trig_mul(2, ng_sin((uint8_t)(mg.tick * 4u + (uint16_t)it->x)))));
+                                MG_SY(it->y + ng_trig_mul(2, ng_sin((uint8_t)(mg.tick * 4u + (uint16_t)it->x)))));
         ng_sprite_group_set_visible(&it->sprite, 1);
         ng_sprite_group_flush(&it->sprite);
     }
@@ -6377,7 +6414,7 @@ void NEOGEO_USER maiya_frame(void)
             if ((mg.tick & 15) == 0) mg_sparks(p->x, (int16_t)(p->y - 10));
             /* the halo rides two pixels above her hair */
             ng_sprite_group_set_pos(&mg.hud[10], (int16_t)(p->x - mg.camera.x - 8),
-                                    (int16_t)(p->y - 72 + ((mg.tick >> 3) & 1)));
+                                    MG_SY(p->y - 72 + ((mg.tick >> 3) & 1)));
             ng_sprite_group_set_visible(&mg.hud[10], 1);
             ng_sprite_group_flush(&mg.hud[10]);
         }

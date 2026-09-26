@@ -7,10 +7,11 @@
   "pit": "water",
   "blocks": "moss",
   "climb": "vine",
+  "upper": 192,
   "posted": "goblin",
   "gate_x": 2864,
   "key": {"x": 1704, "y": 46},
-  "hideout": {"x": 2780, "y": 72, "hint": "KNEEL ON THE LAST HIGH MOSS BLOCK"},
+  "hideout": {"x": 1720, "y": -96, "hint": "CLIMB OVER THE FALLS, KNEEL AT THE END"},
   "guardian": {
     "name": "SLUDGE TOAD",
     "style": "toad",
@@ -38,7 +39,11 @@
     {"x": 2376, "y": 144, "w": 96},
     {"x": 2556, "y": 108, "w": 80},
     {"x": 2740, "y": 72, "w": 96},
-    {"x": 3032, "y": 144, "w": 96}
+    {"x": 3032, "y": 144, "w": 96},
+    {"x": 1088, "y": -64, "w": 112},
+    {"x": 1272, "y": -96, "w": 96},
+    {"x": 1440, "y": -128, "w": 96},
+    {"x": 1616, "y": -96, "w": 128}
   ],
   "encounters": [
     {"x": 168, "enemy": "slime"},
@@ -82,7 +87,7 @@
     {"x": 264, "y": 114, "type": "chest"},
     {"x": 580, "y": 46, "type": "gem"},
     {"x": 1128, "y": 42, "type": "rose"},
-    {"x": 1676, "y": 42, "type": "chest"},
+    {"x": 1640, "y": -126, "type": "chest"},
     {"x": 2224, "y": 42, "type": "gem"},
     {"x": 2772, "y": 42, "type": "rose"}
   ],
@@ -92,11 +97,11 @@
     {"x": 1408, "y": 168, "kind": "veil"},
     {"x": 1928, "y": 168, "kind": "silver"},
     {"x": 408, "y": 78, "kind": "gold"},
-    {"x": 952, "y": 74, "kind": "gold"},
+    {"x": 1304, "y": -128, "kind": "gold"},
     {"x": 992, "y": 166, "kind": "flower"},
     {"x": 1960, "y": 164, "kind": "critter"},
     {"x": 1540, "y": 166, "kind": "charm"},
-    {"x": 540, "y": 48, "kind": "life"}
+    {"x": 1472, "y": -156, "kind": "life"}
   ],
   "decor": [
     {"x": 124, "y": 160, "kind": "bush"},
@@ -115,7 +120,7 @@
   ],
   "vines": [
     {"x": 576, "top": 76, "bottom": 192},
-    {"x": 1124, "top": 72, "bottom": 192},
+    {"x": 1124, "top": -64, "bottom": 192},
     {"x": 1672, "top": 72, "bottom": 192}
   ],
   "npcs": [

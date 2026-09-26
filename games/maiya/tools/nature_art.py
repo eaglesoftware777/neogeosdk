@@ -213,10 +213,15 @@ def water_fall():
     return to_rgba(a)
 
 
+# Climbables are drawn a whole tall climb high (16 tiles); a shorter climb
+# shows only its top rows.
+CLIMB_H = 256
+
+
 def vine():
-    """A full 32 x 128 climbing vine column: one sprite group, four tiles tall."""
-    a = canvas(32, 128)
-    for y in range(128):
+    """A full 32 x 256 climbing vine column: one sprite group, sixteen tiles tall."""
+    a = canvas(32, CLIMB_H)
+    for y in range(CLIMB_H):
         x = 15 + int(3.0 * np.sin(y * 0.22))
         a[y, x:x + 3] = WD_M
         a[y, x] = WD_D
@@ -234,8 +239,8 @@ def vine():
 
 def rope_ladder():
     """A rope ladder: two twisted ropes, wooden rungs every eight rows."""
-    a = canvas(32, 128)
-    for y in range(128):
+    a = canvas(32, CLIMB_H)
+    for y in range(CLIMB_H):
         for x0 in (7, 23):
             a[y, x0:x0 + 3] = AMBER
             a[y, x0 + ((y // 2) % 3)] = WD_L          # the twist
@@ -247,14 +252,14 @@ def rope_ladder():
 
 def wood_ladder():
     """A wooden ladder of two rails and rungs, the rails' grain showing."""
-    a = canvas(32, 128)
+    a = canvas(32, CLIMB_H)
     a[:, 5:9] = WD_M
     a[:, 23:27] = WD_M
     a[:, 5] = WD_L
     a[:, 23] = WD_L
     a[:, 8] = WD_D
     a[:, 26] = WD_D
-    for y in range(4, 128, 12):
+    for y in range(4, CLIMB_H, 12):
         a[y:y + 3, 9:23] = WD_M
         a[y, 9:23] = WD_L
         a[y + 2, 9:23] = WD_D
@@ -263,8 +268,8 @@ def wood_ladder():
 
 def iron_chain():
     """A hanging chain of iron links, turned alternately edge-on."""
-    a = canvas(32, 128)
-    for k, y in enumerate(range(0, 128, 10)):
+    a = canvas(32, CLIMB_H)
+    for k, y in enumerate(range(0, CLIMB_H - 10, 10)):
         if k % 2 == 0:
             disc(a, 16, y + 5, 5, 6, ST_M)
             disc(a, 16, y + 5, 2, 3, 0)
@@ -277,8 +282,8 @@ def iron_chain():
 
 def kelp():
     """A tall swaying frond of kelp with bladders along it."""
-    a = canvas(32, 128)
-    for y in range(128):
+    a = canvas(32, CLIMB_H)
+    for y in range(CLIMB_H):
         x = 14 + int(4.0 * np.sin(y * 0.12))
         a[y, x:x + 4] = LF_M
         a[y, x] = LF_D
@@ -294,8 +299,8 @@ def kelp():
 
 def ice_vine():
     """A vine frozen in a sleeve of ice, frost on its leaves."""
-    a = canvas(32, 128)
-    for y in range(128):
+    a = canvas(32, CLIMB_H)
+    for y in range(CLIMB_H):
         x = 14 + int(3.0 * np.sin(y * 0.22))
         a[y, x - 2:x + 5] = WATER_L
         a[y, x:x + 3] = LF_D

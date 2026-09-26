@@ -29,13 +29,14 @@ static void comma(int *first)
 
 int main(void)
 {
+    static const int upper[MG_LEVEL_COUNT] = MG_UPPER_TABLE;   /* how far above the screen it goes */
     int l, i, first;
     printf("{\"ground_y\": %d, \"pickup_size\": %d, \"ledge_depth\": %d, \"levels\": [\n",
            MG_GROUND_Y, PICKUP_SIZE, LEDGE_BLOCK);
     for (l = 0; l < MG_LEVEL_COUNT; l++) {
         const MGLevel *lv = &mg_levels[l];
-        printf("%s{\"index\": %d, \"name\": \"%s\", \"width\": %u, \"gate_x\": %u,\n",
-               l ? ",\n" : "", l, lv->name, (unsigned)lv->width, (unsigned)lv->gate_x);
+        printf("%s{\"index\": %d, \"name\": \"%s\", \"width\": %u, \"gate_x\": %u, \"top\": %d,\n",
+               l ? ",\n" : "", l, lv->name, (unsigned)lv->width, (unsigned)lv->gate_x, -upper[l]);
 
         printf(" \"platforms\": [");
         for (first = 1, i = 0; i < MG_PLATFORM_COUNT; i++) {
@@ -58,7 +59,7 @@ int main(void)
             const MGPickup *p = &mg_picks[l][i];
             if (!p->x) continue;
             comma(&first);
-            printf("{\"i\": %d, \"x\": %d, \"y\": %u, \"kind\": %u}", i, p->x, p->y, p->kind);
+            printf("{\"i\": %d, \"x\": %d, \"y\": %d, \"kind\": %u}", i, p->x, p->y, p->kind);
         }
         printf("],\n \"secrets\": [");
         for (first = 1, i = 0; i < MG_SECRET_COUNT; i++) {

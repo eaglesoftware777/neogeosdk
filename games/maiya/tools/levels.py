@@ -112,15 +112,19 @@ class Stage:
         s["pit"] = self.name(d, "pit", "stage", "pit", "MG_PIT_")
         s["blocks"] = self.name(d, "blocks", "stage", "ledge set", "MG_BLOCKS_")
         s["climb"] = self.name(d, "climb", "stage", "decoration", "MG_D_")
+        # How far above the screen the valley goes (a tall climb to an upper
+        # tier); 0 for a valley all on one screen's height.
+        s["upper"] = self.num(d, "upper", "stage", 0, 256) if "upper" in d else 0
+        top = -s["upper"]
         if self.get(d, "posted", "stage", str) == "none":
             s["posted"] = "0xFFu"
         else:
             s["posted"] = self.name(d, "posted", "stage", "enemy", "MG_E_")
         s["gate_x"] = self.num(d, "gate_x", "stage", 0, width)
         key = self.get(d, "key", "stage", dict)
-        s["key"] = (self.num(key, "x", "key", 0, width), self.num(key, "y", "key", 0, 223))
+        s["key"] = (self.num(key, "x", "key", 0, width), self.num(key, "y", "key", top, 223))
         hide = self.get(d, "hideout", "stage", dict)
-        s["hideout"] = (self.num(hide, "x", "hideout", 16, width), self.num(hide, "y", "hideout", 16, 192),
+        s["hideout"] = (self.num(hide, "x", "hideout", 16, width), self.num(hide, "y", "hideout", top + 16, 192),
                         self.text(hide, "hint", "hideout"))
         g = self.get(d, "guardian", "stage", dict)
         s["guardian"] = self.text(g, "name", "guardian", 30)
@@ -138,7 +142,7 @@ class Stage:
             self.fail("sunboy", "needs two lines")
         s["sunboy"] = [self.text({"line": t}, "line", f"sunboy[{i}]") for i, t in enumerate(sunboy)]
 
-        s["platforms"] = [(self.num(p, "x", w, 1, width), self.num(p, "y", w, 0, 223), self.num(p, "w", w, 16, 1024))
+        s["platforms"] = [(self.num(p, "x", w, 1, width), self.num(p, "y", w, top, 223), self.num(p, "w", w, 16, 1024))
                           for w, p in self.rows("platforms", "MG_PLATFORM_COUNT")]
         s["rotten"] = 0
         for i, (w, p) in enumerate(self.rows("platforms", "MG_PLATFORM_COUNT")):
@@ -154,13 +158,13 @@ class Stage:
                         for w, h in self.rows("hazards", "MG_HAZARD_COUNT")]
         s["rescues"] = [(self.num(r, "x", w, 1, width), self.choice(r, "who", w, WHO))
                         for w, r in self.rows("rescues", "MG_RESCUE_COUNT")]
-        s["secrets"] = [(self.num(r, "x", w, 1, width), self.num(r, "y", w, 0, 223), self.choice(r, "type", w, SECRET))
+        s["secrets"] = [(self.num(r, "x", w, 1, width), self.num(r, "y", w, top, 223), self.choice(r, "type", w, SECRET))
                         for w, r in self.rows("secrets", "MG_SECRET_COUNT")]
-        s["pickups"] = [(self.num(p, "x", w, 1, width), self.num(p, "y", w, 0, 223), self.name(p, "kind", w, "pickup", "MG_K_"))
+        s["pickups"] = [(self.num(p, "x", w, 1, width), self.num(p, "y", w, top, 223), self.name(p, "kind", w, "pickup", "MG_K_"))
                         for w, p in self.rows("pickups", "MG_PICK_COUNT")]
         s["decor"] = [(self.num(p, "x", w, 1, width), self.num(p, "y", w, 0, 223), self.name(p, "kind", w, "decoration", "MG_D_"))
                       for w, p in self.rows("decor", "MG_DECOR_COUNT")]
-        s["vines"] = [(self.num(v, "x", w, 1, width), self.num(v, "top", w, 0, 223), self.num(v, "bottom", w, 0, 223))
+        s["vines"] = [(self.num(v, "x", w, 1, width), self.num(v, "top", w, top, 223), self.num(v, "bottom", w, 0, 223))
                       for w, v in self.rows("vines", "MG_VINE_COUNT")]
         for w, v in self.rows("vines", "MG_VINE_COUNT"):
             if v["top"] >= v["bottom"]:
@@ -178,8 +182,10 @@ class Stage:
         for i, (x, y, w) in enumerate(s["platforms"]):
             if w % 16:
                 self.fail(f"platforms[{i}].w", f"{w} is not a multiple of 16")
-            if not 64 <= y <= 144:
-                self.fail(f"platforms[{i}].y", f"{y}: a ledge is between 64 (high) and 144 (one jump up)")
+            # (The view rises at most `upper`: she stands 64 px down it on the top ledge.)
+            if not (64 <= y <= 144 or (s["upper"] and -s["upper"] + 64 <= y < 64)):
+                self.fail(f"platforms[{i}].y", f"{y}: a ledge is between 64 (high) and 144 (one jump up)"
+                          + (f", or in the upper tier from {-s['upper'] + 64}" if s["upper"] else ""))
             if x + w >= width:
                 self.fail(f"platforms[{i}]", "runs off the end of the stage")
         xs = [x for x, _ in s["encounters"]]
@@ -208,8 +214,8 @@ class Stage:
         for i, (x, top, bottom) in enumerate(s["vines"]):
             if not any(py == top and px <= x + 16 <= px + pw for px, py, pw in s["platforms"]):
                 self.fail(f"vines[{i}]", f"its top ({x},{top}) meets no ledge")
-            if bottom != 192 or bottom - top > 128:
-                self.fail(f"vines[{i}]", "runs from the road (bottom 192) up at most 128 px")
+            if bottom != 192 or bottom - top > (256 if s["upper"] else 128):
+                self.fail(f"vines[{i}]", f"runs from the road (bottom 192) up at most {256 if s['upper'] else 128} px")
 
     def choice(self, obj, key, where, options):
         value = self.get(obj, key, where, str)
@@ -251,7 +257,7 @@ def render(stages, files):
                     f"{tuples(s['hazards'], 3)}, "
                     f"{{{','.join(str(x) for x, _ in s['rescues']) or '0'}}}, "
                     f"{{{','.join(str(t) for _, t in s['rescues']) or '0'}}}, "
-                    f"{tuples(s['secrets'], 3)}, 0x{s['rotten']:04X}u}}")
+                    f"{tuples(s['secrets'], 3)}, 0x{s['rotten']:08X}u}}")
     out.append(table("MG_LEVELS_TABLE", rows))
     out.append(table("MG_DECOR_TABLE", [tuples(s["decor"], 3) for s in stages]))
     out.append(table("MG_VINES_TABLE", [tuples(s["vines"], 3) for s in stages]))
@@ -272,6 +278,7 @@ def render(stages, files):
     out.append(table("MG_PIT_TABLE", [s["pit"] for s in stages]))
     out.append(table("MG_BLOCKS_TABLE", [s["blocks"] for s in stages]))
     out.append(table("MG_CLIMB_TABLE", [s["climb"] for s in stages]))
+    out.append(table("MG_UPPER_TABLE", [str(s["upper"]) for s in stages]))
     out.append(table("MG_POSTED_TABLE", [s["posted"] for s in stages]))
     out.append("#endif")
     return "\n".join(out) + "\n"

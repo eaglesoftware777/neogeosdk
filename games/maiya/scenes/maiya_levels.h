@@ -9,7 +9,7 @@
  * maiya_levels_data.h, whose initialisers the tables below are built from
  * (and MG_LEVEL_COUNT). These are the tables' sizes.
  */
-#define MG_PLATFORM_COUNT  16
+#define MG_PLATFORM_COUNT  20
 #define MG_ENCOUNTER_COUNT 24
 #define MG_ARCHER_COUNT    6
 #define MG_HAZARD_COUNT    8
@@ -103,7 +103,7 @@ typedef struct {
     uint16_t rescue_x[MG_RESCUE_COUNT];    /* locations of friendly allies to rescue */
     uint8_t  rescue_type[MG_RESCUE_COUNT]; /* 0: Elder, 1: Maiden, 2: Spirit, 3: Sunboy */
     MGSecret secrets[MG_SECRET_COUNT];
-    uint16_t rotten;         /* bit i: platform i is rotten (it gives way under her) */
+    uint32_t rotten;         /* bit i: platform i is rotten (it gives way under her) */
 } MGLevel;
 
 /*
@@ -124,7 +124,8 @@ typedef struct {
 
 typedef struct {
     int16_t x;               /* left edge of a climbable vine column   */
-    uint8_t top, bottom;     /* the shelf it reaches and the road below */
+    int16_t top;             /* the shelf it reaches: above the screen on a tall climb */
+    uint8_t bottom;          /* the road below                          */
 } MGVine;
 
 typedef struct {
@@ -140,7 +141,7 @@ static const MGVine mg_vines[MG_LEVEL_COUNT][MG_VINE_COUNT] = MG_VINES_TABLE;
 static const MGNpc mg_npcs[MG_LEVEL_COUNT][MG_NPC_COUNT] = MG_NPCS_TABLE;
 
 /* Where the Golden Sun Key waits: always on a high shelf, never on the road. */
-static const uint16_t mg_key_pos[MG_LEVEL_COUNT][2] = MG_KEY_TABLE;
+static const int16_t mg_key_pos[MG_LEVEL_COUNT][2] = MG_KEY_TABLE;
 
 /* Each valley's hideout: kneel here and she is taken to a hidden vault.
  * The elder's charm tells her where (the hint). */
@@ -176,8 +177,8 @@ static const char *const mg_sunboy_line[MG_LEVEL_COUNT][2] = MG_SUNBOY_TABLE;
  * caged forest friend for the mission tally, the elder's charm for a hint,
  * and one extra life kept where only a vine can reach. */
 typedef struct {
-    int16_t x;
-    uint8_t y, kind;         /* kind indexes the MG_K_* trinket set */
+    int16_t x, y;            /* y above the screen in a valley's upper tier */
+    uint8_t kind;            /* kind indexes the MG_K_* trinket set */
 } MGPickup;
 
 static const MGPickup mg_picks[MG_LEVEL_COUNT][MG_PICK_COUNT] = MG_PICKS_TABLE;
