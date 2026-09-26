@@ -12,3 +12,7 @@ GAME_ENGINE_EXCLUDE = ng_particles
 # Her fades lift every palette bank she uses together, and every colour
 # reaches palette RAM in the vertical blank (ng_palette_fx.h, the screen).
 GAME_ENGINE_DEFINES = -DNG_PALFX_SCREEN=1
+
+# Her frame doesn't fit in one vertical blank at -O0: the engine and her
+# scene are built at -O2 (the start-up sources stay at -O0).
+GAME_OPTIMIZE = -O2
