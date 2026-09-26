@@ -32,3 +32,5 @@ tests/test_trig
 tests/test_trig.exe
 tests/test_pause
 tests/test_pause.exe
+tests/test_move
+tests/test_move.exe

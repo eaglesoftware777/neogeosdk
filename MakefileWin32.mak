@@ -185,7 +185,7 @@ NG_FIX_SDK_OBJ0=out\ng_fix_sdk0.o
 # SDK modules linked only if a game calls them (sdk/cabinet, ng_trig), from
 # a library at the end of the link (see Makefile).
 SDK_LIB_SRCS=$(wildcard sdk/cabinet/*.c) sdk/2d_engine/ng_trig.c sdk/2d_engine/ng_trig_table.c \
-             $(if $(filter 1,$(USE_2D_PLUS)),,sdk/2d_engine/ng_pause.c)
+             $(if $(filter 1,$(USE_2D_PLUS)),,sdk/2d_engine/ng_pause.c sdk/2d_engine/ng_move.c)
 SDK_LIB_OBJ0=$(addprefix out/lib_,$(addsuffix 0.o,$(notdir $(basename $(SDK_LIB_SRCS)))))
 SDK_LIB=out/libng_sdk.a
 

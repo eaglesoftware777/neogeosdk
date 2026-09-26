@@ -121,7 +121,7 @@
     {"x": 2772, "top": 80, "bottom": 192}
   ],
   "npcs": [
-    {"x": 420, "who": "elder", "line": "THE REEF STILL FEELS THE POISON"},
+    {"x": 420, "who": "elder", "line": "DOWN SINKS YOU THROUGH THE CORAL"},
     {"x": 1880, "who": "spirit", "line": "CRABS CHARGE WHEN YOU COME CLOSE"},
     {"x": 3200, "who": "maiden", "line": "THE KEY GLEAMS ON THE HIGH CORAL"}
   ]

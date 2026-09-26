@@ -119,7 +119,7 @@ NPC_HEIGHT = 44
 TOOL_COLUMNS = 16
 TOOL_THORN0, TOOL_THORN1, TOOL_TRASH, TOOL_SPIT, TOOL_BOLT, TOOL_FIRE, TOOL_ICE, TOOL_OIL = range(8)
 TOOL_SPARK, TOOL_HEART, TOOL_ROSE, TOOL_PETAL, TOOL_LANE, TOOL_CURSOR, TOOL_DRIP, TOOL_LEAF = range(8, 16)
-TOOL_HALO, TOOL_DUST, TOOL_STAR = 16, 17, 18     # second row of the sheet
+TOOL_HALO, TOOL_DUST, TOOL_STAR, TOOL_BUBBLE = 16, 17, 18, 19     # second row of the sheet
 
 
 def c_array(name, values, ctype="uint16_t"):
@@ -699,6 +699,15 @@ def draw_tools():
         star[7 + k, 7 + k] = 1
         star[7 + k, 7 - k] = 1
     star[7, 7] = 15
+
+    # A bubble, for the reef: a pale blue ring, clear inside, a glint.
+    bubble = cell(TOOL_BUBBLE - TOOL_COLUMNS, 1)
+    for i in range(16):
+        for j in range(16):
+            d = ((j - 7.5) ** 2 + (i - 7.5) ** 2) ** 0.5
+            if 4.2 <= d <= 5.6:
+                bubble[i, j] = 10 if (i + j) < 15 else 11
+    bubble[5, 5] = bubble[5, 6] = bubble[6, 5] = 1
 
     # --- Repaints: the first versions of these read as the wrong thing (a
     # rice-ball heart, a fried-egg spark, grey checkered dust, a floppy
@@ -1414,7 +1423,7 @@ def build():
         ("OIL", TOOL_OIL), ("SPARK", TOOL_SPARK), ("HEART", TOOL_HEART), ("ROSE", TOOL_ROSE),
         ("PETAL", TOOL_PETAL), ("LANE", TOOL_LANE), ("CURSOR", TOOL_CURSOR),
         ("DRIP", TOOL_DRIP), ("LEAF", TOOL_LEAF),
-        ("HALO", TOOL_HALO), ("DUST", TOOL_DUST), ("STAR", TOOL_STAR)
+        ("HALO", TOOL_HALO), ("DUST", TOOL_DUST), ("STAR", TOOL_STAR), ("BUBBLE", TOOL_BUBBLE)
     )
     for name, col in tool_names:
         header.append(f"#define MG_T_{name} {col}u")

@@ -313,6 +313,7 @@ typedef struct {
     uint8_t  time_digit[6];          /* m m s s f f: carried a frame at a time          */
     char     time_shown[14];         /* what the HUD's STAGE line shows now             */
     uint32_t kinds_met;              /* creature kinds she has met this game (MG_E_*)   */
+    uint8_t  swimming;               /* steered through the water (the reef's road)     */
 } MGState;
 
 static MGState mg;
@@ -818,12 +819,24 @@ static uint8_t NEOGEO_USER mg_mech(void)
     return mg.stage < MG_LEVEL_COUNT ? mg_stage_mech[mg.stage] : MG_M_NONE;
 }
 
-/* Underwater she falls slowly and floats through her jumps. */
+/* Underwater she falls slowly and floats through her jumps; swimming, the
+ * water's own pull is in the steering (mg_swim), not in gravity. */
 static void NEOGEO_USER mg_player_gravity(void)
 {
-    if (mg_mech() == MG_M_WATER) ng_physics_set_gravity(mg.player, 34, 3 * NG_FP_ONE);
+    if (mg.swimming) ng_physics_set_gravity(mg.player, 0, 3 * NG_FP_ONE);
+    else if (mg_mech() == MG_M_WATER) ng_physics_set_gravity(mg.player, 34, 3 * NG_FP_ONE);
     else ng_physics_set_gravity(mg.player, 64, 6 * NG_FP_ONE);
 }
+
+/*
+ * Her stroke through the reef: the stick steers her eight ways, the water
+ * holds her back (a push settles at a pixel and a half a frame), still she
+ * sinks slowly to the floor (about a quarter of a pixel a frame), and she
+ * can't rise past the surface just under the HUD. The tide (current_x) is
+ * set each frame.
+ */
+#define MG_SWIM_TOP 84   /* the highest her feet go: her head just clears the HUD */
+static const NGMoveParams mg_swim = { 48, 3, 3 * NG_FP_ONE, -9, 0, 0, MG_SWIM_TOP };
 
 static const MGPlatform *NEOGEO_USER mg_platform(uint8_t index)
 {
@@ -1565,6 +1578,8 @@ static void NEOGEO_USER mg_burst(int16_t x, int16_t y, uint8_t tile, uint8_t cou
         p->vx = (int16_t)((k & 1) ? 1 : -1);
         p->vy = (int16_t)(rise - (k & 1));
         p->life = (uint8_t)(14 + k * 3);
+        /* A bubble never falls: it drifts up, slows and shrinks away. */
+        if (tile == MG_T_BUBBLE) p->shrink = p->life;
         k++;
     }
 }
@@ -2389,7 +2404,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
             static const char *const warn[] = {
                 0, 0, 0,
                 "ROTTEN LEDGES CRUMBLE - KEEP MOVING", "THE ROAD IS ICE - SHE WILL SLIDE",
-                "UNDERWATER - EVERY JUMP FLOATS",
+                "UNDERWATER - SWIM ANY WAY, A TO STROKE",
             };
             uint8_t m = mg_mech();
             if (m && m < sizeof(warn) / sizeof(warn[0]) && warn[m]) mg_centre(ROW_CARD + 8, warn[m], PAL_GOLD);
@@ -3470,6 +3485,16 @@ static void NEOGEO_USER mg_controls(void)
 
     mg.held_press = 0;
 
+    /* The reef's road is swum; its guardian is fought standing on the floor. */
+    {
+        uint8_t swim = (uint8_t)(mg_mech() == MG_M_WATER && mg.state == MG_PLAY &&
+                                 !mg.boss_active && !mg.climbing);
+        if (swim != mg.swimming) {
+            mg.swimming = swim;
+            mg_player_gravity();
+        }
+    }
+
     if (mg.climb_cooldown) mg.climb_cooldown--;
     if (mg.dash_wait) mg.dash_wait--;
     if (mg.dash) mg.dash--;
@@ -3523,7 +3548,7 @@ static void NEOGEO_USER mg_controls(void)
         const MGVine *v = mg_vine_at(p->x, p->y);
         uint8_t can_climb = v && (((joy & JOY_UP) && p->y > v->top) ||
                                   ((joy & JOY_DOWN) && p->y < v->bottom));
-        if (!mg.climb_cooldown && mg.state == MG_PLAY && !mg.boss_active && can_climb) {
+        if (!mg.climb_cooldown && mg.state == MG_PLAY && !mg.boss_active && can_climb && !mg.swimming) {
             /* Keep the hand anchor on the same vine through every pose. */
             ng_char_set_pos(p, (int16_t)(v->x + 16), p->y);
             mg.climbing = 1;
@@ -3561,6 +3586,34 @@ static void NEOGEO_USER mg_controls(void)
     if (pressed & JOY_DOWN) { mg.combo_buffer[0] = 1; mg.combo_timer = 24; }
     if ((pressed & (JOY_LEFT | JOY_RIGHT)) && mg.combo_buffer[0]) mg.combo_buffer[1] = 1;
 
+    if (mg.swimming) {
+        /*
+         * Swimming: the stick steers her any of eight ways; A is a stroke,
+         * a kick up and on in a spray of bubbles; the tide rocks her gently
+         * back and forth. Down takes her through a ledge instead of onto it.
+         */
+        NGMoveParams swim = mg_swim;
+        int8_t sx = (int8_t)((joy & JOY_RIGHT) ? 1 : ((joy & JOY_LEFT) ? -1 : 0));
+        int8_t sy = (int8_t)((joy & JOY_DOWN) ? 1 : ((joy & JOY_UP) ? -1 : 0));
+        uint8_t flags;
+
+        if (sx) mg.facing = (uint8_t)(sx < 0);
+        if (sy > 0) mg.drop = 4;
+        swim.current_x = ng_trig_mul(72, ng_sin((uint8_t)(mg.tick >> 1)));
+        if (pressed & BUTTON_A) {
+            p->vy_fp = -3 * NG_FP_ONE;
+            p->vx_fp += mg.facing ? -NG_FP_ONE : NG_FP_ONE;
+            mg_burst(p->x, (int16_t)(p->y - 24), MG_T_BUBBLE, 2, -2);
+            playSFX(SOUND_SFX_15);
+        }
+        flags = ng_move_steer(p, sx, sy, &swim);
+        if (flags & NG_MOVE_SURFACED) {
+            /* Breaking the surface: a spray, and back down. */
+            mg_burst(p->x, (int16_t)(p->y - 50), MG_T_BUBBLE, 3, -3);
+            playSFX(SOUND_SFX_5);
+        }
+        vx = (int16_t)p->vx_fp;
+    } else
     /*
      * Walk and run.  She leans into a step and coasts out of it instead of
      * snapping between nought and full speed, which is what made her look
@@ -3594,7 +3647,7 @@ static void NEOGEO_USER mg_controls(void)
     }
 
     /* ---- Kneel, then sit ------------------------------------------- */
-    if ((joy & JOY_DOWN) && !vx && (ng_physics_is_grounded(p) || mg.on_ledge ||
+    if ((joy & JOY_DOWN) && !vx && !mg.swimming && (ng_physics_is_grounded(p) || mg.on_ledge ||
                                     p->y >= MG_GROUND_Y - 4)) {
         if (mg.crouch_timer < 255) mg.crouch_timer++;
         vx = 0;
@@ -3603,8 +3656,8 @@ static void NEOGEO_USER mg_controls(void)
     }
     mg.sitting = mg.crouch_timer > SIT_DELAY;
 
-    /* Jump & drop through ledges */
-    if (pressed & BUTTON_A) {
+    /* Jump & drop through ledges (swimming, A is the stroke) */
+    if ((pressed & BUTTON_A) && !mg.swimming) {
         if ((joy & JOY_DOWN) && mg.on_ledge) {
             mg.drop = 12;
         } else if (ng_physics_is_grounded(p) || mg.on_ledge || p->y >= MG_GROUND_Y - 4) {
@@ -3616,7 +3669,7 @@ static void NEOGEO_USER mg_controls(void)
     }
     /* Let go of A on the way up and the jump is cut short: a tap hops, a
      * hold clears the shelf.  This is most of what makes a jump feel meant. */
-    if (!(joy & BUTTON_A) && p->vy_fp < -(2 * NG_FP_ONE)) {
+    if (!(joy & BUTTON_A) && !mg.swimming && p->vy_fp < -(2 * NG_FP_ONE)) {
         p->vy_fp = -(2 * NG_FP_ONE);
     }
 
@@ -5020,7 +5073,7 @@ static void NEOGEO_USER mg_stage_mechanics(void)
     }
 
     if (mech == MG_M_WATER && (mg.tick % 50u) == 0u)
-        mg_burst(p->x, (int16_t)(p->y - 50), MG_T_SPIT, 1, -2);
+        mg_burst(p->x, (int16_t)(p->y - 50), MG_T_BUBBLE, 1, -2);
 }
 
 /*
@@ -5212,6 +5265,11 @@ static void NEOGEO_USER mg_animate_player(void)
     } else if (mg.cast) {
         mg.cast--;
         mg_frame(p, (uint8_t)(mg.cast > 5 ? MG_F_CAST1 : MG_F_CAST2), mg.facing);
+    } else if (mg.swimming && !grounded) {
+        /* Strokes while she swims, a slow float while she hangs still. */
+        static const uint8_t stroke[4] = { MG_F_JUMP1, MG_F_JUMP2, MG_F_JUMP3, MG_F_JUMP2 };
+        uint8_t moving = (uint8_t)(mg_abs((int16_t)p->vx_fp) > 96 || p->vy_fp < -96);
+        mg_frame(p, stroke[(mg.tick >> (moving ? 3 : 5)) & 3u], mg.facing);
     } else if (!grounded) {
         mg_frame(p, (uint8_t)(p->vy_fp < 0 ? MG_F_JUMP1 : MG_F_JUMP3), mg.facing);
     } else if (p->vx_fp != 0) {
