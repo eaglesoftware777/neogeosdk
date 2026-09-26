@@ -153,6 +153,9 @@ enum {
     HURT_LOCK = 60,      /* frames of mg.hurt above this lock the controls */
     MG_KNOCK = 768,      /* her knockback: a short stagger, eased to a stop */
     MG_CAM_LEAD = 40,    /* the camera keeps this much more road ahead    */
+    MG_CAM_LEAD_RATE = 1, /* ... swinging over this many px a frame        */
+    MG_CAM_DEAD = 16,    /* she moves this far either way before it follows */
+    MG_CAM_FOLLOW = 255, /* and then it follows exactly (whole pixels)    */
     MG_BOSS_TOUCH = 36,  /* closer than this on the ground, a guardian hurts */
     MG_BOSS_TOUCH_AIR = 24, /* in the air only its body does: she can jump it */
     MG_BOSS_BACKOFF = 40,   /* frames a guardian gives ground after a touch */
@@ -294,7 +297,7 @@ typedef struct {
     uint8_t  wraith_timer;           /* frames until the next wraith, once they come  */
     uint8_t  wraith_side;            /* which screen edge the next one comes from     */
     uint8_t  win_step, win_wait;     /* her victory: landing, the hop, the held pose  */
-    int16_t  cam_lead;               /* how far the camera looks ahead of her         */
+    int8_t   cam_dir;                /* the way she last really ran: the look-ahead's side */
     uint8_t  difficulty;             /* the operator's setting: 0 easy .. 3 expert     */
     uint8_t  boss_backoff;           /* a guardian that just struck her steps back    */
     uint16_t held_press;             /* buttons pressed during a hitstop, not yet seen */
@@ -1085,20 +1088,6 @@ static void NEOGEO_USER mg_collision_hook(void)
     }
 }
 
-/*
- * Engine hook, runs right before the characters are drawn: follow the
- * heroine with the camera and move every world-space sprite with it.
- */
-/*
- * The camera.
- *
- * ng_camera_update() multiplies the error by follow_speed in 16.16, which
- * overflows a 32-bit int once the camera is more than about 128 px from its
- * target: at a tight follow speed one knock-back sent it the wrong way and
- * left Maiya parked off the left edge of the screen.  A side-scroller only
- * needs her kept a little left of centre, so do it here, in whole pixels,
- * with a step small enough to stay smooth and a shake of our own.
- */
 /* During a hitstop nothing thinks, but the stick is still read: a button
  * pressed (even tapped and let go) while the world is held lands on the
  * first frame after it. */
@@ -1115,60 +1104,59 @@ static void NEOGEO_USER mg_impact_sfx(uint16_t id)
     playSFX((uint8_t)id);
 }
 
+/*
+ * The camera: the engine's (ng_camera_update), with what is Maiya's own
+ * around it. Tuning is set in mg_scene: a window of +-MG_CAM_DEAD px around
+ * the spot she is kept at, MG_CAM_LEAD px of look-ahead that swings over
+ * MG_CAM_LEAD_RATE px a frame, and a follow that is exact, in whole
+ * pixels, so she never judders against the valley.
+ */
 static void NEOGEO_USER mg_camera_follow(void)
 {
-    const MGLevel *level = &mg_levels[mg.stage];
-    int16_t want;
-    int16_t max = (int16_t)(level->width - NG_SCREEN_W);
-    int16_t have = (int16_t)(mg.camera.x - mg.shake_x);
-    int16_t step;
+    NGCharacter *p = mg.player;
+    int16_t left = 0, right = (int16_t)(mg_levels[mg.stage].width - 1);
 
-    /*
-     * Look-ahead: more of the road ahead of her than behind, on whichever
-     * side she is walking toward. When she turns, the lead swings across
-     * one pixel a frame, so the view pans over instead of jumping. Whole
-     * pixels only -- a fractional follow let the valley judder by one
-     * against her sprite. A stagger doesn't swing it.
-     */
-    if (mg.hurt <= HURT_LOCK) {
-        int16_t aim = mg.cam_lead;
-        if (mg.player->vx_fp > 128) aim = MG_CAM_LEAD;
-        else if (mg.player->vx_fp < -128) aim = -MG_CAM_LEAD;
-        if (mg.cam_lead < aim) mg.cam_lead++;
-        else if (mg.cam_lead > aim) mg.cam_lead--;
+    /* Where it may go: the valley; the arena while its guardian fights;
+     * the bonus round's one screen. (The bounds are inclusive: the right
+     * one is the last pixel, so the view ends exactly at the edge.) */
+    if (mg.boss_active) {
+        left = mg.arena_left;
+        right = (int16_t)(mg.arena_left + NG_SCREEN_W - 1);
+    } else if (mg.state == MG_BONUS) {
+        right = NG_SCREEN_W - 1;
     }
-    want = (int16_t)(mg.player->x - NG_SCREEN_W / 2 + mg.cam_lead);
+    ng_camera_set_bounds(&mg.camera, left, 0, right, NG_SCREEN_H - 1);
 
-    if (mg.boss_active) want = mg.arena_left;
-    if (mg.state == MG_BONUS) want = 0;
+    /* The look-ahead keeps to the way she last really ran: standing still
+     * doesn't take it back, and a stagger doesn't swing it. */
+    if (mg.hurt <= HURT_LOCK) {
+        if (p->vx_fp > 128) mg.cam_dir = 1;
+        else if (p->vx_fp < -128) mg.cam_dir = -1;
+    }
 
-    if (want < 0) want = 0;
-    if (want > max) want = max;
+    /* Held where it is through a hitstop or a pause; its shake runs on. */
+    mg.camera.mode = (ng_feedback_is_hitstop() || mg.pause) ? NG_CAM_FREE : NG_CAM_FOLLOW;
+    /* Vertically it never moves: aimed at the screen's middle row, and
+     * its bounds hold it at 0 anyway. */
+    ng_camera_update(&mg.camera, p->x, NG_SCREEN_H / 2, mg.cam_dir);
 
-    step = (int16_t)(want - have);
-    if (step > 8) step = 8;
-    else if (step < -8) step = -8;
-    have = (int16_t)(have + step);
-
+    /* Her own knock-back jolt, on top of any impact shake -- neither may
+     * show past the edge of the valley or the arena. */
     if (mg.shake) {
         mg.shake--;
         mg.shake_x = (int16_t)((mg.shake & 2u) ? 2 : -2);
     } else {
         mg.shake_x = 0;
     }
-    /* An impact event's shake (ng_camera_shake on mg.camera): side to side
-     * each frame, easing off over its last frames. It runs through a
-     * hitstop, since this hook draws the frame the world is held on. */
-    if (mg.camera.shake_frames) {
-        int16_t amp = mg.camera.shake_amp;
-        if (mg.camera.shake_frames < amp) amp = mg.camera.shake_frames;
-        mg.shake_x = (int16_t)(mg.shake_x + ((mg.camera.shake_frames & 1u) ? amp : -amp));
-        mg.camera.shake_frames--;
-    }
-
-    ng_camera_snap(&mg.camera, (int16_t)(have + mg.shake_x), 0);
+    mg.camera.x = (int16_t)(mg.camera.x + mg.shake_x);
+    if (mg.camera.x < mg.camera.bound_left) mg.camera.x = mg.camera.bound_left;
+    if (mg.camera.x > mg.camera.bound_right) mg.camera.x = mg.camera.bound_right;
 }
 
+/*
+ * Engine hook, runs right before the characters are drawn: follow the
+ * heroine with the camera and move every world-space sprite with it.
+ */
 static void NEOGEO_USER mg_before_draw_hook(void)
 {
     if (mg.player) mg_camera_follow();
@@ -2070,7 +2058,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.attempt_hits = 0;
     mg.clock = MG_LEVEL_SECONDS; mg.clock_sub = 0; mg.wraith_timer = 0;
     mg.hp_px = MG_HP_BAR_PX; mg.boss_px = 0; mg.cage_open = 0; mg.arena_bg = 0;
-    ng_palfx_screen_stop(); mg.win_step = 0; mg.win_wait = 0; mg.cam_lead = MG_CAM_LEAD;
+    ng_palfx_screen_stop(); mg.win_step = 0; mg.win_wait = 0; mg.cam_dir = 1;
     mg.held_press = 0;
     for (i = 0; i < MG_PLATFORM_COUNT; i++) { mg.ledge_stand[i] = 0; mg.ledge_gone[i] = 0; }
     mg.gate_shown = 0;
@@ -2171,11 +2159,11 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
 
     /* Camera setup */
     ng_camera_init(&mg.camera);
-    ng_camera_set_bounds(&mg.camera, 0, 0, (int16_t)level->width, 224);
-    /* A tight, quick camera: a lazy one lurched a few pixels every third
-     * frame, which read as the whole valley juddering. */
-    ng_camera_set_dead_zone(&mg.camera, 0, 24);
-    ng_camera_set_follow_speed(&mg.camera, 64);
+    ng_camera_set_bounds(&mg.camera, 0, 0, (int16_t)(level->width - 1), NG_SCREEN_H - 1);
+    ng_camera_set_dead_zone(&mg.camera, MG_CAM_DEAD, 0);
+    ng_camera_set_look_ahead(&mg.camera, MG_CAM_LEAD, 0, MG_CAM_LEAD_RATE);
+    ng_camera_set_follow_speed(&mg.camera, MG_CAM_FOLLOW);
+    mg.camera.look_ahead_cur_x = MG_CAM_LEAD;   /* she sets out looking right */
     mg.shake = 0;
     mg.shake_x = 0;
     ng_camera_snap(&mg.camera, 0, 0);

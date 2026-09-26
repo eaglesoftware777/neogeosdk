@@ -33,7 +33,7 @@ extern "C" {
 #define NG_CAM_CINEMATIC   0x02   /* lerp to a fixed destination */
 
 /*
- * NGCamera — all state in one 52-byte struct.
+ * NGCamera — all state in one struct (44 bytes on the 68000).
  * Keep it value-type (no pointers to external objects) for safety.
  */
 typedef struct {
@@ -54,12 +54,20 @@ typedef struct {
     /* Smooth follow speed (0x00FF = no smoothing, 0x0010 = gentle) */
     uint8_t follow_speed;   /* 1..255, applied as (delta * speed) >> 8 */
 
+    /* The look-ahead now: moves look_ahead_rate pixels a frame toward
+     * +look_ahead_x or -look_ahead_x (at most 127) while the target moves,
+     * and back toward 0 while it stands still. It sits in what was the
+     * padding byte here, so the struct keeps its size and layout. */
+    int8_t  look_ahead_cur_x;
+
     /* Look-ahead: camera shifts forward in the direction of player motion */
     int16_t look_ahead_x;   /* pixels to look ahead, applied gradually */
     int16_t look_ahead_y;
-    uint8_t look_ahead_rate; /* how fast look-ahead accumulates (1..8) */
+    uint8_t look_ahead_rate; /* pixels a frame the look-ahead moves (1..8) */
 
-    /* Dead zone: target must leave this box before camera moves */
+    /* Dead zone: a window around where the target is kept; inside it the
+     * camera holds, outside it the camera is pushed just far enough to
+     * bring the target back to the window's edge */
     uint8_t dead_zone_x;    /* half-width  in pixels */
     uint8_t dead_zone_y;    /* half-height in pixels */
 
@@ -109,7 +117,13 @@ void NEOGEO_USER ng_camera_pan_to(NGCamera *cam, int16_t dest_x, int16_t dest_y,
  *
  * target_x / target_y:  pixel position of the entity to follow.
  *                        Pass cam->x / cam->y to keep current position.
- * target_vx:            horizontal velocity hint for look-ahead (pixels/frame).
+ * target_vx:            horizontal velocity hint for look-ahead (pixels/frame);
+ *                        only its sign is used, 0 lets the look-ahead ease back.
+ *
+ * Follow: the target is kept at the screen centre, shifted back by the
+ * look-ahead, within the dead zone; follow_speed eases the camera there
+ * ((delta * speed) >> 8 a frame), and 255 follows exactly, in whole pixels,
+ * so a steadily moving target does not jitter against the scenery.
  *
  * After this call, cam->x and cam->y hold the final integer pixel offset
  * to pass to ng_level_set_scroll() and ng_bg_draw().
