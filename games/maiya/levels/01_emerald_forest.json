@@ -10,6 +10,7 @@
   "posted": "none",
   "gate_x": 3200,
   "key": {"x": 2012, "y": 42},
+  "hideout": {"x": 2628, "y": 68, "hint": "KNEEL ON THE HIGH LEDGE PAST THE KEY"},
   "guardian": {
     "name": "CHAINSAW BEETLE",
     "style": "beetle",

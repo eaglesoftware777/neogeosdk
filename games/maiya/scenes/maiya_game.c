@@ -350,6 +350,10 @@ typedef struct {
     uint8_t  rain_timer;             /* frames to the arena's next thing from above      */
     int16_t  rain_x;                 /* ...and where it will fall (0: nothing warned yet) */
     int16_t  arena_home;             /* the sliding arena ledge's centre                 */
+    uint8_t  vault;                  /* 1 while she is in the valley's hidden vault      */
+    uint8_t  vault_done, charm_seen; /* the vault visited; the elder's charm found       */
+    uint8_t  vault_left;             /* treasures still to come in the vault             */
+    uint16_t vault_timer;            /* frames left in the vault                         */
     MGBullet bullets[MG_BULLETS];    /* the bonus round's cannon fire                   */
     NGSpriteGroup bullet_spr[MG_BULLETS];
     NGSpriteGroup cannon;            /* the blight cannon hovering over the bonus field */
@@ -886,7 +890,7 @@ static const NGMoveParams mg_swim = { 48, 3, 3 * NG_FP_ONE, -9, 0, 0, MG_SWIM_TO
 static const MGPlatform *NEOGEO_USER mg_platform(uint8_t index)
 {
     if (mg.state == MG_BONUS) return 0;
-    if (mg.boss_active) return index < 2 ? &mg.arena[index] : 0;
+    if (mg.boss_active || mg.vault) return index < 2 ? &mg.arena[index] : 0;
     if (index < MG_PLATFORM_COUNT && mg.ledge_gone[index]) return 0;   /* crumbled away */
     return &mg_levels[mg.stage].platforms[index];
 }
@@ -1197,8 +1201,8 @@ static void NEOGEO_USER mg_collision_hook(void)
 
     if (!p) return;
 
-    if (mg.boss_active || mg.state == MG_BONUS) {
-        int16_t left = mg.boss_active ? mg.arena_left : 0;
+    if (mg.boss_active || mg.state == MG_BONUS || mg.vault) {
+        int16_t left = mg.boss_active ? mg.arena_left : (mg.vault ? (int16_t)(level->width - NG_SCREEN_W) : 0);
         if (p->x < left + 20) { ng_char_set_pos(p, left + 20, p->y); p->vx_fp = 0; }
         if (p->x > left + 300) { ng_char_set_pos(p, left + 300, p->y); p->vx_fp = 0; }
         if (mg.boss) {
@@ -1209,13 +1213,13 @@ static void NEOGEO_USER mg_collision_hook(void)
     }
 
     if (p->x < 16) { ng_char_set_pos(p, 16, p->y); p->vx_fp = 0; }
-    if (p->x > (int16_t)(level->width - 16)) {
+    if (!mg.vault && p->x > (int16_t)(level->width - 16)) {
         ng_char_set_pos(p, (int16_t)(level->width - 16), p->y);
         p->vx_fp = 0;
     }
 
     /* A sealed gate is a wall: the guardian waits behind it. */
-    if (level->gate_x && !mg.gate_unlocked && p->x > (int16_t)(level->gate_x - 14)) {
+    if (level->gate_x && !mg.gate_unlocked && !mg.vault && p->x > (int16_t)(level->gate_x - 14)) {
         ng_char_set_pos(p, (int16_t)(level->gate_x - 14), p->y);
         if (p->vx_fp > 0) p->vx_fp = 0;
         if (!mg.gate_shown) {
@@ -1284,6 +1288,9 @@ static void NEOGEO_USER mg_camera_follow(void)
     if (mg.boss_active) {
         left = mg.arena_left;
         right = (int16_t)(mg.arena_left + NG_SCREEN_W - 1);
+    } else if (mg.vault) {
+        left = (int16_t)(mg_levels[mg.stage].width - NG_SCREEN_W);
+        right = (int16_t)(left + NG_SCREEN_W - 1);
     } else if (mg.state == MG_BONUS) {
         right = NG_SCREEN_W - 1;
     }
@@ -2207,6 +2214,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     if (!retry) {
         mg.has_key = 0; mg.gate_unlocked = 0; mg.key_taken = 0;
         mg.pick_mask = 0; mg.secret_mask = 0; mg.hazard_warn_mask = 0; mg.hazard_disabled_mask = 0;
+        mg.vault_done = 0; mg.charm_seen = 0;
         mg.level_falls = 0;
     } else {
         /* A fall costs the special weapon and the thorn sheaf; her own
@@ -2329,6 +2337,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.shake = 0;
     mg.shake_x = 0;
     mg.clear_bonus = 0;   /* no clear card up yet */
+    mg.vault = 0;
     ng_camera_snap(&mg.camera, 0, 0);
     ng_level_set_scroll(mg.camera.x, 0);
 
@@ -4618,11 +4627,12 @@ static void NEOGEO_USER mg_update_entities(void)
                     if (mg.coins < 99) mg.coins++;
                     playSFX(SOUND_SFX_11);
                     break;
-                default:  /* the elder's charm */
+                default:  /* the elder's charm: it tells her where the hideout is */
                     mg.score += 300u;
+                    mg.charm_seen = 1;
                     playSFX(SOUND_SFX_6);
                     mg_hint(mg.boss_active ? mg_boss_hint[mg.stage]
-                                           : mg_secret_hint[mg.stage], PAL_GOLD, 180);
+                                           : mg_hideout[mg.stage].hint, PAL_GOLD, 240);
                     break;
                 }
             } else if (it->kind == MG_I_HEART) {
@@ -5285,6 +5295,95 @@ static void NEOGEO_USER mg_draw_tray(void)
 
 /* ------------------------------------------------------------------ */
 /*  Main Per-Frame Update                                             */
+/*
+ * The hidden vault. Each valley has one hideout: a spot where kneeling for
+ * half a second takes her to a vault of treasure -- the guardian's ground
+ * at the end of the valley, behind the sealed gate, before it has come:
+ * two shelves, gold and silver coming in waves, a life among them -- for
+ * ten seconds, then back to the spot. Once a valley.
+ * It is hard to find on purpose: the spot glints only now and then, until
+ * the elder's charm (itself hidden) tells her where it is; then it sparkles.
+ */
+enum { MG_VAULT_TIME = 600, MG_VAULT_ITEMS = 12 };
+
+static void NEOGEO_USER mg_vault_clear_items(void)
+{
+    uint8_t i;
+    for (i = 0; i < MG_ITEMS; i++) {
+        mg.items[i].life = 0;
+        ng_sprite_group_set_visible(&mg.items[i].sprite, 0);
+        ng_sprite_group_flush(&mg.items[i].sprite);
+    }
+}
+
+static void NEOGEO_USER mg_hideout_step(void)
+{
+    const MGHideout *h = &mg_hideout[mg.stage];
+    NGCharacter *p = mg.player;
+    int16_t vx = (int16_t)(mg_levels[mg.stage].width - NG_SCREEN_W);   /* the arena's ground, behind the gate */
+
+    if (mg.vault) {
+        static const int16_t spot[MG_VAULT_ITEMS][2] = {
+            {60, 164}, {112, 164}, {56, 106}, {100, 106}, {170, 164}, {200, 74},
+            {246, 74}, {230, 164}, {280, 164}, {140, 164}, {224, 74}, {20, 164},
+        };
+        static const uint8_t kind[MG_VAULT_ITEMS] = {
+            MG_K_GOLD, MG_K_SILVER, MG_K_GOLD, MG_K_GOLD, MG_K_FLOWER, MG_K_GOLD,
+            MG_K_SILVER, MG_K_GOLD, MG_K_GOLD, MG_K_SILVER, MG_K_LIFE, MG_K_GOLD,
+        };
+        if (mg.vault_timer) mg.vault_timer--;
+        if (mg.vault_left && (mg.tick % 10u) == 0u) {
+            uint8_t k = (uint8_t)(MG_VAULT_ITEMS - mg.vault_left);
+            uint8_t what = kind[k];
+            if (what == MG_K_LIFE && mg.life_pickups_used >= MG_LIFE_PICKUP_LIMIT) what = MG_K_GOLD;
+            if (mg_drop_trinket((int16_t)(vx + spot[k][0]), spot[k][1], what)) {
+                mg.vault_left--;
+                mg_burst((int16_t)(vx + spot[k][0] + 16), (int16_t)(spot[k][1] + 8), MG_T_STAR, 1, -1);
+            }
+        }
+        if ((mg.vault_timer % 60u) == 0u && mg.vault_timer) {
+            char line[] = "THE VAULT: 00";
+            uint8_t s = (uint8_t)(mg.vault_timer / 60u);
+            line[11] = (char)('0' + s / 10u);
+            line[12] = (char)('0' + s % 10u);
+            mg_hint(line, PAL_GOLD, 70);
+        }
+        if (!mg.vault_timer) {
+            /* Back where she knelt, the vault closed behind her. */
+            mg.vault = 0;
+            mg_vault_clear_items();
+            ng_char_set_pos(p, h->x, h->y);
+            p->vx_fp = p->vy_fp = 0;
+            ng_camera_snap(&mg.camera, (int16_t)(h->x - NG_SCREEN_W / 2), 0);
+            mg_burst(p->x, (int16_t)(p->y - 30), MG_T_STAR, 4, -2);
+            playSFX(SOUND_SFX_13);
+            mg_hint("BACK ON THE ROAD", PAL_SKY, 90);
+        }
+        return;
+    }
+    if (mg.vault_done || mg.boss_active || !h->x || mg.state != MG_PLAY) return;
+    if ((mg.tick % (mg.charm_seen ? 50u : 420u)) == 0u)
+        mg_burst(h->x, (int16_t)(h->y - 6), MG_T_STAR, (uint8_t)(mg.charm_seen ? 2 : 1), -1);
+    if (mg.crouch_timer >= 30 && mg_abs((int16_t)(p->x - h->x)) < 14 && mg_abs((int16_t)(p->y - h->y)) <= 2) {
+        mg.vault = 1;
+        mg.vault_done = 1;
+        mg.vault_timer = MG_VAULT_TIME;
+        mg.vault_left = MG_VAULT_ITEMS;
+        mg.arena[0].x = (int16_t)(vx + 40);  mg.arena[0].y = 136; mg.arena[0].width = 96;
+        mg.arena[1].x = (int16_t)(vx + 184); mg.arena[1].y = 104; mg.arena[1].width = 96;
+        mg_vault_clear_items();
+        mg_burst(p->x, (int16_t)(p->y - 30), MG_T_STAR, 4, -2);
+        ng_char_set_pos(p, (int16_t)(vx + 40), MG_GROUND_Y);
+        p->vx_fp = p->vy_fp = 0;
+        mg.crouch_timer = 0;
+        mg.sitting = 0;
+        ng_camera_snap(&mg.camera, vx, 0);
+        playSFX(SOUND_SFX_13);
+        playSFX(SOUND_SFX_12);
+        mg_hint("A HIDDEN VAULT! GRAB ALL YOU CAN", PAL_GOLD, 60);
+    }
+}
+
 /* ------------------------------------------------------------------ */
 /*
  * The valley's own obstacle, each frame of play.
@@ -6119,10 +6218,11 @@ void NEOGEO_USER maiya_frame(void)
             return;
         }
         mg_controls();
-        mg_spawn();
+        if (!mg.vault) mg_spawn();       /* the road waits while she's in the vault */
         mg_animate_player();
         mg_world_step();
         mg_update_entities();
+        mg_hideout_step();
         mg_hazard_check();
         mg_hazard_warn_check();
         mg_npc_check();

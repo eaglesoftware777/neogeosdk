@@ -34,6 +34,7 @@ git), whose initialisers `maiya_levels.h` builds the stage tables from.
   "posted": "none",
   "gate_x": 3200,
   "key": {"x": 2012, "y": 42},
+  "hideout": {"x": 2628, "y": 68, "hint": "KNEEL ON THE HIGH LEDGE PAST THE KEY"},
   "guardian": {
     "name": "CHAINSAW BEETLE", "style": "beetle", "hp": 16,
     "hint": "...", "taunt": "...", "reply": "..."
@@ -57,6 +58,10 @@ git), whose initialisers `maiya_levels.h` builds the stage tables from.
 Coordinates are world pixels: x from the stage's left edge, y from the top
 of the screen (the road is at y 192). A platform's y is the surface she
 stands on; pickups and secrets are placed by their top-left corner.
+The hideout is where kneeling takes her to the valley's hidden vault; its
+hint is what the elder's charm tells her. It must be on a ledge (or the
+road, y 192), the key just above a ledge, and each climb's top on a ledge.
+
 A platform marked `"rotten": true` is drawn greyed and gives way under her:
 it trembles, drops out of sight and grows back a while later.
 
