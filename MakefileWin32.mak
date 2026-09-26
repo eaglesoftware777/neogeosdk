@@ -376,6 +376,12 @@ $(GAME_ID)-p1.p1: game
 	if not exist $(ROM_DIR) mkdir $(ROM_DIR)
 	copy /Y out\$(GAME_ID)-p1.p1 $(ROM_DIR)\$(GAME_ID)-p1.p1
 	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) hash_eagle\gen_hash.py
+	$(PY) tools\rom_budget.py --game $(GAME) --id $(GAME_ID) --rom-dir $(ROM_DIR) --cfg $(GAME_CFG_FILE) --check
+
+# Bytes each ROM uses against the BUDGET_* keys in the game's game.cfg.
+.PHONY: budget
+budget: game-check
+	$(PY) tools\rom_budget.py --game $(GAME) --id $(GAME_ID) --rom-dir $(ROM_DIR) --cfg $(GAME_CFG_FILE)
 
 .PHONY: hash
 hash:
