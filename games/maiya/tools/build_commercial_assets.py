@@ -869,6 +869,18 @@ def build():
         sn.crop((45, 256, 630, 512)),        # 5 Ancient World Tree
         None,                                # 6 Rio Negro Works, composed below
     ]
+    # The last three valleys had borrowed the coast, the grotto and the
+    # grove. Their roads now run through their own paintings: the sunken
+    # reef, the mine under the silver cave, the hunters' savanna. Each is a
+    # band off the painting's foot, wide enough for the 512-pixel wrap.
+    def band(fname, top):
+        art = Image.open(SOURCE / fname).convert("RGBA")
+        return art.crop((0, int(art.height * top), art.width, art.height))
+    panels += [
+        band("arena_eel.png", 0.34),         # 7 Sunken Reef
+        band("arena_wyrm_0.jpg", 0.18),      # 8 Silver Cave
+        band("arena_hyena.jpg", 0.30),       # 9 Golden Savanna
+    ]
 
     # The works: the old plant's furnaces and gantries stand over the swamp
     # river's bank -- the painted factory for the far layer, the painted
@@ -914,7 +926,7 @@ def build():
         header.append(c_array(f"mg_bg{i}_map", assignments[:12].flatten() + 16, "uint8_t"))
         header.append(c_array(f"mg_ground{i}_map", assignments[12:].flatten() + 16, "uint8_t"))
         header.append(f"#define MG_BG{i}_BANKS {len(palettes)}u")
-        print(f"  Stage {i + 1}/7 compiled (512x224)", flush=True)
+        print(f"  Stage {i + 1}/{len(panels)} compiled (512x224)", flush=True)
 
     # Each guardian's own arena, shown while it fights: the painting fitted
     # to the 320-pixel screen (its floor on the road strip), mirrored out to
@@ -1220,7 +1232,6 @@ def build():
         "jellyfish": (set1_img, (32, 32), 26, {"0": (10, 55, 205, 265), "1": (215, 55, 410, 265)}),
         "toxiccrab": (set1_img, (48, 32), 28, {"0": (10, 345, 250, 540), "1": (250, 345, 490, 540)}),
         "acidmoth":  (set1_img, (48, 32), 30, {"0": (10, 765, 250, 1020), "1": (250, 765, 490, 1020)}),
-        "sewerrat":  (set1_img, (32, 48), 40, {"0": (505, 790, 690, 1020), "1": (690, 790, 875, 1020)}),
         "smogbat":   (set1_img, (32, 48), 40, {"0": (505, 60, 675, 290), "1": (675, 60, 845, 290)}),
         "poachdrone":(set2_img, (48, 32), 28, {"0": (520, 398, 745, 528), "1": (750, 398, 975, 528)}),
         "chemfly":   (set2_img, (32, 32), 20, {"0": (15, 398, 195, 528), "1": (200, 398, 380, 528)}),
@@ -1229,10 +1240,34 @@ def build():
         "vinesting": (set2_img, (32, 64), 56, {"0": (250, 720, 375, 870), "1": (375, 720, 500, 870)}),
         "sporegob":  (set2_img, (32, 48), 40, {"0": (510, 720, 681, 900), "1": (681, 720, 852, 900)}),
     }
-    for cname, (src, canvas, height, boxes) in new_creatures.items():
-        frames = fit_group(src, boxes, canvas, height)
+    # The poison dart frog, in the sewer rat's place: the small-animal
+    # sheet's green frog (sitting, then in mid-leap) turned the vivid blue
+    # that warns off anything thinking of touching it.
+    animals_img = Image.open(find_file("npc_small_animals*.jpg")).convert("RGB")
+    frog = fit_group(animals_img, {"0": (40, 279, 136, 353), "1": (269, 252, 404, 349)},
+                     (48, 32), 22, bg_color="corner")
+
+    def dart_blue(h, s, v):
+        if 55.0 <= h <= 175.0:          # the green skin: electric blue, deeper in shadow
+            return (212.0 + (h - 110.0) * 0.15, min(1.0, s * 1.25 + 0.15), v * (0.85 if v < 0.45 else 1.0))
+        return (h, s, v)
+    for rgba in frog.values():
+        body = rgba[:, :, 3] > 0
+        rgba[body, :3] = hsv_map(rgba[body, :3], dart_blue)
+    new_creatures["dartfrog"] = frog
+
+    for cname, spec in new_creatures.items():
+        if isinstance(spec, dict):
+            frames, canvas = spec, (spec["0"].shape[1], spec["0"].shape[0])
+        else:
+            src, canvas, height, boxes = spec
+            frames = fit_group(src, boxes, canvas, height)
         shared_set(cname, frames)
         header.append(f"#define MG_{cname.upper()}_FRAMES {len(frames)}u")
+        # The sprite's size in the game follows its canvas (tiles are
+        # stored a row at a time, the canvas width apart).
+        header.append(f"#define MG_{cname.upper()}_W {canvas[0]}u")
+        header.append(f"#define MG_{cname.upper()}_H {canvas[1]}u")
         print(f"  Enemy {cname} compiled ({len(frames)} frames)", flush=True)
 
     print("== 4. Compiling Allies & NPCs ==", flush=True)
@@ -1350,7 +1385,7 @@ def build():
 
     # The front plane: boulders and fronds that pass in front of the road.
     front = {"fern": nature_art.fern_frond()}
-    for gname in ("grass", "moss", "sand", "autumn", "snow", "bark", "rust"):
+    for gname in ("grass", "moss", "sand", "autumn", "snow", "bark", "rust", "coral", "stone", "savanna"):
         front[f"stone_{gname}"] = nature_art.standing_stone(gname)
     shared_set("front", front)
     for k, name in enumerate(front.keys()):
@@ -1360,7 +1395,7 @@ def build():
     shared_set("gate", {"shut": nature_art.gate(False), "open": nature_art.gate(True)})
 
     # One ledge set per valley: left cap, middle, right cap.
-    for gname in ("grass", "moss", "sand", "autumn", "snow", "bark", "rust"):
+    for gname in ("grass", "moss", "sand", "autumn", "snow", "bark", "rust", "coral", "stone", "savanna"):
         blocks = {str(k): nature_art.ledge_block(gname, k) for k in range(3)}
         shared_set(f"block_{gname}", blocks)
     print("  Props, pickups, decoration and ledges compiled", flush=True)

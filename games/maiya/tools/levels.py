@@ -109,6 +109,12 @@ class Stage:
         s["background"] = self.num(d, "background", "stage", 0, 255)
         s["music"] = self.num(d, "music", "stage", 0, 255)
         s["mechanic"] = self.name(d, "mechanic", "stage", "mechanic", "MG_M_")
+        s["pit"] = self.name(d, "pit", "stage", "pit", "MG_PIT_")
+        s["blocks"] = self.name(d, "blocks", "stage", "ledge set", "MG_BLOCKS_")
+        if self.get(d, "posted", "stage", str) == "none":
+            s["posted"] = "0xFFu"
+        else:
+            s["posted"] = self.name(d, "posted", "stage", "enemy", "MG_E_")
         s["gate_x"] = self.num(d, "gate_x", "stage", 0, width)
         key = self.get(d, "key", "stage", dict)
         s["key"] = (self.num(key, "x", "key", 0, width), self.num(key, "y", "key", 0, 223))
@@ -151,7 +157,41 @@ class Stage:
                 self.fail(w, "top must be above bottom")
         s["npcs"] = [(self.num(n, "x", w, 1, width), self.choice(n, "who", w, WHO), self.text(n, "line", w))
                      for w, n in self.rows("npcs", "MG_NPC_COUNT")]
+        self.rules(s)
         return s
+
+    def rules(self, s):
+        """How the game plays a stage: what it needs of the numbers."""
+        width, gate = s["width"], s["gate_x"]
+        if gate >= width - 320:
+            self.fail("gate_x", f"{gate} leaves no arena: keep it under width - 320 ({width - 320})")
+        for i, (x, y, w) in enumerate(s["platforms"]):
+            if w % 16:
+                self.fail(f"platforms[{i}].w", f"{w} is not a multiple of 16")
+            if not 64 <= y <= 144:
+                self.fail(f"platforms[{i}].y", f"{y}: a ledge is between 64 (high) and 144 (one jump up)")
+            if x + w >= width:
+                self.fail(f"platforms[{i}]", "runs off the end of the stage")
+        xs = [x for x, _ in s["encounters"]]
+        for i in range(1, len(xs)):
+            if xs[i] <= xs[i - 1]:
+                self.fail(f"encounters[{i}].x", f"{xs[i]}: encounters are met in x order (after {xs[i - 1]})")
+        for i, (x, y) in enumerate(s["archers"]):
+            if not any(py == y and px <= x <= px + pw for px, py, pw in s["platforms"]):
+                self.fail(f"archers[{i}]", f"({x},{y}) stands on no ledge: y must be a ledge's y, x within it")
+        for i, (x, w, kind) in enumerate(s["hazards"]):
+            if w % 16 or w > 64:
+                self.fail(f"hazards[{i}].w", f"{w}: a multiple of 16, at most 64")
+            if x + w >= width - 320:
+                self.fail(f"hazards[{i}]", "reaches into the arena (keep it under width - 320)")
+        rx = [x for x, _ in s["rescues"]]
+        if len(rx) != 4:
+            self.fail("rescues", "needs four captives")
+        if not (rx[0] < width // 2 < rx[3]) or rx != sorted(rx) or rx[3] >= gate:
+            self.fail("rescues", "in x order, the first in the first half, the last in the second, all before the gate")
+        for i, (x, top, bottom) in enumerate(s["vines"]):
+            if bottom != 192 or bottom - top > 128:
+                self.fail(f"vines[{i}]", "runs from the road (bottom 192) up at most 128 px")
 
     def choice(self, obj, key, where, options):
         value = self.get(obj, key, where, str)
@@ -209,6 +249,9 @@ def render(stages, files):
     out.append(table("MG_BOSS_TAUNT_TABLE", [c_string(s["taunt"]) for s in stages]))
     out.append(table("MG_BOSS_REPLY_TABLE", [c_string(s["reply"]) for s in stages]))
     out.append(table("MG_STAGE_MECH_TABLE", [s["mechanic"] for s in stages]))
+    out.append(table("MG_PIT_TABLE", [s["pit"] for s in stages]))
+    out.append(table("MG_BLOCKS_TABLE", [s["blocks"] for s in stages]))
+    out.append(table("MG_POSTED_TABLE", [s["posted"] for s in stages]))
     out.append("#endif")
     return "\n".join(out) + "\n"
 
@@ -222,6 +265,8 @@ def load():
         "MG_H_": defines(GAME / "scenes" / "maiya_levels.h", "MG_H_"),
         "MG_B_": defines(GAME / "scenes" / "maiya_levels.h", "MG_B_"),
         "MG_M_": defines(GAME / "scenes" / "maiya_game.c", "MG_M_"),
+        "MG_PIT_": defines(GAME / "scenes" / "maiya_game.c", "MG_PIT_"),
+        "MG_BLOCKS_": defines(GAME / "scenes" / "maiya_game.c", "MG_BLOCKS_"),
         # From the art build; before it has run the names go unchecked
         # here and the compiler checks them instead.
         "MG_D_": defines(GAME / "artbox" / "generated" / "maiya_assets.h", "MG_D_"),

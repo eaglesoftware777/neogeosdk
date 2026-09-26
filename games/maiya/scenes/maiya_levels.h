@@ -33,7 +33,7 @@
 #define MG_E_JELLYFISH 7 /* drifts on a slow current, never charges her   */
 #define MG_E_TOXICCRAB 8 /* scuttles sideways, sudden charge               */
 #define MG_E_ACIDMOTH  9 /* wide sine-wave flight, never charges          */
-#define MG_E_SEWERRAT  10 /* patrols and swings, blocks low attacks       */
+#define MG_E_DARTFROG  10 /* poison dart frog: hops, spits; never land on it */
 #define MG_E_SMOGBAT   11 /* swoops in fast from off-screen                */
 #define MG_E_POACHDRONE 12 /* hovers on patrol, fires a capture net        */
 #define MG_E_CHEMFLY   13 /* small and fast, drifts in tight loops         */

@@ -17,7 +17,7 @@ normalize their longest silhouette dimension to 86 pixels on a 96x96 canvas.
 The hero keeps a shared scale on an 80x64 canvas. Both paths preserve a
 two-pixel foot margin and one palette for the entire animation.
 
-Six valleys take their far layer and road strip from the painted panels:
+Every valley takes its far layer and road strip from its own painted panel:
 
 | Mission | Valley | Panel |
 | --- | --- | --- |
@@ -27,6 +27,13 @@ Six valleys take their far layer and road strip from the painted panels:
 | 4 | Golden Autumn Grove | blossom village |
 | 5 | Crystal Grotto | snow temple |
 | 6 | Sacred World Tree | old-growth swamp |
+| 7 | Rio Negro Works | the old plant over the swamp river |
+| 8 | Sunken Reef | the reef painting (`arena_eel.png`), a band off its foot |
+| 9 | Silver Cave | the mine painting (`arena_wyrm_0.jpg`) |
+| 10 | Golden Savanna | the hunters' camp painting (`arena_hyena.jpg`) |
+
+The poison dart frog is the small-animal sheet's green frog
+(`npc_small_animals_0.jpg`), recoloured blue by the builder.
 
 Each valley carries a second, blighted palette: the same painting with its
 hues pulled part way toward the blight and some life drained out, so

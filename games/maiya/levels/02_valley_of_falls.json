@@ -4,6 +4,9 @@
   "background": 1,
   "music": 2,
   "mechanic": "none",
+  "pit": "water",
+  "blocks": "moss",
+  "posted": "goblin",
   "gate_x": 3450,
   "key": {"x": 2052, "y": 46},
   "guardian": {
@@ -38,19 +41,19 @@
   "encounters": [
     {"x": 200, "enemy": "slime"},
     {"x": 360, "enemy": "beetle"},
-    {"x": 680, "enemy": "goblin"},
+    {"x": 680, "enemy": "dartfrog"},
     {"x": 840, "enemy": "slime"},
     {"x": 1160, "enemy": "beetle"},
-    {"x": 1480, "enemy": "goblin"},
+    {"x": 1480, "enemy": "vinesting"},
     {"x": 1640, "enemy": "slime"},
     {"x": 1960, "enemy": "beetle"},
-    {"x": 2120, "enemy": "goblin"},
+    {"x": 2120, "enemy": "dartfrog"},
     {"x": 2440, "enemy": "slime"},
     {"x": 2760, "enemy": "beetle"},
-    {"x": 2920, "enemy": "goblin"},
+    {"x": 2920, "enemy": "vinesting"},
     {"x": 3240, "enemy": "slime"},
     {"x": 3400, "enemy": "beetle"},
-    {"x": 3720, "enemy": "goblin"}
+    {"x": 3720, "enemy": "dartfrog"}
   ],
   "archers": [
     {"x": 490, "y": 112},
@@ -89,7 +92,7 @@
     {"x": 492, "y": 78, "kind": "gold"},
     {"x": 1148, "y": 74, "kind": "gold"},
     {"x": 1195, "y": 166, "kind": "flower"},
-    {"x": 2300, "y": 164, "kind": "critter"},
+    {"x": 2360, "y": 164, "kind": "critter"},
     {"x": 1855, "y": 166, "kind": "charm"},
     {"x": 648, "y": 48, "kind": "life"}
   ],

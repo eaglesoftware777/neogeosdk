@@ -4,6 +4,9 @@
   "background": 3,
   "music": 4,
   "mechanic": "crumble",
+  "pit": "fire",
+  "blocks": "autumn",
+  "posted": "drone",
   "gate_x": 3840,
   "key": {"x": 2132, "y": 42},
   "guardian": {
@@ -38,15 +41,15 @@
   "encounters": [
     {"x": 240, "enemy": "goblin"},
     {"x": 400, "enemy": "crow"},
-    {"x": 560, "enemy": "beetle"},
+    {"x": 560, "enemy": "sporegob"},
     {"x": 720, "enemy": "worm"},
     {"x": 880, "enemy": "goblin"},
     {"x": 1200, "enemy": "crow"},
-    {"x": 1360, "enemy": "beetle"},
+    {"x": 1360, "enemy": "acidmoth"},
     {"x": 1520, "enemy": "pair"},
     {"x": 1680, "enemy": "goblin"},
     {"x": 1840, "enemy": "crow"},
-    {"x": 2160, "enemy": "beetle"},
+    {"x": 2160, "enemy": "sporegob"},
     {"x": 2320, "enemy": "worm"},
     {"x": 2480, "enemy": "goblin"},
     {"x": 2640, "enemy": "crow"},
@@ -54,7 +57,7 @@
     {"x": 3120, "enemy": "worm"},
     {"x": 3280, "enemy": "goblin"},
     {"x": 3440, "enemy": "crow"},
-    {"x": 3600, "enemy": "beetle"},
+    {"x": 3600, "enemy": "acidmoth"},
     {"x": 3760, "enemy": "worm"}
   ],
   "archers": [
@@ -95,7 +98,7 @@
     {"x": 552, "y": 70, "kind": "gold"},
     {"x": 1228, "y": 70, "kind": "gold"},
     {"x": 1280, "y": 166, "kind": "flower"},
-    {"x": 2595, "y": 164, "kind": "critter"},
+    {"x": 2660, "y": 164, "kind": "critter"},
     {"x": 2010, "y": 166, "kind": "charm"},
     {"x": 728, "y": 40, "kind": "life"}
   ],
