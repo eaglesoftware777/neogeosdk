@@ -633,7 +633,7 @@ test: game-check test-precheck hash
 	$(MAME_COMMON) -output console
 
 .PHONY: test-precheck
-test-precheck: game-check
+test-precheck: game-check level-check
 	$(LOG_CTX)
 	@[ -f "$(ROM_DIR)/$(GAME_ID)-p1.p1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-p1.p1. Build first with: make all" && exit 1)
 	@[ -f "$(ROM_DIR)/$(GAME_ID)-m1.m1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-m1.m1. Build first with: make all" && exit 1)
@@ -649,6 +649,12 @@ test-build: all
 .PHONY: test-aes
 test-aes:
 	$(MAKE) PLATFORM=aes test
+
+# The game's level tables against placement rules (tools/level_check.py);
+# games without a level exporter pass straight through.  make test runs it.
+.PHONY: level-check
+level-check:
+	$(PYTHON) tools/level_check.py --game $(GAME)
 
 .PHONY: test-mvs
 test-mvs:

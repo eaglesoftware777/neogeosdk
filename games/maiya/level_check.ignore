@@ -1,0 +1,5 @@
+# Placements tools/level_check.py should accept on purpose, one per line:
+#   <level index> <pickup|secret|platform|hazard|encounter|archer|rescue|gate> <index> <rule>  # why
+# Rules: outside inside under floating overlap. The reason after '#' is
+# required. Ignored findings are still printed, and a line that no longer
+# matches anything is reported.

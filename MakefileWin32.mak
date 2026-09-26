@@ -641,7 +641,7 @@ test: game-check test-precheck hash
 	$(MAME_COMMON) -output console
 
 .PHONY: test-precheck
-test-precheck: game-check
+test-precheck: game-check level-check
 	$(LOG_CTX)
 	@if not exist $(ROM_DIR)\$(GAME_ID)-p1.p1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-p1.p1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
 	@if not exist $(ROM_DIR)\$(GAME_ID)-m1.m1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-m1.m1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
@@ -657,6 +657,11 @@ test-build: all
 .PHONY: test-aes
 test-aes:
 	$(MAKE) -f MakefileWin32.mak PLATFORM=aes GAME=$(GAME) test
+
+# The game's level tables against placement rules (see Makefile).
+.PHONY: level-check
+level-check:
+	$(PY) tools\level_check.py --game $(GAME)
 
 .PHONY: test-mvs
 test-mvs:
