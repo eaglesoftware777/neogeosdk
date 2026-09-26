@@ -1016,6 +1016,27 @@ def build():
         if not (name.startswith("jump") or name.startswith("hurt") or name == "spin"):
             maiya_frames[name] = add_shadow(maiya_frames[name])
 
+    # Poses turned a quarter at a time (exact, so no pixel is resampled),
+    # appended so no earlier frame number moves: swimming -- her run turned
+    # to lie along the water, head forward, face down, legs trailing -- and
+    # a somersault for the second jump and the rising strike.
+    def turned(frame, quarters, lift=2):
+        img = np.rot90(frame, k=-quarters).copy()
+        ys, xs = np.nonzero(img[:, :, 3])
+        out = np.zeros_like(frame)
+        if len(ys):
+            img = img[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
+            h, w = img.shape[:2]
+            h, w = min(h, out.shape[0]), min(w, out.shape[1])
+            ox = (out.shape[1] - w) // 2
+            oy = out.shape[0] - lift - h
+            out[oy:oy + h, ox:ox + w] = img[:h, :w]
+        return out
+    for k, src in enumerate(("run0", "run1", "run2")):
+        maiya_frames[f"swim{k}"] = turned(hf[src], 1, lift=10)
+    for k in range(4):
+        maiya_frames[f"flip{k}"] = turned(hf["jump2"], k, lift=2)
+
     # Fit master palette for Maiya
     hero_training = np.concatenate([f[:, :, :3][training_mask(f)] for f in maiya_frames.values()])
     hero_master = fit_palette(hero_training)
