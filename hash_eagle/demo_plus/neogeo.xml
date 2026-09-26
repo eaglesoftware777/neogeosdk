@@ -9,18 +9,18 @@
     -->
 
     <software name="demo_plus">
-        <description>NeoGeo SDK demo_plus v1.2.0 / Eagle Software</description>
+        <description>NeoGeo SDK demo_plus v1.7.0 / Eagle Software</description>
         <year>2026</year>
         <publisher>Eagle Software</publisher>
         <info name="serial" value="NGM-778 (MVS), NGH-778 (AES)"/>
-        <info name="release" value="20260101 (MVS), 20260101 (AES)"/>
+        <info name="release" value="20260914 (MVS), 20260914 (AES)"/>
         <info name="alt_title" value="Eagle SDK"/>
         <sharedfeat name="release" value="MVS,AES" />
         <sharedfeat name="compatibility" value="MVS,AES" />
         <part name="cart" interface="neo_cart">
             <feature name="slot" value="rom_fatfur2" />
             <dataarea name="maincpu" width="16" endianness="big" size="0x100000">
-                <rom loadflag="load16_word_swap" name="778-p1.p1" offset="0x000000" size="0x080000" crc="00ed1828" sha1="d208eb3552aedb033d99772c88ced4d2b230ba4c" />
+                <rom loadflag="load16_word_swap" name="778-p1.p1" offset="0x000000" size="0x080000" crc="df1c5a24" sha1="3f651d5efaf51e52723726deb08f3bcf26b56313" />
             </dataarea>
             <dataarea name="fixed" size="0x020000">
                 <rom offset="0x000000" size="0x020000" name="778-s1.s1" crc="375809b8" sha1="8e66116eeb64654ef5617b982cd5725d084653a1" />
