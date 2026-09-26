@@ -17,6 +17,7 @@
 #include "ng_particles.h"
 #include "ng_palette_fx.h"
 #include "ng_feedback.h"
+#include "ng_pause.h"
 #include "ng_depthfx.h"
 #include "ng_joystick.h"
 
@@ -117,6 +118,13 @@ static void NEOGEO_USER ng_game_engine_draw(void)
 
 void NEOGEO_USER ng_game_engine_frame(void)
 {
+    /* Paused (ng_pause): nothing moves -- no timers, characters, palette
+     * effects, particles or camera -- but the input is still read. */
+    if (ng_freeze.paused) {
+        ng_joystick_update();
+        return;
+    }
+
     ng_game_time_tick();
     ng_joystick_update();
 
@@ -124,9 +132,10 @@ void NEOGEO_USER ng_game_engine_frame(void)
      * Hitstop, for a game that opts in: the world holds still for the few
      * frames of a heavy blow -- no logic, timers, physics or character
      * movement -- while the screen keeps drawing (so a shake still shows)
-     * and the hitstop counter runs down.
+     * and the hitstop counter runs down. Slow motion holds it the same way
+     * on every other frame (both are ng_pause's freeze).
      */
-    if (ng_hitstop_freeze && ng_feedback_is_hitstop()) {
+    if (ng_hitstop_freeze && NG_FREEZE_LOGIC()) {
         ng_game_engine_draw();
         ng_palette_fx_update();
         ng_feedback_update();
