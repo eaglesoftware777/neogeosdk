@@ -125,7 +125,6 @@ void NEOGEO_USER ng_game_engine_frame(void)
         return;
     }
 
-    ng_game_time_tick();
     ng_joystick_update();
 
     /*
@@ -143,6 +142,7 @@ void NEOGEO_USER ng_game_engine_frame(void)
         return;
     }
 
+    ng_game_time_tick();   /* after the hitstop: game time holds through one too */
     if (ng_before_logic) ng_before_logic();
 
     ng_timers_update();
