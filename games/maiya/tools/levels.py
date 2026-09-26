@@ -136,6 +136,12 @@ class Stage:
 
         s["platforms"] = [(self.num(p, "x", w, 1, width), self.num(p, "y", w, 0, 223), self.num(p, "w", w, 16, 1024))
                           for w, p in self.rows("platforms", "MG_PLATFORM_COUNT")]
+        s["rotten"] = 0
+        for i, (w, p) in enumerate(self.rows("platforms", "MG_PLATFORM_COUNT")):
+            if p.get("rotten", False) not in (True, False):
+                self.fail(f"{w}.rotten", "is true or false")
+            if p.get("rotten", False):
+                s["rotten"] |= 1 << i
         s["encounters"] = [(self.num(e, "x", w, 1, width), self.name(e, "enemy", w, "enemy", "MG_E_"))
                            for w, e in self.rows("encounters", "MG_ENCOUNTER_COUNT")]
         s["archers"] = [(self.num(a, "x", w, 1, width), self.num(a, "y", w, 0, 223))
@@ -233,7 +239,7 @@ def render(stages, files):
                     f"{tuples(s['hazards'], 3)}, "
                     f"{{{','.join(str(x) for x, _ in s['rescues']) or '0'}}}, "
                     f"{{{','.join(str(t) for _, t in s['rescues']) or '0'}}}, "
-                    f"{tuples(s['secrets'], 3)}}}")
+                    f"{tuples(s['secrets'], 3)}, 0x{s['rotten']:04X}u}}")
     out.append(table("MG_LEVELS_TABLE", rows))
     out.append(table("MG_DECOR_TABLE", [tuples(s["decor"], 3) for s in stages]))
     out.append(table("MG_VINES_TABLE", [tuples(s["vines"], 3) for s in stages]))

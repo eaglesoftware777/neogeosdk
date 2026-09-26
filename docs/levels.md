@@ -56,6 +56,8 @@ git), whose initialisers `maiya_levels.h` builds the stage tables from.
 Coordinates are world pixels: x from the stage's left edge, y from the top
 of the screen (the road is at y 192). A platform's y is the surface she
 stands on; pickups and secrets are placed by their top-left corner.
+A platform marked `"rotten": true` is drawn greyed and gives way under her:
+it trembles, drops out of sight and grows back a while later.
 
 Names stand for the game's constants, lower case without the prefix:
 

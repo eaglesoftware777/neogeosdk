@@ -103,6 +103,7 @@ typedef struct {
     uint16_t rescue_x[MG_RESCUE_COUNT];    /* locations of friendly allies to rescue */
     uint8_t  rescue_type[MG_RESCUE_COUNT]; /* 0: Elder, 1: Maiden, 2: Spirit, 3: Sunboy */
     MGSecret secrets[MG_SECRET_COUNT];
+    uint16_t rotten;         /* bit i: platform i is rotten (it gives way under her) */
 } MGLevel;
 
 /*

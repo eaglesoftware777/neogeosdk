@@ -12,7 +12,7 @@
   "guardian": {
     "name": "LORD SMOGGAR",
     "style": "smoggar",
-    "hp": 32,
+    "hp": 7,
     "hint": "SMOGGAR'S CORE OPENS AS IT ROARS",
     "taunt": "I DRINK THE WORLD TREE DRY FOR POWER!",
     "reply": "ITS ROOTS RUN DEEPER THAN YOUR GREED!"
@@ -23,19 +23,19 @@
   "platforms": [
     {"x": 320, "y": 144, "w": 96},
     {"x": 560, "y": 104, "w": 80},
-    {"x": 800, "y": 64, "w": 96},
+    {"x": 800, "y": 64, "w": 96, "rotten": true},
     {"x": 1040, "y": 144, "w": 96},
     {"x": 1280, "y": 104, "w": 80},
-    {"x": 1520, "y": 64, "w": 96},
+    {"x": 1520, "y": 64, "w": 96, "rotten": true},
     {"x": 1760, "y": 144, "w": 96},
     {"x": 2000, "y": 104, "w": 80},
-    {"x": 2240, "y": 64, "w": 96},
+    {"x": 2240, "y": 64, "w": 96, "rotten": true},
     {"x": 2480, "y": 144, "w": 96},
     {"x": 2720, "y": 104, "w": 80},
-    {"x": 2960, "y": 64, "w": 96},
+    {"x": 2960, "y": 64, "w": 96, "rotten": true},
     {"x": 3200, "y": 144, "w": 96},
     {"x": 3440, "y": 104, "w": 80},
-    {"x": 3700, "y": 64, "w": 96},
+    {"x": 3700, "y": 64, "w": 96, "rotten": true},
     {"x": 4300, "y": 144, "w": 96}
   ],
   "encounters": [
@@ -98,7 +98,7 @@
   "pickups": [
     {"x": 260, "y": 168, "kind": "silver"},
     {"x": 1151, "y": 168, "kind": "spring"},
-    {"x": 1990, "y": 168, "kind": "crown"},
+    {"x": 1990, "y": 168, "kind": "veil"},
     {"x": 2855, "y": 168, "kind": "silver"},
     {"x": 592, "y": 70, "kind": "gold"},
     {"x": 1328, "y": 70, "kind": "gold"},

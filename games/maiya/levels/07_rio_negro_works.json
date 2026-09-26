@@ -12,7 +12,7 @@
   "guardian": {
     "name": "IRON VULTURE",
     "style": "vulture",
-    "hp": 30,
+    "hp": 6,
     "hint": "THE VULTURE FALLS, THEN SMOGGAR",
     "taunt": "I BUILT THIS PLANT TO CHOKE YOUR RIVER!",
     "reply": "YOUR SMOKE ENDS HERE, IRON VULTURE!"
@@ -99,7 +99,7 @@
   "pickups": [
     {"x": 260, "y": 168, "kind": "silver"},
     {"x": 1100, "y": 168, "kind": "spring"},
-    {"x": 1925, "y": 168, "kind": "crown"},
+    {"x": 1925, "y": 168, "kind": "veil"},
     {"x": 2780, "y": 168, "kind": "silver"},
     {"x": 552, "y": 70, "kind": "gold"},
     {"x": 1252, "y": 70, "kind": "gold"},
