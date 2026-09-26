@@ -16,7 +16,9 @@ SHELL = $(COMSPEC)
 # Usage: make -f MakefileWin32.mak GAME=helloworld p1
 #        make -f MakefileWin32.mak GAME=tutorial p1
 #        make -f MakefileWin32.mak GAME=neogeogame p1
-GAME_CFG_FILE ?= game.cfg
+ifeq ($(origin GAME_CFG_FILE),undefined)
+GAME_CFG_FILE := $(if $(strip $(GAME)),$(or $(wildcard games/$(GAME)/game.cfg),game.cfg),game.cfg)
+endif
 -include $(GAME_CFG_FILE)
 ifeq ($(strip $(GAME)),)
   ifneq ($(strip $(CURRENT_GAME)),)
@@ -96,7 +98,7 @@ else
   ENGINE_DIR  := sdk\2d_engine
   ENGINE_EXT  := c
   ENGINE_CC   := $(CC)
-  CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox $(GAME_EXTRA_INCLUDES) -Wa,-march=68000,-mcpu=68000,-W,--warn
+  CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox $(GAME_EXTRA_INCLUDES) $(GAME_ENGINE_DEFINES) -Wa,-march=68000,-mcpu=68000,-W,--warn
   CXXFLAGS= $(CFLAGS)
 endif
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
@@ -119,6 +121,7 @@ OBJCP=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-objcopy.exe
 OBJDUMP=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-objdump.exe
 GDB=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-gdb.exe
 NM=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-nm.exe
+AR=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-ar.exe
 READELF=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-readelf.exe
 ADDR2LINE=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-addr2line.exe
 SIZE=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-size.exe
@@ -142,7 +145,35 @@ SCAT=$(REPO_WIN)\win\srec_cat.exe
 INFO=$(REPO_WIN)\win\xxd.exe -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
-NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_vram0.o out\ng_sprite_window0.o out\ng_art_asset0.o out\ng_palette_assets0.o out\ng_bg0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o out\ng_scene0.o out\ng_depthfx0.o out\ng_render_queue0.o out\ng_fixed0.o out\ng_camera0.o out\ng_palette_fx0.o out\ng_particles0.o out\ng_feedback0.o out\ng_debug0.o out\ng_joystick0.o out\ng_demo_advanced0.o
+# GAME_ENGINE_EXCLUDE (see Makefile): engine modules a game links as their
+# do-nothing stand-ins, sdk/2d_engine/<module>_none.c.  C engine only.
+GAME_ENGINE_EXCLUDE ?=
+# GAME_ENGINE_DEFINES (see Makefile): -D switches for optional engine code,
+# passed to the engine and the game alike.  C engine only.
+GAME_ENGINE_DEFINES ?=
+# GAME_OPTIMIZE (see Makefile): a GCC level, such as -O2, for the engine,
+# the SDK library and the game's scenes; the start-up sources stay -O0.
+GAME_OPTIMIZE ?=
+# GAME_LEVEL_BUILDER (see Makefile): the script that turns a game's stage
+# files into the header its scenes include; run before compiling.
+GAME_LEVEL_BUILDER ?=
+NG_ENGINE_STUBBED=ng_particles
+ifneq ($(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)),)
+$(error GAME_ENGINE_EXCLUDE: no stand-in for $(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)))
+endif
+ifeq ($(USE_2D_PLUS),1)
+NG_ENGINE_EXCLUDED=
+else
+NG_ENGINE_EXCLUDED=$(filter $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE))
+endif
+ng_engine_mod=$(if $(filter $(1),$(NG_ENGINE_EXCLUDED)),$(1)_none,$(1))
+# ng_rand (C engine only): the one random generator, ng_depthfx included
+ifeq ($(USE_2D_PLUS),1)
+NG_RAND_OBJ0=
+else
+NG_RAND_OBJ0=out\ng_rand0.o
+endif
+NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_vram0.o out\ng_sprite_window0.o out\ng_art_asset0.o out\ng_palette_assets0.o out\ng_bg0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o out\ng_scene0.o out\ng_depthfx0.o out\ng_render_queue0.o out\ng_fixed0.o out\ng_camera0.o out\ng_palette_fx0.o out\$(call ng_engine_mod,ng_particles)0.o out\ng_feedback0.o out\ng_debug0.o out\ng_joystick0.o out\ng_demo_advanced0.o $(NG_RAND_OBJ0)
 # A game.mk may set GAME_SCENES_FROM to other game names; each scene is looked
 # for in this game's scenes directory first and in those after, so a game can
 # reuse another game's scene sources without copying them.
@@ -151,6 +182,12 @@ GAME_SCENE_DIRS := games/$(GAME)/scenes $(foreach g,$(GAME_SCENES_FROM),games/$(
 GAME_SCENE_SRCS := $(foreach s,$(GAME_SCENES),$(firstword $(wildcard $(addsuffix /$(s).c,$(GAME_SCENE_DIRS)))))
 GAME_SCENE_OBJS := $(addprefix out/,$(addsuffix 0.o,$(GAME_SCENES)))
 NG_FIX_SDK_OBJ0=out\ng_fix_sdk0.o
+# SDK modules linked only if a game calls them (sdk/cabinet, ng_trig), from
+# a library at the end of the link (see Makefile).
+SDK_LIB_SRCS=$(wildcard sdk/cabinet/*.c) sdk/2d_engine/ng_trig.c sdk/2d_engine/ng_trig_table.c \
+             $(if $(filter 1,$(USE_2D_PLUS)),,sdk/2d_engine/ng_pause.c sdk/2d_engine/ng_move.c)
+SDK_LIB_OBJ0=$(addprefix out/lib_,$(addsuffix 0.o,$(notdir $(basename $(SDK_LIB_SRCS)))))
+SDK_LIB=out/libng_sdk.a
 
 ifeq ($(DEBUG),1)
 CFLAGS += -g3 -gdwarf-2 -DNG_DEBUG=1
@@ -178,11 +215,19 @@ HASHPATH:=$(REPO_WIN)\hash_eagle\$(GAME);$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
 # under the Universe BIOS, which skips the self-test - so
 #   make test BIOS=unibios40
 # boots straight into the cart if you would rather not sit through it.
-BIOS?=euro
+# Experimental EagleBIOS option: 0 = disabled (default, uses stock BIOS), 1 = enabled
+USE_EAGLE_BIOS ?= 0
+ifeq ($(USE_EAGLE_BIOS),1)
+ROMPATH ?= $(REPO_WIN)\bios\test_roms;$(REPO_WIN)\roms
+override BIOS = $(if $(filter aes,$(PLATFORM)),asia,euro)
+else
+ROMPATH ?= $(REPO_WIN)\roms
+BIOS ?= $(if $(filter aes,$(PLATFORM)),asia,euro)
+endif
 ROM_DIR = roms\$(GAME)
 DUMP_DIR = dump\$(GAME)
 MAME_PLAYBACK ?= -noautoframeskip -frameskip 0
-MAME_COMMON=$(MAME) neogeo -rompath $(REPO_WIN)\roms -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME) $(MAME_PLAYBACK)
+MAME_COMMON=$(MAME) $(if $(filter aes,$(PLATFORM)),aes,neogeo) -rompath "$(ROMPATH)" -hashpath "$(HASHPATH)" -bios $(BIOS) -cart1 $(GAME) $(MAME_PLAYBACK)
 LOG_CTX=@echo [neogeosdk] target=$@ game=$(GAME) game_id=$(GAME_ID) platform=$(PLATFORM) rom_dir=$(ROM_DIR) hashpath=$(HASHPATH)
 
 # PLATFORM: mvs (default) or aes
@@ -196,6 +241,7 @@ PLATFORM_CFLAGS=-DNG_AES=1
 endif
 
 .DEFAULT_GOAL := p1
+.NOTPARALLEL: all bios-package
 
 .PHONY: game-check
 game-check:
@@ -204,6 +250,62 @@ game-check:
 .PHONY: all
 all: game-check art sfix sound p1
 	$(LOG_CTX)
+
+.PHONY: eagle-bios bios-package
+eagle-bios:
+	$(PY) bios\tools\build.py --cc "$(CC)" --wlaz80 "$(WLAZ80)" --wlalink "$(WLALINK)" --install bios\test_roms
+
+ifeq ($(USE_EAGLE_BIOS),1)
+p1 test-precheck: eagle-bios
+endif
+
+bios-package: all hash eagle-bios
+	$(PY) bios\tools\build.py --no-build --game "$(GAME)" --game-id "$(GAME_ID)" --package "dist\$(GAME)-eagle-bios.zip"
+
+# All games known to the SDK (anything with a games/<name>/game.mk), so a
+# new game shows up in these targets and in tools\game_menu.py and
+# tools\sdk_gui.py automatically. See also: games-list.
+GAMES := $(patsubst games/%/game.mk,%,$(wildcard games/*/game.mk))
+
+# Chained with && so the whole line stops at the first failure, same as
+# `set -e` does on Linux; avoids a batch FOR loop's %-escaping entirely.
+.PHONY: all-games
+all-games:
+	$(foreach g,$(GAMES),echo == Building $(g) == && $(MAKE) -f MakefileWin32.mak all GAME=$(g) &&) echo all-games: done.
+
+.PHONY: dist-all
+dist-all:
+	$(foreach g,$(GAMES),echo == Packaging $(g) for MAME == && $(MAKE) -f MakefileWin32.mak bios-package GAME=$(g) &&) echo dist-all: done.
+
+# MAME install/run/menu/gui helpers -- see tools\mame_launcher.py,
+# tools\game_menu.py and tools\sdk_gui.py. install-mame/run-mame need a
+# dist zip already built (make bios-package GAME=<name> or make dist-all).
+.PHONY: install-mame
+install-mame:
+	$(PY) tools\mame_launcher.py install --game $(GAME)
+
+.PHONY: install-mame-all
+install-mame-all:
+	$(PY) tools\mame_launcher.py install --game all
+
+.PHONY: run-mame
+run-mame:
+	$(PY) tools\mame_launcher.py run --game $(GAME) --platform $(PLATFORM)
+
+.PHONY: test-menu
+test-menu:
+	$(PY) tools\game_menu.py
+
+.PHONY: gui
+gui:
+	$(PY) tools\sdk_gui.py
+
+# Maiya-specific: edit per-valley enemy recolours and boss-recolour tints
+# (games\maiya\artbox\palette_config.json) without touching Python, then
+# rebuild the game's art in one click. See games\maiya\tools\maiya_palette_studio.py.
+.PHONY: maiya-palette-studio
+maiya-palette-studio:
+	$(PY) games\maiya\tools\maiya_palette_studio.py
 
 .PHONY: aes
 aes:
@@ -219,44 +321,52 @@ p1: game-check game $(GAME_ID)-p1.p1
 
 game: game-check
 	$(LOG_CTX)
+ifneq ($(strip $(GAME_LEVEL_BUILDER)),)
+	$(PY) $(GAME_LEVEL_BUILDER)
+endif
 	$(GAME_CC) $(GAME_CFLAGS) $(PLATFORM_CFLAGS) $(GAME_NEOGEO_C) -o out\neogeo0.o
 	$(GAME_CC) $(GAME_CFLAGS) $(PLATFORM_CFLAGS) games\$(GAME)\user.c -o out\user0.o
 	$(GAME_CC) $(GAME_CFLAGS) games\$(GAME)\main.c -o out\main0.o
 	$(GAME_CC) $(GAME_CFLAGS) sdk\neogeolib.c -o out\neogeolib0.o
 	$(GAME_CC) $(GAME_CFLAGS) sdk\ng_fix\ng_fix.c -o out\ng_fix_sdk0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_defs.$(ENGINE_EXT) -o out\ng_defs0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_properties.$(ENGINE_EXT) -o out\ng_properties0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_game_time.$(ENGINE_EXT) -o out\ng_game_time0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_timers.$(ENGINE_EXT) -o out\ng_timers0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_progress.$(ENGINE_EXT) -o out\ng_progress0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_status.$(ENGINE_EXT) -o out\ng_status0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_game_events.$(ENGINE_EXT) -o out\ng_game_events0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_level.$(ENGINE_EXT) -o out\ng_level0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_vram.$(ENGINE_EXT) -o out\ng_vram0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_sprite_window.$(ENGINE_EXT) -o out\ng_sprite_window0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_art_asset.$(ENGINE_EXT) -o out\ng_art_asset0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_palette_assets.$(ENGINE_EXT) -o out\ng_palette_assets0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_bg.$(ENGINE_EXT) -o out\ng_bg0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_fix.$(ENGINE_EXT) -o out\ng_fix0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_sprite_group.$(ENGINE_EXT) -o out\ng_sprite_group0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_actions.$(ENGINE_EXT) -o out\ng_actions0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_chars.$(ENGINE_EXT) -o out\ng_chars0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_npcs.$(ENGINE_EXT) -o out\ng_npcs0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_physics.$(ENGINE_EXT) -o out\ng_physics0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_border_constraints.$(ENGINE_EXT) -o out\ng_border_constraints0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_game_interupt.$(ENGINE_EXT) -o out\ng_game_interupt0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_scene.$(ENGINE_EXT) -o out\ng_scene0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_depthfx.$(ENGINE_EXT) -o out\ng_depthfx0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_render_queue.$(ENGINE_EXT) -o out\ng_render_queue0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_fixed.$(ENGINE_EXT) -o out\ng_fixed0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_camera.$(ENGINE_EXT) -o out\ng_camera0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_palette_fx.$(ENGINE_EXT) -o out\ng_palette_fx0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_particles.$(ENGINE_EXT) -o out\ng_particles0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_feedback.$(ENGINE_EXT) -o out\ng_feedback0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_debug.$(ENGINE_EXT) -o out\ng_debug0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_joystick.$(ENGINE_EXT) -o out\ng_joystick0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_demo_advanced.$(ENGINE_EXT) -o out\ng_demo_advanced0.o
-	$(foreach src,$(GAME_SCENE_SRCS),$(GAME_CC) $(GAME_CFLAGS) $(src) -o out/$(notdir $(basename $(src)))0.o &&) rem scenes compiled
+	$(PY) tools\gen_trig.py --out sdk\2d_engine\ng_trig_table.c
+	$(foreach src,$(SDK_LIB_SRCS),$(CC) $(CFLAGS) $(GAME_OPTIMIZE) $(src) -o out/lib_$(notdir $(basename $(src)))0.o &&) rem sdk library compiled
+	if exist out\libng_sdk.a del out\libng_sdk.a
+	$(AR) rcs $(SDK_LIB) $(SDK_LIB_OBJ0)
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_defs.$(ENGINE_EXT) -o out\ng_defs0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_properties.$(ENGINE_EXT) -o out\ng_properties0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_game_time.$(ENGINE_EXT) -o out\ng_game_time0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_timers.$(ENGINE_EXT) -o out\ng_timers0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_progress.$(ENGINE_EXT) -o out\ng_progress0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_status.$(ENGINE_EXT) -o out\ng_status0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_game_events.$(ENGINE_EXT) -o out\ng_game_events0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_level.$(ENGINE_EXT) -o out\ng_level0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_vram.$(ENGINE_EXT) -o out\ng_vram0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_sprite_window.$(ENGINE_EXT) -o out\ng_sprite_window0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_art_asset.$(ENGINE_EXT) -o out\ng_art_asset0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_palette_assets.$(ENGINE_EXT) -o out\ng_palette_assets0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_bg.$(ENGINE_EXT) -o out\ng_bg0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_fix.$(ENGINE_EXT) -o out\ng_fix0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_sprite_group.$(ENGINE_EXT) -o out\ng_sprite_group0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_actions.$(ENGINE_EXT) -o out\ng_actions0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_chars.$(ENGINE_EXT) -o out\ng_chars0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_npcs.$(ENGINE_EXT) -o out\ng_npcs0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_physics.$(ENGINE_EXT) -o out\ng_physics0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_border_constraints.$(ENGINE_EXT) -o out\ng_border_constraints0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_game_interupt.$(ENGINE_EXT) -o out\ng_game_interupt0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_scene.$(ENGINE_EXT) -o out\ng_scene0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_depthfx.$(ENGINE_EXT) -o out\ng_depthfx0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_render_queue.$(ENGINE_EXT) -o out\ng_render_queue0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_fixed.$(ENGINE_EXT) -o out\ng_fixed0.o
+	$(if $(NG_RAND_OBJ0),$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_rand.$(ENGINE_EXT) -o $(NG_RAND_OBJ0))
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_camera.$(ENGINE_EXT) -o out\ng_camera0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_palette_fx.$(ENGINE_EXT) -o out\ng_palette_fx0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\$(call ng_engine_mod,ng_particles).$(ENGINE_EXT) -o out\$(call ng_engine_mod,ng_particles)0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_feedback.$(ENGINE_EXT) -o out\ng_feedback0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_debug.$(ENGINE_EXT) -o out\ng_debug0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_joystick.$(ENGINE_EXT) -o out\ng_joystick0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_demo_advanced.$(ENGINE_EXT) -o out\ng_demo_advanced0.o
+	$(foreach src,$(GAME_SCENE_SRCS),$(GAME_CC) $(GAME_CFLAGS) $(GAME_OPTIMIZE) $(src) -o out/$(notdir $(basename $(src)))0.o &&) rem scenes compiled
 	$(GAME_CC) $(GAME_CFLAGS) games\$(GAME)\eyecatcher.c -o out\eyecatcher0.o
 	$(OBJCP) $(STRIP_SECTS) out\neogeo0.o out\neogeo.o
 	$(OBJCP) $(STRIP_SECTS) out\user0.o out\user.o
@@ -266,7 +376,7 @@ game: game-check
 	@rem The linker script places sections by object file name (out/ng_*0.o),
 	@rem so the objects must reach ld spelled with forward slashes or those
 	@rem patterns never match and the tables land elsewhere in the ROM.
-	$(LD) $(LDFLAGS) -T games/$(GAME)/neogeo.ld -o out/game out/neogeo.o out/user.o out/main.o out/neogeolib.o out/eyecatcher.o $(subst \,/,$(NG_FIX_SDK_OBJ0)) $(subst \,/,$(NG_ENGINE_OBJ0)) $(GAME_SCENE_OBJS)
+	$(LD) $(LDFLAGS) -T games/$(GAME)/neogeo.ld -o out/game out/neogeo.o out/user.o out/main.o out/neogeolib.o out/eyecatcher.o $(subst \,/,$(NG_FIX_SDK_OBJ0)) $(subst \,/,$(NG_ENGINE_OBJ0)) $(GAME_SCENE_OBJS) $(SDK_LIB)
 
 $(GAME_ID)-p1.p1: game
 	$(OBJCP) -O ihex out\game out\game0
@@ -277,6 +387,12 @@ $(GAME_ID)-p1.p1: game
 	if not exist $(ROM_DIR) mkdir $(ROM_DIR)
 	copy /Y out\$(GAME_ID)-p1.p1 $(ROM_DIR)\$(GAME_ID)-p1.p1
 	set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) hash_eagle\gen_hash.py
+	$(PY) tools\rom_budget.py --game $(GAME) --id $(GAME_ID) --rom-dir $(ROM_DIR) --cfg $(GAME_CFG_FILE) --check
+
+# Bytes each ROM uses against the BUDGET_* keys in the game's game.cfg.
+.PHONY: budget
+budget: game-check
+	$(PY) tools\rom_budget.py --game $(GAME) --id $(GAME_ID) --rom-dir $(ROM_DIR) --cfg $(GAME_CFG_FILE)
 
 .PHONY: hash
 hash:
@@ -346,6 +462,9 @@ sound-all: sound
 .PHONY: sfix
 sfix: game-check
 	$(LOG_CTX)
+ifneq ($(strip $(GAME_ART_BUILDER)),)
+	$(PY) $(GAME_ART_BUILDER) --fix-only
+else
 	if not exist games\$(GAME)\artbox mkdir games\$(GAME)\artbox
 	cd games\$(GAME)\artbox && set ARTBOX_DATA_DIR=$(REPO_WIN)\games\$(GAME)\artbox&& set ARTBOX_INFIX_DIR=$(REPO_WIN)\games\$(or $(GAME_ART_FROM),$(GAME))\artbox\infix&& set GAME=$(GAME)&& set GAME_ID=$(GAME_ID)&& $(PY) $(REPO_WIN)\artbox\romdbfiximport.py && $(PY) $(REPO_WIN)\artbox\fixtiles.py && call $(REPO_WIN)\artbox\romfx.bat
 	$(PY) tools\verify_sfix_output.py --root "$(CURDIR)" --game "$(GAME)" --game-id "$(GAME_ID)"
@@ -356,6 +475,7 @@ sfix: game-check
 	copy /Y games\$(GAME)\artbox\$(GAME_ID)-s1.s1 $(ROM_DIR)\$(GAME_ID)-s1.s1
 	copy /Y games\$(GAME)\artbox\$(GAME_ID)-c1.c1 $(ROM_DIR)\$(GAME_ID)-c1.c1
 	copy /Y games\$(GAME)\artbox\$(GAME_ID)-c2.c2 $(ROM_DIR)\$(GAME_ID)-c2.c2
+endif
 
 .PHONY: srom
 srom: sfix
@@ -392,6 +512,9 @@ art-clean:
 # nearest-neighbour-against-global-palette path.
 art: game-check
 	$(LOG_CTX)
+ifneq ($(strip $(GAME_ART_BUILDER)),)
+	$(PY) $(GAME_ART_BUILDER)
+else
 	set ARTBOX_TILE=1&& set GAME_ID=$(GAME_ID)&& set GAME_ART_FROM=$(GAME_ART_FROM)&& call artbox\makeartbox.bat $(GAME)
 	$(PY) tools\verify_artbox_palettes.py --root "$(CURDIR)" --game "$(GAME)"
 	if exist artbox\assets.cfg del /Q artbox\assets.cfg
@@ -409,6 +532,7 @@ art: game-check
 	if exist artbox\screens.c del /Q artbox\screens.c
 	if exist artbox\sprite_meta.h del /Q artbox\sprite_meta.h
 	if exist artbox\__pycache__ rmdir /S /Q artbox\__pycache__
+endif
 
 # art-crt: same as `art` but exports ARTBOX_CRT=1 so romdbimgimport routes
 # screen conversions through artbox\img2neo_crt.py (CIE-Lab quantisation +
@@ -416,6 +540,9 @@ art: game-check
 .PHONY: art-crt
 art-crt: game-check
 	$(LOG_CTX)
+ifneq ($(strip $(GAME_ART_BUILDER)),)
+	$(PY) $(GAME_ART_BUILDER)
+else
 	set ARTBOX_CRT=1&& set GAME_ID=$(GAME_ID)&& set GAME_ART_FROM=$(GAME_ART_FROM)&& call artbox\makeartbox.bat $(GAME)
 	$(PY) tools\verify_artbox_palettes.py --root "$(CURDIR)" --game "$(GAME)"
 	if exist artbox\assets.cfg del /Q artbox\assets.cfg
@@ -433,6 +560,7 @@ art-crt: game-check
 	if exist artbox\screens.c del /Q artbox\screens.c
 	if exist artbox\sprite_meta.h del /Q artbox\sprite_meta.h
 	if exist artbox\__pycache__ rmdir /S /Q artbox\__pycache__
+endif
 
 .PHONY: dist
 dist: game-check all
@@ -523,7 +651,7 @@ test: game-check test-precheck hash
 	$(MAME_COMMON) -output console
 
 .PHONY: test-precheck
-test-precheck: game-check
+test-precheck: game-check level-check
 	$(LOG_CTX)
 	@if not exist $(ROM_DIR)\$(GAME_ID)-p1.p1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-p1.p1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
 	@if not exist $(ROM_DIR)\$(GAME_ID)-m1.m1 (echo ERROR: missing $(ROM_DIR)\$(GAME_ID)-m1.m1. Build first with: make -f MakefileWin32.mak all & exit /b 1)
@@ -539,6 +667,11 @@ test-build: all
 .PHONY: test-aes
 test-aes:
 	$(MAKE) -f MakefileWin32.mak PLATFORM=aes GAME=$(GAME) test
+
+# The game's level tables against placement rules (see Makefile).
+.PHONY: level-check
+level-check:
+	$(PY) tools\level_check.py --game $(GAME)
 
 .PHONY: test-mvs
 test-mvs:
@@ -604,6 +737,17 @@ menu:
 	@echo.
 	@echo Packaging:
 	@echo   make -f MakefileWin32.mak dist
+	@echo   make -f MakefileWin32.mak bios-package GAME^=demo      (build + zip, ready for MAME)
+	@echo   make -f MakefileWin32.mak all-games                    (build every game under games\)
+	@echo   make -f MakefileWin32.mak dist-all                     (bios-package every game under games\)
+	@echo.
+	@echo MAME install/test:
+	@echo   make -f MakefileWin32.mak install-mame GAME^=demo      (copy a built dist zip into your MAME install)
+	@echo   make -f MakefileWin32.mak install-mame-all             (same, for every packaged game)
+	@echo   make -f MakefileWin32.mak run-mame GAME^=demo          (launch an installed game in MAME)
+	@echo   make -f MakefileWin32.mak test-menu                    (interactive text menu for the above)
+	@echo   make -f MakefileWin32.mak gui                          (desktop control panel for the same tasks)
+	@echo   make -f MakefileWin32.mak maiya-palette-studio         (edit maiya's enemy/boss recolour palettes)
 	@echo.
 	@echo Utilities:
 	@echo   make -f MakefileWin32.mak games-list

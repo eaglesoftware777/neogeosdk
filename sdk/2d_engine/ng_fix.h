@@ -18,6 +18,8 @@ void NEOGEO_USER ng_fix_clear(void);
 void NEOGEO_USER ng_fix_clear_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t pal);
 void NEOGEO_USER ng_fix_putc(uint8_t x, uint8_t y, char ch, uint8_t pal);
 void NEOGEO_USER ng_fix_puts(uint8_t x, uint8_t y, const char *text, uint8_t pal);
+/* Any FIX tile by its full 12-bit number (tiles 256..4095 included). */
+void NEOGEO_USER ng_fix_put_tile(uint8_t x, uint8_t y, uint16_t tile, uint8_t pal);
 void NEOGEO_USER ng_fix_put_u16(uint8_t x, uint8_t y, uint16_t value, uint8_t pal, uint16_t tile_offset);
 void NEOGEO_USER ng_fix_put_u32(uint8_t x, uint8_t y, uint32_t value, uint8_t pal, uint16_t tile_offset);
 

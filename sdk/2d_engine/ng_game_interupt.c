@@ -17,6 +17,7 @@
 #include "ng_particles.h"
 #include "ng_palette_fx.h"
 #include "ng_feedback.h"
+#include "ng_pause.h"
 #include "ng_depthfx.h"
 #include "ng_joystick.h"
 
@@ -91,11 +92,57 @@ void NEOGEO_USER ng_game_interupt_set_hooks(
     );
 }
 
+static uint8_t ng_hitstop_freeze = 0;
+
+void NEOGEO_USER ng_game_engine_set_hitstop_freeze(uint8_t on)
+{
+    ng_hitstop_freeze = on ? 1u : 0u;
+}
+
+/* Everything that puts the frame on screen, shared by a normal frame and a
+ * frozen hitstop frame. */
+static void NEOGEO_USER ng_game_engine_draw(void)
+{
+    if (ng_before_draw) ng_before_draw();
+
+    {
+        const NGLevelState *_level = level_state();
+        int16_t _cam_x = _level ? _level->scroll_x : 0;
+        int16_t _cam_y = _level ? _level->scroll_y : 0;
+        ng_bg_draw(_cam_x, _cam_y);
+    }
+    ng_chars_draw();
+
+    if (ng_after_draw) ng_after_draw();
+}
+
 void NEOGEO_USER ng_game_engine_frame(void)
 {
-    ng_game_time_tick();
+    /* Paused (ng_pause): nothing moves -- no timers, characters, palette
+     * effects, particles or camera -- but the input is still read. */
+    if (ng_freeze.paused) {
+        ng_joystick_update();
+        return;
+    }
+
     ng_joystick_update();
 
+    /*
+     * Hitstop, for a game that opts in: the world holds still for the few
+     * frames of a heavy blow -- no logic, timers, physics or character
+     * movement -- while the screen keeps drawing (so a shake still shows)
+     * and the hitstop counter runs down. Slow motion holds it the same way
+     * on every other frame (both are ng_pause's freeze).
+     */
+    if (ng_hitstop_freeze && NG_FREEZE_LOGIC()) {
+        ng_game_engine_draw();
+        ng_palette_fx_update();
+        ng_feedback_update();
+        ng_render_queue_flush();
+        return;
+    }
+
+    ng_game_time_tick();   /* after the hitstop: game time holds through one too */
     if (ng_before_logic) ng_before_logic();
 
     ng_timers_update();
@@ -114,17 +161,7 @@ void NEOGEO_USER ng_game_engine_frame(void)
 
     ng_progress_update();
 
-    if (ng_before_draw) ng_before_draw();
-
-    {
-        const NGLevelState *_level = level_state();
-        int16_t _cam_x = _level ? _level->scroll_x : 0;
-        int16_t _cam_y = _level ? _level->scroll_y : 0;
-        ng_bg_draw(_cam_x, _cam_y);
-    }
-    ng_chars_draw();
-
-    if (ng_after_draw) ng_after_draw();
+    ng_game_engine_draw();
 
     ng_particles_update();
     ng_palette_fx_update();

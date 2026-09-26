@@ -97,6 +97,49 @@ void NEOGEO_USER ng_palfx_stop(uint8_t palette_slot);
 /* Query: is any effect active on this slot? */
 uint8_t NEOGEO_USER ng_palfx_active(uint8_t palette_slot);
 
+#if NG_PALFX_SCREEN
+/*
+ * The screen: every palette bank a game uses, faded as one.
+ *
+ * Built in only for a game whose game.mk sets
+ *   GAME_ENGINE_DEFINES = -DNG_PALFX_SCREEN=1
+ * (C engine). The game lends two buffers of count * 16 words, for banks
+ * 0 .. count-1: the colours as loaded and the colours to show. From then
+ * on it loads those banks with ng_palfx_screen_load() instead of writing
+ * palette RAM, the effects above on those banks land in the same place,
+ * and the lot reaches palette RAM in one piece from ng_palfx_vblank(),
+ * called first thing after each vertical blank begins.
+ *
+ * A fade takes every bank toward white or black together: level 0 is the
+ * true colours, 16 all white (or black). A bank loaded while the screen is
+ * faded comes up at the fade's level, so a scene set up behind a white-out
+ * rises out of it in one piece. While faded, the dark bit is dropped.
+ * The fade moves once per ng_palette_fx_update(), which the engine frame
+ * runs; a game looping on its own calls it once a frame itself.
+ */
+#define NG_PALFX_BLACK   0u
+#define NG_PALFX_WHITE   1u
+
+/* Take over banks 0 .. count-1, starting from the colours now on screen. */
+void NEOGEO_USER ng_palfx_screen_init(uint16_t *base, uint16_t *out, uint8_t count);
+/* Load a bank (0 .. count-1); other banks are ignored. */
+void NEOGEO_USER ng_palfx_screen_load(uint8_t bank, const uint16_t *colors);
+/* A bank's colours as last loaded: a base for the effects above. */
+const uint16_t * NEOGEO_USER ng_palfx_screen_colors(uint8_t bank);
+/* The backdrop colour, written at the next ng_palfx_vblank(); not faded. */
+void NEOGEO_USER ng_palfx_screen_backdrop(uint16_t color);
+/* From the true colours to all `target` over `duration` frames; it stays there. */
+void NEOGEO_USER ng_palfx_screen_fade_out(uint8_t target, uint8_t duration);
+/* From all `target` (at once) back to the true colours over `duration` frames. */
+void NEOGEO_USER ng_palfx_screen_fade_in(uint8_t target, uint8_t duration);
+/* True colours back now, any fade dropped. */
+void NEOGEO_USER ng_palfx_screen_stop(void);
+/* 1 while a fade is still moving. */
+uint8_t NEOGEO_USER ng_palfx_screen_fading(void);
+/* In the vertical blank: put what changed on screen. */
+void NEOGEO_USER ng_palfx_vblank(void);
+#endif
+
 
 #ifdef __cplusplus
 }

@@ -17,7 +17,7 @@ void NEOGEO_USER ng_fix_blank_cell(uint8_t x, uint8_t y)
      */
     /* +2: rows 0/1 of the 32-row FIX map are in vertical blanking, so
      * visible row y is map row y + 2 - the same convention fixtext_out()
-     * (which ng_fix_putc writes through) uses.  Without it this blanked
+     * and ng_fix_putc use.  Without it this blanked
      * a cell two rows above the one it had drawn. */
     addrfix = (uint16_t)(FIXMAP + y + 2u + ((uint16_t)x * 32u));
     vram_sfix(0x20, addrfix, 0x00FF);
@@ -91,8 +91,6 @@ void NEOGEO_USER ng_fix_clear_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, u
 
 void NEOGEO_USER ng_fix_putc(uint8_t x, uint8_t y, char ch, uint8_t pal)
 {
-    char buffer[2];
-
     if (x >= NG_FIX_WIDTH || y >= NG_FIX_HEIGHT) return;
 
     /*
@@ -109,13 +107,29 @@ void NEOGEO_USER ng_fix_putc(uint8_t x, uint8_t y, char ch, uint8_t pal)
 
     if (ng_fix_chars[y][x] == ch && ng_fix_pals[y][x] == pal) return;
 
-    buffer[0] = ch;
-    buffer[1] = '\0';
-
-    fixtext_out(x, y, buffer, pal);
+    /* The cell's map word, as fixtext_out() writes it, without measuring a
+     * one-character string first. */
+    vram_sfix(0x20, (uint16_t)(FIXMAP + y + 2u + ((uint16_t)x * 32u)),
+              (uint16_t)(((uint16_t)pal << 12) | (uint8_t)ch));
 
     ng_fix_chars[y][x] = ch;
     ng_fix_pals[y][x] = pal;
+}
+
+/*
+ * Any FIX tile by its full 12-bit number, not just the first 256 a char
+ * can name -- for HUD pieces drawn into the free space of a game's own S1
+ * ROM. The cell's text cache is marked stale so a later ng_fix_putc on the
+ * same cell always redraws instead of assuming its character is still up.
+ */
+void NEOGEO_USER ng_fix_put_tile(uint8_t x, uint8_t y, uint16_t tile, uint8_t pal)
+{
+    uint16_t addrfix;
+    if (x >= NG_FIX_WIDTH || y >= NG_FIX_HEIGHT) return;
+    addrfix = (uint16_t)(FIXMAP + y + 2u + ((uint16_t)x * 32u));
+    vram_sfix(0x20, addrfix, (uint16_t)(((uint16_t)(pal & 0x0f) << 12) | (tile & 0x0fffu)));
+    ng_fix_chars[y][x] = (char)0xFE;
+    ng_fix_pals[y][x] = 0xF0;
 }
 
 void NEOGEO_USER ng_fix_puts(uint8_t x, uint8_t y, const char *text, uint8_t pal)

@@ -1,0 +1,17 @@
+; World 4: Burning Drylands
+; Fast rhythmic tempo with fiery brass stabs
+T20
+@p5
+@b4
+V13
+O5
+L8
+
+D F# A > D < A F# D4
+< A > D F# A  F# D < A4
+< G > B D G  B G D < G
+< A > C# E A  > C#4 R4
+; Fire storm surge
+> D8 D8 F#8 D8  A8 A8 > D4
+< B8 A8 F#8 E8  D8 < B8 A4
+~

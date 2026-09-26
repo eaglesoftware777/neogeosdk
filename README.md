@@ -4,6 +4,8 @@ Neo Geo development SDK for SNK hardware.
 
 - Repository: https://github.com/eaglesoftware777/neogeosdk
 - Current release: `v1.7.0`
+- In development: `v1.7.1` — Maiya: Super Nature Girl and EagleBIOS
+  (see the changelog)
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 
@@ -243,18 +245,42 @@ with `GAME=<name>`.
 | `games/demo` | 777 | `777-*` | C | The 25-chapter engine reel — every subsystem, in order |
 | `games/demo_plus` | 778 | `778-*` | C/C++ | The same shared demo scenes and assets, with the C++ engine linked (`USE_2D_PLUS=1`) |
 | `games/skylance` | 779 | `779-*` | C | Sky Lance — a complete vertical shooter |
+| `games/maiya` | 780 | `780-*` | C | Maiya: Super Nature Girl, a six-valley platform adventure with guarded arenas and bonus rounds |
 | `games/helloworld` | 772 | `772-*` | — | Minimal FIX-text and one sample; the tutorial target |
 | `games/tutorial` | 555 | `555-*` | C | The minimal engine loop, nothing else |
 | `games/neogeogame` | 775 | `775-*` | C | Sprite-based formation shooter |
 
-Every game carries its own `game.cfg`, so all six build the same way:
+Every game carries its own `game.cfg`. An explicit `GAME=<name>` now selects
+that configuration automatically; the default remains `demo`:
 
 ```bash
-make GAME=<name> GAME_CFG_FILE=games/<name>/game.cfg all
-make GAME=<name> GAME_CFG_FILE=games/<name>/game.cfg test
+make GAME=<name> all
+make GAME=<name> test
 ```
 
 What each one demonstrates: [`docs/GAMES.md`](./docs/GAMES.md).
+
+Maiya's controls, art layout and regression checks are in
+[`games/maiya/README.md`](./games/maiya/README.md).
+
+### Optional System Firmware
+
+EagleBIOS is opt-in; normal builds and tests still use the installed Neo Geo
+firmware. On Linux/WSL:
+
+```sh
+make GAME=maiya all USE_EAGLE_BIOS=1
+make GAME=maiya test USE_EAGLE_BIOS=1
+make GAME=maiya bios-package
+```
+
+On Windows CMD, add `-f MakefileWin32.mak` to each command. These targets use
+the already selected cross compiler, Python and WLA-DX. `eagle-bios` builds
+the firmware alone; `bios-package` creates `dist/<game>-eagle-bios.zip` with
+the cartridge, generated firmware, license and MAME software list. Original
+system ROMs are not replaced. Use `PLATFORM=aes` for both compilation and
+testing on the console machine. Read the [firmware manual](./bios/README.md)
+for supported services and limitations before distributing a game with it.
 
 ### Building a specific game
 
@@ -325,6 +351,13 @@ extension, no path prefix). Files that are `#include`-d from other scene files
 should be omitted to avoid multiple-definition errors.
 
 If the game has no scene files (e.g. `helloworld`), omit `GAME_SCENES` entirely.
+
+Optional keys: `GAME_ENGINE_EXCLUDE` (engine modules linked as do-nothing
+stand-ins), `GAME_ENGINE_DEFINES` (-D switches for optional engine code) and
+`GAME_OPTIMIZE` (a GCC level such as `-O2` for the engine, the SDK library
+and the game's scenes; see `docs/performance_rules.md`) and
+`GAME_LEVEL_BUILDER` (a script that turns stage files into C before the
+build; see `docs/levels.md`).  The makefile comments describe each.
 
 ### Art and sound pipelines
 
@@ -406,6 +439,74 @@ This builds the ROM set, regenerates `hash_eagle/<game>/neogeo.xml`, creates `di
 
 Distribute `dist/` as-is. End users place their `neogeo.zip` BIOS inside `dist/roms/` and
 run `dist/run_neogeosdk.bat`.
+
+## Building, packaging, and testing games
+
+Everything below works for every game under `games/` — current ones and any
+you add later — because it discovers games from `games/*/game.mk` instead of
+naming them.
+
+**Build every game:**
+
+```bash
+make all-games                                # Linux / WSL
+make -f MakefileWin32.mak all-games            # Windows
+```
+
+**Package every game as a MAME-ready zip** (`dist/<game>-eagle-bios.zip`,
+same layout as `make bios-package GAME=<name>` for one game — cartridge ROMs,
+firmware, MAME software list, and a `RUN.txt`):
+
+```bash
+make dist-all                                  # Linux / WSL
+make -f MakefileWin32.mak dist-all             # Windows
+```
+
+**Install a packaged game into your own MAME copy.** The first run asks for
+your MAME installation folder and remembers it; everything lands in a
+self-contained `neogeosdk/` folder inside that install, so your own rom
+collection and MAME's ini files are never touched:
+
+```bash
+make install-mame GAME=maiya                   # or: ./install/install-mame.sh --game maiya
+make install-mame-all                          # install every packaged game
+make run-mame GAME=maiya PLATFORM=mvs          # launch it
+```
+
+On Windows, use `make -f MakefileWin32.mak install-mame GAME=maiya` or
+`install\install-mame.bat --game maiya`.
+
+**Interactive text menu** for the same build/package/install/run steps,
+without remembering flags:
+
+```bash
+make test-menu                                 # Linux / WSL
+make -f MakefileWin32.mak test-menu            # Windows
+```
+
+**Desktop control panel** — one window with a game picker, platform choice,
+and buttons for build/package/install/run/full-pipeline/clean, with a live
+build log:
+
+```bash
+make gui                                       # Linux / WSL
+make -f MakefileWin32.mak gui                  # Windows
+```
+
+**Customizing Maiya's art palettes.** `games/maiya/tools/build_commercial_assets.py`
+reads its per-valley enemy recolours and boss-recolour tints from
+`games/maiya/artbox/palette_config.json` (auto-created with the shipped
+values on first build). Edit the JSON directly, or use the small editor that
+also rebuilds the art for you:
+
+```bash
+make maiya-palette-studio                      # Linux / WSL
+make -f MakefileWin32.mak maiya-palette-studio # Windows
+```
+
+See also `install/README.md` for `install-mame.sh` / `install-mame.bat`
+details, and `tools/mame_launcher.py --help` for scripting the same install
+and run steps directly.
 
 ## Release Assets
 
@@ -1070,6 +1171,11 @@ make unit-tests      : host-side sprite renderer tests (no emulator, no cross
                        `make test`: launching a ROM must not depend on a host
                        C++ compiler being installed.
 make check           : unit tests plus a complete ROM set for this GAME
+make level-check     : the game's level tables against placement rules
+                       (tools/level_check.py); make test runs it first
+make budget          : bytes each ROM (P, C, S, M, V) uses against the optional
+                       BUDGET_* keys in games/<game>/game.cfg; with a budget
+                       declared, every P build fails if a ROM outgrows it
 make debug           : run MAME with debugger
 make debug-build     : build P1 with debug symbols and linker map
 make debug-artifacts : write size, symbols, readelf, map, and disassembly files

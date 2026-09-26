@@ -1,0 +1,13 @@
+; 0_fm_example_a - the house fanfare under the eyecatcher
+;
+; Three rising notes and a held fifth: over in a second and a half,
+; FM only, played once (no loop mark), so the logo has a voice without
+; a tune getting in the way.
+
+T120
+I0
+V13
+O5
+L8
+
+C E G  > C2

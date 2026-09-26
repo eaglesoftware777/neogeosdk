@@ -85,6 +85,38 @@ Monitor `VertBlank` at 0x100000: if the flag is not set when your game logic
 finishes, VBlank was missed.  Set `ng_dbg_vblank_overflow = 1` in the debug HUD.
 Target: game logic + VRAM writes < 60% of the inter-VBlank window.
 
+## Rule 13: Build a Busy Game With GAME_OPTIMIZE
+
+The tree builds at -O0.  A game whose frame doesn't fit sets, in its
+`game.mk`:
+
+```makefile
+GAME_OPTIMIZE = -O2
+```
+
+The engine, the on-demand SDK library and the game's scene files are then
+built at that level; the start-up sources (cart header, `user.c`, `main.c`,
+`eyecatcher.c`, `neogeolib.c`) stay at -O0.  Maiya measured, in MAME, a walk
+and fight through stages 1, 2, 4 and 6: at -O0 22-24 frames a second; with
+`-O2` 28-30; with `-O2` and the streamed sprite writes below 43-49; and with
+her per-frame library divisions gone (see the next rule) 52-55.
+
+## Rule 14: Divide in 16 Bits
+
+The 68000 divides 32 bits by 16 in one `divu.w`; a division GCC can't prove
+fits that calls the library instead, several times slower.  GCC uses
+`divu.w` only when it sees both operands are 16-bit, so cast a product
+first: `(uint16_t)(t * 255u) / (uint16_t)d`, not `(t * 255u) / d`.  A
+signed or 32-bit `%` or `/` in a frame's work (an animation phase, a wrap)
+is worth a look in the listing for `__divsi3`, `__modsi3`, `__udivsi3` and
+`__umodsi3`.
+
+`ng_sprite_group` (built at -O2 in every game) writes the video RAM itself:
+a map is streamed a strip at a time with the tile stepped a row at a time
+(no multiply per row), and the SCB2/3/4 words of a group's strips go out as
+one run each, the auto-increment at 1.  Every write to the data port lands
+at least 12 clocks after the one before.
+
 ## Sprite Budget Allocation Guide
 
 | Use             | Slots  | Notes |

@@ -2,8 +2,8 @@
  * ng_camera.c — Camera system implementation (Stage 5)
  *
  * Performance notes (68000):
- *   - Smooth follow uses fixed-point lerp: (delta * speed) >> 8.
- *     One 32-bit multiply per axis per frame: acceptable.
+ *   - Smooth follow uses fixed-point lerp: (delta * speed) >> 8, worked
+ *     on 8.8 so it cannot overflow. One multiply per axis per frame.
  *   - Shake offset uses a pre-baked 8-entry pattern (no random, no divide).
  *   - Look-ahead accumulates and decays without division.
  *   - All clamping uses if-comparisons, no modulo.
@@ -48,6 +48,7 @@ void NEOGEO_USER ng_camera_init(NGCamera *cam)
     cam->mode          = NG_CAM_FOLLOW;
     cam->shake_offset_x = 0;
     cam->shake_offset_y = 0;
+    cam->look_ahead_cur_x = 0;
 }
 
 void NEOGEO_USER ng_camera_set_bounds(NGCamera *cam,
@@ -136,22 +137,44 @@ static NGFixed NEOGEO_USER ng_cam_clamp_y(const NGCamera *cam, NGFixed v)
     return v;
 }
 
+/*
+ * One axis of the follow. `anchor` is where on screen the target is kept;
+ * the dead zone is a window of +-dead around it. Inside the window the
+ * camera holds. Outside, the camera's goal is the position that puts the
+ * target back on the window's edge -- not all the way back to the anchor,
+ * which made the camera surge and stop, surge and stop behind a running
+ * target -- and follow_speed eases toward it: (delta * speed) >> 8, with
+ * delta taken as 8.8 first so a long way off cannot overflow. Speed 255
+ * follows exactly, in whole pixels.
+ */
+static NGFixed NEOGEO_USER ng_cam_follow_axis(NGFixed cur, int16_t target, int16_t anchor,
+                                              uint8_t dead, uint8_t speed)
+{
+    int16_t at  = NGFX_TO_INT(cur);
+    int16_t off = (int16_t)(target - at - anchor);
+    int32_t delta;
+    int32_t step;
+
+    if (off > (int16_t)dead)       off = (int16_t)(off - dead);
+    else if (off < -(int16_t)dead) off = (int16_t)(off + dead);
+    else return cur;
+
+    delta = (int32_t)(NGFX_FROM_INT(at + off) - cur);
+    if (speed == 255u) return (NGFixed)(cur + delta);
+    step = (delta >> 8) * (int32_t)speed;
+    if (step == 0) step = (delta > 0) ? 1 : -1;   /* always converges */
+    return (NGFixed)(cur + step);
+}
+
 void NEOGEO_USER ng_camera_update(NGCamera *cam,
                                   int16_t target_x, int16_t target_y,
                                   int16_t target_vx)
 {
-    int16_t desired_x;
-    int16_t desired_y;
-    int32_t delta_x;
-    int32_t delta_y;
-    int32_t step_x;
-    int32_t step_y;
-    NGFixed new_fp_x;
-    NGFixed new_fp_y;
     int8_t  sx;
     int8_t  sy;
-    uint8_t hold_x = 0u;
-    uint8_t hold_y = 0u;
+    int16_t aim;
+    int16_t full;
+    int16_t look;
 
     if (!cam) return;
 
@@ -212,80 +235,29 @@ void NEOGEO_USER ng_camera_update(NGCamera *cam,
     /*
      * --- Follow mode ---
      *
-     * Target camera centre is target_x - screen_half_w + look_ahead.
-     * Dead zone: if target is within dead_zone of current screen centre,
-     * do not move.
+     * Look-ahead: the target is kept behind the screen centre on the side
+     * it is moving toward, so more of what is ahead shows. It moves
+     * look_ahead_rate pixels a frame toward its full size while the target
+     * moves, and back toward 0 while it stands, so the view pans over
+     * instead of jumping.
      */
-    desired_x = (int16_t)(target_x - (NG_SCREEN_W / 2));
-    desired_y = (int16_t)(target_y - (NG_SCREEN_H / 2));
-
-    /*
-     * Look-ahead: bias towards player velocity direction.
-     * Accumulate gradually using the look_ahead_rate to avoid snapping.
-     * No division: shift only.
-     */
-    if (target_vx > 0 && cam->look_ahead_x > 0) {
-        desired_x = (int16_t)(desired_x + cam->look_ahead_x);
-    } else if (target_vx < 0 && cam->look_ahead_x > 0) {
-        desired_x = (int16_t)(desired_x - cam->look_ahead_x);
+    full = cam->look_ahead_x > 127 ? 127 : cam->look_ahead_x;
+    aim = target_vx > 0 ? full : (target_vx < 0 ? (int16_t)-full : 0);
+    look = cam->look_ahead_cur_x;
+    if (look < aim) {
+        look = (int16_t)(look + cam->look_ahead_rate);
+        if (look > aim) look = aim;
+    } else if (look > aim) {
+        look = (int16_t)(look - cam->look_ahead_rate);
+        if (look < aim) look = aim;
     }
+    cam->look_ahead_cur_x = (int8_t)look;
 
-    /*
-     * Dead zone check: only follow if target is outside the dead zone.
-     * The dead zone is relative to current camera screen position.
-     */
-    {
-        int16_t screen_target_x = (int16_t)(target_x - cam->x);
-        int16_t screen_target_y = (int16_t)(target_y - cam->y);
-        int16_t screen_cx       = (int16_t)(NG_SCREEN_W / 2);
-        int16_t screen_cy       = (int16_t)(NG_SCREEN_H / 2);
-        int16_t off_x           = (int16_t)(screen_target_x - screen_cx);
-        int16_t off_y           = (int16_t)(screen_target_y - screen_cy);
-
-        if (off_x < 0) off_x = (int16_t)-off_x;
-        if (off_y < 0) off_y = (int16_t)-off_y;
-
-        /*
-         * The dead zone is per-axis: an axis holds while the target is
-         * inside its own margin, and the other axis keeps following.
-         *
-         * This used to require BOTH axes to be inside before it held
-         * anything, which made the common case - a horizontal-only dead
-         * zone, set as (margin, 0) - impossible to trigger: it needed
-         * the target to sit exactly on the vertical centre line at the
-         * same time, so the dead zone effectively never engaged and the
-         * camera behaved like plain follow.
-         */
-        hold_x = (uint8_t)(off_x <= (int16_t)cam->dead_zone_x);
-        hold_y = (uint8_t)(off_y <= (int16_t)cam->dead_zone_y);
-
-    }
-
-    /*
-     * Smooth follow: step = (desired - current) * follow_speed / 256.
-     * One 32-bit multiply per axis.  At follow_speed=64, converges in ~16 frames.
-     */
-    new_fp_x = hold_x ? cam->x_fp : NGFX_FROM_INT(desired_x);
-    new_fp_y = hold_y ? cam->y_fp : NGFX_FROM_INT(desired_y);
-
-    delta_x  = (int32_t)(new_fp_x - cam->x_fp);
-    delta_y  = (int32_t)(new_fp_y - cam->y_fp);
-
-    /* (delta * speed) >> 8 — equivalent to dividing speed by 256 */
-    step_x   = (delta_x * (int32_t)cam->follow_speed) >> 8;
-    step_y   = (delta_y * (int32_t)cam->follow_speed) >> 8;
-
-    /* An axis inside its own dead zone does not move at all, while the
-     * other axis keeps following normally. */
-    if (hold_x) { delta_x = 0; step_x = 0; }
-    if (hold_y) { delta_y = 0; step_y = 0; }
-
-    /* Minimum 1 sub-pixel step to ensure the camera eventually converges */
-    if (step_x == 0 && delta_x != 0) step_x = (delta_x > 0) ?  1 : -1;
-    if (step_y == 0 && delta_y != 0) step_y = (delta_y > 0) ?  1 : -1;
-
-    cam->x_fp = ng_cam_clamp_x(cam, (NGFixed)(cam->x_fp + step_x));
-    cam->y_fp = ng_cam_clamp_y(cam, (NGFixed)(cam->y_fp + step_y));
+    cam->x_fp = ng_cam_clamp_x(cam, ng_cam_follow_axis(cam->x_fp, target_x,
+                               (int16_t)(NG_SCREEN_W / 2 - cam->look_ahead_cur_x),
+                               cam->dead_zone_x, cam->follow_speed));
+    cam->y_fp = ng_cam_clamp_y(cam, ng_cam_follow_axis(cam->y_fp, target_y, NG_SCREEN_H / 2,
+                               cam->dead_zone_y, cam->follow_speed));
 
     cam->x = (int16_t)(NGFX_TO_INT(cam->x_fp) + cam->shake_offset_x);
     cam->y = (int16_t)(NGFX_TO_INT(cam->y_fp) + cam->shake_offset_y);

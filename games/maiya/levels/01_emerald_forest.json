@@ -1,0 +1,115 @@
+{
+  "name": "EMERALD FOREST",
+  "width": 3840,
+  "background": 0,
+  "music": 1,
+  "mechanic": "none",
+  "pit": "water",
+  "blocks": "grass",
+  "posted": "none",
+  "gate_x": 3200,
+  "key": {"x": 2012, "y": 42},
+  "guardian": {
+    "name": "CHAINSAW BEETLE",
+    "style": "beetle",
+    "hp": 16,
+    "hint": "STRIKE THE BEETLE WHEN IT LANDS",
+    "taunt": "I CUT DOWN WHAT TOOK CENTURIES TO GROW!",
+    "reply": "THE FOREST WILL OUTLIVE YOUR BLADES!"
+  },
+  "art": {"name": "ROSE WIND STRIKE", "words": "MAIYA: ROSE WIND, CARRY ME!"},
+  "secret_hint": "A ROSE SLEEPS ABOVE THE ARCH",
+  "sunboy": ["MAIYA! THE FOREST BREATHES AGAIN", "THE MARSH FALLS ARE NEXT. HURRY"],
+  "platforms": [
+    {"x": 320, "y": 140, "w": 96},
+    {"x": 480, "y": 104, "w": 80},
+    {"x": 660, "y": 68, "w": 96},
+    {"x": 860, "y": 140, "w": 80},
+    {"x": 1080, "y": 104, "w": 96},
+    {"x": 1280, "y": 68, "w": 80},
+    {"x": 1500, "y": 140, "w": 96},
+    {"x": 1720, "y": 104, "w": 80},
+    {"x": 1940, "y": 68, "w": 96},
+    {"x": 2160, "y": 140, "w": 96},
+    {"x": 2380, "y": 104, "w": 80},
+    {"x": 2580, "y": 68, "w": 96},
+    {"x": 2800, "y": 140, "w": 96},
+    {"x": 3000, "y": 104, "w": 80},
+    {"x": 3360, "y": 140, "w": 96},
+    {"x": 3580, "y": 104, "w": 80}
+  ],
+  "encounters": [
+    {"x": 180, "enemy": "slime"},
+    {"x": 480, "enemy": "beetle"},
+    {"x": 780, "enemy": "slime"},
+    {"x": 1100, "enemy": "beetle"},
+    {"x": 1420, "enemy": "dartfrog"},
+    {"x": 1740, "enemy": "beetle"},
+    {"x": 2060, "enemy": "acidmoth"},
+    {"x": 2380, "enemy": "beetle"},
+    {"x": 2700, "enemy": "dartfrog"},
+    {"x": 3020, "enemy": "beetle"},
+    {"x": 3380, "enemy": "acidmoth"},
+    {"x": 3620, "enemy": "beetle"}
+  ],
+  "archers": [],
+  "hazards": [
+    {"x": 760, "w": 48, "type": "spikes"},
+    {"x": 1600, "w": 48, "type": "spikes"},
+    {"x": 2280, "w": 48, "type": "spikes"},
+    {"x": 2900, "w": 48, "type": "spikes"},
+    {"x": 1208, "w": 48, "type": "pit"},
+    {"x": 2552, "w": 48, "type": "pit"}
+  ],
+  "rescues": [
+    {"x": 650, "who": "elder"},
+    {"x": 1690, "who": "maiden"},
+    {"x": 2450, "who": "spirit"},
+    {"x": 2990, "who": "sunboy"}
+  ],
+  "secrets": [
+    {"x": 486, "y": 74, "type": "chest"},
+    {"x": 700, "y": 38, "type": "rose"},
+    {"x": 1320, "y": 38, "type": "gem"},
+    {"x": 1996, "y": 38, "type": "chest"},
+    {"x": 2620, "y": 38, "type": "rose"},
+    {"x": 3040, "y": 74, "type": "gem"}
+  ],
+  "pickups": [
+    {"x": 260, "y": 168, "kind": "silver"},
+    {"x": 824, "y": 168, "kind": "spring"},
+    {"x": 1464, "y": 168, "kind": "crown"},
+    {"x": 2084, "y": 168, "kind": "silver"},
+    {"x": 540, "y": 70, "kind": "gold"},
+    {"x": 1128, "y": 70, "kind": "gold"},
+    {"x": 1066, "y": 166, "kind": "flower"},
+    {"x": 2124, "y": 164, "kind": "critter"},
+    {"x": 1690, "y": 166, "kind": "charm"},
+    {"x": 648, "y": 40, "kind": "life"}
+  ],
+  "decor": [
+    {"x": 150, "y": 160, "kind": "grass"},
+    {"x": 487, "y": 160, "kind": "flowers"},
+    {"x": 825, "y": 160, "kind": "bush"},
+    {"x": 1162, "y": 160, "kind": "mushroom"},
+    {"x": 1500, "y": 160, "kind": "sapling"},
+    {"x": 1837, "y": 160, "kind": "lantern"},
+    {"x": 2175, "y": 160, "kind": "sign"},
+    {"x": 2512, "y": 160, "kind": "rock"},
+    {"x": 2850, "y": 160, "kind": "grass"},
+    {"x": 504, "y": 72, "kind": "mushroom"},
+    {"x": 1112, "y": 72, "kind": "sapling"},
+    {"x": 1760, "y": 72, "kind": "lantern"},
+    {"x": 3080, "y": 160, "kind": "lantern"}
+  ],
+  "vines": [
+    {"x": 692, "top": 68, "bottom": 192},
+    {"x": 1304, "top": 68, "bottom": 192},
+    {"x": 1972, "top": 68, "bottom": 192}
+  ],
+  "npcs": [
+    {"x": 444, "who": "elder", "line": "THE GATE OPENS TO THE SUN KEY"},
+    {"x": 1472, "who": "maiden", "line": "CLIMB THE VINES TO THE CANOPY"},
+    {"x": 2680, "who": "spirit", "line": "HOLD DOWN TO KNEEL AND REST"}
+  ]
+}

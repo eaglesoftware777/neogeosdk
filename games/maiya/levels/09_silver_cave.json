@@ -1,0 +1,128 @@
+{
+  "name": "SILVER CAVE",
+  "width": 4608,
+  "background": 8,
+  "music": 5,
+  "mechanic": "ice",
+  "pit": "void",
+  "blocks": "stone",
+  "posted": "goblin",
+  "gate_x": 4000,
+  "key": {"x": 2048, "y": 46},
+  "guardian": {
+    "name": "CAVE WYRM",
+    "style": "wyrm",
+    "hp": 34,
+    "hint": "THE WYRM GLOWS BEFORE IT BITES",
+    "taunt": "I HOARD THE CAVE'S LIGHT FOR MYSELF!",
+    "reply": "HER LIGHT WAS NEVER YOURS TO KEEP!"
+  },
+  "art": {"name": "CAVERN LIGHT BLOOM", "words": "MAIYA: LIGHT, FIND WHAT'S HIDDEN!"},
+  "secret_hint": "THE DEEP VEIN GLINTS WITH GOLD",
+  "sunboy": ["THE CAVE BREATHES CLEAN AIR AGAIN", "ONE VALLEY LEFT: THE OPEN SAVANNA"],
+  "platforms": [
+    {"x": 240, "y": 144, "w": 160},
+    {"x": 480, "y": 120, "w": 128},
+    {"x": 700, "y": 88, "w": 96},
+    {"x": 900, "y": 144, "w": 192},
+    {"x": 1160, "y": 112, "w": 96},
+    {"x": 1340, "y": 80, "w": 128},
+    {"x": 1560, "y": 144, "w": 128},
+    {"x": 1760, "y": 112, "w": 160},
+    {"x": 2000, "y": 72, "w": 128},
+    {"x": 2240, "y": 144, "w": 96},
+    {"x": 2400, "y": 112, "w": 128},
+    {"x": 2620, "y": 144, "w": 160},
+    {"x": 2860, "y": 96, "w": 128},
+    {"x": 3080, "y": 144, "w": 96},
+    {"x": 3260, "y": 112, "w": 128},
+    {"x": 3480, "y": 80, "w": 128}
+  ],
+  "encounters": [
+    {"x": 220, "enemy": "goblin"},
+    {"x": 460, "enemy": "slaggolem"},
+    {"x": 700, "enemy": "plasticbat"},
+    {"x": 920, "enemy": "worm"},
+    {"x": 1140, "enemy": "goblin"},
+    {"x": 1360, "enemy": "plasticbat"},
+    {"x": 1600, "enemy": "slaggolem"},
+    {"x": 1820, "enemy": "worm"},
+    {"x": 2040, "enemy": "plasticbat"},
+    {"x": 2260, "enemy": "goblin"},
+    {"x": 2500, "enemy": "slaggolem"},
+    {"x": 2720, "enemy": "plasticbat"},
+    {"x": 2940, "enemy": "worm"},
+    {"x": 3160, "enemy": "goblin"},
+    {"x": 3380, "enemy": "slaggolem"},
+    {"x": 3600, "enemy": "plasticbat"},
+    {"x": 3820, "enemy": "worm"}
+  ],
+  "archers": [
+    {"x": 510, "y": 120},
+    {"x": 1190, "y": 112},
+    {"x": 1790, "y": 112},
+    {"x": 2430, "y": 112},
+    {"x": 3290, "y": 112}
+  ],
+  "hazards": [
+    {"x": 620, "w": 48, "type": "spikes"},
+    {"x": 1100, "w": 64, "type": "pit"},
+    {"x": 1480, "w": 48, "type": "sludge"},
+    {"x": 1900, "w": 64, "type": "pit"},
+    {"x": 2560, "w": 48, "type": "spikes"},
+    {"x": 3000, "w": 48, "type": "toxic"},
+    {"x": 3380, "w": 64, "type": "pit"},
+    {"x": 3800, "w": 48, "type": "sludge"}
+  ],
+  "rescues": [
+    {"x": 1000, "who": "elder"},
+    {"x": 2100, "who": "maiden"},
+    {"x": 2600, "who": "spirit"},
+    {"x": 3600, "who": "sunboy"}
+  ],
+  "secrets": [
+    {"x": 280, "y": 114, "type": "gem"},
+    {"x": 724, "y": 58, "type": "rose"},
+    {"x": 1380, "y": 50, "type": "chest"},
+    {"x": 2040, "y": 42, "type": "gem"},
+    {"x": 2900, "y": 66, "type": "rose"},
+    {"x": 3520, "y": 50, "type": "chest"}
+  ],
+  "pickups": [
+    {"x": 180, "y": 166, "kind": "silver"},
+    {"x": 1220, "y": 166, "kind": "spring"},
+    {"x": 1700, "y": 166, "kind": "crown"},
+    {"x": 2520, "y": 166, "kind": "silver"},
+    {"x": 1020, "y": 114, "kind": "gold"},
+    {"x": 2720, "y": 114, "kind": "gold"},
+    {"x": 1300, "y": 166, "kind": "flower"},
+    {"x": 2980, "y": 166, "kind": "critter"},
+    {"x": 2200, "y": 166, "kind": "charm"},
+    {"x": 2080, "y": 42, "kind": "life"}
+  ],
+  "decor": [
+    {"x": 140, "y": 160, "kind": "rock"},
+    {"x": 560, "y": 160, "kind": "lantern"},
+    {"x": 1020, "y": 160, "kind": "mushroom"},
+    {"x": 1420, "y": 160, "kind": "rock"},
+    {"x": 1980, "y": 160, "kind": "lantern"},
+    {"x": 2320, "y": 160, "kind": "sign"},
+    {"x": 2780, "y": 160, "kind": "rock"},
+    {"x": 3220, "y": 160, "kind": "mushroom"},
+    {"x": 3660, "y": 160, "kind": "lantern"},
+    {"x": 336, "y": 112, "kind": "rock"},
+    {"x": 1624, "y": 112, "kind": "mushroom"},
+    {"x": 2716, "y": 112, "kind": "lantern"},
+    {"x": 3900, "y": 160, "kind": "lantern"}
+  ],
+  "vines": [
+    {"x": 732, "top": 88, "bottom": 192},
+    {"x": 1372, "top": 80, "bottom": 192},
+    {"x": 2032, "top": 72, "bottom": 192}
+  ],
+  "npcs": [
+    {"x": 444, "who": "spirit", "line": "A SECRET FOUND CAN LIFT THE POISON"},
+    {"x": 1980, "who": "elder", "line": "THE GOLEMS POUND: JUMP THE WAVE"},
+    {"x": 3440, "who": "maiden", "line": "BATS DROP TRASH FROM THE DARK"}
+  ]
+}

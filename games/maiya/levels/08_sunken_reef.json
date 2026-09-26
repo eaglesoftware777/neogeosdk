@@ -1,0 +1,128 @@
+{
+  "name": "SUNKEN REEF",
+  "width": 4480,
+  "background": 7,
+  "music": 3,
+  "mechanic": "water",
+  "pit": "void",
+  "blocks": "coral",
+  "posted": "drone",
+  "gate_x": 3880,
+  "key": {"x": 1684, "y": 46},
+  "guardian": {
+    "name": "REEF EEL",
+    "style": "eel",
+    "hp": 32,
+    "hint": "THE EEL COILS: STRIKE BETWEEN LUNGES",
+    "taunt": "I CHOKED THE REEF WITH MY OWN WASTE!",
+    "reply": "THE TIDE WASHES YOUR FILTH AWAY!"
+  },
+  "art": {"name": "REEF CURRENT CALL", "words": "MAIYA: CURRENT, CARRY THE FILTH AWAY!"},
+  "secret_hint": "THE REEF SHELTERS ONE LAST PEARL",
+  "sunboy": ["THE REEF REMEMBERS YOUR KINDNESS", "THE CAVE IS NEXT. I'LL LIGHT THE WAY"],
+  "platforms": [
+    {"x": 260, "y": 144, "w": 128},
+    {"x": 440, "y": 112, "w": 96},
+    {"x": 600, "y": 80, "w": 128},
+    {"x": 860, "y": 144, "w": 96},
+    {"x": 1040, "y": 112, "w": 64},
+    {"x": 1200, "y": 144, "w": 160},
+    {"x": 1440, "y": 104, "w": 96},
+    {"x": 1620, "y": 72, "w": 160},
+    {"x": 1900, "y": 136, "w": 96},
+    {"x": 2120, "y": 104, "w": 128},
+    {"x": 2360, "y": 144, "w": 96},
+    {"x": 2560, "y": 112, "w": 96},
+    {"x": 2740, "y": 80, "w": 128},
+    {"x": 3000, "y": 144, "w": 128},
+    {"x": 3220, "y": 112, "w": 96},
+    {"x": 3420, "y": 80, "w": 96}
+  ],
+  "encounters": [
+    {"x": 240, "enemy": "toxiccrab"},
+    {"x": 420, "enemy": "jellyfish"},
+    {"x": 640, "enemy": "toxiccrab"},
+    {"x": 900, "enemy": "jellyfish"},
+    {"x": 1080, "enemy": "slime"},
+    {"x": 1300, "enemy": "toxiccrab"},
+    {"x": 1480, "enemy": "jellyfish"},
+    {"x": 1700, "enemy": "drone"},
+    {"x": 1880, "enemy": "toxiccrab"},
+    {"x": 2080, "enemy": "jellyfish"},
+    {"x": 2280, "enemy": "slime"},
+    {"x": 2480, "enemy": "toxiccrab"},
+    {"x": 2700, "enemy": "jellyfish"},
+    {"x": 2900, "enemy": "drone"},
+    {"x": 3100, "enemy": "toxiccrab"},
+    {"x": 3300, "enemy": "jellyfish"},
+    {"x": 3500, "enemy": "slime"},
+    {"x": 3700, "enemy": "toxiccrab"}
+  ],
+  "archers": [
+    {"x": 470, "y": 112},
+    {"x": 1650, "y": 72},
+    {"x": 2150, "y": 104},
+    {"x": 2770, "y": 80},
+    {"x": 3450, "y": 80}
+  ],
+  "hazards": [
+    {"x": 760, "w": 48, "type": "spikes"},
+    {"x": 1360, "w": 48, "type": "toxic"},
+    {"x": 2000, "w": 64, "type": "pit"},
+    {"x": 2300, "w": 48, "type": "sludge"},
+    {"x": 2660, "w": 48, "type": "spikes"},
+    {"x": 3160, "w": 64, "type": "pit"},
+    {"x": 3600, "w": 48, "type": "toxic"}
+  ],
+  "rescues": [
+    {"x": 1100, "who": "maiden"},
+    {"x": 1950, "who": "elder"},
+    {"x": 2600, "who": "spirit"},
+    {"x": 3350, "who": "sunboy"}
+  ],
+  "secrets": [
+    {"x": 300, "y": 114, "type": "rose"},
+    {"x": 640, "y": 50, "type": "gem"},
+    {"x": 1240, "y": 114, "type": "chest"},
+    {"x": 2384, "y": 114, "type": "rose"},
+    {"x": 2780, "y": 50, "type": "gem"},
+    {"x": 3444, "y": 50, "type": "chest"}
+  ],
+  "pickups": [
+    {"x": 200, "y": 166, "kind": "silver"},
+    {"x": 980, "y": 166, "kind": "spring"},
+    {"x": 1760, "y": 166, "kind": "crown"},
+    {"x": 2480, "y": 166, "kind": "silver"},
+    {"x": 868, "y": 114, "kind": "gold"},
+    {"x": 2128, "y": 74, "kind": "gold"},
+    {"x": 1390, "y": 166, "kind": "flower"},
+    {"x": 2860, "y": 166, "kind": "critter"},
+    {"x": 2200, "y": 166, "kind": "charm"},
+    {"x": 1740, "y": 42, "kind": "life"}
+  ],
+  "decor": [
+    {"x": 150, "y": 160, "kind": "rock"},
+    {"x": 520, "y": 160, "kind": "grass"},
+    {"x": 980, "y": 160, "kind": "mushroom"},
+    {"x": 1500, "y": 160, "kind": "flowers"},
+    {"x": 1840, "y": 160, "kind": "grass"},
+    {"x": 2440, "y": 160, "kind": "rock"},
+    {"x": 2980, "y": 160, "kind": "mushroom"},
+    {"x": 3320, "y": 160, "kind": "grass"},
+    {"x": 3560, "y": 160, "kind": "rock"},
+    {"x": 1296, "y": 112, "kind": "grass"},
+    {"x": 2608, "y": 80, "kind": "mushroom"},
+    {"x": 3064, "y": 112, "kind": "flowers"},
+    {"x": 3780, "y": 160, "kind": "lantern"}
+  ],
+  "vines": [
+    {"x": 632, "top": 80, "bottom": 192},
+    {"x": 1652, "top": 72, "bottom": 192},
+    {"x": 2772, "top": 80, "bottom": 192}
+  ],
+  "npcs": [
+    {"x": 420, "who": "elder", "line": "DOWN SINKS YOU THROUGH THE CORAL"},
+    {"x": 1880, "who": "spirit", "line": "CRABS CHARGE WHEN YOU COME CLOSE"},
+    {"x": 3200, "who": "maiden", "line": "THE KEY GLEAMS ON THE HIGH CORAL"}
+  ]
+}

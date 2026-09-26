@@ -1,0 +1,87 @@
+{
+  "valley_tint": [
+    {
+      "name": "Emerald Forest",
+      "hue": 0.0,
+      "sat": 1.0,
+      "val": 1.0
+    },
+    {
+      "name": "Valley of Falls",
+      "hue": -40.0,
+      "sat": 0.95,
+      "val": 0.96
+    },
+    {
+      "name": "Azure Coast",
+      "hue": -95.0,
+      "sat": 0.85,
+      "val": 1.06
+    },
+    {
+      "name": "Autumn Grove",
+      "hue": 95.0,
+      "sat": 1.05,
+      "val": 1.02
+    },
+    {
+      "name": "Crystal Grotto",
+      "hue": -60.0,
+      "sat": 0.55,
+      "val": 1.14
+    },
+    {
+      "name": "World Tree",
+      "hue": 150.0,
+      "sat": 0.9,
+      "val": 0.82
+    },
+    {
+      "name": "Rio Negro Works",
+      "hue": 40.0,
+      "sat": 1.1,
+      "val": 0.78
+    },
+    {
+      "name": "Sunken Reef",
+      "hue": -110.0,
+      "sat": 0.8,
+      "val": 0.98
+    },
+    {
+      "name": "Silver Cave",
+      "hue": 170.0,
+      "sat": 0.45,
+      "val": 1.05
+    },
+    {
+      "name": "Golden Savanna",
+      "hue": 60.0,
+      "sat": 1.0,
+      "val": 1.1
+    }
+  ],
+  "reused_boss_tint": [
+    {
+      "name": "eel",
+      "source": "leviathan",
+      "hue": -70.0,
+      "sat": 0.85,
+      "val": 1.05
+    },
+    {
+      "name": "wyrm",
+      "source": "toad",
+      "hue": 150.0,
+      "sat": 0.7,
+      "val": 1.15
+    },
+    {
+      "name": "hyena",
+      "source": "jackal",
+      "hue": 25.0,
+      "sat": 1.05,
+      "val": 1.0
+    }
+  ]
+}

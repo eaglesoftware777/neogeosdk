@@ -183,6 +183,10 @@ void soundSetADPCMBVolume(uint8_t volume);
 void soundSetSSGVolume(uint8_t volume);
 void soundApplyMix(uint8_t adpcma_vol, uint8_t adpcmb_vol, uint8_t ssg_vol, uint8_t fm_vol);
 
+/* The machine, the operator's settings (software DIPs) and the game's
+ * save block: static inline, so they cost a game nothing until it uses them. */
+#include "ng_system.h"
+
 /* High-level scene helpers used by the demo flow. */
 void soundPlayDemoFM(uint8_t fm_track);
 void soundPlayTitleMusic(uint8_t music_track);

@@ -1,9 +1,9 @@
 # The Shipped Games
 
-**Eagle Software · Neo Geo SDK v1.7.0**
+**Eagle Software · Neo Geo SDK v1.7.0 (Maiya arrives in v1.7.1)**
 
-Six buildable projects live in `games/`: the showcase, its C++ counterpart,
-two shooters, and two minimal examples. Use their source as reference
+Seven projects are listed here: the showcase, its C++ counterpart,
+two shooters, a platform adventure and two minimal examples. Use their source as reference
 implementations for the SDK features they demonstrate.
 
 | Game | Id | Engine | What it is |
@@ -11,19 +11,31 @@ implementations for the SDK features they demonstrate.
 | `demo` | 777 | C | The 25-chapter engine reel |
 | `demo_plus` | 778 | C++ | The same demo scenes, art, and sound on the C++ engine |
 | `skylance` | 779 | C | Sky Lance — a complete vertical shooter |
+| `maiya` | 780 | C | Maiya: Super Nature Girl, six valleys, vine climbing, guardian arenas and bonus playfields |
 | `helloworld` | 772 | — | FIX text and one sample. The tutorial target. |
 | `tutorial` | 555 | C | The minimal engine loop, nothing else |
 | `neogeogame` | 775 | C | A sprite-based formation shooter |
 
-Every game carries its own `game.cfg`, so all six build the same way:
+Every game carries its own `game.cfg`; explicit game selection automatically
+uses that file without changing the default `demo` configuration:
 
 ```sh
-make GAME=<name> GAME_CFG_FILE=games/<name>/game.cfg all
-make GAME=<name> GAME_CFG_FILE=games/<name>/game.cfg test
+make GAME=<name> all
+make GAME=<name> test
 ```
 
-The repo-root `game.cfg` names whichever game you are actively working on;
-passing `GAME_CFG_FILE=` lets you build any other without editing it.
+On Windows use `make -f MakefileWin32.mak` with the same arguments.
+An explicit `GAME_CFG_FILE=` remains available for custom configurations.
+`USE_EAGLE_BIOS=1` builds and installs the optional firmware into its isolated
+test directory. `bios-package` builds a cartridge-plus-firmware ZIP; the
+normal default never bundles replacement firmware.
+
+## Maiya (id 780)
+
+See [the game manual](../games/maiya/README.md) for controls, the fixed-camera
+guardian arenas, bonus progression, source art, palette allocation and MAME
+regression tests. Its per-game art builder preserves animation frame layout
+instead of treating each pose as a generated screen.
 
 ---
 

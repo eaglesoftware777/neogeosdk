@@ -1,0 +1,130 @@
+{
+  "name": "GOLDEN SAVANNA",
+  "width": 4736,
+  "background": 9,
+  "music": 4,
+  "mechanic": "none",
+  "pit": "fire",
+  "blocks": "savanna",
+  "posted": "poachdrone",
+  "gate_x": 4100,
+  "key": {"x": 2188, "y": 46},
+  "guardian": {
+    "name": "BLIGHT HYENA",
+    "style": "hyena",
+    "hp": 36,
+    "hint": "THE HYENA TIRES AFTER THE POUNCE",
+    "taunt": "I HUNT WHAT ISN'T MINE TO TAKE!",
+    "reply": "THESE PLAINS AREN'T YOURS TO HUNT!"
+  },
+  "art": {"name": "SAVANNA WIND CHASE", "words": "MAIYA: WIND, CLEAR THEIR TRAPS!"},
+  "secret_hint": "THE BAOBAB HOLLOW HIDES A CHARM",
+  "sunboy": ["THE HERD RUNS FREE. WE DID IT", "THANK YOU, SUPER NATURE GIRL"],
+  "platforms": [
+    {"x": 320, "y": 144, "w": 128},
+    {"x": 540, "y": 112, "w": 96},
+    {"x": 760, "y": 80, "w": 128},
+    {"x": 1100, "y": 144, "w": 160},
+    {"x": 1400, "y": 112, "w": 96},
+    {"x": 1640, "y": 144, "w": 96},
+    {"x": 1860, "y": 104, "w": 160},
+    {"x": 2140, "y": 72, "w": 128},
+    {"x": 2460, "y": 144, "w": 128},
+    {"x": 2700, "y": 112, "w": 96},
+    {"x": 2920, "y": 144, "w": 96},
+    {"x": 3140, "y": 96, "w": 160},
+    {"x": 3420, "y": 64, "w": 128},
+    {"x": 3700, "y": 144, "w": 128},
+    {"x": 3900, "y": 112, "w": 96}
+  ],
+  "encounters": [
+    {"x": 240, "enemy": "goblin"},
+    {"x": 420, "enemy": "crow"},
+    {"x": 620, "enemy": "poachdrone"},
+    {"x": 820, "enemy": "chemfly"},
+    {"x": 1000, "enemy": "beetle"},
+    {"x": 1200, "enemy": "goblin"},
+    {"x": 1400, "enemy": "chemfly"},
+    {"x": 1600, "enemy": "poachdrone"},
+    {"x": 1800, "enemy": "crow"},
+    {"x": 2000, "enemy": "pair"},
+    {"x": 2200, "enemy": "chemfly"},
+    {"x": 2400, "enemy": "goblin"},
+    {"x": 2600, "enemy": "poachdrone"},
+    {"x": 2800, "enemy": "beetle"},
+    {"x": 3000, "enemy": "chemfly"},
+    {"x": 3200, "enemy": "crow"},
+    {"x": 3400, "enemy": "poachdrone"},
+    {"x": 3600, "enemy": "goblin"},
+    {"x": 3800, "enemy": "chemfly"},
+    {"x": 3950, "enemy": "beetle"}
+  ],
+  "archers": [
+    {"x": 570, "y": 112},
+    {"x": 1430, "y": 112},
+    {"x": 1890, "y": 104},
+    {"x": 2730, "y": 112},
+    {"x": 3170, "y": 96}
+  ],
+  "hazards": [
+    {"x": 680, "w": 64, "type": "pit"},
+    {"x": 980, "w": 48, "type": "fire"},
+    {"x": 1560, "w": 64, "type": "pit"},
+    {"x": 2060, "w": 48, "type": "fire"},
+    {"x": 2380, "w": 64, "type": "pit"},
+    {"x": 2880, "w": 48, "type": "spikes"},
+    {"x": 3320, "w": 64, "type": "pit"},
+    {"x": 3620, "w": 48, "type": "fire"}
+  ],
+  "rescues": [
+    {"x": 1000, "who": "elder"},
+    {"x": 2000, "who": "spirit"},
+    {"x": 2600, "who": "maiden"},
+    {"x": 3700, "who": "sunboy"}
+  ],
+  "secrets": [
+    {"x": 360, "y": 114, "type": "chest"},
+    {"x": 800, "y": 50, "type": "rose"},
+    {"x": 1900, "y": 74, "type": "gem"},
+    {"x": 2500, "y": 114, "type": "chest"},
+    {"x": 3180, "y": 66, "type": "rose"},
+    {"x": 3460, "y": 34, "type": "gem"}
+  ],
+  "pickups": [
+    {"x": 200, "y": 166, "kind": "silver"},
+    {"x": 1260, "y": 166, "kind": "spring"},
+    {"x": 1760, "y": 166, "kind": "crown"},
+    {"x": 2620, "y": 166, "kind": "silver"},
+    {"x": 548, "y": 82, "kind": "gold"},
+    {"x": 2708, "y": 82, "kind": "gold"},
+    {"x": 1500, "y": 166, "kind": "flower"},
+    {"x": 3040, "y": 166, "kind": "critter"},
+    {"x": 2240, "y": 166, "kind": "charm"},
+    {"x": 3500, "y": 34, "kind": "life"}
+  ],
+  "decor": [
+    {"x": 150, "y": 160, "kind": "grass"},
+    {"x": 460, "y": 160, "kind": "bush"},
+    {"x": 900, "y": 160, "kind": "sapling"},
+    {"x": 1340, "y": 160, "kind": "grass"},
+    {"x": 1780, "y": 160, "kind": "rock"},
+    {"x": 2300, "y": 160, "kind": "bush"},
+    {"x": 2640, "y": 160, "kind": "sapling"},
+    {"x": 3080, "y": 160, "kind": "grass"},
+    {"x": 3560, "y": 160, "kind": "rock"},
+    {"x": 1196, "y": 112, "kind": "grass"},
+    {"x": 1956, "y": 72, "kind": "bush"},
+    {"x": 3236, "y": 64, "kind": "sapling"},
+    {"x": 4020, "y": 160, "kind": "sign"}
+  ],
+  "vines": [
+    {"x": 792, "top": 80, "bottom": 192},
+    {"x": 2172, "top": 72, "bottom": 192},
+    {"x": 3452, "top": 64, "bottom": 192}
+  ],
+  "npcs": [
+    {"x": 420, "who": "maiden", "line": "POACHER DRONES FIRE CAPTURE NETS"},
+    {"x": 1920, "who": "elder", "line": "PESTICIDE FLIES LOOP: WAIT, THEN HIT"},
+    {"x": 3320, "who": "spirit", "line": "THE KEY RESTS ON THE ACACIA SHELF"}
+  ]
+}
