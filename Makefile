@@ -129,7 +129,7 @@ SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
 NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_vram ng_sprite_window ng_art_asset ng_palette_assets ng_bg ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt ng_scene ng_depthfx ng_render_queue ng_fixed ng_camera ng_palette_fx ng_particles ng_feedback ng_debug ng_joystick ng_demo_advanced
 ifneq ($(USE_2D_PLUS),1)
-# ng_rand (C engine only): the one random generator, ng_depthfx included
+# ng_rand (C engine only): the one random generator, ng_depthfx included;
 NG_ENGINE_NAMES+=ng_rand
 endif
 NG_ENGINE_STUBBED=ng_particles
@@ -149,9 +149,11 @@ DEMO_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(DEMO_NAMES)))
 NG_FIX_SDK_OBJ0=out/ng_fix_sdk0.o
 # SDK modules a game links only if it calls them: sdk/cabinet (the machine,
 # region and the like) and the engine's on-demand modules (ng_trig and its
-# generated table).  They are built as plain C into a library at the end of
-# the link, so a game that never uses one carries none of its code.
-SDK_LIB_SRCS=$(wildcard sdk/cabinet/*.c) sdk/2d_engine/ng_trig.c sdk/2d_engine/ng_trig_table.c
+# generated table; ng_pause, C engine only).  They are built as plain C into
+# a library at the end of the link, so a game that never uses one carries
+# none of its code.
+SDK_LIB_SRCS=$(wildcard sdk/cabinet/*.c) sdk/2d_engine/ng_trig.c sdk/2d_engine/ng_trig_table.c \
+             $(if $(filter 1,$(USE_2D_PLUS)),,sdk/2d_engine/ng_pause.c)
 SDK_LIB_OBJ0=$(addprefix out/lib_,$(addsuffix 0.o,$(notdir $(basename $(SDK_LIB_SRCS)))))
 SDK_LIB=out/libng_sdk.a
 

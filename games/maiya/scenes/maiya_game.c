@@ -141,6 +141,7 @@ enum {
     /* FIX rows: 2..29 are visible (8 px each). ROW_POWER was reserved but
      * never used until the boss HP bar took it. */
     ROW_SCORE = 2, ROW_LIVES = 4, ROW_POWER = 5, ROW_HINT = 7, ROW_CARD = 8,
+    MG_PAUSE_ROW = 12,               /* PAUSE, in the mission card's space */
 
     /* HUD glyphs written into the low FIX codes by build_fix_assets.py. */
     GLYPH_HEART = 1, GLYPH_ROSE = 2, GLYPH_KEY = 3, GLYPH_COIN = 4,
@@ -247,7 +248,7 @@ typedef struct {
     uint8_t  stage, state, lives, art, kills, rescue_mask;
     uint8_t  hurt, coyote, jump_buffer, drop, boss_hurt, boss_active;
     uint8_t  attack, combo, dash, dash_wait, cast, super_surge, sitting;
-    uint8_t  facing, notice, hud_dirty, pause, session_over;
+    uint8_t  facing, notice, hud_dirty, session_over;
     uint8_t  has_key, gate_unlocked, gate_shown, key_taken;
     uint8_t  climbing, crouch_timer, npc_mask, npc_live, npc_here;
     uint16_t swift, might, veil;      /* power-ups, in frames              */
@@ -486,6 +487,13 @@ static const uint16_t *NEOGEO_USER mg_hero_normal_pal(void)
 }
 
 
+/* The road's music levels (ADPCM-B, SSG, FM), for a pause to put back. */
+static void NEOGEO_USER mg_music_levels(void)
+{
+    if (mg.demo && !maiya_dip_demo_sound()) ng_pause_set_music_levels(0x00, 0x00, 0x00);
+    else ng_pause_set_music_levels(0xB8, 0x00, 0x00);
+}
+
 static void NEOGEO_USER mg_music(uint8_t track)
 {
     if (mg.music_on && mg.music_track == track) return;
@@ -497,6 +505,7 @@ static void NEOGEO_USER mg_music(uint8_t track)
     isZ80Ready();
     if (mg.demo && !maiya_dip_demo_sound()) soundApplyMix(0x00, 0x00, 0x00, 0x00);
     else soundApplyMix(0x3C, 0xB8, 0x00, 0x00);
+    mg_music_levels();
     isZ80Ready(); soundSetADPCMBLoop(1);
     isZ80Ready(); playSFXB(track);
 }
@@ -1135,7 +1144,7 @@ static void NEOGEO_USER mg_camera_follow(void)
     }
 
     /* Held where it is through a hitstop or a pause; its shake runs on. */
-    mg.camera.mode = (ng_feedback_is_hitstop() || mg.pause) ? NG_CAM_FREE : NG_CAM_FOLLOW;
+    mg.camera.mode = (ng_feedback_is_hitstop() || ng_pause_is_on()) ? NG_CAM_FREE : NG_CAM_FOLLOW;
     /* Vertically it never moves: aimed at the screen's middle row, and
      * its bounds hold it at 0 anyway. */
     ng_camera_update(&mg.camera, p->x, NG_SCREEN_H / 2, mg.cam_dir);
@@ -2017,6 +2026,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     ng_sprite_hide_all();
     maiya_vblank();
     ng_game_engine_init();
+    mg_music_levels();   /* the init forgot them; the music may play on unchanged */
     ng_game_engine_set_hooks(0, mg_collision_hook, 0, mg_before_draw_hook, 0);
     /* A heavy blow holds the whole valley still for a few frames, and an
      * impact event's sound plays through the ordinary effect call. */
@@ -2025,7 +2035,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
 
     mg_ui_palettes();
     if (mg.stage != stage) mg.rescue_mask = 0;
-    mg.stage = stage; mg.state = MG_INTRO; mg.pause = 0;
+    mg.stage = stage; mg.state = MG_INTRO;
     mg.tick = mg.boss_timer = mg.encounter_mask = mg.archer_mask = 0;
     mg.walk_distance = 0;
     mg.climb_cooldown = 0; mg.airborne = 0; mg.land_pose = 0;
@@ -5309,8 +5319,33 @@ static void NEOGEO_USER mg_continue_card(void)
     mg_number(19, ROW_CARD + 6, (mg.state_timer + 59u) / 60u, 2, PAL_WARN);
 }
 
+/*
+ * Start pauses the road and resumes it (never the attract demo): the
+ * engine's pause (ng_pause) holds the world, mutes the music, and PAUSE
+ * shows on the FIX layer while it lasts.
+ */
+static void NEOGEO_USER mg_pause_toggle(void)
+{
+    int on = !ng_pause_is_on();
+    ng_pause_set(on);
+    playSFX(SOUND_SFX_11);
+    if (on) mg_centre(MG_PAUSE_ROW, "PAUSE", PAL_GOLD);
+    else ng_fix_clear_rect(1, MG_PAUSE_ROW, 38, 1, PAL_TEXT);
+}
+
 void NEOGEO_USER maiya_frame(void)
 {
+    if (mg.player && !mg.demo && (mg.state == MG_PLAY || mg.state == MG_BONUS) &&
+        (NEO_REGISTER8(BIOS_STATCHANGE) & 0x01u))   /* P1 Start, just pressed */
+        mg_pause_toggle();
+    /* Paused: nothing of hers moves either -- creatures, sparks, the water,
+     * the clock, the camera -- the stick is only read, so no press is left
+     * over for the first frame back. */
+    if (ng_pause_is_on()) {
+        mg.previous_joy = mg_input();
+        return;
+    }
+
     mg.tick++;
     if (!mg.player) return;
     mg_animate_water();
