@@ -144,7 +144,20 @@ SCAT=$(REPO_WIN)\win\srec_cat.exe
 INFO=$(REPO_WIN)\win\xxd.exe -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
-NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_vram0.o out\ng_sprite_window0.o out\ng_art_asset0.o out\ng_palette_assets0.o out\ng_bg0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o out\ng_scene0.o out\ng_depthfx0.o out\ng_render_queue0.o out\ng_fixed0.o out\ng_camera0.o out\ng_palette_fx0.o out\ng_particles0.o out\ng_feedback0.o out\ng_debug0.o out\ng_joystick0.o out\ng_demo_advanced0.o
+# GAME_ENGINE_EXCLUDE (see Makefile): engine modules a game links as their
+# do-nothing stand-ins, sdk/2d_engine/<module>_none.c.  C engine only.
+GAME_ENGINE_EXCLUDE ?=
+NG_ENGINE_STUBBED=ng_particles
+ifneq ($(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)),)
+$(error GAME_ENGINE_EXCLUDE: no stand-in for $(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)))
+endif
+ifeq ($(USE_2D_PLUS),1)
+NG_ENGINE_EXCLUDED=
+else
+NG_ENGINE_EXCLUDED=$(filter $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE))
+endif
+ng_engine_mod=$(if $(filter $(1),$(NG_ENGINE_EXCLUDED)),$(1)_none,$(1))
+NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_vram0.o out\ng_sprite_window0.o out\ng_art_asset0.o out\ng_palette_assets0.o out\ng_bg0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o out\ng_scene0.o out\ng_depthfx0.o out\ng_render_queue0.o out\ng_fixed0.o out\ng_camera0.o out\ng_palette_fx0.o out\$(call ng_engine_mod,ng_particles)0.o out\ng_feedback0.o out\ng_debug0.o out\ng_joystick0.o out\ng_demo_advanced0.o
 # A game.mk may set GAME_SCENES_FROM to other game names; each scene is looked
 # for in this game's scenes directory first and in those after, so a game can
 # reuse another game's scene sources without copying them.
@@ -318,7 +331,7 @@ game: game-check
 	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_fixed.$(ENGINE_EXT) -o out\ng_fixed0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_camera.$(ENGINE_EXT) -o out\ng_camera0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_palette_fx.$(ENGINE_EXT) -o out\ng_palette_fx0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_particles.$(ENGINE_EXT) -o out\ng_particles0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\$(call ng_engine_mod,ng_particles).$(ENGINE_EXT) -o out\$(call ng_engine_mod,ng_particles)0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_feedback.$(ENGINE_EXT) -o out\ng_feedback0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_debug.$(ENGINE_EXT) -o out\ng_debug0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_joystick.$(ENGINE_EXT) -o out\ng_joystick0.o

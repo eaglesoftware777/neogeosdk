@@ -56,6 +56,15 @@ GAME_EXTRA_INCLUDES ?=
 # artbox/in and artbox/infix instead of keeping a second copy of the artwork.
 GAME_ART_FROM ?=
 
+# Optional engine modules a game leaves out.  A game's game.mk can set
+# GAME_ENGINE_EXCLUDE to engine modules it never uses (for example
+# "ng_particles" when it draws its own particles); each is linked as its
+# do-nothing stand-in, sdk/2d_engine/<module>_none.c, so the engine and any
+# caller still link while the game carries none of the module's code or RAM.
+# Only modules with a stand-in may be named; C engine only (a USE_2D_PLUS=1
+# build links every module).
+GAME_ENGINE_EXCLUDE ?=
+
 ifeq ($(USE_2D_PLUS),1)
   ENGINE_DIR  := sdk/2d_engine_plus
   ENGINE_EXT  := cpp
@@ -112,7 +121,18 @@ INFO=xxd -g 2
 SWAP= -byte-swap 2 -o
 FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
 NG_ENGINE_NAMES=ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events ng_level ng_vram ng_sprite_window ng_art_asset ng_palette_assets ng_bg ng_fix ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints ng_game_interupt ng_scene ng_depthfx ng_render_queue ng_fixed ng_camera ng_palette_fx ng_particles ng_feedback ng_debug ng_joystick ng_demo_advanced
-NG_ENGINE_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(NG_ENGINE_NAMES)))
+NG_ENGINE_STUBBED=ng_particles
+ifneq ($(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)),)
+$(error GAME_ENGINE_EXCLUDE: no stand-in for $(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)))
+endif
+ifeq ($(USE_2D_PLUS),1)
+NG_ENGINE_EXCLUDED=
+else
+NG_ENGINE_EXCLUDED=$(filter $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE))
+endif
+# The module a name links as: itself, or its stand-in when the game leaves it out.
+ng_engine_mod=$(if $(filter $(1),$(NG_ENGINE_EXCLUDED)),$(1)_none,$(1))
+NG_ENGINE_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(foreach n,$(NG_ENGINE_NAMES),$(call ng_engine_mod,$(n)))))
 DEMO_NAMES=demo demo_intro demo_sprites demo_camera demo_palette demo_particles demo_depth demo_sound demo_fix demo_combat demo_stress demo_title demo_render
 DEMO_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(DEMO_NAMES)))
 NG_FIX_SDK_OBJ0=out/ng_fix_sdk0.o
@@ -307,7 +327,7 @@ game: game-check
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_fixed.$(ENGINE_EXT) -o out/ng_fixed0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_camera.$(ENGINE_EXT) -o out/ng_camera0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_palette_fx.$(ENGINE_EXT) -o out/ng_palette_fx0.o
-	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_particles.$(ENGINE_EXT) -o out/ng_particles0.o
+	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/$(call ng_engine_mod,ng_particles).$(ENGINE_EXT) -o out/$(call ng_engine_mod,ng_particles)0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_feedback.$(ENGINE_EXT) -o out/ng_feedback0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_debug.$(ENGINE_EXT) -o out/ng_debug0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_joystick.$(ENGINE_EXT) -o out/ng_joystick0.o
