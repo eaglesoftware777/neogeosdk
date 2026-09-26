@@ -119,6 +119,9 @@ class Stage:
         s["gate_x"] = self.num(d, "gate_x", "stage", 0, width)
         key = self.get(d, "key", "stage", dict)
         s["key"] = (self.num(key, "x", "key", 0, width), self.num(key, "y", "key", 0, 223))
+        hide = self.get(d, "hideout", "stage", dict)
+        s["hideout"] = (self.num(hide, "x", "hideout", 16, width), self.num(hide, "y", "hideout", 16, 192),
+                        self.text(hide, "hint", "hideout"))
         g = self.get(d, "guardian", "stage", dict)
         s["guardian"] = self.text(g, "name", "guardian", 30)
         s["boss_style"] = self.name(g, "style", "guardian", "guardian", "MG_B_")
@@ -196,7 +199,15 @@ class Stage:
             self.fail("rescues", "needs four captives")
         if not (rx[0] < width // 2 < rx[3]) or rx != sorted(rx) or rx[3] >= gate:
             self.fail("rescues", "in x order, the first in the first half, the last in the second, all before the gate")
+        hx, hy, _ = s["hideout"]
+        if hy != 192 and not any(py == hy and px <= hx <= px + pw for px, py, pw in s["platforms"]):
+            self.fail("hideout", f"({hx},{hy}) is on no ledge: y must be a ledge's y (or 192, the road), x within it")
+        kx, ky = s["key"]
+        if not any(py - 40 <= ky <= py - 16 and px - 16 <= kx <= px + pw for px, py, pw in s["platforms"]):
+            self.fail("key", f"({kx},{ky}) is over no shelf: it should hang just above a ledge")
         for i, (x, top, bottom) in enumerate(s["vines"]):
+            if not any(py == top and px <= x + 16 <= px + pw for px, py, pw in s["platforms"]):
+                self.fail(f"vines[{i}]", f"its top ({x},{top}) meets no ledge")
             if bottom != 192 or bottom - top > 128:
                 self.fail(f"vines[{i}]", "runs from the road (bottom 192) up at most 128 px")
 
@@ -247,6 +258,8 @@ def render(stages, files):
     out.append(table("MG_NPCS_TABLE", ["{" + ",".join(f"{{{x},{t},{c_string(line)}}}" for x, t, line in s["npcs"]) + "}"
                                        if s["npcs"] else "{{0}}" for s in stages]))
     out.append(table("MG_KEY_TABLE", [f"{{{s['key'][0]}, {s['key'][1]}}}" for s in stages]))
+    out.append(table("MG_HIDEOUT_TABLE", [f"{{{s['hideout'][0]}, {s['hideout'][1]}, {c_string(s['hideout'][2])}}}"
+                                          for s in stages]))
     out.append(table("MG_ART_NAME_TABLE", [c_string(s["art_name"]) for s in stages]))
     out.append(table("MG_ART_WORDS_TABLE", [c_string(s["art_words"]) for s in stages]))
     out.append(table("MG_SECRET_HINT_TABLE", [c_string(s["secret_hint"]) for s in stages]))

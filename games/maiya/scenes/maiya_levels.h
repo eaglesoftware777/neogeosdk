@@ -142,6 +142,15 @@ static const MGNpc mg_npcs[MG_LEVEL_COUNT][MG_NPC_COUNT] = MG_NPCS_TABLE;
 /* Where the Golden Sun Key waits: always on a high shelf, never on the road. */
 static const uint16_t mg_key_pos[MG_LEVEL_COUNT][2] = MG_KEY_TABLE;
 
+/* Each valley's hideout: kneel here and she is taken to a hidden vault.
+ * The elder's charm tells her where (the hint). */
+typedef struct {
+    int16_t x, y;            /* the spot, on the surface she kneels on */
+    const char *hint;
+} MGHideout;
+
+static const MGHideout mg_hideout[MG_LEVEL_COUNT] = MG_HIDEOUT_TABLE;
+
 /* ---------------------------------------------------------------- */
 /*  Secret Arts, elder lore and what Sunboy says between missions    */
 /* ---------------------------------------------------------------- */
