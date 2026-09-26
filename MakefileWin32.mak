@@ -176,11 +176,11 @@ GAME_SCENE_DIRS := games/$(GAME)/scenes $(foreach g,$(GAME_SCENES_FROM),games/$(
 GAME_SCENE_SRCS := $(foreach s,$(GAME_SCENES),$(firstword $(wildcard $(addsuffix /$(s).c,$(GAME_SCENE_DIRS)))))
 GAME_SCENE_OBJS := $(addprefix out/,$(addsuffix 0.o,$(GAME_SCENES)))
 NG_FIX_SDK_OBJ0=out\ng_fix_sdk0.o
-# SDK modules linked only if a game calls them (sdk/cabinet), from a
-# library at the end of the link (see Makefile).
-CABINET_SRCS=$(wildcard sdk/cabinet/*.c)
-CABINET_OBJ0=$(addprefix out/cab_,$(addsuffix 0.o,$(notdir $(basename $(CABINET_SRCS)))))
-CABINET_LIB=out/libng_cabinet.a
+# SDK modules linked only if a game calls them (sdk/cabinet, ng_trig), from
+# a library at the end of the link (see Makefile).
+SDK_LIB_SRCS=$(wildcard sdk/cabinet/*.c) sdk/2d_engine/ng_trig.c sdk/2d_engine/ng_trig_table.c
+SDK_LIB_OBJ0=$(addprefix out/lib_,$(addsuffix 0.o,$(notdir $(basename $(SDK_LIB_SRCS)))))
+SDK_LIB=out/libng_sdk.a
 
 ifeq ($(DEBUG),1)
 CFLAGS += -g3 -gdwarf-2 -DNG_DEBUG=1
@@ -319,9 +319,10 @@ game: game-check
 	$(GAME_CC) $(GAME_CFLAGS) games\$(GAME)\main.c -o out\main0.o
 	$(GAME_CC) $(GAME_CFLAGS) sdk\neogeolib.c -o out\neogeolib0.o
 	$(GAME_CC) $(GAME_CFLAGS) sdk\ng_fix\ng_fix.c -o out\ng_fix_sdk0.o
-	$(foreach src,$(CABINET_SRCS),$(CC) $(CFLAGS) $(src) -o out/cab_$(notdir $(basename $(src)))0.o &&) rem cabinet compiled
-	if exist out\libng_cabinet.a del out\libng_cabinet.a
-	$(AR) rcs $(CABINET_LIB) $(CABINET_OBJ0)
+	$(PY) tools\gen_trig.py --out sdk\2d_engine\ng_trig_table.c
+	$(foreach src,$(SDK_LIB_SRCS),$(CC) $(CFLAGS) $(src) -o out/lib_$(notdir $(basename $(src)))0.o &&) rem sdk library compiled
+	if exist out\libng_sdk.a del out\libng_sdk.a
+	$(AR) rcs $(SDK_LIB) $(SDK_LIB_OBJ0)
 	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_defs.$(ENGINE_EXT) -o out\ng_defs0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_properties.$(ENGINE_EXT) -o out\ng_properties0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_game_time.$(ENGINE_EXT) -o out\ng_game_time0.o
@@ -365,7 +366,7 @@ game: game-check
 	@rem The linker script places sections by object file name (out/ng_*0.o),
 	@rem so the objects must reach ld spelled with forward slashes or those
 	@rem patterns never match and the tables land elsewhere in the ROM.
-	$(LD) $(LDFLAGS) -T games/$(GAME)/neogeo.ld -o out/game out/neogeo.o out/user.o out/main.o out/neogeolib.o out/eyecatcher.o $(subst \,/,$(NG_FIX_SDK_OBJ0)) $(subst \,/,$(NG_ENGINE_OBJ0)) $(GAME_SCENE_OBJS) $(CABINET_LIB)
+	$(LD) $(LDFLAGS) -T games/$(GAME)/neogeo.ld -o out/game out/neogeo.o out/user.o out/main.o out/neogeolib.o out/eyecatcher.o $(subst \,/,$(NG_FIX_SDK_OBJ0)) $(subst \,/,$(NG_ENGINE_OBJ0)) $(GAME_SCENE_OBJS) $(SDK_LIB)
 
 $(GAME_ID)-p1.p1: game
 	$(OBJCP) -O ihex out\game out\game0
