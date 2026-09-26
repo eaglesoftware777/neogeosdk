@@ -13,6 +13,7 @@
 #include "sdk/sound_ids.h"
 #include "artbox/generated/maiya_assets.h"
 #include "maiya_levels.h"   /* the mission tables name decoration tiles */
+#include "maiya_feel.h"     /* hitstop and shake: every tuning value */
 #include <stddef.h>
 
 #pragma GCC optimize ("O2")
@@ -296,6 +297,7 @@ typedef struct {
     int16_t  cam_lead;               /* how far the camera looks ahead of her         */
     uint8_t  difficulty;             /* the operator's setting: 0 easy .. 3 expert     */
     uint8_t  boss_backoff;           /* a guardian that just struck her steps back    */
+    uint16_t held_press;             /* buttons pressed during a hitstop, not yet seen */
 } MGState;
 
 static MGState mg;
@@ -1031,7 +1033,7 @@ static void NEOGEO_USER mg_update_sparks(int16_t camera_x)
         MGSpark *p = &mg.sparks[i];
         int16_t scr_x;
 
-        if (p->life) {
+        if (p->life && !ng_feedback_is_hitstop()) {
             p->life--;
             p->x = (int16_t)(p->x + p->vx);
             p->y = (int16_t)(p->y + p->vy);
@@ -1147,6 +1149,22 @@ static void NEOGEO_USER mg_collision_hook(void)
  * needs her kept a little left of centre, so do it here, in whole pixels,
  * with a step small enough to stay smooth and a shake of our own.
  */
+/* During a hitstop nothing thinks, but the stick is still read: a button
+ * pressed (even tapped and let go) while the world is held lands on the
+ * first frame after it. */
+static uint16_t NEOGEO_USER mg_input(void);
+static void NEOGEO_USER mg_hold_input(void)
+{
+    uint16_t joy = mg_input();
+    mg.held_press |= (uint16_t)(joy & (uint16_t)(~mg.previous_joy));
+    mg.previous_joy = joy;
+}
+
+static void NEOGEO_USER mg_impact_sfx(uint16_t id)
+{
+    playSFX((uint8_t)id);
+}
+
 static void NEOGEO_USER mg_camera_follow(void)
 {
     const MGLevel *level = &mg_levels[mg.stage];
@@ -1187,6 +1205,15 @@ static void NEOGEO_USER mg_camera_follow(void)
         mg.shake_x = (int16_t)((mg.shake & 2u) ? 2 : -2);
     } else {
         mg.shake_x = 0;
+    }
+    /* An impact event's shake (ng_camera_shake on mg.camera): side to side
+     * each frame, easing off over its last frames. It runs through a
+     * hitstop, since this hook draws the frame the world is held on. */
+    if (mg.camera.shake_frames) {
+        int16_t amp = mg.camera.shake_amp;
+        if (mg.camera.shake_frames < amp) amp = mg.camera.shake_frames;
+        mg.shake_x = (int16_t)(mg.shake_x + ((mg.camera.shake_frames & 1u) ? amp : -amp));
+        mg.camera.shake_frames--;
     }
 
     ng_camera_snap(&mg.camera, (int16_t)(have + mg.shake_x), 0);
@@ -1718,7 +1745,7 @@ static void NEOGEO_USER mg_enemy_damage(MGEnemy *e, uint8_t damage)
             e->heading = (int8_t)(mg.player->x < x ? 1 : -1);
             mg_burst(x, (int16_t)(y - 20), MG_T_SPARK, 1, -1);
         }
-        ng_feedback_hitstop(3);
+        ng_impact_event(MG_IMPACT_KILL, 0, 0, &mg.camera, SOUND_SFX_10, 0, 0, 0, 0);
         mg.score += 250u;
         mg.kills++;
 
@@ -1757,9 +1784,9 @@ static void NEOGEO_USER mg_enemy_damage(MGEnemy *e, uint8_t damage)
         case 0:  mg_drop_trinket(x, (int16_t)(y - 20), MG_K_VEIL); break;
         default: break;
         }
-        playSFX(SOUND_SFX_10); /* explosion */
     } else {
         mg_hit_burst(e->body->x, (int16_t)(e->body->y - 20));
+        if (damage >= MG_HEAVY_DAMAGE) ng_feedback_hitstop(MG_HITSTOP_HEAVY_HIT);
         e->body->hp -= damage;
     }
 }
@@ -1788,8 +1815,17 @@ static void NEOGEO_USER mg_boss_damage(uint8_t damage)
     if (!b || mg.boss_hurt || mg.state != MG_PLAY) return;
     mg.boss_hurt = 12;
     mg_hit_burst(b->x, (int16_t)(b->y - 40));
-    playSFX(SOUND_SFX_4); /* metal clank / damage */
-    ng_feedback_hitstop(damage >= b->hp ? 16 : 4);
+    if (damage >= b->hp) {
+        /* The last blow: held longer, shaken harder, no flash -- it drains
+         * to grey below. (A hit's 6-frame flash is always over by now:
+         * boss_hurt keeps blows 12 frames apart.) */
+        ng_impact_event(MG_IMPACT_BOSS_DOWN, 0, 0, &mg.camera, SOUND_SFX_4, 0, 0, 0, 0);
+        ng_feedback_hitstop(MG_HITSTOP_BOSS_DOWN);
+    } else {
+        ng_impact_event(MG_IMPACT_BOSS_HIT, b == mg.boss ? PAL_BOSS : 0,
+                        b == mg.boss ? mg_boss_pal((uint8_t)b->data0) : 0,
+                        &mg.camera, SOUND_SFX_4, 0, 0, 0, 0);
+    }
 
     if (damage >= b->hp) {
         /*
@@ -1850,7 +1886,7 @@ static void NEOGEO_USER mg_boss_damage(uint8_t damage)
         b->vx_fp = (mg.player->x < b->x) ? 320 : -320;
         mg_frame(b, MG_BF_HURT, (uint8_t)(mg.player->x < b->x));
         mg.boss_down = 0;
-        mg.shake = 16;
+        mg.shake = MG_SHAKE_BOSS_DOWN;
         mg.clear_bonus = (uint16_t)(2000u + mg.stage * 1000u + (mg.player->hp * 200u) + mg.clock * 10u);
         mg.score += mg.clear_bonus;
         playSFX(SOUND_SFX_10);
@@ -1897,11 +1933,11 @@ static uint8_t NEOGEO_USER mg_player_damage(void)
     mg.attack = mg.combo = mg.cast = 0;
     mg.hud_dirty = 1;
     playSFX(SOUND_SFX_16); /* player hurt */
-    ng_feedback_hitstop(5);
+    ng_feedback_hitstop(MG_HITSTOP_HURT);
     /* Two small sparks where the blow lands -- it happens on every hit,
      * so it stays small and quick; her bar and her glint say the rest. */
     mg_burst(p->x, (int16_t)(p->y - 30), MG_T_SPARK, 2, -1);
-    mg.shake = 10;
+    mg.shake = MG_SHAKE_HURT;
     /* Staggered back, away from the way she faces unless mg_player_hit()
      * knows where the blow came from; the controls ease it to a stop. */
     p->vx_fp = mg.facing ? MG_KNOCK : -MG_KNOCK;
@@ -2042,8 +2078,10 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     waitVbl();
     ng_game_engine_init();
     ng_game_engine_set_hooks(0, mg_collision_hook, 0, mg_before_draw_hook, 0);
-    /* A heavy blow holds the whole valley still for a few frames. */
+    /* A heavy blow holds the whole valley still for a few frames, and an
+     * impact event's sound plays through the ordinary effect call. */
     ng_game_engine_set_hitstop_freeze(1);
+    ng_feedback_set_sfx_hook(mg_impact_sfx);
 
     mg_ui_palettes();
     if (mg.stage != stage) mg.rescue_mask = 0;
@@ -2081,6 +2119,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.clock = MG_LEVEL_SECONDS; mg.clock_sub = 0; mg.wraith_timer = 0;
     mg.hp_px = MG_HP_BAR_PX; mg.boss_px = 0; mg.cage_open = 0; mg.arena_bg = 0;
     mg_fade_k = 0; mg.win_step = 0; mg.win_wait = 0; mg.cam_lead = MG_CAM_LEAD;
+    mg.held_press = 0;
     for (i = 0; i < MG_PLATFORM_COUNT; i++) { mg.ledge_stand[i] = 0; mg.ledge_gone[i] = 0; }
     mg.gate_shown = 0;
     mg.npc_mask = 0; mg.npc_live = 0; mg.npc_here = 0;
@@ -3308,9 +3347,11 @@ static uint8_t NEOGEO_USER mg_throw(int16_t high)
 static void NEOGEO_USER mg_controls(void)
 {
     uint16_t joy = mg_input();
-    uint16_t pressed = (uint16_t)(joy & (uint16_t)(~mg.previous_joy));
+    uint16_t pressed = (uint16_t)((joy & (uint16_t)(~mg.previous_joy)) | mg.held_press);
     NGCharacter *p = mg.player;
     int16_t vx = 0;
+
+    mg.held_press = 0;
 
     if (mg.climb_cooldown) mg.climb_cooldown--;
     if (mg.dash_wait) mg.dash_wait--;
@@ -5143,6 +5184,7 @@ static void NEOGEO_USER mg_bonus_frame(void)
     }
 
     if (ng_feedback_is_hitstop()) {
+        mg_hold_input();
         mg_world_step();
         return;
     }
@@ -5395,7 +5437,10 @@ void NEOGEO_USER maiya_frame(void)
     }
 
     if (mg.state == MG_PLAY) {
+        /* Hitstop: creatures, villagers, allies, the guardian and every
+         * timer hold still (their logic is skipped, not their drawing). */
         if (ng_feedback_is_hitstop()) {
+            mg_hold_input();
             mg_world_step();
             return;
         }
@@ -5450,6 +5495,10 @@ void NEOGEO_USER maiya_frame(void)
     }
 
     if (mg.state == MG_CLEAR) {
+        if (ng_feedback_is_hitstop()) {   /* the last blow's hold */
+            mg_world_step();
+            return;
+        }
         /*
          * Guardian defeated. She comes down if she was in the air, takes a
          * breath, hops once for joy and then holds her victory pose -- one
