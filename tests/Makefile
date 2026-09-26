@@ -17,15 +17,18 @@ ifeq ($(OS),Windows_NT)
   EXE   := .exe
   RUN   :=
   RMF    = del /Q
+  PYTHON ?= py
 else
   EXE   :=
   RUN   := ./
   RMF    = rm -f
+  PYTHON ?= python3
 endif
 
 TEST_C   := test_c$(EXE)
 TEST_CPP := test_cpp$(EXE)
 TEST_RAND := test_rand$(EXE)
+TEST_TRIG := test_trig$(EXE)
 
 C_SRCS   = sprite_render_test.c \
            ../sdk/2d_engine/ng_chars.c \
@@ -46,7 +49,7 @@ CPP_SRCS = sprite_render_test.c \
 
 .PHONY: all test clean
 
-all: $(TEST_C) $(TEST_CPP) $(TEST_RAND)
+all: $(TEST_C) $(TEST_CPP) $(TEST_RAND) $(TEST_TRIG)
 
 $(TEST_C): $(C_SRCS) $(wildcard ../sdk/2d_engine/*.h)
 	$(CC) -o $@ $(CFLAGS) $(C_SRCS)
@@ -57,10 +60,17 @@ $(TEST_CPP): $(CPP_SRCS) $(wildcard ../sdk/2d_engine_plus/*.hpp ../sdk/2d_engine
 $(TEST_RAND): rand_test.c ../sdk/2d_engine/ng_rand.c ../sdk/2d_engine/ng_rand.h
 	$(CC) -Wall -o $@ $(CFLAGS) rand_test.c ../sdk/2d_engine/ng_rand.c
 
+TRIG_SRCS = trig_test.c ../sdk/2d_engine/ng_trig.c ../sdk/2d_engine/ng_trig_table.c
+
+$(TEST_TRIG): $(TRIG_SRCS) ../sdk/2d_engine/ng_trig.h
+	$(CC) -Wall -o $@ $(CFLAGS) $(TRIG_SRCS) -lm
+
 test: all
 	$(RUN)$(TEST_C)
 	$(RUN)$(TEST_CPP)
 	$(RUN)$(TEST_RAND)
+	$(RUN)$(TEST_TRIG)
+	$(PYTHON) ../tools/gen_trig.py --check ../sdk/2d_engine/ng_trig_table.c
 
 clean:
-	-$(RMF) $(TEST_C) $(TEST_CPP) $(TEST_RAND)
+	-$(RMF) $(TEST_C) $(TEST_CPP) $(TEST_RAND) $(TEST_TRIG)

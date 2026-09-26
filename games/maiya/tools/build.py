@@ -141,8 +141,8 @@ def quick_build(toolchain, platform):
     objects = ["neogeo.o", "user.o", "main.o", "eyecatcher.o", "neogeolib.o"]
     objects += engine_objects()
     objects += ["maiya_game0.o"]
-    if (WORK / "out/libng_cabinet.a").exists():
-        objects += ["libng_cabinet.a"]   # last: only what the game calls is linked
+    if (WORK / "out/libng_sdk.a").exists():
+        objects += ["libng_sdk.a"]   # last: only what the game calls is linked
     command("ld", "-nostdlib", "-T", "games/maiya/neogeo.ld", "-o", "out/game",
             *(f"out/{name}" for name in objects))
     command("objcopy", "-O", "binary", "out/game", "out/game.raw")

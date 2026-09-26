@@ -28,3 +28,5 @@ tests/test_c
 tests/test_cpp
 tests/test_rand
 tests/test_rand.exe
+tests/test_trig
+tests/test_trig.exe

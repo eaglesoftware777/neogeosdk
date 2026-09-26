@@ -147,12 +147,13 @@ NG_ENGINE_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(foreach n,$(NG_ENGINE_NAMES),$
 DEMO_NAMES=demo demo_intro demo_sprites demo_camera demo_palette demo_particles demo_depth demo_sound demo_fix demo_combat demo_stress demo_title demo_render
 DEMO_OBJ0=$(addprefix out/,$(addsuffix 0.o,$(DEMO_NAMES)))
 NG_FIX_SDK_OBJ0=out/ng_fix_sdk0.o
-# SDK modules a game links only if it calls them (sdk/cabinet: the machine,
-# region and the like).  They are built into a library at the end of the
-# link, so a game that never uses one carries none of its code.
-CABINET_SRCS=$(wildcard sdk/cabinet/*.c)
-CABINET_OBJ0=$(addprefix out/cab_,$(addsuffix 0.o,$(notdir $(basename $(CABINET_SRCS)))))
-CABINET_LIB=out/libng_cabinet.a
+# SDK modules a game links only if it calls them: sdk/cabinet (the machine,
+# region and the like) and the engine's on-demand modules (ng_trig and its
+# generated table).  They are built as plain C into a library at the end of
+# the link, so a game that never uses one carries none of its code.
+SDK_LIB_SRCS=$(wildcard sdk/cabinet/*.c) sdk/2d_engine/ng_trig.c sdk/2d_engine/ng_trig_table.c
+SDK_LIB_OBJ0=$(addprefix out/lib_,$(addsuffix 0.o,$(notdir $(basename $(SDK_LIB_SRCS)))))
+SDK_LIB=out/libng_sdk.a
 
 ifeq ($(DEBUG),1)
 CFLAGS += -g3 -gdwarf-2 -DNG_DEBUG=1
@@ -317,9 +318,10 @@ game: game-check
 	$(GAME_CC) $(GAME_CFLAGS)   games/$(GAME)/eyecatcher.c -o out/eyecatcher0.o
 	$(GAME_CC) $(GAME_CFLAGS)   sdk/neogeolib.c -o out/neogeolib0.o
 	$(GAME_CC) $(GAME_CFLAGS)   sdk/ng_fix/ng_fix.c -o out/ng_fix_sdk0.o
-	$(foreach src,$(CABINET_SRCS),$(CC) $(CFLAGS) $(src) -o out/cab_$(notdir $(basename $(src)))0.o;)
-	rm -f $(CABINET_LIB)
-	$(AR) rcs $(CABINET_LIB) $(CABINET_OBJ0)
+	$(PYTHON) tools/gen_trig.py --out sdk/2d_engine/ng_trig_table.c
+	$(foreach src,$(SDK_LIB_SRCS),$(CC) $(CFLAGS) $(src) -o out/lib_$(notdir $(basename $(src)))0.o;)
+	rm -f $(SDK_LIB)
+	$(AR) rcs $(SDK_LIB) $(SDK_LIB_OBJ0)
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_defs.$(ENGINE_EXT) -o out/ng_defs0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_properties.$(ENGINE_EXT) -o out/ng_properties0.o
 	$(ENGINE_CC) $(CXXFLAGS)   $(ENGINE_DIR)/ng_game_time.$(ENGINE_EXT) -o out/ng_game_time0.o
@@ -361,7 +363,7 @@ game: game-check
 	$(OBJCP) $(STRIP_SECTS) out/neogeolib0.o  out/neogeolib.o
 	$(LD) $(LDFLAGS) -T games/$(GAME)/neogeo.ld -o out/game \
 	    out/neogeo.o out/user.o out/main.o out/eyecatcher.o out/neogeolib.o \
-	    $(NG_FIX_SDK_OBJ0) $(NG_ENGINE_OBJ0) $(GAME_SCENE_OBJS) $(CABINET_LIB)
+	    $(NG_FIX_SDK_OBJ0) $(NG_ENGINE_OBJ0) $(GAME_SCENE_OBJS) $(SDK_LIB)
 
 $(GAME_ID)-p1.p1: game
 	$(OBJCP)   -O ihex    out/game out/game0

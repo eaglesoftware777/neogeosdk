@@ -31,9 +31,10 @@ card offers CONTINUE / EXIT.
 
 ## Only What a Game Uses
 
-The files in `sdk/cabinet/` are built into `out/libng_cabinet.a`, which is
-linked last. The linker takes a module from it only if the game calls it,
-so a game that never asks carries none of this code.
+The files in `sdk/cabinet/` are built into `out/libng_sdk.a` (with the
+engine's other on-demand modules, such as `ng_trig`), which is linked last.
+The linker takes a module from it only if the game calls it, so a game that
+never asks carries none of this code.
 
 ## Tested
 
