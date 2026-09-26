@@ -28,6 +28,9 @@ git), whose initialisers `maiya_levels.h` builds the stage tables from.
   "background": 0,
   "music": 1,
   "mechanic": "none",
+  "pit": "water",
+  "blocks": "grass",
+  "posted": "none",
   "gate_x": 3200,
   "key": {"x": 2012, "y": 42},
   "guardian": {
@@ -62,6 +65,9 @@ Names stand for the game's constants, lower case without the prefix:
 | `hazards[].type` | `MG_H_*` | fire, spikes, sludge, toxic, pit |
 | `guardian.style` | `MG_B_*` | beetle, toad, leviathan, eel |
 | `mechanic` | `MG_M_*` in `maiya_game.c` | none, crumble, ice, water |
+| `pit` | `MG_PIT_*`: what lies at the bottom of its pits | water, fire, toxic, void |
+| `blocks` | `MG_BLOCKS_*`: the ledge set (and front-plane stone) | grass, moss, sand, autumn, snow, bark, rust, coral, stone, savanna |
+| `posted` | `MG_E_*`: who stands on the `archers` ledges, or none | none, goblin, drone, poachdrone |
 | `pickups[].kind` | `MG_K_*` from the art build | silver, gold, flower, life |
 | `decor[].kind` | `MG_D_*` from the art build | grass, lantern, rock |
 | `who` | the ally art, in order | elder, maiden, spirit, sunboy |
@@ -83,9 +89,15 @@ levels: 01_emerald_forest.json: encounters[1].enemy: unknown enemy "betle" (know
 
 It checks the fields are there and of the right kind, numbers in range
 (inside the stage's width, on the 224-line screen), names known, lists no
-longer than their tables, and text that fits the screen. `make level-check`
-then checks placement on what was built (`tools/level_check.py`), and names
-the stage file in each finding:
+longer than their tables, and text that fits the screen; and what the game
+needs of a stage: ledges between y 64 and 144 in whole blocks of 16,
+encounters in x order, posted creatures standing on a ledge, hazards at
+most 64 wide and clear of the arena, four captives in order before the
+gate, the gate leaving room for the arena, vines from the road up at most
+128 px. `make level-check` then checks placement on what was built
+(`tools/level_check.py`: pickups inside, under or floating off ledges,
+ledges overlapping, two pickups drawn over each other), and names the stage
+file in each finding:
 
 ```
 ERROR: EMERALD FOREST (level 0, 01_emerald_forest.json), pickup 0 at (330,130): inside -- ...

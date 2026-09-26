@@ -20,6 +20,7 @@ Rules (every one reported as: level, object and index, coordinates, rule):
   floating      a pickup more than --max-float px above the nearest surface
                 below its middle (platforms, and the ground except over pits)
   overlap       two platforms whose bodies overlap
+  stacked       two pickups or secrets drawn over each other
 
 Platforms are one-way ledges: y is the surface they are stood on (width w
 for standing), and they are drawn draw_w wide and ledge_depth deep below it
@@ -44,7 +45,7 @@ import tempfile
 from pathlib import Path
 
 SCREEN_H = 224
-RULES = ("outside", "inside", "under", "floating", "overlap")
+RULES = ("outside", "inside", "under", "floating", "overlap", "stacked")
 
 
 def host_compiler():
@@ -147,6 +148,14 @@ def check(data, opts):
                     add(lv, "platform", a["i"], "overlap", a["x"], a["y"],
                         f"overlaps platform {b['i']} at ({b['x']},{b['y']}): drawn x {a['x']}..{a['x'] + a['draw_w']} and "
                         f"{b['x']}..{b['x'] + b['draw_w']}, tops {abs(a['y'] - b['y'])} px apart")
+
+        # pickups and secrets drawn over each other
+        things = [("pickup", it) for it in lv["pickups"]] + [("secret", it) for it in lv["secrets"]]
+        for a_i, (a_kind, a) in enumerate(things):
+            for b_kind, b in things[a_i + 1:]:
+                if abs(a["x"] - b["x"]) < size and abs(a["y"] - b["y"]) < size:
+                    add(lv, a_kind, a["i"], "stacked", a["x"], a["y"],
+                        f"drawn over {b_kind} {b['i']} at ({b['x']},{b['y']})")
 
         # pickups and secrets
         for kind, items in (("pickup", lv["pickups"]), ("secret", lv["secrets"])):

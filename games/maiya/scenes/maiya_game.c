@@ -87,7 +87,7 @@ enum {
     /* FIX palettes for her framed HP bar, one per tier. */
     PAL_HP_HI = 13, PAL_HP_MID = 10, PAL_HP_LO = 9,
     /* Its own art, its own bank, not a recolour of one of the shared six. */
-    PAL_JELLYFISH = 48, PAL_TOXICCRAB = 49, PAL_ACIDMOTH = 50, PAL_SEWERRAT = 51,
+    PAL_JELLYFISH = 48, PAL_TOXICCRAB = 49, PAL_ACIDMOTH = 50, PAL_DARTFROG = 51,
     PAL_SMOGBAT = 52, PAL_POACHDRONE = 53, PAL_CHEMFLY = 54, PAL_PLASTICBAT = 55,
     PAL_SLAGGOLEM = 56, PAL_VINESTING = 57, PAL_SPOREGOB = 58, PAL_WRAITH = 59,
     PAL_HAZARD = 61, PAL_FACE = 43, PAL_PIT = 66,
@@ -128,6 +128,12 @@ enum {
     MG_STAGE_TIME_COL = 22,         /* STAGE mm:ss:ff, right of the clock */
     /* What each valley throws at her besides its creatures. */
     MG_M_NONE = 0, MG_M_CRUMBLE = 3, MG_M_ICE = 4, MG_M_WATER = 5,
+    /* What lies at the bottom of a valley's pits (its stage file's "pit"). */
+    MG_PIT_WATER = 0, MG_PIT_FIRE = 1, MG_PIT_TOXIC = 2, MG_PIT_VOID = 3,
+    /* The ledge set a valley's shelves are built of (its stage file's "blocks"). */
+    MG_BLOCKS_GRASS = 0, MG_BLOCKS_MOSS = 1, MG_BLOCKS_SAND = 2, MG_BLOCKS_AUTUMN = 3,
+    MG_BLOCKS_SNOW = 4, MG_BLOCKS_BARK = 5, MG_BLOCKS_RUST = 6, MG_BLOCKS_CORAL = 7,
+    MG_BLOCKS_STONE = 8, MG_BLOCKS_SAVANNA = 9,
     MG_CRUMBLE_AFTER = 45, MG_CRUMBLE_BACK = 180,
     MG_SURGE_TIME = 30, MG_SURGE_WINDUP = 6,
     MG_BONUS_LIFE_SCORE_STEP = 50000,
@@ -306,6 +312,7 @@ typedef struct {
     uint32_t time_seen;              /* the stage clock as the HUD last counted it    */
     uint8_t  time_digit[6];          /* m m s s f f: carried a frame at a time          */
     char     time_shown[14];         /* what the HUD's STAGE line shows now             */
+    uint32_t kinds_met;              /* creature kinds she has met this game (MG_E_*)   */
 } MGState;
 
 static MGState mg;
@@ -595,6 +602,21 @@ static void NEOGEO_USER mg_background(uint8_t id, uint8_t restored)
         pal = restored ? mg_bg6_pal : mg_bg6_blight_pal;
         far_map = mg_bg6_map; road_map = mg_ground6_map; count = MG_BG6_BANKS;
         break;
+    case 7:  /* Sunken Reef */
+        far_tile = MG_BG7_TILE; road_tile = MG_GROUND7_TILE;
+        pal = restored ? mg_bg7_pal : mg_bg7_blight_pal;
+        far_map = mg_bg7_map; road_map = mg_ground7_map; count = MG_BG7_BANKS;
+        break;
+    case 8:  /* Silver Cave */
+        far_tile = MG_BG8_TILE; road_tile = MG_GROUND8_TILE;
+        pal = restored ? mg_bg8_pal : mg_bg8_blight_pal;
+        far_map = mg_bg8_map; road_map = mg_ground8_map; count = MG_BG8_BANKS;
+        break;
+    case 9:  /* Golden Savanna */
+        far_tile = MG_BG9_TILE; road_tile = MG_GROUND9_TILE;
+        pal = restored ? mg_bg9_pal : mg_bg9_blight_pal;
+        far_map = mg_bg9_map; road_map = mg_ground9_map; count = MG_BG9_BANKS;
+        break;
     default: /* Sunlit Emerald Forest */
         far_tile = MG_BG0_TILE; road_tile = MG_GROUND0_TILE;
         pal = restored ? mg_bg0_pal : mg_bg0_blight_pal;
@@ -724,17 +746,23 @@ static void NEOGEO_USER mg_scroll_scenery(int16_t camera_x)
 }
 
 /* Ledge set per valley: forest turf, mossy falls, coast sand, autumn earth,
- * grotto snow, world-tree bark. */
+ * grotto snow, world-tree bark, the works' rust, reef coral, mine stone,
+ * savanna earth. */
+static const uint8_t mg_stage_blocks[MG_LEVEL_COUNT] = MG_BLOCKS_TABLE;
+
 static const uint16_t *NEOGEO_USER mg_block_set(uint8_t stage, const uint16_t **pal)
 {
-    switch (stage) {
-    case 1: *pal = mg_block_moss_pal;   return mg_block_moss_tiles;
-    case 2: *pal = mg_block_sand_pal;   return mg_block_sand_tiles;
-    case 3: *pal = mg_block_autumn_pal; return mg_block_autumn_tiles;
-    case 4: *pal = mg_block_snow_pal;   return mg_block_snow_tiles;
-    case 5: *pal = mg_block_bark_pal;   return mg_block_bark_tiles;
-    case 6: *pal = mg_block_rust_pal;   return mg_block_rust_tiles;
-    default: *pal = mg_block_grass_pal; return mg_block_grass_tiles;
+    switch (mg_stage_blocks[stage]) {
+    case MG_BLOCKS_MOSS:    *pal = mg_block_moss_pal;    return mg_block_moss_tiles;
+    case MG_BLOCKS_SAND:    *pal = mg_block_sand_pal;    return mg_block_sand_tiles;
+    case MG_BLOCKS_AUTUMN:  *pal = mg_block_autumn_pal;  return mg_block_autumn_tiles;
+    case MG_BLOCKS_SNOW:    *pal = mg_block_snow_pal;    return mg_block_snow_tiles;
+    case MG_BLOCKS_BARK:    *pal = mg_block_bark_pal;    return mg_block_bark_tiles;
+    case MG_BLOCKS_RUST:    *pal = mg_block_rust_pal;    return mg_block_rust_tiles;
+    case MG_BLOCKS_CORAL:   *pal = mg_block_coral_pal;   return mg_block_coral_tiles;
+    case MG_BLOCKS_STONE:   *pal = mg_block_stone_pal;   return mg_block_stone_tiles;
+    case MG_BLOCKS_SAVANNA: *pal = mg_block_savanna_pal; return mg_block_savanna_tiles;
+    default:                *pal = mg_block_grass_pal;   return mg_block_grass_tiles;
     }
 }
 
@@ -757,13 +785,17 @@ static uint16_t NEOGEO_USER mg_hazard_tile(uint8_t type)
 static const uint8_t mg_stage_mech[MG_LEVEL_COUNT] = MG_STAGE_MECH_TABLE;   /* each stage file's "mechanic" */
 
 /* What lies at the bottom of each valley's pits. */
+static const uint8_t mg_stage_pit[MG_LEVEL_COUNT] = MG_PIT_TABLE;
+/* Who stands posted on a valley's ledges (its stage file's "posted"). */
+static const uint8_t mg_stage_posted[MG_LEVEL_COUNT] = MG_POSTED_TABLE;
+
 static const uint16_t *NEOGEO_USER mg_pit_art(const uint16_t **pal)
 {
-    switch (mg.stage) {
-    case 3: case 9: *pal = mg_pit_fire_pal;  return mg_pit_fire_tiles;
-    case 5: case 6: *pal = mg_pit_toxic_pal; return mg_pit_toxic_tiles;
-    case 4: case 7: case 8: *pal = mg_pit_void_pal; return mg_pit_void_tiles;
-    default:        *pal = mg_pit_water_pal; return mg_pit_water_tiles;
+    switch (mg_stage_pit[mg.stage]) {
+    case MG_PIT_FIRE:  *pal = mg_pit_fire_pal;  return mg_pit_fire_tiles;
+    case MG_PIT_TOXIC: *pal = mg_pit_toxic_pal; return mg_pit_toxic_tiles;
+    case MG_PIT_VOID:  *pal = mg_pit_void_pal;  return mg_pit_void_tiles;
+    default:           *pal = mg_pit_water_pal; return mg_pit_water_tiles;
     }
 }
 
@@ -1275,7 +1307,7 @@ static const uint16_t *NEOGEO_USER mg_enemy_tiles(uint8_t type)
     case MG_E_JELLYFISH: return mg_jellyfish_tiles;
     case MG_E_TOXICCRAB: return mg_toxiccrab_tiles;
     case MG_E_ACIDMOTH: return mg_acidmoth_tiles;
-    case MG_E_SEWERRAT: return mg_sewerrat_tiles;
+    case MG_E_DARTFROG: return mg_dartfrog_tiles;
     case MG_E_SMOGBAT: return mg_smogbat_tiles;
     case MG_E_POACHDRONE: return mg_poachdrone_tiles;
     case MG_E_CHEMFLY: return mg_chemfly_tiles;
@@ -1285,6 +1317,29 @@ static const uint16_t *NEOGEO_USER mg_enemy_tiles(uint8_t type)
     case MG_E_SPOREGOB: return mg_sporegob_tiles;
     case MG_E_WRAITH: return mg_acidmoth_tiles;
     default:          return mg_slime_tiles;
+    }
+}
+
+/* The newer creatures' canvases, which their sprites must be drawn at:
+ * tiles are stored a row at a time, the canvas width apart, so drawing a
+ * 48-wide crab two tiles wide scrambled it, and a tall one lost its feet.
+ * The first six have their sizes set by hand in mg_character. */
+static void NEOGEO_USER mg_enemy_canvas(uint8_t type, uint8_t *w, uint8_t *h)
+{
+    switch (type) {
+    case MG_E_JELLYFISH:  *w = MG_JELLYFISH_W;  *h = MG_JELLYFISH_H;  break;
+    case MG_E_TOXICCRAB:  *w = MG_TOXICCRAB_W;  *h = MG_TOXICCRAB_H;  break;
+    case MG_E_ACIDMOTH:
+    case MG_E_WRAITH:     *w = MG_ACIDMOTH_W;   *h = MG_ACIDMOTH_H;   break;
+    case MG_E_DARTFROG:   *w = MG_DARTFROG_W;   *h = MG_DARTFROG_H;   break;
+    case MG_E_SMOGBAT:    *w = MG_SMOGBAT_W;    *h = MG_SMOGBAT_H;    break;
+    case MG_E_POACHDRONE: *w = MG_POACHDRONE_W; *h = MG_POACHDRONE_H; break;
+    case MG_E_CHEMFLY:    *w = MG_CHEMFLY_W;    *h = MG_CHEMFLY_H;    break;
+    case MG_E_PLASTICBAT: *w = MG_PLASTICBAT_W; *h = MG_PLASTICBAT_H; break;
+    case MG_E_SLAGGOLEM:  *w = MG_SLAGGOLEM_W;  *h = MG_SLAGGOLEM_H;  break;
+    case MG_E_VINESTING:  *w = MG_VINESTING_W;  *h = MG_VINESTING_H;  break;
+    case MG_E_SPOREGOB:   *w = MG_SPOREGOB_W;   *h = MG_SPOREGOB_H;   break;
+    default:              *w = 32u;             *h = 32u;             break;
     }
 }
 
@@ -1319,7 +1374,7 @@ static uint8_t NEOGEO_USER mg_enemy_palette(uint8_t type)
     case MG_E_JELLYFISH: return PAL_JELLYFISH;
     case MG_E_TOXICCRAB: return PAL_TOXICCRAB;
     case MG_E_ACIDMOTH: return PAL_ACIDMOTH;
-    case MG_E_SEWERRAT: return PAL_SEWERRAT;
+    case MG_E_DARTFROG: return PAL_DARTFROG;
     case MG_E_SMOGBAT: return PAL_SMOGBAT;
     case MG_E_POACHDRONE: return PAL_POACHDRONE;
     case MG_E_CHEMFLY: return PAL_CHEMFLY;
@@ -1408,6 +1463,15 @@ static NGCharacter *NEOGEO_USER mg_character(uint8_t kind, int16_t x, int16_t y,
             strips = 3; rows = 2; ox = -24; oy = -30; bx = -16; by = -24; bw = 32; bh = 24;
         } else if (subtype == MG_E_GOBLIN || subtype == MG_E_WORM) {
             strips = 2; rows = 3; ox = -16; oy = -46; bx = -11; by = -38; bw = 22; bh = 38;
+        } else if (subtype >= MG_E_JELLYFISH) {
+            /* Standing on its canvas's foot line, as the first six do. */
+            uint8_t w, h;
+            mg_enemy_canvas(subtype, &w, &h);
+            strips = (uint8_t)(w >> 4); rows = (uint8_t)(h >> 4);
+            ox = (int16_t)-(int16_t)(w >> 1); oy = (int16_t)(2 - (int16_t)h);
+            bw = (int16_t)(w - (w >> 2)); bh = (int16_t)(h - 8u);
+            if (subtype == MG_E_DARTFROG) { bw = 26; bh = 20; }   /* a small frog on a wide canvas */
+            bx = (int16_t)-(bw >> 1); by = (int16_t)-bh;
         }
 
         ng_char_set_sprite(c, NG_SPR_CHAR_FIRST, strips, rows, et[0], palette);
@@ -2168,7 +2232,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg_palette(PAL_JELLYFISH, mg_jellyfish_pal);
     mg_palette(PAL_TOXICCRAB, mg_toxiccrab_pal);
     mg_palette(PAL_ACIDMOTH, mg_acidmoth_pal);
-    mg_palette(PAL_SEWERRAT, mg_sewerrat_pal);
+    mg_palette(PAL_DARTFROG, mg_dartfrog_pal);
     mg_palette(PAL_SMOGBAT, mg_smogbat_pal);
     mg_palette(PAL_POACHDRONE, mg_poachdrone_pal);
     mg_palette(PAL_CHEMFLY, mg_chemfly_pal);
@@ -2224,6 +2288,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.camera.look_ahead_cur_x = MG_CAM_LEAD;   /* she sets out looking right */
     mg.shake = 0;
     mg.shake_x = 0;
+    mg.clear_bonus = 0;   /* no clear card up yet */
     ng_camera_snap(&mg.camera, 0, 0);
     ng_level_set_scroll(mg.camera.x, 0);
 
@@ -2274,7 +2339,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg_palette(PAL_FRONT, mg_front_pal);
     for (i = 0; i < MG_FRONT_SLOTS; i++) {
         /* A frond, then the valley's own stone, then a frond again. */
-        uint16_t tile = (i == 1) ? mg_front_tiles[MG_FR_STONE_GRASS + stage]
+        uint16_t tile = (i == 1) ? mg_front_tiles[MG_FR_STONE_GRASS + mg_stage_blocks[stage]]
                                  : mg_front_tiles[MG_FR_FERN];
         ng_sprite_group_init(&mg.front[i], (uint16_t)(SLOT_FRONT + i * 2), 2, 3,
                              tile, PAL_FRONT);
@@ -2429,6 +2494,7 @@ static uint8_t NEOGEO_USER mg_dip_how_to_play(void)
 
 void NEOGEO_USER maiya_boot(void)
 {
+    mg.kinds_met = 0;
     mg.lives = mg_dip_lives(); mg.art = MAX_ART; mg.score = 0; mg.rescue_mask = 0;
     mg.continues = mg_dip_continues();
     mg.difficulty = mg_dip_difficulty();
@@ -2464,6 +2530,7 @@ void NEOGEO_USER maiya_demo_begin(void)
     static uint8_t demo_stage = 0;
 
     mg.demo = 1;
+    mg.kinds_met = 0;
     mg.lives = 3; mg.art = MAX_ART; mg.score = 0; mg.rescue_mask = 0;
     mg.coins = mg.flowers = mg.critters = 0;
     mg.continues = 0;
@@ -3003,7 +3070,7 @@ static uint8_t NEOGEO_USER mg_enemy_base_hp(uint8_t type)
     switch (type) {
     case MG_E_SLAGGOLEM: return 4;
     case MG_E_BEETLE:    return 3;
-    case MG_E_DRONE: case MG_E_TOXICCRAB: case MG_E_SEWERRAT:
+    case MG_E_DRONE: case MG_E_TOXICCRAB:
     case MG_E_POACHDRONE: case MG_E_VINESTING: return 2;
     default:             return 1;
     }
@@ -3021,6 +3088,36 @@ static void NEOGEO_USER mg_wave(NGCharacter *b, int16_t centre, int16_t swing, i
     if (pull > 16) pull = 16;
     if (pull < -16) pull = -16;
     b->vy_fp = (int16_t)(ng_trig_mul(speed, ng_cos(beat)) + (pull << 3));
+}
+
+/* The first time she meets a kind of creature in a game, a line on the
+ * hint row names it and how to beat it (the forest's slime and beetle,
+ * met in the first seconds, need no introduction). */
+static void NEOGEO_USER mg_kind_hint(uint8_t type)
+{
+    static const char *const hint[MG_E_SPOREGOB + 1] = {
+        [MG_E_CROW]       = "CROW: IT DIVES - STRIKE AS IT SWOOPS",
+        [MG_E_GOBLIN]     = "GOBLIN: IT HURLS SCRAP FROM LEDGES",
+        [MG_E_WORM]       = "WORM: IT SPITS FROM ITS PIPE",
+        [MG_E_DRONE]      = "DRONE: IT HOVERS AND FIRES PULSES",
+        [MG_E_JELLYFISH]  = "JELLYFISH: LAND ON IT TO POP IT",
+        [MG_E_TOXICCRAB]  = "TOXIC CRAB: IT CHARGES UP CLOSE",
+        [MG_E_ACIDMOTH]   = "ACID MOTH: IT WEAVES - WAIT, THEN HIT",
+        [MG_E_DARTFROG]   = "DART FROG: POISON SKIN - DON'T STOMP",
+        [MG_E_SMOGBAT]    = "SMOG BAT: IT DIVES OUT OF THE HAZE",
+        [MG_E_POACHDRONE] = "POACHER DRONE: DODGE ITS NET",
+        [MG_E_CHEMFLY]    = "CHEM FLY: IT LOOPS - HIT IT MID-LOOP",
+        [MG_E_PLASTICBAT] = "PLASTIC BAT: IT DROPS TRASH ON YOU",
+        [MG_E_SLAGGOLEM]  = "SLAG GOLEM: JUMP ITS SHOCKWAVE",
+        [MG_E_VINESTING]  = "VINE STING: ROOTED - KEEP OUT OF REACH",
+        [MG_E_SPOREGOB]   = "SPORE GOBLIN: DODGE ITS TOXIC PUFF",
+    };
+    uint32_t bit;
+    if (type > MG_E_SPOREGOB || mg.demo || mg.state != MG_PLAY) return;
+    bit = (uint32_t)1u << type;
+    if (mg.kinds_met & bit) return;
+    mg.kinds_met |= bit;
+    if (hint[type]) mg_hint(hint[type], PAL_WARN, 120);
 }
 
 static MGEnemy *NEOGEO_USER mg_spawn_enemy(uint8_t type, int16_t x, int16_t y, uint8_t posted)
@@ -3072,6 +3169,7 @@ static MGEnemy *NEOGEO_USER mg_spawn_enemy(uint8_t type, int16_t x, int16_t y, u
     e->move_timer = 0;
     e->heading = 1;
     e->face = (int8_t)((mg.player && mg.player->x < x) ? -1 : 1);
+    mg_kind_hint(type);
     return e;
 }
 
@@ -3173,16 +3271,13 @@ static void NEOGEO_USER mg_spawn_scan(const MGLevel *level, int16_t px)
         mg.encounter_mask |= bit;
     }
 
-    /* Posted throwers / drones on ledges */
+    /* Posted on the ledges: whichever creature the stage file names. */
     for (i = 0; i < MG_ARCHER_COUNT; i++) {
         const MGArcher *a = &level->archers[i];
         uint16_t bit = (uint16_t)(1u << i);
         if (!a->x || (mg.archer_mask & bit) || a->x > px + 300 || a->x + 300 < px) continue;
-        /* No drones until the coast: the early shelves hold goblins, and
-         * the first valley posts nothing at all. */
-        if (mg.stage == 0) { mg.archer_mask |= bit; continue; }
-        if (mg_spawn_enemy((uint8_t)(mg.stage < 3 ? MG_E_GOBLIN : MG_E_DRONE),
-                           a->x, a->y, 1)) mg.archer_mask |= bit;
+        if (mg_stage_posted[mg.stage] == 0xFFu) { mg.archer_mask |= bit; continue; }
+        if (mg_spawn_enemy(mg_stage_posted[mg.stage], a->x, a->y, 1)) mg.archer_mask |= bit;
     }
 
     /* Coins, flowers, charms and the hidden life, handed out as she nears them. */
@@ -4432,16 +4527,24 @@ static void NEOGEO_USER mg_update_entities(void)
                         if (--e->move_timer == 0) { e->mood = 1; e->move_timer = 70; }
                     }
                     break;
-                case MG_E_SEWERRAT:
-                    /* Trots toward her, then breaks into a sprint up close. */
-                    if (mg_abs(dx) < 110) {
-                        b->vx_fp = dir * mg_pace(560);
-                        mg_frame(b, (uint8_t)((uint16_t)(e->timer / 4u) % (uint16_t)nf), flip);
-                    } else {
-                        b->vx_fp = dir * mg_pace(260);
-                        mg_frame(b, (uint8_t)((uint16_t)(e->timer / 8u) % (uint16_t)nf), flip);
+                case MG_E_DARTFROG: {
+                    /* Small quick hops her way, sitting between them; up
+                     * close it puffs its poison. Sitting shows frame 0, the
+                     * leap frame 1. Its skin is the poison: landing on it
+                     * hurts her (it isn't one of the soft creatures). */
+                    uint8_t sitting = (uint8_t)(ng_physics_is_grounded(b) || b->y >= MG_GROUND_Y - 2);
+                    if (sitting) b->vx_fp = 0;
+                    if ((e->timer % 46u) == 0u && sitting) {
+                        b->vy_fp = -3 * NG_FP_ONE - NG_FP_ONE / 2;
+                        b->vx_fp = dir * mg_pace(300);
+                    }
+                    mg_frame(b, (uint8_t)(sitting ? 0 : 1), flip);
+                    if ((e->timer % 120u) == 60u && sitting && mg_abs(dx) < 120) {
+                        mg_fire(b->x, (int16_t)(b->y - 10), (int16_t)(dir * 2), -2, 1, MG_T_SPIT);
+                        playSFX(SOUND_SFX_5);
                     }
                     break;
+                }
                 case MG_E_VINESTING:
                     /* Rooted where it grows, turning to face her and lashing
                      * faster the closer she dares to come. */
@@ -5632,7 +5735,11 @@ void NEOGEO_USER maiya_frame(void)
                 mg.hud_dirty = 1;
                 playSFX(SOUND_SFX_13);
                 playSFX(SOUND_SFX_12);
-                mg_hint("EXTRA LIFE!", PAL_GOLD, 120);
+                /* The guardian's clear bonus often crosses the line: then
+                 * it's the last line of the clear card, not a hint crowded
+                 * in above it. */
+                if (mg.clear_bonus) mg_centre(ROW_CARD + 10, "EXTRA LIFE!", PAL_GOLD);
+                else mg_hint("EXTRA LIFE!", PAL_GOLD, 120);
             }
         }
         if ((mg.swift || mg.might || mg.veil || mg.spring || mg.crown) &&

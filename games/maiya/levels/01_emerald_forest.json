@@ -4,6 +4,9 @@
   "background": 0,
   "music": 1,
   "mechanic": "none",
+  "pit": "water",
+  "blocks": "grass",
+  "posted": "none",
   "gate_x": 3200,
   "key": {"x": 2012, "y": 42},
   "guardian": {
@@ -40,22 +43,16 @@
     {"x": 480, "enemy": "beetle"},
     {"x": 780, "enemy": "slime"},
     {"x": 1100, "enemy": "beetle"},
-    {"x": 1420, "enemy": "slime"},
+    {"x": 1420, "enemy": "dartfrog"},
     {"x": 1740, "enemy": "beetle"},
-    {"x": 2060, "enemy": "slime"},
+    {"x": 2060, "enemy": "acidmoth"},
     {"x": 2380, "enemy": "beetle"},
-    {"x": 2700, "enemy": "slime"},
+    {"x": 2700, "enemy": "dartfrog"},
     {"x": 3020, "enemy": "beetle"},
-    {"x": 3380, "enemy": "slime"},
+    {"x": 3380, "enemy": "acidmoth"},
     {"x": 3620, "enemy": "beetle"}
   ],
-  "archers": [
-    {"x": 510, "y": 104},
-    {"x": 1310, "y": 68},
-    {"x": 1970, "y": 68},
-    {"x": 2610, "y": 68},
-    {"x": 3030, "y": 104}
-  ],
+  "archers": [],
   "hazards": [
     {"x": 760, "w": 48, "type": "spikes"},
     {"x": 1600, "w": 48, "type": "spikes"},
@@ -71,7 +68,7 @@
     {"x": 2990, "who": "sunboy"}
   ],
   "secrets": [
-    {"x": 510, "y": 74, "type": "chest"},
+    {"x": 486, "y": 74, "type": "chest"},
     {"x": 700, "y": 38, "type": "rose"},
     {"x": 1320, "y": 38, "type": "gem"},
     {"x": 1996, "y": 38, "type": "chest"},
@@ -83,7 +80,7 @@
     {"x": 824, "y": 168, "kind": "spring"},
     {"x": 1464, "y": 168, "kind": "crown"},
     {"x": 2084, "y": 168, "kind": "silver"},
-    {"x": 512, "y": 70, "kind": "gold"},
+    {"x": 540, "y": 70, "kind": "gold"},
     {"x": 1128, "y": 70, "kind": "gold"},
     {"x": 1066, "y": 166, "kind": "flower"},
     {"x": 2124, "y": 164, "kind": "critter"},
