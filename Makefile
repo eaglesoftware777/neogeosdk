@@ -372,6 +372,12 @@ $(GAME_ID)-p1.p1: game
 	mkdir -p $(ROM_DIR)
 	cp -f out/$(GAME_ID)-p1.p1 $(ROM_DIR)/$(GAME_ID)-p1.p1
 	GAME=$(GAME) GAME_ID=$(GAME_ID) python3 hash_eagle/gen_hash.py
+	$(PYTHON) tools/rom_budget.py --game $(GAME) --id $(GAME_ID) --rom-dir $(ROM_DIR) --cfg $(GAME_CFG_FILE) --check
+
+# Bytes each ROM uses against the BUDGET_* keys in the game's game.cfg.
+.PHONY: budget
+budget: game-check
+	$(PYTHON) tools/rom_budget.py --game $(GAME) --id $(GAME_ID) --rom-dir $(ROM_DIR) --cfg $(GAME_CFG_FILE)
 
 .PHONY: hash
 hash:
