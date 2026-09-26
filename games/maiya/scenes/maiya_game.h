@@ -7,6 +7,9 @@ extern volatile uint8_t maiya_console_start;   /* Start pressed: see user.c */
 
 void NEOGEO_USER maiya_boot(void);
 void NEOGEO_USER maiya_frame(void);
+/* Wait for the vertical blank and put the frame's colour changes on screen
+ * in it: every frame of hers, the attract's and title's included. */
+void NEOGEO_USER maiya_vblank(void);
 void NEOGEO_USER maiya_title(void);
 void NEOGEO_USER maiya_title_frame(void);
 void NEOGEO_USER maiya_hero_select(void);

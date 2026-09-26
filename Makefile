@@ -65,6 +65,12 @@ GAME_ART_FROM ?=
 # build links every module).
 GAME_ENGINE_EXCLUDE ?=
 
+# Optional engine features.  A game's game.mk can set GAME_ENGINE_DEFINES to
+# -D switches that build in engine code other games leave out, for example
+# "-DNG_PALFX_SCREEN=1" (the palette screen in ng_palette_fx.h).  They reach
+# the engine and the game's own sources alike.  C engine only.
+GAME_ENGINE_DEFINES ?=
+
 ifeq ($(USE_2D_PLUS),1)
   ENGINE_DIR  := sdk/2d_engine_plus
   ENGINE_EXT  := cpp
@@ -81,7 +87,7 @@ else
   ENGINE_DIR  := sdk/2d_engine
   ENGINE_EXT  := c
   ENGINE_CC   := $(CC)
-  CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox $(GAME_EXTRA_INCLUDES) -Wa,-march=68000,-mcpu=68000,-W,--warn
+  CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox $(GAME_EXTRA_INCLUDES) $(GAME_ENGINE_DEFINES) -Wa,-march=68000,-mcpu=68000,-W,--warn
   CXXFLAGS= $(CFLAGS)
 endif
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding

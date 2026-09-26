@@ -28,6 +28,7 @@ https://github.com/eaglesoftware777/neogeosdk
 void NEOGEO_USER game_boot(void);
 void NEOGEO_USER game_frame(void);
 void NEOGEO_USER maiya_title(void);
+void NEOGEO_USER maiya_vblank(void);
 void NEOGEO_USER maiya_eyecatcher(void);
 uint8_t NEOGEO_USER maiya_session_over(void);
 void NEOGEO_USER maiya_demo_begin(void);
@@ -322,14 +323,14 @@ void NEOGEO_USER GAME_ATTRACT(void) {
             fixtext_out(14, 25, "PUSH START", 1);
 #endif
             if (attract_interrupted()) return;
-            waitVbl();
+            maiya_vblank();
         }
 
         /* --- then a slice of the game, played by the machine ---------- */
         clearFix(); clearSprs(); setBACKDROP(BLACK);
         maiya_demo_begin();
         for (i = 0; i < 60 * 22; i++) {
-            waitVbl();
+            maiya_vblank();
             game_frame();
             if (attract_interrupted()) { maiya_demo_end(); return; }
             if (maiya_demo_spent()) break;
@@ -389,7 +390,7 @@ void NEOGEO_USER TITLE_WAIT(void) {
         fixtext_out(14, 25, "PUSH START", 1);
         if (attract_interrupted()) break;
 #endif
-        waitVbl();
+        maiya_vblank();
     }
     (void)i;
     maiya_hero_select();   /* her own screen, now that Start has actually landed */
@@ -404,7 +405,7 @@ void NEOGEO_USER START_GAME(void) {
     clearSprs();
     game_boot();
     for (;;) {
-        waitVbl();
+        maiya_vblank();
         game_frame();
         if (maiya_session_over()) break;
     }

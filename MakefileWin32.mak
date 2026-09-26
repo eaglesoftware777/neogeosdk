@@ -98,7 +98,7 @@ else
   ENGINE_DIR  := sdk\2d_engine
   ENGINE_EXT  := c
   ENGINE_CC   := $(CC)
-  CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox $(GAME_EXTRA_INCLUDES) -Wa,-march=68000,-mcpu=68000,-W,--warn
+  CFLAGS= -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/$(GAME)/scenes -Igames/$(GAME)/artbox $(GAME_EXTRA_INCLUDES) $(GAME_ENGINE_DEFINES) -Wa,-march=68000,-mcpu=68000,-W,--warn
   CXXFLAGS= $(CFLAGS)
 endif
 CFLAGS1=-S -O0 -fomit-frame-pointer  -Wall -fno-zero-initialized-in-bss -march=68000  -mcpu=68000 -mtune=68000 -m68000  -ffreestanding
@@ -147,6 +147,9 @@ FILL= -fill 0xFF  0x000000 0x080000 -range-padding 4 -o
 # GAME_ENGINE_EXCLUDE (see Makefile): engine modules a game links as their
 # do-nothing stand-ins, sdk/2d_engine/<module>_none.c.  C engine only.
 GAME_ENGINE_EXCLUDE ?=
+# GAME_ENGINE_DEFINES (see Makefile): -D switches for optional engine code,
+# passed to the engine and the game alike.  C engine only.
+GAME_ENGINE_DEFINES ?=
 NG_ENGINE_STUBBED=ng_particles
 ifneq ($(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)),)
 $(error GAME_ENGINE_EXCLUDE: no stand-in for $(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)))

@@ -321,20 +321,33 @@ static int16_t NEOGEO_USER mg_abs(int16_t value)
 /*  Palettes and text                                                 */
 /* ------------------------------------------------------------------ */
 /*
- * A whole-screen fade to white and back, for her walk through a guardian's
- * gate. The engine's palette effects run on a handful of banks at a time;
- * this lifts every bank the game uses together. mg_fade_begin() copies the
- * colours on screen now; while a fade is up, mg_palette() keeps whatever it
- * is asked to load in that copy and shows it at the fade's level, so a
- * scene loaded behind the white comes up with it instead of flashing
- * through. 16 is all white; 0 puts the true colours back.
+ * Every colour goes through the engine's palette screen (ng_palette_fx.h):
+ * each bank she loads is kept in mg_pal_base, shown from mg_pal_out, and
+ * reaches palette RAM in the vertical blank, in maiya_vblank(). Her fades
+ * -- the white-out through a guardian's gate, the chooser rising out of
+ * white -- lift all of it together, and a bank loaded behind a fade comes
+ * up with it instead of flashing through.
  */
-#define MG_FADE_BANKS 67u
-static uint16_t mg_fade_src[MG_FADE_BANKS * 16u];
-static uint16_t mg_fade_out[MG_FADE_BANKS * 16u];   /* what goes on screen next */
-static uint8_t mg_fade_lut[32];
-static uint8_t mg_fade_k;
-static uint8_t mg_fade_pending;
+#define MG_PAL_BANKS 67u
+static uint16_t mg_pal_base[MG_PAL_BANKS * 16u];
+static uint16_t mg_pal_out[MG_PAL_BANKS * 16u];
+static uint8_t mg_pal_open;
+
+/* The screen is taken over on first use, from the colours showing then. */
+static void NEOGEO_USER mg_pal_screen(void)
+{
+    if (mg_pal_open) return;
+    mg_pal_open = 1;
+    ng_palfx_screen_init(mg_pal_base, mg_pal_out, MG_PAL_BANKS);
+}
+
+/* The frame boundary: the vertical blank, and in it the colours that
+ * changed since the last one. Every frame of hers passes through here. */
+void NEOGEO_USER maiya_vblank(void)
+{
+    waitVbl();
+    ng_palfx_vblank();
+}
 
 static void NEOGEO_USER mg_lut_for(uint8_t *lut, uint8_t k)
 {
@@ -358,72 +371,16 @@ static void NEOGEO_USER mg_blend(uint16_t *out, const uint16_t *src, const uint8
     }
 }
 
-/* One bank's faded colours, from the copy; at level 0 the copy exactly. */
-static void NEOGEO_USER mg_fade_bank(uint8_t bank)
-{
-    uint16_t *src = &mg_fade_src[(uint16_t)bank * 16u];
-    uint16_t *out = &mg_fade_out[(uint16_t)bank * 16u];
-    if (!mg_fade_k) memcpy(out, src, 32);
-    else mg_blend(out, src, mg_fade_lut);
-}
-
-/*
- * Word copy for palette RAM, kept in assembly on purpose: as a C loop GCC
- * folds it into "move.w (a0)+,(0,a0,d0.l)", and a 68000 works that
- * destination out with the already incremented a0 -- every colour lands
- * one entry along and the whole screen turns to garbage. Two address
- * registers, both post-incremented, and nothing to fold. `n` is at least 1.
- */
-__attribute__((noinline))
-static void NEOGEO_USER mg_copy_words(volatile uint16_t *dst, const volatile uint16_t *src, uint16_t n)
-{
-    n = (uint16_t)(n - 1u);
-    __asm__ volatile (
-        "1:\n\t"
-        "move.w (%0)+,(%1)+\n\t"
-        "dbf %2,1b"
-        : "+a" (src), "+a" (dst), "+d" (n)
-        :
-        : "memory");
-}
-
-static void NEOGEO_USER mg_fade_begin(void)
-{
-    mg_copy_words(mg_fade_src, (const volatile uint16_t *)PALETTES, MG_FADE_BANKS * 16u);
-}
-
-/*
- * Works the whole screen's colours out for level k now; they go on screen
- * at the next mg_fade_commit(), which is a straight copy fast enough to
- * finish inside the vertical blank. Written bank by bank as they were
- * worked out, the banks changed at different points down the picture and
- * the screen showed a patchwork of two brightnesses for a frame.
- */
-static void NEOGEO_USER mg_fade_set(uint8_t k)
-{
-    uint8_t bank;
-    mg_fade_k = k;
-    mg_lut_for(mg_fade_lut, k);
-    for (bank = 0; bank < MG_FADE_BANKS; bank++) mg_fade_bank(bank);
-    mg_fade_pending = 1;
-}
-
-static void NEOGEO_USER mg_fade_commit(void)
-{
-    if (!mg_fade_pending) return;
-    mg_fade_pending = 0;
-    mg_copy_words((volatile uint16_t *)PALETTES, mg_fade_out, MG_FADE_BANKS * 16u);
-}
-
 static void NEOGEO_USER mg_palette(uint8_t bank, const uint16_t *colors)
 {
-    if (mg_fade_k && bank < MG_FADE_BANKS) {
-        memcpy(&mg_fade_src[(uint16_t)bank * 16u], colors, 32);
-        mg_fade_bank(bank);
-        load_palettes(&mg_fade_out[(uint16_t)bank * 16u], PALETTES + (uint32_t)bank * 32u);
-        return;
-    }
-    load_palettes((uint16_t *)colors, PALETTES + (uint32_t)bank * 32u);
+    mg_pal_screen();
+    ng_palfx_screen_load(bank, colors);
+}
+
+static void NEOGEO_USER mg_backdrop(uint16_t color)
+{
+    mg_pal_screen();
+    ng_palfx_screen_backdrop(color);
 }
 
 /* One bank lifted toward white, for a glow on a single sprite. */
@@ -433,7 +390,7 @@ static void NEOGEO_USER mg_whiten_bank(uint8_t bank, const uint16_t *src, uint8_
     uint16_t out[16];
     mg_lut_for(lut, k);
     mg_blend(out, src, lut);
-    load_palettes(out, PALETTES + (uint32_t)bank * 32u);
+    mg_palette(bank, out);
 }
 
 /* An 8-bit-per-channel colour as a Neo Geo palette word (5 bits a channel,
@@ -1934,6 +1891,8 @@ static uint8_t NEOGEO_USER mg_player_damage(void)
     mg.hud_dirty = 1;
     playSFX(SOUND_SFX_16); /* player hurt */
     ng_feedback_hitstop(MG_HITSTOP_HURT);
+    /* A short red flash on her bank alone, over whatever colours she has on. */
+    ng_palfx_flash_red(PAL_HERO, ng_palfx_screen_colors(PAL_HERO), MG_HURT_FLASH);
     /* Two small sparks where the blow lands -- it happens on every hit,
      * so it stays small and quick; her bar and her glint say the rest. */
     mg_burst(p->x, (int16_t)(p->y - 30), MG_T_SPARK, 2, -1);
@@ -2072,10 +2031,10 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     const MGLevel *level = &mg_levels[stage];
 
     soundStopAll();
-    setBACKDROP(0x8000);
+    mg_backdrop(0x8000);
     ng_fix_clear();
     ng_sprite_hide_all();
-    waitVbl();
+    maiya_vblank();
     ng_game_engine_init();
     ng_game_engine_set_hooks(0, mg_collision_hook, 0, mg_before_draw_hook, 0);
     /* A heavy blow holds the whole valley still for a few frames, and an
@@ -2118,7 +2077,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.attempt_hits = 0;
     mg.clock = MG_LEVEL_SECONDS; mg.clock_sub = 0; mg.wraith_timer = 0;
     mg.hp_px = MG_HP_BAR_PX; mg.boss_px = 0; mg.cage_open = 0; mg.arena_bg = 0;
-    mg_fade_k = 0; mg.win_step = 0; mg.win_wait = 0; mg.cam_lead = MG_CAM_LEAD;
+    ng_palfx_screen_stop(); mg.win_step = 0; mg.win_wait = 0; mg.cam_lead = MG_CAM_LEAD;
     mg.held_press = 0;
     for (i = 0; i < MG_PLATFORM_COUNT; i++) { mg.ledge_stand[i] = 0; mg.ledge_gone[i] = 0; }
     mg.gate_shown = 0;
@@ -2295,7 +2254,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     /* Spawn initial wave immediately so enemies are on-screen from frame 1 */
     mg_spawn();
 
-    waitVbl();
+    maiya_vblank();
     mg_hud_static();
     /* The bar, tray and key icon otherwise stay blank until something later
      * flips hud_dirty (damage, a pickup, a power-up expiring) -- drawing
@@ -2533,7 +2492,7 @@ static const uint8_t mg_logo_software[8] = { 4, 5, 6, 7, 8, 1, 9, 0 };
 static uint8_t NEOGEO_USER mg_logo_wait(uint8_t frames)
 {
     while (frames--) {
-        waitVbl();
+        maiya_vblank();
         if (maiya_start_pending()) return 1;
     }
     return 0;
@@ -2572,11 +2531,11 @@ void NEOGEO_USER maiya_eyecatcher(void)
     NEO_REGISTER8(REG_PALBANK0) = 0;
     clearSprs();
     clearFix();
-    setBACKDROP(BLACK);
+    mg_backdrop(BLACK);
     ng_fix_init();
     ng_fix_clear();
     mg_ui_palettes();
-    waitVbl();
+    maiya_vblank();
 
     /* FM alone under the logo: three rising notes and a held fifth. */
     soundStopAll();
@@ -2599,7 +2558,7 @@ void NEOGEO_USER maiya_eyecatcher(void)
 done:
     soundStopAll();
     ng_fix_clear();
-    waitVbl();
+    maiya_vblank();
 }
 
 /* ------------------------------------------------------------------ */
@@ -2633,6 +2592,7 @@ static uint8_t mg_chooser_pick;
 #define PAL_SEL_FRAME         9    /* +0 Maiya's frame, +1 Luna's      */
 #define PAL_SEL_GREY         11    /* a grey ink for the name not picked */
 #define PAL_SEL_HERO          4    /* +0 Maiya standing, +1 Luna        */
+#define MG_CHOOSER_FADE       8u   /* frames it takes to rise out of white */
 
 static NGSpriteGroup mg_chooser_body[2];
 
@@ -2820,10 +2780,10 @@ static void NEOGEO_USER mg_show_how_to_play(void)
     poll_joystick_edge();
     /* The confirm that brought her here shouldn't also skip this: give it
      * a moment to let go before a press counts. */
-    for (i = 0; i < 20; i++) { waitVbl(); poll_joystick_edge(); }
+    for (i = 0; i < 20; i++) { maiya_vblank(); poll_joystick_edge(); }
 
     for (;;) {
-        waitVbl();
+        maiya_vblank();
         joy = poll_joystick_edge();
         if (joy & (BUTTON_A | BUTTON_B | BUTTON_C | BUTTON_D | START1 | START2)) break;
     }
@@ -2851,10 +2811,10 @@ static void NEOGEO_USER mg_show_intro_story(void)
     mg_centre(22, "PRESS ANY BUTTON TO BEGIN", PAL_GOLD);
 
     poll_joystick_edge();
-    for (i = 0; i < 20; i++) { waitVbl(); poll_joystick_edge(); }
+    for (i = 0; i < 20; i++) { maiya_vblank(); poll_joystick_edge(); }
 
     for (;;) {
-        waitVbl();
+        maiya_vblank();
         joy = poll_joystick_edge();
         if (joy & (BUTTON_A | BUTTON_B | BUTTON_C | BUTTON_D | START1 | START2)) break;
     }
@@ -2884,9 +2844,8 @@ void NEOGEO_USER maiya_hero_select(void)
     /* Everything is set up behind a white screen and comes up out of it in
      * one piece, instead of the forest, the cards and the text popping in
      * one after another while they load. */
-    mg_fade_begin();
-    mg_fade_set(16);
-    mg_fade_commit();
+    ng_palfx_screen_fade_in(NG_PALFX_WHITE, MG_CHOOSER_FADE);
+    maiya_vblank();
 
     /* The forest behind, at half its brightness so the cards stand out. */
     mg.arena_bg = 0;
@@ -2918,10 +2877,9 @@ void NEOGEO_USER maiya_hero_select(void)
 
     mg.music_on = 0;
     mg_music(SOUND_TRACK_A);
-    for (i = 16; i > 0; i = (uint8_t)(i - 2u)) {
-        mg_fade_set((uint8_t)(i - 2u));
-        waitVbl();
-        mg_fade_commit();
+    for (i = 0; i < MG_CHOOSER_FADE; i++) {
+        ng_palette_fx_update();
+        maiya_vblank();
         t++;
         mg_chooser_tick(t, 0);
     }
@@ -2932,7 +2890,7 @@ void NEOGEO_USER maiya_hero_select(void)
      * read as an immediate confirm and blow straight through to
      * gameplay, which looked exactly like Start not doing anything. */
     for (;;) {
-        waitVbl();
+        maiya_vblank();
         t++;
         joy = poll_joystick_edge();
         if (joy & (JOY_LEFT | JOY_RIGHT)) {
@@ -2953,7 +2911,7 @@ void NEOGEO_USER maiya_hero_select(void)
     mg_grey_banks(mg_chooser_pick ? PAL_PORTRAIT : PAL_PORTRAIT_ALT,
                   mg_chooser_pick ? mg_portrait_pal : mg_portrait_alt_pal, 2);
     for (i = 0; i < 110; i++) {
-        waitVbl();
+        maiya_vblank();
         t++;
         if (i < 17) {
             const uint16_t *src = mg_chooser_pick ? mg_portrait_alt_pal : mg_portrait_pal;
@@ -3939,21 +3897,6 @@ static void NEOGEO_USER mg_boss_ai(NGCharacter *p)
  * lifted a few steps -- a glint, not a change of costume. (The golden sun
  * palette recoloured every pixel one hue, turning her into a gold cut-out.)
  */
-static void NEOGEO_USER mg_hurt_red_palette(void)
-{
-    const uint16_t *src = mg_hero_normal_pal();
-    uint16_t pal[16];
-    uint8_t i;
-    pal[0] = src[0];
-    for (i = 1; i < 16; i++) {
-        uint16_t c = src[i];
-        uint8_t r = (uint8_t)((c >> 8) & 15u), g = (uint8_t)((c >> 4) & 15u), b = (uint8_t)(c & 15u);
-        r = (uint8_t)(r + ((15u - r) >> 1));
-        pal[i] = (uint16_t)(((uint16_t)r << 8) | ((uint16_t)(g >> 1) << 4) | (uint16_t)(b >> 1));
-    }
-    mg_palette(PAL_HERO, pal);
-}
-
 static void NEOGEO_USER mg_hurt_palette(void)
 {
     const uint16_t *src = mg_hero_normal_pal();
@@ -4498,11 +4441,8 @@ static void NEOGEO_USER mg_update_entities(void)
     if (mg.hurt) {
         mg.hurt--;
         if (mg.hurt > 82) {
-            /* the blow itself: a flash of red */
-            if (mg.hurt_lit != 2) {
-                mg.hurt_lit = 2;
-                mg_hurt_red_palette();
-            }
+            /* the blow itself: her red flash (mg_player_damage) runs out */
+            mg.hurt_lit = 2;
         } else if (mg.hurt > 20) {
             uint8_t lit = (uint8_t)((mg.hurt & 8) != 0);
             if (lit != mg.hurt_lit) {
@@ -5070,8 +5010,8 @@ static void NEOGEO_USER mg_interlude(uint8_t next_stage)
 
     ng_sprite_hide_all();
     ng_fix_clear();
-    setBACKDROP(0x8000);
-    waitVbl();
+    mg_backdrop(0x8000);
+    maiya_vblank();
     mg_ui_palettes();
     mg_palette(PAL_ALLY, mg_sunboy_pal);
     mg_music(SOUND_TRACK_I);
@@ -5331,16 +5271,14 @@ static void NEOGEO_USER mg_warp_frame(void)
             mg_burst((int16_t)(door + (int16_t)(mg_rand() % 28u) - 14), (int16_t)(MG_GROUND_Y - 8 - (mg_rand() & 31)),
                      MG_T_SPARK, 1, -3);
         if (t <= MG_WARP_GONE) p->visible = 0;
-        if (t < MG_WARP_GONE) {
-            if (t == MG_WARP_GONE - 1) mg_fade_begin();
-            if ((t & 1u) == 0u)
-                mg_fade_set((uint8_t)(((MG_WARP_GONE - 1 - t) * 16u) / (MG_WARP_GONE - 1 - MG_WARP_WHITE)));
-        }
+        /* all white by MG_WARP_WHITE */
+        if (t == MG_WARP_GONE - 1)
+            ng_palfx_screen_fade_out(NG_PALFX_WHITE, MG_WARP_GONE - MG_WARP_WHITE);
     } else {
-        if (t == MG_WARP_WHITE) mg_fade_set(16);
         if (t == MG_WARP_SWAP) mg_warp_swap();
-        if (t < MG_WARP_SWAP && t >= MG_WARP_CLEAR && (((t & 1u) == 0u) || t == MG_WARP_CLEAR))
-            mg_fade_set((uint8_t)(((t - MG_WARP_CLEAR) * 16u) / (MG_WARP_SWAP - 1 - MG_WARP_CLEAR)));
+        /* and the colour all back by MG_WARP_CLEAR + 1 */
+        if (t == MG_WARP_SWAP - 1)
+            ng_palfx_screen_fade_in(NG_PALFX_WHITE, MG_WARP_SWAP - 1 - MG_WARP_CLEAR);
         p->visible = (uint8_t)(t <= MG_WARP_APPEAR);
         if (t == MG_WARP_APPEAR) {
             mg_secret_art_ring(p->x, (int16_t)(p->y - 30));
@@ -5394,7 +5332,6 @@ static void NEOGEO_USER mg_continue_card(void)
 
 void NEOGEO_USER maiya_frame(void)
 {
-    mg_fade_commit();      /* first thing after the blank: see mg_fade_set() */
     mg.tick++;
     if (!mg.player) return;
     mg_animate_water();
