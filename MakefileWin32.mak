@@ -151,6 +151,9 @@ GAME_ENGINE_EXCLUDE ?=
 # GAME_ENGINE_DEFINES (see Makefile): -D switches for optional engine code,
 # passed to the engine and the game alike.  C engine only.
 GAME_ENGINE_DEFINES ?=
+# GAME_OPTIMIZE (see Makefile): a GCC level, such as -O2, for the engine,
+# the SDK library and the game's scenes; the start-up sources stay -O0.
+GAME_OPTIMIZE ?=
 NG_ENGINE_STUBBED=ng_particles
 ifneq ($(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)),)
 $(error GAME_ENGINE_EXCLUDE: no stand-in for $(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)))
@@ -321,43 +324,43 @@ game: game-check
 	$(GAME_CC) $(GAME_CFLAGS) sdk\neogeolib.c -o out\neogeolib0.o
 	$(GAME_CC) $(GAME_CFLAGS) sdk\ng_fix\ng_fix.c -o out\ng_fix_sdk0.o
 	$(PY) tools\gen_trig.py --out sdk\2d_engine\ng_trig_table.c
-	$(foreach src,$(SDK_LIB_SRCS),$(CC) $(CFLAGS) $(src) -o out/lib_$(notdir $(basename $(src)))0.o &&) rem sdk library compiled
+	$(foreach src,$(SDK_LIB_SRCS),$(CC) $(CFLAGS) $(GAME_OPTIMIZE) $(src) -o out/lib_$(notdir $(basename $(src)))0.o &&) rem sdk library compiled
 	if exist out\libng_sdk.a del out\libng_sdk.a
 	$(AR) rcs $(SDK_LIB) $(SDK_LIB_OBJ0)
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_defs.$(ENGINE_EXT) -o out\ng_defs0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_properties.$(ENGINE_EXT) -o out\ng_properties0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_game_time.$(ENGINE_EXT) -o out\ng_game_time0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_timers.$(ENGINE_EXT) -o out\ng_timers0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_progress.$(ENGINE_EXT) -o out\ng_progress0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_status.$(ENGINE_EXT) -o out\ng_status0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_game_events.$(ENGINE_EXT) -o out\ng_game_events0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_level.$(ENGINE_EXT) -o out\ng_level0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_vram.$(ENGINE_EXT) -o out\ng_vram0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_sprite_window.$(ENGINE_EXT) -o out\ng_sprite_window0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_art_asset.$(ENGINE_EXT) -o out\ng_art_asset0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_palette_assets.$(ENGINE_EXT) -o out\ng_palette_assets0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_bg.$(ENGINE_EXT) -o out\ng_bg0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_fix.$(ENGINE_EXT) -o out\ng_fix0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_sprite_group.$(ENGINE_EXT) -o out\ng_sprite_group0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_actions.$(ENGINE_EXT) -o out\ng_actions0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_chars.$(ENGINE_EXT) -o out\ng_chars0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_npcs.$(ENGINE_EXT) -o out\ng_npcs0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_physics.$(ENGINE_EXT) -o out\ng_physics0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_border_constraints.$(ENGINE_EXT) -o out\ng_border_constraints0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_game_interupt.$(ENGINE_EXT) -o out\ng_game_interupt0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_scene.$(ENGINE_EXT) -o out\ng_scene0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_depthfx.$(ENGINE_EXT) -o out\ng_depthfx0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_render_queue.$(ENGINE_EXT) -o out\ng_render_queue0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_fixed.$(ENGINE_EXT) -o out\ng_fixed0.o
-	$(if $(NG_RAND_OBJ0),$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_rand.$(ENGINE_EXT) -o $(NG_RAND_OBJ0))
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_camera.$(ENGINE_EXT) -o out\ng_camera0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_palette_fx.$(ENGINE_EXT) -o out\ng_palette_fx0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\$(call ng_engine_mod,ng_particles).$(ENGINE_EXT) -o out\$(call ng_engine_mod,ng_particles)0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_feedback.$(ENGINE_EXT) -o out\ng_feedback0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_debug.$(ENGINE_EXT) -o out\ng_debug0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_joystick.$(ENGINE_EXT) -o out\ng_joystick0.o
-	$(ENGINE_CC) $(CXXFLAGS) $(ENGINE_DIR)\ng_demo_advanced.$(ENGINE_EXT) -o out\ng_demo_advanced0.o
-	$(foreach src,$(GAME_SCENE_SRCS),$(GAME_CC) $(GAME_CFLAGS) $(src) -o out/$(notdir $(basename $(src)))0.o &&) rem scenes compiled
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_defs.$(ENGINE_EXT) -o out\ng_defs0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_properties.$(ENGINE_EXT) -o out\ng_properties0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_game_time.$(ENGINE_EXT) -o out\ng_game_time0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_timers.$(ENGINE_EXT) -o out\ng_timers0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_progress.$(ENGINE_EXT) -o out\ng_progress0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_status.$(ENGINE_EXT) -o out\ng_status0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_game_events.$(ENGINE_EXT) -o out\ng_game_events0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_level.$(ENGINE_EXT) -o out\ng_level0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_vram.$(ENGINE_EXT) -o out\ng_vram0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_sprite_window.$(ENGINE_EXT) -o out\ng_sprite_window0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_art_asset.$(ENGINE_EXT) -o out\ng_art_asset0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_palette_assets.$(ENGINE_EXT) -o out\ng_palette_assets0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_bg.$(ENGINE_EXT) -o out\ng_bg0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_fix.$(ENGINE_EXT) -o out\ng_fix0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_sprite_group.$(ENGINE_EXT) -o out\ng_sprite_group0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_actions.$(ENGINE_EXT) -o out\ng_actions0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_chars.$(ENGINE_EXT) -o out\ng_chars0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_npcs.$(ENGINE_EXT) -o out\ng_npcs0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_physics.$(ENGINE_EXT) -o out\ng_physics0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_border_constraints.$(ENGINE_EXT) -o out\ng_border_constraints0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_game_interupt.$(ENGINE_EXT) -o out\ng_game_interupt0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_scene.$(ENGINE_EXT) -o out\ng_scene0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_depthfx.$(ENGINE_EXT) -o out\ng_depthfx0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_render_queue.$(ENGINE_EXT) -o out\ng_render_queue0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_fixed.$(ENGINE_EXT) -o out\ng_fixed0.o
+	$(if $(NG_RAND_OBJ0),$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_rand.$(ENGINE_EXT) -o $(NG_RAND_OBJ0))
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_camera.$(ENGINE_EXT) -o out\ng_camera0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_palette_fx.$(ENGINE_EXT) -o out\ng_palette_fx0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\$(call ng_engine_mod,ng_particles).$(ENGINE_EXT) -o out\$(call ng_engine_mod,ng_particles)0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_feedback.$(ENGINE_EXT) -o out\ng_feedback0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_debug.$(ENGINE_EXT) -o out\ng_debug0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_joystick.$(ENGINE_EXT) -o out\ng_joystick0.o
+	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_demo_advanced.$(ENGINE_EXT) -o out\ng_demo_advanced0.o
+	$(foreach src,$(GAME_SCENE_SRCS),$(GAME_CC) $(GAME_CFLAGS) $(GAME_OPTIMIZE) $(src) -o out/$(notdir $(basename $(src)))0.o &&) rem scenes compiled
 	$(GAME_CC) $(GAME_CFLAGS) games\$(GAME)\eyecatcher.c -o out\eyecatcher0.o
 	$(OBJCP) $(STRIP_SECTS) out\neogeo0.o out\neogeo.o
 	$(OBJCP) $(STRIP_SECTS) out\user0.o out\user.o

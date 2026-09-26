@@ -6,21 +6,141 @@
 #include "ng_sprite_hw.h"
 
 /*
- * Built at -O2 while the rest of the tree is -O0.
+ * Built at -O2 while the rest of the tree may be -O0.
  *
- * These are the routines a frame runs most: the map fill below is a
- * tight loop over up to sixteen rows for every strip of every sprite
- * that moved, and at -O0 it reloads its bounds from the stack on each
- * iteration.  Raising it here is safe because nothing in this file
- * depends on -O0 to be correct - every hardware access goes through the
- * vram_* helpers in another translation unit, so the compiler can
- * neither reorder nor elide one, and there is no inline asm holding an
- * opinion about register allocation.
+ * These are the routines a frame runs most: the map fill below runs over
+ * up to sixteen rows for every strip of every sprite whose art changed,
+ * and the position writes run for every sprite that moved.  The writes to
+ * the video RAM ports are in the assembly helpers below, so the compiler
+ * can neither reorder, merge nor elide one.
  */
 #pragma GCC optimize ("O2")
 
-static uint16_t ngsg_tiles[NG_SPRITE_MAX_HEIGHT_TILES];
-static uint16_t ngsg_attrs[NG_SPRITE_MAX_HEIGHT_TILES];
+/*
+ * VRAM writes, straight at the LSPC's ports (VRAM_ADDR, VRAM_RW, VRAM_INC
+ * at +0, +2, +4).  Each write to VRAM_RW lands at least 12 clocks after the
+ * write before it, the pace the SDK's other VRAM loops keep (vram_SCB1 is a
+ * memory-to-memory move); the compiler would be free to pack two register
+ * stores into back-to-back 8-clock moves, which is why these are assembly.
+ *
+ * A run of sprites sits at consecutive addresses in each of SCB1 (64 words
+ * a sprite), SCB2, SCB3 and SCB4, so a run is one address and a stream of
+ * words with the auto-increment at 1.
+ *
+ * A host build (the unit tests) makes the same writes through the vram_*
+ * calls, which the tests stand in for.
+ */
+#ifdef __m68k__
+
+/* One word at `addr`. */
+static inline void NEOGEO_USER ngsg_put(uint16_t addr, uint16_t v)
+{
+    __asm__ volatile (
+        "move.w %[addr],(%[p])\n\t"    /* VRAM_ADDR                 */
+        "move.w %[v],2(%[p])"            /* VRAM_RW, 12 clocks on     */
+        :
+        : [p] "a" (VRAM_ADDR), [addr] "d" (addr), [v] "d" (v)
+        : "memory");
+}
+
+/* `first` at `addr`, then n - 1 copies of `rest` at the words after it. */
+static inline void NEOGEO_USER ngsg_fill(uint16_t addr, uint16_t first, uint16_t rest, uint16_t n)
+{
+    if (!n) return;
+    __asm__ volatile (
+        "move.w %[addr],(%[p])\n\t"    /* VRAM_ADDR                 */
+        "move.w #1,4(%[p])\n\t"        /* VRAM_INC = 1              */
+        "move.w %[first],2(%[p])\n\t"  /* VRAM_RW                   */
+        "subq.w #1,%[n]\n\t"
+        "bra.s 2f\n"
+        "1:\n\t"
+        "move.w %[rest],2(%[p])\n"      /* 12 clocks, then the dbf   */
+        "2:\n\t"
+        "dbf %[n],1b"
+        : [n] "+d" (n)
+        : [p] "a" (VRAM_ADDR), [addr] "d" (addr), [first] "d" (first), [rest] "d" (rest)
+        : "cc", "memory");
+}
+
+/*
+ * One strip's SCB1 map at `addr`: `art` rows of (tile, attr), the
+ * tile stepping by `step` a row, then `blank` rows of the transparent tile.
+ * With a bank map `pm`, stepping with the tile, each row's attribute takes
+ * its palette bank from the map over attr's low byte.
+ */
+static void NEOGEO_USER ngsg_put_strip(uint16_t addr, uint16_t tile, int16_t step, uint16_t attr,
+                                       const uint8_t *pm, uint16_t art, uint16_t blank)
+{
+    volatile uint16_t *p = (volatile uint16_t *)VRAM_ADDR;
+    uint16_t w;
+
+    __asm__ volatile (
+        "move.w %[addr],(%[p])\n\t"    /* VRAM_ADDR                 */
+        "move.w #1,4(%[p])\n\t"        /* VRAM_INC = 1              */
+        "addq.l #2,%[p]\n\t"           /* VRAM_RW from here on      */
+        "subq.w #1,%[art]\n\t"
+        "bmi.s 3f\n\t"                   /* no art: all blank         */
+        "cmpa.w #0,%[pm]\n\t"
+        "beq.s 2f\n"
+        "1:\n\t"                         /* banked rows               */
+        "move.w %[tile],(%[p])\n\t"
+        "move.b (%[pm]),%[w]\n\t"
+        "lsl.w #8,%[w]\n\t"
+        "or.b %[attr],%[w]\n\t"
+        "move.w %[w],(%[p])\n\t"
+        "add.w %[step],%[tile]\n\t"
+        "adda.w %[step],%[pm]\n\t"
+        "dbf %[art],1b\n\t"
+        "bra.s 3f\n"
+        "2:\n\t"                         /* one bank                  */
+        "move.w %[tile],(%[p])\n\t"
+        "add.w %[step],%[tile]\n\t"      /* 12 clocks to the attr     */
+        "move.w %[attr],(%[p])\n\t"
+        "dbf %[art],2b\n"
+        "3:\n\t"
+        "subq.w #1,%[blank]\n\t"
+        "bmi.s 5f\n"
+        "4:\n\t"                         /* the map's unused rows     */
+        "move.w %[bt],(%[p])\n\t"
+        "move.w %[ba],(%[p])\n\t"
+        "dbf %[blank],4b\n"
+        "5:"
+        : [p] "+a" (p), [pm] "+a" (pm), [tile] "+d" (tile), [art] "+d" (art),
+          [blank] "+d" (blank), [w] "=&d" (w)
+        : [addr] "d" (addr), [step] "d" (step), [attr] "d" (attr),
+          [bt] "i" (NG_SPRITE_BLANK_TILE), [ba] "i" (NG_SPRITE_BLANK_ATTR)
+        : "cc", "memory");
+}
+#else
+static void ngsg_put(uint16_t addr, uint16_t v)
+{
+    vram_SCB234(addr, v);
+}
+
+static void ngsg_fill(uint16_t addr, uint16_t first, uint16_t rest, uint16_t n)
+{
+    if (!n) return;
+    vram_init(addr, 1);
+    vram_sfix1(first);
+    while (--n) vram_sfix1(rest);
+}
+
+static void ngsg_put_strip(uint16_t addr, uint16_t tile, int16_t step, uint16_t attr,
+                           const uint8_t *pm, uint16_t art, uint16_t blank)
+{
+    vram_init(addr, 1);
+    for (; art; art--) {
+        vram_sfix1(tile);
+        vram_sfix1(pm ? (uint16_t)(((uint16_t)*pm << 8) | (attr & 0x00ffu)) : attr);
+        tile = (uint16_t)(tile + step);
+        if (pm) pm += step;
+    }
+    for (; blank; blank--) {
+        vram_sfix1(NG_SPRITE_BLANK_TILE);
+        vram_sfix1(NG_SPRITE_BLANK_ATTR);
+    }
+}
+#endif
 
 static uint8_t NEOGEO_USER ngsg_clamp_u8(uint8_t v, uint8_t min, uint8_t max)
 {
@@ -39,24 +159,65 @@ static uint8_t NEOGEO_USER ngsg_x_shrink_nibble(uint8_t xScale)
     return (uint8_t)((xScale >> 4) & 0x0f);
 }
 
-static uint16_t NEOGEO_USER ngsg_tile_for(NGSpriteGroup *g, uint8_t strip, uint8_t row)
+/* The rows a group shows: its active rows, bounded by its height, then as
+ * many as its vertical shrink leaves on screen (SCB3's count). */
+static uint8_t NEOGEO_USER ngsg_rows(const NGSpriteGroup *g)
 {
-    uint8_t sourceStrip = strip;
-    uint8_t sourceRow = row;
-
-    if (g->hflip) sourceStrip = (uint8_t)((g->strips - 1u) - sourceStrip);
-    if (g->vflip) sourceRow = (uint8_t)((g->heightTiles - 1u) - sourceRow);
-
-    return (uint16_t)(g->tileBase + ((uint16_t)sourceRow * g->tileStride) + sourceStrip);
+    uint8_t rows = g->activeRows ? g->activeRows : g->heightTiles;
+    if (rows > g->heightTiles) rows = g->heightTiles;
+    if (rows > NG_SPRITE_MAX_HEIGHT_TILES) rows = NG_SPRITE_MAX_HEIGHT_TILES;
+    if (g->yScale == NG_SPRITE_FULL_YSCALE && rows) return rows;   /* no multiply */
+    return ng_sprite_display_rows(rows, g->yScale);
 }
 
-static uint16_t NEOGEO_USER ngsg_attr_for(NGSpriteGroup *g, uint8_t strip, uint8_t row, uint16_t attr)
+/* The SCB words, as setSCB2/3/4 and setSCB1_2 build them. */
+static uint16_t NEOGEO_USER ngsg_scb2(const NGSpriteGroup *g)
 {
-    if (!g->tilePalettes) return attr;
-    if (g->hflip) strip = (uint8_t)(g->strips - 1u - strip);
-    if (g->vflip) row = (uint8_t)(g->heightTiles - 1u - row);
-    return (uint16_t)((attr & 0x00ffu) |
-        ((uint16_t)g->tilePalettes[(uint16_t)row * g->tileStride + strip] << 8));
+    return (uint16_t)(((uint16_t)ngsg_x_shrink_nibble(g->xScale) << 8) | g->yScale);
+}
+
+static uint16_t NEOGEO_USER ngsg_scb3(const NGSpriteGroup *g, uint8_t rows)
+{
+    return (uint16_t)(((uint16_t)(496 - g->y) << 7) | rows);
+}
+
+static uint16_t NEOGEO_USER ngsg_scb4(const NGSpriteGroup *g)
+{
+    return (uint16_t)((uint16_t)g->x << 7);
+}
+
+static uint16_t NEOGEO_USER ngsg_attr(const NGSpriteGroup *g)
+{
+    return (uint16_t)(((uint16_t)g->palette << 8) | (g->autoAnim8 << 3) | (g->autoAnim4 << 2) |
+                      (g->vflip << 1) | g->hflip);
+}
+
+/*
+ * Every strip's SCB1 map.  Rows past the art hold the transparent tile, up
+ * to the rows the hardware can reach (ng_sprite_map_rows).  A strip reads
+ * its page column from the far side when mirrored, and its rows bottom up
+ * when flipped: the tile and the bank map then step back a row at a time.
+ */
+static void NEOGEO_USER ngsg_put_map(const NGSpriteGroup *g, uint8_t rows)
+{
+    uint8_t mapRows = ng_sprite_map_rows(rows);
+    uint8_t art = g->heightTiles < mapRows ? g->heightTiles : mapRows;
+    uint16_t attr = ngsg_attr(g);
+    int16_t step = (int16_t)g->tileStride;
+    uint16_t start = 0;
+    uint16_t addr = (uint16_t)(64u * g->firstSprite);
+    uint8_t strip;
+
+    if (g->vflip) {
+        start = (uint16_t)((uint16_t)(g->heightTiles - 1u) * g->tileStride);
+        step = (int16_t)-step;
+    }
+    for (strip = 0; strip < g->strips; strip++, addr = (uint16_t)(addr + 64u)) {
+        uint16_t first = (uint16_t)(start + (g->hflip ? (uint8_t)(g->strips - 1u - strip) : strip));
+        ngsg_put_strip(addr, (uint16_t)(g->tileBase + first), step, attr,
+                       g->tilePalettes ? g->tilePalettes + first : 0,
+                       art, (uint16_t)(mapRows - art));
+    }
 }
 
 void NEOGEO_USER ng_sprite_group_set_palette_map(NGSpriteGroup *g, const uint8_t *banks)
@@ -146,9 +307,9 @@ void NEOGEO_USER ng_sprite_park_off(uint16_t spr)
     if (spr >= NG_SPR_TOTAL) return;
     /* Break the chain and disable height before touching its transform.
      * Map padding is guaranteed by upload/flush, not by a per-frame wipe. */
-    vram_SCB234((uint16_t)(SCB3_ADDR + spr), NG_SPRITE_DISABLED_SCB3);
-    vram_SCB234((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
-    vram_SCB234((uint16_t)(SCB4_ADDR + spr), setSCB4(NG_SPRITE_DISABLED_X));
+    ngsg_put((uint16_t)(SCB3_ADDR + spr), NG_SPRITE_DISABLED_SCB3);
+    ngsg_put((uint16_t)(SCB2_ADDR + spr), 0x0FFFu);
+    ngsg_put((uint16_t)(SCB4_ADDR + spr), (uint16_t)(NG_SPRITE_DISABLED_X << 7));
 }
 
 void NEOGEO_USER ng_sprite_park_off_range(uint16_t first, uint16_t count)
@@ -161,10 +322,14 @@ void NEOGEO_USER ng_sprite_park_off_range(uint16_t first, uint16_t count)
 
     end = (uint16_t)(first + count);
     if (end > NG_SPR_TOTAL || end < first) end = NG_SPR_TOTAL;
+    if (end == first) return;
 
-    for (i = first; i < end; i++) {
-        ng_sprite_park_off(i);
-    }
+    /* ng_sprite_park_off for the whole run: every chain broken first. */
+    i = (uint16_t)(end - first);
+    ngsg_fill((uint16_t)(SCB3_ADDR + first), NG_SPRITE_DISABLED_SCB3, NG_SPRITE_DISABLED_SCB3, i);
+    ngsg_fill((uint16_t)(SCB2_ADDR + first), 0x0FFFu, 0x0FFFu, i);
+    ngsg_fill((uint16_t)(SCB4_ADDR + first), (uint16_t)(NG_SPRITE_DISABLED_X << 7),
+              (uint16_t)(NG_SPRITE_DISABLED_X << 7), i);
 }
 
 /* Per-frame hide path: hot, must fit in vblank.  Uses the quick
@@ -331,15 +496,8 @@ void NEOGEO_USER ng_sprite_group_set_visible(NGSpriteGroup *g, uint8_t visible)
 
 void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
 {
-    uint8_t strip;
-    uint8_t row;
-    uint8_t activeRows;
-    uint8_t mapRows;
-    uint8_t xNibble;
-    uint16_t driverScb3;
-    uint16_t driverScb4;
-    uint16_t scb2;
-    uint16_t attr;
+    uint8_t rows;
+    uint16_t n;
 
     if (!g) return;
 
@@ -348,75 +506,23 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
         return;
     }
 
-    activeRows = g->activeRows ? g->activeRows : g->heightTiles;
-    if (activeRows > g->heightTiles) activeRows = g->heightTiles;
-    if (activeRows > NG_SPRITE_MAX_HEIGHT_TILES) activeRows = NG_SPRITE_MAX_HEIGHT_TILES;
-
-    activeRows = ng_sprite_display_rows(activeRows, g->yScale);
-    mapRows = ng_sprite_map_rows(activeRows);
-    xNibble = ngsg_x_shrink_nibble(g->xScale);
-    scb2 = setSCB2(xNibble, g->yScale);
-    driverScb3 = setSCB3((uint16_t)(496 - g->y), 0, activeRows);
-    driverScb4 = setSCB4((uint16_t)g->x);
-    attr = setSCB1_2(
-        g->palette,
-        0,
-        g->autoAnim8,
-        g->autoAnim4,
-        g->vflip,
-        g->hflip
-    );
-
-    for (strip = 0; strip < g->strips; strip++) {
-        uint16_t spriteIndex = (uint16_t)(g->firstSprite + strip);
-        uint16_t scb1Addr = (uint16_t)(64u * spriteIndex);
-        uint16_t scb3;
-        uint16_t scb4;
-
-        for (row = 0; row < mapRows; row++) {
-            ngsg_tiles[row] = row < g->heightTiles ? ngsg_tile_for(g, strip, row) : NG_SPRITE_BLANK_TILE;
-            ngsg_attrs[row] = row < g->heightTiles ? ngsg_attr_for(g, strip, row, attr) : NG_SPRITE_BLANK_ATTR;
-        }
-
-        if (strip == 0) {
-            /*
-             * Driving strip: owns X, Y, height and vertical shrink.
-             */
-            scb3 = driverScb3;
-            scb4 = driverScb4;
-        } else {
-            /*
-             * Sticky/chain strip: bit 6 = chain bit, bits[5:0] = height.
-             * Hardware ignores height on chained strips but emulators may read
-             * it; keep consistent with update_transform/flush paths.
-             */
-            scb3 = (uint16_t)(0x0040 | activeRows);
-            scb4 = 0;
-        }
-
-        vram_sprite(
-            scb1Addr,
-            1,
-            spriteIndex,
-            ngsg_tiles,
-            ngsg_attrs,
-            mapRows,
-            scb2,
-            scb3,
-            scb4
-        );
-    }
+    rows = ngsg_rows(g);
+    n = g->strips;
+    ngsg_put_map(g, rows);
+    /*
+     * The driving strip owns X, Y, the height and the vertical shrink; the
+     * chained (sticky) strips carry the chain bit (0x40) and a copy of the
+     * height, which hardware ignores on them but emulators may read.
+     */
+    ngsg_fill((uint16_t)(SCB2_ADDR + g->firstSprite), ngsg_scb2(g), ngsg_scb2(g), n);
+    ngsg_fill((uint16_t)(SCB3_ADDR + g->firstSprite), ngsg_scb3(g, rows), (uint16_t)(0x0040u | rows), n);
+    ngsg_fill((uint16_t)(SCB4_ADDR + g->firstSprite), ngsg_scb4(g), 0u, n);
     g->dirty = 0u;
 }
 
 void NEOGEO_USER ng_sprite_group_update_transform(NGSpriteGroup *g)
 {
-    uint8_t strip;
-    uint8_t activeRows;
-    uint8_t xNibble;
-    uint16_t driverScb3;
-    uint16_t driverScb4;
-    uint16_t scb2;
+    uint8_t rows;
 
     if (!g) return;
 
@@ -425,35 +531,12 @@ void NEOGEO_USER ng_sprite_group_update_transform(NGSpriteGroup *g)
         return;
     }
 
-    activeRows = g->activeRows ? g->activeRows : g->heightTiles;
-    if (activeRows > g->heightTiles) activeRows = g->heightTiles;
-    if (activeRows > NG_SPRITE_MAX_HEIGHT_TILES) activeRows = NG_SPRITE_MAX_HEIGHT_TILES;
-
-    activeRows = ng_sprite_display_rows(activeRows, g->yScale);
-    xNibble = ngsg_x_shrink_nibble(g->xScale);
-    scb2 = setSCB2(xNibble, g->yScale);
-    /* Guide specifies 496-Y is the internal coordinate system for vertical pos */
-    driverScb3 = setSCB3((uint16_t)(496 - g->y), 0, activeRows);
-    driverScb4 = setSCB4((uint16_t)g->x);
-
-    /*
-     * VRAM Access Optimization: Write driver registers first.
-     * Use individual VRAM calls to ensure hardware timing compliance.
-     */
-    vram_SCB234((uint16_t)(SCB2_ADDR + g->firstSprite), scb2);
-    vram_SCB234((uint16_t)(SCB3_ADDR + g->firstSprite), driverScb3);
-    vram_SCB234((uint16_t)(SCB4_ADDR + g->firstSprite), driverScb4);
-
-    for (strip = 1; strip < g->strips; strip++) {
-        uint16_t spriteIndex = (uint16_t)(g->firstSprite + strip);
-
-        /*
-         * Sticky group movement: bit 6 (0x40) of SCB3 is the chain bit.
-         * Horizontal reduction (SCB2) must match driver for consistent width.
-         */
-        vram_SCB234((uint16_t)(SCB2_ADDR + spriteIndex), scb2);
-        vram_SCB234((uint16_t)(SCB3_ADDR + spriteIndex), 0x0040 | activeRows);
-    }
+    rows = ngsg_rows(g);
+    /* Horizontal shrink on every strip, for a consistent width; the
+     * driver's Y and height, and the chain bit on the rest; the driver's X. */
+    ngsg_fill((uint16_t)(SCB2_ADDR + g->firstSprite), ngsg_scb2(g), ngsg_scb2(g), g->strips);
+    ngsg_fill((uint16_t)(SCB3_ADDR + g->firstSprite), ngsg_scb3(g, rows), (uint16_t)(0x0040u | rows), g->strips);
+    ngsg_put((uint16_t)(SCB4_ADDR + g->firstSprite), ngsg_scb4(g));
 }
 
 /**
@@ -493,86 +576,45 @@ void NEOGEO_USER ng_sprite_group_hide(NGSpriteGroup *g)
  */
 void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
 {
-    uint8_t strip;
-    uint8_t activeRows;
-    uint8_t mapRows;
-    uint8_t xNibble;
-    uint16_t scb2;
-    uint16_t driverScb3;
-    uint16_t driverScb4;
-    uint16_t attr;
-    uint8_t row;
+    uint8_t dirty;
+    uint8_t rows;
 
     if (!g) return;
-    if (!g->dirty) return;
+    dirty = g->dirty;
+    if (!dirty) return;
+    g->dirty = 0;   /* all flushed */
 
     /* Visibility change: hide and return if not visible */
     if (!g->visible) {
-        if (g->dirty & NG_SGF_DIRTY_VIS) ng_sprite_group_hide(g);
-        g->dirty = 0;
+        if (dirty & NG_SGF_DIRTY_VIS) ng_sprite_group_hide(g);
         return;
     }
 
-    activeRows = g->activeRows ? g->activeRows : g->heightTiles;
-    if (activeRows > g->heightTiles) activeRows = g->heightTiles;
-    if (activeRows > NG_SPRITE_MAX_HEIGHT_TILES) activeRows = NG_SPRITE_MAX_HEIGHT_TILES;
-
-    activeRows = ng_sprite_display_rows(activeRows, g->yScale);
-    mapRows = ng_sprite_map_rows(activeRows);
-    /* Compute values once even if some are not needed — branch avoidance */
-    xNibble    = ngsg_x_shrink_nibble(g->xScale);
-    scb2       = setSCB2(xNibble, g->yScale);
-    driverScb3 = setSCB3((uint16_t)(496 - g->y), 0, activeRows);
-    driverScb4 = setSCB4((uint16_t)g->x);
-    attr       = setSCB1_2(g->palette, 0, g->autoAnim8, g->autoAnim4, g->vflip, g->hflip);
+    rows = ngsg_rows(g);
 
     /* SCB1 tile + attribute upload — only when tile or palette changed */
-    if (g->dirty & (NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_PALETTE)) {
-        for (strip = 0; strip < g->strips; strip++) {
-            uint16_t scb1Addr = (uint16_t)(64u * (uint16_t)(g->firstSprite + strip));
-
-            for (row = 0; row < mapRows; row++) {
-                ngsg_tiles[row] = row < g->heightTiles ? ngsg_tile_for(g, strip, row) : NG_SPRITE_BLANK_TILE;
-                ngsg_attrs[row] = row < g->heightTiles ? ngsg_attr_for(g, strip, row, attr) : NG_SPRITE_BLANK_ATTR;
-            }
-
-            vram_init(scb1Addr, 1);
-            vram_SCB1(ngsg_tiles, ngsg_attrs, mapRows);
-        }
-    }
+    if (dirty & (NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_PALETTE)) ngsg_put_map(g, rows);
 
     /* SCB2 shrink upload */
-    if (g->dirty & NG_SGF_DIRTY_SHRINK) {
-        for (strip = 0; strip < g->strips; strip++) {
-            uint16_t spriteIndex = (uint16_t)(g->firstSprite + strip);
-            vram_SCB234((uint16_t)(SCB2_ADDR + spriteIndex), scb2);
-        }
-    }
+    if (dirty & NG_SGF_DIRTY_SHRINK)
+        ngsg_fill((uint16_t)(SCB2_ADDR + g->firstSprite), ngsg_scb2(g), ngsg_scb2(g), g->strips);
 
     /*
      * SCB3/4.  The driver strip carries X, Y and the active-character count,
      * so it is rewritten for a move, a show, or a scale change - the count is
      * derived from the vertical shrink and goes stale with it.
-     */
-    if (g->dirty & (NG_SGF_DIRTY_POS | NG_SGF_DIRTY_VIS | NG_SGF_DIRTY_SHRINK)) {
-        vram_SCB234((uint16_t)(SCB3_ADDR + g->firstSprite), driverScb3);
-        vram_SCB234((uint16_t)(SCB4_ADDR + g->firstSprite), driverScb4);
-    }
-
-    /*
+     *
      * Chained strips hold only the chain bit and a copy of the count; the
      * hardware reads neither position from them.  A move therefore leaves
      * them alone - re-stamping thirty-odd slots every time a background
      * scrolls one pixel was most of what a scroll cost.  A show still has to
      * write them, because parking a slot clears its chain bit.
      */
-    if (g->dirty & (NG_SGF_DIRTY_VIS | NG_SGF_DIRTY_SHRINK)) {
-        for (strip = 1; strip < g->strips; strip++) {
-            uint16_t spriteIndex = (uint16_t)(g->firstSprite + strip);
-            vram_SCB234((uint16_t)(SCB3_ADDR + spriteIndex), (uint16_t)(0x0040 | activeRows));
-            vram_SCB234((uint16_t)(SCB4_ADDR + spriteIndex), 0);
-        }
+    if (dirty & (NG_SGF_DIRTY_VIS | NG_SGF_DIRTY_SHRINK)) {
+        ngsg_fill((uint16_t)(SCB3_ADDR + g->firstSprite), ngsg_scb3(g, rows), (uint16_t)(0x0040u | rows), g->strips);
+        ngsg_fill((uint16_t)(SCB4_ADDR + g->firstSprite), ngsg_scb4(g), 0u, g->strips);
+    } else if (dirty & NG_SGF_DIRTY_POS) {
+        ngsg_put((uint16_t)(SCB3_ADDR + g->firstSprite), ngsg_scb3(g, rows));
+        ngsg_put((uint16_t)(SCB4_ADDR + g->firstSprite), ngsg_scb4(g));
     }
-
-    g->dirty = 0;   /* all flushed */
 }

@@ -85,6 +85,27 @@ Monitor `VertBlank` at 0x100000: if the flag is not set when your game logic
 finishes, VBlank was missed.  Set `ng_dbg_vblank_overflow = 1` in the debug HUD.
 Target: game logic + VRAM writes < 60% of the inter-VBlank window.
 
+## Rule 13: Build a Busy Game With GAME_OPTIMIZE
+
+The tree builds at -O0.  A game whose frame doesn't fit sets, in its
+`game.mk`:
+
+```makefile
+GAME_OPTIMIZE = -O2
+```
+
+The engine, the on-demand SDK library and the game's scene files are then
+built at that level; the start-up sources (cart header, `user.c`, `main.c`,
+`eyecatcher.c`, `neogeolib.c`) stay at -O0.  Maiya measured, in MAME, a walk
+and fight through stages 1, 2, 4 and 6: at -O0 22-24 frames a second; with
+`-O2` 28-30; with `-O2` and the streamed sprite writes below 43-49.
+
+`ng_sprite_group` (built at -O2 in every game) writes the video RAM itself:
+a map is streamed a strip at a time with the tile stepped a row at a time
+(no multiply per row), and the SCB2/3/4 words of a group's strips go out as
+one run each, the auto-increment at 1.  Every write to the data port lands
+at least 12 clocks after the one before.
+
 ## Sprite Budget Allocation Guide
 
 | Use             | Slots  | Notes |

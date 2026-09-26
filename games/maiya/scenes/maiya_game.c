@@ -342,11 +342,38 @@ static void NEOGEO_USER mg_pal_screen(void)
     ng_palfx_screen_init(mg_pal_base, mg_pal_out, MG_PAL_BANKS);
 }
 
+/* Sleep only in the normal supervisor game loop. Masking the flag check
+ * prevents a VBlank between the test and STOP from delaying another frame.
+ * STOP atomically restores interrupt acceptance before sleeping. */
+static void NEOGEO_USER mg_wait_vblank(void)
+{
+    uint16_t status;
+    __asm__ volatile ("move.w %%sr,%0" : "=d" (status));
+    if ((status & 0xe700u) != 0x2000u) {
+        waitVbl();
+        return;
+    }
+    __asm__ volatile (
+        "move.w %%sr,%%d0\n\t"
+        "move.w #0x2700,%%sr\n\t"
+        "1: tst.w %c[flag]\n\t"
+        "bne.s 2f\n\t"
+        "stop #0x2000\n\t"
+        "move.w #0x2700,%%sr\n\t"
+        "bra.s 1b\n\t"
+        "2: clr.w %c[flag]\n\t"
+        "addq.l #1,%c[counter]\n\t"
+        "move.w %%d0,%%sr\n\t"
+        : : [flag] "i" (USER_WORKRAM),
+            [counter] "i" (USER_WORKRAM + 32)
+        : "d0", "cc", "memory");
+}
+
 /* The frame boundary: the vertical blank, and in it the colours that
  * changed since the last one. Every frame of hers passes through here. */
 void NEOGEO_USER maiya_vblank(void)
 {
-    waitVbl();
+    mg_wait_vblank();
     ng_palfx_vblank();
 }
 
