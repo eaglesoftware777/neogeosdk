@@ -347,6 +347,9 @@ typedef struct {
     uint8_t  dp_step, dp_timer;      /* how far into forward, down, down-forward she is  */
     int8_t   dp_dir;                 /* ...and which way "forward" was                   */
     uint8_t  jump_cut;               /* 1 while letting go of A can still cut this jump  */
+    uint8_t  rain_timer;             /* frames to the arena's next thing from above      */
+    int16_t  rain_x;                 /* ...and where it will fall (0: nothing warned yet) */
+    int16_t  arena_home;             /* the sliding arena ledge's centre                 */
     MGBullet bullets[MG_BULLETS];    /* the bonus round's cannon fire                   */
     NGSpriteGroup bullet_spr[MG_BULLETS];
     NGSpriteGroup cannon;            /* the blight cannon hovering over the bonus field */
@@ -3875,6 +3878,85 @@ static void NEOGEO_USER mg_arena_setup(uint8_t style)
         mg.arena[j].y = mg_arena_layout[style][j][1];
         mg.arena[j].width = mg_arena_layout[style][j][2];
     }
+    mg.arena_home = mg.arena[0].x;
+    mg.rain_timer = 150;
+    mg.rain_x = 0;
+}
+
+static void NEOGEO_USER mg_stomp_bounce(NGCharacter *p);
+
+/*
+ * Each arena is its own place to fight in. The toad's, the leviathan's,
+ * the eel's and the wyrm's first ledge slides back and forth (carrying her
+ * if she stands on it); and every arena drops its own hazard from above --
+ * sawdust, sludge, oil, embers, icicles, rocks -- a puff at the top giving
+ * half a second's warning of where. It comes quicker once the guardian is
+ * enraged. The cover ledges still shelter her from it.
+ */
+static const uint8_t mg_arena_rain[10] = {
+    MG_T_DUST, MG_T_DRIP, MG_T_OIL, MG_T_FIRE, MG_T_ICE,
+    MG_T_SPIT, MG_T_BOLT, MG_T_OIL, MG_T_TRASH, MG_T_FIRE,
+};
+
+static void NEOGEO_USER mg_arena_step(NGCharacter *p, uint8_t style)
+{
+    if (style > 9) return;
+    if (style == MG_B_TOAD || style == MG_B_LEVIATHAN || style == MG_B_EEL || style == MG_B_WYRM) {
+        int16_t x = (int16_t)(mg.arena_home + ng_trig_mul(44, ng_sin((uint8_t)(mg.tick >> 1))));
+        int16_t dx = (int16_t)(x - mg.arena[0].x);
+        if (dx && mg.on_ledge && mg.ledge_index == 0)
+            ng_char_set_pos(p, (int16_t)(p->x + dx), p->y);   /* she rides along */
+        mg.arena[0].x = x;
+    }
+    if (mg.rain_timer) {
+        mg.rain_timer--;
+        return;
+    }
+    if (!mg.rain_x) {
+        /* The warning: where it will fall, near where she is. */
+        int16_t x = (int16_t)(p->x - 40 + (int16_t)ng_rand_range(80));
+        if (x < mg.arena_left + 24) x = (int16_t)(mg.arena_left + 24);
+        if (x > mg.arena_left + 296) x = (int16_t)(mg.arena_left + 296);
+        mg.rain_x = x;
+        mg.rain_timer = 30;
+        mg_burst(x, 44, MG_T_DUST, 2, 0);
+    } else {
+        MGShot *s = mg_fire(mg.rain_x, 44, 0, 1, 1, mg_arena_rain[style]);
+        if (s) { s->mode = MG_SHOT_ARC; s->life = 120; }
+        mg.rain_x = 0;
+        mg.rain_timer = (uint8_t)((mg.boss_rage ? 60u : 110u) - mg.stage * 3u);
+    }
+}
+
+/*
+ * Landing on its head is the only way to hurt it -- when it's open: not
+ * while it winds up or strikes, when it is all edge and teeth, nor once
+ * enraged while it makes its special move; always in its recovery beats,
+ * and while it pants, near the end.
+ * A landing that isn't welcome hurts her; one while it is still shaking
+ * off the last just bounces her off. A stomp that lands throws her high
+ * and clear, and it shakes itself free for a moment. Returns 1 if she
+ * landed on it this frame.
+ */
+static uint8_t NEOGEO_USER mg_boss_stomp(NGCharacter *p, NGCharacter *b, uint8_t open)
+{
+    int16_t top = (int16_t)(b->y + b->body_y);
+    if (p->vy_fp <= 0 || mg.player_prev_y > top + 8 || p->y < top - 2 ||
+        mg_abs((int16_t)(p->x - b->x)) >= (int16_t)(b->body_w / 2 + 8)) return 0;
+    if (mg.boss_hurt) {
+        p->vy_fp = -STOMP_KICK;
+        p->vx_fp = (p->x < b->x) ? -700 : 700;
+    } else if (!open) {
+        mg_player_hit(b->x);
+        p->vy_fp = -STOMP_KICK;
+    } else {
+        mg_boss_damage(1);
+        mg.boss_hurt = 50;
+        mg_stomp_bounce(p);
+        p->vx_fp = (p->x < b->x) ? -900 : 900;
+        mg.boss_backoff = 30;
+    }
+    return 1;
 }
 
 /* A lob: rises, then falls under its own weight and bursts on the road. */
@@ -3905,8 +3987,6 @@ static void NEOGEO_USER mg_boss_hover(NGCharacter *b, int16_t tx, int16_t ty, in
  * window to strike back. Below half health a guardian is enraged: the
  * cycle runs faster and its signature attack comes with an extra beat.
  */
-static void NEOGEO_USER mg_stomp_bounce(NGCharacter *p);
-
 static void NEOGEO_USER mg_boss_ai(NGCharacter *p)
 {
     NGCharacter *b = mg.boss;
@@ -3943,10 +4023,13 @@ static void NEOGEO_USER mg_boss_ai(NGCharacter *p)
             if (style == MG_B_OWL || style == MG_B_VULTURE) b->vy_fp = (b->y < MG_BOSS_SKY_Y + 20) ? 60 : 0;
             if ((mg.tick % 12u) == 0u) mg_burst(b->x, (int16_t)(b->y - 84), MG_T_DRIP, 1, -1);
             mg_frame(b, (uint8_t)((mg.tick & 32) ? MG_BF_HURT : MG_BF_IDLE), face);
+            mg_arena_step(p, style);
+            mg_boss_stomp(p, b, 1);     /* panting: the opening to finish it */
             return;
         }
     }
     mg.boss_timer = (uint16_t)(mg.boss_timer + (rage == 2 ? (mg.tick & 1) : 1 + (rage && (mg.tick & 1))));
+    mg_arena_step(p, style);
 
     switch (style) {
     case MG_B_BEETLE:
@@ -4148,29 +4231,9 @@ static void NEOGEO_USER mg_boss_ai(NGCharacter *p)
             b->vx_fp = (b->x < p->x) ? -384 : 384;
     }
 
-    /*
-     * Landing on its head is the only way to hurt it -- but not while it
-     * winds up or strikes, when it is all edge and teeth: then the landing
-     * hurts her. A stomp that lands throws her high and clear, and it
-     * shakes itself free for a moment before it can be caught again.
-     */
-    {
-        int16_t top = (int16_t)(b->y + b->body_y);
-        if (!mg.boss_hurt && p->vy_fp > 0 && mg.player_prev_y <= top + 8 && p->y >= top - 2 &&
-            mg_abs((int16_t)(p->x - b->x)) < (int16_t)(b->body_w / 2 + 8)) {
-            if (frame == MG_BF_ATTACK || frame == MG_BF_WINDUP) {
-                mg_player_hit(b->x);
-                p->vy_fp = -STOMP_KICK;
-            } else {
-                mg_boss_damage(1);
-                mg.boss_hurt = 50;
-                mg_stomp_bounce(p);
-                p->vx_fp = (p->x < b->x) ? -900 : 900;
-                mg.boss_backoff = 30;
-            }
-            return;
-        }
-    }
+    /* Landing on its head: see mg_boss_stomp. */
+    if (mg_boss_stomp(p, b, (uint8_t)(harmless || (frame != MG_BF_ATTACK && frame != MG_BF_WINDUP &&
+                                                  !(rage && frame == MG_BF_SPECIAL))))) return;
 
     /*
      * Touching it hurts, and knocks her clear with a little hop. She is
