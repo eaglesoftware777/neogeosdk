@@ -486,14 +486,27 @@ static void NEOGEO_USER mg_hint(const char *text, uint8_t pal, uint8_t frames)
     mg.hint_timer = frames;
 }
 
+/* value / 10, and value % 10 in *rem, by two 68000 divides: the upper
+ * half first, then its remainder with the lower half (the quotient then
+ * fits a word). A 32-bit division from the library costs several times as
+ * much, and a HUD number takes one a digit. */
+static uint32_t NEOGEO_USER mg_div10(uint32_t value, uint8_t *rem)
+{
+    uint16_t hi = (uint16_t)(value >> 16);
+    uint32_t mid = ((uint32_t)(uint16_t)(hi % 10u) << 16) | (uint16_t)value;
+    __asm__ ("divu.w #10,%0" : "+d" (mid));
+    *rem = (uint8_t)(mid >> 16);
+    return ((uint32_t)(uint16_t)(hi / 10u) << 16) | (uint16_t)mid;
+}
+
 static void NEOGEO_USER mg_number(uint8_t x, uint8_t y, uint32_t value, uint8_t digits, uint8_t pal)
 {
     char text[10];
-    uint8_t i;
+    uint8_t i, d;
     text[digits] = 0;
     for (i = digits; i--;) {
-        text[i] = (char)('0' + value % 10u);
-        value /= 10u;
+        value = mg_div10(value, &d);
+        text[i] = (char)('0' + d);
     }
     ng_fix_puts(x, y, text, pal);
 }
@@ -958,11 +971,14 @@ static void NEOGEO_USER mg_draw_gate(int16_t camera_x)
 static void NEOGEO_USER mg_draw_front(int16_t camera_x)
 {
     int16_t plane = (int16_t)(camera_x + camera_x / 4);
+    int16_t lead = plane >= 0 ? (int16_t)((uint16_t)plane % 420u) : (int16_t)(plane % 420);
     uint8_t i;
 
     for (i = 0; i < MG_FRONT_SLOTS; i++) {
         /* Wrap only in the off-screen gap, never through the playfield. */
-        int16_t scr = (int16_t)(((i * 140 + 420 - (plane % 420) + 40) % 420) - 40);
+        int16_t scr = (int16_t)(i * 140 + 420 - lead + 40);   /* > 0 */
+        while (scr >= 420) scr = (int16_t)(scr - 420);
+        scr = (int16_t)(scr - 40);
 
         if (scr < -40 || scr > 340) {
             ng_sprite_group_set_visible(&mg.front[i], 0);
@@ -1048,7 +1064,7 @@ static void NEOGEO_USER mg_update_sparks(int16_t camera_x)
             ng_sprite_group_set_visible(&p->sprite, 0);
         } else if (p->shrink) {
             /* Shrunk toward its own middle, not its corner. */
-            uint8_t sc = (uint8_t)(48u + ((uint16_t)p->life * 207u) / p->shrink);
+            uint8_t sc = (uint8_t)(48u + (uint16_t)((uint16_t)p->life * 207u) / (uint16_t)p->shrink);
             int16_t in = (int16_t)(8 - (sc >> 5));
             ng_sprite_group_set_scale(&p->sprite, sc, sc);
             ng_sprite_group_set_pos(&p->sprite, (int16_t)(scr_x + in), (int16_t)(p->y + in));
@@ -3137,13 +3153,11 @@ static void NEOGEO_USER mg_boss_announce(void)
 
 static void NEOGEO_USER mg_warp_begin(void);
 
-static void NEOGEO_USER mg_spawn(void)
+/* What comes into reach along the road: waves, posted throwers, pickups,
+ * secrets, villagers and captives. */
+static void NEOGEO_USER mg_spawn_scan(const MGLevel *level, int16_t px)
 {
-    const MGLevel *level = &mg_levels[mg.stage];
     uint8_t i;
-    int16_t px = mg.player->x;
-
-    if (mg.boss_active) return;
 
     /* Encounter waves */
     for (i = 0; i < MG_ENCOUNTER_COUNT; i++) {
@@ -3245,6 +3259,19 @@ static void NEOGEO_USER mg_spawn(void)
             }
         }
     }
+}
+
+static void NEOGEO_USER mg_spawn(void)
+{
+    const MGLevel *level = &mg_levels[mg.stage];
+    int16_t px = mg.player->x;
+
+    if (mg.boss_active) return;
+
+    /* The road ahead is looked over every other frame: nothing there needs
+     * the frame it comes into reach, and the scan is one of a frame's
+     * bigger costs. */
+    if ((mg.tick & 1u) == 0u) mg_spawn_scan(level, px);
 
     /* The guardian only shows itself once the gate is open. Walking into
      * the open gate carries her to its lair (mg_warp_begin); a valley with
@@ -3799,7 +3826,7 @@ static void NEOGEO_USER mg_boss_ai(NGCharacter *p)
         t = (uint16_t)(mg.boss_timer % 240u);
         if (t < 180) {
             mg_boss_hover(b, (int16_t)(p->x - dir * 24), MG_BOSS_SKY_Y, 260);
-            if ((t % (rage ? 40u : 60u)) == 30u) {
+            if ((uint16_t)(t % (uint16_t)(rage ? 40u : 60u)) == 30u) {
                 mg_fire(b->x, (int16_t)(b->y + 10), 0, 3, 1, MG_T_ICE);
                 if (rage) {
                     mg_fire((int16_t)(b->x - 24), (int16_t)(b->y + 10), 0, 3, 1, MG_T_ICE);
@@ -3825,7 +3852,7 @@ static void NEOGEO_USER mg_boss_ai(NGCharacter *p)
             b->vx_fp = mg.boss_direction * 300;
             b->vy_fp = (b->y < MG_BOSS_SKY_Y - 4) ? 120 : ((b->y > MG_BOSS_SKY_Y + 4) ? -120 : 0);
             face = (uint8_t)(mg.boss_direction < 0);
-            if ((t % (rage ? 32u : 50u)) == 20u && mg_abs(b_dx) < 60) {
+            if ((uint16_t)(t % (uint16_t)(rage ? 32u : 50u)) == 20u && mg_abs(b_dx) < 60) {
                 mg_fire(b->x, (int16_t)(b->y + 16), 0, 3, 1, MG_T_BOLT);
                 playSFX(SOUND_SFX_6);
             }
@@ -4047,7 +4074,7 @@ static void NEOGEO_USER mg_update_entities(void)
         if (s->life) {
             ng_sprite_group_set_pos(&s->sprite, scr_x, s->y);
             ng_sprite_group_set_visible(&s->sprite, 1);
-            ng_sprite_group_upload(&s->sprite);
+            ng_sprite_group_flush(&s->sprite);
         } else {
             ng_sprite_group_set_visible(&s->sprite, 0);
             ng_sprite_group_flush(&s->sprite);
@@ -4201,7 +4228,7 @@ static void NEOGEO_USER mg_update_entities(void)
         ng_sprite_group_set_pos(&it->sprite, scr_x,
                                 (int16_t)(it->y + ng_trig_mul(2, ng_sin((uint8_t)(mg.tick * 4u + (uint16_t)it->x)))));
         ng_sprite_group_set_visible(&it->sprite, 1);
-        ng_sprite_group_upload(&it->sprite);
+        ng_sprite_group_flush(&it->sprite);
     }
 
     /* Update enemies AI */
@@ -4253,7 +4280,7 @@ static void NEOGEO_USER mg_update_entities(void)
                 else if (off < -48) e->heading = 1;
                 b->vx_fp = (e->type == MG_E_VINESTING) ? 0 : e->heading * mg_pace(110);
                 if (flier) b->vy_fp = (int32_t)(((e->timer >> 5) & 1) ? -40 : 40);
-                mg_frame(b, (uint8_t)((e->timer / 16) % nf), (uint8_t)(e->heading < 0));
+                mg_frame(b, (uint8_t)((uint16_t)(e->timer / 16u) % (uint16_t)nf), (uint8_t)(e->heading < 0));
             } else {
                 if (e->mood == 0) e->mood = 1;
                 switch (e->type) {
@@ -4262,7 +4289,7 @@ static void NEOGEO_USER mg_update_entities(void)
                     int16_t ty = (int16_t)(p->y - 30);
                     b->vx_fp = dir * mg_pace(300);
                     b->vy_fp = (b->y < ty - 4) ? 180 : ((b->y > ty + 4) ? -180 : 0);
-                    mg_frame(b, (uint8_t)((e->timer / 6) % nf), flip);
+                    mg_frame(b, (uint8_t)((uint16_t)(e->timer / 6u) % (uint16_t)nf), flip);
                     break;
                 }
                 case MG_E_BEETLE:
@@ -4270,7 +4297,7 @@ static void NEOGEO_USER mg_update_entities(void)
                      * steer out of -- and stand winded after it. */
                     if (e->mood == 1) {
                         b->vx_fp = dir * mg_pace(200);
-                        mg_frame(b, (uint8_t)((e->timer / 8) % nf), flip);
+                        mg_frame(b, (uint8_t)((uint16_t)(e->timer / 8u) % (uint16_t)nf), flip);
                         if (e->move_timer) e->move_timer--;
                         else if (mg_abs(dx) < 130) { e->mood = 2; e->move_timer = 24; e->heading = dir; }
                     } else if (e->mood == 2) {
@@ -4279,7 +4306,7 @@ static void NEOGEO_USER mg_update_entities(void)
                         if (--e->move_timer == 0) { e->mood = 3; e->move_timer = 36; playSFX(SOUND_SFX_14); }
                     } else if (e->mood == 3) {
                         b->vx_fp = e->heading * mg_pace(820);
-                        mg_frame(b, (uint8_t)((e->timer / 3) % nf), (uint8_t)(e->heading < 0));
+                        mg_frame(b, (uint8_t)((uint16_t)(e->timer / 3u) % (uint16_t)nf), (uint8_t)(e->heading < 0));
                         if (--e->move_timer == 0) { e->mood = 4; e->move_timer = 30; }
                     } else {
                         b->vx_fp = 0;
@@ -4314,10 +4341,10 @@ static void NEOGEO_USER mg_update_entities(void)
                     if (e->type == MG_E_CROW && nf >= 6) {
                         /* Wing-beats while it circles and climbs, wings
                          * folded for the dive. */
-                        mg_frame(b, (uint8_t)(e->mood == 2 ? 4 : (e->timer / (e->mood == 3 ? 3 : 5)) % 4),
+                        mg_frame(b, (uint8_t)(e->mood == 2 ? 4 : (uint16_t)(e->timer / (uint16_t)(e->mood == 3 ? 3 : 5)) % 4u),
                                  (uint8_t)(e->mood == 1 ? flip : e->heading < 0));
                     } else {
-                        mg_frame(b, (uint8_t)((e->timer / (e->mood == 2 ? 3 : 6)) % nf),
+                        mg_frame(b, (uint8_t)((uint16_t)(e->timer / (uint16_t)(e->mood == 2 ? 3 : 6)) % (uint16_t)nf),
                                  (uint8_t)(e->mood == 1 ? flip : e->heading < 0));
                     }
                     break;
@@ -4328,7 +4355,7 @@ static void NEOGEO_USER mg_update_entities(void)
                          * 24 px up and down on a 64-frame beat. */
                         b->vx_fp = dir * mg_pace(110);
                         mg_wave(b, (int16_t)(p->y - 40), 24, 603, (uint8_t)(e->timer << 2));
-                        mg_frame(b, (uint8_t)((e->timer / 14) % nf), flip);
+                        mg_frame(b, (uint8_t)((uint16_t)(e->timer / 14u) % (uint16_t)nf), flip);
                     } else {
                         /* Hover out of reach and keep a firing distance:
                          * back off if she closes in, drift in if she runs. */
@@ -4336,7 +4363,7 @@ static void NEOGEO_USER mg_update_entities(void)
                         int16_t ad = mg_abs(dx);
                         b->vx_fp = ad < 100 ? -dir * mg_pace(200) : (ad > 170 ? dir * mg_pace(200) : 0);
                         b->vy_fp = (b->y < ty - 4) ? 100 : ((b->y > ty + 4) ? -100 : 0);
-                        mg_frame(b, (uint8_t)((e->timer / 10) % nf), flip);
+                        mg_frame(b, (uint8_t)((uint16_t)(e->timer / 10u) % (uint16_t)nf), flip);
                         if ((e->timer % (e->type == MG_E_DRONE ? 110 : 120)) == 55 && ad < 210) {
                             /* Straight at her middle, 4 px a frame whichever
                              * way that is (each part rounded to the pixel). */
@@ -4371,14 +4398,14 @@ static void NEOGEO_USER mg_update_entities(void)
                     } else {
                         mg_wave(b, head, 20, 503, (uint8_t)(e->timer << 2));
                     }
-                    mg_frame(b, (uint8_t)((e->timer / 12) % nf), flip);
+                    mg_frame(b, (uint8_t)((uint16_t)(e->timer / 12u) % (uint16_t)nf), flip);
                     break;
                 }
                 case MG_E_TOXICCRAB:
                     /* Sideways bursts with a pause between: faster when she's close. */
                     if ((e->timer % 40) < 22) {
                         b->vx_fp = dir * mg_pace((int16_t)(mg_abs(dx) < 70 ? 640 : 420));
-                        mg_frame(b, (uint8_t)((e->timer / 4) % nf), flip);
+                        mg_frame(b, (uint8_t)((uint16_t)(e->timer / 4u) % (uint16_t)nf), flip);
                     } else {
                         b->vx_fp = 0;
                         mg_frame(b, 0, flip);
@@ -4389,7 +4416,7 @@ static void NEOGEO_USER mg_update_entities(void)
                      * a shockwave runs out both ways along the ground. */
                     if (e->mood == 1) {
                         b->vx_fp = dir * mg_pace(140);
-                        mg_frame(b, (uint8_t)((e->timer / 12) % nf), flip);
+                        mg_frame(b, (uint8_t)((uint16_t)(e->timer / 12u) % (uint16_t)nf), flip);
                         if (e->move_timer) e->move_timer--;
                         else if (mg_abs(dx) < 64) { e->mood = 2; e->move_timer = 30; }
                     } else if (e->mood == 2) {
@@ -4412,10 +4439,10 @@ static void NEOGEO_USER mg_update_entities(void)
                     /* Trots toward her, then breaks into a sprint up close. */
                     if (mg_abs(dx) < 110) {
                         b->vx_fp = dir * mg_pace(560);
-                        mg_frame(b, (uint8_t)((e->timer / 4) % nf), flip);
+                        mg_frame(b, (uint8_t)((uint16_t)(e->timer / 4u) % (uint16_t)nf), flip);
                     } else {
                         b->vx_fp = dir * mg_pace(260);
-                        mg_frame(b, (uint8_t)((e->timer / 8) % nf), flip);
+                        mg_frame(b, (uint8_t)((uint16_t)(e->timer / 8u) % (uint16_t)nf), flip);
                     }
                     break;
                 case MG_E_VINESTING:
@@ -4423,7 +4450,7 @@ static void NEOGEO_USER mg_update_entities(void)
                      * faster the closer she dares to come. */
                     b->vx_fp = 0;
                     b->vy_fp = 0;
-                    mg_frame(b, (uint8_t)((e->timer / 20) % nf), flip);
+                    mg_frame(b, (uint8_t)((uint16_t)(e->timer / 20u) % (uint16_t)nf), flip);
                     if ((e->timer % (mg_abs(dx) < 36 ? 60 : 100)) == 50 && mg_abs(dx) < 64) {
                         mg_fire(b->x, (int16_t)(b->y - 20), (int16_t)(dir * 3), 0, 1, MG_T_SPIT);
                         playSFX(SOUND_SFX_5);
@@ -4436,7 +4463,7 @@ static void NEOGEO_USER mg_update_entities(void)
                         b->vy_fp = -4 * NG_FP_ONE;
                         b->vx_fp = dir * mg_pace(240);
                     }
-                    mg_frame(b, (uint8_t)((e->timer / 12) % nf), flip);
+                    mg_frame(b, (uint8_t)((uint16_t)(e->timer / 12u) % (uint16_t)nf), flip);
                     if ((e->type == MG_E_SLIME || e->type == MG_E_SPOREGOB)
                         && (e->timer % 150) == 75 && mg_abs(dx) < 160) {
                         mg_fire(b->x, (int16_t)(b->y - 12), (int16_t)(dir * 3), -1, 1, MG_T_SPIT);
@@ -4647,14 +4674,14 @@ static void NEOGEO_USER mg_draw_boss_bar(void)
 static void NEOGEO_USER mg_bars_step(void)
 {
     uint8_t hp = mg.player ? mg.player->hp : 0;
-    uint8_t target = (uint8_t)(((uint16_t)hp * MG_HP_BAR_PX) / MAX_HP);
+    uint8_t target = (uint8_t)((uint16_t)((uint16_t)hp * MG_HP_BAR_PX) / (uint16_t)MAX_HP);
     if (mg.hp_px != target) {
         if (mg.hp_px > target) mg.hp_px--;
         else mg.hp_px = (uint8_t)(mg.hp_px + 2 > target ? target : mg.hp_px + 2);
         mg_draw_hp_bar();
     }
     if (mg.boss_active && mg.boss && mg.boss->max_hp) {
-        target = (uint8_t)(((uint16_t)mg.boss->hp * MG_BOSS_BAR_PX) / mg.boss->max_hp);
+        target = (uint8_t)((uint16_t)((uint16_t)mg.boss->hp * MG_BOSS_BAR_PX) / (uint16_t)mg.boss->max_hp);
         if (mg.boss_px != target) {
             if (mg.boss_px > target) mg.boss_px--;
             else mg.boss_px = (uint8_t)(mg.boss_px + 2 > target ? target : mg.boss_px + 2);
@@ -5088,7 +5115,9 @@ static void NEOGEO_USER mg_animate_player(void)
     } else if (!grounded) {
         mg_frame(p, (uint8_t)(p->vy_fp < 0 ? MG_F_JUMP1 : MG_F_JUMP3), mg.facing);
     } else if (p->vx_fp != 0) {
-        mg.walk_distance = (uint16_t)((mg.walk_distance + mg_abs((int16_t)p->vx_fp)) % (40u * NG_FP_ONE));
+        uint16_t walked = (uint16_t)(mg.walk_distance + mg_abs((int16_t)p->vx_fp));
+        while (walked >= 40u * NG_FP_ONE) walked = (uint16_t)(walked - 40u * NG_FP_ONE);
+        mg.walk_distance = walked;
         mg_frame(p, (uint8_t)(MG_F_WALK0 + ((mg.walk_distance / (10u * NG_FP_ONE)) % 4u)), mg.facing);
     } else {
         mg_frame(p, (uint8_t)(MG_F_IDLE0 + ((mg.tick / 20) % 3)), mg.facing);
