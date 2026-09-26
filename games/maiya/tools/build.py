@@ -83,6 +83,25 @@ def run(mame, platform):
     subprocess.run(command, cwd=GAME / "build", check=True)
 
 
+def engine_objects():
+    """The staged engine objects the makefile links: a module game.mk leaves
+    out (GAME_ENGINE_EXCLUDE) goes in as its stand-in, <module>_none."""
+    excluded = set()
+    for line in (GAME / "game.mk").read_text().splitlines():
+        name, _, value = line.partition("=")
+        if name.strip().rstrip("?:+") == "GAME_ENGINE_EXCLUDE":
+            excluded.update(value.split())
+    names = sorted(p.name[:-3] for p in (WORK / "out").glob("ng_*0.o"))
+    keep = []
+    for name in names:
+        if name.endswith("_none"):
+            if name[:-5] in excluded:
+                keep.append(name)
+        elif name not in excluded:
+            keep.append(name)
+    return [f"{name}0.o" for name in keep]
+
+
 def quick_build(toolchain, platform):
     """Recompile this game's scene against the previously staged SDK objects."""
     if not (WORK / "out/neogeolib.o").exists():
@@ -112,7 +131,7 @@ def quick_build(toolchain, platform):
     command("objcopy", "-R", ".comment", "-R", ".text", "-R", ".data", "-R", ".bss",
             "out/user0.o", "out/user.o")
     objects = ["neogeo.o", "user.o", "main.o", "eyecatcher.o", "neogeolib.o"]
-    objects += sorted(p.name for p in (WORK / "out").glob("ng_*0.o"))
+    objects += engine_objects()
     objects += ["maiya_game0.o"]
     command("ld", "-nostdlib", "-T", "games/maiya/neogeo.ld", "-o", "out/game",
             *(f"out/{name}" for name in objects))
