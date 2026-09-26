@@ -12,7 +12,7 @@
   "guardian": {
     "name": "BLIGHT HYENA",
     "style": "hyena",
-    "hp": 36,
+    "hp": 8,
     "hint": "THE HYENA TIRES AFTER THE POUNCE",
     "taunt": "I HUNT WHAT ISN'T MINE TO TAKE!",
     "reply": "THESE PLAINS AREN'T YOURS TO HUNT!"
@@ -93,7 +93,7 @@
   "pickups": [
     {"x": 200, "y": 166, "kind": "silver"},
     {"x": 1260, "y": 166, "kind": "spring"},
-    {"x": 1760, "y": 166, "kind": "crown"},
+    {"x": 1760, "y": 166, "kind": "veil"},
     {"x": 2620, "y": 166, "kind": "silver"},
     {"x": 548, "y": 82, "kind": "gold"},
     {"x": 2708, "y": 82, "kind": "gold"},

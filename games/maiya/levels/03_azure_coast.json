@@ -12,7 +12,7 @@
   "guardian": {
     "name": "TOXIC LEVIATHAN",
     "style": "leviathan",
-    "hp": 20,
+    "hp": 5,
     "hint": "THE LEVIATHAN RISES, THEN STALLS",
     "taunt": "I FED THE LIVING REEF TO MY HUNGER!",
     "reply": "THE TIDE WILL CARRY YOU OUT INSTEAD!"
@@ -91,7 +91,7 @@
   "pickups": [
     {"x": 260, "y": 168, "kind": "silver"},
     {"x": 1051, "y": 168, "kind": "spring"},
-    {"x": 1760, "y": 168, "kind": "crown"},
+    {"x": 1760, "y": 168, "kind": "veil"},
     {"x": 2465, "y": 168, "kind": "silver"},
     {"x": 532, "y": 74, "kind": "gold"},
     {"x": 1208, "y": 74, "kind": "gold"},

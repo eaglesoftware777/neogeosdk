@@ -12,7 +12,7 @@
   "guardian": {
     "name": "INFERNO JACKAL",
     "style": "jackal",
-    "hp": 24,
+    "hp": 6,
     "hint": "THE JACKAL BURNS OUT: THEN HIT",
     "taunt": "I BURNED THE GROVE TO ASH AND RULE!",
     "reply": "ASH IS WHERE NEW ROOTS BEGIN!"
@@ -22,19 +22,19 @@
   "sunboy": ["AUTUMN KEEPS ITS SEED. WELL DONE", "THE GROTTO HOLDS MY CRYSTAL"],
   "platforms": [
     {"x": 300, "y": 140, "w": 96},
-    {"x": 520, "y": 104, "w": 80},
+    {"x": 520, "y": 104, "w": 80, "rotten": true},
     {"x": 740, "y": 68, "w": 96},
     {"x": 960, "y": 140, "w": 96},
-    {"x": 1180, "y": 104, "w": 80},
+    {"x": 1180, "y": 104, "w": 80, "rotten": true},
     {"x": 1400, "y": 68, "w": 96},
     {"x": 1620, "y": 140, "w": 96},
-    {"x": 1840, "y": 104, "w": 80},
+    {"x": 1840, "y": 104, "w": 80, "rotten": true},
     {"x": 2060, "y": 68, "w": 96},
     {"x": 2280, "y": 140, "w": 96},
-    {"x": 2500, "y": 104, "w": 80},
+    {"x": 2500, "y": 104, "w": 80, "rotten": true},
     {"x": 2720, "y": 68, "w": 96},
     {"x": 2940, "y": 140, "w": 96},
-    {"x": 3160, "y": 104, "w": 80},
+    {"x": 3160, "y": 104, "w": 80, "rotten": true},
     {"x": 3400, "y": 68, "w": 96},
     {"x": 4000, "y": 140, "w": 96}
   ],
@@ -93,7 +93,7 @@
   "pickups": [
     {"x": 260, "y": 168, "kind": "silver"},
     {"x": 1071, "y": 168, "kind": "spring"},
-    {"x": 1830, "y": 168, "kind": "crown"},
+    {"x": 1830, "y": 168, "kind": "veil"},
     {"x": 2615, "y": 168, "kind": "silver"},
     {"x": 552, "y": 70, "kind": "gold"},
     {"x": 1228, "y": 70, "kind": "gold"},

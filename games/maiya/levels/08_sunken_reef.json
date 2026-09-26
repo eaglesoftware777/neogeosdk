@@ -12,7 +12,7 @@
   "guardian": {
     "name": "REEF EEL",
     "style": "eel",
-    "hp": 32,
+    "hp": 7,
     "hint": "THE EEL COILS: STRIKE BETWEEN LUNGES",
     "taunt": "I CHOKED THE REEF WITH MY OWN WASTE!",
     "reply": "THE TIDE WASHES YOUR FILTH AWAY!"
@@ -91,7 +91,7 @@
   "pickups": [
     {"x": 200, "y": 166, "kind": "silver"},
     {"x": 980, "y": 166, "kind": "spring"},
-    {"x": 1760, "y": 166, "kind": "crown"},
+    {"x": 1760, "y": 166, "kind": "veil"},
     {"x": 2480, "y": 166, "kind": "silver"},
     {"x": 868, "y": 114, "kind": "gold"},
     {"x": 2128, "y": 74, "kind": "gold"},

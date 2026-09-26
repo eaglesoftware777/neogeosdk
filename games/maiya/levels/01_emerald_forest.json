@@ -12,7 +12,7 @@
   "guardian": {
     "name": "CHAINSAW BEETLE",
     "style": "beetle",
-    "hp": 16,
+    "hp": 4,
     "hint": "STRIKE THE BEETLE WHEN IT LANDS",
     "taunt": "I CUT DOWN WHAT TOOK CENTURIES TO GROW!",
     "reply": "THE FOREST WILL OUTLIVE YOUR BLADES!"
@@ -78,7 +78,7 @@
   "pickups": [
     {"x": 260, "y": 168, "kind": "silver"},
     {"x": 824, "y": 168, "kind": "spring"},
-    {"x": 1464, "y": 168, "kind": "crown"},
+    {"x": 1464, "y": 168, "kind": "veil"},
     {"x": 2084, "y": 168, "kind": "silver"},
     {"x": 540, "y": 70, "kind": "gold"},
     {"x": 1128, "y": 70, "kind": "gold"},

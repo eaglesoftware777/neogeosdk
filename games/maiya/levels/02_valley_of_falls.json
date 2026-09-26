@@ -12,7 +12,7 @@
   "guardian": {
     "name": "SLUDGE TOAD",
     "style": "toad",
-    "hp": 18,
+    "hp": 5,
     "hint": "THE TOAD GULPS: HIT ITS THROAT",
     "taunt": "I DROWNED YOUR SPRINGS IN MY OWN FILTH!",
     "reply": "THE WATER REMEMBERS ITS OWN COLOR!"
@@ -87,7 +87,7 @@
   "pickups": [
     {"x": 244, "y": 168, "kind": "silver"},
     {"x": 991, "y": 168, "kind": "spring"},
-    {"x": 1651, "y": 168, "kind": "crown"},
+    {"x": 1651, "y": 168, "kind": "veil"},
     {"x": 2322, "y": 168, "kind": "silver"},
     {"x": 492, "y": 78, "kind": "gold"},
     {"x": 1148, "y": 74, "kind": "gold"},
