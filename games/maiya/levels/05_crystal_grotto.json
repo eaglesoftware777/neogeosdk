@@ -6,6 +6,7 @@
   "mechanic": "ice",
   "pit": "void",
   "blocks": "snow",
+  "climb": "icevine",
   "posted": "drone",
   "gate_x": 3960,
   "key": {"x": 2152, "y": 46},

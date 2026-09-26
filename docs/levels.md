@@ -30,6 +30,7 @@ git), whose initialisers `maiya_levels.h` builds the stage tables from.
   "mechanic": "none",
   "pit": "water",
   "blocks": "grass",
+  "climb": "vine",
   "posted": "none",
   "gate_x": 3200,
   "key": {"x": 2012, "y": 42},
@@ -70,6 +71,7 @@ Names stand for the game's constants, lower case without the prefix:
 | `pit` | `MG_PIT_*`: what lies at the bottom of its pits | water, fire, toxic, void |
 | `blocks` | `MG_BLOCKS_*`: the ledge set (and front-plane stone) | grass, moss, sand, autumn, snow, bark, rust, coral, stone, savanna |
 | `posted` | `MG_E_*`: who stands on the `archers` ledges, or none | none, goblin, drone, poachdrone |
+| `climb` | `MG_D_*`: what its vines are made of | vine, rope, ladder, chain, kelp, icevine |
 | `pickups[].kind` | `MG_K_*` from the art build | silver, gold, flower, life |
 | `decor[].kind` | `MG_D_*` from the art build | grass, lantern, rock |
 | `who` | the ally art, in order | elder, maiden, spirit, sunboy |

@@ -375,7 +375,7 @@ static int16_t NEOGEO_USER mg_abs(int16_t value)
  * white -- lift all of it together, and a bank loaded behind a fade comes
  * up with it instead of flashing through.
  */
-#define MG_PAL_BANKS 67u
+#define MG_PAL_BANKS 68u   /* up to PAL_BLOCK_ROT */
 static uint16_t mg_pal_base[MG_PAL_BANKS * 16u];
 static uint16_t mg_pal_out[MG_PAL_BANKS * 16u];
 static uint8_t mg_pal_open;
@@ -825,6 +825,10 @@ static const uint8_t mg_stage_mech[MG_LEVEL_COUNT] = MG_STAGE_MECH_TABLE;   /* e
 
 /* What lies at the bottom of each valley's pits. */
 static const uint8_t mg_stage_pit[MG_LEVEL_COUNT] = MG_PIT_TABLE;
+/* What a valley climbs: vines, a rope ladder, a wooden ladder, a chain,
+ * kelp, a frozen vine (its stage file's "climb"). */
+static const uint8_t mg_stage_climb[MG_LEVEL_COUNT] = MG_CLIMB_TABLE;
+
 /* Who stands posted on a valley's ledges (its stage file's "posted"). */
 static const uint8_t mg_stage_posted[MG_LEVEL_COUNT] = MG_POSTED_TABLE;
 
@@ -1898,6 +1902,27 @@ static void NEOGEO_USER mg_shade_bank(uint8_t bank, const uint16_t *src, uint8_t
     mg_palette(bank, pal);
 }
 
+/* A rotten ledge's colours: each pulled halfway to its own grey, with a
+ * touch of mould green, as bright as before -- darkening a set that is
+ * dark already (the grove's lacquered beam) left a black shape. */
+static void NEOGEO_USER mg_rot_bank(uint8_t bank, const uint16_t *src)
+{
+    uint16_t pal[16];
+    uint8_t i;
+    pal[0] = src[0];
+    for (i = 1; i < 16; i++) {
+        uint16_t c = src[i];
+        uint8_t r = (uint8_t)((c >> 8) & 15u), g = (uint8_t)((c >> 4) & 15u), b = (uint8_t)(c & 15u);
+        uint8_t grey = (uint8_t)((r + g + b) / 3u);
+        r = (uint8_t)((r + grey) >> 1);
+        g = (uint8_t)(((g + grey) >> 1) + 1u);
+        b = (uint8_t)((b + grey) >> 1);
+        if (g > 15u) g = 15u;
+        pal[i] = (uint16_t)(((uint16_t)r << 8) | ((uint16_t)g << 4) | b);
+    }
+    mg_palette(bank, pal);
+}
+
 static void NEOGEO_USER mg_boss_damage(uint8_t damage)
 {
     NGCharacter *b = mg.boss ? mg.boss : mg.eagle;
@@ -2268,7 +2293,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
         const uint16_t *block_pal;
         mg.block_tiles = mg_block_set(stage, &block_pal);
         mg_palette(PAL_BLOCK, block_pal);
-        mg_shade_bank(PAL_BLOCK_ROT, block_pal, 3, 1);   /* rotten: greyed, a quarter darker */
+        mg_rot_bank(PAL_BLOCK_ROT, block_pal);           /* rotten: faded toward grey-green */
     }
 
     /* Load corrupted stage background */
@@ -2347,7 +2372,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
         uint8_t rows = v->x ? (uint8_t)((v->bottom - v->top + 15) / 16) : 1;
         if (rows > 8) rows = 8;
         ng_sprite_group_init(&mg.vines[i], (uint16_t)(SLOT_VINE + i * 2), 2, 8,
-                             mg_decor_tiles[MG_D_VINE], PAL_DECOR);
+                             mg_decor_tiles[mg_stage_climb[stage]], PAL_DECOR);
         ng_sprite_group_set_active_rows(&mg.vines[i], rows);
         ng_sprite_group_set_visible(&mg.vines[i], 0);
     }

@@ -6,6 +6,7 @@
   "mechanic": "ice",
   "pit": "void",
   "blocks": "stone",
+  "climb": "ladder",
   "posted": "goblin",
   "gate_x": 4000,
   "key": {"x": 2048, "y": 46},

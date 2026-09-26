@@ -6,6 +6,7 @@
   "mechanic": "crumble",
   "pit": "fire",
   "blocks": "autumn",
+  "climb": "ladder",
   "posted": "drone",
   "gate_x": 3840,
   "key": {"x": 2132, "y": 42},
