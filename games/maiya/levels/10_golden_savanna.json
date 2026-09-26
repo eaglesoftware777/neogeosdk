@@ -6,6 +6,7 @@
   "mechanic": "none",
   "pit": "fire",
   "blocks": "savanna",
+  "climb": "rope",
   "posted": "poachdrone",
   "gate_x": 4100,
   "key": {"x": 2188, "y": 46},

@@ -6,6 +6,7 @@
   "mechanic": "none",
   "pit": "toxic",
   "blocks": "rust",
+  "climb": "chain",
   "posted": "drone",
   "gate_x": 4440,
   "key": {"x": 2252, "y": 38},

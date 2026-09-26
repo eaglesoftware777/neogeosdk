@@ -6,6 +6,7 @@
   "mechanic": "none",
   "pit": "water",
   "blocks": "moss",
+  "climb": "vine",
   "posted": "goblin",
   "gate_x": 3450,
   "key": {"x": 2052, "y": 46},

@@ -6,6 +6,7 @@
   "mechanic": "none",
   "pit": "water",
   "blocks": "grass",
+  "climb": "vine",
   "posted": "none",
   "gate_x": 3200,
   "key": {"x": 2012, "y": 42},

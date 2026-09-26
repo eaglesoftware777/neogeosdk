@@ -6,6 +6,7 @@
   "mechanic": "water",
   "pit": "void",
   "blocks": "coral",
+  "climb": "kelp",
   "posted": "drone",
   "gate_x": 3880,
   "key": {"x": 1684, "y": 46},

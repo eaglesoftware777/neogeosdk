@@ -6,6 +6,7 @@
   "mechanic": "crumble",
   "pit": "toxic",
   "blocks": "bark",
+  "climb": "vine",
   "posted": "drone",
   "gate_x": 4160,
   "key": {"x": 2312, "y": 38},

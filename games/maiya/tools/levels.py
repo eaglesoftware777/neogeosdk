@@ -111,6 +111,7 @@ class Stage:
         s["mechanic"] = self.name(d, "mechanic", "stage", "mechanic", "MG_M_")
         s["pit"] = self.name(d, "pit", "stage", "pit", "MG_PIT_")
         s["blocks"] = self.name(d, "blocks", "stage", "ledge set", "MG_BLOCKS_")
+        s["climb"] = self.name(d, "climb", "stage", "decoration", "MG_D_")
         if self.get(d, "posted", "stage", str) == "none":
             s["posted"] = "0xFFu"
         else:
@@ -257,6 +258,7 @@ def render(stages, files):
     out.append(table("MG_STAGE_MECH_TABLE", [s["mechanic"] for s in stages]))
     out.append(table("MG_PIT_TABLE", [s["pit"] for s in stages]))
     out.append(table("MG_BLOCKS_TABLE", [s["blocks"] for s in stages]))
+    out.append(table("MG_CLIMB_TABLE", [s["climb"] for s in stages]))
     out.append(table("MG_POSTED_TABLE", [s["posted"] for s in stages]))
     out.append("#endif")
     return "\n".join(out) + "\n"

@@ -1424,9 +1424,12 @@ def build():
     # The Ancient Nature Gate, sealed and open (32 x 48).
     shared_set("gate", {"shut": nature_art.gate(False), "open": nature_art.gate(True)})
 
-    # One ledge set per valley: left cap, middle, right cap.
+    # One ledge set per valley: left end, middle, right end. The forest and
+    # the falls build theirs of turf blocks; every other valley of its own
+    # stuff (nature_art.ledge_piece: planks on posts, a lacquered beam,
+    # ice, a branch, a girder, coral, scaffolding, sandstone).
     for gname in ("grass", "moss", "sand", "autumn", "snow", "bark", "rust", "coral", "stone", "savanna"):
-        blocks = {str(k): nature_art.ledge_block(gname, k) for k in range(3)}
+        blocks = {str(k): nature_art.ledge_piece(gname, k) for k in range(3)}
         shared_set(f"block_{gname}", blocks)
     print("  Props, pickups, decoration and ledges compiled", flush=True)
 
