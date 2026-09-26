@@ -5412,13 +5412,15 @@ static void NEOGEO_USER mg_animate_player(void)
     if (mg.hurt > HURT_LOCK) {
         mg_frame(p, MG_F_HURT0, mg.facing);
     } else if (mg.rising) {
-        /* Gathered low, then the spin up through the petals. */
-        static const uint8_t bloom[4] = { MG_F_SWEEP1, MG_F_SWEEP2, MG_F_SWEEP3, MG_F_SPIN };
-        mg_frame(p, (uint8_t)(mg.rising > MG_RISE_TIME - 3 ? MG_F_CROUCH : bloom[(mg.rising >> 1) & 3u]), mg.facing);
+        /* Gathered low, then up through the petals, arms raised, turning
+         * over once at the top. */
+        uint8_t f = MG_F_JUMP0;
+        if (mg.rising > MG_RISE_TIME - 3) f = MG_F_CROUCH;
+        else if (mg.rising < 8u) f = (uint8_t)(MG_F_FLIP0 + ((8u - mg.rising) >> 1));
+        mg_frame(p, f, mg.facing);
     } else if (mg.spin && !mg.attack) {
-        /* The second jump turns her once in the air. */
-        static const uint8_t turn[4] = { MG_F_SPIN, MG_F_SWEEP3, MG_F_SWEEP2, MG_F_SWEEP1 };
-        mg_frame(p, turn[(mg.spin >> 2) & 3u], mg.facing);
+        /* The second jump is a somersault. */
+        mg_frame(p, (uint8_t)(MG_F_FLIP0 + (((14u - mg.spin) >> 2) & 3u)), mg.facing);
     } else if (mg.super_surge) {
         static const uint8_t spin[4] = { MG_F_SWEEP1, MG_F_SWEEP2, MG_F_SWEEP3, MG_F_SPIN };
         mg_frame(p, (uint8_t)(mg.super_surge >= MG_SURGE_TIME - MG_SURGE_WINDUP
@@ -5432,9 +5434,9 @@ static void NEOGEO_USER mg_animate_player(void)
         mg.cast--;
         mg_frame(p, (uint8_t)(mg.cast > 5 ? MG_F_CAST1 : MG_F_CAST2), mg.facing);
     } else if (mg.swimming && !grounded) {
-        /* Strokes while she swims, a slow float while she hangs still. */
-        static const uint8_t stroke[4] = { MG_F_JUMP1, MG_F_JUMP2, MG_F_JUMP3, MG_F_JUMP2 };
-        uint8_t moving = (uint8_t)(mg_abs((int16_t)p->vx_fp) > 96 || p->vy_fp < -96);
+        /* She swims lying along the water, kicking; still, a slow glide. */
+        static const uint8_t stroke[4] = { MG_F_SWIM0, MG_F_SWIM1, MG_F_SWIM2, MG_F_SWIM1 };
+        uint8_t moving = (uint8_t)(mg_abs((int16_t)p->vx_fp) > 96 || mg_abs((int16_t)p->vy_fp) > 96);
         mg_frame(p, stroke[(mg.tick >> (moving ? 3 : 5)) & 3u], mg.facing);
     } else if (!grounded) {
         mg_frame(p, (uint8_t)(p->vy_fp < 0 ? MG_F_JUMP1 : MG_F_JUMP3), mg.facing);
