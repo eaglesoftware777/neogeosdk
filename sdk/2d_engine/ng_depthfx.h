@@ -94,7 +94,7 @@ void NEOGEO_USER ng_depthfx_set_fog_palettes(uint8_t near_offset,
  * Simplified starfield / flying object helper.
  * Moves p->z towards camera by speed per frame.
  * When p->z <= 0, resets to z_max with random x/y spread.
- * Uses a cheap xorshift noise (no rand(), no stdlib).
+ * The spread comes from ng_rand() (no rand(), no stdlib).
  */
 void NEOGEO_USER ng_depthfx_advance_star(NGVec3 *p, int16_t speed, int16_t z_max,
                                           int16_t spread_x, int16_t spread_y);

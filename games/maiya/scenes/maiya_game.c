@@ -303,15 +303,8 @@ typedef struct {
 static MGState mg;
 
 /* ------------------------------------------------------------------ */
-/*  RNG and math helpers                                              */
+/*  Math helpers (random numbers: the engine's ng_rand)               */
 /* ------------------------------------------------------------------ */
-static uint16_t NEOGEO_USER mg_rand(void)
-{
-    static uint16_t seed = 0x3C71u;
-    seed = (uint16_t)(seed * 2053u + 13849u);
-    return seed;
-}
-
 static int16_t NEOGEO_USER mg_abs(int16_t value)
 {
     return value < 0 ? (int16_t)-value : value;
@@ -1530,9 +1523,9 @@ static void NEOGEO_USER mg_dust_burst(int16_t x, int16_t y)
 {
     static const int8_t rx[8] = { 3, 2, 0, -2, -3, -2, 0, 2 };
     static const int8_t ry[8] = { 0, -2, -3, -2, 0, 1, 2, 1 };
-    uint8_t i, k = 0, turn = (uint8_t)(mg_rand() & 7u);
-    uint8_t want = (uint8_t)(6u + (mg_rand() & 1u));
-    uint8_t petal = (uint8_t)((mg_rand() & 3u) == 0u);
+    uint8_t i, k = 0, turn = (uint8_t)(ng_rand() & 7u);
+    uint8_t want = (uint8_t)(6u + (ng_rand() & 1u));
+    uint8_t petal = (uint8_t)((ng_rand() & 3u) == 0u);
     for (i = 0; i < MG_SPARKS && k < want + 1u + petal; i++) {
         MGSpark *p = &mg.sparks[i];
         if (p->life) continue;
@@ -1546,19 +1539,19 @@ static void NEOGEO_USER mg_dust_burst(int16_t x, int16_t y)
             p->shrink = 6;
         } else if (k > want) {
             /* the petal the valley gets back */
-            ng_sprite_group_set_tile_base(&p->sprite, (uint16_t)(MG_TOOL_TILE + ((mg_rand() & 1u) ? MG_T_PETAL : MG_T_LEAF)));
+            ng_sprite_group_set_tile_base(&p->sprite, (uint16_t)(MG_TOOL_TILE + ((ng_rand() & 1u) ? MG_T_PETAL : MG_T_LEAF)));
             p->x = (int16_t)(x - 8); p->y = (int16_t)(y - 12);
-            p->vx = (int16_t)((mg_rand() & 1u) ? 1 : -1); p->vy = -2;
+            p->vx = (int16_t)((ng_rand() & 1u) ? 1 : -1); p->vy = -2;
             p->life = 34;
             p->shrink = 0;
         } else {
             uint8_t d = (uint8_t)((k - 1u + turn) & 7u);
-            uint8_t fast = (uint8_t)(mg_rand() & 1u);
+            uint8_t fast = (uint8_t)(ng_rand() & 1u);
             ng_sprite_group_set_tile_base(&p->sprite, (uint16_t)(MG_TOOL_TILE + MG_T_DUST));
             p->x = (int16_t)(x - 8 + rx[d] * 2); p->y = (int16_t)(y - 8 + ry[d] * 2);
             p->vx = (int16_t)(rx[d] + (fast ? rx[d] / 2 : 0));
             p->vy = (int16_t)(ry[d] - 1);
-            p->life = (uint8_t)(16u + (mg_rand() % 12u));
+            p->life = (uint8_t)(16u + ng_rand_range(12u));
             p->shrink = p->life;
         }
         k++;
@@ -3012,7 +3005,7 @@ static MGEnemy *NEOGEO_USER mg_spawn_enemy(uint8_t type, int16_t x, int16_t y, u
         if (mg_enemy_flies(type)) ng_physics_set_gravity(e->body, 0, 8 * NG_FP_ONE);
         else ng_physics_set_gravity(e->body, 64, 5 * NG_FP_ONE);
     }
-    e->timer = (uint16_t)(slot * 29 + (mg_rand() & 31));
+    e->timer = (uint16_t)(slot * 29 + (ng_rand() & 31));
     e->hurt = 0;
     e->home = x;
     e->mood = 0;
@@ -4727,7 +4720,7 @@ static void NEOGEO_USER mg_stage_mechanics(void)
                     mg_burst((int16_t)(pl->x + pl->width / 2), pl->y, MG_T_DUST, 4, 1);
                     playSFX(SOUND_SFX_10);
                 } else if (mg.ledge_stand[i] > 18 && (mg.ledge_stand[i] & 3) == 0) {
-                    mg_burst((int16_t)(pl->x + 8 + (mg_rand() % (pl->width - 16))), (int16_t)(pl->y + 18),
+                    mg_burst((int16_t)(pl->x + 8 + ng_rand_range((uint16_t)(pl->width - 16))), (int16_t)(pl->y + 18),
                              MG_T_DUST, 1, 2);
                 }
             } else if (mg.ledge_stand[i]) {
@@ -4779,7 +4772,7 @@ static void NEOGEO_USER mg_clock_tick(void)
                 if (mg.enemies[i].body && mg.enemies[i].type == MG_E_WRAITH) alive++;
             if (alive < 2) {
                 int16_t x = (int16_t)(mg.wraith_side ? mg.camera.x + 330 : mg.camera.x - 10);
-                if (mg_spawn_enemy(MG_E_WRAITH, x, (int16_t)(40 + (mg_rand() & 63)), 0)) {
+                if (mg_spawn_enemy(MG_E_WRAITH, x, (int16_t)(40 + (ng_rand() & 63)), 0)) {
                     mg.wraith_side ^= 1;
                     playSFX(SOUND_SFX_8);
                 }
@@ -5268,7 +5261,7 @@ static void NEOGEO_USER mg_warp_frame(void)
         }
         /* Sparks rise out of the doorway the whole time she's in it. */
         if ((t % 3u) == 0u)
-            mg_burst((int16_t)(door + (int16_t)(mg_rand() % 28u) - 14), (int16_t)(MG_GROUND_Y - 8 - (mg_rand() & 31)),
+            mg_burst((int16_t)(door + (int16_t)ng_rand_range(28u) - 14), (int16_t)(MG_GROUND_Y - 8 - (ng_rand() & 31)),
                      MG_T_SPARK, 1, -3);
         if (t <= MG_WARP_GONE) p->visible = 0;
         /* all white by MG_WARP_WHITE */
@@ -5463,7 +5456,7 @@ void NEOGEO_USER maiya_frame(void)
         } else {
             mg_frame(p, MG_F_WIN, mg.facing);
             if ((mg.state_timer % 20u) == 0u)
-                mg_burst((int16_t)(p->x + (int16_t)(mg_rand() % 40u) - 20), (int16_t)(p->y - 64),
+                mg_burst((int16_t)(p->x + (int16_t)ng_rand_range(40u) - 20), (int16_t)(p->y - 64),
                          MG_T_SPARK, 1, -1);
         }
         if (mg.boss) {

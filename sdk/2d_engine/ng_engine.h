@@ -41,6 +41,7 @@ extern "C" {
 #include "ng_depthfx.h"
 #include "ng_debug.h"
 #include "ng_joystick.h"
+#include "ng_rand.h"
 
 
 #ifdef __cplusplus
