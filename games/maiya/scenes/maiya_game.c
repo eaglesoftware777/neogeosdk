@@ -335,6 +335,7 @@ typedef struct {
     uint8_t  name_buf[3], name_pos, name_row;  /* the high score name being entered, and its place */
     uint8_t  music_next, music_wait;  /* a track waiting for the fade out to finish; the fade under way (1 out, 2 in) */
     uint8_t  music_level;             /* the music's volume now, as the fade has it */
+    uint8_t  art_pose, leaping;       /* the Secret Art's pose, frames left; rising from the high leap */
     uint8_t  flash;                   /* frames of Secret Art palette      */
     uint8_t  angel;                   /* rising-to-the-sky death           */
     uint8_t  flowers, critters;       /* bonus tally for the mission end   */
@@ -2564,6 +2565,7 @@ static void NEOGEO_USER mg_secret_art(void)
     mg.art_wave = 24;              /* the second wave follows the first */
     playSFX(SOUND_SFX_9);          /* the clear ring of the purification */
     mg_voice(MG_VOICE_ART);
+    mg.art_pose = 36;
     mg_light(MG_LIGHT_SUN, 30);
     mg_petal_sweep();
 
@@ -2693,6 +2695,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.gate_shown = 0;
     mg.npc_mask = 0; mg.npc_live = 0; mg.npc_here = 0;
     mg.swift = mg.might = mg.veil = 0; mg.spring = mg.crown = 0; mg.lily = 0; mg.leap_window = 0;
+    mg.art_pose = 0; mg.leaping = 0;
     mg.flash = 0; mg.angel = 0; mg.hurt_lit = 0; mg.art_wave = 0;
     for (i = 0; i < MG_NPC_SLOTS; i++) mg.npcs[i] = 0;
     mg.notice = 0; mg.facing = 0; mg.kills = 0;
@@ -4406,6 +4409,7 @@ static void NEOGEO_USER mg_controls(void)
                     mg_burst(p->x, (int16_t)(p->y - 4), MG_T_SPARK, 3, -2);
                     playSFX(SOUND_SFX_13);
                     mg_voice(MG_VOICE_LEAP);
+                    mg.leaping = 1;
                     mg_light(MG_LIGHT_BURST, 16);
                 }
                 if (mg.spring) v = (int16_t)((v * 5) / 4);
@@ -6794,19 +6798,28 @@ static void NEOGEO_USER mg_animate_player(void)
         return;
     }
     if (mg.crouch_timer) {
-        mg_frame(p, MG_F_CROUCH, mg.facing);
+        /* a moment down and she is gathered to spring: the high leap's ready */
+        mg_frame(p, (uint8_t)(mg.crouch_timer >= MG_LEAP_KNEEL ? MG_F_LEAP0 : MG_F_CROUCH), mg.facing);
         return;
+    }
+    if (mg.leaping) {
+        if (p->vy_fp < 0 && !grounded) { mg_frame(p, MG_F_LEAP1, mg.facing); return; }
+        mg.leaping = 0;
     }
     if (mg.spin) mg.spin--;
     if (mg.hurt > HURT_LOCK) {
         mg_frame(p, MG_F_HURT0, mg.facing);
     } else if (mg.rising) {
-        /* Gathered low, then straight up through the petals, arms raised. */
-        mg_frame(p, (uint8_t)(mg.rising > MG_RISE_TIME - 3 ? MG_F_CROUCH : MG_F_JUMP0), mg.facing);
+        /* Gathered low, the uppercut, then stretched straight up at the top. */
+        mg_frame(p, (uint8_t)(mg.rising > MG_RISE_TIME - 3 ? MG_F_RISE0
+                              : (mg.rising > MG_RISE_TIME - 14 ? MG_F_RISE1 : MG_F_RISE2)), mg.facing);
+    } else if (mg.art_pose) {
+        /* The Secret Art: her hands to the sky, then her palms to the ground. */
+        mg.art_pose--;
+        mg_frame(p, (uint8_t)(mg.art_pose > 18 ? MG_F_ART0 : MG_F_ART1), mg.facing);
     } else if (mg.super_surge) {
-        static const uint8_t spin[4] = { MG_F_SWEEP1, MG_F_SWEEP2, MG_F_SWEEP3, MG_F_SPIN };
-        mg_frame(p, (uint8_t)(mg.super_surge >= MG_SURGE_TIME - MG_SURGE_WINDUP
-                              ? MG_F_SWEEP0 : spin[(mg.super_surge / 2) & 3]), mg.facing);
+        mg_frame(p, (uint8_t)(mg.super_surge >= MG_SURGE_TIME - MG_SURGE_WINDUP ? MG_F_RISE0 : MG_F_SURGE),
+                 mg.facing);
     } else if (mg.dash && grounded) {
         mg_frame(p, (uint8_t)(MG_F_RUN0 + ((mg.dash / 2) % 3)), mg.facing);
     } else if (mg.attack) {

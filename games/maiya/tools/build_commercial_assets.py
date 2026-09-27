@@ -1050,6 +1050,19 @@ def build():
         maiya_frames[f"flip{k}"] = turned(hf["jump2"], k, lift=2)
     # Kneeling on the eagle's back (her landing crouch, no shadow under it).
     maiya_frames["ride"] = hf["land"]
+    # Her special moves, drawn for them: the Rising Bloom's gather, uppercut
+    # and top; the Surge's dash; the Secret Art's call to the sky and her
+    # palms to the ground; the high leap's crouch and spring.
+    sm = Image.open(find_file("maiya_special_moves*.png")).convert("RGB")
+    special = fit_group(sm, {
+        "rise0": (55, 190, 330, 455), "rise1": (490, 15, 740, 450), "rise2": (890, 15, 1130, 460),
+        "surge": (1290, 160, 1625, 450), "art0": (50, 480, 320, 910), "art1": (470, 660, 750, 910),
+        "leap0": (895, 650, 1170, 910), "leap1": (1320, 480, 1560, 895),
+    }, HERO_CANVAS, HERO_HEIGHT, bg_color="corner")
+    for name in ("rise0", "rise1", "rise2", "surge", "art0", "art1", "leap0", "leap1"):
+        # the ones on the ground stand on a shadow like her other grounded poses
+        grounded = name in ("rise0", "art0", "art1", "leap0")
+        maiya_frames[name] = add_shadow(special[name]) if grounded else special[name]
 
     # Fit master palette for Maiya
     hero_training = np.concatenate([f[:, :, :3][training_mask(f)] for f in maiya_frames.values()])
