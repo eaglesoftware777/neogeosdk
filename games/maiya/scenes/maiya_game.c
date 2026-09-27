@@ -333,6 +333,8 @@ typedef struct {
     uint16_t end_timer;               /* ...and how long it has been up             */
     uint8_t  combo_n, combo_t, combo_show; /* creatures beaten in a row, time left to add one, its read-out */
     uint8_t  name_buf[3], name_pos, name_row;  /* the high score name being entered, and its place */
+    uint8_t  music_next, music_wait;  /* a track waiting for the fade out to finish; the fade under way (1 out, 2 in) */
+    uint8_t  music_level;             /* the music's volume now, as the fade has it */
     uint8_t  flash;                   /* frames of Secret Art palette      */
     uint8_t  angel;                   /* rising-to-the-sky death           */
     uint8_t  flowers, critters;       /* bonus tally for the mission end   */
@@ -644,8 +646,11 @@ static void NEOGEO_USER mg_music_levels(void)
     else ng_pause_set_music_levels(0xB8, 0x00, 0x00);
 }
 
+enum { MG_MUSIC_LEVEL = 0xB8 };   /* the music's volume under the effects (ADPCM-B) */
+
 static void NEOGEO_USER mg_music(uint8_t track)
 {
+    mg.music_wait = 0;        /* a switch still fading out gives way to this one */
     if (mg.music_on && mg.music_track == track) return;
     mg.music_track = track;
     mg.music_on = 1;
@@ -654,7 +659,8 @@ static void NEOGEO_USER mg_music(uint8_t track)
      * The attract demo stays silent when the operator turned DEMO SOUND off. */
     isZ80Ready();
     if (mg.demo && !maiya_dip_demo_sound()) soundApplyMix(0x00, 0x00, 0x00, 0x00);
-    else soundApplyMix(0x3C, 0xB8, 0x00, 0x00);
+    else soundApplyMix(0x3C, MG_MUSIC_LEVEL, 0x00, 0x00);
+    mg.music_level = MG_MUSIC_LEVEL;
     mg_music_levels();
     isZ80Ready(); soundSetADPCMBLoop(1);
     isZ80Ready(); playSFXB(track);
@@ -683,6 +689,42 @@ static void NEOGEO_USER mg_voice_later(uint8_t line, uint8_t frames)
 {
     mg.voice_next = line;
     mg.voice_delay = frames;
+}
+
+/*
+ * A change of music without a cut: the music (ADPCM-B) fades out, the next
+ * track starts while it is silent and fades back in -- a step of the
+ * music's volume every other frame, through the SDK's volume wrapper, so
+ * the effects stay at their own level throughout. Used for the guardian's
+ * theme. The pause mutes the music the same way and gives it back.
+ */
+enum { MG_FADE_STEP = 16 };
+
+static void NEOGEO_USER mg_music_to(uint8_t track)
+{
+    if (!mg.music_on || mg.music_track == track || mg.demo) { mg_music(track); return; }
+    mg.music_next = track;
+    mg.music_wait = 1;                         /* fading out */
+}
+
+static void NEOGEO_USER mg_music_tick(void)
+{
+    if (!mg.music_wait || (mg.tick & 1u)) return;
+    if (mg.music_wait == 1) {
+        mg.music_level = (uint8_t)(mg.music_level > MG_FADE_STEP ? mg.music_level - MG_FADE_STEP : 0);
+        soundSetADPCMBVolume(mg.music_level);
+        if (!mg.music_level) {
+            mg.music_track = mg.music_next;
+            isZ80Ready(); soundSetADPCMBLoop(1);
+            isZ80Ready(); playSFXB(mg.music_next);
+            mg.music_wait = 2;                 /* ...and in */
+        }
+    } else {
+        mg.music_level = (uint8_t)(mg.music_level + MG_FADE_STEP >= MG_MUSIC_LEVEL ? MG_MUSIC_LEVEL
+                                                                               : mg.music_level + MG_FADE_STEP);
+        soundSetADPCMBVolume(mg.music_level);
+        if (mg.music_level == MG_MUSIC_LEVEL) mg.music_wait = 0;
+    }
 }
 
 /* ------------------------------------------------------------------ */
@@ -2897,6 +2939,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     }
 
     mg.music_on = 0;
+    mg.music_wait = 0;
     mg_music(level->music);
     if (mg.entrance || mg.flying) mg_voice_later(retry ? MG_VOICE_RETRY : MG_VOICE_START, 40);
 }
@@ -3815,7 +3858,7 @@ static void NEOGEO_USER mg_boss_announce(void)
     mg_centre(ROW_CARD + 2, mg_boss_taunt[k], PAL_WARN);
     mg_centre(ROW_CARD + 5, "MAIYA", PAL_GOLD);
     mg_centre(ROW_CARD + 7, mg_boss_reply[k], PAL_SKY);
-    mg_music(SOUND_TRACK_H);
+    mg_music_to(SOUND_TRACK_H);
 }
 
 static void NEOGEO_USER mg_warp_begin(void);
@@ -7327,6 +7370,8 @@ static void NEOGEO_USER mg_pause_toggle(void)
     int on = !ng_pause_is_on();
     ng_pause_set(on);
     playSFX(SOUND_SFX_11);
+    /* the music rests while she waits, and comes back when play resumes */
+    if (!mg.demo) soundSetADPCMBVolume(on ? 0 : mg.music_level);
     if (on) mg_centre(MG_PAUSE_ROW, "PAUSE", PAL_GOLD);
     else ng_fix_clear_rect(1, MG_PAUSE_ROW, 38, 1, PAL_TEXT);
 }
@@ -7568,6 +7613,7 @@ void NEOGEO_USER maiya_frame(void)
 
     mg.tick++;
     if (mg.voice_delay && --mg.voice_delay == 0) mg_voice(mg.voice_next);
+    mg_music_tick();
     if (!mg.player) return;
     ng_game_time_stage_run((uint8_t)(mg.state == MG_PLAY));
     if (!mg.demo && (mg.state == MG_PLAY || mg.state == MG_INTRO || mg.state == MG_CLEAR ||
