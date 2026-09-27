@@ -85,6 +85,7 @@ enum {
     SLOT_TITLE = 310,    /* attract mode key visual                 */
     SLOT_TRAY = 330,     /* 12 shrunk pick-up icons (2 strips each) */
     SLOT_FX = 356,       /* her special moves' light (4 strips), over her */
+    SLOT_GLIDER = 360,   /* her hang glider / parachute over a healed valley (6 strips) */
     MG_TRAY_SLOTS = 12,
 
     /*
@@ -290,6 +291,7 @@ typedef struct {
     NGCharacter *npcs[MG_NPC_SLOTS];
     NGSpriteGroup cage;
     NGSpriteGroup fx;                /* a special move's light, drawn over her */
+    NGSpriteGroup glider;            /* her hang glider, then parachute, over a healed valley */
     NGSpriteGroup hud[16];
     NGSpriteGroup tray[MG_TRAY_SLOTS];
     MGEnemy enemies[MG_ENEMIES];
@@ -337,6 +339,7 @@ typedef struct {
     uint8_t  music_next, music_wait;  /* a track waiting for the fade out to finish; the fade under way (1 out, 2 in) */
     uint8_t  music_level;             /* the music's volume now, as the fade has it */
     uint8_t  art_pose, leaping;       /* the Secret Art's pose, frames left; rising from the high leap */
+    uint8_t  veil_lit;                /* her mist-veil colours are on               */
     uint8_t  tour_phase, tour_folk_n; /* the healed valley: 0 flying over it, 1 with the elder */
     uint16_t tour_t;                  /* ...frames into the phase                    */
     int16_t  tour_x;                  /* ...where the view has got to                */
@@ -1529,7 +1532,7 @@ static void NEOGEO_USER mg_camera_follow(void)
  * mirrored when she faces left), the Secret Art's widening sun ring and the
  * high leap's burst from her feet.
  */
-enum { MG_LIGHT_NONE, MG_LIGHT_WHIRL, MG_LIGHT_TRAIL, MG_LIGHT_SUN, MG_LIGHT_BURST };
+enum { MG_LIGHT_NONE, MG_LIGHT_WHIRL, MG_LIGHT_TRAIL, MG_LIGHT_SUN, MG_LIGHT_BURST, MG_LIGHT_AURA };
 
 static void NEOGEO_USER mg_light(uint8_t kind, uint8_t frames)
 {
@@ -1566,6 +1569,10 @@ static void NEOGEO_USER mg_draw_light(int16_t camera_x)
         break;
     case MG_LIGHT_SUN:
         frame = (uint16_t)(MG_FX_SUN0 + (mg.fx_time > 20 ? 0u : (mg.fx_time > 10 ? 1u : 2u)));
+        break;
+    case MG_LIGHT_AURA:
+        frame = (uint16_t)(MG_FX_AURA0 + ((mg.tick >> 3) & 1u));
+        y = (int16_t)(p->y - 62);
         break;
     default:
         frame = (uint16_t)(MG_FX_BURST0 + ((mg.tick >> 2) & 1u));
@@ -2713,7 +2720,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.gate_shown = 0;
     mg.npc_mask = 0; mg.npc_live = 0; mg.npc_here = 0;
     mg.swift = mg.might = mg.veil = 0; mg.spring = mg.crown = 0; mg.lily = 0; mg.leap_window = 0;
-    mg.art_pose = 0; mg.leaping = 0;
+    mg.art_pose = 0; mg.leaping = 0; mg.veil_lit = 0;
     mg.flash = 0; mg.angel = 0; mg.hurt_lit = 0; mg.art_wave = 0;
     for (i = 0; i < MG_NPC_SLOTS; i++) mg.npcs[i] = 0;
     mg.notice = 0; mg.facing = 0; mg.kills = 0;
@@ -5211,6 +5218,22 @@ static void NEOGEO_USER mg_boss_ai(NGCharacter *p)
  * lifted a few steps -- a glint, not a change of costume. (The golden sun
  * palette recoloured every pixel one hue, turning her into a gold cut-out.)
  */
+/* The mist veil's colours: hers, each lifted halfway to a pale sky blue. */
+static void NEOGEO_USER mg_veil_palette(void)
+{
+    const uint16_t *src = mg_hero_normal_pal();
+    uint16_t pal[16];
+    uint8_t i;
+    pal[0] = src[0];
+    for (i = 1; i < 16; i++) {
+        uint16_t c = src[i];
+        uint8_t r = (uint8_t)((c >> 8) & 15u), g = (uint8_t)((c >> 4) & 15u), b = (uint8_t)(c & 15u);
+        r = (uint8_t)((r + 11u) >> 1); g = (uint8_t)((g + 14u) >> 1); b = (uint8_t)((b + 15u) >> 1);
+        pal[i] = (uint16_t)(((uint16_t)r << 8) | ((uint16_t)g << 4) | b);
+    }
+    mg_palette(PAL_HERO, pal);
+}
+
 static void NEOGEO_USER mg_hurt_palette(void)
 {
     const uint16_t *src = mg_hero_normal_pal();
@@ -6080,14 +6103,20 @@ static void NEOGEO_USER mg_update_entities(void)
             mg_palette(PAL_HERO, mg_hero_normal_pal());
         }
     } else if (mg.veil) {
-        /* The mist veil: she fades in and out slowly, on purpose. */
-        p->visible = (uint8_t)((mg.veil & 16) ? 0 : 1);
+        /* The mist veil: no flicker -- she is drawn in pale, misty colours
+         * inside a soft ring of light for as long as it lasts (the colours
+         * put back now and then, should anything else have set hers). */
+        if (!mg.veil_lit || (mg.tick & 31u) == 0u) { mg_veil_palette(); mg.veil_lit = 1; }
+        if (!mg.fx_time || mg.fx_kind == MG_LIGHT_AURA) mg_light(MG_LIGHT_AURA, 2);
     }
 
     /* Power-ups run down whether or not she is fighting. */
     if (mg.swift && --mg.swift == 0) mg.hud_dirty = 1;
     if (mg.might && --mg.might == 0) mg.hud_dirty = 1;
-    if (mg.veil && --mg.veil == 0) mg.hud_dirty = 1;
+    if (mg.veil && --mg.veil == 0) {
+        mg.hud_dirty = 1;
+        if (mg.veil_lit) { mg.veil_lit = 0; mg_palette(PAL_HERO, mg_hero_normal_pal()); }
+    }
     if (mg.spring && --mg.spring == 0) mg.hud_dirty = 1;
     if (mg.crown && --mg.crown == 0) mg.hud_dirty = 1;
     if (mg.lily && --mg.lily == 0) mg.hud_dirty = 1;
@@ -7453,10 +7482,11 @@ static void NEOGEO_USER mg_pause_toggle(void)
 /*
  * After the guardian falls and she has her moment, the valley is shown
  * healed: its painting in its clean colours, the fire, sludge and pits gone,
- * and Maiya lifted up as the sun's angel, halo and all, drifting over it
- * as the view pans from one end to the other. The people she freed are out
- * on the road, hopping for joy under hearts; flowers open and leaves rise
- * all along it. At the end she comes down beside the elder, who thanks
+ * and Maiya on a hang glider, sailing over it as the view pans from one
+ * end to the other, petals, roses and leaves falling behind her. The
+ * people she freed are out on the road, hopping for joy under hearts;
+ * flowers open all along it. At the end the glider opens out into a
+ * parachute and brings her down beside the elder, who thanks
  * her and tells her what her work has given back (its stage file's
  * "healed"), with Sunboy's words; then on to the bonus round, if there is
  * one, and the elder's briefing for the next valley. A button moves it on.
@@ -7507,11 +7537,18 @@ static void NEOGEO_USER mg_tour_begin(void)
     for (i = 0; i < 4u; i++) if (lv->rescue_x[i]) mg_tour_person(lv->rescue_type[i], (int16_t)lv->rescue_x[i]);
     for (i = 0; i < MG_NPC_COUNT; i++) if (mg_npcs[mg.stage][i].x) mg_tour_person(mg_npcs[mg.stage][i].type, mg_npcs[mg.stage][i].x);
 
-    /* she rises as the sun's angel (on the Sky Road, on the eagle) */
+    /* she takes to the air on her hang glider (on the Sky Road, the eagle) */
     ng_physics_set_gravity(p, 0, 0);
     p->vx_fp = p->vy_fp = 0;
     p->visible = 1;
-    if (!mg.flying) mg_palette(PAL_HERO, mg_hero_sun_pal);
+    mg.veil = 0;
+    mg.veil_lit = 0;
+    mg_palette(PAL_HERO, mg_hero_normal_pal());
+    ng_sprite_group_set_visible(&mg.hud[10], 0);
+    ng_sprite_group_flush(&mg.hud[10]);
+    mg_palette(PAL_EAGLE, mg_glider_pal);
+    ng_sprite_group_init(&mg.glider, SLOT_GLIDER, 6, 3, mg_glider_tiles[0], PAL_EAGLE);
+    ng_sprite_group_set_visible(&mg.glider, 0);
     mg.facing = 0;
     mg.tour_x = 0;
     mg.tour_t = 0;
@@ -7526,8 +7563,8 @@ static void NEOGEO_USER mg_tour_begin(void)
 static void NEOGEO_USER mg_tour_next(void)
 {
     uint8_t next = (uint8_t)(mg.stage + 1u);
-    ng_sprite_group_set_visible(&mg.hud[10], 0);
-    ng_sprite_group_flush(&mg.hud[10]);
+    ng_sprite_group_set_visible(&mg.glider, 0);
+    ng_sprite_group_flush(&mg.glider);
     /* Every other valley ends with a bonus round first. */
     if ((mg.stage & 1u) == 1u) mg_bonus_enter(next);
     else mg_interlude(next);
@@ -7549,17 +7586,20 @@ static void NEOGEO_USER mg_tour_frame(void)
         int16_t bob = (int16_t)ng_trig_mul(4, ng_sin((uint8_t)(mg.tick * 3u)));
         mg.tour_x = (int16_t)(mg.tour_x + MG_TOUR_SPEED);
         if (mg.tour_x >= end) mg.tour_x = end;
-        ng_char_set_pos(p, (int16_t)(mg.tour_x + 96), (int16_t)((mg.flying ? 130 : 84) + bob));
-        if (mg.flying) mg_frame(p, MG_F_RIDE, 0);
-        else mg_frame(p, (uint8_t)((mg.tick / 14) & 1 ? MG_F_WIN : MG_F_JUMP3), 0);
+        ng_char_set_pos(p, (int16_t)(mg.tour_x + 96), (int16_t)((mg.flying ? 130 : 110) + bob));
+        /* hanging from the glider's bar, arms up */
+        mg_frame(p, (uint8_t)(mg.flying ? MG_F_RIDE : MG_F_LEAP1), 0);
         if (mg.tour_t == 90u) mg_centre(7, mg_healed[mg.stage][0], PAL_TEXT);
         if (mg.tour_t == 170u) mg_centre(8, mg_healed[mg.stage][1], PAL_TEXT);
-        /* flowers open and leaves rise along the road; a glint in the sky */
-        if ((mg.tick % 5u) == 0u)
+        /* flowers open along the road, and petals, roses and leaves fall
+         * from her as she sails over */
+        if ((mg.tick % 6u) == 0u)
             mg_burst((int16_t)(mg.tour_x + (int16_t)ng_rand_range(320u)), (int16_t)(MG_GROUND_Y - 12),
                      (uint8_t)((mg.tick & 8u) ? MG_T_PETAL : MG_T_LEAF), 1, -2);
-        if ((mg.tick % 23u) == 0u)
-            mg_burst((int16_t)(mg.tour_x + (int16_t)ng_rand_range(320u)), (int16_t)(30 + ng_rand_range(60u)), MG_T_SPARK, 1, -1);
+        if ((mg.tick % 4u) == 0u) {
+            static const uint8_t strewn[4] = { MG_T_PETAL, MG_T_ROSE, MG_T_LEAF, MG_T_PETAL };
+            mg_burst((int16_t)(p->x - 16), (int16_t)(p->y - 30), strewn[(mg.tick >> 2) & 3u], 1, 0);
+        }
         if (mg.tour_x >= end && mg.tour_t > 240u) {
             /* the elder waits at the end of the road */
             NGCharacter *elder = mg_tour_person(0, (int16_t)(end + 224));
@@ -7569,20 +7609,21 @@ static void NEOGEO_USER mg_tour_frame(void)
             ng_fix_clear_rect(1, 4, 38, 6, PAL_TEXT);
         }
     } else {
-        /* she comes down beside him, and he speaks */
+        /* the glider opens into a parachute; she drifts down, swaying,
+         * beside him, and he speaks */
         int16_t floor = (int16_t)(mg.flying ? 150 : MG_GROUND_Y);
         int16_t tx = (int16_t)(end + 150);
         if (p->x < tx) ng_char_set_pos(p, (int16_t)(p->x + 1), p->y);
         if (p->y < floor) {
-            ng_char_set_pos(p, p->x, (int16_t)(p->y + 2 > floor ? floor : p->y + 2));
+            ng_char_set_pos(p, p->x, (int16_t)(p->y + 1));
             if (p->y >= floor && !mg.flying) {
-                /* on the road again: her own colours come back */
-                mg_palette(PAL_HERO, mg_hero_normal_pal());
-                mg_burst(p->x, (int16_t)(p->y - 4), MG_T_DUST, 2, -1);
+                /* down: the canopy folds away in a flurry of petals */
+                mg_burst(p->x, (int16_t)(p->y - 90), MG_T_PETAL, 4, -1);
+                mg_burst(p->x, (int16_t)(p->y - 4), MG_T_LEAF, 2, -1);
             }
         }
         if (mg.flying) mg_frame(p, MG_F_RIDE, 0);
-        else mg_frame(p, (uint8_t)(p->y < floor ? MG_F_JUMP3 : (mg.tour_t < 200u ? MG_F_IDLE0 : MG_F_WIN)), 0);
+        else mg_frame(p, (uint8_t)(p->y < floor ? MG_F_LEAP1 : (mg.tour_t < 200u ? MG_F_IDLE0 : MG_F_WIN)), 0);
         if (mg.tour_t == 70u) {
             mg_centre(ROW_CARD - 3, "ELDER: WELL DONE, MAIYA!", PAL_GOLD);
             mg_centre(ROW_CARD - 1, "YOUR COURAGE HAS HEALED THIS VALLEY", PAL_SKY);
@@ -7597,14 +7638,17 @@ static void NEOGEO_USER mg_tour_frame(void)
             return;
         }
     }
-    /* the halo rides over her head */
+    /* the glider over her hands (her grip at its bar), the parachute as she
+     * comes down, and nothing once she is on the road */
     if (!mg.flying && p->visible && (mg.tour_phase == 0 || p->y < (int16_t)MG_GROUND_Y)) {
-        ng_sprite_group_set_pos(&mg.hud[10], (int16_t)(p->x - mg.camera.x - 8), MG_SY(p->y - 72 + ((mg.tick >> 3) & 1)));
-        ng_sprite_group_set_visible(&mg.hud[10], 1);
+        int16_t sway = (int16_t)(mg.tour_phase ? ng_trig_mul(3, ng_sin((uint8_t)(mg.tick * 4u))) : 0);
+        ng_sprite_group_set_tile_base(&mg.glider, mg_glider_tiles[mg.tour_phase ? 1 : 0]);
+        ng_sprite_group_set_pos(&mg.glider, (int16_t)(p->x - mg.camera.x - 48 + sway), MG_SY(p->y - 104));
+        ng_sprite_group_set_visible(&mg.glider, 1);
     } else {
-        ng_sprite_group_set_visible(&mg.hud[10], 0);
+        ng_sprite_group_set_visible(&mg.glider, 0);
     }
-    ng_sprite_group_flush(&mg.hud[10]);
+    ng_sprite_group_flush(&mg.glider);
     /* the people hop for joy, hearts rising over them */
     for (i = 0; i < mg.tour_folk_n; i++) {
         NGCharacter *c = mg.tour_folk[i];

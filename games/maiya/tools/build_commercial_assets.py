@@ -1478,6 +1478,11 @@ def build():
     shared_set("airship", airship)
     header.append(f"#define MG_AIRSHIP_FRAMES {len(airship)}u")
 
+    # Her hang glider for the flight over a healed valley, and the parachute
+    # it opens into (96 x 48, its own palette).
+    glider = {name: painter() for name, painter in nature_art.GLIDER}
+    shared_set("glider", glider)
+
     # The light of her special moves (64 x 64, drawn over her).
     fx = {name: painter() for name, painter in nature_art.FX}
     shared_set("fx", fx)
