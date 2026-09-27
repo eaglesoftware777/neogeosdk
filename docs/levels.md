@@ -112,6 +112,7 @@ Names stand for the game's constants, lower case without the prefix:
 | `posted` | `MG_E_*`: who stands on the `archers` ledges, or none | none, goblin, drone, poachdrone |
 | `climb` | `MG_D_*`: what its vines are made of | vine, rope, ladder, chain, kelp, icevine |
 | `pickups[].kind` | `MG_K_*` from the art build | silver, gold, flower, life, lily (the sky lily: a second jump for a while) |
+| `landmark` | `MG_LM_*` from the art build (`tools/landmark_art.py`) | forest, falls, coast, autumn, ice, worldtree, works, reef, mountain, baobab, citadel: the great tree, cliff or mountain the gate stands in (192 x 176, from gate_x - 80). The gate is the valley's last thing: the view stops with its landmark, nothing may reach past gate_x - 80, and the last 96 px of road before the gate are clear of hazards |
 | `art.kind` | `ART_KINDS` in `tools/levels.py` | blossom (known from the start), rain, sun, frost, gale: the valley's Secret Art. The other four are learned from the spirit orb, the first treasure in the hidden vault of a valley of that kind; until then D gives the blossom storm. `name` is the art's, `words` what she calls out in this valley |
 | `decor[].kind` | `MG_D_*` from the art build | grass, lantern, rock |
 | `who` | the ally art, in order | elder, maiden, spirit, sunboy |

@@ -9,6 +9,7 @@
   "climb": "kelp",
   "posted": "drone",
   "gate_x": 6328,
+  "landmark": "reef",
   "key": {"x": 1580, "y": 46},
   "hideout": {"x": 3256, "y": 80, "hint": "KNEEL ON THE LAST HIGH CORAL"},
   "guardian": {
@@ -151,7 +152,7 @@
     {"x": 1216, "y": 112, "kind": "grass"},
     {"x": 2448, "y": 80, "kind": "mushroom"},
     {"x": 2876, "y": 112, "kind": "flowers"},
-    {"x": 6236, "y": 160, "kind": "lantern"}
+    {"x": 6200, "y": 160, "kind": "lantern"}
   ],
   "vines": [
     {"x": 592, "top": 80, "bottom": 192},

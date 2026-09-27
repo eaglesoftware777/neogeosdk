@@ -9,6 +9,7 @@
   "climb": "rope",
   "posted": "poachdrone",
   "gate_x": 7216,
+  "landmark": "baobab",
   "key": {"x": 2760, "y": 46},
   "hideout": {"x": 1040, "y": 80, "hint": "KNEEL HIGH ABOVE THE FIRST ROPE LADDER"},
   "guardian": {
@@ -145,7 +146,7 @@
     {"x": 1508, "y": 112, "kind": "grass"},
     {"x": 2468, "y": 72, "kind": "bush"},
     {"x": 4080, "y": 64, "kind": "sapling"},
-    {"x": 7116, "y": 160, "kind": "sign"}
+    {"x": 7088, "y": 160, "kind": "sign"}
   ],
   "vines": [
     {"x": 1000, "top": 80, "bottom": 192},

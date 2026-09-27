@@ -10,6 +10,7 @@
   "upper": 256,
   "posted": "drone",
   "gate_x": 5528,
+  "landmark": "worldtree",
   "key": {"x": 2148, "y": 38},
   "hideout": {"x": 3480, "y": 64, "hint": "KNEEL ON THE LAST ROTTEN BRANCH, QUICK"},
   "guardian": {
@@ -51,8 +52,7 @@
     {"x": 4304, "y": 120, "w": 64},
     {"x": 4686, "y": 112, "w": 96},
     {"x": 4896, "y": 104, "w": 96, "rotten": true},
-    {"x": 5096, "y": 136, "w": 96},
-    {"x": 5656, "y": 144, "w": 96}
+    {"x": 5096, "y": 136, "w": 96}
   ],
   "encounters": [
     {"x": 260, "enemy": "drone"},
@@ -79,10 +79,10 @@
     {"x": 3752, "enemy": "pair"},
     {"x": 3824, "enemy": "drone"},
     {"x": 4234, "enemy": "goblin"},
+    {"x": 4676, "enemy": "crow"},
     {"x": 4826, "enemy": "vinesting"},
     {"x": 5036, "enemy": "drone"},
-    {"x": 5564, "enemy": "pair"},
-    {"x": 5748, "enemy": "crow"}
+    {"x": 5200, "enemy": "pair"}
   ],
   "archers": [
     {"x": 548, "y": 104},

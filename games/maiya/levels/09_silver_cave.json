@@ -10,6 +10,7 @@
   "upper": 224,
   "posted": "goblin",
   "gate_x": 6780,
+  "landmark": "mountain",
   "key": {"x": 2292, "y": 46},
   "hideout": {"x": 3968, "y": 80, "hint": "KNEEL ON THE LAST HIGH SCAFFOLD"},
   "guardian": {

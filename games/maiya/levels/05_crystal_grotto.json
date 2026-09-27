@@ -9,6 +9,7 @@
   "climb": "icevine",
   "posted": "drone",
   "gate_x": 4924,
+  "landmark": "ice",
   "key": {"x": 2536, "y": 46},
   "hideout": {"x": 3288, "y": 72, "hint": "KNEEL ON THE HIGH ICE PAST THE KEY"},
   "guardian": {
@@ -41,9 +42,7 @@
     {"x": 3748, "y": 108, "w": 80},
     {"x": 4032, "y": 72, "w": 96},
     {"x": 4648, "y": 144, "w": 96},
-    {"x": 4808, "y": 112, "w": 96},
-    {"x": 4968, "y": 80, "w": 96},
-    {"x": 5112, "y": 144, "w": 96}
+    {"x": 4744, "y": 112, "w": 96}
   ],
   "encounters": [
     {"x": 308, "enemy": "crow"},
@@ -67,17 +66,16 @@
     {"x": 3892, "enemy": "slaggolem"},
     {"x": 4080, "enemy": "goblin"},
     {"x": 4268, "enemy": "crow"},
+    {"x": 4360, "enemy": "goblin"},
     {"x": 4456, "enemy": "pair"},
-    {"x": 4628, "enemy": "crow"},
-    {"x": 5038, "enemy": "goblin"}
+    {"x": 4628, "enemy": "crow"}
   ],
   "archers": [
     {"x": 672, "y": 108},
     {"x": 1708, "y": 72},
     {"x": 2488, "y": 72},
     {"x": 3268, "y": 72},
-    {"x": 4068, "y": 72},
-    {"x": 4998, "y": 80}
+    {"x": 4068, "y": 72}
   ],
   "hazards": [
     {"x": 716, "w": 64, "type": "pit"},
@@ -115,7 +113,7 @@
     {"x": 3112, "y": 164, "kind": "critter"},
     {"x": 3188, "y": 168, "kind": "silver"},
     {"x": 3916, "y": 24, "kind": "lily"},
-    {"x": 4840, "y": 82, "kind": "gold"}
+    {"x": 4776, "y": 82, "kind": "gold"}
   ],
   "decor": [
     {"x": 176, "y": 160, "kind": "rock"},

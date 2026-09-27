@@ -9,6 +9,7 @@
   "climb": "vine",
   "posted": "none",
   "gate_x": 3200,
+  "landmark": "forest",
   "key": {"x": 2012, "y": 42},
   "hideout": {"x": 2628, "y": 68, "hint": "KNEEL ON THE HIGH LEDGE PAST THE KEY"},
   "guardian": {
@@ -38,9 +39,7 @@
     {"x": 2380, "y": 104, "w": 80},
     {"x": 2580, "y": 68, "w": 96},
     {"x": 2800, "y": 140, "w": 96},
-    {"x": 3000, "y": 104, "w": 80},
-    {"x": 3360, "y": 140, "w": 96},
-    {"x": 3580, "y": 104, "w": 80}
+    {"x": 3000, "y": 104, "w": 80}
   ],
   "encounters": [
     {"x": 180, "enemy": "slime"},
@@ -51,10 +50,10 @@
     {"x": 1740, "enemy": "beetle"},
     {"x": 2060, "enemy": "acidmoth"},
     {"x": 2380, "enemy": "beetle"},
+    {"x": 2540, "enemy": "beetle"},
     {"x": 2700, "enemy": "dartfrog"},
-    {"x": 3020, "enemy": "beetle"},
-    {"x": 3380, "enemy": "acidmoth"},
-    {"x": 3620, "enemy": "beetle"}
+    {"x": 2860, "enemy": "acidmoth"},
+    {"x": 3020, "enemy": "beetle"}
   ],
   "archers": [],
   "hazards": [

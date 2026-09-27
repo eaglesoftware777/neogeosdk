@@ -24,6 +24,11 @@ SCREEN = 320        # one screen of valley
 REACH = ((88, "a jump"), (100, "a running jump (hold B)"), (140, "the high leap (kneel, then Up + A)"),
          (190, "the sky lily's second jump (Up + A in the air)"))
 
+LANDMARK = {"forest": "the ancient forest tree", "falls": "the cliff of the falls", "coast": "the great sea rock",
+            "autumn": "the great autumn oak", "ice": "the ice peak", "worldtree": "the World Tree's trunk",
+            "works": "the old works' tower, overgrown", "reef": "the coral rock", "mountain": "the silver mountain",
+            "baobab": "the great baobab", "citadel": "the citadel's tower"}
+
 SECRET = {"rose": "a golden rose", "gem": "a sun seed", "chest": "a golden rose"}
 
 PICKUP = {
@@ -77,7 +82,7 @@ def surface_below(x: int, y: int, size: int, platforms) -> tuple[int, bool]:
 
 def where(x: int, y: int, size: int, d: dict) -> str:
     """Where a thing of `size` px, top-left at (x, y), sits and what it takes."""
-    width = d["width"]
+    width = d["gate_x"] + 112 if d.get("gate_x") else d["width"]
     if d.get("mechanic") == "flight":
         return f"{screen(x, width)}, " + ("high in" if y < 70 else ("in the middle of" if y < 130 else "low in")) + " the sky"
     base, ledge = surface_below(x, y, size, d["platforms"])
@@ -94,7 +99,8 @@ def where(x: int, y: int, size: int, d: dict) -> str:
 
 def valley(n: int, d: dict) -> list[str]:
     lines = []
-    width = d["width"]
+    # the road ends with the gate's landmark (192 px from gate - 80)
+    width = d["gate_x"] + 112 if d.get("gate_x") else d["width"]
     art = d["art"]
     flight = d.get("mechanic") == "flight"
     lines.append(f"## {n}. {title(d['name'])}")
@@ -115,7 +121,8 @@ def valley(n: int, d: dict) -> list[str]:
         lines.append(f"- **Sun Key** (opens the gate): {where(key['x'], key['y'], 16, d)}.")
         gate = d.get("gate_x", 0)
         if gate:
-            lines.append(f"- **The gate**: {screen(gate, width)}. Without the key it stays shut.")
+            lines.append(f"- **The gate**: the very end of the road, in the foot of {LANDMARK[d['landmark']]}; "
+                         "nothing lies past it. Without the key it stays shut; through it, the guardian.")
         h = d["hideout"]
         spot = "in the upper tier" if h["y"] < 0 else ("on the road" if h["y"] == ROAD else "on a ledge")
         orb = ""

@@ -117,6 +117,7 @@ enum {
     PAL_FOLK = 48,       /* the healed valley's people, a bank a kind (48..51, the creatures' banks: none are left) */
     /* The Sky Road's fliers. */
     PAL_RHINO = 65, PAL_DRAGONFLY = 68, PAL_GNAT = 69, PAL_GUNSHIP = 70,
+    PAL_LANDMARK = 71,   /* the great tree or mountain the gate stands in (71..73) */
     /* FIX inks for the guardian's bar: dirty and toxic rather than the
      * clean traffic-light colours of her own -- it's the blight's health. */
     PAL_BOSS_HP_HI = 11, PAL_BOSS_HP_MID = 14, PAL_BOSS_HP_LO = 15,
@@ -450,7 +451,7 @@ static int16_t NEOGEO_USER mg_abs(int16_t value)
  * white -- lift all of it together, and a bank loaded behind a fade comes
  * up with it instead of flashing through.
  */
-#define MG_PAL_BANKS 71u   /* up to PAL_GUNSHIP */
+#define MG_PAL_BANKS 74u   /* up to the landmark's last bank */
 static uint16_t mg_pal_base[MG_PAL_BANKS * 16u];
 static uint16_t mg_pal_out[MG_PAL_BANKS * 16u];
 static uint8_t mg_pal_open;
@@ -1172,9 +1173,69 @@ static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
  * small pool as the road scrolls past, so a valley feels lived in without
  * spending a sprite on ground that is off-screen.
  */
+/*
+ * The valley's end: the gate stands in the foot of a great landmark -- the
+ * forest's ancient tree, a cliff with its fall, the grotto's ice peak, the
+ * citadel's tower (landmark_art.py) -- 192 x 176, the gate in the middle of
+ * its foot. The view stops with it (mg_camera_follow): nothing lies past
+ * the gate. It is drawn in the decoration's sprites, behind the cast; while
+ * it is in view the few props of the road ahead of it wait.
+ */
+static NGSpriteGroup mg_landmark_g;
+static uint8_t mg_landmark_on;
+enum { MG_LANDMARK_W = 192, MG_LANDMARK_H = 176, MG_LANDMARK_LEFT = 80 };
+
+static void NEOGEO_USER mg_landmark_setup(void)
+{
+    uint8_t lm = mg_landmark_of[mg.stage < MG_LEVEL_COUNT ? mg.stage : 0], k;
+    mg_landmark_on = 0;
+    if (lm >= MG_LANDMARKS) return;
+    for (k = 0; k < mg_landmark_banks[lm]; k++)
+        mg_palette((uint8_t)(PAL_LANDMARK + k), mg_landmark_pals[lm] + (uint16_t)k * 16u);
+    ng_sprite_group_init(&mg_landmark_g, SLOT_DECOR, MG_LANDMARK_W / 16, MG_LANDMARK_H / 16,
+                         mg_landmark_tiles[lm], PAL_LANDMARK);
+    ng_sprite_group_set_tile_stride(&mg_landmark_g, MG_LANDMARK_W / 16);
+    ng_sprite_group_set_palette_map(&mg_landmark_g, mg_landmark_maps[lm]);
+    ng_sprite_group_set_visible(&mg_landmark_g, 0);
+}
+
+/* 1 while the landmark is in view (and has the decoration's sprites). */
+static uint8_t NEOGEO_USER mg_landmark_draw(int16_t camera_x)
+{
+    const MGLevel *level = &mg_levels[mg.stage];
+    int16_t scr = (int16_t)((int16_t)level->gate_x - MG_LANDMARK_LEFT - camera_x);
+    uint8_t i;
+    uint8_t want = (uint8_t)(level->gate_x && mg_landmark_of[mg.stage] < MG_LANDMARKS &&
+                             !mg.boss_active && !mg.vault && mg.state != MG_BONUS &&
+                             scr > -MG_LANDMARK_W && scr < NG_SCREEN_W);
+    if (want) {
+        if (!mg_landmark_on) {
+            for (i = 0; i < MG_DECOR_SLOTS; i++) {
+                ng_sprite_group_set_visible(&mg.decor[i], 0);
+                ng_sprite_group_flush(&mg.decor[i]);
+            }
+            ng_sprite_group_mark_dirty(&mg_landmark_g, NG_SGF_DIRTY_ALL);
+            mg_landmark_on = 1;
+        }
+        ng_sprite_group_set_pos(&mg_landmark_g, scr, MG_SY(MG_GROUND_Y + 8 - MG_LANDMARK_H));
+        ng_sprite_group_set_visible(&mg_landmark_g, 1);
+        ng_sprite_group_flush(&mg_landmark_g);
+        return 1;
+    }
+    if (mg_landmark_on) {
+        ng_sprite_group_set_visible(&mg_landmark_g, 0);
+        ng_sprite_group_flush(&mg_landmark_g);
+        for (i = 0; i < MG_DECOR_SLOTS; i++) ng_sprite_group_mark_dirty(&mg.decor[i], NG_SGF_DIRTY_ALL);
+        mg_landmark_on = 0;
+    }
+    return 0;
+}
+
 static void NEOGEO_USER mg_draw_decor(int16_t camera_x)
 {
     uint8_t i, used = 0;
+
+    if (mg_landmark_draw(camera_x)) return;
 
     for (i = 0; i < MG_DECOR_COUNT && used < MG_DECOR_SLOTS; i++) {
         const MGDecor *d = &mg_decor[mg.stage][i];
@@ -1458,6 +1519,9 @@ static void NEOGEO_USER mg_camera_follow(void)
         right = (int16_t)(left + NG_SCREEN_W - 1);
     } else if (mg.state == MG_BONUS) {
         right = NG_SCREEN_W - 1;
+    } else if (mg_levels[mg.stage].gate_x && mg.state != MG_TOUR) {
+        /* the valley ends with the gate's landmark: nothing past it shows */
+        right = (int16_t)(mg_levels[mg.stage].gate_x - MG_LANDMARK_LEFT + MG_LANDMARK_W - 1);
     }
     ng_camera_set_bounds(&mg.camera, left, 0, right, NG_SCREEN_H - 1);
 
@@ -3388,6 +3452,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
 
     ng_sprite_group_init(&mg.gate, SLOT_GATE, 2, 3, mg_gate_tiles[0], PAL_GATE);
     ng_sprite_group_set_visible(&mg.gate, 0);
+    mg_landmark_setup();
 
     ng_sprite_group_init(&mg.cage, SLOT_CAGE, 2, 2, mg_prop_tiles[MG_P_CHEST], PAL_PROP);
     ng_sprite_group_set_visible(&mg.cage, 0);

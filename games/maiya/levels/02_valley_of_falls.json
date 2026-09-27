@@ -10,6 +10,7 @@
   "upper": 192,
   "posted": "goblin",
   "gate_x": 2864,
+  "landmark": "falls",
   "key": {"x": 1704, "y": 46},
   "hideout": {"x": 1720, "y": -96, "hint": "CLIMB OVER THE FALLS, KNEEL AT THE END"},
   "guardian": {
@@ -40,8 +41,7 @@
     {"x": 2192, "y": 72, "w": 96},
     {"x": 2376, "y": 144, "w": 96},
     {"x": 2556, "y": 108, "w": 80},
-    {"x": 2740, "y": 72, "w": 96},
-    {"x": 3032, "y": 144, "w": 96},
+    {"x": 2684, "y": 72, "w": 96},
     {"x": 1088, "y": -64, "w": 112},
     {"x": 1272, "y": -96, "w": 96},
     {"x": 1440, "y": -128, "w": 96},
@@ -58,18 +58,18 @@
     {"x": 1628, "enemy": "beetle"},
     {"x": 1760, "enemy": "dartfrog"},
     {"x": 2028, "enemy": "slime"},
+    {"x": 2160, "enemy": "dartfrog"},
     {"x": 2292, "enemy": "beetle"},
     {"x": 2424, "enemy": "vinesting"},
-    {"x": 2692, "enemy": "slime"},
-    {"x": 2824, "enemy": "beetle"},
-    {"x": 3088, "enemy": "dartfrog"}
+    {"x": 2556, "enemy": "beetle"},
+    {"x": 2692, "enemy": "slime"}
   ],
   "archers": [
     {"x": 408, "y": 112},
     {"x": 1120, "y": 72},
     {"x": 1668, "y": 72},
     {"x": 2216, "y": 72},
-    {"x": 2764, "y": 72}
+    {"x": 2708, "y": 72}
   ],
   "hazards": [
     {"x": 648, "w": 48, "type": "sludge"},
@@ -91,7 +91,7 @@
     {"x": 1128, "y": 42, "type": "rose"},
     {"x": 1640, "y": -126, "type": "chest"},
     {"x": 2224, "y": 42, "type": "gem"},
-    {"x": 2772, "y": 42, "type": "rose"}
+    {"x": 2716, "y": 42, "type": "rose"}
   ],
   "pickups": [
     {"x": 176, "y": 168, "kind": "silver"},
@@ -118,7 +118,7 @@
     {"x": 400, "y": 80, "kind": "bush"},
     {"x": 940, "y": 76, "kind": "lantern"},
     {"x": 1496, "y": 76, "kind": "bush"},
-    {"x": 2764, "y": 160, "kind": "lantern"}
+    {"x": 2708, "y": 160, "kind": "lantern"}
   ],
   "vines": [
     {"x": 576, "top": 76, "bottom": 192},

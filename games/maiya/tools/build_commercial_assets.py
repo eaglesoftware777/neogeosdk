@@ -38,6 +38,7 @@ from tile_codec import encode_image, decode_image, write_utility_tiles  # noqa: 
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import nature_art  # noqa: E402
+import landmark_art  # noqa: E402
 
 SOURCE = GAME / "assets/source_art"
 CHARACTERS = ROOT / "games/demo/artbox/in/characters"
@@ -1578,6 +1579,25 @@ def build():
 
     # The Ancient Nature Gate, sealed and open (32 x 48).
     shared_set("gate", {"shut": nature_art.gate(False), "open": nature_art.gate(True)})
+
+    # The great tree, cliff or mountain each valley's gate stands in
+    # (landmark_art.py, 192 x 176), three palette banks each, shown in the
+    # game's PAL_LANDMARK banks (71..73 in maiya_game.c).
+    landmark_bank = 71
+    lm_names = [name for name, _ in landmark_art.LANDMARKS]
+    lm_banks = []
+    for k, (name, painter) in enumerate(landmark_art.LANDMARKS):
+        _, pals = append(f"landmark_{name}", painter(), banks=3, bank_base=landmark_bank)
+        lm_banks.append(len(pals))
+        header.append(f"#define MG_LM_{name.upper()} {k}u")
+    header.append(f"#define MG_LANDMARKS {len(lm_names)}u")
+    header.append("static const uint16_t mg_landmark_tiles[MG_LANDMARKS] = { "
+                  + ", ".join(f"MG_LANDMARK_{n.upper()}_TILE" for n in lm_names) + " };")
+    header.append("static const uint16_t *const mg_landmark_pals[MG_LANDMARKS] = { "
+                  + ", ".join(f"mg_landmark_{n}_pal" for n in lm_names) + " };")
+    header.append("static const uint8_t *const mg_landmark_maps[MG_LANDMARKS] = { "
+                  + ", ".join(f"mg_landmark_{n}_map" for n in lm_names) + " };")
+    header.append(c_array("mg_landmark_banks", lm_banks, "uint8_t"))
 
     # One ledge set per valley: left end, middle, right end. The forest and
     # the falls build theirs of turf blocks; every other valley of its own
