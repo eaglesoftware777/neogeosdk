@@ -755,6 +755,90 @@ TRINKETS = (
 
 
 # ---------------------------------------------------------------------------
+#  Her special moves' light: 64 x 64 frames drawn over her, sparse enough
+#  that she shows through. The whirl of the Rising Bloom (petals circling
+#  her as she rises, only the near side drawn), the Surge's trail of petals
+#  and leaves (streaming to the left: the game mirrors it when she faces
+#  left), the Secret Art's sun ring (widening) and the high leap's burst of
+#  light from her feet.
+# ---------------------------------------------------------------------------
+
+def _petal(a, x, y, rx, ry, color):
+    disc(a, x, y, rx, ry, color)
+    if rx > 1.8:
+        disc(a, x - rx * 0.3, y - ry * 0.3, rx * 0.4, ry * 0.4, WATER_L if color == BLOSSOM else LF_L)
+
+
+def fx_whirl(phase):
+    a = canvas(64, 64)
+    for ring in range(4):
+        yc = 56 - ring * 14
+        rx = 24 - ring * 2
+        for k in range(6):
+            ang = phase * 0.7 + k * 2 * np.pi / 6 + ring * 0.8
+            if np.sin(ang) < -0.15:
+                continue                       # the far side is behind her
+            x = 32 + np.cos(ang) * rx
+            y = yc + np.sin(ang) * 5
+            _petal(a, x, y, 3.0, 1.8, BLOSSOM if (k + ring) % 3 else LF_M)
+    return to_rgba(outline(a))
+
+
+def fx_trail(phase):
+    a = canvas(64, 64)
+    for k in range(11):
+        x = 58 - k * 5.5 - phase * 3
+        y = 34 + np.sin(k * 1.3 + phase * 1.7) * 9
+        size = 3.2 - k * 0.2
+        if x < 2:
+            continue
+        _petal(a, x, y, size, size * 0.6, (BLOSSOM, LF_M, LF_L)[k % 3])
+    for k, y in enumerate((22, 30, 41, 47)):
+        x0 = 10 + ((k * 7 + phase * 5) % 14)
+        a[y, x0:x0 + 16 - k * 2] = WATER_L
+    return to_rgba(outline(a))
+
+
+def fx_sun(step):
+    a = canvas(64, 64)
+    r = 13 + step * 7
+    ys, xs = np.mgrid[0:64, 0:64]
+    d = np.hypot(xs - 32, ys - 32)
+    a[(d >= r - 1.2) & (d < r + 1.2)] = GOLD
+    a[(d >= r + 1.2) & (d < r + 2.2)] = AMBER
+    for k in range(8):
+        ang = k * np.pi / 4 + step * 0.2
+        for s in range(5):
+            rr = r + 4 + s
+            x, y = int(round(32 + np.cos(ang) * rr)), int(round(32 + np.sin(ang) * rr))
+            if 0 <= x < 64 and 0 <= y < 64:
+                a[y, x] = WATER_L if s < 3 else GOLD
+    return to_rgba(outline(a))
+
+
+def fx_burst(step):
+    a = canvas(64, 64)
+    for k, x in enumerate(range(20, 46, 4)):
+        top = 30 + ((k * 7 + step * 9) % 18)
+        a[top:62, x:x + 1] = WATER_L if k % 2 else GOLD
+    for x, y in ((14, 50 - step * 6), (50, 46 - step * 6), (26, 24 + step * 4), (40, 20 + step * 4)):
+        if 2 <= y < 62:
+            a[y, x - 2:x + 3] = GOLD
+            a[y - 2:y + 3, x] = GOLD
+            a[y, x] = WATER_L
+    disc(a, 32, 61, 14, 2.5, WATER_L)
+    return to_rgba(outline(a))
+
+
+FX = (
+    ("whirl0", lambda: fx_whirl(0)), ("whirl1", lambda: fx_whirl(1)), ("whirl2", lambda: fx_whirl(2)),
+    ("trail0", lambda: fx_trail(0)), ("trail1", lambda: fx_trail(1)),
+    ("sun0", lambda: fx_sun(0)), ("sun1", lambda: fx_sun(1)), ("sun2", lambda: fx_sun(2)),
+    ("burst0", lambda: fx_burst(0)), ("burst1", lambda: fx_burst(1)),
+)
+
+
+# ---------------------------------------------------------------------------
 #  Ground hazards, on their own palette: fire, sludge, a leaking toxic drum
 #  and iron spikes. Each sits on the road along the bottom of a 32x32 block
 #  and has two frames the game alternates so the fire flickers, the sludge

@@ -1418,6 +1418,12 @@ def build():
     for k, name in enumerate(trinkets.keys()):
         header.append(f"#define MG_K_{name.upper()} {k}u")
 
+    # The light of her special moves (64 x 64, drawn over her).
+    fx = {name: painter() for name, painter in nature_art.FX}
+    shared_set("fx", fx)
+    for k, name in enumerate(fx.keys()):
+        header.append(f"#define MG_FX_{name.upper()} {k}u")
+
     # Ground hazards on their own palette, two frames each for the game to
     # alternate: flickering fire, bubbling sludge, a leaking drum, spikes.
     hazards = {name: painter() for name, painter in nature_art.HAZARDS}
