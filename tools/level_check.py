@@ -166,6 +166,8 @@ def check(data, opts):
                 top, bottom, left, right, mid = y, y + size, x, x + size, x + size // 2
                 if left < 0 or right > width or top < world_top or bottom > SCREEN_H:
                     add(lv, kind, it["i"], "outside", x, y, f"its {size} px box leaves the world")
+                if lv.get("flight"):
+                    continue      # flown, not walked: nothing is meant to rest on anything
                 over_pit = any(h["x"] <= mid < h["x"] + h["w"] for h in pits)
                 buried = False
                 for p in plats:

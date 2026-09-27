@@ -30,13 +30,15 @@ static void comma(int *first)
 int main(void)
 {
     static const int upper[MG_LEVEL_COUNT] = MG_UPPER_TABLE;   /* how far above the screen it goes */
+    static const int flight[MG_LEVEL_COUNT] = MG_FLIGHT_TABLE; /* flown, not walked: all in the air */
     int l, i, first;
     printf("{\"ground_y\": %d, \"pickup_size\": %d, \"ledge_depth\": %d, \"levels\": [\n",
            MG_GROUND_Y, PICKUP_SIZE, LEDGE_BLOCK);
     for (l = 0; l < MG_LEVEL_COUNT; l++) {
         const MGLevel *lv = &mg_levels[l];
-        printf("%s{\"index\": %d, \"name\": \"%s\", \"width\": %u, \"gate_x\": %u, \"top\": %d,\n",
-               l ? ",\n" : "", l, lv->name, (unsigned)lv->width, (unsigned)lv->gate_x, -upper[l]);
+        printf("%s{\"index\": %d, \"name\": \"%s\", \"width\": %u, \"gate_x\": %u, \"top\": %d, \"flight\": %s,\n",
+               l ? ",\n" : "", l, lv->name, (unsigned)lv->width, (unsigned)lv->gate_x, -upper[l],
+               flight[l] ? "true" : "false");
 
         printf(" \"platforms\": [");
         for (first = 1, i = 0; i < MG_PLATFORM_COUNT; i++) {

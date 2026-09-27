@@ -52,7 +52,8 @@ git), whose initialisers `maiya_levels.h` builds the stage tables from.
   "pickups":    [{"x": 260, "y": 168, "kind": "silver"}],
   "decor":      [{"x": 150, "y": 160, "kind": "grass"}],
   "vines":      [{"x": 692, "top": 68, "bottom": 192}],
-  "npcs":       [{"x": 444, "who": "elder", "line": "THE GATE OPENS TO THE SUN KEY"}]
+  "npcs":       [{"x": 444, "who": "elder", "line": "THE GATE OPENS TO THE SUN KEY"}],
+  "waves":      [{"x": 900, "enemy": "gnat", "form": "swarm", "count": 5, "y": 100}]
 }
 ```
 
@@ -65,6 +66,19 @@ road, y 192), the key just above a ledge, and each climb's top on a ledge.
 
 A platform marked `"rotten": true` is drawn greyed and gives way under her:
 it trembles, drops out of sight and grows back a while later.
+
+`waves` (optional) is the spawn script: a flight of `count` (1 to 6)
+creatures sent when the view's right edge reaches `x`, flying formation
+`form` about height `y` -- `line` (in a row), `sine` (rising and falling),
+`vee` (a V, point first), `dive` (drops in from above, hangs, dives at
+her), `circle` (loops round a point), `swarm` (closes in on her), `charge`
+(squares up, shakes, rams across), `hover` (keeps pace ahead of her,
+firing). Waves come in x order.
+
+A stage with `"mechanic": "flight"` is flown on the sun eagle: the view
+scrolls on its own and its guardian meets her in the open sky at the end.
+It has no ledges, captives, gate, key, hideout, climbs, hazards or posted
+creatures (`gate_x` 0, `rescues` empty); its creatures come in waves.
 
 `upper` (optional, 0 when left out) gives a valley an upper tier: how many
 pixels above the screen it reaches. Its ledges, pickups, secrets, key and
@@ -80,7 +94,8 @@ Names stand for the game's constants, lower case without the prefix:
 | `enemy` | `MG_E_*` in `maiya_levels.h` | slime, beetle, crow, jellyfish, pair |
 | `hazards[].type` | `MG_H_*` | fire, spikes, sludge, toxic, pit |
 | `guardian.style` | `MG_B_*` | beetle, toad, leviathan, eel |
-| `mechanic` | `MG_M_*` in `maiya_game.c` | none, crumble, ice, water |
+| `mechanic` | `MG_M_*` in `maiya_game.c` | none, crumble, ice, water, flight |
+| `waves[].form` | `MG_FORM_*` in `maiya_levels.h` | line, sine, vee, dive, circle, swarm, charge, hover |
 | `pit` | `MG_PIT_*`: what lies at the bottom of its pits | water, fire, toxic, void |
 | `blocks` | `MG_BLOCKS_*`: the ledge set (and front-plane stone) | grass, moss, sand, autumn, snow, bark, rust, coral, stone, savanna |
 | `posted` | `MG_E_*`: who stands on the `archers` ledges, or none | none, goblin, drone, poachdrone |

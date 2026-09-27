@@ -41,7 +41,8 @@ void *NEOGEO_USER memset(void *destination, int value, size_t count)
 /*  Budgets and slots                                                 */
 /* ------------------------------------------------------------------ */
 enum {
-    MG_ENEMIES = 4, MG_SHOTS = 6, MG_SPARKS = 12, MG_ITEMS = 4,
+    MG_ENEMIES = 8, MG_SHOTS = 6,
+    MG_ROAD_ENEMIES = 4, /* at most this many at once on the road; the sky takes all eight */ MG_SPARKS = 12, MG_ITEMS = 4,
     MG_LEDGE_BLOCKS = 9, MG_HAZARD_BLOCKS = 6, MG_DECOR_SLOTS = 6, MG_SIGNS = 2,
     MG_NPC_SLOTS = 2, MG_FRONT_SLOTS = 3,
     MG_BULLETS = 16,     /* the bonus round's cannon fire (in the ledges' sprites) */
@@ -96,6 +97,8 @@ enum {
     PAL_HAZARD = 61, PAL_FACE = 43, PAL_PIT = 66,
     PAL_BLOCK_ROT = 67,  /* a rotten ledge: the valley's set, greyed and darker */
     PAL_FX = 64,         /* the light of her special moves */
+    /* The Sky Road's fliers. */
+    PAL_RHINO = 65, PAL_DRAGONFLY = 68, PAL_GNAT = 69, PAL_GUNSHIP = 70,
     /* FIX inks for the guardian's bar: dirty and toxic rather than the
      * clean traffic-light colours of her own -- it's the blight's health. */
     PAL_BOSS_HP_HI = 11, PAL_BOSS_HP_MID = 14, PAL_BOSS_HP_LO = 15,
@@ -108,7 +111,7 @@ enum {
     MG_INTERLUDE, MG_BOSS_INTRO, MG_WARP,
 
     HERO_STRIPS = 5, HERO_ROWS = 4, HERO_STRIDE = 5,
-    EAGLE_STRIPS = 4, EAGLE_ROWS = 3,
+    EAGLE_STRIPS = 8, EAGLE_ROWS = 3,
     BOSS_STRIPS = 8, BOSS_ROWS = 6, BOSS_STRIDE = 8,
 
     WALK_SPEED = 512, DASH_SPEED = 1280, JUMP_SPEED = 5 * NG_FP_ONE + 160,
@@ -147,7 +150,7 @@ enum {
     ROW_CLOCK = 3,
     MG_STAGE_TIME_COL = 22,         /* STAGE mm:ss:ff, right of the clock */
     /* What each valley throws at her besides its creatures. */
-    MG_M_NONE = 0, MG_M_CRUMBLE = 3, MG_M_ICE = 4, MG_M_WATER = 5,
+    MG_M_NONE = 0, MG_M_CRUMBLE = 3, MG_M_ICE = 4, MG_M_WATER = 5, MG_M_FLIGHT = 6,
     /* What lies at the bottom of a valley's pits (its stage file's "pit"). */
     MG_PIT_WATER = 0, MG_PIT_FIRE = 1, MG_PIT_TOXIC = 2, MG_PIT_VOID = 3,
     /* The ledge set a valley's shelves are built of (its stage file's "blocks"). */
@@ -219,6 +222,9 @@ typedef struct {
     int8_t  heading;       /* direction a committed move (charge, dive) is locked to        */
     int8_t  face;          /* which way it faces: only turns once she's clearly past it     */
     int16_t home;          /* where it was placed: the centre of its patrol                */
+    uint8_t form, slot_i;  /* flying in a wave: its formation (MG_FORM_*) and place in it  */
+    int16_t base_y;        /* the wave's height                                            */
+    uint16_t age;          /* frames since its wave came                                   */
 } MGEnemy;
 
 typedef struct {
@@ -298,6 +304,9 @@ typedef struct {
     uint8_t  leap_window;             /* frames left to leap high after kneeling */
     uint8_t  voice_next, voice_delay; /* a line waiting to be spoken, and when */
     uint8_t  fx_kind, fx_time;        /* the light over her (MG_LIGHT_*) and for how long */
+    uint8_t  flying;                  /* the Sky Road: on the eagle's back          */
+    int16_t  fly_x;                   /* how far the sky has carried the view       */
+    uint32_t wave_mask;               /* the spawn script's waves already sent      */
     uint8_t  flash;                   /* frames of Secret Art palette      */
     uint8_t  angel;                   /* rising-to-the-sky death           */
     uint8_t  flowers, critters;       /* bonus tally for the mission end   */
@@ -400,7 +409,7 @@ static int16_t NEOGEO_USER mg_abs(int16_t value)
  * white -- lift all of it together, and a bank loaded behind a fade comes
  * up with it instead of flashing through.
  */
-#define MG_PAL_BANKS 68u   /* up to PAL_BLOCK_ROT */
+#define MG_PAL_BANKS 71u   /* up to PAL_GUNSHIP */
 static uint16_t mg_pal_base[MG_PAL_BANKS * 16u];
 static uint16_t mg_pal_out[MG_PAL_BANKS * 16u];
 static uint8_t mg_pal_open;
@@ -706,6 +715,11 @@ static void NEOGEO_USER mg_background(uint8_t id, uint8_t restored)
         pal = restored ? mg_bg9_pal : mg_bg9_blight_pal;
         far_map = mg_bg9_map; road_map = mg_ground9_map; count = MG_BG9_BANKS;
         break;
+    case 10: /* the Sky Road: open sky over the snow peaks */
+        far_tile = MG_BG10_TILE; road_tile = MG_GROUND10_TILE;
+        pal = restored ? mg_bg10_pal : mg_bg10_blight_pal;
+        far_map = mg_bg10_map; road_map = mg_ground10_map; count = MG_BG10_BANKS;
+        break;
     default: /* Sunlit Emerald Forest */
         far_tile = MG_BG0_TILE; road_tile = MG_GROUND0_TILE;
         pal = restored ? mg_bg0_pal : mg_bg0_blight_pal;
@@ -922,7 +936,7 @@ static uint8_t NEOGEO_USER mg_mech(void)
  * water's own pull is in the steering (mg_swim), not in gravity. */
 static void NEOGEO_USER mg_player_gravity(void)
 {
-    if (mg.swimming) ng_physics_set_gravity(mg.player, 0, 3 * NG_FP_ONE);
+    if (mg.swimming || mg.flying) ng_physics_set_gravity(mg.player, 0, 4 * NG_FP_ONE);
     else if (mg_mech() == MG_M_WATER) ng_physics_set_gravity(mg.player, 34, 3 * NG_FP_ONE);
     else ng_physics_set_gravity(mg.player, 64, 6 * NG_FP_ONE);
 }
@@ -1136,6 +1150,14 @@ static void NEOGEO_USER mg_draw_front(int16_t camera_x)
     int16_t plane = (int16_t)(camera_x + camera_x / 4);
     int16_t lead = plane >= 0 ? (int16_t)((uint16_t)plane % 420u) : (int16_t)(plane % 420);
     uint8_t i;
+
+    if (mg.flying) {        /* no road in the sky, so nothing grows in front of it */
+        for (i = 0; i < MG_FRONT_SLOTS; i++) {
+            ng_sprite_group_set_visible(&mg.front[i], 0);
+            ng_sprite_group_flush(&mg.front[i]);
+        }
+        return;
+    }
 
     for (i = 0; i < MG_FRONT_SLOTS; i++) {
         /* Wrap only in the off-screen gap, never through the playfield. */
@@ -1356,11 +1378,19 @@ static void NEOGEO_USER mg_camera_follow(void)
         else if (p->vx_fp < -128) mg.cam_dir = -1;
     }
 
-    /* Held where it is through a hitstop or a pause; its shake runs on. */
-    mg.camera.mode = (ng_feedback_is_hitstop() || ng_pause_is_on()) ? NG_CAM_FREE : NG_CAM_FOLLOW;
-    /* Vertically it never moves: aimed at the screen's middle row, and
-     * its bounds hold it at 0 anyway. */
-    ng_camera_update(&mg.camera, p->x, NG_SCREEN_H / 2, mg.cam_dir);
+    if (mg.flying && !mg.boss_active) {
+        /* On the Sky Road the sky carries the view along at a pixel a
+         * frame (not through a hitstop or a pause), to the guardian. */
+        if (mg.state == MG_PLAY && !ng_feedback_is_hitstop() && !ng_pause_is_on() &&
+            mg.fly_x < mg.arena_left) mg.fly_x++;
+        mg.camera.x = mg.fly_x;
+    } else {
+        /* Held where it is through a hitstop or a pause; its shake runs on. */
+        mg.camera.mode = (ng_feedback_is_hitstop() || ng_pause_is_on()) ? NG_CAM_FREE : NG_CAM_FOLLOW;
+        /* Vertically it never moves: aimed at the screen's middle row, and
+         * its bounds hold it at 0 anyway. */
+        ng_camera_update(&mg.camera, p->x, NG_SCREEN_H / 2, mg.cam_dir);
+    }
 
     /* Her own knock-back jolt, on top of any impact shake -- neither may
      * show past the edge of the valley or the arena. */
@@ -1373,6 +1403,16 @@ static void NEOGEO_USER mg_camera_follow(void)
     mg.camera.x = (int16_t)(mg.camera.x + mg.shake_x);
     if (mg.camera.x < mg.camera.bound_left) mg.camera.x = mg.camera.bound_left;
     if (mg.camera.x > mg.camera.bound_right) mg.camera.x = mg.camera.bound_right;
+
+    /* On the wing she stays inside the view: the sky's left edge pushes
+     * her along, and she can't fly out of the right or the bottom (the
+     * top is ng_move's). */
+    if (mg.flying && mg.state == MG_PLAY) {
+        int16_t lo = (int16_t)(mg.camera.x + 40), hi = (int16_t)(mg.camera.x + 288);
+        if (p->x < lo) { ng_char_set_pos(p, lo, p->y); if (p->vx_fp < NG_FP_ONE) p->vx_fp = NG_FP_ONE; }
+        if (p->x > hi) { ng_char_set_pos(p, hi, p->y); if (p->vx_fp > 0) p->vx_fp = 0; }
+        if (p->y > 212) { ng_char_set_pos(p, p->x, 212); if (p->vy_fp > 0) p->vy_fp = 0; }
+    }
 
     /*
      * Up a tall climb the view rises with her, easing, once she is above
@@ -1460,6 +1500,10 @@ static void NEOGEO_USER mg_draw_light(int16_t camera_x)
 static void NEOGEO_USER mg_before_draw_hook(void)
 {
     if (mg.player) mg_camera_follow();
+    if (mg.eagle && mg.player) {
+        ng_char_set_pos(mg.eagle, mg.player->x, mg.player->y);
+        mg.eagle->visible = (uint8_t)(mg.player->visible && mg.state != MG_DEAD && mg.state != MG_OVER);
+    }
     ng_level_set_scroll(mg.camera.x, mg.cam_y);
     mg_scroll_scenery(mg.camera.x);
     if (mg.state == MG_BONUS) {
@@ -1532,6 +1576,10 @@ static const uint16_t *NEOGEO_USER mg_enemy_tiles(uint8_t type)
     case MG_E_VINESTING: return mg_vinesting_tiles;
     case MG_E_SPOREGOB: return mg_sporegob_tiles;
     case MG_E_WRAITH: return mg_acidmoth_tiles;
+    case MG_E_RHINO: return mg_rhino_tiles;
+    case MG_E_DRAGONFLY: return mg_dragonfly_tiles;
+    case MG_E_GNAT: return mg_gnat_tiles;
+    case MG_E_GUNSHIP: return mg_gunship_tiles;
     default:          return mg_slime_tiles;
     }
 }
@@ -1557,6 +1605,10 @@ static void NEOGEO_USER mg_enemy_canvas(uint8_t type, uint8_t *w, uint8_t *h, ui
     case MG_E_SLAGGOLEM:  MG_CANVAS(SLAGGOLEM);  break;
     case MG_E_VINESTING:  MG_CANVAS(VINESTING);  break;
     case MG_E_SPOREGOB:   MG_CANVAS(SPOREGOB);   break;
+    case MG_E_RHINO:      MG_CANVAS(RHINO);      break;
+    case MG_E_DRAGONFLY:  MG_CANVAS(DRAGONFLY);  break;
+    case MG_E_GNAT:       MG_CANVAS(GNAT);       break;
+    case MG_E_GUNSHIP:    MG_CANVAS(GUNSHIP);    break;
     default:              *w = 32u; *h = 32u; *bw = 24u; *bh = 24u; break;
     }
 }
@@ -1602,6 +1654,10 @@ static uint8_t NEOGEO_USER mg_enemy_palette(uint8_t type)
     case MG_E_VINESTING: return PAL_VINESTING;
     case MG_E_SPOREGOB: return PAL_SPOREGOB;
     case MG_E_WRAITH: return PAL_WRAITH;
+    case MG_E_RHINO: return PAL_RHINO;
+    case MG_E_DRAGONFLY: return PAL_DRAGONFLY;
+    case MG_E_GNAT: return PAL_GNAT;
+    case MG_E_GUNSHIP: return PAL_GUNSHIP;
     default:          return PAL_ENEMY0;
     }
 }
@@ -1630,7 +1686,7 @@ static void NEOGEO_USER mg_frame(NGCharacter *c, uint8_t frame, uint8_t flip)
 {
     uint16_t tile;
     if (c->kind == K_EAGLE) {
-        tile = mg_eagle_tiles[frame % 6u];
+        tile = mg_eagle_tiles[frame % MG_EAGLE_FRAMES];
     } else if (c->kind == K_BOSS) {
         const uint16_t *bt = mg_boss_tiles(c->data0);
         tile = bt[frame % MG_BOSS_FRAMES];
@@ -1660,10 +1716,10 @@ static NGCharacter *NEOGEO_USER mg_character(uint8_t kind, int16_t x, int16_t y,
     ng_physics_detach(c);
 
     if (kind == K_EAGLE) {
-        ng_char_set_sprite(c, NG_SPR_CHAR_FIRST, EAGLE_STRIPS, EAGLE_ROWS, mg_eagle_tiles[3], palette);
+        ng_char_set_sprite(c, NG_SPR_CHAR_FIRST, EAGLE_STRIPS, EAGLE_ROWS, mg_eagle_tiles[0], palette);
         ng_char_set_tile_stride(c, EAGLE_STRIPS);
-        c->sprite_offset_x = -32;
-        c->sprite_offset_y = -44;
+        c->sprite_offset_x = -64;      /* stood on its talons, wings spread either side */
+        c->sprite_offset_y = -46;
         ng_char_set_body(c, -18, -32, 36, 32);
     } else if (kind == K_BOSS) {
         const uint16_t *bt = mg_boss_tiles(subtype);
@@ -1888,7 +1944,8 @@ static void NEOGEO_USER mg_dust_burst(int16_t x, int16_t y)
 static uint8_t NEOGEO_USER mg_enemy_is_bug(uint8_t type)
 {
     return (uint8_t)(type == MG_E_BEETLE || type == MG_E_TOXICCRAB ||
-                     type == MG_E_ACIDMOTH || type == MG_E_CHEMFLY);
+                     type == MG_E_ACIDMOTH || type == MG_E_CHEMFLY ||
+                     type == MG_E_RHINO || type == MG_E_DRAGONFLY || type == MG_E_GNAT);
 }
 
 /* The shot takes its own tile: spit looks like spit and fire like fire,
@@ -2225,7 +2282,7 @@ static uint8_t NEOGEO_USER mg_stomp_rule(uint8_t type)
 {
     switch (type) {
     case MG_E_BEETLE: case MG_E_TOXICCRAB:                   return MG_STOMP_FLIP;
-    case MG_E_SLAGGOLEM:                                     return MG_STOMP_TOUGH;
+    case MG_E_SLAGGOLEM: case MG_E_RHINO: case MG_E_GUNSHIP: return MG_STOMP_TOUGH;
     case MG_E_DARTFROG: case MG_E_VINESTING: case MG_E_WRAITH: return MG_STOMP_HURT;
     default:                                                 return MG_STOMP_POP;
     }
@@ -2413,6 +2470,9 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg_ui_palettes();
     if (mg.stage != stage) mg.rescue_mask = 0;
     mg.stage = stage; mg.state = MG_INTRO;
+    mg.flying = (uint8_t)(mg_mech() == MG_M_FLIGHT);
+    mg.fly_x = 0;
+    mg.wave_mask = 0;
     mg.tick = mg.boss_timer = mg.encounter_mask = mg.archer_mask = 0;
     mg.walk_distance = 0;
     mg.climb_cooldown = 0; mg.airborne = 0; mg.land_pose = 0;
@@ -2461,8 +2521,9 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.previous_joy = poll_joystick();
 
     ng_level_set_world_bounds(0, 0, (int16_t)level->width, 224);
-    /* The road, in stretches: every pit is a gap in the ground itself. */
-    {
+    /* The road, in stretches: every pit is a gap in the ground itself.
+     * (The sky has none.) */
+    if (!mg.flying) {
         int16_t from = 0;
         uint8_t k, done[MG_HAZARD_COUNT];
         for (k = 0; k < MG_HAZARD_COUNT; k++) done[k] = 0;
@@ -2507,6 +2568,10 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg_palette(PAL_SLAGGOLEM, mg_slaggolem_pal);
     mg_palette(PAL_VINESTING, mg_vinesting_pal);
     mg_palette(PAL_SPOREGOB, mg_sporegob_pal);
+    mg_palette(PAL_RHINO, mg_rhino_pal);
+    mg_palette(PAL_DRAGONFLY, mg_dragonfly_pal);
+    mg_palette(PAL_GNAT, mg_gnat_pal);
+    mg_palette(PAL_GUNSHIP, mg_gunship_pal);
     mg_ghost_palette();
     mg_palette(PAL_TOOL, mg_tool_pal);
     mg_palette(PAL_PORTRAIT, mg_portrait_pal);
@@ -2537,13 +2602,24 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
      * her in above the road; a respawn uses the same entrance at the
      * position where she fell, keeping the key and gate progress.
      */
-    mg.entrance = 1;
-    mg.player = mg_character(K_PLAYER, 64, -24,
+    mg.entrance = (uint8_t)!mg.flying;
+    mg.player = mg_character(K_PLAYER, mg.flying ? 96 : 64, mg.flying ? 130 : -24,
                              PAL_HERO, NG_RENDER_BAND_PLAYER, 0);
     if (!mg.player) return;
     mg.player->hp = mg.player->max_hp = MAX_HP;
     ng_physics_attach(mg.player, NG_PHYSICS_GRAVITY | NG_PHYSICS_SOLIDS);
     mg_player_gravity();
+    if (mg.flying) {
+        /*
+         * On the Sky Road she kneels on the sun eagle's back. Her position
+         * is the eagle's talons -- what comes down on a creature from above
+         * -- so she is drawn higher, and her body takes in the bird.
+         */
+        mg.player->sprite_offset_x = -44;
+        mg.player->sprite_offset_y = -88;
+        ng_char_set_body(mg.player, -24, -70, 48, 70);
+        mg.eagle = mg_character(K_EAGLE, mg.player->x, mg.player->y, PAL_EAGLE, NG_RENDER_BAND_ENEMY, 0);
+    }
     mg_frame(mg.player, MG_F_IDLE0, 0);
     mg.player_prev_y = mg.player->y;
 
@@ -2633,7 +2709,8 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.fx_time = 0;
 
     /* Reserve the mandatory key before streaming optional pickups. */
-    if (!mg.has_key && !mg.gate_unlocked) mg_drop_key((int16_t)mg_key_pos[stage][0], (int16_t)mg_key_pos[stage][1]);
+    if (mg.flying) mg.gate_unlocked = 1;   /* no gate in the sky: its guardian waits at the end */
+    else if (!mg.has_key && !mg.gate_unlocked) mg_drop_key((int16_t)mg_key_pos[stage][0], (int16_t)mg_key_pos[stage][1]);
 
     /* Spawn initial wave immediately so enemies are on-screen from frame 1 */
     mg_spawn();
@@ -2651,16 +2728,20 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
         uint8_t k = 0;
         stage_msg[0] = 'M'; stage_msg[1] = 'I'; stage_msg[2] = 'S'; stage_msg[3] = 'S'; stage_msg[4] = 'I';
         stage_msg[5] = 'O'; stage_msg[6] = 'N'; stage_msg[7] = ' ';
-        stage_msg[8] = (char)('1' + stage); stage_msg[9] = ':'; stage_msg[10] = ' ';
+        uint8_t at = 8, n = (uint8_t)(stage + 1);
+        if (n >= 10) stage_msg[at++] = (char)('0' + n / 10u);
+        stage_msg[at++] = (char)('0' + n % 10u);
+        stage_msg[at++] = ':';
+        stage_msg[at++] = ' ';
         while (level->name[k] && k < 18) {
-            stage_msg[11 + k] = level->name[k];
+            stage_msg[at + k] = level->name[k];
             k++;
         }
-        stage_msg[11 + k] = '\0';
+        stage_msg[at + k] = '\0';
         mg_hint(stage_msg, PAL_GOLD, 120);
     }
 
-    if (mg.entrance) {
+    if (mg.entrance || mg.flying) {
         playSFX(SOUND_SFX_13);       /* the sun answers her */
         playSFX(SOUND_SFX_15);
         mg_centre(ROW_CARD + 6, retry ? "MAIYA: I AM NOT DONE YET!"
@@ -2670,6 +2751,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
                 0, 0, 0,
                 "ROTTEN LEDGES CRUMBLE - KEEP MOVING", "THE ROAD IS ICE - SHE WILL SLIDE",
                 "UNDERWATER - SWIM ANY WAY, A TO STROKE",
+                "ON THE SUN EAGLE: B THORNS, C SWOOP",
             };
             uint8_t m = mg_mech();
             if (m && m < sizeof(warn) / sizeof(warn[0]) && warn[m]) mg_centre(ROW_CARD + 8, warn[m], PAL_GOLD);
@@ -2678,7 +2760,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
 
     mg.music_on = 0;
     mg_music(level->music);
-    if (mg.entrance) mg_voice_later(retry ? MG_VOICE_RETRY : MG_VOICE_START, 40);
+    if (mg.entrance || mg.flying) mg_voice_later(retry ? MG_VOICE_RETRY : MG_VOICE_START, 40);
 }
 
 uint8_t NEOGEO_USER maiya_hero_choice(void);
@@ -2819,6 +2901,7 @@ void NEOGEO_USER maiya_demo_begin(void)
     mg.life_pickups_used = 0;
     mg.next_life_score = MG_BONUS_LIFE_SCORE_FIRST;
     mg.thorns = 0; mg.weapon = MG_W_NONE; mg.weapon_ammo = 0;
+    if (mg_stage_mech[demo_stage] == MG_M_FLIGHT) demo_stage = 0;   /* the demo walks */
     mg_scene(demo_stage, 0);
     ng_fix_clear_rect(1, ROW_HINT, 38, 9, PAL_TEXT);
     mg_centre(ROW_CARD + 2, "ATTRACT MODE", PAL_GOLD);
@@ -3355,7 +3438,8 @@ static uint8_t NEOGEO_USER mg_enemy_flies(uint8_t type)
 {
     return (uint8_t)(type == MG_E_CROW || type == MG_E_DRONE || type == MG_E_JELLYFISH ||
                      type == MG_E_ACIDMOTH || type == MG_E_SMOGBAT || type == MG_E_POACHDRONE ||
-                     type == MG_E_CHEMFLY || type == MG_E_PLASTICBAT || type == MG_E_WRAITH);
+                     type == MG_E_CHEMFLY || type == MG_E_PLASTICBAT || type == MG_E_WRAITH ||
+                     type >= MG_E_RHINO);
 }
 
 /* How many hits each kind takes before the valley's own difficulty is added. */
@@ -3366,6 +3450,7 @@ static uint8_t NEOGEO_USER mg_enemy_base_hp(uint8_t type)
     case MG_E_BEETLE:    return 3;
     case MG_E_DRONE: case MG_E_TOXICCRAB:
     case MG_E_POACHDRONE: case MG_E_VINESTING: return 2;
+    case MG_E_RHINO: case MG_E_GUNSHIP: return 3;
     default:             return 1;
     }
 }
@@ -3389,7 +3474,7 @@ static void NEOGEO_USER mg_wave(NGCharacter *b, int16_t centre, int16_t swing, i
  * met in the first seconds, need no introduction). */
 static void NEOGEO_USER mg_kind_hint(uint8_t type)
 {
-    static const char *const hint[MG_E_SPOREGOB + 1] = {
+    static const char *const hint[MG_E_GUNSHIP + 1] = {
         [MG_E_CROW]       = "CROW: IT DIVES - STRIKE AS IT SWOOPS",
         [MG_E_GOBLIN]     = "GOBLIN: IT HURLS SCRAP FROM LEDGES",
         [MG_E_WORM]       = "WORM: IT SPITS FROM ITS PIPE",
@@ -3405,9 +3490,13 @@ static void NEOGEO_USER mg_kind_hint(uint8_t type)
         [MG_E_SLAGGOLEM]  = "SLAG GOLEM: JUMP ITS SHOCKWAVE",
         [MG_E_VINESTING]  = "VINE STING: ROOTED - KEEP OUT OF REACH",
         [MG_E_SPOREGOB]   = "SPORE GOBLIN: DODGE ITS TOXIC PUFF",
+        [MG_E_RHINO]      = "HORN BEETLE: IT RAMS - THREE BLOWS",
+        [MG_E_DRAGONFLY]  = "DRAGONFLY: IT WEAVES IN A LINE",
+        [MG_E_GNAT]       = "GNATS: A SWARM - SCATTER THEM",
+        [MG_E_GUNSHIP]    = "GUNSHIP: IT FIRES - STRIKE FROM ABOVE",
     };
     uint32_t bit;
-    if (type > MG_E_SPOREGOB || mg.demo || mg.state != MG_PLAY) return;
+    if (type > MG_E_GUNSHIP || type == MG_E_WRAITH || mg.demo || mg.state != MG_PLAY) return;
     bit = (uint32_t)1u << type;
     if (mg.kinds_met & bit) return;
     mg.kinds_met |= bit;
@@ -3420,8 +3509,11 @@ static MGEnemy *NEOGEO_USER mg_spawn_enemy(uint8_t type, int16_t x, int16_t y, u
     MGEnemy *e;
     uint8_t pal = mg_enemy_palette(type);
 
-    for (slot = 0; slot < MG_ENEMIES; slot++) if (!mg.enemies[slot].body) break;
-    if (slot == MG_ENEMIES) return 0;
+    {
+        uint8_t cap = (uint8_t)(mg.flying ? MG_ENEMIES : MG_ROAD_ENEMIES);
+        for (slot = 0; slot < cap; slot++) if (!mg.enemies[slot].body) break;
+        if (slot == cap) return 0;
+    }
 
     /* A flyer placed on the road starts up in the air where it belongs. */
     if (!posted && mg_enemy_flies(type) && y >= MG_GROUND_Y - 4) y = (int16_t)(MG_GROUND_Y - 72);
@@ -3442,6 +3534,7 @@ static MGEnemy *NEOGEO_USER mg_spawn_enemy(uint8_t type, int16_t x, int16_t y, u
     if (mg.stage >= 4) e->body->hp++;
     if (mg.difficulty >= 2) e->body->hp++;   /* HARD and EXPERT */
     if (mg_stomp_rule(type) == MG_STOMP_TOUGH) e->body->hp = (uint8_t)(3u + (mg.difficulty >= 2));
+    if (type == MG_E_GNAT || type == MG_E_DRAGONFLY) e->body->hp = 1;   /* one of a flight: one blow */
     e->body->max_hp = e->body->hp;
 
     /*
@@ -3464,6 +3557,10 @@ static MGEnemy *NEOGEO_USER mg_spawn_enemy(uint8_t type, int16_t x, int16_t y, u
     e->move_timer = 0;
     e->heading = 1;
     e->face = (int8_t)((mg.player && mg.player->x < x) ? -1 : 1);
+    e->form = 0;
+    e->slot_i = 0;
+    e->base_y = y;
+    e->age = 0;
     mg_kind_hint(type);
     return e;
 }
@@ -3510,7 +3607,13 @@ static uint8_t NEOGEO_USER mg_boss_arrive(void)
     mg.boss_backoff = 0;
     mg.boss_px = 0;          /* the guardian's bar fills in as it appears */
     mg_arena_setup(level->boss_style);
-    mg_arena_background(level->boss_style);
+    if (mg.flying) {
+        /* fought in the open sky: no cover, and the sky stays behind */
+        mg.arena[0].width = 0;
+        mg.arena[1].width = 0;
+    } else {
+        mg_arena_background(level->boss_style);
+    }
     if (level->boss_style == MG_B_OWL || level->boss_style == MG_B_VULTURE) {
         ng_char_set_pos(mg.boss, mg.boss->x, MG_BOSS_SKY_Y);
     }
@@ -3543,11 +3646,70 @@ static void NEOGEO_USER mg_boss_announce(void)
 
 static void NEOGEO_USER mg_warp_begin(void);
 
+/*
+ * The spawn script (a stage file's "waves"): a flight of creatures sent
+ * when the view's right edge reaches its x, flying its formation about its
+ * height -- in a row, a wave, a V, dropping from above to dive at her,
+ * looping, swarming, charging, or keeping pace while firing (mg_form_step).
+ * A wave whose place is already well behind the view (a retry further on)
+ * is dropped, not sent late.
+ */
+static void NEOGEO_USER mg_wave_scan(void)
+{
+    const MGWave *w = mg_waves[mg.stage];
+    int16_t edge = (int16_t)(mg.camera.x + NG_SCREEN_W);
+    uint8_t i, k;
+
+    if (!w[0].x) return;
+    for (i = 0; i < MG_WAVE_COUNT; i++, w++) {
+        uint32_t bit = (uint32_t)1u << i;
+        if (!w->x) break;
+        if (mg.wave_mask & bit) continue;
+        if (w->x > edge + 16) break;              /* in x order: the rest lie further on */
+        mg.wave_mask |= bit;
+        if ((int16_t)(w->x + 200) < edge) continue;
+        for (k = 0; k < w->count; k++) {
+            int16_t x = (int16_t)(edge + 24), y = w->y;
+            MGEnemy *e;
+            switch (w->form) {
+            case MG_FORM_VEE:
+                x = (int16_t)(x + ((k + 1) >> 1) * 26);
+                y = (int16_t)(y + ((k & 1) ? 1 : -1) * ((k + 1) >> 1) * 18);
+                break;
+            case MG_FORM_DIVE:
+                x = (int16_t)(mg.camera.x + 150 + k * 56);
+                y = -30;
+                break;
+            case MG_FORM_SWARM:
+                x = (int16_t)(x + (k % 3) * 20);
+                y = (int16_t)(y + (int16_t)((k * 23) % 50) - 25);
+                break;
+            case MG_FORM_CHARGE:
+                x = (int16_t)(x + k * 60);
+                break;
+            default:
+                x = (int16_t)(x + k * 30);
+                break;
+            }
+            e = mg_spawn_enemy(w->type, x, y, 0);
+            if (!e) break;
+            e->form = w->form;
+            e->slot_i = k;
+            e->base_y = (w->form == MG_FORM_DIVE) ? w->y : y;
+            e->mood = 0;
+            e->move_timer = 0;
+            ng_physics_set_gravity(e->body, 0, 8 * NG_FP_ONE);
+        }
+    }
+}
+
 /* What comes into reach along the road: waves, posted throwers, pickups,
  * secrets, villagers and captives. */
 static void NEOGEO_USER mg_spawn_scan(const MGLevel *level, int16_t px)
 {
     uint8_t i;
+
+    mg_wave_scan();
 
     /* Encounter waves */
     for (i = 0; i < MG_ENCOUNTER_COUNT; i++) {
@@ -3666,7 +3828,7 @@ static void NEOGEO_USER mg_spawn(void)
     if (!mg.boss_active && mg.gate_unlocked && mg.state == MG_PLAY) {
         if (level->gate_x) {
             if (px >= (int16_t)level->gate_x + 8) mg_warp_begin();
-        } else if (px > mg.arena_left + 32 && mg_boss_arrive()) {
+        } else if ((mg.flying ? mg.fly_x >= mg.arena_left : px > mg.arena_left + 32) && mg_boss_arrive()) {
             mg_boss_announce();
         }
     }
@@ -3758,6 +3920,46 @@ static uint8_t NEOGEO_USER mg_throw(int16_t high)
     return 1;
 }
 
+/*
+ * On the sun eagle's back. The stick steers her eight ways through the sky
+ * (ng_move: a steady push settles at about two pixels a frame, and let go
+ * she keeps pace with the sky -- its current is the scroll); A beats the
+ * wings for a quick climb; B throws a thorn ahead; C is a swoop, a burst
+ * forward she can't be touched in, knocking down what she meets; D is the
+ * Secret Art. Coming down on a creature from above, the talons strike it
+ * (mg_enemy_contact, as a stomp).
+ */
+/* (`top` keeps her head just under the HUD.) */
+static const NGMoveParams mg_fly_sky = { 64, 3, 3 * NG_FP_ONE, 0, NG_FP_ONE, 0, 88 };
+static const NGMoveParams mg_fly_still = { 64, 3, 3 * NG_FP_ONE, 0, 0, 0, 88 };   /* the guardian's sky */
+
+static void NEOGEO_USER mg_fly_controls(NGCharacter *p, uint16_t joy, uint16_t pressed)
+{
+    int8_t dx = (int8_t)((joy & JOY_RIGHT) ? 1 : ((joy & JOY_LEFT) ? -1 : 0));
+    int8_t dy = (int8_t)((joy & JOY_DOWN) ? 1 : ((joy & JOY_UP) ? -1 : 0));
+
+    mg.facing = 0;
+    if (mg.dash) {
+        p->vx_fp = (int16_t)((mg.boss_active ? 0 : NG_FP_ONE) + 4 * NG_FP_ONE);
+        p->vy_fp = 0;
+    } else {
+        ng_move_steer(p, dx, dy, mg.boss_active ? &mg_fly_still : &mg_fly_sky);
+    }
+    if (pressed & BUTTON_A) {
+        p->vy_fp = -3 * NG_FP_ONE;           /* a wing beat */
+        mg.spin = 16;                        /* ...the eagle's wings go quicker */
+        playSFX(SOUND_SFX_15);
+    }
+    if (pressed & BUTTON_B) mg_throw(-52);   /* from her hands, kneeling on its back */
+    if ((pressed & BUTTON_C) && !mg.dash_wait) {
+        mg.dash = 14;
+        mg.dash_wait = 40;
+        mg_light(MG_LIGHT_TRAIL, 14);
+        playSFX(SOUND_SFX_15);
+    }
+    if (pressed & BUTTON_D) mg_secret_art();
+}
+
 static void NEOGEO_USER mg_controls(void)
 {
     uint16_t joy = mg_input();
@@ -3784,6 +3986,12 @@ static void NEOGEO_USER mg_controls(void)
         /* A knock eases off over a few frames instead of sliding her
          * seventy pixels at full speed for the whole stagger. */
         if (mg.hurt > HURT_LOCK) p->vx_fp -= p->vx_fp / 6;
+        mg.previous_joy = joy;
+        return;
+    }
+
+    if (mg.flying) {
+        mg_fly_controls(p, joy, pressed);
         mg.previous_joy = joy;
         return;
     }
@@ -4763,6 +4971,19 @@ static void NEOGEO_USER mg_enemy_contact(MGEnemy *e, NGCharacter *p)
         return;
     }
     if (e->mood == MG_MOOD_SHELL) return;
+    if (mg.dash && mg.flying) {
+        /* The eagle's swoop: what it meets goes down (the armoured ones
+         * take a blow each pass). */
+        if (mg_stomp_rule(e->type) == MG_STOMP_TOUGH && b->hp > 1) {
+            b->hp--;
+            e->hurt = 24;
+            playSFX(SOUND_SFX_4);
+        } else {
+            mg_enemy_defeat(e);
+            mg.score += 200u;
+        }
+        return;
+    }
     if (mg.dash && mg_stomp_rule(e->type) != MG_STOMP_HURT) {
         /* A dash bumps it aside, no harm to either. */
         b->vx_fp = p->x < b->x ? 1100 : -1100;
@@ -4776,6 +4997,130 @@ static void NEOGEO_USER mg_enemy_contact(MGEnemy *e, NGCharacter *p)
         e->body->vx_fp = p->x < e->body->x ? 900 : -900;
         e->hurt = 20;
     }
+}
+
+/*
+ * One creature of a wave, flying its formation. Speeds are in the world,
+ * so a creature that "hangs" keeps pace with the sky (`pace`, nothing once
+ * the view stops for the guardian). It is gone once it has flown out of
+ * the view.
+ */
+static void NEOGEO_USER mg_form_step(MGEnemy *e, NGCharacter *p)
+{
+    NGCharacter *b = e->body;
+    int16_t cam = mg.camera.x, sx = (int16_t)(b->x - cam);
+    int16_t pace = (int16_t)(mg.boss_active ? 0 : NG_FP_ONE);
+    uint16_t age = ++e->age;
+    uint8_t flip = 1;                              /* they come at her from the right */
+
+    switch (e->form) {
+    case MG_FORM_SINE:
+        b->vx_fp = (int16_t)(pace - 3 * NG_FP_ONE);
+        mg_wave(b, e->base_y, 34, 850, (uint8_t)(age * 4u + e->slot_i * 40u));
+        break;
+    case MG_FORM_DIVE:
+        if (e->mood == 0) {
+            /* drop in and hang a moment, then straight at where she is */
+            b->vx_fp = pace;
+            b->vy_fp = (int16_t)((e->base_y - b->y) * 12);
+            if (age > 36u + e->slot_i * 14u) {
+                uint8_t ang = ng_atan2((int16_t)((p->y - 30) - b->y), (int16_t)(p->x - b->x));
+                e->mood = 1;
+                b->vx_fp = (int16_t)(pace + ng_trig_mul(4 * NG_FP_ONE, ng_cos(ang)));
+                b->vy_fp = ng_trig_mul(4 * NG_FP_ONE, ng_sin(ang));
+            }
+        }
+        flip = (uint8_t)(b->vx_fp < pace);
+        break;
+    case MG_FORM_CIRCLE:
+        if (e->mood == 0) {
+            b->vx_fp = (int16_t)(pace - 3 * NG_FP_ONE);
+            b->vy_fp = (int16_t)((e->base_y - b->y) * 12);
+            if (sx < 230) { e->mood = 1; e->move_timer = 0; e->home = (int16_t)(sx - 56); }
+        } else if (e->mood == 1) {
+            /* a loop and a half round a point that keeps pace with the sky */
+            uint8_t ang = (uint8_t)(e->move_timer * 3u);
+            int16_t s = ng_sin(ang);
+            b->vx_fp = 0;
+            b->vy_fp = 0;
+            ng_char_set_pos(b, (int16_t)(cam + e->home + ng_trig_mul(56, ng_cos(ang))),
+                            (int16_t)(e->base_y - ng_trig_mul(40, s)));
+            flip = (uint8_t)(s > 0);
+            if (++e->move_timer >= 128) e->mood = 2;
+        } else {
+            b->vx_fp = (int16_t)(pace - 4 * NG_FP_ONE);
+            b->vy_fp = 0;
+        }
+        break;
+    case MG_FORM_SWARM:
+        if (age < 50u) {
+            b->vx_fp = (int16_t)(pace - 3 * NG_FP_ONE);
+            b->vy_fp = (int16_t)((e->base_y - b->y) * 8);
+        } else if (age < 330u) {
+            /* closing in on her, each with its own jitter */
+            int16_t rx = (int16_t)(b->vx_fp - pace + (p->x > b->x ? 20 : -20));
+            int16_t vy = (int16_t)(b->vy_fp + ((p->y - 30) > b->y ? 20 : -20));
+            if (rx > 3 * NG_FP_ONE / 2) rx = 3 * NG_FP_ONE / 2;
+            if (rx < -3 * NG_FP_ONE / 2) rx = -3 * NG_FP_ONE / 2;
+            if (vy > 3 * NG_FP_ONE / 2) vy = 3 * NG_FP_ONE / 2;
+            if (vy < -3 * NG_FP_ONE / 2) vy = -3 * NG_FP_ONE / 2;
+            b->vx_fp = (int16_t)(pace + rx);
+            b->vy_fp = (int16_t)(vy + ng_trig_mul(80, ng_sin((uint8_t)(age * 9u + e->slot_i * 60u))));
+        } else {
+            b->vx_fp = (int16_t)(pace - 4 * NG_FP_ONE);
+        }
+        flip = (uint8_t)(b->vx_fp < pace);
+        break;
+    case MG_FORM_CHARGE:
+        if (e->mood == 0) {
+            b->vx_fp = (int16_t)(pace - 2 * NG_FP_ONE);
+            b->vy_fp = (int16_t)((e->base_y - b->y) * 8);
+            if (sx < 262) { e->mood = 1; e->move_timer = 50; }
+        } else if (e->mood == 1) {
+            /* it squares up to her height, shaking, then rams across */
+            int16_t vy = (int16_t)(((p->y - 24) - b->y) * 8);
+            if (vy > 2 * NG_FP_ONE) vy = 2 * NG_FP_ONE;
+            if (vy < -2 * NG_FP_ONE) vy = -2 * NG_FP_ONE;
+            b->vx_fp = pace;
+            b->vy_fp = vy;
+            if (e->move_timer & 2) ng_char_set_pos(b, (int16_t)(b->x + ((e->move_timer & 4) ? 1 : -1)), b->y);
+            if (--e->move_timer == 0) { e->mood = 2; playSFX(SOUND_SFX_7); }
+        } else {
+            b->vx_fp = (int16_t)(pace - 5 * NG_FP_ONE);
+            b->vy_fp = 0;
+        }
+        break;
+    case MG_FORM_HOVER:
+        if (e->mood == 0) {
+            b->vx_fp = (int16_t)(pace - 2 * NG_FP_ONE);
+            b->vy_fp = (int16_t)((e->base_y - b->y) * 8);
+            if (sx < 236) e->mood = 1;
+        } else if (e->mood == 1) {
+            /* keeping pace ahead of her, bobbing, firing at her now and then */
+            b->vx_fp = pace;
+            mg_wave(b, e->base_y, 10, 250, (uint8_t)(age * 3u));
+            if ((age % mg_rate(96)) == 0u && sx < 300) {
+                uint8_t ang = ng_atan2((int16_t)((p->y - 30) - (b->y - 20)), (int16_t)(p->x - b->x));
+                mg_fire((int16_t)(b->x - 24), (int16_t)(b->y - 20), ng_trig_mul(3, ng_cos(ang)),
+                        ng_trig_mul(3, ng_sin(ang)), 1, MG_T_BOLT);
+                playSFX(SOUND_SFX_6);
+            }
+            if (age > 480u) e->mood = 2;
+        } else {
+            b->vx_fp = (int16_t)(pace - 3 * NG_FP_ONE);
+        }
+        break;
+    default:   /* MG_FORM_LINE, MG_FORM_VEE: straight across, holding station */
+        b->vx_fp = (int16_t)(pace - 3 * NG_FP_ONE);
+        b->vy_fp = (int16_t)((e->base_y - b->y) * 16);
+        break;
+    }
+    if (sx < -96 || sx > 520 || b->y > 280 || (age > 90u && b->y < -64)) {
+        ng_chars_remove(b);
+        e->body = 0;
+        return;
+    }
+    mg_frame(b, (uint8_t)((age / 6u) % mg_enemy_frames(e->type)), flip);
 }
 
 static void NEOGEO_USER mg_update_entities(void)
@@ -5066,6 +5411,9 @@ static void NEOGEO_USER mg_update_entities(void)
         int16_t dx = (int16_t)(p->x - e->body->x);
         if (e->mood == MG_MOOD_STUNNED || e->mood == MG_MOOD_SHELL) {
             mg_shell_step(e);
+            if (!e->body) continue;
+        } else if (e->form) {
+            mg_form_step(e, p);
             if (!e->body) continue;
         } else if (!e->posted) {
             NGCharacter *b = e->body;
@@ -5965,6 +6313,16 @@ static void NEOGEO_USER mg_world_step(void)
 static void NEOGEO_USER mg_animate_player(void)
 {
     NGCharacter *p = mg.player;
+
+    if (mg.flying) {
+        /* Kneeling on the eagle's back; it beats its wings, quicker after
+         * a climb, and glides through a swoop. */
+        mg_frame(p, (uint8_t)(mg.hurt > HURT_LOCK ? MG_F_HURT0 : MG_F_RIDE), 0);
+        if (mg.spin) mg.spin--;
+        if (mg.eagle)
+            mg_frame(mg.eagle, (uint8_t)(mg.dash ? 1u : ((mg.tick >> (mg.spin ? 2 : 3)) % MG_EAGLE_FRAMES)), 0);
+        return;
+    }
     uint8_t grounded = ng_physics_is_grounded(p) || mg.on_ledge || (p->y >= MG_GROUND_Y - 4);
 
     if (grounded && mg.airborne && !mg.climbing) {
@@ -6673,7 +7031,14 @@ void NEOGEO_USER maiya_frame(void)
         p->visible = 1;
         p->vx_fp = 0;
         if (mg.win_wait) mg.win_wait--;
-        if (mg.win_step == 0) {
+        if (mg.flying) {
+            /* On the wing: she and the eagle ride the sun, the guardian
+             * falls out of the sky. */
+            p->vy_fp = (int16_t)(((mg.state_timer >> 4) & 1u) ? 96 : -96);
+            mg_frame(p, MG_F_RIDE, 0);
+            if (mg.eagle) mg_frame(mg.eagle, (uint8_t)((mg.tick >> 3) % MG_EAGLE_FRAMES), 0);
+            if (mg.boss && !mg.boss_down) ng_physics_set_gravity(mg.boss, 48, 6 * NG_FP_ONE);
+        } else if (mg.win_step == 0) {
             mg_frame(p, grounded ? MG_F_IDLE0 : MG_F_JUMP3, mg.facing);
             if (grounded && mg.state_timer <= 196) {
                 mg.win_step = 1;
@@ -6810,7 +7175,8 @@ void NEOGEO_USER maiya_frame(void)
         mg.previous_joy = joy;
 
         mg.player->vx_fp = 0;
-        mg_frame(mg.player, MG_F_IDLE0, mg.facing);
+        if (mg.flying) mg.player->vy_fp = 0;
+        mg_frame(mg.player, (uint8_t)(mg.flying ? MG_F_RIDE : MG_F_IDLE0), mg.facing);
         if (mg.boss) {
             mg.boss->vx_fp = 0;
             mg_frame(mg.boss, (uint8_t)((mg.tick / 20) % 2), mg.facing);
