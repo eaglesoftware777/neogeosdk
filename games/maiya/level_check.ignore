@@ -3,3 +3,19 @@
 # Rules: outside inside under floating overlap. The reason after '#' is
 # required. Ignored findings are still printed, and a line that no longer
 # matches anything is reported.
+0 pickup 0 floating  # the sky lily: reached only by the kneeling high leap
+0 secret 2 floating  # a sun gem hung high: reached with the sky lily's second jump
+2 pickup 0 floating  # the sky lily: reached only by the kneeling high leap
+2 secret 1 floating  # a sun gem hung high: reached with the sky lily's second jump
+3 pickup 0 floating  # the sky lily: reached only by the kneeling high leap
+3 secret 2 floating  # a sun gem hung high: reached with the sky lily's second jump
+4 pickup 0 floating  # the sky lily: reached only by the kneeling high leap
+4 secret 0 floating  # a sun gem hung high: reached with the sky lily's second jump
+5 pickup 0 floating  # the sky lily: reached only by the kneeling high leap
+5 secret 2 floating  # a sun gem hung high: reached with the sky lily's second jump
+6 pickup 0 floating  # the sky lily: reached only by the kneeling high leap
+6 secret 2 floating  # a sun gem hung high: reached with the sky lily's second jump
+8 pickup 0 floating  # the sky lily: reached only by the kneeling high leap
+8 secret 0 floating  # a sun gem hung high: reached with the sky lily's second jump
+9 pickup 0 floating  # the sky lily: reached only by the kneeling high leap
+9 secret 2 floating  # a sun gem hung high: reached with the sky lily's second jump
