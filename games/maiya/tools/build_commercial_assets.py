@@ -550,12 +550,26 @@ def painted_cutout(src, width, height, pad, door=False):
     if not src.is_file():
         return None
     rgb = np.asarray(Image.open(src).convert("RGB")).astype(np.int16)
-    corner = rgb[2, 2]
-    near = np.abs(rgb - corner).sum(axis=2) < 90
-    lab, _ = ndi.label(near)
-    # (not the bottom row: the landmark stands on it, and its doorway opens onto it)
-    edge = np.unique(np.concatenate([lab[0], lab[:, 0], lab[:, -1]]))
-    back = np.isin(lab, edge[edge > 0])
+    hh, ww = rgb.shape[:2]
+    # The backdrop: a flat magenta, black or white met at the top corners or
+    # half way down the sides, and whatever of that colour joins it there
+    # (a painting may fill a corner with its own leaves).
+    back = np.zeros((hh, ww), dtype=bool)
+    for sy, sx in ((2, 2), (2, ww - 3), (hh // 2, 2), (hh // 2, ww - 3),
+                   (hh * 3 // 4, 2), (hh * 3 // 4, ww - 3), (hh * 7 // 8, 2), (hh * 7 // 8, ww - 3)):
+        col = rgb[sy, sx]
+        flat = ((col[0] > 200 and col[2] > 200 and col[1] < 90) or int(col.sum()) < 60 or int(col.sum()) > 720)
+        if not flat or back[sy, sx]:
+            continue
+        lab, _ = ndi.label(np.abs(rgb - col).sum(axis=2) < 90)
+        back |= lab == lab[sy, sx]
+    # specks the backdrop's own grain left behind would stretch the crop:
+    # only the picture itself, and the pieces of any size beside it, stay
+    lab, n = ndi.label(~back)
+    if n > 1:
+        sizes = ndi.sum(~back, lab, range(1, n + 1))
+        keep = np.flatnonzero(sizes >= sizes.max() * 0.02) + 1
+        back |= ~np.isin(lab, keep)
     alpha = np.where(back, 0, 255).astype(np.uint8)
     ys, xs = np.nonzero(alpha)
     y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
@@ -1521,14 +1535,23 @@ def build():
         "girl":   [(780, 315, 960, 560), (780, 315, 960, 560)],
     }
 
+    npc_masters = {}
     for nname, boxes in npcs.items():
         frames = fit_group(allies_img, {str(k): box for k, box in enumerate(boxes)},
                            NPC_CANVAS, NPC_HEIGHT)
-        shared_set(nname, frames)
+        npc_masters[nname] = shared_set(nname, frames)
         header.append(f"#define MG_{nname.upper()}_FRAMES {len(frames)}u")
         header.append(f"#define MG_{nname.upper()}_W {NPC_CANVAS[0]}u")
         header.append(f"#define MG_{nname.upper()}_H {NPC_CANVAS[1]}u")
         print(f"  NPC {nname} compiled", flush=True)
+
+    # A freed captive elder raises his hat to her: the same sage in a hat,
+    # then lifting it (assets/source_art/elder_salute.png), in the elder's
+    # own colours so the bank the captive was drawn in serves.
+    salute_img = Image.open(SOURCE / "elder_salute.png").convert("RGB")
+    salute = fit_group(salute_img, {"0": (148, 130, 590, 835), "1": (1196, 59, 1650, 835)},
+                       NPC_CANVAS, NPC_HEIGHT, bg_color="corner")
+    shared_set("eldersalute", salute, canvas_master=npc_masters["elder"])
 
     print("== 5. Compiling 10 Blight Guardians (128x96, 8 poses) ==", flush=True)
     # Each guardian's move sheet, eight poses in this order: idle, walk,
