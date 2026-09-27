@@ -356,6 +356,7 @@ typedef struct {
     int16_t  player_prev_y;
     uint8_t  combo_buffer[8], combo_timer;
     uint8_t  bonus_shots, bonus_hits, bonus_timer;
+    uint8_t  bonus_life, bonus_safe;  /* hits she can still take in the round; frames she is safe after one */
     int16_t  bonus_cursor_x, bonus_cursor_y;
     char     hint_text[36];
     uint8_t  hint_timer;
@@ -6223,6 +6224,8 @@ static void NEOGEO_USER mg_draw_clock(void)
         mg_number(12, ROW_CLOCK, (uint32_t)((mg.state_timer + 59u) / 60u), 3, PAL_TEXT);
         ng_fix_puts(7, ROW_CLOCK + 1, "GOLD", PAL_GOLD);
         mg_number(12, ROW_CLOCK + 1, mg.bonus_hits, 3, PAL_TEXT);
+        ng_fix_puts(7, ROW_CLOCK + 2, "LIFE", PAL_GOLD);
+        mg_number(12, ROW_CLOCK + 2, mg.bonus_life, 3, mg.bonus_life > 1u ? PAL_TEXT : PAL_WARN);
         return;
     }
     ng_fix_puts(7, ROW_CLOCK, "TIME", PAL_GOLD);
@@ -6992,7 +6995,10 @@ static void NEOGEO_USER mg_interlude(uint8_t next_stage)
  * cleared is points; clear enough and the valley gives a life back. One
  * touch and the round is over on the spot -- no health lost, no reward.
  */
-enum { MG_BONUS_TIME = 1500, MG_BONUS_CARD = 150, MG_BONUS_OUTRO = 90, MG_BONUS_PERFECT = 8 };
+enum { MG_BONUS_TIME = 1500, MG_BONUS_CARD = 150, MG_BONUS_OUTRO = 90, MG_BONUS_PERFECT = 8,
+       MG_BONUS_ARRIVE = 180,   /* the drone keeps away this long, then flies in...          */
+       MG_BONUS_OPEN = 270,     /* ...and fires its first shot here, four and a half seconds in */
+       MG_BONUS_LIVES = 3, MG_BONUS_SAFE = 90 };
 
 static void NEOGEO_USER mg_bonus_clear_creatures(uint8_t poof)
 {
@@ -7021,31 +7027,43 @@ static void NEOGEO_USER mg_bonus_fire_stop(void)
 }
 
 /*
- * The blight cannon: it drifts from side to side over the field and
- * fires rings of shots in every direction, each ring turned a little from
- * the last so the gaps wander; from the fourth valley on it also fires
- * straight at her. How dense and how fast grows with the valley and the
- * operator's difficulty. One shot touching her ends the round.
+ * The blight cannon: the poachers' drone. It keeps away for the first
+ * three seconds, flies in over the field, and then fires rings of shots in
+ * every direction, each ring turned a little from the last so the gaps
+ * wander. The rounds grow harder one by one -- the first a sparse, slow
+ * ring every second and a half; each later round, and the harder operator
+ * settings, a shot more, a little quicker, a little sooner, and from the
+ * fourth step on one aimed at her between rings. She can take three shots
+ * (a moment's safety after each); the third ends the round.
  */
 static void NEOGEO_USER mg_bonus_cannon(NGCharacter *p)
 {
-    uint8_t level = (uint8_t)(mg.next_stage + mg.difficulty * 2u);
-    uint8_t ring = (uint8_t)(6u + (level >> 1));
-    uint8_t period = (uint8_t)(level * 4u >= 40u ? 30u : 70u - level * 4u);
-    int16_t speed = (int16_t)(18 + level * 2);                /* 1/16 px a frame */
-    int16_t cx = (int16_t)(160 + ng_trig_mul(110, ng_sin((uint8_t)(mg.state_timer >> 1))));
-    int16_t cy = 64;
+    int8_t step = (int8_t)(mg.next_stage / 2u) - 1 + ((int8_t)mg.difficulty - 1);
+    uint8_t ring, period;
+    int16_t speed, cx, cy = 64;
     uint16_t age = (uint16_t)(MG_BONUS_TIME - mg.state_timer);
     uint8_t i, k;
 
-    if (ring > 12u) ring = 12u;
-    ng_sprite_group_set_pos(&mg.cannon, (int16_t)(cx - (int16_t)(MG_POACHDRONE_W / 2u)), (int16_t)(cy - 24));
-    ng_sprite_group_set_tile_base(&mg.cannon, mg_poachdrone_tiles[(mg.state_timer >> 3) & 1u]);
-    ng_sprite_group_set_visible(&mg.cannon, 1);
-    ng_sprite_group_flush(&mg.cannon);
+    if (step < 0) step = 0;
+    if (step > 6) step = 6;
+    ring = (uint8_t)(4 + step);
+    period = (uint8_t)(96 - step * 8);
+    speed = (int16_t)(14 + step * 2);                      /* 1/16 px a frame */
+    cx = (int16_t)(160 + ng_trig_mul(110, ng_sin((uint8_t)(mg.state_timer >> 1))));
 
-    /* Quiet while the card is up, then a ring every `period` frames. */
-    if (age > MG_BONUS_CARD && (age % period) == 0u) {
+    if (age < MG_BONUS_ARRIVE) {
+        ng_sprite_group_set_visible(&mg.cannon, 0);
+        ng_sprite_group_flush(&mg.cannon);
+    } else {
+        /* it drops in from above the screen, then holds its height */
+        if (age < MG_BONUS_OPEN) cy = (int16_t)(-40 + (int16_t)((age - MG_BONUS_ARRIVE) * 104u / (MG_BONUS_OPEN - MG_BONUS_ARRIVE)));
+        ng_sprite_group_set_pos(&mg.cannon, (int16_t)(cx - (int16_t)(MG_POACHDRONE_W / 2u)), (int16_t)(cy - 24));
+        ng_sprite_group_set_tile_base(&mg.cannon, mg_poachdrone_tiles[(mg.state_timer >> 3) & 1u]);
+        ng_sprite_group_set_visible(&mg.cannon, 1);
+        ng_sprite_group_flush(&mg.cannon);
+    }
+
+    if (age >= MG_BONUS_OPEN && ((age - MG_BONUS_OPEN) % period) == 0u) {
         for (k = 0, i = 0; k < ring && i < MG_BULLETS; i++) {
             MGBullet *b = &mg.bullets[i];
             uint8_t a = (uint8_t)(mg.cannon_angle + (uint8_t)((256u * k) / ring));
@@ -7053,13 +7071,13 @@ static void NEOGEO_USER mg_bonus_cannon(NGCharacter *p)
             b->x = (int16_t)(cx << 4); b->y = (int16_t)(cy << 4);
             b->vx = ng_trig_mul(speed, ng_cos(a));
             b->vy = ng_trig_mul(speed, ng_sin(a));
-            b->life = 200;
+            b->life = 220;
             k++;
         }
         mg.cannon_angle = (uint8_t)(mg.cannon_angle + 11u);
         playSFX(SOUND_SFX_5);
     }
-    if (level >= 3 && age > MG_BONUS_CARD && (age % period) == period / 2u) {
+    if (step >= 3 && age >= MG_BONUS_OPEN && ((age - MG_BONUS_OPEN) % period) == period / 2u) {
         /* One aimed at her. */
         for (i = 0; i < MG_BULLETS; i++) {
             MGBullet *b = &mg.bullets[i];
@@ -7067,12 +7085,13 @@ static void NEOGEO_USER mg_bonus_cannon(NGCharacter *p)
             if (b->life) continue;
             a = ng_atan2((int16_t)((p->y - 24) - cy), (int16_t)(p->x - cx));
             b->x = (int16_t)(cx << 4); b->y = (int16_t)(cy << 4);
-            b->vx = ng_trig_mul((int16_t)(speed + 8), ng_cos(a));
-            b->vy = ng_trig_mul((int16_t)(speed + 8), ng_sin(a));
-            b->life = 200;
+            b->vx = ng_trig_mul((int16_t)(speed + 6), ng_cos(a));
+            b->vy = ng_trig_mul((int16_t)(speed + 6), ng_sin(a));
+            b->life = 220;
             break;
         }
     }
+    if (mg.bonus_safe) mg.bonus_safe--;
     for (i = 0; i < MG_BULLETS; i++) {
         MGBullet *b = &mg.bullets[i];
         int16_t x, y;
@@ -7087,7 +7106,12 @@ static void NEOGEO_USER mg_bonus_cannon(NGCharacter *p)
         } else {
             ng_sprite_group_set_pos(&mg.bullet_spr[i], (int16_t)(x - 8), (int16_t)(y - 8));
             ng_sprite_group_set_visible(&mg.bullet_spr[i], 1);
-            if (mg_abs((int16_t)(x - p->x)) < 8 && y > p->y - 42 && y < p->y - 2) mg_bonus_caught();
+            /* her body, not the air around her */
+            if (mg_abs((int16_t)(x - p->x)) < 7 && y > p->y - 40 && y < p->y - 4) {
+                b->life = 0;
+                ng_sprite_group_set_visible(&mg.bullet_spr[i], 0);
+                mg_bonus_caught();
+            }
         }
         ng_sprite_group_flush(&mg.bullet_spr[i]);
     }
@@ -7108,6 +7132,8 @@ static void NEOGEO_USER mg_bonus_enter(uint8_t next_stage)
     mg.bonus_hits = 0;
     mg.bonus_shots = 0;
     mg.bonus_timer = 0;
+    mg.bonus_life = MG_BONUS_LIVES;
+    mg.bonus_safe = 0;
     mg.boss = 0;
     mg.boss_active = 0;
     mg.rescue = 0;
@@ -7143,6 +7169,7 @@ static void NEOGEO_USER mg_bonus_enter(uint8_t next_stage)
     ng_fix_clear_rect(1, ROW_HINT, 38, 10, PAL_TEXT);
     mg_centre(ROW_CARD, "BONUS ROUND", PAL_GOLD);
     mg_centre(ROW_CARD + 2, "DODGE THE CANNON - GRAB THE GOLD", PAL_TEXT);
+    mg_centre(ROW_CARD + 4, "SHE CAN TAKE THREE HITS", PAL_SKY);
     mg.hud_dirty = 1;
     playSFX(SOUND_SFX_13);
 }
@@ -7150,7 +7177,17 @@ static void NEOGEO_USER mg_bonus_enter(uint8_t next_stage)
 /* A creature reached her: the round ends here, and the reward with it. */
 static void NEOGEO_USER mg_bonus_caught(void)
 {
-    if (mg.bonus_timer) return;          /* already winding down */
+    if (mg.bonus_timer || mg.bonus_safe) return;   /* winding down, or safe a moment after a hit */
+    if (mg.bonus_life > 1u) {
+        mg.bonus_life--;
+        mg.bonus_safe = MG_BONUS_SAFE;
+        mg.hurt = MG_BONUS_SAFE;                   /* her colours pulse while she is safe */
+        mg.shake = 4;
+        playSFX(SOUND_SFX_16);
+        mg.hud_dirty = 1;
+        return;
+    }
+    mg.bonus_life = 0;
     mg.bonus_timer = MG_BONUS_OUTRO;
     mg.player->vx_fp = 0;
     mg.shake = 8;
@@ -7191,7 +7228,7 @@ static void NEOGEO_USER mg_bonus_frame(void)
     /* Every coin grabbed here counts toward the reward. */
     mg.bonus_hits = (uint8_t)(mg.coins - mg.bonus_coins);
     if ((mg.state_timer % 60u) == 0u) mg.hud_dirty = 1;
-    if (mg.state_timer == MG_BONUS_TIME - MG_BONUS_CARD) ng_fix_clear_rect(1, ROW_CARD, 38, 3, PAL_TEXT);
+    if (mg.state_timer == MG_BONUS_TIME - MG_BONUS_CARD) ng_fix_clear_rect(1, ROW_CARD, 38, 5, PAL_TEXT);
     if (mg.hud_dirty) {
         mg_update_hud();
         mg.hud_dirty = 0;
@@ -7203,13 +7240,14 @@ static void NEOGEO_USER mg_bonus_frame(void)
         mg_bonus_clear_creatures(1);
         mg_bonus_fire_stop();
         mg.score += 3000u;
+        if (mg.bonus_life == MG_BONUS_LIVES) mg.score += 2000u;   /* not a single hit */
         mg.hud_dirty = 1;
         if (mg.bonus_hits >= MG_BONUS_PERFECT && mg.lives < MAX_LIVES) {
             mg.lives++;
             mg_centre(ROW_CARD, "PERFECT! ONE LIFE RETURNED", PAL_GOLD);
             playSFX(SOUND_SFX_12);
         } else {
-            mg_centre(ROW_CARD, "UNTOUCHED! WELL DONE!", PAL_GOLD);
+            mg_centre(ROW_CARD, mg.bonus_life == MG_BONUS_LIVES ? "UNTOUCHED! WELL DONE!" : "YOU MADE IT THROUGH!", PAL_GOLD);
         }
         playSFX(SOUND_SFX_13);
         mg.bonus_timer = MG_BONUS_OUTRO;

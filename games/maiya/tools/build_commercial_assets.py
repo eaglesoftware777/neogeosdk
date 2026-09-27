@@ -998,6 +998,12 @@ def build():
         "cast2": (473, 780, 763, 990), "win": (810, 780, 964, 990),
     }
     hf = fit_group(m_img, hero_boxes, HERO_CANVAS, HERO_HEIGHT)
+    # The victory pose raises a leafy branch above her head: its box used to
+    # start below her crown and cut her head and hand off. Cut it whole and
+    # fit it on its own, branch and all, into the frame (the sheet draws
+    # this figure larger than her others, so this keeps her about her usual
+    # height), standing on her feet.
+    hf["win"] = fit_group(m_img, {"win": (790, 728, 1012, 995)}, HERO_CANVAS, HERO_CANVAS[1] - 2)["win"]
     hf = {name: clean_sprite(f, white_area=10) for name, f in hf.items()}
 
     # Resting poses are not on the sheet: fold a standing frame onto its heels
