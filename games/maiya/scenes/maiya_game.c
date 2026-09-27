@@ -170,7 +170,7 @@ enum {
 
     /* FIX rows: 2..29 are visible (8 px each). ROW_POWER was reserved but
      * never used until the boss HP bar took it. */
-    ROW_SCORE = 2, ROW_LIVES = 4, ROW_POWER = 5, ROW_HINT = 7, ROW_CARD = 8,
+    ROW_SCORE = 2, ROW_LIVES = 4, ROW_POWER = 5, ROW_COMBO = 6, ROW_HINT = 7, ROW_CARD = 8,
     MG_PAUSE_ROW = 12,               /* PAUSE, in the mission card's space */
 
     /* HUD glyphs written into the low FIX codes by build_fix_assets.py. */
@@ -315,6 +315,7 @@ typedef struct {
     uint8_t  boss_phase;              /* Lord Smoggar's last stand: 0, 1, 2         */
     uint8_t  end_page;                /* the ending: which page                     */
     uint16_t end_timer;               /* ...and how long it has been up             */
+    uint8_t  combo_n, combo_t, combo_show; /* creatures beaten in a row, time left to add one, its read-out */
     uint8_t  flash;                   /* frames of Secret Art palette      */
     uint8_t  angel;                   /* rising-to-the-sky death           */
     uint8_t  flowers, critters;       /* bonus tally for the mission end   */
@@ -2054,6 +2055,8 @@ static void NEOGEO_USER mg_draw_tray(void);
 static void NEOGEO_USER mg_update_hud(void);
 static void NEOGEO_USER mg_stage_time_reset(void);
 static void NEOGEO_USER mg_stage_time_final(void);
+static void NEOGEO_USER mg_stage_rank(void);
+static void NEOGEO_USER mg_combo_add(void);
 static void NEOGEO_USER mg_draw_hp_bar(void);
 static void NEOGEO_USER mg_draw_clock(void);
 static void NEOGEO_USER mg_arena_setup(uint8_t style);
@@ -2106,6 +2109,7 @@ static void NEOGEO_USER mg_enemy_damage(MGEnemy *e, uint8_t damage)
         ng_impact_event(MG_IMPACT_KILL, 0, 0, &mg.camera, SOUND_SFX_10, 0, 0, 0, 0);
         mg.score += 250u;
         mg.kills++;
+        mg_combo_add();
 
         /*
          * What the blight was holding: coins mostly, a heart or a rose now
@@ -2372,7 +2376,7 @@ static void NEOGEO_USER mg_boss_damage(uint8_t damage)
         if (!mg.arena_bg) mg_background(mg_levels[mg.stage].background, 1);
         mg_centre(ROW_CARD + 2, "EARTH RESTORED!", PAL_GOLD);
         mg_centre(ROW_CARD + 4, "THE BLIGHT IS CLEANSED", PAL_SKY);
-        if (!mg.demo) mg_stage_time_final();
+        if (!mg.demo) { mg_stage_time_final(); mg_stage_rank(); }
     } else {
         b->hp -= damage;
         mg.hud_dirty = 1;
@@ -2571,6 +2575,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
 
     soundStopAll();
     mg.voice_delay = 0;     /* nothing said in the last scene carries over */
+    mg.combo_n = mg.combo_t = mg.combo_show = 0;
     mg_backdrop(0x8000);
     ng_fix_clear();
     ng_sprite_hide_all();
@@ -6237,6 +6242,79 @@ static void NEOGEO_USER mg_draw_stage_time(void)
 }
 
 /* The clear: the final time under the victory lines, and the best. */
+/*
+ * The combo: every creature beaten within a second and two thirds of the
+ * last adds one, shown at the right under the HUD; when the chain breaks it
+ * pays out n x n x 50 (a chain of ten, 5000) and the total stays up a
+ * moment.
+ */
+enum { MG_COMBO_TIME = 100, MG_COMBO_SHOW = 90, MG_COMBO_COL = 26 };
+
+static void NEOGEO_USER mg_combo_add(void)
+{
+    if (mg.state != MG_PLAY) return;
+    if (mg.combo_t) { if (mg.combo_n < 99u) mg.combo_n++; }
+    else mg.combo_n = 1;
+    mg.combo_t = MG_COMBO_TIME;
+    if (mg.combo_n >= 2u) {
+        mg.combo_show = 0;
+        ng_fix_clear_rect(MG_COMBO_COL, ROW_COMBO, 13, 1, PAL_TEXT);
+        ng_fix_puts(MG_COMBO_COL, ROW_COMBO, "COMBO X", PAL_GOLD);
+        mg_number(MG_COMBO_COL + 7, ROW_COMBO, mg.combo_n, 2, PAL_TEXT);
+    }
+}
+
+static void NEOGEO_USER mg_combo_tick(void)
+{
+    if (mg.combo_show && --mg.combo_show == 0)
+        ng_fix_clear_rect(MG_COMBO_COL, ROW_COMBO, 13, 1, PAL_TEXT);
+    if (!mg.combo_t || --mg.combo_t) return;
+    if (mg.combo_n >= 2u) {
+        uint16_t bonus = (uint16_t)((uint16_t)mg.combo_n * mg.combo_n * 50u);
+        mg.score += bonus;
+        ng_fix_clear_rect(MG_COMBO_COL, ROW_COMBO, 13, 1, PAL_TEXT);
+        ng_fix_putc(MG_COMBO_COL, ROW_COMBO, '+', PAL_GOLD);
+        mg_number(MG_COMBO_COL + 1, ROW_COMBO, bonus, 5, PAL_GOLD);
+        mg.combo_show = MG_COMBO_SHOW;
+        playSFX(SOUND_SFX_12);
+    }
+    mg.combo_n = 0;
+}
+
+/*
+ * The stage's rank, on the clear card: two points each for time (inside
+ * par -- the road's length at 120 px a second, plus a minute for the
+ * guardian; the sky road's flight is its own length), for health (no hit
+ * taken and no life lost; one for three hits or fewer), and for secrets
+ * (every one found and the vault; one for half). Six is S, five A, three
+ * or four B, one or two C, none D, worth 10000, 5000, 2000, 500 or 0.
+ */
+static void NEOGEO_USER mg_stage_rank(void)
+{
+    static const char ranks[5] = { 'S', 'A', 'B', 'C', 'D' };
+    static const uint16_t bonus[5] = { 10000u, 5000u, 2000u, 500u, 0u };
+    const MGLevel *lv = &mg_levels[mg.stage];
+    uint16_t used = (uint16_t)(MG_LEVEL_SECONDS - mg.clock);
+    uint16_t par = (uint16_t)(lv->width / 120u + 60u + (mg.flying ? 40u : 0u));
+    uint8_t pts = 0, have = 0, found = 0, i, r;
+    char line[] = "RANK X";
+
+    if (used <= par) pts += 2; else if (used <= par + par / 2u) pts += 1;
+    if (!mg.level_falls && !mg.attempt_hits) pts += 2; else if (!mg.level_falls && mg.attempt_hits <= 3u) pts += 1;
+    for (i = 0; i < MG_SECRET_COUNT; i++) {
+        if (!lv->secrets[i].x) continue;
+        have++;
+        if (mg.secret_mask & (1u << i)) found++;
+    }
+    if (mg_hideout[mg.stage].x) { have++; if (mg.vault_done) found++; }
+    if (have && found == have) pts += 2; else if (have && found * 2u >= have) pts += 1;
+
+    r = (uint8_t)(pts >= 6 ? 0 : pts == 5 ? 1 : pts >= 3 ? 2 : pts >= 1 ? 3 : 4);
+    line[5] = ranks[r];
+    mg_centre(ROW_CARD + 11, line, r == 0 ? PAL_GOLD : (r <= 2 ? PAL_SKY : PAL_TEXT));
+    mg.score += bonus[r];
+}
+
 static void NEOGEO_USER mg_stage_time_final(void)
 {
     uint32_t t = ng_game_time_stage_frame();
@@ -7394,6 +7472,7 @@ void NEOGEO_USER maiya_frame(void)
         mg_rescue_check();
 
         mg_clock_tick();
+        mg_combo_tick();
         mg_bars_step();
         mg_stage_mechanics();
         /* Fell into a pit: that's the life, however much health is left. */
