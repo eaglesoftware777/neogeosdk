@@ -22,6 +22,8 @@
   "art": {"name": "SUNFLARE DANCE", "words": "MAIYA: SUN, BURN THE BLIGHT!"},
   "secret_hint": "SHAKE THE BLOSSOM TREE FOR GOLD",
   "sunboy": ["AUTUMN KEEPS ITS SEED. WELL DONE", "THE GROTTO HOLDS MY CRYSTAL"],
+  "healed": ["THE GROVE GLOWS GOLD, NOT FIRE", "THE DEER GRAZE UNDER THE MAPLES"],
+  "briefing": ["THE GROVE BURNS AND ITS FLOOR ROTS", "THE INFERNO JACKAL LIT THE FIRES"],
   "platforms": [
     {"x": 272, "y": 140, "w": 96},
     {"x": 472, "y": 104, "w": 80, "rotten": true},

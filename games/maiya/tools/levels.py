@@ -141,6 +141,13 @@ class Stage:
         if len(sunboy) != 2:
             self.fail("sunboy", "needs two lines")
         s["sunboy"] = [self.text({"line": t}, "line", f"sunboy[{i}]") for i, t in enumerate(sunboy)]
+        # What her work healed (the elder says it after the guardian falls),
+        # and the elder's briefing before the stage: its pollution, its foe.
+        for key in ("healed", "briefing"):
+            lines = self.get(d, key, "stage", list)
+            if len(lines) != 2:
+                self.fail(key, "needs two lines")
+            s[key] = [self.text({"line": t}, "line", f"{key}[{i}]") for i, t in enumerate(lines)]
 
         s["platforms"] = [(self.num(p, "x", w, 1, width), self.num(p, "y", w, top, 223), self.num(p, "w", w, 16, 1024))
                           for w, p in self.rows("platforms", "MG_PLATFORM_COUNT")]
@@ -296,6 +303,8 @@ def render(stages, files):
     out.append(table("MG_ART_WORDS_TABLE", [c_string(s["art_words"]) for s in stages]))
     out.append(table("MG_SECRET_HINT_TABLE", [c_string(s["secret_hint"]) for s in stages]))
     out.append(table("MG_BOSS_HINT_TABLE", [c_string(s["boss_hint"]) for s in stages]))
+    out.append(table("MG_HEALED_TABLE", [f"{{{c_string(s['healed'][0])}, {c_string(s['healed'][1])}}}" for s in stages]))
+    out.append(table("MG_BRIEFING_TABLE", [f"{{{c_string(s['briefing'][0])}, {c_string(s['briefing'][1])}}}" for s in stages]))
     out.append(table("MG_SUNBOY_TABLE", [f"{{{c_string(s['sunboy'][0])}, {c_string(s['sunboy'][1])}}}" for s in stages]))
     out.append(table("MG_PICKS_TABLE", [tuples(s["pickups"], 3) for s in stages]))
     out.append(table("MG_BOSS_TAUNT_TABLE", [c_string(s["taunt"]) for s in stages]))

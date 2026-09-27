@@ -22,6 +22,8 @@
   "art": {"name": "TIDE BLOSSOM", "words": "MAIYA: TIDE, TAKE IT BACK!"},
   "secret_hint": "THE OLD PIER HIDES A COIN HOARD",
   "sunboy": ["THE SEA IS SINGING AGAIN", "THE GROVE IS BURNING. GO THERE"],
+  "healed": ["THE TIDE WASHES THE SAND CLEAN", "THE CRABS AND THE GULLS COME HOME"],
+  "briefing": ["OIL AND PLASTIC CHOKE THE COAST", "A LEVIATHAN OF WASTE RULES THE BAY"],
   "platforms": [
     {"x": 340, "y": 144, "w": 96},
     {"x": 564, "y": 108, "w": 80},

@@ -22,6 +22,8 @@
   "art": {"name": "FROST PETAL STORM", "words": "MAIYA: FROST, HOLD THEM STILL!"},
   "secret_hint": "ICE KEEPS A FRIEND: FREE IT",
   "sunboy": ["I CAN SEE YOU THROUGH THE ICE", "TWO VALLEYS LEFT. THE WORLD TREE"],
+  "healed": ["THE ICE SHINES LIKE GLASS AGAIN", "THE SPRING BENEATH IT RUNS PURE"],
+  "briefing": ["SMOG HAS FROZEN INTO THE GROTTO", "ITS ICE IS SLICK - TREAD WITH CARE"],
   "platforms": [
     {"x": 376, "y": 144, "w": 96},
     {"x": 636, "y": 108, "w": 80},

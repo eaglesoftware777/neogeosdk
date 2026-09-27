@@ -43,6 +43,8 @@ git), whose initialisers `maiya_levels.h` builds the stage tables from.
   "art": {"name": "ROSE WIND STRIKE", "words": "MAIYA: ROSE WIND, CARRY ME!"},
   "secret_hint": "...",
   "sunboy": ["...", "..."],
+  "healed": ["THE OLD TREES BREATHE FREELY AGAIN", "..."],
+  "briefing": ["A CHAINSAW BEETLE TEARS THE FOREST", "..."],
   "platforms":  [{"x": 320, "y": 140, "w": 96}],
   "encounters": [{"x": 180, "enemy": "slime"}],
   "archers":    [{"x": 510, "y": 104}],
@@ -66,6 +68,10 @@ road, y 192), the key just above a ledge, and each climb's top on a ledge.
 
 A platform marked `"rotten": true` is drawn greyed and gives way under her:
 it trembles, drops out of sight and grows back a while later.
+
+`healed` is what her work gave back, told by the elder in the healed
+valley after its guardian falls; `briefing` is the elder's word before the
+stage, on its pollution and its foe (two lines each).
 
 `waves` (optional) is the spawn script: a flight of `count` (1 to 6)
 creatures sent when the view's right edge reaches `x`, flying formation

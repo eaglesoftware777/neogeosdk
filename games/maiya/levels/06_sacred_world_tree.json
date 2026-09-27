@@ -23,6 +23,8 @@
   "art": {"name": "WORLD TREE BLOOM", "words": "MAIYA: WORLD TREE, BLOOM!"},
   "secret_hint": "THE ROOT HOLLOW HOLDS ONE LIFE",
   "sunboy": ["THE TREE BREATHES. I AM SO CLOSE", "THE WORKS ON THE RIVER. LAST ONE"],
+  "healed": ["THE WORLD TREE STANDS TALL AGAIN", "ITS BRANCHES BLOOM TO THE SKY"],
+  "briefing": ["LORD SMOGGAR ROTS THE WORLD TREE", "CLIMB IT, AND FACE HIM AT ITS ROOTS"],
   "platforms": [
     {"x": 296, "y": 144, "w": 96},
     {"x": 520, "y": 104, "w": 80},
