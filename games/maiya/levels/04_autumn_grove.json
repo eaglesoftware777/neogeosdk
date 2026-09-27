@@ -24,7 +24,7 @@
   "secret_hint": "SHAKE THE BLOSSOM TREE FOR GOLD",
   "sunboy": ["AUTUMN KEEPS ITS SEED. WELL DONE", "THE GROTTO HOLDS MY CRYSTAL"],
   "healed": ["THE GROVE GLOWS GOLD, NOT FIRE", "THE DEER GRAZE UNDER THE MAPLES"],
-  "briefing": ["THE GROVE BURNS AND ITS FLOOR ROTS", "THE INFERNO JACKAL LIT THE FIRES"],
+  "briefing": ["TORCH BOTS SET THE GROVE ABLAZE", "FOR THE INFERNO JACKAL"],
   "platforms": [
     {"x": 272, "y": 140, "w": 96},
     {"x": 472, "y": 104, "w": 80, "rotten": true},
@@ -62,13 +62,16 @@
     {"x": 2252, "enemy": "goblin"},
     {"x": 2396, "enemy": "crow"},
     {"x": 2540, "enemy": "pair"},
+    {"x": 2688, "enemy": "torchbot"},
     {"x": 2832, "enemy": "worm"},
     {"x": 2976, "enemy": "goblin"},
     {"x": 3124, "enemy": "crow"},
     {"x": 3268, "enemy": "acidmoth"},
     {"x": 3444, "enemy": "goblin"},
+    {"x": 3752, "enemy": "torchbot"},
     {"x": 3854, "enemy": "sporegob"},
-    {"x": 4100, "enemy": "worm"}
+    {"x": 4100, "enemy": "worm"},
+    {"x": 4360, "enemy": "torchbot"}
   ],
   "archers": [
     {"x": 500, "y": 104},

@@ -25,7 +25,7 @@
   "secret_hint": "THE DEEP VEIN GLINTS WITH GOLD",
   "sunboy": ["THE CAVE BREATHES CLEAN AIR AGAIN", "ONE VALLEY LEFT: THE OPEN SAVANNA"],
   "healed": ["THE MINE HAS FALLEN SILENT AT LAST", "THE CAVE'S SILVER SHINES AGAIN"],
-  "briefing": ["THE MINERS DIG POISON FROM THE CAVE", "A WYRM OF SLAG COILS IN THE DEEP"],
+  "briefing": ["DRILL BOTS DIG POISON FROM THE CAVE", "A WYRM OF SLAG COILS IN THE DEEP"],
   "platforms": [
     {"x": 268, "y": 144, "w": 160},
     {"x": 536, "y": 120, "w": 128},
@@ -77,12 +77,16 @@
     {"x": 4028, "enemy": "plasticbat"},
     {"x": 4276, "enemy": "worm"},
     {"x": 4436, "enemy": "goblin"},
+    {"x": 4740, "enemy": "drillbot"},
     {"x": 4846, "enemy": "slaggolem"},
+    {"x": 5108, "enemy": "drillbot"},
     {"x": 5374, "enemy": "goblin"},
     {"x": 5584, "enemy": "goblin"},
+    {"x": 5772, "enemy": "drillbot"},
     {"x": 5942, "enemy": "slaggolem"},
     {"x": 6162, "enemy": "goblin"},
-    {"x": 6472, "enemy": "plasticbat"}
+    {"x": 6472, "enemy": "plasticbat"},
+    {"x": 6636, "enemy": "drillbot"}
   ],
   "archers": [
     {"x": 572, "y": 120},

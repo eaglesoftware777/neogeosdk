@@ -49,6 +49,14 @@
 #define MG_E_DRAGONFLY 20 /* darts in, hangs, darts on                       */
 #define MG_E_GNAT      21 /* one of a swarm that closes in on her            */
 #define MG_E_GUNSHIP   22 /* the smog fleet's gunship: it fires as it flies  */
+/* The polluters: who dirtied the valleys for their guardians. */
+#define MG_E_BAGOCTO   23 /* a plastic bag of junk on tentacles: flings plastic  */
+#define MG_E_BINOCTO   24 /* a bin bag of it: tougher, flings two cans at a time */
+#define MG_E_SAWBOT    25 /* the loggers' machine: revs its saw, then charges  */
+#define MG_E_DRILLBOT  26 /* the miners' machine: bursts along the road, drill first */
+#define MG_E_TORCHBOT  27 /* the burners' machine: tramps up and breathes fire */
+#define MG_E_SMOGSTACK 28 /* a walking chimney: belches balls of smog at her  */
+#define MG_E_SLUDGEBARREL 29 /* a leaking drum: waddles up, spits sludge over */
 
 /* How a wave flies (a stage file's "waves"; see mg_form_step). */
 #define MG_FORM_LINE   1  /* in a row, straight across                     */

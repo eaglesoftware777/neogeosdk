@@ -24,7 +24,7 @@
   "secret_hint": "A ROSE SLEEPS ABOVE THE ARCH",
   "sunboy": ["MAIYA! THE FOREST BREATHES AGAIN", "THE MARSH FALLS ARE NEXT. HURRY"],
   "healed": ["THE OLD TREES BREATHE FREELY AGAIN", "THE LOGGERS' SAWS HAVE FALLEN SILENT"],
-  "briefing": ["A CHAINSAW BEETLE TEARS THE FOREST", "STOP IT BEFORE THE LAST TREE FALLS"],
+  "briefing": ["SAW BOTS FELL THE FOREST FOR THE", "CHAINSAW BEETLE. STOP THEM ALL!"],
   "platforms": [
     {"x": 320, "y": 140, "w": 96},
     {"x": 480, "y": 104, "w": 80},
@@ -48,7 +48,9 @@
     {"x": 1100, "enemy": "beetle"},
     {"x": 1420, "enemy": "dartfrog"},
     {"x": 1740, "enemy": "beetle"},
+    {"x": 1896, "enemy": "sawbot"},
     {"x": 2060, "enemy": "acidmoth"},
+    {"x": 2216, "enemy": "sawbot"},
     {"x": 2380, "enemy": "beetle"},
     {"x": 2540, "enemy": "beetle"},
     {"x": 2700, "enemy": "dartfrog"},

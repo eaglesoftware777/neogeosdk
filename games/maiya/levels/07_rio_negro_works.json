@@ -24,7 +24,7 @@
   "secret_hint": "A LIFE HANGS ABOVE THE FIRST TANK",
   "sunboy": ["YOU FREED ME! I FELT THE CHAINS BREAK", "THREE MORE VALLEYS NEED US. LET'S GO"],
   "healed": ["THE RIVER RUNS BLACK NO MORE", "THE OLD WORKS STAND STILL AND QUIET"],
-  "briefing": ["THE WORKS POUR POISON IN THE RIVER", "AN IRON VULTURE GUARDS THE FURNACES"],
+  "briefing": ["SMOG STACKS POISON THE RIVER", "AN IRON VULTURE GUARDS THE FURNACES"],
   "platforms": [
     {"x": 332, "y": 144, "w": 96},
     {"x": 576, "y": 104, "w": 96},
@@ -71,8 +71,12 @@
     {"x": 3984, "enemy": "crow"},
     {"x": 4160, "enemy": "pair"},
     {"x": 4428, "enemy": "pair"},
+    {"x": 4648, "enemy": "smogstack"},
     {"x": 4872, "enemy": "goblin"},
-    {"x": 5282, "enemy": "drone"}
+    {"x": 5176, "enemy": "binocto"},
+    {"x": 5282, "enemy": "drone"},
+    {"x": 5536, "enemy": "binocto"},
+    {"x": 5792, "enemy": "smogstack"}
   ],
   "archers": [
     {"x": 608, "y": 104},
