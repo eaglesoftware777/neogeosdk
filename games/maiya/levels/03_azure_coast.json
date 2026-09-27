@@ -9,6 +9,7 @@
   "climb": "rope",
   "posted": "goblin",
   "gate_x": 4168,
+  "landmark": "coast",
   "key": {"x": 2380, "y": 46},
   "hideout": {"x": 3864, "y": 72, "hint": "KNEEL ON THE LAST HIGH PIER"},
   "guardian": {
@@ -39,8 +40,7 @@
     {"x": 3044, "y": 72, "w": 96},
     {"x": 3292, "y": 144, "w": 96},
     {"x": 3540, "y": 108, "w": 80},
-    {"x": 3808, "y": 72, "w": 96},
-    {"x": 4372, "y": 144, "w": 96}
+    {"x": 3808, "y": 72, "w": 96}
   ],
   "encounters": [
     {"x": 248, "enemy": "beetle"},
@@ -58,9 +58,9 @@
     {"x": 3132, "enemy": "beetle"},
     {"x": 3312, "enemy": "goblin"},
     {"x": 3492, "enemy": "pair"},
+    {"x": 3672, "enemy": "toxiccrab"},
     {"x": 3856, "enemy": "slime"},
-    {"x": 4036, "enemy": "beetle"},
-    {"x": 4216, "enemy": "toxiccrab"}
+    {"x": 4036, "enemy": "beetle"}
   ],
   "archers": [
     {"x": 596, "y": 108},

@@ -121,6 +121,9 @@ class Stage:
         else:
             s["posted"] = self.name(d, "posted", "stage", "enemy", "MG_E_")
         s["gate_x"] = self.num(d, "gate_x", "stage", 0, width)
+        # What the gate stands in: a great tree, a cliff, a mountain... (a
+        # stage with no gate has none).
+        s["landmark"] = self.name(d, "landmark", "stage", "landmark", "MG_LM_") if s["gate_x"] else "0xFFu"
         key = self.get(d, "key", "stage", dict)
         s["key"] = (self.num(key, "x", "key", 0, width), self.num(key, "y", "key", top, 223))
         hide = self.get(d, "hideout", "stage", dict)
@@ -204,6 +207,23 @@ class Stage:
                 self.fail(f"waves[{i}].x", f"{wx[i]}: waves come in x order (after {wx[i - 1]})")
         if gate >= width - 320:
             self.fail("gate_x", f"{gate} leaves no arena: keep it under width - 320 ({width - 320})")
+        if gate:
+            # The gate is the last thing in the valley: its landmark stands
+            # from gate - 80, the view ends with it, and nothing may reach
+            # into it or lie past it; the road before it is clear of hazards.
+            edge = gate - 80
+            for key in ("platforms", "encounters", "archers", "rescues", "secrets", "pickups", "decor", "vines", "npcs"):
+                for i, r in enumerate(self.data.get(key, [])):
+                    end = r["x"] + r.get("w", 32 if key in ("pickups", "secrets", "decor", "vines") else 0)
+                    if end > edge:
+                        self.fail(f"{key}[{i}]", f"reaches x {end}, past {edge}: the gate ({gate}) is the "
+                                  "valley's last thing, and its landmark stands from gate - 80")
+            for i, r in enumerate(self.data.get("hazards", [])):
+                if r["x"] + r["w"] > gate - 96:
+                    self.fail(f"hazards[{i}]", f"ends at {r['x'] + r['w']}: keep the last 96 px before the gate clear")
+            for key in ("key", "hideout"):
+                if self.data[key]["x"] > edge:
+                    self.fail(f"{key}.x", f"{self.data[key]['x']} is past {edge}, in the gate's landmark")
         for i, (x, y, w) in enumerate(s["platforms"]):
             if w % 16:
                 self.fail(f"platforms[{i}].w", f"{w} is not a multiple of 16")
@@ -324,6 +344,7 @@ def render(stages, files):
     out.append(table("MG_POSTED_TABLE", [s["posted"] for s in stages]))
     out.append(table("MG_WAVES_TABLE", [tuples(s["waves"], 5) for s in stages]))
     out.append(table("MG_RUSH_TABLE", ["{" + ",".join(s["rush"] + ["0xFFu"]) + "}" for s in stages]))
+    out.append(table("MG_LANDMARK_TABLE", [s["landmark"] for s in stages]))
     out.append(table("MG_FLIGHT_TABLE", ["1" if s["mechanic"] == "MG_M_FLIGHT" else "0" for s in stages]))
     out.append("#endif")
     return "\n".join(out) + "\n"
@@ -345,6 +366,7 @@ def load():
         # here and the compiler checks them instead.
         "MG_D_": defines(GAME / "artbox" / "generated" / "maiya_assets.h", "MG_D_"),
         "MG_K_": defines(GAME / "artbox" / "generated" / "maiya_assets.h", "MG_K_"),
+        "MG_LM_": defines(GAME / "artbox" / "generated" / "maiya_assets.h", "MG_LM_"),
     }
     cap = caps()
     return files, [Stage(f, names, cap).build() for f in files]

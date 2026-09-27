@@ -9,6 +9,7 @@
   "climb": "chain",
   "posted": "drone",
   "gate_x": 8028,
+  "landmark": "citadel",
   "key": {"x": 2630, "y": 28},
   "hideout": {"x": 3760, "y": 72, "hint": "KNEEL ON THE LAST HIGH GANTRY"},
   "guardian": {
@@ -152,7 +153,7 @@
     {"x": 2460, "y": 160, "kind": "lantern"},
     {"x": 3160, "y": 160, "kind": "rock"},
     {"x": 3900, "y": 160, "kind": "lantern"},
-    {"x": 7948, "y": 160, "kind": "sign"}
+    {"x": 7900, "y": 160, "kind": "sign"}
   ],
   "vines": [
     {"x": 676, "top": 80, "bottom": 192},
