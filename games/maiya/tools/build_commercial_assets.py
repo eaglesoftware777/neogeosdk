@@ -524,6 +524,70 @@ def fit_group(img, boxes, canvas, target_h, bg_color="white", pad=2, sharpen=Tru
     return frames
 
 
+def painted_landmark(name):
+    """A landmark's painting (assets/source_art/landmark_<name>.png) fitted to
+    192 x 176, its foot on the bottom row and its middle -- the doorway -- in
+    the middle; None if there is no painting, and then landmark_art.py draws
+    it."""
+    return painted_cutout(SOURCE / f"landmark_{name}.png", 192, 176, 0, door=True)
+
+
+def painted_machine(name):
+    """A polluter machine's painting (assets/source_art/machine_<name>.png),
+    64 x 48 standing on its feet, as two frames: the second a pixel lower, so
+    it judders as it goes; None if there is none (polluter_art.py draws it)."""
+    frame = painted_cutout(SOURCE / f"machine_{name}.png", 64, 48, 2)
+    if frame is None:
+        return None
+    return {"0": frame, "1": np.roll(frame, 1, axis=0)}
+
+
+def painted_cutout(src, width, height, pad, door=False):
+    """A painting on a flat backdrop, cut out and fitted to width x height
+    with its foot on the bottom (pad px up) and centred. The backdrop is only
+    what joins the top or sides in the corner's colour, so a dark doorway or
+    outline inside the picture stays."""
+    if not src.is_file():
+        return None
+    rgb = np.asarray(Image.open(src).convert("RGB")).astype(np.int16)
+    corner = rgb[2, 2]
+    near = np.abs(rgb - corner).sum(axis=2) < 90
+    lab, _ = ndi.label(near)
+    # (not the bottom row: the landmark stands on it, and its doorway opens onto it)
+    edge = np.unique(np.concatenate([lab[0], lab[:, 0], lab[:, -1]]))
+    back = np.isin(lab, edge[edge > 0])
+    alpha = np.where(back, 0, 255).astype(np.uint8)
+    ys, xs = np.nonzero(alpha)
+    y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
+    cut = Image.fromarray(np.dstack([rgb.astype(np.uint8), alpha])[y0:y1, x0:x1], "RGBA")
+    scale = min(width / cut.width, (height - pad) / cut.height)
+    w, h = max(1, round(cut.width * scale)), max(1, round(cut.height * scale))
+    small = np.asarray(cut.resize((w, h), Image.Resampling.LANCZOS)).copy()
+    small[:, :, 3] = np.where(small[:, :, 3] >= 128, 255, 0)
+    small = sharpen_sprite(small)
+    out = np.zeros((height, width, 4), dtype=np.uint8)
+    ox, oy = (width - w) // 2, height - pad - h
+    if door:
+        # the doorway -- the biggest dark hollow in the lower half -- over
+        # the middle, where the gate is drawn
+        luma = small[:, :, :3].astype(int).sum(axis=2)
+        dark = (luma < 120) & (small[:, :, 3] > 0)
+        dark[: h // 2] = False
+        lab, n = ndi.label(dark)
+        if n:
+            sizes = ndi.sum(dark, lab, range(1, n + 1))
+            ys, xs = np.nonzero(lab == int(np.argmax(sizes)) + 1)
+            ox = int(np.clip(width // 2 - int(xs.mean()), width - w - 24, 24)) if w > width - 48 else width // 2 - int(xs.mean())
+            ox = max(min(ox, width - w + 24), -24)
+    sx0, dx0 = max(0, -ox), max(0, ox)
+    cw = min(w - sx0, width - dx0)
+    out[oy:oy + h, dx0:dx0 + cw] = small[:, sx0:sx0 + cw]
+    # the last of a magenta backdrop at the edges, where the painting was blended into it
+    r, g, b = (out[:, :, k].astype(int) for k in range(3))
+    out[(r > 150) & (b > 150) & (g < r - 70) & (g < b - 70), 3] = 0
+    return out
+
+
 def squash(frame, factor=0.62, lean=0):
     """Compress a standing frame onto its heels: a crouch, or a seated rest."""
     alpha = frame[:, :, 3] >= 128
@@ -1421,7 +1485,7 @@ def build():
     new_creatures["bagocto"] = (set1_img, (64, 48), 40, {"0": (24, 564, 271, 721), "1": (277, 559, 484, 724)})
     new_creatures["binocto"] = (set1_img, (64, 48), 40, {"0": (515, 562, 745, 724), "1": (769, 560, 1008, 724)})
     for mname, painter in polluter_art.MACHINES:
-        new_creatures[mname] = {"0": painter(0), "1": painter(1)}
+        new_creatures[mname] = painted_machine(mname) or {"0": painter(0), "1": painter(1)}
 
     for cname, spec in new_creatures.items():
         if isinstance(spec, dict):
@@ -1598,7 +1662,8 @@ def build():
     lm_names = [name for name, _ in landmark_art.LANDMARKS]
     lm_banks = []
     for k, (name, painter) in enumerate(landmark_art.LANDMARKS):
-        _, pals = append(f"landmark_{name}", painter(), banks=3, bank_base=landmark_bank)
+        art = painted_landmark(name)
+        _, pals = append(f"landmark_{name}", painter() if art is None else art, banks=3, bank_base=landmark_bank)
         lm_banks.append(len(pals))
         header.append(f"#define MG_LM_{name.upper()} {k}u")
     header.append(f"#define MG_LANDMARKS {len(lm_names)}u")
