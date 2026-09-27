@@ -19,7 +19,7 @@
     "taunt": "THE SKY BELONGS TO THE SMOG!",
     "reply": "NOT WHILE THE SUN EAGLE FLIES!"
   },
-  "art": {"name": "SUN EAGLE SKY DANCE", "words": "MAIYA: FLY ON, SUN EAGLE!"},
+  "art": {"kind": "gale", "name": "LEAF GALE", "words": "MAIYA: WIND, LIFT US HIGHER!"},
   "secret_hint": "A SUN GEM RIDES THE LOW CLOUDS",
   "sunboy": ["THE SKY IS CLEAR ONCE MORE", "THE EAGLE WILL CARRY US HOME"],
   "healed": ["THE SKY IS BLUE FROM END TO END", "THE BIRDS SING OVER THE PEAKS AGAIN"],

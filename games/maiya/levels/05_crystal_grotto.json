@@ -19,7 +19,7 @@
     "taunt": "I FROZE THE GROTTO'S HEART TO STONE!",
     "reply": "WINTER ENDS. I AM ITS SPRING!"
   },
-  "art": {"name": "FROST PETAL STORM", "words": "MAIYA: FROST, HOLD THEM STILL!"},
+  "art": {"kind": "frost", "name": "FROST PETAL STORM", "words": "MAIYA: FROST, HOLD THEM STILL!"},
   "secret_hint": "ICE KEEPS A FRIEND: FREE IT",
   "sunboy": ["I CAN SEE YOU THROUGH THE ICE", "TWO VALLEYS LEFT. THE WORLD TREE"],
   "healed": ["THE ICE SHINES LIKE GLASS AGAIN", "THE SPRING BENEATH IT RUNS PURE"],

@@ -19,7 +19,7 @@
     "taunt": "I FED THE LIVING REEF TO MY HUNGER!",
     "reply": "THE TIDE WILL CARRY YOU OUT INSTEAD!"
   },
-  "art": {"name": "TIDE BLOSSOM", "words": "MAIYA: TIDE, TAKE IT BACK!"},
+  "art": {"kind": "rain", "name": "PURIFYING RAIN", "words": "MAIYA: TIDE, TAKE IT BACK!"},
   "secret_hint": "THE OLD PIER HIDES A COIN HOARD",
   "sunboy": ["THE SEA IS SINGING AGAIN", "THE GROVE IS BURNING. GO THERE"],
   "healed": ["THE TIDE WASHES THE SAND CLEAN", "THE CRABS AND THE GULLS COME HOME"],

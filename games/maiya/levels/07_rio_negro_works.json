@@ -19,7 +19,7 @@
     "taunt": "I BUILT THIS PLANT TO CHOKE YOUR RIVER!",
     "reply": "YOUR SMOKE ENDS HERE, IRON VULTURE!"
   },
-  "art": {"name": "RIVER OF LIGHT", "words": "MAIYA: RIVER, RUN CLEAR AGAIN!"},
+  "art": {"kind": "sun", "name": "SUNFLARE DANCE", "words": "MAIYA: SUN, BURN THEIR SMOKE AWAY!"},
   "secret_hint": "A LIFE HANGS ABOVE THE FIRST TANK",
   "sunboy": ["YOU FREED ME! I FELT THE CHAINS BREAK", "THREE MORE VALLEYS NEED US. LET'S GO"],
   "healed": ["THE RIVER RUNS BLACK NO MORE", "THE OLD WORKS STAND STILL AND QUIET"],

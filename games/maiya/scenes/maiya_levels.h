@@ -196,6 +196,8 @@ static const char *const mg_briefing[MG_LEVEL_COUNT][2] = MG_BRIEFING_TABLE;
 /* The Secret Art Maiya carries in each valley: the roses she gathers
  * charge it, and D unleashes it. */
 static const char *const mg_art_name[MG_LEVEL_COUNT] = MG_ART_NAME_TABLE;
+/* Which of the five Secret Arts is this valley's (MG_ART_*). */
+static const uint8_t mg_art_kind[MG_LEVEL_COUNT] = MG_ART_KIND_TABLE;
 
 /* What she calls out as each art breaks over the valley. */
 static const char *const mg_art_words[MG_LEVEL_COUNT] = MG_ART_WORDS_TABLE;

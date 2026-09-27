@@ -20,7 +20,7 @@
     "taunt": "I DRINK THE WORLD TREE DRY FOR POWER!",
     "reply": "ITS ROOTS RUN DEEPER THAN YOUR GREED!"
   },
-  "art": {"name": "WORLD TREE BLOOM", "words": "MAIYA: WORLD TREE, BLOOM!"},
+  "art": {"kind": "blossom", "name": "ROSE BLOSSOM STORM", "words": "MAIYA: WORLD TREE, BLOOM!"},
   "secret_hint": "THE ROOT HOLLOW HOLDS ONE LIFE",
   "sunboy": ["THE TREE BREATHES. I AM SO CLOSE", "THE WORKS ON THE RIVER. LAST ONE"],
   "healed": ["THE WORLD TREE STANDS TALL AGAIN", "ITS BRANCHES BLOOM TO THE SKY"],
