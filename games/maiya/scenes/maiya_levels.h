@@ -70,6 +70,7 @@
 #define MG_B_EEL       7   /* Reef Eel, the Leviathan's body (Sunken Reef)*/
 #define MG_B_WYRM      8   /* Cave Wyrm, the Toad's body (Silver Cave)    */
 #define MG_B_HYENA     9   /* Blight Hyena, the Jackal's body (Savanna)   */
+#define MG_B_AIRSHIP  10   /* the smog fleet's dreadnought (the Sky Road) */
 
 /* Hazards */
 #define MG_H_FIRE   1

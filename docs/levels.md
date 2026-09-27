@@ -93,7 +93,7 @@ Names stand for the game's constants, lower case without the prefix:
 |---|---|---|
 | `enemy` | `MG_E_*` in `maiya_levels.h` | slime, beetle, crow, jellyfish, pair |
 | `hazards[].type` | `MG_H_*` | fire, spikes, sludge, toxic, pit |
-| `guardian.style` | `MG_B_*` | beetle, toad, leviathan, eel |
+| `guardian.style` | `MG_B_*` | beetle, toad, leviathan, eel, airship (the Sky Road's, fought part by part) |
 | `mechanic` | `MG_M_*` in `maiya_game.c` | none, crumble, ice, water, flight |
 | `waves[].form` | `MG_FORM_*` in `maiya_levels.h` | line, sine, vee, dive, circle, swarm, charge, hover |
 | `pit` | `MG_PIT_*`: what lies at the bottom of its pits | water, fire, toxic, void |

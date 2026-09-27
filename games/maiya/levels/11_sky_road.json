@@ -12,10 +12,10 @@
   "key": {"x": 0, "y": 0},
   "hideout": {"x": 0, "y": 192, "hint": "NO HIDEOUT UP IN THE SKY"},
   "guardian": {
-    "name": "STORM VULTURE",
-    "style": "vulture",
-    "hp": 8,
-    "hint": "COME DOWN ON ITS BACK AFTER A DIVE",
+    "name": "SMOG DREADNOUGHT",
+    "style": "airship",
+    "hp": 10,
+    "hint": "BREAK ITS STACKS, THEN STRIKE ITS EYE",
     "taunt": "THE SKY BELONGS TO THE SMOG!",
     "reply": "NOT WHILE THE SUN EAGLE FLIES!"
   },
