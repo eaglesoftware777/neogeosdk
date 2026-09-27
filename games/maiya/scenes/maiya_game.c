@@ -293,6 +293,7 @@ typedef struct {
     uint16_t spring, crown;           /* higher jump, bigger thorns        */
     uint16_t lily;                    /* the sky lily: a second jump in the air, in frames */
     uint8_t  leap_window;             /* frames left to leap high after kneeling */
+    uint8_t  voice_next, voice_delay; /* a line waiting to be spoken, and when */
     uint8_t  flash;                   /* frames of Secret Art palette      */
     uint8_t  angel;                   /* rising-to-the-sky death           */
     uint8_t  flowers, critters;       /* bonus tally for the mission end   */
@@ -618,6 +619,31 @@ static void NEOGEO_USER mg_music(uint8_t track)
     mg_music_levels();
     isZ80Ready(); soundSetADPCMBLoop(1);
     isZ80Ready(); playSFXB(track);
+}
+
+/*
+ * Her voice, and the thanks of those she frees: the voice bank's lines
+ * (spoken by games/maiya/tools/make_voices.py), which follow the sixteen
+ * effects in the ADPCM-A bank, in its file order.
+ */
+enum {
+    MG_VOICE_RISE, MG_VOICE_SURGE, MG_VOICE_ART, MG_VOICE_LEAP, MG_VOICE_LILY,
+    MG_VOICE_FREE, MG_VOICE_START, MG_VOICE_RETRY, MG_VOICE_WIN,
+    MG_VOICE_ELDER, MG_VOICE_MAIDEN, MG_VOICE_SPIRIT, MG_VOICE_SUNBOY,
+};
+
+static void NEOGEO_USER mg_voice(uint8_t line)
+{
+    isZ80Ready();
+    playVoiceSample((uint8_t)(SOUND_SFX_COUNT + line));
+}
+
+/* A line spoken a moment from now: after a music change settles, or once
+ * she has had her say. */
+static void NEOGEO_USER mg_voice_later(uint8_t line, uint8_t frames)
+{
+    mg.voice_next = line;
+    mg.voice_delay = frames;
 }
 
 /* ------------------------------------------------------------------ */
@@ -2086,6 +2112,7 @@ static void NEOGEO_USER mg_boss_damage(uint8_t damage)
          * her own colours and fully on screen. */
         mg.hurt = 0; mg.hurt_lit = 0; mg.veil = 0; mg.dash = 0; mg.super_surge = 0;
         mg.attack = 0; mg.flash = 0; mg.win_step = 0; mg.win_wait = 0;
+        mg_voice_later(MG_VOICE_WIN, 50);
         mg_climb_end();
         mg.player->visible = 1;
         mg_palette(PAL_HERO, mg_hero_normal_pal());
@@ -2239,6 +2266,7 @@ static void NEOGEO_USER mg_secret_art(void)
     mg.shake = 24;
     mg.art_wave = 24;              /* the second wave follows the first */
     playSFX(SOUND_SFX_9);          /* the clear ring of the purification */
+    mg_voice(MG_VOICE_ART);
     mg_petal_sweep();
 
     /* Everyone present takes the art -- no hit sparks, they would overwrite
@@ -2307,6 +2335,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     const MGLevel *level = &mg_levels[stage];
 
     soundStopAll();
+    mg.voice_delay = 0;     /* nothing said in the last scene carries over */
     mg_backdrop(0x8000);
     ng_fix_clear();
     ng_sprite_hide_all();
@@ -2582,6 +2611,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
 
     mg.music_on = 0;
     mg_music(level->music);
+    if (mg.entrance) mg_voice_later(retry ? MG_VOICE_RETRY : MG_VOICE_START, 40);
 }
 
 uint8_t NEOGEO_USER maiya_hero_choice(void);
@@ -3883,6 +3913,7 @@ static void NEOGEO_USER mg_controls(void)
                     mg.leap_window = 0;
                     mg_burst(p->x, (int16_t)(p->y - 4), MG_T_SPARK, 3, -2);
                     playSFX(SOUND_SFX_13);
+                    mg_voice(MG_VOICE_LEAP);
                 }
                 if (mg.spring) v = (int16_t)((v * 5) / 4);
                 if (mg_mech() == MG_M_WATER) v = (int16_t)((v * 3) / 4);
@@ -3943,6 +3974,7 @@ static void NEOGEO_USER mg_controls(void)
             mg.crouch_timer = 0;
             mg.dash = 0;
             playSFX(SOUND_SFX_1);
+            mg_voice(MG_VOICE_RISE);
         }
     }
 
@@ -3959,6 +3991,7 @@ static void NEOGEO_USER mg_controls(void)
             mg.combo_buffer[0] = mg.combo_buffer[1] = 0;
             mg.dash = 0;
             playSFX(SOUND_SFX_13);   /* the bloom gathers */
+            mg_voice(MG_VOICE_SURGE);
         } else {
             uint8_t melee = 0;
             if (mg.boss && mg_abs((int16_t)(mg.boss->x - p->x)) < 48 &&
@@ -4866,6 +4899,7 @@ static void NEOGEO_USER mg_update_entities(void)
                     playSFX(SOUND_SFX_13);
                     playSFX(SOUND_SFX_12);
                     mg_hint("SKY LILY: UP + A IN THE AIR, ONE MORE", PAL_GOLD, 150);
+                    mg_voice(MG_VOICE_LILY);
                     break;
                 case MG_K_SPRING:
                     mg.spring = POWER_TIME;
@@ -5966,6 +6000,9 @@ static void NEOGEO_USER mg_rescue_check(void)
     ng_chars_remove(mg.rescue);
     mg.rescue = 0;
     playSFX(SOUND_SFX_11); /* pickup chime */
+    /* She tells the captive it's free; it thanks her in its own voice. */
+    mg_voice(MG_VOICE_FREE);
+    if (type <= 3u) mg_voice_later((uint8_t)(MG_VOICE_ELDER + type), 60);
 
     if (type == 0) {
         mg_hint("ELDER: STRIKE OR STOMP ITS HEAD!", PAL_GOLD, 120);
@@ -6443,6 +6480,7 @@ void NEOGEO_USER maiya_frame(void)
     }
 
     mg.tick++;
+    if (mg.voice_delay && --mg.voice_delay == 0) mg_voice(mg.voice_next);
     if (!mg.player) return;
     ng_game_time_stage_run((uint8_t)(mg.state == MG_PLAY));
     if (!mg.demo && (mg.state == MG_PLAY || mg.state == MG_INTRO || mg.state == MG_CLEAR ||
