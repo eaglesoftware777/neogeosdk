@@ -124,6 +124,10 @@ TOOL_COLUMNS = 16
 TOOL_THORN0, TOOL_THORN1, TOOL_TRASH, TOOL_SPIT, TOOL_BOLT, TOOL_FIRE, TOOL_ICE, TOOL_OIL = range(8)
 TOOL_SPARK, TOOL_HEART, TOOL_ROSE, TOOL_PETAL, TOOL_LANE, TOOL_CURSOR, TOOL_DRIP, TOOL_LEAF = range(8, 16)
 TOOL_HALO, TOOL_DUST, TOOL_STAR, TOOL_BUBBLE = 16, 17, 18, 19     # second row of the sheet
+# The showers over a healed valley and the Secret Art's rain: four flowers
+# (face on, then turned, for the tumble), a leaf two ways, a drop of clean
+# water and its splash -- the rest of the second row.
+TOOL_FLOWER, TOOL_FALL_LEAF, TOOL_WATER, TOOL_SPLASH = 20, 28, 30, 31
 
 
 def c_array(name, values, ctype="uint16_t"):
@@ -802,6 +806,70 @@ def draw_tools():
                 if dy or dx:
                     edge |= pad[1 + dy:17 + dy, 1 + dx:17 + dx]
         c[edge & ~solid] = 12
+
+    # --- The showers' flowers, leaves and water: no dark rim, a darker edge
+    # in each one's own colour, so they read as something soft falling.
+    yy, xx = np.mgrid[0:16, 0:16]
+
+    def flower(c, lobes, radius, body, shade, light, eye, eye2, squash=1.0, turn=0.0):
+        dx = xx - 7.5
+        dy = (yy - 7.5) / squash
+        r = np.hypot(dx, dy)
+        th = np.arctan2(dy, dx) + turn
+        petal = np.abs(np.cos(lobes * th / 2.0)) ** 0.55
+        edge = radius * (0.5 + 0.5 * petal)
+        inside = r <= edge
+        c[inside] = body
+        c[inside & (r > edge - 1.1)] = shade                   # a soft rim in its own darker hue
+        c[inside & (r > 2.6) & (r < edge - 1.4) & (dx + dy < -radius * 0.55)] = light
+        c[inside & (petal < 0.42) & (r > 2.0)] = shade   # the gaps between petals
+        c[r < 2.3 * min(1.0, squash + 0.3)] = eye
+        c[(r < 1.2) | ((np.hypot(dx + 0.8, dy + 0.8) < 0.9) & (r < 2.3))] = eye2
+
+    kinds = (
+        (5, 6.4, 2, 3, 1, 15, 7),      # a pink wild rose
+        (8, 6.6, 1, 10, 1, 15, 6),     # a white daisy, shaded cool
+        (5, 6.0, 7, 15, 1, 6, 13),     # a buttercup
+        (4, 6.2, 14, 3, 1, 7, 15),     # a lilac
+    )
+    col = 0
+    fest = lambda k: cell(TOOL_FLOWER - TOOL_COLUMNS + k, 1)
+    for lobes, radius, body, shade, light, eye, eye2 in kinds:
+        flower(fest(col), lobes, radius, body, shade, light, eye, eye2)
+        flower(fest(col + 1), lobes, radius, body, shade, light, eye, eye2, squash=0.5, turn=0.5)
+        col += 2
+
+    # A leaf face on, and the same leaf edge on as it tumbles.
+    for k, width in ((0, 3.2), (1, 1.9)):
+        c = fest(col + k)
+        dx, dy = xx - 7.5, yy - 7.5
+        u = (dx + dy) * 0.7071
+        v = (dy - dx) * 0.7071
+        body = (u / 6.4) ** 2 + (v / width) ** 2 <= 1.0
+        c[body] = 4
+        c[body & (v > 0.4)] = 5
+        c[body & (np.abs(v) < 0.5)] = 5                         # the midrib
+        c[body & (u < -3.5) & (v < 0)] = 7                      # sun on its tip
+        stem = (np.abs(v) < 0.6) & (u > 6.0) & (u < 7.6)
+        c[stem] = 5
+    col += 2
+
+    # A drop of clean water, and the splash as it lands.
+    c = fest(col)
+    dx, dy = xx - 7.5, yy - 9.0
+    r = np.hypot(dx, dy)
+    body = (r <= 4.0) | ((dy < 0) & (np.abs(dx) <= (dy + 8.5) * 0.47))
+    c[body] = 10
+    c[body & (dx > 1.2)] = 11
+    c[body & (dy > 2.5) & (dx > -1.5)] = 11
+    c[(np.hypot(dx + 1.6, dy + 0.6) < 1.1)] = 1
+    c = fest(col + 1)
+    for px, py in ((3, 9), (12, 9), (5, 5), (10, 5), (7, 3)):
+        c[py:py + 2, px:px + 2] = 10
+        c[py, px] = 1
+    c[12:14, 3:13] = 10
+    c[13, 4:12] = 11
+    c[11, 6:10] = 10
 
     return tool, colors
 
@@ -1534,7 +1602,8 @@ def build():
         ("OIL", TOOL_OIL), ("SPARK", TOOL_SPARK), ("HEART", TOOL_HEART), ("ROSE", TOOL_ROSE),
         ("PETAL", TOOL_PETAL), ("LANE", TOOL_LANE), ("CURSOR", TOOL_CURSOR),
         ("DRIP", TOOL_DRIP), ("LEAF", TOOL_LEAF),
-        ("HALO", TOOL_HALO), ("DUST", TOOL_DUST), ("STAR", TOOL_STAR), ("BUBBLE", TOOL_BUBBLE)
+        ("HALO", TOOL_HALO), ("DUST", TOOL_DUST), ("STAR", TOOL_STAR), ("BUBBLE", TOOL_BUBBLE),
+        ("FLOWER", TOOL_FLOWER), ("FALL_LEAF", TOOL_FALL_LEAF), ("WATER", TOOL_WATER), ("SPLASH", TOOL_SPLASH)
     )
     for name, col in tool_names:
         header.append(f"#define MG_T_{name} {col}u")
