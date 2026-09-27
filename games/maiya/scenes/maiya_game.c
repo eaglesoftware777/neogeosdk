@@ -1886,6 +1886,7 @@ static const uint16_t *NEOGEO_USER mg_ally_tiles(uint8_t type)
     case 1:  return mg_girl_tiles;
     case 2:  return mg_spirit_tiles;
     case 3:  return mg_sunboy_tiles;
+    case 4:  return mg_eldersalute_tiles;   /* a freed elder, his hat on or raised */
     default: return mg_elder_tiles;
     }
 }
@@ -7733,9 +7734,10 @@ static void NEOGEO_USER mg_npc_check(void)
 
 /*
  * A freed captive stays in sight: the chest is thrown open and whoever was
- * in it hops for joy and thanks her in their own voice. Then the maiden and
- * Sunboy run off the screen, away from her, the spirit flies up and away,
- * and once out of sight they are gone; the elder stays where he stood,
+ * in it thanks her in their own voice. The maiden, the spirit and Sunboy
+ * hop for joy, then the maiden and Sunboy run off the screen, away from
+ * her, the spirit flies up and away, and once out of sight they are gone.
+ * The elder raises his hat to her, puts it back, and stays where he stood,
  * turned to her, until she is far down the road. Nothing blinks out on the
  * spot. (The villagers who give hints are not captives: they stay as they
  * are.)
@@ -7757,19 +7759,21 @@ static void NEOGEO_USER mg_freed_step(void)
     int16_t sx;
     if (!c || !p) return;
     if (mg_freed_t < 255u) mg_freed_t++;
+    if (c->data0 == 0 || c->data0 == 4) {
+        c->data0 = 4;                       /* in his hat */
+        /* out of the chest first, on its far side from her (she stands at
+         * the chest), so the salute is seen */
+        ng_char_set_pos(c, (int16_t)(c->x + (mg_freed_t <= 16u ? mg_freed_dir * 2 : 0)), MG_GROUND_Y);
+        mg_frame(c, (uint8_t)(mg_freed_t >= 20u && mg_freed_t < 68u), (uint8_t)(c->x > p->x));
+        if (mg_abs((int16_t)(c->x - p->x)) > 420) mg_freed_clear(1);
+        return;
+    }
     if (mg_freed_t <= 24u) {
         /* a hop for joy, facing her, a heart over them */
         uint8_t up = (uint8_t)(mg_freed_t < 12u ? mg_freed_t : 24u - mg_freed_t);
         ng_char_set_pos(c, c->x, (int16_t)(MG_GROUND_Y - (up >> 1)));
         mg_frame(c, 1, (uint8_t)(c->x > p->x));
         if (mg_freed_t == 6u) mg_burst(c->x, (int16_t)(MG_GROUND_Y - 56), MG_T_HEART, 1, -1);
-        return;
-    }
-    if (c->data0 == 0) {
-        /* the elder stays, and watches her go */
-        ng_char_set_pos(c, c->x, MG_GROUND_Y);
-        mg_frame(c, 0, (uint8_t)(c->x > p->x));
-        if (mg_abs((int16_t)(c->x - p->x)) > 420) mg_freed_clear(1);
         return;
     }
     if (c->data0 == 2) ng_char_set_pos(c, (int16_t)(c->x + mg_freed_dir * 3), (int16_t)(c->y - 2));
