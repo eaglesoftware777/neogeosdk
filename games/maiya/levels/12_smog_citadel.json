@@ -1,6 +1,6 @@
 {
   "name": "SMOG CITADEL",
-  "width": 4800,
+  "width": 8448,
   "background": 11,
   "music": 7,
   "mechanic": "crumble",
@@ -8,7 +8,7 @@
   "blocks": "rust",
   "climb": "chain",
   "posted": "drone",
-  "gate_x": 4380,
+  "gate_x": 8028,
   "key": {"x": 2630, "y": 28},
   "hideout": {"x": 3760, "y": 72, "hint": "KNEEL ON THE LAST HIGH GANTRY"},
   "guardian": {
@@ -43,7 +43,20 @@
     {"x": 3280, "y": 144, "w": 96},
     {"x": 3480, "y": 104, "w": 128, "rotten": true},
     {"x": 3720, "y": 72, "w": 96},
-    {"x": 3960, "y": 128, "w": 128}
+    {"x": 3960, "y": 128, "w": 128},
+    {"x": 4360, "y": 144, "w": 96},
+    {"x": 4520, "y": 112, "w": 96, "rotten": true},
+    {"x": 5099, "y": 112, "w": 96},
+    {"x": 5309, "y": 104, "w": 96, "rotten": true},
+    {"x": 5509, "y": 136, "w": 96},
+    {"x": 5798, "y": 128, "w": 128},
+    {"x": 6038, "y": 96, "w": 96, "rotten": true},
+    {"x": 6218, "y": 64, "w": 96},
+    {"x": 6547, "y": 144, "w": 96},
+    {"x": 6707, "y": 112, "w": 96, "rotten": true},
+    {"x": 6867, "y": 80, "w": 96},
+    {"x": 7286, "y": 112, "w": 96},
+    {"x": 7496, "y": 104, "w": 96, "rotten": true}
   ],
   "encounters": [
     {"x": 250, "enemy": "slime"},
@@ -66,14 +79,26 @@
     {"x": 3560, "enemy": "poachdrone"},
     {"x": 3780, "enemy": "beetle"},
     {"x": 3980, "enemy": "chemfly"},
-    {"x": 4160, "enemy": "goblin"}
+    {"x": 4160, "enemy": "goblin"},
+    {"x": 4340, "enemy": "slime"},
+    {"x": 4750, "enemy": "smogbat"},
+    {"x": 5239, "enemy": "slaggolem"},
+    {"x": 5449, "enemy": "chemfly"},
+    {"x": 5768, "enemy": "sporegob"},
+    {"x": 5988, "enemy": "vinesting"},
+    {"x": 6527, "enemy": "slaggolem"},
+    {"x": 6937, "enemy": "acidmoth"},
+    {"x": 7426, "enemy": "drone"},
+    {"x": 7636, "enemy": "beetle"}
   ],
   "archers": [
     {"x": 690, "y": 80},
     {"x": 1750, "y": 72},
     {"x": 2400, "y": 96},
     {"x": 3080, "y": 96},
-    {"x": 3750, "y": 72}
+    {"x": 3750, "y": 72},
+    {"x": 5339, "y": 104},
+    {"x": 6897, "y": 80}
   ],
   "hazards": [
     {"x": 820, "w": 48, "type": "fire"},
@@ -83,13 +108,17 @@
     {"x": 2940, "w": 48, "type": "pit"},
     {"x": 3400, "w": 48, "type": "sludge"},
     {"x": 3860, "w": 48, "type": "fire"},
-    {"x": 4140, "w": 64, "type": "pit"}
+    {"x": 4140, "w": 64, "type": "pit"},
+    {"x": 5115, "w": 64, "type": "pit"},
+    {"x": 5958, "w": 48, "type": "sludge"},
+    {"x": 6657, "w": 48, "type": "sludge"},
+    {"x": 7302, "w": 64, "type": "pit"}
   ],
   "rescues": [
     {"x": 580, "who": "elder"},
     {"x": 1640, "who": "maiden"},
     {"x": 2720, "who": "spirit"},
-    {"x": 3620, "who": "sunboy"}
+    {"x": 6104, "who": "sunboy"}
   ],
   "secrets": [
     {"x": 500, "y": 82, "type": "rose"},
@@ -100,16 +129,20 @@
     {"x": 4220, "y": 16, "type": "gem"}
   ],
   "pickups": [
-    {"x": 3652, "y": 24, "kind": "lily"},
+    {"x": 760, "y": 168, "kind": "gold"},
     {"x": 1116, "y": 74, "kind": "gold"},
-    {"x": 1860, "y": 168, "kind": "flower"},
-    {"x": 3736, "y": 42, "kind": "life"},
-    {"x": 2160, "y": 114, "kind": "veil"},
     {"x": 1520, "y": 82, "kind": "spring"},
-    {"x": 3300, "y": 114, "kind": "silver"},
+    {"x": 1860, "y": 168, "kind": "flower"},
+    {"x": 2160, "y": 114, "kind": "veil"},
     {"x": 2900, "y": 168, "kind": "charm"},
+    {"x": 3300, "y": 114, "kind": "silver"},
+    {"x": 3652, "y": 24, "kind": "lily"},
+    {"x": 3736, "y": 42, "kind": "life"},
     {"x": 4040, "y": 98, "kind": "critter"},
-    {"x": 760, "y": 168, "kind": "gold"}
+    {"x": 5341, "y": 74, "kind": "silver"},
+    {"x": 6070, "y": 66, "kind": "flower"},
+    {"x": 6739, "y": 82, "kind": "gold"},
+    {"x": 7528, "y": 74, "kind": "silver"}
   ],
   "decor": [
     {"x": 150, "y": 160, "kind": "rock"},
@@ -119,7 +152,7 @@
     {"x": 2460, "y": 160, "kind": "lantern"},
     {"x": 3160, "y": 160, "kind": "rock"},
     {"x": 3900, "y": 160, "kind": "lantern"},
-    {"x": 4300, "y": 160, "kind": "sign"}
+    {"x": 7948, "y": 160, "kind": "sign"}
   ],
   "vines": [
     {"x": 676, "top": 80, "bottom": 192},

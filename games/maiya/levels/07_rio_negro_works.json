@@ -1,6 +1,6 @@
 {
   "name": "RIO NEGRO WORKS",
-  "width": 5632,
+  "width": 6656,
   "background": 6,
   "music": 7,
   "mechanic": "none",
@@ -8,7 +8,7 @@
   "blocks": "rust",
   "climb": "chain",
   "posted": "drone",
-  "gate_x": 4912,
+  "gate_x": 5936,
   "key": {"x": 2492, "y": 38},
   "hideout": {"x": 3252, "y": 64, "hint": "KNEEL ON THE HIGH GIRDER PAST THE KEY"},
   "guardian": {
@@ -40,7 +40,11 @@
     {"x": 3476, "y": 144, "w": 96},
     {"x": 3740, "y": 104, "w": 96},
     {"x": 4028, "y": 64, "w": 96},
-    {"x": 5048, "y": 144, "w": 112}
+    {"x": 4892, "y": 144, "w": 96},
+    {"x": 5052, "y": 112, "w": 96},
+    {"x": 5212, "y": 80, "w": 96},
+    {"x": 5352, "y": 120, "w": 64},
+    {"x": 6072, "y": 144, "w": 112}
   ],
   "encounters": [
     {"x": 264, "enemy": "goblin"},
@@ -66,7 +70,9 @@
     {"x": 3808, "enemy": "pair"},
     {"x": 3984, "enemy": "crow"},
     {"x": 4160, "enemy": "pair"},
-    {"x": 4428, "enemy": "pair"}
+    {"x": 4428, "enemy": "pair"},
+    {"x": 4872, "enemy": "goblin"},
+    {"x": 5282, "enemy": "drone"}
   ],
   "archers": [
     {"x": 608, "y": 104},
@@ -74,7 +80,8 @@
     {"x": 2180, "y": 104},
     {"x": 2976, "y": 104},
     {"x": 3772, "y": 104},
-    {"x": 5080, "y": 144}
+    {"x": 5242, "y": 80},
+    {"x": 6104, "y": 144}
   ],
   "hazards": [
     {"x": 708, "w": 64, "type": "sludge"},
@@ -84,7 +91,8 @@
     {"x": 2832, "w": 64, "type": "sludge"},
     {"x": 3364, "w": 48, "type": "fire"},
     {"x": 3896, "w": 64, "type": "sludge"},
-    {"x": 4428, "w": 48, "type": "sludge"}
+    {"x": 4428, "w": 48, "type": "sludge"},
+    {"x": 5002, "w": 48, "type": "sludge"}
   ],
   "rescues": [
     {"x": 996, "who": "spirit"},
@@ -101,16 +109,17 @@
     {"x": 4072, "y": 34, "type": "gem"}
   ],
   "pickups": [
-    {"x": 3640, "y": 24, "kind": "lily"},
-    {"x": 1216, "y": 168, "kind": "spring"},
-    {"x": 2132, "y": 168, "kind": "veil"},
-    {"x": 3076, "y": 168, "kind": "silver"},
     {"x": 612, "y": 70, "kind": "gold"},
+    {"x": 828, "y": 36, "kind": "life"},
+    {"x": 1216, "y": 168, "kind": "spring"},
     {"x": 1384, "y": 70, "kind": "gold"},
     {"x": 1600, "y": 166, "kind": "flower"},
-    {"x": 3316, "y": 164, "kind": "critter"},
+    {"x": 2132, "y": 168, "kind": "veil"},
     {"x": 2556, "y": 166, "kind": "charm"},
-    {"x": 828, "y": 36, "kind": "life"}
+    {"x": 3076, "y": 168, "kind": "silver"},
+    {"x": 3316, "y": 164, "kind": "critter"},
+    {"x": 3640, "y": 24, "kind": "lily"},
+    {"x": 5084, "y": 82, "kind": "gold"}
   ],
   "decor": [
     {"x": 176, "y": 160, "kind": "mushroom"},

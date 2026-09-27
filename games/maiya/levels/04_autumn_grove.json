@@ -1,6 +1,6 @@
 {
   "name": "AUTUMN GROVE",
-  "width": 4096,
+  "width": 5120,
   "background": 3,
   "music": 4,
   "mechanic": "crumble",
@@ -8,7 +8,7 @@
   "blocks": "autumn",
   "climb": "ladder",
   "posted": "drone",
-  "gate_x": 3484,
+  "gate_x": 4508,
   "key": {"x": 1936, "y": 42},
   "hideout": {"x": 3128, "y": 68, "hint": "KNEEL ON THE LAST HIGH BEAM"},
   "guardian": {
@@ -40,7 +40,11 @@
     {"x": 2668, "y": 140, "w": 96},
     {"x": 2868, "y": 104, "w": 80, "rotten": true},
     {"x": 3088, "y": 68, "w": 96},
-    {"x": 3632, "y": 140, "w": 96}
+    {"x": 3464, "y": 144, "w": 96},
+    {"x": 3624, "y": 112, "w": 96, "rotten": true},
+    {"x": 3784, "y": 80, "w": 96},
+    {"x": 3924, "y": 120, "w": 64},
+    {"x": 4656, "y": 140, "w": 96}
   ],
   "encounters": [
     {"x": 216, "enemy": "goblin"},
@@ -62,23 +66,27 @@
     {"x": 2976, "enemy": "goblin"},
     {"x": 3124, "enemy": "crow"},
     {"x": 3268, "enemy": "acidmoth"},
-    {"x": 3412, "enemy": "worm"}
+    {"x": 3444, "enemy": "goblin"},
+    {"x": 3854, "enemy": "sporegob"},
+    {"x": 4436, "enemy": "worm"}
   ],
   "archers": [
     {"x": 500, "y": 104},
     {"x": 1296, "y": 68},
     {"x": 1896, "y": 68},
     {"x": 2496, "y": 68},
-    {"x": 3112, "y": 68}
+    {"x": 3112, "y": 68},
+    {"x": 3814, "y": 80}
   ],
   "hazards": [
+    {"x": 560, "w": 48, "type": "pit"},
     {"x": 780, "w": 64, "type": "fire"},
     {"x": 1380, "w": 64, "type": "fire"},
     {"x": 1980, "w": 64, "type": "fire"},
     {"x": 2576, "w": 64, "type": "fire"},
-    {"x": 560, "w": 48, "type": "pit"},
     {"x": 2884, "w": 48, "type": "pit"},
-    {"x": 3320, "w": 48, "type": "pit"}
+    {"x": 3320, "w": 48, "type": "pit"},
+    {"x": 3574, "w": 48, "type": "fire"}
   ],
   "rescues": [
     {"x": 980, "who": "elder"},
@@ -95,16 +103,17 @@
     {"x": 3124, "y": 38, "type": "gem"}
   ],
   "pickups": [
-    {"x": 2800, "y": 24, "kind": "lily"},
-    {"x": 972, "y": 168, "kind": "spring"},
-    {"x": 1660, "y": 168, "kind": "veil"},
-    {"x": 2372, "y": 168, "kind": "silver"},
     {"x": 500, "y": 70, "kind": "gold"},
+    {"x": 660, "y": 40, "kind": "life"},
+    {"x": 972, "y": 168, "kind": "spring"},
     {"x": 1116, "y": 70, "kind": "gold"},
     {"x": 1160, "y": 166, "kind": "flower"},
-    {"x": 2416, "y": 164, "kind": "critter"},
+    {"x": 1660, "y": 168, "kind": "veil"},
     {"x": 1824, "y": 166, "kind": "charm"},
-    {"x": 660, "y": 40, "kind": "life"}
+    {"x": 2372, "y": 168, "kind": "silver"},
+    {"x": 2416, "y": 164, "kind": "critter"},
+    {"x": 2800, "y": 24, "kind": "lily"},
+    {"x": 3656, "y": 82, "kind": "gold"}
   ],
   "decor": [
     {"x": 136, "y": 160, "kind": "lantern"},
