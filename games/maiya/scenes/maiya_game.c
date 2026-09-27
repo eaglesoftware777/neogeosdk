@@ -310,6 +310,11 @@ typedef struct {
     uint8_t  ship_part[3];            /* the dreadnought: its stacks' and bridge's health */
     uint8_t  ship_target;             /* the part a blow is aimed at (0xFF: the next one) */
     uint8_t  ship_z;                  /* its distance as it comes in (0: arrived)   */
+    uint8_t  rush_i;                  /* the returning guardian being fought (0xFF: the stage's own) */
+    uint8_t  boss_style_now;          /* the guardian in the arena now (MG_B_*)     */
+    uint8_t  boss_phase;              /* Lord Smoggar's last stand: 0, 1, 2         */
+    uint8_t  end_page;                /* the ending: which page                     */
+    uint16_t end_timer;               /* ...and how long it has been up             */
     uint8_t  flash;                   /* frames of Secret Art palette      */
     uint8_t  angel;                   /* rising-to-the-sky death           */
     uint8_t  flowers, critters;       /* bonus tally for the mission end   */
@@ -722,6 +727,11 @@ static void NEOGEO_USER mg_background(uint8_t id, uint8_t restored)
         far_tile = MG_BG10_TILE; road_tile = MG_GROUND10_TILE;
         pal = restored ? mg_bg10_pal : mg_bg10_blight_pal;
         far_map = mg_bg10_map; road_map = mg_ground10_map; count = MG_BG10_BANKS;
+        break;
+    case 11: /* the Smog Citadel: Lord Smoggar's works */
+        far_tile = MG_BG11_TILE; road_tile = MG_GROUND11_TILE;
+        pal = restored ? mg_bg11_pal : mg_bg11_blight_pal;
+        far_map = mg_bg11_map; road_map = mg_ground11_map; count = MG_BG11_BANKS;
         break;
     default: /* Sunlit Emerald Forest */
         far_tile = MG_BG0_TILE; road_tile = MG_GROUND0_TILE;
@@ -1509,7 +1519,7 @@ static void NEOGEO_USER mg_before_draw_hook(void)
     }
     ng_level_set_scroll(mg.camera.x, mg.cam_y);
     mg_scroll_scenery(mg.camera.x);
-    if (mg.state == MG_BONUS) {
+    if (mg.state == MG_BONUS || mg.state == MG_ENDING) {
         mg_update_sparks(mg.camera.x);
         return;
     }
@@ -2232,6 +2242,9 @@ static void NEOGEO_USER mg_ship_part_down(uint8_t part)
         mg_hint("ITS BRIDGE IS BARE - STRIKE THE EYE!", PAL_GOLD, 150);
 }
 
+static uint8_t NEOGEO_USER mg_boss_spawn(uint8_t style, uint8_t stomps);
+static void NEOGEO_USER mg_boss_announce(void);
+
 static void NEOGEO_USER mg_boss_damage(uint8_t damage)
 {
     NGCharacter *b = mg.boss ? mg.boss : mg.eagle;
@@ -2270,6 +2283,31 @@ static void NEOGEO_USER mg_boss_damage(uint8_t damage)
          * regardless of how many valleys follow it, since it is the only one
          * the Vulture ever guards.
          */
+        if (mg.rush_i != 0xFFu && mg.boss) {
+            /* One of the rush beaten: the next steps into its own lair --
+             * and after the last, the stage's own guardian. */
+            int16_t bx = b->x;
+            uint8_t i, next = (uint8_t)(mg.rush_i + 1u);
+            ng_chars_remove(mg.boss);
+            mg.boss = 0;
+            mg_sparks(bx, (int16_t)(MG_GROUND_Y - 40));
+            playSFX(SOUND_SFX_10);
+            mg.score += 3000u;
+            mg.hud_dirty = 1;
+            for (i = 0; i < MG_SHOTS; i++) mg.shots[i].life = 0;
+            if (next < MG_RUSH_COUNT && mg_rush[mg.stage][next] != 0xFFu) {
+                mg.rush_i = next;
+                mg_boss_spawn(mg_rush[mg.stage][next], 3);
+            } else {
+                mg.rush_i = 0xFFu;
+                mg_boss_spawn(mg_levels[mg.stage].boss_style, mg_levels[mg.stage].boss_hp);
+            }
+            if (mg.boss) {
+                mg.boss_hurt = 40;
+                mg_boss_announce();
+            }
+            return;
+        }
         if (mg.stage == 6 && b->data0 == MG_B_VULTURE && mg.boss) {
             int16_t bx = b->x;
             ng_chars_remove(mg.boss);
@@ -3668,45 +3706,44 @@ static int16_t NEOGEO_USER mg_ledge_y_at(const MGLevel *level, int16_t x)
  */
 static void NEOGEO_USER mg_ship_approach(NGCharacter *b);
 
-static uint8_t NEOGEO_USER mg_boss_arrive(void)
+/*
+ * A guardian takes the arena: its palette and body, its cover and its
+ * lair behind (the open sky, on the Sky Road), on the wing if it flies,
+ * with `stomps` of health (x MG_STOMP_BLOW, then the operator's
+ * difficulty: 80%, 100%, 120% or 140%).
+ */
+static uint8_t NEOGEO_USER mg_boss_spawn(uint8_t style, uint8_t stomps)
 {
     const MGLevel *level = &mg_levels[mg.stage];
-    uint8_t i;
-    for (i = 0; i < MG_ENEMIES; i++) {
-        if (mg.enemies[i].body) ng_chars_remove(mg.enemies[i].body);
-        mg.enemies[i].body = 0;
-    }
-    for (i = 0; i < MG_SHOTS; i++) mg.shots[i].life = 0;
+    uint8_t flies = (uint8_t)(style == MG_B_OWL || style == MG_B_VULTURE || style == MG_B_AIRSHIP);
+
     mg.boss_home = (int16_t)(level->width - 160);
-    mg.boss = mg_character(K_BOSS, (int16_t)(level->width - 70), MG_GROUND_Y, PAL_BOSS, NG_RENDER_BAND_ENEMY, level->boss_style);
+    mg_palette(PAL_BOSS, mg_boss_pal(style));
+    mg.boss = mg_character(K_BOSS, (int16_t)(level->width - 70), MG_GROUND_Y, PAL_BOSS, NG_RENDER_BAND_ENEMY, style);
     if (!mg.boss) return 0;
+    mg.boss_style_now = style;
     mg.boss_active = 1;
     mg.boss_timer = 0;
     mg.boss_rage = 0;
     mg.boss_direction = 0;
     mg.boss_backoff = 0;
+    mg.boss_phase = 0;
     mg.boss_px = 0;          /* the guardian's bar fills in as it appears */
-    mg_arena_setup(level->boss_style);
+    mg_arena_setup(style);
     if (mg.flying) {
         /* fought in the open sky: no cover, and the sky stays behind */
         mg.arena[0].width = 0;
         mg.arena[1].width = 0;
     } else {
-        mg_arena_background(level->boss_style);
+        mg_arena_background(style);
     }
-    if (level->boss_style == MG_B_OWL || level->boss_style == MG_B_VULTURE) {
-        ng_char_set_pos(mg.boss, mg.boss->x, MG_BOSS_SKY_Y);
-    }
-    /* the operator's difficulty: 80%, 100%, 120% or 140% of its health */
+    if (style == MG_B_OWL || style == MG_B_VULTURE) ng_char_set_pos(mg.boss, mg.boss->x, MG_BOSS_SKY_Y);
     mg.boss->hp = mg.boss->max_hp =
-        (uint8_t)(((uint16_t)level->boss_hp * MG_STOMP_BLOW * (8u + mg.difficulty * 2u)) / 10u);
+        (uint8_t)(((uint16_t)stomps * MG_STOMP_BLOW * (8u + mg.difficulty * 2u)) / 10u);
     ng_physics_attach(mg.boss, NG_PHYSICS_GRAVITY | NG_PHYSICS_SOLIDS);
-    if (level->boss_style == MG_B_OWL || level->boss_style == MG_B_VULTURE ||
-        level->boss_style == MG_B_AIRSHIP)
-        ng_physics_set_gravity(mg.boss, 0, 8 * NG_FP_ONE);   /* they fight on the wing */
-    else
-        ng_physics_set_gravity(mg.boss, 56, 6 * NG_FP_ONE);
-    if (level->boss_style == MG_B_AIRSHIP) {
+    if (flies) ng_physics_set_gravity(mg.boss, 0, 8 * NG_FP_ONE);   /* they fight on the wing */
+    else ng_physics_set_gravity(mg.boss, 56, 6 * NG_FP_ONE);
+    if (style == MG_B_AIRSHIP) {
         /* its health, shared out: each stack three tenths, the bridge the rest */
         uint8_t hp = mg.boss->hp;
         mg.ship_part[MG_SHIP_STACK_L] = mg.ship_part[MG_SHIP_STACK_R] = (uint8_t)((hp * 3u) / 10u);
@@ -3719,18 +3756,43 @@ static uint8_t NEOGEO_USER mg_boss_arrive(void)
     return 1;
 }
 
+/* The guardian meets her at the end of the road: the road's creatures and
+ * shots are cleared first. A stage with a rush (its file's "rush") sends
+ * its returning guardians first, three stomps each. */
+static uint8_t NEOGEO_USER mg_boss_arrive(void)
+{
+    const MGLevel *level = &mg_levels[mg.stage];
+    uint8_t i;
+    for (i = 0; i < MG_ENEMIES; i++) {
+        if (mg.enemies[i].body) ng_chars_remove(mg.enemies[i].body);
+        mg.enemies[i].body = 0;
+    }
+    for (i = 0; i < MG_SHOTS; i++) mg.shots[i].life = 0;
+    if (mg_rush[mg.stage][0] != 0xFFu) {
+        mg.rush_i = 0;
+        return mg_boss_spawn(mg_rush[mg.stage][0], 3);
+    }
+    mg.rush_i = 0xFFu;
+    return mg_boss_spawn(level->boss_style, level->boss_hp);
+}
+
 /* It speaks, she answers, and the fight's music starts. */
 static void NEOGEO_USER mg_boss_announce(void)
 {
-    const MGLevel *level = &mg_levels[mg.stage];
+    uint8_t k = mg.stage;
+    if (mg.rush_i != 0xFFu) {
+        /* one of the rush: the valley it guarded first has its words */
+        for (k = 0; k < MG_LEVEL_COUNT && mg_levels[k].boss_style != mg.boss_style_now; k++) {}
+        if (k == MG_LEVEL_COUNT) k = mg.stage;
+    }
     playSFX(SOUND_SFX_14); /* boss roar */
     mg.state = MG_BOSS_INTRO;
     mg.state_timer = 210;
     ng_fix_clear_rect(1, ROW_CARD, 38, 9, PAL_TEXT);
-    mg_centre(ROW_CARD, level->guardian, PAL_WARN);
-    mg_centre(ROW_CARD + 2, mg_boss_taunt[mg.stage], PAL_WARN);
+    mg_centre(ROW_CARD, mg_levels[k].guardian, PAL_WARN);
+    mg_centre(ROW_CARD + 2, mg_boss_taunt[k], PAL_WARN);
     mg_centre(ROW_CARD + 5, "MAIYA", PAL_GOLD);
-    mg_centre(ROW_CARD + 7, mg_boss_reply[mg.stage], PAL_SKY);
+    mg_centre(ROW_CARD + 7, mg_boss_reply[k], PAL_SKY);
     mg_music(SOUND_TRACK_H);
 }
 
@@ -4581,7 +4643,11 @@ static void NEOGEO_USER mg_arena_step(NGCharacter *p, uint8_t style)
         MGShot *s = mg_fire(mg.rain_x, 44, 0, 1, 1, mg_arena_rain[style]);
         if (s) { s->mode = MG_SHOT_ARC; s->life = 120; }
         mg.rain_x = 0;
-        mg.rain_timer = (uint8_t)((mg.boss_rage ? 60u : 110u) - mg.stage * 3u);
+        {
+            /* quicker when enraged, further on, and in Smoggar's later phases */
+            int16_t wait = (int16_t)((mg.boss_rage ? 60 : 110) - mg.stage * 3 - mg.boss_phase * 10);
+            mg.rain_timer = (uint8_t)(wait < 18 ? 18 : wait);
+        }
     }
 }
 
@@ -4755,6 +4821,35 @@ static void NEOGEO_USER mg_ship_ai(NGCharacter *b, NGCharacter *p)
     }
 }
 
+/*
+ * Lord Smoggar at the end of the road fights in three phases, by his
+ * health: at two thirds the smog rises -- two smog wraiths come for her
+ * and the arena's fall comes quicker; at a third he is the smog itself --
+ * enraged from then on, with smog bats diving out of the haze.
+ */
+static void NEOGEO_USER mg_smoggar_phase(NGCharacter *b)
+{
+    uint16_t third = (uint16_t)(b->hp * 3u);
+    uint8_t want = (uint8_t)(third <= b->max_hp ? 2 : (third <= (uint16_t)(b->max_hp * 2u) ? 1 : 0));
+    uint8_t i;
+
+    if (want <= mg.boss_phase) return;
+    mg.boss_phase = want;
+    mg.shake = 16;
+    playSFX(SOUND_SFX_14);
+    mg_burst(b->x, (int16_t)(b->y - 60), MG_T_DUST, 4, -2);
+    if (want == 1) {
+        mg_hint("SMOGGAR: THE SMOG RISES!", PAL_WARN, 150);
+        for (i = 0; i < 2u; i++)
+            mg_spawn_enemy(MG_E_WRAITH, (int16_t)(mg.arena_left + (i ? 300 : 20)), (int16_t)(MG_GROUND_Y - 90), 0);
+    } else {
+        mg_hint("SMOGGAR: I AM THE SMOG ITSELF!", PAL_WARN, 150);
+        mg.boss_rage = 1;
+        for (i = 0; i < 2u; i++)
+            mg_spawn_enemy(MG_E_SMOGBAT, (int16_t)(mg.arena_left + 60 + i * 200), 40, 0);
+    }
+}
+
 static void NEOGEO_USER mg_boss_ai(NGCharacter *p)
 {
     NGCharacter *b = mg.boss;
@@ -4768,6 +4863,7 @@ static void NEOGEO_USER mg_boss_ai(NGCharacter *p)
     uint16_t t;
 
     if (style == MG_B_AIRSHIP) { mg_ship_ai(b, p); return; }
+    if (style == MG_B_SMOGGAR && mg.stage + 1u == MG_LEVEL_COUNT && mg.rush_i == 0xFFu) mg_smoggar_phase(b);
     if (mg.boss_hurt) mg.boss_hurt--;
     if (!rage && b->hp * 2 <= b->max_hp) {
         mg.boss_rage = rage = 1;
@@ -7107,6 +7203,118 @@ static void NEOGEO_USER mg_pause_toggle(void)
     else ng_fix_clear_rect(1, MG_PAUSE_ROW, 38, 1, PAL_TEXT);
 }
 
+/* ------------------------------------------------------------------ */
+/*  The ending                                                        */
+/* ------------------------------------------------------------------ */
+/*
+ * After the last guardian: the smog lifts; then each valley she walked,
+ * healed, passes by in its own restored colours with its name; then the
+ * two heroines, and the credits. A button moves a page on (after its first
+ * second). The journey is counted in the save as one more clear.
+ */
+enum { MG_END_OPEN = 0, MG_END_VALLEYS = MG_LEVEL_COUNT - 1 };
+
+static void NEOGEO_USER mg_ending_page(void)
+{
+    uint8_t page = mg.end_page;
+    ng_fix_clear_rect(1, ROW_CARD - 2, 38, 16, PAL_TEXT);
+    ng_fix_clear_rect(1, ROW_HINT, 38, 1, PAL_TEXT);
+    mg.end_timer = 0;
+    if (page == MG_END_OPEN) {
+        mg_centre(ROW_CARD + 2, "LORD SMOGGAR IS GONE", PAL_GOLD);
+        mg_centre(ROW_CARD + 5, "THE SMOG LIFTS FROM EVERY VALLEY", PAL_SKY);
+    } else if (page <= MG_END_VALLEYS) {
+        const MGLevel *lv = &mg_levels[page - 1u];
+        mg_background(lv->background, 1);
+        mg_centre(ROW_CARD + 2, lv->name, PAL_GOLD);
+        mg_centre(ROW_CARD + 4, "IS HEALED", PAL_SKY);
+    } else if (page == MG_END_VALLEYS + 1u) {
+        mg_background(mg_levels[MG_LEVEL_COUNT - 1u].background, 1);
+        mg_centre(ROW_CARD + 1, "MAIYA AND LUNA", PAL_GOLD);
+        mg_centre(ROW_CARD + 3, "SUPER NATURE GIRLS", PAL_SKY);
+        mg_centre(ROW_CARD + 6, "THE VALLEYS WILL REMEMBER YOU", PAL_TEXT);
+        mg_voice_later(MG_VOICE_SUNBOY, 20);
+    } else {
+        mg_centre(ROW_CARD - 1, "A GAME BY EAGLE SOFTWARE", PAL_GOLD);
+        mg_centre(ROW_CARD + 2, "MUSIC AND SOUND", PAL_SKY);
+        mg_centre(ROW_CARD + 3, "JUHANI JUNKALA", PAL_TEXT);
+        mg_centre(ROW_CARD + 5, "VOICES", PAL_SKY);
+        mg_centre(ROW_CARD + 6, "THE LJ SPEECH RECORDINGS", PAL_TEXT);
+        mg_centre(ROW_CARD + 9, "THANK YOU FOR PLAYING", PAL_GOLD);
+        mg_centre(ROW_CARD + 12, "THE END", PAL_WARN);
+    }
+}
+
+static void NEOGEO_USER mg_ending_begin(void)
+{
+    uint8_t i;
+    mg.state = MG_ENDING;
+    mg.end_page = MG_END_OPEN;
+    for (i = 0; i < MG_ENEMIES; i++) {
+        if (mg.enemies[i].body) ng_chars_remove(mg.enemies[i].body);
+        mg.enemies[i].body = 0;
+    }
+    if (mg.boss) { ng_chars_remove(mg.boss); mg.boss = 0; }
+    if (mg.rescue) { ng_chars_remove(mg.rescue); mg.rescue = 0; }
+    for (i = 0; i < MG_SHOTS; i++) mg.shots[i].life = 0;
+    mg.boss_active = 0;
+    mg.player->visible = 0;
+    ng_physics_set_gravity(mg.player, 0, 0);
+    mg.player->vy_fp = 0;
+    ng_char_set_pos(mg.player, 200, 100);
+    for (i = 0; i < 16u; i++) { ng_sprite_group_set_visible(&mg.hud[i], 0); ng_sprite_group_flush(&mg.hud[i]); }
+    for (i = 0; i < MG_TRAY_SLOTS; i++) { ng_sprite_group_set_visible(&mg.tray[i], 0); ng_sprite_group_flush(&mg.tray[i]); }
+    /* the road's own things go too: only the valleys themselves pass by */
+    for (i = 0; i < MG_LEDGE_BLOCKS; i++) { ng_sprite_group_set_visible(&mg.ledges[i], 0); ng_sprite_group_flush(&mg.ledges[i]); }
+    for (i = 0; i < MG_HAZARD_BLOCKS; i++) { ng_sprite_group_set_visible(&mg.hazards[i], 0); ng_sprite_group_flush(&mg.hazards[i]); }
+    for (i = 0; i < MG_SIGNS; i++) { ng_sprite_group_set_visible(&mg.signs[i], 0); ng_sprite_group_flush(&mg.signs[i]); }
+    for (i = 0; i < MG_DECOR_SLOTS; i++) { ng_sprite_group_set_visible(&mg.decor[i], 0); ng_sprite_group_flush(&mg.decor[i]); }
+    for (i = 0; i < MG_VINE_COUNT; i++) { ng_sprite_group_set_visible(&mg.vines[i], 0); ng_sprite_group_flush(&mg.vines[i]); }
+    for (i = 0; i < MG_FRONT_SLOTS; i++) { ng_sprite_group_set_visible(&mg.front[i], 0); ng_sprite_group_flush(&mg.front[i]); }
+    for (i = 0; i < MG_ITEMS; i++) { mg.items[i].life = 0; ng_sprite_group_set_visible(&mg.items[i].sprite, 0); ng_sprite_group_flush(&mg.items[i].sprite); }
+    ng_sprite_group_set_visible(&mg.gate, 0); ng_sprite_group_flush(&mg.gate);
+    ng_sprite_group_set_visible(&mg.cage, 0); ng_sprite_group_flush(&mg.cage);
+    mg.fx_time = 0;
+    ng_fix_clear();
+    mg_music(SOUND_TRACK_I);
+    mg_voice_later(MG_VOICE_WIN, 30);
+    if (!mg.demo) {
+        MGSave *sv = mg_saved();
+        maiya_save_check();
+        if (sv->clears < 255u) sv->clears++;
+        ng_save_commit();
+    }
+    mg_ending_page();
+}
+
+static void NEOGEO_USER mg_ending_frame(void)
+{
+    uint16_t joy = mg_input();
+    uint16_t pressed = (uint16_t)(joy & (uint16_t)(~mg.previous_joy));
+    uint16_t length = mg.end_page == MG_END_OPEN ? 240u
+                    : (mg.end_page <= MG_END_VALLEYS ? 150u : (mg.end_page == MG_END_VALLEYS + 1u ? 300u : 600u));
+    mg.previous_joy = joy;
+
+    /* the view drifts along the healed valley behind the words */
+    mg.player->visible = 0;
+    mg.player->vx_fp = 0;
+    mg.player->vy_fp = 0;
+    ng_char_set_pos(mg.player, (int16_t)(mg.player->x + 1), 100);
+    mg_world_step();
+
+    if (++mg.end_timer >= length ||
+        (mg.end_timer > 60u && (pressed & (BUTTON_A | BUTTON_B | BUTTON_C | BUTTON_D)))) {
+        if (mg.end_page >= MG_END_VALLEYS + 2u) {
+            mg.session_over = 1;
+            mg.state = MG_DONE;
+            mg.state_timer = 0;
+            return;
+        }
+        mg.end_page++;
+        mg_ending_page();
+    }
+}
+
 void NEOGEO_USER maiya_frame(void)
 {
     if (mg.player && !mg.demo && (mg.state == MG_PLAY || mg.state == MG_BONUS) &&
@@ -7310,14 +7518,7 @@ void NEOGEO_USER maiya_frame(void)
                     mg_interlude((uint8_t)(mg.stage + 1));
                 }
             } else {
-                /* Victory Ending */
-                mg.state = MG_ENDING;
-                mg.state_timer = 300;
-                ng_fix_clear_rect(1, ROW_CARD, 38, 13, PAL_TEXT);
-                mg_centre(ROW_CARD + 2, "CONGRATULATIONS!", PAL_GOLD);
-                mg_centre(ROW_CARD + 4, "EARTH IS RESTORED", PAL_SKY);
-                mg_centre(ROW_CARD + 6, "MAIYA AND SUNBOY SAVED THE VALLEY", PAL_TEXT);
-                mg_centre(ROW_CARD + 10, "EAGLE SOFTWARE 1996", PAL_GOLD);
+                mg_ending_begin();
             }
         }
         return;
@@ -7419,8 +7620,7 @@ void NEOGEO_USER maiya_frame(void)
             if (mg.next_stage < MG_LEVEL_COUNT) {
                 mg_scene(mg.next_stage, 0);
             } else {
-                mg.state = MG_ENDING;
-                mg.state_timer = 360;
+                mg_ending_begin();
             }
         }
         return;
@@ -7492,7 +7692,11 @@ void NEOGEO_USER maiya_frame(void)
         return;
     }
 
-    if (mg.state == MG_ENDING || mg.state == MG_DONE) {
+    if (mg.state == MG_ENDING) {
+        mg_ending_frame();
+        return;
+    }
+    if (mg.state == MG_DONE) {
         mg.player->vx_fp = 0;
         if (mg.state_timer && --mg.state_timer == 0) {
             mg.session_over = 1;

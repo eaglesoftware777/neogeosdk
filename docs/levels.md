@@ -75,6 +75,11 @@ her), `circle` (loops round a point), `swarm` (closes in on her), `charge`
 (squares up, shakes, rams across), `hover` (keeps pace ahead of her,
 firing). Waves come in x order.
 
+`rush` (optional) is a boss rush: guardian styles met again, in order,
+before the stage's own guardian (three stomps each, each in its own lair,
+with the words of the valley it first guarded). The Smog Citadel sends
+five before Lord Smoggar, who fights in three phases there.
+
 A stage with `"mechanic": "flight"` is flown on the sun eagle: the view
 scrolls on its own and its guardian meets her in the open sky at the end.
 It has no ledges, captives, gate, key, hideout, climbs, hazards or posted
