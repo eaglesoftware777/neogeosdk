@@ -37,6 +37,22 @@ void *NEOGEO_USER memset(void *destination, int value, size_t count)
     return destination;
 }
 
+/* Overlapping copies (the compiler's own for shifting the score table
+ * down a line): from the end when moving a block up in memory. */
+void *NEOGEO_USER memmove(void *destination, const void *source, size_t count)
+{
+    volatile uint8_t *out = (volatile uint8_t *)destination;
+    const uint8_t *in = (const uint8_t *)source;
+    if (out <= in) {
+        while (count--) *out++ = *in++;
+    } else {
+        out += count;
+        in += count;
+        while (count--) *--out = *--in;
+    }
+    return destination;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Budgets and slots                                                 */
 /* ------------------------------------------------------------------ */
@@ -108,7 +124,7 @@ enum {
 
     /* Game states. */
     MG_INTRO = 0, MG_PLAY, MG_CLEAR, MG_BONUS, MG_DEAD, MG_OVER, MG_ENDING, MG_DONE,
-    MG_INTERLUDE, MG_BOSS_INTRO, MG_WARP,
+    MG_INTERLUDE, MG_BOSS_INTRO, MG_WARP, MG_NAME, MG_TABLE,
 
     HERO_STRIPS = 5, HERO_ROWS = 4, HERO_STRIDE = 5,
     EAGLE_STRIPS = 8, EAGLE_ROWS = 3,
@@ -316,6 +332,7 @@ typedef struct {
     uint8_t  end_page;                /* the ending: which page                     */
     uint16_t end_timer;               /* ...and how long it has been up             */
     uint8_t  combo_n, combo_t, combo_show; /* creatures beaten in a row, time left to add one, its read-out */
+    uint8_t  name_buf[3], name_pos, name_row;  /* the high score name being entered, and its place */
     uint8_t  flash;                   /* frames of Secret Art palette      */
     uint8_t  angel;                   /* rising-to-the-sky death           */
     uint8_t  flowers, critters;       /* bonus tally for the mission end   */
@@ -6856,11 +6873,44 @@ static void NEOGEO_USER mg_interlude(uint8_t next_stage)
     mg_palette(PAL_ALLY, mg_sunboy_pal);
     mg_music(SOUND_TRACK_I);
 
+    /*
+     * The card for what comes next: that valley's own painting, dimmed,
+     * behind Sunboy; a map of the whole journey -- every mission a
+     * stop, the ones behind her starred, the next one her mark -- and the
+     * next mission's number and name.
+     */
+    if (!done) {
+        uint8_t i;
+        mg_background(mg_levels[next_stage].background, 0);
+        for (i = 0; i < 16u; i++)
+            mg_shade_bank((uint8_t)(PAL_BG + i), &mg_pal_base[(uint16_t)(PAL_BG + i) * 16u], 2, 0);
+    }
+
     ng_sprite_group_init(&boy, SLOT_TITLE, 2, 3, mg_sunboy_tiles[0], PAL_ALLY);
-    ng_sprite_group_set_pos(&boy, 144, 60);
+    ng_sprite_group_set_pos(&boy, 144, 26);
     ng_sprite_group_upload(&boy);
 
-    mg_centre(4, "SUNBOY CALLS OUT", PAL_GOLD);
+    mg_centre(2, "SUNBOY CALLS OUT", PAL_GOLD);
+    {
+        uint8_t k, col = (uint8_t)((40u - (MG_LEVEL_COUNT * 2u - 1u)) / 2u);
+        for (k = 0; k < MG_LEVEL_COUNT; k++) {
+            uint8_t c = (uint8_t)(k < next_stage ? '*' : (k == next_stage ? 'M' : 'O'));
+            ng_fix_putc((uint8_t)(col + k * 2u), 11, c,
+                        k < next_stage ? PAL_GOLD : (k == next_stage ? PAL_SKY : PAL_TEXT));
+            if (k + 1u < MG_LEVEL_COUNT) ng_fix_putc((uint8_t)(col + k * 2u + 1u), 11, '-', PAL_TEXT);
+        }
+        if (!done) {
+            char line[40] = "MISSION ";
+            uint8_t at = 8, n = (uint8_t)(next_stage + 1u), j = 0;
+            if (n >= 10u) line[at++] = (char)('0' + n / 10u);
+            line[at++] = (char)('0' + n % 10u);
+            line[at++] = ':';
+            line[at++] = ' ';
+            while (mg_levels[next_stage].name[j] && at < 38u) line[at++] = mg_levels[next_stage].name[j++];
+            line[at] = '\0';
+            mg_centre(12, line, PAL_GOLD);
+        }
+    }
     mg_centre(14, mg_sunboy_line[mg.stage][0], PAL_SKY);
     mg_centre(16, mg_sunboy_line[mg.stage][1], PAL_TEXT);
 
@@ -7282,6 +7332,118 @@ static void NEOGEO_USER mg_pause_toggle(void)
 }
 
 /* ------------------------------------------------------------------ */
+/*  High scores: the name entry and the table                         */
+/* ------------------------------------------------------------------ */
+/*
+ * A session that ends with a score good enough for the table asks for
+ * three letters -- up and down change the letter, A (or right) takes it, B
+ * (or left) goes back; thirty seconds and it takes what is there -- and
+ * then shows the table, the new line in gold, before the attract returns.
+ * The table lives in the save (backup RAM on a cabinet).
+ */
+static const char mg_name_chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ.! ";
+enum { MG_NAME_CHARS = sizeof(mg_name_chars) - 1, MG_NAME_TIME = 1800, MG_TABLE_TIME = 360 };
+
+static void NEOGEO_USER mg_show_scores(void)
+{
+    MGSave *sv = mg_saved();
+    uint8_t i;
+    ng_fix_clear();
+    mg_centre(4, "THE BEST NATURE GIRLS", PAL_GOLD);
+    ng_fix_puts(8, 7, "NAME", PAL_SKY);
+    ng_fix_puts(16, 7, "MISSION", PAL_SKY);
+    ng_fix_puts(26, 7, "SCORE", PAL_SKY);
+    for (i = 0; i < MG_SCORES; i++) {
+        uint8_t row = (uint8_t)(9u + i * 2u), pal = (uint8_t)(i == mg.name_row ? PAL_GOLD : PAL_TEXT);
+        mg_number(4, row, (uint32_t)(i + 1u), 2, pal);
+        ng_fix_putc(9, row, sv->top[i].name[0], pal);
+        ng_fix_putc(10, row, sv->top[i].name[1], pal);
+        ng_fix_putc(11, row, sv->top[i].name[2], pal);
+        mg_number(19, row, sv->top[i].stage, 2, pal);
+        mg_number(26, row, sv->top[i].score, 7, pal);
+    }
+    mg.state = MG_TABLE;
+    mg.state_timer = MG_TABLE_TIME;
+}
+
+static void NEOGEO_USER mg_name_draw(void)
+{
+    uint8_t i;
+    for (i = 0; i < 3u; i++) {
+        ng_fix_putc((uint8_t)(18u + i * 2u), 14, mg.name_buf[i], i == mg.name_pos ? PAL_GOLD : PAL_TEXT);
+        ng_fix_putc((uint8_t)(18u + i * 2u), 15, i == mg.name_pos ? '^' : ' ', PAL_SKY);
+    }
+}
+
+/* The session is over: to the name entry if the score makes the table,
+ * otherwise straight back to the attract. */
+static void NEOGEO_USER mg_session_end(void)
+{
+    MGSave *sv = mg_saved();
+    maiya_save_check();
+    mg.name_row = 0xFFu;
+    if (mg.demo || mg.score <= sv->top[MG_SCORES - 1].score) {
+        mg.session_over = 1;
+        mg.state = MG_DONE;
+        mg.state_timer = 0;
+        return;
+    }
+    ng_sprite_hide_all();
+    ng_fix_clear();
+    mg_centre(6, "A NEW HIGH SCORE!", PAL_GOLD);
+    mg_number(16, 8, mg.score, 7, PAL_TEXT);
+    mg_centre(11, "ENTER YOUR NAME", PAL_SKY);
+    mg_centre(20, "UP, DOWN: LETTER   A: NEXT   B: BACK", PAL_TEXT);
+    mg.name_buf[0] = 'A'; mg.name_buf[1] = 'A'; mg.name_buf[2] = 'A';
+    mg.name_pos = 0;
+    mg_name_draw();
+    mg.state = MG_NAME;
+    mg.state_timer = MG_NAME_TIME;
+    mg.previous_joy = mg_input();
+    mg_music(SOUND_TRACK_G);
+}
+
+static void NEOGEO_USER mg_name_commit(void)
+{
+    MGSave *sv = mg_saved();
+    uint8_t i, at = 0;
+    while (at < MG_SCORES && sv->top[at].score >= mg.score) at++;
+    if (at < MG_SCORES) {
+        for (i = MG_SCORES - 1; i > at; i--) sv->top[i] = sv->top[i - 1];
+        sv->top[at].name[0] = mg.name_buf[0];
+        sv->top[at].name[1] = mg.name_buf[1];
+        sv->top[at].name[2] = mg.name_buf[2];
+        sv->top[at].stage = (uint8_t)(mg.stage + 1u);
+        sv->top[at].score = mg.score;
+        ng_save_commit();
+    }
+    mg.name_row = at;
+    playSFX(SOUND_SFX_13);
+    mg_show_scores();
+}
+
+static void NEOGEO_USER mg_name_frame(void)
+{
+    uint16_t joy = mg_input();
+    uint16_t pressed = (uint16_t)(joy & (uint16_t)(~mg.previous_joy));
+    uint8_t c = 0;
+    mg.previous_joy = joy;
+
+    while (c < MG_NAME_CHARS && mg_name_chars[c] != (char)mg.name_buf[mg.name_pos]) c++;
+    if (pressed & JOY_UP) { c = (uint8_t)(c + 1u >= MG_NAME_CHARS ? 0 : c + 1u); playSFX(SOUND_SFX_11); }
+    if (pressed & JOY_DOWN) { c = (uint8_t)(c ? c - 1u : MG_NAME_CHARS - 1u); playSFX(SOUND_SFX_11); }
+    mg.name_buf[mg.name_pos] = (uint8_t)mg_name_chars[c < MG_NAME_CHARS ? c : 0];
+    if ((pressed & (BUTTON_B | JOY_LEFT)) && mg.name_pos) mg.name_pos--;
+    if (pressed & (BUTTON_A | JOY_RIGHT)) {
+        playSFX(SOUND_SFX_15);
+        if (++mg.name_pos >= 3u) { mg.name_pos = 2; mg_name_commit(); return; }
+    }
+    mg_name_draw();
+    if ((mg.state_timer % 60u) == 0u) mg_number(34, 3, (uint32_t)(mg.state_timer / 60u), 2, PAL_WARN);
+    if (--mg.state_timer == 0) mg_name_commit();
+}
+
+/* ------------------------------------------------------------------ */
 /*  The ending                                                        */
 /* ------------------------------------------------------------------ */
 /*
@@ -7383,9 +7545,7 @@ static void NEOGEO_USER mg_ending_frame(void)
     if (++mg.end_timer >= length ||
         (mg.end_timer > 60u && (pressed & (BUTTON_A | BUTTON_B | BUTTON_C | BUTTON_D)))) {
         if (mg.end_page >= MG_END_VALLEYS + 2u) {
-            mg.session_over = 1;
-            mg.state = MG_DONE;
-            mg.state_timer = 0;
+            mg_session_end();
             return;
         }
         mg.end_page++;
@@ -7645,8 +7805,7 @@ void NEOGEO_USER maiya_frame(void)
                 playSFX(SOUND_SFX_6);
             } else {
                 mg.state = MG_DONE;
-                mg.state_timer = 180;
-                mg.session_over = 1;
+                mg.state_timer = 180;        /* then the name entry, if it made the table */
                 ng_fix_clear_rect(1, ROW_CARD, 38, 10, PAL_TEXT);
                 mg_centre(ROW_CARD + 4, "GAME OVER", PAL_WARN);
             }
@@ -7762,8 +7921,8 @@ void NEOGEO_USER maiya_frame(void)
 
         if (mg.state_timer && --mg.state_timer == 0) {
             NEO_REGISTER8(BIOS_PLAYER1_MODE) = 3;
-            mg.session_over = 1;
             mg.state = MG_DONE;
+            mg.state_timer = 180;
             ng_fix_clear_rect(1, ROW_CARD, 38, 13, PAL_TEXT);
             mg_centre(ROW_CARD + 4, "GAME OVER", PAL_WARN);
             mg_centre(ROW_CARD + 6, "THE EARTH STILL WAITS FOR YOU", PAL_SKY);
@@ -7775,11 +7934,17 @@ void NEOGEO_USER maiya_frame(void)
         mg_ending_frame();
         return;
     }
+    if (mg.state == MG_NAME) {
+        mg_name_frame();
+        return;
+    }
+    if (mg.state == MG_TABLE) {
+        if (--mg.state_timer == 0) mg.session_over = 1;
+        return;
+    }
     if (mg.state == MG_DONE) {
         mg.player->vx_fp = 0;
-        if (mg.state_timer && --mg.state_timer == 0) {
-            mg.session_over = 1;
-            mg.state = MG_DONE;
-        }
+        if (mg.state_timer && --mg.state_timer == 0) mg_session_end();
+        else if (!mg.state_timer && !mg.session_over) mg_session_end();
     }
 }
