@@ -176,7 +176,9 @@ enum {
     MG_BLOCKS_SNOW = 4, MG_BLOCKS_BARK = 5, MG_BLOCKS_RUST = 6, MG_BLOCKS_CORAL = 7,
     MG_BLOCKS_STONE = 8, MG_BLOCKS_SAVANNA = 9,
     MG_CRUMBLE_AFTER = 45, MG_CRUMBLE_BACK = 180,
-    MG_SURGE_TIME = 30, MG_SURGE_WINDUP = 6,
+    /* The Surge: a beat to gather, then some 100 px of spin (it ran 180
+     * and carried her into pits). */
+    MG_SURGE_TIME = 22, MG_SURGE_WINDUP = 6, MG_SURGE_SPEED = 1600,
     MG_BONUS_LIFE_SCORE_STEP = 50000,
     MG_BONUS_LIFE_SCORE_FIRST = 20000,
     MG_BOSS_BAR_COL = 12, MG_BOSS_BAR_LABEL_COL = 7,
@@ -4675,9 +4677,10 @@ static void NEOGEO_USER mg_controls(void)
 
     /*
      * The Rose Blossom Surge. A beat of stillness while the bloom gathers
-     * around her, then she spins through the road trailing petals: every
-     * creature in her path is struck, the guardian once, and she can't be
-     * touched until it's over.
+     * around her, then she spins a short way along the road trailing
+     * petals: every creature in her path is struck, the guardian once, and
+     * she can't be touched until it's over. On the road she stops at a
+     * pit's edge and finishes the spin there.
      */
     if (mg.super_surge) {
         mg.super_surge--;
@@ -4692,7 +4695,10 @@ static void NEOGEO_USER mg_controls(void)
             }
         } else {
             uint8_t i;
-            vx = (int16_t)(mg.facing ? -DASH_SPEED * 3 / 2 : DASH_SPEED * 3 / 2);
+            int8_t dir = (int8_t)(mg.facing ? -1 : 1);
+            int16_t speed = (int16_t)(mg.super_surge > 3 ? MG_SURGE_SPEED : DASH_SPEED / 2);
+            if (!mg.airborne && mg_over_pit((int16_t)(p->x + dir * 20), 0)) speed = 0;
+            vx = (int16_t)(dir * speed);
             if ((mg.super_surge % 3) == 0)
                 mg_burst((int16_t)(p->x + (mg.facing ? 14 : -14)), (int16_t)(p->y - 24),
                          (uint8_t)((mg.super_surge & 4) ? MG_T_PETAL : MG_T_LEAF), 1, -1);
