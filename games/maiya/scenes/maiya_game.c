@@ -113,6 +113,7 @@ enum {
     PAL_HAZARD = 61, PAL_FACE = 43, PAL_PIT = 66,
     PAL_BLOCK_ROT = 67,  /* a rotten ledge: the valley's set, greyed and darker */
     PAL_FX = 64,         /* the light of her special moves */
+    PAL_FOLK = 48,       /* the healed valley's people, a bank a kind (48..51, the creatures' banks: none are left) */
     /* The Sky Road's fliers. */
     PAL_RHINO = 65, PAL_DRAGONFLY = 68, PAL_GNAT = 69, PAL_GUNSHIP = 70,
     /* FIX inks for the guardian's bar: dirty and toxic rather than the
@@ -124,7 +125,7 @@ enum {
 
     /* Game states. */
     MG_INTRO = 0, MG_PLAY, MG_CLEAR, MG_BONUS, MG_DEAD, MG_OVER, MG_ENDING, MG_DONE,
-    MG_INTERLUDE, MG_BOSS_INTRO, MG_WARP, MG_NAME, MG_TABLE,
+    MG_INTERLUDE, MG_BOSS_INTRO, MG_WARP, MG_NAME, MG_TABLE, MG_TOUR,
 
     HERO_STRIPS = 5, HERO_ROWS = 4, HERO_STRIDE = 5,
     EAGLE_STRIPS = 8, EAGLE_ROWS = 3,
@@ -336,6 +337,10 @@ typedef struct {
     uint8_t  music_next, music_wait;  /* a track waiting for the fade out to finish; the fade under way (1 out, 2 in) */
     uint8_t  music_level;             /* the music's volume now, as the fade has it */
     uint8_t  art_pose, leaping;       /* the Secret Art's pose, frames left; rising from the high leap */
+    uint8_t  tour_phase, tour_folk_n; /* the healed valley: 0 flying over it, 1 with the elder */
+    uint16_t tour_t;                  /* ...frames into the phase                    */
+    int16_t  tour_x;                  /* ...where the view has got to                */
+    NGCharacter *tour_folk[8];        /* ...the people freed, out on the road; the elder last */
     uint8_t  flash;                   /* frames of Secret Art palette      */
     uint8_t  angel;                   /* rising-to-the-sky death           */
     uint8_t  flowers, critters;       /* bonus tally for the mission end   */
@@ -1453,7 +1458,9 @@ static void NEOGEO_USER mg_camera_follow(void)
         else if (p->vx_fp < -128) mg.cam_dir = -1;
     }
 
-    if (mg.flying && !mg.boss_active) {
+    if (mg.state == MG_TOUR) {
+        mg.camera.x = mg.tour_x;            /* the healed valley's own slow pan */
+    } else if (mg.flying && !mg.boss_active) {
         /* On the Sky Road the sky carries the view along at a pixel a
          * frame (not through a hitstop or a pause), to the guardian. */
         if (mg.state == MG_PLAY && !ng_feedback_is_hitstop() && !ng_pause_is_on() &&
@@ -1582,6 +1589,16 @@ static void NEOGEO_USER mg_before_draw_hook(void)
     ng_level_set_scroll(mg.camera.x, mg.cam_y);
     mg_scroll_scenery(mg.camera.x);
     if (mg.state == MG_BONUS || mg.state == MG_ENDING) {
+        mg_update_sparks(mg.camera.x);
+        return;
+    }
+    if (mg.state == MG_TOUR) {
+        /* healed: the ledges, the climbs and the flowers, but no fire, no
+         * sludge, no pits, no gate */
+        mg_draw_ledges(mg.camera.x);
+        mg_draw_vines(mg.camera.x);
+        mg_draw_decor(mg.camera.x);
+        mg_draw_front(mg.camera.x);
         mg_update_sparks(mg.camera.x);
         return;
     }
@@ -6929,7 +6946,7 @@ static void NEOGEO_USER mg_interlude(uint8_t next_stage)
     mg_backdrop(0x8000);
     maiya_vblank();
     mg_ui_palettes();
-    mg_palette(PAL_ALLY, mg_sunboy_pal);
+    mg_palette(PAL_ALLY, mg_elder_pal);
     mg_music(SOUND_TRACK_I);
 
     /*
@@ -6945,11 +6962,12 @@ static void NEOGEO_USER mg_interlude(uint8_t next_stage)
             mg_shade_bank((uint8_t)(PAL_BG + i), &mg_pal_base[(uint16_t)(PAL_BG + i) * 16u], 2, 0);
     }
 
-    ng_sprite_group_init(&boy, SLOT_TITLE, 2, 3, mg_sunboy_tiles[0], PAL_ALLY);
+    /* the elder briefs her: the next valley's pollution, and its foe */
+    ng_sprite_group_init(&boy, SLOT_TITLE, 2, 3, mg_elder_tiles[0], PAL_ALLY);
     ng_sprite_group_set_pos(&boy, 144, 26);
     ng_sprite_group_upload(&boy);
 
-    mg_centre(2, "SUNBOY CALLS OUT", PAL_GOLD);
+    mg_centre(2, "THE ELDER'S COUNSEL", PAL_GOLD);
     {
         uint8_t k, col = (uint8_t)((40u - (MG_LEVEL_COUNT * 2u - 1u)) / 2u);
         for (k = 0; k < MG_LEVEL_COUNT; k++) {
@@ -6970,8 +6988,10 @@ static void NEOGEO_USER mg_interlude(uint8_t next_stage)
             mg_centre(12, line, PAL_GOLD);
         }
     }
-    mg_centre(14, mg_sunboy_line[mg.stage][0], PAL_SKY);
-    mg_centre(16, mg_sunboy_line[mg.stage][1], PAL_TEXT);
+    if (!done) {
+        mg_centre(14, mg_briefing[next_stage][0], PAL_SKY);
+        mg_centre(16, mg_briefing[next_stage][1], PAL_TEXT);
+    }
 
     ng_fix_puts(8, 19, "FLOWERS", PAL_GOLD);
     mg_number(17, 19, mg.flowers, 2, PAL_TEXT);
@@ -7428,6 +7448,177 @@ static void NEOGEO_USER mg_pause_toggle(void)
 }
 
 /* ------------------------------------------------------------------ */
+/*  The healed valley                                                 */
+/* ------------------------------------------------------------------ */
+/*
+ * After the guardian falls and she has her moment, the valley is shown
+ * healed: its painting in its clean colours, the fire, sludge and pits gone,
+ * and Maiya lifted up as the sun's angel, halo and all, drifting over it
+ * as the view pans from one end to the other. The people she freed are out
+ * on the road, hopping for joy under hearts; flowers open and leaves rise
+ * all along it. At the end she comes down beside the elder, who thanks
+ * her and tells her what her work has given back (its stage file's
+ * "healed"), with Sunboy's words; then on to the bonus round, if there is
+ * one, and the elder's briefing for the next valley. A button moves it on.
+ * On the Sky Road she flies it on the eagle's back.
+ */
+enum { MG_TOUR_SPEED = 6, MG_TOUR_ELDER = 330 };
+
+static NGCharacter *NEOGEO_USER mg_tour_person(uint8_t type, int16_t x)
+{
+    NGCharacter *c;
+    if (mg.tour_folk_n >= 8u || type > 3u) return 0;
+    c = mg_character(K_ALLY, x, MG_GROUND_Y, (uint8_t)(PAL_FOLK + type), NG_RENDER_BAND_NPC, type);
+    if (c) mg.tour_folk[mg.tour_folk_n++] = c;
+    return c;
+}
+
+static void NEOGEO_USER mg_tour_begin(void)
+{
+    const MGLevel *lv = &mg_levels[mg.stage];
+    NGCharacter *p = mg.player;
+    uint8_t i;
+
+    for (i = 0; i < MG_ENEMIES; i++) {
+        if (mg.enemies[i].body) ng_chars_remove(mg.enemies[i].body);
+        mg.enemies[i].body = 0;
+    }
+    if (mg.boss) { ng_chars_remove(mg.boss); mg.boss = 0; }
+    if (mg.rescue) { ng_chars_remove(mg.rescue); mg.rescue = 0; }
+    for (i = 0; i < MG_NPC_SLOTS; i++) { if (mg.npcs[i]) ng_chars_remove(mg.npcs[i]); mg.npcs[i] = 0; }
+    for (i = 0; i < MG_SHOTS; i++) mg.shots[i].life = 0;
+    for (i = 0; i < MG_ITEMS; i++) { mg.items[i].life = 0; ng_sprite_group_set_visible(&mg.items[i].sprite, 0); ng_sprite_group_flush(&mg.items[i].sprite); }
+    for (i = 0; i < MG_HAZARD_BLOCKS; i++) { ng_sprite_group_set_visible(&mg.hazards[i], 0); ng_sprite_group_flush(&mg.hazards[i]); }
+    for (i = 0; i < MG_SIGNS; i++) { ng_sprite_group_set_visible(&mg.signs[i], 0); ng_sprite_group_flush(&mg.signs[i]); }
+    for (i = 0; i < 16u; i++) { if (i != 10u) { ng_sprite_group_set_visible(&mg.hud[i], 0); ng_sprite_group_flush(&mg.hud[i]); } }
+    for (i = 0; i < MG_TRAY_SLOTS; i++) { ng_sprite_group_set_visible(&mg.tray[i], 0); ng_sprite_group_flush(&mg.tray[i]); }
+    ng_sprite_group_set_visible(&mg.gate, 0); ng_sprite_group_flush(&mg.gate);
+    ng_sprite_group_set_visible(&mg.cage, 0); ng_sprite_group_flush(&mg.cage);
+    mg.fx_time = 0;
+    mg.boss_active = 0;
+    mg.arena_bg = 0;
+    mg.cam_y = 0;
+    mg_background(lv->background, 1);          /* its own painting, in its clean colours */
+    ng_fix_clear();
+
+    /* the people she freed, and the valley's villagers, out on the road */
+    mg.tour_folk_n = 0;
+    for (i = 0; i < 4u; i++) mg_palette((uint8_t)(PAL_FOLK + i), mg_ally_pal(i));
+    for (i = 0; i < 4u; i++) if (lv->rescue_x[i]) mg_tour_person(lv->rescue_type[i], (int16_t)lv->rescue_x[i]);
+    for (i = 0; i < MG_NPC_COUNT; i++) if (mg_npcs[mg.stage][i].x) mg_tour_person(mg_npcs[mg.stage][i].type, mg_npcs[mg.stage][i].x);
+
+    /* she rises as the sun's angel (on the Sky Road, on the eagle) */
+    ng_physics_set_gravity(p, 0, 0);
+    p->vx_fp = p->vy_fp = 0;
+    p->visible = 1;
+    if (!mg.flying) mg_palette(PAL_HERO, mg_hero_sun_pal);
+    mg.facing = 0;
+    mg.tour_x = 0;
+    mg.tour_t = 0;
+    mg.tour_phase = 0;
+    mg.state = MG_TOUR;
+    mg_music(SOUND_TRACK_I);
+    mg_centre(4, lv->name, PAL_GOLD);
+    mg_centre(5, "IS HEALED", PAL_SKY);
+    mg.previous_joy = mg_input();
+}
+
+static void NEOGEO_USER mg_tour_next(void)
+{
+    uint8_t next = (uint8_t)(mg.stage + 1u);
+    ng_sprite_group_set_visible(&mg.hud[10], 0);
+    ng_sprite_group_flush(&mg.hud[10]);
+    /* Every other valley ends with a bonus round first. */
+    if ((mg.stage & 1u) == 1u) mg_bonus_enter(next);
+    else mg_interlude(next);
+}
+
+static void NEOGEO_USER mg_tour_frame(void)
+{
+    const MGLevel *lv = &mg_levels[mg.stage];
+    NGCharacter *p = mg.player;
+    uint16_t joy = mg_input();
+    uint16_t pressed = (uint16_t)(joy & (uint16_t)(~mg.previous_joy));
+    int16_t end = (int16_t)(lv->width - NG_SCREEN_W);
+    uint8_t i;
+    mg.previous_joy = joy;
+    mg.tour_t++;
+
+    if (mg.tour_phase == 0) {
+        /* over the valley, end to end */
+        int16_t bob = (int16_t)ng_trig_mul(4, ng_sin((uint8_t)(mg.tick * 3u)));
+        mg.tour_x = (int16_t)(mg.tour_x + MG_TOUR_SPEED);
+        if (mg.tour_x >= end) mg.tour_x = end;
+        ng_char_set_pos(p, (int16_t)(mg.tour_x + 96), (int16_t)((mg.flying ? 130 : 84) + bob));
+        if (mg.flying) mg_frame(p, MG_F_RIDE, 0);
+        else mg_frame(p, (uint8_t)((mg.tick / 14) & 1 ? MG_F_WIN : MG_F_JUMP3), 0);
+        if (mg.tour_t == 90u) mg_centre(7, mg_healed[mg.stage][0], PAL_TEXT);
+        if (mg.tour_t == 170u) mg_centre(8, mg_healed[mg.stage][1], PAL_TEXT);
+        /* flowers open and leaves rise along the road; a glint in the sky */
+        if ((mg.tick % 5u) == 0u)
+            mg_burst((int16_t)(mg.tour_x + (int16_t)ng_rand_range(320u)), (int16_t)(MG_GROUND_Y - 12),
+                     (uint8_t)((mg.tick & 8u) ? MG_T_PETAL : MG_T_LEAF), 1, -2);
+        if ((mg.tick % 23u) == 0u)
+            mg_burst((int16_t)(mg.tour_x + (int16_t)ng_rand_range(320u)), (int16_t)(30 + ng_rand_range(60u)), MG_T_SPARK, 1, -1);
+        if (mg.tour_x >= end && mg.tour_t > 240u) {
+            /* the elder waits at the end of the road */
+            NGCharacter *elder = mg_tour_person(0, (int16_t)(end + 224));
+            if (elder) mg_frame(elder, 0, 1);
+            mg.tour_phase = 1;
+            mg.tour_t = 0;
+            ng_fix_clear_rect(1, 4, 38, 6, PAL_TEXT);
+        }
+    } else {
+        /* she comes down beside him, and he speaks */
+        int16_t floor = (int16_t)(mg.flying ? 150 : MG_GROUND_Y);
+        int16_t tx = (int16_t)(end + 150);
+        if (p->x < tx) ng_char_set_pos(p, (int16_t)(p->x + 1), p->y);
+        if (p->y < floor) {
+            ng_char_set_pos(p, p->x, (int16_t)(p->y + 2 > floor ? floor : p->y + 2));
+            if (p->y >= floor && !mg.flying) {
+                /* on the road again: her own colours come back */
+                mg_palette(PAL_HERO, mg_hero_normal_pal());
+                mg_burst(p->x, (int16_t)(p->y - 4), MG_T_DUST, 2, -1);
+            }
+        }
+        if (mg.flying) mg_frame(p, MG_F_RIDE, 0);
+        else mg_frame(p, (uint8_t)(p->y < floor ? MG_F_JUMP3 : (mg.tour_t < 200u ? MG_F_IDLE0 : MG_F_WIN)), 0);
+        if (mg.tour_t == 70u) {
+            mg_centre(ROW_CARD - 3, "ELDER: WELL DONE, MAIYA!", PAL_GOLD);
+            mg_centre(ROW_CARD - 1, "YOUR COURAGE HAS HEALED THIS VALLEY", PAL_SKY);
+            mg_voice(MG_VOICE_ELDER);
+        }
+        if (mg.tour_t == 150u) {
+            mg_centre(ROW_CARD + 1, mg_sunboy_line[mg.stage][0], PAL_TEXT);
+            mg_centre(ROW_CARD + 2, mg_sunboy_line[mg.stage][1], PAL_TEXT);
+        }
+        if (mg.tour_t >= MG_TOUR_ELDER || (mg.tour_t > 90u && (pressed & (BUTTON_A | BUTTON_B | BUTTON_C | BUTTON_D)))) {
+            mg_tour_next();
+            return;
+        }
+    }
+    /* the halo rides over her head */
+    if (!mg.flying && p->visible && (mg.tour_phase == 0 || p->y < (int16_t)MG_GROUND_Y)) {
+        ng_sprite_group_set_pos(&mg.hud[10], (int16_t)(p->x - mg.camera.x - 8), MG_SY(p->y - 72 + ((mg.tick >> 3) & 1)));
+        ng_sprite_group_set_visible(&mg.hud[10], 1);
+    } else {
+        ng_sprite_group_set_visible(&mg.hud[10], 0);
+    }
+    ng_sprite_group_flush(&mg.hud[10]);
+    /* the people hop for joy, hearts rising over them */
+    for (i = 0; i < mg.tour_folk_n; i++) {
+        NGCharacter *c = mg.tour_folk[i];
+        uint8_t hop = (uint8_t)(((mg.tick + i * 19u) & 31u) < 6u);
+        int16_t sx = (int16_t)(c->x - mg.camera.x);
+        mg_frame(c, (uint8_t)((mg.tick / 12u + i) & 1u), (uint8_t)(c->x > p->x));
+        ng_char_set_pos(c, c->x, (int16_t)(MG_GROUND_Y - (hop ? 4 : 0)));
+        if (sx > 0 && sx < 320 && ((mg.tick + i * 13u) % 40u) == 0u)
+            mg_burst(c->x, (int16_t)(MG_GROUND_Y - 52), MG_T_HEART, 1, -1);
+    }
+    mg_world_step();
+}
+
+/* ------------------------------------------------------------------ */
 /*  High scores: the name entry and the table                         */
 /* ------------------------------------------------------------------ */
 /*
@@ -7847,12 +8038,7 @@ void NEOGEO_USER maiya_frame(void)
         }
         if (--mg.state_timer == 0) {
             if (mg.stage + 1 < MG_LEVEL_COUNT) {
-                /* Every other valley ends with a bonus round first. */
-                if ((mg.stage & 1u) == 1u) {
-                    mg_bonus_enter((uint8_t)(mg.stage + 1));
-                } else {
-                    mg_interlude((uint8_t)(mg.stage + 1));
-                }
+                mg_tour_begin();       /* the healed valley, then on (mg_tour_next) */
             } else {
                 mg_ending_begin();
             }
@@ -8029,6 +8215,10 @@ void NEOGEO_USER maiya_frame(void)
 
     if (mg.state == MG_ENDING) {
         mg_ending_frame();
+        return;
+    }
+    if (mg.state == MG_TOUR) {
+        mg_tour_frame();
         return;
     }
     if (mg.state == MG_NAME) {

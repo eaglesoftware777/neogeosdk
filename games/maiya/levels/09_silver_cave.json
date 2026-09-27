@@ -23,6 +23,8 @@
   "art": {"name": "CAVERN LIGHT BLOOM", "words": "MAIYA: LIGHT, FIND WHAT'S HIDDEN!"},
   "secret_hint": "THE DEEP VEIN GLINTS WITH GOLD",
   "sunboy": ["THE CAVE BREATHES CLEAN AIR AGAIN", "ONE VALLEY LEFT: THE OPEN SAVANNA"],
+  "healed": ["THE MINE HAS FALLEN SILENT AT LAST", "THE CAVE'S SILVER SHINES AGAIN"],
+  "briefing": ["THE MINERS DIG POISON FROM THE CAVE", "A WYRM OF SLAG COILS IN THE DEEP"],
   "platforms": [
     {"x": 268, "y": 144, "w": 160},
     {"x": 536, "y": 120, "w": 128},

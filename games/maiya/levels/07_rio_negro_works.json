@@ -22,6 +22,8 @@
   "art": {"name": "RIVER OF LIGHT", "words": "MAIYA: RIVER, RUN CLEAR AGAIN!"},
   "secret_hint": "A LIFE HANGS ABOVE THE FIRST TANK",
   "sunboy": ["YOU FREED ME! I FELT THE CHAINS BREAK", "THREE MORE VALLEYS NEED US. LET'S GO"],
+  "healed": ["THE RIVER RUNS BLACK NO MORE", "THE OLD WORKS STAND STILL AND QUIET"],
+  "briefing": ["THE WORKS POUR POISON IN THE RIVER", "AN IRON VULTURE GUARDS THE FURNACES"],
   "platforms": [
     {"x": 332, "y": 144, "w": 96},
     {"x": 576, "y": 104, "w": 96},

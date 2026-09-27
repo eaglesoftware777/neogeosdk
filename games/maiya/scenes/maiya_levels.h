@@ -184,6 +184,11 @@ static const MGWave mg_waves[MG_LEVEL_COUNT][MG_WAVE_COUNT] = MG_WAVES_TABLE;
  * ends the list). */
 static const uint8_t mg_rush[MG_LEVEL_COUNT][MG_RUSH_COUNT + 1] = MG_RUSH_TABLE;
 
+/* What her work healed in each valley (the elder, after its guardian), and
+ * the elder's briefing before it: its pollution and its foe. */
+static const char *const mg_healed[MG_LEVEL_COUNT][2] = MG_HEALED_TABLE;
+static const char *const mg_briefing[MG_LEVEL_COUNT][2] = MG_BRIEFING_TABLE;
+
 /* ---------------------------------------------------------------- */
 /*  Secret Arts, elder lore and what Sunboy says between missions    */
 /* ---------------------------------------------------------------- */

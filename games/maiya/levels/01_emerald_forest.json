@@ -22,6 +22,8 @@
   "art": {"name": "ROSE WIND STRIKE", "words": "MAIYA: ROSE WIND, CARRY ME!"},
   "secret_hint": "A ROSE SLEEPS ABOVE THE ARCH",
   "sunboy": ["MAIYA! THE FOREST BREATHES AGAIN", "THE MARSH FALLS ARE NEXT. HURRY"],
+  "healed": ["THE OLD TREES BREATHE FREELY AGAIN", "THE LOGGERS' SAWS HAVE FALLEN SILENT"],
+  "briefing": ["A CHAINSAW BEETLE TEARS THE FOREST", "STOP IT BEFORE THE LAST TREE FALLS"],
   "platforms": [
     {"x": 320, "y": 140, "w": 96},
     {"x": 480, "y": 104, "w": 80},

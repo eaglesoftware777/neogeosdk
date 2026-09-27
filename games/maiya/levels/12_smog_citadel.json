@@ -22,6 +22,8 @@
   "art": {"name": "BLOOM OF ALL VALLEYS", "words": "MAIYA: ALL VALLEYS, BLOOM AS ONE!"},
   "secret_hint": "THE CITADEL HIDES A SUN GEM UP HIGH",
   "sunboy": ["THE SMOG IS GONE FOREVER", "MAIYA, YOU SAVED US ALL"],
+  "healed": ["THE CITADEL'S FIRES ARE OUT", "THE WORLD CAN BREATHE AGAIN"],
+  "briefing": ["LORD SMOGGAR WAITS IN HIS CITADEL", "HIS FALLEN GUARDIANS WILL RISE AGAIN"],
   "rush": ["beetle", "toad", "jackal", "owl", "vulture"],
   "platforms": [
     {"x": 320, "y": 144, "w": 96},

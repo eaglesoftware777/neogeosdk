@@ -23,6 +23,8 @@
   "art": {"name": "PURIFYING RAIN", "words": "MAIYA: RAIN, WASH IT CLEAN!"},
   "secret_hint": "BEHIND THE FALLS: A SUN SEED",
   "sunboy": ["THE WATER RUNS CLEAR. I FELT IT", "TAKE THE COAST ROAD. I AM WEAKER"],
+  "healed": ["THE FALLS RUN CLEAR AND COLD AGAIN", "FISH LEAP IN THE POOLS ONCE MORE"],
+  "briefing": ["SLUDGE POURS INTO THE SACRED FALLS", "A TOAD OF POISON GUARDS THE SPRING"],
   "platforms": [
     {"x": 232, "y": 144, "w": 96},
     {"x": 384, "y": 112, "w": 80},
