@@ -3097,9 +3097,19 @@ uint8_t NEOGEO_USER maiya_session_over(void)
  * it (coins, start) stays in user.c; this only sets the demo up and tears it
  * down again so a credited game starts from a clean slate.
  */
+/*
+ * The attract rounds show three valleys in turn -- the Emerald Forest, the
+ * Crystal Grotto (played as Luna) and the Rio Negro Works. The very first
+ * round walks the forest from its start; every later one drops her in
+ * somewhere along the road, a different place each time, well short of
+ * the gate. The demo never goes through the gate: no guardian is shown.
+ */
+static const uint8_t mg_demo_stages[3] = { 0, 4, 6 };
+
 void NEOGEO_USER maiya_demo_begin(void)
 {
-    static uint8_t demo_stage = 0;
+    static uint8_t demo_round = 0;
+    uint8_t demo_stage = mg_demo_stages[demo_round % 3u];
 
     mg.demo = 1;
     mg.kinds_met = 0;
@@ -3110,14 +3120,31 @@ void NEOGEO_USER maiya_demo_begin(void)
     mg.life_pickups_used = 0;
     mg.next_life_score = MG_BONUS_LIFE_SCORE_FIRST;
     mg.thorns = 0; mg.weapon = MG_W_NONE; mg.weapon_ammo = 0;
-    if (mg_stage_mech[demo_stage] == MG_M_FLIGHT) demo_stage = 0;   /* the demo walks */
+    mg.hero_choice = (uint8_t)(demo_stage == 4u);     /* the grotto is Luna's */
     mg_scene(demo_stage, 0);
+    if (demo_round) {
+        /* somewhere along the road: on it, clear of breaks and hazards,
+         * with a good stretch left before the gate */
+        const MGLevel *lv = &mg_levels[demo_stage];
+        int16_t span = (int16_t)(lv->gate_x - 1800 - 300);
+        uint8_t tries;
+        for (tries = 0; tries < 16u && span > 0; tries++) {
+            int16_t x = (int16_t)(300 + (int16_t)ng_rand_range((uint16_t)span));
+            uint8_t k, clear = (uint8_t)!mg_over_pit(x, 48);
+            for (k = 0; k < MG_HAZARD_COUNT && clear; k++) {
+                const MGHazard *hz = &lv->hazards[k];
+                if (hz->type && x > hz->x - 60 && x < hz->x + hz->width + 60) clear = 0;
+            }
+            if (!clear) continue;
+            ng_char_set_pos(mg.player, x, mg.player->y);
+            ng_camera_snap(&mg.camera, (int16_t)(x - 100), 0);
+            break;
+        }
+    }
     ng_fix_clear_rect(1, ROW_HINT, 38, 9, PAL_TEXT);
     mg_centre(ROW_CARD + 2, "ATTRACT MODE", PAL_GOLD);
     mg.state_timer = 80;
-
-    demo_stage = (uint8_t)(demo_stage + 1);
-    if (demo_stage >= MG_LEVEL_COUNT) demo_stage = 0;
+    demo_round++;
 }
 
 void NEOGEO_USER maiya_demo_end(void)
@@ -3129,11 +3156,15 @@ void NEOGEO_USER maiya_demo_end(void)
     ng_fix_clear();
 }
 
-/* The demo never ends on a game over: it just picks the valley up again. */
+/* The demo never ends on a game over: it just picks the valley up again.
+ * Nor does it ever show a guardian: it stops short of the gate. */
 uint8_t NEOGEO_USER maiya_demo_spent(void)
 {
-    return (uint8_t)(mg.state == MG_OVER || mg.state == MG_DONE ||
-                     mg.state == MG_ENDING);
+    const MGLevel *lv = &mg_levels[mg.stage];
+    return (uint8_t)(mg.state == MG_OVER || mg.state == MG_DONE || mg.state == MG_ENDING ||
+                     mg.state == MG_WARP || mg.state == MG_BOSS_INTRO || mg.state == MG_CLEAR ||
+                     mg.boss_active ||
+                     (mg.player && lv->gate_x && mg.player->x > (int16_t)(lv->gate_x - 160)));
 }
 
 /* ------------------------------------------------------------------ */
@@ -4104,6 +4135,26 @@ static uint16_t NEOGEO_USER mg_demo_joystick(void)
     if ((mg.tick % 170u) < 5u) joy |= BUTTON_A;
     if ((mg.tick % 620u) < 90u) joy = (uint16_t)((joy & ~JOY_RIGHT) | JOY_UP);
     if ((mg.tick % 1500u) < 6u && mg.art) joy |= BUTTON_D;
+    /* It never falls in: a break in the road or a hazard just ahead is
+     * taken at a run and jumped. */
+    {
+        const MGLevel *lv = &mg_levels[mg.stage];
+        uint8_t danger = (uint8_t)(mg_over_pit((int16_t)(p->x + 30), 0) || mg_over_pit((int16_t)(p->x + 60), 0));
+        for (i = 0; i < MG_HAZARD_COUNT && !danger; i++) {
+            const MGHazard *hz = &lv->hazards[i];
+            if (hz->type && hz->type != MG_H_PIT && p->x + 64 > hz->x && p->x < hz->x) danger = 1;
+        }
+        if (danger) {
+            /* A held through the jump (letting go would cut it short); on
+             * the ground with it still held from the last, let go a frame
+             * so the next press counts */
+            uint8_t footing = (uint8_t)(ng_physics_is_grounded(p) || mg.on_ledge || p->y >= MG_GROUND_Y - 4);
+            joy = (uint16_t)((joy & ~(JOY_UP | JOY_LEFT | BUTTON_A)) | JOY_RIGHT | BUTTON_B);
+            if (!(footing && p->vy_fp >= 0 && (mg.previous_joy & BUTTON_A))) joy |= BUTTON_A;
+        } else if (mg_over_pit((int16_t)(p->x + 110), 0)) {
+            joy |= BUTTON_B;                     /* getting up to a run first */
+        }
+    }
     return joy;
 }
 
