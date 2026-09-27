@@ -59,6 +59,7 @@ DEFAULT_VALLEY_TINT = [
     {"name": "Sunken Reef", "hue": -110.0, "sat": 0.80, "val": 0.98},
     {"name": "Silver Cave", "hue": 170.0, "sat": 0.45, "val": 1.05},
     {"name": "Golden Savanna", "hue": 60.0, "sat": 1.00, "val": 1.10},
+    {"name": "Sky Road", "hue": -20.0, "sat": 0.90, "val": 1.08},
 ]
 
 DEFAULT_REUSED_BOSS_TINT = [
@@ -101,10 +102,12 @@ HERO_ROWS = 4
 HERO_STRIDE = 5
 HERO_HEIGHT = 52
 
-EAGLE_CANVAS = (64, 48)
-EAGLE_STRIPS = 3
-EAGLE_ROWS = 2
-EAGLE_HEIGHT = 42
+# The eagle Maiya rides on the Sky Road: wings spread wide enough to carry
+# her, kneeling on its back.
+EAGLE_CANVAS = (128, 48)
+EAGLE_STRIPS = 8
+EAGLE_ROWS = 3
+EAGLE_HEIGHT = 44
 
 BOSS_CANVAS = (128, 96)
 BOSS_STRIPS = 6
@@ -891,6 +894,9 @@ def build():
         band("arena_eel.png", 0.34),         # 7 Sunken Reef
         band("arena_wyrm_0.jpg", 0.18),      # 8 Silver Cave
         band("arena_hyena.jpg", 0.30),       # 9 Golden Savanna
+        # 10 Sky Road: the snow peaks under an open sky, seen from the
+        # eagle's back (the citadel sheet's middle band).
+        Image.open(find_file("stages_citadel*.jpg")).convert("RGBA").crop((0, 256, 585, 512)),
     ]
 
     # The works: the old plant's furnaces and gantries stand over the swamp
@@ -1038,6 +1044,8 @@ def build():
         maiya_frames[f"swim{k}"] = turned(hf[src], 1, lift=10)
     for k in range(4):
         maiya_frames[f"flip{k}"] = turned(hf["jump2"], k, lift=2)
+    # Kneeling on the eagle's back (her landing crouch, no shadow under it).
+    maiya_frames["ride"] = hf["land"]
 
     # Fit master palette for Maiya
     hero_training = np.concatenate([f[:, :, :3][training_mask(f)] for f in maiya_frames.values()])
@@ -1087,17 +1095,16 @@ def build():
     alt_pal[1:] = hsv_map(hero_master, alt_tint)
     header.append(c_array("mg_hero_alt_pal", palette_words(alt_pal)))
 
-    # Eagle (guardian sun bird): its own white-and-gold painting -- wings
-    # up, spread, down and a level glide -- rather than the Iron Vulture's
-    # body shrunk down, which read as a brown smudge.
+    # The sun eagle Maiya rides: its own white-and-gold painting, a wing
+    # beat of three -- spread, a level glide, wings down -- stood on its
+    # talons so the back she kneels on stays put from beat to beat. (The
+    # wings-up pose is left out: twice as tall, it shrank the rest.)
     eagle_src = Image.open(find_file("flying_mount_eagle*.jpg")).convert("RGB")
-    up, spread, down, glide = (21, 19, 451, 465), (524, 203, 1282, 465), \
-        (65, 475, 651, 737), (693, 509, 1351, 737)
-    eagle_frames = fit_group(eagle_src, {
-        "perch0": glide, "perch1": spread, "perch2": glide,
-        "fly0": up, "fly1": spread, "fly2": down,
-    }, EAGLE_CANVAS, EAGLE_HEIGHT, bg_color="corner")
+    spread, down, glide = (524, 203, 1282, 465), (65, 475, 651, 737), (693, 509, 1351, 737)
+    eagle_frames = fit_group(eagle_src, {"fly0": spread, "fly1": glide, "fly2": down},
+                             EAGLE_CANVAS, EAGLE_HEIGHT, bg_color="corner")
     shared_set("eagle", eagle_frames)
+    header.append(f"#define MG_EAGLE_FRAMES {len(eagle_frames)}u")
 
     # Face HUD icon and portrait
     # The select-screen portraits: the painted pair (Maiya, Luna) when it
@@ -1291,6 +1298,27 @@ def build():
         body = rgba[:, :, 3] > 0
         rgba[body, :3] = hsv_map(rgba[body, :3], dart_blue)
     new_creatures["dartfrog"] = frog
+
+    # The Sky Road's fliers, off the flight sheets and turned to face right
+    # like the rest of the roster: a horned beetle on the wing, a dragonfly,
+    # a gnat of the swarms, and the smog fleet's gunship (one paint scheme,
+    # its second frame a pixel lower: it bobs as it flies).
+    insects = Image.open(find_file("flight_insects*.jpg")).convert("RGB")
+    ships = Image.open(find_file("flight_airship*.jpg")).convert("RGB")
+    def facing_right(frames):
+        return {k: np.ascontiguousarray(f[:, ::-1]) for k, f in frames.items()}
+    new_creatures["rhino"] = facing_right(fit_group(
+        insects, {"0": (50, 60, 440, 250), "1": (50, 280, 440, 455)},
+        (64, 48), 40, bg_color="corner", center_box=True))
+    new_creatures["dragonfly"] = facing_right(fit_group(
+        insects, {"0": (515, 35, 815, 245), "1": (470, 275, 815, 445)},
+        (64, 48), 40, bg_color="corner", center_box=True))
+    new_creatures["gnat"] = fit_group(
+        insects, {"0": (885, 140, 940, 190), "1": (955, 170, 1010, 225)},
+        (32, 32), 24, bg_color="corner", center_box=True)
+    ship = facing_right(fit_group(ships, {"0": (845, 40, 1120, 210)},
+                                  (80, 48), 44, bg_color="corner", center_box=True))["0"]
+    new_creatures["gunship"] = {"0": ship, "1": np.roll(ship, 1, axis=0)}
 
     for cname, spec in new_creatures.items():
         if isinstance(spec, dict):

@@ -124,7 +124,7 @@ class Stage:
         key = self.get(d, "key", "stage", dict)
         s["key"] = (self.num(key, "x", "key", 0, width), self.num(key, "y", "key", top, 223))
         hide = self.get(d, "hideout", "stage", dict)
-        s["hideout"] = (self.num(hide, "x", "hideout", 16, width), self.num(hide, "y", "hideout", top + 16, 192),
+        s["hideout"] = (self.num(hide, "x", "hideout", 0, width), self.num(hide, "y", "hideout", top + 16, 192),
                         self.text(hide, "hint", "hideout"))
         g = self.get(d, "guardian", "stage", dict)
         s["guardian"] = self.text(g, "name", "guardian", 30)
@@ -171,12 +171,23 @@ class Stage:
                 self.fail(w, "top must be above bottom")
         s["npcs"] = [(self.num(n, "x", w, 1, width), self.choice(n, "who", w, WHO), self.text(n, "line", w))
                      for w, n in self.rows("npcs", "MG_NPC_COUNT")]
+        # The spawn script: a flight of creatures when the view's right edge
+        # reaches x, flying the named formation at height y.
+        s["waves"] = [(self.num(v, "x", w, 1, width), self.name(v, "enemy", w, "enemy", "MG_E_"),
+                       self.name(v, "form", w, "formation", "MG_FORM_"), self.num(v, "count", w, 1, 6),
+                       self.num(v, "y", w, 16, 208))
+                      for w, v in self.rows("waves", "MG_WAVE_COUNT")]
         self.rules(s)
         return s
 
     def rules(self, s):
         """How the game plays a stage: what it needs of the numbers."""
         width, gate = s["width"], s["gate_x"]
+        flight = s["mechanic"] == "MG_M_FLIGHT"
+        wx = [x for x, *_ in s["waves"]]
+        for i in range(1, len(wx)):
+            if wx[i] < wx[i - 1]:
+                self.fail(f"waves[{i}].x", f"{wx[i]}: waves come in x order (after {wx[i - 1]})")
         if gate >= width - 320:
             self.fail("gate_x", f"{gate} leaves no arena: keep it under width - 320 ({width - 320})")
         for i, (x, y, w) in enumerate(s["platforms"]):
@@ -200,6 +211,15 @@ class Stage:
                 self.fail(f"hazards[{i}].w", f"{w}: a multiple of 16, at most 64")
             if x + w >= width - 320:
                 self.fail(f"hazards[{i}]", "reaches into the arena (keep it under width - 320)")
+        if flight:
+            # On the wing there is no road: no captives, key, gate, hideout
+            # or climbs, and the guardian meets her at the end of the sky.
+            for field in ("rescues", "vines", "archers", "hazards"):
+                if s[field]:
+                    self.fail(field, "a flight stage has none")
+            if gate:
+                self.fail("gate_x", "a flight stage has no gate (0)")
+            return
         rx = [x for x, _ in s["rescues"]]
         if len(rx) != 4:
             self.fail("rescues", "needs four captives")
@@ -280,6 +300,8 @@ def render(stages, files):
     out.append(table("MG_CLIMB_TABLE", [s["climb"] for s in stages]))
     out.append(table("MG_UPPER_TABLE", [str(s["upper"]) for s in stages]))
     out.append(table("MG_POSTED_TABLE", [s["posted"] for s in stages]))
+    out.append(table("MG_WAVES_TABLE", [tuples(s["waves"], 5) for s in stages]))
+    out.append(table("MG_FLIGHT_TABLE", ["1" if s["mechanic"] == "MG_M_FLIGHT" else "0" for s in stages]))
     out.append("#endif")
     return "\n".join(out) + "\n"
 
@@ -292,6 +314,7 @@ def load():
         "MG_E_": defines(GAME / "scenes" / "maiya_levels.h", "MG_E_"),
         "MG_H_": defines(GAME / "scenes" / "maiya_levels.h", "MG_H_"),
         "MG_B_": defines(GAME / "scenes" / "maiya_levels.h", "MG_B_"),
+        "MG_FORM_": defines(GAME / "scenes" / "maiya_levels.h", "MG_FORM_"),
         "MG_M_": defines(GAME / "scenes" / "maiya_game.c", "MG_M_"),
         "MG_PIT_": defines(GAME / "scenes" / "maiya_game.c", "MG_PIT_"),
         "MG_BLOCKS_": defines(GAME / "scenes" / "maiya_game.c", "MG_BLOCKS_"),

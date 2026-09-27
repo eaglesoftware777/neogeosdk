@@ -47,3 +47,11 @@ swimming. The guardian's arena is fought standing on the floor, as before.
 
 `tests/move_test.c` covers the settle speed, the coast, the current, the
 limit, rise and sink, and the surface.
+
+Maiya flies the Sky Road (stage mechanic "flight") kneeling on the sun
+eagle: the same call steers her eight ways with no rise, the sky's scroll
+as the current (so let go, she keeps pace with the view) and `top` just
+under the HUD. A beats the wings (a quick climb), B throws thorns ahead,
+C is a swoop she can't be touched in, and coming down on a creature from
+above the talons strike it. The view scrolls a pixel a frame on its own;
+the guardian is fought in the open sky where it stops.

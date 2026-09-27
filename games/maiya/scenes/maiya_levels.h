@@ -18,6 +18,7 @@
 #define MG_DECOR_COUNT     13
 #define MG_VINE_COUNT      3
 #define MG_NPC_COUNT       3
+#define MG_WAVE_COUNT      24
 #define MG_PICK_COUNT      10
 
 #include "maiya_levels_data.h"
@@ -42,6 +43,21 @@
 #define MG_E_VINESTING 16 /* rooted in place, lashes anything that nears   */
 #define MG_E_SPOREGOB  17 /* hops like the others, spits a slow toxic puff */
 #define MG_E_WRAITH    18 /* smog wraith: comes for her when time runs short */
+/* The Sky Road's fliers. */
+#define MG_E_RHINO     19 /* a horned beetle on the wing: armoured, charges  */
+#define MG_E_DRAGONFLY 20 /* darts in, hangs, darts on                       */
+#define MG_E_GNAT      21 /* one of a swarm that closes in on her            */
+#define MG_E_GUNSHIP   22 /* the smog fleet's gunship: it fires as it flies  */
+
+/* How a wave flies (a stage file's "waves"; see mg_form_step). */
+#define MG_FORM_LINE   1  /* in a row, straight across                     */
+#define MG_FORM_SINE   2  /* in a row, rising and falling in a wave         */
+#define MG_FORM_VEE    3  /* a V, point first                               */
+#define MG_FORM_DIVE   4  /* drops in from above, hangs, dives at her       */
+#define MG_FORM_CIRCLE 5  /* flies in and loops round a point, then on      */
+#define MG_FORM_SWARM  6  /* a cloud that closes in on her, then scatters   */
+#define MG_FORM_CHARGE 7  /* stops at the edge, shakes, rams across at her  */
+#define MG_FORM_HOVER  8  /* keeps pace ahead of her, firing, then goes     */
 
 /* Guardians of the Blight Syndicate. */
 #define MG_B_BEETLE    0   /* Chainsaw Beetle (Emerald Forest)            */
@@ -151,6 +167,16 @@ typedef struct {
 } MGHideout;
 
 static const MGHideout mg_hideout[MG_LEVEL_COUNT] = MG_HIDEOUT_TABLE;
+
+/* The spawn script: a flight of `count` creatures when the view's right
+ * edge reaches x, flying formation `form` about height y. */
+typedef struct {
+    int16_t x;
+    uint8_t type, form, count;
+    int16_t y;
+} MGWave;
+
+static const MGWave mg_waves[MG_LEVEL_COUNT][MG_WAVE_COUNT] = MG_WAVES_TABLE;
 
 /* ---------------------------------------------------------------- */
 /*  Secret Arts, elder lore and what Sunboy says between missions    */
