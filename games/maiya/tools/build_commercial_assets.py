@@ -1446,6 +1446,15 @@ def build():
     for k, name in enumerate(trinkets.keys()):
         header.append(f"#define MG_K_{name.upper()} {k}u")
 
+    # The Sky Road's guardian, the smog fleet's dreadnought: 256 x 96, its
+    # three states of damage off the airship sheet (whole, a fire at the
+    # stern, burning), nose to the left, facing her.
+    ships_img = Image.open(find_file("flight_airship*.jpg")).convert("RGB")
+    airship = fit_group(ships_img, {"0": (80, 58, 630, 245), "1": (80, 288, 630, 472), "2": (80, 508, 640, 700)},
+                        (256, 96), 92, bg_color="corner", center_box=True)
+    shared_set("airship", airship)
+    header.append(f"#define MG_AIRSHIP_FRAMES {len(airship)}u")
+
     # The light of her special moves (64 x 64, drawn over her).
     fx = {name: painter() for name, painter in nature_art.FX}
     shared_set("fx", fx)

@@ -307,6 +307,9 @@ typedef struct {
     uint8_t  flying;                  /* the Sky Road: on the eagle's back          */
     int16_t  fly_x;                   /* how far the sky has carried the view       */
     uint32_t wave_mask;               /* the spawn script's waves already sent      */
+    uint8_t  ship_part[3];            /* the dreadnought: its stacks' and bridge's health */
+    uint8_t  ship_target;             /* the part a blow is aimed at (0xFF: the next one) */
+    uint8_t  ship_z;                  /* its distance as it comes in (0: arrived)   */
     uint8_t  flash;                   /* frames of Secret Art palette      */
     uint8_t  angel;                   /* rising-to-the-sky death           */
     uint8_t  flowers, critters;       /* bonus tally for the mission end   */
@@ -1536,6 +1539,7 @@ static const uint16_t *NEOGEO_USER mg_boss_tiles(uint8_t style)
     case MG_B_EEL:       return mg_boss_eel_tiles;
     case MG_B_WYRM:      return mg_boss_wyrm_tiles;
     case MG_B_HYENA:     return mg_boss_hyena_tiles;
+    case MG_B_AIRSHIP:   return mg_airship_tiles;
     default:             return mg_boss_beetle_tiles;
     }
 }
@@ -1552,6 +1556,7 @@ static const uint16_t *NEOGEO_USER mg_boss_pal(uint8_t style)
     case MG_B_EEL:       return mg_boss_eel_pal;
     case MG_B_WYRM:      return mg_boss_wyrm_pal;
     case MG_B_HYENA:     return mg_boss_hyena_pal;
+    case MG_B_AIRSHIP:   return mg_airship_pal;
     default:             return mg_boss_beetle_pal;
     }
 }
@@ -1689,7 +1694,7 @@ static void NEOGEO_USER mg_frame(NGCharacter *c, uint8_t frame, uint8_t flip)
         tile = mg_eagle_tiles[frame % MG_EAGLE_FRAMES];
     } else if (c->kind == K_BOSS) {
         const uint16_t *bt = mg_boss_tiles(c->data0);
-        tile = bt[frame % MG_BOSS_FRAMES];
+        tile = bt[frame % (c->data0 == MG_B_AIRSHIP ? MG_AIRSHIP_FRAMES : MG_BOSS_FRAMES)];
     } else if (c->kind == K_ENEMY) {
         const uint16_t *et = mg_enemy_tiles(c->data0);
         tile = et[frame % mg_enemy_frames(c->data0)];
@@ -1721,6 +1726,13 @@ static NGCharacter *NEOGEO_USER mg_character(uint8_t kind, int16_t x, int16_t y,
         c->sprite_offset_x = -64;      /* stood on its talons, wings spread either side */
         c->sprite_offset_y = -46;
         ng_char_set_body(c, -18, -32, 36, 32);
+    } else if (kind == K_BOSS && subtype == MG_B_AIRSHIP) {
+        /* 256 x 96, standing on the middle of its keel */
+        ng_char_set_sprite(c, NG_SPR_CHAR_FIRST, 16, 6, mg_airship_tiles[0], palette);
+        ng_char_set_tile_stride(c, 16);
+        c->sprite_offset_x = -128;
+        c->sprite_offset_y = -96;
+        ng_char_set_body(c, -120, -76, 238, 64);
     } else if (kind == K_BOSS) {
         const uint16_t *bt = mg_boss_tiles(subtype);
         ng_char_set_sprite(c, NG_SPR_CHAR_FIRST, BOSS_STRIPS, BOSS_ROWS, bt[0], palette);
@@ -2166,10 +2178,76 @@ static void NEOGEO_USER mg_rot_bank(uint8_t bank, const uint16_t *src)
     mg_palette(bank, pal);
 }
 
+/*
+ * The smog dreadnought, the Sky Road's guardian, is fought part by part:
+ * its two smokestacks first (thorns, the swoop, the talons from above),
+ * then -- both stacks gone -- the bridge behind its shark's eye opens and
+ * is the last target. Its armour turns everything else. Its health bar is
+ * the three parts' together. {x, y of the part's middle from the keel's,
+ * half its width, half its height}.
+ */
+enum { MG_SHIP_STACK_L, MG_SHIP_STACK_R, MG_SHIP_BRIDGE, MG_SHIP_PARTS };
+static const int8_t mg_ship_box[MG_SHIP_PARTS][4] = {
+    { 40, -84, 8, 13 }, { 60, -86, 8, 13 }, { -91, -58, 16, 9 },
+};
+
+static uint8_t NEOGEO_USER mg_ship_open(uint8_t part)
+{
+    return (uint8_t)(mg.ship_part[part] &&
+                     (part != MG_SHIP_BRIDGE || (!mg.ship_part[MG_SHIP_STACK_L] && !mg.ship_part[MG_SHIP_STACK_R])));
+}
+
+/* The part a blow at (x, y) lands on, open or not; 0xFF: none. */
+static uint8_t NEOGEO_USER mg_ship_part_at(int16_t x, int16_t y)
+{
+    NGCharacter *b = mg.boss;
+    uint8_t i;
+    for (i = 0; i < MG_SHIP_PARTS; i++) {
+        const int8_t *k = mg_ship_box[i];
+        if (!mg.ship_part[i]) continue;
+        if (mg_abs((int16_t)(x - (b->x + k[0]))) <= k[2] + 4 && mg_abs((int16_t)(y - (b->y + k[1]))) <= k[3] + 4)
+            return i;
+    }
+    return 0xFFu;
+}
+
+static uint8_t NEOGEO_USER mg_ship_in_hull(int16_t x, int16_t y)
+{
+    NGCharacter *b = mg.boss;
+    /* (from behind its nose, so a shot at the bridge reaches it) */
+    return (uint8_t)(x > b->x - 100 && x < b->x + 118 && y > b->y - 76 && y < b->y - 12);
+}
+
+/* A part is wrecked: fire and a jolt, the hull's paint burns one step on,
+ * and once both stacks are gone the bridge is bared. */
+static void NEOGEO_USER mg_ship_part_down(uint8_t part)
+{
+    NGCharacter *b = mg.boss;
+    const int8_t *k = mg_ship_box[part];
+    mg_burst((int16_t)(b->x + k[0]), (int16_t)(b->y + k[1]), MG_T_FIRE, 4, -2);
+    mg_burst((int16_t)(b->x + k[0]), (int16_t)(b->y + k[1] - 8), MG_T_DUST, 3, -2);
+    mg.shake = 12;
+    playSFX(SOUND_SFX_10);
+    if (part != MG_SHIP_BRIDGE && !mg.ship_part[MG_SHIP_STACK_L] && !mg.ship_part[MG_SHIP_STACK_R])
+        mg_hint("ITS BRIDGE IS BARE - STRIKE THE EYE!", PAL_GOLD, 150);
+}
+
 static void NEOGEO_USER mg_boss_damage(uint8_t damage)
 {
     NGCharacter *b = mg.boss ? mg.boss : mg.eagle;
     if (!b || mg.boss_hurt || mg.state != MG_PLAY) return;
+    if (b == mg.boss && b->data0 == MG_B_AIRSHIP) {
+        /* the blow lands on the part it was aimed at, or the next one open */
+        uint8_t part = mg.ship_target;
+        mg.ship_target = 0xFFu;
+        if (part >= MG_SHIP_PARTS || !mg_ship_open(part)) {
+            for (part = 0; part < MG_SHIP_PARTS && !mg_ship_open(part); part++) {}
+            if (part == MG_SHIP_PARTS || mg.ship_z) return;
+        }
+        if (damage > mg.ship_part[part]) damage = mg.ship_part[part];
+        mg.ship_part[part] = (uint8_t)(mg.ship_part[part] - damage);
+        if (!mg.ship_part[part] && damage < b->hp) mg_ship_part_down(part);
+    }
     mg.boss_hurt = 12;
     mg_hit_burst(b->x, (int16_t)(b->y - 40));
     if (damage >= b->hp) {
@@ -2264,8 +2342,8 @@ static void NEOGEO_USER mg_boss_damage(uint8_t damage)
 }
 
 /*
- * What landing on a creature does -- she carries no weapon, so this is how
- * the blight is beaten, and each kind has its own answer:
+ * What landing on a creature does -- besides her thorns and whip, this is
+ * how the blight is beaten, and each kind has its own answer:
  *   POP    squashed at one stomp (the soft ones, and anything in the air
  *          caught from above);
  *   FLIP   armour: the first stomp leaves it dazed (upright -- an insect
@@ -3588,6 +3666,8 @@ static int16_t NEOGEO_USER mg_ledge_y_at(const MGLevel *level, int16_t x)
  * the guardian stands at the far end, the arena's cover and backdrop go
  * up. Returns 0 if there was no character slot for it.
  */
+static void NEOGEO_USER mg_ship_approach(NGCharacter *b);
+
 static uint8_t NEOGEO_USER mg_boss_arrive(void)
 {
     const MGLevel *level = &mg_levels[mg.stage];
@@ -3621,10 +3701,20 @@ static uint8_t NEOGEO_USER mg_boss_arrive(void)
     mg.boss->hp = mg.boss->max_hp =
         (uint8_t)(((uint16_t)level->boss_hp * MG_STOMP_BLOW * (8u + mg.difficulty * 2u)) / 10u);
     ng_physics_attach(mg.boss, NG_PHYSICS_GRAVITY | NG_PHYSICS_SOLIDS);
-    if (level->boss_style == MG_B_OWL || level->boss_style == MG_B_VULTURE)
+    if (level->boss_style == MG_B_OWL || level->boss_style == MG_B_VULTURE ||
+        level->boss_style == MG_B_AIRSHIP)
         ng_physics_set_gravity(mg.boss, 0, 8 * NG_FP_ONE);   /* they fight on the wing */
     else
         ng_physics_set_gravity(mg.boss, 56, 6 * NG_FP_ONE);
+    if (level->boss_style == MG_B_AIRSHIP) {
+        /* its health, shared out: each stack three tenths, the bridge the rest */
+        uint8_t hp = mg.boss->hp;
+        mg.ship_part[MG_SHIP_STACK_L] = mg.ship_part[MG_SHIP_STACK_R] = (uint8_t)((hp * 3u) / 10u);
+        mg.ship_part[MG_SHIP_BRIDGE] = (uint8_t)(hp - 2u * mg.ship_part[MG_SHIP_STACK_L]);
+        mg.ship_target = 0xFFu;
+        mg.ship_z = 110;
+        mg_ship_approach(mg.boss);
+    }
     mg.boss->vx_fp = 0;
     return 1;
 }
@@ -4554,6 +4644,117 @@ static void NEOGEO_USER mg_boss_hover(NGCharacter *b, int16_t tx, int16_t ty, in
  * window to strike back. Below half health a guardian is enraged: the
  * cycle runs faster and its signature attack comes with an extra beat.
  */
+/*
+ * Coming in from the distance, small and high, growing as it nears
+ * (ng_shrink_tab, the depth effect's scale), until it takes station ahead
+ * of her. Nothing hurts it, or her, on the way.
+ */
+static void NEOGEO_USER mg_ship_approach(NGCharacter *b)
+{
+    uint8_t s;
+    if (mg.ship_z) mg.ship_z--;
+    s = ng_shrink_tab[mg.ship_z];
+    b->scale_x = s;
+    b->scale_y = s;
+    b->sprite_offset_x = (int16_t)-(((uint16_t)128u * s) >> 8);
+    b->sprite_offset_y = (int16_t)-(((uint16_t)96u * s) >> 8);
+    b->sprite_dirty = 1;
+    b->vx_fp = 0;
+    b->vy_fp = 0;
+    ng_char_set_pos(b, (int16_t)(mg.arena_left + 220 + mg.ship_z), (int16_t)(140 - mg.ship_z / 2));
+    mg_frame(b, 0, 0);
+}
+
+/*
+ * The dreadnought's fight: it rides a slow swell ahead of her, lobs shells
+ * from its gondola's ports at her, puffs smog from its stacks that drifts
+ * back at her, and now and then looses a cloud of gnats. With its stacks
+ * gone it comes lower and quicker, firing faster. Landing on a stack (or,
+ * bared, the bridge) with the talons is a blow; on the deck she only
+ * bounces off; flying into the hull hurts.
+ */
+static void NEOGEO_USER mg_stomp_bounce(NGCharacter *p);
+
+static void NEOGEO_USER mg_ship_ai(NGCharacter *b, NGCharacter *p)
+{
+    uint8_t down = (uint8_t)(!mg.ship_part[MG_SHIP_STACK_L] + !mg.ship_part[MG_SHIP_STACK_R]);
+    uint8_t rage = (uint8_t)(down == 2);
+    uint16_t t;
+    uint8_t i;
+
+    if (mg.boss_hurt) mg.boss_hurt--;
+    if (mg.boss_backoff) mg.boss_backoff--;
+    if (mg.ship_z) { mg_ship_approach(b); return; }
+    t = ++mg.boss_timer;
+
+    mg_boss_hover(b, (int16_t)(mg.arena_left + 220 + ng_trig_mul(rage ? 40 : 24, ng_sin((uint8_t)(t >> 1)))),
+                  (int16_t)(rage ? 150 + ng_trig_mul(30, ng_sin((uint8_t)t)) : 140), 160);
+    mg_frame(b, down, 0);
+
+    /* shells from the gondola: one at her, two either side */
+    if ((t % mg_rate(rage ? 70 : 110)) == 0u) {
+        mg_lob_at(b, p, -18, MG_T_OIL);
+        mg_lob((int16_t)(b->x - 30), (int16_t)(b->y - 18), -3, -4, MG_T_OIL);
+        mg_lob((int16_t)(b->x + 10), (int16_t)(b->y - 18), -1, -5, MG_T_OIL);
+        playSFX(SOUND_SFX_8);
+    }
+    /* smog from the stacks, drifting back at her */
+    if ((t % mg_rate(160)) == 80u) {
+        for (i = 0; i < 2; i++) {
+            if (!mg.ship_part[i]) continue;
+            mg_fire((int16_t)(b->x + mg_ship_box[i][0]), (int16_t)(b->y + mg_ship_box[i][1] - 14), -2, 0, 1, MG_T_DUST);
+        }
+    }
+    /* a cloud of gnats */
+    if ((t % 360u) == 200u) {
+        for (i = 0; i < 3u; i++) {
+            MGEnemy *e = mg_spawn_enemy(MG_E_GNAT, (int16_t)(b->x - 70), (int16_t)(b->y - 50 + i * 16), 0);
+            if (!e) break;
+            e->form = MG_FORM_SWARM;
+            e->slot_i = i;
+            e->age = 50;
+            ng_physics_set_gravity(e->body, 0, 8 * NG_FP_ONE);
+        }
+    }
+
+    /* the talons coming down on it */
+    if (p->vy_fp > 0 && mg_abs((int16_t)(p->x - b->x)) < 124) {
+        uint8_t part = mg_ship_part_at(p->x, (int16_t)(p->y + 4));
+        if (part != 0xFFu) {
+            const int8_t *k = mg_ship_box[part];
+            int16_t top = (int16_t)(b->y + k[1] - k[3]);
+            if (mg.player_prev_y <= top + 8 && p->y >= top - 2) {
+                if (mg_ship_open(part) && !mg.boss_hurt) {
+                    mg.ship_target = part;
+                    mg_boss_damage(MG_STOMP_BLOW);
+                    mg.boss_hurt = 40;
+                }
+                mg_stomp_bounce(p);
+                return;
+            }
+        }
+        if (mg.player_prev_y <= b->y - 72 && p->y >= b->y - 76 && p->y < b->y - 60) {
+            p->vy_fp = -STOMP_KICK;          /* the deck: she only bounces off */
+            return;
+        }
+    }
+    /* the swoop into an open part */
+    if (mg.dash && !mg.boss_hurt) {
+        uint8_t part = mg_ship_part_at(p->x, (int16_t)(p->y - 30));
+        if (part != 0xFFu && mg_ship_open(part)) {
+            mg.ship_target = part;
+            mg_boss_damage(MG_STOMP_BLOW);
+            mg.boss_hurt = 30;
+        }
+        return;
+    }
+    /* flying into the hull */
+    if (!mg.boss_backoff && mg_ship_in_hull(p->x, (int16_t)(p->y - 20))) {
+        mg_player_hit(b->x);
+        if (mg.state == MG_PLAY && mg.hurt == 90) mg.boss_backoff = MG_BOSS_BACKOFF;
+    }
+}
+
 static void NEOGEO_USER mg_boss_ai(NGCharacter *p)
 {
     NGCharacter *b = mg.boss;
@@ -4566,6 +4767,7 @@ static void NEOGEO_USER mg_boss_ai(NGCharacter *p)
     uint8_t harmless = 0;          /* its recovery beat: touching it doesn't hurt */
     uint16_t t;
 
+    if (style == MG_B_AIRSHIP) { mg_ship_ai(b, p); return; }
     if (mg.boss_hurt) mg.boss_hurt--;
     if (!rage && b->hp * 2 <= b->max_hp) {
         mg.boss_rage = rage = 1;
@@ -5200,7 +5402,18 @@ static void NEOGEO_USER mg_update_entities(void)
                     if (!through) { s->life = 0; break; }
                 }
             }
-            if (s->life && mg.boss && mg_abs((int16_t)(mg.boss->x - s->x)) < 40 &&
+            if (s->life && mg.boss && mg.boss->data0 == MG_B_AIRSHIP) {
+                /* a part takes it; the armour turns it with a spark */
+                uint8_t part = mg_ship_part_at(s->x, s->y);
+                if (part != 0xFFu && mg_ship_open(part)) {
+                    mg.ship_target = part;
+                    mg_boss_damage((uint8_t)(s->mode == MG_SHOT_PIERCE ? 2 : 1));
+                    if (!through) s->life = 0;
+                } else if (mg_ship_in_hull(s->x, s->y)) {
+                    mg_burst(s->x, s->y, MG_T_SPARK, 1, -1);
+                    s->life = 0;
+                }
+            } else if (s->life && mg.boss && mg_abs((int16_t)(mg.boss->x - s->x)) < 40 &&
                 mg_abs((int16_t)(mg.boss->y - s->y)) < 48) {
                 mg_boss_damage((uint8_t)(s->mode == MG_SHOT_PIERCE ? 2 : 1));
                 if (!through) s->life = 0;
@@ -7038,6 +7251,9 @@ void NEOGEO_USER maiya_frame(void)
             mg_frame(p, MG_F_RIDE, 0);
             if (mg.eagle) mg_frame(mg.eagle, (uint8_t)((mg.tick >> 3) % MG_EAGLE_FRAMES), 0);
             if (mg.boss && !mg.boss_down) ng_physics_set_gravity(mg.boss, 48, 6 * NG_FP_ONE);
+            if (mg.boss && mg.boss->data0 == MG_B_AIRSHIP && (mg.state_timer & 7u) == 0u)
+                mg_burst((int16_t)(mg.boss->x - 100 + (int16_t)ng_rand_range(200u)),
+                         (int16_t)(mg.boss->y - 20 - (int16_t)ng_rand_range(50u)), MG_T_FIRE, 2, -1);
         } else if (mg.win_step == 0) {
             mg_frame(p, grounded ? MG_F_IDLE0 : MG_F_JUMP3, mg.facing);
             if (grounded && mg.state_timer <= 196) {
@@ -7177,7 +7393,9 @@ void NEOGEO_USER maiya_frame(void)
         mg.player->vx_fp = 0;
         if (mg.flying) mg.player->vy_fp = 0;
         mg_frame(mg.player, (uint8_t)(mg.flying ? MG_F_RIDE : MG_F_IDLE0), mg.facing);
-        if (mg.boss) {
+        if (mg.boss && mg.boss->data0 == MG_B_AIRSHIP) {
+            mg_ship_approach(mg.boss);       /* it comes in out of the distance as it speaks */
+        } else if (mg.boss) {
             mg.boss->vx_fp = 0;
             mg_frame(mg.boss, (uint8_t)((mg.tick / 20) % 2), mg.facing);
         }
