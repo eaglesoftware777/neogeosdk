@@ -1375,7 +1375,7 @@ def build():
         "vinesting": (set2_img, (64, 64), 58, {"0": (230, 709, 351, 834), "1": (371, 711, 480, 831)}),
         "sporegob":  (set2_img, (64, 64), 54, {"0": (622, 726, 733, 850), "1": (750, 727, 860, 872)}),
     }
-    # The poison dart frog, in the sewer rat's place: the small-animal
+    # The poison dart frog: the small-animal
     # sheet's green frog (sitting, then in mid-leap) turned the vivid blue
     # that warns off anything thinking of touching it.
     animals_img = Image.open(find_file("npc_small_animals*.jpg")).convert("RGB")
