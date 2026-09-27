@@ -60,6 +60,7 @@ DEFAULT_VALLEY_TINT = [
     {"name": "Silver Cave", "hue": 170.0, "sat": 0.45, "val": 1.05},
     {"name": "Golden Savanna", "hue": 60.0, "sat": 1.00, "val": 1.10},
     {"name": "Sky Road", "hue": -20.0, "sat": 0.90, "val": 1.08},
+    {"name": "Smog Citadel", "hue": 150.0, "sat": 0.80, "val": 0.90},
 ]
 
 DEFAULT_REUSED_BOSS_TINT = [
@@ -897,6 +898,9 @@ def build():
         # 10 Sky Road: the snow peaks under an open sky, seen from the
         # eagle's back (the citadel sheet's middle band).
         Image.open(find_file("stages_citadel*.jpg")).convert("RGBA").crop((0, 256, 585, 512)),
+        # 11 the Smog Citadel: Lord Smoggar's works, pipes, gears and
+        # glowing vats (the citadel sheet's bottom band).
+        Image.open(find_file("stages_citadel*.jpg")).convert("RGBA").crop((0, 512, 585, 768)),
     ]
 
     # The works: the old plant's furnaces and gantries stand over the swamp

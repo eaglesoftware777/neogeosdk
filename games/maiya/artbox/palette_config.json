@@ -65,6 +65,12 @@
       "hue": -20.0,
       "sat": 0.9,
       "val": 1.08
+    },
+    {
+      "name": "Smog Citadel",
+      "hue": 150.0,
+      "sat": 0.8,
+      "val": 0.9
     }
   ],
   "reused_boss_tint": [

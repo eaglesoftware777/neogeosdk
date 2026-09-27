@@ -19,6 +19,7 @@
 #define MG_VINE_COUNT      3
 #define MG_NPC_COUNT       3
 #define MG_WAVE_COUNT      24
+#define MG_RUSH_COUNT      6
 #define MG_PICK_COUNT      10
 
 #include "maiya_levels_data.h"
@@ -178,6 +179,10 @@ typedef struct {
 } MGWave;
 
 static const MGWave mg_waves[MG_LEVEL_COUNT][MG_WAVE_COUNT] = MG_WAVES_TABLE;
+
+/* The guardians met again, in order, before a stage's own (MG_B_*; 0xFF
+ * ends the list). */
+static const uint8_t mg_rush[MG_LEVEL_COUNT][MG_RUSH_COUNT + 1] = MG_RUSH_TABLE;
 
 /* ---------------------------------------------------------------- */
 /*  Secret Arts, elder lore and what Sunboy says between missions    */

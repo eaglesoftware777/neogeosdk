@@ -173,6 +173,12 @@ class Stage:
                      for w, n in self.rows("npcs", "MG_NPC_COUNT")]
         # The spawn script: a flight of creatures when the view's right edge
         # reaches x, flying the named formation at height y.
+        # The guardians she must beat again before the stage's own (a boss
+        # rush), in order.
+        rush = d.get("rush", [])
+        if not isinstance(rush, list) or len(rush) > self.cap["MG_RUSH_COUNT"]:
+            self.fail("rush", f"a list of at most {self.cap['MG_RUSH_COUNT']} guardian styles")
+        s["rush"] = [self.name({"style": r}, "style", f"rush[{i}]", "guardian", "MG_B_") for i, r in enumerate(rush)]
         s["waves"] = [(self.num(v, "x", w, 1, width), self.name(v, "enemy", w, "enemy", "MG_E_"),
                        self.name(v, "form", w, "formation", "MG_FORM_"), self.num(v, "count", w, 1, 6),
                        self.num(v, "y", w, 16, 208))
@@ -301,6 +307,7 @@ def render(stages, files):
     out.append(table("MG_UPPER_TABLE", [str(s["upper"]) for s in stages]))
     out.append(table("MG_POSTED_TABLE", [s["posted"] for s in stages]))
     out.append(table("MG_WAVES_TABLE", [tuples(s["waves"], 5) for s in stages]))
+    out.append(table("MG_RUSH_TABLE", ["{" + ",".join(s["rush"] + ["0xFFu"]) + "}" for s in stages]))
     out.append(table("MG_FLIGHT_TABLE", ["1" if s["mechanic"] == "MG_M_FLIGHT" else "0" for s in stages]))
     out.append("#endif")
     return "\n".join(out) + "\n"
