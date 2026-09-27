@@ -139,6 +139,9 @@ enum {
     /* Where a flying guardian's feet ride: its 96-pixel body then fills the
      * upper screen instead of hanging above the top edge. */
     MG_BOSS_SKY_Y = 110,
+    /* A guardian's health is set in stomps (its stage file's "hp"): a
+     * stomp, or the Rising Bloom, takes this much; a thorn takes one. */
+    MG_STOMP_BLOW = 4,
     ROW_CLOCK = 3,
     MG_STAGE_TIME_COL = 22,         /* STAGE mm:ss:ff, right of the clock */
     /* What each valley throws at her besides its creatures. */
@@ -190,6 +193,10 @@ enum {
     POWER_TIME = 480,    /* swiftness and might last eight seconds        */
     STOMP_KICK = 4 * NG_FP_ONE,  /* the hop she takes off a squashed slime */
     VEIL_TIME = 300,     /* the mist veil hides her for five              */
+    LILY_TIME = 1800,    /* a sky lily's second jump lasts thirty seconds  */
+    /* Kneel (Down held a moment), then Up + A: a leap straight up, well
+     * above any running jump -- the way to what hangs out of reach. */
+    MG_LEAP_KNEEL = 8, MG_LEAP_WINDOW = 14, LEAP_SPEED = 7 * NG_FP_ONE + 96,
     ANGEL_TIME = 150,    /* how long she rises before the valley resets   */
     MAX_CONTINUES = 3,   /* the cabinet allows three, then the run is over */
     CONTINUE_TIME = 600  /* ten seconds on the clock to decide            */
@@ -284,6 +291,8 @@ typedef struct {
     uint8_t  climbing, crouch_timer, npc_mask, npc_live, npc_here;
     uint16_t swift, might, veil;      /* power-ups, in frames              */
     uint16_t spring, crown;           /* higher jump, bigger thorns        */
+    uint16_t lily;                    /* the sky lily: a second jump in the air, in frames */
+    uint8_t  leap_window;             /* frames left to leap high after kneeling */
     uint8_t  flash;                   /* frames of Secret Art palette      */
     uint8_t  angel;                   /* rising-to-the-sky death           */
     uint8_t  flowers, critters;       /* bonus tally for the mission end   */
@@ -1626,6 +1635,32 @@ static NGCharacter *NEOGEO_USER mg_character(uint8_t kind, int16_t x, int16_t y,
 /* ------------------------------------------------------------------ */
 static void NEOGEO_USER mg_sparks(int16_t x, int16_t y);
 
+/* A curtain of rose petals across the playfield: the Secret Art you see. */
+/*
+ * The purifying storm.  Twelve pieces of the valley -- petals, leaves, seeds
+ * and drops of clean water -- burst out of her and cross the whole screen
+ * in both directions, so everything standing on it is touched by the art.
+ * Two waves: the first radiates from her, the second rains from the sky.
+ */
+static void NEOGEO_USER mg_petal_sweep(void)
+{
+    static const uint8_t tiles[4] = { MG_T_PETAL, MG_T_LEAF, MG_T_DRIP, MG_T_SPARK };
+    uint8_t i;
+
+    for (i = 0; i < MG_SPARKS; i++) {
+        MGSpark *p = &mg.sparks[i];
+        /* out of her hands, fanning across the road */
+        p->x = mg.player->x;
+        p->y = (int16_t)(mg.player->y - 30);
+        p->vx = (int16_t)((i & 1) ? (2 + (i >> 1)) : -(2 + (i >> 1)));
+        p->vy = (int16_t)(-1 - (i % 3));
+        p->life = (uint8_t)(50 + (i & 3) * 4);
+        ng_sprite_group_set_tile_base(&p->sprite, (uint16_t)(MG_TOOL_TILE + tiles[i & 3]));
+        ng_sprite_group_set_palette(&p->sprite, PAL_TOOL);
+        p->shrink = 0;
+    }
+}
+
 static void NEOGEO_USER mg_sparks(int16_t x, int16_t y)
 {
     uint8_t i;
@@ -1785,6 +1820,13 @@ static MGShot *NEOGEO_USER mg_fire(int16_t x, int16_t y, int16_t vx, int16_t vy,
     return 0;
 }
 
+static uint8_t NEOGEO_USER mg_shots_in_flight(void)
+{
+    uint8_t i, n = 0;
+    for (i = 0; i < MG_SHOTS; i++) if (mg.shots[i].life && !mg.shots[i].hostile) n++;
+    return n;
+}
+
 static MGItem *NEOGEO_USER mg_drop(int16_t x, int16_t y, uint8_t kind)
 {
     uint8_t i;
@@ -1904,24 +1946,33 @@ static void NEOGEO_USER mg_enemy_damage(MGEnemy *e, uint8_t damage)
          * and then, and once in a while a power-up or a forest friend.
          */
         switch (mg.kills % 12u) {
-        /* She carries no weapon, so nothing drops one: coins, hearts,
-         * and -- only while she's playing well -- a power worth having. */
-        case 1:  mg_drop_trinket(x, (int16_t)(y - 20), MG_K_SILVER); break;
+        /* Ammunition is earned: a sheaf or a special weapon only while
+         * she's playing well; otherwise the creature gives up a coin. */
+        case 1:
+            mg_drop_trinket(x, (int16_t)(y - 20), mg_playing_well() ? MG_K_THORNS : MG_K_SILVER);
+            break;
         case 11:
-            mg_drop_trinket(x, (int16_t)(y - 20), mg_playing_well() ? MG_K_VEIL : MG_K_SILVER);
+            if (mg_playing_well()) {
+                static const uint8_t arms[3] = { MG_K_SPREAD, MG_K_PIERCE, MG_K_GALE };
+                mg_drop_trinket(x, (int16_t)(y - 20), arms[(mg.kills / 12u) % 3u]);
+            } else {
+                mg_drop_trinket(x, (int16_t)(y - 20), MG_K_SILVER);
+            }
             break;
         case 3:  mg_drop_trinket(x, (int16_t)(y - 20), MG_K_SILVER); break;
         case 6:  mg_drop_trinket(x, (int16_t)(y - 20), MG_K_GOLD); break;
         case 2:
         case 4:  mg_drop(x, (int16_t)(y - 20), MG_I_HEART); break;
         case 8:
+            /* A Secret Art charge is special ammunition too: earned, not handed out. */
             if (!mg_playing_well()) mg_drop_trinket(x, (int16_t)(y - 20), MG_K_SILVER);
+            else if ((mg.kills / 12u) % 2u) mg_drop_trinket(x, (int16_t)(y - 20), MG_K_BLOOM);
             else mg_drop(x, (int16_t)(y - 20), MG_I_ROSE_RED);
             break;
         case 9:  mg_drop_trinket(x, (int16_t)(y - 20), MG_K_SWIFT); break;
-        case 10: mg_drop_trinket(x, (int16_t)(y - 20), MG_K_GOLD); break;
+        case 10: mg_drop_trinket(x, (int16_t)(y - 20), MG_K_MIGHT); break;
         case 5:  mg_drop_trinket(x, (int16_t)(y - 20), MG_K_SPRING); break;
-        case 7:  mg_drop_trinket(x, (int16_t)(y - 20), MG_K_SPRING); break;
+        case 7:  mg_drop_trinket(x, (int16_t)(y - 20), MG_K_CROWN); break;
         case 0:  mg_drop_trinket(x, (int16_t)(y - 20), MG_K_VEIL); break;
         default: break;
         }
@@ -2006,7 +2057,7 @@ static void NEOGEO_USER mg_boss_damage(uint8_t damage)
             mg_palette(PAL_BOSS, mg_boss_pal(MG_B_SMOGGAR));
             mg.boss = mg_character(K_BOSS, bx, MG_GROUND_Y, PAL_BOSS, NG_RENDER_BAND_ENEMY, MG_B_SMOGGAR);
             if (mg.boss) {
-                mg.boss->hp = mg.boss->max_hp = 7;   /* stomps */
+                mg.boss->hp = mg.boss->max_hp = 7 * MG_STOMP_BLOW;   /* seven stomps */
                 mg.boss_timer = 0; mg.boss_rage = 0; mg.boss_direction = 0; mg.boss_px = 0;
                 mg.boss_backoff = 0;
                 ng_physics_attach(mg.boss, NG_PHYSICS_GRAVITY | NG_PHYSICS_SOLIDS);
@@ -2092,6 +2143,12 @@ static uint8_t NEOGEO_USER mg_stomp_rule(uint8_t type)
     }
 }
 
+/* The whip: twice a thorn's bite, twice again while Thorn Might lasts. */
+static uint8_t NEOGEO_USER mg_strike(void)
+{
+    return (uint8_t)(mg.might ? 4 : 2);
+}
+
 static void NEOGEO_USER mg_sad_face_palette(void);
 static void NEOGEO_USER mg_bonus_caught(void);
 
@@ -2136,7 +2193,7 @@ static uint8_t NEOGEO_USER mg_player_damage(void)
         if (mg.lives) mg.lives--;
         mg.hud_dirty = 1;
         mg_update_hud();
-        mg.swift = mg.might = mg.veil = mg.spring = mg.crown = 0;
+        mg.swift = mg.might = mg.veil = mg.spring = mg.crown = mg.lily = 0;
         p->vx_fp = p->vy_fp = 0;
         ng_physics_detach(p);
         playSFX(SOUND_SFX_16);   /* the blow */
@@ -2156,6 +2213,42 @@ static void NEOGEO_USER mg_player_hit(int16_t from_x)
     NGCharacter *p = mg.player;
     if (!mg_player_damage() || mg.state != MG_PLAY) return;
     p->vx_fp = (p->x < from_x) ? -MG_KNOCK : MG_KNOCK;
+}
+
+/*
+ * Secret Art.  Each valley teaches Maiya a different one, and the roses she
+ * gathers are its charges.  The sunlight palette is a flash, not a costume:
+ * mg.flash counts it down and hands her own colours back.
+ */
+static void NEOGEO_USER mg_secret_art(void)
+{
+    uint8_t i;
+    if (mg.art == 0 || mg.state != MG_PLAY) return;
+    mg.art--;
+    mg.hud_dirty = 1;
+    playSFX(SOUND_SFX_13); /* art power surge */
+
+    /*
+     * Petals sweep the whole screen and the valley shakes.  Her own colours
+     * only lift for a moment -- a long recolour read as a costume change and
+     * made it hard to tell what had actually happened.
+     */
+    mg.flash = 12;                 /* her colours lift, and come straight back */
+    mg_palette(PAL_HERO, mg_hero_sun_pal);
+    mg.attack = 22;
+    mg.shake = 24;
+    mg.art_wave = 24;              /* the second wave follows the first */
+    playSFX(SOUND_SFX_9);          /* the clear ring of the purification */
+    mg_petal_sweep();
+
+    /* Everyone present takes the art -- no hit sparks, they would overwrite
+     * the storm in the same particle pool. */
+    for (i = 0; i < MG_ENEMIES; i++) {
+        if (mg.enemies[i].body) mg_enemy_damage(&mg.enemies[i], 10);
+    }
+    if (mg.boss) mg_boss_damage(6);
+
+    mg_hint(mg_art_words[mg.stage], PAL_GOLD, 100);
 }
 
 /* ------------------------------------------------------------------ */
@@ -2268,7 +2361,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     for (i = 0; i < MG_PLATFORM_COUNT; i++) { mg.ledge_stand[i] = 0; mg.ledge_gone[i] = 0; }
     mg.gate_shown = 0;
     mg.npc_mask = 0; mg.npc_live = 0; mg.npc_here = 0;
-    mg.swift = mg.might = mg.veil = 0; mg.spring = mg.crown = 0;
+    mg.swift = mg.might = mg.veil = 0; mg.spring = mg.crown = 0; mg.lily = 0; mg.leap_window = 0;
     mg.flash = 0; mg.angel = 0; mg.hurt_lit = 0; mg.art_wave = 0;
     for (i = 0; i < MG_NPC_SLOTS; i++) mg.npcs[i] = 0;
     mg.notice = 0; mg.facing = 0; mg.kills = 0;
@@ -2965,14 +3058,17 @@ static void NEOGEO_USER mg_show_how_to_play(void)
 
     ng_fix_clear();
     mg_centre(6,  "HOW TO PLAY", PAL_GOLD);
-    mg_centre(9,  "LEFT / RIGHT: WALK   HOLD B: RUN", PAL_TEXT);
-    mg_centre(10, "UP: CLIMB A VINE, OR TURN THE KEY", PAL_TEXT);
-    mg_centre(12, "A: JUMP - A AGAIN IN THE AIR: ONE MORE", PAL_TEXT);
-    mg_centre(13, "RUN, THEN JUMP: HIGHER STILL", PAL_TEXT);
-    mg_centre(14, "C: DASH (ONCE IN THE AIR TOO)", PAL_TEXT);
-    mg_centre(16, "LAND ON A CREATURE TO BEAT IT", PAL_SKY);
-    mg_centre(17, "HOLD A AS YOU LAND: BOUNCE HIGH", PAL_SKY);
-    mg_centre(18, "SOME HAVE ARMOUR, SOME POISON SKIN", PAL_SKY);
+    mg_centre(8,  "LEFT / RIGHT: WALK   HOLD B: RUN", PAL_TEXT);
+    mg_centre(9,  "UP: CLIMB A VINE, OR TURN THE KEY", PAL_TEXT);
+    mg_centre(10, "A: JUMP (HOLD FOR HEIGHT)", PAL_TEXT);
+    mg_centre(11, "RUN, THEN JUMP: HIGHER STILL", PAL_TEXT);
+    mg_centre(12, "KNEEL, THEN UP + A: A HIGH LEAP", PAL_TEXT);
+    mg_centre(13, "B: THROW A THORN, OR STRIKE UP CLOSE", PAL_TEXT);
+    mg_centre(14, "C: DASH      D: SECRET ART", PAL_TEXT);
+    mg_centre(16, "DOWN, FORWARD + B: ROSE BLOSSOM SURGE", PAL_SKY);
+    mg_centre(17, "FWD, DOWN, DOWN-FWD + B: RISING BLOOM", PAL_SKY);
+    mg_centre(18, "LAND ON A CREATURE TO BEAT IT TOO", PAL_SKY);
+    mg_centre(19, "A SKY LILY: UP + A IN THE AIR, ONE MORE", PAL_SKY);
     mg_centre(22, "PRESS ANY BUTTON TO BEGIN", PAL_GOLD);
 
     poll_joystick_edge();
@@ -3323,7 +3419,7 @@ static uint8_t NEOGEO_USER mg_boss_arrive(void)
     }
     /* the operator's difficulty: 80%, 100%, 120% or 140% of its health */
     mg.boss->hp = mg.boss->max_hp =
-        (uint8_t)(((uint16_t)level->boss_hp * (8u + mg.difficulty * 2u)) / 10u);
+        (uint8_t)(((uint16_t)level->boss_hp * MG_STOMP_BLOW * (8u + mg.difficulty * 2u)) / 10u);
     ng_physics_attach(mg.boss, NG_PHYSICS_GRAVITY | NG_PHYSICS_SOLIDS);
     if (level->boss_style == MG_B_OWL || level->boss_style == MG_B_VULTURE)
         ng_physics_set_gravity(mg.boss, 0, 8 * NG_FP_ONE);   /* they fight on the wing */
@@ -3503,6 +3599,7 @@ static uint16_t NEOGEO_USER mg_demo_joystick(void)
     }
     if ((mg.tick % 170u) < 5u) joy |= BUTTON_A;
     if ((mg.tick % 620u) < 90u) joy = (uint16_t)((joy & ~JOY_RIGHT) | JOY_UP);
+    if ((mg.tick % 1500u) < 6u && mg.art) joy |= BUTTON_D;
     return joy;
 }
 
@@ -3512,6 +3609,57 @@ static uint16_t NEOGEO_USER mg_input(void)
 }
 
 static void NEOGEO_USER mg_enemy_defeat(MGEnemy *e);
+
+/*
+ * One throw from her hand, at `high` pixels above her feet. A special
+ * weapon, while it has ammunition, goes first; otherwise it's her own
+ * thorn, doubled while a sheaf lasts. The thorn crown sends it out bigger
+ * and faster. Returns 0 only when too many are already in the air.
+ */
+static uint8_t NEOGEO_USER mg_throw(int16_t high)
+{
+    NGCharacter *p = mg.player;
+    int16_t dir = (int16_t)(mg.facing ? -1 : 1);
+    int16_t y = (int16_t)(p->y + high);
+    MGShot *s;
+
+    if (mg.weapon && mg.weapon_ammo) {
+        if (mg_shots_in_flight() >= 4) return 0;
+        if (mg.weapon == MG_W_SPREAD) {
+            mg_fire(p->x, y, (int16_t)(dir * 6), -2, 0, MG_T_PETAL);
+            mg_fire(p->x, y, (int16_t)(dir * 7), 0, 0, MG_T_PETAL);
+            mg_fire(p->x, y, (int16_t)(dir * 6), 2, 0, MG_T_PETAL);
+        } else if (mg.weapon == MG_W_PIERCE) {
+            s = mg_fire(p->x, y, (int16_t)(dir * 10), 0, 0, MG_T_STAR);
+            if (s) { s->mode = MG_SHOT_PIERCE; s->life = 60; }
+        } else {
+            /* Only one wind leaf out at a time: it has to come home. */
+            uint8_t i;
+            for (i = 0; i < MG_SHOTS; i++)
+                if (mg.shots[i].life && mg.shots[i].mode == MG_SHOT_GALE) return 0;
+            s = mg_fire(p->x, y, (int16_t)(dir * 8), 0, 0, MG_T_LEAF);
+            if (s) { s->mode = MG_SHOT_GALE; s->life = 110; }
+        }
+        if (--mg.weapon_ammo == 0) mg.weapon = MG_W_NONE;
+    } else {
+        /* Her own thorn throw never runs out. A sheaf of thorns amplifies
+         * it: while the count lasts, every throw sends two. */
+        int16_t rate = (int16_t)(mg.crown ? 9 : 6);
+        uint8_t kind = (uint8_t)(mg.crown ? MG_T_THORN1 : MG_T_THORN0);
+        if (mg_shots_in_flight() >= (mg.thorns ? 5 : (mg.crown ? 4 : 3))) return 0;
+        if (mg.thorns) {
+            mg_fire(p->x, (int16_t)(y - 5), (int16_t)(dir * rate), 0, 0, kind);
+            mg_fire(p->x, (int16_t)(y + 5), (int16_t)(dir * rate), 0, 0, kind);
+            mg.thorns--;
+        } else {
+            mg_fire(p->x, y, (int16_t)(dir * rate), 0, 0, kind);
+        }
+    }
+    mg.cast = 10;
+    mg.hud_dirty = 1;
+    playSFX(SOUND_SFX_2); /* thorn toss */
+    return 1;
+}
 
 static void NEOGEO_USER mg_controls(void)
 {
@@ -3575,6 +3723,7 @@ static void NEOGEO_USER mg_controls(void)
                 mg.airborne = 1;
                 playSFX(SOUND_SFX_15);
             }
+            if ((pressed & BUTTON_B) && mg.state != MG_BONUS) mg_throw(-26);
         }
         mg.previous_joy = joy;
         return;
@@ -3693,6 +3842,8 @@ static void NEOGEO_USER mg_controls(void)
         mg.crouch_timer = 0;
     }
     mg.sitting = mg.crouch_timer > SIT_DELAY;
+    if (mg.crouch_timer >= MG_LEAP_KNEEL) mg.leap_window = MG_LEAP_WINDOW;
+    else if (mg.leap_window) mg.leap_window--;
 
     /*
      * Jump & drop through ledges (swimming, A is the stroke). A jump
@@ -3700,8 +3851,10 @@ static void NEOGEO_USER mg_controls(void)
      * lands, and one pressed a few frames after she runs off a ledge still
      * counts: the jump happens when the player meant it, not only on the
      * exact frame the ground allows it. Running (B held, and up to speed)
-     * she jumps higher. In the air a second press is one more, smaller
-     * jump, with a spin.
+     * she jumps higher. Kneeling a moment, then Up and A, she leaps
+     * straight up, higher still. In the air, with a sky lily in hand, Up
+     * and A again is one more, smaller jump (a plain one, and never a
+     * third).
      */
     if (!mg.swimming) {
         uint8_t footing = (uint8_t)(ng_physics_is_grounded(p) || mg.on_ledge || p->y >= MG_GROUND_Y - 4);
@@ -3723,6 +3876,14 @@ static void NEOGEO_USER mg_controls(void)
                 mg.jump_buffer = 0;
             } else if (mg.coyote) {
                 int16_t v = (int16_t)(((joy & BUTTON_B) && mg_abs(vx) > WALK_SPEED + 64) ? RUN_JUMP_SPEED : JUMP_SPEED);
+                if ((joy & JOY_UP) && mg.leap_window) {
+                    /* the high leap: straight up out of the kneel */
+                    v = LEAP_SPEED;
+                    vx = 0;
+                    mg.leap_window = 0;
+                    mg_burst(p->x, (int16_t)(p->y - 4), MG_T_SPARK, 3, -2);
+                    playSFX(SOUND_SFX_13);
+                }
                 if (mg.spring) v = (int16_t)((v * 5) / 4);
                 if (mg_mech() == MG_M_WATER) v = (int16_t)((v * 3) / 4);
                 p->vy_fp = -v;
@@ -3731,12 +3892,11 @@ static void NEOGEO_USER mg_controls(void)
                 mg.jump_buffer = 0;
                 mg.jump_cut = 1;
                 playSFX(SOUND_SFX_15);
-            } else if ((pressed & BUTTON_A) && mg.air_jump) {
+            } else if ((pressed & BUTTON_A) && (joy & JOY_UP) && mg.air_jump && mg.lily) {
                 p->vy_fp = -AIR_JUMP_SPEED;
                 mg.jump_cut = 1;
                 mg.air_jump = 0;
                 mg.jump_buffer = 0;
-                mg.spin = 14;
                 mg_burst(p->x, (int16_t)(p->y - 4), MG_T_PETAL, 2, 1);
                 playSFX(SOUND_SFX_15);
             }
@@ -3747,9 +3907,6 @@ static void NEOGEO_USER mg_controls(void)
     if (!(joy & BUTTON_A) && mg.jump_cut && !mg.swimming && p->vy_fp < -(2 * NG_FP_ONE)) {
         p->vy_fp = -(2 * NG_FP_ONE);
     }
-
-    /* She carries no weapon: creatures are beaten by landing on them
-     * (mg_update_entities), and a guardian the same way. */
 
     /*
      * The Rising Bloom, her one strike up close: forward, down, down-
@@ -3778,7 +3935,7 @@ static void NEOGEO_USER mg_controls(void)
             mg.dp_step = 3;
             mg.dp_timer = 12;
         }
-        if (mg.dp_step == 3 && (pressed & BUTTON_B) && !mg.rising && !mg.rise_wait) {
+        if (mg.dp_step == 3 && (pressed & BUTTON_B) && !mg.rising && !mg.rise_wait && mg.state != MG_BONUS) {
             mg.rising = MG_RISE_TIME;
             mg.rise_hit = 0;
             mg.facing = (uint8_t)(mg.dp_dir < 0);
@@ -3788,6 +3945,59 @@ static void NEOGEO_USER mg_controls(void)
             playSFX(SOUND_SFX_1);
         }
     }
+
+    /*
+     * B: her thorn, or the whip up close (and held, she runs). Kneeling,
+     * the throw skims the road. Down, forward + B is the Rose Blossom
+     * Surge. Landing on a creature beats it too (mg_enemy_contact).
+     */
+    /* (The bonus round is dodged, not fought: her weapons rest there.) */
+    if ((pressed & BUTTON_B) && !mg.rising && !mg.super_surge && mg.state != MG_BONUS) {
+        if (mg.combo_buffer[0] && mg.combo_buffer[1] && !mg.dash_wait) {
+            mg.super_surge = MG_SURGE_TIME;
+            mg.surge_struck_boss = 0;
+            mg.combo_buffer[0] = mg.combo_buffer[1] = 0;
+            mg.dash = 0;
+            playSFX(SOUND_SFX_13);   /* the bloom gathers */
+        } else {
+            uint8_t melee = 0;
+            if (mg.boss && mg_abs((int16_t)(mg.boss->x - p->x)) < 48 &&
+                mg_abs((int16_t)(mg.boss->y - p->y)) < 52) {
+                mg_boss_damage(mg_strike());
+                melee = 1;
+            }
+            if (!melee) {
+                uint8_t i;
+                for (i = 0; i < MG_ENEMIES; i++) {
+                    NGCharacter *e = mg.enemies[i].body;
+                    if (!e || mg.enemies[i].mood == MG_MOOD_DYING ||
+                        mg_abs((int16_t)(e->x - p->x)) >= 44) continue;
+                    /* Standing, she cuts at chest height; kneeling, at the
+                     * ground, where the low creatures actually are. */
+                    if (mg.crouch_timer) {
+                        if (e->y < p->y - 26) continue;
+                    } else if (e->y < p->y - 52) {
+                        continue;
+                    }
+                    mg_enemy_damage(&mg.enemies[i], mg_strike());
+                    melee = 1;
+                    break;
+                }
+            }
+            if (melee) {
+                mg.attack = 12;
+                playSFX(SOUND_SFX_1); /* whip crack */
+            } else {
+                mg_throw((int16_t)(mg.crouch_timer ? -8 : -26));
+            }
+        }
+    }
+
+    /* Secret Art (D button) */
+    if ((pressed & BUTTON_D) && mg.state != MG_BONUS) {
+        mg_secret_art();
+    }
+
     if (mg.rising) {
         int8_t dir = (int8_t)(mg.facing ? -1 : 1);
         mg.rising--;
@@ -3822,7 +4032,7 @@ static void NEOGEO_USER mg_controls(void)
             if (!mg.rise_hit && mg.boss && mg.boss_active &&
                 mg_abs((int16_t)(mg.boss->x - hx)) < 40 && mg.boss->y > p->y - 90 && mg.boss->y < p->y + 90) {
                 mg.rise_hit = 1;
-                mg_boss_damage(1);
+                mg_boss_damage(MG_STOMP_BLOW);
                 mg.boss_hurt = 60;
             }
         }
@@ -3996,7 +4206,7 @@ static uint8_t NEOGEO_USER mg_boss_stomp(NGCharacter *p, NGCharacter *b, uint8_t
         mg_player_hit(b->x);
         p->vy_fp = -STOMP_KICK;
     } else {
-        mg_boss_damage(1);
+        mg_boss_damage(MG_STOMP_BLOW);
         mg.boss_hurt = 50;
         mg_stomp_bounce(p);
         p->vx_fp = (p->x < b->x) ? -900 : 900;
@@ -4641,10 +4851,21 @@ static void NEOGEO_USER mg_update_entities(void)
                     mg_hint("SWIFT WIND: SHE RUNS LIGHT", PAL_SKY, 90);
                     break;
                 case MG_K_MIGHT:
+                    mg.might = POWER_TIME;
+                    playSFX(SOUND_SFX_4);
+                    mg_hint("THORN MIGHT: HER STRIKE BITES", PAL_GOLD, 90);
+                    break;
                 case MG_K_VEIL:
                     mg.veil = VEIL_TIME;
                     playSFX(SOUND_SFX_8);
                     mg_hint("MIST VEIL: NOTHING CAN TOUCH HER", PAL_SKY, 90);
+                    break;
+                case MG_K_LILY:
+                    mg.lily = LILY_TIME;
+                    mg.air_jump = 1;
+                    playSFX(SOUND_SFX_13);
+                    playSFX(SOUND_SFX_12);
+                    mg_hint("SKY LILY: UP + A IN THE AIR, ONE MORE", PAL_GOLD, 150);
                     break;
                 case MG_K_SPRING:
                     mg.spring = POWER_TIME;
@@ -4653,16 +4874,32 @@ static void NEOGEO_USER mg_update_entities(void)
                     mg_hint("SPRING BUD: SHE JUMPS THE CANOPY", PAL_SKY, 90);
                     break;
                 case MG_K_CROWN:
+                    mg.crown = POWER_TIME;
+                    playSFX(SOUND_SFX_13);
+                    mg_hint("THORN CROWN: HER THROW GROWS", PAL_GOLD, 90);
+                    break;
                 case MG_K_THORNS:
+                    mg.thorns = (uint8_t)(mg.thorns + MG_THORNS_REFILL > MG_THORNS_MAX
+                                          ? MG_THORNS_MAX : mg.thorns + MG_THORNS_REFILL);
+                    playSFX(SOUND_SFX_11);
+                    mg_hint("THORN SHEAF: TWO AT A TIME", PAL_SKY, 60);
+                    break;
                 case MG_K_SPREAD:
                 case MG_K_PIERCE:
                 case MG_K_GALE:
+                    mg.weapon = (uint8_t)(it->kind == MG_K_SPREAD ? MG_W_SPREAD
+                                        : it->kind == MG_K_PIERCE ? MG_W_PIERCE : MG_W_GALE);
+                    mg.weapon_ammo = MG_WEAPON_AMMO;
+                    playSFX(SOUND_SFX_13);
+                    playSFX(SOUND_SFX_15);
+                    mg_hint(it->kind == MG_K_SPREAD ? "PETAL FAN: THREE AT ONCE"
+                          : it->kind == MG_K_PIERCE ? "GOLDEN SEED: IT GOES THROUGH"
+                          : "WIND LEAF: IT COMES BACK", PAL_GOLD, 120);
+                    break;
                 case MG_K_BLOOM:
-                    /* The old weapon charms: she fights with her feet now,
-                     * so any still lying about are worth a gold coin. */
-                    mg.score += 500u;
-                    if (mg.coins < 99) mg.coins++;
-                    playSFX(SOUND_SFX_11);
+                    if (mg.art < MAX_ART) mg.art++;
+                    playSFX(SOUND_SFX_13);
+                    mg_hint("A BLOOM BUD: ONE MORE SECRET ART", PAL_GOLD, 120);
                     break;
                 default:  /* the elder's charm: it tells her where the hideout is */
                     mg.score += 300u;
@@ -4677,8 +4914,7 @@ static void NEOGEO_USER mg_update_entities(void)
                 mg.score += 200u;
                 playSFX(SOUND_SFX_12);
             } else if (it->kind == MG_I_ROSE_RED) {
-                /* A red rose mends her: two hearts. */
-                p->hp = (uint8_t)(p->hp + 2 > MAX_HP ? MAX_HP : p->hp + 2);
+                if (mg.art < MAX_ART) mg.art++;
                 mg.score += 500u;
                 playSFX(SOUND_SFX_13);
             } else {
@@ -5006,6 +5242,7 @@ static void NEOGEO_USER mg_update_entities(void)
     if (mg.veil && --mg.veil == 0) mg.hud_dirty = 1;
     if (mg.spring && --mg.spring == 0) mg.hud_dirty = 1;
     if (mg.crown && --mg.crown == 0) mg.hud_dirty = 1;
+    if (mg.lily && --mg.lily == 0) mg.hud_dirty = 1;
     if (mg.flash && --mg.flash == 0) mg_palette(PAL_HERO, mg_hero_normal_pal());
     /* The second wave used to repeat the same petal curtain as the first;
      * now it's the Secret Art's own signature -- a ring of gold expanding
@@ -5312,6 +5549,13 @@ static void NEOGEO_USER mg_draw_tray(void)
 
     ng_fix_clear_rect(0, ROW_TRAY, 40, 1, PAL_TEXT);
 
+    x = mg_tray_slot(slot++, x, mg_item_tiles[MG_I_ROSE_RED], PAL_ITEM, mg.art, 1);
+    if (mg.weapon) {
+        static const uint8_t icon[4] = { 0, MG_K_SPREAD, MG_K_PIERCE, MG_K_GALE };
+        x = mg_tray_slot(slot++, x, mg_trinket_tiles[icon[mg.weapon]], PAL_TRINKET, mg.weapon_ammo, 2);
+    } else if (mg.thorns) {
+        x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_THORNS], PAL_TRINKET, mg.thorns, 2);
+    }
     x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_GOLD], PAL_TRINKET, mg.coins, 2);
     x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_FLOWER], PAL_TRINKET, mg.flowers, 2);
     x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_CRITTER], PAL_TRINKET, mg.critters, 2);
@@ -5322,6 +5566,7 @@ static void NEOGEO_USER mg_draw_tray(void)
     if (mg.might)  x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_MIGHT], PAL_TRINKET, (mg.might + 59u) / 60u, 1);
     if (mg.veil)   x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_VEIL], PAL_TRINKET, (mg.veil + 59u) / 60u, 1);
     if (mg.spring) x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_SPRING], PAL_TRINKET, (mg.spring + 59u) / 60u, 1);
+    if (mg.lily)   x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_LILY], PAL_TRINKET, (mg.lily + 59u) / 60u, 2);
     if (mg.crown)  x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_CROWN], PAL_TRINKET, (mg.crown + 59u) / 60u, 1);
 
     for (; slot < MG_TRAY_SLOTS; slot++) {
@@ -5647,15 +5892,8 @@ static void NEOGEO_USER mg_animate_player(void)
     if (mg.hurt > HURT_LOCK) {
         mg_frame(p, MG_F_HURT0, mg.facing);
     } else if (mg.rising) {
-        /* Gathered low, then up through the petals, arms raised, turning
-         * over once at the top. */
-        uint8_t f = MG_F_JUMP0;
-        if (mg.rising > MG_RISE_TIME - 3) f = MG_F_CROUCH;
-        else if (mg.rising < 8u) f = (uint8_t)(MG_F_FLIP0 + ((8u - mg.rising) >> 1));
-        mg_frame(p, f, mg.facing);
-    } else if (mg.spin && !mg.attack) {
-        /* The second jump is a somersault. */
-        mg_frame(p, (uint8_t)(MG_F_FLIP0 + (((14u - mg.spin) >> 2) & 3u)), mg.facing);
+        /* Gathered low, then straight up through the petals, arms raised. */
+        mg_frame(p, (uint8_t)(mg.rising > MG_RISE_TIME - 3 ? MG_F_CROUCH : MG_F_JUMP0), mg.facing);
     } else if (mg.super_surge) {
         static const uint8_t spin[4] = { MG_F_SWEEP1, MG_F_SWEEP2, MG_F_SWEEP3, MG_F_SPIN };
         mg_frame(p, (uint8_t)(mg.super_surge >= MG_SURGE_TIME - MG_SURGE_WINDUP
@@ -5730,14 +5968,17 @@ static void NEOGEO_USER mg_rescue_check(void)
     playSFX(SOUND_SFX_11); /* pickup chime */
 
     if (type == 0) {
-        mg_hint("ELDER: LAND ON THE GUARDIAN'S HEAD!", PAL_GOLD, 120);
+        mg_hint("ELDER: STRIKE OR STOMP ITS HEAD!", PAL_GOLD, 120);
     } else if (type == 1) {
         if (mg.player->hp < MAX_HP) mg.player->hp++;
         mg_hint("MAIDEN: HEALTH RESTORED!", PAL_SKY, 120);
     } else if (type == 2) {
+        /* The spirit hands her a sky lily too: a second jump for a while. */
+        if (mg.art < MAX_ART) mg.art++;
+        mg.lily = LILY_TIME;
         mg.air_jump = 1;
-        mg.spring = POWER_TIME;
-        mg_hint("SPIRIT: YOUR JUMPS ARE LIGHT AS AIR!", PAL_GOLD, 120);
+        mg.hud_dirty = 1;
+        mg_hint("SPIRIT: SECRET ART AND A SKY LILY!", PAL_GOLD, 120);
     } else {
         mg_hint("SUNBOY: MAIYA! WE WON!", PAL_GOLD, 120);
     }
@@ -6304,7 +6545,7 @@ void NEOGEO_USER maiya_frame(void)
                 else mg_hint("EXTRA LIFE!", PAL_GOLD, 120);
             }
         }
-        if ((mg.swift || mg.might || mg.veil || mg.spring || mg.crown) &&
+        if ((mg.swift || mg.might || mg.veil || mg.spring || mg.crown || mg.lily) &&
             (mg.tick % 60u) == 0u) mg_draw_tray();
         return;
     }

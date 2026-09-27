@@ -722,6 +722,27 @@ def bloom_bud():
     return to_rgba(outline(a))
 
 
+def sky_lily():
+    """A white sky lily, gold at its heart: while it lasts she can jump once
+    more in the air. Hard to reach on purpose."""
+    a = canvas()
+    a[22:32, 15:17] = LF_M
+    disc(a, 11, 27, 4.5, 2.0, LF_M)
+    disc(a, 21, 28, 4.5, 2.0, LF_L)
+    for k in range(6):
+        ang = np.pi / 2 + k * np.pi / 3
+        for r in range(11):
+            w = 2.8 * (1.0 - r / 12.0) + 0.5
+            x, y = 16 + np.cos(ang) * r, 14 - np.sin(ang) * r * 0.85
+            disc(a, x, y, w, w, ST_L)
+            if 2 <= r <= 7:
+                disc(a, x, y, 0.6, 0.6, WATER_L)
+    disc(a, 16, 14, 3.0, 3.0, BLOSSOM)
+    for dx, dy in ((-2, -3), (2, -3), (0, 1)):
+        disc(a, 16 + dx, 14 + dy, 1.0, 1.0, GOLD)
+    return to_rgba(outline(a))
+
+
 TRINKETS = (
     ("gold", gold_coin), ("silver", silver_coin), ("flower", cut_flower),
     ("critter", critter), ("life", life_heart), ("swift", swift_leaf),
@@ -729,6 +750,7 @@ TRINKETS = (
     ("spring", spring_bud), ("crown", thorn_crown),
     ("thorns", thorn_bundle), ("spread", spread_fan), ("pierce", pierce_seed),
     ("gale", gale_leaf), ("bloom", bloom_bud),
+    ("lily", sky_lily),
 )
 
 

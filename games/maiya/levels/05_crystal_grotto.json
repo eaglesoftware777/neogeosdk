@@ -88,7 +88,7 @@
     {"x": 4304, "who": "sunboy"}
   ],
   "secrets": [
-    {"x": 424, "y": 114, "type": "gem"},
+    {"x": 4336, "y": 16, "type": "gem"},
     {"x": 944, "y": 42, "type": "chest"},
     {"x": 1720, "y": 42, "type": "rose"},
     {"x": 2500, "y": 42, "type": "gem"},
@@ -96,7 +96,7 @@
     {"x": 4080, "y": 42, "type": "rose"}
   ],
   "pickups": [
-    {"x": 308, "y": 168, "kind": "silver"},
+    {"x": 3916, "y": 24, "kind": "lily"},
     {"x": 1288, "y": 168, "kind": "spring"},
     {"x": 2176, "y": 168, "kind": "veil"},
     {"x": 3188, "y": 168, "kind": "silver"},

@@ -87,13 +87,13 @@
   "secrets": [
     {"x": 452, "y": 114, "type": "chest"},
     {"x": 1008, "y": 50, "type": "rose"},
-    {"x": 2396, "y": 74, "type": "gem"},
+    {"x": 2948, "y": 16, "type": "gem"},
     {"x": 3152, "y": 114, "type": "chest"},
     {"x": 4008, "y": 66, "type": "rose"},
     {"x": 4364, "y": 34, "type": "gem"}
   ],
   "pickups": [
-    {"x": 252, "y": 166, "kind": "silver"},
+    {"x": 2268, "y": 24, "kind": "lily"},
     {"x": 1588, "y": 166, "kind": "spring"},
     {"x": 2220, "y": 166, "kind": "veil"},
     {"x": 3304, "y": 166, "kind": "silver"},
