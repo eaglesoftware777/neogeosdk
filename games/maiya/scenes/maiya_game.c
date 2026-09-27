@@ -3217,6 +3217,7 @@ static void NEOGEO_USER mg_secret_art(void)
 /*  Scene & Level Initialization                                      */
 /* ------------------------------------------------------------------ */
 static void NEOGEO_USER mg_spawn(void);
+static void NEOGEO_USER mg_freed_clear(uint8_t remove);
 static void NEOGEO_USER mg_hazard_disable_check(uint16_t pressed);
 
 /*
@@ -3298,6 +3299,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.attack = mg.combo = mg.dash = mg.dash_wait = mg.boss_hurt = mg.boss_active = 0;
     mg.hurt = 0; mg.coyote = mg.jump_buffer = mg.drop = mg.cast = mg.super_surge = 0;
     mg.boss = mg.rescue = mg.eagle = 0; mg.ledges_used = 0; mg.eagle_timer = 0;
+    mg_freed_clear(0);
     mg.on_ledge = 0; mg.combo_timer = 0; mg.combo_buffer[0] = mg.combo_buffer[1] = 0;
     mg.climbing = 0; mg.crouch_timer = 0; mg.sitting = 0;
     /*
@@ -7729,6 +7731,54 @@ static void NEOGEO_USER mg_npc_check(void)
     }
 }
 
+/*
+ * A freed captive stays in sight: the chest is thrown open and whoever was
+ * in it hops for joy and thanks her in their own voice. Then the maiden and
+ * Sunboy run off the screen, away from her, the spirit flies up and away,
+ * and once out of sight they are gone; the elder stays where he stood,
+ * turned to her, until she is far down the road. Nothing blinks out on the
+ * spot. (The villagers who give hints are not captives: they stay as they
+ * are.)
+ */
+static NGCharacter *mg_freed;
+static uint8_t mg_freed_t;
+static int8_t mg_freed_dir;
+
+static void NEOGEO_USER mg_freed_clear(uint8_t remove)
+{
+    if (mg_freed && remove) ng_chars_remove(mg_freed);
+    mg_freed = 0;
+}
+
+static void NEOGEO_USER mg_freed_step(void)
+{
+    NGCharacter *c = mg_freed;
+    NGCharacter *p = mg.player;
+    int16_t sx;
+    if (!c || !p) return;
+    if (mg_freed_t < 255u) mg_freed_t++;
+    if (mg_freed_t <= 24u) {
+        /* a hop for joy, facing her, a heart over them */
+        uint8_t up = (uint8_t)(mg_freed_t < 12u ? mg_freed_t : 24u - mg_freed_t);
+        ng_char_set_pos(c, c->x, (int16_t)(MG_GROUND_Y - (up >> 1)));
+        mg_frame(c, 1, (uint8_t)(c->x > p->x));
+        if (mg_freed_t == 6u) mg_burst(c->x, (int16_t)(MG_GROUND_Y - 56), MG_T_HEART, 1, -1);
+        return;
+    }
+    if (c->data0 == 0) {
+        /* the elder stays, and watches her go */
+        ng_char_set_pos(c, c->x, MG_GROUND_Y);
+        mg_frame(c, 0, (uint8_t)(c->x > p->x));
+        if (mg_abs((int16_t)(c->x - p->x)) > 420) mg_freed_clear(1);
+        return;
+    }
+    if (c->data0 == 2) ng_char_set_pos(c, (int16_t)(c->x + mg_freed_dir * 3), (int16_t)(c->y - 2));
+    else ng_char_set_pos(c, (int16_t)(c->x + mg_freed_dir * 4), MG_GROUND_Y);
+    mg_frame(c, (uint8_t)((mg_freed_t >> 2) & 1u), (uint8_t)(mg_freed_dir < 0));
+    sx = (int16_t)(c->x - mg.camera.x);
+    if (sx < -48 || sx > NG_SCREEN_W + 48 || MG_SY(c->y) < -60) mg_freed_clear(1);
+}
+
 static void NEOGEO_USER mg_rescue_check(void)
 {
     uint8_t type;
@@ -7740,8 +7790,11 @@ static void NEOGEO_USER mg_rescue_check(void)
     mg.cage_x = (int16_t)(mg.rescue->x - 16);
     mg.cage_y = (int16_t)(mg.rescue->y - 32);
     mg.cage_open = 70;
-    mg_burst(mg.rescue->x, (int16_t)(mg.rescue->y - 30), MG_T_STAR, 4, -3);
-    ng_chars_remove(mg.rescue);
+    /* out of the chest, and in sight a while yet (mg_freed_step) */
+    mg_freed_clear(1);
+    mg_freed = mg.rescue;
+    mg_freed_t = 0;
+    mg_freed_dir = (int8_t)(mg_freed->x >= mg.player->x ? 1 : -1);
     mg.rescue = 0;
     playSFX(SOUND_SFX_11); /* pickup chime */
     /* She tells the captive it's free; it thanks her in its own voice. */
@@ -8323,6 +8376,7 @@ static void NEOGEO_USER mg_tour_begin(void)
     }
     if (mg.boss) { ng_chars_remove(mg.boss); mg.boss = 0; }
     if (mg.rescue) { ng_chars_remove(mg.rescue); mg.rescue = 0; }
+    mg_freed_clear(1);
     for (i = 0; i < MG_NPC_SLOTS; i++) { if (mg.npcs[i]) ng_chars_remove(mg.npcs[i]); mg.npcs[i] = 0; }
     /* (a thorn still in the air at the win would hang there, frozen) */
     for (i = 0; i < MG_SHOTS; i++) { mg.shots[i].life = 0; ng_sprite_group_set_visible(&mg.shots[i].sprite, 0); ng_sprite_group_flush(&mg.shots[i].sprite); }
@@ -8628,6 +8682,7 @@ static void NEOGEO_USER mg_ending_begin(void)
     }
     if (mg.boss) { ng_chars_remove(mg.boss); mg.boss = 0; }
     if (mg.rescue) { ng_chars_remove(mg.rescue); mg.rescue = 0; }
+    mg_freed_clear(1);
     for (i = 0; i < MG_SHOTS; i++) mg.shots[i].life = 0;
     mg.boss_active = 0;
     mg.player->visible = 0;
@@ -8763,6 +8818,7 @@ void NEOGEO_USER maiya_frame(void)
         mg_hazard_warn_check();
         mg_npc_check();
         mg_rescue_check();
+        mg_freed_step();
 
         mg_clock_tick();
         mg_combo_tick();
