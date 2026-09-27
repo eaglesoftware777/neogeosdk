@@ -830,12 +830,78 @@ def fx_burst(step):
     return to_rgba(outline(a))
 
 
+def fx_aura(phase):
+    """The mist veil's light: a soft ring of motes about her, twinkling."""
+    a = canvas(64, 64)
+    for k in range(12):
+        ang = k * np.pi / 6 + phase * 0.26
+        r = 25 + (2 if (k + phase) % 2 else 0)
+        x, y = 32 + np.cos(ang) * r * 0.62, 34 + np.sin(ang) * r
+        disc(a, x, y, 1.6 if (k + phase) % 3 else 2.4, 1.6 if (k + phase) % 3 else 2.4, WATER_L)
+        if (k + phase) % 3 == 0:
+            a[int(y), max(0, int(x) - 3):int(x) + 4] = ST_L
+            a[max(0, int(y) - 3):int(y) + 4, int(x)] = ST_L
+    return to_rgba(a)
+
+
 FX = (
     ("whirl0", lambda: fx_whirl(0)), ("whirl1", lambda: fx_whirl(1)), ("whirl2", lambda: fx_whirl(2)),
     ("trail0", lambda: fx_trail(0)), ("trail1", lambda: fx_trail(1)),
     ("sun0", lambda: fx_sun(0)), ("sun1", lambda: fx_sun(1)), ("sun2", lambda: fx_sun(2)),
     ("burst0", lambda: fx_burst(0)), ("burst1", lambda: fx_burst(1)),
+    ("aura0", lambda: fx_aura(0)), ("aura1", lambda: fx_aura(1)),
 )
+
+
+# ---------------------------------------------------------------------------
+#  Her hang glider over a healed valley, and the parachute it opens into to
+#  bring her down: 96 x 48, her hands' grip at the bottom middle (48, 46).
+# ---------------------------------------------------------------------------
+
+def glider_wing():
+    """A hang glider seen from the side and a little below: a sweeping
+    wing in sun gold and rose, its keel, and the A-frame down to the bar
+    she holds."""
+    a = canvas(96, 48)
+    for x in range(4, 92):
+        u = (x - 48) / 44.0
+        top = int(round(10 + 7 * u * u))           # the leading edge curves back to the tips
+        depth = int(round(9 - 5 * abs(u)))
+        stripe = (x // 11) % 3
+        a[top:top + depth, x] = (GOLD, BLOSSOM, AMBER)[stripe]
+        a[top, x] = WATER_L
+    a[16:19, 46:50] = ST_M                           # the keel's hang point
+    for k in range(27):                              # the A-frame: two tubes down to the bar
+        y = 18 + k
+        a[y, 48 - 12 + (k * 12) // 27] = ST_L
+        a[y, 48 + 12 - (k * 12) // 27] = ST_L
+    a[44:47, 38:59] = ST_M                           # the control bar
+    a[44, 38:59] = ST_L
+    return to_rgba(outline(a))
+
+
+def glider_chute():
+    """The same cloth opened out as a parachute: an arch of cells in gold
+    and rose, its lines running down to her hands."""
+    a = canvas(96, 48)
+    for x in range(6, 90):
+        u = (x - 48) / 42.0
+        top = int(round(4 + 10 * u * u))
+        cell = (x // 12) % 2
+        a[top:top + 8, x] = GOLD if cell else BLOSSOM
+        a[top, x] = WATER_L
+        a[top + 7, x] = AMBER if cell else LF_L
+    for sx in (10, 26, 40, 56, 70, 86):              # the lines, to the grip
+        u = (sx - 48) / 42.0
+        y0 = int(round(12 + 10 * u * u))
+        for y in range(y0, 46):
+            f = (y - y0) / max(1, 46 - y0)
+            a[y, int(round(sx + (48 - sx) * f))] = ST_L
+    a[44:47, 44:53] = ST_M
+    return to_rgba(outline(a))
+
+
+GLIDER = (("wing", glider_wing), ("chute", glider_chute))
 
 
 # ---------------------------------------------------------------------------
