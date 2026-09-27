@@ -47,6 +47,31 @@ and trimmed for the driver:
 | `15.wav` | Movement / Jumping / jump 1 | jump, dash, swiftness |
 | `16.wav` | General / Damage / hit 1 | Maiya hurt |
 
+## Voices (ADPCM-A, `samples/in_wav_a_voice/`)
+
+Maiya's calls and the thanks of the captives she frees are synthesised, not
+recorded: `tools/make_voices.py` speaks each line with the piper speech
+synthesiser and its LJ Speech voice, which was trained on the public-domain
+LJ Speech recordings, and colours it per speaker with sox (pitch, tempo,
+an echo for the spirit). The WAVs are in the repository; the synthesiser
+and its voice model are only needed to change a line.
+
+| File | Speaker | Line | Played |
+| --- | --- | --- | --- |
+| `v01_rise.wav` | Maiya | "Rising bloom!" | the Rising Bloom |
+| `v02_surge.wav` | Maiya | "Rose blossom surge!" | the Rose Blossom Surge |
+| `v03_art.wav` | Maiya | "Nature, heal this land!" | the Secret Art |
+| `v04_leap.wav` | Maiya | "Up we go!" | the high leap |
+| `v05_lily.wav` | Maiya | "Light as air!" | a sky lily picked up |
+| `v06_free.wav` | Maiya | "You're free now!" | a captive freed |
+| `v07_start.wav` | Maiya | "The valley called me!" | a mission begins |
+| `v08_retry.wav` | Maiya | "I'm not done yet!" | back after a fall |
+| `v09_win.wav` | Maiya | "The valley is healed!" | a guardian beaten |
+| `v10_elder.wav` | the elder | "Bless you, child of nature!" | freed |
+| `v11_maiden.wav` | the maiden | "Thank you! You saved me!" | freed |
+| `v12_spirit.wav` | the spirit | "The forest thanks you!" | freed |
+| `v13_sunboy.wav` | Sunboy | "We did it! Thank you!" | freed |
+
 ## FM and SSG (`fm/`, `ssg/`, `mml/`)
 
 The FM fanfare under the house eyecatcher (`fm/0_fm_example_a.mml`), the
