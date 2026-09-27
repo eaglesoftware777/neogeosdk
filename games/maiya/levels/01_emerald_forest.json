@@ -19,7 +19,7 @@
     "taunt": "I CUT DOWN WHAT TOOK CENTURIES TO GROW!",
     "reply": "THE FOREST WILL OUTLIVE YOUR BLADES!"
   },
-  "art": {"name": "ROSE WIND STRIKE", "words": "MAIYA: ROSE WIND, CARRY ME!"},
+  "art": {"kind": "blossom", "name": "ROSE BLOSSOM STORM", "words": "MAIYA: ROSE WIND, CARRY ME!"},
   "secret_hint": "A ROSE SLEEPS ABOVE THE ARCH",
   "sunboy": ["MAIYA! THE FOREST BREATHES AGAIN", "THE MARSH FALLS ARE NEXT. HURRY"],
   "healed": ["THE OLD TREES BREATHE FREELY AGAIN", "THE LOGGERS' SAWS HAVE FALLEN SILENT"],

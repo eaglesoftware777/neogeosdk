@@ -743,6 +743,26 @@ def sky_lily():
     return to_rgba(outline(a))
 
 
+def spirit_orb():
+    """A spirit orb, found in a valley's hidden vault: a blossom held in a
+    ring of sunlight, rays all round it. It teaches her the valley's Secret
+    Art."""
+    a = canvas()
+    for k in range(8):
+        ang = k * np.pi / 4
+        for r in np.arange(10.0, 15.0, 0.5):
+            x, y = 16 + np.cos(ang) * r, 16 - np.sin(ang) * r
+            disc(a, x, y, 0.8, 0.8, GOLD if r < 13 else AMBER)
+    disc(a, 16, 16, 9.0, 9.0, GOLD)
+    disc(a, 16, 16, 7.5, 7.5, WATER_L)
+    for k in range(5):
+        ang = np.pi / 2 + k * 2 * np.pi / 5
+        disc(a, 16 + np.cos(ang) * 3.2, 16 - np.sin(ang) * 3.2, 2.6, 2.6, BLOSSOM)
+    disc(a, 16, 16, 1.8, 1.8, GOLD)
+    disc(a, 13, 12, 1.2, 1.2, ST_L)
+    return to_rgba(outline(a))
+
+
 TRINKETS = (
     ("gold", gold_coin), ("silver", silver_coin), ("flower", cut_flower),
     ("critter", critter), ("life", life_heart), ("swift", swift_leaf),
@@ -750,7 +770,7 @@ TRINKETS = (
     ("spring", spring_bud), ("crown", thorn_crown),
     ("thorns", thorn_bundle), ("spread", spread_fan), ("pierce", pierce_seed),
     ("gale", gale_leaf), ("bloom", bloom_bud),
-    ("lily", sky_lily),
+    ("lily", sky_lily), ("art", spirit_orb),
 )
 
 

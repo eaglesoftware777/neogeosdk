@@ -341,6 +341,7 @@ typedef struct {
     uint8_t  music_next, music_wait;  /* a track waiting for the fade out to finish; the fade under way (1 out, 2 in) */
     uint8_t  music_level;             /* the music's volume now, as the fade has it */
     uint8_t  art_pose, leaping;       /* the Secret Art's pose, frames left; rising from the high leap */
+    uint8_t  arts_known;              /* the Secret Arts she has learned, a bit each (MG_ART_*) */
     uint8_t  veil_lit;                /* her mist-veil colours are on               */
     uint8_t  tour_phase, tour_folk_n; /* the healed valley: 0 flying over it, 1 with the elder */
     uint16_t tour_t;                  /* ...frames into the phase                    */
@@ -453,6 +454,7 @@ static int16_t NEOGEO_USER mg_abs(int16_t value)
 static uint16_t mg_pal_base[MG_PAL_BANKS * 16u];
 static uint16_t mg_pal_out[MG_PAL_BANKS * 16u];
 static uint8_t mg_pal_open;
+static uint8_t mg_tint_t, mg_tint_art;   /* the Secret Art's colour shake: frames left, which art */
 
 /* The screen is taken over on first use, from the colours showing then. */
 static void NEOGEO_USER mg_pal_screen(void)
@@ -749,6 +751,8 @@ static void NEOGEO_USER mg_background(uint8_t id, uint8_t restored)
     uint16_t far_tile, road_tile;
     uint8_t count, i;
 
+    mg_tint_t = 0;          /* a new painting: an art's colour shake is over */
+
     switch (id) {
     case 1:  /* Valley of Sacred Falls */
         far_tile = MG_BG1_TILE; road_tile = MG_GROUND1_TILE;
@@ -841,6 +845,7 @@ static void NEOGEO_USER mg_arena_background(uint8_t style)
     const uint16_t *pal = 0;
     const uint8_t *far_map = 0, *road_map = 0;
     uint8_t count = 0, i;
+    mg_tint_t = 0;
     switch (style) {
 #if MG_ARENA0_READY
     case 0: far = MG_ARENA0_TILE; road = MG_ARENAGROUND0_TILE; pal = mg_arena0_pal;
@@ -1588,8 +1593,13 @@ static void NEOGEO_USER mg_draw_light(int16_t camera_x)
     ng_sprite_group_flush(&mg.fx);
 }
 
+static void NEOGEO_USER mg_falls_step(void);
+static void NEOGEO_USER mg_art_step(void);
+
 static void NEOGEO_USER mg_before_draw_hook(void)
 {
+    mg_falls_step();
+    mg_art_step();
     if (mg.player) mg_camera_follow();
     if (mg.eagle && mg.player) {
         ng_char_set_pos(mg.eagle, mg.player->x, mg.player->y);
@@ -1884,35 +1894,371 @@ static NGCharacter *NEOGEO_USER mg_character(uint8_t kind, int16_t x, int16_t y,
 }
 
 /* ------------------------------------------------------------------ */
+/*  Showers from the sky                                              */
+/* ------------------------------------------------------------------ */
+/*
+ * Flowers, leaves and drops of clean water falling over the whole screen.
+ * A piece lives on the screen, not in the valley -- the view pans under
+ * it -- sways and tumbles as it comes down, and at a height of its own it
+ * is gone: a flower or a leaf shrinks away, a drop splashes. Over a healed
+ * valley each one gone brings the painting's colours up a step
+ * (mg_glow_*). There the shower has the tray's 24 sprites, which the scene
+ * hides; in play it takes the 14 above the glider, which nothing uses.
+ *
+ * A Secret Art sends its pieces the other way: each appears at the edge of
+ * the screen, gathers there a moment, then flies onto the creature it was
+ * called for and strikes it (mg_art_strike).
+ */
+enum {
+    MG_FALLS = 24, SLOT_RAIN = 366, MG_RAIN_SLOTS = 14,
+    MG_FALL_LEAF = 4, MG_FALL_WATER = 5,   /* below 4: a flower of that kind */
+    MG_FALL_THORN = 6, MG_FALL_ROSE = 7, MG_FALL_ICE = 8, MG_FALL_SPARK = 9, MG_FALL_STAR = 10,
+    MG_FALL_FADE = 10,
+    MG_AIM_BOSS = MG_ENEMIES + 1, MG_AIM_SPOT = MG_ENEMIES + 2
+};
+
+typedef struct {
+    int16_t x, y;            /* on screen, in eighths of a pixel */
+    int8_t  vx;              /* eighths of a pixel a frame */
+    uint8_t vy;
+    uint8_t live, kind, t, end, fade, sway;
+    uint8_t aim;             /* an art's piece: 1 + the creature it flies at, or
+                              * MG_AIM_BOSS / MG_AIM_SPOT; 0 for one that falls */
+    uint8_t wait;            /* ...frames it gathers before it flies */
+    int16_t tx, ty;          /* ...where it strikes, like x and y */
+    NGCharacter *who;        /* ...and the one it was called for */
+    NGSpriteGroup sprite;
+} MGFall;
+
+static void NEOGEO_USER mg_art_strike(MGFall *f);
+static void NEOGEO_USER mg_art_track(MGFall *f);
+
+static MGFall mg_falls[MG_FALLS];
+static uint8_t mg_falls_n;       /* sprites the shower has: 0 while there is none */
+static uint8_t mg_falls_gone;    /* pieces gone since it began (stops at 255) */
+
+/* Shrinking away, frame by frame to the last. */
+static const uint8_t mg_fall_scale[MG_FALL_FADE] = { 24, 48, 72, 96, 120, 144, 168, 192, 216, 240 };
+
+static void NEOGEO_USER mg_falls_begin(uint16_t slot, uint8_t count)
+{
+    uint8_t i;
+    mg_falls_n = count;
+    mg_falls_gone = 0;
+    for (i = 0; i < count; i++) {
+        mg_falls[i].live = 0;
+        ng_sprite_group_init(&mg_falls[i].sprite, (uint16_t)(slot + i), 1, 1,
+                             MG_TOOL_TILE + MG_T_FLOWER, PAL_TOOL);
+        ng_sprite_group_set_visible(&mg_falls[i].sprite, 0);
+        ng_sprite_group_upload(&mg_falls[i].sprite);
+    }
+}
+
+static void NEOGEO_USER mg_falls_end(void)
+{
+    uint8_t i;
+    for (i = 0; i < mg_falls_n; i++) {
+        mg_falls[i].live = 0;
+        ng_sprite_group_set_visible(&mg_falls[i].sprite, 0);
+        ng_sprite_group_flush(&mg_falls[i].sprite);
+    }
+    mg_falls_n = 0;
+}
+
+/* One more piece from above the screen, anywhere across it; none when
+ * every sprite is falling already. */
+static void NEOGEO_USER mg_fall_spawn(uint8_t kind)
+{
+    uint8_t i;
+    for (i = 0; i < mg_falls_n; i++) {
+        MGFall *f = &mg_falls[i];
+        if (f->live) continue;
+        f->live = 1;
+        f->kind = kind;
+        f->t = 0;
+        f->fade = 0;
+        f->sway = (uint8_t)ng_rand();
+        f->x = (int16_t)(((int16_t)ng_rand_range(352u) - 16) * 8);
+        f->y = -16 * 8;
+        f->vx = (int8_t)(-2 - (int8_t)(ng_rand() & 3u));    /* the breeze of her passing */
+        f->aim = 0;
+        f->wait = 0;
+        if (kind == MG_FALL_WATER) f->vy = (uint8_t)(22u + (ng_rand() & 7u));
+        else if (kind == MG_FALL_LEAF) f->vy = (uint8_t)(9u + (ng_rand() & 3u));
+        else f->vy = (uint8_t)(7u + (ng_rand() & 3u));
+        f->end = (uint8_t)(64u + ng_rand_range(144u));
+        ng_sprite_group_set_scale(&f->sprite, NG_SPRITE_FULL_XSCALE, NG_SPRITE_FULL_YSCALE);
+        return;
+    }
+}
+
+/* Half flowers of the four kinds, the rest leaves and clean water. */
+static void NEOGEO_USER mg_fall_any(void)
+{
+    uint8_t r = (uint8_t)(ng_rand() & 15u);
+    mg_fall_spawn((uint8_t)(r < 8u ? (r & 3u) : (r < 11u ? MG_FALL_LEAF : MG_FALL_WATER)));
+}
+
+static void NEOGEO_USER mg_falls_step(void)
+{
+    uint8_t i;
+    for (i = 0; i < mg_falls_n; i++) {
+        MGFall *f = &mg_falls[i];
+        NGSpriteGroup *g = &f->sprite;
+        int16_t sx, sy;
+        uint16_t tile;
+        uint8_t turn = 0, flip = 0;
+        if (!f->live) continue;
+        f->t++;
+        if (f->fade) {
+            if (--f->fade == 0) {
+                f->live = 0;
+                if (mg_falls_gone < 255u) mg_falls_gone++;
+                ng_sprite_group_set_visible(g, 0);
+                ng_sprite_group_flush(g);
+                continue;
+            }
+        } else if (f->aim) {
+            if (f->wait) {
+                f->wait--;                       /* gathering at the edge */
+            } else {
+                /* flying at it, a quarter of the way closer each frame */
+                int16_t dx, dy;
+                mg_art_track(f);
+                dx = (int16_t)(f->tx - f->x);
+                dy = (int16_t)(f->ty - f->y);
+                f->x = (int16_t)(f->x + (dx >> 2) + (dx > 0 ? 8 : (dx < 0 ? -8 : 0)));
+                f->y = (int16_t)(f->y + (dy >> 2) + (dy > 0 ? 8 : (dy < 0 ? -8 : 0)));
+                if (dx > -96 && dx < 96 && dy > -96 && dy < 96) {
+                    mg_art_strike(f);
+                    f->aim = 0;
+                    f->fade = MG_FALL_FADE;
+                }
+            }
+        } else {
+            f->x = (int16_t)(f->x + f->vx);
+            f->y = (int16_t)(f->y + f->vy);
+            if ((f->y >> 3) >= (int16_t)f->end) f->fade = MG_FALL_FADE;
+        }
+        sx = (int16_t)(f->x >> 3);
+        sy = (int16_t)(f->y >> 3);
+        if (f->kind > MG_FALL_WATER) {
+            /* an art's weapons: the thorn spins, the rest glint as they come */
+            static const uint8_t art_tile[5] = { MG_T_THORN0, MG_T_ROSE, MG_T_ICE, MG_T_SPARK, MG_T_STAR };
+            tile = art_tile[f->kind - MG_FALL_THORN];
+            if (f->kind == MG_FALL_THORN) turn = (uint8_t)((f->t >> 1) & 1u);
+            else flip = (uint8_t)((f->t >> 3) & 1u);
+        } else if (f->kind == MG_FALL_WATER) {
+            tile = (uint16_t)(f->fade ? MG_T_SPLASH : MG_T_WATER);
+        } else {
+            /* a flower turns over every eight frames and back, a leaf
+             * flutters twice as fast; both swing side to side */
+            uint8_t k = (uint8_t)(f->t + f->sway);
+            uint8_t leaf = (uint8_t)(f->kind == MG_FALL_LEAF);
+            turn = (uint8_t)((k >> (leaf ? 2 : 3)) & 1u);
+            flip = (uint8_t)((k >> (leaf ? 3 : 4)) & 1u);
+            tile = (uint16_t)(leaf ? MG_T_FALL_LEAF : MG_T_FLOWER + f->kind * 2u);
+            if (!f->aim) sx = (int16_t)(sx + ng_trig_mul(leaf ? 4 : 7, ng_sin((uint8_t)(f->sway + f->t * 3u))));
+        }
+        {
+            /* an art's piece grows out of nothing as it appears; going, a
+             * piece shrinks toward its own middle (a drop splashes instead) */
+            uint8_t k = 0;
+            if (f->aim && f->t < MG_FALL_FADE) k = f->t;
+            else if (f->fade && f->kind != MG_FALL_WATER) k = f->fade;
+            if (k) {
+                uint8_t sc = mg_fall_scale[k - 1u];
+                int16_t in = (int16_t)(8 - (sc >> 5));
+                ng_sprite_group_set_scale(g, sc, sc);
+                sx = (int16_t)(sx + in);
+                sy = (int16_t)(sy + in);
+            } else {
+                ng_sprite_group_set_scale(g, NG_SPRITE_FULL_XSCALE, NG_SPRITE_FULL_YSCALE);
+            }
+        }
+        ng_sprite_group_set_tile_base(g, (uint16_t)(MG_TOOL_TILE + tile + turn));
+        ng_sprite_group_set_flip(g, flip, 0);
+        ng_sprite_group_set_pos(g, sx, sy);
+        ng_sprite_group_set_visible(g, 1);
+        ng_sprite_group_flush(g);
+    }
+}
+
+/*
+ * The healed valley's painting coming up: from hazy -- three quarters as
+ * bright, half its colour drained -- through its own colours at glow 8, to
+ * richer and lighter than it was painted at 16. Worked out from the colours
+ * it was loaded with, four banks a frame, through tables made once a step.
+ */
+static uint16_t mg_glow_src[16u * 16u];
+static uint8_t mg_glow_lut[32];
+static int8_t mg_glow_sat[63];
+static uint8_t mg_glow_now, mg_glow_bank;
+
+#define MG_T3(n) n, n, n
+static const uint8_t mg_third[94] = {   /* (r + g + b) / 3 */
+    MG_T3(0), MG_T3(1), MG_T3(2), MG_T3(3), MG_T3(4), MG_T3(5), MG_T3(6), MG_T3(7),
+    MG_T3(8), MG_T3(9), MG_T3(10), MG_T3(11), MG_T3(12), MG_T3(13), MG_T3(14), MG_T3(15),
+    MG_T3(16), MG_T3(17), MG_T3(18), MG_T3(19), MG_T3(20), MG_T3(21), MG_T3(22), MG_T3(23),
+    MG_T3(24), MG_T3(25), MG_T3(26), MG_T3(27), MG_T3(28), MG_T3(29), MG_T3(30), 31
+};
+#undef MG_T3
+
+static void NEOGEO_USER mg_glow_tables(uint8_t glow)
+{
+    uint8_t v, lift = (uint8_t)(glow > 8u ? glow - 8u : 0u);
+    uint8_t sat = (uint8_t)(glow <= 8u ? 8u + glow : 16u + ((glow - 8u) >> 1));   /* sixteenths */
+    uint16_t light = 0, step = (uint16_t)(48u + 2u * (glow < 8u ? glow : 8u));   /* sixty-fourths */
+    int16_t d = (int16_t)(-31 * (int16_t)sat);
+    for (v = 0; v < 32u; v++) {
+        uint8_t b = (uint8_t)(light >> 6);
+        light = (uint16_t)(light + step);
+        /* the middle tones lifted, the lightest and darkest left be */
+        b = (uint8_t)(b + (((((31u - b) * b) >> 6) * lift) >> 3));
+        mg_glow_lut[v] = (uint8_t)(b > 31u ? 31u : b);
+    }
+    for (v = 0; v < 63u; v++) {
+        mg_glow_sat[v] = (int8_t)(d >> 4);
+        d = (int16_t)(d + sat);
+    }
+}
+
+static uint8_t NEOGEO_USER mg_glow_channel(uint8_t c, uint8_t grey)
+{
+    int16_t v = (int16_t)(grey + mg_glow_sat[c + 31u - grey]);
+    if (v < 0) v = 0;
+    if (v > 31) v = 31;
+    return mg_glow_lut[v];
+}
+
+static void NEOGEO_USER mg_glow_apply(uint8_t k)
+{
+    const uint16_t *src = &mg_glow_src[(uint16_t)k * 16u];
+    uint16_t out[16];
+    uint8_t i;
+    out[0] = src[0];
+    for (i = 1; i < 16u; i++) {
+        uint16_t c = src[i];
+        uint8_t r = (uint8_t)(((c >> 7) & 0x1Eu) | ((c >> 14) & 1u));
+        uint8_t g = (uint8_t)(((c >> 3) & 0x1Eu) | ((c >> 13) & 1u));
+        uint8_t b = (uint8_t)(((c << 1) & 0x1Eu) | ((c >> 12) & 1u));
+        uint8_t grey = mg_third[r + g + b];
+        r = mg_glow_channel(r, grey);
+        g = mg_glow_channel(g, grey);
+        b = mg_glow_channel(b, grey);
+        out[i] = (uint16_t)(((uint16_t)(r & 1u) << 14) | ((uint16_t)(g & 1u) << 13) |
+                            ((uint16_t)(b & 1u) << 12) | ((uint16_t)(r >> 1) << 8) |
+                            ((uint16_t)(g >> 1) << 4) | (uint16_t)(b >> 1));
+    }
+    mg_palette((uint8_t)(PAL_BG + k), out);
+}
+
+/* The painting as just loaded, shown hazy at once. */
+static void NEOGEO_USER mg_glow_begin(void)
+{
+    uint16_t i;
+    for (i = 0; i < 16u * 16u; i++) mg_glow_src[i] = mg_pal_base[(uint16_t)PAL_BG * 16u + i];
+    mg_glow_now = 0;
+    mg_glow_tables(0);
+    for (i = 0; i < 16u; i++) mg_glow_apply((uint8_t)i);
+    mg_glow_bank = 16;
+}
+
+/* A step toward `want` once the last one is all on screen. */
+static void NEOGEO_USER mg_glow_step(uint8_t want)
+{
+    uint8_t k;
+    if (want > 16u) want = 16u;
+    if (mg_glow_bank >= 16u && want > mg_glow_now) {
+        mg_glow_now++;
+        mg_glow_tables(mg_glow_now);
+        mg_glow_bank = 0;
+    }
+    for (k = 0; k < 4u && mg_glow_bank < 16u; k++) mg_glow_apply(mg_glow_bank++);
+}
+
+/*
+ * A Secret Art's colour shake: the painting swings between two tints of the
+ * art's own light, strong at first and dying away, and then its colours
+ * come back as they were. Half the banks a frame, from the colours it had
+ * when the art began (kept in mg_glow_src, which only the healed valley
+ * uses otherwise). As it dies down, the art's own flowers, water, light or
+ * leaves drift down over the valley.
+ */
+enum { MG_ART_BLOSSOM, MG_ART_RAIN, MG_ART_SUN, MG_ART_FROST, MG_ART_GALE, MG_ARTS };
+enum { MG_TINT_TIME = 48 };
+static const uint8_t mg_tint_rgb[MG_ARTS][2][3] = {
+    { { 31, 26, 8 },  { 31, 14, 22 } },   /* the rose storm: gold, then rose */
+    { { 8, 24, 31 },  { 22, 30, 31 } },   /* the rain: clear blue, then foam */
+    { { 31, 24, 4 },  { 31, 14, 4 } },    /* the sun: gold, then flame */
+    { { 18, 26, 31 }, { 31, 31, 31 } },   /* the frost: ice, then snow */
+    { { 12, 30, 10 }, { 30, 28, 8 } },    /* the gale: leaf, then straw */
+};
+/* ...and what drifts down after it */
+static const uint8_t mg_art_after[MG_ARTS][2] = {
+    { 0, 3 }, { MG_FALL_WATER, MG_FALL_WATER }, { 2, MG_FALL_STAR }, { 1, MG_FALL_STAR }, { MG_FALL_LEAF, 2 },
+};
+static uint8_t mg_tint_lut[3][32];
+
+static void NEOGEO_USER mg_tint_begin(uint8_t art)
+{
+    uint16_t i;
+    if (!mg_tint_t)
+        for (i = 0; i < 16u * 16u; i++) mg_glow_src[i] = mg_pal_base[(uint16_t)PAL_BG * 16u + i];
+    mg_tint_art = art;
+    mg_tint_t = MG_TINT_TIME;
+}
+
+static void NEOGEO_USER mg_tint_apply(uint8_t k)
+{
+    const uint16_t *src = &mg_glow_src[(uint16_t)k * 16u];
+    uint16_t out[16];
+    uint8_t i;
+    out[0] = src[0];
+    for (i = 1; i < 16u; i++) {
+        uint16_t c = src[i];
+        uint8_t r = mg_tint_lut[0][((c >> 7) & 0x1Eu) | ((c >> 14) & 1u)];
+        uint8_t g = mg_tint_lut[1][((c >> 3) & 0x1Eu) | ((c >> 13) & 1u)];
+        uint8_t b = mg_tint_lut[2][((c << 1) & 0x1Eu) | ((c >> 12) & 1u)];
+        out[i] = (uint16_t)(((uint16_t)(r & 1u) << 14) | ((uint16_t)(g & 1u) << 13) |
+                            ((uint16_t)(b & 1u) << 12) | ((uint16_t)(r >> 1) << 8) |
+                            ((uint16_t)(g >> 1) << 4) | (uint16_t)(b >> 1));
+    }
+    mg_palette((uint8_t)(PAL_BG + k), out);
+}
+
+static void NEOGEO_USER mg_art_step(void)
+{
+    uint8_t k, first;
+    if (!mg_tint_t) return;
+    mg_tint_t--;
+    if (!mg_tint_t) {
+        for (k = 0; k < 16u; k++) mg_palette((uint8_t)(PAL_BG + k), &mg_glow_src[(uint16_t)k * 16u]);
+        return;
+    }
+    if (mg_tint_t < 30u && (mg_tint_t & 1u)) mg_fall_spawn(mg_art_after[mg_tint_art][(mg_tint_t >> 1) & 1u]);
+    first = (uint8_t)(mg_tint_t & 1u);
+    if (first) {
+        /* the other tint every eight frames, weaker each time */
+        const uint8_t *rgb = mg_tint_rgb[mg_tint_art][(mg_tint_t >> 3) & 1u];
+        uint8_t strength = (uint8_t)((mg_tint_t * 3u) >> 4), c, v;
+        if (strength > 7u) strength = 7u;
+        for (c = 0; c < 3u; c++) {
+            int16_t acc = (int16_t)(rgb[c] * strength);    /* (tint - v) * strength */
+            for (v = 0; v < 32u; v++) {
+                int16_t o = (int16_t)(v + (acc >> 4));
+                mg_tint_lut[c][v] = (uint8_t)(o < 0 ? 0 : (o > 31 ? 31 : o));
+                acc = (int16_t)(acc - strength);
+            }
+        }
+    }
+    for (k = (uint8_t)(first ? 0u : 8u); k < (uint8_t)(first ? 8u : 16u); k++) mg_tint_apply(k);
+}
+
+/* ------------------------------------------------------------------ */
 /*  Shots, Sparks, Items & Hazards                                    */
 /* ------------------------------------------------------------------ */
 static void NEOGEO_USER mg_sparks(int16_t x, int16_t y);
-
-/* A curtain of rose petals across the playfield: the Secret Art you see. */
-/*
- * The purifying storm.  Twelve pieces of the valley -- petals, leaves, seeds
- * and drops of clean water -- burst out of her and cross the whole screen
- * in both directions, so everything standing on it is touched by the art.
- * Two waves: the first radiates from her, the second rains from the sky.
- */
-static void NEOGEO_USER mg_petal_sweep(void)
-{
-    static const uint8_t tiles[4] = { MG_T_PETAL, MG_T_LEAF, MG_T_DRIP, MG_T_SPARK };
-    uint8_t i;
-
-    for (i = 0; i < MG_SPARKS; i++) {
-        MGSpark *p = &mg.sparks[i];
-        /* out of her hands, fanning across the road */
-        p->x = mg.player->x;
-        p->y = (int16_t)(mg.player->y - 30);
-        p->vx = (int16_t)((i & 1) ? (2 + (i >> 1)) : -(2 + (i >> 1)));
-        p->vy = (int16_t)(-1 - (i % 3));
-        p->life = (uint8_t)(50 + (i & 3) * 4);
-        ng_sprite_group_set_tile_base(&p->sprite, (uint16_t)(MG_TOOL_TILE + tiles[i & 3]));
-        ng_sprite_group_set_palette(&p->sprite, PAL_TOOL);
-        p->shrink = 0;
-    }
-}
 
 static void NEOGEO_USER mg_sparks(int16_t x, int16_t y)
 {
@@ -2510,7 +2856,7 @@ static uint8_t NEOGEO_USER mg_player_damage(void)
     NGCharacter *p = mg.player;
     /* In the bonus round one touch ends it: no health lost, no reward. */
     if (mg.state == MG_BONUS) { mg_bonus_caught(); return 0; }
-    if (mg.hurt || mg.veil || mg.dash || mg.super_surge || mg.state != MG_PLAY) return 0;
+    if (mg.hurt || mg.veil || mg.dash || mg.super_surge || mg.art_pose || mg.state != MG_PLAY) return 0;
     if (mg.rising > MG_RISE_TIME - MG_RISE_SAFE) return 0;
     mg.hurt = 90;
     if (mg.attempt_hits < 255) mg.attempt_hits++;
@@ -2568,42 +2914,175 @@ static void NEOGEO_USER mg_player_hit(int16_t from_x)
 }
 
 /*
- * Secret Art.  Each valley teaches Maiya a different one, and the roses she
- * gathers are its charges.  The sunlight palette is a flash, not a costume:
- * mg.flash counts it down and hands her own colours back.
+ * Secret Arts. Five, one to each kind of valley (its stage file's art
+ * "kind"): the Rose Blossom Storm she knows from the start -- the forest,
+ * the World Tree, the citadel -- and four she learns from a spirit orb in
+ * a hidden vault: the Purifying Rain (the falls, the coast, the reef), the
+ * Sunflare Dance (the grove, the works), the Frost Petal Storm (the grotto,
+ * the silver cave) and the Leaf Gale (the savanna, the sky road). In a
+ * valley she uses its own art once she knows it, the rose storm until
+ * then; the roses she gathers are the charges.
+ *
+ * Each goes the same way. Her colours flare and the valley's shake in the
+ * art's light (mg_art_step), a ring of gold goes out from her, and the
+ * art's pieces appear at the edges of the screen -- in a halo all round it
+ * for the roses and the frost, across the sky for the rain, out of the sun
+ * in its corner, from both sides for the gale -- gather a moment, and fly
+ * onto every creature on it. A weak one is beaten, however far into the
+ * journey. A tough one -- the armoured, and from the fifth valley on the
+ * shelled and the machines too -- is left
+ * dazed on its last strength, held a long while by the frost; the
+ * guardian takes a heavy blow. She can't be touched while it lasts.
  */
+static const uint8_t mg_art_pieces[MG_ARTS][4] = {
+    { MG_FALL_THORN, 0, MG_FALL_ROSE, 3 },                   /* thorns, roses, lilac */
+    { MG_FALL_WATER, MG_FALL_WATER, 1, MG_FALL_WATER },      /* clean water, a daisy */
+    { MG_FALL_SPARK, MG_FALL_STAR, 2, MG_FALL_SPARK },       /* sunlight, buttercups */
+    { MG_FALL_ICE, 1, MG_FALL_STAR, MG_FALL_ICE },           /* ice, snow-white daisies */
+    { MG_FALL_LEAF, MG_FALL_LEAF, 2, MG_FALL_LEAF },         /* leaves, a buttercup */
+};
+static uint8_t mg_art_live;      /* the art let loose last */
+static uint16_t mg_art_hit;      /* who its pieces have struck: a bit a creature, 0x100 the guardian */
+
+static uint8_t NEOGEO_USER mg_art_now(void)
+{
+    uint8_t k = mg_art_kind[mg.stage < MG_LEVEL_COUNT ? mg.stage : 0];
+    return (uint8_t)(((mg.arts_known >> k) & 1u) ? k : MG_ART_BLOSSOM);
+}
+
+/* Where the target is now, if it is still the one the piece was called for. */
+static void NEOGEO_USER mg_art_track(MGFall *f)
+{
+    NGCharacter *b = 0;
+    int16_t up = 22;
+    if (f->aim == MG_AIM_BOSS) { b = mg.boss; up = 46; }
+    else if (f->aim && f->aim <= MG_ENEMIES) b = mg.enemies[f->aim - 1u].body;
+    if (b && b == f->who) {
+        f->tx = (int16_t)((b->x - mg.camera.x - 8) * 8);
+        f->ty = (int16_t)((MG_SY(b->y) - up) * 8);
+    }
+}
+
+static uint8_t NEOGEO_USER mg_enemy_base_hp(uint8_t type);
+
+static void NEOGEO_USER mg_art_strike(MGFall *f)
+{
+    MGEnemy *e;
+    NGCharacter *b;
+    uint16_t bit;
+    if (f->aim == MG_AIM_BOSS) {
+        if (mg.boss && mg.boss == f->who && mg.boss_active && !(mg_art_hit & 0x100u)) {
+            mg_art_hit |= 0x100u;
+            mg_boss_damage(6);
+        }
+        return;
+    }
+    if (!f->aim || f->aim > MG_ENEMIES) return;
+    bit = (uint16_t)(1u << (f->aim - 1u));
+    e = &mg.enemies[f->aim - 1u];
+    b = e->body;
+    if (!b || b != f->who || e->mood == MG_MOOD_DYING || (mg_art_hit & bit)) return;
+    mg_art_hit |= bit;
+    if ((mg_stomp_rule(e->type) == MG_STOMP_TOUGH || (mg.stage >= 4u && mg_enemy_base_hp(e->type) >= 2u)) && b->hp > 1u) {
+        b->hp = 1;
+        b->vx_fp = b->vy_fp = 0;
+        e->hurt = 20;
+        e->mood = MG_MOOD_STUNNED;
+        e->move_timer = (uint8_t)(mg_art_live == MG_ART_FROST ? 200u : 70u);
+        mg_hit_burst(b->x, (int16_t)(b->y - 20));
+        playSFX(SOUND_SFX_4);
+    } else {
+        e->hurt = 0;
+        mg_enemy_damage(e, 99);
+    }
+}
+
+/* Where each of the art's pieces appears, on screen. */
+static void NEOGEO_USER mg_art_start(uint8_t art, uint8_t i, int16_t *x, int16_t *y)
+{
+    switch (art) {
+    case MG_ART_RAIN:  *x = (int16_t)(12 + i * 22); *y = (int16_t)(4 + (i & 1u) * 12); break;
+    case MG_ART_SUN:   *x = (int16_t)(300 - (i & 3u) * 22 - (i >> 2) * 8); *y = (int16_t)(6 + (i >> 2) * 16); break;
+    case MG_ART_GALE:  *x = (int16_t)((i & 1u) ? 312 : 0); *y = (int16_t)(36 + (i >> 1) * 22); break;
+    default: {
+        /* a halo round the whole screen */
+        uint8_t a = (uint8_t)(i * 18u + 192u);
+        *x = (int16_t)(152 + ng_trig_mul(148, ng_cos(a)));
+        *y = (int16_t)(100 + ng_trig_mul(96, ng_sin(a)));
+        break;
+    }
+    }
+}
+
 static void NEOGEO_USER mg_secret_art(void)
 {
-    uint8_t i;
-    if (mg.art == 0 || mg.state != MG_PLAY) return;
+    uint8_t aims[MG_ENEMIES];
+    uint8_t i, n = 0, bossn = 0, art;
+    if (mg.art == 0 || mg.state != MG_PLAY || mg.art_pose) return;
     mg.art--;
     mg.hud_dirty = 1;
+    art = mg_art_now();
+    mg_art_live = art;
+    mg_art_hit = 0;
     playSFX(SOUND_SFX_13); /* art power surge */
 
-    /*
-     * Petals sweep the whole screen and the valley shakes.  Her own colours
-     * only lift for a moment -- a long recolour read as a costume change and
-     * made it hard to tell what had actually happened.
-     */
-    mg.flash = 12;                 /* her colours lift, and come straight back */
+    /* Her own colours only lift for a moment -- a long recolour read as a
+     * costume change. The valley's shake with the art's light instead. */
+    mg.flash = 12;
     mg_palette(PAL_HERO, mg_hero_sun_pal);
     mg.attack = 22;
     mg.shake = 24;
-    mg.art_wave = 24;              /* the second wave follows the first */
     playSFX(SOUND_SFX_9);          /* the clear ring of the purification */
     mg_voice(MG_VOICE_ART);
     mg.art_pose = 36;
     mg_light(MG_LIGHT_SUN, 30);
-    mg_petal_sweep();
+    mg_secret_art_ring(mg.player->x, (int16_t)(mg.player->y - 30));
+    mg_tint_begin(art);
 
-    /* Everyone present takes the art -- no hit sparks, they would overwrite
-     * the storm in the same particle pool. */
+    /* every creature on the screen, and the guardian (four pieces its own) */
     for (i = 0; i < MG_ENEMIES; i++) {
-        if (mg.enemies[i].body) mg_enemy_damage(&mg.enemies[i], 10);
+        NGCharacter *b = mg.enemies[i].body;
+        int16_t sx;
+        if (!b || mg.enemies[i].mood == MG_MOOD_DYING) continue;
+        sx = (int16_t)(b->x - mg.camera.x);
+        if (sx < -8 || sx > 328) continue;
+        aims[n++] = (uint8_t)(i + 1u);
     }
-    if (mg.boss) mg_boss_damage(6);
+    if (mg.boss && mg.boss_active) bossn = 4;
+    mg_falls_begin(SLOT_RAIN, MG_RAIN_SLOTS);
+    for (i = 0; i < MG_RAIN_SLOTS; i++) {
+        MGFall *f = &mg_falls[i];
+        int16_t x, y;
+        mg_art_start(art, i, &x, &y);
+        f->live = 1;
+        f->t = 0;
+        f->fade = 0;
+        f->sway = (uint8_t)ng_rand();
+        f->kind = mg_art_pieces[art][i & 3u];
+        f->x = (int16_t)(x * 8);
+        f->y = (int16_t)(y * 8);
+        f->vx = 0;
+        f->vy = 12;
+        f->end = 220;
+        /* round the halo they go one after another; the rest in a rush */
+        f->wait = (uint8_t)((art == MG_ART_BLOSSOM || art == MG_ART_FROST) ? 12u + i : 12u + (i & 7u));
+        if (i < bossn) {
+            f->aim = MG_AIM_BOSS;
+            f->who = mg.boss;
+        } else if (n) {
+            f->aim = aims[(uint8_t)(i - bossn) % n];
+            f->who = mg.enemies[f->aim - 1u].body;
+        } else {
+            /* nothing here: the pieces cleanse the air where they meet */
+            f->aim = MG_AIM_SPOT;
+            f->who = 0;
+            f->tx = (int16_t)((32 + (int16_t)ng_rand_range(256u)) * 8);
+            f->ty = (int16_t)((40 + (int16_t)ng_rand_range(140u)) * 8);
+        }
+        mg_art_track(f);
+    }
 
-    mg_hint(mg_art_words[mg.stage], PAL_GOLD, 100);
+    mg_hint(art == mg_art_kind[mg.stage] ? mg_art_words[mg.stage] : mg_art_words[0], PAL_GOLD, 100);
 }
 
 /* ------------------------------------------------------------------ */
@@ -3070,6 +3549,7 @@ void NEOGEO_USER maiya_boot(void)
 {
     mg.kinds_met = 0;
     mg.lives = mg_dip_lives(); mg.art = MAX_ART; mg.score = 0; mg.rescue_mask = 0;
+    mg.arts_known = 1u << MG_ART_BLOSSOM;
     mg.continues = mg_dip_continues();
     mg.difficulty = mg_dip_difficulty();
     mg.coins = mg.flowers = mg.critters = 0;
@@ -3116,6 +3596,7 @@ void NEOGEO_USER maiya_demo_begin(void)
     mg.demo = 1;
     mg.kinds_met = 0;
     mg.lives = 3; mg.art = MAX_ART; mg.score = 0; mg.rescue_mask = 0;
+    mg.arts_known = (1u << MG_ARTS) - 1u;   /* the attract shows each valley's own */
     mg.coins = mg.flowers = mg.critters = 0;
     mg.continues = 0;
     mg.session_over = 0;
@@ -5821,6 +6302,26 @@ static void NEOGEO_USER mg_update_entities(void)
                           : it->kind == MG_K_PIERCE ? "GOLDEN SEED: IT GOES THROUGH"
                           : "WIND LEAF: IT COMES BACK", PAL_GOLD, 120);
                     break;
+                case MG_K_ART:
+                    /* a spirit orb: the valley's own Secret Art is hers now */
+                    mg.arts_known |= (uint8_t)(1u << mg_art_kind[mg.stage]);
+                    if (mg.art < MAX_ART) mg.art++;
+                    mg.score += 2000u;
+                    playSFX(SOUND_SFX_13);
+                    playSFX(SOUND_SFX_9);
+                    {
+                        /* (built here: initialised data isn't copied to RAM) */
+                        char line[40];
+                        const char *name = "NEW SECRET ART: ";
+                        uint8_t k = 0;
+                        while (*name) line[k++] = *name++;
+                        name = mg_art_name[mg.stage];
+                        while (*name && k < 38u) line[k++] = *name++;
+                        line[k] = 0;
+                        mg_hint(line, PAL_GOLD, 180);
+                    }
+                    mg_light(MG_LIGHT_SUN, 30);
+                    break;
                 case MG_K_BLOOM:
                     if (mg.art < MAX_ART) mg.art++;
                     playSFX(SOUND_SFX_13);
@@ -6178,11 +6679,6 @@ static void NEOGEO_USER mg_update_entities(void)
     if (mg.crown && --mg.crown == 0) mg.hud_dirty = 1;
     if (mg.lily && --mg.lily == 0) mg.hud_dirty = 1;
     if (mg.flash && --mg.flash == 0) mg_palette(PAL_HERO, mg_hero_normal_pal());
-    /* The second wave used to repeat the same petal curtain as the first;
-     * now it's the Secret Art's own signature -- a ring of gold expanding
-     * from where she stands, nothing else in the game looks like it. */
-    if (mg.art_wave && --mg.art_wave == 0)
-        mg_secret_art_ring(mg.player->x, (int16_t)(mg.player->y - 30));
 }
 
 /* ------------------------------------------------------------------ */
@@ -6627,12 +7123,15 @@ static void NEOGEO_USER mg_hideout_step(void)
             uint8_t k = (uint8_t)(MG_VAULT_ITEMS - mg.vault_left);
             uint8_t what = kind[k];
             if (what == MG_K_LIFE && mg.life_pickups_used >= MG_LIFE_PICKUP_LIMIT) what = MG_K_GOLD;
+            /* the first, in a valley whose art she hasn't learned: its spirit orb */
+            if (k == 0u && !((mg.arts_known >> mg_art_kind[mg.stage]) & 1u)) what = MG_K_ART;
             if (mg_drop_trinket((int16_t)(vx + spot[k][0]), spot[k][1], what)) {
                 mg.vault_left--;
                 mg_burst((int16_t)(vx + spot[k][0] + 16), (int16_t)(spot[k][1] + 8), MG_T_STAR, 1, -1);
             }
         }
-        if ((mg.vault_timer % 60u) == 0u && mg.vault_timer) {
+        /* (the count waits while a longer word -- a new art -- is up) */
+        if ((mg.vault_timer % 60u) == 0u && mg.vault_timer && mg.hint_timer < 20u) {
             char line[] = "THE VAULT: 00";
             uint8_t s = (uint8_t)(mg.vault_timer / 60u);
             line[11] = (char)('0' + s / 10u);
@@ -7534,243 +8033,6 @@ static void NEOGEO_USER mg_pause_toggle(void)
 }
 
 /* ------------------------------------------------------------------ */
-/*  Showers from the sky                                              */
-/* ------------------------------------------------------------------ */
-/*
- * Flowers, leaves and drops of clean water falling over the whole screen.
- * A piece lives on the screen, not in the valley -- the view pans under
- * it -- sways and tumbles as it comes down, and at a height of its own it
- * is gone: a flower or a leaf shrinks away, a drop splashes. Over a healed
- * valley each one gone brings the painting's colours up a step
- * (mg_glow_*). There the shower has the tray's 24 sprites, which the scene
- * hides; in play it takes the 14 above the glider, which nothing uses.
- */
-enum {
-    MG_FALLS = 24, SLOT_RAIN = 366, MG_RAIN_SLOTS = 14,
-    MG_FALL_LEAF = 4, MG_FALL_WATER = 5,   /* below 4: a flower of that kind */
-    MG_FALL_FADE = 10
-};
-
-typedef struct {
-    int16_t x, y;            /* on screen, in eighths of a pixel */
-    int8_t  vx;              /* eighths of a pixel a frame */
-    uint8_t vy;
-    uint8_t live, kind, t, end, fade, sway;
-    NGSpriteGroup sprite;
-} MGFall;
-
-static MGFall mg_falls[MG_FALLS];
-static uint8_t mg_falls_n;       /* sprites the shower has: 0 while there is none */
-static uint8_t mg_falls_gone;    /* pieces gone since it began (stops at 255) */
-
-/* Shrinking away, frame by frame to the last. */
-static const uint8_t mg_fall_scale[MG_FALL_FADE] = { 24, 48, 72, 96, 120, 144, 168, 192, 216, 240 };
-
-static void NEOGEO_USER mg_falls_begin(uint16_t slot, uint8_t count)
-{
-    uint8_t i;
-    mg_falls_n = count;
-    mg_falls_gone = 0;
-    for (i = 0; i < count; i++) {
-        mg_falls[i].live = 0;
-        ng_sprite_group_init(&mg_falls[i].sprite, (uint16_t)(slot + i), 1, 1,
-                             MG_TOOL_TILE + MG_T_FLOWER, PAL_TOOL);
-        ng_sprite_group_set_visible(&mg_falls[i].sprite, 0);
-        ng_sprite_group_upload(&mg_falls[i].sprite);
-    }
-}
-
-static void NEOGEO_USER mg_falls_end(void)
-{
-    uint8_t i;
-    for (i = 0; i < mg_falls_n; i++) {
-        mg_falls[i].live = 0;
-        ng_sprite_group_set_visible(&mg_falls[i].sprite, 0);
-        ng_sprite_group_flush(&mg_falls[i].sprite);
-    }
-    mg_falls_n = 0;
-}
-
-/* One more piece from above the screen, anywhere across it; none when
- * every sprite is falling already. */
-static void NEOGEO_USER mg_fall_spawn(uint8_t kind)
-{
-    uint8_t i;
-    for (i = 0; i < mg_falls_n; i++) {
-        MGFall *f = &mg_falls[i];
-        if (f->live) continue;
-        f->live = 1;
-        f->kind = kind;
-        f->t = 0;
-        f->fade = 0;
-        f->sway = (uint8_t)ng_rand();
-        f->x = (int16_t)(((int16_t)ng_rand_range(352u) - 16) * 8);
-        f->y = -16 * 8;
-        f->vx = (int8_t)(-2 - (int8_t)(ng_rand() & 3u));    /* the breeze of her passing */
-        if (kind == MG_FALL_WATER) f->vy = (uint8_t)(22u + (ng_rand() & 7u));
-        else if (kind == MG_FALL_LEAF) f->vy = (uint8_t)(9u + (ng_rand() & 3u));
-        else f->vy = (uint8_t)(7u + (ng_rand() & 3u));
-        f->end = (uint8_t)(64u + ng_rand_range(144u));
-        ng_sprite_group_set_scale(&f->sprite, NG_SPRITE_FULL_XSCALE, NG_SPRITE_FULL_YSCALE);
-        return;
-    }
-}
-
-/* Half flowers of the four kinds, the rest leaves and clean water. */
-static void NEOGEO_USER mg_fall_any(void)
-{
-    uint8_t r = (uint8_t)(ng_rand() & 15u);
-    mg_fall_spawn((uint8_t)(r < 8u ? (r & 3u) : (r < 11u ? MG_FALL_LEAF : MG_FALL_WATER)));
-}
-
-static void NEOGEO_USER mg_falls_step(void)
-{
-    uint8_t i;
-    for (i = 0; i < mg_falls_n; i++) {
-        MGFall *f = &mg_falls[i];
-        NGSpriteGroup *g = &f->sprite;
-        int16_t sx, sy;
-        uint16_t tile;
-        uint8_t turn = 0, flip = 0;
-        if (!f->live) continue;
-        f->t++;
-        if (f->fade) {
-            if (--f->fade == 0) {
-                f->live = 0;
-                if (mg_falls_gone < 255u) mg_falls_gone++;
-                ng_sprite_group_set_visible(g, 0);
-                ng_sprite_group_flush(g);
-                continue;
-            }
-        } else {
-            f->x = (int16_t)(f->x + f->vx);
-            f->y = (int16_t)(f->y + f->vy);
-            if ((f->y >> 3) >= (int16_t)f->end) f->fade = MG_FALL_FADE;
-        }
-        sx = (int16_t)(f->x >> 3);
-        sy = (int16_t)(f->y >> 3);
-        if (f->kind == MG_FALL_WATER) {
-            tile = (uint16_t)(f->fade ? MG_T_SPLASH : MG_T_WATER);
-        } else {
-            /* a flower turns over every eight frames and back, a leaf
-             * flutters twice as fast; both swing side to side */
-            uint8_t k = (uint8_t)(f->t + f->sway);
-            uint8_t leaf = (uint8_t)(f->kind == MG_FALL_LEAF);
-            turn = (uint8_t)((k >> (leaf ? 2 : 3)) & 1u);
-            flip = (uint8_t)((k >> (leaf ? 3 : 4)) & 1u);
-            tile = (uint16_t)(leaf ? MG_T_FALL_LEAF : MG_T_FLOWER + f->kind * 2u);
-            sx = (int16_t)(sx + ng_trig_mul(leaf ? 4 : 7, ng_sin((uint8_t)(f->sway + f->t * 3u))));
-            if (f->fade) {
-                /* shrunk toward its own middle */
-                uint8_t sc = mg_fall_scale[f->fade - 1u];
-                int16_t in = (int16_t)(8 - (sc >> 5));
-                ng_sprite_group_set_scale(g, sc, sc);
-                sx = (int16_t)(sx + in);
-                sy = (int16_t)(sy + in);
-            }
-        }
-        ng_sprite_group_set_tile_base(g, (uint16_t)(MG_TOOL_TILE + tile + turn));
-        ng_sprite_group_set_flip(g, flip, 0);
-        ng_sprite_group_set_pos(g, sx, sy);
-        ng_sprite_group_set_visible(g, 1);
-        ng_sprite_group_flush(g);
-    }
-}
-
-/*
- * The healed valley's painting coming up: from hazy -- three quarters as
- * bright, half its colour drained -- through its own colours at glow 8, to
- * richer and lighter than it was painted at 16. Worked out from the colours
- * it was loaded with, four banks a frame, through tables made once a step.
- */
-static uint16_t mg_glow_src[16u * 16u];
-static uint8_t mg_glow_lut[32];
-static int8_t mg_glow_sat[63];
-static uint8_t mg_glow_now, mg_glow_bank;
-
-#define MG_T3(n) n, n, n
-static const uint8_t mg_third[94] = {   /* (r + g + b) / 3 */
-    MG_T3(0), MG_T3(1), MG_T3(2), MG_T3(3), MG_T3(4), MG_T3(5), MG_T3(6), MG_T3(7),
-    MG_T3(8), MG_T3(9), MG_T3(10), MG_T3(11), MG_T3(12), MG_T3(13), MG_T3(14), MG_T3(15),
-    MG_T3(16), MG_T3(17), MG_T3(18), MG_T3(19), MG_T3(20), MG_T3(21), MG_T3(22), MG_T3(23),
-    MG_T3(24), MG_T3(25), MG_T3(26), MG_T3(27), MG_T3(28), MG_T3(29), MG_T3(30), 31
-};
-#undef MG_T3
-
-static void NEOGEO_USER mg_glow_tables(uint8_t glow)
-{
-    uint8_t v, lift = (uint8_t)(glow > 8u ? glow - 8u : 0u);
-    uint8_t sat = (uint8_t)(glow <= 8u ? 8u + glow : 16u + ((glow - 8u) >> 1));   /* sixteenths */
-    uint16_t light = 0, step = (uint16_t)(48u + 2u * (glow < 8u ? glow : 8u));   /* sixty-fourths */
-    int16_t d = (int16_t)(-31 * (int16_t)sat);
-    for (v = 0; v < 32u; v++) {
-        uint8_t b = (uint8_t)(light >> 6);
-        light = (uint16_t)(light + step);
-        /* the middle tones lifted, the lightest and darkest left be */
-        b = (uint8_t)(b + (((((31u - b) * b) >> 6) * lift) >> 3));
-        mg_glow_lut[v] = (uint8_t)(b > 31u ? 31u : b);
-    }
-    for (v = 0; v < 63u; v++) {
-        mg_glow_sat[v] = (int8_t)(d >> 4);
-        d = (int16_t)(d + sat);
-    }
-}
-
-static uint8_t NEOGEO_USER mg_glow_channel(uint8_t c, uint8_t grey)
-{
-    int16_t v = (int16_t)(grey + mg_glow_sat[c + 31u - grey]);
-    if (v < 0) v = 0;
-    if (v > 31) v = 31;
-    return mg_glow_lut[v];
-}
-
-static void NEOGEO_USER mg_glow_apply(uint8_t k)
-{
-    const uint16_t *src = &mg_glow_src[(uint16_t)k * 16u];
-    uint16_t out[16];
-    uint8_t i;
-    out[0] = src[0];
-    for (i = 1; i < 16u; i++) {
-        uint16_t c = src[i];
-        uint8_t r = (uint8_t)(((c >> 7) & 0x1Eu) | ((c >> 14) & 1u));
-        uint8_t g = (uint8_t)(((c >> 3) & 0x1Eu) | ((c >> 13) & 1u));
-        uint8_t b = (uint8_t)(((c << 1) & 0x1Eu) | ((c >> 12) & 1u));
-        uint8_t grey = mg_third[r + g + b];
-        r = mg_glow_channel(r, grey);
-        g = mg_glow_channel(g, grey);
-        b = mg_glow_channel(b, grey);
-        out[i] = (uint16_t)(((uint16_t)(r & 1u) << 14) | ((uint16_t)(g & 1u) << 13) |
-                            ((uint16_t)(b & 1u) << 12) | ((uint16_t)(r >> 1) << 8) |
-                            ((uint16_t)(g >> 1) << 4) | (uint16_t)(b >> 1));
-    }
-    mg_palette((uint8_t)(PAL_BG + k), out);
-}
-
-/* The painting as just loaded, shown hazy at once. */
-static void NEOGEO_USER mg_glow_begin(void)
-{
-    uint16_t i;
-    for (i = 0; i < 16u * 16u; i++) mg_glow_src[i] = mg_pal_base[(uint16_t)PAL_BG * 16u + i];
-    mg_glow_now = 0;
-    mg_glow_tables(0);
-    for (i = 0; i < 16u; i++) mg_glow_apply((uint8_t)i);
-    mg_glow_bank = 16;
-}
-
-/* A step toward `want` once the last one is all on screen. */
-static void NEOGEO_USER mg_glow_step(uint8_t want)
-{
-    uint8_t k;
-    if (want > 16u) want = 16u;
-    if (mg_glow_bank >= 16u && want > mg_glow_now) {
-        mg_glow_now++;
-        mg_glow_tables(mg_glow_now);
-        mg_glow_bank = 0;
-    }
-    for (k = 0; k < 4u && mg_glow_bank < 16u; k++) mg_glow_apply(mg_glow_bank++);
-}
-
-/* ------------------------------------------------------------------ */
 /*  The healed valley                                                 */
 /* ------------------------------------------------------------------ */
 /*
@@ -7945,7 +8207,6 @@ static void NEOGEO_USER mg_tour_frame(void)
         if (sx > 0 && sx < 320 && ((mg.tick + i * 13u) % 40u) == 0u)
             mg_burst(c->x, (int16_t)(MG_GROUND_Y - 52), MG_T_HEART, 1, -1);
     }
-    mg_falls_step();
     /* each piece gone brings the colours up; with the elder, all the way */
     mg_glow_step((uint8_t)(mg.tour_phase ? 16u : mg_falls_gone >> 2));
     mg_world_step();

@@ -134,6 +134,7 @@ class Stage:
         s["taunt"] = self.text(g, "taunt", "guardian", 40)
         s["reply"] = self.text(g, "reply", "guardian", 40)
         art = self.get(d, "art", "stage", dict)
+        s["art_kind"] = self.choice(art, "kind", "art", ART_KINDS)
         s["art_name"] = self.text(art, "name", "art", 30)
         s["art_words"] = self.text(art, "words", "art", 40)
         s["secret_hint"] = self.text(d, "secret_hint", "stage")
@@ -257,6 +258,11 @@ class Stage:
         return options.index(value)
 
 
+# The Secret Arts, in the order of the game's MG_ART_* (maiya_game.c): the
+# rose storm she knows from the start, and four she learns in the valleys.
+ART_KINDS = ("blossom", "rain", "sun", "frost", "gale")
+
+
 def c_string(text):
     return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
@@ -300,6 +306,7 @@ def render(stages, files):
     out.append(table("MG_HIDEOUT_TABLE", [f"{{{s['hideout'][0]}, {s['hideout'][1]}, {c_string(s['hideout'][2])}}}"
                                           for s in stages]))
     out.append(table("MG_ART_NAME_TABLE", [c_string(s["art_name"]) for s in stages]))
+    out.append(table("MG_ART_KIND_TABLE", [f"{s['art_kind']}u" for s in stages]))
     out.append(table("MG_ART_WORDS_TABLE", [c_string(s["art_words"]) for s in stages]))
     out.append(table("MG_SECRET_HINT_TABLE", [c_string(s["secret_hint"]) for s in stages]))
     out.append(table("MG_BOSS_HINT_TABLE", [c_string(s["boss_hint"]) for s in stages]))

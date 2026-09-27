@@ -19,7 +19,7 @@
     "taunt": "I HUNT WHAT ISN'T MINE TO TAKE!",
     "reply": "THESE PLAINS AREN'T YOURS TO HUNT!"
   },
-  "art": {"name": "SAVANNA WIND CHASE", "words": "MAIYA: WIND, CLEAR THEIR TRAPS!"},
+  "art": {"kind": "gale", "name": "LEAF GALE", "words": "MAIYA: WIND, CLEAR THEIR TRAPS!"},
   "secret_hint": "THE BAOBAB HOLLOW HIDES A CHARM",
   "sunboy": ["THE HERD RUNS FREE. WE DID IT", "THANK YOU, SUPER NATURE GIRL"],
   "healed": ["THE HERDS RUN FREE ACROSS THE PLAIN", "THE POACHERS' TRAPS LIE BROKEN"],

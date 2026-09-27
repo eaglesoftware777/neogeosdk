@@ -20,7 +20,7 @@
     "taunt": "I HOARD THE CAVE'S LIGHT FOR MYSELF!",
     "reply": "HER LIGHT WAS NEVER YOURS TO KEEP!"
   },
-  "art": {"name": "CAVERN LIGHT BLOOM", "words": "MAIYA: LIGHT, FIND WHAT'S HIDDEN!"},
+  "art": {"kind": "frost", "name": "FROST PETAL STORM", "words": "MAIYA: FROST, HOLD THEM FAST!"},
   "secret_hint": "THE DEEP VEIN GLINTS WITH GOLD",
   "sunboy": ["THE CAVE BREATHES CLEAN AIR AGAIN", "ONE VALLEY LEFT: THE OPEN SAVANNA"],
   "healed": ["THE MINE HAS FALLEN SILENT AT LAST", "THE CAVE'S SILVER SHINES AGAIN"],

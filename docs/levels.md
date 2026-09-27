@@ -40,7 +40,7 @@ git), whose initialisers `maiya_levels.h` builds the stage tables from.
     "name": "CHAINSAW BEETLE", "style": "beetle", "hp": 16,
     "hint": "...", "taunt": "...", "reply": "..."
   },
-  "art": {"name": "ROSE WIND STRIKE", "words": "MAIYA: ROSE WIND, CARRY ME!"},
+  "art": {"kind": "blossom", "name": "ROSE BLOSSOM STORM", "words": "MAIYA: ROSE WIND, CARRY ME!"},
   "secret_hint": "...",
   "sunboy": ["...", "..."],
   "healed": ["THE OLD TREES BREATHE FREELY AGAIN", "..."],
@@ -112,6 +112,7 @@ Names stand for the game's constants, lower case without the prefix:
 | `posted` | `MG_E_*`: who stands on the `archers` ledges, or none | none, goblin, drone, poachdrone |
 | `climb` | `MG_D_*`: what its vines are made of | vine, rope, ladder, chain, kelp, icevine |
 | `pickups[].kind` | `MG_K_*` from the art build | silver, gold, flower, life, lily (the sky lily: a second jump for a while) |
+| `art.kind` | `ART_KINDS` in `tools/levels.py` | blossom (known from the start), rain, sun, frost, gale: the valley's Secret Art. The other four are learned from the spirit orb, the first treasure in the hidden vault of a valley of that kind; until then D gives the blossom storm. `name` is the art's, `words` what she calls out in this valley |
 | `decor[].kind` | `MG_D_*` from the art build | grass, lantern, rock |
 | `who` | the ally art, in order | elder, maiden, spirit, sunboy |
 | `secrets[].type` | | rose, gem, chest |

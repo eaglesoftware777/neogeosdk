@@ -19,7 +19,7 @@
     "taunt": "YOU BEAT MY GUARDIANS. NOT ME!",
     "reply": "FOR EVERY VALLEY YOU POISONED!"
   },
-  "art": {"name": "BLOOM OF ALL VALLEYS", "words": "MAIYA: ALL VALLEYS, BLOOM AS ONE!"},
+  "art": {"kind": "blossom", "name": "ROSE BLOSSOM STORM", "words": "MAIYA: ALL VALLEYS, BLOOM AS ONE!"},
   "secret_hint": "THE CITADEL HIDES A SUN GEM UP HIGH",
   "sunboy": ["THE SMOG IS GONE FOREVER", "MAIYA, YOU SAVED US ALL"],
   "healed": ["THE CITADEL'S FIRES ARE OUT", "THE WORLD CAN BREATHE AGAIN"],
