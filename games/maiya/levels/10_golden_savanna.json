@@ -1,6 +1,6 @@
 {
   "name": "GOLDEN SAVANNA",
-  "width": 5888,
+  "width": 7936,
   "background": 9,
   "music": 4,
   "mechanic": "none",
@@ -8,7 +8,7 @@
   "blocks": "savanna",
   "climb": "rope",
   "posted": "poachdrone",
-  "gate_x": 5168,
+  "gate_x": 7216,
   "key": {"x": 2760, "y": 46},
   "hideout": {"x": 1040, "y": 80, "hint": "KNEEL HIGH ABOVE THE FIRST ROPE LADDER"},
   "guardian": {
@@ -39,7 +39,17 @@
     {"x": 3960, "y": 96, "w": 160},
     {"x": 4312, "y": 64, "w": 128},
     {"x": 4664, "y": 144, "w": 128},
-    {"x": 4916, "y": 112, "w": 96}
+    {"x": 4916, "y": 112, "w": 96},
+    {"x": 5148, "y": 144, "w": 96},
+    {"x": 5308, "y": 112, "w": 96},
+    {"x": 5468, "y": 80, "w": 96},
+    {"x": 5608, "y": 120, "w": 64},
+    {"x": 5840, "y": 112, "w": 96},
+    {"x": 6050, "y": 104, "w": 96},
+    {"x": 6250, "y": 136, "w": 96},
+    {"x": 6492, "y": 128, "w": 128},
+    {"x": 6732, "y": 96, "w": 96},
+    {"x": 6912, "y": 64, "w": 96}
   ],
   "encounters": [
     {"x": 304, "enemy": "goblin"},
@@ -61,14 +71,24 @@
     {"x": 4288, "enemy": "poachdrone"},
     {"x": 4540, "enemy": "goblin"},
     {"x": 4792, "enemy": "chemfly"},
-    {"x": 4980, "enemy": "beetle"}
+    {"x": 4980, "enemy": "beetle"},
+    {"x": 5128, "enemy": "goblin"},
+    {"x": 5538, "enemy": "poachdrone"},
+    {"x": 5980, "enemy": "goblin"},
+    {"x": 6190, "enemy": "beetle"},
+    {"x": 6462, "enemy": "chemfly"},
+    {"x": 6682, "enemy": "beetle"},
+    {"x": 6992, "enemy": "crow"}
   ],
   "archers": [
     {"x": 720, "y": 112},
     {"x": 1804, "y": 112},
     {"x": 2384, "y": 104},
     {"x": 3444, "y": 112},
-    {"x": 3996, "y": 96}
+    {"x": 3996, "y": 96},
+    {"x": 5498, "y": 80},
+    {"x": 6080, "y": 104},
+    {"x": 6762, "y": 96}
   ],
   "hazards": [
     {"x": 856, "w": 64, "type": "pit"},
@@ -78,7 +98,10 @@
     {"x": 3000, "w": 64, "type": "pit"},
     {"x": 3632, "w": 48, "type": "spikes"},
     {"x": 4188, "w": 64, "type": "pit"},
-    {"x": 4564, "w": 48, "type": "fire"}
+    {"x": 4564, "w": 48, "type": "fire"},
+    {"x": 5258, "w": 48, "type": "fire"},
+    {"x": 5856, "w": 64, "type": "pit"},
+    {"x": 6652, "w": 48, "type": "fire"}
   ],
   "rescues": [
     {"x": 1260, "who": "elder"},
@@ -95,16 +118,19 @@
     {"x": 4364, "y": 34, "type": "gem"}
   ],
   "pickups": [
-    {"x": 2268, "y": 24, "kind": "lily"},
-    {"x": 1588, "y": 166, "kind": "spring"},
-    {"x": 2220, "y": 166, "kind": "veil"},
-    {"x": 3304, "y": 166, "kind": "silver"},
     {"x": 692, "y": 82, "kind": "gold"},
-    {"x": 3416, "y": 82, "kind": "gold"},
+    {"x": 1588, "y": 166, "kind": "spring"},
     {"x": 1892, "y": 166, "kind": "flower"},
-    {"x": 3832, "y": 166, "kind": "critter"},
+    {"x": 2220, "y": 166, "kind": "veil"},
+    {"x": 2268, "y": 24, "kind": "lily"},
     {"x": 2824, "y": 166, "kind": "charm"},
-    {"x": 4412, "y": 34, "kind": "life"}
+    {"x": 3304, "y": 166, "kind": "silver"},
+    {"x": 3416, "y": 82, "kind": "gold"},
+    {"x": 3832, "y": 166, "kind": "critter"},
+    {"x": 4412, "y": 34, "kind": "life"},
+    {"x": 5340, "y": 82, "kind": "gold"},
+    {"x": 6082, "y": 74, "kind": "silver"},
+    {"x": 6764, "y": 66, "kind": "flower"}
   ],
   "decor": [
     {"x": 188, "y": 160, "kind": "grass"},
@@ -119,7 +145,7 @@
     {"x": 1508, "y": 112, "kind": "grass"},
     {"x": 2468, "y": 72, "kind": "bush"},
     {"x": 4080, "y": 64, "kind": "sapling"},
-    {"x": 5068, "y": 160, "kind": "sign"}
+    {"x": 7116, "y": 160, "kind": "sign"}
   ],
   "vines": [
     {"x": 1000, "top": 80, "bottom": 192},

@@ -9,10 +9,10 @@
  * maiya_levels_data.h, whose initialisers the tables below are built from
  * (and MG_LEVEL_COUNT). These are the tables' sizes.
  */
-#define MG_PLATFORM_COUNT  20
-#define MG_ENCOUNTER_COUNT 24
-#define MG_ARCHER_COUNT    6
-#define MG_HAZARD_COUNT    8
+#define MG_PLATFORM_COUNT  32
+#define MG_ENCOUNTER_COUNT 32
+#define MG_ARCHER_COUNT    8
+#define MG_HAZARD_COUNT    12
 #define MG_SECRET_COUNT    6
 #define MG_RESCUE_COUNT    4
 #define MG_DECOR_COUNT     13
@@ -20,7 +20,7 @@
 #define MG_NPC_COUNT       3
 #define MG_WAVE_COUNT      24
 #define MG_RUSH_COUNT      6
-#define MG_PICK_COUNT      10
+#define MG_PICK_COUNT      14
 
 #include "maiya_levels_data.h"
 

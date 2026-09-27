@@ -1,6 +1,6 @@
 {
   "name": "CRYSTAL GROTTO",
-  "width": 5376,
+  "width": 5632,
   "background": 4,
   "music": 5,
   "mechanic": "ice",
@@ -8,7 +8,7 @@
   "blocks": "snow",
   "climb": "icevine",
   "posted": "drone",
-  "gate_x": 4668,
+  "gate_x": 4924,
   "key": {"x": 2536, "y": 46},
   "hideout": {"x": 3288, "y": 72, "hint": "KNEEL ON THE HIGH ICE PAST THE KEY"},
   "guardian": {
@@ -40,7 +40,10 @@
     {"x": 3492, "y": 144, "w": 96},
     {"x": 3748, "y": 108, "w": 80},
     {"x": 4032, "y": 72, "w": 96},
-    {"x": 4856, "y": 144, "w": 96}
+    {"x": 4648, "y": 144, "w": 96},
+    {"x": 4808, "y": 112, "w": 96},
+    {"x": 4968, "y": 80, "w": 96},
+    {"x": 5112, "y": 144, "w": 96}
   ],
   "encounters": [
     {"x": 308, "enemy": "crow"},
@@ -64,24 +67,28 @@
     {"x": 3892, "enemy": "slaggolem"},
     {"x": 4080, "enemy": "goblin"},
     {"x": 4268, "enemy": "crow"},
-    {"x": 4456, "enemy": "pair"}
+    {"x": 4456, "enemy": "pair"},
+    {"x": 4628, "enemy": "crow"},
+    {"x": 5038, "enemy": "goblin"}
   ],
   "archers": [
     {"x": 672, "y": 108},
     {"x": 1708, "y": 72},
     {"x": 2488, "y": 72},
     {"x": 3268, "y": 72},
-    {"x": 4068, "y": 72}
+    {"x": 4068, "y": 72},
+    {"x": 4998, "y": 80}
   ],
   "hazards": [
+    {"x": 716, "w": 64, "type": "pit"},
     {"x": 1036, "w": 32, "type": "spikes"},
     {"x": 1816, "w": 32, "type": "spikes"},
+    {"x": 2036, "w": 64, "type": "pit"},
     {"x": 2596, "w": 32, "type": "spikes"},
+    {"x": 2792, "w": 64, "type": "pit"},
     {"x": 3372, "w": 32, "type": "spikes"},
     {"x": 4128, "w": 32, "type": "spikes"},
-    {"x": 716, "w": 64, "type": "pit"},
-    {"x": 2036, "w": 64, "type": "pit"},
-    {"x": 2792, "w": 64, "type": "pit"}
+    {"x": 4758, "w": 48, "type": "spikes"}
   ],
   "rescues": [
     {"x": 1296, "who": "spirit"},
@@ -98,16 +105,17 @@
     {"x": 4080, "y": 42, "type": "rose"}
   ],
   "pickups": [
-    {"x": 3916, "y": 24, "kind": "lily"},
-    {"x": 1288, "y": 168, "kind": "spring"},
-    {"x": 2176, "y": 168, "kind": "veil"},
-    {"x": 3188, "y": 168, "kind": "silver"},
     {"x": 676, "y": 74, "kind": "gold"},
+    {"x": 880, "y": 44, "kind": "life"},
+    {"x": 1288, "y": 168, "kind": "spring"},
     {"x": 1472, "y": 74, "kind": "gold"},
     {"x": 1556, "y": 166, "kind": "flower"},
-    {"x": 3112, "y": 164, "kind": "critter"},
+    {"x": 2176, "y": 168, "kind": "veil"},
     {"x": 2440, "y": 166, "kind": "charm"},
-    {"x": 880, "y": 44, "kind": "life"}
+    {"x": 3112, "y": 164, "kind": "critter"},
+    {"x": 3188, "y": 168, "kind": "silver"},
+    {"x": 3916, "y": 24, "kind": "lily"},
+    {"x": 4840, "y": 82, "kind": "gold"}
   ],
   "decor": [
     {"x": 176, "y": 160, "kind": "rock"},

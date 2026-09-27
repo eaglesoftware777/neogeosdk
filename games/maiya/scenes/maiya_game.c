@@ -301,8 +301,8 @@ typedef struct {
     uint32_t encounter_mask;
     uint16_t tick, archer_mask, pick_mask;
     uint8_t secret_mask;
-    uint8_t hazard_warn_mask;          /* one bit per hazard: already warned */
-    uint8_t hazard_disabled_mask;      /* one bit per hazard: shut off for good */
+    uint16_t hazard_warn_mask;         /* one bit per hazard: already warned */
+    uint16_t hazard_disabled_mask;     /* one bit per hazard: shut off for good */
     uint16_t boss_timer, state_timer, clear_bonus;
     int16_t  boss_home;
     int16_t arena_left, boss_direction;
@@ -1105,7 +1105,7 @@ static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
         uint8_t blocks;
         int16_t scr = (int16_t)(hz->x - camera_x);
 
-        if (!hz->type || (mg.hazard_disabled_mask & (uint8_t)(1u << i))) continue;
+        if (!hz->type || (mg.hazard_disabled_mask & (uint16_t)(1u << i))) continue;
         if (scr > 336 || (int16_t)(scr + hz->width) < -16) continue;
 
         blocks = (uint8_t)((hz->width + 31) / 32);
@@ -6695,7 +6695,7 @@ static void NEOGEO_USER mg_hazard_check(void)
     if (p->y < MG_GROUND_Y - 4 || mg.on_ledge || mg.climbing) return;
     for (i = 0; i < MG_HAZARD_COUNT; i++) {
         const MGHazard *hz = &level->hazards[i];
-        if (mg.hazard_disabled_mask & (uint8_t)(1u << i)) continue;
+        if (mg.hazard_disabled_mask & (uint16_t)(1u << i)) continue;
         if (hz->type && hz->type != MG_H_PIT &&
             p->x > hz->x && p->x < (int16_t)(hz->x + hz->width)) {
             mg_player_damage();
@@ -6720,7 +6720,7 @@ static void NEOGEO_USER mg_hazard_warn_check(void)
     if (mg.state != MG_PLAY) return;
     for (i = 0; i < MG_HAZARD_COUNT; i++) {
         const MGHazard *hz = &level->hazards[i];
-        uint8_t bit = (uint8_t)(1u << i);
+        uint16_t bit = (uint16_t)(1u << i);
         int16_t near_x = (int16_t)(hz->x - 50);
         if (!hz->type || (mg.hazard_warn_mask & bit) || (mg.hazard_disabled_mask & bit)) continue;
         if (p->x < near_x || p->x > (int16_t)(hz->x + hz->width)) continue;
@@ -6756,7 +6756,7 @@ static void NEOGEO_USER mg_hazard_disable_check(uint16_t pressed)
     if (mg.state != MG_PLAY || !(pressed & JOY_UP) || mg.climbing) return;
     for (i = 0; i < MG_HAZARD_COUNT; i++) {
         const MGHazard *hz = &level->hazards[i];
-        uint8_t bit = (uint8_t)(1u << i);
+        uint16_t bit = (uint16_t)(1u << i);
         int16_t reach = (int16_t)(hz->x - 24);
         if (hz->type != MG_H_TOXIC || (mg.hazard_disabled_mask & bit)) continue;
         if (p->x < reach || p->x > (int16_t)(hz->x + hz->width + 24)) continue;

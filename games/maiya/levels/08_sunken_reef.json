@@ -1,6 +1,6 @@
 {
   "name": "SUNKEN REEF",
-  "width": 4224,
+  "width": 6912,
   "background": 7,
   "music": 3,
   "mechanic": "water",
@@ -8,7 +8,7 @@
   "blocks": "coral",
   "climb": "kelp",
   "posted": "drone",
-  "gate_x": 3640,
+  "gate_x": 6328,
   "key": {"x": 1580, "y": 46},
   "hideout": {"x": 3256, "y": 80, "hint": "KNEEL ON THE LAST HIGH CORAL"},
   "guardian": {
@@ -40,7 +40,21 @@
     {"x": 2572, "y": 80, "w": 128},
     {"x": 2816, "y": 144, "w": 128},
     {"x": 3020, "y": 112, "w": 96},
-    {"x": 3208, "y": 80, "w": 96}
+    {"x": 3208, "y": 80, "w": 96},
+    {"x": 3620, "y": 144, "w": 96},
+    {"x": 3780, "y": 112, "w": 96},
+    {"x": 3940, "y": 80, "w": 96},
+    {"x": 4080, "y": 120, "w": 64},
+    {"x": 4302, "y": 112, "w": 96},
+    {"x": 4512, "y": 104, "w": 96},
+    {"x": 4712, "y": 136, "w": 96},
+    {"x": 4944, "y": 128, "w": 128},
+    {"x": 5184, "y": 96, "w": 96},
+    {"x": 5364, "y": 64, "w": 96},
+    {"x": 5636, "y": 144, "w": 96},
+    {"x": 5796, "y": 112, "w": 96},
+    {"x": 5956, "y": 80, "w": 96},
+    {"x": 6096, "y": 120, "w": 64}
   ],
   "encounters": [
     {"x": 224, "enemy": "toxiccrab"},
@@ -60,14 +74,26 @@
     {"x": 2908, "enemy": "toxiccrab"},
     {"x": 3096, "enemy": "jellyfish"},
     {"x": 3284, "enemy": "slime"},
-    {"x": 3472, "enemy": "toxiccrab"}
+    {"x": 3472, "enemy": "toxiccrab"},
+    {"x": 3600, "enemy": "toxiccrab"},
+    {"x": 4010, "enemy": "toxiccrab"},
+    {"x": 4442, "enemy": "drone"},
+    {"x": 4652, "enemy": "slime"},
+    {"x": 4914, "enemy": "jellyfish"},
+    {"x": 5134, "enemy": "toxiccrab"},
+    {"x": 5444, "enemy": "toxiccrab"},
+    {"x": 5616, "enemy": "toxiccrab"},
+    {"x": 6026, "enemy": "slime"}
   ],
   "archers": [
     {"x": 440, "y": 112},
     {"x": 1548, "y": 72},
     {"x": 2016, "y": 104},
     {"x": 2600, "y": 80},
-    {"x": 3236, "y": 80}
+    {"x": 3236, "y": 80},
+    {"x": 4542, "y": 104},
+    {"x": 5214, "y": 96},
+    {"x": 5986, "y": 80}
   ],
   "hazards": [
     {"x": 712, "w": 48, "type": "spikes"},
@@ -76,13 +102,17 @@
     {"x": 2160, "w": 48, "type": "sludge"},
     {"x": 2496, "w": 48, "type": "spikes"},
     {"x": 2964, "w": 64, "type": "pit"},
-    {"x": 3380, "w": 48, "type": "toxic"}
+    {"x": 3380, "w": 48, "type": "toxic"},
+    {"x": 3730, "w": 48, "type": "spikes"},
+    {"x": 4318, "w": 64, "type": "pit"},
+    {"x": 5104, "w": 48, "type": "spikes"},
+    {"x": 5746, "w": 48, "type": "spikes"}
   ],
   "rescues": [
     {"x": 1032, "who": "maiden"},
     {"x": 1832, "who": "elder"},
     {"x": 2440, "who": "spirit"},
-    {"x": 3144, "who": "sunboy"}
+    {"x": 4964, "who": "sunboy"}
   ],
   "secrets": [
     {"x": 280, "y": 114, "type": "rose"},
@@ -94,15 +124,19 @@
   ],
   "pickups": [
     {"x": 188, "y": 166, "kind": "silver"},
-    {"x": 920, "y": 166, "kind": "spring"},
-    {"x": 1652, "y": 166, "kind": "veil"},
-    {"x": 2328, "y": 166, "kind": "silver"},
     {"x": 816, "y": 114, "kind": "gold"},
-    {"x": 1996, "y": 74, "kind": "gold"},
+    {"x": 920, "y": 166, "kind": "spring"},
     {"x": 1304, "y": 166, "kind": "flower"},
-    {"x": 2684, "y": 166, "kind": "critter"},
+    {"x": 1632, "y": 42, "kind": "life"},
+    {"x": 1652, "y": 166, "kind": "veil"},
+    {"x": 1996, "y": 74, "kind": "gold"},
     {"x": 2064, "y": 166, "kind": "charm"},
-    {"x": 1632, "y": 42, "kind": "life"}
+    {"x": 2328, "y": 166, "kind": "silver"},
+    {"x": 2684, "y": 166, "kind": "critter"},
+    {"x": 3812, "y": 82, "kind": "gold"},
+    {"x": 4544, "y": 74, "kind": "silver"},
+    {"x": 5216, "y": 66, "kind": "flower"},
+    {"x": 5828, "y": 82, "kind": "gold"}
   ],
   "decor": [
     {"x": 140, "y": 160, "kind": "rock"},
@@ -117,7 +151,7 @@
     {"x": 1216, "y": 112, "kind": "grass"},
     {"x": 2448, "y": 80, "kind": "mushroom"},
     {"x": 2876, "y": 112, "kind": "flowers"},
-    {"x": 3548, "y": 160, "kind": "lantern"}
+    {"x": 6236, "y": 160, "kind": "lantern"}
   ],
   "vines": [
     {"x": 592, "top": 80, "bottom": 192},
