@@ -102,7 +102,7 @@ Names stand for the game's constants, lower case without the prefix:
 
 | Field | Constants | Examples |
 |---|---|---|
-| `enemy` | `MG_E_*` in `maiya_levels.h` | slime, beetle, crow, jellyfish, pair |
+| `enemy` | `MG_E_*` in `maiya_levels.h` | slime, beetle, crow, jellyfish, pair; the polluters: bagocto, binocto, sawbot, drillbot, torchbot, smogstack, sludgebarrel (the valleys' own foes: tough, a point of hp more every three valleys, and placed on the open road -- under a ledge a creature stands on the ledge) |
 | `hazards[].type` | `MG_H_*` | fire, spikes, sludge, toxic, pit |
 | `guardian.style` | `MG_B_*` | beetle, toad, leviathan, eel, airship (the Sky Road's, fought part by part) |
 | `mechanic` | `MG_M_*` in `maiya_game.c` | none, crumble, ice, water, flight |

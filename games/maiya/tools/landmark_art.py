@@ -44,7 +44,7 @@ class Pic:
         if clip is None:
             self.d.line(pts, fill=self.c(col), width=width)
             return
-        tmp = Image.new("L", (W, H), 0)
+        tmp = Image.new("L", self.img.size, 0)
         ImageDraw.Draw(tmp).line(pts, fill=255, width=width)
         a = np.array(self.img)
         a[(np.array(tmp) > 0) & clip] = self.c(col)

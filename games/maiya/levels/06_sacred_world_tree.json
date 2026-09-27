@@ -25,7 +25,7 @@
   "secret_hint": "THE ROOT HOLLOW HOLDS ONE LIFE",
   "sunboy": ["THE TREE BREATHES. I AM SO CLOSE", "THE WORKS ON THE RIVER. LAST ONE"],
   "healed": ["THE WORLD TREE STANDS TALL AGAIN", "ITS BRANCHES BLOOM TO THE SKY"],
-  "briefing": ["LORD SMOGGAR ROTS THE WORLD TREE", "CLIMB IT, AND FACE HIM AT ITS ROOTS"],
+  "briefing": ["SAW BOTS HACK AT THE WORLD TREE", "LORD SMOGGAR WAITS AT ITS ROOTS"],
   "platforms": [
     {"x": 296, "y": 144, "w": 96},
     {"x": 520, "y": 104, "w": 80},
@@ -78,11 +78,15 @@
     {"x": 3604, "enemy": "drone"},
     {"x": 3752, "enemy": "pair"},
     {"x": 3824, "enemy": "drone"},
+    {"x": 4128, "enemy": "torchbot"},
     {"x": 4234, "enemy": "goblin"},
+    {"x": 4456, "enemy": "sawbot"},
+    {"x": 4528, "enemy": "sawbot"},
     {"x": 4676, "enemy": "crow"},
     {"x": 4826, "enemy": "vinesting"},
     {"x": 5036, "enemy": "drone"},
-    {"x": 5200, "enemy": "pair"}
+    {"x": 5200, "enemy": "pair"},
+    {"x": 5384, "enemy": "sawbot"}
   ],
   "archers": [
     {"x": 548, "y": 104},

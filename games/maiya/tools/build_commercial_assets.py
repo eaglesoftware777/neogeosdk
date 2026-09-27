@@ -39,6 +39,7 @@ from tile_codec import encode_image, decode_image, write_utility_tiles  # noqa: 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import nature_art  # noqa: E402
 import landmark_art  # noqa: E402
+import polluter_art  # noqa: E402
 
 SOURCE = GAME / "assets/source_art"
 CHARACTERS = ROOT / "games/demo/artbox/in/characters"
@@ -1411,6 +1412,16 @@ def build():
     ship = facing_right(fit_group(ships, {"0": (845, 40, 1120, 210)},
                                   (80, 48), 44, bg_color="corner", center_box=True))["0"]
     new_creatures["gunship"] = {"0": ship, "1": np.roll(ship, 1, axis=0)}
+
+    # The polluters who dirtied the valleys for their guardians: the trash
+    # octopuses off the first sheet (a plastic bag and a bin bag, each
+    # clutching its junk), and the blight's machines drawn in
+    # polluter_art.py -- the saw bot, the drill bot, the torch bot, the
+    # walking smoke stack and the sludge barrel.
+    new_creatures["bagocto"] = (set1_img, (64, 48), 40, {"0": (24, 564, 271, 721), "1": (277, 559, 484, 724)})
+    new_creatures["binocto"] = (set1_img, (64, 48), 40, {"0": (515, 562, 745, 724), "1": (769, 560, 1008, 724)})
+    for mname, painter in polluter_art.MACHINES:
+        new_creatures[mname] = {"0": painter(0), "1": painter(1)}
 
     for cname, spec in new_creatures.items():
         if isinstance(spec, dict):

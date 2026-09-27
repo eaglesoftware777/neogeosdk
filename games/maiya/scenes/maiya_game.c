@@ -118,6 +118,9 @@ enum {
     /* The Sky Road's fliers. */
     PAL_RHINO = 65, PAL_DRAGONFLY = 68, PAL_GNAT = 69, PAL_GUNSHIP = 70,
     PAL_LANDMARK = 71,   /* the great tree or mountain the gate stands in (71..73) */
+    /* The polluters. */
+    PAL_BAGOCTO = 74, PAL_BINOCTO = 75, PAL_SAWBOT = 76, PAL_DRILLBOT = 77, PAL_TORCHBOT = 78,
+    PAL_SMOGSTACK = 79, PAL_SLUDGEBARREL = 80,
     /* FIX inks for the guardian's bar: dirty and toxic rather than the
      * clean traffic-light colours of her own -- it's the blight's health. */
     PAL_BOSS_HP_HI = 11, PAL_BOSS_HP_MID = 14, PAL_BOSS_HP_LO = 15,
@@ -451,7 +454,7 @@ static int16_t NEOGEO_USER mg_abs(int16_t value)
  * white -- lift all of it together, and a bank loaded behind a fade comes
  * up with it instead of flashing through.
  */
-#define MG_PAL_BANKS 74u   /* up to the landmark's last bank */
+#define MG_PAL_BANKS 81u   /* up to the last polluter's bank */
 static uint16_t mg_pal_base[MG_PAL_BANKS * 16u];
 static uint16_t mg_pal_out[MG_PAL_BANKS * 16u];
 static uint8_t mg_pal_open;
@@ -1774,6 +1777,13 @@ static const uint16_t *NEOGEO_USER mg_enemy_tiles(uint8_t type)
     case MG_E_DRAGONFLY: return mg_dragonfly_tiles;
     case MG_E_GNAT: return mg_gnat_tiles;
     case MG_E_GUNSHIP: return mg_gunship_tiles;
+    case MG_E_BAGOCTO: return mg_bagocto_tiles;
+    case MG_E_BINOCTO: return mg_binocto_tiles;
+    case MG_E_SAWBOT: return mg_sawbot_tiles;
+    case MG_E_DRILLBOT: return mg_drillbot_tiles;
+    case MG_E_TORCHBOT: return mg_torchbot_tiles;
+    case MG_E_SMOGSTACK: return mg_smogstack_tiles;
+    case MG_E_SLUDGEBARREL: return mg_sludgebarrel_tiles;
     default:          return mg_slime_tiles;
     }
 }
@@ -1803,6 +1813,13 @@ static void NEOGEO_USER mg_enemy_canvas(uint8_t type, uint8_t *w, uint8_t *h, ui
     case MG_E_DRAGONFLY:  MG_CANVAS(DRAGONFLY);  break;
     case MG_E_GNAT:       MG_CANVAS(GNAT);       break;
     case MG_E_GUNSHIP:    MG_CANVAS(GUNSHIP);    break;
+    case MG_E_BAGOCTO:    MG_CANVAS(BAGOCTO);    break;
+    case MG_E_BINOCTO:    MG_CANVAS(BINOCTO);    break;
+    case MG_E_SAWBOT:     MG_CANVAS(SAWBOT);     break;
+    case MG_E_DRILLBOT:   MG_CANVAS(DRILLBOT);   break;
+    case MG_E_TORCHBOT:   MG_CANVAS(TORCHBOT);   break;
+    case MG_E_SMOGSTACK:  MG_CANVAS(SMOGSTACK);  break;
+    case MG_E_SLUDGEBARREL: MG_CANVAS(SLUDGEBARREL); break;
     default:              *w = 32u; *h = 32u; *bw = 24u; *bh = 24u; break;
     }
 }
@@ -1852,6 +1869,13 @@ static uint8_t NEOGEO_USER mg_enemy_palette(uint8_t type)
     case MG_E_DRAGONFLY: return PAL_DRAGONFLY;
     case MG_E_GNAT: return PAL_GNAT;
     case MG_E_GUNSHIP: return PAL_GUNSHIP;
+    case MG_E_BAGOCTO: return PAL_BAGOCTO;
+    case MG_E_BINOCTO: return PAL_BINOCTO;
+    case MG_E_SAWBOT: return PAL_SAWBOT;
+    case MG_E_DRILLBOT: return PAL_DRILLBOT;
+    case MG_E_TORCHBOT: return PAL_TORCHBOT;
+    case MG_E_SMOGSTACK: return PAL_SMOGSTACK;
+    case MG_E_SLUDGEBARREL: return PAL_SLUDGEBARREL;
     default:          return PAL_ENEMY0;
     }
 }
@@ -2935,6 +2959,11 @@ static uint8_t NEOGEO_USER mg_stomp_rule(uint8_t type)
     switch (type) {
     case MG_E_BEETLE: case MG_E_TOXICCRAB:                   return MG_STOMP_FLIP;
     case MG_E_SLAGGOLEM: case MG_E_RHINO: case MG_E_GUNSHIP: return MG_STOMP_TOUGH;
+    /* the polluters' machines and the bin bag are armoured; the torch
+     * bot's hull is too hot to land on */
+    case MG_E_BINOCTO: case MG_E_SAWBOT: case MG_E_DRILLBOT: case MG_E_SMOGSTACK:
+    case MG_E_SLUDGEBARREL:                                  return MG_STOMP_TOUGH;
+    case MG_E_TORCHBOT:                                      return MG_STOMP_HURT;
     case MG_E_DARTFROG: case MG_E_VINESTING: case MG_E_WRAITH: return MG_STOMP_HURT;
     default:                                                 return MG_STOMP_POP;
     }
@@ -3360,6 +3389,13 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg_palette(PAL_DRAGONFLY, mg_dragonfly_pal);
     mg_palette(PAL_GNAT, mg_gnat_pal);
     mg_palette(PAL_GUNSHIP, mg_gunship_pal);
+    mg_palette(PAL_BAGOCTO, mg_bagocto_pal);
+    mg_palette(PAL_BINOCTO, mg_binocto_pal);
+    mg_palette(PAL_SAWBOT, mg_sawbot_pal);
+    mg_palette(PAL_DRILLBOT, mg_drillbot_pal);
+    mg_palette(PAL_TORCHBOT, mg_torchbot_pal);
+    mg_palette(PAL_SMOGSTACK, mg_smogstack_pal);
+    mg_palette(PAL_SLUDGEBARREL, mg_sludgebarrel_pal);
     mg_ghost_palette();
     mg_palette(PAL_TOOL, mg_tool_pal);
     mg_palette(PAL_PORTRAIT, mg_portrait_pal);
@@ -4274,7 +4310,7 @@ static uint8_t NEOGEO_USER mg_enemy_flies(uint8_t type)
     return (uint8_t)(type == MG_E_CROW || type == MG_E_DRONE || type == MG_E_JELLYFISH ||
                      type == MG_E_ACIDMOTH || type == MG_E_SMOGBAT || type == MG_E_POACHDRONE ||
                      type == MG_E_CHEMFLY || type == MG_E_PLASTICBAT || type == MG_E_WRAITH ||
-                     type >= MG_E_RHINO);
+                     (type >= MG_E_RHINO && type <= MG_E_GUNSHIP));   /* the Sky Road's; the polluters walk */
 }
 
 /* How many hits each kind takes before the valley's own difficulty is added. */
@@ -4286,6 +4322,10 @@ static uint8_t NEOGEO_USER mg_enemy_base_hp(uint8_t type)
     case MG_E_DRONE: case MG_E_TOXICCRAB:
     case MG_E_POACHDRONE: case MG_E_VINESTING: return 2;
     case MG_E_RHINO: case MG_E_GUNSHIP: return 3;
+    case MG_E_BAGOCTO: return 2;
+    case MG_E_BINOCTO: case MG_E_TORCHBOT: case MG_E_SLUDGEBARREL: return 3;
+    case MG_E_SAWBOT: case MG_E_DRILLBOT: return 4;
+    case MG_E_SMOGSTACK: return 5;
     default:             return 1;
     }
 }
@@ -4309,7 +4349,7 @@ static void NEOGEO_USER mg_wave(NGCharacter *b, int16_t centre, int16_t swing, i
  * met in the first seconds, need no introduction). */
 static void NEOGEO_USER mg_kind_hint(uint8_t type)
 {
-    static const char *const hint[MG_E_GUNSHIP + 1] = {
+    static const char *const hint[MG_E_SLUDGEBARREL + 1] = {
         [MG_E_CROW]       = "CROW: IT DIVES - STRIKE AS IT SWOOPS",
         [MG_E_GOBLIN]     = "GOBLIN: IT HURLS SCRAP FROM LEDGES",
         [MG_E_WORM]       = "WORM: IT SPITS FROM ITS PIPE",
@@ -4329,9 +4369,16 @@ static void NEOGEO_USER mg_kind_hint(uint8_t type)
         [MG_E_DRAGONFLY]  = "DRAGONFLY: IT WEAVES IN A LINE",
         [MG_E_GNAT]       = "GNATS: A SWARM - SCATTER THEM",
         [MG_E_GUNSHIP]    = "GUNSHIP: IT FIRES - STRIKE FROM ABOVE",
+        [MG_E_BAGOCTO]    = "BAG OCTOPUS: IT FLINGS PLASTIC",
+        [MG_E_BINOCTO]    = "BIN OCTOPUS: TOUGH, FLINGS TWO CANS",
+        [MG_E_SAWBOT]     = "SAW BOT: IT REVS, THEN CHARGES",
+        [MG_E_DRILLBOT]   = "DRILL BOT: IT BURSTS - JUMP OVER",
+        [MG_E_TORCHBOT]   = "TORCH BOT: FIRE UP CLOSE, HIT IT FAR",
+        [MG_E_SMOGSTACK]  = "SMOG STACK: DODGE ITS SMOG BALLS",
+        [MG_E_SLUDGEBARREL] = "SLUDGE BARREL: IT SPITS UP AND OVER",
     };
     uint32_t bit;
-    if (type > MG_E_GUNSHIP || type == MG_E_WRAITH || mg.demo || mg.state != MG_PLAY) return;
+    if (type > MG_E_SLUDGEBARREL || type == MG_E_WRAITH || mg.demo || mg.state != MG_PLAY) return;
     bit = (uint32_t)1u << type;
     if (mg.kinds_met & bit) return;
     mg.kinds_met |= bit;
@@ -4370,6 +4417,10 @@ static MGEnemy *NEOGEO_USER mg_spawn_enemy(uint8_t type, int16_t x, int16_t y, u
     if (mg.difficulty >= 2) e->body->hp++;   /* HARD and EXPERT */
     if (mg_stomp_rule(type) == MG_STOMP_TOUGH) e->body->hp = (uint8_t)(3u + (mg.difficulty >= 2));
     if (type == MG_E_GNAT || type == MG_E_DRAGONFLY) e->body->hp = 1;   /* one of a flight: one blow */
+    /* The polluters are the valleys' real foes: tougher the further she has
+     * come, a point more every three valleys. */
+    if (type >= MG_E_BAGOCTO)
+        e->body->hp = (uint8_t)(mg_enemy_base_hp(type) + mg.stage / 3u + (mg.difficulty >= 2));
     e->body->max_hp = e->body->hp;
 
     /*
@@ -4593,10 +4644,12 @@ static void NEOGEO_USER mg_spawn_scan(const MGLevel *level, int16_t px)
             int16_t x2 = (int16_t)(en->x + 40);
             mg_spawn_enemy(MG_E_SLIME, en->x, mg_ledge_y_at(level, en->x), 0);
             mg_spawn_enemy(MG_E_BEETLE, x2, mg_ledge_y_at(level, x2), 0);
-        } else {
-            mg_spawn_enemy(en->type, en->x, mg_ledge_y_at(level, en->x), 0);
+            mg.encounter_mask |= bit;
+        } else if (mg_spawn_enemy(en->type, en->x, mg_ledge_y_at(level, en->x), 0)) {
+            /* (a road already full keeps it waiting for a place, until she
+             * is well past it: it used to be lost) */
+            mg.encounter_mask |= bit;
         }
-        mg.encounter_mask |= bit;
     }
 
     /* Posted on the ledges: whichever creature the stage file names. */
@@ -6491,6 +6544,15 @@ static void NEOGEO_USER mg_update_entities(void)
         }
         e->timer++;
         if (e->hurt) e->hurt--;
+        /* A straggler left far behind (or waiting far ahead) goes: the road
+         * holds only four at once, and one left alive back there kept every
+         * creature after it from coming at all. */
+        if (!e->form && e->type != MG_E_WRAITH && !mg.boss_active &&
+            mg_abs((int16_t)(e->body->x - p->x)) > 480) {
+            ng_chars_remove(e->body);
+            e->body = 0;
+            continue;
+        }
         if (e->body->y > MG_GROUND_Y + 20) {          /* gone down a pit */
             ng_chars_remove(e->body);
             e->body = 0;
@@ -6538,26 +6600,103 @@ static void NEOGEO_USER mg_update_entities(void)
                     mg_frame(b, (uint8_t)((uint16_t)(e->timer / 6u) % (uint16_t)nf), flip);
                     break;
                 }
-                case MG_E_BEETLE:
+                case MG_E_BEETLE: case MG_E_SAWBOT: case MG_E_DRILLBOT: {
                     /* Stalk, rev the saw, then commit to a charge it can't
-                     * steer out of -- and stand winded after it. */
+                     * steer out of -- and stand winded after it. The
+                     * loggers' saw bot stalks and charges harder, sparks
+                     * flying off the blade as it revs; the miners' drill bot
+                     * bursts fastest and shortest, drill first. */
+                    uint8_t saw = (uint8_t)(e->type == MG_E_SAWBOT), drill = (uint8_t)(e->type == MG_E_DRILLBOT);
                     if (e->mood == 1) {
-                        b->vx_fp = dir * mg_pace(200);
+                        b->vx_fp = dir * mg_pace((int16_t)(saw ? 240 : (drill ? 170 : 200)));
                         mg_frame(b, (uint8_t)((uint16_t)(e->timer / 8u) % (uint16_t)nf), flip);
                         if (e->move_timer) e->move_timer--;
-                        else if (mg_abs(dx) < 130) { e->mood = 2; e->move_timer = 24; e->heading = dir; }
+                        else if (mg_abs(dx) < 130) {
+                            e->mood = 2; e->move_timer = (uint8_t)(saw ? 20 : (drill ? 14 : 24)); e->heading = dir;
+                        }
                     } else if (e->mood == 2) {
                         b->vx_fp = 0;
                         mg_frame(b, (uint8_t)(((e->timer / 3) & 1) ? nf - 1 : 0), (uint8_t)(e->heading < 0));
-                        if (--e->move_timer == 0) { e->mood = 3; e->move_timer = 36; playSFX(SOUND_SFX_14); }
+                        if (saw && (e->move_timer & 3u) == 0u)
+                            mg_burst((int16_t)(b->x + e->heading * 22), (int16_t)(b->y - 26), MG_T_SPARK, 1, -1);
+                        if (--e->move_timer == 0) { e->mood = 3; e->move_timer = (uint8_t)(drill ? 26 : 36); playSFX(SOUND_SFX_14); }
                     } else if (e->mood == 3) {
-                        b->vx_fp = e->heading * mg_pace(820);
+                        b->vx_fp = e->heading * mg_pace((int16_t)(saw ? 960 : (drill ? 1120 : 820)));
                         mg_frame(b, (uint8_t)((uint16_t)(e->timer / 3u) % (uint16_t)nf), (uint8_t)(e->heading < 0));
                         if (--e->move_timer == 0) { e->mood = 4; e->move_timer = 30; }
                     } else {
                         b->vx_fp = 0;
                         mg_frame(b, 0, (uint8_t)(e->heading < 0));
                         if (--e->move_timer == 0) { e->mood = 1; e->move_timer = 40; }
+                    }
+                    break;
+                }
+                case MG_E_TORCHBOT:
+                    /* The burners' machine: it tramps at her and, within
+                     * reach, stands and breathes a short tongue of fire --
+                     * then must stop to let its torch cool. */
+                    if (e->mood == 1) {
+                        b->vx_fp = dir * mg_pace(170);
+                        mg_frame(b, (uint8_t)((e->timer >> 3) & 1u), flip);
+                        if (e->move_timer) e->move_timer--;
+                        else if (mg_abs(dx) < 100) { e->mood = 2; e->move_timer = 20; e->heading = dir; }
+                    } else if (e->mood == 2) {
+                        b->vx_fp = 0;
+                        mg_frame(b, 0, (uint8_t)(e->heading < 0));
+                        if ((e->move_timer & 3u) == 0u) {
+                            MGShot *s = mg_fire((int16_t)(b->x + e->heading * 24), (int16_t)(b->y - 22),
+                                                (int16_t)(e->heading * 5), (int16_t)((e->move_timer & 4u) ? -1 : 0), 1, MG_T_FIRE);
+                            if (s) s->life = 16;
+                            playSFX(SOUND_SFX_10);
+                        }
+                        if (--e->move_timer == 0) { e->mood = 3; e->move_timer = 60; }
+                    } else {
+                        b->vx_fp = 0;
+                        mg_frame(b, 0, flip);
+                        if (--e->move_timer == 0) { e->mood = 1; e->move_timer = 30; }
+                    }
+                    break;
+                case MG_E_SMOGSTACK:
+                    /* A walking chimney: it plods her way and now and then
+                     * belches a ball of smog straight at her. */
+                    b->vx_fp = dir * mg_pace(110);
+                    mg_frame(b, (uint8_t)((e->timer >> 4) & 1u), flip);
+                    if ((e->timer % mg_rate(100)) == 50u && mg_abs(dx) < 220) {
+                        uint8_t aim = ng_atan2((int16_t)((p->y - 24) - (b->y - 44)), dx);
+                        mg_fire(b->x, (int16_t)(b->y - 44), (int16_t)((ng_trig_mul(6, ng_cos(aim)) + 1) >> 1),
+                                (int16_t)((ng_trig_mul(6, ng_sin(aim)) + 1) >> 1), 1, MG_T_DUST);
+                        playSFX(SOUND_SFX_5);
+                    }
+                    break;
+                case MG_E_SLUDGEBARREL:
+                    /* A leaking drum: it waddles at her in fits and starts,
+                     * and spits a gob of sludge up and over when she's near. */
+                    if ((e->timer % 48u) < 30u) {
+                        b->vx_fp = dir * mg_pace(260);
+                        mg_frame(b, (uint8_t)((e->timer >> 3) & 1u), flip);
+                    } else {
+                        b->vx_fp = 0;
+                        mg_frame(b, 0, flip);
+                    }
+                    if ((e->timer % mg_rate(90)) == 40u && mg_abs(dx) < 150) {
+                        MGShot *s = mg_fire(b->x, (int16_t)(b->y - 30), (int16_t)(dir * 3), -4, 1, MG_T_SPIT);
+                        if (s) s->mode = MG_SHOT_ARC;
+                        playSFX(SOUND_SFX_5);
+                    }
+                    break;
+                case MG_E_BAGOCTO: case MG_E_BINOCTO:
+                    /* The trash octopuses drag themselves at her and fling
+                     * their junk up and over -- the bin bag two at a time. */
+                    b->vx_fp = dir * mg_pace((int16_t)(e->type == MG_E_BAGOCTO ? 150 : 120));
+                    mg_frame(b, (uint8_t)((e->timer >> 4) & 1u), flip);
+                    if ((e->timer % mg_rate(e->type == MG_E_BAGOCTO ? 110 : 90)) == 45u && mg_abs(dx) < 180) {
+                        MGShot *s = mg_fire(b->x, (int16_t)(b->y - 26), (int16_t)(dir * 3), -4, 1, MG_T_TRASH);
+                        if (s) s->mode = MG_SHOT_ARC;
+                        if (e->type == MG_E_BINOCTO) {
+                            s = mg_fire(b->x, (int16_t)(b->y - 26), (int16_t)(dir * 2), -5, 1, MG_T_TRASH);
+                            if (s) s->mode = MG_SHOT_ARC;
+                        }
+                        playSFX(SOUND_SFX_5);
                     }
                     break;
                 case MG_E_CROW: case MG_E_SMOGBAT: case MG_E_PLASTICBAT: {

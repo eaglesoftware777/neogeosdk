@@ -24,7 +24,7 @@
   "secret_hint": "THE BAOBAB HOLLOW HIDES A CHARM",
   "sunboy": ["THE HERD RUNS FREE. WE DID IT", "THANK YOU, SUPER NATURE GIRL"],
   "healed": ["THE HERDS RUN FREE ACROSS THE PLAIN", "THE POACHERS' TRAPS LIE BROKEN"],
-  "briefing": ["POACHERS HUNT THE GOLDEN SAVANNA", "THEIR DRONES SNARE ALL THAT LIVES"],
+  "briefing": ["POACHERS' MACHINES CLEAR THE PLAIN", "THEIR DRONES SNARE ALL THAT LIVES"],
   "platforms": [
     {"x": 404, "y": 144, "w": 128},
     {"x": 680, "y": 112, "w": 96},
@@ -64,6 +64,7 @@
     {"x": 2268, "enemy": "crow"},
     {"x": 2520, "enemy": "pair"},
     {"x": 2772, "enemy": "chemfly"},
+    {"x": 2896, "enemy": "sawbot"},
     {"x": 3028, "enemy": "goblin"},
     {"x": 3280, "enemy": "poachdrone"},
     {"x": 3532, "enemy": "beetle"},
@@ -74,11 +75,15 @@
     {"x": 4792, "enemy": "chemfly"},
     {"x": 4980, "enemy": "beetle"},
     {"x": 5128, "enemy": "goblin"},
+    {"x": 5432, "enemy": "torchbot"},
     {"x": 5538, "enemy": "poachdrone"},
+    {"x": 5752, "enemy": "sawbot"},
     {"x": 5980, "enemy": "goblin"},
     {"x": 6190, "enemy": "beetle"},
+    {"x": 6376, "enemy": "torchbot"},
     {"x": 6462, "enemy": "chemfly"},
     {"x": 6682, "enemy": "beetle"},
+    {"x": 6856, "enemy": "sawbot"},
     {"x": 6992, "enemy": "crow"}
   ],
   "archers": [
