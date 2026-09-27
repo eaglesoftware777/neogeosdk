@@ -20,16 +20,16 @@
         <part name="cart" interface="neo_cart">
             <feature name="slot" value="rom_fatfur2" />
             <dataarea name="maincpu" width="16" endianness="big" size="0x100000">
-                <rom loadflag="load16_word_swap" name="780-p1.p1" offset="0x000000" size="0x080000" crc="4b9770e4" sha1="c0b94ede91d1c27dd7bcb6ea3dfe3b588870be46" />
+                <rom loadflag="load16_word_swap" name="780-p1.p1" offset="0x000000" size="0x080000" crc="a9dee86e" sha1="762c7e88729ac6aa65fd7400c6f91e18012d1617" />
             </dataarea>
             <dataarea name="fixed" size="0x020000">
                 <rom offset="0x000000" size="0x020000" name="780-s1.s1" crc="53ee7999" sha1="d4af221ed91915f113e5b5cf79b66df1b63a9f8d" />
             </dataarea>
             <dataarea name="audiocpu" size="0x020000">
-                <rom offset="0x000000" size="0x020000" name="780-m1.m1" crc="e2c3d236" sha1="4544c703c13009910b132adbc50e416dfdf2ca24" />
+                <rom offset="0x000000" size="0x020000" name="780-m1.m1" crc="10efd358" sha1="a95b648242905810f43a9a2c4ab484185447c1fa" />
             </dataarea>
-            <dataarea name="ymsnd:adpcma" size="0x784100">
-                <rom name="780-v1.v1" offset="0x000000" size="0x784100" crc="88abeb0b" sha1="5aded72657175d4fd982f8234ec420bf778a88c6" />
+            <dataarea name="ymsnd:adpcma" size="0x79ab00">
+                <rom name="780-v1.v1" offset="0x000000" size="0x79ab00" crc="127b89b4" sha1="8ec212c59da5e650ed6978cf358e24220b5d33c3" />
             </dataarea>
             <dataarea name="sprites" size="0x800000">
                 <rom loadflag="load16_byte" name="780-c1.c1" offset="0x000000" size="0x400000" crc="207f46a3" sha1="88328534bb71d5eaefe62293d5280e80c6d425e3" />

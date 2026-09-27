@@ -534,6 +534,20 @@ static void NEOGEO_USER mg_backdrop(uint16_t color)
     ng_palfx_screen_backdrop(color);
 }
 
+/* Luna's light: a bank with its red and blue swapped -- Maiya's gold turns
+ * sky blue, her rose lilac. */
+static void NEOGEO_USER mg_moon_bank(uint8_t bank, const uint16_t *src)
+{
+    uint16_t out[16];
+    uint8_t i;
+    for (i = 0; i < 16u; i++) {
+        uint16_t c = src[i];
+        out[i] = (uint16_t)((c & 0x80F0u) | ((c >> 8) & 0x000Fu) | ((c & 0x000Fu) << 8) |
+                            ((c >> 2) & 0x1000u) | ((c & 0x1000u) << 2) | (c & 0x2000u));
+    }
+    mg_palette(bank, out);
+}
+
 /* One bank lifted toward white, for a glow on a single sprite. */
 static void NEOGEO_USER mg_whiten_bank(uint8_t bank, const uint16_t *src, uint8_t k)
 {
@@ -690,10 +704,13 @@ enum {
     MG_VOICE_RISE, MG_VOICE_SURGE, MG_VOICE_ART, MG_VOICE_LEAP, MG_VOICE_LILY,
     MG_VOICE_FREE, MG_VOICE_START, MG_VOICE_RETRY, MG_VOICE_WIN,
     MG_VOICE_ELDER, MG_VOICE_MAIDEN, MG_VOICE_SPIRIT, MG_VOICE_SUNBOY,
+    MG_VOICE_LUNA,      /* Luna's own words for the first nine, in their order */
 };
 
 static void NEOGEO_USER mg_voice(uint8_t line)
 {
+    /* Luna speaks for herself, in her own voice */
+    if (mg.hero_choice && line <= MG_VOICE_WIN) line = (uint8_t)(line + MG_VOICE_LUNA);
     isZ80Ready();
     playVoiceSample((uint8_t)(SOUND_SFX_COUNT + line));
 }
@@ -2470,6 +2487,24 @@ static uint8_t NEOGEO_USER mg_enemy_is_bug(uint8_t type)
 
 /* The shot takes its own tile: spit looks like spit and fire like fire,
  * not every projectile borrowing the thorn it was first set up with. */
+/*
+ * Luna does all Maiya does, the same way and as hard; only what she throws
+ * and what flies about her are her own: lilac where Maiya throws thorns,
+ * white daisies for petals, stars where petals scatter, her light in moon
+ * colours (mg_moon_bank), her own voice (mg_voice).
+ */
+static uint8_t NEOGEO_USER mg_her_tile(uint8_t tile)
+{
+    if (!mg.hero_choice) return tile;
+    switch (tile) {
+    case MG_T_THORN0: return (uint8_t)(MG_T_FLOWER + 6);   /* a lilac, face on */
+    case MG_T_THORN1: return (uint8_t)(MG_T_FLOWER + 7);   /* ...the crown's, turned */
+    case MG_T_PETAL:  return MG_T_STAR;
+    case MG_T_LEAF:   return (uint8_t)(MG_T_FLOWER + 2);   /* a daisy */
+    default:          return tile;
+    }
+}
+
 static MGShot *NEOGEO_USER mg_fire(int16_t x, int16_t y, int16_t vx, int16_t vy, uint8_t hostile, uint8_t kind)
 {
     uint8_t i;
@@ -2478,7 +2513,7 @@ static MGShot *NEOGEO_USER mg_fire(int16_t x, int16_t y, int16_t vx, int16_t vy,
         if (p->life) continue;
         p->x = x; p->y = y; p->vx = vx; p->vy = vy;
         p->life = 90; p->hostile = hostile; p->kind = kind; p->mode = MG_SHOT_PLAIN;
-        ng_sprite_group_set_tile_base(&p->sprite, (uint16_t)(MG_TOOL_TILE + kind));
+        ng_sprite_group_set_tile_base(&p->sprite, (uint16_t)(MG_TOOL_TILE + (hostile ? kind : mg_her_tile(kind))));
         return p;
     }
     return 0;
@@ -3457,7 +3492,8 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     ng_sprite_group_init(&mg.cage, SLOT_CAGE, 2, 2, mg_prop_tiles[MG_P_CHEST], PAL_PROP);
     ng_sprite_group_set_visible(&mg.cage, 0);
 
-    mg_palette(PAL_FX, mg_fx_pal);
+    if (mg.hero_choice) mg_moon_bank(PAL_FX, mg_fx_pal);
+    else mg_palette(PAL_FX, mg_fx_pal);
     ng_sprite_group_init(&mg.fx, SLOT_FX, 4, 4, mg_fx_tiles[0], PAL_FX);
     ng_sprite_group_set_visible(&mg.fx, 0);
     mg.fx_time = 0;
@@ -3579,17 +3615,28 @@ void NEOGEO_USER maiya_save_check(void)
 /* ------------------------------------------------------------------ */
 /* A console always reads the defaults: 3 lives, 3 continues, NORMAL,
  * demo sound on, how-to-play shown. */
+/* The system's copy of the soft DIPs holds the table's special list (all
+ * 0xFF) ahead of the options once a system ROM has filled it in; a system
+ * that never did leaves zeros, which would read as one life and no
+ * continues. Then the table's own defaults stand. */
+static uint8_t NEOGEO_USER mg_dips_set(void)
+{
+    return (uint8_t)(*(const volatile uint8_t *)BIOS_GAME_DIP == 0xFFu);
+}
+
+/* Three lives unless the operator chose otherwise. */
 static uint8_t NEOGEO_USER mg_dip_lives(void)
 {
     static const uint8_t lives[5] = { 1, 2, 3, 4, 5 };
     uint8_t o = ng_dip_option(0);
-    return o < 5 ? lives[o] : 3;
+    return (mg_dips_set() && o < 5) ? lives[o] : 3;
 }
 
 static uint8_t NEOGEO_USER mg_dip_continues(void)
 {
     static const uint8_t continues[4] = { 0, 1, 3, 5 };
     uint8_t o = ng_dip_option(1);
+    if (!mg_dips_set()) return 3;
     return o < 4 ? continues[o] : MAX_CONTINUES;
 }
 
@@ -3597,7 +3644,7 @@ static uint8_t NEOGEO_USER mg_dip_continues(void)
 static uint8_t NEOGEO_USER mg_dip_difficulty(void)
 {
     uint8_t o = ng_dip_option(2);
-    return o < 4 ? o : 1;
+    return (mg_dips_set() && o < 4) ? o : 1;
 }
 
 uint8_t NEOGEO_USER maiya_dip_demo_sound(void)
@@ -5049,7 +5096,7 @@ static void NEOGEO_USER mg_controls(void)
                 mg.jump_cut = 1;
                 mg.air_jump = 0;
                 mg.jump_buffer = 0;
-                mg_burst(p->x, (int16_t)(p->y - 4), MG_T_PETAL, 2, 1);
+                mg_burst(p->x, (int16_t)(p->y - 4), mg_her_tile(MG_T_PETAL), 2, 1);
                 playSFX(SOUND_SFX_15);
             }
         }
@@ -5166,13 +5213,13 @@ static void NEOGEO_USER mg_controls(void)
             mg.jump_cut = 0;
             mg.airborne = 1;
             mg.coyote = 0;
-            mg_burst(p->x, (int16_t)(p->y - 10), MG_T_PETAL, 3, -3);
+            mg_burst(p->x, (int16_t)(p->y - 10), mg_her_tile(MG_T_PETAL), 3, -3);
             playSFX(SOUND_SFX_15);
         }
         if (mg.rising <= MG_RISE_TIME - 3 && mg.rising > MG_RISE_TIME - 16) {
             int16_t hx = (int16_t)(p->x + dir * 14);
             uint8_t i;
-            if ((mg.rising & 3u) == 0u) mg_burst(hx, (int16_t)(p->y - 50), MG_T_PETAL, 1, -1);
+            if ((mg.rising & 3u) == 0u) mg_burst(hx, (int16_t)(p->y - 50), mg_her_tile(MG_T_PETAL), 1, -1);
             for (i = 0; i < MG_ENEMIES; i++) {
                 MGEnemy *e = &mg.enemies[i];
                 NGCharacter *b = e->body;
@@ -5218,7 +5265,7 @@ static void NEOGEO_USER mg_controls(void)
         vx = mg.facing ? (int16_t)-speed : speed;
         if ((mg.dash % 4) == 0 && !mg.airborne)
             mg_burst((int16_t)(p->x + (mg.facing ? 12 : -12)), (int16_t)(p->y - 18),
-                     (uint8_t)((mg.dash & 4) ? MG_T_PETAL : MG_T_LEAF), 1, -1);
+                     mg_her_tile((uint8_t)((mg.dash & 4) ? MG_T_PETAL : MG_T_LEAF)), 1, -1);
     }
 
     /*
@@ -5237,7 +5284,7 @@ static void NEOGEO_USER mg_controls(void)
                 playSFX(SOUND_SFX_15);
                 playSFX(SOUND_SFX_1);
             } else if ((mg.super_surge & 1) == 0) {
-                mg_burst(p->x, (int16_t)(p->y - 30), MG_T_PETAL, 2, -2);
+                mg_burst(p->x, (int16_t)(p->y - 30), mg_her_tile(MG_T_PETAL), 2, -2);
             }
         } else {
             uint8_t i;
@@ -5247,7 +5294,7 @@ static void NEOGEO_USER mg_controls(void)
             vx = (int16_t)(dir * speed);
             if ((mg.super_surge % 3) == 0)
                 mg_burst((int16_t)(p->x + (mg.facing ? 14 : -14)), (int16_t)(p->y - 24),
-                         (uint8_t)((mg.super_surge & 4) ? MG_T_PETAL : MG_T_LEAF), 1, -1);
+                         mg_her_tile((uint8_t)((mg.super_surge & 4) ? MG_T_PETAL : MG_T_LEAF)), 1, -1);
             for (i = 0; i < MG_ENEMIES; i++) {
                 NGCharacter *e = mg.enemies[i].body;
                 if (e && mg_abs((int16_t)(e->x - p->x)) < 40 &&

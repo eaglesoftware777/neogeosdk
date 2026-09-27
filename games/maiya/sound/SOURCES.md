@@ -52,8 +52,9 @@ and trimmed for the driver:
 Maiya's calls and the thanks of the captives she frees are synthesised, not
 recorded: `tools/make_voices.py` speaks each line with the piper speech
 synthesiser and its LJ Speech voice, which was trained on the public-domain
-LJ Speech recordings, and colours it per speaker with sox (pitch, tempo,
-an echo for the spirit). The WAVs are in the repository; the synthesiser
+LJ Speech recordings -- Luna's lines with its Kristin voice, trained on
+public-domain LibriVox recordings -- and colours it per speaker with sox
+(pitch, tempo, an echo for the spirit). The WAVs are in the repository; the synthesiser
 and its voice model are only needed to change a line.
 
 | File | Speaker | Line | Played |
@@ -71,6 +72,15 @@ and its voice model are only needed to change a line.
 | `v11_maiden.wav` | the maiden | "Thank you! You saved me!" | freed |
 | `v12_spirit.wav` | the spirit | "The forest thanks you!" | freed |
 | `v13_sunboy.wav` | Sunboy | "We did it! Thank you!" | freed |
+| `v14_luna_rise.wav` | Luna | "Bloom, rise up!" | the Rising Bloom, as Luna |
+| `v15_luna_surge.wav` | Luna | "Blossom rush!" | the Rose Blossom Surge, as Luna |
+| `v16_luna_art.wav` | Luna | "Earth, make this valley whole!" | the Secret Art, as Luna |
+| `v17_luna_leap.wav` | Luna | "Here I go!" | the high leap, as Luna |
+| `v18_luna_lily.wav` | Luna | "Like a feather!" | a sky lily picked up, as Luna |
+| `v19_luna_free.wav` | Luna | "Go on, you're safe!" | a captive freed, as Luna |
+| `v20_luna_start.wav` | Luna | "I heard the valley cry!" | a mission begins, as Luna |
+| `v21_luna_retry.wav` | Luna | "Not over yet!" | a mission tried again, as Luna |
+| `v22_luna_win.wav` | Luna | "The land lives again!" | a guardian beaten, as Luna |
 
 ## FM and SSG (`fm/`, `ssg/`, `mml/`)
 
