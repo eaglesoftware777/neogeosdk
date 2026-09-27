@@ -67,6 +67,7 @@ enum {
     SLOT_HUD = 290,      /* face avatar, hearts, halo, key          */
     SLOT_TITLE = 310,    /* attract mode key visual                 */
     SLOT_TRAY = 330,     /* 12 shrunk pick-up icons (2 strips each) */
+    SLOT_FX = 356,       /* her special moves' light (4 strips), over her */
     MG_TRAY_SLOTS = 12,
 
     /*
@@ -94,6 +95,7 @@ enum {
     PAL_SLAGGOLEM = 56, PAL_VINESTING = 57, PAL_SPOREGOB = 58, PAL_WRAITH = 59,
     PAL_HAZARD = 61, PAL_FACE = 43, PAL_PIT = 66,
     PAL_BLOCK_ROT = 67,  /* a rotten ledge: the valley's set, greyed and darker */
+    PAL_FX = 64,         /* the light of her special moves */
     /* FIX inks for the guardian's bar: dirty and toxic rather than the
      * clean traffic-light colours of her own -- it's the blight's health. */
     PAL_BOSS_HP_HI = 11, PAL_BOSS_HP_MID = 14, PAL_BOSS_HP_LO = 15,
@@ -264,6 +266,7 @@ typedef struct {
     const uint16_t *block_tiles;
     NGCharacter *npcs[MG_NPC_SLOTS];
     NGSpriteGroup cage;
+    NGSpriteGroup fx;                /* a special move's light, drawn over her */
     NGSpriteGroup hud[16];
     NGSpriteGroup tray[MG_TRAY_SLOTS];
     MGEnemy enemies[MG_ENEMIES];
@@ -294,6 +297,7 @@ typedef struct {
     uint16_t lily;                    /* the sky lily: a second jump in the air, in frames */
     uint8_t  leap_window;             /* frames left to leap high after kneeling */
     uint8_t  voice_next, voice_delay; /* a line waiting to be spoken, and when */
+    uint8_t  fx_kind, fx_time;        /* the light over her (MG_LIGHT_*) and for how long */
     uint8_t  flash;                   /* frames of Secret Art palette      */
     uint8_t  angel;                   /* rising-to-the-sky death           */
     uint8_t  flowers, critters;       /* bonus tally for the mission end   */
@@ -1397,6 +1401,62 @@ static void NEOGEO_USER mg_camera_follow(void)
  * Engine hook, runs right before the characters are drawn: follow the
  * heroine with the camera and move every world-space sprite with it.
  */
+/*
+ * The light of a special move, drawn over her for as long as it lasts: the
+ * Rising Bloom's whirl of petals, the Surge's trail (streaming behind her,
+ * mirrored when she faces left), the Secret Art's widening sun ring and the
+ * high leap's burst from her feet.
+ */
+enum { MG_LIGHT_NONE, MG_LIGHT_WHIRL, MG_LIGHT_TRAIL, MG_LIGHT_SUN, MG_LIGHT_BURST };
+
+static void NEOGEO_USER mg_light(uint8_t kind, uint8_t frames)
+{
+    mg.fx_kind = kind;
+    mg.fx_time = frames;
+}
+
+static void NEOGEO_USER mg_draw_light(int16_t camera_x)
+{
+    NGCharacter *p = mg.player;
+    uint16_t frame;
+    int16_t x, y;
+    uint8_t flip = 0;
+
+    if (!mg.fx_time || !p || mg.state == MG_BONUS) {
+        if (mg.fx_time) mg.fx_time = 0;
+        ng_sprite_group_set_visible(&mg.fx, 0);
+        ng_sprite_group_flush(&mg.fx);
+        return;
+    }
+    mg.fx_time--;
+    x = (int16_t)(p->x - camera_x - 32);
+    y = (int16_t)(p->y - 60);
+    switch (mg.fx_kind) {
+    case MG_LIGHT_WHIRL:
+        frame = (uint16_t)(MG_FX_WHIRL0 + (mg.tick >> 2) % 3u);
+        y = (int16_t)(p->y - 64);
+        break;
+    case MG_LIGHT_TRAIL:
+        frame = (uint16_t)(MG_FX_TRAIL0 + ((mg.tick >> 2) & 1u));
+        flip = mg.facing;
+        x = (int16_t)(x + (flip ? 30 : -30));
+        y = (int16_t)(p->y - 58);
+        break;
+    case MG_LIGHT_SUN:
+        frame = (uint16_t)(MG_FX_SUN0 + (mg.fx_time > 20 ? 0u : (mg.fx_time > 10 ? 1u : 2u)));
+        break;
+    default:
+        frame = (uint16_t)(MG_FX_BURST0 + ((mg.tick >> 2) & 1u));
+        y = (int16_t)(p->y - 62);
+        break;
+    }
+    ng_sprite_group_set_tile_base(&mg.fx, mg_fx_tiles[frame]);
+    ng_sprite_group_set_flip(&mg.fx, flip, 0);
+    ng_sprite_group_set_pos(&mg.fx, x, MG_SY(y));
+    ng_sprite_group_set_visible(&mg.fx, 1);
+    ng_sprite_group_flush(&mg.fx);
+}
+
 static void NEOGEO_USER mg_before_draw_hook(void)
 {
     if (mg.player) mg_camera_follow();
@@ -1414,6 +1474,7 @@ static void NEOGEO_USER mg_before_draw_hook(void)
     mg_draw_gate(mg.camera.x);
     mg_draw_cage(mg.camera.x);
     mg_update_sparks(mg.camera.x);
+    mg_draw_light(mg.camera.x);
 }
 
 /* ------------------------------------------------------------------ */
@@ -2267,6 +2328,7 @@ static void NEOGEO_USER mg_secret_art(void)
     mg.art_wave = 24;              /* the second wave follows the first */
     playSFX(SOUND_SFX_9);          /* the clear ring of the purification */
     mg_voice(MG_VOICE_ART);
+    mg_light(MG_LIGHT_SUN, 30);
     mg_petal_sweep();
 
     /* Everyone present takes the art -- no hit sparks, they would overwrite
@@ -2564,6 +2626,11 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
 
     ng_sprite_group_init(&mg.cage, SLOT_CAGE, 2, 2, mg_prop_tiles[MG_P_CHEST], PAL_PROP);
     ng_sprite_group_set_visible(&mg.cage, 0);
+
+    mg_palette(PAL_FX, mg_fx_pal);
+    ng_sprite_group_init(&mg.fx, SLOT_FX, 4, 4, mg_fx_tiles[0], PAL_FX);
+    ng_sprite_group_set_visible(&mg.fx, 0);
+    mg.fx_time = 0;
 
     /* Reserve the mandatory key before streaming optional pickups. */
     if (!mg.has_key && !mg.gate_unlocked) mg_drop_key((int16_t)mg_key_pos[stage][0], (int16_t)mg_key_pos[stage][1]);
@@ -3914,6 +3981,7 @@ static void NEOGEO_USER mg_controls(void)
                     mg_burst(p->x, (int16_t)(p->y - 4), MG_T_SPARK, 3, -2);
                     playSFX(SOUND_SFX_13);
                     mg_voice(MG_VOICE_LEAP);
+                    mg_light(MG_LIGHT_BURST, 16);
                 }
                 if (mg.spring) v = (int16_t)((v * 5) / 4);
                 if (mg_mech() == MG_M_WATER) v = (int16_t)((v * 3) / 4);
@@ -3975,6 +4043,7 @@ static void NEOGEO_USER mg_controls(void)
             mg.dash = 0;
             playSFX(SOUND_SFX_1);
             mg_voice(MG_VOICE_RISE);
+            mg_light(MG_LIGHT_WHIRL, MG_RISE_TIME);
         }
     }
 
@@ -3992,6 +4061,7 @@ static void NEOGEO_USER mg_controls(void)
             mg.dash = 0;
             playSFX(SOUND_SFX_13);   /* the bloom gathers */
             mg_voice(MG_VOICE_SURGE);
+            mg_light(MG_LIGHT_TRAIL, MG_SURGE_TIME);
         } else {
             uint8_t melee = 0;
             if (mg.boss && mg_abs((int16_t)(mg.boss->x - p->x)) < 48 &&
