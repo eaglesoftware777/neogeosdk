@@ -122,6 +122,14 @@ rest in `maiya_levels.h`); encounters are met in x order. Screen text is
 plain upper-case ASCII, at most 38 characters (a guardian's taunt and reply
 40, names 30).
 
+## The Player's Guide to Hidden Things
+
+`docs/maiya_secrets.md` lists, valley by valley, where the key, the hidden
+vault and its spirit orb, the secrets, the sky lilies, the lives and the
+other special items are, and what it takes to reach each. It is written
+from these files by `python3 games/maiya/tools/secrets_doc.py`; run that
+again after changing a stage.
+
 ## Checks
 
 `levels.py` stops at the first mistake and names the file, the field and the
