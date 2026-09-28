@@ -37,11 +37,14 @@ Maiya-WIP-EagleBIOS.zip   the game's ROMs plus EagleBIOS, the free
 Maiya-WIP-AES-NeoGeoBIOS.zip  the game's ROMs with the original Asia AES
                           system BIOS and lookup ROM, for MAME:
                             mame aes -rompath roms -hashpath hash -bios asia -cart1 maiya
-Maiya-WIP-NeoSD.neo       for the NeoSD flash cart: copy it to the SD card.
-                          It uses the console's installed system BIOS.
+Maiya-WIP-NeoSD.neo       original preview image, restored byte-for-byte
+                          from commit 3e5e68a.
+Maiya-WIP-NeoSD_AES.neo   AES console build with the startup fix.
+Maiya-WIP-NeoSD_MVS.neo   MVS arcade build.
+                          Copy the appropriate image to the NeoSD card.
 
-The .neo contains cartridge data only, with no bundled system BIOS.
-These packages use the AES build with the BIOS eye-catcher disabled;
+The .neo files contain cartridge data only, with no bundled system BIOS.
+The AES packages use the AES build with the BIOS eye-catcher disabled;
 the game's own logo appears in the attract sequence.
 Physical NeoSD hardware compatibility still needs hardware testing.
 
@@ -54,10 +57,9 @@ to enter setup. Select USA or Europe as named by the package, and Console
 MAME's stock AES BIOS choices are Asia and Japan, with no separate stock
 USA or Europe option. The regional packages use unmodified UniBIOS.
 
-Maiya-WIP-NeoSD.neo is the single cartridge image for original Neo Geo
-system BIOS use in all regions. It contains no EagleBIOS or other BIOS.
-The console BIOS determines the region. No regional setting is embedded
-in .neo. All BIOS versions and physical flash carts have not been tested.
+All three .neo images use the system's installed BIOS and contain no
+EagleBIOS or other BIOS. The system BIOS determines the region.
+All BIOS versions and physical flash carts have not been tested.
 
 ENGINE WORK IN THIS BUILD
 -------------------------
@@ -65,6 +67,6 @@ ENGINE WORK IN THIS BUILD
   palette effects (valleys that brighten as they heal, colour-shaking arts)
 - painted landmarks and creatures, particle showers, formation flight
 - synthesized voices for both heroines, ADPCM music and effects
-- one ROM that runs on arcade (MVS) and console (AES)
+- separate cartridge builds for arcade (MVS) and console (AES)
 Coming next: a platform layer for MVS / AES / Neo Geo CD, a locked frame
 rate, raster effects (rippling water), more polish everywhere.
