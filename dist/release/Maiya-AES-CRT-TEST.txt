@@ -1,0 +1,65 @@
+MAIYA AES / CRT - NEOSD CONVERSION TEST
+======================================
+
+Official-tool file: Maiya-WIP-NeoSD_AES_Official.neo
+Diagnostic file: Maiya-WIP-NeoSD_AES_CRT.neo
+
+The diagnostic is the existing AES startup-fixed cartridge with optional
+region padding. Game code, graphics, palettes and display timing are
+unchanged. No system BIOS is bundled. Use your console's installed BIOS.
+
+The earlier images stored V1 at its raw length, 0x79AB00. The community
+converter neosdconv pads P/S/M/V to 64 KiB and C to 256 KiB. The diagnostic stores V1 as
+0x7A0000 bytes, appending 0x5500 bytes of FF and updating the header.
+Consequently, C starts at file offset 0x861000 instead of 0x85BB00.
+C1 and C2 are byte-interleaved, C1 first. Both deinterleave exactly to the
+source ROMs; their byte order did not need changing.
+
+The diagnostic matches neosdconv 1.0.2 byte-for-byte:
+https://github.com/city41/neosdconv/blob/master/src/buildNeoFile.ts
+
+OFFICIAL CONVERTER RESULT
+-------------------------
+Terraonion NeoBuilder v1.06 produced Maiya-WIP-NeoSD_AES_Official.neo.
+Its entire output is identical to Maiya-WIP-NeoSD_AES.neo. It preserves
+the raw V1 length and the original C1/C2 byte interleave. Therefore padding
+is not a confirmed format defect, and the official conversion does not
+resolve the reported corruption by itself. The padded image is an A/B test.
+
+Tool archive (retailer support mirror):
+https://stoneagegamer.com/content/flash/neosd/NeoBuilderUI_1.06.zip
+Run from the extracted tool directory with its DLLs and order.txt present:
+NeoBuilder.exe -n "Maiya: Super Nature Girl" -m "Eagle Software" -y 2026 -g 5 -s 0 -o OUTPUT_DIR AES_ROM_ZIP
+The input ZIP contains only the six AES ROMs named 780-p1.bin, 780-s1.bin,
+780-m1.bin, 780-v1.bin, 780-c1.bin and 780-c2.bin. A missing-screenshot
+notice is expected for this homebrew. No tool binaries are bundled here.
+
+Verification: two packing regression tests passed; all bytes of the padded
+image match neosdconv 1.0.2. The unchanged AES cartridge reaches character
+selection in MAME 0.289 with the original Japanese AES BIOS. This does not
+test NeoSD Pro flash loading or analog CRT output.
+
+Hardware report: https://www.youtube.com/watch?v=UE-T6EG9ExA
+The video preview frames show readable HUD text and scrambled sprite art.
+That suggests a graphics-data problem rather than loss of CRT sync, but
+does not prove the cause. Neither the conversion nor a sync problem has
+been established as the cause. Retest on the NeoSD Pro shown in the video.
+
+TEST
+----
+1. Copy both new files to the SD card, keeping the older files for comparison.
+2. Select and fully flash each new file into a NeoSD slot. Do not launch a
+   slot that still contains the earlier image.
+3. Use AES/Console mode and the same Japanese BIOS, CRT and cable as before.
+4. Check the character portraits, stage background, heroine and sound.
+5. Report which image was flashed, BIOS version, NeoSD firmware, and whether
+   corruption persists. A short recording of the same stage is useful.
+
+This is a conversion-only hardware test, not a confirmed fix for every CRT
+or BIOS. Existing .neo release files are preserved unchanged.
+
+REBUILD
+-------
+python3 tools/pack_neosd.py --rom-dir roms/maiya --game-id 780 --output dist/release/Maiya-WIP-NeoSD_AES_CRT.neo --name "Maiya: Super Nature Girl"
+
+The ROM directory must contain the AES build when running this command.
