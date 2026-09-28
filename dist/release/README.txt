@@ -31,13 +31,33 @@ WHAT'S IN THIS PACKAGE
 ----------------------
 Maiya-WIP-EagleBIOS.zip   the game's ROMs plus EagleBIOS, the free
                           open-source replacement system firmware, for MAME:
-                            mame neogeo -rompath roms -hashpath hash -bios euro -cart1 maiya
+                            mame aes -rompath roms -hashpath hash -bios asia -cart1 maiya
                           (checksum warnings for the replacement firmware
                           are expected)
+Maiya-WIP-AES-NeoGeoBIOS.zip  the game's ROMs with the original Asia AES
+                          system BIOS and lookup ROM, for MAME:
+                            mame aes -rompath roms -hashpath hash -bios asia -cart1 maiya
 Maiya-WIP-NeoSD.neo       for the NeoSD flash cart: copy it to the SD card.
-                          It runs on the cart's own system BIOS support.
+                          It uses the console's installed system BIOS.
 
-No SNK system BIOS is included in anything here.
+The .neo contains cartridge data only, with no bundled system BIOS.
+These packages use the AES build with the BIOS eye-catcher disabled;
+the game's own logo appears in the attract sequence.
+Physical NeoSD hardware compatibility still needs hardware testing.
+
+USA AND EUROPE
+--------------
+Maiya-WIP-AES-USA.zip and Maiya-WIP-AES-Europe.zip include UniBIOS 4.0.
+Run the command in RUN.txt, then hold A+B+C during the UniBIOS splash
+to enter setup. Select USA or Europe as named by the package, and Console
+(AES) mode. These ZIPs require this region selection on first use.
+MAME's stock AES BIOS choices are Asia and Japan, with no separate stock
+USA or Europe option. The regional packages use unmodified UniBIOS.
+
+Maiya-WIP-NeoSD.neo is the single cartridge image for original Neo Geo
+system BIOS use in all regions. It contains no EagleBIOS or other BIOS.
+The console BIOS determines the region. No regional setting is embedded
+in .neo. All BIOS versions and physical flash carts have not been tested.
 
 ENGINE WORK IN THIS BUILD
 -------------------------
