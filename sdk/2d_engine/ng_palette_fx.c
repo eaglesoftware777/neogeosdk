@@ -256,6 +256,8 @@ void NEOGEO_USER ng_palfx_vblank(void)
         for (i = 0; i < bytes; i++) ng_palfx_scr.dirty[i] = 0;
         palfx_copy_words((volatile uint16_t *)PALETTES, ng_palfx_scr.out,
                          (uint16_t)((uint16_t)ng_palfx_scr.count << 4));
+        /* $400000 is the video reference color on real hardware. */
+        *((volatile uint16_t *)PALETTES) = 0x8000u;
         return;
     }
     for (i = 0; i < bytes; i++) {
@@ -268,6 +270,8 @@ void NEOGEO_USER ng_palfx_vblank(void)
                                  ng_palfx_scr.out + ((uint16_t)bank << 4), 16u);
         }
     }
+    /* Keep the hardware reference black even while screen palette FX run. */
+    *((volatile uint16_t *)PALETTES) = 0x8000u;
 }
 #else
 /* Without the screen an effect's colours go straight to the render queue. */

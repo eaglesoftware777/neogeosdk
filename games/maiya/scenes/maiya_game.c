@@ -590,7 +590,8 @@ static void NEOGEO_USER mg_ink(uint8_t bank, uint16_t ink)
 {
     uint16_t colors[16];
     uint8_t i;
-    colors[0] = 0;
+    /* Palette 0/color 0 is the Neo Geo video reference and must stay black. */
+    colors[0] = (bank == 0u) ? 0x8000u : 0u;
     for (i = 1; i < 16; i++) colors[i] = ink;
     mg_palette(bank, colors);
 }
