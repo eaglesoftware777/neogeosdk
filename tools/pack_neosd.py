@@ -9,7 +9,7 @@ def pad(data, alignment):
     return data + b"\xff" * (-len(data) % alignment)
 
 
-def build_image(parts, name, manufacturer, year, genre, ngh):
+def build_image(parts, name, manufacturer, year, genre, ngh, hardware_alignment=True):
     if not all(parts.values()):
         raise ValueError("All six cartridge ROMs must be nonempty")
     if len(parts["p1"]) > 0x100000:
@@ -22,11 +22,13 @@ def build_image(parts, name, manufacturer, year, genre, ngh):
         raise ValueError("Name/manufacturer exceed the NeoSD header fields")
 
     p, s, m, v = (pad(parts[key], 0x10000) for key in ("p1", "s1", "m1", "v1"))
+    # NeoSD sample addressing needs a power-of-two region, not just 64 KiB.
+    if hardware_alignment:
+        v = pad(v, 1 << (len(v) - 1).bit_length())
     c = bytearray(len(parts["c1"]) * 2)
     c[0::2], c[1::2] = parts["c1"], parts["c2"]
     c = pad(bytes(c), 0x40000)
-    # Match neosdconv's optional region padding for hardware A/B tests.
-    # Official NeoBuilder 1.06 preserves raw lengths for this cartridge.
+    # Offsets are derived from padded sizes; interleave bytes, never swap lanes.
     header = bytearray(4096)
     header[:4] = b"NEO\x01"
     struct.pack_into("<10I", header, 4, len(p), len(s), len(m), len(v),
@@ -45,11 +47,14 @@ def main():
     parser.add_argument("--manufacturer", default="Eagle Software")
     parser.add_argument("--year", type=int, default=2026)
     parser.add_argument("--genre", type=int, default=5)
+    parser.add_argument("--legacy-alignment", action="store_true",
+                        help="Use 64 KiB sample padding instead of hardware padding")
     args = parser.parse_args()
     parts = {key: (args.rom_dir / f"{args.game_id}-{key}.{key}").read_bytes()
              for key in ("p1", "s1", "m1", "v1", "c1", "c2")}
     data = build_image(parts, args.name, args.manufacturer,
-                       args.year, args.genre, int(args.game_id, 16))
+                       args.year, args.genre, int(args.game_id, 16),
+                       hardware_alignment=not args.legacy_alignment)
     args.output.write_bytes(data)
     print(f"Packaged {args.output}: {len(data)} bytes")
 

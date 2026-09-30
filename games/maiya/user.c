@@ -9,6 +9,7 @@ https://github.com/eaglesoftware777/neogeosdk
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
 #include "sdk/bsp/bsp.h"
+#include "sdk/2d_engine/ng_fix.h"
 #include "games/maiya/scenes/maiya_game.h"
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
@@ -312,7 +313,7 @@ void NEOGEO_USER GAME_ATTRACT(void) {
         maiya_title();
         if (!maiya_dip_demo_sound()) { isZ80Ready(); soundApplyMix(0x00, 0x00, 0x00, 0x00); }
         for (i = 0; i < 60 * 12; i++) {
-            if (!ng_sys_is_mvs()) fixtext_out(14, 25, "PUSH START", 1);
+            if (!ng_sys_is_mvs()) ng_fix_puts(14, 25, "PUSH START", 1);
             if (attract_interrupted()) return;
             maiya_vblank();
         }
@@ -340,7 +341,7 @@ void NEOGEO_USER TITLE_WAIT(void) {
         if (MAIYA_START_LATCH || NEO_REGISTER8(BIOS_USER_MODE) == 2) break;
         if (!ng_sys_is_mvs()) {
             /* a console: no credits and no countdown, Start alone */
-            fixtext_out(14, 25, "PUSH START", 1);
+            ng_fix_puts(14, 25, "PUSH START", 1);
             if (attract_interrupted()) break;
         } else if (read_p1credit() > 0) {
             char timer[10];
@@ -350,9 +351,9 @@ void NEOGEO_USER TITLE_WAIT(void) {
             timer[6] = (char)('0' + secs / 10);
             timer[7] = (char)('0' + secs % 10);
             timer[8] = '\0';
-            fixtext_out(30, 3, timer, 3);   /* top right, clear of the painted copyright line */
-            if ((i >> 4) & 1) fixtext_out(13, 25, "PUSH 1P START", 1);
-            else fixtext_out(13, 25, "             ", 1);
+            ng_fix_puts(30, 3, timer, 3);   /* top right, clear of the painted copyright line */
+            if ((i >> 4) & 1) ng_fix_puts(13, 25, "PUSH 1P START", 1);
+            else ng_fix_puts(13, 25, "             ", 1);
             if (auto_frames > 0) auto_frames--;
             else {
                 uint16_t saved_sr;
@@ -376,8 +377,8 @@ void NEOGEO_USER TITLE_WAIT(void) {
                 if (MAIYA_START_LATCH) break;
             }
         } else {
-            fixtext_out(30, 3, "        ", 0);
-            fixtext_out(13, 25, "             ", 0);
+            ng_fix_puts(30, 3, "        ", 0);
+            ng_fix_puts(13, 25, "             ", 0);
         }
         maiya_vblank();
     }

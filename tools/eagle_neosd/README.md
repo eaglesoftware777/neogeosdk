@@ -6,6 +6,15 @@ High-performance, standalone toolchain specifically designed for Eagle Software 
 
 ## Key Capabilities & Features
 
+Hardware packaging pads V1/V2 sample regions to the next power of two (at least
+64 KiB), preserving data and appending `$FF`. Maiya's sample payload is padded to
+8 MiB automatically. Header lengths and subsequent C offsets use the padded
+sizes. Already aligned ROMs are not enlarged. Rebuild the native tool after
+updating; the GUI uses the same native packing path.
+
+See [v1.7.1 hardware-test notes](../../docs/NEOSD_V171_TEST_IMAGES.md) for the
+separate MVS sound-only and AES boot-compatible images and their validation.
+
 1. **Bidirectional Conversion**:
    - **Pack**: Loose ROMs -> `.neo` (with automated C-ROM byte interleaving).
    - **Extract / Unpack**: `.neo` -> Loose ROMs (with automated C-ROM de-interleaving).

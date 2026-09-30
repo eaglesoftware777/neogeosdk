@@ -128,6 +128,13 @@ See [asset and audio notes](assets/CREDITS.md) for the source inventory.
 
 ## Optional EagleBIOS
 
+NeoSD v1.7.1 hardware-test images and their region-preservation rules are
+documented in [NeoSD test images](../../docs/NEOSD_V171_TEST_IMAGES.md).
+The normal sound build requires P1 and M1 from the same SDK revision.
+Maiya's private FIX font/HUD occupies `$D00-$FFF`; the system boot area is
+separate. The AES BIOS logo occupies unused C bank `$49`, without shifting
+gameplay sprite tile numbers.
+
 ```sh
 make GAME=maiya all USE_EAGLE_BIOS=1
 make GAME=maiya test USE_EAGLE_BIOS=1

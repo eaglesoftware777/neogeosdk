@@ -28,6 +28,9 @@ def main():
     if not (art / "780-s1.s1").exists():
         subprocess.run([sys.executable, str(ROOT / "bios/tools/gen_sfix.py"), str(art / "780-s1.s1")], check=True)
     from build_fix_assets import inject_hud_glyphs
+    from boot_assets import install_fix
+    fix_path = art / "780-s1.s1"
+    fix_path.write_bytes(install_fix(fix_path.read_bytes()))
     inject_hud_glyphs()
     shutil.copyfile(art / "780-s1.s1", roms / "780-s1.s1")
 
