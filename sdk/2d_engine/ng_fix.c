@@ -3,6 +3,14 @@
 
 static char ng_fix_chars[NG_FIX_HEIGHT][NG_FIX_WIDTH];
 static uint8_t ng_fix_pals[NG_FIX_HEIGHT][NG_FIX_WIDTH];
+static uint16_t ng_fix_ascii_base;
+
+void NEOGEO_USER ng_fix_set_ascii_base(uint16_t tile_base)
+{
+    if (tile_base > 0xF00u || (tile_base & 0xFFu)) return;
+    ng_fix_ascii_base = tile_base;
+    ng_fix_invalidate_all();
+}
 
 void NEOGEO_USER ng_fix_blank_cell(uint8_t x, uint8_t y)
 {
@@ -110,7 +118,7 @@ void NEOGEO_USER ng_fix_putc(uint8_t x, uint8_t y, char ch, uint8_t pal)
     /* The cell's map word, as fixtext_out() writes it, without measuring a
      * one-character string first. */
     vram_sfix(0x20, (uint16_t)(FIXMAP + y + 2u + ((uint16_t)x * 32u)),
-              (uint16_t)(((uint16_t)pal << 12) | (uint8_t)ch));
+              (uint16_t)(((uint16_t)pal << 12) | (ng_fix_ascii_base + (uint8_t)ch)));
 
     ng_fix_chars[y][x] = ch;
     ng_fix_pals[y][x] = pal;

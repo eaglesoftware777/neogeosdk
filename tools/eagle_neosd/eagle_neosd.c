@@ -285,6 +285,8 @@ int neosd_pack_files(const char *out_path, const NeoSDRomSet *romset)
     uint8_t raw_hdr[NEO_HEADER_SIZE];
     FILE *out_file;
     size_t i;
+    size_t region_sizes[NEO_REGIONS_COUNT];
+    uint8_t padding[4096];
     const char *reg_names[NEO_REGIONS_COUNT] = {
         "P-ROM (68000 Program)",
         "S-ROM (Fix Layer)",
@@ -296,6 +298,23 @@ int neosd_pack_files(const char *out_path, const NeoSDRomSet *romset)
 
     if (!out_path || !romset) return -1;
 
+    memset(padding, 0xff, sizeof(padding));
+    for (i = 0; i < NEO_REGIONS_COUNT; i++) {
+        size_t size = romset->reg[i].size;
+        size_t alignment = (i == NEO_REG_C) ? 0x40000 : 0x10000;
+        if (size > UINT32_MAX - alignment + 1) return -1;
+        region_sizes[i] = (size + alignment - 1) / alignment * alignment;
+        if ((i == NEO_REG_V1 || i == NEO_REG_V2) && size) {
+            /* Sample address lines require a complete power-of-two region. */
+            size_t target = 0x10000;
+            while (target < size) {
+                if (target > UINT32_MAX / 2) return -1;
+                target *= 2;
+            }
+            region_sizes[i] = target;
+        }
+    }
+
     memset(raw_hdr, 0, NEO_HEADER_SIZE);
     raw_hdr[0] = 'N';
     raw_hdr[1] = 'E';
@@ -303,12 +322,8 @@ int neosd_pack_files(const char *out_path, const NeoSDRomSet *romset)
     raw_hdr[3] = 0x01;
 
     /* Sizes */
-    put_u32_le(raw_hdr + 4,  (uint32_t)romset->reg[NEO_REG_P].size);
-    put_u32_le(raw_hdr + 8,  (uint32_t)romset->reg[NEO_REG_S].size);
-    put_u32_le(raw_hdr + 12, (uint32_t)romset->reg[NEO_REG_M].size);
-    put_u32_le(raw_hdr + 16, (uint32_t)romset->reg[NEO_REG_V1].size);
-    put_u32_le(raw_hdr + 20, (uint32_t)romset->reg[NEO_REG_V2].size);
-    put_u32_le(raw_hdr + 24, (uint32_t)romset->reg[NEO_REG_C].size);
+    for (i = 0; i < NEO_REGIONS_COUNT; i++)
+        put_u32_le(raw_hdr + 4 + i * 4, (uint32_t)region_sizes[i]);
 
     /* Metadata */
     put_u32_le(raw_hdr + 28, romset->opt.year ? romset->opt.year : 2026);
@@ -365,6 +380,17 @@ int neosd_pack_files(const char *out_path, const NeoSDRomSet *romset)
                 fprintf(stderr, "Error writing region %zu to output file.\n", i);
                 fclose(out_file);
                 return -1;
+            }
+        }
+        {
+            size_t remaining = region_sizes[i] - sz;
+            while (remaining) {
+                size_t count = remaining < sizeof(padding) ? remaining : sizeof(padding);
+                if (fwrite(padding, 1, count, out_file) != count) {
+                    fclose(out_file);
+                    return -1;
+                }
+                remaining -= count;
             }
         }
     }

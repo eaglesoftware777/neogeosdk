@@ -659,7 +659,7 @@ void NEOGEO_USER soundCommand(uint8_t command) {
 	}
 	isZ80Ready();
 }
-void NEOGEO_USER soundInit(void) { soundCommand(0x01); }
+void NEOGEO_USER soundInit(void) { soundCommand(0x09); }
 void NEOGEO_USER soundReset(void) { soundCommand(0x03); }
 void NEOGEO_USER soundStopAll(void) { soundCommand(0x04); }
 void NEOGEO_USER soundStopMusic(void) { soundCommand(0x0F); }

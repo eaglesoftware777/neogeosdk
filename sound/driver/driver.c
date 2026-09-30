@@ -222,7 +222,7 @@ void execute_command(void) {
     }
 
     if (var_command == 0) return;
-    if (var_command == 0x01) { driver_init(); return; }
+    if (var_command == 0x01 || var_command == 0x09) { driver_init(); return; }
     if (var_command == 0x03) { driver_init(); return; }
     if (var_command == 0x05) { var_param_mode = 1; var_wait_tempo = 2; return; }
     if (var_command == 0x06) { var_param_mode = 1; var_wait_tempo = 3; return; }

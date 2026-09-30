@@ -219,14 +219,11 @@ uint32_t psize  __attribute__ ((section ("neogeo_init"))) = 		0x80000;
  * so nothing the game declares can land in it. */
 uint32_t pbcks __attribute__ ((section ("neogeo_init"))) = 		0x100400;
 uint16_t dipsize  __attribute__ ((section ("neogeo_init"))) = 		0x0400;  /* save block size */
-/* 2 = no eye-catcher at all. The console's system ROM draws its own logo
- * (0) from sprite and FIX tiles a cart is expected to carry, which Maiya's
- * ROMs don't -- garbage on screen; and it calls a game's own eye-catcher
- * (1) with every interrupt masked, where EYE_CATCHER waits for vertical
- * blanks that never come -- a black screen for good. Her house logo is
- * drawn at the head of the attract instead. */
-uint8_t bioslogoflag __attribute__ ((section ("neogeo_init"))) = 	0x02;
-uint8_t bioslogotile __attribute__ ((section ("neogeo_init"))) = 	0x00;
+/* Let the BIOS animate the isolated logo bank. The game draws its house
+ * intro later, with VBlank available; it does not run inside the masked
+ * cartridge eye-catcher callback. */
+uint8_t bioslogoflag __attribute__ ((section ("neogeo_init"))) = 	0x00;
+uint8_t bioslogotile __attribute__ ((section ("neogeo_init"))) = 	0x49;
 /********************************************************************/
 /* neogeo_entry */
 uint32_t NEOGEO_ENT0[]  __attribute__ ((section ("neogeo_entry"))) = {0x00000200, 0x00000200, 0x00000200};  /* one soft DIP table, all regions */
@@ -310,4 +307,3 @@ struct SOFT_DIP_TABLE SOFT_DIPS __attribute__ ((section ("neogeo_gamedata"))) = 
 		{'W','I','T','H','O','U','T',' ',' ',' ',' ',' '},
 	}
 };
-

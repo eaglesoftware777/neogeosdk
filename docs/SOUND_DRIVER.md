@@ -243,13 +243,14 @@ wrapper yet — `playSoundtest(index)` in `sdk/neogeolib.c` sends one directly.
 
 | Byte | Meaning |
 |---|---|
-| `$01` | Driver init |
+| `$01` | BIOS prepare-slot-switch: stop sound/timers, acknowledge and wait in RAM |
 | `$02` | BIOS eyecatcher / boot music (mapped to music track 1) |
-| `$03` | Driver soft reset |
+| `$03` | Game soft reset; restart the selected driver when waiting for a BIOS slot switch |
 | `$04` | Stop all playback |
 | `$05` *n* | ADPCM-A volume |
 | `$06` *n* | ADPCM-B volume |
 | `$07` *n* | SSG music volume |
+| `$09` | Game driver init (`soundInit()`); rebuild P1 and M1 together |
 | `$0A` *n* | Fade-out speed |
 | `$0C` | Stop ADPCM-A only |
 | `$0D` | Stop ADPCM-B only |
@@ -427,4 +428,3 @@ effects and nine of his tracks, converted for the YM2610; the file-by-file
 list is in `games/maiya/sound/SOURCES.md`.  His generosity is what lets an
 open SDK ship a game that sounds like an arcade cabinet, and it is
 acknowledged here with thanks.
-

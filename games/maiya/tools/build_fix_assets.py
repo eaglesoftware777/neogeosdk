@@ -224,10 +224,9 @@ def draw_countdown():
 # ---------------------------------------------------------------------------
 #  HUD glyphs injected straight into the FIX ROM
 #
-#  fixtext_out() can only address FIX tiles 0..255, and the imported infix
-#  sheets land far above that, so the handful of icons the HUD prints as text
-#  (lives, roses, the Sun Key, coins) are written into the low, unused codes
-#  here.  They are drawn on pen 1 alone: the HUD palettes are flat inks, so a
+#  HUD icons live in the private $D00 FIX page, away from BIOS boot tiles.
+#  They are drawn with full 12-bit tile calls, not truncated char values.
+#  Most icons use pen 1 alone: the HUD palettes are flat inks, so a
 #  silhouette takes whatever colour it is printed in.
 #
 #  Re-run this script after any `make art` rebuild of 780-s1.s1.
@@ -390,7 +389,7 @@ _COL_PAIRS = [(4, 5), (6, 7), (0, 1), (2, 3)]
 #  a run of the S1 ROM the art build leaves empty.
 # ---------------------------------------------------------------------------
 
-BAR_TILE_BASE = 0x180
+BAR_TILE_BASE = 0xE80
 BAR_CAP_FILL = 5          # fill pixels carried by each cap
 BAR_CELL_FILL = 8         # fill pixels carried by each middle cell
 
@@ -526,10 +525,11 @@ def inject_hud_glyphs():
         return
     rom = bytearray(S1_PATH.read_bytes())
     for code, rows in GLYPHS.items():
-        rom[code * 32:(code + 1) * 32] = encode_fix_tile(rows)
+        tile = 0xD00 + code
+        rom[tile * 32:(tile + 1) * 32] = encode_fix_tile(rows)
     # The life heart in three pens -- 1 outline, 4 fill, 3 shine -- drawn with
     # the red health-bar palette, so it keeps an edge against a red sky.
-    rom[0x01 * 32:0x02 * 32] = encode_fix_pens(heart_pens())
+    rom[0xD01 * 32:0xD02 * 32] = encode_fix_pens(heart_pens())
     bars = bar_tiles()
     bars.update(frame_tiles())
     ours = {encode_fix_pens(p) for p in bars.values()}

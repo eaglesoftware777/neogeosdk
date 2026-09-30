@@ -1744,6 +1744,14 @@ def build():
     title_base, title_pals = append("title", title_arr, banks=16, bank_base=16)
     header.append("#define MG_TITLE_PAL_BANK 16u")
 
+    from boot_assets import BOOT_C_BANK, logo_lanes
+    boot_offset = BOOT_C_BANK * 256 * 64
+    if c1.tell() > boot_offset:
+        raise ValueError("Maiya graphics overlap the reserved BIOS logo bank")
+    for stream, lane in zip((c1, c2), logo_lanes()):
+        stream.write(bytes(boot_offset - stream.tell()))
+        # The final output below swaps every pair, so undo the logo's final wiring.
+        stream.write(np.frombuffer(lane, dtype=np.uint8).reshape(-1, 2)[:, ::-1].tobytes())
     write_utility_tiles(c1, c2)
 
     # Output C-ROM pair

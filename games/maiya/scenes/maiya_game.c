@@ -187,7 +187,7 @@ enum {
     MG_BONUS_LIFE_SCORE_FIRST = 20000,
     MG_BOSS_BAR_COL = 12, MG_BOSS_BAR_LABEL_COL = 7,
     /* Framed bar tiles (see mg_draw_bar) and the two bars' sizes. */
-    MG_BAR_TILE = 0x180, MG_BAR_CELL_TILE = MG_BAR_TILE + 6, MG_BAR_RCAP_TILE = MG_BAR_TILE + 15,
+    MG_BAR_TILE = 0xE80, MG_BAR_CELL_TILE = MG_BAR_TILE + 6, MG_BAR_RCAP_TILE = MG_BAR_TILE + 15,
     MG_FRAME_TILE = MG_BAR_TILE + 21,   /* the select screen's card frame: TL T TR L R BL B BR */
     MG_HP_BAR_COL = 10, MG_HP_BAR_CELLS = 8, MG_HP_BAR_PX = 5 + MG_HP_BAR_CELLS * 8 + 5,
     MG_BOSS_BAR_CELLS = 18, MG_BOSS_BAR_PX = 5 + MG_BOSS_BAR_CELLS * 8 + 5,
@@ -197,11 +197,11 @@ enum {
     ROW_SCORE = 2, ROW_LIVES = 4, ROW_POWER = 5, ROW_COMBO = 6, ROW_HINT = 7, ROW_CARD = 8,
     MG_PAUSE_ROW = 12,               /* PAUSE, in the mission card's space */
 
-    /* HUD glyphs written into the low FIX codes by build_fix_assets.py. */
-    GLYPH_HEART = 1, GLYPH_ROSE = 2, GLYPH_KEY = 3, GLYPH_COIN = 4,
-    GLYPH_LEAF = 5, GLYPH_SPARK = 6, GLYPH_BLOCK = 7, GLYPH_DOT = 8,
-    GLYPH_FLOWER = 9, GLYPH_FRIEND = 10, GLYPH_BERRY = 11, GLYPH_ORB = 12,
-    GLYPH_BUD = 13, GLYPH_CROWN = 14,
+    /* Private FIX tiles do not overlap the BIOS boot layout. */
+    GLYPH_HEART = 0xD01, GLYPH_ROSE = 0xD02, GLYPH_KEY = 0xD03, GLYPH_COIN = 0xD04,
+    GLYPH_LEAF = 0xD05, GLYPH_SPARK = 0xD06, GLYPH_BLOCK = 0xD07, GLYPH_DOT = 0xD08,
+    GLYPH_FLOWER = 0xD09, GLYPH_FRIEND = 0xD0A, GLYPH_BERRY = 0xD0B, GLYPH_ORB = 0xD0C,
+    GLYPH_BUD = 0xD0D, GLYPH_CROWN = 0xD0E,
     ROW_TRAY = 26,                   /* the collection tray, bottom left  */
     MG_TRAY_ICON_SCALE = 0x60,       /* small badge icons, not a HUD bar  */
     MG_TRAY_ICON_PX = 13,            /* ~32px source shrunk by the above  */
@@ -3853,8 +3853,8 @@ static uint8_t NEOGEO_USER mg_logo_word(const uint8_t *word, uint8_t len,
         for (row = 0; row < 5; row++) {
             for (col = 0; col < 3; col++) {
                 if (glyph[row] & (uint8_t)(4u >> col)) {
-                    ng_fix_putc((uint8_t)(left + i * 4 + col),
-                                (uint8_t)(top + row), (char)GLYPH_BLOCK, pal);
+                    ng_fix_put_tile((uint8_t)(left + i * 4 + col),
+                                    (uint8_t)(top + row), GLYPH_BLOCK, pal);
                 }
             }
         }
@@ -3878,6 +3878,7 @@ void NEOGEO_USER maiya_eyecatcher(void)
     clearFix();
     mg_backdrop(BLACK);
     ng_fix_init();
+    ng_fix_set_ascii_base(0xD00u);
     ng_fix_clear();
     mg_ui_palettes();
     maiya_vblank();
@@ -3893,7 +3894,7 @@ void NEOGEO_USER maiya_eyecatcher(void)
         mg_logo_word(mg_logo_software, 8, 4, 17, PAL_TEXT)) goto done;
 
     for (i = 0; i < 8; i++) {
-        ng_fix_putc((uint8_t)(9 + i * 3), 24, (char)GLYPH_SPARK, PAL_GOLD);
+        ng_fix_put_tile((uint8_t)(9 + i * 3), 24, GLYPH_SPARK, PAL_GOLD);
         if (mg_logo_wait(2)) goto done;
     }
     ng_fix_puts(16, 27, "PRESENTS", PAL_SKY);
@@ -4065,6 +4066,7 @@ void NEOGEO_USER maiya_title(void)
     NGSpriteGroup title_vis;
     ng_sprite_hide_all();
     ng_fix_init();
+    ng_fix_set_ascii_base(0xD00u);
     mg_ui_palettes();
 
     /* Load title visual: sixteen palettes, one picked per tile. */
@@ -6986,8 +6988,10 @@ static void NEOGEO_USER mg_draw_lives(void)
 {
     uint8_t i;
     for (i = 0; i < 6; i++) {
-        ng_fix_putc((uint8_t)(28 + i), ROW_LIVES,
-                    (char)(i < mg.lives ? GLYPH_HEART : ' '), PAL_HP_LO);
+        if (i < mg.lives)
+            ng_fix_put_tile((uint8_t)(28 + i), ROW_LIVES, GLYPH_HEART, PAL_HP_LO);
+        else
+            ng_fix_blank_cell((uint8_t)(28 + i), ROW_LIVES);
     }
 }
 

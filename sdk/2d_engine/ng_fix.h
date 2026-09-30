@@ -13,6 +13,8 @@ extern "C" {
 #define NG_FIX_SAFE_HEIGHT  28
 
 void NEOGEO_USER ng_fix_init(void);
+/* Select the 256-tile ASCII page; 0 preserves the standard SDK layout. */
+void NEOGEO_USER ng_fix_set_ascii_base(uint16_t tile_base);
 void NEOGEO_USER ng_fix_invalidate_all(void);
 void NEOGEO_USER ng_fix_clear(void);
 void NEOGEO_USER ng_fix_clear_rect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t pal);
