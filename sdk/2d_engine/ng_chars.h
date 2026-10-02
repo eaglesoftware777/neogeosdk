@@ -127,6 +127,8 @@ struct NGCharacter {
 };
 
 void NEOGEO_USER ng_chars_init(void);
+/* Default 1 sorts each priority band by Y. Use 0 for stable side-view order. */
+void NEOGEO_USER ng_chars_set_depth_sort(uint8_t enabled);
 NGCharacter* NEOGEO_USER chars_add(uint8_t kind, int16_t x, int16_t y);
 void NEOGEO_USER ng_chars_remove(NGCharacter *c);
 void NEOGEO_USER ng_chars_clear_kind(uint8_t kind);

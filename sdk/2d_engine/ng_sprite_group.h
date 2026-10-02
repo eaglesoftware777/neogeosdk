@@ -47,6 +47,11 @@ typedef struct {
     uint8_t visible;
     uint8_t dirty;      /* bitmask of NG_SGF_DIRTY_* flags */
     const uint8_t *tilePalettes;
+    /* Footprint whose transparent padding is already resident in VRAM. */
+    uint16_t mapFirst;
+    uint8_t mapStrips;
+    uint8_t mapHeight;
+    uint8_t mapRows;
 } NGSpriteGroup;
 
 void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette);

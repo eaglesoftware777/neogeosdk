@@ -57,7 +57,7 @@ static inline void NEOGEO_USER ngsg_fill(uint16_t addr, uint16_t first, uint16_t
         "move.w %[rest],2(%[p])\n"      /* 12 clocks, then the dbf   */
         "2:\n\t"
         "dbf %[n],1b"
-        : [n] "+d" (n)
+        : [n] "+&d" (n)
         : [p] "a" (VRAM_ADDR), [addr] "d" (addr), [first] "d" (first), [rest] "d" (rest)
         : "cc", "memory");
 }
@@ -105,8 +105,8 @@ static void NEOGEO_USER ngsg_put_strip(uint16_t addr, uint16_t tile, int16_t ste
         "move.w %[ba],(%[p])\n\t"
         "dbf %[blank],4b\n"
         "5:"
-        : [p] "+a" (p), [pm] "+a" (pm), [tile] "+d" (tile), [art] "+d" (art),
-          [blank] "+d" (blank), [w] "=&d" (w)
+        : [p] "+&a" (p), [pm] "+&a" (pm), [tile] "+&d" (tile), [art] "+&d" (art),
+          [blank] "+&d" (blank), [w] "=&d" (w)
         : [addr] "d" (addr), [step] "d" (step), [attr] "d" (attr),
           [bt] "i" (NG_SPRITE_BLANK_TILE), [ba] "i" (NG_SPRITE_BLANK_ATTR)
         : "cc", "memory");
@@ -198,15 +198,20 @@ static uint16_t NEOGEO_USER ngsg_attr(const NGSpriteGroup *g)
  * its page column from the far side when mirrored, and its rows bottom up
  * when flipped: the tile and the bank map then step back a row at a time.
  */
-static void NEOGEO_USER ngsg_put_map(const NGSpriteGroup *g, uint8_t rows)
+static void NEOGEO_USER ngsg_put_map(NGSpriteGroup *g, uint8_t rows, uint8_t force)
 {
     uint8_t mapRows = ng_sprite_map_rows(rows);
     uint8_t art = g->heightTiles < mapRows ? g->heightTiles : mapRows;
+    uint8_t blank = (uint8_t)(mapRows - art);
     uint16_t attr = ngsg_attr(g);
     int16_t step = (int16_t)g->tileStride;
     uint16_t start = 0;
     uint16_t addr = (uint16_t)(64u * g->firstSprite);
     uint8_t strip;
+
+    if (!force && g->mapRows >= mapRows && g->mapFirst == g->firstSprite &&
+        g->mapStrips == g->strips && g->mapHeight == g->heightTiles)
+        blank = 0u;
 
     if (g->vflip) {
         start = (uint16_t)((uint16_t)(g->heightTiles - 1u) * g->tileStride);
@@ -216,8 +221,12 @@ static void NEOGEO_USER ngsg_put_map(const NGSpriteGroup *g, uint8_t rows)
         uint16_t first = (uint16_t)(start + (g->hflip ? (uint8_t)(g->strips - 1u - strip) : strip));
         ngsg_put_strip(addr, (uint16_t)(g->tileBase + first), step, attr,
                        g->tilePalettes ? g->tilePalettes + first : 0,
-                       art, (uint16_t)(mapRows - art));
+                       art, blank);
     }
+    g->mapFirst = g->firstSprite;
+    g->mapStrips = g->strips;
+    g->mapHeight = g->heightTiles;
+    g->mapRows = mapRows;
 }
 
 void NEOGEO_USER ng_sprite_group_set_palette_map(NGSpriteGroup *g, const uint8_t *banks)
@@ -378,6 +387,9 @@ void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, ui
     g->autoAnim8 = 0;
     g->visible = 1;
     g->dirty = NG_SGF_DIRTY_ALL;   /* force full upload on first draw */
+    g->mapRows = 0u;
+    g->mapFirst = 0xffffu;
+    g->mapStrips = g->mapHeight = 0u;
 }
 
 void NEOGEO_USER ng_sprite_group_mark_dirty(NGSpriteGroup *g, uint8_t dirty_flags)
@@ -508,7 +520,7 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
 
     rows = ngsg_rows(g);
     n = g->strips;
-    ngsg_put_map(g, rows);
+    ngsg_put_map(g, rows, 1u);
     /*
      * The driving strip owns X, Y, the height and the vertical shrink; the
      * chained (sticky) strips carry the chain bit (0x40) and a copy of the
@@ -558,6 +570,7 @@ void NEOGEO_USER ng_sprite_group_hide(NGSpriteGroup *g)
 {
     if (!g) return;
     ng_sprite_hide_range(g->firstSprite, g->strips);
+    g->mapRows = 0u;
 }
 
 /*
@@ -593,7 +606,10 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
     rows = ngsg_rows(g);
 
     /* SCB1 tile + attribute upload — only when tile or palette changed */
-    if (dirty & (NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_PALETTE)) ngsg_put_map(g, rows);
+    if ((dirty & (NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_PALETTE)) ||
+        g->mapRows < ng_sprite_map_rows(rows) || g->mapFirst != g->firstSprite ||
+        g->mapStrips != g->strips || g->mapHeight != g->heightTiles)
+        ngsg_put_map(g, rows, (uint8_t)(dirty == NG_SGF_DIRTY_ALL));
 
     /* SCB2 shrink upload */
     if (dirty & NG_SGF_DIRTY_SHRINK)

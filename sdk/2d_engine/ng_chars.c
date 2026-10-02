@@ -2,12 +2,15 @@
 #include "ng_actions.h"
 #include "ng_level.h"
 #include "ng_sprite_pool.h"
+#include "ng_char_render.h"
 
 static NGCharacter ng_chars[NG_MAX_CHARS];
 static NGCharInterupt ng_char_interupts[NG_MAX_CHAR_KINDS];
 
 static uint8_t ng_char_uploaded_strips[NG_MAX_CHARS];
 static uint16_t ng_char_uploaded_first[NG_MAX_CHARS];
+static NGSpriteGroup ng_char_groups[NG_MAX_CHARS];
+static uint8_t ng_char_depth_sort = 1u;
 static uint8_t ng_palette_owner[64];
 static uint8_t ng_default_arena_id;
 static uint8_t ng_fixed_updates_per_frame = 1u;
@@ -95,6 +98,7 @@ void NEOGEO_USER ng_chars_init(void)
     }
 
     ng_chars_active_top = 0;
+    ng_char_depth_sort = 1u;
     ng_default_arena_id = 0u;
     ng_fixed_updates_per_frame = 1u;
 }
@@ -418,11 +422,17 @@ static uint8_t NEOGEO_USER ng_char_draws_before(NGCharacter *a, NGCharacter *b)
         return (uint8_t)(a->priority_band < b->priority_band);
     }
 
+    if (!ng_char_depth_sort) return 1u;
     ay = ng_char_sort_y(a);
     by = ng_char_sort_y(b);
 
     /* Greater Y = lower on screen = nearer, so it must be assigned later. */
-    return (uint8_t)(ay < by);
+    return (uint8_t)(ay <= by);
+}
+
+void NEOGEO_USER ng_chars_set_depth_sort(uint8_t enabled)
+{
+    ng_char_depth_sort = enabled ? 1u : 0u;
 }
 
 /*
@@ -513,7 +523,8 @@ void NEOGEO_USER ng_chars_draw(void)
             break;
         }
 
-        if (c->sprite_first != next_slot) {
+        if (c->sprite_first != next_slot ||
+            ng_char_uploaded_strips[idx] != visibleStrips) {
             if (ng_char_uploaded_first[idx] != 0xffff) {
                 chars_hide_uploaded(idx);
                 ng_char_uploaded_strips[idx] = 0;
@@ -542,54 +553,16 @@ void NEOGEO_USER ng_chars_draw(void)
     for (i = 0; i < count; i++) {
         uint8_t idx = order[i];
         NGCharacter *c = &ng_chars[idx];
-        NGSpriteGroup g;
         uint8_t visibleStrips;
 
         visibleStrips = c->sprite_strips ? c->sprite_strips : 1;
         if (visibleStrips > NG_SPRITE_MAX_STRIPS) visibleStrips = NG_SPRITE_MAX_STRIPS;
 
-        ng_sprite_group_init(
-            &g,
-            c->sprite_first,
-            visibleStrips,
-            c->sprite_height ? c->sprite_height : 1,
-            c->sprite_tile,
-            c->palette
-        );
-        ng_sprite_group_set_tile_stride(&g, c->sprite_stride ? c->sprite_stride : visibleStrips);
-        ng_sprite_group_set_palette_map(&g, c->sprite_palette_map);
-        ng_sprite_group_set_active_rows(&g, c->sprite_active_rows ? c->sprite_active_rows : g.heightTiles);
-        ng_sprite_group_set_pos(&g,
-            (int16_t)(c->x + c->sprite_offset_x - camera_x),
-            (int16_t)(c->y + c->sprite_offset_y - camera_y));
-        ng_sprite_group_set_scale(&g, c->scale_x, c->scale_y);
-        ng_sprite_group_set_flip(&g, c->flip_x, c->flip_y);
-
-        /* Tail clear: only the slots that this char ACTUALLY used
-         * last frame and is no longer using.  Previously we wiped
-         * the full NG_SPRITE_MAX_STRIPS (=32) window every frame,
-         * which clobbered up to 26 unrelated slots and pushed the
-         * vblank past its budget — the horizontal-strip / black-
-         * box artefacts came from those overruns spilling into
-         * active video. */
-        if (c->sprite_dirty) {
-            uint8_t prev = ng_char_uploaded_strips[idx];
-            if (prev > visibleStrips) {
-                ng_sprite_hide_range((uint16_t)(c->sprite_first + visibleStrips),
-                                     (uint16_t)(prev - visibleStrips));
-            }
-            ng_sprite_group_upload(&g);
-            ng_char_uploaded_strips[idx] = visibleStrips;
-            ng_char_uploaded_first[idx]  = c->sprite_first;
-            c->sprite_dirty = 0;
-        } else {
-            uint8_t prev = ng_char_uploaded_strips[idx];
-            ng_sprite_group_update_transform(&g);
-            if (prev > visibleStrips) {
-                ng_sprite_hide_range((uint16_t)(c->sprite_first + visibleStrips),
-                                     (uint16_t)(prev - visibleStrips));
-            }
-        }
+        ng_char_sync_group(&ng_char_groups[idx], c, visibleStrips,
+                           (uint8_t)(ng_char_uploaded_first[idx] == 0xffffu),
+                           camera_x, camera_y);
+        ng_char_uploaded_strips[idx] = visibleStrips;
+        ng_char_uploaded_first[idx] = c->sprite_first;
     }
 }
 

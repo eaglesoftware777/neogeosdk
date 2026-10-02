@@ -52,16 +52,21 @@ wasted.  Use:
 Only set bits get written to VRAM.  A static sprite costs zero VRAM writes
 per frame after initial upload.
 
-## Rule 7: VBlank-Safe Queues
+## Rule 7: Schedule VRAM and Palette Writes
 
-All VRAM and palette writes go through `ng_render_queue`.
-Game logic posts commands; `ng_render_queue_flush()` applies them at VBlank.
-Never write directly to `VRAM_ADDR`/`VRAM_RW` in game logic.
+The render queue batches queued commands, but sprite-group flushes also write
+VRAM directly. Keep those writes together in the draw phase, avoid duplicate
+full uploads, and measure whether the work fits the frame budget. Palette
+changes should use the palette API so their upload occurs at the intended
+sync point.
 
 ## Rule 8: Do Not Update Unchanged Sprites
 
-The dirty-flag system in `NGSpriteGroup` and the render queue enforce this.
-The Y-depth sorter in `ng_chars.c` re-assigns slots only when sort order changes.
+`NGSpriteGroup` retains its uploaded map footprint and skips unchanged fields.
+The character manager retains a group per character. Avoid needless tile or
+palette invalidation in scene code; those fields trigger SCB1 uploads. Use
+`ng_chars_set_depth_sort(0)` where fixed priority bands are sufficient, so
+changing Y positions do not cause slot reassignment.
 
 ## Rule 9: Prefer Pre-Baked ROM Assets
 

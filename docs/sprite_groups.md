@@ -21,6 +21,9 @@ when the character moves.
 - Dirty-flag system avoids redundant VRAM writes: only changed attributes are
   uploaded each frame.
 - `ng_sprite_group_flush()` checks `g->dirty` and skips unchanged SCB regions.
+- The group remembers its last SCB1 footprint. Frame changes rewrite occupied
+  tiles; blank padding is written again only when the footprint grows or a
+  hidden group is restored.
 
 ## Dirty Flags
 
@@ -45,7 +48,7 @@ ng_sprite_group_init(&player, 0, 4, 8, 0x100, 2);
 
 // Game loop:
 ng_sprite_group_set_pos(&player, x, y);   // sets DIRTY_POS automatically
-ng_sprite_group_flush(&player);            // writes only SCB3/4; zero wasted writes
+ng_sprite_group_flush(&player);            // writes the driver position when moved
 ```
 
 ## Common Mistakes
@@ -60,6 +63,12 @@ ng_sprite_group_flush(&player);            // writes only SCB3/4; zero wasted wr
 
 - For static backgrounds: call `ng_sprite_group_upload()` once at scene load.
   Never call it again unless the tile set changes.
-- For moving characters: use `ng_sprite_group_set_pos()` + `ng_sprite_group_flush()`
-  each frame (writes SCB3+SCB4 only = 2 × 2 words = 8 bytes per strip).
+- For moving characters: keep the same group between frames and use
+  `ng_sprite_group_set_pos()` + `ng_sprite_group_flush()`. Position-only updates
+  write the driver strip's SCB3 and SCB4; scale or visibility changes also
+  refresh the chained strips.
+- `ng_chars_draw()` retains one group per character and hides an old slot window
+  before assigning a new one. Call `ng_chars_set_depth_sort(0)` for a scene
+  whose priority bands already define a fixed order; restore `1` when Y-depth
+  sorting is needed.
 - Limit groups to ≤ 380 total hardware slots across all active groups.
