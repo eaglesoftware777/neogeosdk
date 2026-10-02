@@ -8,6 +8,8 @@ local scenario = os.getenv('MG_SCENARIO') or 'walk'
 local aes = os.getenv('MG_PLATFORM') == 'aes'
 local testing_continue = scenario:sub(1, 8) == 'continue'
 local log = assert(io.open(output .. '/telemetry.jsonl', 'w'))
+local frames = assert(io.open(output .. '/frames.csv', 'w'))
+frames:write('time,tick,state,stage,x,y,boss_x,ship_z,scale_x,scale_y,arena_left\n')
 local next_capture, placed, play_frame, continue_frame = 0, false, 0, 0
 local pit_step, pit_wait = 0, 0
 local pit_after, pit_after_frame = false, 0
@@ -51,6 +53,14 @@ emu.register_frame_done(function()
     end
     local mode = memory:read_u8(0x10fdaf)
     if p ~= 0 and mode == 2 and u8('demo') == 0 then
+        local boss = memory:read_u32(a.boss)
+        local valid_boss = boss >= 0x100000 and boss <= 0x10efff
+        frames:write(string.format('%.6f,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n',
+            t, memory:read_u16(a.tick), u8('state'), u8('stage'), s16(p + a.char_x),
+            s16(p + a.char_y), valid_boss and s16(boss + a.char_x) or 0, u8('ship_z'),
+            valid_boss and memory:read_u8(boss + a.char_scale_x) or 0,
+            valid_boss and memory:read_u8(boss + a.char_scale_y) or 0,
+            s16(a.arena_left)))
         play_frame = play_frame + 1
         if not placed and u8('state') == 1 then
             placed = true
@@ -98,21 +108,34 @@ emu.register_frame_done(function()
                 w8('state', 8)
                 memory:write_u16(a.state_timer, 1)
             end
+            if scenario == 'flight' then
+                w8('next_stage', 10)
+                w8('state', 8)
+                memory:write_u16(a.state_timer, 1)
+            end
+        end
+        if scenario == 'flight' and u8('stage') == 10 and u8('state') == 1 then
+            if u8('boss_active') == 0 then
+                local arena = s16(a.arena_left)
+                memory:write_u16(a.fly_x, arena)
+                position(p, arena + 64, 130)
+            end
+            memory:write_u8(p + a.char_hp, 5)
         end
         -- Once the interlude has dropped her into Valley of Falls, drive a
-        -- fixed sequence past its first pit (x=560, width=48): approach and
+        -- fixed sequence past its first pit (x=464, width=48): approach and
         -- stand at the lip, jump it, then a second pass that walks straight
         -- in without jumping, to confirm the fall (and the one-life cost)
         -- actually happens.
         if scenario == 'pit' and u8('stage') == 1 and u8('state') == 1 and p ~= 0 then
             local x = s16(p + a.char_x)
             if pit_step == 0 then
-                position(p, 460, 192)
+                position(p, 380, 192)
                 memory:write_u8(p + a.char_hp, 5)
                 pit_step, pit_wait = 1, 0
             elseif pit_step == 1 then
                 input('P1 Right', true)
-                if x >= 548 then pit_step, pit_wait = 15, 0 end
+                if x >= 446 then pit_step, pit_wait = 15, 0 end
             elseif pit_step == 15 then
                 input('P1 Right', false)   -- stop and stand at the lip first
                 pit_wait = pit_wait + 1
@@ -121,22 +144,21 @@ emu.register_frame_done(function()
             elseif pit_step == 2 then
                 input('P1 Right', true)
                 pit_wait = pit_wait + 1
-                if pit_wait == 6 then input('P1 A', true) end
-                if pit_wait == 12 then input('P1 A', false) end
+                input('P1 A', pit_wait >= 2 and pit_wait < 8)
                 if pit_wait == 20 then screen:snapshot(output .. '/pit_02_mid_jump.png') end
-                if pit_wait == 40 then
+                if pit_wait == 50 then
                     screen:snapshot(output .. '/pit_03_after_jump.png')
                     pit_step, pit_wait = 3, 0
                 end
             elseif pit_step == 3 then
                 input('P1 Right', false)
-                position(p, 460, 192)
+                position(p, 380, 192)
                 memory:write_u8(p + a.char_hp, 5)
                 w8('lives', 3)
                 pit_step, pit_wait = 4, 0
             elseif pit_step == 4 then
                 input('P1 Right', true)
-                if x >= 555 then
+                if x >= 455 then
                     screen:snapshot(output .. '/pit_04_before_fall.png')
                     pit_step, pit_wait = 5, 0
                 end
@@ -158,12 +180,19 @@ emu.register_frame_done(function()
         if pit_after and play_frame - pit_after_frame == 200 then
             screen:snapshot(output .. '/pit_07_respawned.png')
         end
-        input('P1 Right', scenario == 'walk' or (scenario == 'bonus' and play_frame % 240 < 120))
+        if scenario ~= 'pit' then
+            input('P1 Right', scenario == 'walk' or (scenario == 'bonus' and play_frame % 240 < 120) or
+                  (scenario == 'flight' and u8('stage') == 10 and u8('state') == 1))
+            input('P1 A', (scenario == 'walk' or scenario == 'bonus') and play_frame % 180 < 6)
+        end
         input('P1 Left', scenario == 'boss' or (scenario == 'bonus' and play_frame % 240 >= 120))
-        input('P1 Up', scenario == 'climb' and placed and play_frame < 210)
-        input('P1 Down', scenario == 'climb' and play_frame >= 240 and play_frame < 390)
-        input('P1 A', (scenario == 'walk' or scenario == 'bonus') and play_frame % 180 < 6)
-        input('P1 B', (scenario == 'walk' or scenario == 'bonus') and play_frame % 24 < 6)
+        input('P1 Up', (scenario == 'climb' and placed and play_frame < 210) or
+              (scenario == 'flight' and u8('stage') == 10 and play_frame % 240 < 120))
+        input('P1 Down', (scenario == 'climb' and play_frame >= 240 and play_frame < 390) or
+              (scenario == 'flight' and u8('stage') == 10 and play_frame % 240 >= 120))
+        input('P1 B', ((scenario == 'walk' or scenario == 'bonus') and play_frame % 24 < 6) or
+              (scenario == 'flight' and u8('stage') == 10 and play_frame % 16 < 4) or
+              (scenario == 'pit' and pit_step == 2))
         input('P1 D', false)
         if scenario == 'pickups' and placed then
             local x, y = 901, 192
@@ -226,4 +255,4 @@ emu.register_frame_done(function()
         next_capture = t + 0.5
     end
 end)
-emu.register_stop(function() log:close() end)
+emu.register_stop(function() log:close(); frames:close() end)

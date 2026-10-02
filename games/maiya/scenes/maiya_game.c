@@ -14,6 +14,7 @@
 #include "artbox/generated/maiya_assets.h"
 #include "maiya_levels.h"   /* the mission tables name decoration tiles */
 #include "maiya_feel.h"     /* hitstop and shake: every tuning value */
+#include "maiya_presentation.h"
 #include <stddef.h>
 
 #pragma GCC optimize ("O2")
@@ -75,7 +76,7 @@ enum {
     SLOT_SPARK = 230,    /* 12 particles: sparks, petals, dust      */
     SLOT_ITEM = 242,     /* 4 pickups (2 strips each)               */
     SLOT_CAGE = 250,     /* 1 captive cage (2 strips)               */
-    SLOT_GATE = 252,     /* the Ancient Nature Gate (2 strips)      */
+    SLOT_GATE = 258,     /* 3 gate strips, clear of cage and signs  */
     SLOT_SIGN = 254,     /* 2 pit caution signs (2 strips each)     */
     SLOT_HAZARD = 270,   /* 6 blocks (12 strips) fire/spikes/sludge */
     SLOT_DECOR = 83,     /* 6 props behind the character pool      */
@@ -120,7 +121,7 @@ enum {
     PAL_LANDMARK = 71,   /* the great tree or mountain the gate stands in (71..73) */
     /* The polluters. */
     PAL_BAGOCTO = 74, PAL_BINOCTO = 75, PAL_SAWBOT = 76, PAL_DRILLBOT = 77, PAL_TORCHBOT = 78,
-    PAL_SMOGSTACK = 79, PAL_SLUDGEBARREL = 80,
+    PAL_SMOGSTACK = 79, PAL_SLUDGEBARREL = 80, PAL_WATER = 81,
     /* FIX inks for the guardian's bar: dirty and toxic rather than the
      * clean traffic-light colours of her own -- it's the blight's health. */
     PAL_BOSS_HP_HI = 11, PAL_BOSS_HP_MID = 14, PAL_BOSS_HP_LO = 15,
@@ -230,6 +231,8 @@ enum {
     MAX_CONTINUES = 3,   /* the cabinet allows three, then the run is over */
     CONTINUE_TIME = 600  /* ten seconds on the clock to decide            */
 };
+
+typedef char mg_gate_slot_check[(SLOT_GATE + MG_GATE_STRIPS <= SLOT_VINE) ? 1 : -1];
 
 /* A shot of the bonus round's cannon: position and speed in 1/16 px. */
 typedef struct {
@@ -454,10 +457,12 @@ static int16_t NEOGEO_USER mg_abs(int16_t value)
  * white -- lift all of it together, and a bank loaded behind a fade comes
  * up with it instead of flashing through.
  */
-#define MG_PAL_BANKS 81u   /* up to the last polluter's bank */
+#define MG_PAL_BANKS 82u
 static uint16_t mg_pal_base[MG_PAL_BANKS * 16u];
 static uint16_t mg_pal_out[MG_PAL_BANKS * 16u];
 static uint8_t mg_pal_open;
+static const uint16_t *mg_cycle_source;
+static uint8_t mg_cycle_bank, mg_cycle_dark, mg_cycle_light;
 static uint8_t mg_tint_t, mg_tint_art;   /* the Secret Art's colour shake: frames left, which art */
 
 /* The screen is taken over on first use, from the colours showing then. */
@@ -840,6 +845,40 @@ static void NEOGEO_USER mg_background(uint8_t id, uint8_t restored)
 
     for (i = 0; i < count; i++) mg_palette((uint8_t)(PAL_BG + i), pal + i * 16u);
 
+    mg_cycle_source = 0;
+    {
+        uint8_t tile_x = id == 1u ? 9u : 14u;
+        uint8_t tile_y = id == 1u ? 5u : 2u;
+        uint8_t bank = far_map[(uint16_t)tile_x * 12u + tile_y];
+        if (bank >= PAL_BG && bank < (uint8_t)(PAL_BG + count)) {
+            const uint16_t *colors = pal + (uint16_t)(bank - PAL_BG) * 16u;
+            uint16_t best = 49u;
+            uint8_t first, second;
+            for (first = 1u; first < 16u; first++) {
+                uint16_t c = colors[first];
+                uint8_t r = (uint8_t)(((c >> 7) & 30u) | ((c >> 14) & 1u));
+                uint8_t g = (uint8_t)(((c >> 3) & 30u) | ((c >> 13) & 1u));
+                uint8_t b = (uint8_t)(((c << 1) & 30u) | ((c >> 12) & 1u));
+                if (b < r + 2u || b < g + 1u) continue;
+                for (second = (uint8_t)(first + 1u); second < 16u; second++) {
+                    uint16_t other = colors[second];
+                    uint8_t r2 = (uint8_t)(((other >> 7) & 30u) | ((other >> 14) & 1u));
+                    uint8_t g2 = (uint8_t)(((other >> 3) & 30u) | ((other >> 13) & 1u));
+                    uint8_t b2 = (uint8_t)(((other << 1) & 30u) | ((other >> 12) & 1u));
+                    uint16_t distance;
+                    if (b2 < r2 + 2u || b2 < g2 + 1u) continue;
+                    distance = mg_palette_distance(c, other);
+                    if (!distance || distance >= best) continue;
+                    best = distance;
+                    mg_cycle_dark = first;
+                    mg_cycle_light = second;
+                    mg_cycle_bank = bank;
+                    mg_cycle_source = colors;
+                }
+            }
+        }
+    }
+
     /* A cleansed valley is shown in its own painted colours: the restored
      * palette is the reward. (A brightness pulse used to run on it, which
      * washed the whole sky out.) */
@@ -911,6 +950,7 @@ static void NEOGEO_USER mg_arena_background(uint8_t style)
 #endif
     default: return;
     }
+    mg_cycle_source = 0;
     for (i = 0; i < count; i++) mg_palette((uint8_t)(PAL_BG + i), pal + i * 16u);
     ng_sprite_group_init(&mg.far, SLOT_FAR, 32, 12, far, PAL_BG);
     ng_sprite_group_set_palette_map(&mg.far, far_map);
@@ -923,27 +963,19 @@ static void NEOGEO_USER mg_arena_background(uint8_t style)
     mg.arena_bg = 1;
 }
 
-/* Waterfall shimmer.  The "fall" decor tile paints its curtain in exactly
- * two dedicated palette slots (water, water-light -- NATURE indices 14/15),
- * which nothing else in the shared decor palette touches, so swapping just
- * those two every few frames reads as flowing water without recolouring
- * any other scenery sharing PAL_DECOR. Cheap enough to leave running every
- * scene; it is invisible wherever no falls decor is actually placed. */
-static void NEOGEO_USER mg_animate_water(void)
+static void NEOGEO_USER mg_animate_scenery(void)
 {
-    static uint8_t phase = 0;
-    if ((mg.tick & 7u) == 0u) {
-        uint16_t buf[16];
-        uint8_t i;
-        phase ^= 1;
-        for (i = 0; i < 16; i++) buf[i] = mg_decor_pal[i];
-        if (phase) {
-            buf[14] = mg_decor_pal[15];
-            buf[15] = mg_decor_pal[14];
-        }
-        mg_palette(PAL_DECOR, buf);
+    uint16_t colors[16];
+    uint8_t i;
+    if (!mg_cycle_source || mg.arena_bg || mg_tint_t || (mg.tick & 15u)) return;
+    for (i = 0; i < 16u; i++) colors[i] = mg_cycle_source[i];
+    if ((mg.tick & 16u) && mg_cycle_dark != mg_cycle_light) {
+        colors[mg_cycle_dark] = mg_cycle_source[mg_cycle_light];
+        colors[mg_cycle_light] = mg_cycle_source[mg_cycle_dark];
     }
+    mg_palette(mg_cycle_bank, colors);
 }
+
 
 static void NEOGEO_USER mg_scroll_scenery(int16_t camera_x)
 {
@@ -1265,6 +1297,7 @@ static void NEOGEO_USER mg_draw_decor(int16_t camera_x)
 
         if (!d->x || scr < -32 || scr > 336) continue;
         g = &mg.decor[used];
+        ng_sprite_group_set_palette(g, PAL_DECOR);
         ng_sprite_group_set_tile_base(g, mg_decor_tiles[d->kind]);
         ng_sprite_group_set_pos(g, scr, MG_SY(d->y));
         ng_sprite_group_set_visible(g, 1);
@@ -1302,11 +1335,13 @@ static void NEOGEO_USER mg_draw_gate(int16_t camera_x)
     const MGLevel *level = &mg_levels[mg.stage];
     int16_t scr = (int16_t)((int16_t)level->gate_x - camera_x);
 
-    if (!level->gate_x || scr < -32 || scr > 336) {
+    if (!level->gate_x || scr < -(int16_t)(MG_GATE_STRIPS * 16u) || scr > 336) {
         ng_sprite_group_set_visible(&mg.gate, 0);
     } else {
         ng_sprite_group_set_tile_base(&mg.gate, mg_gate_tiles[mg.gate_unlocked ? 1 : 0]);
-        ng_sprite_group_set_pos(&mg.gate, scr, MG_SY(MG_GROUND_Y - 48));
+        ng_sprite_group_set_pos(&mg.gate,
+            (int16_t)(scr + 16 - MG_GATE_STRIPS * 8u),
+            MG_SY(MG_GROUND_Y - MG_GATE_ROWS * 16u));
         ng_sprite_group_set_visible(&mg.gate, 1);
     }
     ng_sprite_group_flush(&mg.gate);
@@ -1586,6 +1621,11 @@ static void NEOGEO_USER mg_camera_follow(void)
      * top is ng_move's). */
     if (mg.flying && mg.state == MG_PLAY) {
         int16_t lo = (int16_t)(mg.camera.x + 40), hi = (int16_t)(mg.camera.x + 288);
+        if (mg.fly_x >= (int16_t)(mg.arena_left - NG_SCREEN_W) &&
+            (!mg.boss_active || (mg.boss && mg.boss->data0 == MG_B_AIRSHIP))) {
+            int16_t boss_limit = (int16_t)(mg.arena_left + 180);
+            if (hi > boss_limit) hi = boss_limit;
+        }
         if (p->x < lo) { ng_char_set_pos(p, lo, p->y); if (p->vx_fp < NG_FP_ONE) p->vx_fp = NG_FP_ONE; }
         if (p->x > hi) { ng_char_set_pos(p, hi, p->y); if (p->vx_fp > 0) p->vx_fp = 0; }
         if (p->y > 212) { ng_char_set_pos(p, p->x, 212); if (p->vy_fp > 0) p->vy_fp = 0; }
@@ -1692,6 +1732,7 @@ static void NEOGEO_USER mg_before_draw_hook(void)
     }
     ng_level_set_scroll(mg.camera.x, mg.cam_y);
     mg_scroll_scenery(mg.camera.x);
+    mg_animate_scenery();
     if (mg.state == MG_BONUS || mg.state == MG_ENDING) {
         mg_update_sparks(mg.camera.x);
         return;
@@ -1942,12 +1983,12 @@ static NGCharacter *NEOGEO_USER mg_character(uint8_t kind, int16_t x, int16_t y,
         c->sprite_offset_y = -46;
         ng_char_set_body(c, -18, -32, 36, 32);
     } else if (kind == K_BOSS && subtype == MG_B_AIRSHIP) {
-        /* 256 x 96, standing on the middle of its keel */
+        /* 256 x 96 source art, scaled uniformly for the sky arena. */
         ng_char_set_sprite(c, NG_SPR_CHAR_FIRST, 16, 6, mg_airship_tiles[0], palette);
         ng_char_set_tile_stride(c, 16);
         c->sprite_offset_x = -128;
         c->sprite_offset_y = -96;
-        ng_char_set_body(c, -120, -76, 238, 64);
+        ng_char_set_body(c, -90, -57, 179, 48);
     } else if (kind == K_BOSS) {
         const uint16_t *bt = mg_boss_tiles(subtype);
         ng_char_set_sprite(c, NG_SPR_CHAR_FIRST, BOSS_STRIPS, BOSS_ROWS, bt[0], palette);
@@ -2759,9 +2800,15 @@ static void NEOGEO_USER mg_rot_bank(uint8_t bank, const uint16_t *src)
  * half its width, half its height}.
  */
 enum { MG_SHIP_STACK_L, MG_SHIP_STACK_R, MG_SHIP_BRIDGE, MG_SHIP_PARTS };
+enum { MG_SHIP_SCALE = 0xBF };
 static const int8_t mg_ship_box[MG_SHIP_PARTS][4] = {
     { 40, -84, 8, 13 }, { 60, -86, 8, 13 }, { -91, -58, 16, 9 },
 };
+
+static int16_t NEOGEO_USER mg_ship_scaled(int16_t value)
+{
+    return (int16_t)((value * 3) / 4);
+}
 
 static uint8_t NEOGEO_USER mg_ship_open(uint8_t part)
 {
@@ -2777,7 +2824,8 @@ static uint8_t NEOGEO_USER mg_ship_part_at(int16_t x, int16_t y)
     for (i = 0; i < MG_SHIP_PARTS; i++) {
         const int8_t *k = mg_ship_box[i];
         if (!mg.ship_part[i]) continue;
-        if (mg_abs((int16_t)(x - (b->x + k[0]))) <= k[2] + 4 && mg_abs((int16_t)(y - (b->y + k[1]))) <= k[3] + 4)
+        if (mg_abs((int16_t)(x - (b->x + mg_ship_scaled(k[0])))) <= mg_ship_scaled(k[2]) + 4 &&
+            mg_abs((int16_t)(y - (b->y + mg_ship_scaled(k[1])))) <= mg_ship_scaled(k[3]) + 4)
             return i;
     }
     return 0xFFu;
@@ -2787,7 +2835,7 @@ static uint8_t NEOGEO_USER mg_ship_in_hull(int16_t x, int16_t y)
 {
     NGCharacter *b = mg.boss;
     /* (from behind its nose, so a shot at the bridge reaches it) */
-    return (uint8_t)(x > b->x - 100 && x < b->x + 118 && y > b->y - 76 && y < b->y - 12);
+    return (uint8_t)(x > b->x - 75 && x < b->x + 89 && y > b->y - 57 && y < b->y - 9);
 }
 
 /* A part is wrecked: fire and a jolt, the hull's paint burns one step on,
@@ -2796,8 +2844,8 @@ static void NEOGEO_USER mg_ship_part_down(uint8_t part)
 {
     NGCharacter *b = mg.boss;
     const int8_t *k = mg_ship_box[part];
-    mg_burst((int16_t)(b->x + k[0]), (int16_t)(b->y + k[1]), MG_T_FIRE, 4, -2);
-    mg_burst((int16_t)(b->x + k[0]), (int16_t)(b->y + k[1] - 8), MG_T_DUST, 3, -2);
+    mg_burst((int16_t)(b->x + mg_ship_scaled(k[0])), (int16_t)(b->y + mg_ship_scaled(k[1])), MG_T_FIRE, 4, -2);
+    mg_burst((int16_t)(b->x + mg_ship_scaled(k[0])), (int16_t)(b->y + mg_ship_scaled(k[1] - 8)), MG_T_DUST, 3, -2);
     mg.shake = 12;
     playSFX(SOUND_SFX_10);
     if (part != MG_SHIP_BRIDGE && !mg.ship_part[MG_SHIP_STACK_L] && !mg.ship_part[MG_SHIP_STACK_R])
@@ -3412,6 +3460,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
         mg_palette(PAL_PIT, pit_pal);
     }
     mg_palette(PAL_DECOR, mg_decor_pal);
+    mg_palette(PAL_WATER, mg_decor_pal);
     mg_palette(PAL_ITEM, mg_item_pal);
     mg_palette(PAL_TRINKET, mg_trinket_pal);
     mg_palette(PAL_GATE, mg_gate_pal);
@@ -3525,7 +3574,9 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
         ng_sprite_group_set_visible(&mg.front[i], 0);
     }
 
-    ng_sprite_group_init(&mg.gate, SLOT_GATE, 2, 3, mg_gate_tiles[0], PAL_GATE);
+    ng_sprite_group_init(&mg.gate, SLOT_GATE, MG_GATE_STRIPS, MG_GATE_ROWS,
+                         mg_gate_tiles[0], PAL_GATE);
+    ng_sprite_group_set_tile_stride(&mg.gate, MG_GATE_STRIPS);
     ng_sprite_group_set_visible(&mg.gate, 0);
     mg_landmark_setup();
 
@@ -4057,7 +4108,7 @@ static void NEOGEO_USER mg_chooser_tick(uint16_t t, uint8_t chosen)
         uint8_t f = MG_F_IDLE0;
         if (who == mg_chooser_pick) f = chosen ? MG_F_WIN : (uint8_t)(MG_F_IDLE0 + (t / 12u) % 3u);
         ng_sprite_group_set_tile_base(&mg_chooser_body[who], mg_hero_tiles[f]);
-        ng_sprite_group_upload(&mg_chooser_body[who]);
+        ng_sprite_group_flush(&mg_chooser_body[who]);
     }
 }
 
@@ -5523,6 +5574,7 @@ static void NEOGEO_USER mg_ship_approach(NGCharacter *b)
     uint8_t s;
     if (mg.ship_z) mg.ship_z--;
     s = ng_shrink_tab[mg.ship_z];
+    if (s > MG_SHIP_SCALE) s = MG_SHIP_SCALE;
     b->scale_x = s;
     b->scale_y = s;
     b->sprite_offset_x = (int16_t)-(((uint16_t)128u * s) >> 8);
@@ -5571,7 +5623,8 @@ static void NEOGEO_USER mg_ship_ai(NGCharacter *b, NGCharacter *p)
     if ((t % mg_rate(160)) == 80u) {
         for (i = 0; i < 2; i++) {
             if (!mg.ship_part[i]) continue;
-            mg_fire((int16_t)(b->x + mg_ship_box[i][0]), (int16_t)(b->y + mg_ship_box[i][1] - 14), -2, 0, 1, MG_T_DUST);
+            mg_fire((int16_t)(b->x + mg_ship_scaled(mg_ship_box[i][0])),
+                    (int16_t)(b->y + mg_ship_scaled(mg_ship_box[i][1] - 14)), -2, 0, 1, MG_T_DUST);
         }
     }
     /* a cloud of gnats */
@@ -5587,11 +5640,11 @@ static void NEOGEO_USER mg_ship_ai(NGCharacter *b, NGCharacter *p)
     }
 
     /* the talons coming down on it */
-    if (p->vy_fp > 0 && mg_abs((int16_t)(p->x - b->x)) < 124) {
+    if (p->vy_fp > 0 && mg_abs((int16_t)(p->x - b->x)) < 93) {
         uint8_t part = mg_ship_part_at(p->x, (int16_t)(p->y + 4));
         if (part != 0xFFu) {
             const int8_t *k = mg_ship_box[part];
-            int16_t top = (int16_t)(b->y + k[1] - k[3]);
+            int16_t top = (int16_t)(b->y + mg_ship_scaled((int16_t)(k[1] - k[3])));
             if (mg.player_prev_y <= top + 8 && p->y >= top - 2) {
                 if (mg_ship_open(part) && !mg.boss_hurt) {
                     mg.ship_target = part;
@@ -5602,7 +5655,7 @@ static void NEOGEO_USER mg_ship_ai(NGCharacter *b, NGCharacter *p)
                 return;
             }
         }
-        if (mg.player_prev_y <= b->y - 72 && p->y >= b->y - 76 && p->y < b->y - 60) {
+        if (mg.player_prev_y <= b->y - 54 && p->y >= b->y - 57 && p->y < b->y - 45) {
             p->vy_fp = -STOMP_KICK;          /* the deck: she only bounces off */
             return;
         }
@@ -7640,6 +7693,12 @@ static void NEOGEO_USER mg_animate_player(void)
     }
     uint8_t grounded = ng_physics_is_grounded(p) || mg.on_ledge || (p->y >= MG_GROUND_Y - 4);
 
+    /* Keep one forward gait clock through attacks and dashes. A backward
+     * countdown is not an animation phase; it reverses the foot sequence. */
+    if (grounded && !mg.climbing && p->vx_fp != 0)
+        mg.walk_distance = mg_gait_advance(mg.walk_distance,
+                                           (uint16_t)mg_abs((int16_t)p->vx_fp));
+
     if (grounded && mg.airborne && !mg.climbing) {
         mg.airborne = 0;
     } else if (!grounded && !mg.climbing && p->vy_fp > NG_FP_ONE) {
@@ -7685,7 +7744,7 @@ static void NEOGEO_USER mg_animate_player(void)
         mg_frame(p, (uint8_t)(mg.super_surge >= MG_SURGE_TIME - MG_SURGE_WINDUP ? MG_F_RISE0 : MG_F_SURGE),
                  mg.facing);
     } else if (mg.dash && grounded) {
-        mg_frame(p, (uint8_t)(MG_F_RUN0 + ((mg.dash / 2) % 3)), mg.facing);
+        mg_frame(p, (uint8_t)(MG_F_WALK0 + mg_gait_frame(mg.walk_distance)), mg.facing);
     } else if (mg.attack) {
         mg.attack--;
         mg_frame(p, (uint8_t)(mg.attack > 6 ? MG_F_ATK1 : MG_F_ATK2), mg.facing);
@@ -7700,10 +7759,7 @@ static void NEOGEO_USER mg_animate_player(void)
     } else if (!grounded) {
         mg_frame(p, (uint8_t)(p->vy_fp < 0 ? MG_F_JUMP1 : MG_F_JUMP3), mg.facing);
     } else if (p->vx_fp != 0) {
-        uint16_t walked = (uint16_t)(mg.walk_distance + mg_abs((int16_t)p->vx_fp));
-        while (walked >= 40u * NG_FP_ONE) walked = (uint16_t)(walked - 40u * NG_FP_ONE);
-        mg.walk_distance = walked;
-        mg_frame(p, (uint8_t)(MG_F_WALK0 + ((mg.walk_distance / (10u * NG_FP_ONE)) % 4u)), mg.facing);
+        mg_frame(p, (uint8_t)(MG_F_WALK0 + mg_gait_frame(mg.walk_distance)), mg.facing);
     } else {
         mg_frame(p, (uint8_t)(MG_F_IDLE0 + ((mg.tick / 20) % 3)), mg.facing);
     }
@@ -8752,7 +8808,9 @@ static void NEOGEO_USER mg_ending_frame(void)
 void NEOGEO_USER maiya_frame(void)
 {
     if (mg.player && !mg.demo && (mg.state == MG_PLAY || mg.state == MG_BONUS) &&
-        (NEO_REGISTER8(BIOS_STATCHANGE) & 0x01u))   /* P1 Start, just pressed */
+        mg_pause_start_allowed(NEO_REGISTER8(BIOS_STATCHANGE),
+                               NEO_REGISTER8(BIOS_STATCURNT),
+                               NEO_REGISTER8(BIOS_P1CURRENT)))
         mg_pause_toggle();
     /* Paused: nothing of hers moves either -- creatures, sparks, the water,
      * the clock, the camera -- the stick is only read, so no press is left
@@ -8770,7 +8828,6 @@ void NEOGEO_USER maiya_frame(void)
     if (!mg.demo && (mg.state == MG_PLAY || mg.state == MG_INTRO || mg.state == MG_CLEAR ||
                      mg.state == MG_DEAD || mg.state == MG_WARP || mg.state == MG_BOSS_INTRO))
         mg_draw_stage_time();
-    mg_animate_water();
 
     if (mg.state == MG_INTRO) {
         /* Mission card: the world is live behind it, any button skips. */
@@ -8795,7 +8852,8 @@ void NEOGEO_USER maiya_frame(void)
             mg_animate_player();
         }
         mg_world_step();
-        mg_update_entities();
+        /* Spawned enemies must not approach while the mission card owns
+         * control. Their first steering update belongs to MG_PLAY. */
         if (mg.hurt) mg.hurt--;
 
         /* The card only counts down once her feet are on the road. */

@@ -116,6 +116,8 @@ def flower_patch():
     for cx, cy, col in ((6, 17, GOLD), (15, 12, BLOSSOM), (24, 19, BLOSSOM)):
         disc(a, cx, cy, 3.4, 3.4, col)
         disc(a, cx, cy, 1.4, 1.4, GOLD if col == BLOSSOM else AMBER)
+        a[max(0, cy - 3), cx - 1:cx + 1] = WATER_L
+        a[27:29, max(0, cx - 4):max(0, cx - 1)] = LF_L
     for k in range(3, 30, 4):
         a[30, k] = LF_D
     return to_rgba(outline(a))
@@ -139,7 +141,10 @@ def mushroom_cluster():
         a[int(cy):, :][m[int(cy):, :]] = 0
         box(a, int(cx - r), int(cy) - 1, int(cx + r) + 1, int(cy) + 1, col)
         disc(a, cx - r * 0.35, cy - r * 0.35, r * 0.4, r * 0.26, GOLD if col == BLOSSOM else LF_L)
-        speckle(a, a == col, GOLD if col == BLOSSOM else BLOSSOM, step=7)
+        spot = GOLD if col == BLOSSOM else BLOSSOM
+        for dx, dy in ((-0.38, -0.42), (0.25, -0.58), (0.53, -0.18)):
+            sx, sy = int(cx + r * dx), int(cy + r * dy)
+            disc(a, sx, sy, 1.3 if r < 8 else 1.8, 1.1, spot)
     return to_rgba(outline(a))
 
 
@@ -334,26 +339,26 @@ def door(open_state=False):
 
 def gate(open_state=False):
     """The Ancient Nature Gate: stone arch laced with vines and a sun lock."""
-    a = canvas(32, 48)
-    box(a, 2, 6, 30, 48, ST_M)
-    box(a, 2, 6, 5, 48, ST_D)
-    box(a, 27, 6, 30, 48, ST_L)
-    box(a, 0, 0, 32, 7, ST_L)
-    box(a, 0, 4, 32, 7, ST_D)
-    for y in range(10, 46, 6):
-        a[y:y + 1, 6:26] = ST_D
+    a = canvas(48, 64)
+    box(a, 2, 6, 46, 64, ST_M)
+    box(a, 2, 6, 7, 64, ST_D)
+    box(a, 41, 6, 46, 64, ST_L)
+    box(a, 0, 0, 48, 7, ST_L)
+    box(a, 0, 4, 48, 7, ST_D)
+    for y in range(10, 62, 6):
+        a[y:y + 1, 8:40] = ST_D
     if open_state:
-        box(a, 6, 10, 26, 48, 0)
-        box(a, 6, 10, 8, 48, ST_D)
-        box(a, 24, 10, 26, 48, ST_D)
+        box(a, 8, 10, 40, 64, 0)
+        box(a, 8, 10, 10, 64, ST_D)
+        box(a, 38, 10, 40, 64, ST_D)
     else:
-        box(a, 6, 10, 26, 48, LF_D)
-        for y in range(10, 48, 5):
-            a[y:y + 2, 6:26] = LF_M
-            a[y + 2:y + 3, 7:25] = LF_L
-        disc(a, 16, 26, 6, 6, GOLD)
-        disc(a, 16, 26, 3.4, 3.4, AMBER)
-        a[26:31, 15:18] = AMBER
+        box(a, 8, 10, 40, 64, LF_D)
+        for y in range(10, 64, 5):
+            a[y:y + 2, 8:40] = LF_M
+            a[y + 2:y + 3, 9:39] = LF_L
+        disc(a, 24, 34, 7, 7, GOLD)
+        disc(a, 24, 34, 4, 4, AMBER)
+        a[34:40, 23:26] = AMBER
     return to_rgba(outline(a))
 
 
@@ -528,6 +533,8 @@ def _coin(rim, face, shine):
     disc(a, 16, 16, 11, 11, rim)
     disc(a, 16, 16, 8.5, 8.5, face)
     disc(a, 12, 12, 3.2, 3.2, shine)
+    a[7:10, 19] = shine
+    a[8, 18:21] = shine
     a[14:19, 15:18] = rim
     a[15:18, 13:20] = rim
     return a

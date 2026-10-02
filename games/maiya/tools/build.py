@@ -117,8 +117,8 @@ def quick_build(toolchain, platform):
     if staged_platform != platform:
         raise SystemExit(f"Run a full build with --platform {platform} before --quick")
     copy_source(GAME / "scenes/maiya_game.c", WORK / "games/maiya/scenes/maiya_game.c")
-    copy_source(GAME / "scenes/maiya_game.h", WORK / "games/maiya/scenes/maiya_game.h")
-    copy_source(GAME / "scenes/maiya_levels.h", WORK / "games/maiya/scenes/maiya_levels.h")
+    for header in (GAME / "scenes").glob("*.h"):
+        copy_source(header, WORK / "games/maiya/scenes" / header.name)
     subprocess.run([sys.executable, str(GAME / "tools/levels.py")], check=True)   # the stage files
     copy_source(GAME / "scenes/maiya_levels_data.h", WORK / "games/maiya/scenes/maiya_levels_data.h")
     copy_source(GAME / "artbox/generated/maiya_assets.h",

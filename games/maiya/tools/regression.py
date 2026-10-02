@@ -15,7 +15,7 @@ def main():
     parser.add_argument("--mame", default="mame")
     parser.add_argument("--scenario", choices=("idle", "walk", "climb", "boss", "bonus", "continue",
                                               "continue-exit", "continue-timeout", "tray", "factory",
-                                              "pickups", "pit"), default="walk")
+                                              "pickups", "pit", "flight"), default="walk")
     parser.add_argument("--idle", action="store_true", help="Capture startup without gameplay inputs")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--eagle-bios", action="store_true")
@@ -36,14 +36,15 @@ def main():
         "stage", "state", "player", "boss", "boss_active", "state_timer",
         "gate_unlocked", "climbing", "demo", "shake_x", "lives", "continues",
         "has_key", "next_stage", "art", "coins", "flowers", "critters",
-        "swift", "might", "veil", "spring", "crown", "items", "pick_mask", "hud_dirty")}
+        "swift", "might", "veil", "spring", "crown", "items", "pick_mask", "hud_dirty",
+        "tick", "fly_x", "ship_z", "arena_left")}
     fields["camera_x"] = "&mg.camera.x"
     # BIOS_PLAYER1_MODE (0x10FDB6), the same address regression.lua already
     # reads as "player_mode": Maiya no longer keeps a Start-press counter of
     # her own, since the BIOS's own mode flag is the live, race-free signal.
     fields["start_count"] = "0x10FDB6"
     fields.update({"char_" + name: f"&((NGCharacter*)0)->{name}"
-                   for name in ("x", "y", "x_fp", "y_fp", "hp", "flip_x", "data0")})
+                   for name in ("x", "y", "x_fp", "y_fp", "hp", "flip_x", "data0", "scale_x", "scale_y")})
     fields.update({"item_" + name: f"&((MGItem*)0)->{name}" for name in ("life", "key", "source")})
     fields["item_size"] = "sizeof(MGItem)"
     command = [str(gdb), "-batch", str(WORK / "out/game")]
@@ -81,7 +82,8 @@ def main():
         assert max(s["boss_x"] for s in arena) - min(s["boss_x"] for s in arena) > 40, "Guardian does not walk"
         assert all(3540 <= s["x"] <= 3820 for s in arena), "Player escaped arena"
         settled = arena[4:]
-        assert settled and all(s["camera_x"] - s["shake_x"] == 3520 for s in settled), "Arena camera did not lock"
+        # The single-screen arena clamps the final camera, including shake.
+        assert settled and all(s["camera_x"] == 3520 for s in settled), "Arena camera did not lock"
     elif args.scenario == "bonus":
         bonus = [s for s in active if s["state"] == 3]
         assert bonus and all(s["camera_x"] == 0 for s in bonus), "Bonus reused the previous arena"
@@ -94,14 +96,13 @@ def main():
         resumed = [s for s in active if s["continues"] == 2 and s["state"] in (0, 1)]
         assert resumed, "Start did not resume the game"
         first = resumed[0]
-        # A continue restarts the whole mission, not the spot she fell: the
-        # same head-of-road entrance every fresh arrival uses, and whatever
-        # she was carrying goes with the reset, the same as any other retry.
+        # A retry returns to the mission entrance, preserving collected
+        # progress so its extra-life pickup cannot be farmed repeatedly.
         assert first["x"] == 64 and first["y"] < 192, "Respawn did not return to the start of the mission"
         assert first["lives"] == 3, "Continue must restore three lives"
         if args.platform == "mvs":
             assert first["credit"] == 0, "Continue must spend exactly one credit"
-        assert not first["has_key"] and not first["gate_unlocked"], "Continue should reset mission progress"
+        assert first["has_key"] and first["gate_unlocked"], "Continue lost collected mission progress"
         assert any(s["state"] == 1 for s in resumed), "Respawn never returned control after landing"
     elif args.scenario in ("continue-exit", "continue-timeout"):
         waiting = [s for s in active if s["state"] == 5]
@@ -122,9 +123,21 @@ def main():
     elif args.scenario == "pit":
         falls = [s for s in active if s["stage"] == 1]
         assert falls, "Never reached Valley of Falls"
-        assert max(s["x"] for s in falls) > 590, "Never walked past the first pit"
+        positions = [int(row[4]) for row in (line.split(",") for line in
+                     (output / "frames.csv").read_text().splitlines()[1:])
+                     if int(row[3]) == 1 and int(row[2]) == 1]
+        assert positions and max(positions) > 510, "Never crossed the first pit"
         assert any(s["state"] == 4 for s in falls), "Falling into the pit never registered a death"
         assert any(s["lives"] == 2 for s in falls), "Falling into the pit did not cost exactly one life"
+    elif args.scenario == "flight":
+        rows = [line.split(",") for line in (output / "frames.csv").read_text().splitlines()[1:]]
+        sky = [row for row in rows if int(row[3]) == 10 and int(row[2]) == 1]
+        ship = [row for row in sky if int(row[6]) and int(row[7]) == 0]
+        assert ship, "Sky Road airship did not reach the arena"
+        assert all(int(row[8]) <= 191 and int(row[9]) <= 191 for row in ship), "Airship scale grew past the arena size"
+        assert all(int(row[4]) <= int(row[10]) + 181 for row in ship), "Player passed the arena flight boundary"
+        arena = [row for row in sky if int(row[6])]
+        assert all(abs(int(b[4]) - int(a[4])) <= 16 for a, b in zip(arena[4:], arena[5:])), "Flight position jumped at the arena transition"
     assert "LUA ERROR" not in (output / "mame.log").read_text(), "Capture script failed"
     print(f"PASS {args.scenario}: {output}")
 

@@ -42,7 +42,7 @@
     {"x": 3000, "y": 104, "w": 80}
   ],
   "encounters": [
-    {"x": 180, "enemy": "slime"},
+    {"x": 360, "enemy": "slime"},
     {"x": 480, "enemy": "beetle"},
     {"x": 780, "enemy": "slime"},
     {"x": 1100, "enemy": "beetle"},

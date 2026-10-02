@@ -43,11 +43,16 @@ py -m pip install numpy pillow scipy
 | B | Whip nearby enemies or throw thorns |
 | C | Dash |
 | D | Spend a rose-art charge |
+| Start alone | Pause / resume during play |
 | Down + A | Drop through a one-way ledge |
 | Up at the gate | Turn the collected Sun Key |
 
 The Sun Key is on a canopy shelf. Rescue the villagers, collect roses and
 reach the gate before entering the guardian arena.
+
+Enemies wait at their spawn positions during the mission card. The first
+forest encounter starts farther along the road, leaving room to move before
+combat begins.
 
 The bottom tray uses the actual pickup sprites at half size, with live counts
 for rose arts, coins, flowers and rescued friends. Active powers show their
@@ -58,11 +63,17 @@ consume its spawn. High shelves hold the rarer treasures and extra lives.
 Climbing uses position-based reaching poses with stable facing. Release the
 stick to stop, or press A to detach. Release A during a jump for a shorter hop.
 
+Start combined with an action button or Select is left to the system firmware,
+not treated as a game pause. NeoSD uses a held A+D+Start combination to return
+to its cartridge list; NeoSD PRO's configurable slot-menu combination is
+normally D+Start. Start+Select may instead open the UniBIOS in-game menu.
+These shortcuts depend on the installed firmware and require hardware testing.
+
 ## Lives and Continue
 
 Each run starts with three lives and three available continuations. A lethal
-hit costs one life: Maiya rises with a halo, then returns from the sky at her
-death position. Landing on either a shelf or the road restores control.
+hit costs one life: Maiya rises with a halo, then returns from the sky at the
+mission entrance. Landing on either a shelf or the road restores control.
 Collected map items, rescued allies and key/gate progress survive that return;
 enemies and temporary powers reset.
 
@@ -123,6 +134,14 @@ sprite ranges. Decorative plants remain behind characters; only the explicit
 front props pass in front. Foreground wrapping occurs outside the viewport.
 Portraits use banks 41-42, decoration 14, villagers 33-34 and the gate 35,
 so loading a villager or portrait cannot recolor the scenery or gate.
+
+Gate dimensions and row stride come from the generated asset header. Its
+three-strip window is separate from the cage, signs and vines. Walking and
+dashing share a forward distance-based gait clock, without changing character
+scale or jump physics. The eight walking slots currently repeat four source
+poses; additional distinct poses must be authored, not obtained by stretching
+the existing drawings. Water shimmer resolves its two inks from the compiled
+decor palette rather than relying on pre-quantization palette indices.
 
 See [asset and audio notes](assets/CREDITS.md) for the source inventory.
 
