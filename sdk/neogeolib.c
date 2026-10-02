@@ -631,11 +631,9 @@ void NEOGEO_USER playSoundtest(uint16_t index) { isZ80Ready(); soundCommand((uin
  *
  * The driver answers through the reply port: its NMI handler drops the
  * port to 0 the moment it has read the byte out of the latch, and raises
- * it to 1 again once the byte is in its queue.  At rest the port reads 1,
- * and the BIOS insists on that - it re-initialises the driver if it ever
- * finds anything else there - so 1 alone cannot mean "your byte arrived":
- * it is also what the port held before we wrote.  A caller that sends a
- * second byte on that stale 1 overwrites the latch before the Z80 has read
+ * it to $80 again once the byte is in its queue. The BIOS-reserved reply
+ * $01 is used only for slot switching. A caller that sends a
+ * second byte on a stale ready reply overwrites the latch before the Z80 has read
  * the first, or lands a second NMI inside the handler, which then files
  * both bytes into the same queue slot.  Either way one byte is gone, and
  * for a two-byte command that means the parameter is lost and the next
@@ -646,10 +644,14 @@ void NEOGEO_USER playSoundtest(uint16_t index) { isZ80Ready(); soundCommand((uin
  * guards the theoretical case of the drop and the rise both landing
  * between two polls, in which case the byte is already queued anyway.
  */
-#define Z80_REPLY_READY  1u
+#define Z80_REPLY_READY  0x80u
 #define Z80_BUSY_POLLS   256u
 
-void NEOGEO_USER soundCommand(uint8_t command) {
+/* Keep protocol state in RAM even when the SDK strips generic .bss. */
+static uint8_t sound_parameter_pending
+    __attribute__((section(".bss.sound_protocol")));
+
+static void NEOGEO_USER soundSendByte(uint8_t command) {
 	uint16_t polls;
 	isZ80Ready();
 	NEO_REGISTER8(REG_SOUND) = command;
@@ -659,8 +661,41 @@ void NEOGEO_USER soundCommand(uint8_t command) {
 	}
 	isZ80Ready();
 }
-void NEOGEO_USER soundInit(void) { soundCommand(0x09); }
-void NEOGEO_USER soundReset(void) { soundCommand(0x03); }
+void NEOGEO_USER soundCommand(uint8_t command) {
+    if (sound_parameter_pending) {
+        sound_parameter_pending = 0u;
+        if (command == 1u || command == 2u || command == 3u ||
+            command == 9u || command == 0xFFu) {
+            soundSendByte(0xFFu);
+            command ^= 0x80u;
+        }
+    } else {
+        switch (command) {
+        case 0x05: case 0x06: case 0x07: case 0x0A: case 0x0E:
+        case 0x12: case 0x13: case 0x14: case 0x15: case 0x16:
+        case 0x17: case 0x18: case 0x19: case 0x1A: case 0x1B:
+        case 0x1D: case 0x1E: case 0x1F: case 0x31: case 0x32:
+            sound_parameter_pending = 1u;
+            break;
+        default:
+            break;
+        }
+    }
+    soundSendByte(command);
+}
+void NEOGEO_USER soundInit(void) {
+    uint16_t polls;
+    sound_parameter_pending = 0u;
+    /* Bootstrap must also work while the BIOS leaves the Z80 in its RAM wait. */
+    NEO_REGISTER8(REG_SOUND) = 0x09;
+    for (polls = 0u; polls < 512u; polls++) kickWatchDog();
+    isZ80Ready();
+}
+void NEOGEO_USER soundReset(void) { soundCommand(0x08); }
+void NEOGEO_USER soundHardwareReset(void) {
+    sound_parameter_pending = 0u;
+    soundSendByte(0x03);
+}
 void NEOGEO_USER soundStopAll(void) { soundCommand(0x04); }
 void NEOGEO_USER soundStopMusic(void) { soundCommand(0x0F); }
 void NEOGEO_USER soundCancelFade(void) { soundCommand(0x11); }
@@ -1346,7 +1381,7 @@ void NEOGEO_USER  isZ80Ready() {
 	ASM_L(.isready)
 	ASM_MVB(#0,0x300001)
 	ASM_MVB(0x320000,%%d0)
-	ASM_CMPB(#0x01,%%d0)
+	ASM_CMPB(#0x80,%%d0)
 	ASM_BNE(.isready)
 	: : : "d0"
 	ASM_END

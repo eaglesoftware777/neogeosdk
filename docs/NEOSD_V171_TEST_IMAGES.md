@@ -6,7 +6,65 @@ Hardware confirmation on NeoSD and NeoSD Pro is still required.
 
 ## MVS Sound Only
 
+### Protocol revision (NGP2)
+
+This is an unpublished hardware-test candidate, not a confirmed physical MVS
+sound fix. Both P1 and M1 implement the paired protocol; changing only one
+region is unsafe. See [MVS Sound Protocol](MVS_SOUND_PROTOCOL.md).
+
+`dist/release/Maiya-WIP-NeoSD_MVS_SOUND_FIX_PROTOCOL_PRERELEASE_v1.neo`
+
+This additional image retains all previous test images. Ordinary ready is `$80`;
+only BIOS slot switching replies `$01`. Raw `$01/$02/$03` bypass parameters and
+the FIFO. `$02` restarts and starts the existing eyecatcher music directly;
+`$03` performs a full reset. Game scene reset is `$08`, initialization `$09`.
+Reserved argument values are escaped by the 68000 sender and decoded by NMI.
+The public API values and sample/music data are unchanged.
+
+Before interpreting slot-wait or parameter flags, NMI checks a four-byte
+work-RAM ownership signature. A newly selected cartridge can inherit a different
+driver's RAM layout without executing its own reset vector first. Unowned RAM
+therefore takes the clean restart path instead of treating foreign bytes as
+protocol state. A prepare-switch request still silences the chip and enters
+the RAM wait, invalidating a foreign register cache before doing so.
+
+Only verified sound functions and erased P1 padding, plus M1, differ from the
+original MVS v1 image. Header, S1, C and V regions remain byte-identical. V1
+remains 8 MiB. No graphics,
+animation, sample content, FM/SSG playback or AES assets are rebuilt.
+
+Build with WLA-DX and 68000 binutils installed (the output must not exist):
+
+```sh
+python3 tools/build_mvs_sound_prerelease.py \
+  --output dist/release/Maiya-WIP-NeoSD_MVS_SOUND_FIX_PROTOCOL_PRERELEASE_v1.neo
+```
+
+`tests/mvs_sound_boot.lua` exercises warm startup with an invalidated cache,
+bank restoration, readiness ordering, RAM slot wait, BIOS restart and ADPCM
+commands under MAME. It also models a ROM handoff from foreign work RAM; optional
+`MVS_FOREIGN_RAM` selects a captured 2048-byte RAM snapshot, otherwise deliberately
+invalid RAM is used. Set `MVS_BOOT_REPORT` to its output text path and use it as
+the MAME autoboot script with a checksum-matched cartridge set. A WAV capture
+confirmed nonzero ADPCM-A and ADPCM-B output after restart. Z80Ex tests require
+the optional library; a skipped suite is not playback validation.
+
+`tests/mvs_sound_protocol.lua` additionally interrupts incomplete transfers with
+each BIOS command and checks all 256 arguments through the real patched P1.
+The assembler-backed P1 adapter is release-specific and uses scratch RAM at
+`$10EF00`. Normal SDK builds allocate their protocol state through the linker.
+
+Physical MVS/NeoSD testing is still pending. This revision addresses startup
+weaknesses; emulator checks alone do not establish the cause of hardware silence
+or guarantee flashcart compatibility. Check cold/warm boots and slot changes,
+then coin/start, music and effects before treating it as a verified hardware fix.
+
+### Earlier isolated image (historical)
+
 `dist/release/Maiya-WIP-NeoSD_MVS_SOUND_FIX_PRERELEASE.neo`
+
+This earlier image did not resolve the reported physical sound silence. Its
+behavior below describes that retained artifact, not the current NGP2 driver.
 
 Based on the exact MVS v1 image. Its header, S1, C, V1 and V2 are unchanged.
 P1 changes by exactly one byte: `soundInit()` sends `$09`, rather than using the
@@ -27,14 +85,9 @@ implement this slot-switch fix; use the authoritative ASM path for MVS hardware.
 Old binaries that send game-init `$01` must be rebuilt with the updated SDK.
 Do not mix a newly compiled P1 with an old M1.
 
-Reproduction after assembling the updated ASM driver and padding M1 to 128 KiB:
-
-```sh
-python3 tools/patch_neosd_sound.py \
-  dist/release/Maiya-WIP-NeoSD_MVS_v1.neo \
-  --m1 out/780-m1.m1 \
-  --output dist/release/Maiya-WIP-NeoSD_MVS_SOUND_FIX_PRERELEASE.neo
-```
+The current tools create NGP2 images, not this historical revision. Do not use
+them to overwrite its published filename. Use the protocol builder above with
+a new output name.
 
 This patcher is intentionally release-specific. It rejects an unexpected P1
 instruction signature, incorrect region sizes, and a base without 8 MiB V1.
@@ -59,17 +112,11 @@ text cache. Default `$000` preserves other games' layout; Maiya uses `$D00`.
 Full-width tile calls are used for relocated HUD symbols, avoiding char truncation.
 The font selection persists across scene clears; a clear never changes fonts.
 
-```sh
-make GAME=maiya PLATFORM=aes p1
-python3 tools/patch_neosd_aes_boot.py \
-  dist/release/Maiya-WIP-NeoSD_AES_v1.neo \
-  --p1 roms/maiya/780-p1.p1 \
-  --output dist/release/Maiya-WIP-NeoSD_AES_UNIBIOS_FIX_PRERELEASE.neo
-```
-
-The AES test-image patcher deliberately restores game-init `$01` in the compiled
-P1 to match the preserved old AES M1. Normal new builds use `$09` with the new M1.
-This is not a general-purpose P-ROM patcher; do not apply it to unrelated games.
+This retained AES artifact uses the older paired protocol. Its release-specific
+patcher restores game-init `$01` to match its preserved M1 and rejects the new
+NGP2 SDK function layout. Do not rebuild this historical AES image with a new
+P1 and its old M1. This pass does not alter the AES image or its graphics.
+Normal new builds must use a matching P1 and M1, with game initialization `$09`.
 
 ## Padding and Container Layout
 
@@ -88,7 +135,8 @@ hardware policy automatically; rebuild the native executable after updating.
 ## Verification
 
 Every test asset has a JSON manifest containing region sizes, SHA-256 hashes,
-and unchanged-region flags. The MVS patcher asserts only one P1 byte changes.
+and unchanged-region flags. The current MVS patcher restricts P1 changes to
+verified sound functions and erased padding; it rejects incompatible M1 revisions.
 The AES patcher asserts sample and driver preservation and exact game-font copying.
 
 ```sh

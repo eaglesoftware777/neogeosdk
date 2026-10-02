@@ -53,7 +53,7 @@ ym_wait_ready:
     ld (fifo_write),a
     xor a
     out ($00),a
-    ld a,$01
+    ld a,$80
     out ($0C),a
     pop hl
     pop bc
@@ -181,7 +181,7 @@ void driver_init(void) {
     init_fm();
     
     out(DRIVER_PORT_NMI_ENABLE, 0);
-    out(DRIVER_PORT_STATUS, 1);
+    out(DRIVER_PORT_STATUS, DRIVER_READY_VALUE);
     ei();
 }
 
@@ -224,6 +224,7 @@ void execute_command(void) {
     if (var_command == 0) return;
     if (var_command == 0x01 || var_command == 0x09) { driver_init(); return; }
     if (var_command == 0x03) { driver_init(); return; }
+    if (var_command == 0x08) { driver_init(); return; }
     if (var_command == 0x05) { var_param_mode = 1; var_wait_tempo = 2; return; }
     if (var_command == 0x06) { var_param_mode = 1; var_wait_tempo = 3; return; }
     if (var_command == 0x07) { var_param_mode = 1; var_wait_tempo = 4; return; }
