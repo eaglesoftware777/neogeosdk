@@ -106,6 +106,8 @@ void isZ80Ready(void);
 /* Core sound control. */
 void soundInit(void);
 void soundReset(void);
+/* Full Z80 restart; stops playback and resets volumes, sequencers and timers. */
+void soundHardwareReset(void);
 void soundStopAll(void);
 void soundStopMusic(void);
 void soundCancelFade(void);

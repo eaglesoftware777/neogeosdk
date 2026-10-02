@@ -32,6 +32,7 @@ SECTIONS
 						out\ng_*0.o(.rodata)
 						} > memory_user =0xFF
        game_engine_bss (NOLOAD) : {
+                        out\neogeolib.o(.bss.sound_protocol)
                         out\demo*0.o(.bss)
                         out\demo*0.o(.bss.*)
                         out\demo*0.o(COMMON)

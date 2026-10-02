@@ -80,6 +80,12 @@ class Machine:
     def close(self):
         self.lib.z80ex_destroy(self.cpu)
 
+    def parameter(self, value):
+        if value in (1, 2, 3, 9, 255):
+            self.command(255)
+            value ^= 128
+        self.command(value)
+
 
 @unittest.skipUnless(LIB and shutil.which("wla-z80") and shutil.which("wlalink"),
                      "Requires Z80Ex and WLA-DX")
@@ -120,25 +126,60 @@ class SlotSwitchTests(unittest.TestCase):
         m = self.machine
         m.command(5)
         self.assertNotEqual(m.mem[0xFE0B], 0)
-        m.command(1)
+        m.parameter(1)
         self.assertEqual(m.mem[0xFE42], 0)
         self.assertEqual(m.mem[0xFE0C], 1)
         self.assertEqual(m.mem[0xFE0B], 0)
 
     def test_game_init_and_soft_reset_keep_timer_running(self):
         m = self.machine
-        for command in (9, 3, 4, 9):
+        for command in (9, 3, 8, 4, 9):
             m.command(command)
             self.assertEqual(m.mem[0xFE42], 0)
             self.assertTrue(m.mem[0xF927] & 2)
+
+    def test_game_init_rebuilds_shadow_and_protocol_state(self):
+        m = self.machine
+        # A warm handoff must not trust a previous driver's cache or FIFO.
+        m.mem[0xF900:0xFB00] = bytes(0x200)
+        m.mem[0xFE42] = 0
+        m.mem[0xFE43] = 0
+        m.writes.clear()
+        m.command(9)
+        self.assertEqual(m.mem[0xFE42:0xFE44], bytes(2))
+        self.assertTrue(m.mem[0xF927] & 2)
+        self.assertTrue(any(port == 4 and value == 7
+                            for port, value, _ in m.writes))
+        ready = [i for i, (port, value, _) in enumerate(m.writes)
+                 if port == 12 and value == 0x80]
+        enable = [i for i, (port, _, _) in enumerate(m.writes) if port == 8]
+        self.assertEqual(len(ready), 1)
+        self.assertLess(enable[-1], ready[0])
+
+    def test_nine_remains_a_volume_parameter(self):
+        m = self.machine
+        m.command(5)
+        m.parameter(9)
+        self.assertEqual(m.mem[0xFE0C], 9)
+        self.assertEqual(m.mem[0xFE42], 0)
+
+    def test_foreign_parameter_flags_cannot_swallow_bios_restart(self):
+        m = self.machine
+        m.mem[0xFE42] = 0
+        m.mem[0xFE43] = 0xA5
+        m.mem[0xFE44:0xFE48] = bytes(4)
+        m.command(3)
+        self.assertEqual(m.mem[0xFE42:0xFE44], bytes(2))
+        self.assertEqual(m.mem[0xFE44:0xFE48], b"NGS1")
+        self.assertTrue(m.mem[0xF927] & 2)
 
     def test_parameter_arriving_before_fifo_dispatch(self):
         m = self.machine
         m.latch = 5
         self.assertTrue(m.lib.z80ex_nmi(m.cpu))
         m.run(lambda: m.pc < 0xF800 and m.mem[0xF820] != m.mem[0xF821]
-              and m.mem[0xFE43] == 1 and m.writes[-1][:2] == (12, 1))
-        m.command(1)
+              and m.mem[0xFE43] == 1 and m.writes[-1][:2] == (12, 0x80))
+        m.parameter(1)
         self.assertEqual(m.mem[0xFE42], 0)
         self.assertEqual(m.mem[0xFE0C], 1)
 
@@ -157,8 +198,14 @@ class SlotSwitchTests(unittest.TestCase):
         new.command(9)
         for m in (old, new):
             m.writes.clear()
-            for command in (5, 1, 6, 0xC0, 0x40, 0x80, 0x31, 1, 0x32, 1):
+            for command, parameter in ((5, 1), (6, 0xC0), (0x40, None),
+                                       (0x80, None), (0x31, 1), (0x32, 1)):
                 m.command(command)
+                if parameter is not None:
+                    if m is new:
+                        m.parameter(parameter)
+                    else:
+                        m.command(parameter)
             for _ in range(120):
                 self.assertTrue(m.lib.z80ex_int(m.cpu))
                 m.halt()
@@ -166,6 +213,30 @@ class SlotSwitchTests(unittest.TestCase):
         ym = lambda m: [(port, value) for port, value, pc in m.writes
                          if port in (4, 5, 6, 7)]
         self.assertEqual(ym(old), ym(new))
+
+    def test_bios_commands_interrupt_incomplete_parameters(self):
+        m = self.machine
+        m.command(5)
+        m.command(255)
+        m.command(1, sleeping=True)
+        self.assertEqual(m.mem[0xFE48], 0)
+        m.command(3)
+        m.command(5)
+        m.command(2)
+        self.assertEqual(m.mem[0xFE43:0xFE44], bytes(1))
+        self.assertTrue(m.mem[0xFE08])
+        m.command(5)
+        m.command(3)
+        self.assertEqual(m.mem[0xFE0C], 0x3F)
+        self.assertEqual(m.mem[0xFE43:0xFE49], b'\x00NGS1\x00')
+
+    def test_all_parameter_bytes_round_trip(self):
+        m = self.machine
+        for value in range(256):
+            m.command(6)
+            m.parameter(value)
+            self.assertEqual(m.mem[0xFE0D], value)
+            self.assertEqual(m.mem[0xFE42], 0)
 
 
 if __name__ == "__main__":
