@@ -1015,6 +1015,15 @@ def build():
         palette[1:] = master
         header.append(c_array(f"mg_{prefix}_tiles", tiles))
         header.append(c_array(f"mg_{prefix}_pal", palette_words(palette)))
+        if prefix == "gate":
+            dimensions = {frame.shape[:2] for frame in frames.values()}
+            if len(dimensions) != 1:
+                raise ValueError("Gate frames must use one shared canvas")
+            height, width = next(iter(dimensions))
+            if height % 16 or width % 16:
+                raise ValueError("Gate canvas must be aligned to 16-pixel tiles")
+            header.append(f"#define MG_GATE_ROWS {height // 16}u")
+            header.append(f"#define MG_GATE_STRIPS {width // 16}u")
         return master
 
     print("== 1. Compiling 6 Nature Stage Environments ==", flush=True)
@@ -1417,6 +1426,21 @@ def build():
             for name, f in frames.items():
                 rgb = np.clip(f[:, :, :3].astype(np.float32) * spec["lift"] + 14.0, 0, 255)
                 frames[name] = np.dstack((rgb.astype(np.uint8), f[:, :, 3]))
+        if cname == "beetle":
+            cleaned = {}
+            for name, frame in frames.items():
+                out = frame.copy()
+                for y in range(4, 21):
+                    for x in range(4, 44):
+                        ring = frame[y - 1:y + 2, x - 1:x + 2]
+                        if frame[y, x, 3] < 250 or np.count_nonzero(ring[:, :, 3] >= 250) < 9:
+                            continue
+                        neighbors = np.delete(ring[:, :, :3].reshape(9, 3), 4, axis=0)
+                        warm = (neighbors[:, 0] > neighbors[:, 2] + 14) & (neighbors[:, 0] > 70)
+                        if warm.sum() >= 7 and int(frame[y, x, 0]) + 35 < int(np.median(neighbors[:, 0])):
+                            out[y, x, :3] = np.median(neighbors, axis=0).astype(np.uint8)
+                cleaned[name] = out
+            frames = cleaned
         if cname in ("slime", "beetle", "goblin", "worm"):
             frames = {k: add_shadow(f) for k, f in frames.items()}
         master = shared_set(cname, frames)
@@ -1675,7 +1699,7 @@ def build():
     for k, name in enumerate(front.keys()):
         header.append(f"#define MG_FR_{name.upper()} {k}u")
 
-    # The Ancient Nature Gate, sealed and open (32 x 48).
+    # The gate's shared 48 x 64 canvas keeps a full-height doorway.
     shared_set("gate", {"shut": nature_art.gate(False), "open": nature_art.gate(True)})
 
     # The great tree, cliff or mountain each valley's gate stands in
