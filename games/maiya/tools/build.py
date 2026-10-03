@@ -92,9 +92,18 @@ def stage():
     (GAME / "build/bank-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
 
 
+def eagle_bios_path():
+    """bios/test_roms, where `make eagle-bios` puts EagleBIOS: put ahead of roms/
+    in a rompath, MAME boots it and never an SNK BIOS from roms/neogeo."""
+    path = ROOT / "bios/test_roms"
+    if not (path / "neogeo/sp-s2.sp1").is_file() or not (path / "aes/neo-epo.bin").is_file():
+        raise SystemExit("EagleBIOS is not built: run make eagle-bios")
+    return str(path)
+
+
 def run(mame, platform):
     command = [mame, "aes" if platform == "aes" else "neogeo", "-noreadconfig", "-rompath",
-               f"{WORK / 'roms'};{ROOT / 'roms'}", "-hashpath",
+               f"{eagle_bios_path()};{WORK / 'roms'};{ROOT / 'roms'}", "-hashpath",
                str(WORK / "hash_eagle/maiya"), "-cart1", "maiya",
                "-bios", "asia" if platform == "aes" else "euro", "-window", "-nofilter", "-waitvsync",
                "-noautoframeskip", "-frameskip", "0", "-skip_gameinfo",

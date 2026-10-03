@@ -31,8 +31,8 @@ selected toolchain and works in Linux/WSL and Windows CMD:
 
 ```sh
 make eagle-bios
-make GAME=maiya all USE_EAGLE_BIOS=1
-make GAME=maiya test USE_EAGLE_BIOS=1
+make GAME=maiya all
+make GAME=maiya test
 make GAME=maiya bios-package
 ```
 
@@ -41,10 +41,11 @@ uses Python 3, the configured m68k GCC/binutils and `wla-z80`/`wlalink`; it
 does not require Unix shell commands or `srec_cat`. Keep these tools on PATH
 or override the root Makefile's toolchain and WLA variables.
 
-`USE_EAGLE_BIOS` defaults to **0**. Enabling it builds fresh firmware and
+`USE_EAGLE_BIOS` defaults to **1**: every build makes fresh firmware and
 copies only the required files into `bios/test_roms/{neogeo,aes}`. MAME
-searches that directory before the cartridge directory, leaving installed
-vendor BIOS files untouched. AES uses machine `aes` and BIOS selector `asia`;
+searches that directory before the cartridge directory, so no vendor BIOS
+file is used, and none is touched. `USE_EAGLE_BIOS=0` goes back to the
+installed vendor firmware; `BIOS=<name>` asks for another one by name. AES uses machine `aes` and BIOS selector `asia`;
 MVS uses `neogeo` and `euro`. Compile the game with the same `PLATFORM` used
 for testing. MAME checksum warnings for replacement system firmware are
 expected, but missing files and startup failures are not.
@@ -70,7 +71,7 @@ make test-games # every SDK cartridge in ../roms on the arcade firmware
 make clean
 ```
 
-From the repository root, `make test USE_EAGLE_BIOS=1 GAME=<game>` and
+From the repository root, `make test GAME=<game>` and
 `./test_demo_bios.sh` launch MAME with these ROMs instead of a vendor set.
 
 ## What happens at power-on

@@ -200,31 +200,22 @@ endif
 
 # Intentionally pinned to game-first order; do not inherit ambient HASHPATH env.
 HASHPATH:=$(CURDIR)/hash_eagle/$(GAME);$(CURDIR)/hash_eagle;$(CURDIR)/hash
-# Default BIOS for make test/debug. Override: make test BIOS=euro
-# Supported values (make bios-list for full table):
-#   us  us-e  us-v2  us-u4  us-u3
-#   euro  euro-s1  asia-mv1c  asia-mv1b
-#   japan  japan-s2  japan-s1  japan-mv1b  japan-j3a  japan-mv1c  japan-hotel
-#   unibios40 unibios33 unibios32 unibios31 unibios30
-#   unibios23 unibios23o unibios22 unibios21 unibios20
-#   unibios13 unibios12 unibios12o unibios11 unibios10
-#
-# The bright green, garbled screen for the first ~3.5s of a run is not
-# ours: it is the MVS BIOS power-on self-test painting its RAM/VRAM test
-# patterns, and the 68k is still inside BIOS ROM the whole time it is up.
-# It is byte-identical under us/euro/japan and does not appear at all
-# under the Universe BIOS, which skips the self-test - so
+# The system ROM for test/debug is EagleBIOS, the open firmware built in
+# bios/ (USE_EAGLE_BIOS=1, the default): MAME finds it in bios/test_roms
+# ahead of anything in roms/, so no SNK BIOS takes part in a build or a
+# test. It stands in for MAME's euro MVS ROM (sp-s2.sp1) and asia AES ROM
+# (neo-epo.bin), the defaults below. Another system ROM is only ever
+# asked for by name, and comes from roms/neogeo or roms/aes:
 #   make test BIOS=unibios40
-# boots straight into the cart if you would rather not sit through it.
-# Experimental EagleBIOS option: 0 = disabled (default, uses stock BIOS), 1 = enabled
-USE_EAGLE_BIOS ?= 0
+#   make test USE_EAGLE_BIOS=0   (the stock BIOS, if present)
+# (make bios-list for every name MAME knows.)
+USE_EAGLE_BIOS ?= 1
 ifeq ($(USE_EAGLE_BIOS),1)
 ROMPATH ?= $(CURDIR)/bios/test_roms;$(CURDIR)/roms
-override BIOS = $(if $(filter aes,$(PLATFORM)),asia,euro)
 else
 ROMPATH ?= $(CURDIR)/roms
-BIOS ?= $(if $(filter aes,$(PLATFORM)),asia,euro)
 endif
+BIOS ?= $(if $(filter aes,$(PLATFORM)),asia,euro)
 ROM_DIR = roms/$(GAME)
 DUMP_DIR = dump/$(GAME)
 MAME_PLAYBACK ?= -noautoframeskip -frameskip 0

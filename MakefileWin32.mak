@@ -206,31 +206,22 @@ endif
 
 # Intentionally pinned to game-first order; do not inherit ambient HASHPATH env.
 HASHPATH:=$(REPO_WIN)\hash_eagle\$(GAME);$(REPO_WIN)\hash_eagle;$(REPO_WIN)\hash
-# Default BIOS for test/debug. Override: make -f MakefileWin32.mak test BIOS=euro
-# Supported values (make -f MakefileWin32.mak bios-list for full table):
-#   us  us-e  us-v2  us-u4  us-u3
-#   euro  euro-s1  asia-mv1c  asia-mv1b
-#   japan  japan-s2  japan-s1  japan-mv1b  japan-j3a  japan-mv1c  japan-hotel
-#   unibios40 unibios33 unibios32 unibios31 unibios30
-#   unibios23 unibios23o unibios22 unibios21 unibios20
-#   unibios13 unibios12 unibios12o unibios11 unibios10
-#
-# The bright green, garbled screen for the first ~3.5s of a run is not
-# ours: it is the MVS BIOS power-on self-test painting its RAM/VRAM test
-# patterns, and the 68k is still inside BIOS ROM the whole time it is up.
-# It is byte-identical under us/euro/japan and does not appear at all
-# under the Universe BIOS, which skips the self-test - so
-#   make test BIOS=unibios40
-# boots straight into the cart if you would rather not sit through it.
-# Experimental EagleBIOS option: 0 = disabled (default, uses stock BIOS), 1 = enabled
-USE_EAGLE_BIOS ?= 0
+# The system ROM for test/debug is EagleBIOS, the open firmware built in
+# bios/ (USE_EAGLE_BIOS=1, the default): MAME finds it in bios/test_roms
+# ahead of anything in roms/, so no SNK BIOS takes part in a build or a
+# test. It stands in for MAME's euro MVS ROM (sp-s2.sp1) and asia AES ROM
+# (neo-epo.bin), the defaults below. Another system ROM is only ever
+# asked for by name, and comes from roms/neogeo or roms/aes:
+#   make -f MakefileWin32.mak test BIOS=unibios40
+#   make -f MakefileWin32.mak test USE_EAGLE_BIOS=0   (the stock BIOS, if present)
+# (make -f MakefileWin32.mak bios-list for every name MAME knows.)
+USE_EAGLE_BIOS ?= 1
 ifeq ($(USE_EAGLE_BIOS),1)
 ROMPATH ?= $(REPO_WIN)\bios\test_roms;$(REPO_WIN)\roms
-override BIOS = $(if $(filter aes,$(PLATFORM)),asia,euro)
 else
 ROMPATH ?= $(REPO_WIN)\roms
-BIOS ?= $(if $(filter aes,$(PLATFORM)),asia,euro)
 endif
+BIOS ?= $(if $(filter aes,$(PLATFORM)),asia,euro)
 ROM_DIR = roms\$(GAME)
 DUMP_DIR = dump\$(GAME)
 MAME_PLAYBACK ?= -noautoframeskip -frameskip 0

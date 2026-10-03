@@ -26,8 +26,8 @@ make GAME=<name> test
 
 On Windows use `make -f MakefileWin32.mak` with the same arguments.
 An explicit `GAME_CFG_FILE=` remains available for custom configurations.
-`USE_EAGLE_BIOS=1` builds and installs the optional firmware into its isolated
-test directory. `bios-package` builds a cartridge-plus-firmware ZIP; the
+EagleBIOS (`USE_EAGLE_BIOS=1`, the default) is built and installed into its
+isolated test directory, and every test runs on it. `bios-package` builds a cartridge-plus-firmware ZIP; the
 normal default never bundles replacement firmware.
 
 ## Maiya (id 780)
