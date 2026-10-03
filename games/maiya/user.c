@@ -11,6 +11,9 @@ https://github.com/eaglesoftware777/neogeosdk
 #include "sdk/bsp/bsp.h"
 #include "sdk/2d_engine/ng_fix.h"
 #include "games/maiya/scenes/maiya_game.h"
+#ifdef NG_RASTER
+#include "sdk/2d_engine/ng_raster.h"
+#endif
 #pragma GCC push_options
 #pragma GCC optimize ("O0")
 
@@ -59,9 +62,21 @@ NEOGEO_INTERRUPT void NEOGEO_USER VBlank(void) {
     ::: ASM_END
 }
 
+#ifdef NG_RASTER
+/* The LSPC timer goes straight to the raster bands' own interrupt routine
+ * (ng_raster.h; the bands are mg_raster_step's): no second save and call. */
+__asm__(
+    "\t.section neogeo_user,\"ax\",@progbits\n"
+    "\t.even\n"
+    "\t.globl IRQ2\n"
+    "IRQ2:\n"
+    "\tjmp ng_raster_irq_handler\n"
+    "\t.previous\n");
+#else
 NEOGEO_INTERRUPT void NEOGEO_USER IRQ2(void) {
     ASM_START ASM_MVW(#2,REG_IRQACK) ::: ASM_END
 }
+#endif
 
 NEOGEO_INTERRUPT void NEOGEO_USER IRQ3(void) {
     ASM_START ASM_MVW(#1,REG_IRQACK) ASM_MVB(%%d0,REG_DIPSW) ::: ASM_END

@@ -80,6 +80,10 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g);
 #define NG_VRAM_QUEUE_GROUPS  256u
 #define NG_VRAM_QUEUE_HIDES   32u
 void NEOGEO_USER ng_vram_commit(void);
+/* Non-zero while the engine is writing video memory (the commit, a full
+ * list's flush, a hide, an upload): raster bands (ng_raster.h) leave their
+ * own video writes out then. */
+extern volatile uint8_t ng_vram_busy;
 void NEOGEO_USER ng_sprite_group_cancel(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_hide_range_queued(uint16_t firstSprite, uint16_t count);
 #endif

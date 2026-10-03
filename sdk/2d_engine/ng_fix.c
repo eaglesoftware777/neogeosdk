@@ -1,4 +1,5 @@
 #include "ng_fix.h"
+#include "ng_sprite_group.h"
 #include "ng_perf.h"
 #include "neogeo.h"
 
@@ -64,7 +65,12 @@ static void NEOGEO_USER ng_fix_write(uint16_t i)
         r[-1].next = (uint16_t)(i + 32u);
         return;
     }
-    if (r == &ng_fix_q[NG_FIX_QUEUE]) { ng_fix_commit(); r = ng_fix_q; }
+    if (r == &ng_fix_q[NG_FIX_QUEUE]) {   /* full: written at once */
+        ng_vram_busy++;
+        ng_fix_commit();
+        ng_vram_busy--;
+        r = ng_fix_q;
+    }
     r->first = i;
     r->next = (uint16_t)(i + 32u);
     r->n = 1;

@@ -14,7 +14,7 @@ Framework v1 is the C 2D engine (`sdk/2d_engine`) at a fixed API. Its public cal
 | Macro | Value | Meaning |
 |---|---|---|
 | `NG_SDK_VERSION` | `0x010701` | the SDK release this tree becomes (`CHANGELOG.md`) |
-| `NG_FRAMEWORK_VERSION` | `0x0100` | the frozen engine API, 1.0 |
+| `NG_FRAMEWORK_VERSION` | `0x0101` | the engine API: 1.0 frozen, 1.1 adds raster bands |
 
 The list is `docs/api/framework_v1.txt`: every `NEOGEO_USER` prototype in `sdk/2d_engine/*.h`.
 - `make api-check` (also part of `make test`) runs `tools/api_freeze.py`. It fails when a listed prototype is missing or changed, and reports the additions.
@@ -86,9 +86,10 @@ The report gives game fps, the share of frames that overran, work in scanlines (
 
 ## v1.x
 
-Additions planned on top of 1.0 (`docs/design/V4_PLAN.md`):
-- raster bands on the LSPC timer interrupt;
-- colour cycling and palette-bank flips;
+Additions since 1.0:
+- **1.1: raster bands** (`ng_raster.h`, `docs/raster.md`, `-DNG_RASTER=1`).
+
+Additions planned (`docs/design/V4_PLAN.md`):
 - shrink-based squash and stretch with weighted hitstop;
 - parallax planes with a strips-per-line check;
 - `make neo`;
