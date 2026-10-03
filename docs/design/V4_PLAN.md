@@ -124,6 +124,15 @@ These are the values already played, so they are kept rather than moved to the p
 
 Regressions pass as before.
 
+## Phase 7 results
+
+`make neo GAME=<name>` (`tools/make_neo.py`, `docs/MAKEFILE_INTEGRATION.md`) builds the game for AES and then MVS. For each platform it writes to `dist/neo/<game>/`:
+- a MAME test set (`roms/` and `hash/`);
+- a NeoSD image: P, S and M padded to 64 KiB, V to a power of two, C1/C2 interleaved and padded to 256 KiB;
+- a manifest of sizes, CRC32s and SHA-256s.
+
+For Maiya, both sets pass `-verifysoftlist`, and the images' headers read back right. The P-ROMs match the ones installed in phase 4 byte for byte. No system BIOS goes in. `dist/release` is never written.
+
 ## 4. Framework v1
 
 When phases 0–2 are in, the SDK is tagged **v1.0**:

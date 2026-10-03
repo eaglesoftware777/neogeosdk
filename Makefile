@@ -276,6 +276,19 @@ all-games:
 	  $(MAKE) all GAME=$$g || exit 1; \
 	done
 
+# make neo GAME=<name>: the game built for AES and then for MVS (so roms/<game>
+# ends as the MVS set), each as a MAME test set and a NeoSD image in
+# dist/neo/<game>/, with a manifest of sizes and checksums (tools/make_neo.py).
+.PHONY: neo
+neo: game-check
+	rm -f out/*.o
+	$(MAKE) all hash GAME=$(GAME) GAME_ID=$(GAME_ID) PLATFORM=aes
+	$(PYTHON) tools/make_neo.py --game $(GAME) --game-id $(GAME_ID) --platform aes --name "$(or $(GAME_NAME),$(GAME))"
+	rm -f out/*.o
+	$(MAKE) all hash GAME=$(GAME) GAME_ID=$(GAME_ID) PLATFORM=mvs
+	$(PYTHON) tools/make_neo.py --game $(GAME) --game-id $(GAME_ID) --platform mvs --name "$(or $(GAME_NAME),$(GAME))"
+	$(PYTHON) tools/make_neo.py --game $(GAME) --manifest
+
 .PHONY: dist-all
 dist-all:
 	@for g in $(GAMES); do \

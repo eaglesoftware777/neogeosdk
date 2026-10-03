@@ -34,3 +34,6 @@ tests/test_pause
 tests/test_pause.exe
 tests/test_move
 tests/test_move.exe
+
+# make neo GAME=<name>: NeoSD images and MAME test sets, rebuilt on demand
+dist/neo/
