@@ -158,6 +158,21 @@ Regressions pass as before.
 - EagleBIOS's CARD answers "no card", so with EagleBIOS a console's save lasts the session only.
 - Not verified on a real AES.
 
+## Phase 6 results
+
+**The run cycle.** Her source sheet draws four run poses:
+- Walk 0–3 are those poses, and walk 4–7 repeat them.
+- The three "run" frames the art builds are copies of three of them.
+- None of the poses rises or falls: head and feet sit at the same height in all four.
+
+More poses need drawn art. In code, the two poses that plant a foot now draw her a little shorter, with her feet and the shadow under them on the ground and her head dipping: 97% walking, 95% running (`MG_RUN_FOOTFALL*` in `maiya_feel.h`). So the cycle bobs twice a stride. Checked frame by frame in MAME.
+
+**Already there:**
+- **Two palettes per heroine:** `mg_hero_pal` and `mg_hero_alt_pal`, picked on the chooser.
+- **Placeholder art:** none of the art the game uses is a placeholder that code can replace. What's left needs drawing.
+
+**The C-ROM budget** is raised from 2 MiB, which the art had filled to 98.8%, to the chips' 8 MiB (`games/maiya/game.cfg`).
+
 ## Phase 7 results
 
 `make neo GAME=<name>` (`tools/make_neo.py`, `docs/MAKEFILE_INTEGRATION.md`) builds the game for AES and then MVS. For each platform it writes to `dist/neo/<game>/`:

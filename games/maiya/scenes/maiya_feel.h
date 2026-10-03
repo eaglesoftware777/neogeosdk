@@ -40,6 +40,10 @@
  * Her feet and her middle stay where they are.
  */
 enum { MG_SQ_LAND = 1, MG_SQ_JUMP, MG_SQ_HURT, MG_SQ_STRIKE, MG_SQ_KINDS };
+/* her run's footfall: how tall she is on the two poses that plant a foot
+ * (256ths, less one): 97% walking, 95% at a run */
+#define MG_RUN_FOOTFALL       0xF7
+#define MG_RUN_FOOTFALL_FAST  0xF2
 enum { MG_SQ_FRAMES = 6 };
 static const uint8_t mg_sq_len[MG_SQ_KINDS] = { 0, 6, 4, 4, 3 };
 static const uint8_t mg_sq_x[MG_SQ_KINDS][MG_SQ_FRAMES] = {

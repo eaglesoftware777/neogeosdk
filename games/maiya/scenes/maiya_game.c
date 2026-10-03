@@ -7884,6 +7884,13 @@ static void NEOGEO_USER mg_squash_step(void)
         if (!ng_feedback_is_hitstop()) mg.sq_t--;
     } else {
         mg.sq_t = 0;
+        /* Her run's footfalls: the run has four poses and none of them
+         * rises or falls, so on the two that plant a foot she settles a
+         * little lower -- her feet and the shadow drawn under them stay
+         * on the ground, her head dips -- a little more when she runs. */
+        if (!mg.flying && !mg.climbing && !mg.swimming && !mg.airborne && p->vx_fp != 0 &&
+            (p->sprite_tile == mg_hero_tiles[MG_F_WALK0] || p->sprite_tile == mg_hero_tiles[MG_F_WALK2]))
+            ys = (uint8_t)(mg_abs((int16_t)p->vx_fp) > WALK_SPEED + 64 ? MG_RUN_FOOTFALL_FAST : MG_RUN_FOOTFALL);
     }
     w = (uint8_t)(HERO_STRIPS * ((xs >> 4) + 1u));               /* drawn width */
     h = (int16_t)(((uint16_t)(HERO_ROWS * 16) * (uint16_t)(ys + 1u)) >> 8);   /* drawn height */
