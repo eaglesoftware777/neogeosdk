@@ -172,6 +172,14 @@ SDK_LIB_SRCS=$(wildcard sdk/cabinet/*.c) sdk/2d_engine/ng_trig.c sdk/2d_engine/n
 SDK_LIB_OBJ0=$(addprefix out/lib_,$(addsuffix 0.o,$(notdir $(basename $(SDK_LIB_SRCS)))))
 SDK_LIB=out/libng_sdk.a
 
+# Measurement builds: frame time and VRAM traffic counted in RAM for a test
+# script to read (sdk/ng_perf.h). Never for a release.
+ifeq ($(PERF),1)
+CFLAGS += -DNG_DEBUG_PERF=1
+CXXFLAGS += -DNG_DEBUG_PERF=1
+GAME_CFLAGS += -DNG_DEBUG_PERF=1   # (taken from CFLAGS above, before this)
+endif
+
 ifeq ($(DEBUG),1)
 CFLAGS += -g3 -gdwarf-2 -DNG_DEBUG=1
 LDFLAGS += -Map=out/game.map
