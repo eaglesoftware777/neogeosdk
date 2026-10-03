@@ -27,6 +27,7 @@ extern "C" {
 #define NG_SGF_DIRTY_SHRINK   0x08  /* scale changed → write SCB2 */
 #define NG_SGF_DIRTY_VIS      0x10  /* visibility changed */
 #define NG_SGF_DIRTY_ALL      0x1F  /* force full upload */
+#define NG_SGF_QUEUED         0x80  /* NG_VRAM_DEFER: waiting for ng_vram_commit() */
 
 typedef struct {
     uint16_t firstSprite;
@@ -59,6 +60,29 @@ void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, ui
 void NEOGEO_USER ng_sprite_group_mark_dirty(NGSpriteGroup *g, uint8_t dirty_flags);
 /* Dirty-aware flush: only writes VRAM regions flagged in g->dirty. */
 void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g);
+
+#ifdef NG_VRAM_DEFER
+/*
+ * Video writes in the vertical blank (a game's GAME_ENGINE_DEFINES
+ * -DNG_VRAM_DEFER=1, C engine). ng_sprite_group_flush() then only puts the
+ * group on a list; ng_vram_commit(), called first thing after the frame's
+ * wait for the vertical blank, writes every listed group's changes there --
+ * the screen is never drawn from half-written sprite tables. A group is
+ * written in the state it has at the commit, once however many times it was
+ * flushed. Character hides are listed too and done first.
+ *
+ * ng_sprite_group_upload(), ng_sprite_group_hide() and the
+ * ng_sprite_hide_*() calls still write at once: scene set-up, behind a fade.
+ * A group listed but then thrown away must be dropped with
+ * ng_sprite_group_cancel(), or the commit would bring it back. If the list
+ * is ever full, a flush writes at once as before.
+ */
+#define NG_VRAM_QUEUE_GROUPS  256u
+#define NG_VRAM_QUEUE_HIDES   32u
+void NEOGEO_USER ng_vram_commit(void);
+void NEOGEO_USER ng_sprite_group_cancel(NGSpriteGroup *g);
+void NEOGEO_USER ng_sprite_hide_range_queued(uint16_t firstSprite, uint16_t count);
+#endif
 void NEOGEO_USER ng_sprite_group_set_tile_base(NGSpriteGroup *g, uint16_t tileBase);
 void NEOGEO_USER ng_sprite_group_set_tile_stride(NGSpriteGroup *g, uint16_t tileStride);
 void NEOGEO_USER ng_sprite_group_set_palette(NGSpriteGroup *g, uint8_t palette);

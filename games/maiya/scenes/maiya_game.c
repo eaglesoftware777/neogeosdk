@@ -501,13 +501,15 @@ static void NEOGEO_USER mg_wait_vblank(void)
         : "d0", "cc", "memory");
 }
 
-/* The frame boundary: the vertical blank, and in it the colours that
- * changed since the last one. Every frame of hers passes through here. */
+/* The frame boundary: the vertical blank, and in it the sprites and the
+ * colours that changed since the last one. Every frame of hers passes
+ * through here. */
 void NEOGEO_USER maiya_vblank(void)
 {
     NG_PERF_FRAME_END();        /* (measurement builds only: sdk/ng_perf.h) */
     mg_wait_vblank();
     NG_PERF_FRAME_BEGIN();
+    ng_vram_commit();           /* the sprites the frame changed, in the blank */
     ng_palfx_vblank();
 }
 

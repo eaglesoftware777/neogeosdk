@@ -466,7 +466,14 @@ void NEOGEO_USER clearSprs() {
 	ASM_END
 }
 
+#ifdef NG_VRAM_DEFER
+void ng_fix_queue_drop(void);
+#endif
+
 void NEOGEO_USER clearFix() {
+#ifdef NG_VRAM_DEFER
+	ng_fix_queue_drop();   /* text cells still waiting for the blank are cleared too */
+#endif
 	ASM_START
 	ASM_JSR(SYS_FIX_CLEAR)
 	ASM_MVL(#1280-1, %%d7)

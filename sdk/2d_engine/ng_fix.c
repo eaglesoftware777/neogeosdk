@@ -6,6 +6,47 @@ static char ng_fix_chars[NG_FIX_HEIGHT][NG_FIX_WIDTH];
 static uint8_t ng_fix_pals[NG_FIX_HEIGHT][NG_FIX_WIDTH];
 static uint16_t ng_fix_ascii_base;
 
+#ifdef NG_VRAM_DEFER
+/*
+ * NG_VRAM_DEFER: a cell's word waits, in order, for ng_fix_commit() in the
+ * vertical blank (ng_vram_commit() calls it). A full list is written at
+ * once, in order, before the next cell joins it; a clear of the whole layer
+ * drops what was waiting.
+ */
+#define NG_FIX_QUEUE 128u
+static struct { uint16_t addr, value; } ng_fix_q[NG_FIX_QUEUE];
+static uint8_t ng_fix_qn;
+
+static uint8_t ng_fix_last_n;
+uint8_t NEOGEO_USER ng_fix_last_commit_cells(void) { return ng_fix_last_n; }
+
+void NEOGEO_USER ng_fix_commit(void)
+{
+    uint8_t i;
+    ng_fix_last_n = ng_fix_qn;
+    for (i = 0; i < ng_fix_qn; i++) {
+        NG_PERF_VRAM(1);
+        vram_sfix(0x20, ng_fix_q[i].addr, ng_fix_q[i].value);
+    }
+    ng_fix_qn = 0;
+}
+
+void NEOGEO_USER ng_fix_queue_drop(void)
+{
+    ng_fix_qn = 0;
+}
+
+static void NEOGEO_USER ng_fix_write(uint16_t addr, uint16_t value)
+{
+    if (ng_fix_qn >= NG_FIX_QUEUE) ng_fix_commit();
+    ng_fix_q[ng_fix_qn].addr = addr;
+    ng_fix_q[ng_fix_qn].value = value;
+    ng_fix_qn++;
+}
+#else
+#define ng_fix_write(addr, value) do { NG_PERF_VRAM(1); vram_sfix(0x20, (addr), (value)); } while (0)
+#endif
+
 void NEOGEO_USER ng_fix_set_ascii_base(uint16_t tile_base)
 {
     if (tile_base > 0xF00u || (tile_base & 0xFFu)) return;
@@ -29,8 +70,7 @@ void NEOGEO_USER ng_fix_blank_cell(uint8_t x, uint8_t y)
      * and ng_fix_putc use.  Without it this blanked
      * a cell two rows above the one it had drawn. */
     addrfix = (uint16_t)(FIXMAP + y + 2u + ((uint16_t)x * 32u));
-    NG_PERF_VRAM(1);
-    vram_sfix(0x20, addrfix, 0x00FF);
+    ng_fix_write(addrfix, 0x00FF);
 
     ng_fix_chars[y][x] = ' ';
     ng_fix_pals[y][x] = 0;
@@ -64,7 +104,7 @@ void NEOGEO_USER ng_fix_invalidate_all(void)
 
 void NEOGEO_USER ng_fix_clear(void)
 {
-    clearFix();
+    clearFix();   /* (with NG_VRAM_DEFER it drops the cells waiting) */
 
     {
         uint8_t y;
@@ -119,9 +159,8 @@ void NEOGEO_USER ng_fix_putc(uint8_t x, uint8_t y, char ch, uint8_t pal)
 
     /* The cell's map word, as fixtext_out() writes it, without measuring a
      * one-character string first. */
-    NG_PERF_VRAM(1);
-    vram_sfix(0x20, (uint16_t)(FIXMAP + y + 2u + ((uint16_t)x * 32u)),
-              (uint16_t)(((uint16_t)pal << 12) | (ng_fix_ascii_base + (uint8_t)ch)));
+    ng_fix_write((uint16_t)(FIXMAP + y + 2u + ((uint16_t)x * 32u)),
+                 (uint16_t)(((uint16_t)pal << 12) | (ng_fix_ascii_base + (uint8_t)ch)));
 
     ng_fix_chars[y][x] = ch;
     ng_fix_pals[y][x] = pal;
@@ -138,8 +177,7 @@ void NEOGEO_USER ng_fix_put_tile(uint8_t x, uint8_t y, uint16_t tile, uint8_t pa
     uint16_t addrfix;
     if (x >= NG_FIX_WIDTH || y >= NG_FIX_HEIGHT) return;
     addrfix = (uint16_t)(FIXMAP + y + 2u + ((uint16_t)x * 32u));
-    NG_PERF_VRAM(1);
-    vram_sfix(0x20, addrfix, (uint16_t)(((uint16_t)(pal & 0x0f) << 12) | (tile & 0x0fffu)));
+    ng_fix_write(addrfix, (uint16_t)(((uint16_t)(pal & 0x0f) << 12) | (tile & 0x0fffu)));
     ng_fix_chars[y][x] = (char)0xFE;
     ng_fix_pals[y][x] = 0xF0;
 }

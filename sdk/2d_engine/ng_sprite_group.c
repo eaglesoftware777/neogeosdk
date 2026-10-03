@@ -5,6 +5,7 @@
 #include "ng_vram.h"
 #include "ng_sprite_hw.h"
 #include "ng_perf.h"
+#include "ng_fix.h"
 
 /*
  * Built at -O2 while the rest of the tree may be -O0.
@@ -592,7 +593,13 @@ void NEOGEO_USER ng_sprite_group_hide(NGSpriteGroup *g)
  *
  * If nothing is dirty, the function returns immediately — zero VRAM writes.
  */
+/* With NG_VRAM_DEFER this is the commit's writer, called with the group's
+ * listing already cleared; ng_sprite_group_flush() then only lists. */
+#ifdef NG_VRAM_DEFER
+static void NEOGEO_USER ngsg_flush_now(NGSpriteGroup *g)
+#else
 void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
+#endif
 {
     uint8_t dirty;
     uint8_t rows;
@@ -639,3 +646,87 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
         ngsg_put((uint16_t)(SCB4_ADDR + g->firstSprite), ngsg_scb4(g));
     }
 }
+
+#ifdef NG_VRAM_DEFER
+static NGSpriteGroup *ngsg_queue[NG_VRAM_QUEUE_GROUPS];
+static uint16_t ngsg_queue_n;
+static struct { uint16_t first, count; } ngsg_hides[NG_VRAM_QUEUE_HIDES];
+static uint8_t ngsg_hides_n;
+
+void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
+{
+    if (!g || !(g->dirty & NG_SGF_DIRTY_ALL)) return;
+    if (g->dirty & NG_SGF_QUEUED) return;          /* already listed: written as it is then */
+    if (ngsg_queue_n < NG_VRAM_QUEUE_GROUPS) {
+        ngsg_queue[ngsg_queue_n++] = g;
+        g->dirty = (uint8_t)(g->dirty | NG_SGF_QUEUED);
+        return;
+    }
+    ngsg_flush_now(g);                             /* list full: as before */
+}
+
+void NEOGEO_USER ng_sprite_group_cancel(NGSpriteGroup *g)
+{
+    /* Its changes are dropped; the listing, if any, stays and finds nothing. */
+    if (g) g->dirty = (uint8_t)(g->dirty & NG_SGF_QUEUED);
+}
+
+void NEOGEO_USER ng_sprite_hide_range_queued(uint16_t firstSprite, uint16_t count)
+{
+    if (ngsg_hides_n < NG_VRAM_QUEUE_HIDES) {
+        ngsg_hides[ngsg_hides_n].first = firstSprite;
+        ngsg_hides[ngsg_hides_n].count = count;
+        ngsg_hides_n++;
+        return;
+    }
+    ng_sprite_hide_range(firstSprite, count);
+}
+
+/*
+ * Nine flushes in ten (measured in play) only move a group: its map,
+ * height and shrink are as last written, and the driving strip's two
+ * position words are all that change. Written here straight, without the
+ * general routine's checks; anything else takes ngsg_flush_now(). Returns
+ * 0 when the group isn't that case.
+ */
+static uint8_t NEOGEO_USER ngsg_flush_moved(NGSpriteGroup *g)
+{
+    uint8_t rows;
+    if ((g->dirty & NG_SGF_DIRTY_ALL) != NG_SGF_DIRTY_POS || !g->visible ||
+        g->yScale != NG_SPRITE_FULL_YSCALE || g->mapFirst != g->firstSprite ||
+        g->mapStrips != g->strips || g->mapHeight != g->heightTiles)
+        return 0u;
+    rows = g->activeRows ? g->activeRows : g->heightTiles;          /* as ngsg_rows() */
+    if (rows > g->heightTiles) rows = g->heightTiles;
+    if (rows > NG_SPRITE_MAX_HEIGHT_TILES) rows = NG_SPRITE_MAX_HEIGHT_TILES;
+    if (!rows || g->mapRows < ng_sprite_map_rows(rows)) return 0u;
+    ngsg_put((uint16_t)(SCB3_ADDR + g->firstSprite), ngsg_scb3(g, rows));
+    ngsg_put((uint16_t)(SCB4_ADDR + g->firstSprite), ngsg_scb4(g));
+    g->dirty = (uint8_t)(g->dirty & NG_SGF_QUEUED);
+    return 1u;
+}
+
+void NEOGEO_USER ng_vram_commit(void)
+{
+    uint16_t i;
+    NG_PERF_COMMIT(1);
+    /* Hides first: a character that moved to other slots is hidden where it
+     * was before it is drawn where it is. */
+    for (i = 0; i < ngsg_hides_n; i++) ng_sprite_hide_range(ngsg_hides[i].first, ngsg_hides[i].count);
+    ngsg_hides_n = 0;
+    for (i = 0; i < ngsg_queue_n; i++) {
+        NGSpriteGroup *g = ngsg_queue[i];
+        g->dirty = (uint8_t)(g->dirty & (uint8_t)~NG_SGF_QUEUED);
+        if (!ngsg_flush_moved(g)) ngsg_flush_now(g);
+    }
+    {
+        uint16_t groups = ngsg_queue_n;
+        uint16_t from = NG_PERF_LINE();
+        (void)groups; (void)from;
+        ngsg_queue_n = 0;
+        ng_fix_commit();                 /* then the text cells */
+        NG_PERF_COMMIT_PART(groups, ng_fix_last_commit_cells(), from);
+    }
+    NG_PERF_COMMIT(0);
+}
+#endif
