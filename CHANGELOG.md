@@ -77,6 +77,10 @@ the v1.7.1 release when it merges.  v1.7.0 remains the current release.
   Maiya's regression, play and measurement runs boot it too
   (`--stock-bios` to opt out).  `PLATFORM=aes` selects the console machine
   and BIOS.
+- A memory card routine (SYS_CARD) in the console system ROMs' card
+  layout -- format, search, load, save, delete, title, user name -- so a
+  card moves between EagleBIOS, the original AES BIOS and UniBIOS with its
+  saves (checked both ways in MAME).
 - Contract probes on both boards, cartridge compatibility tests that reject
   modified ROM sets, and Maiya boot and audio checks on MVS and AES.
   Physical hardware and retail-cartridge compatibility are not yet verified.

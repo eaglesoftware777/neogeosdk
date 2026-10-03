@@ -41,6 +41,11 @@
 #define REG_SRAMUNLOCK      (*(volatile uint8_t  *)0x3A001Du)  /* Unlock backup RAM */
 #define REG_PALBANK0        (*(volatile uint8_t  *)0x3A000Fu)  /* Palette bank 0 */
 #define REG_PALBANK1        (*(volatile uint8_t  *)0x3A001Fu)  /* Palette bank 1 */
+#define REG_CRDUNLOCK1      (*(volatile uint8_t  *)0x3A0005u)  /* Memory card writes: both unlocks */
+#define REG_CRDUNLOCK2      (*(volatile uint8_t  *)0x3A0017u)
+#define REG_CRDLOCK1        (*(volatile uint8_t  *)0x3A0015u)  /* ... and both locks again */
+#define REG_CRDLOCK2        (*(volatile uint8_t  *)0x3A0007u)
+#define REG_CRDNORMAL       (*(volatile uint8_t  *)0x3A0019u)  /* Card memory, not its attribute registers */
 
 /* VRAM Registers */
 #define REG_VRAM_ADDR       (*(volatile uint16_t *)0x3C0000u)

@@ -178,7 +178,7 @@ A new code interrupts a tune within 10 ms.
 | `C00456` | SYS_CREDIT_DOWN   | spend them                                                                 |
 | `C0045C` | SYS_READ_CALENDAR | BCD date and time into `10FDD2`                                            |
 | `C00462` | SYS_SET_CALENDAR  | accepted, nothing to write to                                              |
-| `C00468` | SYS_CARD          | memory card: answers "not inserted" (`80`)                                 |
+| `C00468` | SYS_CARD          | memory card, in the console system ROMs' card layout: format, search, load, save, delete, title, user name (8-bit cards, 2-16 KiB) |
 | `C0046E` | SYS_CARD_ERROR    | no-op                                                                      |
 | `C00474` | SYS_HOWTOPLAY     | no-op                                                                      |
 | `C004C2` | SYS_FIX_CLEAR     | FIX map to `0020`                                                          |
@@ -281,8 +281,8 @@ screenshots, copied test ROMs and audio on another drive.
 
 ## Limitations
 
-No memory card support, no clock (the calendar answers a fixed date), no
-HOWTOPLAY screen, no Japanese common-FIX text, one cartridge slot, region
+Memory cards: 8-bit ones only (the SNK card is one); 16-bit cards are not
+handled. No clock (the calendar answers a fixed date), no HOWTOPLAY screen, no Japanese common-FIX text, one cartridge slot, region
 fixed by the firmware id word.
 
 Passing the firmware probes does not establish universal retail cartridge
