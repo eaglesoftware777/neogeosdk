@@ -220,7 +220,11 @@ uint32_t psize  __attribute__ ((section ("neogeo_init"))) = 		0x80000;
 uint32_t pbcks __attribute__ ((section ("neogeo_init"))) = 		0x100400;
 uint16_t dipsize  __attribute__ ((section ("neogeo_init"))) = 		0x0400;  /* save block size */
 uint8_t bioslogoflag __attribute__ ((section ("neogeo_init"))) = 	0x01;  /* 1 = game supplies its own eye-catcher; BIOS calls EYE_CATCHER entry */
-uint8_t bioslogotile __attribute__ ((section ("neogeo_init"))) = 	0x00;
+/* The logo bank: the game draws its own eye-catcher (above), but the
+ * UniBIOS splash shows the cartridge logo from this bank on an arcade board
+ * too -- bank 0 put unrelated tiles there. $49 is the isolated Maiya logo
+ * the AES header uses (games/maiya/tools/boot_assets.py). */
+uint8_t bioslogotile __attribute__ ((section ("neogeo_init"))) = 	0x49;
 /********************************************************************/
 /* neogeo_entry */
 uint32_t NEOGEO_ENT0[]  __attribute__ ((section ("neogeo_entry"))) = {0x00000200, 0x00000200, 0x00000200};  /* one soft DIP table, all regions */
