@@ -32,4 +32,29 @@
 #define MG_SHAKE_HURT          10   /* frames of Maiya's own 2 px shake when she is struck    */
 #define MG_SHAKE_BOSS_DOWN     16   /* ... and when a guardian falls                          */
 
+/*
+ * Her squash and stretch (maiya_game.c, mg_squash_step), by the hardware's
+ * shrink -- it only ever makes a sprite smaller, so "stretched" is drawn
+ * narrower. Per kind and frame: the horizontal shrink (top nibble:
+ * sixteenths of each strip, less one) and the vertical (256ths, less one).
+ * Her feet and her middle stay where they are.
+ */
+enum { MG_SQ_LAND = 1, MG_SQ_JUMP, MG_SQ_HURT, MG_SQ_STRIKE, MG_SQ_KINDS };
+enum { MG_SQ_FRAMES = 6 };
+static const uint8_t mg_sq_len[MG_SQ_KINDS] = { 0, 6, 4, 4, 3 };
+static const uint8_t mg_sq_x[MG_SQ_KINDS][MG_SQ_FRAMES] = {
+    { 0 },
+    { 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF },          /* landing                          */
+    { 0xCF, 0xDF, 0xEF, 0xFF },                      /* springing up: 13/16 wide, back    */
+    { 0xDF, 0xDF, 0xEF, 0xFF },                      /* struck                           */
+    { 0xFF, 0xFF, 0xFF },                            /* striking                         */
+};
+static const uint8_t mg_sq_y[MG_SQ_KINDS][MG_SQ_FRAMES] = {
+    { 0 },
+    { 0xCB, 0xD7, 0xE3, 0xEF, 0xF7, 0xFF },          /* landing: 80% tall, back over six  */
+    { 0xFF, 0xFF, 0xFF, 0xFF },
+    { 0xDF, 0xE7, 0xF3, 0xFF },
+    { 0xEF, 0xF7, 0xFF },
+};
+
 #endif

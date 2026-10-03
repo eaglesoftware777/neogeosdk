@@ -90,7 +90,6 @@ Additions since 1.0:
 - **1.1: raster bands** (`ng_raster.h`, `docs/raster.md`, `-DNG_RASTER=1`).
 
 Additions planned (`docs/design/V4_PLAN.md`):
-- shrink-based squash and stretch with weighted hitstop;
 - parallax planes with a strips-per-line check;
 - `make neo`;
 - cartridge saves (MVS backup RAM, AES memory card).
