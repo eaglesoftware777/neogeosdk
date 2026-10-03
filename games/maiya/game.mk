@@ -16,7 +16,7 @@ GAME_ENGINE_EXCLUDE = ng_particles
 # her sprites (ng_sprite_group.h, NG_VRAM_DEFER: maiya_vblank() commits them).
 # Her sound commands wait in a queue instead of her frame waiting on the Z80
 # (sdk/neogeo.h, NG_SOUND_QUEUE).
-# Raster bands (ng_raster.h): the savanna haze and the reef sway.
+# Raster bands (ng_raster.h): the savanna haze.
 GAME_ENGINE_DEFINES = -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_RASTER=1
 
 # Her frame doesn't fit in one vertical blank at -O0: the engine and her
