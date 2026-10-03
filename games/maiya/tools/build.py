@@ -32,6 +32,25 @@ def copy_source(source, destination):
         destination.chmod(0o755)
 
 
+def check_sound_driver(m1):
+    """The reused M1 must speak the protocol this P1 is built for: its table
+    of commands that take a parameter (nmi_parameter_commands in
+    sound/driver/driver.asm, the same list soundCommand() keeps in
+    sdk/neogeolib.c) must be in it. A P1 paired with an older driver waits
+    forever for a ready reply the driver never gives, on a black screen."""
+    lines = (ROOT / "sound/driver/driver.asm").read_text().splitlines()
+    start = next(i for i, line in enumerate(lines) if line.strip() == "nmi_parameter_commands:")
+    table = bytearray()
+    for line in lines[start + 1:]:
+        line = line.split(";")[0].strip()
+        if not line.startswith(".db"):
+            break
+        table += bytes(int(v.strip().lstrip("$"), 16) for v in line[3:].split(","))
+    if bytes(table) not in m1.read_bytes():
+        raise SystemExit(f"{m1.relative_to(ROOT)} was built from an older sound driver than "
+                         "sound/driver/driver.asm.\nRebuild it first: make bios-package GAME=maiya GAME_ID=780")
+
+
 def stage():
     for name in ("sdk", "tools", "hash_eagle"):
         for source in (ROOT / name).rglob("*"):
@@ -56,6 +75,7 @@ def stage():
     # Reuse Maiya's built audio bank. This isolated P1 build does not assemble
     # the driver or modify shared sample tables; run GAME=maiya sound first.
     provenance = {}
+    check_sound_driver(ROOT / "roms/maiya/780-m1.m1")
     for suffix in ("m1.m1", "v1.v1"):
         source = ROOT / "roms/maiya" / f"780-{suffix}"
         if not source.is_file():
@@ -169,6 +189,7 @@ def main():
     parser.add_argument("--run-only", action="store_true")
     parser.add_argument("--rebuild-art", action="store_true")
     parser.add_argument("--quick", action="store_true", help="Rebuild scene code only, using the staged SDK")
+    parser.add_argument("--perf", action="store_true", help="Measurement build: frame and VRAM counters (sdk/ng_perf.h)")
     parser.add_argument("--mame", default="mame")
     parser.add_argument("--platform", choices=("mvs", "aes"), default="mvs")
     parser.add_argument("--make", default="make")
@@ -177,6 +198,8 @@ def main():
     if not args.run_only:
         if args.rebuild_art or not (GAME / "artbox/generated/maiya_assets.h").is_file():
             subprocess.run([sys.executable, str(GAME / "tools/build_commercial_assets.py")], check=True)
+        if args.quick and args.perf:
+            raise SystemExit("--perf needs a full build: the staged engine objects are built without it")
         if args.quick:
             toolchain = args.toolchain
             if toolchain is None:
@@ -194,6 +217,8 @@ def main():
             command += ["-f", "MakefileWin32.mak"]
         command += ["GAME=maiya", "GAME_CFG_FILE=games/maiya/game.cfg",
                     f"SDKHOME={ROOT.parent}", f"PLATFORM={args.platform}", "p1"]
+        if args.perf:
+            command.append("PERF=1")
         if args.toolchain:
             command.append(f"XTOOLS_ROOT={args.toolchain.resolve()}")
         with (GAME / "build/build.log").open("w", encoding="utf-8") as log:

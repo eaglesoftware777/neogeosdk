@@ -4,6 +4,7 @@
 #include "ng_sprite_pool.h"
 #include "ng_vram.h"
 #include "ng_sprite_hw.h"
+#include "ng_perf.h"
 
 /*
  * Built at -O2 while the rest of the tree may be -O0.
@@ -35,6 +36,7 @@
 /* One word at `addr`. */
 static inline void NEOGEO_USER ngsg_put(uint16_t addr, uint16_t v)
 {
+    NG_PERF_VRAM(1);
     __asm__ volatile (
         "move.w %[addr],(%[p])\n\t"    /* VRAM_ADDR                 */
         "move.w %[v],2(%[p])"            /* VRAM_RW, 12 clocks on     */
@@ -46,6 +48,7 @@ static inline void NEOGEO_USER ngsg_put(uint16_t addr, uint16_t v)
 /* `first` at `addr`, then n - 1 copies of `rest` at the words after it. */
 static inline void NEOGEO_USER ngsg_fill(uint16_t addr, uint16_t first, uint16_t rest, uint16_t n)
 {
+    NG_PERF_VRAM(n);
     if (!n) return;
     __asm__ volatile (
         "move.w %[addr],(%[p])\n\t"    /* VRAM_ADDR                 */
@@ -73,6 +76,7 @@ static void NEOGEO_USER ngsg_put_strip(uint16_t addr, uint16_t tile, int16_t ste
 {
     volatile uint16_t *p = (volatile uint16_t *)VRAM_ADDR;
     uint16_t w;
+    NG_PERF_VRAM(2u * (art + blank));
 
     __asm__ volatile (
         "move.w %[addr],(%[p])\n\t"    /* VRAM_ADDR                 */
@@ -243,6 +247,7 @@ static void NEOGEO_USER ng_sprite_kill_slot(uint16_t spr)
     uint16_t scb1_base;
 
     if (spr >= NG_SPR_TOTAL) return;
+    NG_PERF_VRAM(3u + 64u);
 
     /* 1. Kill display FIRST: ACT=0, chain=0, Y_field=256 ->
      *    screen_y=240 (past visible).  Y_field=496 would resolve

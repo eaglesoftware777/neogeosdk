@@ -1,0 +1,99 @@
+# Maiya v4 and NeoGeoSDK Framework v1: the plan
+
+The v4 directive asks for an arcade-grade engine: VBlank-only video writes,
+a sprite allocator, raster effects, palette cycling, sub-pixel motion,
+hardware squash and stretch, multi-plane parallax, hitstop, aligned ROMs
+and saves on every system. This document maps each point onto what the
+engine already has and what the hardware allows, then splits the work
+into phases.
+
+Each phase is one commit. Facts are held to `docs/platforms/CLASSIC_BASELINE.md`.
+
+## 1. Where the engine is today (v3)
+
+| Directive point | Today | Gap |
+|---|---|---|
+| VRAM writes only in blanking | Palettes already go in VBlank (`ng_palfx_vblank`). Sprites don't: the frame waits for VBlank, runs the logic, *then* draws (`ng_game_engine_draw`). Every sprite write lands mid-frame, while the picture is being drawn | **The main cause of tearing.** Phase 1 |
+| Shadow SCB buffers | `NGSpriteGroup` keeps each group's state with dirty flags; v3 made characters keep theirs between frames | The flush happens at draw time, not in VBlank |
+| Sprite allocator, culling | Fixed slot ranges per pool (`ng_sprite_pool.h`); characters off screen are skipped (`ng_char_render_visible`) | No per-scanline budget check |
+| Hardware scaling | `ng_shrink_tab`, `ng_depthfx` (depth to shrink), `ng_sprite_group_set_scale` | Not used for squash and stretch |
+| Raster effects | None | Phase 3 |
+| Palette cycling | `ng_palfx_cycle`, screen-wide fades, Maiya's water | Only on whole banks, never per line |
+| Sub-pixel motion | 24.8 fixed point everywhere (`NG_FP_SHIFT` 8, `int32_t` positions); no floating point anywhere | Camera and sprites round differently, which reads as jitter |
+| Collision | Box tests with an x-distance early-out; ≤ 8 creatures, 6 shots | Fine at this scale (§3) |
+| Object pools | Fixed arrays everywhere; the SDK has no `malloc` | Nothing to do |
+| Hitstop, flash | `ng_feedback_hitstop`, hit flash, screen shake | Tune per blow |
+| Palettes | Bank 0: 82 of 256 palettes in use; bank 1 unused | Room to give the heroines two palettes each, and depth to the scenery |
+| Parallax | Far plane, road plane, a front plane | Phase 5 |
+| ROM alignment, `.neo` | 8 MB alignment and `.neo` packing exist, but as separate scripts | Phase 7: one build target |
+| Saves | MVS backup RAM block (`ng_save_*`) | AES memory card (P1 step B) |
+
+Also measured:
+- The v3 MVS build boots and plays on both the original arcade BIOS and EagleBIOS.
+- The `build.py` test workspace boots to a black screen on the original BIOS. It is the harness the regression scripts use, so it gets fixed in phase 0.
+- The helloworld, demo and demo_plus ROMs no longer match the current SDK. They get rebuilt with the first SDK commit.
+
+## 2. Where the directive needs correcting for real hardware
+
+1. **No VRAM DMA on cartridge systems.** The 68000 writes VRAM through `REG_VRAMADDR` ($3C0000), `REG_VRAMRW` ($3C0002) and `REG_VRAMMOD` ($3C0004, the step added after each write).
+   - Spacing: 12 cycles between data writes, 16 cycles from a data write to an address write [W: VRAM].
+2. **A full shadow of SCB1 can't be flushed in a VBlank.**
+   - SCB1 is 64 words per sprite, 24,384 words for 381 sprites: at least 290,000 cycles, more than a whole frame (202,752).
+   - VBlank is about 30,720 cycles.
+   - So:
+     - SCB2, SCB3 and SCB4 are shadowed in full: 3 × 381 words, about 15,000–18,000 cycles with auto-increment.
+     - SCB1 is written only for the strips whose tiles changed, against a budget; whatever doesn't fit waits for the next VBlank.
+3. **Horizontal blanking is short.** 64 of 384 pixels is 128 CPU cycles a line: room for a few register writes, not a VRAM flush.
+4. **There is no H-blank interrupt.** Raster effects use the LSPC timer interrupt (`REG_LSPCMODE` bits 4–7, `REG_TIMERHIGH/LOW` $3C0008/$3C000A, acknowledged at $3C000C).
+   - **Every-line interrupts are not viable:** a line is 768 cycles, and each interrupt costs 44 cycles to enter and 20 to return before any work.
+   - Effects use bands of 8–16 lines.
+   - The reload value must stay above 4 [W: Timer interrupt].
+   - A palette write during active display shows as "snow" [W: Palettes]. Each band changes a few colours, timed into horizontal blanking.
+   - MAME is off by a couple of lines here [M], so raster effects must be checked on hardware.
+5. **Sprite limits:** 381 sprites a screen and 96 strips on any one line, not 384 [M: neogeo_spr].
+6. **The hardware can only shrink, never enlarge.**
+   - Squash and stretch: the art is drawn at full size, and the stretch squashes the other axis.
+   - Horizontal shrink has 16 steps per strip; vertical has 256 steps (the L0 ROM table).
+   - Chained ("sticky") strips are placed one after another by the hardware, so a multi-strip heroine shrinks without seams.
+7. **16.16 fixed point instead of 24.8:** not needed for smoothness. 1/256 px is already finer than any visible step.
+   - The jitter comes from the camera and the sprites rounding differently.
+   - Fix: one rounding point, the camera's integer position, subtracted before rounding.
+   - 16.16 is cheap on the 68000 (`swap`), so the camera and parallax may use it internally. The engine API stays 24.8 to avoid a rewrite.
+8. **Spatial hash grid:** rejected. With at most 8 creatures and 6 shots, the existing x-sorted early-out costs fewer cycles than keeping a grid up to date.
+
+## 3. The phases
+
+Each phase builds with zero warnings and rebuilds and commits the other games' ROMs when the SDK changes. Each runs MAME regressions on MVS and AES, and reports frame time, overruns and peak strips per line.
+
+| Phase | What | Done when |
+|---|---|---|
+| **0 Measure** (G1 step A) | Fix the black-screen test workspace. Engine perf counters behind `NG_DEBUG_PERF`: frame time in scanlines (from `REG_LSPCMODE`'s line counter), overruns, VRAM words written per frame, peak strips per line. A MAME script over stages 1, 2, 4, 6, a guardian, the Sky Road and the rush for 3,600 frames each | A table of today's numbers |
+| **1 Two-phase frame** (G2) | The logic updates the groups' shadow state only. At the start of VBlank, `ng_vram_commit()` writes SCB2–4 changes and the dirty SCB1 strips, highest priority first (the heroine, then creatures, then scenery), within a cycle budget; the rest waits a frame. The VBlank interrupt enables the commit; the logic never touches VRAM | No VRAM writes on active lines (measured); no tearing in captures; frame time not worse |
+| **2 Steady frame rate** (G1 step B) | Cut the logic below one frame on every stage (now 52–57 fps): the measured hot spots, the scan loops, divisions | 60 fps (59.19 Hz), zero overruns over 3,600 frames per stage |
+| **3 Raster bands and palette work** (B2, C1, G5) | Timer interrupt bands for a sky gradient, a water line and heat haze. Colour cycling for water, lava, glow and stars. Palette banks 0/1 flipped for whole-screen changes. All off unless the stage asks | Stable on MVS and AES in MAME; listed "not verified on hardware" until tested there |
+| **4 Feel** | Shrink-based squash and stretch: jump, landing, recoil, strikes. Hitstop of 1–4 frames by blow weight, with a one-frame flash. One rounding point for camera and sprites (§2.7) | No art added; motion captures compared before and after |
+| **5 Parallax** | Up to three full planes. More planes are stacked in vertical bands so they never share a line. A build-time check of strips per line against 96 | Peak ≤ 96 on every stage (measured) |
+| **6 Animation and art** | The run cycle (the reviewers' first complaint) and the other stiff moves: more frames from the art pipeline. Two palettes per heroine. The remaining placeholder art | Captures; C-ROM budget raised if needed (the chips hold 8 MB, the budget says 2 MB) |
+| **7 Build pipeline** | `make neo GAME=maiya`: aligned C, V and P ROMs, MVS and AES `.neo` images and the MAME test sets in one step | One command builds everything a tester needs |
+| **8 Saves** (P1 step B) | The platform layer's cartridge backends: MVS backup RAM as today, the AES memory card through the BIOS card routine ($C00468, its command bytes cited first) | Saves on MVS and AES in MAME |
+
+## Phase 0 results
+
+`docs/perf/maiya_v3_baseline.md`. Every stage overruns, on 24–89% of its frames (50–59 game fps), and 86–90% of video writes land on drawn lines. The average video traffic is small (51–99 words a frame), so the phase 1 commit fits well inside a blank. Sprites per line peak at 65–72 of 96.
+
+## 4. Framework v1
+
+When phases 0–2 are in, the SDK is tagged **v1.0**:
+- `NG_SDK_VERSION` in `ng_defs.h`;
+- the public API frozen and listed: changes after that are additions only;
+- docs updated: sprite groups, the frame (logic, then commit), the perf counters, raster bands;
+- every game rebuilt and committed against it.
+
+Phases 3–8 then land as v1.x additions.
+
+## 5. Not verified, and kept so until checked
+
+- Classic MVS and AES hardware: everything after phase 0, especially the raster bands (§2.4).
+- The NeoSD cart: the A+D+Start and Start+Select hotkeys (an open reviewer report).
+- AES+: the frame budget at its overclock, which is unknown.
+- Neo Geo CD: out of scope for v4.

@@ -1,4 +1,5 @@
 #include "ng_fix.h"
+#include "ng_perf.h"
 #include "neogeo.h"
 
 static char ng_fix_chars[NG_FIX_HEIGHT][NG_FIX_WIDTH];
@@ -28,6 +29,7 @@ void NEOGEO_USER ng_fix_blank_cell(uint8_t x, uint8_t y)
      * and ng_fix_putc use.  Without it this blanked
      * a cell two rows above the one it had drawn. */
     addrfix = (uint16_t)(FIXMAP + y + 2u + ((uint16_t)x * 32u));
+    NG_PERF_VRAM(1);
     vram_sfix(0x20, addrfix, 0x00FF);
 
     ng_fix_chars[y][x] = ' ';
@@ -117,6 +119,7 @@ void NEOGEO_USER ng_fix_putc(uint8_t x, uint8_t y, char ch, uint8_t pal)
 
     /* The cell's map word, as fixtext_out() writes it, without measuring a
      * one-character string first. */
+    NG_PERF_VRAM(1);
     vram_sfix(0x20, (uint16_t)(FIXMAP + y + 2u + ((uint16_t)x * 32u)),
               (uint16_t)(((uint16_t)pal << 12) | (ng_fix_ascii_base + (uint8_t)ch)));
 
@@ -135,6 +138,7 @@ void NEOGEO_USER ng_fix_put_tile(uint8_t x, uint8_t y, uint16_t tile, uint8_t pa
     uint16_t addrfix;
     if (x >= NG_FIX_WIDTH || y >= NG_FIX_HEIGHT) return;
     addrfix = (uint16_t)(FIXMAP + y + 2u + ((uint16_t)x * 32u));
+    NG_PERF_VRAM(1);
     vram_sfix(0x20, addrfix, (uint16_t)(((uint16_t)(pal & 0x0f) << 12) | (tile & 0x0fffu)));
     ng_fix_chars[y][x] = (char)0xFE;
     ng_fix_pals[y][x] = 0xF0;

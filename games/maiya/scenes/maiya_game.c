@@ -12,6 +12,7 @@
 #include "sdk/2d_engine/ng_engine.h"
 #include "sdk/sound_ids.h"
 #include "artbox/generated/maiya_assets.h"
+#include "ng_perf.h"
 #include "maiya_levels.h"   /* the mission tables name decoration tiles */
 #include "maiya_feel.h"     /* hitstop and shake: every tuning value */
 #include "maiya_presentation.h"
@@ -504,7 +505,9 @@ static void NEOGEO_USER mg_wait_vblank(void)
  * changed since the last one. Every frame of hers passes through here. */
 void NEOGEO_USER maiya_vblank(void)
 {
+    NG_PERF_FRAME_END();        /* (measurement builds only: sdk/ng_perf.h) */
     mg_wait_vblank();
+    NG_PERF_FRAME_BEGIN();
     ng_palfx_vblank();
 }
 
