@@ -73,6 +73,11 @@ def install(target, label, tidy, clear_nvram):
             for nvram in (tests / "nvram", target / "tests" / f"{platform}-unibios" / "nvram"):
                 if nvram.exists():
                     move(nvram)
+        if platform == "aes":
+            # a blank 2 KiB memory card for the launchers; an existing one keeps its saves
+            (tests / "memcard-blank.bin").write_bytes(bytes(2048))
+            if not (tests / "memcard.bin").exists():
+                (tests / "memcard.bin").write_bytes(bytes(2048))
         print(f"{platform}: P1 {crc(tests / 'roms/maiya/780-p1.p1'):08x}")
 
     keep(target / "roms/maiya"); keep(target / "roms/maiya.zip"); keep(target / "hash/maiya")

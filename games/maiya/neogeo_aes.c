@@ -219,10 +219,11 @@ uint32_t psize  __attribute__ ((section ("neogeo_init"))) = 		0x80000;
  * so nothing the game declares can land in it. */
 uint32_t pbcks __attribute__ ((section ("neogeo_init"))) = 		0x100400;
 uint16_t dipsize  __attribute__ ((section ("neogeo_init"))) = 		0x0400;  /* save block size */
-/* Let the BIOS animate the isolated logo bank. The game draws its house
- * intro later, with VBlank available; it does not run inside the masked
- * cartridge eye-catcher callback. */
-uint8_t bioslogoflag __attribute__ ((section ("neogeo_init"))) = 	0x00;
+/* No system eye-catcher (2): a console boots as it does on EagleBIOS --
+ * one logo, no jingle -- under UniBIOS and the original BIOS too, then the
+ * game's own house intro, drawn with VBlank available. The logo bank still
+ * names the isolated Maiya logo, which the UniBIOS splash shows. */
+uint8_t bioslogoflag __attribute__ ((section ("neogeo_init"))) = 	0x02;
 uint8_t bioslogotile __attribute__ ((section ("neogeo_init"))) = 	0x49;
 /********************************************************************/
 /* neogeo_entry */
