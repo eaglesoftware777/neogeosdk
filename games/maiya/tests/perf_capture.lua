@@ -15,7 +15,7 @@ local out = assert(io.open(os.getenv('PERF_OUT'), 'w'))
 local STAGE = tonumber(os.getenv('PERF_STAGE'))
 local MODE = os.getenv('PERF_MODE') or 'walk'
 local AT = tonumber(os.getenv('PERF_AT') or '120')
-local N = 3600
+local N = tonumber(os.getenv('PERF_FRAMES') or '3600')
 local vram = emu.item(machine.devices[':spritegen'].items['0/m_videoram'])
 
 local function input(name, value)

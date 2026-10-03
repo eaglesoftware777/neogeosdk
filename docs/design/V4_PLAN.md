@@ -124,6 +124,18 @@ These are the values already played, so they are kept rather than moved to the p
 
 Regressions pass as before.
 
+## Phase 5 results
+
+`docs/perf/maiya_v4_phase5.md`. **All 23 scenarios** (12 roads, 11 guardian arenas) peak at 78 sprites on a line or fewer, against 96. `perf_report.py --all-stages --strip-limit 96` checks this and exits 1 over the limit.
+
+**Frame time over the same 23 scenarios** (timing-only build):
+- Overruns are 0–4% everywhere.
+- The Sunken Reef was the exception at 14%. It is now 1% (200 lines on average), after dropping its sway and removing 20 library divides a frame.
+
+**Parallax:**
+- **Splitting Maiya's single paintings into bands** that scroll at different paces was tried on the Sky Road. It measured right but left a seam through its clouds, so it was taken out. More planes need layered art.
+- **The 96 check is measured, not computed at build time.** Only a run shows where the cast stands on the screen.
+
 ## Phase 7 results
 
 `make neo GAME=<name>` (`tools/make_neo.py`, `docs/MAKEFILE_INTEGRATION.md`) builds the game for AES and then MVS. For each platform it writes to `dist/neo/<game>/`:

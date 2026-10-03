@@ -688,6 +688,23 @@ static void NEOGEO_USER mg_digits(char *out, uint32_t value, uint8_t digits)
     }
 }
 
+/* a % b and a / b for a 16-bit a and a non-zero b, by one 68000 divide:
+ * written plainly C takes them to int and calls the library's 32-bit
+ * routines, several hundred cycles a time. */
+static inline uint16_t mg_mod16(uint16_t a, uint16_t b)
+{
+    uint32_t q = a;
+    __asm__ ("divu.w %1,%0" : "+d" (q) : "d" (b));
+    return (uint16_t)(q >> 16);
+}
+
+static inline uint16_t mg_div16(uint16_t a, uint16_t b)
+{
+    uint32_t q = a;
+    __asm__ ("divu.w %1,%0" : "+d" (q) : "d" (b));
+    return (uint16_t)q;
+}
+
 static void NEOGEO_USER mg_number(uint8_t x, uint8_t y, uint32_t value, uint8_t digits, uint8_t pal)
 {
     char text[10];
@@ -1760,7 +1777,9 @@ static void NEOGEO_USER mg_art_step(void);
 #ifdef NG_RASTER
 /*
  * Raster bands (ng_raster.h), eight lines each: the savanna's heat shimmers
- * over its horizon, and on the reef the whole painting sways with the water.
+ * over its horizon. (The reef's painting swayed with the water too, but at
+ * about 16,000 cycles a frame on the heaviest stage it cost more than the
+ * reef had to spare.)
  * A band's word moves the painting's driving strip (its chained strips
  * follow it); the band after the last puts it back where the commit left
  * it, so the next frame starts straight. Only in play, on the road.
@@ -1779,12 +1798,7 @@ static void NEOGEO_USER mg_raster_step(void)
     uint8_t first, last, n, k, phase, step, amp;
     uint16_t base = (uint16_t)mg.far.x;
     if (mg.state != MG_PLAY || mg.arena_bg || mg.vault || !mg.far.visible) return;
-    if (mg_mech() == MG_M_WATER) {             /* the reef: all of it, slowly */
-        first = ng_raster_band_at(0);
-        last = (uint8_t)(ng_raster_last_band() - 1u);   /* the last band puts it back */
-        amp = 2; step = 3;
-        phase = (uint8_t)(mg.tick >> 2);
-    } else if (mg_stage_blocks[mg.stage] == MG_BLOCKS_SAVANNA) {   /* the horizon */
+    if (mg_stage_blocks[mg.stage] == MG_BLOCKS_SAVANNA) {   /* the horizon */
         first = ng_raster_band_at(MG_HAZE_TOP);
         last = ng_raster_band_at(MG_HAZE_BOTTOM);
         amp = 1; step = 7;
@@ -2039,7 +2053,7 @@ static void NEOGEO_USER mg_frame(NGCharacter *c, uint8_t frame, uint8_t flip)
         tile = bt[frame % (c->data0 == MG_B_AIRSHIP ? MG_AIRSHIP_FRAMES : MG_BOSS_FRAMES)];
     } else if (c->kind == K_ENEMY) {
         const uint16_t *et = mg_enemy_tiles(c->data0);
-        tile = et[frame % mg_enemy_frames(c->data0)];
+        tile = et[mg_mod16(frame, mg_enemy_frames(c->data0))];
     } else if (c->kind == K_ALLY) {
         const uint16_t *at = mg_ally_tiles(c->data0);
         tile = at[frame % 2u];
@@ -3426,9 +3440,7 @@ static void NEOGEO_USER mg_sad_face_palette(void)
 static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
 {
 #ifdef NG_RASTER
-    /* eight-line bands for the savanna's haze, sixteen for the reef's sway;
-     * no bands at all until a frame asks for them */
-    ng_raster_start(mg_stage_mech[stage < MG_LEVEL_COUNT ? stage : 0] == MG_M_WATER ? 16u : 8u);
+    ng_raster_start(8);   /* the savanna's haze; no bands until a frame asks */
 #endif
     uint8_t i;
     const MGLevel *level = &mg_levels[stage];
@@ -4471,7 +4483,7 @@ static int16_t NEOGEO_USER mg_pace(int16_t base)
 static uint16_t NEOGEO_USER mg_rate(uint16_t base)
 {
     uint16_t cut = (uint16_t)(mg.stage * 4u + (mg.difficulty >= 2 ? 6u : 0u));
-    return (uint16_t)(base - (uint16_t)((base * cut) / 100u));
+    return (uint16_t)(base - mg_div16((uint16_t)(base * cut), 100u));   /* (base * cut fits a word) */
 }
 
 /* Creatures that live in the air: they hover and swoop instead of falling
@@ -6414,7 +6426,7 @@ static void NEOGEO_USER mg_form_step(MGEnemy *e, NGCharacter *p)
         e->body = 0;
         return;
     }
-    mg_frame(b, (uint8_t)((age / 6u) % mg_enemy_frames(e->type)), flip);
+    mg_frame(b, (uint8_t)mg_mod16((uint16_t)(age / 6u), mg_enemy_frames(e->type)), flip);
 }
 
 static void NEOGEO_USER mg_update_entities(void)
@@ -6923,7 +6935,7 @@ static void NEOGEO_USER mg_update_entities(void)
                          * 24 px up and down on a 64-frame beat. */
                         b->vx_fp = dir * mg_pace(110);
                         mg_wave(b, (int16_t)(p->y - 40), 24, 603, (uint8_t)(e->timer << 2));
-                        mg_frame(b, (uint8_t)((uint16_t)(e->timer / 14u) % (uint16_t)nf), flip);
+                        mg_frame(b, (uint8_t)mg_mod16((uint16_t)(e->timer / 14u), (uint16_t)nf), flip);
                     } else {
                         /* Hover out of reach and keep a firing distance:
                          * back off if she closes in, drift in if she runs. */
@@ -6966,7 +6978,7 @@ static void NEOGEO_USER mg_update_entities(void)
                     } else {
                         mg_wave(b, head, 20, 503, (uint8_t)(e->timer << 2));
                     }
-                    mg_frame(b, (uint8_t)((uint16_t)(e->timer / 12u) % (uint16_t)nf), flip);
+                    mg_frame(b, (uint8_t)mg_mod16((uint16_t)(e->timer / 12u), (uint16_t)nf), flip);
                     break;
                 }
                 case MG_E_TOXICCRAB:
@@ -6984,7 +6996,7 @@ static void NEOGEO_USER mg_update_entities(void)
                      * a shockwave runs out both ways along the ground. */
                     if (e->mood == 1) {
                         b->vx_fp = dir * mg_pace(140);
-                        mg_frame(b, (uint8_t)((uint16_t)(e->timer / 12u) % (uint16_t)nf), flip);
+                        mg_frame(b, (uint8_t)mg_mod16((uint16_t)(e->timer / 12u), (uint16_t)nf), flip);
                         if (e->move_timer) e->move_timer--;
                         else if (mg_abs(dx) < 64) { e->mood = 2; e->move_timer = 30; }
                     } else if (e->mood == 2) {
@@ -7039,7 +7051,7 @@ static void NEOGEO_USER mg_update_entities(void)
                         b->vy_fp = -4 * NG_FP_ONE;
                         b->vx_fp = dir * mg_pace(240);
                     }
-                    mg_frame(b, (uint8_t)((uint16_t)(e->timer / 12u) % (uint16_t)nf), flip);
+                    mg_frame(b, (uint8_t)mg_mod16((uint16_t)(e->timer / 12u), (uint16_t)nf), flip);
                     if ((e->type == MG_E_SLIME || e->type == MG_E_SPOREGOB)
                         && (e->timer % mg_rate(150)) == 75 && mg_abs(dx) < 160) {
                         mg_fire(b->x, (int16_t)(b->y - 12), (int16_t)(dir * 3), -1, 1, MG_T_SPIT);
@@ -7608,7 +7620,7 @@ static void NEOGEO_USER mg_hideout_step(void)
         return;
     }
     if (mg.vault_done || mg.boss_active || !h->x || mg.state != MG_PLAY) return;
-    if ((mg.tick % (mg.charm_seen ? 50u : 420u)) == 0u)
+    if (mg_mod16((uint16_t)mg.tick, mg.charm_seen ? 50u : 420u) == 0u)
         mg_burst(h->x, (int16_t)(h->y - 6), MG_T_STAR, (uint8_t)(mg.charm_seen ? 2 : 1), -1);
     if (mg.crouch_timer >= 30 && mg_abs((int16_t)(p->x - h->x)) < 14 && mg_abs((int16_t)(p->y - h->y)) <= 2) {
         mg.vault = 1;

@@ -8,6 +8,10 @@ Runs MAME headless over seven scenarios -- stages 1, 2, 4 and 6, a guardian
 fight, the Sky Road and the citadel's rush -- for 3,600 frames each
 (games/maiya/tests/perf_capture.lua) and prints one table. The counters are
 the game's own (sdk/ng_perf.h); a PERF build only, never a release.
+
+    --all-stages        every stage's road and every guardian's arena instead
+    --frames N          frames a scenario (3,600)
+    --strip-limit 96    exit 1 when a scenario puts more sprites on one line
 """
 from __future__ import annotations
 
@@ -87,6 +91,18 @@ def layout(tc):
     return lay
 
 
+def all_scenarios():
+    """Every stage's road from its start, and every guardian's arena."""
+    out = []
+    for k, path in enumerate(sorted((GAME / "levels").glob("*.json"))):
+        level = json.loads(path.read_text())
+        name = level.get("name", path.stem).title()
+        out.append((f"Stage {k + 1} {name}", k, "walk", 120))
+        if level.get("gate_x"):
+            out.append((f"Stage {k + 1} guardian", k, "gate", level["gate_x"] - 40))
+    return out
+
+
 def scenarios():
     levels = sorted((GAME / "levels").glob("*.json"))
     gate = lambda k: json.loads(levels[k].read_text())["gate_x"] - 40
@@ -101,13 +117,13 @@ def scenarios():
     ]
 
 
-def run(mame, lay, stage, mode, at):
+def run(mame, lay, stage, mode, at, frames=N):
     with tempfile.TemporaryDirectory() as tmp:
         tmp = Path(tmp)
         (tmp / "layout.lua").write_text("return {" + ",".join(f"{k}={v}" for k, v in lay.items()) + "}\n")
         env = dict(os.environ, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy", DISPLAY="",
                    PERF_LAYOUT=str(tmp / "layout.lua"), PERF_OUT=str(tmp / "result.txt"),
-                   PERF_STAGE=str(stage), PERF_MODE=mode, PERF_AT=str(at))
+                   PERF_STAGE=str(stage), PERF_MODE=mode, PERF_AT=str(at), PERF_FRAMES=str(frames))
         subprocess.run([mame, "neogeo", "-noreadconfig", "-rompath", f"{WORK / 'roms'};{ROOT / 'roms'}",
                         "-hashpath", str(WORK / "hash_eagle/maiya"), "-cart1", "maiya", "-bios", "euro",
                         "-video", "none", "-sound", "none", "-nothrottle", "-skip_gameinfo", "-nonvram_save",
@@ -121,7 +137,7 @@ def run(mame, lay, stage, mode, at):
     return {k: int(v) for k, v in re.findall(r"(\w+)=(-?\d+)", text)}
 
 
-def table(rows):
+def table(rows, frames=N):
     out = ["| Scenario | Game fps | Overran | Work, avg lines | Peak | VRAM words, avg / peak | Written on drawn lines | Most strips on a line |",
            "|---|---|---|---|---|---|---|---|"]
     for name, r in rows:
@@ -130,7 +146,7 @@ def table(rows):
             continue
         f = max(1, r["frames"])
         peak = f"{r['lines_peak']}" + ("+" if r["lines_peak"] >= 2 * LINES - 1 else "")
-        out.append(f"| {name} | {HZ * r['frames'] / N:.1f} | {100 * r['overruns'] / f:.0f}% | "
+        out.append(f"| {name} | {HZ * r['frames'] / frames:.1f} | {100 * r['overruns'] / f:.0f}% | "
                    f"{r['lines_sum'] / f:.0f} of {LINES} | {peak} | {r['vram_sum'] / f:.0f} / {r['vram_peak']} | "
                    f"{100 * r['active_sum'] / max(1, r['vram_sum']):.0f}% | {r['strips_peak']} (line {r['strips_line']})"
                    + (f", over 96 in {r['over96']} samples" if r["over96"] else "") + " |")
@@ -142,19 +158,30 @@ def main():
     ap.add_argument("--mame", default="mame")
     ap.add_argument("--toolchain", type=Path)
     ap.add_argument("--out", type=Path, help="also write the table to this Markdown file")
+    ap.add_argument("--all-stages", action="store_true", help="every stage's road and every guardian's arena")
+    ap.add_argument("--frames", type=int, default=N, help="frames a scenario")
+    ap.add_argument("--strip-limit", type=int, help="exit 1 when a scenario puts more sprites on one line")
     args = ap.parse_args()
     lay = layout(toolchain(args.toolchain))
     rows = []
-    for name, stage, mode, at in scenarios():
-        r = run(args.mame, lay, stage, mode, at)
+    for name, stage, mode, at in (all_scenarios() if args.all_stages else scenarios()):
+        r = run(args.mame, lay, stage, mode, at, args.frames)
         rows.append((name, r))
         print(f"{name}: {r}", file=sys.stderr, flush=True)
-    text = table(rows)
+    text = table(rows, args.frames)
     print(text)
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(text + "\n")
+    if args.strip_limit is not None:
+        over = [(name, r.get("strips_peak", 0)) for name, r in rows
+                if "error" in r or r.get("strips_peak", 0) > args.strip_limit]
+        for name, peak in over:
+            print(f"strip limit: {name}: {peak} sprites on one line (limit {args.strip_limit})", file=sys.stderr)
+        if over:
+            return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -56,10 +56,13 @@ Rules:
 
 ## Maiya
 
-`mg_raster_step()`:
-- **Golden Savanna:** heat haze over the horizon, screen lines 64–136. The painting's driving strip moves ±1 pixel in 8-line bands: 11 interrupts a frame.
-- **Sunken Reef:** the whole painting sways ±2 pixels in 16-line bands: 14 interrupts a frame.
-- Both run only in play on the road: not in an arena, the vault, or a cutscene.
+`mg_raster_step()`, the **Golden Savanna:** heat haze over the horizon, screen lines 64–136.
+- The painting's driving strip moves ±1 pixel in 8-line bands: 11 interrupts a frame.
+- It runs only in play on the road: not in an arena, the vault, or a cutscene.
+
+Two other uses were tried and taken out:
+- **The Sunken Reef's whole painting swayed** ±2 pixels in 16-line bands, 14 interrupts a frame. It cost the heaviest stage about 16,000 cycles a frame (phase 5).
+- **The Sky Road scrolled its clouds slower than its mountains.** The clouds that reach below the split line sheared along a seam.
 
 ## Not done
 
