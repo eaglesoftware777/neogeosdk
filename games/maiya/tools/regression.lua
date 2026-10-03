@@ -195,9 +195,12 @@ emu.register_frame_done(function()
               (scenario == 'pit' and pit_step == 2))
         input('P1 D', false)
         if scenario == 'pickups' and placed then
-            local x, y = 901, 192
-            if play_frame > 180 then x, y = 528, 104 end
-            if play_frame > 300 then x, y = 901, 192 end
+            -- Emerald Forest: the spring on the road (pickup 2, x 824) and
+            -- the coin on the shelf (pickup 5, x 540, y 70); she takes one
+            -- within 28 px of its 32 px art's middle.
+            local x, y = 840, 192
+            if play_frame > 180 then x, y = 556, 104 end
+            if play_frame > 300 then x, y = 840, 192 end
             position(p, x, y)
             memory:write_u8(p + a.char_hp, 5)
         end
@@ -216,7 +219,8 @@ emu.register_frame_done(function()
             end
         end
         if scenario == 'factory' and u8('stage') == 6 and u8('state') == 1 then
-            position(p, 4840, 192)
+            -- inside the guardian's arena, wherever the road now ends
+            position(p, s16(a.arena_left) + 40, 192)
             w8('gate_unlocked', 1)
             memory:write_u8(p + a.char_hp, 5)
             local boss = memory:read_u32(a.boss)

@@ -11,7 +11,8 @@ from build import GAME, ROOT, WORK, eagle_bios_path
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--seconds", type=int, default=50)
+    parser.add_argument("--seconds", type=int,
+                        help="how long MAME runs (50; bonus 110: the healed valley's interlude comes first)")
     parser.add_argument("--mame", default="mame")
     parser.add_argument("--scenario", choices=("idle", "walk", "climb", "boss", "bonus", "continue",
                                               "continue-exit", "continue-timeout", "tray", "factory",
@@ -31,6 +32,8 @@ def main():
         parser.error("The Exit choice is only offered on AES")
     if args.idle:
         args.scenario = "idle"
+    if args.seconds is None:
+        args.seconds = 110 if args.scenario == "bonus" else 50
     output = (args.output or GAME / "build" / args.scenario).resolve()
     output.mkdir(parents=True, exist_ok=True)
     gdb = next(ROOT.parent.glob("x-tools-v*/m68k-unknown-elf/bin/m68k-unknown-elf-gdb"))
