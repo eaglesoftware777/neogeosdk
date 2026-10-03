@@ -7,7 +7,7 @@ These are the second ROM set shared with the NeoGeoSDK v1.7.1 pre-release.
 The v1 files on this release stay exactly as they were published; every
 v2 file carries "_v2" in its name.
 
-WHAT'S NEW SINCE v1
+WHAT'S NEW SINCE v1   (every change: Maiya-CHANGELOG_v2.txt)
 -------------------
 - Smoother game: the engine writes sprites and text in the vertical blank
   and queues sound commands, so frames no longer wait on the hardware.
@@ -18,12 +18,13 @@ WHAT'S NEW SINCE v1
 - Maiya squashes and stretches as she lands and leaps, and her run settles
   on each footfall.
 - Console saves: on an AES with a memory card, scores, names and progress
-  are kept on the card ("MAIYA SCORES", two card blocks).
+  are kept on the card ("MAIYA SCORES", two card blocks), under EagleBIOS,
+  the Universe BIOS and the original console BIOS alike.
 - Arcade sound fix (from the v1.7.1 MVS sound pre-release) is in both
   builds: coin and start sounds after slot switching on MVS boards.
-- Clean boot screens: the Universe BIOS splash shows the Maiya logo on
+- Clean, simple boot: the Universe BIOS splash shows the Maiya logo on
   both AES and MVS (the arcade build used to show stray tiles there), and
-  the eye-catcher draws Maiya's own logo and text.
+  a console boots with one logo and no jingle under every BIOS.
 - Same cartridge layout as v1: P 512 KiB, S 128 KiB, M 128 KiB,
   V 8 MiB, C 8 MiB; the .neo files are the same size as v1's.
 
@@ -39,16 +40,17 @@ Maiya-Darksoft-AES_v2.zip      Darksoft Neo Geo Multi folder, AES build
                                BIOS included: the Multi uses the board's.
 Maiya-WIP-EagleBIOS_v2.zip     MAME: the MVS build with EagleBIOS
                                  mame neogeo -rompath roms -hashpath hash -bios euro -cart1 maiya
-Maiya-WIP-AES-EagleBIOS_v2.zip MAME: the AES build with EagleBIOS
-                                 mame aes -rompath roms -hashpath hash -bios asia -cart1 maiya
+Maiya-WIP-AES-EagleBIOS_v2.zip MAME: the AES build with EagleBIOS and a blank memory card
+                                 mame aes -rompath roms -hashpath hash -bios asia -cart1 maiya -memc card.bin
+Maiya-CHANGELOG_v2.txt         every change from v1 to v2
 Maiya-MANIFEST_v2.txt          size, CRC32 and SHA-256 of every v2 file
 
 EagleBIOS is the free, open system ROM written for NeoGeoSDK. It is the
 only system ROM in these packages: no SNK BIOS and no Universe BIOS is
 included. MAME warns that its checksums differ from the original BIOS:
-that is expected. EagleBIOS's memory card routine is not written yet, so
-under EagleBIOS a console keeps its save for the session only; on a real
-console BIOS or the Universe BIOS the card works.
+that is expected. EagleBIOS keeps console saves on a memory card in the
+same layout as the original console BIOS, so one card works with all of
+them. The AES MAME zip comes with a blank card, card.bin, in its command.
 
 To play under the Universe BIOS or an original BIOS in MAME, put your own
 copy in MAME's roms/neogeo (or roms/aes) and pick it with -bios, for
