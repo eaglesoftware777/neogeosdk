@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import subprocess
 
-from build import GAME, ROOT, WORK
+from build import GAME, ROOT, WORK, eagle_bios_path
 
 
 def main():
@@ -18,7 +18,9 @@ def main():
                                               "pickups", "pit", "flight"), default="walk")
     parser.add_argument("--idle", action="store_true", help="Capture startup without gameplay inputs")
     parser.add_argument("--output", type=Path)
-    parser.add_argument("--eagle-bios", action="store_true")
+    parser.add_argument("--stock-bios", action="store_true",
+                        help="the system ROM in roms/ instead of EagleBIOS (bios/test_roms)")
+    parser.add_argument("--eagle-bios", action="store_true", help=argparse.SUPPRESS)  # now the default
     parser.add_argument("--platform", choices=("mvs", "aes"), default="mvs")
     args = parser.parse_args()
     marker = WORK / "platform.txt"
@@ -54,7 +56,7 @@ def main():
     (output / "layout.lua").write_text("return {" + ",".join(f"{key}={int(value)}" for key, value in layout.items()) + "}\n")
     env = dict(os.environ, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy", DISPLAY="",
                MG_CAPTURE_DIR=str(output), MG_SCENARIO=args.scenario, MG_PLATFORM=args.platform)
-    bios_path = str(ROOT / "bios/test_roms") + ";" if args.eagle_bios else ""
+    bios_path = "" if args.stock_bios else eagle_bios_path() + ";"
     command = [args.mame, "aes" if args.platform == "aes" else "neogeo", "-noreadconfig", "-rompath",
                f"{bios_path}{WORK / 'roms'};{ROOT / 'roms'}", "-hashpath",
                str(WORK / "hash_eagle/maiya"), "-cart1", "maiya", "-bios", "asia" if args.platform == "aes" else "euro",

@@ -155,8 +155,8 @@ separate. The AES BIOS logo occupies unused C bank `$49`, without shifting
 gameplay sprite tile numbers.
 
 ```sh
-make GAME=maiya all USE_EAGLE_BIOS=1
-make GAME=maiya test USE_EAGLE_BIOS=1
+make GAME=maiya all
+make GAME=maiya test
 make GAME=maiya bios-package
 ```
 
@@ -186,7 +186,8 @@ The quick build requires a previously staged full build made with
 and the toolchain's GDB to read structure offsets from the debug ELF. The
 scenario harness positions the player through debugger memory only; no
 scenario shortcuts are compiled into the game. `--output PATH` keeps captures
-on another drive, and `--eagle-bios` selects the separately installed firmware.
+on another drive. Runs boot EagleBIOS from `bios/test_roms` (`make eagle-bios`);
+`--stock-bios` boots the system ROM in `roms/` instead.
 The older `tools/capture.py` command delegates to the same harness; `--idle`
 captures startup without gameplay inputs. Telemetry is written as JSON lines.
 

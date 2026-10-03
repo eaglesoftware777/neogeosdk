@@ -71,9 +71,12 @@ the v1.7.1 release when it merges.  v1.7.0 remains the current release.
 - `make eagle-bios` builds it with the SDK's cross compiler on Linux and
   Windows into an isolated ROM path; `make bios-package` packages the
   generated firmware with a cartridge, its hashes and launch instructions.
-- `USE_EAGLE_BIOS=1` runs a game under the generated firmware.  The default
-  is `0`: the stock BIOS, exactly as before.  `PLATFORM=aes` selects the
-  console machine and BIOS.
+- Builds and tests run on the generated firmware (`USE_EAGLE_BIOS=1`, now
+  the default), so no SNK BIOS takes part in them; `USE_EAGLE_BIOS=0` goes
+  back to the stock BIOS and `BIOS=<name>` asks for another one by name.
+  Maiya's regression, play and measurement runs boot it too
+  (`--stock-bios` to opt out).  `PLATFORM=aes` selects the console machine
+  and BIOS.
 - Contract probes on both boards, cartridge compatibility tests that reject
   modified ROM sets, and Maiya boot and audio checks on MVS and AES.
   Physical hardware and retail-cartridge compatibility are not yet verified.

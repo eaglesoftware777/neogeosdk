@@ -27,6 +27,9 @@ from pathlib import Path
 GAME = Path(__file__).resolve().parents[1]
 ROOT = GAME.parents[1]
 WORK = GAME / "build/workspace"
+
+from build import eagle_bios_path  # noqa: E402  (the same tools folder)
+
 HZ = 59.1856          # MVS refresh: docs/platforms/CLASSIC_BASELINE.md
 LINES = 264           # scanlines a frame
 N = 3600
@@ -124,7 +127,7 @@ def run(mame, lay, stage, mode, at, frames=N):
         env = dict(os.environ, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy", DISPLAY="",
                    PERF_LAYOUT=str(tmp / "layout.lua"), PERF_OUT=str(tmp / "result.txt"),
                    PERF_STAGE=str(stage), PERF_MODE=mode, PERF_AT=str(at), PERF_FRAMES=str(frames))
-        subprocess.run([mame, "neogeo", "-noreadconfig", "-rompath", f"{WORK / 'roms'};{ROOT / 'roms'}",
+        subprocess.run([mame, "neogeo", "-noreadconfig", "-rompath", f"{eagle_bios_path()};{WORK / 'roms'};{ROOT / 'roms'}",
                         "-hashpath", str(WORK / "hash_eagle/maiya"), "-cart1", "maiya", "-bios", "euro",
                         "-video", "none", "-sound", "none", "-nothrottle", "-skip_gameinfo", "-nonvram_save",
                         "-cfg_directory", str(tmp / "cfg"), "-nvram_directory", str(tmp / "nvram"),

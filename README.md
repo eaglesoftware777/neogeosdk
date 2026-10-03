@@ -263,15 +263,17 @@ What each one demonstrates: [`docs/GAMES.md`](./docs/GAMES.md).
 Maiya's controls, art layout and regression checks are in
 [`games/maiya/README.md`](./games/maiya/README.md).
 
-### Optional System Firmware
+### System Firmware
 
-EagleBIOS is opt-in; normal builds and tests still use the installed Neo Geo
-firmware. On Linux/WSL:
+Builds and tests run on EagleBIOS, the open system firmware built in `bios/`:
+no SNK BIOS takes part. On Linux/WSL:
 
 ```sh
-make GAME=maiya all USE_EAGLE_BIOS=1
-make GAME=maiya test USE_EAGLE_BIOS=1
+make GAME=maiya all
+make GAME=maiya test
 make GAME=maiya bios-package
+make GAME=maiya test BIOS=unibios40      # another system ROM, by name
+make GAME=maiya test USE_EAGLE_BIOS=0    # the installed stock firmware
 ```
 
 On Windows CMD, add `-f MakefileWin32.mak` to each command. These targets use
