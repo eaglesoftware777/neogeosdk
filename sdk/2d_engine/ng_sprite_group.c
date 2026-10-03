@@ -353,7 +353,13 @@ void NEOGEO_USER ng_sprite_park_off_range(uint16_t first, uint16_t count)
  * so scene boundaries still get the full SCB1 teardown. */
 void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint16_t count)
 {
+#ifdef NG_VRAM_DEFER
+    ng_vram_busy++;
+#endif
     ng_sprite_park_off_range(firstSprite, count);
+#ifdef NG_VRAM_DEFER
+    ng_vram_busy--;
+#endif
 }
 
 void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count)
@@ -363,9 +369,15 @@ void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count)
 
 void NEOGEO_USER ng_sprite_hide_all(void)
 {
+#ifdef NG_VRAM_DEFER
+    ng_vram_busy++;
+#endif
     /* Slot zero is the hardware's empty-list filler. */
     ng_sprite_disable_hw(0u);
     ng_sprite_park_off_range(1u, NG_SPR_TOTAL - 1u);
+#ifdef NG_VRAM_DEFER
+    ng_vram_busy--;
+#endif
 }
 
 void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette)
@@ -534,7 +546,18 @@ void NEOGEO_USER ng_sprite_groups_hide_all(NGSpriteGroup *g, uint8_t count)
     }
 }
 
+#ifdef NG_VRAM_DEFER
+static void NEOGEO_USER ngsg_upload_now(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
+{
+    ng_vram_busy++;
+    ngsg_upload_now(g);
+    ng_vram_busy--;
+}
+static void NEOGEO_USER ngsg_upload_now(NGSpriteGroup *g)
+#else
+void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
+#endif
 {
     uint8_t rows;
     uint16_t n;
@@ -670,6 +693,7 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
 }
 
 #ifdef NG_VRAM_DEFER
+volatile uint8_t ng_vram_busy;
 static NGSpriteGroup *ngsg_queue[NG_VRAM_QUEUE_GROUPS];
 static uint16_t ngsg_queue_n;
 static struct { uint16_t first, count; } ngsg_hides[NG_VRAM_QUEUE_HIDES];
@@ -684,7 +708,9 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
         g->dirty = (uint8_t)(g->dirty | NG_SGF_QUEUED);
         return;
     }
+    ng_vram_busy++;
     ngsg_flush_now(g);                             /* list full: as before */
+    ng_vram_busy--;
 }
 
 void NEOGEO_USER ng_sprite_group_cancel(NGSpriteGroup *g)
@@ -731,6 +757,7 @@ static uint8_t NEOGEO_USER ngsg_flush_moved(NGSpriteGroup *g)
 void NEOGEO_USER ng_vram_commit(void)
 {
     uint16_t i;
+    ng_vram_busy++;
     NG_PERF_COMMIT(1);
     /* Hides first: a character that moved to other slots is hidden where it
      * was before it is drawn where it is. */
@@ -750,5 +777,6 @@ void NEOGEO_USER ng_vram_commit(void)
         NG_PERF_COMMIT_PART(groups, ng_fix_last_commit_cells(), from);
     }
     NG_PERF_COMMIT(0);
+    ng_vram_busy--;
 }
 #endif

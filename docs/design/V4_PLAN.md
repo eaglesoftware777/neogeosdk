@@ -89,6 +89,20 @@ Each phase builds with zero warnings and rebuilds and commits the other games' R
 
 `docs/perf/maiya_v4_phase2.md`. 59.0–59.2 game fps on every scenario, with work averaging 131–187 of 264 lines (29–50% headroom), against 50–59 fps before. Overruns are 0–1% of frames, almost all of them outside play: the stage start, the guardian's entrance, the healed valley's tour. In play, only the World Tree still has a few (13 of about 3,100 frames). The frame no longer waits for the Z80 (`NG_SOUND_QUEUE`). Text, fades and scenery write only what changed.
 
+## Phase 3 results
+
+`docs/raster.md`.
+- **Raster bands** are a Framework v1.x addition, `ng_raster.h`, opt-in with `-DNG_RASTER=1`.
+  - Bands are 8 or 16 lines on the LSPC timer, carrying colours and sprite-table words.
+  - The timer runs only over the bands in use: one interrupt per band, about 470 cycles each in MAME.
+- **Maiya:**
+  - The Golden Savanna has heat haze over its horizon: 11 interrupts a frame, average 187 of 264 lines, no overruns over 1,200 frames.
+  - The Sunken Reef's whole painting sways: 14 interrupts.
+  - The reef is a heavy stage on its own (215 lines median, 5% of frames over budget). It is outside the seven measured scenarios.
+- **Colour cycling** already exists: `ng_palfx_cycle()`, and Maiya's scenery swap.
+- **Palette-bank flips are left out.** The bank select switches the CPU's access and the display together, and Maiya's whole-screen changes are fades.
+- **Not verified on hardware.**
+
 ## 4. Framework v1
 
 When phases 0–2 are in, the SDK is tagged **v1.0**:

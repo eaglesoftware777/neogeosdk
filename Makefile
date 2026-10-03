@@ -147,6 +147,13 @@ ifneq ($(USE_2D_PLUS),1)
 # ng_rand (C engine only): the one random generator, ng_depthfx included;
 NG_ENGINE_NAMES+=ng_rand
 endif
+# ng_raster (C engine only): built and linked only for a game that asks for
+# it with -DNG_RASTER=1 in GAME_ENGINE_DEFINES (docs/raster.md).
+ifneq ($(USE_2D_PLUS),1)
+ifneq ($(findstring -DNG_RASTER,$(GAME_ENGINE_DEFINES)),)
+NG_ENGINE_NAMES+=ng_raster
+endif
+endif
 NG_ENGINE_STUBBED=ng_particles
 ifneq ($(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)),)
 $(error GAME_ENGINE_EXCLUDE: no stand-in for $(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)))
@@ -377,6 +384,7 @@ endif
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_render_queue.$(ENGINE_EXT) -o out/ng_render_queue0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_fixed.$(ENGINE_EXT) -o out/ng_fixed0.o
 	$(if $(filter ng_rand,$(NG_ENGINE_NAMES)),$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_rand.$(ENGINE_EXT) -o out/ng_rand0.o)
+	$(if $(filter ng_raster,$(NG_ENGINE_NAMES)),$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_raster.$(ENGINE_EXT) -o out/ng_raster0.o)
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_camera.$(ENGINE_EXT) -o out/ng_camera0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_palette_fx.$(ENGINE_EXT) -o out/ng_palette_fx0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/$(call ng_engine_mod,ng_particles).$(ENGINE_EXT) -o out/$(call ng_engine_mod,ng_particles)0.o

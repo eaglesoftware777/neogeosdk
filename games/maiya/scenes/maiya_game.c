@@ -13,6 +13,9 @@
 #include "sdk/sound_ids.h"
 #include "artbox/generated/maiya_assets.h"
 #include "ng_perf.h"
+#ifdef NG_RASTER
+#include "ng_raster.h"
+#endif
 #include "maiya_levels.h"   /* the mission tables name decoration tiles */
 #include "maiya_feel.h"     /* hitstop and shake: every tuning value */
 #include "maiya_presentation.h"
@@ -511,6 +514,9 @@ void NEOGEO_USER maiya_vblank(void)
     mg_wait_vblank();
     NG_PERF_FRAME_BEGIN();
     ng_vram_commit();           /* the sprites the frame changed, in the blank */
+#ifdef NG_RASTER
+    ng_raster_vblank();         /* the frame's raster bands (mg_raster_step) */
+#endif
     ng_palfx_vblank();
     ng_sound_vblank();          /* the next queued byte for the sound CPU */
 }
@@ -1750,6 +1756,52 @@ static void NEOGEO_USER mg_draw_light(int16_t camera_x)
 static void NEOGEO_USER mg_falls_step(void);
 static void NEOGEO_USER mg_art_step(void);
 
+#ifdef NG_RASTER
+/*
+ * Raster bands (ng_raster.h), eight lines each: the savanna's heat shimmers
+ * over its horizon, and on the reef the whole painting sways with the water.
+ * A band's word moves the painting's driving strip (its chained strips
+ * follow it); the band after the last puts it back where the commit left
+ * it, so the next frame starts straight. Only in play, on the road.
+ */
+enum { MG_HAZE_TOP = 64, MG_HAZE_BOTTOM = 136 };
+
+/* One swing, 32 steps: sixteenths of the wave's height. */
+static const int8_t mg_sway[32] = {
+    0, 3, 6, 9, 11, 13, 15, 16, 16, 16, 15, 13, 11, 9, 6, 3,
+    0, -3, -6, -9, -11, -13, -15, -16, -16, -16, -15, -13, -11, -9, -6, -3
+};
+
+static void NEOGEO_USER mg_raster_step(void)
+{
+    uint16_t words[NG_RASTER_BANDS];
+    uint8_t first, last, n, k, phase, step, amp;
+    uint16_t base = (uint16_t)mg.far.x;
+    if (mg.state != MG_PLAY || mg.arena_bg || mg.vault || !mg.far.visible) return;
+    if (mg_mech() == MG_M_WATER) {             /* the reef: all of it, slowly */
+        first = ng_raster_band_at(0);
+        last = (uint8_t)(ng_raster_last_band() - 1u);   /* the last band puts it back */
+        amp = 2; step = 3;
+        phase = (uint8_t)(mg.tick >> 2);
+    } else if (mg_stage_blocks[mg.stage] == MG_BLOCKS_SAVANNA) {   /* the horizon */
+        first = ng_raster_band_at(MG_HAZE_TOP);
+        last = ng_raster_band_at(MG_HAZE_BOTTOM);
+        amp = 1; step = 7;
+        phase = (uint8_t)(mg.tick >> 1);
+    } else {
+        return;
+    }
+    n = (uint8_t)(last - first + 1u);
+    for (k = 0; k < n; k++) {
+        int16_t off = (int16_t)(mg_sway[(uint8_t)(phase + k * step) & 31u] * amp);
+        off = (int16_t)((off + (off < 0 ? -8 : 8)) / 16);       /* to the nearest pixel */
+        words[k] = (uint16_t)(((base + (uint16_t)off) & 511u) << 7);
+    }
+    words[n] = (uint16_t)((base & 511u) << 7);                  /* and back */
+    ng_raster_vram_bands(first, (uint8_t)(n + 1u), (uint16_t)(SCB4_ADDR + mg.far.firstSprite), words);
+}
+#endif
+
 static void NEOGEO_USER mg_before_draw_hook(void)
 {
     ng_sound_pump();        /* mid-frame: a second queued sound byte can go */
@@ -1767,6 +1819,9 @@ static void NEOGEO_USER mg_before_draw_hook(void)
         mg_update_sparks(mg.camera.x);
         return;
     }
+#ifdef NG_RASTER
+    mg_raster_step();
+#endif
     if (mg.state == MG_TOUR) {
         /* healed: the ledges, the climbs and the flowers, but no fire, no
          * sludge, no pits, no gate */
@@ -3366,6 +3421,11 @@ static void NEOGEO_USER mg_sad_face_palette(void)
 
 static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
 {
+#ifdef NG_RASTER
+    /* eight-line bands for the savanna's haze, sixteen for the reef's sway;
+     * no bands at all until a frame asks for them */
+    ng_raster_start(mg_stage_mech[stage < MG_LEVEL_COUNT ? stage : 0] == MG_M_WATER ? 16u : 8u);
+#endif
     uint8_t i;
     const MGLevel *level = &mg_levels[stage];
 
