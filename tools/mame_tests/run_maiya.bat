@@ -15,7 +15,7 @@ goto launch
 :aes
 set "PLATFORM=aes"
 set "DRIVER=aes"
-set "BIOS=unibios40"
+set "BIOS=asia"
 :launch
 if not "%~2"=="" set "BIOS=%~2"
 set "MAME_EXE=mame"
