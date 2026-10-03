@@ -99,6 +99,20 @@ When phases 0–2 are in, the SDK is tagged **v1.0**:
 
 Phases 3–8 then land as v1.x additions.
 
+**Done (2026-10-03).** The SDK already has release v1.7.0, and this branch becomes v1.7.1 (`CHANGELOG.md`). So the version is two numbers:
+- `NG_SDK_VERSION` 1.7.1;
+- `NG_FRAMEWORK_VERSION` 1.0, the frozen engine API.
+
+The API itself:
+- 315 prototypes are listed in `docs/api/framework_v1.txt`.
+- `make api-check`, now part of `make test`, fails on any listed call that is removed or changed.
+- `docs/FRAMEWORK_V1.md` covers the frame, the switches and the rules.
+
+The rebuild against it:
+- Every game was rebuilt: P1, plus M1, whose committed copies predated the current sound protocol.
+- Built from the current source with the old M1s, demo and demo_plus hung at boot waiting for the Z80. They boot again.
+- helloworld and tutorial stay black in the headless test, the same as their committed ROMs.
+
 ## 5. Not verified, and kept so until checked
 
 - Classic MVS and AES hardware: everything after phase 0, especially the raster bands (§2.4).

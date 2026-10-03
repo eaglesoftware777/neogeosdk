@@ -72,3 +72,16 @@ ng_sprite_group_flush(&player);            // writes the driver position when mo
   whose priority bands already define a fixed order; restore `1` when Y-depth
   sorting is needed.
 - Limit groups to ≤ 380 total hardware slots across all active groups.
+- For scenery placed every frame, use `ng_sprite_group_show_at(g, tile, palette, x, y)`.
+  It does what `set_tile_base`, `set_palette`, `set_pos`, `set_visible(1)` and
+  `flush` do, in one call. `ng_sprite_groups_hide_all(first, count)` hides the
+  unused rest of a pool and touches only the groups still shown.
+
+## Writing in the vertical blank (`NG_VRAM_DEFER`)
+
+With `-DNG_VRAM_DEFER=1` in a game's `GAME_ENGINE_DEFINES`,
+`ng_sprite_group_flush()` only lists the group. `ng_vram_commit()`, called
+right after the frame's wait for the vertical blank, writes every listed group
+in the state it has then: hides first, then the groups, then the FIX text
+cells. A group that only moved costs two words. See
+[`FRAMEWORK_V1.md`](FRAMEWORK_V1.md) for the whole frame.

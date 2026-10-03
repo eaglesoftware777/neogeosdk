@@ -661,8 +661,14 @@ test: game-check test-precheck hash
 	$(LOG_CTX)
 	$(MAME_COMMON) -output console
 
+# Framework v1: the C engine's public calls change by additions only
+# (tools/api_freeze.py, against docs/api/framework_v1.txt).
+.PHONY: api-check
+api-check:
+	@$(PYTHON) tools/api_freeze.py
+
 .PHONY: test-precheck
-test-precheck: game-check level-check
+test-precheck: game-check level-check api-check
 	$(LOG_CTX)
 	@[ -f "$(ROM_DIR)/$(GAME_ID)-p1.p1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-p1.p1. Build first with: make all" && exit 1)
 	@[ -f "$(ROM_DIR)/$(GAME_ID)-m1.m1" ] || (echo "ERROR: missing $(ROM_DIR)/$(GAME_ID)-m1.m1. Build first with: make all" && exit 1)

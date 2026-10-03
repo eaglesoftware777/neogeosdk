@@ -23,6 +23,13 @@ hundreds of cycles.  Use `NGFixed` (16.16) or 8.8 fixed-point from `ng_defs.h`.
 
 ## Rule 3: Avoid Division in the Frame Loop
 
+A 32-bit multiply or divide is a library call on the 68000 (`__mulsi3`,
+`__divsi3`, `__udivsi3`): several hundred cycles. C promotes `uint8_t` and
+`uint16_t` operands to `int`, so `a * b` and `a / b` on small types still
+become 32-bit operations. Cast both sides to `uint16_t` for a 16-bit multiply
+(one `mulu.w`), and use `divu.w` through inline assembly when the quotient
+fits a word; see `ng_chars_index()` and `docs/FRAMEWORK_V1.md`.
+
 Integer division on the 68000 (`DIVS/DIVU`) is 76-158 cycles per call.
 In a 60 Hz frame with ~200,000 available cycles, 10 divisions = 1,580 cycles
 wasted.  Use:

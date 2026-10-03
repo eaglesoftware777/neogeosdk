@@ -21,7 +21,7 @@ C_DIR = os.path.join(ROOT, 'sdk', '2d_engine')
 CPP_DIR = os.path.join(ROOT, 'sdk', '2d_engine_plus')
 DOC_DIR = os.path.join(ROOT, 'docs')
 
-VERSION = 'v1.7.0'
+VERSION = 'v1.7.1 (Framework v1)'
 
 # module stem -> (section, one-line purpose, longer note or '')
 MODULES = {
@@ -137,7 +137,10 @@ def protos_c(path):
     txt = open(path, encoding='utf-8', errors='replace').read()
     txt = re.sub(r'/\*.*?\*/', '', txt, flags=re.S)
     txt = re.sub(r'//[^\n]*', '', txt)
-    flat = re.sub(r'\n\s+', ' ', txt)
+    # Join a prototype's indented continuation lines (spaces and tabs only:
+    # \s would also swallow blank lines and glue the next prototype onto a
+    # preprocessor line, where the match below can't see it).
+    flat = re.sub(r'\n[ \t]+', ' ', txt)
     out = re.findall(
         r'^[A-Za-z_][A-Za-z0-9_ \*]*NEOGEO_USER\s+[A-Za-z0-9_]+\s*\([^;]*\);',
         flat, re.M)
