@@ -27,6 +27,11 @@ void NEOGEO_USER ng_game_interupt_set_hooks(
     NGInteruptHook after_draw
 );
 void NEOGEO_USER ng_game_engine_frame(void);
+/* Opt in to a real hitstop: while ng_feedback_is_hitstop(), the engine frame
+ * skips logic, timers, physics and character movement but still draws and
+ * counts the hitstop down. Off by default, so existing games keep their
+ * behaviour. */
+void NEOGEO_USER ng_game_engine_set_hitstop_freeze(uint8_t on);
 void NEOGEO_USER ng_game_interupt(void);
 
 

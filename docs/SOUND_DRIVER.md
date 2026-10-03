@@ -69,6 +69,7 @@ boot before anything else.
 |---|---|
 | `soundInit()` | Boot the Z80 driver and YM2610. Required once. |
 | `soundReset()` | Driver soft reset. |
+| `soundHardwareReset()` | No arguments. Full BIOS-style restart; discards a pending parameter transfer. |
 | `soundStopAll()` | Stop every channel, every area. |
 | `soundStopMusic()` | Stop MML, SSG and FM sequences; leaves ADPCM playback alone. |
 | `soundCancelFade()` | Abort a fade and restore the stored base volumes. |
@@ -241,15 +242,23 @@ chapter's LFO demonstration.
 Use the SDK functions first. Reach for raw bytes only for a feature with no
 wrapper yet — `playSoundtest(index)` in `sdk/neogeolib.c` sends one directly.
 
+The ASM driver reserves BIOS `$01/$02/$03` before parameter/FIFO dispatch.
+`soundCommand()` automatically escapes reserved parameter values; direct port
+writers must use the wire format in [MVS Sound Protocol](MVS_SOUND_PROTOCOL.md).
+Ordinary readiness is `$80`; `$01` acknowledges only a slot switch. Deploy a
+matching P1/M1 pair; the experimental C driver does not implement this protocol.
+
 | Byte | Meaning |
 |---|---|
-| `$01` | Driver init |
+| `$01` | BIOS prepare-slot-switch: stop sound/timers, acknowledge and wait in RAM |
 | `$02` | BIOS eyecatcher / boot music (mapped to music track 1) |
-| `$03` | Driver soft reset |
+| `$03` | Full BIOS driver restart, including stack, RAM and chip initialization |
 | `$04` | Stop all playback |
 | `$05` *n* | ADPCM-A volume |
 | `$06` *n* | ADPCM-B volume |
 | `$07` *n* | SSG music volume |
+| `$08` | Game scene reset (`soundReset()`); preserves the established timing behavior |
+| `$09` | Clean game driver restart (`soundInit()`); rebuild P1 and M1 together |
 | `$0A` *n* | Fade-out speed |
 | `$0C` | Stop ADPCM-A only |
 | `$0D` | Stop ADPCM-B only |
@@ -282,16 +291,15 @@ wrapper yet — `playSoundtest(index)` in `sdk/neogeolib.c` sends one directly.
 
 Every byte is one NMI on the Z80. The handler reads the latch, drops the
 reply port (`$320000` read from the 68000) to `0`, files the byte in a
-32-byte queue, and raises the reply to `1` again. The driver's main loop
+32-byte queue, and raises the reply to `$80` again. The driver's main loop
 executes queued commands afterwards, so the acknowledgement means
 *accepted*, not *done*.
 
-At rest the reply reads `1`, and it has to: the BIOS reads that port before
-it sends its own `$03` and re-initialises the driver if it finds anything
-else there. That is also why `1` on its own cannot prove a byte arrived -
-it is what the port held before the write. `soundCommand()` therefore
+At rest the reply reads `$80`. Reply `$01` is reserved for BIOS slot switching
+and must never be used for ordinary readiness. A stale ready value cannot
+prove a byte arrived. `soundCommand()` therefore
 waits for the reply to drop to `0` after writing, and only then for the
-`1` that follows. Writing the next byte on the stale `1` overwrites the
+`$80` that follows. Writing the next byte on a stale ready reply overwrites the
 latch before the Z80 has read it, or fires a second NMI inside the handler,
 which files both bytes into the same queue slot; either way one byte is
 lost, and for a prefixed command that means the next command is swallowed
@@ -396,3 +404,34 @@ and one drum cue over a matching seven-bar phrase at 112 BPM.
 Chapter 24 (`SKY LANCE`) drives a pure-SSG mix under gameplay, with every
 Z80 command spaced by `waitVbl()` so multi-step setup applies cleanly. See
 [`DEMO_CHAPTERS.md`](./DEMO_CHAPTERS.md).
+
+## 7. Looping a scene track
+
+`soundPlayGameLoop()` resets the driver before it starts an ADPCM-B track,
+and that reset clears the repeat flag along with the sequence clocks.  A
+`soundSetADPCMBLoop(1)` issued *before* the call is therefore lost, and the
+track plays once and stops.  The flag is latched when a track starts, so the
+order that loops is: reset, set the repeat flag, then start the track:
+
+```c
+isZ80Ready(); soundSceneReset();
+isZ80Ready(); soundApplyMix(0x40, 0xB8, 0x00, 0x00);
+isZ80Ready(); soundSetADPCMBLoop(1);
+isZ80Ready(); playSFXB(SOUND_TRACK_B);
+```
+
+Maiya wraps exactly this in one routine and names its tracks directly rather
+than through the eight-slot pool.
+
+## 8. Audio credits
+
+Every game carries its own sound bank; the demo's is original synthesized
+material and the SDK never shares a bank between games.
+
+**Juhani Junkala** released *The Essential Retro Video Game Sound Effects
+Collection*, the *Retro Game Music Pack* and *Chiptune Adventures* under the
+CC0 public-domain dedication.  Maiya: Super Nature Girl uses sixteen of his
+effects and nine of his tracks, converted for the YM2610; the file-by-file
+list is in `games/maiya/sound/SOURCES.md`.  His generosity is what lets an
+open SDK ship a game that sounds like an arcade cabinet, and it is
+acknowledged here with thanks.

@@ -212,7 +212,12 @@ Behavior:
   Initializes the Z80 driver state, YM2610 timer state, SSG, FM, ADPCM-A, and ADPCM-B.
 
 - `soundReset()`
-  Performs a soft reset of driver state. Clears queues, timers, and playback state, and returns to default driver values.
+  No arguments. Sends game scene reset $08, stopping playback while keeping
+  the established Timer-B sequencing behavior. Does not discard queued bytes.
+
+- `soundHardwareReset()`
+  No arguments. Sends BIOS reset $03 and restarts stack, RAM, FIFO, parsers,
+  register cache and chip configuration. Aborts a pending sender transaction.
 
 - `soundStopAll()`
   Stops music and all active sound playback immediately without rebuilding full driver state.
@@ -551,15 +556,28 @@ Use the SDK functions first. Use raw command bytes only when you need a feature 
 
 Current raw command map in `sound/driver/driver.asm`:
 
+The NGP2 ASM protocol reserves raw BIOS bytes $01/$02/$03 before parameters
+and FIFO handling. Ordinary readiness is $80; only slot switching returns $01.
+Parameter values $01/$02/$03/$09/$FF are transmitted as $FF followed by the
+value XOR $80. SDK functions do this automatically; direct port writers must
+encode them. The experimental C driver does not implement this wire protocol.
+See docs/MVS_SOUND_PROTOCOL.md for complete paired P1/M1 requirements.
+
 - `$01`
-  Driver init.
+  BIOS slot prepare: silence sound, stop timers and acknowledge from RAM.
 
 - `$02`
   BIOS eyecatcher / boot music command.
-  The driver maps this to music track 1.
+  Directly restarts the driver and starts music track 1; bypasses the FIFO.
 
 - `$03`
-  Driver soft reset.
+  Full BIOS driver restart, never a game scene reset.
+
+- `$08`
+  Game scene reset, used by soundReset().
+
+- `$09`
+  Private game initialization, used by soundInit(); never use $01 for this.
 
 - `$04`
   Stop all playback.

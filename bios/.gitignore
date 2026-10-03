@@ -1,0 +1,12 @@
+out/
+*.rom
+*.sp1
+*.bin
+*.sm1
+*.lo
+*.sfix
+*.wav
+test_captures*
+test_roms/
+*.tmp
+*.log

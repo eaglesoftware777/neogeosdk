@@ -1,0 +1,41 @@
+NeoGeoSDK v1.7.1 - separate NeoSD hardware tests
+=============================================
+
+The original AES_v1 and MVS_v1 images have not been replaced.
+Both new files retain the original 8 MiB V1 layout and container lengths.
+
+MVS: Maiya-WIP-NeoSD_MVS_SOUND_FIX_PRERELEASE.neo
+------------------------------------------------
+Use this first to test the MVS sound problem.
+Only M1 and one P1 sound-init command byte change.
+S1, C1/C2, V1/V2 and the container header are unchanged.
+BIOS command 01 now waits in Z80 RAM after stopping sound/timers;
+the ready acknowledgement is sent from RAM. Game init uses command 09.
+Parameter 01 remains valid, including before FIFO dispatch.
+
+AES: Maiya-WIP-NeoSD_AES_UNIBIOS_FIX_PRERELEASE.neo
+-------------------------------------------------
+Use this separately to test the UniBIOS boot graphics.
+Original AES M1 and V1/V2 are preserved, including command-01 game init.
+An isolated, original Maiya logo occupies unused C bank 49.
+Gameplay sprite tiles do not move. Existing font/HUD pixels are copied
+unchanged to private FIX banks D-F, away from system boot tiles.
+Transparent BIOS tile FF and the copyright glyph are provided correctly.
+
+Validation completed
+--------------------
+- Driver assembly and complete AES P1 compilation.
+- Z80 execution tests: RAM acknowledgement, timer/restart behavior,
+  early parameter delivery and YM register-write parity with the old driver.
+- Python/native packager byte parity and region-preservation tests.
+- MAME MVS boot/coin/start/gameplay with non-silent captured audio.
+- MAME AES UniBIOS 4.0 splash, boot animation, title, selection and gameplay.
+- GitHub upload SHA-256 hashes match the local files.
+
+Hardware confirmation is still required. These are prerelease test files,
+not a claim that every flashcart, BIOS version and multislot board is verified.
+Please report board/console, BIOS version, NeoSD model/firmware, cold/warm boot,
+MVS slot-switch results, coin/start sound, music/SFX and AES boot/menu behavior.
+
+The accompanying JSON manifests document unchanged regions and SHA-256 hashes.
+Reproduction and build notes are in docs/NEOSD_V171_TEST_IMAGES.md.

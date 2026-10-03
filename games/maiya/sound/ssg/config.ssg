@@ -1,0 +1,47 @@
+; NeoGeo YM2610 SSG preset/config bank
+
+[preset 0]
+name=Clean Square
+tone_mask=0x38
+vol_a=0A
+vol_b=06
+vol_c=00
+noise_freq=00
+
+[preset 1]
+name=Soft Menu Beep
+tone_mask=0x38
+vol_a=08
+vol_b=04
+vol_c=00
+noise_freq=00
+
+[preset 2]
+name=Arcade Alert
+tone_mask=0x38
+vol_a=0F
+vol_b=08
+vol_c=04
+noise_freq=06
+
+; Noise-mix preset for voice consonant simulation: channel A plays
+; TONE + NOISE simultaneously; channels B and C are silent.  Mixer
+; bit layout: bit0 /Tone A, bit3 /Noise A — both 0 means both on.
+[preset 3]
+name=Voice Consonant
+tone_mask=0x36
+vol_a=0E
+vol_b=00
+vol_c=00
+noise_freq=10
+
+; Vowel preset for voice synthesis: TONE A only, no noise, B and C
+; silent.  Channel A's vol_a is irrelevant when envelope mode (M=1)
+; is enabled by the $F7 directive, but we set it to a sane fallback.
+[preset 4]
+name=Voice Vowel
+tone_mask=0x3E
+vol_a=0F
+vol_b=00
+vol_c=00
+noise_freq=00

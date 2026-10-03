@@ -1,4 +1,5 @@
 #include "ng_scene.h"
+#include "ng_fix.h"
 #include "ng_chars.h"
 #include "ng_physics.h"
 #include "ng_game_events.h"
@@ -15,7 +16,7 @@ void NEOGEO_USER ng_scene_clean(uint8_t flags)
     uint8_t i;
 
     if (flags & NG_SCENE_CLEAN_FIX) {
-        clearFix();
+        ng_fix_clear();   /* the layer and what ng_fix remembers of it */
     }
 
     if (flags & NG_SCENE_CLEAN_SPRITES) {

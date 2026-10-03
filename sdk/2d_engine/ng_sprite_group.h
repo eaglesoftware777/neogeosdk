@@ -27,6 +27,7 @@ extern "C" {
 #define NG_SGF_DIRTY_SHRINK   0x08  /* scale changed → write SCB2 */
 #define NG_SGF_DIRTY_VIS      0x10  /* visibility changed */
 #define NG_SGF_DIRTY_ALL      0x1F  /* force full upload */
+#define NG_SGF_QUEUED         0x80  /* NG_VRAM_DEFER: waiting for ng_vram_commit() */
 
 typedef struct {
     uint16_t firstSprite;
@@ -47,6 +48,11 @@ typedef struct {
     uint8_t visible;
     uint8_t dirty;      /* bitmask of NG_SGF_DIRTY_* flags */
     const uint8_t *tilePalettes;
+    /* Footprint whose transparent padding is already resident in VRAM. */
+    uint16_t mapFirst;
+    uint8_t mapStrips;
+    uint8_t mapHeight;
+    uint8_t mapRows;
 } NGSpriteGroup;
 
 void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette);
@@ -54,6 +60,33 @@ void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, ui
 void NEOGEO_USER ng_sprite_group_mark_dirty(NGSpriteGroup *g, uint8_t dirty_flags);
 /* Dirty-aware flush: only writes VRAM regions flagged in g->dirty. */
 void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g);
+
+#ifdef NG_VRAM_DEFER
+/*
+ * Video writes in the vertical blank (a game's GAME_ENGINE_DEFINES
+ * -DNG_VRAM_DEFER=1, C engine). ng_sprite_group_flush() then only puts the
+ * group on a list; ng_vram_commit(), called first thing after the frame's
+ * wait for the vertical blank, writes every listed group's changes there --
+ * the screen is never drawn from half-written sprite tables. A group is
+ * written in the state it has at the commit, once however many times it was
+ * flushed. Character hides are listed too and done first.
+ *
+ * ng_sprite_group_upload(), ng_sprite_group_hide() and the
+ * ng_sprite_hide_*() calls still write at once: scene set-up, behind a fade.
+ * A group listed but then thrown away must be dropped with
+ * ng_sprite_group_cancel(), or the commit would bring it back. If the list
+ * is ever full, a flush writes at once as before.
+ */
+#define NG_VRAM_QUEUE_GROUPS  256u
+#define NG_VRAM_QUEUE_HIDES   32u
+void NEOGEO_USER ng_vram_commit(void);
+/* Non-zero while the engine is writing video memory (the commit, a full
+ * list's flush, a hide, an upload): raster bands (ng_raster.h) leave their
+ * own video writes out then. */
+extern volatile uint8_t ng_vram_busy;
+void NEOGEO_USER ng_sprite_group_cancel(NGSpriteGroup *g);
+void NEOGEO_USER ng_sprite_hide_range_queued(uint16_t firstSprite, uint16_t count);
+#endif
 void NEOGEO_USER ng_sprite_group_set_tile_base(NGSpriteGroup *g, uint16_t tileBase);
 void NEOGEO_USER ng_sprite_group_set_tile_stride(NGSpriteGroup *g, uint16_t tileStride);
 void NEOGEO_USER ng_sprite_group_set_palette(NGSpriteGroup *g, uint8_t palette);
@@ -66,6 +99,12 @@ void NEOGEO_USER ng_sprite_group_set_scale(NGSpriteGroup *g, uint8_t xScale, uin
 void NEOGEO_USER ng_sprite_group_set_flip(NGSpriteGroup *g, uint8_t hflip, uint8_t vflip);
 void NEOGEO_USER ng_sprite_group_set_auto_anim(NGSpriteGroup *g, uint8_t autoAnim4, uint8_t autoAnim8);
 void NEOGEO_USER ng_sprite_group_set_visible(NGSpriteGroup *g, uint8_t visible);
+/* The common per-frame cases in one call each:
+ * show_at = set_tile_base + set_palette + set_pos + set_visible(1) + flush;
+ * hide_all = set_visible(0) + flush for each of `count` groups. */
+void NEOGEO_USER ng_sprite_group_show_at(NGSpriteGroup *g, uint16_t tileBase, uint8_t palette,
+                                         int16_t x, int16_t y);
+void NEOGEO_USER ng_sprite_groups_hide_all(NGSpriteGroup *g, uint8_t count);
 void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_group_update_transform(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_group_hide(NGSpriteGroup *g);

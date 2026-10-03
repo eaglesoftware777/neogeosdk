@@ -1,0 +1,90 @@
+# Maiya Audio Sources
+
+Maiya has her own YM2610 bank: `game.mk` points the sound build at this
+directory, so nothing in the ROM comes from the demo or any other game in the
+SDK.
+
+## Music (ADPCM-B, `samples/in_wav_b/`)
+
+All nine tracks are by **Juhani Junkala**, released by him under the CC0
+public-domain dedication, converted to 16-bit mono 32 kHz for the ADPCM-B
+encoder:
+
+| File | Track | Where it plays |
+| --- | --- | --- |
+| `1.wav` | Retro Game Music Pack - Title Screen | the hero select screen, the controls and the story |
+| `2.wav` | Chiptune Adventures - Stage 1 | Mission 1, Emerald Forest |
+| `3.wav` | Chiptune Adventures - Stage 2 | Mission 2, Valley of Sacred Falls |
+| `4.wav` | Retro Game Music Pack - Level 1 | Mission 3, Azure Coral Coast; Mission 6, Sacred World Tree |
+| `5.wav` | Retro Game Music Pack - Level 2 | Mission 4, Golden Autumn Grove |
+| `6.wav` | Retro Game Music Pack - Level 3 | Mission 5, Crystal Grotto |
+| `7.wav` | Chiptune Adventures - Stage Select | title screen, bonus rounds |
+| `8.wav` | Chiptune Adventures - Boss Fight | every guardian, and Mission 7, Rio Negro Works |
+| `9.wav` | Retro Game Music Pack - Ending | Sunboy between missions, the ending |
+
+## Sound effects (ADPCM-A, `samples/in_wav_a/`)
+
+The sixteen effects are taken from **Juhani Junkala**'s *The Essential Retro
+Video Game Sound Effects Collection* (CC0), converted to 16-bit mono 22 kHz
+and trimmed for the driver:
+
+| File | Source effect | Used for |
+| --- | --- | --- |
+| `1.wav` | Weapons / Melee / sword 1 | rose whip crack |
+| `2.wav` | Weapons / Single Shot / single shot 1 | thorn toss |
+| `3.wav` | General / Impacts / impact 1 | creature hit, squash |
+| `4.wav` | Weapons / Melee / punch 1 | guardian clank, thorn might |
+| `5.wav` | General / Weird / depressurizing | slime spit |
+| `6.wav` | Weapons / Lasers / laser 1 | drone pulse, elder's charm, gate |
+| `7.wav` | General / Weird / mechanical noise 1 | saw |
+| `8.wav` | Explosions / Short / hard 1 | guardian flame, mist veil |
+| `9.wav` | General / High Pitched / high 1 | landing, forest friend |
+| `10.wav` | Explosions / Medium / medium 1 | blast, death |
+| `11.wav` | General / Coins / coin cluster 1 | coins, roses, seeds |
+| `12.wav` | General / Positive / power-up 1 | hearts, flowers, extra life |
+| `13.wav` | Movement / Opening Doors / door open 1 | Secret Art, key, gate, continue |
+| `14.wav` | Death Screams / Alien / alien 1 | guardian roar |
+| `15.wav` | Movement / Jumping / jump 1 | jump, dash, swiftness |
+| `16.wav` | General / Damage / hit 1 | Maiya hurt |
+
+## Voices (ADPCM-A, `samples/in_wav_a_voice/`)
+
+Maiya's calls and the thanks of the captives she frees are synthesised, not
+recorded: `tools/make_voices.py` speaks each line with the piper speech
+synthesiser and its LJ Speech voice, which was trained on the public-domain
+LJ Speech recordings -- Luna's lines with its Kristin voice, trained on
+public-domain LibriVox recordings -- and colours it per speaker with sox
+(pitch, tempo, an echo for the spirit). The WAVs are in the repository; the synthesiser
+and its voice model are only needed to change a line.
+
+| File | Speaker | Line | Played |
+| --- | --- | --- | --- |
+| `v01_rise.wav` | Maiya | "Rising bloom!" | the Rising Bloom |
+| `v02_surge.wav` | Maiya | "Rose blossom surge!" | the Rose Blossom Surge |
+| `v03_art.wav` | Maiya | "Nature, heal this land!" | the Secret Art |
+| `v04_leap.wav` | Maiya | "Up we go!" | the high leap |
+| `v05_lily.wav` | Maiya | "Light as air!" | a sky lily picked up |
+| `v06_free.wav` | Maiya | "You're free now!" | a captive freed |
+| `v07_start.wav` | Maiya | "The valley called me!" | a mission begins |
+| `v08_retry.wav` | Maiya | "I'm not done yet!" | back after a fall |
+| `v09_win.wav` | Maiya | "The valley is healed!" | a guardian beaten |
+| `v10_elder.wav` | the elder | "Bless you, child of nature!" | freed |
+| `v11_maiden.wav` | the maiden | "Thank you! You saved me!" | freed |
+| `v12_spirit.wav` | the spirit | "The forest thanks you!" | freed |
+| `v13_sunboy.wav` | Sunboy | "We did it! Thank you!" | freed |
+| `v14_luna_rise.wav` | Luna | "Bloom, rise up!" | the Rising Bloom, as Luna |
+| `v15_luna_surge.wav` | Luna | "Blossom rush!" | the Rose Blossom Surge, as Luna |
+| `v16_luna_art.wav` | Luna | "Earth, make this valley whole!" | the Secret Art, as Luna |
+| `v17_luna_leap.wav` | Luna | "Here I go!" | the high leap, as Luna |
+| `v18_luna_lily.wav` | Luna | "Like a feather!" | a sky lily picked up, as Luna |
+| `v19_luna_free.wav` | Luna | "Go on, you're safe!" | a captive freed, as Luna |
+| `v20_luna_start.wav` | Luna | "I heard the valley cry!" | a mission begins, as Luna |
+| `v21_luna_retry.wav` | Luna | "Not over yet!" | a mission tried again, as Luna |
+| `v22_luna_win.wav` | Luna | "The land lives again!" | a guardian beaten, as Luna |
+
+## FM and SSG (`fm/`, `ssg/`, `mml/`)
+
+The FM fanfare under the house eyecatcher (`fm/0_fm_example_a.mml`), the
+two select-screen fanfares -- Maiya's (`fm/1_fm_example_b.mml`) and Luna's
+(`fm/2_fm_example_c.mml`) -- and the remaining FM, SSG and MML tracks are
+written for this game in the repository.

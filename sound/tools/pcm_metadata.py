@@ -15,11 +15,8 @@ def read_rate(path, fallback=16000):
 
 
 def write_rate(path, rate):
-    Path(str(path) + ".json").write_text(
-        json.dumps({"sample_rate": rate}, indent=2) + "\n",
-        encoding="ascii",
-        newline="\n",
-    )
+    with open(str(path) + ".json", "w", encoding="ascii", newline="\n") as f:
+        f.write(json.dumps({"sample_rate": rate}, indent=2) + "\n")
 
 
 def delta_n(rate):

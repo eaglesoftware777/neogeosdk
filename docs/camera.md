@@ -23,10 +23,16 @@ at 60 fps even when the player is accelerating.
 
 | Parameter        | Type    | Description |
 |-----------------|---------|-------------|
-| `follow_speed`  | uint8_t | 1=very slow, 255=instant snap, 64=smooth arcade feel |
-| `dead_zone_x/y` | uint8_t | pixels target can move before camera follows |
-| `look_ahead_x`  | int16_t | horizontal look-ahead in pixels |
+| `follow_speed`  | uint8_t | 1=very slow, 64=smooth arcade feel, 255=exact (whole pixels, no lag) |
+| `dead_zone_x/y` | uint8_t | half-size of a window around where the target is kept: inside it the camera holds, outside it the camera is pushed just far enough to bring the target back to the window's edge |
+| `look_ahead_x`  | int16_t | horizontal look-ahead in pixels (up to 127): the target is kept this far behind the screen centre, on the side it moves toward |
+| `look_ahead_rate` | uint8_t | pixels a frame the look-ahead moves when the target turns; it eases back to 0 while the target stands (`target_vx` 0) |
 | `shake_amp`     | uint8_t | max shake amplitude in pixels (2-4 recommended) |
+
+A running target stays still on screen at the edge of the dead-zone
+window; with `follow_speed` 255 it does so to the pixel, so it never
+judders against the scenery. `ng_camera_set_bounds()` takes the last
+world pixel (inclusive): a 2048-pixel-wide world is `2047`.
 
 ## Example
 
@@ -45,8 +51,10 @@ ng_camera_apply(&cam, player->x, player->y, player->vx_fp >> NG_FP_SHIFT);
 
 - Forgetting to call `ng_camera_set_bounds()` after `ng_level_set_world_bounds()`:
   the camera will not clamp to world edges.
-- Setting `follow_speed = 255` (instant): looks like no camera system at all.
-  Use 32..80 for arcade smoothness.
+- Setting `follow_speed = 255` with no dead zone and no look-ahead: looks
+  like no camera system at all. With a dead zone and look-ahead it is the
+  steadiest follow there is (Maiya uses 16 px and 40 px at 1 px a frame);
+  alone, use 32..80 for arcade smoothness.
 - Shake amplitude > 6 pixels: creates nausea on a CRT.  Keep it 2..4.
 
 ## Performance Advice

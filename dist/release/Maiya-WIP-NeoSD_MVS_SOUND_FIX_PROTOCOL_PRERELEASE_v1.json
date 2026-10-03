@@ -1,0 +1,55 @@
+{
+  "base": "Maiya-WIP-NeoSD_MVS_v1.neo",
+  "output": "Maiya-WIP-NeoSD_MVS_SOUND_FIX_PROTOCOL_PRERELEASE_v1.neo",
+  "sha256": "4b8a5615e3a4a3d592b360acfd1898ef0808b4bd06f199993faa2cd97c486937",
+  "hardware_test": "pending",
+  "regions": {
+    "p1": {
+      "size": 524288,
+      "unchanged": false,
+      "sha256": "9bb3b659264eec915c4e43a41d10aa070cbc13175cfa5c589b2b1c9fd1eb434b"
+    },
+    "s1": {
+      "size": 131072,
+      "unchanged": true,
+      "sha256": "61d10291d697d176784f1831ac7a0422607be1a6e3bacac8ffdfeedcf29117b8"
+    },
+    "m1": {
+      "size": 131072,
+      "unchanged": false,
+      "sha256": "e7d130680b970a6c483032df1f1d3a60db79980084358f4bcbaa9bb998381c60"
+    },
+    "v1": {
+      "size": 8388608,
+      "unchanged": true,
+      "sha256": "ea1f4bd3acbe1105f3eb5741ab0ab930e70980bedeaa2d48874e458c60fb0792"
+    },
+    "v2": {
+      "size": 0,
+      "unchanged": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "c": {
+      "size": 8388608,
+      "unchanged": true,
+      "sha256": "cbb21a678fd7d16557b13058fe5b5e112518c19fcc6d6a2b839b7c5706048a3a"
+    }
+  },
+  "protocol": {
+    "ordinary_ready": "80",
+    "slot_reply": "01",
+    "bios_reset": "03",
+    "scene_reset": "08",
+    "game_init": "09",
+    "parameter_escape": "FF",
+    "escaped_values": [
+      "01",
+      "02",
+      "03",
+      "09",
+      "FF"
+    ],
+    "escape_transform": "xor 80",
+    "revision": "NGP2"
+  }
+}

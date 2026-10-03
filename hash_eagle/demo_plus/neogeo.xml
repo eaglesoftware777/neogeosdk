@@ -9,24 +9,24 @@
     -->
 
     <software name="demo_plus">
-        <description>NeoGeo SDK demo_plus v1.2.0 / Eagle Software</description>
+        <description>NeoGeo SDK demo_plus v1.7.0 / Eagle Software</description>
         <year>2026</year>
         <publisher>Eagle Software</publisher>
         <info name="serial" value="NGM-778 (MVS), NGH-778 (AES)"/>
-        <info name="release" value="20260101 (MVS), 20260101 (AES)"/>
+        <info name="release" value="20260914 (MVS), 20260914 (AES)"/>
         <info name="alt_title" value="Eagle SDK"/>
         <sharedfeat name="release" value="MVS,AES" />
         <sharedfeat name="compatibility" value="MVS,AES" />
         <part name="cart" interface="neo_cart">
             <feature name="slot" value="rom_fatfur2" />
             <dataarea name="maincpu" width="16" endianness="big" size="0x100000">
-                <rom loadflag="load16_word_swap" name="778-p1.p1" offset="0x000000" size="0x080000" crc="00ed1828" sha1="d208eb3552aedb033d99772c88ced4d2b230ba4c" />
+                <rom loadflag="load16_word_swap" name="778-p1.p1" offset="0x000000" size="0x080000" crc="99453a16" sha1="1cc0a4deea54ab551a1b1c0d7ba783519543e98c" />
             </dataarea>
             <dataarea name="fixed" size="0x020000">
                 <rom offset="0x000000" size="0x020000" name="778-s1.s1" crc="375809b8" sha1="8e66116eeb64654ef5617b982cd5725d084653a1" />
             </dataarea>
             <dataarea name="audiocpu" size="0x020000">
-                <rom offset="0x000000" size="0x020000" name="778-m1.m1" crc="7fca1d07" sha1="5cfd435161de15397535896dcabd34edae88eb45" />
+                <rom offset="0x000000" size="0x020000" name="778-m1.m1" crc="674f8b6d" sha1="2a84ebe9d0f06e5cb5094311c981ad137607212a" />
             </dataarea>
             <dataarea name="ymsnd:adpcma" size="0x708700">
                 <rom name="778-v1.v1" offset="0x000000" size="0x708700" crc="bb2f8632" sha1="eb1b4bfccda6da4aa753c8da6acba00c2296282a" />
