@@ -1,23 +1,30 @@
-Maiya v1.7.1 prerelease MAME tests
-================================
+Maiya MAME tests (v2 ROMs)
+==========================
 
-Windows CMD, from this folder:
-    run_maiya_mvs.bat          MVS sound-only fix, Europe BIOS
-    run_maiya_aes.bat          AES boot-graphics fix, UniBIOS 4.0
-    run_maiya.bat aes asia     Optional standard AES BIOS
+Windows, from this folder:
+    run_maiya_mvs.bat           MVS build, EagleBIOS (euro)
+    run_maiya_aes.bat           AES build, EagleBIOS (asia)
+    run_maiya_mvs_unibios.bat   MVS build, UniBIOS 4.0 (own settings and saves)
+    run_maiya_aes_unibios.bat   AES build, UniBIOS 4.0 (own settings and saves)
+    run_maiya.bat mvs|aes BIOS  either build with any BIOS name MAME knows
 
-MVS and AES have separate ROMs, matching software-list hashes, configurations
-and NVRAM under tests/mvs and tests/aes. Existing system BIOS files under roms
-are retained. UniBIOS 4.0 must already be available in the system BIOS set.
-The MVS image retains the original graphics; the AES image retains the original
-sound driver. Both retain the 8 MiB V1 sample region.
+EagleBIOS, the open NeoGeoSDK system ROM, is installed in roms\neogeo and
+roms\aes. UniBIOS is never installed by the SDK: put uni-bios_4_0.rom in
+roms\neogeo and roms\aes yourself for the UniBIOS launchers. MAME warns that
+EagleBIOS's checksums differ from the original BIOS: that is expected.
 
-Old installed files are backed up under backups before replacement.
-sv_mvs.bat and v.bat use the corrected MVS set for new recordings/playbacks.
-Old input recordings may not reproduce correctly with a changed program ROM.
+UniBIOS in-game menu, during play:
+    MVS  Start+Coin    (keys 1 and 5)  or Start+A+B+C
+    AES  Start+Select  (keys 1 and 5)  or Start+A+B+C
+    (A, B, C = Left Ctrl, Left Alt, Space; some keyboards cannot take
+    1+Ctrl+Alt+Space at once, so 1+5 is the safer one)
 
-Reinstall after updating the SDK test images:
-    py tools\install_maiya_mame_tests.py C:\mame\neogeosdk
-Run that command from the SDK checkout. Any MAME installation path is accepted.
+MVS and AES have separate ROMs, software lists, settings and saves under
+tests\mvs and tests\aes. roms\maiya and roms\maiya.zip hold the MVS build.
 
-MAME verification does not replace physical NeoSD hardware testing.
+Reinstall after `make neo GAME=maiya`, from the SDK checkout:
+    py tools\install_maiya_mame_tests.py C:\mame\neogeosdk --tidy
+Replaced files, older launchers and the test folders of earlier builds are
+moved to backups\ first.
+
+MAME testing does not replace NeoSD, Darksoft or real-board testing.

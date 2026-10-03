@@ -157,15 +157,17 @@ coin/start, ADPCM-A/B, FM/SSG, and AES UniBIOS splash and menu readability.
 
 ## Windows MAME installation
 
-Install the exact test-image regions and checksum-matched software lists:
+Install the MVS and AES sets `make neo GAME=maiya` builds, with their
+software lists and launchers:
 
 ```bat
-py tools\install_maiya_mame_tests.py C:\mame\neogeosdk
+py tools\install_maiya_mame_tests.py C:\mame\neogeosdk --tidy
 ```
 
-The destination can be any existing MAME SDK installation. System BIOS files
-are retained, and replaced launchers/test sets are backed up. Run
-`run_maiya_mvs.bat` for the sound fix, or `run_maiya_aes.bat` for the UniBIOS 4.0
-logo fix. Use `run_maiya.bat aes asia` for a standard AES BIOS instead.
-Each platform has separate ROM/hash paths, configuration and NVRAM, preventing
-the AES baseline audio driver from being mixed with the new MVS program.
+The destination can be any existing MAME SDK installation. Replaced files are
+backed up first; `--tidy` also retires older launchers and the test folders of
+earlier builds into the backup, so every launcher left runs the new build.
+`run_maiya_mvs.bat` and `run_maiya_aes.bat` boot EagleBIOS;
+`run_maiya_mvs_unibios.bat` and `run_maiya_aes_unibios.bat` boot UniBIOS 4.0,
+which must be placed in `roms\neogeo` and `roms\aes` by hand. Each platform has
+separate ROM/hash paths, configuration and NVRAM.
