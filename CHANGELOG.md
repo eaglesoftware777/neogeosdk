@@ -5,6 +5,22 @@
 Status: in progress on the `fix/maiya-arenas-eagle-bios` branch; becomes
 the v1.7.1 release when it merges.  v1.7.0 remains the current release.
 
+### Framework v1 (`sdk/2d_engine`)
+
+- The C engine's public calls are frozen at Framework 1.0: from now on they
+  change by additions only. `docs/api/framework_v1.txt` lists them,
+  `make api-check` (part of `make test`) checks them, and `NG_SDK_VERSION` /
+  `NG_FRAMEWORK_VERSION` in `ng_defs.h` name the release. See
+  `docs/FRAMEWORK_V1.md`.
+- `NG_VRAM_DEFER`: sprite groups and FIX text are written in the vertical
+  blank by `ng_vram_commit()`.
+- `NG_SOUND_QUEUE`: sound commands queue instead of holding the frame.
+- The FIX layer writes only changed cells, as runs; screen fades blend from
+  byte tables over two frames; `ng_sprite_group_show_at()` and
+  `ng_sprite_groups_hide_all()`.
+- Frame counters (`make PERF=1` / `PERF=2`) and Maiya's measurement scripts:
+  `docs/perf/`.
+
 ### Maiya: Super Nature Girl (`games/maiya`, id 780)
 
 - A new game built the way Sky Lance is: `make GAME=maiya` on Linux,

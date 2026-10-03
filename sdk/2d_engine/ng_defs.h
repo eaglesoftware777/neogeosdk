@@ -12,6 +12,17 @@ extern "C" {
 #define NEOGEO_USER
 #endif
 
+/* Versions. The SDK as a whole (CHANGELOG.md), and the framework: the C
+ * engine's public calls, frozen at 1.0 (docs/FRAMEWORK_V1.md) -- from then
+ * on they change by additions only (tools/api_freeze.py checks it). */
+#define NG_SDK_VERSION_MAJOR        1
+#define NG_SDK_VERSION_MINOR        7
+#define NG_SDK_VERSION_PATCH        1
+#define NG_SDK_VERSION              ((NG_SDK_VERSION_MAJOR << 16) | (NG_SDK_VERSION_MINOR << 8) | NG_SDK_VERSION_PATCH)
+#define NG_FRAMEWORK_VERSION_MAJOR  1
+#define NG_FRAMEWORK_VERSION_MINOR  0
+#define NG_FRAMEWORK_VERSION        ((NG_FRAMEWORK_VERSION_MAJOR << 8) | NG_FRAMEWORK_VERSION_MINOR)
+
 /* Boolean */
 #define NG_TRUE  1
 #define NG_FALSE 0
