@@ -65,7 +65,13 @@ Checked in MAME's AES driver (`-memc`) on the AES system ROM (asia) and on UniBI
 - the save is back after a power-on: the count of games played went 1, 1, 2, 2 over four power-ons;
 - with no card the game runs on, the card answering "no card".
 
+EagleBIOS has the same CARD routine (`bios/src/bios_card.c`), in the console system ROMs' card layout, so a card moves between them with its saves:
+- on EagleBIOS a fresh card is formatted and saved, and the count went 1, 1, 2, 2 over four power-ons;
+- a card EagleBIOS wrote is read by the AES system ROM and by UniBIOS, and one the AES system ROM wrote is read by EagleBIOS;
+- the card EagleBIOS writes matches the system ROM's field for field: header, checksums, directory, both FATs and the data blocks.
+
+On the way: MAME's card answers reads only after the system has chosen its memory over its attribute registers (`REG_CRDNORMAL`, `$3A0019`), as a system ROM does.
+
 ## Not done
 
-- **EagleBIOS's CARD routine** answers "no card" (`bios/src/bios_card.c`). With it, a console keeps its save for the session only.
 - **Hardware:** a real AES with a card is not verified.
