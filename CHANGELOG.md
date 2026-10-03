@@ -95,6 +95,19 @@ the v1.7.1 release when it merges.  v1.7.0 remains the current release.
   were milestones on the way to v1.7.0, and had been labelled as though
   they came after it.
 
+### Maiya v2 release files
+
+- `tools/make_release.py` names a game's release files with a version
+  suffix into `dist/release/` -- NeoSD images, Darksoft folders, MAME zips
+  with EagleBIOS for MVS and AES, a manifest of sizes and hashes -- and
+  never overwrites a released file. EagleBIOS is the only system ROM it
+  lets into a zip.
+- `tools/pack_darksoft.py` packs a cartridge as a Darksoft Neo Geo Multi
+  folder (the v1 layout, C ROMs in two-byte pairs) and `--unpack` turns one
+  back into a MAME set, so the very files the Multi gets can be run.
+- Maiya's `_v2` files join the v1.7.1 pre-release beside the v1 files,
+  which stay as published: `Maiya-README_v2.txt` lists what changed.
+
 ### Multi-game build, MAME install, and customisation tooling
 
 - `make all-games` / `make dist-all` (and the `MakefileWin32.mak` equivalents)
