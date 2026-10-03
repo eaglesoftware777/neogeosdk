@@ -81,6 +81,10 @@ Each phase builds with zero warnings and rebuilds and commits the other games' R
 
 `docs/perf/maiya_v3_baseline.md`. Every stage overruns, on 24–89% of its frames (50–59 game fps), and 86–90% of video writes land on drawn lines. The average video traffic is small (51–99 words a frame), so the phase 1 commit fits well inside a blank. Sprites per line peak at 65–72 of 96.
 
+## Phase 1 results
+
+`docs/perf/maiya_v4_phase1.md`. Sprites and FIX text are written in the vertical blank (`NG_VRAM_DEFER`). The commit fits the blank in nine frames in ten (median 15,268 cycles, p90 24,290, against ~30,700). Writes still landing on drawn lines come from overrunning frames, so phase 2 finishes the job.
+
 ## 4. Framework v1
 
 When phases 0–2 are in, the SDK is tagged **v1.0**:

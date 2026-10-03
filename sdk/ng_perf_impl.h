@@ -62,9 +62,43 @@ void ng_perf_frame_end(void)
 void ng_perf_vram(uint16_t words)
 {
     uint16_t line = ng_perf_line();
+    uint8_t drawn = (uint8_t)(line >= 16u && line < 240u);
     ng_perf.vram_cur = (uint16_t)(ng_perf.vram_cur + words);
-    if (line >= 16u && line < 240u)
-        ng_perf.vram_active_cur = (uint16_t)(ng_perf.vram_active_cur + words);
+    if (drawn) ng_perf.vram_active_cur = (uint16_t)(ng_perf.vram_active_cur + words);
+    if (!ng_perf.in_commit) {
+        ng_perf.outside_sum += words;
+        if (drawn) ng_perf.outside_active_sum += words;
+    }
+}
+
+static uint8_t ng_perf_commit_began_blank;
+
+void ng_perf_commit_part(uint16_t groups, uint16_t fix_cells, uint16_t fix_from_line)
+{
+    uint16_t now = ng_perf_line();
+    ng_perf.commit_groups_sum += groups;
+    if (groups > ng_perf.commit_groups_peak) ng_perf.commit_groups_peak = groups;
+    ng_perf.commit_fix_cells_sum += fix_cells;
+    ng_perf.commit_fix_lines_sum += (uint16_t)(now >= fix_from_line ? now - fix_from_line : now + 264u - fix_from_line);
+}
+
+void ng_perf_commit(uint8_t begin)
+{
+    uint16_t line = ng_perf_line();
+    uint8_t drawn = (uint8_t)(line >= 16u && line < 240u);
+    if (begin) {
+        ng_perf.commit_begin = line;
+        ng_perf.in_commit = 1u;
+        ng_perf_commit_began_blank = (uint8_t)!drawn;
+        if (drawn) ng_perf.commit_late++;
+    } else {
+        uint16_t lines = (uint16_t)(line >= ng_perf.commit_begin ? line - ng_perf.commit_begin
+                                                                 : line + 264u - ng_perf.commit_begin);
+        ng_perf.in_commit = 0u;
+        if (ng_perf_commit_began_blank && drawn) ng_perf.commit_spill++;
+        ng_perf.commit_lines_sum += lines;
+        if (lines > ng_perf.commit_lines_peak) ng_perf.commit_lines_peak = lines;
+    }
 }
 
 #ifdef __cplusplus

@@ -23,7 +23,11 @@ static void NEOGEO_USER ng_char_sync_group(NGSpriteGroup *g, NGCharacter *c,
     ng_sprite_group_set_flip(g, c->flip_x, c->flip_y);
     /* An explicit invalidation without a field change may follow raw VRAM
      * writes. Rebuild the whole group in that case. */
+#ifdef NG_VRAM_DEFER
+    if (c->sprite_dirty && !(g->dirty & NG_SGF_DIRTY_ALL))   /* (a listing for the commit isn't a change) */
+#else
     if (c->sprite_dirty && !g->dirty)
+#endif
         ng_sprite_group_mark_dirty(g, NG_SGF_DIRTY_ALL);
     ng_sprite_group_flush(g);
     c->sprite_dirty = 0u;

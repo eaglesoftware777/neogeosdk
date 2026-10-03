@@ -46,6 +46,19 @@ typedef struct {
     uint16_t vram_active_peak;
     uint16_t begin_line;      /* where the current frame's work began              */
     uint16_t vram_cur, vram_active_cur;
+    /* NG_VRAM_DEFER: where the rest comes from */
+    uint32_t outside_sum;        /* words written outside ng_vram_commit()        */
+    uint32_t outside_active_sum; /* ...of them on drawn lines                     */
+    uint16_t commit_late;        /* commits that began on a drawn line            */
+    uint16_t commit_spill;       /* commits that began in the blank, ended drawn  */
+    uint32_t commit_lines_sum;   /* scanlines the commits took, all together      */
+    uint16_t commit_lines_peak;
+    uint16_t commit_begin;       /* where the current commit began                */
+    uint16_t commit_groups_peak; /* the most groups one commit wrote              */
+    uint32_t commit_groups_sum;
+    uint32_t commit_fix_lines_sum; /* ...of the commits' lines, the text cells'   */
+    uint32_t commit_fix_cells_sum;
+    uint8_t  in_commit;
 } NGPerf;
 
 extern NGPerf ng_perf;
@@ -54,16 +67,24 @@ void ng_perf_frame_begin(void);
 void ng_perf_frame_end(void);
 void ng_perf_vram(uint16_t words);
 uint16_t ng_perf_line(void);
+void ng_perf_commit(uint8_t begin);
+void ng_perf_commit_part(uint16_t groups, uint16_t fix_cells, uint16_t fix_from_line);
 
 #define NG_PERF_FRAME_BEGIN() ng_perf_frame_begin()
 #define NG_PERF_FRAME_END()   ng_perf_frame_end()
 #define NG_PERF_VRAM(n)       ng_perf_vram((uint16_t)(n))
+#define NG_PERF_COMMIT(begin) ng_perf_commit(begin)
+#define NG_PERF_COMMIT_PART(g, c, l) ng_perf_commit_part((g), (c), (l))
+#define NG_PERF_LINE() ng_perf_line()
 
 #else
 
 #define NG_PERF_FRAME_BEGIN() ((void)0)
 #define NG_PERF_FRAME_END()   ((void)0)
 #define NG_PERF_VRAM(n)       ((void)0)
+#define NG_PERF_COMMIT(begin) ((void)0)
+#define NG_PERF_COMMIT_PART(g, c, l) ((void)0)
+#define NG_PERF_LINE() 0u
 
 #endif
 

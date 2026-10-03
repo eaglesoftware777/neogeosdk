@@ -66,7 +66,7 @@ local function play(p, MG)
         if MODE == 'gate' then mem:write_u8(MG + a.has_key, 1) end
         place(p, AT, 192)
     end
-    if pf == 60 then for o = 0, 36, 2 do mem:write_u16(P + o, 0) end; start = pf end
+    if pf == 60 then for o = 0, 74, 2 do mem:write_u16(P + o, 0) end; start = pf end
     if MODE == 'gate' and pf < 200 then
         press('P1 Right', pf > 20); press('P1 Up', pf > 30 and pf < 40)
     elseif MODE == 'gate' then
@@ -84,9 +84,10 @@ local function play(p, MG)
         local function u16(o) return mem:read_u16(P + o) end
         local function u32(o) return mem:read_u32(P + o) end
         out:write(string.format('frames=%d overruns=%d lines_sum=%d lines_peak=%d vram_sum=%d vram_peak=%d ' ..
-            'active_sum=%d active_peak=%d strips_peak=%d strips_line=%d over96=%d state=%d\n',
+            'active_sum=%d active_peak=%d strips_peak=%d strips_line=%d over96=%d state=%d ' ..
+            'outside_sum=%d outside_active_sum=%d commit_late=%d commit_spill=%d commit_lines_sum=%d commit_lines_peak=%d groups_peak=%d groups_sum=%d fixlines_sum=%d fixcells_sum=%d\n',
             u32(0), u32(4), u32(8), u16(22), u32(12), u16(26), u32(16), u16(30), speak, sat, over96,
-            mem:read_u8(a.state)))
+            mem:read_u8(a.state), u32(38), u32(42), u16(46), u16(48), u32(50), u16(54), u16(58), u32(60), u32(64), u32(68)))
         out:close()
         machine:exit()
     end

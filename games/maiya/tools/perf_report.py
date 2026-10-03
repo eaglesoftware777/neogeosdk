@@ -37,6 +37,15 @@ def toolchain(given):
     raise SystemExit("Pass --toolchain with the cross compiler location")
 
 
+def engine_defines():
+    """GAME_ENGINE_DEFINES from game.mk: the struct layout may depend on them."""
+    for line in (GAME / "game.mk").read_text().splitlines():
+        name, _, value = line.partition("=")
+        if name.strip() == "GAME_ENGINE_DEFINES":
+            return value.split()
+    return []
+
+
 def offsets(tc):
     """Field offsets and enum values the capture script needs, from the
     staged source the measurement build was made from."""
@@ -52,7 +61,7 @@ def offsets(tc):
         c.write_text(src)
         subprocess.run([str(tc / "m68k-unknown-elf/bin/m68k-unknown-elf-gcc"), "-S", "-O0", "-w", "-m68000",
                         "-ffreestanding", "-std=gnu99", "-I.", "-Isdk", "-Isdk/2d_engine", "-Igames/maiya/scenes",
-                        "-Igames/maiya/artbox", "-Igames/maiya", "-DNG_PALFX_SCREEN=1", str(c), "-o", str(s)],
+                        "-Igames/maiya/artbox", "-Igames/maiya", *engine_defines(), str(c), "-o", str(s)],
                        cwd=WORK, check=True)
         asm = s.read_text()
     found = {m.group(1): int(m.group(2)) for m in re.finditer(r"^OFF_(\w+):\s*\n\s*\.long\s+(\d+)", asm, re.M)}

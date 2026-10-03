@@ -50,7 +50,11 @@ static void NEOGEO_USER chars_hide_slot(uint16_t firstSprite, uint8_t strips)
     if (firstSprite == 0xffff) return;
     if (strips == 0) strips = NG_SPRITE_MAX_STRIPS;
     if (strips > NG_SPRITE_MAX_STRIPS) strips = NG_SPRITE_MAX_STRIPS;
+#ifdef NG_VRAM_DEFER
+    ng_sprite_hide_range_queued(firstSprite, strips);   /* with the frame's other writes */
+#else
     ng_sprite_hide_range(firstSprite, strips);
+#endif
 }
 
 /* Hide a previously-uploaded char window using the actual strip count
@@ -67,6 +71,11 @@ static void NEOGEO_USER chars_hide_uploaded(uint8_t idx)
 
     first = ng_char_uploaded_first[idx];
     strips = ng_char_uploaded_strips[idx];
+#ifdef NG_VRAM_DEFER
+    /* Whatever its group still had waiting for the commit would show it
+     * again after the hide. */
+    ng_sprite_group_cancel(&ng_char_groups[idx]);
+#endif
     if (first == 0xffffu) return;
     if (strips == 0u) strips = NG_SPRITE_MAX_STRIPS;
     chars_hide_slot(first, strips);

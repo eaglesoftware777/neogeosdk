@@ -32,4 +32,12 @@ void NEOGEO_USER ng_fix_blank_cell(uint8_t x, uint8_t y);
 #ifdef __cplusplus
 }
 #endif
+#ifdef NG_VRAM_DEFER
+/* The cells written since the last vertical blank: ng_vram_commit() writes
+ * them; a clear of the whole layer drops them. */
+void NEOGEO_USER ng_fix_commit(void);
+void NEOGEO_USER ng_fix_queue_drop(void);
+uint8_t NEOGEO_USER ng_fix_last_commit_cells(void);
+#endif
+
 #endif
