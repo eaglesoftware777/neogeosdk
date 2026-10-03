@@ -136,6 +136,28 @@ Regressions pass as before.
 - **Splitting Maiya's single paintings into bands** that scroll at different paces was tried on the Sky Road. It measured right but left a seam through its clouds, so it was taken out. More planes need layered art.
 - **The 96 check is measured, not computed at build time.** Only a run shows where the cast stands on the screen.
 
+## Phase 8 results
+
+`docs/saves.md`. The SDK's save block (`ng_save_*`, `sdk/ng_system.h`) now has a memory card backend, `ng_card_save` and `ng_card_load`, through the system ROM's CARD routine at `$C00468`:
+- card file: the game's NGH and sub-number 0, a 20-byte title, the block's header and data, in whole 64-byte card blocks;
+- the block is loaded only when it is whole and of this game's version;
+- a card is formatted only when it says it is unformatted.
+
+**Maiya on a console:** it reads its save from the card at power-on and writes it when it seals something worth keeping. Arcade boards keep backup RAM as before.
+
+**Checked in MAME's AES driver**, on the AES system ROM and on UniBIOS 4.0:
+- a fresh card is formatted and saved;
+- the save comes back after a power-on (games played went 1, 1, 2, 2 over four power-ons);
+- with no card the game runs on.
+
+**Found on the way:**
+- The system ROM reads back only the first block of a file whose size isn't whole blocks.
+- GCC's -O2 post-increment miscompile shifted a C copy loop by one byte; the copies are in assembly now.
+
+**Not done or verified:**
+- EagleBIOS's CARD answers "no card", so with EagleBIOS a console's save lasts the session only.
+- Not verified on a real AES.
+
 ## Phase 7 results
 
 `make neo GAME=<name>` (`tools/make_neo.py`, `docs/MAKEFILE_INTEGRATION.md`) builds the game for AES and then MVS. For each platform it writes to `dist/neo/<game>/`:

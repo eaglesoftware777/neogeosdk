@@ -3802,6 +3802,18 @@ static MGSave *NEOGEO_USER mg_saved(void)
     return (MGSave *)ng_save_data();
 }
 
+/*
+ * On a console the save block lasts only while it is on: a memory card
+ * keeps it after (ng_card_*). It is read from the card once a power-on
+ * (WORK_INIT clears the flag) -- and again by the reset, which a console's
+ * system calls at every power-on -- and written to it whenever the game
+ * seals something worth keeping: a game started, a name entered, the
+ * journey finished; never the defaults. An arcade board keeps the block in
+ * backup RAM.
+ */
+static uint8_t mg_card_read;
+static uint8_t mg_card_buf[NG_CARD_FILE_SIZE(sizeof(MGSave))];
+
 void NEOGEO_USER maiya_save_reset(void)
 {
     static const char names[MG_SCORES][3] = {
@@ -3810,6 +3822,9 @@ void NEOGEO_USER maiya_save_reset(void)
     };
     MGSave *sv;
     uint8_t i;
+    if (!ng_sys_is_mvs() &&
+        ng_card_load(MG_SAVE_VERSION, (uint16_t)sizeof(MGSave), mg_card_buf, (uint16_t)sizeof mg_card_buf) == NG_CARD_OK)
+        return;                                    /* a console's save is the card's */
     ng_save_format(MG_SAVE_VERSION, (uint16_t)sizeof(MGSave));
     sv = mg_saved();
     for (i = 0; i < MG_SCORES; i++) {
@@ -3824,7 +3839,19 @@ void NEOGEO_USER maiya_save_reset(void)
 
 void NEOGEO_USER maiya_save_check(void)
 {
+    if (!mg_card_read && !ng_sys_is_mvs()) {
+        mg_card_read = 1;
+        ng_card_load(MG_SAVE_VERSION, (uint16_t)sizeof(MGSave), mg_card_buf, (uint16_t)sizeof mg_card_buf);
+    }
     if (!ng_save_valid(MG_SAVE_VERSION, (uint16_t)sizeof(MGSave))) maiya_save_reset();
+}
+
+/* Seals the block, and on a console puts it on the memory card. */
+static void NEOGEO_USER mg_save_seal(void)
+{
+    ng_save_commit();
+    if (!ng_sys_is_mvs())
+        ng_card_save("MAIYA SCORES", mg_card_buf, (uint16_t)sizeof mg_card_buf);
 }
 
 /* ------------------------------------------------------------------ */
@@ -3892,7 +3919,7 @@ void NEOGEO_USER maiya_boot(void)
         MGSave *sv = mg_saved();
         maiya_save_check();
         if (sv->plays < 0xFFFFu) sv->plays++;
-        ng_save_commit();
+        mg_save_seal();
     }
     mg_scene(0, 0);
 }
@@ -8866,7 +8893,7 @@ static void NEOGEO_USER mg_name_commit(void)
         sv->top[at].name[2] = mg.name_buf[2];
         sv->top[at].stage = (uint8_t)(mg.stage + 1u);
         sv->top[at].score = mg.score;
-        ng_save_commit();
+        mg_save_seal();
     }
     mg.name_row = at;
     playSFX(SOUND_SFX_13);
@@ -8974,7 +9001,7 @@ static void NEOGEO_USER mg_ending_begin(void)
         MGSave *sv = mg_saved();
         maiya_save_check();
         if (sv->clears < 255u) sv->clears++;
-        ng_save_commit();
+        mg_save_seal();
     }
     mg_ending_page();
 }

@@ -88,8 +88,7 @@ The report gives game fps, the share of frames that overran, work in scanlines (
 
 Additions since 1.0:
 - **1.1: raster bands** (`ng_raster.h`, `docs/raster.md`, `-DNG_RASTER=1`).
+- **The memory card**, in `sdk/ng_system.h`: `ng_card_save` and `ng_card_load` (`docs/saves.md`).
+- **`make neo`** (`docs/MAKEFILE_INTEGRATION.md`).
 
-Additions planned (`docs/design/V4_PLAN.md`):
-- parallax planes with a strips-per-line check;
-- `make neo`;
-- cartridge saves (MVS backup RAM, AES memory card).
+Measured, not added: the strips-per-line check is `perf_report.py --all-stages --strip-limit 96`. A plane is a sprite group, and a band of one can scroll at its own pace through `ng_raster` (`docs/perf/maiya_v4_phase5.md`).
