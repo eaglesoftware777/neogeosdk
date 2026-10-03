@@ -95,6 +95,12 @@ void NEOGEO_USER ng_sprite_group_set_scale(NGSpriteGroup *g, uint8_t xScale, uin
 void NEOGEO_USER ng_sprite_group_set_flip(NGSpriteGroup *g, uint8_t hflip, uint8_t vflip);
 void NEOGEO_USER ng_sprite_group_set_auto_anim(NGSpriteGroup *g, uint8_t autoAnim4, uint8_t autoAnim8);
 void NEOGEO_USER ng_sprite_group_set_visible(NGSpriteGroup *g, uint8_t visible);
+/* The common per-frame cases in one call each:
+ * show_at = set_tile_base + set_palette + set_pos + set_visible(1) + flush;
+ * hide_all = set_visible(0) + flush for each of `count` groups. */
+void NEOGEO_USER ng_sprite_group_show_at(NGSpriteGroup *g, uint16_t tileBase, uint8_t palette,
+                                         int16_t x, int16_t y);
+void NEOGEO_USER ng_sprite_groups_hide_all(NGSpriteGroup *g, uint8_t count);
 void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_group_update_transform(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_group_hide(NGSpriteGroup *g);

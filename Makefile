@@ -174,10 +174,11 @@ SDK_LIB=out/libng_sdk.a
 
 # Measurement builds: frame time and VRAM traffic counted in RAM for a test
 # script to read (sdk/ng_perf.h). Never for a release.
-ifeq ($(PERF),1)
-CFLAGS += -DNG_DEBUG_PERF=1
-CXXFLAGS += -DNG_DEBUG_PERF=1
-GAME_CFLAGS += -DNG_DEBUG_PERF=1   # (taken from CFLAGS above, before this)
+ifneq ($(filter 1 2,$(PERF)),)
+PERF_DEFINES := -DNG_DEBUG_PERF=1 $(if $(filter 2,$(PERF)),-DNG_DEBUG_PERF_LITE=1)
+CFLAGS += $(PERF_DEFINES)
+CXXFLAGS += $(PERF_DEFINES)
+GAME_CFLAGS += $(PERF_DEFINES)   # (taken from CFLAGS above, before this)
 endif
 
 ifeq ($(DEBUG),1)

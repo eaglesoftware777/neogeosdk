@@ -512,6 +512,28 @@ void NEOGEO_USER ng_sprite_group_set_visible(NGSpriteGroup *g, uint8_t visible)
     }
 }
 
+void NEOGEO_USER ng_sprite_group_show_at(NGSpriteGroup *g, uint16_t tileBase, uint8_t palette,
+                                         int16_t x, int16_t y)
+{
+    uint8_t d = 0;
+    if (!g) return;
+    if (g->tileBase != tileBase) { g->tileBase = tileBase; d |= NG_SGF_DIRTY_TILE; }
+    if (g->palette != palette) { g->palette = palette; d |= NG_SGF_DIRTY_PALETTE; }
+    if (g->x != x || g->y != y) { g->x = x; g->y = y; d |= NG_SGF_DIRTY_POS; }
+    if (!g->visible) { g->visible = 1; d |= NG_SGF_DIRTY_ALL; }
+    g->dirty |= d;
+    ng_sprite_group_flush(g);
+}
+
+void NEOGEO_USER ng_sprite_groups_hide_all(NGSpriteGroup *g, uint8_t count)
+{
+    if (!g) return;
+    for (; count; count--, g++) {
+        if (g->visible) { g->visible = 0; g->dirty |= NG_SGF_DIRTY_VIS; }
+        if (g->dirty & NG_SGF_DIRTY_ALL) ng_sprite_group_flush(g);
+    }
+}
+
 void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
 {
     uint8_t rows;

@@ -22,78 +22,83 @@ static struct {
     uint8_t   fade;          /* NG_PALFX_FADE_IN, NG_PALFX_FADE_OUT or 0    */
     uint8_t   frames;        /* frames the fade has still to run            */
     uint8_t   all_dirty;     /* every bank changed since the last blank     */
+    uint8_t   half_done;     /* a level's blend is half done (palfx_screen_level) */
     uint8_t   backdrop_set;
     uint16_t  backdrop;
     uint16_t  progress;      /* 8.8, 0 .. 16: how far the fade has gone     */
     uint16_t  step;          /* added to progress each frame                */
     uint8_t   dirty[32];     /* a bit per bank changed since the last blank */
-    /* Each channel's 5-bit value at `level`, already in its place in the
-     * palette word: red at lut[0..31], green at [32..63], blue at [64..95]. */
-    uint16_t  lut[96];
+    /* A colour at `level`, a byte of it at a time: hi[] by its high byte
+     * (red, with its low bit), lo[] by its low byte (green and blue); the
+     * two looked-up words ORed are the colour. */
+    uint16_t  hi[256];
+    uint16_t  lo[256];
 } ng_palfx_scr;
 
 /*
  * Word copy, kept in assembly on purpose: as a C loop GCC can fold it into
  * "move.w (a0)+,(0,a0,d0.l)", whose destination a 68000 works out with the
  * already incremented a0, so every word lands one entry along. `n` >= 1.
+ * Whole banks (16 words) go eight longs to a movem, the rest a word at a
+ * time.
  */
 __attribute__((noinline))
 static void NEOGEO_USER palfx_copy_words(volatile uint16_t *dst, const volatile uint16_t *src, uint16_t n)
 {
-    n = (uint16_t)(n - 1u);
-    __asm__ volatile (
-        "1:\n\t"
-        "move.w (%0)+,(%1)+\n\t"
-        "dbf %2,1b"
-        : "+a" (src), "+a" (dst), "+d" (n)
-        :
-        : "memory");
+    uint16_t banks = (uint16_t)(n >> 4);
+    n &= 15u;
+    if (banks) {
+        banks = (uint16_t)(banks - 1u);
+        __asm__ volatile (
+            "1:\n\t"
+            "movem.l (%0)+,%%d0-%%d3/%%a2-%%a5\n\t"
+            "movem.l %%d0-%%d3/%%a2-%%a5,(%1)\n\t"
+            "lea 32(%1),%1\n\t"
+            "dbf %2,1b"
+            : "+a" (src), "+a" (dst), "+d" (banks)
+            :
+            : "d0", "d1", "d2", "d3", "a2", "a3", "a4", "a5", "memory");
+    }
+    if (n) {
+        n = (uint16_t)(n - 1u);
+        __asm__ volatile (
+            "1:\n\t"
+            "move.w (%0)+,(%1)+\n\t"
+            "dbf %2,1b"
+            : "+a" (src), "+a" (dst), "+d" (n)
+            :
+            : "memory");
+    }
 }
 
 /*
- * n colours through the level's tables. Each channel's 5-bit value (four
- * bits in its nibble, the lowest in bit 14, 13 or 12) is found by shifts
- * and a bit test, looked up, and the three results ORed: no multiply or
- * divide per colour. `n` >= 1.
+ * n colours through the level's two byte tables: two lookups and an OR a
+ * colour, no shift. (Green's and blue's lowest bits sit in the high byte;
+ * between the end levels they are left out, a 32nd of a step at most.)
+ * `n` >= 1.
  */
 __attribute__((noinline))
 static void NEOGEO_USER palfx_screen_blend(uint16_t *dst, const uint16_t *src, uint16_t n)
 {
-    const uint16_t *green = &ng_palfx_scr.lut[32];
-    uint16_t c, i, w;
+    const uint16_t *hi = ng_palfx_scr.hi;
+    const uint16_t *lo = ng_palfx_scr.lo;
+    uint16_t h, l, w;
     n = (uint16_t)(n - 1u);
     __asm__ volatile (
         "1:\n\t"
-        "move.w (%[src])+,%[c]\n\t"
-        "move.w %[c],%[i]\n\t"          /* red: bits 11..8 and 14 */
-        "lsr.w #6,%[i]\n\t"
-        "andi.w #0x3C,%[i]\n\t"
-        "btst #14,%[c]\n\t"
-        "beq.s 2f\n\t"
-        "addq.w #2,%[i]\n"
-        "2:\n\t"
-        "move.w -64(%[t],%[i].w),%[w]\n\t"
-        "move.w %[c],%[i]\n\t"          /* green: bits 7..4 and 13 */
-        "lsr.w #2,%[i]\n\t"
-        "andi.w #0x3C,%[i]\n\t"
-        "btst #13,%[c]\n\t"
-        "beq.s 3f\n\t"
-        "addq.w #2,%[i]\n"
-        "3:\n\t"
-        "or.w 0(%[t],%[i].w),%[w]\n\t"
-        "move.w %[c],%[i]\n\t"          /* blue: bits 3..0 and 12 */
-        "lsl.w #2,%[i]\n\t"
-        "andi.w #0x3C,%[i]\n\t"
-        "btst #12,%[c]\n\t"
-        "beq.s 4f\n\t"
-        "addq.w #2,%[i]\n"
-        "4:\n\t"
-        "or.w 64(%[t],%[i].w),%[w]\n\t"
+        "moveq #0,%[h]\n\t"
+        "moveq #0,%[l]\n\t"
+        "move.b (%[src])+,%[h]\n\t"
+        "move.b (%[src])+,%[l]\n\t"
+        "add.w %[h],%[h]\n\t"
+        "add.w %[l],%[l]\n\t"
+        "move.w 0(%[hi],%[h].w),%[w]\n\t"
+        "or.w 0(%[lo],%[l].w),%[w]\n\t"
         "move.w %[w],(%[dst])+\n\t"
         "dbf %[n],1b"
         : [src] "+a" (src), [dst] "+a" (dst), [n] "+d" (n),
-          [c] "=&d" (c), [i] "=&d" (i), [w] "=&d" (w)
-        : [t] "a" (green)
+          [h] "=&d" (h), [l] "=&d" (l), [w] "=&d" (w)
+        : [hi] "a" (hi), [lo] "a" (lo)
         : "cc", "memory");
 }
 
@@ -102,15 +107,39 @@ static void NEOGEO_USER palfx_screen_blend(uint16_t *dst, const uint16_t *src, u
 static void NEOGEO_USER palfx_screen_tables(void)
 {
     uint8_t v, l;
+    uint16_t i;
+    uint16_t r[32], g[16], b[16];     /* g, b: the even values only */
     uint8_t k = ng_palfx_scr.level;
     int16_t p = ng_palfx_scr.target == NG_PALFX_WHITE ? (int16_t)(((int16_t)k << 5) - k) : 0;
     for (v = 0; v < 32u; v++) {
         /* p = (target - v) * level, stepped down by `level` each time */
+        uint16_t q, odd;
         l = (uint8_t)(v + (p >> 4));
-        ng_palfx_scr.lut[v]       = (uint16_t)(((uint16_t)(l & 1u) << 14) | ((uint16_t)(l >> 1) << 8));
-        ng_palfx_scr.lut[32u + v] = (uint16_t)(((uint16_t)(l & 1u) << 13) | ((uint16_t)(l >> 1) << 4));
-        ng_palfx_scr.lut[64u + v] = (uint16_t)(((uint16_t)(l & 1u) << 12) | (uint16_t)(l >> 1));
+        q = (uint16_t)(l >> 1);
+        odd = (uint16_t)(l & 1u);
+        r[v] = (uint16_t)((odd ? 0x4000u : 0u) | (q << 8));
+        if (!(v & 1u)) {
+            g[v >> 1] = (uint16_t)((odd ? 0x2000u : 0u) | (q << 4));
+            b[v >> 1] = (uint16_t)((odd ? 0x1000u : 0u) | q);
+        }
         p = (int16_t)(p - k);
+    }
+    /* High byte: the dark bit (7), red's low bit (6), green's and blue's
+     * (5, 4), red's four (3..0). Red's five bits pick the word; bits 7, 5
+     * and 4 don't matter, so it goes to the eight bytes that differ in them. */
+    for (v = 0; v < 32u; v++) {
+        uint16_t w = r[v];
+        uint16_t *h = &ng_palfx_scr.hi[(v >> 1) | ((v & 1u) << 6)];
+        h[0x00] = w; h[0x10] = w; h[0x20] = w; h[0x30] = w;
+        h[0x80] = w; h[0x90] = w; h[0xA0] = w; h[0xB0] = w;
+    }
+    /* Low byte: green's four bits, blue's four (each low bit taken as 0). */
+    {
+        uint16_t *o = ng_palfx_scr.lo;
+        for (v = 0; v < 16u; v++) {
+            uint16_t gw = g[v];
+            for (i = 0; i < 16u; i++) *o++ = (uint16_t)(gw | b[i]);
+        }
     }
 }
 
@@ -123,19 +152,58 @@ static void NEOGEO_USER palfx_screen_show(uint8_t bank, const uint16_t *colors)
     ng_palfx_scr.dirty[bank >> 3] |= (uint8_t)(1u << (bank & 7u));
 }
 
-/* Every bank again at `level`: all of them go on screen at the next blank,
- * so the picture never shows two brightnesses at once. */
+/* The second half of a level's blend (palfx_screen_level), then all of
+ * it goes on screen at the next blank. */
+static void NEOGEO_USER palfx_screen_finish(void)
+{
+    uint16_t half = (uint16_t)((uint16_t)(ng_palfx_scr.count >> 1) << 4);
+    uint16_t n = (uint16_t)(((uint16_t)ng_palfx_scr.count << 4) - half);
+    ng_palfx_scr.half_done = 0;
+    palfx_screen_blend(ng_palfx_scr.out + half, ng_palfx_scr.base + half, n);
+    ng_palfx_scr.all_dirty = 1;
+}
+
+/*
+ * Every bank again at `level`: all of them go on screen at the same blank,
+ * so the picture never shows two brightnesses at once. The two end levels
+ * are a copy and a fill; a level between them is a blend of every colour,
+ * half of it now and half (palfx_screen_finish) on the next frame, the
+ * picture changing when both are done -- so a frame never pays for all of
+ * it, and a fade steps at most every other frame.
+ */
 static void NEOGEO_USER palfx_screen_level(uint8_t level, uint8_t force)
 {
     uint16_t n = (uint16_t)((uint16_t)ng_palfx_scr.count << 4);
     if (level > 16u) level = 16u;
-    if (level == ng_palfx_scr.level && !force) return;
+    if (level == ng_palfx_scr.level && !force && !ng_palfx_scr.half_done) return;
     ng_palfx_scr.level = level;
-    if (level) {
-        palfx_screen_tables();
-        palfx_screen_blend(ng_palfx_scr.out, ng_palfx_scr.base, n);
-    } else {
+    ng_palfx_scr.half_done = 0;
+    if (!level) {
         palfx_copy_words(ng_palfx_scr.out, ng_palfx_scr.base, n);
+    } else {
+        palfx_screen_tables();
+        if (level == 16u) {
+            /* all of it the target: a fill, two colours a long (n is
+             * whole banks, so even and at least 16) */
+            uint32_t *o = (uint32_t *)ng_palfx_scr.out;
+            uint32_t w = ng_palfx_scr.target == NG_PALFX_WHITE ? 0x7FFF7FFFUL : 0UL;
+            uint16_t longs = (uint16_t)((n >> 1) - 1u);
+            __asm__ volatile (
+                "1:\n\t"
+                "move.l %[w],(%[o])+\n\t"
+                "dbf %[n],1b"
+                : [o] "+a" (o), [n] "+d" (longs)
+                : [w] "d" (w)
+                : "memory");
+        } else {
+            uint16_t half = (uint16_t)((uint16_t)(ng_palfx_scr.count >> 1) << 4);
+            if (half) {
+                palfx_screen_blend(ng_palfx_scr.out, ng_palfx_scr.base, half);
+                ng_palfx_scr.half_done = 1;
+                return;
+            }
+            palfx_screen_blend(ng_palfx_scr.out, ng_palfx_scr.base, n);
+        }
     }
     ng_palfx_scr.all_dirty = 1;
 }
@@ -144,7 +212,8 @@ static void NEOGEO_USER palfx_screen_level(uint8_t level, uint8_t force)
  * so an effect's colours are laid over the fade's, not under them. */
 static void NEOGEO_USER palfx_screen_step(void)
 {
-    uint8_t part;
+    uint8_t part, level, busy = ng_palfx_scr.half_done;
+    if (busy) palfx_screen_finish();
     if (!ng_palfx_scr.fade) return;
     if (--ng_palfx_scr.frames == 0) {
         part = 16u;
@@ -153,7 +222,9 @@ static void NEOGEO_USER palfx_screen_step(void)
         part = (uint8_t)(ng_palfx_scr.progress >> 8);
         if (part > 16u) part = 16u;
     }
-    palfx_screen_level(ng_palfx_scr.fade == NG_PALFX_FADE_OUT ? part : (uint8_t)(16u - part), 0);
+    level = ng_palfx_scr.fade == NG_PALFX_FADE_OUT ? part : (uint8_t)(16u - part);
+    /* a frame that finished a blend starts no other, unless it's an end level */
+    if (!busy || level == 0u || level == 16u) palfx_screen_level(level, 0);
     if (!ng_palfx_scr.frames) ng_palfx_scr.fade = 0;
 }
 
@@ -187,6 +258,7 @@ void NEOGEO_USER ng_palfx_screen_init(uint16_t *base, uint16_t *out, uint8_t cou
     ng_palfx_scr.count = count;
     ng_palfx_scr.target = NG_PALFX_WHITE;
     ng_palfx_scr.level = 0;
+    ng_palfx_scr.half_done = 0;
     ng_palfx_scr.fade = 0;
     ng_palfx_scr.all_dirty = 0;
     ng_palfx_scr.backdrop_set = 0;
