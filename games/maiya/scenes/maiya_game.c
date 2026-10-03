@@ -329,6 +329,7 @@ typedef struct {
     uint8_t  attack, combo, dash, dash_wait, cast, super_surge, sitting;
     uint8_t  facing, notice, hud_dirty, session_over;
     uint8_t  tray_dirty;      /* the tray, drawn a frame after the rest of the HUD */
+    uint8_t  sq_kind, sq_t;   /* her squash and stretch: which, and frames left (mg_squash_step) */
     uint8_t  has_key, gate_unlocked, gate_shown, key_taken;
     uint8_t  climbing, crouch_timer, npc_mask, npc_live, npc_here;
     uint16_t swift, might, veil;      /* power-ups, in frames              */
@@ -2756,6 +2757,8 @@ static uint8_t NEOGEO_USER mg_pickup_active(uint8_t source)
 static void NEOGEO_USER mg_hud_static(void);
 static void NEOGEO_USER mg_draw_lives(void);
 static void NEOGEO_USER mg_draw_tray(void);
+/* her squash and stretch (mg_squash_step; the tables are in maiya_feel.h) */
+static void NEOGEO_USER mg_squash(uint8_t kind);
 static void NEOGEO_USER mg_update_hud(void);
 static void NEOGEO_USER mg_stage_time_reset(void);
 static void NEOGEO_USER mg_stage_time_final(void);
@@ -3142,6 +3145,7 @@ static uint8_t NEOGEO_USER mg_player_damage(void)
     if (mg.hurt || mg.veil || mg.dash || mg.super_surge || mg.art_pose || mg.state != MG_PLAY) return 0;
     if (mg.rising > MG_RISE_TIME - MG_RISE_SAFE) return 0;
     mg.hurt = 90;
+    mg_squash(MG_SQ_HURT);
     if (mg.attempt_hits < 255) mg.attempt_hits++;
     mg_climb_end();
     mg.attack = mg.combo = mg.cast = 0;
@@ -5314,12 +5318,14 @@ static void NEOGEO_USER mg_controls(void)
                 if (mg_mech() == MG_M_WATER) v = (int16_t)((v * 3) / 4);
                 p->vy_fp = -v;
                 mg.airborne = 1;
+                mg_squash(MG_SQ_JUMP);
                 mg.coyote = 0;
                 mg.jump_buffer = 0;
                 mg.jump_cut = 1;
                 playSFX(SOUND_SFX_15);
             } else if ((pressed & BUTTON_A) && (joy & JOY_UP) && mg.air_jump && mg.lily) {
                 p->vy_fp = -AIR_JUMP_SPEED;
+                mg_squash(MG_SQ_JUMP);
                 mg.jump_cut = 1;
                 mg.air_jump = 0;
                 mg.jump_buffer = 0;
@@ -5416,6 +5422,7 @@ static void NEOGEO_USER mg_controls(void)
             }
             if (melee) {
                 mg.attack = 12;
+                mg_squash(MG_SQ_STRIKE);
                 playSFX(SOUND_SFX_1); /* whip crack */
             } else {
                 mg_throw((int16_t)(mg.crouch_timer ? -8 : -26));
@@ -7807,9 +7814,52 @@ static void NEOGEO_USER mg_hazard_disable_check(uint16_t pressed)
     }
 }
 
+/*
+ * Squash and stretch, by the hardware's shrink -- which only ever makes a
+ * sprite smaller: landing she is squashed shorter, springing up drawn in
+ * narrower (what reads as stretched), struck both, striking a little
+ * shorter. Her feet stay where they are and her middle where it is: the
+ * offsets take in what the shrink took away (her canvas is 80 x 64). It
+ * holds through a hitstop, like everything else.
+ */
+static void NEOGEO_USER mg_squash(uint8_t kind)
+{
+    /* a landing doesn't cut a hit's short: the stronger stays */
+    if (mg.sq_t && mg.sq_kind == MG_SQ_HURT && kind != MG_SQ_HURT) return;
+    mg.sq_kind = kind;
+    mg.sq_t = mg_sq_len[kind];
+}
+
+static void NEOGEO_USER mg_squash_step(void)
+{
+    NGCharacter *p = mg.player;
+    uint8_t xs = 0xFF, ys = 0xFF, w;
+    int16_t ox, oy, h;
+    if (!p) return;
+    ox = mg.flying ? -44 : -40;          /* her offsets, as mg_character and mg_scene set them */
+    oy = mg.flying ? -88 : -62;
+    if (mg.sq_t && !mg.flying && !mg.climbing && !mg.swimming && mg.sq_kind < MG_SQ_KINDS) {
+        uint8_t i = (uint8_t)(mg_sq_len[mg.sq_kind] - mg.sq_t);
+        xs = mg_sq_x[mg.sq_kind][i];
+        ys = mg_sq_y[mg.sq_kind][i];
+        if (!ng_feedback_is_hitstop()) mg.sq_t--;
+    } else {
+        mg.sq_t = 0;
+    }
+    w = (uint8_t)(HERO_STRIPS * ((xs >> 4) + 1u));               /* drawn width */
+    h = (int16_t)(((uint16_t)(HERO_ROWS * 16) * (uint16_t)(ys + 1u)) >> 8);   /* drawn height */
+    ox = (int16_t)(ox + (HERO_STRIPS * 16 - w) / 2);
+    oy = (int16_t)(oy + (HERO_ROWS * 16 - h));
+    p->scale_x = xs;
+    p->scale_y = ys;
+    p->sprite_offset_x = ox;
+    p->sprite_offset_y = oy;
+}
+
 /* Physics, character draw and world sprites for one frame. */
 static void NEOGEO_USER mg_world_step(void)
 {
+    mg_squash_step();
     mg.player_prev_y = mg.player->y;
     if (mg.drop) mg.drop--;
     ng_game_engine_frame();
@@ -7838,6 +7888,7 @@ static void NEOGEO_USER mg_animate_player(void)
 
     if (grounded && mg.airborne && !mg.climbing) {
         mg.airborne = 0;
+        if (p->vy_fp >= 0) mg_squash(MG_SQ_LAND);   /* (not the frame she springs up from) */
     } else if (!grounded && !mg.climbing && p->vy_fp > NG_FP_ONE) {
         mg.airborne = 1;
     }

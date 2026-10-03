@@ -103,6 +103,27 @@ Each phase builds with zero warnings and rebuilds and commits the other games' R
 - **Palette-bank flips are left out.** The bank select switches the CPU's access and the display together, and Maiya's whole-screen changes are fades.
 - **Not verified on hardware.**
 
+## Phase 4 results
+
+**Squash and stretch, in Maiya's code** (`mg_squash_step`; the tables are in `games/maiya/scenes/maiya_feel.h`). It uses the hardware shrink, which only makes a sprite smaller:
+- **Landing:** she is squashed to 80% of her height, back to full over six frames.
+- **Springing up:** she is drawn 13/16 wide, back over four frames.
+- **Struck:** both ways, over four frames.
+- **Striking:** a little shorter, over three frames.
+
+Her feet and her middle stay put: the offsets take in what the shrink removed. It holds through a hitstop. Checked frame by frame in MAME: the scale bytes and offsets, and captures of a landing and a jump.
+
+**Hitstop by weight and the flash were already in place** (`maiya_feel.h`, `ng_impact_event`):
+- light 3 frames, medium 5, heavy 8;
+- a heavy blow on a creature that survives 4, Maiya struck 5, a guardian's last blow 14;
+- a flash where the target has a palette bank of its own.
+
+These are the values already played, so they are kept rather than moved to the plan's 1–4.
+
+**One rounding point was already in place.** Maiya's camera follows in whole pixels (`MG_CAM_FOLLOW` 255), so positions are rounded once, in the physics, and the camera and sprites can't disagree.
+
+Regressions pass as before.
+
 ## 4. Framework v1
 
 When phases 0–2 are in, the SDK is tagged **v1.0**:
