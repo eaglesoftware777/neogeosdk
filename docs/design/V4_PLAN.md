@@ -85,6 +85,10 @@ Each phase builds with zero warnings and rebuilds and commits the other games' R
 
 `docs/perf/maiya_v4_phase1.md`. Sprites and FIX text are written in the vertical blank (`NG_VRAM_DEFER`). The commit fits the blank in nine frames in ten (median 15,268 cycles, p90 24,290, against ~30,700). Writes still landing on drawn lines come from overrunning frames, so phase 2 finishes the job.
 
+## Phase 2 results
+
+`docs/perf/maiya_v4_phase2.md`. 59.0–59.2 game fps on every scenario, with work averaging 131–187 of 264 lines (29–50% headroom), against 50–59 fps before. Overruns are 0–1% of frames, almost all of them outside play: the stage start, the guardian's entrance, the healed valley's tour. In play, only the World Tree still has a few (13 of about 3,100 frames). The frame no longer waits for the Z80 (`NG_SOUND_QUEUE`). Text, fades and scenery write only what changed.
+
 ## 4. Framework v1
 
 When phases 0–2 are in, the SDK is tagged **v1.0**:

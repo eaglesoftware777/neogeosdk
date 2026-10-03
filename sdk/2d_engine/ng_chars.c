@@ -250,6 +250,11 @@ NGCharacter* NEOGEO_USER chars_at(uint8_t index)
     return &ng_chars[index];
 }
 
+uint8_t NEOGEO_USER ng_chars_slots_used(void)
+{
+    return ng_chars_active_top;
+}
+
 uint8_t NEOGEO_USER ng_chars_count(void)
 {
     uint8_t i;
@@ -264,11 +269,15 @@ uint8_t NEOGEO_USER ng_chars_count(void)
 
 uint8_t NEOGEO_USER ng_chars_index(NGCharacter *c)
 {
-    uint8_t i;
+    uint32_t off;
     if (!c) return 0xff;
-    i = (uint8_t)(c - ng_chars);
-    if (i >= NG_MAX_CHARS) return 0xff;
-    return i;
+    /* The byte offset, and one 68000 divide by the record's size: a
+     * pointer difference costs a call to the library's 32-bit divide. The
+     * offset is under 64K records' worth, so the quotient fits a word. */
+    off = (uint32_t)((const char *)c - (const char *)ng_chars);
+    if (off >= (uint32_t)sizeof(ng_chars)) return 0xff;
+    __asm__ ("divu.w %1,%0" : "+d" (off) : "i" ((uint16_t)sizeof(NGCharacter)));
+    return (uint8_t)off;
 }
 
 void NEOGEO_USER ng_chars_set_game_interupt(uint8_t kind, NGCharInterupt fn)
@@ -388,6 +397,9 @@ void NEOGEO_USER ng_chars_update(void)
     }
 }
 
+/* (Out of line: inlined in the draw loop, GCC re-derived c from its index
+ * for every field.) */
+__attribute__((noinline))
 static uint8_t NEOGEO_USER ng_char_render_visible(NGCharacter *c, int16_t camera_x, int16_t camera_y)
 {
     int16_t sx;
@@ -452,16 +464,12 @@ void NEOGEO_USER ng_chars_set_depth_sort(uint8_t enabled)
  * characters draw later.
  * Invisible/offscreen chars are hidden separately.
  */
-static uint8_t NEOGEO_USER ng_chars_depth_sort(uint8_t *order, int16_t camera_x, int16_t camera_y)
+/* The `count` characters in `order` (the drawable ones, found by
+ * ng_chars_draw) into draw order. */
+static void NEOGEO_USER ng_chars_depth_sort(uint8_t *order, uint8_t count)
 {
-    uint8_t i, j, count = 0;
+    uint8_t i, j;
     uint8_t tmp;
-
-    for (i = 0; i < ng_chars_active_top; i++) {
-        NGCharacter *c = &ng_chars[i];
-        if (ng_char_render_visible(c, camera_x, camera_y))
-            order[count++] = i;
-    }
 
     /* Insertion sort by render band, then Y ascending. */
     for (i = 1; i < count; i++) {
@@ -473,8 +481,6 @@ static uint8_t NEOGEO_USER ng_chars_depth_sort(uint8_t *order, int16_t camera_x,
         }
         order[j] = tmp;
     }
-
-    return count;
 }
 
 void NEOGEO_USER ng_chars_draw(void)
@@ -487,12 +493,17 @@ void NEOGEO_USER ng_chars_draw(void)
     int16_t camera_x = level ? level->scroll_x : 0;
     int16_t camera_y = level ? level->scroll_y : 0;
 
-    /* Hide inactive, invisible or offscreen chars that still have a VRAM slot booked. */
+    /* Hide inactive, invisible or offscreen chars that still have a VRAM
+     * slot booked; list the rest for drawing (one visibility test each). */
+    count = 0;
     for (i = 0; i < ng_chars_active_top; i++) {
         NGCharacter *c = &ng_chars[i];
-        uint8_t should_draw = ng_char_render_visible(c, camera_x, camera_y);
 
-        if (!should_draw) {
+        /* the common cases first, without the call */
+        if (c->active && c->visible && c->sprite_first != 0xffff &&
+            ng_char_render_visible(c, camera_x, camera_y)) {
+            order[count++] = i;
+        } else {
             if (ng_char_uploaded_first[i] != 0xffff) {
                 chars_hide_uploaded(i);
                 ng_char_uploaded_strips[i] = 0;
@@ -511,8 +522,8 @@ void NEOGEO_USER ng_chars_draw(void)
         }
     }
 
-    /* Build sorted draw order for active visible on-screen chars. */
-    count = ng_chars_depth_sort(order, camera_x, camera_y);
+    /* Sorted draw order for those. */
+    ng_chars_depth_sort(order, count);
 
     /*
      * Phase 1 – recompute hardware slot assignments based on sort order.

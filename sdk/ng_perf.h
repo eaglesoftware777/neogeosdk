@@ -1,7 +1,8 @@
 /*
  * ng_perf.h -- frame timing and VRAM traffic, counted in RAM
  *
- * Built only with NG_DEBUG_PERF (make PERF=1); in any other build every
+ * Built only with NG_DEBUG_PERF (make PERF=1, or PERF=2 for the frame's
+ * timing alone, without the per-write counting); in any other build every
  * macro here is empty and nothing is added to the ROM. A test script reads
  * the counters by symbol (ng_perf) instead of having them drawn, so
  * measuring doesn't change what is measured.
@@ -72,10 +73,19 @@ void ng_perf_commit_part(uint16_t groups, uint16_t fix_cells, uint16_t fix_from_
 
 #define NG_PERF_FRAME_BEGIN() ng_perf_frame_begin()
 #define NG_PERF_FRAME_END()   ng_perf_frame_end()
+#ifdef NG_DEBUG_PERF_LITE
+/* PERF=2: the frame's timing only. Counting every VRAM write costs a call
+ * and a counter read each, enough to add overruns of its own. */
+#define NG_PERF_VRAM(n)       ((void)0)
+#define NG_PERF_COMMIT(begin) ((void)0)
+#define NG_PERF_COMMIT_PART(g, c, l) ((void)0)
+#define NG_PERF_LINE() 0u
+#else
 #define NG_PERF_VRAM(n)       ng_perf_vram((uint16_t)(n))
 #define NG_PERF_COMMIT(begin) ng_perf_commit(begin)
 #define NG_PERF_COMMIT_PART(g, c, l) ng_perf_commit_part((g), (c), (l))
 #define NG_PERF_LINE() ng_perf_line()
+#endif
 
 #else
 

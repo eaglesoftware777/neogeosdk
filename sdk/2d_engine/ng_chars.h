@@ -135,6 +135,8 @@ void NEOGEO_USER ng_chars_clear_kind(uint8_t kind);
 NGCharacter* NEOGEO_USER chars_find(uint8_t kind);
 NGCharacter* NEOGEO_USER chars_at(uint8_t index);
 uint8_t NEOGEO_USER ng_chars_count(void);
+/* One past the highest slot in use: a loop over the characters can stop there. */
+uint8_t NEOGEO_USER ng_chars_slots_used(void);
 uint8_t NEOGEO_USER ng_chars_index(NGCharacter *c);
 void NEOGEO_USER ng_chars_set_game_interupt(uint8_t kind, NGCharInterupt fn);
 void NEOGEO_USER ng_chars_reset_slot(uint8_t index);

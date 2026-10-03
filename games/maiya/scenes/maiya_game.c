@@ -325,6 +325,7 @@ typedef struct {
     uint8_t  hurt, coyote, jump_buffer, drop, boss_hurt, boss_active;
     uint8_t  attack, combo, dash, dash_wait, cast, super_surge, sitting;
     uint8_t  facing, notice, hud_dirty, session_over;
+    uint8_t  tray_dirty;      /* the tray, drawn a frame after the rest of the HUD */
     uint8_t  has_key, gate_unlocked, gate_shown, key_taken;
     uint8_t  climbing, crouch_timer, npc_mask, npc_live, npc_here;
     uint16_t swift, might, veil;      /* power-ups, in frames              */
@@ -511,6 +512,7 @@ void NEOGEO_USER maiya_vblank(void)
     NG_PERF_FRAME_BEGIN();
     ng_vram_commit();           /* the sprites the frame changed, in the blank */
     ng_palfx_vblank();
+    ng_sound_vblank();          /* the next queued byte for the sound CPU */
 }
 
 static void NEOGEO_USER mg_lut_for(uint8_t *lut, uint8_t k)
@@ -630,10 +632,18 @@ static void NEOGEO_USER mg_centre(uint8_t y, const char *text, uint8_t pal)
     ng_fix_puts((uint8_t)(20 - n / 2), y, text, pal);
 }
 
+/* The hint line, columns 1..38, made whole and then written over the old
+ * one, so only the cells that change reach the FIX layer. */
 static void NEOGEO_USER mg_hint(const char *text, uint8_t pal, uint8_t frames)
 {
-    ng_fix_clear_rect(1, ROW_HINT, 38, 1, PAL_TEXT);
-    mg_centre(ROW_HINT, text, pal);
+    char row[39];
+    uint8_t n = 0, i, at;
+    while (text[n]) n++;
+    for (i = 0; i < 38u; i++) row[i] = ' ';
+    row[38] = 0;
+    at = n < 38u ? (uint8_t)(19u - n / 2u) : 0u;     /* column 20 - n/2 */
+    for (i = 0; i < n && (uint8_t)(at + i) < 38u; i++) row[at + i] = text[i];
+    ng_fix_puts(1, ROW_HINT, row, pal);
     mg.hint_timer = frames;
 }
 
@@ -650,15 +660,32 @@ static uint32_t NEOGEO_USER mg_div10(uint32_t value, uint8_t *rem)
     return ((uint32_t)(uint16_t)(hi / 10u) << 16) | (uint16_t)mid;
 }
 
+/* value as `digits` decimal digits, leading zeros kept, into out[] */
+static void NEOGEO_USER mg_digits(char *out, uint32_t value, uint8_t digits)
+{
+    uint8_t d;
+    if (value < 1000u && digits && digits <= 3u) {
+        /* the HUD's small counts: by subtraction, no divide */
+        uint16_t v = (uint16_t)value;
+        char h = '0', t = '0';
+        while (v >= 100u) { v = (uint16_t)(v - 100u); h++; }
+        while (v >= 10u) { v = (uint16_t)(v - 10u); t++; }
+        out[digits - 1u] = (char)('0' + v);
+        if (digits >= 2u) out[digits - 2u] = t;
+        if (digits == 3u) out[0] = h;
+        return;
+    }
+    while (digits--) {
+        value = mg_div10(value, &d);
+        out[digits] = (char)('0' + d);
+    }
+}
+
 static void NEOGEO_USER mg_number(uint8_t x, uint8_t y, uint32_t value, uint8_t digits, uint8_t pal)
 {
     char text[10];
-    uint8_t i, d;
     text[digits] = 0;
-    for (i = digits; i--;) {
-        value = mg_div10(value, &d);
-        text[i] = (char)('0' + d);
-    }
+    mg_digits(text, value, digits);
     ng_fix_puts(x, y, text, pal);
 }
 
@@ -1118,11 +1145,21 @@ static void NEOGEO_USER mg_draw_ledges(int16_t camera_x)
     uint8_t road = (uint8_t)(!mg.boss_active && mg.state != MG_BONUS);
     uint32_t rotten = road ? mg_levels[mg.stage].rotten : 0u;
 
+    const MGPlatform *all = mg_levels[mg.stage].platforms;
     for (i = 0; i < MG_PLATFORM_COUNT; i++) {
-        const MGPlatform *pl = mg_platform(i);
+        const MGPlatform *pl;
         uint8_t blocks;
         int16_t scr, y, shake = 0;
-        uint8_t rot = (uint8_t)((rotten >> i) & 1u);
+        uint8_t rot;
+
+        /* On the road a ledge well off the screen is passed over first (most
+         * of the 32 are): in an arena or the vault the ledges are others. */
+        if (road && !mg.vault) {
+            int16_t far = (int16_t)(all[i].x - camera_x);
+            if (!all[i].width || far > 336 || (int16_t)(far + all[i].width) < -16) continue;
+        }
+        pl = mg_platform(i);
+        rot = (uint8_t)((rotten >> i) & 1u);
 
         /* A rotten ledge that gave way isn't there to stand on, but is
          * still seen falling for a moment after it goes. */
@@ -1150,18 +1187,11 @@ static void NEOGEO_USER mg_draw_ledges(int16_t camera_x)
             uint8_t piece = k == 0 ? 0 : (k + 1 == blocks ? 2 : 1);
 
             if (bx > 336 || bx < -32) continue;
-            ng_sprite_group_set_tile_base(g, mg.block_tiles[piece]);
-            ng_sprite_group_set_palette(g, rot ? PAL_BLOCK_ROT : PAL_BLOCK);
-            ng_sprite_group_set_pos(g, bx, MG_SY(y));
-            ng_sprite_group_set_visible(g, 1);
-            ng_sprite_group_flush(g);
+            ng_sprite_group_show_at(g, mg.block_tiles[piece], rot ? PAL_BLOCK_ROT : PAL_BLOCK, bx, MG_SY(y));
             used++;
         }
     }
-    for (; used < MG_LEDGE_BLOCKS; used++) {
-        ng_sprite_group_set_visible(&mg.ledges[used], 0);
-        ng_sprite_group_flush(&mg.ledges[used]);
-    }
+    if (used < MG_LEDGE_BLOCKS) ng_sprite_groups_hide_all(&mg.ledges[used], (uint8_t)(MG_LEDGE_BLOCKS - used));
 }
 
 static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
@@ -1216,14 +1246,8 @@ static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
             }
         }
     }
-    for (; used < MG_HAZARD_BLOCKS; used++) {
-        ng_sprite_group_set_visible(&mg.hazards[used], 0);
-        ng_sprite_group_flush(&mg.hazards[used]);
-    }
-    for (; signs < MG_SIGNS; signs++) {
-        ng_sprite_group_set_visible(&mg.signs[signs], 0);
-        ng_sprite_group_flush(&mg.signs[signs]);
-    }
+    if (used < MG_HAZARD_BLOCKS) ng_sprite_groups_hide_all(&mg.hazards[used], (uint8_t)(MG_HAZARD_BLOCKS - used));
+    if (signs < MG_SIGNS) ng_sprite_groups_hide_all(&mg.signs[signs], (uint8_t)(MG_SIGNS - signs));
 }
 
 /*
@@ -1302,17 +1326,10 @@ static void NEOGEO_USER mg_draw_decor(int16_t camera_x)
 
         if (!d->x || scr < -32 || scr > 336) continue;
         g = &mg.decor[used];
-        ng_sprite_group_set_palette(g, PAL_DECOR);
-        ng_sprite_group_set_tile_base(g, mg_decor_tiles[d->kind]);
-        ng_sprite_group_set_pos(g, scr, MG_SY(d->y));
-        ng_sprite_group_set_visible(g, 1);
-        ng_sprite_group_flush(g);
+        ng_sprite_group_show_at(g, mg_decor_tiles[d->kind], PAL_DECOR, scr, MG_SY(d->y));
         used++;
     }
-    for (; used < MG_DECOR_SLOTS; used++) {
-        ng_sprite_group_set_visible(&mg.decor[used], 0);
-        ng_sprite_group_flush(&mg.decor[used]);
-    }
+    if (used < MG_DECOR_SLOTS) ng_sprite_groups_hide_all(&mg.decor[used], (uint8_t)(MG_DECOR_SLOTS - used));
 }
 
 /* Climbing vines run from the road to a canopy shelf; one sprite group each. */
@@ -1435,11 +1452,14 @@ static void NEOGEO_USER mg_draw_cage(int16_t camera_x)
 static void NEOGEO_USER mg_update_sparks(int16_t camera_x)
 {
     uint8_t i;
+    uint8_t moving = (uint8_t)!ng_feedback_is_hitstop();
     for (i = 0; i < MG_SPARKS; i++) {
         MGSpark *p = &mg.sparks[i];
         int16_t scr_x;
 
-        if (p->life && !ng_feedback_is_hitstop()) {
+        /* a spent spark, already put away, has nothing to do */
+        if (!p->life && !p->sprite.visible && !(p->sprite.dirty & NG_SGF_DIRTY_ALL)) { p->shrink = 0; continue; }
+        if (p->life && moving) {
             p->life--;
             p->x = (int16_t)(p->x + p->vx);
             p->y = (int16_t)(p->y + p->vy);
@@ -1461,7 +1481,11 @@ static void NEOGEO_USER mg_update_sparks(int16_t camera_x)
             ng_sprite_group_set_visible(&p->sprite, 0);
         } else if (p->shrink) {
             /* Shrunk toward its own middle, not its corner. */
-            uint8_t sc = (uint8_t)(48u + (uint16_t)((uint16_t)p->life * 207u) / (uint16_t)p->shrink);
+            uint32_t q = (uint32_t)((uint16_t)p->life * 207u);
+            uint8_t sc;
+            /* life * 207 / shrink in one 68000 divide (the quotient fits a word) */
+            __asm__ ("divu.w %1,%0" : "+d" (q) : "d" ((uint16_t)p->shrink));
+            sc = (uint8_t)(48u + (uint16_t)q);
             int16_t in = (int16_t)(8 - (sc >> 5));
             ng_sprite_group_set_scale(&p->sprite, sc, sc);
             ng_sprite_group_set_pos(&p->sprite, (int16_t)(scr_x + in), MG_SY(p->y + in));
@@ -1728,6 +1752,7 @@ static void NEOGEO_USER mg_art_step(void);
 
 static void NEOGEO_USER mg_before_draw_hook(void)
 {
+    ng_sound_pump();        /* mid-frame: a second queued sound byte can go */
     mg_falls_step();
     mg_art_step();
     if (mg.player) mg_camera_follow();
@@ -2229,11 +2254,8 @@ static void NEOGEO_USER mg_falls_step(void)
                 ng_sprite_group_set_scale(g, NG_SPRITE_FULL_XSCALE, NG_SPRITE_FULL_YSCALE);
             }
         }
-        ng_sprite_group_set_tile_base(g, (uint16_t)(MG_TOOL_TILE + tile + turn));
         ng_sprite_group_set_flip(g, flip, 0);
-        ng_sprite_group_set_pos(g, sx, sy);
-        ng_sprite_group_set_visible(g, 1);
-        ng_sprite_group_flush(g);
+        ng_sprite_group_show_at(g, (uint16_t)(MG_TOOL_TILE + tile + turn), g->palette, sx, sy);
     }
 }
 
@@ -2241,11 +2263,31 @@ static void NEOGEO_USER mg_falls_step(void)
  * The healed valley's painting coming up: from hazy -- three quarters as
  * bright, half its colour drained -- through its own colours at glow 8, to
  * richer and lighter than it was painted at 16. Worked out from the colours
- * it was loaded with, four banks a frame, through tables made once a step.
+ * it was loaded with, two banks a frame, through tables made once a step.
  */
 static uint16_t mg_glow_src[16u * 16u];
-static uint8_t mg_glow_lut[32];
+static uint8_t mg_glow_lut[112];   /* by value + 40: the clamp to 0..31 built in */
 static int8_t mg_glow_sat[63];
+static const uint16_t mg_glow_pack[3][32] = {   /* a 5-bit channel in its place: red, green, blue */
+    {
+        0x0000, 0x4000, 0x0100, 0x4100, 0x0200, 0x4200, 0x0300, 0x4300,
+        0x0400, 0x4400, 0x0500, 0x4500, 0x0600, 0x4600, 0x0700, 0x4700,
+        0x0800, 0x4800, 0x0900, 0x4900, 0x0A00, 0x4A00, 0x0B00, 0x4B00,
+        0x0C00, 0x4C00, 0x0D00, 0x4D00, 0x0E00, 0x4E00, 0x0F00, 0x4F00,
+    },
+    {
+        0x0000, 0x2000, 0x0010, 0x2010, 0x0020, 0x2020, 0x0030, 0x2030,
+        0x0040, 0x2040, 0x0050, 0x2050, 0x0060, 0x2060, 0x0070, 0x2070,
+        0x0080, 0x2080, 0x0090, 0x2090, 0x00A0, 0x20A0, 0x00B0, 0x20B0,
+        0x00C0, 0x20C0, 0x00D0, 0x20D0, 0x00E0, 0x20E0, 0x00F0, 0x20F0,
+    },
+    {
+        0x0000, 0x1000, 0x0001, 0x1001, 0x0002, 0x1002, 0x0003, 0x1003,
+        0x0004, 0x1004, 0x0005, 0x1005, 0x0006, 0x1006, 0x0007, 0x1007,
+        0x0008, 0x1008, 0x0009, 0x1009, 0x000A, 0x100A, 0x000B, 0x100B,
+        0x000C, 0x100C, 0x000D, 0x100D, 0x000E, 0x100E, 0x000F, 0x100F,
+    },
+};
 static uint8_t mg_glow_now, mg_glow_bank;
 
 #define MG_T3(n) n, n, n
@@ -2267,9 +2309,16 @@ static void NEOGEO_USER mg_glow_tables(uint8_t glow)
         uint8_t b = (uint8_t)(light >> 6);
         light = (uint16_t)(light + step);
         /* the middle tones lifted, the lightest and darkest left be */
-        b = (uint8_t)(b + (((((31u - b) * b) >> 6) * lift) >> 3));
-        mg_glow_lut[v] = (uint8_t)(b > 31u ? 31u : b);
+        {
+            /* (16-bit products: a plain int multiply is a library call) */
+            uint16_t t = (uint16_t)((uint16_t)(31u - b) * (uint16_t)b);
+            t = (uint16_t)((uint16_t)(t >> 6) * (uint16_t)lift);
+            b = (uint8_t)(b + (t >> 3));
+        }
+        mg_glow_lut[40u + v] = (uint8_t)(b > 31u ? 31u : b);
     }
+    for (v = 0; v < 40u; v++) mg_glow_lut[v] = mg_glow_lut[40];
+    for (v = 72; v < 112u; v++) mg_glow_lut[v] = mg_glow_lut[71];
     for (v = 0; v < 63u; v++) {
         mg_glow_sat[v] = (int8_t)(d >> 4);
         d = (int16_t)(d + sat);
@@ -2278,30 +2327,26 @@ static void NEOGEO_USER mg_glow_tables(uint8_t glow)
 
 static uint8_t NEOGEO_USER mg_glow_channel(uint8_t c, uint8_t grey)
 {
-    int16_t v = (int16_t)(grey + mg_glow_sat[c + 31u - grey]);
-    if (v < 0) v = 0;
-    if (v > 31) v = 31;
-    return mg_glow_lut[v];
+    /* grey + the saturation's pull, -38..69, through the clamping table */
+    return mg_glow_lut[(int16_t)(grey + 40 + mg_glow_sat[c + 31u - grey])];
 }
 
 static void NEOGEO_USER mg_glow_apply(uint8_t k)
 {
     const uint16_t *src = &mg_glow_src[(uint16_t)k * 16u];
+    const uint8_t *sb = (const uint8_t *)src;   /* a colour's high byte, then its low */
     uint16_t out[16];
     uint8_t i;
     out[0] = src[0];
     for (i = 1; i < 16u; i++) {
-        uint16_t c = src[i];
-        uint8_t r = (uint8_t)(((c >> 7) & 0x1Eu) | ((c >> 14) & 1u));
-        uint8_t g = (uint8_t)(((c >> 3) & 0x1Eu) | ((c >> 13) & 1u));
-        uint8_t b = (uint8_t)(((c << 1) & 0x1Eu) | ((c >> 12) & 1u));
+        uint8_t h = sb[2u * i], l = sb[2u * i + 1u];
+        uint8_t r = (uint8_t)(((h & 0x0Fu) << 1) | ((h >> 6) & 1u));
+        uint8_t g = (uint8_t)(((l >> 3) & 0x1Eu) | ((h >> 5) & 1u));
+        uint8_t b = (uint8_t)(((l & 0x0Fu) << 1) | ((h >> 4) & 1u));
         uint8_t grey = mg_third[r + g + b];
-        r = mg_glow_channel(r, grey);
-        g = mg_glow_channel(g, grey);
-        b = mg_glow_channel(b, grey);
-        out[i] = (uint16_t)(((uint16_t)(r & 1u) << 14) | ((uint16_t)(g & 1u) << 13) |
-                            ((uint16_t)(b & 1u) << 12) | ((uint16_t)(r >> 1) << 8) |
-                            ((uint16_t)(g >> 1) << 4) | (uint16_t)(b >> 1));
+        out[i] = (uint16_t)(mg_glow_pack[0][mg_glow_channel(r, grey)] |
+                            mg_glow_pack[1][mg_glow_channel(g, grey)] |
+                            mg_glow_pack[2][mg_glow_channel(b, grey)]);
     }
     mg_palette((uint8_t)(PAL_BG + k), out);
 }
@@ -2327,7 +2372,7 @@ static void NEOGEO_USER mg_glow_step(uint8_t want)
         mg_glow_tables(mg_glow_now);
         mg_glow_bank = 0;
     }
-    for (k = 0; k < 4u && mg_glow_bank < 16u; k++) mg_glow_apply(mg_glow_bank++);
+    for (k = 0; k < 2u && mg_glow_bank < 16u; k++) mg_glow_apply(mg_glow_bank++);
 }
 
 /*
@@ -4689,9 +4734,13 @@ static void NEOGEO_USER mg_wave_scan(void)
 
 /* What comes into reach along the road: waves, posted throwers, pickups,
  * secrets, villagers and captives. */
-static void NEOGEO_USER mg_spawn_scan(const MGLevel *level, int16_t px)
+static void NEOGEO_USER mg_spawn_scan(const MGLevel *level, int16_t px, uint8_t half)
 {
     uint8_t i;
+
+    /* Half the road's lists one frame, half the next: each is still looked
+     * over every other frame, but no frame carries the whole scan. */
+    if (half) goto second_half;
 
     mg_wave_scan();
 
@@ -4723,6 +4772,9 @@ static void NEOGEO_USER mg_spawn_scan(const MGLevel *level, int16_t px)
         if (mg_spawn_enemy(mg_stage_posted[mg.stage], a->x, a->y, 1)) mg.archer_mask |= bit;
     }
 
+    return;
+
+second_half:
     /* Coins, flowers, charms and the hidden life, handed out as she nears them. */
     for (i = 0; i < MG_PICK_COUNT; i++) {
         const MGPickup *pk = &mg_picks[mg.stage][i];
@@ -4803,10 +4855,10 @@ static void NEOGEO_USER mg_spawn(void)
 
     if (mg.boss_active) return;
 
-    /* The road ahead is looked over every other frame: nothing there needs
-     * the frame it comes into reach, and the scan is one of a frame's
-     * bigger costs. */
-    if ((mg.tick & 1u) == 0u) mg_spawn_scan(level, px);
+    /* The road ahead is looked over every other frame, half of it a frame
+     * (mg_spawn_scan): nothing there needs the frame it comes into reach,
+     * and the scan is one of a frame's bigger costs. */
+    mg_spawn_scan(level, px, (uint8_t)(mg.tick & 1u));
 
     /* The guardian only shows itself once the gate is open. Walking into
      * the open gate carries her to its lair (mg_warp_begin); a valley with
@@ -7318,7 +7370,9 @@ static void NEOGEO_USER mg_stage_time_final(void)
     }
 }
 
-static void NEOGEO_USER mg_update_hud(void)
+/* All of the HUD but the tray; mg_update_hud() is both. In play the tray
+ * follows a frame later (mg_hud_step), so one frame doesn't pay for both. */
+static void NEOGEO_USER mg_update_hud_text(void)
 {
     mg_draw_clock();
     mg_draw_hp_bar();
@@ -7328,7 +7382,25 @@ static void NEOGEO_USER mg_update_hud(void)
     mg_number(28, ROW_SCORE, mg.score, 6, PAL_TEXT);
     mg.score_shown = mg.score;
     mg_draw_lives();
+}
+
+static void NEOGEO_USER mg_update_hud(void)
+{
+    mg_update_hud_text();
     mg_draw_tray();
+    mg.tray_dirty = 0;
+}
+
+static void NEOGEO_USER mg_hud_step(void)
+{
+    if (mg.hud_dirty) {
+        mg_update_hud_text();
+        mg.hud_dirty = 0;
+        mg.tray_dirty = 1;
+    } else if (mg.tray_dirty) {
+        mg_draw_tray();
+        mg.tray_dirty = 0;
+    }
 }
 
 /*
@@ -7343,7 +7415,7 @@ static void NEOGEO_USER mg_update_hud(void)
  * the left edge, with its count right against it -- a corner badge, not a
  * second HUD bar.
  */
-static uint16_t NEOGEO_USER mg_tray_slot(uint8_t slot, uint16_t x, uint16_t tile, uint8_t pal,
+static uint16_t NEOGEO_USER mg_tray_slot(char *row, uint8_t slot, uint16_t x, uint16_t tile, uint8_t pal,
                                         uint32_t count, uint8_t digits)
 {
     NGSpriteGroup *g = &mg.tray[slot];
@@ -7352,49 +7424,49 @@ static uint16_t NEOGEO_USER mg_tray_slot(uint8_t slot, uint16_t x, uint16_t tile
         ng_sprite_group_flush(g);
         return x;
     }
-    ng_sprite_group_set_tile_base(g, tile);
-    ng_sprite_group_set_palette(g, pal);
     ng_sprite_group_set_scale(g, MG_TRAY_ICON_SCALE, MG_TRAY_ICON_SCALE);
-    ng_sprite_group_set_pos(g, (int16_t)x, (int16_t)(ROW_TRAY * 8 - 2));
-    ng_sprite_group_set_visible(g, 1);
-    ng_sprite_group_flush(g);
+    ng_sprite_group_show_at(g, tile, pal, (int16_t)x, (int16_t)(ROW_TRAY * 8 - 2));
     if (digits) {
-        mg_number((uint8_t)((x + MG_TRAY_ICON_PX + 1u) / 8u), ROW_TRAY, count, digits, PAL_TEXT);
+        uint8_t col = (uint8_t)((x + MG_TRAY_ICON_PX + 1u) / 8u);
+        if (col + digits <= 40u) mg_digits(row + col, count, digits);
     }
     return (uint16_t)(x + MG_TRAY_ICON_PX + digits * 8u + 2u);
 }
 
+/* The row's text is made whole first and then written over the old one:
+ * only the cells that changed reach the FIX layer. */
 static void NEOGEO_USER mg_draw_tray(void)
 {
     uint8_t slot = 0;
     uint16_t x = 0;
+    char row[41];
 
-    ng_fix_clear_rect(0, ROW_TRAY, 40, 1, PAL_TEXT);
+    for (slot = 0; slot < 40u; slot++) row[slot] = ' ';
+    row[40] = 0;
+    slot = 0;
 
-    x = mg_tray_slot(slot++, x, mg_item_tiles[MG_I_ROSE_RED], PAL_ITEM, mg.art, 1);
+    x = mg_tray_slot(row, slot++, x, mg_item_tiles[MG_I_ROSE_RED], PAL_ITEM, mg.art, 1);
     if (mg.weapon) {
         static const uint8_t icon[4] = { 0, MG_K_SPREAD, MG_K_PIERCE, MG_K_GALE };
-        x = mg_tray_slot(slot++, x, mg_trinket_tiles[icon[mg.weapon]], PAL_TRINKET, mg.weapon_ammo, 2);
+        x = mg_tray_slot(row, slot++, x, mg_trinket_tiles[icon[mg.weapon]], PAL_TRINKET, mg.weapon_ammo, 2);
     } else if (mg.thorns) {
-        x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_THORNS], PAL_TRINKET, mg.thorns, 2);
+        x = mg_tray_slot(row, slot++, x, mg_trinket_tiles[MG_K_THORNS], PAL_TRINKET, mg.thorns, 2);
     }
-    x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_GOLD], PAL_TRINKET, mg.coins, 2);
-    x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_FLOWER], PAL_TRINKET, mg.flowers, 2);
-    x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_CRITTER], PAL_TRINKET, mg.critters, 2);
+    x = mg_tray_slot(row, slot++, x, mg_trinket_tiles[MG_K_GOLD], PAL_TRINKET, mg.coins, 2);
+    x = mg_tray_slot(row, slot++, x, mg_trinket_tiles[MG_K_FLOWER], PAL_TRINKET, mg.flowers, 2);
+    x = mg_tray_slot(row, slot++, x, mg_trinket_tiles[MG_K_CRITTER], PAL_TRINKET, mg.critters, 2);
     if (mg.has_key && !mg.gate_unlocked) {
-        x = mg_tray_slot(slot++, x, mg_item_tiles[MG_I_GEM], PAL_ITEM, 0, 0);
+        x = mg_tray_slot(row, slot++, x, mg_item_tiles[MG_I_GEM], PAL_ITEM, 0, 0);
     }
-    if (mg.swift)  x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_SWIFT], PAL_TRINKET, (mg.swift + 59u) / 60u, 1);
-    if (mg.might)  x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_MIGHT], PAL_TRINKET, (mg.might + 59u) / 60u, 1);
-    if (mg.veil)   x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_VEIL], PAL_TRINKET, (mg.veil + 59u) / 60u, 1);
-    if (mg.spring) x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_SPRING], PAL_TRINKET, (mg.spring + 59u) / 60u, 1);
-    if (mg.lily)   x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_LILY], PAL_TRINKET, (mg.lily + 59u) / 60u, 2);
-    if (mg.crown)  x = mg_tray_slot(slot++, x, mg_trinket_tiles[MG_K_CROWN], PAL_TRINKET, (mg.crown + 59u) / 60u, 1);
+    if (mg.swift)  x = mg_tray_slot(row, slot++, x, mg_trinket_tiles[MG_K_SWIFT], PAL_TRINKET, (mg.swift + 59u) / 60u, 1);
+    if (mg.might)  x = mg_tray_slot(row, slot++, x, mg_trinket_tiles[MG_K_MIGHT], PAL_TRINKET, (mg.might + 59u) / 60u, 1);
+    if (mg.veil)   x = mg_tray_slot(row, slot++, x, mg_trinket_tiles[MG_K_VEIL], PAL_TRINKET, (mg.veil + 59u) / 60u, 1);
+    if (mg.spring) x = mg_tray_slot(row, slot++, x, mg_trinket_tiles[MG_K_SPRING], PAL_TRINKET, (mg.spring + 59u) / 60u, 1);
+    if (mg.lily)   x = mg_tray_slot(row, slot++, x, mg_trinket_tiles[MG_K_LILY], PAL_TRINKET, (mg.lily + 59u) / 60u, 2);
+    if (mg.crown)  x = mg_tray_slot(row, slot++, x, mg_trinket_tiles[MG_K_CROWN], PAL_TRINKET, (mg.crown + 59u) / 60u, 1);
 
-    for (; slot < MG_TRAY_SLOTS; slot++) {
-        ng_sprite_group_set_visible(&mg.tray[slot], 0);
-        ng_sprite_group_flush(&mg.tray[slot]);
-    }
+    if (slot < MG_TRAY_SLOTS) ng_sprite_groups_hide_all(&mg.tray[slot], (uint8_t)(MG_TRAY_SLOTS - slot));
+    ng_fix_puts(0, ROW_TRAY, row, PAL_TEXT);
 }
 
 /* ------------------------------------------------------------------ */
@@ -8905,10 +8977,7 @@ void NEOGEO_USER maiya_frame(void)
         if (mg.hint_timer && --mg.hint_timer == 0) {
             ng_fix_clear_rect(1, ROW_HINT, 38, 1, PAL_TEXT);
         }
-        if (mg.hud_dirty) {
-            mg_update_hud();
-            mg.hud_dirty = 0;
-        }
+        mg_hud_step();
         /* The FIX follows the game: score the moment it moves, the tray
          * once a second while a power runs down. */
         if (mg.score != mg.score_shown) {
@@ -8933,7 +9002,7 @@ void NEOGEO_USER maiya_frame(void)
             }
         }
         if ((mg.swift || mg.might || mg.veil || mg.spring || mg.crown || mg.lily) &&
-            (mg.tick % 60u) == 0u) mg_draw_tray();
+            (mg.tick % 60u) == 30u) mg.tray_dirty = 1;
         return;
     }
 
@@ -9005,10 +9074,7 @@ void NEOGEO_USER maiya_frame(void)
             }
         }
         mg_world_step();
-        if (mg.hud_dirty) {
-            mg_update_hud();
-            mg.hud_dirty = 0;
-        }
+        mg_hud_step();
         if (--mg.state_timer == 0) {
             if (mg.stage + 1 < MG_LEVEL_COUNT) {
                 mg_tour_begin();       /* the healed valley, then on (mg_tour_next) */

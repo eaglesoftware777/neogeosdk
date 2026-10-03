@@ -190,6 +190,7 @@ def main():
     parser.add_argument("--rebuild-art", action="store_true")
     parser.add_argument("--quick", action="store_true", help="Rebuild scene code only, using the staged SDK")
     parser.add_argument("--perf", action="store_true", help="Measurement build: frame and VRAM counters (sdk/ng_perf.h)")
+    parser.add_argument("--perf-lite", action="store_true", help="Measurement build: the frame's timing only (PERF=2)")
     parser.add_argument("--mame", default="mame")
     parser.add_argument("--platform", choices=("mvs", "aes"), default="mvs")
     parser.add_argument("--make", default="make")
@@ -198,7 +199,7 @@ def main():
     if not args.run_only:
         if args.rebuild_art or not (GAME / "artbox/generated/maiya_assets.h").is_file():
             subprocess.run([sys.executable, str(GAME / "tools/build_commercial_assets.py")], check=True)
-        if args.quick and args.perf:
+        if args.quick and (args.perf or args.perf_lite):
             raise SystemExit("--perf needs a full build: the staged engine objects are built without it")
         if args.quick:
             toolchain = args.toolchain
@@ -219,6 +220,8 @@ def main():
                     f"SDKHOME={ROOT.parent}", f"PLATFORM={args.platform}", "p1"]
         if args.perf:
             command.append("PERF=1")
+        elif args.perf_lite:
+            command.append("PERF=2")
         if args.toolchain:
             command.append(f"XTOOLS_ROOT={args.toolchain.resolve()}")
         with (GAME / "build/build.log").open("w", encoding="utf-8") as log:
