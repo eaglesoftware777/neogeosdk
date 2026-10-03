@@ -110,7 +110,15 @@ the v1.7.1 release when it merges.  v1.7.0 remains the current release.
   folder (the v1 layout, C ROMs in two-byte pairs) and `--unpack` turns one
   back into a MAME set, so the very files the Multi gets can be run.
 - Maiya's `_v2` files join the v1.7.1 pre-release beside the v1 files,
-  which stay as published: `Maiya-README_v2.txt` lists what changed.
+  which stay as published. `games/maiya/CHANGELOG.md` (shipped as
+  `Maiya-CHANGELOG_v2.txt`) lists every change from v1 to v2.
+- Maiya's AES build asks for no system eye-catcher: a console boots with
+  one logo and no jingle under EagleBIOS, UniBIOS and the original BIOS,
+  then the game's own intro.
+- `make_release.py --replace` rebuilds a version's own files, rewriting
+  only those whose content changed (a zip by its members), and
+  `--changelog` ships a changelog. The AES MAME zip carries a blank memory
+  card, and the MAME AES launchers insert one.
 
 ### Multi-game build, MAME install, and customisation tooling
 

@@ -20,7 +20,9 @@ UniBIOS in-game menu, during play:
     1+Ctrl+Alt+Space at once, so 1+5 is the safer one)
 
 MVS and AES have separate ROMs, software lists, settings and saves under
-tests\mvs and tests\aes. roms\maiya and roms\maiya.zip hold the MVS build.
+tests\mvs and tests\aes. The AES launchers insert a memory card
+(tests\aes\memcard.bin, and its own for UniBIOS): console saves outlast
+MAME, and the card works the same on EagleBIOS and UniBIOS. roms\maiya and roms\maiya.zip hold the MVS build.
 
 Reinstall after `make neo GAME=maiya`, from the SDK checkout:
     py tools\install_maiya_mame_tests.py C:\mame\neogeosdk --tidy

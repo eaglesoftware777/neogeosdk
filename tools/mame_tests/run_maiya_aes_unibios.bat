@@ -14,7 +14,9 @@ if not exist "%HERE%roms\aes\uni-bios_4_0.rom" (
 set "DATA=%HERE%tests\aes-unibios"
 if not exist "%DATA%\cfg" mkdir "%DATA%\cfg"
 if not exist "%DATA%\nvram" mkdir "%DATA%\nvram"
+rem A blank 2 KiB memory card the first time: the game formats it.
+if not exist "%DATA%\memcard.bin" copy /b "%HERE%tests\aes\memcard-blank.bin" "%DATA%\memcard.bin" >nul
 echo UniBIOS in-game menu, during play: hold Start+Select (keys 1+5)
 echo   or Start+A+B+C (keys 1 + Left Ctrl + Left Alt + Space)
-"%MAME_EXE%" aes -rompath "%HERE%tests\aes\roms;%HERE%roms;%HERE%..\roms" -hashpath "%HERE%tests\aes\hash" -bios unibios40 -cart1 maiya -cfg_directory "%DATA%\cfg" -nvram_directory "%DATA%\nvram" -nofilter -window
+"%MAME_EXE%" aes -rompath "%HERE%tests\aes\roms;%HERE%roms;%HERE%..\roms" -hashpath "%HERE%tests\aes\hash" -bios unibios40 -cart1 maiya -memc "%DATA%\memcard.bin" -cfg_directory "%DATA%\cfg" -nvram_directory "%DATA%\nvram" -nofilter -window
 exit /b %ERRORLEVEL%
