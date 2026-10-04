@@ -805,8 +805,9 @@ void NEOGEO_USER ng_char_set_pos(NGCharacter *c, int16_t x, int16_t y)
     if (!c) return;
     c->x = x;
     c->y = y;
-    c->x_fp = NG_TO_FP(x);
-    c->y_fp = NG_TO_FP(y);
+    /* an axis left on its pixel keeps its fraction (see ng_physics.c) */
+    if (NG_FROM_FP(c->x_fp) != x) c->x_fp = NG_TO_FP(x);
+    if (NG_FROM_FP(c->y_fp) != y) c->y_fp = NG_TO_FP(y);
 }
 
 void NEOGEO_USER ng_char_set_speed(NGCharacter *c, int16_t vx_px, int16_t vy_px)

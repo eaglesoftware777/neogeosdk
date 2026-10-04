@@ -1,12 +1,10 @@
 # Maiya: Super Nature Girl — changelog
 
-The ROM sets shared with the NeoGeoSDK v1.7.1 pre-release. The SDK keeps its
-own version; Maiya's ROMs are numbered on their own (`_v1`, `_v2`, ...).
+The ROM sets shared with the NeoGeoSDK pre-releases: `_v1` and `_v2` with
+v1.7.1, `_v3` with v1.7.2. The SDK keeps its own version; Maiya's ROMs are
+numbered on their own.
 
-## v2 (2026-10-03) — everything since v1
-
-v1 was built on 2026-09-29. v2 is that game made smoother, cleaner and
-safer to boot, on every system it targets.
+## v3 (NeoGeoSDK v1.7.2 pre-release) — everything since v2
 
 ### Smoother play
 
@@ -57,6 +55,59 @@ safer to boot, on every system it targets.
   the next blank. The game no longer waits on the sound CPU's reply
   itself; the queue does, byte by byte. Every byte sent reaches the
   Z80, checked over a minute of boot and play on MVS and AES.
+
+### Her stride and the camera
+
+- **She gets going and stops like a runner.** From a stand to a walk in 8
+  frames, on to a run (B) in 6 more; let go, she stops in 4 frames from a
+  walk, 7 from a run. Pushing against her momentum she skids -- braking
+  hard, low, still facing the way she ran -- and turns round only once
+  nearly stopped (4 frames from a full run), never running backwards. In
+  the air she turns at once, with a little less grip; ice keeps its slide.
+- **As fast left as right.** A floor or a ledge that stopped her fall
+  used to round her position down to the pixel every frame, so a run to
+  the left went 4 pixels a frame and a run to the right 3. Both go
+  3 1/8 now (sdk/2d_engine: an axis that doesn't move keeps its fraction).
+- **The camera glides.** It lets her move 22 pixels either way before it
+  follows, then eases after her instead of locking to her, and keeps
+  36 pixels more road ahead of her, swinging over 2 pixels a frame when
+  she turns. A run holds her still on screen; a stop and a turn don't
+  jolt it.
+
+### The screens around the game
+
+- **From the attract to the chooser, cleanly.** Start or a credit during
+  the attract demo used to cut it with a torn frame. On a console the
+  title then came up for half a dozen frames in the demo's colours, the
+  demo's own strips over it, and on every system the chooser rose out of
+  white with its two portraits pure white for a frame. Now:
+  - Start (or the demo's end) takes the valley down into black first;
+  - a credit on an arcade board, which the system ends from its own
+    interrupt with no time for a fade, turns the picture black at the
+    top of the blank, so the system's clearing is never seen;
+  - the title is built in the dark, its music's sound-driver reset
+    included, and rises out of it whole;
+  - the title also goes into black before the demo round;
+  - a fade's colours go up together, every bank at the same level, and
+    a hide of every sprite drops what was still listed for the next
+    blank (sdk/2d_engine).
+- **See their moves, played for real.** On "how to play", A and B
+  together opens the first valley's road and plays each move in the game
+  itself, from the keys a player would press, shown under her: run, jump,
+  whip, thorn, dash, Rose Blossom Surge, Rising Bloom, the high leap and
+  the Secret Art -- with their own physics, dust, petals, thorns in
+  flight, sounds and the art's whole show, and a creature to take each
+  blow. Maiya plays each move, then Luna, one on the road at a time, so
+  they never run into each other. No HUD, no harm, nothing else on the
+  road. Any button goes back.
+
+## v2 (2026-10-03) — everything since v1
+
+v1 was built on 2026-09-29. v2 is that game made smoother, cleaner and
+safer to boot, on every system it targets.
+
+### Smoother play
+
 - **A steady frame rate.** Every stage now runs at about 59 frames a
   second. Measured before this work, the game overran its frame on 24–89%
   of frames (50–59 fps, with visible slowdowns). In v2 that is 0–4%, and in
@@ -102,36 +153,16 @@ safer to boot, on every system it targets.
   - a mission's painting and HUD appearing piece by piece;
   - a few frames of scrambled tiles before the flight over the healed
     valley.
-- **From the attract to the chooser, cleanly.** Start or a credit during
-  the attract demo used to cut it with a torn frame. On a console the
-  title then came up for half a dozen frames in the demo's colours, the
-  demo's own strips over it, and on every system the chooser rose out of
-  white with its two portraits pure white for a frame. Now:
-  - Start (or the demo's end) takes the valley down into black first;
-  - a credit on an arcade board, which the system ends from its own
-    interrupt with no time for a fade, turns the picture black at the
-    top of the blank, so the system's clearing is never seen;
-  - the title is built in the dark, its music's sound-driver reset
-    included, and rises out of it whole;
-  - the title also goes into black before the demo round;
-  - a fade's colours go up together, every bank at the same level, and
-    a hide of every sprite drops what was still listed for the next
-    blank (sdk/2d_engine).
 - **A beaten guardian** lies grey, then goes in a puff of dust and sparks.
   It no longer darkens into a black shape on the road.
 - **The chooser has a clock:** 15 seconds to choose (shown top right),
   then the girl picked answers the call.
 - **The reminders move on by themselves.** "How to play" and the story
   each stay 10 seconds, or until a button.
-- **See their moves, played for real.** On "how to play", A and B
-  together opens the first valley's road and plays each move in the game
-  itself, from the keys a player would press, shown under her: run, jump,
-  whip, thorn, dash, Rose Blossom Surge, Rising Bloom, the high leap and
-  the Secret Art -- with their own physics, dust, petals, thorns in
-  flight, sounds and the art's whole show, and a creature to take each
-  blow. Maiya plays each move, then Luna, one on the road at a time, so
-  they never run into each other. No HUD, no harm, nothing else on the
-  road. Any button goes back.
+- **See their moves.** On "how to play", A and B together brings out Maiya
+  and Luna face to face over the forest. Both play each move, with its
+  name and keys: run, jump, whip, thorn, dash, Rose Blossom Surge, Rising
+  Bloom, the high leap and the Secret Art. Any button goes back.
 
 ### Living backgrounds
 
