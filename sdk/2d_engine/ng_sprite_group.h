@@ -89,6 +89,10 @@ void NEOGEO_USER ng_sprite_hide_range_queued(uint16_t firstSprite, uint16_t coun
 #endif
 void NEOGEO_USER ng_sprite_group_set_tile_base(NGSpriteGroup *g, uint16_t tileBase);
 void NEOGEO_USER ng_sprite_group_set_tile_stride(NGSpriteGroup *g, uint16_t tileStride);
+/* One strip shown from another column of the art (16-pixel columns from
+ * tileBase): a layer wider than 512 pixels streams its columns this way,
+ * each strip rewritten while off screen. Written at once. */
+void NEOGEO_USER ng_sprite_group_set_strip_column(NGSpriteGroup *g, uint8_t strip, uint16_t column);
 void NEOGEO_USER ng_sprite_group_set_palette(NGSpriteGroup *g, uint8_t palette);
 /* Row-major bank map using tileStride; NULL restores the single bank. */
 void NEOGEO_USER ng_sprite_group_set_palette_map(NGSpriteGroup *g, const uint8_t *banks);

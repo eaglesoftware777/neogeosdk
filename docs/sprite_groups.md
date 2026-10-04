@@ -76,6 +76,11 @@ ng_sprite_group_flush(&player);            // writes the driver position when mo
   It does what `set_tile_base`, `set_palette`, `set_pos`, `set_visible(1)` and
   `flush` do, in one call. `ng_sprite_groups_hide_all(first, count)` hides the
   unused rest of a pool and touches only the groups still shown.
+- For a layer wider than the 512 pixels the hardware wraps in, give the group
+  the whole art's width as its tile stride and point each strip at the column it
+  should show with `ng_sprite_group_set_strip_column(g, strip, column)`, while the
+  strip is off screen. It writes the strip's tile map at once (holding off raster
+  bands while it does). Maiya's far layer streams its paintings this way.
 
 ## Writing in the vertical blank (`NG_VRAM_DEFER`)
 

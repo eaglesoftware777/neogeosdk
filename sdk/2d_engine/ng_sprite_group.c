@@ -234,6 +234,30 @@ static void NEOGEO_USER ngsg_put_map(NGSpriteGroup *g, uint8_t rows, uint8_t for
     g->mapRows = mapRows;
 }
 
+/*
+ * One strip pointed at another column of the group's art: `column` counts
+ * 16-pixel columns from tileBase, rows stepping by tileStride, the bank map
+ * stepping with them. A layer wider than the 512 pixels the hardware wraps
+ * in streams its columns this way, each strip rewritten while it is off
+ * screen. Written at once.
+ */
+void NEOGEO_USER ng_sprite_group_set_strip_column(NGSpriteGroup *g, uint8_t strip, uint16_t column)
+{
+    uint8_t mapRows, art;
+    if (!g || strip >= g->strips) return;
+#ifdef NG_VRAM_DEFER
+    ng_vram_busy++;
+#endif
+    mapRows = ng_sprite_map_rows(ngsg_rows(g));
+    art = g->heightTiles < mapRows ? g->heightTiles : mapRows;
+    ngsg_put_strip((uint16_t)(64u * (uint16_t)(g->firstSprite + strip)), (uint16_t)(g->tileBase + column),
+                   (int16_t)g->tileStride, ngsg_attr(g), g->tilePalettes ? g->tilePalettes + column : 0,
+                   art, 0u);
+#ifdef NG_VRAM_DEFER
+    ng_vram_busy--;
+#endif
+}
+
 void NEOGEO_USER ng_sprite_group_set_palette_map(NGSpriteGroup *g, const uint8_t *banks)
 {
     if (g && g->tilePalettes != banks) {
