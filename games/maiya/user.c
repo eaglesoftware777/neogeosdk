@@ -37,6 +37,8 @@ void NEOGEO_USER maiya_eyecatcher(void);
 uint8_t NEOGEO_USER maiya_session_over(void);
 void NEOGEO_USER maiya_demo_begin(void);
 void NEOGEO_USER maiya_demo_end(void);
+void NEOGEO_USER maiya_fade_out(void);
+void NEOGEO_USER maiya_demo_cut(void);
 uint8_t NEOGEO_USER maiya_demo_spent(void);
 void NEOGEO_USER GAME_ATTRACT(void);
 void NEOGEO_USER TITLE_WAIT(void);
@@ -129,7 +131,9 @@ void NEOGEO_USER PLAYER_START(void) {
     }
 }
 
-void NEOGEO_USER DEMO_END(void)   { soundStopAll(); }
+/* A credit ends the demo from the system's interrupt: the picture goes
+ * black at the top of the blank, before the system clears it. */
+void NEOGEO_USER DEMO_END(void)   { maiya_demo_cut(); soundStopAll(); }
 void NEOGEO_USER COIN_SOUND(void) {
     isZ80Ready();
     soundSetADPCMAVolume(0x3C);
@@ -329,11 +333,12 @@ void NEOGEO_USER GAME_ATTRACT(void) {
         if (!maiya_dip_demo_sound()) { isZ80Ready(); soundApplyMix(0x00, 0x00, 0x00, 0x00); }
         for (i = 0; i < 60 * 12; i++) {
             if (!ng_sys_is_mvs()) ng_fix_puts(14, 25, "PUSH START", 1);
-            if (attract_interrupted()) return;
+            if (attract_interrupted()) { maiya_fade_out(); return; }
             maiya_vblank();
         }
 
         /* --- then a slice of the game, played by the machine ---------- */
+        maiya_fade_out();     /* the title goes down into black first: no torn frame */
         clearFix(); clearSprs(); setBACKDROP(BLACK);
         maiya_demo_begin();
         for (i = 0; i < 60 * 22; i++) {
