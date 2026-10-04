@@ -36,6 +36,94 @@ safer to boot, on every system it targets.
   library calls (20 a frame on the Sunken Reef).
 - No library multiply or divide is left in a frame's work.
 
+### Clean scene changes
+
+- **No glitches between screens.** Every scene change now happens behind a
+  fade. The old screen fades to black (white for the chooser), the new one
+  is built while nothing shows, and it fades up whole. This covers:
+  - Start to the chooser;
+  - the chooser to the reminders, and on to the first mission;
+  - each mission start, and a retry;
+  - a guardian's defeat to the flight over the healed valley;
+  - the bonus round and the elder's briefing;
+  - the ending.
+
+  This removes, among others:
+  - a torn half-white frame after Start;
+  - the chooser's title left on a black frame;
+  - a leftover sprite under the reminders;
+  - a mission's painting and HUD appearing piece by piece;
+  - a few frames of scrambled tiles before the flight over the healed
+    valley.
+- **A beaten guardian** lies grey, then goes in a puff of dust and sparks.
+  It no longer darkens into a black shape on the road.
+- **The chooser has a clock:** 15 seconds to choose (shown top right),
+  then the girl picked answers the call.
+- **The reminders move on by themselves.** "How to play" and the story
+  each stay 10 seconds, or until a button.
+- **See their moves.** On "how to play", A and B together brings out Maiya
+  and Luna face to face over the forest. Both play each move, with its
+  name and keys: run, jump, whip, thorn, dash, Rose Blossom Surge, Rising
+  Bloom, the high leap and the Secret Art. Any button goes back.
+
+### Living backgrounds
+
+- **No more seam.** Each valley's far painting used to wrap every 512
+  pixels with a hard line where its two ends met, cross-faded into a
+  doubled image. It now wraps along a cut that follows where its ends look
+  alike, so the join can't be seen and nothing is doubled.
+- **Longer paintings, less repetition.**
+  - Five valleys show their whole painted band, about 1,100-1,200 pixels
+    of scenery, before it comes round again: the forest, the World Tree's
+    marsh, the works, the Sky Road and the citadel.
+  - The other seven are twice as long as before, their painting followed
+    by its mirror image, which meets it edge to edge.
+  - The far layer streams the painting a column at a time as she travels.
+- **Ground to walk on.** The road is the painting's own ground, wrapping
+  without a seam, wherever the far painting goes.
+- **Small life, far off.** Each valley has a few creatures and lights of
+  its own in the air between the HUD and the road. They are drawn small
+  and drift with the far painting, so they read as part of the distance:
+  - forest: butterflies and sun motes;
+  - falls: butterflies and mist;
+  - coast: glints and spray;
+  - autumn grove: falling leaves;
+  - grotto: snow and ice glints;
+  - World Tree: fireflies and petals;
+  - works and citadel: embers and smoke;
+  - reef: bubbles and light;
+  - cave: glints and fireflies;
+  - savanna: pollen and butterflies;
+  - Sky Road: snow.
+
+### Guardians
+
+- **The health bar tells the truth.** It closes a quarter of the gap each
+  frame instead of a pixel at a time, and keeps moving after the last
+  blow. Before, a big hit could leave it a second behind, and it froze
+  where it was when the guardian fell, so guardians seemed to die with
+  health left.
+- **The fliers fall sooner:**
+  - the Smog Dreadnought on the Sky Road takes 6 stomps' worth, down
+    from 10;
+  - the Blizzard Owl and the Iron Vulture take 5, down from 6.
+
+### Her movement
+
+- **A real run.** The sheet's four sprint poses all had the same leg in
+  front and both fists up: she glided in one frozen stride. The run is now
+  two strides — contact, legs passing under her, push-off, flight — with
+  two more poses cut from her sheet. Her arms change with her legs, and she
+  is the same size in every frame. She dips as a foot lands and while her
+  legs pass, and rises in the flight between strides.
+- **Starting and turning.** From a standstill she starts on a push-off.
+  Turning at speed, she brakes low for a moment before running the other
+  way, instead of running backwards.
+- **The whole jump.** Push-off, rising, the top of the arc, falling —
+  four poses where there were two.
+- **No shadows.** The checkered shadows under Maiya, Luna, the creatures
+  and the guardians are gone.
+
 ### New effects and feel
 
 - **Heat haze** over the Golden Savanna: the horizon shimmers in 8-line
@@ -138,8 +226,10 @@ safer to boot, on every system it targets.
 ### Still open
 
 - Real NeoSD, Darksoft, MVS and AES hardware: reports welcome.
-- More run poses need newly drawn art, and deeper parallax needs layered
-  paintings.
+- A run drawn frame by frame (eight poses of her own) would move better
+  still than the cycle made from her sheet. Deeper parallax needs layered
+  paintings, and the seven mirrored valleys would gain from paintings
+  as long as the others'.
 
 ## v1 (2026-09-28/29)
 
