@@ -391,9 +391,16 @@ void NEOGEO_USER ng_sprite_hide_vram_base(uint16_t spriteBase, uint16_t count)
     ng_sprite_park_off_range(ng_vram_scb1_to_sprite_slot(spriteBase), count);
 }
 
+#ifdef NG_VRAM_DEFER
+static void NEOGEO_USER ngsg_queue_drop(void);
+#endif
+
 void NEOGEO_USER ng_sprite_hide_all(void)
 {
 #ifdef NG_VRAM_DEFER
+    /* Everything goes: what was listed for the next blank was flushed
+     * before this and would bring its strips back over the next screen. */
+    ngsg_queue_drop();
     ng_vram_busy++;
 #endif
     /* Slot zero is the hardware's empty-list filler. */
@@ -735,6 +742,16 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
     ng_vram_busy++;
     ngsg_flush_now(g);                             /* list full: as before */
     ng_vram_busy--;
+}
+
+/* The list emptied: each group listed loses its changes, as cancelled
+ * (ng_sprite_group_cancel), and no hide waits either. */
+static void NEOGEO_USER ngsg_queue_drop(void)
+{
+    uint16_t i;
+    for (i = 0; i < ngsg_queue_n; i++) ngsg_queue[i]->dirty = 0;
+    ngsg_queue_n = 0;
+    ngsg_hides_n = 0;
 }
 
 void NEOGEO_USER ng_sprite_group_cancel(NGSpriteGroup *g)

@@ -81,6 +81,21 @@ safer to boot, on every system it targets.
   - a mission's painting and HUD appearing piece by piece;
   - a few frames of scrambled tiles before the flight over the healed
     valley.
+- **From the attract to the chooser, cleanly.** Start or a credit during
+  the attract demo used to cut it with a torn frame. On a console the
+  title then came up for half a dozen frames in the demo's colours, the
+  demo's own strips over it, and on every system the chooser rose out of
+  white with its two portraits pure white for a frame. Now:
+  - Start (or the demo's end) takes the valley down into black first;
+  - a credit on an arcade board, which the system ends from its own
+    interrupt with no time for a fade, turns the picture black at the
+    top of the blank, so the system's clearing is never seen;
+  - the title is built in the dark, its music's sound-driver reset
+    included, and rises out of it whole;
+  - the title also goes into black before the demo round;
+  - a fade's colours go up together, every bank at the same level, and
+    a hide of every sprite drops what was still listed for the next
+    blank (sdk/2d_engine).
 - **A beaten guardian** lies grey, then goes in a puff of dust and sparks.
   It no longer darkens into a black shape on the road.
 - **The chooser has a clock:** 15 seconds to choose (shown top right),

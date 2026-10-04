@@ -323,6 +323,13 @@ void NEOGEO_USER ng_palfx_vblank(void)
         ng_palfx_scr.backdrop_set = 0;
         setBACKDROP(ng_palfx_scr.backdrop);
     }
+    /* Half way through a level's blend (palfx_screen_level) nothing goes
+     * up: a bank loaded meanwhile is already at the new level, the banks
+     * not yet blended aren't, and shown together the two halves of the
+     * screen would be two brightnesses -- a card loaded behind a white-out
+     * came up white on a dimmer picture for a frame. It all goes at the
+     * next blank, with the rest. */
+    if (ng_palfx_scr.half_done) return;
     if (ng_palfx_scr.all_dirty) {
         ng_palfx_scr.all_dirty = 0;
         for (i = 0; i < bytes; i++) ng_palfx_scr.dirty[i] = 0;

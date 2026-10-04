@@ -4110,11 +4110,46 @@ void NEOGEO_USER maiya_demo_begin(void)
 
 void NEOGEO_USER maiya_demo_end(void)
 {
+    /* Cut short by a credit or Start, or played out: the valley goes down
+     * into black before anything of it is taken away, never a torn frame. */
+    mg_scene_out(NG_PALFX_BLACK, MG_SCENE_FADE);
     mg.demo = 0;
     mg.session_over = 0;
     soundStopAll();
     ng_sprite_hide_all();
     ng_fix_clear();
+}
+
+/*
+ * A credit during the attract on an arcade board: the system ends the demo
+ * from the vertical blank's interrupt and goes straight to the title, with
+ * no frame left for a fade, and clears the screen while it is being drawn.
+ * DEMO_END (user.c) calls this there, at the top of the blank: every colour
+ * of hers goes black at once (82 banks and the backdrop, about 14,000
+ * cycles, inside the blank), so what follows is never seen -- a clean cut,
+ * not a torn frame. The title rises out of the black (maiya_title).
+ * (A fill in assembly: a C loop over palette RAM is where GCC's
+ * post-increment addressing has gone wrong for this game before.)
+ */
+void NEOGEO_USER maiya_demo_cut(void)
+{
+    uint32_t *p = (uint32_t *)PALETTES;
+    uint16_t longs = (uint16_t)(MG_PAL_BANKS * 8u - 1u);
+    __asm__ volatile (
+        "1:\n\t"
+        "move.l %[w],(%[p])+\n\t"
+        "dbf %[n],1b"
+        : [p] "+a" (p), [n] "+d" (longs)
+        : [w] "d" (0x80008000UL)
+        : "memory");
+    *(volatile uint16_t *)(PALETTES + 8190) = 0x8000u;   /* the backdrop */
+}
+
+/* The attract loop's cuts (user.c): what is on screen goes down into black
+ * before the system or the next card clears it, never a torn frame. */
+void NEOGEO_USER maiya_fade_out(void)
+{
+    mg_scene_out(NG_PALFX_BLACK, MG_SCENE_FADE);
 }
 
 /* The demo never ends on a game over: it just picks the valley up again.
@@ -4387,14 +4422,22 @@ static void NEOGEO_USER mg_chooser_tick(uint16_t t, uint8_t chosen)
 void NEOGEO_USER maiya_title(void)
 {
     NGSpriteGroup title_vis;
+    /*
+     * Built in the dark and risen out of it whole. Whatever came before --
+     * a demo cut short by a credit or Start, a restart of the system -- may
+     * have left its colours in palette RAM, and the title's own sixteen
+     * banks, and its music's reset of the sound driver (a busy wait of a
+     * few frames), take a moment: put up at once, the picture showed in the
+     * last scene's colours for half a dozen frames.
+     */
+    mg_pal_screen();
+    ng_palfx_screen_stop();
+    mg_scene_dark = 0;
+    mg_scene_out(NG_PALFX_BLACK, 1);
     ng_sprite_hide_all();
     ng_fix_init();
     ng_fix_set_ascii_base(0xD00u);
     mg_ui_palettes();
-    /* (whatever came before -- a demo, a game -- may have left the screen
-     * faded: the title is shown in its own colours) */
-    ng_palfx_screen_stop();
-    mg_scene_dark = 0;
 
     /* Load title visual: sixteen palettes, one picked per tile. */
     {
@@ -4412,6 +4455,11 @@ void NEOGEO_USER maiya_title(void)
     /* The title theme, looping until a credit or the demo takes over. */
     mg.music_on = 0;
     mg_music(SOUND_TRACK_G);
+    mg_scene_in(NG_PALFX_BLACK, MG_SCENE_RISE);
+    while (ng_palfx_screen_fading()) {
+        ng_palette_fx_update();
+        maiya_vblank();
+    }
 }
 
 /*
