@@ -515,6 +515,10 @@ void NEOGEO_USER maiya_vblank(void)
     NG_PERF_FRAME_END();        /* (measurement builds only: sdk/ng_perf.h) */
     mg_wait_vblank();
     NG_PERF_FRAME_BEGIN();
+    /* The next queued byte for the sound CPU before anything else: the
+     * Z80 has the whole blank to take it, and the effect starts a frame's
+     * work sooner. A few register reads. */
+    ng_sound_vblank();
     /* The colours first: a whole-screen fade must land in the blank. A
      * sprite list long enough to run past it (a scene's set-up) then only
      * finishes late behind those colours, instead of the colours changing
@@ -524,7 +528,6 @@ void NEOGEO_USER maiya_vblank(void)
 #ifdef NG_RASTER
     ng_raster_vblank();         /* the frame's raster bands (mg_raster_step) */
 #endif
-    ng_sound_vblank();          /* the next queued byte for the sound CPU */
 }
 
 static void NEOGEO_USER mg_lut_for(uint8_t *lut, uint8_t k)
@@ -790,16 +793,17 @@ static void NEOGEO_USER mg_music(uint8_t track)
     if (mg.music_on && mg.music_track == track) return;
     mg.music_track = track;
     mg.music_on = 1;
-    isZ80Ready(); soundSceneReset();
+    soundSceneReset();
     /* ADPCM-A level is six bits: 64 masks to 0 and mutes every effect.
-     * The attract demo stays silent when the operator turned DEMO SOUND off. */
-    isZ80Ready();
+     * The attract demo stays silent when the operator turned DEMO SOUND off.
+     * (No waiting on the sound CPU here or below: the bytes queue, and each
+     * goes out when the driver shows it ready -- sdk/neogeolib.c.) */
     if (mg.demo && !maiya_dip_demo_sound()) soundApplyMix(0x00, 0x00, 0x00, 0x00);
     else soundApplyMix(0x3C, MG_MUSIC_LEVEL, 0x00, 0x00);
     mg.music_level = MG_MUSIC_LEVEL;
     mg_music_levels();
-    isZ80Ready(); soundSetADPCMBLoop(1);
-    isZ80Ready(); playSFXB(track);
+    soundSetADPCMBLoop(1);
+    playSFXB(track);
 }
 
 /*
@@ -818,7 +822,6 @@ static void NEOGEO_USER mg_voice(uint8_t line)
 {
     /* Luna speaks for herself, in her own voice */
     if (mg.hero_choice && line <= MG_VOICE_WIN) line = (uint8_t)(line + MG_VOICE_LUNA);
-    isZ80Ready();
     playVoiceSample((uint8_t)(SOUND_SFX_COUNT + line));
 }
 
@@ -854,8 +857,8 @@ static void NEOGEO_USER mg_music_tick(void)
         soundSetADPCMBVolume(mg.music_level);
         if (!mg.music_level) {
             mg.music_track = mg.music_next;
-            isZ80Ready(); soundSetADPCMBLoop(1);
-            isZ80Ready(); playSFXB(mg.music_next);
+            soundSetADPCMBLoop(1);
+            playSFXB(mg.music_next);
             mg.music_wait = 2;                 /* ...and in */
         }
     } else {
@@ -891,21 +894,29 @@ static void NEOGEO_USER mg_layers_reset(uint8_t cols)
     mg_far_at = 0xFFFFu;
 }
 
+/*
+ * Strip i sits d = (i - window + 6) & 31 strips into the window, so it
+ * shows column window - 6 + d of the painting -- or window + 26 when it is
+ * the first strip and the offset is part way into a column (it has wrapped
+ * to the far right, off screen). One divide finds where the window starts
+ * in the painting; every strip is a step on from there, at most once
+ * round, so the frame that moves the window costs a few hundred cycles
+ * instead of a divide a strip.
+ */
 static void NEOGEO_USER mg_layer_stream(NGSpriteGroup *g, uint8_t *shown, uint16_t *at, uint16_t offset)
 {
     uint16_t window = (uint16_t)(offset >> 4);
-    uint8_t i;
-    if (mg_layer_cols <= 32u || window == *at) return;
+    uint8_t cols = mg_layer_cols, lead = MG_LAYER_LEAD >> 4, d, start;
+    if (cols <= 32u || window == *at) return;
     *at = window;
-    for (i = 0; i < 32u; i++) {
-        /* where strip i sits on screen, counted from the window's start */
-        int16_t x = (int16_t)((((uint16_t)i << 4) - offset + MG_LAYER_LEAD) & 511u) - MG_LAYER_LEAD;
-        int16_t c = (int16_t)(((int16_t)offset + x) >> 4);
-        uint16_t col;
-        while (c < 0) c = (int16_t)(c + mg_layer_cols);
-        col = mg_mod16((uint16_t)c, mg_layer_cols);
+    start = (uint8_t)mg_mod16(window, cols);                 /* the window's column... */
+    start = (uint8_t)(start >= lead ? start - lead : start + cols - lead);   /* ...less the lead */
+    for (d = 0; d < 32u; d++) {
+        uint8_t i = (uint8_t)((d + window - lead) & 31u);
+        uint8_t col = (uint8_t)(start + ((d == 0 && (offset & 15u)) ? 32u : d));
+        if (col >= cols) col = (uint8_t)(col - cols);
         if (col != shown[i]) {
-            shown[i] = (uint8_t)col;
+            shown[i] = col;
             ng_sprite_group_set_strip_column(g, i, col);
         }
     }
@@ -2529,7 +2540,9 @@ static void NEOGEO_USER mg_glow_begin(void)
     mg_glow_bank = 16;
 }
 
-/* A step toward `want` once the last one is all on screen. */
+/* A step toward `want` once the last one is all on screen. The frame that
+ * works out the step's tables recolours no bank: the two together were the
+ * flight's heaviest frame, and the banks follow from the next. */
 static void NEOGEO_USER mg_glow_step(uint8_t want)
 {
     uint8_t k;
@@ -2538,6 +2551,7 @@ static void NEOGEO_USER mg_glow_step(uint8_t want)
         mg_glow_now++;
         mg_glow_tables(mg_glow_now);
         mg_glow_bank = 0;
+        return;
     }
     for (k = 0; k < 2u && mg_glow_bank < 16u; k++) mg_glow_apply(mg_glow_bank++);
 }
@@ -2893,6 +2907,15 @@ static uint8_t NEOGEO_USER mg_playing_well(void)
     return (uint8_t)(mg.level_falls == 0 && mg.attempt_hits <= 3);
 }
 
+/* An impact preset's shake, flash and sound, with Maiya's own hold
+ * (maiya_feel.h) in place of the preset's: a hold already running is kept. */
+static void NEOGEO_USER mg_impact(uint8_t kind, uint8_t bank, const uint16_t *pal, uint16_t sfx, uint8_t hold)
+{
+    uint8_t before = ng_freeze.hitstop;
+    ng_impact_event(kind, bank, pal, &mg.camera, sfx, 0, 0, 0, 0);
+    ng_freeze.hitstop = before > hold ? before : hold;
+}
+
 static void NEOGEO_USER mg_enemy_damage(MGEnemy *e, uint8_t damage)
 {
     if (!e->body || e->hurt || e->mood == MG_MOOD_DYING) return;
@@ -2924,7 +2947,7 @@ static void NEOGEO_USER mg_enemy_damage(MGEnemy *e, uint8_t damage)
             ng_chars_remove(b);
             e->body = 0;
         }
-        ng_impact_event(MG_IMPACT_KILL, 0, 0, &mg.camera, SOUND_SFX_10, 0, 0, 0, 0);
+        mg_impact(MG_IMPACT_KILL, 0, 0, SOUND_SFX_10, MG_HITSTOP_KILL);
         mg.score += 250u;
         mg.kills++;
         mg_combo_add();
@@ -3096,12 +3119,10 @@ static void NEOGEO_USER mg_boss_damage(uint8_t damage)
         /* The last blow: held longer, shaken harder, no flash -- it drains
          * to grey below. (A hit's 6-frame flash is always over by now:
          * boss_hurt keeps blows 12 frames apart.) */
-        ng_impact_event(MG_IMPACT_BOSS_DOWN, 0, 0, &mg.camera, SOUND_SFX_4, 0, 0, 0, 0);
-        ng_feedback_hitstop(MG_HITSTOP_BOSS_DOWN);
+        mg_impact(MG_IMPACT_BOSS_DOWN, 0, 0, SOUND_SFX_4, MG_HITSTOP_BOSS_DOWN);
     } else {
-        ng_impact_event(MG_IMPACT_BOSS_HIT, b == mg.boss ? PAL_BOSS : 0,
-                        b == mg.boss ? mg_boss_pal((uint8_t)b->data0) : 0,
-                        &mg.camera, SOUND_SFX_4, 0, 0, 0, 0);
+        mg_impact(MG_IMPACT_BOSS_HIT, b == mg.boss ? PAL_BOSS : 0,
+                  b == mg.boss ? mg_boss_pal((uint8_t)b->data0) : 0, SOUND_SFX_4, MG_HITSTOP_BOSS_HIT);
     }
 
     if (damage >= b->hp) {

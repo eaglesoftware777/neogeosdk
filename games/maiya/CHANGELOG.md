@@ -10,6 +10,32 @@ safer to boot, on every system it targets.
 
 ### Smoother play
 
+- **No more catching on every blow.** Every creature she beat used to
+  freeze the whole screen for 3 frames, Maiya included (4 for a heavy
+  blow that didn't finish it). While she ran and jumped through a valley
+  that came every few seconds, and it read as the game hanging. A
+  creature beaten or struck no longer holds anything: the shake, the
+  sparks and the sound carry the blow. A guardian's hit holds 2 frames
+  (was 5), her own hurt 2 (was 5), a guardian's last blow 10 (was 14).
+  In the forest guardian's fight that is 18 held frames where there were
+  47.
+- **Lighter frames, fewer late ones.** Measured on every stage's road and
+  every guardian's arena, frames that run late are down to 0–1% on the
+  roads and in the arenas (up to 5% before). In play that is a few
+  frames in half a minute, most of them a few scanlines over. What went:
+  - the far painting's streaming did a divide for each of its 32
+    strips whenever the view moved a column on; now it does one;
+  - the engine looked through its 64 timers, 64 progress trackers and
+    32 NPC slots every frame, though Maiya uses none of them: each list
+    is now skipped while nothing in it runs;
+  - over a healed valley, the frame that works out the colour lift's
+    next step no longer recolours banks as well.
+- **Sound sent sooner.** A queued byte for the sound CPU goes out first
+  thing in the vertical blank, and the queue is tried again at the end of
+  each frame's work, so a kill's or a pick-up's sound doesn't wait for
+  the next blank. The game no longer waits on the sound CPU's reply
+  itself; the queue does, byte by byte. Every byte sent reaches the
+  Z80, checked over a minute of boot and play on MVS and AES.
 - **A steady frame rate.** Every stage now runs at about 59 frames a
   second. Measured before this work, the game overran its frame on 24–89%
   of frames (50–59 fps, with visible slowdowns). In v2 that is 0–4%, and in

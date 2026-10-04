@@ -1,6 +1,10 @@
 #include "ng_timers.h"
 
 static NGTimer ng_timers[NG_MAX_TIMERS];
+/* 0 when no timer can be running: the frame's update is then skipped
+ * instead of looking at every slot (a game using none pays nothing). Set
+ * by a start, worked out again by each update. */
+static uint8_t ng_timers_live;
 
 static uint8_t NEOGEO_USER ng_timer_percent_value(uint16_t value, uint16_t max)
 {
@@ -28,12 +32,14 @@ void NEOGEO_USER ng_timers_init(void)
         ng_timers[i].value = 0;
         ng_timers[i].initial = 0;
     }
+    ng_timers_live = 0;
 }
 
 void NEOGEO_USER ng_timer_start(uint8_t id, uint16_t frames)
 {
     if (id >= NG_MAX_TIMERS) return;
     ng_timers[id].active = (frames > 0) ? 1 : 0;
+    if (frames) ng_timers_live = 1;
     ng_timers[id].value = frames;
     ng_timers[id].initial = frames;
 }
@@ -47,12 +53,15 @@ void NEOGEO_USER ng_timer_stop(uint8_t id)
 
 void NEOGEO_USER ng_timers_update(void)
 {
-    uint8_t i;
+    uint8_t i, live = 0;
+    if (!ng_timers_live) return;
     for (i = 0; i < NG_MAX_TIMERS; i++) {
         if (!ng_timers[i].active) continue;
         if (ng_timers[i].value > 0) ng_timers[i].value--;
         if (ng_timers[i].value == 0) ng_timers[i].active = 0;
+        else live = 1;
     }
+    ng_timers_live = live;
 }
 
 uint8_t NEOGEO_USER ng_timer_active(uint8_t id)
