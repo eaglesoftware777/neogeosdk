@@ -102,10 +102,15 @@ safer to boot, on every system it targets.
   then the girl picked answers the call.
 - **The reminders move on by themselves.** "How to play" and the story
   each stay 10 seconds, or until a button.
-- **See their moves.** On "how to play", A and B together brings out Maiya
-  and Luna face to face over the forest. Both play each move, with its
-  name and keys: run, jump, whip, thorn, dash, Rose Blossom Surge, Rising
-  Bloom, the high leap and the Secret Art. Any button goes back.
+- **See their moves, played for real.** On "how to play", A and B
+  together opens the first valley's road and plays each move in the game
+  itself, from the keys a player would press, shown under her: run, jump,
+  whip, thorn, dash, Rose Blossom Surge, Rising Bloom, the high leap and
+  the Secret Art -- with their own physics, dust, petals, thorns in
+  flight, sounds and the art's whole show, and a creature to take each
+  blow. Maiya plays each move, then Luna, one on the road at a time, so
+  they never run into each other. No HUD, no harm, nothing else on the
+  road. Any button goes back.
 
 ### Living backgrounds
 
