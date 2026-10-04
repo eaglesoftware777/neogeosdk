@@ -440,6 +440,10 @@ typedef struct {
     uint8_t  bonus_coins;            /* her coin count as the round began               */
 } MGState;
 
+/* mg.demo: the attract round plays the game itself; the moves demo (on the
+ * controls screen) plays her moves for whoever is choosing. */
+enum { MG_DEMO_ATTRACT = 1, MG_DEMO_MOVES = 2 };
+
 static MGState mg;
 
 /* A world height on the screen, with the view raised up a tall climb. */
@@ -690,6 +694,7 @@ static void NEOGEO_USER mg_hint(const char *text, uint8_t pal, uint8_t frames)
 {
     char row[39];
     uint8_t n = 0, i, at;
+    if (mg.demo == MG_DEMO_MOVES) return;   /* its own words are the move's name */
     while (text[n]) n++;
     for (i = 0; i < 38u; i++) row[i] = ' ';
     row[38] = 0;
@@ -781,7 +786,7 @@ static const uint16_t *NEOGEO_USER mg_hero_normal_pal(void)
 /* The road's music levels (ADPCM-B, SSG, FM), for a pause to put back. */
 static void NEOGEO_USER mg_music_levels(void)
 {
-    if (mg.demo && !maiya_dip_demo_sound()) ng_pause_set_music_levels(0x00, 0x00, 0x00);
+    if (mg.demo == MG_DEMO_ATTRACT && !maiya_dip_demo_sound()) ng_pause_set_music_levels(0x00, 0x00, 0x00);
     else ng_pause_set_music_levels(0xB8, 0x00, 0x00);
 }
 
@@ -798,7 +803,7 @@ static void NEOGEO_USER mg_music(uint8_t track)
      * The attract demo stays silent when the operator turned DEMO SOUND off.
      * (No waiting on the sound CPU here or below: the bytes queue, and each
      * goes out when the driver shows it ready -- sdk/neogeolib.c.) */
-    if (mg.demo && !maiya_dip_demo_sound()) soundApplyMix(0x00, 0x00, 0x00, 0x00);
+    if (mg.demo == MG_DEMO_ATTRACT && !maiya_dip_demo_sound()) soundApplyMix(0x00, 0x00, 0x00, 0x00);
     else soundApplyMix(0x3C, MG_MUSIC_LEVEL, 0x00, 0x00);
     mg.music_level = MG_MUSIC_LEVEL;
     mg_music_levels();
@@ -3274,6 +3279,7 @@ static uint8_t NEOGEO_USER mg_player_damage(void)
     NGCharacter *p = mg.player;
     /* In the bonus round one touch ends it: no health lost, no reward. */
     if (mg.state == MG_BONUS) { mg_bonus_caught(); return 0; }
+    if (mg.demo == MG_DEMO_MOVES) return 0;           /* showing her moves, not her falls */
     if (mg.hurt || mg.veil || mg.dash || mg.super_surge || mg.art_pose || mg.state != MG_PLAY) return 0;
     if (mg.rising > MG_RISE_TIME - MG_RISE_SAFE) return 0;
     mg.hurt = 90;
@@ -4071,7 +4077,7 @@ void NEOGEO_USER maiya_demo_begin(void)
     static uint8_t demo_round = 0;
     uint8_t demo_stage = mg_demo_stages[demo_round % 3u];
 
-    mg.demo = 1;
+    mg.demo = MG_DEMO_ATTRACT;
     mg.kinds_met = 0;
     mg.lives = 3; mg.art = MAX_ART; mg.score = 0; mg.rescue_mask = 0;
     mg.arts_known = (1u << MG_ARTS) - 1u;   /* the attract shows each valley's own */
@@ -4520,135 +4526,181 @@ static uint8_t NEOGEO_USER mg_reminder_wait(uint8_t moves)
 }
 
 /*
- * Their moves, shown: on the controls screen, A and B together brings out
- * Maiya and Luna, face to face over the forest, each move played by both
- * with its name and its keys -- then back to the controls. Any button
- * cuts it short.
+ * Their moves, played for real: on the controls screen, A and B together
+ * opens the first valley's road and plays each move in the game itself --
+ * her own physics, the thorn in flight, the whip, the dust and petals, the
+ * Rose Blossom Surge, the Rising Bloom, the high leap and the Secret Art's
+ * whole show, with a creature to take each blow -- driven by the keys a
+ * player presses, shown under her. Maiya plays each move, then Luna: one
+ * on the road at a time, so they never run into each other. She can't be
+ * hurt, nothing else comes down the road, and no HUD is drawn. Any button
+ * goes back to the controls.
  */
-typedef struct { uint8_t frame, time; int8_t dx, dy; } MGDemoStep;
-typedef struct { const char *name, *keys; const MGDemoStep *steps; uint8_t count; } MGDemoMove;
+typedef struct { uint8_t frames, joy; } MGKeys;            /* held for so many frames */
+typedef struct {
+    const char *name, *keys;
+    const MGKeys *script;
+    uint8_t steps;
+    int16_t target[2];      /* where creatures stand to take it, from her (0: none) */
+} MGMoveShow;
 
-static const MGDemoStep mg_demo_run[] = {
-    { MG_F_WALK0, 5, 0, 0 }, { MG_F_WALK1, 5, 0, 0 }, { MG_F_WALK2, 5, 0, 0 }, { MG_F_WALK3, 5, 0, 0 },
-    { MG_F_WALK4, 5, 0, 0 }, { MG_F_WALK5, 5, 0, 0 }, { MG_F_WALK6, 5, 0, 0 }, { MG_F_WALK7, 5, 0, 0 },
-    { MG_F_WALK0, 5, 0, 0 }, { MG_F_WALK1, 5, 0, 0 }, { MG_F_WALK2, 5, 0, 0 }, { MG_F_WALK3, 5, 0, 0 },
-    { MG_F_WALK4, 5, 0, 0 }, { MG_F_WALK5, 5, 0, 0 }, { MG_F_WALK6, 5, 0, 0 }, { MG_F_WALK7, 5, 0, 0 },
+#define MG_K_(n, j) { (uint8_t)(n), (uint8_t)(j) }
+static const MGKeys mg_show_run[]   = { MG_K_(50, JOY_RIGHT | BUTTON_B), MG_K_(16, 0) };
+static const MGKeys mg_show_jump[]  = { MG_K_(6, 0), MG_K_(24, BUTTON_A), MG_K_(36, 0), MG_K_(5, BUTTON_A), MG_K_(10, 0) };
+static const MGKeys mg_show_whip[]  = { MG_K_(14, 0), MG_K_(3, BUTTON_B), MG_K_(10, 0) };
+static const MGKeys mg_show_thorn[] = { MG_K_(10, 0), MG_K_(3, BUTTON_B), MG_K_(22, 0), MG_K_(3, BUTTON_B), MG_K_(10, 0) };
+static const MGKeys mg_show_dash[]  = { MG_K_(8, 0), MG_K_(3, BUTTON_C), MG_K_(10, 0) };
+static const MGKeys mg_show_surge[] = { MG_K_(8, 0), MG_K_(4, JOY_DOWN), MG_K_(4, JOY_RIGHT),
+                                        MG_K_(3, JOY_RIGHT | BUTTON_B), MG_K_(10, 0) };
+static const MGKeys mg_show_bloom[] = { MG_K_(8, 0), MG_K_(3, JOY_RIGHT), MG_K_(3, JOY_DOWN),
+                                        MG_K_(3, JOY_DOWN | JOY_RIGHT), MG_K_(3, JOY_DOWN | JOY_RIGHT | BUTTON_B),
+                                        MG_K_(10, 0) };
+static const MGKeys mg_show_leap[]  = { MG_K_(8, 0), MG_K_(14, JOY_DOWN), MG_K_(12, JOY_UP | BUTTON_A), MG_K_(10, 0) };
+static const MGKeys mg_show_art[]   = { MG_K_(12, 0), MG_K_(3, BUTTON_D), MG_K_(10, 0) };
+#undef MG_K_
+#define MG_SHOW(name, keys, script, a, b) \
+    { name, keys, script, (uint8_t)(sizeof(script) / sizeof(script[0])), { a, b } }
+static const MGMoveShow mg_show_moves[] = {
+    MG_SHOW("RUN", "LEFT / RIGHT, HOLD B", mg_show_run, 0, 0),
+    MG_SHOW("JUMP", "A - HOLD IT TO GO HIGHER", mg_show_jump, 0, 0),
+    MG_SHOW("WHIP", "B, UP CLOSE", mg_show_whip, 36, 0),
+    MG_SHOW("THORN", "B", mg_show_thorn, 150, 0),
+    MG_SHOW("DASH", "C", mg_show_dash, 0, 0),
+    MG_SHOW("ROSE BLOSSOM SURGE", "DOWN, FORWARD + B", mg_show_surge, 120, 0),
+    MG_SHOW("RISING BLOOM", "FORWARD, DOWN, DOWN-FORWARD + B", mg_show_bloom, 34, 0),
+    MG_SHOW("HIGH LEAP", "KNEEL, THEN UP + A", mg_show_leap, 0, 0),
+    MG_SHOW("SECRET ART", "D", mg_show_art, 140, 220),
 };
-static const MGDemoStep mg_demo_jump[] = {
-    { MG_F_JUMP0, 4, 0, 0 }, { MG_F_JUMP1, 10, 0, -3 }, { MG_F_JUMP2, 8, 0, 0 },
-    { MG_F_JUMP3, 10, 0, 3 }, { MG_F_LAND, 10, 0, 0 },
-};
-static const MGDemoStep mg_demo_whip[] = {
-    { MG_F_ATK0, 5, 0, 0 }, { MG_F_ATK1, 6, 0, 0 }, { MG_F_ATK2, 6, 0, 0 }, { MG_F_ATK3, 10, 0, 0 },
-    { MG_F_ATK0, 5, 0, 0 }, { MG_F_ATK1, 6, 0, 0 }, { MG_F_ATK2, 6, 0, 0 }, { MG_F_ATK3, 10, 0, 0 },
-};
-static const MGDemoStep mg_demo_thorn[] = {
-    { MG_F_CAST0, 5, 0, 0 }, { MG_F_CAST1, 6, 0, 0 }, { MG_F_CAST2, 14, 0, 0 },
-    { MG_F_CAST0, 5, 0, 0 }, { MG_F_CAST1, 6, 0, 0 }, { MG_F_CAST2, 14, 0, 0 },
-};
-static const MGDemoStep mg_demo_dash[] = {
-    { MG_F_WALK2, 4, 3, 0 }, { MG_F_WALK3, 4, 4, 0 }, { MG_F_WALK4, 4, 4, 0 }, { MG_F_LAND, 10, 1, 0 },
-};
-static const MGDemoStep mg_demo_surge[] = {
-    { MG_F_RISE0, 8, 0, 0 }, { MG_F_SURGE, 18, 3, 0 }, { MG_F_LAND, 10, 0, 0 },
-};
-static const MGDemoStep mg_demo_bloom[] = {
-    { MG_F_RISE0, 6, 0, 0 }, { MG_F_RISE1, 12, 0, -4 }, { MG_F_RISE2, 10, 0, 0 },
-    { MG_F_JUMP3, 12, 0, 4 }, { MG_F_LAND, 10, 0, 0 },
-};
-static const MGDemoStep mg_demo_leap[] = {
-    { MG_F_LEAP0, 20, 0, 0 }, { MG_F_LEAP1, 12, 0, -5 }, { MG_F_JUMP2, 8, 0, 0 },
-    { MG_F_JUMP3, 12, 0, 5 }, { MG_F_LAND, 10, 0, 0 },
-};
-static const MGDemoStep mg_demo_art[] = {
-    { MG_F_ART0, 28, 0, 0 }, { MG_F_ART1, 28, 0, 0 },
-};
-#define MG_DEMO_MOVE(name, keys, steps) { name, keys, steps, (uint8_t)(sizeof(steps) / sizeof(steps[0])) }
-static const MGDemoMove mg_demo_moves[] = {
-    MG_DEMO_MOVE("RUN", "LEFT / RIGHT, HOLD B TO RUN", mg_demo_run),
-    MG_DEMO_MOVE("JUMP", "A - HOLD FOR HEIGHT", mg_demo_jump),
-    MG_DEMO_MOVE("WHIP", "B UP CLOSE", mg_demo_whip),
-    MG_DEMO_MOVE("THORN", "B", mg_demo_thorn),
-    MG_DEMO_MOVE("DASH", "C", mg_demo_dash),
-    MG_DEMO_MOVE("ROSE BLOSSOM SURGE", "DOWN, FORWARD + B", mg_demo_surge),
-    MG_DEMO_MOVE("RISING BLOOM", "FWD, DOWN, DOWN-FWD + B", mg_demo_bloom),
-    MG_DEMO_MOVE("HIGH LEAP", "KNEEL, THEN UP + A", mg_demo_leap),
-    MG_DEMO_MOVE("SECRET ART", "D", mg_demo_art),
-};
+#undef MG_SHOW
+enum { MG_SHOW_X = 72, MG_SHOW_SETTLE = 150, MG_SHOW_ROW = 25 };
+
+static uint8_t mg_show_joy;      /* the keys the moves demo holds this frame (mg_input) */
+
+static MGEnemy *NEOGEO_USER mg_spawn_enemy(uint8_t type, int16_t x, int16_t y, uint8_t posted);
+static void NEOGEO_USER mg_bonus_clear_creatures(uint8_t poof);
+static void NEOGEO_USER mg_vault_clear_items(void);
+
+/* One frame of the game with the demo's keys; 1 when a real button wants out. */
+static uint8_t NEOGEO_USER mg_show_frame(uint8_t joy)
+{
+    mg_show_joy = joy;
+    maiya_vblank();
+    maiya_frame();
+    ng_sound_pump();
+    return (uint8_t)((poll_joystick_edge() & (BUTTON_A | BUTTON_B | BUTTON_C | BUTTON_D | START1 | START2)) != 0);
+}
+
+/* The move played out: she is back on her feet, and her thorns, petals and
+ * the art's pieces and colours have all finished. */
+static uint8_t NEOGEO_USER mg_show_settled(void)
+{
+    NGCharacter *p = mg.player;
+    uint8_t i;
+    if (!(ng_physics_is_grounded(p) || p->y >= MG_GROUND_Y - 4) || mg.rising || mg.super_surge ||
+        mg.dash || mg.art_pose || mg.attack || mg_tint_t || mg_shots_in_flight()) return 0;
+    for (i = 0; i < mg_falls_n; i++) if (mg_falls[i].live) return 0;
+    return 1;
+}
+
+/* Behind black: the girl whose turn it is, standing ready on the road, the
+ * creatures the move is for in front of her, and its name and keys. */
+static void NEOGEO_USER mg_show_setup(uint8_t who, const MGMoveShow *mv)
+{
+    NGCharacter *p = mg.player;
+    char line[40];
+    const char *name = who ? "LUNA: " : "MAIYA: ";
+    uint8_t i, n = 0;
+
+    mg_scene_out(NG_PALFX_BLACK, MG_SCENE_FADE);
+    mg_bonus_clear_creatures(0);
+    mg_vault_clear_items();
+    mg_falls_end();
+
+    mg.hero_choice = who;
+    mg_palette(PAL_HERO, mg_hero_normal_pal());
+    if (who) mg_moon_bank(PAL_FX, mg_fx_pal);
+    else mg_palette(PAL_FX, mg_fx_pal);
+    mg.attack = mg.combo = mg.dash = mg.dash_wait = mg.hurt = mg.cast = mg.super_surge = 0;
+    mg.coyote = mg.jump_buffer = mg.drop = mg.combo_timer = 0;
+    mg.combo_buffer[0] = mg.combo_buffer[1] = 0;
+    mg.climbing = mg.crouch_timer = mg.sitting = mg.leap_window = mg.leaping = 0;
+    mg.art_pose = mg.flash = mg.rising = mg.rise_wait = mg.rise_hit = 0;
+    mg.dp_step = mg.dp_timer = 0;
+    mg.airborne = mg.on_ledge = mg.jump_cut = mg.stomp_chain = 0;
+    mg.facing = 0; mg.shake = 0; mg.held_press = 0; mg.previous_joy = 0;
+    mg.art = MAX_ART;
+    ng_char_set_pos(p, MG_SHOW_X, MG_GROUND_Y);
+    p->vx_fp = p->vy_fp = 0;
+    p->visible = 1;
+    mg_player_gravity();
+    mg_frame(p, MG_F_IDLE0, 0);
+    ng_camera_snap(&mg.camera, 0, 0);
+
+    for (i = 0; i < 2u; i++) {
+        MGEnemy *e;
+        if (!mv->target[i]) continue;
+        e = mg_spawn_enemy(MG_E_BEETLE, (int16_t)(MG_SHOW_X + mv->target[i]), MG_GROUND_Y, 0);
+        if (e) e->body->hp = e->body->max_hp = 1;    /* one blow: each move finishes it */
+    }
+
+    ng_fix_clear_rect(0, MG_SHOW_ROW, 40, 2, PAL_TEXT);
+    while (name[n]) { line[n] = name[n]; n++; }
+    for (i = 0; mv->name[i] && n < 39u; i++) line[n++] = mv->name[i];
+    line[n] = 0;
+    mg_centre(MG_SHOW_ROW, line, who ? PAL_SKY : PAL_GOLD);
+    mg_centre((uint8_t)(MG_SHOW_ROW + 1), mv->keys, PAL_TEXT);
+    mg_scene_in(NG_PALFX_BLACK, MG_SCENE_RISE);
+}
 
 static void NEOGEO_USER mg_move_demo(void)
 {
-    static const int16_t home[2] = { 72, 200 };
-    NGSpriteGroup girl[2];
-    int16_t x[2], y;
-    uint8_t m, s, k, who, i;
+    uint8_t chosen = mg.hero_choice, m, who, s, k;
+    uint16_t wait;
 
-    mg_scene_out(NG_PALFX_BLACK, MG_SCENE_FADE);
+    /* The first valley, as a mission would open it, held in the dark. */
+    mg.demo = MG_DEMO_MOVES;
+    mg.lives = 3; mg.score = 0; mg.kills = 0; mg.continues = 0;
+    mg.thorns = 0; mg.weapon = MG_W_NONE; mg.weapon_ammo = 0;
+    mg.arts_known = 1u << MG_ART_BLOSSOM;
+    mg_scene_hold = 1;
+    mg_scene(0, 0);
+    mg_scene_hold = 0;
+    mg.state = MG_PLAY;
+    mg.entrance = 0;
+    mg.state_timer = 0;
+    mg.voice_delay = 0;
+    ng_sprite_group_set_visible(&mg.hud[0], 0);     /* no HUD: her moves alone */
+    ng_sprite_group_flush(&mg.hud[0]);
     ng_fix_clear();
-    ng_sprite_hide_all();
-    mg.arena_bg = 0;
-    mg_background(0, 1);                   /* the forest, dimmed behind them */
-    for (i = 0; i < MG_BG0_BANKS; i++)
-        mg_shade_bank((uint8_t)(PAL_BG + i), mg_bg0_pal + i * 16u, 2, 0);
-    for (who = 0; who < 2; who++) {
-        mg_palette((uint8_t)(PAL_SEL_HERO + who), who ? mg_hero_alt_pal : mg_hero_pal);
-        ng_sprite_group_init(&girl[who], (uint16_t)(NG_SPR_CHAR_FIRST + who * HERO_STRIPS), HERO_STRIPS,
-                             HERO_ROWS, mg_hero_tiles[MG_F_IDLE0], (uint8_t)(PAL_SEL_HERO + who));
-        ng_sprite_group_set_tile_stride(&girl[who], HERO_STRIDE);
-        ng_sprite_group_set_flip(&girl[who], who, 0);       /* face to face */
-    }
-    mg_centre(2, "THEIR MOVES", PAL_GOLD);
-    ng_fix_puts(7, 10, "MAIYA", PAL_GOLD);      /* over their heads, clear of them */
-    ng_fix_puts(23, 10, "LUNA", PAL_SKY);
-    mg_centre(26, "ANY BUTTON: BACK TO THE CONTROLS", PAL_TEXT);
-    for (who = 0; who < 2; who++) {
-        ng_sprite_group_show_at(&girl[who], mg_hero_tiles[MG_F_IDLE0], (uint8_t)(PAL_SEL_HERO + who),
-                                (int16_t)(home[who] - 40), (int16_t)(MG_CHOOSER_FEET_Y - 62));
-    }
-    mg_scene_in(NG_PALFX_BLACK, MG_SCENE_RISE);
+    mg_centre(1, "THEIR MOVES", PAL_GOLD);
+    mg_centre(27, "ANY BUTTON: BACK TO THE CONTROLS", PAL_TEXT);
     poll_joystick_edge();
 
-    for (m = 0; m < sizeof(mg_demo_moves) / sizeof(mg_demo_moves[0]); m++) {
-        const MGDemoMove *mv = &mg_demo_moves[m];
-        ng_fix_clear_rect(0, 5, 40, 3, PAL_TEXT);
-        mg_centre(5, mv->name, PAL_GOLD);
-        mg_centre(7, mv->keys, PAL_SKY);
-        x[0] = home[0]; x[1] = home[1]; y = MG_CHOOSER_FEET_Y;
-        for (s = 0; s < mv->count; s++) {
-            const MGDemoStep *st = &mv->steps[s];
-            for (k = 0; k < st->time; k++) {
-                y = (int16_t)(y + st->dy);
-                for (who = 0; who < 2; who++) {
-                    x[who] = (int16_t)(x[who] + (who ? -st->dx : st->dx));
-                    ng_sprite_group_show_at(&girl[who], mg_hero_tiles[st->frame], (uint8_t)(PAL_SEL_HERO + who),
-                                            (int16_t)(x[who] - 40), (int16_t)(y - 62));
-                }
-                ng_palette_fx_update();
-                maiya_vblank();
-                if (poll_joystick_edge() & (BUTTON_A | BUTTON_B | BUTTON_C | BUTTON_D | START1 | START2))
-                    goto done;
-            }
-        }
-        /* a breath standing before the next */
-        for (k = 0; k < 30u; k++) {
-            for (who = 0; who < 2; who++)
-                ng_sprite_group_show_at(&girl[who], mg_hero_tiles[MG_F_IDLE0], (uint8_t)(PAL_SEL_HERO + who),
-                                        (int16_t)(home[who] - 40), (int16_t)(MG_CHOOSER_FEET_Y - 62));
-            ng_palette_fx_update();
-            maiya_vblank();
-            if (poll_joystick_edge() & (BUTTON_A | BUTTON_B | BUTTON_C | BUTTON_D | START1 | START2))
-                goto done;
+    for (m = 0; m < sizeof(mg_show_moves) / sizeof(mg_show_moves[0]); m++) {
+        const MGMoveShow *mv = &mg_show_moves[m];
+        for (who = 0; who < 2u; who++) {
+            mg_show_setup(who, mv);
+            for (k = 0; k < 12u; k++) if (mg_show_frame(0)) goto done;   /* she rises with the light */
+            for (s = 0; s < mv->steps; s++)
+                for (k = 0; k < mv->script[s].frames; k++)
+                    if (mg_show_frame(mv->script[s].joy)) goto done;
+            for (wait = 0; wait < MG_SHOW_SETTLE && !mg_show_settled(); wait++)
+                if (mg_show_frame(0)) goto done;
+            for (k = 0; k < 20u; k++) if (mg_show_frame(0)) goto done;
         }
     }
 done:
+    /* Back to the controls, the game as it was before the demo opened. */
     mg_scene_out(NG_PALFX_BLACK, MG_SCENE_FADE);
-#ifdef NG_VRAM_DEFER
-    ng_sprite_group_cancel(&girl[0]);
-    ng_sprite_group_cancel(&girl[1]);
-#endif
+    mg.demo = 0;
+    mg.hero_choice = chosen;
+    mg_show_joy = 0;
+    soundStopAll();
     ng_sprite_hide_all();
     ng_fix_clear();
     mg_ui_palettes();
+    mg.music_on = 0;
+    mg_music(SOUND_TRACK_A);
 }
 
 static void NEOGEO_USER mg_show_how_to_play(void)
@@ -5363,6 +5415,7 @@ static uint16_t NEOGEO_USER mg_demo_joystick(void)
 
 static uint16_t NEOGEO_USER mg_input(void)
 {
+    if (mg.demo == MG_DEMO_MOVES) return mg_show_joy;
     return mg.demo ? mg_demo_joystick() : poll_joystick();
 }
 
@@ -7744,7 +7797,7 @@ enum { MG_COMBO_TIME = 100, MG_COMBO_SHOW = 90, MG_COMBO_COL = 26 };
 
 static void NEOGEO_USER mg_combo_add(void)
 {
-    if (mg.state != MG_PLAY) return;
+    if (mg.state != MG_PLAY || mg.demo == MG_DEMO_MOVES) return;
     if (mg.combo_t) { if (mg.combo_n < 99u) mg.combo_n++; }
     else mg.combo_n = 1;
     mg.combo_t = MG_COMBO_TIME;
@@ -7843,6 +7896,7 @@ static void NEOGEO_USER mg_update_hud_text(void)
 
 static void NEOGEO_USER mg_update_hud(void)
 {
+    if (mg.demo == MG_DEMO_MOVES) return;
     mg_update_hud_text();
     mg_draw_tray();
     mg.tray_dirty = 0;
@@ -7850,6 +7904,7 @@ static void NEOGEO_USER mg_update_hud(void)
 
 static void NEOGEO_USER mg_hud_step(void)
 {
+    if (mg.demo == MG_DEMO_MOVES) { mg.hud_dirty = mg.tray_dirty = 0; return; }
     if (mg.hud_dirty) {
         mg_update_hud_text();
         mg.hud_dirty = 0;
@@ -9491,15 +9546,17 @@ void NEOGEO_USER maiya_frame(void)
             return;
         }
         mg_controls();
-        if (!mg.vault) mg_spawn();       /* the road waits while she's in the vault */
+        if (!mg.vault && mg.demo != MG_DEMO_MOVES) mg_spawn();   /* the road waits while she's in the vault */
         mg_animate_player();
         mg_world_step();
         mg_update_entities();
-        mg_hideout_step();
-        mg_hazard_check();
-        mg_hazard_warn_check();
-        mg_npc_check();
-        mg_rescue_check();
+        if (mg.demo != MG_DEMO_MOVES) {   /* the moves demo: her moves alone */
+            mg_hideout_step();
+            mg_hazard_check();
+            mg_hazard_warn_check();
+            mg_npc_check();
+            mg_rescue_check();
+        }
         mg_freed_step();
 
         mg_clock_tick();
@@ -9518,7 +9575,7 @@ void NEOGEO_USER maiya_frame(void)
         mg_hud_step();
         /* The FIX follows the game: score the moment it moves, the tray
          * once a second while a power runs down. */
-        if (mg.score != mg.score_shown) {
+        if (mg.score != mg.score_shown && mg.demo != MG_DEMO_MOVES) {
             mg_number(28, ROW_SCORE, mg.score, 6, PAL_TEXT);
             mg.score_shown = mg.score;
         }
