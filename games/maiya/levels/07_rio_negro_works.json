@@ -15,7 +15,7 @@
   "guardian": {
     "name": "IRON VULTURE",
     "style": "vulture",
-    "hp": 6,
+    "hp": 5,
     "hint": "THE VULTURE FALLS, THEN SMOGGAR",
     "taunt": "I BUILT THIS PLANT TO CHOKE YOUR RIVER!",
     "reply": "YOUR SMOKE ENDS HERE, IRON VULTURE!"

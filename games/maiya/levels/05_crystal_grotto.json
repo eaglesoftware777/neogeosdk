@@ -15,7 +15,7 @@
   "guardian": {
     "name": "BLIZZARD OWL",
     "style": "owl",
-    "hp": 6,
+    "hp": 5,
     "hint": "THE OWL BLINKS BETWEEN GUSTS",
     "taunt": "I FROZE THE GROTTO'S HEART TO STONE!",
     "reply": "WINTER ENDS. I AM ITS SPRING!"
