@@ -21,13 +21,17 @@ static uint16_t ng_fix_ascii_base;
  * blank (ng_vram_commit() calls it), as runs: cells 32 words apart -- a
  * row of text, left to right -- each run one entry. The commit writes a
  * run's cells as they are then (a cell changed twice in a frame shows its
- * last word). A full list is written at once before the next run joins it;
- * a clear of the whole layer drops what was waiting.
+ * last word), and only while the blank has time (ng_vram_lines_left): the
+ * rest wait, in order, for the next one. When the list is full a change
+ * marks its text row instead, and a marked row is written whole from what
+ * the cells hold -- nothing is ever written at once while the picture is
+ * drawn. A clear of the whole layer drops what was waiting.
  */
 #define NG_FIX_QUEUE 64u
 typedef struct { uint16_t first, next, n, spare; } NGFixRun;   /* 8 bytes: a shift to index */
 static NGFixRun ng_fix_q[NG_FIX_QUEUE];
 static NGFixRun *ng_fix_tail;    /* one past the last run (ng_fix_queue_drop sets it) */
+static uint32_t ng_fix_rows;     /* text rows to write whole: a bit a row */
 
 static uint8_t ng_fix_last_n;
 uint8_t NEOGEO_USER ng_fix_last_commit_cells(void) { return ng_fix_last_n; }
@@ -35,41 +39,66 @@ uint8_t NEOGEO_USER ng_fix_last_commit_cells(void) { return ng_fix_last_n; }
 /* A run's address is set once and the chip steps it after each word. */
 void NEOGEO_USER ng_fix_commit(void)
 {
-    NGFixRun *r = ng_fix_q, *end = ng_fix_tail;
+    NGFixRun *r = ng_fix_q, *end, *keep = ng_fix_q;
     uint16_t cells = 0;
-    if (r == end) { ng_fix_last_n = 0; return; }
+    if (ng_fix_tail == 0) ng_fix_tail = ng_fix_q;
+    end = ng_fix_tail;
+    if ((r == end && !ng_fix_rows) || !ng_vram_lines_left()) { ng_fix_last_n = 0; return; }
     NEO_REGISTER(VRAM_INC) = 0x20;
     for (; r < end; r++) {
         const uint16_t *w = &ng_fix_words[r->first];
         uint16_t n = r->n;
+        if (ng_vram_lines_left() < (uint8_t)(1u + (n >> 4))) {   /* some 20 cells a line */
+            while (r < end) *keep++ = *r++;                       /* the next blank, in order */
+            break;
+        }
         cells = (uint16_t)(cells + n);
         NEO_REGISTER(VRAM_ADDR) = (uint16_t)(FIXMAP + 2u + r->first);
         while (n--) { NEO_REGISTER(VRAM_RW) = *w; w += 32; }
     }
+    ng_fix_tail = keep;
+    if (ng_fix_rows) {
+        uint8_t y;
+        uint16_t rows = 0;
+        for (y = 0; y < NG_FIX_HEIGHT; y++) {
+            const uint16_t *w;
+            uint8_t x;
+            if (!(ng_fix_rows & ((uint32_t)1u << y))) continue;
+            if (ng_vram_lines_left() < 3u) break;                 /* (a row is 40 cells) */
+            ng_fix_rows &= ~((uint32_t)1u << y);
+            w = &ng_fix_words[y];
+            NEO_REGISTER(VRAM_ADDR) = (uint16_t)(FIXMAP + 2u + y);
+            for (x = 0; x < NG_FIX_WIDTH; x++, w += 32) NEO_REGISTER(VRAM_RW) = *w;
+            cells = (uint16_t)(cells + NG_FIX_WIDTH);
+            rows++;
+        }
+        NG_PERF_FIX_ROWS(rows);
+        (void)rows;
+    }
     NG_PERF_VRAM(cells);
     ng_fix_last_n = (uint8_t)(cells > 255u ? 255u : cells);
-    ng_fix_tail = ng_fix_q;
 }
 
 void NEOGEO_USER ng_fix_queue_drop(void)
 {
     ng_fix_tail = ng_fix_q;
+    ng_fix_rows = 0;
 }
 
-/* Cell i changed: it extends the last run when it is that run's next cell. */
+/* Cell i changed: it extends the last run when it is that run's next cell;
+ * with the list full, its row is marked to be written whole. */
 static void NEOGEO_USER ng_fix_write(uint16_t i)
 {
     NGFixRun *r = ng_fix_tail;
+    if (r == 0) r = ng_fix_tail = ng_fix_q;
     if (r != ng_fix_q && r[-1].next == i) {
         r[-1].n++;
         r[-1].next = (uint16_t)(i + 32u);
         return;
     }
-    if (r == &ng_fix_q[NG_FIX_QUEUE]) {   /* full: written at once */
-        ng_vram_busy++;
-        ng_fix_commit();
-        ng_vram_busy--;
-        r = ng_fix_q;
+    if (r == &ng_fix_q[NG_FIX_QUEUE]) {
+        ng_fix_rows |= (uint32_t)1u << (i & 31u);
+        return;
     }
     r->first = i;
     r->next = (uint16_t)(i + 32u);
@@ -130,7 +159,10 @@ void NEOGEO_USER ng_fix_invalidate_all(void)
 void NEOGEO_USER ng_fix_clear(void)
 {
     uint16_t i;
-    clearFix();   /* (with NG_VRAM_DEFER it drops the cells waiting) */
+#ifdef NG_VRAM_DEFER
+    ng_fix_queue_drop();   /* (a scene-change clear: behind a fade) */
+#endif
+    clearFix();
     for (i = 0; i < NG_FIX_WIDTH * NG_FIX_HEIGHT; i++) ng_fix_words[i] = NG_FIX_BLANK;
 }
 

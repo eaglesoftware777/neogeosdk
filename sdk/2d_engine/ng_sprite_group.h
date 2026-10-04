@@ -29,6 +29,12 @@ extern "C" {
 #define NG_SGF_DIRTY_ALL      0x1F  /* force full upload */
 #define NG_SGF_QUEUED         0x80  /* NG_VRAM_DEFER: waiting for ng_vram_commit() */
 
+/* Commit priority (NG_VRAM_DEFER): when a vertical blank hasn't room for
+ * every change, the high ones go first and the low ones wait a frame. */
+#define NG_SG_PRIO_NORMAL     0     /* the cast, shots, objects (the default) */
+#define NG_SG_PRIO_HIGH       1     /* the player, the scrolling layers       */
+#define NG_SG_PRIO_LOW        2     /* scenery and decoration                 */
+
 typedef struct {
     uint16_t firstSprite;
     uint8_t strips;
@@ -53,6 +59,9 @@ typedef struct {
     uint8_t mapStrips;
     uint8_t mapHeight;
     uint8_t mapRows;
+    uint8_t prio;       /* NG_SG_PRIO_*: set by ng_sprite_group_set_priority() */
+    uint8_t readyRows;  /* NG_VRAM_DEFER: the rows its last full write left, when a
+                         * move is then only the driving strip's two words (0: not so) */
 } NGSpriteGroup;
 
 void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette);
@@ -61,25 +70,45 @@ void NEOGEO_USER ng_sprite_group_mark_dirty(NGSpriteGroup *g, uint8_t dirty_flag
 /* Dirty-aware flush: only writes VRAM regions flagged in g->dirty. */
 void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g);
 
+/* A group's commit priority (NG_SG_PRIO_*); every group starts NORMAL. */
+void NEOGEO_USER ng_sprite_group_set_priority(NGSpriteGroup *g, uint8_t prio);
+
 #ifdef NG_VRAM_DEFER
 /*
  * Video writes in the vertical blank (a game's GAME_ENGINE_DEFINES
- * -DNG_VRAM_DEFER=1, C engine). ng_sprite_group_flush() then only puts the
- * group on a list; ng_vram_commit(), called first thing after the frame's
- * wait for the vertical blank, writes every listed group's changes there --
+ * -DNG_VRAM_DEFER=1, C engine). ng_sprite_group_flush() only puts the group
+ * on its priority's list; ng_vram_commit(), called first thing after the
+ * frame's wait for the vertical blank, writes the listed changes there --
  * the screen is never drawn from half-written sprite tables. A group is
- * written in the state it has at the commit, once however many times it was
- * flushed. Character hides are listed too and done first.
+ * written in the state it has at the commit, once however many times it
+ * was flushed (the latest state: changes coalesce).
  *
- * ng_sprite_group_upload(), ng_sprite_group_hide() and the
- * ng_sprite_hide_*() calls still write at once: scene set-up, behind a fade.
- * A group listed but then thrown away must be dropped with
- * ng_sprite_group_cancel(), or the commit would bring it back. If the list
- * is ever full, a flush writes at once as before.
+ * The commit has a deadline: the blank's 40 lines end where the picture
+ * starts (line 16), and no job begins at or after NG_VRAM_DEADLINE. What
+ * doesn't fit stays listed, in order, for the next blank: hides first, then
+ * the HIGH groups, a streaming layer's strip columns, the NORMAL groups, the
+ * FIX layer's cells and last the LOW groups. Nothing listed is ever written
+ * while the picture is drawn: a full list leaves the group dirty for its
+ * next flush, a full FIX list falls back to whole text rows, and character
+ * hides are a bitmap that can't overflow.
+ *
+ * ng_sprite_group_upload(), ng_sprite_group_hide(), ng_sprite_hide_all()
+ * and ng_sprite_hide_range() still write at once: scene set-up, behind a
+ * fade. During play, a group is drawn whole with
+ * ng_sprite_group_mark_dirty(g, NG_SGF_DIRTY_ALL) and a flush. A group
+ * listed but then thrown away must be dropped with ng_sprite_group_cancel(),
+ * or the commit would bring it back (ng_sprite_hide_all() drops them all).
  */
-#define NG_VRAM_QUEUE_GROUPS  256u
-#define NG_VRAM_QUEUE_HIDES   32u
+#define NG_VRAM_QUEUE_GROUPS  256u   /* NORMAL */
+#define NG_VRAM_QUEUE_HIGH    32u
+#define NG_VRAM_QUEUE_LOW     128u
+#define NG_VRAM_QUEUE_STRIPS  64u
+#define NG_VRAM_DEADLINE      8u     /* the last line a job may begin before: the picture is at 16 */
 void NEOGEO_USER ng_vram_commit(void);
+/* Lines left before the deadline (0 while the picture is being drawn), and
+ * whether a commit could start now. */
+uint8_t NEOGEO_USER ng_vram_lines_left(void);
+uint8_t NEOGEO_USER ng_vram_window_open(void);
 /* Non-zero while the engine is writing video memory (the commit, a full
  * list's flush, a hide, an upload): raster bands (ng_raster.h) leave their
  * own video writes out then. */
@@ -91,7 +120,9 @@ void NEOGEO_USER ng_sprite_group_set_tile_base(NGSpriteGroup *g, uint16_t tileBa
 void NEOGEO_USER ng_sprite_group_set_tile_stride(NGSpriteGroup *g, uint16_t tileStride);
 /* One strip shown from another column of the art (16-pixel columns from
  * tileBase): a layer wider than 512 pixels streams its columns this way,
- * each strip rewritten while off screen. Written at once. */
+ * each strip rewritten while off screen. With NG_VRAM_DEFER it is listed
+ * for the blank (the same strip twice in a frame: the last column);
+ * otherwise written at once. */
 void NEOGEO_USER ng_sprite_group_set_strip_column(NGSpriteGroup *g, uint8_t strip, uint16_t column);
 void NEOGEO_USER ng_sprite_group_set_palette(NGSpriteGroup *g, uint8_t palette);
 /* Row-major bank map using tileStride; NULL restores the single bank. */
