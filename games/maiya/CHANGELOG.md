@@ -4,7 +4,7 @@ The ROM sets shared with the NeoGeoSDK pre-releases: `_v1` and `_v2` with
 v1.7.1, `_v3` with v1.7.2. The SDK keeps its own version; Maiya's ROMs are
 numbered on their own.
 
-## v3 (NeoGeoSDK v1.7.2 pre-release) — everything since v2
+## v3 (2026-10-05, NeoGeoSDK v1.7.2 pre-release) — everything since v2
 
 ### Smoother play
 
