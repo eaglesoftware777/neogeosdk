@@ -322,6 +322,7 @@ typedef struct {
     MGPlatform arena[2];
     uint16_t walk_distance;
     uint8_t  gait_still;             /* she stood still last frame                    */
+    uint8_t  gait;                   /* her gait pose shown: 1 + phase, | 0x10 at a run; 0 none */
     uint8_t climb_cooldown;
     uint8_t  stage, state, lives, art, kills, rescue_mask;
     uint8_t  hurt, coyote, jump_buffer, drop, boss_hurt, boss_active;
@@ -8378,16 +8379,12 @@ static void NEOGEO_USER mg_squash_step(void)
         mg.sq_t = 0;
         /* Her run's weight: she is lowest as a foot lands and while her
          * legs pass under her, highest in the flight between strides --
-         * her feet stay on the ground, her head dips -- a little more
-         * when she runs. */
-        if (!mg.flying && !mg.climbing && !mg.swimming && !mg.airborne && p->vx_fp != 0) {
-            uint8_t k, fast = (uint8_t)(mg_abs((int16_t)p->vx_fp) > WALK_SPEED + 64);
-            for (k = 0; k < MG_GAIT_FRAMES; k++) {
-                if (p->sprite_tile != mg_hero_tiles[MG_F_WALK0 + k]) continue;
-                if ((k & 3u) == 0u) ys = fast ? MG_RUN_FOOTFALL_FAST : MG_RUN_FOOTFALL;
-                else if ((k & 3u) == 1u) ys = fast ? MG_RUN_PASSING_FAST : MG_RUN_PASSING;
-                break;
-            }
+         * her feet stay on the ground, her head dips. */
+        if (!mg.flying && !mg.climbing && !mg.swimming && !mg.airborne && (mg.gait & 0x10u)) {
+            /* (her walk has its weight drawn in: down a pixel, up a pixel) */
+            uint8_t k = (uint8_t)((mg.gait & 0x0Fu) - 1u);
+            if ((k & 3u) == 0u) ys = MG_RUN_FOOTFALL;
+            else if ((k & 3u) == 1u) ys = MG_RUN_PASSING;
         }
     }
     w = (uint8_t)(HERO_STRIPS * ((xs >> 4) + 1u));               /* drawn width */
@@ -8409,9 +8406,33 @@ static void NEOGEO_USER mg_world_step(void)
     ng_game_engine_frame();
 }
 
+/* Her run's poses by gait phase: the sprint, with the low passing pose
+ * between strides. Her walk is MG_F_WALK0..7, upright and half the step:
+ * contact, down, passing, up, for each foot (build_commercial_assets.py). */
+static const uint8_t mg_run_cycle[MG_GAIT_FRAMES] = {
+    MG_F_RUN3, MG_F_RUNPASS, MG_F_RUN1, MG_F_RUN0, MG_F_STRIDE, MG_F_RUNPASS, MG_F_RUN1, MG_F_RUN2
+};
+
+/* A run is faster than her walk (her swift walk included), with a margin
+ * so easing from one to the other doesn't flicker between the two. */
+static uint8_t NEOGEO_USER mg_gait_runs(uint16_t speed)
+{
+    return (uint8_t)(speed > (mg.swift ? WALK_SPEED * 5 / 4 : WALK_SPEED) + 64);
+}
+
+static void NEOGEO_USER mg_gait_pose(NGCharacter *p, uint8_t run)
+{
+    uint8_t k = mg_gait_frame(mg.walk_distance);
+    mg.gait = (uint8_t)((k + 1u) | (run ? 0x10u : 0u));
+    mg_frame(p, run ? mg_run_cycle[k] : (uint8_t)(MG_F_WALK0 + k), mg.facing);
+}
+
 static void NEOGEO_USER mg_animate_player(void)
 {
     NGCharacter *p = mg.player;
+    uint16_t speed;
+
+    mg.gait = 0;
 
     if (mg.flying) {
         /* Kneeling on the eagle's back; it beats its wings, quicker after
@@ -8426,11 +8447,15 @@ static void NEOGEO_USER mg_animate_player(void)
 
     /* Keep one forward gait clock through attacks and dashes. A backward
      * countdown is not an animation phase; it reverses the foot sequence.
-     * From a standstill she starts on the push-off, not mid-stride. */
-    if (grounded && !mg.climbing && p->vx_fp != 0) {
+     * From a standstill she starts on phase 2: the walk's passing pose,
+     * the run's push-off.
+     * The clock is the road she covers: a phase is 10 px at a run, 5 at a
+     * walk (a step is half a stride), so her feet never slide. */
+    speed = (uint16_t)mg_abs((int16_t)p->vx_fp);
+    if (grounded && !mg.climbing && speed) {
         if (mg.gait_still) mg.walk_distance = (uint16_t)(MG_GAIT_STEP * 2u);
         mg.walk_distance = mg_gait_advance(mg.walk_distance,
-                                           (uint16_t)mg_abs((int16_t)p->vx_fp));
+                                           (uint16_t)(mg_gait_runs(speed) ? speed : speed * 2u));
     }
     mg.gait_still = (uint8_t)(p->vx_fp == 0);
 
@@ -8480,7 +8505,7 @@ static void NEOGEO_USER mg_animate_player(void)
         mg_frame(p, (uint8_t)(mg.super_surge >= MG_SURGE_TIME - MG_SURGE_WINDUP ? MG_F_RISE0 : MG_F_SURGE),
                  mg.facing);
     } else if (mg.dash && grounded) {
-        mg_frame(p, (uint8_t)(MG_F_WALK0 + mg_gait_frame(mg.walk_distance)), mg.facing);
+        mg_gait_pose(p, 1);
     } else if (mg.attack) {
         mg.attack--;
         mg_frame(p, (uint8_t)(mg.attack > 6 ? MG_F_ATK1 : MG_F_ATK2), mg.facing);
@@ -8503,7 +8528,7 @@ static void NEOGEO_USER mg_animate_player(void)
         if (mg.turning)
             mg_frame(p, MG_F_LAND, mg.facing);
         else
-            mg_frame(p, (uint8_t)(MG_F_WALK0 + mg_gait_frame(mg.walk_distance)), mg.facing);
+            mg_gait_pose(p, mg_gait_runs(speed));
     } else {
         mg_frame(p, (uint8_t)(MG_F_IDLE0 + ((mg.tick / 20) % 3)), mg.facing);
     }
