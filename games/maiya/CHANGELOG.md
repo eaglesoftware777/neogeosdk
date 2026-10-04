@@ -68,6 +68,14 @@ numbered on their own.
   used to round her position down to the pixel every frame, so a run to
   the left went 4 pixels a frame and a run to the right 3. Both go
   3 1/8 now (sdk/2d_engine: an axis that doesn't move keeps its fraction).
+- **A walk of her own.** Her walk was her sprint played slower. Now it is
+  upright, a step half a stride long: contact, her weight down a pixel,
+  her legs passing under her, up a pixel, for each foot. It's put together
+  from whole pixels of her own poses, nothing resampled. Her run keeps
+  the sprint, with a low passing pose between strides at the same size
+  as the rest. Both are paced by the road she covers (5 pixels a phase
+  walking, 10 running), so her feet don't slide, and the run's dip as a
+  foot lands is only on the run.
 - **The camera glides.** It lets her move 22 pixels either way before it
   follows, then eases after her instead of locking to her, and keeps
   36 pixels more road ahead of her, swinging over 2 pixels a frame when

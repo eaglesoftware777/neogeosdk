@@ -1226,6 +1226,63 @@ def build():
     for name, src in (("pass", "jump0"), ("stride", "jump1")):
         refit = fit_group(m_img, {name: hero_boxes[src]}, HERO_CANVAS, run_h)
         hf[name] = clean_sprite(refit[name], white_area=10)
+    # The run's passing pose (legs under her, a knee coming through), from
+    # the jump row's third figure at the stance's own scale: drawn on the
+    # sheet a little taller than the stance, so fitted to its share of run_h.
+    stance_h = _cutout_bbox(m_img, hero_boxes["jump0"], "white").height
+    passing_h = _cutout_bbox(m_img, hero_boxes["jump2"], "white").height
+    refit = fit_group(m_img, {"runpass": hero_boxes["jump2"]}, HERO_CANVAS, run_h * passing_h / stance_h)
+    hf["runpass"] = clean_sprite(refit["runpass"], white_area=10)
+
+    # Her walk, apart from her run. The sheet draws no walk, so it is put
+    # together from whole pixels of two of its poses, nothing resampled:
+    # the stance (upright, a short step: the contact) and the stance's
+    # upper body and skirt on the run's passing legs (the passing pose),
+    # joined at the skirt's hem. Her weight moves by a whole pixel: down
+    # as the foot takes it, up as the legs pass. Contact, down, passing,
+    # up -- and the same for the other foot.
+    def body_on_legs(upper, legs, cut, dx=0, lift=0):
+        """upper's rows above `cut` over `legs`' rows from `cut` (moved dx),
+        the upper part raised `lift` px (negative: lowered); a raise
+        repeats the hem row so nothing opens at the join."""
+        h, w = legs.shape[:2]
+        out = np.zeros_like(legs)
+        x0, x1 = max(0, dx), min(w, w + dx)
+        out[cut:, x0:x1] = legs[cut:, x0 - dx:x1 - dx]
+        for k in range(1, lift + 1):
+            hem = upper[cut - 1, :, 3] >= 128
+            out[cut - k][hem] = upper[cut - 1][hem]
+        top = np.zeros_like(upper)
+        if lift >= 0:
+            top[:cut - lift] = upper[lift:cut]
+        else:
+            top[-lift:cut - lift] = upper[:cut]
+        drawn = top[:, :, 3] >= 128
+        out[drawn] = top[drawn]
+        return out
+
+    def seam_offset(upper, legs, cut):
+        """The sideways shift that best continues the silhouette across the
+        join: the middle of the shifts that tie for the fewest mismatched
+        pixels between the hem row and the legs' first row."""
+        hem = upper[cut - 1, :, 3] >= 128
+        scores = []
+        for dx in range(-9, 4):
+            row = np.zeros_like(hem)
+            x0, x1 = max(0, dx), min(len(hem), len(hem) + dx)
+            row[x0:x1] = legs[cut, x0 - dx:x1 - dx, 3] >= 128
+            scores.append((int((hem ^ row).sum()), dx))
+        best = min(score for score, _ in scores)
+        tied = [dx for score, dx in scores if score == best]
+        return tied[len(tied) // 2]
+
+    hem_rows = np.nonzero((hf["pass"][:, :, 3] >= 128).any(axis=1))[0]
+    hem = int(hem_rows[-1]) - 17          # the join: her legs are the 18 rows above her soles
+    legs_dx = seam_offset(hf["pass"], hf["runpass"], hem)
+    walk_contact = hf["pass"]
+    walk_down = body_on_legs(hf["pass"], hf["pass"], hem, 0, -1)
+    walk_passing = body_on_legs(hf["pass"], hf["runpass"], hem, legs_dx, 0)
+    walk_up = body_on_legs(hf["pass"], hf["runpass"], hem, legs_dx, 1)
 
     # Resting poses are not on the sheet: fold a standing frame onto its heels
     # so Maiya can duck under a swoop, take a knee, or sit down and listen.
@@ -1236,9 +1293,9 @@ def build():
 
     maiya_frames = {
         "idle0": hf["idle0"], "idle1": hf["idle1"], "idle2": hf["idle0"],
-        # two strides: contact, passing, push-off, flight -- then again
-        "walk0": hf["run3"], "walk1": hf["pass"], "walk2": hf["run1"], "walk3": hf["run0"],
-        "walk4": hf["stride"], "walk5": hf["pass"], "walk6": hf["run1"], "walk7": hf["run2"],
+        # her walk: two steps of contact, down, passing, up
+        "walk0": walk_contact, "walk1": walk_down, "walk2": walk_passing, "walk3": walk_up,
+        "walk4": walk_contact, "walk5": walk_down, "walk6": walk_passing, "walk7": walk_up,
         "crouch": hf["crouch"],
         "run0": hf["run0"], "run1": hf["run1"], "run2": hf["run2"],
         "jump0": hf["jump0"], "jump1": hf["jump1"], "jump2": hf["jump2"],
@@ -1284,9 +1341,21 @@ def build():
     }, HERO_CANVAS, HERO_HEIGHT, bg_color="corner")
     for name in ("rise0", "rise1", "rise2", "surge", "art0", "art1", "leap0", "leap1"):
         maiya_frames[name] = special[name]
+    # Her run's poses that are not frames already (the game plays her run as
+    # run3, runpass, run1, run0, stride, runpass, run1, run2), appended so
+    # no earlier frame number moves.
+    for name in ("run3", "stride", "runpass"):
+        maiya_frames[name] = hf[name]
 
-    # Fit master palette for Maiya
-    hero_training = np.concatenate([f[:, :, :3][training_mask(f)] for f in maiya_frames.values()])
+    # Fit master palette for Maiya: on the poses it was always fitted on
+    # (her walk is made of their pixels), so her colours and Luna's don't
+    # move when a frame is added.
+    palette_frames = dict(maiya_frames)
+    for k, name in enumerate(("run3", "pass", "run1", "run0", "stride", "pass", "run1", "run2")):
+        palette_frames[f"walk{k}"] = hf[name]
+    for name in ("run3", "stride", "runpass"):
+        del palette_frames[name]
+    hero_training = np.concatenate([f[:, :, :3][training_mask(f)] for f in palette_frames.values()])
     hero_master = fit_palette(hero_training)
     hero_tiles = []
     for name, f in maiya_frames.items():
