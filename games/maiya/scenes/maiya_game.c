@@ -154,9 +154,7 @@ enum {
      * part of the climb; then a wait before the next. */
     MG_RISE_TIME = 22, MG_RISE_SAFE = 12, MG_RISE_WAIT = 45,
     RISE_SPEED = 6 * NG_FP_ONE + 64,
-    CLIMB_SPEED = 320,
-    WALK_ACCEL = 112,    /* she leans into a run instead of snapping to it */
-    WALK_BRAKE = 96,
+    CLIMB_SPEED = 320,   /* (her acceleration and braking: maiya_feel.h) */
     MAX_HP = 5, MAX_LIVES = 7, MAX_ART = 3,
     /* The hidden extra life is one trinket among ten, but unlike the rest
      * it hands out a life -- worth capping across the whole run, not just
@@ -212,10 +210,10 @@ enum {
     MG_TRAY_ICON_PX = 13,            /* ~32px source shrunk by the above  */
     HURT_LOCK = 60,      /* frames of mg.hurt above this lock the controls */
     MG_KNOCK = 768,      /* her knockback: a short stagger, eased to a stop */
-    MG_CAM_LEAD = 40,    /* the camera keeps this much more road ahead    */
-    MG_CAM_LEAD_RATE = 1, /* ... swinging over this many px a frame        */
-    MG_CAM_DEAD = 16,    /* she moves this far either way before it follows */
-    MG_CAM_FOLLOW = 255, /* and then it follows exactly (whole pixels)    */
+    MG_CAM_LEAD = 36,    /* the camera keeps this much more road ahead    */
+    MG_CAM_LEAD_RATE = 2, /* ... gliding over this many px a frame          */
+    MG_CAM_DEAD = 22,    /* she moves this far either way before it follows */
+    MG_CAM_FOLLOW = 176, /* and then it eases after her (of 256 a frame)  */
     MG_BOSS_TOUCH = 36,  /* closer than this on the ground, a guardian hurts */
     MG_BOSS_TOUCH_AIR = 24, /* in the air only its body does: she can jump it */
     MG_BOSS_BACKOFF = 40,   /* frames a guardian gives ground after a touch */
@@ -370,6 +368,7 @@ typedef struct {
     uint8_t  art_wave;                /* frames until the storm's second wave */
     uint8_t  over_pick;               /* console continue screen: 0 go on, 1 exit */
     uint8_t  airborne, land_pose;
+    uint8_t  turning;                 /* braking against her momentum, still facing the old way */
     uint8_t  hero_choice;             /* 0 Maiya (blonde/green), 1 Luna (dark/blue) */
     uint8_t  coins;
     uint32_t score_shown;
@@ -1755,6 +1754,7 @@ static void NEOGEO_USER mg_collision_hook(void)
         /* Feet crossed the ledge top this frame (or rest on it). */
         if (mg.player_prev_y <= pl->y && p->y >= pl->y) {
             ng_char_set_pos(p, p->x, pl->y);
+            p->y_fp = NG_TO_FP(pl->y);   /* she stands on the pixel; x keeps its fraction */
             p->vy_fp = 0;
             physics_body(p)->grounded = 1;
             mg.on_ledge = 1;
@@ -5728,35 +5728,50 @@ static void NEOGEO_USER mg_controls(void)
         vx = (int16_t)p->vx_fp;
     } else
     /*
-     * Walk and run.  She leans into a step and coasts out of it instead of
-     * snapping between nought and full speed, which is what made her look
-     * like a sprite being dragged rather than a girl running.
+     * Walk and run (tuning: maiya_feel.h). The speed steps toward what the
+     * stick asks: up to a walk, on to a run, a firmer stop when let go, and
+     * against her momentum a harder brake -- a skid, still facing the way
+     * she ran -- turning round only once nearly stopped, never running
+     * backwards. In the air she turns at once; on ice she slides.
      */
     {
         /* B held: she runs. */
         int16_t speed = (int16_t)((joy & BUTTON_B) ? RUN_SPEED : WALK_SPEED);
-        int16_t want = 0;
         int16_t have = (int16_t)p->vx_fp;
+        int16_t mag = (int16_t)(have < 0 ? -have : have);
+        int8_t dir = (int8_t)((joy & JOY_LEFT) ? -1 : ((joy & JOY_RIGHT) ? 1 : 0));
+        uint8_t ground = (uint8_t)(ng_physics_is_grounded(p) || mg.on_ledge || p->y >= MG_GROUND_Y - 4);
         /* On ice she's slow to get going and slower to stop. */
         uint8_t slick = (uint8_t)(mg_mech() == MG_M_ICE && !mg.on_ledge && !mg.airborne);
-        int16_t accel = (int16_t)(slick ? 36 : WALK_ACCEL);
+        int16_t step;
         if (mg.swift) speed = (int16_t)((speed * 5) / 4);
-        int16_t brake = (int16_t)(slick ? 14 : WALK_BRAKE);
 
-        if (joy & JOY_LEFT) {
-            want = (int16_t)-speed;
-            mg.facing = 1;
-        } else if (joy & JOY_RIGHT) {
-            want = speed;
-            mg.facing = 0;
-        }
-
-        if (want > have) {
-            have = (int16_t)(have + (want > 0 ? accel : brake));
-            if (have > want) have = want;
-        } else if (want < have) {
-            have = (int16_t)(have - (want < 0 ? accel : brake));
-            if (have < want) have = want;
+        mg.turning = 0;
+        if (slick) {
+            int16_t want = (int16_t)(dir * speed);
+            if (want > have) { have = (int16_t)(have + (want > 0 ? 36 : 14)); if (have > want) have = want; }
+            else if (want < have) { have = (int16_t)(have - (want < 0 ? 36 : 14)); if (have < want) have = want; }
+            if (dir) mg.facing = (uint8_t)(dir < 0);
+        } else if (!dir) {
+            /* let go: she stops */
+            step = (int16_t)(ground ? MG_STOP_BRAKE : MG_AIR_BRAKE);
+            have = (int16_t)(mag <= step ? 0 : (have > 0 ? have - step : have + step));
+        } else if (have && ((have > 0) != (dir > 0))) {
+            /* against her momentum: a skid, then round */
+            step = (int16_t)(ground ? MG_TURN_BRAKE : MG_AIR_TURN);
+            have = (int16_t)(mag <= step ? 0 : (have > 0 ? have - step : have + step));
+            if (!ground || mag <= MG_TURN_FLIP) mg.facing = (uint8_t)(dir < 0);
+            else mg.turning = 1;
+        } else {
+            /* with her momentum, or setting off */
+            if (mag < speed) {
+                step = (int16_t)(!ground ? MG_AIR_ACCEL : (mag < WALK_SPEED ? MG_WALK_ACCEL : MG_RUN_ACCEL));
+                mag = (int16_t)(mag + step > speed ? speed : mag + step);
+            } else if (mag > speed) {
+                mag = (int16_t)(mag - MG_RUN_EASE < speed ? speed : mag - MG_RUN_EASE);
+            }
+            have = (int16_t)(dir * mag);
+            mg.facing = (uint8_t)(dir < 0);
         }
         vx = have;
     }
@@ -8483,9 +8498,9 @@ static void NEOGEO_USER mg_animate_player(void)
         mg_frame(p, (uint8_t)(vy < -MG_AIR_PUSH ? MG_F_JUMP0 : (vy < -MG_AIR_TOP ? MG_F_JUMP1
                               : (vy <= MG_AIR_TOP ? MG_F_JUMP2 : MG_F_JUMP3))), mg.facing);
     } else if (p->vx_fp != 0) {
-        /* Turning at speed: a moment braking, low, before she runs the
-         * other way, instead of running backwards. */
-        if ((((int16_t)p->vx_fp > 0) == (mg.facing != 0)) && mg_abs((int16_t)p->vx_fp) > WALK_SPEED / 2)
+        /* Turning at speed: braking low, still facing the way she ran,
+         * before she sets off the other way (mg_controls). */
+        if (mg.turning)
             mg_frame(p, MG_F_LAND, mg.facing);
         else
             mg_frame(p, (uint8_t)(MG_F_WALK0 + mg_gait_frame(mg.walk_distance)), mg.facing);

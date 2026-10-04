@@ -5,12 +5,15 @@ static NGPhysicsBody ng_physics_bodies[NG_MAX_CHARS];
 static NGSolidRect ng_solids[NG_MAX_SOLIDS];
 static uint8_t ng_solid_count;
 
+/* An axis whose whole pixel stays keeps its fraction: a floor or a wall
+ * that only stops one axis must not round the other down each frame (that
+ * made a run left a pixel a frame faster than a run right). */
 static void NEOGEO_USER ng_physics_sync_position(NGCharacter *c, int16_t x, int16_t y)
 {
     c->x = x;
     c->y = y;
-    c->x_fp = NG_TO_FP(x);
-    c->y_fp = NG_TO_FP(y);
+    if (NG_FROM_FP(c->x_fp) != x) c->x_fp = NG_TO_FP(x);
+    if (NG_FROM_FP(c->y_fp) != y) c->y_fp = NG_TO_FP(y);
 }
 
 static int16_t NEOGEO_USER ng_physics_min_i16(int16_t a, int16_t b)
