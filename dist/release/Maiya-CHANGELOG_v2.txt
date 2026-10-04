@@ -81,20 +81,6 @@ safer to boot, on every system it targets.
   - The far layer streams the painting a column at a time as she travels.
 - **Ground to walk on.** The road is the painting's own ground, wrapping
   without a seam, wherever the far painting goes.
-- **Small life, far off.** Each valley has a few creatures and lights of
-  its own in the air between the HUD and the road. They are drawn small
-  and drift with the far painting, so they read as part of the distance:
-  - forest: butterflies and sun motes;
-  - falls: butterflies and mist;
-  - coast: glints and spray;
-  - autumn grove: falling leaves;
-  - grotto: snow and ice glints;
-  - World Tree: fireflies and petals;
-  - works and citadel: embers and smoke;
-  - reef: bubbles and light;
-  - cave: glints and fireflies;
-  - savanna: pollen and butterflies;
-  - Sky Road: snow.
 
 ### Guardians
 
