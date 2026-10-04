@@ -13,6 +13,21 @@ WHAT'S NEW SINCE v1   (every change: Maiya-CHANGELOG_v2.txt)
   and queues sound commands, so frames no longer wait on the hardware.
   Every stage was measured at about 59 frames a second with 0-4% of
   frames running long.
+- Clean scene changes: every screen change fades through black (white for
+  the chooser), the new scene built while nothing shows -- no torn or
+  half-drawn frames, no leftover sprites, no scrambled tiles.
+- A livelier run: two strides per cycle, legs passing under her, arms
+  moving with them; she brakes when she turns, and her jump has four poses.
+- Backgrounds without a seam, and longer: five valleys show their whole
+  painted band, the others the painting and its mirror; small creatures and
+  lights of each valley drift far off (butterflies, leaves, snow, bubbles,
+  fireflies, embers).
+- The checkered shadows under every character are gone.
+- The guardian's health bar keeps up with its health; the flying guardians
+  fall sooner.
+- The chooser gives 15 seconds to choose; "how to play" and the story each
+  move on after 10 seconds, or at a button -- and on "how to play", A and B
+  together shows both girls' moves.
 - Every stage stays within the hardware's 96 sprites per line (78 at most).
 - Heat haze over the Golden Savanna (a raster effect on the line timer).
 - Maiya squashes and stretches as she lands and leaps, and her run settles
