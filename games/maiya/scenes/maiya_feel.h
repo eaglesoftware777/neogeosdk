@@ -9,7 +9,14 @@
  *   NG_IMPACT_HEAVY   8 frames held, 3 px shake for 8 frames, white flash 8
  * The flash is given only where the target has a palette bank of its own:
  * a guardian does; the creatures of one kind share a bank, so a kill
- * shakes and holds but doesn't flash (it would flash every one alike).
+ * shakes but doesn't flash (it would flash every one alike).
+ *
+ * The presets' holds are cut to Maiya's own below (mg_impact): a hold
+ * stops her too, and three frames on every creature she knocked down read
+ * as the game catching on her run and her jumps, not as a blow landing.
+ * A creature beaten or struck now holds nothing -- the shake, the sparks
+ * and the sound carry it -- and only a guardian's blows and her own hurt
+ * hold, briefly.
  * No engine particles: their sprite slots (256-287) are Maiya's vines and
  * foreground, so her own sparks and dust stay the particles of a hit.
  */
@@ -23,9 +30,11 @@
 #define MG_IMPACT_BOSS_DOWN    NG_IMPACT_HEAVY    /* a guardian beaten            */
 
 #define MG_HEAVY_DAMAGE        3    /* a blow this strong (Surge, stomp, Secret Art) is heavy */
-#define MG_HITSTOP_HEAVY_HIT   4    /* frames held by a heavy blow a creature survives        */
-#define MG_HITSTOP_HURT        5    /* frames held when Maiya is struck                       */
-#define MG_HITSTOP_BOSS_DOWN   14   /* frames held on a guardian's last blow (on top of HEAVY) */
+#define MG_HITSTOP_KILL        0    /* frames held when a creature is beaten (the preset: 3)  */
+#define MG_HITSTOP_HEAVY_HIT   0    /* frames held by a heavy blow a creature survives        */
+#define MG_HITSTOP_HURT        2    /* frames held when Maiya is struck                       */
+#define MG_HITSTOP_BOSS_HIT    2    /* frames held when a guardian is struck (the preset: 5)  */
+#define MG_HITSTOP_BOSS_DOWN   10   /* frames held on a guardian's last blow                  */
 
 #define MG_HURT_FLASH          12   /* frames of her red flash when struck (her bank only)    */
 
