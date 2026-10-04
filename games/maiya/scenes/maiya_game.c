@@ -1132,144 +1132,6 @@ static void NEOGEO_USER mg_animate_scenery(void)
 }
 
 
-/*
- * The valley's own small life, far off: a few creatures and lights in the
- * open air between the HUD and the road, drifting with the far painting --
- * butterflies and sun motes in the forest, leaves in the autumn grove,
- * bubbles on the reef, fireflies under the world tree, embers in the
- * works. Drawn small (the hardware's shrink) and moving with the far
- * layer's parallax, they read as part of the distance; nothing of them is
- * anything she touches. They borrow the title's sprites, unused in play,
- * and give them back (mg_ambient_end) before any screen that uses them.
- */
-enum { MG_AMBIENT = 6, MG_AMB_TOP = 56, MG_AMB_BOTTOM = 156,
-       MG_AMB_FLUTTER = 0, MG_AMB_FALL, MG_AMB_RISE, MG_AMB_TWINKLE, MG_AMB_DRIFT };
-typedef struct { int16_t x, y; uint8_t kind, tile, t; } MGAmbient;
-static NGSpriteGroup mg_amb_g[MG_AMBIENT];
-static MGAmbient mg_amb[MG_AMBIENT];
-static int16_t mg_amb_far;          /* the far layer's offset last frame */
-static uint8_t mg_amb_ready, mg_amb_shown;
-
-/* Each valley's two kinds, with their tiles: { kind, tile, kind, tile }. */
-static const uint8_t mg_amb_theme[MG_LEVEL_COUNT][4] = {
-    { MG_AMB_FLUTTER, MG_T_PETAL,  MG_AMB_TWINKLE, MG_T_SPARK },     /* forest: butterflies, sun motes */
-    { MG_AMB_FLUTTER, MG_T_PETAL,  MG_AMB_RISE,    MG_T_BUBBLE },    /* falls: butterflies, mist       */
-    { MG_AMB_TWINKLE, MG_T_STAR,   MG_AMB_DRIFT,   MG_T_BUBBLE },    /* coast: glints, spray           */
-    { MG_AMB_FALL,    MG_T_LEAF,   MG_AMB_FALL,    MG_T_FALL_LEAF }, /* autumn: leaves                 */
-    { MG_AMB_FALL,    MG_T_STAR,   MG_AMB_TWINKLE, MG_T_STAR },      /* grotto: snow, ice glints       */
-    { MG_AMB_DRIFT,   MG_T_SPARK,  MG_AMB_FLUTTER, MG_T_PETAL },     /* world tree: fireflies, petals  */
-    { MG_AMB_RISE,    MG_T_FIRE,   MG_AMB_RISE,    MG_T_DUST },      /* works: embers, smoke           */
-    { MG_AMB_RISE,    MG_T_BUBBLE, MG_AMB_TWINKLE, MG_T_STAR },      /* reef: bubbles, light           */
-    { MG_AMB_TWINKLE, MG_T_STAR,   MG_AMB_DRIFT,   MG_T_SPARK },     /* cave: glints, fireflies        */
-    { MG_AMB_DRIFT,   MG_T_DUST,   MG_AMB_FLUTTER, MG_T_PETAL },     /* savanna: pollen, butterflies   */
-    { MG_AMB_FALL,    MG_T_STAR,   MG_AMB_FALL,    MG_T_STAR },      /* sky road: snow                 */
-    { MG_AMB_RISE,    MG_T_FIRE,   MG_AMB_RISE,    MG_T_DUST },      /* citadel: embers, smoke         */
-};
-
-static void NEOGEO_USER mg_amb_spawn(MGAmbient *a, uint8_t i, uint8_t anywhere)
-{
-    const uint8_t *th = mg_amb_theme[mg.stage < MG_LEVEL_COUNT ? mg.stage : 0];
-    uint8_t b = (uint8_t)((i & 1u) << 1);
-    a->kind = th[b];
-    a->tile = th[b + 1u];
-    a->t = (uint8_t)ng_rand();
-    a->x = (int16_t)ng_rand_range(NG_SCREEN_W);
-    a->y = (int16_t)(MG_AMB_TOP + (int16_t)ng_rand_range(MG_AMB_BOTTOM - MG_AMB_TOP));
-    if (anywhere) return;
-    if (a->kind == MG_AMB_FALL) a->y = MG_AMB_TOP;
-    else if (a->kind == MG_AMB_RISE) a->y = MG_AMB_BOTTOM;
-    else a->x = (int16_t)(mg.cam_dir > 0 ? NG_SCREEN_W + 4 : -12);   /* from the side ahead */
-}
-
-static void NEOGEO_USER mg_ambient_begin(void)
-{
-    uint8_t i;
-    for (i = 0; i < MG_AMBIENT; i++) {
-        NGSpriteGroup *g = &mg_amb_g[i];
-        ng_sprite_group_init(g, (uint16_t)(SLOT_TITLE + i), 1, 1, MG_TOOL_TILE, PAL_TOOL);
-        ng_sprite_group_set_scale(g, 0x9Fu, 0x9Fu);        /* five eighths: far off */
-        ng_sprite_group_set_visible(g, 0);
-        mg_amb_spawn(&mg_amb[i], i, 1);
-    }
-    mg_amb_far = (int16_t)(mg.camera.x >> 1);
-    mg_amb_shown = 0;
-    mg_amb_ready = 1;
-}
-
-/* Their sprites back to the screen that owns them: nothing listed stays. */
-static void NEOGEO_USER mg_ambient_end(void)
-{
-    uint8_t i;
-    if (!mg_amb_ready) return;
-    for (i = 0; i < MG_AMBIENT; i++) {
-#ifdef NG_VRAM_DEFER
-        ng_sprite_group_cancel(&mg_amb_g[i]);
-#endif
-        mg_amb_g[i].visible = 0;
-    }
-    mg_amb_ready = 0;
-}
-
-static void NEOGEO_USER mg_ambient_step(int16_t camera_x)
-{
-    int16_t far = (int16_t)(camera_x >> 1), dx;
-    uint8_t i, live = (uint8_t)((mg.state == MG_PLAY || mg.state == MG_INTRO || mg.state == MG_CLEAR ||
-                                 mg.state == MG_BOSS_INTRO || mg.state == MG_DEAD) && !mg.vault);
-    if (!mg_amb_ready) return;
-    dx = (int16_t)(far - mg_amb_far);
-    mg_amb_far = far;
-    if (dx > 24 || dx < -24) dx = 0;                     /* the camera jumped: no sweep */
-    if (!live) {
-        if (mg_amb_shown) ng_sprite_groups_hide_all(mg_amb_g, MG_AMBIENT);
-        mg_amb_shown = 0;
-        return;
-    }
-    mg_amb_shown = 1;
-    for (i = 0; i < MG_AMBIENT; i++) {
-        MGAmbient *a = &mg_amb[i];
-        NGSpriteGroup *g = &mg_amb_g[i];
-        int16_t sx, sy;
-        uint8_t flip = 0, show = 1;
-        a->t++;
-        a->x = (int16_t)(a->x - dx);                      /* with the far painting */
-        sx = a->x;
-        sy = a->y;
-        switch (a->kind) {
-        case MG_AMB_FLUTTER:                              /* a butterfly: wings beating, bobbing */
-            if ((a->t & 3u) == 0u) a->x = (int16_t)(a->x + ((a->t & 64u) ? 1 : -1));
-            sy = (int16_t)(a->y + ng_trig_mul(6, ng_sin((uint8_t)(a->t << 2))));
-            flip = (uint8_t)((a->t >> 2) & 1u);
-            break;
-        case MG_AMB_FALL:                                 /* a leaf or a flake, swaying down */
-            if (a->t & 1u) a->y++;
-            sx = (int16_t)(a->x + ng_trig_mul(8, ng_sin((uint8_t)(a->t << 1))));
-            flip = (uint8_t)((a->t >> 4) & 1u);
-            break;
-        case MG_AMB_RISE:                                 /* a bubble or an ember, wavering up */
-            if (a->t & 1u) a->y--;
-            sx = (int16_t)(a->x + ng_trig_mul(4, ng_sin((uint8_t)(a->t << 2))));
-            break;
-        case MG_AMB_TWINKLE:                              /* a glint: on a moment, then gone */
-            show = (uint8_t)((a->t & 63u) < 40u);
-            if ((a->t & 63u) == 63u) mg_amb_spawn(a, i, 1);
-            break;
-        default:                                          /* a firefly or a mote, wandering */
-            if ((a->t & 7u) == 0u) a->x = (int16_t)(a->x + ((a->t & 128u) ? 1 : -1));
-            sy = (int16_t)(a->y + ng_trig_mul(10, ng_sin((uint8_t)a->t)));
-            show = (uint8_t)((a->t & 31u) < 26u);
-            break;
-        }
-        if (a->x < -16 || a->x > NG_SCREEN_W + 8 || a->y < MG_AMB_TOP - 8 || a->y > MG_AMB_BOTTOM + 8)
-            mg_amb_spawn(a, i, 0);
-        if (show) {
-            ng_sprite_group_set_flip(g, flip, 0);
-            ng_sprite_group_show_at(g, (uint16_t)(MG_TOOL_TILE + a->tile), PAL_TOOL, sx, sy);
-        } else if (g->visible) {
-            ng_sprite_group_set_visible(g, 0);
-            ng_sprite_group_flush(g);
-        }
-    }
-}
 
 static void NEOGEO_USER mg_scroll_scenery(int16_t camera_x)
 {
@@ -2065,7 +1927,6 @@ static void NEOGEO_USER mg_before_draw_hook(void)
     ng_level_set_scroll(mg.camera.x, mg.cam_y);
     mg_scroll_scenery(mg.camera.x);
     mg_animate_scenery();
-    mg_ambient_step(mg.camera.x);
     if (mg.state == MG_BONUS || mg.state == MG_ENDING) {
         mg_update_sparks(mg.camera.x);
         return;
@@ -4008,7 +3869,6 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.music_wait = 0;
     mg_music(level->music);
     if (mg.entrance || mg.flying) mg_voice_later(retry ? MG_VOICE_RETRY : MG_VOICE_START, 40);
-    mg_ambient_begin();
     if (!mg_scene_hold) mg_scene_in(NG_PALFX_BLACK, MG_SCENE_RISE);
 }
 
@@ -4506,7 +4366,6 @@ static void NEOGEO_USER mg_chooser_tick(uint16_t t, uint8_t chosen)
 void NEOGEO_USER maiya_title(void)
 {
     NGSpriteGroup title_vis;
-    mg_ambient_end();
     ng_sprite_hide_all();
     ng_fix_init();
     ng_fix_set_ascii_base(0xD00u);
@@ -4795,7 +4654,6 @@ void NEOGEO_USER maiya_hero_select(void)
      * comes down out of it in one piece, instead of the forest, the cards
      * and the text popping in one after another while they load. */
     mg_scene_out(NG_PALFX_WHITE, MG_CHOOSER_FADE);
-    mg_ambient_end();
     ng_sprite_hide_all();
     ng_fix_clear();
     mg_ui_palettes();
@@ -8572,7 +8430,6 @@ static void NEOGEO_USER mg_interlude(uint8_t next_stage)
     uint8_t done = (uint8_t)(next_stage >= MG_LEVEL_COUNT);
 
     mg_scene_out(NG_PALFX_BLACK, MG_SCENE_FADE);
-    mg_ambient_end();
     ng_sprite_hide_all();
     ng_fix_clear();
     maiya_vblank();
@@ -8781,7 +8638,6 @@ static void NEOGEO_USER mg_bonus_enter(uint8_t next_stage)
     mg_scene_hold = 1;
     mg_scene(next_stage, 0);
     mg_scene_hold = 0;
-    mg_ambient_end();          /* the field is the bonus's own */
     mg.state = MG_BONUS;
     mg.next_stage = next_stage;
     mg.state_timer = MG_BONUS_TIME;
@@ -9122,7 +8978,6 @@ static void NEOGEO_USER mg_tour_begin(void)
      * it, painting and all, so not one frame of the old tiles under the new
      * picture shows; it comes up once everything has landed. */
     mg_scene_out(NG_PALFX_BLACK, MG_SCENE_FADE);
-    mg_ambient_end();
     for (i = 0; i < MG_ENEMIES; i++) {
         if (mg.enemies[i].body) ng_chars_remove(mg.enemies[i].body);
         mg.enemies[i].body = 0;
@@ -9429,7 +9284,6 @@ static void NEOGEO_USER mg_ending_begin(void)
 {
     uint8_t i;
     mg_scene_out(NG_PALFX_BLACK, MG_SCENE_FADE);
-    mg_ambient_end();
     mg.state = MG_ENDING;
     mg.end_page = MG_END_OPEN;
     for (i = 0; i < MG_ENEMIES; i++) {
