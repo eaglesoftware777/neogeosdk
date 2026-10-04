@@ -398,7 +398,8 @@ BIOMES = {
 def ledge_block(biome, piece):
     """A ledge block with a face, not a flat sticker.
 
-    piece: 0 left cap, 1 middle, 2 right cap.
+    piece: 0 left cap, 1 middle, 2 right cap, 3 the other middle (a stone
+    set in the face, the fringe and the speckle falling differently).
 
     The top is a lit surface in perspective, the body a shaded front face
     with a bevel down the lit side and a dark cast shadow under the lip, so
@@ -430,12 +431,19 @@ def ledge_block(biome, piece):
     a[30:32, :] = 9           # the block's own shadow on what is below
 
     body = a == 4
-    a[body & (((xs * 3 + ys * 5) % 13) == 0)] = 6
-    a[body & (((xs * 7 + ys * 11) % 23) == 0)] = 8
+    shift = 5 if piece == 3 else 0
+    a[body & (((xs * 3 + ys * 5 + shift) % 13) == 0)] = 6
+    a[body & (((xs * 7 + ys * 11 + shift) % 23) == 0)] = 8
+    if piece == 3:                      # two stones bedded in the face, lit from the top left
+        disc(a, 18, 20, 5, 3, 5)
+        disc(a, 18, 20, 4, 2, 6)
+        a[18, 15:18] = 7
+        disc(a, 25, 24, 2, 2, 5)
+        disc(a, 25, 24, 1, 1, 6)
 
     # Crest fringe: grass (or snow, or bark) hanging over the lip.
     for x in range(0, 32, 4):
-        drop = 2 + ((x // 4) % 3)
+        drop = 2 + ((x // 4 + (piece == 3)) % 3)
         a[9:9 + drop, x:x + 2] = 3
         a[9:9 + drop - 1, x + 1:x + 2] = 2
 
@@ -1251,13 +1259,19 @@ def pier_piece(piece):
     a[12:13, :] = 6
     for x in (6, 22):                   # nails
         a[7, x] = 8
-    a[13:32, 12:20] = 4                 # the post
-    a[13:32, 12:14] = 3
-    a[13:32, 18:20] = 5
-    a[13:32, 19:20] = 6
-    for y in range(18, 26, 2):          # rope wound round it
-        a[y, 11:21] = 7
-        a[y + 1, 11:21][a[y + 1, 11:21] > 0] = 5
+    if piece == 3:                      # between posts: a rope slung under the deck
+        for x in range(4, 28):
+            y = 13 + int(round(4 * np.sin(np.pi * (x - 4) / 24)))
+            a[y, x] = 7
+            a[y + 1, x] = 5
+    else:
+        a[13:32, 12:20] = 4             # the post
+        a[13:32, 12:14] = 3
+        a[13:32, 18:20] = 5
+        a[13:32, 19:20] = 6
+        for y in range(18, 26, 2):      # rope wound round it
+            a[y, 11:21] = 7
+            a[y + 1, 11:21][a[y + 1, 11:21] > 0] = 5
     _round_ends(a, piece, 2, 12, r=3)
     return _finish(a, pal, piece)
 
@@ -1265,7 +1279,8 @@ def pier_piece(piece):
 def beam_piece(piece):
     """The grove: a red-lacquered beam under a strip of dark roof tiles."""
     pal = [(0, 0, 0), (30, 20, 24), (130, 130, 150), (82, 82, 100), (52, 50, 64),
-           (246, 118, 84), (214, 62, 42), (150, 36, 30), (100, 24, 22), (244, 204, 92)]
+           (246, 118, 84), (214, 62, 42), (150, 36, 30), (100, 24, 22), (244, 204, 92),
+           (240, 234, 216)]
     a = canvas()
     a[2:7, :] = 3                       # roof tiles
     a[2, :] = 2
@@ -1276,13 +1291,19 @@ def beam_piece(piece):
     a[7:9, :] = 5
     a[15:17, :] = 7
     a[16, :] = 8
-    if piece != 1:                      # a gold cap on the ends, and a post
+    if piece in (0, 2):                 # a gold cap on the ends, and a post
         x0 = 0 if piece == 0 else 24
         a[8:16, x0:x0 + 8] = 9
         a[10:14, x0 + 2:x0 + 6] = 6
         a[17:32, x0 + 1:x0 + 7] = 6
         a[17:32, x0 + 1:x0 + 3] = 5
         a[17:32, x0 + 5:x0 + 7] = 7
+    elif piece == 3:                    # zigzag paper streamers on a cord
+        a[17, 6:26] = 4
+        for cx in (9, 21):
+            for k in range(10):
+                x = cx + (1 if (k // 2) % 2 else -1)
+                a[18 + k, x - 1:x + 2] = 10
     else:                               # a paper lantern hangs from the middle
         a[17:19, 15:17] = 4
         disc(a, 16, 24, 5, 5, 9)
@@ -1302,13 +1323,15 @@ def ice_piece(piece):
     a[16:22, :] = 6
     a[20:22, :] = 7
     ys, xs = np.mgrid[0:32, 0:32]
-    a[(a == 5) & (((xs + ys) % 11) < 2) & (ys < 16)] = 4     # glints running through it
-    a[(a == 5) & (((xs - ys) % 13) == 0)] = 6
+    turn = 6 if piece == 3 else 0
+    a[(a == 5) & (((xs + ys + turn) % 11) < 2) & (ys < 16)] = 4     # glints running through it
+    a[(a == 5) & (((xs - ys + turn) % 13) == 0)] = 6
     for x in range(32):                 # a lumpy snow cap
         top = 1 + ((x * 5 + piece * 3) % 3 == 0)
         a[top:6, x] = 3
         a[top:top + 2, x] = 2
-    for x0, length in ((5, 8), (13, 5), (21, 9), (27, 4)):   # icicles
+    drips = ((3, 5), (10, 10), (18, 4), (25, 8)) if piece == 3 else ((5, 8), (13, 5), (21, 9), (27, 4))
+    for x0, length in drips:                                   # icicles
         if piece == 0 and x0 < 6:
             continue
         for k in range(length):
@@ -1350,7 +1373,11 @@ def branch_piece(piece):
         disc(a, 24, 3, 3, 2, 3)
     else:                               # a few leaves hanging under the branch
         disc(a, 10 + piece * 6, 21, 2, 3, 9)
-        disc(a, 23, 22, 2, 3, 3)
+        disc(a, 23 if piece == 1 else 6, 22, 2, 3, 3)
+    if piece == 3:                      # a knot in the bark: a ring round a dark hollow
+        disc(a, 16, 12, 4, 3, 7)
+        disc(a, 16, 12, 3, 2, 5)
+        disc(a, 16, 12, 1, 1, 8)
     return _finish(a, pal, piece)
 
 
@@ -1364,8 +1391,12 @@ def girder_piece(piece):
     a[5, :] = 4
     a[6:16, 4:28] = 4                   # the web
     a[6:16, :] = 4
-    for cx in (8, 24):                  # lightening holes
+    for cx in ((16,) if piece == 3 else (8, 24)):              # lightening holes
         disc(a, cx, 11, 3, 3, 0)
+    if piece == 3:                      # a stencilled plate, bolted on
+        a[7:15, 3:9] = 8
+        a[8:14, 4:8] = 5
+        a[10:12, 5:7] = 8
     for x in range(2, 32, 6):           # rivets
         a[3, x] = 5
         a[4, x] = 2
@@ -1374,7 +1405,7 @@ def girder_piece(piece):
     ys, xs = np.mgrid[0:32, 0:32]
     a[(a == 4) & (((xs * 7 + ys * 3) % 17) == 0)] = 6          # rust streaks
     a[(a == 3) & (((xs * 5 + ys * 11) % 29) == 0)] = 7
-    if piece != 1:
+    if piece in (0, 2):
         x0 = 0 if piece == 0 else 26
         stripes = (xs >= x0) & (xs < x0 + 6) & (ys >= 6) & (ys < 16)
         a[stripes & (((xs + ys) // 2) % 2 == 0)] = 8
@@ -1400,6 +1431,9 @@ def coral_piece(piece):
     for cx in (9 + piece * 3, 22):                               # polyps and an anemone
         a[4, cx] = 5
         a[3, cx + 1] = 5
+    if piece == 3:                      # a starfish on the rock
+        for dx, dy in ((0, 0), (-1, 0), (1, 0), (0, -1), (0, 1), (-2, 1), (2, 1), (-1, 2), (1, 2), (0, -2)):
+            a[15 + dy, 24 + dx] = 5
     for x in range(11, 17):
         a[22:25 + (x % 3), x] = 9 if x % 2 else 0
     # the underside breaks off unevenly
@@ -1427,7 +1461,12 @@ def scaffold_piece(piece):
     ys, xs = np.mgrid[0:32, 0:32]
     band = (ys >= 12) & (xs >= 5) & (xs <= 26)
     a[band & (np.abs((xs - 5) - (ys - 12) * 22 // 19) <= 1)] = 5              # the X brace
-    a[band & (np.abs((26 - xs) - (ys - 12) * 22 // 19) <= 1)] = 5
+    if piece != 3:
+        a[band & (np.abs((26 - xs) - (ys - 12) * 22 // 19) <= 1)] = 5
+    else:                               # one brace, a coil of rope on the upright
+        for y in range(18, 26, 2):
+            a[y, 0:6] = 8
+            a[y + 1, 0:6][a[y + 1, 0:6] > 0] = 6
     a[10, 3] = a[10, 29] = 8            # bolts
     if piece == 1:                      # slime seeping off the edge
         a[9:15, 20:22] = 7
@@ -1448,6 +1487,9 @@ def slab_piece(piece):
     a[18:20, :] = 8
     ys, xs = np.mgrid[0:32, 0:32]
     a[(a == 6) & (((xs * 5 + ys * 3) % 23) == 0)] = 7            # cracks and grit
+    if piece == 3:                      # a crack running down the stone
+        for y in range(6, 18):
+            a[y, 18 + (y // 3) % 2] = 8
     for x in range(32):                 # an uneven underside
         cut = 19 - ((x * 5 + piece * 2) % 4)
         a[cut + 1:21, x] = 0
@@ -1466,8 +1508,156 @@ LEDGE_STYLES = {
 }
 
 
-def ledge_piece(biome, piece):
-    """A valley's ledge piece: its own structure where it has one, else the
-    grassy block."""
+# A valley's ledge pieces, in the order the game numbers them (MG_BP_* in
+# maiya_game.c). Every one is 32x32.
+LEDGE_PIECES = ("left", "middle", "right", "middle2", "single", "broken", "under")
+
+# What hangs under a valley's wide ledges (piece 6), and its colours: light,
+# dark, an accent.
+UNDERSIDES = {
+    "grass":   ("roots",     (150, 106, 66), (88, 60, 38), (118, 84, 54)),
+    "moss":    ("strands",   (124, 196, 148), (66, 142, 108), (52, 96, 74)),
+    "sand":    ("post",      (214, 166, 108), (116, 80, 50), (222, 204, 150)),
+    "autumn":  ("lantern",   (214, 62, 42), (100, 24, 22), (244, 204, 92)),
+    "snow":    ("icicles",   (196, 238, 252), (78, 150, 206), (255, 255, 255)),
+    "bark":    ("vines",     (84, 152, 62), (46, 92, 40), (148, 206, 92)),
+    "rust":    ("chain",     (136, 142, 156), (50, 52, 62), (174, 96, 54)),
+    "coral":   ("kelp",      (130, 220, 216), (54, 140, 132), (255, 150, 164)),
+    "stone":   ("legs",      (130, 98, 64), (74, 52, 34), (152, 228, 88)),
+    "savanna": ("roots",     (216, 170, 110), (140, 92, 56), (186, 130, 80)),
+}
+
+
+def _ledge_painter(biome):
     painter = LEDGE_STYLES.get(biome)
-    return painter(piece) if painter else ledge_block(biome, piece)
+    return painter if painter else (lambda piece: ledge_block(biome, piece))
+
+
+def _broken_end(mid):
+    """A middle piece snapped off on its right: a jagged, leaning edge,
+    outlined in the piece's own darkest colour (a crumbling ledge's end)."""
+    a = mid.copy()
+    solid = a[:, :, 3] > 0
+    ys, xs = np.mgrid[0:32, 0:32]
+    # a few chunks broken away, the break leaning back as it goes down
+    steps = (26, 26, 26, 26, 26, 24, 24, 24, 24, 25, 25, 25, 22, 22, 22, 22,
+             20, 20, 20, 20, 21, 21, 21, 21, 18, 18, 18, 18, 16, 16, 16, 16)
+    edge = np.array(steps)[ys]
+    keep = solid & (xs <= edge)
+    gone = solid & ~keep
+    a[~keep] = 0
+    if keep.any():
+        lum = a[:, :, :3].astype(int) @ np.array([3, 6, 1])
+        lum[~keep] = 1 << 20
+        darkest = a[np.unravel_index(int(np.argmin(lum)), lum.shape)][:3]
+        pad = np.pad(gone, 1)
+        touches = pad[1:-1, 2:] | pad[1:-1, :-2] | pad[2:, 1:-1] | pad[:-2, 1:-1]
+        a[keep & touches, :3] = darkest
+    return a
+
+
+def underside_drop(biome):
+    """How far below a ledge's top its underside piece hangs from: the row
+    under the last one its middle piece fills (most of the way across)."""
+    mid = _ledge_painter(biome)(3)
+    rows = np.nonzero((mid[:, :, 3] > 0).sum(axis=1) >= 20)[0]
+    return int(rows[-1]) + 1 if len(rows) else 32
+
+
+def underside_piece(biome):
+    """What hangs under a valley's wide ledge, drawn from its row 0 down:
+    roots, moss, a pier post, a lantern, long icicles, vines, a chain,
+    kelp, scaffold legs (UNDERSIDES)."""
+    style, light, dark, accent = UNDERSIDES[biome]
+    pal = [(0, 0, 0), (24, 20, 28), light, dark, accent]
+    a = canvas()
+
+    def strand(x, length, wiggle, width=2, colour=2):
+        for y in range(length):
+            cx = x + int(round(wiggle * np.sin(y / 3.0)))
+            w = max(1, width - (y * width) // max(1, length))
+            a[y, cx:cx + w] = colour
+            if w > 1:
+                a[y, cx + w - 1] = 3
+
+    if style in ("roots", "strands", "vines", "kelp"):
+        spec = {"roots":   ((5, 14, 1, 3), (12, 24, 1, 2), (20, 10, 1, 3), (26, 19, 1, 2)),
+                "strands": ((3, 10, 0, 2), (8, 18, 0, 2), (14, 8, 0, 2), (19, 22, 0, 2), (25, 12, 0, 2), (29, 6, 0, 1)),
+                "vines":   ((7, 26, 1, 2), (22, 18, 1, 2)),
+                "kelp":    ((6, 22, 2, 3), (16, 28, 2, 3), (25, 16, 2, 2))}[style]
+        for x, length, wiggle, width in spec:
+            strand(x, length, wiggle, width)
+            if style == "roots":            # rootlets
+                for y in range(4, length - 2, 6):
+                    a[y, x + 2:x + 4] = 3
+            if style == "vines":            # pairs of leaves
+                for y in range(5, length - 1, 7):
+                    disc(a, x - 2, y, 2, 1, 4)
+                    disc(a, x + 4, y + 2, 2, 1, 4)
+            if style == "kelp":             # a bladder near the tip
+                disc(a, x + 1, length - 3, 1, 2, 4)
+        if style == "strands":
+            a[0:2, :] = np.where(np.arange(32) % 3 == 0, 3, 2)
+    elif style == "post":                   # another post under the deck, barnacled
+        a[0:30, 12:20] = 2
+        a[0:30, 12:14] = 4
+        a[0:30, 18:20] = 3
+        for y in range(6, 14, 2):
+            a[y, 11:21] = 4
+            a[y + 1, 11:21] = 3
+        for x, y in ((13, 20), (17, 23), (14, 26)):
+            a[y, x:x + 2] = 4
+        a[30:32, 11:21] = 3
+    elif style == "lantern":                # a paper lantern on a long cord
+        a[0:9, 15:17] = 3
+        disc(a, 16, 16, 6, 7, 2)
+        for y in (11, 14, 17, 20):
+            a[y, 11:22][a[y, 11:22] > 0] = 3
+        a[9:11, 13:20] = 4
+        a[22:24, 13:20] = 4
+        a[24:30, 15:17] = 4
+    elif style == "icicles":
+        for x, length in ((7, 24), (14, 14), (22, 28), (29, 10)):
+            for y in range(length):
+                half = max(0, 2 - y * 3 // length)
+                a[y, x - half:x + half + 1] = 2 if y < length - 3 else 4
+            a[2:length - 4, x - 1] = 4
+    elif style == "chain":                  # a chain of links and a hook
+        for k, y in enumerate(range(0, 22, 4)):
+            if k % 2 == 0:
+                a[y:y + 5, 14:19] = 2
+                a[y + 1:y + 4, 15:18] = 0
+            else:
+                a[y:y + 5, 16] = 3
+        a[22:28, 18:20] = 2
+        a[27:29, 13:20] = 2
+        a[24:27, 13:15] = 2
+        a[24, 13] = 4
+    elif style == "legs":                   # the frame's legs, braced, down to rest
+        for x0 in (1, 27):
+            a[0:30, x0:x0 + 4] = 2
+            a[0:30, x0 + 3] = 3
+        ys, xs = np.mgrid[0:32, 0:32]
+        band = (ys >= 4) & (ys < 26) & (xs >= 5) & (xs <= 26)
+        a[band & (np.abs((xs - 5) - (ys - 4) * 21 // 22) <= 1)] = 2
+        a[30:32, 0:6] = 3
+        a[30:32, 26:32] = 3
+        a[0:9, 9:11] = 4                    # the seep dripping down a leg
+        a[9:11, 9] = 4
+    return _finish(a, pal, 6, open_sides=False)
+
+
+def ledge_piece(biome, piece):
+    """A valley's ledge piece (LEDGE_PIECES): its own structure where it has
+    one, else the grassy block. The single block is the two end pieces'
+    outer halves; the broken end a middle piece snapped off."""
+    paint = _ledge_painter(biome)
+    if piece <= 3:
+        return paint(piece)
+    if piece == 4:
+        out = paint(0).copy()
+        out[:, 16:] = paint(2)[:, 16:]
+        return out
+    if piece == 5:
+        return _broken_end(paint(1))
+    return underside_piece(biome)

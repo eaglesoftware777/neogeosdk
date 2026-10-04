@@ -1843,13 +1843,17 @@ def build():
                   + ", ".join(f"mg_landmark_{n}_map" for n in lm_names) + " };")
     header.append(c_array("mg_landmark_banks", lm_banks, "uint8_t"))
 
-    # One ledge set per valley: left end, middle, right end. The forest and
-    # the falls build theirs of turf blocks; every other valley of its own
-    # stuff (nature_art.ledge_piece: planks on posts, a lacquered beam,
-    # ice, a branch, a girder, coral, scaffolding, sandstone).
+    # One ledge set per valley (nature_art.LEDGE_PIECES): left end, middle,
+    # right end, a second middle, a single block, a broken end and what
+    # hangs under a wide ledge. The forest and the falls build theirs of
+    # turf blocks; every other valley of its own stuff (planks on posts, a
+    # lacquered beam, ice, a branch, a girder, coral, scaffolding,
+    # sandstone). MG_BLOCK_<SET>_UNDER: how far under a ledge's top its
+    # underside hangs from.
     for gname in ("grass", "moss", "sand", "autumn", "snow", "bark", "rust", "coral", "stone", "savanna"):
-        blocks = {str(k): nature_art.ledge_piece(gname, k) for k in range(3)}
+        blocks = {str(k): nature_art.ledge_piece(gname, k) for k in range(len(nature_art.LEDGE_PIECES))}
         shared_set(f"block_{gname}", blocks)
+        header.append(f"#define MG_BLOCK_{gname.upper()}_UNDER {nature_art.underside_drop(gname)}")
     print("  Props, pickups, decoration and ledges compiled", flush=True)
 
     print("== 7. Compiling Projectile and HUD Tools Sheet ==", flush=True)

@@ -75,7 +75,7 @@ enum {
      */
     SLOT_FAR = 1,        /* 32 strips, scenery far layer            */
     SLOT_ROAD = 33,      /* 32 strips, scenery road layer           */
-    SLOT_LEDGE = 65,     /* 12 blocks (24 strips), one-way ledges   */
+    SLOT_LEDGE = 65,     /* 9 blocks (18 strips), one-way ledges    */
     SLOT_SHOT = 224,     /* 8 projectile sprites                    */
     SLOT_SPARK = 230,    /* 12 particles: sparks, petals, dust      */
     SLOT_ITEM = 242,     /* 4 pickups (2 strips each)               */
@@ -1195,6 +1195,15 @@ static const uint16_t *NEOGEO_USER mg_block_set(uint8_t stage, const uint16_t **
     }
 }
 
+/* A ledge set's pieces (nature_art.LEDGE_PIECES), and how far under a
+ * ledge's top each set's underside hangs from (by MG_BLOCKS_*). */
+enum { MG_BP_LEFT, MG_BP_MID, MG_BP_RIGHT, MG_BP_MID2, MG_BP_SINGLE, MG_BP_BROKEN, MG_BP_UNDER };
+static const uint8_t mg_block_under[] = {
+    MG_BLOCK_GRASS_UNDER, MG_BLOCK_MOSS_UNDER, MG_BLOCK_SAND_UNDER, MG_BLOCK_AUTUMN_UNDER,
+    MG_BLOCK_SNOW_UNDER, MG_BLOCK_BARK_UNDER, MG_BLOCK_RUST_UNDER, MG_BLOCK_CORAL_UNDER,
+    MG_BLOCK_STONE_UNDER, MG_BLOCK_SAVANNA_UNDER
+};
+
 /* Each hazard has its own painting and two frames: the fire flickers, the
  * sludge bubbles, the leaking drum breathes gas, the spikes glint. The
  * toxic drum is what can be shut off for good, so it looks the part. */
@@ -1324,13 +1333,23 @@ static void NEOGEO_USER mg_pool_show(NGSpriteGroup *pool, uint16_t *owner, uint8
 static uint16_t mg_ledge_owner[MG_LEDGE_BLOCKS], mg_hazard_owner[MG_HAZARD_BLOCKS], mg_decor_owner[MG_DECOR_SLOTS];
 
 /*
- * One-way ledges are drawn as rows of 32x32 blocks (left / mid / right
- * piece) from a small pool; blocks outside the screen are released.
+ * One-way ledges are drawn as rows of 32x32 blocks from a small pool;
+ * blocks outside the screen are released. A ledge is its left end, its
+ * middles (the two kinds in turn, so a long one doesn't repeat), its right
+ * end -- broken off on a rotten ledge -- or one block for a small one. A
+ * ledge of three blocks or more has what hangs under it in its valley
+ * (roots, icicles, a chain...) under its middle, while the pool has room
+ * once every top is placed: the stage files keep that within the pool
+ * (levels.py --lint).
  */
 static void NEOGEO_USER mg_draw_ledges(int16_t camera_x)
 {
     MGPoolWant want[MG_LEDGE_BLOCKS];
-    uint8_t i, k, used = 0;
+    uint16_t under_key[3];              /* (fields, not struct copies: the  */
+    int16_t under_x[3], under_y[3];     /*  compiler's small-struct copy    */
+    uint8_t under_pal[3];               /*  can't be trusted at -O2)        */
+    uint8_t i, k, used = 0, unders = 0;
+    uint8_t drop = mg_block_under[mg_stage_blocks[mg.stage]];
     uint8_t road = (uint8_t)(!mg.boss_active && mg.state != MG_BONUS);
     uint32_t rotten = road ? mg_levels[mg.stage].rotten : 0u;
 
@@ -1369,19 +1388,41 @@ static void NEOGEO_USER mg_draw_ledges(int16_t camera_x)
         if (MG_SY(y) > 224 || MG_SY(y) < -32) continue;
 
         blocks = (uint8_t)((pl->width + 16) / 32);
-        if (blocks < 2) blocks = 2;
-        for (k = 0; k < blocks && used < MG_LEDGE_BLOCKS; k++) {
-            int16_t bx = (int16_t)(scr + k * 32 + shake);
-            uint8_t piece = k == 0 ? 0 : (k + 1 == blocks ? 2 : 1);
+        if (blocks < 1) blocks = 1;
+        {
+            uint8_t centre = (uint8_t)(blocks >= 3 ? blocks / 2 : 0xFF);
+            for (k = 0; k < blocks && used < MG_LEDGE_BLOCKS; k++) {
+                int16_t bx = (int16_t)(scr + k * 32 + shake);
+                uint8_t piece;
 
-            if (bx > 336 || bx < -32) continue;
-            want[used].key = (uint16_t)(((uint16_t)(i + 1u) << 4) | (k & 15u));
-            want[used].tile = mg.block_tiles[piece];
-            want[used].pal = rot ? PAL_BLOCK_ROT : PAL_BLOCK;
-            want[used].x = bx;
-            want[used].y = MG_SY(y);
-            used++;
+                if (blocks == 1) piece = MG_BP_SINGLE;
+                else if (k == 0) piece = MG_BP_LEFT;
+                else if (k + 1 == blocks) piece = rot ? MG_BP_BROKEN : MG_BP_RIGHT;
+                else piece = (uint8_t)((k == centre || ((k + i) & 1u)) ? MG_BP_MID2 : MG_BP_MID);
+
+                if (bx > 336 || bx < -32) continue;
+                want[used].key = (uint16_t)(((uint16_t)(i + 1u) << 5) | (k & 31u));
+                want[used].tile = mg.block_tiles[piece];
+                want[used].pal = rot ? PAL_BLOCK_ROT : PAL_BLOCK;
+                want[used].x = bx;
+                want[used].y = MG_SY(y);
+                used++;
+                if (k == centre && unders < 3 && MG_SY(y) + drop < 224) {
+                    under_key[unders] = (uint16_t)(((uint16_t)(i + 1u) << 5) | 31u);
+                    under_x[unders] = bx;
+                    under_y[unders] = (int16_t)(MG_SY(y) + drop);
+                    under_pal[unders] = rot ? PAL_BLOCK_ROT : PAL_BLOCK;
+                    unders++;
+                }
+            }
         }
+    }
+    for (k = 0; k < unders && used < MG_LEDGE_BLOCKS; k++, used++) {
+        want[used].key = under_key[k];
+        want[used].tile = mg.block_tiles[MG_BP_UNDER];
+        want[used].pal = under_pal[k];
+        want[used].x = under_x[k];
+        want[used].y = under_y[k];
     }
     mg_pool_show(mg.ledges, mg_ledge_owner, MG_LEDGE_BLOCKS, want, used);
 }
