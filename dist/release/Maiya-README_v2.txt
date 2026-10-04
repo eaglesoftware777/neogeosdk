@@ -19,9 +19,7 @@ WHAT'S NEW SINCE v1   (every change: Maiya-CHANGELOG_v2.txt)
 - A livelier run: two strides per cycle, legs passing under her, arms
   moving with them; she brakes when she turns, and her jump has four poses.
 - Backgrounds without a seam, and longer: five valleys show their whole
-  painted band, the others the painting and its mirror; small creatures and
-  lights of each valley drift far off (butterflies, leaves, snow, bubbles,
-  fireflies, embers).
+  painted band, the others the painting and its mirror.
 - The checkered shadows under every character are gone.
 - The guardian's health bar keeps up with its health; the flying guardians
   fall sooner.
