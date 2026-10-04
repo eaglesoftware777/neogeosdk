@@ -30,6 +30,27 @@ safer to boot, on every system it targets.
     is now skipped while nothing in it runs;
   - over a healed valley, the frame that works out the colour lift's
     next step no longer recolours banks as well.
+- **Nothing is drawn while the picture is on screen.** Sprite, text and
+  colour changes go to video memory only in the vertical blank, and the
+  blank now has a deadline: no write starts after line 8, eight lines
+  before the picture begins. Before, on a busy road most frames' writes
+  ran on into the top of the picture.
+  - What doesn't fit waits for the next blank, in order of importance:
+    every group that only moved goes first, so nothing slips against the
+    scrolling layers; then new content (a new animation frame, a shrink,
+    a show) for Maiya and the layers, the cast and objects, the text, and
+    last the scenery. On the busiest roads 1 to 3 such changes a frame
+    wait one frame; positions never do.
+  - A full list never writes at once any more: the group waits for its
+    next flush, character hides are a bitmap that can't overflow, and a
+    full text list rewrites whole text rows instead.
+  - A frame that ran past the blank keeps its writes for the next one
+    rather than tearing the picture.
+  - The commit itself is cheaper: a plain move is one address and two
+    words, a strip's map is written without a call per strip, shrinks
+    have their own short path, and ledges, hazards and decoration keep
+    their sprites while in view instead of trading pieces every 32
+    pixels.
 - **Sound sent sooner.** A queued byte for the sound CPU goes out first
   thing in the vertical blank, and the queue is tried again at the end of
   each frame's work, so a kill's or a pick-up's sound doesn't wait for

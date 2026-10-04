@@ -518,6 +518,12 @@ void NEOGEO_USER maiya_vblank(void)
 {
     NG_PERF_FRAME_END();        /* (measurement builds only: sdk/ng_perf.h) */
     mg_wait_vblank();
+    /* A frame whose work ran on past the blank arrives here while the
+     * picture is being drawn: writing then would tear it. Its writes wait
+     * for the next blank (the picture shows the last frame once more, as
+     * it would have anyway). A frame a few lines late, still in the top
+     * border, goes on: the commit's deadline keeps it off the picture. */
+    if (!ng_vram_window_open()) mg_wait_vblank();
     NG_PERF_FRAME_BEGIN();
     /* The next queued byte for the sound CPU before anything else: the
      * Z80 has the whole blank to take it, and the effect starts a frame's
@@ -1053,12 +1059,14 @@ static void NEOGEO_USER mg_background(uint8_t id, uint8_t restored)
     /* The painting may be wider than the layer's 512 pixels: the layer
      * starts on its first 32 columns and streams the rest (mg_layers_at). */
     ng_sprite_group_init(&mg.far, SLOT_FAR, 32, 12, far_tile, PAL_BG);
+    ng_sprite_group_set_priority(&mg.far, NG_SG_PRIO_HIGH);   /* the layers first in a short blank */
     ng_sprite_group_set_tile_stride(&mg.far, cols);
     ng_sprite_group_set_palette_map(&mg.far, far_map);
     ng_sprite_group_set_pos(&mg.far, 0, 0);
     ng_sprite_group_upload(&mg.far);
 
     ng_sprite_group_init(&mg.road, SLOT_ROAD, 32, 2, road_tile, PAL_BG);
+    ng_sprite_group_set_priority(&mg.road, NG_SG_PRIO_HIGH);
     ng_sprite_group_set_palette_map(&mg.road, road_map);
     ng_sprite_group_set_pos(&mg.road, 0, MG_GROUND_Y);
     ng_sprite_group_upload(&mg.road);
@@ -1123,10 +1131,12 @@ static void NEOGEO_USER mg_arena_background(uint8_t style)
     mg_cycle_source = 0;
     for (i = 0; i < count; i++) mg_palette((uint8_t)(PAL_BG + i), pal + i * 16u);
     ng_sprite_group_init(&mg.far, SLOT_FAR, 32, 12, far, PAL_BG);
+    ng_sprite_group_set_priority(&mg.far, NG_SG_PRIO_HIGH);
     ng_sprite_group_set_palette_map(&mg.far, far_map);
     ng_sprite_group_set_pos(&mg.far, 0, 0);
     ng_sprite_group_upload(&mg.far);
     ng_sprite_group_init(&mg.road, SLOT_ROAD, 32, 2, road, PAL_BG);
+    ng_sprite_group_set_priority(&mg.road, NG_SG_PRIO_HIGH);
     ng_sprite_group_set_palette_map(&mg.road, road_map);
     ng_sprite_group_set_pos(&mg.road, 0, MG_GROUND_Y);
     ng_sprite_group_upload(&mg.road);
@@ -1273,11 +1283,53 @@ static const MGPlatform *NEOGEO_USER mg_platform(uint8_t index)
 }
 
 /*
+ * A pool of sprite groups for what is on screen: each block keeps the group
+ * it was given for as long as it stays in view, and only a block coming
+ * into view takes a group anew. Handed out in screen order, as they were,
+ * every group took its neighbour's piece each time the first left the
+ * screen -- a burst of full rewrites for the vertical blank, every 32
+ * pixels of road. A want's key is never 0 (a free group's owner).
+ */
+typedef struct { uint16_t key, tile; int16_t x, y; uint8_t pal; } MGPoolWant;
+
+static void NEOGEO_USER mg_pool_show(NGSpriteGroup *pool, uint16_t *owner, uint8_t n,
+                                     const MGPoolWant *want, uint8_t wn)
+{
+    uint16_t used = 0, placed = 0;      /* (a pool is under 16 groups) */
+    uint8_t i, j;
+    for (i = 0; i < wn; i++) {          /* in view still: its own group */
+        for (j = 0; j < n; j++) {
+            if (owner[j] != want[i].key || (used & (1u << j))) continue;
+            used |= (uint16_t)(1u << j);
+            placed |= (uint16_t)(1u << i);
+            ng_sprite_group_show_at(&pool[j], want[i].tile, want[i].pal, want[i].x, want[i].y);
+            break;
+        }
+    }
+    for (i = 0; i < wn; i++) {          /* new in view: a free group */
+        if (placed & (1u << i)) continue;
+        for (j = 0; j < n && (used & (1u << j)); j++) {}
+        if (j == n) break;
+        used |= (uint16_t)(1u << j);
+        owner[j] = want[i].key;
+        ng_sprite_group_show_at(&pool[j], want[i].tile, want[i].pal, want[i].x, want[i].y);
+    }
+    for (j = 0; j < n; j++) {           /* gone from view */
+        if (used & (1u << j)) continue;
+        owner[j] = 0;
+        ng_sprite_group_set_visible(&pool[j], 0);
+        ng_sprite_group_flush(&pool[j]);
+    }
+}
+static uint16_t mg_ledge_owner[MG_LEDGE_BLOCKS], mg_hazard_owner[MG_HAZARD_BLOCKS], mg_decor_owner[MG_DECOR_SLOTS];
+
+/*
  * One-way ledges are drawn as rows of 32x32 blocks (left / mid / right
  * piece) from a small pool; blocks outside the screen are released.
  */
 static void NEOGEO_USER mg_draw_ledges(int16_t camera_x)
 {
+    MGPoolWant want[MG_LEDGE_BLOCKS];
     uint8_t i, k, used = 0;
     uint8_t road = (uint8_t)(!mg.boss_active && mg.state != MG_BONUS);
     uint32_t rotten = road ? mg_levels[mg.stage].rotten : 0u;
@@ -1320,20 +1372,24 @@ static void NEOGEO_USER mg_draw_ledges(int16_t camera_x)
         if (blocks < 2) blocks = 2;
         for (k = 0; k < blocks && used < MG_LEDGE_BLOCKS; k++) {
             int16_t bx = (int16_t)(scr + k * 32 + shake);
-            NGSpriteGroup *g = &mg.ledges[used];
             uint8_t piece = k == 0 ? 0 : (k + 1 == blocks ? 2 : 1);
 
             if (bx > 336 || bx < -32) continue;
-            ng_sprite_group_show_at(g, mg.block_tiles[piece], rot ? PAL_BLOCK_ROT : PAL_BLOCK, bx, MG_SY(y));
+            want[used].key = (uint16_t)(((uint16_t)(i + 1u) << 4) | (k & 15u));
+            want[used].tile = mg.block_tiles[piece];
+            want[used].pal = rot ? PAL_BLOCK_ROT : PAL_BLOCK;
+            want[used].x = bx;
+            want[used].y = MG_SY(y);
             used++;
         }
     }
-    if (used < MG_LEDGE_BLOCKS) ng_sprite_groups_hide_all(&mg.ledges[used], (uint8_t)(MG_LEDGE_BLOCKS - used));
+    mg_pool_show(mg.ledges, mg_ledge_owner, MG_LEDGE_BLOCKS, want, used);
 }
 
 static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
 {
     const MGLevel *level = &mg_levels[mg.stage];
+    MGPoolWant want[MG_HAZARD_BLOCKS];
     uint8_t i, k, used = 0, signs = 0;
 
     for (i = 0; i < MG_HAZARD_COUNT; i++) {
@@ -1347,7 +1403,6 @@ static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
         blocks = (uint8_t)((hz->width + 31) / 32);
         for (k = 0; k < blocks && used < MG_HAZARD_BLOCKS; k++) {
             int16_t bx = (int16_t)(scr + k * 32);
-            NGSpriteGroup *g = &mg.hazards[used];
 
             if (bx > 336 || bx < -32) continue;
             if (hz->type == MG_H_PIT) {
@@ -1355,16 +1410,16 @@ static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
                 const uint16_t *pal;
                 const uint16_t *art = mg_pit_art(&pal);
                 uint8_t piece = (uint8_t)(hz->width <= 32 ? 0 : (hz->width <= 48 ? 1 + k : 3 + k));
-                ng_sprite_group_set_tile_base(g, art[((mg.tick >> 4) & 1) * 5 + piece]);
-                ng_sprite_group_set_palette(g, PAL_PIT);
+                want[used].tile = art[((mg.tick >> 4) & 1) * 5 + piece];
+                want[used].pal = PAL_PIT;
             } else {
-                ng_sprite_group_set_tile_base(g, mg_hazard_tile(hz->type));
-                ng_sprite_group_set_palette(g, PAL_HAZARD);
+                want[used].tile = mg_hazard_tile(hz->type);
+                want[used].pal = PAL_HAZARD;
             }
+            want[used].key = (uint16_t)(((uint16_t)(i + 1u) << 4) | (k & 15u));
+            want[used].x = bx;
             /* A pit is cut into the road itself; everything else stands on it. */
-            ng_sprite_group_set_pos(g, bx, MG_SY(hz->type == MG_H_PIT ? MG_GROUND_Y : MG_GROUND_Y - 32));
-            ng_sprite_group_set_visible(g, 1);
-            ng_sprite_group_flush(g);
+            want[used].y = MG_SY(hz->type == MG_H_PIT ? MG_GROUND_Y : MG_GROUND_Y - 32);
             used++;
         }
         /* A pit reads as a texture change more than a hole at a glance, so
@@ -1383,7 +1438,7 @@ static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
             }
         }
     }
-    if (used < MG_HAZARD_BLOCKS) ng_sprite_groups_hide_all(&mg.hazards[used], (uint8_t)(MG_HAZARD_BLOCKS - used));
+    mg_pool_show(mg.hazards, mg_hazard_owner, MG_HAZARD_BLOCKS, want, used);
     if (signs < MG_SIGNS) ng_sprite_groups_hide_all(&mg.signs[signs], (uint8_t)(MG_SIGNS - signs));
 }
 
@@ -1413,6 +1468,7 @@ static void NEOGEO_USER mg_landmark_setup(void)
         mg_palette((uint8_t)(PAL_LANDMARK + k), mg_landmark_pals[lm] + (uint16_t)k * 16u);
     ng_sprite_group_init(&mg_landmark_g, SLOT_DECOR, MG_LANDMARK_W / 16, MG_LANDMARK_H / 16,
                          mg_landmark_tiles[lm], PAL_LANDMARK);
+    ng_sprite_group_set_priority(&mg_landmark_g, NG_SG_PRIO_LOW);
     ng_sprite_group_set_tile_stride(&mg_landmark_g, MG_LANDMARK_W / 16);
     ng_sprite_group_set_palette_map(&mg_landmark_g, mg_landmark_maps[lm]);
     ng_sprite_group_set_visible(&mg_landmark_g, 0);
@@ -1452,6 +1508,7 @@ static uint8_t NEOGEO_USER mg_landmark_draw(int16_t camera_x)
 
 static void NEOGEO_USER mg_draw_decor(int16_t camera_x)
 {
+    MGPoolWant want[MG_DECOR_SLOTS];
     uint8_t i, used = 0;
 
     if (mg_landmark_draw(camera_x)) return;
@@ -1459,14 +1516,16 @@ static void NEOGEO_USER mg_draw_decor(int16_t camera_x)
     for (i = 0; i < MG_DECOR_COUNT && used < MG_DECOR_SLOTS; i++) {
         const MGDecor *d = &mg_decor[mg.stage][i];
         int16_t scr = (int16_t)(d->x - camera_x);
-        NGSpriteGroup *g;
 
         if (!d->x || scr < -32 || scr > 336) continue;
-        g = &mg.decor[used];
-        ng_sprite_group_show_at(g, mg_decor_tiles[d->kind], PAL_DECOR, scr, MG_SY(d->y));
+        want[used].key = (uint16_t)(i + 1u);
+        want[used].tile = mg_decor_tiles[d->kind];
+        want[used].pal = PAL_DECOR;
+        want[used].x = scr;
+        want[used].y = MG_SY(d->y);
         used++;
     }
-    if (used < MG_DECOR_SLOTS) ng_sprite_groups_hide_all(&mg.decor[used], (uint8_t)(MG_DECOR_SLOTS - used));
+    mg_pool_show(mg.decor, mg_decor_owner, MG_DECOR_SLOTS, want, used);
 }
 
 /* Climbing vines run from the road to a canopy shelf; one sprite group each. */
@@ -1622,7 +1681,10 @@ static void NEOGEO_USER mg_update_sparks(int16_t camera_x)
             uint8_t sc;
             /* life * 207 / shrink in one 68000 divide (the quotient fits a word) */
             __asm__ ("divu.w %1,%0" : "+d" (q) : "d" ((uint16_t)p->shrink));
-            sc = (uint8_t)(48u + (uint16_t)q);
+            /* in sixteenths, as the hardware's sideways shrink steps anyway:
+             * a 256th up or down on a 16-pixel spark doesn't show, and the
+             * spark is rewritten only when it does (a few times a life) */
+            sc = (uint8_t)((48u + (uint16_t)q) | 0x0Fu);
             int16_t in = (int16_t)(8 - (sc >> 5));
             ng_sprite_group_set_scale(&p->sprite, sc, sc);
             ng_sprite_group_set_pos(&p->sprite, (int16_t)(scr_x + in), MG_SY(p->y + in));
@@ -2310,8 +2372,11 @@ static void NEOGEO_USER mg_falls_begin(uint16_t slot, uint8_t count)
         mg_falls[i].live = 0;
         ng_sprite_group_init(&mg_falls[i].sprite, (uint16_t)(slot + i), 1, 1,
                              MG_TOOL_TILE + MG_T_FLOWER, PAL_TOOL);
+        ng_sprite_group_set_priority(&mg_falls[i].sprite, NG_SG_PRIO_LOW);
         ng_sprite_group_set_visible(&mg_falls[i].sprite, 0);
-        ng_sprite_group_upload(&mg_falls[i].sprite);
+        /* (in play -- a Secret Art -- so through the blank's commit) */
+        ng_sprite_group_mark_dirty(&mg_falls[i].sprite, NG_SGF_DIRTY_ALL);
+        ng_sprite_group_flush(&mg_falls[i].sprite);
     }
 }
 
@@ -3736,6 +3801,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.player = mg_character(K_PLAYER, mg.flying ? 96 : 64, mg.flying ? 130 : -24,
                              PAL_HERO, NG_RENDER_BAND_PLAYER, 0);
     if (!mg.player) return;
+    ng_char_set_vram_priority(mg.player, NG_SG_PRIO_HIGH);   /* her sprite first in a short blank */
     mg.player->hp = mg.player->max_hp = MAX_HP;
     ng_physics_attach(mg.player, NG_PHYSICS_GRAVITY | NG_PHYSICS_SOLIDS);
     mg_player_gravity();
@@ -3789,11 +3855,13 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
         ng_sprite_group_set_visible(&mg.items[i].sprite, 0);
     }
     for (i = 0; i < MG_LEDGE_BLOCKS; i++) {
+        mg_ledge_owner[i] = 0;                    /* (no block holds it yet) */
         ng_sprite_group_init(&mg.ledges[i], (uint16_t)(SLOT_LEDGE + i * 2), 2, 2,
                              mg.block_tiles[1], PAL_BLOCK);
         ng_sprite_group_set_visible(&mg.ledges[i], 0);
     }
     for (i = 0; i < MG_HAZARD_BLOCKS; i++) {
+        mg_hazard_owner[i] = 0;                    /* (no block holds it yet) */
         ng_sprite_group_init(&mg.hazards[i], (uint16_t)(SLOT_HAZARD + i * 2), 2, 2,
                              mg_hazard_tiles[MG_HZ_SPIKES0], PAL_HAZARD);
         ng_sprite_group_set_visible(&mg.hazards[i], 0);
@@ -3804,8 +3872,10 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
         ng_sprite_group_set_visible(&mg.signs[i], 0);
     }
     for (i = 0; i < MG_DECOR_SLOTS; i++) {
+        mg_decor_owner[i] = 0;                    /* (no block holds it yet) */
         ng_sprite_group_init(&mg.decor[i], (uint16_t)(SLOT_DECOR + i * 2), 2, 2,
                              mg_decor_tiles[MG_D_GRASS], PAL_DECOR);
+        ng_sprite_group_set_priority(&mg.decor[i], NG_SG_PRIO_LOW);
         ng_sprite_group_set_visible(&mg.decor[i], 0);
     }
     for (i = 0; i < MG_VINE_COUNT; i++) {
@@ -3824,6 +3894,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
                                  : mg_front_tiles[MG_FR_FERN];
         ng_sprite_group_init(&mg.front[i], (uint16_t)(SLOT_FRONT + i * 2), 2, 3,
                              tile, PAL_FRONT);
+        ng_sprite_group_set_priority(&mg.front[i], NG_SG_PRIO_LOW);
         ng_sprite_group_set_visible(&mg.front[i], 0);
     }
 
@@ -9145,6 +9216,7 @@ static void NEOGEO_USER mg_tour_begin(void)
     ng_sprite_group_flush(&mg.hud[10]);
     mg_palette(PAL_EAGLE, mg_glider_pal);
     ng_sprite_group_init(&mg.glider, SLOT_GLIDER, 6, 3, mg_glider_tiles[0], PAL_EAGLE);
+    ng_sprite_group_set_priority(&mg.glider, NG_SG_PRIO_HIGH);
     ng_sprite_group_set_visible(&mg.glider, 0);
     mg.facing = 0;
     mg.tour_x = 0;

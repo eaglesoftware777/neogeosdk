@@ -17,6 +17,9 @@ static void NEOGEO_USER ng_char_sync_group(NGSpriteGroup *g, NGCharacter *c,
         ng_sprite_group_init(g, c->sprite_first, strips, height,
                              c->sprite_tile, c->palette);
     }
+#ifndef __cplusplus
+    g->prio = c->vram_prio;
+#endif
 #ifdef __cplusplus
     ng_sprite_group_set_tile_base(g, c->sprite_tile);
     ng_sprite_group_set_palette(g, c->palette);

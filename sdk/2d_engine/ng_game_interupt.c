@@ -138,7 +138,9 @@ void NEOGEO_USER ng_game_engine_frame(void)
         ng_game_engine_draw();
         ng_palette_fx_update();
         ng_feedback_update();
-        ng_render_queue_flush();
+#ifndef NG_VRAM_DEFER
+        ng_render_queue_flush();   /* (NG_VRAM_DEFER: ng_vram_commit, in the blank) */
+#endif
         return;
     }
 
@@ -166,7 +168,9 @@ void NEOGEO_USER ng_game_engine_frame(void)
     ng_particles_update();
     ng_palette_fx_update();
     ng_feedback_update();
-    ng_render_queue_flush();
+#ifndef NG_VRAM_DEFER
+    ng_render_queue_flush();       /* (NG_VRAM_DEFER: ng_vram_commit, in the blank) */
+#endif
 }
 
 void NEOGEO_USER ng_game_interupt(void)

@@ -78,3 +78,31 @@ Checked with a write tap on `$320000` and a tap on the Z80's reply port (`$0C`) 
 The vertical blank's interrupt sets the frame flag, acknowledges, kicks the watchdog and reads the controls through the system ROM (`SYS_IO`); the frame's VRAM work runs after the wait, in the main loop. Measured, the interrupt side and the whole sound path cost under 1.5% of a frame: there was nothing to gain there.
 
 The 68000 is one processor: what runs beside it is the Z80, which plays all the sound on its own from the queued bytes. Work that doesn't need every frame is spread over frames instead: the road's spawn scan (half a frame's worth every other frame), a fade (half the banks a frame), the colour lift (two banks a frame, its tables on a frame of their own).
+
+## Writes only in the blank
+
+Measured after the first part of this work, on the timing-only build with the commit's own start and end recorded: on a busy road (the Autumn Grove, the Valley of Falls) the commit ran 30 to 50 lines from line 244, past the first line of the picture (16), on 30 to 75% of frames.
+
+The commit (`ng_vram_commit`, `sdk/2d_engine/ng_sprite_group.c`) now has a deadline, `NG_VRAM_DEADLINE` (line 8): no job starts after it. What doesn't fit stays listed for the next blank:
+- phase A, every listed group that only moved: its driving strip's two words, one VRAM address with the step set to $200 (SCB3 and SCB4 are $200 apart);
+- phase B, content by priority: `NG_SG_PRIO_HIGH` (the player, the scrolling layers), a streaming layer's strip columns, `NORMAL` (the cast, shots, objects), the FIX text, `LOW` (decoration). A job starts only with its estimate and half again to spare.
+
+The colour upload (`ng_palfx_vblank`) keeps to the same deadline; a whole-screen upload (82 banks, about 18 lines) starts only with room for it.
+
+Measured on 1,500 frames each, running and jumping:
+
+| Scenario | Commits whose last write fell on a drawn line | Content changes left for the next blank, a frame |
+|---|---|---|
+| Stage 2 Valley of Falls | 0 | 2.7 |
+| Stage 4 Autumn Grove | 0 | 2.7 |
+| Stage 6 World Tree | 1 | 1.8 |
+| Stage 10 Golden Savanna | 2 | 1.2 |
+
+(The content count is taken at the commit's end in the measurement build, which costs it a little of the blank: a release build leaves less.)
+
+What made room:
+- a plain move from about 300 to under 200 clocks, and no move waits behind content;
+- `ngsg_put_strip` always inlined: a 2 x 2 block's new map from 1,676 to 1,368 clocks, the player's from 5,832 to 4,348;
+- shrinks (sparks, petals) through their own path, and dust sparks rescaled in sixteenths, the hardware's own sideways step, instead of every frame;
+- ledges, hazards and decoration keep their sprite groups while in view (`mg_pool_show`): handed out in screen order, every block took its neighbour's piece each time the first left the screen.
+

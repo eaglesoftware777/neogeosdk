@@ -8,6 +8,9 @@
 static NGPalFxSlot ng_palfx_slots[NG_PALFX_MAX_SLOTS];
 
 #include "ng_palette_math.h"
+#ifdef NG_VRAM_DEFER
+#include "ng_sprite_group.h"   /* ng_vram_lines_left: the blank's deadline */
+#endif
 
 #if NG_PALFX_SCREEN
 /* ------------------------------------------------------------------ */
@@ -330,6 +333,16 @@ void NEOGEO_USER ng_palfx_vblank(void)
      * came up white on a dimmer picture for a frame. It all goes at the
      * next blank, with the rest. */
     if (ng_palfx_scr.half_done) return;
+#ifdef NG_VRAM_DEFER
+    /* Colours change only in the blank too (ng_sprite_group.h): every bank
+     * at once (a bank a movem pair, some 166 clocks: about a quarter of a
+     * line) starts only with room for all of it -- 22 lines for 82 banks,
+     * which the blank has when this runs first; single banks go while
+     * there is time; the rest wait. */
+    if (ng_palfx_scr.all_dirty &&
+        ng_vram_lines_left() < (uint8_t)(2u + (ng_palfx_scr.count >> 2)))
+        return;
+#endif
     if (ng_palfx_scr.all_dirty) {
         ng_palfx_scr.all_dirty = 0;
         for (i = 0; i < bytes; i++) ng_palfx_scr.dirty[i] = 0;
@@ -342,6 +355,9 @@ void NEOGEO_USER ng_palfx_vblank(void)
     for (i = 0; i < bytes; i++) {
         bits = ng_palfx_scr.dirty[i];
         if (!bits) continue;
+#ifdef NG_VRAM_DEFER
+        if (!ng_vram_lines_left()) break;           /* (eight banks are under three lines) */
+#endif
         ng_palfx_scr.dirty[i] = 0;
         for (bank = (uint8_t)(i << 3); bits; bits >>= 1, bank++) {
             if (bits & 1u)

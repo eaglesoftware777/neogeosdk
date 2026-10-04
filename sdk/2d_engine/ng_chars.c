@@ -181,6 +181,7 @@ NGCharacter* NEOGEO_USER chars_add(uint8_t kind, int16_t x, int16_t y)
             c->cull_margin_right = 0;
             c->cull_margin_top = 0;
             c->cull_margin_bottom = 0;
+            c->vram_prio = 0;
             c->anim_clip = 0;
             c->anim_frame = 0;
             c->anim_timer = 0;
@@ -276,7 +277,11 @@ uint8_t NEOGEO_USER ng_chars_index(NGCharacter *c)
      * offset is under 64K records' worth, so the quotient fits a word. */
     off = (uint32_t)((const char *)c - (const char *)ng_chars);
     if (off >= (uint32_t)sizeof(ng_chars)) return 0xff;
+#ifdef __m68k__
     __asm__ ("divu.w %1,%0" : "+d" (off) : "i" ((uint16_t)sizeof(NGCharacter)));
+#else
+    off /= (uint32_t)sizeof(NGCharacter);   /* (the host unit tests) */
+#endif
     return (uint8_t)off;
 }
 
@@ -322,6 +327,7 @@ void NEOGEO_USER ng_chars_reset_slot(uint8_t index)
     c->cull_margin_right = 0;
     c->cull_margin_top = 0;
     c->cull_margin_bottom = 0;
+    c->vram_prio = 0;
     c->anim_clip = 0;
     c->anim_frame = 0;
     c->anim_timer = 0;
@@ -693,6 +699,11 @@ uint8_t NEOGEO_USER ng_char_bind_asset(NGCharacter *c, const NGSpriteAssetView *
     c->sprite_offset_x = asset->offset_x;
     c->sprite_offset_y = asset->offset_y;
     return 1u;
+}
+
+void NEOGEO_USER ng_char_set_vram_priority(NGCharacter *c, uint8_t prio)
+{
+    if (c) c->vram_prio = prio;
 }
 
 void NEOGEO_USER ng_char_set_cull_margin(NGCharacter *c, int16_t l, int16_t r, int16_t t, int16_t b)
