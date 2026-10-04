@@ -225,8 +225,10 @@ def main():
         command = [args.make]
         if os.name == "nt":
             command += ["-f", "MakefileWin32.mak"]
+        # (no EagleBIOS build here: the workspace has no bios/, and its runs
+        # boot the one the main tree builds -- eagle_bios_path)
         command += ["GAME=maiya", "GAME_CFG_FILE=games/maiya/game.cfg",
-                    f"SDKHOME={ROOT.parent}", f"PLATFORM={args.platform}", "p1"]
+                    f"SDKHOME={ROOT.parent}", f"PLATFORM={args.platform}", "USE_EAGLE_BIOS=0", "p1"]
         if args.perf:
             command.append("PERF=1")
         elif args.perf_lite:
