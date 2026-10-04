@@ -98,6 +98,12 @@ fully in view on the top one), and a vine may climb up to 256 px from the
 road to reach it. The view rises with her once she is above y 64 and eases
 back down as she comes down; the painted scenery behind stays put.
 
+`objective` (optional, `none` when left out) is what the gate asks for
+besides the key: `drums`, every toxic drum on the road shut off (stand
+close, press Up). The stage then has exactly three `toxic` hazards; the
+Rio Negro Works asks it, and there a drum needs nothing she carries to
+shut it (on the last valleys a drum needs a secret found first).
+
 Names stand for the game's constants, lower case without the prefix:
 
 | Field | Constants | Examples |
@@ -155,6 +161,23 @@ file in each finding:
 ```
 ERROR: EMERALD FOREST (level 0, 01_emerald_forest.json), pickup 0 at (330,130): inside -- ...
 ```
+
+`levels.py --lint` goes on to how a stage plays (warnings; `--strict`
+makes them fail), worked out from her own jump (`maiya_game.c`'s speeds
+and gravity, the reef's lighter one included):
+
+- the same height three ledges in a row, a run of three heights coming
+  round three times or more (a staircase on repeat), one width for most
+  ledges, the same gap between ledges five times running;
+- a ledge she can't reach from the road, a vine's top or another ledge
+  she can reach, with a running jump (and whether the high leap would);
+- a pick-up, a secret or the key she can't touch from anywhere she
+  stands, or in a running jump off its edge;
+- hazards less than 48 px apart, or on the road she starts on;
+- more than three creatures on one screen, or none for 1,100 px;
+- more ledge blocks on one screen than the pool of 9 sprites draws, or
+  more with what hangs under the wide ones (it is then left off);
+- the key, the hideout or a captive in the gate's landmark.
 
 Converting the tables that were hand-written in C to these files left the
 P-ROM byte-for-byte the same.

@@ -10,8 +10,8 @@
   "posted": "drone",
   "gate_x": 4508,
   "landmark": "autumn",
-  "key": {"x": 1936, "y": 42},
-  "hideout": {"x": 3128, "y": 68, "hint": "KNEEL ON THE LAST HIGH BEAM"},
+  "key": {"x": 1952, "y": 76},
+  "hideout": {"x": 3544, "y": 88, "hint": "KNEEL ON THE LAST HIGH BEAM"},
   "guardian": {
     "name": "INFERNO JACKAL",
     "style": "jackal",
@@ -26,25 +26,31 @@
   "healed": ["THE GROVE GLOWS GOLD, NOT FIRE", "THE DEER GRAZE UNDER THE MAPLES"],
   "briefing": ["TORCH BOTS SET THE GROVE ABLAZE", "FOR THE INFERNO JACKAL"],
   "platforms": [
-    {"x": 272, "y": 140, "w": 96},
-    {"x": 472, "y": 104, "w": 80, "rotten": true},
-    {"x": 672, "y": 68, "w": 96},
-    {"x": 872, "y": 140, "w": 96},
-    {"x": 1072, "y": 104, "w": 80, "rotten": true},
-    {"x": 1272, "y": 68, "w": 96},
-    {"x": 1472, "y": 140, "w": 96},
-    {"x": 1672, "y": 104, "w": 80, "rotten": true},
-    {"x": 1868, "y": 68, "w": 96},
-    {"x": 2068, "y": 140, "w": 96},
-    {"x": 2268, "y": 104, "w": 80, "rotten": true},
-    {"x": 2468, "y": 68, "w": 96},
-    {"x": 2668, "y": 140, "w": 96},
-    {"x": 2868, "y": 104, "w": 80, "rotten": true},
-    {"x": 3088, "y": 68, "w": 96},
-    {"x": 3464, "y": 144, "w": 96},
-    {"x": 3624, "y": 112, "w": 96, "rotten": true},
-    {"x": 3784, "y": 80, "w": 96},
-    {"x": 3924, "y": 120, "w": 64}
+    {"x": 240, "y": 104, "w": 64},
+    {"x": 368, "y": 96, "w": 64},
+    {"x": 544, "y": 104, "w": 80},
+    {"x": 704, "y": 104, "w": 80},
+    {"x": 976, "y": 144, "w": 48, "rotten": true},
+    {"x": 1088, "y": 112, "w": 64, "rotten": true},
+    {"x": 1200, "y": 104, "w": 48},
+    {"x": 1312, "y": 144, "w": 64},
+    {"x": 1504, "y": 120, "w": 80},
+    {"x": 1680, "y": 96, "w": 48},
+    {"x": 1792, "y": 136, "w": 64},
+    {"x": 1920, "y": 104, "w": 96},
+    {"x": 2048, "y": 104, "w": 32, "rotten": true},
+    {"x": 2208, "y": 136, "w": 80},
+    {"x": 2336, "y": 128, "w": 112},
+    {"x": 2592, "y": 136, "w": 64},
+    {"x": 2768, "y": 120, "w": 80},
+    {"x": 2912, "y": 104, "w": 80, "rotten": true},
+    {"x": 3184, "y": 144, "w": 64},
+    {"x": 3344, "y": 120, "w": 80},
+    {"x": 3504, "y": 88, "w": 80},
+    {"x": 3760, "y": 136, "w": 32, "rotten": true},
+    {"x": 3840, "y": 104, "w": 48},
+    {"x": 3920, "y": 136, "w": 48},
+    {"x": 4128, "y": 136, "w": 112}
   ],
   "encounters": [
     {"x": 216, "enemy": "goblin"},
@@ -74,12 +80,12 @@
     {"x": 4360, "enemy": "torchbot"}
   ],
   "archers": [
-    {"x": 500, "y": 104},
-    {"x": 1296, "y": 68},
-    {"x": 1896, "y": 68},
-    {"x": 2496, "y": 68},
-    {"x": 3112, "y": 68},
-    {"x": 3814, "y": 80}
+    {"x": 584, "y": 104},
+    {"x": 1344, "y": 144},
+    {"x": 1824, "y": 136},
+    {"x": 2392, "y": 128},
+    {"x": 3216, "y": 144},
+    {"x": 3864, "y": 104}
   ],
   "hazards": [
     {"x": 560, "w": 48, "type": "pit"},
@@ -98,25 +104,25 @@
     {"x": 3176, "who": "sunboy"}
   ],
   "secrets": [
-    {"x": 308, "y": 110, "type": "chest"},
-    {"x": 708, "y": 38, "type": "rose"},
+    {"x": 256, "y": 68, "type": "chest"},
+    {"x": 384, "y": 60, "type": "rose"},
     {"x": 3272, "y": 16, "type": "gem"},
-    {"x": 1908, "y": 38, "type": "chest"},
-    {"x": 2504, "y": 38, "type": "rose"},
-    {"x": 3124, "y": 38, "type": "gem"}
+    {"x": 1952, "y": 68, "type": "chest"},
+    {"x": 2608, "y": 100, "type": "rose"},
+    {"x": 3200, "y": 108, "type": "gem"}
   ],
   "pickups": [
-    {"x": 500, "y": 70, "kind": "gold"},
-    {"x": 660, "y": 40, "kind": "life"},
-    {"x": 972, "y": 168, "kind": "spring"},
+    {"x": 568, "y": 68, "kind": "gold"},
+    {"x": 728, "y": 68, "kind": "life"},
+    {"x": 984, "y": 108, "kind": "spring"},
     {"x": 1116, "y": 70, "kind": "gold"},
     {"x": 1160, "y": 166, "kind": "flower"},
     {"x": 1660, "y": 168, "kind": "veil"},
-    {"x": 1824, "y": 166, "kind": "charm"},
+    {"x": 1808, "y": 100, "kind": "charm"},
     {"x": 2372, "y": 168, "kind": "silver"},
-    {"x": 2416, "y": 164, "kind": "critter"},
+    {"x": 2376, "y": 92, "kind": "critter"},
     {"x": 2800, "y": 24, "kind": "lily"},
-    {"x": 3656, "y": 82, "kind": "gold"}
+    {"x": 3760, "y": 100, "kind": "gold"}
   ],
   "decor": [
     {"x": 136, "y": 160, "kind": "lantern"},
@@ -128,15 +134,15 @@
     {"x": 2408, "y": 160, "kind": "mushroom"},
     {"x": 2788, "y": 160, "kind": "lantern"},
     {"x": 3168, "y": 160, "kind": "lantern"},
-    {"x": 492, "y": 72, "kind": "bush"},
-    {"x": 1100, "y": 72, "kind": "grass"},
-    {"x": 1708, "y": 72, "kind": "sapling"},
+    {"x": 376, "y": 64, "kind": "bush"},
+    {"x": 1120, "y": 80, "kind": "grass"},
+    {"x": 1816, "y": 104, "kind": "sapling"},
     {"x": 3376, "y": 160, "kind": "lantern"}
   ],
   "vines": [
-    {"x": 700, "top": 68, "bottom": 192},
-    {"x": 1300, "top": 68, "bottom": 192},
-    {"x": 1900, "top": 68, "bottom": 192}
+    {"x": 384, "top": 96, "bottom": 192},
+    {"x": 1696, "top": 96, "bottom": 192},
+    {"x": 3520, "top": 88, "bottom": 192}
   ],
   "npcs": [
     {"x": 380, "who": "maiden", "line": "AUTUMN KEEPS ITS SEEDS ALIVE"},
