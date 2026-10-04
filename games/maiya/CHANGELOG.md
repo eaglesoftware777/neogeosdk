@@ -82,6 +82,24 @@ numbered on their own.
   she turns. A run holds her still on screen; a stop and a turn don't
   jolt it.
 
+### The valleys' ledges
+
+- **More to each ledge than one block repeated.** Each valley's ledge set
+  had a left end, a middle and a right end. It now also has a second
+  middle drawn differently (stones in the turf, a rope slung between the
+  pier's posts, paper streamers on the grove's beam, a knot in the World
+  Tree's branch, a stencilled plate on the girder, a starfish on the
+  reef, one brace and a coil of rope on the mine's scaffold, a crack in
+  the savanna's sandstone), taken in turn along a ledge; a single block
+  for a ledge too small for two; a broken end on a ledge that crumbles;
+  and what hangs under a wide ledge: roots in the forest and on the
+  savanna, moss at the falls, another post under the pier, a paper
+  lantern in the grove, long icicles in the grotto, vines from the World
+  Tree, a chain from the girder, kelp from the reef, the scaffold's
+  braced legs in the mine.
+- They come from the same pool of sprites as before; what hangs under a
+  ledge takes a sprite only when every ledge top on screen has one.
+
 ### The screens around the game
 
 - **From the attract to the chooser, cleanly.** Start or a credit during
