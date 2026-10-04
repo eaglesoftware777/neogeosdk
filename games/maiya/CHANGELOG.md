@@ -82,6 +82,44 @@ numbered on their own.
   she turns. A run holds her still on screen; a stop and a turn don't
   jolt it.
 
+### The valleys' roads
+
+- **Every road laid out again.** The ledges of eleven valleys went up in
+  the same three steps (low, middle, high) at the same spacing, over and
+  over, most of them one width; and on most roads some ledges, and the
+  pick-ups over them, could only be reached with the high leap or a
+  second jump. Each road is now built from a grammar of its own: single
+  steps, stairs up and down, bridges at one height, small islands,
+  a long shelf off a step, a high shelf at the top of a stair, a zigzag
+  climb over one stretch, and open road -- weighted by valley:
+  - the forest gentle (low steps, wide shelves, open road);
+  - the falls, the World Tree and the silver cave climbing;
+  - the coast long piers and decks, with long open road;
+  - the grove bridges that crumble (four ledges in ten);
+  - the grotto small ice floes;
+  - the works high catwalks;
+  - the reef islands, for her lighter jumps underwater;
+  - the savanna mostly open road and long low slabs;
+  - the citadel all of it, a third of it crumbling.
+- Every ledge can be reached from the road, a vine or another ledge with
+  a running jump; every pick-up and secret from where she can stand
+  (a sky lily and a sun gem still hang high on purpose, for the high
+  leap and the lily's second jump). No screen has more ledge pieces than
+  the sprites that draw them.
+- The posted creatures, the vines, the key, the decoration on the ledges
+  and every hideout moved with the ledges, each hideout where its hint
+  says (the high ledge past the key, the last high pier...).
+- **The works pour poison from three drums**, and the gate holds until
+  all three are shut: stand close and press Up. The briefing and the
+  elder at the start say so; each drum shut says how many still pour.
+- **Dust at her feet:** a puff behind her at each footfall of a run,
+  dust thrown up ahead of her in a skid, and two puffs when she lands
+  from a real fall. They take only free particles, and none underwater.
+- `levels.py --lint` (docs/levels.md) warns of what plays badly: ledges
+  out of reach, a staircase on repeat, one width or one gap again and
+  again, items out of reach, hazards too close, crowds or long empty
+  stretches, and more ledge pieces on a screen than the pool draws.
+
 ### The valleys' ledges
 
 - **More to each ledge than one block repeated.** Each valley's ledge set

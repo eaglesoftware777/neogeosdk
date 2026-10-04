@@ -15,10 +15,10 @@
 #define LEDGE_BLOCK 32   /* a ledge is drawn as 32 x 32 blocks hanging from its top */
 
 /* The width a ledge is drawn at, as mg_draw_ledges() lays its blocks. */
-static int drawn_width(int width)
+static int drawn_width(int width)   /* as mg_draw_ledges: a small ledge is one block */
 {
     int blocks = (width + 16) / LEDGE_BLOCK;
-    return (blocks < 2 ? 2 : blocks) * LEDGE_BLOCK;
+    return (blocks < 1 ? 1 : blocks) * LEDGE_BLOCK;
 }
 
 static void comma(int *first)

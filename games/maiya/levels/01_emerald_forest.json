@@ -10,8 +10,8 @@
   "posted": "none",
   "gate_x": 3200,
   "landmark": "forest",
-  "key": {"x": 2012, "y": 42},
-  "hideout": {"x": 2628, "y": 68, "hint": "KNEEL ON THE HIGH LEDGE PAST THE KEY"},
+  "key": {"x": 1276, "y": 60},
+  "hideout": {"x": 2644, "y": 80, "hint": "KNEEL ON THE HIGH LEDGE PAST THE KEY"},
   "guardian": {
     "name": "CHAINSAW BEETLE",
     "style": "beetle",
@@ -26,20 +26,16 @@
   "healed": ["THE OLD TREES BREATHE FREELY AGAIN", "THE LOGGERS' SAWS HAVE FALLEN SILENT"],
   "briefing": ["SAW BOTS FELL THE FOREST FOR THE", "CHAINSAW BEETLE. STOP THEM ALL!"],
   "platforms": [
-    {"x": 320, "y": 140, "w": 96},
     {"x": 480, "y": 104, "w": 80},
-    {"x": 660, "y": 68, "w": 96},
-    {"x": 860, "y": 140, "w": 80},
-    {"x": 1080, "y": 104, "w": 96},
-    {"x": 1280, "y": 68, "w": 80},
-    {"x": 1500, "y": 140, "w": 96},
-    {"x": 1720, "y": 104, "w": 80},
-    {"x": 1940, "y": 68, "w": 96},
-    {"x": 2160, "y": 140, "w": 96},
-    {"x": 2380, "y": 104, "w": 80},
-    {"x": 2580, "y": 68, "w": 96},
-    {"x": 2800, "y": 140, "w": 96},
-    {"x": 3000, "y": 104, "w": 80}
+    {"x": 660, "y": 68, "w": 64},
+    {"x": 836, "y": 128, "w": 96},
+    {"x": 1012, "y": 112, "w": 96},
+    {"x": 1236, "y": 88, "w": 112},
+    {"x": 1764, "y": 136, "w": 64},
+    {"x": 1892, "y": 104, "w": 192},
+    {"x": 2244, "y": 128, "w": 64},
+    {"x": 2404, "y": 112, "w": 64},
+    {"x": 2596, "y": 80, "w": 96}
   ],
   "encounters": [
     {"x": 360, "enemy": "slime"},
@@ -76,9 +72,9 @@
     {"x": 486, "y": 74, "type": "chest"},
     {"x": 700, "y": 38, "type": "rose"},
     {"x": 1856, "y": 16, "type": "gem"},
-    {"x": 1996, "y": 38, "type": "chest"},
+    {"x": 1972, "y": 68, "type": "chest"},
     {"x": 2620, "y": 38, "type": "rose"},
-    {"x": 3040, "y": 74, "type": "gem"}
+    {"x": 2660, "y": 44, "type": "gem"}
   ],
   "pickups": [
     {"x": 996, "y": 24, "kind": "lily"},
@@ -86,7 +82,7 @@
     {"x": 1464, "y": 168, "kind": "veil"},
     {"x": 2084, "y": 168, "kind": "silver"},
     {"x": 540, "y": 70, "kind": "gold"},
-    {"x": 1128, "y": 70, "kind": "gold"},
+    {"x": 1044, "y": 76, "kind": "gold"},
     {"x": 1066, "y": 166, "kind": "flower"},
     {"x": 2124, "y": 164, "kind": "critter"},
     {"x": 1690, "y": 166, "kind": "charm"},
@@ -102,15 +98,15 @@
     {"x": 2175, "y": 160, "kind": "sign"},
     {"x": 2512, "y": 160, "kind": "rock"},
     {"x": 2850, "y": 160, "kind": "grass"},
-    {"x": 504, "y": 72, "kind": "mushroom"},
-    {"x": 1112, "y": 72, "kind": "sapling"},
-    {"x": 1760, "y": 72, "kind": "lantern"},
+    {"x": 488, "y": 72, "kind": "mushroom"},
+    {"x": 1052, "y": 80, "kind": "sapling"},
+    {"x": 1796, "y": 104, "kind": "lantern"},
     {"x": 3080, "y": 160, "kind": "lantern"}
   ],
   "vines": [
     {"x": 692, "top": 68, "bottom": 192},
-    {"x": 1304, "top": 68, "bottom": 192},
-    {"x": 1972, "top": 68, "bottom": 192}
+    {"x": 1252, "top": 88, "bottom": 192},
+    {"x": 2612, "top": 80, "bottom": 192}
   ],
   "npcs": [
     {"x": 444, "who": "elder", "line": "THE GATE OPENS TO THE SUN KEY"},

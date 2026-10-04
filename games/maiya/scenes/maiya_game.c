@@ -323,6 +323,8 @@ typedef struct {
     uint16_t walk_distance;
     uint8_t  gait_still;             /* she stood still last frame                    */
     uint8_t  gait;                   /* her gait pose shown: 1 + phase, | 0x10 at a run; 0 none */
+    uint8_t  gait_step;              /* the gait phase shown last (a footfall is a new 0 or 4) */
+    int16_t  air_vy;                 /* her fall speed in the air, kept for the landing's dust */
     uint8_t climb_cooldown;
     uint8_t  stage, state, lives, art, kills, rescue_mask;
     uint8_t  hurt, coyote, jump_buffer, drop, boss_hurt, boss_active;
@@ -1178,6 +1180,11 @@ static void NEOGEO_USER mg_scroll_scenery(int16_t camera_x)
  * grotto snow, world-tree bark, the works' rust, reef coral, mine stone,
  * savanna earth. */
 static const uint8_t mg_stage_blocks[MG_LEVEL_COUNT] = MG_BLOCKS_TABLE;
+
+/* What a stage's gate asks for besides the key (levels.py OBJECTIVES). */
+enum { MG_OBJ_NONE, MG_OBJ_DRUMS };
+static const uint8_t mg_stage_objective[MG_LEVEL_COUNT] = MG_OBJECTIVE_TABLE;
+static uint8_t NEOGEO_USER mg_drums_left(void);
 
 static const uint16_t *NEOGEO_USER mg_block_set(uint8_t stage, const uint16_t **pal)
 {
@@ -2882,6 +2889,30 @@ static void NEOGEO_USER mg_dust_burst(int16_t x, int16_t y)
             p->life = (uint8_t)(16u + ng_rand_range(12u));
             p->shrink = p->life;
         }
+        k++;
+    }
+}
+
+/*
+ * Dust her feet kick up -- a footfall at a run, a skid, a landing from a
+ * real fall: a puff or two at her feet, drifting the way she went and
+ * shrinking away, taken only from free particles (and none underwater).
+ */
+static void NEOGEO_USER mg_kick_dust(int16_t x, int16_t y, uint8_t count, int8_t vx)
+{
+    uint8_t i, k = 0;
+    if (mg_mech() == MG_M_WATER) return;
+    for (i = 0; i < MG_SPARKS && k < count; i++) {
+        MGSpark *d = &mg.sparks[i];
+        if (d->life) continue;
+        ng_sprite_group_set_tile_base(&d->sprite, (uint16_t)(MG_TOOL_TILE + MG_T_DUST));
+        ng_sprite_group_set_palette(&d->sprite, PAL_TOOL);
+        d->x = (int16_t)(x - 8 + (k ? -vx * 6 : 0));
+        d->y = (int16_t)(y - 12);
+        d->vx = (int16_t)(k ? -vx : vx);
+        d->vy = -1;
+        d->life = (uint8_t)(12u + (k << 2));
+        d->shrink = d->life;
         k++;
     }
 }
@@ -5721,6 +5752,12 @@ static void NEOGEO_USER mg_controls(void)
     /* ---- Turning the Sun Key in the Ancient Nature Gate ------------- */
     if ((pressed & JOY_UP) && mg.has_key && !mg.gate_unlocked) {
         const MGLevel *lvl = &mg_levels[mg.stage];
+        if (lvl->gate_x && mg_abs((int16_t)(p->x - (int16_t)lvl->gate_x)) < 48 &&
+            mg_stage_objective[mg.stage] == MG_OBJ_DRUMS && mg_drums_left()) {
+            mg_hint("THE GATE HOLDS WHILE THE DRUMS POUR", PAL_TEXT, 120);
+            mg.previous_joy = joy;
+            return;
+        }
         if (lvl->gate_x && mg_abs((int16_t)(p->x - (int16_t)lvl->gate_x)) < 48) {
             mg.gate_unlocked = 1;
             mg.score += 3000u;
@@ -8351,6 +8388,16 @@ static void NEOGEO_USER mg_hazard_warn_check(void)
     }
 }
 
+/* The poison drums still pouring on this road. */
+static uint8_t NEOGEO_USER mg_drums_left(void)
+{
+    const MGLevel *level = &mg_levels[mg.stage];
+    uint8_t i, n = 0;
+    for (i = 0; i < MG_HAZARD_COUNT; i++)
+        if (level->hazards[i].type == MG_H_TOXIC && !(mg.hazard_disabled_mask & (uint16_t)(1u << i))) n++;
+    return n;
+}
+
 /*
  * The last two valleys leave one patch of pollution that a hazard alone
  * cannot explain away: it can be shut off for good, not just avoided.
@@ -8360,6 +8407,8 @@ static void NEOGEO_USER mg_hazard_warn_check(void)
  * fits a level she has already walked through in one direction: the fix
  * sits behind her, back where the road started, so clearing it means
  * choosing to backtrack for it rather than stumbling onto it.
+ * The works pour poison from three drums, and its gate holds until every
+ * one is shut (MG_OBJ_DRUMS): there she needs nothing to shut them with.
  */
 static void NEOGEO_USER mg_hazard_disable_check(uint16_t pressed)
 {
@@ -8374,7 +8423,7 @@ static void NEOGEO_USER mg_hazard_disable_check(uint16_t pressed)
         int16_t reach = (int16_t)(hz->x - 24);
         if (hz->type != MG_H_TOXIC || (mg.hazard_disabled_mask & bit)) continue;
         if (p->x < reach || p->x > (int16_t)(hz->x + hz->width + 24)) continue;
-        if (!mg.secret_mask) {
+        if (!mg.secret_mask && mg_stage_objective[mg.stage] != MG_OBJ_DRUMS) {
             mg_hint("NOTHING SHE CARRIES CAN LIFT THIS", PAL_TEXT, 90);
             return;
         }
@@ -8382,7 +8431,12 @@ static void NEOGEO_USER mg_hazard_disable_check(uint16_t pressed)
         mg.score += 1000u;
         mg.hud_dirty = 1;
         playSFX(SOUND_SFX_13);
-        mg_hint("THE POISON FADES", PAL_SKY, 120);
+        if (mg_stage_objective[mg.stage] != MG_OBJ_DRUMS) mg_hint("THE POISON FADES", PAL_SKY, 120);
+        else switch (mg_drums_left()) {
+        case 0:  mg_hint("THE RIVER RUNS CLEAN. TO THE GATE!", PAL_GOLD, 150); break;
+        case 1:  mg_hint("A DRUM IS SHUT. ONE MORE POURS", PAL_SKY, 120); break;
+        default: mg_hint("A DRUM IS SHUT. TWO MORE POUR", PAL_SKY, 120); break;
+        }
         return;
     }
 }
@@ -8465,6 +8519,10 @@ static void NEOGEO_USER mg_gait_pose(NGCharacter *p, uint8_t run)
 {
     uint8_t k = mg_gait_frame(mg.walk_distance);
     mg.gait = (uint8_t)((k + 1u) | (run ? 0x10u : 0u));
+    /* a foot landing at a run kicks up a little dust behind her */
+    if (run && (k & 3u) == 0u && k != mg.gait_step)
+        mg_kick_dust((int16_t)(p->x + (mg.facing ? 8 : -8)), p->y, 1, (int8_t)(mg.facing ? 1 : -1));
+    mg.gait_step = k;
     mg_frame(p, run ? mg_run_cycle[k] : (uint8_t)(MG_F_WALK0 + k), mg.facing);
 }
 
@@ -8503,9 +8561,11 @@ static void NEOGEO_USER mg_animate_player(void)
     if (grounded && mg.airborne && !mg.climbing) {
         mg.airborne = 0;
         if (p->vy_fp >= 0) mg_squash(MG_SQ_LAND);   /* (not the frame she springs up from) */
+        if (p->vy_fp >= 0 && mg.air_vy >= 3 * NG_FP_ONE) mg_kick_dust(p->x, p->y, 2, 1);   /* a real fall */
     } else if (!grounded && !mg.climbing && p->vy_fp > NG_FP_ONE) {
         mg.airborne = 1;
     }
+    if (!grounded) mg.air_vy = (int16_t)p->vy_fp;
 
     if (mg.climbing) {
         /*
@@ -8566,9 +8626,11 @@ static void NEOGEO_USER mg_animate_player(void)
     } else if (p->vx_fp != 0) {
         /* Turning at speed: braking low, still facing the way she ran,
          * before she sets off the other way (mg_controls). */
-        if (mg.turning)
+        if (mg.turning) {
             mg_frame(p, MG_F_LAND, mg.facing);
-        else
+            if ((mg.tick & 3u) == 0u)      /* her heels plough up the road ahead */
+                mg_kick_dust((int16_t)(p->x + (mg.facing ? -12 : 12)), p->y, 1, (int8_t)(mg.facing ? -1 : 1));
+        } else
             mg_gait_pose(p, mg_gait_runs(speed));
     } else {
         mg_frame(p, (uint8_t)(MG_F_IDLE0 + ((mg.tick / 20) % 3)), mg.facing);

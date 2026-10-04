@@ -3,6 +3,7 @@
 
     python3 games/maiya/tools/levels.py          (the build runs it)
     python3 games/maiya/tools/levels.py --check  (validate only)
+    python3 games/maiya/tools/levels.py --lint   (validate, then warn about design)
 
 Each stage is one JSON file in games/maiya/levels/, taken in file-name order
 (01_..., 02_...): the first file is mission 1. The script checks every file
@@ -11,6 +12,8 @@ maiya_game.c build their tables from. The header is generated: edit the
 JSON, not the header. The format is described in docs/levels.md.
 
 A mistake is reported as file, field and entry, and nothing is written.
+--lint goes on to what plays badly without breaking the game (see lint()):
+--strict makes a warning fail too.
 """
 
 import argparse
@@ -115,6 +118,9 @@ class Stage:
         # How far above the screen the valley goes (a tall climb to an upper
         # tier); 0 for a valley all on one screen's height.
         s["upper"] = self.num(d, "upper", "stage", 0, 256) if "upper" in d else 0
+        # What the gate asks for besides the key: "drums", every poison drum
+        # on the road shut off (the works). Most stages ask nothing more.
+        s["objective"] = self.choice(d, "objective", "stage", OBJECTIVES) if "objective" in d else 0
         top = -s["upper"]
         if self.get(d, "posted", "stage", str) == "none":
             s["posted"] = "0xFFu"
@@ -245,6 +251,10 @@ class Stage:
                 self.fail(f"hazards[{i}].w", f"{w}: a multiple of 16, at most 64")
             if x + w >= width - 320:
                 self.fail(f"hazards[{i}]", "reaches into the arena (keep it under width - 320)")
+        if s["objective"] == OBJECTIVES.index("drums"):
+            drums = [x for x, _, kind in s["hazards"] if kind == "MG_H_TOXIC"]
+            if len(drums) != 3:
+                self.fail("hazards", f"the drums objective needs three toxic drums, not {len(drums)}")
         if flight:
             # On the wing there is no road: no captives, key, gate, hideout
             # or climbs, and the guardian meets her at the end of the sky.
@@ -278,9 +288,205 @@ class Stage:
         return options.index(value)
 
 
+# What a gate can ask for besides the key, in the order of MG_OBJ_* (maiya_game.c).
+OBJECTIVES = ("none", "drums")
+
 # The Secret Arts, in the order of the game's MG_ART_* (maiya_game.c): the
 # rose storm she knows from the start, and four she learns in the valleys.
 ART_KINDS = ("blossom", "rain", "sun", "frost", "gale")
+
+
+# How she moves, for --lint (maiya_game.c): 8.8 pixels a frame.
+RUN_SPEED, WALK_SPEED = 800, 512
+JUMP_SPEED, RUN_JUMP_SPEED, LEAP_SPEED = 5 * 256 + 160, 6 * 256, 7 * 256 + 96
+AIR_JUMP_SPEED = 5 * 256         # the sky lily's second jump
+GRAVITY = {"MG_M_WATER": (34, 3 * 256)}          # (per frame, fastest fall); else (64, 6 * 256)
+POOL_BLOCKS = 9          # ledge sprites (MG_LEDGE_BLOCKS)
+VIEW = 320
+
+
+def jump(mech, speed, vy0):
+    """The arc of a jump from the ground: (frames, x, height) while she is
+    in the air, fixed-point as the game steps it."""
+    g, fall = GRAVITY.get(mech, (64, 6 * 256))
+    vy, y, x, t, out = -vy0, 0, 0, 0, []
+    while True:
+        vy = min(vy + g, fall)
+        y += vy
+        x += speed
+        t += 1
+        out.append((t, x / 256, -y / 256))
+        if y > 160 * 256 or t > 400:
+            return out
+
+
+def reach(mech, rise, run=True):
+    """The longest gap (px) she can jump to land `rise` px higher (negative:
+    lower), or None if the jump doesn't get that high."""
+    arc = jump(mech, RUN_SPEED if run else WALK_SPEED, RUN_JUMP_SPEED if run else JUMP_SPEED)
+    top = max(h for _, _, h in arc)
+    if rise > top:
+        return None
+    best = 0
+    for (t, x, h), (_, _, h0) in zip(arc[1:], arc):
+        if h0 >= rise > h or (h <= rise and h0 <= rise and False):
+            best = x
+    return best if best else (arc[-1][1] if rise <= 0 else None)
+
+
+def lint(s, data):
+    """What makes a stage play badly though the game takes it: a list of
+    warnings. Ledges in x order, on the road's tier (y > 0).
+      - repetition: three ledges in a row at one height; a run of heights
+        coming round again (the staircase); one width for most ledges; one
+        gap between ledges again and again
+      - reach: a ledge she can't get to from the road, another ledge or a
+        vine with a running jump (the high leap is said so); a pick-up, a
+        secret or the key out of reach of where she can stand -- by a jump,
+        the kneeling high leap from right under it, or, on a road with a
+        sky lily, the lily's second jump (a lily and a gem are hung high on
+        purpose)
+      - hazards too close together to land between, or at the very start
+      - creatures crowded on one screen, or none for a long way
+      - more ledge blocks on one screen than the sprite pool holds (a block
+        goes undrawn), or more than it holds with what hangs under them
+      - the key, the hideout or a captive after the gate's landmark"""
+    out = []
+    mech = s["mechanic"]
+    if mech == "MG_M_FLIGHT":
+        return out
+    width, gate = s["width"], s["gate_x"]
+    plats = sorted((x, y, w) for x, y, w in s["platforms"])
+    road = [p for p in plats if p[1] > 0]
+
+    ys = [y for _, y, _ in road]
+    for i in range(len(ys) - 2):
+        if ys[i] == ys[i + 1] == ys[i + 2]:
+            out.append(f"ledges at x {road[i][0]}..{road[i + 2][0]}: three in a row at height {ys[i]}")
+    seen = {}
+    for i in range(len(ys) - 2):
+        key = tuple(y // 8 for y in ys[i:i + 3])
+        seen.setdefault(key, []).append(road[i][0])
+    for key, where in seen.items():
+        if len(where) >= 3 and len(set(key)) > 1:
+            out.append(f"the same three heights ({', '.join(str(k * 8) for k in key)}) come round "
+                       f"{len(where)} times (x {', '.join(map(str, where))}): a staircase on repeat")
+    if len(road) >= 6:
+        widths = [w for _, _, w in road]
+        common = max(set(widths), key=widths.count)
+        if widths.count(common) * 2 > len(widths):
+            out.append(f"{widths.count(common)} of {len(widths)} ledges are {common} px wide")
+        gaps = [b[0] - a[0] for a, b in zip(road, road[1:])]
+        run = 1
+        for i in range(1, len(gaps)):
+            run = run + 1 if abs(gaps[i] - gaps[i - 1]) <= 12 else 1
+            if run == 4:
+                out.append(f"ledges from x {road[i - 3][0]}: five {gaps[i]} px apart, like a metronome")
+
+    # Reach: from the road (everywhere), vines' tops, and ledges reached.
+    reached = set()
+    surfaces = [(0, width, 192)]
+    for x, top, _ in s["vines"]:
+        for j, (px, py, pw) in enumerate(plats):
+            if py == top and px <= x + 16 <= px + pw:
+                reached.add(j)
+    changed = True
+    while changed:
+        changed = False
+        for j, (px, py, pw) in enumerate(plats):
+            if j in reached:
+                continue
+            sources = surfaces + [plats[k][0:1] + (plats[k][0] + plats[k][2], plats[k][1]) for k in reached]
+            for a0, a1, ay in sources:
+                gap = max(0, px - a1, a0 - (px + pw))
+                r = reach(mech, ay - py)
+                if r is not None and gap <= r * 0.85:
+                    reached.add(j)
+                    changed = True
+                    break
+    for j, (px, py, pw) in enumerate(plats):
+        if j not in reached:
+            leap = any(ay - py <= max(h for _, _, h in jump(mech, 0, LEAP_SPEED)) and
+                       max(0, px - a1, a0 - (px + pw)) <= 24
+                       for a0, a1, ay in surfaces + [(plats[k][0], plats[k][0] + plats[k][2], plats[k][1]) for k in reached])
+            out.append(f"ledge at x {px}, height {py}: out of a running jump's reach"
+                       + (" (only the high leap gets there)" if leap else ""))
+    stand = surfaces + [(plats[k][0], plats[k][0] + plats[k][2], plats[k][1]) for k in reached]
+
+    def top(speed):
+        return max(h for _, _, h in jump(mech, 0, speed))
+    leap = top(LEAP_SPEED)
+    lily = any(kind == "MG_K_LILY" for _, _, kind in s["pickups"])
+    twice = top(RUN_JUMP_SPEED) + top(AIR_JUMP_SPEED)
+
+    def reachable(x, y):
+        # The pick-up test: her feet within 70 px under the art's top, 28
+        # across its middle -- from where she stands, in a running jump off
+        # its edge while she is high enough, the high leap from right under
+        # it, or the lily's second jump.
+        for a0, a1, ay in stand:
+            if y > ay - 3:
+                continue
+            need = ay - (y + 69)
+            d = 0 if need <= 0 else reach(mech, need)
+            if d is not None and a0 - 28 - d <= x + 16 <= a1 + 28 + d:
+                return True
+            if need <= leap and a0 - 28 <= x + 16 <= a1 + 28:
+                return True
+            if lily and need <= twice and a0 - 88 <= x + 16 <= a1 + 88:
+                return True
+        return False
+    for kind, rows in (("pick-up", s["pickups"]), ("secret", s["secrets"])):
+        for x, y, _ in rows:
+            if not reachable(x, y):
+                out.append(f"{kind} at ({x},{y}): out of reach from anywhere she stands")
+    kx, ky = s["key"]
+    if not reachable(kx, ky):
+        out.append(f"the key at ({kx},{ky}): out of reach")
+
+    hz = sorted((x, w) for x, w, _ in s["hazards"])
+    for (x0, w0), (x1, _) in zip(hz, hz[1:]):
+        if 0 <= x1 - (x0 + w0) < 48:
+            out.append(f"hazards at x {x0} and {x1}: {x1 - x0 - w0} px between, no room to land")
+    for x, w in hz:
+        if x < 200:
+            out.append(f"hazard at x {x}: on the road she starts on")
+
+    ex = [x for x, _ in s["encounters"]]
+    for i, x in enumerate(ex):
+        crowd = [e for e in ex if x <= e < x + VIEW]
+        if len(crowd) > 3:
+            out.append(f"creatures from x {x}: {len(crowd)} on one screen")
+            break
+    end = gate - 80 if gate else width
+    for a, b in zip([200] + ex, ex + [end]):
+        if b - a > 1100:
+            out.append(f"no creature from x {a} to {b}")
+
+    worst = (0, 0, 0)
+    tiers = ([p for p in plats if p[1] > 0], [p for p in plats if p[1] <= 0])   # never on screen together
+    for wx, tier in ((wx, tier) for tier in tiers for wx in range(0, width - VIEW + 1, 16)):
+        tops = unders = 0
+        for px, py, pw in tier:
+            blocks = max(1, (pw + 16) // 32)
+            if px + 32 * blocks < wx - 16 or px > wx + VIEW + 16:
+                continue
+            seen_blocks = sum(1 for k in range(blocks) if wx - 32 <= px + 32 * k <= wx + VIEW + 16)
+            tops += seen_blocks
+            unders += 1 if blocks >= 3 and seen_blocks else 0
+        if (tops, tops + unders) > worst[:2]:
+            worst = (tops, tops + unders, wx)
+    if worst[0] > POOL_BLOCKS:
+        out.append(f"the screen from x {worst[2]} has {worst[0]} ledge blocks: the pool draws {POOL_BLOCKS}")
+    elif worst[1] > POOL_BLOCKS:
+        out.append(f"the screen from x {worst[2]} has {worst[0]} ledge blocks and "
+                   f"{worst[1] - worst[0]} undersides: one goes undrawn")
+
+    if gate:
+        for what, x in [("the key", kx), ("the hideout", s["hideout"][0])] + [("a captive", x) for x, _ in s["rescues"]]:
+            if x >= gate - 80:
+                out.append(f"{what} at x {x}: in the gate's landmark")
+    return out
 
 
 def c_string(text):
@@ -341,6 +547,7 @@ def render(stages, files):
     out.append(table("MG_BLOCKS_TABLE", [s["blocks"] for s in stages]))
     out.append(table("MG_CLIMB_TABLE", [s["climb"] for s in stages]))
     out.append(table("MG_UPPER_TABLE", [str(s["upper"]) for s in stages]))
+    out.append(table("MG_OBJECTIVE_TABLE", [f"{s['objective']}u" for s in stages]))
     out.append(table("MG_POSTED_TABLE", [s["posted"] for s in stages]))
     out.append(table("MG_WAVES_TABLE", [tuples(s["waves"], 5) for s in stages]))
     out.append(table("MG_RUSH_TABLE", ["{" + ",".join(s["rush"] + ["0xFFu"]) + "}" for s in stages]))
@@ -350,7 +557,7 @@ def render(stages, files):
     return "\n".join(out) + "\n"
 
 
-def load():
+def load(with_data=False):
     files = sorted(LEVELS.glob("*.json"))
     if not files:
         raise LevelError(f"no stage files in {LEVELS}")
@@ -369,18 +576,30 @@ def load():
         "MG_LM_": defines(GAME / "artbox" / "generated" / "maiya_assets.h", "MG_LM_"),
     }
     cap = caps()
-    return files, [Stage(f, names, cap).build() for f in files]
+    stages = [Stage(f, names, cap) for f in files]
+    built = [st.build() for st in stages]
+    return (files, built, [st.data for st in stages]) if with_data else (files, built)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--check", action="store_true", help="validate the stage files, write nothing")
+    parser.add_argument("--lint", action="store_true", help="validate, then warn about how the stages play")
+    parser.add_argument("--strict", action="store_true", help="with --lint: a warning fails")
     args = parser.parse_args()
     try:
-        files, stages = load()
+        files, stages, data = load(with_data=True)
     except LevelError as e:
         print(f"levels: {e}", file=sys.stderr)
         return 1
+    if args.lint:
+        count = 0
+        for f, s, d in zip(files, stages, data):
+            for w in lint(s, d):
+                print(f"levels: {f.name}: warning: {w}")
+                count += 1
+        print(f"levels: {len(stages)} stages, {count} warnings")
+        return 1 if (args.strict and count) else 0
     text = render(stages, [f.name for f in files])
     if args.check:
         print(f"levels: {len(stages)} stages OK")
