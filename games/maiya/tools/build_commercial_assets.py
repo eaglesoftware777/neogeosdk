@@ -191,32 +191,6 @@ def extract_cutout(img, bg_color="white", tol=26):
     return Image.fromarray(np.dstack((arr, alpha)))
 
 
-def add_shadow(frame, pad=2, half_h=2.4, spread=0.42):
-    """A ground shadow tucked under the feet: a dark ellipse on the feet
-    line, drawn only where the frame is empty, so the figure stands on the
-    road instead of floating over it. Widest where the figure's stance is.
-
-    Every other pixel only, in a checkerboard: the road shows through half
-    of it, which on the hardware reads as a see-through shade. Solid, it
-    was a hard black slab under everyone -- on snow or sand, a row of
-    black rectangles."""
-    a = np.array(frame, dtype=np.uint8, copy=True)
-    opaque = a[..., 3] > 0
-    if not opaque.any():
-        return a
-    h, w = opaque.shape
-    ys, xs = np.where(opaque)
-    low = ys >= ys.max() - max(4, (ys.max() - ys.min()) // 4)
-    cx = float(np.median(xs[low]))
-    half_w = max(4.0, (xs.max() - xs.min()) * spread)
-    feet = h - pad - 0.5
-    yy, xx = np.mgrid[0:h, 0:w]
-    shade = (((xx - cx) / half_w) ** 2 + ((yy - feet) / half_h) ** 2 <= 1.0) & ~opaque
-    shade &= ((xx + yy) % 2) == 0
-    a[shade] = (24, 18, 30, 255)
-    return a
-
-
 def clean_sprite(a, white_area=None, island=24):
     """Strip what keying on a white sheet leaves behind.
 
@@ -468,6 +442,69 @@ def sharpen_sprite(arr, amount=1.0, outline=0.20):
     out = arr.copy()
     out[:, :, :3] = sharp.astype(np.uint8)
     return out
+
+
+def wrap_seamless(img, width):
+    """A painting cut to `width` columns that wraps onto itself without a seam.
+
+    Its first columns are taken from beyond `width` -- the painting's own
+    continuation, so the wrap from its last column to its first is no join
+    at all -- up to a cut where that continuation meets the painting's
+    start. The cut runs down the rows where the two look most alike (the
+    least squared difference along a connected path), so it follows
+    the shapes instead of crossing them; nothing is cross-faded, so
+    nothing is doubled.
+    """
+    img = np.asarray(img, dtype=np.float32)
+    h, n = img.shape[:2]
+    over = n - width
+    end, start = img[:, width:n, :3], img[:, 0:over, :3]
+    err = ((end - start) ** 2).sum(axis=2)
+    err[:, 0] = np.inf                       # the first column always comes from the end
+    cost = err.copy()
+    for y in range(1, h):
+        prev = cost[y - 1]
+        best = np.minimum(prev, np.minimum(np.r_[np.inf, prev[:-1]], np.r_[prev[1:], np.inf]))
+        cost[y] = err[y] + best
+    cut = np.zeros(h, dtype=int)
+    cut[-1] = int(np.argmin(cost[-1]))
+    for y in range(h - 2, -1, -1):
+        x = cut[y + 1]
+        lo, hi = max(1, x - 1), min(over - 1, x + 1)
+        cut[y] = lo + int(np.argmin(cost[y, lo:hi + 1]))
+    out = img[:, :width].copy()
+    for y in range(h):
+        s = cut[y]
+        out[y, :s] = img[y, width:width + s]
+        # one pixel either side of the cut shared, so it carries no hard edge
+        out[y, s - 1, :3] = (img[y, width + s - 1, :3] * 2 + img[y, s - 1, :3]) / 3
+        out[y, s, :3] = (img[y, width + s, :3] + img[y, s, :3] * 2) / 3
+    return out
+
+
+def long_painting(panel, height=224, road=32, mirror_below=640):
+    """A valley's far painting and its road.
+
+    The painting (the rows above the road) is as long as its source allows
+    and wraps without a seam at its own width, a multiple of 16 pixels; a
+    source too short to stretch out is laid next to its own mirror image,
+    which meets it edge to edge at both joins. The road is the painting's
+    foot near its start -- ground to walk on, wherever the painting goes --
+    512 pixels wrapping without a seam."""
+    width = round(panel.width * height / panel.height)
+    art = np.asarray(panel.resize((width, height), Image.Resampling.LANCZOS)).astype(np.float32)
+    if width < mirror_below:
+        art = np.asarray(panel.resize((512, height), Image.Resampling.LANCZOS)).astype(np.float32)
+        far = np.concatenate([art, art[:, ::-1]], axis=1)[:height - road]
+    else:
+        far = wrap_seamless(art, (width - 32) // 16 * 16)[:height - road]
+    foot = Image.fromarray(np.clip(art[height - road:, :min(art.shape[1], 576)], 0, 255).astype(np.uint8))
+    foot = np.asarray(foot.resize((560, road), Image.Resampling.LANCZOS)).astype(np.float32)
+    ground = wrap_seamless(foot, 512)
+    far, ground = (np.clip(a, 0, 255).astype(np.uint8) for a in (far, ground))
+    far[:, :, 3] = 255
+    ground[:, :, 3] = 255
+    return far, ground
 
 
 def fit_group(img, boxes, canvas, target_h, bg_color="white", pad=2, sharpen=True,
@@ -972,9 +1009,19 @@ def build():
     ]
     manifest = []
 
+    # The boot logo's bank is fixed (games/maiya/tools/boot_assets.py): art
+    # that would run across it starts again after it.
+    from boot_assets import BOOT_C_BANK, logo_lanes
+    boot_offset = BOOT_C_BANK * 256 * 64
+    boot_end = boot_offset + 256 * 64
+
     def store(name, indices, palettes, assignments, rgba):
         h, w = indices.shape
         count = h * w // 256
+        if c1.tell() < boot_end and c1.tell() + count * 64 > boot_offset:
+            gap = bytes(boot_end - c1.tell())
+            c1.write(gap)
+            c2.write(gap)
         base = c1.tell() // 64
         lo, hi = encode_image(indices, count)
         assert np.array_equal(decode_image(lo, hi, w, h), indices)
@@ -1030,15 +1077,18 @@ def build():
     sn = Image.open(find_file("stages_nature*.jpg")).convert("RGBA")
     env = Image.open(GAME / "assets/environments.png").convert("RGBA")
 
-    # Six valleys of the living world.  Every box keeps the 320:140 playfield
-    # ratio so nothing is squeezed on its way to a 512 x 224 wrap.
+    # Six valleys of the living world. A road runs thousands of pixels, so
+    # each painting is as long as its source allows: the sheet bands that
+    # run the whole width are taken whole (past the label in their left
+    # margin), not one 512-pixel window of them repeated.
     panels = [
-        sn.crop((45, 0, 630, 256)),          # 0 Emerald Forest
-        env.crop((768, 0, 1536, 336)),       # 1 Valley of Sacred Falls
-        env.crop((0, 341, 768, 677)),        # 2 Azure Coral Coast
-        env.crop((0, 0, 768, 336)),          # 3 Golden Autumn Grove
-        env.crop((768, 683, 1536, 1019)),    # 4 Crystal Grotto
-        sn.crop((45, 256, 630, 512)),        # 5 Ancient World Tree
+        sn.crop((45, 0, 1376, 256)),         # 0 Emerald Forest, the whole band
+        # (the sheet's panels, inset past the dark rules between them)
+        env.crop((771, 3, 1533, 333)),       # 1 Valley of Sacred Falls
+        env.crop((3, 344, 765, 674)),        # 2 Azure Coral Coast
+        env.crop((3, 3, 765, 333)),          # 3 Golden Autumn Grove
+        env.crop((771, 686, 1533, 1016)),    # 4 Crystal Grotto
+        sn.crop((45, 256, 1376, 512)),       # 5 Ancient World Tree, the whole band
         None,                                # 6 Rio Negro Works, composed below
     ]
     # The last three valleys had borrowed the coast, the grotto and the
@@ -1053,18 +1103,19 @@ def build():
         band("arena_wyrm_0.jpg", 0.18),      # 8 Silver Cave
         band("arena_hyena.jpg", 0.30),       # 9 Golden Savanna
         # 10 Sky Road: the snow peaks under an open sky, seen from the
-        # eagle's back (the citadel sheet's middle band).
-        Image.open(find_file("stages_citadel*.jpg")).convert("RGBA").crop((0, 256, 585, 512)),
+        # eagle's back (the citadel sheet's middle band, whole).
+        Image.open(find_file("stages_citadel*.jpg")).convert("RGBA").crop((0, 256, 1376, 512)),
         # 11 the Smog Citadel: Lord Smoggar's works, pipes, gears and
-        # glowing vats (the citadel sheet's bottom band).
-        Image.open(find_file("stages_citadel*.jpg")).convert("RGBA").crop((0, 512, 585, 768)),
+        # glowing vats (the citadel sheet's bottom band, whole).
+        Image.open(find_file("stages_citadel*.jpg")).convert("RGBA").crop((0, 512, 1376, 768)),
     ]
 
     # The works: the old plant's furnaces and gantries stand over the swamp
     # river's bank -- the painted factory for the far layer, the painted
     # marsh water for the road.
-    works = np.asarray(sn.crop((600, 512, 1185, 768)).resize((512, 224), Image.Resampling.LANCZOS))
-    river = np.asarray(sn.crop((45, 256, 630, 512)).resize((512, 224), Image.Resampling.LANCZOS))
+    works_w = round(1331 * 224 / 256)
+    works = np.asarray(sn.crop((45, 512, 1376, 768)).resize((works_w, 224), Image.Resampling.LANCZOS))
+    river = np.asarray(sn.crop((45, 256, 1376, 512)).resize((works_w, 224), Image.Resampling.LANCZOS))
     composed = works.copy()
     composed[192:] = river[192:]
     fade = np.linspace(0.0, 1.0, 12)[:, None, None]
@@ -1072,19 +1123,16 @@ def build():
     panels[6] = Image.fromarray(composed)
 
     for i, panel in enumerate(panels):
-        panel = np.asarray(panel.resize((512, 224), Image.Resampling.LANCZOS)).astype(np.float32)
-        # Seamless wrap blend across edges
-        blend = 64
-        left, right = panel[:, :blend].copy(), panel[:, -blend:].copy()
-        t = (np.arange(blend, dtype=np.float32) / blend)[None, :, None]
-        panel[:, :blend] = left * (0.5 + 0.5 * t) + right * (0.5 - 0.5 * t)
-        panel[:, -blend:] = right * (1.0 - 0.5 * t) + left * (0.5 * t)
-        panel = panel.astype(np.uint8)
-        panel[:, :, 3] = 255
+        far, ground = long_painting(panel)
+        cols = far.shape[1] // 16
+        # one set of banks for both: the road, repeated under the painting
+        # for the quantizer, is stored once
+        under = np.concatenate([ground] * (cols // 32 + 1), axis=1)[:, :far.shape[1]]
+        panel = np.concatenate([far, under], axis=0)
 
         indices, palettes, assignments = quantize(panel, 16, None, dither="none")
         store(f"bg{i}", indices[:192], palettes, assignments[:12], panel[:192])
-        store(f"ground{i}", indices[192:], palettes, assignments[12:], panel[192:])
+        store(f"ground{i}", indices[192:, :512], palettes, assignments[12:, :32], panel[192:, :512])
         if i == 6:
             healed = []
             for p in palettes:
@@ -1102,9 +1150,10 @@ def build():
                 blighted.extend(palette_words(dark))
             header.append(c_array(f"mg_bg{i}_blight_pal", blighted))
         header.append(c_array(f"mg_bg{i}_map", assignments[:12].flatten() + 16, "uint8_t"))
-        header.append(c_array(f"mg_ground{i}_map", assignments[12:].flatten() + 16, "uint8_t"))
+        header.append(c_array(f"mg_ground{i}_map", assignments[12:, :32].flatten() + 16, "uint8_t"))
         header.append(f"#define MG_BG{i}_BANKS {len(palettes)}u")
-        print(f"  Stage {i + 1}/{len(panels)} compiled (512x224)", flush=True)
+        header.append(f"#define MG_BG{i}_COLS {cols}u")
+        print(f"  Stage {i + 1}/{len(panels)} compiled ({far.shape[1]}x192, road 512x32)", flush=True)
 
     # Each guardian's own arena, shown while it fights: the painting fitted
     # to the 320-pixel screen (its floor on the road strip), mirrored out to
@@ -1163,6 +1212,21 @@ def build():
     hf["win"] = fit_group(m_img, {"win": (790, 728, 1012, 995)}, HERO_CANVAS, HERO_CANVAS[1] - 2)["win"]
     hf = {name: clean_sprite(f, white_area=10) for name, f in hf.items()}
 
+    # Her run. The sheet's four sprint poses all have the same leg in front
+    # and both fists up: played in a row she glides in one frozen stride.
+    # A run needs the legs to pass under her and the arms to move, so two
+    # poses from the jump row join it -- the push-off stance, legs together
+    # under her and an arm swung down (the passing pose), and the stride --
+    # cut again at the sprint's height (the sheet draws them smaller), so
+    # she is the same size in every frame of the cycle.
+    def drawn_height(frame):
+        rows = np.nonzero(frame[:, :, 3].any(axis=1))[0]
+        return int(rows[-1] - rows[0] + 1) if len(rows) else 0
+    run_h = int(np.median([drawn_height(hf[k]) for k in ("run0", "run1", "run2", "run3")]))
+    for name, src in (("pass", "jump0"), ("stride", "jump1")):
+        refit = fit_group(m_img, {name: hero_boxes[src]}, HERO_CANVAS, run_h)
+        hf[name] = clean_sprite(refit[name], white_area=10)
+
     # Resting poses are not on the sheet: fold a standing frame onto its heels
     # so Maiya can duck under a swoop, take a knee, or sit down and listen.
     hf["crouch"] = squash(hf["land"], 0.70)
@@ -1172,8 +1236,9 @@ def build():
 
     maiya_frames = {
         "idle0": hf["idle0"], "idle1": hf["idle1"], "idle2": hf["idle0"],
-        "walk0": hf["run0"], "walk1": hf["run1"], "walk2": hf["run2"], "walk3": hf["run3"],
-        "walk4": hf["run0"], "walk5": hf["run1"], "walk6": hf["run2"], "walk7": hf["run3"],
+        # two strides: contact, passing, push-off, flight -- then again
+        "walk0": hf["run3"], "walk1": hf["pass"], "walk2": hf["run1"], "walk3": hf["run0"],
+        "walk4": hf["stride"], "walk5": hf["pass"], "walk6": hf["run1"], "walk7": hf["run2"],
         "crouch": hf["crouch"],
         "run0": hf["run0"], "run1": hf["run1"], "run2": hf["run2"],
         "jump0": hf["jump0"], "jump1": hf["jump1"], "jump2": hf["jump2"],
@@ -1185,11 +1250,6 @@ def build():
         "hurt0": hf["jump4"], "hurt1": hf["jump2"], "down": hf["down"],
         "sit": hf["sit"], "win": hf["win"],
     }
-
-    # Grounded poses stand on a shadow; in the air she doesn't.
-    for name in list(maiya_frames):
-        if not (name.startswith("jump") or name.startswith("hurt") or name == "spin"):
-            maiya_frames[name] = add_shadow(maiya_frames[name])
 
     # Poses turned a quarter at a time (exact, so no pixel is resampled),
     # appended so no earlier frame number moves: swimming -- her run turned
@@ -1211,7 +1271,7 @@ def build():
         maiya_frames[f"swim{k}"] = turned(hf[src], 1, lift=10)
     for k in range(4):
         maiya_frames[f"flip{k}"] = turned(hf["jump2"], k, lift=2)
-    # Kneeling on the eagle's back (her landing crouch, no shadow under it).
+    # Kneeling on the eagle's back (her landing crouch).
     maiya_frames["ride"] = hf["land"]
     # Her special moves, drawn for them: the Rising Bloom's gather, uppercut
     # and top; the Surge's dash; the Secret Art's call to the sky and her
@@ -1223,9 +1283,7 @@ def build():
         "leap0": (895, 650, 1170, 910), "leap1": (1320, 480, 1560, 895),
     }, HERO_CANVAS, HERO_HEIGHT, bg_color="corner")
     for name in ("rise0", "rise1", "rise2", "surge", "art0", "art1", "leap0", "leap1"):
-        # the ones on the ground stand on a shadow like her other grounded poses
-        grounded = name in ("rise0", "art0", "art1", "leap0")
-        maiya_frames[name] = add_shadow(special[name]) if grounded else special[name]
+        maiya_frames[name] = special[name]
 
     # Fit master palette for Maiya
     hero_training = np.concatenate([f[:, :, :3][training_mask(f)] for f in maiya_frames.values()])
@@ -1441,8 +1499,6 @@ def build():
                             out[y, x, :3] = np.median(neighbors, axis=0).astype(np.uint8)
                 cleaned[name] = out
             frames = cleaned
-        if cname in ("slime", "beetle", "goblin", "worm"):
-            frames = {k: add_shadow(f) for k, f in frames.items()}
         master = shared_set(cname, frames)
         words = []
         for shift, sat, val in valley_tint:
@@ -1609,10 +1665,6 @@ def build():
             boxes[pose_names[k]] = found[item] if isinstance(item, int) else item
         frames = fit_group(b_img, boxes, BOSS_CANVAS, BOSS_HEIGHT, bg_color="corner", clip_tall=True)
         assert len(frames) == 8, bname
-        fliers = bname in ("owl", "vulture")
-        for pose in frames:
-            if pose == "dead" or (not fliers and pose != "jump"):
-                frames[pose] = add_shadow(frames[pose], half_h=3.2)
         boss_masters[bname] = shared_set(f"boss_{bname}", frames)
         print(f"  Boss {bname} compiled (128x96, 8 poses)", flush=True)
     for k, name in enumerate(pose_names):
@@ -1768,14 +1820,17 @@ def build():
     title_base, title_pals = append("title", title_arr, banks=16, bank_base=16)
     header.append("#define MG_TITLE_PAL_BANK 16u")
 
-    from boot_assets import BOOT_C_BANK, logo_lanes
-    boot_offset = BOOT_C_BANK * 256 * 64
-    if c1.tell() > boot_offset:
-        raise ValueError("Maiya graphics overlap the reserved BIOS logo bank")
+    # The logo into its bank: after the art, or into the gap the art left.
+    art_end = c1.tell()
     for stream, lane in zip((c1, c2), logo_lanes()):
-        stream.write(bytes(boot_offset - stream.tell()))
+        if stream.tell() < boot_offset:
+            stream.write(bytes(boot_offset - stream.tell()))
+        stream.seek(boot_offset)
+        if any(stream.getvalue()[boot_offset:min(boot_end, art_end)]):
+            raise ValueError("Maiya graphics overlap the reserved BIOS logo bank")
         # The final output below swaps every pair, so undo the logo's final wiring.
         stream.write(np.frombuffer(lane, dtype=np.uint8).reshape(-1, 2)[:, ::-1].tobytes())
+        stream.seek(max(art_end, boot_end))
     write_utility_tiles(c1, c2)
 
     # Output C-ROM pair

@@ -44,6 +44,14 @@ enum { MG_SQ_LAND = 1, MG_SQ_JUMP, MG_SQ_HURT, MG_SQ_STRIKE, MG_SQ_KINDS };
  * (256ths, less one): 97% walking, 95% at a run */
 #define MG_RUN_FOOTFALL       0xF7
 #define MG_RUN_FOOTFALL_FAST  0xF2
+/* ... and while her legs pass under her: 98% walking, 97% at a run */
+#define MG_RUN_PASSING        0xFA
+#define MG_RUN_PASSING_FAST   0xF7
+/* Her jump's poses by her climb speed (1/256 px a frame): the push-off
+ * while she is still faster than this going up, the top of the arc within
+ * this of still, rising or falling either side of it. */
+#define MG_AIR_PUSH           (4 * 256 + 192)
+#define MG_AIR_TOP            (256 + 128)
 enum { MG_SQ_FRAMES = 6 };
 static const uint8_t mg_sq_len[MG_SQ_KINDS] = { 0, 6, 4, 4, 3 };
 static const uint8_t mg_sq_x[MG_SQ_KINDS][MG_SQ_FRAMES] = {

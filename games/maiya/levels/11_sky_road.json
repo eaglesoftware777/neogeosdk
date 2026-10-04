@@ -14,7 +14,7 @@
   "guardian": {
     "name": "SMOG DREADNOUGHT",
     "style": "airship",
-    "hp": 10,
+    "hp": 6,
     "hint": "BREAK ITS STACKS, THEN STRIKE ITS EYE",
     "taunt": "THE SKY BELONGS TO THE SMOG!",
     "reply": "NOT WHILE THE SUN EAGLE FLIES!"
