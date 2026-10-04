@@ -1,5 +1,39 @@
 # Changelog
 
+## v1.7.2 - pre-release: frames in the blank, and Maiya v3
+
+Status: a pre-release from the `fix/maiya-arenas-eagle-bios` branch, with
+Maiya's `_v3` ROM files; v1.7.0 remains the current release.
+
+### Engine (`sdk/2d_engine`, Framework 1.2: additions only)
+
+- Video memory is written only in the vertical blank, with a deadline
+  (`NG_VRAM_DEADLINE`, line 8, under `NG_VRAM_DEFER`): no job starts after
+  it, and what doesn't fit waits for the next blank. Groups that only
+  moved go first (one address and two words each: SCB3 and SCB4 are $200
+  apart); then new content by priority -- `ng_sprite_group_set_priority()`
+  and `ng_char_set_vram_priority()`: HIGH (the player, scrolling layers),
+  a streaming layer's strip columns, NORMAL, the FIX text, LOW
+  (decoration). `ng_vram_lines_left()` and `ng_vram_window_open()` say
+  how much of the blank is left.
+- A full list never writes outside the blank: a group waits for its next
+  flush, character hides are a bitmap, and a full FIX list rewrites whole
+  rows in the blank instead.
+- Palette uploads keep the same deadline; a whole-screen upload starts
+  only with room for it.
+- `ng_char_set_pos()` and the physics' clamps keep the fraction of an
+  axis whose pixel doesn't change: a floor stopping a fall rounded the x
+  down every frame, so a run left went a pixel a frame faster than a run
+  right.
+- The frame counters (`make PERF=2`) time the commit as well.
+
+### Maiya: Super Nature Girl, v3 ROMs
+
+Her stride, her walk, the camera, every road laid out again, the valleys'
+ledge pieces, the works' three drums, dust at her feet, no hold on
+creature blows: `games/maiya/CHANGELOG.md`. `games/maiya/tools/levels.py
+--lint` checks how a stage plays (`docs/levels.md`).
+
 ## v1.7.1 - Maiya: Super Nature Girl and EagleBIOS
 
 Status: in progress on the `fix/maiya-arenas-eagle-bios` branch; becomes

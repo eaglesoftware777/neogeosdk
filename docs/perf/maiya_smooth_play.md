@@ -106,3 +106,36 @@ What made room:
 - shrinks (sparks, petals) through their own path, and dust sparks rescaled in sixteenths, the hardware's own sideways step, instead of every frame;
 - ledges, hazards and decoration keep their sprite groups while in view (`mg_pool_show`): handed out in screen order, every block took its neighbour's piece each time the first left the screen.
 
+
+## The v3 roads
+
+Measured on 2026-10-05 after the v3 work (her stride and walk, the camera, every road laid out again, the ledges' new pieces and undersides, dust at her feet), the same way, 1,800 frames each:
+
+| Scenario | Game fps | Overran | Work, avg lines of 264 | Most sprites on a line |
+|---|---|---|---|---|
+| Stage 1 Emerald Forest | 58.9 | 0% | 176 | 70 |
+| Stage 1 guardian | 58.6 | 0% | 166 | 62 |
+| Stage 2 Valley Of Falls | 59.2 | 1% | 186 | 72 |
+| Stage 2 guardian | 58.4 | 0% | 158 | 55 |
+| Stage 3 Azure Coast | 59.2 | 0% | 202 | 69 |
+| Stage 3 guardian | 58.7 | 0% | 171 | 56 |
+| Stage 4 Autumn Grove | 59.1 | 1% | 200 | 69 |
+| Stage 4 guardian | 58.9 | 0% | 172 | 55 |
+| Stage 5 Crystal Grotto | 58.9 | 1% | 194 | 69 |
+| Stage 5 guardian | 58.9 | 0% | 175 | 56 |
+| Stage 6 Sacred World Tree | 59.1 | 2% | 218 | 68 |
+| Stage 6 guardian | 58.9 | 0% | 172 | 55 |
+| Stage 7 Rio Negro Works | 59.2 | 0% | 204 | 66 |
+| Stage 7 guardian | 59.2 | 0% | 136 | 56 |
+| Stage 8 Sunken Reef | 59.2 | 0% | 212 | 59 |
+| Stage 8 guardian | 58.9 | 0% | 168 | 57 |
+| Stage 9 Silver Cave | 58.6 | 1% | 180 | 65 |
+| Stage 9 guardian | 58.9 | 0% | 177 | 56 |
+| Stage 10 Golden Savanna | 58.6 | 1% | 177 | 66 |
+| Stage 10 guardian | 58.9 | 0% | 172 | 57 |
+| Stage 11 Sky Road | 59.2 | 0% | 151 | 53 |
+| Stage 12 Smog Citadel | 58.9 | 1% | 205 | 64 |
+| Stage 12 guardian | 59.0 | 0% | 159 | 54 |
+
+- Frames that run late stay at 0-2%, every scenario at about 59 frames a second, and no line has more than 72 sprites (the hardware draws 96).
+- A road's average work can't be set beside the table above: the runs follow the new layouts, where she spends more time up on ledges with more of them in view.
