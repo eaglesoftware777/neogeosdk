@@ -22,9 +22,6 @@ WHAT'S NEW SINCE v2   (every change: Maiya-CHANGELOG_v3.txt)
   speed, stops firmly, skids when turned against her momentum and only
   then turns round. She now runs as fast to the left as to the right
   (an old rounding gave the left a pixel a frame more).
-- A walk of her own, upright, half a stride long, with her weight going
-  down and up a pixel; her run keeps the sprint, with a passing pose at
-  the right size.
 - The camera eases after her and keeps more road ahead, without jolting
   on stops and turns.
 - Every road laid out again: each valley built from its own mix of steps,
@@ -39,6 +36,8 @@ WHAT'S NEW SINCE v2   (every change: Maiya-CHANGELOG_v3.txt)
 - "How to play", A and B together: each move played for real on the
   first valley's road, Maiya's then Luna's, one at a time.
 - From the attract demo to the chooser cleanly, without a torn frame.
+- The flight over a healed valley is clear: no shower falling across
+  the screen; the colours still come back as she flies.
 - Same cartridge layout as v1 and v2: P 512 KiB, S 128 KiB, M 128 KiB,
   V 8 MiB, C 8 MiB; the sound (M and V) is v2's, byte for byte, the
   arcade sound fix included; the boot is the same.

@@ -21,6 +21,10 @@ Maiya's `_v3` ROM files; v1.7.0 remains the current release.
   rows in the blank instead.
 - Palette uploads keep the same deadline; a whole-screen upload starts
   only with room for it.
+- No job waits for ever: one that has headed its list for three blanks
+  running goes first in the next. (A big map in the lowest priority -- a
+  valley's landmark around its gate -- could otherwise find too little of
+  the blank left every frame and never be drawn.)
 - `ng_char_set_pos()` and the physics' clamps keep the fraction of an
   axis whose pixel doesn't change: a floor stopping a fall rounded the x
   down every frame, so a run left went a pixel a frame faster than a run
@@ -29,7 +33,7 @@ Maiya's `_v3` ROM files; v1.7.0 remains the current release.
 
 ### Maiya: Super Nature Girl, v3 ROMs
 
-Her stride, her walk, the camera, every road laid out again, the valleys'
+Her stride, the camera, every road laid out again, the valleys'
 ledge pieces, the works' three drums, dust at her feet, no hold on
 creature blows: `games/maiya/CHANGELOG.md`. `games/maiya/tools/levels.py
 --lint` checks how a stage plays (`docs/levels.md`).

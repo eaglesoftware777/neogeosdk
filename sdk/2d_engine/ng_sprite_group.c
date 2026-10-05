@@ -988,6 +988,48 @@ static void NEOGEO_USER ngsg_commit_list(NGSpriteGroup **q, uint16_t *count)
     *count = kept;
 }
 
+/*
+ * No job waits for ever. A list's lowest priority runs last, with what
+ * the others left of the blank, and a big map (a 192 x 176 landmark: some
+ * twenty lines) could find too little there every frame and never be
+ * drawn. The job at the head of a list after a commit is the one that has
+ * waited longest; one that has headed its list for NGSG_AGED blanks
+ * running goes first in the next, before any other content.
+ */
+#define NGSG_AGED 3u
+static NGSpriteGroup *ngsg_head[3];
+static uint8_t ngsg_head_age[3];
+
+static void NEOGEO_USER ngsg_note_head(uint8_t list, NGSpriteGroup **q, uint16_t n)
+{
+    NGSpriteGroup *g = n ? q[0] : 0;
+    if (g && g == ngsg_head[list]) {
+        if (ngsg_head_age[list] < 255u) ngsg_head_age[list]++;
+    } else {
+        ngsg_head[list] = g;
+        ngsg_head_age[list] = 1u;
+    }
+}
+
+static void NEOGEO_USER ngsg_commit_aged(void)
+{
+    uint8_t list, best = 3u, age = 0u;
+    NGSpriteGroup *g;
+    for (list = 0; list < 3u; list++)
+        if (ngsg_head[list] && ngsg_head_age[list] >= NGSG_AGED && ngsg_head_age[list] > age) {
+            best = list;
+            age = ngsg_head_age[list];
+        }
+    if (best == 3u) return;
+    g = ngsg_head[best];
+    ngsg_head[best] = 0;
+    /* still waiting with content (a hide or a later write may have done it) */
+    if (!(g->dirty & NG_SGF_QUEUED) || !(g->dirty & NG_SGF_DIRTY_ALL)) return;
+    if (!ngsg_flush_moved(g) && !ngsg_flush_rescaled(g)) ngsg_flush_now(g);
+    ngsg_done++;
+    /* (still marked listed: its list's loop finds nothing dirty and drops it) */
+}
+
 #ifdef NG_DEBUG_PERF
 /* (measurement builds) Content -- maps, shrinks, shows -- a commit left for
  * the next blank. Counted at its end, so the count takes a little of the
@@ -1110,9 +1152,12 @@ void NEOGEO_USER ng_vram_commit(void)
     ngsg_commit_moves(ngsg_high, ngsg_high_n);
     ngsg_commit_moves(ngsg_norm, ngsg_norm_n);
     ngsg_commit_moves(ngsg_low, ngsg_low_n);
+    ngsg_commit_aged();              /* a job that has waited too long */
     ngsg_commit_list(ngsg_high, &ngsg_high_n);
+    ngsg_note_head(0, ngsg_high, ngsg_high_n);
     if (ngsg_strips_n) ngsg_commit_strips();
     ngsg_commit_list(ngsg_norm, &ngsg_norm_n);
+    ngsg_note_head(1, ngsg_norm, ngsg_norm_n);
     {
         uint16_t from = NG_PERF_LINE();
         (void)from;
@@ -1120,6 +1165,7 @@ void NEOGEO_USER ng_vram_commit(void)
         NG_PERF_COMMIT_PART(ngsg_done, ng_fix_last_commit_cells(), from);
     }
     ngsg_commit_list(ngsg_low, &ngsg_low_n);
+    ngsg_note_head(2, ngsg_low, ngsg_low_n);
     NG_PERF_COMMIT(0);
 #ifdef NG_DEBUG_PERF
     ngsg_perf_left();                /* (after the commit's end is taken) */
