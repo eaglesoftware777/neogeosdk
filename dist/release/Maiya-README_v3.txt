@@ -52,6 +52,11 @@ Maiya-Darksoft-MVS_v3.zip      Darksoft Neo Geo Multi folder, MVS build
 Maiya-Darksoft-AES_v3.zip      Darksoft Neo Geo Multi folder, AES build
                                Copy the folder inside to the SD card. No
                                BIOS included: the Multi uses the board's.
+Maiya-BackBit-MVS_v3.zip       BackBit Platinum folder, MVS build
+Maiya-BackBit-AES_v3.zip       BackBit Platinum folder, AES build
+                               Copy the maiya folder inside to the microSD
+                               card. No BIOS included: the BackBit uses
+                               the board's.
 Maiya-WIP-EagleBIOS_v3.zip     MAME: the MVS build with EagleBIOS
                                  mame neogeo -rompath roms -hashpath hash -bios euro -cart1 maiya
 Maiya-WIP-AES-EagleBIOS_v3.zip MAME: the AES build with EagleBIOS and a blank memory card

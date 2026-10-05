@@ -8,6 +8,8 @@ a version suffix into dist/release/:
     <Prefix>-WIP-NeoSD_AES_<v>.neo
     <Prefix>-Darksoft-MVS_<v>.zip        Darksoft Multi folders (tools/pack_darksoft.py)
     <Prefix>-Darksoft-AES_<v>.zip
+    <Prefix>-BackBit-MVS_<v>.zip         BackBit Platinum folders (tools/pack_backbit.py)
+    <Prefix>-BackBit-AES_<v>.zip
     <Prefix>-WIP-EagleBIOS_<v>.zip       MAME: the MVS cartridge with EagleBIOS
     <Prefix>-WIP-AES-EagleBIOS_<v>.zip   MAME: the AES cartridge with EagleBIOS
     <Prefix>-MANIFEST_<v>.txt            every file's size, CRC32 and SHA-256
@@ -35,6 +37,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from pack_darksoft import build as darksoft  # noqa: E402
+from pack_backbit import build as backbit, mame_set  # noqa: E402
 
 EAGLE = {"neogeo": ("sp-s2.sp1", "sm1.sm1", "sfix.sfix", "000-lo.lo"), "aes": ("neo-epo.bin", "000-lo.lo")}
 PARTS = ("p1", "s1", "m1", "v1", "c1", "c2")
@@ -90,6 +93,7 @@ def main():
     names = {
         "neo_mvs": f"{p}-WIP-NeoSD_MVS_{v}.neo", "neo_aes": f"{p}-WIP-NeoSD_AES_{v}.neo",
         "ds_mvs": f"{p}-Darksoft-MVS_{v}.zip", "ds_aes": f"{p}-Darksoft-AES_{v}.zip",
+        "bb_mvs": f"{p}-BackBit-MVS_{v}.zip", "bb_aes": f"{p}-BackBit-AES_{v}.zip",
         "eagle_mvs": f"{p}-WIP-EagleBIOS_{v}.zip", "eagle_aes": f"{p}-WIP-AES-EagleBIOS_{v}.zip",
         "manifest": f"{p}-MANIFEST_{v}.txt",
     }
@@ -115,6 +119,11 @@ def main():
             with zipfile.ZipFile(stage / names[key], "w", zipfile.ZIP_DEFLATED) as z:
                 for k, data in files.items():
                     z.writestr(f"{folder}/{k}", data)
+        for plat, key in (("MVS", "bb_mvs"), ("AES", "bb_aes")):
+            files = backbit(mame_set(src / plat.lower() / "roms" / g, i), g, args.name, plat)
+            with zipfile.ZipFile(stage / names[key], "w", zipfile.ZIP_DEFLATED) as z:
+                for k, data in files.items():
+                    z.writestr(k, data)
         eagle_zip(stage / names["eagle_mvs"], g, i, src / "mvs", ("neogeo", "aes"),
                   f"mame neogeo -rompath roms -hashpath hash -bios euro -cart1 {g}\n"
                   "EagleBIOS stands in for the system ROM: checksum warnings for it are expected.\n"
