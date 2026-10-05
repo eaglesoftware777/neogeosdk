@@ -31,6 +31,13 @@ Maiya's `_v3` ROM files; v1.7.0 remains the current release.
   right.
 - The frame counters (`make PERF=2`) time the commit as well.
 
+### Release packages
+
+- BackBit Platinum folders: `tools/pack_backbit.py`, and `make_release.py`
+  adds `<Prefix>-BackBit-MVS_<v>.zip` and `-AES_<v>.zip` to a release
+  (the game's own six ROM files, `<game>.p1` to `<game>.c2`, in a folder
+  named after it).
+
 ### Maiya: Super Nature Girl, v3 ROMs
 
 Her stride, the camera, every road laid out again, the valleys'
