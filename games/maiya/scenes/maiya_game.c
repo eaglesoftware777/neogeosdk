@@ -322,7 +322,7 @@ typedef struct {
     MGPlatform arena[2];
     uint16_t walk_distance;
     uint8_t  gait_still;             /* she stood still last frame                    */
-    uint8_t  gait;                   /* her gait pose shown: 1 + phase, | 0x10 at a run; 0 none */
+    uint8_t  gait;                   /* her stride's pose shown: 1 + phase, | 0x10 at a run; 0 none */
     uint8_t  gait_step;              /* the gait phase shown last (a footfall is a new 0 or 4) */
     int16_t  air_vy;                 /* her fall speed in the air, kept for the landing's dust */
     uint8_t climb_cooldown;
@@ -2369,13 +2369,13 @@ static NGCharacter *NEOGEO_USER mg_character(uint8_t kind, int16_t x, int16_t y,
 /*  Showers from the sky                                              */
 /* ------------------------------------------------------------------ */
 /*
- * Flowers, leaves and drops of clean water falling over the whole screen.
- * A piece lives on the screen, not in the valley -- the view pans under
- * it -- sways and tumbles as it comes down, and at a height of its own it
- * is gone: a flower or a leaf shrinks away, a drop splashes. Over a healed
- * valley each one gone brings the painting's colours up a step
- * (mg_glow_*). There the shower has the tray's 24 sprites, which the scene
- * hides; in play it takes the 14 above the glider, which nothing uses.
+ * Flowers, leaves and drops of clean water falling over the whole screen,
+ * after a Secret Art. A piece lives on the screen, not in the valley --
+ * the view pans under it -- sways and tumbles as it comes down, and at a
+ * height of its own it is gone: a flower or a leaf shrinks away, a drop
+ * splashes. It takes the 14 sprites above the glider, which nothing else
+ * uses in play. (The flight over a healed valley has no shower: its
+ * colours come up as she flies, mg_glow_*.)
  *
  * A Secret Art sends its pieces the other way: each appears at the edge of
  * the screen, gathers there a moment, then flies onto the creature it was
@@ -2407,7 +2407,6 @@ static void NEOGEO_USER mg_art_track(MGFall *f);
 
 static MGFall mg_falls[MG_FALLS];
 static uint8_t mg_falls_n;       /* sprites the shower has: 0 while there is none */
-static uint8_t mg_falls_gone;    /* pieces gone since it began (stops at 255) */
 
 /* Shrinking away, frame by frame to the last. */
 static const uint8_t mg_fall_scale[MG_FALL_FADE] = { 24, 48, 72, 96, 120, 144, 168, 192, 216, 240 };
@@ -2416,7 +2415,6 @@ static void NEOGEO_USER mg_falls_begin(uint16_t slot, uint8_t count)
 {
     uint8_t i;
     mg_falls_n = count;
-    mg_falls_gone = 0;
     for (i = 0; i < count; i++) {
         mg_falls[i].live = 0;
         ng_sprite_group_init(&mg_falls[i].sprite, (uint16_t)(slot + i), 1, 1,
@@ -2467,13 +2465,6 @@ static void NEOGEO_USER mg_fall_spawn(uint8_t kind)
     }
 }
 
-/* Half flowers of the four kinds, the rest leaves and clean water. */
-static void NEOGEO_USER mg_fall_any(void)
-{
-    uint8_t r = (uint8_t)(ng_rand() & 15u);
-    mg_fall_spawn((uint8_t)(r < 8u ? (r & 3u) : (r < 11u ? MG_FALL_LEAF : MG_FALL_WATER)));
-}
-
 static void NEOGEO_USER mg_falls_step(void)
 {
     uint8_t i;
@@ -2488,7 +2479,6 @@ static void NEOGEO_USER mg_falls_step(void)
         if (f->fade) {
             if (--f->fade == 0) {
                 f->live = 0;
-                if (mg_falls_gone < 255u) mg_falls_gone++;
                 ng_sprite_group_set_visible(g, 0);
                 ng_sprite_group_flush(g);
                 continue;
@@ -8474,12 +8464,12 @@ static void NEOGEO_USER mg_squash_step(void)
         mg.sq_t = 0;
         /* Her run's weight: she is lowest as a foot lands and while her
          * legs pass under her, highest in the flight between strides --
-         * her feet stay on the ground, her head dips. */
-        if (!mg.flying && !mg.climbing && !mg.swimming && !mg.airborne && (mg.gait & 0x10u)) {
-            /* (her walk has its weight drawn in: down a pixel, up a pixel) */
-            uint8_t k = (uint8_t)((mg.gait & 0x0Fu) - 1u);
-            if ((k & 3u) == 0u) ys = MG_RUN_FOOTFALL;
-            else if ((k & 3u) == 1u) ys = MG_RUN_PASSING;
+         * her feet stay on the ground, her head dips -- a little more
+         * when she runs. */
+        if (!mg.flying && !mg.climbing && !mg.swimming && !mg.airborne && mg.gait) {
+            uint8_t k = (uint8_t)((mg.gait & 0x0Fu) - 1u), fast = (uint8_t)(mg.gait & 0x10u);
+            if ((k & 3u) == 0u) ys = fast ? MG_RUN_FOOTFALL_FAST : MG_RUN_FOOTFALL;
+            else if ((k & 3u) == 1u) ys = fast ? MG_RUN_PASSING_FAST : MG_RUN_PASSING;
         }
     }
     w = (uint8_t)(HERO_STRIPS * ((xs >> 4) + 1u));               /* drawn width */
@@ -8501,20 +8491,9 @@ static void NEOGEO_USER mg_world_step(void)
     ng_game_engine_frame();
 }
 
-/* Her run's poses by gait phase: the sprint, with the low passing pose
- * between strides. Her walk is MG_F_WALK0..7, upright and half the step:
- * contact, down, passing, up, for each foot (build_commercial_assets.py). */
-static const uint8_t mg_run_cycle[MG_GAIT_FRAMES] = {
-    MG_F_RUN3, MG_F_RUNPASS, MG_F_RUN1, MG_F_RUN0, MG_F_STRIDE, MG_F_RUNPASS, MG_F_RUN1, MG_F_RUN2
-};
-
-/* A run is faster than her walk (her swift walk included), with a margin
- * so easing from one to the other doesn't flicker between the two. */
-static uint8_t NEOGEO_USER mg_gait_runs(uint16_t speed)
-{
-    return (uint8_t)(speed > (mg.swift ? WALK_SPEED * 5 / 4 : WALK_SPEED) + 64);
-}
-
+/* Her stride, walking or running: two strides of contact, passing,
+ * push-off and flight (MG_F_WALK0..7), the run's footfall a little deeper
+ * (mg_squash_step). */
 static void NEOGEO_USER mg_gait_pose(NGCharacter *p, uint8_t run)
 {
     uint8_t k = mg_gait_frame(mg.walk_distance);
@@ -8523,7 +8502,7 @@ static void NEOGEO_USER mg_gait_pose(NGCharacter *p, uint8_t run)
     if (run && (k & 3u) == 0u && k != mg.gait_step)
         mg_kick_dust((int16_t)(p->x + (mg.facing ? 8 : -8)), p->y, 1, (int8_t)(mg.facing ? 1 : -1));
     mg.gait_step = k;
-    mg_frame(p, run ? mg_run_cycle[k] : (uint8_t)(MG_F_WALK0 + k), mg.facing);
+    mg_frame(p, (uint8_t)(MG_F_WALK0 + k), mg.facing);
 }
 
 static void NEOGEO_USER mg_animate_player(void)
@@ -8546,15 +8525,11 @@ static void NEOGEO_USER mg_animate_player(void)
 
     /* Keep one forward gait clock through attacks and dashes. A backward
      * countdown is not an animation phase; it reverses the foot sequence.
-     * From a standstill she starts on phase 2: the walk's passing pose,
-     * the run's push-off.
-     * The clock is the road she covers: a phase is 10 px at a run, 5 at a
-     * walk (a step is half a stride), so her feet never slide. */
+     * From a standstill she starts on the push-off, not mid-stride. */
     speed = (uint16_t)mg_abs((int16_t)p->vx_fp);
     if (grounded && !mg.climbing && speed) {
         if (mg.gait_still) mg.walk_distance = (uint16_t)(MG_GAIT_STEP * 2u);
-        mg.walk_distance = mg_gait_advance(mg.walk_distance,
-                                           (uint16_t)(mg_gait_runs(speed) ? speed : speed * 2u));
+        mg.walk_distance = mg_gait_advance(mg.walk_distance, speed);
     }
     mg.gait_still = (uint8_t)(p->vx_fp == 0);
 
@@ -8631,7 +8606,7 @@ static void NEOGEO_USER mg_animate_player(void)
             if ((mg.tick & 3u) == 0u)      /* her heels plough up the road ahead */
                 mg_kick_dust((int16_t)(p->x + (mg.facing ? -12 : 12)), p->y, 1, (int8_t)(mg.facing ? -1 : 1));
         } else
-            mg_gait_pose(p, mg_gait_runs(speed));
+            mg_gait_pose(p, (uint8_t)(speed > WALK_SPEED + 64));
     } else {
         mg_frame(p, (uint8_t)(MG_F_IDLE0 + ((mg.tick / 20) % 3)), mg.facing);
     }
@@ -9339,7 +9314,6 @@ static void NEOGEO_USER mg_tour_begin(void)
     mg.cam_y = 0;
     mg_background(lv->background, 1);          /* its own painting, in its clean colours */
     mg_glow_begin();                            /* ...still hazy, for now */
-    mg_falls_begin(SLOT_TRAY, MG_FALLS);        /* the shower has the tray's sprites */
     ng_fix_clear();
 
     /* the people she freed, and the valley's villagers, out on the road */
@@ -9405,8 +9379,6 @@ static void NEOGEO_USER mg_tour_frame(void)
         mg_frame(p, (uint8_t)(mg.flying ? MG_F_RIDE : MG_F_LEAP1), 0);
         if (mg.tour_t == 90u) mg_centre(7, mg_healed[mg.stage][0], PAL_TEXT);
         if (mg.tour_t == 170u) mg_centre(8, mg_healed[mg.stage][1], PAL_TEXT);
-        /* the sky strews the valley she has healed */
-        if ((mg.tick & 1u) == 0u) mg_fall_any();
         if (mg.tour_x >= end && mg.tour_t > 240u) {
             /* the elder waits at the end of the road */
             NGCharacter *elder = mg_tour_person(0, (int16_t)(end + 224));
@@ -9422,7 +9394,6 @@ static void NEOGEO_USER mg_tour_frame(void)
         int16_t tx = (int16_t)(end + 150);
         if (p->x < tx) ng_char_set_pos(p, (int16_t)(p->x + 1), p->y);
         if (p->y < floor) ng_char_set_pos(p, p->x, (int16_t)(p->y + 1));
-        if ((mg.tick & 7u) == 0u) mg_fall_any();     /* the last of the shower */
         if (mg.flying) mg_frame(p, MG_F_RIDE, 0);
         else mg_frame(p, (uint8_t)(p->y < floor ? MG_F_LEAP1 : (mg.tour_t < 200u ? MG_F_IDLE0 : MG_F_WIN)), 0);
         if (mg.tour_t == 70u) {
@@ -9460,8 +9431,9 @@ static void NEOGEO_USER mg_tour_frame(void)
         if (sx > 0 && sx < 320 && ((mg.tick + i * 13u) % 40u) == 0u)
             mg_burst(c->x, (int16_t)(MG_GROUND_Y - 52), MG_T_HEART, 1, -1);
     }
-    /* each piece gone brings the colours up; with the elder, all the way */
-    mg_glow_step((uint8_t)(mg.tour_phase ? 16u : mg_falls_gone >> 2));
+    /* the colours come up as she flies over (all of them in about four
+     * seconds); with the elder, all the way */
+    mg_glow_step((uint8_t)(mg.tour_phase || mg.tour_t >= 256u ? 16u : mg.tour_t >> 4));
     mg_world_step();
 }
 

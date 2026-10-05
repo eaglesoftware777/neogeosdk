@@ -73,10 +73,12 @@
  */
 enum { MG_SQ_LAND = 1, MG_SQ_JUMP, MG_SQ_HURT, MG_SQ_STRIKE, MG_SQ_KINDS };
 /* her run's footfall: how tall she is on the two poses that plant a foot
- * (256ths, less one): 95%; her walk's dip and rise are drawn in its frames */
-#define MG_RUN_FOOTFALL       0xF2
-/* ... and while her legs pass under her: 97% */
-#define MG_RUN_PASSING        0xF7
+ * (256ths, less one): 97% walking, 95% at a run */
+#define MG_RUN_FOOTFALL       0xF7
+#define MG_RUN_FOOTFALL_FAST  0xF2
+/* ... and while her legs pass under her: 98% walking, 97% at a run */
+#define MG_RUN_PASSING        0xFA
+#define MG_RUN_PASSING_FAST   0xF7
 /* Her jump's poses by her climb speed (1/256 px a frame): the push-off
  * while she is still faster than this going up, the top of the arc within
  * this of still, rising or falling either side of it. */
