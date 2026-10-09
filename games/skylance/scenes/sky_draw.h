@@ -32,12 +32,16 @@ NGCharacter * NEOGEO_USER sky_spawn(uint8_t kind, uint8_t id,
                                     uint8_t scale, uint8_t band);
 
 /* ------------------------------------------------------------------ */
-/*  Scrolling background (hardware slots 1..32, behind everything)      */
+/*  Shooter terrain/cloud layers (slots 1..88, characters start at 96) */
 /* ------------------------------------------------------------------ */
 void NEOGEO_USER sky_bg_select(uint8_t id);
 void NEOGEO_USER sky_bg_advance(uint8_t pixels);
+void NEOGEO_USER sky_bg_follow(int16_t x, int16_t y);
 void NEOGEO_USER sky_bg_draw(void);
 void NEOGEO_USER sky_bg_hide(void);
+void NEOGEO_USER sky_title_draw(void);
+void NEOGEO_USER sky_presentation_init(void);
+void NEOGEO_USER sky_fade_out(void);
 
 /* ------------------------------------------------------------------ */
 /*  Frame pump                                                          */

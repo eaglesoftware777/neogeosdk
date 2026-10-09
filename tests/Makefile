@@ -31,6 +31,7 @@ TEST_RAND := test_rand$(EXE)
 TEST_TRIG := test_trig$(EXE)
 TEST_PAUSE := test_pause$(EXE)
 TEST_MOVE := test_move$(EXE)
+TEST_SHOOTER := test_shooter$(EXE)
 
 C_SRCS   = sprite_render_test.c \
            ../sdk/2d_engine/ng_chars.c \
@@ -51,7 +52,7 @@ CPP_SRCS = sprite_render_test.c \
 
 .PHONY: all test clean
 
-all: $(TEST_C) $(TEST_CPP) $(TEST_RAND) $(TEST_TRIG) $(TEST_PAUSE) $(TEST_MOVE)
+all: $(TEST_C) $(TEST_CPP) $(TEST_RAND) $(TEST_TRIG) $(TEST_PAUSE) $(TEST_MOVE) $(TEST_SHOOTER)
 
 $(TEST_C): $(C_SRCS) $(wildcard ../sdk/2d_engine/*.h)
 	$(CC) -o $@ $(CFLAGS) $(C_SRCS)
@@ -75,6 +76,9 @@ $(TEST_PAUSE): $(PAUSE_SRCS) ../sdk/2d_engine/ng_pause.h ../sdk/2d_engine/ng_fee
 $(TEST_MOVE): move_test.c ../sdk/2d_engine/ng_move.c ../sdk/2d_engine/ng_move.h
 	$(CC) -Wall -o $@ $(CFLAGS) move_test.c ../sdk/2d_engine/ng_move.c
 
+$(TEST_SHOOTER): shooter_test.c ../sdk/2d_engine/ng_shooter.c ../sdk/2d_engine/ng_shooter.h
+	$(CC) -Wall -Wextra -o $@ $(CFLAGS) shooter_test.c ../sdk/2d_engine/ng_shooter.c
+
 test: all
 	$(RUN)$(TEST_C)
 	$(RUN)$(TEST_CPP)
@@ -82,7 +86,8 @@ test: all
 	$(RUN)$(TEST_TRIG)
 	$(RUN)$(TEST_PAUSE)
 	$(RUN)$(TEST_MOVE)
+	$(RUN)$(TEST_SHOOTER)
 	$(PYTHON) ../tools/gen_trig.py --check ../sdk/2d_engine/ng_trig_table.c
 
 clean:
-	-$(RMF) $(TEST_C) $(TEST_CPP) $(TEST_RAND) $(TEST_TRIG) $(TEST_PAUSE)
+	-$(RMF) $(TEST_C) $(TEST_CPP) $(TEST_RAND) $(TEST_TRIG) $(TEST_PAUSE) $(TEST_SHOOTER)

@@ -13,7 +13,7 @@
  * on they change by additions only (tools/api_freeze.py checks it). */
 #define NG_SDK_VERSION_MAJOR        1
 #define NG_SDK_VERSION_MINOR        7
-#define NG_SDK_VERSION_PATCH        2
+#define NG_SDK_VERSION_PATCH        3
 #define NG_SDK_VERSION              ((NG_SDK_VERSION_MAJOR << 16) | (NG_SDK_VERSION_MINOR << 8) | NG_SDK_VERSION_PATCH)
 #define NG_FRAMEWORK_VERSION_MAJOR  1
 #define NG_FRAMEWORK_VERSION_MINOR  2   /* 1.1: raster bands (ng_raster.h); 1.2: VRAM priorities, the blank's deadline */

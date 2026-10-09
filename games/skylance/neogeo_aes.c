@@ -212,12 +212,12 @@ uint32_t * IVT[] __attribute__ ((section ("neogeo_ivt"))) = {
 					(uint32_t *)0xFFFFFFFF	};
 uint8_t neogeo_str[] __attribute__ ((section ("neogeo_init"))) = { 0x4e, 0x45, 0x4f, 0x2d, 0x47, 0x45, 0x4f };
 uint8_t zerobyte __attribute__ ((section ("neogeo_init"))) = 0x00;
-uint16_t id __attribute__ ((section ("neogeo_init"))) = 			0x0777;
+uint16_t id __attribute__ ((section ("neogeo_init"))) = 			0x0779;
 uint32_t psize  __attribute__ ((section ("neogeo_init"))) = 		0x80000;
-uint32_t pbcks __attribute__ ((section ("neogeo_init"))) = 		0x108000;  /* backup start = start of work RAM */
-uint16_t dipsize  __attribute__ ((section ("neogeo_init"))) = 		0x1000;
-uint8_t bioslogoflag __attribute__ ((section ("neogeo_init"))) = 	0x00;  /* 0 = show BIOS startup logo + call EYE_CATCHER (AES standard) */
-uint8_t bioslogotile __attribute__ ((section ("neogeo_init"))) = 	0x00;
+uint32_t pbcks __attribute__ ((section ("neogeo_init"))) = 		0x100400;  /* reserved, outside engine BSS */
+uint16_t dipsize  __attribute__ ((section ("neogeo_init"))) = 		0x0100;
+uint8_t bioslogoflag __attribute__ ((section ("neogeo_init"))) = 	0x02;
+uint8_t bioslogotile __attribute__ ((section ("neogeo_init"))) = 	0x49;
 /********************************************************************/
 /* neogeo_entry */
 uint32_t NEOGEO_ENT0[]  __attribute__ ((section ("neogeo_entry"))) = {0x00000200, 0x00000280, 0x00000300};

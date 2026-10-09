@@ -10,13 +10,15 @@
  */
 
 #include "sky_draw.h"
-#include "sky_terrain.h"
 #include "sky_stage.h"
 #include "sdk/neogeo.h"
 #include "sdk/2d_engine/ng_sprite_group.h"
 #include "sdk/2d_engine/ng_sprite_window.h"
 #include "sdk/2d_engine/ng_art_asset.h"
 #include "sdk/2d_engine/ng_sprite_hw.h"
+#include "sdk/2d_engine/ng_palette_fx.h"
+#include "sdk/2d_engine/ng_fix.h"
+#include "sdk/2d_engine/ng_shooter.h"
 #include "sprite_meta.h"
 #include "infix_palettes.h"
 
@@ -118,7 +120,8 @@ void NEOGEO_USER sky_bind(NGCharacter *c, uint8_t id, uint8_t scale, uint8_t ban
     }
 
     ng_char_set_priority(c, band, 0);
-    if (!s_palette_loaded[id]) {
+    if (!s_palette_loaded[id] || id == SKY_P1_PLANE || id == SKY_P2_PLANE ||
+        id == SKY_P3_PLANE || id >= 35u) {
         ng_load_screen_palette(id);
         s_palette_loaded[id] = 1u;
     }
@@ -139,17 +142,42 @@ NGCharacter * NEOGEO_USER sky_spawn(uint8_t kind, uint8_t id,
 /* ------------------------------------------------------------------ */
 /*  Scrolling background                                                */
 /* ------------------------------------------------------------------ */
-/* Resident terrain pages occupy slots 1..32, below all craft. */
+/* Terrain occupies 1..44, clouds 45..88; craft start at slot 96. */
 static uint8_t s_bg_id;
 static uint8_t s_bg_advance;
-static SkyTerrain s_terrain;
+static NGVerticalLayer s_ground, s_clouds;
+static NGShooterCamera s_camera;
+static int16_t s_follow_x = 160, s_follow_y = 112;
+static uint8_t s_bg_ready;
+static uint16_t s_palette_base[104u * 16u];
+static uint16_t s_palette_out[104u * 16u];
 
 void NEOGEO_USER sky_bg_select(uint8_t id)
 {
-    if (s_bg_id == id && s_terrain.ready) return;
+    const NGArtAsset *art = ng_screen_art_asset(id);
+    const NGArtAsset *cloud = ng_screen_art_asset(SKY_CLOUD_ART);
+    if (s_bg_id == id && s_bg_ready) return;
+    if (!art || art->strips != 22u || art->active_rows != 32u) return;
     s_bg_id = id;
     s_bg_advance = 0u;
-    sky_terrain_init(&s_terrain, id, NG_SPR_BG0_FIRST, SKY_FIELD_X);
+    ng_load_screen_palette(id);
+    ng_shooter_camera_init(&s_camera);
+    ng_shooter_camera_set_follow(&s_camera, 8u, 6u, 16u, 4u);
+    s_follow_x = 160;
+    s_follow_y = 112;
+    s_bg_ready = ng_vertical_layer_init(&s_ground, 1u, 22u, 16u,
+                                       art->tile_base, art->palette_bank, art->tile_palettes, -16);
+    if (cloud) {
+        ng_load_screen_palette(SKY_CLOUD_ART);
+        ng_vertical_layer_init(&s_clouds, 45u, 22u, 16u, cloud->tile_base,
+                               cloud->palette_bank, cloud->tile_palettes, -16);
+    }
+}
+
+void NEOGEO_USER sky_bg_follow(int16_t x, int16_t y)
+{
+    s_follow_x = x;
+    s_follow_y = y;
 }
 
 void NEOGEO_USER sky_bg_advance(uint8_t pixels)
@@ -159,15 +187,50 @@ void NEOGEO_USER sky_bg_advance(uint8_t pixels)
 
 void NEOGEO_USER sky_bg_draw(void)
 {
-    sky_terrain_draw(&s_terrain, s_bg_advance, SKY_FIELD_X);
+    if (!s_bg_ready) return;
+    ng_shooter_camera_set_speed(&s_camera, (int16_t)((uint16_t)s_bg_advance * 256u));
+    ng_shooter_camera_step(&s_camera, s_follow_x, s_follow_y);
+    ng_vertical_layer_draw(&s_ground, &s_camera, 256u);
+    ng_vertical_layer_draw(&s_clouds, &s_camera, 384u);
     s_bg_advance = 0u;
 }
 
 void NEOGEO_USER sky_bg_hide(void)
 {
-    ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(NG_SPR_BG0_FIRST), 32u);
+    ng_vertical_layer_hide(&s_ground);
+    ng_vertical_layer_hide(&s_clouds);
+    /* The title borrows the first page without enabling a scrolling layer. */
+    ng_sprite_group_cancel(&s_ground.pages[0]);
+    ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(NG_SPR_BG0_FIRST), 20u);
     s_bg_id = 0u;
-    s_terrain.ready = 0u;
+    s_bg_ready = 0u;
+}
+
+void NEOGEO_USER sky_title_draw(void)
+{
+    const NGArtAsset *art = ng_screen_art_asset(SKY_TITLE_ART);
+    NGSpriteGroup *g = &s_ground.pages[0];
+    sky_bg_hide();
+    ng_load_screen_palette(SKY_TITLE_ART);
+    ng_sprite_group_init(g, 1u, 20u, 14u, art->tile_base, art->palette_bank);
+    ng_sprite_group_set_tile_stride(g, 20u);
+    ng_sprite_group_set_palette_map(g, art->tile_palettes);
+    ng_sprite_group_set_pos(g, 0, 0);
+    ng_sprite_group_upload(g);
+}
+
+void NEOGEO_USER sky_presentation_init(void)
+{
+    ng_palfx_screen_init(s_palette_base, s_palette_out, 104u);
+    ng_fix_init();
+    ng_fix_set_ascii_base(0xD00u);
+}
+
+void NEOGEO_USER sky_fade_out(void)
+{
+    ng_palfx_screen_fade_out(16u, 8u);
+    while (ng_palfx_screen_fading()) sky_frame();
+    sky_frame();
 }
 
 /* ------------------------------------------------------------------ */
@@ -182,6 +245,7 @@ static uint16_t s_rng      = 0x1234u;
 void NEOGEO_USER sky_scene_begin(void)
 {
     uint16_t i;
+    sky_fade_out();
     waitVbl();
     setBACKDROP(SKY_BG_CLEAR);
     clearFix();
@@ -193,29 +257,22 @@ void NEOGEO_USER sky_scene_begin(void)
     s_joy = 0u;
     s_joy_prev = 0u;
     s_pressed = 0u;
+    ng_fix_invalidate_all();
+    ng_palfx_screen_fade_in(0u, 12u);
     waitVbl();
 }
 
 uint16_t NEOGEO_USER sky_frame(void)
 {
     waitVbl();
+    if (!ng_vram_window_open()) waitVbl();
+    ng_palfx_vblank();
+    ng_vram_commit();
+    ng_palette_fx_update();
     s_joy_prev = s_joy;
     s_joy = poll_joystick();
     s_pressed = (uint16_t)(s_joy & (uint16_t)~s_joy_prev);
     s_frames++;
-    /* Only the impact-ring asset is cycled; index zero and HUD inks stay intact. */
-    if ((s_frames % 6u) == 0u && s_palette_loaded[SKY_SHOT_RING]) {
-        const uint16_t *base = ng_get_screen_palette(SKY_SHOT_RING);
-        const NGSpriteAssetMeta *m = sky_meta(SKY_SHOT_RING);
-        if (base && m) {
-            uint16_t colors[16];
-            uint8_t i, phase = (uint8_t)((s_frames / 6u) % 15u);
-            colors[0] = base[0];
-            for (i = 1u; i < 16u; i++)
-                colors[i] = base[1u + (i - 1u + phase) % 15u];
-            load_palettes(colors, PALETTES + PALOFFSET * m->palette_bank);
-        }
-    }
     /* Stir the generator every frame so enemy spawns don't fall into a
      * visible pattern when the player holds a steady input. */
     s_rng ^= (uint16_t)(s_joy + s_frames);
@@ -237,7 +294,7 @@ uint16_t NEOGEO_USER sky_rand(void)
 void NEOGEO_USER sky_puts(uint8_t x, uint8_t y, const char *text, uint8_t pal)
 {
     if (!text || x >= 40u || y >= 28u) return;
-    mess_out_clipped(x, y, text, (short)pal, (uint16_t)(40u - x));
+    ng_fix_puts(x, y, text, pal);
 }
 
 /*
@@ -293,7 +350,7 @@ void NEOGEO_USER sky_fix_palettes_init(void)
         s_infix_bank[i] = (uint8_t)(SKY_FIX_INFIX_BANK0 + used);
         used++;
         for (k = 0u; k < 16u; k++) pal[k] = INFIX_PALETTES[i][k];
-        load_palettes(pal, PALETTES + PALOFFSET * s_infix_bank[i]);
+        ng_palfx_screen_load(s_infix_bank[i], pal);
     }
 }
 
@@ -303,7 +360,7 @@ void NEOGEO_USER sky_fix_blank(uint8_t x, uint8_t y, uint8_t cells)
     for (i = 0u; i < cells; i++) {
         uint8_t cx = (uint8_t)(x + i);
         if (cx >= 40u || y >= 28u) return;
-        ngfix_write_tile(cx, y, 0xFFu, 0u);
+        ng_fix_blank_cell(cx, y);
     }
 }
 
@@ -327,7 +384,7 @@ void NEOGEO_USER sky_infix(uint8_t x, uint8_t y, uint8_t infix_index)
             uint8_t cx = (uint8_t)(x + col);
             uint8_t cy = (uint8_t)(y + row);
             if (cx >= 40u || cy >= 28u) continue;
-            ngfix_write_tile(cx, cy,
+            ng_fix_put_tile(cx, cy,
                              (uint16_t)(img->tile_base + (uint16_t)row * img->cols + col),
                              s_infix_bank[infix_index]);
         }

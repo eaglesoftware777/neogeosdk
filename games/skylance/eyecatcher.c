@@ -30,9 +30,7 @@ void NEOGEO_USER showEyeCatcherMVS(void)
 {
     clearFix();
     clearSprs();
-    showScreen2(32, 0, 0xF, 0xFF, 16, 0x0000, EC_SPRITE_BASE);
-    cyclexms(900);
-    clearSprs();
+    setBACKDROP(BLACK);
 }
 
 #pragma GCC pop_options
