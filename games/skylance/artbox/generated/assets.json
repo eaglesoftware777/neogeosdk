@@ -1,0 +1,472 @@
+[
+  {
+    "id": 1,
+    "name": "coast",
+    "tile_base": 0,
+    "tile_last": 703,
+    "width": 352,
+    "height": 512,
+    "bank_base": 16,
+    "palette_count": 16
+  },
+  {
+    "id": 2,
+    "name": "mountain",
+    "tile_base": 704,
+    "tile_last": 1407,
+    "width": 352,
+    "height": 512,
+    "bank_base": 16,
+    "palette_count": 16
+  },
+  {
+    "id": 3,
+    "name": "p1_pilot",
+    "tile_base": 1408,
+    "tile_last": 1437,
+    "width": 80,
+    "height": 96,
+    "bank_base": 32,
+    "palette_count": 4
+  },
+  {
+    "id": 4,
+    "name": "p1_plane",
+    "tile_base": 1438,
+    "tile_last": 1446,
+    "width": 48,
+    "height": 48,
+    "bank_base": 44,
+    "palette_count": 4
+  },
+  {
+    "id": 5,
+    "name": "p2_pilot",
+    "tile_base": 1447,
+    "tile_last": 1476,
+    "width": 80,
+    "height": 96,
+    "bank_base": 36,
+    "palette_count": 4
+  },
+  {
+    "id": 6,
+    "name": "p2_plane",
+    "tile_base": 1477,
+    "tile_last": 1485,
+    "width": 48,
+    "height": 48,
+    "bank_base": 48,
+    "palette_count": 4
+  },
+  {
+    "id": 7,
+    "name": "p3_pilot",
+    "tile_base": 1486,
+    "tile_last": 1515,
+    "width": 80,
+    "height": 96,
+    "bank_base": 40,
+    "palette_count": 4
+  },
+  {
+    "id": 8,
+    "name": "p3_plane",
+    "tile_base": 1516,
+    "tile_last": 1524,
+    "width": 48,
+    "height": 48,
+    "bank_base": 52,
+    "palette_count": 4
+  },
+  {
+    "id": 9,
+    "name": "shot_player",
+    "tile_base": 1525,
+    "tile_last": 1525,
+    "width": 16,
+    "height": 16,
+    "bank_base": 93,
+    "palette_count": 1
+  },
+  {
+    "id": 10,
+    "name": "bomber",
+    "tile_base": 1526,
+    "tile_last": 1534,
+    "width": 48,
+    "height": 48,
+    "bank_base": 72,
+    "palette_count": 3
+  },
+  {
+    "id": 11,
+    "name": "cathedral",
+    "tile_base": 1535,
+    "tile_last": 1583,
+    "width": 112,
+    "height": 112,
+    "bank_base": 56,
+    "palette_count": 16
+  },
+  {
+    "id": 12,
+    "name": "gold_core",
+    "tile_base": 1584,
+    "tile_last": 1632,
+    "width": 112,
+    "height": 112,
+    "bank_base": 56,
+    "palette_count": 16
+  },
+  {
+    "id": 13,
+    "name": "heli_carrier",
+    "tile_base": 1633,
+    "tile_last": 1681,
+    "width": 112,
+    "height": 112,
+    "bank_base": 56,
+    "palette_count": 16
+  },
+  {
+    "id": 14,
+    "name": "battleship",
+    "tile_base": 1682,
+    "tile_last": 1730,
+    "width": 112,
+    "height": 112,
+    "bank_base": 56,
+    "palette_count": 16
+  },
+  {
+    "id": 15,
+    "name": "red_fortress",
+    "tile_base": 1731,
+    "tile_last": 1779,
+    "width": 112,
+    "height": 112,
+    "bank_base": 56,
+    "palette_count": 16
+  },
+  {
+    "id": 16,
+    "name": "stealth",
+    "tile_base": 1780,
+    "tile_last": 1828,
+    "width": 112,
+    "height": 112,
+    "bank_base": 56,
+    "palette_count": 16
+  },
+  {
+    "id": 17,
+    "name": "tank_fort",
+    "tile_base": 1829,
+    "tile_last": 1877,
+    "width": 112,
+    "height": 112,
+    "bank_base": 56,
+    "palette_count": 16
+  },
+  {
+    "id": 18,
+    "name": "drone",
+    "tile_base": 1878,
+    "tile_last": 1886,
+    "width": 48,
+    "height": 48,
+    "bank_base": 75,
+    "palette_count": 3
+  },
+  {
+    "id": 19,
+    "name": "fighter",
+    "tile_base": 1887,
+    "tile_last": 1895,
+    "width": 48,
+    "height": 48,
+    "bank_base": 78,
+    "palette_count": 3
+  },
+  {
+    "id": 20,
+    "name": "heli",
+    "tile_base": 1896,
+    "tile_last": 1904,
+    "width": 48,
+    "height": 48,
+    "bank_base": 81,
+    "palette_count": 3
+  },
+  {
+    "id": 21,
+    "name": "interceptor",
+    "tile_base": 1905,
+    "tile_last": 1913,
+    "width": 48,
+    "height": 48,
+    "bank_base": 84,
+    "palette_count": 3
+  },
+  {
+    "id": 22,
+    "name": "missile_boat",
+    "tile_base": 1914,
+    "tile_last": 1922,
+    "width": 48,
+    "height": 48,
+    "bank_base": 87,
+    "palette_count": 3
+  },
+  {
+    "id": 23,
+    "name": "shot_orb",
+    "tile_base": 1923,
+    "tile_last": 1923,
+    "width": 16,
+    "height": 16,
+    "bank_base": 94,
+    "palette_count": 1
+  },
+  {
+    "id": 24,
+    "name": "shot_ring",
+    "tile_base": 1924,
+    "tile_last": 1927,
+    "width": 32,
+    "height": 32,
+    "bank_base": 95,
+    "palette_count": 1
+  },
+  {
+    "id": 25,
+    "name": "tank",
+    "tile_base": 1928,
+    "tile_last": 1936,
+    "width": 48,
+    "height": 48,
+    "bank_base": 90,
+    "palette_count": 3
+  },
+  {
+    "id": 26,
+    "name": "item_life",
+    "tile_base": 1937,
+    "tile_last": 1937,
+    "width": 16,
+    "height": 16,
+    "bank_base": 96,
+    "palette_count": 1
+  },
+  {
+    "id": 27,
+    "name": "item_missile",
+    "tile_base": 1938,
+    "tile_last": 1938,
+    "width": 16,
+    "height": 16,
+    "bank_base": 97,
+    "palette_count": 1
+  },
+  {
+    "id": 28,
+    "name": "item_speed",
+    "tile_base": 1939,
+    "tile_last": 1939,
+    "width": 16,
+    "height": 16,
+    "bank_base": 98,
+    "palette_count": 1
+  },
+  {
+    "id": 29,
+    "name": "open_sea",
+    "tile_base": 1940,
+    "tile_last": 2643,
+    "width": 352,
+    "height": 512,
+    "bank_base": 16,
+    "palette_count": 16
+  },
+  {
+    "id": 30,
+    "name": "convoy",
+    "tile_base": 2644,
+    "tile_last": 3347,
+    "width": 352,
+    "height": 512,
+    "bank_base": 16,
+    "palette_count": 16
+  },
+  {
+    "id": 31,
+    "name": "outpost",
+    "tile_base": 3348,
+    "tile_last": 4051,
+    "width": 352,
+    "height": 512,
+    "bank_base": 16,
+    "palette_count": 16
+  },
+  {
+    "id": 32,
+    "name": "armored",
+    "tile_base": 4052,
+    "tile_last": 4755,
+    "width": 352,
+    "height": 512,
+    "bank_base": 16,
+    "palette_count": 16
+  },
+  {
+    "id": 33,
+    "name": "citadel",
+    "tile_base": 4756,
+    "tile_last": 5459,
+    "width": 352,
+    "height": 512,
+    "bank_base": 16,
+    "palette_count": 16
+  },
+  {
+    "id": 34,
+    "name": "title",
+    "tile_base": 5460,
+    "tile_last": 5739,
+    "width": 320,
+    "height": 224,
+    "bank_base": 16,
+    "palette_count": 16
+  },
+  {
+    "id": 35,
+    "name": "p1_plane_left",
+    "tile_base": 5740,
+    "tile_last": 5748,
+    "width": 48,
+    "height": 48,
+    "bank_base": 44,
+    "palette_count": 4
+  },
+  {
+    "id": 36,
+    "name": "p1_plane_right",
+    "tile_base": 5749,
+    "tile_last": 5757,
+    "width": 48,
+    "height": 48,
+    "bank_base": 44,
+    "palette_count": 4
+  },
+  {
+    "id": 37,
+    "name": "p2_plane_left",
+    "tile_base": 5758,
+    "tile_last": 5766,
+    "width": 48,
+    "height": 48,
+    "bank_base": 48,
+    "palette_count": 4
+  },
+  {
+    "id": 38,
+    "name": "p2_plane_right",
+    "tile_base": 5767,
+    "tile_last": 5775,
+    "width": 48,
+    "height": 48,
+    "bank_base": 48,
+    "palette_count": 3
+  },
+  {
+    "id": 39,
+    "name": "p3_plane_left",
+    "tile_base": 5776,
+    "tile_last": 5784,
+    "width": 48,
+    "height": 48,
+    "bank_base": 52,
+    "palette_count": 2
+  },
+  {
+    "id": 40,
+    "name": "p3_plane_right",
+    "tile_base": 5785,
+    "tile_last": 5793,
+    "width": 48,
+    "height": 48,
+    "bank_base": 52,
+    "palette_count": 2
+  },
+  {
+    "id": 41,
+    "name": "explosion_0",
+    "tile_base": 5794,
+    "tile_last": 5797,
+    "width": 32,
+    "height": 32,
+    "bank_base": 99,
+    "palette_count": 1
+  },
+  {
+    "id": 42,
+    "name": "explosion_1",
+    "tile_base": 5798,
+    "tile_last": 5801,
+    "width": 32,
+    "height": 32,
+    "bank_base": 99,
+    "palette_count": 1
+  },
+  {
+    "id": 43,
+    "name": "explosion_2",
+    "tile_base": 5802,
+    "tile_last": 5805,
+    "width": 32,
+    "height": 32,
+    "bank_base": 99,
+    "palette_count": 1
+  },
+  {
+    "id": 44,
+    "name": "explosion_3",
+    "tile_base": 5806,
+    "tile_last": 5809,
+    "width": 32,
+    "height": 32,
+    "bank_base": 99,
+    "palette_count": 1
+  },
+  {
+    "id": 45,
+    "name": "explosion_4",
+    "tile_base": 5810,
+    "tile_last": 5813,
+    "width": 32,
+    "height": 32,
+    "bank_base": 99,
+    "palette_count": 1
+  },
+  {
+    "id": 46,
+    "name": "explosion_5",
+    "tile_base": 5814,
+    "tile_last": 5817,
+    "width": 32,
+    "height": 32,
+    "bank_base": 99,
+    "palette_count": 1
+  },
+  {
+    "id": 47,
+    "name": "clouds",
+    "tile_base": 5818,
+    "tile_last": 6521,
+    "width": 352,
+    "height": 512,
+    "bank_base": 100,
+    "palette_count": 1
+  }
+]

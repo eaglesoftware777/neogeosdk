@@ -1,0 +1,38 @@
+{
+  "base": "Maiya-WIP-NeoSD_AES_v1.neo",
+  "output": "Maiya-WIP-NeoSD_AES_UNIBIOS_FIX_PRERELEASE.neo",
+  "sha256": "9f57d95d791bf5f4665fd92c2b6bbc151ce247bf22da9624ad3ff60ac2ef6664",
+  "hardware_test": "pending",
+  "regions": {
+    "p1": {
+      "size": 524288,
+      "unchanged": false,
+      "sha256": "90c974c5f513f27aad6467e0ccfc899760ffd7c1c1e045affc3512e969df8a4f"
+    },
+    "s1": {
+      "size": 131072,
+      "unchanged": false,
+      "sha256": "bd32f8a66d6dde5a555ae66b99d1ee083d42075169dcc030ec3aad9ae8b64fd2"
+    },
+    "m1": {
+      "size": 131072,
+      "unchanged": true,
+      "sha256": "2e5634cb0ea33b74c599691e1e82cc9ad84bbfeececab83c7989d5fbbc2740b2"
+    },
+    "v1": {
+      "size": 8388608,
+      "unchanged": true,
+      "sha256": "ea1f4bd3acbe1105f3eb5741ab0ab930e70980bedeaa2d48874e458c60fb0792"
+    },
+    "v2": {
+      "size": 0,
+      "unchanged": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "c": {
+      "size": 8388608,
+      "unchanged": false,
+      "sha256": "19770fb0f0381742866445526297760247be8a6c5f009771cd9efa9574c3b238"
+    }
+  }
+}

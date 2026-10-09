@@ -103,9 +103,15 @@ banks 1
 .define VAR_SSG_LEVEL_C    $FE3F
 .define VAR_FM_CARRIERS    $FE40
 .define VAR_ADPCMB_REPEAT  $FE41
+.define VAR_SLOT_WAIT      $FE42
+.define VAR_RX_PARAM       $FE43
+.define VAR_DRIVER_COOKIE  $FE44 ; four-byte work-RAM ownership signature
+.define VAR_RX_ESCAPE      $FE48
+.define SLOT_WAIT_CODE     $FF80
 
 .define STACK              $FFFC
-.define READY_VALUE        $01
+.define READY_VALUE        $80
+.define SLOT_REPLY         $01
 
 ;;; Command Range
 .define MUSIC_BASE         $20
@@ -165,6 +171,8 @@ irq_end:
     push hl
     in a,($00)
     ld b,a
+    jp nmi_route_command
+nmi_enqueue:
     xor a
     out ($0C),a
     ld a,(FIFO_WRITE)
@@ -182,11 +190,36 @@ irq_end:
     pop bc
     pop af
     retn
+nmi_end:
+.assert nmi_end <= $00C0
+.org $00C0
+    .db "NGP2"
 
 .org $00D0
 main:
+    xor a
+    ld i,a
+    jr main_initialize
+main_eyecatcher:
+    ld a,1
+    ld i,a
+main_initialize:
+    di
+    xor a
+    out ($18),a
+    out ($0C),a
     ld sp,STACK
     im 1
+
+    ; Restore linear ROM windows after a BIOS or cartridge slot change.
+    ld a,$1E
+    in a,($08)
+    ld a,$0E
+    in a,($09)
+    ld a,$06
+    in a,($0A)
+    ld a,$02
+    in a,($0B)
 
     ; Clear Work RAM
     xor a
@@ -205,6 +238,13 @@ main:
     ldir
 
     call driver_init
+    ; IM 1 does not use I; retain the boot hook across work-RAM clearing.
+    ld a,i
+    or a
+    jr z,main_loop
+    xor a
+    ld i,a
+    call play_music1
 
 main_loop:
     call process_fifo
@@ -258,6 +298,8 @@ driver_init:
     call init_adpcma
     call init_adpcmb
     call reset_sequence_clocks
+
+    call stamp_driver_ram
 
     xor a
     out ($08),a       ; Enable NMIs
@@ -651,17 +693,204 @@ set_fmvol_wait:
     ld (VAR_WAIT_TEMPO),a
     ld (VAR_PARAM_MODE),a
     ret
+nmi_route_command:
+    ; BIOS requests take precedence even during a game parameter transfer.
+    ld a,b
+    cp $01
+    jp z,slot_switch_prepare
+    cp $02
+    jp z,nmi_eyecatcher_restart
+    cp $03
+    jp z,slot_wait_restart
+    cp $09
+    jp z,slot_wait_restart
+    ; A newly selected M1 may receive NMI with another driver's RAM intact.
+    ld a,(VAR_DRIVER_COOKIE)
+    cp $4E
+    jp nz,nmi_foreign_ram
+    ld a,(VAR_DRIVER_COOKIE+1)
+    cp $47
+    jp nz,nmi_foreign_ram
+    ld a,(VAR_DRIVER_COOKIE+2)
+    cp $53
+    jp nz,nmi_foreign_ram
+    ld a,(VAR_DRIVER_COOKIE+3)
+    cp $31
+    jp nz,nmi_foreign_ram
+    ld a,(VAR_SLOT_WAIT)
+    or a
+    jp nz,slot_wait_command
+    ; Track the incoming protocol independently of the main-loop FIFO.
+    ; A parameter can arrive before its command has been executed.
+    ld a,(VAR_RX_PARAM)
+    or a
+    jr z,nmi_new_command
+    ld a,(VAR_RX_ESCAPE)
+    or a
+    jr nz,nmi_decode_parameter
+    ld a,b
+    cp $FF
+    jr z,nmi_parameter_escape
+nmi_finish_parameter:
+    xor a
+    ld (VAR_RX_PARAM),a
+    ld (VAR_RX_ESCAPE),a
+    jp nmi_enqueue
+nmi_decode_parameter:
+    ld a,b
+    xor $80
+    ld b,a
+    jr nmi_finish_parameter
+nmi_parameter_escape:
+    ld a,1
+    ld (VAR_RX_ESCAPE),a
+    xor a
+    out ($0C),a
+    out ($00),a
+    ld a,READY_VALUE
+    out ($0C),a
+    pop hl
+    pop bc
+    pop af
+    retn
+nmi_new_command:
+    ld a,b
+    cp $01
+    jp z,slot_switch_prepare
+    ; Initialization is a barrier: do not acknowledge a queued reset early.
+    cp $09
+    jp z,slot_wait_restart
+    cp $03
+    jp z,slot_wait_restart
+    ld hl,nmi_parameter_commands
+    ld c,nmi_parameter_commands_end-nmi_parameter_commands
+nmi_parameter_scan:
+    cp (hl)
+    jr z,nmi_expect_parameter
+    inc hl
+    dec c
+    jr nz,nmi_parameter_scan
+    jp nmi_enqueue
+nmi_expect_parameter:
+    ld a,1
+    ld (VAR_RX_PARAM),a
+    jp nmi_enqueue
+nmi_parameter_commands:
+    .db $05,$06,$07,$0A,$0E,$12,$13,$14,$15,$16
+    .db $17,$18,$19,$1A,$1B,$1D,$1E,$1F,$31,$32
+nmi_parameter_commands_end:
+
+stamp_driver_ram:
+    ld hl,$474E
+    ld (VAR_DRIVER_COOKIE),hl
+    ld hl,$3153
+    ld (VAR_DRIVER_COOKIE+2),hl
+    ret
+
+nmi_foreign_ram:
+    ld a,b
+    cp $01
+    jp nz,slot_wait_restart
+    ; Slot prepare must silence hardware without trusting a foreign cache.
+    ld a,$FF
+    ld hl,SHADOW_A
+    ld de,SHADOW_A+1
+    ld bc,$01FF
+    ld (hl),a
+    ldir
+    xor a
+    ld (VAR_RX_PARAM),a
+    jp slot_switch_prepare
+
+; BIOS slot switching must acknowledge only after execution reaches work RAM.
+slot_switch_prepare:
+    di
+    xor a
+    out ($0C),a
+    out ($00),a
+    ; A slot request may interrupt a YM transaction or inherit foreign RAM.
+    ld a,$FF
+    ld hl,SHADOW_A
+    ld de,SHADOW_A+1
+    ld bc,$01FF
+    ld (hl),a
+    ldir
+    xor a
+    ld (VAR_RX_PARAM),a
+    ld (VAR_RX_ESCAPE),a
+    call stop_all
+    ld d,$27
+    ld e,$30
+    call force_write_a
+    xor a
+    out ($08),a
+    ld a,1
+    ld (VAR_SLOT_WAIT),a
+    call stamp_driver_ram
+    ld hl,slot_wait_template
+    ld de,SLOT_WAIT_CODE
+    ld bc,slot_wait_template_end-slot_wait_template
+    ldir
+    ld sp,STACK
+    ld hl,SLOT_WAIT_CODE
+    push hl
+    retn
+
+slot_wait_template:
+    ei
+    ld a,SLOT_REPLY
+    out ($0C),a
+    jp SLOT_WAIT_CODE+5
+slot_wait_template_end:
+.assert SLOT_WAIT_CODE+slot_wait_template_end-slot_wait_template < STACK-16
+
+slot_wait_command:
+    ld a,b
+    cp $01
+    jp z,slot_switch_prepare
+    cp $03
+    jr z,slot_wait_restart
+    cp $09
+    jr z,slot_wait_restart
+    xor a
+    out ($00),a
+    out ($0C),a
+    pop hl
+    pop bc
+    pop af
+    retn
+slot_wait_restart:
+    di
+    xor a
+    out ($18),a
+    out ($00),a
+    out ($0C),a
+    ld sp,STACK
+    ld hl,main
+    push hl
+    retn
+nmi_eyecatcher_restart:
+    di
+    xor a
+    out ($18),a
+    out ($00),a
+    out ($0C),a
+    ld sp,STACK
+    ld hl,main_eyecatcher
+    push hl
+    retn
+
 exec_normal:
     ld a,c
     or a
     ret z
 
-    cp $01 ; Init
+    cp $09 ; Game init; $01 is reserved for BIOS slot switching
     jp z,driver_init
     cp $02 ; BIOS eyecatcher / boot music
     jp z,play_music1
-    cp $03 ; Reset
-    jp z,driver_soft_reset
+    cp $03 ; BIOS hardware-equivalent reset (normally handled in NMI)
+    jp z,slot_wait_restart
     cp $04 ; Stop all
     jp z,stop_all
     cp $05 ; ADPCM-A volume parameter follows
@@ -670,6 +899,8 @@ exec_normal:
     jp z,set_adpcmb_volume_wait
     cp $07 ; SSG/MML volume parameter follows
     jp z,set_ssg_volume_wait
+    cp $08 ; Game scene reset; keep the existing playback timing
+    jp z,driver_soft_reset
     cp $0A ; Fade out speed parameter follows
     jp z,set_fadeout_wait
     cp $0C ; ADPCM-A stop

@@ -1,0 +1,17 @@
+; World 3: Smokestack City
+; Heavy mechanical pulse and driving synth rhythm
+T20
+@p4
+@b3
+V14
+O4
+L8
+
+C C D# C  F F G4
+C D# F G  G# G D# C
+< G# > C D# G#  G D# C < G#
+< A# > D F A#  > C4 R4
+; Iron rhythm
+C8 C8 D#8 C8  F8 F8 G4
+> C8 < A#8 G#8 G8  F8 D#8 C4
+~

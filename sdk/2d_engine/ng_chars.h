@@ -124,15 +124,23 @@ struct NGCharacter {
     uint8_t anim_timer;
     /* Row-major absolute palette banks, starting at sprite_tile. */
     const uint8_t *sprite_palette_map;
+    uint8_t vram_prio;   /* NG_SG_PRIO_* for its sprite group (ng_char_set_vram_priority) */
 };
 
 void NEOGEO_USER ng_chars_init(void);
+/* Default 1 sorts each priority band by Y. Use 0 for stable side-view order. */
+void NEOGEO_USER ng_chars_set_depth_sort(uint8_t enabled);
 NGCharacter* NEOGEO_USER chars_add(uint8_t kind, int16_t x, int16_t y);
+/* How soon its sprite changes reach the screen when a blank is short
+ * (NG_SG_PRIO_*, ng_sprite_group.h): the player is HIGH. */
+void NEOGEO_USER ng_char_set_vram_priority(NGCharacter *c, uint8_t prio);
 void NEOGEO_USER ng_chars_remove(NGCharacter *c);
 void NEOGEO_USER ng_chars_clear_kind(uint8_t kind);
 NGCharacter* NEOGEO_USER chars_find(uint8_t kind);
 NGCharacter* NEOGEO_USER chars_at(uint8_t index);
 uint8_t NEOGEO_USER ng_chars_count(void);
+/* One past the highest slot in use: a loop over the characters can stop there. */
+uint8_t NEOGEO_USER ng_chars_slots_used(void);
 uint8_t NEOGEO_USER ng_chars_index(NGCharacter *c);
 void NEOGEO_USER ng_chars_set_game_interupt(uint8_t kind, NGCharInterupt fn);
 void NEOGEO_USER ng_chars_reset_slot(uint8_t index);

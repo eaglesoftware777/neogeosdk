@@ -14,6 +14,13 @@ in C++14, with identical public ABI.
 Both builds compile down to the same hardware writes. Choose one
 per ROM via the `USE_2D_PLUS` make flag.
 
+## v1.7.3: Vertical Shooters
+
+The C engine adds the opt-in `ng_shooter.h` module: fractional vertical
+scrolling, bounded camera follow and independently paced parallax layers.
+Enable `-DNG_SHOOTER=1` per game. Existing camera/background APIs are unchanged;
+Maiya does not enable the module. See [Vertical Shooters](../../docs/vertical_shooters.md).
+
 ```sh
 make p1                   # link C engine (this directory) — default
 make p1 USE_2D_PLUS=1     # link C++ engine

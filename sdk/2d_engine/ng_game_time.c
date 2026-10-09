@@ -1,3 +1,10 @@
+/*
+ * Built for size whatever the engine's own optimisation level: every game
+ * links this module, and at this size it carries the stage clock's stop and
+ * start for less ROM than it took without them.
+ */
+#pragma GCC optimize ("Os")
+
 #include "ng_game_time.h"
 #include "ng_properties.h"
 
@@ -5,6 +12,7 @@ static uint32_t ng_time_frame;
 static uint32_t ng_time_stage_frame;
 static uint16_t ng_time_second;
 static uint8_t ng_time_second_tick;
+static uint8_t ng_time_stage_on;
 
 void NEOGEO_USER ng_game_time_init(void)
 {
@@ -12,6 +20,7 @@ void NEOGEO_USER ng_game_time_init(void)
     ng_time_stage_frame = 0;
     ng_time_second = 0;
     ng_time_second_tick = 0;
+    ng_time_stage_on = 1;
     ng_prop_set(NG_PROP_GROUP_TIME, NG_PROP_TIME_FRAME, 0);
     ng_prop_set(NG_PROP_GROUP_TIME, NG_PROP_TIME_SECOND, 0);
     ng_prop_set(NG_PROP_GROUP_TIME, NG_PROP_TIME_STAGE_FRAME, 0);
@@ -20,7 +29,7 @@ void NEOGEO_USER ng_game_time_init(void)
 void NEOGEO_USER ng_game_time_tick(void)
 {
     ng_time_frame++;
-    ng_time_stage_frame++;
+    if (ng_time_stage_on) ng_time_stage_frame++;
     ng_time_second_tick++;
     if (ng_time_second_tick >= NG_FRAME_RATE) {
         ng_time_second_tick = 0;
@@ -37,6 +46,11 @@ void NEOGEO_USER ng_game_time_reset_stage(void)
     ng_time_stage_frame = 0;
     ng_time_second_tick = 0;
     ng_prop_set(NG_PROP_GROUP_TIME, NG_PROP_TIME_STAGE_FRAME, 0);
+}
+
+void NEOGEO_USER ng_game_time_stage_run(uint8_t on)
+{
+    ng_time_stage_on = on;
 }
 
 uint32_t NEOGEO_USER ng_game_time_frame(void) { return ng_time_frame; }

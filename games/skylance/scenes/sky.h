@@ -12,21 +12,15 @@
 /* ------------------------------------------------------------------ */
 /*  Screen geometry                                                     */
 /* ------------------------------------------------------------------ */
-/*
- * The CRT is 320x224, but an artbox page is 16x16 tiles = 256x256 px and
- * the hardware can only SHRINK a sprite, never stretch it, so a
- * background page covers 256 of the 320 columns.  Sky Lance therefore
- * flies inside that 256-wide column, drawn at x = SKY_FIELD_X, with the
- * 32 px either side left as backdrop - the pillars the HUD sits on.
- */
-#define SKY_FIELD_X        32
-#define SKY_FIELD_W        256
+/* Native 20-strip backgrounds cover the complete 320x224 CRT image. */
+#define SKY_FIELD_X        0
+#define SKY_FIELD_W        320
 #define SKY_FIELD_LEFT     (SKY_FIELD_X + 12)
 #define SKY_FIELD_RIGHT    (SKY_FIELD_X + SKY_FIELD_W - 12)
 #define SKY_FIELD_TOP      24
 #define SKY_FIELD_BOTTOM   206
 
-/* Backdrop behind the pillars, and the colour the wipes run on. */
+/* Backdrop and scene-wipe colour. */
 #define SKY_BG_CLEAR       BLACK
 
 /* FIX palette banks, loaded by setup_fix_palettes() in user.c. */
@@ -72,6 +66,15 @@
 #define SKY_ITEM_MISSILE    27u
 #define SKY_ITEM_SPEED      28u
 #define SKY_BG_OPEN_SEA     29u
+#define SKY_BG_CONVOY       30u
+#define SKY_BG_OUTPOST      31u
+#define SKY_BG_ARMORED      32u
+#define SKY_BG_CITADEL      33u
+#define SKY_TITLE_ART       34u
+#define SKY_PLANE_BANKED(pilot, right) (35u + (pilot) * 2u + (right))
+#define SKY_EXPLOSION_FIRST 41u
+#define SKY_CLOUD_ART       47u
+#define SKY_START_FLAG      0x100700u
 
 /* ------------------------------------------------------------------ */
 /*  Hardware scale presets (SCB2 shrink, 0xFF = full size)              */
@@ -87,8 +90,7 @@
  * plane reduced to a quarter of its imported height arrives on screen as
  * a smear of colour with the shape mostly gone.
  *
- * The art is imported at the size it is drawn now - the artbox rules
- * cat_sky_planes, cat_sky_opponents and cat_sky_bosses set the ceilings -
+ * The direct art builder imports each sprite at its final drawing size,
  * so there is nothing left between the pipeline's resampling and the
  * screen.  These stay named so a global re-tune is still one edit.
  *
@@ -98,7 +100,7 @@
  * sprite horizontally. Content anchoring follows the two hardware ratios.
  *
  * Sizes these produce on a 320x224 screen:
- *   craft up to 32 px (40 px rules round down to tile multiples), bosses 112 px
+ *   craft 48 px, bosses 112 px, explosions 32 px
  */
 #define SKY_SCALE_PLAYER   0xFFu
 #define SKY_SCALE_ENEMY    0xFFu
@@ -107,19 +109,16 @@
 #define SKY_SCALE_FULL     0xFFu
 #define SKY_SCALE_PROJECTILE NG_SCALE(6)
 #define SKY_BURST_STEPS       6u
-#define SKY_BURST_SCALE(step) NG_SCALE(6u + (step))
 
 /*
  * Two exceptions, both on the select screen.
  *
- * The pilot portraits are not playfield art and have no import rule of
- * their own, so they arrive at the 256 px character ceiling - 170x256,
- * against the 80 px column they sit in.  And the roster wants the
+ * The pilot portraits are native 64x80 images. The roster wants the
  * unselected planes visibly smaller than the one under the cursor, which
  * is a deliberate difference in size rather than a fit to the artwork.
  */
-#define SKY_SCALE_PORTRAIT NG_SCALE(5)    /* 53x80 in an 80 px column   */
-#define SKY_SCALE_ROSTER   NG_SCALE(9)    /* unselected plane, 16x23    */
+#define SKY_SCALE_PORTRAIT 0xFFu
+#define SKY_SCALE_ROSTER   NG_SCALE(9)    /* unselected plane, 27x27 */
 
 /* ------------------------------------------------------------------ */
 /*  Entry points                                                        */
@@ -128,5 +127,6 @@
 void NEOGEO_USER sky_run(void);
 /* Attract loop: title card and the pilot roster, until a coin lands. */
 void NEOGEO_USER sky_run_attract(void);
+uint8_t NEOGEO_USER sky_start_pending(void);
 
 #endif /* SKY_H */

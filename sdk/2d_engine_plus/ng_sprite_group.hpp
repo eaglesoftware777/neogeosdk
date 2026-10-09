@@ -37,6 +37,10 @@ struct NGSpriteGroup {
     uint8_t  visible;
     uint8_t  dirty;
     const uint8_t *tilePalettes;
+    uint16_t mapFirst;
+    uint8_t mapStrips;
+    uint8_t mapHeight;
+    uint8_t mapRows;
 
     void NEOGEO_USER init(uint16_t firstSprite, uint8_t strips, uint8_t heightTiles,
                           uint16_t tileBase, uint8_t palette);

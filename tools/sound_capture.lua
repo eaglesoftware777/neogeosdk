@@ -23,7 +23,7 @@ local tap = z80.spaces['io']:install_write_tap(0, 0xffff, 'ym-capture', function
 end)
 
 local events = {
-    {3, {1}, 'init'},
+    {3, {9}, 'init'},
     {4, {4, 0x31, 3, 0x1e, 120}, 'fm_120'},
     {10, {0x1e, 90}, 'fm_90'},
     {16, {0x1e, 150}, 'fm_150'},
@@ -48,10 +48,34 @@ local events = {
     {105, {0x0e, 1, 0x0a, 0xfe}, 'b_fade'},
     {108, {4, 0x06, 0xb8, 0x80}, 'b_one_shot'},
     {122, {4}, 'end_stop'},
-    {124, {1, 0x20}, 'mml_mix'},
+    {124, {9, 0x20}, 'mml_mix'},
     {157, {4, 0x20}, 'mml_inline_b'},
     {165, {4}, 'mml_stop'},
 }
+-- Public API arguments are logical bytes; protect BIOS values on the wire.
+local parameter_commands = {
+    [5]=true, [6]=true, [7]=true, [10]=true, [14]=true,
+    [18]=true, [19]=true, [20]=true, [21]=true, [22]=true,
+    [23]=true, [24]=true, [25]=true, [26]=true, [27]=true,
+    [29]=true, [30]=true, [31]=true, [49]=true, [50]=true,
+}
+local pending = false
+for _, e in ipairs(events) do
+    local encoded = {}
+    for _, value in ipairs(e[2]) do
+        if pending then
+            pending = false
+            if value == 1 or value == 2 or value == 3 or value == 9 or value == 255 then
+                encoded[#encoded + 1] = 255
+                value = value ~ 128
+            end
+        else
+            pending = parameter_commands[value] or false
+        end
+        encoded[#encoded + 1] = value
+    end
+    e[2] = encoded
+end
 local event, byte = 1, 1
 emu.register_frame_done(function()
     local now = machine.time:as_double()

@@ -1,0 +1,18 @@
+; World 2: Mudriver Marsh
+; Atmospheric minor swamp tension with bubbling accents
+T24
+@p3
+@b2
+V12
+O4
+L8
+
+D F G A  F D < A4
+> D D F D  G G A4
+< A# > D F G  F D < A#4
+> C E G A#  A G E4
+; Tension lift
+D F A > D < A F D4
+< G > C E G  E C < G4
+< A# > D F A#  > D4 R4
+~

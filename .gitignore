@@ -26,3 +26,16 @@ games/tutorial/artbox/*
 games/demo_plus/artbox/*
 tests/test_c
 tests/test_cpp
+tests/test_rand
+tests/test_rand.exe
+tests/test_trig
+tests/test_trig.exe
+tests/test_pause
+tests/test_pause.exe
+tests/test_move
+tests/test_move.exe
+tests/test_shooter
+tests/test_shooter.exe
+
+# make neo GAME=<name>: NeoSD images and MAME test sets, rebuilt on demand
+dist/neo/

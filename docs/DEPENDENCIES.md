@@ -59,6 +59,10 @@ Ubuntu/WSL installations. The desktop studios additionally need:
 python3 -m pip install PyQt6 scipy
 ```
 
+Maiya's frame-based art builder also needs SciPy, without the desktop UI:
+`python3 -m pip install scipy`. Run `make GAME=maiya all` for the initial
+build so its generated sprite metadata and ROMs stay in sync.
+
 Core modules used by the build scripts:
 
 | Module     | Used by                                   | Install via               |
@@ -205,6 +209,8 @@ py -m pip install numpy pillow pypng
 ```
 
 For Artbox Studio and Sound Studio, also run `py -m pip install PyQt6 scipy`.
+Maiya's art builder requires `py -m pip install scipy` even without either
+studio. Use `make -f MakefileWin32.mak GAME=maiya all` for its first build.
 Launch them with `py`, not a different Python installation. See the
 [desktop studios manual](DESKTOP_STUDIOS.md).
 
