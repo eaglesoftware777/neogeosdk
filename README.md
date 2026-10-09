@@ -6,7 +6,9 @@ Neo Geo development SDK for SNK hardware.
 - Current release: `v1.7.0`
 - Pre-releases: `v1.7.1` — Maiya: Super Nature Girl and EagleBIOS;
   `v1.7.2` — frames written only in the vertical blank, and Maiya's v3
-  ROMs (see the changelog)
+  ROMs; `v1.7.3` — local Sky Lance upgrade with opt-in vertical scrolling,
+  camera follow and cloud parallax (see the changelog)
+- Vertical shooter API: [`docs/vertical_shooters.md`](docs/vertical_shooters.md)
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 

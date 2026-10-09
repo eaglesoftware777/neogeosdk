@@ -78,15 +78,15 @@ static const SkyStage k_stage[SKY_STAGE_COUNT] = {
       "CRIMSON KEEP", "01 / 07  MOUNTAIN DAWN" },
     { SKY_BG_COAST, SKY_B_BATTLESHIP, 60u, 6000u, 1u, {4u,1u,4u,6u}, 5u,
       "IRON TIDE", "02 / 07  HARBOR ASSAULT" },
-    { SKY_BG_MOUNTAIN, SKY_B_GOLD_CORE, 64u, 6500u, 1u, {5u,2u,0u,6u}, 6u,
+    { SKY_BG_CONVOY, SKY_B_GOLD_CORE, 64u, 6500u, 1u, {5u,2u,0u,6u}, 6u,
       "SOL CORE", "03 / 07  VALLEY CONVOY" },
     { SKY_BG_OPEN_SEA, SKY_B_STEALTH, 68u, 7000u, 1u, {2u,4u,1u,6u}, 6u,
       "NIGHT RAZOR", "04 / 07  REEF INTERCEPT" },
-    { SKY_BG_MOUNTAIN, SKY_B_HELI_CARRIER, 76u, 7500u, 1u, {3u,5u,3u,6u}, 6u,
+    { SKY_BG_OUTPOST, SKY_B_HELI_CARRIER, 76u, 7500u, 1u, {3u,5u,3u,6u}, 6u,
       "ROTOR NEST", "05 / 07  FOREST OUTPOST" },
-    { SKY_BG_MOUNTAIN, SKY_B_TANK_FORT, 84u, 8000u, 1u, {5u,2u,5u,6u}, 7u,
+    { SKY_BG_ARMORED, SKY_B_TANK_FORT, 84u, 8000u, 1u, {5u,2u,5u,6u}, 7u,
       "EARTH HAMMER", "06 / 07  ARMORED COLUMN" },
-    { SKY_BG_COAST, SKY_B_CATHEDRAL, 96u, 10000u, 1u, {4u,2u,3u,6u}, 7u,
+    { SKY_BG_CITADEL, SKY_B_CATHEDRAL, 96u, 10000u, 1u, {4u,2u,3u,6u}, 7u,
       "CRIMSON CITADEL", "07 / 07  FINAL APPROACH" }
 };
 
@@ -180,12 +180,7 @@ NGCharacter * NEOGEO_USER sky_spawn_blast(int16_t x, int16_t y)
     NGCharacter *c;
 
     if (sky_count_kind(SKY_KIND_BLAST) >= SKY_MAX_BLASTS) return 0;
-    /*
-     * There is no explosion frame in this art set, so the enemy shot
-     * ring doubles as one: spawned at the kill point, it expands over
-     * six frames via SCB2 and is then dropped.  data0 carries the age.
-     */
-    c = sky_spawn(SKY_KIND_BLAST, SKY_SHOT_RING, x, y, SKY_BURST_SCALE(0), NG_RENDER_BAND_FX);
+    c = sky_spawn(SKY_KIND_BLAST, SKY_EXPLOSION_FIRST, x, y, SKY_SCALE_FULL, NG_RENDER_BAND_FX);
     if (c) c->data0 = 0u;
     return c;
 }
@@ -432,15 +427,14 @@ static void NEOGEO_USER sky_boss_step(NGCharacter *c, int16_t px, int16_t py)
 
 static void NEOGEO_USER sky_blast_step(NGCharacter *c)
 {
-    /* Bound the expansion before converting to an 8-bit hardware scale.
-     * Adding to full scale wrapped to zero and displaced the old anchor. */
+    /* Native-sized frames retain their impact anchor; no SCB2 scale wrap. */
     c->data0++;
     if (c->data0 >= SKY_BURST_STEPS * 3u) {
         ng_chars_remove(c);
         return;
     }
     if ((c->data0 % 3u) == 0u)
-        sky_bind(c, SKY_SHOT_RING, SKY_BURST_SCALE(c->data0 / 3u), NG_RENDER_BAND_FX);
+        sky_bind(c, SKY_EXPLOSION_FIRST + c->data0 / 3u, SKY_SCALE_FULL, NG_RENDER_BAND_FX);
 }
 
 void NEOGEO_USER sky_stage_effects_tick(void)

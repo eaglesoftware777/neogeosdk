@@ -13,14 +13,16 @@ Framework v1 is the C 2D engine (`sdk/2d_engine`) at a fixed API. Its public cal
 
 | Macro | Value | Meaning |
 |---|---|---|
-| `NG_SDK_VERSION` | `0x010701` | the SDK release this tree becomes (`CHANGELOG.md`) |
-| `NG_FRAMEWORK_VERSION` | `0x0101` | the engine API: 1.0 frozen, 1.1 adds raster bands |
+| `NG_SDK_VERSION` | `0x010703` | SDK v1.7.3 pre-release (`CHANGELOG.md`) |
+| `NG_FRAMEWORK_VERSION` | `0x0103` | 1.0 frozen; additive raster, vblank and opt-in shooter APIs |
 
 The list is `docs/api/framework_v1.txt`: every `NEOGEO_USER` prototype in `sdk/2d_engine/*.h`.
 - `make api-check` (also part of `make test`) runs `tools/api_freeze.py`. It fails when a listed prototype is missing or changed, and reports the additions.
 - `python3 tools/api_freeze.py --write` records a new list. Run it only when a new framework version is declared.
 
-The C++ engine (`sdk/2d_engine_plus`) carries the same version macros. It isn't frozen by this check.
+The C++ engine (`sdk/2d_engine_plus`) carries the same SDK release number.
+Its framework remains 1.2: the new 1.3 shooter module is C-only. It isn't
+frozen by this check.
 
 ## The frame
 

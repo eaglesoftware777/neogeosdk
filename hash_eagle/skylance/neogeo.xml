@@ -20,10 +20,10 @@
         <part name="cart" interface="neo_cart">
             <feature name="slot" value="rom_fatfur2" />
             <dataarea name="maincpu" width="16" endianness="big" size="0x100000">
-                <rom loadflag="load16_word_swap" name="779-p1.p1" offset="0x000000" size="0x080000" crc="63fd3252" sha1="4fc61d938d72da57231c15f42c848e108af653ba" />
+                <rom loadflag="load16_word_swap" name="779-p1.p1" offset="0x000000" size="0x080000" crc="68027a77" sha1="43ce07b2a5a30fa053b3a424dafe804d044b606b" />
             </dataarea>
             <dataarea name="fixed" size="0x020000">
-                <rom offset="0x000000" size="0x020000" name="779-s1.s1" crc="f2cb1039" sha1="860789d84a62589b34afcfdedc5a74ae943dbbb2" />
+                <rom offset="0x000000" size="0x020000" name="779-s1.s1" crc="01745e90" sha1="f457ac275f7636f90f209793d4b49ee4a790ae8d" />
             </dataarea>
             <dataarea name="audiocpu" size="0x020000">
                 <rom offset="0x000000" size="0x020000" name="779-m1.m1" crc="c924cb36" sha1="a9ad5e4d892cfbcff6363280d6e2a5252ea053df" />
@@ -31,9 +31,9 @@
             <dataarea name="ymsnd:adpcma" size="0x3f6100">
                 <rom name="779-v1.v1" offset="0x000000" size="0x3f6100" crc="cc94858e" sha1="3164522290e6a1339124f02190968e529aeb4943" />
             </dataarea>
-            <dataarea name="sprites" size="0x1000000">
-                <rom loadflag="load16_byte" name="779-c1.c1" offset="0x000000" size="0x800000" crc="9bd0180f" sha1="bf46478771684b11596f95fdd542e4b01d824130" />
-                <rom loadflag="load16_byte" name="779-c2.c2" offset="0x000001" size="0x800000" crc="65bea7f4" sha1="a74e2578581f12473abbf71df34f6c0d957c92f6" />
+            <dataarea name="sprites" size="0x800000">
+                <rom loadflag="load16_byte" name="779-c1.c1" offset="0x000000" size="0x400000" crc="953d5337" sha1="2410babc534cbfd7e310b72f0f817ce065becde2" />
+                <rom loadflag="load16_byte" name="779-c2.c2" offset="0x000001" size="0x400000" crc="1910cbf1" sha1="e557632853cde8581dc644c708cb5715c4906cf3" />
             </dataarea>
         </part>
     </software>

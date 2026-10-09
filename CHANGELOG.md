@@ -1,5 +1,33 @@
 # Changelog
 
+## v1.7.3 - pre-release: Sky Lance vertical shooter upgrade
+
+Status: local working-tree build; not committed, pushed or published.
+
+### Engine (Framework 1.3: additions only)
+
+- New opt-in C module `ng_shooter.h`, enabled with `-DNG_SHOOTER=1`:
+  fractional/reverse vertical scroll, bounded smooth camera follow and
+  independently paced resident parallax layers. Positive travel flies up.
+- `NGVerticalLayer` uses two pages, preserves row-major palette maps and
+  queues high-priority position writes without re-uploading maps during play.
+- Existing camera, background, sprite and collision APIs are unchanged.
+  Maiya does not enable this module; its sources and installed ROMs are untouched.
+
+### Sky Lance
+
+- Direct C1/C2 generation, separate verified AES/MVS sets and aligned NeoSD
+  cartridges, native full-width terrain with camera gutters, cloud parallax,
+  improved pilot portraits and cleaned aircraft/enemy pixels.
+- Arcade-style metallic title with squadron art and the credit
+  `(C)1996 (+30) EAGLE SOFTWARE`; dedicated pixel explosions and seven terrains.
+- Retains MVS sound handshake/timer recovery, work-RAM-safe sound startup,
+  BIOS-aware credit handling, private font/logo tiles and reserved save RAM.
+- Windows test launchers, installation backups, asset checks and gameplay/audio
+  capture checks. Real board/CRT verification is still required.
+
+See `docs/vertical_shooters.md` and `games/skylance/README.md`.
+
 ## v1.7.2 - pre-release: frames in the blank, and Maiya v3
 
 Status: a pre-release from the `fix/maiya-arenas-eagle-bios` branch, with

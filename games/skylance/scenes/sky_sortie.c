@@ -31,7 +31,7 @@ void NEOGEO_USER soundSetSSGVolume(uint8_t v);
 void NEOGEO_USER soundSetFMVolume(uint8_t v);
 int  NEOGEO_USER read_p1credit(void);
 
-#define NGO_START_FLAG  0xD00100
+#define NGO_START_FLAG  SKY_START_FLAG
 
 /* ------------------------------------------------------------------ */
 /*  Pilots                                                              */
@@ -73,6 +73,7 @@ static uint32_t s_hiscore;
 static NGCharacter *s_player;
 static uint8_t s_missiles;
 static uint8_t s_speed_bonus;
+static uint8_t s_plane_pose;
 static uint32_t s_hud_score, s_hud_high;
 static uint8_t s_hud_lives, s_hud_energy, s_hud_missiles, s_hud_boss;
 
@@ -237,6 +238,15 @@ static void NEOGEO_USER sky_player_step(void)
                      * so a boss is always fought from below. */
                     (int16_t)NG_CLAMP(y, SKY_FIELD_TOP + 40, SKY_FIELD_BOTTOM - 28));
 
+    {
+        uint8_t pose = dx ? SKY_PLANE_BANKED(s_pick, dx > 0) : p->plane;
+        if (pose != s_plane_pose) {
+            sky_bind(s_player, pose, SKY_SCALE_PLAYER, NG_RENDER_BAND_PLAYER);
+            ng_char_set_body(s_player, -6, -6, 12, 12);
+            s_plane_pose = pose;
+        }
+    }
+
     /* Auto-fire on hold, like the arcade board: A is a trigger, not a
      * typing test. */
     if (joy & (BUTTON_A | BUTTON_B)) sky_fire();
@@ -399,18 +409,12 @@ static void NEOGEO_USER sky_title_card(void)
     uint16_t t;
 
     sky_scene_begin();
-    sky_bg_select(SKY_BG_MOUNTAIN);
-
-    sky_puts(15u,  7u, "SKY  LANCE",            SKY_PAL_TITLE);
-    sky_puts( 9u,  9u, "NEO GEO 2D  SORTIE 01", SKY_PAL_BODY);
-    sky_puts(11u, 20u, "PRESS A TO SORTIE",     SKY_PAL_SCORE);
-    sky_puts( 6u, 22u, "MOVE  A/B FIRE  D MISSILE", SKY_PAL_BODY);
+    sky_title_draw();
 
     for (t = 0u; t < 420u; t++) {
         sky_frame();
-        sky_bg_advance(1u);
-        sky_bg_draw();
-        if (sky_joy_pressed() & (BUTTON_A | BUTTON_B)) return;
+        sky_puts(14u, 24u, (t & 32u) ? "           " : "INSERT COIN", SKY_PAL_SCORE);
+        if (sky_start_pending()) return;
     }
 }
 
@@ -432,10 +436,10 @@ static uint8_t NEOGEO_USER sky_select(void)
     sky_puts( 7u, 25u, "LEFT / RIGHT    A CONFIRM", SKY_PAL_BODY);
 
     for (i = 0u; i < SKY_PILOTS; i++) {
-        int16_t cx = (int16_t)(SKY_FIELD_X + 48 + i * 80);
-        face[i]  = sky_spawn(SKY_KIND_FACE,   k_pilot[i].face,  cx,  90,
+        int16_t cx = (int16_t)(68 + i * 92);
+        face[i]  = sky_spawn(SKY_KIND_FACE,   k_pilot[i].face,  cx,  72,
                              SKY_SCALE_PORTRAIT, NG_RENDER_BAND_NPC);
-        plane[i] = sky_spawn(SKY_KIND_PLAYER, k_pilot[i].plane, cx, 170,
+        plane[i] = sky_spawn(SKY_KIND_PLAYER, k_pilot[i].plane, cx, 144,
                              SKY_SCALE_ROSTER, NG_RENDER_BAND_PLAYER);
     }
 
@@ -460,7 +464,7 @@ static uint8_t NEOGEO_USER sky_select(void)
                              sel ? SKY_SCALE_PLAYER : SKY_SCALE_ROSTER, NG_RENDER_BAND_PLAYER);
                 }
                 if (face[i]) {
-                    face[i]->visible = sel;
+                    face[i]->visible = 1u;
                 }
             }
             sky_fix_blank(6u, 21u, 28u);
@@ -491,16 +495,6 @@ static uint8_t NEOGEO_USER sky_fly_stage(uint8_t stage)
     sky_stage_begin(stage);
     sky_hud_static();
 
-    /* The pilot chosen at the roster rides along in the margin beside
-     * the playfield for the whole sortie, the way the arcade cabinet
-     * keeps the character you picked in view.  The margin is 32 px wide,
-     * which three sixteenths of the portrait fills exactly.  It sits in
-     * the back band: characters are allotted sprite slots back to front,
-     * so on a crowded frame the front-most are the ones dropped, and
-     * nothing else is ever drawn in the margin for it to be behind. */
-    sky_spawn(SKY_KIND_FACE, k_pilot[s_pick % SKY_PILOTS].face,
-              SKY_FIELD_X / 2, 56, NG_SCALE(3), NG_RENDER_BAND_BACK);
-
     s_player = sky_spawn(SKY_KIND_PLAYER, k_pilot[s_pick % SKY_PILOTS].plane,
                          SKY_FIELD_X + SKY_FIELD_W / 2, SKY_FIELD_BOTTOM - 32,
                          SKY_SCALE_PLAYER, NG_RENDER_BAND_PLAYER);
@@ -512,6 +506,7 @@ static uint8_t NEOGEO_USER sky_fly_stage(uint8_t stage)
     }
     s_invuln  = 120u;
     s_fire_cd = 0u;
+    s_plane_pose = k_pilot[s_pick % SKY_PILOTS].plane;
 
     tag[0] = 'S'; tag[1] = 'T'; tag[2] = 'A'; tag[3] = 'G'; tag[4] = 'E';
     tag[5] = ' '; tag[6] = (char)('0' + ((stage + 1u) / 10u));
@@ -523,10 +518,10 @@ static uint8_t NEOGEO_USER sky_fly_stage(uint8_t stage)
     for (;;) {
         sky_frame();
 
+        sky_player_step();
+        if (s_player) sky_bg_follow(s_player->x, s_player->y);
         sky_bg_advance(1u);
         sky_bg_draw();
-
-        sky_player_step();
         if (sky_stage_tick(s_player ? s_player->x : 0,
                            s_player ? s_player->y : 0)) {
             cleared = 1u;
@@ -594,7 +589,7 @@ static void NEOGEO_USER sky_victory_credits(void)
     sky_puts(14u, 12u, "- CREDITS -",               SKY_PAL_TITLE);
     sky_puts( 6u, 14u, "DESIGN   EAGLE SOFTWARE 2026", SKY_PAL_BODY);
     sky_puts( 6u, 16u, "ENGINE   NEO GEO SDK 2D",      SKY_PAL_BODY);
-    sky_puts( 6u, 18u, "ART      ARTBOX PIPELINE",     SKY_PAL_BODY);
+    sky_puts( 6u, 18u, "ART      NATIVE TILE ROMS",    SKY_PAL_BODY);
     sky_puts( 6u, 20u, "SOUND    YM2610 FM SSG ADPCM", SKY_PAL_BODY);
     sky_puts( 9u, 23u, "THANK YOU FOR PLAYING",        SKY_PAL_SCORE);
 
@@ -724,17 +719,17 @@ void NEOGEO_USER sky_run_attract(void)
 
     for (;;) {
         sky_title_card();
-        if (NEO_REGISTER8(NGO_START_FLAG) || read_p1credit() > 0) return;
+        if (sky_start_pending()) return;
 
         sky_scene_begin();
         sky_bg_select(SKY_BG_COAST);
         sky_puts(12u, 1u, "SKY LANCE  SQUADRON", SKY_PAL_TITLE);
 
         for (i = 0u; i < SKY_PILOTS; i++) {
-            int16_t cx = (int16_t)(SKY_FIELD_X + 48 + i * 80);
-            sky_spawn(SKY_KIND_FACE,   k_pilot[i].face,  cx,  90,
+            int16_t cx = (int16_t)(68 + i * 92);
+            sky_spawn(SKY_KIND_FACE,   k_pilot[i].face,  cx,  72,
                       SKY_SCALE_PORTRAIT, NG_RENDER_BAND_NPC);
-            sky_spawn(SKY_KIND_PLAYER, k_pilot[i].plane, cx, 170,
+            sky_spawn(SKY_KIND_PLAYER, k_pilot[i].plane, cx, 144,
                       SKY_SCALE_ROSTER, NG_RENDER_BAND_PLAYER);
             sky_puts((uint8_t)(4u + i * 10u), 24u, k_pilot[i].name, SKY_PAL_BODY);
         }
@@ -747,7 +742,7 @@ void NEOGEO_USER sky_run_attract(void)
                 sky_bg_draw();
                 ng_chars_update();
                 ng_chars_draw();
-                if (NEO_REGISTER8(NGO_START_FLAG) || read_p1credit() > 0) return;
+                if (sky_start_pending()) return;
             }
         }
     }

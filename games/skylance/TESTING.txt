@@ -1,0 +1,34 @@
+SKY LANCE - SDK v1.7.3 PRE-RELEASE TEST
+
+Run from C:\mame\neogeosdk:
+  run_skylance_mvs.bat           Arcade, EagleBIOS
+  run_skylance_aes.bat           Console, EagleBIOS
+  run_skylance_mvs.bat stock     Existing installed arcade BIOS
+  run_skylance_aes.bat stock     Existing installed console BIOS
+  run_skylance_mvs.bat unibios40 Existing Universe BIOS, if installed
+  run_skylance_aes.bat unibios40 Existing Universe BIOS, if installed
+  run_skylance_backup.bat        Previous arcade version for comparison
+
+MAME default keys: arrows move, Ctrl/Alt fire, Z missile (button D).
+MVS: 5 inserts a coin, 1 starts. AES: 1 starts without a credit.
+Pilot select: left/right, Ctrl confirms.
+
+Each platform has its own program ROM, software list, settings and saves
+under tests\skylance. The existing Maiya installation stays in place.
+Matching NeoSD images are beside the two test sets.
+
+Changes: direct C1/C2 packing with codec round trips; seven detailed
+352x512 scrolling sector variants with camera gutters and cloud parallax;
+320x224 metallic squadron title; larger native-size portraits,
+craft and bosses; banked craft poses; six-frame pixel explosions; queued sound; display writes in the
+vertical blank; isolated logo/FIX banks; work-RAM start latch; atomic
+credit debit; reserved backup RAM and clean sound initialization after RAM clearing.
+
+These are native Neo Geo graphics. The hardware output stays 320x224.
+High-resolution source art is reduced once to its actual displayed size.
+
+Rebuild and install from WSL:
+  python3 tools/build_skylance_mame.py /mnt/c/mame/neogeosdk
+
+Inspect skylance-build.json for this build's ROM sizes and SHA-256 hashes.
+Real cartridge hardware and a CRT still need testing by the board owner.
