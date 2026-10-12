@@ -8,7 +8,9 @@ Neo Geo development SDK for SNK hardware.
   `v1.7.2` — frames written only in the vertical blank, and Maiya's v3
   ROMs; `v1.7.3` — Sky Lance's first public ROM set (painted routes, boss
   arenas, cockpit instruments, an opt-in vertical shooter module) and
-  Maiya's v4 ROMs with her walk and run redrawn (see the changelog)
+  Maiya's v4 ROMs with her walk and run redrawn; `v1.7.5` — the `ng_fight`
+  fighting-game engine and Shadow League Fighting's first playable ROM set
+  (see the changelog)
 - Vertical shooter API: [`docs/vertical_shooters.md`](docs/vertical_shooters.md)
 - Fighting-game API: [`docs/fighting.md`](docs/fighting.md) (v1.7.5 work: Shadow League Fighting, first playable)
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)

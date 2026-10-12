@@ -1,10 +1,12 @@
 # Changelog
 
-## v1.7.5 - in progress: ng_fight and Shadow League Fighting
+## v1.7.5 - pre-release: ng_fight and Shadow League Fighting (first playable)
 
-Status: work toward v1.7.5 on the `fix/maiya-arenas-eagle-bios` branch; the
-version macros stay at 1.7.3 until the milestone is complete. What is done
-and what remains: `docs/roadmap/V1.7.5_STATUS.md`; capability audit:
+Status: a work-in-progress pre-release from the `fix/maiya-arenas-eagle-bios`
+branch with Shadow League Fighting's first ROM set (`_v1`); v1.7.0 remains
+the current release. SDK 1.7.5, Framework 1.4 (additions only). The
+EagleBIOS work planned for v1.7.4 is still to come. What is done and what
+remains: `docs/roadmap/V1.7.5_STATUS.md`; capability audit:
 `docs/roadmap/SDK_CAPABILITY_AUDIT.md`.
 
 ### Engine
@@ -19,6 +21,7 @@ and what remains: `docs/roadmap/V1.7.5_STATUS.md`; capability audit:
   scaling, projectiles, power (three stocks), guard and spirit meters,
   rounds with timer, KO, time up and draws, and a CPU opponent with levels.
 - The Makefile builds `ng_fight` only for a game that asks for it.
+- SDK version 1.7.5, Framework 1.4.
 
 ### Shadow League Fighting (id 781): first playable
 
