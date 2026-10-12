@@ -35,6 +35,26 @@ static uint8_t ng_df_fog_very_far;
  * function: every game links this module, and it stays no larger. */
 #define ng_df_xorshift() ng_rand()
 
+#ifdef NG_SHOOTER
+NGShooterProjection NEOGEO_USER ng_depthfx_shooter_project(const NGShooterCamera *camera,
+                           int16_t x,int16_t y,uint8_t band)
+{
+    /* Q8 lateral/parallax weights and deliberate stable shrink presets.
+     * The ten semantic bands map to the existing six actor sort bands. */
+    static const uint16_t weight[NG_SHOOTER_DEPTH_BANDS]={32,64,256,256,128,64,0,0,384,0};
+    static const uint8_t scale[NG_SHOOTER_DEPTH_BANDS]={255,255,255,255,159,255,255,223,255,255};
+    static const uint8_t render[NG_SHOOTER_DEPTH_BANDS]={0,0,0,1,0,2,3,4,4,5};
+    NGShooterProjection out;int32_t dx,dy;
+    if(band>=NG_SHOOTER_DEPTH_BANDS) band=NG_SHOOTER_PLAYER_AIR;
+    dx=camera ? camera->x_q8*weight[band] : 0;
+    dy=camera ? camera->y_q8*weight[band] : 0;
+    /* Keep both directions symmetric around the fixed camera pivot. */
+    out.x=(int16_t)(x-(dx<0 ? -((-dx)>>16) : dx>>16));
+    out.y=(int16_t)(y-(dy<0 ? -((-dy)>>16) : dy>>16));
+    out.scale=scale[band];out.render_band=render[band];return out;
+}
+#endif
+
 void NEOGEO_USER ng_depthfx_init(void)
 {
     ng_df_fog_near     = 0;
