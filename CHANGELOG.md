@@ -51,6 +51,11 @@ the current release.
   legs from her original drawings with no darker far leg; a real run with a
   knee drive and a flight; holds matched to the planted foot so she no
   longer skates; a 6-frame stop. Her sprite slots are pinned (no blink).
+- Both arms in sight on every frame, in step with her legs: one fist ahead
+  of her chest, the other arm swung back with the elbow out past her back
+  (the far arm used to pass hidden behind her chest and the near one fold
+  onto her hip for half of each stride). Only the 16 walk/run frames change
+  (62 C tiles); P1, S1, M1 and V1 are byte for byte the first v4 build's.
 - Throws on the move plant her feet between short walks; Emerald Forest,
   Azure Coast and Autumn Grove re-laid; Luna's hair specks fixed.
 - See `games/maiya/CHANGELOG.md`.
@@ -64,6 +69,32 @@ the current release.
 - The art gates (`tools/check_hero_frames.py`, Maiya's `check_hands.py`,
   `check_stride_details.py`, `check_cute_polish.py`, Sky Lance's
   `check_skylance_native_art.py`) run in each game's art build.
+- `tools/audit_release.py` checks a game's release files for the hardware
+  fixes before they are published: ROM sizes and the blank tile, cartridge
+  id, eye-catcher flag (MVS 1, AES 2), the Universe BIOS logo bank `$49`
+  with its tiles, the game's FIX font in its own bank, the MVS sound
+  protocol (NGP2) in M1, the NeoSD alignment (P/S/M 64 KiB, V padded with
+  `$FF` to a power of two, C 256 KiB), Darksoft and BackBit round trips, no
+  system BIOS in the cartridge packages, EagleBIOS-only MAME zips with a
+  matching software list, and the manifest. Both games' v1.7.3 sets pass.
+- `games/maiya/tools/pin_reference_art.py` (`MAIYA_ART_REFERENCE=<rev>` in
+  `make`): Maiya's painted art (valleys, arenas, landmarks, creatures, the
+  title) goes through resampling and floating-point palette fitting that
+  round differently on different PCs (76 of 494 assets), while her
+  index-map frames come out the same everywhere. The script keeps the
+  reference build's tiles and palettes and lays over them only what the
+  source edits changed; it stops if the tile layout or a `#define` moved.
+- `ASEPRITE=builtin`: Maiya's walk/run source is authored, reopened and
+  exported by `games/maiya/tools/aseprite/ase_file.py` on a machine without
+  Aseprite; its `.aseprite` file is the one Aseprite saves, byte for byte.
+- `tools/make_setup_zips.py` makes the setups uploaded with the release:
+  `Maiya_Setup_Wizard.zip` and the new `SkyLance_Setup.zip`
+  (`tools/installer/skylance`: `install_skylance.bat` for Windows
+  PowerShell, `install_skylance.sh` for Linux/macOS), which installs Sky
+  Lance's MVS and AES MAME sets side by side with EagleBIOS and the
+  launchers, after checking the release zips against the manifest.
+- `tools/patch_neosd_sound.py` finds the SDK's current toolchain
+  (`x-tools-v3`).
 
 ## v1.7.2 - pre-release: frames in the blank, and Maiya v3
 

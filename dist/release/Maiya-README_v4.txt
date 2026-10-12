@@ -11,8 +11,11 @@ WHAT'S NEW SINCE v3   (every change: Maiya-CHANGELOG_v4.txt)
 -------------------
 - Her walk and run, redrawn. Arms with elbows, brown bracers and small
   closed fists instead of stiff sticks ending in pale discs. Walking, her
-  arms swing loosely; running, they pump with the elbow bent, the fist
-  from her chin back past her hip.
+  arms swing loosely; running, they pump with the elbow bent.
+- Both arms in sight, in step with her legs: one fist pumps ahead of her
+  chest while the other arm swings back, its elbow out past her back and
+  the fist behind her hip, as in her original drawing. Before, half of
+  each stride had both arms tucked behind her.
 - Her legs come from her original drawings, both in the same colours:
   no darker "shadow" leg flashing every step. One leg lifts while the
   other carries her.
