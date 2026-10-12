@@ -39,3 +39,6 @@ tests/test_shooter.exe
 
 # make neo GAME=<name>: NeoSD images and MAME test sets, rebuilt on demand
 dist/neo/
+
+# Setup wizards: rebuilt for each release and uploaded with it
+dist/*_Setup_Wizard.zip
