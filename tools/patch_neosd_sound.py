@@ -31,7 +31,7 @@ def find_m68k_prefix():
         if assembler:
             return assembler[:-2]
     parent = Path(__file__).resolve().parents[2]
-    for folder in ("x-tools-v2", "x-tools-v2-win", "x-tools"):
+    for folder in ("x-tools-v3", "x-tools-v2", "x-tools-v2-win", "x-tools"):
         for triple in ("m68k-unknown-elf", "m68k-elf"):
             prefix = parent / folder / triple / "bin" / (triple + "-")
             if Path(str(prefix) + "as" + (".exe" if os.name == "nt" else "")).exists():

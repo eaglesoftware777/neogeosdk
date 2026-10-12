@@ -98,6 +98,16 @@ The standalone Windows setup wizard includes EagleBIOS for emulator use,
 normal/scanline launchers, previews, controls and the cartridge packages. It
 needs Windows PowerShell and an installed MAME; Python is not required.
 
+The v1.7.3 pre-release carries `SkyLance_Setup.zip` (`tools/make_setup_zips.py`,
+sources in `tools/installer/skylance`): `install_skylance.bat` (Windows
+PowerShell) or `install_skylance.sh` (Linux/macOS) downloads the v1 MVS and
+AES MAME sets from the release (or takes them from beside the script), checks
+them against `SkyLance-MANIFEST_v1.txt` and installs them side by side with
+EagleBIOS and the launchers (`tests/skylance/{mvs,aes}`, the layout above);
+replaced files go to `backups/skylance-setup-<time>`, settings and saves stay.
+`tools/audit_release.py --prefix SkyLance --game skylance --game-id 779
+--version v1` checks the release files for every hardware fix.
+
 MAME captures, audio and state logs are saved under
 `C:/mame/neogeosdk/tests/skylance/qa/<build-id>`. The harness seeds resources and
 invulnerability only in explicit inspection modes. Physical AES/MVS boot,

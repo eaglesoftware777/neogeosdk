@@ -37,6 +37,25 @@ guardian arenas, bonus progression, source art, palette allocation and MAME
 regression tests. Its per-game art builder preserves animation frame layout
 instead of treating each pose as a generated screen.
 
+Building her release on a second machine (Python 3.10 or later):
+
+```sh
+ASEPRITE=builtin MAIYA_ART_REFERENCE=v1.7.3 make neo GAME=maiya
+python3 tools/make_release.py --game maiya --game-id 780 --prefix Maiya \
+    --name "Maiya: Super Nature Girl" --version v4 --replace \
+    --readme dist/release/Maiya-README_v4.txt --changelog games/maiya/CHANGELOG.md
+python3 tools/audit_release.py --prefix Maiya --game maiya --game-id 780 --version v4
+python3 tools/make_setup_zips.py
+```
+
+`ASEPRITE=builtin` stands in for Aseprite in her walk/run pipeline (the same
+`.aseprite` file and exports). `MAIYA_ART_REFERENCE` keeps her painted art
+exactly as that revision's build drew it, because resampling and palette
+fitting round differently from one PC to another; her frames, the code and
+the sound build the same everywhere. `audit_release.py` checks every release
+file for the hardware fixes (alignment, boot logo bank, FIX isolation, MVS
+sound protocol, no BIOS in the cartridge packages).
+
 ---
 
 ## demo — the engine reel (id 777)
