@@ -400,7 +400,7 @@ endif
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_debug.$(ENGINE_EXT) -o out/ng_debug0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_joystick.$(ENGINE_EXT) -o out/ng_joystick0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_demo_advanced.$(ENGINE_EXT) -o out/ng_demo_advanced0.o
-	$(foreach src,$(GAME_SCENE_SRCS),$(GAME_CC) $(GAME_CFLAGS) $(GAME_OPTIMIZE) $(src) -o out/$(notdir $(basename $(src)))0.o;)
+	$(foreach src,$(GAME_SCENE_SRCS),$(GAME_CC) $(GAME_CFLAGS) $(GAME_OPTIMIZE) $(src) -o out/$(notdir $(basename $(src)))0.o || exit $$?;)
 	$(OBJCP) $(STRIP_SECTS) out/neogeo0.o     out/neogeo.o
 	$(OBJCP) $(STRIP_SECTS) out/user0.o       out/user.o
 	$(OBJCP) $(STRIP_SECTS) out/main0.o       out/main.o

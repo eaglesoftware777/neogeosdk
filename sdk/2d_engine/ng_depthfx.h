@@ -99,6 +99,24 @@ void NEOGEO_USER ng_depthfx_set_fog_palettes(uint8_t near_offset,
 void NEOGEO_USER ng_depthfx_advance_star(NGVec3 *p, int16_t speed, int16_t z_max,
                                           int16_t spread_x, int16_t spread_y);
 
+#ifdef NG_SHOOTER
+#include "ng_shooter.h"
+typedef enum {
+    NG_SHOOTER_ATMOSPHERE, NG_SHOOTER_DISTANT_TERRAIN,
+    NG_SHOOTER_TERRAIN, NG_SHOOTER_GROUND_OBJECT, NG_SHOOTER_SHADOW,
+    NG_SHOOTER_LOW_AIR, NG_SHOOTER_PLAYER_AIR, NG_SHOOTER_HIGH_AIR,
+    NG_SHOOTER_FOREGROUND, NG_SHOOTER_HUD, NG_SHOOTER_DEPTH_BANDS
+} NGShooterDepthBand;
+typedef struct {
+    int16_t x,y;
+    uint8_t scale,render_band;
+} NGShooterProjection;
+/* Inputs remain logical world pixels. Projection is visual only; callers
+ * that project interactive ground units must update their collision root. */
+NGShooterProjection NEOGEO_USER ng_depthfx_shooter_project(const NGShooterCamera *camera,
+                           int16_t x, int16_t y, uint8_t band);
+#endif
+
 
 #ifdef __cplusplus
 }

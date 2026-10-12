@@ -134,6 +134,13 @@ NGCharacter* NEOGEO_USER chars_add(uint8_t kind, int16_t x, int16_t y);
 /* How soon its sprite changes reach the screen when a blank is short
  * (NG_SG_PRIO_*, ng_sprite_group.h): the player is HIGH. */
 void NEOGEO_USER ng_char_set_vram_priority(NGCharacter *c, uint8_t prio);
+/* Keep its sprite_strips hardware slots from firstSprite (inside
+ * NG_SPR_CHAR_FIRST..NG_SPR_CHAR_LAST) instead of the depth sorter's: the
+ * others are placed below the lowest pinned slot, and the pinned char draws
+ * in front of them. Its slots then never move, so it never waits a frame
+ * unwritten because something ahead of it in the draw order came or went.
+ * Call after ng_char_set_sprite; 0xffff unpins. */
+void NEOGEO_USER ng_char_pin_sprite(NGCharacter *c, uint16_t firstSprite);
 void NEOGEO_USER ng_chars_remove(NGCharacter *c);
 void NEOGEO_USER ng_chars_clear_kind(uint8_t kind);
 NGCharacter* NEOGEO_USER chars_find(uint8_t kind);

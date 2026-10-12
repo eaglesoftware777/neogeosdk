@@ -9,6 +9,8 @@ static NGCharInterupt ng_char_interupts[NG_MAX_CHAR_KINDS];
 
 static uint8_t ng_char_uploaded_strips[NG_MAX_CHARS];
 static uint16_t ng_char_uploaded_first[NG_MAX_CHARS];
+/* Hardware slot a character is pinned to (ng_char_pin_sprite), or 0xffff. */
+static uint16_t ng_char_pinned_first[NG_MAX_CHARS];
 static NGSpriteGroup ng_char_groups[NG_MAX_CHARS];
 static uint8_t ng_char_depth_sort = 1u;
 static uint8_t ng_palette_owner[64];
@@ -97,6 +99,7 @@ void NEOGEO_USER ng_chars_init(void)
         ng_chars[i].sprite_palette_map = 0;
         ng_char_uploaded_strips[i] = 0;
         ng_char_uploaded_first[i] = 0xffff;
+        ng_char_pinned_first[i] = 0xffff;
     }
 
     for (i = 0; i < NG_MAX_CHAR_KINDS; i++) {
@@ -155,6 +158,7 @@ NGCharacter* NEOGEO_USER chars_add(uint8_t kind, int16_t x, int16_t y)
             c->sprite_offset_y = 0;
             ng_char_uploaded_strips[i] = 0;
             ng_char_uploaded_first[i] = 0xffff;
+            ng_char_pinned_first[i] = 0xffff;
 
             c->body_x = 0;
             c->body_y = 0;
@@ -440,23 +444,6 @@ static int16_t NEOGEO_USER ng_char_sort_y(NGCharacter *c)
     return (int16_t)(c->y + c->depth_offset);
 }
 
-static uint8_t NEOGEO_USER ng_char_draws_before(NGCharacter *a, NGCharacter *b)
-{
-    int16_t ay;
-    int16_t by;
-
-    if (a->priority_band != b->priority_band) {
-        return (uint8_t)(a->priority_band < b->priority_band);
-    }
-
-    if (!ng_char_depth_sort) return 1u;
-    ay = ng_char_sort_y(a);
-    by = ng_char_sort_y(b);
-
-    /* Greater Y = lower on screen = nearer, so it must be assigned later. */
-    return (uint8_t)(ay <= by);
-}
-
 void NEOGEO_USER ng_chars_set_depth_sort(uint8_t enabled)
 {
     ng_char_depth_sort = enabled ? 1u : 0u;
@@ -474,18 +461,30 @@ void NEOGEO_USER ng_chars_set_depth_sort(uint8_t enabled)
  * ng_chars_draw) into draw order. */
 static void NEOGEO_USER ng_chars_depth_sort(uint8_t *order, uint8_t count)
 {
-    uint8_t i, j;
-    uint8_t tmp;
+    /* Stable insertion sort by render band, then Y ascending (greater Y is
+     * lower on screen, nearer, so it is assigned later). Each char's key is
+     * read once: finding a char in ng_chars[] costs a multiply by the
+     * record size, and comparing chars directly did two per step. */
+    uint32_t key[NG_MAX_CHARS];
+    uint32_t k;
+    uint8_t i, j, tmp;
 
-    /* Insertion sort by render band, then Y ascending. */
+    for (i = 0; i < count; i++) {
+        NGCharacter *c = &ng_chars[order[i]];
+        key[i] = ((uint32_t)c->priority_band << 16) |
+                 (ng_char_depth_sort ? (uint16_t)((uint16_t)ng_char_sort_y(c) ^ 0x8000u) : 0u);
+    }
     for (i = 1; i < count; i++) {
         tmp = order[i];
+        k = key[i];
         j = i;
-        while (j > 0 && !ng_char_draws_before(&ng_chars[order[j-1]], &ng_chars[tmp])) {
+        while (j > 0 && key[j-1] > k) {
             order[j] = order[j-1];
+            key[j] = key[j-1];
             j--;
         }
         order[j] = tmp;
+        key[j] = k;
     }
 }
 
@@ -499,16 +498,29 @@ void NEOGEO_USER ng_chars_draw(void)
     int16_t camera_x = level ? level->scroll_x : 0;
     int16_t camera_y = level ? level->scroll_y : 0;
 
+    uint8_t pinned[NG_MAX_CHARS];
+    uint8_t pinned_count = 0;
+    uint16_t slot_limit = (uint16_t)(NG_SPR_CHAR_LAST + 1u);
+
+    /* Pinned chars keep their slots; everyone else is placed below the
+     * lowest of them, whether or not it is drawn this frame. */
+    for (i = 0; i < ng_chars_active_top; i++) {
+        if (ng_chars[i].active && ng_char_pinned_first[i] < slot_limit) slot_limit = ng_char_pinned_first[i];
+    }
+
     /* Hide inactive, invisible or offscreen chars that still have a VRAM
      * slot booked; list the rest for drawing (one visibility test each). */
     count = 0;
     for (i = 0; i < ng_chars_active_top; i++) {
         NGCharacter *c = &ng_chars[i];
 
+        if (c->active && ng_char_pinned_first[i] != 0xffff && c->sprite_first == 0xffff)
+            c->sprite_first = ng_char_pinned_first[i];
         /* the common cases first, without the call */
         if (c->active && c->visible && c->sprite_first != 0xffff &&
             ng_char_render_visible(c, camera_x, camera_y)) {
-            order[count++] = i;
+            if (ng_char_pinned_first[i] != 0xffff) pinned[pinned_count++] = i;
+            else order[count++] = i;
         } else {
             if (ng_char_uploaded_first[i] != 0xffff) {
                 chars_hide_uploaded(i);
@@ -545,7 +557,7 @@ void NEOGEO_USER ng_chars_draw(void)
         uint8_t visibleStrips = c->sprite_strips ? c->sprite_strips : 1;
         if (visibleStrips > NG_SPRITE_MAX_STRIPS) visibleStrips = NG_SPRITE_MAX_STRIPS;
 
-        if ((uint16_t)(next_slot + visibleStrips - 1u) > NG_SPR_CHAR_LAST) {
+        if ((uint32_t)next_slot + visibleStrips > slot_limit) {
             break;
         }
 
@@ -573,6 +585,25 @@ void NEOGEO_USER ng_chars_draw(void)
             ng_chars[idx].sprite_dirty = 1u;
         }
         count = drawn;
+    }
+    /* Pinned chars last: their slots never move, so a creature coming or
+     * going ahead of them in the draw order can't leave them unwritten
+     * (hidden) for the frames a moved upload waits. */
+    for (i = 0; i < pinned_count; i++) {
+        uint8_t idx = pinned[i];
+        NGCharacter *c = &ng_chars[idx];
+        uint8_t visibleStrips = c->sprite_strips ? c->sprite_strips : 1;
+        if (visibleStrips > NG_SPRITE_MAX_STRIPS) visibleStrips = NG_SPRITE_MAX_STRIPS;
+        if (c->sprite_first != ng_char_pinned_first[idx] || ng_char_uploaded_strips[idx] != visibleStrips) {
+            if (ng_char_uploaded_first[idx] != 0xffff) {
+                chars_hide_uploaded(idx);
+                ng_char_uploaded_strips[idx] = 0;
+                ng_char_uploaded_first[idx] = 0xffff;
+            }
+            c->sprite_first = ng_char_pinned_first[idx];
+            c->sprite_dirty = 1;
+        }
+        order[count++] = idx;
     }
 
     /* Phase 2 – draw each char in depth-sorted order (back-to-front). */
@@ -704,6 +735,20 @@ uint8_t NEOGEO_USER ng_char_bind_asset(NGCharacter *c, const NGSpriteAssetView *
 void NEOGEO_USER ng_char_set_vram_priority(NGCharacter *c, uint8_t prio)
 {
     if (c) c->vram_prio = prio;
+}
+
+void NEOGEO_USER ng_char_pin_sprite(NGCharacter *c, uint16_t firstSprite)
+{
+    uint8_t i;
+    if (!c) return;
+    i = ng_chars_index(c);
+    if (i == 0xff) return;
+    if (firstSprite != 0xffff &&
+        (firstSprite < NG_SPR_CHAR_FIRST ||
+         (uint32_t)firstSprite + (c->sprite_strips ? c->sprite_strips : 1u) > NG_SPR_CHAR_LAST + 1u))
+        return;
+    ng_char_pinned_first[i] = firstSprite;
+    c->sprite_dirty = 1;
 }
 
 void NEOGEO_USER ng_char_set_cull_margin(NGCharacter *c, int16_t l, int16_t r, int16_t t, int16_t b)

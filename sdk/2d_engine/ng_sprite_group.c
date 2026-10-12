@@ -424,6 +424,10 @@ void NEOGEO_USER ng_sprite_hide_all(void)
 #endif
 }
 
+#ifdef NG_VRAM_DEFER
+static uint8_t NEOGEO_USER ngsg_queued_flag(const NGSpriteGroup *g);
+#endif
+
 void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette)
 {
     if (!g) return;
@@ -449,6 +453,12 @@ void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, ui
     g->autoAnim8 = 0;
     g->visible = 1;
     g->dirty = NG_SGF_DIRTY_ALL;   /* force full upload on first draw */
+#ifdef NG_VRAM_DEFER
+    /* A pending list holds this pointer, not a snapshot. Rebinding must
+     * preserve membership or the same group can fill the list repeatedly.
+     * Query the lists rather than reading an uninitialized group's flags. */
+    g->dirty |= ngsg_queued_flag(g);
+#endif
     g->mapRows = 0u;
     g->mapFirst = 0xffffu;
     g->mapStrips = g->mapHeight = 0u;
@@ -631,7 +641,9 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
     ngsg_fill((uint16_t)(SCB2_ADDR + g->firstSprite), ngsg_scb2(g), ngsg_scb2(g), n);
     ngsg_fill((uint16_t)(SCB3_ADDR + g->firstSprite), ngsg_scb3(g, rows), (uint16_t)(0x0040u | rows), n);
     ngsg_fill((uint16_t)(SCB4_ADDR + g->firstSprite), ngsg_scb4(g), 0u, n);
-    g->dirty = 0u;
+    /* Written, but a listed group stays listed: dropping the mark lets a
+     * later flush list it a second time. */
+    g->dirty = (uint8_t)(g->dirty & NG_SGF_QUEUED);
     ngsg_note_ready(g, rows);
 }
 
@@ -778,11 +790,25 @@ static struct { NGSpriteGroup *g; uint16_t column; uint8_t strip; } ngsg_strips[
 static uint8_t ngsg_strips_n;
 static uint16_t ngsg_done;      /* groups written by the commit under way (ng_perf) */
 
+static uint8_t NEOGEO_USER ngsg_queued_flag(const NGSpriteGroup *g)
+{
+    uint16_t i;
+    for (i = 0; i < ngsg_high_n; i++) if (ngsg_high[i] == g) return NG_SGF_QUEUED;
+    for (i = 0; i < ngsg_norm_n; i++) if (ngsg_norm[i] == g) return NG_SGF_QUEUED;
+    for (i = 0; i < ngsg_low_n; i++) if (ngsg_low[i] == g) return NG_SGF_QUEUED;
+    return 0u;
+}
+
 /* The raster line, 0..263 (the counter runs $F8..$1FF: $100 is line 0). */
 static uint16_t NEOGEO_USER ngsg_line(void)
 {
+#ifdef NG_VRAM_HOST_TEST
+    extern uint16_t ng_vram_test_line;
+    return ng_vram_test_line;
+#else
     uint16_t c = (uint16_t)(*(volatile uint16_t *)0x3C0006u >> 7);
     return (uint16_t)(c >= 0x100u ? c - 0x100u : c + 8u);
+#endif
 }
 
 uint8_t NEOGEO_USER ng_vram_lines_left(void)
@@ -800,14 +826,16 @@ uint8_t NEOGEO_USER ng_vram_window_open(void)
 
 void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
 {
+    NGSpriteGroup **q;
+    uint16_t *count, n;
     if (!g || !(g->dirty & NG_SGF_DIRTY_ALL)) return;
     if (g->dirty & NG_SGF_QUEUED) return;          /* already listed: written as it is then */
     if (g->prio == NG_SG_PRIO_HIGH && ngsg_high_n < NG_VRAM_QUEUE_HIGH) {
-        ngsg_high[ngsg_high_n++] = g;
+        q = ngsg_high; count = &ngsg_high_n;
     } else if (g->prio == NG_SG_PRIO_LOW && ngsg_low_n < NG_VRAM_QUEUE_LOW) {
-        ngsg_low[ngsg_low_n++] = g;
+        q = ngsg_low; count = &ngsg_low_n;
     } else if (ngsg_norm_n < NG_VRAM_QUEUE_GROUPS) {
-        ngsg_norm[ngsg_norm_n++] = g;
+        q = ngsg_norm; count = &ngsg_norm_n;
     } else {
         /* Full: never written here. It stays dirty, and its next flush
          * lists it (each group is listed once a frame, so this needs more
@@ -815,7 +843,14 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
         NG_PERF_QUEUE_FULL();
         return;
     }
+    n = *count;
+    q[n] = g;
     g->dirty = (uint8_t)(g->dirty | NG_SGF_QUEUED);
+    /* Publish the completed entry last. The 68000 can be inspected or
+     * interrupted between the pointer store and count update; publishing
+     * first temporarily exposes a stale pointer from the previous list. */
+    __asm__ volatile ("" : : : "memory");
+    *count = (uint16_t)(n + 1u);
 }
 
 static void NEOGEO_USER ngsg_list_strip(NGSpriteGroup *g, uint8_t strip, uint16_t column)
@@ -1026,6 +1061,9 @@ static void NEOGEO_USER ngsg_commit_aged(void)
     /* still waiting with content (a hide or a later write may have done it) */
     if (!(g->dirty & NG_SGF_QUEUED) || !(g->dirty & NG_SGF_DIRTY_ALL)) return;
     if (!ngsg_flush_moved(g) && !ngsg_flush_rescaled(g)) ngsg_flush_now(g);
+    /* A full write clears dirty flags, but this pointer is still in its
+     * list. If the write spends the blank, compaction waits another frame. */
+    g->dirty |= NG_SGF_QUEUED;
     ngsg_done++;
     /* (still marked listed: its list's loop finds nothing dirty and drops it) */
 }

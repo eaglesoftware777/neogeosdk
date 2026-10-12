@@ -34,6 +34,17 @@ int main(void)
     NGShooterCamera cam;
     uint8_t banks[704] = {0};
     int i, ratio;
+    NGShooterStripBudget budget;
+    ng_shooter_budget_init(&budget,22);
+    ng_shooter_budget_add(&budget,-16,3,3);
+    ng_shooter_budget_add(&budget,16,4,8);
+    assert(ng_shooter_budget_peak(&budget)==33);
+    ng_shooter_budget_add(&budget,400,8,5); /* wraps at hardware Y=512 */
+    assert(ng_shooter_budget_peak(&budget)==33);
+    ng_shooter_budget_add(&budget,-1,1,9);
+    assert(ng_shooter_budget_peak(&budget)==39);
+    ng_shooter_budget_add(&budget,200,32,4); /* full-height SCB3 */
+    assert(ng_shooter_budget_peak(&budget)==43);
     memset(&layer, 0, sizeof(layer));
     ng_shooter_camera_init(&cam);
     ng_shooter_camera_set_speed(&cam, 128);

@@ -16,7 +16,9 @@ static int32_t NEOGEO_USER follow(int32_t current, int32_t target, uint8_t limit
     if (target > limit) target = limit;
     if (target < -(int16_t)limit) target = -(int16_t)limit;
     delta = target * 256 - current;
-    step = delta / (1L << shift);
+    /* Arithmetic shifts round negative values down; preserve the old
+     * division's truncation towards zero without a 32-bit divide helper. */
+    step = delta < 0 ? -((-delta) >> shift) : delta >> shift;
     if (!step && delta) step = delta > 0 ? 1 : -1;
     return current + step;
 }
@@ -119,4 +121,43 @@ void NEOGEO_USER ng_vertical_layer_hide(NGVerticalLayer *layer)
         ng_sprite_group_hide(&layer->pages[page]);
     }
     layer->ready = 0;
+}
+
+void NEOGEO_USER ng_shooter_budget_init(NGShooterStripBudget *b, uint16_t baseline)
+{
+    /* Cleared two lines per store: games count the budget every frame. */
+    typedef uint32_t __attribute__((may_alias)) pair;
+    pair *w;
+    uint8_t i;
+    if (!b) return;
+    w = (pair *)b->edges;
+    for (i=0; i<112u; i++) *w++=0;
+    b->edges[224]=0;
+    b->baseline=baseline;
+}
+static void NEOGEO_USER budget_span(NGShooterStripBudget *b, uint16_t a,
+                                    uint16_t z, uint8_t strips)
+{
+    if (a>=224u) return;
+    if (z>224u) z=224u;
+    if (a<z) { b->edges[a]+=strips; b->edges[z]-=strips; }
+}
+void NEOGEO_USER ng_shooter_budget_add(NGShooterStripBudget *b, int16_t y,
+                                       uint8_t rows, uint8_t strips)
+{
+    uint16_t start,end;
+    if (!b || !rows || !strips) return;
+    if (rows>=32u) { b->baseline+=strips; return; }
+    start=(uint16_t)y & 511u;
+    end=start+(uint16_t)rows*16u;
+    budget_span(b,start,end,strips);
+    if (end>512u) budget_span(b,0u,end-512u,strips);
+}
+uint16_t NEOGEO_USER ng_shooter_budget_peak(const NGShooterStripBudget *b)
+{
+    uint16_t i,peak;int16_t count;
+    if (!b) return 0u;
+    peak=b->baseline;count=(int16_t)b->baseline;
+    for(i=0;i<224u;i++) { count+=b->edges[i];if(count>(int16_t)peak) peak=(uint16_t)count; }
+    return peak;
 }

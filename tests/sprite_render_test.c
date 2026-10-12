@@ -453,6 +453,17 @@ static void test_character_depth_order(void)
     a->priority_band = 5u;
     ng_chars_draw();
     assert(b->sprite_first < a->sprite_first);
+    /* Sort Y below zero (a depth offset) still orders as a signed value. */
+    ng_chars_set_depth_sort(1u);
+    a->priority_band = b->priority_band;
+    a->y = b->y = 100;
+    a->depth_offset = -150;
+    ng_chars_draw();
+    assert(a->sprite_first < b->sprite_first);
+    b->depth_offset = -200;
+    ng_chars_draw();
+    assert(b->sprite_first < a->sprite_first);
+    a->depth_offset = b->depth_offset = 0;
 }
 
 static void test_map_growth_after_shrink(void)
