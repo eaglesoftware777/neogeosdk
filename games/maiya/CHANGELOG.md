@@ -13,8 +13,17 @@ version; Maiya's ROMs are numbered on their own.
   palms. They are drawn again: a short green sleeve with its pink trim, the
   bare upper arm, the brown bracer lit along one edge, and a small closed
   fist joined at the wrist. Walking, they swing loosely with a slight bend;
-  running, they pump with the elbow near 90 degrees, the fist from her chin
-  back past her hip. The far arm shows behind her back on its back swing.
+  running, they pump with the elbow near 90 degrees.
+- **Both arms in sight, in step with her legs.** As in her original stride
+  drawing, one fist pumps ahead of her chest while the other arm is swung
+  back, its elbow out past her back and the fist behind her hip, and they
+  change over with her legs. Before, half of each cycle had both arms tucked
+  behind her: the far arm swung forward hidden behind her chest and the near
+  one swung back onto her hip. Now the far arm takes the same path as the
+  near one from a shoulder just behind it, so its fist shows ahead of her
+  chest on the forward swing and its elbow behind her back on the back
+  swing; the near arm's shoulder rolls back as it swings back. Each fist
+  moves at most 7 px a frame.
 - **Legs from her own drawings, no shadow leg.** One leg pair per pose from
   her original walk and run sheets, both legs in the same colours: the far
   leg used to be darker and flashed like a shadow every step. Each leg goes

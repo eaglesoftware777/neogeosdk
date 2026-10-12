@@ -10,6 +10,11 @@ and export the strips and the per-layer evidence in `layers/`.
     python3 tools/aseprite/pipeline.py --author
     make GAME=maiya art
 
+Without Aseprite, `ASEPRITE=builtin` makes `pipeline.py` author, reopen and
+export with `tools/aseprite/ase_file.py`, which writes the same
+`maiya_walkrun.aseprite` byte for byte and the same exports (only the sheet
+JSON's `meta.app` names it).
+
 `--accept` records the composed layers in `cute-polish.json` as the accepted
 art, so any later hand edit to a map fails `check_cute_polish.py` until it is
 reviewed and accepted. Edit the drawings in `compose_gait.py` (the arms are
@@ -31,15 +36,20 @@ literal pixel rows there) or in the source sheets, never only in `maps/`.
   bob or shift opens a gap at the hem. Each boot band carries the idle
   outfit's two-pixel gold glint.
 - **Arms** -- ten pixel drawings in `compose_gait.py`: five for the walk's
-  relaxed swing, five for the run's pump (elbow near 90 degrees, the fist
-  from the chin back past the hip). Each is a short green sleeve with its
-  pink trim, the bare upper arm, the brown bracer lit along one edge and
-  shadowed along the other, and a small closed fist joined to the bracer at
-  the wrist (the old cream discs with an outline ring at the wrist read as
-  open palms). The near arm (shoulder 47,26) swings against the near leg;
-  the far arm (shoulder 36,26, she is turned three-quarters) is half a cycle
-  behind, showing behind her back on its back swing and passing behind her
-  chest forward.
+  relaxed swing, five for the run's pump (elbow near 90 degrees). Each is a
+  short green sleeve with its pink trim, the bare upper arm, the brown bracer
+  lit along one edge and shadowed along the other, and a small closed fist
+  joined to the bracer at the wrist. The near arm (shoulder 47,26) swings
+  against the near leg. The far arm, half a cycle behind it, takes the same
+  path from a shoulder just behind and above it (45,25): so, as in her
+  original stride drawing, one fist pumps ahead of her chest while the other
+  arm is swung back with its elbow out past her back and its fist behind her
+  hip, on every frame (the far fist ahead of her chest on its forward swing,
+  her elbow behind her back on its back swing). Swinging back, each arm's
+  shoulder rolls back with it (the sleeve tops move from x 47 to 42).
+  Each fist moves at most 7 px a frame, the run's bob included
+  (`tools/check_hero_frames.py`). Stopped, the far arm hangs at her back
+  (shoulder 36,26).
 - **Timing** -- each pose is held for the road its planted foot covers in
   the drawing, with the legs shifted at most 4 px under the tunic, so the
   planted foot stays put: at most 3 px of slip a pose at a walk, 1 px at a
@@ -50,17 +60,17 @@ literal pixel rows there) or in the source sheets, never only in `maps/`.
 
 | Slot | Walk | Legs from | Leg shift | Bob | Arms (near) | Hold |
 | --- | --- | --- | ---: | ---: | --- | ---: |
-| 0 / 4 | contact | WALK 0: both feet down | 0 | 0 | forward / back | 8 |
+| 0 / 4 | contact | WALK 0: both feet down | 0 | 0 | ahead of the skirt / behind it | 8 |
 | 1 / 5 | down | WALK 2: weight on the front foot, back on its toe | -3 | +1 | halfway | 10 |
-| 2 / 6 | passing | WALK 1: support under the hip, the other heel lifting | -2 | 0 | hanging | 14 |
+| 2 / 6 | passing | WALK 1: support under the hip, the other heel lifting | -2 | 0 | hanging at her side | 14 |
 | 3 / 7 | up | WALK 5: support behind, the swing knee lifted forward | +3 | -1 | halfway | 8 |
 
 | Slot | Run | Legs from | Leg shift | Bob | Arms (near) | Hold |
 | --- | --- | --- | ---: | ---: | --- | ---: |
-| 0 / 4 | contact | RUN 0: landing ahead, the back foot pushing | 0 | 0 | fist at the chin / elbow back | 10 |
-| 1 / 5 | down | RUN 1: support under her, the other heel kicking up | 0 | +2 | fist at the chest | 14 |
-| 2 / 6 | push-off | RUN 5: support extended behind, the knee driving through | +4 | 0 | fist at the belly | 8 |
-| 3 / 7 | flight | RUN 3: the trailing leg folded, the leading one reaching; soles 4 px up | 0 | -2 | elbow going back | 8 |
+| 0 / 4 | contact | RUN 0: landing ahead, the back foot pushing | 0 | 0 | fist at the chest / elbow out past her back, fist behind the hip | 10 |
+| 1 / 5 | down | RUN 1: support under her, the other heel kicking up | 0 | +2 | fist coming down ahead of her | 14 |
+| 2 / 6 | push-off | RUN 5: support extended behind, the knee driving through | +4 | 0 | hanging at her side | 8 |
+| 3 / 7 | flight | RUN 3: the trailing leg folded, the leading one reaching; soles 4 px up | 0 | -2 | elbow going back past her back | 8 |
 
 Holds are gait clock units (80 per two-step cycle); the clock runs 5/4 of
 the road at a walk and 1 at a run. Stop: the earlier stop legs (feet

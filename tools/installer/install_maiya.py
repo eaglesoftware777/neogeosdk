@@ -65,8 +65,8 @@ NEOGEO_XML = """<?xml version="1.0"?>
                 <rom name="780-v1.v1" offset="0x000000" size="0x79ab00" crc="127b89b4" sha1="8ec212c59da5e650ed6978cf358e24220b5d33c3" />
             </dataarea>
             <dataarea name="sprites" size="0x800000">
-                <rom loadflag="load16_byte" name="780-c1.c1" offset="0x000000" size="0x400000" crc="1ec8e364" sha1="9d2a88d32fa067dc4008e8da415772cb56b2c46f" />
-                <rom loadflag="load16_byte" name="780-c2.c2" offset="0x000001" size="0x400000" crc="f324e7d4" sha1="68eafc9a5a51998fe02614dea7704c77ce597edf" />
+                <rom loadflag="load16_byte" name="780-c1.c1" offset="0x000000" size="0x400000" crc="48638505" sha1="b2517c2a09efe0b196335c616ba3b2f13969f052" />
+                <rom loadflag="load16_byte" name="780-c2.c2" offset="0x000001" size="0x400000" crc="66a5c0e2" sha1="9f3d77f2284925c82d8e26f725243083a73d6d92" />
             </dataarea>
         </part>
     </software>
