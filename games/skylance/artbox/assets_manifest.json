@@ -2731,9 +2731,9 @@
   {
     "db_index": 10,
     "screen_id": 11,
-    "name": "opponent_boss_crimson_cathedral.png",
+    "name": "opponent_boss_crimson_castle.png",
     "subdir": "npcs",
-    "path": "c:\\neogeo\\neogeosdk\\games\\skylance\\artbox\\in\\npcs\\opponent_boss_crimson_cathedral.png",
+    "path": "c:\\neogeo\\neogeosdk\\games\\skylance\\artbox\\in\\npcs\\opponent_boss_crimson_castle.png",
     "rule_name": "cat_sky_bosses",
     "mode": "sprite",
     "category": "npcs",

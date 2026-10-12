@@ -141,7 +141,7 @@ op3=08,48,1F,18,12,DF,00
 op4=02,00,1F,16,10,CF,00
 
 [patch 12]
-name=Temple Gong FM
+name=Bronze Gong FM
 alg=3
 fb=7
 stereo=C1

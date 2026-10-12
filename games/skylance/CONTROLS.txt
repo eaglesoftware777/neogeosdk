@@ -1,0 +1,45 @@
+SKY LANCE - OPERATION AURORA
+
+STICK       Smooth flight on both axes. Hold left/right to bank to 45 degrees.
+A           Primary fire. Hold for automatic fire; P raises weapon power.
+B           Afterburner. It changes speed; it does not change fuel's countdown.
+B + LEFT    Evasive left barrel roll (press B while holding left).
+B + RIGHT   Evasive right barrel roll (press B while holding right).
+B + UP      High-G climb (press B while holding up).
+B + DOWN    Split-S dive (press B while holding down).
+C           Pilot-specific super bomb. C:BMB and the bomb icon show stock.
+D           Heavy missile. AMMO shows the remaining missiles.
+B + D       Chaff. Can pull guided missiles onto a visible decoy cloud.
+
+Maneuvers have a short cooldown. Normal stick movements use
+gentle banks; the long hold reaches 45 degrees and releases smoothly to level.
+
+ROOK / F-16   Silver-blue nimble fighter; precision bomb strike.
+KIRA / F-35   Olive-green steady fighter; stealth missile barrage.
+BLAZE / F-15  Charcoal-crimson fast heavy fighter; cluster bomb run.
+These are arcade handling models with miniature aircraft proportions.
+
+FUEL is seconds remaining in the mission: 240 seconds at launch, counting
+through both flight and target battles. Zero fuel fails the mission. The F
+pickup adds 30 seconds; coasting and losing a life do not refill the timer.
+
+At each of three SAM/radar pads, the scenery stops. Defeat the defending
+escorts and the mini boss, then destroy the exposed command target to resume
+flight. All three targets earn the 2500-point objective bonus. Submarines do
+not count. After the final waves the flight cruises to the route's end,
+where the main boss waits in an open arena.
+
+Avoid the marked radar circle to remain undetected. Entering it triggers six
+extra defenders and doubles the site's missile rate. Chaff briefly spoofs
+the radar and gives guided missiles a decoy to follow, but each release
+rolls every missile: later routes, higher DIFFICULTY settings and bosses'
+missiles fool it less often (a boss's hardly at all, except on EASY).
+If one stays locked on, the radar scope turns red. Each mission starts
+with six chaff releases; the cockpit's B+D counter shows the remaining stock.
+Air and ground units have distinct projectiles. Super bomb damage grows by mission.
+
+P power / M missiles / S shield / F fuel / T speed / bomb extra super
+L spare life / star score chain / H hull repair.
+
+AES and MVS launchers start fullscreen. Scanline launchers require MAME's
+BGFX crt-geom shader. The cartridge packages are not yet verified on real boards.

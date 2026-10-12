@@ -10,6 +10,7 @@ import struct
 import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
+import zlib
 
 from pack_neosd import build_image
 
@@ -76,7 +77,9 @@ def snapshot(target, stamp):
         destination = backup / name
         destination.parent.mkdir(parents=True, exist_ok=True)
         if source.is_dir():
-            shutil.copytree(source, destination)
+            # QA captures remain in the installed evidence tree. Copying
+            # every historical recording on each install exhausts the disk.
+            shutil.copytree(source, destination, ignore=shutil.ignore_patterns("qa"))
         else:
             shutil.copy2(source, destination)
     if not found:
@@ -103,8 +106,13 @@ def install(target, stage, manifest):
     for log in stage.glob("*-build.log"):
         shutil.copy2(log, target / "tests/skylance" / log.name)
     for source in (ROOT / "tools/mame_tests").glob("*skylance*.bat"):
+        if "backup" in source.stem:
+            continue
         data = source.read_text(encoding="ascii").replace("\r\n", "\n").replace("\n", "\r\n")
         (target / source.name).write_bytes(data.encode("ascii"))
+    # Keep archived cartridges, while honoring the removed root shortcuts.
+    for name in ("run_skylance_backup.bat", "run_skylance_backup_scanlines.bat"):
+        (target / name).unlink(missing_ok=True)
     shutil.copy2(ROOT / "games/skylance/TESTING.txt", target / "SKYLANCE-TEST.txt")
     (target / "skylance-build.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="ascii")
     print(f"Installed: {target}\nPrevious Sky Lance: {backup}", flush=True)
@@ -145,8 +153,12 @@ def main():
             shutil.copy2(ROOT / "hash_eagle/skylance/neogeo.xml", hashes / "neogeo.xml")
             tree = ET.parse(hashes / "neogeo.xml")
             for rom in tree.findall(".//rom"):
-                if int(rom.attrib["size"], 0) != len((roms / rom.attrib["name"]).read_bytes()):
+                rdata = (roms / rom.attrib["name"]).read_bytes()
+                if int(rom.attrib["size"], 0) != len(rdata):
                     raise ValueError("MAME software list size mismatch")
+                rom.attrib["crc"] = f"{zlib.crc32(rdata):08x}"
+                rom.attrib["sha1"] = hashlib.sha1(rdata).hexdigest()
+            tree.write(hashes / "neogeo.xml", encoding="utf-8", xml_declaration=True)
             # Symbols let the hardware capture inspect the actual game state.
             nm = ROOT.parent / "x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-nm"
             (destination / "symbols.txt").write_bytes(subprocess.check_output([str(nm), "-n", str(ROOT / "out/game")]))
