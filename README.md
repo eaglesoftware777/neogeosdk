@@ -10,6 +10,7 @@ Neo Geo development SDK for SNK hardware.
   arenas, cockpit instruments, an opt-in vertical shooter module) and
   Maiya's v4 ROMs with her walk and run redrawn (see the changelog)
 - Vertical shooter API: [`docs/vertical_shooters.md`](docs/vertical_shooters.md)
+- Fighting-game API: [`docs/fighting.md`](docs/fighting.md) (v1.7.5 work: Shadow League Fighting, first playable)
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
 
