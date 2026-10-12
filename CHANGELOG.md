@@ -1,32 +1,69 @@
 # Changelog
 
-## v1.7.3 - pre-release: Sky Lance vertical shooter upgrade
+## v1.7.3 - pre-release: Sky Lance v1 and Maiya v4
 
-Status: local working-tree build; not committed, pushed or published.
+Status: a pre-release from the `fix/maiya-arenas-eagle-bios` branch, with
+Sky Lance's first public ROM set (`_v1`) and Maiya's `_v4`; v1.7.0 remains
+the current release.
 
-### Engine (Framework 1.3: additions only)
+### Engine (`sdk/2d_engine`, Framework 1.3: additions only)
 
 - New opt-in C module `ng_shooter.h`, enabled with `-DNG_SHOOTER=1`:
   fractional/reverse vertical scroll, bounded smooth camera follow and
   independently paced resident parallax layers. Positive travel flies up.
+  `NGShooterStripBudget` (`ng_shooter_budget_init/add/peak`) counts the
+  sprite strips each scanline would carry, so optional scenery (shadows,
+  clouds) can yield before the 96-per-line limit; `ng_depthfx_shooter_project`
+  places an object in one of the shooter's depth bands.
 - `NGVerticalLayer` uses two pages, preserves row-major palette maps and
   queues high-priority position writes without re-uploading maps during play.
+- `ng_char_pin_sprite()` keeps a character's hardware sprite slots fixed
+  (drawn in front of the depth-sorted cast), so it never waits a frame
+  unwritten when something ahead of it in the draw order comes or goes.
+  Characters are depth-sorted by key.
+- Deferred sprite groups: rebinding or fully writing a group keeps its place
+  in the pending lists (it could be listed twice), and a list entry is
+  published before the count that makes it visible.
+- The build stops at the first scene file that fails to compile instead of
+  linking stale objects.
 - Existing camera, background, sprite and collision APIs are unchanged.
-  Maiya does not enable this module; its sources and installed ROMs are untouched.
 
-### Sky Lance
+### Sky Lance (id 779), `_v1`
 
-- Direct C1/C2 generation, separate verified AES/MVS sets and aligned NeoSD
-  cartridges, native full-width terrain with camera gutters, cloud parallax,
-  improved pilot portraits and cleaned aircraft/enemy pixels.
-- Arcade-style metallic title with squadron art and the credit
-  `(C)1996 (+30) EAGLE SOFTWARE`; dedicated pixel explosions and seven terrains.
-- Retains MVS sound handshake/timer recovery, work-RAM-safe sound startup,
-  BIOS-aware credit handling, private font/logo tiles and reserved save RAM.
-- Windows test launchers, installation backups, asset checks and gameplay/audio
-  capture checks. Real board/CRT verification is still required.
+- Seven long painted routes, each ending in an open arena themed to its
+  boss (deep sea for the warship, empty desert for the tank fortress, and
+  so on); the flight cruises there once the waves are spent.
+- Three pilots (F-16, F-35, F-15) with banking, rolls, climbs and Split-S;
+  command targets with escorts, radar sites and mini-boss strips; painted
+  jets, bosses, warships, clouds and explosions; wrecks for ground units.
+- Chaff with odds per missile that fall with the route and a new DIFFICULTY
+  soft DIP (EASY to EXPERT); boss missiles resist except on EASY.
+- HUD with cockpit instruments (attitude, radar scope, G meter) drawn as
+  fixed sprite groups, segmented bars, threat cues; a painted title with the
+  pilots' faces; eight-frame explosions and chained blasts on big kills.
+- Native C-ROM audit, MAME inspection modes (features, boss, turrets, quiet,
+  per stage and pilot), cartridge packages and a Windows setup wizard.
+- See `games/skylance/CHANGELOG.md` and `games/skylance/README.md`.
 
-See `docs/vertical_shooters.md` and `games/skylance/README.md`.
+### Maiya (id 780), `_v4`
+
+- Her walk and run redrawn: arms with elbows, bracers and closed fists;
+  legs from her original drawings with no darker far leg; a real run with a
+  knee drive and a flight; holds matched to the planted foot so she no
+  longer skates; a 6-frame stop. Her sprite slots are pinned (no blink).
+- Throws on the move plant her feet between short walks; Emerald Forest,
+  Azure Coast and Autumn Grove re-laid; Luna's hair specks fixed.
+- See `games/maiya/CHANGELOG.md`.
+
+### Tools
+
+- `tools/make_release.py` builds both games' release sets; the Maiya setup
+  wizard points at v1.7.3 and installs the MVS and AES sets side by side;
+  `tools/build_skylance_mame.py` installs Sky Lance's MVS and AES test sets
+  into a MAME folder.
+- The art gates (`tools/check_hero_frames.py`, Maiya's `check_hands.py`,
+  `check_stride_details.py`, `check_cute_polish.py`, Sky Lance's
+  `check_skylance_native_art.py`) run in each game's art build.
 
 ## v1.7.2 - pre-release: frames in the blank, and Maiya v3
 

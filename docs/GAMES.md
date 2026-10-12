@@ -84,88 +84,37 @@ parity; successful compilation alone does not prove identical behavior.
 
 ## skylance — Sky Lance (id 779)
 
-A complete vertical arcade shooter: three pilots, seven stages over three
-terrains, one named boss per stage with its own attack, gunboats and tanks
-that fire from the ground, pick-ups and a super missile, attract reel,
-pilot select, scoring, lives, energy, game-over handling, and the
-credits with a victory flight after the seventh boss.
+A complete vertical arcade shooter: three pilots (Rook's F-16, Kira's F-35,
+Blaze's F-15), seven long painted routes, three guarded command targets per
+route, a mini-boss at each and one named boss per route, fought in an open
+arena on the route's last page. See [the game's README](../games/skylance/README.md)
+for controls, the build and packages, and its
+[changelog](../games/skylance/CHANGELOG.md).
 
-### Pilots
-
-| Call sign | Name | Fire rate | Speed | Bolt |
+| # | Subtitle | Terrain | Boss | Arena |
 |---|---|---|---|---|
-| BLUE LANCE | ROOK | 8 | 3 | single — the baseline |
-| GREEN WING | KIRA | 11 | 3 | twin — wider spread, slower rate |
-| RED STRIKER | BLAZE | 6 | 4 | single — fast and rapid, has to get close |
-
-The three are differentiated the way the arcade originals do it: by feel, not
-by damage numbers.
-
-### Stages
-
-| # | Subtitle | Terrain | Roster | Boss |
-|---|---|---|---|---|
-| 1 | MOUNTAIN DAWN | Valley | drones, fighters, interceptors | CRIMSON KEEP |
-| 2 | HARBOR ASSAULT | Harbour | gunboats, fighters, bombers | IRON TIDE |
-| 3 | VALLEY CONVOY | Valley | tanks, interceptors, drones, bombers | SOL CORE |
-| 4 | REEF INTERCEPT | Open sea | interceptors, gunboats, fighters, bombers | NIGHT RAZOR |
-| 5 | FOREST OUTPOST | Valley | gunships, tanks, bombers | ROTOR NEST |
-| 6 | ARMORED COLUMN | Valley | tanks, interceptors, bombers | EARTH HAMMER |
-| 7 | FINAL APPROACH | Harbour | gunboats, interceptors, gunships, bombers | CRIMSON CITADEL |
-
-Each stage runs 5–7 squadrons, every roster entry in turn, then the boss.
-Gunboats and tanks are surface units: they ride the scroll along the sea
-lanes or the valley road and fire from where they are, never chasing.
-Gunships come down to a firing line and hold it; bombers dive.  Each boss
-has its own volley - a fan with escape lanes, converging naval guns, a core
-that alternates the safe side, a carrier fan that leaves the centre open -
-and the player's ceiling keeps the plane under the boss station so a boss
-is always fought from below.
-
-Every fourth kill drops a pick-up: a speed step, two missiles for the rack,
-or a spare plane (energy, once the rack of planes is full).  **D** fires a
-super missile worth six hits.  The route line under the playfield names the
-stage and the missile count; the impact ring cycles through its palette
-bank every few frames.
-
-After the seventh boss the credits name the pilot and the score, and the
-plane flies a victory lap - a climb, a loop with the burst ring trailing,
-a dive off the top - before the attract loop returns.
+| 1 | MOUNTAIN DAWN | Mountains | CRIMSON KEEP | alpine plateau |
+| 2 | HARBOR ASSAULT | Coast | IRON TIDE | deep sea |
+| 3 | VALLEY CONVOY | Valley | SOL CORE | open valley floor |
+| 4 | REEF INTERCEPT | Open sea | NIGHT RAZOR | open ocean |
+| 5 | FOREST OUTPOST | Forest | ROTOR NEST | forest clearing |
+| 6 | ARMORED COLUMN | Desert | EARTH HAMMER | empty desert |
+| 7 | FINAL APPROACH | Citadel | CRIMSON CITADEL | lava plain |
 
 ### Layout
 
 | File | What it holds |
 |---|---|
-| `scenes/sky_draw.c` | Asset binding, the scrolling backdrop, the FIX HUD, the frame pump |
-| `scenes/sky_stage.c` | Enemy roster, stage table, wave director, boss AI |
+| `scenes/sky_draw.c` | Asset binding, the streamed routes, cockpit instruments, the FIX HUD, the frame pump |
+| `scenes/sky_stage.c` | Enemy roster, stage table, wave director, encounters, chaff, boss behaviour |
 | `scenes/sky_sortie.c` | Attract reel, pilot select, the flight loop, collisions, scoring |
 | `user.c` | BIOS handshake, FIX palettes, MVS title |
-| `main.c` | Generated `showScreenN()` art entry points — rewritten by `make art` |
+| `tools/` | Painted art pipeline (`paint_terrain.py`, `paint_sprites.py`, `paint_jets.py`), the art build and checks |
 
-### Two hardware lessons worth reading the source for
-
-**The playfield is 256 px wide, not 320.** The arena is the column the
-backdrop covers, centred on the screen, with 32 px of backdrop either side.
-That is a consequence of the backdrop being exactly one 16 × 16-tile page
-wide, not a style choice.
-
-**The backdrop does not have to be authored to tile.** A page is 16 × 16
-tiles and the sprite chip can only shrink, never stretch, so a vertically
-scrolling backdrop is exactly one page tall.  `scenes/sky_terrain.h` draws
-each terrain as two copies of the page with the second flipped vertically,
-so the join always meets the same source row from either side and any
-256 × 256 picture scrolls seamlessly.  The three terrains - the valley,
-the harbour and the open sea - are imported from
-`artbox/in/backgrounds/` and `artbox/in/zzzz_terrain/` at 256 × 256 with
-sixteen palette banks each.
-
-Sky Lance also ships without its own sample set, so its audio path is
-`vrom m1rom` rather than the full `sound` target — see
-`games/skylance/sound/README.md`.
-
-During a sortie the pilot chosen at the roster rides along in the margin
-beside the playfield, in the back render band so a crowded frame can never
-drop it.
+The playfield is 288 pixels wide; the 32-pixel column to its right holds
+the pilot's portrait and the cockpit instruments. Routes are 352 pixels wide
+(the camera follows the jet sideways) and stream one 256-row page at a time.
+Sky Lance builds with the opt-in shooter module (`-DNG_SHOOTER=1`).
 
 A two-stage slice of Sky Lance also appears as chapter 24 of the demo reel,
 built from the same art, so you can see the same game driven two ways.
