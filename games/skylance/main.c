@@ -3,6 +3,7 @@
 #include "sdk/neogeo.h"
 #include "sdk/2d_engine/ng_art_asset.h"
 #include "sdk/2d_engine/ng_palette_fx.h"
+#include "sdk/2d_engine/ng_render_queue.h"
 #include "games/skylance/artbox/generated/sky_assets.h"
 #include "games/skylance/scenes/sky.h"
 
@@ -21,9 +22,12 @@ uint8_t NEOGEO_USER ng_load_screen_palette(uint16_t id)
     const NGArtAsset *art = ng_screen_art_asset(id);
     uint8_t i;
     if (!art) return 0u;
-    for (i = 0u; i < sky_art_bank_counts[id - 1u]; i++)
-        ng_palfx_screen_load((uint8_t)(art->palette_bank + i),
-                            sky_art_palettes[id - 1u] + i * 16u);
+    for (i = 0u; i < sky_art_bank_counts[id - 1u]; i++) {
+        uint8_t bank = (uint8_t)(art->palette_bank + i);
+        const uint16_t *colors = sky_art_palettes[id - 1u] + i * 16u;
+        if (bank < 104u) ng_palfx_screen_load(bank, colors);
+        else ng_rq_palette_upload(bank, colors);
+    }
     return 1u;
 }
 

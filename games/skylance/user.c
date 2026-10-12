@@ -289,13 +289,14 @@ void NEOGEO_USER showTitleMVS(void) {
 	uint16_t frames = 15u * 60u;
 	sky_scene_begin();
 	sky_title_draw();
+	sky_puts(8u, 27u, "(C) 2026 EAGLE SOFTWARE", SKY_PAL_BODY);
 	for (;;) {
 		if (NEO_REGISTER8(NGO_START_FLAG)) break;
 		if (!ng_sys_is_mvs()) {
-			sky_puts(14u, 24u, "PUSH START", SKY_PAL_SCORE);
+			sky_puts(14u, 25u, "PUSH START", SKY_PAL_SCORE);
 			if (sky_start_pending()) break;
 		} else if (read_p1credit() > 0) {
-			sky_puts(12u, 24u, "PUSH 1P START", SKY_PAL_SCORE);
+			sky_puts(12u, 25u, "PUSH 1P START", SKY_PAL_SCORE);
 			if (frames) frames--;
 			else {
 				uint16_t saved_sr;
@@ -315,7 +316,7 @@ void NEOGEO_USER showTitleMVS(void) {
 				}
 				__asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
 			}
-		} else sky_puts(14u, 24u, "INSERT COIN", SKY_PAL_BODY);
+		} else sky_puts(14u, 25u, "INSERT COIN", SKY_PAL_BODY);
 		sky_frame();
 	}
 }
@@ -349,14 +350,12 @@ void NEOGEO_USER DISPLAY_INIT(void) {
 /*
  * FIX text palettes.
  *
- * Sky Lance draws its HUD over a full-screen background image, not over
- * the backdrop, so unlike a page-coloured demo the glyph plate matters:
- * the BIOS font paints each glyph - and the whole of its space character -
- * as an opaque entry-2 field, and here that is deliberately kept BLACK so
- * the HUD reads as a dark plate over whatever art is behind it.  Entry 1
- * (glyph body) and entry 3 (accent pixels) carry the ink.
+ * Sky Lance's text face (tools/hud_art.py) floats over the art: no plate,
+ * a one-pixel drop shadow in entry 2, the glyph's upper rows in entry 1 and
+ * its lower rows in entry 3, a darker shade of the same ink.
  */
-#define SKY_FIX_PAL(ink)  0x8000u, (ink), BLACK, (ink), \
+#define SKY_FIX_SHADOW    0xC012u
+#define SKY_FIX_PAL(light, dark)  0x8000u, (light), SKY_FIX_SHADOW, (dark), \
                           BLACK, BLACK, BLACK, BLACK, \
                           BLACK, BLACK, BLACK, BLACK, \
                           BLACK, BLACK, BLACK, BLACK
@@ -364,13 +363,13 @@ void NEOGEO_USER DISPLAY_INIT(void) {
 void NEOGEO_USER setup_fix_palettes(void) {
 	uint16_t fix_pal[16];
 
-	setpal(fix_pal, SKY_FIX_PAL(WHITE));           /* SKY_PAL_BODY  */
+	setpal(fix_pal, SKY_FIX_PAL(0xDEFFu, 0x39ACu));   /* SKY_PAL_BODY: white to steel */
 	ng_palfx_screen_load(0u, fix_pal);
-	setpal(fix_pal, SKY_FIX_PAL(YELLOW));          /* SKY_PAL_SCORE */
+	setpal(fix_pal, SKY_FIX_PAL(0x6FEAu, 0x6E92u));   /* SKY_PAL_SCORE: gold */
 	ng_palfx_screen_load(1u, fix_pal);
-	setpal(fix_pal, SKY_FIX_PAL(CYAN));            /* SKY_PAL_TITLE */
+	setpal(fix_pal, SKY_FIX_PAL(0x3AEFu, 0xC2AEu));   /* SKY_PAL_TITLE: cyan to blue */
 	ng_palfx_screen_load(2u, fix_pal);
-	setpal(fix_pal, SKY_FIX_PAL(RED));             /* SKY_PAL_WARN  */
+	setpal(fix_pal, SKY_FIX_PAL(0x6FBAu, 0x0E32u));   /* SKY_PAL_WARN: rose to red */
 	ng_palfx_screen_load(3u, fix_pal);
 
 	/*

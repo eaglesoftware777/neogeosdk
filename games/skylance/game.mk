@@ -1,6 +1,6 @@
 GAME_NAME  = Sky Lance
 GAME_ID    = 779
-GAME_SCENES = sky_draw sky_stage sky_sortie
+GAME_SCENES = sky_draw sky_stage sky_sortie sky_combat
 GAME_ART_BUILDER = games/skylance/tools/art.py
 GAME_OPTIMIZE = -O2
 GAME_ENGINE_EXCLUDE = ng_particles

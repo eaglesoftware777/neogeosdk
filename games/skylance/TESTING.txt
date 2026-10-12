@@ -1,34 +1,40 @@
 SKY LANCE - SDK v1.7.3 PRE-RELEASE TEST
 
-Run from C:\mame\neogeosdk:
-  run_skylance_mvs.bat           Arcade, EagleBIOS
-  run_skylance_aes.bat           Console, EagleBIOS
-  run_skylance_mvs.bat stock     Existing installed arcade BIOS
-  run_skylance_aes.bat stock     Existing installed console BIOS
-  run_skylance_mvs.bat unibios40 Existing Universe BIOS, if installed
-  run_skylance_aes.bat unibios40 Existing Universe BIOS, if installed
-  run_skylance_backup.bat        Previous arcade version for comparison
+Run from C:\mame\neogeosdk (or your standalone installation):
+  run_skylance_mvs.bat             Arcade, EagleBIOS
+  run_skylance_aes.bat             Console, EagleBIOS
+  run_skylance_mvs_scanlines.bat    Arcade with CRT scanlines
+  run_skylance_aes_scanlines.bat    Console with CRT scanlines
+Append stock or unibios40 to choose an existing installed BIOS instead.
+Fullscreen launchers use the local display helper and optional mame-path.txt.
+Previous builds remain in backups/skylance; no root backup launcher is created.
 
-MAME default keys: arrows move, Ctrl/Alt fire, Z missile (button D).
-MVS: 5 inserts a coin, 1 starts. AES: 1 starts without a credit.
-Pilot select: left/right, Ctrl confirms.
+Default keys: arrows move, Ctrl=A fire, Alt=B boost/maneuver, Space=C bomb,
+Z=D missile, Alt+Z=B+D chaff. MVS: 5 coin, 1 start. AES: 1 start.
+Pilot selection: left/right, Ctrl confirms. See CONTROLS.txt for all gestures.
 
-Each platform has its own program ROM, software list, settings and saves
-under tests\skylance. The existing Maiya installation stays in place.
-Matching NeoSD images are beside the two test sets.
+Fuel is the mission timer (240 seconds). Three command targets stop the route:
+defeat the escorts and mini boss, then destroy the exposed target to resume.
+Avoid radar coverage or expect reinforcements and faster anti-air missiles.
+Use chaff to divert guided missiles. C:BMB and B+D show separate stock counts.
 
-Changes: direct C1/C2 packing with codec round trips; seven detailed
-352x512 scrolling sector variants with camera gutters and cloud parallax;
-320x224 metallic squadron title; larger native-size portraits,
-craft and bosses; banked craft poses; six-frame pixel explosions; queued sound; display writes in the
-vertical blank; isolated logo/FIX banks; work-RAM start latch; atomic
-credit debit; reserved backup RAM and clean sound initialization after RAM clearing.
+Seven native pixel routes are 352x2048, streamed through eight distinct pages.
+Water lanes, roads and empty command pads own surface-object placements.
+Each pilot has a compact working cockpit, stable portrait, seven bank poses,
+four maneuver poses, distinct handling and a mission-scaled bomb strike.
+Ordinary opponents are compact; large art is reserved for bosses.
 
-These are native Neo Geo graphics. The hardware output stays 320x224.
-High-resolution source art is reduced once to its actual displayed size.
+AES and MVS use isolated ROMs, hashes, settings and saves under tests/skylance.
+Read skylance-build.json for the exact build ID, ROM sizes and SHA-256 hashes.
+Native captures and audio diagnostics are under tests/skylance/qa/<build ID>.
+The standalone setup includes launchers, previews, controls and all cartridge
+formats. Hardware-only candidates include no BIOS. No release is published.
 
-Rebuild and install from WSL:
+Rebuild/install from WSL:
   python3 tools/build_skylance_mame.py /mnt/c/mame/neogeosdk
+Cartridge packages:
+  python3 tools/build_skylance_candidate.py
 
-Inspect skylance-build.json for this build's ROM sizes and SHA-256 hashes.
-Real cartridge hardware and a CRT still need testing by the board owner.
+MAME inspection does not certify physical AES/MVS, NeoSD, Darksoft or BackBit.
+Board owners still need to test cold boot, sustained combat, sound, slot
+switching and cartridge return shortcuts on their own hardware.

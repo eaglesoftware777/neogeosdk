@@ -1,95 +1,106 @@
 # Sky Lance
 
-SDK v1.7.3 pre-release: opt-in vertical camera/parallax support, widened
-terrain, cleaned sprite pixels, 80x96 pilots and a metallic squadron title.
-See [Vertical Shooters](../../docs/vertical_shooters.md) for the additive API.
+A native Neo Geo vertical shooter with three pilots, seven long routes and
+one main boss per mission. First public set: `_v1`, with the NeoGeoSDK
+v1.7.3 pre-release (see [CHANGELOG.md](CHANGELOG.md)).
 
-A vertical arcade shooter for the Neo Geo, built on this SDK's 2D engine.
-Three pilots, seven stages, one named boss per stage.
+Rook flies a silver-blue F-16, Kira an olive F-35 and Blaze a crimson F-15.
+Aircraft proportions use the official type dimensions as an arcade reference.
+Each has different acceleration, top speed, primary fire and bomb damage.
+Held lateral input reaches a 45-degree bank; releasing the stick levels the
+whole airframe. B with a direction performs a barrel roll, climb or Split-S.
+C spends a counted super bomb; B+D spends a counted chaff release.
+See [CONTROLS.txt](CONTROLS.txt) for the exact controls.
 
-## Build
+Fuel is a 240-second mission countdown, including time spent in target battles.
+It never regenerates while coasting or after a lost life. F pickups add 30
+seconds, capped at 240. Running out of fuel fails the mission.
 
-Sky Lance keeps its own `game.cfg` so the repo-root one can stay pointed at
-whatever game you are working on:
+At route distances 512, 1024 and 1536, the scenery stops at an empty military
+pad. Defeat the escorts and a dedicated mini boss before damaging the command
+target. Destroying the exposed target resumes scrolling. Destroy all three
+for the 2500-point objective bonus; submarines do not count as command targets.
+Entering the visible radar circle calls six extra defenders and doubles the
+site's missile cadence. Avoiding coverage preserves the quieter encounter.
+Chaff briefly spoofs coverage and can divert guided missiles to a visible decoy:
+each release rolls every missile in the air, and the chance falls with the
+route and the operator's DIFFICULTY setting (EASY to EXPERT, NORMAL by default;
+a console plays NORMAL). Bosses' missiles see through most of it except on EASY.
 
-```sh
-make GAME=skylance GAME_CFG_FILE=games/skylance/game.cfg art     # direct C-ROMs + asset tables
-make GAME=skylance GAME_CFG_FILE=games/skylance/game.cfg sfix    # S-ROM (HUD tiles)
-make GAME=skylance GAME_CFG_FILE=games/skylance/game.cfg vrom m1rom
-make GAME=skylance GAME_CFG_FILE=games/skylance/game.cfg p1      # program ROM
-```
+Every boss is met on its route's last page, an open arena themed to it: deep
+sea for the warship, empty desert for the tank fortress, a forest clearing, a
+lava plain. Once the waves are spent the flight cruises there, and the boss
+appears when the arena fills the screen.
 
-`make ... sound` is the full audio path and re-encodes from `sound/samples/in_wav_*`,
-which this game does not ship - see `sound/README.md`.  Use `vrom m1rom` instead.
+The routes are painted panels (`assets/painted/sources`) that
+`tools/paint_terrain.py` scales to the route's 352-pixel width, cross-fades,
+fits to sixteen palette banks per route (one per 16x16 tile, refined and
+despeckled) and lays out in streaming order; it paints the valley road, the
+target pads and the boss arena, and checks the sea lanes are open water. Roads,
+water lanes and encounter pads own their associated object positions. Villages, farms, docks, forests, rail
+freight, industry, runways and hangars vary along eight streamed pages per route.
+Clouds use a separate rear layer. The hardware output is 320x224; enlarged
+review sheets use nearest-neighbour pixels.
 
-Run it with `-cart1 skylance` and the hash path `hash_eagle/skylance`.
+The flight field is 288 pixels wide. A 32-pixel cockpit contains a stable pilot
+portrait, a moving attitude indicator and working G/engine gauges. F-35 uses a
+panoramic panel; F-16/F-15 use separate instrument displays. These are compact
+arcade interpretations of their layouts. Briefing text wraps inside its assigned
+rectangle. Ordinary aircraft/vehicles use compact 32-pixel canvases; mini and
+main bosses have larger dedicated art. Hostile weapons have eight distinct
+projectile designs. C strikes vary by pilot and grow in damage by mission.
 
-## Layout
-
-| File | What it holds |
-|------|---------------|
-| `scenes/sky_draw.c`   | asset binding, the scrolling backdrop, the FIX HUD, the frame pump |
-| `scenes/sky_stage.c`  | enemy roster, stage table, wave director, boss AI |
-| `scenes/sky_sortie.c` | attract reel, pilot select, the flight loop, collisions, scoring |
-| `user.c`              | BIOS handshake, FIX palettes, MVS title |
-| `main.c`              | engine lookup hooks for the generated asset tables |
-
-## Art
-
-`artbox/in/` is split into the SDK's category folders - `backgrounds/`,
-`characters/`, `npcs/` - because the flat layout falls through to the
-screen-mode fallback rule and sprites lose their transparency handling.
-
-`tools/art.py` generates C1/C2 directly using the shared palette/tile codecs,
-without an intermediate ZIP or generated `screens.c`. Each lane is 4 MiB.
-Boot tiles at `0x4900..0x49FF` and utility tiles at `0xFFFD..0xFFFF` are reserved.
-The cartridge packer checks that conversion preserves each lane byte for byte.
-
-Seven native 352x512 terrain variants use two resident 22-strip pages, without
-reflecting the map. The original art is retained; craft and opponents are
-48x48, portraits 80x96 and bosses 112x112. Aircraft have banked poses and
-explosions have six dedicated 32x32 pixel frames with a shared palette.
-Preview PNGs and metadata are in `artbox/generated`.
-
-## Playfield
-
-The arena now covers the full 320x224 image, without black side pillars.
-This is detailed native Neo Geo art, not an HD video mode.
-
-## Colour and effects
-
-The direct builder owns the palette budgets. Bosses use up to 16 banks,
-ordinary opponents 3 and player craft 4. Scene-exclusive assets share banks
-to fit the 104-bank vblank update budget, including the sparse cloud layer.
-Pilots and aircraft no longer share an unrelated animation palette. Bindings
-in `sky_draw.c` carry the per-tile map for characters and both background pages.
-
-Enemy shots use a compact independent shrink preset and a 6x6 collision core.
-Explosion frames stay anchored at the impact position, with no scale overflow.
-Sprite/FIX writes are deferred to vblank and gameplay fonts use private tiles.
-
-## Hardware And Installation
-
-The shared Z80 driver retains MVS slot-switch and timer recovery fixes.
-Sound starts after work-RAM clearing; coin sounds do not stop music.
-AES Start and MVS credits use the detected BIOS machine mode. Cartridge ID
-is `0x0779`; backup RAM is reserved outside engine BSS. AES/MVS boot headers,
-ROM sizes, blank tiles and sample alignment are verified during packaging.
+## Build and inspect
 
 ```sh
-python3 tools/build_skylance_mame.py /mnt/c/mame/neogeosdk
-python3 -m unittest discover -s tests -p 'test_skylance_assets.py'
-python3 games/skylance/tools/qa.py --platform mvs --bios eagle
-python3 games/skylance/tools/qa.py --platform aes --bios stock
+python3 games/skylance/tools/art.py
+python3 games/skylance/tools/contact_sheet.py
+python3 games/skylance/tools/test_production.py
+python3 -m unittest discover -s tests -p 'test_skylance*.py'
+python3 tools/build_skylance_mame.py /mnt/c/mame/neogeosdk --skip-art
+python3 games/skylance/tools/qa.py --platform mvs --bios stock --stage 0 --encounters --seconds 260
+python3 games/skylance/tools/qa.py --platform aes --bios eagle --stage 1 --encounters --radar-test --seconds 300
 ```
 
-The installer backs up the previous Sky Lance set and leaves Maiya alone.
-Open `run_skylance_mvs.bat` or `run_skylance_aes.bat` in the installed folder.
-See `TESTING.txt` for controls and BIOS options. Separate `.neo` cartridges
-are under `tests/skylance/aes` and `tests/skylance/mvs`.
+Native previews, metadata and diagnostic sheets are in `artbox/generated`.
+Accepted source masters remain in `artbox/redrawn`; the new terrain and compact
+consoles come from the deterministic pixel authoring script. Original art is
+retained. All asset IDs stay stable; new assets are appended.
 
-The capture runner needs Windows MAME at `/mnt/c/mame/mame.exe` and BIOS ROMs.
-It checks visible gameplay, audio, the Z80 protocol and timer, saving PNG/WAV
-captures under `tests/skylance/qa`. `--stage 0..6` selects an inspection sector
-with temporary invulnerability; normal runs do not modify game RAM.
-Emulator checks do not replace real-board testing.
+C1/C2 are 4 MiB each. Boot tiles 0x4900..0x49FF, the transparent utility tile,
+FIX transparency, cartridge backup RAM and the 104-bank atomic fade budget are
+reserved. Higher effect banks use the queued palette path. Exact boss health is
+owned by Sky Lance as 16-bit data; the shared character ABI remains unchanged.
+Deferred groups preserve pending membership during rebinds and aged uploads;
+queue entries publish their pointer before increasing the visible count.
+
+## Installation and packages
+
+`tools/build_skylance_mame.py <mame-folder>` builds, verifies and installs
+the MVS and AES test sets. Run `run_skylance_mvs.bat` or `run_skylance_aes.bat`
+in that folder.
+Normal launchers use fullscreen display settings; scanline variants select
+MAME's BGFX crt-geom shader. Each platform has isolated ROMs, hashes and saves.
+Existing Sky Lance files are backed up; other game installations are preserved.
+
+```sh
+python3 tools/build_skylance_candidate.py --output <candidate-folder>
+make neo GAME=skylance
+python3 tools/make_release.py --game skylance --game-id 779 --prefix SkyLance \
+    --name "Sky Lance" --version v1 --changelog games/skylance/CHANGELOG.md
+```
+
+Candidates contain separate AES/MVS NeoSD, Darksoft, BackBit and MAME packages.
+ROM hashes and format round trips are checked. NeoSD/Darksoft sample regions
+receive FF padding to 8 MiB; BackBit retains the original six ROM payloads.
+Hardware packages contain no BIOS and never overwrite an earlier candidate.
+The standalone Windows setup wizard includes EagleBIOS for emulator use,
+normal/scanline launchers, previews, controls and the cartridge packages. It
+needs Windows PowerShell and an installed MAME; Python is not required.
+
+MAME captures, audio and state logs are saved under
+`C:/mame/neogeosdk/tests/skylance/qa/<build-id>`. The harness seeds resources and
+invulnerability only in explicit inspection modes. Physical AES/MVS boot,
+cartridge audio, slot switching and return shortcuts still need real-board
+verification. See [PRODUCTION_STATUS.md](PRODUCTION_STATUS.md) for recorded
+build evidence and remaining production limits.

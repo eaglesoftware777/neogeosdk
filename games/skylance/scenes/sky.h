@@ -14,10 +14,10 @@
 /* ------------------------------------------------------------------ */
 /* Native 20-strip backgrounds cover the complete 320x224 CRT image. */
 #define SKY_FIELD_X        0
-#define SKY_FIELD_W        320
+#define SKY_FIELD_W        288
 #define SKY_FIELD_LEFT     (SKY_FIELD_X + 12)
 #define SKY_FIELD_RIGHT    (SKY_FIELD_X + SKY_FIELD_W - 12)
-#define SKY_FIELD_TOP      24
+#define SKY_FIELD_TOP      32
 #define SKY_FIELD_BOTTOM   206
 
 /* Backdrop and scene-wipe colour. */
@@ -45,9 +45,11 @@
 #define SKY_P3_PILOT         7u
 #define SKY_P3_PLANE         8u
 #define SKY_SHOT_PLAYER      9u
+#define SKY_PICKUP_FIRST    48u
+#define SKY_WEAPON_FIRST    57u
 
 #define SKY_E_BOMBER        10u
-#define SKY_B_CATHEDRAL     11u
+#define SKY_B_CASTLE        11u
 #define SKY_B_GOLD_CORE     12u
 #define SKY_B_HELI_CARRIER  13u
 #define SKY_B_BATTLESHIP    14u
@@ -74,6 +76,24 @@
 #define SKY_PLANE_BANKED(pilot, right) (35u + (pilot) * 2u + (right))
 #define SKY_EXPLOSION_FIRST 41u
 #define SKY_CLOUD_ART       47u
+#define SKY_SMOKE_FIRST     84u
+#define SKY_SPECIAL_FIRST   94u
+#define SKY_E_SAM          106u
+#define SKY_E_RADAR        107u
+#define SKY_E_SUB          108u
+#define SKY_E_BUNKER       109u
+#define SKY_E_RADAR_SITE   110u
+#define SKY_HOSTILE_FIRST  111u
+#define SKY_COCKPIT_FIRST  119u
+#define SKY_ATTITUDE_FIRST 122u
+#define SKY_MANEUVER_FIRST 129u
+#define SKY_ROUTE_FIRST    141u
+#define SKY_ROUTE_PARTS      4u
+#define SKY_CIVILIAN_FIRST 162u
+#define SKY_CHAFF_ART      164u
+#define SKY_RADAR_FIRST    165u
+#define SKY_MINIBOSS_FIRST 167u
+#define SKY_CONSOLE_FIRST  170u
 #define SKY_START_FLAG      0x100700u
 
 /* ------------------------------------------------------------------ */
@@ -108,7 +128,6 @@
 #define SKY_SCALE_BOSS     0xFFu
 #define SKY_SCALE_FULL     0xFFu
 #define SKY_SCALE_PROJECTILE NG_SCALE(6)
-#define SKY_BURST_STEPS       6u
 
 /*
  * Two exceptions, both on the select screen.
