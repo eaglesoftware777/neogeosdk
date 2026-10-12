@@ -37,7 +37,7 @@ def get_default_sd_dir(base_dir=None):
 
 
 # Fallback when GitHub cannot be reached: this release's flashcart files.
-# BEGIN KNOWN_ASSETS (tools/installer/make_wizard_zip.py rewrites this block)
+# BEGIN KNOWN_ASSETS (the release's files; update the sizes with each release)
 KNOWN_ASSETS = {
     "version": "v1.7.3",
     "neosd": {
@@ -58,13 +58,13 @@ KNOWN_ASSETS = {
         "mvs": {
             "filename": "Maiya-Darksoft-MVS_v4.zip",
             "url": "https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.3/Maiya-Darksoft-MVS_v4.zip",
-            "size": 9057719,
+            "size": 9057760,
             "desc": "Darksoft Neo Geo Multi MVS folder (interleaved crom0)"
         },
         "aes": {
             "filename": "Maiya-Darksoft-AES_v4.zip",
             "url": "https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.3/Maiya-Darksoft-AES_v4.zip",
-            "size": 9057718,
+            "size": 9057758,
             "desc": "Darksoft Neo Geo Multi AES folder (interleaved crom0)"
         }
     },
@@ -72,13 +72,13 @@ KNOWN_ASSETS = {
         "mvs": {
             "filename": "Maiya-BackBit-MVS_v4.zip",
             "url": "https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.3/Maiya-BackBit-MVS_v4.zip",
-            "size": 9121511,
+            "size": 9121523,
             "desc": "BackBit Platinum MVS microSD folder (cartridge files)"
         },
         "aes": {
             "filename": "Maiya-BackBit-AES_v4.zip",
             "url": "https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.3/Maiya-BackBit-AES_v4.zip",
-            "size": 9121510,
+            "size": 9121523,
             "desc": "BackBit Platinum AES microSD folder (cartridge files)"
         }
     }
