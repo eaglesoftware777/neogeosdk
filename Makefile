@@ -156,6 +156,9 @@ endif
 ifneq ($(filter -DNG_SHOOTER=1,$(GAME_ENGINE_DEFINES)),)
 NG_ENGINE_NAMES+=ng_shooter
 endif
+ifneq ($(filter -DNG_FIGHT=1,$(GAME_ENGINE_DEFINES)),)
+NG_ENGINE_NAMES+=ng_fight
+endif
 endif
 NG_ENGINE_STUBBED=ng_particles
 ifneq ($(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)),)
@@ -393,6 +396,7 @@ endif
 	$(if $(filter ng_rand,$(NG_ENGINE_NAMES)),$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_rand.$(ENGINE_EXT) -o out/ng_rand0.o)
 	$(if $(filter ng_raster,$(NG_ENGINE_NAMES)),$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_raster.$(ENGINE_EXT) -o out/ng_raster0.o)
 	$(if $(filter ng_shooter,$(NG_ENGINE_NAMES)),$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_shooter.$(ENGINE_EXT) -o out/ng_shooter0.o)
+	$(if $(filter ng_fight,$(NG_ENGINE_NAMES)),$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_fight.$(ENGINE_EXT) -o out/ng_fight0.o)
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_camera.$(ENGINE_EXT) -o out/ng_camera0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_palette_fx.$(ENGINE_EXT) -o out/ng_palette_fx0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/$(call ng_engine_mod,ng_particles).$(ENGINE_EXT) -o out/$(call ng_engine_mod,ng_particles)0.o
