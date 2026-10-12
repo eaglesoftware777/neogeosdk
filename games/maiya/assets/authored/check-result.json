@@ -1,0 +1,653 @@
+{
+  "passed": true,
+  "errors": [],
+  "poses": [
+    {
+      "pose": "walk_contact_a",
+      "bounds": [
+        22,
+        10,
+        60,
+        61
+      ],
+      "height": 52,
+      "area": 1121,
+      "bob": 0,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 82,
+        "near_leg": 80
+      },
+      "boot_x": {
+        "far_leg": 53.1,
+        "near_leg": 25.8
+      },
+      "fists": {
+        "far_arm": [
+          30.1,
+          40.7
+        ],
+        "near_arm": [
+          58.2,
+          37.5
+        ]
+      }
+    },
+    {
+      "pose": "walk_down_a",
+      "bounds": [
+        19,
+        11,
+        57,
+        61
+      ],
+      "height": 51,
+      "area": 1070,
+      "bob": 1,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 76,
+        "near_leg": 79
+      },
+      "boot_x": {
+        "far_leg": 49.1,
+        "near_leg": 23.5
+      },
+      "fists": {
+        "far_arm": [
+          32.3,
+          41.7
+        ],
+        "near_arm": [
+          54.0,
+          40.8
+        ]
+      }
+    },
+    {
+      "pose": "walk_passing_a",
+      "bounds": [
+        24,
+        10,
+        57,
+        61
+      ],
+      "height": 52,
+      "area": 987,
+      "bob": 0,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 71,
+        "near_leg": 69
+      },
+      "boot_x": {
+        "far_leg": 40.5,
+        "near_leg": 27.5
+      },
+      "fists": {
+        "far_arm": [
+          38.7,
+          40.7
+        ],
+        "near_arm": [
+          49.7,
+          40.7
+        ]
+      }
+    },
+    {
+      "pose": "walk_up_a",
+      "bounds": [
+        24,
+        9,
+        57,
+        61
+      ],
+      "height": 53,
+      "area": 999,
+      "bob": -1,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 78,
+        "near_leg": 57
+      },
+      "boot_x": {
+        "far_leg": 29.2,
+        "near_leg": 43.2
+      },
+      "fists": {
+        "far_arm": [
+          43.0,
+          38.8
+        ],
+        "near_arm": [
+          43.3,
+          39.7
+        ]
+      }
+    },
+    {
+      "pose": "walk_contact_b",
+      "bounds": [
+        22,
+        10,
+        60,
+        61
+      ],
+      "height": 52,
+      "area": 1021,
+      "bob": 0,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 80,
+        "near_leg": 82
+      },
+      "boot_x": {
+        "far_leg": 25.8,
+        "near_leg": 53.1
+      },
+      "fists": {
+        "far_arm": [
+          47.2,
+          37.5
+        ],
+        "near_arm": [
+          41.1,
+          40.7
+        ]
+      }
+    },
+    {
+      "pose": "walk_down_b",
+      "bounds": [
+        19,
+        11,
+        57,
+        61
+      ],
+      "height": 51,
+      "area": 999,
+      "bob": 1,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 79,
+        "near_leg": 76
+      },
+      "boot_x": {
+        "far_leg": 23.5,
+        "near_leg": 49.1
+      },
+      "fists": {
+        "far_arm": [
+          43.0,
+          40.8
+        ],
+        "near_arm": [
+          43.3,
+          41.7
+        ]
+      }
+    },
+    {
+      "pose": "walk_passing_b",
+      "bounds": [
+        24,
+        10,
+        57,
+        61
+      ],
+      "height": 52,
+      "area": 987,
+      "bob": 0,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 69,
+        "near_leg": 71
+      },
+      "boot_x": {
+        "far_leg": 27.5,
+        "near_leg": 40.5
+      },
+      "fists": {
+        "far_arm": [
+          38.7,
+          40.7
+        ],
+        "near_arm": [
+          49.7,
+          40.7
+        ]
+      }
+    },
+    {
+      "pose": "walk_up_b",
+      "bounds": [
+        24,
+        9,
+        57,
+        61
+      ],
+      "height": 53,
+      "area": 1072,
+      "bob": -1,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 57,
+        "near_leg": 78
+      },
+      "boot_x": {
+        "far_leg": 43.2,
+        "near_leg": 29.2
+      },
+      "fists": {
+        "far_arm": [
+          32.3,
+          39.7
+        ],
+        "near_arm": [
+          54.0,
+          38.8
+        ]
+      }
+    },
+    {
+      "pose": "run_contact_a",
+      "bounds": [
+        21,
+        10,
+        58,
+        61
+      ],
+      "height": 52,
+      "area": 1084,
+      "bob": 0,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 71,
+        "near_leg": 72
+      },
+      "boot_x": {
+        "far_leg": 51.8,
+        "near_leg": 25.9
+      },
+      "fists": {
+        "far_arm": [
+          34.8,
+          36.2
+        ],
+        "near_arm": [
+          56.5,
+          27.4
+        ]
+      }
+    },
+    {
+      "pose": "run_down_a",
+      "bounds": [
+        24,
+        12,
+        58,
+        61
+      ],
+      "height": 50,
+      "area": 993,
+      "bob": 2,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 65,
+        "near_leg": 65
+      },
+      "boot_x": {
+        "far_leg": 41.0,
+        "near_leg": 29.6
+      },
+      "fists": {
+        "far_arm": [
+          38.5,
+          38.6
+        ],
+        "near_arm": [
+          56.5,
+          33.5
+        ]
+      }
+    },
+    {
+      "pose": "run_push_a",
+      "bounds": [
+        23,
+        10,
+        57,
+        61
+      ],
+      "height": 52,
+      "area": 999,
+      "bob": 0,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 59,
+        "near_leg": 64
+      },
+      "boot_x": {
+        "far_leg": 27.0,
+        "near_leg": 42.2
+      },
+      "fists": {
+        "far_arm": [
+          42.1,
+          33.8
+        ],
+        "near_arm": [
+          53.1,
+          33.8
+        ]
+      }
+    },
+    {
+      "pose": "run_flight_a",
+      "bounds": [
+        21,
+        8,
+        62,
+        57
+      ],
+      "height": 50,
+      "area": 1010,
+      "bob": -2,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 69,
+        "near_leg": 69
+      },
+      "boot_x": {
+        "far_leg": 24.0,
+        "near_leg": 55.3
+      },
+      "fists": {
+        "far_arm": [
+          45.5,
+          29.5
+        ],
+        "near_arm": [
+          49.5,
+          34.6
+        ]
+      }
+    },
+    {
+      "pose": "run_contact_b",
+      "bounds": [
+        21,
+        10,
+        58,
+        61
+      ],
+      "height": 52,
+      "area": 1008,
+      "bob": 0,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 72,
+        "near_leg": 71
+      },
+      "boot_x": {
+        "far_leg": 25.9,
+        "near_leg": 51.8
+      },
+      "fists": {
+        "far_arm": [
+          45.5,
+          27.4
+        ],
+        "near_arm": [
+          45.8,
+          36.2
+        ]
+      }
+    },
+    {
+      "pose": "run_down_b",
+      "bounds": [
+        24,
+        12,
+        57,
+        61
+      ],
+      "height": 50,
+      "area": 953,
+      "bob": 2,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 65,
+        "near_leg": 65
+      },
+      "boot_x": {
+        "far_leg": 29.6,
+        "near_leg": 41.0
+      },
+      "fists": {
+        "far_arm": [
+          45.5,
+          33.5
+        ],
+        "near_arm": [
+          49.5,
+          38.6
+        ]
+      }
+    },
+    {
+      "pose": "run_push_b",
+      "bounds": [
+        23,
+        10,
+        57,
+        61
+      ],
+      "height": 52,
+      "area": 999,
+      "bob": 0,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 64,
+        "near_leg": 59
+      },
+      "boot_x": {
+        "far_leg": 42.2,
+        "near_leg": 27.0
+      },
+      "fists": {
+        "far_arm": [
+          42.1,
+          33.8
+        ],
+        "near_arm": [
+          53.1,
+          33.8
+        ]
+      }
+    },
+    {
+      "pose": "run_flight_b",
+      "bounds": [
+        21,
+        8,
+        62,
+        57
+      ],
+      "height": 50,
+      "area": 1050,
+      "bob": -2,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 69,
+        "near_leg": 69
+      },
+      "boot_x": {
+        "far_leg": 55.3,
+        "near_leg": 24.0
+      },
+      "fists": {
+        "far_arm": [
+          38.5,
+          34.6
+        ],
+        "near_arm": [
+          56.5,
+          29.5
+        ]
+      }
+    },
+    {
+      "pose": "stop",
+      "bounds": [
+        24,
+        10,
+        57,
+        61
+      ],
+      "height": 52,
+      "area": 947,
+      "bob": 0,
+      "layer_components": {
+        "far_arm": 1,
+        "far_leg": 1,
+        "near_leg": 1,
+        "torso": 1,
+        "head_hair": 1,
+        "near_arm": 1
+      },
+      "boots": {
+        "far_leg": 50,
+        "near_leg": 68
+      },
+      "boot_x": {
+        "far_leg": 33.5,
+        "near_leg": 41.5
+      },
+      "fists": {
+        "far_arm": [
+          38.7,
+          40.7
+        ],
+        "near_arm": [
+          49.7,
+          40.7
+        ]
+      }
+    }
+  ],
+  "review": "/mnt/c/neogeo/neogeosdk/games/maiya/assets/authored/review"
+}

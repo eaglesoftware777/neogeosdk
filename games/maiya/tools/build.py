@@ -51,7 +51,19 @@ def check_sound_driver(m1):
                          "sound/driver/driver.asm.\nRebuild it first: make bios-package GAME=maiya GAME_ID=780")
 
 
+def check_authored_hero():
+    """Reject missing hands, malformed drawings and stale C-ROM imports."""
+    subprocess.run([sys.executable, str(ROOT / "tools/check_hero_frames.py"),
+                    "--no-export"], check=True)
+    subprocess.run([sys.executable, str(GAME / "tools/check_hands.py")], check=True)
+    subprocess.run([sys.executable, str(GAME / "tools/check_stride_details.py")], check=True)
+    subprocess.run([sys.executable, str(GAME / "tools/check_cute_polish.py")], check=True)
+    subprocess.run([sys.executable, str(ROOT / "tools/check_hero_frames.py"),
+                    "--rom-only"], check=True)
+
+
 def stage():
+    check_authored_hero()
     for name in ("sdk", "tools", "hash_eagle"):
         for source in (ROOT / name).rglob("*"):
             if source.is_file() and (source.suffix in TEXT_SUFFIXES):
@@ -67,7 +79,7 @@ def stage():
         relative = source.relative_to(GAME)
         if relative.parts[0] in {"build", "assets", "tests"} or "__pycache__" in relative.parts:
             continue
-        if source.is_file() and (source.suffix in TEXT_SUFFIXES):
+        if source.is_file() and (source.suffix in TEXT_SUFFIXES or source.name == "level_check.ignore"):
             copy_source(source, WORK / "games/maiya" / relative)
     roms = WORK / "roms/maiya"
     roms.mkdir(parents=True, exist_ok=True)
@@ -139,6 +151,7 @@ def engine_objects():
 
 def quick_build(toolchain, platform):
     """Recompile this game's scene against the previously staged SDK objects."""
+    check_authored_hero()
     if not (WORK / "out/neogeolib.o").exists():
         raise SystemExit("Run a full build first.")
     marker = WORK / "platform.txt"

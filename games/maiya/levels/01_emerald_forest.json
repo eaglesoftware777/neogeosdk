@@ -10,8 +10,15 @@
   "posted": "none",
   "gate_x": 3200,
   "landmark": "forest",
-  "key": {"x": 1276, "y": 60},
-  "hideout": {"x": 2644, "y": 80, "hint": "KNEEL ON THE HIGH LEDGE PAST THE KEY"},
+  "key": {
+    "x": 1224,
+    "y": 60
+  },
+  "hideout": {
+    "x": 2624,
+    "y": 80,
+    "hint": "KNEEL ON THE ARCH PAST THE LOG CAMP"
+  },
   "guardian": {
     "name": "CHAINSAW BEETLE",
     "style": "beetle",
@@ -20,97 +27,378 @@
     "taunt": "I CUT DOWN WHAT TOOK CENTURIES TO GROW!",
     "reply": "THE FOREST WILL OUTLIVE YOUR BLADES!"
   },
-  "art": {"kind": "blossom", "name": "ROSE BLOSSOM STORM", "words": "MAIYA: ROSE WIND, CARRY ME!"},
+  "art": {
+    "kind": "blossom",
+    "name": "ROSE BLOSSOM STORM",
+    "words": "MAIYA: ROSE WIND, CARRY ME!"
+  },
   "secret_hint": "A ROSE SLEEPS ABOVE THE ARCH",
-  "sunboy": ["MAIYA! THE FOREST BREATHES AGAIN", "THE MARSH FALLS ARE NEXT. HURRY"],
-  "healed": ["THE OLD TREES BREATHE FREELY AGAIN", "THE LOGGERS' SAWS HAVE FALLEN SILENT"],
-  "briefing": ["SAW BOTS FELL THE FOREST FOR THE", "CHAINSAW BEETLE. STOP THEM ALL!"],
+  "sunboy": [
+    "MAIYA! THE FOREST BREATHES AGAIN",
+    "THE MARSH FALLS ARE NEXT. HURRY"
+  ],
+  "healed": [
+    "THE OLD TREES BREATHE FREELY AGAIN",
+    "THE LOGGERS' SAWS HAVE FALLEN SILENT"
+  ],
+  "briefing": [
+    "SAW BOTS FELL THE FOREST FOR THE",
+    "CHAINSAW BEETLE. STOP THEM ALL!"
+  ],
   "platforms": [
-    {"x": 480, "y": 104, "w": 80},
-    {"x": 660, "y": 68, "w": 64},
-    {"x": 836, "y": 128, "w": 96},
-    {"x": 1012, "y": 112, "w": 96},
-    {"x": 1236, "y": 88, "w": 112},
-    {"x": 1764, "y": 136, "w": 64},
-    {"x": 1892, "y": 104, "w": 192},
-    {"x": 2244, "y": 128, "w": 64},
-    {"x": 2404, "y": 112, "w": 64},
-    {"x": 2596, "y": 80, "w": 96}
+    {
+      "x": 480,
+      "y": 128,
+      "w": 48
+    },
+    {
+      "x": 656,
+      "y": 96,
+      "w": 80
+    },
+    {
+      "x": 864,
+      "y": 128,
+      "w": 96
+    },
+    {
+      "x": 1056,
+      "y": 144,
+      "w": 48
+    },
+    {
+      "x": 1184,
+      "y": 88,
+      "w": 112
+    },
+    {
+      "x": 1504,
+      "y": 136,
+      "w": 48
+    },
+    {
+      "x": 1632,
+      "y": 104,
+      "w": 64
+    },
+    {
+      "x": 1792,
+      "y": 72,
+      "w": 96
+    },
+    {
+      "x": 2160,
+      "y": 128,
+      "w": 112
+    },
+    {
+      "x": 2336,
+      "y": 96,
+      "w": 80
+    },
+    {
+      "x": 2576,
+      "y": 80,
+      "w": 112
+    },
+    {
+      "x": 2768,
+      "y": 120,
+      "w": 48
+    }
   ],
   "encounters": [
-    {"x": 360, "enemy": "slime"},
-    {"x": 480, "enemy": "beetle"},
-    {"x": 780, "enemy": "slime"},
-    {"x": 1100, "enemy": "beetle"},
-    {"x": 1420, "enemy": "dartfrog"},
-    {"x": 1740, "enemy": "beetle"},
-    {"x": 1896, "enemy": "sawbot"},
-    {"x": 2060, "enemy": "acidmoth"},
-    {"x": 2216, "enemy": "sawbot"},
-    {"x": 2380, "enemy": "beetle"},
-    {"x": 2540, "enemy": "beetle"},
-    {"x": 2700, "enemy": "dartfrog"},
-    {"x": 2860, "enemy": "acidmoth"},
-    {"x": 3020, "enemy": "beetle"}
+    {
+      "x": 360,
+      "enemy": "slime"
+    },
+    {
+      "x": 520,
+      "enemy": "beetle"
+    },
+    {
+      "x": 760,
+      "enemy": "slime"
+    },
+    {
+      "x": 1080,
+      "enemy": "crow"
+    },
+    {
+      "x": 1360,
+      "enemy": "dartfrog"
+    },
+    {
+      "x": 1540,
+      "enemy": "beetle"
+    },
+    {
+      "x": 1720,
+      "enemy": "acidmoth"
+    },
+    {
+      "x": 1980,
+      "enemy": "sawbot"
+    },
+    {
+      "x": 2160,
+      "enemy": "beetle"
+    },
+    {
+      "x": 2340,
+      "enemy": "sawbot"
+    },
+    {
+      "x": 2520,
+      "enemy": "dartfrog"
+    },
+    {
+      "x": 2720,
+      "enemy": "crow"
+    },
+    {
+      "x": 2920,
+      "enemy": "sawbot"
+    },
+    {
+      "x": 3040,
+      "enemy": "beetle"
+    }
   ],
   "archers": [],
   "hazards": [
-    {"x": 760, "w": 48, "type": "spikes"},
-    {"x": 1600, "w": 48, "type": "spikes"},
-    {"x": 2280, "w": 48, "type": "spikes"},
-    {"x": 2900, "w": 48, "type": "spikes"},
-    {"x": 1208, "w": 48, "type": "pit"},
-    {"x": 2552, "w": 48, "type": "pit"}
+    {
+      "x": 960,
+      "w": 48,
+      "type": "spikes"
+    },
+    {
+      "x": 1152,
+      "w": 48,
+      "type": "pit"
+    },
+    {
+      "x": 1584,
+      "w": 48,
+      "type": "spikes"
+    },
+    {
+      "x": 2080,
+      "w": 48,
+      "type": "spikes"
+    },
+    {
+      "x": 2512,
+      "w": 48,
+      "type": "pit"
+    },
+    {
+      "x": 2912,
+      "w": 48,
+      "type": "spikes"
+    }
   ],
   "rescues": [
-    {"x": 650, "who": "elder"},
-    {"x": 1690, "who": "maiden"},
-    {"x": 2450, "who": "spirit"},
-    {"x": 2990, "who": "sunboy"}
+    {
+      "x": 600,
+      "who": "elder"
+    },
+    {
+      "x": 1680,
+      "who": "maiden"
+    },
+    {
+      "x": 2380,
+      "who": "spirit"
+    },
+    {
+      "x": 2980,
+      "who": "sunboy"
+    }
   ],
   "secrets": [
-    {"x": 486, "y": 74, "type": "chest"},
-    {"x": 700, "y": 38, "type": "rose"},
-    {"x": 1856, "y": 16, "type": "gem"},
-    {"x": 1972, "y": 68, "type": "chest"},
-    {"x": 2620, "y": 38, "type": "rose"},
-    {"x": 2660, "y": 44, "type": "gem"}
+    {
+      "x": 500,
+      "y": 88,
+      "type": "chest"
+    },
+    {
+      "x": 688,
+      "y": 56,
+      "type": "rose"
+    },
+    {
+      "x": 1824,
+      "y": 32,
+      "type": "gem"
+    },
+    {
+      "x": 1856,
+      "y": 32,
+      "type": "chest"
+    },
+    {
+      "x": 2608,
+      "y": 40,
+      "type": "rose"
+    },
+    {
+      "x": 2640,
+      "y": 40,
+      "type": "gem"
+    }
   ],
   "pickups": [
-    {"x": 996, "y": 24, "kind": "lily"},
-    {"x": 824, "y": 168, "kind": "spring"},
-    {"x": 1464, "y": 168, "kind": "veil"},
-    {"x": 2084, "y": 168, "kind": "silver"},
-    {"x": 540, "y": 70, "kind": "gold"},
-    {"x": 1044, "y": 76, "kind": "gold"},
-    {"x": 1066, "y": 166, "kind": "flower"},
-    {"x": 2124, "y": 164, "kind": "critter"},
-    {"x": 1690, "y": 166, "kind": "charm"},
-    {"x": 648, "y": 40, "kind": "life"}
+    {
+      "x": 700,
+      "y": 168,
+      "kind": "spring"
+    },
+    {
+      "x": 1216,
+      "y": 48,
+      "kind": "gold"
+    },
+    {
+      "x": 1520,
+      "y": 96,
+      "kind": "flower"
+    },
+    {
+      "x": 1664,
+      "y": 64,
+      "kind": "life"
+    },
+    {
+      "x": 1720,
+      "y": 168,
+      "kind": "veil"
+    },
+    {
+      "x": 1792,
+      "y": 48,
+      "kind": "silver"
+    },
+    {
+      "x": 2176,
+      "y": 88,
+      "kind": "gold"
+    },
+    {
+      "x": 2368,
+      "y": 56,
+      "kind": "lily"
+    },
+    {
+      "x": 2780,
+      "y": 80,
+      "kind": "charm"
+    },
+    {
+      "x": 2840,
+      "y": 164,
+      "kind": "critter"
+    }
   ],
   "decor": [
-    {"x": 150, "y": 160, "kind": "grass"},
-    {"x": 487, "y": 160, "kind": "flowers"},
-    {"x": 825, "y": 160, "kind": "bush"},
-    {"x": 1162, "y": 160, "kind": "mushroom"},
-    {"x": 1500, "y": 160, "kind": "sapling"},
-    {"x": 1837, "y": 160, "kind": "lantern"},
-    {"x": 2175, "y": 160, "kind": "sign"},
-    {"x": 2512, "y": 160, "kind": "rock"},
-    {"x": 2850, "y": 160, "kind": "grass"},
-    {"x": 488, "y": 72, "kind": "mushroom"},
-    {"x": 1052, "y": 80, "kind": "sapling"},
-    {"x": 1796, "y": 104, "kind": "lantern"},
-    {"x": 3080, "y": 160, "kind": "lantern"}
+    {
+      "x": 150,
+      "y": 160,
+      "kind": "grass"
+    },
+    {
+      "x": 487,
+      "y": 160,
+      "kind": "flowers"
+    },
+    {
+      "x": 825,
+      "y": 160,
+      "kind": "bush"
+    },
+    {
+      "x": 1162,
+      "y": 160,
+      "kind": "mushroom"
+    },
+    {
+      "x": 1500,
+      "y": 160,
+      "kind": "sapling"
+    },
+    {
+      "x": 1837,
+      "y": 160,
+      "kind": "lantern"
+    },
+    {
+      "x": 2175,
+      "y": 160,
+      "kind": "sign"
+    },
+    {
+      "x": 2512,
+      "y": 160,
+      "kind": "rock"
+    },
+    {
+      "x": 2850,
+      "y": 160,
+      "kind": "grass"
+    },
+    {
+      "x": 488,
+      "y": 72,
+      "kind": "mushroom"
+    },
+    {
+      "x": 1052,
+      "y": 80,
+      "kind": "sapling"
+    },
+    {
+      "x": 1796,
+      "y": 104,
+      "kind": "lantern"
+    },
+    {
+      "x": 3080,
+      "y": 160,
+      "kind": "lantern"
+    }
   ],
   "vines": [
-    {"x": 692, "top": 68, "bottom": 192},
-    {"x": 1252, "top": 88, "bottom": 192},
-    {"x": 2612, "top": 80, "bottom": 192}
+    {
+      "x": 688,
+      "top": 96,
+      "bottom": 192
+    },
+    {
+      "x": 1216,
+      "top": 88,
+      "bottom": 192
+    },
+    {
+      "x": 2608,
+      "top": 80,
+      "bottom": 192
+    }
   ],
   "npcs": [
-    {"x": 444, "who": "elder", "line": "THE GATE OPENS TO THE SUN KEY"},
-    {"x": 1472, "who": "maiden", "line": "CLIMB THE VINES TO THE CANOPY"},
-    {"x": 2680, "who": "spirit", "line": "HOLD DOWN TO KNEEL AND REST"}
+    {
+      "x": 444,
+      "who": "elder",
+      "line": "THE GATE OPENS TO THE SUN KEY"
+    },
+    {
+      "x": 1472,
+      "who": "maiden",
+      "line": "CLIMB THE VINES TO THE CANOPY"
+    },
+    {
+      "x": 2680,
+      "who": "spirit",
+      "line": "HOLD DOWN TO KNEEL AND REST"
+    }
   ]
 }

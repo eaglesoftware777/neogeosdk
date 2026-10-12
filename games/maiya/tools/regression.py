@@ -121,8 +121,8 @@ def main():
         assert factory and any(s["boss_active"] for s in factory), "Factory guardian did not spawn"
         assert any(s["boss_kind"] == 5 for s in factory), "Second factory guardian did not spawn"
     elif args.scenario == "pickups":
-        assert any(s["pick_mask"] & 2 for s in active), "Later road pickup never became collectible"
-        assert any(s["pick_mask"] & 16 for s in active), "Uncollected shelf pickup was lost on backtracking"
+        assert any(s["pick_mask"] & 1 for s in active), "Later road pickup never became collectible"
+        assert any(s["pick_mask"] & 64 for s in active), "Uncollected shelf pickup was lost on backtracking"
         assert all(s["key_count"] == 1 for s in active if s["state"] == 1), "Mandatory key was discarded or duplicated"
         assert all(s["duplicate_items"] == 0 for s in active), "Map pickup spawned twice"
     elif args.scenario == "pit":

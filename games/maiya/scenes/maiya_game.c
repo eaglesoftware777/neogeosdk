@@ -19,6 +19,7 @@
 #include "maiya_levels.h"   /* the mission tables name decoration tiles */
 #include "maiya_feel.h"     /* hitstop and shake: every tuning value */
 #include "maiya_presentation.h"
+#include "maiya_collision.h"
 #include <stddef.h>
 
 #pragma GCC optimize ("O2")
@@ -142,7 +143,7 @@ enum {
     BOSS_STRIPS = 8, BOSS_ROWS = 6, BOSS_STRIDE = 8,
 
     WALK_SPEED = 512, DASH_SPEED = 1280, JUMP_SPEED = 5 * NG_FP_ONE + 160,
-    /* Hold B to run: faster, and a running jump carries higher. A second
+    /* Hold a direction to run: faster, and a running jump carries higher. A second
      * press of A in the air is one more, smaller jump. */
     RUN_SPEED = 800, RUN_JUMP_SPEED = 6 * NG_FP_ONE, AIR_JUMP_SPEED = 5 * NG_FP_ONE,
     /* Landing on a creature bounces her; holding A bounces her high -- a
@@ -321,7 +322,10 @@ typedef struct {
     int16_t arena_left, boss_direction;
     MGPlatform arena[2];
     uint16_t walk_distance;
-    uint8_t  gait_still;             /* she stood still last frame                    */
+    uint8_t run_hold;
+    int8_t run_direction;
+    uint8_t  gait_clock, gait_stop;   /* actual ground travel; four-frame stop hold */
+    int32_t  gait_prev_x;            /* physics position before this world step */
     uint8_t  gait;                   /* her stride's pose shown: 1 + phase, | 0x10 at a run; 0 none */
     uint8_t  gait_step;              /* the gait phase shown last (a footfall is a new 0 or 4) */
     int16_t  air_vy;                 /* her fall speed in the air, kept for the landing's dust */
@@ -329,6 +333,8 @@ typedef struct {
     uint8_t  stage, state, lives, art, kills, rescue_mask;
     uint8_t  hurt, coyote, jump_buffer, drop, boss_hurt, boss_active;
     uint8_t  attack, combo, dash, dash_wait, cast, super_surge, sitting;
+    uint8_t  plant;                  /* frames her feet stay planted for a throw on the move */
+    MGFire   fire;                   /* B held, and the steps between throws on the move */
     uint8_t  facing, notice, hud_dirty, session_over;
     uint8_t  tray_dirty;      /* the tray, drawn a frame after the rest of the HUD */
     uint8_t  sq_kind, sq_t;   /* her squash and stretch: which, and frames left (mg_squash_step) */
@@ -1394,8 +1400,7 @@ static void NEOGEO_USER mg_draw_ledges(int16_t camera_x)
          * way round): they mustn't take blocks from the ones in view. */
         if (MG_SY(y) > 224 || MG_SY(y) < -32) continue;
 
-        blocks = (uint8_t)((pl->width + 16) / 32);
-        if (blocks < 1) blocks = 1;
+        blocks = (uint8_t)mg_ledge_blocks(pl->width);
         {
             uint8_t centre = (uint8_t)(blocks >= 3 ? blocks / 2 : 0xFF);
             for (k = 0; k < blocks && used < MG_LEDGE_BLOCKS; k++) {
@@ -1799,7 +1804,7 @@ static void NEOGEO_USER mg_collision_hook(void)
     for (i = 0; i < MG_PLATFORM_COUNT; i++) {
         const MGPlatform *pl = mg_platform(i);
         if (!pl || !pl->width) continue;
-        if (p->x < pl->x || p->x > (int16_t)(pl->x + pl->width)) continue;
+        if (!mg_ledge_reaches(p->x, pl->x, pl->width)) continue;
         /* Feet crossed the ledge top this frame (or rest on it). */
         if (mg.player_prev_y <= pl->y && p->y >= pl->y) {
             ng_char_set_pos(p, p->x, pl->y);
@@ -1997,6 +2002,7 @@ static void NEOGEO_USER mg_draw_light(int16_t camera_x)
 
 static void NEOGEO_USER mg_falls_step(void);
 static void NEOGEO_USER mg_art_step(void);
+static void NEOGEO_USER mg_gait_commit(void);
 
 #ifdef NG_RASTER
 /*
@@ -2046,6 +2052,7 @@ static void NEOGEO_USER mg_before_draw_hook(void)
     ng_sound_pump();        /* mid-frame: a second queued sound byte can go */
     mg_falls_step();
     mg_art_step();
+    mg_gait_commit();
     if (mg.player) mg_camera_follow();
     if (mg.eagle && mg.player) {
         ng_char_set_pos(mg.eagle, mg.player->x, mg.player->y);
@@ -3414,7 +3421,7 @@ static uint8_t NEOGEO_USER mg_player_damage(void)
     mg_squash(MG_SQ_HURT);
     if (mg.attempt_hits < 255) mg.attempt_hits++;
     mg_climb_end();
-    mg.attack = mg.combo = mg.cast = 0;
+    mg.attack = mg.combo = mg.cast = mg.plant = 0;
     mg.hud_dirty = 1;
     playSFX(SOUND_SFX_16); /* player hurt */
     ng_feedback_hitstop(MG_HITSTOP_HURT);
@@ -3723,12 +3730,17 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.wave_mask = 0;
     mg.tick = mg.boss_timer = mg.encounter_mask = mg.archer_mask = 0;
     mg.walk_distance = 0;
+    mg.gait = mg.gait_clock = mg.gait_stop = 0;
+    mg.gait_step = 0xFFu;
+    mg.run_hold = 0;
+    mg.run_direction = 0;
     mg.climb_cooldown = 0; mg.airborne = 0; mg.land_pose = 0;
     mg.arena_left = (int16_t)(level->width - 320);
     mg.arena[0] = (MGPlatform){ (int16_t)(mg.arena_left + 24), 144, 64 };
     mg.arena[1] = (MGPlatform){ (int16_t)(mg.arena_left + 232), 144, 64 };
     mg.attack = mg.combo = mg.dash = mg.dash_wait = mg.boss_hurt = mg.boss_active = 0;
-    mg.hurt = 0; mg.coyote = mg.jump_buffer = mg.drop = mg.cast = mg.super_surge = 0;
+    mg.hurt = 0; mg.coyote = mg.jump_buffer = mg.drop = mg.cast = mg.super_surge = mg.plant = 0;
+    mg.fire = (MGFire){ 0, 0, 0 };
     mg.boss = mg.rescue = mg.eagle = 0; mg.ledges_used = 0; mg.eagle_timer = 0;
     mg_freed_clear(0);
     mg.on_ledge = 0; mg.combo_timer = 0; mg.combo_buffer[0] = mg.combo_buffer[1] = 0;
@@ -3865,6 +3877,10 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
                              PAL_HERO, NG_RENDER_BAND_PLAYER, 0);
     if (!mg.player) return;
     ng_char_set_vram_priority(mg.player, NG_SG_PRIO_HIGH);   /* her sprite first in a short blank */
+    /* Her slots stay put at the top of the cast's range: given the next
+     * free slots after the creatures in the draw order, she moved whenever
+     * one came or went, and blinked out for the frame her upload waited. */
+    ng_char_pin_sprite(mg.player, (uint16_t)(NG_SPR_CHAR_LAST + 1 - HERO_STRIPS));
     mg.player->hp = mg.player->max_hp = MAX_HP;
     ng_physics_attach(mg.player, NG_PHYSICS_GRAVITY | NG_PHYSICS_SOLIDS);
     mg_player_gravity();
@@ -4679,7 +4695,7 @@ typedef struct {
 } MGMoveShow;
 
 #define MG_K_(n, j) { (uint8_t)(n), (uint8_t)(j) }
-static const MGKeys mg_show_run[]   = { MG_K_(50, JOY_RIGHT | BUTTON_B), MG_K_(16, 0) };
+static const MGKeys mg_show_run[]   = { MG_K_(50, JOY_RIGHT), MG_K_(16, 0) };
 static const MGKeys mg_show_jump[]  = { MG_K_(6, 0), MG_K_(24, BUTTON_A), MG_K_(36, 0), MG_K_(5, BUTTON_A), MG_K_(10, 0) };
 static const MGKeys mg_show_whip[]  = { MG_K_(14, 0), MG_K_(3, BUTTON_B), MG_K_(10, 0) };
 static const MGKeys mg_show_thorn[] = { MG_K_(10, 0), MG_K_(3, BUTTON_B), MG_K_(22, 0), MG_K_(3, BUTTON_B), MG_K_(10, 0) };
@@ -4695,7 +4711,7 @@ static const MGKeys mg_show_art[]   = { MG_K_(12, 0), MG_K_(3, BUTTON_D), MG_K_(
 #define MG_SHOW(name, keys, script, a, b) \
     { name, keys, script, (uint8_t)(sizeof(script) / sizeof(script[0])), { a, b } }
 static const MGMoveShow mg_show_moves[] = {
-    MG_SHOW("RUN", "LEFT / RIGHT, HOLD B", mg_show_run, 0, 0),
+    MG_SHOW("RUN", "HOLD LEFT / RIGHT", mg_show_run, 0, 0),
     MG_SHOW("JUMP", "A - HOLD IT TO GO HIGHER", mg_show_jump, 0, 0),
     MG_SHOW("WHIP", "B, UP CLOSE", mg_show_whip, 36, 0),
     MG_SHOW("THORN", "B", mg_show_thorn, 150, 0),
@@ -4754,7 +4770,8 @@ static void NEOGEO_USER mg_show_setup(uint8_t who, const MGMoveShow *mv)
     mg_palette(PAL_HERO, mg_hero_normal_pal());
     if (who) mg_moon_bank(PAL_FX, mg_fx_pal);
     else mg_palette(PAL_FX, mg_fx_pal);
-    mg.attack = mg.combo = mg.dash = mg.dash_wait = mg.hurt = mg.cast = mg.super_surge = 0;
+    mg.attack = mg.combo = mg.dash = mg.dash_wait = mg.hurt = mg.cast = mg.super_surge = mg.plant = 0;
+    mg.fire = (MGFire){ 0, 0, 0 };
     mg.coyote = mg.jump_buffer = mg.drop = mg.combo_timer = 0;
     mg.combo_buffer[0] = mg.combo_buffer[1] = 0;
     mg.climbing = mg.crouch_timer = mg.sitting = mg.leap_window = mg.leaping = 0;
@@ -5159,7 +5176,7 @@ static MGEnemy *NEOGEO_USER mg_spawn_enemy(uint8_t type, int16_t x, int16_t y, u
 
     /*
      * Everything walking attaches to gravity. A flyer used to get gravity
-     * too, and since its AI only ever set a small up/down bob, every frame
+     * too, and since its behaviour only ever set a small up/down bob, every frame
      * the pull won: moths, bats and jellyfish sank to the road and hopped
      * along it. They now integrate their own velocity with no pull.
      */
@@ -5538,10 +5555,11 @@ static uint16_t NEOGEO_USER mg_demo_joystick(void)
              * the ground with it still held from the last, let go a frame
              * so the next press counts */
             uint8_t footing = (uint8_t)(ng_physics_is_grounded(p) || mg.on_ledge || p->y >= MG_GROUND_Y - 4);
-            joy = (uint16_t)((joy & ~(JOY_UP | JOY_LEFT | BUTTON_A)) | JOY_RIGHT | BUTTON_B);
+            joy = (uint16_t)((joy & ~(JOY_UP | JOY_LEFT | BUTTON_A | BUTTON_B)) | JOY_RIGHT);
             if (!(footing && p->vy_fp >= 0 && (mg.previous_joy & BUTTON_A))) joy |= BUTTON_A;
         } else if (mg_over_pit((int16_t)(p->x + 110), 0)) {
-            joy |= BUTTON_B;                     /* getting up to a run first */
+            /* right held and no throws: up to a run first */
+            joy = (uint16_t)((joy & ~(JOY_UP | BUTTON_B)) | JOY_RIGHT);
         }
     }
     return joy;
@@ -5804,8 +5822,7 @@ static void NEOGEO_USER mg_controls(void)
      * backwards. In the air she turns at once; on ice she slides.
      */
     {
-        /* B held: she runs. */
-        int16_t speed = (int16_t)((joy & BUTTON_B) ? RUN_SPEED : WALK_SPEED);
+        int16_t speed;
         int16_t have = (int16_t)p->vx_fp;
         int16_t mag = (int16_t)(have < 0 ? -have : have);
         int8_t dir = (int8_t)((joy & JOY_LEFT) ? -1 : ((joy & JOY_RIGHT) ? 1 : 0));
@@ -5813,6 +5830,14 @@ static void NEOGEO_USER mg_controls(void)
         /* On ice she's slow to get going and slower to stop. */
         uint8_t slick = (uint8_t)(mg_mech() == MG_M_ICE && !mg.on_ledge && !mg.airborne);
         int16_t step;
+        if (!dir || dir != mg.run_direction) {
+            mg.run_hold = 0;
+            mg.run_direction = dir;
+        }
+        /* Throwing on the move (mg.fire.wait), she keeps to a walk. */
+        if (dir && ground && mg.run_hold < MG_RUN_HOLD_FRAMES && !mg.fire.wait)
+            mg.run_hold++;
+        speed = (int16_t)(mg.run_hold >= MG_RUN_HOLD_FRAMES ? RUN_SPEED : WALK_SPEED);
         if (mg.swift) speed = (int16_t)((speed * 5) / 4);
 
         mg.turning = 0;
@@ -5862,7 +5887,7 @@ static void NEOGEO_USER mg_controls(void)
      * pressed a few frames before she lands is kept and taken as she
      * lands, and one pressed a few frames after she runs off a ledge still
      * counts: the jump happens when the player meant it, not only on the
-     * exact frame the ground allows it. Running (B held, and up to speed)
+     * exact frame the ground allows it. Running at speed
      * she jumps higher. Kneeling a moment, then Up and A, she leaps
      * straight up, higher still. In the air, with a sky lily in hand, Up
      * and A again is one more, smaller jump (a plain one, and never a
@@ -5887,7 +5912,7 @@ static void NEOGEO_USER mg_controls(void)
                 mg.drop = 12;
                 mg.jump_buffer = 0;
             } else if (mg.coyote) {
-                int16_t v = (int16_t)(((joy & BUTTON_B) && mg_abs(vx) > WALK_SPEED + 64) ? RUN_JUMP_SPEED : JUMP_SPEED);
+                int16_t v = (int16_t)(mg_abs(vx) > WALK_SPEED + 64 ? RUN_JUMP_SPEED : JUMP_SPEED);
                 if ((joy & JOY_UP) && mg.leap_window) {
                     /* the high leap: straight up out of the kneel */
                     v = LEAP_SPEED;
@@ -5966,13 +5991,20 @@ static void NEOGEO_USER mg_controls(void)
     }
 
     /*
-     * B: her thorn, or the whip up close (and held, she runs). Kneeling,
+     * B: her thorn, or the whip up close. Kneeling,
      * the throw skims the road. Down, forward + B is the Rose Blossom
      * Surge. Landing on a creature beats it too (mg_enemy_contact).
+     * Held, B throws again (mg_fire_tick). On the move, each blow plants
+     * her feet a moment and she walks a few steps before the next one.
      */
     /* (The bonus round is dodged, not fought: her weapons rest there.) */
-    if ((pressed & BUTTON_B) && !mg.rising && !mg.super_surge && mg.state != MG_BONUS) {
-        if (mg.combo_buffer[0] && mg.combo_buffer[1] && !mg.dash_wait) {
+    uint8_t on_move = (uint8_t)((joy & (JOY_LEFT | JOY_RIGHT)) && !mg.crouch_timer && !mg.swimming &&
+                                !mg.airborne && (ng_physics_is_grounded(p) || mg.on_ledge ||
+                                                 p->y >= MG_GROUND_Y - 4));
+    uint8_t throw_now = mg_fire_tick(&mg.fire, (uint8_t)((pressed & BUTTON_B) != 0),
+                                     (uint8_t)((joy & BUTTON_B) != 0), on_move, MG_FIRE_REPEAT);
+    if (throw_now && !mg.rising && !mg.super_surge && mg.state != MG_BONUS) {
+        if ((pressed & BUTTON_B) && mg.combo_buffer[0] && mg.combo_buffer[1] && !mg.dash_wait) {
             mg.super_surge = MG_SURGE_TIME;
             mg.surge_struck_boss = 0;
             mg.combo_buffer[0] = mg.combo_buffer[1] = 0;
@@ -5983,7 +6015,8 @@ static void NEOGEO_USER mg_controls(void)
         } else {
             uint8_t melee = 0;
             if (mg.boss && mg_abs((int16_t)(mg.boss->x - p->x)) < 48 &&
-                mg_abs((int16_t)(mg.boss->y - p->y)) < 52) {
+                mg_whip_height(p->y, (uint8_t)(mg.crouch_timer != 0),
+                               (int16_t)(mg.boss->y + mg.boss->body_y), mg.boss->body_h)) {
                 mg_boss_damage(mg_strike());
                 melee = 1;
             }
@@ -5993,13 +6026,10 @@ static void NEOGEO_USER mg_controls(void)
                     NGCharacter *e = mg.enemies[i].body;
                     if (!e || mg.enemies[i].mood == MG_MOOD_DYING ||
                         mg_abs((int16_t)(e->x - p->x)) >= 44) continue;
-                    /* Standing, she cuts at chest height; kneeling, at the
-                     * ground, where the low creatures actually are. */
-                    if (mg.crouch_timer) {
-                        if (e->y < p->y - 26) continue;
-                    } else if (e->y < p->y - 52) {
-                        continue;
-                    }
+                    /* Both edges must overlap the creature's actual body:
+                     * a shelf overhead cannot whip something on the road. */
+                    if (!mg_whip_height(p->y, (uint8_t)(mg.crouch_timer != 0),
+                                        (int16_t)(e->y + e->body_y), e->body_h)) continue;
                     mg_enemy_damage(&mg.enemies[i], mg_strike());
                     melee = 1;
                     break;
@@ -6009,8 +6039,17 @@ static void NEOGEO_USER mg_controls(void)
                 mg.attack = 12;
                 mg_squash(MG_SQ_STRIKE);
                 playSFX(SOUND_SFX_1); /* whip crack */
-            } else {
-                mg_throw((int16_t)(mg.crouch_timer ? -8 : -26));
+            } else if (!mg_throw((int16_t)(mg.crouch_timer ? -8 : -26))) {
+                on_move = 0;                       /* nothing thrown: she keeps walking */
+            }
+            if (on_move) {
+                /* Feet planted for the blow, then a few steps at a walk,
+                 * starting again from a footfall. */
+                mg.plant = melee ? mg.attack : MG_STEP_PLANT;
+                if (!melee) mg.cast = MG_STEP_PLANT;
+                mg.fire.wait = MG_STEP_GAP;
+                mg.run_hold = 0;
+                mg.walk_distance = (uint16_t)(mg.walk_distance < MG_GAIT_CYCLE / 2 ? MG_GAIT_CYCLE / 2 : 0);
             }
         }
     }
@@ -6121,7 +6160,9 @@ static void NEOGEO_USER mg_controls(void)
                     mg_enemy_damage(&mg.enemies[i], 3);
             }
             if (!mg.surge_struck_boss && mg.boss &&
-                mg_abs((int16_t)(mg.boss->x - p->x)) < 52) {
+                mg_abs((int16_t)(mg.boss->x - p->x)) < 52 &&
+                mg_attack_height((int16_t)(p->y - 48), 48,
+                                 (int16_t)(mg.boss->y + mg.boss->body_y), mg.boss->body_h)) {
                 mg_boss_damage(4);
                 mg.surge_struck_boss = 1;
             }
@@ -6129,6 +6170,11 @@ static void NEOGEO_USER mg_controls(void)
         }
     }
 
+    /* A blow on the move: her feet stay put for a moment (mg.plant). */
+    if (mg.plant) {
+        mg.plant--;
+        if (!mg.airborne && !mg.dash && !mg.super_surge && !mg.rising) vx = 0;
+    }
     p->vx_fp = vx;
     mg.previous_joy = joy;
 }
@@ -7292,7 +7338,7 @@ static void NEOGEO_USER mg_update_entities(void)
         ng_sprite_group_flush(&it->sprite);
     }
 
-    /* Update enemies AI */
+    /* Update the enemies' behaviour */
     for (i = 0; i < MG_ENEMIES; i++) {
         MGEnemy *e = &mg.enemies[i];
         if (!e->body) continue;
@@ -8462,15 +8508,6 @@ static void NEOGEO_USER mg_squash_step(void)
         if (!ng_feedback_is_hitstop()) mg.sq_t--;
     } else {
         mg.sq_t = 0;
-        /* Her run's weight: she is lowest as a foot lands and while her
-         * legs pass under her, highest in the flight between strides --
-         * her feet stay on the ground, her head dips -- a little more
-         * when she runs. */
-        if (!mg.flying && !mg.climbing && !mg.swimming && !mg.airborne && mg.gait) {
-            uint8_t k = (uint8_t)((mg.gait & 0x0Fu) - 1u), fast = (uint8_t)(mg.gait & 0x10u);
-            if ((k & 3u) == 0u) ys = fast ? MG_RUN_FOOTFALL_FAST : MG_RUN_FOOTFALL;
-            else if ((k & 3u) == 1u) ys = fast ? MG_RUN_PASSING_FAST : MG_RUN_PASSING;
-        }
     }
     w = (uint8_t)(HERO_STRIPS * ((xs >> 4) + 1u));               /* drawn width */
     h = (int16_t)(((uint16_t)(HERO_ROWS * 16) * (uint16_t)(ys + 1u)) >> 8);   /* drawn height */
@@ -8486,31 +8523,77 @@ static void NEOGEO_USER mg_squash_step(void)
 static void NEOGEO_USER mg_world_step(void)
 {
     mg_squash_step();
+    mg.gait_prev_x = mg.player->x_fp;
     mg.player_prev_y = mg.player->y;
     if (mg.drop) mg.drop--;
     ng_game_engine_frame();
 }
 
-/* Her stride, walking or running: two strides of contact, passing,
- * push-off and flight (MG_F_WALK0..7), the run's footfall a little deeper
- * (mg_squash_step). */
+/* Her stride uses separate walk and run art on the same distance clock. */
 static void NEOGEO_USER mg_gait_pose(NGCharacter *p, uint8_t run)
 {
-    uint8_t k = mg_gait_frame(mg.walk_distance);
+    (void)p;
+    /* Final pose is selected after physics, using actual displacement. */
+    mg.gait = (uint8_t)(1u | (run ? 0x10u : 0u));
+}
+
+static void NEOGEO_USER mg_gait_commit(void)
+{
+    NGCharacter *p = mg.player;
+    static const uint8_t run_frames[8] = {
+        MG_F_GAIT_RUN0, MG_F_GAIT_RUN1, MG_F_GAIT_RUN2, MG_F_GAIT_RUN3,
+        MG_F_GAIT_RUN4, MG_F_GAIT_RUN5, MG_F_GAIT_RUN6, MG_F_GAIT_RUN7
+    };
+    uint8_t k, run;
+    if (!p) return;
+    if (mg.gait_clock) {
+        int32_t moved = p->x_fp - mg.gait_prev_x;
+        if (moved < 0) moved = -moved;
+        /* Normal/dash displacement is bounded; a scripted teleport is not gait. */
+        if (moved <= DASH_SPEED)
+            mg.walk_distance = mg_gait_advance(mg.walk_distance,
+                                               mg_gait_units((uint16_t)moved, (uint8_t)((mg.gait & 0x10u) != 0u)));
+    }
+    if (!mg.gait) return;
+    /* Physics may deliver a hit after animation requested gait. Keep the
+     * action drawing and its existing squash, rather than shrinking a gait. */
+    if (mg.hurt > HURT_LOCK) {
+        mg.gait = 0;
+        mg_frame(p, MG_F_HURT0, mg.facing);
+        return;
+    }
+    if (p->scale_x != 0xFFu || p->scale_y != 0xFFu) {
+        uint8_t action = MG_F_LAND;
+        switch (mg.sq_kind) {
+        case MG_SQ_HURT: action = MG_F_HURT0; break;
+        case MG_SQ_JUMP: action = MG_F_JUMP0; break;
+        case MG_SQ_STRIKE: action = MG_F_ATK2; break;
+        default: break;
+        }
+        mg.gait = 0;
+        mg_frame(p, action, mg.facing);
+        return;
+    }
+    run = (uint8_t)((mg.gait & 0x10u) != 0u);
+    k = mg_gait_frame_mode(mg.walk_distance, run);
     mg.gait = (uint8_t)((k + 1u) | (run ? 0x10u : 0u));
     /* a foot landing at a run kicks up a little dust behind her */
-    if (run && (k & 3u) == 0u && k != mg.gait_step)
+    if (run && mg_gait_footfall[k] && k != mg.gait_step)
         mg_kick_dust((int16_t)(p->x + (mg.facing ? 8 : -8)), p->y, 1, (int8_t)(mg.facing ? 1 : -1));
     mg.gait_step = k;
-    mg_frame(p, (uint8_t)(MG_F_WALK0 + k), mg.facing);
+    /* Every gait drawing keeps run0's hip and has its bob drawn in, so
+     * the offsets mg_squash_step set (-40, -62) stand as they are. */
+    mg_frame(p, (uint8_t)(run ? run_frames[k] : MG_F_GAIT_WALK0 + k), mg.facing);
 }
 
 static void NEOGEO_USER mg_animate_player(void)
 {
     NGCharacter *p = mg.player;
     uint16_t speed;
+    uint8_t previous_gait = mg.gait;
 
     mg.gait = 0;
+    mg.gait_clock = 0;
 
     if (mg.flying) {
         /* Kneeling on the eagle's back; it beats its wings, quicker after
@@ -8523,15 +8606,12 @@ static void NEOGEO_USER mg_animate_player(void)
     }
     uint8_t grounded = ng_physics_is_grounded(p) || mg.on_ledge || (p->y >= MG_GROUND_Y - 4);
 
-    /* Keep one forward gait clock through attacks and dashes. A backward
-     * countdown is not an animation phase; it reverses the foot sequence.
-     * From a standstill she starts on the push-off, not mid-stride. */
+    /* Physics commits the forward distance clock before drawing. Stops
+     * hold a passing/landing drawing without rewinding that clock. */
     speed = (uint16_t)mg_abs((int16_t)p->vx_fp);
-    if (grounded && !mg.climbing && speed) {
-        if (mg.gait_still) mg.walk_distance = (uint16_t)(MG_GAIT_STEP * 2u);
-        mg.walk_distance = mg_gait_advance(mg.walk_distance, speed);
-    }
-    mg.gait_still = (uint8_t)(p->vx_fp == 0);
+    mg.gait_clock = (uint8_t)(grounded && !mg.climbing && !mg.swimming);
+    if (grounded && !speed && previous_gait) mg.gait_stop = MG_GAIT_STOP;
+    if (!grounded || speed || mg.climbing || mg.swimming) mg.gait_stop = 0;
 
     if (grounded && mg.airborne && !mg.climbing) {
         mg.airborne = 0;
@@ -8608,7 +8688,11 @@ static void NEOGEO_USER mg_animate_player(void)
         } else
             mg_gait_pose(p, (uint8_t)(speed > WALK_SPEED + 64));
     } else {
-        mg_frame(p, (uint8_t)(MG_F_IDLE0 + ((mg.tick / 20) % 3)), mg.facing);
+        if (mg.gait_stop) {
+            mg.gait_stop--;
+            mg_frame(p, MG_F_GAIT_STOP0, mg.facing);
+        } else
+            mg_frame(p, (uint8_t)(MG_F_IDLE0 + ((mg.tick / 20) % 3)), mg.facing);
     }
 }
 
@@ -9155,13 +9239,16 @@ static void NEOGEO_USER mg_warp_frame(void)
     int16_t door = (int16_t)(level->gate_x + 16);
 
     p->vx_fp = 0;
+    mg.gait = mg.gait_clock = 0;
     if (t > MG_WARP_WHITE) {
         /* The road is still live around her until the white comes down. */
         mg_update_entities();
         if (t > MG_WARP_GLOW) {
             if (p->x != door) {
                 ng_char_set_pos(p, (int16_t)(p->x + (p->x < door ? 1 : -1)), p->y);
-                mg_frame(p, (uint8_t)(MG_F_WALK0 + ((mg.tick / 5) & 7)), (uint8_t)(p->x > door));
+                mg.facing = (uint8_t)(p->x > door);
+                mg.walk_distance = mg_gait_advance(mg.walk_distance, 256u);
+                mg_gait_pose(p, 0);
             } else {
                 mg_frame(p, MG_F_IDLE0, 0);
             }

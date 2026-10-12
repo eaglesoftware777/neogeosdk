@@ -55,7 +55,16 @@ class AssetsTest(unittest.TestCase):
         for i in range(len(backgrounds)):
             far = next(e for e in manifest if e["name"] == f"bg{i}")
             road = next(e for e in manifest if e["name"] == f"ground{i}")
-            self.assertEqual((far["strips"], far["rows"]), (32, 12))
+            # The renderer wraps the full painting using MG_BG*_COLS.
+            # The road is still 512 px; the accepted far paintings are
+            # 1024--1168 px. Check their exact current widths and the map
+            # allocation instead of the old 512-pixel background limit.
+            columns = int(re.search(rf"#define MG_BG{i}_COLS (\d+)u?", header).group(1))
+            self.assertEqual(columns, (70, 64, 64, 64, 64, 70, 70, 64, 64, 64, 73, 73)[i])
+            self.assertEqual((far["strips"], far["rows"]), (columns, 12))
+            map_length = int(re.search(rf"mg_bg{i}_map\[(\d+)\]", header).group(1))
+            self.assertEqual(map_length, columns * 12)
+            self.assertEqual(far["tile_last"] - far["tile_base"] + 1, columns * 12)
             self.assertEqual((road["strips"], road["rows"]), (32, 2))
             self.assertEqual(far["palette_count"], road["palette_count"])
 

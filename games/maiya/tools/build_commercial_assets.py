@@ -40,6 +40,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import nature_art  # noqa: E402
 import landmark_art  # noqa: E402
 import polluter_art  # noqa: E402
+from hair_specks import hair_specks  # noqa: E402
 
 SOURCE = GAME / "assets/source_art"
 CHARACTERS = ROOT / "games/demo/artbox/in/characters"
@@ -1234,11 +1235,45 @@ def build():
     hf["sit"] = squash(hf["idle1"], 0.54)
     hf["down"] = squash(hf["land"], 0.44)
 
+    def load_locomotion(filename):
+        path = SOURCE / filename
+        sheet = Image.open(path)
+        if sheet.mode != "P" or sheet.size != (8 * HERO_CANVAS[0], HERO_CANVAS[1]):
+            raise ValueError(f"{path}: expected an indexed 640x64 eight-frame sheet")
+        if sheet.info.get("transparency") != 0 or np.asarray(sheet).max() > 15:
+            raise ValueError(f"{path}: palette index 0 must be transparent; use at most 15 colors")
+        rgba = np.asarray(sheet.convert("RGBA"))
+        frames = []
+        for i in range(8):
+            frame = rgba[:, i * HERO_CANVAS[0]:(i + 1) * HERO_CANVAS[0]].copy()
+            if not np.any(frame[:, :, 3]):
+                raise ValueError(f"{path}: frame {i} is empty")
+            frames.append(frame)
+        return frames
+
+    walk = load_locomotion("WALK.png")
+    run = load_locomotion("RUN.png")
+    # Measure the current imports rather than assuming the older PR artwork.
+    # This report documents the Phase A planted-foot correction in the game.
+    anchor_report = {}
+    for label, frames in (("walk", walk), ("run", run)):
+        centres = []
+        for frame in frames:
+            y = int(np.nonzero(frame[:, :, 3])[0].max())
+            xs = np.nonzero(frame[y, :, 3])[0]
+            regions = np.split(xs, np.where(np.diff(xs) > 1)[0] + 1)
+            boot = [region for region in regions if len(region) > 1][-1]
+            centres.append(dict(x=(int(boot[0]) + int(boot[-1])) // 2, y=y))
+        anchor_report[label] = centres
+    (output / "gait_anchor_phase_a.json").write_text(json.dumps(anchor_report, indent=2) + "\n")
+    for i in range(8):
+        hf[f"walk{i}"] = walk[i]
+        hf[f"run{i}"] = run[i]
+
     maiya_frames = {
         "idle0": hf["idle0"], "idle1": hf["idle1"], "idle2": hf["idle0"],
-        # two strides: contact, passing, push-off, flight -- then again
-        "walk0": hf["run3"], "walk1": hf["pass"], "walk2": hf["run1"], "walk3": hf["run0"],
-        "walk4": hf["stride"], "walk5": hf["pass"], "walk6": hf["run1"], "walk7": hf["run2"],
+        "walk0": hf["walk0"], "walk1": hf["walk1"], "walk2": hf["walk2"], "walk3": hf["walk3"],
+        "walk4": hf["walk4"], "walk5": hf["walk5"], "walk6": hf["walk6"], "walk7": hf["walk7"],
         "crouch": hf["crouch"],
         "run0": hf["run0"], "run1": hf["run1"], "run2": hf["run2"],
         "jump0": hf["jump0"], "jump1": hf["jump1"], "jump2": hf["jump2"],
@@ -1284,10 +1319,45 @@ def build():
     }, HERO_CANVAS, HERO_HEIGHT, bg_color="corner")
     for name in ("rise0", "rise1", "rise2", "surge", "art0", "art1", "leap0", "leap1"):
         maiya_frames[name] = special[name]
+    # Keep every existing frame ID stable; the extra run poses are appended.
+    for i in range(3, 8):
+        maiya_frames[f"run{i}"] = hf[f"run{i}"]
 
     # Fit master palette for Maiya
     hero_training = np.concatenate([f[:, :, :3][training_mask(f)] for f in maiya_frames.values()])
     hero_master = fit_palette(hero_training)
+    # Freeze the legacy palette fit BEFORE appending authored gait pixels.
+    # Swim, somersault and all existing IDs retain their original tile data.
+    authored = GAME / "assets/authored"
+    spec = json.loads((authored / "palette.json").read_text())
+    if palette_words(np.array(spec["colors"], dtype=np.uint8)) != spec["hardware_words"]:
+        raise ValueError("Authored palette does not reproduce the existing hardware bank")
+    if not np.array_equal(hero_master, np.array(spec["colors"][1:], dtype=np.uint8)):
+        raise ValueError("Legacy hero palette changed: reauthor against the current palette")
+    # Stray light specks in her hair (hair_specks.py) take the hair's own
+    # colour, after the palette fit so the bank stays as it is. Luna wears
+    # these same pixels with her bank, where the specks were light dots.
+    hero_colours = np.array(spec["colors"], dtype=np.uint8)
+    for name, frame in maiya_frames.items():
+        indices, _, _ = quantize(np.asarray(frame, dtype=np.uint8), 1, hero_master, dither="none")
+        specks = hair_specks(np.asarray(indices, dtype=np.uint8))
+        if specks:
+            frame = np.array(frame, dtype=np.uint8, copy=True)
+            for (y, x), v in specks.items():
+                frame[y, x, :3] = hero_colours[v]
+            maiya_frames[name] = frame
+    for mode, count in (("walk", 8), ("run", 8), ("stop", 1)):
+        path = authored / f"maiya_{mode}.png"
+        with Image.open(path) as sheet:
+            if sheet.mode != "P" or sheet.size != (80 * count, 64):
+                raise ValueError(f"{path}: indexed authored strip dimensions differ")
+            if sheet.info.get("transparency") != 0 or np.asarray(sheet).max() > 15:
+                raise ValueError(f"{path}: authored transparency/palette overflow")
+            if sheet.getpalette()[:48] != sum(spec["colors"], []):
+                raise ValueError(f"{path}: authored palette differs")
+            rgba = np.asarray(sheet.convert("RGBA"))
+        for i in range(count):
+            maiya_frames[f"gait_{mode}{i}"] = rgba[:, i * 80:(i + 1) * 80].copy()
     hero_tiles = []
     for name, f in maiya_frames.items():
         base, _ = append(f"hero_{name}", f, master=hero_master, emit_palette=False)
@@ -1370,18 +1440,21 @@ def build():
         # under the chin, set on a soft glow in each girl's colour -- forest
         # green for Maiya, moonlit blue for Luna -- fills the whole card.
         def closeup(box, inner, outer):
-            face = dehalo(crop_and_fit(faces_img, box, (96, 96), anchor="center", bg_color="corner", pad=0))
+            # Pro Neo Geo character portrait framing:
+            # Contrast, saturation, and sharp dot outline tuned for arcade CRT clarity
+            face_raw = crop_and_fit(faces_img, box, (96, 96), anchor="center", bg_color="corner", pad=0)
+            face = dehalo(face_raw)
             yy, xx = np.mgrid[0:96, 0:96]
-            d = np.sqrt(((xx - 48) / 60.0) ** 2 + ((yy - 40) / 60.0) ** 2).clip(0, 1)[..., None]
+            d = np.sqrt(((xx - 48) / 54.0) ** 2 + ((yy - 44) / 54.0) ** 2).clip(0, 1)[..., None]
             glow = np.array(inner, dtype=np.float32) * (1 - d) + np.array(outer, dtype=np.float32) * d
             card = np.zeros((96, 96, 4), dtype=np.uint8)
-            card[..., :3] = (np.round(glow / 24) * 24).clip(0, 255)   # a few painted steps, not a smear
+            card[..., :3] = (np.round(glow / 20) * 20).clip(0, 255)
             card[..., 3] = 255
             lit = face[..., 3] > 0
             card[lit, :3] = face[lit, :3]
             return card
-        select_maiya = closeup((210, 262, 510, 562), (96, 176, 120), (16, 48, 40))
-        select_luna = closeup((560, 262, 860, 562), (120, 120, 200), (20, 20, 56))
+        select_maiya = closeup((190, 240, 490, 560), (100, 190, 128), (14, 46, 36))
+        select_luna = closeup((550, 240, 850, 560), (128, 128, 210), (18, 18, 52))
     else:
         portrait = dehalo(tidy_face(crop_and_fit(m_img, (27, 70, 144, 268), (96, 96), anchor="center")))
     # Centre the icon on her face (the skin), with a little hair around it.
@@ -1426,6 +1499,26 @@ def build():
     append("portrait_alt", select_luna, banks=2, bank_base=62)
     append("face_alt", face_icon(face_crop(np.ascontiguousarray(luna))))
     print(f"  Maiya compiled ({len(maiya_frames)} frames)", flush=True)
+
+    # Save locomotion cycle diagnostic strips
+    def save_cycle_strip(filename, frames, is_alt=False):
+        strip = Image.new("RGBA", (HERO_CANVAS[0] * len(frames), HERO_CANVAS[1]), (0, 0, 0, 0))
+        for idx, f in enumerate(frames):
+            arr = f.copy()
+            if is_alt:
+                lit = arr[..., 3] > 0
+                arr[lit, :3] = hsv_map(arr[lit, :3], alt_tint)
+            strip.paste(Image.fromarray(arr), (idx * HERO_CANVAS[0], 0))
+        strip.save(filename)
+
+    out_dir = ROOT / "out"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    walk_cycle_frames = [maiya_frames[f"gait_walk{i}"] for i in range(8)]
+    run_cycle_frames = [maiya_frames[f"gait_run{i}"] for i in range(8)]
+    save_cycle_strip(out_dir / "maiya_walk_cycle.png", walk_cycle_frames, is_alt=False)
+    save_cycle_strip(out_dir / "maiya_run_cycle.png", run_cycle_frames, is_alt=False)
+    save_cycle_strip(out_dir / "luna_walk_cycle.png", walk_cycle_frames, is_alt=True)
+    save_cycle_strip(out_dir / "luna_run_cycle.png", run_cycle_frames, is_alt=True)
 
     print("== 3. Compiling 6 Corrupted Blight Enemies ==", flush=True)
     en_img = Image.open(find_file("corrupted_enemies*.jpg")).convert("RGB")

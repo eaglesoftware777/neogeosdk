@@ -14,11 +14,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--fix-only", action="store_true")
     args = parser.parse_args()
+    subprocess.run([sys.executable, str(ROOT / "tools/check_hero_frames.py")], check=True)
+    subprocess.run([sys.executable, str(GAME / "tools/check_hands.py")], check=True)
+    subprocess.run([sys.executable, str(GAME / "tools/check_stride_details.py")], check=True)
+    subprocess.run([sys.executable, str(GAME / "tools/check_cute_polish.py")], check=True)
     art = GAME / "artbox"
     roms = ROOT / "roms/maiya"
     roms.mkdir(parents=True, exist_ok=True)
     if not args.fix_only:
         subprocess.run([sys.executable, str(GAME / "tools/build_commercial_assets.py")], check=True)
+        subprocess.run([sys.executable, str(ROOT / "tools/check_hero_frames.py"), "--rom-only"], check=True)
         for part in ("c1", "c2"):
             name = f"780-{part}.{part}"
             shutil.copyfile(art / "generated" / name, art / name)
