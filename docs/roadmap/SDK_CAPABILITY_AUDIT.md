@@ -1,7 +1,7 @@
 # SDK capability audit (2026-10-12)
 
-Baseline: branch `fix/maiya-arenas-eagle-bios`, NeoGeoSDK v1.7.3 (Framework
-1.3) plus the `ng_fight` work described in `docs/roadmap/V1.7.5_STATUS.md`.
+Baseline: branch `fix/maiya-arenas-eagle-bios`, NeoGeoSDK v1.7.5 (Framework
+1.4), with the `ng_fight` work described in `docs/roadmap/V1.7.5_STATUS.md`.
 Classes: **done** (implemented and verified), **partial** (implemented but
 incomplete), **untested** (implemented, insufficiently tested), **missing**,
 **hardware** (needs physical hardware), **deferred**, **infeasible**.

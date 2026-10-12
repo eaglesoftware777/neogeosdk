@@ -14,6 +14,15 @@ in C++14, with identical public ABI.
 Both builds compile down to the same hardware writes. Choose one
 per ROM via the `USE_2D_PLUS` make flag.
 
+## v1.7.5: Fighting games
+
+The C engine adds the opt-in `ng_fight.h` module (Framework 1.4): a
+deterministic one-on-one fighting core with buffered two-player input and
+motion recognition, data-driven fighters, guard levels, throws, meters,
+rounds and a CPU opponent. Enable `-DNG_FIGHT=1` per game. See
+[Fighting games](../../docs/fighting.md); Shadow League Fighting
+(`games/shadowleague`) uses it.
+
 ## v1.7.3: Vertical Shooters
 
 The C engine adds the opt-in `ng_shooter.h` module: fractional vertical
