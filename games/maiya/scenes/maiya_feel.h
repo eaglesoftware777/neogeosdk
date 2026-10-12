@@ -42,16 +42,17 @@
  * Her stride on the road, in 8.8 pixels a frame (WALK_SPEED 512 is 2 px a
  * frame, RUN_SPEED 800 is 3.125): the speed steps toward what the stick
  * asks, never snaps to it.
- *   - from a stand to a walk in 8 frames; on, holding B, to a run in 6 more
+ *   - a short direction press walks; a sustained hold builds into a run
  *   - let go, she stops in 4 frames from a walk, 7 from a run
  *   - the stick against her momentum: she brakes harder, still facing the
  *     way she ran (a skid), and turns only once nearly stopped -- 5 frames
  *     from a full run -- then sets off the other way
- *   - from a run to a walk (B let go) she eases down
+ *   - after release she brakes; a reversed direction starts a new hold
  * In the air she has a little less grip and turns at once (a throw has to
  * go the way she faces); on ice the road's own slide (maiya_game.c).
  */
 #define MG_WALK_ACCEL          64   /* up to a walk                                 */
+#define MG_RUN_HOLD_FRAMES     14   /* continuous direction frames before sprint   */
 #define MG_RUN_ACCEL           48   /* from a walk up to a run                      */
 #define MG_STOP_BRAKE         128   /* stick let go                                 */
 #define MG_TURN_BRAKE         176   /* stick against her momentum                   */
@@ -60,6 +61,17 @@
 #define MG_AIR_ACCEL           96
 #define MG_AIR_BRAKE           64
 #define MG_AIR_TURN           128
+
+/*
+ * B on the move. Held, she throws again every MG_FIRE_REPEAT frames. While
+ * she walks or runs, a throw (or a whip up close) plants her feet for
+ * MG_STEP_PLANT frames and drops her back to a walk, and the next throw
+ * waits MG_STEP_GAP frames from it: a few short steps between shots,
+ * never a throwing pose sliding along the road. Standing, nothing waits.
+ */
+#define MG_FIRE_REPEAT         20
+#define MG_STEP_PLANT           8
+#define MG_STEP_GAP            24
 
 #define MG_SHAKE_HURT          10   /* frames of Maiya's own 2 px shake when she is struck    */
 #define MG_SHAKE_BOSS_DOWN     16   /* ... and when a guardian falls                          */
@@ -72,13 +84,7 @@
  * Her feet and her middle stay where they are.
  */
 enum { MG_SQ_LAND = 1, MG_SQ_JUMP, MG_SQ_HURT, MG_SQ_STRIKE, MG_SQ_KINDS };
-/* her run's footfall: how tall she is on the two poses that plant a foot
- * (256ths, less one): 97% walking, 95% at a run */
-#define MG_RUN_FOOTFALL       0xF7
-#define MG_RUN_FOOTFALL_FAST  0xF2
-/* ... and while her legs pass under her: 98% walking, 97% at a run */
-#define MG_RUN_PASSING        0xFA
-#define MG_RUN_PASSING_FAST   0xF7
+/* Ordinary gait uses integer offsets in maiya_presentation.h, never shrink. */
 /* Her jump's poses by her climb speed (1/256 px a frame): the push-off
  * while she is still faster than this going up, the top of the arc within
  * this of still, rising or falling either side of it. */

@@ -1,8 +1,56 @@
 # Maiya: Super Nature Girl — changelog
 
 The ROM sets shared with the NeoGeoSDK pre-releases: `_v1` and `_v2` with
-v1.7.1, `_v3` with v1.7.2. The SDK keeps its own version; Maiya's ROMs are
-numbered on their own.
+v1.7.1, `_v3` with v1.7.2, `_v4` with v1.7.3. The SDK keeps its own
+version; Maiya's ROMs are numbered on their own.
+
+## v4 (2026-10-12, NeoGeoSDK v1.7.3 pre-release) — everything since v3
+
+### Her walk and run, redrawn
+
+- **Arms with elbows and fists.** Her arms were straight sticks ending in
+  large cream discs ringed by an outline at the wrist, which read as open
+  palms. They are drawn again: a short green sleeve with its pink trim, the
+  bare upper arm, the brown bracer lit along one edge, and a small closed
+  fist joined at the wrist. Walking, they swing loosely with a slight bend;
+  running, they pump with the elbow near 90 degrees, the fist from her chin
+  back past her hip. The far arm shows behind her back on its back swing.
+- **Legs from her own drawings, no shadow leg.** One leg pair per pose from
+  her original walk and run sheets, both legs in the same colours: the far
+  leg used to be darker and flashed like a shadow every step. Each leg goes
+  through every pose in turn, one up while the other is down.
+- **A real run.** Contact, the down pose with the other heel kicking up, the
+  push-off with the knee driving through, and a flight with both feet off
+  the ground. The old push-off folded both knees together.
+- **No skating.** Each pose is held for the road her planted foot covers in
+  the drawing, so the foot stays on the ground: up to 8-10 px of slide a
+  pose before, at most 3 px at a walk and 1 px at a run now.
+- **Stopping** settles her feet together for 6 frames, then she is straight
+  back in her idle pose.
+- **No blinking.** Her sprite could vanish for a frame when a creature
+  ahead of her in the draw order came or went; her sprite slots are now
+  fixed (0 of 841 frames in the test run, 6 before).
+
+### Throwing on the move
+
+- B held throws again every 20 frames. Walking or running, a throw (or a
+  whip up close) plants her feet for 8 frames (12 for the whip), drops her
+  to a walk, and the next throw waits 24 frames; a press meanwhile is kept.
+  Standing, kneeling and air throws and the combos are unchanged. The
+  attract demo no longer holds B.
+
+### Levels
+
+- Emerald Forest: the road's pickups, platforms, hazards, key and hideout
+  laid out again (two more ledges; the hideout's hint now points to the arch
+  past the log camp).
+- Azure Coast: three fewer creature encounters (18).
+- Autumn Grove: archers and ledges moved.
+
+### Luna
+
+- Stray light specks in her hair (the shared hair pixels that use slots
+  6, 12 and 14) are now hair colour: 47 pixels in 26 frames.
 
 ## v3 (2026-10-05, NeoGeoSDK v1.7.2 pre-release) — everything since v2
 

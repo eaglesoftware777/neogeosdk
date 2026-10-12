@@ -37,15 +37,41 @@ py -m pip install numpy pillow scipy
 
 | Control | Action |
 | --- | --- |
-| Left / Right | Walk, accelerate and brake |
+| Left / Right | Tap to walk; hold to build into a run; release to brake |
 | Up / Down at a vine | Climb, or stop by releasing the direction |
 | A | Jump; detach from a vine with a jump |
-| B | Whip nearby enemies or throw thorns |
+| B | Whip nearby enemies or throw thorns; hold to keep throwing. On the move she plants her feet for each throw and walks a few steps before the next |
 | C | Dash |
 | D | Spend a rose-art charge |
 | Start alone | Pause / resume during play |
 | Down + A | Drop through a one-way ledge |
 | Up at the gate | Turn the collected Sun Key |
+
+### Special moves and character differences
+
+- **Rising Bloom (uppercut):** forward, down, down-forward + B. It hits
+  nearby creatures in front/overhead during the ascending strike window;
+  armored creatures take a hit, and an exposed guardian can be struck once.
+  The descent is a recovery, not a second attack. Wraiths are immune.
+- **Rose Blossom Surge:** down, forward + B; a short petal-trailing attack.
+- **High leap:** kneel briefly (at least eight frames), then Up + A.
+- **Stomp:** land on a susceptible creature; hold A for a higher bounce.
+- **Sky Lily:** while active, Up + A gives one extra jump in the air.
+- **Secret Art:** D spends a charge on the current learned art. The five arts
+  are Rose Blossom Storm, Purifying Rain, Sunflare Dance, Frost Petal Storm
+  and Leaf Gale. These intentionally affect enemies across different heights.
+
+Swift Wind increases speed; Thorn Might strengthens blows; Mist Veil protects;
+Spring Bud boosts jumping; Thorn Crown improves ordinary throws; Thorn Sheaf
+gives double throws. Petal Fan, Golden Seed and Wind Leaf supply limited-ammo
+spread, piercing and returning weapons. Bloom Bud adds an art charge; spirit
+orbs teach an art; extra lives, currency, flowers, rescues and the Sun Key have
+their own counters or mission roles.
+
+Maiya and Luna share movement, collision, damage and move inputs. Their
+appearance, voice, projectile art and effect colors differ; neither is a
+stronger or faster character. Nearby whip attacks require overlap with the
+enemy's actual body, and one-way ledges allow four pixels of edge forgiveness.
 
 The Sun Key is on a canopy shelf. Rescue the villagers, collect roses and
 reach the gate before entering the guardian arena.
@@ -126,6 +152,20 @@ earlier prototype layout and has different sprite dimensions.
 Maiya's canvas is 80x64, guardians 96x96. Animation groups share one palette
 and fixed feet anchors. Guardian source sheets contain differently sized
 drawings; their longest visible dimension is normalized before conversion.
+`assets/source_art/WALK.png` and `RUN.png` are eight-frame indexed sheets
+(80x64 per frame, index 0 transparent): her original walk and run drawings.
+`tools/aseprite/compose_gait.py` builds each gait frame from the stride
+figure on her original heroine sheet (head, rose, ponytail, tunic: the same
+pixels in every frame, moved only by its bob), one leg pair per phase cut
+from those sheets (both legs in the same colours), and drawn arms with a
+sleeve, bracer and closed fist. Each pose is held for the road its planted
+foot covers. `tools/aseprite/pipeline.py --author` turns the maps into
+`assets/authored/maiya_walkrun.aseprite` and exports the strips and layers;
+`tools/check_hero_frames.py`, `check_hands.py`, `check_stride_details.py`
+and `check_cute_polish.py` gate them (same head, solid boots, fists joined
+at the wrist, legs alternating, no sliding feet). See
+`assets/authored/POSES.md`. The larger `maiya_*_master.png` files are pose
+references, not build inputs.
 The generated `artbox/generated/assets.json` describes exact tile bounds,
 row stride and dimensions. The game never guesses a screen ID for a frame.
 
@@ -137,10 +177,13 @@ so loading a villager or portrait cannot recolor the scenery or gate.
 
 Gate dimensions and row stride come from the generated asset header. Its
 three-strip window is separate from the cage, signs and vines. Walking and
-dashing share a forward distance-based gait clock, without changing character
-scale or jump physics. The eight walking slots currently repeat four source
-poses; additional distinct poses must be authored, not obtained by stretching
-the existing drawings. Water shimmer resolves its two inks from the compiled
+dashing share a forward distance-based gait clock (walk: contact, down,
+passing, up for each foot; run: contact, down, push-off, flight), without
+changing character scale or jump physics. Every gait frame keeps one hip, so
+the sprite moves with her and never jumps; new poses must be drawn, not made
+by stretching the existing drawings. Her sprite slots are pinned
+(`ng_char_pin_sprite`), so creatures coming and going never move her into
+slots still waiting to be written. Water shimmer resolves its two inks from the compiled
 decor palette rather than relying on pre-quantization palette indices.
 
 See [asset and audio notes](assets/CREDITS.md) for the source inventory.

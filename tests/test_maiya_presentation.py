@@ -26,12 +26,12 @@ int main(void) {
     uint16_t phase = 0;
     uint16_t palette[16] = {0};
     for (i = 0; i < 8; i++) {
-        assert(mg_gait_frame(phase) == i);
-        phase = mg_gait_advance(phase, MG_GAIT_STEP);
+        assert(mg_gait_frame_mode(phase, 1) == i);
+        phase = mg_gait_advance(phase, (uint16_t)(mg_run_distance[i] * 256u));
     }
     assert(phase == 0);
     assert(mg_gait_advance(phase, 0) == phase);
-    assert(mg_gait_frame(mg_gait_advance(20479, 1280)) < 8);
+    assert(mg_gait_frame_mode(mg_gait_advance(20479, 1280), 0) < 8);
     assert(mg_pause_start_allowed(1, 1, 0));
     assert(!mg_pause_start_allowed(0, 1, 0));
     assert(!mg_pause_start_allowed(1, 3, 0));

@@ -1,0 +1,296 @@
+{
+  "passed": true,
+  "errors": [],
+  "poses": [
+    {
+      "pose": "walk_contact_a",
+      "feet": {
+        "near_leg": {
+          "x": 25.77777777777778,
+          "sole": 61
+        },
+        "far_leg": {
+          "x": 53.07843137254902,
+          "sole": 61
+        }
+      }
+    },
+    {
+      "pose": "walk_down_a",
+      "feet": {
+        "near_leg": {
+          "x": 23.516129032258064,
+          "sole": 61
+        },
+        "far_leg": {
+          "x": 49.12244897959184,
+          "sole": 61
+        }
+      }
+    },
+    {
+      "pose": "walk_passing_a",
+      "feet": {
+        "near_leg": {
+          "x": 27.535714285714285,
+          "sole": 60
+        },
+        "far_leg": {
+          "x": 40.54545454545455,
+          "sole": 61
+        }
+      }
+    },
+    {
+      "pose": "walk_up_a",
+      "feet": {
+        "near_leg": {
+          "x": 43.241379310344826,
+          "sole": 57
+        },
+        "far_leg": {
+          "x": 29.2,
+          "sole": 61
+        }
+      }
+    },
+    {
+      "pose": "walk_contact_b",
+      "feet": {
+        "near_leg": {
+          "x": 53.07843137254902,
+          "sole": 61
+        },
+        "far_leg": {
+          "x": 25.77777777777778,
+          "sole": 61
+        }
+      }
+    },
+    {
+      "pose": "walk_down_b",
+      "feet": {
+        "near_leg": {
+          "x": 49.12244897959184,
+          "sole": 61
+        },
+        "far_leg": {
+          "x": 23.516129032258064,
+          "sole": 61
+        }
+      }
+    },
+    {
+      "pose": "walk_passing_b",
+      "feet": {
+        "near_leg": {
+          "x": 40.54545454545455,
+          "sole": 61
+        },
+        "far_leg": {
+          "x": 27.535714285714285,
+          "sole": 60
+        }
+      }
+    },
+    {
+      "pose": "walk_up_b",
+      "feet": {
+        "near_leg": {
+          "x": 29.2,
+          "sole": 61
+        },
+        "far_leg": {
+          "x": 43.241379310344826,
+          "sole": 57
+        }
+      }
+    },
+    {
+      "pose": "run_contact_a",
+      "feet": {
+        "near_leg": {
+          "x": 25.91891891891892,
+          "sole": 61
+        },
+        "far_leg": {
+          "x": 51.794871794871796,
+          "sole": 61
+        }
+      }
+    },
+    {
+      "pose": "run_down_a",
+      "feet": {
+        "near_leg": {
+          "x": 29.6,
+          "sole": 59
+        },
+        "far_leg": {
+          "x": 41.023809523809526,
+          "sole": 61
+        }
+      }
+    },
+    {
+      "pose": "run_push_a",
+      "feet": {
+        "near_leg": {
+          "x": 42.31111111111111,
+          "sole": 54
+        },
+        "far_leg": {
+          "x": 26.966666666666665,
+          "sole": 61
+        }
+      }
+    },
+    {
+      "pose": "run_flight_a",
+      "feet": {
+        "near_leg": {
+          "x": 55.255319148936174,
+          "sole": 57
+        },
+        "far_leg": {
+          "x": 23.96153846153846,
+          "sole": 55
+        }
+      }
+    },
+    {
+      "pose": "run_contact_b",
+      "feet": {
+        "near_leg": {
+          "x": 51.794871794871796,
+          "sole": 61
+        },
+        "far_leg": {
+          "x": 25.91891891891892,
+          "sole": 61
+        }
+      }
+    },
+    {
+      "pose": "run_down_b",
+      "feet": {
+        "near_leg": {
+          "x": 41.023809523809526,
+          "sole": 61
+        },
+        "far_leg": {
+          "x": 29.6,
+          "sole": 59
+        }
+      }
+    },
+    {
+      "pose": "run_push_b",
+      "feet": {
+        "near_leg": {
+          "x": 26.966666666666665,
+          "sole": 61
+        },
+        "far_leg": {
+          "x": 42.31111111111111,
+          "sole": 54
+        }
+      }
+    },
+    {
+      "pose": "run_flight_b",
+      "feet": {
+        "near_leg": {
+          "x": 23.96153846153846,
+          "sole": 55
+        },
+        "far_leg": {
+          "x": 55.255319148936174,
+          "sole": 57
+        }
+      }
+    },
+    {
+      "pose": "stop",
+      "feet": {
+        "near_leg": {
+          "x": 41.54545454545455,
+          "sole": 61
+        },
+        "far_leg": {
+          "x": 33.535714285714285,
+          "sole": 61
+        }
+      }
+    }
+  ],
+  "recovery": [
+    {
+      "half": 0,
+      "swing_layer": "near_leg",
+      "swing_soles": [
+        61,
+        61,
+        60,
+        57
+      ],
+      "stance_foot_x": [
+        53.07843137254902,
+        49.12244897959184,
+        40.54545454545455,
+        29.2
+      ]
+    },
+    {
+      "half": 1,
+      "swing_layer": "far_leg",
+      "swing_soles": [
+        61,
+        61,
+        60,
+        57
+      ],
+      "stance_foot_x": [
+        53.07843137254902,
+        49.12244897959184,
+        40.54545454545455,
+        29.2
+      ]
+    },
+    {
+      "half": 0,
+      "swing_layer": "near_leg",
+      "swing_soles": [
+        61,
+        59,
+        54,
+        57
+      ],
+      "stance_foot_x": [
+        51.794871794871796,
+        41.023809523809526,
+        26.966666666666665,
+        23.96153846153846
+      ],
+      "folded_shin_px": 6.727272727272727
+    },
+    {
+      "half": 1,
+      "swing_layer": "far_leg",
+      "swing_soles": [
+        61,
+        59,
+        54,
+        57
+      ],
+      "stance_foot_x": [
+        51.794871794871796,
+        41.023809523809526,
+        26.966666666666665,
+        23.96153846153846
+      ],
+      "folded_shin_px": 6.727272727272727
+    }
+  ],
+  "accepted_upper_body_preserved": null
+}
