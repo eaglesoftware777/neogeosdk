@@ -32,8 +32,8 @@ BOOT_MIN=45           # visible boot pixels per leg (the earlier thin-legged dra
 FIST_STEP=7           # largest fist move between consecutive frames, in pixels (the run's 2 px bob adds to its swing)
 FIST_SWING=6          # least distance each fist travels over a step (arms that swing)
 FOOT_STEP=16          # largest boot move between consecutive frames, in pixels
-AREA_SLACK=.17        # opaque area against the stride (her slim arms fold over the tunic at the down and stop poses)
-SHOULDER={'far_arm':(36,26),'near_arm':(47,26)}   # where each arm joins her, at bob 0 (compose_gait.py)
+AREA_SLACK=.18        # opaque area against the stride (her slim arms fold over the tunic at the down and stop poses; at the run's down, one crosses her back and the other passes behind her chest)
+SHOULDER={'far_arm':(45,25),'near_arm':(47,26)}   # where each arm joins her, at bob 0 (compose_gait.py)
 
 def components(mask):
     seen=np.zeros(mask.shape,bool);result=[];h,w=mask.shape

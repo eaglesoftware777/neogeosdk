@@ -1,6 +1,37 @@
 # Maiya's walk, run and throws on the move — 2026-10-12
 
-## Current version: walk and run redrawn
+## Current version: both arms in sight (2026-10-12, second pass)
+
+Player feedback on the redrawn walk and run below: her arms were hidden
+behind her back too much and did not look natural or cute; she should run
+in step, classy and cute. In half of each cycle both arms were tucked away:
+the far arm swung forward behind her chest (its fist never cleared it) and
+the near arm swung back onto her hip.
+
+What changed (`tools/aseprite/compose_gait.py`, `assets/authored/POSES.md`):
+
+- The far arm takes the near arm's path, half a cycle behind it, from a
+  shoulder just behind and above it (45,25 instead of 36,26). Forward, its
+  fist shows ahead of her chest; back, its elbow and fist show behind her.
+- The back swing is drawn again after her original stride drawing: the
+  elbow goes out past her back and the fist sits behind her hip, and the
+  shoulder rolls back with the arm. New drawings R1-R4 (run) and W3-W4
+  (walk); R0, W0-W2 and the legs, head, tunic, holds and bobs are unchanged.
+- So every frame has one fist ahead of her and one arm behind her, changing
+  over with her legs. Each fist moves at most 7 px a frame (the run's bob
+  included).
+- Gates: `check_hero_frames.py` takes the new far shoulder; its area slack
+  is 18% (the run's down pose has one arm across her back and the other
+  behind her chest: 926 of the stride's 1125 px). Hands, stride details,
+  cute polish (accepted again) and the C-ROM gate pass.
+
+Built on the SDK machine without Aseprite: `ASEPRITE=builtin` authors and
+exports with `tools/aseprite/ase_file.py` (its .aseprite is the one
+Aseprite saved, byte for byte, for the same maps). The painted art is
+pinned to v1.7.3's build (`tools/pin_reference_art.py`): the rebuild changes
+only the 16 walk/run frames (62 C tiles); P1, S1, M1 and V1 are v4's.
+
+## Earlier: walk and run redrawn (2026-10-12, first pass)
 
 Player feedback on the restored version: her arms looked distorted, the
 palms and fists weird; shadows of her legs and knees appeared when she ran;
@@ -28,8 +59,7 @@ What changed (details in `assets/authored/POSES.md`):
   slip, arm sides from the shoulders); all pass, as do the C-ROM gate, the
   full build, the unit tests and the native AES/MVS gait run.
 
-Working tree on `fix/maiya-arenas-eagle-bios`, HEAD `0b8273c`. Nothing is
-committed or pushed. Installed in `C:\mame\neogeosdk` (previous files in
+Built on `fix/maiya-arenas-eagle-bios` at `0b8273c` (committed as `7fc86b0`). Installed in `C:\mame\neogeosdk` (previous files in
 `backups\20261012-023045-walk-run-redraw`).
 
 ## Earlier: previous walk/run restored (2026-10-11)

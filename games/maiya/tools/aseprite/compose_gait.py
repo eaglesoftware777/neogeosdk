@@ -18,11 +18,17 @@ and near layers along the gap between the boots; the B half of each cycle
 uses the same drawing with the layers exchanged.
 
 Arms: ten pixel drawings below, five for the walk's relaxed swing (fist ahead
-at the waist, beside the hip, behind) and five for the run's pump (elbow near
-90 degrees, fist from the chin back past the hip): a short green sleeve with
-its pink trim, the bare upper arm, the brown bracer lit along one edge and a
-small closed fist joined at the wrist. The arm nearest the viewer swings
-against the near leg; the far arm is half a cycle behind it.
+at the waist, beside the hip, behind her skirt) and five for the run's pump
+(elbow near 90 degrees, fist at the chest ahead of her and, swung back, the
+elbow out past her back with the fist behind the hip, as in her original
+stride drawing): a short green sleeve with its pink trim, the bare upper arm,
+the brown bracer lit along one edge and a small closed fist joined at the
+wrist. The shoulder rolls back with the arm as it swings back. The arm
+nearest the viewer swings against the near leg; the far arm, half a cycle
+behind it, takes the same path from a shoulder just behind and above the near
+one, so whichever arm is forward shows its fist ahead of her chest and the
+one swung back shows its elbow and fist behind her: one fist ahead, one
+behind, on every frame.
 
 Writes assets/authored/maps/<pose>__<layer>.txt for the 16 gait poses and the
 stop's arms, and the leg sources and bounds in poses.json. Then rebuild with
@@ -45,7 +51,8 @@ GROUND = 61                      # the sole's outline row on the ground line
 FLIGHT_SOLE = 57                 # the run's flight: both soles 4 px clear of the ground
 HEM = 42                         # the tunic's lowest full row at bob 0
 HIP_X = 40.5                     # the hips' centre under the tunic
-NEAR_SHOULDER, FAR_SHOULDER = (47, 26), (36, 26)
+NEAR_SHOULDER, FAR_SHOULDER = (47, 26), (45, 25)
+STOP_FAR_SHOULDER = (36, 26)     # standing, her far arm hangs at her back
 
 # per half: contact, down, passing / push-off, up / flight
 PHASES = {'walk': [('WALK', 0), ('WALK', 2), ('WALK', 1), ('WALK', 5)],
@@ -124,49 +131,46 @@ ARMS = {
         '..199971',
         '...1111.',
     ]),
-    'W3': ((6, 2), [
-        '.....111.',
-        '....1FFA1',
-        '...1F44A1',
-        '...1F44A1',
-        '...1344A1',
-        '...166331',
-        '...16971.',
-        '...1699..',
-        '..16691..',
-        '..16971..',
-        '..175B1..',
-        '..175B1..',
-        '.175B1...',
-        '.175B1...',
-        '.19991...',
-        '196691...',
-        '166691...',
-        '199971...',
-        '.1111....',
-    ]),
-    'W4': ((8, 2), [
+    'W3': ((10, 2), [
         '.......111.',
-        '......1FFA1',
-        '.....1F44A1',
-        '.....1F44A1',
-        '.....1344A1',
-        '....166331.',
-        '....16971..',
-        '...16699...',
-        '...96971...',
+        '......1F4A1',
+        '.....1F4A1.',
+        '....1F4A1..',
+        '...13331...',
+        '...16991...',
+        '..16991....',
+        '.16991.....',
+        '16991......',
+        '1175B1.....',
+        '.175B1.....',
         '..175B1....',
         '..175B1....',
-        '.1755B1....',
+        '...175B111.',
+        '....1196691',
+        '.....166691',
+        '.....199991',
+        '......1111.',
+    ]),
+    'W4': ((12, 2), [
+        '.......111.',
+        '......1F4A1',
+        '.....1F4A1.',
+        '.....1F4A1.',
+        '....13331..',
+        '....16991..',
+        '...16991...',
+        '...16991...',
+        '..16991....',
+        '..175B1....',
         '.175B1.....',
-        '.175B1.....',
-        '.1999......',
+        '175B1......',
+        '175B1......',
         '196691.....',
         '166691.....',
-        '199971.....',
+        '199991.....',
         '.1111......',
     ]),
-    'R0': ((2, 2), [
+    'R0': ((2, 1), [
         '.111..........',
         '1FFA1....1111.',
         '1F44A1..196691',
@@ -178,66 +182,67 @@ ARMS = {
         '...169B1......',
         '....111.......',
     ]),
-    'R1': ((2, 2), [
-        '.111..........',
-        '1FFA1.........',
-        '1F44A1........',
-        '1F44A1........',
-        '1F4431........',
-        '133991..11111.',
-        '.1669991196691',
-        '..169777966691',
-        '..169555999971',
-        '..169BBB91111.',
-        '...11111......',
+    'R1': ((4, 1), [
+        '.111.........',
+        '1F4A1........',
+        '1F4A1........',
+        '1F4A1........',
+        '1F4A1...1111.',
+        '.133311196691',
+        '.169977766691',
+        '.166755599991',
+        '.1695BBB1111.',
+        '..19B11......',
+        '...11........',
     ]),
-    'R2': ((3, 2), [
-        '..111........',
-        '.1FFA1.......',
-        '.1F4A1.......',
-        '.1F4A1.......',
-        '1F44A1.......',
-        '133331.......',
-        '.16971.......',
-        '.16951111111.',
-        '.169577996691',
-        '.169555966691',
-        '.197BBB999971',
-        '..11111.1111.',
+    'R2': ((6, 3), [
+        '..111...',
+        '.1F4A1..',
+        '.1F4A1..',
+        '.1F4A1..',
+        '.1F4A1..',
+        '13331...',
+        '16991...',
+        '16991...',
+        '16991...',
+        '175B1...',
+        '.175B1..',
+        '.175B11.',
+        '..196691',
+        '..166691',
+        '..199991',
+        '...1111.',
     ]),
-    'R3': ((5, 2), [
-        '....111....',
-        '...1FFA1...',
-        '..1F44A1...',
-        '..1F44A1...',
-        '..1334A1...',
-        '.166931....',
+    'R3': ((10, 2), [
+        '.......111.',
+        '......1F4A1',
+        '.....1F4A1.',
+        '....1F4A1..',
+        '...13331...',
+        '..16991....',
         '.16991.....',
-        '166971.....',
-        '169751.....',
-        '.1975B1....',
-        '..175B9111.',
-        '...17996691',
-        '....1166691',
-        '.....199971',
-        '......1111.',
+        '.175B1.....',
+        '175B1......',
+        '175B11.....',
+        '.196691....',
+        '.166691....',
+        '.199991....',
+        '..1111.....',
     ]),
-    'R4': ((7, 2), [
-        '......111.',
-        '....11FFA1',
-        '...13F44A1',
-        '..113444A1',
-        '.166634A1.',
-        '16699731..',
-        '1697991...',
-        '1975B1....',
-        '.975B1....',
-        '.1755B1...',
-        '..1759111.',
-        '...1996691',
-        '....166691',
-        '....199971',
-        '.....1111.',
+    'R4': ((15, 4), [
+        '.........111.',
+        '........1FFA1',
+        '.......1F44A1',
+        '......1F44A1.',
+        '.....133331..',
+        '...166991....',
+        '..16691......',
+        '.175B1.......',
+        '.175B1.......',
+        '196691.......',
+        '166691.......',
+        '199991.......',
+        '.1111........',
     ]),
 }
 
@@ -412,7 +417,7 @@ def compose():
     for l in ('near_leg', 'far_leg'):       # both boot bands in the same gold
         layers[l][layers[l] == 13] = 2
     layers['near_arm'] = arm('W2', NEAR_SHOULDER, stop['bob'])
-    layers['far_arm'] = arm('W2', FAR_SHOULDER, stop['bob'])
+    layers['far_arm'] = arm('W2', STOP_FAR_SHOULDER, stop['bob'])
     out['stop'] = layers
     for p in poses:
         flat = np.zeros((64, 80), np.uint8)
@@ -429,7 +434,8 @@ def hands(poses, out):
     from scipy import ndimage as ndi
     boxes = []
     for p in poses:
-        for layer, shoulder in (('far_arm', FAR_SHOULDER), ('near_arm', NEAR_SHOULDER)):
+        far = STOP_FAR_SHOULDER if p['mode'] == 'stop' else FAR_SHOULDER
+        for layer, shoulder in (('far_arm', far), ('near_arm', NEAR_SHOULDER)):
             arm_map = out[p['name']][layer]
             lab, n = ndi.label(np.isin(arm_map, (6, 9)))
             sx, sy = shoulder[0], shoulder[1] + p['bob']

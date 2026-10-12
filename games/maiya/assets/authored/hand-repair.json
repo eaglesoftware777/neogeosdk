@@ -6,10 +6,10 @@
       "layer": "far_arm",
       "side": "back",
       "box": [
-        29,
-        38,
-        32,
-        41
+        34,
+        36,
+        37,
+        38
       ]
     },
     {
@@ -28,10 +28,10 @@
       "layer": "far_arm",
       "side": "back",
       "box": [
-        31,
-        39,
-        34,
-        42
+        41,
+        38,
+        44,
+        40
       ]
     },
     {
@@ -50,10 +50,10 @@
       "layer": "far_arm",
       "side": "front",
       "box": [
-        36,
-        38,
-        40,
-        41
+        45,
+        37,
+        49,
+        40
       ]
     },
     {
@@ -72,10 +72,10 @@
       "layer": "far_arm",
       "side": "front",
       "box": [
-        40,
-        36,
-        44,
-        39
+        49,
+        35,
+        53,
+        38
       ]
     },
     {
@@ -83,10 +83,10 @@
       "layer": "near_arm",
       "side": "back",
       "box": [
-        42,
+        43,
         37,
-        45,
-        40
+        46,
+        39
       ]
     },
     {
@@ -94,252 +94,252 @@
       "layer": "far_arm",
       "side": "front",
       "box": [
+        53,
+        34,
+        57,
+        37
+      ]
+    },
+    {
+      "pose": "walk_contact_b",
+      "layer": "near_arm",
+      "side": "back",
+      "box": [
+        36,
+        37,
+        39,
+        39
+      ]
+    },
+    {
+      "pose": "walk_down_b",
+      "layer": "far_arm",
+      "side": "front",
+      "box": [
+        49,
+        37,
+        53,
+        40
+      ]
+    },
+    {
+      "pose": "walk_down_b",
+      "layer": "near_arm",
+      "side": "back",
+      "box": [
+        43,
+        39,
+        46,
+        41
+      ]
+    },
+    {
+      "pose": "walk_passing_b",
+      "layer": "far_arm",
+      "side": "front",
+      "box": [
+        45,
+        37,
+        49,
+        40
+      ]
+    },
+    {
+      "pose": "walk_passing_b",
+      "layer": "near_arm",
+      "side": "front",
+      "box": [
+        47,
+        38,
+        51,
+        41
+      ]
+    },
+    {
+      "pose": "walk_up_b",
+      "layer": "far_arm",
+      "side": "back",
+      "box": [
+        41,
+        36,
         44,
-        35,
-        48,
         38
       ]
     },
     {
-      "pose": "walk_contact_b",
-      "layer": "near_arm",
-      "side": "back",
-      "box": [
-        40,
-        38,
-        43,
-        41
-      ]
-    },
-    {
-      "pose": "walk_down_b",
-      "layer": "far_arm",
-      "side": "front",
-      "box": [
-        40,
-        38,
-        44,
-        41
-      ]
-    },
-    {
-      "pose": "walk_down_b",
-      "layer": "near_arm",
-      "side": "back",
-      "box": [
-        42,
-        39,
-        45,
-        42
-      ]
-    },
-    {
-      "pose": "walk_passing_b",
-      "layer": "far_arm",
-      "side": "front",
-      "box": [
-        36,
-        38,
-        40,
-        41
-      ]
-    },
-    {
-      "pose": "walk_passing_b",
-      "layer": "near_arm",
-      "side": "front",
-      "box": [
-        47,
-        38,
-        51,
-        41
-      ]
-    },
-    {
       "pose": "walk_up_b",
+      "layer": "near_arm",
+      "side": "front",
+      "box": [
+        51,
+        36,
+        55,
+        39
+      ]
+    },
+    {
+      "pose": "run_contact_a",
       "layer": "far_arm",
       "side": "back",
       "box": [
         31,
-        37,
+        30,
         34,
-        40
-      ]
-    },
-    {
-      "pose": "walk_up_b",
-      "layer": "near_arm",
-      "side": "front",
-      "box": [
-        51,
-        36,
-        55,
-        39
+        32
       ]
     },
     {
       "pose": "run_contact_a",
+      "layer": "near_arm",
+      "side": "front",
+      "box": [
+        53,
+        27,
+        57,
+        31
+      ]
+    },
+    {
+      "pose": "run_down_a",
       "layer": "far_arm",
+      "side": "back",
+      "box": [
+        37,
+        35,
+        40,
+        37
+      ]
+    },
+    {
+      "pose": "run_down_a",
+      "layer": "near_arm",
+      "side": "front",
+      "box": [
+        51,
+        32,
+        54,
+        34
+      ]
+    },
+    {
+      "pose": "run_push_a",
+      "layer": "far_arm",
+      "side": "back",
+      "box": [
+        42,
+        34,
+        45,
+        36
+      ]
+    },
+    {
+      "pose": "run_push_a",
+      "layer": "near_arm",
+      "side": "back",
+      "box": [
+        44,
+        35,
+        47,
+        37
+      ]
+    },
+    {
+      "pose": "run_flight_a",
+      "layer": "far_arm",
+      "side": "front",
+      "box": [
+        49,
+        27,
+        52,
+        29
+      ]
+    },
+    {
+      "pose": "run_flight_a",
+      "layer": "near_arm",
+      "side": "back",
+      "box": [
+        39,
+        32,
+        42,
+        34
+      ]
+    },
+    {
+      "pose": "run_contact_b",
+      "layer": "far_arm",
+      "side": "front",
+      "box": [
+        51,
+        26,
+        55,
+        30
+      ]
+    },
+    {
+      "pose": "run_contact_b",
+      "layer": "near_arm",
       "side": "back",
       "box": [
         33,
+        31,
+        36,
+        33
+      ]
+    },
+    {
+      "pose": "run_down_b",
+      "layer": "far_arm",
+      "side": "front",
+      "box": [
+        49,
+        31,
+        52,
+        33
+      ]
+    },
+    {
+      "pose": "run_down_b",
+      "layer": "near_arm",
+      "side": "back",
+      "box": [
+        39,
+        36,
+        42,
+        38
+      ]
+    },
+    {
+      "pose": "run_push_b",
+      "layer": "far_arm",
+      "side": "back",
+      "box": [
+        42,
         34,
-        37,
-        37
+        45,
+        36
       ]
     },
     {
-      "pose": "run_contact_a",
-      "layer": "near_arm",
-      "side": "front",
-      "box": [
-        53,
-        26,
-        57,
-        30
-      ]
-    },
-    {
-      "pose": "run_down_a",
-      "layer": "far_arm",
-      "side": "front",
-      "box": [
-        36,
-        36,
-        40,
-        39
-      ]
-    },
-    {
-      "pose": "run_down_a",
-      "layer": "near_arm",
-      "side": "front",
-      "box": [
-        53,
-        32,
-        57,
-        35
-      ]
-    },
-    {
-      "pose": "run_push_a",
-      "layer": "far_arm",
-      "side": "front",
-      "box": [
-        40,
-        32,
-        44,
-        34
-      ]
-    },
-    {
-      "pose": "run_push_a",
-      "layer": "near_arm",
-      "side": "front",
-      "box": [
-        51,
-        32,
-        55,
-        34
-      ]
-    },
-    {
-      "pose": "run_flight_a",
-      "layer": "far_arm",
-      "side": "front",
-      "box": [
-        42,
-        28,
-        46,
-        31
-      ]
-    },
-    {
-      "pose": "run_flight_a",
-      "layer": "near_arm",
-      "side": "front",
-      "box": [
-        47,
-        32,
-        51,
-        35
-      ]
-    },
-    {
-      "pose": "run_contact_b",
-      "layer": "far_arm",
-      "side": "front",
-      "box": [
-        42,
-        26,
-        46,
-        30
-      ]
-    },
-    {
-      "pose": "run_contact_b",
+      "pose": "run_push_b",
       "layer": "near_arm",
       "side": "back",
       "box": [
         44,
-        34,
-        48,
+        35,
+        47,
         37
       ]
     },
     {
-      "pose": "run_down_b",
-      "layer": "far_arm",
-      "side": "front",
-      "box": [
-        42,
-        32,
-        46,
-        35
-      ]
-    },
-    {
-      "pose": "run_down_b",
-      "layer": "near_arm",
-      "side": "front",
-      "box": [
-        47,
-        36,
-        51,
-        39
-      ]
-    },
-    {
-      "pose": "run_push_b",
-      "layer": "far_arm",
-      "side": "front",
-      "box": [
-        40,
-        32,
-        44,
-        34
-      ]
-    },
-    {
-      "pose": "run_push_b",
-      "layer": "near_arm",
-      "side": "front",
-      "box": [
-        51,
-        32,
-        55,
-        34
-      ]
-    },
-    {
       "pose": "run_flight_b",
       "layer": "far_arm",
-      "side": "front",
+      "side": "back",
       "box": [
-        36,
-        32,
+        37,
+        31,
         40,
-        35
+        33
       ]
     },
     {
@@ -347,10 +347,10 @@
       "layer": "near_arm",
       "side": "front",
       "box": [
-        53,
+        51,
         28,
-        57,
-        31
+        54,
+        30
       ]
     },
     {

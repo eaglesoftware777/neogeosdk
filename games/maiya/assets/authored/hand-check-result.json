@@ -5,7 +5,7 @@
     {
       "pose": "walk_contact_a",
       "layer": "far_arm",
-      "visible_palm_pixels": 7
+      "visible_palm_pixels": 0
     },
     {
       "pose": "walk_contact_a",
@@ -35,32 +35,32 @@
     {
       "pose": "walk_up_a",
       "layer": "far_arm",
-      "visible_palm_pixels": 0
+      "visible_palm_pixels": 13
     },
     {
       "pose": "walk_up_a",
       "layer": "near_arm",
-      "visible_palm_pixels": 14
+      "visible_palm_pixels": 12
     },
     {
       "pose": "walk_contact_b",
       "layer": "far_arm",
-      "visible_palm_pixels": 3
+      "visible_palm_pixels": 13
     },
     {
       "pose": "walk_contact_b",
       "layer": "near_arm",
-      "visible_palm_pixels": 14
+      "visible_palm_pixels": 12
     },
     {
       "pose": "walk_down_b",
       "layer": "far_arm",
-      "visible_palm_pixels": 0
+      "visible_palm_pixels": 13
     },
     {
       "pose": "walk_down_b",
       "layer": "near_arm",
-      "visible_palm_pixels": 14
+      "visible_palm_pixels": 12
     },
     {
       "pose": "walk_passing_b",
@@ -85,7 +85,7 @@
     {
       "pose": "run_contact_a",
       "layer": "far_arm",
-      "visible_palm_pixels": 3
+      "visible_palm_pixels": 12
     },
     {
       "pose": "run_contact_a",
@@ -100,7 +100,7 @@
     {
       "pose": "run_down_a",
       "layer": "near_arm",
-      "visible_palm_pixels": 14
+      "visible_palm_pixels": 12
     },
     {
       "pose": "run_push_a",
@@ -110,37 +110,37 @@
     {
       "pose": "run_push_a",
       "layer": "near_arm",
-      "visible_palm_pixels": 14
+      "visible_palm_pixels": 12
     },
     {
       "pose": "run_flight_a",
       "layer": "far_arm",
-      "visible_palm_pixels": 0
+      "visible_palm_pixels": 6
     },
     {
       "pose": "run_flight_a",
       "layer": "near_arm",
-      "visible_palm_pixels": 13
+      "visible_palm_pixels": 12
     },
     {
       "pose": "run_contact_b",
       "layer": "far_arm",
-      "visible_palm_pixels": 0
+      "visible_palm_pixels": 13
     },
     {
       "pose": "run_contact_b",
       "layer": "near_arm",
-      "visible_palm_pixels": 13
+      "visible_palm_pixels": 12
     },
     {
       "pose": "run_down_b",
       "layer": "far_arm",
-      "visible_palm_pixels": 0
+      "visible_palm_pixels": 6
     },
     {
       "pose": "run_down_b",
       "layer": "near_arm",
-      "visible_palm_pixels": 13
+      "visible_palm_pixels": 12
     },
     {
       "pose": "run_push_b",
@@ -150,7 +150,7 @@
     {
       "pose": "run_push_b",
       "layer": "near_arm",
-      "visible_palm_pixels": 14
+      "visible_palm_pixels": 12
     },
     {
       "pose": "run_flight_b",
@@ -160,7 +160,7 @@
     {
       "pose": "run_flight_b",
       "layer": "near_arm",
-      "visible_palm_pixels": 14
+      "visible_palm_pixels": 12
     },
     {
       "pose": "stop",
