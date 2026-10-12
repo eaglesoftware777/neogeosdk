@@ -1,5 +1,44 @@
 # Changelog
 
+## v1.7.5 - in progress: ng_fight and Shadow League Fighting
+
+Status: work toward v1.7.5 on the `fix/maiya-arenas-eagle-bios` branch; the
+version macros stay at 1.7.3 until the milestone is complete. What is done
+and what remains: `docs/roadmap/V1.7.5_STATUS.md`; capability audit:
+`docs/roadmap/SDK_CAPABILITY_AUDIT.md`.
+
+### Engine
+
+- New opt-in module `ng_fight` (`-DNG_FIGHT=1`, `docs/fighting.md`): a
+  deterministic one-on-one fighting core. Buffered two-player input with
+  quarter/half circles, dragon-punch, double quarter circles, charge, 360,
+  dash and backdash recognition and simultaneous presses; data-driven
+  fighters in ROM tables; state machine, physics, push/hurt/hit boxes,
+  guard levels (high, mid, low, overhead), chip, guard break, throws and
+  escapes, cancels and chains, counter hits and counter stances, combo
+  scaling, projectiles, power (three stocks), guard and spirit meters,
+  rounds with timer, KO, time up and draws, and a CPU opponent with levels.
+- The Makefile builds `ng_fight` only for a game that asks for it.
+
+### Shadow League Fighting (id 781): first playable
+
+- Title, attract demo, fighter select, VS card, arcade ladder, versus play
+  when a second player presses START, MVS soft DIPs for difficulty and
+  rounds; MVS and AES builds with EagleBIOS.
+- Kenji Arata (traditional karate) and Jack Mercer (boxing), drawn by a
+  skeletal pixel-art renderer whose joints also give each frame's hurtboxes
+  and each attack's hitbox; fighters are JSON definitions validated and
+  cooked during the art build.
+- The Arata Mountain Dojo stage, hit/guard/dust effects, a FIX HUD (life,
+  timer, names, power, round wins, combo count), synthesized effects and
+  music.
+
+### Tests
+
+- `tests/test_fight.py` (input, combat, rounds, CPU determinism on the host),
+  `tests/test_shadowleague.py` (data validation, full CPU matches with the
+  real fighters), `games/shadowleague/tools/qa.py` (MAME, MVS and AES).
+
 ## v1.7.3 - pre-release: Sky Lance v1 and Maiya v4
 
 Status: a pre-release from the `fix/maiya-arenas-eagle-bios` branch, with

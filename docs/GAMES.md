@@ -71,7 +71,7 @@ The demo is the largest consumer of the SDK and therefore the best place to
 read working usage of: the FIX layer and INFIX photo pages, sprite screens,
 character movesets, gravity and solids, camera follow / dead-zone / shake,
 palette effects, the particle pool under stress, hitstop and shake feedback,
-depth projection, two-layer parallax, NPC patrol AI, live joystick handling
+depth projection, two-layer parallax, NPC patrol behaviour, live joystick handling
 with two-button specials, a scrolling world, sprite-scaling pseudo-3D, and a
 playable shooter.
 
@@ -137,6 +137,16 @@ Sky Lance builds with the opt-in shooter module (`-DNG_SHOOTER=1`).
 
 A two-stage slice of Sky Lance also appears as chapter 24 of the demo reel,
 built from the same art, so you can see the same game driven two ways.
+
+## shadowleague — Shadow League Fighting (id 781)
+
+An original one-on-one fighting game on the `ng_fight` engine
+(`docs/fighting.md`), at its first playable milestone: Kenji Arata
+(karate) and Jack Mercer (boxing), the Arata Mountain Dojo, arcade and
+versus play, MVS and AES. Fighters are JSON definitions
+(`games/shadowleague/fighters/`) drawn and cooked by the game's tools.
+Build with `make GAME=shadowleague all`; check with
+`python3 games/shadowleague/tools/qa.py`. Details: `games/shadowleague/README.md`.
 
 ## helloworld (id 772)
 
