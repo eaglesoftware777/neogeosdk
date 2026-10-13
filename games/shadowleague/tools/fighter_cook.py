@@ -26,7 +26,7 @@ KIND = {"normal": "NGF_KIND_NORMAL", "command": "NGF_KIND_COMMAND", "special": "
 MOTION = {"none": "NGF_MOTION_NONE", "qcf": "NGF_MOTION_QCF", "qcb": "NGF_MOTION_QCB", "dp": "NGF_MOTION_DP",
           "rdp": "NGF_MOTION_RDP", "hcf": "NGF_MOTION_HCF", "hcb": "NGF_MOTION_HCB", "dqcf": "NGF_MOTION_DQCF",
           "dqcb": "NGF_MOTION_DQCB", "charge_bf": "NGF_MOTION_CHARGE_BF", "charge_du": "NGF_MOTION_CHARGE_DU",
-          "360": "NGF_MOTION_360", "dash": "NGF_MOTION_DASH", "backdash": "NGF_MOTION_BACKDASH",
+          "360": "NGF_MOTION_360", "720": "NGF_MOTION_720", "dash": "NGF_MOTION_DASH", "backdash": "NGF_MOTION_BACKDASH",
           "fwd": "NGF_MOTION_FWD", "back": "NGF_MOTION_BACK", "down_fwd": "NGF_MOTION_DOWN_FWD"}
 LEVEL = {"mid": "NGF_LV_MID", "high": "NGF_LV_HIGH", "low": "NGF_LV_LOW", "overhead": "NGF_LV_OVERHEAD",
          "throw": "NGF_LV_THROW", "unblockable": "NGF_LV_UNBLOCKABLE"}

@@ -1,46 +1,61 @@
 # Changelog
 
-## v1.7.5 - pre-release: ng_fight and Shadow League Fighting (first playable)
+## v1.7.5 - pre-release: ng_fight, Shadow League Fighting (production slice), and EagleBIOS v1.7.4
 
-Status: a work-in-progress pre-release from the `fix/maiya-arenas-eagle-bios`
-branch with Shadow League Fighting's first ROM set (`_v1`); v1.7.0 remains
-the current release. SDK 1.7.5, Framework 1.4 (additions only). The
-EagleBIOS work planned for v1.7.4 is still to come. What is done and what
-remains: `docs/roadmap/V1.7.5_STATUS.md`; capability audit:
-`docs/roadmap/SDK_CAPABILITY_AUDIT.md`.
+Status: a pre-release from the `fix/maiya-arenas-eagle-bios` branch with
+Shadow League Fighting's expanded 7-fighter roster and EagleBIOS v1.7.4;
+v1.7.0 remains the current release. SDK 1.7.5, Framework 1.4 (additions only).
+What is done and what remains: `docs/roadmap/V1.7.5_STATUS.md`; capability
+audit: `docs/roadmap/SDK_CAPABILITY_AUDIT.md`.
 
-### Engine
+### Engine (`sdk/2d_engine/ng_fight.{h,c}`, opt-in `-DNG_FIGHT=1`)
 
-- New opt-in module `ng_fight` (`-DNG_FIGHT=1`, `docs/fighting.md`): a
-  deterministic one-on-one fighting core. Buffered two-player input with
-  quarter/half circles, dragon-punch, double quarter circles, charge, 360,
-  dash and backdash recognition and simultaneous presses; data-driven
-  fighters in ROM tables; state machine, physics, push/hurt/hit boxes,
-  guard levels (high, mid, low, overhead), chip, guard break, throws and
-  escapes, cancels and chains, counter hits and counter stances, combo
-  scaling, projectiles, power (three stocks), guard and spirit meters,
-  rounds with timer, KO, time up and draws, and a CPU opponent with levels.
-- The Makefile builds `ng_fight` only for a game that asks for it.
-- SDK version 1.7.5, Framework 1.4.
+- Input & motions: negative-edge release tracking, 720 motion recognition,
+  buffered simultaneous presses, quarter/half circles, dragon-punch, charge,
+  360, dash and backdash.
+- Super freeze mechanics: 30-frame screen pause, backdrop darkening, attacker
+  hit advantage, and `NGF_EV_SUPER_FREEZE` event generation.
+- Mode-aware cancel logic: chain normal cancellation into special and super arts.
+- Projectiles: spawn velocities, bounding clash physics, destruction events.
+- Tag and striker support: 3v3 team sequential battle, striker summon actor
+  (`ngf_call_striker`), and tag duo partner switch (`ngf_tag_switch`).
+- Hardware camera zoom: distance-based scaling computation (`m->zoom_scale` 192..255).
+- Deterministic match hash verification (`ngf_match_hash`).
 
-### Shadow League Fighting (id 781): first playable
+### Shadow League Fighting (id 781): production vertical slice
 
-- Title, attract demo, fighter select, VS card, arcade ladder, versus play
-  when a second player presses START, MVS soft DIPs for difficulty and
-  rounds; MVS and AES builds with EagleBIOS.
-- Kenji Arata (traditional karate) and Jack Mercer (boxing), drawn by a
-  skeletal pixel-art renderer whose joints also give each frame's hurtboxes
-  and each attack's hitbox; fighters are JSON definitions validated and
-  cooked during the art build.
-- The Arata Mountain Dojo stage, hit/guard/dust effects, a FIX HUD (life,
-  timer, names, power, round wins, combo count), synthesized effects and
-  music.
+- 7-fighter roster: Kenji Arata (Karate), Jack Mercer (Boxing), Min-Jun Park
+  (Taekwondo), Batu Temur (Bökh wrestling), Amara Silva (Capoeira), Niran Vong
+  (Muay Lao), and ATLAS (Combat Robotics boss prototype).
+- Anatomical pixel-art renderer: articulated torso musculature (pectoral/ab/lat
+  contours), uniform overlays (gi lapels, vests, cybernetic armor, belts, cords),
+  expressive hands (open palm, knife-hand, claw, fist), distinct silhouettes and
+  hairstyles, and leg musculature.
+- Two-layer parallax stage: 512x224 Arata Mountain Dojo interior with 512x160 dawn
+  mountains scrolling at half speed through open windows.
+- Hardware sprite zoom: SCB2 scaling and centered camera projection.
+- Full arcade flow: 7-fighter ladder, 10-second continue screen with MVS
+  credit deduction (`SYS_CREDIT_DOWN`), title screen P2 join.
+- Complete FIX HUD: life bars, 60s timer, names, 3-stock power gauge, round-win
+  markers, combo counter, guard gauge, spirit bar, and striker status badge.
+
+### EagleBIOS v1.7.4
+
+- `SYS_HOWTOPLAY` interactive tutorial with color-coded joystick and button badges.
+- Message stream 9: Japanese common-FIX font stream support.
+- 16-bit JEIDA/PCMCIA memory card detection, save directory inspection, error buzzer.
+- Backup RAM checksummed format v2 (`EGS2`) with automatic v1 migration and recovery.
+- Real-time clock: uPD4990A serial read/write with leap year arithmetic and weekday calculation.
+- 11-entry expanded BIOS menu: System Settings, Cabinet DIPs, Game Soft DIPs, Memory
+  Card Manager, Hardware Diagnostics, Sound Test, Input Test, Clock Setup, Cart Info,
+  Backup RAM Clear, Boot Game.
 
 ### Tests
 
-- `tests/test_fight.py` (input, combat, rounds, CPU determinism on the host),
-  `tests/test_shadowleague.py` (data validation, full CPU matches with the
-  real fighters), `games/shadowleague/tools/qa.py` (MAME, MVS and AES).
+- `tests/test_fight.py`, `tests/test_shadowleague.py` (774,537 frames simulated across all matchups).
+- `tools/api_freeze.py` (315 frozen prototypes preserved).
+- `bios/test_bios.py` (MVS and AES firmware contracts verified).
+- `games/shadowleague/tools/qa.py` (Headless MAME QA passed for both MVS and AES).
 
 ## v1.7.3 - pre-release: Sky Lance v1 and Maiya v4
 

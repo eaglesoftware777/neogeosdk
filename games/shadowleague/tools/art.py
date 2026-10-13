@@ -117,67 +117,85 @@ def noise(shape, seed, scale):
     return big
 
 
-def stage():
-    """Arata Mountain Dojo at dawn: open screens onto the peaks, a plank floor."""
-    h, w = 224, 512
+def stage_far():
+    """Arata Mountain distant peaks and dawn sky."""
+    h, w = 160, 512
     img = np.zeros((h, w, 3), np.float32)
     y = np.arange(h)[:, None] * np.ones((1, w))
     x = np.ones((h, 1)) * np.arange(w)[None, :]
     # Sky.
-    t = np.clip(y / 150, 0, 1)
+    t = np.clip(y / 140.0, 0, 1)
     sky = (1 - t)[..., None] * np.array([70, 92, 150]) + t[..., None] * np.array([246, 170, 110])
     img[:] = sky
     # Sun.
-    sun = np.hypot(x - 300, y - 118) < 18
+    sun = np.hypot(x - 300, y - 80) < 18
     img[sun] = (255, 226, 160)
     # Mountains, far and near.
-    far = 96 + 26 * np.sin(x / 47.0) + 14 * np.sin(x / 19.0 + 1.3)
-    near = 122 + 22 * np.sin(x / 61.0 + 2.0) + 9 * np.sin(x / 13.0)
+    far = 60 + 26 * np.sin(x / 47.0) + 14 * np.sin(x / 19.0 + 1.3)
+    near = 86 + 22 * np.sin(x / 61.0 + 2.0) + 9 * np.sin(x / 13.0)
     img[y > far] = (118, 104, 140)
     img[(y > far) & (y < far + 6) & (np.sin(x / 9.0) > 0.2)] = (220, 206, 220)
     img[y > near] = (64, 72, 98)
     # Misty pines at the foot.
-    trees = 146 + 6 * np.abs(np.sin(x / 5.0)) + 4 * np.sin(x / 23.0)
+    trees = 110 + 6 * np.abs(np.sin(x / 5.0)) + 4 * np.sin(x / 23.0)
     img[y > trees] = (40, 58, 62)
-    # Dojo interior: walls, beams, pillars, shoji panels.
+    img = np.clip(img, 0, 255).astype(np.uint8)
+    return np.dstack([img, np.full((h, w), 255, np.uint8)])
+
+
+def stage_near():
+    """Arata Mountain Dojo interior: beams, pillars, open/closed shoji, plank floor."""
+    h, w = 224, 512
+    img = np.zeros((h, w, 4), np.uint8)
     wall_top, floor_top = 40, 168
-    img[:wall_top] = (60, 38, 28)
-    img[:wall_top][(np.arange(wall_top) % 10 < 2)] = (44, 28, 22)
-    img[wall_top - 6:wall_top] = (96, 62, 40)
-    img[wall_top:wall_top + 3] = (30, 20, 16)
+    y = np.arange(h)[:, None] * np.ones((1, w))
+    x = np.ones((h, 1)) * np.arange(w)[None, :]
+
+    # Upper wall and ceiling.
+    img[:wall_top, :, :3] = (60, 38, 28)
+    img[:wall_top, :, 3] = 255
+    img[:wall_top][(np.arange(wall_top) % 10 < 2)] = (44, 28, 22, 255)
+    img[wall_top - 6:wall_top] = (96, 62, 40, 255)
+    img[wall_top:wall_top + 3] = (30, 20, 16, 255)
+
+    # Vertical pillars.
     for px in range(0, w + 1, 128):
         x0, x1 = px - 9, px + 9
         xs = slice(max(x0, 0), min(x1, w))
-        img[wall_top:floor_top, xs] = (110, 70, 44)
-        img[wall_top:floor_top, max(x0, 0):max(x0 + 3, 0)] = (70, 44, 30)
-        img[wall_top:floor_top, min(x1 - 3, w):min(x1, w)] = (150, 100, 64)
+        img[wall_top:floor_top, xs] = (110, 70, 44, 255)
+        img[wall_top:floor_top, max(x0, 0):max(x0 + 3, 0)] = (70, 44, 30, 255)
+        img[wall_top:floor_top, min(x1 - 3, w):min(x1, w)] = (150, 100, 64, 255)
+
+    # Shoji panels: 0 and 3 closed, 1 and 2 open (transparent window onto far peaks).
     for k, px in enumerate(range(0, w, 128)):
         if k in (0, 3):
-            # Closed shoji: paper and lattice.
             area = (slice(wall_top + 3, floor_top), slice(px + 9, px + 119))
-            img[area] = (236, 226, 204)
+            img[area] = (236, 226, 204, 255)
             for gx in range(px + 9, px + 119, 18):
-                img[wall_top + 3:floor_top, gx:gx + 2] = (120, 84, 54)
+                img[wall_top + 3:floor_top, gx:gx + 2] = (120, 84, 54, 255)
             for gy in range(wall_top + 3, floor_top, 22):
-                img[gy:gy + 2, px + 9:px + 119] = (120, 84, 54)
+                img[gy:gy + 2, px + 9:px + 119] = (120, 84, 54, 255)
             if k == 0:
                 # Hanging scroll.
-                img[60:128, px + 50:px + 78] = (226, 214, 180)
-                img[58:62, px + 46:px + 82] = (80, 50, 34)
-                img[126:130, px + 46:px + 82] = (80, 50, 34)
+                img[60:128, px + 50:px + 78] = (226, 214, 180, 255)
+                img[58:62, px + 46:px + 82] = (80, 50, 34, 255)
+                img[126:130, px + 46:px + 82] = (80, 50, 34, 255)
                 for sy in range(70, 120, 9):
-                    img[sy:sy + 5, px + 60:px + 68] = (40, 30, 30)
+                    img[sy:sy + 5, px + 60:px + 68] = (40, 30, 30, 255)
         else:
-            img[wall_top + 3:wall_top + 8, px + 9:px + 119] = (96, 62, 40)
+            # Open window lintel bar.
+            img[wall_top + 3:wall_top + 8, px + 9:px + 119] = (96, 62, 40, 255)
+
     # Lanterns.
     for lx in (128, 384):
-        img[wall_top + 3:wall_top + 14, lx - 1:lx + 1] = (30, 20, 16)
+        img[wall_top + 3:wall_top + 14, lx - 1:lx + 1] = (30, 20, 16, 255)
         lamp = ((x - lx) / 9) ** 2 + ((y - (wall_top + 26)) / 13) ** 2 < 1
-        img[lamp] = (210, 60, 40)
-        img[lamp & (np.abs(x - lx) < 4)] = (250, 150, 80)
-        img[(np.abs(y - (wall_top + 14)) < 2) & (np.abs(x - lx) < 7)] = (40, 26, 18)
-        img[(np.abs(y - (wall_top + 39)) < 2) & (np.abs(x - lx) < 7)] = (40, 26, 18)
-    # Floor: planks running toward the viewer, polished.
+        img[lamp] = (210, 60, 40, 255)
+        img[lamp & (np.abs(x - lx) < 4)] = (250, 150, 80, 255)
+        img[(np.abs(y - (wall_top + 14)) < 2) & (np.abs(x - lx) < 7)] = (40, 26, 18, 255)
+        img[(np.abs(y - (wall_top + 39)) < 2) & (np.abs(x - lx) < 7)] = (40, 26, 18, 255)
+
+    # Floor: polished planks.
     fy = y - floor_top
     floor = y >= floor_top
     plank = np.floor((x - 256) / (12 + fy * 0.55))
@@ -185,16 +203,15 @@ def stage():
     base = np.array([168, 112, 66]) * shade[..., None]
     grain = noise((h, w), 7, 4) * 14
     base = base + grain[..., None] - 7
-    img[floor] = base[floor]
+    img[floor, :3] = np.clip(base[floor], 0, 255)
+    img[floor, 3] = 255
     seam = floor & (np.abs(((x - 256) / (12 + fy * 0.55)) - np.round((x - 256) / (12 + fy * 0.55))) < 0.04)
-    img[seam] = (96, 60, 34)
-    img[(y >= floor_top) & (y < floor_top + 3)] = (88, 56, 34)
+    img[seam] = (96, 60, 34, 255)
+    img[(y >= floor_top) & (y < floor_top + 3)] = (88, 56, 34, 255)
     # Window light on the floor.
     glow = floor & (np.abs(x - 300 + (y - floor_top) * 0.6) < 40)
-    img[glow] = img[glow] * 1.12
-    img = np.clip(img, 0, 255).astype(np.uint8)
-    rgba = np.dstack([img, np.full((h, w), 255, np.uint8)])
-    return rgba
+    img[glow, :3] = np.clip(img[glow, :3].astype(np.float32) * 1.12, 0, 255).astype(np.uint8)
+    return img
 
 
 # --------------------------------------------------------------------------
@@ -337,7 +354,7 @@ def build():
     header = ["/* Generated by games/shadowleague/tools/art.py. */", "#ifndef SLF_ASSETS_H", "#define SLF_ASSETS_H",
               "#include <stdint.h>", '#include "sdk/2d_engine/ng_fight.h"']
     fighters = fighter_cook.load_all()
-    order = ["kenji", "jack"]
+    order = ["kenji", "jack", "minjun", "batu", "amara", "niran", "atlas"]
     fighters.sort(key=lambda f: order.index(f.id) if f.id in order else 99)
     bases, pals, names, styles, origins = [], [], [], [], []
     for f in fighters:
@@ -369,16 +386,29 @@ def build():
     header.append(f"#define SLF_SHADOW_TILE {sh}u")
     header.append("static const uint16_t slf_shadow_pal[16] = {" + ",".join(
         str(v) for v in palette_words(pal16([(0, 0, 0), (52, 30, 18)]))) + "};")
-    # Stage.
-    rgba = stage()
-    indices, banks, assignment = quantize(rgba, bank_limit=10)
-    st = place(indices)
-    header.append(f"#define SLF_STAGE_TILE {st}u\n#define SLF_STAGE_COLS 32u\n#define SLF_STAGE_ROWS 14u\n#define SLF_STAGE_W 512")
+    # Stage: near (dojo interior, 512x224) and far (mountain peaks, 512x160).
+    near_rgba = stage_near()
+    far_rgba = stage_far()
+    both_rgba = np.vstack([near_rgba, far_rgba])
+    indices, banks, assignment = quantize(both_rgba, bank_limit=10)
+    ind_near = indices[:224, :]
+    ind_far = indices[224:, :]
+    assign_near = assignment[:14, :]
+    assign_far = assignment[14:, :]
+    st_near = place(ind_near)
+    st_far = place(ind_far)
+    header.append(f"#define SLF_STAGE_TILE {st_near}u\n#define SLF_STAGE_COLS 32u\n#define SLF_STAGE_ROWS 14u\n#define SLF_STAGE_W 512")
+    header.append(f"#define SLF_STAGE_FAR_TILE {st_far}u\n#define SLF_STAGE_FAR_ROWS 10u")
     header.append(f"#define SLF_PAL_STAGE {PAL_STAGE}u\n#define SLF_STAGE_BANKS {len(banks)}u")
-    header.append(emit("slf_stage_map", assignment.flatten() + PAL_STAGE, "uint8_t"))
+    header.append(emit("slf_stage_map", assign_near.flatten() + PAL_STAGE, "uint8_t"))
+    header.append(emit("slf_stage_far_map", assign_far.flatten() + PAL_STAGE, "uint8_t"))
     header.append("static const uint16_t slf_stage_pal[][16] = {" + ",".join(
         "{" + ",".join(str(v) for v in palette_words(b)) + "}" for b in banks) + "};")
-    Image.fromarray(np.dstack([reconstruct(indices, banks, assignment), np.full(indices.shape, 255, np.uint8)])).save(OUT / "stage.png")
+    comp = np.array(near_rgba, copy=True)
+    comp_trans = comp[:160, :, 3] < 128
+    comp[:160, :, :3][comp_trans] = far_rgba[:160, :, :3][comp_trans]
+    comp[:, :, 3] = 255
+    Image.fromarray(comp).save(OUT / "stage.png")
     end = c1.tell()
     # Boot logo (bank $49), then the utility tiles.
     lo, hi = encode_image(logo_pixels(), 60)

@@ -119,8 +119,18 @@ uint8_t bios_free_play(void);
 uint8_t bios_cart_valid(void);
 uint8_t bios_backup_load(void);
 void bios_backup_save(void);
+void bios_backup_clear(void);
 void bios_cart_prepare(void);
 void bios_controller_setup(void);
+
+typedef struct {
+    uint16_t ngh;
+    uint8_t sub;
+    uint8_t block;
+    uint16_t size_blocks;
+} BiosCardSaveEntry;
+
+uint8_t bios_card_get_saves(BiosCardSaveEntry *entries, uint8_t max_entries);
 
 /* Credits in Backup RAM / System RAM */
 #define P1_CREDITS          (*(volatile uint8_t  *)0xD00034u)

@@ -78,19 +78,20 @@ static uint8_t NEOGEO_USER anim_sprite(uint8_t def, uint8_t anim, uint16_t tick)
 static void NEOGEO_USER select_screen(uint8_t humans)
 {
     static const int16_t k_x[2] = {84, 236};
-    uint8_t cursor[2], done[2], p, i;
+    uint8_t cursor[2], last_cursor[2], done[2], p, i;
     uint16_t tick = 0, timer = 20u * 60u;
     slf_scene_begin();
     slf_music(SLF_TRACK_TITLE);
-    slf_fighter_palettes(0u, 0u, (uint8_t)(1u % SLF_FIGHTER_COUNT), 0u);
+    cursor[0] = 0u;
+    cursor[1] = (uint8_t)(SLF_FIGHTER_COUNT - 1u);
+    last_cursor[0] = last_cursor[1] = 0xFFu;
+    done[0] = (uint8_t)!(humans & 1u);
+    done[1] = (uint8_t)!(humans & 2u);
+    slf_fighter_palettes(cursor[0], 0u, cursor[1], (uint8_t)(cursor[0] == cursor[1]));
     slf_stage_show(96);
     slf_fighter_bank(0u, 0u);
     slf_fighter_bank(1u, 1u);
     slf_puts_center(2u, "SELECT YOUR FIGHTER", SLF_PAL_GOLD);
-    cursor[0] = 0u;
-    cursor[1] = (uint8_t)(SLF_FIGHTER_COUNT - 1u);
-    done[0] = (uint8_t)!(humans & 1u);
-    done[1] = (uint8_t)!(humans & 2u);
     for (;;) {
         uint8_t row = 20u;
         slf_frame();
@@ -99,7 +100,10 @@ static void NEOGEO_USER select_screen(uint8_t humans)
         for (p = 0u; p < 2u; p++) {
             uint8_t press = slf_pressed(p);
             if (done[p]) continue;
-            if (press & (NGF_RAW_LEFT | NGF_RAW_RIGHT)) {
+            if (press & NGF_RAW_LEFT) {
+                cursor[p] = (uint8_t)((cursor[p] + SLF_FIGHTER_COUNT - 1u) % SLF_FIGHTER_COUNT);
+                slf_sfx(SLF_SFX_MENU);
+            } else if (press & NGF_RAW_RIGHT) {
                 cursor[p] = (uint8_t)((cursor[p] + 1u) % SLF_FIGHTER_COUNT);
                 slf_sfx(SLF_SFX_MENU);
             }
@@ -109,24 +113,25 @@ static void NEOGEO_USER select_screen(uint8_t humans)
                 slf_sfx(SLF_SFX_SELECT);
             }
         }
-        for (i = 0u; i < SLF_FIGHTER_COUNT && i < 2u; i++) {
-            uint8_t chosen = (uint8_t)((done[0] && (humans & 1u) && s_pick[0] == i) ||
-                                       (done[1] && (humans & 2u) && s_pick[1] == i));
-            slf_fighter_pose(i, i, anim_sprite(i, chosen ? NGF_A_WIN : NGF_A_IDLE, tick), k_x[i],
+        for (i = 0u; i < 2u; i++) {
+            uint8_t f_id = done[i] ? s_pick[i] : cursor[i];
+            uint8_t chosen = (uint8_t)(done[i] && (humans & (1u << i)));
+            slf_fighter_pose(i, f_id, anim_sprite(f_id, chosen ? NGF_A_WIN : NGF_A_IDLE, tick), k_x[i],
                              SLF_FLOOR_Y - 125, i);
         }
-        if (tick == 1u) {
-            for (i = 0u; i < SLF_FIGHTER_COUNT && i < 2u; i++) {
-                if (i == 0u) {
-                    slf_puts(1u, row, slf_fighter_defs[i]->name, SLF_PAL_TEXT);
-                    slf_puts(1u, (uint8_t)(row + 2u), slf_fighter_origin[i], SLF_PAL_GOLD);
-                    slf_puts(1u, (uint8_t)(row + 3u), slf_fighter_style[i], SLF_PAL_DIM);
-                } else {
-                    slf_puts_right(38u, row, slf_fighter_defs[i]->name, SLF_PAL_TEXT);
-                    slf_puts_right(38u, (uint8_t)(row + 2u), slf_fighter_origin[i], SLF_PAL_GOLD);
-                    slf_puts_right(38u, (uint8_t)(row + 3u), slf_fighter_style[i], SLF_PAL_DIM);
-                }
-            }
+        if (tick == 1u || cursor[0] != last_cursor[0] || cursor[1] != last_cursor[1]) {
+            slf_clear_rows(row, (uint8_t)(row + 3u));
+            slf_puts(1u, row, slf_fighter_defs[cursor[0]]->name, SLF_PAL_TEXT);
+            slf_puts(1u, (uint8_t)(row + 2u), slf_fighter_origin[cursor[0]], SLF_PAL_GOLD);
+            slf_puts(1u, (uint8_t)(row + 3u), slf_fighter_style[cursor[0]], SLF_PAL_DIM);
+
+            slf_puts_right(38u, row, slf_fighter_defs[cursor[1]]->name, SLF_PAL_TEXT);
+            slf_puts_right(38u, (uint8_t)(row + 2u), slf_fighter_origin[cursor[1]], SLF_PAL_GOLD);
+            slf_puts_right(38u, (uint8_t)(row + 3u), slf_fighter_style[cursor[1]], SLF_PAL_DIM);
+
+            last_cursor[0] = cursor[0];
+            last_cursor[1] = cursor[1];
+            slf_fighter_palettes(cursor[0], 0u, cursor[1], (uint8_t)(cursor[0] == cursor[1]));
         }
         for (p = 0u; p < 2u; p++) {
             uint8_t col_on = (uint8_t)(cursor[p] ? 25u : 12u);
@@ -322,9 +327,56 @@ static void NEOGEO_USER versus(void)
     NEO_REGISTER8(BIOS_PLAYER2_MODE) = 3u;
 }
 
+static uint8_t NEOGEO_USER continue_screen(void)
+{
+    uint16_t timer = 10u * 60u;
+    uint8_t last_sec = 0xFFu;
+    slf_scene_begin();
+    slf_music(SLF_TRACK_TITLE);
+    slf_stage_show(96);
+    slf_puts_center(8u, "CONTINUE ?", SLF_PAL_GOLD);
+    while (timer--) {
+        uint8_t sec = (uint8_t)(timer / 60u);
+        slf_frame();
+        if (sec != last_sec) {
+            slf_big_center(12u, (uint16_t)(SLF_BIG_DIGITS + sec * 2u), 2u, 2u, sec < 4u ? SLF_PAL_RED : SLF_PAL_BIG);
+            last_sec = sec;
+            if (sec < 9u) slf_sfx(SLF_SFX_MENU);
+        }
+        if (!ng_sys_is_mvs()) {
+            slf_puts_center(24u, "PRESS START TO CONTINUE", SLF_PAL_TEXT);
+            if (slf_start_pressed(0u) || (slf_pressed(0u) & (NGF_BTN_A | NGF_BTN_C))) {
+                slf_sfx(SLF_SFX_SELECT);
+                return 1u;
+            }
+        } else {
+            if (read_p1credit() > 0) {
+                slf_puts_center(24u, "PRESS 1P START TO CONTINUE", SLF_PAL_GOLD);
+                if (slf_start_pressed(0u) || (slf_pressed(0u) & (NGF_BTN_A | NGF_BTN_C))) {
+                    uint16_t saved_sr;
+                    __asm__ volatile ("move.w %%sr,%0\n\tmove.w #0x2700,%%sr" : "=d" (saved_sr) : : "memory");
+                    NEO_REGISTER8(0x10FDB0) = 1;
+                    NEO_REGISTER8(0x10FDB1) = 0;
+                    CALLNEOGEOF(SYS_CREDIT_CHECK);
+                    if (NEO_REGISTER8(0x10FDB0)) {
+                        CALLNEOGEOF(SYS_CREDIT_DOWN);
+                    }
+                    __asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
+                    slf_sfx(SLF_SFX_SELECT);
+                    return 1u;
+                }
+            } else {
+                slf_puts_center(24u, "   INSERT COIN TO CONTINUE   ", SLF_PAL_TEXT);
+            }
+        }
+    }
+    return 0u;
+}
+
 void NEOGEO_USER slf_run(void)
 {
-    uint8_t ladder[4], count = 0, stage, i;
+    uint8_t ladder[SLF_FIGHTER_COUNT];
+    uint8_t count = 0, stage, i;
     NEO_REGISTER8(SLF_P2_FLAG) = 0u;
     select_screen(1u);
     for (i = 0u; i < SLF_FIGHTER_COUNT; i++) if (i != s_pick[0]) ladder[count++] = i;
@@ -340,9 +392,13 @@ void NEOGEO_USER slf_run(void)
             return;
         }
         if (result != 0u) {
-            slf_music(SLF_TRACK_VICTORY);
-            big_card(SLF_BIG_GAMEOVER, SLF_BIG_GAMEOVER_W, SLF_BIG_GAMEOVER_H, SLF_PAL_RED, s_def[1], 240u);
-            return;
+            if (!continue_screen()) {
+                slf_music(SLF_TRACK_VICTORY);
+                big_card(SLF_BIG_GAMEOVER, SLF_BIG_GAMEOVER_W, SLF_BIG_GAMEOVER_H, SLF_PAL_RED, s_def[1], 240u);
+                return;
+            }
+            stage--;
+            continue;
         }
     }
     slf_music(SLF_TRACK_VICTORY);
@@ -356,8 +412,13 @@ void NEOGEO_USER slf_run_attract(void)
         slf_scene_begin();
         slf_music(SLF_TRACK_TITLE);
         slf_title_draw();
+        slf_puts_center(1u, "HI-SCORE 50000", SLF_PAL_GOLD);
         for (t = 0u; t < 6u * 60u; t++) {
             slf_frame();
+            if (slf_start_pressed(1u)) {
+                versus();
+                return;
+            }
             if (slf_start_pending()) return;
             if ((t & 31u) == 0u)
                 slf_puts_center(24u, (t & 32u) ? (ng_sys_is_mvs() ? "INSERT COIN" : "PUSH START") : "           ",

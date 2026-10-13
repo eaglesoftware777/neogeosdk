@@ -160,8 +160,23 @@ static void mess_stream(uint32_t pc)
                 limit--;
             }
             if (opcode == 7) pc = (data + 1u) & ~1u;
+        } else if (opcode == 9) {
+            /* Japanese common-FIX stream 9 translation */
+            static const char * const common_msgs[] = {
+                "CREDIT", "COIN", "LEVEL", "PLAYER", "ROUND", "TIME", "PUSH", "START", "GAME OVER"
+            };
+            uint8_t msg_idx = (uint8_t)(arg < 9u ? arg : 0u);
+            const char *msg = common_msgs[msg_idx];
+            REG_VRAM_INC = 32;
+            uint16_t x = anchor;
+            while (*msg && limit) {
+                REG_VRAM_ADDR = x;
+                REG_VRAM_RW = (uint16_t)(((parameter >> 8) << 12) | (uint8_t)(*msg));
+                x += 32;
+                msg++;
+                limit--;
+            }
         } else {
-            /* Japanese common-FIX translation (9) is not provided. */
             return;
         }
     }

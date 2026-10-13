@@ -47,15 +47,18 @@ static uint16_t card_dir;          /* offset of the directory             */
 static uint16_t card_fat[2];       /* offsets of the two FATs             */
 static uint16_t card_fat_size;     /* bytes in each FAT                   */
 static uint16_t card_data;         /* first data block                    */
+static uint8_t  card_is_16bit;     /* 1 = 16-bit card, 0 = 8-bit card     */
 
 static uint8_t rd(uint16_t n)
 {
+    if (card_is_16bit) return ((volatile uint8_t *)ADDR_MEMCARD)[n];
     return (uint8_t)CARD_WORD(n);
 }
 
 static void wr(uint16_t n, uint8_t value)
 {
-    CARD_WORD(n) = value;
+    if (card_is_16bit) ((volatile uint8_t *)ADDR_MEMCARD)[n] = value;
+    else CARD_WORD(n) = value;
 }
 
 static void geometry(uint16_t bytes)
@@ -116,9 +119,21 @@ static void lock(void)
 static uint8_t is_formatted(void)
 {
     static const uint8_t magic[8] = { 'N', 'E', 'O', '-', 'G', 'E', 'O', 0x80 };
-    for (uint8_t i = 0; i < 8u; i++)
-        if (rd((uint16_t)(0x20u + 2u * i)) != magic[i]) return 0;
-    return 1;
+    uint8_t match8 = 1, match16 = 1, i;
+
+    /* Check 8-bit word spacing */
+    for (i = 0u; i < 8u; i++) {
+        if ((uint8_t)CARD_WORD(0x20u + 2u * i) != magic[i]) { match8 = 0; break; }
+    }
+    if (match8) { card_is_16bit = 0; return 1; }
+
+    /* Check 16-bit byte spacing */
+    for (i = 0u; i < 8u; i++) {
+        if (((volatile uint8_t *)ADDR_MEMCARD)[0x20u + i] != magic[i]) { match16 = 0; break; }
+    }
+    if (match16) { card_is_16bit = 1; return 1; }
+
+    return 0;
 }
 
 /* Reads the layout from the header, and mends a FAT whose checksum is wrong
@@ -129,7 +144,7 @@ static uint8_t mount(uint8_t writable)
     uint8_t good0, good1;
     if (!is_formatted()) return CARD_UNFORMATTED;
     size = (uint16_t)(((uint16_t)rd(0x0Au) << 8) | rd(0x0Bu));
-    size >>= 1;                                    /* 8-bit: half the space */
+    if (!card_is_16bit) size >>= 1;               /* 8-bit: half the space */
     if (size < CARD_MIN || size > CARD_MAX || (size & (CARD_MIN - 1u))) return CARD_FAT_ERROR;
     geometry(size);
     good0 = (uint8_t)(fat_sum(0) == rd(0x0Du));
@@ -356,10 +371,42 @@ void sys_card_c(void)
     BIOS_CRDRESULT = r;
 }
 
+uint8_t bios_card_get_saves(BiosCardSaveEntry *entries, uint8_t max_entries)
+{
+    if (REG_STATUS_B & 0x30u) return 0;
+    unlock();
+    if (mount(0) != CARD_OK) { lock(); return 0; }
+    uint8_t count = 0;
+    for (uint16_t i = 0; i < card_blocks && count < max_entries; i++) {
+        uint16_t at = (uint16_t)(card_dir + i * 4u);
+        uint8_t sub = rd(at);
+        if (sub == 0xFFu) continue;
+        uint16_t ngh = (uint16_t)(((uint16_t)rd(at + 1u) << 8) | rd(at + 2u));
+        uint8_t first_block = rd(at + 3u);
+        uint16_t b_count = 0;
+        uint8_t b = first_block;
+        while (b >= 2u && b_count < card_blocks) {
+            b_count++;
+            uint8_t next = fat(b);
+            if (next <= 1u) break;
+            b = next;
+        }
+        entries[count].ngh = ngh;
+        entries[count].sub = sub;
+        entries[count].block = first_block;
+        entries[count].size_blocks = b_count;
+        count++;
+    }
+    lock();
+    return count;
+}
+
 /*
- * SYS_CARD_ERROR: Display memory card error message.
+ * SYS_CARD_ERROR: Display memory card error message / sound.
  */
 void sys_card_error_c(void)
 {
-    /* Quick return */
+    if (BIOS_CRDRESULT != CARD_OK) {
+        REG_SOUND = 0x04; /* Short error click / chirp to Z80 */
+    }
 }
