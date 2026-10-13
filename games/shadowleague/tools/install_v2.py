@@ -23,13 +23,13 @@ def main():
     ap.add_argument('--target',type=Path,default=Path('/mnt/c/mame/neogeosdk'))
     args=ap.parse_args();installed=args.target.resolve()
     (installed/"staging").mkdir(parents=True,exist_ok=True)
-    target=Path(tempfile.mkdtemp(prefix="shadowleague-v2-redraw-",dir=installed/"staging"))
+    target=Path(tempfile.mkdtemp(prefix="shadowleague-v2-gameplay-",dir=installed/"staging"))
     source=ROOT/'dist/neo/shadowleague'
     for platform in ('mvs','aes'):
         assert (source/platform/'hash/neogeo.xml').is_file()
         assert len(list((source/platform/'roms/shadowleague').glob('781-*')))==6
     stamp=datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d-%H%M%S')
-    backup=installed/'backups/shadowleague'/(stamp+'-before-v2-redraw')
+    backup=installed/'backups/shadowleague'/(stamp+'-before-v2-gameplay')
     assert not backup.exists()
     tests=target/'tests/shadowleague'
     for platform in ('mvs','aes'):
@@ -69,7 +69,7 @@ set "DATA=%HERE%tests\shadowleague\%MODE%"
 set "ROMS=%HERE%tests\shadowleague\bios;%DATA%\roms"
 set "MAME_DISPLAY=-skip_gameinfo -nowindow -keepaspect -video d3d"
 if exist "%HERE%mame_display.bat" call "%HERE%mame_display.bat"
-"%MAME_EXE%" %SYSTEM% -noreadconfig %MAME_DISPLAY% -nofilter -prescale 3 -rompath "%ROMS%" -hashpath "%DATA%\hash" -bios %BIOS% -cart1 shadowleague -cfg_directory "%DATA%\cfg-eagle" -nvram_directory "%DATA%\nvram-eagle" -state_directory "%DATA%\state-v2-redraw" -noautosave -noautoframeskip -frameskip 0 %SCAN%
+"%MAME_EXE%" %SYSTEM% -noreadconfig %MAME_DISPLAY% -nofilter -prescale 3 -rompath "%ROMS%" -hashpath "%DATA%\hash" -bios %BIOS% -cart1 shadowleague -cfg_directory "%DATA%\cfg-eagle" -nvram_directory "%DATA%\nvram-eagle" -state_directory "%DATA%\state-v2-gameplay" -noautosave -noautoframeskip -frameskip 0 %SCAN%
 if errorlevel 1 pause
 exit /b %ERRORLEVEL%
 ''')
@@ -79,7 +79,7 @@ exit /b %ERRORLEVEL%
     # Recording helpers keep the same data locations and now resolve the new sets.
     for p in installed.glob('*shadowleague*.bat'):
         if not (target/p.name).exists():shutil.copy2(p,target/p.name)
-    info={'version':'v2','revision':'roster-and-arena-redraw','installed_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    info={'version':'v2','revision':'team-battle-and-controls','installed_utc':datetime.datetime.now(datetime.timezone.utc).isoformat(),
           'backup':str(backup.relative_to(installed)),'files':{}}
     for platform in ('mvs','aes'):
         for p in (tests/platform/'roms/shadowleague').glob('781-*'):

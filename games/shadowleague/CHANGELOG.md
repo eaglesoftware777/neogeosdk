@@ -3,7 +3,17 @@
 Shadow League Fighting's ROM sets ship with the NeoGeoSDK pre-releases and
 are numbered on their own: `_v1` with v1.7.5.
 
-## v2 (2026-10-13) — roster and arena redraw
+## v2 (2026-10-13) — roster, arenas and fighting core
+
+- Playable Duel and Team Battle selection: three unique fighters and one assist.
+- Reserve entries after KO, double KO and timeout clear the previous bout, reset
+  the clock and refresh character art, palette and HUD.
+- Each teammate retains separate health; defeated members stay eliminated.
+- Assists use their own animation, collision and damage, with three calls per match.
+- Super pauses freeze both fighters and keep buffered buttons responsive.
+- Replay checks include input queues, animation timers, reserves and assist state.
+- Previous V1 distributions archived outside the repository; current game files
+  retain the V2 version.
 
 - All 44 fighters: distinct anime faces, clothing, silhouettes, guards and footwork.
 - Six alternating foot phases, quieter held guards, separate preparation/recovery,

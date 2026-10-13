@@ -13,7 +13,8 @@ the game owns drawing, sound and the HUD. Shadow League Fighting
   The same seed and inputs give the same match (`ngf_match_hash`).
 - Positions are Q8 (pixels x 256): `x` grows right, `h` is the height above
   the floor. Frame-data speeds are in eighths of a pixel per frame.
-- `NGFMatch` is about 500 bytes; every fighter definition is ROM data.
+- `NGFMatch` uses fixed storage for fighters, input queues, teams and assists;
+  every fighter definition is ROM data.
 
 ## Input
 
@@ -34,7 +35,10 @@ back/down charge. Queries are relative to the fighter's facing:
 `ngf_input_pressed(in, mask, buffer)` accepts several buttons pressed within
 the buffer (simultaneous presses); a started move consumes its buttons, so
 one press never fires twice. Opposite directions cancel (SOCD neutral). A
-move's `window` overrides the default leniency.
+move's `window` overrides the default leniency. Button ages advance with the
+simulation, so presses and releases survive hitstop and super pauses. Normals
+accept four frames, specials five; `ngf_input_released` handles release edges.
+Successful motion moves consume their completed motion as well as their buttons.
 
 ## Fighter data
 
@@ -91,6 +95,23 @@ round or `OVER` once a side has `rounds_to_win` (default 2). The game reads
 `combo`, and drains `ngf_pop_event` for sounds and effects (hit, block,
 throw, tech, guard break, counter, KO, move start, landing).
 
+## Teams and assists
+
+After `ngf_match_init`, choose `NGF_MODE_3V3` or `NGF_MODE_TAG` with
+`ngf_match_set_mode` and assign up to three members per side with `ngf_team_set`.
+Teams play until a side has no remaining fighters. KO, double KO and timeout
+advance defeated sides; the next bout clears movement, stun, projectiles and
+assists, introduces the new members and resets the timer. The survivor recovers
+one eighth of maximum life. Tag mode's `ngf_tag_switch` retains each member's
+health separately and skips eliminated partners.
+
+`ngf_striker_set` assigns a separate assist with three calls per match. A+C or
+`ngf_call_striker` summons it while the caller can act. The assist runs in, uses
+its strongest standing normal, and leaves. Its active hitbox must intersect an
+opponent's vulnerable hurtbox; guard and damage rules still apply. A cooldown
+prevents immediate repeat calls. Without an assigned assist, A+C does not summon
+a duplicate of the active fighter.
+
 ## CPU
 
 `ngf_set_cpu(&m, side, level)` (1-9; 0 = human) makes that side's input come
@@ -102,6 +123,8 @@ motions so the same input rules apply.
 
 - `tests/test_fight.py` builds `tests/fight_test.c` on the host: motions and
   near misses, charge, dash, simultaneous presses, hits, guards by level,
-  throws, projectiles, supers, the timer and a deterministic CPU match.
+  throws, projectiles, supers, frozen animation, buffered input, assist collision,
+  tag health, team elimination, double KO, timeout, replay hashes and a
+  deterministic CPU match.
 - `tests/test_shadowleague.py`: Shadow League's data validates and its cooked
   fighters finish CPU matches in every pairing.

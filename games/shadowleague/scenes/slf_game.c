@@ -17,6 +17,7 @@ enum { MODE_ARCADE, MODE_VERSUS, MODE_DEMO };
 static NGFMatch s_match;
 static uint8_t s_def[2];
 static uint8_t s_pick[2];
+static uint8_t s_roster[2][4], s_team_mode, s_slot;
 
 static const uint8_t k_sound_map[10] = {
     0, SLF_SFX_HIT_LIGHT, SLF_SFX_HIT_HEAVY, SLF_SFX_BLOCK, SLF_SFX_SPECIAL,
@@ -75,6 +76,32 @@ static uint8_t NEOGEO_USER anim_sprite(uint8_t def, uint8_t anim, uint16_t tick)
     return d->frames[a->first + i].sprite;
 }
 
+static void NEOGEO_USER choose_format(void)
+{
+    uint16_t timer = 10u * 60u;
+    slf_scene_begin(); slf_stage_set(0u); slf_stage_show(96);
+    slf_puts_center(7u, "CHOOSE YOUR BATTLE", SLF_PAL_GOLD);
+    slf_puts_center(18u, "LEFT / RIGHT - CHANGE", SLF_PAL_TEXT);
+    slf_puts_center(20u, "A OR C - CONFIRM", SLF_PAL_TEXT);
+    for (;;) {
+        slf_frame();
+        if (slf_pressed(0u) & (NGF_RAW_LEFT | NGF_RAW_RIGHT | NGF_BTN_B)) {
+            s_team_mode ^= 1u; slf_sfx(SLF_SFX_MENU);
+        }
+        slf_puts_center(11u, s_team_mode ? "   TEAM BATTLE   " : "      DUEL       ", SLF_PAL_BIG);
+        slf_puts_center(14u, s_team_mode ? "3 FIGHTERS + 1 ASSIST" : "  ONE AGAINST ONE   ", SLF_PAL_GOLD);
+        if ((slf_pressed(0u) & (NGF_BTN_A | NGF_BTN_C)) || slf_start_pressed(0u) || !--timer) break;
+    }
+}
+
+static uint8_t NEOGEO_USER picked_before(uint8_t side, uint8_t def)
+{
+    uint8_t i;
+    if (!s_team_mode) return 0;
+    for (i = 0u; i < s_slot; i++) if (s_roster[side][i] == def) return 1u;
+    return 0;
+}
+
 static void NEOGEO_USER select_screen(uint8_t humans)
 {
     static const int16_t k_x[2] = {84, 236};
@@ -84,8 +111,9 @@ static void NEOGEO_USER select_screen(uint8_t humans)
     uint16_t tick = 0, timer = 25u * 60u;
     slf_scene_begin();
     slf_music(SLF_TRACK_TITLE);
-    cursor[0] = 0u;
-    cursor[1] = 1u;
+    cursor[0] = s_slot;
+    cursor[1] = (uint8_t)(s_slot + 1u);
+    s_pick[0] = cursor[0]; s_pick[1] = cursor[1];
     last_cursor[0] = last_cursor[1] = 0xFFu;
     done[0] = (uint8_t)!(humans & 1u);
     done[1] = (uint8_t)!(humans & 2u);
@@ -94,7 +122,10 @@ static void NEOGEO_USER select_screen(uint8_t humans)
     slf_stage_show(96);
     slf_fighter_bank(0u, 0u);
     slf_fighter_bank(1u, 1u);
-    slf_puts_center(1u, "SELECT YOUR FIGHTER", SLF_PAL_GOLD);
+    {
+        static const char *const headings[4] = {"SELECT YOUR CAPTAIN", "SELECT SECOND FIGHTER", "SELECT THIRD FIGHTER", "SELECT YOUR ASSIST"};
+        slf_puts_center(1u, s_team_mode ? headings[s_slot] : "SELECT YOUR FIGHTER", SLF_PAL_GOLD);
+    }
     for (;;) {
         uint8_t row = 20u;
         slf_frame();
@@ -120,6 +151,8 @@ static void NEOGEO_USER select_screen(uint8_t humans)
                 last_active = p;
                 slf_sfx(SLF_SFX_MENU);
             }
+            for (i = 0u; i < SLF_FIGHTER_COUNT && picked_before(p, cursor[p]); i++)
+                cursor[p] = (uint8_t)((cursor[p] + 1u) % SLF_FIGHTER_COUNT);
             if ((press & (NGF_BTN_A | NGF_BTN_C)) || slf_start_pressed(p) || !timer) {
                 done[p] = 1u;
                 s_pick[p] = cursor[p];
@@ -201,6 +234,25 @@ static void NEOGEO_USER select_screen(uint8_t humans)
     wait_frames(50u);
 }
 
+static void NEOGEO_USER select_roster(uint8_t humans)
+{
+    uint8_t p, slot, count = s_team_mode ? 4u : 1u;
+    for (slot = 0u; slot < count; slot++) {
+        s_slot = slot; select_screen(humans);
+        for (p = 0u; p < 2u; p++) s_roster[p][slot] = s_pick[p];
+    }
+    s_slot = 0u;
+    for (p = 0u; p < 2u; p++) s_pick[p] = s_roster[p][0];
+}
+
+static void NEOGEO_USER cpu_roster(uint8_t side, uint8_t captain)
+{
+    uint8_t slot;
+    s_roster[side][0] = captain;
+    for (slot = 1u; slot < 4u; slot++)
+        s_roster[side][slot] = (uint8_t)((captain + slot * 7u) % SLF_FIGHTER_COUNT);
+}
+
 static void NEOGEO_USER vs_screen(void)
 {
     uint16_t tick;
@@ -234,7 +286,12 @@ static void NEOGEO_USER announce(NGFMatch *m, uint8_t state)
     announce_clear();
     switch (state) {
     case NGF_M_INTRO:
-        if (m->rounds_to_win > 1u && m->f[0].wins == m->rounds_to_win - 1u && m->f[1].wins == m->rounds_to_win - 1u)
+        if (m->match_mode != NGF_MODE_1V1) {
+            char bout[7] = {'B', 'O', 'U', 'T', ' ', '1', '\0'};
+            bout[5] = (char)('0' + m->round);
+            slf_puts_center(10u, "TEAM BATTLE", SLF_PAL_GOLD);
+            slf_puts_center(12u, bout, SLF_PAL_BIG);
+        } else if (m->rounds_to_win > 1u && m->f[0].wins == m->rounds_to_win - 1u && m->f[1].wins == m->rounds_to_win - 1u)
             slf_big_center(10u, SLF_BIG_FINAL, SLF_BIG_FINAL_W, SLF_BIG_FINAL_H, SLF_PAL_BIG);
         else if (m->round == 1u) slf_big_center(10u, SLF_BIG_ROUND1, SLF_BIG_ROUND1_W, SLF_BIG_ROUND1_H, SLF_PAL_BIG);
         else if (m->round == 2u) slf_big_center(10u, SLF_BIG_ROUND2, SLF_BIG_ROUND2_W, SLF_BIG_ROUND2_H, SLF_PAL_BIG);
@@ -309,6 +366,7 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
 {
     NGFMatch *m = &s_match;
     uint8_t last_state = 0xFFu, last_round = 0u;
+    uint8_t active_def[2], team = (uint8_t)(s_team_mode && mode != MODE_DEMO);
     uint16_t over = 0, counter_clear = 0;
     slf_scene_begin();
     slf_fx_reset();
@@ -318,6 +376,18 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
     if (mode != MODE_DEMO) slf_music(SLF_TRACK_DOJO);
     ngf_match_init(m, slf_fighter_defs[s_def[0]], slf_fighter_defs[s_def[1]], SLF_STAGE_W, slf_rand());
     m->rounds_to_win = mode == MODE_DEMO ? 1u : rounds_to_win();
+    active_def[0] = s_def[0]; active_def[1] = s_def[1];
+    if (team) {
+        uint8_t side;
+        if (lv0) cpu_roster(0u, s_def[0]);
+        if (lv1) cpu_roster(1u, s_def[1]);
+        ngf_match_set_mode(m, NGF_MODE_3V3);
+        for (side = 0u; side < 2u; side++) {
+            ngf_team_set(m, side, slf_fighter_defs[s_roster[side][0]],
+                slf_fighter_defs[s_roster[side][1]], slf_fighter_defs[s_roster[side][2]]);
+            ngf_striker_set(m, side, slf_fighter_defs[s_roster[side][3]]);
+        }
+    }
     ngf_set_cpu(m, 0u, lv0);
     ngf_set_cpu(m, 1u, lv1);
     if (mode == MODE_DEMO) slf_puts_center(22u, "DEMO PLAY", SLF_PAL_GOLD);
@@ -335,7 +405,15 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
         }
         if (m->state == NGF_M_INTRO && m->state_timer == 60u) announce(m, NGF_M_FIGHT);
         if (counter_clear && !--counter_clear) announce_clear();
-        slf_match_draw(m, s_def);
+        if (team) {
+            uint8_t side, changed = 0u;
+            for (side = 0u; side < 2u; side++) {
+                uint8_t def = s_roster[side][m->team_active[side]];
+                if (def != active_def[side]) { active_def[side] = def; changed = 1u; }
+            }
+            if (changed) slf_fighter_palettes(active_def[0], 0u, active_def[1], (uint8_t)(active_def[0] == active_def[1]));
+        }
+        slf_match_draw(m, active_def);
         slf_hud_draw(m);
         if (mode == MODE_DEMO && (m->frame & 31u) == 0u)
             slf_puts_center(24u, (m->frame & 32u) ? (ng_sys_is_mvs() ? "INSERT COIN" : "PUSH START") : "           ",
@@ -370,7 +448,8 @@ static void NEOGEO_USER versus(void)
     slf_big_center(10u, SLF_BIG_CHALLENGER, SLF_BIG_CHALLENGER_W, SLF_BIG_CHALLENGER_H, SLF_PAL_RED);
     slf_sfx(SLF_SFX_BELL);
     wait_frames(120u);
-    select_screen(3u);
+    choose_format();
+    select_roster(3u);
     s_def[0] = s_pick[0];
     s_def[1] = s_pick[1];
     vs_screen();
@@ -433,7 +512,8 @@ void NEOGEO_USER slf_run(void)
     uint8_t ladder[8];
     uint8_t stage;
     NEO_REGISTER8(SLF_P2_FLAG) = 0u;
-    select_screen(1u);
+    choose_format();
+    select_roster(1u);
     /* 8-stage tournament: 5 random contenders, 1 rival, 1 sub-boss, 1 final boss */
     for (stage = 0u; stage < 5u; stage++) {
         uint8_t opp;
