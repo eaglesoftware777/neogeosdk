@@ -1,6 +1,6 @@
 GAME_NAME  = Shadow League Fighting
 GAME_ID    = 781
-GAME_SCENES = slf_draw slf_game
+GAME_SCENES = slf_draw slf_game slf_data
 GAME_ART_BUILDER = games/shadowleague/tools/art.py
 GAME_OPTIMIZE = -O2
 GAME_ENGINE_EXCLUDE = ng_particles

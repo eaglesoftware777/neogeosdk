@@ -14,8 +14,8 @@ the feet on the floor. Palette indices: 0 clear, 1 outline, 2-4 skin,
 import math
 import numpy as np
 
-W, H = 112, 128
-ANCHOR = (56, 125)
+W, H = 160, 160
+ANCHOR = (80, 141)
 LIGHT = np.array([0.45, -0.89])
 RAMPS = {"skin": (2, 3, 4), "A": (5, 6, 7), "B": (8, 9, 10), "C": (11, 12, 13),
          "white": (14, 14, 14), "accent": (15, 15, 15)}
@@ -130,6 +130,19 @@ def skeleton(build, pose):
     """Joint positions (canvas pixels) for a resolved pose."""
     ax, ay = ANCHOR
     leg = build["thigh"] + build["shin"]
+    pose = dict(pose)
+    pose["hip"] = list(pose["hip"])
+    if abs(pose["torso"]) < 65:
+        hip_y = ay - build["ankle"] - leg + pose["hip"][1]
+        for side in ("near", "far"):
+            foot = list(pose[side + "_foot"])
+            if foot[1] == 0:
+                root_x = pose["hip"][0] - (build["depth"] if side == "far" else 0)
+                dx = max(-leg*.82, min(leg*.82, foot[0] - root_x))
+                foot[0] = root_x + dx
+                pose[side + "_foot"] = foot
+                hip_y = max(hip_y, ay - build["ankle"] - math.sqrt(leg*leg - dx*dx) + .25)
+        pose["hip"][1] = hip_y - (ay - build["ankle"] - leg)
     hip = np.array([ax + pose["hip"][0], ay - build["ankle"] - leg + pose["hip"][1]], float)
     t = math.radians(pose["torso"])
     up = np.array([math.sin(t), -math.cos(t)])
@@ -427,6 +440,12 @@ def draw_torso(c, build, j, mat):
 
 
 def render(build, mat, pose):
+    if mat.get('portrait'):
+        import fashion_art
+        j = skeleton(build, pose)
+        image, layers = fashion_art.render(build, mat, pose, j)
+        j["art_layers"] = layers
+        return image, j
     c = Canvas()
     j = skeleton(build, pose)
     draw_arm(c, build, j, "far", mat, pose.get("fist", "closed"))

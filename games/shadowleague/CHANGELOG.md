@@ -3,10 +3,27 @@
 Shadow League Fighting's ROM sets ship with the NeoGeoSDK pre-releases and
 are numbered on their own: `_v1` with v1.7.5.
 
-## v2 (2026-10-13, NeoGeoSDK v1.7.5 pre-release) — production vertical slice
- 
+## v2 (2026-10-13) — roster and arena redraw
+
+- All 44 fighters: distinct anime faces, clothing, silhouettes, guards and footwork.
+- Six alternating foot phases, quieter held guards, separate preparation/recovery,
+  chambered kicks and boxing attacks that consistently use the hands.
+- Shaped fists, wraps, boots, cuffs, seams and far-side shading; intact limb layers
+  and sufficient canvas room for extended strikes, falls and overhead hands.
+- Four detailed pixel arenas: mountain dojo, Bangkok riverside, Brooklyn rooftop
+  and the Chimera laboratory, with clear fighting floors and grounded scenery.
+- New FIX lettering, vitality and spirit gauges, win markers and arena dimming
+  during super freezes. Strikers use their own character palettes.
+- Lossless sparse sprite sharing and one copy of the fighter definitions in ROM.
+- Artwork gates cover all 2,124 frames, including actual C-ROM pixel equality.
+- V2 release filenames retained for MAME, NeoSD, Darksoft and BackBit.
+- Installer stages the new sets, preserves controls, backs up the old game and
+  directs each launcher to the verified private V2 ROMs and software list.
+
+## Earlier V2 production slice
+
 ### The game
- 
+
 - Expanded 7-fighter roster:
   - Kenji Arata (Karate, Japan)
   - Jack Mercer (Boxing, United States; no kicks)
@@ -21,14 +38,14 @@ are numbered on their own: `_v1` with v1.7.5.
 - Arcade continue screen: 10-second countdown with MVS credit deduction (`SYS_CREDIT_DOWN`).
 - Title screen P2 join support.
 - 3v3 team battle and striker summon modes in engine.
- 
+
 ### Presentation
- 
+
 - Two-layer parallax stage: 512x224 Arata Mountain Dojo interior with 512x160 dawn mountains scrolling at half speed through open windows.
 - Anatomical character art renderer: articulated torso plates, uniform drapery & gear, expressive hands, unique silhouettes & hair, and leg contours.
 - Hardware camera zoom: dynamic SCB2 scaling (192..255) based on fighter distance.
 - Complete FIX HUD: health bars, 60s timer, names, 3-stock power gauges, round markers, combo counter, guard gauge, spirit bar, and striker status badge.
- 
+
 ## v1 (2026-10-12, NeoGeoSDK v1.7.5 pre-release) — first playable
 
 ### The game

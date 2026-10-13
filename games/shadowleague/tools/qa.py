@@ -27,7 +27,14 @@ def main():
     ap.add_argument("--seconds", type=int, default=100)
     ap.add_argument("--mame", default="mame")
     ap.add_argument("--output", type=Path, default=GAME / "build/qa")
+    ap.add_argument("--elf",type=Path,default=ROOT/"out/game")
+    ap.add_argument("--roms",type=Path,default=ROOT/"roms")
+    ap.add_argument("--bios",type=Path,default=ROOT/"bios/test_roms")
+    ap.add_argument("--hash",type=Path,default=ROOT/"hash_eagle/shadowleague")
     args = ap.parse_args()
+    windows=args.mame.lower().endswith(".exe")
+    def native(p):
+        return subprocess.check_output(["wslpath","-w",str(p)],text=True).strip() if windows else str(p)
     out = args.output.resolve() / args.platform
     out.mkdir(parents=True, exist_ok=True)
     for old in out.glob("shot_*.png"):
@@ -41,22 +48,23 @@ def main():
     subprocess.run([str(gcc), "-g", "-c", "-DNG_FIGHT=1", "-I" + str(ROOT), "-I" + str(ROOT / "sdk"),
                     "-I" + str(ROOT / "sdk/2d_engine"), str(probe), "-o", str(out / "layout_probe.o")], check=True)
     layout = {}
-    for binary, names in ((ROOT / "out/game", ["match"]), (out / "layout_probe.o", [n for n in FIELDS if n != "match"])):
+    for binary, names in ((args.elf, ["match"]), (out / "layout_probe.o", [n for n in FIELDS if n != "match"])):
         cmd = [str(gdb), "-batch", str(binary)]
         for name in names:
             cmd += ["-ex", f'printf "{name}=%lu\\n", (unsigned long){FIELDS[name]}']
         layout.update(line.split("=", 1) for line in subprocess.check_output(cmd, text=True).splitlines() if "=" in line)
     (out / "layout.lua").write_text("return {" + ",".join(f"{k}={int(v)}" for k, v in layout.items()) + "}\n")
     env = dict(os.environ, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy", DISPLAY="",
-               SLF_CAPTURE_DIR=str(out), SLF_PLATFORM=args.platform)
+               SLF_CAPTURE_DIR=native(out).replace("\\","/"), SLF_PLATFORM=args.platform)
+    if windows:env["WSLENV"]=env.get("WSLENV","")+":SLF_CAPTURE_DIR:SLF_PLATFORM"
     aes = args.platform == "aes"
     command = [args.mame, "aes" if aes else "neogeo", "-noreadconfig", "-rompath",
-               f"{ROOT / 'bios/test_roms'};{ROOT / 'roms'}", "-hashpath", str(ROOT / "hash_eagle/shadowleague"),
+               f"{native(args.bios)};{native(args.roms)}", "-hashpath", native(args.hash),
                "-cart1", "shadowleague", "-bios", "asia" if aes else "euro", "-video", "none", "-sound", "none",
                "-nothrottle", "-nonvram_save", "-seconds_to_run", str(args.seconds), "-skip_gameinfo",
-               "-cfg_directory", str(out / "cfg"), "-nvram_directory", str(out / "nvram"),
-               "-snapshot_directory", str(out), "-autoboot_delay", "0",
-               "-autoboot_script", str(GAME / "tools/qa.lua")]
+               "-cfg_directory", native(out / "cfg"), "-nvram_directory", native(out / "nvram"),
+               "-snapshot_directory", native(out), "-autoboot_delay", "0",
+               "-autoboot_script", native(GAME / "tools/qa.lua")]
     with (out / "mame.log").open("w") as log:
         subprocess.run(command, env=env, cwd=out, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=900)
     samples = [json.loads(line) for line in (out / "telemetry.jsonl").read_text().splitlines()]
