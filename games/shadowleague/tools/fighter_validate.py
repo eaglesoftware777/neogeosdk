@@ -12,7 +12,7 @@ STANDARD = ("idle", "walk_f", "walk_b", "crouch", "jump", "guard", "guard_low", 
             "fall", "down", "getup", "dash", "backdash", "thrown", "win", "lose", "intro", "dizzy")
 KINDS = ("normal", "command", "special", "super", "throw", "evade", "guard_attack")
 MOTIONS = ("none", "qcf", "qcb", "dp", "rdp", "hcf", "hcb", "dqcf", "dqcb", "charge_bf", "charge_du",
-           "360", "dash", "backdash", "fwd", "back", "down_fwd")
+           "360", "720", "dash", "backdash", "fwd", "back", "down_fwd")
 LEVELS = ("mid", "high", "low", "overhead", "throw", "unblockable")
 STANCES = ("stand", "crouch", "air", "ground", "any", "stand|close", "stand|far")
 FLAGS = ("active", "rehit", "spawn", "invuln", "airborne", "counter")

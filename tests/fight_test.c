@@ -215,6 +215,62 @@ static uint32_t cpu_match(uint16_t seed, uint32_t *frames_out)
     return ngf_match_hash(&m) ^ h;
 }
 
+static void test_720_and_teams(void)
+{
+    NGFInput in;
+    /* 720 motion */
+    ngf_input_reset(&in);
+    ngf_input_push(&in, NGF_RAW_RIGHT, 0);
+    ngf_input_push(&in, NGF_RAW_DOWN, 0);
+    ngf_input_push(&in, NGF_RAW_LEFT, 0);
+    ngf_input_push(&in, NGF_RAW_UP, 0);
+    assert(ngf_input_motion(&in, NGF_MOTION_360, 0, 0));
+    assert(!ngf_input_motion(&in, NGF_MOTION_720, 0, 0));
+    ngf_input_push(&in, NGF_RAW_RIGHT, 0);
+    ngf_input_push(&in, NGF_RAW_DOWN, 0);
+    ngf_input_push(&in, NGF_RAW_LEFT, 0);
+    ngf_input_push(&in, NGF_RAW_UP, 0);
+    assert(ngf_input_motion(&in, NGF_MOTION_720, 0, 0));
+
+    /* Super freeze */
+    fight_at(60);
+    m.f[0].power = NGF_POWER_STOCK;
+    {
+        static const uint8_t dqcfa[] = {NGF_RAW_DOWN, NGF_RAW_DOWN | NGF_RAW_RIGHT, NGF_RAW_RIGHT,
+                                        NGF_RAW_DOWN, NGF_RAW_DOWN | NGF_RAW_RIGHT, NGF_RAW_RIGHT | NGF_BTN_A};
+        tap(dqcfa, 6, 0);
+        assert(m.super_freeze > 0);
+        assert(m.super_who == 0);
+    }
+
+    /* 3v3 Team battle KO swap */
+    ngf_match_init(&m, &tester, &tester, 640, 7);
+    ngf_match_set_mode(&m, NGF_MODE_3V3);
+    ngf_team_set(&m, 1, &tester, &tester, &tester);
+    assert(m.team_count[1] == 3);
+    assert(m.team_active[1] == 0);
+    run(100, 0, 0); /* into fight */
+    m.f[1].life = 0;
+    m.state = NGF_M_KO;
+    m.state_timer = 150;
+    ngf_match_step(&m, 0, 0);
+    assert(m.team_active[1] == 1);
+    assert(m.f[1].life == tester.life);
+
+    /* Striker summon */
+    assert(ngf_call_striker(&m, 0));
+    assert(m.striker[0].active == 1);
+    assert(m.striker[0].cooldown > 0);
+
+    /* Tag duo swap */
+    ngf_match_set_mode(&m, NGF_MODE_TAG);
+    ngf_team_set(&m, 0, &tester, &tester, NULL);
+    assert(m.team_count[0] == 2);
+    assert(m.team_active[0] == 0);
+    assert(ngf_tag_switch(&m, 0));
+    assert(m.team_active[0] == 1);
+}
+
 static void test_cpu_determinism(void)
 {
     uint32_t n1, n2, a = cpu_match(99, &n1), b = cpu_match(99, &n2);
@@ -229,6 +285,7 @@ int main(void)
     test_motions();
     test_hit_and_block();
     test_throw_projectile_super();
+    test_720_and_teams();
     test_timer_draw();
     test_cpu_determinism();
     printf("fight_test: ok (NGFMatch %u bytes)\n", (unsigned)sizeof(NGFMatch));

@@ -49,6 +49,7 @@ enum {
     NGF_MOTION_CHARGE_BF,   /* [4] 6 */
     NGF_MOTION_CHARGE_DU,   /* [2] 8 */
     NGF_MOTION_360,         /* all four cardinals */
+    NGF_MOTION_720,         /* two full 360 rotations */
     NGF_MOTION_DASH,        /* 6 5 6 */
     NGF_MOTION_BACKDASH,    /* 4 5 4 */
     NGF_MOTION_FWD,         /* holding forward (command normal / throw) */
@@ -216,15 +217,25 @@ typedef struct {
 #define NGF_EVENTS      8u
 enum { NGF_EV_NONE, NGF_EV_HIT, NGF_EV_BLOCK, NGF_EV_THROW, NGF_EV_TECH, NGF_EV_GUARD_BREAK,
        NGF_EV_KO, NGF_EV_MOVE, NGF_EV_PROJECTILE, NGF_EV_ROUND, NGF_EV_FIGHT, NGF_EV_TIME_UP,
-       NGF_EV_LAND, NGF_EV_WIN, NGF_EV_COUNTER };
+       NGF_EV_LAND, NGF_EV_WIN, NGF_EV_COUNTER, NGF_EV_SUPER_FREEZE, NGF_EV_STRIKER, NGF_EV_TAG };
 typedef struct { uint8_t type, who, data, pad; int16_t x, y; } NGFEvent;
 
 enum { NGF_M_INTRO, NGF_M_FIGHT, NGF_M_KO, NGF_M_TIME_UP, NGF_M_ROUND_END, NGF_M_OVER };
+enum { NGF_MODE_1V1 = 0, NGF_MODE_3V3 = 1, NGF_MODE_TAG = 2 };
 
 typedef struct {
     uint8_t seq[16];          /* queued raw inputs */
     uint8_t len, pos, wait, level, hold, pad;
 } NGFCpu;
+
+typedef struct {
+    const NGFFighterDef *def;
+    int32_t x, h;                     /* Q8 */
+    int16_t vx;                       /* Q8 */
+    uint8_t facing_left, state, state_timer, active;
+    uint8_t anim, frame, frame_timer, cooldown;
+    uint8_t owner, move_index;
+} NGFStriker;
 
 typedef struct {
     NGFFighter f[2];
@@ -237,6 +248,15 @@ typedef struct {
     int16_t stage_w, camera_x, screen_w, floor_y;
     uint16_t rng;
     uint32_t frame;
+    uint8_t super_freeze;                     /* frames remaining in super freeze */
+    uint8_t super_who;                        /* attacker who activated super */
+    uint8_t zoom_scale;                       /* SCB2 shrink factor (192..255) */
+    uint8_t match_mode;                       /* NGF_MODE_* */
+    const NGFFighterDef *team[2][3];          /* 3v3 / tag rosters */
+    uint8_t team_count[2];                    /* members per team */
+    uint8_t team_active[2];                   /* current active member */
+    uint16_t tag_reserve[2];                  /* off-screen partner reserve life */
+    NGFStriker striker[2];                    /* striker summon actors */
 } NGFMatch;
 
 #define NGF_ROUND_SECONDS 60u
@@ -256,6 +276,11 @@ int16_t  NEOGEO_USER ngf_fighter_px(const NGFFighter *f);   /* world x, px */
 int16_t  NEOGEO_USER ngf_fighter_py(const NGFFighter *f);   /* height, px */
 uint16_t NEOGEO_USER ngf_distance(const NGFMatch *m);
 uint32_t NEOGEO_USER ngf_match_hash(const NGFMatch *m);
+void     NEOGEO_USER ngf_match_set_mode(NGFMatch *m, uint8_t mode);
+void     NEOGEO_USER ngf_team_set(NGFMatch *m, uint8_t who, const NGFFighterDef *f1,
+                                  const NGFFighterDef *f2, const NGFFighterDef *f3);
+uint8_t  NEOGEO_USER ngf_call_striker(NGFMatch *m, uint8_t who);
+uint8_t  NEOGEO_USER ngf_tag_switch(NGFMatch *m, uint8_t who);
 
 #ifdef __cplusplus
 }

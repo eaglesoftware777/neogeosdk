@@ -139,4 +139,34 @@ void sys_int2_c(void)
 
 void sys_howtoplay_c(void)
 {
+    uint16_t frames = 300u;
+    sys_fix_clear_c();
+    sys_lsp_1st_c();
+    bios_set_backdrop(COLOR_BLACK);
+    bios_init_palette_banks();
+
+    bios_fix_puts(13, 2, "HOW TO PLAY", 1);
+    bios_fix_puts(6, 4, "============================", 2);
+
+    bios_fix_puts(5, 7, "JOYSTICK:", 3);
+    bios_fix_puts(16, 6, "  ^ UP", 1);
+    bios_fix_puts(16, 7, "<   > MOVE", 1);
+    bios_fix_puts(16, 8, "  v DOWN", 1);
+
+    bios_fix_puts(5, 11, "BUTTON A:  PUNCH / LIGHT ATTACK", 1);
+    bios_fix_puts(5, 13, "BUTTON B:  KICK  / MEDIUM ATTACK", 3);
+    bios_fix_puts(5, 15, "BUTTON C:  HEAVY / STRONG ATTACK", 2);
+    bios_fix_puts(5, 17, "BUTTON D:  EVADE / TACTICAL DASH", 4);
+
+    bios_fix_puts(5, 20, "A + B:     THROW / GUARD CANCEL", 1);
+    bios_fix_puts(5, 22, "C + D:     POWER BLOW / STRIKER", 2);
+
+    bios_fix_puts(7, 25, "PRESS BUTTON TO CONTINUE", 2);
+
+    while (frames--) {
+        bios_wait_vbl();
+        sys_io_c();
+        if (BIOS_P1CHANGE || (BIOS_STATCHANGE & (STAT_START1 | STAT_START2 | STAT_COIN1 | STAT_COIN2))) break;
+    }
+    sys_fix_clear_c();
 }

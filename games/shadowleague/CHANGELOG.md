@@ -3,6 +3,32 @@
 Shadow League Fighting's ROM sets ship with the NeoGeoSDK pre-releases and
 are numbered on their own: `_v1` with v1.7.5.
 
+## v2 (2026-10-13, NeoGeoSDK v1.7.5 pre-release) — production vertical slice
+ 
+### The game
+ 
+- Expanded 7-fighter roster:
+  - Kenji Arata (Karate, Japan)
+  - Jack Mercer (Boxing, United States; no kicks)
+  - Min-Jun Park (Taekwondo, South Korea; kicking focus)
+  - Batu Temur (Bökh wrestling, Mongolia; 360/720 command throws)
+  - Amara Silva (Capoeira, Brazil; fluid acrobatics & evasive rolls)
+  - Niran Vong (Muay Lao, Laos; devastating elbows & knee strikes)
+  - ATLAS (Combat Robotics, The Veil Facility; Boss Prototype with projectiles & super armor)
+- Super freeze mechanics: 30-frame screen freeze on super activation with backdrop darkening.
+- Negative-edge input buffering for special move execution on button release.
+- 7-fighter arcade ladder (6 opponents + mirror match closure).
+- Arcade continue screen: 10-second countdown with MVS credit deduction (`SYS_CREDIT_DOWN`).
+- Title screen P2 join support.
+- 3v3 team battle and striker summon modes in engine.
+ 
+### Presentation
+ 
+- Two-layer parallax stage: 512x224 Arata Mountain Dojo interior with 512x160 dawn mountains scrolling at half speed through open windows.
+- Anatomical character art renderer: articulated torso plates, uniform drapery & gear, expressive hands, unique silhouettes & hair, and leg contours.
+- Hardware camera zoom: dynamic SCB2 scaling (192..255) based on fighter distance.
+- Complete FIX HUD: health bars, 60s timer, names, 3-stock power gauges, round markers, combo counter, guard gauge, spirit bar, and striker status badge.
+ 
 ## v1 (2026-10-12, NeoGeoSDK v1.7.5 pre-release) — first playable
 
 ### The game
