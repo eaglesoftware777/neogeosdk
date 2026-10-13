@@ -119,6 +119,12 @@
     "guard_push":[["guard_push", 4, "invuln"], ["guard_push", 5, "active|invuln"], ["guard", 14]]
   },
   "moves": [
+    {"name": "GRAND KHAN ANNIHILATOR", "anim": "super", "kind": "super", "motion": "720", "buttons": "A", "stance": "ground",
+     "level": "throw", "damage": 65, "guard_damage": 25, "chip": 10, "hitstun": 28, "blockstun": 18, "pushback": 8,
+     "meter": 0, "cost": 1, "hitstop": 12, "sound": "super", "hit_sound": "hit_heavy", "limb": "near_fist", "range": 58},
+    {"name": "GRAND KHAN ANNIHILATOR", "anim": "super", "kind": "super", "motion": "720", "buttons": "C", "stance": "ground",
+     "level": "throw", "damage": 65, "guard_damage": 25, "chip": 10, "hitstun": 28, "blockstun": 18, "pushback": 8,
+     "meter": 0, "cost": 1, "hitstop": 12, "sound": "super", "hit_sound": "hit_heavy", "limb": "near_fist", "range": 58},
     {"name": "GRAND KHAN ANNIHILATOR", "anim": "super", "kind": "super", "motion": "360", "buttons": "A", "stance": "ground",
      "level": "throw", "damage": 65, "guard_damage": 25, "chip": 10, "hitstun": 28, "blockstun": 18, "pushback": 8,
      "meter": 0, "cost": 1, "hitstop": 12, "sound": "super", "hit_sound": "hit_heavy", "limb": "near_fist", "range": 58},

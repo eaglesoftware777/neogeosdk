@@ -78,20 +78,23 @@ static uint8_t NEOGEO_USER anim_sprite(uint8_t def, uint8_t anim, uint16_t tick)
 static void NEOGEO_USER select_screen(uint8_t humans)
 {
     static const int16_t k_x[2] = {84, 236};
+    static const uint8_t k_port_col[7] = { 5u, 9u, 14u, 18u, 23u, 27u, 32u };
     uint8_t cursor[2], last_cursor[2], done[2], p, i;
-    uint16_t tick = 0, timer = 20u * 60u;
+    uint8_t win_base = 0u, last_active = 0u;
+    uint16_t tick = 0, timer = 25u * 60u;
     slf_scene_begin();
     slf_music(SLF_TRACK_TITLE);
     cursor[0] = 0u;
-    cursor[1] = (uint8_t)(SLF_FIGHTER_COUNT - 1u);
+    cursor[1] = 1u;
     last_cursor[0] = last_cursor[1] = 0xFFu;
     done[0] = (uint8_t)!(humans & 1u);
     done[1] = (uint8_t)!(humans & 2u);
     slf_fighter_palettes(cursor[0], 0u, cursor[1], (uint8_t)(cursor[0] == cursor[1]));
+    slf_stage_set(0u);
     slf_stage_show(96);
     slf_fighter_bank(0u, 0u);
     slf_fighter_bank(1u, 1u);
-    slf_puts_center(2u, "SELECT YOUR FIGHTER", SLF_PAL_GOLD);
+    slf_puts_center(1u, "SELECT YOUR FIGHTER", SLF_PAL_GOLD);
     for (;;) {
         uint8_t row = 20u;
         slf_frame();
@@ -102,9 +105,19 @@ static void NEOGEO_USER select_screen(uint8_t humans)
             if (done[p]) continue;
             if (press & NGF_RAW_LEFT) {
                 cursor[p] = (uint8_t)((cursor[p] + SLF_FIGHTER_COUNT - 1u) % SLF_FIGHTER_COUNT);
+                last_active = p;
                 slf_sfx(SLF_SFX_MENU);
             } else if (press & NGF_RAW_RIGHT) {
                 cursor[p] = (uint8_t)((cursor[p] + 1u) % SLF_FIGHTER_COUNT);
+                last_active = p;
+                slf_sfx(SLF_SFX_MENU);
+            } else if (press & NGF_RAW_UP) {
+                cursor[p] = (uint8_t)((cursor[p] + SLF_FIGHTER_COUNT - 11u) % SLF_FIGHTER_COUNT);
+                last_active = p;
+                slf_sfx(SLF_SFX_MENU);
+            } else if (press & NGF_RAW_DOWN) {
+                cursor[p] = (uint8_t)((cursor[p] + 11u) % SLF_FIGHTER_COUNT);
+                last_active = p;
                 slf_sfx(SLF_SFX_MENU);
             }
             if ((press & (NGF_BTN_A | NGF_BTN_C)) || slf_start_pressed(p) || !timer) {
@@ -113,14 +126,23 @@ static void NEOGEO_USER select_screen(uint8_t humans)
                 slf_sfx(SLF_SFX_SELECT);
             }
         }
+        {
+            uint8_t act = cursor[last_active];
+            if (act < 3u) win_base = 0u;
+            else if (act > (uint8_t)(SLF_FIGHTER_COUNT - 4u)) win_base = (uint8_t)(SLF_FIGHTER_COUNT - 7u);
+            else win_base = (uint8_t)(act - 3u);
+        }
         for (i = 0u; i < 2u; i++) {
             uint8_t f_id = done[i] ? s_pick[i] : cursor[i];
             uint8_t chosen = (uint8_t)(done[i] && (humans & (1u << i)));
             slf_fighter_pose(i, f_id, anim_sprite(f_id, chosen ? NGF_A_WIN : NGF_A_IDLE, tick), k_x[i],
                              SLF_FLOOR_Y - 125, i);
         }
+        slf_portraits_show(win_base, cursor[0], cursor[1], done[0], done[1], tick);
         if (tick == 1u || cursor[0] != last_cursor[0] || cursor[1] != last_cursor[1]) {
             slf_clear_rows(row, (uint8_t)(row + 3u));
+            slf_clear_rows(3u, 3u);
+            slf_clear_rows(9u, 9u);
             slf_puts(1u, row, slf_fighter_defs[cursor[0]]->name, SLF_PAL_TEXT);
             slf_puts(1u, (uint8_t)(row + 2u), slf_fighter_origin[cursor[0]], SLF_PAL_GOLD);
             slf_puts(1u, (uint8_t)(row + 3u), slf_fighter_style[cursor[0]], SLF_PAL_DIM);
@@ -129,17 +151,42 @@ static void NEOGEO_USER select_screen(uint8_t humans)
             slf_puts_right(38u, (uint8_t)(row + 2u), slf_fighter_origin[cursor[1]], SLF_PAL_GOLD);
             slf_puts_right(38u, (uint8_t)(row + 3u), slf_fighter_style[cursor[1]], SLF_PAL_DIM);
 
+            {
+                char idx_str[10];
+                uint8_t cur_num = (uint8_t)(cursor[last_active] + 1u);
+                idx_str[0] = '<';
+                idx_str[1] = ' ';
+                idx_str[2] = (char)('0' + cur_num / 10u);
+                idx_str[3] = (char)('0' + cur_num % 10u);
+                idx_str[4] = '/';
+                idx_str[5] = '4';
+                idx_str[6] = '4';
+                idx_str[7] = ' ';
+                idx_str[8] = '>';
+                idx_str[9] = '\0';
+                slf_puts_center(9u, idx_str, SLF_PAL_GOLD);
+            }
+
             last_cursor[0] = cursor[0];
             last_cursor[1] = cursor[1];
             slf_fighter_palettes(cursor[0], 0u, cursor[1], (uint8_t)(cursor[0] == cursor[1]));
         }
         for (p = 0u; p < 2u; p++) {
-            uint8_t col_on = (uint8_t)(cursor[p] ? 25u : 12u);
-            uint8_t col_off = (uint8_t)(cursor[p] ? 12u : 25u);
+            uint8_t cur = cursor[p];
             if (!(humans & (1u << p))) continue;
-            slf_puts(col_off, (uint8_t)(5u + p), "  ", SLF_PAL_TEXT);
-            slf_puts(col_on, (uint8_t)(5u + p), p ? "2P" : "1P",
-                     (tick & 8u) && !done[p] ? SLF_PAL_DIM : (p ? SLF_PAL_BLUE : SLF_PAL_RED));
+            if (cur >= win_base && cur < (uint8_t)(win_base + 7u)) {
+                uint8_t slot = (uint8_t)(cur - win_base);
+                uint8_t c = k_port_col[slot];
+                uint8_t pal = (uint8_t)(p ? SLF_PAL_BLUE : SLF_PAL_RED);
+                if (done[p]) pal = SLF_PAL_GOLD;
+                else if (tick & 8u) pal = SLF_PAL_WHITE;
+                if (cursor[0] == cursor[1]) {
+                    if (p == 0u) slf_puts(c, 3u, "1P", pal);
+                    else slf_puts((uint8_t)(c + 2u), 3u, "2P", pal);
+                } else {
+                    slf_puts((uint8_t)(c + 1u), 3u, p ? "2P" : "1P", pal);
+                }
+            }
         }
         {
             char t[3];
@@ -150,6 +197,7 @@ static void NEOGEO_USER select_screen(uint8_t humans)
         }
         if (done[0] && done[1]) break;
     }
+    slf_portraits_hide();
     wait_frames(50u);
 }
 
@@ -158,6 +206,7 @@ static void NEOGEO_USER vs_screen(void)
     uint16_t tick;
     slf_scene_begin();
     slf_fighter_palettes(s_def[0], 0u, s_def[1], (uint8_t)(s_def[0] == s_def[1]));
+    slf_stage_set(slf_fighter_stages[s_def[1]]);
     slf_stage_show(96);
     slf_fighter_bank(0u, 0u);
     slf_fighter_bank(1u, 1u);
@@ -169,6 +218,7 @@ static void NEOGEO_USER vs_screen(void)
             slf_big_center(9u, SLF_BIG_VS, SLF_BIG_VS_W, SLF_BIG_VS_H, SLF_PAL_RED);
             slf_puts(2u, 24u, slf_fighter_defs[s_def[0]]->name, SLF_PAL_GOLD);
             slf_puts_right(37u, 24u, slf_fighter_defs[s_def[1]]->name, SLF_PAL_GOLD);
+            slf_puts_center(26u, slf_stage_names[slf_fighter_stages[s_def[1]]], SLF_PAL_TEXT);
         }
     }
 }
@@ -262,6 +312,8 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
     uint16_t over = 0, counter_clear = 0;
     slf_scene_begin();
     slf_fx_reset();
+    slf_stage_set(slf_fighter_stages[s_def[1]]);
+    slf_stage_show(96);
     slf_fighter_palettes(s_def[0], 0u, s_def[1], (uint8_t)(s_def[0] == s_def[1]));
     if (mode != MODE_DEMO) slf_music(SLF_TRACK_DOJO);
     ngf_match_init(m, slf_fighter_defs[s_def[0]], slf_fighter_defs[s_def[1]], SLF_STAGE_W, slf_rand());
@@ -297,13 +349,15 @@ static void NEOGEO_USER big_card(uint16_t tile, uint8_t w, uint8_t h, uint8_t pa
 {
     uint16_t tick;
     slf_scene_begin();
-    slf_fighter_palettes(winner_def, 0u, winner_def, 0u);
+    slf_fighter_palettes(winner_def < SLF_FIGHTER_COUNT ? winner_def : 0u, 0u,
+                         winner_def < SLF_FIGHTER_COUNT ? winner_def : 0u, 0u);
+    slf_stage_set(winner_def < SLF_FIGHTER_COUNT ? slf_fighter_stages[winner_def] : 0u);
     slf_stage_show(96);
     slf_fighter_bank(0u, 0u);
     slf_big_center(6u, tile, w, h, pal);
     for (tick = 0; tick < frames; tick++) {
         slf_frame();
-        if (winner_def != 0xFFu)
+        if (winner_def != 0xFFu && winner_def < SLF_FIGHTER_COUNT)
             slf_fighter_pose(0u, winner_def, anim_sprite(winner_def, NGF_A_WIN, tick), 160, SLF_FLOOR_Y - 125, 0u);
     }
 }
@@ -333,6 +387,7 @@ static uint8_t NEOGEO_USER continue_screen(void)
     uint8_t last_sec = 0xFFu;
     slf_scene_begin();
     slf_music(SLF_TRACK_TITLE);
+    slf_stage_set(0u);
     slf_stage_show(96);
     slf_puts_center(8u, "CONTINUE ?", SLF_PAL_GOLD);
     while (timer--) {
@@ -375,13 +430,23 @@ static uint8_t NEOGEO_USER continue_screen(void)
 
 void NEOGEO_USER slf_run(void)
 {
-    uint8_t ladder[SLF_FIGHTER_COUNT];
-    uint8_t count = 0, stage, i;
+    uint8_t ladder[8];
+    uint8_t stage;
     NEO_REGISTER8(SLF_P2_FLAG) = 0u;
     select_screen(1u);
-    for (i = 0u; i < SLF_FIGHTER_COUNT; i++) if (i != s_pick[0]) ladder[count++] = i;
-    ladder[count++] = s_pick[0];          /* the mirror match closes the ladder */
-    for (stage = 0u; stage < count; stage++) {
+    /* 8-stage tournament: 5 random contenders, 1 rival, 1 sub-boss, 1 final boss */
+    for (stage = 0u; stage < 5u; stage++) {
+        uint8_t opp;
+        do {
+            opp = (uint8_t)(slf_rand() % 40u);
+        } while (opp == s_pick[0]);
+        ladder[stage] = opp;
+    }
+    ladder[5] = (s_pick[0] == 1u) ? 0u : 1u;
+    ladder[6] = (uint8_t)(41u + (slf_rand() & 1u));
+    ladder[7] = (s_pick[0] == 43u) ? 42u : 43u;
+
+    for (stage = 0u; stage < 8u; stage++) {
         uint8_t result;
         s_def[0] = s_pick[0];
         s_def[1] = ladder[stage];
@@ -402,30 +467,141 @@ void NEOGEO_USER slf_run(void)
         }
     }
     slf_music(SLF_TRACK_VICTORY);
-    big_card(SLF_BIG_CONGRATS, SLF_BIG_CONGRATS_W, SLF_BIG_CONGRATS_H, SLF_PAL_BIG, s_pick[0], 360u);
+    big_card(SLF_BIG_CONGRATS, SLF_BIG_CONGRATS_W, SLF_BIG_CONGRATS_H, SLF_PAL_BIG, s_pick[0], 240u);
+    {
+        uint16_t end_t;
+        slf_scene_begin();
+        slf_stage_set(3u);
+        slf_stage_show(96);
+        slf_fighter_palettes(s_pick[0], 0u, s_pick[0], 0u);
+        slf_fighter_bank(0u, 0u);
+        slf_puts_center(4u, "PROJECT CHIMERA TERMINATED", SLF_PAL_GOLD);
+        slf_puts_center(7u, "THE VEIL CORE HAS CRUMBLED.", SLF_PAL_WHITE);
+        slf_puts_center(10u, "NEW SHADOW LEAGUE CHAMPION:", SLF_PAL_BLUE);
+        slf_puts_center(13u, slf_fighter_defs[s_pick[0]]->name, SLF_PAL_BIG);
+        slf_puts_center(16u, slf_fighter_origin[s_pick[0]], SLF_PAL_GOLD);
+        slf_puts_center(19u, "THANK YOU FOR PLAYING!", SLF_PAL_WHITE);
+        for (end_t = 0u; end_t < 360u; end_t++) {
+            slf_frame();
+            slf_fighter_pose(0u, s_pick[0], anim_sprite(s_pick[0], NGF_A_WIN, end_t), 160, SLF_FLOOR_Y - 125, 0u);
+            if (slf_start_pressed(0u) || slf_start_pressed(1u)) break;
+        }
+    }
+}
+
+static uint8_t NEOGEO_USER attract_story(void)
+{
+    uint16_t t;
+    slf_scene_begin();
+    slf_music(SLF_TRACK_TITLE);
+    slf_stage_set(3u);
+    slf_stage_show(96);
+    slf_puts_center(3u, "PROJECT CHIMERA : PROLOGUE", SLF_PAL_GOLD);
+    slf_puts_center(6u, "YEAR 2099 -- NEO TOKYO", SLF_PAL_BLUE);
+    slf_puts_center(9u, "THE SHADOW VEIL HAS SUMMONED 44 FIGHTERS", SLF_PAL_WHITE);
+    slf_puts_center(11u, "FROM 32 NATIONS ACROSS THE GLOBE.", SLF_PAL_WHITE);
+    slf_puts_center(14u, "HIDDEN BENEATH THE TOURNAMENT LIES", SLF_PAL_GOLD);
+    slf_puts_center(16u, "A SECRET CYBERNETIC PROTOCOL.", SLF_PAL_RED);
+    slf_puts_center(19u, "ONLY THE STRONGEST WILL SURVIVE.", SLF_PAL_TEXT);
+    for (t = 0u; t < 360u; t++) {
+        slf_frame();
+        if (slf_start_pressed(1u)) { NEO_REGISTER8(SLF_P2_FLAG) = 1u; return 1u; }
+        if (slf_start_pending() || slf_start_pressed(0u)) return 1u;
+        if ((t & 31u) == 0u)
+            slf_puts_center(24u, (t & 32u) ? (ng_sys_is_mvs() ? "INSERT COIN" : "PUSH START") : "           ", SLF_PAL_TEXT);
+    }
+    return 0u;
+}
+
+static uint8_t NEOGEO_USER attract_tutorial(void)
+{
+    uint16_t t;
+    slf_scene_begin();
+    slf_music(SLF_TRACK_TITLE);
+    slf_stage_set(0u);
+    slf_stage_show(96);
+    slf_fighter_palettes(0u, 0u, 3u, 0u);
+    slf_fighter_bank(0u, 0u);
+    slf_fighter_bank(1u, 1u);
+    slf_puts_center(2u, "-- HOW TO PLAY --", SLF_PAL_GOLD);
+    slf_puts(4u, 5u, "(A) LIGHT PUNCH    (B) LIGHT KICK", SLF_PAL_WHITE);
+    slf_puts(4u, 7u, "(C) HEAVY PUNCH    (D) HEAVY KICK", SLF_PAL_WHITE);
+    slf_puts(4u, 10u, "TACTICAL EVASION :  (A) + (B)", SLF_PAL_BLUE);
+    slf_puts(4u, 12u, "BLOWBACK COUNTER :  (C) + (D)", SLF_PAL_RED);
+    slf_puts(4u, 15u, "SPECIAL MOVES    :  D,DF,F + BTN", SLF_PAL_GOLD);
+    slf_puts(4u, 17u, "SUPER CLIMAX     :  QCFx2 / HCF + BTN", SLF_PAL_GOLD);
+    for (t = 0u; t < 360u; t++) {
+        slf_frame();
+        slf_fighter_pose(0u, 0u, anim_sprite(0u, NGF_A_IDLE, t), 72, SLF_FLOOR_Y - 125, 0u);
+        slf_fighter_pose(1u, 3u, anim_sprite(3u, NGF_A_IDLE, t), 248, SLF_FLOOR_Y - 125, 1u);
+        if (slf_start_pressed(1u)) { NEO_REGISTER8(SLF_P2_FLAG) = 1u; return 1u; }
+        if (slf_start_pending() || slf_start_pressed(0u)) return 1u;
+        if ((t & 31u) == 0u)
+            slf_puts_center(24u, (t & 32u) ? (ng_sys_is_mvs() ? "INSERT COIN" : "PUSH START") : "           ", SLF_PAL_TEXT);
+    }
+    return 0u;
+}
+
+static uint8_t NEOGEO_USER attract_showcase(void)
+{
+    static const uint8_t k_show_fighters[4] = { 0u, 1u, 7u, 43u };
+    uint8_t k;
+    for (k = 0u; k < 4u; k++) {
+        uint8_t f = k_show_fighters[k];
+        uint16_t t;
+        slf_scene_begin();
+        slf_fighter_palettes(f, 0u, f, 0u);
+        slf_fighter_bank(0u, 0u);
+        slf_stage_set(slf_fighter_stages[f]);
+        slf_stage_show(96);
+        slf_puts_center(2u, "ROSTER SHOWCASE", SLF_PAL_GOLD);
+        slf_puts_center(5u, slf_fighter_defs[f]->name, SLF_PAL_BIG);
+        slf_puts_center(7u, slf_fighter_origin[f], SLF_PAL_WHITE);
+        slf_puts_center(9u, slf_fighter_style[f], SLF_PAL_BLUE);
+        for (t = 0u; t < 150u; t++) {
+            slf_frame();
+            slf_fighter_pose(0u, f, anim_sprite(f, NGF_A_WIN, t), 160, SLF_FLOOR_Y - 125, 0u);
+            if (slf_start_pressed(1u)) { NEO_REGISTER8(SLF_P2_FLAG) = 1u; return 1u; }
+            if (slf_start_pending() || slf_start_pressed(0u)) return 1u;
+            if ((t & 31u) == 0u)
+                slf_puts_center(24u, (t & 32u) ? (ng_sys_is_mvs() ? "INSERT COIN" : "PUSH START") : "           ", SLF_PAL_TEXT);
+        }
+    }
+    return 0u;
+}
+
+static uint8_t NEOGEO_USER attract_title(void)
+{
+    uint16_t t;
+    slf_scene_begin();
+    slf_music(SLF_TRACK_TITLE);
+    slf_stage_set(0u);
+    slf_title_draw();
+    slf_puts_center(1u, "HI-SCORE 50000", SLF_PAL_GOLD);
+    for (t = 0u; t < 6u * 60u; t++) {
+        slf_frame();
+        if (slf_start_pressed(1u)) { NEO_REGISTER8(SLF_P2_FLAG) = 1u; return 1u; }
+        if (slf_start_pending() || slf_start_pressed(0u)) return 1u;
+        if ((t & 31u) == 0u)
+            slf_puts_center(24u, (t & 32u) ? (ng_sys_is_mvs() ? "INSERT COIN" : "PUSH START") : "           ",
+                            SLF_PAL_TEXT);
+    }
+    return 0u;
 }
 
 void NEOGEO_USER slf_run_attract(void)
 {
     for (;;) {
-        uint16_t t;
-        slf_scene_begin();
-        slf_music(SLF_TRACK_TITLE);
-        slf_title_draw();
-        slf_puts_center(1u, "HI-SCORE 50000", SLF_PAL_GOLD);
-        for (t = 0u; t < 6u * 60u; t++) {
-            slf_frame();
-            if (slf_start_pressed(1u)) {
-                versus();
-                return;
-            }
-            if (slf_start_pending()) return;
-            if ((t & 31u) == 0u)
-                slf_puts_center(24u, (t & 32u) ? (ng_sys_is_mvs() ? "INSERT COIN" : "PUSH START") : "           ",
-                                SLF_PAL_TEXT);
-        }
+        if (attract_title()) break;
+        if (attract_story()) break;
+        if (attract_tutorial()) break;
+        if (attract_showcase()) break;
         s_def[0] = (uint8_t)(slf_rand() % SLF_FIGHTER_COUNT);
         s_def[1] = (uint8_t)(slf_rand() % SLF_FIGHTER_COUNT);
-        if (run_match(5u, 5u, MODE_DEMO) == RESULT_ABORT) return;
+        if (s_def[0] == s_def[1]) s_def[1] = (uint8_t)((s_def[0] + 1u) % SLF_FIGHTER_COUNT);
+        if (run_match(5u, 5u, MODE_DEMO) == RESULT_ABORT) break;
+    }
+    if (NEO_REGISTER8(SLF_P2_FLAG)) {
+        versus();
     }
 }

@@ -65,16 +65,20 @@ class Canvas:
         ys, xs = np.mgrid[0:H, 0:W]
         self.px = np.stack([xs + 0.5, ys + 0.5], axis=-1)
 
-    def _paint(self, mask, tone, ramp):
+    def paint_smooth(self, mask, tone, ramp):
         if not mask.any():
             return
         lo, mid, hi = RAMPS[ramp]
-        tones = np.where(tone > 0.33, hi, np.where(tone < -0.28, lo, mid)).astype(np.uint8)
-        edge = mask & ~(np.roll(mask, 1, 0) & np.roll(mask, -1, 0) & np.roll(mask, 1, 1) & np.roll(mask, -1, 1))
+        tones = np.where(tone > 0.30, hi, np.where(tone < -0.22, lo, mid)).astype(np.uint8)
         self.idx[mask] = tones[mask]
-        self.idx[edge] = 1
 
-    def capsule(self, p0, p1, r0, r1, ramp):
+    def outline_mask(self, mask, color=1):
+        if not mask.any():
+            return
+        edge = mask & ~(np.roll(mask, 1, 0) & np.roll(mask, -1, 0) & np.roll(mask, 1, 1) & np.roll(mask, -1, 1))
+        self.idx[edge] = color
+
+    def capsule_mask(self, p0, p1, r0, r1):
         p0, p1 = np.asarray(p0, float), np.asarray(p1, float)
         d = p1 - p0
         length2 = float(np.dot(d, d)) or 1e-6
@@ -86,19 +90,40 @@ class Canvas:
         r = r0 + (r1 - r0) * t
         mask = dist <= r
         normal = off / np.maximum(r, 0.5)[..., None]
-        self._paint(mask, normal @ LIGHT, ramp)
+        tone = normal @ LIGHT
+        return mask, tone
 
-    def ellipse(self, c, rx, ry, ramp, light=True):
+    def ellipse_mask(self, c, rx, ry):
         off = (self.px - np.asarray(c, float)) / np.array([rx, ry])
         dist = np.hypot(off[..., 0], off[..., 1])
         mask = dist <= 1.0
-        self._paint(mask, (off @ LIGHT) if light else np.zeros(mask.shape), ramp)
+        tone = off @ LIGHT
+        return mask, tone
+
+    def capsule(self, p0, p1, r0, r1, ramp, outline=True):
+        mask, tone = self.capsule_mask(p0, p1, r0, r1)
+        self.paint_smooth(mask, tone, ramp)
+        if outline:
+            self.outline_mask(mask)
+
+    def ellipse(self, c, rx, ry, ramp, light=True, outline=True):
+        mask, tone = self.ellipse_mask(c, rx, ry)
+        self.paint_smooth(mask, tone if light else np.zeros(mask.shape), ramp)
+        if outline:
+            self.outline_mask(mask)
         return mask
 
     def dot(self, x, y, index):
         x, y = int(round(x)), int(round(y))
         if 0 <= x < W and 0 <= y < H:
             self.idx[y, x] = index
+
+    def line(self, p0, p1, index):
+        p0, p1 = np.asarray(p0, float), np.asarray(p1, float)
+        dist = int(math.ceil(np.hypot(*(p1 - p0)))) or 1
+        for step in range(dist + 1):
+            pt = p0 + (p1 - p0) * (step / dist)
+            self.dot(pt[0], pt[1], index)
 
 
 def skeleton(build, pose):
@@ -139,48 +164,54 @@ def draw_leg(c, build, j, side, mat):
             side_n = -side_n
         toe = ankle + (shin_dir * 0.55 + side_n * 0.83) * build["foot"]
 
-    # Thigh with quadriceps contour
     thigh_scale = mat.get("thigh_scale", 1.0)
-    c.capsule(hip, knee, build["thigh_r"] * thigh_scale, build["knee_r"] * thigh_scale, mat["thigh"])
-
-    # Kneecap patella accent
-    patella = knee + (ankle - knee) * 0.12
-    c.ellipse(patella, build["knee_r"] * 0.6, build["knee_r"] * 0.6, mat["shin"])
-
-    # Shin / calf contour
     shin_scale = mat.get("shin_scale", 1.0)
-    if mat.get("shin_split"):
-        mid = knee + (ankle - knee) * mat["shin_split"]
-        c.capsule(knee, mid, build["knee_r"] * 0.95, build["ankle_r"] * 1.1, mat["shin"])
-        c.capsule(mid, ankle, build["ankle_r"] * 1.15, build["ankle_r"] * 1.1, mat["boot"])
-    else:
-        # Tapered calf to ankle
-        mid = knee + (ankle - knee) * 0.4
-        c.capsule(knee, mid, build["knee_r"] * shin_scale * 1.08, build["ankle_r"] * shin_scale * 1.15, mat["shin"])
-        c.capsule(mid, ankle, build["ankle_r"] * shin_scale * 1.15, build["ankle_r"] * shin_scale, mat["shin"])
+    thigh_m, thigh_t = c.capsule_mask(hip, knee, build["thigh_r"] * thigh_scale * 1.15, build["knee_r"] * thigh_scale * 1.15)
+    shin_m, shin_t = c.capsule_mask(knee, ankle, build["knee_r"] * shin_scale * 1.15, build["ankle_r"] * shin_scale * 1.25)
+    foot_m, foot_t = c.capsule_mask(ankle, toe, build["ankle_r"], build["toe_r"])
 
-    # Ankle wraps (Muay Lao / kickboxing)
-    if mat.get("ankle_wrap"):
-        wrap_mid = ankle - (ankle - knee) * 0.18
-        c.capsule(wrap_mid, ankle, build["ankle_r"] * 1.18, build["ankle_r"] * 1.12, mat["ankle_wrap"])
-
-    # Baggy martial arts trousers flare (abadá)
-    if mat.get("abada"):
-        cuff_l = ankle + np.array([-build["ankle_r"] * 1.5, 0])
-        cuff_r = ankle + np.array([build["ankle_r"] * 1.5, 0])
-        c.capsule(knee + (ankle - knee) * 0.5, ankle, build["ankle_r"] * 1.7, build["ankle_r"] * 1.4, mat["shin"])
-
-    # Foot
-    c.capsule(ankle, toe, build["ankle_r"], build["toe_r"], mat["foot"])
-    if mat.get("foot") == "skin":
-        # Bare foot toes definition
-        toe_tip = toe + shin_dir * 1.5
-        c.dot(toe_tip[0], toe_tip[1], 3)
-
-    # Trunks / shorts
     if mat.get("trunks"):
         t_end = hip + (knee - hip) * mat["trunks"]
-        c.capsule(hip, t_end, build["thigh_r"] * 1.15, build["thigh_r"] * 1.08, mat.get("shorts", mat["thigh"]))
+        trunks_m, trunks_t = c.capsule_mask(hip, t_end, build["thigh_r"] * 1.25, build["thigh_r"] * 1.18)
+        skin_m = (thigh_m & ~trunks_m) | shin_m
+        skin_t = np.where(shin_m, shin_t, thigh_t)
+        c.paint_smooth(skin_m, skin_t, "skin")
+        c.outline_mask(skin_m)
+        c.paint_smooth(trunks_m, trunks_t, mat.get("shorts", mat["thigh"]))
+        stripe_mat = mat.get("waistband", "white")
+        c.line(hip + np.array([build["thigh_r"] * 0.8, 0]),
+               t_end + np.array([build["thigh_r"] * 0.7, 0]), RAMPS.get(stripe_mat, (14, 14, 14))[1])
+        c.outline_mask(trunks_m)
+    else:
+        leg_m = thigh_m | shin_m
+        leg_t = np.where(shin_m, shin_t, thigh_t)
+        c.paint_smooth(leg_m, leg_t, mat["thigh"])
+        knee_fwd = np.array([-shin_dir[1], shin_dir[0]])
+        c.line(knee - knee_fwd * 3, knee + knee_fwd * 3 + shin_dir * 1.5, RAMPS[mat["thigh"]][0])
+        c.line(ankle - knee_fwd * 3, ankle + knee_fwd * 3, RAMPS[mat["thigh"]][0])
+        if mat.get("abada"):
+            cuff_m, cuff_t = c.capsule_mask(knee + (ankle - knee) * 0.5, ankle, build["ankle_r"] * 1.7, build["ankle_r"] * 1.4)
+            c.paint_smooth(cuff_m, cuff_t, mat["shin"])
+        c.outline_mask(leg_m)
+
+    if mat.get("shin_split"):
+        boot_start = knee + (ankle - knee) * mat["shin_split"]
+        boot_m, boot_t = c.capsule_mask(boot_start, ankle, build["ankle_r"] * 1.25, build["ankle_r"] * 1.15)
+        c.paint_smooth(boot_m, boot_t, mat["boot"])
+        c.outline_mask(boot_m)
+    if mat.get("ankle_wrap"):
+        wrap_mid = ankle - (ankle - knee) * 0.18
+        wrap_m, wrap_t = c.capsule_mask(wrap_mid, ankle, build["ankle_r"] * 1.2, build["ankle_r"] * 1.15)
+        c.paint_smooth(wrap_m, wrap_t, mat["ankle_wrap"])
+        c.outline_mask(wrap_m)
+
+    c.paint_smooth(foot_m, foot_t, mat["foot"])
+    if mat.get("foot") == "skin":
+        c.dot(toe[0], toe[1], 4)
+        c.dot(toe[0] - 1, toe[1], 3)
+    elif mat.get("vest"):
+        c.line(toe, toe + np.array([3.0, -2.5]), RAMPS[mat["boot"]][1])
+    c.outline_mask(foot_m)
 
 
 def draw_arm(c, build, j, side, mat, fist_kind):
@@ -188,205 +219,211 @@ def draw_arm(c, build, j, side, mat, fist_kind):
     arm_dir = (f - e) / max(np.hypot(*(f - e)), 1e-6)
     up_dir = (e - s) / max(np.hypot(*(e - s)), 1e-6)
 
-    # Upper arm with deltoid cap
-    c.ellipse(s, build["arm_r"] * 1.15, build["arm_r"] * 1.15, mat["upper_arm"])
-    c.capsule(s, e, build["arm_r"], build["elbow_r"], mat["upper_arm"])
+    delt_m, delt_t = c.ellipse_mask(s, build["arm_r"] * 1.3, build["arm_r"] * 1.3)
+    u_arm_m, u_arm_t = c.capsule_mask(s, e, build["arm_r"] * 1.05, build["elbow_r"] * 1.05)
+    fore_m, fore_t = c.capsule_mask(e, f, build["elbow_r"] * 0.95, build["wrist_r"])
 
-    # Forearm
-    c.capsule(e, f, build["elbow_r"] * 0.95, build["wrist_r"], mat["forearm"])
-
-    # Sleeve
     sleeve = mat.get("sleeve", 0.0)
     if sleeve:
-        c.capsule(s, s + (e - s) * sleeve, build["arm_r"] * 1.35, build["elbow_r"] * 1.4, mat.get("sleeve_mat", mat["upper_arm"]))
+        sl = s + (e - s) * sleeve
+        sl_m, sl_t = c.capsule_mask(s, sl, build["arm_r"] * 1.4, build["elbow_r"] * 1.45)
+        c.paint_smooth(delt_m | sl_m, np.where(sl_m, sl_t, delt_t), mat.get("sleeve_mat", mat["upper_arm"]))
+        c.line(sl + np.array([-build["elbow_r"] * 1.2, 0]), sl + np.array([build["elbow_r"] * 1.2, 0]), RAMPS[mat["upper_arm"]][0])
+        fore_vis_m, fore_vis_t = c.capsule_mask(sl, f, build["elbow_r"] * 0.95, build["wrist_r"])
+        c.paint_smooth(fore_vis_m, fore_vis_t, mat["forearm"])
+        c.outline_mask(delt_m | sl_m | fore_vis_m)
+    else:
+        arm_m = delt_m | u_arm_m | fore_m
+        c.paint_smooth(arm_m, np.where(fore_m, fore_t, np.where(u_arm_m, u_arm_t, delt_t)), mat["upper_arm"])
+        c.dot(e[0], e[1], RAMPS[mat["upper_arm"]][2])
+        c.outline_mask(arm_m)
 
-    # Armor pauldrons (ATLAS)
+    if mat.get("band") and mat.get("torso") == "skin":
+        p_arm = s + (e - s) * 0.38
+        p_m, _ = c.ellipse_mask(p_arm, build["arm_r"] * 1.25, build["arm_r"] * 0.9)
+        c.paint_smooth(p_m, np.zeros(p_m.shape), mat.get("band", "white"))
+        c.line(p_arm, p_arm + np.array([-4.0, 5.5]), RAMPS[mat.get("band", "white")][1])
     if mat.get("armor"):
-        c.ellipse(s - up_dir * 1.5, build["arm_r"] * 1.4, build["arm_r"] * 1.2, mat["armor"])
-
-    # Wrist wraps (kaad chuek / athletic tape)
+        p_m, p_t = c.ellipse_mask(s - up_dir * 1.5, build["arm_r"] * 1.4, build["arm_r"] * 1.2)
+        c.paint_smooth(p_m, p_t, mat["armor"])
+        c.dot(s[0] - up_dir[0] * 1.5, s[1] - up_dir[1] * 1.5, 15)
+        c.outline_mask(p_m)
     if mat.get("wrist_wrap"):
         w_start = f - arm_dir * (build["wrist_r"] * 1.8)
-        c.capsule(w_start, f, build["wrist_r"] * 1.2, build["wrist_r"] * 1.15, mat["wrist_wrap"])
+        w_m, w_t = c.capsule_mask(w_start, f, build["wrist_r"] * 1.25, build["wrist_r"] * 1.15)
+        c.paint_smooth(w_m, w_t, mat["wrist_wrap"])
+        c.outline_mask(w_m)
+    if mat.get("boot") and mat.get("fist") == "B":
+        w_lace = f - arm_dir * (build["fist_r"] * 0.85)
+        c.line(w_lace, f - arm_dir * (build["fist_r"] * 0.35), 14)
 
-    # Articulated hands
     fr = build["fist_r"]
     ortho_dir = np.array([-arm_dir[1], arm_dir[0]])
-    if ortho_dir[0] < 0:
-        ortho_dir = -ortho_dir
+    if ortho_dir[0] < 0: ortho_dir = -ortho_dir
 
     if fist_kind == "open":
-        # Open palm with extended fingers
-        c.ellipse(f, fr * 0.85, fr * 0.85, mat["fist"])
+        fist_m, fist_t = c.ellipse_mask(f, fr * 0.85, fr * 0.85)
         tip = f + arm_dir * (fr * 1.3)
-        c.capsule(f, tip, fr * 0.75, fr * 0.45, mat["fist"])
-        # Thumb flare
-        thumb = f + (arm_dir * 0.5 + ortho_dir * 0.85) * (fr * 0.9)
-        c.capsule(f, thumb, fr * 0.5, fr * 0.35, mat["fist"])
+        fingers_m, fingers_t = c.capsule_mask(f, tip, fr * 0.75, fr * 0.45)
+        c.paint_smooth(fist_m | fingers_m, np.where(fingers_m, fingers_t, fist_t), mat["fist"])
+        c.outline_mask(fist_m | fingers_m)
     elif fist_kind == "knife":
-        # Karate shuto / Taekwondo spear-hand
-        c.ellipse(f, fr * 0.75, fr * 0.75, mat["fist"])
+        fist_m, fist_t = c.ellipse_mask(f, fr * 0.75, fr * 0.75)
         tip = f + arm_dir * (fr * 1.6)
-        c.capsule(f, tip, fr * 0.7, fr * 0.3, mat["fist"])
+        shuto_m, shuto_t = c.capsule_mask(f, tip, fr * 0.7, fr * 0.3)
+        c.paint_smooth(fist_m | shuto_m, np.where(shuto_m, shuto_t, fist_t), mat["fist"])
+        c.outline_mask(fist_m | shuto_m)
     elif fist_kind == "claw":
-        # Grappling / tiger claw: hooked fingers
-        c.ellipse(f, fr * 0.9, fr * 0.9, mat["fist"])
+        fist_m, fist_t = c.ellipse_mask(f, fr * 0.9, fr * 0.9)
         claw_tip = f + (arm_dir * 0.9 + ortho_dir * 0.6) * (fr * 1.1)
-        c.capsule(f, claw_tip, fr * 0.6, fr * 0.3, mat["fist"])
+        claw_m, claw_t = c.capsule_mask(f, claw_tip, fr * 0.6, fr * 0.3)
+        c.paint_smooth(fist_m | claw_m, np.where(claw_m, claw_t, fist_t), mat["fist"])
+        c.outline_mask(fist_m | claw_m)
     else:
-        # Clenched fist (fist / closed)
-        c.ellipse(f, fr, fr * 1.05, mat["fist"])
-        knuckle = f + arm_dir * (fr * 0.65)
-        c.dot(knuckle[0], knuckle[1], 1)
+        fist_m, fist_t = c.ellipse_mask(f, fr * 1.05, fr * 1.1)
+        c.paint_smooth(fist_m, fist_t, mat["fist"])
+        c.line(f + arm_dir * (fr * 0.5) - np.array([0, 2]), f + arm_dir * (fr * 0.5) + np.array([0, 2]), 1)
+        c.outline_mask(fist_m)
 
 
 def draw_head(c, build, j, mat, pose):
     head, up = j["head"], j["up"]
     r = build["head_r"]
-    c.capsule(j["neck"], head, build["neck_r"], build["neck_r"], "skin")
-    c.ellipse(head, r, r * 1.08, "skin")
+    neck_m, _ = c.capsule_mask(j["neck"], head, build["neck_r"], build["neck_r"])
+    c.idx[neck_m] = RAMPS["skin"][1]
+    head_m, head_t = c.ellipse_mask(head, r * 0.95, r * 1.1)
+    c.paint_smooth(head_m, head_t, "skin")
 
-    # Hair style selection
     hair_style = mat.get("hair_style", "default")
     hair_mat = mat.get("hair", "C")
-    lo, mid, hi = RAMPS[hair_mat]
-
-    # Base head inside mask
-    inside = np.hypot((c.px[..., 0] - head[0]) / (r + 1.2), (c.px[..., 1] - head[1]) / (r * 1.08 + 1.2)) <= 1.0
+    lo_h, mid_h, hi_h = RAMPS[hair_mat]
 
     if hair_style == "visor":
-        # Robotic helmet / sensor visor (ATLAS)
-        helmet = inside & ((c.px[..., 1] - head[1]) < r * 0.45)
+        helmet = head_m & ((c.px[..., 1] - head[1]) < r * 0.45)
         c.idx[helmet] = RAMPS[mat.get("armor", "A")][1]
-        # Glowing visor scanner slit
-        visor_band = inside & (np.abs(c.px[..., 1] - head[1]) <= 1.8) & ((c.px[..., 0] - head[0]) >= -r * 0.3)
+        visor_band = head_m & (np.abs(c.px[..., 1] - head[1]) <= 1.8) & ((c.px[..., 0] - head[0]) >= -r * 0.3)
         c.idx[visor_band] = RAMPS.get("accent", (15, 15, 15))[1]
-        c.dot(head[0] + r * 0.5, head[1], 14)  # white gleam
-        # Audio transducer ear pod
-        c.ellipse(head + np.array([-r * 0.7, 0]), 2.2, 3.0, mat.get("armor", "A"))
+        c.dot(head[0] + r * 0.5, head[1], 14)
     else:
-        # Standard / spiky / braids / topknot hair
-        hair_low = mat.get("hair_low", 0.0)
-        hair = (c.px[..., 0] - head[0]) * 0.55 + (c.px[..., 1] - head[1]) * 1.0 < -r * 0.15 - hair_low
-        back = c.px[..., 0] - head[0] < -r * 0.25
-        mask = inside & (hair | back)
+        hair_cap = head_m & ((c.px[..., 1] - head[1]) < -r * 0.05) & ((c.px[..., 0] - head[0]) < r * 0.35)
+        c.idx[hair_cap] = mid_h
+        hair_back = head_m & ((c.px[..., 0] - head[0]) < -r * 0.25)
+        c.idx[hair_back] = lo_h
 
-        tone = ((c.px - head) / r) @ LIGHT
-        c.idx[mask] = np.where(tone[mask] > 0.45, hi, np.where(tone[mask] < -0.2, lo, mid))
-
-        # Distinct hair silhouettes
-        if hair_style == "braids":
-            # Long cascading dreadlock braids trailing behind neck and back
-            b1 = head + np.array([-r * 0.6, r * 0.3])
-            b2 = head + np.array([-r * 0.8, r * 1.4])
-            c.capsule(b1, b2, 2.0, 1.4, hair_mat)
-            b3 = head + np.array([-r * 0.3, r * 0.4])
-            b4 = head + np.array([-r * 0.5, r * 1.6])
-            c.capsule(b3, b4, 1.8, 1.2, hair_mat)
+        if hair_style == "spiky":
+            for sp_dx, sp_dy in [(-r * 0.2, -r * 1.25), (-r * 0.6, -r * 1.1), (-r * 0.9, -r * 0.6), (-r * 0.9, -r * 0.1)]:
+                c.line(head + np.array([-2, -4]), head + np.array([sp_dx, sp_dy]), hi_h)
+                c.line(head + np.array([-1, -3]), head + np.array([sp_dx - 1, sp_dy + 1]), lo_h)
         elif hair_style == "topknot":
-            # Mongolian warrior topknot / shonmage atop cranium
             knot_c = head + np.array([-r * 0.1, -r * 1.15])
             c.ellipse(knot_c, 2.5, 3.2, hair_mat)
-            c.capsule(knot_c, knot_c + np.array([-3.0, 3.5]), 1.4, 1.0, hair_mat)
-        elif hair_style == "mongkhon":
-            # Sacred Muay Lao circlet headband and trailing tail
-            circlet = inside & (np.abs((c.px[..., 1] - (head[1] - r * 0.42))) < 1.6)
-            c.idx[circlet] = RAMPS[mat.get("band", "white")][1]
-            m_tail = head + np.array([-r - 2.5, -r * 0.35])
-            c.capsule(m_tail, m_tail + np.array([-6.0, 5.0]), 1.6, 1.1, mat.get("band", "white"))
-        elif hair_style == "spiky":
-            # Spiky lock silhouettes extending outwards
-            sp1 = head + np.array([-r * 0.3, -r * 0.9])
-            c.capsule(sp1, sp1 + np.array([-3.5, -4.0]), 2.0, 0.8, hair_mat)
-            sp2 = head + np.array([-r * 0.7, -r * 0.4])
-            c.capsule(sp2, sp2 + np.array([-4.5, -2.5]), 1.8, 0.7, hair_mat)
+            c.line(knot_c, knot_c + np.array([-3.0, 3.5]), lo_h)
+        elif hair_style == "braids":
+            b1 = head + np.array([-r * 0.6, r * 0.3])
+            c.line(b1, b1 + np.array([-3.0, 8.0]), hi_h)
+            b2 = head + np.array([-r * 0.3, r * 0.4])
+            c.line(b2, b2 + np.array([-2.0, 9.0]), mid_h)
 
-        edge = mask & ~(np.roll(mask, 1, 0) & np.roll(mask, -1, 0) & np.roll(mask, 1, 1) & np.roll(mask, -1, 1))
-        c.idx[edge & ~(np.roll(inside, 1, 1) & np.roll(inside, -1, 1) & np.roll(inside, 1, 0) & np.roll(inside, -1, 0))] = 1
-
-    # Standard headband
     if mat.get("band") and hair_style != "mongkhon":
-        band = inside & (np.abs((c.px[..., 1] - (head[1] - r * 0.38))) < 1.3)
-        c.idx[band] = RAMPS[mat["band"]][1]
-        tail = head + np.array([-r - 2.0, -r * 0.3])
-        c.capsule(tail, tail + np.array([-5.0, 3.0 + (pose.get("tail", 0))]), 1.4, 1.0, mat["band"])
+        band_mat = mat["band"]
+        lo_bd, mid_bd, hi_bd = RAMPS[band_mat]
+        band_y = head[1] - r * 0.25
+        band_m = head_m & (np.abs(c.px[..., 1] - band_y) <= 1.5) & ((c.px[..., 0] - head[0]) > -r * 0.8)
+        c.idx[band_m] = mid_bd
+        band_hi_m = head_m & (c.px[..., 1] >= band_y - 1.5) & (c.px[..., 1] < band_y - 0.5)
+        c.idx[band_hi_m] = hi_bd
+        tail_k = head + np.array([-r * 0.75, -r * 0.25])
+        c.line(tail_k, tail_k + np.array([-6.0, 3.0]), hi_bd)
+        c.line(tail_k + np.array([0, 1]), tail_k + np.array([-7.0, 5.0]), mid_bd)
+        c.line(tail_k + np.array([0, 2]), tail_k + np.array([-6.0, 7.0]), lo_bd)
+    elif hair_style == "mongkhon":
+        circlet = head_m & (np.abs(c.px[..., 1] - (head[1] - r * 0.38)) <= 1.6)
+        c.idx[circlet] = RAMPS[mat.get("band", "white")][1]
+        m_tail = head + np.array([-r - 2.5, -r * 0.35])
+        c.line(m_tail, m_tail + np.array([-6.0, 5.0]), RAMPS[mat.get("band", "white")][1])
 
-    # Face details: eye (sclera + pupil), brow ridge, jaw contour
-    ex, ey = head[0] + r * 0.45, head[1] - r * 0.05
-    c.dot(ex, ey, 14)        # white sclera
-    c.dot(ex + 1, ey, 1)     # dark pupil
-    c.dot(ex, ey - 2, 1)     # brow line
-    c.dot(ex + 1, ey - 2, 1)
-    c.dot(head[0] + r * 0.75, head[1] + r * 0.45, 2)  # mouth/jaw
-    c.dot(head[0] + r * 0.98, head[1] + r * 0.05, 3)  # nose bridge
+    eye_x, eye_y = head[0] + r * 0.35, head[1] - r * 0.05
+    c.dot(eye_x, eye_y, 14)
+    c.dot(eye_x + 1, eye_y, 1)
+    c.line(np.array([eye_x - 1, eye_y - 2]), np.array([eye_x + 2, eye_y - 2]), 1)
+    c.dot(head[0] + r * 0.75, head[1] + r * 0.05, 3)
+    c.dot(head[0] + r * 0.7, head[1] + r * 0.15, 1)
+    c.line(np.array([head[0] + r * 0.35, head[1] + r * 0.45]), np.array([head[0] + r * 0.65, head[1] + r * 0.45]), 1)
+    c.dot(head[0] + r * 0.5, head[1] + r * 0.55, 2)
+
+    c.outline_mask(head_m)
 
 
 def draw_torso(c, build, j, mat):
     hip, neck = j["hip"], j["neck"]
-    c.capsule(hip, neck - j["up"] * 2.0, build["waist_r"], build["chest_r"], mat["torso"])
+    up = j["up"]
+    torso_m, torso_t = c.capsule_mask(hip, neck - up * 2.0, build["waist_r"] * 1.05, build["chest_r"] * 1.1)
+    c.paint_smooth(torso_m, torso_t, mat["torso"])
 
-    # Anatomical muscular contouring (pectoral plates and abdominal grid)
     if mat.get("muscle") or mat.get("open_chest") or mat["torso"] == "skin":
-        chest = hip + j["up"] * (build["torso"] * 0.65)
-        # Pectoral muscle plate accents
+        chest = hip + up * (build["torso"] * 0.65)
         c.dot(chest[0] + 3, chest[1] + 2, 2)
         c.dot(chest[0] + 4, chest[1] + 2, 2)
         c.dot(chest[0] + 2, chest[1] + 3, 2)
         c.dot(chest[0] + 5, chest[1] + 3, 2)
-        # Rectus abdominis six-pack grid
         for k in range(3):
-            a = hip + j["up"] * (7 + k * 4.5)
+            a = hip + up * (7 + k * 4.5)
             c.dot(a[0] + 3, a[1], 2)
             c.dot(a[0] + 4, a[1], 2)
             c.dot(a[0] + 5, a[1] + 0.5, 3)
 
-    # Gi / Dobok V-neck lapels
     if mat.get("gi_lapel"):
         lapel_mat = mat["gi_lapel"]
-        v_pt = hip + j["up"] * (build["torso"] * 0.45)
-        sh_near = neck + np.array([build["chest_r"] * 0.6, -1.0])
-        sh_far = neck + np.array([-build["chest_r"] * 0.6, -1.0])
-        c.capsule(sh_near, v_pt, 2.2, 1.8, lapel_mat)
-        c.capsule(sh_far, v_pt, 2.0, 1.6, lapel_mat)
+        lo_l, mid_l, hi_l = RAMPS[lapel_mat]
+        v_apex = hip + up * (build["torso"] * 0.42)
+        sh_l = neck + np.array([-build["chest_r"] * 0.55, -1.0])
+        sh_r = neck + np.array([build["chest_r"] * 0.55, -1.0])
+        c.line(sh_l, v_apex + np.array([3.0, 3.0]), hi_l)
+        c.line(sh_l + np.array([1, 0]), v_apex + np.array([4.0, 3.0]), mid_l)
+        c.line(sh_r, v_apex - np.array([2.0, -2.0]), mid_l)
+        c.line(sh_r + np.array([-1, 0]), v_apex - np.array([3.0, -2.0]), lo_l)
+        c.dot(neck[0], neck[1] + 2, 3)
+        c.dot(neck[0] + 1, neck[1] + 3, 3)
+        c.dot(v_apex[0] - 1, v_apex[1] - 3, 2)
+        skirt_m, skirt_t = c.capsule_mask(hip + np.array([0, 1]), hip + np.array([1, 10]), build["waist_r"] * 1.15, build["waist_r"] * 1.1)
+        c.paint_smooth(skirt_m, skirt_t, mat["torso"])
 
-    # Wrestling vest / zodog
     if mat.get("vest"):
-        vest_mat = mat["vest"]
-        v_neck = neck - j["up"] * 2.0
-        c.capsule(v_neck, hip + j["up"] * (build["torso"] * 0.5), build["chest_r"] * 1.08, build["waist_r"] * 1.05, vest_mat)
-        # Open chest cutout revealing muscular chest
-        c.capsule(v_neck, hip + j["up"] * (build["torso"] * 0.55), build["chest_r"] * 0.5, build["waist_r"] * 0.4, "skin")
+        vest_m, vest_t = c.capsule_mask(hip + up * (build["torso"] * 0.5), neck - up * 1.5, build["waist_r"] * 1.08, build["chest_r"] * 1.15)
+        c.paint_smooth(vest_m, vest_t, mat["vest"])
 
-    # Cybernetic armor plating (ATLAS)
     if mat.get("armor"):
         cuirass_mat = mat["armor"]
-        c_top = neck - j["up"] * 2.0
-        c.capsule(c_top, hip + j["up"] * (build["torso"] * 0.4), build["chest_r"] * 1.06, build["waist_r"] * 1.03, cuirass_mat)
-        # Glowing chest reactor / power core
-        core_pos = hip + j["up"] * (build["torso"] * 0.6)
+        c_top = neck - up * 2.0
+        c.capsule(c_top, hip + up * (build["torso"] * 0.4), build["chest_r"] * 1.06, build["waist_r"] * 1.03, cuirass_mat)
+        core_pos = hip + up * (build["torso"] * 0.6)
         c.ellipse(core_pos, 2.4, 2.4, "accent")
-        c.dot(core_pos[0], core_pos[1], 14)  # white bright core
+        c.dot(core_pos[0], core_pos[1], 14)
 
-    # Open chest V-neck cut
-    if mat.get("open_chest") and not mat.get("vest"):
-        v = neck - j["up"] * 9.0
-        c.capsule(neck - j["up"] * 2.5, v, 2.6, 0.6, "skin")
-
-    # Martial arts belt / obi
-    if mat.get("belt"):
-        c.capsule(hip - j["up"] * 1.5 + np.array([-build["waist_r"] + 1, 0]),
-                  hip + j["up"] * 1.5 + np.array([build["waist_r"] - 1, 0]), 1.9, 1.9, mat["belt"])
-        c.capsule(hip + np.array([build["waist_r"] - 2, 1]), hip + np.array([build["waist_r"] + 2, 8]), 1.3, 1.0, mat["belt"])
-
-    # Waistband
     if mat.get("waistband"):
-        c.capsule(hip + np.array([-build["waist_r"], -2]), hip + np.array([build["waist_r"], -2]), 2.2, 2.2, mat["waistband"])
+        belt_mat = mat["waistband"]
+        lo_b, mid_b, hi_b = RAMPS[belt_mat]
+        belt_l = hip + np.array([-build["waist_r"] * 1.1, -3])
+        belt_r = hip + np.array([build["waist_r"] * 1.1, -1])
+        belt_m, _ = c.capsule_mask(belt_l, belt_r, 2.6, 2.6)
+        c.idx[belt_m] = mid_b
+        c.line(belt_l + np.array([0, -1]), belt_r + np.array([0, -1]), hi_b)
+        c.line(belt_l + np.array([0, 2]), belt_r + np.array([0, 2]), lo_b)
+        knot = hip + np.array([2.0, -1.0])
+        c.ellipse_mask(knot, 2.2, 2.0)
+        c.dot(knot[0], knot[1], hi_b)
+        c.dot(knot[0] + 1, knot[1], lo_b)
+        c.line(knot, knot + np.array([2.0, 11.0]), mid_b)
+        c.line(knot + np.array([1, 0]), knot + np.array([3.0, 11.0]), lo_b)
+        c.dot(knot[0] + 2.0, knot[1] + 10.0, 15)
+        c.dot(knot[0] + 2.0, knot[1] + 11.0, 15)
 
-    # Capoeira cordão / sash ties
     if mat.get("abada_cord"):
         cord_mat = mat["abada_cord"]
         cord_hip = hip + np.array([build["waist_r"] * 0.6, 0])
-        c.capsule(cord_hip, cord_hip + np.array([2.0, 10.0]), 1.2, 0.9, cord_mat)
+        c.line(cord_hip, cord_hip + np.array([2.0, 10.0]), RAMPS[cord_mat][1])
+
+    c.outline_mask(torso_m)
 
 
 def render(build, mat, pose):
