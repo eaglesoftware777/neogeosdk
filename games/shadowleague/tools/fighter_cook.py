@@ -74,9 +74,9 @@ class Fighter:
             self.joints.append(joints)
 
     def palettes(self):
-        base = {k: [tuple(c) for c in v] for k, v in self.data["palette"].items()}
+        base = {k: [tuple(c) for c in v] if isinstance(v[0], (list, tuple)) else tuple(v) for k, v in self.data["palette"].items()}
         alt = dict(base)
-        alt.update({k: [tuple(c) for c in v] for k, v in self.data.get("alt_palette", {}).items()})
+        alt.update({k: [tuple(c) for c in v] if isinstance(v[0], (list, tuple)) else tuple(v) for k, v in self.data.get("alt_palette", {}).items()})
         return art.ramp_colors(base), art.ramp_colors(alt)
 
     def hitbox(self, move):

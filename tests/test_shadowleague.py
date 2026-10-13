@@ -24,7 +24,7 @@ class ShadowLeagueTests(unittest.TestCase):
     def test_cooked_fighters_play(self):
         with tempfile.TemporaryDirectory(prefix="slf-data-") as d:
             binary = Path(d) / "slf"
-            subprocess.run(["cc", "-std=c99", "-DNG_FIGHT=1", "-I" + str(ROOT), "-I" + str(ROOT / "sdk"),
+            subprocess.run(["cc", "-std=c99", "-DNG_FIGHT=1", "-DSLF_ASSETS_IMPLEMENTATION=1", "-I" + str(ROOT), "-I" + str(ROOT / "sdk"),
                             "-I" + str(ROOT / "sdk/2d_engine"), str(ROOT / "tests/shadowleague_data_test.c"),
                             str(ROOT / "sdk/2d_engine/ng_fight.c"), "-o", str(binary)], check=True)
             subprocess.run([str(binary)], check=True)

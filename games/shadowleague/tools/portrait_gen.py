@@ -145,6 +145,13 @@ def draw_features(p, skin_tone=3, brow_col=1, hair_mat=12, hair_hi=13,
 
 def generate_portrait(fighter_id):
     """Generate 32x32 indexed image (0..15) for fighter."""
+    from pathlib import Path
+    from PIL import Image
+    authored = Path(__file__).resolve().parents[1] / 'assets/authored/portraits' / (fighter_id + '.png')
+    if authored.exists():
+        im = Image.open(authored)
+        assert im.mode == 'P' and im.size == (32, 32) and im.info.get('transparency') == 0
+        return np.array(im)
     p = np.zeros((32, 32), dtype=np.uint8)
     p[2:30, 2:30] = 11
 

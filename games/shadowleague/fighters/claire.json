@@ -35,35 +35,40 @@
     "torso": 31,
     "shoulder_drop": 4,
     "neck": 3,
-    "head_r": 8.8,
+    "head_r": 7.7,
     "upper_arm": 17,
     "forearm": 16,
     "depth": 5,
-    "thigh_r": 6.3,
+    "thigh_r": 6.93,
     "knee_r": 4.4,
     "ankle_r": 3.1,
     "toe_r": 2.5,
-    "arm_r": 4.0,
-    "elbow_r": 3.3,
-    "wrist_r": 2.6,
+    "arm_r": 4.4,
+    "elbow_r": 3.63,
+    "wrist_r": 2.86,
     "fist_r": 3.7,
     "waist_r": 7.8,
-    "chest_r": 10.1,
+    "chest_r": 10.71,
     "neck_r": 3.2
   },
   "materials": {
+    "portrait": "claire",
+    "costume": "jacket",
     "thigh": "A",
     "shin": "A",
     "foot": "B",
-    "torso": "A",
-    "upper_arm": "A",
+    "torso": "B",
+    "upper_arm": "B",
     "forearm": "skin",
-    "fist": "B",
-    "shin_split": 0.55,
-    "boot": "B",
-    "vest": "C",
+    "fist": "skin",
     "hair": "C",
-    "hair_style": "default"
+    "waistband": "B",
+    "piping": true,
+    "sleeve": 0.72,
+    "collar": true,
+    "trim": "A",
+    "shin_split": 0.52,
+    "boot": "B"
   },
   "palette": {
     "skin": [
@@ -85,54 +90,69 @@
     ],
     "A": [
       [
-        20,
-        28,
-        52
-      ],
-      [
-        42,
-        56,
-        102
-      ],
-      [
-        80,
+        107,
         104,
-        172
+        96
+      ],
+      [
+        182,
+        177,
+        163
+      ],
+      [
+        249,
+        242,
+        223
       ]
     ],
     "B": [
       [
-        130,
-        20,
-        26
+        34,
+        60,
+        97
       ],
       [
-        198,
-        38,
-        44
+        57,
+        101,
+        164
       ],
       [
-        242,
-        88,
-        88
+        78,
+        139,
+        225
       ]
     ],
     "C": [
       [
-        210,
-        206,
-        200
+        68,
+        35,
+        25
       ],
       [
-        236,
-        234,
-        230
+        115,
+        59,
+        42
       ],
       [
-        254,
-        254,
-        254
+        158,
+        81,
+        57
       ]
+    ],
+    "outline": [
+      17,
+      21,
+      31
+    ],
+    "white": [
+      250,
+      247,
+      235
+    ],
+    "accent": [
+      239,
+      188,
+      66
     ]
   },
   "alt_palette": {
@@ -174,26 +194,26 @@
   "poses": {
     "stance": {
       "hip": [
-        0,
-        4
+        1.2,
+        6
       ],
-      "torso": 8,
-      "head": -8,
+      "torso": -4,
+      "head": 4,
       "far_foot": [
-        15,
+        23,
         0
       ],
       "near_foot": [
-        -14,
+        -23,
         0
       ],
       "far_fist": [
-        16,
-        2
+        22,
+        0
       ],
       "near_fist": [
-        7,
-        15
+        4,
+        11
       ]
     },
     "walk_a": {
@@ -318,7 +338,7 @@
     "down": {
       "base": "stance",
       "hip": [
-        -10,
+        -4,
         42
       ],
       "torso": -94,
@@ -485,37 +505,778 @@
         50,
         -50
       ]
+    },
+    "v2_breathe": {
+      "base": "stance",
+      "hip": [
+        1.2,
+        7
+      ],
+      "far_fist": [
+        21,
+        1
+      ]
+    },
+    "v2_step0": {
+      "base": "stance",
+      "far_foot": [
+        25,
+        0
+      ],
+      "near_foot": [
+        -20,
+        -3
+      ],
+      "hip": [
+        1.2,
+        6
+      ],
+      "far_fist": [
+        23,
+        0
+      ],
+      "near_fist": [
+        3,
+        11
+      ]
+    },
+    "v2_step1": {
+      "base": "stance",
+      "far_foot": [
+        15,
+        0
+      ],
+      "near_foot": [
+        -2,
+        -6
+      ],
+      "hip": [
+        1.2,
+        7
+      ],
+      "far_fist": [
+        23,
+        0
+      ],
+      "near_fist": [
+        3,
+        11
+      ]
+    },
+    "v2_step2": {
+      "base": "stance",
+      "far_foot": [
+        7,
+        0
+      ],
+      "near_foot": [
+        19,
+        -3
+      ],
+      "hip": [
+        1.2,
+        6
+      ],
+      "far_fist": [
+        23,
+        0
+      ],
+      "near_fist": [
+        3,
+        11
+      ]
+    },
+    "v2_step3": {
+      "base": "stance",
+      "far_foot": [
+        -20,
+        -3
+      ],
+      "near_foot": [
+        25,
+        0
+      ],
+      "hip": [
+        1.2,
+        6
+      ],
+      "far_fist": [
+        21,
+        0
+      ],
+      "near_fist": [
+        5,
+        11
+      ]
+    },
+    "v2_step4": {
+      "base": "stance",
+      "far_foot": [
+        -2,
+        -6
+      ],
+      "near_foot": [
+        15,
+        0
+      ],
+      "hip": [
+        1.2,
+        7
+      ],
+      "far_fist": [
+        21,
+        0
+      ],
+      "near_fist": [
+        5,
+        11
+      ]
+    },
+    "v2_step5": {
+      "base": "stance",
+      "far_foot": [
+        19,
+        -3
+      ],
+      "near_foot": [
+        7,
+        0
+      ],
+      "hip": [
+        1.2,
+        6
+      ],
+      "far_fist": [
+        21,
+        0
+      ],
+      "near_fist": [
+        5,
+        11
+      ]
+    },
+    "v2_a_jab_wind": {
+      "hip": [
+        1.2,
+        6
+      ],
+      "torso": -0.48,
+      "head": 4,
+      "far_foot": [
+        23.0,
+        0.0
+      ],
+      "near_foot": [
+        -23.0,
+        0.0
+      ],
+      "far_fist": [
+        23.4,
+        -0.5
+      ],
+      "near_fist": [
+        4.0,
+        11.0
+      ]
+    },
+    "v2_a_jab_recover": {
+      "hip": [
+        1.2,
+        6
+      ],
+      "torso": 4.0,
+      "head": 4,
+      "far_foot": [
+        23.0,
+        0.0
+      ],
+      "near_foot": [
+        -23.0,
+        0.0
+      ],
+      "far_fist": [
+        24.8,
+        -0.9
+      ],
+      "near_fist": [
+        4.0,
+        11.0
+      ]
+    },
+    "v2_c_straight_wind": {
+      "hip": [
+        2,
+        2
+      ],
+      "torso": 0.40000000000000036,
+      "head": 4,
+      "far_foot": [
+        23.0,
+        0.0
+      ],
+      "near_foot": [
+        -23.0,
+        0.0
+      ],
+      "far_fist": [
+        22.0,
+        0.0
+      ],
+      "near_fist": [
+        11.7,
+        8.4
+      ]
+    },
+    "v2_c_straight_recover": {
+      "hip": [
+        2,
+        2
+      ],
+      "torso": 6.0,
+      "head": 4,
+      "far_foot": [
+        23.0,
+        0.0
+      ],
+      "near_foot": [
+        -23.0,
+        0.0
+      ],
+      "far_fist": [
+        22.0,
+        0.0
+      ],
+      "near_fist": [
+        19.0,
+        5.8
+      ]
+    },
+    "v2_b_kick_wind": {
+      "hip": [
+        1.2,
+        6
+      ],
+      "torso": -5.76,
+      "head": 4,
+      "far_foot": [
+        8,
+        -24
+      ],
+      "near_foot": [
+        -23.0,
+        0.0
+      ],
+      "far_fist": [
+        22.0,
+        0.0
+      ],
+      "near_fist": [
+        4.0,
+        11.0
+      ],
+      "far_knee": [
+        1,
+        -1
+      ]
+    },
+    "v2_b_kick_recover": {
+      "hip": [
+        1.2,
+        6
+      ],
+      "torso": -8.0,
+      "head": 4,
+      "far_foot": [
+        12,
+        -18
+      ],
+      "near_foot": [
+        -23.0,
+        0.0
+      ],
+      "far_fist": [
+        22.0,
+        0.0
+      ],
+      "near_fist": [
+        4.0,
+        11.0
+      ],
+      "far_knee": [
+        1,
+        -1
+      ]
+    },
+    "v2_d_kick_wind": {
+      "hip": [
+        1.2,
+        6
+      ],
+      "torso": -5.76,
+      "head": 4,
+      "far_foot": [
+        8,
+        -24
+      ],
+      "near_foot": [
+        -23.0,
+        0.0
+      ],
+      "far_fist": [
+        22.0,
+        0.0
+      ],
+      "near_fist": [
+        4.0,
+        11.0
+      ],
+      "far_knee": [
+        1,
+        -1
+      ]
+    },
+    "v2_d_kick_recover": {
+      "hip": [
+        1.2,
+        6
+      ],
+      "torso": -8.0,
+      "head": 4,
+      "far_foot": [
+        12,
+        -18
+      ],
+      "near_foot": [
+        -23.0,
+        0.0
+      ],
+      "far_fist": [
+        22.0,
+        0.0
+      ],
+      "near_fist": [
+        4.0,
+        11.0
+      ],
+      "far_knee": [
+        1,
+        -1
+      ]
+    },
+    "v2_c_sweep_wind": {
+      "hip": [
+        0,
+        26
+      ],
+      "torso": 6.5600000000000005,
+      "head": -16,
+      "far_foot": [
+        28.1,
+        -0.4
+      ],
+      "near_foot": [
+        -21.0,
+        0.0
+      ],
+      "far_fist": [
+        20.3,
+        1.4
+      ],
+      "near_fist": [
+        5.0,
+        12.2
+      ],
+      "far_knee": [
+        0,
+        -1
+      ]
+    },
+    "v2_c_sweep_recover": {
+      "hip": [
+        0,
+        26
+      ],
+      "torso": 20.0,
+      "head": -16,
+      "far_foot": [
+        35.4,
+        -1.1
+      ],
+      "near_foot": [
+        -18.1,
+        0.0
+      ],
+      "far_fist": [
+        18.7,
+        2.8
+      ],
+      "near_fist": [
+        5.9,
+        13.3
+      ],
+      "far_knee": [
+        0,
+        -1
+      ]
+    },
+    "v2_j_attack_wind": {
+      "hip": [
+        0,
+        -6
+      ],
+      "torso": -6.2,
+      "head": 4,
+      "far_foot": [
+        20.4,
+        -5.3
+      ],
+      "near_foot": [
+        -10.5,
+        -3.5
+      ],
+      "far_fist": [
+        20.1,
+        0.5
+      ],
+      "near_fist": [
+        5.0,
+        11.2
+      ],
+      "near_knee": [
+        0,
+        -1
+      ]
+    },
+    "v2_j_attack_recover": {
+      "hip": [
+        0,
+        -6
+      ],
+      "torso": -9.0,
+      "head": 4,
+      "far_foot": [
+        16.5,
+        -13.0
+      ],
+      "near_foot": [
+        7.8,
+        -8.6
+      ],
+      "far_fist": [
+        18.2,
+        0.9
+      ],
+      "near_fist": [
+        5.9,
+        11.5
+      ],
+      "near_knee": [
+        0,
+        -1
+      ]
+    },
+    "v2_guard_push_wind": {
+      "hip": [
+        2,
+        2
+      ],
+      "torso": 0.40000000000000036,
+      "head": 4,
+      "far_foot": [
+        23.0,
+        0.0
+      ],
+      "near_foot": [
+        -23.0,
+        0.0
+      ],
+      "far_fist": [
+        22.0,
+        0.0
+      ],
+      "near_fist": [
+        11.7,
+        8.4
+      ]
+    },
+    "v2_guard_push_recover": {
+      "hip": [
+        2,
+        2
+      ],
+      "torso": 6.0,
+      "head": 4,
+      "far_foot": [
+        23.0,
+        0.0
+      ],
+      "near_foot": [
+        -23.0,
+        0.0
+      ],
+      "far_fist": [
+        22.0,
+        0.0
+      ],
+      "near_fist": [
+        19.0,
+        5.8
+      ]
+    },
+    "v2_spec_1_wind": {
+      "hip": [
+        1.2,
+        6
+      ],
+      "torso": -8.4,
+      "head": 4,
+      "far_foot": [
+        8,
+        -24
+      ],
+      "near_foot": [
+        -23.0,
+        0.0
+      ],
+      "far_fist": [
+        22.0,
+        0.0
+      ],
+      "near_fist": [
+        4.0,
+        11.0
+      ]
+    },
+    "v2_spec_1_recover": {
+      "hip": [
+        1.2,
+        6
+      ],
+      "torso": -14.0,
+      "head": 4,
+      "far_foot": [
+        12,
+        -18
+      ],
+      "near_foot": [
+        -23.0,
+        0.0
+      ],
+      "far_fist": [
+        22.0,
+        0.0
+      ],
+      "near_fist": [
+        4.0,
+        11.0
+      ]
+    },
+    "v2_spec_2_wind": {
+      "hip": [
+        0,
+        -6
+      ],
+      "torso": -2.24,
+      "head": 4,
+      "far_foot": [
+        20.4,
+        -5.3
+      ],
+      "near_foot": [
+        8,
+        -24
+      ],
+      "far_fist": [
+        20.1,
+        0.5
+      ],
+      "near_fist": [
+        5.0,
+        11.2
+      ]
+    },
+    "v2_spec_2_recover": {
+      "hip": [
+        0,
+        -6
+      ],
+      "torso": 0.0,
+      "head": 4,
+      "far_foot": [
+        16.5,
+        -13.0
+      ],
+      "near_foot": [
+        12,
+        -18
+      ],
+      "far_fist": [
+        18.2,
+        0.9
+      ],
+      "near_fist": [
+        5.9,
+        11.5
+      ]
+    },
+    "v2_spec_3_wind": {
+      "hip": [
+        0,
+        -6
+      ],
+      "torso": 1.2800000000000002,
+      "head": 4,
+      "far_foot": [
+        23.7,
+        0.0
+      ],
+      "near_foot": [
+        -19.3,
+        -4.4
+      ],
+      "far_fist": [
+        20.1,
+        0.5
+      ],
+      "near_fist": [
+        5.0,
+        11.2
+      ]
+    },
+    "v2_spec_3_recover": {
+      "hip": [
+        0,
+        -6
+      ],
+      "torso": 8.0,
+      "head": 4,
+      "far_foot": [
+        24.6,
+        0.0
+      ],
+      "near_foot": [
+        -13.8,
+        -10.8
+      ],
+      "far_fist": [
+        18.2,
+        0.9
+      ],
+      "near_fist": [
+        5.9,
+        11.5
+      ]
+    },
+    "v2_super_anim_wind": {
+      "hip": [
+        1.2,
+        6
+      ],
+      "torso": -8.84,
+      "head": 4,
+      "far_foot": [
+        8,
+        -24
+      ],
+      "near_foot": [
+        -23.0,
+        0.0
+      ],
+      "far_fist": [
+        22.0,
+        0.0
+      ],
+      "near_fist": [
+        4.0,
+        11.0
+      ]
+    },
+    "v2_super_anim_recover": {
+      "hip": [
+        1.2,
+        6
+      ],
+      "torso": -15.0,
+      "head": 4,
+      "far_foot": [
+        12,
+        -18
+      ],
+      "near_foot": [
+        -23.0,
+        0.0
+      ],
+      "far_fist": [
+        22.0,
+        0.0
+      ],
+      "near_fist": [
+        4.0,
+        11.0
+      ]
     }
   },
   "anims": {
     "idle": [
       [
         "stance",
-        10
+        15
       ],
       [
-        "walk_a",
-        10
+        "v2_breathe",
+        15
       ]
     ],
     "walk_f": [
       [
-        "walk_a",
-        8
+        "v2_step0",
+        6
       ],
       [
-        "stance",
-        8
+        "v2_step1",
+        4
+      ],
+      [
+        "v2_step2",
+        5
+      ],
+      [
+        "v2_step3",
+        6
+      ],
+      [
+        "v2_step4",
+        4
+      ],
+      [
+        "v2_step5",
+        5
       ]
     ],
     "walk_b": [
       [
-        "stance",
-        8
+        "v2_step3",
+        6
       ],
       [
-        "walk_a",
-        8
+        "v2_step2",
+        5
+      ],
+      [
+        "v2_step1",
+        4
+      ],
+      [
+        "v2_step0",
+        6
+      ],
+      [
+        "v2_step5",
+        5
+      ],
+      [
+        "v2_step4",
+        4
       ]
     ],
     "crouch": [
@@ -632,7 +1393,7 @@
     ],
     "a_jab": [
       [
-        "stance",
+        "v2_a_jab_wind",
         2
       ],
       [
@@ -641,13 +1402,13 @@
         "active"
       ],
       [
-        "stance",
+        "v2_a_jab_recover",
         4
       ]
     ],
     "c_straight": [
       [
-        "stance",
+        "v2_c_straight_wind",
         4
       ],
       [
@@ -656,13 +1417,13 @@
         "active"
       ],
       [
-        "stance",
+        "v2_c_straight_recover",
         8
       ]
     ],
     "b_kick": [
       [
-        "stance",
+        "v2_b_kick_wind",
         3
       ],
       [
@@ -671,13 +1432,13 @@
         "active"
       ],
       [
-        "stance",
+        "v2_b_kick_recover",
         6
       ]
     ],
     "d_kick": [
       [
-        "stance",
+        "v2_d_kick_wind",
         5
       ],
       [
@@ -686,13 +1447,13 @@
         "active"
       ],
       [
-        "stance",
+        "v2_d_kick_recover",
         10
       ]
     ],
     "c_sweep": [
       [
-        "crouch",
+        "v2_c_sweep_wind",
         4
       ],
       [
@@ -701,13 +1462,13 @@
         "active"
       ],
       [
-        "crouch",
+        "v2_c_sweep_recover",
         12
       ]
     ],
     "j_attack": [
       [
-        "jump",
+        "v2_j_attack_wind",
         3
       ],
       [
@@ -768,7 +1529,7 @@
     ],
     "spec_1": [
       [
-        "stance",
+        "v2_spec_1_wind",
         4
       ],
       [
@@ -779,13 +1540,13 @@
         0
       ],
       [
-        "stance",
+        "v2_spec_1_recover",
         10
       ]
     ],
     "spec_2": [
       [
-        "stance",
+        "v2_spec_2_wind",
         4
       ],
       [
@@ -796,13 +1557,13 @@
         28
       ],
       [
-        "stance",
+        "v2_spec_2_recover",
         10
       ]
     ],
     "spec_3": [
       [
-        "stance",
+        "v2_spec_3_wind",
         4
       ],
       [
@@ -813,7 +1574,7 @@
         0
       ],
       [
-        "stance",
+        "v2_spec_3_recover",
         10
       ]
     ],
@@ -836,7 +1597,7 @@
         16
       ],
       [
-        "stance",
+        "v2_super_anim_recover",
         18
       ]
     ]
@@ -1213,5 +1974,12 @@
     "rush": "PIETINEMENT",
     "throw": "THROW",
     "super": "BALLET D'ACIER"
+  },
+  "visual_design": {
+    "costume": "jacket",
+    "legwear": "trousers",
+    "family": "savate",
+    "footwear": "boot",
+    "personality": "Savate: jacket, ivory and blue, savate guard"
   }
 }
