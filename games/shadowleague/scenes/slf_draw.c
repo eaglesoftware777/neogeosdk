@@ -87,6 +87,7 @@ void NEOGEO_USER slf_fix_palettes_init(void)
 
 void NEOGEO_USER slf_fighter_palettes(uint8_t def0, uint8_t alt0, uint8_t def1, uint8_t alt1)
 {
+    s_hud_valid = 0u;
     ng_palfx_screen_load(PAL_FIGHTER, slf_fighter_pals[def0][alt0 ? 1 : 0]);
     ng_palfx_screen_load((uint8_t)(PAL_FIGHTER + 1u), slf_fighter_pals[def1][alt1 ? 1 : 0]);
 }
@@ -656,11 +657,19 @@ void NEOGEO_USER slf_hud_draw(const NGFMatch *m)
             slf_puts(i ? 32u : 2u, 4u, g_bar, f->guard < 30u ? SLF_PAL_RED : SLF_PAL_DIM);
         }
 
-        /* Striker status */
-        if (m->striker[i].cooldown == 0u) {
-            slf_puts(i ? 33u : 2u, 24u, "STRK", SLF_PAL_GOLD);
-        } else {
-            slf_puts(i ? 33u : 2u, 24u, "WAIT", SLF_PAL_DIM);
+        {
+            char badge[7] = {'A','S','S','T',' ', '0', '\0'};
+            if (m->assist[i]) {
+                badge[5] = (char)('0' + m->assist_uses[i]);
+                slf_puts(i ? 32u : 2u, 24u, badge,
+                    m->assist_uses[i] && !m->striker[i].cooldown ? SLF_PAL_GOLD : SLF_PAL_DIM);
+            }
+            if (m->match_mode != NGF_MODE_1V1) {
+                char team[6] = {'T', ' ', '1', '/', '3', '\0'};
+                team[2] = (char)('1' + m->team_active[i]);
+                team[4] = (char)('0' + m->team_count[i]);
+                slf_puts(i ? 23u : 12u, 24u, team, SLF_PAL_TEXT);
+            }
         }
 
         /* Combo count, on the attacker's side. */

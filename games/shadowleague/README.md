@@ -4,7 +4,11 @@ An original one-on-one fighting game for Neo Geo MVS and AES, built on the
 SDK's `ng_fight` engine (`docs/fighting.md`). Cartridge id 781.
 
 **Status: V2 playable.** 44 individually styled fighters, four panoramic arenas,
-arcade and versus play against a CPU or a second player. Each fighter has a
+arcade and versus play against a CPU or a second player. Choose Duel or Team
+Battle before selecting characters. Team Battle uses three fighters and a separately
+chosen assist, with three calls per match; A+C calls the assist. Defeated members
+stay eliminated, the survivor keeps health with a small recovery, and each new
+bout gets a fresh timer and introduction. Each fighter has a
 discipline-specific guard, costume, six-phase footwork and strike preparation.
 Boxing fighters use punches on all four buttons, including jumping attacks. See `docs/roadmap/V1.7.5_STATUS.md`.
 
@@ -52,6 +56,7 @@ best of three.
 ```sh
 make GAME=shadowleague all            # PLATFORM=aes for the console build
 python3 games/shadowleague/tools/qa.py
+python3 games/shadowleague/tools/qa.py --team --seconds 180
 ```
 
 Sources:
@@ -63,6 +68,16 @@ Sources:
 - `tools/art.py` builds the C and S ROMs and `artbox/generated/slf_assets.h`.
 - `tools/sound.py` synthesizes the effects and music.
 - `scenes/slf_game.c` is the game flow, `scenes/slf_draw.c` the hardware side.
+
+## V2 gameplay
+
+Hitstop and super pauses freeze both fighters, assists, projectiles and the round
+clock. Buttons continue buffering through pauses; consumed presses and releases
+cannot trigger twice. Normal attacks accept a four-frame input buffer. Assists
+use their own fighter's attack animation and active hitbox, so distant opponents
+are safe and blocking still works. Tag mode in the SDK retains each member's health
+separately and skips defeated partners. Replay hashes include input queues and
+state timers.
 
 ## V2 artwork and installation
 
@@ -99,6 +114,6 @@ python3 games/shadowleague/tools/install_v2.py --target /mnt/c/mame/neogeosdk
 ```
 
 The installer stages and verifies both sets, then moves only the previous Shadow
-League files to `backups/shadowleague/<date>-before-v2-redraw`. Other games and
+League files to `backups/shadowleague/<date>-before-v2-gameplay`. Other games and
 shared BIOS files are preserved. MVS/AES launchers select the fresh private ROMs
 and hashes. Controls and soft DIPs are kept; old save states are left in the backup.

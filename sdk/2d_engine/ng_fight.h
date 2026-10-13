@@ -61,6 +61,8 @@ enum {
 typedef struct {
     uint8_t raw[NGF_INPUT_FRAMES];     /* raw controller bits per frame */
     uint8_t press[NGF_INPUT_FRAMES];   /* buttons pressed on that frame */
+    uint8_t pending, release_pending, motion_frames;
+    uint8_t press_age[4], release_age[4];
     uint8_t head;                      /* index of the newest frame */
     uint8_t released;                  /* buttons released this frame */
     uint8_t charge_back, charge_down;  /* frames held (saturating) */
@@ -75,6 +77,7 @@ uint8_t NEOGEO_USER ngf_input_dir(const NGFInput *in, uint8_t ago, uint8_t facin
 uint8_t NEOGEO_USER ngf_input_motion(const NGFInput *in, uint8_t motion, uint8_t facing_left, uint8_t window);
 /* All buttons of `mask` pressed within the last `buffer` frames. */
 uint8_t NEOGEO_USER ngf_input_pressed(const NGFInput *in, uint8_t mask, uint8_t buffer);
+uint8_t NEOGEO_USER ngf_input_released(const NGFInput *in, uint8_t mask, uint8_t buffer);
 void    NEOGEO_USER ngf_input_consume(NGFInput *in, uint8_t mask);
 /* Raw bits for a numpad direction, for a facing (CPU and replay input). */
 uint8_t NEOGEO_USER ngf_raw_from_numpad(uint8_t numpad, uint8_t facing_left);
@@ -234,7 +237,7 @@ typedef struct {
     int16_t vx;                       /* Q8 */
     uint8_t facing_left, state, state_timer, active;
     uint8_t anim, frame, frame_timer, cooldown;
-    uint8_t owner, move_index;
+    uint8_t owner, move_index, move_hit;
 } NGFStriker;
 
 typedef struct {
@@ -256,6 +259,9 @@ typedef struct {
     uint8_t team_count[2];                    /* members per team */
     uint8_t team_active[2];                   /* current active member */
     uint16_t tag_reserve[2];                  /* off-screen partner reserve life */
+    uint16_t team_life[2][3];
+    const NGFFighterDef *assist[2];
+    uint8_t assist_uses[2];
     NGFStriker striker[2];                    /* striker summon actors */
 } NGFMatch;
 
@@ -279,6 +285,7 @@ uint32_t NEOGEO_USER ngf_match_hash(const NGFMatch *m);
 void     NEOGEO_USER ngf_match_set_mode(NGFMatch *m, uint8_t mode);
 void     NEOGEO_USER ngf_team_set(NGFMatch *m, uint8_t who, const NGFFighterDef *f1,
                                   const NGFFighterDef *f2, const NGFFighterDef *f3);
+void     NEOGEO_USER ngf_striker_set(NGFMatch *m, uint8_t who, const NGFFighterDef *def);
 uint8_t  NEOGEO_USER ngf_call_striker(NGFMatch *m, uint8_t who);
 uint8_t  NEOGEO_USER ngf_tag_switch(NGFMatch *m, uint8_t who);
 

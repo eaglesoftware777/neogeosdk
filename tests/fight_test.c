@@ -258,6 +258,8 @@ static void test_720_and_teams(void)
     assert(m.f[1].life == tester.life);
 
     /* Striker summon */
+    run(100, 0, 0);
+    ngf_striker_set(&m, 0, &tester);
     assert(ngf_call_striker(&m, 0));
     assert(m.striker[0].active == 1);
     assert(m.striker[0].cooldown > 0);
@@ -269,6 +271,142 @@ static void test_720_and_teams(void)
     assert(m.team_active[0] == 0);
     assert(ngf_tag_switch(&m, 0));
     assert(m.team_active[0] == 1);
+}
+
+static void test_freeze_and_input_buffer(void)
+{
+    static const uint8_t super[] = {NGF_RAW_DOWN, NGF_RAW_DOWN | NGF_RAW_RIGHT, NGF_RAW_RIGHT,
+        NGF_RAW_DOWN, NGF_RAW_DOWN | NGF_RAW_RIGHT, NGF_RAW_RIGHT | NGF_BTN_A};
+    uint8_t i, pause, frame, timer;
+    int32_t x, h;
+    uint16_t life, clock;
+    fight_at(100);
+    m.f[0].power = NGF_POWER_STOCK;
+    tap(super, 6, 0);
+    pause = m.super_freeze; frame = m.f[0].frame; timer = m.f[0].frame_timer;
+    x = m.f[0].x; h = m.f[0].h; life = m.f[1].life; clock = m.clock;
+    assert(pause > 0);
+    for (i = 0; i < pause; i++) {
+        run(1, NGF_RAW_RIGHT, 0);
+        assert(m.f[0].x == x && m.f[0].h == h);
+        assert(m.f[0].frame == frame && m.f[0].frame_timer == timer);
+        assert(m.f[1].life == life && m.clock == clock);
+    }
+    assert(m.super_freeze == 0);
+    fight_at(180);
+    m.hitstop = 12;
+    run(1, NGF_BTN_A, 0); run(11, 0, 0);
+    assert(m.f[0].state == NGF_S_IDLE);
+    run(1, 0, 0);
+    assert(m.f[0].state == NGF_S_ATTACK && m.f[0].move_index == 5);
+    run(40, 0, 0);
+    assert(m.f[0].state == NGF_S_IDLE);
+    fight_at(180);
+    m.hitstop = 12;
+    ngf_set_cpu(&m, 1, 4); m.cpu[1].wait = 8;
+    run(12, 0, 0);
+    assert(m.cpu[1].wait == 8);
+}
+
+static void test_assist_collision(void)
+{
+    uint16_t life;
+    fight_at(260); ngf_striker_set(&m, 0, &tester); m.hitstop = 12;
+    run(1, NGF_BTN_A | NGF_BTN_C, 0); run(11, 0, 0); run(1, 0, 0);
+    assert(m.striker[0].active && m.assist_uses[0] == 2);
+    fight_at(260);
+    assert(!ngf_call_striker(&m, 0));
+    assert(!ngf_call_striker(&m, 255));
+    ngf_striker_set(&m, 0, &tester); life = m.f[1].life;
+    assert(ngf_call_striker(&m, 0));
+    assert(m.assist_uses[0] == 2);
+    assert(!ngf_call_striker(&m, 0));
+    run(120, 0, 0);
+    assert(m.f[1].life == life && !m.striker[0].active);
+    fight_at(40); ngf_striker_set(&m, 0, &tester); life = m.f[1].life;
+    assert(ngf_call_striker(&m, 0)); run(100, 0, 0);
+    assert(m.f[1].life < life);
+    assert(m.f[1].life == life - (uint16_t)moves[6].damage * 3u / 4u);
+    m.assist_uses[0] = 0; m.striker[0].cooldown = 0;
+    assert(!ngf_call_striker(&m, 0));
+}
+
+static void ko_side(uint8_t who)
+{
+    m.f[who].life = 0; m.hitstop = m.super_freeze = 0;
+    m.state = NGF_M_KO; m.state_timer = 150; run(1, 0, 0);
+}
+
+static void test_team_lifecycle(void)
+{
+    NGFFighterDef other = tester;
+    other.name = "OTHER"; other.life = 900;
+    ngf_match_init(&m, &tester, &tester, 640, 7);
+    ngf_match_set_mode(&m, NGF_MODE_3V3);
+    ngf_team_set(&m, 0, &tester, &tester, &tester);
+    ngf_team_set(&m, 1, &tester, &other, &tester);
+    run(100, 0, 0); m.f[0].life = 480; m.f[1].h = 500; m.f[1].push_vx = 300;
+    ko_side(1);
+    assert(m.state == NGF_M_INTRO && m.team_active[1] == 1);
+    assert(m.f[1].def == &other && m.f[1].life == 900);
+    assert(m.f[1].grounded && m.f[1].h == 0 && m.f[1].push_vx == 0);
+    assert(m.f[0].life == 555 && m.f[0].wins == 0);
+    assert(m.clock == NGF_ROUND_SECONDS * NGF_SECOND_FRAMES);
+    run(100, 0, 0); ko_side(1);
+    assert(m.team_active[1] == 2 && m.f[1].life == tester.life);
+    run(100, 0, 0); ko_side(1);
+    assert(m.state == NGF_M_ROUND_END && m.f[0].wins == 1 && m.f[1].life == 0);
+    run(140, 0, 0); assert(m.state == NGF_M_OVER && m.winner == 0);
+
+    ngf_match_init(&m, &tester, &tester, 640, 7);
+    ngf_match_set_mode(&m, NGF_MODE_3V3);
+    ngf_team_set(&m, 0, &tester, &tester, NULL);
+    ngf_team_set(&m, 1, &tester, &tester, NULL);
+    run(100, 0, 0); m.f[0].life = 0; ko_side(1);
+    assert(m.team_active[0] == 1 && m.team_active[1] == 1 && m.state == NGF_M_INTRO);
+    run(100, 0, 0); m.f[0].life = 0; ko_side(1);
+    assert(m.round_winner == 2 && m.state == NGF_M_ROUND_END);
+
+    ngf_match_init(&m, &tester, &tester, 640, 7);
+    ngf_match_set_mode(&m, NGF_MODE_3V3);
+    ngf_team_set(&m, 1, &tester, &other, NULL);
+    run(100, 0, 0); m.f[0].life = 300; m.f[1].life = 100;
+    m.state = NGF_M_TIME_UP; m.state_timer = 90; run(1, 0, 0);
+    assert(m.team_active[1] == 1 && m.f[1].life == 900 && m.team_life[1][0] == 0);
+
+    fight_at(180); ngf_match_set_mode(&m, NGF_MODE_TAG);
+    ngf_team_set(&m, 0, &tester, &other, &tester);
+    m.f[0].life = 321;
+    assert(ngf_tag_switch(&m, 0)); assert(m.f[0].life == 900);
+    m.f[0].state = NGF_S_IDLE; m.f[0].life = 654;
+    assert(ngf_tag_switch(&m, 0)); assert(m.f[0].life == 600);
+    m.f[0].state = NGF_S_IDLE;
+    assert(ngf_tag_switch(&m, 0)); assert(m.f[0].life == 321);
+    assert(m.team_life[0][1] == 654);
+    m.f[0].state = NGF_S_IDLE; m.team_life[0][1] = m.team_life[0][2] = 0;
+    assert(!ngf_tag_switch(&m, 0)); assert(!ngf_tag_switch(&m, 255));
+}
+
+static void test_simultaneous_contact(void)
+{
+    fight_at(40); m.f[0].state_timer = 100; run(1, NGF_BTN_A, NGF_BTN_A);
+    assert(m.f[0].state_timer == 0); run(8, 0, 0);
+    assert(m.f[0].life < tester.life && m.f[1].life < tester.life);
+    assert(m.f[0].life == m.f[1].life);
+}
+
+static void test_replay_hash(void)
+{
+    uint32_t before;
+    fight_at(120); before = ngf_match_hash(&m);
+    m.f[0].frame_timer++;
+    assert(ngf_match_hash(&m) != before); m.f[0].frame_timer--;
+    m.f[0].input.pending = NGF_BTN_A;
+    assert(ngf_match_hash(&m) != before); m.f[0].input.pending = 0;
+    m.team_life[0][1] = 321;
+    assert(ngf_match_hash(&m) != before); m.team_life[0][1] = 0;
+    m.cpu[0].wait++;
+    assert(ngf_match_hash(&m) != before);
 }
 
 static void test_cpu_determinism(void)
@@ -286,7 +424,12 @@ int main(void)
     test_hit_and_block();
     test_throw_projectile_super();
     test_720_and_teams();
+    test_freeze_and_input_buffer();
+    test_assist_collision();
+    test_team_lifecycle();
     test_timer_draw();
+    test_simultaneous_contact();
+    test_replay_hash();
     test_cpu_determinism();
     printf("fight_test: ok (NGFMatch %u bytes)\n", (unsigned)sizeof(NGFMatch));
     return 0;
