@@ -48,11 +48,15 @@ void     NEOGEO_USER slf_puts_right(uint8_t x_end, uint8_t y, const char *text, 
 void     NEOGEO_USER slf_big(uint8_t x, uint8_t y, uint16_t tile, uint8_t w, uint8_t h, uint8_t pal);
 void     NEOGEO_USER slf_big_center(uint8_t y, uint16_t tile, uint8_t w, uint8_t h, uint8_t pal);
 void     NEOGEO_USER slf_clear_rows(uint8_t y0, uint8_t y1);
+void     NEOGEO_USER slf_stage_set(uint8_t stage_id);
+uint8_t  NEOGEO_USER slf_stage_current(void);
 void     NEOGEO_USER slf_stage_show(int16_t camera_x);
 void     NEOGEO_USER slf_fighter_palettes(uint8_t def0, uint8_t alt0, uint8_t def1, uint8_t alt1);
 void     NEOGEO_USER slf_fighter_pose(uint8_t slot, uint8_t def, uint8_t sprite, int16_t x, int16_t y, uint8_t flip);
 void     NEOGEO_USER slf_fighter_hide(uint8_t slot);
 void     NEOGEO_USER slf_fighter_bank(uint8_t slot, uint8_t bank);
+void     NEOGEO_USER slf_portraits_show(uint8_t win_base, uint8_t p1_cur, uint8_t p2_cur, uint8_t p1_done, uint8_t p2_done, uint16_t tick);
+void     NEOGEO_USER slf_portraits_hide(void);
 void     NEOGEO_USER slf_match_draw(const NGFMatch *m, const uint8_t *def_index);
 void     NEOGEO_USER slf_hud_draw(const NGFMatch *m);
 void     NEOGEO_USER slf_fx_spawn(uint8_t kind, int16_t screen_x, int16_t screen_y);

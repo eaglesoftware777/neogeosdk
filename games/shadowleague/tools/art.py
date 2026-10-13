@@ -27,6 +27,7 @@ sys.path.insert(0, str(TOOLS))
 from palette_banks import palette_words, quantize, reconstruct  # noqa: E402
 from tile_codec import encode_image, write_utility_tiles  # noqa: E402
 import fighter_cook  # noqa: E402
+import portrait_gen  # noqa: E402
 
 spec = importlib.util.spec_from_file_location("slf_system_font", ROOT / "bios/tools/gen_sfix.py")
 font = importlib.util.module_from_spec(spec)
@@ -117,56 +118,45 @@ def noise(shape, seed, scale):
     return big
 
 
-def stage_far():
+def stage_dojo_far():
     """Arata Mountain distant peaks and dawn sky."""
     h, w = 160, 512
     img = np.zeros((h, w, 3), np.float32)
     y = np.arange(h)[:, None] * np.ones((1, w))
     x = np.ones((h, 1)) * np.arange(w)[None, :]
-    # Sky.
     t = np.clip(y / 140.0, 0, 1)
     sky = (1 - t)[..., None] * np.array([70, 92, 150]) + t[..., None] * np.array([246, 170, 110])
     img[:] = sky
-    # Sun.
     sun = np.hypot(x - 300, y - 80) < 18
     img[sun] = (255, 226, 160)
-    # Mountains, far and near.
     far = 60 + 26 * np.sin(x / 47.0) + 14 * np.sin(x / 19.0 + 1.3)
     near = 86 + 22 * np.sin(x / 61.0 + 2.0) + 9 * np.sin(x / 13.0)
     img[y > far] = (118, 104, 140)
     img[(y > far) & (y < far + 6) & (np.sin(x / 9.0) > 0.2)] = (220, 206, 220)
     img[y > near] = (64, 72, 98)
-    # Misty pines at the foot.
     trees = 110 + 6 * np.abs(np.sin(x / 5.0)) + 4 * np.sin(x / 23.0)
     img[y > trees] = (40, 58, 62)
     img = np.clip(img, 0, 255).astype(np.uint8)
     return np.dstack([img, np.full((h, w), 255, np.uint8)])
 
-
-def stage_near():
+def stage_dojo_near():
     """Arata Mountain Dojo interior: beams, pillars, open/closed shoji, plank floor."""
     h, w = 224, 512
     img = np.zeros((h, w, 4), np.uint8)
     wall_top, floor_top = 40, 168
     y = np.arange(h)[:, None] * np.ones((1, w))
     x = np.ones((h, 1)) * np.arange(w)[None, :]
-
-    # Upper wall and ceiling.
     img[:wall_top, :, :3] = (60, 38, 28)
     img[:wall_top, :, 3] = 255
     img[:wall_top][(np.arange(wall_top) % 10 < 2)] = (44, 28, 22, 255)
     img[wall_top - 6:wall_top] = (96, 62, 40, 255)
     img[wall_top:wall_top + 3] = (30, 20, 16, 255)
-
-    # Vertical pillars.
     for px in range(0, w + 1, 128):
         x0, x1 = px - 9, px + 9
         xs = slice(max(x0, 0), min(x1, w))
         img[wall_top:floor_top, xs] = (110, 70, 44, 255)
         img[wall_top:floor_top, max(x0, 0):max(x0 + 3, 0)] = (70, 44, 30, 255)
         img[wall_top:floor_top, min(x1 - 3, w):min(x1, w)] = (150, 100, 64, 255)
-
-    # Shoji panels: 0 and 3 closed, 1 and 2 open (transparent window onto far peaks).
     for k, px in enumerate(range(0, w, 128)):
         if k in (0, 3):
             area = (slice(wall_top + 3, floor_top), slice(px + 9, px + 119))
@@ -176,17 +166,13 @@ def stage_near():
             for gy in range(wall_top + 3, floor_top, 22):
                 img[gy:gy + 2, px + 9:px + 119] = (120, 84, 54, 255)
             if k == 0:
-                # Hanging scroll.
                 img[60:128, px + 50:px + 78] = (226, 214, 180, 255)
                 img[58:62, px + 46:px + 82] = (80, 50, 34, 255)
                 img[126:130, px + 46:px + 82] = (80, 50, 34, 255)
                 for sy in range(70, 120, 9):
                     img[sy:sy + 5, px + 60:px + 68] = (40, 30, 30, 255)
         else:
-            # Open window lintel bar.
             img[wall_top + 3:wall_top + 8, px + 9:px + 119] = (96, 62, 40, 255)
-
-    # Lanterns.
     for lx in (128, 384):
         img[wall_top + 3:wall_top + 14, lx - 1:lx + 1] = (30, 20, 16, 255)
         lamp = ((x - lx) / 9) ** 2 + ((y - (wall_top + 26)) / 13) ** 2 < 1
@@ -194,8 +180,6 @@ def stage_near():
         img[lamp & (np.abs(x - lx) < 4)] = (250, 150, 80, 255)
         img[(np.abs(y - (wall_top + 14)) < 2) & (np.abs(x - lx) < 7)] = (40, 26, 18, 255)
         img[(np.abs(y - (wall_top + 39)) < 2) & (np.abs(x - lx) < 7)] = (40, 26, 18, 255)
-
-    # Floor: polished planks.
     fy = y - floor_top
     floor = y >= floor_top
     plank = np.floor((x - 256) / (12 + fy * 0.55))
@@ -208,10 +192,177 @@ def stage_near():
     seam = floor & (np.abs(((x - 256) / (12 + fy * 0.55)) - np.round((x - 256) / (12 + fy * 0.55))) < 0.04)
     img[seam] = (96, 60, 34, 255)
     img[(y >= floor_top) & (y < floor_top + 3)] = (88, 56, 34, 255)
-    # Window light on the floor.
     glow = floor & (np.abs(x - 300 + (y - floor_top) * 0.6) < 40)
     img[glow, :3] = np.clip(img[glow, :3].astype(np.float32) * 1.12, 0, 255).astype(np.uint8)
     return img
+
+def stage_bangkok_far():
+    """Bangkok night skyline: deep indigo night sky, illuminated Buddhist spires and modern towers, stadium searchlights."""
+    h, w = 160, 512
+    img = np.zeros((h, w, 3), np.float32)
+    y = np.arange(h)[:, None] * np.ones((1, w))
+    x = np.ones((h, 1)) * np.arange(w)[None, :]
+    t = np.clip(y / 150.0, 0, 1)
+    sky = (1 - t)[..., None] * np.array([18, 14, 40]) + t[..., None] * np.array([44, 24, 72])
+    img[:] = sky
+    for beam_x, beam_angle in ((140, 0.4), (380, -0.4)):
+        beam = np.abs((x - beam_x) - (160 - y) * beam_angle) < (8 + (160 - y) * 0.15)
+        img[beam] = img[beam] * 0.7 + np.array([80, 110, 180]) * 0.3
+    bldg_h = 70 + 25 * np.sin(x / 31.0) + 15 * np.cos(x / 11.0)
+    img[y > bldg_h] = (24, 18, 38)
+    spire = (np.abs(x - 256) < 3) & (y > 40)
+    img[spire] = (240, 190, 60)
+    windows = (y > bldg_h + 10) & ((x.astype(int) % 8 < 2) & (y.astype(int) % 12 < 3))
+    img[windows] = (255, 220, 110)
+    img = np.clip(img, 0, 255).astype(np.uint8)
+    return np.dstack([img, np.full((h, w), 255, np.uint8)])
+
+def stage_bangkok_near():
+    """Bangkok night stadium: overhead trusses, stadium ring ropes, turnbuckles, cheering crowd, ring canvas."""
+    h, w = 224, 512
+    img = np.zeros((h, w, 4), np.uint8)
+    wall_top, floor_top = 40, 168
+    y = np.arange(h)[:, None] * np.ones((1, w))
+    x = np.ones((h, 1)) * np.arange(w)[None, :]
+    img[:wall_top, :, :3] = (32, 28, 48)
+    img[:wall_top, :, 3] = 255
+    img[:wall_top][(np.arange(wall_top) % 12 < 3)] = (20, 18, 32, 255)
+    img[wall_top - 4:wall_top] = (60, 50, 80, 255)
+    for lx in (100, 256, 412):
+        lamp = ((x - lx) / 12) ** 2 + ((y - (wall_top + 10)) / 8) ** 2 < 1
+        img[lamp] = (255, 240, 180, 255)
+        img[lamp & (np.abs(x - lx) < 6)] = (255, 255, 230, 255)
+    crowd_y = 120 + 8 * np.sin(x / 9.0) + 4 * np.cos(x / 4.0)
+    crowd = (y > crowd_y) & (y < floor_top)
+    img[crowd, :3] = (22, 18, 32)
+    img[crowd, 3] = 255
+    for ry, rope_col in ((floor_top - 44, (200, 30, 30)), (floor_top - 30, (230, 230, 230)), (floor_top - 16, (30, 80, 200))):
+        img[ry:ry + 3, :, :3] = rope_col
+        img[ry:ry + 3, :, 3] = 255
+    for px in (32, 480):
+        img[floor_top - 54:floor_top, px - 6:px + 6] = (80, 70, 100, 255)
+        img[floor_top - 54:floor_top - 12, px - 4:px + 4] = (220, 40, 40, 255)
+    canvas = y >= floor_top
+    base = np.array([40, 60, 120]) + ((x - 256) / 256.0 * 10)[..., None]
+    img[canvas, :3] = np.clip(base[canvas], 0, 255)
+    img[canvas, 3] = 255
+    img[(y >= floor_top) & (y < floor_top + 4)] = (210, 30, 30, 255)
+    ring_circle = canvas & (np.hypot(x - 256, (y - floor_top - 28) * 1.8) < 80) & (np.hypot(x - 256, (y - floor_top - 28) * 1.8) > 74)
+    img[ring_circle] = (240, 240, 250, 255)
+    return img
+
+def stage_brooklyn_far():
+    """Brooklyn warehouse gym: dusk industrial skyline through grimy factory windows."""
+    h, w = 160, 512
+    img = np.zeros((h, w, 3), np.float32)
+    y = np.arange(h)[:, None] * np.ones((1, w))
+    x = np.ones((h, 1)) * np.arange(w)[None, :]
+    t = np.clip(y / 140.0, 0, 1)
+    sky = (1 - t)[..., None] * np.array([120, 50, 40]) + t[..., None] * np.array([210, 110, 50])
+    img[:] = sky
+    bridge = (np.abs(x - 180) < 6) | (np.abs(x - 330) < 6)
+    img[bridge & (y > 30)] = (50, 30, 30)
+    cable = (y > 40) & (np.abs((y - 40) - ((x - 255) / 100.0) ** 2 * 35) < 3)
+    img[cable] = (60, 35, 35)
+    factories = 95 + 16 * np.sin(x / 42.0) + 10 * np.cos(x / 17.0)
+    img[y > factories] = (40, 24, 24)
+    tower = (np.abs(x - 420) < 14) & (y > 70) & (y < 95)
+    img[tower] = (45, 26, 26)
+    img = np.clip(img, 0, 255).astype(np.uint8)
+    return np.dstack([img, np.full((h, w), 255, np.uint8)])
+
+def stage_brooklyn_near():
+    """Brooklyn gym: weathered brick walls, steel pillars, hanging heavy bags, weathered canvas floor."""
+    h, w = 224, 512
+    img = np.zeros((h, w, 4), np.uint8)
+    wall_top, floor_top = 40, 168
+    y = np.arange(h)[:, None] * np.ones((1, w))
+    x = np.ones((h, 1)) * np.arange(w)[None, :]
+    img[:wall_top, :, :3] = (48, 36, 32)
+    img[:wall_top, :, 3] = 255
+    img[:wall_top][(np.arange(wall_top) % 10 < 2)] = (32, 22, 20, 255)
+    wall = (y >= wall_top) & (y < floor_top)
+    brick = ((y.astype(int) // 8) % 2) * 8
+    mortar = ((x.astype(int) + brick) % 16 == 0) | (y.astype(int) % 8 == 0)
+    img[wall, :3] = (140, 52, 42)
+    img[wall & mortar, :3] = (80, 40, 34)
+    img[wall, 3] = 255
+    for px in range(0, w + 1, 128):
+        img[wall_top:floor_top, px - 10:px + 10] = (60, 64, 72, 255)
+        img[wall_top:floor_top, px - 3:px + 3] = (90, 96, 110, 255)
+    for bx in (96, 352):
+        img[wall_top:wall_top + 20, bx - 1:bx + 1] = (120, 120, 130, 255)
+        bag = ((x - bx) / 10) ** 2 + ((y - (wall_top + 52)) / 30) ** 2 < 1
+        img[bag] = (90, 36, 28, 255)
+        img[bag & (x < bx - 3)] = (130, 54, 40, 255)
+    canvas = y >= floor_top
+    fy = y - floor_top
+    base = np.array([130, 100, 75]) + ((fy * 0.4)[..., None])
+    img[canvas, :3] = np.clip(base[canvas], 0, 255)
+    img[canvas, 3] = 255
+    img[(y >= floor_top) & (y < floor_top + 3)] = (60, 42, 32, 255)
+    return img
+
+def stage_chimera_far():
+    """Project Chimera facility: subterranean server mainframe, cryogenic stasis pods with fighter silhouettes."""
+    h, w = 160, 512
+    img = np.zeros((h, w, 3), np.float32)
+    y = np.arange(h)[:, None] * np.ones((1, w))
+    x = np.ones((h, 1)) * np.arange(w)[None, :]
+    t = np.clip(y / 150.0, 0, 1)
+    sky = (1 - t)[..., None] * np.array([8, 24, 32]) + t[..., None] * np.array([14, 52, 64])
+    img[:] = sky
+    racks = (x.astype(int) % 48 < 36) & (y > 30)
+    img[racks] = (18, 36, 44)
+    leds = racks & (y > 45) & ((x.astype(int) % 12 < 3) & (y.astype(int) % 8 < 2))
+    img[leds] = (40, 240, 210)
+    for pod_x in (120, 256, 392):
+        pod = (np.abs(x - pod_x) < 16) & (y > 40) & (y < 130)
+        img[pod] = (20, 100, 120)
+        glow = (np.abs(x - pod_x) < 12) & (y > 46) & (y < 124)
+        img[glow] = (60, 220, 240)
+        subject = glow & (((x - pod_x) ** 2 / 20.0 + (y - 85) ** 2 / 500.0) < 1)
+        img[subject] = (10, 40, 50)
+    img = np.clip(img, 0, 255).astype(np.uint8)
+    return np.dstack([img, np.full((h, w), 255, np.uint8)])
+
+def stage_chimera_near():
+    """Project Chimera cybernetic facility: metallic catwalks, hazard yellow/black stripes, hexagonal floor, conduits."""
+    h, w = 224, 512
+    img = np.zeros((h, w, 4), np.uint8)
+    wall_top, floor_top = 40, 168
+    y = np.arange(h)[:, None] * np.ones((1, w))
+    x = np.ones((h, 1)) * np.arange(w)[None, :]
+    img[:wall_top, :, :3] = (24, 32, 40)
+    img[:wall_top, :, 3] = 255
+    img[:wall_top][(np.arange(wall_top) % 8 < 2)] = (14, 20, 26, 255)
+    for cy in (16, 28):
+        img[cy:cy + 2, :, :3] = (30, 200, 230)
+    for hx in range(0, w, 16):
+        stripe = (y >= wall_top - 6) & (y < wall_top) & (((x - hx + y) % 16) < 8)
+        img[stripe, :3] = (230, 190, 20)
+    for px in range(0, w + 1, 128):
+        img[wall_top:floor_top, px - 12:px + 12] = (36, 48, 58, 255)
+        img[wall_top:floor_top, px - 4:px + 4] = (60, 190, 220, 255)
+    canvas = y >= floor_top
+    fy = y - floor_top
+    base = np.array([20, 28, 36]) + ((fy * 0.3)[..., None])
+    img[canvas, :3] = np.clip(base[canvas], 0, 255)
+    img[canvas, 3] = 255
+    circuits = canvas & (((x.astype(int) % 32 == 0) & (fy % 16 < 12)) | (fy % 16 == 0))
+    img[circuits, :3] = (40, 210, 240)
+    img[(y >= floor_top) & (y < floor_top + 3)] = (30, 200, 230, 255)
+    return img
+
+def stage_idx_for_fighter(f):
+    st = f.data.get("stage", "").upper()
+    if any(k in st for k in ("BANGKOK", "FESTIVAL", "TEMPLE", "RAINFOREST", "MEDITERRANEAN", "SAND", "SOUTHERN")):
+        return 1
+    elif any(k in st for k in ("BROOKLYN", "LONDON", "BARCELONA", "SALVADOR", "BEACH", "ARENA", "MUNICIPAL", "JOHANNESBURG")):
+        return 2
+    elif any(k in st for k in ("CHIMERA", "WAREHOUSE", "HARBOR", "COMPOUND", "AI", "FACILITY", "LODGE")):
+        return 3
+    return 0
 
 
 # --------------------------------------------------------------------------
@@ -354,7 +505,14 @@ def build():
     header = ["/* Generated by games/shadowleague/tools/art.py. */", "#ifndef SLF_ASSETS_H", "#define SLF_ASSETS_H",
               "#include <stdint.h>", '#include "sdk/2d_engine/ng_fight.h"']
     fighters = fighter_cook.load_all()
-    order = ["kenji", "jack", "minjun", "batu", "amara", "niran", "atlas"]
+    order = [
+        "kenji", "somchai", "amara", "jack", "claire", "viktor", "linwei", "batu",
+        "minjun", "malik", "idris", "arun", "ryuhei", "diego", "niran", "chenbao",
+        "aisha", "kiran", "elena", "fahri", "maya", "aditya", "sokha", "lucas",
+        "noah", "zara", "thabo", "maia", "tomas", "leila", "kaimana", "aleksei",
+        "hayato", "mason", "lotus", "tororojo", "irina", "kofi", "xiaomei", "zero",
+        "echo", "atlas", "viper", "mirage"
+    ]
     fighters.sort(key=lambda f: order.index(f.id) if f.id in order else 99)
     bases, pals, names, styles, origins = [], [], [], [], []
     for f in fighters:
@@ -377,6 +535,21 @@ def build():
         "{" + ",".join("{" + ",".join(str(v) for v in p) + "}" for p in pair) + "}" for pair in pals) + "};")
     header.append("static const char * const slf_fighter_origin[] = {" + ",".join(f'"{o}"' for o in origins) + "};")
     header.append("static const char * const slf_fighter_style[] = {" + ",".join(f'"{s}"' for s in styles) + "};")
+    fighter_stages = [stage_idx_for_fighter(f) for f in fighters]
+    header.append(emit("slf_fighter_stages", fighter_stages, "uint8_t"))
+    # Fighter Select portraits (32x32, 2x2 tiles each) and cursor bracket frame
+    port_imgs = [portrait_gen.generate_portrait(f.id) for f in fighters]
+    cur_img = portrait_gen.generate_cursor_frame()
+    port_block = np.vstack(port_imgs + [cur_img])
+    port_tile = place(port_block)
+    header.append(f"#define SLF_PORTRAIT_TILE {port_tile}u")
+    header.append(f"#define SLF_CURSOR_TILE {port_tile + len(fighters) * 4}u")
+    cursor_pals = [
+        pal16([(0, 0, 0)] + [(0, 0, 0)] * 13 + [(255, 255, 255), (255, 60, 60)]),
+        pal16([(0, 0, 0)] + [(0, 0, 0)] * 13 + [(255, 255, 255), (60, 180, 255)]),
+    ]
+    header.append("static const uint16_t slf_cursor_pals[2][16] = {" + ",".join(
+        "{" + ",".join(str(v) for v in palette_words(p)) + "}" for p in cursor_pals) + "};")
     # Effects: 3 kinds x 4 frames, 32x32 (2x2 tiles).
     fx = place(np.vstack([spark(fr, kind) for kind in range(3) for fr in range(4)]))
     header.append(f"#define SLF_FX_TILE {fx}u")
@@ -386,24 +559,47 @@ def build():
     header.append(f"#define SLF_SHADOW_TILE {sh}u")
     header.append("static const uint16_t slf_shadow_pal[16] = {" + ",".join(
         str(v) for v in palette_words(pal16([(0, 0, 0), (52, 30, 18)]))) + "};")
-    # Stage: near (dojo interior, 512x224) and far (mountain peaks, 512x160).
-    near_rgba = stage_near()
-    far_rgba = stage_far()
-    both_rgba = np.vstack([near_rgba, far_rgba])
-    indices, banks, assignment = quantize(both_rgba, bank_limit=10)
-    ind_near = indices[:224, :]
-    ind_far = indices[224:, :]
-    assign_near = assignment[:14, :]
-    assign_far = assignment[14:, :]
-    st_near = place(ind_near)
-    st_far = place(ind_far)
-    header.append(f"#define SLF_STAGE_TILE {st_near}u\n#define SLF_STAGE_COLS 32u\n#define SLF_STAGE_ROWS 14u\n#define SLF_STAGE_W 512")
-    header.append(f"#define SLF_STAGE_FAR_TILE {st_far}u\n#define SLF_STAGE_FAR_ROWS 10u")
-    header.append(f"#define SLF_PAL_STAGE {PAL_STAGE}u\n#define SLF_STAGE_BANKS {len(banks)}u")
-    header.append(emit("slf_stage_map", assign_near.flatten() + PAL_STAGE, "uint8_t"))
-    header.append(emit("slf_stage_far_map", assign_far.flatten() + PAL_STAGE, "uint8_t"))
-    header.append("static const uint16_t slf_stage_pal[][16] = {" + ",".join(
-        "{" + ",".join(str(v) for v in palette_words(b)) + "}" for b in banks) + "};")
+    # 4 Arenas: near (512x224) and far (512x160).
+    stage_defs = [
+        ("dojo", stage_dojo_near(), stage_dojo_far(), "ARATA MOUNTAIN DOJO - JAPAN"),
+        ("bangkok", stage_bangkok_near(), stage_bangkok_far(), "BANGKOK NIGHT STADIUM - THAILAND"),
+        ("brooklyn", stage_brooklyn_near(), stage_brooklyn_far(), "BROOKLYN UNDERGROUND GYM - USA"),
+        ("chimera", stage_chimera_near(), stage_chimera_far(), "PROJECT CHIMERA FACILITY - THE VEIL"),
+    ]
+    st_near_tiles, st_far_tiles, st_maps, st_far_maps, st_pals = [], [], [], [], []
+    for s_idx, (s_name, near_rgba, far_rgba, s_desc) in enumerate(stage_defs):
+        both_rgba = np.vstack([near_rgba, far_rgba])
+        indices, banks, assignment = quantize(both_rgba, bank_limit=8)
+        ind_near = indices[:224, :]
+        ind_far = indices[224:, :]
+        assign_near = assignment[:14, :]
+        assign_far = assignment[14:, :]
+        st_near = place(ind_near)
+        st_far = place(ind_far)
+        st_near_tiles.append(st_near)
+        st_far_tiles.append(st_far)
+        st_maps.append(assign_near.flatten() + PAL_STAGE)
+        st_far_maps.append(assign_far.flatten() + PAL_STAGE)
+        bank_pals = [palette_words(b) for b in banks]
+        while len(bank_pals) < 8:
+            bank_pals.append([0] * 16)
+        st_pals.append(bank_pals)
+
+    header.append(f"#define SLF_STAGE_COUNT 4u\n#define SLF_STAGE_COLS 32u\n#define SLF_STAGE_ROWS 14u\n#define SLF_STAGE_W 512")
+    header.append(f"#define SLF_STAGE_FAR_ROWS 10u\n#define SLF_PAL_STAGE {PAL_STAGE}u\n#define SLF_STAGE_BANKS 8u")
+    header.append(emit("slf_stage_tiles", st_near_tiles))
+    header.append(emit("slf_stage_far_tiles", st_far_tiles))
+    for s_idx in range(4):
+        header.append(emit(f"slf_stage_map_{s_idx}", st_maps[s_idx], "uint8_t"))
+        header.append(emit(f"slf_stage_far_map_{s_idx}", st_far_maps[s_idx], "uint8_t"))
+    header.append("static const uint8_t * const slf_stage_maps[4] = {" + ",".join(f"slf_stage_map_{i}" for i in range(4)) + "};")
+    header.append("static const uint8_t * const slf_stage_far_maps[4] = {" + ",".join(f"slf_stage_far_map_{i}" for i in range(4)) + "};")
+    header.append("static const uint16_t slf_stage_pals[4][8][16] = {" + ",".join(
+        "{" + ",".join("{" + ",".join(str(v) for v in b) + "}" for b in p) + "}" for p in st_pals) + "};")
+    header.append("static const char * const slf_stage_names[4] = {" + ",".join(f'"{d[3]}"' for d in stage_defs) + "};")
+    header.append("#define SLF_STAGE_TILE slf_stage_tiles[0]\n#define SLF_STAGE_FAR_TILE slf_stage_far_tiles[0]")
+    header.append("#define slf_stage_map slf_stage_maps[0]\n#define slf_stage_far_map slf_stage_far_maps[0]")
+    header.append("#define slf_stage_pal slf_stage_pals[0]")
     comp = np.array(near_rgba, copy=True)
     comp_trans = comp[:160, :, 3] < 128
     comp[:160, :, :3][comp_trans] = far_rgba[:160, :, :3][comp_trans]

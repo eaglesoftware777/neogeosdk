@@ -34,9 +34,15 @@ void NEOGEO_USER soundSetADPCMBLoop(uint8_t enable);
 #define SPR_PROJ      87u
 #define SPR_STRIKER   93u
 #define SPR_FX       107u
+#define SPR_PORTRAITS 115u
+#define SPR_CURSOR_1P 129u
+#define SPR_CURSOR_2P 131u
 #define PAL_FIGHTER   16u
 #define PAL_FX        18u
 #define PAL_SHADOW    21u
+#define PAL_PORTRAITS 22u
+#define PAL_CURSOR_1P 29u
+#define PAL_CURSOR_2P 30u
 #define FX_SLOTS       4u
 #define FX_TICKS       3u
 
@@ -44,9 +50,12 @@ static uint16_t s_palette_base[104u * 16u];
 static uint16_t s_palette_out[104u * 16u];
 static NGSpriteGroup s_stage_far, s_stage, s_fighter[2], s_shadow[2], s_fx[FX_SLOTS];
 static NGSpriteGroup s_proj[NGF_PROJECTILES], s_striker[2];
+static NGSpriteGroup s_portraits[7], s_cursor[2];
+static uint8_t s_stage_id;
 static uint8_t s_stage_live, s_stage_far_live;
 static uint8_t s_fighter_live[2], s_fighter_pal[2], s_shadow_live[2];
 static uint8_t s_proj_live[NGF_PROJECTILES], s_striker_live[2];
+static uint8_t s_portraits_live, s_cursor_live[2], s_port_last_win;
 static uint8_t s_fx_kind[FX_SLOTS], s_fx_timer[FX_SLOTS], s_fx_live[FX_SLOTS];
 static int16_t s_fx_x[FX_SLOTS], s_fx_y[FX_SLOTS];
 static uint8_t s_joy[2], s_joy_prev[2], s_start, s_start_prev;
@@ -61,6 +70,8 @@ void NEOGEO_USER slf_presentation_init(void)
     ng_palfx_screen_init(s_palette_base, s_palette_out, 104u);
     ng_fix_init();
     ng_fix_set_ascii_base(0xD00u);
+    s_stage_id = 0u;
+    s_port_last_win = 0xFFu;
     s_rng = 0x5A17u;
 }
 
@@ -70,7 +81,7 @@ void NEOGEO_USER slf_fix_palettes_init(void)
     for (i = 0u; i < 8u; i++) ng_palfx_screen_load(i, slf_fix_pals[i]);
     for (i = 0u; i < 3u; i++) ng_palfx_screen_load((uint8_t)(PAL_FX + i), slf_fx_pals[i]);
     ng_palfx_screen_load(PAL_SHADOW, slf_shadow_pal);
-    for (i = 0u; i < SLF_STAGE_BANKS; i++) ng_palfx_screen_load((uint8_t)(SLF_PAL_STAGE + i), slf_stage_pal[i]);
+    for (i = 0u; i < SLF_STAGE_BANKS; i++) ng_palfx_screen_load((uint8_t)(SLF_PAL_STAGE + i), slf_stage_pals[s_stage_id][i]);
 }
 
 void NEOGEO_USER slf_fighter_palettes(uint8_t def0, uint8_t alt0, uint8_t def1, uint8_t alt1)
@@ -104,6 +115,9 @@ void NEOGEO_USER slf_scene_begin(void)
     }
     for (i = 0u; i < NGF_PROJECTILES; i++) s_proj_live[i] = 0u;
     for (i = 0u; i < FX_SLOTS; i++) s_fx_live[i] = s_fx_timer[i] = 0u;
+    s_portraits_live = 0u;
+    s_port_last_win = 0xFFu;
+    s_cursor_live[0] = s_cursor_live[1] = 0u;
     s_hud_valid = 0u;
     ng_fix_invalidate_all();
     slf_fix_palettes_init();
@@ -195,13 +209,39 @@ void NEOGEO_USER slf_clear_rows(uint8_t y0, uint8_t y1)
 }
 
 /* ------------------------------------------------------------ sprites */
+void NEOGEO_USER slf_stage_set(uint8_t stage_id)
+{
+    uint8_t b;
+    if (stage_id >= SLF_STAGE_COUNT) stage_id = 0u;
+    if (stage_id == s_stage_id && s_stage_live) return;
+    s_stage_id = stage_id;
+    for (b = 0u; b < SLF_STAGE_BANKS; b++) {
+        ng_palfx_screen_load((uint8_t)(SLF_PAL_STAGE + b), slf_stage_pals[s_stage_id][b]);
+    }
+    if (s_stage_far_live) {
+        ng_sprite_group_cancel(&s_stage_far);
+        ng_sprite_group_hide(&s_stage_far);
+        s_stage_far_live = 0u;
+    }
+    if (s_stage_live) {
+        ng_sprite_group_cancel(&s_stage);
+        ng_sprite_group_hide(&s_stage);
+        s_stage_live = 0u;
+    }
+}
+
+uint8_t NEOGEO_USER slf_stage_current(void)
+{
+    return s_stage_id;
+}
+
 void NEOGEO_USER slf_stage_show(int16_t camera_x)
 {
     int16_t far_x = (int16_t)(camera_x >> 1);
     if (!s_stage_far_live) {
-        ng_sprite_group_init(&s_stage_far, SPR_STAGE_FAR, SLF_STAGE_COLS, SLF_STAGE_FAR_ROWS, SLF_STAGE_FAR_TILE, SLF_PAL_STAGE);
+        ng_sprite_group_init(&s_stage_far, SPR_STAGE_FAR, SLF_STAGE_COLS, SLF_STAGE_FAR_ROWS, slf_stage_far_tiles[s_stage_id], SLF_PAL_STAGE);
         ng_sprite_group_set_tile_stride(&s_stage_far, SLF_STAGE_COLS);
-        ng_sprite_group_set_palette_map(&s_stage_far, slf_stage_far_map);
+        ng_sprite_group_set_palette_map(&s_stage_far, slf_stage_far_maps[s_stage_id]);
         ng_sprite_group_set_pos(&s_stage_far, (int16_t)-far_x, 0);
         ng_sprite_group_upload(&s_stage_far);
         s_stage_far_live = 1u;
@@ -210,9 +250,9 @@ void NEOGEO_USER slf_stage_show(int16_t camera_x)
         ng_sprite_group_flush(&s_stage_far);
     }
     if (!s_stage_live) {
-        ng_sprite_group_init(&s_stage, SPR_STAGE, SLF_STAGE_COLS, SLF_STAGE_ROWS, SLF_STAGE_TILE, SLF_PAL_STAGE);
+        ng_sprite_group_init(&s_stage, SPR_STAGE, SLF_STAGE_COLS, SLF_STAGE_ROWS, slf_stage_tiles[s_stage_id], SLF_PAL_STAGE);
         ng_sprite_group_set_tile_stride(&s_stage, SLF_STAGE_COLS);
-        ng_sprite_group_set_palette_map(&s_stage, slf_stage_map);
+        ng_sprite_group_set_palette_map(&s_stage, slf_stage_maps[s_stage_id]);
         ng_sprite_group_set_pos(&s_stage, (int16_t)-camera_x, 0);
         ng_sprite_group_upload(&s_stage);
         s_stage_live = 1u;
@@ -259,6 +299,79 @@ void NEOGEO_USER slf_fighter_hide(uint8_t slot)
         ng_sprite_group_cancel(&s_shadow[slot]);
         ng_sprite_group_hide(&s_shadow[slot]);
         s_shadow_live[slot] = 0u;
+    }
+}
+
+void NEOGEO_USER slf_portraits_show(uint8_t win_base, uint8_t p1_cur, uint8_t p2_cur, uint8_t p1_done, uint8_t p2_done, uint16_t tick)
+{
+    uint8_t i, p;
+    if (win_base > (uint8_t)(SLF_FIGHTER_COUNT - 7u)) win_base = (uint8_t)(SLF_FIGHTER_COUNT - 7u);
+    if (!s_portraits_live) {
+        ng_palfx_screen_load(PAL_CURSOR_1P, slf_cursor_pals[0]);
+        ng_palfx_screen_load(PAL_CURSOR_2P, slf_cursor_pals[1]);
+        for (i = 0u; i < 7u; i++) {
+            uint8_t f = (uint8_t)(win_base + i);
+            int16_t px = (int16_t)(36 + i * 36);
+            int16_t py = 36;
+            uint16_t tile = (uint16_t)(SLF_PORTRAIT_TILE + f * 4u);
+            ng_palfx_screen_load((uint8_t)(PAL_PORTRAITS + i), slf_fighter_pals[f][0]);
+            ng_sprite_group_init(&s_portraits[i], (uint16_t)(SPR_PORTRAITS + i * 2u), 2u, 2u, tile, (uint8_t)(PAL_PORTRAITS + i));
+            ng_sprite_group_set_pos(&s_portraits[i], px, py);
+            ng_sprite_group_upload(&s_portraits[i]);
+        }
+        for (p = 0u; p < 2u; p++) {
+            uint8_t cur = p ? p2_cur : p1_cur;
+            int16_t cx = (int16_t)(cur >= win_base && cur < (uint8_t)(win_base + 7u) ? (36 + (cur - win_base) * 36) : -32);
+            int16_t cy = 36;
+            ng_sprite_group_init(&s_cursor[p], (uint16_t)(p ? SPR_CURSOR_2P : SPR_CURSOR_1P), 2u, 2u, SLF_CURSOR_TILE, (uint8_t)(p ? PAL_CURSOR_2P : PAL_CURSOR_1P));
+            ng_sprite_group_set_pos(&s_cursor[p], cx, cy);
+            ng_sprite_group_upload(&s_cursor[p]);
+            s_cursor_live[p] = 1u;
+        }
+        s_port_last_win = win_base;
+        s_portraits_live = 1u;
+        return;
+    }
+    if (win_base != s_port_last_win) {
+        for (i = 0u; i < 7u; i++) {
+            uint8_t f = (uint8_t)(win_base + i);
+            uint16_t tile = (uint16_t)(SLF_PORTRAIT_TILE + f * 4u);
+            ng_palfx_screen_load((uint8_t)(PAL_PORTRAITS + i), slf_fighter_pals[f][0]);
+            ng_sprite_group_set_tile_base(&s_portraits[i], tile);
+            ng_sprite_group_flush(&s_portraits[i]);
+        }
+        s_port_last_win = win_base;
+    }
+    for (p = 0u; p < 2u; p++) {
+        uint8_t cur = p ? p2_cur : p1_cur;
+        int16_t cx = (int16_t)(cur >= win_base && cur < (uint8_t)(win_base + 7u) ? (36 + (cur - win_base) * 36) : -32);
+        int16_t cy = 36;
+        if (p1_cur == p2_cur && (tick & 4u) && p == 1u) {
+            ng_sprite_group_set_pos(&s_cursor[1], -32, -32);
+        } else {
+            ng_sprite_group_set_pos(&s_cursor[p], cx, cy);
+        }
+        ng_sprite_group_flush(&s_cursor[p]);
+    }
+}
+
+void NEOGEO_USER slf_portraits_hide(void)
+{
+    uint8_t i;
+    if (s_portraits_live) {
+        for (i = 0u; i < 7u; i++) {
+            ng_sprite_group_cancel(&s_portraits[i]);
+            ng_sprite_group_hide(&s_portraits[i]);
+        }
+        s_portraits_live = 0u;
+        s_port_last_win = 0xFFu;
+    }
+    for (i = 0u; i < 2u; i++) {
+        if (s_cursor_live[i]) {
+            ng_sprite_group_cancel(&s_cursor[i]);
+            ng_sprite_group_hide(&s_cursor[i]);
+            s_cursor_live[i] = 0u;
+        }
     }
 }
 
