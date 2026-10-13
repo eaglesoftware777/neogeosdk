@@ -1,0 +1,38 @@
+# Shadow League Fighting — changelog
+
+Shadow League Fighting's ROM sets ship with the NeoGeoSDK pre-releases and
+are numbered on their own: `_v2` with v1.7.5.
+
+## v2 (2026-10-13, NeoGeoSDK v1.7.5 pre-release) — The 44-Fighter Chimera Expansion
+
+### The game
+
+- Complete 44-Fighter Tournament Roster:
+  - 32 Main Tournament Competitors from 32 distinct countries.
+  - 7 Bonus Contenders (Lotus, El Toro Rojo, Irina, Kofi, Xiao Mei, etc.).
+  - 2 Hidden Masters (Zero, Echo).
+  - 3 Project Chimera Prototype Droids (Atlas, Viper, Mirage).
+- 44 custom 32x32 arcade character select portraits with native fighter palettes.
+- Windowed Character Select Screen:
+  - Intuitive navigation across all 44 combatants (Left/Right step, Up/Down column jump).
+  - Live animated preview of chosen fighter in neutral and victory stances.
+  - Independent 1P and 2P cursor tracking and palette-matched indicators.
+- Multi-Arena Stages:
+  - Arata Mountain Dojo (Japan)
+  - Bangkok Night Stadium (Thailand)
+  - Brooklyn Underground Gym (USA)
+  - Project Chimera Facility - The Veil Core
+  - Real-time stage switching, parallax scrolling (near 512x224 and far 512x160 layers), and dynamic 8-bank palette loading.
+- Attract Mode Presentation:
+  - Atmospheric Prologue: "The Veil - Project Chimera" storyline crawl.
+  - "How To Play" tutorial demonstration detailing 4-button arcade inputs, tactical rolls (A+B), blowback counters (C+D), and special/super execution.
+  - Champion Roster Showcase highlighting fighters, countries, and styles.
+  - Interactive CPU demo bouts.
+- 8-Stage Arcade Ladder & Epilogue:
+  - Face 5 global contenders, 1 rival bout, 1 sub-boss droid (Atlas/Viper), and the final boss (Mirage).
+  - Climactic story epilogue and victory presentation upon tournament completion.
+
+### Hardware & Graphics
+
+- C-ROM utilization optimized to 64,528 tiles, remaining strictly within the 65,536 (16-bit) hardware indexing budget without bankswitching latency.
+- Verified in MAME (MVS and AES) with open EagleBIOS.
