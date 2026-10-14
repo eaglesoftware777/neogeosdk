@@ -3,6 +3,20 @@
 Sky Lance's ROM sets ship with the NeoGeoSDK pre-releases and are numbered
 on their own: `_v1` with v1.7.3.
 
+## Hardware RC1 (2026-10-14)
+
+- Fix BIOS-dependent black terrain and aircraft by uploading a completed
+  palette buffer at the start of the cartridge's VBlank interrupt.
+- Keep the overhead cloud on a straight course when the player banks.
+- Inset critical HUD information for CRT overscan; prioritize hostile bullet
+  uploads and include cockpit instruments in the scanline budget.
+- Preserve the v1 graphics and sound ROM payloads. Provide matched MVS/AES
+  NeoSD images and a BackBit MVS package with checksums.
+- Validate four 90-second MAME runs with EagleBIOS and Universe BIOS 4.0.
+  Physical BackBit/NeoSD confirmation remains pending; difficulty is unchanged.
+
+Downloads and test details: [Hardware RC1](https://github.com/eaglesoftware777/neogeosdk/releases/tag/skylance-hardware-rc1-20261014).
+
 ## v1 (2026-10-12, NeoGeoSDK v1.7.3 pre-release) — the first public set
 
 ### The game

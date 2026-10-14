@@ -24,6 +24,19 @@
 #include "sdk/2d_engine/ng_palette_math.h"
 #include "sprite_meta.h"
 #include "infix_palettes.h"
+#include "sky_video_sync.h"
+
+static SkyVideoSync s_video_sync;
+static volatile uint16_t s_palette_irq_count;
+static volatile uint8_t s_palette_irq_lines;
+
+void NEOGEO_USER sky_palette_vblank(void)
+{
+    if (!sky_video_take(&s_video_sync)) return;
+    s_palette_irq_lines = ng_vram_lines_left();
+    ng_palfx_vblank();
+    s_palette_irq_count++;
+}
 
 const uint16_t * NEOGEO_USER ng_get_screen_palette(uint16_t screen_id);
 static uint8_t s_palette_loaded[NG_ASSET_META_COUNT + 1u];
@@ -145,7 +158,8 @@ void NEOGEO_USER sky_bind(NGCharacter *c, uint16_t id, uint8_t scale, uint8_t ba
     }
 
     ng_char_set_priority(c, band, 0);
-    c->vram_prio = c->kind == SKY_KIND_PLAYER ? NG_SG_PRIO_HIGH : NG_SG_PRIO_NORMAL;
+    c->vram_prio = (c->kind == SKY_KIND_PLAYER || c->kind == SKY_KIND_ESHOT) ?
+                  NG_SG_PRIO_HIGH : NG_SG_PRIO_NORMAL;
     if (!s_palette_loaded[id]) {
         ng_load_screen_palette(id);
         s_palette_loaded[id] = 1u;
@@ -247,6 +261,8 @@ static uint8_t s_bg_id;
 static uint8_t s_bg_advance;
 static NGVerticalLayer s_ground;
 static NGSpriteGroup s_air_shadow[6], s_far_cloud;
+static NGSpriteGroup s_instrument[3];
+static uint16_t s_instrument_id[3];
 static uint16_t s_shadow_asset[6];
 static uint8_t s_shadow_visible[6];
 static uint8_t s_far_cloud_ready;
@@ -425,8 +441,11 @@ static uint16_t NEOGEO_USER sky_shadow_for(const NGCharacter *c)
 }
 static void NEOGEO_USER sky_actor_budget(NGShooterStripBudget *b)
 {
+    uint8_t i;
     ng_shooter_budget_init(b,22u);
     if(s_far_cloud_ready) ng_shooter_budget_add(b,s_far_cloud.y,3u,6u);
+    for(i=0u;i<3u;i++) if(s_instrument_id[i])
+        ng_shooter_budget_add(b,s_instrument[i].y,s_instrument[i].activeRows,s_instrument[i].strips);
     for (const NGCharacter *c = chars_at(0u), *end = c + ng_chars_slots_used(); c < end; c++) {
         if(c && c->active && c->visible)
             ng_shooter_budget_add(b,(int16_t)(c->y+c->sprite_offset_y),c->sprite_height,c->sprite_strips);
@@ -461,18 +480,20 @@ void NEOGEO_USER sky_depth_draw(void)
                                        SKY_SCALE_FULL,NG_RENDER_BAND_FX);
             if(s_overhead_cloud)ng_char_set_speed(s_overhead_cloud,0,2);
         }
-        if(s_overhead_cloud) {
-            NGShooterProjection p=ng_depthfx_shooter_project(&s_camera,s_overhead_x,s_overhead_cloud->y,NG_SHOOTER_FOREGROUND);
-            ng_char_set_pos(s_overhead_cloud,p.x,s_overhead_cloud->y);
-        }
+        /* Screen-space weather keeps its own course when the pilot banks. */
+        if(s_overhead_cloud)
+            ng_char_set_pos(s_overhead_cloud,s_overhead_x,s_overhead_cloud->y);
     }
     sky_actor_budget(&budget);
     peak=ng_shooter_budget_peak(&budget);
     /* Optional particles yield before critical aircraft or dangerous bolts.
      * The later native VRAM audit checks the actual physical SCB occupancy. */
-    for (NGCharacter *c = chars_at(0u), *end = c + ng_chars_slots_used(); c < end && peak>90u; c++) {
-        if(c && c->active && (c->kind==SKY_KIND_SMOKE || c->kind==SKY_KIND_CANOPY)) {
-            ng_chars_remove(c);if(c==s_overhead_cloud)s_overhead_cloud=0;sky_actor_budget(&budget);peak=ng_shooter_budget_peak(&budget);
+    for(i=0u;i<3u && peak>90u;i++) {
+        uint8_t kind=i==0u?SKY_KIND_SMOKE:i==1u?SKY_KIND_CANOPY:SKY_KIND_BLAST;
+        for (NGCharacter *c = chars_at(0u), *end = c + ng_chars_slots_used(); c < end && peak>90u; c++) {
+            if(c && c->active && c->kind==kind) {
+                ng_chars_remove(c);if(c==s_overhead_cloud)s_overhead_cloud=0;sky_actor_budget(&budget);peak=ng_shooter_budget_peak(&budget);
+            }
         }
     }
     for(i=0;i<6u;i++) {
@@ -516,8 +537,6 @@ void NEOGEO_USER sky_depth_draw(void)
  * per-frame character pass.
  */
 #define SKY_INSTRUMENT_SLOT 360u
-static NGSpriteGroup s_instrument[3];
-static uint16_t s_instrument_id[3];
 
 void NEOGEO_USER sky_instrument_show(uint8_t k, uint16_t id, int16_t x, int16_t y)
 {
@@ -637,9 +656,10 @@ void NEOGEO_USER sky_scene_begin(void)
 
 uint16_t NEOGEO_USER sky_frame(void)
 {
-    waitVbl();
+    sky_video_publish(&s_video_sync);
+    /* A stale flag from an overrun is not an acknowledgement of this batch. */
+    do { waitVbl(); } while (s_video_sync.pending);
     if (!ng_vram_window_open()) waitVbl();
-    ng_palfx_vblank();
     ng_vram_commit();
     ng_palette_fx_update();
     s_joy_prev = s_joy;

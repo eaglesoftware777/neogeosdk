@@ -55,6 +55,7 @@ void NEOGEO_USER sky_instrument_show(uint8_t k, uint16_t id, int16_t x, int16_t 
 void NEOGEO_USER sky_instruments_hide(void);
 void NEOGEO_USER sky_title_draw(void);
 void NEOGEO_USER sky_presentation_init(void);
+void NEOGEO_USER sky_palette_vblank(void);
 void NEOGEO_USER sky_fade_out(void);
 
 /* ------------------------------------------------------------------ */

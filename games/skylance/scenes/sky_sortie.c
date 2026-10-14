@@ -124,8 +124,8 @@ static void NEOGEO_USER sky_radio_chatter(const char *msg, uint8_t sfx)
     for (k = 0u; k < 30u && msg[k] != '\0'; k++) s_radio_msg[k] = msg[k];
     s_radio_msg[k] = '\0';
     s_radio_timer = 120u;
-    sky_fix_blank(1u, 3u, 30u);
-    sky_puts(1u, 3u, s_radio_msg, (msg[1] == 'A') ? SKY_PAL_SCORE : SKY_PAL_TITLE);
+    sky_fix_blank(2u, 4u, 30u);
+    sky_puts(2u, 4u, s_radio_msg, (msg[1] == 'A') ? SKY_PAL_SCORE : SKY_PAL_TITLE);
     if (sfx) playSFX(sfx);
 }
 
@@ -136,15 +136,15 @@ static void NEOGEO_USER sky_hud_cockpit(void)
     int8_t bank = s_bank;
     if (bank < -3) bank = -3;
     if (bank > 3) bank = 3;
-    /* The instruments stand in the HUD column right of the field (x 288-320)
+    /* The instruments stand in the HUD column right of the field (x 272-304)
      * under the portrait: the attitude indicator follows the jet's bank; the
      * radar scope sweeps, red under a radar lock or a guided missile still
      * on the jet; the G meter's needle reads the load, its lamp the
      * afterburner. (sky_instrument_show ignores an unchanged frame.) */
-    sky_instrument_show(0u, (uint16_t)(SKY_ATTITUDE_IND_0 + bank + 3), 288, 66);
+    sky_instrument_show(0u, (uint16_t)(SKY_ATTITUDE_IND_0 + bank + 3), 272, 66);
     sky_instrument_show(1u, (uint16_t)(SKY_RADAR_SCOPE_0 + ((s_sortie_frames >> 3) & 7u) +
-                        ((sky_stage_radar_alert() || sky_stage_seekers()) ? 8u : 0u)), 288, 101);
-    sky_instrument_show(2u, (uint16_t)(SKY_G_METER_0 + g * 2u + (s_resources.boosting != 0u)), 288, 136);
+                        ((sky_stage_radar_alert() || sky_stage_seekers()) ? 8u : 0u)), 272, 101);
+    sky_instrument_show(2u, (uint16_t)(SKY_G_METER_0 + g * 2u + (s_resources.boosting != 0u)), 272, 136);
     if (g != s_hud_gmeter) {
         s_hud_gmeter = g;
     }
@@ -163,47 +163,47 @@ static void NEOGEO_USER sky_hud_cockpit_remove(void)
 
 /*
  * Row ownership on the 40x28 FIX grid:
- *   0..1    SCORE label and counter (cols 0..16), HI (cols 18..31),
- *           aircraft and callsign (cols 36..39)
- *   2       TGT, stage, radar, flight state, CHAFF stock
- *   3       ATC & Pilot radio chatter
- *   4       boss health bar (cols 8..31), while a boss is alive
- *   23..25  equipment captions, icons and counters
- *   26..27  lives pips and energy cells
+ *   1..2    SCORE label and counter (cols 2..18), HI (cols 20..33),
+ *           aircraft and callsign (cols 34..37)
+ *   3       TGT, stage, radar, flight state, CHAFF stock
+ *   4       ATC & Pilot radio chatter
+ *   5       boss health bar (cols 8..31), while a boss is alive
+ *   22..24  equipment captions, icons and counters
+ *   25..26  lives pips and energy cells
  * Everything between belongs to the playfield.
  */
 static void NEOGEO_USER sky_hud_static(void)
 {
     char digit[2];
-    sky_infix(0u,  0u, SKY_INFIX_SCORE);
-    sky_infix(18u, 0u, SKY_INFIX_HI);
-    sky_infix(1u, 26u, (uint8_t)(SKY_INFIX_1P + (s_pick % 3u)));
+    sky_infix(2u,  1u, SKY_INFIX_SCORE);
+    sky_infix(20u, 1u, SKY_INFIX_HI);
+    sky_infix(2u, 25u, (uint8_t)(SKY_INFIX_1P + (s_pick % 3u)));
     /* The route line: which of the seven this is, and the missile rack.
      * The digits are written on their own so no string is built here. */
-    sky_puts(9u, 2u, "/7", SKY_PAL_BODY);
-    sky_puts(2u, 23u, "PWR", SKY_PAL_BODY);
-    sky_puts(8u, 23u, "AMMO", SKY_PAL_BODY);
-    sky_puts(14u, 23u, "ARM", SKY_PAL_BODY);
-    sky_puts(20u, 23u, "FUEL", SKY_PAL_BODY);
-    sky_puts(27u, 23u, "C:BMB", SKY_PAL_BODY);
-    sky_puts(34u, 23u, "SPD", SKY_PAL_BODY);
-    sky_infix(2u, 24u, 18u);
-    sky_infix(8u, 24u, 19u);
-    sky_infix(14u, 24u, 20u);
-    sky_infix(20u, 24u, 21u);
-    sky_infix(27u, 24u, 22u);
-    sky_infix(34u, 24u, 23u);
+    sky_puts(11u, 3u, "/7", SKY_PAL_BODY);
+    sky_puts(2u, 22u, "PWR", SKY_PAL_BODY);
+    sky_puts(8u, 22u, "AMMO", SKY_PAL_BODY);
+    sky_puts(14u, 22u, "ARM", SKY_PAL_BODY);
+    sky_puts(20u, 22u, "FUEL", SKY_PAL_BODY);
+    sky_puts(27u, 22u, "C:BMB", SKY_PAL_BODY);
+    sky_puts(34u, 22u, "SPD", SKY_PAL_BODY);
+    sky_infix(2u, 23u, 18u);
+    sky_infix(8u, 23u, 19u);
+    sky_infix(14u, 23u, 20u);
+    sky_infix(20u, 23u, 21u);
+    sky_infix(27u, 23u, 22u);
+    sky_infix(34u, 23u, 23u);
     digit[1] = '\0';
     digit[0] = (char)('1' + s_stage);
-    sky_puts(8u, 2u, digit, SKY_PAL_BODY);
+    sky_puts(10u, 3u, digit, SKY_PAL_BODY);
 
     {
         static const char *models[3] = {"F-16", "F-35", "F-15"};
         static const char *calls[3] = {"ROOK", "KIRA", "BLZE"};
-        sky_puts(36u, 0u, models[s_pick % 3u], SKY_PAL_TITLE);
-        sky_puts(36u, 1u, calls[s_pick % 3u], SKY_PAL_SCORE);
+        sky_puts(34u, 1u, models[s_pick % 3u], SKY_PAL_TITLE);
+        sky_puts(34u, 2u, calls[s_pick % 3u], SKY_PAL_SCORE);
     }
-    sky_puts(33u, 2u, "CHAFF", SKY_PAL_BODY);
+    sky_puts(32u, 3u, "CHAFF", SKY_PAL_BODY);
 
     s_hud_gmeter = 0xFFu;
     s_hud_thrust = 0xFFu;
@@ -228,7 +228,7 @@ static void NEOGEO_USER sky_hud_draw(void)
 
     if (s_radio_timer) {
         if (--s_radio_timer == 0u) {
-            sky_fix_blank(1u, 3u, 30u);
+            sky_fix_blank(2u, 4u, 30u);
         }
     }
     if (s_special_banner) s_special_banner--;
@@ -244,25 +244,25 @@ static void NEOGEO_USER sky_hud_draw(void)
         /* Threats blink in the warning ink: a radar lock, a missile on the jet. */
         uint8_t blink = (uint8_t)((s_sortie_frames >> 4) & 1u);
         if (sky_stage_radar_alert())
-            sky_puts(12u, 2u, "RADAR:ALERT", blink ? SKY_PAL_WARN : SKY_PAL_BODY);
+            sky_puts(14u, 3u, "RADAR:ALERT", blink ? SKY_PAL_WARN : SKY_PAL_BODY);
         else
-            sky_puts(12u, 2u, "RADAR:QUIET", SKY_PAL_BODY);
+            sky_puts(14u, 3u, "RADAR:QUIET", SKY_PAL_BODY);
         if (sky_stage_seekers())
-            sky_puts(24u, 2u, "LOCKED", blink ? SKY_PAL_WARN : SKY_PAL_SCORE);
+            sky_puts(26u, 3u, "LOCKED", blink ? SKY_PAL_WARN : SKY_PAL_SCORE);
         else
-            sky_puts(24u, 2u, sky_stage_encounter() == 3u ? "TARGET" :
+            sky_puts(26u, 3u, sky_stage_encounter() == 3u ? "TARGET" :
                      sky_stage_paused() ? "DEFEND" : "FLIGHT", SKY_PAL_SCORE);
     }
     {
         char stock[2];
         stock[0] = (char)('0' + sky_stage_chaff_stock()); stock[1] = '\0';
-        sky_puts(39u, 2u, stock, SKY_PAL_SCORE);
+        sky_puts(37u, 3u, stock, SKY_PAL_SCORE);
     }
 
     if (targets != s_hud_targets) {
         char label[] = "TGT 0/3";
         label[4] = (char)('0' + targets);
-        sky_puts(0u, 2u, label, SKY_PAL_SCORE);
+        sky_puts(2u, 3u, label, SKY_PAL_SCORE);
         if (s_hud_targets != 0xFFu && targets > s_hud_targets) {
             sky_radio_chatter("COMMAND TARGET DESTROYED +1000", SOUND_SFX_6);
         }
@@ -272,42 +272,42 @@ static void NEOGEO_USER sky_hud_draw(void)
         char number[4];
         number[1] = '\0';
         number[0] = (char)('0' + s_resources.power);
-        sky_puts(5u, 25u, number, SKY_PAL_SCORE);
+        sky_puts(5u, 24u, number, SKY_PAL_SCORE);
         number[0] = (char)('0' + s_resources.shields);
-        sky_puts(17u, 25u, number, SKY_PAL_SCORE);
+        sky_puts(17u, 24u, number, SKY_PAL_SCORE);
         number[0] = (char)('0' + s_resources.cores);
-        sky_puts(30u, 25u, number, SKY_PAL_SCORE);
+        sky_puts(30u, 24u, number, SKY_PAL_SCORE);
         number[0] = (char)('0' + s_resources.turbo);
-        sky_puts(37u, 25u, number, SKY_PAL_SCORE);
+        sky_puts(37u, 24u, number, SKY_PAL_SCORE);
         number[0] = (char)('0' + fuel / 100u);
         number[1] = (char)('0' + (fuel / 10u) % 10u);
         number[2] = (char)('0' + fuel % 10u);
         number[3] = '\0';
-        sky_puts(23u, 25u, number, fuel <= 30u ? SKY_PAL_WARN : SKY_PAL_SCORE);
+        sky_puts(23u, 24u, number, fuel <= 30u ? SKY_PAL_WARN : SKY_PAL_SCORE);
         s_resource_hud = state;
     }
 
     if (s_hud_score != s_score) {
-        sky_infix_number(5u, 0u, s_score, 6u);
+        sky_infix_number(7u, 1u, s_score, 6u);
         s_hud_score = s_score;
     }
     if (s_hud_high != s_hiscore) {
-        sky_infix_number(20u, 0u, s_hiscore, 6u);
+        sky_infix_number(22u, 1u, s_hiscore, 6u);
         s_hud_high = s_hiscore;
     }
     if (s_hud_missiles != s_missiles) {
         char ammo[2];
         ammo[0] = (char)('0' + s_missiles); ammo[1] = '\0';
-        sky_puts(11u, 25u, ammo, SKY_PAL_SCORE);
+        sky_puts(11u, 24u, ammo, SKY_PAL_SCORE);
         s_hud_missiles = s_missiles;
     }
 
     /* Lives pips: one per spare plane, blanked back out as they go. */
     if (s_hud_lives != s_lives) for (i = 0u; i < SKY_LIVES_MAX; i++) {
-        if (i < s_lives) sky_infix((uint8_t)(4u + i * 2u), 26u, SKY_INFIX_LIFE);
+        if (i < s_lives) sky_infix((uint8_t)(4u + i * 2u), 25u, SKY_INFIX_LIFE);
         else {
+            sky_fix_blank((uint8_t)(4u + i * 2u), 25u, 2u);
             sky_fix_blank((uint8_t)(4u + i * 2u), 26u, 2u);
-            sky_fix_blank((uint8_t)(4u + i * 2u), 27u, 2u);
         }
     }
     s_hud_lives = s_lives;
@@ -320,9 +320,9 @@ static void NEOGEO_USER sky_hud_draw(void)
         hp[3] = '%'; hp[4] = '\0';
         /* cyan while sound, gold once damaged, red when one more hit is fatal */
         uint8_t ink = s_energy <= 34u ? SKY_PAL_WARN : s_energy <= 67u ? SKY_PAL_SCORE : SKY_PAL_TITLE;
-        sky_puts(20u, 26u, "HULL", SKY_PAL_BODY);
-        sky_puts(26u, 26u, hp, ink);
-        sky_meter(20u, 27u, 18u, (uint8_t)(((uint16_t)s_energy * 18u + 99u) / 100u), ink);
+        sky_puts(20u, 25u, "HULL", SKY_PAL_BODY);
+        sky_puts(26u, 25u, hp, ink);
+        sky_meter(20u, 26u, 18u, (uint8_t)(((uint16_t)s_energy * 18u + 99u) / 100u), ink);
     }
     s_hud_energy = s_energy;
 }
@@ -339,8 +339,8 @@ static void NEOGEO_USER sky_hud_boss(void)
     s_hud_boss = n;
 
     /* A beaten boss or mini-boss leaves no empty bar behind. */
-    if (!n) sky_fix_blank(8u, 4u, 24u);
-    else sky_meter(8u, 4u, 24u, n, SKY_PAL_WARN);
+    if (!n) sky_fix_blank(8u, 5u, 24u);
+    else sky_meter(8u, 5u, 24u, n, SKY_PAL_WARN);
 }
 
 /* ------------------------------------------------------------------ */
@@ -1126,7 +1126,7 @@ static uint8_t NEOGEO_USER sky_fly_stage(uint8_t stage)
                          SKY_SCALE_PLAYER, NG_RENDER_BAND_PLAYER);
     if (!s_player) return 0u;
     s_hud_face = sky_spawn(SKY_KIND_FACE, k_pilot[s_pick % SKY_PILOTS].face,
-                           304, 44, NG_SCALE(5), NG_RENDER_BAND_PLAYER);
+                           288, 44, NG_SCALE(5), NG_RENDER_BAND_PLAYER);
     if (s_player) {
         /* The plane's hitbox is deliberately tiny - a shmup is read from
          * the nose of the aircraft, not from its wingspan. */

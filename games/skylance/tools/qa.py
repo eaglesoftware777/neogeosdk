@@ -129,7 +129,7 @@ def main():
         raise RuntimeError("Player visibility was disabled during damage inspection")
     if any(int(r["vram_duplicates"]) for r in gameplay):
         raise RuntimeError("A sprite group was inserted into multiple pending queue entries")
-    if any((int(r["face_x"]), int(r["face_y"])) != (304, 44)
+    if any((int(r["face_x"]), int(r["face_y"])) != (288, 44)
            for r in gameplay if int(r["face_x"]) or int(r["face_y"])):
         raise RuntimeError("Cockpit portrait moved from its fixed anchor")
     rendered = []
