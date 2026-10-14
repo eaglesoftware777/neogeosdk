@@ -4,6 +4,11 @@ A native Neo Geo vertical shooter with three pilots, seven long routes and
 one main boss per mission. First public set: `_v1`, with the NeoGeoSDK
 v1.7.3 pre-release (see [CHANGELOG.md](CHANGELOG.md)).
 
+The [2026-10-14 hardware candidate](https://github.com/eaglesoftware777/neogeosdk/releases/tag/skylance-hardware-rc1-20261014)
+corrects BIOS-dependent black graphics while retaining the v1 art and audio.
+Use its complete matched set for BackBit MVS or NeoSD testing. Real cartridge
+confirmation is still pending. [Diagnosis and emulator results](assets/review/hardware-20261014/REPORT.md).
+
 Rook flies a silver-blue F-16, Kira an olive F-35 and Blaze a crimson F-15.
 Aircraft proportions use the official type dimensions as an arcade reference.
 Each has different acceleration, top speed, primary fire and bomb damage.

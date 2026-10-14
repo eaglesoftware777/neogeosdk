@@ -49,10 +49,17 @@ def build(roms, game, name, platform):
     files = {f"{game}/{game}.{part}": roms[part] for part in PARTS}
     lines = "\n".join(f"  {game}.{part}  {len(roms[part]):>8}  {zlib.crc32(roms[part]) & 0xffffffff:08x}"
                       for part in PARTS)
+    platform_note = (
+        "This is the MVS program build for the BackBit Platinum MVS cartridge.\n"
+        if platform == "MVS" else
+        "AES identifies the console-mode program header only.\n"
+        "It does not establish AES hardware compatibility or announce an AES cartridge.\n"
+        "The BackBit Platinum product is for MVS; use the MVS build on an MVS board.\n")
     files[f"{game}/README.txt"] = (
         f"{name} -- BackBit Platinum ({platform})\n\n"
         f"Copy the {game} folder to the BackBit Platinum's microSD card.\n"
-        "No system BIOS is included: the BackBit uses the board's.\n\n"
+        "No system BIOS is included: the BackBit uses the board's.\n"
+        f"{platform_note}\n"
         f"{lines}\n").encode()
     return files
 
