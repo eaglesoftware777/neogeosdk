@@ -22,3 +22,7 @@ games/demo/main.c                       text eol=lf
 # them out as CRLF on every host, whatever core.autocrlf says.
 *.bat text eol=crlf
 *.cmd text eol=crlf
+
+# Written by tools/gen_trig.py: LF on every host, so a rebuild anywhere is
+# byte-for-byte the committed file.
+sdk/2d_engine/ng_trig_table.c   text eol=lf

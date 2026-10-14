@@ -51,6 +51,10 @@ void  display_digit(uint16_t, uint16_t,uint32_t,short,uint16_t);
 int   read_p1credit(void);
 void  playSoundtest(uint16_t);
 void  isZ80Ready(void);
+#ifdef NG_SOUND_QUEUE
+void  ng_sound_flush(void);
+void  ng_sound_vblank(void);
+#endif
 void  soundInit(void);
 void soundCommand(uint8_t);
 void  soundReset(void);
@@ -322,7 +326,10 @@ void NEOGEO_USER fixtext_out(uint16_t x, uint16_t y,char *mess, short pal) {
 	int len = strlen(mess);
 	NEO_REGISTER(VRAM_ADDR) = FIXMAP+y+FIX_ROW0+x*32;
 	NEO_REGISTER(VRAM_INC) = 0x20;
-	for (int i=0; i<len; i++) NEO_REGISTER(VRAM_RW) = (uint16_t)((pal << 12) | mess[i]);
+	for (int i=0; i<len; i++) {
+		uint8_t ch = (uint8_t)mess[i];
+		NEO_REGISTER(VRAM_RW) = (ch == ' ') ? 0x00FFu : (uint16_t)(((pal & 0x0F) << 12) | ch);
+	}
 }
 
 static uint16_t NEOGEO_USER mess_out_strlen_clipped(const char *text, uint16_t max_chars)
@@ -463,7 +470,14 @@ void NEOGEO_USER clearSprs() {
 	ASM_END
 }
 
+#ifdef NG_VRAM_DEFER
+void ng_fix_queue_drop(void);
+#endif
+
 void NEOGEO_USER clearFix() {
+#ifdef NG_VRAM_DEFER
+	ng_fix_queue_drop();   /* text cells still waiting for the blank are cleared too */
+#endif
 	ASM_START
 	ASM_JSR(SYS_FIX_CLEAR)
 	ASM_MVL(#1280-1, %%d7)
@@ -484,9 +498,15 @@ void NEOGEO_USER waitVbl() {
 	ASM_CLRW(USER_WORKRAM)
 	ASM_ADDQL(#1, USER_WORKRAM+32)
 	ASM_END
+#ifdef NG_SOUND_QUEUE
+	ng_sound_vblank();
+#endif
 }
 
 void NEOGEO_USER cycle10ms() {
+#ifdef NG_SOUND_QUEUE
+	ng_sound_flush();
+#endif
 	ASM_START
 	ASM_MVW(#2400, %%d0)
 	ASM_L(.d10)
@@ -496,6 +516,9 @@ void NEOGEO_USER cycle10ms() {
 }
 
 void NEOGEO_USER cycle1s() {
+#ifdef NG_SOUND_QUEUE
+	ng_sound_flush();
+#endif
 	ASM_START
 	ASM_MVW(#5000, %%d1)
 	ASM_L(.c1s)
@@ -509,6 +532,9 @@ void NEOGEO_USER cycle1s() {
 }
 
 void NEOGEO_USER cyclexms1(int cyc1) {
+#ifdef NG_SOUND_QUEUE
+	ng_sound_flush();
+#endif
 	ASM_START
 	ASM_MVL(%[cyc1], %%d1)
 	ASM_MVML(%%d0, -(%%sp))
@@ -524,6 +550,9 @@ void NEOGEO_USER cyclexms1(int cyc1) {
 }
 
 void NEOGEO_USER cyclexs(int cyc1xs) {
+#ifdef NG_SOUND_QUEUE
+	ng_sound_flush();
+#endif
 	ASM_START
 	ASM_MVL(%[cyc1xs], %%d1)
 	ASM_MVML(%%d0/%%d2, -(%%sp))
@@ -543,6 +572,9 @@ void NEOGEO_USER cyclexs(int cyc1xs) {
 }
 
   void NEOGEO_USER cyclexms(int cycxms) {
+#ifdef NG_SOUND_QUEUE
+	ng_sound_flush();
+#endif
       ASM_START
       ASM_MVL(%[cycxms], %%d1)
       ASM_MVML(%%d0/%%d2, -(%%sp))
@@ -628,11 +660,9 @@ void NEOGEO_USER playSoundtest(uint16_t index) { isZ80Ready(); soundCommand((uin
  *
  * The driver answers through the reply port: its NMI handler drops the
  * port to 0 the moment it has read the byte out of the latch, and raises
- * it to 1 again once the byte is in its queue.  At rest the port reads 1,
- * and the BIOS insists on that - it re-initialises the driver if it ever
- * finds anything else there - so 1 alone cannot mean "your byte arrived":
- * it is also what the port held before we wrote.  A caller that sends a
- * second byte on that stale 1 overwrites the latch before the Z80 has read
+ * it to $80 again once the byte is in its queue. The BIOS-reserved reply
+ * $01 is used only for slot switching. A caller that sends a
+ * second byte on a stale ready reply overwrites the latch before the Z80 has read
  * the first, or lands a second NMI inside the handler, which then files
  * both bytes into the same queue slot.  Either way one byte is gone, and
  * for a two-byte command that means the parameter is lost and the next
@@ -643,10 +673,15 @@ void NEOGEO_USER playSoundtest(uint16_t index) { isZ80Ready(); soundCommand((uin
  * guards the theoretical case of the drop and the rise both landing
  * between two polls, in which case the byte is already queued anyway.
  */
-#define Z80_REPLY_READY  1u
+#define Z80_REPLY_READY  0x80u
 #define Z80_BUSY_POLLS   256u
 
-void NEOGEO_USER soundCommand(uint8_t command) {
+/* Keep protocol state in RAM even when the SDK strips generic .bss. */
+static uint8_t sound_parameter_pending
+    __attribute__((section(".bss.sound_protocol")));
+
+#ifndef NG_SOUND_QUEUE
+static void NEOGEO_USER soundSendByte(uint8_t command) {
 	uint16_t polls;
 	isZ80Ready();
 	NEO_REGISTER8(REG_SOUND) = command;
@@ -656,8 +691,121 @@ void NEOGEO_USER soundCommand(uint8_t command) {
 	}
 	isZ80Ready();
 }
-void NEOGEO_USER soundInit(void) { soundCommand(0x01); }
-void NEOGEO_USER soundReset(void) { soundCommand(0x03); }
+#else
+/*
+ * NG_SOUND_QUEUE: the bytes wait in a queue and go out one at a time, with
+ * no wait at all. A byte goes out only when the reply port shows the driver
+ * ready ($80) and the one before it went out at least SOUND_GAP_LINES
+ * scanlines earlier -- long after its NMI handler has finished. (Measured
+ * in MAME 0.264: the driver reads the latch about 13 us after the write and
+ * leaves its handler about 300 us after it, the reply at 0 for the last
+ * 22 us of that. 16 lines are about 1 ms.) Two vertical blanks since the
+ * last byte are always gap enough.
+ *
+ * The queue moves on each sound call, each ng_sound_pump(), each vertical
+ * blank (waitVbl(), ng_sound_vblank()); the delays (cyclexms() and kin)
+ * empty it first, so a sequence written with delays between its commands
+ * still reaches the driver before each delay.
+ */
+#define SOUND_QUEUE_LEN  32u
+#define SOUND_GAP_LINES  16u
+#define SOUND_BSS __attribute__((section(".bss.sound_protocol")))
+static uint8_t sound_queue[SOUND_QUEUE_LEN] SOUND_BSS;
+static uint8_t sound_queue_head SOUND_BSS;
+static uint8_t sound_queue_tail SOUND_BSS;
+static uint8_t sound_queue_blanks SOUND_BSS;
+static uint16_t sound_queue_line SOUND_BSS;
+
+/* The raster line, 0..263 (the counter runs $F8..$1FF). */
+static uint16_t NEOGEO_USER sound_line(void)
+{
+    return (uint16_t)((NEO_REGISTER(REG_LSPCMODE) >> 7) - 0xF8u);
+}
+
+static void NEOGEO_USER sound_queue_try(void)
+{
+    uint16_t line;
+    if (sound_queue_head == sound_queue_tail) return;
+    line = sound_line();
+    if (sound_queue_blanks < 2u) {
+        /* lines since the last byte, modulo a frame: never more than the truth */
+        uint16_t gap = (uint16_t)(line + 264u - sound_queue_line);
+        if (gap >= 264u) gap = (uint16_t)(gap - 264u);
+        if (gap < SOUND_GAP_LINES) return;
+    }
+    if (NEO_REGISTER8(REG_SOUND) != Z80_REPLY_READY) return;
+    NEO_REGISTER8(REG_SOUND) = sound_queue[sound_queue_tail];
+    sound_queue_tail = (uint8_t)((sound_queue_tail + 1u) & (SOUND_QUEUE_LEN - 1u));
+    sound_queue_line = line;
+    sound_queue_blanks = 0u;
+}
+
+void NEOGEO_USER ng_sound_pump(void) { sound_queue_try(); }
+
+void NEOGEO_USER ng_sound_vblank(void)
+{
+    if (sound_queue_blanks < 2u) sound_queue_blanks++;
+    sound_queue_try();
+}
+
+void NEOGEO_USER ng_sound_flush(void)
+{
+    while (sound_queue_head != sound_queue_tail) {
+        kickWatchDog();
+        sound_queue_try();
+    }
+}
+
+static void NEOGEO_USER soundSendByte(uint8_t command) {
+    uint8_t next = (uint8_t)((sound_queue_head + 1u) & (SOUND_QUEUE_LEN - 1u));
+    while (next == sound_queue_tail) {   /* full: make room */
+        kickWatchDog();
+        sound_queue_try();
+    }
+    sound_queue[sound_queue_head] = command;
+    sound_queue_head = next;
+    sound_queue_try();
+}
+#endif
+void NEOGEO_USER soundCommand(uint8_t command) {
+    if (sound_parameter_pending) {
+        sound_parameter_pending = 0u;
+        if (command == 1u || command == 2u || command == 3u ||
+            command == 9u || command == 0xFFu) {
+            soundSendByte(0xFFu);
+            command ^= 0x80u;
+        }
+    } else {
+        switch (command) {
+        case 0x05: case 0x06: case 0x07: case 0x0A: case 0x0E:
+        case 0x12: case 0x13: case 0x14: case 0x15: case 0x16:
+        case 0x17: case 0x18: case 0x19: case 0x1A: case 0x1B:
+        case 0x1D: case 0x1E: case 0x1F: case 0x31: case 0x32:
+            sound_parameter_pending = 1u;
+            break;
+        default:
+            break;
+        }
+    }
+    soundSendByte(command);
+}
+void NEOGEO_USER soundInit(void) {
+    uint16_t polls;
+    sound_parameter_pending = 0u;
+#ifdef NG_SOUND_QUEUE
+    sound_queue_head = sound_queue_tail = 0u;
+    sound_queue_blanks = 2u;
+#endif
+    /* Bootstrap must also work while the BIOS leaves the Z80 in its RAM wait. */
+    NEO_REGISTER8(REG_SOUND) = 0x09;
+    for (polls = 0u; polls < 512u; polls++) kickWatchDog();
+    isZ80Ready();
+}
+void NEOGEO_USER soundReset(void) { soundCommand(0x08); }
+void NEOGEO_USER soundHardwareReset(void) {
+    sound_parameter_pending = 0u;
+    soundSendByte(0x03);
+}
 void NEOGEO_USER soundStopAll(void) { soundCommand(0x04); }
 void NEOGEO_USER soundStopMusic(void) { soundCommand(0x0F); }
 void NEOGEO_USER soundCancelFade(void) { soundCommand(0x11); }
@@ -1343,7 +1491,7 @@ void NEOGEO_USER  isZ80Ready() {
 	ASM_L(.isready)
 	ASM_MVB(#0,0x300001)
 	ASM_MVB(0x320000,%%d0)
-	ASM_CMPB(#0x01,%%d0)
+	ASM_CMPB(#0x80,%%d0)
 	ASM_BNE(.isready)
 	: : : "d0"
 	ASM_END

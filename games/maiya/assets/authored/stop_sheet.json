@@ -1,0 +1,19 @@
+{ "frames": {
+   "maiya_walkrun #stop.aseprite": {
+    "frame": { "x": 0, "y": 0, "w": 80, "h": 64 },
+    "rotated": false,
+    "trimmed": false,
+    "spriteSourceSize": { "x": 0, "y": 0, "w": 80, "h": 64 },
+    "sourceSize": { "w": 80, "h": 64 },
+    "duration": 66
+   }
+ },
+ "meta": {
+  "app": "games/maiya/tools/aseprite/ase_file.py",
+  "version": "ASEPRITE=builtin",
+  "image": "maiya_stop.png",
+  "format": "I8",
+  "size": { "w": 80, "h": 64 },
+  "scale": "1"
+ }
+}

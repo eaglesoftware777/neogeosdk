@@ -1,0 +1,380 @@
+{
+  "method": "compose_gait.py: each closed fist is part of its drawn arm, joined to the bracer at the wrist; the box is the skin cluster at the end of the arm.",
+  "hands": [
+    {
+      "pose": "walk_contact_a",
+      "layer": "far_arm",
+      "side": "back",
+      "box": [
+        34,
+        36,
+        37,
+        38
+      ]
+    },
+    {
+      "pose": "walk_contact_a",
+      "layer": "near_arm",
+      "side": "front",
+      "box": [
+        55,
+        35,
+        59,
+        38
+      ]
+    },
+    {
+      "pose": "walk_down_a",
+      "layer": "far_arm",
+      "side": "back",
+      "box": [
+        41,
+        38,
+        44,
+        40
+      ]
+    },
+    {
+      "pose": "walk_down_a",
+      "layer": "near_arm",
+      "side": "front",
+      "box": [
+        51,
+        38,
+        55,
+        41
+      ]
+    },
+    {
+      "pose": "walk_passing_a",
+      "layer": "far_arm",
+      "side": "front",
+      "box": [
+        45,
+        37,
+        49,
+        40
+      ]
+    },
+    {
+      "pose": "walk_passing_a",
+      "layer": "near_arm",
+      "side": "front",
+      "box": [
+        47,
+        38,
+        51,
+        41
+      ]
+    },
+    {
+      "pose": "walk_up_a",
+      "layer": "far_arm",
+      "side": "front",
+      "box": [
+        49,
+        35,
+        53,
+        38
+      ]
+    },
+    {
+      "pose": "walk_up_a",
+      "layer": "near_arm",
+      "side": "back",
+      "box": [
+        43,
+        37,
+        46,
+        39
+      ]
+    },
+    {
+      "pose": "walk_contact_b",
+      "layer": "far_arm",
+      "side": "front",
+      "box": [
+        53,
+        34,
+        57,
+        37
+      ]
+    },
+    {
+      "pose": "walk_contact_b",
+      "layer": "near_arm",
+      "side": "back",
+      "box": [
+        36,
+        37,
+        39,
+        39
+      ]
+    },
+    {
+      "pose": "walk_down_b",
+      "layer": "far_arm",
+      "side": "front",
+      "box": [
+        49,
+        37,
+        53,
+        40
+      ]
+    },
+    {
+      "pose": "walk_down_b",
+      "layer": "near_arm",
+      "side": "back",
+      "box": [
+        43,
+        39,
+        46,
+        41
+      ]
+    },
+    {
+      "pose": "walk_passing_b",
+      "layer": "far_arm",
+      "side": "front",
+      "box": [
+        45,
+        37,
+        49,
+        40
+      ]
+    },
+    {
+      "pose": "walk_passing_b",
+      "layer": "near_arm",
+      "side": "front",
+      "box": [
+        47,
+        38,
+        51,
+        41
+      ]
+    },
+    {
+      "pose": "walk_up_b",
+      "layer": "far_arm",
+      "side": "back",
+      "box": [
+        41,
+        36,
+        44,
+        38
+      ]
+    },
+    {
+      "pose": "walk_up_b",
+      "layer": "near_arm",
+      "side": "front",
+      "box": [
+        51,
+        36,
+        55,
+        39
+      ]
+    },
+    {
+      "pose": "run_contact_a",
+      "layer": "far_arm",
+      "side": "back",
+      "box": [
+        31,
+        30,
+        34,
+        32
+      ]
+    },
+    {
+      "pose": "run_contact_a",
+      "layer": "near_arm",
+      "side": "front",
+      "box": [
+        53,
+        27,
+        57,
+        31
+      ]
+    },
+    {
+      "pose": "run_down_a",
+      "layer": "far_arm",
+      "side": "back",
+      "box": [
+        37,
+        35,
+        40,
+        37
+      ]
+    },
+    {
+      "pose": "run_down_a",
+      "layer": "near_arm",
+      "side": "front",
+      "box": [
+        51,
+        32,
+        54,
+        34
+      ]
+    },
+    {
+      "pose": "run_push_a",
+      "layer": "far_arm",
+      "side": "back",
+      "box": [
+        42,
+        34,
+        45,
+        36
+      ]
+    },
+    {
+      "pose": "run_push_a",
+      "layer": "near_arm",
+      "side": "back",
+      "box": [
+        44,
+        35,
+        47,
+        37
+      ]
+    },
+    {
+      "pose": "run_flight_a",
+      "layer": "far_arm",
+      "side": "front",
+      "box": [
+        49,
+        27,
+        52,
+        29
+      ]
+    },
+    {
+      "pose": "run_flight_a",
+      "layer": "near_arm",
+      "side": "back",
+      "box": [
+        39,
+        32,
+        42,
+        34
+      ]
+    },
+    {
+      "pose": "run_contact_b",
+      "layer": "far_arm",
+      "side": "front",
+      "box": [
+        51,
+        26,
+        55,
+        30
+      ]
+    },
+    {
+      "pose": "run_contact_b",
+      "layer": "near_arm",
+      "side": "back",
+      "box": [
+        33,
+        31,
+        36,
+        33
+      ]
+    },
+    {
+      "pose": "run_down_b",
+      "layer": "far_arm",
+      "side": "front",
+      "box": [
+        49,
+        31,
+        52,
+        33
+      ]
+    },
+    {
+      "pose": "run_down_b",
+      "layer": "near_arm",
+      "side": "back",
+      "box": [
+        39,
+        36,
+        42,
+        38
+      ]
+    },
+    {
+      "pose": "run_push_b",
+      "layer": "far_arm",
+      "side": "back",
+      "box": [
+        42,
+        34,
+        45,
+        36
+      ]
+    },
+    {
+      "pose": "run_push_b",
+      "layer": "near_arm",
+      "side": "back",
+      "box": [
+        44,
+        35,
+        47,
+        37
+      ]
+    },
+    {
+      "pose": "run_flight_b",
+      "layer": "far_arm",
+      "side": "back",
+      "box": [
+        37,
+        31,
+        40,
+        33
+      ]
+    },
+    {
+      "pose": "run_flight_b",
+      "layer": "near_arm",
+      "side": "front",
+      "box": [
+        51,
+        28,
+        54,
+        30
+      ]
+    },
+    {
+      "pose": "stop",
+      "layer": "far_arm",
+      "side": "front",
+      "box": [
+        36,
+        38,
+        40,
+        41
+      ]
+    },
+    {
+      "pose": "stop",
+      "layer": "near_arm",
+      "side": "front",
+      "box": [
+        47,
+        38,
+        51,
+        41
+      ]
+    }
+  ],
+  "edits": []
+}

@@ -189,6 +189,9 @@ void NGSpriteGroup::init(uint16_t first, uint8_t s, uint8_t h, uint16_t tb, uint
     autoAnim8  = 0;
     visible    = 1;
     dirty      = NG_SGF_DIRTY_ALL;
+    mapRows = 0u;
+    mapFirst = 0xffffu;
+    mapStrips = mapHeight = 0u;
 }
 
 void NGSpriteGroup::markDirty(uint8_t flags) { dirty |= flags; }
@@ -290,6 +293,7 @@ void NGSpriteGroup::setVisible(uint8_t v)
 void NGSpriteGroup::hide()
 {
     hideRange(firstSprite, strips);
+    mapRows = 0u;
 }
 
 void NGSpriteGroup::upload()
@@ -334,6 +338,10 @@ void NGSpriteGroup::upload()
                     ngsg_tiles, ngsg_attrs, mapRows,
                     scb2, scb3, scb4);
     }
+    mapFirst = firstSprite;
+    mapStrips = strips;
+    mapHeight = heightTiles;
+    this->mapRows = mapRows;
     dirty = 0u;
 }
 
@@ -390,16 +398,26 @@ void NGSpriteGroup::flush()
     driverScb4 = setSCB4((uint16_t)x);
     attr       = setSCB1_2(palette, 0, autoAnim8, autoAnim4, vflip, hflip);
 
-    if (dirty & (NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_PALETTE)) {
+    if ((dirty & (NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_PALETTE)) ||
+        this->mapRows < mapRows || mapFirst != firstSprite ||
+        mapStrips != strips || mapHeight != heightTiles) {
+        uint8_t writeRows = mapRows;
+        if (dirty != NG_SGF_DIRTY_ALL && this->mapRows >= mapRows &&
+            mapFirst == firstSprite && mapStrips == strips && mapHeight == heightTiles)
+            writeRows = heightTiles < mapRows ? heightTiles : mapRows;
         for (strip = 0; strip < strips; strip++) {
             uint16_t scb1Addr = (uint16_t)(64u * (uint16_t)(firstSprite + strip));
-            for (row = 0; row < mapRows; row++) {
+            for (row = 0; row < writeRows; row++) {
                 ngsg_tiles[row] = row < heightTiles ? tileFor(strip, row) : NG_SPRITE_BLANK_TILE;
                 ngsg_attrs[row] = row < heightTiles ? attrFor(strip, row, attr) : NG_SPRITE_BLANK_ATTR;
             }
             vram_init(scb1Addr, 1);
-            vram_SCB1(ngsg_tiles, ngsg_attrs, mapRows);
+            vram_SCB1(ngsg_tiles, ngsg_attrs, writeRows);
         }
+        mapFirst = firstSprite;
+        mapStrips = strips;
+        mapHeight = heightTiles;
+        this->mapRows = mapRows;
     }
 
     if (dirty & NG_SGF_DIRTY_SHRINK) {

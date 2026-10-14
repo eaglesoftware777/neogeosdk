@@ -5,12 +5,15 @@ static NGPhysicsBody ng_physics_bodies[NG_MAX_CHARS];
 static NGSolidRect ng_solids[NG_MAX_SOLIDS];
 static uint8_t ng_solid_count;
 
+/* An axis whose whole pixel stays keeps its fraction: a floor or a wall
+ * that only stops one axis must not round the other down each frame (that
+ * made a run left a pixel a frame faster than a run right). */
 static void NEOGEO_USER ng_physics_sync_position(NGCharacter *c, int16_t x, int16_t y)
 {
     c->x = x;
     c->y = y;
-    c->x_fp = NG_TO_FP(x);
-    c->y_fp = NG_TO_FP(y);
+    if (NG_FROM_FP(c->x_fp) != x) c->x_fp = NG_TO_FP(x);
+    if (NG_FROM_FP(c->y_fp) != y) c->y_fp = NG_TO_FP(y);
 }
 
 static int16_t NEOGEO_USER ng_physics_min_i16(int16_t a, int16_t b)
@@ -29,12 +32,10 @@ static void NEOGEO_USER ng_physics_apply_drag(int32_t *v, int32_t drag)
     }
 }
 
-static void NEOGEO_USER ng_physics_resolve_world(NGCharacter *c, NGPhysicsBody *body)
+/* The world's bounds, read once a frame by ng_physics_resolve(). */
+static void NEOGEO_USER ng_physics_resolve_world(NGCharacter *c, NGPhysicsBody *body,
+                                                 int16_t left, int16_t top, int16_t right, int16_t bottom)
 {
-    int16_t left = (int16_t)ng_prop_get(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_LEFT);
-    int16_t top = (int16_t)ng_prop_get(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_TOP);
-    int16_t right = (int16_t)ng_prop_get(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_RIGHT);
-    int16_t bottom = (int16_t)ng_prop_get(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_BOTTOM);
     int16_t body_x = c->body_x;
     int16_t body_y = c->body_y;
     int16_t body_w = c->body_w ? c->body_w : 16;
@@ -218,8 +219,9 @@ uint8_t NEOGEO_USER ng_physics_add_solid(int16_t x, int16_t y, int16_t w, int16_
 void NEOGEO_USER ng_physics_update_pre(void)
 {
     uint8_t i;
+    uint8_t n = ng_chars_slots_used();   /* no character lives past this slot */
 
-    for (i = 0; i < NG_MAX_CHARS; i++) {
+    for (i = 0; i < n; i++) {
         NGCharacter *c = chars_at(i);
         NGPhysicsBody *body = &ng_physics_bodies[i];
 
@@ -246,19 +248,35 @@ void NEOGEO_USER ng_physics_resolve(void)
 {
     uint8_t i;
     uint8_t s;
+    uint8_t n = ng_chars_slots_used();
+    int16_t left = (int16_t)ng_prop_get(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_LEFT);
+    int16_t top = (int16_t)ng_prop_get(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_TOP);
+    int16_t right = (int16_t)ng_prop_get(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_RIGHT);
+    int16_t bottom = (int16_t)ng_prop_get(NG_PROP_GROUP_WORLD, NG_PROP_WORLD_BOTTOM);
 
-    for (i = 0; i < NG_MAX_CHARS; i++) {
+    for (i = 0; i < n; i++) {
         NGCharacter *c = chars_at(i);
         NGPhysicsBody *body = &ng_physics_bodies[i];
 
         if (!body->enabled || !c || !c->active) continue;
 
         if (body->flags & NG_PHYSICS_WORLD) {
-            ng_physics_resolve_world(c, body);
+            ng_physics_resolve_world(c, body, left, top, right, bottom);
         }
         if (body->flags & NG_PHYSICS_SOLIDS) {
+            int16_t ax = (int16_t)(c->x + c->body_x);
+            int16_t ay = (int16_t)(c->y + c->body_y);
             for (s = 0; s < ng_solid_count; s++) {
-                ng_physics_resolve_solid(c, body, &ng_solids[s]);
+                const NGSolidRect *sd = &ng_solids[s];
+                /* ng_physics_resolve_solid() does nothing unless the body
+                 * touches the solid (ng_rect_hit, edges inclusive): the same
+                 * test here first, without the call and its rectangles. */
+                if ((int16_t)(ax + c->body_w) < sd->x || ax > (int16_t)(sd->x + sd->w) ||
+                    (int16_t)(ay + c->body_h) < sd->y || ay > (int16_t)(sd->y + sd->h))
+                    continue;
+                ng_physics_resolve_solid(c, body, sd);
+                ax = (int16_t)(c->x + c->body_x);   /* it may have moved */
+                ay = (int16_t)(c->y + c->body_y);
             }
         }
     }

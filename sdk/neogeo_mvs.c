@@ -214,8 +214,11 @@ uint8_t neogeo_str[] __attribute__ ((section ("neogeo_init"))) = { 0x4e, 0x45, 0
 uint8_t zerobyte __attribute__ ((section ("neogeo_init"))) = 0x00;
 uint16_t id __attribute__ ((section ("neogeo_init"))) = 			0x0777;
 uint32_t psize  __attribute__ ((section ("neogeo_init"))) = 		0x80000;
-uint32_t pbcks __attribute__ ((section ("neogeo_init"))) = 		0x108000;  /* backup start = start of work RAM */
-uint16_t dipsize  __attribute__ ((section ("neogeo_init"))) = 		0x1000;
+/* The save block the system keeps for the game (see ng_save_* in
+ * neogeolib): 1 KB of work RAM below the linker's variables at 0x100800,
+ * so nothing the game declares can land in it. */
+uint32_t pbcks __attribute__ ((section ("neogeo_init"))) = 		0x100400;
+uint16_t dipsize  __attribute__ ((section ("neogeo_init"))) = 		0x0400;  /* save block size */
 uint8_t bioslogoflag __attribute__ ((section ("neogeo_init"))) = 	0x01;  /* 1 = game supplies its own eye-catcher; BIOS calls EYE_CATCHER entry */
 uint8_t bioslogotile __attribute__ ((section ("neogeo_init"))) = 	0x00;
 /********************************************************************/
