@@ -7,7 +7,7 @@ MEMORY
   memory_padds       (rx) : ORIGIN = 0x13a, LENGTH = 71
   memory_id2         (rx) : ORIGIN = 0x182, LENGTH = 126
   memory_gamedata    (rx) : ORIGIN = 0x200, LENGTH = 384
-  memory_user        (rx) : ORIGIN = 0x380, LENGTH = 400K
+  memory_user        (rx) : ORIGIN = 0x380, LENGTH = 0xFFC80
   memory_game_engine_bss (rw) : ORIGIN = 0x100800, LENGTH = 0xE800
 
 }

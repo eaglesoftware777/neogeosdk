@@ -1,0 +1,58 @@
+{
+  "canvas": [
+    352,
+    224
+  ],
+  "title": "title.png",
+  "cards": [
+    {
+      "file": "summons.png",
+      "duration": 210,
+      "caption": [
+        "NEO TOKYO. THE YEAR IS 2099.",
+        "FORTY-FOUR INVITATIONS. ONE SECRET."
+      ]
+    },
+    {
+      "file": "kenji.png",
+      "duration": 150,
+      "caption": [
+        "KENJI ARATA / KARATE",
+        "A STOLEN LEGACY. A VOW TO RETURN."
+      ]
+    },
+    {
+      "file": "jack.png",
+      "duration": 150,
+      "caption": [
+        "JACK MERCER / BOXING",
+        "ONE LAST FIGHT. NO MORE FIXED ODDS."
+      ]
+    },
+    {
+      "file": "amara.png",
+      "duration": 150,
+      "caption": [
+        "AMARA SILVA / CAPOEIRA",
+        "FOLLOW THE RHYTHM. BREAK THE CIRCLE."
+      ]
+    },
+    {
+      "file": "protocol.png",
+      "duration": 180,
+      "caption": [
+        "BENEATH THE LEAGUE: PROJECT CHIMERA.",
+        "THE PRIZE WAS NEVER MEANT FOR YOU."
+      ]
+    },
+    {
+      "file": "challenge.png",
+      "duration": 150,
+      "caption": [
+        "ONE FIGHTER. OR THREE AND A STRIKER.",
+        "ENTER THE SHADOW LEAGUE."
+      ]
+    }
+  ],
+  "palette_source": "Each PNG embeds its own exact indexed palette"
+}

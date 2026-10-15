@@ -203,6 +203,25 @@ static uint16_t NEOGEO_USER ngsg_attr(const NGSpriteGroup *g)
                       (g->vflip << 1) | g->hflip);
 }
 
+/* High C-ROM addresses take this path only when an asset actually needs
+ * them. The common bank-zero assembly writer is unchanged. Carry the full
+ * address for every row so a strip crossing FFFF/10000 remains coherent. */
+static void NEOGEO_USER ngsg_put_wide_strip(uint16_t addr, uint32_t tile, int16_t step,
+    uint16_t attr, const uint8_t *pm, uint8_t art, uint8_t blank)
+{
+    uint8_t row;
+    for (row = 0u; row < art; row++) {
+        uint16_t a = (uint16_t)((attr & 0xFF0Fu) | ((tile >> 12) & 0xF0u));
+        if (pm) { a = (uint16_t)((a & 0x00FFu) | ((uint16_t)*pm << 8)); pm += step; }
+        ngsg_put(addr++, (uint16_t)tile); ngsg_put(addr++, a);
+        tile = (uint32_t)((int32_t)tile + step);
+    }
+    for (row = 0u; row < blank; row++) {
+        ngsg_put(addr++, NG_SPRITE_BLANK_TILE);
+        ngsg_put(addr++, NG_SPRITE_BLANK_ATTR);
+    }
+}
+
 /*
  * Every strip's SCB1 map.  Rows past the art hold the transparent tile, up
  * to the rows the hardware can reach (ng_sprite_map_rows).  A strip reads
@@ -230,9 +249,11 @@ static void NEOGEO_USER ngsg_put_map(NGSpriteGroup *g, uint8_t rows, uint8_t for
     }
     for (strip = 0; strip < g->strips; strip++, addr = (uint16_t)(addr + 64u)) {
         uint16_t first = (uint16_t)(start + (g->hflip ? (uint8_t)(g->strips - 1u - strip) : strip));
-        ngsg_put_strip(addr, (uint16_t)(g->tileBase + first), step, attr,
-                       g->tilePalettes ? g->tilePalettes + first : 0,
-                       art, blank);
+        uint32_t base = ((uint32_t)g->tileHigh << 16) + g->tileBase;
+        const uint8_t *pm = g->tilePalettes ? g->tilePalettes + first : 0;
+        if (g->tileHigh || base + (uint32_t)g->heightTiles * g->tileStride > 0xFFFFu)
+            ngsg_put_wide_strip(addr, base + first, step, attr, pm, art, blank);
+        else ngsg_put_strip(addr, (uint16_t)(g->tileBase + first), step, attr, pm, art, blank);
     }
     g->mapFirst = g->firstSprite;
     g->mapStrips = g->strips;
@@ -251,6 +272,12 @@ static void NEOGEO_USER ngsg_write_strip(NGSpriteGroup *g, uint8_t strip, uint16
 {
     uint8_t mapRows = ng_sprite_map_rows(ngsg_rows(g));
     uint8_t art = g->heightTiles < mapRows ? g->heightTiles : mapRows;
+    if (g->tileHigh || (uint32_t)g->tileBase + column + (uint32_t)art * g->tileStride > 0xFFFFu) {
+        ngsg_put_wide_strip((uint16_t)(64u * (g->firstSprite + strip)),
+            ((uint32_t)g->tileHigh << 16) + g->tileBase + column, (int16_t)g->tileStride,
+            ngsg_attr(g), g->tilePalettes ? g->tilePalettes + column : 0, art, 0u);
+        return;
+    }
     ngsg_put_strip((uint16_t)(64u * (uint16_t)(g->firstSprite + strip)), (uint16_t)(g->tileBase + column),
                    (int16_t)g->tileStride, ngsg_attr(g), g->tilePalettes ? g->tilePalettes + column : 0,
                    art, 0u);
@@ -440,6 +467,7 @@ void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, ui
     g->heightTiles = heightTiles;
     g->activeRows = heightTiles;
     g->tileBase = tileBase;
+    g->tileHigh = 0u;
     g->tileStride = strips;
     g->palette = palette;
     g->tilePalettes = 0;
@@ -479,6 +507,15 @@ void NEOGEO_USER ng_sprite_group_mark_dirty(NGSpriteGroup *g, uint8_t dirty_flag
 void NEOGEO_USER ng_sprite_group_set_tile_base(NGSpriteGroup *g, uint16_t tileBase)
 {
     if (g && g->tileBase != tileBase) { g->tileBase = tileBase; g->dirty |= NG_SGF_DIRTY_TILE; }
+}
+
+void NEOGEO_USER ng_sprite_group_set_tile_address(NGSpriteGroup *g, uint32_t address)
+{
+    if (!g || address > 0xFFFFFu) return;
+    if (g->tileBase != (uint16_t)address || g->tileHigh != (uint8_t)(address >> 16)) {
+        g->tileBase = (uint16_t)address; g->tileHigh = (uint8_t)(address >> 16);
+        g->dirty |= NG_SGF_DIRTY_TILE;
+    }
 }
 
 void NEOGEO_USER ng_sprite_group_set_tile_stride(NGSpriteGroup *g, uint16_t tileStride)

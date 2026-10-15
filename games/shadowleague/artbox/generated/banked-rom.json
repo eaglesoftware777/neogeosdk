@@ -1,0 +1,14 @@
+{
+  "mapper": "standard",
+  "fixed_code_bytes": 348419,
+  "bank_capacity": 1048576,
+  "payload_bytes": [
+    2656,
+    1992
+  ],
+  "P_bytes": 3145728,
+  "payload_sha256": [
+    "410f65c59984b5379c38d5bd2d3e88947f12766dd0c07124f44d8a6bfd6bec65",
+    "60863eb1df45720a04203096bd2e33f9e2f0937d4e02fa751e960a4851892378"
+  ]
+}

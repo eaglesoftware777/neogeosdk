@@ -28,7 +28,8 @@ back/down charge. Queries are relative to the fighter's facing:
 | `NGF_MOTION_HCF` / `HCB` | 41236 / 63214 | 22-frame window |
 | `NGF_MOTION_DQCF` / `DQCB` | 236236 / 214214 | supers |
 | `NGF_MOTION_CHARGE_BF` / `DU` | [4]6 / [2]8 | 40 frames held, 10 to release |
-| `NGF_MOTION_360` | all four directions | 30-frame window |
+| `NGF_MOTION_360` | four ordered cardinal sectors, clockwise or counterclockwise | 30-frame window, diagonals optional; final diagonal leniency |
+| `NGF_MOTION_720` | eight ordered cardinal sectors | 48-frame window; reversal restarts the path |
 | `NGF_MOTION_DASH` / `BACKDASH` | 656 / 454 | |
 | `NGF_MOTION_FWD` / `BACK` / `DOWN_FWD` | 6 / 4 / 3 held | command normals, throws |
 
@@ -53,6 +54,12 @@ Successful motion moves consume their completed motion as well as their buttons.
   starts the move's `follow` instead).
 - `hurt`: up to three boxes per frame (`NGFBox {x, y, w, h}`, facing right,
   `y` measured up from the feet).
+- Optional `hit_sets` / `frame_hits`: up to three attack rectangles for each
+  animation frame. An empty set stays a whiff even when the move has a broad
+  legacy rectangle. Fighter and striker contacts use the same lookup. Null
+  pointers preserve old fighter definitions. `frame_hits` runs parallel to
+  `frames`, and set zero is empty. Sprite/FX contact uses the actual rectangle
+  that touched a hurtbox.
 - `moves`, in priority order (the first match wins): kind (normal, command,
   special, super, throw, evade, guard attack), motion, buttons, stance
   (stand/crouch/air, close/far), level (mid, high, low, overhead, throw,

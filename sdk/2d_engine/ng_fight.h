@@ -85,6 +85,7 @@ uint8_t NEOGEO_USER ngf_raw_from_numpad(uint8_t numpad, uint8_t facing_left);
 /* ---- fighter data (ROM) ------------------------------------------- */
 typedef struct { int8_t x; int8_t y; uint8_t w; uint8_t h; } NGFBox;   /* y: bottom above feet */
 typedef struct { NGFBox box[3]; uint8_t count; uint8_t pad; } NGFHurtSet;
+typedef struct { NGFBox box[3]; uint8_t count; uint8_t pad; } NGFHitSet;
 
 #define NGF_FF_ACTIVE   0x01u   /* the move's hitbox is live */
 #define NGF_FF_REHIT    0x02u   /* a new hit may land from this frame */
@@ -183,6 +184,10 @@ typedef struct {
     const NGFProjectileDef *projectiles;
     uint8_t  anim_count, move_count, projectile_count, hurt_count;
     NGFCpuProfile cpu_profile;
+    /* Optional per-animation-frame hit sets. Null preserves legacy move boxes.
+     * frame_hits is parallel to frames; index zero is an empty contact set. */
+    const NGFHitSet *hit_sets;
+    const uint8_t *frame_hits;
 } NGFFighterDef;
 
 /* ---- runtime ------------------------------------------------------- */

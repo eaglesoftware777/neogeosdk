@@ -3,6 +3,25 @@
 An original one-on-one fighting game for Neo Geo MVS and AES, built on the
 SDK's `ng_fight` engine (`docs/fighting.md`). Cartridge id 781.
 
+The isolated rebirth candidate adds a new native title, three 80x96 selection
+portraits and a skippable illustrated attract story. It preserves the two player
+formats: 1 vs 1, and 3 vs 3 with one selected striker per team. Its 3-MiB P image
+contains fixed code and two aligned data banks; C-ROM capacity is 16 MiB and the
+sprite renderer supports the full hardware tile address. Kenji, Jack and Amara
+now import complete native layered pose sets as playable visual proofs. The other
+41 fighters retain V2 art, and the four arenas are preserved. This is not an
+approved professional roster redraw. See `assets/review/rebirth/REPORT.md` for the source,
+encoded-ROM evidence, checks, launchers and remaining production work.
+
+The candidate also imports sixteen native FIX announcements, with exact S-ROM
+pixel checks, and uploads complete palettes before BIOS input servicing to
+avoid black artwork under Universe BIOS. The active sources are
+`assets/authored/fighters/{kenji,jack,amara}/`: indexed PNG layers, explicit
+contacts, flat exports, contact sheets and GIFs. Normal builds consume these
+exports and cannot replace a missing pose with older geometry art. New native
+HUD plates, timer digits, recent-damage trails and distinct Guard/Spirit gauges
+are visible in the locally installed `graphics-20261015` candidate.
+
 **Status: V2 playable.** 44 individually styled fighters, four panoramic arenas,
 arcade and versus play against a CPU or a second player. Choose Duel or Team
 Battle before selecting characters. Team Battle uses three fighters and a separately
@@ -63,8 +82,9 @@ Sources:
 
 - `fighters/*.json`: each fighter's build, palette, poses, animations, frame
   data, moves and CPU profile. `tools/fighter_validate.py` checks them.
-- `tools/fighter_cook.py` draws every pose (`tools/fighter_art.py`) and
-  writes the ROM tables.
+- `tools/fighter_cook.py` imports complete authored fighter exports when present,
+  otherwise retains the existing V2 pose renderer, and writes the ROM tables.
+  An authored manifest may never fall back to generated missing poses.
 - `tools/art.py` builds the C and S ROMs and `artbox/generated/slf_assets.h`.
 - `tools/sound.py` synthesizes the effects and music.
 - `scenes/slf_game.c` is the game flow, `scenes/slf_draw.c` the hardware side.

@@ -34,6 +34,7 @@ enum { SLF_TRACK_TITLE = 1, SLF_TRACK_DOJO, SLF_TRACK_VICTORY };
 
 /* slf_draw.c */
 void     NEOGEO_USER slf_presentation_init(void);
+void     NEOGEO_USER slf_palette_vblank(void);
 void     NEOGEO_USER slf_fix_palettes_init(void);
 void     NEOGEO_USER slf_scene_begin(void);
 void     NEOGEO_USER slf_fade_out(void);
@@ -64,6 +65,10 @@ void     NEOGEO_USER slf_fx_reset(void);
 void     NEOGEO_USER slf_music(uint8_t track);
 void     NEOGEO_USER slf_sfx(uint8_t id);
 void     NEOGEO_USER slf_title_draw(void);
+void     NEOGEO_USER slf_title_tick(uint16_t tick);
+uint16_t NEOGEO_USER slf_story_show(uint8_t number);
+void     NEOGEO_USER slf_story_pan(uint16_t tick, uint8_t reverse);
+void     NEOGEO_USER slf_large_portrait(uint8_t side, uint8_t def);
 
 /* slf_game.c */
 void     NEOGEO_USER slf_run_attract(void);

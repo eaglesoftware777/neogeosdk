@@ -1,0 +1,402 @@
+{
+  "width": 160,
+  "height": 160,
+  "anchor": [
+    80,
+    141
+  ],
+  "colors": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      16,
+      16,
+      32
+    ],
+    [
+      96,
+      56,
+      72
+    ],
+    [
+      168,
+      96,
+      80
+    ],
+    [
+      216,
+      152,
+      112
+    ],
+    [
+      80,
+      32,
+      56
+    ],
+    [
+      168,
+      56,
+      72
+    ],
+    [
+      232,
+      80,
+      88
+    ],
+    [
+      24,
+      40,
+      64
+    ],
+    [
+      48,
+      72,
+      104
+    ],
+    [
+      88,
+      120,
+      160
+    ],
+    [
+      24,
+      24,
+      40
+    ],
+    [
+      64,
+      48,
+      64
+    ],
+    [
+      112,
+      80,
+      72
+    ],
+    [
+      248,
+      224,
+      184
+    ],
+    [
+      232,
+      184,
+      88
+    ]
+  ],
+  "layers": [
+    "far_arm",
+    "far_leg",
+    "torso",
+    "head_hair",
+    "near_leg",
+    "near_arm"
+  ],
+  "frames": [
+    {
+      "name": "step0",
+      "file": "step0.png",
+      "layers": {
+        "far_arm": "step0-far_arm.png",
+        "far_leg": "step0-far_leg.png",
+        "torso": "step0-torso.png",
+        "head_hair": "step0-head_hair.png",
+        "near_leg": "step0-near_leg.png",
+        "near_arm": "step0-near_arm.png"
+      },
+      "duration_ms": 83,
+      "contacts": [
+        "far_leg",
+        "near_leg"
+      ],
+      "foot_centres": {
+        "far_leg": [
+          62.0,
+          141
+        ],
+        "near_leg": [
+          107.0,
+          141
+        ]
+      },
+      "root": [
+        80,
+        141
+      ],
+      "bounds": [
+        50,
+        21,
+        126,
+        141
+      ]
+    },
+    {
+      "name": "step1",
+      "file": "step1.png",
+      "layers": {
+        "far_arm": "step1-far_arm.png",
+        "far_leg": "step1-far_leg.png",
+        "torso": "step1-torso.png",
+        "head_hair": "step1-head_hair.png",
+        "near_leg": "step1-near_leg.png",
+        "near_arm": "step1-near_arm.png"
+      },
+      "duration_ms": 83,
+      "contacts": [
+        "far_leg",
+        "near_leg"
+      ],
+      "foot_centres": {
+        "far_leg": [
+          67.5,
+          141
+        ],
+        "near_leg": [
+          109.0,
+          141
+        ]
+      },
+      "root": [
+        80,
+        141
+      ],
+      "bounds": [
+        50,
+        22,
+        126,
+        141
+      ]
+    },
+    {
+      "name": "step2",
+      "file": "step2.png",
+      "layers": {
+        "far_arm": "step2-far_arm.png",
+        "far_leg": "step2-far_leg.png",
+        "torso": "step2-torso.png",
+        "head_hair": "step2-head_hair.png",
+        "near_leg": "step2-near_leg.png",
+        "near_arm": "step2-near_arm.png"
+      },
+      "duration_ms": 83,
+      "contacts": [
+        "near_leg"
+      ],
+      "foot_centres": {
+        "far_leg": [
+          68.0,
+          140
+        ],
+        "near_leg": [
+          118.0,
+          141
+        ]
+      },
+      "root": [
+        80,
+        141
+      ],
+      "bounds": [
+        50,
+        21,
+        127,
+        141
+      ]
+    },
+    {
+      "name": "step3",
+      "file": "step3.png",
+      "layers": {
+        "far_arm": "step3-far_arm.png",
+        "far_leg": "step3-far_leg.png",
+        "torso": "step3-torso.png",
+        "head_hair": "step3-head_hair.png",
+        "near_leg": "step3-near_leg.png",
+        "near_arm": "step3-near_arm.png"
+      },
+      "duration_ms": 83,
+      "contacts": [
+        "far_leg",
+        "near_leg"
+      ],
+      "foot_centres": {
+        "far_leg": [
+          71.5,
+          141
+        ],
+        "near_leg": [
+          115.5,
+          141
+        ]
+      },
+      "root": [
+        80,
+        141
+      ],
+      "bounds": [
+        50,
+        20,
+        126,
+        141
+      ]
+    },
+    {
+      "name": "step4",
+      "file": "step4.png",
+      "layers": {
+        "far_arm": "step4-far_arm.png",
+        "far_leg": "step4-far_leg.png",
+        "torso": "step4-torso.png",
+        "head_hair": "step4-head_hair.png",
+        "near_leg": "step4-near_leg.png",
+        "near_arm": "step4-near_arm.png"
+      },
+      "duration_ms": 83,
+      "contacts": [
+        "far_leg",
+        "near_leg"
+      ],
+      "foot_centres": {
+        "far_leg": [
+          62.5,
+          141
+        ],
+        "near_leg": [
+          111.0,
+          141
+        ]
+      },
+      "root": [
+        80,
+        141
+      ],
+      "bounds": [
+        49,
+        21,
+        126,
+        141
+      ]
+    },
+    {
+      "name": "step5",
+      "file": "step5.png",
+      "layers": {
+        "far_arm": "step5-far_arm.png",
+        "far_leg": "step5-far_leg.png",
+        "torso": "step5-torso.png",
+        "head_hair": "step5-head_hair.png",
+        "near_leg": "step5-near_leg.png",
+        "near_arm": "step5-near_arm.png"
+      },
+      "duration_ms": 83,
+      "contacts": [
+        "far_leg",
+        "near_leg"
+      ],
+      "foot_centres": {
+        "far_leg": [
+          55.0,
+          141
+        ],
+        "near_leg": [
+          102.5,
+          141
+        ]
+      },
+      "root": [
+        80,
+        141
+      ],
+      "bounds": [
+        44,
+        22,
+        126,
+        141
+      ]
+    },
+    {
+      "name": "step6",
+      "file": "step6.png",
+      "layers": {
+        "far_arm": "step6-far_arm.png",
+        "far_leg": "step6-far_leg.png",
+        "torso": "step6-torso.png",
+        "head_hair": "step6-head_hair.png",
+        "near_leg": "step6-near_leg.png",
+        "near_arm": "step6-near_arm.png"
+      },
+      "duration_ms": 83,
+      "contacts": [
+        "near_leg"
+      ],
+      "foot_centres": {
+        "far_leg": [
+          52.5,
+          140
+        ],
+        "near_leg": [
+          94.0,
+          141
+        ]
+      },
+      "root": [
+        80,
+        141
+      ],
+      "bounds": [
+        42,
+        21,
+        126,
+        141
+      ]
+    },
+    {
+      "name": "step7",
+      "file": "step7.png",
+      "layers": {
+        "far_arm": "step7-far_arm.png",
+        "far_leg": "step7-far_leg.png",
+        "torso": "step7-torso.png",
+        "head_hair": "step7-head_hair.png",
+        "near_leg": "step7-near_leg.png",
+        "near_arm": "step7-near_arm.png"
+      },
+      "duration_ms": 83,
+      "contacts": [
+        "far_leg",
+        "near_leg"
+      ],
+      "foot_centres": {
+        "far_leg": [
+          58.5,
+          141
+        ],
+        "near_leg": [
+          103.5,
+          141
+        ]
+      },
+      "root": [
+        80,
+        141
+      ],
+      "bounds": [
+        46,
+        20,
+        126,
+        141
+      ]
+    }
+  ],
+  "tags": [
+    {
+      "name": "footwork",
+      "first": 0,
+      "last": 7
+    }
+  ],
+  "status": "motion study; not approved production combat animation"
+}

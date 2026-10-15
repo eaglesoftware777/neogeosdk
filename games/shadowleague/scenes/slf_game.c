@@ -88,8 +88,8 @@ static void NEOGEO_USER choose_format(void)
         if (slf_pressed(0u) & (NGF_RAW_LEFT | NGF_RAW_RIGHT | NGF_BTN_B)) {
             s_team_mode ^= 1u; slf_sfx(SLF_SFX_MENU);
         }
-        slf_puts_center(11u, s_team_mode ? "   TEAM BATTLE   " : "      DUEL       ", SLF_PAL_BIG);
-        slf_puts_center(14u, s_team_mode ? "3 FIGHTERS + 1 ASSIST" : "  ONE AGAINST ONE   ", SLF_PAL_GOLD);
+        slf_puts_center(11u, s_team_mode ? "3 VS 3 + STRIKER" : "    1 VS 1     ", SLF_PAL_BIG);
+        slf_puts_center(14u, s_team_mode ? "ONE STRIKER FOR EACH TEAM" : "     SINGLE FIGHTER     ", SLF_PAL_GOLD);
         if ((slf_pressed(0u) & (NGF_BTN_A | NGF_BTN_C)) || slf_start_pressed(0u) || !--timer) break;
     }
 }
@@ -104,7 +104,7 @@ static uint8_t NEOGEO_USER picked_before(uint8_t side, uint8_t def)
 
 static void NEOGEO_USER select_screen(uint8_t humans)
 {
-    static const int16_t k_x[2] = {84, 236};
+    static const int16_t k_x[2] = {112, 208};
     static const uint8_t k_port_col[7] = { 5u, 9u, 14u, 18u, 23u, 27u, 32u };
     uint8_t cursor[2], last_cursor[2], done[2], p, i;
     uint8_t win_base = 0u, last_active = 0u;
@@ -168,6 +168,7 @@ static void NEOGEO_USER select_screen(uint8_t humans)
         for (i = 0u; i < 2u; i++) {
             uint8_t f_id = done[i] ? s_pick[i] : cursor[i];
             uint8_t chosen = (uint8_t)(done[i] && (humans & (1u << i)));
+            slf_large_portrait(i, f_id);
             slf_fighter_pose(i, f_id, anim_sprite(f_id, chosen ? NGF_A_WIN : NGF_A_IDLE, tick), k_x[i],
                              SLF_FLOOR_Y - 125, i);
         }
@@ -276,9 +277,12 @@ static void NEOGEO_USER vs_screen(void)
 }
 
 /* ------------------------------------------------------------ match */
+static uint8_t s_feedback_timer;
+
 static void NEOGEO_USER announce_clear(void)
 {
-    slf_clear_rows(8u, 15u);
+    slf_clear_rows(7u, 17u);
+    s_feedback_timer = 0u;
 }
 
 static void NEOGEO_USER announce(NGFMatch *m, uint8_t state)
@@ -342,10 +346,15 @@ static void NEOGEO_USER play_events(NGFMatch *m)
         case NGF_EV_GUARD_BREAK:
             slf_sfx(SLF_SFX_HIT_HEAVY);
             slf_fx_spawn(1u, sx, sy);
+            slf_clear_rows(7u, 9u);
+            slf_big_center(7u, SLF_BIG_GUARDBREAK, SLF_BIG_GUARDBREAK_W, SLF_BIG_GUARDBREAK_H, SLF_PAL_RED);
+            s_feedback_timer = 45u;
             break;
         case NGF_EV_COUNTER:
             slf_sfx(SLF_SFX_COUNTER);
-            slf_big(e.who ? 26u : 4u, 8u, SLF_BIG_COUNTER, SLF_BIG_COUNTER_W, SLF_BIG_COUNTER_H, SLF_PAL_BLUE);
+            slf_clear_rows(7u, 9u);
+            slf_big_center(7u, SLF_BIG_COUNTER, SLF_BIG_COUNTER_W, SLF_BIG_COUNTER_H, SLF_PAL_BLUE);
+            s_feedback_timer = 30u;
             break;
         case NGF_EV_KO: slf_sfx(SLF_SFX_KO); break;
         case NGF_EV_MOVE:
@@ -396,6 +405,7 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
         if (mode == MODE_DEMO && (slf_start_pending() || slf_start_pressed(0u))) return RESULT_ABORT;
         if (mode == MODE_ARCADE && NEO_REGISTER8(SLF_P2_FLAG)) return RESULT_CHALLENGER;
         ngf_match_step(m, slf_joy(0u), slf_joy(1u));
+        if (s_feedback_timer && !--s_feedback_timer) slf_clear_rows(7u, 9u);
         play_events(m);
         if (m->state != last_state || m->round != last_round) {
             if (m->state == NGF_M_FIGHT && last_state == NGF_M_INTRO) counter_clear = 30u;
@@ -571,24 +581,20 @@ void NEOGEO_USER slf_run(void)
 
 static uint8_t NEOGEO_USER attract_story(void)
 {
-    uint16_t t;
-    slf_scene_begin();
+    uint8_t card;
     slf_music(SLF_TRACK_TITLE);
-    slf_stage_set(3u);
-    slf_stage_show(96);
-    slf_puts_center(3u, "PROJECT CHIMERA : PROLOGUE", SLF_PAL_GOLD);
-    slf_puts_center(6u, "YEAR 2099 -- NEO TOKYO", SLF_PAL_BLUE);
-    slf_puts_center(9u, "THE SHADOW VEIL HAS SUMMONED 44 FIGHTERS", SLF_PAL_WHITE);
-    slf_puts_center(11u, "FROM 32 NATIONS ACROSS THE GLOBE.", SLF_PAL_WHITE);
-    slf_puts_center(14u, "HIDDEN BENEATH THE TOURNAMENT LIES", SLF_PAL_GOLD);
-    slf_puts_center(16u, "A SECRET CYBERNETIC PROTOCOL.", SLF_PAL_RED);
-    slf_puts_center(19u, "ONLY THE STRONGEST WILL SURVIVE.", SLF_PAL_TEXT);
-    for (t = 0u; t < 360u; t++) {
-        slf_frame();
-        if (slf_start_pressed(1u)) { NEO_REGISTER8(SLF_P2_FLAG) = 1u; return 1u; }
-        if (slf_start_pending() || slf_start_pressed(0u)) return 1u;
-        if ((t & 31u) == 0u)
-            slf_puts_center(24u, (t & 32u) ? (ng_sys_is_mvs() ? "INSERT COIN" : "PUSH START") : "           ", SLF_PAL_TEXT);
+    for (card = 1u; card < SLF_PRESENTATION_CARDS; card++) {
+        uint16_t t, duration;
+        slf_scene_begin();
+        duration = slf_story_show(card);
+        for (t = 0u; t < duration; t++) {
+            slf_frame();
+            slf_story_pan(t, (uint8_t)(card & 1u));
+            if (slf_start_pressed(1u)) { NEO_REGISTER8(SLF_P2_FLAG) = 1u; return 1u; }
+            if (slf_start_pending() || slf_start_pressed(0u)) return 1u;
+            if ((t & 31u) == 0u)
+                slf_puts(1u, 0u, (t & 32u) ? (ng_sys_is_mvs() ? "INSERT COIN" : "PUSH START ") : "           ", SLF_PAL_TEXT);
+        }
     }
     return 0u;
 }
@@ -624,9 +630,9 @@ static uint8_t NEOGEO_USER attract_tutorial(void)
 
 static uint8_t NEOGEO_USER attract_showcase(void)
 {
-    static const uint8_t k_show_fighters[4] = { 0u, 1u, 7u, 43u };
+    static const uint8_t k_show_fighters[3] = { 0u, 3u, 2u };
     uint8_t k;
-    for (k = 0u; k < 4u; k++) {
+    for (k = 0u; k < 3u; k++) {
         uint8_t f = k_show_fighters[k];
         uint16_t t;
         slf_scene_begin();
@@ -657,13 +663,13 @@ static uint8_t NEOGEO_USER attract_title(void)
     slf_music(SLF_TRACK_TITLE);
     slf_stage_set(0u);
     slf_title_draw();
-    slf_puts_center(1u, "HI-SCORE 50000", SLF_PAL_GOLD);
     for (t = 0u; t < 6u * 60u; t++) {
         slf_frame();
+        slf_title_tick(t);
         if (slf_start_pressed(1u)) { NEO_REGISTER8(SLF_P2_FLAG) = 1u; return 1u; }
         if (slf_start_pending() || slf_start_pressed(0u)) return 1u;
         if ((t & 31u) == 0u)
-            slf_puts_center(24u, (t & 32u) ? (ng_sys_is_mvs() ? "INSERT COIN" : "PUSH START") : "           ",
+            slf_puts_center(26u, (t & 32u) ? (ng_sys_is_mvs() ? "INSERT COIN" : "PUSH START") : "           ",
                             SLF_PAL_TEXT);
     }
     return 0u;

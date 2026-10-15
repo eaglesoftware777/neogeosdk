@@ -147,6 +147,39 @@ static const uint16_t motion_steps[NGF_MOTION_COUNT][6] = {
 static const uint8_t motion_len[NGF_MOTION_COUNT] = {0, 3, 3, 3, 3, 3, 3, 5, 5};
 static const uint8_t motion_window[NGF_MOTION_COUNT] = {0, 15, 15, 15, 15, 22, 22, 30, 30, 0, 0, 30, 48, 12, 12, 0, 0, 0};
 
+/* Clockwise octants: R, DR, D, DL, L, UL, U, UR. Neutral is ignored.
+ * Cardinal-only turns are lenient, but reversals/opposite jumps restart the
+ * path. Four ordered cardinal sectors are a 270-degree execution; eight
+ * require a second traversal. The last diagonal has one-octant leniency,
+ * allowing a grounded command before an up-diagonal initiates a jump. A
+ * button may follow within 4 frames. */
+static uint8_t NEOGEO_USER ordered_rotation(const NGFInput *in, uint8_t facing_left,
+    uint8_t window, uint8_t backwards, uint8_t required)
+{
+    static const uint8_t octant[10] = {255u, 3u, 2u, 1u, 4u, 255u, 0u, 5u, 6u, 7u};
+    uint8_t age = window, previous = 255u, count = 0u, travel = 0u, last_age = 255u;
+    while (age) {
+        uint8_t current, delta;
+        age--;
+        current = octant[ngf_input_dir(in, age, facing_left)];
+        if (current == 255u) continue;
+        if (previous == current) { last_age = age; continue; }
+        delta = previous == 255u ? 0u : (uint8_t)((backwards ? previous - current : current - previous) & 7u);
+        if (previous == 255u || delta > 2u || age + 6u < last_age) {
+            count = (uint8_t)((current & 1u) == 0u);
+            travel = 0u;
+        } else {
+            travel = (uint8_t)(travel + delta);
+            if (!(current & 1u) && count < 8u) count++;
+        }
+        previous = current;
+        last_age = age;
+        if ((uint8_t)(count + (current & 1u)) >= required &&
+            travel >= (required == 8u ? 13u : 5u) && age <= 4u) return 1u;
+    }
+    return 0u;
+}
+
 uint8_t NEOGEO_USER ngf_input_motion(const NGFInput *in, uint8_t motion, uint8_t facing_left, uint8_t window)
 {
     uint8_t now = ngf_input_dir(in, 0, facing_left);
@@ -165,23 +198,11 @@ uint8_t NEOGEO_USER ngf_input_motion(const NGFInput *in, uint8_t motion, uint8_t
         return (uint8_t)(((FWDS >> now) & 1u) && in->back_release >= CHARGE_FRAMES && in->back_age <= CHARGE_WINDOW);
     case NGF_MOTION_CHARGE_DU:
         return (uint8_t)(((UPS >> now) & 1u) && in->down_release >= CHARGE_FRAMES && in->down_age <= CHARGE_WINDOW);
-    case NGF_MOTION_360: {
-        uint16_t seen = 0;
-        for (ago = 0; ago < window; ago++) seen |= DIR(ngf_input_dir(in, ago, facing_left));
-        return (uint8_t)((seen & BACKS) && (seen & FWDS) && (seen & DOWNS) && (seen & UPS));
-    }
+    case NGF_MOTION_360:
     case NGF_MOTION_720: {
-        uint16_t seen1 = 0, seen2 = 0;
-        for (ago = 0; ago < window; ago++) {
-            uint16_t d = DIR(ngf_input_dir(in, ago, facing_left));
-            if (!((seen1 & BACKS) && (seen1 & FWDS) && (seen1 & DOWNS) && (seen1 & UPS))) {
-                seen1 |= d;
-            } else {
-                seen2 |= d;
-            }
-        }
-        return (uint8_t)((seen1 & BACKS) && (seen1 & FWDS) && (seen1 & DOWNS) && (seen1 & UPS) &&
-                         (seen2 & BACKS) && (seen2 & FWDS) && (seen2 & DOWNS) && (seen2 & UPS));
+        uint8_t required = motion == NGF_MOTION_720 ? 8u : 4u;
+        return (uint8_t)(ordered_rotation(in, facing_left, window, 0u, required) ||
+                         ordered_rotation(in, facing_left, window, 1u, required));
     }
     case NGF_MOTION_DASH:
     case NGF_MOTION_BACKDASH: {
@@ -344,6 +365,30 @@ static uint8_t NEOGEO_USER hits_body(const NGFFighter *def, WBox hit)
     for (i = 0; i < set->count; i++)
         if (overlap(hit, world_box(def->x, def->h, def->facing_left, &set->box[i]))) return 1;
     return 0;
+}
+
+/* Resolve only the boxes of the currently displayed animation frame.
+ * Save the actual contacting rectangle for sparks/counters and strike trades. */
+static uint8_t NEOGEO_USER frame_contact(const NGFFighterDef *d, uint8_t anim, uint8_t frame,
+    const NGFMove *move, int32_t x, int32_t h, uint8_t facing_left,
+    const NGFFighter *target, WBox *contact)
+{
+    if (d->hit_sets && d->frame_hits) {
+        uint16_t index = (uint16_t)(d->anims[anim].first + frame);
+        const NGFHitSet *set = &d->hit_sets[d->frame_hits[index]];
+        uint8_t k;
+        for (k = 0u; k < set->count && k < 3u; k++) {
+            WBox box = world_box(x, h, facing_left, &set->box[k]);
+            if (set->box[k].w && set->box[k].h && hits_body(target, box)) {
+                *contact = box;
+                return 1u;
+            }
+        }
+        return 0u;
+    }
+    if (!move->hit.w || !move->hit.h) return 0u;
+    *contact = world_box(x, h, facing_left, &move->hit);
+    return hits_body(target, *contact);
 }
 
 static uint8_t NEOGEO_USER can_block(const NGFFighter *f, uint8_t level)
@@ -903,10 +948,9 @@ static void NEOGEO_USER resolve_attacks(NGFMatch *m)
         NGFFighter *f = &m->f[i], *o = &m->f[i ^ 1u];
         const NGFFrame *fr = ngf_fighter_frame(f);
         if (f->state != NGF_S_ATTACK || !f->move || f->move->kind == NGF_KIND_THROW) continue;
-        if (!(fr->flags & NGF_FF_ACTIVE) || f->move_hit || !f->move->hit.w) continue;
+        if (!(fr->flags & NGF_FF_ACTIVE) || f->move_hit) continue;
         if (!vulnerable(o)) continue;
-        box[i] = world_box(f->x, f->h, f->facing_left, &f->move->hit);
-        hit[i] = hits_body(o, box[i]);
+        hit[i] = frame_contact(f->def, f->anim, f->frame, f->move, f->x, f->h, f->facing_left, o, &box[i]);
         contact_move[i] = f->move;
     }
     for (i = 0; i < 2u; i++) {
@@ -1150,8 +1194,8 @@ static void NEOGEO_USER striker_step(NGFMatch *m)
             NGFFighter *target = &m->f[i ^ 1u];
             st->x += (int32_t)(st->facing_left ? -fr->dx : fr->dx) * 32;
             if ((fr->flags & NGF_FF_ACTIVE) && !st->move_hit && vulnerable(target)) {
-                WBox box = world_box(st->x, st->h, st->facing_left, &mv->hit);
-                if (hits_body(target, box)) {
+                WBox box;
+                if (frame_contact(st->def, st->anim, st->frame, mv, st->x, st->h, st->facing_left, target, &box)) {
                     HitParams hp;
                     st->move_hit = 1;
                     params_from_move(mv, &hp);
