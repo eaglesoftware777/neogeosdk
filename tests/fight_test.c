@@ -63,6 +63,7 @@ static const NGFFighterDef tester = {
     20, 90, 56, 52, 100, 0, anims, frames, hurt, moves, projectiles,
     sizeof(anims) / sizeof(anims[0]), sizeof(moves) / sizeof(moves[0]), 1, 4,
     {160, 70, 40, 5, 4, 1, 2, 6, 3, 0},
+    0, 0,
 };
 
 static NGFMatch m;
@@ -213,6 +214,80 @@ static uint32_t cpu_match(uint16_t seed, uint32_t *frames_out)
     }
     *frames_out = n;
     return ngf_match_hash(&m) ^ h;
+}
+
+static void test_frame_contacts(void)
+{
+    static const NGFHitSet sets[] = {
+        {{{0,0,0,0}},0,0},
+        {{{10,60,18,14}},1,0},
+        {{{10,60,50,14}},1,0},
+        {{{10,4,50,8},{10,60,50,14}},2,0}
+    };
+    uint8_t indices[sizeof(frames)/sizeof(frames[0])] = {0};
+    NGFFighterDef authored = tester;
+    uint8_t k, side;
+    authored.hit_sets = sets; authored.frame_hits = indices;
+    for (side=0;side<2;side++) for (k=0;k<4;k++) {
+        NGFFighter *attacker;
+        uint16_t life;
+        fight_at(60);
+        attacker = &m.f[side]; attacker->def = &authored;
+        attacker->state = NGF_S_ATTACK; attacker->move = &moves[5];
+        attacker->anim = 19; attacker->frame = 1; attacker->frame_timer = 0;
+        attacker->move_hit = 0; indices[6] = k;
+        life = m.f[side^1].life;
+        run(1,0,0);
+        if (k<2) assert(m.f[side^1].life==life); /* Empty/early reach whiffs despite move union. */
+        else assert(m.f[side^1].life<life); /* Extended/multiple boxes contact. */
+    }
+}
+
+static void test_ordered_rotations(void)
+{
+    static const uint8_t cw[] = {6,3,2,1,4,7,8,9,6,3,2,1,4,7,8};
+    static const uint8_t ccw[] = {6,9,8,7,4,1,2,3,6,9,8,7,4,1,2};
+    static const uint8_t scrambled[] = {6,4,2,8,6,4,2,8};
+    static const uint8_t reverse[] = {6,2,4,2,8};
+    NGFInput in;
+    uint8_t side, turn, i;
+    for (side=0;side<2;side++) for (turn=0;turn<2;turn++) {
+        const uint8_t *path = turn ? ccw : cw;
+        ngf_input_reset(&in);
+        for (i=0;i<7;i++) ngf_input_push(&in,ngf_raw_from_numpad(path[i],side),side);
+        assert(ngf_input_motion(&in,NGF_MOTION_360,side,0));
+        assert(!ngf_input_motion(&in,NGF_MOTION_720,side,0));
+        for (;i<15;i++) ngf_input_push(&in,ngf_raw_from_numpad(path[i],side),side);
+        assert(ngf_input_motion(&in,NGF_MOTION_720,side,0));
+        for (i=0;i<6;i++) ngf_input_push(&in,0,side);
+        assert(!ngf_input_motion(&in,NGF_MOTION_360,side,0));
+    }
+    ngf_input_reset(&in);
+    for (i=0;i<sizeof(scrambled);i++) ngf_input_push(&in,ngf_raw_from_numpad(scrambled[i],0),0);
+    assert(!ngf_input_motion(&in,NGF_MOTION_360,0,0));
+    assert(!ngf_input_motion(&in,NGF_MOTION_720,0,0));
+    ngf_input_reset(&in);
+    for (i=0;i<sizeof(reverse);i++) ngf_input_push(&in,ngf_raw_from_numpad(reverse[i],0),0);
+    assert(!ngf_input_motion(&in,NGF_MOTION_360,0,0));
+    ngf_input_reset(&in);
+    for(i=0;i<7;i++) { ngf_input_push(&in,ngf_raw_from_numpad(cw[i],0),0);ngf_input_push(&in,ngf_raw_from_numpad(cw[i],0),0); }
+    ngf_input_push(&in,0,0);
+    assert(ngf_input_motion(&in,NGF_MOTION_360,0,0));
+    /* Motion history is consumed by successful motion moves, not by normal
+     * buttons: a player can buffer directions while chaining a normal. */
+    {
+        NGFFighterDef spinning = tester;
+        NGFMove spin = moves[1];
+        spin.motion = NGF_MOTION_360;
+        spin.buttons = NGF_BTN_A;
+        spinning.moves = &spin; spinning.move_count = 1;
+        fight_at(100);
+        m.f[0].def = &spinning;
+        for(i=0;i<6;i++) run(1,(uint8_t)(ngf_raw_from_numpad(cw[i],0)|(i==5?NGF_BTN_A:0)),0);
+        assert(m.f[0].move == &spin);
+        assert(m.f[0].input.motion_frames == 0);
+        assert(!ngf_input_motion(&m.f[0].input,NGF_MOTION_360,0,0));
+    }
 }
 
 static void test_720_and_teams(void)
@@ -423,6 +498,8 @@ int main(void)
     test_motions();
     test_hit_and_block();
     test_throw_projectile_super();
+    test_frame_contacts();
+    test_ordered_rotations();
     test_720_and_teams();
     test_freeze_and_input_buffer();
     test_assist_collision();

@@ -3,6 +3,29 @@
 Shadow League Fighting's ROM sets ship with the NeoGeoSDK pre-releases and
 are numbered on their own: `_v1` with v1.7.5.
 
+## Rebirth candidate (in progress, 2026-10-15)
+
+- Original native title/logo, three larger portraits and six illustrated story
+  cuts, with existing music and immediate START/credit handling.
+- Sixteen indexed FIX announcements, including FIGHT, K.O., VICTORY, PERFECT,
+  COUNTER and GUARD BREAK, verified against decoded S-ROM pixels.
+- Completed palette buffers upload before BIOS input handling. Live emulator
+  checks reject prolonged palette starvation, in addition to sprite overload.
+- A 3-MiB P image with two aligned data banks and fixed interrupt/code addresses;
+  16-MiB C capacity and complete hardware sprite tile addressing.
+- Per-frame attack contacts, ordered rotational inputs and strict authored
+  imports with optional per-tile fighter palettes.
+- Activated native playable pose sets for Kenji, Jack and Amara: 203 referenced
+  pose exports, 185 distinct drawings, six indexed layers each, explicit contacts
+  and eight-drawing forward/backward footwork. They remain visual proofs awaiting
+  artistic review. The remaining 41 fighter bodies and four arenas are preserved.
+- Revised native title busts and portraits; metal HUD plates, shaped timer digits,
+  recent-damage trails and separate Guard/Spirit gauges.
+- Separate AES/MVS test packages, nine current emulator scenarios and audible
+  cartridge recordings. Installed locally with verified ROM hashes and an old-build
+  backup. Professional art acceptance, remaining roster production, pacing
+  improvements and physical-cartridge tests remain.
+
 ## v2 (2026-10-13) — roster, arenas and fighting core
 
 - Playable Duel and Team Battle selection: three unique fighters and one assist.

@@ -62,6 +62,7 @@ NEOGEO_INTERRUPT void NEOGEO_USER VBlank(void) {
 	ASM_MVEML(%%d0-%%d7/%%a0-%%a6,-(%%sp))
 	ASM_MVW(#4,REG_IRQACK) // Acknowledge the VBlank interrupt
 	ASM_MVB(%%d0,REG_DIPSW)        // Kick watchdog
+	ASM_JSR(slf_palette_vblank)
 	ASM_JSR(SYS_IO)
 	ASM_MVEML((%%sp)+, %%d0-%%d7/%%a0-%%a6)
 	:

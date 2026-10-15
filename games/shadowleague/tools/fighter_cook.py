@@ -1,7 +1,8 @@
 """Cook Shadow League fighter definitions into ng_fight ROM tables and frames.
 
-Every pose an animation uses is drawn once (fighter_art), so a fighter's
-sprite frames, hurtboxes and per-move hitboxes come from the same joints.
+Activated native fighters load completed PNG layers, exports and contact metadata.
+Missing native poses fail instead of falling back to the legacy geometry renderer.
+Other fighters retain the existing fighter_art drawing and joint metadata.
 
     python3 games/shadowleague/tools/fighter_cook.py --sheet   # contact sheets for review
 """
@@ -67,17 +68,44 @@ class Fighter:
                 if fr[0] not in used:
                     used.append(fr[0])
         self.sprite_names = used
+        self.authored = None
+        source = GAME / 'assets/authored/fighters' / self.id
+        self.authored_folder = source
         self.images, self.joints = [], []
+        if (source / 'manifest.json').exists():
+            from native_art_io import fighter_source
+            q = fighter_source(source, used)
+            self.images, self.authored = q['images'], q['metadata']
+            self.source_images, self.source_palette = q['source_images'], q['source_palette']
+            self.authored_palette = self.source_palette[:16]
+            self.tile_banks, self.bank_indices = q['tile_maps'], q['bank_indices']
+            self.source_banks = q['banks']
+            self.joints = [None] * len(used)
+            return
         for name in used:
             image, joints = art.render(d["build"], d["materials"], self.poses[name])
             self.images.append(image)
             self.joints.append(joints)
 
     def palettes(self):
+        if self.authored is not None:
+            manifest = json.loads((self.authored_folder/'manifest.json').read_text())
+            alternate = np.asarray(manifest['alt_palette'],dtype=np.uint8)
+            if alternate.ndim!=2 or alternate.shape[1]!=3 or len(alternate)<=max(int(im.max()) for im in self.source_images):raise ValueError(self.id+': alternate palette omits used source colors')
+            return self.authored_palette, alternate[:16]
         base = {k: [tuple(c) for c in v] if isinstance(v[0], (list, tuple)) else tuple(v) for k, v in self.data["palette"].items()}
         alt = dict(base)
         alt.update({k: [tuple(c) for c in v] if isinstance(v[0], (list, tuple)) else tuple(v) for k, v in self.data.get("alt_palette", {}).items()})
         return art.ramp_colors(base), art.ramp_colors(alt)
+
+    def palette_banks(self):
+        if self.authored is None:
+            normal, alternate = self.palettes()
+            return np.asarray([normal]), np.asarray([alternate])
+        manifest = json.loads((self.authored_folder/'manifest.json').read_text())
+        alternate = np.asarray(manifest['alt_palette'],dtype=np.uint8)
+        if alternate.ndim!=2 or alternate.shape[1]!=3 or len(alternate)<=max(int(im.max()) for im in self.source_images):raise ValueError(self.id+': alternate palette omits used source colors')
+        return self.source_banks, np.asarray([alternate[indices] for indices in self.bank_indices])
 
     def hitbox(self, move):
         if "limb" not in move:
@@ -85,8 +113,12 @@ class Fighter:
         boxes = []
         for fr in self.data["anims"][move["anim"]]:
             if len(fr) > 2 and "active" in fr[2]:
-                j = self.joints[self.sprite_names.index(fr[0])]
-                boxes.append(art.hitbox(self.data["build"], j, move["limb"]))
+                i = self.sprite_names.index(fr[0])
+                if self.authored is not None:
+                    boxes.extend(self.authored[i]["hit"].get(move["limb"], []))
+                else:
+                    boxes.append(art.hitbox(self.data["build"], self.joints[i], move["limb"]))
+        if not boxes: return [0, 0, 0, 0]
         x0 = min(b[0] for b in boxes)
         y0 = min(b[1] for b in boxes)
         x1 = max(b[0] + b[2] for b in boxes)
@@ -97,6 +129,8 @@ class Fighter:
         d = self.data
         lines = []
         frames, anims = [], []
+        hit_sets = [()]
+        frame_hits = []
         for name in self.anim_names:
             first = len(frames)
             for fr in d["anims"][name]:
@@ -105,6 +139,18 @@ class Fighter:
                 dx = int(fr[3]) if len(fr) > 3 else 0
                 dy = int(fr[4]) if len(fr) > 4 else 0
                 frames.append(f"{{{sprite}, {int(fr[1])}, {sprite}, {flags(fl, FLAG)}, {dx}, {dy}}}")
+                limbs = sorted({m['limb'] for m in d['moves'] if m['anim']==name and 'limb' in m}) if 'active' in fl else []
+                boxes = []
+                for limb in limbs:
+                    if self.authored is not None:
+                        boxes.extend(self.authored[sprite]['hit'].get(limb, []))
+                    else:
+                        boxes.append(art.hitbox(d['build'], self.joints[sprite], limb))
+                key = tuple(tuple(int(v) for v in box) for box in boxes)
+                if len(key)>3:raise ValueError(self.id+'/'+name+': more than three frame contacts')
+                if key not in hit_sets:hit_sets.append(key)
+                if len(hit_sets)>256:raise ValueError(self.id+': contact set index overflow')
+                frame_hits.append(hit_sets.index(key))
             count = len(d["anims"][name])
             last = d["anims"][name][-1]
             loop = "0xFF" if int(last[1]) == 255 or name in ("getup", "throw") or not self._loops(name) else "0"
@@ -115,12 +161,18 @@ class Fighter:
         for i, j in enumerate(self.joints):
             pose = self.poses[self.sprite_names[i]]
             attacking = self._attacking_limb(self.sprite_names[i])
-            boxes = art.hurtboxes(d["build"], j, attacking)
-            if pose.get("hip", [0, 0])[1] > 36:          # lying down
+            boxes = self.authored[i]["hurt"] if self.authored is not None else art.hurtboxes(d["build"], j, attacking)
+            if self.authored is None and pose.get("hip", [0, 0])[1] > 36:          # lying down
                 boxes = boxes[:1]
             cells = ", ".join(f"{{{b[0]}, {b[1]}, {b[2]}, {b[3]}}}" for b in boxes)
             hurt.append(f"{{{{{cells}}}, {len(boxes)}, 0}}")
         lines.append(f"static const NGFHurtSet {prefix}_hurt[] = {{\n    " + ",\n    ".join(hurt) + "\n};")
+        hit_rows = []
+        for boxes in hit_sets:
+            cells = ', '.join('{'+', '.join(str(v) for v in b)+'}' for b in boxes) or '{0, 0, 0, 0}'
+            hit_rows.append('{{'+cells+'}, '+str(len(boxes))+', 0}')
+        lines.append(f"static const NGFHitSet {prefix}_hit_sets[] = {{\n    " + ",\n    ".join(hit_rows) + "\n};")
+        lines.append(f"static const uint8_t {prefix}_frame_hits[] = {{" + ','.join(str(v) for v in frame_hits) + "};")
         names = [m["name"] for m in d["moves"]]
         moves = []
         for mv in d["moves"]:
@@ -153,7 +205,8 @@ class Fighter:
             f"    {prefix}_anims, {prefix}_frames, {prefix}_hurt, {prefix}_moves, 0,\n"
             f"    {len(self.anim_names)}, {len(d['moves'])}, 0, {len(self.joints)},\n"
             f"    {{{cpu['aggression']}, {cpu['range']}, {cpu['jump']}, {idx('poke')}, {idx('sweep')}, {idx('anti_air')}, "
-            f"{idx('special')}, {idx('rush')}, {idx('throw')}, {idx('super')}}}\n}};")
+            f"{idx('special')}, {idx('rush')}, {idx('throw')}, {idx('super')}}},\n"
+            f"    {prefix}_hit_sets, {prefix}_frame_hits\n}};")
         return "\n".join(lines)
 
     def _loops(self, name):
@@ -177,7 +230,7 @@ class Fighter:
         out[:] = (60, 64, 80)
         for i, image in enumerate(self.images):
             y, x = (i // cols) * art.H, (i % cols) * art.W
-            rgb = pal[image]
+            rgb = self.source_palette[self.source_images[i]] if self.authored is not None else pal[image]
             mask = image > 0
             out[y:y + art.H, x:x + art.W][mask] = rgb[mask]
         Image.fromarray(out).resize((out.shape[1] * scale, out.shape[0] * scale), Image.NEAREST).save(path)

@@ -148,6 +148,26 @@ static void test_pinned_player_stays_when_a_creature_leaves(void)
     assert(player_after_creature_leaves(1u));    /* pinned: same slots, still drawn */
 }
 
+static void test_deferred_large_rom_map_keeps_latest_address(void)
+{
+    NGSpriteGroup g;
+    static const uint8_t banks[2] = {64u, 67u};
+    ngsg_queue_drop(); memset(ram, 0, sizeof(ram));
+    ng_vram_test_line = 100u;
+    ng_sprite_group_init(&g, 300u, 1u, 2u, 10u, 7u);
+    ng_sprite_group_set_palette_map(&g, banks);
+    ng_sprite_group_set_tile_address(&g, 0x1FFFEu);
+    ng_sprite_group_flush(&g);ng_vram_commit();
+    assert(pending() == 1u && ram[300u * 64u] == 0u);
+    ng_sprite_group_set_tile_address(&g, 0x1FFFFu);
+    ng_sprite_group_flush(&g);assert(pending() == 1u);
+    ng_vram_test_line = 240u;ng_vram_commit();
+    assert(pending() == 0u);
+    assert(ram[300u * 64u] == 0xFFFFu && ram[300u * 64u + 1u] == 0x4010u);
+    assert(ram[300u * 64u + 2u] == 0u && ram[300u * 64u + 3u] == 0x4320u);
+    assert(ram[300u * 64u + 5u] == NG_SPRITE_BLANK_ATTR);
+}
+
 int main(void)
 {
     test_pending_rebind_is_unique();
@@ -155,6 +175,7 @@ int main(void)
     test_aged_write_keeps_membership_until_compaction();
     test_pinned_player_stays_when_a_creature_leaves();
     test_upload_keeps_membership();
+    test_deferred_large_rom_map_keeps_latest_address();
     puts("deferred rebind membership, hidden window reuse, pinned slots and immediate uploads: PASS");
     return 0;
 }

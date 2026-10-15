@@ -1,0 +1,377 @@
+{
+  "width": 160,
+  "height": 160,
+  "colors": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      16,
+      16,
+      32
+    ],
+    [
+      96,
+      56,
+      72
+    ],
+    [
+      168,
+      96,
+      80
+    ],
+    [
+      216,
+      152,
+      112
+    ],
+    [
+      80,
+      32,
+      56
+    ],
+    [
+      168,
+      56,
+      72
+    ],
+    [
+      232,
+      80,
+      88
+    ],
+    [
+      24,
+      40,
+      64
+    ],
+    [
+      48,
+      72,
+      104
+    ],
+    [
+      88,
+      120,
+      160
+    ],
+    [
+      24,
+      24,
+      40
+    ],
+    [
+      64,
+      48,
+      64
+    ],
+    [
+      112,
+      80,
+      72
+    ],
+    [
+      248,
+      224,
+      184
+    ],
+    [
+      232,
+      184,
+      88
+    ]
+  ],
+  "layers": [
+    "far_arm",
+    "far_leg",
+    "torso",
+    "head_hair",
+    "near_leg",
+    "near_arm"
+  ],
+  "frames": [
+    {
+      "name": "idle0",
+      "duration": 10,
+      "duration_ms": 167,
+      "bounds": [
+        47,
+        17,
+        124,
+        141
+      ],
+      "anchor": [
+        80,
+        141
+      ],
+      "file": "idle0.png",
+      "layers": {
+        "far_arm": "layers/idle0__far_arm.png",
+        "far_leg": "layers/idle0__far_leg.png",
+        "torso": "layers/idle0__torso.png",
+        "head_hair": "layers/idle0__head_hair.png",
+        "near_leg": "layers/idle0__near_leg.png",
+        "near_arm": "layers/idle0__near_arm.png"
+      }
+    },
+    {
+      "name": "idle1",
+      "duration": 12,
+      "duration_ms": 200,
+      "bounds": [
+        47,
+        18,
+        124,
+        141
+      ],
+      "anchor": [
+        80,
+        141
+      ],
+      "file": "idle1.png",
+      "layers": {
+        "far_arm": "layers/idle1__far_arm.png",
+        "far_leg": "layers/idle1__far_leg.png",
+        "torso": "layers/idle1__torso.png",
+        "head_hair": "layers/idle1__head_hair.png",
+        "near_leg": "layers/idle1__near_leg.png",
+        "near_arm": "layers/idle1__near_arm.png"
+      }
+    },
+    {
+      "name": "idle2",
+      "duration": 10,
+      "duration_ms": 167,
+      "bounds": [
+        47,
+        17,
+        124,
+        141
+      ],
+      "anchor": [
+        80,
+        141
+      ],
+      "file": "idle2.png",
+      "layers": {
+        "far_arm": "layers/idle2__far_arm.png",
+        "far_leg": "layers/idle2__far_leg.png",
+        "torso": "layers/idle2__torso.png",
+        "head_hair": "layers/idle2__head_hair.png",
+        "near_leg": "layers/idle2__near_leg.png",
+        "near_arm": "layers/idle2__near_arm.png"
+      }
+    },
+    {
+      "name": "idle3",
+      "duration": 12,
+      "duration_ms": 200,
+      "bounds": [
+        47,
+        16,
+        124,
+        141
+      ],
+      "anchor": [
+        80,
+        141
+      ],
+      "file": "idle3.png",
+      "layers": {
+        "far_arm": "layers/idle3__far_arm.png",
+        "far_leg": "layers/idle3__far_leg.png",
+        "torso": "layers/idle3__torso.png",
+        "head_hair": "layers/idle3__head_hair.png",
+        "near_leg": "layers/idle3__near_leg.png",
+        "near_arm": "layers/idle3__near_arm.png"
+      }
+    },
+    {
+      "name": "walk0",
+      "duration": 6,
+      "duration_ms": 100,
+      "bounds": [
+        47,
+        17,
+        124,
+        141
+      ],
+      "anchor": [
+        80,
+        141
+      ],
+      "file": "walk0.png",
+      "layers": {
+        "far_arm": "layers/walk0__far_arm.png",
+        "far_leg": "layers/walk0__far_leg.png",
+        "torso": "layers/walk0__torso.png",
+        "head_hair": "layers/walk0__head_hair.png",
+        "near_leg": "layers/walk0__near_leg.png",
+        "near_arm": "layers/walk0__near_arm.png"
+      }
+    },
+    {
+      "name": "walk1",
+      "duration": 4,
+      "duration_ms": 67,
+      "bounds": [
+        52,
+        18,
+        124,
+        141
+      ],
+      "anchor": [
+        80,
+        141
+      ],
+      "file": "walk1.png",
+      "layers": {
+        "far_arm": "layers/walk1__far_arm.png",
+        "far_leg": "layers/walk1__far_leg.png",
+        "torso": "layers/walk1__torso.png",
+        "head_hair": "layers/walk1__head_hair.png",
+        "near_leg": "layers/walk1__near_leg.png",
+        "near_arm": "layers/walk1__near_arm.png"
+      }
+    },
+    {
+      "name": "walk2",
+      "duration": 6,
+      "duration_ms": 100,
+      "bounds": [
+        47,
+        17,
+        124,
+        141
+      ],
+      "anchor": [
+        80,
+        141
+      ],
+      "file": "walk2.png",
+      "layers": {
+        "far_arm": "layers/walk2__far_arm.png",
+        "far_leg": "layers/walk2__far_leg.png",
+        "torso": "layers/walk2__torso.png",
+        "head_hair": "layers/walk2__head_hair.png",
+        "near_leg": "layers/walk2__near_leg.png",
+        "near_arm": "layers/walk2__near_arm.png"
+      }
+    },
+    {
+      "name": "walk3",
+      "duration": 4,
+      "duration_ms": 67,
+      "bounds": [
+        52,
+        16,
+        124,
+        141
+      ],
+      "anchor": [
+        80,
+        141
+      ],
+      "file": "walk3.png",
+      "layers": {
+        "far_arm": "layers/walk3__far_arm.png",
+        "far_leg": "layers/walk3__far_leg.png",
+        "torso": "layers/walk3__torso.png",
+        "head_hair": "layers/walk3__head_hair.png",
+        "near_leg": "layers/walk3__near_leg.png",
+        "near_arm": "layers/walk3__near_arm.png"
+      }
+    },
+    {
+      "name": "chamber",
+      "duration": 4,
+      "duration_ms": 67,
+      "bounds": [
+        47,
+        18,
+        124,
+        141
+      ],
+      "anchor": [
+        80,
+        141
+      ],
+      "file": "chamber.png",
+      "layers": {
+        "far_arm": "layers/chamber__far_arm.png",
+        "far_leg": "layers/chamber__far_leg.png",
+        "torso": "layers/chamber__torso.png",
+        "head_hair": "layers/chamber__head_hair.png",
+        "near_leg": "layers/chamber__near_leg.png",
+        "near_arm": "layers/chamber__near_arm.png"
+      }
+    },
+    {
+      "name": "strike",
+      "duration": 3,
+      "duration_ms": 50,
+      "bounds": [
+        47,
+        17,
+        138,
+        141
+      ],
+      "anchor": [
+        80,
+        141
+      ],
+      "file": "strike.png",
+      "layers": {
+        "far_arm": "layers/strike__far_arm.png",
+        "far_leg": "layers/strike__far_leg.png",
+        "torso": "layers/strike__torso.png",
+        "head_hair": "layers/strike__head_hair.png",
+        "near_leg": "layers/strike__near_leg.png",
+        "near_arm": "layers/strike__near_arm.png"
+      }
+    },
+    {
+      "name": "rise",
+      "duration": 4,
+      "duration_ms": 67,
+      "bounds": [
+        47,
+        14,
+        124,
+        141
+      ],
+      "anchor": [
+        80,
+        141
+      ],
+      "file": "rise.png",
+      "layers": {
+        "far_arm": "layers/rise__far_arm.png",
+        "far_leg": "layers/rise__far_leg.png",
+        "torso": "layers/rise__torso.png",
+        "head_hair": "layers/rise__head_hair.png",
+        "near_leg": "layers/rise__near_leg.png",
+        "near_arm": "layers/rise__near_arm.png"
+      }
+    }
+  ],
+  "tags": [
+    {
+      "name": "idle",
+      "first": 0,
+      "last": 3
+    },
+    {
+      "name": "walk",
+      "first": 4,
+      "last": 7
+    },
+    {
+      "name": "punch-key-study",
+      "first": 8,
+      "last": 10
+    }
+  ]
+}

@@ -415,10 +415,14 @@ endif
 	    $(NG_FIX_SDK_OBJ0) $(NG_ENGINE_OBJ0) $(GAME_SCENE_OBJS) $(SDK_LIB)
 
 $(GAME_ID)-p1.p1: game
+ifneq ($(strip $(GAME_P_BUILDER)),)
+	$(PYTHON) $(GAME_P_BUILDER) --elf out/game --output out/game.rom --objcopy "$(OBJCP)"
+else
 	$(OBJCP)   -O ihex    out/game out/game0
 	$(SCAT)  out/game0 -Intel $(CROP) -o out/game0.rom -binary
 	$(SCAT)  out/game0.rom -binary $(SWAP) out/game1.rom -binary
 	$(SCAT)  out/game1.rom -binary $(FILL) out/game.rom -binary
+endif
 	cp       out/game.rom out/$(GAME_ID)-p1.p1
 	mkdir -p $(ROM_DIR)
 	cp -f out/$(GAME_ID)-p1.p1 $(ROM_DIR)/$(GAME_ID)-p1.p1

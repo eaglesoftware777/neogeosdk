@@ -47,9 +47,11 @@ uint16_t NGSpriteGroup::tileFor(uint8_t strip, uint8_t row) const
 
 uint16_t NGSpriteGroup::attrFor(uint8_t strip, uint8_t row, uint16_t attr) const
 {
-    if (!tilePalettes) return attr;
     if (hflip) strip = (uint8_t)(strips - 1u - strip);
     if (vflip) row = (uint8_t)(heightTiles - 1u - row);
+    uint32_t address = ((uint32_t)tileHigh << 16) + tileBase + (uint32_t)row * tileStride + strip;
+    attr = (uint16_t)((attr & 0xFF0Fu) | ((address >> 12) & 0xF0u));
+    if (!tilePalettes) return attr;
     return (uint16_t)((attr & 0x00ffu) |
         ((uint16_t)tilePalettes[(uint16_t)row * tileStride + strip] << 8));
 }
@@ -177,6 +179,7 @@ void NGSpriteGroup::init(uint16_t first, uint8_t s, uint8_t h, uint16_t tb, uint
     heightTiles = h;
     activeRows  = h;
     tileBase    = tb;
+    tileHigh    = 0u;
     tileStride  = s;
     palette     = pal;
     tilePalettes = 0;
@@ -201,6 +204,15 @@ void NGSpriteGroup::setTileBase(uint16_t tb)
     if (tileBase == tb) return;
     tileBase = tb;
     dirty |= NG_SGF_DIRTY_TILE;
+}
+
+void NEOGEO_USER ng_sprite_group_set_tile_address(NGSpriteGroup *g, uint32_t address)
+{
+    if (!g || address > 0xFFFFFu) return;
+    if (g->tileBase != (uint16_t)address || g->tileHigh != (uint8_t)(address >> 16)) {
+        g->tileBase = (uint16_t)address; g->tileHigh = (uint8_t)(address >> 16);
+        g->dirty |= NG_SGF_DIRTY_TILE;
+    }
 }
 
 void NGSpriteGroup::setTileStride(uint16_t ts)

@@ -2114,6 +2114,12 @@
         0,
         -1
       ]
+    },
+    "ink_step6": {
+      "base": "stance"
+    },
+    "ink_step7": {
+      "base": "stance"
     }
   },
   "anims": {
@@ -2130,30 +2136,42 @@
     "walk_f": [
       [
         "v2_step0",
-        6
-      ],
-      [
-        "v2_step1",
-        4
-      ],
-      [
-        "v2_step2",
         5
       ],
       [
-        "v2_step3",
-        6
+        "v2_step1",
+        3
       ],
       [
-        "v2_step4",
+        "v2_step2",
         4
       ],
       [
+        "v2_step3",
+        5
+      ],
+      [
+        "v2_step4",
+        5
+      ],
+      [
         "v2_step5",
+        3
+      ],
+      [
+        "ink_step6",
+        4
+      ],
+      [
+        "ink_step7",
         5
       ]
     ],
     "walk_b": [
+      [
+        "v2_step4",
+        6
+      ],
       [
         "v2_step3",
         6
@@ -2171,11 +2189,15 @@
         6
       ],
       [
-        "v2_step5",
+        "ink_step7",
+        6
+      ],
+      [
+        "ink_step6",
         5
       ],
       [
-        "v2_step4",
+        "v2_step5",
         4
       ]
     ],
