@@ -2,43 +2,43 @@
   {
     "file": "title.png",
     "tile": 65802,
-    "palette_banks": 7,
+    "palette_banks": 8,
     "P_offset": 1048576
   },
   {
     "file": "summons.png",
     "tile": 66110,
-    "palette_banks": 1,
+    "palette_banks": 8,
     "P_offset": 2097152
   },
   {
     "file": "kenji.png",
     "tile": 66418,
-    "palette_banks": 3,
+    "palette_banks": 8,
     "P_offset": 1049240
   },
   {
     "file": "jack.png",
     "tile": 66726,
-    "palette_banks": 3,
+    "palette_banks": 8,
     "P_offset": 2097816
   },
   {
     "file": "amara.png",
     "tile": 67034,
-    "palette_banks": 3,
+    "palette_banks": 8,
     "P_offset": 1049904
   },
   {
     "file": "protocol.png",
     "tile": 67342,
-    "palette_banks": 1,
+    "palette_banks": 8,
     "P_offset": 2098480
   },
   {
     "file": "challenge.png",
     "tile": 67650,
-    "palette_banks": 1,
+    "palette_banks": 8,
     "P_offset": 1050568
   }
 ]
