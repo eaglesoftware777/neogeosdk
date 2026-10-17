@@ -1221,69 +1221,218 @@
         21.0,
         -1.6
       ]
+    },
+    "backdash": {
+      "base": "stance"
+    },
+    "cr_hk": {
+      "base": "stance"
+    },
+    "cr_hp1": {
+      "base": "stance"
+    },
+    "cr_hp2": {
+      "base": "stance"
+    },
+    "cr_lk": {
+      "base": "stance"
+    },
+    "cr_lp": {
+      "base": "stance"
+    },
+    "dash": {
+      "base": "stance"
+    },
+    "dizzy_b": {
+      "base": "stance"
+    },
+    "gattack": {
+      "base": "stance"
+    },
+    "getup": {
+      "base": "stance"
+    },
+    "guard_low": {
+      "base": "stance"
+    },
+    "hit_b": {
+      "base": "stance"
+    },
+    "hit_low": {
+      "base": "stance"
+    },
+    "hk1": {
+      "base": "stance"
+    },
+    "hk2": {
+      "base": "stance"
+    },
+    "hp1": {
+      "base": "stance"
+    },
+    "hp2": {
+      "base": "stance"
+    },
+    "idle2": {
+      "base": "stance"
+    },
+    "idle3": {
+      "base": "stance"
+    },
+    "j_k": {
+      "base": "stance"
+    },
+    "j_p": {
+      "base": "stance"
+    },
+    "jump_apex": {
+      "base": "stance"
+    },
+    "jump_down": {
+      "base": "stance"
+    },
+    "jump_up": {
+      "base": "stance"
+    },
+    "lk2": {
+      "base": "stance"
+    },
+    "lose": {
+      "base": "stance"
+    },
+    "lp1": {
+      "base": "stance"
+    },
+    "lp2": {
+      "base": "stance"
+    },
+    "roll": {
+      "base": "stance"
+    },
+    "sp1_1": {
+      "base": "stance"
+    },
+    "sp1_2": {
+      "base": "stance"
+    },
+    "sp2_1": {
+      "base": "stance"
+    },
+    "sp2_2": {
+      "base": "stance"
+    },
+    "sp3_1": {
+      "base": "stance"
+    },
+    "sp3_2": {
+      "base": "stance"
+    },
+    "super_1": {
+      "base": "stance"
+    },
+    "super_2": {
+      "base": "stance"
+    },
+    "super_3": {
+      "base": "stance"
+    },
+    "throw_1": {
+      "base": "stance"
+    },
+    "throw_2": {
+      "base": "stance"
+    },
+    "walk1": {
+      "base": "stance"
+    },
+    "walk2": {
+      "base": "stance"
+    },
+    "walk3": {
+      "base": "stance"
+    },
+    "walk4": {
+      "base": "stance"
+    },
+    "walk5": {
+      "base": "stance"
+    },
+    "walk6": {
+      "base": "stance"
+    },
+    "win_b": {
+      "base": "stance"
     }
   },
   "anims": {
     "idle": [
       [
         "stance",
-        15
+        10
       ],
       [
-        "v2_breathe",
-        15
+        "idle2",
+        10
+      ],
+      [
+        "idle3",
+        10
+      ],
+      [
+        "idle2",
+        10
       ]
     ],
     "walk_f": [
       [
-        "v2_step0",
-        6
-      ],
-      [
-        "v2_step1",
-        4
-      ],
-      [
-        "v2_step2",
+        "walk1",
         5
       ],
       [
-        "v2_step3",
-        6
+        "walk2",
+        5
       ],
       [
-        "v2_step4",
-        4
+        "walk3",
+        5
       ],
       [
-        "v2_step5",
+        "walk4",
+        5
+      ],
+      [
+        "walk5",
+        5
+      ],
+      [
+        "walk6",
         5
       ]
     ],
     "walk_b": [
       [
-        "v2_step3",
+        "walk6",
         6
       ],
       [
-        "v2_step2",
-        5
-      ],
-      [
-        "v2_step1",
-        4
-      ],
-      [
-        "v2_step0",
+        "walk5",
         6
       ],
       [
-        "v2_step5",
-        5
+        "walk4",
+        6
       ],
       [
-        "v2_step4",
-        4
+        "walk3",
+        6
+      ],
+      [
+        "walk2",
+        6
+      ],
+      [
+        "walk1",
+        6
       ]
     ],
     "crouch": [
@@ -1294,7 +1443,15 @@
     ],
     "jump": [
       [
-        "jump",
+        "jump_up",
+        8
+      ],
+      [
+        "jump_apex",
+        10
+      ],
+      [
+        "jump_down",
         255
       ]
     ],
@@ -1306,7 +1463,7 @@
     ],
     "guard_low": [
       [
-        "crouch",
+        "guard_low",
         4
       ]
     ],
@@ -1318,7 +1475,7 @@
     ],
     "hit_low": [
       [
-        "crouch",
+        "hit_low",
         255
       ]
     ],
@@ -1336,52 +1493,52 @@
     ],
     "getup": [
       [
-        "crouch",
+        "getup",
         10
       ],
       [
-        "stance",
+        "crouch",
         8
       ]
     ],
     "dash": [
       [
-        "walk_a",
-        4
-      ],
-      [
-        "walk_a",
-        4
+        "dash",
+        255
       ]
     ],
     "backdash": [
       [
-        "jump",
+        "backdash",
         255
       ]
     ],
     "thrown": [
       [
-        "fall",
+        "hit_b",
         255
       ]
     ],
     "win": [
       [
         "win",
+        24
+      ],
+      [
+        "win_b",
         255
       ]
     ],
     "lose": [
       [
-        "down",
+        "lose",
         255
       ]
     ],
     "intro": [
       [
         "intro",
-        24
+        40
       ],
       [
         "stance",
@@ -1394,109 +1551,109 @@
         12
       ],
       [
-        "hit",
+        "dizzy_b",
         12
       ]
     ],
     "a_jab": [
       [
-        "v2_a_jab_wind",
+        "lp1",
         2
       ],
       [
-        "n_jab",
+        "lp2",
         3,
         "active"
       ],
       [
-        "v2_a_jab_recover",
+        "lp1",
         4
       ]
     ],
     "c_straight": [
       [
-        "v2_c_straight_wind",
+        "hp1",
         4
       ],
       [
-        "n_straight",
+        "hp2",
         4,
         "active"
       ],
       [
-        "v2_c_straight_recover",
+        "hp1",
         8
       ]
     ],
     "b_kick": [
       [
-        "v2_b_kick_wind",
+        "hk1",
         3
       ],
       [
-        "n_kick",
+        "lk2",
         4,
         "active"
       ],
       [
-        "v2_b_kick_recover",
+        "stance",
         6
       ]
     ],
     "d_kick": [
       [
-        "v2_d_kick_wind",
+        "hk1",
         5
       ],
       [
-        "n_kick",
+        "hk2",
         5,
         "active"
       ],
       [
-        "v2_d_kick_recover",
+        "hk1",
         10
       ]
     ],
     "c_sweep": [
       [
-        "v2_c_sweep_wind",
+        "crouch",
         4
       ],
       [
-        "n_sweep",
+        "cr_hk",
         5,
         "active"
       ],
       [
-        "v2_c_sweep_recover",
+        "crouch",
         12
       ]
     ],
     "j_attack": [
       [
-        "v2_j_attack_wind",
+        "jump_apex",
         3
       ],
       [
-        "n_air",
+        "j_p",
         255,
         "active"
       ]
     ],
     "throw": [
       [
-        "n_straight",
+        "throw_1",
         4
       ],
       [
-        "n_straight",
+        "throw_2",
         12
       ]
     ],
     "evade": [
       [
-        "crouch",
+        "roll",
         18,
         "invuln",
         36
@@ -1508,7 +1665,7 @@
     ],
     "evade_b": [
       [
-        "crouch",
+        "roll",
         18,
         "invuln",
         -34
@@ -1525,7 +1682,7 @@
         "invuln"
       ],
       [
-        "n_straight",
+        "gattack",
         5,
         "active|invuln"
       ],
@@ -1536,76 +1693,154 @@
     ],
     "spec_1": [
       [
-        "v2_spec_1_wind",
+        "sp1_1",
         4
       ],
       [
-        "sp_1_hit",
+        "sp1_2",
         6,
         "active",
         24,
         0
       ],
       [
-        "v2_spec_1_recover",
+        "sp1_1",
         10
       ]
     ],
     "spec_2": [
       [
-        "v2_spec_2_wind",
+        "sp2_1",
         4
       ],
       [
-        "sp_2_hit",
+        "sp2_2",
         6,
         "active|airborne",
         22,
         26
       ],
       [
-        "v2_spec_2_recover",
+        "sp2_1",
         10
       ]
     ],
     "spec_3": [
       [
-        "v2_spec_3_wind",
+        "sp3_1",
         4
       ],
       [
-        "sp_3_hit",
+        "sp3_2",
         6,
         "active",
         26,
         0
       ],
       [
-        "v2_spec_3_recover",
+        "sp3_1",
         10
       ]
     ],
     "super_anim": [
       [
-        "stance",
+        "super_1",
         8,
         "invuln"
       ],
       [
-        "sup_hit",
+        "super_2",
         8,
         "active|invuln",
         34
       ],
       [
-        "n_straight",
+        "super_3",
         6,
         "active|rehit",
         16
       ],
       [
-        "v2_super_anim_recover",
+        "hp1",
         18
+      ]
+    ],
+    "n_crouch_a": [
+      [
+        "crouch",
+        2
+      ],
+      [
+        "cr_lp",
+        3,
+        "active"
+      ],
+      [
+        "crouch",
+        7
+      ]
+    ],
+    "n_crouch_b": [
+      [
+        "crouch",
+        4
+      ],
+      [
+        "cr_lk",
+        3,
+        "active"
+      ],
+      [
+        "crouch",
+        9
+      ]
+    ],
+    "n_crouch_c": [
+      [
+        "cr_hp1",
+        4
+      ],
+      [
+        "cr_hp2",
+        6,
+        "active"
+      ],
+      [
+        "cr_hp1",
+        14
+      ]
+    ],
+    "n_air_a": [
+      [
+        "jump_apex",
+        3
+      ],
+      [
+        "j_p",
+        255,
+        "active"
+      ]
+    ],
+    "n_air_b": [
+      [
+        "jump_apex",
+        3
+      ],
+      [
+        "j_k",
+        255,
+        "active"
+      ]
+    ],
+    "n_air_d": [
+      [
+        "jump_apex",
+        3
+      ],
+      [
+        "j_k",
+        255,
+        "active"
       ]
     ]
   },
@@ -1968,6 +2203,111 @@
       "buttons": "AB",
       "stance": "ground",
       "level": "mid"
+    },
+    {
+      "name": "CROUCH JAB",
+      "level": "mid",
+      "damage": 22,
+      "guard_damage": 6,
+      "hitstun": 11,
+      "blockstun": 8,
+      "pushback": 6,
+      "cancel": "chain|special|super",
+      "meter": 4,
+      "hitstop": 6,
+      "hit_sound": "hit_light",
+      "limb": "far_fist",
+      "anim": "n_crouch_a",
+      "kind": "normal",
+      "buttons": "A",
+      "stance": "crouch"
+    },
+    {
+      "name": "CROUCH KICK",
+      "level": "low",
+      "damage": 28,
+      "guard_damage": 8,
+      "hitstun": 12,
+      "blockstun": 9,
+      "pushback": 8,
+      "cancel": "special|super",
+      "meter": 5,
+      "hitstop": 6,
+      "hit_sound": "hit_light",
+      "limb": "far_ankle",
+      "anim": "n_crouch_b",
+      "kind": "normal",
+      "buttons": "B",
+      "stance": "crouch"
+    },
+    {
+      "name": "RISING STRIKE",
+      "level": "mid",
+      "damage": 70,
+      "guard_damage": 14,
+      "hitstun": 18,
+      "blockstun": 14,
+      "pushback": 10,
+      "cancel": "special|super",
+      "meter": 10,
+      "hitstop": 9,
+      "hit_sound": "hit_heavy",
+      "limb": "near_fist",
+      "anim": "n_crouch_c",
+      "kind": "normal",
+      "buttons": "C",
+      "stance": "crouch"
+    },
+    {
+      "name": "JUMP JAB",
+      "level": "overhead",
+      "damage": 34,
+      "guard_damage": 6,
+      "hitstun": 12,
+      "blockstun": 9,
+      "pushback": 6,
+      "meter": 5,
+      "hitstop": 6,
+      "hit_sound": "hit_light",
+      "limb": "far_fist",
+      "anim": "n_air_a",
+      "kind": "normal",
+      "buttons": "A",
+      "stance": "air"
+    },
+    {
+      "name": "JUMP KNEE",
+      "level": "overhead",
+      "damage": 40,
+      "guard_damage": 8,
+      "hitstun": 14,
+      "blockstun": 10,
+      "pushback": 6,
+      "meter": 6,
+      "hitstop": 7,
+      "hit_sound": "hit_light",
+      "limb": "far_ankle",
+      "anim": "n_air_b",
+      "kind": "normal",
+      "buttons": "B",
+      "stance": "air"
+    },
+    {
+      "name": "FLYING KICK",
+      "level": "overhead",
+      "damage": 72,
+      "guard_damage": 12,
+      "hitstun": 18,
+      "blockstun": 12,
+      "pushback": 8,
+      "meter": 8,
+      "hitstop": 9,
+      "hit_sound": "hit_heavy",
+      "limb": "near_ankle",
+      "anim": "n_air_d",
+      "kind": "normal",
+      "buttons": "D",
+      "stance": "air"
     }
   ],
   "cpu": {

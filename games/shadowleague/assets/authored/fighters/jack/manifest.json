@@ -1,7760 +1,3717 @@
 {
-  "canvas": [
-    160,
-    160
-  ],
-  "anchor": [
-    80,
-    141
-  ],
-  "head": "head.png",
-  "portrait_small": "portrait-small.png",
-  "alt_palette": [
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      24,
-      24,
-      32
-    ],
-    [
-      80,
-      48,
-      64
-    ],
-    [
-      128,
-      72,
-      64
-    ],
-    [
-      176,
-      120,
-      88
-    ],
-    [
-      216,
-      160,
-      120
-    ],
-    [
-      240,
-      200,
-      160
-    ],
-    [
-      32,
-      24,
-      32
-    ],
-    [
-      64,
-      48,
-      48
-    ],
-    [
-      120,
-      96,
-      80
-    ],
-    [
-      24,
-      40,
-      64
-    ],
-    [
-      48,
-      88,
-      152
-    ],
-    [
-      96,
-      152,
-      216
-    ],
-    [
-      56,
-      48,
-      64
-    ],
-    [
-      96,
-      80,
-      104
-    ],
-    [
-      152,
-      136,
-      152
-    ],
-    [
-      208,
-      192,
-      200
-    ],
-    [
-      32,
-      32,
-      48
-    ],
-    [
-      80,
-      80,
-      104
-    ],
-    [
-      216,
-      176,
-      88
-    ],
-    [
-      248,
-      224,
-      184
-    ],
-    [
-      120,
-      104,
-      96
-    ],
-    [
-      48,
-      56,
-      64
-    ],
-    [
-      152,
-      168,
-      184
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
-    ],
-    [
-      0,
-      0,
-      0
+ "canvas": [
+  160,
+  160
+ ],
+ "anchor": [
+  80,
+  141
+ ],
+ "head": "head.png",
+ "portrait_small": "portrait-small.png",
+ "source": "Native indexed PNG frames; four 15-colour palettes, one chosen per 16x16 tile",
+ "frames": {
+  "stance": {
+   "file": "stance.png",
+   "hurt": [
+    [
+     -17,
+     0,
+     53,
+     46
+    ],
+    [
+     -6,
+     46,
+     43,
+     38
+    ],
+    [
+     -3,
+     84,
+     43,
+     29
     ]
-  ],
-  "frames": {
-    "stance": {
-      "file": "stance.png",
-      "layers": {
-        "far_arm": "stance-far_arm.png",
-        "far_leg": "stance-far_leg.png",
-        "torso": "stance-torso.png",
-        "head_hair": "stance-head_hair.png",
-        "near_leg": "stance-near_leg.png",
-        "near_arm": "stance-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          96,
-          26,
-          27
-        ],
-        [
-          -28,
-          35,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            87,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            -1,
-            74,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        49,
-        18,
-        82,
-        124
-      ]
-    },
-    "v2_breathe": {
-      "file": "v2_breathe.png",
-      "layers": {
-        "far_arm": "v2_breathe-far_arm.png",
-        "far_leg": "v2_breathe-far_leg.png",
-        "torso": "v2_breathe-torso.png",
-        "head_hair": "v2_breathe-head_hair.png",
-        "near_leg": "v2_breathe-near_leg.png",
-        "near_arm": "v2_breathe-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          96,
-          26,
-          27
-        ],
-        [
-          -28,
-          34,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            86,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            -1,
-            74,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        49,
-        18,
-        82,
-        124
-      ]
-    },
-    "v2_step0": {
-      "file": "v2_step0.png",
-      "layers": {
-        "far_arm": "v2_step0-far_arm.png",
-        "far_leg": "v2_step0-far_leg.png",
-        "torso": "v2_step0-torso.png",
-        "head_hair": "v2_step0-head_hair.png",
-        "near_leg": "v2_step0-near_leg.png",
-        "near_arm": "v2_step0-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          96,
-          26,
-          27
-        ],
-        [
-          -28,
-          35,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            87,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            -1,
-            74,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        49,
-        18,
-        82,
-        124
-      ]
-    },
-    "v2_step1": {
-      "file": "v2_step1.png",
-      "layers": {
-        "far_arm": "v2_step1-far_arm.png",
-        "far_leg": "v2_step1-far_leg.png",
-        "torso": "v2_step1-torso.png",
-        "head_hair": "v2_step1-head_hair.png",
-        "near_leg": "v2_step1-near_leg.png",
-        "near_arm": "v2_step1-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          95,
-          26,
-          27
-        ],
-        [
-          -28,
-          34,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          68,
-          41
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            86,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -24,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            -1,
-            73,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            20,
-            1,
-            21,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          67.5,
-          141
-        ],
-        "near_leg": [
-          109.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        49,
-        19,
-        82,
-        123
-      ]
-    },
-    "v2_step2": {
-      "file": "v2_step2.png",
-      "layers": {
-        "far_arm": "v2_step2-far_arm.png",
-        "far_leg": "v2_step2-far_leg.png",
-        "torso": "v2_step2-torso.png",
-        "head_hair": "v2_step2-head_hair.png",
-        "near_leg": "v2_step2-near_leg.png",
-        "near_arm": "v2_step2-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          96,
-          26,
-          27
-        ],
-        [
-          -28,
-          35,
-          52,
-          57
-        ],
-        [
-          -20,
-          0,
-          68,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            87,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -18,
-            2,
-            20,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            -1,
-            74,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            25,
-            1,
-            21,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          68.0,
-          140
-        ],
-        "near_leg": [
-          118.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        49,
-        18,
-        82,
-        124
-      ]
-    },
-    "v2_step3": {
-      "file": "v2_step3.png",
-      "layers": {
-        "far_arm": "v2_step3-far_arm.png",
-        "far_leg": "v2_step3-far_leg.png",
-        "torso": "v2_step3-torso.png",
-        "head_hair": "v2_step3-head_hair.png",
-        "near_leg": "v2_step3-near_leg.png",
-        "near_arm": "v2_step3-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          97,
-          26,
-          27
-        ],
-        [
-          -28,
-          36,
-          52,
-          57
-        ],
-        [
-          -22,
-          0,
-          67,
-          43
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            88,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -21,
-            1,
-            21,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            -1,
-            75,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            23,
-            1,
-            20,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          71.5,
-          141
-        ],
-        "near_leg": [
-          115.5,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        49,
-        17,
-        82,
-        125
-      ]
-    },
-    "v2_step4": {
-      "file": "v2_step4.png",
-      "layers": {
-        "far_arm": "v2_step4-far_arm.png",
-        "far_leg": "v2_step4-far_leg.png",
-        "torso": "v2_step4-torso.png",
-        "head_hair": "v2_step4-head_hair.png",
-        "near_leg": "v2_step4-near_leg.png",
-        "near_arm": "v2_step4-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          96,
-          26,
-          27
-        ],
-        [
-          -28,
-          35,
-          52,
-          57
-        ],
-        [
-          -31,
-          0,
-          72,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            87,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -30,
-            1,
-            21,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            -1,
-            74,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            19,
-            1,
-            20,
-            11
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.5,
-          141
-        ],
-        "near_leg": [
-          111.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        49,
-        18,
-        82,
-        124
-      ]
-    },
-    "v2_step5": {
-      "file": "v2_step5.png",
-      "layers": {
-        "far_arm": "v2_step5-far_arm.png",
-        "far_leg": "v2_step5-far_leg.png",
-        "torso": "v2_step5-torso.png",
-        "head_hair": "v2_step5-head_hair.png",
-        "near_leg": "v2_step5-near_leg.png",
-        "near_arm": "v2_step5-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          95,
-          26,
-          27
-        ],
-        [
-          -28,
-          34,
-          52,
-          57
-        ],
-        [
-          -36,
-          0,
-          68,
-          41
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            86,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -35,
-            1,
-            19,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            -1,
-            73,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            10,
-            1,
-            20,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          55.0,
-          141
-        ],
-        "near_leg": [
-          102.5,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        44,
-        19,
-        87,
-        123
-      ]
-    },
-    "ink_step6": {
-      "file": "ink_step6.png",
-      "layers": {
-        "far_arm": "ink_step6-far_arm.png",
-        "far_leg": "ink_step6-far_leg.png",
-        "torso": "ink_step6-torso.png",
-        "head_hair": "ink_step6-head_hair.png",
-        "near_leg": "ink_step6-near_leg.png",
-        "near_arm": "ink_step6-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          96,
-          26,
-          27
-        ],
-        [
-          -28,
-          35,
-          52,
-          57
-        ],
-        [
-          -38,
-          0,
-          66,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            87,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -37,
-            2,
-            18,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            -1,
-            74,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            6,
-            1,
-            20,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          52.5,
-          140
-        ],
-        "near_leg": [
-          94.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        42,
-        18,
-        89,
-        124
-      ]
-    },
-    "ink_step7": {
-      "file": "ink_step7.png",
-      "layers": {
-        "far_arm": "ink_step7-far_arm.png",
-        "far_leg": "ink_step7-far_leg.png",
-        "torso": "ink_step7-torso.png",
-        "head_hair": "ink_step7-head_hair.png",
-        "near_leg": "ink_step7-near_leg.png",
-        "near_arm": "ink_step7-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          97,
-          26,
-          27
-        ],
-        [
-          -28,
-          36,
-          52,
-          57
-        ],
-        [
-          -34,
-          0,
-          67,
-          43
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            88,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -33,
-            1,
-            20,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            -1,
-            75,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            11,
-            1,
-            20,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          58.5,
-          141
-        ],
-        "near_leg": [
-          103.5,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        46,
-        17,
-        85,
-        125
-      ]
-    },
-    "crouch": {
-      "file": "crouch.png",
-      "layers": {
-        "far_arm": "crouch-far_arm.png",
-        "far_leg": "crouch-far_leg.png",
-        "torso": "crouch-torso.png",
-        "head_hair": "crouch-head_hair.png",
-        "near_leg": "crouch-near_leg.png",
-        "near_arm": "crouch-near_arm.png"
-      },
-      "hurt": [
-        [
-          -2,
-          72,
-          26,
-          27
-        ],
-        [
-          -16,
-          11,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            43,
-            63,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            11,
-            50,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        42,
-        88,
-        100
-      ]
-    },
-    "jump": {
-      "file": "jump.png",
-      "layers": {
-        "far_arm": "jump-far_arm.png",
-        "far_leg": "jump-far_leg.png",
-        "torso": "jump-torso.png",
-        "head_hair": "jump-head_hair.png",
-        "near_leg": "jump-near_leg.png",
-        "near_arm": "jump-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          100,
-          26,
-          27
-        ],
-        [
-          -28,
-          39,
-          52,
-          57
-        ],
-        [
-          -20,
-          16,
-          57,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            90,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -9,
-            23,
-            19,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            -1,
-            79,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            4,
-            17,
-            19,
-            14
-          ]
-        ]
-      },
-      "contacts": [],
-      "foot_centres": {
-        "far_leg": [
-          81.0,
-          118
-        ],
-        "near_leg": [
-          95.0,
-          125
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        49,
-        14,
-        82,
-        112
-      ]
-    },
-    "jump_b": {
-      "file": "jump_b.png",
-      "layers": {
-        "far_arm": "jump_b-far_arm.png",
-        "far_leg": "jump_b-far_leg.png",
-        "torso": "jump_b-torso.png",
-        "head_hair": "jump_b-head_hair.png",
-        "near_leg": "jump_b-near_leg.png",
-        "near_arm": "jump_b-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          100,
-          26,
-          27
-        ],
-        [
-          -28,
-          39,
-          52,
-          57
-        ],
-        [
-          -20,
-          16,
-          57,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            92,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -9,
-            23,
-            19,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            -1,
-            77,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            4,
-            17,
-            19,
-            14
-          ]
-        ]
-      },
-      "contacts": [],
-      "foot_centres": {
-        "far_leg": [
-          81.0,
-          118
-        ],
-        "near_leg": [
-          95.0,
-          125
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        49,
-        14,
-        82,
-        112
-      ]
-    },
-    "guard": {
-      "file": "guard.png",
-      "layers": {
-        "far_arm": "guard-far_arm.png",
-        "far_leg": "guard-far_leg.png",
-        "torso": "guard-torso.png",
-        "head_hair": "guard-head_hair.png",
-        "near_leg": "guard-near_leg.png",
-        "near_arm": "guard-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          96,
-          26,
-          27
-        ],
-        [
-          -28,
-          35,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            29,
-            87,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            -3,
-            76,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        47,
-        18,
-        82,
-        124
-      ]
-    },
-    "guard_low": {
-      "file": "guard_low.png",
-      "layers": {
-        "far_arm": "guard_low-far_arm.png",
-        "far_leg": "guard_low-far_leg.png",
-        "torso": "guard_low-torso.png",
-        "head_hair": "guard_low-head_hair.png",
-        "near_leg": "guard_low-near_leg.png",
-        "near_arm": "guard_low-near_arm.png"
-      },
-      "hurt": [
-        [
-          -2,
-          72,
-          26,
-          27
-        ],
-        [
-          -16,
-          11,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            43,
-            63,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            11,
-            50,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        42,
-        88,
-        100
-      ]
-    },
-    "hit": {
-      "file": "hit.png",
-      "layers": {
-        "far_arm": "hit-far_arm.png",
-        "far_leg": "hit-far_leg.png",
-        "torso": "hit-torso.png",
-        "head_hair": "hit-head_hair.png",
-        "near_leg": "hit-near_leg.png",
-        "near_arm": "hit-near_arm.png"
-      },
-      "hurt": [
-        [
-          -24,
-          94,
-          26,
-          27
-        ],
-        [
-          -34,
-          32,
-          52,
-          57
-        ],
-        [
-          -22,
-          0,
-          50,
-          43
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            25,
-            84,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -21,
-            1,
-            21,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            -28,
-            14,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            6,
-            1,
-            20,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          71.5,
-          141
-        ],
-        "near_leg": [
-          94.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        42,
-        20,
-        83,
-        122
-      ]
-    },
-    "hit_b": {
-      "file": "hit_b.png",
-      "layers": {
-        "far_arm": "hit_b-far_arm.png",
-        "far_leg": "hit_b-far_leg.png",
-        "torso": "hit_b-torso.png",
-        "head_hair": "hit_b-head_hair.png",
-        "near_leg": "hit_b-near_leg.png",
-        "near_arm": "hit_b-near_arm.png"
-      },
-      "hurt": [
-        [
-          -24,
-          94,
-          26,
-          27
-        ],
-        [
-          -34,
-          32,
-          52,
-          57
-        ],
-        [
-          -22,
-          0,
-          50,
-          43
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            9,
-            19,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -21,
-            1,
-            21,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            -28,
-            14,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            6,
-            1,
-            20,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          71.5,
-          141
-        ],
-        "near_leg": [
-          94.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        42,
-        20,
-        67,
-        122
-      ]
-    },
-    "hit_low": {
-      "file": "hit_low.png",
-      "layers": {
-        "far_arm": "hit_low-far_arm.png",
-        "far_leg": "hit_low-far_leg.png",
-        "torso": "hit_low-torso.png",
-        "head_hair": "hit_low-head_hair.png",
-        "near_leg": "hit_low-near_leg.png",
-        "near_arm": "hit_low-near_arm.png"
-      },
-      "hurt": [
-        [
-          -24,
-          77,
-          26,
-          27
-        ],
-        [
-          -34,
-          15,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            26,
-            7,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            -7,
-            54,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        43,
-        37,
-        95,
-        105
-      ]
-    },
-    "fall": {
-      "file": "fall.png",
-      "layers": {
-        "far_arm": "fall-far_arm.png",
-        "far_leg": "fall-far_leg.png",
-        "torso": "fall-torso.png",
-        "head_hair": "fall-head_hair.png",
-        "near_leg": "fall-near_leg.png",
-        "near_arm": "fall-near_arm.png"
-      },
-      "hurt": [
-        [
-          -49,
-          30,
-          28,
-          27
-        ],
-        [
-          -33,
-          19,
-          51,
-          26
-        ],
-        [
-          0,
-          2,
-          62,
-          63
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            -6,
-            56,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            37,
-            54,
-            13,
-            8
-          ]
-        ],
-        "near_fist": [
-          [
-            -25,
-            4,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            46,
-            3,
-            14,
-            6
-          ]
-        ]
-      },
-      "contacts": [],
-      "foot_centres": {
-        "far_leg": [
-          92.5,
-          125
-        ],
-        "near_leg": [
-          133.0,
-          139
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        30,
-        65,
-        112,
-        75
-      ]
-    },
-    "down": {
-      "file": "down.png",
-      "layers": {
-        "far_arm": "down-far_arm.png",
-        "far_leg": "down-far_leg.png",
-        "torso": "down-torso.png",
-        "head_hair": "down-head_hair.png",
-        "near_leg": "down-near_leg.png",
-        "near_arm": "down-near_arm.png"
-      },
-      "hurt": [
-        [
-          -48,
-          3,
-          28,
-          27
-        ],
-        [
-          -33,
-          1,
-          51,
-          26
-        ],
-        [
-          4,
-          0,
-          57,
-          21
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            13,
-            11,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            47,
-            10,
-            13,
-            6
-          ]
-        ],
-        "near_fist": [
-          [
-            -7,
-            1,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            41,
-            1,
-            15,
-            4
-          ]
-        ]
-      },
-      "contacts": [
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          89.5,
-          134
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        31,
-        110,
-        110,
-        32
-      ]
-    },
-    "getup": {
-      "file": "getup.png",
-      "layers": {
-        "far_arm": "getup-far_arm.png",
-        "far_leg": "getup-far_leg.png",
-        "torso": "getup-torso.png",
-        "head_hair": "getup-head_hair.png",
-        "near_leg": "getup-near_leg.png",
-        "near_arm": "getup-near_arm.png"
-      },
-      "hurt": [
-        [
-          -8,
-          76,
-          26,
-          27
-        ],
-        [
-          -22,
-          15,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            37,
-            67,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            5,
-            54,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        38,
-        83,
-        104
-      ]
-    },
-    "dash": {
-      "file": "dash.png",
-      "layers": {
-        "far_arm": "dash-far_arm.png",
-        "far_leg": "dash-far_leg.png",
-        "torso": "dash-torso.png",
-        "head_hair": "dash-head_hair.png",
-        "near_leg": "dash-near_leg.png",
-        "near_arm": "dash-near_arm.png"
-      },
-      "hurt": [
-        [
-          -2,
-          92,
-          26,
-          27
-        ],
-        [
-          -21,
-          29,
-          52,
-          57
-        ],
-        [
-          -44,
-          0,
-          98,
-          51
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            39,
-            21,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -43,
-            0,
-            22,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            9,
-            34,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            29,
-            1,
-            23,
-            15
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          47.5,
-          141
-        ],
-        "near_leg": [
-          122.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        36,
-        22,
-        103,
-        120
-      ]
-    },
-    "walk_a": {
-      "file": "walk_a.png",
-      "layers": {
-        "far_arm": "walk_a-far_arm.png",
-        "far_leg": "walk_a-far_leg.png",
-        "torso": "walk_a-torso.png",
-        "head_hair": "walk_a-head_hair.png",
-        "near_leg": "walk_a-near_leg.png",
-        "near_arm": "walk_a-near_arm.png"
-      },
-      "hurt": [
-        [
-          -12,
-          95,
-          26,
-          27
-        ],
-        [
-          -26,
-          34,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          68,
-          41
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            33,
-            86,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -24,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            1,
-            73,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            20,
-            1,
-            21,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          67.5,
-          141
-        ],
-        "near_leg": [
-          109.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        51,
-        19,
-        82,
-        123
-      ]
-    },
-    "backdash": {
-      "file": "backdash.png",
-      "layers": {
-        "far_arm": "backdash-far_arm.png",
-        "far_leg": "backdash-far_leg.png",
-        "torso": "backdash-torso.png",
-        "head_hair": "backdash-head_hair.png",
-        "near_leg": "backdash-near_leg.png",
-        "near_arm": "backdash-near_arm.png"
-      },
-      "hurt": [
-        [
-          -19,
-          95,
-          26,
-          27
-        ],
-        [
-          -33,
-          34,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          58
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            26,
-            86,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            -6,
-            73,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            4,
-            17,
-            19,
-            14
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          95.0,
-          125
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        44,
-        19,
-        82,
-        123
-      ]
-    },
-    "win": {
-      "file": "win.png",
-      "layers": {
-        "far_arm": "win-far_arm.png",
-        "far_leg": "win-far_leg.png",
-        "torso": "win-torso.png",
-        "head_hair": "win-head_hair.png",
-        "near_leg": "win-near_leg.png",
-        "near_arm": "win-near_arm.png"
-      },
-      "hurt": [
-        [
-          -24,
-          95,
-          26,
-          27
-        ],
-        [
-          -28,
-          35,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            15,
-            22,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            3,
-            112,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        50,
-        9,
-        67,
-        133
-      ]
-    },
-    "win_b": {
-      "file": "win_b.png",
-      "layers": {
-        "far_arm": "win_b-far_arm.png",
-        "far_leg": "win_b-far_leg.png",
-        "torso": "win_b-torso.png",
-        "head_hair": "win_b-head_hair.png",
-        "near_leg": "win_b-near_leg.png",
-        "near_arm": "win_b-near_arm.png"
-      },
-      "hurt": [
-        [
-          -24,
-          95,
-          26,
-          27
-        ],
-        [
-          -28,
-          35,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            15,
-            22,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            4,
-            113,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        50,
-        8,
-        67,
-        134
-      ]
-    },
-    "lose": {
-      "file": "lose.png",
-      "layers": {
-        "far_arm": "lose-far_arm.png",
-        "far_leg": "lose-far_leg.png",
-        "torso": "lose-torso.png",
-        "head_hair": "lose-head_hair.png",
-        "near_leg": "lose-near_leg.png",
-        "near_arm": "lose-near_arm.png"
-      },
-      "hurt": [
-        [
-          -10,
-          69,
-          26,
-          27
-        ],
-        [
-          -24,
-          11,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            36,
-            3,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            38,
-            21,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        45,
-        83,
-        97
-      ]
-    },
-    "intro": {
-      "file": "intro.png",
-      "layers": {
-        "far_arm": "intro-far_arm.png",
-        "far_leg": "intro-far_leg.png",
-        "torso": "intro-torso.png",
-        "head_hair": "intro-head_hair.png",
-        "near_leg": "intro-near_leg.png",
-        "near_arm": "intro-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          96,
-          26,
-          27
-        ],
-        [
-          -28,
-          35,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            87,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            -1,
-            74,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        49,
-        18,
-        82,
-        124
-      ]
-    },
-    "intro_b": {
-      "file": "intro_b.png",
-      "layers": {
-        "far_arm": "intro_b-far_arm.png",
-        "far_leg": "intro_b-far_leg.png",
-        "torso": "intro_b-torso.png",
-        "head_hair": "intro_b-head_hair.png",
-        "near_leg": "intro_b-near_leg.png",
-        "near_arm": "intro_b-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          96,
-          26,
-          27
-        ],
-        [
-          -28,
-          35,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            87,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            38,
-            67,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        50,
-        18,
-        88,
-        124
-      ]
-    },
-    "dizzy": {
-      "file": "dizzy.png",
-      "layers": {
-        "far_arm": "dizzy-far_arm.png",
-        "far_leg": "dizzy-far_leg.png",
-        "torso": "dizzy-torso.png",
-        "head_hair": "dizzy-head_hair.png",
-        "near_leg": "dizzy-near_leg.png",
-        "near_arm": "dizzy-near_arm.png"
-      },
-      "hurt": [
-        [
-          -18,
-          93,
-          26,
-          27
-        ],
-        [
-          -30,
-          33,
-          52,
-          57
-        ],
-        [
-          -22,
-          0,
-          50,
-          43
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            13,
-            20,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -21,
-            1,
-            21,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            -24,
-            15,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            6,
-            1,
-            20,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          71.5,
-          141
-        ],
-        "near_leg": [
-          94.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        46,
-        21,
-        67,
-        121
-      ]
-    },
-    "dizzy_b": {
-      "file": "dizzy_b.png",
-      "layers": {
-        "far_arm": "dizzy_b-far_arm.png",
-        "far_leg": "dizzy_b-far_leg.png",
-        "torso": "dizzy_b-torso.png",
-        "head_hair": "dizzy_b-head_hair.png",
-        "near_leg": "dizzy_b-near_leg.png",
-        "near_arm": "dizzy_b-near_arm.png"
-      },
-      "hurt": [
-        [
-          -15,
-          93,
-          26,
-          27
-        ],
-        [
-          -30,
-          33,
-          52,
-          57
-        ],
-        [
-          -22,
-          0,
-          50,
-          43
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            13,
-            20,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -21,
-            1,
-            21,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            -24,
-            15,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            6,
-            1,
-            20,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          71.5,
-          141
-        ],
-        "near_leg": [
-          94.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        46,
-        21,
-        67,
-        121
-      ]
-    },
-    "jab_1": {
-      "file": "jab_1.png",
-      "layers": {
-        "far_arm": "jab_1-far_arm.png",
-        "far_leg": "jab_1-far_leg.png",
-        "torso": "jab_1-torso.png",
-        "head_hair": "jab_1-head_hair.png",
-        "near_leg": "jab_1-near_leg.png",
-        "near_arm": "jab_1-near_arm.png"
-      },
-      "hurt": [
-        [
-          -16,
-          95,
-          26,
-          27
-        ],
-        [
-          -30,
-          34,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            29,
-            86,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            0,
-            39,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        47,
-        19,
-        82,
-        123
-      ]
-    },
-    "v2_jab_punch": {
-      "file": "v2_jab_punch.png",
-      "layers": {
-        "far_arm": "v2_jab_punch-far_arm.png",
-        "far_leg": "v2_jab_punch-far_leg.png",
-        "torso": "v2_jab_punch-torso.png",
-        "head_hair": "v2_jab_punch-head_hair.png",
-        "near_leg": "v2_jab_punch-near_leg.png",
-        "near_arm": "v2_jab_punch-near_arm.png"
-      },
-      "hurt": [
-        [
-          -12,
-          96,
-          26,
-          27
-        ],
-        [
-          -26,
-          35,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            33,
-            87,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            41,
-            75,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        50,
-        18,
-        91,
-        124
-      ]
-    },
-    "body_1": {
-      "file": "body_1.png",
-      "layers": {
-        "far_arm": "body_1-far_arm.png",
-        "far_leg": "body_1-far_leg.png",
-        "torso": "body_1-torso.png",
-        "head_hair": "body_1-head_hair.png",
-        "near_leg": "body_1-near_leg.png",
-        "near_arm": "body_1-near_arm.png"
-      },
-      "hurt": [
-        [
-          -16,
-          95,
-          26,
-          27
-        ],
-        [
-          -30,
-          34,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            29,
-            86,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            0,
-            36,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        47,
-        19,
-        82,
-        123
-      ]
-    },
-    "v2_body_punch": {
-      "file": "v2_body_punch.png",
-      "layers": {
-        "far_arm": "v2_body_punch-far_arm.png",
-        "far_leg": "v2_body_punch-far_leg.png",
-        "torso": "v2_body_punch-torso.png",
-        "head_hair": "v2_body_punch-head_hair.png",
-        "near_leg": "v2_body_punch-near_leg.png",
-        "near_arm": "v2_body_punch-near_arm.png"
-      },
-      "hurt": [
-        [
-          -9,
-          94,
-          26,
-          27
-        ],
-        [
-          -25,
-          31,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            34,
-            83,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            37,
-            41,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        50,
-        20,
-        87,
-        122
-      ]
-    },
-    "cross_1": {
-      "file": "cross_1.png",
-      "layers": {
-        "far_arm": "cross_1-far_arm.png",
-        "far_leg": "cross_1-far_leg.png",
-        "torso": "cross_1-torso.png",
-        "head_hair": "cross_1-head_hair.png",
-        "near_leg": "cross_1-near_leg.png",
-        "near_arm": "cross_1-near_arm.png"
-      },
-      "hurt": [
-        [
-          -16,
-          95,
-          26,
-          27
-        ],
-        [
-          -30,
-          34,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            29,
-            86,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            0,
-            36,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        47,
-        19,
-        82,
-        123
-      ]
-    },
-    "v2_cross_punch": {
-      "file": "v2_cross_punch.png",
-      "layers": {
-        "far_arm": "v2_cross_punch-far_arm.png",
-        "far_leg": "v2_cross_punch-far_leg.png",
-        "torso": "v2_cross_punch-torso.png",
-        "head_hair": "v2_cross_punch-head_hair.png",
-        "near_leg": "v2_cross_punch-near_leg.png",
-        "near_arm": "v2_cross_punch-near_arm.png"
-      },
-      "hurt": [
-        [
-          -10,
-          96,
-          26,
-          27
-        ],
-        [
-          -24,
-          35,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            35,
-            87,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            48,
-            77,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        50,
-        18,
-        98,
-        124
-      ]
-    },
-    "cross_2": {
-      "file": "cross_2.png",
-      "layers": {
-        "far_arm": "cross_2-far_arm.png",
-        "far_leg": "cross_2-far_leg.png",
-        "torso": "cross_2-torso.png",
-        "head_hair": "cross_2-head_hair.png",
-        "near_leg": "cross_2-near_leg.png",
-        "near_arm": "cross_2-near_arm.png"
-      },
-      "hurt": [
-        [
-          -11,
-          95,
-          26,
-          27
-        ],
-        [
-          -25,
-          34,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            34,
-            86,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            42,
-            55,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        50,
-        19,
-        92,
-        123
-      ]
-    },
-    "hook_1": {
-      "file": "hook_1.png",
-      "layers": {
-        "far_arm": "hook_1-far_arm.png",
-        "far_leg": "hook_1-far_leg.png",
-        "torso": "hook_1-torso.png",
-        "head_hair": "hook_1-head_hair.png",
-        "near_leg": "hook_1-near_leg.png",
-        "near_arm": "hook_1-near_arm.png"
-      },
-      "hurt": [
-        [
-          -16,
-          95,
-          26,
-          27
-        ],
-        [
-          -30,
-          34,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            29,
-            86,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            0,
-            36,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        47,
-        19,
-        82,
-        123
-      ]
-    },
-    "v2_hook_punch": {
-      "file": "v2_hook_punch.png",
-      "layers": {
-        "far_arm": "v2_hook_punch-far_arm.png",
-        "far_leg": "v2_hook_punch-far_leg.png",
-        "torso": "v2_hook_punch-torso.png",
-        "head_hair": "v2_hook_punch-head_hair.png",
-        "near_leg": "v2_hook_punch-near_leg.png",
-        "near_arm": "v2_hook_punch-near_arm.png"
-      },
-      "hurt": [
-        [
-          -10,
-          95,
-          26,
-          27
-        ],
-        [
-          -24,
-          34,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            35,
-            86,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            44,
-            64,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        50,
-        19,
-        94,
-        123
-      ]
-    },
-    "v2_c_jab_wind": {
-      "file": "v2_c_jab_wind.png",
-      "layers": {
-        "far_arm": "v2_c_jab_wind-far_arm.png",
-        "far_leg": "v2_c_jab_wind-far_leg.png",
-        "torso": "v2_c_jab_wind-torso.png",
-        "head_hair": "v2_c_jab_wind-head_hair.png",
-        "near_leg": "v2_c_jab_wind-near_leg.png",
-        "near_arm": "v2_c_jab_wind-near_arm.png"
-      },
-      "hurt": [
-        [
-          -5,
-          72,
-          26,
-          27
-        ],
-        [
-          -19,
-          11,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            40,
-            63,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            11,
-            16,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        42,
-        85,
-        100
-      ]
-    },
-    "v2_c_jab_punch": {
-      "file": "v2_c_jab_punch.png",
-      "layers": {
-        "far_arm": "v2_c_jab_punch-far_arm.png",
-        "far_leg": "v2_c_jab_punch-far_leg.png",
-        "torso": "v2_c_jab_punch-torso.png",
-        "head_hair": "v2_c_jab_punch-head_hair.png",
-        "near_leg": "v2_c_jab_punch-near_leg.png",
-        "near_arm": "v2_c_jab_punch-near_arm.png"
-      },
-      "hurt": [
-        [
-          -4,
-          72,
-          26,
-          27
-        ],
-        [
-          -18,
-          11,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            41,
-            63,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            49,
-            51,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        42,
-        94,
-        100
-      ]
-    },
-    "v2_c_jab_recover": {
-      "file": "v2_c_jab_recover.png",
-      "layers": {
-        "far_arm": "v2_c_jab_recover-far_arm.png",
-        "far_leg": "v2_c_jab_recover-far_leg.png",
-        "torso": "v2_c_jab_recover-torso.png",
-        "head_hair": "v2_c_jab_recover-head_hair.png",
-        "near_leg": "v2_c_jab_recover-near_leg.png",
-        "near_arm": "v2_c_jab_recover-near_arm.png"
-      },
-      "hurt": [
-        [
-          -5,
-          72,
-          26,
-          27
-        ],
-        [
-          -19,
-          11,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            40,
-            63,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            48,
-            32,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        42,
-        93,
-        100
-      ]
-    },
-    "v2_c_body_wind": {
-      "file": "v2_c_body_wind.png",
-      "layers": {
-        "far_arm": "v2_c_body_wind-far_arm.png",
-        "far_leg": "v2_c_body_wind-far_leg.png",
-        "torso": "v2_c_body_wind-torso.png",
-        "head_hair": "v2_c_body_wind-head_hair.png",
-        "near_leg": "v2_c_body_wind-near_leg.png",
-        "near_arm": "v2_c_body_wind-near_arm.png"
-      },
-      "hurt": [
-        [
-          -5,
-          72,
-          26,
-          27
-        ],
-        [
-          -19,
-          11,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            40,
-            63,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            11,
-            16,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        42,
-        85,
-        100
-      ]
-    },
-    "v2_c_body_punch": {
-      "file": "v2_c_body_punch.png",
-      "layers": {
-        "far_arm": "v2_c_body_punch-far_arm.png",
-        "far_leg": "v2_c_body_punch-far_leg.png",
-        "torso": "v2_c_body_punch-torso.png",
-        "head_hair": "v2_c_body_punch-head_hair.png",
-        "near_leg": "v2_c_body_punch-near_leg.png",
-        "near_arm": "v2_c_body_punch-near_arm.png"
-      },
-      "hurt": [
-        [
-          -5,
-          72,
-          26,
-          27
-        ],
-        [
-          -19,
-          11,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            40,
-            63,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            43,
-            21,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        42,
-        88,
-        100
-      ]
-    },
-    "v2_c_body_recover": {
-      "file": "v2_c_body_recover.png",
-      "layers": {
-        "far_arm": "v2_c_body_recover-far_arm.png",
-        "far_leg": "v2_c_body_recover-far_leg.png",
-        "torso": "v2_c_body_recover-torso.png",
-        "head_hair": "v2_c_body_recover-head_hair.png",
-        "near_leg": "v2_c_body_recover-near_leg.png",
-        "near_arm": "v2_c_body_recover-near_arm.png"
-      },
-      "hurt": [
-        [
-          -5,
-          72,
-          26,
-          27
-        ],
-        [
-          -19,
-          11,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            40,
-            63,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            48,
-            32,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        42,
-        93,
-        100
-      ]
-    },
-    "c_upper_1": {
-      "file": "c_upper_1.png",
-      "layers": {
-        "far_arm": "c_upper_1-far_arm.png",
-        "far_leg": "c_upper_1-far_leg.png",
-        "torso": "c_upper_1-torso.png",
-        "head_hair": "c_upper_1-head_hair.png",
-        "near_leg": "c_upper_1-near_leg.png",
-        "near_arm": "c_upper_1-near_arm.png"
-      },
-      "hurt": [
-        [
-          -5,
-          72,
-          26,
-          27
-        ],
-        [
-          -19,
-          11,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            40,
-            63,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            11,
-            16,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        42,
-        85,
-        100
-      ]
-    },
-    "v2_c_upper_punch": {
-      "file": "v2_c_upper_punch.png",
-      "layers": {
-        "far_arm": "v2_c_upper_punch-far_arm.png",
-        "far_leg": "v2_c_upper_punch-far_leg.png",
-        "torso": "v2_c_upper_punch-torso.png",
-        "head_hair": "v2_c_upper_punch-head_hair.png",
-        "near_leg": "v2_c_upper_punch-near_leg.png",
-        "near_arm": "v2_c_upper_punch-near_arm.png"
-      },
-      "hurt": [
-        [
-          -12,
-          90,
-          26,
-          27
-        ],
-        [
-          -26,
-          29,
-          52,
-          57
-        ],
-        [
-          -22,
-          0,
-          50,
-          43
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            33,
-            81,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -21,
-            1,
-            21,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            33,
-            95,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            6,
-            1,
-            20,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          71.5,
-          141
-        ],
-        "near_leg": [
-          94.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        53,
-        24,
-        80,
-        118
-      ]
-    },
-    "c_dig_1": {
-      "file": "c_dig_1.png",
-      "layers": {
-        "far_arm": "c_dig_1-far_arm.png",
-        "far_leg": "c_dig_1-far_leg.png",
-        "torso": "c_dig_1-torso.png",
-        "head_hair": "c_dig_1-head_hair.png",
-        "near_leg": "c_dig_1-near_leg.png",
-        "near_arm": "c_dig_1-near_arm.png"
-      },
-      "hurt": [
-        [
-          -5,
-          72,
-          26,
-          27
-        ],
-        [
-          -19,
-          11,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            40,
-            63,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            11,
-            16,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        42,
-        85,
-        100
-      ]
-    },
-    "v2_c_dig_punch": {
-      "file": "v2_c_dig_punch.png",
-      "layers": {
-        "far_arm": "v2_c_dig_punch-far_arm.png",
-        "far_leg": "v2_c_dig_punch-far_leg.png",
-        "torso": "v2_c_dig_punch-torso.png",
-        "head_hair": "v2_c_dig_punch-head_hair.png",
-        "near_leg": "v2_c_dig_punch-near_leg.png",
-        "near_arm": "v2_c_dig_punch-near_arm.png"
-      },
-      "hurt": [
-        [
-          -5,
-          72,
-          26,
-          27
-        ],
-        [
-          -19,
-          11,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            40,
-            63,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            43,
-            21,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        42,
-        88,
-        100
-      ]
-    },
-    "v2_j_jab_wind": {
-      "file": "v2_j_jab_wind.png",
-      "layers": {
-        "far_arm": "v2_j_jab_wind-far_arm.png",
-        "far_leg": "v2_j_jab_wind-far_leg.png",
-        "torso": "v2_j_jab_wind-torso.png",
-        "head_hair": "v2_j_jab_wind-head_hair.png",
-        "near_leg": "v2_j_jab_wind-near_leg.png",
-        "near_arm": "v2_j_jab_wind-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          99,
-          26,
-          27
-        ],
-        [
-          -28,
-          38,
-          52,
-          57
-        ],
-        [
-          -20,
-          16,
-          57,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            90,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -9,
-            23,
-            19,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            2,
-            43,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            4,
-            17,
-            19,
-            14
-          ]
-        ]
-      },
-      "contacts": [],
-      "foot_centres": {
-        "far_leg": [
-          81.0,
-          118
-        ],
-        "near_leg": [
-          95.0,
-          125
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        49,
-        15,
-        82,
-        111
-      ]
-    },
-    "v2_j_jab_punch": {
-      "file": "v2_j_jab_punch.png",
-      "layers": {
-        "far_arm": "v2_j_jab_punch-far_arm.png",
-        "far_leg": "v2_j_jab_punch-far_leg.png",
-        "torso": "v2_j_jab_punch-torso.png",
-        "head_hair": "v2_j_jab_punch-head_hair.png",
-        "near_leg": "v2_j_jab_punch-near_leg.png",
-        "near_arm": "v2_j_jab_punch-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          99,
-          26,
-          27
-        ],
-        [
-          -28,
-          38,
-          52,
-          57
-        ],
-        [
-          -20,
-          16,
-          57,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            90,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -9,
-            23,
-            19,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            39,
-            78,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            4,
-            17,
-            19,
-            14
-          ]
-        ]
-      },
-      "contacts": [],
-      "foot_centres": {
-        "far_leg": [
-          81.0,
-          118
-        ],
-        "near_leg": [
-          95.0,
-          125
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        52,
-        15,
-        87,
-        111
-      ]
-    },
-    "v2_j_over_wind": {
-      "file": "v2_j_over_wind.png",
-      "layers": {
-        "far_arm": "v2_j_over_wind-far_arm.png",
-        "far_leg": "v2_j_over_wind-far_leg.png",
-        "torso": "v2_j_over_wind-torso.png",
-        "head_hair": "v2_j_over_wind-head_hair.png",
-        "near_leg": "v2_j_over_wind-near_leg.png",
-        "near_arm": "v2_j_over_wind-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          99,
-          26,
-          27
-        ],
-        [
-          -28,
-          38,
-          52,
-          57
-        ],
-        [
-          -20,
-          16,
-          57,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            90,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -9,
-            23,
-            19,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            2,
-            43,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            4,
-            17,
-            19,
-            14
-          ]
-        ]
-      },
-      "contacts": [],
-      "foot_centres": {
-        "far_leg": [
-          81.0,
-          118
-        ],
-        "near_leg": [
-          95.0,
-          125
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        49,
-        15,
-        82,
-        111
-      ]
-    },
-    "v2_j_over_punch": {
-      "file": "v2_j_over_punch.png",
-      "layers": {
-        "far_arm": "v2_j_over_punch-far_arm.png",
-        "far_leg": "v2_j_over_punch-far_leg.png",
-        "torso": "v2_j_over_punch-torso.png",
-        "head_hair": "v2_j_over_punch-head_hair.png",
-        "near_leg": "v2_j_over_punch-near_leg.png",
-        "near_arm": "v2_j_over_punch-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          99,
-          26,
-          27
-        ],
-        [
-          -28,
-          38,
-          52,
-          57
-        ],
-        [
-          -20,
-          16,
-          57,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            90,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -9,
-            23,
-            19,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            40,
-            103,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            4,
-            17,
-            19,
-            14
-          ]
-        ]
-      },
-      "contacts": [],
-      "foot_centres": {
-        "far_leg": [
-          81.0,
-          118
-        ],
-        "near_leg": [
-          95.0,
-          125
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        52,
-        15,
-        88,
-        111
-      ]
-    },
-    "v2_j_hammer_wind": {
-      "file": "v2_j_hammer_wind.png",
-      "layers": {
-        "far_arm": "v2_j_hammer_wind-far_arm.png",
-        "far_leg": "v2_j_hammer_wind-far_leg.png",
-        "torso": "v2_j_hammer_wind-torso.png",
-        "head_hair": "v2_j_hammer_wind-head_hair.png",
-        "near_leg": "v2_j_hammer_wind-near_leg.png",
-        "near_arm": "v2_j_hammer_wind-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          99,
-          26,
-          27
-        ],
-        [
-          -28,
-          38,
-          52,
-          57
-        ],
-        [
-          -20,
-          16,
-          57,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            90,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -9,
-            23,
-            19,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            2,
-            43,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            4,
-            17,
-            19,
-            14
-          ]
-        ]
-      },
-      "contacts": [],
-      "foot_centres": {
-        "far_leg": [
-          81.0,
-          118
-        ],
-        "near_leg": [
-          95.0,
-          125
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        49,
-        15,
-        82,
-        111
-      ]
-    },
-    "v2_j_hammer_punch": {
-      "file": "v2_j_hammer_punch.png",
-      "layers": {
-        "far_arm": "v2_j_hammer_punch-far_arm.png",
-        "far_leg": "v2_j_hammer_punch-far_leg.png",
-        "torso": "v2_j_hammer_punch-torso.png",
-        "head_hair": "v2_j_hammer_punch-head_hair.png",
-        "near_leg": "v2_j_hammer_punch-near_leg.png",
-        "near_arm": "v2_j_hammer_punch-near_arm.png"
-      },
-      "hurt": [
-        [
-          -14,
-          99,
-          26,
-          27
-        ],
-        [
-          -28,
-          38,
-          52,
-          57
-        ],
-        [
-          -20,
-          16,
-          57,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            32,
-            30,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -9,
-            23,
-            19,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            34,
-            48,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            4,
-            17,
-            19,
-            14
-          ]
-        ]
-      },
-      "contacts": [],
-      "foot_centres": {
-        "far_leg": [
-          81.0,
-          118
-        ],
-        "near_leg": [
-          95.0,
-          125
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        52,
-        15,
-        82,
-        111
-      ]
-    },
-    "rush_0": {
-      "file": "rush_0.png",
-      "layers": {
-        "far_arm": "rush_0-far_arm.png",
-        "far_leg": "rush_0-far_leg.png",
-        "torso": "rush_0-torso.png",
-        "head_hair": "rush_0-head_hair.png",
-        "near_leg": "rush_0-near_leg.png",
-        "near_arm": "rush_0-near_arm.png"
-      },
-      "hurt": [
-        [
-          -7,
-          92,
-          26,
-          27
-        ],
-        [
-          -23,
-          29,
-          52,
-          57
-        ],
-        [
-          -44,
-          0,
-          98,
-          51
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            37,
-            21,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -43,
-            0,
-            22,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            7,
-            34,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            29,
-            1,
-            23,
-            15
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          47.5,
-          141
-        ],
-        "near_leg": [
-          122.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        36,
-        22,
-        101,
-        120
-      ]
-    },
-    "rush_1": {
-      "file": "rush_1.png",
-      "layers": {
-        "far_arm": "rush_1-far_arm.png",
-        "far_leg": "rush_1-far_leg.png",
-        "torso": "rush_1-torso.png",
-        "head_hair": "rush_1-head_hair.png",
-        "near_leg": "rush_1-near_leg.png",
-        "near_arm": "rush_1-near_arm.png"
-      },
-      "hurt": [
-        [
-          -4,
-          92,
-          26,
-          27
-        ],
-        [
-          -19,
-          30,
-          52,
-          57
-        ],
-        [
-          -44,
-          0,
-          98,
-          51
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            40,
-            82,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -43,
-            0,
-            22,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            53,
-            72,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            29,
-            1,
-            23,
-            15
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          47.5,
-          141
-        ],
-        "near_leg": [
-          122.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        36,
-        22,
-        117,
-        120
-      ]
-    },
-    "weave_0": {
-      "file": "weave_0.png",
-      "layers": {
-        "far_arm": "weave_0-far_arm.png",
-        "far_leg": "weave_0-far_leg.png",
-        "torso": "weave_0-torso.png",
-        "head_hair": "weave_0-head_hair.png",
-        "near_leg": "weave_0-near_leg.png",
-        "near_arm": "weave_0-near_arm.png"
-      },
-      "hurt": [
-        [
-          -7,
-          76,
-          26,
-          27
-        ],
-        [
-          -21,
-          13,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            39,
-            5,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            6,
-            52,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        38,
-        84,
-        104
-      ]
-    },
-    "weave_1": {
-      "file": "weave_1.png",
-      "layers": {
-        "far_arm": "weave_1-far_arm.png",
-        "far_leg": "weave_1-far_leg.png",
-        "torso": "weave_1-torso.png",
-        "head_hair": "weave_1-head_hair.png",
-        "near_leg": "weave_1-near_leg.png",
-        "near_arm": "weave_1-near_arm.png"
-      },
-      "hurt": [
-        [
-          0,
-          76,
-          26,
-          27
-        ],
-        [
-          -14,
-          13,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            46,
-            5,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            13,
-            52,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        38,
-        91,
-        104
-      ]
-    },
-    "body_2": {
-      "file": "body_2.png",
-      "layers": {
-        "far_arm": "body_2-far_arm.png",
-        "far_leg": "body_2-far_leg.png",
-        "torso": "body_2-torso.png",
-        "head_hair": "body_2-head_hair.png",
-        "near_leg": "body_2-near_leg.png",
-        "near_arm": "body_2-near_arm.png"
-      },
-      "hurt": [
-        [
-          -9,
-          94,
-          26,
-          27
-        ],
-        [
-          -25,
-          31,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            34,
-            83,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            37,
-            41,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        50,
-        20,
-        87,
-        122
-      ]
-    },
-    "upper_0": {
-      "file": "upper_0.png",
-      "layers": {
-        "far_arm": "upper_0-far_arm.png",
-        "far_leg": "upper_0-far_leg.png",
-        "torso": "upper_0-torso.png",
-        "head_hair": "upper_0-head_hair.png",
-        "near_leg": "upper_0-near_leg.png",
-        "near_arm": "upper_0-near_arm.png"
-      },
-      "hurt": [
-        [
-          -8,
-          78,
-          26,
-          27
-        ],
-        [
-          -22,
-          17,
-          52,
-          57
-        ],
-        [
-          -25,
-          0,
-          83,
-          31
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            37,
-            69,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -25,
-            0,
-            22,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            8,
-            22,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            33,
-            0,
-            23,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          66.5,
-          141
-        ],
-        "near_leg": [
-          127.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        36,
-        83,
-        106
-      ]
-    },
-    "upper_1": {
-      "file": "upper_1.png",
-      "layers": {
-        "far_arm": "upper_1-far_arm.png",
-        "far_leg": "upper_1-far_leg.png",
-        "torso": "upper_1-torso.png",
-        "head_hair": "upper_1-head_hair.png",
-        "near_leg": "upper_1-near_leg.png",
-        "near_arm": "upper_1-near_arm.png"
-      },
-      "hurt": [
-        [
-          -12,
-          100,
-          26,
-          27
-        ],
-        [
-          -26,
-          39,
-          52,
-          57
-        ],
-        [
-          -20,
-          16,
-          57,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            33,
-            91,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -9,
-            23,
-            19,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            33,
-            105,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            4,
-            17,
-            19,
-            14
-          ]
-        ]
-      },
-      "contacts": [],
-      "foot_centres": {
-        "far_leg": [
-          81.0,
-          118
-        ],
-        "near_leg": [
-          95.0,
-          125
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        53,
-        14,
-        80,
-        112
-      ]
-    },
-    "upper_2": {
-      "file": "upper_2.png",
-      "layers": {
-        "far_arm": "upper_2-far_arm.png",
-        "far_leg": "upper_2-far_leg.png",
-        "torso": "upper_2-torso.png",
-        "head_hair": "upper_2-head_hair.png",
-        "near_leg": "upper_2-near_leg.png",
-        "near_arm": "upper_2-near_arm.png"
-      },
-      "hurt": [
-        [
-          -15,
-          95,
-          26,
-          27
-        ],
-        [
-          -29,
-          34,
-          52,
-          57
-        ],
-        [
-          -20,
-          0,
-          48,
-          58
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            31,
-            26,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -9,
-            23,
-            19,
-            14
-          ]
-        ],
-        "near_fist": [
-          [
-            27,
-            95,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            6,
-            1,
-            20,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          81.0,
-          118
-        ],
-        "near_leg": [
-          94.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        47,
-        19,
-        84,
-        123
-      ]
-    },
-    "v2_upper_recover": {
-      "file": "v2_upper_recover.png",
-      "layers": {
-        "far_arm": "v2_upper_recover-far_arm.png",
-        "far_leg": "v2_upper_recover-far_leg.png",
-        "torso": "v2_upper_recover-torso.png",
-        "head_hair": "v2_upper_recover-head_hair.png",
-        "near_leg": "v2_upper_recover-near_leg.png",
-        "near_arm": "v2_upper_recover-near_arm.png"
-      },
-      "hurt": [
-        [
-          -13,
-          92,
-          26,
-          27
-        ],
-        [
-          -27,
-          31,
-          52,
-          57
-        ],
-        [
-          -22,
-          0,
-          50,
-          43
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            32,
-            83,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -21,
-            1,
-            21,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            0,
-            70,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            6,
-            1,
-            20,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          71.5,
-          141
-        ],
-        "near_leg": [
-          94.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        50,
-        22,
-        82,
-        120
-      ]
-    },
-    "flurry_a": {
-      "file": "flurry_a.png",
-      "layers": {
-        "far_arm": "flurry_a-far_arm.png",
-        "far_leg": "flurry_a-far_leg.png",
-        "torso": "flurry_a-torso.png",
-        "head_hair": "flurry_a-head_hair.png",
-        "near_leg": "flurry_a-near_leg.png",
-        "near_arm": "flurry_a-near_arm.png"
-      },
-      "hurt": [
-        [
-          -5,
-          91,
-          26,
-          27
-        ],
-        [
-          -19,
-          30,
-          52,
-          57
-        ],
-        [
-          -44,
-          0,
-          98,
-          51
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            40,
-            82,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -43,
-            0,
-            22,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            53,
-            72,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            29,
-            1,
-            23,
-            15
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          47.5,
-          141
-        ],
-        "near_leg": [
-          122.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        36,
-        23,
-        117,
-        119
-      ]
-    },
-    "flurry_b": {
-      "file": "flurry_b.png",
-      "layers": {
-        "far_arm": "flurry_b-far_arm.png",
-        "far_leg": "flurry_b-far_leg.png",
-        "torso": "flurry_b-torso.png",
-        "head_hair": "flurry_b-head_hair.png",
-        "near_leg": "flurry_b-near_leg.png",
-        "near_arm": "flurry_b-near_arm.png"
-      },
-      "hurt": [
-        [
-          -11,
-          91,
-          26,
-          27
-        ],
-        [
-          -25,
-          30,
-          52,
-          57
-        ],
-        [
-          -44,
-          0,
-          98,
-          51
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            55,
-            69,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -43,
-            0,
-            22,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            43,
-            60,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            29,
-            1,
-            23,
-            15
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          47.5,
-          141
-        ],
-        "near_leg": [
-          122.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        36,
-        23,
-        119,
-        119
-      ]
-    },
-    "v2_super_recover": {
-      "file": "v2_super_recover.png",
-      "layers": {
-        "far_arm": "v2_super_recover-far_arm.png",
-        "far_leg": "v2_super_recover-far_leg.png",
-        "torso": "v2_super_recover-torso.png",
-        "head_hair": "v2_super_recover-head_hair.png",
-        "near_leg": "v2_super_recover-near_leg.png",
-        "near_arm": "v2_super_recover-near_arm.png"
-      },
-      "hurt": [
-        [
-          -12,
-          91,
-          26,
-          27
-        ],
-        [
-          -26,
-          30,
-          52,
-          57
-        ],
-        [
-          -22,
-          0,
-          50,
-          43
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            34,
-            22,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -21,
-            1,
-            21,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            41,
-            51,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            6,
-            1,
-            20,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          71.5,
-          141
-        ],
-        "near_leg": [
-          94.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        54,
-        23,
-        87,
-        119
-      ]
-    },
-    "clinch": {
-      "file": "clinch.png",
-      "layers": {
-        "far_arm": "clinch-far_arm.png",
-        "far_leg": "clinch-far_leg.png",
-        "torso": "clinch-torso.png",
-        "head_hair": "clinch-head_hair.png",
-        "near_leg": "clinch-near_leg.png",
-        "near_arm": "clinch-near_arm.png"
-      },
-      "hurt": [
-        [
-          -10,
-          95,
-          26,
-          27
-        ],
-        [
-          -24,
-          34,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            52,
-            62,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            42,
-            66,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        50,
-        19,
-        102,
-        123
-      ]
-    },
-    "clinch_b": {
-      "file": "clinch_b.png",
-      "layers": {
-        "far_arm": "clinch_b-far_arm.png",
-        "far_leg": "clinch_b-far_leg.png",
-        "torso": "clinch_b-torso.png",
-        "head_hair": "clinch_b-head_hair.png",
-        "near_leg": "clinch_b-near_leg.png",
-        "near_arm": "clinch_b-near_arm.png"
-      },
-      "hurt": [
-        [
-          -11,
-          87,
-          26,
-          27
-        ],
-        [
-          -25,
-          26,
-          52,
-          57
-        ],
-        [
-          -22,
-          0,
-          50,
-          43
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            51,
-            54,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -21,
-            1,
-            21,
-            13
-          ]
-        ],
-        "near_fist": [
-          [
-            37,
-            36,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            6,
-            1,
-            20,
-            13
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          71.5,
-          141
-        ],
-        "near_leg": [
-          94.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        55,
-        27,
-        96,
-        115
-      ]
-    },
-    "roll": {
-      "file": "roll.png",
-      "layers": {
-        "far_arm": "roll-far_arm.png",
-        "far_leg": "roll-far_leg.png",
-        "torso": "roll-torso.png",
-        "head_hair": "roll-head_hair.png",
-        "near_leg": "roll-near_leg.png",
-        "near_arm": "roll-near_arm.png"
-      },
-      "hurt": [
-        [
-          -20,
-          31,
-          26,
-          27
-        ],
-        [
-          -21,
-          8,
-          41,
-          31
-        ],
-        [
-          -22,
-          0,
-          71,
-          23
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            30,
-            5,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -20,
-            1,
-            17,
-            6
-          ]
-        ],
-        "near_fist": [
-          [
-            -1,
-            1,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            28,
-            1,
-            17,
-            4
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          70.0,
-          141
-        ],
-        "near_leg": [
-          117.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        58,
-        83,
-        72,
-        59
-      ]
-    },
-    "shove": {
-      "file": "shove.png",
-      "layers": {
-        "far_arm": "shove-far_arm.png",
-        "far_leg": "shove-far_leg.png",
-        "torso": "shove-torso.png",
-        "head_hair": "shove-head_hair.png",
-        "near_leg": "shove-near_leg.png",
-        "near_arm": "shove-near_arm.png"
-      },
-      "hurt": [
-        [
-          -10,
-          94,
-          26,
-          27
-        ],
-        [
-          -24,
-          33,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            56,
-            72,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            3,
-            72,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        50,
-        20,
-        106,
-        122
-      ]
-    },
-    "hook_2": {
-      "file": "hook_2.png",
-      "layers": {
-        "far_arm": "hook_2-far_arm.png",
-        "far_leg": "hook_2-far_leg.png",
-        "torso": "hook_2-torso.png",
-        "head_hair": "hook_2-head_hair.png",
-        "near_leg": "hook_2-near_leg.png",
-        "near_arm": "hook_2-near_arm.png"
-      },
-      "hurt": [
-        [
-          -10,
-          95,
-          26,
-          27
-        ],
-        [
-          -24,
-          34,
-          52,
-          57
-        ],
-        [
-          -30,
-          0,
-          67,
-          42
-        ]
-      ],
-      "hit": {
-        "far_fist": [
-          [
-            35,
-            86,
-            20,
-            21
-          ]
-        ],
-        "far_ankle": [
-          [
-            -29,
-            1,
-            20,
-            12
-          ]
-        ],
-        "near_fist": [
-          [
-            44,
-            64,
-            20,
-            21
-          ]
-        ],
-        "near_ankle": [
-          [
-            14,
-            1,
-            21,
-            12
-          ]
-        ]
-      },
-      "contacts": [
-        "far_leg",
-        "near_leg"
-      ],
-      "foot_centres": {
-        "far_leg": [
-          62.0,
-          141
-        ],
-        "near_leg": [
-          107.0,
-          141
-        ]
-      },
-      "root": [
-        80,
-        141
-      ],
-      "silhouette_bounds": [
-        50,
-        19,
-        94,
-        123
-      ]
-    }
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      27,
+      69,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      27,
+      69,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      27,
+      69,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      27,
+      69,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
   },
-  "source": "Editable native indexed PNG layers; initial pixel maps retained",
-  "visual_review": "playable proof; professional artistic acceptance pending"
+  "idle2": {
+   "file": "idle2.png",
+   "hurt": [
+    [
+     -16,
+     0,
+     51,
+     44
+    ],
+    [
+     -5,
+     44,
+     40,
+     36
+    ],
+    [
+     -3,
+     80,
+     42,
+     28
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      26,
+      65,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      26,
+      65,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      26,
+      65,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      26,
+      65,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "idle3": {
+   "file": "idle3.png",
+   "hurt": [
+    [
+     -11,
+     0,
+     43,
+     48
+    ],
+    [
+     -6,
+     48,
+     40,
+     40
+    ],
+    [
+     -4,
+     88,
+     41,
+     30
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      24,
+      72,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      24,
+      72,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      24,
+      72,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      24,
+      72,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "walk1": {
+   "file": "walk1.png",
+   "hurt": [
+    [
+     -19,
+     0,
+     62,
+     45
+    ],
+    [
+     -6,
+     45,
+     37,
+     38
+    ],
+    [
+     -3,
+     83,
+     38,
+     29
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      23,
+      67,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      23,
+      67,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      23,
+      67,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      23,
+      67,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "walk2": {
+   "file": "walk2.png",
+   "hurt": [
+    [
+     -27,
+     0,
+     69,
+     45
+    ],
+    [
+     -6,
+     45,
+     37,
+     38
+    ],
+    [
+     -3,
+     83,
+     37,
+     29
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      22,
+      66,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      22,
+      66,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      22,
+      66,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      22,
+      66,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "walk3": {
+   "file": "walk3.png",
+   "hurt": [
+    [
+     -25,
+     0,
+     62,
+     45
+    ],
+    [
+     -5,
+     45,
+     36,
+     38
+    ],
+    [
+     -3,
+     83,
+     39,
+     29
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      23,
+      71,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      23,
+      71,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      23,
+      71,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      23,
+      71,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "walk4": {
+   "file": "walk4.png",
+   "hurt": [
+    [
+     -13,
+     0,
+     36,
+     46
+    ],
+    [
+     -6,
+     46,
+     35,
+     38
+    ],
+    [
+     -6,
+     84,
+     39,
+     29
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      20,
+      75,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      20,
+      75,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      20,
+      75,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      20,
+      75,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "walk5": {
+   "file": "walk5.png",
+   "hurt": [
+    [
+     -24,
+     0,
+     66,
+     45
+    ],
+    [
+     -6,
+     45,
+     39,
+     38
+    ],
+    [
+     -3,
+     83,
+     40,
+     29
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      25,
+      70,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      25,
+      70,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      25,
+      70,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      25,
+      70,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "walk6": {
+   "file": "walk6.png",
+   "hurt": [
+    [
+     -13,
+     0,
+     48,
+     46
+    ],
+    [
+     -5,
+     46,
+     41,
+     38
+    ],
+    [
+     -3,
+     84,
+     42,
+     29
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      26,
+      70,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      26,
+      70,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      26,
+      70,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      26,
+      70,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "crouch": {
+   "file": "crouch.png",
+   "hurt": [
+    [
+     -16,
+     0,
+     54,
+     36
+    ],
+    [
+     -10,
+     36,
+     48,
+     30
+    ],
+    [
+     -3,
+     66,
+     41,
+     23
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      27,
+      45,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      27,
+      45,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      27,
+      45,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      27,
+      45,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "jump_up": {
+   "file": "jump_up.png",
+   "hurt": [
+    [
+     -12,
+     0,
+     23,
+     56
+    ],
+    [
+     -8,
+     56,
+     29,
+     47
+    ],
+    [
+     -8,
+     103,
+     36,
+     35
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      15,
+      97,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      15,
+      97,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      15,
+      97,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      15,
+      97,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": []
+  },
+  "jump_apex": {
+   "file": "jump_apex.png",
+   "hurt": [
+    [
+     -6,
+     0,
+     35,
+     35
+    ],
+    [
+     -8,
+     35,
+     47,
+     30
+    ],
+    [
+     -3,
+     65,
+     41,
+     22
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      27,
+      44,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      27,
+      44,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      27,
+      44,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      27,
+      44,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": []
+  },
+  "jump_down": {
+   "file": "jump_down.png",
+   "hurt": [
+    [
+     -12,
+     0,
+     27,
+     50
+    ],
+    [
+     -16,
+     50,
+     33,
+     42
+    ],
+    [
+     -16,
+     92,
+     39,
+     31
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      10,
+      79,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      10,
+      79,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      10,
+      79,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      10,
+      79,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": []
+  },
+  "dash": {
+   "file": "dash.png",
+   "hurt": [
+    [
+     -59,
+     0,
+     71,
+     42
+    ],
+    [
+     -33,
+     42,
+     68,
+     35
+    ],
+    [
+     -30,
+     77,
+     64,
+     27
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      27,
+      66,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      27,
+      66,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      27,
+      66,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      27,
+      66,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "backdash": {
+   "file": "backdash.png",
+   "hurt": [
+    [
+     4,
+     0,
+     39,
+     44
+    ],
+    [
+     -22,
+     44,
+     54,
+     36
+    ],
+    [
+     -25,
+     80,
+     36,
+     28
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      23,
+      29,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      23,
+      29,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      23,
+      29,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      23,
+      29,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": []
+  },
+  "guard": {
+   "file": "guard.png",
+   "hurt": [
+    [
+     -20,
+     0,
+     63,
+     50
+    ],
+    [
+     -7,
+     50,
+     39,
+     42
+    ],
+    [
+     -9,
+     92,
+     43,
+     31
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      22,
+      60,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      22,
+      60,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      22,
+      60,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      22,
+      60,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "guard_low": {
+   "file": "guard_low.png",
+   "hurt": [
+    [
+     -9,
+     0,
+     43,
+     32
+    ],
+    [
+     -10,
+     32,
+     52,
+     27
+    ],
+    [
+     -1,
+     59,
+     43,
+     20
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      28,
+      41,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      28,
+      41,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      28,
+      41,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      28,
+      41,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "hit": {
+   "file": "hit.png",
+   "hurt": [
+    [
+     -19,
+     0,
+     71,
+     50
+    ],
+    [
+     -19,
+     50,
+     55,
+     42
+    ],
+    [
+     -29,
+     92,
+     61,
+     32
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      29,
+      36,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      29,
+      36,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      29,
+      36,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      29,
+      36,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "hit_low": {
+   "file": "hit_low.png",
+   "hurt": [
+    [
+     1,
+     0,
+     72,
+     32
+    ],
+    [
+     -8,
+     32,
+     57,
+     26
+    ],
+    [
+     -3,
+     58,
+     42,
+     20
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      74,
+      26,
+      5,
+      2
+     ]
+    ],
+    "near_fist": [
+     [
+      74,
+      26,
+      5,
+      2
+     ]
+    ],
+    "far_ankle": [
+     [
+      74,
+      26,
+      5,
+      2
+     ]
+    ],
+    "near_ankle": [
+     [
+      74,
+      26,
+      5,
+      2
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "fall": {
+   "file": "fall.png",
+   "hurt": [
+    [
+     5,
+     8,
+     71,
+     30
+    ],
+    [
+     -6,
+     38,
+     74,
+     25
+    ],
+    [
+     -5,
+     63,
+     44,
+     19
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      63,
+      34,
+      16,
+      23
+     ]
+    ],
+    "near_fist": [
+     [
+      63,
+      34,
+      16,
+      23
+     ]
+    ],
+    "far_ankle": [
+     [
+      63,
+      34,
+      16,
+      23
+     ]
+    ],
+    "near_ankle": [
+     [
+      63,
+      34,
+      16,
+      23
+     ]
+    ]
+   },
+   "contacts": []
+  },
+  "down": {
+   "file": "down.png",
+   "hurt": [
+    [
+     -30,
+     0,
+     105,
+     12
+    ],
+    [
+     -31,
+     12,
+     106,
+     10
+    ],
+    [
+     -5,
+     22,
+     84,
+     7
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      77,
+      26,
+      2,
+      3
+     ]
+    ],
+    "near_fist": [
+     [
+      77,
+      26,
+      2,
+      3
+     ]
+    ],
+    "far_ankle": [
+     [
+      77,
+      26,
+      2,
+      3
+     ]
+    ],
+    "near_ankle": [
+     [
+      77,
+      26,
+      2,
+      3
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "getup": {
+   "file": "getup.png",
+   "hurt": [
+    [
+     -16,
+     0,
+     59,
+     32
+    ],
+    [
+     -9,
+     32,
+     52,
+     26
+    ],
+    [
+     -1,
+     58,
+     44,
+     20
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      31,
+      37,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      31,
+      37,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      31,
+      37,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      31,
+      37,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "dizzy": {
+   "file": "dizzy.png",
+   "hurt": [
+    [
+     -15,
+     0,
+     48,
+     45
+    ],
+    [
+     -6,
+     45,
+     38,
+     38
+    ],
+    [
+     -2,
+     83,
+     35,
+     28
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      21,
+      53,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      21,
+      53,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      21,
+      53,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      21,
+      53,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "dizzy_b": {
+   "file": "dizzy_b.png",
+   "hurt": [
+    [
+     -9,
+     0,
+     48,
+     47
+    ],
+    [
+     -7,
+     47,
+     48,
+     40
+    ],
+    [
+     -8,
+     87,
+     34,
+     30
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      31,
+      48,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      31,
+      48,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      31,
+      48,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      31,
+      48,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "intro": {
+   "file": "intro.png",
+   "hurt": [
+    [
+     -21,
+     0,
+     59,
+     50
+    ],
+    [
+     -13,
+     50,
+     45,
+     42
+    ],
+    [
+     -12,
+     92,
+     38,
+     32
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      22,
+      46,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      22,
+      46,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      22,
+      46,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      22,
+      46,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "win": {
+   "file": "win.png",
+   "hurt": [
+    [
+     -28,
+     0,
+     51,
+     57
+    ],
+    [
+     -16,
+     57,
+     41,
+     48
+    ],
+    [
+     -23,
+     105,
+     31,
+     36
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      15,
+      63,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      15,
+      63,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      15,
+      63,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      15,
+      63,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "win_b": {
+   "file": "win_b.png",
+   "hurt": [
+    [
+     -24,
+     0,
+     51,
+     55
+    ],
+    [
+     -13,
+     55,
+     42,
+     46
+    ],
+    [
+     -20,
+     101,
+     30,
+     35
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      18,
+      60,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      18,
+      60,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      18,
+      60,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      18,
+      60,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "lose": {
+   "file": "lose.png",
+   "hurt": [
+    [
+     -24,
+     0,
+     60,
+     31
+    ],
+    [
+     -8,
+     31,
+     46,
+     26
+    ],
+    [
+     -2,
+     57,
+     39,
+     19
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      26,
+      33,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      26,
+      33,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      26,
+      33,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      26,
+      33,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "lp1": {
+   "file": "lp1.png",
+   "hurt": [
+    [
+     -23,
+     0,
+     63,
+     45
+    ],
+    [
+     -6,
+     45,
+     55,
+     38
+    ],
+    [
+     -4,
+     83,
+     63,
+     28
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      48,
+      77,
+      16,
+      15
+     ]
+    ],
+    "near_fist": [
+     [
+      48,
+      77,
+      16,
+      15
+     ]
+    ],
+    "far_ankle": [
+     [
+      48,
+      77,
+      16,
+      15
+     ]
+    ],
+    "near_ankle": [
+     [
+      48,
+      77,
+      16,
+      15
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "lp2": {
+   "file": "lp2.png",
+   "hurt": [
+    [
+     -25,
+     0,
+     67,
+     44
+    ],
+    [
+     -7,
+     44,
+     36,
+     37
+    ],
+    [
+     -4,
+     81,
+     77,
+     28
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      61,
+      82,
+      16,
+      13
+     ]
+    ],
+    "near_fist": [
+     [
+      61,
+      82,
+      16,
+      13
+     ]
+    ],
+    "far_ankle": [
+     [
+      61,
+      82,
+      16,
+      13
+     ]
+    ],
+    "near_ankle": [
+     [
+      61,
+      82,
+      16,
+      13
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "lk2": {
+   "file": "lk2.png",
+   "hurt": [
+    [
+     -29,
+     0,
+     73,
+     36
+    ],
+    [
+     -9,
+     36,
+     75,
+     30
+    ],
+    [
+     -1,
+     66,
+     40,
+     23
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      56,
+      47,
+      16,
+      15
+     ]
+    ],
+    "near_fist": [
+     [
+      56,
+      47,
+      16,
+      15
+     ]
+    ],
+    "far_ankle": [
+     [
+      56,
+      47,
+      16,
+      15
+     ]
+    ],
+    "near_ankle": [
+     [
+      56,
+      47,
+      16,
+      15
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "hp1": {
+   "file": "hp1.png",
+   "hurt": [
+    [
+     -28,
+     0,
+     70,
+     45
+    ],
+    [
+     -7,
+     45,
+     41,
+     38
+    ],
+    [
+     -25,
+     83,
+     56,
+     29
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      24,
+      39,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      24,
+      39,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      24,
+      39,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      24,
+      39,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "hp2": {
+   "file": "hp2.png",
+   "hurt": [
+    [
+     -31,
+     0,
+     74,
+     45
+    ],
+    [
+     -11,
+     45,
+     37,
+     38
+    ],
+    [
+     -7,
+     83,
+     79,
+     28
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      60,
+      85,
+      16,
+      12
+     ]
+    ],
+    "near_fist": [
+     [
+      60,
+      85,
+      16,
+      12
+     ]
+    ],
+    "far_ankle": [
+     [
+      60,
+      85,
+      16,
+      12
+     ]
+    ],
+    "near_ankle": [
+     [
+      60,
+      85,
+      16,
+      12
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "hk1": {
+   "file": "hk1.png",
+   "hurt": [
+    [
+     -7,
+     0,
+     38,
+     50
+    ],
+    [
+     -9,
+     50,
+     47,
+     42
+    ],
+    [
+     -10,
+     92,
+     30,
+     31
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      27,
+      55,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      27,
+      55,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      27,
+      55,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      27,
+      55,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "hk2": {
+   "file": "hk2.png",
+   "hurt": [
+    [
+     -5,
+     0,
+     18,
+     46
+    ],
+    [
+     -18,
+     46,
+     83,
+     39
+    ],
+    [
+     -20,
+     85,
+     94,
+     29
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      62,
+      76,
+      16,
+      20
+     ]
+    ],
+    "near_fist": [
+     [
+      62,
+      76,
+      16,
+      20
+     ]
+    ],
+    "far_ankle": [
+     [
+      62,
+      76,
+      16,
+      20
+     ]
+    ],
+    "near_ankle": [
+     [
+      62,
+      76,
+      16,
+      20
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "cr_lp": {
+   "file": "cr_lp.png",
+   "hurt": [
+    [
+     -27,
+     0,
+     80,
+     36
+    ],
+    [
+     -12,
+     36,
+     54,
+     30
+    ],
+    [
+     -2,
+     66,
+     78,
+     22
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      63,
+      64,
+      16,
+      14
+     ]
+    ],
+    "near_fist": [
+     [
+      63,
+      64,
+      16,
+      14
+     ]
+    ],
+    "far_ankle": [
+     [
+      63,
+      64,
+      16,
+      14
+     ]
+    ],
+    "near_ankle": [
+     [
+      63,
+      64,
+      16,
+      14
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "cr_lk": {
+   "file": "cr_lk.png",
+   "hurt": [
+    [
+     -19,
+     0,
+     91,
+     32
+    ],
+    [
+     -13,
+     32,
+     53,
+     26
+    ],
+    [
+     -1,
+     58,
+     37,
+     20
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      63,
+      0,
+      16,
+      15
+     ]
+    ],
+    "near_fist": [
+     [
+      63,
+      0,
+      16,
+      15
+     ]
+    ],
+    "far_ankle": [
+     [
+      63,
+      0,
+      16,
+      15
+     ]
+    ],
+    "near_ankle": [
+     [
+      63,
+      0,
+      16,
+      15
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "cr_hp1": {
+   "file": "cr_hp1.png",
+   "hurt": [
+    [
+     -24,
+     0,
+     64,
+     40
+    ],
+    [
+     -14,
+     40,
+     50,
+     34
+    ],
+    [
+     -4,
+     74,
+     39,
+     25
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      28,
+      47,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      28,
+      47,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      28,
+      47,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      28,
+      47,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "cr_hp2": {
+   "file": "cr_hp2.png",
+   "hurt": [
+    [
+     -33,
+     0,
+     73,
+     57
+    ],
+    [
+     -22,
+     57,
+     42,
+     48
+    ],
+    [
+     -7,
+     105,
+     32,
+     36
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      15,
+      123,
+      11,
+      18
+     ]
+    ],
+    "near_fist": [
+     [
+      15,
+      123,
+      11,
+      18
+     ]
+    ],
+    "far_ankle": [
+     [
+      15,
+      123,
+      11,
+      18
+     ]
+    ],
+    "near_ankle": [
+     [
+      15,
+      123,
+      11,
+      18
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "cr_hk": {
+   "file": "cr_hk.png",
+   "hurt": [
+    [
+     -14,
+     0,
+     88,
+     29
+    ],
+    [
+     -6,
+     29,
+     81,
+     24
+    ],
+    [
+     -3,
+     53,
+     43,
+     18
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      63,
+      11,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      63,
+      11,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      63,
+      11,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      63,
+      11,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "j_p": {
+   "file": "j_p.png",
+   "hurt": [
+    [
+     -40,
+     0,
+     94,
+     38
+    ],
+    [
+     -30,
+     38,
+     72,
+     31
+    ],
+    [
+     -23,
+     69,
+     57,
+     24
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      42,
+      13,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      42,
+      13,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      42,
+      13,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      42,
+      13,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": []
+  },
+  "j_k": {
+   "file": "j_k.png",
+   "hurt": [
+    [
+     -13,
+     0,
+     43,
+     55
+    ],
+    [
+     -21,
+     55,
+     46,
+     46
+    ],
+    [
+     -28,
+     101,
+     57,
+     35
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      19,
+      0,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      19,
+      0,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      19,
+      0,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      19,
+      0,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": []
+  },
+  "sp1_1": {
+   "file": "sp1_1.png",
+   "hurt": [
+    [
+     -40,
+     0,
+     73,
+     41
+    ],
+    [
+     -7,
+     41,
+     51,
+     34
+    ],
+    [
+     -7,
+     75,
+     53,
+     26
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      35,
+      67,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      35,
+      67,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      35,
+      67,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      35,
+      67,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "sp1_2": {
+   "file": "sp1_2.png",
+   "hurt": [
+    [
+     -36,
+     0,
+     78,
+     44
+    ],
+    [
+     -9,
+     44,
+     38,
+     36
+    ],
+    [
+     -4,
+     80,
+     79,
+     28
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      63,
+      81,
+      16,
+      13
+     ]
+    ],
+    "near_fist": [
+     [
+      63,
+      81,
+      16,
+      13
+     ]
+    ],
+    "far_ankle": [
+     [
+      63,
+      81,
+      16,
+      13
+     ]
+    ],
+    "near_ankle": [
+     [
+      63,
+      81,
+      16,
+      13
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "sp2_1": {
+   "file": "sp2_1.png",
+   "hurt": [
+    [
+     -22,
+     0,
+     59,
+     35
+    ],
+    [
+     -15,
+     35,
+     50,
+     30
+    ],
+    [
+     -4,
+     65,
+     36,
+     22
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      25,
+      35,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      25,
+      35,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      25,
+      35,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      25,
+      35,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "sp2_2": {
+   "file": "sp2_2.png",
+   "hurt": [
+    [
+     -25,
+     0,
+     54,
+     51
+    ],
+    [
+     -16,
+     51,
+     35,
+     43
+    ],
+    [
+     -5,
+     94,
+     38,
+     33
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      19,
+      109,
+      16,
+      18
+     ]
+    ],
+    "near_fist": [
+     [
+      19,
+      109,
+      16,
+      18
+     ]
+    ],
+    "far_ankle": [
+     [
+      19,
+      109,
+      16,
+      18
+     ]
+    ],
+    "near_ankle": [
+     [
+      19,
+      109,
+      16,
+      18
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "sp3_1": {
+   "file": "sp3_1.png",
+   "hurt": [
+    [
+     -28,
+     0,
+     67,
+     32
+    ],
+    [
+     -11,
+     32,
+     48,
+     26
+    ],
+    [
+     -2,
+     58,
+     40,
+     20
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      25,
+      42,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      25,
+      42,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      25,
+      42,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      25,
+      42,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "sp3_2": {
+   "file": "sp3_2.png",
+   "hurt": [
+    [
+     -36,
+     0,
+     77,
+     42
+    ],
+    [
+     -14,
+     42,
+     41,
+     35
+    ],
+    [
+     -11,
+     77,
+     74,
+     26
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      52,
+      77,
+      16,
+      16
+     ]
+    ],
+    "near_fist": [
+     [
+      52,
+      77,
+      16,
+      16
+     ]
+    ],
+    "far_ankle": [
+     [
+      52,
+      77,
+      16,
+      16
+     ]
+    ],
+    "near_ankle": [
+     [
+      52,
+      77,
+      16,
+      16
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "gattack": {
+   "file": "gattack.png",
+   "hurt": [
+    [
+     -36,
+     0,
+     75,
+     41
+    ],
+    [
+     -11,
+     41,
+     53,
+     35
+    ],
+    [
+     -2,
+     76,
+     57,
+     26
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      42,
+      71,
+      16,
+      17
+     ]
+    ],
+    "near_fist": [
+     [
+      42,
+      71,
+      16,
+      17
+     ]
+    ],
+    "far_ankle": [
+     [
+      42,
+      71,
+      16,
+      17
+     ]
+    ],
+    "near_ankle": [
+     [
+      42,
+      71,
+      16,
+      17
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "super_1": {
+   "file": "super_1.png",
+   "hurt": [
+    [
+     -26,
+     0,
+     64,
+     42
+    ],
+    [
+     -8,
+     42,
+     42,
+     35
+    ],
+    [
+     -2,
+     77,
+     40,
+     26
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      26,
+      61,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      26,
+      61,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      26,
+      61,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      26,
+      61,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "super_2": {
+   "file": "super_2.png",
+   "hurt": [
+    [
+     -30,
+     0,
+     75,
+     42
+    ],
+    [
+     -16,
+     42,
+     45,
+     36
+    ],
+    [
+     -12,
+     78,
+     81,
+     27
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      58,
+      76,
+      16,
+      14
+     ]
+    ],
+    "near_fist": [
+     [
+      58,
+      76,
+      16,
+      14
+     ]
+    ],
+    "far_ankle": [
+     [
+      58,
+      76,
+      16,
+      14
+     ]
+    ],
+    "near_ankle": [
+     [
+      58,
+      76,
+      16,
+      14
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "super_3": {
+   "file": "super_3.png",
+   "hurt": [
+    [
+     -33,
+     0,
+     66,
+     51
+    ],
+    [
+     -15,
+     51,
+     34,
+     43
+    ],
+    [
+     -8,
+     94,
+     44,
+     33
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      23,
+      90,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      23,
+      90,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      23,
+      90,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      23,
+      90,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "throw_1": {
+   "file": "throw_1.png",
+   "hurt": [
+    [
+     -46,
+     0,
+     77,
+     41
+    ],
+    [
+     -23,
+     41,
+     73,
+     34
+    ],
+    [
+     -9,
+     75,
+     66,
+     26
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      46,
+      67,
+      16,
+      23
+     ]
+    ],
+    "near_fist": [
+     [
+      46,
+      67,
+      16,
+      23
+     ]
+    ],
+    "far_ankle": [
+     [
+      46,
+      67,
+      16,
+      23
+     ]
+    ],
+    "near_ankle": [
+     [
+      46,
+      67,
+      16,
+      23
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "throw_2": {
+   "file": "throw_2.png",
+   "hurt": [
+    [
+     -37,
+     0,
+     68,
+     45
+    ],
+    [
+     -13,
+     45,
+     46,
+     38
+    ],
+    [
+     -23,
+     83,
+     54,
+     28
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      20,
+      56,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      20,
+      56,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      20,
+      56,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      20,
+      56,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "roll": {
+   "file": "roll.png",
+   "hurt": [
+    [
+     -4,
+     0,
+     54,
+     24
+    ],
+    [
+     -5,
+     24,
+     54,
+     19
+    ],
+    [
+     -2,
+     43,
+     38,
+     15
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      38,
+      26,
+      16,
+      20
+     ]
+    ],
+    "near_fist": [
+     [
+      38,
+      26,
+      16,
+      20
+     ]
+    ],
+    "far_ankle": [
+     [
+      38,
+      26,
+      16,
+      20
+     ]
+    ],
+    "near_ankle": [
+     [
+      38,
+      26,
+      16,
+      20
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  },
+  "hit_b": {
+   "file": "hit_b.png",
+   "hurt": [
+    [
+     -23,
+     0,
+     56,
+     37
+    ],
+    [
+     -14,
+     37,
+     42,
+     31
+    ],
+    [
+     -9,
+     68,
+     47,
+     23
+    ]
+   ],
+   "hit": {
+    "far_fist": [
+     [
+      26,
+      65,
+      16,
+      24
+     ]
+    ],
+    "near_fist": [
+     [
+      26,
+      65,
+      16,
+      24
+     ]
+    ],
+    "far_ankle": [
+     [
+      26,
+      65,
+      16,
+      24
+     ]
+    ],
+    "near_ankle": [
+     [
+      26,
+      65,
+      16,
+      24
+     ]
+    ]
+   },
+   "contacts": [
+    "far_leg",
+    "near_leg"
+   ]
+  }
+ },
+ "alt_palette": [
+  [
+   0,
+   0,
+   0
+  ],
+  [
+   16,
+   8,
+   16
+  ],
+  [
+   247,
+   173,
+   123
+  ],
+  [
+   107,
+   66,
+   33
+  ],
+  [
+   247,
+   239,
+   230
+  ],
+  [
+   41,
+   173,
+   132
+  ],
+  [
+   165,
+   99,
+   74
+  ],
+  [
+   49,
+   49,
+   58
+  ],
+  [
+   16,
+   99,
+   66
+  ],
+  [
+   173,
+   156,
+   156
+  ],
+  [
+   49,
+   33,
+   16
+  ],
+  [
+   156,
+   90,
+   58
+  ],
+  [
+   165,
+   66,
+   33
+  ],
+  [
+   66,
+   41,
+   16
+  ],
+  [
+   197,
+   123,
+   90
+  ],
+  [
+   239,
+   165,
+   99
+  ],
+  [
+   115,
+   66,
+   49
+  ],
+  [
+   33,
+   165,
+   107
+  ],
+  [
+   8,
+   16,
+   8
+  ],
+  [
+   16,
+   99,
+   49
+  ],
+  [
+   74,
+   41,
+   25
+  ],
+  [
+   49,
+   33,
+   16
+  ],
+  [
+   239,
+   165,
+   99
+  ],
+  [
+   99,
+   66,
+   33
+  ],
+  [
+   25,
+   132,
+   90
+  ],
+  [
+   66,
+   41,
+   16
+  ],
+  [
+   90,
+   222,
+   189
+  ],
+  [
+   16,
+   107,
+   74
+  ],
+  [
+   16,
+   58,
+   49
+  ],
+  [
+   239,
+   239,
+   247
+  ],
+  [
+   41,
+   173,
+   132
+  ],
+  [
+   8,
+   16,
+   8
+  ],
+  [
+   41,
+   197,
+   148
+  ],
+  [
+   247,
+   239,
+   230
+  ],
+  [
+   16,
+   107,
+   74
+  ],
+  [
+   189,
+   123,
+   90
+  ],
+  [
+   173,
+   165,
+   156
+  ],
+  [
+   41,
+   173,
+   132
+  ],
+  [
+   16,
+   58,
+   49
+  ],
+  [
+   247,
+   165,
+   132
+  ],
+  [
+   25,
+   132,
+   90
+  ],
+  [
+   123,
+   74,
+   58
+  ],
+  [
+   16,
+   82,
+   49
+  ],
+  [
+   132,
+   123,
+   132
+  ],
+  [
+   33,
+   165,
+   107
+  ],
+  [
+   148,
+   99,
+   74
+  ],
+  [
+   247,
+   173,
+   123
+  ],
+  [
+   8,
+   16,
+   8
+  ],
+  [
+   49,
+   49,
+   58
+  ],
+  [
+   189,
+   123,
+   90
+  ],
+  [
+   99,
+   41,
+   33
+  ],
+  [
+   33,
+   173,
+   132
+  ],
+  [
+   140,
+   58,
+   33
+  ],
+  [
+   247,
+   181,
+   123
+  ],
+  [
+   214,
+   140,
+   99
+  ],
+  [
+   173,
+   99,
+   74
+  ],
+  [
+   173,
+   74,
+   41
+  ],
+  [
+   123,
+   74,
+   58
+  ],
+  [
+   16,
+   58,
+   49
+  ],
+  [
+   247,
+   239,
+   230
+  ],
+  [
+   148,
+   99,
+   74
+  ]
+ ]
 }

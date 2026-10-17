@@ -32,7 +32,7 @@ FIELDS = {"match": "&s_match", "state": "&((NGFMatch*)0)->state", "round": "&((N
 RUNTIME_FIELDS={"bank_seen":"&slf_rom_banks_seen", "bank_errors":"&slf_rom_errors",
                 "bank_copies":"&slf_rom_copies", "presentation":"&slf_presentation_current",
                 "card_buffer":"&s_story_card", "palette_state":"&ng_palfx_scr",
-                "select_live":"&s_portraits_live", "def_kenji":"&slf_kenji",
+                "select_live":"&slf_select_live", "def_kenji":"&slf_kenji",
                 "def_jack":"&slf_jack", "def_amara":"&slf_amara"}
 
 
@@ -46,6 +46,7 @@ def main():
     ap.add_argument("--fighter",choices=('kenji','jack','amara'),help="Select a showcase fighter using actual menu inputs")
     ap.add_argument("--attract-only",action="store_true",help="No input; verify all story cards and both physical data banks")
     ap.add_argument("--seconds", type=int, default=100)
+    ap.add_argument("--wav", action="store_true", help="Record the sound output to audio.wav")
     ap.add_argument("--mame", default="mame")
     ap.add_argument("--bios-name", help="MAME BIOS name; defaults to euro/asia")
     ap.add_argument("--output", type=Path, default=GAME / "build/qa")
@@ -104,6 +105,7 @@ def main():
                "-nothrottle", "-nonvram_save", "-seconds_to_run", str(args.seconds), "-skip_gameinfo",
                "-cfg_directory", native(out / "cfg"), "-nvram_directory", native(out / "nvram"),
                "-snapshot_directory", native(out), "-autoboot_delay", "0",
+               *(["-wavwrite", native(out / "audio.wav")] if args.wav else []),
                "-autoboot_script", native(script)]
     if args.record:command += ["-aviwrite", native(out / "cartridge.avi")]
     provenance={'platform':args.platform,'bios_name':args.bios_name or ('asia' if aes else 'euro'),'team':args.team,'fighter':args.fighter,'attract_only':args.attract_only,

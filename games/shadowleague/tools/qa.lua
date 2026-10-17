@@ -76,6 +76,9 @@ emu.register_frame_done(function()
             pad(selection_ticks%16<8 and 8 or 0)
             if selection_ticks%16==15 then selection_moves=selection_moves+1 end
         else pad(selection_ticks%20<10 and 16 or 0) end
+        if selection_ticks==20 or selection_ticks==44 then
+            screen:snapshot(string.format('%s/select_%03d.png', output, selection_ticks))
+        end
         selection_ticks=selection_ticks+1
     elseif team and t > 14 and t < 14.25 then
         pad(8)

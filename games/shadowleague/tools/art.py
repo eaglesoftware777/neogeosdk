@@ -78,49 +78,6 @@ def emit(name, values, ctype="uint16_t"):
 # --------------------------------------------------------------------------
 #  Effects and stage
 # --------------------------------------------------------------------------
-def spark(frame, kind):
-    """32x32 burst: kind 0 hit (gold), 1 guard (blue), 2 dust (tan)."""
-    img = np.zeros((32, 32), np.uint8)
-    ys, xs = np.mgrid[0:32, 0:32] - 15.5
-    r = np.hypot(xs, ys)
-    a = np.arctan2(ys, xs)
-    if kind == 2:
-        for k, (cx, cy) in enumerate(((-7, 6), (6, 5), (0, 2))):
-            rr = np.hypot(xs - cx * (1 + frame * 0.3), ys - cy + frame * 2)
-            rad = 4 + frame * 1.3 - k
-            img[rr < rad] = 2 + (rr[rr < rad] < rad * 0.5)
-        return img
-    grow = [5, 9, 13, 15][frame]
-    spikes = 0.65 + 0.35 * np.cos(a * (8 if kind == 0 else 6) + frame)
-    edge = grow * spikes
-    img[r < edge] = 2
-    img[r < edge * 0.7] = 3
-    img[r < edge * 0.4] = 4
-    if frame >= 2:
-        img[r < edge * (0.25 if frame == 2 else 0.6)] = 0
-    return img
-
-
-SPARK_PALS = [
-    [(0, 0, 0), (40, 20, 10), (230, 110, 30), (255, 210, 60), (255, 255, 230)],
-    [(0, 0, 0), (10, 20, 40), (40, 110, 230), (120, 200, 255), (240, 250, 255)],
-    [(0, 0, 0), (40, 30, 20), (150, 120, 90), (200, 176, 140), (230, 214, 186)],
-]
-
-
-def projectile_pixels(frame):
-    image=np.zeros((48,48),dtype=np.uint8)
-    y,x=np.mgrid[0:48,0:48]
-    body=((x-27)/15)**2+((y-24)/8)**2
-    image[body<1]=15;image[body<.46]=14
-    for k in range(4):
-        yy=16+k*5;start=4+(k+frame)%3*3
-        image[yy:yy+2,start:28-k]=15
-        image[yy+1,start+6:30-k]=14
-    image[22:25,38:44]=14
-    return image
-
-
 def shadow():
     img = np.zeros((16, 64), np.uint8)
     ys, xs = np.mgrid[0:16, 0:64]
@@ -372,14 +329,29 @@ def stage_chimera_near():
     img[(y >= floor_top) & (y < floor_top + 3)] = (30, 200, 230, 255)
     return img
 
+STAGES = [
+    # (master painting, name on the VS screen, home-stage keywords)
+    ("dojo", "ARATA MOUNTAIN DOJO - JAPAN", ("ARATA", "MUNICIPAL DOJO")),
+    ("bangkok", "BANGKOK NIGHT STADIUM - THAILAND", ("BANGKOK", "TEMPLE", "VIENTIANE")),
+    ("brooklyn", "BROOKLYN UNDERGROUND GYM - USA", ("BROOKLYN", "NATIONAL TRAINING")),
+    ("chimera", "PROJECT CHIMERA FACILITY - THE VEIL", ("CHIMERA", "VEIL")),
+    ("mexico", "ARENA CORONA - MEXICO CITY", ("MEXICO",)),
+    ("shanghai", "PUDONG ROOFTOP RING - SHANGHAI", ("SHANGHAI", "SEOUL")),
+    ("london", "THE ARCHES FIGHT CLUB - LONDON", ("LONDON", "BARCELONA", "MARSEILLE", "MEDITERRANEAN", "CASABLANCA")),
+    ("africa", "HARVEST FESTIVAL RING - ACCRA", ("ACCRA", "JOHANNESBURG", "WEST AFRICAN", "COASTAL")),
+    ("salvador", "PELOURINHO SQUARE - SALVADOR", ("SALVADOR", "RAINFOREST", "BEACHSIDE")),
+    ("steppe", "NAADAM GROUNDS - MONGOLIA", ("MONGOLIAN", "SAND", "TRADITIONAL FIELD", "AKHARA")),
+    ("frozen", "ICEBOUND HARBOR - MURMANSK", ("FROZEN", "LODGE", "NORTHERN", "MOUNTAIN COMPOUND")),
+    ("docks", "PIER 9 CONTAINER YARD - MANILA", ("MANILA", "WAREHOUSE")),
+]
+STAGE_BANKS = 16
+
+
 def stage_idx_for_fighter(f):
     st = f.data.get("stage", "").upper()
-    if any(k in st for k in ("BANGKOK", "FESTIVAL", "TEMPLE", "RAINFOREST", "MEDITERRANEAN", "SAND", "SOUTHERN")):
-        return 1
-    elif any(k in st for k in ("BROOKLYN", "LONDON", "BARCELONA", "SALVADOR", "BEACH", "ARENA", "MUNICIPAL", "JOHANNESBURG")):
-        return 2
-    elif any(k in st for k in ("CHIMERA", "WAREHOUSE", "HARBOR", "COMPOUND", "AI", "FACILITY", "LODGE")):
-        return 3
+    for i, (_, _, keys) in enumerate(STAGES):
+        if any(k in st for k in keys):
+            return i
     return 0
 
 
@@ -390,6 +362,14 @@ def fix_rom():
     rom = bytearray(font.build_rom())
     lo = GAME_FIX_BASE * 32
     rom[lo:lo + 256 * 32] = rom[:256 * 32]
+    # The game's text page uses its own shaded face; the system font stays below for the BIOS.
+    import slf_font
+    for code, glyph in slf_font.glyph_tiles().items():
+        rom[lo + code * 32:lo + (code + 1) * 32] = font.encode_tile(glyph)
+    # The tall face (two tiles a character) for headings, names and menus.
+    import slf_tall_font
+    for number, glyph in slf_tall_font.glyph_tiles().items():
+        rom[number * 32:(number + 1) * 32] = font.encode_tile(glyph)
     rom[0xFF * 32:0x100 * 32] = bytes(32)
     return rom
 
@@ -412,13 +392,15 @@ FIX_PALS = [
     [(0, 0, 0), (250, 250, 250), (16, 16, 24), (190, 196, 210)],
     [(0, 0, 0), (255, 220, 90), (40, 20, 0), (230, 160, 40)],
     [(0, 0, 0), (150, 150, 170), (16, 16, 24), (110, 110, 130)],
-    [(0, 0, 0), (29, 36, 56), (183, 246, 105), (55, 170, 113), (65, 40, 59), (255, 104, 81),
+    [(0, 0, 0), (29, 36, 56), (255, 232, 96), (240, 156, 40), (44, 18, 30), (232, 44, 40),
      (149, 105, 231), (250, 215, 113), (179, 202, 219), (91, 108, 139)],
     [(0,0,0),(20,10,8),(255,240,176),(236,164,48),(160,80,32),(80,32,24),(255,255,224),(48,24,32)],
     [(0,0,0),(24,4,8),(255,184,136),(232,64,64),(144,32,56),(64,16,32),(255,240,208),(40,16,32)],
     [(0,0,0),(4,8,28),(192,232,255),(64,152,224),(32,72,144),(16,32,72),(240,248,255),(16,24,48)],
     [(0,0,0),(12,12,20),(248,248,240),(152,176,192),(80,112,136),(40,56,80),(255,255,248),(24,32,48)],
 ]
+import slf_tall_font  # noqa: E402
+FIX_PALS += [slf_tall_font.PALETTES[k] for k in ('GOLD', 'SILVER', 'RED', 'BLUE')]   # 8-11
 
 
 def build_fix():
@@ -532,6 +514,15 @@ def build():
         if c1.tell() < boot_end and c1.tell() + count * 64 > boot_start:
             for s in (c1, c2):
                 s.write(bytes(boot_end - s.tell()))
+        utility = 0xFFFD * 64
+        if c1.tell() < 0x10000 * 64 and c1.tell() + count * 64 > utility:
+            # the utility tiles ($FFFD-$FFFF) go in last, at their fixed place
+            for s in (c1, c2):
+                s.write(bytes(0x10000 * 64 - s.tell()))
+        if count == 2 and (c1.tell() // 64) & 0xFFFF == 0xFFFF:
+            # a two-tile strip's second tile is reached by a 16-bit add
+            for s in (c1, c2):
+                s.write(bytes(64))
         tile = c1.tell() // 64
         a, b = encode_image(indexed, count)
         c1.write(a)
@@ -552,6 +543,101 @@ def build():
         "echo", "atlas", "viper", "mirage"
     ]
     fighters.sort(key=lambda f: order.index(f.id) if f.id in order else 99)
+    # Fighter Select portraits (32x32, 2x2 tiles each) and cursor bracket frame
+    port_imgs = []
+    for f in fighters:
+        if f.authored is not None:
+            from native_art_io import indexed
+            manifest=json.loads((f.authored_folder/'manifest.json').read_text())
+            portrait,_=indexed(f.authored_folder/manifest['portrait_small'],(32,32))
+            port_imgs.append(portrait)
+        else:port_imgs.append(portrait_gen.generate_portrait(f.id))
+    cur_img = portrait_gen.generate_cursor_frame()
+    port_block = np.vstack(port_imgs + [cur_img])
+    port_tile = place(port_block)
+    header.append(f"#define SLF_PORTRAIT_TILE {port_tile}u")
+    header.append(f"#define SLF_CURSOR_TILE {port_tile + len(fighters) * 4}u")
+    # The select screen's wall of faces (palettes 32-47: the stage is not up there)
+    import select_wall
+    ready = [int(f.authored is not None) for f in fighters]
+    wall_lines, wall_preview = select_wall.build([f.id for f in fighters], place, emit, PAL_STAGE, ready)
+    header.extend(wall_lines)
+    Image.fromarray(wall_preview).save(OUT / "select-wall.png")
+    cursor_pals = [
+        pal16([(0, 0, 0)] + [(0, 0, 0)] * 13 + [(255, 255, 255), (255, 60, 60)]),
+        pal16([(0, 0, 0)] + [(0, 0, 0)] * 13 + [(255, 255, 255), (60, 180, 255)]),
+    ]
+    header.append("static const uint16_t slf_cursor_pals[2][16] = {" + ",".join(
+        "{" + ",".join(str(v) for v in palette_words(p)) + "}" for p in cursor_pals) + "};")
+    # Effects and the projectile, painted: 48x48 frames, a palette a kind.
+    import painted_fx
+    import colorsys
+    pfx = painted_fx.frames()
+    header.append(f"#define SLF_PROJECTILE_TILE {place(np.vstack(pfx['projectile'][0]))}u")
+    proj = pfx['projectile'][1]
+    blue = np.array([[int(v * 255) for v in colorsys.hsv_to_rgb((colorsys.rgb_to_hsv(*(c / 255.0))[0] + 0.6) % 1.0,
+                     *colorsys.rgb_to_hsv(*(c / 255.0))[1:])] for c in proj], np.uint8)
+    header.append("static const uint16_t slf_proj_pals[2][16] = {" + ",".join(
+        "{" + ",".join(str(v) for v in palette_words(p)) + "}" for p in (proj, blue)) + "};")
+    fx = place(np.vstack([f for kind in ('hit', 'guard', 'dust') for f in pfx[kind][0]]))
+    header.append(f"#define SLF_FX_TILE {fx}u")
+    header.append("static const uint16_t slf_fx_pals[3][16] = {" + ",".join(
+        "{" + ",".join(str(v) for v in palette_words(pfx[k][1])) + "}" for k in ('hit', 'guard', 'dust')) + "};")
+    sh = place(shadow())
+    header.append(f"#define SLF_SHADOW_TILE {sh}u")
+    header.append("static const uint16_t slf_shadow_pal[16] = {" + ",".join(
+        str(v) for v in palette_words(pal16([(0, 0, 0), (52, 30, 18)]))) + "};")
+    identity_packed = []
+    # Arenas: one painted 512x224 panorama each, sixteen palettes chosen
+    # tile by tile. (The far layer is not drawn: its tables name the near art.)
+    st_near_tiles, st_far_tiles, st_maps, st_far_maps, st_pals = [], [], [], [], []
+    st_dark_pals = []
+    for s_idx, (s_name, s_desc, _) in enumerate(STAGES):
+        authored = GAME / "assets/authored" / (s_name + "-master.png")
+        if not authored.exists():raise ValueError("Missing arena artwork: " + s_name)
+        master = Image.open(authored).convert("RGBA")
+        if master.size != (512, 224):
+            master = master.resize((512, 224), Image.Resampling.LANCZOS)
+        near_rgba = np.asarray(master)
+        indices, banks, assignment = quantize(near_rgba, bank_limit=STAGE_BANKS)
+        st_near = place(indices)
+        st_near_tiles.append(st_near)
+        st_far_tiles.append(st_near)
+        st_maps.append(assignment.flatten() + PAL_STAGE)
+        st_far_maps.append(assignment[:10].flatten() + PAL_STAGE)
+        bank_pals = [palette_words(b) for b in banks]
+        dark_pals = [palette_words((np.asarray(b,dtype=np.float32)*.38).astype(np.uint8)) for b in banks]
+        while len(dark_pals) < STAGE_BANKS:dark_pals.append([0]*16)
+        st_dark_pals.append(dark_pals)
+        while len(bank_pals) < STAGE_BANKS:
+            bank_pals.append([0] * 16)
+        st_pals.append(bank_pals)
+        if s_idx == 0:
+            far_rgba = near_rgba
+    n = len(STAGES)
+
+    header.append(f"#define SLF_STAGE_COUNT {n}u\n#define SLF_STAGE_COLS 32u\n#define SLF_STAGE_ROWS 14u\n#define SLF_STAGE_W 512")
+    header.append(f"#define SLF_STAGE_FAR_ROWS 10u\n#define SLF_PAL_STAGE {PAL_STAGE}u\n#define SLF_STAGE_BANKS {STAGE_BANKS}u")
+    header.append(emit("slf_stage_tiles", st_near_tiles))
+    header.append(emit("slf_stage_far_tiles", st_far_tiles))
+    for s_idx in range(n):
+        header.append(emit(f"slf_stage_map_{s_idx}", st_maps[s_idx], "uint8_t"))
+        header.append(emit(f"slf_stage_far_map_{s_idx}", st_far_maps[s_idx], "uint8_t"))
+    header.append(f"static const uint8_t * const slf_stage_maps[{n}] = {{" + ",".join(f"slf_stage_map_{i}" for i in range(n)) + "};")
+    header.append(f"static const uint8_t * const slf_stage_far_maps[{n}] = {{" + ",".join(f"slf_stage_far_map_{i}" for i in range(n)) + "};")
+    header.append(f"static const uint16_t slf_stage_pals[{n}][{STAGE_BANKS}][16] = {{" + ",".join(
+        "{" + ",".join("{" + ",".join(str(v) for v in b) + "}" for b in p) + "}" for p in st_pals) + "};")
+    header.append(f"static const char * const slf_stage_names[{n}] = {{" + ",".join(f'"{d[1]}"' for d in STAGES) + "};")
+    header.append(f"static const uint16_t slf_stage_dark_pals[{n}][{STAGE_BANKS}][16] = {{" + ",".join(
+        "{" + ",".join("{" + ",".join(str(v) for v in bank) + "}" for bank in stage) + "}" for stage in st_dark_pals) + "};")
+    header.append("#define SLF_STAGE_TILE slf_stage_tiles[0]\n#define SLF_STAGE_FAR_TILE slf_stage_far_tiles[0]")
+    header.append("#define slf_stage_map slf_stage_maps[0]\n#define slf_stage_far_map slf_stage_far_maps[0]")
+    header.append("#define slf_stage_pal slf_stage_pals[0]")
+    comp = np.array(far_rgba, copy=True)
+    comp[:, :, 3] = 255
+    Image.fromarray(comp).save(OUT / "stage.png")
+    # The fighters after the shared art: every other picture keeps a 16-bit
+    # tile number, and the fighters' strips carry their high address bits.
     bases, pals, names, styles, origins = [], [], [], [], []
     bank_pals, bank_offsets, bank_counts = [], [], []
     strips = StripPack(place)
@@ -595,103 +681,26 @@ def build():
     header.append("static const char * const slf_fighter_style[] = {" + ",".join(f'"{s}"' for s in styles) + "};")
     fighter_stages = [stage_idx_for_fighter(f) for f in fighters]
     header.append(emit("slf_fighter_stages", fighter_stages, "uint8_t"))
-    # Fighter Select portraits (32x32, 2x2 tiles each) and cursor bracket frame
-    port_imgs = []
+    # Fighters still waiting for their painted set stay locked on the select
+    # wall and out of the CPU line-ups.
+    header.append(emit("slf_fighter_ready", [int(f.authored is not None) for f in fighters], "uint8_t"))
+    # Voices (slf_voices.py): the shout for each move, and each fighter's voice type.
+    import slf_voices
+    voice_plan = slf_voices.plan(slf_voices.load_fighters())
+    header.append(f"#define SLF_SND_ANNOUNCER {slf_voices.announcer_base(voice_plan)}u")
+    header.append(f"#define SLF_SND_TYPES {slf_voices.type_base(voice_plan)}u")
+    header.append(emit("slf_voice_type", [slf_voices.CAST[f.id]["type"] for f in fighters], "uint8_t"))
+    move_voice, move_voice_ofs = [], []
     for f in fighters:
-        if f.authored is not None:
-            from native_art_io import indexed
-            manifest=json.loads((f.authored_folder/'manifest.json').read_text())
-            portrait,_=indexed(f.authored_folder/manifest['portrait_small'],(32,32))
-            port_imgs.append(portrait)
-        else:port_imgs.append(portrait_gen.generate_portrait(f.id))
-    cur_img = portrait_gen.generate_cursor_frame()
-    port_block = np.vstack(port_imgs + [cur_img])
-    port_tile = place(port_block)
-    header.append(f"#define SLF_PORTRAIT_TILE {port_tile}u")
-    header.append(f"#define SLF_CURSOR_TILE {port_tile + len(fighters) * 4}u")
-    cursor_pals = [
-        pal16([(0, 0, 0)] + [(0, 0, 0)] * 13 + [(255, 255, 255), (255, 60, 60)]),
-        pal16([(0, 0, 0)] + [(0, 0, 0)] * 13 + [(255, 255, 255), (60, 180, 255)]),
-    ]
-    header.append("static const uint16_t slf_cursor_pals[2][16] = {" + ",".join(
-        "{" + ",".join(str(v) for v in palette_words(p)) + "}" for p in cursor_pals) + "};")
-    projectile = np.vstack([projectile_pixels(k) for k in range(2)])
-    header.append(f"#define SLF_PROJECTILE_TILE {place(projectile)}u")
-    # Effects: 3 kinds x 4 frames, 32x32 (2x2 tiles).
-    fx = place(np.vstack([spark(fr, kind) for kind in range(3) for fr in range(4)]))
-    header.append(f"#define SLF_FX_TILE {fx}u")
-    header.append("static const uint16_t slf_fx_pals[3][16] = {" + ",".join(
-        "{" + ",".join(str(v) for v in palette_words(pal16(p))) + "}" for p in SPARK_PALS) + "};")
-    sh = place(shadow())
-    header.append(f"#define SLF_SHADOW_TILE {sh}u")
-    header.append("static const uint16_t slf_shadow_pal[16] = {" + ",".join(
-        str(v) for v in palette_words(pal16([(0, 0, 0), (52, 30, 18)]))) + "};")
-    identity_packed = []
-    # 4 Arenas: near (512x224) and far (512x160).
-    stage_defs = [
-        ("dojo", stage_dojo_near(), stage_dojo_far(), "ARATA MOUNTAIN DOJO - JAPAN"),
-        ("bangkok", stage_bangkok_near(), stage_bangkok_far(), "BANGKOK NIGHT STADIUM - THAILAND"),
-        ("brooklyn", stage_brooklyn_near(), stage_brooklyn_far(), "BROOKLYN UNDERGROUND GYM - USA"),
-        ("chimera", stage_chimera_near(), stage_chimera_far(), "PROJECT CHIMERA FACILITY - THE VEIL"),
-    ]
-    st_near_tiles, st_far_tiles, st_maps, st_far_maps, st_pals = [], [], [], [], []
-    st_dark_pals = []
-    for s_idx, (s_name, near_rgba, far_rgba, s_desc) in enumerate(stage_defs):
-        authored = GAME / "assets/authored" / (s_name + "-master.png")
-        native_source = GAME / "assets/authored/arenas" / (s_name + ".png")
-        if native_source.exists():
-            from native_art_io import indexed, palette_tiles
-            native, colors = indexed(native_source,(512,224))
-            indices, banks, assignment = palette_tiles(np.vstack([native,native[:160]]),colors,limit=8)
-        else:
-            if not authored.exists():raise ValueError("Missing arena artwork: " + s_name)
-            near_rgba = np.asarray(Image.open(authored).convert("RGBA").resize((512,224), Image.Resampling.NEAREST))
-            far_rgba = near_rgba[:160].copy()
-            both_rgba = np.vstack([near_rgba, far_rgba])
-            indices, banks, assignment = quantize(both_rgba, bank_limit=8)
-        ind_near = indices[:224, :]
-        ind_far = indices[224:, :]
-        assign_near = assignment[:14, :]
-        assign_far = assignment[14:, :]
-        st_near = place(ind_near)
-        st_far = place(ind_far)
-        if native_source.exists():identity_packed.extend([(s_name+"-native-near",ind_near,st_near),(s_name+"-native-far",ind_far,st_far)])
-        st_near_tiles.append(st_near)
-        st_far_tiles.append(st_far)
-        st_maps.append(assign_near.flatten() + PAL_STAGE)
-        st_far_maps.append(assign_far.flatten() + PAL_STAGE)
-        bank_pals = [palette_words(b) for b in banks]
-        dark_pals = [palette_words((np.asarray(b,dtype=np.float32)*.38).astype(np.uint8)) for b in banks]
-        while len(dark_pals)<8:dark_pals.append([0]*16)
-        st_dark_pals.append(dark_pals)
-        while len(bank_pals) < 8:
-            bank_pals.append([0] * 16)
-        st_pals.append(bank_pals)
-
-    header.append(f"#define SLF_STAGE_COUNT 4u\n#define SLF_STAGE_COLS 32u\n#define SLF_STAGE_ROWS 14u\n#define SLF_STAGE_W 512")
-    header.append(f"#define SLF_STAGE_FAR_ROWS 10u\n#define SLF_PAL_STAGE {PAL_STAGE}u\n#define SLF_STAGE_BANKS 8u")
-    header.append(emit("slf_stage_tiles", st_near_tiles))
-    header.append(emit("slf_stage_far_tiles", st_far_tiles))
-    for s_idx in range(4):
-        header.append(emit(f"slf_stage_map_{s_idx}", st_maps[s_idx], "uint8_t"))
-        header.append(emit(f"slf_stage_far_map_{s_idx}", st_far_maps[s_idx], "uint8_t"))
-    header.append("static const uint8_t * const slf_stage_maps[4] = {" + ",".join(f"slf_stage_map_{i}" for i in range(4)) + "};")
-    header.append("static const uint8_t * const slf_stage_far_maps[4] = {" + ",".join(f"slf_stage_far_map_{i}" for i in range(4)) + "};")
-    header.append("static const uint16_t slf_stage_pals[4][8][16] = {" + ",".join(
-        "{" + ",".join("{" + ",".join(str(v) for v in b) + "}" for b in p) + "}" for p in st_pals) + "};")
-    header.append("static const char * const slf_stage_names[4] = {" + ",".join(f'"{d[3]}"' for d in stage_defs) + "};")
-    header.append("static const uint16_t slf_stage_dark_pals[4][8][16] = {" + ",".join(
-        "{" + ",".join("{" + ",".join(str(v) for v in bank) + "}" for bank in stage) + "}" for stage in st_dark_pals) + "};")
-    header.append("#define SLF_STAGE_TILE slf_stage_tiles[0]\n#define SLF_STAGE_FAR_TILE slf_stage_far_tiles[0]")
-    header.append("#define slf_stage_map slf_stage_maps[0]\n#define slf_stage_far_map slf_stage_far_maps[0]")
-    header.append("#define slf_stage_pal slf_stage_pals[0]")
-    comp = np.array(near_rgba, copy=True)
-    comp_trans = comp[:160, :, 3] < 128
-    comp[:160, :, :3][comp_trans] = far_rgba[:160, :, :3][comp_trans]
-    comp[:, :, 3] = 255
-    Image.fromarray(comp).save(OUT / "stage.png")
+        move_voice_ofs.append(len(move_voice))
+        move_voice.extend(slf_voices.move_samples(f.data, voice_plan))
+    header.append(emit("slf_move_voice_ofs", move_voice_ofs))
+    header.append(emit("slf_move_voice", move_voice, "uint8_t"))
+    identity_tables, high_packed = rebirth_assets.tables(place)
+    header.extend(identity_tables);identity_packed.extend(high_packed)
     end = c1.tell()
-    # Boot logo (bank $49), then the utility tiles.
+    # Boot logo (bank $49), then the utility tiles at $FFFD-$FFFF (place()
+    # stepped over both when the art ran past them).
     lo, hi = encode_image(logo_pixels(), 60)
     for s, lane in zip((c1, c2), (lo, hi)):
         if s.tell() < boot_start:
@@ -700,12 +709,16 @@ def build():
         lane = lane[:14 * 64] + lane[15 * 64:]
         s.write(lane.ljust(256 * 64, b"\0"))
         s.seek(max(end, boot_end))
-    write_utility_tiles(c1, c2)
-    # Keep legacy game art/utility tiles in their original address space.
-    # Native presentation uses C address bit 16, verified in the renderer
-    # and decoded-ROM checker rather than wrapped into a 16-bit tile ID.
-    identity_tables, high_packed = rebirth_assets.tables(place)
-    header.extend(identity_tables);identity_packed.extend(high_packed)
+    utility = 0xFFFD * 64
+    if c1.tell() <= utility:
+        write_utility_tiles(c1, c2)
+    else:
+        top = c1.tell()
+        for s in (c1, c2):
+            s.seek(utility)
+        write_utility_tiles(c1, c2)
+        for s in (c1, c2):
+            s.seek(top)
     end = c1.tell()
     if end > 0x800000:raise ValueError('C-ROM lane exceeds the 8 MiB cartridge capacity')
     for stream in (c1,c2):stream.write(bytes(0x800000-stream.tell()))
@@ -753,14 +766,15 @@ def main():
     header += fix_defines
     header.append("static "+fix_palette_definition())
     public_names = ("slf_fighter_defs", "slf_fighter_strip_maps", "slf_fighter_strip_offsets",
-                    "slf_fighter_pals", "slf_fighter_origin", "slf_fighter_style", "slf_fighter_stages",
-                    "slf_cursor_pals", "slf_fx_pals", "slf_shadow_pal", "slf_stage_pals",
+                    "slf_fighter_pals", "slf_fighter_origin", "slf_fighter_style", "slf_fighter_stages", "slf_fighter_ready", "slf_voice_type", "slf_move_voice_ofs", "slf_move_voice",
+                    "slf_cursor_pals", "slf_fx_pals", "slf_proj_pals", "slf_shadow_pal", "slf_stage_pals",
                     "slf_stage_far_maps", "slf_stage_maps", "slf_stage_far_tiles", "slf_stage_tiles",
                     "slf_stage_names", "slf_fix_pals", "slf_stage_dark_pals",
                     "slf_rebirth_identity_pal", "slf_rebirth_portrait_tiles", "slf_rebirth_portrait_pals",
                     "slf_hud_plate_pal",
                     "slf_fighter_bank_offsets", "slf_fighter_bank_counts", "slf_fighter_bank_pals",
-                    "slf_presentation_offsets")
+                    "slf_presentation_offsets", "slf_wall_map", "slf_wall_pals", "slf_wall_row_len",
+                    "slf_wall_row_start", "slf_wall_row_off", "slf_face_pals", "slf_face_maps")
     macros=[item for item in header[6:] if item.startswith("#define ")]
     body="\n".join(item for item in header[6:] if not item.startswith("#define "))
     declarations=[]

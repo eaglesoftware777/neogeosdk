@@ -15,6 +15,9 @@
 #define KO_FRAMES     150u
 #define TIMEUP_FRAMES  90u
 #define END_FRAMES    130u
+#define HOP_FRAMES      4u     /* up released this soon after take-off: a short hop */
+#define MOTION_LATE     7u     /* frames a motion's last step may precede its button */
+#define NGF_CANCEL_KARA 0x08u  /* internal: a second button joins the normal just started */
 
 /* ===================================================================== */
 /*  Input                                                                 */
@@ -145,14 +148,14 @@ static const uint16_t motion_steps[NGF_MOTION_COUNT][6] = {
     {DIR(2), DIR(4), DIR(2), DIR(1), DIR(4)},
 };
 static const uint8_t motion_len[NGF_MOTION_COUNT] = {0, 3, 3, 3, 3, 3, 3, 5, 5};
-static const uint8_t motion_window[NGF_MOTION_COUNT] = {0, 15, 15, 15, 15, 22, 22, 30, 30, 0, 0, 30, 48, 12, 12, 0, 0, 0};
+static const uint8_t motion_window[NGF_MOTION_COUNT] = {0, 26, 26, 26, 26, 34, 34, 46, 46, 0, 0, 40, 60, 14, 14, 0, 0, 0};
 
 /* Clockwise octants: R, DR, D, DL, L, UL, U, UR. Neutral is ignored.
  * Cardinal-only turns are lenient, but reversals/opposite jumps restart the
  * path. Four ordered cardinal sectors are a 270-degree execution; eight
  * require a second traversal. The last diagonal has one-octant leniency,
  * allowing a grounded command before an up-diagonal initiates a jump. A
- * button may follow within 4 frames. */
+ * button may follow within MOTION_LATE frames. */
 static uint8_t NEOGEO_USER ordered_rotation(const NGFInput *in, uint8_t facing_left,
     uint8_t window, uint8_t backwards, uint8_t required)
 {
@@ -175,7 +178,7 @@ static uint8_t NEOGEO_USER ordered_rotation(const NGFInput *in, uint8_t facing_l
         previous = current;
         last_age = age;
         if ((uint8_t)(count + (current & 1u)) >= required &&
-            travel >= (required == 8u ? 13u : 5u) && age <= 4u) return 1u;
+            travel >= (required == 8u ? 13u : 5u) && age <= MOTION_LATE) return 1u;
     }
     return 0u;
 }
@@ -219,11 +222,11 @@ uint8_t NEOGEO_USER ngf_input_motion(const NGFInput *in, uint8_t motion, uint8_t
     default:
         break;
     }
-    /* The motion must end within the last five frames, steps in order. */
+    /* The motion must end within the last few frames, steps in order. */
     step = motion_len[motion];
     for (ago = 0; ago < window && step; ago++) {
         uint8_t d = ngf_input_dir(in, ago, facing_left);
-        if (step == motion_len[motion] && ago > 4u) return 0;
+        if (step == motion_len[motion] && ago > MOTION_LATE) return 0;
         if ((motion_steps[motion][step - 1u] >> d) & 1u) step--;
     }
     return (uint8_t)(step == 0u);
@@ -455,6 +458,8 @@ static void NEOGEO_USER apply_hit(NGFMatch *m, uint8_t att_i, const HitParams *h
         uint16_t dmg = hp->damage;
         uint8_t scale = def->combo > 5u ? 5u : def->combo;
         dmg = (uint16_t)(dmg * (10u - scale) / 10u);
+        if (att->max_super) dmg = (uint16_t)(dmg + dmg / 2u);
+        else if (att->max_timer) dmg = (uint16_t)(dmg + dmg / 4u);
         if (def->state == NGF_S_ATTACK && def->counter) {
             dmg = (uint16_t)(dmg + dmg / 4u);
             event(m, NGF_EV_HIT, att_i, 0xFE, ex, ey);   /* counter */
@@ -616,6 +621,12 @@ static void NEOGEO_USER start_move(NGFMatch *m, uint8_t who, uint8_t k)
 {
     NGFFighter *f = &m->f[who], *o = &m->f[who ^ 1u];
     const NGFMove *mv = &f->def->moves[k];
+    /* A+B out of blockstun: a guard-cancel roll for one stock. */
+    if (f->state == NGF_S_BLOCK && mv->kind == NGF_KIND_EVADE) {
+        f->power = (uint16_t)(f->power - NGF_POWER_STOCK);
+        f->invuln = 10;
+    }
+    f->max_super = 0;
     f->move = mv;
     f->move_index = k;
     f->state_timer = 0;
@@ -626,17 +637,25 @@ static void NEOGEO_USER start_move(NGFMatch *m, uint8_t who, uint8_t k)
     if (f->grounded) f->vx = 0;
     else f->air_used = 1;
     if (mv->kind == NGF_KIND_SUPER) {
-        f->power = (uint16_t)(f->power - mv->cost * NGF_POWER_STOCK);
+        if (f->max_timer) {               /* the MAX super: free, stronger, ends the mode */
+            f->max_timer = 0;
+            f->max_super = 1;
+        } else {
+            f->power = (uint16_t)(f->power - mv->cost * NGF_POWER_STOCK);
+        }
         m->super_freeze = 30u;
         m->super_who = who;
-        event(m, NGF_EV_SUPER_FREEZE, who, mv->cost, ngf_fighter_px(f), ngf_fighter_py(f));
+        event(m, NGF_EV_SUPER_FREEZE, who, (uint8_t)(mv->cost | (f->max_super ? 0x80u : 0u)),
+              ngf_fighter_px(f), ngf_fighter_py(f));
     }
     if (mv->kind == NGF_KIND_GUARD_ATTACK) f->spirit = (uint8_t)(f->spirit - mv->cost);
     ngf_input_consume(&f->input, mv->buttons);
+    f->input.kara = mv->kind <= NGF_KIND_COMMAND ? mv->buttons : 0u;
     if (mv->motion && mv->motion < NGF_MOTION_DASH) f->input.motion_frames = 0;
     event(m, NGF_EV_MOVE, who, mv->kind, ngf_fighter_px(f), ngf_fighter_py(f));
     if (mv->kind == NGF_KIND_THROW) {
-        if (!o->cpu && (ngf_input_pressed(&o->input, NGF_BTN_C, 4) || ngf_input_pressed(&o->input, NGF_BTN_D, 4))) {
+        if (o->cpu ? (uint8_t)(rnd(m) % 100u) < (uint8_t)(m->cpu[who ^ 1u].level * 5u) :
+                     (ngf_input_pressed(&o->input, NGF_BTN_C, 4) || ngf_input_pressed(&o->input, NGF_BTN_D, 4))) {
             /* Broken: both pushed apart. */
             f->state = NGF_S_IDLE;
             f->move = 0;
@@ -672,19 +691,22 @@ static uint8_t NEOGEO_USER try_moves(NGFMatch *m, uint8_t who, uint8_t cancel)
         if ((mv->stance & NGF_STANCE_CLOSE) && dist > f->def->close_range) continue;
         if ((mv->stance & NGF_STANCE_FAR) && dist <= f->def->close_range) continue;
         if (f->state == NGF_S_BLOCK) {
-            if (mv->kind != NGF_KIND_GUARD_ATTACK || f->spirit < mv->cost) continue;
+            if (mv->kind == NGF_KIND_GUARD_ATTACK) { if (f->spirit < mv->cost) continue; }
+            else if (mv->kind != NGF_KIND_EVADE || mv->motion || f->power < NGF_POWER_STOCK) continue;
         } else if (mv->kind == NGF_KIND_GUARD_ATTACK) {
             continue;
         }
         if (cancel) {
-            uint8_t ok = 0;
+            uint8_t ok = 0, kara = f->input.kara;
+            if ((cancel & NGF_CANCEL_KARA) && mv->buttons == kara && mv->kind <= NGF_KIND_COMMAND) continue;
             if ((cancel & NGF_CANCEL_CHAIN) && mv->kind == NGF_KIND_NORMAL && k > f->move_index) ok = 1;
-            if ((cancel & NGF_CANCEL_SPECIAL) && mv->kind == NGF_KIND_SPECIAL) ok = 1;
+            if ((cancel & NGF_CANCEL_SPECIAL) && mv->kind == NGF_KIND_SPECIAL && k != f->move_index) ok = 1;
             if ((cancel & (NGF_CANCEL_SPECIAL | NGF_CANCEL_SUPER)) && mv->kind == NGF_KIND_SUPER) ok = 1;
+            if ((cancel & NGF_CANCEL_KARA) && kara && (mv->buttons & kara) == kara && mv->buttons != kara) ok = 1;
             if (!ok) continue;
         }
         if (stance == NGF_STANCE_AIR && f->air_used) continue;
-        if (mv->kind == NGF_KIND_SUPER && f->power < (uint16_t)(mv->cost * NGF_POWER_STOCK)) continue;
+        if (mv->kind == NGF_KIND_SUPER && !f->max_timer && f->power < (uint16_t)(mv->cost * NGF_POWER_STOCK)) continue;
         if (mv->projectile && has_projectile(m, who)) continue;
         btn_ok = ngf_input_pressed(&f->input, mv->buttons,
                                    (uint8_t)(mv->kind <= NGF_KIND_COMMAND || mv->kind == NGF_KIND_THROW ? 4u : 5u));
@@ -700,19 +722,50 @@ static uint8_t NEOGEO_USER try_moves(NGFMatch *m, uint8_t who, uint8_t cancel)
     return 0;
 }
 
+/* B+C (A+B+C works too): spend a stock to enter MAX mode. */
+static uint8_t NEOGEO_USER max_start(NGFMatch *m, uint8_t who)
+{
+    NGFFighter *f = &m->f[who];
+    if (f->max_timer || !f->grounded || f->power < NGF_POWER_STOCK) return 0;
+    if (!ngf_input_pressed(&f->input, NGF_BTN_B | NGF_BTN_C, 4u)) return 0;
+    f->power = (uint16_t)(f->power - NGF_POWER_STOCK);
+    f->max_timer = NGF_MAX_FRAMES;
+    ngf_input_consume(&f->input, NGF_BTN_A | NGF_BTN_B | NGF_BTN_C);
+    f->state = NGF_S_IDLE;
+    f->move = 0;
+    f->vx = 0;
+    set_anim(f, NGF_A_IDLE, 1);
+    m->super_freeze = 20u;
+    m->super_who = who;
+    event(m, NGF_EV_MAX, who, 0, ngf_fighter_px(f), ngf_fighter_py(f));
+    return 1;
+}
+
+/* Up from the ground: a jump, a short hop if up is let go at once, and
+ * longer out of a run. */
+static void NEOGEO_USER jump_start(NGFFighter *f, uint8_t dir, uint8_t run)
+{
+    const NGFFighterDef *d = f->def;
+    int16_t vx = dir == 9u ? d->jump_vx : dir == 7u ? -d->jump_vx : 0;
+    if (run && vx > 0) vx = (int16_t)(vx + vx / 2);
+    f->state = NGF_S_JUMP;
+    f->state_timer = 0;
+    f->grounded = 0;
+    f->air_used = 0;
+    f->hop = 1;
+    f->vh = d->jump_vy;
+    f->vx = (int16_t)(vx * sign_of(f));
+    set_anim(f, NGF_A_JUMP, 1);
+}
+
 static void NEOGEO_USER free_move(NGFMatch *m, uint8_t who, uint8_t controls)
 {
     NGFFighter *f = &m->f[who], *o = &m->f[who ^ 1u];
     const NGFFighterDef *d = f->def;
     uint8_t dir = controls ? ngf_input_dir(&f->input, 0, f->facing_left) : 5u;
-    if (controls && try_moves(m, who, 0)) return;
+    if (controls && (max_start(m, who) || try_moves(m, who, 0))) return;
     if (dir >= 7u) {
-        f->state = NGF_S_JUMP;
-        f->grounded = 0;
-        f->air_used = 0;
-        f->vh = d->jump_vy;
-        f->vx = (int16_t)((dir == 9u ? d->jump_vx : dir == 7u ? -d->jump_vx : 0) * sign_of(f));
-        set_anim(f, NGF_A_JUMP, 1);
+        jump_start(f, dir, 0);
         return;
     }
     if (controls && ngf_input_motion(&f->input, NGF_MOTION_DASH, f->facing_left, 0)) {
@@ -780,6 +833,7 @@ static void NEOGEO_USER fighter_step(NGFMatch *m, uint8_t who, uint8_t controls)
     NGFFighter *f = &m->f[who], *o = &m->f[who ^ 1u];
     const NGFFrame *fr;
     if (f->invuln) f->invuln--;
+    if (f->max_timer) f->max_timer--;
     if (f->state != NGF_S_BLOCK && !(m->frame & (GUARD_REGEN - 1u)) && f->guard < f->def->guard_max) f->guard++;
     switch (f->state) {
     case NGF_S_IDLE:
@@ -790,6 +844,14 @@ static void NEOGEO_USER fighter_step(NGFMatch *m, uint8_t who, uint8_t controls)
         if (f->state == NGF_S_IDLE || f->state == NGF_S_CROUCH) anim_step(m, who);
         break;
     case NGF_S_JUMP:
+        if (f->state_timer < 255u) f->state_timer++;
+        if (f->hop) {
+            if (f->state_timer > HOP_FRAMES) f->hop = 0;
+            else if (!controls || ngf_input_dir(&f->input, 0, f->facing_left) < 7u) {
+                f->vh = (int16_t)(f->vh * 11 / 16);
+                f->hop = 0;
+            }
+        }
         if (controls) try_moves(m, who, 0);
         anim_step(m, who);
         break;
@@ -798,7 +860,11 @@ static void NEOGEO_USER fighter_step(NGFMatch *m, uint8_t who, uint8_t controls)
         f->vx = (int16_t)(f->def->dash * sign_of(f));
         if (!(m->frame & 3u) && f->spirit < NGF_SPIRIT_MAX) f->spirit++;
         anim_step(m, who);
-        if (controls && try_moves(m, who, 0)) break;
+        if (controls && (max_start(m, who) || try_moves(m, who, 0))) break;
+        if (controls && ngf_input_dir(&f->input, 0, f->facing_left) >= 7u) {
+            jump_start(f, ngf_input_dir(&f->input, 0, f->facing_left), 1);
+            break;
+        }
         if (f->state_timer >= 10u && (!controls || ngf_input_dir(&f->input, 0, f->facing_left) != 6u)) {
             f->state = NGF_S_IDLE;
             f->vx = 0;
@@ -809,10 +875,20 @@ static void NEOGEO_USER fighter_step(NGFMatch *m, uint8_t who, uint8_t controls)
         anim_step(m, who);
         break;
     case NGF_S_ATTACK: {
-        uint8_t done;
-        if (f->move_hit && f->move && f->move->cancel && controls && try_moves(m, who, f->move->cancel)) break;
-        if (f->move && f->move->kind == NGF_KIND_NORMAL && f->state_timer <= 2u && controls &&
-            try_moves(m, who, NGF_CANCEL_CHAIN | NGF_CANCEL_SPECIAL | NGF_CANCEL_SUPER)) break;
+        uint8_t done, cancel = f->move ? f->move->cancel : 0u;
+        if (f->max_timer && f->move && f->move->kind == NGF_KIND_SPECIAL) cancel |= NGF_CANCEL_SPECIAL | NGF_CANCEL_SUPER;
+        if (f->move_hit && cancel && controls && try_moves(m, who, cancel)) break;
+        /* A connected normal may be cancelled into MAX mode. */
+        if (f->move_hit && f->move && f->move->kind <= NGF_KIND_COMMAND && controls && max_start(m, who)) break;
+        /* The first frames of a normal still take a second button (A+B, C+D,
+         * B+C) or a special: the buttons need not land on the same frame. */
+        if (f->move && f->move->kind <= NGF_KIND_COMMAND && f->state_timer <= 2u && controls) {
+            uint8_t keep = f->input.pending;
+            f->input.pending |= f->input.kara;
+            if (max_start(m, who) ||
+                try_moves(m, who, NGF_CANCEL_CHAIN | NGF_CANCEL_SPECIAL | NGF_CANCEL_SUPER | NGF_CANCEL_KARA)) break;
+            f->input.pending = keep;
+        }
         f->state_timer++;
         done = anim_step(m, who);
         if (f->move && f->move->kind == NGF_KIND_THROW && done) {
@@ -984,143 +1060,492 @@ static void NEOGEO_USER face_each_other(NGFMatch *m)
 /* ===================================================================== */
 /*  CPU                                                                   */
 /* ===================================================================== */
-static void NEOGEO_USER cpu_push(NGFCpu *c, uint8_t raw)
+enum { PLAN_NONE, PLAN_GUARD, PLAN_JUMP_IN, PLAN_WAKE };
+enum { PICK_WALK, PICK_RUN, PICK_JUMP, PICK_HOP, PICK_POKE, PICK_RUSH, PICK_BACK, PICK_WAIT,
+       PICK_THROW, PICK_COMBO, PICK_LOW, PICK_BLOW, PICK_SWEEP, PICK_ROLL, PICK_BACKDASH };
+
+static void NEOGEO_USER cpu_push(NGFCpu *c, uint8_t raw, uint8_t frames)
 {
-    if (c->len < sizeof(c->seq)) c->seq[c->len++] = raw;
+    while (frames-- && c->len < sizeof(c->seq)) c->seq[c->len++] = raw;
 }
 
-static void NEOGEO_USER cpu_queue_move(NGFMatch *m, uint8_t who, uint8_t k)
+static uint8_t NEOGEO_USER chance(NGFMatch *m, uint16_t percent)
+{
+    return (uint8_t)(rnd(m) % 100u < percent);
+}
+
+/* How far in front a move's strike reaches, px. */
+static uint8_t NEOGEO_USER move_reach(const NGFMove *mv)
+{
+    int16_t r = (int16_t)(mv->hit.x + mv->hit.w);
+    return (uint8_t)(r < 0 ? 0 : r > 200 ? 200 : r);
+}
+
+static uint8_t NEOGEO_USER move_invuln(const NGFFighterDef *d, const NGFMove *mv)
+{
+    const NGFAnim *a = &d->anims[mv->anim];
+    uint8_t i;
+    for (i = 0; i < a->count && i < 3u; i++)
+        if (d->frames[a->first + i].flags & NGF_FF_INVULN) return 1;
+    return 0;
+}
+
+/* The other fighter's move has missed and has no strike left. */
+static uint8_t NEOGEO_USER recovering(const NGFFighter *o)
+{
+    const NGFAnim *a;
+    uint8_t i;
+    if (o->state != NGF_S_ATTACK || o->move_hit || !o->move || !o->grounded) return 0;
+    a = &o->def->anims[o->anim];
+    for (i = o->frame; i < a->count; i++)
+        if (o->def->frames[a->first + i].flags & NGF_FF_ACTIVE) return 0;
+    return 1;
+}
+
+/* Distance to the nearest enemy projectile flying at us, 0xFFFF none. */
+static uint16_t NEOGEO_USER incoming(const NGFMatch *m, uint8_t who)
+{
+    int16_t x = ngf_fighter_px(&m->f[who]);
+    uint16_t best = 0xFFFFu;
+    uint8_t i;
+    for (i = 0; i < NGF_PROJECTILES; i++) {
+        const NGFProjectile *p = &m->proj[i];
+        int16_t d;
+        if (!p->active || p->owner == who) continue;
+        d = (int16_t)(p->facing_left ? (p->x >> 8) - x : x - (p->x >> 8));
+        if (d >= 0 && (uint16_t)d < best) best = (uint16_t)d;
+    }
+    return best;
+}
+
+static uint8_t NEOGEO_USER find_normal(const NGFFighterDef *d, uint8_t stance, uint8_t button, uint8_t avoid)
+{
+    uint8_t k, best = 0xFFu;
+    for (k = 0; k < d->move_count; k++) {
+        const NGFMove *mv = &d->moves[k];
+        if (mv->kind != NGF_KIND_NORMAL || mv->buttons != button || !(mv->stance & stance)) continue;
+        if ((mv->stance & NGF_STANCE_AIR) != (stance & NGF_STANCE_AIR)) continue;
+        if (!(mv->stance & avoid)) return k;
+        if (best == 0xFFu) best = k;
+    }
+    return best;
+}
+
+static uint8_t NEOGEO_USER role_anim(const NGFCpu *c, const NGFFighterDef *d, uint8_t role)
+{
+    return c->role[role] == 0xFFu ? 0xFFu : d->moves[c->role[role]].anim;
+}
+
+/* Sort the fighter's moves into the roles the CPU plays them in. */
+static void NEOGEO_USER cpu_learn(NGFCpu *c, const NGFFighterDef *d)
+{
+    const NGFCpuProfile *p = &d->cpu_profile;
+    uint8_t k;
+    for (k = 0; k < NGF_CPU_ROLES; k++) c->role[k] = 0xFFu;
+    c->learned = d;
+    c->role[NGF_CPU_POKE] = find_normal(d, NGF_STANCE_STAND, NGF_BTN_D, NGF_STANCE_CLOSE);
+    c->role[NGF_CPU_LOW] = find_normal(d, NGF_STANCE_CROUCH, NGF_BTN_B, 0);
+    c->role[NGF_CPU_JAB] = find_normal(d, NGF_STANCE_CROUCH, NGF_BTN_A, 0);
+    c->role[NGF_CPU_HEAVY] = find_normal(d, NGF_STANCE_STAND, NGF_BTN_C, NGF_STANCE_FAR);
+    c->role[NGF_CPU_SWEEP] = find_normal(d, NGF_STANCE_CROUCH, NGF_BTN_D, 0);
+    c->role[NGF_CPU_AIR] = find_normal(d, NGF_STANCE_AIR, NGF_BTN_D, 0);
+    c->role[NGF_CPU_AIR2] = find_normal(d, NGF_STANCE_AIR, NGF_BTN_C, 0);
+    if (c->role[NGF_CPU_POKE] == 0xFFu && p->poke < d->move_count) c->role[NGF_CPU_POKE] = p->poke;
+    if (c->role[NGF_CPU_SWEEP] == 0xFFu && p->sweep < d->move_count) c->role[NGF_CPU_SWEEP] = p->sweep;
+    if (p->anti_air < d->move_count) c->role[NGF_CPU_ANTI_AIR] = p->anti_air;
+    if (p->special < d->move_count && d->moves[p->special].kind == NGF_KIND_SPECIAL &&
+        d->moves[p->special].damage) c->role[NGF_CPU_RUSH] = p->special;
+    if (p->super_move < d->move_count && d->moves[p->super_move].motion != NGF_MOTION_720)
+        c->role[NGF_CPU_SUPER] = p->super_move;
+    if (p->throw_move < d->move_count) c->role[NGF_CPU_THROW] = p->throw_move;
+    for (k = 0; k < d->move_count; k++) {
+        const NGFMove *mv = &d->moves[k];
+        switch (mv->kind) {
+        case NGF_KIND_SPECIAL:
+            if (!mv->motion || !mv->damage || mv->motion == NGF_MOTION_720) break;
+            if (c->role[NGF_CPU_ANTI_AIR] == 0xFFu && (mv->motion == NGF_MOTION_DP || move_invuln(d, mv))) {
+                c->role[NGF_CPU_ANTI_AIR] = k;
+                break;
+            }
+            if (mv->anim == role_anim(c, d, NGF_CPU_ANTI_AIR) || mv->anim == role_anim(c, d, NGF_CPU_RUSH) ||
+                mv->anim == role_anim(c, d, NGF_CPU_SPECIAL)) break;
+            if (c->role[NGF_CPU_RUSH] == 0xFFu) c->role[NGF_CPU_RUSH] = k;
+            else if (c->role[NGF_CPU_SPECIAL] == 0xFFu) c->role[NGF_CPU_SPECIAL] = k;
+            else if (c->role[NGF_CPU_SPECIAL2] == 0xFFu) c->role[NGF_CPU_SPECIAL2] = k;
+            break;
+        case NGF_KIND_SUPER:
+            if (c->role[NGF_CPU_SUPER] == 0xFFu && mv->motion != NGF_MOTION_720) c->role[NGF_CPU_SUPER] = k;
+            break;
+        case NGF_KIND_THROW:
+            if (c->role[NGF_CPU_THROW] == 0xFFu) c->role[NGF_CPU_THROW] = k;
+            break;
+        case NGF_KIND_EVADE:
+            if (!mv->motion && c->role[NGF_CPU_ROLL] == 0xFFu) c->role[NGF_CPU_ROLL] = k;
+            break;
+        case NGF_KIND_COMMAND:
+            if (mv->buttons == (NGF_BTN_C | NGF_BTN_D) && c->role[NGF_CPU_BLOW] == 0xFFu) c->role[NGF_CPU_BLOW] = k;
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+/* Queue the stick motion and buttons of move k; fast: one frame per step. */
+static void NEOGEO_USER cpu_queue_move(NGFMatch *m, uint8_t who, uint8_t k, uint8_t fast)
 {
     static const uint8_t pads[][6] = {
         {0}, {2, 3, 6}, {2, 1, 4}, {6, 2, 3}, {4, 2, 1}, {4, 1, 2, 3, 6}, {6, 3, 2, 1, 4},
         {2, 3, 6, 2, 3, 6}, {2, 1, 4, 2, 1, 4},
     };
     static const uint8_t lens[] = {0, 3, 3, 3, 3, 5, 5, 6, 6};
-    NGFFighter *f = &m->f[who];
-    NGFCpu *c;
-    if (who > 1u) return;
-    c = &m->cpu[who];
+    static const uint8_t spin[] = {4, 1, 2, 3, 6};
+    NGFCpu *c = &m->cpu[who];
+    const NGFFighter *f = &m->f[who];
     const NGFMove *mv;
-    uint8_t fl = f->facing_left, i, last = 5u;
+    uint8_t fl = f->facing_left, i, last = 5u, step = fast ? 1u : 2u;
     if (k >= f->def->move_count) return;
     mv = &f->def->moves[k];
     c->len = c->pos = 0;
+    c->wait = 0;
     if (mv->motion >= NGF_MOTION_QCF && mv->motion <= NGF_MOTION_DQCB) {
-        for (i = 0; i < lens[mv->motion]; i++) {
-            last = pads[mv->motion][i];
-            cpu_push(c, ngf_raw_from_numpad(last, fl));
-            cpu_push(c, ngf_raw_from_numpad(last, fl));
-        }
+        for (i = 0; i + 1u < lens[mv->motion]; i++) cpu_push(c, ngf_raw_from_numpad(pads[mv->motion][i], fl), step);
+        last = pads[mv->motion][lens[mv->motion] - 1u];
+    } else if (mv->motion == NGF_MOTION_360) {
+        for (i = 0; i < sizeof(spin); i++) cpu_push(c, ngf_raw_from_numpad(spin[i], fl), 1u);
+        last = 9u;                      /* the button lands with the up-diagonal, before any jump */
     } else if (mv->motion == NGF_MOTION_CHARGE_BF) {
-        c->hold = ngf_raw_from_numpad(4, fl);
-        c->wait = (uint8_t)(CHARGE_FRAMES + 2u);
+        cpu_push(c, ngf_raw_from_numpad(4, fl), (uint8_t)(CHARGE_FRAMES + 2u));
         last = 6u;
     } else if (mv->motion == NGF_MOTION_CHARGE_DU) {
-        c->hold = ngf_raw_from_numpad(1, fl);
-        c->wait = (uint8_t)(CHARGE_FRAMES + 2u);
+        cpu_push(c, ngf_raw_from_numpad(1, fl), (uint8_t)(CHARGE_FRAMES + 2u));
         last = 9u;
     } else if (mv->motion == NGF_MOTION_FWD) last = 6u;
     else if (mv->motion == NGF_MOTION_BACK) last = 4u;
     else if (mv->motion == NGF_MOTION_DOWN_FWD) last = 3u;
     else if (mv->stance == NGF_STANCE_CROUCH) {
         last = 2u;
-        cpu_push(c, ngf_raw_from_numpad(2, fl));
+        cpu_push(c, ngf_raw_from_numpad(2, fl), 1u);
     }
-    cpu_push(c, (uint8_t)(ngf_raw_from_numpad(last, fl) | mv->buttons));
-    cpu_push(c, ngf_raw_from_numpad(last == 2u ? 2u : 5u, fl));
+    cpu_push(c, (uint8_t)(ngf_raw_from_numpad(last, fl) | mv->buttons), 1u);
+    cpu_push(c, ngf_raw_from_numpad(last <= 3u ? 2u : 5u, fl), 1u);
+}
+
+static uint8_t NEOGEO_USER cpu_move(NGFMatch *m, uint8_t who, uint8_t k, uint8_t fast)
+{
+    if (k == 0xFFu) return 0;
+    cpu_queue_move(m, who, k, fast);
+    return 1;
+}
+
+static void NEOGEO_USER cpu_jump(NGFCpu *c, uint8_t fl, uint8_t dir, uint8_t hop)
+{
+    c->len = c->pos = 0;
+    cpu_push(c, ngf_raw_from_numpad(dir, fl), hop ? 2u : (uint8_t)(HOP_FRAMES + 2u));
+    c->plan = PLAN_JUMP_IN;
+}
+
+static void NEOGEO_USER cpu_hold(NGFCpu *c, uint8_t raw, uint8_t frames, uint8_t plan)
+{
+    c->hold = raw;
+    c->wait = frames;
+    c->plan = plan;
+}
+
+/* Guard high against jumps and overheads, low otherwise; weaker CPUs guess. */
+static uint8_t NEOGEO_USER cpu_guard(NGFMatch *m, uint8_t who, uint8_t guess)
+{
+    NGFFighter *f = &m->f[who];
+    const NGFFighter *o = &m->f[who ^ 1u];
+    uint8_t lv = m->cpu[who].level, level = o->move ? o->move->level : NGF_LV_MID;
+    uint8_t high = (uint8_t)(!o->grounded || level == NGF_LV_OVERHEAD);
+    if (guess && lv < 9u && chance(m, (uint16_t)((9u - lv) * 4u))) high ^= 1u;
+    f->block_low = (uint8_t)!high;
+    return ngf_raw_from_numpad(high ? 4u : 1u, f->facing_left);
+}
+
+/* A cancellable normal, and the special or super it cancels into once it connects. */
+static uint8_t NEOGEO_USER cpu_combo(NGFMatch *m, uint8_t who, uint8_t starter)
+{
+    NGFCpu *c = &m->cpu[who];
+    const NGFFighter *f = &m->f[who];
+    const NGFFighterDef *d = f->def;
+    uint8_t k = c->role[starter], next = 0xFFu, cancel, pick;
+    if (k == 0xFFu) return 0;
+    cancel = d->moves[k].cancel;
+    if ((cancel & (NGF_CANCEL_SPECIAL | NGF_CANCEL_SUPER)) && chance(m, (uint16_t)(25u + c->level * 8u))) {
+        pick = (uint8_t)(rnd(m) & 3u);
+        if ((f->power >= NGF_POWER_STOCK || f->max_timer) && chance(m, (uint16_t)(15u + c->level * 5u)))
+            next = c->role[NGF_CPU_SUPER];
+        if (next == 0xFFu && (cancel & NGF_CANCEL_SPECIAL)) {
+            next = c->role[pick == 0u ? NGF_CPU_ANTI_AIR : pick == 1u ? NGF_CPU_SPECIAL :
+                           pick == 2u ? NGF_CPU_SPECIAL2 : NGF_CPU_RUSH];
+            if (next == 0xFFu) next = c->role[NGF_CPU_RUSH];
+        }
+    }
+    cpu_queue_move(m, who, k, 0);
+    c->next = next;
+    return 1;
+}
+
+static uint8_t NEOGEO_USER cpu_pick(NGFMatch *m, NGFCpu *c, const uint8_t *weight, uint8_t count)
+{
+    uint16_t total = 0, r;
+    uint8_t i, tries;
+    for (i = 0; i < count; i++) total = (uint16_t)(total + weight[i]);
+    if (!total) return PICK_WAIT;
+    for (tries = 0; tries < 2u; tries++) {
+        r = (uint16_t)(rnd(m) % total);
+        for (i = 0; i < count; i++) {
+            if (r < weight[i]) break;
+            r = (uint16_t)(r - weight[i]);
+        }
+        if (i != c->last || weight[i] == total) break;   /* vary the choice */
+    }
+    c->last = i;
+    return i;
 }
 
 uint8_t NEOGEO_USER ngf_cpu_input(NGFMatch *m, uint8_t who)
 {
     NGFCpu *c = &m->cpu[who];
     NGFFighter *f = &m->f[who], *o = &m->f[who ^ 1u];
-    const NGFCpuProfile *cpu = &f->def->cpu_profile;
-    uint16_t dist, r;
-    uint8_t lv = c->level, fl = f->facing_left, threat;
-    if (c->wait) { c->wait--; return c->hold; }
+    const NGFFighterDef *d = f->def;
+    uint8_t lv = c->level, fl = f->facing_left;
+    uint8_t react = (uint8_t)(lv >= 10u ? 4u : 14u - lv);
+    uint8_t ready = (uint8_t)(f->state == NGF_S_IDLE || f->state == NGF_S_CROUCH || f->state == NGF_S_DASH);
+    uint8_t weight[PICK_BACKDASH + 1], i;
+    uint16_t dist, shot;
+    if (c->learned != d) cpu_learn(c, d);
+    /* Whether this CPU saw the other fighter's attack coming is decided once,
+     * as it starts: a guard has to be up before a fast normal lands. */
+    if (o->state == NGF_S_ATTACK && o->state_timer == 1u) c->judge = chance(m, (uint16_t)(25u + lv * 7u));
+    if (o->state != NGF_S_ATTACK) c->judge = 0;
     if (c->pos < c->len) return c->seq[c->pos++];
     c->len = c->pos = 0;
-    c->hold = 0;
-    f->block_low = 0;
-    if (m->state != NGF_M_FIGHT) return 0;
+    if (m->state != NGF_M_FIGHT) { c->wait = 0; c->next = 0xFFu; return 0; }
     dist = ngf_distance(m);
-    r = (uint16_t)(rnd(m) % 100u);
-    threat = (uint8_t)((o->state == NGF_S_ATTACK && dist < (uint16_t)(o->move ? o->move->range + 70u : 120u)) ||
-                       has_projectile(m, (uint8_t)(who ^ 1u)));
-    if (f->state == NGF_S_BLOCK || f->state == NGF_S_HIT) { c->hold = ngf_raw_from_numpad(f->block_low ? 1u : 4u, fl); return c->hold; }
-    if (f->state != NGF_S_IDLE && f->state != NGF_S_CROUCH && f->state != NGF_S_JUMP && f->state != NGF_S_DASH) return 0;
-    if (f->state == NGF_S_JUMP) {
-        if (!f->air_used && f->vh < 0 && dist < 70u && cpu->rush != 0xFFu && r < 60u) {
-            const NGFMove *mv;
-            uint8_t k;
-            for (k = 0; k < f->def->move_count; k++) {
-                mv = &f->def->moves[k];
-                if ((mv->stance & NGF_STANCE_AIR) && mv->kind == NGF_KIND_NORMAL) {
-                    cpu_push(c, mv->buttons);
-                    cpu_push(c, 0);
-                    break;
-                }
+    shot = incoming(m, who);
+    /* A hold (walking, waiting) gives way the moment something new comes at us. */
+    if (c->wait) {
+        uint8_t alert = (uint8_t)(ready && c->plan != PLAN_GUARD &&
+            ((o->state == NGF_S_ATTACK && c->judge && o->grounded) ||
+             (o->state == NGF_S_JUMP && o->state_timer == react) || shot < 140u));
+        if (!alert) { c->wait--; return c->hold; }
+        c->wait = 0;
+    }
+    if (c->plan == PLAN_GUARD) c->plan = PLAN_NONE;
+    c->hold = 0;
+    switch (f->state) {
+    case NGF_S_ATTACK:
+        if (c->next != 0xFFu && f->move_hit) {
+            uint8_t k = c->next;
+            c->next = 0xFFu;
+            /* Better CPUs only spend a super on a hit, not on a block. */
+            if (d->moves[k].kind == NGF_KIND_SUPER && o->state != NGF_S_HIT && lv >= 5u) return 0;
+            cpu_queue_move(m, who, k, 1u);
+            return ngf_cpu_input(m, who);
+        }
+        return 0;
+    case NGF_S_BLOCK:
+        c->next = 0xFFu;
+        if (lv >= 4u && f->stun_frames > 3u && !(m->frame & 7u) && chance(m, (uint16_t)(lv + lv / 2u))) {
+            if (f->power >= NGF_POWER_STOCK && c->role[NGF_CPU_ROLL] != 0xFFu && chance(m, 50u))
+                return NGF_BTN_A | NGF_BTN_B;                       /* guard-cancel roll */
+            if (f->spirit >= NGF_SPIRIT_MAX / 2u)
+                return (uint8_t)(cpu_guard(m, who, 0) | NGF_BTN_C | NGF_BTN_D);   /* guard attack */
+        }
+        return cpu_guard(m, who, 0);
+    case NGF_S_HIT:
+        c->next = 0xFFu;
+        return cpu_guard(m, who, 0);
+    case NGF_S_JUMP:
+        if (!f->air_used) {
+            int16_t h = ngf_fighter_py(f);
+            uint8_t k = c->role[(m->frame & 1u) ? NGF_CPU_AIR : NGF_CPU_AIR2];
+            if (k == 0xFFu) k = c->role[NGF_CPU_AIR];
+            if (k != 0xFFu && ((f->vh < 0 && h < 70 && dist < (uint16_t)(move_reach(&d->moves[k]) + 36u)) ||
+                               (!o->grounded && dist < 60u && h > 20))) {
+                cpu_push(c, d->moves[k].buttons, 1u);
+                return ngf_cpu_input(m, who);
             }
         }
         return 0;
+    case NGF_S_DOWN:
+    case NGF_S_GETUP:
+        c->plan = PLAN_WAKE;
+        c->next = 0xFFu;
+        return cpu_guard(m, who, 0);
+    default:
+        if (!ready) return 0;
+        break;
     }
-    if (threat && r < (uint16_t)(30u + lv * 7u)) {
-        uint8_t low = (uint8_t)(o->move && o->move->level == NGF_LV_LOW);
-        f->block_low = low;
-        c->hold = ngf_raw_from_numpad(low ? 1u : 4u, fl);
-        c->wait = (uint8_t)(8u + (rnd(m) & 7u));
-        return c->hold;
-    }
-    if (!o->grounded && o->state == NGF_S_JUMP && dist < 110u && cpu->anti_air != 0xFFu && r < (uint16_t)(20u + lv * 8u)) {
-        cpu_queue_move(m, who, cpu->anti_air);
-        return ngf_cpu_input(m, who);
-    }
-    if (o->state == NGF_S_ATTACK && o->move && dist < (uint16_t)(cpu->range + 30u) && cpu->rush != 0xFFu &&
-        o->frame + 1u >= o->def->anims[o->anim].count && r < (uint16_t)(lv * 9u)) {
-        cpu_queue_move(m, who, cpu->rush);
-        return ngf_cpu_input(m, who);
-    }
-    if (m->assist[who] && m->assist_uses[who] && !m->striker[who].cooldown &&
-        !m->striker[who].active && f->grounded && dist < 90u && r < lv)
-        return NGF_BTN_A | NGF_BTN_C;
-    if (f->power >= NGF_POWER_STOCK && cpu->super_move != 0xFFu && dist < 90u && r < (uint16_t)(4u + lv)) {
-        cpu_queue_move(m, who, cpu->super_move);
-        return ngf_cpu_input(m, who);
-    }
-    if (dist > (uint16_t)(cpu->range + 30u)) {
-        if (cpu->special != 0xFFu && dist > 140u && r < (uint16_t)(6u + lv * 2u)) {
-            cpu_queue_move(m, who, cpu->special);
+    c->next = 0xFFu;
+
+    /* Getting up next to the other fighter: a reversal, or guard. */
+    if (c->plan == PLAN_WAKE) {
+        c->plan = PLAN_NONE;
+        if (dist < 90u && chance(m, (uint16_t)(lv * 5u)) && cpu_move(m, who, c->role[NGF_CPU_ANTI_AIR], 1u))
             return ngf_cpu_input(m, who);
-        }
-        if (r < (uint16_t)(cpu->jump / 16u) && dist < 170u) {
-            cpu_push(c, ngf_raw_from_numpad(9, fl));
-            cpu_push(c, ngf_raw_from_numpad(9, fl));
+        if (dist < 100u && o->state == NGF_S_ATTACK) { cpu_hold(c, cpu_guard(m, who, 1), 12u, PLAN_GUARD); return c->hold; }
+    }
+    /* Landed from a jump-in: keep going while the other fighter reels. */
+    if (c->plan == PLAN_JUMP_IN) {
+        c->plan = PLAN_NONE;
+        if ((o->state == NGF_S_HIT || o->state == NGF_S_BLOCK) && dist < 85u &&
+            cpu_combo(m, who, (rnd(m) & 1u) ? NGF_CPU_HEAVY : NGF_CPU_LOW))
             return ngf_cpu_input(m, who);
+    }
+    /* A projectile on the way: jump it, roll through it, or guard. */
+    if (shot < 140u) {
+        if (shot > 60u && chance(m, (uint16_t)(10u + lv * 5u))) { cpu_jump(c, fl, dist < 150u ? 9u : 8u, 0); return ngf_cpu_input(m, who); }
+        if (shot < 90u && chance(m, (uint16_t)(lv * 4u)) && cpu_move(m, who, c->role[NGF_CPU_ROLL], 1u)) return ngf_cpu_input(m, who);
+        cpu_hold(c, cpu_guard(m, who, 0), 10u, PLAN_GUARD);
+        return c->hold;
+    }
+    /* A jump coming in: anti-air it, meet it in the air, or guard high. */
+    if (!o->grounded && (o->state == NGF_S_JUMP || o->state == NGF_S_ATTACK) && o->state_timer >= react && dist < 150u) {
+        uint8_t toward = (uint8_t)(dist < 70u || (fl ? o->vx > 0 : o->vx < 0));
+        if (toward && chance(m, (uint16_t)(25u + lv * 7u))) {
+            uint8_t k = 0xFFu;
+            if ((f->power >= NGF_POWER_STOCK || f->max_timer) && c->role[NGF_CPU_SUPER] != 0xFFu &&
+                move_invuln(d, &d->moves[c->role[NGF_CPU_SUPER]]) && dist < 90u && chance(m, 30u))
+                k = c->role[NGF_CPU_SUPER];
+            else if (c->role[NGF_CPU_ANTI_AIR] != 0xFFu && dist < 100u && (o->vh < 0 || dist < 60u))
+                k = c->role[NGF_CPU_ANTI_AIR];
+            else if (dist < 75u && (o->vh < 0 || dist < 50u))
+                k = c->role[NGF_CPU_HEAVY];
+            if (cpu_move(m, who, k, 1u)) return ngf_cpu_input(m, who);
+            if (dist < 110u && ngf_fighter_py(o) > 30) { cpu_jump(c, fl, 8u, 0); return ngf_cpu_input(m, who); }
         }
-        c->hold = ngf_raw_from_numpad(6, fl);
-        c->wait = (uint8_t)(6u + (rnd(m) % 18u));
-        return c->hold;
+        if (toward && chance(m, (uint16_t)(40u + lv * 5u))) {
+            cpu_hold(c, cpu_guard(m, who, 1), 14u, PLAN_GUARD);
+            return c->hold;
+        }
     }
-    if (dist < 44u && cpu->throw_move != 0xFFu && throwable(o) && r < 18u) {
-        cpu_queue_move(m, who, cpu->throw_move);
+    /* A ground attack: punish it if it missed, otherwise guard. */
+    if (o->state == NGF_S_ATTACK && o->move && o->grounded) {
+        if (recovering(o) && o->state_timer >= react && dist < 95u && chance(m, (uint16_t)(20u + lv * 8u))) {
+            if ((f->power >= NGF_POWER_STOCK || f->max_timer) && chance(m, (uint16_t)(lv * 5u)) &&
+                cpu_move(m, who, c->role[NGF_CPU_SUPER], 1u)) return ngf_cpu_input(m, who);
+            if (cpu_combo(m, who, dist < 70u ? NGF_CPU_HEAVY : NGF_CPU_LOW)) return ngf_cpu_input(m, who);
+        }
+        if (!recovering(o) && c->judge && dist < (uint16_t)(move_reach(o->move) + 45u)) {
+            cpu_hold(c, cpu_guard(m, who, 1), 10u, PLAN_GUARD);
+            return c->hold;
+        }
+    }
+    /* A dizzy opponent: walk in and combo. */
+    if (o->state == NGF_S_DIZZY) {
+        if (dist > 70u) { cpu_hold(c, ngf_raw_from_numpad(6, fl), 6u, PLAN_NONE); return c->hold; }
+        if (cpu_combo(m, who, NGF_CPU_HEAVY)) return ngf_cpu_input(m, who);
+    }
+    /* Call the striker. */
+    if (m->assist[who] && m->assist_uses[who] && !m->striker[who].cooldown && !m->striker[who].active &&
+        dist < 90u && chance(m, lv)) {
+        cpu_push(c, NGF_BTN_A | NGF_BTN_C, 1u);
+        cpu_push(c, 0, 1u);
         return ngf_cpu_input(m, who);
     }
-    if (r < (uint16_t)(cpu->aggression / 8u + lv * 3u)) {
-        uint8_t pick = (uint8_t)(rnd(m) % 4u);
-        uint8_t k = pick == 0u ? cpu->sweep : pick == 1u ? cpu->special : pick == 2u ? cpu->rush : cpu->poke;
-        if (k == 0xFFu) k = cpu->poke;
-        cpu_queue_move(m, who, k);
-        c->wait = 0;
+    /* MAX mode when there is power to burn. */
+    if (!f->max_timer && f->power >= NGF_POWER_STOCK && lv >= 3u && dist < 140u &&
+        chance(m, (uint16_t)(f->power >= 2u * NGF_POWER_STOCK ? lv : lv / 3u + 1u))) {
+        cpu_push(c, NGF_BTN_B | NGF_BTN_C, 1u);
+        cpu_push(c, 0, 1u);
         return ngf_cpu_input(m, who);
     }
-    if (r > 85u) {
-        c->hold = ngf_raw_from_numpad(4, fl);
-        c->wait = (uint8_t)(4u + (rnd(m) & 7u));
-        return c->hold;
+    /* Neutral: weigh what to do from the distance. */
+    for (i = 0; i <= PICK_BACKDASH; i++) weight[i] = 0;
+    {
+        const NGFCpuProfile *p = &d->cpu_profile;
+        uint8_t aggro = (uint8_t)(p->aggression / 16u + lv * 2u + (f->max_timer ? 12u : 0u));
+        uint8_t poke = c->role[NGF_CPU_POKE] == 0xFFu ? 0u : move_reach(&d->moves[c->role[NGF_CPU_POKE]]);
+        weight[PICK_WAIT] = (uint8_t)(lv >= 9u ? 3u : 3u + (9u - lv) * 3u);
+        if (dist > 170u) {
+            weight[PICK_WALK] = 20;
+            weight[PICK_RUN] = (uint8_t)(10u + aggro);
+            weight[PICK_HOP] = 4;
+            if (c->role[NGF_CPU_RUSH] != 0xFFu && d->moves[c->role[NGF_CPU_RUSH]].range > 100u) weight[PICK_RUSH] = 4;
+        } else if (dist > 80u) {
+            weight[PICK_WALK] = 18;
+            weight[PICK_RUN] = (uint8_t)(6u + aggro / 2u);
+            weight[PICK_JUMP] = (uint8_t)(6u + p->jump / 10u + lv);
+            weight[PICK_HOP] = (uint8_t)(4u + lv / 2u);
+            if (poke && dist < (uint16_t)(poke + 20u)) weight[PICK_POKE] = (uint8_t)(8u + lv);
+            if (c->role[NGF_CPU_RUSH] != 0xFFu && dist < (uint16_t)(d->moves[c->role[NGF_CPU_RUSH]].range + 40u))
+                weight[PICK_RUSH] = (uint8_t)(4u + lv);
+            weight[PICK_BACK] = 5;
+        } else {
+            if (c->role[NGF_CPU_THROW] != 0xFFu && throwable(o) && dist <= (uint16_t)(d->moves[c->role[NGF_CPU_THROW]].range + 4u))
+                weight[PICK_THROW] = (uint8_t)(8u + lv * 2u);
+            weight[PICK_COMBO] = (uint8_t)(10u + aggro);
+            weight[PICK_LOW] = (uint8_t)(6u + aggro / 2u);
+            if (c->role[NGF_CPU_BLOW] != 0xFFu) weight[PICK_BLOW] = 3;
+            if (c->role[NGF_CPU_SWEEP] != 0xFFu) weight[PICK_SWEEP] = 5;
+            if (c->role[NGF_CPU_POKE] != 0xFFu) weight[PICK_POKE] = 4;
+            if (c->role[NGF_CPU_ROLL] != 0xFFu) weight[PICK_ROLL] = 2;
+            weight[PICK_HOP] = (uint8_t)(2u + lv / 3u);
+            weight[PICK_BACKDASH] = 3;
+            weight[PICK_BACK] = 3;
+        }
     }
-    c->hold = 0;
-    c->wait = (uint8_t)(4u + (rnd(m) % (uint16_t)(26u - 2u * (lv > 9u ? 9u : lv))));
-    return 0;
+    switch (cpu_pick(m, c, weight, PICK_BACKDASH + 1u)) {
+    case PICK_WALK:
+        cpu_hold(c, ngf_raw_from_numpad(6, fl), (uint8_t)(6u + rnd(m) % 16u), PLAN_NONE);
+        return c->hold;
+    case PICK_RUN:
+        cpu_push(c, ngf_raw_from_numpad(6, fl), 1u);
+        cpu_push(c, 0, 1u);
+        cpu_hold(c, ngf_raw_from_numpad(6, fl), (uint8_t)(10u + rnd(m) % 20u), PLAN_NONE);
+        return ngf_cpu_input(m, who);
+    case PICK_JUMP:
+        cpu_jump(c, fl, 9u, 0);
+        return ngf_cpu_input(m, who);
+    case PICK_HOP:
+        cpu_jump(c, fl, 9u, 1u);
+        return ngf_cpu_input(m, who);
+    case PICK_POKE:
+        if (cpu_move(m, who, c->role[NGF_CPU_POKE], 0)) return ngf_cpu_input(m, who);
+        break;
+    case PICK_RUSH:
+        if (cpu_move(m, who, c->role[NGF_CPU_RUSH], 0)) return ngf_cpu_input(m, who);
+        break;
+    case PICK_BACK:
+        cpu_hold(c, ngf_raw_from_numpad(4, fl), (uint8_t)(6u + rnd(m) % 10u), PLAN_NONE);
+        return c->hold;
+    case PICK_THROW:
+        if (cpu_move(m, who, c->role[NGF_CPU_THROW], 0)) return ngf_cpu_input(m, who);
+        break;
+    case PICK_COMBO: {
+        uint8_t starter = (uint8_t)(rnd(m) % 3u);
+        if (cpu_combo(m, who, starter == 0u ? NGF_CPU_HEAVY : starter == 1u ? NGF_CPU_LOW : NGF_CPU_JAB))
+            return ngf_cpu_input(m, who);
+        break;
+    }
+    case PICK_LOW:
+        if (cpu_combo(m, who, NGF_CPU_LOW)) return ngf_cpu_input(m, who);
+        break;
+    case PICK_BLOW:
+        if (cpu_move(m, who, c->role[NGF_CPU_BLOW], 0)) return ngf_cpu_input(m, who);
+        break;
+    case PICK_SWEEP:
+        if (cpu_move(m, who, c->role[NGF_CPU_SWEEP], 0)) return ngf_cpu_input(m, who);
+        break;
+    case PICK_ROLL:
+        if (cpu_move(m, who, c->role[NGF_CPU_ROLL], 0)) return ngf_cpu_input(m, who);
+        break;
+    case PICK_BACKDASH:
+        cpu_push(c, ngf_raw_from_numpad(4, fl), 1u);
+        cpu_push(c, 0, 1u);
+        cpu_push(c, ngf_raw_from_numpad(4, fl), 1u);
+        cpu_push(c, 0, 1u);
+        return ngf_cpu_input(m, who);
+    default:
+        break;
+    }
+    cpu_hold(c, f->state == NGF_S_CROUCH ? ngf_raw_from_numpad(2, fl) : 0u,
+             (uint8_t)(3u + rnd(m) % (uint16_t)(lv >= 9u ? 6u : 24u - 2u * lv)), PLAN_NONE);
+    return c->hold;
 }
 
 void NEOGEO_USER ngf_set_cpu(NGFMatch *m, uint8_t who, uint8_t level)
@@ -1131,6 +1556,9 @@ void NEOGEO_USER ngf_set_cpu(NGFMatch *m, uint8_t who, uint8_t level)
     c->level = level;
     c->len = c->pos = c->wait = 0;
     c->hold = 0;
+    c->plan = PLAN_NONE;
+    c->next = 0xFFu;
+    c->learned = 0;
     m->f[who].cpu = (uint8_t)(level != 0u);
 }
 
@@ -1452,7 +1880,7 @@ void NEOGEO_USER ngf_match_step(NGFMatch *m, uint8_t raw1, uint8_t raw2)
     for (i = 0; i < 2u; i++) {
         NGFFighter *f = &m->f[i];
         if (controls && f->grounded) {
-            if (ngf_input_pressed(&f->input, NGF_BTN_A | NGF_BTN_C, 3u)) {
+            if (ngf_input_pressed(&f->input, NGF_BTN_A | NGF_BTN_C, 3u) && !ngf_input_pressed(&f->input, NGF_BTN_B, 4u)) {
                 if (ngf_call_striker(m, i)) ngf_input_consume(&f->input, NGF_BTN_A | NGF_BTN_C);
             }
             if (ngf_input_pressed(&f->input, NGF_BTN_B | NGF_BTN_D, 3u)) {

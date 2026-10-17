@@ -33,7 +33,7 @@ extern "C" {
 #define NGF_BTN_D      0x80u   /* heavy kick  */
 #define NGF_BTN_ALL    0xF0u
 
-#define NGF_INPUT_FRAMES 32u    /* ring length: must be a power of two */
+#define NGF_INPUT_FRAMES 64u    /* ring length: must be a power of two */
 
 /* Motions (numpad notation, facing right). */
 enum {
@@ -68,6 +68,8 @@ typedef struct {
     uint8_t charge_back, charge_down;  /* frames held (saturating) */
     uint8_t back_release, down_release;/* charge when last released */
     uint8_t back_age, down_age;        /* frames since that release */
+    uint8_t kara;                      /* buttons of the normal just started */
+    uint8_t pad;
 } NGFInput;
 
 void    NEOGEO_USER ngf_input_reset(NGFInput *in);
@@ -198,6 +200,10 @@ enum { NGF_S_IDLE, NGF_S_CROUCH, NGF_S_JUMP, NGF_S_ATTACK, NGF_S_BLOCK, NGF_S_HI
 #define NGF_POWER_STOCK 128u
 #define NGF_POWER_MAX   (3u * NGF_POWER_STOCK)
 #define NGF_SPIRIT_MAX  128u
+/* MAX mode: B+C (or A+B+C) spends one stock for this many frames of
+ * stronger hits, special-to-special and special-to-super cancels, and one
+ * super that costs no stock and hits harder (which ends the mode). */
+#define NGF_MAX_FRAMES  720u
 
 typedef struct {
     const NGFFighterDef *def;
@@ -212,6 +218,8 @@ typedef struct {
     uint8_t  guard, spirit, combo, palette;
     uint16_t combo_damage;
     uint8_t  wins, invuln, stun_frames, cpu;
+    uint16_t max_timer;                /* frames left in MAX mode */
+    uint8_t  max_super, hop;           /* current super is a MAX super; jump may still become a hop */
     NGFInput input;
 } NGFFighter;
 
@@ -225,15 +233,27 @@ typedef struct {
 #define NGF_EVENTS      8u
 enum { NGF_EV_NONE, NGF_EV_HIT, NGF_EV_BLOCK, NGF_EV_THROW, NGF_EV_TECH, NGF_EV_GUARD_BREAK,
        NGF_EV_KO, NGF_EV_MOVE, NGF_EV_PROJECTILE, NGF_EV_ROUND, NGF_EV_FIGHT, NGF_EV_TIME_UP,
-       NGF_EV_LAND, NGF_EV_WIN, NGF_EV_COUNTER, NGF_EV_SUPER_FREEZE, NGF_EV_STRIKER, NGF_EV_TAG };
+       NGF_EV_LAND, NGF_EV_WIN, NGF_EV_COUNTER, NGF_EV_SUPER_FREEZE, NGF_EV_STRIKER, NGF_EV_TAG,
+       NGF_EV_MAX };
 typedef struct { uint8_t type, who, data, pad; int16_t x, y; } NGFEvent;
 
 enum { NGF_M_INTRO, NGF_M_FIGHT, NGF_M_KO, NGF_M_TIME_UP, NGF_M_ROUND_END, NGF_M_OVER };
 enum { NGF_MODE_1V1 = 0, NGF_MODE_3V3 = 1, NGF_MODE_TAG = 2 };
 
+/* Moves the CPU picks by role, found once per fighter. */
+enum { NGF_CPU_POKE, NGF_CPU_LOW, NGF_CPU_JAB, NGF_CPU_HEAVY, NGF_CPU_SWEEP, NGF_CPU_AIR, NGF_CPU_AIR2,
+       NGF_CPU_ANTI_AIR, NGF_CPU_RUSH, NGF_CPU_SPECIAL, NGF_CPU_SPECIAL2, NGF_CPU_SUPER, NGF_CPU_THROW,
+       NGF_CPU_ROLL, NGF_CPU_BLOW, NGF_CPU_ROLES };
+
 typedef struct {
-    uint8_t seq[16];          /* queued raw inputs */
-    uint8_t len, pos, wait, level, hold, pad;
+    uint8_t seq[56];          /* queued raw inputs, played before any hold */
+    uint8_t len, pos, wait, level, hold, plan;
+    uint8_t next;             /* move to cancel into once the current one connects, 0xFF none */
+    uint8_t last;             /* last choice, so the next one differs */
+    uint8_t judge;            /* the other fighter's current attack was read in time to guard */
+    uint8_t pad;
+    const NGFFighterDef *learned;
+    uint8_t role[NGF_CPU_ROLES + 1];
 } NGFCpu;
 
 typedef struct {
