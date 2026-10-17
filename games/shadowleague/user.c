@@ -296,10 +296,10 @@ void NEOGEO_USER showTitleMVS(void) {
 	for (;;) {
 		if (NEO_REGISTER8(NGO_START_FLAG)) break;
 		if (!ng_sys_is_mvs()) {
-			slf_puts_center(24u, "PUSH START", SLF_PAL_GOLD);
+			slf_puts_tall_center(24u, "PUSH START", SLF_TALL_GOLD);
 			if (slf_start_pending()) break;
 		} else if (read_p1credit() > 0) {
-			slf_puts_center(24u, "PUSH 1P START", SLF_PAL_GOLD);
+			slf_puts_tall_center(24u, "PUSH 1P START", SLF_TALL_GOLD);
 			if (frames) frames--;
 			else {
 				uint16_t saved_sr;
@@ -319,7 +319,7 @@ void NEOGEO_USER showTitleMVS(void) {
 				}
 				__asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
 			}
-		} else slf_puts_center(24u, "  INSERT COIN  ", SLF_PAL_TEXT);
+		} else slf_puts_tall_center(24u, "  INSERT COIN  ", SLF_TALL_SILVER);
 		slf_frame();
 	}
 }

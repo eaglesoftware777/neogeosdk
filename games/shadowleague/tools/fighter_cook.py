@@ -41,6 +41,70 @@ CANCEL = {"chain": "NGF_CANCEL_CHAIN", "special": "NGF_CANCEL_SPECIAL", "super":
 SOUNDS = ("none", "hit_light", "hit_heavy", "block", "special", "super", "whoosh", "throw", "ko", "land")
 
 
+# try_moves takes the first match, so moves whose input contains another's
+# come first: supers, then specials by motion length, two-button moves before
+# one-button ones, throws before the normals that share their button.
+KIND_ORDER = {"super": 0, "special": 1, "guard_attack": 2, "evade": 3, "throw": 5, "command": 6, "normal": 7}
+MOTION_ORDER = {"dqcf": 0, "dqcb": 0, "720": 1, "360": 2, "hcf": 3, "hcb": 3, "dp": 4, "rdp": 4, "qcf": 5, "qcb": 5,
+                "charge_bf": 6, "charge_du": 6, "dash": 7, "backdash": 7, "down_fwd": 8, "fwd": 8, "back": 8, "none": 9}
+# Normals without a cancel setting: lights chain, heavies cancel into
+# specials, sweeps and jumping attacks do not.
+DEFAULT_CANCEL = {("stand", "A"): "chain|special|super", ("stand", "B"): "chain|special|super",
+                  ("stand", "C"): "special|super", ("stand", "D"): "special|super",
+                  ("crouch", "A"): "chain|special|super", ("crouch", "B"): "special|super",
+                  ("crouch", "C"): "special|super"}
+BLOWBACK = {"name": "BLOWBACK", "kind": "command", "buttons": "CD", "stance": "stand", "level": "mid",
+            "damage": 60, "guard_damage": 14, "hitstun": 20, "blockstun": 16, "pushback": 14,
+            "on_hit": "knockdown", "launch": [10, 26], "cancel": "super", "meter": 8, "hitstop": 10,
+            "sound": "whoosh", "hit_sound": "hit_heavy"}
+
+
+def complete_moves(data):
+    """The system moves every fighter has, then the moves in matching order."""
+    moves = [dict(m) for m in data["moves"]]
+    for m in moves:
+        if m["kind"] == "normal" and "cancel" not in m:
+            stance = m.get("stance", "stand").split("|")
+            if "far" not in stance:
+                m["cancel"] = DEFAULT_CANCEL.get((stance[0], m.get("buttons", "")[:1]), "")
+    ground = [m for m in moves if m["kind"] in ("normal", "command") and m.get("stance", "stand").split("|")[0] != "air"]
+    if not any(m.get("buttons") == "CD" for m in ground):
+        heavy = next((m for m in ground if m["kind"] == "normal" and m.get("buttons") == "D" and
+                      m.get("stance", "stand").split("|")[0] == "stand"), None)
+        if heavy:
+            moves.append(dict(BLOWBACK, anim=heavy["anim"], **({"limb": heavy["limb"]} if "limb" in heavy else {})))
+    throws = [m for m in moves if m["kind"] == "throw"]
+    if throws:
+        base = throws[0]
+        have = {(m.get("motion", "none"), m.get("buttons")) for m in throws}
+        for motion in ("fwd", "back"):
+            for button in ("C", "D"):
+                if (motion, button) not in have:
+                    moves.append(dict(base, motion=motion, buttons=button))
+                    have.add((motion, button))
+    order = sorted(range(len(moves)), key=lambda i: (
+        KIND_ORDER[moves[i]["kind"]] - (2 if moves[i]["kind"] == "command" and len(moves[i].get("buttons", "")) > 1 else 0),
+        MOTION_ORDER[moves[i].get("motion", "none")], -len(moves[i].get("buttons", "")), i))
+    return [moves[i] for i in order]
+
+
+# A limb's contact box covers only the fist or foot, which at close range is
+# already past the other fighter's body: strikes reach back along the limb to
+# this many pixels in front of the attacker, and rising strikes (uppercuts,
+# flip kicks) down to chest height, so they also hit a standing opponent.
+LIMB_INNER = 10
+LIMB_CHEST = 80
+
+
+def along_limb(box):
+    x, y, w, h = (int(v) for v in box)
+    if x > LIMB_INNER:
+        w, x = x + w - LIMB_INNER, LIMB_INNER
+    if y > LIMB_CHEST:
+        h, y = y + h - LIMB_CHEST, LIMB_CHEST
+    return [x, y, w, h]
+
+
 def flags(text, table):
     parts = [table[p] for p in (text.split("|") if text else [])]
     return " | ".join(parts) if parts else "0"
@@ -57,6 +121,7 @@ class Fighter:
         problems = validate(self.data, self.path.name)
         if problems:
             raise SystemExit("\n".join(problems))
+        self.data["moves"] = complete_moves(self.data)
         d = self.data
         self.id = d["id"]
         self.poses = {name: art.resolve(d["poses"], name) for name in d["poses"]}
@@ -115,9 +180,9 @@ class Fighter:
             if len(fr) > 2 and "active" in fr[2]:
                 i = self.sprite_names.index(fr[0])
                 if self.authored is not None:
-                    boxes.extend(self.authored[i]["hit"].get(move["limb"], []))
+                    boxes.extend(along_limb(b) for b in self.authored[i]["hit"].get(move["limb"], []))
                 else:
-                    boxes.append(art.hitbox(self.data["build"], self.joints[i], move["limb"]))
+                    boxes.append(along_limb(art.hitbox(self.data["build"], self.joints[i], move["limb"])))
         if not boxes: return [0, 0, 0, 0]
         x0 = min(b[0] for b in boxes)
         y0 = min(b[1] for b in boxes)
@@ -143,9 +208,9 @@ class Fighter:
                 boxes = []
                 for limb in limbs:
                     if self.authored is not None:
-                        boxes.extend(self.authored[sprite]['hit'].get(limb, []))
+                        boxes.extend(along_limb(b) for b in self.authored[sprite]['hit'].get(limb, []))
                     else:
-                        boxes.append(art.hitbox(d['build'], self.joints[sprite], limb))
+                        boxes.append(along_limb(art.hitbox(d['build'], self.joints[sprite], limb)))
                 key = tuple(tuple(int(v) for v in box) for box in boxes)
                 if len(key)>3:raise ValueError(self.id+'/'+name+': more than three frame contacts')
                 if key not in hit_sets:hit_sets.append(key)

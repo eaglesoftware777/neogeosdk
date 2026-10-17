@@ -29,6 +29,16 @@ class ShadowLeagueTests(unittest.TestCase):
                             str(ROOT / "sdk/2d_engine/ng_fight.c"), "-o", str(binary)], check=True)
             subprocess.run([str(binary)], check=True)
 
+    def test_controls(self):
+        """Specials at a player's pace, A+B, C+D, B+C (MAX), throws, hops and guard cancels."""
+        with tempfile.TemporaryDirectory(prefix="slf-controls-") as directory:
+            binary = Path(directory) / "controls"
+            subprocess.run(["cc", "-std=c99", "-DNG_FIGHT=1", "-DSLF_ASSETS_IMPLEMENTATION=1",
+                            "-I" + str(ROOT), "-I" + str(ROOT / "sdk"), "-I" + str(ROOT / "sdk/2d_engine"),
+                            str(ROOT / "tests/shadowleague_controls_test.c"),
+                            str(ROOT / "sdk/2d_engine/ng_fight.c"), "-o", str(binary)], check=True)
+            subprocess.run([str(binary)], check=True)
+
     def test_cooked_teams_play(self):
         with tempfile.TemporaryDirectory(prefix="slf-teams-") as directory:
             binary = Path(directory) / "teams"

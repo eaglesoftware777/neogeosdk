@@ -3,10 +3,12 @@ import json,struct
 from pathlib import Path
 import numpy as np
 from native_art_io import indexed,palette_tiles
-from palette_banks import palette_words
+from palette_banks import palette_words,quantize
+from PIL import Image
 ROOT=Path(__file__).resolve().parents[1]/'assets/authored/rebirth'
 GENERATED=Path(__file__).resolve().parents[1]/'artbox/generated'
-CARD_BYTES=664
+CARD_BYTES=920
+CARD_BANKS=16
 
 def tables(place):
     lines=[];packed=[]
@@ -31,12 +33,24 @@ def tables(place):
     lines.append('static const uint16_t slf_rebirth_portrait_pals[3][16] = {'+','.join('{'+','.join(str(v) for v in p)+'}' for p in palettes)+'};')
     project=json.loads((ROOT/'cinema/project.json').read_text())
     cards=[{'file':project['title'],'duration':360,'caption':['','']}]+project['cards']
+    story=len(cards);backdrops=project.get('backdrops',[]);cards+=backdrops
     payloads=[bytearray(),bytearray()];offsets=[];descriptors=[]
     for number,card in enumerate(cards):
+        painted=ROOT/'cinema/sources'/card['file']
+        if painted.exists():
+            # The full-colour painting, sixteen palettes chosen tile by tile;
+            # the indexed card beside it is rewritten from the result.
+            rgba=np.asarray(Image.open(painted).convert('RGBA'))
+            if rgba.shape[:2]!=(224,352):raise ValueError(card['file']+': painted card must be 352x224')
+            data,banks,mapping=quantize(rgba,bank_limit=CARD_BANKS)
+            glob=np.where(data>0,mapping.repeat(16,0).repeat(16,1).astype(np.int32)*15+data,0).astype(np.uint8)
+            flat=[0,0,0]+[int(v) for b in banks for v in b[1:].flatten()]
+            out=Image.fromarray(glob,'P');out.putpalette(flat+[0]*(768-len(flat)))
+            out.save(ROOT/'cinema'/card['file'],transparency=0)
         source,colors=indexed(ROOT/'cinema'/card['file'],(352,224))
-        data,banks,mapping=palette_tiles(source,colors,limit=8)
+        if not painted.exists():data,banks,mapping=palette_tiles(source,colors,limit=CARD_BANKS)
         tile=place(data);packed.append((card['file'],data,tile))
-        words=[word for bank in banks for word in palette_words(bank)];words += [0]*(128-len(words))
+        words=[word for bank in banks for word in palette_words(bank)];words += [0]*(CARD_BANKS*16-len(words))
         caption=b''
         if len(card['caption'])!=2 or not 1<=card['duration']<=600:raise ValueError('Invalid story timing/caption')
         for text in card['caption']:
@@ -44,7 +58,7 @@ def tables(place):
             if len(encoded)>38:raise ValueError('Story caption exceeds FIX safe width')
             caption+=encoded.ljust(40,b'\0')
         descriptor=struct.pack('>IHBB',tile,card['duration'],len(banks),22)
-        descriptor+=struct.pack('>128H',*words)+mapping.tobytes().ljust(320,b'\0')+caption
+        descriptor+=struct.pack('>%dH'%(CARD_BANKS*16),*words)+mapping.tobytes().ljust(320,b'\0')+caption
         if len(descriptor)!=CARD_BYTES:raise ValueError('Presentation descriptor layout mismatch')
         bank=number&1;offsets.append(0x100000+bank*0x100000+len(payloads[bank]));payloads[bank].extend(descriptor)
         descriptors.append({'file':card['file'],'tile':tile,'palette_banks':len(banks),'P_offset':offsets[-1]})
@@ -57,6 +71,9 @@ def tables(place):
     for n,payload in enumerate(payloads):(GENERATED/f'presentation-bank-{n}.bin').write_bytes(payload)
     (GENERATED/'presentation-layout.json').write_text(json.dumps(descriptors,indent=2)+'\n')
     lines.append(f'#define SLF_PRESENTATION_CARDS {len(cards)}u')
+    lines.append(f'#define SLF_STORY_CARDS {story}u')
+    for n,card in enumerate(backdrops):
+        lines.append(f"#define SLF_CARD_{card['file'][:-4].upper()} {story+n}u")
     lines.append('static const uint32_t slf_presentation_offsets[] = {'+','.join(str(v) for v in offsets)+'};')
     return lines,packed
 

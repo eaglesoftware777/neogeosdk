@@ -3,7 +3,7 @@ import sys,unittest,json
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'games/shadowleague/tools'))
-from fighter_cook import Fighter,art
+from fighter_cook import Fighter,along_limb,art
 
 class ContactCompilerTests(unittest.TestCase):
     def test_distinct_active_poses_keep_distinct_rectangles(self):
@@ -15,8 +15,8 @@ class ContactCompilerTests(unittest.TestCase):
             if f.authored is not None:
                 source=f.authored[sprite]['hit'].get('near_fist',[])
                 self.assertTrue(source,'Active authored punch needs its own contact region')
-                boxes.extend(source)
-            else:boxes.append(art.hitbox(f.data['build'],f.joints[sprite],'near_fist'))
+                boxes.extend(along_limb(b) for b in source)
+            else:boxes.append(along_limb(art.hitbox(f.data['build'],f.joints[sprite],'near_fist')))
         self.assertGreater(len({tuple(b) for b in boxes}),1)
         text=f.c_tables('probe')
         for b in boxes:self.assertIn('{'+', '.join(str(v) for v in b)+'}',text)

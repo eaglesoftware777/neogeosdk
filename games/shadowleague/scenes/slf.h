@@ -23,12 +23,23 @@
 #define SLF_PAL_RED    5u
 #define SLF_PAL_BLUE   6u
 #define SLF_PAL_WHITE  7u
+/* The tall face's colours (slf_puts_tall). */
+#define SLF_TALL_GOLD   8u
+#define SLF_TALL_SILVER 9u
+#define SLF_TALL_RED    10u
+#define SLF_TALL_BLUE   11u
 
 /* Sound effects (tools/sound.py order, 1-based like SOUND_SFX_n + 1). */
 enum { SLF_SFX_COIN = 1, SLF_SFX_MENU, SLF_SFX_START, SLF_SFX_HIT_LIGHT, SLF_SFX_HIT_HEAVY,
        SLF_SFX_BLOCK, SLF_SFX_WHOOSH, SLF_SFX_SPECIAL, SLF_SFX_SUPER, SLF_SFX_THROW, SLF_SFX_KO,
-       SLF_SFX_LAND, SLF_SFX_BELL, SLF_SFX_COUNTER, SLF_SFX_SELECT };
-enum { SLF_TRACK_TITLE = 1, SLF_TRACK_DOJO, SLF_TRACK_VICTORY };
+       SLF_SFX_LAND, SLF_SFX_BELL, SLF_SFX_COUNTER, SLF_SFX_SELECT, SLF_SFX_POWER };
+/* ADPCM-B tracks (tools/music.py): then one per arena, in stage order. */
+enum { SLF_TRACK_TITLE = 1, SLF_TRACK_SELECT, SLF_TRACK_VICTORY, SLF_TRACK_CONTINUE, SLF_TRACK_STAGE };
+/* Voice lines after the effects (tools/slf_voices.py): the announcer's, and
+ * four grunts for each voice type. */
+enum { SLF_ANN_ROUND1, SLF_ANN_ROUND2, SLF_ANN_ROUND3, SLF_ANN_FINAL, SLF_ANN_FIGHT, SLF_ANN_KO,
+       SLF_ANN_TIMEUP, SLF_ANN_PERFECT, SLF_ANN_YOUWIN, SLF_ANN_DRAW };
+enum { SLF_GRUNT_ATTACK, SLF_GRUNT_HURT, SLF_GRUNT_KO, SLF_GRUNT_POWER };
 
 #define SLF_FLOOR_Y 212
 
@@ -56,8 +67,13 @@ void     NEOGEO_USER slf_fighter_palettes(uint8_t def0, uint8_t alt0, uint8_t de
 void     NEOGEO_USER slf_fighter_pose(uint8_t slot, uint8_t def, uint8_t sprite, int16_t x, int16_t y, uint8_t flip);
 void     NEOGEO_USER slf_fighter_hide(uint8_t slot);
 void     NEOGEO_USER slf_fighter_bank(uint8_t slot, uint8_t bank);
-void     NEOGEO_USER slf_portraits_show(uint8_t win_base, uint8_t p1_cur, uint8_t p2_cur, uint8_t p1_done, uint8_t p2_done, uint16_t tick);
-void     NEOGEO_USER slf_portraits_hide(void);
+void     NEOGEO_USER slf_puts_tall(uint8_t x, uint8_t y, const char *text, uint8_t pal);
+void     NEOGEO_USER slf_puts_tall_center(uint8_t y, const char *text, uint8_t pal);
+void     NEOGEO_USER slf_puts_tall_right(uint8_t x_end, uint8_t y, const char *text, uint8_t pal);
+void     NEOGEO_USER slf_wall_show(void);
+uint8_t  NEOGEO_USER slf_wall_step(uint8_t def, uint8_t dir);
+void     NEOGEO_USER slf_wall_face(uint8_t side, uint8_t def);
+void     NEOGEO_USER slf_wall_cursor(uint8_t p, uint8_t def, uint8_t state, uint16_t tick);
 void     NEOGEO_USER slf_match_draw(const NGFMatch *m, const uint8_t *def_index);
 void     NEOGEO_USER slf_hud_draw(const NGFMatch *m);
 void     NEOGEO_USER slf_fx_spawn(uint8_t kind, int16_t screen_x, int16_t screen_y);

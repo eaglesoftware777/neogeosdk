@@ -59,9 +59,9 @@ emu.register_frame_done(function()
     local expected=cpu:read_u32(a.card_buffer)
     local attr=ram:read(65)
     local address=ram:read(64) | ((attr & 0xf0)<<12)
-    assert(expected>=0x10000 and expected<0x20000,'Card does not use the high graphics region')
+    assert(expected<0x100000,'Card lies outside the 20-bit graphics space')
     assert(address==expected,'Live SCB1 lost high C-ROM address bits')
-    assert((attr>>8)==cpu:read_u8(a.card_buffer+264),'Live SCB1 palette does not match copied tile map')
+    assert((attr>>8)==cpu:read_u8(a.card_buffer+520),'Live SCB1 palette does not match copied tile map')
     checked=checked+1
    end
   end

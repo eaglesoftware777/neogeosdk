@@ -137,3 +137,9 @@ The installer stages and verifies both sets, then moves only the previous Shadow
 League files to `backups/shadowleague/<date>-before-v2-gameplay`. Other games and
 shared BIOS files are preserved. MVS/AES launchers select the fresh private ROMs
 and hashes. Controls and soft DIPs are kept; old save states are left in the backup.
+
+## Credits
+
+The fighter voices and the announcer are spoken by Piper with the
+`en_US-libritts_r-medium` voice, which is trained on the LibriTTS-R corpus
+(Koizumi et al., 2023), licensed CC BY 4.0. The lines are in `tools/slf_voices.py`.

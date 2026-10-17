@@ -54,5 +54,39 @@
       ]
     }
   ],
-  "palette_source": "Each PNG embeds its own exact indexed palette"
+  "palette_source": "Each PNG embeds its own exact indexed palette",
+  "backdrops": [
+    {
+      "file": "mode.png",
+      "duration": 1,
+      "caption": [
+        "",
+        ""
+      ]
+    },
+    {
+      "file": "select.png",
+      "duration": 1,
+      "caption": [
+        "",
+        ""
+      ]
+    },
+    {
+      "file": "vs.png",
+      "duration": 1,
+      "caption": [
+        "",
+        ""
+      ]
+    },
+    {
+      "file": "ending.png",
+      "duration": 1,
+      "caption": [
+        "",
+        ""
+      ]
+    }
+  ]
 }

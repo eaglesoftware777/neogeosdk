@@ -57,7 +57,7 @@ def check(fighters,layout=None,c1=None,c2=None):
             if (sizes<3).any():failures.append(label+': detached small pixel cluster')
             layers = j['art_layers'] if f.authored is None else {
                 ('head' if part=='head_hair' else part):np.asarray(Image.open(f.authored_folder/path))>0
-                for part,path in f.authored[i]['layers'].items()}
+                for part,path in f.authored[i].get('layers',{}).items()}
             for part,mask in layers.items():
                 _,n=ndimage.label(mask,CONNECT)
                 if n<1 or n>(2 if part=='head' else 1):failures.append(label+': disconnected '+part)

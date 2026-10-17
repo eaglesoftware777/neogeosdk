@@ -2297,85 +2297,188 @@
     },
     "ink_step7": {
       "base": "stance"
+    },
+    "cr_hk": {
+      "base": "stance"
+    },
+    "cr_hp1": {
+      "base": "stance"
+    },
+    "cr_hp2": {
+      "base": "stance"
+    },
+    "cr_lk": {
+      "base": "stance"
+    },
+    "cr_lp": {
+      "base": "stance"
+    },
+    "gattack": {
+      "base": "stance"
+    },
+    "hk1": {
+      "base": "stance"
+    },
+    "hk2": {
+      "base": "stance"
+    },
+    "hp1": {
+      "base": "stance"
+    },
+    "hp2": {
+      "base": "stance"
+    },
+    "idle2": {
+      "base": "stance"
+    },
+    "idle3": {
+      "base": "stance"
+    },
+    "j_k": {
+      "base": "stance"
+    },
+    "j_p": {
+      "base": "stance"
+    },
+    "jump_apex": {
+      "base": "stance"
+    },
+    "jump_down": {
+      "base": "stance"
+    },
+    "jump_up": {
+      "base": "stance"
+    },
+    "lk2": {
+      "base": "stance"
+    },
+    "lp1": {
+      "base": "stance"
+    },
+    "lp2": {
+      "base": "stance"
+    },
+    "sp1_1": {
+      "base": "stance"
+    },
+    "sp1_2": {
+      "base": "stance"
+    },
+    "sp2_1": {
+      "base": "stance"
+    },
+    "sp2_2": {
+      "base": "stance"
+    },
+    "sp3_1": {
+      "base": "stance"
+    },
+    "sp3_2": {
+      "base": "stance"
+    },
+    "super_1": {
+      "base": "stance"
+    },
+    "super_2": {
+      "base": "stance"
+    },
+    "super_3": {
+      "base": "stance"
+    },
+    "throw_1": {
+      "base": "stance"
+    },
+    "throw_2": {
+      "base": "stance"
+    },
+    "walk1": {
+      "base": "stance"
+    },
+    "walk2": {
+      "base": "stance"
+    },
+    "walk3": {
+      "base": "stance"
+    },
+    "walk4": {
+      "base": "stance"
+    },
+    "walk5": {
+      "base": "stance"
+    },
+    "walk6": {
+      "base": "stance"
     }
   },
   "anims": {
     "idle": [
       [
         "stance",
-        14
+        10
       ],
       [
-        "v2_breathe",
-        14
+        "idle2",
+        10
+      ],
+      [
+        "idle3",
+        10
+      ],
+      [
+        "idle2",
+        10
       ]
     ],
     "walk_f": [
       [
-        "v2_step0",
+        "walk1",
         5
       ],
       [
-        "v2_step1",
-        3
-      ],
-      [
-        "v2_step2",
-        4
-      ],
-      [
-        "v2_step3",
+        "walk2",
         5
       ],
       [
-        "v2_step4",
+        "walk3",
         5
       ],
       [
-        "v2_step5",
-        3
+        "walk4",
+        5
       ],
       [
-        "ink_step6",
-        4
+        "walk5",
+        5
       ],
       [
-        "ink_step7",
+        "walk6",
         5
       ]
     ],
     "walk_b": [
       [
-        "v2_step4",
+        "walk6",
         6
       ],
       [
-        "v2_step3",
+        "walk5",
         6
       ],
       [
-        "v2_step2",
-        5
-      ],
-      [
-        "v2_step1",
-        4
-      ],
-      [
-        "v2_step0",
+        "walk4",
         6
       ],
       [
-        "ink_step7",
+        "walk3",
         6
       ],
       [
-        "ink_step6",
-        5
+        "walk2",
+        6
       ],
       [
-        "v2_step5",
-        4
+        "walk1",
+        6
       ]
     ],
     "crouch": [
@@ -2386,11 +2489,15 @@
     ],
     "jump": [
       [
-        "jump",
-        6
+        "jump_up",
+        8
       ],
       [
-        "jump_b",
+        "jump_apex",
+        10
+      ],
+      [
+        "jump_down",
         255
       ]
     ],
@@ -2409,10 +2516,6 @@
     "hit": [
       [
         "hit",
-        4
-      ],
-      [
-        "hit_b",
         255
       ]
     ],
@@ -2447,11 +2550,7 @@
     "dash": [
       [
         "dash",
-        4
-      ],
-      [
-        "walk_a",
-        4
+        255
       ]
     ],
     "backdash": [
@@ -2469,11 +2568,11 @@
     "win": [
       [
         "win",
-        16
+        24
       ],
       [
         "win_b",
-        16
+        255
       ]
     ],
     "lose": [
@@ -2485,11 +2584,11 @@
     "intro": [
       [
         "intro",
-        10
+        40
       ],
       [
-        "intro_b",
-        10
+        "stance",
+        255
       ]
     ],
     "dizzy": [
@@ -2504,315 +2603,315 @@
     ],
     "jab": [
       [
-        "jab_1",
+        "lp1",
         2
       ],
       [
-        "v2_jab_punch",
+        "lp2",
         3,
         "active"
       ],
       [
-        "jab_1",
+        "lp1",
         5
       ]
     ],
     "body": [
       [
-        "body_1",
+        "hk1",
         4
       ],
       [
-        "v2_body_punch",
+        "lk2",
         3,
         "active"
       ],
       [
-        "body_1",
+        "stance",
         8
       ]
     ],
     "cross": [
       [
-        "cross_1",
+        "hp1",
         5
       ],
       [
-        "v2_cross_punch",
+        "hp2",
         4,
         "active",
         8
       ],
       [
-        "cross_2",
+        "hp1",
         5
       ],
       [
-        "cross_1",
+        "hp1",
         8
       ]
     ],
     "hook": [
       [
-        "hook_1",
+        "hk1",
         8
       ],
       [
-        "v2_hook_punch",
+        "hk2",
         5,
         "active",
         10
       ],
       [
-        "hook_1",
+        "hk1",
         14
       ]
     ],
     "c_jab": [
       [
-        "v2_c_jab_wind",
+        "crouch",
         2
       ],
       [
-        "v2_c_jab_punch",
+        "cr_lp",
         3,
         "active"
       ],
       [
-        "v2_c_jab_recover",
+        "crouch",
         6
       ]
     ],
     "c_body": [
       [
-        "v2_c_body_wind",
+        "crouch",
         4
       ],
       [
-        "v2_c_body_punch",
+        "cr_lk",
         3,
         "active"
       ],
       [
-        "v2_c_body_recover",
+        "crouch",
         9
       ]
     ],
     "c_upper": [
       [
-        "c_upper_1",
+        "cr_hp1",
         4
       ],
       [
-        "v2_c_upper_punch",
+        "cr_hp2",
         6,
         "active"
       ],
       [
-        "c_upper_1",
+        "cr_hp1",
         14
       ]
     ],
     "c_dig": [
       [
-        "c_dig_1",
+        "crouch",
         7
       ],
       [
-        "v2_c_dig_punch",
+        "cr_hk",
         4,
         "active",
         6
       ],
       [
-        "c_dig_1",
+        "crouch",
         16
       ]
     ],
     "j_jab": [
       [
-        "v2_j_jab_wind",
+        "jump_apex",
         3
       ],
       [
-        "v2_j_jab_punch",
+        "j_p",
         255,
         "active"
       ]
     ],
     "j_over": [
       [
-        "v2_j_over_wind",
+        "jump_apex",
         5
       ],
       [
-        "v2_j_over_punch",
+        "j_p",
         255,
         "active"
       ]
     ],
     "j_hammer": [
       [
-        "v2_j_hammer_wind",
+        "jump_apex",
         6
       ],
       [
-        "v2_j_hammer_punch",
+        "j_k",
         255,
         "active"
       ]
     ],
     "rush": [
       [
-        "rush_0",
+        "sp1_1",
         7
       ],
       [
-        "rush_1",
+        "sp1_2",
         4,
         "active",
         56
       ],
       [
-        "rush_1",
+        "sp1_2",
         6,
         "",
         14
       ],
       [
-        "cross_1",
+        "sp1_1",
         14
       ]
     ],
     "rush_h": [
       [
-        "rush_0",
+        "sp1_1",
         10
       ],
       [
-        "rush_1",
+        "sp1_2",
         5,
         "active",
         70
       ],
       [
-        "rush_1",
+        "sp1_2",
         8,
         "",
         20
       ],
       [
-        "cross_1",
+        "sp1_1",
         18
       ]
     ],
     "weave": [
       [
-        "weave_0",
+        "sp3_1",
         6,
         "invuln",
         24
       ],
       [
-        "weave_1",
+        "sp3_1",
         10,
         "invuln",
         24
       ],
       [
-        "body_2",
+        "sp3_2",
         4,
         "active",
         8
       ],
       [
-        "body_1",
+        "sp3_1",
         14
       ]
     ],
     "upper": [
       [
-        "upper_0",
+        "sp2_1",
         3,
         "invuln"
       ],
       [
-        "upper_1",
+        "sp2_2",
         6,
         "active|invuln|airborne",
         10,
         56
       ],
       [
-        "upper_2",
+        "sp2_1",
         22
       ],
       [
-        "v2_upper_recover",
+        "sp2_1",
         10
       ]
     ],
     "super": [
       [
-        "rush_0",
+        "super_1",
         10,
         "invuln"
       ],
       [
-        "flurry_a",
+        "super_2",
         4,
         "active|invuln",
         24
       ],
       [
-        "flurry_b",
+        "super_3",
         4,
         "active|rehit",
         18
       ],
       [
-        "flurry_a",
+        "super_2",
         4,
         "active|rehit",
         18
       ],
       [
-        "flurry_b",
+        "super_3",
         4,
         "active|rehit",
         18
       ],
       [
-        "upper_1",
+        "super_2",
         6,
         "active|rehit|airborne",
         8,
         52
       ],
       [
-        "upper_2",
+        "hp1",
         24
       ],
       [
-        "v2_super_recover",
+        "hp1",
         8
       ]
     ],
     "throw": [
       [
-        "clinch",
+        "throw_1",
         6
       ],
       [
-        "clinch_b",
+        "throw_2",
         8
       ],
       [
-        "clinch",
+        "throw_2",
         6
       ],
       [
-        "cross_2",
+        "throw_2",
         10
       ]
     ],
@@ -2842,12 +2941,12 @@
     ],
     "guard_push": [
       [
-        "shove",
+        "guard",
         3,
         "invuln"
       ],
       [
-        "shove",
+        "gattack",
         5,
         "active|invuln"
       ],
@@ -2858,17 +2957,17 @@
     ],
     "haymaker": [
       [
-        "hook_1",
+        "hk1",
         12
       ],
       [
-        "hook_2",
+        "hk2",
         5,
         "active",
         14
       ],
       [
-        "hook_1",
+        "hk1",
         18
       ]
     ]

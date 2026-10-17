@@ -259,7 +259,7 @@ static void test_ordered_rotations(void)
         assert(!ngf_input_motion(&in,NGF_MOTION_720,side,0));
         for (;i<15;i++) ngf_input_push(&in,ngf_raw_from_numpad(path[i],side),side);
         assert(ngf_input_motion(&in,NGF_MOTION_720,side,0));
-        for (i=0;i<6;i++) ngf_input_push(&in,0,side);
+        for (i=0;i<8;i++) ngf_input_push(&in,0,side);   /* past the button's 7-frame grace */
         assert(!ngf_input_motion(&in,NGF_MOTION_360,side,0));
     }
     ngf_input_reset(&in);

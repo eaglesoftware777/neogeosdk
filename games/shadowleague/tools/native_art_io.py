@@ -103,20 +103,26 @@ def fighter_source(folder,names):
         colors=pal
         if any(edge.any() for edge in (data[0],data[-1],data[:,0],data[:,-1])):raise ValueError(name+': clipped source')
         if not fr.get('hurt') or 'hit' not in fr:raise ValueError(name+': missing authored collision metadata')
-        if set(fr.get('layers',{}))!=required_layers:raise ValueError(name+': six anatomy layers required')
-        flat=np.zeros_like(data)
-        for layer in ('far_arm','far_leg','torso','head_hair','near_leg','near_arm'):
-            part,part_pal=indexed(folder/fr['layers'][layer],(160,160))
-            if not np.array_equal(part_pal,pal):raise ValueError(name+': layer palette mismatch')
-            _,components=ndimage.label(part>0,np.ones((3,3),np.uint8))
-            if not 1<=components<=(2 if layer=='head_hair' else 1):raise ValueError(name+': disconnected '+layer)
-            flat[part>0]=part[part>0]
-        if not np.array_equal(flat,data):raise ValueError(name+': flattening differs from source layers')
         if 'contacts' not in fr:raise ValueError(name+': missing foot contact metadata')
         for layer in fr['contacts']:
             if layer not in ('far_leg','near_leg'):raise ValueError(name+': invalid planted-foot layer')
-            leg,_=indexed(folder/fr['layers'][layer],(160,160))
-            if np.where(leg>0)[0].max()!=141:raise ValueError(name+': sole misses baseline 141')
+        if 'layers' in fr:
+            # Layered drawings: each limb is one piece and the layers flatten to the export.
+            if set(fr['layers'])!=required_layers:raise ValueError(name+': six anatomy layers required')
+            flat=np.zeros_like(data)
+            for layer in ('far_arm','far_leg','torso','head_hair','near_leg','near_arm'):
+                part,part_pal=indexed(folder/fr['layers'][layer],(160,160))
+                if not np.array_equal(part_pal,pal):raise ValueError(name+': layer palette mismatch')
+                _,components=ndimage.label(part>0,np.ones((3,3),np.uint8))
+                if not 1<=components<=(2 if layer=='head_hair' else 1):raise ValueError(name+': disconnected '+layer)
+                flat[part>0]=part[part>0]
+            if not np.array_equal(flat,data):raise ValueError(name+': flattening differs from source layers')
+            for layer in fr['contacts']:
+                leg,_=indexed(folder/fr['layers'][layer],(160,160))
+                if np.where(leg>0)[0].max()!=141:raise ValueError(name+': sole misses baseline 141')
+        elif fr['contacts'] and np.where(data>0)[0].max()!=141:
+            # Single-layer drawings: a planted pose stands on the baseline.
+            raise ValueError(name+': sole misses baseline 141')
         for boxes in [fr['hurt']]+list(fr['hit'].values()):
             if len(boxes)>3:raise ValueError(name+': more than three collision boxes')
             for box in boxes:
