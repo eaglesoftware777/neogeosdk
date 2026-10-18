@@ -1,7 +1,13 @@
 # Sky Lance — changelog
 
 Sky Lance's ROM sets ship with the NeoGeoSDK pre-releases and are numbered
-on their own: `_v1` with v1.7.3.
+on their own: `_v1` with v1.7.3, `_v2` with v1.7.7.
+
+## v2 (2026-10-18, NeoGeoSDK v1.7.7 pre-release) — the hardware fix
+
+The Hardware RC1 correction below, now a regular set in every format (NeoSD,
+Darksoft, BackBit and MAME, MVS and AES), built with SDK 1.7.7. Gameplay and
+difficulty are unchanged from v1.
 
 ## Hardware RC1 (2026-10-14)
 

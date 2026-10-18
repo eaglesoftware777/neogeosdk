@@ -1,9 +1,32 @@
 # Shadow League Fighting — changelog
 
 Shadow League Fighting's ROM sets ship with the NeoGeoSDK pre-releases and
-are numbered on their own: `_v1` with v1.7.5.
+are numbered on their own: `_v1` and `_v2` with v1.7.5, `_v3` with v1.7.7.
 
-## Rebirth candidate (in progress, 2026-10-15)
+## v3 (2026-10-18, NeoGeoSDK v1.7.7 pre-release) — painted roster, training and CPU ranks
+
+- All 44 fighters load complete painted pose sets (2,460 runtime frames, four
+  tile palettes per fighter) with detailed selection faces. Jack fights as a
+  boxer; Batu wears a closed jacket; Malik, Viktor and Ryuhei use wider,
+  uncropped poses.
+- Poses are uploaded into hidden sprite banks and shown only when complete,
+  with bounded work per frame and stable sprite slots for fighters,
+  projectiles and strikers.
+- CPU levels 1 to 7 (3 by default) that react to what they see, choose
+  projectiles and keep the same level across rounds and team members.
+- Long, short and reverse throws; throw escapes; original projectiles and
+  effects with their own palettes.
+- MVS soft DIPs: level, rounds to win, 30/60/90-second rounds, demo sound.
+  AES home menu: ARCADE, VERSUS, TRAINING and OPTIONS.
+- Training: dummy standing, guarding, crouching, jumping, CPU or player two;
+  recording and playback of up to 240 inputs; infinite power, life recovery,
+  position reset and the fighter's command list.
+- New title and skippable illustrated introduction.
+- 59 localized voice lines for 15 fighters.
+- Open: occasional slowdown or flicker reported in play, arena art and depth,
+  further movement and title polish, and physical cartridge tests.
+
+### Rebirth pass (2026-10-15)
 
 - Original native title/logo, three larger portraits and six illustrated story
   cuts, with existing music and immediate START/credit handling.

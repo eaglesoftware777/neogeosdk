@@ -1,8 +1,8 @@
 # Shadow League Fighting
 
-Original Neo Geo MVS/AES fighting game, cartridge ID 781. This isolated candidate
-uses fighting component 1.7.7. The game package for hardware review is V1; it does
-not publish or replace the SDK release being prepared separately.
+Original Neo Geo MVS/AES fighting game, cartridge ID 781, built on the SDK's
+fighting component (`ng_fight`). The current ROM set is `_v3`, shared with the
+NeoGeoSDK v1.7.7 pre-release.
 
 Two match formats: 1 vs 1 and 3 vs 3 with one selected striker per side. All 44
 fighters now load complete indexed artwork exports. This includes the previously
