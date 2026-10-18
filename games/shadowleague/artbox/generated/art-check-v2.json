@@ -1,10 +1,10 @@
 {
   "passed": true,
   "fighters": 44,
-  "frames": 2183,
-  "limb_layers_checked": 5388,
+  "frames": 2460,
+  "limb_layers_checked": 0,
   "indexed_assets_checked": 88,
-  "ground_contacts_checked": 87,
+  "ground_contacts_checked": 0,
   "canvas": [
     160,
     160

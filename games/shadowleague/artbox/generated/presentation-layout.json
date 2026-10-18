@@ -1,67 +1,67 @@
 [
   {
-    "file": "title.png",
-    "tile": 62882,
+    "file": "title-sdk177.png",
+    "tile": 99354,
     "palette_banks": 16,
     "P_offset": 1048576
   },
   {
     "file": "summons.png",
-    "tile": 63190,
+    "tile": 99662,
     "palette_banks": 16,
     "P_offset": 2097152
   },
   {
-    "file": "kenji.png",
-    "tile": 63498,
+    "file": "kenji-sdk177.png",
+    "tile": 99970,
     "palette_banks": 16,
     "P_offset": 1049496
   },
   {
-    "file": "jack.png",
-    "tile": 63806,
+    "file": "ryuhei-sdk177.png",
+    "tile": 100278,
     "palette_banks": 16,
     "P_offset": 2098072
   },
   {
-    "file": "amara.png",
-    "tile": 64114,
+    "file": "jack-sdk177.png",
+    "tile": 100586,
     "palette_banks": 16,
     "P_offset": 1050416
   },
   {
-    "file": "protocol.png",
-    "tile": 64422,
+    "file": "claire-sdk177.png",
+    "tile": 100894,
     "palette_banks": 16,
     "P_offset": 2098992
   },
   {
-    "file": "challenge.png",
-    "tile": 64730,
+    "file": "title-sdk177.png",
+    "tile": 101202,
     "palette_banks": 16,
     "P_offset": 1051336
   },
   {
     "file": "mode.png",
-    "tile": 65038,
+    "tile": 101510,
     "palette_banks": 16,
     "P_offset": 2099912
   },
   {
     "file": "select.png",
-    "tile": 65536,
+    "tile": 101818,
     "palette_banks": 16,
     "P_offset": 1052256
   },
   {
     "file": "vs.png",
-    "tile": 65844,
+    "tile": 102126,
     "palette_banks": 16,
     "P_offset": 2100832
   },
   {
     "file": "ending.png",
-    "tile": 66152,
+    "tile": 102434,
     "palette_banks": 16,
     "P_offset": 1053176
   }

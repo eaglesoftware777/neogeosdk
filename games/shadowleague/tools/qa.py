@@ -18,6 +18,7 @@ FIELDS = {"match": "&s_match", "state": "&((NGFMatch*)0)->state", "round": "&((N
           "seconds": "&((NGFMatch*)0)->seconds", "winner": "&((NGFMatch*)0)->winner",
           "frame": "&((NGFMatch*)0)->frame",
           "super_freeze": "&((NGFMatch*)0)->super_freeze",
+          "training": "&((NGFMatch*)0)->training", "difficulty1": "&((NGFMatch*)0)->cpu[1].difficulty",
           "life0": "&((NGFMatch*)0)->f[0].life", "life1": "&((NGFMatch*)0)->f[1].life",
           "x0": "&((NGFMatch*)0)->f[0].x", "x1": "&((NGFMatch*)0)->f[1].x",
           "st0": "&((NGFMatch*)0)->f[0].state", "st1": "&((NGFMatch*)0)->f[1].state",
@@ -33,7 +34,13 @@ RUNTIME_FIELDS={"bank_seen":"&slf_rom_banks_seen", "bank_errors":"&slf_rom_error
                 "bank_copies":"&slf_rom_copies", "presentation":"&slf_presentation_current",
                 "card_buffer":"&s_story_card", "palette_state":"&ng_palfx_scr",
                 "select_live":"&slf_select_live", "def_kenji":"&slf_kenji",
-                "def_jack":"&slf_jack", "def_amara":"&slf_amara"}
+                "def_jack":"&slf_jack", "def_amara":"&slf_amara",
+                "home_live":"&slf_home_live", "home_selection":"&slf_home_selection",
+                "home_difficulty":"&slf_home_difficulty", "home_rounds":"&slf_home_rounds",
+                "home_seconds":"&slf_home_seconds", "select_cursor":"&slf_select_cursor",
+                "wall_start":"&slf_wall_row_start", "wall_len":"&slf_wall_row_len",
+                "actor_deferred":"&slf_actor_deferred", "actor_commits":"&slf_actor_commits",
+                "actor_deadline_misses":"&slf_actor_deadline_misses"}
 
 
 def main():
@@ -43,7 +50,9 @@ def main():
     ap.add_argument("--record",action="store_true",help="Record real cartridge frames as native AVI")
     ap.add_argument("--motion-frames",action="store_true",help="Save every native frame during the review motion interval")
     ap.add_argument("--team", action="store_true", help="Select team battle and verify a teammate enters")
-    ap.add_argument("--fighter",choices=('kenji','jack','amara'),help="Select a showcase fighter using actual menu inputs")
+    ap.add_argument("--fighter",choices=sorted(p.stem for p in (GAME/'fighters').glob('*.json')),help="Select a showcase fighter using actual menu inputs")
+    ap.add_argument("--training",action="store_true",help="Enter AES practice with actual menu inputs")
+    ap.add_argument("--options",action="store_true",help="Exercise all seven AES settings before entering practice")
     ap.add_argument("--attract-only",action="store_true",help="No input; verify all story cards and both physical data banks")
     ap.add_argument("--seconds", type=int, default=100)
     ap.add_argument("--wav", action="store_true", help="Record the sound output to audio.wav")
@@ -56,6 +65,12 @@ def main():
     ap.add_argument("--hash",type=Path,default=ROOT/"hash_eagle/shadowleague")
     args = ap.parse_args()
     if args.team and args.fighter:ap.error('--fighter selects a duel; use the regular team scenario for reserves and assists')
+    if (args.training or args.options) and args.platform!="aes":ap.error("Practice/settings QA requires AES")
+    if args.options:args.training=True
+    expressions=dict(FIELDS)
+    if args.training:expressions["match"]="&slf_training_match"
+    runtime_fields=dict(RUNTIME_FIELDS)
+    if args.fighter:runtime_fields["def_"+args.fighter]="&slf_"+args.fighter
     windows=args.mame.lower().endswith(".exe")
     def native(p):
         p = p.resolve()
@@ -79,21 +94,21 @@ def main():
     for binary, names in ((args.elf, ["match"]), (out / "layout_probe.o", [n for n in FIELDS if n != "match"])):
         cmd = [str(gdb), "-batch", str(binary)]
         for name in names:
-            cmd += ["-ex", f'printf "{name}=%lu\\n", (unsigned long){FIELDS[name]}']
+            cmd += ["-ex", f'printf "{name}=%lu\\n", (unsigned long){expressions[name]}']
         layout.update(line.split("=", 1) for line in subprocess.check_output(cmd, text=True).splitlines() if "=" in line)
     cmd=[str(gdb),'-batch',str(args.elf)]
-    for name,expression in RUNTIME_FIELDS.items():cmd+=['-ex',f'printf "{name}=%lu\\n", (unsigned long){expression}']
+    for name,expression in runtime_fields.items():cmd+=['-ex',f'printf "{name}=%lu\\n", (unsigned long){expression}']
     runtime=subprocess.run(cmd,text=True,capture_output=True)
-    if runtime.returncode==0:
-        layout.update(line.split('=',1) for line in runtime.stdout.splitlines() if '=' in line)
-    elif args.attract_only:raise RuntimeError('Candidate ELF lacks bank/story QA symbols: '+runtime.stderr)
+    layout.update(line.split('=',1) for line in runtime.stdout.splitlines() if '=' in line)
+    if args.attract_only and 'bank_seen' not in layout:raise RuntimeError('Candidate ELF lacks bank/story QA symbols: '+runtime.stderr)
     (out / "layout.lua").write_text("return {" + ",".join(f"{k}={int(v)}" for k, v in layout.items()) + "}\n")
     env = dict(os.environ, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy", DISPLAY="",
                SLF_CAPTURE_DIR=native(out).replace("\\","/"), SLF_PLATFORM=args.platform, SLF_TEAM="1" if args.team else "0",
                SLF_SCRIPT_ROOT=native(GAME / "tools").replace("\\","/"), SLF_MOTION_FRAMES="1" if args.motion_frames else "0",
-               SLF_ATTRACT_ONLY='1' if args.attract_only else '0')
-    env['SLF_FIGHTER']=str({'kenji':0,'jack':3,'amara':2}[args.fighter]) if args.fighter else ''
-    if windows:env["WSLENV"]=env.get("WSLENV","")+":SLF_CAPTURE_DIR:SLF_PLATFORM:SLF_TEAM:SLF_SCRIPT_ROOT:SLF_MOTION_FRAMES:SLF_ATTRACT_ONLY:SLF_FIGHTER"
+               SLF_ATTRACT_ONLY='1' if args.attract_only else '0',SLF_TRAINING='1' if args.training else '0',SLF_OPTIONS='1' if args.options else '0')
+    ids=[f['id'] for f in json.loads((GAME/'artbox/generated/fighter-layout.json').read_text())]
+    env['SLF_FIGHTER']=str(ids.index(args.fighter)) if args.fighter else ''
+    if windows:env["WSLENV"]=env.get("WSLENV","")+":SLF_CAPTURE_DIR:SLF_PLATFORM:SLF_TEAM:SLF_SCRIPT_ROOT:SLF_MOTION_FRAMES:SLF_ATTRACT_ONLY:SLF_FIGHTER:SLF_TRAINING:SLF_OPTIONS"
     aes = args.platform == "aes"
     script = args.script.resolve()
     if windows:
@@ -108,7 +123,7 @@ def main():
                *(["-wavwrite", native(out / "audio.wav")] if args.wav else []),
                "-autoboot_script", native(script)]
     if args.record:command += ["-aviwrite", native(out / "cartridge.avi")]
-    provenance={'platform':args.platform,'bios_name':args.bios_name or ('asia' if aes else 'euro'),'team':args.team,'fighter':args.fighter,'attract_only':args.attract_only,
+    provenance={'platform':args.platform,'bios_name':args.bios_name or ('asia' if aes else 'euro'),'team':args.team,'fighter':args.fighter,'attract_only':args.attract_only,'training':args.training,'options':args.options,
                 'seconds':args.seconds,'elf_sha256':hashlib.sha256(args.elf.read_bytes()).hexdigest(),
                 'rom_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest()
                               for p in sorted((args.roms/'shadowleague').glob('781-*'))}}
@@ -140,6 +155,17 @@ def main():
     if args.fighter:
         assert any(s.get('def0_pointer')==int(layout['def_'+args.fighter]) for s in fighting), 'Requested showcase fighter was not selected'
     assert "LUA ERROR" not in (out / "mame.log").read_text(), "Capture script failed"
+    if args.training:
+        assert any(s.get('training')==1 for s in fighting), 'Practice was not entered'
+        assert all(s['secs']>=98 for s in fighting), 'Practice timer expired'
+        if args.options:
+            ui=[json.loads(line) for line in (out/'ui-telemetry.jsonl').read_text().splitlines()]
+            home=next(s for s in ui if s['screen']==1)
+            assert (home['difficulty'],home['rounds'],home['seconds'])==(3,2,60), 'AES initial settings are not level 3 / two wins / 60 seconds'
+            assert all(1<=s['rounds']<=3 and s['seconds'] in (30,60,90) for s in ui if s['screen']==2), 'Invalid AES rounds/time displayed'
+            assert set(range(1,8))<={s['difficulty'] for s in ui if s['screen']==2}, 'Not all seven AES settings exercised'
+    elif args.platform=='mvs':
+        assert all(s.get('difficulty1')==3 for s in fighting if s['cpu1']), 'MVS default difficulty is not level 3'
     if args.team:
         assert all(s["mode"] == 1 and s["count0"] == 3 and s["count1"] == 3 for s in fighting), "Team selection failed"
         assert any(s["active0"] or s["active1"] for s in fighting), "No reserve fighter entered"

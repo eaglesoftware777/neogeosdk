@@ -465,9 +465,9 @@ static void NEOGEO_USER apply_hit(NGFMatch *m, uint8_t att_i, const HitParams *h
             event(m, NGF_EV_HIT, att_i, 0xFE, ex, ey);   /* counter */
         }
         if (!dmg) dmg = 1;
-        def->life = def->life > dmg ? (uint16_t)(def->life - dmg) : 0u;
-        def->combo++;
-        def->combo_damage = (uint16_t)(def->combo_damage + dmg);
+        def->life = def->life > dmg ? (uint16_t)(def->life - dmg) : (m->training ? 1u : 0u);
+        if (def->combo < 255u) def->combo++;
+        def->combo_damage = def->combo_damage > (uint16_t)(65535u - dmg) ? 65535u : (uint16_t)(def->combo_damage + dmg);
         if (att->power < NGF_POWER_MAX) att->power = (uint16_t)(att->power + hp->meter);
         if (def->power < NGF_POWER_MAX) def->power = (uint16_t)(def->power + hp->meter / 2u);
         if (att->power > NGF_POWER_MAX) att->power = NGF_POWER_MAX;
@@ -890,6 +890,15 @@ static void NEOGEO_USER fighter_step(NGFMatch *m, uint8_t who, uint8_t controls)
             f->input.pending = keep;
         }
         f->state_timer++;
+        if (f->move && f->move->kind == NGF_KIND_THROW && o->state == NGF_S_THROWN) {
+            uint8_t lift = f->state_timer > 8u ? 8u : (uint8_t)f->state_timer;
+            int8_t direction = sign_of(f);
+            if (f->move->motion == NGF_MOTION_BACK && f->state_timer >= 8u) direction = (int8_t)-direction;
+            o->x = f->x + (int32_t)(direction * 26) * 256;
+            o->h = (int32_t)(lift * ((f->move->on_hit & NGF_ON_LIFT) ? 7u : 2u)) * 256;
+            o->grounded = 0u;
+            o->vx = o->vh = 0;
+        }
         done = anim_step(m, who);
         if (f->move && f->move->kind == NGF_KIND_THROW && done) {
             NGFFighter *t = o;
@@ -1162,6 +1171,7 @@ static void NEOGEO_USER cpu_learn(NGFCpu *c, const NGFFighterDef *d)
         const NGFMove *mv = &d->moves[k];
         switch (mv->kind) {
         case NGF_KIND_SPECIAL:
+            if (mv->projectile) { c->role[NGF_CPU_PROJECTILE] = k; break; }
             if (!mv->motion || !mv->damage || mv->motion == NGF_MOTION_720) break;
             if (c->role[NGF_CPU_ANTI_AIR] == 0xFFu && (mv->motion == NGF_MOTION_DP || move_invuln(d, mv))) {
                 c->role[NGF_CPU_ANTI_AIR] = k;
@@ -1312,14 +1322,15 @@ uint8_t NEOGEO_USER ngf_cpu_input(NGFMatch *m, uint8_t who)
     NGFFighter *f = &m->f[who], *o = &m->f[who ^ 1u];
     const NGFFighterDef *d = f->def;
     uint8_t lv = c->level, fl = f->facing_left;
-    uint8_t react = (uint8_t)(lv >= 10u ? 4u : 14u - lv);
+    uint8_t react = c->difficulty ? ngf_cpu_reaction_frames(c->difficulty) : (uint8_t)(lv >= 10u ? 4u : 14u - lv);
     uint8_t ready = (uint8_t)(f->state == NGF_S_IDLE || f->state == NGF_S_CROUCH || f->state == NGF_S_DASH);
     uint8_t weight[PICK_BACKDASH + 1], i;
     uint16_t dist, shot;
     if (c->learned != d) cpu_learn(c, d);
     /* Whether this CPU saw the other fighter's attack coming is decided once,
      * as it starts: a guard has to be up before a fast normal lands. */
-    if (o->state == NGF_S_ATTACK && o->state_timer == 1u) c->judge = chance(m, (uint16_t)(25u + lv * 7u));
+    if (o->state == NGF_S_ATTACK && o->state_timer == (c->difficulty ? react : 1u))
+        c->judge = chance(m, (uint16_t)(25u + lv * 7u));
     if (o->state != NGF_S_ATTACK) c->judge = 0;
     if (c->pos < c->len) return c->seq[c->pos++];
     c->len = c->pos = 0;
@@ -1403,6 +1414,9 @@ uint8_t NEOGEO_USER ngf_cpu_input(NGFMatch *m, uint8_t who)
         cpu_hold(c, cpu_guard(m, who, 0), 10u, PLAN_GUARD);
         return c->hold;
     }
+    if (dist > 130u && dist < 260u && c->role[NGF_CPU_PROJECTILE] != 0xFFu && !has_projectile(m, who) &&
+        chance(m, (uint16_t)(8u + lv * 4u)) && cpu_move(m, who, c->role[NGF_CPU_PROJECTILE], 0u))
+        return ngf_cpu_input(m, who);
     /* A jump coming in: anti-air it, meet it in the air, or guard high. */
     if (!o->grounded && (o->state == NGF_S_JUMP || o->state == NGF_S_ATTACK) && o->state_timer >= react && dist < 150u) {
         uint8_t toward = (uint8_t)(dist < 70u || (fl ? o->vx > 0 : o->vx < 0));
@@ -1553,13 +1567,36 @@ void NEOGEO_USER ngf_set_cpu(NGFMatch *m, uint8_t who, uint8_t level)
     NGFCpu *c;
     if (who > 1u) return;
     c = &m->cpu[who];
-    c->level = level;
+    c->level = level > 9u ? 9u : level;
+    c->difficulty = 0u;
     c->len = c->pos = c->wait = 0;
     c->hold = 0;
     c->plan = PLAN_NONE;
     c->next = 0xFFu;
     c->learned = 0;
     m->f[who].cpu = (uint8_t)(level != 0u);
+}
+
+uint8_t NEOGEO_USER ngf_cpu_reaction_frames(uint8_t difficulty)
+{
+    static const uint8_t frames[7] = {20u, 16u, 12u, 10u, 8u, 6u, 4u};
+    if (difficulty < 1u || difficulty > NGF_DIFFICULTY_LEVELS) return 0u;
+    return frames[difficulty - 1u];
+}
+
+uint8_t NEOGEO_USER ngf_set_cpu_difficulty(NGFMatch *m, uint8_t who, uint8_t difficulty)
+{
+    static const uint8_t levels[7] = {1u, 2u, 4u, 5u, 6u, 8u, 9u};
+    if (who > 1u || difficulty < 1u || difficulty > NGF_DIFFICULTY_LEVELS) return 0u;
+    ngf_set_cpu(m, who, levels[difficulty - 1u]);
+    m->cpu[who].difficulty = difficulty;
+    return 1u;
+}
+
+static void NEOGEO_USER cpu_restart(NGFMatch *m, uint8_t who)
+{
+    if (m->cpu[who].difficulty) ngf_set_cpu_difficulty(m, who, m->cpu[who].difficulty);
+    else ngf_set_cpu(m, who, m->cpu[who].level);
 }
 
 /* ===================================================================== */
@@ -1664,7 +1701,7 @@ void NEOGEO_USER ngf_team_set(NGFMatch *m, uint8_t who, const NGFFighterDef *f1,
     fighter_reset(m, who);
     if (m->state == NGF_M_FIGHT) { m->f[who].state = NGF_S_IDLE; set_anim(&m->f[who], NGF_A_IDLE, 1); }
     m->tag_reserve[who] = m->f[who].life;
-    ngf_set_cpu(m, who, m->cpu[who].level);
+    cpu_restart(m, who);
 }
 
 void NEOGEO_USER ngf_striker_set(NGFMatch *m, uint8_t who, const NGFFighterDef *def)
@@ -1720,7 +1757,7 @@ uint8_t NEOGEO_USER ngf_tag_switch(NGFMatch *m, uint8_t who)
     f->life = m->team_life[who][next]; f->guard = f->def->guard_max;
     f->move = 0; f->move_hit = f->counter = f->combo = 0; f->combo_damage = 0;
     f->state = NGF_S_DASH; f->state_timer = 0;
-    set_anim(f, NGF_A_DASH, 1); ngf_set_cpu(m, who, m->cpu[who].level);
+    set_anim(f, NGF_A_DASH, 1); cpu_restart(m, who);
     event(m, NGF_EV_TAG, who, next, ngf_fighter_px(f), ngf_fighter_py(f));
     return 1;
 }
@@ -1739,6 +1776,7 @@ void NEOGEO_USER ngf_match_init(NGFMatch *m, const NGFFighterDef *p1, const NGFF
     m->floor_y = 200;
     m->rng = seed ? seed : 0x2F6Bu;
     m->rounds_to_win = 2;
+    m->round_seconds = NGF_ROUND_SECONDS;
     m->winner = 0xFFu;
     m->round = 0;
     m->zoom_scale = 255u;
@@ -1758,16 +1796,27 @@ void NEOGEO_USER ngf_round_start(NGFMatch *m)
     for (i = 0; i < NGF_PROJECTILES; i++) m->proj[i].active = 0;
     m->state = NGF_M_INTRO;
     m->state_timer = 0;
-    m->clock = (uint16_t)(NGF_ROUND_SECONDS * NGF_SECOND_FRAMES);
-    m->seconds = NGF_ROUND_SECONDS;
+    m->clock = (uint16_t)(m->round_seconds * NGF_SECOND_FRAMES);
+    m->seconds = m->round_seconds;
     m->hitstop = m->super_freeze = 0;
     for (i = 0; i < 2u; i++) {
         m->striker[i].active = m->striker[i].cooldown = 0;
-        ngf_set_cpu(m, i, m->cpu[i].level);
+        cpu_restart(m, i);
     }
     m->round_winner = 0xFFu;
     m->camera_x = (int16_t)((m->stage_w - m->screen_w) / 2);
     event(m, NGF_EV_ROUND, 0, m->round, 0, 0);
+}
+
+uint8_t NEOGEO_USER ngf_set_round_seconds(NGFMatch *m, uint8_t seconds)
+{
+    if (seconds < 10u || seconds > 99u) return 0u;
+    m->round_seconds = seconds;
+    if (m->state == NGF_M_INTRO) {
+        m->clock = (uint16_t)(seconds * NGF_SECOND_FRAMES);
+        m->seconds = seconds;
+    }
+    return 1u;
 }
 
 static void NEOGEO_USER end_round(NGFMatch *m)
@@ -1943,6 +1992,89 @@ void NEOGEO_USER ngf_match_step(NGFMatch *m, uint8_t raw1, uint8_t raw2)
     }
 }
 
+void NEOGEO_USER ngf_training_reset(NGFTraining *t, NGFMatch *m)
+{
+    uint8_t i;
+    ngf_round_start(m);
+    m->training = 1u;
+    m->clock = 99u * NGF_SECOND_FRAMES;
+    m->seconds = 99u;
+    m->state = NGF_M_FIGHT;
+    m->round = 1u;
+    m->winner = m->round_winner = 0xFFu;
+    m->f[0].wins = m->f[1].wins = 0u;
+    for (i = 0u; i < 2u; i++) {
+        m->f[i].state = NGF_S_IDLE;
+        set_anim(&m->f[i], NGF_A_IDLE, 1u);
+    }
+    m->ev_count = 0u;
+    t->idle[0] = t->idle[1] = 0u;
+    t->record_pos = 0u;
+}
+
+void NEOGEO_USER ngf_training_init(NGFTraining *t, NGFMatch *m)
+{
+    uint16_t i;
+    uint8_t *p = (uint8_t *)t;
+    for (i = 0u; i < sizeof(*t); i++) p[i] = 0u;
+    t->infinite_power = t->recover_life = 1u;
+    ngf_set_cpu(m, 0u, 0u);
+    ngf_set_cpu(m, 1u, 0u);
+    ngf_training_reset(t, m);
+}
+
+uint8_t NEOGEO_USER ngf_training_set_dummy(NGFTraining *t, NGFMatch *m, uint8_t dummy)
+{
+    if (dummy >= NGF_DUMMY_COUNT) return 0u;
+    t->dummy = dummy;
+    t->record_pos = 0u;
+    if (dummy == NGF_DUMMY_RECORD) t->record_size = 0u;
+    if (dummy == NGF_DUMMY_CPU) ngf_set_cpu_difficulty(m, 1u, NGF_DIFFICULTY_DEFAULT);
+    else ngf_set_cpu(m, 1u, 0u);
+    return 1u;
+}
+
+void NEOGEO_USER ngf_training_step(NGFTraining *t, NGFMatch *m, uint8_t raw1, uint8_t raw2)
+{
+    uint8_t dummy = 0u, i;
+    switch (t->dummy) {
+    case NGF_DUMMY_GUARD:
+        dummy = ngf_raw_from_numpad((m->f[0].move && m->f[0].move->level == NGF_LV_LOW) ? 1u : 4u,
+                                   m->f[1].facing_left);
+        break;
+    case NGF_DUMMY_CROUCH: dummy = NGF_RAW_DOWN; break;
+    case NGF_DUMMY_JUMP: dummy = NGF_RAW_UP; break;
+    case NGF_DUMMY_PLAYER2: dummy = raw2; break;
+    case NGF_DUMMY_RECORD:
+        dummy = raw1;
+        raw1 = 0u;
+        if (t->record_size < NGF_TRAIN_RECORD_FRAMES) t->record[t->record_size++] = dummy;
+        break;
+    case NGF_DUMMY_PLAYBACK:
+        if (t->record_size) {
+            dummy = t->record[t->record_pos++];
+            if (t->record_pos >= t->record_size) t->record_pos = 0u;
+        }
+        break;
+    default: break;
+    }
+    m->training = 1u;
+    m->clock = 99u * NGF_SECOND_FRAMES;
+    m->seconds = 99u;
+    ngf_match_step(m, raw1, dummy);
+    for (i = 0u; i < 2u; i++) {
+        NGFFighter *f = &m->f[i];
+        if (t->infinite_power) { f->power = NGF_POWER_MAX; f->spirit = NGF_SPIRIT_MAX; }
+        if (f->state == NGF_S_IDLE || f->state == NGF_S_CROUCH) {
+            if (t->idle[i] < 60u) t->idle[i]++;
+            if (t->idle[i] == 60u && t->recover_life) {
+                f->life = f->def->life;
+                f->guard = f->def->guard_max;
+            }
+        } else t->idle[i] = 0u;
+    }
+}
+
 uint32_t NEOGEO_USER ngf_match_hash(const NGFMatch *m)
 {
     uint32_t h = 2166136261u;
@@ -1966,6 +2098,9 @@ uint32_t NEOGEO_USER ngf_match_hash(const NGFMatch *m)
         for (k = 0; k < NGF_INPUT_FRAMES; k++) { MIX(in->raw[k]); MIX(in->press[k]); }
         for (k = 0; k < 4u; k++) { MIX(in->press_age[k]); MIX(in->release_age[k]); }
         MIX(cpu->len); MIX(cpu->pos); MIX(cpu->wait); MIX(cpu->level); MIX(cpu->hold);
+        MIX(cpu->difficulty); MIX(cpu->plan); MIX(cpu->next); MIX(cpu->last); MIX(cpu->judge);
+        MIX(cpu->learned == f->def);
+        for (k = 0u; k < NGF_CPU_ROLES; k++) MIX(cpu->role[k]);
         for (k = 0; k < cpu->len; k++) MIX(cpu->seq[k]);
         MIX(m->team_count[i]); MIX(m->team_active[i]); MIX(m->assist_uses[i]);
         for (k = 0; k < 3u; k++) MIX(m->team_life[i][k]);
@@ -1984,6 +2119,7 @@ uint32_t NEOGEO_USER ngf_match_hash(const NGFMatch *m)
     MIX(m->clock); MIX(m->seconds); MIX(m->rng); MIX(m->round); MIX(m->state); MIX(m->state_timer);
     MIX(m->winner); MIX(m->round_winner); MIX(m->rounds_to_win); MIX(m->frame); MIX(m->hitstop);
     MIX(m->super_freeze); MIX(m->super_who); MIX(m->zoom_scale); MIX(m->match_mode);
+    MIX(m->training); MIX(m->round_seconds);
     MIX(m->stage_w); MIX(m->camera_x); MIX(m->screen_w); MIX(m->floor_y);
 #undef MIX
     return h;

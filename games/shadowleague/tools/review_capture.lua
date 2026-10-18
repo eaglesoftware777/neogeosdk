@@ -50,6 +50,7 @@ emu.register_frame_done(function()
   palette_pending_max=math.max(palette_pending_max,palette_pending)
  end
  assert(strips<=96,'Sprite scanline limit exceeded')
+ if a.actor_deadline_misses then assert(cpu:read_u16(a.actor_deadline_misses)==0,'Actor write crossed the drawing deadline') end
  if os.getenv('SLF_ATTRACT_ONLY')=='1' and a.card_buffer then
   local count=cpu:read_u16(a.bank_copies)
   if count~=copies and count>0 and count<=16 then copies=count;pending=2 end
@@ -87,7 +88,7 @@ emu.register_frame_done(function()
  end
  previous_state=state;previous_sim=sim;previous_round=round
  if frame%30==0 then
-  log:write(string.format('{"hardware_frame":%d,"t":%.5f,"state":%d,"simulation_frame":%d,"scanline_strips":%d,"peak_strips":%d,"fight_observations":%d,"missed_simulation_frames":%d,"presentation_checks":%d,"palette_pending_max":%d,"super_freezes":%d}\n',frame,machine.time:as_double(),state,sim,strips,peak,observed,missed,checked,palette_pending_max,super_freezes));log:flush()
+  log:write(string.format('{"hardware_frame":%d,"t":%.5f,"state":%d,"simulation_frame":%d,"scanline_strips":%d,"peak_strips":%d,"fight_observations":%d,"missed_simulation_frames":%d,"presentation_checks":%d,"palette_pending_max":%d,"super_freezes":%d,"actor_commits":%d,"actor_deferred":%d,"actor_deadline_misses":%d}\n',frame,machine.time:as_double(),state,sim,strips,peak,observed,missed,checked,palette_pending_max,super_freezes, a.actor_commits and cpu:read_u16(a.actor_commits) or 0, a.actor_deferred and cpu:read_u16(a.actor_deferred) or 0, a.actor_deadline_misses and cpu:read_u16(a.actor_deadline_misses) or 0));log:flush()
   assert(strips<=96,'Sprite scanline limit exceeded')
  end
  if os.getenv('SLF_MOTION_FRAMES')=='1' and machine.time:as_double()>22 and machine.time:as_double()<32 then

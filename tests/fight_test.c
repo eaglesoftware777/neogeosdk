@@ -493,6 +493,74 @@ static void test_cpu_determinism(void)
     printf("cpu match: %lu frames, winner %u, rounds %u\n", (unsigned long)n1, m.winner, m.round);
 }
 
+
+static void test_seven_levels_and_round_options(void)
+{
+    uint8_t level, previous = 255u;
+    uint32_t before;
+    fight_at(100);
+    for (level = 1u; level <= NGF_DIFFICULTY_LEVELS; level++) {
+        assert(ngf_set_cpu_difficulty(&m, 1u, level));
+        assert(m.cpu[1].difficulty == level);
+        assert(ngf_cpu_reaction_frames(level) < previous);
+        previous = ngf_cpu_reaction_frames(level);
+    }
+    before = ngf_match_hash(&m);
+    assert(!ngf_set_cpu_difficulty(&m, 2u, 3u));
+    assert(!ngf_set_cpu_difficulty(&m, 1u, 0u));
+    assert(!ngf_set_cpu_difficulty(&m, 1u, 8u));
+    assert(before == ngf_match_hash(&m));
+    assert(ngf_set_cpu_difficulty(&m, 1u, NGF_DIFFICULTY_DEFAULT));
+    assert(ngf_set_round_seconds(&m, 90u));
+    ngf_round_start(&m);
+    assert(m.cpu[1].difficulty == 3u);
+    assert(m.seconds == 90u && m.clock == 90u * 60u);
+    assert(!ngf_set_round_seconds(&m, 0u));
+    assert(!ngf_set_round_seconds(&m, 100u));
+    assert(m.round_seconds == 90u);
+    ngf_set_cpu(&m, 1u, 255u);
+    assert(m.cpu[1].level == 9u && m.cpu[1].difficulty == 0u);
+}
+
+static void test_training_modes_and_recording(void)
+{
+    NGFTraining t;
+    uint16_t i;
+    int32_t player_x;
+    fight_at(50);
+    ngf_training_init(&t, &m);
+    assert(m.seconds == 99u && m.clock == 99u * NGF_SECOND_FRAMES);
+    assert(m.training && m.state == NGF_M_FIGHT);
+    m.f[1].x = m.f[0].x + 50 * 256;
+    m.f[1].life = 1u;
+    ngf_training_step(&t, &m, NGF_BTN_A, 0u);
+    for (i = 0u; i < 70u; i++) ngf_training_step(&t, &m, 0u, 0u);
+    assert(m.state == NGF_M_FIGHT && m.f[1].life > 0u);
+    assert(m.f[0].power == NGF_POWER_MAX && m.seconds >= 98u);
+    assert(ngf_training_set_dummy(&t, &m, NGF_DUMMY_RECORD));
+    ngf_training_reset(&t, &m);
+    player_x = m.f[0].x;
+    for (i = 0u; i < 30u; i++) ngf_training_step(&t, &m, NGF_RAW_RIGHT, 0u);
+    assert(t.record_size == 30u && m.f[0].x == player_x);
+    for (i = 0u; i < 30u; i++) assert(t.record[i] == NGF_RAW_RIGHT);
+    assert(ngf_training_set_dummy(&t, &m, NGF_DUMMY_PLAYBACK));
+    for (i = 0u; i < 90u; i++) ngf_training_step(&t, &m, 0u, 0u);
+    assert(t.record_pos == 0u && t.record_size == 30u);
+    assert(ngf_training_set_dummy(&t, &m, NGF_DUMMY_RECORD));
+    for (i = 0u; i < 300u; i++) ngf_training_step(&t, &m, 0u, 0u);
+    assert(t.record_size == NGF_TRAIN_RECORD_FRAMES);
+    assert(!ngf_training_set_dummy(&t, &m, NGF_DUMMY_COUNT));
+    assert(ngf_training_set_dummy(&t, &m, NGF_DUMMY_CPU));
+    assert(m.cpu[1].difficulty == 3u && m.f[1].cpu);
+    assert(ngf_training_set_dummy(&t, &m, NGF_DUMMY_PLAYER2));
+    assert(!m.f[1].cpu);
+    assert(ngf_training_set_dummy(&t, &m, NGF_DUMMY_JUMP));
+    ngf_training_reset(&t, &m);
+    for (i = 0u; i < 8u; i++) ngf_training_step(&t, &m, 0u, 0u);
+    assert(!m.f[1].grounded && m.f[1].h > 0);
+    printf("training: nonlethal combat, timers, resource refill, record/playback and dummy modes: ok\n");
+}
+
 int main(void)
 {
     test_motions();
@@ -508,6 +576,8 @@ int main(void)
     test_simultaneous_contact();
     test_replay_hash();
     test_cpu_determinism();
+    test_seven_levels_and_round_options();
+    test_training_modes_and_recording();
     printf("fight_test: ok (NGFMatch %u bytes)\n", (unsigned)sizeof(NGFMatch));
     return 0;
 }

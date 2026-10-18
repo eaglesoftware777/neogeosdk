@@ -40,11 +40,8 @@ def face(fighter_id, size):
     """size x size RGB head shot on the cell ground."""
     kept = FACES / f'{fighter_id}.png'
     if kept.exists():
-        return np.asarray(Image.open(kept).convert('RGB').resize((size, size), Image.Resampling.LANCZOS))
-    icon = Image.open(GAME / 'assets/authored/portraits' / f'{fighter_id}.png').convert('RGBA')
-    icon = np.asarray(icon.resize((size, size), Image.Resampling.LANCZOS)).astype(float)
-    alpha = icon[..., 3:] / 255.0
-    return (icon[..., :3] * alpha + np.asarray(GROUND) * (1 - alpha)).astype(np.uint8)
+        return np.asarray(Image.open(kept).convert('RGB').resize((size, size), Image.Resampling.NEAREST))
+    raise ValueError(f'Missing authored selection portrait: {kept}')
 
 
 def refresh_faces(ids):
@@ -93,7 +90,7 @@ def painted_face(fighter_id):
             # the model sheet's plain backdrop: whatever matches its corner
             corner = rgb[2, 2].astype(int)
             crop[np.abs(crop.astype(int) - corner).sum(-1) < 36] = GROUND
-        return np.asarray(Image.fromarray(crop).resize((128, 128), Image.Resampling.LANCZOS))
+        return np.asarray(Image.fromarray(crop).resize((128, 128), Image.Resampling.NEAREST))
     return None
 
 
@@ -161,8 +158,6 @@ def build(ids, place, emit, pal_base, ready=None):
     """C tables for the wall, the big faces and the cursors. place(indexed)
     stores an image in the C ROM and returns its first tile."""
     header = []
-    if PAINTED.is_dir():
-        refresh_faces(ids)
     indices, banks, assign = quantize(wall_image(ids, ready), bank_limit=16)
     tile = place(indices)
     header.append(f'#define SLF_WALL_TILE {tile}u\n#define SLF_WALL_STRIPS {WALL_W // 16}u\n'

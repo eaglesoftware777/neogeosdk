@@ -1,0 +1,18 @@
+{
+  "preview": "games/shadowleague/assets/review/sdk177/v1-jack-gameplay-1080p.mp4",
+  "sha256": "ddcc3bbe819c6a0f175393f091c05e9c0c385f740ef0bc2b906edab06479bc14",
+  "source_archive": "/home/kepler/shadowleague-local-archives/v1-final-jack-20261018.mkv",
+  "capture_manifest": "games/shadowleague/assets/review/sdk177/v1-final-jack/mvs/run-manifest.json",
+  "start_seconds": 44.0,
+  "duration_seconds": 18.0,
+  "native_pixels": [
+    320,
+    224
+  ],
+  "preview_pixels": [
+    1920,
+    1080
+  ],
+  "scaling": "4x nearest neighbour, padded",
+  "mean_audio_dbfs": -17.0
+}

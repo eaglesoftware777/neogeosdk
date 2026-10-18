@@ -145,6 +145,62 @@ static void throws(uint8_t def)
     }
 }
 
+static void throw_trajectories(uint8_t def)
+{
+    int16_t landing[2], height[2];
+    uint8_t button, back;
+    for (back=0u;back<2u;back++) {
+        for (button=0u;button<2u;button++) {
+            uint16_t t;
+            int16_t x,peak=0;
+            start(def,(int16_t)(slf_fighter_defs[def]->push_w*2+4));
+            x=ngf_fighter_px(&m.f[0]);
+            hold((uint8_t)(pad(back ? 4u:6u)|(button?NGF_BTN_D:NGF_BTN_C)),1);
+            assert(m.f[1].state==NGF_S_THROWN);
+            for (t=0u;t<160u;t++) {
+                hold(0,1);
+                if (m.f[1].state==NGF_S_THROWN && ngf_fighter_py(&m.f[1])>peak) peak=ngf_fighter_py(&m.f[1]);
+                if (m.f[1].state!=NGF_S_THROWN && m.f[1].grounded) break;
+            }
+            assert(t<160u);
+            landing[button]=(int16_t)(ngf_fighter_px(&m.f[1])-x);
+            height[button]=peak;
+            assert(back?landing[button]<-30:landing[button]>30);
+        }
+        assert(back?landing[0]<landing[1]-20:landing[0]>landing[1]+20);
+        assert(height[0]>=14 && height[1]>=14);
+    }
+}
+
+static void learned_combo(uint8_t def)
+{
+    uint16_t t;
+    uint8_t heavy=0u,special=0u,peak=0u;
+    start(def,(int16_t)(slf_fighter_defs[def]->push_w*2+4));
+    hold(NGF_BTN_A,1);
+    for (t=0u;t<45u;t++) {
+        hold(0,1);
+        if (m.f[0].move_hit && !m.hitstop) break;
+    }
+    assert(t<45u);
+    hold(NGF_BTN_C,1);
+    for (t=0u;t<45u;t++) {
+        hold(0,1);
+        if (m.f[1].combo>peak) peak=m.f[1].combo;
+        if (m.f[0].move && m.f[0].move->kind==NGF_KIND_NORMAL && m.f[0].move->buttons==NGF_BTN_C) heavy=1u;
+        if (heavy && m.f[0].move_hit && !m.hitstop) break;
+    }
+    assert(heavy && peak>=2u && t<45u);
+    hold(pad(2),2);hold(pad(3),2);hold((uint8_t)(pad(6)|NGF_BTN_C),1);
+    for (t=0u;t<60u;t++) {
+        hold(0,1);
+        if (m.f[0].move && m.f[0].move->kind==NGF_KIND_SPECIAL) special=1u;
+        if (m.f[1].combo>peak) peak=m.f[1].combo;
+    }
+    if (!(special && peak>=3u)) fprintf(stderr,"%s learned combo: heavy %u special %u hits %u\n",slf_fighter_defs[def]->name,heavy,special,peak);
+    assert(special && peak>=3u);
+}
+
 static void jumps(uint8_t def)
 {
     int16_t full = 0, hop = 0, run_x;
@@ -201,6 +257,8 @@ int main(void)
         two_buttons(def);
         max_super(def);
         throws(def);
+        throw_trajectories(def);
+        if (def==0u || def==3u || def==4u || def==12u) learned_combo(def);
         jumps(def);
         guard_cancel(def);
         fighters++;

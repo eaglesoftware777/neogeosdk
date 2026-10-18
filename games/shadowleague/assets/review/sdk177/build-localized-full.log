@@ -1,0 +1,2589 @@
+[game-check] GAME=shadowleague (from games/shadowleague/game.cfg)
+[neogeosdk] target=art game=shadowleague game_id=781 platform=aes rom_dir=roms/shadowleague hashpath=/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash
+python3 games/shadowleague/tools/art.py
+Art gates PASS: 44 fighters, 2460 frames, 0 intact limb layers; C-ROM round trip True
+C ROM: 102644 tiles used; stage 16 palettes; fighters 44; {'frames': 2460, 'unshared_tiles': 319832, 'unique_strips': 45915, 'shared_tiles': 91830, 'pixel_loss': 0, 'total_tiles': 102644}
+[neogeosdk] target=sfix game=shadowleague game_id=781 platform=aes rom_dir=roms/shadowleague hashpath=/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash
+python3 games/shadowleague/tools/art.py --fix-only
+samples: no in_wav_a_voice, skipping voice
+../../games/shadowleague/sound/samples/out_16el_a/1.wav
+../../games/shadowleague/sound/samples/out_a/1.adpcma
+Encoded 6474 samples + 0 preroll nibbles -> 3328 bytes
+  Verify: SNR=29.0dB  max_err=85  avg_err=16.1
+Written to ../../games/shadowleague/sound/samples/out_a/1.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/10.wav
+../../games/shadowleague/sound/samples/out_a/10.adpcma
+Encoded 5549 samples + 0 preroll nibbles -> 2816 bytes
+  Verify: SNR=38.6dB  max_err=85  avg_err=3.7
+Written to ../../games/shadowleague/sound/samples/out_a/10.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/100.wav
+../../games/shadowleague/sound/samples/out_a/100.adpcma
+Encoded 15456 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=23.2dB  max_err=2162  avg_err=6.0
+Written to ../../games/shadowleague/sound/samples/out_a/100.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/101.wav
+../../games/shadowleague/sound/samples/out_a/101.adpcma
+Encoded 23352 samples + 0 preroll nibbles -> 11776 bytes
+  Verify: SNR=21.3dB  max_err=1403  avg_err=9.8
+Written to ../../games/shadowleague/sound/samples/out_a/101.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/102.wav
+../../games/shadowleague/sound/samples/out_a/102.adpcma
+Encoded 20546 samples + 0 preroll nibbles -> 10496 bytes
+  Verify: SNR=20.3dB  max_err=1727  avg_err=13.5
+Written to ../../games/shadowleague/sound/samples/out_a/102.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/103.wav
+../../games/shadowleague/sound/samples/out_a/103.adpcma
+Encoded 24501 samples + 0 preroll nibbles -> 12288 bytes
+  Verify: SNR=23.1dB  max_err=1151  avg_err=15.5
+Written to ../../games/shadowleague/sound/samples/out_a/103.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/104.wav
+../../games/shadowleague/sound/samples/out_a/104.adpcma
+Encoded 19460 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=20.2dB  max_err=750  avg_err=17.9
+Written to ../../games/shadowleague/sound/samples/out_a/104.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/105.wav
+../../games/shadowleague/sound/samples/out_a/105.adpcma
+Encoded 26258 samples + 0 preroll nibbles -> 13312 bytes
+  Verify: SNR=20.6dB  max_err=2159  avg_err=22.5
+Written to ../../games/shadowleague/sound/samples/out_a/105.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/106.wav
+../../games/shadowleague/sound/samples/out_a/106.adpcma
+Encoded 12996 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=23.1dB  max_err=1001  avg_err=10.5
+Written to ../../games/shadowleague/sound/samples/out_a/106.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/107.wav
+../../games/shadowleague/sound/samples/out_a/107.adpcma
+Encoded 15070 samples + 0 preroll nibbles -> 7680 bytes
+  Verify: SNR=17.0dB  max_err=2309  avg_err=21.4
+Written to ../../games/shadowleague/sound/samples/out_a/107.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/108.wav
+../../games/shadowleague/sound/samples/out_a/108.adpcma
+Encoded 14317 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=24.6dB  max_err=1241  avg_err=9.7
+Written to ../../games/shadowleague/sound/samples/out_a/108.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/109.wav
+../../games/shadowleague/sound/samples/out_a/109.adpcma
+Encoded 18568 samples + 0 preroll nibbles -> 9472 bytes
+  Verify: SNR=23.9dB  max_err=1814  avg_err=10.9
+Written to ../../games/shadowleague/sound/samples/out_a/109.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/11.wav
+../../games/shadowleague/sound/samples/out_a/11.adpcma
+Encoded 22199 samples + 0 preroll nibbles -> 11264 bytes
+  Verify: SNR=43.5dB  max_err=75  avg_err=2.2
+Written to ../../games/shadowleague/sound/samples/out_a/11.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/110.wav
+../../games/shadowleague/sound/samples/out_a/110.adpcma
+Encoded 19862 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=23.2dB  max_err=1493  avg_err=14.0
+Written to ../../games/shadowleague/sound/samples/out_a/110.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/111.wav
+../../games/shadowleague/sound/samples/out_a/111.adpcma
+Encoded 16478 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=27.7dB  max_err=1316  avg_err=8.9
+Written to ../../games/shadowleague/sound/samples/out_a/111.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/112.wav
+../../games/shadowleague/sound/samples/out_a/112.adpcma
+Encoded 20882 samples + 0 preroll nibbles -> 10496 bytes
+  Verify: SNR=20.3dB  max_err=1641  avg_err=23.7
+Written to ../../games/shadowleague/sound/samples/out_a/112.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/113.wav
+../../games/shadowleague/sound/samples/out_a/113.adpcma
+Encoded 23599 samples + 0 preroll nibbles -> 12032 bytes
+  Verify: SNR=22.1dB  max_err=1166  avg_err=18.7
+Written to ../../games/shadowleague/sound/samples/out_a/113.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/114.wav
+../../games/shadowleague/sound/samples/out_a/114.adpcma
+Encoded 13612 samples + 0 preroll nibbles -> 6912 bytes
+  Verify: SNR=19.2dB  max_err=1733  avg_err=18.2
+Written to ../../games/shadowleague/sound/samples/out_a/114.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/115.wav
+../../games/shadowleague/sound/samples/out_a/115.adpcma
+Encoded 17493 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=21.5dB  max_err=1476  avg_err=12.4
+Written to ../../games/shadowleague/sound/samples/out_a/115.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/116.wav
+../../games/shadowleague/sound/samples/out_a/116.adpcma
+Encoded 10998 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=23.8dB  max_err=756  avg_err=14.0
+Written to ../../games/shadowleague/sound/samples/out_a/116.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/117.wav
+../../games/shadowleague/sound/samples/out_a/117.adpcma
+Encoded 15138 samples + 0 preroll nibbles -> 7680 bytes
+  Verify: SNR=18.4dB  max_err=1599  avg_err=10.6
+Written to ../../games/shadowleague/sound/samples/out_a/117.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/118.wav
+../../games/shadowleague/sound/samples/out_a/118.adpcma
+Encoded 16893 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=20.9dB  max_err=2375  avg_err=7.0
+Written to ../../games/shadowleague/sound/samples/out_a/118.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/119.wav
+../../games/shadowleague/sound/samples/out_a/119.adpcma
+Encoded 19161 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=22.8dB  max_err=1623  avg_err=10.7
+Written to ../../games/shadowleague/sound/samples/out_a/119.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/12.wav
+../../games/shadowleague/sound/samples/out_a/12.adpcma
+Encoded 2589 samples + 0 preroll nibbles -> 1536 bytes
+  Verify: SNR=39.1dB  max_err=80  avg_err=2.8
+Written to ../../games/shadowleague/sound/samples/out_a/12.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/120.wav
+../../games/shadowleague/sound/samples/out_a/120.adpcma
+Encoded 14934 samples + 0 preroll nibbles -> 7680 bytes
+  Verify: SNR=27.5dB  max_err=1176  avg_err=8.3
+Written to ../../games/shadowleague/sound/samples/out_a/120.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/121.wav
+../../games/shadowleague/sound/samples/out_a/121.adpcma
+Encoded 20707 samples + 0 preroll nibbles -> 10496 bytes
+  Verify: SNR=29.5dB  max_err=1004  avg_err=5.2
+Written to ../../games/shadowleague/sound/samples/out_a/121.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/122.wav
+../../games/shadowleague/sound/samples/out_a/122.adpcma
+Encoded 16486 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=25.6dB  max_err=853  avg_err=10.9
+Written to ../../games/shadowleague/sound/samples/out_a/122.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/123.wav
+../../games/shadowleague/sound/samples/out_a/123.adpcma
+Encoded 14689 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=17.9dB  max_err=2532  avg_err=18.0
+Written to ../../games/shadowleague/sound/samples/out_a/123.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/124.wav
+../../games/shadowleague/sound/samples/out_a/124.adpcma
+Encoded 15402 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=33.2dB  max_err=426  avg_err=4.8
+Written to ../../games/shadowleague/sound/samples/out_a/124.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/125.wav
+../../games/shadowleague/sound/samples/out_a/125.adpcma
+Encoded 20118 samples + 0 preroll nibbles -> 10240 bytes
+  Verify: SNR=20.5dB  max_err=1338  avg_err=15.6
+Written to ../../games/shadowleague/sound/samples/out_a/125.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/126.wav
+../../games/shadowleague/sound/samples/out_a/126.adpcma
+Encoded 20142 samples + 0 preroll nibbles -> 10240 bytes
+  Verify: SNR=29.1dB  max_err=412  avg_err=9.1
+Written to ../../games/shadowleague/sound/samples/out_a/126.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/127.wav
+../../games/shadowleague/sound/samples/out_a/127.adpcma
+Encoded 13112 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=31.1dB  max_err=569  avg_err=6.7
+Written to ../../games/shadowleague/sound/samples/out_a/127.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/128.wav
+../../games/shadowleague/sound/samples/out_a/128.adpcma
+Encoded 10778 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=31.3dB  max_err=619  avg_err=8.9
+Written to ../../games/shadowleague/sound/samples/out_a/128.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/129.wav
+../../games/shadowleague/sound/samples/out_a/129.adpcma
+Encoded 16396 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=31.6dB  max_err=539  avg_err=7.2
+Written to ../../games/shadowleague/sound/samples/out_a/129.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/13.wav
+../../games/shadowleague/sound/samples/out_a/13.adpcma
+Encoded 18500 samples + 0 preroll nibbles -> 9472 bytes
+  Verify: SNR=23.5dB  max_err=1352  avg_err=9.4
+Written to ../../games/shadowleague/sound/samples/out_a/13.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/130.wav
+../../games/shadowleague/sound/samples/out_a/130.adpcma
+Encoded 13610 samples + 0 preroll nibbles -> 6912 bytes
+  Verify: SNR=19.5dB  max_err=2186  avg_err=8.6
+Written to ../../games/shadowleague/sound/samples/out_a/130.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/131.wav
+../../games/shadowleague/sound/samples/out_a/131.adpcma
+Encoded 13055 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=22.7dB  max_err=1477  avg_err=9.6
+Written to ../../games/shadowleague/sound/samples/out_a/131.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/132.wav
+../../games/shadowleague/sound/samples/out_a/132.adpcma
+Encoded 16114 samples + 0 preroll nibbles -> 8192 bytes
+  Verify: SNR=20.8dB  max_err=1954  avg_err=12.7
+Written to ../../games/shadowleague/sound/samples/out_a/132.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/133.wav
+../../games/shadowleague/sound/samples/out_a/133.adpcma
+Encoded 20879 samples + 0 preroll nibbles -> 10496 bytes
+  Verify: SNR=22.8dB  max_err=1093  avg_err=13.3
+Written to ../../games/shadowleague/sound/samples/out_a/133.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/134.wav
+../../games/shadowleague/sound/samples/out_a/134.adpcma
+Encoded 16083 samples + 0 preroll nibbles -> 8192 bytes
+  Verify: SNR=17.6dB  max_err=1823  avg_err=18.8
+Written to ../../games/shadowleague/sound/samples/out_a/134.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/135.wav
+../../games/shadowleague/sound/samples/out_a/135.adpcma
+Encoded 15788 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=17.5dB  max_err=2359  avg_err=26.9
+Written to ../../games/shadowleague/sound/samples/out_a/135.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/136.wav
+../../games/shadowleague/sound/samples/out_a/136.adpcma
+Encoded 19742 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=17.8dB  max_err=2477  avg_err=19.3
+Written to ../../games/shadowleague/sound/samples/out_a/136.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/137.wav
+../../games/shadowleague/sound/samples/out_a/137.adpcma
+Encoded 16494 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=19.8dB  max_err=1296  avg_err=13.0
+Written to ../../games/shadowleague/sound/samples/out_a/137.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/138.wav
+../../games/shadowleague/sound/samples/out_a/138.adpcma
+Encoded 21679 samples + 0 preroll nibbles -> 11008 bytes
+  Verify: SNR=17.4dB  max_err=2171  avg_err=12.7
+Written to ../../games/shadowleague/sound/samples/out_a/138.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/139.wav
+../../games/shadowleague/sound/samples/out_a/139.adpcma
+Encoded 15325 samples + 0 preroll nibbles -> 7680 bytes
+  Verify: SNR=17.1dB  max_err=2192  avg_err=11.1
+Written to ../../games/shadowleague/sound/samples/out_a/139.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/14.wav
+../../games/shadowleague/sound/samples/out_a/14.adpcma
+Encoded 6474 samples + 0 preroll nibbles -> 3328 bytes
+  Verify: SNR=19.3dB  max_err=1372  avg_err=16.2
+Written to ../../games/shadowleague/sound/samples/out_a/14.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/140.wav
+../../games/shadowleague/sound/samples/out_a/140.adpcma
+Encoded 19396 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=20.0dB  max_err=1871  avg_err=15.8
+Written to ../../games/shadowleague/sound/samples/out_a/140.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/141.wav
+../../games/shadowleague/sound/samples/out_a/141.adpcma
+Encoded 17800 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=17.5dB  max_err=2763  avg_err=14.8
+Written to ../../games/shadowleague/sound/samples/out_a/141.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/142.wav
+../../games/shadowleague/sound/samples/out_a/142.adpcma
+Encoded 16075 samples + 0 preroll nibbles -> 8192 bytes
+  Verify: SNR=17.1dB  max_err=2105  avg_err=21.7
+Written to ../../games/shadowleague/sound/samples/out_a/142.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/143.wav
+../../games/shadowleague/sound/samples/out_a/143.adpcma
+Encoded 14466 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=20.0dB  max_err=1352  avg_err=15.9
+Written to ../../games/shadowleague/sound/samples/out_a/143.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/144.wav
+../../games/shadowleague/sound/samples/out_a/144.adpcma
+Encoded 22598 samples + 0 preroll nibbles -> 11520 bytes
+  Verify: SNR=20.4dB  max_err=1537  avg_err=19.5
+Written to ../../games/shadowleague/sound/samples/out_a/144.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/145.wav
+../../games/shadowleague/sound/samples/out_a/145.adpcma
+Encoded 18047 samples + 0 preroll nibbles -> 9216 bytes
+  Verify: SNR=17.2dB  max_err=2423  avg_err=27.6
+Written to ../../games/shadowleague/sound/samples/out_a/145.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/146.wav
+../../games/shadowleague/sound/samples/out_a/146.adpcma
+Encoded 10415 samples + 0 preroll nibbles -> 5376 bytes
+  Verify: SNR=25.9dB  max_err=687  avg_err=6.2
+Written to ../../games/shadowleague/sound/samples/out_a/146.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/147.wav
+../../games/shadowleague/sound/samples/out_a/147.adpcma
+Encoded 14335 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=22.4dB  max_err=1223  avg_err=15.8
+Written to ../../games/shadowleague/sound/samples/out_a/147.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/148.wav
+../../games/shadowleague/sound/samples/out_a/148.adpcma
+Encoded 17227 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=21.2dB  max_err=1607  avg_err=14.0
+Written to ../../games/shadowleague/sound/samples/out_a/148.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/149.wav
+../../games/shadowleague/sound/samples/out_a/149.adpcma
+Encoded 16622 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=22.0dB  max_err=1492  avg_err=17.7
+Written to ../../games/shadowleague/sound/samples/out_a/149.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/15.wav
+../../games/shadowleague/sound/samples/out_a/15.adpcma
+Encoded 5549 samples + 0 preroll nibbles -> 2816 bytes
+  Verify: SNR=14.7dB  max_err=2633  avg_err=85.8
+Written to ../../games/shadowleague/sound/samples/out_a/15.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/150.wav
+../../games/shadowleague/sound/samples/out_a/150.adpcma
+Encoded 14775 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=23.3dB  max_err=1591  avg_err=14.2
+Written to ../../games/shadowleague/sound/samples/out_a/150.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/151.wav
+../../games/shadowleague/sound/samples/out_a/151.adpcma
+Encoded 17662 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=19.0dB  max_err=741  avg_err=20.4
+Written to ../../games/shadowleague/sound/samples/out_a/151.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/152.wav
+../../games/shadowleague/sound/samples/out_a/152.adpcma
+Encoded 17911 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=20.0dB  max_err=1762  avg_err=15.2
+Written to ../../games/shadowleague/sound/samples/out_a/152.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/153.wav
+../../games/shadowleague/sound/samples/out_a/153.adpcma
+Encoded 19321 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=25.1dB  max_err=942  avg_err=14.9
+Written to ../../games/shadowleague/sound/samples/out_a/153.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/154.wav
+../../games/shadowleague/sound/samples/out_a/154.adpcma
+Encoded 16219 samples + 0 preroll nibbles -> 8192 bytes
+  Verify: SNR=23.2dB  max_err=677  avg_err=18.3
+Written to ../../games/shadowleague/sound/samples/out_a/154.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/155.wav
+../../games/shadowleague/sound/samples/out_a/155.adpcma
+Encoded 12508 samples + 0 preroll nibbles -> 6400 bytes
+  Verify: SNR=23.2dB  max_err=1262  avg_err=9.0
+Written to ../../games/shadowleague/sound/samples/out_a/155.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/156.wav
+../../games/shadowleague/sound/samples/out_a/156.adpcma
+Encoded 12881 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=18.7dB  max_err=1972  avg_err=19.3
+Written to ../../games/shadowleague/sound/samples/out_a/156.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/157.wav
+../../games/shadowleague/sound/samples/out_a/157.adpcma
+Encoded 17952 samples + 0 preroll nibbles -> 9216 bytes
+  Verify: SNR=23.5dB  max_err=1495  avg_err=9.4
+Written to ../../games/shadowleague/sound/samples/out_a/157.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/158.wav
+../../games/shadowleague/sound/samples/out_a/158.adpcma
+Encoded 9377 samples + 0 preroll nibbles -> 4864 bytes
+  Verify: SNR=28.7dB  max_err=844  avg_err=4.7
+Written to ../../games/shadowleague/sound/samples/out_a/158.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/159.wav
+../../games/shadowleague/sound/samples/out_a/159.adpcma
+Encoded 12798 samples + 0 preroll nibbles -> 6400 bytes
+  Verify: SNR=25.5dB  max_err=1843  avg_err=7.4
+Written to ../../games/shadowleague/sound/samples/out_a/159.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/16.wav
+../../games/shadowleague/sound/samples/out_a/16.adpcma
+Encoded 14800 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=28.7dB  max_err=266  avg_err=10.7
+Written to ../../games/shadowleague/sound/samples/out_a/16.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/160.wav
+../../games/shadowleague/sound/samples/out_a/160.adpcma
+Encoded 11765 samples + 0 preroll nibbles -> 5888 bytes
+  Verify: SNR=25.6dB  max_err=1067  avg_err=11.1
+Written to ../../games/shadowleague/sound/samples/out_a/160.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/161.wav
+../../games/shadowleague/sound/samples/out_a/161.adpcma
+Encoded 17391 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=22.7dB  max_err=1564  avg_err=13.3
+Written to ../../games/shadowleague/sound/samples/out_a/161.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/162.wav
+../../games/shadowleague/sound/samples/out_a/162.adpcma
+Encoded 21392 samples + 0 preroll nibbles -> 10752 bytes
+  Verify: SNR=18.1dB  max_err=1791  avg_err=24.6
+Written to ../../games/shadowleague/sound/samples/out_a/162.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/163.wav
+../../games/shadowleague/sound/samples/out_a/163.adpcma
+Encoded 19456 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=25.8dB  max_err=1580  avg_err=13.1
+Written to ../../games/shadowleague/sound/samples/out_a/163.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/164.wav
+../../games/shadowleague/sound/samples/out_a/164.adpcma
+Encoded 14047 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=23.5dB  max_err=1254  avg_err=18.0
+Written to ../../games/shadowleague/sound/samples/out_a/164.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/165.wav
+../../games/shadowleague/sound/samples/out_a/165.adpcma
+Encoded 15121 samples + 0 preroll nibbles -> 7680 bytes
+  Verify: SNR=25.0dB  max_err=829  avg_err=15.6
+Written to ../../games/shadowleague/sound/samples/out_a/165.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/166.wav
+../../games/shadowleague/sound/samples/out_a/166.adpcma
+Encoded 19145 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=21.2dB  max_err=1524  avg_err=13.2
+Written to ../../games/shadowleague/sound/samples/out_a/166.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/167.wav
+../../games/shadowleague/sound/samples/out_a/167.adpcma
+Encoded 16573 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=19.1dB  max_err=1794  avg_err=15.7
+Written to ../../games/shadowleague/sound/samples/out_a/167.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/168.wav
+../../games/shadowleague/sound/samples/out_a/168.adpcma
+Encoded 18886 samples + 0 preroll nibbles -> 9472 bytes
+  Verify: SNR=22.8dB  max_err=870  avg_err=11.0
+Written to ../../games/shadowleague/sound/samples/out_a/168.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/169.wav
+../../games/shadowleague/sound/samples/out_a/169.adpcma
+Encoded 17107 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=26.5dB  max_err=1184  avg_err=10.4
+Written to ../../games/shadowleague/sound/samples/out_a/169.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/17.wav
+../../games/shadowleague/sound/samples/out_a/17.adpcma
+Encoded 18011 samples + 0 preroll nibbles -> 9216 bytes
+  Verify: SNR=21.5dB  max_err=1355  avg_err=7.4
+Written to ../../games/shadowleague/sound/samples/out_a/17.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/170.wav
+../../games/shadowleague/sound/samples/out_a/170.adpcma
+Encoded 19470 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=18.1dB  max_err=2127  avg_err=10.1
+Written to ../../games/shadowleague/sound/samples/out_a/170.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/171.wav
+../../games/shadowleague/sound/samples/out_a/171.adpcma
+Encoded 25726 samples + 0 preroll nibbles -> 13056 bytes
+  Verify: SNR=25.9dB  max_err=1121  avg_err=11.3
+Written to ../../games/shadowleague/sound/samples/out_a/171.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/172.wav
+../../games/shadowleague/sound/samples/out_a/172.adpcma
+Encoded 16878 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=27.4dB  max_err=1382  avg_err=9.0
+Written to ../../games/shadowleague/sound/samples/out_a/172.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/173.wav
+../../games/shadowleague/sound/samples/out_a/173.adpcma
+Encoded 25563 samples + 0 preroll nibbles -> 12800 bytes
+  Verify: SNR=27.0dB  max_err=843  avg_err=13.5
+Written to ../../games/shadowleague/sound/samples/out_a/173.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/174.wav
+../../games/shadowleague/sound/samples/out_a/174.adpcma
+Encoded 27750 samples + 0 preroll nibbles -> 14080 bytes
+  Verify: SNR=21.7dB  max_err=1887  avg_err=13.6
+Written to ../../games/shadowleague/sound/samples/out_a/174.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/175.wav
+../../games/shadowleague/sound/samples/out_a/175.adpcma
+Encoded 18470 samples + 0 preroll nibbles -> 9472 bytes
+  Verify: SNR=17.6dB  max_err=2112  avg_err=10.8
+Written to ../../games/shadowleague/sound/samples/out_a/175.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/176.wav
+../../games/shadowleague/sound/samples/out_a/176.adpcma
+Encoded 21070 samples + 0 preroll nibbles -> 10752 bytes
+  Verify: SNR=22.6dB  max_err=1668  avg_err=8.5
+Written to ../../games/shadowleague/sound/samples/out_a/176.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/177.wav
+../../games/shadowleague/sound/samples/out_a/177.adpcma
+Encoded 20878 samples + 0 preroll nibbles -> 10496 bytes
+  Verify: SNR=17.8dB  max_err=2258  avg_err=18.3
+Written to ../../games/shadowleague/sound/samples/out_a/177.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/178.wav
+../../games/shadowleague/sound/samples/out_a/178.adpcma
+Encoded 12952 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=21.9dB  max_err=1486  avg_err=16.2
+Written to ../../games/shadowleague/sound/samples/out_a/178.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/179.wav
+../../games/shadowleague/sound/samples/out_a/179.adpcma
+Encoded 12873 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=24.9dB  max_err=1302  avg_err=8.4
+Written to ../../games/shadowleague/sound/samples/out_a/179.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/18.wav
+../../games/shadowleague/sound/samples/out_a/18.adpcma
+Encoded 18528 samples + 0 preroll nibbles -> 9472 bytes
+  Verify: SNR=22.9dB  max_err=1149  avg_err=12.0
+Written to ../../games/shadowleague/sound/samples/out_a/18.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/180.wav
+../../games/shadowleague/sound/samples/out_a/180.adpcma
+Encoded 17986 samples + 0 preroll nibbles -> 9216 bytes
+  Verify: SNR=26.1dB  max_err=1105  avg_err=8.4
+Written to ../../games/shadowleague/sound/samples/out_a/180.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/181.wav
+../../games/shadowleague/sound/samples/out_a/181.adpcma
+Encoded 16493 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=23.9dB  max_err=893  avg_err=13.5
+Written to ../../games/shadowleague/sound/samples/out_a/181.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/182.wav
+../../games/shadowleague/sound/samples/out_a/182.adpcma
+Encoded 19423 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=22.3dB  max_err=1525  avg_err=17.8
+Written to ../../games/shadowleague/sound/samples/out_a/182.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/183.wav
+../../games/shadowleague/sound/samples/out_a/183.adpcma
+Encoded 19711 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=23.4dB  max_err=1030  avg_err=14.1
+Written to ../../games/shadowleague/sound/samples/out_a/183.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/184.wav
+../../games/shadowleague/sound/samples/out_a/184.adpcma
+Encoded 17858 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=25.3dB  max_err=898  avg_err=11.4
+Written to ../../games/shadowleague/sound/samples/out_a/184.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/185.wav
+../../games/shadowleague/sound/samples/out_a/185.adpcma
+Encoded 21989 samples + 0 preroll nibbles -> 11008 bytes
+  Verify: SNR=24.4dB  max_err=744  avg_err=16.5
+Written to ../../games/shadowleague/sound/samples/out_a/185.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/186.wav
+../../games/shadowleague/sound/samples/out_a/186.adpcma
+Encoded 14349 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=23.5dB  max_err=990  avg_err=9.7
+Written to ../../games/shadowleague/sound/samples/out_a/186.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/187.wav
+../../games/shadowleague/sound/samples/out_a/187.adpcma
+Encoded 14735 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=19.7dB  max_err=1483  avg_err=11.0
+Written to ../../games/shadowleague/sound/samples/out_a/187.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/188.wav
+../../games/shadowleague/sound/samples/out_a/188.adpcma
+Encoded 13768 samples + 0 preroll nibbles -> 6912 bytes
+  Verify: SNR=21.8dB  max_err=1349  avg_err=15.6
+Written to ../../games/shadowleague/sound/samples/out_a/188.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/189.wav
+../../games/shadowleague/sound/samples/out_a/189.adpcma
+Encoded 13024 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=18.0dB  max_err=2756  avg_err=16.0
+Written to ../../games/shadowleague/sound/samples/out_a/189.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/19.wav
+../../games/shadowleague/sound/samples/out_a/19.adpcma
+Encoded 19194 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=19.4dB  max_err=1373  avg_err=7.3
+Written to ../../games/shadowleague/sound/samples/out_a/19.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/190.wav
+../../games/shadowleague/sound/samples/out_a/190.adpcma
+Encoded 14669 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=19.4dB  max_err=2128  avg_err=15.6
+Written to ../../games/shadowleague/sound/samples/out_a/190.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/191.wav
+../../games/shadowleague/sound/samples/out_a/191.adpcma
+Encoded 13990 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=16.3dB  max_err=2432  avg_err=15.6
+Written to ../../games/shadowleague/sound/samples/out_a/191.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/192.wav
+../../games/shadowleague/sound/samples/out_a/192.adpcma
+Encoded 15452 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=19.6dB  max_err=2262  avg_err=15.3
+Written to ../../games/shadowleague/sound/samples/out_a/192.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/193.wav
+../../games/shadowleague/sound/samples/out_a/193.adpcma
+Encoded 17135 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=22.5dB  max_err=1929  avg_err=20.8
+Written to ../../games/shadowleague/sound/samples/out_a/193.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/194.wav
+../../games/shadowleague/sound/samples/out_a/194.adpcma
+Encoded 14479 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=25.6dB  max_err=860  avg_err=11.4
+Written to ../../games/shadowleague/sound/samples/out_a/194.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/195.wav
+../../games/shadowleague/sound/samples/out_a/195.adpcma
+Encoded 17238 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=25.6dB  max_err=698  avg_err=11.3
+Written to ../../games/shadowleague/sound/samples/out_a/195.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/196.wav
+../../games/shadowleague/sound/samples/out_a/196.adpcma
+Encoded 13993 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=26.6dB  max_err=1079  avg_err=11.4
+Written to ../../games/shadowleague/sound/samples/out_a/196.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/197.wav
+../../games/shadowleague/sound/samples/out_a/197.adpcma
+Encoded 15784 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=32.0dB  max_err=481  avg_err=6.7
+Written to ../../games/shadowleague/sound/samples/out_a/197.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/198.wav
+../../games/shadowleague/sound/samples/out_a/198.adpcma
+Encoded 16059 samples + 0 preroll nibbles -> 8192 bytes
+  Verify: SNR=23.2dB  max_err=584  avg_err=10.7
+Written to ../../games/shadowleague/sound/samples/out_a/198.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/199.wav
+../../games/shadowleague/sound/samples/out_a/199.adpcma
+Encoded 20045 samples + 0 preroll nibbles -> 10240 bytes
+  Verify: SNR=23.2dB  max_err=969  avg_err=17.1
+Written to ../../games/shadowleague/sound/samples/out_a/199.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/2.wav
+../../games/shadowleague/sound/samples/out_a/2.adpcma
+Encoded 1110 samples + 0 preroll nibbles -> 768 bytes
+  Verify: SNR=20.6dB  max_err=1763  avg_err=61.5
+Written to ../../games/shadowleague/sound/samples/out_a/2.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/20.wav
+../../games/shadowleague/sound/samples/out_a/20.adpcma
+Encoded 16992 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=21.0dB  max_err=1829  avg_err=5.8
+Written to ../../games/shadowleague/sound/samples/out_a/20.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/200.wav
+../../games/shadowleague/sound/samples/out_a/200.adpcma
+Encoded 14131 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=18.0dB  max_err=1520  avg_err=12.0
+Written to ../../games/shadowleague/sound/samples/out_a/200.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/201.wav
+../../games/shadowleague/sound/samples/out_a/201.adpcma
+Encoded 27750 samples + 0 preroll nibbles -> 14080 bytes
+  Verify: SNR=24.7dB  max_err=868  avg_err=6.3
+Written to ../../games/shadowleague/sound/samples/out_a/201.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/202.wav
+../../games/shadowleague/sound/samples/out_a/202.adpcma
+Encoded 14193 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=24.6dB  max_err=848  avg_err=13.4
+Written to ../../games/shadowleague/sound/samples/out_a/202.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/203.wav
+../../games/shadowleague/sound/samples/out_a/203.adpcma
+Encoded 12601 samples + 0 preroll nibbles -> 6400 bytes
+  Verify: SNR=25.0dB  max_err=822  avg_err=6.3
+Written to ../../games/shadowleague/sound/samples/out_a/203.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/204.wav
+../../games/shadowleague/sound/samples/out_a/204.adpcma
+Encoded 14564 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=21.7dB  max_err=1648  avg_err=8.6
+Written to ../../games/shadowleague/sound/samples/out_a/204.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/205.wav
+../../games/shadowleague/sound/samples/out_a/205.adpcma
+Encoded 20832 samples + 0 preroll nibbles -> 10496 bytes
+  Verify: SNR=26.7dB  max_err=944  avg_err=11.2
+Written to ../../games/shadowleague/sound/samples/out_a/205.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/206.wav
+../../games/shadowleague/sound/samples/out_a/206.adpcma
+Encoded 17568 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=18.5dB  max_err=2101  avg_err=7.7
+Written to ../../games/shadowleague/sound/samples/out_a/206.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/207.wav
+../../games/shadowleague/sound/samples/out_a/207.adpcma
+Encoded 10785 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=22.0dB  max_err=1608  avg_err=12.7
+Written to ../../games/shadowleague/sound/samples/out_a/207.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/208.wav
+../../games/shadowleague/sound/samples/out_a/208.adpcma
+Encoded 15017 samples + 0 preroll nibbles -> 7680 bytes
+  Verify: SNR=18.4dB  max_err=1736  avg_err=20.8
+Written to ../../games/shadowleague/sound/samples/out_a/208.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/209.wav
+../../games/shadowleague/sound/samples/out_a/209.adpcma
+Encoded 17750 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=18.6dB  max_err=2074  avg_err=19.5
+Written to ../../games/shadowleague/sound/samples/out_a/209.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/21.wav
+../../games/shadowleague/sound/samples/out_a/21.adpcma
+Encoded 12219 samples + 0 preroll nibbles -> 6144 bytes
+  Verify: SNR=16.9dB  max_err=1757  avg_err=9.4
+Written to ../../games/shadowleague/sound/samples/out_a/21.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/210.wav
+../../games/shadowleague/sound/samples/out_a/210.adpcma
+Encoded 16629 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=15.7dB  max_err=1595  avg_err=16.6
+Written to ../../games/shadowleague/sound/samples/out_a/210.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/211.wav
+../../games/shadowleague/sound/samples/out_a/211.adpcma
+Encoded 19782 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=16.9dB  max_err=1868  avg_err=14.3
+Written to ../../games/shadowleague/sound/samples/out_a/211.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/212.wav
+../../games/shadowleague/sound/samples/out_a/212.adpcma
+Encoded 18963 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=17.8dB  max_err=2060  avg_err=12.0
+Written to ../../games/shadowleague/sound/samples/out_a/212.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/213.wav
+../../games/shadowleague/sound/samples/out_a/213.adpcma
+Encoded 23054 samples + 0 preroll nibbles -> 11776 bytes
+  Verify: SNR=20.4dB  max_err=1579  avg_err=9.9
+Written to ../../games/shadowleague/sound/samples/out_a/213.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/214.wav
+../../games/shadowleague/sound/samples/out_a/214.adpcma
+Encoded 15520 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=18.3dB  max_err=2373  avg_err=17.6
+Written to ../../games/shadowleague/sound/samples/out_a/214.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/215.wav
+../../games/shadowleague/sound/samples/out_a/215.adpcma
+Encoded 17683 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=18.4dB  max_err=2104  avg_err=17.2
+Written to ../../games/shadowleague/sound/samples/out_a/215.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/216.wav
+../../games/shadowleague/sound/samples/out_a/216.adpcma
+Encoded 11705 samples + 0 preroll nibbles -> 5888 bytes
+  Verify: SNR=25.2dB  max_err=1019  avg_err=17.0
+Written to ../../games/shadowleague/sound/samples/out_a/216.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/217.wav
+../../games/shadowleague/sound/samples/out_a/217.adpcma
+Encoded 19227 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=26.1dB  max_err=1191  avg_err=12.6
+Written to ../../games/shadowleague/sound/samples/out_a/217.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/218.wav
+../../games/shadowleague/sound/samples/out_a/218.adpcma
+Encoded 27695 samples + 0 preroll nibbles -> 14080 bytes
+  Verify: SNR=22.5dB  max_err=1704  avg_err=9.7
+Written to ../../games/shadowleague/sound/samples/out_a/218.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/219.wav
+../../games/shadowleague/sound/samples/out_a/219.adpcma
+Encoded 15688 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=27.7dB  max_err=652  avg_err=10.9
+Written to ../../games/shadowleague/sound/samples/out_a/219.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/22.wav
+../../games/shadowleague/sound/samples/out_a/22.adpcma
+Encoded 16225 samples + 0 preroll nibbles -> 8192 bytes
+  Verify: SNR=25.2dB  max_err=968  avg_err=6.0
+Written to ../../games/shadowleague/sound/samples/out_a/22.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/220.wav
+../../games/shadowleague/sound/samples/out_a/220.adpcma
+Encoded 15093 samples + 0 preroll nibbles -> 7680 bytes
+  Verify: SNR=25.1dB  max_err=792  avg_err=13.9
+Written to ../../games/shadowleague/sound/samples/out_a/220.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/221.wav
+../../games/shadowleague/sound/samples/out_a/221.adpcma
+Encoded 18982 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=25.9dB  max_err=1575  avg_err=11.6
+Written to ../../games/shadowleague/sound/samples/out_a/221.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/222.wav
+../../games/shadowleague/sound/samples/out_a/222.adpcma
+Encoded 19013 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=19.5dB  max_err=1258  avg_err=10.6
+Written to ../../games/shadowleague/sound/samples/out_a/222.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/223.wav
+../../games/shadowleague/sound/samples/out_a/223.adpcma
+Encoded 17541 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=19.7dB  max_err=2082  avg_err=16.6
+Written to ../../games/shadowleague/sound/samples/out_a/223.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/224.wav
+../../games/shadowleague/sound/samples/out_a/224.adpcma
+Encoded 16736 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=20.5dB  max_err=2014  avg_err=13.6
+Written to ../../games/shadowleague/sound/samples/out_a/224.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/225.wav
+../../games/shadowleague/sound/samples/out_a/225.adpcma
+Encoded 23431 samples + 0 preroll nibbles -> 11776 bytes
+  Verify: SNR=23.9dB  max_err=1702  avg_err=8.7
+Written to ../../games/shadowleague/sound/samples/out_a/225.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/23.wav
+../../games/shadowleague/sound/samples/out_a/23.adpcma
+Encoded 14637 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=21.6dB  max_err=1614  avg_err=6.5
+Written to ../../games/shadowleague/sound/samples/out_a/23.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/24.wav
+../../games/shadowleague/sound/samples/out_a/24.adpcma
+Encoded 14652 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=29.3dB  max_err=337  avg_err=6.5
+Written to ../../games/shadowleague/sound/samples/out_a/24.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/25.wav
+../../games/shadowleague/sound/samples/out_a/25.adpcma
+Encoded 16022 samples + 0 preroll nibbles -> 8192 bytes
+  Verify: SNR=23.4dB  max_err=1071  avg_err=7.1
+Written to ../../games/shadowleague/sound/samples/out_a/25.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/26.wav
+../../games/shadowleague/sound/samples/out_a/26.adpcma
+Encoded 21542 samples + 0 preroll nibbles -> 11008 bytes
+  Verify: SNR=24.7dB  max_err=991  avg_err=5.9
+Written to ../../games/shadowleague/sound/samples/out_a/26.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/27.wav
+../../games/shadowleague/sound/samples/out_a/27.adpcma
+Encoded 10829 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=22.9dB  max_err=1345  avg_err=11.3
+Written to ../../games/shadowleague/sound/samples/out_a/27.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/28.wav
+../../games/shadowleague/sound/samples/out_a/28.adpcma
+Encoded 9556 samples + 0 preroll nibbles -> 4864 bytes
+  Verify: SNR=20.8dB  max_err=1478  avg_err=7.1
+Written to ../../games/shadowleague/sound/samples/out_a/28.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/29.wav
+../../games/shadowleague/sound/samples/out_a/29.adpcma
+Encoded 13087 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=26.4dB  max_err=1119  avg_err=11.9
+Written to ../../games/shadowleague/sound/samples/out_a/29.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/3.wav
+../../games/shadowleague/sound/samples/out_a/3.adpcma
+Encoded 9250 samples + 0 preroll nibbles -> 4864 bytes
+  Verify: SNR=14.2dB  max_err=2760  avg_err=86.6
+Written to ../../games/shadowleague/sound/samples/out_a/3.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/30.wav
+../../games/shadowleague/sound/samples/out_a/30.adpcma
+Encoded 14050 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=31.0dB  max_err=482  avg_err=10.4
+Written to ../../games/shadowleague/sound/samples/out_a/30.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/31.wav
+../../games/shadowleague/sound/samples/out_a/31.adpcma
+Encoded 8551 samples + 0 preroll nibbles -> 4352 bytes
+  Verify: SNR=23.1dB  max_err=1173  avg_err=8.8
+Written to ../../games/shadowleague/sound/samples/out_a/31.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/32.wav
+../../games/shadowleague/sound/samples/out_a/32.adpcma
+Encoded 6269 samples + 0 preroll nibbles -> 3328 bytes
+  Verify: SNR=24.6dB  max_err=997  avg_err=9.0
+Written to ../../games/shadowleague/sound/samples/out_a/32.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/33.wav
+../../games/shadowleague/sound/samples/out_a/33.adpcma
+Encoded 10906 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=27.5dB  max_err=829  avg_err=13.9
+Written to ../../games/shadowleague/sound/samples/out_a/33.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/34.wav
+../../games/shadowleague/sound/samples/out_a/34.adpcma
+Encoded 9596 samples + 0 preroll nibbles -> 4864 bytes
+  Verify: SNR=22.6dB  max_err=1412  avg_err=17.8
+Written to ../../games/shadowleague/sound/samples/out_a/34.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/35.wav
+../../games/shadowleague/sound/samples/out_a/35.adpcma
+Encoded 8828 samples + 0 preroll nibbles -> 4608 bytes
+  Verify: SNR=21.5dB  max_err=1733  avg_err=12.5
+Written to ../../games/shadowleague/sound/samples/out_a/35.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/36.wav
+../../games/shadowleague/sound/samples/out_a/36.adpcma
+Encoded 6805 samples + 0 preroll nibbles -> 3584 bytes
+  Verify: SNR=16.4dB  max_err=2120  avg_err=17.4
+Written to ../../games/shadowleague/sound/samples/out_a/36.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/37.wav
+../../games/shadowleague/sound/samples/out_a/37.adpcma
+Encoded 10972 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=24.9dB  max_err=1195  avg_err=10.9
+Written to ../../games/shadowleague/sound/samples/out_a/37.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/38.wav
+../../games/shadowleague/sound/samples/out_a/38.adpcma
+Encoded 10927 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=32.3dB  max_err=604  avg_err=9.8
+Written to ../../games/shadowleague/sound/samples/out_a/38.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/39.wav
+../../games/shadowleague/sound/samples/out_a/39.adpcma
+Encoded 6770 samples + 0 preroll nibbles -> 3584 bytes
+  Verify: SNR=15.2dB  max_err=2436  avg_err=15.7
+Written to ../../games/shadowleague/sound/samples/out_a/39.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/4.wav
+../../games/shadowleague/sound/samples/out_a/4.adpcma
+Encoded 2220 samples + 0 preroll nibbles -> 1280 bytes
+  Verify: SNR=25.3dB  max_err=200  avg_err=9.5
+Written to ../../games/shadowleague/sound/samples/out_a/4.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/40.wav
+../../games/shadowleague/sound/samples/out_a/40.adpcma
+Encoded 6591 samples + 0 preroll nibbles -> 3328 bytes
+  Verify: SNR=15.3dB  max_err=2300  avg_err=19.2
+Written to ../../games/shadowleague/sound/samples/out_a/40.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/41.wav
+../../games/shadowleague/sound/samples/out_a/41.adpcma
+Encoded 12173 samples + 0 preroll nibbles -> 6144 bytes
+  Verify: SNR=18.8dB  max_err=1916  avg_err=16.0
+Written to ../../games/shadowleague/sound/samples/out_a/41.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/42.wav
+../../games/shadowleague/sound/samples/out_a/42.adpcma
+Encoded 11252 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=28.1dB  max_err=957  avg_err=11.2
+Written to ../../games/shadowleague/sound/samples/out_a/42.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/43.wav
+../../games/shadowleague/sound/samples/out_a/43.adpcma
+Encoded 11192 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=18.6dB  max_err=2243  avg_err=16.4
+Written to ../../games/shadowleague/sound/samples/out_a/43.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/44.wav
+../../games/shadowleague/sound/samples/out_a/44.adpcma
+Encoded 7465 samples + 0 preroll nibbles -> 3840 bytes
+  Verify: SNR=18.6dB  max_err=2351  avg_err=10.6
+Written to ../../games/shadowleague/sound/samples/out_a/44.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/45.wav
+../../games/shadowleague/sound/samples/out_a/45.adpcma
+Encoded 14566 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=19.5dB  max_err=2759  avg_err=20.9
+Written to ../../games/shadowleague/sound/samples/out_a/45.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/46.wav
+../../games/shadowleague/sound/samples/out_a/46.adpcma
+Encoded 13596 samples + 0 preroll nibbles -> 6912 bytes
+  Verify: SNR=29.9dB  max_err=536  avg_err=9.8
+Written to ../../games/shadowleague/sound/samples/out_a/46.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/47.wav
+../../games/shadowleague/sound/samples/out_a/47.adpcma
+Encoded 9725 samples + 0 preroll nibbles -> 4864 bytes
+  Verify: SNR=17.3dB  max_err=2263  avg_err=7.0
+Written to ../../games/shadowleague/sound/samples/out_a/47.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/48.wav
+../../games/shadowleague/sound/samples/out_a/48.adpcma
+Encoded 7841 samples + 0 preroll nibbles -> 4096 bytes
+  Verify: SNR=21.0dB  max_err=765  avg_err=5.1
+Written to ../../games/shadowleague/sound/samples/out_a/48.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/49.wav
+../../games/shadowleague/sound/samples/out_a/49.adpcma
+Encoded 10815 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=19.0dB  max_err=1167  avg_err=10.3
+Written to ../../games/shadowleague/sound/samples/out_a/49.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/5.wav
+../../games/shadowleague/sound/samples/out_a/5.adpcma
+Encoded 4809 samples + 0 preroll nibbles -> 2560 bytes
+  Verify: SNR=34.9dB  max_err=128  avg_err=4.0
+Written to ../../games/shadowleague/sound/samples/out_a/5.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/50.wav
+../../games/shadowleague/sound/samples/out_a/50.adpcma
+Encoded 12098 samples + 0 preroll nibbles -> 6144 bytes
+  Verify: SNR=22.3dB  max_err=1386  avg_err=6.6
+Written to ../../games/shadowleague/sound/samples/out_a/50.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/51.wav
+../../games/shadowleague/sound/samples/out_a/51.adpcma
+Encoded 15526 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=17.4dB  max_err=1974  avg_err=12.4
+Written to ../../games/shadowleague/sound/samples/out_a/51.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/52.wav
+../../games/shadowleague/sound/samples/out_a/52.adpcma
+Encoded 16851 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=20.4dB  max_err=1751  avg_err=22.4
+Written to ../../games/shadowleague/sound/samples/out_a/52.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/53.wav
+../../games/shadowleague/sound/samples/out_a/53.adpcma
+Encoded 14600 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=21.0dB  max_err=1975  avg_err=14.5
+Written to ../../games/shadowleague/sound/samples/out_a/53.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/54.wav
+../../games/shadowleague/sound/samples/out_a/54.adpcma
+Encoded 19856 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=23.8dB  max_err=1100  avg_err=14.8
+Written to ../../games/shadowleague/sound/samples/out_a/54.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/55.wav
+../../games/shadowleague/sound/samples/out_a/55.adpcma
+Encoded 12700 samples + 0 preroll nibbles -> 6400 bytes
+  Verify: SNR=21.2dB  max_err=1042  avg_err=18.9
+Written to ../../games/shadowleague/sound/samples/out_a/55.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/56.wav
+../../games/shadowleague/sound/samples/out_a/56.adpcma
+Encoded 12515 samples + 0 preroll nibbles -> 6400 bytes
+  Verify: SNR=31.4dB  max_err=300  avg_err=7.0
+Written to ../../games/shadowleague/sound/samples/out_a/56.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/57.wav
+../../games/shadowleague/sound/samples/out_a/57.adpcma
+Encoded 17153 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=26.8dB  max_err=640  avg_err=13.9
+Written to ../../games/shadowleague/sound/samples/out_a/57.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/58.wav
+../../games/shadowleague/sound/samples/out_a/58.adpcma
+Encoded 12622 samples + 0 preroll nibbles -> 6400 bytes
+  Verify: SNR=20.9dB  max_err=1370  avg_err=20.0
+Written to ../../games/shadowleague/sound/samples/out_a/58.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/59.wav
+../../games/shadowleague/sound/samples/out_a/59.adpcma
+Encoded 17209 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=24.1dB  max_err=1049  avg_err=9.3
+Written to ../../games/shadowleague/sound/samples/out_a/59.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/6.wav
+../../games/shadowleague/sound/samples/out_a/6.adpcma
+Encoded 2589 samples + 0 preroll nibbles -> 1536 bytes
+  Verify: SNR=19.6dB  max_err=416  avg_err=13.9
+Written to ../../games/shadowleague/sound/samples/out_a/6.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/60.wav
+../../games/shadowleague/sound/samples/out_a/60.adpcma
+Encoded 11756 samples + 0 preroll nibbles -> 5888 bytes
+  Verify: SNR=16.8dB  max_err=2187  avg_err=11.6
+Written to ../../games/shadowleague/sound/samples/out_a/60.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/61.wav
+../../games/shadowleague/sound/samples/out_a/61.adpcma
+Encoded 18801 samples + 0 preroll nibbles -> 9472 bytes
+  Verify: SNR=22.4dB  max_err=1940  avg_err=8.4
+Written to ../../games/shadowleague/sound/samples/out_a/61.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/62.wav
+../../games/shadowleague/sound/samples/out_a/62.adpcma
+Encoded 14318 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=18.9dB  max_err=1821  avg_err=15.6
+Written to ../../games/shadowleague/sound/samples/out_a/62.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/63.wav
+../../games/shadowleague/sound/samples/out_a/63.adpcma
+Encoded 23541 samples + 0 preroll nibbles -> 11776 bytes
+  Verify: SNR=18.8dB  max_err=2217  avg_err=17.3
+Written to ../../games/shadowleague/sound/samples/out_a/63.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/64.wav
+../../games/shadowleague/sound/samples/out_a/64.adpcma
+Encoded 14707 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=23.9dB  max_err=1199  avg_err=12.7
+Written to ../../games/shadowleague/sound/samples/out_a/64.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/65.wav
+../../games/shadowleague/sound/samples/out_a/65.adpcma
+Encoded 20933 samples + 0 preroll nibbles -> 10496 bytes
+  Verify: SNR=20.0dB  max_err=2149  avg_err=14.5
+Written to ../../games/shadowleague/sound/samples/out_a/65.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/66.wav
+../../games/shadowleague/sound/samples/out_a/66.adpcma
+Encoded 22414 samples + 0 preroll nibbles -> 11264 bytes
+  Verify: SNR=23.8dB  max_err=747  avg_err=11.6
+Written to ../../games/shadowleague/sound/samples/out_a/66.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/67.wav
+../../games/shadowleague/sound/samples/out_a/67.adpcma
+Encoded 14334 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=29.1dB  max_err=778  avg_err=5.1
+Written to ../../games/shadowleague/sound/samples/out_a/67.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/68.wav
+../../games/shadowleague/sound/samples/out_a/68.adpcma
+Encoded 12936 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=23.8dB  max_err=1050  avg_err=13.4
+Written to ../../games/shadowleague/sound/samples/out_a/68.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/69.wav
+../../games/shadowleague/sound/samples/out_a/69.adpcma
+Encoded 15497 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=22.0dB  max_err=1596  avg_err=15.4
+Written to ../../games/shadowleague/sound/samples/out_a/69.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/7.wav
+../../games/shadowleague/sound/samples/out_a/7.adpcma
+Encoded 2960 samples + 0 preroll nibbles -> 1536 bytes
+  Verify: SNR=22.0dB  max_err=407  avg_err=17.9
+Written to ../../games/shadowleague/sound/samples/out_a/7.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/70.wav
+../../games/shadowleague/sound/samples/out_a/70.adpcma
+Encoded 21225 samples + 0 preroll nibbles -> 10752 bytes
+  Verify: SNR=23.3dB  max_err=1041  avg_err=4.2
+Written to ../../games/shadowleague/sound/samples/out_a/70.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/71.wav
+../../games/shadowleague/sound/samples/out_a/71.adpcma
+Encoded 21157 samples + 0 preroll nibbles -> 10752 bytes
+  Verify: SNR=21.0dB  max_err=1326  avg_err=7.0
+Written to ../../games/shadowleague/sound/samples/out_a/71.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/72.wav
+../../games/shadowleague/sound/samples/out_a/72.adpcma
+Encoded 17289 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=20.9dB  max_err=750  avg_err=7.2
+Written to ../../games/shadowleague/sound/samples/out_a/72.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/73.wav
+../../games/shadowleague/sound/samples/out_a/73.adpcma
+Encoded 23089 samples + 0 preroll nibbles -> 11776 bytes
+  Verify: SNR=25.6dB  max_err=1061  avg_err=5.7
+Written to ../../games/shadowleague/sound/samples/out_a/73.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/74.wav
+../../games/shadowleague/sound/samples/out_a/74.adpcma
+Encoded 22730 samples + 0 preroll nibbles -> 11520 bytes
+  Verify: SNR=20.5dB  max_err=1868  avg_err=14.6
+Written to ../../games/shadowleague/sound/samples/out_a/74.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/75.wav
+../../games/shadowleague/sound/samples/out_a/75.adpcma
+Encoded 11999 samples + 0 preroll nibbles -> 6144 bytes
+  Verify: SNR=23.6dB  max_err=1272  avg_err=8.0
+Written to ../../games/shadowleague/sound/samples/out_a/75.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/76.wav
+../../games/shadowleague/sound/samples/out_a/76.adpcma
+Encoded 20086 samples + 0 preroll nibbles -> 10240 bytes
+  Verify: SNR=20.9dB  max_err=1806  avg_err=14.2
+Written to ../../games/shadowleague/sound/samples/out_a/76.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/77.wav
+../../games/shadowleague/sound/samples/out_a/77.adpcma
+Encoded 22037 samples + 0 preroll nibbles -> 11264 bytes
+  Verify: SNR=18.2dB  max_err=1755  avg_err=10.2
+Written to ../../games/shadowleague/sound/samples/out_a/77.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/78.wav
+../../games/shadowleague/sound/samples/out_a/78.adpcma
+Encoded 13708 samples + 0 preroll nibbles -> 6912 bytes
+  Verify: SNR=24.3dB  max_err=1027  avg_err=15.2
+Written to ../../games/shadowleague/sound/samples/out_a/78.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/79.wav
+../../games/shadowleague/sound/samples/out_a/79.adpcma
+Encoded 14435 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=26.8dB  max_err=1406  avg_err=8.3
+Written to ../../games/shadowleague/sound/samples/out_a/79.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/8.wav
+../../games/shadowleague/sound/samples/out_a/8.adpcma
+Encoded 7030 samples + 0 preroll nibbles -> 3584 bytes
+  Verify: SNR=23.9dB  max_err=457  avg_err=21.6
+Written to ../../games/shadowleague/sound/samples/out_a/8.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/80.wav
+../../games/shadowleague/sound/samples/out_a/80.adpcma
+Encoded 17772 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=20.7dB  max_err=2092  avg_err=15.0
+Written to ../../games/shadowleague/sound/samples/out_a/80.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/81.wav
+../../games/shadowleague/sound/samples/out_a/81.adpcma
+Encoded 18467 samples + 0 preroll nibbles -> 9472 bytes
+  Verify: SNR=25.0dB  max_err=738  avg_err=15.5
+Written to ../../games/shadowleague/sound/samples/out_a/81.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/82.wav
+../../games/shadowleague/sound/samples/out_a/82.adpcma
+Encoded 19493 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=22.7dB  max_err=2021  avg_err=19.0
+Written to ../../games/shadowleague/sound/samples/out_a/82.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/83.wav
+../../games/shadowleague/sound/samples/out_a/83.adpcma
+Encoded 22733 samples + 0 preroll nibbles -> 11520 bytes
+  Verify: SNR=25.9dB  max_err=1044  avg_err=13.6
+Written to ../../games/shadowleague/sound/samples/out_a/83.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/84.wav
+../../games/shadowleague/sound/samples/out_a/84.adpcma
+Encoded 15818 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=30.0dB  max_err=654  avg_err=8.9
+Written to ../../games/shadowleague/sound/samples/out_a/84.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/85.wav
+../../games/shadowleague/sound/samples/out_a/85.adpcma
+Encoded 16893 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=26.9dB  max_err=459  avg_err=13.1
+Written to ../../games/shadowleague/sound/samples/out_a/85.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/86.wav
+../../games/shadowleague/sound/samples/out_a/86.adpcma
+Encoded 22067 samples + 0 preroll nibbles -> 11264 bytes
+  Verify: SNR=24.4dB  max_err=1978  avg_err=8.5
+Written to ../../games/shadowleague/sound/samples/out_a/86.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/87.wav
+../../games/shadowleague/sound/samples/out_a/87.adpcma
+Encoded 19363 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=26.2dB  max_err=1254  avg_err=8.4
+Written to ../../games/shadowleague/sound/samples/out_a/87.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/88.wav
+../../games/shadowleague/sound/samples/out_a/88.adpcma
+Encoded 20222 samples + 0 preroll nibbles -> 10240 bytes
+  Verify: SNR=18.7dB  max_err=2158  avg_err=12.7
+Written to ../../games/shadowleague/sound/samples/out_a/88.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/89.wav
+../../games/shadowleague/sound/samples/out_a/89.adpcma
+Encoded 18971 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=17.4dB  max_err=2345  avg_err=19.8
+Written to ../../games/shadowleague/sound/samples/out_a/89.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/9.wav
+../../games/shadowleague/sound/samples/out_a/9.adpcma
+Encoded 16650 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=33.4dB  max_err=162  avg_err=6.8
+Written to ../../games/shadowleague/sound/samples/out_a/9.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/90.wav
+../../games/shadowleague/sound/samples/out_a/90.adpcma
+Encoded 14324 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=23.8dB  max_err=1180  avg_err=7.2
+Written to ../../games/shadowleague/sound/samples/out_a/90.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/91.wav
+../../games/shadowleague/sound/samples/out_a/91.adpcma
+Encoded 12062 samples + 0 preroll nibbles -> 6144 bytes
+  Verify: SNR=28.3dB  max_err=643  avg_err=3.4
+Written to ../../games/shadowleague/sound/samples/out_a/91.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/92.wav
+../../games/shadowleague/sound/samples/out_a/92.adpcma
+Encoded 15367 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=27.2dB  max_err=866  avg_err=4.5
+Written to ../../games/shadowleague/sound/samples/out_a/92.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/93.wav
+../../games/shadowleague/sound/samples/out_a/93.adpcma
+Encoded 21666 samples + 0 preroll nibbles -> 11008 bytes
+  Verify: SNR=20.2dB  max_err=1785  avg_err=7.4
+Written to ../../games/shadowleague/sound/samples/out_a/93.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/94.wav
+../../games/shadowleague/sound/samples/out_a/94.adpcma
+Encoded 19708 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=25.1dB  max_err=1087  avg_err=14.9
+Written to ../../games/shadowleague/sound/samples/out_a/94.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/95.wav
+../../games/shadowleague/sound/samples/out_a/95.adpcma
+Encoded 16625 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=20.5dB  max_err=1075  avg_err=27.6
+Written to ../../games/shadowleague/sound/samples/out_a/95.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/96.wav
+../../games/shadowleague/sound/samples/out_a/96.adpcma
+Encoded 14553 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=28.0dB  max_err=963  avg_err=7.7
+Written to ../../games/shadowleague/sound/samples/out_a/96.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/97.wav
+../../games/shadowleague/sound/samples/out_a/97.adpcma
+Encoded 19630 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=34.9dB  max_err=577  avg_err=5.3
+Written to ../../games/shadowleague/sound/samples/out_a/97.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/98.wav
+../../games/shadowleague/sound/samples/out_a/98.adpcma
+Encoded 15791 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=24.5dB  max_err=466  avg_err=9.4
+Written to ../../games/shadowleague/sound/samples/out_a/98.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/99.wav
+../../games/shadowleague/sound/samples/out_a/99.adpcma
+Encoded 21108 samples + 0 preroll nibbles -> 10752 bytes
+  Verify: SNR=24.4dB  max_err=1530  avg_err=7.5
+Written to ../../games/shadowleague/sound/samples/out_a/99.adpcma
+[voice] ../../games/shadowleague/sound/samples/out_16el_a_voice not found — skipping voice ADPCM-A stage
+../../games/shadowleague/sound/samples/out_16el_b/1.wav
+../../games/shadowleague/sound/samples/out_b/1.adpcmb
+Encoded 647999 samples -> 324096 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/1.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/10.wav
+../../games/shadowleague/sound/samples/out_b/10.adpcmb
+Encoded 903724 samples -> 452096 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/10.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/11.wav
+../../games/shadowleague/sound/samples/out_b/11.adpcmb
+Encoded 845419 samples -> 422912 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/11.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/12.wav
+../../games/shadowleague/sound/samples/out_b/12.adpcmb
+Encoded 1110508 samples -> 555264 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/12.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/13.wav
+../../games/shadowleague/sound/samples/out_b/13.adpcmb
+Encoded 780000 samples -> 390144 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/13.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/14.wav
+../../games/shadowleague/sound/samples/out_b/14.adpcmb
+Encoded 936000 samples -> 468224 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/14.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/15.wav
+../../games/shadowleague/sound/samples/out_b/15.adpcmb
+Encoded 873600 samples -> 436992 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/15.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/16.wav
+../../games/shadowleague/sound/samples/out_b/16.adpcmb
+Encoded 903724 samples -> 452096 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/16.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/2.wav
+../../games/shadowleague/sound/samples/out_b/2.adpcmb
+Encoded 315000 samples -> 157696 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/2.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/3.wav
+../../games/shadowleague/sound/samples/out_b/3.adpcmb
+Encoded 157500 samples -> 78848 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/3.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/4.wav
+../../games/shadowleague/sound/samples/out_b/4.adpcmb
+Encoded 420000 samples -> 210176 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/4.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/5.wav
+../../games/shadowleague/sound/samples/out_b/5.adpcmb
+Encoded 873600 samples -> 436992 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/5.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/6.wav
+../../games/shadowleague/sound/samples/out_b/6.adpcmb
+Encoded 819000 samples -> 409600 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/6.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/7.wav
+../../games/shadowleague/sound/samples/out_b/7.adpcmb
+Encoded 1170000 samples -> 585216 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/7.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/8.wav
+../../games/shadowleague/sound/samples/out_b/8.adpcmb
+Encoded 949565 samples -> 474880 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/8.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/9.wav
+../../games/shadowleague/sound/samples/out_b/9.adpcmb
+Encoded 873600 samples -> 436992 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/9.adpcmb
+make m1rom GAME=shadowleague
+make[1]: Entering directory '/mnt/c/neogeo/shadowleague-sdk177-20261017'
+GAME=shadowleague GAME_ID=781 GAME_SOUND=games/shadowleague/sound sh ./sound/tools/vrom.sh
+Built /mnt/c/neogeo/shadowleague-sdk177-20261017/out/781-v1.v1 (241 samples)
+Updated /mnt/c/neogeo/shadowleague-sdk177-20261017/sound/driver/sample_table.inc
+mkdir -p roms/shadowleague
+cp -f out/781-v1.v1 roms/shadowleague/781-v1.v1
+fmpatches: no patches.fm in games/shadowleague/sound/fm/, writing an empty table
+Built sound/driver/fm_patch_table.inc (0 patches)
+fm: no MML files in games/shadowleague/sound/fm/, writing an empty table
+Built sound/driver/fm_data.inc (0 tracks)
+mml: no MML files in games/shadowleague/sound/mml/, writing an empty table
+Built sound/driver/music_data.inc (0 tracks)
+ssgconfig: no config.ssg in games/shadowleague/sound/ssg/, writing an empty table
+Built sound/driver/ssg_config.inc (0 presets)
+ssg: no MML files in games/shadowleague/sound/ssg/, writing an empty table
+Built sound/driver/ssg_data.inc (0 tracks)
+WLAZ80=wla-z80 WLALINK=wlalink USE_Z80C= Z80C_SRC= GAME=shadowleague GAME_SOUND=games/shadowleague/sound GAME_ID=781 sh ./sound/tools/m1rom.sh
+Assembling ASM driver with wla-z80
+Built /mnt/c/neogeo/shadowleague-sdk177-20261017/out/781-m1.m1
+make[1]: Leaving directory '/mnt/c/neogeo/shadowleague-sdk177-20261017'
+[neogeosdk] target=sound game=shadowleague game_id=781 platform=aes rom_dir=roms/shadowleague hashpath=/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash
+[neogeosdk] target=game game=shadowleague game_id=781 platform=aes rom_dir=roms/shadowleague hashpath=/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -DNG_AES=1   games/shadowleague/neogeo_aes.c -o out/neogeo0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -DNG_AES=1   games/shadowleague/user.c -o out/user0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn   games/shadowleague/main.c -o out/main0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn   games/shadowleague/eyecatcher.c -o out/eyecatcher0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn   sdk/neogeolib.c -o out/neogeolib0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn   sdk/ng_fix/ng_fix.c -o out/ng_fix_sdk0.o
+python3 tools/gen_trig.py --out sdk/2d_engine/ng_trig_table.c
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 sdk/cabinet/ng_sys.c -o out/lib_ng_sys0.o; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 sdk/2d_engine/ng_trig.c -o out/lib_ng_trig0.o; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 sdk/2d_engine/ng_trig_table.c -o out/lib_ng_trig_table0.o; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 sdk/2d_engine/ng_pause.c -o out/lib_ng_pause0.o; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 sdk/2d_engine/ng_move.c -o out/lib_ng_move0.o;
+rm -f out/libng_sdk.a
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-ar rcs out/libng_sdk.a out/lib_ng_sys0.o out/lib_ng_trig0.o out/lib_ng_trig_table0.o out/lib_ng_pause0.o out/lib_ng_move0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_defs.c -o out/ng_defs0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_properties.c -o out/ng_properties0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_game_time.c -o out/ng_game_time0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_timers.c -o out/ng_timers0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_progress.c -o out/ng_progress0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_status.c -o out/ng_status0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_game_events.c -o out/ng_game_events0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_level.c -o out/ng_level0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_vram.c -o out/ng_vram0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_sprite_window.c -o out/ng_sprite_window0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_art_asset.c -o out/ng_art_asset0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_palette_assets.c -o out/ng_palette_assets0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_bg.c -o out/ng_bg0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_fix.c -o out/ng_fix0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_sprite_group.c -o out/ng_sprite_group0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_actions.c -o out/ng_actions0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_chars.c -o out/ng_chars0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_npcs.c -o out/ng_npcs0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_physics.c -o out/ng_physics0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_border_constraints.c -o out/ng_border_constraints0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_game_interupt.c -o out/ng_game_interupt0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_scene.c -o out/ng_scene0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_depthfx.c -o out/ng_depthfx0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_render_queue.c -o out/ng_render_queue0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_fixed.c -o out/ng_fixed0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_rand.c -o out/ng_rand0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_fight.c -o out/ng_fight0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_camera.c -o out/ng_camera0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_palette_fx.c -o out/ng_palette_fx0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_particles_none.c -o out/ng_particles_none0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_feedback.c -o out/ng_feedback0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_debug.c -o out/ng_debug0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_joystick.c -o out/ng_joystick0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_demo_advanced.c -o out/ng_demo_advanced0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 games/shadowleague/scenes/slf_draw.c -o out/slf_draw0.o || exit $?; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 games/shadowleague/scenes/slf_game.c -o out/slf_game0.o || exit $?; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 games/shadowleague/scenes/slf_practice.c -o out/slf_practice0.o || exit $?; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 games/shadowleague/scenes/slf_data.c -o out/slf_data0.o || exit $?; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 games/shadowleague/scenes/slf_rom.c -o out/slf_rom0.o || exit $?;
+games/shadowleague/scenes/slf_draw.c:1061:25: warning: 'mark_at' defined but not used [-Wunused-function]
+ 1061 | static void NEOGEO_USER mark_at(int16_t y)
+      |                         ^~~~~~~
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy -R .comment -R .text -R .data -R .bss out/neogeo0.o     out/neogeo.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy -R .comment -R .text -R .data -R .bss out/user0.o       out/user.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy -R .comment -R .text -R .data -R .bss out/main0.o       out/main.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy -R .comment -R .text -R .data -R .bss out/eyecatcher0.o out/eyecatcher.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy -R .comment -R .text -R .data -R .bss out/neogeolib0.o  out/neogeolib.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-ld -nostdlib -T games/shadowleague/neogeo.ld -o out/game \
+    out/neogeo.o out/user.o out/main.o out/eyecatcher.o out/neogeolib.o \
+    out/ng_fix_sdk0.o out/ng_defs0.o out/ng_properties0.o out/ng_game_time0.o out/ng_timers0.o out/ng_progress0.o out/ng_status0.o out/ng_game_events0.o out/ng_level0.o out/ng_vram0.o out/ng_sprite_window0.o out/ng_art_asset0.o out/ng_palette_assets0.o out/ng_bg0.o out/ng_fix0.o out/ng_sprite_group0.o out/ng_actions0.o out/ng_chars0.o out/ng_npcs0.o out/ng_physics0.o out/ng_border_constraints0.o out/ng_game_interupt0.o out/ng_scene0.o out/ng_depthfx0.o out/ng_render_queue0.o out/ng_fixed0.o out/ng_camera0.o out/ng_palette_fx0.o out/ng_particles_none0.o out/ng_feedback0.o out/ng_debug0.o out/ng_joystick0.o out/ng_demo_advanced0.o out/ng_rand0.o out/ng_fight0.o out/slf_draw0.o out/slf_game0.o out/slf_practice0.o out/slf_data0.o out/slf_rom0.o out/libng_sdk.a
+python3 games/shadowleague/tools/banked_rom.py --elf out/game --output out/game.rom --objcopy "/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy"
+Banked P: fixed 507767, payloads [5520, 4600], cartridge 3145728 bytes
+cp       out/game.rom out/781-p1.p1
+mkdir -p roms/shadowleague
+cp -f out/781-p1.p1 roms/shadowleague/781-p1.p1
+GAME=shadowleague GAME_ID=781 python3 hash_eagle/gen_hash.py
+Generated /mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague/neogeo.xml
+python3 tools/rom_budget.py --game shadowleague --id 781 --rom-dir roms/shadowleague --cfg games/shadowleague/game.cfg --check
+[budget] within budget: P 67%, C 62%, S 41%, M 18%, V 97%
+python3 bios/tools/build.py --cc "/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc" --wlaz80 "wla-z80" --wlalink "wlalink" --install bios/test_roms
+Generated /mnt/c/neogeo/shadowleague-sdk177-20261017/bios/sfix.sfix (131072 bytes)
+Generated /mnt/c/neogeo/shadowleague-sdk177-20261017/bios/000-lo.lo (131072 bytes)
+[neogeosdk] target=p1 game=shadowleague game_id=781 platform=aes rom_dir=roms/shadowleague hashpath=/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash
+[neogeosdk] target=all game=shadowleague game_id=781 platform=aes rom_dir=roms/shadowleague hashpath=/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash
+GAME=shadowleague GAME_ID=781 python3 hash_eagle/gen_hash.py
+Generated /mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague/neogeo.xml
+neo: dist/candidates/shadowleague/sdk177/shadowleague-aes.neo (28577792 bytes), MAME set dist/candidates/shadowleague/sdk177/aes
+[game-check] GAME=shadowleague (from games/shadowleague/game.cfg)
+[neogeosdk] target=art game=shadowleague game_id=781 platform=mvs rom_dir=roms/shadowleague hashpath=/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash
+python3 games/shadowleague/tools/art.py
+Art gates PASS: 44 fighters, 2460 frames, 0 intact limb layers; C-ROM round trip True
+C ROM: 102644 tiles used; stage 16 palettes; fighters 44; {'frames': 2460, 'unshared_tiles': 319832, 'unique_strips': 45915, 'shared_tiles': 91830, 'pixel_loss': 0, 'total_tiles': 102644}
+[neogeosdk] target=sfix game=shadowleague game_id=781 platform=mvs rom_dir=roms/shadowleague hashpath=/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash
+python3 games/shadowleague/tools/art.py --fix-only
+samples: no in_wav_a_voice, skipping voice
+../../games/shadowleague/sound/samples/out_16el_a/1.wav
+../../games/shadowleague/sound/samples/out_a/1.adpcma
+Encoded 6474 samples + 0 preroll nibbles -> 3328 bytes
+  Verify: SNR=29.0dB  max_err=85  avg_err=16.1
+Written to ../../games/shadowleague/sound/samples/out_a/1.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/10.wav
+../../games/shadowleague/sound/samples/out_a/10.adpcma
+Encoded 5549 samples + 0 preroll nibbles -> 2816 bytes
+  Verify: SNR=38.6dB  max_err=85  avg_err=3.7
+Written to ../../games/shadowleague/sound/samples/out_a/10.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/100.wav
+../../games/shadowleague/sound/samples/out_a/100.adpcma
+Encoded 15456 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=23.2dB  max_err=2162  avg_err=6.0
+Written to ../../games/shadowleague/sound/samples/out_a/100.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/101.wav
+../../games/shadowleague/sound/samples/out_a/101.adpcma
+Encoded 23352 samples + 0 preroll nibbles -> 11776 bytes
+  Verify: SNR=21.3dB  max_err=1403  avg_err=9.8
+Written to ../../games/shadowleague/sound/samples/out_a/101.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/102.wav
+../../games/shadowleague/sound/samples/out_a/102.adpcma
+Encoded 20546 samples + 0 preroll nibbles -> 10496 bytes
+  Verify: SNR=20.3dB  max_err=1727  avg_err=13.5
+Written to ../../games/shadowleague/sound/samples/out_a/102.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/103.wav
+../../games/shadowleague/sound/samples/out_a/103.adpcma
+Encoded 24501 samples + 0 preroll nibbles -> 12288 bytes
+  Verify: SNR=23.1dB  max_err=1151  avg_err=15.5
+Written to ../../games/shadowleague/sound/samples/out_a/103.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/104.wav
+../../games/shadowleague/sound/samples/out_a/104.adpcma
+Encoded 19460 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=20.2dB  max_err=750  avg_err=17.9
+Written to ../../games/shadowleague/sound/samples/out_a/104.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/105.wav
+../../games/shadowleague/sound/samples/out_a/105.adpcma
+Encoded 26258 samples + 0 preroll nibbles -> 13312 bytes
+  Verify: SNR=20.6dB  max_err=2159  avg_err=22.5
+Written to ../../games/shadowleague/sound/samples/out_a/105.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/106.wav
+../../games/shadowleague/sound/samples/out_a/106.adpcma
+Encoded 12996 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=23.1dB  max_err=1001  avg_err=10.5
+Written to ../../games/shadowleague/sound/samples/out_a/106.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/107.wav
+../../games/shadowleague/sound/samples/out_a/107.adpcma
+Encoded 15070 samples + 0 preroll nibbles -> 7680 bytes
+  Verify: SNR=17.0dB  max_err=2309  avg_err=21.4
+Written to ../../games/shadowleague/sound/samples/out_a/107.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/108.wav
+../../games/shadowleague/sound/samples/out_a/108.adpcma
+Encoded 14317 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=24.6dB  max_err=1241  avg_err=9.7
+Written to ../../games/shadowleague/sound/samples/out_a/108.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/109.wav
+../../games/shadowleague/sound/samples/out_a/109.adpcma
+Encoded 18568 samples + 0 preroll nibbles -> 9472 bytes
+  Verify: SNR=23.9dB  max_err=1814  avg_err=10.9
+Written to ../../games/shadowleague/sound/samples/out_a/109.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/11.wav
+../../games/shadowleague/sound/samples/out_a/11.adpcma
+Encoded 22199 samples + 0 preroll nibbles -> 11264 bytes
+  Verify: SNR=43.5dB  max_err=75  avg_err=2.2
+Written to ../../games/shadowleague/sound/samples/out_a/11.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/110.wav
+../../games/shadowleague/sound/samples/out_a/110.adpcma
+Encoded 19862 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=23.2dB  max_err=1493  avg_err=14.0
+Written to ../../games/shadowleague/sound/samples/out_a/110.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/111.wav
+../../games/shadowleague/sound/samples/out_a/111.adpcma
+Encoded 16478 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=27.7dB  max_err=1316  avg_err=8.9
+Written to ../../games/shadowleague/sound/samples/out_a/111.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/112.wav
+../../games/shadowleague/sound/samples/out_a/112.adpcma
+Encoded 20882 samples + 0 preroll nibbles -> 10496 bytes
+  Verify: SNR=20.3dB  max_err=1641  avg_err=23.7
+Written to ../../games/shadowleague/sound/samples/out_a/112.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/113.wav
+../../games/shadowleague/sound/samples/out_a/113.adpcma
+Encoded 23599 samples + 0 preroll nibbles -> 12032 bytes
+  Verify: SNR=22.1dB  max_err=1166  avg_err=18.7
+Written to ../../games/shadowleague/sound/samples/out_a/113.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/114.wav
+../../games/shadowleague/sound/samples/out_a/114.adpcma
+Encoded 13612 samples + 0 preroll nibbles -> 6912 bytes
+  Verify: SNR=19.2dB  max_err=1733  avg_err=18.2
+Written to ../../games/shadowleague/sound/samples/out_a/114.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/115.wav
+../../games/shadowleague/sound/samples/out_a/115.adpcma
+Encoded 17493 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=21.5dB  max_err=1476  avg_err=12.4
+Written to ../../games/shadowleague/sound/samples/out_a/115.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/116.wav
+../../games/shadowleague/sound/samples/out_a/116.adpcma
+Encoded 10998 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=23.8dB  max_err=756  avg_err=14.0
+Written to ../../games/shadowleague/sound/samples/out_a/116.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/117.wav
+../../games/shadowleague/sound/samples/out_a/117.adpcma
+Encoded 15138 samples + 0 preroll nibbles -> 7680 bytes
+  Verify: SNR=18.4dB  max_err=1599  avg_err=10.6
+Written to ../../games/shadowleague/sound/samples/out_a/117.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/118.wav
+../../games/shadowleague/sound/samples/out_a/118.adpcma
+Encoded 16893 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=20.9dB  max_err=2375  avg_err=7.0
+Written to ../../games/shadowleague/sound/samples/out_a/118.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/119.wav
+../../games/shadowleague/sound/samples/out_a/119.adpcma
+Encoded 19161 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=22.8dB  max_err=1623  avg_err=10.7
+Written to ../../games/shadowleague/sound/samples/out_a/119.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/12.wav
+../../games/shadowleague/sound/samples/out_a/12.adpcma
+Encoded 2589 samples + 0 preroll nibbles -> 1536 bytes
+  Verify: SNR=39.1dB  max_err=80  avg_err=2.8
+Written to ../../games/shadowleague/sound/samples/out_a/12.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/120.wav
+../../games/shadowleague/sound/samples/out_a/120.adpcma
+Encoded 14934 samples + 0 preroll nibbles -> 7680 bytes
+  Verify: SNR=27.5dB  max_err=1176  avg_err=8.3
+Written to ../../games/shadowleague/sound/samples/out_a/120.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/121.wav
+../../games/shadowleague/sound/samples/out_a/121.adpcma
+Encoded 20707 samples + 0 preroll nibbles -> 10496 bytes
+  Verify: SNR=29.5dB  max_err=1004  avg_err=5.2
+Written to ../../games/shadowleague/sound/samples/out_a/121.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/122.wav
+../../games/shadowleague/sound/samples/out_a/122.adpcma
+Encoded 16486 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=25.6dB  max_err=853  avg_err=10.9
+Written to ../../games/shadowleague/sound/samples/out_a/122.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/123.wav
+../../games/shadowleague/sound/samples/out_a/123.adpcma
+Encoded 14689 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=17.9dB  max_err=2532  avg_err=18.0
+Written to ../../games/shadowleague/sound/samples/out_a/123.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/124.wav
+../../games/shadowleague/sound/samples/out_a/124.adpcma
+Encoded 15402 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=33.2dB  max_err=426  avg_err=4.8
+Written to ../../games/shadowleague/sound/samples/out_a/124.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/125.wav
+../../games/shadowleague/sound/samples/out_a/125.adpcma
+Encoded 20118 samples + 0 preroll nibbles -> 10240 bytes
+  Verify: SNR=20.5dB  max_err=1338  avg_err=15.6
+Written to ../../games/shadowleague/sound/samples/out_a/125.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/126.wav
+../../games/shadowleague/sound/samples/out_a/126.adpcma
+Encoded 20142 samples + 0 preroll nibbles -> 10240 bytes
+  Verify: SNR=29.1dB  max_err=412  avg_err=9.1
+Written to ../../games/shadowleague/sound/samples/out_a/126.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/127.wav
+../../games/shadowleague/sound/samples/out_a/127.adpcma
+Encoded 13112 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=31.1dB  max_err=569  avg_err=6.7
+Written to ../../games/shadowleague/sound/samples/out_a/127.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/128.wav
+../../games/shadowleague/sound/samples/out_a/128.adpcma
+Encoded 10778 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=31.3dB  max_err=619  avg_err=8.9
+Written to ../../games/shadowleague/sound/samples/out_a/128.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/129.wav
+../../games/shadowleague/sound/samples/out_a/129.adpcma
+Encoded 16396 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=31.6dB  max_err=539  avg_err=7.2
+Written to ../../games/shadowleague/sound/samples/out_a/129.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/13.wav
+../../games/shadowleague/sound/samples/out_a/13.adpcma
+Encoded 18500 samples + 0 preroll nibbles -> 9472 bytes
+  Verify: SNR=23.5dB  max_err=1352  avg_err=9.4
+Written to ../../games/shadowleague/sound/samples/out_a/13.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/130.wav
+../../games/shadowleague/sound/samples/out_a/130.adpcma
+Encoded 13610 samples + 0 preroll nibbles -> 6912 bytes
+  Verify: SNR=19.5dB  max_err=2186  avg_err=8.6
+Written to ../../games/shadowleague/sound/samples/out_a/130.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/131.wav
+../../games/shadowleague/sound/samples/out_a/131.adpcma
+Encoded 13055 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=22.7dB  max_err=1477  avg_err=9.6
+Written to ../../games/shadowleague/sound/samples/out_a/131.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/132.wav
+../../games/shadowleague/sound/samples/out_a/132.adpcma
+Encoded 16114 samples + 0 preroll nibbles -> 8192 bytes
+  Verify: SNR=20.8dB  max_err=1954  avg_err=12.7
+Written to ../../games/shadowleague/sound/samples/out_a/132.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/133.wav
+../../games/shadowleague/sound/samples/out_a/133.adpcma
+Encoded 20879 samples + 0 preroll nibbles -> 10496 bytes
+  Verify: SNR=22.8dB  max_err=1093  avg_err=13.3
+Written to ../../games/shadowleague/sound/samples/out_a/133.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/134.wav
+../../games/shadowleague/sound/samples/out_a/134.adpcma
+Encoded 16083 samples + 0 preroll nibbles -> 8192 bytes
+  Verify: SNR=17.6dB  max_err=1823  avg_err=18.8
+Written to ../../games/shadowleague/sound/samples/out_a/134.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/135.wav
+../../games/shadowleague/sound/samples/out_a/135.adpcma
+Encoded 15788 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=17.5dB  max_err=2359  avg_err=26.9
+Written to ../../games/shadowleague/sound/samples/out_a/135.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/136.wav
+../../games/shadowleague/sound/samples/out_a/136.adpcma
+Encoded 19742 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=17.8dB  max_err=2477  avg_err=19.3
+Written to ../../games/shadowleague/sound/samples/out_a/136.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/137.wav
+../../games/shadowleague/sound/samples/out_a/137.adpcma
+Encoded 16494 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=19.8dB  max_err=1296  avg_err=13.0
+Written to ../../games/shadowleague/sound/samples/out_a/137.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/138.wav
+../../games/shadowleague/sound/samples/out_a/138.adpcma
+Encoded 21679 samples + 0 preroll nibbles -> 11008 bytes
+  Verify: SNR=17.4dB  max_err=2171  avg_err=12.7
+Written to ../../games/shadowleague/sound/samples/out_a/138.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/139.wav
+../../games/shadowleague/sound/samples/out_a/139.adpcma
+Encoded 15325 samples + 0 preroll nibbles -> 7680 bytes
+  Verify: SNR=17.1dB  max_err=2192  avg_err=11.1
+Written to ../../games/shadowleague/sound/samples/out_a/139.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/14.wav
+../../games/shadowleague/sound/samples/out_a/14.adpcma
+Encoded 6474 samples + 0 preroll nibbles -> 3328 bytes
+  Verify: SNR=19.3dB  max_err=1372  avg_err=16.2
+Written to ../../games/shadowleague/sound/samples/out_a/14.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/140.wav
+../../games/shadowleague/sound/samples/out_a/140.adpcma
+Encoded 19396 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=20.0dB  max_err=1871  avg_err=15.8
+Written to ../../games/shadowleague/sound/samples/out_a/140.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/141.wav
+../../games/shadowleague/sound/samples/out_a/141.adpcma
+Encoded 17800 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=17.5dB  max_err=2763  avg_err=14.8
+Written to ../../games/shadowleague/sound/samples/out_a/141.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/142.wav
+../../games/shadowleague/sound/samples/out_a/142.adpcma
+Encoded 16075 samples + 0 preroll nibbles -> 8192 bytes
+  Verify: SNR=17.1dB  max_err=2105  avg_err=21.7
+Written to ../../games/shadowleague/sound/samples/out_a/142.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/143.wav
+../../games/shadowleague/sound/samples/out_a/143.adpcma
+Encoded 14466 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=20.0dB  max_err=1352  avg_err=15.9
+Written to ../../games/shadowleague/sound/samples/out_a/143.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/144.wav
+../../games/shadowleague/sound/samples/out_a/144.adpcma
+Encoded 22598 samples + 0 preroll nibbles -> 11520 bytes
+  Verify: SNR=20.4dB  max_err=1537  avg_err=19.5
+Written to ../../games/shadowleague/sound/samples/out_a/144.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/145.wav
+../../games/shadowleague/sound/samples/out_a/145.adpcma
+Encoded 18047 samples + 0 preroll nibbles -> 9216 bytes
+  Verify: SNR=17.2dB  max_err=2423  avg_err=27.6
+Written to ../../games/shadowleague/sound/samples/out_a/145.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/146.wav
+../../games/shadowleague/sound/samples/out_a/146.adpcma
+Encoded 10415 samples + 0 preroll nibbles -> 5376 bytes
+  Verify: SNR=25.9dB  max_err=687  avg_err=6.2
+Written to ../../games/shadowleague/sound/samples/out_a/146.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/147.wav
+../../games/shadowleague/sound/samples/out_a/147.adpcma
+Encoded 14335 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=22.4dB  max_err=1223  avg_err=15.8
+Written to ../../games/shadowleague/sound/samples/out_a/147.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/148.wav
+../../games/shadowleague/sound/samples/out_a/148.adpcma
+Encoded 17227 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=21.2dB  max_err=1607  avg_err=14.0
+Written to ../../games/shadowleague/sound/samples/out_a/148.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/149.wav
+../../games/shadowleague/sound/samples/out_a/149.adpcma
+Encoded 16622 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=22.0dB  max_err=1492  avg_err=17.7
+Written to ../../games/shadowleague/sound/samples/out_a/149.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/15.wav
+../../games/shadowleague/sound/samples/out_a/15.adpcma
+Encoded 5549 samples + 0 preroll nibbles -> 2816 bytes
+  Verify: SNR=14.7dB  max_err=2633  avg_err=85.8
+Written to ../../games/shadowleague/sound/samples/out_a/15.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/150.wav
+../../games/shadowleague/sound/samples/out_a/150.adpcma
+Encoded 14775 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=23.3dB  max_err=1591  avg_err=14.2
+Written to ../../games/shadowleague/sound/samples/out_a/150.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/151.wav
+../../games/shadowleague/sound/samples/out_a/151.adpcma
+Encoded 17662 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=19.0dB  max_err=741  avg_err=20.4
+Written to ../../games/shadowleague/sound/samples/out_a/151.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/152.wav
+../../games/shadowleague/sound/samples/out_a/152.adpcma
+Encoded 17911 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=20.0dB  max_err=1762  avg_err=15.2
+Written to ../../games/shadowleague/sound/samples/out_a/152.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/153.wav
+../../games/shadowleague/sound/samples/out_a/153.adpcma
+Encoded 19321 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=25.1dB  max_err=942  avg_err=14.9
+Written to ../../games/shadowleague/sound/samples/out_a/153.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/154.wav
+../../games/shadowleague/sound/samples/out_a/154.adpcma
+Encoded 16219 samples + 0 preroll nibbles -> 8192 bytes
+  Verify: SNR=23.2dB  max_err=677  avg_err=18.3
+Written to ../../games/shadowleague/sound/samples/out_a/154.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/155.wav
+../../games/shadowleague/sound/samples/out_a/155.adpcma
+Encoded 12508 samples + 0 preroll nibbles -> 6400 bytes
+  Verify: SNR=23.2dB  max_err=1262  avg_err=9.0
+Written to ../../games/shadowleague/sound/samples/out_a/155.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/156.wav
+../../games/shadowleague/sound/samples/out_a/156.adpcma
+Encoded 12881 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=18.7dB  max_err=1972  avg_err=19.3
+Written to ../../games/shadowleague/sound/samples/out_a/156.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/157.wav
+../../games/shadowleague/sound/samples/out_a/157.adpcma
+Encoded 17952 samples + 0 preroll nibbles -> 9216 bytes
+  Verify: SNR=23.5dB  max_err=1495  avg_err=9.4
+Written to ../../games/shadowleague/sound/samples/out_a/157.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/158.wav
+../../games/shadowleague/sound/samples/out_a/158.adpcma
+Encoded 9377 samples + 0 preroll nibbles -> 4864 bytes
+  Verify: SNR=28.7dB  max_err=844  avg_err=4.7
+Written to ../../games/shadowleague/sound/samples/out_a/158.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/159.wav
+../../games/shadowleague/sound/samples/out_a/159.adpcma
+Encoded 12798 samples + 0 preroll nibbles -> 6400 bytes
+  Verify: SNR=25.5dB  max_err=1843  avg_err=7.4
+Written to ../../games/shadowleague/sound/samples/out_a/159.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/16.wav
+../../games/shadowleague/sound/samples/out_a/16.adpcma
+Encoded 14800 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=28.7dB  max_err=266  avg_err=10.7
+Written to ../../games/shadowleague/sound/samples/out_a/16.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/160.wav
+../../games/shadowleague/sound/samples/out_a/160.adpcma
+Encoded 11765 samples + 0 preroll nibbles -> 5888 bytes
+  Verify: SNR=25.6dB  max_err=1067  avg_err=11.1
+Written to ../../games/shadowleague/sound/samples/out_a/160.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/161.wav
+../../games/shadowleague/sound/samples/out_a/161.adpcma
+Encoded 17391 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=22.7dB  max_err=1564  avg_err=13.3
+Written to ../../games/shadowleague/sound/samples/out_a/161.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/162.wav
+../../games/shadowleague/sound/samples/out_a/162.adpcma
+Encoded 21392 samples + 0 preroll nibbles -> 10752 bytes
+  Verify: SNR=18.1dB  max_err=1791  avg_err=24.6
+Written to ../../games/shadowleague/sound/samples/out_a/162.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/163.wav
+../../games/shadowleague/sound/samples/out_a/163.adpcma
+Encoded 19456 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=25.8dB  max_err=1580  avg_err=13.1
+Written to ../../games/shadowleague/sound/samples/out_a/163.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/164.wav
+../../games/shadowleague/sound/samples/out_a/164.adpcma
+Encoded 14047 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=23.5dB  max_err=1254  avg_err=18.0
+Written to ../../games/shadowleague/sound/samples/out_a/164.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/165.wav
+../../games/shadowleague/sound/samples/out_a/165.adpcma
+Encoded 15121 samples + 0 preroll nibbles -> 7680 bytes
+  Verify: SNR=25.0dB  max_err=829  avg_err=15.6
+Written to ../../games/shadowleague/sound/samples/out_a/165.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/166.wav
+../../games/shadowleague/sound/samples/out_a/166.adpcma
+Encoded 19145 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=21.2dB  max_err=1524  avg_err=13.2
+Written to ../../games/shadowleague/sound/samples/out_a/166.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/167.wav
+../../games/shadowleague/sound/samples/out_a/167.adpcma
+Encoded 16573 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=19.1dB  max_err=1794  avg_err=15.7
+Written to ../../games/shadowleague/sound/samples/out_a/167.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/168.wav
+../../games/shadowleague/sound/samples/out_a/168.adpcma
+Encoded 18886 samples + 0 preroll nibbles -> 9472 bytes
+  Verify: SNR=22.8dB  max_err=870  avg_err=11.0
+Written to ../../games/shadowleague/sound/samples/out_a/168.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/169.wav
+../../games/shadowleague/sound/samples/out_a/169.adpcma
+Encoded 17107 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=26.5dB  max_err=1184  avg_err=10.4
+Written to ../../games/shadowleague/sound/samples/out_a/169.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/17.wav
+../../games/shadowleague/sound/samples/out_a/17.adpcma
+Encoded 18011 samples + 0 preroll nibbles -> 9216 bytes
+  Verify: SNR=21.5dB  max_err=1355  avg_err=7.4
+Written to ../../games/shadowleague/sound/samples/out_a/17.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/170.wav
+../../games/shadowleague/sound/samples/out_a/170.adpcma
+Encoded 19470 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=18.1dB  max_err=2127  avg_err=10.1
+Written to ../../games/shadowleague/sound/samples/out_a/170.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/171.wav
+../../games/shadowleague/sound/samples/out_a/171.adpcma
+Encoded 25726 samples + 0 preroll nibbles -> 13056 bytes
+  Verify: SNR=25.9dB  max_err=1121  avg_err=11.3
+Written to ../../games/shadowleague/sound/samples/out_a/171.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/172.wav
+../../games/shadowleague/sound/samples/out_a/172.adpcma
+Encoded 16878 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=27.4dB  max_err=1382  avg_err=9.0
+Written to ../../games/shadowleague/sound/samples/out_a/172.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/173.wav
+../../games/shadowleague/sound/samples/out_a/173.adpcma
+Encoded 25563 samples + 0 preroll nibbles -> 12800 bytes
+  Verify: SNR=27.0dB  max_err=843  avg_err=13.5
+Written to ../../games/shadowleague/sound/samples/out_a/173.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/174.wav
+../../games/shadowleague/sound/samples/out_a/174.adpcma
+Encoded 27750 samples + 0 preroll nibbles -> 14080 bytes
+  Verify: SNR=21.7dB  max_err=1887  avg_err=13.6
+Written to ../../games/shadowleague/sound/samples/out_a/174.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/175.wav
+../../games/shadowleague/sound/samples/out_a/175.adpcma
+Encoded 18470 samples + 0 preroll nibbles -> 9472 bytes
+  Verify: SNR=17.6dB  max_err=2112  avg_err=10.8
+Written to ../../games/shadowleague/sound/samples/out_a/175.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/176.wav
+../../games/shadowleague/sound/samples/out_a/176.adpcma
+Encoded 21070 samples + 0 preroll nibbles -> 10752 bytes
+  Verify: SNR=22.6dB  max_err=1668  avg_err=8.5
+Written to ../../games/shadowleague/sound/samples/out_a/176.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/177.wav
+../../games/shadowleague/sound/samples/out_a/177.adpcma
+Encoded 20878 samples + 0 preroll nibbles -> 10496 bytes
+  Verify: SNR=17.8dB  max_err=2258  avg_err=18.3
+Written to ../../games/shadowleague/sound/samples/out_a/177.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/178.wav
+../../games/shadowleague/sound/samples/out_a/178.adpcma
+Encoded 12952 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=21.9dB  max_err=1486  avg_err=16.2
+Written to ../../games/shadowleague/sound/samples/out_a/178.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/179.wav
+../../games/shadowleague/sound/samples/out_a/179.adpcma
+Encoded 12873 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=24.9dB  max_err=1302  avg_err=8.4
+Written to ../../games/shadowleague/sound/samples/out_a/179.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/18.wav
+../../games/shadowleague/sound/samples/out_a/18.adpcma
+Encoded 18528 samples + 0 preroll nibbles -> 9472 bytes
+  Verify: SNR=22.9dB  max_err=1149  avg_err=12.0
+Written to ../../games/shadowleague/sound/samples/out_a/18.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/180.wav
+../../games/shadowleague/sound/samples/out_a/180.adpcma
+Encoded 17986 samples + 0 preroll nibbles -> 9216 bytes
+  Verify: SNR=26.1dB  max_err=1105  avg_err=8.4
+Written to ../../games/shadowleague/sound/samples/out_a/180.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/181.wav
+../../games/shadowleague/sound/samples/out_a/181.adpcma
+Encoded 16493 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=23.9dB  max_err=893  avg_err=13.5
+Written to ../../games/shadowleague/sound/samples/out_a/181.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/182.wav
+../../games/shadowleague/sound/samples/out_a/182.adpcma
+Encoded 19423 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=22.3dB  max_err=1525  avg_err=17.8
+Written to ../../games/shadowleague/sound/samples/out_a/182.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/183.wav
+../../games/shadowleague/sound/samples/out_a/183.adpcma
+Encoded 19711 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=23.4dB  max_err=1030  avg_err=14.1
+Written to ../../games/shadowleague/sound/samples/out_a/183.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/184.wav
+../../games/shadowleague/sound/samples/out_a/184.adpcma
+Encoded 17858 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=25.3dB  max_err=898  avg_err=11.4
+Written to ../../games/shadowleague/sound/samples/out_a/184.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/185.wav
+../../games/shadowleague/sound/samples/out_a/185.adpcma
+Encoded 21989 samples + 0 preroll nibbles -> 11008 bytes
+  Verify: SNR=24.4dB  max_err=744  avg_err=16.5
+Written to ../../games/shadowleague/sound/samples/out_a/185.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/186.wav
+../../games/shadowleague/sound/samples/out_a/186.adpcma
+Encoded 14349 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=23.5dB  max_err=990  avg_err=9.7
+Written to ../../games/shadowleague/sound/samples/out_a/186.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/187.wav
+../../games/shadowleague/sound/samples/out_a/187.adpcma
+Encoded 14735 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=19.7dB  max_err=1483  avg_err=11.0
+Written to ../../games/shadowleague/sound/samples/out_a/187.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/188.wav
+../../games/shadowleague/sound/samples/out_a/188.adpcma
+Encoded 13768 samples + 0 preroll nibbles -> 6912 bytes
+  Verify: SNR=21.8dB  max_err=1349  avg_err=15.6
+Written to ../../games/shadowleague/sound/samples/out_a/188.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/189.wav
+../../games/shadowleague/sound/samples/out_a/189.adpcma
+Encoded 13024 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=18.0dB  max_err=2756  avg_err=16.0
+Written to ../../games/shadowleague/sound/samples/out_a/189.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/19.wav
+../../games/shadowleague/sound/samples/out_a/19.adpcma
+Encoded 19194 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=19.4dB  max_err=1373  avg_err=7.3
+Written to ../../games/shadowleague/sound/samples/out_a/19.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/190.wav
+../../games/shadowleague/sound/samples/out_a/190.adpcma
+Encoded 14669 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=19.4dB  max_err=2128  avg_err=15.6
+Written to ../../games/shadowleague/sound/samples/out_a/190.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/191.wav
+../../games/shadowleague/sound/samples/out_a/191.adpcma
+Encoded 13990 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=16.3dB  max_err=2432  avg_err=15.6
+Written to ../../games/shadowleague/sound/samples/out_a/191.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/192.wav
+../../games/shadowleague/sound/samples/out_a/192.adpcma
+Encoded 15452 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=19.6dB  max_err=2262  avg_err=15.3
+Written to ../../games/shadowleague/sound/samples/out_a/192.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/193.wav
+../../games/shadowleague/sound/samples/out_a/193.adpcma
+Encoded 17135 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=22.5dB  max_err=1929  avg_err=20.8
+Written to ../../games/shadowleague/sound/samples/out_a/193.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/194.wav
+../../games/shadowleague/sound/samples/out_a/194.adpcma
+Encoded 14479 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=25.6dB  max_err=860  avg_err=11.4
+Written to ../../games/shadowleague/sound/samples/out_a/194.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/195.wav
+../../games/shadowleague/sound/samples/out_a/195.adpcma
+Encoded 17238 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=25.6dB  max_err=698  avg_err=11.3
+Written to ../../games/shadowleague/sound/samples/out_a/195.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/196.wav
+../../games/shadowleague/sound/samples/out_a/196.adpcma
+Encoded 13993 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=26.6dB  max_err=1079  avg_err=11.4
+Written to ../../games/shadowleague/sound/samples/out_a/196.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/197.wav
+../../games/shadowleague/sound/samples/out_a/197.adpcma
+Encoded 15784 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=32.0dB  max_err=481  avg_err=6.7
+Written to ../../games/shadowleague/sound/samples/out_a/197.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/198.wav
+../../games/shadowleague/sound/samples/out_a/198.adpcma
+Encoded 16059 samples + 0 preroll nibbles -> 8192 bytes
+  Verify: SNR=23.2dB  max_err=584  avg_err=10.7
+Written to ../../games/shadowleague/sound/samples/out_a/198.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/199.wav
+../../games/shadowleague/sound/samples/out_a/199.adpcma
+Encoded 20045 samples + 0 preroll nibbles -> 10240 bytes
+  Verify: SNR=23.2dB  max_err=969  avg_err=17.1
+Written to ../../games/shadowleague/sound/samples/out_a/199.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/2.wav
+../../games/shadowleague/sound/samples/out_a/2.adpcma
+Encoded 1110 samples + 0 preroll nibbles -> 768 bytes
+  Verify: SNR=20.6dB  max_err=1763  avg_err=61.5
+Written to ../../games/shadowleague/sound/samples/out_a/2.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/20.wav
+../../games/shadowleague/sound/samples/out_a/20.adpcma
+Encoded 16992 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=21.0dB  max_err=1829  avg_err=5.8
+Written to ../../games/shadowleague/sound/samples/out_a/20.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/200.wav
+../../games/shadowleague/sound/samples/out_a/200.adpcma
+Encoded 14131 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=18.0dB  max_err=1520  avg_err=12.0
+Written to ../../games/shadowleague/sound/samples/out_a/200.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/201.wav
+../../games/shadowleague/sound/samples/out_a/201.adpcma
+Encoded 27750 samples + 0 preroll nibbles -> 14080 bytes
+  Verify: SNR=24.7dB  max_err=868  avg_err=6.3
+Written to ../../games/shadowleague/sound/samples/out_a/201.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/202.wav
+../../games/shadowleague/sound/samples/out_a/202.adpcma
+Encoded 14193 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=24.6dB  max_err=848  avg_err=13.4
+Written to ../../games/shadowleague/sound/samples/out_a/202.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/203.wav
+../../games/shadowleague/sound/samples/out_a/203.adpcma
+Encoded 12601 samples + 0 preroll nibbles -> 6400 bytes
+  Verify: SNR=25.0dB  max_err=822  avg_err=6.3
+Written to ../../games/shadowleague/sound/samples/out_a/203.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/204.wav
+../../games/shadowleague/sound/samples/out_a/204.adpcma
+Encoded 14564 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=21.7dB  max_err=1648  avg_err=8.6
+Written to ../../games/shadowleague/sound/samples/out_a/204.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/205.wav
+../../games/shadowleague/sound/samples/out_a/205.adpcma
+Encoded 20832 samples + 0 preroll nibbles -> 10496 bytes
+  Verify: SNR=26.7dB  max_err=944  avg_err=11.2
+Written to ../../games/shadowleague/sound/samples/out_a/205.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/206.wav
+../../games/shadowleague/sound/samples/out_a/206.adpcma
+Encoded 17568 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=18.5dB  max_err=2101  avg_err=7.7
+Written to ../../games/shadowleague/sound/samples/out_a/206.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/207.wav
+../../games/shadowleague/sound/samples/out_a/207.adpcma
+Encoded 10785 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=22.0dB  max_err=1608  avg_err=12.7
+Written to ../../games/shadowleague/sound/samples/out_a/207.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/208.wav
+../../games/shadowleague/sound/samples/out_a/208.adpcma
+Encoded 15017 samples + 0 preroll nibbles -> 7680 bytes
+  Verify: SNR=18.4dB  max_err=1736  avg_err=20.8
+Written to ../../games/shadowleague/sound/samples/out_a/208.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/209.wav
+../../games/shadowleague/sound/samples/out_a/209.adpcma
+Encoded 17750 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=18.6dB  max_err=2074  avg_err=19.5
+Written to ../../games/shadowleague/sound/samples/out_a/209.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/21.wav
+../../games/shadowleague/sound/samples/out_a/21.adpcma
+Encoded 12219 samples + 0 preroll nibbles -> 6144 bytes
+  Verify: SNR=16.9dB  max_err=1757  avg_err=9.4
+Written to ../../games/shadowleague/sound/samples/out_a/21.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/210.wav
+../../games/shadowleague/sound/samples/out_a/210.adpcma
+Encoded 16629 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=15.7dB  max_err=1595  avg_err=16.6
+Written to ../../games/shadowleague/sound/samples/out_a/210.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/211.wav
+../../games/shadowleague/sound/samples/out_a/211.adpcma
+Encoded 19782 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=16.9dB  max_err=1868  avg_err=14.3
+Written to ../../games/shadowleague/sound/samples/out_a/211.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/212.wav
+../../games/shadowleague/sound/samples/out_a/212.adpcma
+Encoded 18963 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=17.8dB  max_err=2060  avg_err=12.0
+Written to ../../games/shadowleague/sound/samples/out_a/212.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/213.wav
+../../games/shadowleague/sound/samples/out_a/213.adpcma
+Encoded 23054 samples + 0 preroll nibbles -> 11776 bytes
+  Verify: SNR=20.4dB  max_err=1579  avg_err=9.9
+Written to ../../games/shadowleague/sound/samples/out_a/213.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/214.wav
+../../games/shadowleague/sound/samples/out_a/214.adpcma
+Encoded 15520 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=18.3dB  max_err=2373  avg_err=17.6
+Written to ../../games/shadowleague/sound/samples/out_a/214.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/215.wav
+../../games/shadowleague/sound/samples/out_a/215.adpcma
+Encoded 17683 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=18.4dB  max_err=2104  avg_err=17.2
+Written to ../../games/shadowleague/sound/samples/out_a/215.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/216.wav
+../../games/shadowleague/sound/samples/out_a/216.adpcma
+Encoded 11705 samples + 0 preroll nibbles -> 5888 bytes
+  Verify: SNR=25.2dB  max_err=1019  avg_err=17.0
+Written to ../../games/shadowleague/sound/samples/out_a/216.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/217.wav
+../../games/shadowleague/sound/samples/out_a/217.adpcma
+Encoded 19227 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=26.1dB  max_err=1191  avg_err=12.6
+Written to ../../games/shadowleague/sound/samples/out_a/217.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/218.wav
+../../games/shadowleague/sound/samples/out_a/218.adpcma
+Encoded 27695 samples + 0 preroll nibbles -> 14080 bytes
+  Verify: SNR=22.5dB  max_err=1704  avg_err=9.7
+Written to ../../games/shadowleague/sound/samples/out_a/218.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/219.wav
+../../games/shadowleague/sound/samples/out_a/219.adpcma
+Encoded 15688 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=27.7dB  max_err=652  avg_err=10.9
+Written to ../../games/shadowleague/sound/samples/out_a/219.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/22.wav
+../../games/shadowleague/sound/samples/out_a/22.adpcma
+Encoded 16225 samples + 0 preroll nibbles -> 8192 bytes
+  Verify: SNR=25.2dB  max_err=968  avg_err=6.0
+Written to ../../games/shadowleague/sound/samples/out_a/22.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/220.wav
+../../games/shadowleague/sound/samples/out_a/220.adpcma
+Encoded 15093 samples + 0 preroll nibbles -> 7680 bytes
+  Verify: SNR=25.1dB  max_err=792  avg_err=13.9
+Written to ../../games/shadowleague/sound/samples/out_a/220.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/221.wav
+../../games/shadowleague/sound/samples/out_a/221.adpcma
+Encoded 18982 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=25.9dB  max_err=1575  avg_err=11.6
+Written to ../../games/shadowleague/sound/samples/out_a/221.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/222.wav
+../../games/shadowleague/sound/samples/out_a/222.adpcma
+Encoded 19013 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=19.5dB  max_err=1258  avg_err=10.6
+Written to ../../games/shadowleague/sound/samples/out_a/222.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/223.wav
+../../games/shadowleague/sound/samples/out_a/223.adpcma
+Encoded 17541 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=19.7dB  max_err=2082  avg_err=16.6
+Written to ../../games/shadowleague/sound/samples/out_a/223.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/224.wav
+../../games/shadowleague/sound/samples/out_a/224.adpcma
+Encoded 16736 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=20.5dB  max_err=2014  avg_err=13.6
+Written to ../../games/shadowleague/sound/samples/out_a/224.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/225.wav
+../../games/shadowleague/sound/samples/out_a/225.adpcma
+Encoded 23431 samples + 0 preroll nibbles -> 11776 bytes
+  Verify: SNR=23.9dB  max_err=1702  avg_err=8.7
+Written to ../../games/shadowleague/sound/samples/out_a/225.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/23.wav
+../../games/shadowleague/sound/samples/out_a/23.adpcma
+Encoded 14637 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=21.6dB  max_err=1614  avg_err=6.5
+Written to ../../games/shadowleague/sound/samples/out_a/23.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/24.wav
+../../games/shadowleague/sound/samples/out_a/24.adpcma
+Encoded 14652 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=29.3dB  max_err=337  avg_err=6.5
+Written to ../../games/shadowleague/sound/samples/out_a/24.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/25.wav
+../../games/shadowleague/sound/samples/out_a/25.adpcma
+Encoded 16022 samples + 0 preroll nibbles -> 8192 bytes
+  Verify: SNR=23.4dB  max_err=1071  avg_err=7.1
+Written to ../../games/shadowleague/sound/samples/out_a/25.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/26.wav
+../../games/shadowleague/sound/samples/out_a/26.adpcma
+Encoded 21542 samples + 0 preroll nibbles -> 11008 bytes
+  Verify: SNR=24.7dB  max_err=991  avg_err=5.9
+Written to ../../games/shadowleague/sound/samples/out_a/26.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/27.wav
+../../games/shadowleague/sound/samples/out_a/27.adpcma
+Encoded 10829 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=22.9dB  max_err=1345  avg_err=11.3
+Written to ../../games/shadowleague/sound/samples/out_a/27.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/28.wav
+../../games/shadowleague/sound/samples/out_a/28.adpcma
+Encoded 9556 samples + 0 preroll nibbles -> 4864 bytes
+  Verify: SNR=20.8dB  max_err=1478  avg_err=7.1
+Written to ../../games/shadowleague/sound/samples/out_a/28.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/29.wav
+../../games/shadowleague/sound/samples/out_a/29.adpcma
+Encoded 13087 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=26.4dB  max_err=1119  avg_err=11.9
+Written to ../../games/shadowleague/sound/samples/out_a/29.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/3.wav
+../../games/shadowleague/sound/samples/out_a/3.adpcma
+Encoded 9250 samples + 0 preroll nibbles -> 4864 bytes
+  Verify: SNR=14.2dB  max_err=2760  avg_err=86.6
+Written to ../../games/shadowleague/sound/samples/out_a/3.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/30.wav
+../../games/shadowleague/sound/samples/out_a/30.adpcma
+Encoded 14050 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=31.0dB  max_err=482  avg_err=10.4
+Written to ../../games/shadowleague/sound/samples/out_a/30.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/31.wav
+../../games/shadowleague/sound/samples/out_a/31.adpcma
+Encoded 8551 samples + 0 preroll nibbles -> 4352 bytes
+  Verify: SNR=23.1dB  max_err=1173  avg_err=8.8
+Written to ../../games/shadowleague/sound/samples/out_a/31.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/32.wav
+../../games/shadowleague/sound/samples/out_a/32.adpcma
+Encoded 6269 samples + 0 preroll nibbles -> 3328 bytes
+  Verify: SNR=24.6dB  max_err=997  avg_err=9.0
+Written to ../../games/shadowleague/sound/samples/out_a/32.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/33.wav
+../../games/shadowleague/sound/samples/out_a/33.adpcma
+Encoded 10906 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=27.5dB  max_err=829  avg_err=13.9
+Written to ../../games/shadowleague/sound/samples/out_a/33.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/34.wav
+../../games/shadowleague/sound/samples/out_a/34.adpcma
+Encoded 9596 samples + 0 preroll nibbles -> 4864 bytes
+  Verify: SNR=22.6dB  max_err=1412  avg_err=17.8
+Written to ../../games/shadowleague/sound/samples/out_a/34.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/35.wav
+../../games/shadowleague/sound/samples/out_a/35.adpcma
+Encoded 8828 samples + 0 preroll nibbles -> 4608 bytes
+  Verify: SNR=21.5dB  max_err=1733  avg_err=12.5
+Written to ../../games/shadowleague/sound/samples/out_a/35.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/36.wav
+../../games/shadowleague/sound/samples/out_a/36.adpcma
+Encoded 6805 samples + 0 preroll nibbles -> 3584 bytes
+  Verify: SNR=16.4dB  max_err=2120  avg_err=17.4
+Written to ../../games/shadowleague/sound/samples/out_a/36.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/37.wav
+../../games/shadowleague/sound/samples/out_a/37.adpcma
+Encoded 10972 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=24.9dB  max_err=1195  avg_err=10.9
+Written to ../../games/shadowleague/sound/samples/out_a/37.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/38.wav
+../../games/shadowleague/sound/samples/out_a/38.adpcma
+Encoded 10927 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=32.3dB  max_err=604  avg_err=9.8
+Written to ../../games/shadowleague/sound/samples/out_a/38.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/39.wav
+../../games/shadowleague/sound/samples/out_a/39.adpcma
+Encoded 6770 samples + 0 preroll nibbles -> 3584 bytes
+  Verify: SNR=15.2dB  max_err=2436  avg_err=15.7
+Written to ../../games/shadowleague/sound/samples/out_a/39.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/4.wav
+../../games/shadowleague/sound/samples/out_a/4.adpcma
+Encoded 2220 samples + 0 preroll nibbles -> 1280 bytes
+  Verify: SNR=25.3dB  max_err=200  avg_err=9.5
+Written to ../../games/shadowleague/sound/samples/out_a/4.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/40.wav
+../../games/shadowleague/sound/samples/out_a/40.adpcma
+Encoded 6591 samples + 0 preroll nibbles -> 3328 bytes
+  Verify: SNR=15.3dB  max_err=2300  avg_err=19.2
+Written to ../../games/shadowleague/sound/samples/out_a/40.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/41.wav
+../../games/shadowleague/sound/samples/out_a/41.adpcma
+Encoded 12173 samples + 0 preroll nibbles -> 6144 bytes
+  Verify: SNR=18.8dB  max_err=1916  avg_err=16.0
+Written to ../../games/shadowleague/sound/samples/out_a/41.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/42.wav
+../../games/shadowleague/sound/samples/out_a/42.adpcma
+Encoded 11252 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=28.1dB  max_err=957  avg_err=11.2
+Written to ../../games/shadowleague/sound/samples/out_a/42.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/43.wav
+../../games/shadowleague/sound/samples/out_a/43.adpcma
+Encoded 11192 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=18.6dB  max_err=2243  avg_err=16.4
+Written to ../../games/shadowleague/sound/samples/out_a/43.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/44.wav
+../../games/shadowleague/sound/samples/out_a/44.adpcma
+Encoded 7465 samples + 0 preroll nibbles -> 3840 bytes
+  Verify: SNR=18.6dB  max_err=2351  avg_err=10.6
+Written to ../../games/shadowleague/sound/samples/out_a/44.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/45.wav
+../../games/shadowleague/sound/samples/out_a/45.adpcma
+Encoded 14566 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=19.5dB  max_err=2759  avg_err=20.9
+Written to ../../games/shadowleague/sound/samples/out_a/45.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/46.wav
+../../games/shadowleague/sound/samples/out_a/46.adpcma
+Encoded 13596 samples + 0 preroll nibbles -> 6912 bytes
+  Verify: SNR=29.9dB  max_err=536  avg_err=9.8
+Written to ../../games/shadowleague/sound/samples/out_a/46.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/47.wav
+../../games/shadowleague/sound/samples/out_a/47.adpcma
+Encoded 9725 samples + 0 preroll nibbles -> 4864 bytes
+  Verify: SNR=17.3dB  max_err=2263  avg_err=7.0
+Written to ../../games/shadowleague/sound/samples/out_a/47.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/48.wav
+../../games/shadowleague/sound/samples/out_a/48.adpcma
+Encoded 7841 samples + 0 preroll nibbles -> 4096 bytes
+  Verify: SNR=21.0dB  max_err=765  avg_err=5.1
+Written to ../../games/shadowleague/sound/samples/out_a/48.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/49.wav
+../../games/shadowleague/sound/samples/out_a/49.adpcma
+Encoded 10815 samples + 0 preroll nibbles -> 5632 bytes
+  Verify: SNR=19.0dB  max_err=1167  avg_err=10.3
+Written to ../../games/shadowleague/sound/samples/out_a/49.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/5.wav
+../../games/shadowleague/sound/samples/out_a/5.adpcma
+Encoded 4809 samples + 0 preroll nibbles -> 2560 bytes
+  Verify: SNR=34.9dB  max_err=128  avg_err=4.0
+Written to ../../games/shadowleague/sound/samples/out_a/5.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/50.wav
+../../games/shadowleague/sound/samples/out_a/50.adpcma
+Encoded 12098 samples + 0 preroll nibbles -> 6144 bytes
+  Verify: SNR=22.3dB  max_err=1386  avg_err=6.6
+Written to ../../games/shadowleague/sound/samples/out_a/50.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/51.wav
+../../games/shadowleague/sound/samples/out_a/51.adpcma
+Encoded 15526 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=17.4dB  max_err=1974  avg_err=12.4
+Written to ../../games/shadowleague/sound/samples/out_a/51.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/52.wav
+../../games/shadowleague/sound/samples/out_a/52.adpcma
+Encoded 16851 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=20.4dB  max_err=1751  avg_err=22.4
+Written to ../../games/shadowleague/sound/samples/out_a/52.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/53.wav
+../../games/shadowleague/sound/samples/out_a/53.adpcma
+Encoded 14600 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=21.0dB  max_err=1975  avg_err=14.5
+Written to ../../games/shadowleague/sound/samples/out_a/53.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/54.wav
+../../games/shadowleague/sound/samples/out_a/54.adpcma
+Encoded 19856 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=23.8dB  max_err=1100  avg_err=14.8
+Written to ../../games/shadowleague/sound/samples/out_a/54.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/55.wav
+../../games/shadowleague/sound/samples/out_a/55.adpcma
+Encoded 12700 samples + 0 preroll nibbles -> 6400 bytes
+  Verify: SNR=21.2dB  max_err=1042  avg_err=18.9
+Written to ../../games/shadowleague/sound/samples/out_a/55.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/56.wav
+../../games/shadowleague/sound/samples/out_a/56.adpcma
+Encoded 12515 samples + 0 preroll nibbles -> 6400 bytes
+  Verify: SNR=31.4dB  max_err=300  avg_err=7.0
+Written to ../../games/shadowleague/sound/samples/out_a/56.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/57.wav
+../../games/shadowleague/sound/samples/out_a/57.adpcma
+Encoded 17153 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=26.8dB  max_err=640  avg_err=13.9
+Written to ../../games/shadowleague/sound/samples/out_a/57.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/58.wav
+../../games/shadowleague/sound/samples/out_a/58.adpcma
+Encoded 12622 samples + 0 preroll nibbles -> 6400 bytes
+  Verify: SNR=20.9dB  max_err=1370  avg_err=20.0
+Written to ../../games/shadowleague/sound/samples/out_a/58.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/59.wav
+../../games/shadowleague/sound/samples/out_a/59.adpcma
+Encoded 17209 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=24.1dB  max_err=1049  avg_err=9.3
+Written to ../../games/shadowleague/sound/samples/out_a/59.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/6.wav
+../../games/shadowleague/sound/samples/out_a/6.adpcma
+Encoded 2589 samples + 0 preroll nibbles -> 1536 bytes
+  Verify: SNR=19.6dB  max_err=416  avg_err=13.9
+Written to ../../games/shadowleague/sound/samples/out_a/6.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/60.wav
+../../games/shadowleague/sound/samples/out_a/60.adpcma
+Encoded 11756 samples + 0 preroll nibbles -> 5888 bytes
+  Verify: SNR=16.8dB  max_err=2187  avg_err=11.6
+Written to ../../games/shadowleague/sound/samples/out_a/60.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/61.wav
+../../games/shadowleague/sound/samples/out_a/61.adpcma
+Encoded 18801 samples + 0 preroll nibbles -> 9472 bytes
+  Verify: SNR=22.4dB  max_err=1940  avg_err=8.4
+Written to ../../games/shadowleague/sound/samples/out_a/61.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/62.wav
+../../games/shadowleague/sound/samples/out_a/62.adpcma
+Encoded 14318 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=18.9dB  max_err=1821  avg_err=15.6
+Written to ../../games/shadowleague/sound/samples/out_a/62.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/63.wav
+../../games/shadowleague/sound/samples/out_a/63.adpcma
+Encoded 23541 samples + 0 preroll nibbles -> 11776 bytes
+  Verify: SNR=18.8dB  max_err=2217  avg_err=17.3
+Written to ../../games/shadowleague/sound/samples/out_a/63.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/64.wav
+../../games/shadowleague/sound/samples/out_a/64.adpcma
+Encoded 14707 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=23.9dB  max_err=1199  avg_err=12.7
+Written to ../../games/shadowleague/sound/samples/out_a/64.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/65.wav
+../../games/shadowleague/sound/samples/out_a/65.adpcma
+Encoded 20933 samples + 0 preroll nibbles -> 10496 bytes
+  Verify: SNR=20.0dB  max_err=2149  avg_err=14.5
+Written to ../../games/shadowleague/sound/samples/out_a/65.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/66.wav
+../../games/shadowleague/sound/samples/out_a/66.adpcma
+Encoded 22414 samples + 0 preroll nibbles -> 11264 bytes
+  Verify: SNR=23.8dB  max_err=747  avg_err=11.6
+Written to ../../games/shadowleague/sound/samples/out_a/66.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/67.wav
+../../games/shadowleague/sound/samples/out_a/67.adpcma
+Encoded 14334 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=29.1dB  max_err=778  avg_err=5.1
+Written to ../../games/shadowleague/sound/samples/out_a/67.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/68.wav
+../../games/shadowleague/sound/samples/out_a/68.adpcma
+Encoded 12936 samples + 0 preroll nibbles -> 6656 bytes
+  Verify: SNR=23.8dB  max_err=1050  avg_err=13.4
+Written to ../../games/shadowleague/sound/samples/out_a/68.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/69.wav
+../../games/shadowleague/sound/samples/out_a/69.adpcma
+Encoded 15497 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=22.0dB  max_err=1596  avg_err=15.4
+Written to ../../games/shadowleague/sound/samples/out_a/69.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/7.wav
+../../games/shadowleague/sound/samples/out_a/7.adpcma
+Encoded 2960 samples + 0 preroll nibbles -> 1536 bytes
+  Verify: SNR=22.0dB  max_err=407  avg_err=17.9
+Written to ../../games/shadowleague/sound/samples/out_a/7.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/70.wav
+../../games/shadowleague/sound/samples/out_a/70.adpcma
+Encoded 21225 samples + 0 preroll nibbles -> 10752 bytes
+  Verify: SNR=23.3dB  max_err=1041  avg_err=4.2
+Written to ../../games/shadowleague/sound/samples/out_a/70.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/71.wav
+../../games/shadowleague/sound/samples/out_a/71.adpcma
+Encoded 21157 samples + 0 preroll nibbles -> 10752 bytes
+  Verify: SNR=21.0dB  max_err=1326  avg_err=7.0
+Written to ../../games/shadowleague/sound/samples/out_a/71.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/72.wav
+../../games/shadowleague/sound/samples/out_a/72.adpcma
+Encoded 17289 samples + 0 preroll nibbles -> 8704 bytes
+  Verify: SNR=20.9dB  max_err=750  avg_err=7.2
+Written to ../../games/shadowleague/sound/samples/out_a/72.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/73.wav
+../../games/shadowleague/sound/samples/out_a/73.adpcma
+Encoded 23089 samples + 0 preroll nibbles -> 11776 bytes
+  Verify: SNR=25.6dB  max_err=1061  avg_err=5.7
+Written to ../../games/shadowleague/sound/samples/out_a/73.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/74.wav
+../../games/shadowleague/sound/samples/out_a/74.adpcma
+Encoded 22730 samples + 0 preroll nibbles -> 11520 bytes
+  Verify: SNR=20.5dB  max_err=1868  avg_err=14.6
+Written to ../../games/shadowleague/sound/samples/out_a/74.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/75.wav
+../../games/shadowleague/sound/samples/out_a/75.adpcma
+Encoded 11999 samples + 0 preroll nibbles -> 6144 bytes
+  Verify: SNR=23.6dB  max_err=1272  avg_err=8.0
+Written to ../../games/shadowleague/sound/samples/out_a/75.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/76.wav
+../../games/shadowleague/sound/samples/out_a/76.adpcma
+Encoded 20086 samples + 0 preroll nibbles -> 10240 bytes
+  Verify: SNR=20.9dB  max_err=1806  avg_err=14.2
+Written to ../../games/shadowleague/sound/samples/out_a/76.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/77.wav
+../../games/shadowleague/sound/samples/out_a/77.adpcma
+Encoded 22037 samples + 0 preroll nibbles -> 11264 bytes
+  Verify: SNR=18.2dB  max_err=1755  avg_err=10.2
+Written to ../../games/shadowleague/sound/samples/out_a/77.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/78.wav
+../../games/shadowleague/sound/samples/out_a/78.adpcma
+Encoded 13708 samples + 0 preroll nibbles -> 6912 bytes
+  Verify: SNR=24.3dB  max_err=1027  avg_err=15.2
+Written to ../../games/shadowleague/sound/samples/out_a/78.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/79.wav
+../../games/shadowleague/sound/samples/out_a/79.adpcma
+Encoded 14435 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=26.8dB  max_err=1406  avg_err=8.3
+Written to ../../games/shadowleague/sound/samples/out_a/79.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/8.wav
+../../games/shadowleague/sound/samples/out_a/8.adpcma
+Encoded 7030 samples + 0 preroll nibbles -> 3584 bytes
+  Verify: SNR=23.9dB  max_err=457  avg_err=21.6
+Written to ../../games/shadowleague/sound/samples/out_a/8.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/80.wav
+../../games/shadowleague/sound/samples/out_a/80.adpcma
+Encoded 17772 samples + 0 preroll nibbles -> 8960 bytes
+  Verify: SNR=20.7dB  max_err=2092  avg_err=15.0
+Written to ../../games/shadowleague/sound/samples/out_a/80.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/81.wav
+../../games/shadowleague/sound/samples/out_a/81.adpcma
+Encoded 18467 samples + 0 preroll nibbles -> 9472 bytes
+  Verify: SNR=25.0dB  max_err=738  avg_err=15.5
+Written to ../../games/shadowleague/sound/samples/out_a/81.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/82.wav
+../../games/shadowleague/sound/samples/out_a/82.adpcma
+Encoded 19493 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=22.7dB  max_err=2021  avg_err=19.0
+Written to ../../games/shadowleague/sound/samples/out_a/82.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/83.wav
+../../games/shadowleague/sound/samples/out_a/83.adpcma
+Encoded 22733 samples + 0 preroll nibbles -> 11520 bytes
+  Verify: SNR=25.9dB  max_err=1044  avg_err=13.6
+Written to ../../games/shadowleague/sound/samples/out_a/83.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/84.wav
+../../games/shadowleague/sound/samples/out_a/84.adpcma
+Encoded 15818 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=30.0dB  max_err=654  avg_err=8.9
+Written to ../../games/shadowleague/sound/samples/out_a/84.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/85.wav
+../../games/shadowleague/sound/samples/out_a/85.adpcma
+Encoded 16893 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=26.9dB  max_err=459  avg_err=13.1
+Written to ../../games/shadowleague/sound/samples/out_a/85.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/86.wav
+../../games/shadowleague/sound/samples/out_a/86.adpcma
+Encoded 22067 samples + 0 preroll nibbles -> 11264 bytes
+  Verify: SNR=24.4dB  max_err=1978  avg_err=8.5
+Written to ../../games/shadowleague/sound/samples/out_a/86.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/87.wav
+../../games/shadowleague/sound/samples/out_a/87.adpcma
+Encoded 19363 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=26.2dB  max_err=1254  avg_err=8.4
+Written to ../../games/shadowleague/sound/samples/out_a/87.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/88.wav
+../../games/shadowleague/sound/samples/out_a/88.adpcma
+Encoded 20222 samples + 0 preroll nibbles -> 10240 bytes
+  Verify: SNR=18.7dB  max_err=2158  avg_err=12.7
+Written to ../../games/shadowleague/sound/samples/out_a/88.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/89.wav
+../../games/shadowleague/sound/samples/out_a/89.adpcma
+Encoded 18971 samples + 0 preroll nibbles -> 9728 bytes
+  Verify: SNR=17.4dB  max_err=2345  avg_err=19.8
+Written to ../../games/shadowleague/sound/samples/out_a/89.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/9.wav
+../../games/shadowleague/sound/samples/out_a/9.adpcma
+Encoded 16650 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=33.4dB  max_err=162  avg_err=6.8
+Written to ../../games/shadowleague/sound/samples/out_a/9.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/90.wav
+../../games/shadowleague/sound/samples/out_a/90.adpcma
+Encoded 14324 samples + 0 preroll nibbles -> 7168 bytes
+  Verify: SNR=23.8dB  max_err=1180  avg_err=7.2
+Written to ../../games/shadowleague/sound/samples/out_a/90.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/91.wav
+../../games/shadowleague/sound/samples/out_a/91.adpcma
+Encoded 12062 samples + 0 preroll nibbles -> 6144 bytes
+  Verify: SNR=28.3dB  max_err=643  avg_err=3.4
+Written to ../../games/shadowleague/sound/samples/out_a/91.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/92.wav
+../../games/shadowleague/sound/samples/out_a/92.adpcma
+Encoded 15367 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=27.2dB  max_err=866  avg_err=4.5
+Written to ../../games/shadowleague/sound/samples/out_a/92.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/93.wav
+../../games/shadowleague/sound/samples/out_a/93.adpcma
+Encoded 21666 samples + 0 preroll nibbles -> 11008 bytes
+  Verify: SNR=20.2dB  max_err=1785  avg_err=7.4
+Written to ../../games/shadowleague/sound/samples/out_a/93.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/94.wav
+../../games/shadowleague/sound/samples/out_a/94.adpcma
+Encoded 19708 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=25.1dB  max_err=1087  avg_err=14.9
+Written to ../../games/shadowleague/sound/samples/out_a/94.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/95.wav
+../../games/shadowleague/sound/samples/out_a/95.adpcma
+Encoded 16625 samples + 0 preroll nibbles -> 8448 bytes
+  Verify: SNR=20.5dB  max_err=1075  avg_err=27.6
+Written to ../../games/shadowleague/sound/samples/out_a/95.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/96.wav
+../../games/shadowleague/sound/samples/out_a/96.adpcma
+Encoded 14553 samples + 0 preroll nibbles -> 7424 bytes
+  Verify: SNR=28.0dB  max_err=963  avg_err=7.7
+Written to ../../games/shadowleague/sound/samples/out_a/96.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/97.wav
+../../games/shadowleague/sound/samples/out_a/97.adpcma
+Encoded 19630 samples + 0 preroll nibbles -> 9984 bytes
+  Verify: SNR=34.9dB  max_err=577  avg_err=5.3
+Written to ../../games/shadowleague/sound/samples/out_a/97.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/98.wav
+../../games/shadowleague/sound/samples/out_a/98.adpcma
+Encoded 15791 samples + 0 preroll nibbles -> 7936 bytes
+  Verify: SNR=24.5dB  max_err=466  avg_err=9.4
+Written to ../../games/shadowleague/sound/samples/out_a/98.adpcma
+../../games/shadowleague/sound/samples/out_16el_a/99.wav
+../../games/shadowleague/sound/samples/out_a/99.adpcma
+Encoded 21108 samples + 0 preroll nibbles -> 10752 bytes
+  Verify: SNR=24.4dB  max_err=1530  avg_err=7.5
+Written to ../../games/shadowleague/sound/samples/out_a/99.adpcma
+[voice] ../../games/shadowleague/sound/samples/out_16el_a_voice not found — skipping voice ADPCM-A stage
+../../games/shadowleague/sound/samples/out_16el_b/1.wav
+../../games/shadowleague/sound/samples/out_b/1.adpcmb
+Encoded 647999 samples -> 324096 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/1.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/10.wav
+../../games/shadowleague/sound/samples/out_b/10.adpcmb
+Encoded 903724 samples -> 452096 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/10.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/11.wav
+../../games/shadowleague/sound/samples/out_b/11.adpcmb
+Encoded 845419 samples -> 422912 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/11.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/12.wav
+../../games/shadowleague/sound/samples/out_b/12.adpcmb
+Encoded 1110508 samples -> 555264 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/12.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/13.wav
+../../games/shadowleague/sound/samples/out_b/13.adpcmb
+Encoded 780000 samples -> 390144 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/13.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/14.wav
+../../games/shadowleague/sound/samples/out_b/14.adpcmb
+Encoded 936000 samples -> 468224 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/14.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/15.wav
+../../games/shadowleague/sound/samples/out_b/15.adpcmb
+Encoded 873600 samples -> 436992 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/15.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/16.wav
+../../games/shadowleague/sound/samples/out_b/16.adpcmb
+Encoded 903724 samples -> 452096 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/16.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/2.wav
+../../games/shadowleague/sound/samples/out_b/2.adpcmb
+Encoded 315000 samples -> 157696 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/2.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/3.wav
+../../games/shadowleague/sound/samples/out_b/3.adpcmb
+Encoded 157500 samples -> 78848 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/3.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/4.wav
+../../games/shadowleague/sound/samples/out_b/4.adpcmb
+Encoded 420000 samples -> 210176 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/4.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/5.wav
+../../games/shadowleague/sound/samples/out_b/5.adpcmb
+Encoded 873600 samples -> 436992 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/5.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/6.wav
+../../games/shadowleague/sound/samples/out_b/6.adpcmb
+Encoded 819000 samples -> 409600 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/6.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/7.wav
+../../games/shadowleague/sound/samples/out_b/7.adpcmb
+Encoded 1170000 samples -> 585216 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/7.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/8.wav
+../../games/shadowleague/sound/samples/out_b/8.adpcmb
+Encoded 949565 samples -> 474880 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/8.adpcmb
+../../games/shadowleague/sound/samples/out_16el_b/9.wav
+../../games/shadowleague/sound/samples/out_b/9.adpcmb
+Encoded 873600 samples -> 436992 bytes
+Written to ../../games/shadowleague/sound/samples/out_b/9.adpcmb
+make m1rom GAME=shadowleague
+make[1]: Entering directory '/mnt/c/neogeo/shadowleague-sdk177-20261017'
+GAME=shadowleague GAME_ID=781 GAME_SOUND=games/shadowleague/sound sh ./sound/tools/vrom.sh
+Built /mnt/c/neogeo/shadowleague-sdk177-20261017/out/781-v1.v1 (241 samples)
+Updated /mnt/c/neogeo/shadowleague-sdk177-20261017/sound/driver/sample_table.inc
+mkdir -p roms/shadowleague
+cp -f out/781-v1.v1 roms/shadowleague/781-v1.v1
+fmpatches: no patches.fm in games/shadowleague/sound/fm/, writing an empty table
+Built sound/driver/fm_patch_table.inc (0 patches)
+fm: no MML files in games/shadowleague/sound/fm/, writing an empty table
+Built sound/driver/fm_data.inc (0 tracks)
+mml: no MML files in games/shadowleague/sound/mml/, writing an empty table
+Built sound/driver/music_data.inc (0 tracks)
+ssgconfig: no config.ssg in games/shadowleague/sound/ssg/, writing an empty table
+Built sound/driver/ssg_config.inc (0 presets)
+ssg: no MML files in games/shadowleague/sound/ssg/, writing an empty table
+Built sound/driver/ssg_data.inc (0 tracks)
+WLAZ80=wla-z80 WLALINK=wlalink USE_Z80C= Z80C_SRC= GAME=shadowleague GAME_SOUND=games/shadowleague/sound GAME_ID=781 sh ./sound/tools/m1rom.sh
+Assembling ASM driver with wla-z80
+Built /mnt/c/neogeo/shadowleague-sdk177-20261017/out/781-m1.m1
+make[1]: Leaving directory '/mnt/c/neogeo/shadowleague-sdk177-20261017'
+[neogeosdk] target=sound game=shadowleague game_id=781 platform=mvs rom_dir=roms/shadowleague hashpath=/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash
+[neogeosdk] target=game game=shadowleague game_id=781 platform=mvs rom_dir=roms/shadowleague hashpath=/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -DNG_MVS=1   games/shadowleague/neogeo_mvs.c -o out/neogeo0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -DNG_MVS=1   games/shadowleague/user.c -o out/user0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn   games/shadowleague/main.c -o out/main0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn   games/shadowleague/eyecatcher.c -o out/eyecatcher0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn   sdk/neogeolib.c -o out/neogeolib0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn   sdk/ng_fix/ng_fix.c -o out/ng_fix_sdk0.o
+python3 tools/gen_trig.py --out sdk/2d_engine/ng_trig_table.c
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 sdk/cabinet/ng_sys.c -o out/lib_ng_sys0.o; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 sdk/2d_engine/ng_trig.c -o out/lib_ng_trig0.o; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 sdk/2d_engine/ng_trig_table.c -o out/lib_ng_trig_table0.o; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 sdk/2d_engine/ng_pause.c -o out/lib_ng_pause0.o; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 sdk/2d_engine/ng_move.c -o out/lib_ng_move0.o;
+rm -f out/libng_sdk.a
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-ar rcs out/libng_sdk.a out/lib_ng_sys0.o out/lib_ng_trig0.o out/lib_ng_trig_table0.o out/lib_ng_pause0.o out/lib_ng_move0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_defs.c -o out/ng_defs0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_properties.c -o out/ng_properties0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_game_time.c -o out/ng_game_time0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_timers.c -o out/ng_timers0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_progress.c -o out/ng_progress0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_status.c -o out/ng_status0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_game_events.c -o out/ng_game_events0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_level.c -o out/ng_level0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_vram.c -o out/ng_vram0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_sprite_window.c -o out/ng_sprite_window0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_art_asset.c -o out/ng_art_asset0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_palette_assets.c -o out/ng_palette_assets0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_bg.c -o out/ng_bg0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_fix.c -o out/ng_fix0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_sprite_group.c -o out/ng_sprite_group0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_actions.c -o out/ng_actions0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_chars.c -o out/ng_chars0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_npcs.c -o out/ng_npcs0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_physics.c -o out/ng_physics0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_border_constraints.c -o out/ng_border_constraints0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_game_interupt.c -o out/ng_game_interupt0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_scene.c -o out/ng_scene0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_depthfx.c -o out/ng_depthfx0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_render_queue.c -o out/ng_render_queue0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_fixed.c -o out/ng_fixed0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_rand.c -o out/ng_rand0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_fight.c -o out/ng_fight0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_camera.c -o out/ng_camera0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_palette_fx.c -o out/ng_palette_fx0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_particles_none.c -o out/ng_particles_none0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_feedback.c -o out/ng_feedback0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_debug.c -o out/ng_debug0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_joystick.c -o out/ng_joystick0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2   sdk/2d_engine/ng_demo_advanced.c -o out/ng_demo_advanced0.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 games/shadowleague/scenes/slf_draw.c -o out/slf_draw0.o || exit $?; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 games/shadowleague/scenes/slf_game.c -o out/slf_game0.o || exit $?; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 games/shadowleague/scenes/slf_practice.c -o out/slf_practice0.o || exit $?; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 games/shadowleague/scenes/slf_data.c -o out/slf_data0.o || exit $?; /mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc -c  -O0 -fomit-frame-pointer   -Wall  -fno-zero-initialized-in-bss  -march=68000 -mcpu=68000 -mtune=68000 -m68000 -ffreestanding -std=gnu99 -I. -Isdk -Isdk/2d_engine -Igames/shadowleague/scenes -Igames/shadowleague/artbox  -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1 -Wa,-march=68000,-mcpu=68000,-W,--warn -O2 games/shadowleague/scenes/slf_rom.c -o out/slf_rom0.o || exit $?;
+games/shadowleague/scenes/slf_draw.c:1061:25: warning: 'mark_at' defined but not used [-Wunused-function]
+ 1061 | static void NEOGEO_USER mark_at(int16_t y)
+      |                         ^~~~~~~
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy -R .comment -R .text -R .data -R .bss out/neogeo0.o     out/neogeo.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy -R .comment -R .text -R .data -R .bss out/user0.o       out/user.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy -R .comment -R .text -R .data -R .bss out/main0.o       out/main.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy -R .comment -R .text -R .data -R .bss out/eyecatcher0.o out/eyecatcher.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy -R .comment -R .text -R .data -R .bss out/neogeolib0.o  out/neogeolib.o
+/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-ld -nostdlib -T games/shadowleague/neogeo.ld -o out/game \
+    out/neogeo.o out/user.o out/main.o out/eyecatcher.o out/neogeolib.o \
+    out/ng_fix_sdk0.o out/ng_defs0.o out/ng_properties0.o out/ng_game_time0.o out/ng_timers0.o out/ng_progress0.o out/ng_status0.o out/ng_game_events0.o out/ng_level0.o out/ng_vram0.o out/ng_sprite_window0.o out/ng_art_asset0.o out/ng_palette_assets0.o out/ng_bg0.o out/ng_fix0.o out/ng_sprite_group0.o out/ng_actions0.o out/ng_chars0.o out/ng_npcs0.o out/ng_physics0.o out/ng_border_constraints0.o out/ng_game_interupt0.o out/ng_scene0.o out/ng_depthfx0.o out/ng_render_queue0.o out/ng_fixed0.o out/ng_camera0.o out/ng_palette_fx0.o out/ng_particles_none0.o out/ng_feedback0.o out/ng_debug0.o out/ng_joystick0.o out/ng_demo_advanced0.o out/ng_rand0.o out/ng_fight0.o out/slf_draw0.o out/slf_game0.o out/slf_practice0.o out/slf_data0.o out/slf_rom0.o out/libng_sdk.a
+python3 games/shadowleague/tools/banked_rom.py --elf out/game --output out/game.rom --objcopy "/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy"
+Banked P: fixed 507767, payloads [5520, 4600], cartridge 3145728 bytes
+cp       out/game.rom out/781-p1.p1
+mkdir -p roms/shadowleague
+cp -f out/781-p1.p1 roms/shadowleague/781-p1.p1
+GAME=shadowleague GAME_ID=781 python3 hash_eagle/gen_hash.py
+Generated /mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague/neogeo.xml
+python3 tools/rom_budget.py --game shadowleague --id 781 --rom-dir roms/shadowleague --cfg games/shadowleague/game.cfg --check
+[budget] within budget: P 67%, C 62%, S 41%, M 18%, V 97%
+python3 bios/tools/build.py --cc "/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc" --wlaz80 "wla-z80" --wlalink "wlalink" --install bios/test_roms
+Generated /mnt/c/neogeo/shadowleague-sdk177-20261017/bios/sfix.sfix (131072 bytes)
+Generated /mnt/c/neogeo/shadowleague-sdk177-20261017/bios/000-lo.lo (131072 bytes)
+[neogeosdk] target=p1 game=shadowleague game_id=781 platform=mvs rom_dir=roms/shadowleague hashpath=/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash
+[neogeosdk] target=all game=shadowleague game_id=781 platform=mvs rom_dir=roms/shadowleague hashpath=/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash
+GAME=shadowleague GAME_ID=781 python3 hash_eagle/gen_hash.py
+Generated /mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague/neogeo.xml
+neo: dist/candidates/shadowleague/sdk177/shadowleague-mvs.neo (28577792 bytes), MAME set dist/candidates/shadowleague/sdk177/mvs
+neo: dist/candidates/shadowleague/sdk177/MANIFEST.txt

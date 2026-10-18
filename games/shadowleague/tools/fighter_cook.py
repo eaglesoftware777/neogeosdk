@@ -36,7 +36,7 @@ STANCE = {"stand": "NGF_STANCE_STAND", "crouch": "NGF_STANCE_CROUCH", "air": "NG
           "stand|close": "(NGF_STANCE_STAND | NGF_STANCE_CLOSE)", "stand|far": "(NGF_STANCE_STAND | NGF_STANCE_FAR)"}
 FLAG = {"active": "NGF_FF_ACTIVE", "rehit": "NGF_FF_REHIT", "spawn": "NGF_FF_SPAWN", "invuln": "NGF_FF_INVULN",
         "airborne": "NGF_FF_AIRBORNE", "counter": "NGF_FF_COUNTER"}
-ON_HIT = {"knockdown": "NGF_ON_KNOCKDOWN", "launch": "NGF_ON_LAUNCH", "wallbounce": "NGF_ON_WALLBOUNCE"}
+ON_HIT = {"knockdown": "NGF_ON_KNOCKDOWN", "launch": "NGF_ON_LAUNCH", "wallbounce": "NGF_ON_WALLBOUNCE", "lift": "NGF_ON_LIFT"}
 CANCEL = {"chain": "NGF_CANCEL_CHAIN", "special": "NGF_CANCEL_SPECIAL", "super": "NGF_CANCEL_SUPER"}
 SOUNDS = ("none", "hit_light", "hit_heavy", "block", "special", "super", "whoosh", "throw", "ko", "land")
 
@@ -82,6 +82,11 @@ def complete_moves(data):
                 if (motion, button) not in have:
                     moves.append(dict(base, motion=motion, buttons=button))
                     have.add((motion, button))
+        for m in moves:
+            if m['kind']=='throw' and m.get('motion') in ('fwd','back'):
+                m['launch']=[30 if m.get('buttons')=='C' else 12, 42 if m.get('buttons')=='C' else 30]
+                if any(word in data['style'] for word in ('WRESTL','JUDO','GRAPPL','SAMBO')):
+                    m['on_hit']='knockdown|lift'
     order = sorted(range(len(moves)), key=lambda i: (
         KIND_ORDER[moves[i]["kind"]] - (2 if moves[i]["kind"] == "command" and len(moves[i].get("buttons", "")) > 1 else 0),
         MOTION_ORDER[moves[i].get("motion", "none")], -len(moves[i].get("buttons", "")), i))
@@ -133,6 +138,7 @@ class Fighter:
                 if fr[0] not in used:
                     used.append(fr[0])
         self.sprite_names = used
+        self.canvas, self.anchor = [160,160], [80,141]
         self.authored = None
         source = GAME / 'assets/authored/fighters' / self.id
         self.authored_folder = source
@@ -140,6 +146,7 @@ class Fighter:
         if (source / 'manifest.json').exists():
             from native_art_io import fighter_source
             q = fighter_source(source, used)
+            self.canvas, self.anchor = q['canvas'], q['anchor']
             self.images, self.authored = q['images'], q['metadata']
             self.source_images, self.source_palette = q['source_images'], q['source_palette']
             self.authored_palette = self.source_palette[:16]
@@ -262,13 +269,24 @@ class Fighter:
         def idx(key):
             return names.index(cpu[key]) if cpu.get(key) in names else 0xFF
         push = d["push"]
+        projectiles=d.get('projectiles',[])
+        if projectiles:
+            rows=[]
+            for projectile in projectiles:
+                values=[self.anim_names.index(projectile.get('anim','idle')),projectile['speed'],
+                        *projectile['spawn'],projectile['damage'],projectile.get('chip',2),projectile.get('hitstun',20),
+                        projectile.get('blockstun',16),LEVEL[projectile.get('level','mid')],projectile.get('life',60),
+                        flags(projectile.get('on_hit',''),ON_HIT),SOUNDS.index(projectile.get('hit_sound','hit_heavy'))]
+                rows.append('{'+','.join(str(v) for v in values)+',{'+','.join(str(v) for v in projectile['box'])+'}}')
+            lines.append(f'static const NGFProjectileDef {prefix}_projectiles[] = {{'+','.join(rows)+'};')
+        projectile_ptr=prefix+'_projectiles' if projectiles else '0'
         lines.append(
             f"static const NGFFighterDef {prefix} = {{\n"
             f"    \"{d['name']}\", {d['life']}, {q8(ph['walk_fwd'])}, {q8(ph['walk_back'])}, {q8(ph['dash'])},\n"
             f"    {q8(ph['backdash'][0])}, {q8(ph['backdash'][1])}, {q8(ph['jump'][0])}, {q8(ph['jump'][1])}, {q8(ph['gravity'])},\n"
             f"    {push[0]}, {push[1]}, {push[2]}, {d['close_range']}, {d['guard_max']}, 0,\n"
-            f"    {prefix}_anims, {prefix}_frames, {prefix}_hurt, {prefix}_moves, 0,\n"
-            f"    {len(self.anim_names)}, {len(d['moves'])}, 0, {len(self.joints)},\n"
+            f"    {prefix}_anims, {prefix}_frames, {prefix}_hurt, {prefix}_moves, {projectile_ptr},\n"
+            f"    {len(self.anim_names)}, {len(d['moves'])}, {len(projectiles)}, {len(self.joints)},\n"
             f"    {{{cpu['aggression']}, {cpu['range']}, {cpu['jump']}, {idx('poke')}, {idx('sweep')}, {idx('anti_air')}, "
             f"{idx('special')}, {idx('rush')}, {idx('throw')}, {idx('super')}}},\n"
             f"    {prefix}_hit_sets, {prefix}_frame_hits\n}};")
@@ -291,13 +309,13 @@ class Fighter:
         pal, _ = self.palettes()
         cols = 10
         rows = (len(self.images) + cols - 1) // cols
-        out = np.zeros((rows * art.H, cols * art.W, 3), np.uint8)
+        out = np.zeros((rows * self.canvas[1], cols * self.canvas[0], 3), np.uint8)
         out[:] = (60, 64, 80)
         for i, image in enumerate(self.images):
-            y, x = (i // cols) * art.H, (i % cols) * art.W
+            y, x = (i // cols) * self.canvas[1], (i % cols) * self.canvas[0]
             rgb = self.source_palette[self.source_images[i]] if self.authored is not None else pal[image]
             mask = image > 0
-            out[y:y + art.H, x:x + art.W][mask] = rgb[mask]
+            out[y:y + self.canvas[1], x:x + self.canvas[0]][mask] = rgb[mask]
         Image.fromarray(out).resize((out.shape[1] * scale, out.shape[0] * scale), Image.NEAREST).save(path)
 
 

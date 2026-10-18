@@ -100,7 +100,7 @@ def validate(data, source="fighter"):
                 err(f"{tag}: unknown limb '{mv['limb']}'")
             if mv.get("anim") in anims and not any(len(fr) > 2 and "active" in fr[2] for fr in anims[mv["anim"]]):
                 err(f"{tag}: has a limb but its animation has no active frame")
-        elif mv.get("kind") not in ("throw", "evade") and mv.get("damage"):
+        elif mv.get("kind") not in ("throw", "evade") and mv.get("damage") and not mv.get('projectile'):
             err(f"{tag}: deals damage but names no limb")
         if mv.get("follow") and mv["follow"] not in names:
             err(f"{tag}: follow '{mv['follow']}' is not a move")
@@ -112,6 +112,18 @@ def validate(data, source="fighter"):
     for slot in ("skin", "A", "B", "C"):
         if slot not in data["palette"]:
             err(f"palette: missing ramp '{slot}'")
+    projectiles=data.get('projectiles',[])
+    if len(projectiles)>4:err('more than four projectile definitions')
+    for i,p in enumerate(projectiles):
+        if p.get('anim','idle') not in anims:err(f'projectile {i}: unknown animation')
+        if not 1<=p.get('speed',0)<=12:err(f'projectile {i}: invalid speed')
+        if len(p.get('spawn',[]))!=2 or any(not -128<=v<=127 for v in p.get('spawn',[])):err(f'projectile {i}: invalid spawn')
+        box=p.get('box',[])
+        if len(box)!=4 or not (-128<=box[0]<=127 and -128<=box[1]<=127 and 1<=box[2]<=255 and 1<=box[3]<=255):err(f'projectile {i}: invalid box')
+        for field in ('damage','chip','hitstun','blockstun','life'):
+            if not 0<=p.get(field,0)<=255:err(f'projectile {i}: invalid {field}')
+    for move in data['moves']:
+        if move.get('projectile',0)>len(projectiles) or move.get('projectile',0)<0:err('move references an invalid projectile')
     return errors
 
 

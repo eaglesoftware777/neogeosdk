@@ -1,15 +1,17 @@
 /*
  * Shadow League Fighting: hardware side.
- *
- * Sprite slots: stage 33-64 (32 strips x 14 tiles), shadows 65-72, fighters
- * 73-172 (sparse shared 16x32 strips per fighter; the attacker takes the
- * front slot), projectiles 173-178, strikers 179-278, effects 279-286. Palette banks: FIX 0-7, fighters 16-17,
- * effects 18-20, shadow 21, stage 32-41. Every VRAM write goes through the
- * SDK's deferred sprite groups and FIX queue, committed in the blank.
+ * Sprite reservations: stage 33-64, shadows 65-72, fighters 73-146,
+ * projectiles 173-184, strikers 195-268, effects 279-290. Each actor reserves
+ * two banks of 12 columns so partially uploaded poses stay hidden.
+ * Palettes: FIX 0-11, effects 18-25, stage 32-47, bodies/support 64-79,
+ * cinematic cards 80-95, HUD 96, selection faces 97-100.
+ * The early palette interrupt also streams hidden actor columns. Other
+ * sprite and FIX writes use the deferred SDK queues during blanking.
  */
 #include <stdint.h>
 #include "sdk/macro.h"
 #include "sdk/neogeo.h"
+#include "sdk/ng_system.h"
 #include "sdk/sound_ids.h"
 #include "sdk/2d_engine/ng_sprite_group.h"
 #include "sdk/2d_engine/ng_fix.h"
@@ -33,7 +35,7 @@ void NEOGEO_USER soundSetADPCMBLoop(uint8_t enable);
 #define SPR_SHADOW    65u
 #define SPR_FIGHTER   73u
 #define SPR_PROJ     173u
-#define SPR_STRIKER  179u
+#define SPR_STRIKER  195u
 #define SPR_FX       279u
 #define SPR_CURSOR_1P 301u
 #define SPR_CURSOR_2P 303u
@@ -52,8 +54,10 @@ void NEOGEO_USER soundSetADPCMBLoop(uint8_t enable);
 static uint16_t s_palette_base[104u * 16u];
 static uint16_t s_palette_out[104u * 16u];
 static volatile uint8_t s_palette_pending;
+static uint8_t s_demo_silent;
 volatile uint16_t slf_palette_irq_count;
 volatile uint8_t slf_palette_irq_lines;
+static void NEOGEO_USER actors_commit(void);
 
 /* Only a completed main-loop buffer may be read by the early interrupt.
  * Upload before BIOS I/O can exhaust the full-screen palette window. */
@@ -64,6 +68,7 @@ void NEOGEO_USER slf_palette_vblank(void)
     __asm__ volatile ("" ::: "memory");
     slf_palette_irq_lines = ng_vram_lines_left();
     ng_palfx_vblank();
+    actors_commit();
     slf_palette_irq_count++;
 }
 static NGSpriteGroup s_stage_far, s_stage, s_shadow[2], s_fx[FX_SLOTS];
@@ -88,11 +93,13 @@ static void NEOGEO_USER actors_reset(void);
 static uint8_t s_large_port_live[2], s_large_port_def[2];
 static uint8_t s_stage_id, s_stage_dim;
 static uint8_t s_stage_live, s_stage_far_live;
-static uint8_t s_fighter_live[2], s_fighter_pal[2], s_shadow_live[2], s_front = 1u;
+static uint8_t s_fighter_live[2], s_fighter_pal[2], s_shadow_live[2];
 static uint8_t s_proj_live[NGF_PROJECTILES], s_striker_live[2];
 static NGSpriteGroup s_wall, s_face[2], s_wall_cursor[2];
 static uint8_t s_face_live[2], s_face_def[2], s_wall_cursor_live[2];
 volatile uint8_t slf_select_live;       /* (read by the capture scripts) */
+volatile uint8_t slf_select_cursor[2];
+static const uint8_t k_fx_pal[5] = {18u,19u,20u,24u,25u};
 static uint8_t s_fx_kind[FX_SLOTS], s_fx_timer[FX_SLOTS], s_fx_live[FX_SLOTS];
 static int16_t s_fx_x[FX_SLOTS], s_fx_y[FX_SLOTS];
 static uint8_t s_joy[2], s_joy_prev[2], s_start, s_start_prev;
@@ -116,7 +123,7 @@ void NEOGEO_USER slf_fix_palettes_init(void)
 {
     uint8_t i;
     for (i = 0u; i < 12u; i++) ng_palfx_screen_load(i, slf_fix_pals[i]);
-    for (i = 0u; i < 3u; i++) ng_palfx_screen_load((uint8_t)(PAL_FX + i), slf_fx_pals[i]);
+    for (i = 0u; i < 5u; i++) ng_palfx_screen_load(k_fx_pal[i], slf_fx_pals[i]);
     ng_palfx_screen_load(PAL_SHADOW, slf_shadow_pal);
     ng_palfx_screen_load(PAL_PROJ, slf_proj_pals[0]);
     ng_palfx_screen_load((uint8_t)(PAL_PROJ + 1u), slf_proj_pals[1]);
@@ -184,7 +191,6 @@ uint16_t NEOGEO_USER slf_frame(void)
     /* An old wait flag from an overrun cannot acknowledge this batch. */
     do { waitVbl(); } while (s_palette_pending);
     if (!ng_vram_window_open()) waitVbl();
-    actors_commit();
     ng_vram_commit();
     ng_palette_fx_update();
     s_joy_prev[0] = s_joy[0];
@@ -331,25 +337,28 @@ void NEOGEO_USER slf_stage_show(int16_t camera_x)
 }
 
 /* ------------------------------------------------------------ actors */
-/* Fighters and strikers go straight to VRAM: one sprite a 16-pixel column,
- * cut to the strips it draws, and a pose lands whole in one blank. As fifty
- * sprite-group jobs a pose took three or four blanks, and the half-written
- * poses flickered whenever both fighters moved. */
-#define ACTOR_COLS 10u
+/* Each actor keeps a displayed sprite bank and a hidden upload bank. A pose
+ * becomes visible only after all its columns have arrived in VRAM. */
+#define ACTOR_COLS 12u
+#define ACTOR_ROWS 6u
+#define ACTOR_NONE 255u
 typedef struct {
-    uint16_t first;                         /* first sprite slot */
-    uint8_t def, sprite, flip, pal;         /* the pose in scb1 */
-    uint16_t tiles_dirty, pos_dirty;        /* a bit a column */
-    int16_t left, top;
-    uint8_t row0[ACTOR_COLS], rows[ACTOR_COLS];   /* first strip, strips (0: hidden) */
-    uint16_t scb1[ACTOR_COLS][20];
+    uint8_t def, sprite, flip, pal, anchor_x, anchor_y;
+    uint8_t row0[ACTOR_COLS], rows[ACTOR_COLS];
+    uint16_t scb1[ACTOR_COLS][ACTOR_ROWS * 4u];
+} SLFPose;
+typedef struct {
+    SLFPose pose[3];
+    uint16_t first;
+    int16_t x, y, left, top;
+    uint8_t build, upload, active, column, bank, ready, hide, moved;
 } SLFActor;
 static SLFActor s_actor[4];
+volatile uint16_t slf_actor_commits, slf_actor_deferred, slf_actor_deadline_misses;
 
 static inline __attribute__((always_inline)) void actor_put(uint16_t addr, const uint16_t *src, uint16_t n)
 {
     volatile uint16_t *p = (volatile uint16_t *)VRAM_ADDR;
-    /* (asm: GCC turns a C copy loop into a post-increment the 68000 misreads) */
     __asm__ volatile (
         "move.w %[addr],(%[p])\n\t"
         "move.w #1,4(%[p])\n\t"
@@ -365,104 +374,142 @@ static inline __attribute__((always_inline)) void actor_put(uint16_t addr, const
 static inline __attribute__((always_inline)) void actor_word(uint16_t addr, uint16_t v)
 {
     volatile uint16_t *p = (volatile uint16_t *)VRAM_ADDR;
-    p[0] = addr;
-    p[1] = v;
+    p[0] = addr; p[1] = v;
 }
 
-/* Called at the start of the blank, before the sprite-group commit. An
- * actor is written whole or left for the next blank, never half. */
+static void NEOGEO_USER actor_position(SLFActor *a, const SLFPose *p, uint16_t first, uint8_t scale)
+{
+    uint8_t col;
+    int16_t left = (int16_t)(a->x - p->anchor_x + (p->flip ? 1 : 0));
+    int16_t top = (int16_t)(a->y + 125 - p->anchor_y);
+    for (col = 0u; col < ACTOR_COLS; col++) {
+        uint16_t sprite = (uint16_t)(first + col);
+        if (scale && p->rows[col]) actor_word((uint16_t)(0x8000u + sprite), 0x0FFFu);
+        actor_word((uint16_t)(0x8200u + sprite), p->rows[col] ?
+            (uint16_t)(((uint16_t)(496 - top - p->row0[col] * 32) & 511u) << 7 | p->rows[col] * 2u) : 0u);
+        if (p->rows[col]) actor_word((uint16_t)(0x8400u + sprite), (uint16_t)(((uint16_t)(left + col * 16) & 511u) << 7));
+    }
+    a->left = left; a->top = top; a->moved = 0u;
+}
+
+/* Build, upload and displayed poses have separate RAM ownership. Texture data
+ * goes to hidden sprite slots; only a completed pose becomes visible. */
 static void NEOGEO_USER actors_commit(void)
 {
     uint8_t i, col;
     for (i = 0u; i < 4u; i++) {
         SLFActor *a = &s_actor[i];
-        uint16_t dirty = (uint16_t)(a->tiles_dirty | a->pos_dirty);
-        if (!dirty) continue;
-        if (ng_vram_lines_left() < (a->tiles_dirty ? 14u : 3u)) continue;
-        for (col = 0u; col < ACTOR_COLS; col++) {
-            uint16_t spr = (uint16_t)(a->first + col);
-            uint8_t rows = a->rows[col];
-            if (!((dirty >> col) & 1u)) continue;
-            if (rows && ((a->tiles_dirty >> col) & 1u)) {
-                actor_put((uint16_t)(spr << 6), a->scb1[col], (uint16_t)(rows * 4u));
-                actor_word((uint16_t)(0x8000u + spr), 0x0FFFu);
-            }
-            actor_word((uint16_t)(0x8200u + spr), rows ?
-                (uint16_t)(((uint16_t)(496 - (a->top + a->row0[col] * 32)) & 0x1FFu) << 7 | (uint16_t)(rows * 2u)) : 0u);
-            actor_word((uint16_t)(0x8400u + spr), (uint16_t)(((uint16_t)(a->left + col * 16) & 0x1FFu) << 7));
+        uint16_t first;
+        if (a->hide) {
+            if (ng_vram_lines_left() < 8u) { slf_actor_deferred++; continue; }
+            for (col = 0u; col < ACTOR_COLS * 2u; col++) actor_word((uint16_t)(0x8200u + a->first + col), 0u);
+            a->active = a->upload = ACTOR_NONE;
+            a->hide = a->ready = a->moved = 0u;
+            if (!ng_vram_window_open()) slf_actor_deadline_misses++;
+            continue;
         }
-        a->tiles_dirty = a->pos_dirty = 0u;
+        if (a->upload == ACTOR_NONE && a->ready) {
+            a->upload = a->build; a->ready = 0u; a->column = 0u;
+            for (col = 0u; col < 3u; col++) if (col != a->active && col != a->upload) { a->build = col; break; }
+        }
+        if (a->upload != ACTOR_NONE) {
+            const SLFPose *p = &a->pose[a->upload];
+            uint8_t next_bank = (uint8_t)(a->active == ACTOR_NONE ? 0u : a->bank ^ 1u);
+            first = (uint16_t)(a->first + next_bank * ACTOR_COLS);
+            while (a->column < ACTOR_COLS) {
+                col = a->column;
+                if (p->rows[col]) {
+                    if (ng_vram_lines_left() < 6u) break;
+                    actor_put((uint16_t)((first + col) << 6), p->scb1[col], (uint16_t)(p->rows[col] * 4u));
+                    if (!ng_vram_window_open()) slf_actor_deadline_misses++;
+                }
+                a->column++;
+            }
+            if (a->column == ACTOR_COLS && ng_vram_lines_left() >= 12u) {
+                if (a->active != ACTOR_NONE)
+                    for (col = 0u; col < ACTOR_COLS; col++) actor_word((uint16_t)(0x8200u + a->first + a->bank * ACTOR_COLS + col), 0u);
+                actor_position(a, p, first, 1u);
+                a->active = a->upload; a->upload = ACTOR_NONE; a->bank = next_bank;
+                slf_actor_commits++;
+                if (!ng_vram_window_open()) slf_actor_deadline_misses++;
+            } else slf_actor_deferred++;
+        }
+        if (a->active != ACTOR_NONE && a->moved) {
+            if (ng_vram_lines_left() < 8u) { slf_actor_deferred++; continue; }
+            actor_position(a, &a->pose[a->active], (uint16_t)(a->first + a->bank * ACTOR_COLS), 0u);
+            if (!ng_vram_window_open()) slf_actor_deadline_misses++;
+        }
     }
 }
 
 static void NEOGEO_USER actors_reset(void)
 {
-    uint8_t i;
+    uint8_t i, k;
     for (i = 0u; i < 4u; i++) {
-        s_actor[i].tiles_dirty = s_actor[i].pos_dirty = 0u;
-        s_actor[i].def = 0xFFu;
+        SLFActor *a = &s_actor[i];
+        a->build = a->bank = a->ready = a->hide = a->moved = 0u;
+        a->active = a->upload = ACTOR_NONE;
+        for (k = 0u; k < 3u; k++) a->pose[k].def = 255u;
     }
 }
 
 static void NEOGEO_USER actor_hide(uint8_t actor)
 {
-    SLFActor *a = &s_actor[actor];
-    uint8_t col;
-    for (col = 0u; col < ACTOR_COLS; col++) a->rows[col] = 0u;
-    a->tiles_dirty = 0u;
-    a->pos_dirty = (1u << ACTOR_COLS) - 1u;
-    a->def = 0xFFu;
+    s_actor[actor].hide = 1u;
+    s_actor[actor].ready = 0u;
+}
+
+static uint8_t NEOGEO_USER pose_matches(const SLFPose *p, uint8_t def, uint8_t sprite, uint8_t flip, uint8_t pal)
+{
+    return (uint8_t)(p->def == def && p->sprite == sprite && p->flip == flip && p->pal == pal);
 }
 
 static void NEOGEO_USER actor_draw(uint8_t actor, uint8_t *live, uint16_t first,
     uint8_t def, uint8_t sprite, int16_t x, int16_t y, uint8_t flip, uint8_t pal)
 {
     SLFActor *a = &s_actor[actor];
-    int16_t left = (int16_t)(x - 80 + (flip ? 1 : 0));
-    int16_t top = (int16_t)(y - 16);
-    uint8_t col;
-    if (!*live || a->first != first || a->def != def || a->sprite != sprite || a->flip != flip || a->pal != pal) {
+    SLFPose *p = &a->pose[a->build];
+    const SLFFrameAnchor *root = &slf_fighter_frame_anchors[def][sprite];
+    uint8_t col, columns = slf_fighter_columns[def];
+    a->hide = 0u; a->first = first;
+    if (a->x != x || a->y != y) { a->x = x; a->y = y; a->moved = 1u; }
+    *live = 1u;
+    if (a->active != ACTOR_NONE && pose_matches(&a->pose[a->active],def,sprite,flip,pal)) {
+        a->upload = ACTOR_NONE; a->ready = 0u; return;
+    }
+    if (a->upload != ACTOR_NONE && pose_matches(&a->pose[a->upload],def,sprite,flip,pal)) { a->ready = 0u; return; }
+    if (!pose_matches(p,def,sprite,flip,pal)) {
         const SLFStripRef *m, *map = slf_fighter_strip_maps[def] + slf_fighter_strip_offsets[def][sprite];
         uint8_t lo[ACTOR_COLS], hi[ACTOR_COLS];
         uint16_t flipbit = flip ? 1u : 0u;
-        for (col = 0u; col < ACTOR_COLS; col++) { lo[col] = 0xFFu; hi[col] = 0u; }
+        for (col = 0u; col < ACTOR_COLS; col++) { lo[col] = 255u; hi[col] = 0u; }
         for (m = map; m->slot != 255u; m++) {
-            uint8_t c = (uint8_t)(m->slot % 10u), r = (uint8_t)(m->slot / 10u);
+            uint8_t c = (uint8_t)(m->slot % columns), r = (uint8_t)(m->slot / columns);
             if (r < lo[c]) lo[c] = r;
             if (r > hi[c]) hi[c] = r;
         }
         for (col = 0u; col < ACTOR_COLS; col++) {
-            uint8_t src = (uint8_t)(flip ? ACTOR_COLS - 1u - col : col), k;
-            uint16_t *w = a->scb1[col];
-            if (lo[src] == 0xFFu) { a->rows[col] = 0u; continue; }
-            a->row0[col] = lo[src];
-            a->rows[col] = (uint8_t)(hi[src] - lo[src] + 1u);
-            for (k = 0u; k < a->rows[col] * 2u; k++) {      /* gaps: the blank tile */
-                w[k * 2u] = NG_SPRITE_BLANK_TILE;
-                w[k * 2u + 1u] = NG_SPRITE_BLANK_ATTR;
-            }
+            uint8_t src, k;
+            uint16_t *w = p->scb1[col];
+            p->rows[col] = 0u;
+            if (col >= columns) continue;
+            src = (uint8_t)(flip ? columns - 1u - col : col);
+            if (lo[src] == 255u) continue;
+            p->row0[col] = lo[src]; p->rows[col] = (uint8_t)(hi[src] - lo[src] + 1u);
+            for (k = 0u; k < p->rows[col] * 2u; k++) { w[k*2u] = NG_SPRITE_BLANK_TILE; w[k*2u+1u] = NG_SPRITE_BLANK_ATTR; }
         }
         for (m = map; m->slot != 255u; m++) {
-            uint8_t c = (uint8_t)(m->slot % 10u), r = (uint8_t)(m->slot / 10u);
-            uint8_t dest = (uint8_t)(flip ? ACTOR_COLS - 1u - c : c);
-            uint16_t *w = a->scb1[dest] + (uint8_t)(r - lo[c]) * 4u;
+            uint8_t c = (uint8_t)(m->slot % columns), r = (uint8_t)(m->slot / columns);
+            uint8_t dest = (uint8_t)(flip ? columns - 1u - c : c);
+            uint16_t *w = p->scb1[dest] + (uint8_t)(r - lo[c]) * 4u;
             uint16_t high = (uint16_t)((m->pal_bits >> 4) << 4) | flipbit;
-            w[0] = m->tile;
-            w[1] = (uint16_t)((uint16_t)(pal + (m->pal_bits & 3u)) << 8) | high;
-            w[2] = (uint16_t)(m->tile + 1u);
-            w[3] = (uint16_t)((uint16_t)(pal + ((m->pal_bits >> 2) & 3u)) << 8) | high;
+            w[0] = m->tile; w[1] = (uint16_t)((uint16_t)(pal + (m->pal_bits & 3u)) << 8) | high;
+            w[2] = (uint16_t)(m->tile + 1u); w[3] = (uint16_t)((uint16_t)(pal + ((m->pal_bits >> 2) & 3u)) << 8) | high;
         }
-        a->first = first; a->def = def; a->sprite = sprite; a->flip = flip; a->pal = pal;
-        a->tiles_dirty = (1u << ACTOR_COLS) - 1u;
-        a->pos_dirty = (1u << ACTOR_COLS) - 1u;
-        a->left = left; a->top = top;
-        *live = 1u;
-        return;
+        p->def = def; p->sprite = sprite; p->flip = flip; p->pal = pal;
+        p->anchor_x = flip ? (uint8_t)(columns * 16u - root->x) : root->x; p->anchor_y = root->y;
     }
-    if (left != a->left || top != a->top) {
-        a->left = left; a->top = top;
-        a->pos_dirty = (1u << ACTOR_COLS) - 1u;
-    }
+    a->ready = 1u;
 }
 
 void NEOGEO_USER slf_fighter_pose(uint8_t slot, uint8_t def, uint8_t sprite, int16_t x, int16_t y, uint8_t flip)
@@ -570,6 +617,7 @@ void NEOGEO_USER slf_wall_face(uint8_t side, uint8_t def)
 /* state: 0 moving, 1 chosen. A moving cursor flashes; a chosen one is gold. */
 void NEOGEO_USER slf_wall_cursor(uint8_t p, uint8_t def, uint8_t state, uint16_t tick)
 {
+    slf_select_cursor[p] = def;
     NGSpriteGroup *g = &s_wall_cursor[p];
     uint8_t r = wall_row(def);
     int16_t x = (int16_t)(WALL_X - 3 + (slf_wall_row_off[r] + def - slf_wall_row_start[r]) * SLF_WALL_CELL);
@@ -621,6 +669,7 @@ void NEOGEO_USER slf_fx_spawn(uint8_t kind, int16_t screen_x, int16_t screen_y)
         if (!s_fx_timer[i]) { pick = i; break; }
         if (s_fx_timer[i] < oldest) { oldest = s_fx_timer[i]; pick = i; }
     }
+    if (kind >= 5u || (i == FX_SLOTS && kind >= 2u)) return;
     s_fx_kind[pick] = kind;
     s_fx_timer[pick] = (uint8_t)(4u * FX_TICKS);
     s_fx_x[pick] = (int16_t)(screen_x - 24);
@@ -642,7 +691,7 @@ static void NEOGEO_USER fx_draw(void)
         tile = (uint16_t)(SLF_FX_TILE + (s_fx_kind[i] * 4u + frame) * 9u);
         s_fx_timer[i]--;
         if (!s_fx_live[i]) {
-            ng_sprite_group_init(g, (uint16_t)(SPR_FX + i * 3u), 3u, 3u, tile, (uint8_t)(PAL_FX + s_fx_kind[i]));
+            ng_sprite_group_init(g, (uint16_t)(SPR_FX + i * 3u), 3u, 3u, tile, k_fx_pal[s_fx_kind[i]]);
             ng_sprite_group_set_tile_stride(g, 3u);
             ng_sprite_group_set_pos(g, s_fx_x[i], s_fx_y[i]);
             ng_sprite_group_upload(g);
@@ -650,7 +699,7 @@ static void NEOGEO_USER fx_draw(void)
             continue;
         }
         ng_sprite_group_set_tile_base(g, tile);
-        ng_sprite_group_set_palette(g, (uint8_t)(PAL_FX + s_fx_kind[i]));
+        ng_sprite_group_set_palette(g, k_fx_pal[s_fx_kind[i]]);
         ng_sprite_group_set_pos(g, s_fx_x[i], s_fx_y[i]);
         ng_sprite_group_flush(g);
     }
@@ -658,16 +707,11 @@ static void NEOGEO_USER fx_draw(void)
 
 void NEOGEO_USER slf_match_draw(const NGFMatch *m, const uint8_t *def_index)
 {
-    uint8_t front, i, p, s;
-    const NGFFighter *a = &m->f[0], *b = &m->f[1];
+    uint8_t i, p, s;
     /* Full scale always: the stage does not shrink, and a shrink that
      * followed the camera rewrote every strip of both fighters each frame. */
     const uint8_t zoom = 255u;
-    /* The attacker comes to the front and stays there until the other one
-     * attacks: a swap rewrites both fighters, so it happens only then. */
-    if (a->state == NGF_S_ATTACK && b->state != NGF_S_ATTACK) s_front = 0u;
-    else if (b->state == NGF_S_ATTACK && a->state != NGF_S_ATTACK) s_front = 1u;
-    front = s_front;
+    /* Each fighter keeps its hardware slots while hidden poses are uploaded. */
     slf_stage_show(m->camera_x);
     if ((uint8_t)(m->super_freeze != 0u) != s_stage_dim) {
         uint8_t bank;
@@ -677,16 +721,10 @@ void NEOGEO_USER slf_match_draw(const NGFMatch *m, const uint8_t *def_index)
                 slf_stage_dark_pals[s_stage_id][bank] : slf_stage_pals[s_stage_id][bank]);
     }
 
-    /* Super freeze backdrop */
-    if (m->super_freeze) {
-        if (m->super_freeze & 2u) setBACKDROP(0x0000);
-        else setBACKDROP(0x4000);
-    } else {
-        setBACKDROP(BLACK);
-    }
+    setBACKDROP(BLACK);
 
     for (i = 0u; i < 2u; i++) {
-        uint8_t who = (uint8_t)(i == 1u ? front : (front ^ 1u));
+        uint8_t who = i;
         const NGFFighter *f = &m->f[who];
         int16_t sx, sy;
         if (zoom < 255u) {
@@ -721,10 +759,12 @@ void NEOGEO_USER slf_match_draw(const NGFMatch *m, const uint8_t *def_index)
             py = (int16_t)(SLF_FLOOR_Y - 12 - ((int32_t)(113 + (pj->h >> 8)) * zoom) / 255);
         } else {
             px = (int16_t)((pj->x >> 8) - m->camera_x);
-            py = (int16_t)(SLF_FLOOR_Y - 125 - (pj->h >> 8));
+            py = (int16_t)(SLF_FLOOR_Y - 24 - (pj->h >> 8));
         }
         uint16_t tile = (uint16_t)(SLF_PROJECTILE_TILE + ((m->frame >> 2) & 3u) * 9u);
-        uint8_t pal = (uint8_t)(PAL_PROJ + (pj->owner & 1u));
+        uint8_t fire = slf_fighter_fx[def_index[pj->owner]];
+        uint8_t pal = fire ? k_fx_pal[3] : (uint8_t)(PAL_PROJ + (pj->owner & 1u));
+        if (fire) tile = (uint16_t)(SLF_FX_TILE + (12u + ((m->frame >> 2) & 3u)) * 9u);
         if (!s_proj_live[p]) {
             ng_sprite_group_init(g, (uint16_t)(SPR_PROJ + p * 3u), 3u, 3u, tile, pal);
             ng_sprite_group_set_tile_stride(g, 3u);
@@ -1045,6 +1085,7 @@ void NEOGEO_USER slf_title_tick(uint16_t tick)
 /* ------------------------------------------------------------ sound */
 void NEOGEO_USER slf_music(uint8_t track)
 {
+    if (s_demo_silent) return;
     soundStopAll();              waitVbl();
     soundCancelFade();           waitVbl();
     soundSetADPCMAVolume(0x3Fu); waitVbl();
@@ -1059,5 +1100,11 @@ void NEOGEO_USER slf_music(uint8_t track)
 
 void NEOGEO_USER slf_sfx(uint8_t id)
 {
-    if (id) playSFX((uint8_t)(SOUND_SFX_1 + id - 1u));
+    if (id && !s_demo_silent) playSFX((uint8_t)(SOUND_SFX_1 + id - 1u));
+}
+
+void NEOGEO_USER slf_audio_demo(uint8_t demo)
+{
+    s_demo_silent = (uint8_t)(demo && ng_sys_is_mvs() && ng_dip_option(3u) == 1u);
+    if (s_demo_silent) { soundStopAll(); waitVbl(); }
 }

@@ -49,7 +49,7 @@ def check(fighters,layout=None,c1=None,c2=None):
                 palettes+=1
         for i,(name,image,j) in enumerate(zip(f.sprite_names,f.images,f.joints)):
             label=f'{f.id}/{name}';frames+=1
-            if image.shape!=(160,160) or image.dtype!=np.uint8 or image.max()>15:
+            if image.shape!=tuple(reversed(f.canvas)) or image.dtype!=np.uint8 or image.max()>15:
                 failures.append(label+': native indexed canvas')
             if image[0].any() or image[-1].any() or image[:,0].any() or image[:,-1].any():
                 failures.append(label+': clipped canvas edge')
@@ -68,19 +68,19 @@ def check(fighters,layout=None,c1=None,c2=None):
                 if max(ys)!=141:failures.append(label+': planted sole missed baseline 141')
                 contacts+=1
             if decoded is not None:
-                actual=np.zeros((160,160),dtype=np.uint8)
+                actual=np.zeros_like(image)
                 for slot,tile,bits in layouts[f.id]['frames'][i]['strips']:
                     tile |= (bits >> 4) << 16
-                    row,col=divmod(slot,10)
+                    row,col=divmod(slot,f.canvas[0]//16)
                     actual[row*32:row*32+16,col*16:col*16+16]=decoded[tile]
                     actual[row*32+16:row*32+32,col*16:col*16+16]=decoded[tile+1]
                 if not np.array_equal(actual,image):failures.append(label+': C-ROM pixel mismatch')
                 if f.authored is not None:
                     banks,_ = f.palette_banks()
-                    rgb=np.zeros((160,160,3),np.uint8)
+                    rgb=np.zeros((*image.shape,3),np.uint8)
                     for slot,tile,bits in layouts[f.id]['frames'][i]['strips']:
                         tile |= (bits >> 4) << 16
-                        row,col=divmod(slot,10)
+                        row,col=divmod(slot,f.canvas[0]//16)
                         for half,bank in enumerate((bits&3,(bits>>2)&3)):
                             y=row*32+half*16;x=col*16
                             if bank>=len(banks):failures.append(label+': palette assignment overflow');continue
