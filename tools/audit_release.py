@@ -3,7 +3,7 @@
 Check a game's release files in dist/release/ for the hardware fixes every
 set must carry, before they are published:
 
-  ROMs        P 512 KiB, S and M 128 KiB, C1/C2 equal lanes, hardware blank
+  ROMs        P 512 KiB (or whole 1 MiB banks), S and M 128 KiB, C1/C2 equal lanes, hardware blank
               tile $FFFF empty
   boot        cartridge id at $108, eye-catcher flag MVS 1 / AES 2, the
               Universe BIOS logo bank $49 with its tiles drawn in C, the
@@ -53,8 +53,11 @@ class Audit:
 
 def rom_checks(a, roms, platform, game_id):
     p = roms["p1"]
-    a.check(len(p) == 0x80000 and len(roms["s1"]) == 0x20000 and len(roms["m1"]) == 0x20000,
-            f"{platform}: P 512 KiB, S and M 128 KiB")
+    # P is 512 KiB, or a banked image of whole 1 MiB banks (the fixed first
+    # MiB, then the windows switched at $2FFFF0), up to the NeoSD's 8 MiB.
+    p_ok = len(p) == 0x80000 or (len(p) % 0x100000 == 0 and 0x100000 <= len(p) <= 0x800000)
+    a.check(p_ok and len(roms["s1"]) == 0x20000 and len(roms["m1"]) == 0x20000,
+            f"{platform}: P 512 KiB or whole 1 MiB banks, S and M 128 KiB")
     a.check(len(roms["c1"]) == len(roms["c2"]) and len(roms["c1"]) % 0x20000 == 0,
             f"{platform}: C1/C2 equal lanes ({len(roms['c1']) // 1024} KiB each)")
     a.check(all(roms[c][-64:] == bytes(64) for c in ("c1", "c2")) if len(roms["c1"]) == 0x400000 else True,
