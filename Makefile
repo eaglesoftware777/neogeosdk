@@ -86,6 +86,11 @@ GAME_OPTIMIZE ?=
 # level-check runs it first too.
 GAME_LEVEL_BUILDER ?=
 
+# Genre engine: GAME_GENRE_ENGINE = puzzle, mahjong, rpg or beatemup in a
+# game.mk compiles and links that one engine (sdk/genre_engine.mk); empty,
+# the default, links none.
+include sdk/genre_engine.mk
+
 ifeq ($(USE_2D_PLUS),1)
   ENGINE_DIR  := sdk/2d_engine_plus
   ENGINE_EXT  := cpp
@@ -119,6 +124,10 @@ else
   GAME_CC     := $(CC)
   GAME_CFLAGS := $(CFLAGS)
 endif
+# The genre engine is C in either variant: built with the C flags, and its
+# switch reaches the game's own sources as well.
+NG_GENRE_CFLAGS = $(CFLAGS) $(NG_GENRE_DEFINE)
+GAME_CFLAGS += $(NG_GENRE_DEFINE)
 LD=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-ld
 LDFLAGS=  -nostdlib
 OBJCP=$(XTOOLS_ROOT)/m68k-unknown-elf/bin/m68k-unknown-elf-objcopy
@@ -404,6 +413,7 @@ endif
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_debug.$(ENGINE_EXT) -o out/ng_debug0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_joystick.$(ENGINE_EXT) -o out/ng_joystick0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE)   $(ENGINE_DIR)/ng_demo_advanced.$(ENGINE_EXT) -o out/ng_demo_advanced0.o
+	$(if $(NG_GENRE_SRC),$(CC) $(NG_GENRE_CFLAGS) $(GAME_OPTIMIZE)   $(NG_GENRE_SRC) -o $(NG_GENRE_OBJ0))
 	$(foreach src,$(GAME_SCENE_SRCS),$(GAME_CC) $(GAME_CFLAGS) $(GAME_OPTIMIZE) $(src) -o out/$(notdir $(basename $(src)))0.o || exit $$?;)
 	$(OBJCP) $(STRIP_SECTS) out/neogeo0.o     out/neogeo.o
 	$(OBJCP) $(STRIP_SECTS) out/user0.o       out/user.o
@@ -412,7 +422,7 @@ endif
 	$(OBJCP) $(STRIP_SECTS) out/neogeolib0.o  out/neogeolib.o
 	$(LD) $(LDFLAGS) -T games/$(GAME)/neogeo.ld -o out/game \
 	    out/neogeo.o out/user.o out/main.o out/eyecatcher.o out/neogeolib.o \
-	    $(NG_FIX_SDK_OBJ0) $(NG_ENGINE_OBJ0) $(GAME_SCENE_OBJS) $(SDK_LIB)
+	    $(NG_FIX_SDK_OBJ0) $(NG_ENGINE_OBJ0) $(NG_GENRE_OBJ0) $(GAME_SCENE_OBJS) $(SDK_LIB)
 
 $(GAME_ID)-p1.p1: game
 	$(OBJCP)   -O ihex    out/game out/game0
@@ -751,6 +761,11 @@ bios-list:
 	@echo "  unibios11        Universe BIOS (Hack, Ver. 1.1)"
 	@echo "  unibios10        Universe BIOS (Hack, Ver. 1.0)"
 
+.PHONY: genre-info
+# The genre engine a game links (GAME_GENRE_ENGINE in its game.mk).
+genre-info:
+	@echo "game=$(GAME) genre=$(or $(NG_GENRE),none) source=$(or $(NG_GENRE_SRC),-) object=$(or $(NG_GENRE_OBJ0),-) define=$(or $(NG_GENRE_DEFINE),-)"
+
 .PHONY: games-list
 games-list:
 	@echo "Available GAME values:"
@@ -793,6 +808,7 @@ menu:
 	@echo ""
 	@echo "Utilities:"
 	@echo "  make games-list              # list game folders"
+	@echo "  make genre-info GAME=<name>  # the genre engine the game links, if any"
 	@echo "  make bios-list               # list BIOS values"
 	@echo "  make clean / clean-all       # clear current game artifacts"
 

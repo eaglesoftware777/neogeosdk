@@ -32,6 +32,15 @@ TEST_TRIG := test_trig$(EXE)
 TEST_PAUSE := test_pause$(EXE)
 TEST_MOVE := test_move$(EXE)
 TEST_SHOOTER := test_shooter$(EXE)
+# v1.7.7 genre engines (sdk/2d_engine/ng_<genre>.c), each on its own, and all
+# four reached from a C++14 program through their C headers.
+TEST_PUZZLE := test_puzzle$(EXE)
+TEST_MAHJONG := test_mahjong$(EXE)
+TEST_RPG := test_rpg$(EXE)
+TEST_BEATEMUP := test_beatemup$(EXE)
+TEST_GENRE_CPP := test_genre_cpp$(EXE)
+TEST_GENRES := $(TEST_PUZZLE) $(TEST_MAHJONG) $(TEST_RPG) $(TEST_BEATEMUP) $(TEST_GENRE_CPP)
+GENRE_CFLAGS = -std=c99 -Wall -Wextra -Werror -Wno-missing-field-initializers $(CFLAGS)
 
 C_SRCS   = sprite_render_test.c \
            ../sdk/2d_engine/ng_chars.c \
@@ -52,7 +61,7 @@ CPP_SRCS = sprite_render_test.c \
 
 .PHONY: all test clean
 
-all: $(TEST_C) $(TEST_CPP) $(TEST_RAND) $(TEST_TRIG) $(TEST_PAUSE) $(TEST_MOVE) $(TEST_SHOOTER)
+all: $(TEST_C) $(TEST_CPP) $(TEST_RAND) $(TEST_TRIG) $(TEST_PAUSE) $(TEST_MOVE) $(TEST_SHOOTER) $(TEST_GENRES)
 
 $(TEST_C): $(C_SRCS) $(wildcard ../sdk/2d_engine/*.h)
 	$(CC) -o $@ $(CFLAGS) $(C_SRCS)
@@ -79,6 +88,28 @@ $(TEST_MOVE): move_test.c ../sdk/2d_engine/ng_move.c ../sdk/2d_engine/ng_move.h
 $(TEST_SHOOTER): shooter_test.c ../sdk/2d_engine/ng_shooter.c ../sdk/2d_engine/ng_shooter.h
 	$(CC) -Wall -Wextra -o $@ $(CFLAGS) shooter_test.c ../sdk/2d_engine/ng_shooter.c
 
+$(TEST_PUZZLE): puzzle_test.c ../sdk/2d_engine/ng_puzzle.c ../sdk/2d_engine/ng_puzzle.h $(TRIG_SRCS)
+	$(CC) -o $@ $(GENRE_CFLAGS) puzzle_test.c ../sdk/2d_engine/ng_puzzle.c ../sdk/2d_engine/ng_trig.c ../sdk/2d_engine/ng_trig_table.c
+
+$(TEST_MAHJONG): mahjong_test.c ../sdk/2d_engine/ng_mahjong.c ../sdk/2d_engine/ng_mahjong.h
+	$(CC) -o $@ $(GENRE_CFLAGS) mahjong_test.c ../sdk/2d_engine/ng_mahjong.c
+
+$(TEST_RPG): rpg_test.c ../sdk/2d_engine/ng_rpg.c ../sdk/2d_engine/ng_rpg.h
+	$(CC) -o $@ $(GENRE_CFLAGS) rpg_test.c ../sdk/2d_engine/ng_rpg.c
+
+$(TEST_BEATEMUP): beatemup_test.c ../sdk/2d_engine/ng_beatemup.c ../sdk/2d_engine/ng_beatemup.h
+	$(CC) -o $@ $(GENRE_CFLAGS) beatemup_test.c ../sdk/2d_engine/ng_beatemup.c
+
+GENRE_SRCS = ../sdk/2d_engine/ng_puzzle.c ../sdk/2d_engine/ng_mahjong.c ../sdk/2d_engine/ng_rpg.c \
+             ../sdk/2d_engine/ng_beatemup.c ../sdk/2d_engine/ng_trig.c ../sdk/2d_engine/ng_trig_table.c
+GENRE_OBJS = $(patsubst ../sdk/2d_engine/%.c,genre_%.o,$(GENRE_SRCS))
+
+genre_%.o: ../sdk/2d_engine/%.c
+	$(CC) -c -o $@ -std=c99 -Wall -Wextra $(CFLAGS) $<
+
+$(TEST_GENRE_CPP): genre_cpp_test.cpp $(GENRE_OBJS) $(wildcard ../sdk/2d_engine/ng_puzzle.h ../sdk/2d_engine/ng_mahjong.h ../sdk/2d_engine/ng_rpg.h ../sdk/2d_engine/ng_beatemup.h)
+	$(CXX) -std=c++14 -Wall -Wextra -Werror -Wno-missing-field-initializers -o $@ $(CFLAGS) genre_cpp_test.cpp $(GENRE_OBJS)
+
 test: all
 	$(RUN)$(TEST_C)
 	$(RUN)$(TEST_CPP)
@@ -87,7 +118,12 @@ test: all
 	$(RUN)$(TEST_PAUSE)
 	$(RUN)$(TEST_MOVE)
 	$(RUN)$(TEST_SHOOTER)
+	$(RUN)$(TEST_PUZZLE)
+	$(RUN)$(TEST_MAHJONG)
+	$(RUN)$(TEST_RPG)
+	$(RUN)$(TEST_BEATEMUP)
+	$(RUN)$(TEST_GENRE_CPP)
 	$(PYTHON) ../tools/gen_trig.py --check ../sdk/2d_engine/ng_trig_table.c
 
 clean:
-	-$(RMF) $(TEST_C) $(TEST_CPP) $(TEST_RAND) $(TEST_TRIG) $(TEST_PAUSE) $(TEST_SHOOTER)
+	-$(RMF) $(TEST_C) $(TEST_CPP) $(TEST_RAND) $(TEST_TRIG) $(TEST_PAUSE) $(TEST_SHOOTER) $(TEST_GENRES) $(GENRE_OBJS)
