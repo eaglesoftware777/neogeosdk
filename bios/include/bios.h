@@ -230,7 +230,7 @@ void sys_read_calendar_c(void);
 void sys_set_calendar_c(void);
 void sys_card_c(void);
 void sys_card_error_c(void);
-void sys_howtoplay_c(void);
+void sys_howtoplay_c(const uint8_t *desc);
 void sys_fix_clear_c(void);
 void sys_lsp_1st_c(void);
 void sys_mess_out_c(void);

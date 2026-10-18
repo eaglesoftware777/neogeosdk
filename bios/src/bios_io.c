@@ -137,35 +137,97 @@ void sys_int2_c(void)
     REG_IRQACK = 2;
 }
 
-void sys_howtoplay_c(void)
+/* ---- SYS_HOWTOPLAY ------------------------------------------------------
+ * A game may hand over its own instructions: A0 at the call points at an
+ * HTP1 block in its program ROM (sdk/ng_system.h: NGHowToPlay and
+ * ng_sys_howtoplay). Every field is checked before anything is drawn; any
+ * other A0 gets a short screen that names no game's buttons. The game's
+ * own VBlank handler is running (it calls SYS_IO, not SYS_INT1), so frames
+ * are counted from the LSPC line counter, which wraps once a frame, and the
+ * pad edges are the ones that handler already read. */
+#define HTP_LINES   12u
+#define HTP_WIDTH   31u     /* a line holds up to 30 characters and its end */
+
+static uint8_t htp_text_ok(const uint8_t *s)
 {
-    uint16_t frames = 300u;
+    uint8_t i;
+    for (i = 0; i < HTP_WIDTH; i++) {
+        if (!s[i]) return 1;
+        if (s[i] < 0x20u || s[i] > 0x7Eu) return 0;
+    }
+    return 0;
+}
+
+static uint8_t htp_len(const uint8_t *s)
+{
+    uint8_t n = 0;
+    while (n < HTP_WIDTH && s[n]) n++;
+    return n;
+}
+
+static uint8_t htp_valid(const uint8_t *d)
+{
+    uint32_t a = (uint32_t)d;
+    uint8_t i;
+    if (!d) return 0;
+    /* in the cartridge's program ROM: the fixed bank or the switched one */
+    if (!((a + 6u + 32u * (1u + HTP_LINES) <= 0x100000u) || (a >= 0x200000u && a + 6u + 32u * (1u + HTP_LINES) <= 0x300000u)))
+        return 0;
+    if (d[0] != 'H' || d[1] != 'T' || d[2] != 'P' || d[3] != '1') return 0;
+    if (!d[4] || d[4] > HTP_LINES) return 0;
+    if (!htp_text_ok(d + 6)) return 0;
+    for (i = 0; i < d[4]; i++) if (!htp_text_ok(d + 38u + 32u * i)) return 0;
+    return 1;
+}
+
+/* One frame: the line counter (bits 15..7 of LSPCMODE) going back down. */
+static void htp_frame(void)
+{
+    uint16_t last = (uint16_t)(REG_LSPCMODE >> 7), now;
+    uint16_t guard = 0;
+    for (;;) {
+        bios_watchdog();
+        now = (uint16_t)(REG_LSPCMODE >> 7);
+        if (now < last || ++guard > 60000u) break;
+        last = now;
+    }
+}
+
+void sys_howtoplay_c(const uint8_t *desc)
+{
+    uint16_t frames;
+    uint8_t i, n, spacing, y;
     sys_fix_clear_c();
     sys_lsp_1st_c();
     bios_set_backdrop(COLOR_BLACK);
     bios_init_palette_banks();
 
-    bios_fix_puts(13, 2, "HOW TO PLAY", 1);
-    bios_fix_puts(6, 4, "============================", 2);
-
-    bios_fix_puts(5, 7, "JOYSTICK:", 3);
-    bios_fix_puts(16, 6, "  ^ UP", 1);
-    bios_fix_puts(16, 7, "<   > MOVE", 1);
-    bios_fix_puts(16, 8, "  v DOWN", 1);
-
-    bios_fix_puts(5, 11, "BUTTON A:  PUNCH / LIGHT ATTACK", 1);
-    bios_fix_puts(5, 13, "BUTTON B:  KICK  / MEDIUM ATTACK", 3);
-    bios_fix_puts(5, 15, "BUTTON C:  HEAVY / STRONG ATTACK", 2);
-    bios_fix_puts(5, 17, "BUTTON D:  EVADE / TACTICAL DASH", 4);
-
-    bios_fix_puts(5, 20, "A + B:     THROW / GUARD CANCEL", 1);
-    bios_fix_puts(5, 22, "C + D:     POWER BLOW / STRIKER", 2);
-
-    bios_fix_puts(7, 25, "PRESS BUTTON TO CONTINUE", 2);
+    if (htp_valid(desc)) {
+        const char *title = (const char *)(desc + 6);
+        n = desc[4];
+        frames = (uint16_t)((desc[5] ? desc[5] : 10u) * 60u);
+        bios_fix_puts((uint8_t)((40u - htp_len(desc + 6)) >> 1), 3, title, 1);
+        bios_fix_puts(6, 4, "============================", 2);
+        spacing = (uint8_t)(n <= 9u ? 2u : 1u);
+        y = 7;
+        for (i = 0; i < n; i++) {
+            bios_fix_puts(5, y, (const char *)(desc + 38u + 32u * i), (uint8_t)(1u + (i & 3u)));
+            y = (uint8_t)(y + spacing);
+        }
+    } else {
+        frames = 300u;
+        bios_fix_puts(14, 3, "HOW TO PLAY", 1);
+        bios_fix_puts(6, 4, "============================", 2);
+        bios_fix_puts(6, 8, "JOYSTICK   MOVE", 3);
+        bios_fix_puts(6, 11, "A B C D    THE GAME'S ACTIONS", 1);
+        bios_fix_puts(6, 14, "START      PLAY", 2);
+        bios_fix_puts(6, 18, "THIS GAME SHOWS ITS OWN", 4);
+        bios_fix_puts(6, 20, "CONTROLS WHILE IT PLAYS", 4);
+    }
+    bios_fix_puts(8, 26, "PRESS A BUTTON TO PLAY", 2);
 
     while (frames--) {
-        bios_wait_vbl();
-        sys_io_c();
+        htp_frame();
         if (BIOS_P1CHANGE || (BIOS_STATCHANGE & (STAT_START1 | STAT_START2 | STAT_COIN1 | STAT_COIN2))) break;
     }
     sys_fix_clear_c();
