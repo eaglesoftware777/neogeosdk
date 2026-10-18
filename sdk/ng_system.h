@@ -43,6 +43,36 @@ static inline uint8_t NEOGEO_USER ng_sys_is_unibios(void)
     return 0u;
 }
 
+/* 1 when the system ROM is EagleBIOS (bios/): it names itself at $C004E0. */
+static inline uint8_t NEOGEO_USER ng_sys_is_eaglebios(void)
+{
+    const volatile uint8_t *id = (const volatile uint8_t *)0xC004E0u;
+    return (uint8_t)(id[0] == 'E' && id[1] == 'A' && id[2] == 'G' && id[3] == 'L' && id[4] == 'E');
+}
+
+/*
+ * The game's own HOW TO PLAY text for EagleBIOS's screen (SYS_HOWTOPLAY):
+ * put one of these in ROM (const) and hand it to ng_sys_howtoplay(). Text
+ * is upper case, each line and the title at most 30 characters and ended
+ * by a 0 within its 32 bytes; up to 12 lines; `seconds` 0 means 10. The
+ * screen clears the FIX layer and hides every sprite, so call it between
+ * scenes and redraw afterwards. Only EagleBIOS reads the block: ask
+ * ng_sys_is_eaglebios() first, and show the game's own screen otherwise.
+ */
+#define NG_HOWTOPLAY_LINES 12
+typedef struct {
+    char magic[4];                 /* "HTP1" */
+    uint8_t lines, seconds;
+    char title[32];
+    char line[NG_HOWTOPLAY_LINES][32];
+} NGHowToPlay;
+
+static inline void NEOGEO_USER ng_sys_howtoplay(const NGHowToPlay *h)
+{
+    register const NGHowToPlay *a0 __asm__("a0") = h;
+    __asm__ volatile("jsr 0xC00474" : : "a"(a0) : "memory", "cc");
+}
+
 /* ------------------------------------------------------------------ */
 /*  Software DIPs: the operator's settings for this game              */
 /* ------------------------------------------------------------------ */

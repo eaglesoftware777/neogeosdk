@@ -269,7 +269,9 @@ sys_card_error_wrap:
 
 sys_howtoplay_wrap:
     movem.l %d0-%d7/%a0-%a6, -(%sp)
+    move.l  %a0, -(%sp)             /* the game's HTP1 block, or anything else */
     jsr     sys_howtoplay_c
+    addq.l  #4, %sp
     movem.l (%sp)+, %d0-%d7/%a0-%a6
     rts
 

@@ -176,11 +176,11 @@ A new code interrupts a tune within 10 ms.
 | `C0044A` | SYS_IO            | pads, start/select, coins, credits, START and coin callbacks into the cartridge |
 | `C00450` | SYS_CREDIT_CHECK  | can the requested credits (`10FDB0`, `10FDB1`) be spent; carry set if not  |
 | `C00456` | SYS_CREDIT_DOWN   | spend them                                                                 |
-| `C0045C` | SYS_READ_CALENDAR | BCD date and time into `10FDD2`                                            |
-| `C00462` | SYS_SET_CALENDAR  | accepted, nothing to write to                                              |
-| `C00468` | SYS_CARD          | memory card, in the console system ROMs' card layout: format, search, load, save, delete, title, user name (8-bit cards, 2-16 KiB) |
-| `C0046E` | SYS_CARD_ERROR    | no-op                                                                      |
-| `C00474` | SYS_HOWTOPLAY     | no-op                                                                      |
+| `C0045C` | SYS_READ_CALENDAR | BCD date and time into `10FDD2`, from a software calendar (see Limitations) |
+| `C00462` | SYS_SET_CALENDAR  | sets that software calendar (checked: month, day of month, hours, minutes) |
+| `C00468` | SYS_CARD          | memory card, in the console system ROMs' card layout: format, search, load, save, delete, title, user name (8-bit cards, 2-16 KiB; a 16-bit card path exists, untested) |
+| `C0046E` | SYS_CARD_ERROR    | an error chirp when the last card call failed; no screen                  |
+| `C00474` | SYS_HOWTOPLAY     | a HOW TO PLAY screen: the game's own text when A0 points at an `HTP1` block in its program ROM (`sdk/ng_system.h`: `NGHowToPlay`, `ng_sys_howtoplay`), otherwise a short screen that names no game's buttons |
 | `C004C2` | SYS_FIX_CLEAR     | FIX map to `0020`                                                          |
 | `C004C8` | SYS_LSP_1ST       | every sprite height 0, full size, parked at x = 496 off the right edge     |
 | `C004CE` | SYS_MESS_OUT      | run the message queue ending at `10FDBE`                                   |
@@ -281,9 +281,21 @@ screenshots, copied test ROMs and audio on another drive.
 
 ## Limitations
 
-Memory cards: 8-bit ones only (the SNK card is one); 16-bit cards are not
-handled. No clock (the calendar answers a fixed date), no HOWTOPLAY screen, no Japanese common-FIX text, one cartridge slot, region
-fixed by the firmware id word.
+Memory cards: 8-bit ones (the SNK card is one) are tested; `bios_card.c` has a
+byte-wide path for 16-bit cards that no test has exercised. The calendar is
+software: it starts at 2026-10-12 12:00 at power-on and advances with the
+firmware's own VBlank (so not while a game runs its own interrupt without
+SYS_INT1); the uPD4990A clock chip is neither read nor set. One cartridge
+slot: the firmware always selects slot 0 (no slot cycling on multi-slot
+boards). The region is fixed by the firmware id word. Japanese messages use
+the common-FIX stream translation in `bios_video.c`.
+
+SYS_HOWTOPLAY runs on the game's time: it counts frames from the LSPC line
+counter and reads the pad edges the game's own VBlank handler produced, so a
+game may call it between scenes. The block is checked field by field (magic,
+line count, printable text ended within 31 bytes, every byte inside the
+program ROM's address range) before anything is drawn. Other system ROMs
+know nothing of the block: games ask `ng_sys_is_eaglebios()` first.
 
 Passing the firmware probes does not establish universal retail cartridge
 compatibility or verification on physical hardware. Cartridge timing, fonts,
