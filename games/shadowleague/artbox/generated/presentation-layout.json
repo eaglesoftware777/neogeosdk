@@ -1,0 +1,68 @@
+[
+  {
+    "file": "title-sdk177.png",
+    "tile": 99354,
+    "palette_banks": 16,
+    "P_offset": 1048576
+  },
+  {
+    "file": "summons.png",
+    "tile": 99662,
+    "palette_banks": 16,
+    "P_offset": 2097152
+  },
+  {
+    "file": "kenji-sdk177.png",
+    "tile": 99970,
+    "palette_banks": 16,
+    "P_offset": 1049496
+  },
+  {
+    "file": "ryuhei-sdk177.png",
+    "tile": 100278,
+    "palette_banks": 16,
+    "P_offset": 2098072
+  },
+  {
+    "file": "jack-sdk177.png",
+    "tile": 100586,
+    "palette_banks": 16,
+    "P_offset": 1050416
+  },
+  {
+    "file": "claire-sdk177.png",
+    "tile": 100894,
+    "palette_banks": 16,
+    "P_offset": 2098992
+  },
+  {
+    "file": "title-sdk177.png",
+    "tile": 101202,
+    "palette_banks": 16,
+    "P_offset": 1051336
+  },
+  {
+    "file": "mode.png",
+    "tile": 101510,
+    "palette_banks": 16,
+    "P_offset": 2099912
+  },
+  {
+    "file": "select.png",
+    "tile": 101818,
+    "palette_banks": 16,
+    "P_offset": 1052256
+  },
+  {
+    "file": "vs.png",
+    "tile": 102126,
+    "palette_banks": 16,
+    "P_offset": 2100832
+  },
+  {
+    "file": "ending.png",
+    "tile": 102434,
+    "palette_banks": 16,
+    "P_offset": 1053176
+  }
+]

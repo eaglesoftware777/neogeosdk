@@ -1,0 +1,158 @@
+{
+  "jack": {
+    "platform": "mvs",
+    "provenance": {
+      "platform": "mvs",
+      "bios_name": "euro",
+      "team": false,
+      "fighter": "jack",
+      "attract_only": false,
+      "training": false,
+      "options": false,
+      "seconds": 90,
+      "elf_sha256": "4a221167ce4d77d7e1b3105587fcc372a5f35f9b72a68406259434bf6e5e74ae",
+      "rom_sha256": {
+        "781-c1.c1": "9e1ea1134041550a0b92fc373ed803a1dc797e39852de6cfef772fb75b875e95",
+        "781-c2.c2": "be49b097a5e81602e4519435eb4c67747d07c4a60b805ac89885c845918384d9",
+        "781-m1.m1": "f72aeb787b7486504e15e45cd007e71827799c75b7b3384da13054ad4f0901d5",
+        "781-p1.p1": "9451edd00be7f05673aef93f378500f927b12f9136cea2559d0f4fcaa3b3b332",
+        "781-s1.s1": "56d8140539b0752b19766727b11388df21f27e523acb87a0c7ad0df158865b71",
+        "781-v1.v1": "0da0a125e7281753f06ab0ef941257646ccfa23250241e7a0c9ec8bdce7e4720"
+      }
+    },
+    "performance": {
+      "hardware_frame": 5310,
+      "t": 89.71776,
+      "state": 1,
+      "simulation_frame": 4056,
+      "scanline_strips": 57,
+      "peak_strips": 60,
+      "fight_observations": 3195,
+      "missed_simulation_frames": 5,
+      "presentation_checks": 0,
+      "palette_pending_max": 10,
+      "super_freezes": 6,
+      "actor_commits": 806,
+      "actor_deferred": 144,
+      "actor_deadline_misses": 0
+    },
+    "result": "PASS mvs duel: 107 fight samples, last {'t': 89.72, 'training': 0, 'difficulty1': 3, 'def0_pointer': 444720, 'state': 1, 'round': 3, 'secs': 56, 'life0': 624, 'life1': 906, 'x0': 133, 'x1': 182, 'st0': 7, 'st1': 3, 'wins0': 1, 'wins1': 1, 'winner': 255, 'frame': 4056, 'mode': 0, 'active0': 0, 'active1': 0, 'count0': 1, 'count1': 1, 'assist0': 0, 'assist1': 0, 'maxlife0': 1000, 'maxlife1': 980, 'joy0': 0, 'cpu0': 0, 'cpu1': 1}"
+  },
+  "team": {
+    "platform": "mvs",
+    "provenance": {
+      "platform": "mvs",
+      "bios_name": "euro",
+      "team": true,
+      "fighter": null,
+      "attract_only": false,
+      "training": false,
+      "options": false,
+      "seconds": 115,
+      "elf_sha256": "4a221167ce4d77d7e1b3105587fcc372a5f35f9b72a68406259434bf6e5e74ae",
+      "rom_sha256": {
+        "781-c1.c1": "9e1ea1134041550a0b92fc373ed803a1dc797e39852de6cfef772fb75b875e95",
+        "781-c2.c2": "be49b097a5e81602e4519435eb4c67747d07c4a60b805ac89885c845918384d9",
+        "781-m1.m1": "f72aeb787b7486504e15e45cd007e71827799c75b7b3384da13054ad4f0901d5",
+        "781-p1.p1": "9451edd00be7f05673aef93f378500f927b12f9136cea2559d0f4fcaa3b3b332",
+        "781-s1.s1": "56d8140539b0752b19766727b11388df21f27e523acb87a0c7ad0df158865b71",
+        "781-v1.v1": "0da0a125e7281753f06ab0ef941257646ccfa23250241e7a0c9ec8bdce7e4720"
+      }
+    },
+    "performance": {
+      "hardware_frame": 6780,
+      "t": 114.55488,
+      "state": 1,
+      "simulation_frame": 5215,
+      "scanline_strips": 52,
+      "peak_strips": 61,
+      "fight_observations": 4368,
+      "missed_simulation_frames": 13,
+      "presentation_checks": 0,
+      "palette_pending_max": 10,
+      "super_freezes": 8,
+      "actor_commits": 1163,
+      "actor_deferred": 213,
+      "actor_deadline_misses": 0
+    },
+    "result": "PASS mvs team: 147 fight samples, last {'t': 114.55, 'training': 0, 'difficulty1': 3, 'def0_pointer': 459406, 'state': 1, 'round': 4, 'secs': 52, 'life0': 10, 'life1': 418, 'x0': 358, 'x1': 400, 'st0': 5, 'st1': 3, 'wins0': 0, 'wins1': 0, 'winner': 255, 'frame': 5215, 'mode': 1, 'active0': 1, 'active1': 2, 'count0': 3, 'count1': 3, 'assist0': 0, 'assist1': 1, 'maxlife0': 1000, 'maxlife1': 1000, 'joy0': 10, 'cpu0': 0, 'cpu1': 1}"
+  },
+  "training": {
+    "platform": "aes",
+    "provenance": {
+      "platform": "aes",
+      "bios_name": "asia",
+      "team": false,
+      "fighter": "atlas",
+      "attract_only": false,
+      "training": true,
+      "options": true,
+      "seconds": 100,
+      "elf_sha256": "9fb7b8051cf9e8ba577202663836f0a5e2ca267d6af8eca574a1ffc65f67c77f",
+      "rom_sha256": {
+        "781-c1.c1": "9e1ea1134041550a0b92fc373ed803a1dc797e39852de6cfef772fb75b875e95",
+        "781-c2.c2": "be49b097a5e81602e4519435eb4c67747d07c4a60b805ac89885c845918384d9",
+        "781-m1.m1": "f72aeb787b7486504e15e45cd007e71827799c75b7b3384da13054ad4f0901d5",
+        "781-p1.p1": "950fee53736b26733109cea55f45df8cda9d2cb9e353b39fa0e2f5e94ae3a4e0",
+        "781-s1.s1": "56d8140539b0752b19766727b11388df21f27e523acb87a0c7ad0df158865b71",
+        "781-v1.v1": "0da0a125e7281753f06ab0ef941257646ccfa23250241e7a0c9ec8bdce7e4720"
+      }
+    },
+    "performance": {
+      "hardware_frame": 5910,
+      "t": 99.85536,
+      "state": 1,
+      "simulation_frame": 4573,
+      "scanline_strips": 52,
+      "peak_strips": 58,
+      "fight_observations": 4601,
+      "missed_simulation_frames": 28,
+      "presentation_checks": 0,
+      "palette_pending_max": 16,
+      "super_freezes": 6,
+      "actor_commits": 837,
+      "actor_deferred": 207,
+      "actor_deadline_misses": 0
+    },
+    "result": "PASS aes duel: 154 fight samples, last {'t': 99.86, 'training': 1, 'difficulty1': 0, 'def0_pointer': 160064, 'state': 1, 'round': 1, 'secs': 99, 'life0': 1200, 'life1': 1, 'x0': 355, 'x1': 496, 'st0': 3, 'st1': 5, 'wins0': 0, 'wins1': 0, 'winner': 255, 'frame': 4573, 'mode': 0, 'active0': 0, 'active1': 0, 'count0': 1, 'count1': 1, 'assist0': 0, 'assist1': 0, 'maxlife0': 1200, 'maxlife1': 1200, 'joy0': 2, 'cpu0': 0, 'cpu1': 0}"
+  },
+  "attract": {
+    "platform": "mvs",
+    "provenance": {
+      "platform": "mvs",
+      "bios_name": "euro",
+      "team": false,
+      "fighter": null,
+      "attract_only": true,
+      "training": false,
+      "options": false,
+      "seconds": 72,
+      "elf_sha256": "4a221167ce4d77d7e1b3105587fcc372a5f35f9b72a68406259434bf6e5e74ae",
+      "rom_sha256": {
+        "781-c1.c1": "9e1ea1134041550a0b92fc373ed803a1dc797e39852de6cfef772fb75b875e95",
+        "781-c2.c2": "be49b097a5e81602e4519435eb4c67747d07c4a60b805ac89885c845918384d9",
+        "781-m1.m1": "f72aeb787b7486504e15e45cd007e71827799c75b7b3384da13054ad4f0901d5",
+        "781-p1.p1": "9451edd00be7f05673aef93f378500f927b12f9136cea2559d0f4fcaa3b3b332",
+        "781-s1.s1": "56d8140539b0752b19766727b11388df21f27e523acb87a0c7ad0df158865b71",
+        "781-v1.v1": "0da0a125e7281753f06ab0ef941257646ccfa23250241e7a0c9ec8bdce7e4720"
+      }
+    },
+    "performance": {
+      "hardware_frame": 4260,
+      "t": 71.97696,
+      "state": 1,
+      "simulation_frame": 1321,
+      "scanline_strips": 52,
+      "peak_strips": 58,
+      "fight_observations": 1228,
+      "missed_simulation_frames": 3,
+      "presentation_checks": 8,
+      "palette_pending_max": 10,
+      "super_freezes": 1,
+      "actor_commits": 372,
+      "actor_deferred": 79,
+      "actor_deadline_misses": 0
+    },
+    "result": "PASS mvs attract: seven cards, both aligned P banks, no copy errors; {'t': 71.98, 'seen': 3, 'copies': 8, 'errors': 0, 'card': 7}"
+  }
+}

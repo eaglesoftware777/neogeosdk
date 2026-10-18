@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/mnt/c/neogeo/shadowleague-sdk177-20261017/games/shadowleague/tools/qa.py", line 173, in <module>
+    main()
+  File "/mnt/c/neogeo/shadowleague-sdk177-20261017/games/shadowleague/tools/qa.py", line 131, in main
+    subprocess.run(command, env=env, cwd=out, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=900)
+  File "/usr/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/mnt/c/mame/mame.exe', 'aes', '-noreadconfig', '-rompath', 'C:\\mame\\neogeosdk\\tests\\shadowleague\\bios;C:\\neogeo\\shadowleague-sdk177-20261017\\dist\\candidates\\shadowleague\\sdk177\\aes\\roms', '-hashpath', 'C:\\neogeo\\shadowleague-sdk177-20261017\\dist\\candidates\\shadowleague\\sdk177\\aes\\hash', '-cart1', 'shadowleague', '-bios', 'asia', '-video', 'none', '-sound', 'none', '-nothrottle', '-nonvram_save', '-seconds_to_run', '100', '-skip_gameinfo', '-cfg_directory', 'C:\\neogeo\\shadowleague-sdk177-20261017\\games\\shadowleague\\assets\\review\\sdk177\\milestone3-training\\aes\\cfg', '-nvram_directory', 'C:\\neogeo\\shadowleague-sdk177-20261017\\games\\shadowleague\\assets\\review\\sdk177\\milestone3-training\\aes\\nvram', '-snapshot_directory', 'C:\\neogeo\\shadowleague-sdk177-20261017\\games\\shadowleague\\assets\\review\\sdk177\\milestone3-training\\aes', '-autoboot_delay', '0', '-autoboot_script', 'C:\\neogeo\\shadowleague-sdk177-20261017\\games\\shadowleague\\assets\\review\\sdk177\\milestone3-training\\aes\\qa.lua']' returned non-zero exit status 1.

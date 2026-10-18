@@ -1,119 +1,103 @@
 # Shadow League Fighting
 
-An original one-on-one fighting game for Neo Geo MVS and AES, built on the
-SDK's `ng_fight` engine (`docs/fighting.md`). Cartridge id 781.
+Original Neo Geo MVS/AES fighting game, cartridge ID 781. This isolated candidate
+uses fighting component 1.7.7. The game package for hardware review is V1; it does
+not publish or replace the SDK release being prepared separately.
 
-**Status: V2 playable.** 44 individually styled fighters, four panoramic arenas,
-arcade and versus play against a CPU or a second player. Choose Duel or Team
-Battle before selecting characters. Team Battle uses three fighters and a separately
-chosen assist, with three calls per match; A+C calls the assist. Defeated members
-stay eliminated, the survivor keeps health with a small recovery, and each new
-bout gets a fresh timer and introduction. Each fighter has a
-discipline-specific guard, costume, six-phase footwork and strike preparation.
-Boxing fighters use punches on all four buttons, including jumping attacks. See `docs/roadmap/V1.7.5_STATUS.md`.
+Two match formats: 1 vs 1 and 3 vs 3 with one selected striker per side. All 44
+fighters now load complete indexed artwork exports. This includes the previously
+unavailable cast, Atlas, and Batu's covered wrestling costume. The normal build
+consumes these exports and rejects missing poses. The four existing arenas remain;
+a new arena art/depth pass and further visual polish are unfinished.
 
-## Controls
+The new title and skippable illustrated introduction use encoded cartridge art.
+The renderer uploads fighter poses into hidden sprite banks and shows a pose only
+when complete. This prevents partial texture uploads; it does not establish that
+every reported face flicker or slowdown has been resolved. Native screenshots,
+telemetry and review sheets are in `assets/review/sdk177/`.
 
-```
-Stick       walk, crouch, jump; hold back to guard (down-back for low attacks)
-            6 6 dash, 4 4 backdash
-A  light punch      B  light kick      C  heavy punch      D  heavy kick
-A + B       evasive roll (back + A + B rolls away)
-C + D       heavy attack; while guarding: guard attack (costs spirit)
-6 or 4 + C  throw (close); press C or D as you are grabbed to escape
-```
+## Playing
 
-### Kenji Arata — traditional karate (Japan)
-
-| Move | Input |
+| Input | Action |
 |---|---|
-| Ressen Zuki (lunging reverse punch) | 236 + A or C |
-| Kokoro Uke (counter stance) | 214 + A or C |
-| Kakato Otoshi (axe kick, overhead) | 623 + B or D |
-| Ichigeki Hissatsu (super, one stock) | 236236 + A or C |
-| Yoko Geri (side kick) | C + D |
+| Stick | Walk, crouch, jump; back guards, down-back guards low |
+| Forward, forward / back, back | Dash / backdash |
+| A / B / C / D | Light punch / light kick / heavy punch / heavy kick |
+| A+B | Evade; back+A+B evades away |
+| C+D | Blowback; guard attack while blocking |
+| B+C | MAX power mode, one stock |
+| Forward+C / forward+D, close | Long / short throw |
+| Back+C or D, close | Reverse throw |
+| C or D when grabbed | Throw escape |
+| A+C, team battle | Call the selected striker |
 
-### Jack Mercer — professional boxing (United States)
+Boxers use punches on all four buttons. Motions are relative to the opponent.
+Kenji: quarter-circle forward+A/C lunging punch, quarter-circle forward+B/D
+energy wave, quarter-circle back+A/C counter, forward/down/down-forward+B/D
+axe kick, double quarter-circle forward+A/C super. His wave is an original move.
+Jack: quarter-circle forward+A/C rush, quarter-circle back+B/D weave,
+forward/down/down-forward+A/C uppercut, double quarter-circle forward+A/C super.
+Arun and Zero have original flame projectiles; Atlas has an energy pulse.
 
-| Move | Input |
-|---|---|
-| Brooklyn Rush (dashing straight) | 236 + A or C |
-| Weave (slip under strikes, body blow) | 214 + B or D |
-| Rising Bell (uppercut, anti-air) | 623 + A or C |
-| Final Round (super, one stock) | 236236 + A or C |
-| Haymaker | C + D |
+Host input tests verify all 347 selectable specials/supers. Kenji, Jack, Claire
+and Ryuhei also have verified three-hit A > C > quarter-circle-forward+C combos
+at close range. Press the next move after the previous strike connects.
 
-Jack throws no kicks: B and D are body punches and hooks.
+## Difficulty and training
 
-## Arcade settings (MVS soft DIPs)
+MVS software DIPs provide LEVEL 1–7, default LEVEL 3, rounds to win, 30/60/90-second
+rounds and demo sound. Tournament progress does not secretly increase difficulty.
+AES has ARCADE, VERSUS, TRAINING and OPTIONS in the home menu. Defaults are level 3,
+two round wins and 60 seconds; options persist during the current game session.
 
-DIFFICULTY (EASY to EXPERT, NORMAL by default) sets the CPU level; ROUNDS
-(1-3) is the number of round wins a match needs. A console plays NORMAL,
-best of three.
+In training, START opens the practice menu. Choose standing, guarding, crouching,
+jumping, CPU level 3, player two, recording or playback. Recording uses player one's
+controls for the dummy, stores up to 240 inputs and loops them in playback. Infinite
+power, life recovery, position reset and the selected fighter's command list are
+available. Practice is nonlethal and the clock stays at 99.
 
-## Building
+## Building and local installation
 
 ```sh
-make GAME=shadowleague all            # PLATFORM=aes for the console build
-python3 games/shadowleague/tools/qa.py
-python3 games/shadowleague/tools/qa.py --team --seconds 180
+python3 games/shadowleague/tools/build_candidate.py --label sdk177 --output-root dist/candidates/shadowleague/sdk177
+python3 -m unittest discover -s tests -p 'test_fight.py' -v
+python3 -m unittest discover -s tests -p 'test_shadowleague*.py' -v
+make GAME=shadowleague test-precheck budget
+python3 games/shadowleague/tools/package_v1.py
+python3 games/shadowleague/tools/install_milestone.py --milestone v1-hardware-test --version "V1 / SDK 1.7.7"
 ```
 
-Sources:
+The installer replaces only Shadow League files in `C:\mame\neogeosdk`, verifies
+checksums and makes no backups. Launch `START_SHADOW_LEAGUE_MILESTONE.bat` for AES
+or `START_SHADOW_LEAGUE_MILESTONE_MVS.bat` for MVS. It preserves other games and the
+shared BIOS. Do not use save states from previous builds.
 
-- `fighters/*.json`: each fighter's build, palette, poses, animations, frame
-  data, moves and CPU profile. `tools/fighter_validate.py` checks them.
-- `tools/fighter_cook.py` draws every pose (`tools/fighter_art.py`) and
-  writes the ROM tables.
-- `tools/art.py` builds the C and S ROMs and `artbox/generated/slf_assets.h`.
-- `tools/sound.py` synthesizes the effects and music.
-- `scenes/slf_game.c` is the game flow, `scenes/slf_draw.c` the hardware side.
+V1 hardware-test files are under `dist/candidates/shadowleague/sdk177/hardware-v1/`:
+NeoSD and Darksoft AES/MVS, MAME sets with matching software-list XML, and BackBit
+MVS. Their manifest records SHA256 and exact decoding checks against all six ROMs.
+Physical cartridge compatibility still needs tester confirmation. The dedicated
+`START_SHADOW_LEAGUE_V1.bat` opens the newly installed AES candidate.
 
-## V2 gameplay
+P is 3 MiB: one fixed region plus two aligned presentation data banks. C remains
+16 MiB in equal 8-MiB lanes. Recorded voices/music fit the 8-MiB V budget. Indexed
+fighter canvases are 160×160 or 192×192 with explicit per-frame roots; the game's
+logical collision coordinates and floor stay consistent. Fighters use up to four
+16-color tile banks. Hardware output is native resolution, not 1080p artwork.
 
-Hitstop and super pauses freeze both fighters, assists, projectiles and the round
-clock. Buttons continue buffering through pauses; consumed presses and releases
-cannot trigger twice. Normal attacks accept a four-frame input buffer. Assists
-use their own fighter's attack animation and active hitbox, so distant opponents
-are safe and blocking still works. Tag mode in the SDK retains each member's health
-separately and skips defeated partners. Replay hashes include input queues and
-state timers.
+`tools/art.py` validates exports and compares decoded C/S-ROM pixels with the
+compiled source. `tools/painted_import/` imports completed seven-sheet pose sets;
+it rejects missing drawings and opaque cropping. Flat sprite exports do not have
+separate anatomy layers, so pixel-integrity gates cannot certify anatomy or appeal.
+Artist/player review remains necessary.
 
-## V2 artwork and installation
+## Audio sources
 
-Native action canvases are 160x160, anchored at (80,141). The extra transparent
-margin keeps extended kicks, falls and raised hands inside the canvas. The game
-keeps the same floor position and world coordinate system. Collision follows the
-new drawing. Bodies use separate
-near/far limbs, shaped hands, footwear, cloth folds and authored character heads.
-All 2,124 frames are indexed with transparent colour 0 and 15 opaque colours.
+Original music/effects and the existing announcer, male/female grunts and robot
+processing are preserved. Fifteen fighters receive 59 localized combat lines.
+Other language performances remain unfinished. `tools/sync_voice_samples.py` maps
+approved named WAVs to stable sample numbers before normal sound builds.
 
-`assets/authored/profiles.json` lists the 44 costume and fighting designs.
-`assets/authored/art-direction.json` records the visual brief. The master portrait,
-roster and four arena sheets are retained beside the indexed heads and portraits.
-`tools/redesign_v2.py` rebuilds the design from `roster-baseline.json`; ordinary
-builds read the editable fighter JSON files, not that regeneration recipe.
-
-`tools/check_art_v2.py` runs during the asset build. It rejects clipping, detached
-clusters, disconnected limb layers, palette errors and missed planted-foot rows,
-and compares every sprite with pixels decoded from the final cartridge ROMs.
-Sparse shared strips preserve the pixels while fitting the existing C-ROM budget.
-Fighter definitions live in one cartridge translation unit, so strikers and the
-main cast share the same definitions. Super moves dim the arena while leaving the
-fighters visible. Private FIX lettering, vitality, spirit and win markers use the
-new palette and crisp pixel geometry.
-
-The four arenas are Mountain Dojo, Bangkok Riverside, Brooklyn Rooftop and Chimera
-Laboratory. Combat floors stay clear; scenery and spectators remain behind them.
-The opaque panoramas use one visible stage layer to protect the scanline budget.
-
-After packaging, install with:
-
-```sh
-python3 games/shadowleague/tools/install_v2.py --target /mnt/c/mame/neogeosdk
-```
-
-The installer stages and verifies both sets, then moves only the previous Shadow
-League files to `backups/shadowleague/<date>-before-v2-gameplay`. Other games and
-shared BIOS files are preserved. MVS/AES launchers select the fresh private ROMs
-and hashes. Controls and soft DIPs are kept; old save states are left in the backup.
+Existing speech: Piper `en_US-libritts_r-medium`, LibriTTS-R corpus (Koizumi et al.,
+2023), CC BY 4.0. The localized pass uses Kokoro-82M (Apache 2.0) with Koniwa
+(CC BY 3.0) and SIWIS (CC BY 4.0) attribution and full sources in
+`assets/authored/voices/voice-sources-sdk177.md`.

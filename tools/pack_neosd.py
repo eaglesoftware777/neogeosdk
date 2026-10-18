@@ -12,8 +12,10 @@ def pad(data, alignment):
 def build_image(parts, name, manufacturer, year, genre, ngh, hardware_alignment=True):
     if not all(parts.values()):
         raise ValueError("All six cartridge ROMs must be nonempty")
-    if len(parts["p1"]) > 0x100000:
-        raise ValueError("Banked P ROMs are not supported by this packer")
+    if len(parts["p1"]) > 0x800000:
+        raise ValueError("Standard P image exceeds the supported eight-MiB capacity")
+    if len(parts["p1"]) > 0x100000 and len(parts["p1"]) % 0x100000:
+        raise ValueError("Banked P images must contain complete one-MiB banks")
     if len(parts["c1"]) != len(parts["c2"]):
         raise ValueError("C1 and C2 must have equal lengths")
     title = name.encode("ascii")

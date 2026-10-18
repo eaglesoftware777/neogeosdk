@@ -72,8 +72,17 @@ def gen_xml():
 
     def sz(n): return f"0x{n:06x}" if n else "0x000000"
 
-    maincpu_area = 0x100000
+    maincpu_area = max(0x100000, p1_sz or 0)
     sprites_area = (c1_sz or 0) + (c2_sz or 0)
+    cfg = os.path.join(REPO_ROOT, 'games', GAME, 'game.cfg')
+    mapper = 'rom_fatfur2'
+    if os.path.isfile(cfg):
+        from pathlib import Path
+        sys.path.insert(0, os.path.join(REPO_ROOT, 'tools'))
+        from rom_budget import parse_cfg
+        mapper = parse_cfg(Path(cfg)).get('CART_MAPPER', mapper)
+    if mapper not in ('rom', 'rom_fatfur2'):
+        raise ValueError('Unsupported homebrew cartridge mapper: ' + mapper)
 
     xml = f"""\
 <?xml version="1.0"?>
@@ -96,7 +105,7 @@ def gen_xml():
         <sharedfeat name="release" value="MVS,AES" />
         <sharedfeat name="compatibility" value="MVS,AES" />
         <part name="cart" interface="neo_cart">
-            <feature name="slot" value="rom_fatfur2" />
+            <feature name="slot" value="{mapper}" />
             <dataarea name="maincpu" width="16" endianness="big" size="{sz(maincpu_area)}">
                 <rom loadflag="load16_word_swap" name="{GAME_ID}-p1.p1" offset="0x000000" size="{sz(p1_sz)}" crc="{p1_crc}" sha1="{p1_sha}" />
             </dataarea>

@@ -41,6 +41,7 @@ struct NGSpriteGroup {
     uint8_t mapStrips;
     uint8_t mapHeight;
     uint8_t mapRows;
+    uint8_t tileHigh;
 
     void NEOGEO_USER init(uint16_t firstSprite, uint8_t strips, uint8_t heightTiles,
                           uint16_t tileBase, uint8_t palette);
@@ -81,6 +82,7 @@ void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, ui
 void NEOGEO_USER ng_sprite_group_mark_dirty(NGSpriteGroup *g, uint8_t dirty_flags);
 void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_group_set_tile_base(NGSpriteGroup *g, uint16_t tileBase);
+void NEOGEO_USER ng_sprite_group_set_tile_address(NGSpriteGroup *g, uint32_t tileAddress);
 void NEOGEO_USER ng_sprite_group_set_tile_stride(NGSpriteGroup *g, uint16_t tileStride);
 void NEOGEO_USER ng_sprite_group_set_palette(NGSpriteGroup *g, uint8_t palette);
 void NEOGEO_USER ng_sprite_group_set_palette_map(NGSpriteGroup *g, const uint8_t *banks);

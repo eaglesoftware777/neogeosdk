@@ -335,6 +335,46 @@ static void test_tile_palette_maps(void)
     assert(!g.tilePalettes);
 }
 
+static void test_large_c_rom_addresses(void)
+{
+    NGSpriteGroup g;
+    static const uint8_t banks[] = {64u, 65u, 66u, 67u};
+    ng_sprite_group_init(&g, 300u, 2u, 2u, 0u, 7u);
+    ng_sprite_group_set_tile_address(&g, 0x1FFFEu);
+    ng_sprite_group_set_palette_map(&g, banks);
+    ng_sprite_group_flush(&g);
+    assert(ram[300u * 64u] == 0xFFFEu);
+    assert(ram[300u * 64u + 1u] == 0x4010u);
+    assert(ram[300u * 64u + 2u] == 0u);
+    assert(ram[300u * 64u + 3u] == 0x4220u);
+    assert(ram[300u * 64u + 5u] == NG_SPRITE_BLANK_ATTR);
+    ng_sprite_group_set_flip(&g, 1u, 1u);
+    ng_sprite_group_flush(&g);
+    assert(ram[300u * 64u] == 1u);
+    assert(ram[300u * 64u + 1u] == 0x4323u);
+    assert(ram[301u * 64u + 3u] == 0x4013u);
+    ng_sprite_group_set_tile_address(&g, 0x100000u);
+    assert(g.tileHigh == 1u && g.tileBase == 0xFFFEu);
+    ng_sprite_group_set_flip(&g, 0u, 0u);
+    ng_sprite_group_set_tile_address(&g, 0x7FFFEu);
+    ng_sprite_group_flush(&g);
+    assert(ram[300u * 64u + 1u] == 0x4070u);
+    assert(ram[300u * 64u + 3u] == 0x4280u);
+    ng_sprite_group_set_flip(&g, 1u, 1u);
+    ng_sprite_group_flush(&g);
+    assert(ram[300u * 64u + 1u] == 0x4383u);
+    assert(ram[301u * 64u + 3u] == 0x4073u);
+    ng_sprite_group_set_tile_address(&g, 123u);
+    ng_sprite_group_set_flip(&g, 0u, 0u);
+    ng_sprite_group_flush(&g);
+    assert(ram[300u * 64u + 1u] == 0x4000u);
+    ng_sprite_group_init(&g, 300u, 1u, 1u, 5u, 6u);
+    assert(g.tileHigh == 0u);
+    ng_sprite_group_set_tile_address(&g, 0xFFFFFu);
+    ng_sprite_group_flush(&g);
+    assert(ram[300u * 64u] == 0xFFFFu && ram[300u * 64u + 1u] == 0x06F0u);
+}
+
 static void test_character_palette_binding(void)
 {
     NGCharacter *c;
@@ -505,6 +545,7 @@ int main(void)
     test_window_parks_only_its_own_tail();
     test_palette_effects();
     test_tile_palette_maps();
+    test_large_c_rom_addresses();
     test_camera_pan();
     test_character_palette_binding();
     test_cached_character_updates();

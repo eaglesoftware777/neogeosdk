@@ -26,10 +26,16 @@ from pack_neosd import build_image  # noqa: E402
 
 PARTS = ("p1", "s1", "m1", "v1", "c1", "c2")
 
+def display(path):
+    try:
+        return str(Path(path).resolve().relative_to(ROOT))
+    except ValueError:
+        return str(Path(path).resolve())
 
-def pack(game, game_id, platform, name):
+
+def pack(game, game_id, platform, name, output_root=None):
     rom_dir = ROOT / "roms" / game
-    out = ROOT / "dist" / "neo" / game
+    out = Path(output_root) if output_root else ROOT / "dist" / "neo" / game
     mame = out / platform
     if mame.exists():
         shutil.rmtree(mame)
@@ -44,18 +50,18 @@ def pack(game, game_id, platform, name):
     image = build_image(parts, name, "Eagle Software", 2026, 5, int(game_id, 16))
     neo = out / f"{game}-{platform}.neo"
     neo.write_bytes(image)
-    print(f"neo: {neo.relative_to(ROOT)} ({len(image)} bytes), MAME set {mame.relative_to(ROOT)}")
+    print(f"neo: {display(neo)} ({len(image)} bytes), MAME set {display(mame)}")
 
 
-def manifest(game):
-    out = ROOT / "dist" / "neo" / game
-    lines = [f"# dist/neo/{game}: built by make neo GAME={game}", "# size  crc32     sha256  path"]
+def manifest(game, output_root=None):
+    out = Path(output_root) if output_root else ROOT / "dist" / "neo" / game
+    lines = [f"# {display(out)}: built for GAME={game}", "# size  crc32     sha256  path"]
     for path in sorted(p for p in out.rglob("*") if p.is_file() and p.name != "MANIFEST.txt"):
         data = path.read_bytes()
         lines.append(f"{len(data):9d}  {zlib.crc32(data) & 0xffffffff:08x}  "
                      f"{hashlib.sha256(data).hexdigest()}  {path.relative_to(out)}")
     (out / "MANIFEST.txt").write_text("\n".join(lines) + "\n")
-    print(f"neo: {(out / 'MANIFEST.txt').relative_to(ROOT)}")
+    print(f"neo: {display(out / 'MANIFEST.txt')}")
 
 
 def main():
@@ -65,13 +71,14 @@ def main():
     ap.add_argument("--platform", choices=("mvs", "aes"))
     ap.add_argument("--name", help="the title in the NeoSD header (33 characters at most)")
     ap.add_argument("--manifest", action="store_true")
+    ap.add_argument("--output-root", type=Path, help="Separate candidate directory; released packages remain intact")
     args = ap.parse_args()
     if args.manifest:
-        manifest(args.game)
+        manifest(args.game, args.output_root)
         return 0
     if not (args.game_id and args.platform and args.name):
         ap.error("--game-id, --platform and --name are needed to pack")
-    pack(args.game, args.game_id, args.platform, args.name[:33])
+    pack(args.game, args.game_id, args.platform, args.name[:33], args.output_root)
     return 0
 
 
