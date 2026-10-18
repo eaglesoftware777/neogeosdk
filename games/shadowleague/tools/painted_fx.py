@@ -25,12 +25,12 @@ def _key(rgb):
     return (r > 140) & (b > 140) & (g < 120) & (r - g > 70) & (b - g > 70)
 
 
-def frames():
-    rgb = np.asarray(Image.open(SHEET).convert('RGB'))
+def _sheet(path, kinds):
+    rgb = np.asarray(Image.open(path).convert('RGB'))
     h, w = rgb.shape[:2]
-    ch, cw = h // 4, w // 4
+    ch, cw = h // len(kinds), w // 4
     out = {}
-    for row, kind in enumerate(KINDS):
+    for row, kind in enumerate(kinds):
         cells = []
         for col in range(4):
             cell = rgb[row * ch:(row + 1) * ch, col * cw:(col + 1) * cw]
@@ -46,7 +46,7 @@ def frames():
                 cy, cx = ch / 2, cw / 2               # bursts grow from one point
             img = np.dstack([cell, np.where(solid, 255, 0)]).astype(np.uint8)
             size = (max(1, round(cw * scale)), max(1, round(ch * scale)))
-            small = np.asarray(Image.fromarray(img).resize(size, Image.Resampling.LANCZOS))
+            small = np.asarray(Image.fromarray(img).resize(size, Image.Resampling.NEAREST))
             canvas = np.zeros((SIZE, SIZE, 4), np.uint8)
             ox, oy = round(SIZE / 2 - cx * scale), round(SIZE / 2 - cy * scale)
             y0, x0 = max(0, oy), max(0, ox)
@@ -57,4 +57,10 @@ def frames():
             rgba.append(canvas)
         indices, banks, _ = quantize(np.vstack(rgba), bank_limit=1)
         out[kind] = ([indices[i * SIZE:(i + 1) * SIZE] for i in range(4)], banks[0])
+    return out
+
+
+def frames():
+    out=_sheet(SHEET,KINDS)
+    out.update(_sheet(SHEET.parents[1]/'sdk177/sources/special-effects.png',('fire','super')))
     return out

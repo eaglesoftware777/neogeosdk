@@ -9,10 +9,14 @@ from native_art_io import indexed,palette_tiles,fighter_source
 from strip_pack import StripPack
 
 class NativeArtTests(unittest.TestCase):
-    def test_native_title_repacking_keeps_eight_bank_limit_and_exact_colors(self):
-        source,colors=indexed(ROOT/'games/shadowleague/assets/authored/rebirth/cinema/title.png',(352,224))
-        local,banks,mapping=palette_tiles(source,colors,limit=8)
-        self.assertLessEqual(len(banks),8)
+    def test_native_title_repacking_keeps_card_bank_limit_and_exact_colors(self):
+        sys.path.insert(0,str(ROOT/'artbox'))
+        from rebirth_assets import CARD_BANKS
+        folder=ROOT/'games/shadowleague/assets/authored/rebirth/cinema'
+        project=json.loads((folder/'project.json').read_text())
+        source,colors=indexed(folder/project['title'],(352,224))
+        local,banks,mapping=palette_tiles(source,colors,limit=CARD_BANKS)
+        self.assertLessEqual(len(banks),CARD_BANKS)
         decoded=np.zeros((*source.shape,3),np.uint8)
         for y in range(0,224,16):
             for x in range(0,352,16):decoded[y:y+16,x:x+16]=banks[mapping[y//16,x//16]][local[y:y+16,x:x+16]]
@@ -27,15 +31,39 @@ class NativeArtTests(unittest.TestCase):
                 source=game/'assets/authored/fighters'/who
                 manifest=json.loads((source/'manifest.json').read_text())
                 names={fr[0] for seq in data['anims'].values() for fr in seq}
-                self.assertEqual(names,set(manifest['frames']))
+                self.assertTrue(names <= set(manifest['frames']))
+                source_data=fighter_source(source,names)
+                self.assertEqual(len(source_data['images']),len(names))
                 for name in names:
                     pose=manifest['frames'][name]
                     self.assertTrue((source/pose['file']).is_file())
-                    self.assertEqual(len(pose['layers']),6)
-                self.assertEqual(len(data['anims']['walk_f']),8)
-                if who!='jack':
-                    a=manifest['frames']['v2_step0']['foot_centres'];b=manifest['frames']['v2_step4']['foot_centres']
-                    self.assertLess(a['far_leg'][0],a['near_leg'][0]);self.assertGreater(b['far_leg'][0],b['near_leg'][0])
+                    if 'layers' in pose:self.assertEqual(len(pose['layers']),6)
+                    pixels,_=indexed(source/pose['file'],tuple(manifest['canvas']))
+                    self.assertFalse(pixels[0].any() or pixels[-1].any() or pixels[:,0].any() or pixels[:,-1].any())
+                self.assertEqual(len(data['anims']['walk_f']),6)
+
+    def test_large_canvas_keeps_last_tile_and_palette_bits(self):
+        packed=[]
+        def place(image):
+            packed.append(image.copy());return 0x20000
+        pack=StripPack(place)
+        image=np.zeros((192,192),np.uint8);image[160:191,176:191]=7
+        banks=np.zeros((12,12),np.uint8);banks[10,11]=3;banks[11,11]=2
+        self.assertEqual(pack.frame(image,banks),[(71,0,0x2b)])
+        np.testing.assert_array_equal(packed[0],image[160:192,176:192])
+        with self.assertRaisesRegex(ValueError,'160x160 or 192x192'):pack.frame(np.zeros((176,176),np.uint8))
+
+    def test_large_flat_frame_has_explicit_stable_root(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            folder=Path(temporary);data=np.zeros((192,192),np.uint8)
+            data[40:174,20:172]=1
+            im=Image.fromarray(data,'P');im.putpalette([0,0,0,239,156,90]+[0]*762);im.save(folder/'guard.png',transparency=0)
+            d={'canvas':[192,192],'anchor':[96,173],'frames':{'guard':{'file':'guard.png','root':[101,173],'hurt':[[-20,0,40,100]],'hit':{},'contacts':[]}}}
+            (folder/'manifest.json').write_text(json.dumps(d))
+            source=fighter_source(folder,['guard'])
+            self.assertEqual(source['canvas'],[192,192]);self.assertEqual(source['anchor'],[96,173])
+            self.assertEqual(source['metadata'][0]['root'],[101,173])
+
     def test_shared_strip_retains_independent_palette_and_address_bits(self):
         pack=StripPack(lambda image:0x10002)
         image=np.zeros((160,160),np.uint8);image[32:64,48:64]=1

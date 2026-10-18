@@ -1,0 +1,17 @@
+[game-check] GAME=shadowleague (from games/shadowleague/game.cfg)
+python3 tools/level_check.py --game shadowleague
+level_check: shadowleague has no level exporter (games/shadowleague/tools/level_export.c); nothing to check
+api-freeze: 315 frozen prototypes present, 65 added since
+python3 bios/tools/build.py --cc "/mnt/c/neogeo/x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-gcc" --wlaz80 "wla-z80" --wlalink "wlalink" --install bios/test_roms
+Generated /mnt/c/neogeo/shadowleague-sdk177-20261017/bios/sfix.sfix (131072 bytes)
+Generated /mnt/c/neogeo/shadowleague-sdk177-20261017/bios/000-lo.lo (131072 bytes)
+[neogeosdk] target=test-precheck game=shadowleague game_id=781 platform=mvs rom_dir=roms/shadowleague hashpath=/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle/shadowleague;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash_eagle;/mnt/c/neogeo/shadowleague-sdk177-20261017/hash
+python3 tools/rom_budget.py --game shadowleague --id 781 --rom-dir roms/shadowleague --cfg games/shadowleague/game.cfg
+ROM budget: shadowleague (781), roms/shadowleague, budgets from games/shadowleague/game.cfg
+  ROM     used (bytes)    capacity (bytes)     fill
+  P          2,101,752           3,145,728    66.8%
+  C         10,451,712          16,777,216    62.3%  81,654 tiles
+  S             54,272             131,072    41.4%  1,696 tiles
+  M              5,940              32,768    18.1%
+  V          8,111,104           8,388,608    96.7%
+  Palette banks used: not available (the build does not record them)

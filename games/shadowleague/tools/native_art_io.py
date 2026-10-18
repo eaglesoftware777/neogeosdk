@@ -92,18 +92,22 @@ def palette_tiles(data,colors,limit=4,with_indices=False):
 def fighter_source(folder,names):
     folder=Path(folder);manifest=json.loads((folder/'manifest.json').read_text())
     frames=manifest['frames'];result=[];metadata=[];colors=None
-    if manifest.get('canvas')!=[160,160] or manifest.get('anchor')!=[80,141]:raise ValueError('Authored fighter canvas/anchor mismatch')
+    canvas=manifest.get('canvas');anchor=manifest.get('anchor')
+    if canvas not in ([160,160],[192,192]) or anchor!=[canvas[0]//2,canvas[1]-19]:raise ValueError('Authored fighter canvas/anchor mismatch')
+    width,height=canvas;baseline=anchor[1]
     from scipy import ndimage
     from PIL import Image
     required_layers={'far_arm','far_leg','torso','head_hair','near_leg','near_arm'}
     for name in names:
         if name not in frames:raise ValueError(f'{folder}: missing authored pose {name}; procedural fallback forbidden')
-        fr=frames[name];data,pal=indexed(folder/fr['file'],(160,160))
+        fr=frames[name];data,pal=indexed(folder/fr['file'],tuple(canvas))
         if colors is not None and not np.array_equal(pal,colors):raise ValueError('Fighter palette changes between poses')
         colors=pal
         if any(edge.any() for edge in (data[0],data[-1],data[:,0],data[:,-1])):raise ValueError(name+': clipped source')
         if not fr.get('hurt') or 'hit' not in fr:raise ValueError(name+': missing authored collision metadata')
         if 'contacts' not in fr:raise ValueError(name+': missing foot contact metadata')
+        root=fr.get('root',anchor)
+        if len(root)!=2 or not (0<=root[0]<width and 0<=root[1]<height):raise ValueError(name+': frame anchor outside canvas')
         for layer in fr['contacts']:
             if layer not in ('far_leg','near_leg'):raise ValueError(name+': invalid planted-foot layer')
         if 'layers' in fr:
@@ -111,25 +115,25 @@ def fighter_source(folder,names):
             if set(fr['layers'])!=required_layers:raise ValueError(name+': six anatomy layers required')
             flat=np.zeros_like(data)
             for layer in ('far_arm','far_leg','torso','head_hair','near_leg','near_arm'):
-                part,part_pal=indexed(folder/fr['layers'][layer],(160,160))
+                part,part_pal=indexed(folder/fr['layers'][layer],tuple(canvas))
                 if not np.array_equal(part_pal,pal):raise ValueError(name+': layer palette mismatch')
                 _,components=ndimage.label(part>0,np.ones((3,3),np.uint8))
                 if not 1<=components<=(2 if layer=='head_hair' else 1):raise ValueError(name+': disconnected '+layer)
                 flat[part>0]=part[part>0]
             if not np.array_equal(flat,data):raise ValueError(name+': flattening differs from source layers')
             for layer in fr['contacts']:
-                leg,_=indexed(folder/fr['layers'][layer],(160,160))
-                if np.where(leg>0)[0].max()!=141:raise ValueError(name+': sole misses baseline 141')
-        elif fr['contacts'] and np.where(data>0)[0].max()!=141:
+                leg,_=indexed(folder/fr['layers'][layer],tuple(canvas))
+                if np.where(leg>0)[0].max()!=baseline:raise ValueError(name+f': sole misses baseline {baseline}')
+        elif fr['contacts'] and np.where(data>0)[0].max()!=baseline:
             # Single-layer drawings: a planted pose stands on the baseline.
-            raise ValueError(name+': sole misses baseline 141')
+            raise ValueError(name+f': sole misses baseline {baseline}')
         for boxes in [fr['hurt']]+list(fr['hit'].values()):
             if len(boxes)>3:raise ValueError(name+': more than three collision boxes')
             for box in boxes:
                 if len(box)!=4 or not (-128<=box[0]<=127 and -128<=box[1]<=127 and 1<=box[2]<=255 and 1<=box[3]<=255):raise ValueError(name+': invalid hardware collision rectangle')
         result.append(data);metadata.append(fr)
     local,banks,tile_maps,indices=palette_tiles(np.vstack(result),colors,limit=4,with_indices=True)
-    return {'images':[local[i*160:(i+1)*160] for i in range(len(result))],
+    return {'canvas':canvas,'anchor':anchor,'images':[local[i*height:(i+1)*height] for i in range(len(result))],
             'source_images':result,'source_palette':colors,'metadata':metadata,
             'banks':banks,'bank_indices':indices,
-            'tile_maps':[tile_maps[i*10:(i+1)*10] for i in range(len(result))]}
+            'tile_maps':[tile_maps[i*(height//16):(i+1)*(height//16)] for i in range(len(result))]}

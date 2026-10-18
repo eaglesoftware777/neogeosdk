@@ -3,50 +3,50 @@
     352,
     224
   ],
-  "title": "title.png",
+  "title": "title-sdk177.png",
   "cards": [
     {
       "file": "summons.png",
-      "duration": 210,
+      "duration": 180,
       "caption": [
         "NEO TOKYO. THE YEAR IS 2099.",
         "FORTY-FOUR INVITATIONS. ONE SECRET."
       ]
     },
     {
-      "file": "kenji.png",
-      "duration": 150,
+      "file": "kenji-sdk177.png",
+      "duration": 180,
       "caption": [
         "KENJI ARATA / KARATE",
         "A STOLEN LEGACY. A VOW TO RETURN."
       ]
     },
     {
-      "file": "jack.png",
-      "duration": 150,
+      "file": "ryuhei-sdk177.png",
+      "duration": 180,
+      "caption": [
+        "RYUHEI GENDA / JUDO",
+        "THE STRONGEST GRIP. THE CALMEST MIND."
+      ]
+    },
+    {
+      "file": "jack-sdk177.png",
+      "duration": 180,
       "caption": [
         "JACK MERCER / BOXING",
         "ONE LAST FIGHT. NO MORE FIXED ODDS."
       ]
     },
     {
-      "file": "amara.png",
-      "duration": 150,
-      "caption": [
-        "AMARA SILVA / CAPOEIRA",
-        "FOLLOW THE RHYTHM. BREAK THE CIRCLE."
-      ]
-    },
-    {
-      "file": "protocol.png",
+      "file": "claire-sdk177.png",
       "duration": 180,
       "caption": [
-        "BENEATH THE LEAGUE: PROJECT CHIMERA.",
-        "THE PRIZE WAS NEVER MEANT FOR YOU."
+        "CLAIRE MOREAU / SAVATE",
+        "EVERY STEP SETS THE NEXT STRIKE."
       ]
     },
     {
-      "file": "challenge.png",
+      "file": "title-sdk177.png",
       "duration": 150,
       "caption": [
         "ONE FIGHTER. OR THREE AND A STRIKER.",

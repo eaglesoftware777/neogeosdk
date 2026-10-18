@@ -2786,6 +2786,21 @@
         "hk1",
         18
       ]
+    ],
+    "palm_wave": [
+      [
+        "sp1_1",
+        9
+      ],
+      [
+        "sp1_2",
+        3,
+        "spawn"
+      ],
+      [
+        "sp1_1",
+        22
+      ]
     ]
   },
   "moves": [
@@ -3267,6 +3282,38 @@
       "hitstop": 10,
       "hit_sound": "hit_heavy",
       "limb": "near_ankle"
+    },
+    {
+      "name": "RESSEN PALM WAVE",
+      "kind": "special",
+      "motion": "qcf",
+      "buttons": "B",
+      "stance": "stand",
+      "anim": "palm_wave",
+      "level": "mid",
+      "damage": 0,
+      "projectile": 1,
+      "range": 210,
+      "cancel": "super",
+      "sound": "special",
+      "hit_sound": "hit_heavy",
+      "window": 24
+    },
+    {
+      "name": "RESSEN PALM WAVE",
+      "kind": "special",
+      "motion": "qcf",
+      "buttons": "D",
+      "stance": "stand",
+      "anim": "palm_wave",
+      "level": "mid",
+      "damage": 0,
+      "projectile": 1,
+      "range": 210,
+      "cancel": "super",
+      "sound": "special",
+      "hit_sound": "hit_heavy",
+      "window": 24
     }
   ],
   "cpu": {
@@ -3287,5 +3334,28 @@
     "family": "karate",
     "footwear": "bare",
     "personality": "Traditional Karate: gi, ivory and red, karate guard"
-  }
+  },
+  "projectiles": [
+    {
+      "anim": "idle",
+      "speed": 5,
+      "spawn": [
+        42,
+        70
+      ],
+      "damage": 64,
+      "chip": 4,
+      "hitstun": 22,
+      "blockstun": 16,
+      "life": 64,
+      "level": "mid",
+      "box": [
+        -13,
+        -10,
+        26,
+        20
+      ]
+    }
+  ],
+  "effect": "energy"
 }

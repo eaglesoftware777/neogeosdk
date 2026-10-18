@@ -8,6 +8,10 @@ local a = dofile(output .. '/layout.lua')
 local aes = os.getenv('SLF_PLATFORM') == 'aes'
 local team = os.getenv('SLF_TEAM') == '1'
 local attract = os.getenv('SLF_ATTRACT_ONLY') == '1'
+local training=os.getenv('SLF_TRAINING')=='1'
+local options=os.getenv('SLF_OPTIONS')=='1'
+local option_ticks,options_done=0,false
+local ui=assert(io.open(output..'/ui-telemetry.jsonl','w'))
 local wanted=tonumber(os.getenv('SLF_FIGHTER') or '')
 local log = assert(io.open(output .. '/telemetry.jsonl', 'w'))
 local banks = a.bank_seen and assert(io.open(output .. '/bank-telemetry.jsonl', 'w')) or nil
@@ -61,6 +65,7 @@ local moves = {
 }
 local seq, pos, hold, next_move = nil, 1, 0, 1
 local selection_ticks,selection_moves=0,0
+local select_capture_tick,select_capture_count=0,0
 emu.register_frame_done(function()
     local t = machine.time:as_double()
     frame = frame + 1
@@ -69,16 +74,32 @@ emu.register_frame_done(function()
     local st = (t > 12 and t < 12.25)
     input('1 Player Start', st)
     input('P1 Start', st)
-    if wanted and t>16 and a.select_live and memory:read_u8(a.select_live)~=0 then
+    local home=a.home_live and memory:read_u8(a.home_live) or 0
+    if aes and home==1 and a.home_selection then
+        local target=(options and not options_done) and 3 or (training and 2 or 0)
+        local selected=memory:read_u8(a.home_selection)
+        if selected~=target then pad(frame%16<8 and 2 or 0) else pad(frame%20<10 and 16 or 0) end
+    elseif aes and home==2 and options then
+        option_ticks=option_ticks+1
+        if option_ticks<128 then pad(option_ticks%16<8 and 8 or 0)
+        else options_done=true;pad(option_ticks%20<10 and 16 or 0) end
+    elseif wanted and t>16 and a.select_live and memory:read_u8(a.select_live)~=0 then
         -- One held direction edge per sixteen hardware frames. No RAM writes;
         -- the final fighter pointer is checked by the host against its ELF.
-        if selection_moves<wanted then
+        if selection_ticks<64 then pad(0)
+        elseif a.select_cursor and a.wall_start and a.wall_len then
+            local current=memory:read_u8(a.select_cursor)
+            local function row(index)
+                local r=0
+                while r<6 and index>=memory:read_u8(a.wall_start+r+1) do r=r+1 end
+                return r
+            end
+            if current==wanted then pad(selection_ticks%20<10 and 16 or 0)
+            else pad(selection_ticks%16<8 and (row(current)==row(wanted) and 8 or 2) or 0) end
+        elseif selection_moves<wanted then
             pad(selection_ticks%16<8 and 8 or 0)
             if selection_ticks%16==15 then selection_moves=selection_moves+1 end
         else pad(selection_ticks%20<10 and 16 or 0) end
-        if selection_ticks==20 or selection_ticks==44 then
-            screen:snapshot(string.format('%s/select_%03d.png', output, selection_ticks))
-        end
         selection_ticks=selection_ticks+1
     elseif team and t > 14 and t < 14.25 then
         pad(8)
@@ -97,15 +118,28 @@ emu.register_frame_done(function()
         screen:snapshot(string.format('%s/shot_%03d.png', output, math.floor(t)))
         next_shot = next_shot + (attract and 1 or (t < 40 and 4 or 3))
     end
+    if a.select_live and memory:read_u8(a.select_live)~=0 then
+        select_capture_tick=select_capture_tick+1
+        if select_capture_tick%16==0 and select_capture_tick<=96 then
+            screen:snapshot(string.format('%s/selection_%03d.png',output,select_capture_count))
+            select_capture_count=select_capture_count+1
+        end
+    else select_capture_tick=0 end
+    if a.home_live and frame%4==0 then
+        ui:write(string.format('{"t":%.3f,"screen":%d,"difficulty":%d,"rounds":%d,"seconds":%d}\n',t,
+            memory:read_u8(a.home_live),a.home_difficulty and memory:read_u8(a.home_difficulty) or 0,
+            a.home_rounds and memory:read_u8(a.home_rounds) or 0,
+            a.home_seconds and memory:read_u8(a.home_seconds) or 0));ui:flush()
+    end
     if frame % 30 == 0 then
         if banks then
             banks:write(string.format('{"t":%.2f,"seen":%d,"copies":%d,"errors":%d,"card":%d}\n',
                 t,memory:read_u8(a.bank_seen),memory:read_u16(a.bank_copies),memory:read_u16(a.bank_errors),memory:read_u8(a.presentation)))
             banks:flush()
         end
-        log:write(string.format('{"t":%.2f,"def0_pointer":%d,"state":%d,"round":%d,"secs":%d,"life0":%d,"life1":%d,' ..
+        log:write(string.format('{"t":%.2f,"training":%d,"difficulty1":%d,"def0_pointer":%d,"state":%d,"round":%d,"secs":%d,"life0":%d,"life1":%d,' ..
             '"x0":%d,"x1":%d,"st0":%d,"st1":%d,"wins0":%d,"wins1":%d,"winner":%d,"frame":%d,"mode":%d,"active0":%d,"active1":%d,"count0":%d,"count1":%d,"assist0":%d,"assist1":%d,"maxlife0":%d,"maxlife1":%d,"joy0":%d,"cpu0":%d,"cpu1":%d}\n',
-            t, memory:read_u32(a.match+a.def0), u8(a.state), u8(a.round), u8(a.seconds), u16(a.life0), u16(a.life1), s32(a.x0) // 256,
+            t, u8(a.training), u8(a.difficulty1), memory:read_u32(a.match+a.def0), u8(a.state), u8(a.round), u8(a.seconds), u16(a.life0), u16(a.life1), s32(a.x0) // 256,
             s32(a.x1) // 256, u8(a.st0), u8(a.st1), u8(a.wins0), u8(a.wins1), u8(a.winner),
             memory:read_u32(a.match + a.frame), u8(a.mode), u8(a.active0), u8(a.active1),
             u8(a.count0), u8(a.count1), u8(a.assist0), u8(a.assist1),

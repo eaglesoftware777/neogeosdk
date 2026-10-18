@@ -9,14 +9,17 @@ GAME=ROOT/'games/shadowleague'
 def main():
  ap=argparse.ArgumentParser(description=__doc__);ap.add_argument('--platform',choices=['aes','mvs','both'],default='both')
  ap.add_argument('--reuse-assets',action='store_true',help='Code-only rebuild after unchanged C/S/M/V assets have passed a full build')
+ ap.add_argument('--output-root',type=Path,default=ROOT/'dist/candidates/shadowleague/rebirth-banked')
+ ap.add_argument('--label',default='rebirth')
  args=ap.parse_args()
- out=GAME/'build/elf/rebirth-banked';out.mkdir(parents=True,exist_ok=True)
- destination=ROOT/'dist/candidates/shadowleague/rebirth-banked'
+ if not args.label or any(c not in 'abcdefghijklmnopqrstuvwxyz0123456789-' for c in args.label):ap.error('Invalid artifact label')
+ out=GAME/'build/elf'/args.label;out.mkdir(parents=True,exist_ok=True)
+ destination=args.output_root.resolve()
  platforms=['aes','mvs'] if args.platform=='both' else [args.platform]
  for p in platforms:
   targets=['781-p1.p1','hash'] if args.reuse_assets else ['all','hash']
   subprocess.run(['make','GAME=shadowleague','PLATFORM='+p]+targets,cwd=ROOT,check=True)
-  shutil.copy2(ROOT/'out/game',out/(p+'-rebirth-game'))
+  shutil.copy2(ROOT/'out/game',out/(p+'-'+args.label+'-game'))
   subprocess.run([sys.executable,'tools/make_neo.py','--game','shadowleague','--game-id','781','--platform',p,'--name','Shadow League Fighting','--output-root',str(destination)],cwd=ROOT,check=True)
   package=destination/p/'roms/shadowleague'
   for rom in package.glob('781-*'):

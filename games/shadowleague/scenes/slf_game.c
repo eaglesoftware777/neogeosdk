@@ -18,6 +18,7 @@ static NGFMatch s_match;
 static uint8_t s_def[2];
 static uint8_t s_pick[2];
 static uint8_t s_roster[2][4], s_team_mode, s_slot;
+static uint8_t s_practice_pick;
 
 static const uint8_t k_sound_map[10] = {
     0, SLF_SFX_HIT_LIGHT, SLF_SFX_HIT_HEAVY, SLF_SFX_BLOCK, SLF_SFX_SPECIAL,
@@ -38,14 +39,13 @@ uint8_t NEOGEO_USER slf_start_pending(void)
 
 static uint8_t NEOGEO_USER cpu_level(uint8_t step)
 {
-    uint8_t lv = ng_sys_is_mvs() ? (uint8_t)(2u + ng_dip_option(0) * 2u) : 4u;
-    lv = (uint8_t)(lv + step);
-    return lv > 9u ? 9u : lv;
+    (void)step;
+    return ng_sys_is_mvs() ? slf_difficulty_from_dip(ng_dip_option(0)) : slf_home_difficulty;
 }
 
 static uint8_t NEOGEO_USER rounds_to_win(void)
 {
-    uint8_t r = ng_sys_is_mvs() ? (uint8_t)(ng_dip_option(1) + 1u) : 2u;
+    uint8_t r = ng_sys_is_mvs() ? (uint8_t)(ng_dip_option(1) + 1u) : slf_home_rounds;
     return r ? (r > 3u ? 3u : r) : 2u;
 }
 
@@ -185,7 +185,8 @@ static void NEOGEO_USER select_screen(uint8_t humans)
     slf_fighter_bank(1u, 1u);
     {
         static const char *const headings[4] = {"SELECT YOUR CAPTAIN", "SELECT SECOND FIGHTER", "SELECT THIRD FIGHTER", "SELECT YOUR ASSIST"};
-        slf_puts_tall_center(0u, s_team_mode ? headings[s_slot] : "SELECT YOUR FIGHTER", SLF_TALL_GOLD);
+        slf_puts_tall_center(0u, s_practice_pick == 1u ? "TRAINING FIGHTER" : s_practice_pick == 2u ?
+                            "TRAINING PARTNER" : s_team_mode ? headings[s_slot] : "SELECT YOUR FIGHTER", SLF_TALL_GOLD);
     }
     for (;;) {
         slf_frame();
@@ -384,7 +385,7 @@ static void NEOGEO_USER move_voice(const NGFMatch *m, uint8_t who, uint8_t def, 
     }
 }
 
-static void NEOGEO_USER play_events(NGFMatch *m, const uint8_t *defs)
+void NEOGEO_USER slf_combat_events(NGFMatch *m, const uint8_t *defs)
 {
     NGFEvent e;
     uint8_t i;
@@ -429,8 +430,11 @@ static void NEOGEO_USER play_events(NGFMatch *m, const uint8_t *defs)
             if (e.who < 2u) grunt(defs[e.who], SLF_GRUNT_KO);
             break;
         case NGF_EV_MOVE:
-            if (e.data == NGF_KIND_SUPER) slf_sfx(SLF_SFX_SUPER);
-            else if (e.data == NGF_KIND_SPECIAL) slf_sfx(SLF_SFX_SPECIAL);
+            if (e.data == NGF_KIND_SUPER) { slf_sfx(SLF_SFX_SUPER); slf_fx_spawn(4u, sx, (int16_t)(SLF_FLOOR_Y - 66)); }
+            else if (e.data == NGF_KIND_SPECIAL) {
+                slf_sfx(SLF_SFX_SPECIAL);
+                if (e.who < 2u && slf_fighter_fx[defs[e.who]]) slf_fx_spawn(3u, (int16_t)(sx + (m->f[e.who].facing_left ? -28 : 28)), (int16_t)(SLF_FLOOR_Y - 64));
+            }
             else if (e.data != NGF_KIND_THROW) slf_sfx(SLF_SFX_WHOOSH);
             if (e.who < 2u) move_voice(m, e.who, defs[e.who], e.data);
             break;
@@ -476,8 +480,9 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
             ngf_striker_set(m, side, slf_fighter_defs[s_roster[side][3]]);
         }
     }
-    ngf_set_cpu(m, 0u, lv0);
-    ngf_set_cpu(m, 1u, lv1);
+    if (lv0) ngf_set_cpu_difficulty(m, 0u, lv0); else ngf_set_cpu(m, 0u, 0u);
+    if (lv1) ngf_set_cpu_difficulty(m, 1u, lv1); else ngf_set_cpu(m, 1u, 0u);
+    ngf_set_round_seconds(m, ng_sys_is_mvs() ? slf_seconds_from_dip(ng_dip_option(2)) : slf_home_seconds);
     if (mode == MODE_DEMO) slf_puts_center(22u, "DEMO PLAY", SLF_PAL_GOLD);
     for (;;) {
         slf_frame();
@@ -485,7 +490,7 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
         if (mode == MODE_ARCADE && NEO_REGISTER8(SLF_P2_FLAG)) return RESULT_CHALLENGER;
         ngf_match_step(m, slf_joy(0u), slf_joy(1u));
         if (s_feedback_timer && !--s_feedback_timer) slf_clear_rows(7u, 9u);
-        play_events(m, active_def);
+        slf_combat_events(m, active_def);
         if (m->state != last_state || m->round != last_round) {
             if (m->state == NGF_M_FIGHT && last_state == NGF_M_INTRO) counter_clear = 30u;
             if (m->state != NGF_M_OVER) announce(m, m->state == NGF_M_FIGHT ? NGF_M_FIGHT : m->state);
@@ -603,6 +608,21 @@ void NEOGEO_USER slf_run(void)
 {
     uint8_t ladder[8];
     uint8_t stage;
+    slf_audio_demo(0u);
+    if (!ng_sys_is_mvs()) {
+        uint8_t choice = slf_home_menu();
+        if (choice == 1u) { versus(); return; }
+        if (choice == 2u) {
+            uint8_t first;
+            s_team_mode = 0u; s_practice_pick = 1u;
+            select_roster(1u); first = s_pick[0];
+            s_practice_pick = 2u;
+            select_roster(1u);
+            s_practice_pick = 0u;
+            slf_training_run(first, s_pick[0]);
+            return;
+        }
+    }
     NEO_REGISTER8(SLF_P2_FLAG) = 0u;
     choose_format();
     select_roster(1u);
@@ -664,6 +684,14 @@ void NEOGEO_USER slf_run(void)
     }
 }
 
+static const uint8_t featured_cast[4] = {0u, 12u, 3u, 4u};
+static uint8_t NEOGEO_USER featured_fighter(uint8_t avoid)
+{
+    uint8_t k = (uint8_t)(slf_rand() & 3u);
+    if (featured_cast[k] == avoid) k = (uint8_t)((k + 1u) & 3u);
+    return featured_cast[k];
+}
+
 static uint8_t NEOGEO_USER attract_story(void)
 {
     uint8_t card;
@@ -687,7 +715,7 @@ static uint8_t NEOGEO_USER attract_story(void)
 static uint8_t NEOGEO_USER attract_tutorial(void)
 {
     uint16_t t;
-    uint8_t a = ready_fighter(0xFFu), b = ready_fighter(a);
+    uint8_t a = featured_fighter(0xFFu), b = featured_fighter(a);
     slf_scene_begin();
     slf_music(SLF_TRACK_TITLE);
     slf_story_show(SLF_CARD_MODE);
@@ -717,8 +745,8 @@ static uint8_t NEOGEO_USER attract_tutorial(void)
 static uint8_t NEOGEO_USER attract_showcase(void)
 {
     uint8_t k, f = 0xFFu;
-    for (k = 0u; k < 3u; k++) {
-        f = ready_fighter(f);
+    for (k = 0u; k < 4u; k++) {
+        f = featured_cast[k];
         uint16_t t;
         slf_scene_begin();
         slf_fighter_palettes(f, 0u, f, 0u);
@@ -762,16 +790,18 @@ static uint8_t NEOGEO_USER attract_title(void)
 
 void NEOGEO_USER slf_run_attract(void)
 {
+    slf_audio_demo(1u);
     for (;;) {
         if (attract_title()) break;
         if (attract_story()) break;
         if (attract_tutorial()) break;
         if (attract_showcase()) break;
-        s_def[0] = ready_fighter(0xFFu);
-        s_def[1] = ready_fighter(s_def[0]);
+        s_def[0] = featured_fighter(0xFFu);
+        s_def[1] = featured_fighter(s_def[0]);
         if (run_match(5u, 5u, MODE_DEMO) == RESULT_ABORT) break;
     }
     if (NEO_REGISTER8(SLF_P2_FLAG)) {
+        slf_audio_demo(0u);
         versus();
     }
 }

@@ -17,6 +17,9 @@
  */
 #include <stdint.h>
 #include "ng_defs.h"
+#define NGF_VERSION_STRING "1.7.7"
+#define NGF_DIFFICULTY_LEVELS 7u
+#define NGF_DIFFICULTY_DEFAULT 3u
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -128,6 +131,7 @@ enum { NGF_LV_MID, NGF_LV_HIGH, NGF_LV_LOW, NGF_LV_OVERHEAD, NGF_LV_THROW, NGF_L
 #define NGF_ON_KNOCKDOWN  0x01u
 #define NGF_ON_LAUNCH     0x02u
 #define NGF_ON_WALLBOUNCE 0x04u
+#define NGF_ON_LIFT       0x08u   /* a throw holds the opponent overhead before release */
 #define NGF_CANCEL_CHAIN   0x01u   /* into a later normal */
 #define NGF_CANCEL_SPECIAL 0x02u
 #define NGF_CANCEL_SUPER   0x04u
@@ -243,7 +247,7 @@ enum { NGF_MODE_1V1 = 0, NGF_MODE_3V3 = 1, NGF_MODE_TAG = 2 };
 /* Moves the CPU picks by role, found once per fighter. */
 enum { NGF_CPU_POKE, NGF_CPU_LOW, NGF_CPU_JAB, NGF_CPU_HEAVY, NGF_CPU_SWEEP, NGF_CPU_AIR, NGF_CPU_AIR2,
        NGF_CPU_ANTI_AIR, NGF_CPU_RUSH, NGF_CPU_SPECIAL, NGF_CPU_SPECIAL2, NGF_CPU_SUPER, NGF_CPU_THROW,
-       NGF_CPU_ROLL, NGF_CPU_BLOW, NGF_CPU_ROLES };
+       NGF_CPU_ROLL, NGF_CPU_BLOW, NGF_CPU_PROJECTILE, NGF_CPU_ROLES };
 
 typedef struct {
     uint8_t seq[56];          /* queued raw inputs, played before any hold */
@@ -254,6 +258,7 @@ typedef struct {
     uint8_t pad;
     const NGFFighterDef *learned;
     uint8_t role[NGF_CPU_ROLES + 1];
+    uint8_t difficulty;       /* calibrated 1..7, or 0 for the legacy level API */
 } NGFCpu;
 
 typedef struct {
@@ -288,7 +293,19 @@ typedef struct {
     const NGFFighterDef *assist[2];
     uint8_t assist_uses[2];
     NGFStriker striker[2];                    /* striker summon actors */
+    uint8_t training;                         /* practice damage cannot cause a KO */
+    uint8_t round_seconds;
 } NGFMatch;
+
+#define NGF_TRAIN_RECORD_FRAMES 240u
+enum { NGF_DUMMY_STAND, NGF_DUMMY_GUARD, NGF_DUMMY_CROUCH, NGF_DUMMY_JUMP,
+       NGF_DUMMY_CPU, NGF_DUMMY_PLAYER2, NGF_DUMMY_RECORD, NGF_DUMMY_PLAYBACK,
+       NGF_DUMMY_COUNT };
+typedef struct {
+    uint8_t dummy, infinite_power, recover_life;
+    uint8_t record_size, record_pos, idle[2];
+    uint8_t record[NGF_TRAIN_RECORD_FRAMES];
+} NGFTraining;
 
 #define NGF_ROUND_SECONDS 60u
 #define NGF_SECOND_FRAMES 60u
@@ -296,9 +313,16 @@ typedef struct {
 void     NEOGEO_USER ngf_match_init(NGFMatch *m, const NGFFighterDef *p1, const NGFFighterDef *p2,
                                     int16_t stage_w, uint16_t seed);
 void     NEOGEO_USER ngf_round_start(NGFMatch *m);
+uint8_t  NEOGEO_USER ngf_set_round_seconds(NGFMatch *m, uint8_t seconds);
 /* One frame: raw controller bits for each side (ignored for CPU sides). */
 void     NEOGEO_USER ngf_match_step(NGFMatch *m, uint8_t raw1, uint8_t raw2);
 void     NEOGEO_USER ngf_set_cpu(NGFMatch *m, uint8_t who, uint8_t level);  /* level 0 = human */
+uint8_t  NEOGEO_USER ngf_set_cpu_difficulty(NGFMatch *m, uint8_t who, uint8_t difficulty);
+uint8_t  NEOGEO_USER ngf_cpu_reaction_frames(uint8_t difficulty);
+void     NEOGEO_USER ngf_training_init(NGFTraining *t, NGFMatch *m);
+void     NEOGEO_USER ngf_training_reset(NGFTraining *t, NGFMatch *m);
+uint8_t  NEOGEO_USER ngf_training_set_dummy(NGFTraining *t, NGFMatch *m, uint8_t dummy);
+void     NEOGEO_USER ngf_training_step(NGFTraining *t, NGFMatch *m, uint8_t raw1, uint8_t raw2);
 uint8_t  NEOGEO_USER ngf_cpu_input(NGFMatch *m, uint8_t who);
 uint8_t  NEOGEO_USER ngf_pop_event(NGFMatch *m, NGFEvent *out);
 const NGFFrame *NEOGEO_USER ngf_fighter_frame(const NGFFighter *f);

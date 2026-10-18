@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include "sdk/neogeo.h"
 #include "sdk/2d_engine/ng_fight.h"
+#include "games/shadowleague/scenes/slf_settings.h"
 
 #define SLF_START_FLAG   0x100700u   /* BIOS handshake: a credited start */
 #define SLF_P2_FLAG      0x100701u   /* player 2 pressed start during play */
@@ -80,6 +81,12 @@ void     NEOGEO_USER slf_fx_spawn(uint8_t kind, int16_t screen_x, int16_t screen
 void     NEOGEO_USER slf_fx_reset(void);
 void     NEOGEO_USER slf_music(uint8_t track);
 void     NEOGEO_USER slf_sfx(uint8_t id);
+void     NEOGEO_USER slf_audio_demo(uint8_t demo);
+void     NEOGEO_USER slf_combat_events(NGFMatch *m, const uint8_t *defs);
+uint8_t  NEOGEO_USER slf_home_menu(void);
+void     NEOGEO_USER slf_training_run(uint8_t fighter, uint8_t partner);
+extern uint8_t slf_home_difficulty, slf_home_rounds, slf_home_seconds;
+extern volatile uint8_t slf_home_live, slf_training_active;
 void     NEOGEO_USER slf_title_draw(void);
 void     NEOGEO_USER slf_title_tick(uint16_t tick);
 uint16_t NEOGEO_USER slf_story_show(uint8_t number);

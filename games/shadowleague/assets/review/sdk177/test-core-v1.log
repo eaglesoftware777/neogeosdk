@@ -1,0 +1,9 @@
+test_fight_core (test_fight.FightTests.test_fight_core) ... cpu match: 5161 frames, winner 1, rounds 3
+training: nonlethal combat, timers, resource refill, record/playback and dummy modes: ok
+fight_test: ok (NGFMatch 1000 bytes)
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.983s
+
+OK
