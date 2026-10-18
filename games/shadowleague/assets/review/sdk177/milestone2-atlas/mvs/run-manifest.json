@@ -1,0 +1,19 @@
+{
+  "platform": "mvs",
+  "bios_name": "euro",
+  "team": false,
+  "fighter": "atlas",
+  "attract_only": false,
+  "training": false,
+  "options": false,
+  "seconds": 85,
+  "elf_sha256": "d14f555efc6c0ee4a3132bf71ffe034cd6703344a5e3d30a0f76ab828e2d45c3",
+  "rom_sha256": {
+    "781-c1.c1": "c1ea903df5e42afe602b6b944a90b9f6955d0be18f7f4b377d2de3fe5d678f19",
+    "781-c2.c2": "957613675848b02ca93ef19bb6308582e40f6ce45105f0b930be5bc2dfcac46c",
+    "781-m1.m1": "c93d1c9de20232bd63c1940080cca3cf6dd513a7f525fb7a076497e1b1089c47",
+    "781-p1.p1": "d9884318002c42eeac80c02cabf325d3c0263cedc99472108925405af4bfee80",
+    "781-s1.s1": "56d8140539b0752b19766727b11388df21f27e523acb87a0c7ad0df158865b71",
+    "781-v1.v1": "d65c22d48a0323654f4cd72ed8bdd54ef51a4d40a947e4a11c30b0773cb69b7a"
+  }
+}
