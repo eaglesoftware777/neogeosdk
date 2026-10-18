@@ -1,5 +1,48 @@
 # Changelog
 
+## v1.7.7 - pre-release: genre engines and four new games
+
+Status: a pre-release from the `fix/maiya-arenas-eagle-bios` branch; v1.7.0
+remains the current release. SDK 1.7.7, Framework 1.5 (additions only).
+Engine guide: `docs/GENRE_ENGINES_V1.7.7.md`; objectives and test results:
+`docs/roadmap/V1.7.7_SDK_OBJECTIVES_AND_AUDIT.md`,
+`docs/roadmap/V1.7.7_TEST_REPORT.md`.
+
+### Engine
+
+- Four one-file genre engines in `sdk/2d_engine`, chosen per game with
+  `GAME_GENRE_ENGINE` in `game.mk` (`sdk/genre_engine.mk`, both Makefiles;
+  `make genre-info` shows what a game links): `ng_puzzle` (match and bubble
+  boards), `ng_mahjong` (four-seat Hong Kong Old Style and solitaire),
+  `ng_rpg` (top-down rooms, party, items, dialogue, environmental puzzles,
+  saves) and `ng_beatemup` (a belt-scrolling brawler for one player: waves,
+  crowd director, grabs and throws).
+- `ng_sprite_group_set_tile_address()`: 20-bit C-ROM tile addresses for
+  cartridges past 64K tiles; bank-zero assets keep the old writer.
+- `ng_fight`: seven calibrated CPU ranks, training recording and playback,
+  long, short and reverse throws, configurable round time.
+- `palette_banks.quantize(refine=N)` optional refit passes (0 keeps the
+  old output); `tools/ng_artpack.py`, `sound/tools/ng_synth.py` and
+  `ng_songs.py` for painted art, effects and music.
+
+### EagleBIOS
+
+- `SYS_HOWTOPLAY` shows the game's own `HTP1` text block;
+  `ng_sys_is_eaglebios()` and `ng_sys_howtoplay()` in `sdk/ng_system.h`.
+
+### Games
+
+- Seven Wonders Puzzles (782), Maiya & Luna (783), No Signal Z Alpha (784)
+  and Mahjong Demo (785): first ROM sets (`_v1`).
+- Shadow League Fighting (781): SDK 1.7.7 candidate (`_v3`).
+- Sky Lance (779): the hardware palette fix (`_v2`).
+
+### Tests and tools
+
+- `tests/test_genre_engines.py` (host tests, C++14 consumer, documentation
+  examples, 68000 code check, build selector); `tools/genre_qa.py` (MAME
+  timeline runner), `tools/install_wip_mame.py`, `tools/stamp_cart_header.py`.
+
 ## v1.7.5 - pre-release: ng_fight, Shadow League Fighting (production slice), and EagleBIOS v1.7.4
 
 Status: a pre-release from the `fix/maiya-arenas-eagle-bios` branch with

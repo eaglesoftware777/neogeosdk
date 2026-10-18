@@ -27,7 +27,7 @@ The standard selector is a word write to 2FFFF0. Selector N maps physical
 (N+1)*100000 into the CPU's 200000..2FFFFF window. The software list selects
 `rom`; the former `rom_fatfur2` protection handler intercepts this range and
 cannot be used for the banked candidate. These mappings were verified against
-the [MAME driver](https://github.com/mamedev/mame/blob/master/src/mame/snk/neogeo.cpp)
+MAME's Neo Geo driver
 and then exercised by the candidate's actual scene loads in AES and MVS.
 
 `banked_rom.py` rejects fixed code larger than 1 MiB and any overflowing data
@@ -57,7 +57,7 @@ cover the 1FFFF/20000 and 7FFFF/80000 seams, palette maps, flips, the final FFFF
 tile, and invalid base addresses. The candidate itself allocates 16 MiB; larger
 address bits are covered by the host VRAM tests, not by a 128-MiB cartridge claim.
 Deferred tests verify that a queued upload uses the latest address exactly once.
-The [MAME sprite renderer](https://github.com/mamedev/mame/blob/master/src/mame/snk/neogeo_spr.cpp)
+MAME's Neo Geo sprite renderer
 provides the hardware reference for address attributes and the 96-strips-per-line
 limit. Actual scanline load is measured from sprite RAM in every captured frame.
 
