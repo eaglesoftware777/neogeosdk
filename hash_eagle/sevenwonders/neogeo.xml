@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!DOCTYPE softwarelist PUBLIC "-//MAME//DTD Software List//EN" "https://raw.githubusercontent.com/mamedev/mame/master/src/mame/mame.dtd">
+<softwarelist name="neogeo" description="SNK Neo-Geo cartridges">
+    <!--
+    ID-0782
+    . NGM-782
+    NEO-MVS PROG-G2 (SNK-9201) / NEO-MVS CHA 42G-2
+    . NGH-782
+    -->
+
+    <software name="sevenwonders">
+        <description>NeoGeo SDK sevenwonders v1.7.0 / Eagle Software</description>
+        <year>2026</year>
+        <publisher>Eagle Software</publisher>
+        <info name="serial" value="NGM-782 (MVS), NGH-782 (AES)"/>
+        <info name="release" value="20260914 (MVS), 20260914 (AES)"/>
+        <info name="alt_title" value="Eagle SDK"/>
+        <sharedfeat name="release" value="MVS,AES" />
+        <sharedfeat name="compatibility" value="MVS,AES" />
+        <part name="cart" interface="neo_cart">
+            <feature name="slot" value="rom_fatfur2" />
+            <dataarea name="maincpu" width="16" endianness="big" size="0x100000">
+                <rom loadflag="load16_word_swap" name="782-p1.p1" offset="0x000000" size="0x080000" crc="c5480d6e" sha1="abd50e748e1b275386efad3880e59b815f5f720d" />
+            </dataarea>
+            <dataarea name="fixed" size="0x020000">
+                <rom offset="0x000000" size="0x020000" name="782-s1.s1" crc="eb99e197" sha1="a5a393c0500a3e0c8a03a4bff614e23e66c57804" />
+            </dataarea>
+            <dataarea name="audiocpu" size="0x020000">
+                <rom offset="0x000000" size="0x020000" name="782-m1.m1" crc="a8031d28" sha1="3ff4f7a43961f1952f499ac55c5e903dc4fa7eaa" />
+            </dataarea>
+            <dataarea name="ymsnd:adpcma" size="0x324400">
+                <rom name="782-v1.v1" offset="0x000000" size="0x324400" crc="afec46cd" sha1="274b9b049ce8285afb8def6b0e302e7a5885e4d9" />
+            </dataarea>
+            <dataarea name="sprites" size="0x800000">
+                <rom loadflag="load16_byte" name="782-c1.c1" offset="0x000000" size="0x400000" crc="20efee4b" sha1="cd81a92fb029aebc040a87b4c7d6f257bff954a4" />
+                <rom loadflag="load16_byte" name="782-c2.c2" offset="0x000001" size="0x400000" crc="2e56f9b5" sha1="f3b0ba4d319fcb49a03d89b7182d469685cd1e1b" />
+            </dataarea>
+        </part>
+    </software>
+</softwarelist>
