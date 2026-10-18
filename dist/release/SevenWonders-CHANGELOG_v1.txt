@@ -1,0 +1,18 @@
+# Seven Wonders Puzzles — changelog
+
+The ROM sets ship with the NeoGeoSDK pre-releases and are numbered on their
+own: `_v1` with v1.7.7.
+
+## v1 (2026-10-18, NeoGeoSDK v1.7.7 pre-release) — the first public set
+
+- Seven wonders, four levels each (28): the Sky Garden, the Crystal Canal,
+  the Moon Lighthouse, the Clockwork Tower, the Coral Palace, the Sunstone
+  Pyramid and the Starlight Dome, each with its cat, mood and goals.
+- Two kinds of level: matching pieces on a board (match colours, break ice,
+  make special pieces, clear crates) and launched bubbles (rescue the
+  kittens floating in them).
+- The paw hammer once a level, hints, an aim guide; stars and best scores
+  kept in the save block.
+- Arcade settings (MVS): TRIES, HOW TO PLAY, DIFFICULTY (EASY to EXPERT),
+  AIM GUIDE.
+- Built on the SDK's puzzle engine (`ng_puzzle`).

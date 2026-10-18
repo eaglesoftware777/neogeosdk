@@ -1,0 +1,19 @@
+# Maiya & Luna — changelog
+
+The ROM sets ship with the NeoGeoSDK pre-releases and are numbered on their
+own: `_v1` with v1.7.7.
+
+## v1 (2026-10-18, NeoGeoSDK v1.7.7 pre-release) — the first public set
+
+- The sequel to Maiya: Super Nature Girl. Choose who sets out: Maiya climbs
+  ivy, pushes stones and shoos creatures with her whip; Luna slips through
+  gaps, works fine mechanisms and looks closely. Each sister has her own
+  routes, puzzles and conversations through the same places.
+- Seven chapters, 46 rooms and 175 finds for the notebook in each journey.
+  The sisters meet only in Chapter VI, at the World Tree, and solve it
+  together (D switches between them).
+- Every room settles and no place can strand a sister (checked on both
+  journeys by `tools/check_world.py`).
+- The notebook (START): bag, finds, notes, journey, saving.
+- Arcade settings (MVS): HOW TO PLAY, DANGER (GENTLE or NORMAL), HINTS.
+- Built on the SDK's RPG engine (`ng_rpg`).

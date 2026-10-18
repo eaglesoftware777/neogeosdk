@@ -1,0 +1,15 @@
+# Mahjong Demo — changelog
+
+The ROM sets ship with the NeoGeoSDK pre-releases and are numbered on their
+own: `_v1` with v1.7.7.
+
+## v1 (2026-10-18, NeoGeoSDK v1.7.7 pre-release) — the first public set
+
+- Four-seat Mahjong, Hong Kong Old Style: the player at East against three
+  CPU seats; chow, pung and kong claims, wins and scoring; hints from the
+  CPU's own choice.
+- Solitaire on the turtle layout of 144 tiles: every deal can be cleared;
+  hints, undo and shuffles.
+- The rules on screen; an attract mode with four CPU seats.
+- Arcade settings (MVS): CPU LEVEL, FLOWERS, ROUNDS, HOW TO PLAY.
+- Built on the SDK's Mahjong engine (`ng_mahjong`).
