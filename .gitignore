@@ -36,6 +36,17 @@ tests/test_move
 tests/test_move.exe
 tests/test_shooter
 tests/test_shooter.exe
+tests/test_puzzle
+tests/test_puzzle.exe
+tests/test_mahjong
+tests/test_mahjong.exe
+tests/test_rpg
+tests/test_rpg.exe
+tests/test_beatemup
+tests/test_beatemup.exe
+tests/test_genre_cpp
+tests/test_genre_cpp.exe
+tests/genre_*.o
 
 # make neo GAME=<name>: NeoSD images and MAME test sets, rebuilt on demand
 dist/neo/

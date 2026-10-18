@@ -89,12 +89,14 @@ def training_mask(rgba):
     return core
 
 
-def quantize(rgba, bank_limit=1, master=None, dither="none"):
+def quantize(rgba, bank_limit=1, master=None, dither="none", refine=0):
     """Return indices, RGB banks (including index zero), tile-bank offsets.
 
     Semi-transparent borders do not train palettes when a solid core exists.
     Alpha below 128 stays transparent. More banks cannot increase the fitted
     image's nearest-color Lab error: the global fallback is never discarded.
+    refine: up to that many refit passes over the banks (see below); 0 keeps
+    the plain allocation.
     """
     rgba = np.asarray(rgba, dtype=np.uint8)
     height, width = rgba.shape[:2]
@@ -163,6 +165,28 @@ def quantize(rgba, bank_limit=1, master=None, dither="none"):
         best_errors = np.minimum(best_errors, new_errors)
         palettes.append(candidate)
         index_planes.append(new_labels)
+
+    # Optional refit passes (refine > 0): each bank is fitted again to every
+    # tile that chose it, then each tile moves to the bank that now fits it
+    # best. The greedy allocation above gives a new bank only the tiles it
+    # happens to improve, which splits a smooth sky or road into rectangles;
+    # these passes let the tiles of one area settle on one bank. A pass is
+    # kept only if it lowers the picture's total error.
+    if refine and master is None and len(palettes) > 1:
+        best_total = best_errors.sum()
+        for _ in range(refine):
+            trial = list(palettes)
+            for bank in range(len(trial)):
+                region = (assignment[tile_ids] == bank) & core
+                if region.sum() >= 16:
+                    trial[bank] = fit_palette(rgb[region])
+            planes, totals = zip(*(evaluate(palette) for palette in trial))
+            totals = np.stack(totals)
+            if totals.min(axis=0).sum() >= best_total:
+                break
+            palettes, index_planes = trial, list(planes)
+            assignment = totals.argmin(axis=0).astype(np.uint8)
+            best_total = totals.min(axis=0).sum()
 
     banks = np.zeros((len(palettes), 16, 3), dtype=np.uint8)
     banks[:, 1:] = palettes

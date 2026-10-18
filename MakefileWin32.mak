@@ -115,6 +115,10 @@ else
   GAME_CC     := $(CC)
   GAME_CFLAGS := $(CFLAGS)
 endif
+# The genre engine is C in either variant: built with the C flags, and its
+# switch reaches the game's own sources as well.
+NG_GENRE_CFLAGS = $(CFLAGS) $(NG_GENRE_DEFINE)
+GAME_CFLAGS += $(NG_GENRE_DEFINE)
 LD=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-ld.exe
 LDFLAGS=  -nostdlib
 OBJCP=$(M68K_ELF_BIN)\$(M68K_ELF_PREFIX)-objcopy.exe
@@ -157,6 +161,9 @@ GAME_OPTIMIZE ?=
 # GAME_LEVEL_BUILDER (see Makefile): the script that turns a game's stage
 # files into the header its scenes include; run before compiling.
 GAME_LEVEL_BUILDER ?=
+# GAME_GENRE_ENGINE (see Makefile and sdk/genre_engine.mk): puzzle, mahjong,
+# rpg or beatemup compiles and links that one genre engine; empty links none.
+include sdk/genre_engine.mk
 NG_ENGINE_STUBBED=ng_particles
 ifneq ($(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)),)
 $(error GAME_ENGINE_EXCLUDE: no stand-in for $(filter-out $(NG_ENGINE_STUBBED),$(GAME_ENGINE_EXCLUDE)))
@@ -180,7 +187,19 @@ ifneq ($(findstring -DNG_RASTER,$(GAME_ENGINE_DEFINES)),)
 NG_RASTER_OBJ0=out\ng_raster0.o
 endif
 endif
-NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_vram0.o out\ng_sprite_window0.o out\ng_art_asset0.o out\ng_palette_assets0.o out\ng_bg0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o out\ng_scene0.o out\ng_depthfx0.o out\ng_render_queue0.o out\ng_fixed0.o out\ng_camera0.o out\ng_palette_fx0.o out\$(call ng_engine_mod,ng_particles)0.o out\ng_feedback0.o out\ng_debug0.o out\ng_joystick0.o out\ng_demo_advanced0.o $(NG_RAND_OBJ0) $(NG_RASTER_OBJ0)
+# ng_shooter and ng_fight (C engine only): only for a game with -DNG_SHOOTER=1
+# or -DNG_FIGHT=1 in GAME_ENGINE_DEFINES, as in the Linux Makefile.
+NG_SHOOTER_OBJ0=
+NG_FIGHT_OBJ0=
+ifneq ($(USE_2D_PLUS),1)
+ifneq ($(filter -DNG_SHOOTER=1,$(GAME_ENGINE_DEFINES)),)
+NG_SHOOTER_OBJ0=out\ng_shooter0.o
+endif
+ifneq ($(filter -DNG_FIGHT=1,$(GAME_ENGINE_DEFINES)),)
+NG_FIGHT_OBJ0=out\ng_fight0.o
+endif
+endif
+NG_ENGINE_OBJ0=out\ng_defs0.o out\ng_properties0.o out\ng_game_time0.o out\ng_timers0.o out\ng_progress0.o out\ng_status0.o out\ng_game_events0.o out\ng_level0.o out\ng_vram0.o out\ng_sprite_window0.o out\ng_art_asset0.o out\ng_palette_assets0.o out\ng_bg0.o out\ng_fix0.o out\ng_sprite_group0.o out\ng_actions0.o out\ng_chars0.o out\ng_npcs0.o out\ng_physics0.o out\ng_border_constraints0.o out\ng_game_interupt0.o out\ng_scene0.o out\ng_depthfx0.o out\ng_render_queue0.o out\ng_fixed0.o out\ng_camera0.o out\ng_palette_fx0.o out\$(call ng_engine_mod,ng_particles)0.o out\ng_feedback0.o out\ng_debug0.o out\ng_joystick0.o out\ng_demo_advanced0.o $(NG_RAND_OBJ0) $(NG_RASTER_OBJ0) $(NG_SHOOTER_OBJ0) $(NG_FIGHT_OBJ0)
 # A game.mk may set GAME_SCENES_FROM to other game names; each scene is looked
 # for in this game's scenes directory first and in those after, so a game can
 # reuse another game's scene sources without copying them.
@@ -358,6 +377,8 @@ endif
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_fixed.$(ENGINE_EXT) -o out\ng_fixed0.o
 	$(if $(NG_RAND_OBJ0),$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_rand.$(ENGINE_EXT) -o $(NG_RAND_OBJ0))
 	$(if $(NG_RASTER_OBJ0),$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_raster.$(ENGINE_EXT) -o $(NG_RASTER_OBJ0))
+	$(if $(NG_SHOOTER_OBJ0),$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_shooter.$(ENGINE_EXT) -o $(NG_SHOOTER_OBJ0))
+	$(if $(NG_FIGHT_OBJ0),$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_fight.$(ENGINE_EXT) -o $(NG_FIGHT_OBJ0))
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_camera.$(ENGINE_EXT) -o out\ng_camera0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_palette_fx.$(ENGINE_EXT) -o out\ng_palette_fx0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\$(call ng_engine_mod,ng_particles).$(ENGINE_EXT) -o out\$(call ng_engine_mod,ng_particles)0.o
@@ -365,6 +386,7 @@ endif
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_debug.$(ENGINE_EXT) -o out\ng_debug0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_joystick.$(ENGINE_EXT) -o out\ng_joystick0.o
 	$(ENGINE_CC) $(CXXFLAGS) $(GAME_OPTIMIZE) $(ENGINE_DIR)\ng_demo_advanced.$(ENGINE_EXT) -o out\ng_demo_advanced0.o
+	$(if $(NG_GENRE_SRC),$(CC) $(NG_GENRE_CFLAGS) $(GAME_OPTIMIZE) $(NG_GENRE_SRC) -o $(NG_GENRE_OBJ0))
 	$(foreach src,$(GAME_SCENE_SRCS),$(GAME_CC) $(GAME_CFLAGS) $(GAME_OPTIMIZE) $(src) -o out/$(notdir $(basename $(src)))0.o &&) rem scenes compiled
 	$(GAME_CC) $(GAME_CFLAGS) games\$(GAME)\eyecatcher.c -o out\eyecatcher0.o
 	$(OBJCP) $(STRIP_SECTS) out\neogeo0.o out\neogeo.o
@@ -375,7 +397,7 @@ endif
 	@rem The linker script places sections by object file name (out/ng_*0.o),
 	@rem so the objects must reach ld spelled with forward slashes or those
 	@rem patterns never match and the tables land elsewhere in the ROM.
-	$(LD) $(LDFLAGS) -T games/$(GAME)/neogeo.ld -o out/game out/neogeo.o out/user.o out/main.o out/neogeolib.o out/eyecatcher.o $(subst \,/,$(NG_FIX_SDK_OBJ0)) $(subst \,/,$(NG_ENGINE_OBJ0)) $(GAME_SCENE_OBJS) $(SDK_LIB)
+	$(LD) $(LDFLAGS) -T games/$(GAME)/neogeo.ld -o out/game out/neogeo.o out/user.o out/main.o out/neogeolib.o out/eyecatcher.o $(subst \,/,$(NG_FIX_SDK_OBJ0)) $(subst \,/,$(NG_ENGINE_OBJ0)) $(NG_GENRE_OBJ0) $(GAME_SCENE_OBJS) $(SDK_LIB)
 
 $(GAME_ID)-p1.p1: game
 	$(OBJCP) -O ihex out\game out\game0
@@ -712,6 +734,11 @@ bios-list:
 	@echo   unibios11        Universe BIOS (Hack, Ver. 1.1)
 	@echo   unibios10        Universe BIOS (Hack, Ver. 1.0)
 
+.PHONY: genre-info
+# The genre engine a game links (GAME_GENRE_ENGINE in its game.mk).
+genre-info:
+	@echo game=$(GAME) genre=$(or $(NG_GENRE),none) source=$(or $(NG_GENRE_SRC),-) object=$(or $(NG_GENRE_OBJ0),-) define=$(or $(NG_GENRE_DEFINE),-)
+
 .PHONY: games-list
 games-list:
 	@echo Available GAME values:
@@ -750,6 +777,7 @@ menu:
 	@echo.
 	@echo Utilities:
 	@echo   make -f MakefileWin32.mak games-list
+	@echo   make -f MakefileWin32.mak genre-info GAME=name         (the genre engine the game links, if any)
 	@echo   make -f MakefileWin32.mak bios-list
 	@echo   make -f MakefileWin32.mak clean ^| clean-all
 
