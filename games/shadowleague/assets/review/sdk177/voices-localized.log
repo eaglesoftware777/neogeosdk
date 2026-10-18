@@ -1,0 +1,63 @@
+{"key": "aisha_sp1", "fighter": "aisha", "language": "fr-fr", "voice": "ff_siwis", "text": "En garde !", "duration": 0.7533344133052541, "peak": 0.97}
+{"key": "aisha_sp2", "fighter": "aisha", "language": "fr-fr", "voice": "ff_siwis", "text": "À moi !", "duration": 0.5459258059290458, "peak": 0.97}
+{"key": "aisha_sp3", "fighter": "aisha", "language": "fr-fr", "voice": "ff_siwis", "text": "Prends ça !", "duration": 0.7247691560019439, "peak": 0.97}
+{"key": "aisha_super", "fighter": "aisha", "language": "fr-fr", "voice": "ff_siwis", "text": "C'est terminé !", "duration": 0.8167827636481452, "peak": 0.97}
+{"key": "amara_sp1", "fighter": "amara", "language": "pt-br", "voice": "pf_dora", "text": "Vamos lá!", "duration": 0.7026297316269777, "peak": 0.97}
+{"key": "amara_sp2", "fighter": "amara", "language": "pt-br", "voice": "pf_dora", "text": "Agora!", "duration": 0.6524110373130299, "peak": 0.97}
+{"key": "amara_super", "fighter": "amara", "language": "pt-br", "voice": "pf_dora", "text": "Acabou!", "duration": 0.6782223662184783, "peak": 0.97}
+{"key": "arun_sp1", "fighter": "arun", "language": "hi", "voice": "hm_omega", "text": "तैयार हो!", "duration": 0.8121928829850424, "peak": 0.97}
+{"key": "arun_sp2", "fighter": "arun", "language": "hi", "voice": "hm_omega", "text": "आगे!", "duration": 0.6195258923267996, "peak": 0.97}
+{"key": "arun_sp3", "fighter": "arun", "language": "hi", "voice": "hm_omega", "text": "लो!", "duration": 0.5765430098817431, "peak": 0.97}
+{"key": "arun_super", "fighter": "arun", "language": "hi", "voice": "hm_omega", "text": "अब समाप्त!", "duration": 1.0089637669420595, "peak": 0.97}
+Building prefix dict from the default dictionary ...
+Dumping model to file cache /tmp/jieba.cache
+Loading model cost 0.990 seconds.
+Prefix dict has been built successfully.
+{"key": "chenbao_sp1", "fighter": "chenbao", "language": "zh", "voice": "zm_yunjian", "text": "看招！", "duration": 0.5717371348344943, "peak": 0.97}
+{"key": "chenbao_sp2", "fighter": "chenbao", "language": "zh", "voice": "zm_yunjian", "text": "破！", "duration": 0.35304282088665695, "peak": 0.97}
+{"key": "chenbao_sp3", "fighter": "chenbao", "language": "zh", "voice": "zm_yunjian", "text": "来了！", "duration": 0.5072628111669096, "peak": 0.97}
+{"key": "chenbao_super", "fighter": "chenbao", "language": "zh", "voice": "zm_yunjian", "text": "结束了！", "duration": 0.6710945515416599, "peak": 0.97}
+{"key": "claire_sp1", "fighter": "claire", "language": "fr-fr", "voice": "ff_siwis", "text": "En garde !", "duration": 0.7533344133052541, "peak": 0.97}
+{"key": "claire_sp2", "fighter": "claire", "language": "fr-fr", "voice": "ff_siwis", "text": "À moi !", "duration": 0.5459258059290458, "peak": 0.97}
+{"key": "claire_sp3", "fighter": "claire", "language": "fr-fr", "voice": "ff_siwis", "text": "Prends ça !", "duration": 0.7247691560019439, "peak": 0.97}
+{"key": "claire_super", "fighter": "claire", "language": "fr-fr", "voice": "ff_siwis", "text": "C'est terminé !", "duration": 0.8167827636481452, "peak": 0.97}
+{"key": "diego_sp1", "fighter": "diego", "language": "es", "voice": "em_alex", "text": "¡Aquí voy!", "duration": 0.7303310113937037, "peak": 0.97}
+{"key": "diego_sp2", "fighter": "diego", "language": "es", "voice": "em_alex", "text": "¡Arriba!", "duration": 0.6480911496301096, "peak": 0.97}
+{"key": "diego_sp3", "fighter": "diego", "language": "es", "voice": "em_alex", "text": "¡Toma!", "duration": 0.5258923267995033, "peak": 0.97}
+{"key": "diego_super", "fighter": "diego", "language": "es", "voice": "em_alex", "text": "¡Se acabó!", "duration": 0.7388087909714347, "peak": 0.97}
+{"key": "hayato_sp1", "fighter": "hayato", "language": "ja", "voice": "jm_kumo", "text": "いくぞ！", "duration": 0.7029537232031967, "peak": 0.97}
+{"key": "hayato_sp2", "fighter": "hayato", "language": "ja", "voice": "jm_kumo", "text": "そこだ！", "duration": 0.725525136346455, "peak": 0.97}
+{"key": "hayato_sp3", "fighter": "hayato", "language": "ja", "voice": "jm_kumo", "text": "甘い！", "duration": 0.5507316809762947, "peak": 0.97}
+{"key": "hayato_super", "fighter": "hayato", "language": "ja", "voice": "jm_kumo", "text": "これで終わりだ！", "duration": 1.176467411847292, "peak": 0.97}
+{"key": "kenji_sp1", "fighter": "kenji", "language": "ja", "voice": "jm_kumo", "text": "いくぞ！", "duration": 0.7029537232031967, "peak": 0.97}
+{"key": "kenji_sp2", "fighter": "kenji", "language": "ja", "voice": "jm_kumo", "text": "そこだ！", "duration": 0.725525136346455, "peak": 0.97}
+{"key": "kenji_sp3", "fighter": "kenji", "language": "ja", "voice": "jm_kumo", "text": "甘い！", "duration": 0.5507316809762947, "peak": 0.97}
+{"key": "kenji_super", "fighter": "kenji", "language": "ja", "voice": "jm_kumo", "text": "これで終わりだ！", "duration": 1.176467411847292, "peak": 0.97}
+{"key": "kiran_sp1", "fighter": "kiran", "language": "en-gb", "voice": "bf_emma", "text": "Here I come!", "duration": 0.938279604730277, "peak": 0.97}
+{"key": "kiran_sp2", "fighter": "kiran", "language": "en-gb", "voice": "bf_emma", "text": "Up you go!", "duration": 0.8230466007883795, "peak": 0.97}
+{"key": "kiran_sp3", "fighter": "kiran", "language": "en-gb", "voice": "bf_emma", "text": "Take this!", "duration": 0.822128624655759, "peak": 0.97}
+{"key": "kiran_super", "fighter": "kiran", "language": "en-gb", "voice": "bf_emma", "text": "It ends now!", "duration": 0.9194880933095739, "peak": 0.97}
+{"key": "linwei_sp1", "fighter": "linwei", "language": "zh", "voice": "zm_yunjian", "text": "看招！", "duration": 0.5717371348344943, "peak": 0.97}
+{"key": "linwei_sp2", "fighter": "linwei", "language": "zh", "voice": "zm_yunjian", "text": "破！", "duration": 0.35304282088665695, "peak": 0.97}
+{"key": "linwei_sp3", "fighter": "linwei", "language": "zh", "voice": "zm_yunjian", "text": "来了！", "duration": 0.5072628111669096, "peak": 0.97}
+{"key": "linwei_super", "fighter": "linwei", "language": "zh", "voice": "zm_yunjian", "text": "结束了！", "duration": 0.6710945515416599, "peak": 0.97}
+{"key": "lucas_sp1", "fighter": "lucas", "language": "pt-br", "voice": "pm_alex", "text": "Vamos lá!", "duration": 0.6868621415843188, "peak": 0.97}
+{"key": "lucas_sp2", "fighter": "lucas", "language": "pt-br", "voice": "pm_alex", "text": "Agora!", "duration": 0.6447972352718829, "peak": 0.97}
+{"key": "lucas_sp3", "fighter": "lucas", "language": "pt-br", "voice": "pm_alex", "text": "Toma!", "duration": 0.5363140558345483, "peak": 0.97}
+{"key": "lucas_super", "fighter": "lucas", "language": "pt-br", "voice": "pm_alex", "text": "Acabou!", "duration": 0.6761704195690912, "peak": 0.97}
+{"key": "ryuhei_sp1", "fighter": "ryuhei", "language": "ja", "voice": "jm_kumo", "text": "いくぞ！", "duration": 0.7029537232031967, "peak": 0.97}
+{"key": "ryuhei_sp2", "fighter": "ryuhei", "language": "ja", "voice": "jm_kumo", "text": "そこだ！", "duration": 0.725525136346455, "peak": 0.97}
+{"key": "ryuhei_sp3", "fighter": "ryuhei", "language": "ja", "voice": "jm_kumo", "text": "甘い！", "duration": 0.5507316809762947, "peak": 0.97}
+{"key": "ryuhei_super", "fighter": "ryuhei", "language": "ja", "voice": "jm_kumo", "text": "これで終わりだ！", "duration": 1.176467411847292, "peak": 0.97}
+{"key": "tomas_sp1", "fighter": "tomas", "language": "es", "voice": "em_alex", "text": "¡Aquí voy!", "duration": 0.7303310113937037, "peak": 0.97}
+{"key": "tomas_sp2", "fighter": "tomas", "language": "es", "voice": "em_alex", "text": "¡Arriba!", "duration": 0.6480911496301096, "peak": 0.97}
+{"key": "tomas_sp3", "fighter": "tomas", "language": "es", "voice": "em_alex", "text": "¡Toma!", "duration": 0.5258923267995033, "peak": 0.97}
+{"key": "tomas_super", "fighter": "tomas", "language": "es", "voice": "em_alex", "text": "¡Se acabó!", "duration": 0.7388087909714347, "peak": 0.97}
+{"key": "tororojo_sp1", "fighter": "tororojo", "language": "es", "voice": "em_alex", "text": "¡Aquí voy!", "duration": 0.7303310113937037, "peak": 0.97}
+{"key": "tororojo_sp2", "fighter": "tororojo", "language": "es", "voice": "em_alex", "text": "¡Arriba!", "duration": 0.6480911496301096, "peak": 0.97}
+{"key": "tororojo_sp3", "fighter": "tororojo", "language": "es", "voice": "em_alex", "text": "¡Toma!", "duration": 0.5258923267995033, "peak": 0.97}
+{"key": "tororojo_super", "fighter": "tororojo", "language": "es", "voice": "em_alex", "text": "¡Se acabó!", "duration": 0.7388087909714347, "peak": 0.97}
+{"key": "xiaomei_sp1", "fighter": "xiaomei", "language": "zh", "voice": "zf_xiaobei", "text": "看招！", "duration": 0.8212646471191749, "peak": 0.97}
+{"key": "xiaomei_sp2", "fighter": "xiaomei", "language": "zh", "voice": "zf_xiaobei", "text": "破！", "duration": 0.5325341541119931, "peak": 0.97}
+{"key": "xiaomei_sp3", "fighter": "xiaomei", "language": "zh", "voice": "zf_xiaobei", "text": "来了！", "duration": 0.7578162967762838, "peak": 0.97}
+{"key": "xiaomei_super", "fighter": "xiaomei", "language": "zh", "voice": "zf_xiaobei", "text": "结束了！", "duration": 0.9330417409147362, "peak": 0.97}

@@ -1,0 +1,2 @@
+Art gates PASS: 44 fighters, 2183 frames, 5388 intact limb layers; C-ROM round trip True
+C ROM: 66460 tiles used; stage 16 palettes; fighters 44; {'frames': 2183, 'unshared_tiles': 218300, 'unique_strips': 27766, 'shared_tiles': 55532, 'pixel_loss': 0, 'total_tiles': 66460}

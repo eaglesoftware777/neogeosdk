@@ -62,6 +62,7 @@ NEOGEO_INTERRUPT void NEOGEO_USER VBlank(void) {
 	ASM_MVEML(%%d0-%%d7/%%a0-%%a6,-(%%sp))
 	ASM_MVW(#4,REG_IRQACK) // Acknowledge the VBlank interrupt
 	ASM_MVB(%%d0,REG_DIPSW)        // Kick watchdog
+	ASM_JSR(slf_palette_vblank)
 	ASM_JSR(SYS_IO)
 	ASM_MVEML((%%sp)+, %%d0-%%d7/%%a0-%%a6)
 	:
@@ -295,10 +296,10 @@ void NEOGEO_USER showTitleMVS(void) {
 	for (;;) {
 		if (NEO_REGISTER8(NGO_START_FLAG)) break;
 		if (!ng_sys_is_mvs()) {
-			slf_puts_center(24u, "PUSH START", SLF_PAL_GOLD);
+			slf_puts_tall_center(24u, "PUSH START", SLF_TALL_GOLD);
 			if (slf_start_pending()) break;
 		} else if (read_p1credit() > 0) {
-			slf_puts_center(24u, "PUSH 1P START", SLF_PAL_GOLD);
+			slf_puts_tall_center(24u, "PUSH 1P START", SLF_TALL_GOLD);
 			if (frames) frames--;
 			else {
 				uint16_t saved_sr;
@@ -318,7 +319,7 @@ void NEOGEO_USER showTitleMVS(void) {
 				}
 				__asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
 			}
-		} else slf_puts_center(24u, "  INSERT COIN  ", SLF_PAL_TEXT);
+		} else slf_puts_tall_center(24u, "  INSERT COIN  ", SLF_TALL_SILVER);
 		slf_frame();
 	}
 }

@@ -1,0 +1,14 @@
+test_adpcma_has_no_preroll_and_settles_its_padding (test_sound_tools.SoundToolsTests.test_adpcma_has_no_preroll_and_settles_its_padding) ... ok
+test_adpcma_rounding_and_overflow_match_hardware (test_sound_tools.SoundToolsTests.test_adpcma_rounding_and_overflow_match_hardware) ... ok
+test_adpcmb_rounds_to_nearest_prediction (test_sound_tools.SoundToolsTests.test_adpcmb_rounds_to_nearest_prediction) ... ok
+test_downsampling_rejects_aliases_and_preserves_passband (test_sound_tools.SoundToolsTests.test_downsampling_rejects_aliases_and_preserves_passband) ... ok
+test_fm_a440_table_and_music_layout (test_sound_tools.SoundToolsTests.test_fm_a440_table_and_music_layout) ... ok
+test_overlapping_wla_writes_are_fatal_even_with_exit_zero (test_sound_tools.SoundToolsTests.test_overlapping_wla_writes_are_fatal_even_with_exit_zero) ... ok
+test_rational_resampling_keeps_time_alignment_and_edges (test_sound_tools.SoundToolsTests.test_rational_resampling_keeps_time_alignment_and_edges) ... ok
+test_sample_rates_survive_metadata_and_legacy_fallback (test_sound_tools.SoundToolsTests.test_sample_rates_survive_metadata_and_legacy_fallback) ... ok
+test_track_ids_do_not_depend_on_directory_order (test_sound_tools.SoundToolsTests.test_track_ids_do_not_depend_on_directory_order) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.316s
+
+OK

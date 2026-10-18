@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/mnt/c/neogeo/shadowleague-sdk177-20261017/games/shadowleague/tools/art.py", line 801, in <module>
+    main()
+  File "/mnt/c/neogeo/shadowleague-sdk177-20261017/games/shadowleague/tools/art.py", line 774, in main
+    header = build()
+             ^^^^^^^
+  File "/mnt/c/neogeo/shadowleague-sdk177-20261017/games/shadowleague/tools/art.py", line 673, in build
+    f.sheet(OUT / f"{f.id}_sheet.png")
+  File "/mnt/c/neogeo/shadowleague-sdk177-20261017/games/shadowleague/tools/fighter_cook.py", line 318, in sheet
+    out[y:y + art.H, x:x + art.W][mask] = rgb[mask]
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+IndexError: boolean index did not match indexed array along dimension 0; dimension is 160 but corresponding boolean dimension is 192

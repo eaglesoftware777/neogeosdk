@@ -1,0 +1,26 @@
+test_authored_anatomy_layers_keep_global_colors_across_banks (test_shadowleague_native_art.NativeArtTests.test_authored_anatomy_layers_keep_global_colors_across_banks) ... ok
+test_large_canvas_keeps_last_tile_and_palette_bits (test_shadowleague_native_art.NativeArtTests.test_large_canvas_keeps_last_tile_and_palette_bits) ... ok
+test_large_flat_frame_has_explicit_stable_root (test_shadowleague_native_art.NativeArtTests.test_large_flat_frame_has_explicit_stable_root) ... ok
+test_missing_authored_frame_never_falls_back (test_shadowleague_native_art.NativeArtTests.test_missing_authored_frame_never_falls_back) ... ok
+test_multi_bank_pixel_roundtrip (test_shadowleague_native_art.NativeArtTests.test_multi_bank_pixel_roundtrip) ... ok
+test_native_title_repacking_keeps_card_bank_limit_and_exact_colors (test_shadowleague_native_art.NativeArtTests.test_native_title_repacking_keeps_card_bank_limit_and_exact_colors) ... ERROR
+test_overfull_tile_fails (test_shadowleague_native_art.NativeArtTests.test_overfull_tile_fails) ... ok
+test_partial_alpha_fails (test_shadowleague_native_art.NativeArtTests.test_partial_alpha_fails) ... ok
+test_playable_showcase_has_all_referenced_pose_exports (test_shadowleague_native_art.NativeArtTests.test_playable_showcase_has_all_referenced_pose_exports) ... ok
+test_shared_strip_retains_independent_palette_and_address_bits (test_shadowleague_native_art.NativeArtTests.test_shared_strip_retains_independent_palette_and_address_bits) ... ok
+test_unused_index_zero_must_still_be_transparent (test_shadowleague_native_art.NativeArtTests.test_unused_index_zero_must_still_be_transparent) ... ok
+
+======================================================================
+ERROR: test_native_title_repacking_keeps_card_bank_limit_and_exact_colors (test_shadowleague_native_art.NativeArtTests.test_native_title_repacking_keeps_card_bank_limit_and_exact_colors)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/mnt/c/neogeo/shadowleague-sdk177-20261017/tests/test_shadowleague_native_art.py", line 14, in test_native_title_repacking_keeps_card_bank_limit_and_exact_colors
+    from rebirth_assets import CARD_BANKS
+  File "/mnt/c/neogeo/shadowleague-sdk177-20261017/games/shadowleague/tools/rebirth_assets.py", line 6, in <module>
+    from palette_banks import palette_words,quantize
+ModuleNotFoundError: No module named 'palette_banks'
+
+----------------------------------------------------------------------
+Ran 11 tests in 2.623s
+
+FAILED (errors=1)

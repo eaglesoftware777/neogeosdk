@@ -213,7 +213,7 @@ uint32_t * IVT[] __attribute__ ((section ("neogeo_ivt"))) = {
 uint8_t neogeo_str[] __attribute__ ((section ("neogeo_init"))) = { 0x4e, 0x45, 0x4f, 0x2d, 0x47, 0x45, 0x4f };
 uint8_t zerobyte __attribute__ ((section ("neogeo_init"))) = 0x00;
 uint16_t id __attribute__ ((section ("neogeo_init"))) = 			0x0781;
-uint32_t psize  __attribute__ ((section ("neogeo_init"))) = 		0x80000;
+uint32_t psize  __attribute__ ((section ("neogeo_init"))) = 		0x300000;
 uint32_t pbcks __attribute__ ((section ("neogeo_init"))) = 		0x100400;  /* reserved, outside engine BSS */
 uint16_t dipsize  __attribute__ ((section ("neogeo_init"))) = 		0x0100;
 uint8_t bioslogoflag __attribute__ ((section ("neogeo_init"))) = 	0x02;
@@ -260,28 +260,34 @@ uint16_t ID2END __attribute__ ((section ("neogeo_id2"))) = 0x4e75;
  * choices. The game reads the chosen values through ng_dip_option().
  */
 struct SOFT_DIP_TABLE {
-	uint8_t game_name[16];
-	uint8_t special_list[6];
-	uint8_t option_list[10];
-	char    strings[9][12];
+    uint8_t game_name[16];
+    uint8_t special_list[6];
+    uint8_t option_list[10];
+    char strings[19][12];
 };
 struct SOFT_DIP_TABLE SOFT_DIPS __attribute__ ((section ("neogeo_gamedata"))) = {
-	{'S','H','A','D','O','W',' ','L','E','A','G','U','E',' ',' ',' '},
-	{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
-	{
-		0x14,   /* DIFFICULTY   EASY .. EXPERT    default NORMAL */
-		0x13,   /* ROUNDS       1 2 3 (to win)     default 2      */
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-	},
-	{
-		{'D','I','F','F','I','C','U','L','T','Y',' ',' '},
-		{'E','A','S','Y',' ',' ',' ',' ',' ',' ',' ',' '},
-		{'N','O','R','M','A','L',' ',' ',' ',' ',' ',' '},
-		{'H','A','R','D',' ',' ',' ',' ',' ',' ',' ',' '},
-		{'E','X','P','E','R','T',' ',' ',' ',' ',' ',' '},
-		{'R','O','U','N','D','S',' ',' ',' ',' ',' ',' '},
-		{'1',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '},
-		{'2',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '},
-		{'3',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '},
-	}
+    {'S','H','A','D','O','W',' ','L','E','A','G','U','E',' ',' ',' '},
+    {0xFF,0xFF,0xFF,0xFF,0xFF,0xFF},
+    {0x27,0x13,0x13,0x02,0,0,0,0,0,0},
+    {
+        "DIFFICULTY  ",
+        "LEVEL 1     ",
+        "LEVEL 2     ",
+        "LEVEL 3     ",
+        "LEVEL 4     ",
+        "LEVEL 5     ",
+        "LEVEL 6     ",
+        "LEVEL 7     ",
+        "ROUNDS      ",
+        "1           ",
+        "2           ",
+        "3           ",
+        "ROUND TIME  ",
+        "30 SECONDS  ",
+        "60 SECONDS  ",
+        "90 SECONDS  ",
+        "DEMO SOUND  ",
+        "ON          ",
+        "OFF         ",
+    }
 };

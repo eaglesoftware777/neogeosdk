@@ -62,6 +62,7 @@ typedef struct {
     uint8_t prio;       /* NG_SG_PRIO_*: set by ng_sprite_group_set_priority() */
     uint8_t readyRows;  /* NG_VRAM_DEFER: the rows its last full write left, when a
                          * move is then only the driving strip's two words (0: not so) */
+    uint8_t tileHigh;   /* tile address bits 16..19; zero for legacy assets */
 } NGSpriteGroup;
 
 void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette);
@@ -117,6 +118,9 @@ void NEOGEO_USER ng_sprite_group_cancel(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_hide_range_queued(uint16_t firstSprite, uint16_t count);
 #endif
 void NEOGEO_USER ng_sprite_group_set_tile_base(NGSpriteGroup *g, uint16_t tileBase);
+/* Full 20-bit C-ROM tile address. Addresses above 0xfffff are rejected.
+ * A group can cross a 64K-tile boundary; padding always uses bank-zero blank. */
+void NEOGEO_USER ng_sprite_group_set_tile_address(NGSpriteGroup *g, uint32_t tileAddress);
 void NEOGEO_USER ng_sprite_group_set_tile_stride(NGSpriteGroup *g, uint16_t tileStride);
 /* One strip shown from another column of the art (16-pixel columns from
  * tileBase): a layer wider than 512 pixels streams its columns this way,
