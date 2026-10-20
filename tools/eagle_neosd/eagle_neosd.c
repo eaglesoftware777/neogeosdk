@@ -15,14 +15,43 @@
 #if defined(_WIN32) || defined(_WIN64)
     #include <windows.h>
     #include <direct.h>
-    #define mkdir_portable(path) _mkdir(path)
 #else
     #include <dirent.h>
     #include <sys/stat.h>
     #include <sys/types.h>
     #include <unistd.h>
-    #define mkdir_portable(path) mkdir(path, 0755)
 #endif
+
+static void mkdir_portable(const char *path)
+{
+    char tmp[512];
+    char *p = NULL;
+    size_t len;
+    if (!path || !path[0]) return;
+    snprintf(tmp, sizeof(tmp), "%s", path);
+    len = strlen(tmp);
+    if (len > 0 && (tmp[len - 1] == '/' || tmp[len - 1] == '\\'))
+        tmp[len - 1] = 0;
+#if defined(_WIN32) || defined(_WIN64)
+    for (p = tmp + 1; *p; p++) {
+        if (*p == '/' || *p == '\\') {
+            *p = 0;
+            _mkdir(tmp);
+            *p = '\\';
+        }
+    }
+    _mkdir(tmp);
+#else
+    for (p = tmp + 1; *p; p++) {
+        if (*p == '/' || *p == '\\') {
+            *p = 0;
+            mkdir(tmp, 0755);
+            *p = '/';
+        }
+    }
+    mkdir(tmp, 0755);
+#endif
+}
 
 /* ------------------------------------------------------------------ */
 /*  CRC-32 Implementation (IEEE 802.3)                                */
