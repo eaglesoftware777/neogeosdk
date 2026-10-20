@@ -1,60 +1,49 @@
-SEVEN WONDERS PUZZLES  --  v1 ROMs  --  Eagle Software, 2026
-============================================================
+# Seven Wonders Puzzles
 
-!! WORK IN PROGRESS !!  A preview build, not a finished game.
+A native Neo Geo puzzle game built on the SDK's puzzle engine
+(`GAME_GENRE_ENGINE = puzzle`, `sdk/2d_engine/ng_puzzle.c`). Game ID 782.
 
-Seven Wonders Puzzles' first ROM set, shared with the NeoGeoSDK v1.7.7
-pre-release. Every file carries "_v1" in its name.
+Seven wonders, four levels each: the Sky Garden, the Crystal Canal, the Moon
+Lighthouse, the Clockwork Tower, the Coral Palace, the Sunstone Pyramid and
+the Starlight Dome. Each has its cat, its mood and its goals (match colours,
+break ice, make special pieces, clear crates, rescue kittens floating in
+bubbles), in two kinds of level: matching pieces on a board, and launched
+bubbles. 28 levels, with stars and best scores kept in the save block.
 
-A puzzle game: seven wonders, four levels each, every one with its cat,
-its mood and its goals. Match pieces on a board (colours, ice, special
-pieces, crates) or launch bubbles to rescue the kittens floating in them.
-28 levels, stars and best scores kept. (Every change:
-SevenWonders-CHANGELOG_v1.txt)
+## Controls
 
-FILES
------
-SevenWonders-WIP-NeoSD_MVS_v1.neo      NeoSD image, arcade (MVS) build
-SevenWonders-WIP-NeoSD_AES_v1.neo      NeoSD image, console (AES) build
-                                       Cartridge data only: the NeoSD uses the
-                                       system's own BIOS.
-SevenWonders-Darksoft-MVS_v1.zip       Darksoft Neo Geo Multi folder, MVS build
-SevenWonders-Darksoft-AES_v1.zip       Darksoft Neo Geo Multi folder, AES build
-                                       Copy the folder inside to the SD card. No
-                                       BIOS included: the Multi uses the board's.
-SevenWonders-BackBit-MVS_v1.zip        BackBit Platinum folder, MVS build
-SevenWonders-BackBit-AES_v1.zip        BackBit Platinum folder, AES build
-                                       Copy the sevenwonders folder inside to the
-                                       microSD card. No BIOS included. The
-                                       BackBit is an MVS cartridge: use the MVS
-                                       folder on an arcade board.
-SevenWonders-WIP-EagleBIOS_v1.zip      MAME: the MVS build with EagleBIOS
-                                         mame neogeo -rompath roms -hashpath hash -bios euro -cart1 sevenwonders
-SevenWonders-WIP-AES-EagleBIOS_v1.zip  MAME: the AES build with EagleBIOS and a blank memory card
-                                         mame aes -rompath roms -hashpath hash -bios asia -cart1 sevenwonders -memc card.bin
-SevenWonders-CHANGELOG_v1.txt          what is in this set
-SevenWonders-MANIFEST_v1.txt           size, CRC32 and SHA-256 of every v1 file
+The joystick moves the paw (match) or aims (bubbles). A picks up a piece,
+then the joystick pushes it into its neighbour, or A fires. B puts the piece
+down, or swaps the loaded and the next bubble. C is the paw hammer, once a
+level: it breaks the piece under the paw, or the bubble the aim points at. D
+shows a hint (match) or switches the aim guide (bubbles). On a console START
+pauses.
 
-EagleBIOS is the free, open system ROM written for NeoGeoSDK. It is the
-only system ROM in these packages: no SNK BIOS and no Universe BIOS is
-included. MAME warns that its checksums differ from the original BIOS:
-that is expected.
+## How it is made
 
-CONTROLS
---------
-Stick       move the paw (match) or aim (bubbles)
-A           pick up a piece, then push it into its neighbour; or fire
-B           put the piece down; or swap the loaded and next bubble
-C           paw hammer, once a level
-D           hint (match) or aim guide (bubbles)
-START       pause (console)
-Arcade settings (MVS): TRIES, HOW TO PLAY, DIFFICULTY, AIM GUIDE.
+- `levels/levels.json`: the chapters, the levels (board layouts, bubble rows,
+  goals, moves) and the attract demonstration; `tools/levels.py` writes
+  `scenes/sw_levels_data.h` (the build's level builder).
+- `scenes/sw_game.c` is the flow of the game, `scenes/sw_draw.c` the screen.
+- `tools/art.py` packs the pictures; painted ones are imported with
+  `tools/paint_import.py`. `tools/sound.py` renders the music and effects
+  before `make`.
 
-STATUS
-------
-Checked in MAME (MVS and AES, EagleBIOS): boot, title, play; a test
-build's bot plays all 28 levels to the ending.
+## Build and check
 
-Real hardware is not verified yet: reports from NeoSD, Darksoft, BackBit,
-MVS and AES owners are very welcome (board or console, BIOS, cart firmware,
-what you saw and heard).
+```sh
+python3 games/sevenwonders/tools/sound.py      # when the music changes
+make GAME=sevenwonders GAME_CFG_FILE=games/sevenwonders/game.cfg all
+python3 games/sevenwonders/tools/check_levels.py --seeds 40
+```
+
+`check_levels.py` checks every level with `ng_puzzle_level_check()` and plays
+it over many seeds with the engine's own hints. It fails if a level is
+rejected, stays busy after settling (a softlock) or is never won; the bot is
+far weaker than a player, so its win rates are a floor.
+
+## Test build (never install it)
+
+`-DSW_AUTOPLAY=1` added to `GAME_ENGINE_DEFINES` (keep the game's own
+defines) lets the hint bot play every level, so `tools/genre_qa.py` can run
+the whole game in MAME to the ending.

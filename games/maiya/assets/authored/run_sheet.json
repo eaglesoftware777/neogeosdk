@@ -65,8 +65,8 @@
    }
  },
  "meta": {
-  "app": "games/maiya/tools/aseprite/ase_file.py",
-  "version": "ASEPRITE=builtin",
+  "app": "https://www.aseprite.org/",
+  "version": "1.3.18.6-x64",
   "image": "maiya_run.png",
   "format": "I8",
   "size": { "w": 640, "h": 64 },
