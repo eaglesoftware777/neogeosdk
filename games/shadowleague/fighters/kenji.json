@@ -3357,5 +3357,288 @@
       ]
     }
   ],
-  "effect": "energy"
+  "effect": "energy",
+  "combat": {
+    "juggle_limit": 6,
+    "relaunch_limit": 2,
+    "assist": "c_rise:C:none",
+    "routes": [
+      {
+        "from": "jab:A:none",
+        "to": "mae:B:none",
+        "ticks": [
+          3,
+          9
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "jab:A:none",
+        "to": "reverse:C:none",
+        "ticks": [
+          3,
+          9
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_jab:A:none",
+        "to": "c_kick:B:none",
+        "ticks": [
+          2,
+          8
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_jab:A:none",
+        "to": "c_rise:C:none",
+        "ticks": [
+          2,
+          8
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "jab:A:none",
+        "to": "lunge:A:qcf",
+        "ticks": [
+          3,
+          9
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "jab:A:none",
+        "to": "axe:B:dp",
+        "ticks": [
+          3,
+          9
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "mae:B:none",
+        "to": "lunge:A:qcf",
+        "ticks": [
+          4,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "mae:B:none",
+        "to": "axe:B:dp",
+        "ticks": [
+          4,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "reverse:C:none",
+        "to": "lunge:A:qcf",
+        "ticks": [
+          6,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "reverse:C:none",
+        "to": "axe:B:dp",
+        "ticks": [
+          6,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_jab:A:none",
+        "to": "lunge:A:qcf",
+        "ticks": [
+          2,
+          8
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_jab:A:none",
+        "to": "axe:B:dp",
+        "ticks": [
+          2,
+          8
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_kick:B:none",
+        "to": "lunge:A:qcf",
+        "ticks": [
+          4,
+          10
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_kick:B:none",
+        "to": "axe:B:dp",
+        "ticks": [
+          4,
+          10
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_rise:C:none",
+        "to": "lunge:A:qcf",
+        "ticks": [
+          4,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_rise:C:none",
+        "to": "axe:B:dp",
+        "ticks": [
+          4,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "axe:D:dp",
+        "to": "super:A:dqcf",
+        "ticks": [
+          10,
+          19
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "axe:D:dp",
+        "to": "super:C:dqcf",
+        "ticks": [
+          10,
+          19
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "axe:B:dp",
+        "to": "super:A:dqcf",
+        "ticks": [
+          10,
+          19
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "axe:B:dp",
+        "to": "super:C:dqcf",
+        "ticks": [
+          10,
+          19
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "lunge_h:C:qcf",
+        "to": "super:A:dqcf",
+        "ticks": [
+          11,
+          19
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "lunge_h:C:qcf",
+        "to": "super:C:dqcf",
+        "ticks": [
+          11,
+          19
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "lunge:A:qcf",
+        "to": "super:A:dqcf",
+        "ticks": [
+          8,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "lunge:A:qcf",
+        "to": "super:C:dqcf",
+        "ticks": [
+          8,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "lunge:A:qcf",
+        "to": "axe:D:dp",
+        "ticks": [
+          8,
+          15
+        ],
+        "on": "hit|max",
+        "max_uses": 1
+      },
+      {
+        "from": "axe:B:dp",
+        "to": "lunge_h:C:qcf",
+        "ticks": [
+          10,
+          19
+        ],
+        "on": "hit|max",
+        "max_uses": 1
+      },
+      {
+        "from": "reverse:C:none",
+        "to": "lunge_h:C:qcf",
+        "ticks": [
+          6,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      }
+    ],
+    "throws": [
+      {"move": "throw:C:fwd", "grip_x": 24, "lift": 22, "carry_tick": 8, "release_x": 32, "tech_ticks": 4},
+      {"move": "throw:D:fwd", "grip_x": 24, "lift": 18, "carry_tick": 8, "release_x": 24, "tech_ticks": 4},
+      {"move": "throw:C:back", "grip_x": 24, "lift": 24, "carry_tick": 8, "release_x": 32, "tech_ticks": 4},
+      {"move": "throw:D:back", "grip_x": 24, "lift": 18, "carry_tick": 8, "release_x": 24, "tech_ticks": 4}
+    ]
+  }
 }

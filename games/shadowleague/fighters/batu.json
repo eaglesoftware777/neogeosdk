@@ -2749,5 +2749,366 @@
     "family": "heavy",
     "footwear": "boot",
     "personality": "Bokh Wrestling: vest, brown and blue, heavy guard"
+  },
+  "combat": {
+    "juggle_limit": 5,
+    "relaunch_limit": 1,
+    "assist": "slam:C:360",
+    "routes": [
+      {
+        "from": "chop:A:none",
+        "to": "n_stand_b:B:none",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "chop:A:none",
+        "to": "palm:C:none",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_b:B:none",
+        "to": "palm:C:none",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_b:B:none",
+        "to": "n_stand_d:D:none",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_chop:A:none",
+        "to": "n_crouch_b:B:none",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_chop:A:none",
+        "to": "c_chop:C:none",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_b:B:none",
+        "to": "c_chop:C:none",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "chop:A:none",
+        "to": "slam:C:360",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "chop:A:none",
+        "to": "slam:A:360",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "chop:A:none",
+        "to": "hug:D:hcf",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_b:B:none",
+        "to": "slam:C:360",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_b:B:none",
+        "to": "slam:A:360",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_b:B:none",
+        "to": "hug:D:hcf",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "palm:C:none",
+        "to": "slam:C:360",
+        "ticks": [
+          5,
+          16
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "palm:C:none",
+        "to": "slam:A:360",
+        "ticks": [
+          5,
+          16
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "palm:C:none",
+        "to": "hug:D:hcf",
+        "ticks": [
+          5,
+          16
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_chop:A:none",
+        "to": "slam:C:360",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_chop:A:none",
+        "to": "slam:A:360",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_chop:A:none",
+        "to": "hug:D:hcf",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_b:B:none",
+        "to": "slam:C:360",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_b:B:none",
+        "to": "slam:A:360",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_b:B:none",
+        "to": "hug:D:hcf",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_chop:C:none",
+        "to": "slam:C:360",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_chop:C:none",
+        "to": "slam:A:360",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_chop:C:none",
+        "to": "hug:D:hcf",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "slam:C:360",
+        "to": "super:A:360",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "slam:C:360",
+        "to": "super:C:360",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "slam:A:360",
+        "to": "super:A:360",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "slam:A:360",
+        "to": "super:C:360",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "hug:D:hcf",
+        "to": "super:A:360",
+        "ticks": [
+          5,
+          25
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "hug:D:hcf",
+        "to": "super:C:360",
+        "ticks": [
+          5,
+          25
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "tackle:C:charge_bf",
+        "to": "super:A:360",
+        "ticks": [
+          7,
+          19
+        ],
+        "on": "hit",
+        "max_uses": 1
+      }
+    ],
+    "throws": [
+      {
+        "move": "throw:C:fwd",
+        "grip_x": 26,
+        "lift": 30,
+        "carry_tick": 8,
+        "release_x": 34,
+        "tech_ticks": 4
+      },
+      {
+        "move": "throw:D:fwd",
+        "grip_x": 26,
+        "lift": 22,
+        "carry_tick": 8,
+        "release_x": 22,
+        "tech_ticks": 4
+      },
+      {
+        "move": "throw:C:back",
+        "grip_x": 26,
+        "lift": 32,
+        "carry_tick": 8,
+        "release_x": 34,
+        "tech_ticks": 4
+      },
+      {
+        "move": "throw:D:back",
+        "grip_x": 26,
+        "lift": 22,
+        "carry_tick": 8,
+        "release_x": 22,
+        "tech_ticks": 4
+      }
+    ]
   }
 }

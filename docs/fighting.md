@@ -135,3 +135,53 @@ motions so the same input rules apply.
   deterministic CPU match.
 - `tests/test_shadowleague.py`: Shadow League's data validates and its cooked
   fighters finish CPU matches in every pairing.
+
+## Authored combat policies (1.7.7)
+
+`NGFFighterDef.combat` optionally points to an `NGFCombatRules` block in ROM.
+Null retains the legacy cancel/juggle policy. An authored policy defines up to
+32 `NGFCancelRule` entries: source and destination move IDs, inclusive startup
+tick window, hit/block/counter/whiff conditions, optional MAX requirement and a
+per-route use limit. Tick windows pause with hitstop and super freeze. Routes
+do not depend on which move is later in the move array. Command recognition,
+stance restrictions and resource checks still apply. Startup kara inputs and
+normal-to-MAX activation retain their existing behavior.
+
+`ngf_cancel_check` inspects a route without spending input or meter. It reports
+no route, timing, contact, repeat or resource failure; training also displays
+the last attempted route's rejection. Route uses reset at a new neutral attack
+or fighter/round reset. A connected move records hit, block and counter contact
+separately from the legacy one-hit latch.
+
+Policies bound airborne hit points and upward relaunches. Exhausted airborne
+hit budgets prevent further contacts until landing. A hit after the upward
+relaunch limit cannot refresh upward velocity. Long grounded combos lose a
+bounded amount of stun; damage scaling remains in place. Null-policy fighters
+retain their prior behavior. Optional `assist_move` chooses a specific melee
+support action (one-based move ID); zero preserves the legacy selection.
+Optional `throws` (`NGFThrowAnchor`) define per-throw grip distance, peak lift,
+back-throw carry tick, release distance and defender tech window, adjusting for
+wider targets and stage-corner walls so thrower and defender do not collapse
+onto the same coordinate.
+
+Walking backward is separated from proximity-guard appearance and real
+blocking: holding back enters a standing/crouching guard pose and holds
+position only while an opponent's attack still has active frames ahead within
+its authored reach (or an approaching projectile is close), and otherwise
+retreats freely. Actual blocking is evaluated at contact.
+
+Shadow League activates this policy for Kenji, Jack and Amara. Their JSON routes
+use `animation:buttons:motion` selectors, resolved by the compiler after system
+moves are inserted and ordered. The validator rejects ambiguous selectors,
+invalid windows, unbounded repeats, invalid throw anchors and unsupported
+support actions. `fighter_cook.py --tables-only` updates these fighters'
+compiled combat tables without regenerating graphics or altering the rest of
+the roster's frames. Training mode displays an 8-step input timeline, move tick
+and spacing readout, repeatable reset positions (center, left corner, right
+corner) and route rejection reasons including whiff/spacing and juggle limits.
+
+The bounded presentation event queue reports loss and peak occupancy. On
+overflow it retains decisive state announcements ahead of cosmetic movement
+events, preserving retained event order. If it cannot retain another critical
+event, that loss has its own counter. These counters do not replace gameplay
+state. Replay hashes include MAX, kara, route-use and juggle state.

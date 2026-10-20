@@ -318,6 +318,15 @@ uint8_t NEOGEO_USER ng_palfx_screen_fading(void)
     return (uint8_t)(ng_palfx_scr.fade != 0);
 }
 
+uint8_t NEOGEO_USER ng_palfx_screen_ready(uint8_t first, uint8_t count)
+{
+    uint16_t b, end = (uint16_t)first + count;
+    if (!count || end > ng_palfx_scr.count || ng_palfx_scr.all_dirty || ng_palfx_scr.half_done) return 0u;
+    for (b = first; b < end; b++)
+        if (ng_palfx_scr.dirty[b >> 3] & (uint8_t)(1u << (b & 7u))) return 0u;
+    return 1u;
+}
+
 void NEOGEO_USER ng_palfx_vblank(void)
 {
     uint8_t i, bits, bank;
@@ -339,9 +348,12 @@ void NEOGEO_USER ng_palfx_vblank(void)
      * line) starts only with room for all of it -- 22 lines for 82 banks,
      * which the blank has when this runs first; single banks go while
      * there is time; the rest wait. */
-    if (ng_palfx_scr.all_dirty &&
-        ng_vram_lines_left() < (uint8_t)(2u + (ng_palfx_scr.count >> 2)))
-        return;
+    {
+        uint8_t needed = (uint8_t)(2u + (ng_palfx_scr.count >> 2));
+        if (needed > 22u) needed = 22u;
+        if (ng_palfx_scr.all_dirty && ng_vram_lines_left() < needed)
+            return;
+    }
 #endif
     if (ng_palfx_scr.all_dirty) {
         ng_palfx_scr.all_dirty = 0;

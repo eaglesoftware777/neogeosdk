@@ -1,10 +1,20 @@
 /* Exercise real deferred rendering against the host VRAM fixture. */
+static void advance_raster(void);
+#define NG_TEST_VRAM_WRITE() advance_raster()
 #define main sprite_immediate_test_main
 #include "sprite_render_test.c"
 #undef main
 #include "../sdk/2d_engine/ng_sprite_group.c"
 
 uint16_t ng_vram_test_line = 240u;
+static unsigned words_per_line, raster_words;
+static void advance_raster(void)
+{
+    if (words_per_line && ++raster_words >= words_per_line) {
+        raster_words = 0u;
+        ng_vram_test_line = (uint16_t)((ng_vram_test_line + 1u) % 264u);
+    }
+}
 void ng_render_queue_flush(void) {}
 void ng_fix_commit(void) {}
 
@@ -168,6 +178,78 @@ static void test_deferred_large_rom_map_keeps_latest_address(void)
     assert(ram[300u * 64u + 5u] == NG_SPRITE_BLANK_ATTR);
 }
 
+static void test_aged_content_obeys_deadline(void)
+{
+    NGSpriteGroup g;
+    unsigned before;
+    ngsg_queue_drop();
+    ng_sprite_group_init(&g, 96u, 4u, 4u, 900u, 20u);
+    ng_sprite_group_flush(&g);
+    ngsg_head[1] = &g; ngsg_head_age[1] = 9u;
+    before = writes;
+    ng_vram_test_line = 100u;
+    ngsg_commit_aged();
+    assert(writes == before && pending() == 1u);
+    ng_vram_test_line = 7u;
+    ngsg_commit_aged();
+    assert(writes == before && (g.dirty & NG_SGF_DIRTY_TILE));
+    ng_vram_test_line = 240u;
+    ng_vram_commit();
+    assert(pending() == 0u && map_tile(96, 0) == 900u);
+    ngsg_head[1] = &g; ngsg_head_age[1] = 9u;
+    ngsg_queue_drop();
+    assert(!ngsg_head[1] && !ngsg_head_age[1]);
+}
+
+static void test_bounded_removal_and_slot_reuse(void)
+{
+    NGSpriteGroup g;
+    unsigned before;
+    ngsg_queue_drop(); memset(ram, 0, sizeof(ram));
+    ng_vram_test_line = 240u;
+    ng_sprite_group_init(&g, 96u, 40u, 1u, 1000u, 20u);
+    ng_sprite_group_upload(&g);
+    before = writes;
+    ng_vram_test_line = 100u;
+    ng_sprite_group_hide_queued(&g);
+    assert(writes == before && !g.readyRows && !g.visible);
+    ng_sprite_group_init(&g, 120u, 3u, 3u, 1100u, 21u);
+    ng_sprite_group_flush(&g);
+    ng_vram_commit();
+    assert(writes == before && pending() == 1u);
+    /* A simulated tight blank permits one eight-strip hide batch. The
+     * replacement belongs to the part still waiting, so it cannot publish. */
+    words_per_line = 24u; raster_words = 0u;
+    ng_vram_test_line = 4u;
+    ng_vram_commit();
+    assert(ngsg_hide_any && ngsg_waiting_hide(&g));
+    assert(writes == before + 24u && map_tile(120, 0) != 1100u);
+    words_per_line = 0u;
+    ng_vram_test_line = 240u;
+    ng_vram_commit();
+    assert(!ngsg_hide_any && pending() == 0u);
+    assert(map_tile(120, 0) == 1100u && act_of(120) == 3u);
+    before = writes;
+    ng_vram_commit();
+    assert(writes == before); /* No old hide can erase the replacement. */
+}
+
+static void test_cancel_drops_owned_streaming_columns(void)
+{
+    NGSpriteGroup a, b;
+    ngsg_queue_drop();
+    ng_sprite_group_init(&a, 96u, 3u, 3u, 1200u, 20u);
+    ng_sprite_group_init(&b, 100u, 3u, 3u, 1300u, 21u);
+    ngsg_list_strip(&a, 0u, 19u);
+    ngsg_list_strip(&b, 0u, 20u);
+    ngsg_list_strip(&a, 1u, 21u);
+    ng_sprite_group_flush(&a);
+    ng_sprite_group_cancel(&a);
+    assert(ngsg_strips_n == 1u && ngsg_strips[0].g == &b);
+    assert(pending() == 1u && (a.dirty & NG_SGF_QUEUED));
+    ngsg_queue_drop();
+}
+
 int main(void)
 {
     test_pending_rebind_is_unique();
@@ -176,6 +258,9 @@ int main(void)
     test_pinned_player_stays_when_a_creature_leaves();
     test_upload_keeps_membership();
     test_deferred_large_rom_map_keeps_latest_address();
-    puts("deferred rebind membership, hidden window reuse, pinned slots and immediate uploads: PASS");
+    test_aged_content_obeys_deadline();
+    test_bounded_removal_and_slot_reuse();
+    test_cancel_drops_owned_streaming_columns();
+    puts("deferred membership, deadline, bounded hides and replacement ownership: PASS");
     return 0;
 }

@@ -245,7 +245,9 @@ static void NEOGEO_USER show_asset(NGSpriteGroup *g, uint16_t first_sprite, uint
 {
     const NGArtAsset *a = art(id);
     uint16_t per = (uint16_t)((uint16_t)a->strips * a->rows);
+    uint8_t prio = g->prio;
     ng_sprite_group_init(g, first_sprite, a->strips, a->rows, (uint16_t)(a->tile_base + per * frame), a->palette_bank);
+    if (prio != NG_SG_PRIO_NORMAL) ng_sprite_group_set_priority(g, prio);
     ng_sprite_group_set_palette_map(g, a->tile_palettes + per * frame);
     ng_sprite_group_set_pos(g, x, y);
     ng_sprite_group_set_visible(g, 1);
@@ -322,12 +324,14 @@ void NEOGEO_USER ml_chapter_picture(uint8_t chapter)
 void NEOGEO_USER ml_logo(uint8_t show, int16_t x, int16_t y)
 {
     if (!show) { hide(&s_logo); return; }
+    ng_sprite_group_set_priority(&s_logo, NG_SG_PRIO_HIGH);
     show_asset(&s_logo, SPR_LOGO, ML_ART_LOGO, 0, x, y);
 }
 
 void NEOGEO_USER ml_card(uint8_t show)
 {
     if (!show) { hide(&s_card); return; }
+    ng_sprite_group_set_priority(&s_card, NG_SG_PRIO_HIGH);
     show_asset(&s_card, SPR_CARD, ML_ART_CARD, 0, 16, 16);
 }
 
@@ -789,9 +793,13 @@ void NEOGEO_USER ml_dialog(uint8_t speaker, const char *text, uint8_t typing)
     uint8_t face = speaker < ML_SPEAKERS ? ml_face_art[speaker] : 0u;
     uint16_t n = 0;
     s_dlg_speaker = speaker;
-    if (!s_dialog.visible) show_asset(&s_dialog, SPR_DIALOG, ML_ART_DIALOG, 0, 0, 160);
+    if (!s_dialog.visible) {
+        ng_sprite_group_set_priority(&s_dialog, NG_SG_PRIO_HIGH);
+        show_asset(&s_dialog, SPR_DIALOG, ML_ART_DIALOG, 0, 0, 160);
+    }
     if (face) {
         load_art_palettes(face);             /* every portrait shares one pair of banks */
+        ng_sprite_group_set_priority(&s_face, NG_SG_PRIO_HIGH);
         show_asset(&s_face, SPR_FACE, face, 0, 8, 160);
     }
     else hide(&s_face);

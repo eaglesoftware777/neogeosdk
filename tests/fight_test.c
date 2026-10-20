@@ -63,7 +63,7 @@ static const NGFFighterDef tester = {
     20, 90, 56, 52, 100, 0, anims, frames, hurt, moves, projectiles,
     sizeof(anims) / sizeof(anims[0]), sizeof(moves) / sizeof(moves[0]), 1, 4,
     {160, 70, 40, 5, 4, 1, 2, 6, 3, 0},
-    0, 0,
+    0, 0, 0,
 };
 
 static NGFMatch m;
@@ -478,6 +478,12 @@ static void test_replay_hash(void)
     assert(ngf_match_hash(&m) != before); m.f[0].frame_timer--;
     m.f[0].input.pending = NGF_BTN_A;
     assert(ngf_match_hash(&m) != before); m.f[0].input.pending = 0;
+    m.f[0].max_timer = 1u;
+    assert(ngf_match_hash(&m) != before); m.f[0].max_timer = 0u;
+    m.f[0].input.kara = NGF_BTN_A;
+    assert(ngf_match_hash(&m) != before); m.f[0].input.kara = 0u;
+    m.f[0].route_uses[0] = 1u;
+    assert(ngf_match_hash(&m) != before); m.f[0].route_uses[0] = 0u;
     m.team_life[0][1] = 321;
     assert(ngf_match_hash(&m) != before); m.team_life[0][1] = 0;
     m.cpu[0].wait++;
@@ -561,6 +567,155 @@ static void test_training_modes_and_recording(void)
     printf("training: nonlethal combat, timers, resource refill, record/playback and dummy modes: ok\n");
 }
 
+static void test_retreat_is_not_proximity_locked(void)
+{
+    uint8_t side;
+    for (side = 0u; side < 2u; side++) {
+        NGFFighter *f, *o;
+        int32_t before;
+        uint8_t back = side ? NGF_RAW_RIGHT : NGF_RAW_LEFT;
+        fight_at(120);
+        f = &m.f[side]; o = &m.f[side ^ 1u]; before = f->x;
+        /* A live distant projectile and the opponent starting a heavy out of reach. */
+        m.proj[0].active = 1u; m.proj[0].owner = (uint8_t)(side ^ 1u);
+        m.proj[0].def = &projectiles[0]; m.proj[0].life = 50u;
+        m.proj[0].x = o->x; m.proj[0].h = 120 * 256;
+        ngf_match_step(&m, side ? NGF_BTN_C : back, side ? back : NGF_BTN_C);
+        assert(f->vx == (side ? tester.walk_back : -tester.walk_back));
+        assert(f->anim == NGF_A_WALK_B);
+        assert(side ? f->x > before : f->x < before);
+        /* Within reach during active startup: proximity guard appears in place. */
+        fight_at(70);
+        f = &m.f[side]; o = &m.f[side ^ 1u];
+        ngf_match_step(&m, side ? NGF_BTN_C : 0u, side ? 0u : NGF_BTN_C);
+        before = f->x;
+        ngf_match_step(&m, side ? 0u : back, side ? back : 0u);
+        assert(f->vx == 0 && f->anim == NGF_A_GUARD && f->x == before);
+        /* Once the strike has no active frames remaining (recovery), retreat resumes. */
+        o->frame = 2u; o->frame_timer = 0u;
+        ngf_match_step(&m, side ? 0u : back, side ? back : 0u);
+        assert(f->vx == (side ? tester.walk_back : -tester.walk_back));
+        assert(f->anim == NGF_A_WALK_B);
+    }
+}
+
+static void test_event_pressure_preserves_ko(void)
+{
+    uint8_t i, found = 0u;
+    NGFEvent ev;
+    fight_at(50);
+    m.ev_count = NGF_EVENTS;
+    for (i = 0u; i < NGF_EVENTS; i++) {
+        memset(&m.ev[i], 0, sizeof(m.ev[i]));
+        m.ev[i].type = NGF_EV_MOVE;
+    }
+    m.f[1].life = 1u;
+    run(1, NGF_BTN_A, 0u); run(20, 0u, 0u);
+    assert(m.f[1].life == 0u);
+    assert(m.events_dropped > 0u && !m.events_critical_dropped && m.events_peak == NGF_EVENTS);
+    while (ngf_pop_event(&m, &ev)) if (ev.type == NGF_EV_KO) found++;
+    assert(found == 1u);
+}
+
+static void test_authored_cancel_routes(void)
+{
+    static const NGFCancelRule routes[] = {
+        {6u, 5u, 6u, 11u, NGF_CONTACT_HIT, 1u}, /* reverse array order */
+        {5u, 6u, 3u, 8u, NGF_CONTACT_BLOCK, 1u},
+        {6u, 0u, 6u, 11u, NGF_CONTACT_HIT, 1u},
+    };
+    static const NGFCombatRules policy = {routes, 3u, 2u, 1u, 6u, 0, 0u, 0u};
+    NGFFighterDef authored = tester;
+    NGFFighter *f;
+    uint8_t rule, side;
+    authored.combat = &policy;
+    for (side = 0u; side < 2u; side++) {
+        fight_at(100);
+        f = &m.f[side]; f->def = &authored;
+        f->state = NGF_S_ATTACK; f->move_index = 6u; f->move = &moves[6];
+        f->anim = moves[6].anim; f->frame = 1u; f->frame_timer = 0u;
+        f->state_timer = 5u; f->move_contact = NGF_CONTACT_HIT; f->move_hit = 1u;
+        assert(ngf_cancel_check(f, 5u, &rule) == NGF_CANCEL_WINDOW);
+        f->state_timer = 6u; f->move_contact = NGF_CONTACT_BLOCK;
+        assert(ngf_cancel_check(f, 5u, &rule) == NGF_CANCEL_CONTACT);
+        f->move_contact = NGF_CONTACT_HIT;
+        assert(ngf_cancel_check(f, 5u, &rule) == NGF_CANCEL_OK && rule == 0u);
+        assert(ngf_cancel_check(f, 0u, 0) == NGF_CANCEL_RESOURCE);
+        f->power = NGF_POWER_STOCK;
+        assert(ngf_cancel_check(f, 0u, 0) == NGF_CANCEL_OK);
+        f->route_uses[0] = 1u;
+        assert(ngf_cancel_check(f, 5u, 0) == NGF_CANCEL_REPEAT);
+        f->route_uses[0] = 0u; f->state_timer = 12u;
+        assert(ngf_cancel_check(f, 5u, 0) == NGF_CANCEL_WINDOW);
+        f->state_timer = 6u;
+        ngf_match_step(&m, side ? 0u : NGF_BTN_A, side ? NGF_BTN_A : 0u);
+        assert(f->move_index == 5u && f->route_uses[0] == 1u);
+        assert(!f->move_contact);
+        ngf_round_start(&m);
+        assert(!f->route_uses[0] && !f->juggle_points && !f->move_contact);
+    }
+    fight_at(50);
+    ngf_striker_set(&m, 0u, &authored);
+    assert(ngf_call_striker(&m, 0u));
+    assert(m.striker[0].move_index == 5u); /* Selected jab, not the strongest normal. */
+}
+
+static void test_juggle_budget_and_landing_reset(void)
+{
+    static const NGFCombatRules policy = {0, 0u, 2u, 1u, 0u, 0, 0u, 0u};
+    NGFFighterDef authored = tester;
+    uint16_t life;
+    authored.combat = &policy;
+    fight_at(50);
+    m.f[1].def = &authored; m.f[1].state = NGF_S_FALL;
+    m.f[1].grounded = 0u; m.f[1].h = 30 * 256; m.f[1].vh = 0;
+    m.f[1].anim = NGF_A_FALL; m.f[1].frame = 0u;
+    m.f[1].juggle_points = 2u;
+    m.f[0].state = NGF_S_ATTACK; m.f[0].move = &moves[5]; m.f[0].move_index = 5u;
+    m.f[0].anim = moves[5].anim; m.f[0].frame = 1u; m.f[0].frame_timer = 0u;
+    life = m.f[1].life;
+    run(1, 0u, 0u);
+    assert(m.f[1].life == life && !m.f[0].move_hit);
+    m.f[1].juggle_points = 1u; m.f[1].relaunches = 1u;
+    run(1, 0u, 0u);
+    assert(m.f[1].life < life && m.f[1].juggle_points == 2u);
+    assert(m.f[1].vh <= 0); /* Budgeted hit cannot add another upward launch. */
+    run(90, 0u, 0u);
+    assert(m.f[1].grounded && !m.f[1].juggle_points && !m.f[1].relaunches);
+}
+
+static void test_throw_anchors_and_corners(void)
+{
+    static const NGFThrowAnchor anchors[] = {
+        {3u, 24u, 32u, 6u, 36u, 5u}
+    };
+    static const NGFCombatRules policy = {0, 0u, 2u, 1u, 0u, anchors, 1u, 0u};
+    NGFFighterDef authored = tester, wide = tester;
+    NGFMove back_moves[sizeof(moves) / sizeof(moves[0])];
+    memcpy(back_moves, moves, sizeof(moves));
+    back_moves[3].motion = NGF_MOTION_BACK;
+    authored.combat = &policy;
+    wide.push_w = 28u;
+    /* Authored grip, wider opponent adjustment, and peak lift. */
+    fight_at(40);
+    m.f[0].def = &authored; m.f[1].def = &wide;
+    run(1, NGF_RAW_RIGHT | NGF_BTN_C, 0u);
+    assert(m.f[1].state == NGF_S_THROWN);
+    assert(ngf_fighter_px(&m.f[1]) - ngf_fighter_px(&m.f[0]) == 24 + (28 - 20));
+    run(6, 0u, 0u);
+    assert(ngf_fighter_py(&m.f[1]) >= 31 && ngf_fighter_py(&m.f[1]) <= 32);
+    /* Corner back-throw keeps thrower and target separated at the stage wall. */
+    authored.moves = back_moves;
+    fight_at(40);
+    m.f[0].def = &authored;
+    m.f[0].x = 24 * 256; m.f[1].x = 64 * 256;
+    m.f[0].facing_left = 0u; m.f[1].facing_left = 1u;
+    run(1, NGF_RAW_LEFT | NGF_BTN_C, 0u);
+    assert(m.f[1].state == NGF_S_THROWN);
+    run(7, 0u, 0u);
+    assert(ngf_fighter_px(&m.f[1]) == 16 && ngf_fighter_px(&m.f[0]) == 40);
+}
+
 int main(void)
 {
     test_motions();
@@ -578,6 +733,11 @@ int main(void)
     test_cpu_determinism();
     test_seven_levels_and_round_options();
     test_training_modes_and_recording();
+    test_retreat_is_not_proximity_locked();
+    test_event_pressure_preserves_ko();
+    test_authored_cancel_routes();
+    test_juggle_budget_and_landing_reset();
+    test_throw_anchors_and_corners();
     printf("fight_test: ok (NGFMatch %u bytes)\n", (unsigned)sizeof(NGFMatch));
     return 0;
 }

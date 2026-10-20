@@ -40,7 +40,18 @@ RUNTIME_FIELDS={"bank_seen":"&slf_rom_banks_seen", "bank_errors":"&slf_rom_error
                 "home_seconds":"&slf_home_seconds", "select_cursor":"&slf_select_cursor",
                 "wall_start":"&slf_wall_row_start", "wall_len":"&slf_wall_row_len",
                 "actor_deferred":"&slf_actor_deferred", "actor_commits":"&slf_actor_commits",
-                "actor_deadline_misses":"&slf_actor_deadline_misses"}
+                "actor_deadline_misses":"&slf_actor_deadline_misses",
+                "hardware_ticks":"&slf_hardware_ticks", "input_sequence":"&slf_input_sequence",
+                "input_dropped":"&slf_input_dropped", "input_catchups":"&slf_input_catchups",
+                "commit_skipped":"&slf_commit_skipped", "irq_lines_peak":"&slf_irq_lines_peak",
+                "actor_requested":"&slf_actor_requested", "actor_uploading":"&slf_actor_uploading",
+                "actor_displayed":"&slf_actor_displayed", "actor_age_peak":"&slf_actor_age_peak",
+                "scene_input_ignored":"&slf_scene_input_ignored",
+                "scene_setup":"&s_scene_setup",
+                "perf":"&ng_perf", "render_queue_stats":"&ng_rq_stats"}
+PERF_FIELDS = {"perf_" + name: "&((NGPerf*)0)->" + name for name in
+               ("lines_peak", "commit_late", "commit_spill", "commit_lines_peak", "queue_full",
+                "outside_sum", "outside_active_sum", "overruns", "commit_phase_peak")}
 
 
 def main():
@@ -60,6 +71,7 @@ def main():
     ap.add_argument("--bios-name", help="MAME BIOS name; defaults to euro/asia")
     ap.add_argument("--output", type=Path, default=GAME / "build/qa")
     ap.add_argument("--elf",type=Path,default=ROOT/"out/game")
+    ap.add_argument("--layout-root",type=Path,default=ROOT,help="Source tree matching the ELF's SDK structure layout")
     ap.add_argument("--roms",type=Path,default=ROOT/"roms")
     ap.add_argument("--bios",type=Path,default=ROOT/"bios/test_roms")
     ap.add_argument("--hash",type=Path,default=ROOT/"hash_eagle/shadowleague")
@@ -68,6 +80,7 @@ def main():
     if (args.training or args.options) and args.platform!="aes":ap.error("Practice/settings QA requires AES")
     if args.options:args.training=True
     expressions=dict(FIELDS)
+    expressions.update(PERF_FIELDS)
     if args.training:expressions["match"]="&slf_training_match"
     runtime_fields=dict(RUNTIME_FIELDS)
     if args.fighter:runtime_fields["def_"+args.fighter]="&slf_"+args.fighter
@@ -87,11 +100,12 @@ def main():
     # Field offsets from a debug object built by the cartridge's compiler;
     # the match's address from the cartridge itself.
     probe = out / "layout_probe.c"
-    probe.write_text('#include "sdk/2d_engine/ng_fight.h"\nNGFMatch qa_match; NGFFighterDef qa_def;\n')
-    subprocess.run([str(gcc), "-g", "-c", "-DNG_FIGHT=1", "-I" + str(ROOT), "-I" + str(ROOT / "sdk"),
-                    "-I" + str(ROOT / "sdk/2d_engine"), str(probe), "-o", str(out / "layout_probe.o")], check=True)
+    probe.write_text('#define NG_DEBUG_PERF 1\n#include "sdk/ng_perf.h"\n#include "sdk/2d_engine/ng_fight.h"\nNGFMatch qa_match; NGFFighterDef qa_def; NGPerf qa_perf;\n')
+    layout_root = args.layout_root.resolve()
+    subprocess.run([str(gcc), "-g", "-c", "-DNG_FIGHT=1", "-I" + str(layout_root), "-I" + str(layout_root / "sdk"),
+                    "-I" + str(layout_root / "sdk/2d_engine"), str(probe), "-o", str(out / "layout_probe.o")], check=True)
     layout = {}
-    for binary, names in ((args.elf, ["match"]), (out / "layout_probe.o", [n for n in FIELDS if n != "match"])):
+    for binary, names in ((args.elf, ["match"]), (out / "layout_probe.o", [n for n in expressions if n != "match"])):
         cmd = [str(gdb), "-batch", str(binary)]
         for name in names:
             cmd += ["-ex", f'printf "{name}=%lu\\n", (unsigned long){expressions[name]}']
@@ -125,6 +139,7 @@ def main():
     if args.record:command += ["-aviwrite", native(out / "cartridge.avi")]
     provenance={'platform':args.platform,'bios_name':args.bios_name or ('asia' if aes else 'euro'),'team':args.team,'fighter':args.fighter,'attract_only':args.attract_only,'training':args.training,'options':args.options,
                 'seconds':args.seconds,'elf_sha256':hashlib.sha256(args.elf.read_bytes()).hexdigest(),
+                'layout_header_sha256':hashlib.sha256((layout_root/'sdk/2d_engine/ng_fight.h').read_bytes()).hexdigest(),
                 'rom_sha256':{p.name:hashlib.sha256(p.read_bytes()).hexdigest()
                               for p in sorted((args.roms/'shadowleague').glob('781-*'))}}
     (out/'run-manifest.json').write_text(json.dumps(provenance,indent=2)+'\n')

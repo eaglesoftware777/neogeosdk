@@ -194,8 +194,12 @@ uint8_t NEOGEO_USER ngf_input_motion(const NGFInput *in, uint8_t motion, uint8_t
     if (window > in->motion_frames) window = in->motion_frames;
     switch (motion) {
     case NGF_MOTION_NONE: return 1;
-    case NGF_MOTION_FWD: return (uint8_t)(now == 6u);
-    case NGF_MOTION_BACK: return (uint8_t)(now == 4u);
+    case NGF_MOTION_FWD:
+        return (uint8_t)(now == 6u || (now == 5u && (ngf_input_dir(in, 1, facing_left) == 6u ||
+                                                     ngf_input_dir(in, 2, facing_left) == 6u)));
+    case NGF_MOTION_BACK:
+        return (uint8_t)(now == 4u || (now == 5u && (ngf_input_dir(in, 1, facing_left) == 4u ||
+                                                     ngf_input_dir(in, 2, facing_left) == 4u)));
     case NGF_MOTION_DOWN_FWD: return (uint8_t)(now == 3u);
     case NGF_MOTION_CHARGE_BF:
         return (uint8_t)(((FWDS >> now) & 1u) && in->back_release >= CHARGE_FRAMES && in->back_age <= CHARGE_WINDOW);
@@ -245,12 +249,40 @@ uint16_t NEOGEO_USER ngf_distance(const NGFMatch *m)
     return (uint16_t)(d < 0 ? -d : d);
 }
 
+static uint8_t NEOGEO_USER event_priority(uint8_t type)
+{
+    switch (type) {
+    case NGF_EV_KO: case NGF_EV_ROUND: case NGF_EV_FIGHT:
+    case NGF_EV_TIME_UP: case NGF_EV_WIN: case NGF_EV_TAG:
+        return 3u;
+    case NGF_EV_MOVE: case NGF_EV_PROJECTILE: case NGF_EV_LAND:
+        return 1u;
+    default: return 2u;
+    }
+}
+
 static void NEOGEO_USER event(NGFMatch *m, uint8_t type, uint8_t who, uint8_t data, int16_t x, int16_t y)
 {
     NGFEvent *e;
-    if (m->ev_count >= NGF_EVENTS) return;
+    if (m->ev_count >= NGF_EVENTS) {
+        uint8_t i, victim = NGF_EVENTS, priority = event_priority(type);
+        for (i = 0u; i < NGF_EVENTS; i++) {
+            uint8_t p = event_priority(m->ev[i].type);
+            if (p < priority) { victim = i; priority = p; }
+        }
+        m->events_dropped++;
+        if (victim == NGF_EVENTS) {
+            if (event_priority(type) == 3u) m->events_critical_dropped++;
+            return;
+        }
+        /* Preserve the order of every retained event. Cosmetic pressure
+         * must not suppress a round transition or a decisive impact. */
+        for (i = victim; i + 1u < m->ev_count; i++) m->ev[i] = m->ev[i + 1u];
+        m->ev_count--;
+    }
     e = &m->ev[m->ev_count++];
     e->type = type; e->who = who; e->data = data; e->pad = 0; e->x = x; e->y = y;
+    if (m->ev_count > m->events_peak) m->events_peak = m->ev_count;
 }
 
 uint8_t NEOGEO_USER ngf_pop_event(NGFMatch *m, NGFEvent *out)
@@ -350,6 +382,8 @@ static uint8_t NEOGEO_USER overlap(WBox a, WBox b)
 static uint8_t NEOGEO_USER vulnerable(const NGFFighter *f)
 {
     if (f->invuln || (ngf_fighter_frame(f)->flags & NGF_FF_INVULN)) return 0;
+    if (!f->grounded && f->def->combat && f->def->combat->juggle_limit &&
+        f->juggle_points >= f->def->combat->juggle_limit) return 0;
     switch (f->state) {
     case NGF_S_DOWN: case NGF_S_GETUP: case NGF_S_THROWN: case NGF_S_KO:
     case NGF_S_WIN: case NGF_S_LOSE: case NGF_S_INTRO:
@@ -475,10 +509,20 @@ static void NEOGEO_USER apply_hit(NGFMatch *m, uint8_t att_i, const HitParams *h
         if (!def->grounded || (hp->on_hit & (NGF_ON_KNOCKDOWN | NGF_ON_LAUNCH)) || !def->life) {
             int8_t lvx = hp->launch_vx ? hp->launch_vx : 12, lvy = hp->launch_vy ? hp->launch_vy : 28;
             int16_t away = def->x >= att->x ? 1 : -1;
+            uint8_t airborne = (uint8_t)!def->grounded;
+            int16_t previous_vh = def->vh;
             if (!def->life && lvy < 32) lvy = 32;
             def->state = NGF_S_FALL;
             def->grounded = 0;
             def->vh = (int16_t)(lvy * 32);
+            if (def->def->combat) {
+                if (def->juggle_points < 255u) def->juggle_points++;
+                if (airborne) {
+                    if (def->relaunches >= def->def->combat->relaunch_limit)
+                        def->vh = previous_vh < 0 ? previous_vh : 0;
+                    else def->relaunches++;
+                }
+            }
             def->vx = (int16_t)(away * lvx * 32);
             set_anim(def, NGF_A_FALL, 1);
         } else {
@@ -486,6 +530,11 @@ static void NEOGEO_USER apply_hit(NGFMatch *m, uint8_t att_i, const HitParams *h
                                     (def->state == NGF_S_ATTACK && def->move && (def->move->stance & NGF_STANCE_CROUCH)));
             def->state = NGF_S_HIT;
             def->stun_frames = (uint8_t)(hp->hitstun + (def->counter ? 4u : 0u));
+            if (def->def->combat && def->combo > 4u) {
+                uint8_t loss = (uint8_t)((def->combo > 10u ? 10u : def->combo) - 4u);
+                def->stun_frames = def->stun_frames > (uint8_t)(6u + loss) ?
+                    (uint8_t)(def->stun_frames - loss) : 6u;
+            }
             set_anim(def, low ? NGF_A_HIT_LOW : NGF_A_HIT, 1);
             push_away(m, att, def, hp->pushback);
         }
@@ -558,6 +607,39 @@ static uint8_t NEOGEO_USER has_projectile(const NGFMatch *m, uint8_t who)
     return 0;
 }
 
+/* Proximity guard. Holding back shows a guard and holds position only while
+ * a strike can actually arrive: the opponent's move still has active frames
+ * ahead and its authored reach (plus a small margin) covers this fighter's
+ * front edge, or an enemy projectile is flying at it and is close. Any other
+ * attack or projectile on screen leaves walking backward free. Real blocking
+ * is decided at contact by can_block(), independent of this appearance. */
+#define GUARD_REACH_MARGIN  12
+#define GUARD_SHOT_FRAMES   10
+static uint8_t NEOGEO_USER guard_threat(const NGFMatch *m, uint8_t who)
+{
+    const NGFFighter *f = &m->f[who], *o = &m->f[who ^ 1u];
+    int16_t x = ngf_fighter_px(f);
+    uint8_t i;
+    if (o->state == NGF_S_ATTACK && o->move && o->move->kind != NGF_KIND_THROW && o->move->hit.w) {
+        const NGFAnim *a = &o->def->anims[o->anim];
+        int16_t gap = (int16_t)((int16_t)ngf_distance(m) - (int16_t)f->def->push_w);
+        int16_t reach = (int16_t)(o->move->hit.x + (int16_t)o->move->hit.w + GUARD_REACH_MARGIN);
+        uint8_t strike = 0u;
+        for (i = o->frame; i < a->count; i++)
+            if (o->def->frames[a->first + i].flags & NGF_FF_ACTIVE) { strike = 1u; break; }
+        if (strike && gap <= reach) return 1u;
+    }
+    for (i = 0; i < NGF_PROJECTILES; i++) {
+        const NGFProjectile *p = &m->proj[i];
+        int16_t d, speed;
+        if (!p->active || p->owner == who) continue;
+        d = (int16_t)(p->facing_left ? (p->x >> 8) - x : x - (p->x >> 8));
+        speed = (int16_t)(p->def->speed < 0 ? -p->def->speed : p->def->speed);
+        if (d >= 0 && d <= (int16_t)(speed * GUARD_SHOT_FRAMES + f->def->push_w)) return 1u;
+    }
+    return 0u;
+}
+
 static void NEOGEO_USER projectiles_step(NGFMatch *m)
 {
     uint8_t i, j;
@@ -617,10 +699,34 @@ static uint8_t NEOGEO_USER throwable(const NGFFighter *o)
     return (uint8_t)(o->state == NGF_S_IDLE || o->state == NGF_S_CROUCH || o->state == NGF_S_DASH);
 }
 
+static const NGFThrowAnchor * NEOGEO_USER find_throw_anchor(const NGFFighterDef *d, uint8_t move_index)
+{
+    uint8_t i;
+    if (!d || !d->combat || !d->combat->throws) return 0;
+    for (i = 0u; i < d->combat->throw_count; i++)
+        if (d->combat->throws[i].move == move_index) return &d->combat->throws[i];
+    return 0;
+}
+
+static void NEOGEO_USER place_thrown(const NGFMatch *m, NGFFighter *f, NGFFighter *o, int8_t direction, uint8_t base_x, uint8_t adjust_size)
+{
+    int16_t dist = (int16_t)base_x;
+    int32_t lo = (int32_t)FIGHT_MARGIN << 8;
+    int32_t hi = (int32_t)(m->stage_w - FIGHT_MARGIN) << 8;
+    if (adjust_size && o->def->push_w > 20u) dist = (int16_t)(dist + (int16_t)(o->def->push_w - 20u));
+    o->x = f->x + (int32_t)(direction * dist) * 256;
+    if (o->x < lo) { o->x = lo; f->x = o->x - (int32_t)(direction * dist) * 256; }
+    if (o->x > hi) { o->x = hi; f->x = o->x - (int32_t)(direction * dist) * 256; }
+}
+
 static void NEOGEO_USER start_move(NGFMatch *m, uint8_t who, uint8_t k)
 {
     NGFFighter *f = &m->f[who], *o = &m->f[who ^ 1u];
     const NGFMove *mv = &f->def->moves[k];
+    if (f->state != NGF_S_ATTACK) {
+        uint8_t r;
+        for (r = 0u; r < NGF_CANCEL_RULES; r++) f->route_uses[r] = 0u;
+    }
     /* A+B out of blockstun: a guard-cancel roll for one stock. */
     if (f->state == NGF_S_BLOCK && mv->kind == NGF_KIND_EVADE) {
         f->power = (uint16_t)(f->power - NGF_POWER_STOCK);
@@ -632,6 +738,7 @@ static void NEOGEO_USER start_move(NGFMatch *m, uint8_t who, uint8_t k)
     f->state_timer = 0;
     f->state = NGF_S_ATTACK;
     f->move_hit = 0;
+    f->move_contact = 0u;
     f->counter = 1;
     set_anim(f, mv->anim, 1);
     if (f->grounded) f->vx = 0;
@@ -654,8 +761,11 @@ static void NEOGEO_USER start_move(NGFMatch *m, uint8_t who, uint8_t k)
     if (mv->motion && mv->motion < NGF_MOTION_DASH) f->input.motion_frames = 0;
     event(m, NGF_EV_MOVE, who, mv->kind, ngf_fighter_px(f), ngf_fighter_py(f));
     if (mv->kind == NGF_KIND_THROW) {
+        const NGFThrowAnchor *ta = find_throw_anchor(f->def, k);
+        uint8_t tech = (ta && ta->tech_ticks) ? ta->tech_ticks : 4u;
+        uint8_t grip = (ta && ta->grip_x) ? ta->grip_x : 26u;
         if (o->cpu ? (uint8_t)(rnd(m) % 100u) < (uint8_t)(m->cpu[who ^ 1u].level * 5u) :
-                     (ngf_input_pressed(&o->input, NGF_BTN_C, 4) || ngf_input_pressed(&o->input, NGF_BTN_D, 4))) {
+                     (ngf_input_pressed(&o->input, NGF_BTN_C, tech) || ngf_input_pressed(&o->input, NGF_BTN_D, tech))) {
             /* Broken: both pushed apart. */
             f->state = NGF_S_IDLE;
             f->move = 0;
@@ -669,12 +779,39 @@ static void NEOGEO_USER start_move(NGFMatch *m, uint8_t who, uint8_t k)
         o->state = NGF_S_THROWN;
         o->move = 0;
         o->vx = 0;
-        o->x = f->x + (int32_t)(sign_of(f) * 26) * 256;
+        place_thrown(m, f, o, sign_of(f), grip, (uint8_t)(ta != 0));
         o->facing_left = (uint8_t)!f->facing_left;
         set_anim(o, NGF_A_THROWN, 1);
         event(m, NGF_EV_THROW, who, 0, ngf_fighter_px(o), 40);
     }
     enter_frame(m, who);
+}
+
+uint8_t NEOGEO_USER ngf_cancel_check(const NGFFighter *f, uint8_t to, uint8_t *rule_index)
+{
+    const NGFCombatRules *rules = f->def->combat;
+    uint8_t i, reason = NGF_CANCEL_NO_ROUTE;
+    if (!rules || !rules->routes || rules->route_count > NGF_CANCEL_RULES ||
+        f->state != NGF_S_ATTACK || to >= f->def->move_count) return reason;
+    for (i = 0u; i < rules->route_count; i++) {
+        const NGFCancelRule *r = &rules->routes[i];
+        const NGFMove *target = &f->def->moves[to];
+        uint8_t contact = f->move_contact ? f->move_contact : NGF_CONTACT_WHIFF;
+        if (r->from != f->move_index || r->to != to) continue;
+        reason = NGF_CANCEL_WINDOW;
+        if (f->state_timer < r->first_tick || f->state_timer > r->last_tick) continue;
+        reason = NGF_CANCEL_CONTACT;
+        if (!(r->conditions & contact)) continue;
+        reason = NGF_CANCEL_REPEAT;
+        if (!r->max_uses || f->route_uses[i] >= r->max_uses) continue;
+        reason = NGF_CANCEL_RESOURCE;
+        if ((r->conditions & NGF_CANCEL_NEEDS_MAX) && !f->max_timer) continue;
+        if (target->kind == NGF_KIND_SUPER && !f->max_timer &&
+            f->power < (uint16_t)(target->cost * NGF_POWER_STOCK)) continue;
+        if (rule_index) *rule_index = i;
+        return NGF_CANCEL_OK;
+    }
+    return reason;
 }
 
 static uint8_t NEOGEO_USER try_moves(NGFMatch *m, uint8_t who, uint8_t cancel)
@@ -686,7 +823,7 @@ static uint8_t NEOGEO_USER try_moves(NGFMatch *m, uint8_t who, uint8_t cancel)
     uint8_t k;
     for (k = 0; k < f->def->move_count; k++) {
         const NGFMove *mv = &f->def->moves[k];
-        uint8_t btn_ok;
+        uint8_t btn_ok, route = 255u;
         if (!(mv->stance & stance)) continue;
         if ((mv->stance & NGF_STANCE_CLOSE) && dist > f->def->close_range) continue;
         if ((mv->stance & NGF_STANCE_FAR) && dist <= f->def->close_range) continue;
@@ -696,7 +833,7 @@ static uint8_t NEOGEO_USER try_moves(NGFMatch *m, uint8_t who, uint8_t cancel)
         } else if (mv->kind == NGF_KIND_GUARD_ATTACK) {
             continue;
         }
-        if (cancel) {
+        if (cancel && (!f->def->combat || (cancel & NGF_CANCEL_KARA))) {
             uint8_t ok = 0, kara = f->input.kara;
             if ((cancel & NGF_CANCEL_KARA) && mv->buttons == kara && mv->kind <= NGF_KIND_COMMAND) continue;
             if ((cancel & NGF_CANCEL_CHAIN) && mv->kind == NGF_KIND_NORMAL && k > f->move_index) ok = 1;
@@ -715,7 +852,17 @@ static uint8_t NEOGEO_USER try_moves(NGFMatch *m, uint8_t who, uint8_t cancel)
         }
         if (!btn_ok) continue;
         if (mv->motion && !ngf_input_motion(&f->input, mv->motion, f->facing_left, mv->window)) continue;
-        if (mv->kind == NGF_KIND_THROW && (!throwable(o) || dist > mv->range)) continue;
+        if (cancel && f->def->combat && !(cancel & NGF_CANCEL_KARA)) {
+            f->cancel_reject = ngf_cancel_check(f, k, &route);
+            if (f->cancel_reject != NGF_CANCEL_OK) continue;
+        }
+        if (mv->kind == NGF_KIND_THROW) {
+            uint16_t reach = (uint16_t)(f->def->push_w + o->def->push_w + 20u);
+            if (mv->range > reach) reach = mv->range;
+            if (!throwable(o) || dist > reach) continue;
+        }
+        if (route != 255u) f->route_uses[route]++;
+        f->cancel_reject = NGF_CANCEL_OK;
         start_move(m, who, k);
         return 1;
     }
@@ -760,7 +907,7 @@ static void NEOGEO_USER jump_start(NGFFighter *f, uint8_t dir, uint8_t run)
 
 static void NEOGEO_USER free_move(NGFMatch *m, uint8_t who, uint8_t controls)
 {
-    NGFFighter *f = &m->f[who], *o = &m->f[who ^ 1u];
+    NGFFighter *f = &m->f[who];
     const NGFFighterDef *d = f->def;
     uint8_t dir = controls ? ngf_input_dir(&f->input, 0, f->facing_left) : 5u;
     if (controls && (max_start(m, who) || try_moves(m, who, 0))) return;
@@ -787,7 +934,7 @@ static void NEOGEO_USER free_move(NGFMatch *m, uint8_t who, uint8_t controls)
     if (dir <= 3u) {
         f->state = NGF_S_CROUCH;
         f->vx = 0;
-        set_anim(f, dir == 1u && o->state == NGF_S_ATTACK ? NGF_A_GUARD_LOW : NGF_A_CROUCH, 0);
+        set_anim(f, dir == 1u && guard_threat(m, who) ? NGF_A_GUARD_LOW : NGF_A_CROUCH, 0);
         return;
     }
     f->state = NGF_S_IDLE;
@@ -796,7 +943,10 @@ static void NEOGEO_USER free_move(NGFMatch *m, uint8_t who, uint8_t controls)
         set_anim(f, NGF_A_WALK_F, 0);
         if (!(m->frame & 7u) && f->spirit < NGF_SPIRIT_MAX) f->spirit++;
     } else if (dir == 4u) {
-        uint8_t threat = (uint8_t)((o->state == NGF_S_ATTACK && ngf_distance(m) < 150u) || has_projectile(m, (uint8_t)(who ^ 1u)));
+        /* Holding back retreats unless a strike can arrive now (see
+         * guard_threat); then it shows a standing guard in place. A distant
+         * attack or projectile never pins walking backward. */
+        uint8_t threat = guard_threat(m, who);
         f->vx = threat ? 0 : (int16_t)(-d->walk_back * sign_of(f));
         set_anim(f, threat ? NGF_A_GUARD : NGF_A_WALK_B, 0);
     } else {
@@ -808,6 +958,7 @@ static void NEOGEO_USER free_move(NGFMatch *m, uint8_t who, uint8_t controls)
 static void NEOGEO_USER land(NGFMatch *m, uint8_t who)
 {
     NGFFighter *f = &m->f[who];
+    f->juggle_points = f->relaunches = 0u;
     f->grounded = 1;
     f->h = 0;
     f->vh = 0;
@@ -877,7 +1028,8 @@ static void NEOGEO_USER fighter_step(NGFMatch *m, uint8_t who, uint8_t controls)
     case NGF_S_ATTACK: {
         uint8_t done, cancel = f->move ? f->move->cancel : 0u;
         if (f->max_timer && f->move && f->move->kind == NGF_KIND_SPECIAL) cancel |= NGF_CANCEL_SPECIAL | NGF_CANCEL_SUPER;
-        if (f->move_hit && cancel && controls && try_moves(m, who, cancel)) break;
+        if (f->def->combat) cancel |= 0x10u; /* authored route policy */
+        if ((f->move_hit || f->def->combat) && cancel && controls && try_moves(m, who, cancel)) break;
         /* A connected normal may be cancelled into MAX mode. */
         if (f->move_hit && f->move && f->move->kind <= NGF_KIND_COMMAND && controls && max_start(m, who)) break;
         /* The first frames of a normal still take a second button (A+B, C+D,
@@ -891,11 +1043,15 @@ static void NEOGEO_USER fighter_step(NGFMatch *m, uint8_t who, uint8_t controls)
         }
         f->state_timer++;
         if (f->move && f->move->kind == NGF_KIND_THROW && o->state == NGF_S_THROWN) {
-            uint8_t lift = f->state_timer > 8u ? 8u : (uint8_t)f->state_timer;
+            const NGFThrowAnchor *ta = find_throw_anchor(f->def, f->move_index);
+            uint8_t carry = (ta && ta->carry_tick) ? ta->carry_tick : 8u;
+            uint8_t grip = (ta && ta->grip_x) ? ta->grip_x : 26u;
+            uint8_t lift = f->state_timer > carry ? carry : (uint8_t)f->state_timer;
             int8_t direction = sign_of(f);
-            if (f->move->motion == NGF_MOTION_BACK && f->state_timer >= 8u) direction = (int8_t)-direction;
-            o->x = f->x + (int32_t)(direction * 26) * 256;
-            o->h = (int32_t)(lift * ((f->move->on_hit & NGF_ON_LIFT) ? 7u : 2u)) * 256;
+            if (f->move->motion == NGF_MOTION_BACK && f->state_timer >= carry) direction = (int8_t)-direction;
+            place_thrown(m, f, o, direction, grip, (uint8_t)(ta != 0));
+            if (ta && ta->lift) o->h = ((int32_t)lift * ta->lift * 256) / (carry ? carry : 1u);
+            else o->h = (int32_t)(lift * ((f->move->on_hit & NGF_ON_LIFT) ? 7u : 2u)) * 256;
             o->grounded = 0u;
             o->vx = o->vh = 0;
         }
@@ -903,11 +1059,20 @@ static void NEOGEO_USER fighter_step(NGFMatch *m, uint8_t who, uint8_t controls)
         if (f->move && f->move->kind == NGF_KIND_THROW && done) {
             NGFFighter *t = o;
             if (t->state == NGF_S_THROWN) {
+                const NGFThrowAnchor *ta = find_throw_anchor(f->def, f->move_index);
                 HitParams hp;
+                if (ta && (ta->release_x || ta->grip_x)) {
+                    uint8_t rel = ta->release_x ? ta->release_x : ta->grip_x;
+                    int8_t direction = (int8_t)((f->move->motion == NGF_MOTION_BACK) ? -sign_of(f) : sign_of(f));
+                    place_thrown(m, f, t, direction, rel, 1u);
+                }
                 params_from_move(f->move, &hp);
                 hp.level = NGF_LV_UNBLOCKABLE;
                 hp.on_hit |= NGF_ON_KNOCKDOWN;
                 t->state = NGF_S_IDLE;
+                t->grounded = 1u;
+                t->juggle_points = 0u;
+                t->relaunches = 0u;
                 apply_hit(m, who, &hp, ngf_fighter_px(t), 40, 1);
             }
         }
@@ -1049,6 +1214,8 @@ static void NEOGEO_USER resolve_attacks(NGFMatch *m)
             f->move_hit = 1;
             if (try_counter(m, (uint8_t)(i ^ 1u), (int16_t)(f->facing_left ? box[i].l : box[i].r),
                             (int16_t)((box[i].b + box[i].t) / 2))) continue;
+            f->move_contact |= can_block(&m->f[i ^ 1u], hp.level) ? NGF_CONTACT_BLOCK :
+                (uint8_t)(NGF_CONTACT_HIT | (m->f[i ^ 1u].counter ? NGF_CONTACT_COUNTER : 0u));
             apply_hit(m, i, &hp, (int16_t)(m->f[i].facing_left ? box[i].l : box[i].r),
                       (int16_t)((box[i].b + box[i].t) / 2), 1);
         }
@@ -1722,7 +1889,12 @@ uint8_t NEOGEO_USER ngf_call_striker(NGFMatch *m, uint8_t who)
     st = &m->striker[who]; f = &m->f[who]; d = m->assist[who];
     if (st->active || st->cooldown || !f->grounded || !f->life ||
         (f->state != NGF_S_IDLE && f->state != NGF_S_CROUCH && f->state != NGF_S_ATTACK && f->state != NGF_S_DASH)) return 0;
-    for (k = 0; k < d->move_count; k++) {
+    if (d->combat && d->combat->assist_move) {
+        best = (uint8_t)(d->combat->assist_move - 1u);
+        if (best >= d->move_count || d->moves[best].projectile ||
+            !d->moves[best].hit.w || !d->moves[best].hit.h) return 0u;
+    }
+    for (k = 0; k < d->move_count && !(d->combat && d->combat->assist_move); k++) {
         const NGFMove *mv = &d->moves[k];
         if (mv->kind != NGF_KIND_NORMAL || !(mv->stance & NGF_STANCE_STAND) || mv->projectile || !mv->hit.w || !mv->hit.h) continue;
         if (best == 0xFFu || mv->damage > d->moves[best].damage) best = k;
@@ -1756,6 +1928,8 @@ uint8_t NEOGEO_USER ngf_tag_switch(NGFMatch *m, uint8_t who)
     m->team_active[who] = next; f->def = m->team[who][next];
     f->life = m->team_life[who][next]; f->guard = f->def->guard_max;
     f->move = 0; f->move_hit = f->counter = f->combo = 0; f->combo_damage = 0;
+    f->move_contact = f->cancel_reject = f->juggle_points = f->relaunches = 0u;
+    { uint8_t r; for (r = 0u; r < NGF_CANCEL_RULES; r++) f->route_uses[r] = 0u; }
     f->state = NGF_S_DASH; f->state_timer = 0;
     set_anim(f, NGF_A_DASH, 1); cpu_restart(m, who);
     event(m, NGF_EV_TAG, who, next, ngf_fighter_px(f), ngf_fighter_py(f));
@@ -2088,13 +2262,17 @@ uint32_t NEOGEO_USER ngf_match_hash(const NGFMatch *m)
         MIX(f->x); MIX(f->h); MIX((uint16_t)f->vx); MIX((uint16_t)f->vh); MIX((uint16_t)f->push_vx);
         MIX(f->state); MIX(f->state_timer); MIX(f->grounded); MIX(f->facing_left);
         MIX(f->anim); MIX(f->frame); MIX(f->frame_timer); MIX(f->move_hit); MIX(f->move_index);
+        MIX(f->move_contact); MIX(f->juggle_points); MIX(f->relaunches);
+        for (k = 0u; k < NGF_CANCEL_RULES; k++) MIX(f->route_uses[k]);
         MIX(f->move != 0); MIX(f->air_used); MIX(f->block_low); MIX(f->counter);
         MIX(f->life); MIX(f->power); MIX(f->guard); MIX(f->spirit); MIX(f->combo); MIX(f->combo_damage);
         MIX(f->wins); MIX(f->invuln); MIX(f->stun_frames); MIX(f->cpu);
+        MIX(f->max_timer); MIX(f->max_super); MIX(f->hop);
         for (k = 0; f->def->name[k] && k < 80u; k++) MIX((uint8_t)f->def->name[k]);
         MIX(in->head); MIX(in->released); MIX(in->pending); MIX(in->release_pending); MIX(in->motion_frames);
         MIX(in->charge_back); MIX(in->charge_down); MIX(in->back_release); MIX(in->down_release);
         MIX(in->back_age); MIX(in->down_age);
+        MIX(in->kara);
         for (k = 0; k < NGF_INPUT_FRAMES; k++) { MIX(in->raw[k]); MIX(in->press[k]); }
         for (k = 0; k < 4u; k++) { MIX(in->press_age[k]); MIX(in->release_age[k]); }
         MIX(cpu->len); MIX(cpu->pos); MIX(cpu->wait); MIX(cpu->level); MIX(cpu->hold);

@@ -2836,5 +2836,366 @@
     "family": "taekwondo",
     "footwear": "bare",
     "personality": "Taekwondo: gi, ivory and blue, taekwondo guard"
+  },
+  "combat": {
+    "juggle_limit": 7,
+    "relaunch_limit": 2,
+    "assist": "crescent:D:dp",
+    "routes": [
+      {
+        "from": "jab:A:none",
+        "to": "kick:B:none",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "jab:A:none",
+        "to": "n_stand_c:C:none",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "kick:B:none",
+        "to": "n_stand_c:C:none",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "kick:B:none",
+        "to": "hook:D:none",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_jab:A:none",
+        "to": "c_kick:B:none",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_jab:A:none",
+        "to": "n_crouch_c:C:none",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_kick:B:none",
+        "to": "n_crouch_c:C:none",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "jab:A:none",
+        "to": "dragon:D:qcf",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "jab:A:none",
+        "to": "dragon:B:qcf",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "jab:A:none",
+        "to": "crescent:D:dp",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "kick:B:none",
+        "to": "dragon:D:qcf",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "kick:B:none",
+        "to": "dragon:B:qcf",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "kick:B:none",
+        "to": "crescent:D:dp",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_c:C:none",
+        "to": "dragon:D:qcf",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_c:C:none",
+        "to": "dragon:B:qcf",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_c:C:none",
+        "to": "crescent:D:dp",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_jab:A:none",
+        "to": "dragon:D:qcf",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_jab:A:none",
+        "to": "dragon:B:qcf",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_jab:A:none",
+        "to": "crescent:D:dp",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_kick:B:none",
+        "to": "dragon:D:qcf",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_kick:B:none",
+        "to": "dragon:B:qcf",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_kick:B:none",
+        "to": "crescent:D:dp",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_c:C:none",
+        "to": "dragon:D:qcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_c:C:none",
+        "to": "dragon:B:qcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_c:C:none",
+        "to": "crescent:D:dp",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "crescent:D:dp",
+        "to": "super:B:dqcf",
+        "ticks": [
+          3,
+          18
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "crescent:D:dp",
+        "to": "super:D:dqcf",
+        "ticks": [
+          3,
+          18
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "crescent:B:dp",
+        "to": "super:B:dqcf",
+        "ticks": [
+          3,
+          18
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "crescent:B:dp",
+        "to": "super:D:dqcf",
+        "ticks": [
+          3,
+          18
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "axe:D:qcb",
+        "to": "super:B:dqcf",
+        "ticks": [
+          8,
+          20
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "axe:D:qcb",
+        "to": "super:D:dqcf",
+        "ticks": [
+          8,
+          20
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "axe:B:qcb",
+        "to": "super:B:dqcf",
+        "ticks": [
+          8,
+          20
+        ],
+        "on": "hit",
+        "max_uses": 1
+      }
+    ],
+    "throws": [
+      {
+        "move": "throw:C:fwd",
+        "grip_x": 21,
+        "lift": 26,
+        "carry_tick": 7,
+        "release_x": 32,
+        "tech_ticks": 4
+      },
+      {
+        "move": "throw:D:fwd",
+        "grip_x": 21,
+        "lift": 18,
+        "carry_tick": 7,
+        "release_x": 22,
+        "tech_ticks": 4
+      },
+      {
+        "move": "throw:C:back",
+        "grip_x": 21,
+        "lift": 28,
+        "carry_tick": 7,
+        "release_x": 32,
+        "tech_ticks": 4
+      },
+      {
+        "move": "throw:D:back",
+        "grip_x": 21,
+        "lift": 18,
+        "carry_tick": 7,
+        "release_x": 22,
+        "tech_ticks": 4
+      }
+    ]
   }
 }

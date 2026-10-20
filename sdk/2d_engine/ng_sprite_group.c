@@ -411,6 +411,10 @@ void NEOGEO_USER ng_sprite_park_off_range(uint16_t first, uint16_t count)
               (uint16_t)(NG_SPRITE_DISABLED_X << 7), i);
 }
 
+#ifdef NG_VRAM_DEFER
+static void NEOGEO_USER ngsg_clear_hide_range(uint16_t firstSprite, uint16_t count);
+#endif
+
 /* Per-frame hide path: hot, must fit in vblank.  Uses the quick
  * park (just SCB234, no SCB1 wipe).  ng_sprite_hide_all() goes
  * through ng_vram_clear_all_sprites() -> heavy disable instead,
@@ -419,6 +423,7 @@ void NEOGEO_USER ng_sprite_hide_range(uint16_t firstSprite, uint16_t count)
 {
 #ifdef NG_VRAM_DEFER
     ng_vram_busy++;
+    ngsg_clear_hide_range(firstSprite, count);
 #endif
     ng_sprite_park_off_range(firstSprite, count);
 #ifdef NG_VRAM_DEFER
@@ -666,6 +671,9 @@ void NEOGEO_USER ng_sprite_group_upload(NGSpriteGroup *g)
         ng_sprite_group_hide(g);
         return;
     }
+#ifdef NG_VRAM_DEFER
+    ngsg_clear_hide_range(g->firstSprite, g->strips);
+#endif
 
     rows = ngsg_rows(g);
     n = g->strips;
@@ -694,6 +702,9 @@ void NEOGEO_USER ng_sprite_group_update_transform(NGSpriteGroup *g)
         ng_sprite_group_hide(g);
         return;
     }
+#ifdef NG_VRAM_DEFER
+    ngsg_clear_hide_range(g->firstSprite, g->strips);
+#endif
 
     rows = ngsg_rows(g);
     /* Horizontal shrink on every strip, for a consistent width; the
@@ -819,6 +830,8 @@ static NGSpriteGroup *ngsg_high[NG_VRAM_QUEUE_HIGH];
 static NGSpriteGroup *ngsg_norm[NG_VRAM_QUEUE_GROUPS];
 static NGSpriteGroup *ngsg_low[NG_VRAM_QUEUE_LOW];
 static uint16_t ngsg_high_n, ngsg_norm_n, ngsg_low_n;
+static NGSpriteGroup *ngsg_head[3];
+static uint8_t ngsg_head_age[3];
 /* Character hides: a bit a sprite slot, so a hide never waits for room. */
 static uint16_t ngsg_hide_bits[(NG_SPR_TOTAL + 15u) >> 4];
 static uint8_t ngsg_hide_any;
@@ -921,12 +934,20 @@ static void NEOGEO_USER ngsg_queue_drop(void)
     for (i = 0; i < (uint16_t)((NG_SPR_TOTAL + 15u) >> 4); i++) ngsg_hide_bits[i] = 0;
     ngsg_hide_any = 0;
     ngsg_strips_n = 0;
+    for (i = 0u; i < 3u; i++) { ngsg_head[i] = 0; ngsg_head_age[i] = 0u; }
 }
 
 void NEOGEO_USER ng_sprite_group_cancel(NGSpriteGroup *g)
 {
+    uint8_t i, kept = 0u;
     /* Its changes are dropped; the listing, if any, stays and finds nothing. */
-    if (g) g->dirty = (uint8_t)(g->dirty & NG_SGF_QUEUED);
+    if (!g) return;
+    g->dirty = (uint8_t)(g->dirty & NG_SGF_QUEUED);
+    /* Streaming-column jobs belong to the same owner as the group. A
+     * removed/rebound group must not retain an old column upload. */
+    for (i = 0u; i < ngsg_strips_n; i++)
+        if (ngsg_strips[i].g != g) ngsg_strips[kept++] = ngsg_strips[i];
+    ngsg_strips_n = kept;
 }
 
 void NEOGEO_USER ng_sprite_hide_range_queued(uint16_t firstSprite, uint16_t count)
@@ -936,6 +957,38 @@ void NEOGEO_USER ng_sprite_hide_range_queued(uint16_t firstSprite, uint16_t coun
     if (end > NG_SPR_TOTAL || end < firstSprite) end = NG_SPR_TOTAL;
     for (s = firstSprite; s < end; s++) ngsg_hide_bits[s >> 4] |= (uint16_t)(1u << (s & 15u));
     if (end > firstSprite) ngsg_hide_any = 1;
+}
+
+static void NEOGEO_USER ngsg_clear_hide_range(uint16_t firstSprite, uint16_t count)
+{
+    uint16_t s, end;
+    if (!ngsg_hide_any || firstSprite >= NG_SPR_TOTAL) return;
+    end = (uint16_t)(firstSprite + count);
+    if (end > NG_SPR_TOTAL || end < firstSprite) end = NG_SPR_TOTAL;
+    for (s = firstSprite; s < end; s++) ngsg_hide_bits[s >> 4] &= (uint16_t)~(1u << (s & 15u));
+}
+
+void NEOGEO_USER ng_sprite_group_hide_queued(NGSpriteGroup *g)
+{
+    if (!g) return;
+    ng_sprite_group_cancel(g);
+    ng_sprite_hide_range_queued(g->firstSprite, g->strips);
+    g->visible = 0u;
+    g->mapRows = g->readyRows = 0u;
+}
+
+/* A delayed removal owns its old slots until it reaches hardware. In
+ * particular, a newly initialised group must not upload into those slots
+ * and then be erased by the remainder of an older hide. */
+static uint8_t NEOGEO_USER ngsg_waiting_hide(const NGSpriteGroup *g)
+{
+    uint16_t s, end;
+    if (!ngsg_hide_any) return 0u;
+    end = (uint16_t)(g->firstSprite + g->strips);
+    if (end < g->firstSprite || end > NG_SPR_TOTAL) end = NG_SPR_TOTAL;
+    for (s = g->firstSprite; s < end; s++)
+        if (ngsg_hide_bits[s >> 4] & (uint16_t)(1u << (s & 15u))) return 1u;
+    return 0u;
 }
 
 /*
@@ -967,7 +1020,7 @@ static uint8_t NEOGEO_USER ngsg_flush_moved(NGSpriteGroup *g)
  * line a strip and some 12 row pairs a line; a show, a hide or a rescale 2
  * lines a small group; a move (most of them) well under one. Never more
  * than a blank holds, so a big job can always go first in the next one. */
-#define NGSG_COST_MAX 30u
+#define NGSG_COST_MAX 16u
 static uint8_t NEOGEO_USER ngsg_cost(const NGSpriteGroup *g)
 {
     uint8_t d = g->dirty;
@@ -978,7 +1031,7 @@ static uint8_t NEOGEO_USER ngsg_cost(const NGSpriteGroup *g)
         uint16_t lines;
         if (g->mapRows < ng_sprite_map_rows(ngsg_rows(g)) || g->mapFirst != g->firstSprite)
             pairs = (uint16_t)((uint16_t)g->strips * ng_sprite_map_rows(ngsg_rows(g)));   /* padding too */
-        lines = (uint16_t)(2u + (((uint16_t)g->strips * 3u) >> 2) + ((pairs * 5u) >> 6));   /* set-up, strips, rows */
+        lines = (uint16_t)(2u + (g->strips >> 2) + ((pairs * 5u) >> 6));                   /* set-up, strips, rows */
         return (uint8_t)(lines > NGSG_COST_MAX ? NGSG_COST_MAX : lines);
     }
     if (d & (NG_SGF_DIRTY_VIS | NG_SGF_DIRTY_SHRINK)) return (uint8_t)(2u + (g->strips >> 3));
@@ -1034,6 +1087,7 @@ static void NEOGEO_USER ngsg_commit_list(NGSpriteGroup **q, uint16_t *count)
             g->dirty = (uint8_t)(g->dirty & (uint8_t)~NG_SGF_QUEUED);
             continue;
         }
+        if (ngsg_waiting_hide(g)) { q[kept++] = g; continue; }
         /* A move phase A had no time for: the driving strip's Y/count and X. */
         if ((g->dirty & NG_SGF_DIRTY_ALL) == NG_SGF_DIRTY_POS && g->readyRows && g->visible) {
             if (left < 2u) { q[kept++] = g; left = ng_vram_lines_left(); continue; }
@@ -1069,17 +1123,18 @@ static void NEOGEO_USER ngsg_commit_list(NGSpriteGroup **q, uint16_t *count)
  * running goes first in the next, before any other content.
  */
 #define NGSG_AGED 3u
-static NGSpriteGroup *ngsg_head[3];
-static uint8_t ngsg_head_age[3];
 
 static void NEOGEO_USER ngsg_note_head(uint8_t list, NGSpriteGroup **q, uint16_t n)
 {
-    NGSpriteGroup *g = n ? q[0] : 0;
+    uint16_t i;
+    NGSpriteGroup *g = 0;
+    for (i = 0; i < n; i++)
+        if (q[i]->dirty & NG_SGF_DIRTY_ALL) { g = q[i]; break; }
     if (g && g == ngsg_head[list]) {
         if (ngsg_head_age[list] < 255u) ngsg_head_age[list]++;
     } else {
         ngsg_head[list] = g;
-        ngsg_head_age[list] = 1u;
+        ngsg_head_age[list] = g ? 1u : 0u;
     }
 }
 
@@ -1094,9 +1149,15 @@ static void NEOGEO_USER ngsg_commit_aged(void)
         }
     if (best == 3u) return;
     g = ngsg_head[best];
-    ngsg_head[best] = 0;
     /* still waiting with content (a hide or a later write may have done it) */
-    if (!(g->dirty & NG_SGF_QUEUED) || !(g->dirty & NG_SGF_DIRTY_ALL)) return;
+    if (!(g->dirty & NG_SGF_QUEUED) || !(g->dirty & NG_SGF_DIRTY_ALL)) {
+        ngsg_head[best] = 0;
+        return;
+    }
+    /* Age changes priority, never the safe writing window. Hides and
+     * movement earlier in this commit may already have spent the blank. */
+    if (ngsg_waiting_hide(g) || ng_vram_lines_left() < 2u) return;
+    ngsg_head[best] = 0;
     if (!ngsg_flush_moved(g) && !ngsg_flush_rescaled(g)) ngsg_flush_now(g);
     /* A full write clears dirty flags, but this pointer is still in its
      * list. If the write spends the blank, compaction waits another frame. */
@@ -1146,6 +1207,7 @@ static void NEOGEO_USER ngsg_commit_moves(NGSpriteGroup **q, uint16_t n)
          * another piece, a creature's next frame) is written whole in
          * phase B, never its place now and its look a frame later */
         if ((g->dirty & NG_SGF_DIRTY_ALL) != NG_SGF_DIRTY_POS || !rows || !g->visible) continue;
+        if (ngsg_waiting_hide(g)) continue;
         /* the line every eighth move (each is a fraction of a line), every
          * move near the end; what's left keeps its move for phase B or the
          * next blank */
@@ -1178,22 +1240,25 @@ static void NEOGEO_USER ngsg_commit_moves(NGSpriteGroup **q, uint16_t n)
 
 static void NEOGEO_USER ngsg_commit_hides(void)
 {
-    uint16_t w, s = 0, run = 0;
-    for (w = 0; w < (uint16_t)((NG_SPR_TOTAL + 15u) >> 4); w++) {
-        uint16_t bits = ngsg_hide_bits[w];
-        uint8_t b;
-        if (!bits && !run) { s = (uint16_t)(s + 16u); continue; }
-        ngsg_hide_bits[w] = 0;
-        for (b = 0; b < 16u; b++, s++) {
-            if (bits & (uint16_t)(1u << b)) {
-                run++;
-            } else if (run) {
-                ng_sprite_park_off_range((uint16_t)(s - run), run);
-                run = 0;
-            }
-        }
+    uint16_t s = 0u;
+    while (s < NG_SPR_TOTAL) {
+        uint16_t first, count = 0u;
+        /* Empty bitmap words are the common case (a three-strip effect
+         * among 380 slots). Testing every individual bit burns dozens of
+         * scanlines on the 68000 even when no descriptors are written. */
+        if (!ngsg_hide_bits[s >> 4]) { s = (uint16_t)((s & 0xFFF0u) + 16u); continue; }
+        if (!(ngsg_hide_bits[s >> 4] & (uint16_t)(1u << (s & 15u)))) { s++; continue; }
+        /* Eight parked strips are 24 descriptor words. Recheck the
+         * raster between batches; keep unprocessed bits for next blank. */
+        if (ng_vram_lines_left() < 4u) return;
+        first = s;
+        do {
+            ngsg_hide_bits[s >> 4] &= (uint16_t)~(uint16_t)(1u << (s & 15u));
+            s++; count++;
+        } while (s < NG_SPR_TOTAL && count < 8u &&
+                 (ngsg_hide_bits[s >> 4] & (uint16_t)(1u << (s & 15u))));
+        ng_sprite_park_off_range(first, count);
     }
-    if (run) ng_sprite_park_off_range((uint16_t)(s - run), run);
     ngsg_hide_any = 0;
 }
 
@@ -1201,7 +1266,7 @@ static void NEOGEO_USER ngsg_commit_strips(void)
 {
     uint8_t i, kept = 0;
     for (i = 0; i < ngsg_strips_n; i++) {
-        if (ng_vram_lines_left() < 2u) {
+        if (ng_vram_lines_left() < 2u || ngsg_waiting_hide(ngsg_strips[i].g)) {
             ngsg_strips[kept++] = ngsg_strips[i];   /* (a strip is well under a line) */
             continue;
         }
@@ -1214,12 +1279,19 @@ void NEOGEO_USER ng_vram_commit(void)
 {
     ng_vram_busy++;
     NG_PERF_COMMIT(1);
+    if (!ng_vram_window_open()) {
+        NG_PERF_COMMIT(0);
+        ng_vram_busy--;
+        return;
+    }
     NG_PERF_QUEUE((uint16_t)(ngsg_high_n + ngsg_norm_n + ngsg_low_n));
     ngsg_done = 0;
     ng_render_queue_flush();         /* anything posted for the blank */
+    NG_PERF_COMMIT_PHASE(0u);
     /* Hides first: a character that moved to other slots is hidden where it
      * was before it is drawn where it is. */
     if (ngsg_hide_any) ngsg_commit_hides();
+    NG_PERF_COMMIT_PHASE(1u);
     /* Every listed group's move first (phase A), so nothing slips against
      * the scrolling layers; then content -- maps, shrinks, shows -- by
      * priority (phase B): the player and the layers, the cast, the text,
@@ -1227,11 +1299,15 @@ void NEOGEO_USER ng_vram_commit(void)
     ngsg_commit_moves(ngsg_high, ngsg_high_n);
     ngsg_commit_moves(ngsg_norm, ngsg_norm_n);
     ngsg_commit_moves(ngsg_low, ngsg_low_n);
+    NG_PERF_COMMIT_PHASE(2u);
     ngsg_commit_aged();              /* a job that has waited too long */
+    NG_PERF_COMMIT_PHASE(3u);
     ngsg_commit_list(ngsg_high, &ngsg_high_n);
     ngsg_note_head(0, ngsg_high, ngsg_high_n);
     if (ngsg_strips_n) ngsg_commit_strips();
+    NG_PERF_COMMIT_PHASE(4u);
     ngsg_commit_list(ngsg_norm, &ngsg_norm_n);
+    NG_PERF_COMMIT_PHASE(5u);
     ngsg_note_head(1, ngsg_norm, ngsg_norm_n);
     {
         uint16_t from = NG_PERF_LINE();
@@ -1239,7 +1315,9 @@ void NEOGEO_USER ng_vram_commit(void)
         ng_fix_commit();             /* then the text cells */
         NG_PERF_COMMIT_PART(ngsg_done, ng_fix_last_commit_cells(), from);
     }
+    NG_PERF_COMMIT_PHASE(6u);
     ngsg_commit_list(ngsg_low, &ngsg_low_n);
+    NG_PERF_COMMIT_PHASE(7u);
     ngsg_note_head(2, ngsg_low, ngsg_low_n);
     NG_PERF_COMMIT(0);
 #ifdef NG_DEBUG_PERF

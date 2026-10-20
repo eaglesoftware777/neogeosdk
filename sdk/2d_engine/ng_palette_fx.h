@@ -126,6 +126,9 @@ void NEOGEO_USER ng_palfx_screen_init(uint16_t *base, uint16_t *out, uint8_t cou
 void NEOGEO_USER ng_palfx_screen_load(uint8_t bank, const uint16_t *colors);
 /* A bank's colours as last loaded: a base for the effects above. */
 const uint16_t * NEOGEO_USER ng_palfx_screen_colors(uint8_t bank);
+/* 1 only when this nonempty range has reached palette RAM in full. Use
+ * after ng_palfx_vblank before publishing descriptors for a new actor. */
+uint8_t NEOGEO_USER ng_palfx_screen_ready(uint8_t first, uint8_t count);
 /* The backdrop colour, written at the next ng_palfx_vblank(); not faded. */
 void NEOGEO_USER ng_palfx_screen_backdrop(uint16_t color);
 /* From the true colours to all `target` over `duration` frames; it stays there. */

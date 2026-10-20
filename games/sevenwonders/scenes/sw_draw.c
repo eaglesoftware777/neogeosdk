@@ -210,7 +210,9 @@ static void NEOGEO_USER show_asset(NGSpriteGroup *g, uint16_t first_sprite, uint
 {
     const NGArtAsset *a = art(id);
     uint16_t per = (uint16_t)((uint16_t)a->strips * a->rows);
+    uint8_t prio = g->prio;
     ng_sprite_group_init(g, first_sprite, a->strips, a->rows, (uint16_t)(a->tile_base + per * frame), a->palette_bank);
+    if (prio != NG_SG_PRIO_NORMAL) ng_sprite_group_set_priority(g, prio);
     ng_sprite_group_set_palette_map(g, a->tile_palettes + per * frame);
     ng_sprite_group_set_pos(g, x, y);
     ng_sprite_group_set_visible(g, 1);
@@ -247,11 +249,15 @@ void NEOGEO_USER sw_scene(uint8_t background)
     waitVbl();
     clearFix();
     ng_sprite_hide_all();
+    s_bg.visible = s_logo.visible = s_card.visible = s_panel.visible = 0;
     s_cat[0].visible = s_cat[1].visible = 0;    /* parked above: show them whole next time */
+    s_banner[0].visible = s_banner[1].visible = 0;
+    s_star[0].visible = s_star[1].visible = s_star[2].visible = 0;
     ng_fix_invalidate_all();
     load_art_palettes(id);
     ng_palfx_screen_backdrop(0x8000u);
     show_asset(&s_bg, SPR_BG, id, 0, 0, 0);
+    ng_sprite_group_upload(&s_bg);              /* upload full background in the dark before fade-in */
     ng_palfx_screen_fade_in(NG_PALFX_BLACK, 12u);
     sw_frame();
 }
@@ -259,6 +265,7 @@ void NEOGEO_USER sw_scene(uint8_t background)
 void NEOGEO_USER sw_logo(uint8_t show, int16_t y)
 {
     if (!show) { ng_sprite_group_set_visible(&s_logo, 0); ng_sprite_group_flush(&s_logo); return; }
+    ng_sprite_group_set_priority(&s_logo, NG_SG_PRIO_HIGH);
     show_asset(&s_logo, SPR_LOGO, SW_ART_LOGO, 0, (int16_t)((320 - 256) >> 1), y);
 }
 
@@ -285,6 +292,7 @@ void NEOGEO_USER sw_cat_hide(uint8_t slot)
 void NEOGEO_USER sw_card(uint8_t show)
 {
     if (!show) { ng_sprite_group_set_visible(&s_card, 0); ng_sprite_group_flush(&s_card); return; }
+    ng_sprite_group_set_priority(&s_card, NG_SG_PRIO_HIGH);
     show_asset(&s_card, SPR_CARD, SW_ART_CARD, 0, 32, 16);
 }
 
@@ -296,6 +304,7 @@ void NEOGEO_USER sw_banner(uint8_t which, int16_t y)
 void NEOGEO_USER sw_panel(uint8_t show)
 {
     if (!show) { ng_sprite_group_set_visible(&s_panel, 0); ng_sprite_group_flush(&s_panel); return; }
+    ng_sprite_group_set_priority(&s_panel, NG_SG_PRIO_HIGH);
     show_asset(&s_panel, SPR_PANEL, SW_ART_PANEL, 0, 4, 4);
 }
 

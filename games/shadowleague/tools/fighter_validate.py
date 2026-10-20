@@ -124,6 +124,42 @@ def validate(data, source="fighter"):
             if not 0<=p.get(field,0)<=255:err(f'projectile {i}: invalid {field}')
     for move in data['moves']:
         if move.get('projectile',0)>len(projectiles) or move.get('projectile',0)<0:err('move references an invalid projectile')
+    if 'combat' in data:
+        combat = data['combat']
+        selectors = [m['anim'] + ':' + m.get('buttons', '') + ':' + m.get('motion', 'none') for m in data['moves']]
+        routes = combat.get('routes', [])
+        if not 1 <= len(routes) <= 32: err('combat needs 1..32 cancel routes')
+        for route in routes:
+            for key in ('from', 'to'):
+                if selectors.count(route.get(key)) != 1: err('combat route has an unknown or ambiguous ' + key)
+            ticks = route.get('ticks', [])
+            if len(ticks) != 2 or not 0 <= ticks[0] <= ticks[1] <= 254: err('combat cancel window must be ordered ticks 0..254')
+            conditions = set(route.get('on', '').split('|'))
+            if conditions - {'hit', 'block', 'counter', 'whiff', 'max'} or not conditions - {'max'}:
+                err('combat route has invalid contact conditions')
+            if not 1 <= route.get('max_uses', 1) <= 3: err('combat repeat limit must be 1..3')
+        for key, low, high in (('juggle_limit', 1, 12), ('relaunch_limit', 0, 3)):
+            if not low <= combat.get(key, -1) <= high: err('combat ' + key + ' outside allowed range')
+        if combat.get('assist'):
+            if selectors.count(combat['assist']) != 1: err('combat assist is unknown or ambiguous')
+            else:
+                move = data['moves'][selectors.index(combat['assist'])]
+                if move.get('projectile') or not move.get('limb'): err('combat assist must name an authored melee attack')
+        throws = combat.get('throws', [])
+        if len(throws) > 8: err('combat allows at most 8 throw anchors')
+        throw_selectors = set(selectors)
+        if any(m.get('kind') == 'throw' for m in data['moves']):
+            for motion in ('fwd', 'back'):
+                for btn in ('C', 'D'):
+                    throw_selectors.add(f'throw:{btn}:{motion}')
+        for th in throws:
+            if th.get('move') not in throw_selectors:
+                err('combat throw references unknown move ' + str(th.get('move')))
+            if not 12 <= int(th.get('grip_x', 26)) <= 64: err('combat throw grip_x outside 12..64')
+            if not 0 <= int(th.get('lift', 16)) <= 96: err('combat throw lift outside 0..96')
+            if not 1 <= int(th.get('carry_tick', 8)) <= 32: err('combat throw carry_tick outside 1..32')
+            if not 12 <= int(th.get('release_x', 26)) <= 80: err('combat throw release_x outside 12..80')
+            if not 1 <= int(th.get('tech_ticks', 4)) <= 12: err('combat throw tech_ticks outside 1..12')
     return errors
 
 

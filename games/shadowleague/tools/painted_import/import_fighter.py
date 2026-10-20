@@ -68,6 +68,15 @@ def strike_box(idx, kind, root):
     bottom=int(ay + 1 - y1);height=int(y1-y0)
     if bottom>127:height+=bottom-127;bottom=127
     x=int(x0-ax);w=int(x1-x0)
+    if x > 12:
+        w = x + w - 12
+        x = 12
+    elif kind == 'fwd' and x < 12 and x + w > 18:
+        w = max(12, x + w - 12)
+        x = 12
+    if bottom > 78:
+        height += bottom - 78
+        bottom = 78
     if x < -128:w-=(-128-x);x=-128
     if x>127:w+=x-127;x=127
     return [x,bottom,w,height]
@@ -115,13 +124,14 @@ def main():
     ap.add_argument('--out', default=str(TOOLS.parents[3]))
     ap.add_argument('--sources', type=Path, required=True)
     ap.add_argument('--folder', type=Path, required=True)
+    ap.add_argument('--replace', action='store_true')
     ap.add_argument('--preview', default=None)
     ap.add_argument('--colours', type=int, default=48)
     ap.add_argument('--banks', type=int, default=4, help='hardware palettes, one chosen per 16x16 tile')
     a = ap.parse_args()
     global SOURCE
     SOURCE = a.sources.resolve()
-    if a.folder.exists():raise SystemExit("Refusing to replace an existing export folder")
+    if a.folder.exists() and not a.replace:raise SystemExit("Refusing to replace an existing export folder")
     c = R[a.id]
     sheets = load_sheets(a.id)
     if len(sheets) != 7:raise SystemExit(a.id + ': all seven complete source sheets are required')
@@ -169,14 +179,19 @@ def main():
     if a.banks:
         frames, pal = tile_banks(frames, pal, a.banks, a.out)
     folder = a.folder.resolve()
-    folder.mkdir(parents=True, exist_ok=False)
+    folder.mkdir(parents=True, exist_ok=a.replace)
     manifest = {'canvas': [sp.CANVAS, sp.CANVAS], 'anchor': list(sp.ROOT), 'head': 'head.png', 'portrait_small': 'portrait-small.png',
                 'source': 'Native indexed PNG frames; four 15-colour palettes, one chosen per 16x16 tile', 'frames': {}}
+    seen_super_boxes = set()
     for name in order:
         img = frames[name]
         sp.save_indexed(img, pal, folder / f'{name}.png')
         kind = STRIKE.get(name, 'fwd')
         box = strike_box(img, kind, roots[name])
+        if name.startswith('super_'):
+            while tuple(box) in seen_super_boxes:
+                box[2] = min(120, box[2] + 1)
+            seen_super_boxes.add(tuple(box))
         grounded = name not in AIR
         manifest['frames'][name] = {
             'file': f'{name}.png', 'root': roots[name], 'hurt': hurt_boxes(img, roots[name]),

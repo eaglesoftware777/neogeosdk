@@ -98,12 +98,36 @@ def kmeans(x, k, iters=40, seed=7):
     return c, lab
 
 
+def clean_fringe(rgb, mask):
+    """Strip 1-2px anti-aliased magenta halo from the outer boundary of mask."""
+    f = rgb.astype(int)
+    r, g, b = f[..., 0], f[..., 1], f[..., 2]
+    fringe = (r > 110) & (b > 110) & (r - g > 28) & (b - g > 28) & ((r - g) + (b - g) > 65)
+    m = mask.copy()
+    for _ in range(2):
+        border = m & ~ndi.binary_erosion(m, iterations=1)
+        drop = border & fringe
+        if not drop.any():
+            break
+        m = m & ~drop
+    return m if m.any() else mask
+
+
 def palette(crops, k=15, sample=120000, outline=(16, 12, 20)):
     """k colours for one fighter; slot 1 is the outline ink."""
     px = []
     for rgb, mask in crops:
-        inner = ndi.binary_erosion(mask, iterations=2)
-        px.append(rgb[inner])
+        m = clean_fringe(rgb, mask)
+        inner = ndi.binary_erosion(m, iterations=2)
+        if not inner.any():
+            inner = m
+        sub = rgb[inner]
+        f = sub.astype(int)
+        r, g, b = f[:, 0], f[:, 1], f[:, 2]
+        not_mag = ~((r > 115) & (b > 115) & (r - g > 35) & (b - g > 35) & ((r - g) + (b - g) > 75))
+        if not_mag.any():
+            sub = sub[not_mag]
+        px.append(sub)
     px = np.concatenate(px)
     rng = np.random.default_rng(1)
     px = px[rng.choice(len(px), min(sample, len(px)), replace=False)]
@@ -141,9 +165,9 @@ def majority(idx, H, W, k):
             cnt = np.bincount(idx[a:b, c:e].ravel(), minlength=k + 1)
             if cnt[0] * 2 > cnt.sum():
                 continue
+            opq = int(cnt[1:].sum())
             cnt[0] = 0
-            # ink wins ties: thin dark lines survive the reduction
-            if cnt[1] * 3 >= cnt.max():
+            if cnt[1] * 100 >= opq * 48:
                 out[j, i] = 1
             else:
                 out[j, i] = cnt.argmax()
@@ -165,7 +189,7 @@ def clean(idx, pal):
         nb = nb[nb > 0]
         if len(nb):
             idx[y, x] = np.bincount(nb).argmax()
-    # isolated single pixels of a colour that appears in no neighbour
+    # Remove isolated 1-pixel non-ink speckles ("trash pixels") inside surfaces
     out = idx.copy()
     h, w = idx.shape
     for y in range(1, h - 1):
@@ -177,8 +201,8 @@ def clean(idx, pal):
             nb.remove(v)
             if v in nb:
                 continue
-            opq = [q for q in nb if q]
-            if len(opq) >= 7:
+            opq = [q for q in nb if q > 1]
+            if len(opq) >= 5:
                 out[y, x] = np.bincount(opq).argmax()
     return out
 
@@ -195,12 +219,39 @@ def outline(idx, pal, light=55.0):
 
 
 def native(rgb, mask, scale, pal):
-    k = len(pal)
-    idx = label(rgb, mask, pal)
-    h, w = idx.shape
+    mask = clean_fringe(rgb, mask)
+    h, w = mask.shape
     H, W = max(1, round(h * scale)), max(1, round(w * scale))
-    small = majority(idx, H, W, k)
-    small = clean(small, pal)
+    ys = np.linspace(0, h, H + 1).astype(int)
+    xs = np.linspace(0, w, W + 1).astype(int)
+    pl = to_lab(pal)
+    idx_full = label(rgb, mask, pal)
+    out = np.zeros((H, W), np.uint8)
+    for j in range(H):
+        a, b = ys[j], max(ys[j + 1], ys[j] + 1)
+        for i in range(W):
+            c, e = xs[i], max(xs[i + 1], xs[i] + 1)
+            sub_m = mask[a:b, c:e]
+            n_on = int(sub_m.sum())
+            if n_on * 2 < sub_m.size:
+                continue
+            sub_idx = idx_full[a:b, c:e][sub_m]
+            n_ink = int((sub_idx == 1).sum())
+            if n_ink * 100 >= n_on * 50:
+                out[j, i] = 1
+                continue
+            sub_rgb = rgb[a:b, c:e][sub_m]
+            non_ink = sub_idx > 1
+            if non_ink.any():
+                sub_rgb = sub_rgb[non_ink]
+            med = np.median(sub_rgb, axis=0)
+            dists = ((sub_rgb.astype(float) - med) ** 2).sum(-1)
+            keep = sub_rgb[dists <= np.percentile(dists, 65)]
+            mean_rgb = keep.mean(0).reshape(1, 1, 3)
+            lab = to_lab(mean_rgb)[0, 0]
+            d = ((pl - lab) ** 2).sum(-1)
+            out[j, i] = int(d.argmin()) + 1
+    small = clean(out, pal)
     return small
 
 
