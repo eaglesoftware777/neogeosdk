@@ -135,6 +135,7 @@ void NEOGEO_USER ngf_input_consume(NGFInput *in, uint8_t mask)
     in->pending &= (uint8_t)~mask;
     in->release_pending &= (uint8_t)~mask;
     in->released &= (uint8_t)~mask;
+    in->kara &= (uint8_t)~mask;
     in->back_release = in->down_release = 0;
 }
 
@@ -1043,6 +1044,8 @@ static void NEOGEO_USER fighter_step(NGFMatch *m, uint8_t who, uint8_t controls)
             if (max_start(m, who) ||
                 try_moves(m, who, NGF_CANCEL_CHAIN | NGF_CANCEL_SPECIAL | NGF_CANCEL_SUPER | NGF_CANCEL_KARA)) break;
             f->input.pending = keep;
+        } else {
+            f->input.kara = 0;
         }
         f->state_timer++;
         if (f->move && f->move->kind == NGF_KIND_THROW && o->state == NGF_S_THROWN) {
