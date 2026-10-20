@@ -67,6 +67,9 @@ typedef struct {
     uint16_t queue_peak;         /* the most groups listed at a commit's start     */
     uint16_t queue_full;         /* flushes that found their list full (never written at once) */
     uint16_t fix_rows_sum;       /* FIX rows rewritten whole after a full run list */
+    uint16_t commit_phase_peak[8]; /* raw queue, hides, moves, aged, high/strips,
+                                    * normal, FIX, low: worst scanline costs */
+    uint16_t phase_line;
 } NGPerf;
 
 extern NGPerf ng_perf;
@@ -77,6 +80,7 @@ void ng_perf_vram(uint16_t words);
 uint16_t ng_perf_line(void);
 void ng_perf_commit(uint8_t begin);
 void ng_perf_commit_part(uint16_t groups, uint16_t fix_cells, uint16_t fix_from_line);
+void ng_perf_commit_phase(uint8_t phase);
 
 #define NG_PERF_FRAME_BEGIN() ng_perf_frame_begin()
 #define NG_PERF_FRAME_END()   ng_perf_frame_end()
@@ -94,6 +98,7 @@ void ng_perf_commit_part(uint16_t groups, uint16_t fix_cells, uint16_t fix_from_
 #define NG_PERF_COMMIT_PART(g, c, l) ng_perf_commit_part((g), (c), (l))
 #define NG_PERF_LINE() ng_perf_line()
 #endif
+#define NG_PERF_COMMIT_PHASE(p) ng_perf_commit_phase(p)
 #define NG_PERF_DEFERRED(n)   do { uint16_t n_ = (uint16_t)(n); ng_perf.deferred_sum += n_; \
                                    if (n_ > ng_perf.deferred_peak) ng_perf.deferred_peak = n_; } while (0)
 #define NG_PERF_QUEUE(n)      do { uint16_t n_ = (uint16_t)(n); \
@@ -109,6 +114,7 @@ void ng_perf_commit_part(uint16_t groups, uint16_t fix_cells, uint16_t fix_from_
 #define NG_PERF_COMMIT(begin) ((void)0)
 #define NG_PERF_COMMIT_PART(g, c, l) ((void)0)
 #define NG_PERF_LINE() 0u
+#define NG_PERF_COMMIT_PHASE(p) ((void)0)
 #define NG_PERF_DEFERRED(n)   ((void)0)
 #define NG_PERF_QUEUE(n)      ((void)0)
 #define NG_PERF_QUEUE_FULL()  ((void)0)

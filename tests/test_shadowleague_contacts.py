@@ -15,12 +15,22 @@ class ContactCompilerTests(unittest.TestCase):
             if f.authored is not None:
                 source=f.authored[sprite]['hit'].get('near_fist',[])
                 self.assertTrue(source,'Active authored punch needs its own contact region')
-                boxes.extend(along_limb(b) for b in source)
+                boxes.extend(source)
             else:boxes.append(along_limb(art.hitbox(f.data['build'],f.joints[sprite],'near_fist')))
         self.assertGreater(len({tuple(b) for b in boxes}),1)
         text=f.c_tables('probe')
         for b in boxes:self.assertIn('{'+', '.join(str(v) for v in b)+'}',text)
         self.assertIn('probe_hit_sets, probe_frame_hits',text)
+    def test_authored_contacts_are_not_extended_to_the_chest(self):
+        f=Fighter(ROOT/'games/shadowleague/fighters/kenji.json')
+        self.assertIsNotNone(f.authored)
+        sprite=f.sprite_names.index('lp2')
+        boxes=f.authored[sprite]['hit']['far_fist']
+        self.assertTrue(boxes)
+        text=f.c_tables('probe')
+        for box in boxes:
+            self.assertIn('{'+', '.join(str(v) for v in box)+'}',text)
+            self.assertGreater(box[0],10)
     def test_all_compiled_frames_have_a_contact_index(self):
         import re
         for name in ('kenji','jack','amara'):

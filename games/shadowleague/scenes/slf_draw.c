@@ -12,6 +12,8 @@
 #include "sdk/macro.h"
 #include "sdk/neogeo.h"
 #include "sdk/ng_system.h"
+#include "sdk/ng_input_queue.h"
+#include "sdk/ng_perf.h"
 #include "sdk/sound_ids.h"
 #include "sdk/2d_engine/ng_sprite_group.h"
 #include "sdk/2d_engine/ng_fix.h"
@@ -58,17 +60,22 @@ static uint8_t s_demo_silent;
 volatile uint16_t slf_palette_irq_count;
 volatile uint8_t slf_palette_irq_lines;
 static void NEOGEO_USER actors_commit(void);
+static uint16_t s_irq_begin_line;
+volatile uint16_t slf_irq_lines_peak;
 
 /* Only a completed main-loop buffer may be read by the early interrupt.
  * Upload before BIOS I/O can exhaust the full-screen palette window. */
 void NEOGEO_USER slf_palette_vblank(void)
 {
-    if (!s_palette_pending) return;
+    s_irq_begin_line = NG_PERF_LINE();
+    if (!s_palette_pending || ng_vram_busy) return;
+    ng_vram_busy++;
     s_palette_pending = 0u;
     __asm__ volatile ("" ::: "memory");
     slf_palette_irq_lines = ng_vram_lines_left();
     ng_palfx_vblank();
     actors_commit();
+    ng_vram_busy--;
     slf_palette_irq_count++;
 }
 static NGSpriteGroup s_stage_far, s_stage, s_shadow[2], s_fx[FX_SLOTS];
@@ -87,8 +94,6 @@ typedef struct {
 typedef char SLFStoryCard_size_must_be_920[(sizeof(SLFStoryCard) == 920u) ? 1 : -1];
 static SLFStoryCard s_story_card;
 uint8_t slf_presentation_current;
-static void NEOGEO_USER mark_at(int16_t y);
-static void NEOGEO_USER actors_commit(void);
 static void NEOGEO_USER actors_reset(void);
 static uint8_t s_large_port_live[2], s_large_port_def[2];
 static uint8_t s_stage_id, s_stage_dim;
@@ -103,6 +108,13 @@ static const uint8_t k_fx_pal[5] = {18u,19u,20u,24u,25u};
 static uint8_t s_fx_kind[FX_SLOTS], s_fx_timer[FX_SLOTS], s_fx_live[FX_SLOTS];
 static int16_t s_fx_x[FX_SLOTS], s_fx_y[FX_SLOTS];
 static uint8_t s_joy[2], s_joy_prev[2], s_start, s_start_prev;
+NGInputQueue slf_input_queue;
+volatile uint32_t slf_input_sequence, slf_input_catchups, slf_commit_skipped;
+volatile uint32_t slf_hardware_ticks, slf_input_dropped;
+volatile uint32_t slf_scene_input_discarded;
+static uint8_t s_input_live;
+static uint8_t s_scene_setup;
+volatile uint32_t slf_scene_input_ignored;
 static uint16_t s_frames, s_rng;
 /* HUD cache: what the FIX layer shows now. */
 static uint8_t s_hud_valid, s_hud_life[2], s_hud_power[2], s_hud_stock[2], s_hud_wins[2], s_hud_secs;
@@ -117,6 +129,29 @@ void NEOGEO_USER slf_presentation_init(void)
     ng_fix_set_ascii_base(0xD00u);
     s_stage_id = 0u;
     s_rng = 0x5A17u;
+    s_input_live = 1u;
+}
+
+/* SYS_IO has completed: snapshot both players and START on this tick,
+ * including ticks when the main loop is still building presentation data. */
+void NEOGEO_USER slf_input_vblank(void)
+{
+    if (s_input_live) {
+        if (s_scene_setup) {
+            slf_input_queue.ticks++;
+            slf_scene_input_ignored++;
+        } else ng_input_queue_push(&slf_input_queue, NEO_REGISTER8(BIOS_P1CURRENT),
+                NEO_REGISTER8(BIOS_P2CURRENT), NEO_REGISTER8(0x10FDACu));
+        slf_hardware_ticks = slf_input_queue.ticks;
+        slf_input_dropped = slf_input_queue.dropped;
+    }
+#ifdef NG_DEBUG_PERF
+    {
+        uint16_t now = NG_PERF_LINE();
+        uint16_t lines = now >= s_irq_begin_line ? now - s_irq_begin_line : now + 264u - s_irq_begin_line;
+        if (lines > slf_irq_lines_peak) slf_irq_lines_peak = lines;
+    }
+#endif
 }
 
 void NEOGEO_USER slf_fix_palettes_init(void)
@@ -158,6 +193,7 @@ void NEOGEO_USER slf_scene_begin(void)
 {
     uint8_t i;
     slf_fade_out();
+    s_scene_setup = 1u;
     waitVbl();
     setBACKDROP(BLACK);
     clearFix();
@@ -182,23 +218,36 @@ void NEOGEO_USER slf_scene_begin(void)
     slf_fix_palettes_init();
     ng_palfx_screen_fade_in(0u, 12u);
     waitVbl();
+    slf_scene_input_discarded += ng_input_queue_discard(&slf_input_queue);
+    s_scene_setup = 0u;
 }
 
 uint16_t NEOGEO_USER slf_frame(void)
 {
-    __asm__ volatile ("" ::: "memory");
-    s_palette_pending = 1u;
-    /* An old wait flag from an overrun cannot acknowledge this batch. */
-    do { waitVbl(); } while (s_palette_pending);
-    if (!ng_vram_window_open()) waitVbl();
-    ng_vram_commit();
+    NGInputSample sample;
+    if (ng_input_queue_pop(&slf_input_queue, &sample)) {
+        /* Catch up simulation with preserved input. Do not publish an IRQ
+         * pose buffer until the main loop has finished its newest state. */
+        slf_input_catchups++;
+    } else {
+        NG_PERF_FRAME_END();
+        __asm__ volatile ("" ::: "memory");
+        s_palette_pending = 1u;
+        /* An old wait flag cannot acknowledge this completed pose batch. */
+        do { waitVbl(); } while (s_palette_pending);
+        NG_PERF_FRAME_BEGIN();
+        if (ng_vram_window_open()) ng_vram_commit();
+        else slf_commit_skipped++;
+        while (!ng_input_queue_pop(&slf_input_queue, &sample)) waitVbl();
+    }
     ng_palette_fx_update();
     s_joy_prev[0] = s_joy[0];
     s_joy_prev[1] = s_joy[1];
     s_start_prev = s_start;
-    s_joy[0] = NEO_REGISTER8(BIOS_P1CURRENT);
-    s_joy[1] = NEO_REGISTER8(BIOS_P2CURRENT);
-    s_start = NEO_REGISTER8(0x10FDACu);          /* BIOS_STATCURNT */
+    s_joy[0] = sample.joy[0];
+    s_joy[1] = sample.joy[1];
+    s_start = sample.start;
+    slf_input_sequence = sample.tick;
     s_frames++;
     s_rng ^= (uint16_t)(s_joy[0] + (s_joy[1] << 8) + s_frames);
     return s_frames;
@@ -355,10 +404,19 @@ typedef struct {
 } SLFActor;
 static SLFActor s_actor[4];
 volatile uint16_t slf_actor_commits, slf_actor_deferred, slf_actor_deadline_misses;
+volatile uint32_t slf_actor_requested[4], slf_actor_uploading[4], slf_actor_displayed[4];
+volatile uint32_t slf_actor_request_tick[4];
+volatile uint16_t slf_actor_age[4], slf_actor_age_peak[4];
+
+static uint32_t NEOGEO_USER pose_id(const SLFPose *p)
+{
+    return ((uint32_t)p->def << 16) | ((uint16_t)p->sprite << 8) | (p->flip ? 128u : 0u) | p->pal;
+}
 
 static inline __attribute__((always_inline)) void actor_put(uint16_t addr, const uint16_t *src, uint16_t n)
 {
     volatile uint16_t *p = (volatile uint16_t *)VRAM_ADDR;
+    NG_PERF_VRAM(n);
     __asm__ volatile (
         "move.w %[addr],(%[p])\n\t"
         "move.w #1,4(%[p])\n\t"
@@ -374,6 +432,7 @@ static inline __attribute__((always_inline)) void actor_put(uint16_t addr, const
 static inline __attribute__((always_inline)) void actor_word(uint16_t addr, uint16_t v)
 {
     volatile uint16_t *p = (volatile uint16_t *)VRAM_ADDR;
+    NG_PERF_VRAM(1u);
     p[0] = addr; p[1] = v;
 }
 
@@ -400,16 +459,22 @@ static void NEOGEO_USER actors_commit(void)
     for (i = 0u; i < 4u; i++) {
         SLFActor *a = &s_actor[i];
         uint16_t first;
+        uint32_t age = slf_actor_requested[i] != slf_actor_displayed[i] ?
+            slf_input_queue.ticks + 1u - slf_actor_request_tick[i] : 0u;
+        slf_actor_age[i] = (uint16_t)(age > 65535u ? 65535u : age);
+        if (slf_actor_age[i] > slf_actor_age_peak[i]) slf_actor_age_peak[i] = slf_actor_age[i];
         if (a->hide) {
             if (ng_vram_lines_left() < 8u) { slf_actor_deferred++; continue; }
             for (col = 0u; col < ACTOR_COLS * 2u; col++) actor_word((uint16_t)(0x8200u + a->first + col), 0u);
             a->active = a->upload = ACTOR_NONE;
             a->hide = a->ready = a->moved = 0u;
+            slf_actor_requested[i] = slf_actor_uploading[i] = slf_actor_displayed[i] = 0u;
             if (!ng_vram_window_open()) slf_actor_deadline_misses++;
             continue;
         }
         if (a->upload == ACTOR_NONE && a->ready) {
             a->upload = a->build; a->ready = 0u; a->column = 0u;
+            slf_actor_uploading[i] = pose_id(&a->pose[a->upload]);
             for (col = 0u; col < 3u; col++) if (col != a->active && col != a->upload) { a->build = col; break; }
         }
         if (a->upload != ACTOR_NONE) {
@@ -425,11 +490,13 @@ static void NEOGEO_USER actors_commit(void)
                 }
                 a->column++;
             }
-            if (a->column == ACTOR_COLS && ng_vram_lines_left() >= 12u) {
+            if (a->column == ACTOR_COLS && ng_vram_lines_left() >= 12u &&
+                ng_palfx_screen_ready(p->pal, slf_fighter_bank_counts[p->def])) {
                 if (a->active != ACTOR_NONE)
                     for (col = 0u; col < ACTOR_COLS; col++) actor_word((uint16_t)(0x8200u + a->first + a->bank * ACTOR_COLS + col), 0u);
                 actor_position(a, p, first, 1u);
                 a->active = a->upload; a->upload = ACTOR_NONE; a->bank = next_bank;
+                slf_actor_displayed[i] = pose_id(p); slf_actor_uploading[i] = 0u;
                 slf_actor_commits++;
                 if (!ng_vram_window_open()) slf_actor_deadline_misses++;
             } else slf_actor_deferred++;
@@ -449,6 +516,8 @@ static void NEOGEO_USER actors_reset(void)
         SLFActor *a = &s_actor[i];
         a->build = a->bank = a->ready = a->hide = a->moved = 0u;
         a->active = a->upload = ACTOR_NONE;
+        slf_actor_requested[i] = slf_actor_uploading[i] = slf_actor_displayed[i] = 0u;
+        slf_actor_age[i] = 0u;
         for (k = 0u; k < 3u; k++) a->pose[k].def = 255u;
     }
 }
@@ -471,11 +540,16 @@ static void NEOGEO_USER actor_draw(uint8_t actor, uint8_t *live, uint16_t first,
     SLFPose *p = &a->pose[a->build];
     const SLFFrameAnchor *root = &slf_fighter_frame_anchors[def][sprite];
     uint8_t col, columns = slf_fighter_columns[def];
+    uint32_t requested = ((uint32_t)def << 16) | ((uint16_t)sprite << 8) | (flip ? 128u : 0u) | pal;
+    if (requested != slf_actor_requested[actor]) {
+        slf_actor_requested[actor] = requested;
+        slf_actor_request_tick[actor] = slf_input_queue.ticks;
+    }
     a->hide = 0u; a->first = first;
     if (a->x != x || a->y != y) { a->x = x; a->y = y; a->moved = 1u; }
     *live = 1u;
     if (a->active != ACTOR_NONE && pose_matches(&a->pose[a->active],def,sprite,flip,pal)) {
-        a->upload = ACTOR_NONE; a->ready = 0u; return;
+        a->upload = ACTOR_NONE; a->ready = 0u; slf_actor_uploading[actor] = 0u; return;
     }
     if (a->upload != ACTOR_NONE && pose_matches(&a->pose[a->upload],def,sprite,flip,pal)) { a->ready = 0u; return; }
     if (!pose_matches(p,def,sprite,flip,pal)) {
@@ -526,8 +600,7 @@ void NEOGEO_USER slf_fighter_hide(uint8_t slot)
         s_fighter_live[slot] = 0u;
     }
     if (s_shadow_live[slot]) {
-        ng_sprite_group_cancel(&s_shadow[slot]);
-        ng_sprite_group_hide(&s_shadow[slot]);
+        ng_sprite_group_hide_queued(&s_shadow[slot]);
         s_shadow_live[slot] = 0u;
     }
 }
@@ -645,7 +718,7 @@ static void NEOGEO_USER shadow_at(uint8_t slot, int16_t x)
         ng_sprite_group_init(g, (uint16_t)(SPR_SHADOW + slot * 4u), 4u, 1u, SLF_SHADOW_TILE, PAL_SHADOW);
         ng_sprite_group_set_tile_stride(g, 4u);
         ng_sprite_group_set_pos(g, (int16_t)(x - 32), SLF_FLOOR_Y - 10);
-        ng_sprite_group_upload(g);
+        ng_sprite_group_flush(g);
         s_shadow_live[slot] = 1u;
         return;
     }
@@ -658,7 +731,7 @@ void NEOGEO_USER slf_fx_reset(void)
     uint8_t i;
     for (i = 0u; i < FX_SLOTS; i++) {
         s_fx_timer[i] = 0u;
-        if (s_fx_live[i]) { ng_sprite_group_cancel(&s_fx[i]); ng_sprite_group_hide(&s_fx[i]); s_fx_live[i] = 0u; }
+        if (s_fx_live[i]) { ng_sprite_group_hide_queued(&s_fx[i]); s_fx_live[i] = 0u; }
     }
 }
 
@@ -684,7 +757,7 @@ static void NEOGEO_USER fx_draw(void)
         uint8_t frame;
         uint16_t tile;
         if (!s_fx_timer[i]) {
-            if (s_fx_live[i]) { ng_sprite_group_cancel(g); ng_sprite_group_hide(g); s_fx_live[i] = 0u; }
+            if (s_fx_live[i]) { ng_sprite_group_hide_queued(g); s_fx_live[i] = 0u; }
             continue;
         }
         frame = (uint8_t)(3u - (s_fx_timer[i] - 1u) / FX_TICKS);
@@ -694,7 +767,8 @@ static void NEOGEO_USER fx_draw(void)
             ng_sprite_group_init(g, (uint16_t)(SPR_FX + i * 3u), 3u, 3u, tile, k_fx_pal[s_fx_kind[i]]);
             ng_sprite_group_set_tile_stride(g, 3u);
             ng_sprite_group_set_pos(g, s_fx_x[i], s_fx_y[i]);
-            ng_sprite_group_upload(g);
+            ng_sprite_group_set_priority(g, NG_SG_PRIO_LOW);
+            ng_sprite_group_flush(g);
             s_fx_live[i] = 1u;
             continue;
         }
@@ -747,8 +821,7 @@ void NEOGEO_USER slf_match_draw(const NGFMatch *m, const uint8_t *def_index)
         NGSpriteGroup *g = &s_proj[p];
         if (!pj->active) {
             if (s_proj_live[p]) {
-                ng_sprite_group_cancel(g);
-                ng_sprite_group_hide(g);
+                ng_sprite_group_hide_queued(g);
                 s_proj_live[p] = 0u;
             }
             continue;
@@ -771,7 +844,8 @@ void NEOGEO_USER slf_match_draw(const NGFMatch *m, const uint8_t *def_index)
             ng_sprite_group_set_scale(g, zoom, zoom);
             ng_sprite_group_set_flip(g, pj->facing_left, 0u);
             ng_sprite_group_set_pos(g, (int16_t)(px - 24), py);
-            ng_sprite_group_upload(g);
+            ng_sprite_group_set_priority(g, NG_SG_PRIO_HIGH);
+            ng_sprite_group_flush(g);
             s_proj_live[p] = 1u;
         } else {
             ng_sprite_group_set_tile_base(g, tile);
@@ -1058,7 +1132,7 @@ void NEOGEO_USER slf_story_pan(uint16_t tick, uint8_t reverse)
     ng_sprite_group_flush(&s_story_panel);
 }
 
-static void NEOGEO_USER mark_at(int16_t y)
+static void __attribute__((unused)) NEOGEO_USER mark_at(int16_t y)
 {
     ng_palfx_screen_load(88u, slf_rebirth_identity_pal);
     ng_sprite_group_init(&s_title_logo, 73u, 18u, 6u, (uint16_t)SLF_REBIRTH_LOGO_TILE, 88u);

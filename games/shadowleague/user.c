@@ -64,6 +64,7 @@ NEOGEO_INTERRUPT void NEOGEO_USER VBlank(void) {
 	ASM_MVB(%%d0,REG_DIPSW)        // Kick watchdog
 	ASM_JSR(slf_palette_vblank)
 	ASM_JSR(SYS_IO)
+	ASM_JSR(slf_input_vblank)
 	ASM_MVEML((%%sp)+, %%d0-%%d7/%%a0-%%a6)
 	:
 	:

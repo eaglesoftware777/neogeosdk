@@ -9,6 +9,7 @@ Other fighters retain the existing fighter_art drawing and joint metadata.
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -186,7 +187,9 @@ class Fighter:
         for fr in self.data["anims"][move["anim"]]:
             if len(fr) > 2 and "active" in fr[2]:
                 i = self.sprite_names.index(fr[0])
-                if self.authored is not None:
+                if self.authored is not None and self.id in ("kenji", "jack", "amara"):
+                    boxes.extend([int(v) for v in b] for b in self.authored[i]["hit"].get(move["limb"], []))
+                elif self.authored is not None:
                     boxes.extend(along_limb(b) for b in self.authored[i]["hit"].get(move["limb"], []))
                 else:
                     boxes.append(along_limb(art.hitbox(self.data["build"], self.joints[i], move["limb"])))
@@ -214,7 +217,9 @@ class Fighter:
                 limbs = sorted({m['limb'] for m in d['moves'] if m['anim']==name and 'limb' in m}) if 'active' in fl else []
                 boxes = []
                 for limb in limbs:
-                    if self.authored is not None:
+                    if self.authored is not None and self.id in ("kenji", "jack", "amara"):
+                        boxes.extend([int(v) for v in b] for b in self.authored[sprite]['hit'].get(limb, []))
+                    elif self.authored is not None:
                         boxes.extend(along_limb(b) for b in self.authored[sprite]['hit'].get(limb, []))
                     else:
                         boxes.append(along_limb(art.hitbox(d['build'], self.joints[sprite], limb)))
@@ -280,6 +285,33 @@ class Fighter:
                 rows.append('{'+','.join(str(v) for v in values)+',{'+','.join(str(v) for v in projectile['box'])+'}}')
             lines.append(f'static const NGFProjectileDef {prefix}_projectiles[] = {{'+','.join(rows)+'};')
         projectile_ptr=prefix+'_projectiles' if projectiles else '0'
+        combat_ptr = '0'
+        if 'combat' in d:
+            combat = d['combat']
+            selectors = [m['anim'] + ':' + m.get('buttons', '') + ':' + m.get('motion', 'none') for m in d['moves']]
+            conditions = {'hit': 'NGF_CONTACT_HIT', 'block': 'NGF_CONTACT_BLOCK',
+                          'counter': 'NGF_CONTACT_COUNTER', 'whiff': 'NGF_CONTACT_WHIFF',
+                          'max': 'NGF_CANCEL_NEEDS_MAX'}
+            rows = []
+            for route in combat['routes']:
+                mask = ' | '.join(conditions[c] for c in route['on'].split('|'))
+                rows.append('{%d, %d, %d, %d, %s, %d}' %
+                            (selectors.index(route['from']), selectors.index(route['to']),
+                             *route['ticks'], mask, route.get('max_uses', 1)))
+            lines.append(f'static const NGFCancelRule {prefix}_routes[] = {{' + ','.join(rows) + '};')
+            assist = selectors.index(combat['assist']) + 1 if combat.get('assist') else 0
+            throw_rows = []
+            for th in combat.get('throws', []):
+                throw_rows.append('{%d, %d, %d, %d, %d, %d}' % (
+                    selectors.index(th['move']), th.get('grip_x', 26), th.get('lift', 16),
+                    th.get('carry_tick', 8), th.get('release_x', th.get('grip_x', 26)), th.get('tech_ticks', 4)))
+            throws_ptr = '0'
+            if throw_rows:
+                lines.append(f'static const NGFThrowAnchor {prefix}_throws[] = {{' + ','.join(throw_rows) + '};')
+                throws_ptr = f'{prefix}_throws'
+            lines.append(f'static const NGFCombatRules {prefix}_combat = {{' +
+                         f'{prefix}_routes, {len(rows)}, {combat["juggle_limit"]}, {combat["relaunch_limit"]}, {assist}, {throws_ptr}, {len(throw_rows)}, 0' + '};')
+            combat_ptr = '&' + prefix + '_combat'
         lines.append(
             f"static const NGFFighterDef {prefix} = {{\n"
             f"    \"{d['name']}\", {d['life']}, {q8(ph['walk_fwd'])}, {q8(ph['walk_back'])}, {q8(ph['dash'])},\n"
@@ -289,7 +321,7 @@ class Fighter:
             f"    {len(self.anim_names)}, {len(d['moves'])}, {len(projectiles)}, {len(self.joints)},\n"
             f"    {{{cpu['aggression']}, {cpu['range']}, {cpu['jump']}, {idx('poke')}, {idx('sweep')}, {idx('anti_air')}, "
             f"{idx('special')}, {idx('rush')}, {idx('throw')}, {idx('super')}}},\n"
-            f"    {prefix}_hit_sets, {prefix}_frame_hits\n}};")
+            f"    {prefix}_hit_sets, {prefix}_frame_hits, {combat_ptr}\n}};")
         return "\n".join(lines)
 
     def _loops(self, name):
@@ -326,13 +358,29 @@ def load_all():
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--sheet", action="store_true")
+    ap.add_argument("--tables-only", action="store_true", help="Update combat tables in the existing header without writing graphics")
     args = ap.parse_args()
     out = GAME / "artbox/generated"
     out.mkdir(parents=True, exist_ok=True)
-    for f in load_all():
+    header = out / 'slf_assets.h'
+    text = header.read_text() if args.tables_only else None
+    paths = sorted((GAME / 'fighters').glob('*.json'))
+    if args.tables_only:
+        # Keep the untouched roster's compiled frames exactly as approved.
+        # Only the explicit combat-policy fighters need their tables recooked.
+        paths = [p for p in paths if 'combat' in json.loads(p.read_text())]
+        text = re.sub(r'(slf_\w+_hit_sets, slf_\w+_frame_hits)(\n\};)', r'\1, 0\2', text)
+    for f in (Fighter(p) for p in paths):
         print(f"{f.id}: {len(f.images)} frames, {len(f.anim_names)} animations, {len(f.data['moves'])} moves")
         if args.sheet:
             f.sheet(out / f"{f.id}_sheet.png")
+        if args.tables_only:
+            prefix = 'slf_' + f.id
+            pattern = r'static const NGFFrame ' + prefix + r'_frames\[\].*?static const NGFFighterDef ' + prefix + r' = \{.*?\n\};'
+            text, count = re.subn(pattern, lambda m: f.c_tables(prefix), text, count=1, flags=re.S)
+            if count != 1: raise ValueError('Missing compiled fighter tables: ' + f.id)
+    if args.tables_only:
+        header.write_text(text, encoding='ascii')
 
 
 if __name__ == "__main__":

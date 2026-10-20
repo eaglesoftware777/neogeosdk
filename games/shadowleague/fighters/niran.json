@@ -2718,5 +2718,366 @@
     "family": "thai",
     "footwear": "bare",
     "personality": "Muay Lao: bare, navy and ivory, thai guard"
+  },
+  "combat": {
+    "juggle_limit": 6,
+    "relaunch_limit": 2,
+    "assist": "spear:D:dp",
+    "routes": [
+      {
+        "from": "elbow:A:none",
+        "to": "teep:B:none",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "elbow:A:none",
+        "to": "n_stand_c:C:none",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "teep:B:none",
+        "to": "n_stand_c:C:none",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "teep:B:none",
+        "to": "n_stand_d:D:none",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_jab:A:none",
+        "to": "c_kick:B:none",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_jab:A:none",
+        "to": "n_crouch_c:C:none",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_kick:B:none",
+        "to": "n_crouch_c:C:none",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "elbow:A:none",
+        "to": "spin_elbow:C:qcf",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "elbow:A:none",
+        "to": "spin_elbow:A:qcf",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "elbow:A:none",
+        "to": "spear:D:dp",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "teep:B:none",
+        "to": "spin_elbow:C:qcf",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "teep:B:none",
+        "to": "spin_elbow:A:qcf",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "teep:B:none",
+        "to": "spear:D:dp",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_c:C:none",
+        "to": "spin_elbow:C:qcf",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_c:C:none",
+        "to": "spin_elbow:A:qcf",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_c:C:none",
+        "to": "spear:D:dp",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_jab:A:none",
+        "to": "spin_elbow:C:qcf",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_jab:A:none",
+        "to": "spin_elbow:A:qcf",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_jab:A:none",
+        "to": "spear:D:dp",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_kick:B:none",
+        "to": "spin_elbow:C:qcf",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_kick:B:none",
+        "to": "spin_elbow:A:qcf",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_kick:B:none",
+        "to": "spear:D:dp",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_c:C:none",
+        "to": "spin_elbow:C:qcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_c:C:none",
+        "to": "spin_elbow:A:qcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_c:C:none",
+        "to": "spear:D:dp",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "spear:D:dp",
+        "to": "super:B:dqcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "spear:D:dp",
+        "to": "super:D:dqcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "spear:B:dp",
+        "to": "super:B:dqcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "spear:B:dp",
+        "to": "super:D:dqcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "spin_elbow:C:qcf",
+        "to": "super:B:dqcf",
+        "ticks": [
+          5,
+          16
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "spin_elbow:C:qcf",
+        "to": "super:D:dqcf",
+        "ticks": [
+          5,
+          16
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "spin_elbow:A:qcf",
+        "to": "super:B:dqcf",
+        "ticks": [
+          5,
+          16
+        ],
+        "on": "hit",
+        "max_uses": 1
+      }
+    ],
+    "throws": [
+      {
+        "move": "throw:C:fwd",
+        "grip_x": 22,
+        "lift": 22,
+        "carry_tick": 8,
+        "release_x": 30,
+        "tech_ticks": 4
+      },
+      {
+        "move": "throw:D:fwd",
+        "grip_x": 22,
+        "lift": 16,
+        "carry_tick": 8,
+        "release_x": 22,
+        "tech_ticks": 4
+      },
+      {
+        "move": "throw:C:back",
+        "grip_x": 22,
+        "lift": 24,
+        "carry_tick": 8,
+        "release_x": 30,
+        "tech_ticks": 4
+      },
+      {
+        "move": "throw:D:back",
+        "grip_x": 22,
+        "lift": 16,
+        "carry_tick": 8,
+        "release_x": 22,
+        "tech_ticks": 4
+      }
+    ]
   }
 }

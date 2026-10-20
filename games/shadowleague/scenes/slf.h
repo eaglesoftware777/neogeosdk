@@ -47,6 +47,7 @@ enum { SLF_GRUNT_ATTACK, SLF_GRUNT_HURT, SLF_GRUNT_KO, SLF_GRUNT_POWER };
 /* slf_draw.c */
 void     NEOGEO_USER slf_presentation_init(void);
 void     NEOGEO_USER slf_palette_vblank(void);
+void     NEOGEO_USER slf_input_vblank(void);
 void     NEOGEO_USER slf_fix_palettes_init(void);
 void     NEOGEO_USER slf_scene_begin(void);
 void     NEOGEO_USER slf_fade_out(void);

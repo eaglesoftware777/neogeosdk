@@ -136,6 +136,38 @@ enum { NGF_LV_MID, NGF_LV_HIGH, NGF_LV_LOW, NGF_LV_OVERHEAD, NGF_LV_THROW, NGF_L
 #define NGF_CANCEL_SPECIAL 0x02u
 #define NGF_CANCEL_SUPER   0x04u
 
+#define NGF_CONTACT_HIT      0x01u
+#define NGF_CONTACT_BLOCK    0x02u
+#define NGF_CONTACT_COUNTER  0x04u
+#define NGF_CONTACT_WHIFF    0x08u
+#define NGF_CANCEL_NEEDS_MAX 0x10u
+#define NGF_CANCEL_RULES     32u
+/* Tick windows are inclusive, measured in unfrozen simulation ticks from
+ * move startup. Routes refer to move IDs, never relative array ordering. */
+typedef struct {
+    uint8_t from, to, first_tick, last_tick, conditions, max_uses;
+} NGFCancelRule;
+/* Authored throw interaction for one throw move. Distances are whole pixels
+ * between the two fighters' roots; ticks are unfrozen simulation ticks from
+ * the throw's startup. Zero fields fall back to the legacy behaviour. */
+typedef struct {
+    uint8_t move;          /* move ID of the throw */
+    uint8_t grip_x;        /* root distance while held (legacy 26) */
+    uint8_t lift;          /* peak height of the held opponent (legacy 16, lift 56) */
+    uint8_t carry_tick;    /* back throw: tick it carries over (legacy 8) */
+    uint8_t release_x;     /* root distance at release (legacy: grip) */
+    uint8_t tech_ticks;    /* defender's C/D break window (legacy 4) */
+} NGFThrowAnchor;
+typedef struct {
+    const NGFCancelRule *routes;
+    uint8_t route_count, juggle_limit, relaunch_limit;
+    uint8_t assist_move;  /* 1-based authored melee support move; zero = legacy */
+    const NGFThrowAnchor *throws;
+    uint8_t throw_count, pad;
+} NGFCombatRules;
+enum { NGF_CANCEL_OK, NGF_CANCEL_NO_ROUTE, NGF_CANCEL_WINDOW,
+       NGF_CANCEL_CONTACT, NGF_CANCEL_REPEAT, NGF_CANCEL_RESOURCE };
+
 typedef struct {
     uint8_t anim;          /* animation index */
     uint8_t kind;          /* NGF_KIND_* */
@@ -194,6 +226,8 @@ typedef struct {
      * frame_hits is parallel to frames; index zero is an empty contact set. */
     const NGFHitSet *hit_sets;
     const uint8_t *frame_hits;
+    /* Null preserves the legacy cancel and juggle policy. */
+    const NGFCombatRules *combat;
 } NGFFighterDef;
 
 /* ---- runtime ------------------------------------------------------- */
@@ -225,7 +259,13 @@ typedef struct {
     uint16_t max_timer;                /* frames left in MAX mode */
     uint8_t  max_super, hop;           /* current super is a MAX super; jump may still become a hop */
     NGFInput input;
+    uint8_t move_contact, cancel_reject, juggle_points, relaunches;
+    uint8_t route_uses[NGF_CANCEL_RULES];
 } NGFFighter;
+
+/* Inspect a route without consuming input or meter. rule_index may be null.
+ * The normal command parser and stance checks still apply when executing. */
+uint8_t NEOGEO_USER ngf_cancel_check(const NGFFighter *f, uint8_t to, uint8_t *rule_index);
 
 typedef struct {
     const NGFProjectileDef *def;
@@ -295,6 +335,10 @@ typedef struct {
     NGFStriker striker[2];                    /* striker summon actors */
     uint8_t training;                         /* practice damage cannot cause a KO */
     uint8_t round_seconds;
+    /* Presentation queue telemetry survives round changes. Eviction and
+     * rejection both count as loss; critical loss is reported separately. */
+    uint32_t events_dropped, events_critical_dropped;
+    uint8_t events_peak;
 } NGFMatch;
 
 #define NGF_TRAIN_RECORD_FRAMES 240u

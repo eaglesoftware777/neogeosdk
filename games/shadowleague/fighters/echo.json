@@ -2319,5 +2319,366 @@
     "family": "android",
     "footwear": "boot",
     "personality": "Imitation Matrix: armor, slate and teal, android guard"
+  },
+  "combat": {
+    "juggle_limit": 6,
+    "relaunch_limit": 2,
+    "assist": "spec_2:C:dp",
+    "routes": [
+      {
+        "from": "a_jab:A:none",
+        "to": "b_kick:B:none",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "a_jab:A:none",
+        "to": "c_straight:C:none",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "b_kick:B:none",
+        "to": "c_straight:C:none",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "b_kick:B:none",
+        "to": "d_kick:D:none",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_a:A:none",
+        "to": "n_crouch_b:B:none",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_a:A:none",
+        "to": "n_crouch_c:C:none",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_b:B:none",
+        "to": "n_crouch_c:C:none",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "a_jab:A:none",
+        "to": "spec_1:C:qcf",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "a_jab:A:none",
+        "to": "spec_1:A:qcf",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "a_jab:A:none",
+        "to": "spec_2:C:dp",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "b_kick:B:none",
+        "to": "spec_1:C:qcf",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "b_kick:B:none",
+        "to": "spec_1:A:qcf",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "b_kick:B:none",
+        "to": "spec_2:C:dp",
+        "ticks": [
+          2,
+          12
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_straight:C:none",
+        "to": "spec_1:C:qcf",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_straight:C:none",
+        "to": "spec_1:A:qcf",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_straight:C:none",
+        "to": "spec_2:C:dp",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_a:A:none",
+        "to": "spec_1:C:qcf",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_a:A:none",
+        "to": "spec_1:A:qcf",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_a:A:none",
+        "to": "spec_2:C:dp",
+        "ticks": [
+          1,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_b:B:none",
+        "to": "spec_1:C:qcf",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_b:B:none",
+        "to": "spec_1:A:qcf",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_b:B:none",
+        "to": "spec_2:C:dp",
+        "ticks": [
+          3,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_c:C:none",
+        "to": "spec_1:C:qcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_c:C:none",
+        "to": "spec_1:A:qcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_c:C:none",
+        "to": "spec_2:C:dp",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "spec_2:C:dp",
+        "to": "super_anim:CD:dqcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "spec_2:C:dp",
+        "to": "super_anim:C:dqcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "spec_2:A:dp",
+        "to": "super_anim:CD:dqcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "spec_2:A:dp",
+        "to": "super_anim:C:dqcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "spec_1:C:qcf",
+        "to": "super_anim:CD:dqcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "spec_1:C:qcf",
+        "to": "super_anim:C:dqcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "spec_1:A:qcf",
+        "to": "super_anim:CD:dqcf",
+        "ticks": [
+          3,
+          15
+        ],
+        "on": "hit",
+        "max_uses": 1
+      }
+    ],
+    "throws": [
+      {
+        "move": "throw:C:fwd",
+        "grip_x": 22,
+        "lift": 22,
+        "carry_tick": 8,
+        "release_x": 30,
+        "tech_ticks": 4
+      },
+      {
+        "move": "throw:D:fwd",
+        "grip_x": 22,
+        "lift": 16,
+        "carry_tick": 8,
+        "release_x": 22,
+        "tech_ticks": 4
+      },
+      {
+        "move": "throw:C:back",
+        "grip_x": 22,
+        "lift": 24,
+        "carry_tick": 8,
+        "release_x": 30,
+        "tech_ticks": 4
+      },
+      {
+        "move": "throw:D:back",
+        "grip_x": 22,
+        "lift": 16,
+        "carry_tick": 8,
+        "release_x": 22,
+        "tech_ticks": 4
+      }
+    ]
   }
 }

@@ -73,6 +73,14 @@ void ng_perf_vram(uint16_t words)
 
 static uint8_t ng_perf_commit_began_blank;
 
+void ng_perf_commit_phase(uint8_t phase)
+{
+    uint16_t now = ng_perf_line();
+    uint16_t lines = now >= ng_perf.phase_line ? now - ng_perf.phase_line : now + 264u - ng_perf.phase_line;
+    if (phase < 8u && lines > ng_perf.commit_phase_peak[phase]) ng_perf.commit_phase_peak[phase] = lines;
+    ng_perf.phase_line = now;
+}
+
 void ng_perf_commit_part(uint16_t groups, uint16_t fix_cells, uint16_t fix_from_line)
 {
     uint16_t now = ng_perf_line();
@@ -88,6 +96,7 @@ void ng_perf_commit(uint8_t begin)
     uint8_t drawn = (uint8_t)(line >= 16u && line < 240u);
     if (begin) {
         ng_perf.commit_begin = line;
+        ng_perf.phase_line = line;
         ng_perf.in_commit = 1u;
         ng_perf_commit_began_blank = (uint8_t)!drawn;
         if (drawn) ng_perf.commit_late++;

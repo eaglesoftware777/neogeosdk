@@ -40,7 +40,7 @@ def face(fighter_id, size):
     """size x size RGB head shot on the cell ground."""
     kept = FACES / f'{fighter_id}.png'
     if kept.exists():
-        return np.asarray(Image.open(kept).convert('RGB').resize((size, size), Image.Resampling.NEAREST))
+        return np.asarray(Image.open(kept).convert('RGB').resize((size, size), Image.Resampling.LANCZOS))
     raise ValueError(f'Missing authored selection portrait: {kept}')
 
 

@@ -85,8 +85,16 @@ uint16_t setSCB4(uint16_t x) { return (uint16_t)((x & 511u) << 7); }
 uint16_t setSCB1_2(uint16_t p, uint16_t t, uint16_t a8, uint16_t a4, uint16_t v, uint16_t h)
 { return (uint16_t)((p << 8) | (t << 4) | (a8 << 3) | (a4 << 2) | (v << 1) | h); }
 void vram_init(uint16_t a, uint16_t i) { address = a; increment = i; }
-void vram_sfix1(uint16_t value) { assert(address < 0x8800); ram[address] = value; address += increment; writes++; }
-void vram_SCB234(uint16_t a, uint16_t value) { assert(a < 0x8800); ram[a] = value; writes++; }
+void vram_sfix1(uint16_t value) { assert(address < 0x8800); ram[address] = value; address += increment; writes++;
+#ifdef NG_TEST_VRAM_WRITE
+    NG_TEST_VRAM_WRITE();
+#endif
+}
+void vram_SCB234(uint16_t a, uint16_t value) { assert(a < 0x8800); ram[a] = value; writes++;
+#ifdef NG_TEST_VRAM_WRITE
+    NG_TEST_VRAM_WRITE();
+#endif
+}
 void vram_SCB1(uint16_t *tiles, uint16_t *attrs, uint8_t count)
 { unsigned i; for (i = 0; i < count; i++) { vram_sfix1(tiles[i]); vram_sfix1(attrs[i]); } }
 void vram_sprite(uint16_t a, uint16_t inc, uint16_t slot, uint16_t *tiles,

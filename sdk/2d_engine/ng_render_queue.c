@@ -15,22 +15,30 @@
 #include "ng_render_queue.h"
 #include "macro.h"
 #include "neogeo.h"
+#ifdef NG_VRAM_DEFER
+#include "ng_sprite_group.h"
+#endif
 
 static NGRenderCmd  ng_rq_cmds[NG_RQ_MAX_CMDS];
 static uint8_t      ng_rq_count;
 
 static NGPaletteUpload ng_rq_palettes[NG_RQ_MAX_PAL_UPLOADS];
 static uint8_t         ng_rq_pal_count;
+static uint16_t        ng_rq_palette_data[NG_RQ_MAX_PAL_UPLOADS][16];
+NGRenderQueueStats ng_rq_stats;
 
 void NEOGEO_USER ng_render_queue_init(void)
 {
     ng_rq_count     = 0;
     ng_rq_pal_count = 0;
+    ng_rq_stats.command_overflows = ng_rq_stats.palette_overflows = 0u;
+    ng_rq_stats.command_peak = ng_rq_stats.palette_peak = 0u;
 }
 
 static NGRenderCmd * NEOGEO_USER ng_rq_alloc(void)
 {
-    if (ng_rq_count >= NG_RQ_MAX_CMDS) return 0;
+    if (ng_rq_count >= NG_RQ_MAX_CMDS) { ng_rq_stats.command_overflows++; return 0; }
+    if (ng_rq_count + 1u > ng_rq_stats.command_peak) ng_rq_stats.command_peak = (uint8_t)(ng_rq_count + 1u);
     return &ng_rq_cmds[ng_rq_count++];
 }
 
@@ -76,16 +84,18 @@ void NEOGEO_USER ng_rq_scb234(uint16_t addr, uint16_t value)
 
 void NEOGEO_USER ng_rq_palette_upload(uint16_t palette_slot, const uint16_t *data)
 {
-    NGPaletteUpload *p;
-    if (ng_rq_pal_count >= NG_RQ_MAX_PAL_UPLOADS) return;
+    uint8_t i, k;
     if (!data) return;
-    p = &ng_rq_palettes[ng_rq_pal_count++];
-    /*
-     * palette_slot 0..N maps to PALETTES + slot * 32 bytes.
-     * palette_addr stored as word offset from PALETTES base.
-     */
-    p->palette_addr = (uint16_t)(palette_slot * 16u);   /* 16 words = 32 bytes per slot */
-    p->data         = data;
+    for (i = 0u; i < ng_rq_pal_count; i++)
+        if (ng_rq_palettes[i].palette_addr == palette_slot * 16u) break;
+    if (i == ng_rq_pal_count) {
+        if (ng_rq_pal_count >= NG_RQ_MAX_PAL_UPLOADS) { ng_rq_stats.palette_overflows++; return; }
+        ng_rq_pal_count++;
+        if (ng_rq_pal_count > ng_rq_stats.palette_peak) ng_rq_stats.palette_peak = ng_rq_pal_count;
+    }
+    for (k = 0u; k < 16u; k++) ng_rq_palette_data[i][k] = data[k];
+    ng_rq_palettes[i].palette_addr = (uint16_t)(palette_slot * 16u);
+    ng_rq_palettes[i].data = ng_rq_palette_data[i];
 }
 
 void NEOGEO_USER ng_render_queue_flush(void)
@@ -95,6 +105,9 @@ void NEOGEO_USER ng_render_queue_flush(void)
     /* --- Apply sprite commands --- */
     for (i = 0; i < ng_rq_count; i++) {
         const NGRenderCmd *cmd = &ng_rq_cmds[i];
+#ifdef NG_VRAM_DEFER
+        if (ng_vram_lines_left() < 3u) break;
+#endif
 
         switch (cmd->type) {
         case NG_RQ_SPRITE_POS:
@@ -125,15 +138,30 @@ void NEOGEO_USER ng_render_queue_flush(void)
             break;
         }
     }
-    ng_rq_count = 0;
+    {
+        uint8_t k, done = i;
+        for (k = done; k < ng_rq_count; k++) ng_rq_cmds[k - done] = ng_rq_cmds[k];
+        ng_rq_count = (uint8_t)(ng_rq_count - done);
+    }
 
     /* --- Apply palette uploads --- */
     for (i = 0; i < ng_rq_pal_count; i++) {
         const NGPaletteUpload *p = &ng_rq_palettes[i];
+#ifdef NG_VRAM_DEFER
+        if (ng_vram_lines_left() < 4u) break;
+#endif
         uintptr_t base = (uintptr_t)((uint32_t)PALETTES + (uint32_t)p->palette_addr * 2u);
         load_palettes((uint16_t *)p->data, base);
     }
-    ng_rq_pal_count = 0;
+    {
+        uint8_t k, j, done = i;
+        for (k = done; k < ng_rq_pal_count; k++) {
+            ng_rq_palettes[k - done].palette_addr = ng_rq_palettes[k].palette_addr;
+            for (j = 0u; j < 16u; j++) ng_rq_palette_data[k - done][j] = ng_rq_palette_data[k][j];
+            ng_rq_palettes[k - done].data = ng_rq_palette_data[k - done];
+        }
+        ng_rq_pal_count = (uint8_t)(ng_rq_pal_count - done);
+    }
 }
 
 uint8_t NEOGEO_USER ng_rq_free(void)

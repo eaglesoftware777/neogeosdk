@@ -116,6 +116,11 @@ uint8_t NEOGEO_USER ng_vram_window_open(void);
 extern volatile uint8_t ng_vram_busy;
 void NEOGEO_USER ng_sprite_group_cancel(NGSpriteGroup *g);
 void NEOGEO_USER ng_sprite_hide_range_queued(uint16_t firstSprite, uint16_t count);
+/* Runtime removal: cancel pending content, queue the owned slots for a
+ * bounded blanking-time hide, and invalidate the cached map. Safe to
+ * reinitialise the same group before the next commit; the hide precedes
+ * its replacement. The group must remain alive while still queued. */
+void NEOGEO_USER ng_sprite_group_hide_queued(NGSpriteGroup *g);
 #endif
 void NEOGEO_USER ng_sprite_group_set_tile_base(NGSpriteGroup *g, uint16_t tileBase);
 /* Full 20-bit C-ROM tile address. Addresses above 0xfffff are rejected.

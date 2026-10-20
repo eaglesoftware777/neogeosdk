@@ -16,6 +16,24 @@
 #include "sdk/neogeo.h"
 #include "sdk/sound_ids.h"
 #include "sdk/sound_voice_ids.h"
+#ifndef SOUND_VOICE_WORD_GO
+#define SOUND_VOICE_WORD_GO SOUND_SFX_1
+#endif
+#ifndef SOUND_VOICE_WORD_SCORE
+#define SOUND_VOICE_WORD_SCORE SOUND_SFX_2
+#endif
+#ifndef SOUND_VOICE_WORD_READY
+#define SOUND_VOICE_WORD_READY SOUND_SFX_3
+#endif
+#ifndef SOUND_VOICE_WORD_START
+#define SOUND_VOICE_WORD_START SOUND_SFX_4
+#endif
+#ifndef SOUND_VOICE_WORD_STAGE
+#define SOUND_VOICE_WORD_STAGE SOUND_SFX_5
+#endif
+#ifndef SOUND_VOICE_WORD_GAME_OVER
+#define SOUND_VOICE_WORD_GAME_OVER SOUND_SFX_6
+#endif
 #include "sdk/2d_engine/ng_defs.h"
 #include "sdk/2d_engine/ng_chars.h"
 #include "sdk/2d_engine/ng_fixed.h"

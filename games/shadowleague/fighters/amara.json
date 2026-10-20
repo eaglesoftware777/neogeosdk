@@ -2509,5 +2509,288 @@
     "family": "flow",
     "footwear": "bare",
     "personality": "Capoeira: jersey, ivory and green, flow guard"
+  },
+  "combat": {
+    "juggle_limit": 6,
+    "relaunch_limit": 2,
+    "assist": "c_rasteira:D:none",
+    "routes": [
+      {
+        "from": "ginga_slap:A:none",
+        "to": "n_stand_b:B:none",
+        "ticks": [
+          3,
+          9
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "ginga_slap:A:none",
+        "to": "martelo:D:none",
+        "ticks": [
+          3,
+          9
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_b:B:none",
+        "to": "martelo:D:none",
+        "ticks": [
+          3,
+          9
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_slap:A:none",
+        "to": "n_crouch_b:B:none",
+        "ticks": [
+          2,
+          8
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_slap:A:none",
+        "to": "n_crouch_c:C:none",
+        "ticks": [
+          2,
+          8
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "ginga_slap:A:none",
+        "to": "meia_lua:B:qcf",
+        "ticks": [
+          3,
+          9
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "ginga_slap:A:none",
+        "to": "au_batido:B:dp",
+        "ticks": [
+          3,
+          9
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_b:B:none",
+        "to": "meia_lua:B:qcf",
+        "ticks": [
+          3,
+          9
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_b:B:none",
+        "to": "au_batido:B:dp",
+        "ticks": [
+          3,
+          9
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_c:C:none",
+        "to": "meia_lua:B:qcf",
+        "ticks": [
+          4,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_stand_c:C:none",
+        "to": "au_batido:B:dp",
+        "ticks": [
+          4,
+          11
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_slap:A:none",
+        "to": "meia_lua:B:qcf",
+        "ticks": [
+          2,
+          8
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "c_slap:A:none",
+        "to": "au_batido:B:dp",
+        "ticks": [
+          2,
+          8
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_b:B:none",
+        "to": "meia_lua:B:qcf",
+        "ticks": [
+          4,
+          10
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_b:B:none",
+        "to": "au_batido:B:dp",
+        "ticks": [
+          4,
+          10
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_c:C:none",
+        "to": "meia_lua:B:qcf",
+        "ticks": [
+          4,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "n_crouch_c:C:none",
+        "to": "au_batido:B:dp",
+        "ticks": [
+          4,
+          13
+        ],
+        "on": "hit|block",
+        "max_uses": 1
+      },
+      {
+        "from": "meia_lua:D:qcf",
+        "to": "super:B:dqcf",
+        "ticks": [
+          6,
+          14
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "meia_lua:D:qcf",
+        "to": "super:D:dqcf",
+        "ticks": [
+          6,
+          14
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "meia_lua:B:qcf",
+        "to": "super:B:dqcf",
+        "ticks": [
+          6,
+          14
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "meia_lua:B:qcf",
+        "to": "super:D:dqcf",
+        "ticks": [
+          6,
+          14
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "au_batido:D:dp",
+        "to": "super:B:dqcf",
+        "ticks": [
+          4,
+          13
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "au_batido:D:dp",
+        "to": "super:D:dqcf",
+        "ticks": [
+          4,
+          13
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "au_batido:B:dp",
+        "to": "super:B:dqcf",
+        "ticks": [
+          4,
+          13
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "au_batido:B:dp",
+        "to": "super:D:dqcf",
+        "ticks": [
+          4,
+          13
+        ],
+        "on": "hit",
+        "max_uses": 1
+      },
+      {
+        "from": "meia_lua:B:qcf",
+        "to": "au_batido:D:dp",
+        "ticks": [
+          6,
+          14
+        ],
+        "on": "hit|max",
+        "max_uses": 1
+      },
+      {
+        "from": "au_batido:B:dp",
+        "to": "meia_lua:D:qcf",
+        "ticks": [
+          4,
+          13
+        ],
+        "on": "hit|max",
+        "max_uses": 1
+      }
+    ],
+    "throws": [
+      {"move": "throw:C:fwd", "grip_x": 26, "lift": 28, "carry_tick": 7, "release_x": 34, "tech_ticks": 4},
+      {"move": "throw:D:fwd", "grip_x": 26, "lift": 20, "carry_tick": 7, "release_x": 26, "tech_ticks": 4},
+      {"move": "throw:C:back", "grip_x": 26, "lift": 30, "carry_tick": 7, "release_x": 34, "tech_ticks": 4},
+      {"move": "throw:D:back", "grip_x": 26, "lift": 20, "carry_tick": 7, "release_x": 26, "tech_ticks": 4}
+    ]
   }
 }
