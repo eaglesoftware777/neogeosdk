@@ -783,6 +783,68 @@ int neosd_unpack(const char *neo_path, const char *out_dir, int verbose)
         free(temp_c);
     }
 
+    /* Write MAME software list XMLs for instant emulator testing */
+    char xml_path[512];
+    char name[NEO_NAME_LEN] = {0};
+    char manu[NEO_MANUFACTURER_LEN] = {0};
+    uint32_t year = get_u32_le(hdr + 28);
+    memcpy(name, hdr + 44, NEO_NAME_LEN - 1);
+    memcpy(manu, hdr + 77, NEO_MANUFACTURER_LEN - 1);
+
+    static const char *systems[2] = { "neogeo", "aes" };
+    for (int s = 0; s < 2; s++) {
+        snprintf(xml_path, sizeof(xml_path), "%s/%s.xml", out_dir, systems[s]);
+        FILE *x = fopen(xml_path, "w");
+        if (x) {
+            fprintf(x, "<?xml version=\"1.0\"?>\n");
+            fprintf(x, "<!DOCTYPE softwarelist PUBLIC \"-//MAME//DTD Software List//EN\" \"https://raw.githubusercontent.com/mamedev/mame/master/src/mame/mame.dtd\">\n");
+            fprintf(x, "<softwarelist name=\"%s\" description=\"Neo-Geo Hardware Test\">\n", systems[s]);
+            fprintf(x, "    <software name=\"testgame\">\n");
+            fprintf(x, "        <description>%s</description>\n", name[0] ? name : "NeoGeo Test Game");
+            fprintf(x, "        <year>%u</year>\n", year ? year : 2026);
+            fprintf(x, "        <publisher>%s</publisher>\n", manu[0] ? manu : "Eagle Software");
+            fprintf(x, "        <part name=\"cart\" interface=\"neo_cart\">\n");
+            fprintf(x, "            <feature name=\"slot\" value=\"rom\" />\n");
+            if (psz > 0) {
+                fprintf(x, "            <dataarea name=\"maincpu\" width=\"16\" endianness=\"big\" size=\"0x%X\">\n", psz);
+                fprintf(x, "                <rom loadflag=\"load16_word_swap\" name=\"%u-p1.p1\" offset=\"0x000000\" size=\"0x%X\" />\n", ngh, psz);
+                fprintf(x, "            </dataarea>\n");
+            }
+            if (ssz > 0) {
+                fprintf(x, "            <dataarea name=\"fixed\" size=\"0x%X\">\n", ssz);
+                fprintf(x, "                <rom offset=\"0x000000\" size=\"0x%X\" name=\"%u-s1.s1\" />\n", ssz, ngh);
+                fprintf(x, "            </dataarea>\n");
+            }
+            if (msz > 0) {
+                fprintf(x, "            <dataarea name=\"audiocpu\" size=\"0x%X\">\n", msz);
+                fprintf(x, "                <rom offset=\"0x000000\" size=\"0x%X\" name=\"%u-m1.m1\" />\n", msz, ngh);
+                fprintf(x, "            </dataarea>\n");
+            }
+            if (v1sz > 0) {
+                fprintf(x, "            <dataarea name=\"ymsnd:adpcma\" size=\"0x%X\">\n", v1sz);
+                fprintf(x, "                <rom name=\"%u-v1.v1\" offset=\"0x000000\" size=\"0x%X\" />\n", ngh, v1sz);
+                fprintf(x, "            </dataarea>\n");
+            }
+            if (v2sz > 0) {
+                fprintf(x, "            <dataarea name=\"ymsnd:adpcmb\" size=\"0x%X\">\n", v2sz);
+                fprintf(x, "                <rom name=\"%u-v2.v2\" offset=\"0x000000\" size=\"0x%X\" />\n", ngh, v2sz);
+                fprintf(x, "            </dataarea>\n");
+            }
+            if (csz > 0) {
+                uint32_t half = csz / 2;
+                fprintf(x, "            <dataarea name=\"sprites\" size=\"0x%X\">\n", csz);
+                fprintf(x, "                <rom loadflag=\"load16_byte\" name=\"%u-c1.c1\" offset=\"0x000000\" size=\"0x%X\" />\n", ngh, half);
+                fprintf(x, "                <rom loadflag=\"load16_byte\" name=\"%u-c2.c2\" offset=\"0x000001\" size=\"0x%X\" />\n", ngh, half);
+                fprintf(x, "            </dataarea>\n");
+            }
+            fprintf(x, "        </part>\n");
+            fprintf(x, "    </software>\n");
+            fprintf(x, "</softwarelist>\n");
+            fclose(x);
+            if (verbose) printf(" -> Generated emulator test definition: %s\n", xml_path);
+        }
+    }
+
     fclose(f);
     printf("Unpack complete! Output written to: %s\n\n", out_dir);
     return 0;
