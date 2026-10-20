@@ -154,6 +154,38 @@ void NEOGEO_USER PLAYER_START (void) {
 		playSFX(SOUND_SFX_3);
 		return;
 	}
+	/* A first player's start during a P2 game: a challenger. */
+	if ((start_flag & 1u) && NEO_REGISTER8(BIOS_PLAYER2_MODE) == 1u && NEO_REGISTER8(BIOS_PLAYER1_MODE) != 1u) {
+		if (ng_sys_is_mvs()) {
+			NEO_REGISTER8(0x10FDB0) = 1;
+			NEO_REGISTER8(0x10FDB1) = 0;
+			CALLNEOGEOF(SYS_CREDIT_CHECK);
+			if (!NEO_REGISTER8(0x10FDB0)) { NEO_REGISTER8(BIOS_START_FLAG) = (uint8_t)(start_flag & ~1u); return; }
+			CALLNEOGEOF(SYS_CREDIT_DOWN);
+		}
+		NEO_REGISTER8(BIOS_PLAYER1_MODE) = 1;
+		NEO_REGISTER8(NGO_START_FLAG) = 1;
+		playSFX(SOUND_SFX_3);
+		return;
+	}
+
+	/* Game start by P2 */
+	if ((start_flag & 2u) && NEO_REGISTER8(BIOS_PLAYER1_MODE) != 1u && NEO_REGISTER8(BIOS_PLAYER2_MODE) != 1u) {
+		NEO_REGISTER8(BIOS_USER_MODE) = 2;
+		NEO_REGISTER8(NGO_START_FLAG) = 2;
+		NEO_REGISTER8(BIOS_PLAYER2_MODE) = 1;
+		NEO_REGISTER8(BIOS_START_FLAG) = start_flag | 2;
+		soundSetADPCMAVolume(0x3C);
+		playSFX(SOUND_SFX_3);
+		if (ng_sys_is_mvs()) {
+			NEO_REGISTER8(0x10FDB0) = 0;
+			NEO_REGISTER8(0x10FDB1) = 1;
+			CALLNEOGEOF(SYS_CREDIT_CHECK);
+			CALLNEOGEOF(SYS_CREDIT_DOWN);
+		}
+		return;
+	}
+
 	if (!(start_flag & 1u) || NEO_REGISTER8(BIOS_PLAYER1_MODE) == 1u) {
 		NEO_REGISTER8(BIOS_START_FLAG) = 0;
 		return;
@@ -254,7 +286,7 @@ void NEOGEO_USER GAME_DISPATCH(void) {
 		NEO_REGISTER8(BIOS_USER_MODE) = 1;
 		GAME_ATTRACT();
 	}
-	if (NEO_REGISTER8(NGO_START_FLAG) || (ng_sys_is_mvs() && read_p1credit() > 0)) {
+	if (NEO_REGISTER8(NGO_START_FLAG) || (ng_sys_is_mvs() && (read_p1credit() > 0 || *(volatile uint8_t *)P2_CREDITS > 0))) {
 		NEO_REGISTER8(BIOS_USER_MODE) = 2;
 		showTitleMVS();
 		START_GAME();
@@ -298,29 +330,70 @@ void NEOGEO_USER showTitleMVS(void) {
 		if (NEO_REGISTER8(NGO_START_FLAG)) break;
 		if (!ng_sys_is_mvs()) {
 			slf_puts_tall_center(24u, "PUSH START", SLF_TALL_GOLD);
-			if (slf_start_pending()) break;
-		} else if (read_p1credit() > 0) {
-			slf_puts_tall_center(24u, "PUSH 1P START", SLF_TALL_GOLD);
-			if (frames) frames--;
-			else {
-				uint16_t saved_sr;
-				__asm__ volatile ("move.w %%sr,%0\n\tmove.w #0x2700,%%sr" : "=d" (saved_sr) : : "memory");
-				if (!NEO_REGISTER8(NGO_START_FLAG)) {
+			if (slf_start_pressed(0u)) { NEO_REGISTER8(NGO_START_FLAG) = 1; break; }
+			if (slf_start_pressed(1u)) { NEO_REGISTER8(NGO_START_FLAG) = 2; break; }
+			if (slf_start_pending()) { NEO_REGISTER8(NGO_START_FLAG) = 1; break; }
+		} else {
+			int p1c = read_p1credit();
+			int p2c = *(volatile uint8_t *)P2_CREDITS;
+			if (p1c > 0 || p2c > 0) {
+				if (p1c > 0 && p2c > 0) slf_puts_tall_center(24u, "PUSH 1P OR 2P START", SLF_TALL_GOLD);
+				else if (p1c > 0) slf_puts_tall_center(24u, "PUSH 1P START", SLF_TALL_GOLD);
+				else slf_puts_tall_center(24u, "PUSH 2P START", SLF_TALL_GOLD);
+
+				if (slf_start_pressed(0u) && p1c > 0) {
+					uint16_t saved_sr;
+					__asm__ volatile ("move.w %%sr,%0\n\tmove.w #0x2700,%%sr" : "=d" (saved_sr) : : "memory");
 					NEO_REGISTER8(0x10FDB0) = 1;
 					NEO_REGISTER8(0x10FDB1) = 0;
-					NEO_REGISTER8(0x10FDB2) = 0;
-					NEO_REGISTER8(0x10FDB3) = 0;
 					CALLNEOGEOF(SYS_CREDIT_CHECK);
 					if (NEO_REGISTER8(0x10FDB0)) {
 						CALLNEOGEOF(SYS_CREDIT_DOWN);
 						NEO_REGISTER8(NGO_START_FLAG) = 1;
 						NEO_REGISTER8(BIOS_PLAYER1_MODE) = 1;
 						NEO_REGISTER8(BIOS_USER_MODE) = 2;
+						__asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
+						break;
 					}
+					__asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
 				}
-				__asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
-			}
-		} else slf_puts_tall_center(24u, "  INSERT COIN  ", SLF_TALL_SILVER);
+				if (slf_start_pressed(1u) && (p2c > 0 || p1c > 0)) {
+					uint16_t saved_sr;
+					__asm__ volatile ("move.w %%sr,%0\n\tmove.w #0x2700,%%sr" : "=d" (saved_sr) : : "memory");
+					NEO_REGISTER8(0x10FDB0) = 0;
+					NEO_REGISTER8(0x10FDB1) = 1;
+					CALLNEOGEOF(SYS_CREDIT_CHECK);
+					if (NEO_REGISTER8(0x10FDB1)) {
+						CALLNEOGEOF(SYS_CREDIT_DOWN);
+						NEO_REGISTER8(NGO_START_FLAG) = 2;
+						NEO_REGISTER8(BIOS_PLAYER2_MODE) = 1;
+						NEO_REGISTER8(BIOS_USER_MODE) = 2;
+						__asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
+						break;
+					}
+					__asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
+				}
+				if (frames) frames--;
+				else {
+					uint16_t saved_sr;
+					__asm__ volatile ("move.w %%sr,%0\n\tmove.w #0x2700,%%sr" : "=d" (saved_sr) : : "memory");
+					if (!NEO_REGISTER8(NGO_START_FLAG)) {
+						NEO_REGISTER8(0x10FDB0) = 1;
+						NEO_REGISTER8(0x10FDB1) = 0;
+						NEO_REGISTER8(0x10FDB2) = 0;
+						NEO_REGISTER8(0x10FDB3) = 0;
+						CALLNEOGEOF(SYS_CREDIT_CHECK);
+						if (NEO_REGISTER8(0x10FDB0)) {
+							CALLNEOGEOF(SYS_CREDIT_DOWN);
+							NEO_REGISTER8(NGO_START_FLAG) = 1;
+							NEO_REGISTER8(BIOS_PLAYER1_MODE) = 1;
+							NEO_REGISTER8(BIOS_USER_MODE) = 2;
+						}
+					}
+					__asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
+				}
+			} else slf_puts_tall_center(24u, "  INSERT COIN  ", SLF_TALL_SILVER);
+		}
 		slf_frame();
 	}
 }

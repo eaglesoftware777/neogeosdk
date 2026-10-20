@@ -1,62 +1,80 @@
-NO SIGNAL Z ALPHA  --  v1 ROMs  --  Eagle Software, 2026
-========================================================
+# No Signal Z Alpha
 
-!! WORK IN PROGRESS !!  A preview build, not a finished game.
+A native Neo Geo single-player beat-'em-up, built on the SDK's beat-'em-up
+engine (`GAME_GENRE_ENGINE = beatemup`, `sdk/2d_engine/ng_beatemup.c`).
+Game ID 784.
 
-No Signal Z Alpha's first ROM set, shared with the NeoGeoSDK v1.7.7
-pre-release. Every file carries "_v1" in its name.
+Someone stole the phone. Then the whole city lost its signal. Choose one hero
+(exactly one person plays) and get it back across eight stages: The Hood, The
+City Underpass, The Viral Outbreak, The Clone Lab, Concrete Jungle, The
+Machine City, The Rogue AI and The Signal Beyond Earth, each with its own
+crew and a boss in three phases.
 
-A beat-'em-up for one player. Someone stole the phone, then the whole city
-lost its signal: choose Jay, Zoe or Kai and get it back across eight
-stages, each with its own crew and a boss in three phases. Story Arcade,
-then Boss Rush and Stage Select, a two-minute Challenge and the Gallery.
-(Every change: NoSignal-CHANGELOG_v1.txt)
+- **Jay** ("No Cap"): fast hands, big heart; special Ratio Rush.
+- **Zoe** ("Main Character"): flips, counters, sass; special Main Character
+  Energy.
+- **Kai** ("Aura"): slow, strong, unbothered; special Aura Breaker.
 
-FILES
------
-NoSignal-WIP-NeoSD_MVS_v1.neo      NeoSD image, arcade (MVS) build
-NoSignal-WIP-NeoSD_AES_v1.neo      NeoSD image, console (AES) build
-                                   Cartridge data only: the NeoSD uses the
-                                   system's own BIOS.
-NoSignal-Darksoft-MVS_v1.zip       Darksoft Neo Geo Multi folder, MVS build
-NoSignal-Darksoft-AES_v1.zip       Darksoft Neo Geo Multi folder, AES build
-                                   Copy the folder inside to the SD card. No
-                                   BIOS included: the Multi uses the board's.
-NoSignal-BackBit-MVS_v1.zip        BackBit Platinum folder, MVS build
-NoSignal-BackBit-AES_v1.zip        BackBit Platinum folder, AES build
-                                   Copy the nosignal folder inside to the
-                                   microSD card. No BIOS included. The
-                                   BackBit is an MVS cartridge: use the MVS
-                                   folder on an arcade board.
-NoSignal-WIP-EagleBIOS_v1.zip      MAME: the MVS build with EagleBIOS
-                                     mame neogeo -rompath roms -hashpath hash -bios euro -cart1 nosignal
-NoSignal-WIP-AES-EagleBIOS_v1.zip  MAME: the AES build with EagleBIOS and a blank memory card
-                                     mame aes -rompath roms -hashpath hash -bios asia -cart1 nosignal -memc card.bin
-NoSignal-CHANGELOG_v1.txt          what is in this set
-NoSignal-MANIFEST_v1.txt           size, CRC32 and SHA-256 of every v1 file
+Modes: Story Arcade (eight stages, one phone); Boss Rush and Stage Select
+(opened by clearing the story); Challenge (two minutes, high score); the
+Gallery of everyone met so far. Health is the
+phone's battery, lives its signal bars; out of lives, RECONNECT? (a credit on
+an arcade board, free on a console).
 
-EagleBIOS is the free, open system ROM written for NeoGeoSDK. It is the
-only system ROM in these packages: no SNK BIOS and no Universe BIOS is
-included. MAME warns that its checksums differ from the original BIOS:
-that is expected.
+## Controls
 
-CONTROLS
---------
-Stick       walk along and across the street; double tap runs
-A           attack (a chain of four); down + A sweeps
-B           jump (A in the air kicks)
-C           grab, throw, pick up, ride the scooter
-D           the hero's special (costs a little battery)
-START       pause (console)
-Arcade settings (MVS): LIVES, DIFFICULTY, HOW TO PLAY, BARKS.
+The stick walks along and across the street; a double tap runs. A attacks (a
+chain of four; down + A sweeps), B jumps (A in the air kicks), C grabs,
+throws, picks up and rides the scooter, D is the hero's special (it costs a
+little battery). On a console START pauses.
 
-STATUS
-------
-Checked in MAME (MVS and AES, EagleBIOS): boot, title, hero select and
-Stage 1 fights; test builds clear all eight stages to the ending. Still
-open: flicker when many fighters stand close together, the repainting of
-stages 2 to 8, and the feel of the fights.
+## How it is made
 
-Real hardware is not verified yet: reports from NeoSD, Darksoft, BackBit,
-MVS and AES owners are very welcome (board or console, BIOS, cart firmware,
-what you saw and heard).
+- `scenes/ns_data.c`: the heroes, enemies, bosses and their moves, the eight
+  stages' waves, props and weapons, the scenes' lines.
+- `scenes/ns_game.c`: the flow of a game; `scenes/ns_draw.c`: the screen.
+- `tools/import_sheets.py SOURCE_DIR [NAME ...]` cuts painted pose sheets into
+  fighter frames (`artbox/painted/fighters/<name>/NN.png`): 128-pixel frames,
+  160 for the larger bosses, 192 for the Overmind, so every fighter fits the
+  screen. `tools/paint_import.py` imports the street paintings (three
+  sections each), the title, the endings and the portraits.
+- `tools/art.py` packs them; `tools/sound.py` renders the music, effects and
+  voices before `make`.
+
+The screen is planned around two hardware limits. The Neo Geo shows at most
+96 sprites on a scanline, counting every sprite whose height covers it,
+on the screen or not, so the street's strips are placed one by one and only
+the 21 on the screen are shown, and five enemies at most are out at once.
+Sprite tables are written in the vertical blank only (`NG_VRAM_DEFER`), about
+four whole fighter pictures' worth a frame, so each fighter keeps its own
+block of sprites while the depth order allows, animation clocks are offset
+per fighter, and at most two fighters besides the hero change picture in one
+frame (the others a frame later).
+
+## Build
+
+```sh
+python3 games/nosignal/tools/sound.py        # when the music or voices change
+make GAME=nosignal GAME_CFG_FILE=games/nosignal/game.cfg all
+make unit-tests                               # includes tests/beatemup_test.c
+```
+
+## Test builds (never install these)
+
+Add to `GAME_ENGINE_DEFINES` (keep the game's own defines):
+
+- `-DNS_AUTOPLAY=1`: a plain bot plays the story (it lines up with the
+  nearest enemy, punches, and spends the special when crowded; a slow mend
+  lets it reach the ending). `-DNS_AUTOPLAY_HERO=0|1|2` picks Jay, Zoe or Kai.
+- `make ... PERF=2`: the SDK's frame and video-memory counters (`ng_perf`,
+  `sdk/ng_perf.h`): how many sprite updates waited for a later frame.
+
+`tools/genre_qa.py` drives MAME from a timeline and logs RAM by symbol, for
+example (START every ten seconds moves the scenes on, coins keep credits for
+the continue screen):
+
+```sh
+python3 tools/genre_qa.py --game nosignal --seconds 1500 --every 10 \
+  --step 3:coin --step 6:start --step 20:start --step 30:start \
+  --watch s_hero:1 --watch s_total:4 --out /tmp/ns-qa
+```

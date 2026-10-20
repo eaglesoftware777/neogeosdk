@@ -76,21 +76,23 @@ static uint8_t NEOGEO_USER anim_sprite(uint8_t def, uint8_t anim, uint16_t tick)
     return d->frames[a->first + i].sprite;
 }
 
-static void NEOGEO_USER choose_format(void)
+static void NEOGEO_USER choose_format(uint8_t player)
 {
     uint16_t timer = 10u * 60u;
+    uint8_t other = player ^ 1u;
     slf_scene_begin(); slf_story_show(SLF_CARD_MODE);
     slf_puts_tall_center(6u, "CHOOSE YOUR BATTLE", SLF_TALL_GOLD);
     slf_puts_center(19u, "LEFT / RIGHT - CHANGE", SLF_PAL_TEXT);
     slf_puts_center(21u, "A OR C - CONFIRM", SLF_PAL_TEXT);
     for (;;) {
         slf_frame();
-        if (slf_pressed(0u) & (NGF_RAW_LEFT | NGF_RAW_RIGHT | NGF_BTN_B)) {
+        if ((slf_pressed(player) | slf_pressed(other)) & (NGF_RAW_LEFT | NGF_RAW_RIGHT | NGF_BTN_B)) {
             s_team_mode ^= 1u; slf_sfx(SLF_SFX_MENU);
         }
         slf_puts_tall_center(11u, s_team_mode ? "< 3 VS 3 + STRIKER >" : "<      1 VS 1      >", SLF_TALL_SILVER);
         slf_puts_center(15u, s_team_mode ? "ONE STRIKER FOR EACH TEAM" : "     SINGLE FIGHTER     ", SLF_PAL_GOLD);
-        if ((slf_pressed(0u) & (NGF_BTN_A | NGF_BTN_C)) || slf_start_pressed(0u) || !--timer) break;
+        if ((slf_pressed(player) & (NGF_BTN_A | NGF_BTN_C)) || slf_start_pressed(player) ||
+            (slf_pressed(other) & (NGF_BTN_A | NGF_BTN_C)) || slf_start_pressed(other) || !--timer) break;
     }
 }
 
@@ -265,9 +267,10 @@ static void NEOGEO_USER cpu_roster(uint8_t side, uint8_t captain)
     }
 }
 
-static void NEOGEO_USER vs_screen(void)
+static void NEOGEO_USER vs_screen(uint8_t stage_fighter)
 {
     uint16_t tick;
+    uint8_t stage_id = stage_fighter < SLF_FIGHTER_COUNT ? slf_fighter_stages[stage_fighter] : 0u;
     slf_scene_begin();
     slf_fighter_palettes(s_def[0], 0u, s_def[1], (uint8_t)(s_def[0] == s_def[1]));
     slf_story_show(SLF_CARD_VS);
@@ -281,7 +284,7 @@ static void NEOGEO_USER vs_screen(void)
             slf_big_center(9u, SLF_BIG_VS, SLF_BIG_VS_W, SLF_BIG_VS_H, SLF_PAL_RED);
             slf_puts_tall(2u, 23u, slf_fighter_defs[s_def[0]]->name, SLF_TALL_RED);
             slf_puts_tall_right(37u, 23u, slf_fighter_defs[s_def[1]]->name, SLF_TALL_BLUE);
-            slf_puts_center(26u, slf_stage_names[slf_fighter_stages[s_def[1]]], SLF_PAL_TEXT);
+            slf_puts_center(26u, slf_stage_names[stage_id], SLF_PAL_TEXT);
         }
     }
 }
@@ -459,13 +462,15 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
     NGFMatch *m = &s_match;
     uint8_t last_state = 0xFFu, last_round = 0u;
     uint8_t active_def[2], team = (uint8_t)(s_team_mode && mode != MODE_DEMO);
+    uint8_t cpu_side = lv0 ? 0u : 1u;
+    uint8_t initial_stage = slf_fighter_stages[s_def[cpu_side]];
     uint16_t over = 0, counter_clear = 0;
     slf_scene_begin();
     slf_fx_reset();
-    slf_stage_set(slf_fighter_stages[s_def[1]]);
+    slf_stage_set(initial_stage);
     slf_stage_show(96);
     slf_fighter_palettes(s_def[0], 0u, s_def[1], (uint8_t)(s_def[0] == s_def[1]));
-    if (mode != MODE_DEMO) slf_music((uint8_t)(SLF_TRACK_STAGE + slf_fighter_stages[s_def[1]]));
+    if (mode != MODE_DEMO) slf_music((uint8_t)(SLF_TRACK_STAGE + initial_stage));
     ngf_match_init(m, slf_fighter_defs[s_def[0]], slf_fighter_defs[s_def[1]], SLF_STAGE_W, slf_rand());
     m->rounds_to_win = mode == MODE_DEMO ? 1u : rounds_to_win();
     active_def[0] = s_def[0]; active_def[1] = s_def[1];
@@ -486,8 +491,52 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
     if (mode == MODE_DEMO) slf_puts_center(22u, "DEMO PLAY", SLF_PAL_GOLD);
     for (;;) {
         slf_frame();
-        if (mode == MODE_DEMO && (slf_start_pending() || slf_start_pressed(0u))) return RESULT_ABORT;
-        if (mode == MODE_ARCADE && NEO_REGISTER8(SLF_P2_FLAG)) return RESULT_CHALLENGER;
+        if (mode == MODE_DEMO && (slf_start_pending() || slf_start_pressed(0u) || slf_start_pressed(1u))) return RESULT_ABORT;
+        if (mode == MODE_ARCADE) {
+            if (lv0 == 0u) {
+                /* P1 playing: P2 can challenge */
+                if (NEO_REGISTER8(SLF_P2_FLAG) || slf_start_pressed(1u)) {
+                    if (ng_sys_is_mvs()) {
+                        uint16_t saved_sr;
+                        __asm__ volatile ("move.w %%sr,%0\n\tmove.w #0x2700,%%sr" : "=d" (saved_sr) : : "memory");
+                        NEO_REGISTER8(0x10FDB0) = 0;
+                        NEO_REGISTER8(0x10FDB1) = 1;
+                        CALLNEOGEOF(SYS_CREDIT_CHECK);
+                        if (NEO_REGISTER8(0x10FDB1)) {
+                            CALLNEOGEOF(SYS_CREDIT_DOWN);
+                            __asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
+                            NEO_REGISTER8(BIOS_PLAYER2_MODE) = 1;
+                            return RESULT_CHALLENGER;
+                        }
+                        __asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
+                    } else {
+                        NEO_REGISTER8(BIOS_PLAYER2_MODE) = 1;
+                        return RESULT_CHALLENGER;
+                    }
+                }
+            } else {
+                /* P2 playing: P1 can challenge */
+                if (NEO_REGISTER8(SLF_START_FLAG) || slf_start_pressed(0u)) {
+                    if (ng_sys_is_mvs()) {
+                        uint16_t saved_sr;
+                        __asm__ volatile ("move.w %%sr,%0\n\tmove.w #0x2700,%%sr" : "=d" (saved_sr) : : "memory");
+                        NEO_REGISTER8(0x10FDB0) = 1;
+                        NEO_REGISTER8(0x10FDB1) = 0;
+                        CALLNEOGEOF(SYS_CREDIT_CHECK);
+                        if (NEO_REGISTER8(0x10FDB0)) {
+                            CALLNEOGEOF(SYS_CREDIT_DOWN);
+                            __asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
+                            NEO_REGISTER8(BIOS_PLAYER1_MODE) = 1;
+                            return RESULT_CHALLENGER;
+                        }
+                        __asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
+                    } else {
+                        NEO_REGISTER8(BIOS_PLAYER1_MODE) = 1;
+                        return RESULT_CHALLENGER;
+                    }
+                }
+            }
+        }
         ngf_match_step(m, slf_joy(0u), slf_joy(1u));
         if (s_feedback_timer && !--s_feedback_timer) slf_clear_rows(7u, 9u);
         slf_combat_events(m, active_def);
@@ -505,7 +554,15 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
                 uint8_t def = s_roster[side][m->team_active[side]];
                 if (def != active_def[side]) { active_def[side] = def; changed = 1u; }
             }
-            if (changed) slf_fighter_palettes(active_def[0], 0u, active_def[1], (uint8_t)(active_def[0] == active_def[1]));
+            if (changed) {
+                slf_fighter_palettes(active_def[0], 0u, active_def[1], (uint8_t)(active_def[0] == active_def[1]));
+                uint8_t new_stage = slf_fighter_stages[active_def[cpu_side]];
+                if (new_stage != slf_stage_current()) {
+                    slf_stage_set(new_stage);
+                    slf_stage_show(m->camera_x);
+                    if (mode != MODE_DEMO) slf_music((uint8_t)(SLF_TRACK_STAGE + new_stage));
+                }
+            }
         }
         slf_match_draw(m, active_def);
         slf_hud_draw(m);
@@ -541,15 +598,16 @@ static void NEOGEO_USER versus(void)
 {
     uint8_t result;
     NEO_REGISTER8(SLF_P2_FLAG) = 0u;
+    NEO_REGISTER8(SLF_START_FLAG) = 0u;
     slf_scene_begin();
     slf_big_center(10u, SLF_BIG_CHALLENGER, SLF_BIG_CHALLENGER_W, SLF_BIG_CHALLENGER_H, SLF_PAL_RED);
     slf_sfx(SLF_SFX_BELL);
     wait_frames(120u);
-    choose_format();
+    choose_format(0u);
     select_roster(3u);
     s_def[0] = s_pick[0];
     s_def[1] = s_pick[1];
-    vs_screen();
+    vs_screen(s_def[1]);
     result = run_match(0u, 0u, MODE_VERSUS);
     slf_music(SLF_TRACK_VICTORY);
     if (result < 2u) big_card(SLF_BIG_WIN, SLF_BIG_WIN_W, SLF_BIG_WIN_H, SLF_PAL_BIG, s_def[result], 240u);
@@ -557,7 +615,7 @@ static void NEOGEO_USER versus(void)
     NEO_REGISTER8(BIOS_PLAYER2_MODE) = 3u;
 }
 
-static uint8_t NEOGEO_USER continue_screen(void)
+static uint8_t NEOGEO_USER continue_screen(uint8_t player)
 {
     uint16_t timer = 10u * 60u;
     uint8_t last_sec = 0xFFu;
@@ -576,20 +634,21 @@ static uint8_t NEOGEO_USER continue_screen(void)
         }
         if (!ng_sys_is_mvs()) {
             slf_puts_center(24u, "PRESS START TO CONTINUE", SLF_PAL_TEXT);
-            if (slf_start_pressed(0u) || (slf_pressed(0u) & (NGF_BTN_A | NGF_BTN_C))) {
+            if (slf_start_pressed(player) || (slf_pressed(player) & (NGF_BTN_A | NGF_BTN_C))) {
                 slf_sfx(SLF_SFX_SELECT);
                 return 1u;
             }
         } else {
-            if (read_p1credit() > 0) {
-                slf_puts_center(24u, "PRESS 1P START TO CONTINUE", SLF_PAL_GOLD);
-                if (slf_start_pressed(0u) || (slf_pressed(0u) & (NGF_BTN_A | NGF_BTN_C))) {
+            int cred = player ? *(volatile uint8_t *)P2_CREDITS : read_p1credit();
+            if (cred > 0) {
+                slf_puts_center(24u, player ? "PRESS 2P START TO CONTINUE" : "PRESS 1P START TO CONTINUE", SLF_PAL_GOLD);
+                if (slf_start_pressed(player) || (slf_pressed(player) & (NGF_BTN_A | NGF_BTN_C))) {
                     uint16_t saved_sr;
                     __asm__ volatile ("move.w %%sr,%0\n\tmove.w #0x2700,%%sr" : "=d" (saved_sr) : : "memory");
-                    NEO_REGISTER8(0x10FDB0) = 1;
-                    NEO_REGISTER8(0x10FDB1) = 0;
+                    NEO_REGISTER8(0x10FDB0) = (uint8_t)(player == 0 ? 1 : 0);
+                    NEO_REGISTER8(0x10FDB1) = (uint8_t)(player == 1 ? 1 : 0);
                     CALLNEOGEOF(SYS_CREDIT_CHECK);
-                    if (NEO_REGISTER8(0x10FDB0)) {
+                    if (NEO_REGISTER8(player ? 0x10FDB1 : 0x10FDB0)) {
                         CALLNEOGEOF(SYS_CREDIT_DOWN);
                     }
                     __asm__ volatile ("move.w %0,%%sr" : : "d" (saved_sr) : "memory");
@@ -608,6 +667,8 @@ void NEOGEO_USER slf_run(void)
 {
     uint8_t ladder[8];
     uint8_t stage;
+    uint8_t human = (NEO_REGISTER8(SLF_START_FLAG) == 2u || NEO_REGISTER8(SLF_P2_FLAG) == 1u) ? 1u : 0u;
+    uint8_t cpu = (uint8_t)(human ^ 1u);
     slf_audio_demo(0u);
     if (!ng_sys_is_mvs()) {
         uint8_t choice = slf_home_menu();
@@ -624,18 +685,19 @@ void NEOGEO_USER slf_run(void)
         }
     }
     NEO_REGISTER8(SLF_P2_FLAG) = 0u;
-    choose_format();
-    select_roster(1u);
+    NEO_REGISTER8(SLF_START_FLAG) = 0u;
+    choose_format(human);
+    select_roster((uint8_t)(1u << human));
     /* 8-stage tournament: 5 random contenders, 1 rival, 1 sub-boss, 1 final
      * boss, all playable fighters (the bosses are stood in for until theirs are). */
-    ladder[5] = (s_pick[0] == 1u) ? 0u : 1u;
+    ladder[5] = (s_pick[human] == 1u) ? 0u : 1u;
     ladder[6] = (uint8_t)(41u + (slf_rand() & 1u));
-    ladder[7] = (s_pick[0] == 43u) ? 42u : 43u;
+    ladder[7] = (s_pick[human] == 43u) ? 42u : 43u;
     for (stage = 0u; stage < 8u; stage++) {
         uint8_t opp = ladder[stage], tries, k, seen = 1u;
-        if (stage >= 5u && slf_fighter_ready[opp] && opp != s_pick[0]) continue;
+        if (stage >= 5u && slf_fighter_ready[opp] && opp != s_pick[human]) continue;
         for (tries = 0u; tries < 12u && seen; tries++) {
-            opp = ready_fighter(s_pick[0]);
+            opp = ready_fighter(s_pick[human]);
             seen = 0u;
             for (k = 0u; k < stage; k++) if (ladder[k] == opp) seen = 1u;
         }
@@ -644,18 +706,18 @@ void NEOGEO_USER slf_run(void)
 
     for (stage = 0u; stage < 8u; stage++) {
         uint8_t result;
-        s_def[0] = s_pick[0];
-        s_def[1] = ladder[stage];
-        vs_screen();
-        result = run_match(0u, cpu_level(stage), MODE_ARCADE);
+        s_def[human] = s_pick[human];
+        s_def[cpu] = ladder[stage];
+        vs_screen(s_def[cpu]);
+        result = run_match(human == 0u ? 0u : cpu_level(stage), human == 1u ? 0u : cpu_level(stage), MODE_ARCADE);
         if (result == RESULT_CHALLENGER) {
             versus();
             return;
         }
-        if (result != 0u) {
-            if (!continue_screen()) {
+        if (result != human) {
+            if (!continue_screen(human)) {
                 slf_music(SLF_TRACK_VICTORY);
-                big_card(SLF_BIG_GAMEOVER, SLF_BIG_GAMEOVER_W, SLF_BIG_GAMEOVER_H, SLF_PAL_RED, s_def[1], 240u);
+                big_card(SLF_BIG_GAMEOVER, SLF_BIG_GAMEOVER_W, SLF_BIG_GAMEOVER_H, SLF_PAL_RED, s_def[cpu], 240u);
                 return;
             }
             stage--;
@@ -663,22 +725,22 @@ void NEOGEO_USER slf_run(void)
         }
     }
     slf_music(SLF_TRACK_VICTORY);
-    big_card(SLF_BIG_CONGRATS, SLF_BIG_CONGRATS_W, SLF_BIG_CONGRATS_H, SLF_PAL_BIG, s_pick[0], 240u);
+    big_card(SLF_BIG_CONGRATS, SLF_BIG_CONGRATS_W, SLF_BIG_CONGRATS_H, SLF_PAL_BIG, s_pick[human], 240u);
     {
         uint16_t end_t;
         slf_scene_begin();
         slf_story_show(SLF_CARD_ENDING);
-        slf_fighter_palettes(s_pick[0], 0u, s_pick[0], 0u);
+        slf_fighter_palettes(s_pick[human], 0u, s_pick[human], 0u);
         slf_fighter_bank(0u, 0u);
         slf_puts_center(4u, "PROJECT CHIMERA TERMINATED", SLF_PAL_GOLD);
         slf_puts_center(7u, "THE VEIL CORE HAS CRUMBLED.", SLF_PAL_WHITE);
         slf_puts_center(10u, "NEW SHADOW LEAGUE CHAMPION:", SLF_PAL_BLUE);
-        slf_puts_center(13u, slf_fighter_defs[s_pick[0]]->name, SLF_PAL_BIG);
-        slf_puts_center(16u, slf_fighter_origin[s_pick[0]], SLF_PAL_GOLD);
+        slf_puts_center(13u, slf_fighter_defs[s_pick[human]]->name, SLF_PAL_BIG);
+        slf_puts_center(16u, slf_fighter_origin[s_pick[human]], SLF_PAL_GOLD);
         slf_puts_center(19u, "THANK YOU FOR PLAYING!", SLF_PAL_WHITE);
         for (end_t = 0u; end_t < 360u; end_t++) {
             slf_frame();
-            slf_fighter_pose(0u, s_pick[0], anim_sprite(s_pick[0], NGF_A_WIN, end_t), 160, SLF_FLOOR_Y - 125, 0u);
+            slf_fighter_pose(0u, s_pick[human], anim_sprite(s_pick[human], NGF_A_WIN, end_t), 160, SLF_FLOOR_Y - 125, 0u);
             if (slf_start_pressed(0u) || slf_start_pressed(1u)) break;
         }
     }
@@ -800,8 +862,5 @@ void NEOGEO_USER slf_run_attract(void)
         s_def[1] = featured_fighter(s_def[0]);
         if (run_match(5u, 5u, MODE_DEMO) == RESULT_ABORT) break;
     }
-    if (NEO_REGISTER8(SLF_P2_FLAG)) {
-        slf_audio_demo(0u);
-        versus();
-    }
+    slf_audio_demo(0u);
 }

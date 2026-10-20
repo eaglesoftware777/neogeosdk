@@ -1,59 +1,40 @@
-MAHJONG DEMO  --  v1 ROMs  --  Eagle Software, 2026
-===================================================
+# Mahjong Demo
 
-!! WORK IN PROGRESS !!  A preview build, not a finished game.
+A small technical demonstration of the SDK's Mahjong engine
+(`GAME_GENRE_ENGINE = mahjong`, `sdk/2d_engine/ng_mahjong.c`). Game ID 785.
 
-Mahjong Demo's first ROM set, shared with the NeoGeoSDK v1.7.7 pre-release.
-Every file carries "_v1" in its name.
+- **Four-seat Mahjong, Hong Kong Old Style**: the player at East against
+  three CPU seats; the engine deals, draws, decides for the CPU seats and
+  resolves claims (chow, pung, kong, a win), and scores the hand.
+- **Solitaire** on the classic turtle layout of 144 tiles: the engine deals
+  so the layout can always be cleared, and keeps hints, undo and shuffles.
+- **Rules**: what this demo implements, on screen.
 
-A small demonstration of the SDK's Mahjong engine: four-seat Hong Kong Old
-Style Mahjong against three CPU seats, solitaire on the 144-tile turtle
-layout (every deal can be cleared), and the rules on screen.
-(Every change: MahjongDemo-CHANGELOG_v1.txt)
+In attract, four CPU seats play a hand against each other.
 
-FILES
------
-MahjongDemo-WIP-NeoSD_MVS_v1.neo      NeoSD image, arcade (MVS) build
-MahjongDemo-WIP-NeoSD_AES_v1.neo      NeoSD image, console (AES) build
-                                      Cartridge data only: the NeoSD uses the
-                                      system's own BIOS.
-MahjongDemo-Darksoft-MVS_v1.zip       Darksoft Neo Geo Multi folder, MVS build
-MahjongDemo-Darksoft-AES_v1.zip       Darksoft Neo Geo Multi folder, AES build
-                                      Copy the folder inside to the SD card. No
-                                      BIOS included: the Multi uses the board's.
-MahjongDemo-BackBit-MVS_v1.zip        BackBit Platinum folder, MVS build
-MahjongDemo-BackBit-AES_v1.zip        BackBit Platinum folder, AES build
-                                      Copy the mahjong_demo folder inside to the
-                                      microSD card. No BIOS included. The
-                                      BackBit is an MVS cartridge: use the MVS
-                                      folder on an arcade board.
-MahjongDemo-WIP-EagleBIOS_v1.zip      MAME: the MVS build with EagleBIOS
-                                        mame neogeo -rompath roms -hashpath hash -bios euro -cart1 mahjong_demo
-MahjongDemo-WIP-AES-EagleBIOS_v1.zip  MAME: the AES build with EagleBIOS and a blank memory card
-                                        mame aes -rompath roms -hashpath hash -bios asia -cart1 mahjong_demo -memc card.bin
-MahjongDemo-CHANGELOG_v1.txt          what is in this set
-MahjongDemo-MANIFEST_v1.txt           size, CRC32 and SHA-256 of every v1 file
+## Controls
 
-EagleBIOS is the free, open system ROM written for NeoGeoSDK. It is the
-only system ROM in these packages: no SNK BIOS and no Universe BIOS is
-included. MAME warns that its checksums differ from the original BIOS:
-that is expected.
+At the table: LEFT / RIGHT choose a tile, A discards it, C declares a win or
+a kong when one is possible, D asks the CPU for a hint. In a claim window
+LEFT / RIGHT choose, A takes it and B passes. Holding B speeds the CPU turns
+up.
 
-CONTROLS
---------
-Table       LEFT / RIGHT choose a tile, A discards, C declares a win
-            or a kong, D asks for a hint; in a claim window A takes
-            and B passes; hold B to speed the CPU turns up
-Solitaire   stick moves between free tiles, A picks, B undoes,
-            C shows a pair, D shuffles, START pauses
-Arcade settings (MVS): CPU LEVEL, FLOWERS, ROUNDS, HOW TO PLAY.
+Solitaire: the stick moves between free tiles, A picks (a second matching
+tile removes the pair), B undoes, C shows a pair, D shuffles what is left,
+START pauses (continue, deal again, back to the menu).
 
-STATUS
-------
-Checked in MAME (MVS and AES, EagleBIOS): attract with four CPU seats,
-the player's turns, hints and discards, CPU claims and scored wins,
-solitaire picks, hints and shuffles.
+## How it is made
 
-Real hardware is not verified yet: reports from NeoSD, Darksoft, BackBit,
-MVS and AES owners are very welcome (board or console, BIOS, cart firmware,
-what you saw and heard).
+`scenes/mj_table.c` is the four-seat table, `scenes/mj_sol.c` the solitaire,
+`scenes/mj_game.c` the title, attract, menu and rules, `scenes/mj_draw.c`
+the screen. `tools/art.py` draws the tiles (sprite tiles for the hands and
+the solitaire, two-cell FIX mini tiles for the discards); `tools/sound.py`
+renders the music and effects before `make`.
+
+## Build
+
+```sh
+python3 games/mahjong_demo/tools/sound.py
+make GAME=mahjong_demo GAME_CFG_FILE=games/mahjong_demo/game.cfg all
+make unit-tests                                # includes tests/mahjong_test.c
+```

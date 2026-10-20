@@ -59,6 +59,8 @@ void NEOGEO_USER ngf_input_reset(NGFInput *in)
     uint8_t *p = (uint8_t *)in;
     uint16_t i;
     for (i = 0; i < sizeof(*in); i++) p[i] = 0;
+    in->press_age[0] = in->press_age[1] = in->press_age[2] = in->press_age[3] = 255u;
+    in->release_age[0] = in->release_age[1] = in->release_age[2] = in->release_age[3] = 255u;
 }
 
 static void NEOGEO_USER charge(uint8_t held, uint8_t *count, uint8_t *release, uint8_t *age)
@@ -105,9 +107,10 @@ uint8_t NEOGEO_USER ngf_input_dir(const NGFInput *in, uint8_t ago, uint8_t facin
     return numpad(in->raw[(uint8_t)(in->head - ago) & (NGF_INPUT_FRAMES - 1u)], facing_left);
 }
 
-static uint8_t NEOGEO_USER buffered_buttons(uint8_t pending, const uint8_t *age, uint8_t mask, uint8_t buffer)
+static uint8_t NEOGEO_USER buffered_buttons(const NGFInput *in, uint8_t mask, uint8_t buffer, uint8_t release)
 {
-    uint8_t i;
+    uint8_t i, pending = release ? in->release_pending : (uint8_t)(in->pending | in->kara);
+    const uint8_t *age = release ? in->release_age : in->press_age;
     if (!mask || !buffer || (pending & mask) != mask) return 0;
     if (buffer > NGF_INPUT_FRAMES) buffer = NGF_INPUT_FRAMES;
     for (i = 0; i < 4u; i++)
@@ -117,12 +120,12 @@ static uint8_t NEOGEO_USER buffered_buttons(uint8_t pending, const uint8_t *age,
 
 uint8_t NEOGEO_USER ngf_input_pressed(const NGFInput *in, uint8_t mask, uint8_t buffer)
 {
-    return buffered_buttons(in->pending, in->press_age, mask, buffer);
+    return buffered_buttons(in, mask, buffer, 0);
 }
 
 uint8_t NEOGEO_USER ngf_input_released(const NGFInput *in, uint8_t mask, uint8_t buffer)
 {
-    return buffered_buttons(in->release_pending, in->release_age, mask, buffer);
+    return buffered_buttons(in, mask, buffer, 1);
 }
 
 void NEOGEO_USER ngf_input_consume(NGFInput *in, uint8_t mask)
@@ -140,15 +143,15 @@ static const uint16_t motion_steps[NGF_MOTION_COUNT][6] = {
     {0},
     {DIR(2), DIR(3), DIR(6)},
     {DIR(2), DIR(1), DIR(4)},
-    {DIR(6), DIR(2), DIR(3)},
-    {DIR(4), DIR(2), DIR(1)},
-    {DIR(4), DIR(2), DIR(6)},
-    {DIR(6), DIR(2), DIR(4)},
-    {DIR(2), DIR(6), DIR(2), DIR(3), DIR(6)},
-    {DIR(2), DIR(4), DIR(2), DIR(1), DIR(4)},
+    {DIR(6), DIR(2) | DIR(1), DIR(3) | DIR(6)},
+    {DIR(4), DIR(2) | DIR(3), DIR(1) | DIR(4)},
+    {DIR(4) | DIR(1), DIR(2) | DIR(1) | DIR(3), DIR(6) | DIR(3)},
+    {DIR(6) | DIR(3), DIR(2) | DIR(3) | DIR(1), DIR(4) | DIR(1)},
+    {DIR(2), DIR(6) | DIR(3), DIR(2), DIR(3), DIR(6) | DIR(3)},
+    {DIR(2), DIR(4) | DIR(1), DIR(2), DIR(1), DIR(4) | DIR(1)},
 };
 static const uint8_t motion_len[NGF_MOTION_COUNT] = {0, 3, 3, 3, 3, 3, 3, 5, 5};
-static const uint8_t motion_window[NGF_MOTION_COUNT] = {0, 26, 26, 26, 26, 34, 34, 46, 46, 0, 0, 40, 60, 14, 14, 0, 0, 0};
+static const uint8_t motion_window[NGF_MOTION_COUNT] = {0, 28, 28, 28, 28, 36, 36, 52, 52, 0, 0, 40, 60, 14, 14, 0, 0, 0};
 
 /* Clockwise octants: R, DR, D, DL, L, UL, U, UR. Neutral is ignored.
  * Cardinal-only turns are lenient, but reversals/opposite jumps restart the
@@ -1061,11 +1064,9 @@ static void NEOGEO_USER fighter_step(NGFMatch *m, uint8_t who, uint8_t controls)
             if (t->state == NGF_S_THROWN) {
                 const NGFThrowAnchor *ta = find_throw_anchor(f->def, f->move_index);
                 HitParams hp;
-                if (ta && (ta->release_x || ta->grip_x)) {
-                    uint8_t rel = ta->release_x ? ta->release_x : ta->grip_x;
-                    int8_t direction = (int8_t)((f->move->motion == NGF_MOTION_BACK) ? -sign_of(f) : sign_of(f));
-                    place_thrown(m, f, t, direction, rel, 1u);
-                }
+                int8_t throw_dir = (int8_t)((f->move->motion == NGF_MOTION_BACK) ? -sign_of(f) : sign_of(f));
+                uint8_t rel = (ta && (ta->release_x || ta->grip_x)) ? (ta->release_x ? ta->release_x : ta->grip_x) : 28u;
+                place_thrown(m, f, t, throw_dir, rel, 1u);
                 params_from_move(f->move, &hp);
                 hp.level = NGF_LV_UNBLOCKABLE;
                 hp.on_hit |= NGF_ON_KNOCKDOWN;
@@ -1074,6 +1075,17 @@ static void NEOGEO_USER fighter_step(NGFMatch *m, uint8_t who, uint8_t controls)
                 t->juggle_points = 0u;
                 t->relaunches = 0u;
                 apply_hit(m, who, &hp, ngf_fighter_px(t), 40, 1);
+                /* KOF throw trajectory: launch high and far in the throw direction */
+                {
+                    int16_t lvx = hp.launch_vx ? (int16_t)(hp.launch_vx > 0 ? hp.launch_vx : -hp.launch_vx) : 16;
+                    int16_t lvy = hp.launch_vy ? hp.launch_vy : 26;
+                    t->vx = (int16_t)(throw_dir * lvx * 96);
+                    t->vh = (int16_t)(lvy * 76);
+                    t->h = (int32_t)(ta && ta->lift ? ta->lift : 24u) * 256;
+                    t->grounded = 0u;
+                    t->state = NGF_S_FALL;
+                    set_anim(t, NGF_A_FALL, 1);
+                }
             }
         }
         if (done) {
@@ -2035,9 +2047,11 @@ static void NEOGEO_USER end_round(NGFMatch *m)
                 m->f[i].life = life[i]; m->team_life[i][m->team_active[i]] = life[i];
                 if (changed[i]) event(m, NGF_EV_TAG, i, m->team_active[i], ngf_fighter_px(&m->f[i]), 0);
             }
+            m->assist_uses[0] = m->assist[0] ? 3u : 0u;
+            m->assist_uses[1] = m->assist[1] ? 3u : 0u;
             return;
         }
-        w = exhausted[0] && exhausted[1] ? 2u : exhausted[0] ? 1u : 0u;
+        w = (uint8_t)(exhausted[0] && exhausted[1] ? 2u : exhausted[0] ? 1u : 0u);
     }
     m->round_winner = w;
     if (w != 1u) a->wins++;
@@ -2103,11 +2117,20 @@ void NEOGEO_USER ngf_match_step(NGFMatch *m, uint8_t raw1, uint8_t raw2)
     for (i = 0; i < 2u; i++) {
         NGFFighter *f = &m->f[i];
         if (controls && f->grounded) {
-            if (ngf_input_pressed(&f->input, NGF_BTN_A | NGF_BTN_C, 3u) && !ngf_input_pressed(&f->input, NGF_BTN_B, 4u)) {
-                if (ngf_call_striker(m, i)) ngf_input_consume(&f->input, NGF_BTN_A | NGF_BTN_C);
+            uint8_t can_assist = (uint8_t)(f->state == NGF_S_IDLE || f->state == NGF_S_CROUCH || f->state == NGF_S_DASH ||
+                                           (f->state == NGF_S_ATTACK && f->state_timer <= 3u && f->move && f->move->kind == NGF_KIND_NORMAL));
+            if (can_assist && (ngf_input_pressed(&f->input, NGF_BTN_A | NGF_BTN_C, 4u) ||
+                               (m->match_mode != NGF_MODE_1V1 && ngf_input_pressed(&f->input, NGF_BTN_B | NGF_BTN_C, 4u) && f->power < NGF_POWER_STOCK))) {
+                if (ngf_call_striker(m, i)) {
+                    if (f->state == NGF_S_ATTACK) { f->state = NGF_S_IDLE; f->move = 0; set_anim(f, NGF_A_IDLE, 1); }
+                    ngf_input_consume(&f->input, NGF_BTN_A | NGF_BTN_C | NGF_BTN_B);
+                }
             }
-            if (ngf_input_pressed(&f->input, NGF_BTN_B | NGF_BTN_D, 3u)) {
-                if (ngf_tag_switch(m, i)) ngf_input_consume(&f->input, NGF_BTN_B | NGF_BTN_D);
+            if (can_assist && ngf_input_pressed(&f->input, NGF_BTN_B | NGF_BTN_D, 4u)) {
+                if (ngf_tag_switch(m, i)) {
+                    if (f->state == NGF_S_ATTACK) { f->state = NGF_S_IDLE; f->move = 0; }
+                    ngf_input_consume(&f->input, NGF_BTN_B | NGF_BTN_D);
+                }
             }
         }
         fighter_step(m, i, controls);
@@ -2151,13 +2174,29 @@ void NEOGEO_USER ngf_match_step(NGFMatch *m, uint8_t raw1, uint8_t raw2)
         break;
     case NGF_M_ROUND_END:
         if (m->state_timer >= END_FRAMES) {
-            uint8_t a = (uint8_t)(m->f[0].wins >= m->rounds_to_win), b = (uint8_t)(m->f[1].wins >= m->rounds_to_win);
-            if (a || b || m->round >= 9u) {
-                m->state = NGF_M_OVER;
-                m->state_timer = 0;
-                m->winner = (uint8_t)(a && b ? 2u : a ? 0u : b ? 1u : 2u);
+            if (m->match_mode != NGF_MODE_1V1) {
+                uint8_t exhausted0 = (uint8_t)(m->team_active[0] >= m->team_count[0] - 1u && m->team_life[0][m->team_active[0]] == 0);
+                uint8_t exhausted1 = (uint8_t)(m->team_active[1] >= m->team_count[1] - 1u && m->team_life[1][m->team_active[1]] == 0);
+                if (exhausted0 || exhausted1) {
+                    m->state = NGF_M_OVER;
+                    m->state_timer = 0;
+                    m->winner = (uint8_t)(exhausted0 && exhausted1 ? 2u : exhausted0 ? 1u : 0u);
+                } else {
+                    ngf_round_start(m);
+                    m->f[0].life = m->team_life[0][m->team_active[0]];
+                    m->f[1].life = m->team_life[1][m->team_active[1]];
+                    m->assist_uses[0] = m->assist[0] ? 3u : 0u;
+                    m->assist_uses[1] = m->assist[1] ? 3u : 0u;
+                }
             } else {
-                ngf_round_start(m);
+                uint8_t a = (uint8_t)(m->f[0].wins >= m->rounds_to_win), b = (uint8_t)(m->f[1].wins >= m->rounds_to_win);
+                if (a || b || m->round >= 9u) {
+                    m->state = NGF_M_OVER;
+                    m->state_timer = 0;
+                    m->winner = (uint8_t)(a && b ? 2u : a ? 0u : b ? 1u : 2u);
+                } else {
+                    ngf_round_start(m);
+                }
             }
         }
         break;
