@@ -1,6 +1,6 @@
 {
   "mapper": "standard",
-  "fixed_code_bytes": 528722,
+  "fixed_code_bytes": 528456,
   "bank_capacity": 1048576,
   "payload_bytes": [
     5520,
