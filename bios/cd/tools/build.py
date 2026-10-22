@@ -66,8 +66,21 @@ def build(out, cc, stock_rom=None):
         if stock_rom is not None and Path(stock_rom).is_file():
             base = bytearray(Path(stock_rom).read_bytes())
             if len(base) == 0x80000:
+                if base[:4] == bytes.fromhex('100000f3'):
+                    unswapped = bytearray(len(base))
+                    for i in range(0, len(base), 2):
+                        unswapped[i] = base[i+1]
+                        unswapped[i+1] = base[i]
+                    base = unswapped
                 base[:len(data)] = data
                 rom.write_bytes(base)
+                # Also emit word-swapped MAME ROM for emulators that expect swapped words
+                mame_rom = out / ('mame_eagle_cd_' + model + '.rom')
+                swapped = bytearray(len(base))
+                for i in range(0, len(base), 2):
+                    swapped[i] = base[i+1]
+                    swapped[i+1] = base[i]
+                mame_rom.write_bytes(swapped)
             else:
                 rom.write_bytes(data.ljust(0x80000, b'\xff'))
         else:
