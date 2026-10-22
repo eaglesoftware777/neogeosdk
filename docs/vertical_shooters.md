@@ -94,7 +94,7 @@ direct-ROM workflow. The native output is not an HD video mode.
 make api-check
 make -C tests test_shooter
 ./tests/test_shooter
-python3 tools/build_skylance_mame.py /mnt/c/mame/neogeosdk
+python3 tools/build_skylance_mame.py roms/
 python3 -m unittest discover -s tests -p test_skylance_assets.py
 python3 games/skylance/tools/qa.py --platform mvs --bios stock
 python3 games/skylance/tools/qa.py --platform aes --bios eagle

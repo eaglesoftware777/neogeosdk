@@ -161,7 +161,7 @@ Install the MVS and AES sets `make neo GAME=maiya` builds, with their
 software lists and launchers:
 
 ```bat
-py tools\install_maiya_mame_tests.py C:\mame\neogeosdk --tidy
+py tools\install_maiya_mame_tests.py <destination_dir> --tidy
 ```
 
 The destination can be any existing MAME SDK installation. Replaced files are
