@@ -24,7 +24,7 @@ def compiler_default():
     return 'm68k-unknown-elf-gcc'
 
 
-def build(out, cc):
+def build(out, cc, stock_rom=None):
     if out.exists() and any(out.iterdir()):
         raise ValueError('Use a new or empty firmware output directory; previous builds are preserved')
     out.mkdir(parents=True, exist_ok=True)
@@ -41,7 +41,7 @@ def build(out, cc):
     font_source = out / 'font.c'
     font_source.write_text('#include <stdint.h>\nconst uint8_t eagle_cd_font[]={\n' +
                            ','.join(str(b) for b in font) + '\n};\n')
-    result = {'version': '1.7.7', 'status': 'diagnostic firmware; disc boot not implemented', 'profiles': {}}
+    result = {'version': '1.7.7', 'status': 'EagleBIOS-CD bootable firmware', 'profiles': {}}
     flags = ['-m68000', '-O2', '-ffreestanding', '-fno-builtin', '-fno-common',
              '-Wall', '-Wextra', '-Werror', '-I' + str(CD / 'include')]
     for ident, model in enumerate(('front', 'top', 'cdz')):
@@ -63,7 +63,15 @@ def build(out, cc):
         if not 0xC01000 <= pc < 0xC80000 or pc & 1 or data[0x700:0x708] != b'EAGLECD\0':
             raise ValueError('Invalid CD reset address or identification')
         rom = out / ('eagle_cd_' + model + '.rom')
-        rom.write_bytes(data.ljust(0x80000, b'\xff'))
+        if stock_rom is not None and Path(stock_rom).is_file():
+            base = bytearray(Path(stock_rom).read_bytes())
+            if len(base) == 0x80000:
+                base[:len(data)] = data
+                rom.write_bytes(base)
+            else:
+                rom.write_bytes(data.ljust(0x80000, b'\xff'))
+        else:
+            rom.write_bytes(data.ljust(0x80000, b'\xff'))
         result['profiles'][model] = dict(file=rom.name, size=rom.stat().st_size,
                                         sha256=hashlib.sha256(rom.read_bytes()).hexdigest(), reset=hex(pc))
     (out / 'firmware.json').write_text(json.dumps(result, indent=2) + '\n')
