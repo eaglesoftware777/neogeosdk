@@ -66,6 +66,12 @@ ng_cd_irq_entry:
     jsr sky_palette_vblank
 6:
 #endif
+#ifdef NG_CD_MAIYA
+    btst #7,0x10FD80
+    beq.s 7f
+    jsr maiya_video_vblank
+7:
+#endif
     jsr 0xC0044A
     jsr ng_cd_irq
     movem.l (%sp)+,%d0-%d7/%a0-%a6
