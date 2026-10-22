@@ -1,3 +1,6 @@
+ifeq ($(PLATFORM),cd)
+include sdk/platform/cd/cd.mk
+else
 #######
 #https://eaglesoftware.biz
 #https://github.com/eaglesoftware777
@@ -868,3 +871,6 @@ unit-tests:
 .PHONY: check
 check: unit-tests test-precheck
 	@echo check: unit tests and ROM set OK
+
+endif # cartridge / CD build selection
+include sdk/platform/cd/targets.mk

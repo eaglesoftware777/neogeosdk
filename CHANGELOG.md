@@ -2,6 +2,16 @@
 
 ## v1.7.7 - pre-release: genre engines and four new games
 
+### Experimental CD development backend
+
+- Added isolated native hello-world PRG/IPL/ISO/CUE authoring, format/bank
+  validation, C/C++14 build checks and optional CD startup diagnostics.
+- Added original standalone 512 KiB EagleBIOS-CD diagnostic firmware. Its menu
+  and input gate passed in three MAME configurations; disc boot is unavailable.
+- Stock CD firmware interoperability, runtime reloads, CDDA playback, saves and
+  physical compatibility remain pending. This is not full CD platform support.
+  See [CD status and evidence](docs/roadmap/NEOGEO_CD_VALIDATION_REPORT.md).
+
 Status: a pre-release from the `fix/maiya-arenas-eagle-bios` branch; v1.7.0
 remains the current release. SDK 1.7.7, Framework 1.5 (additions only).
 Engine guide: `docs/GENRE_ENGINES_V1.7.7.md`; objectives and test results:

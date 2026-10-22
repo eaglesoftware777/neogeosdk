@@ -2077,3 +2077,11 @@ The project is intended only for lawful homebrew development, technical research
 
 All copyrights, trademarks, and intellectual property rights must be respected. Any commercial or consulting use should be performed only in accordance with applicable law and with proper authorization or acceptance from the relevant rights holders.
 ```
+
+## Experimental Neo Geo CD development
+
+An opt-in native CD hello-world image pipeline and separate original
+EagleBIOS-CD diagnostic firmware are under development for 1.7.7. Stock BIOS
+boot, runtime reloads, CDDA, saves and physical compatibility are not complete.
+Existing cartridge builds remain independent. See [CD status and build guide](docs/NEOGEO_CD.md)
+and [measured validation](docs/roadmap/NEOGEO_CD_VALIDATION_REPORT.md).
