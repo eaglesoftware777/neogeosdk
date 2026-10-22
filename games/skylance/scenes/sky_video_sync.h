@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-/* The main loop publishes completed palette data immediately before waiting.
+/* The main loop publishes completed video data immediately before waiting.
  * Only the game-owned VBlank interrupt may consume it, before BIOS I/O and
  * the sound pump spend the short atomic-upload window. */
 typedef struct {

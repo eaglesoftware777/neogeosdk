@@ -10,6 +10,8 @@
  */
 #include "maiya_game.h"
 #include "sdk/2d_engine/ng_engine.h"
+#include "sdk/2d_engine/ng_frame_sync.h"
+#include "sdk/macro.h"
 #include "sdk/sound_ids.h"
 #include "artbox/generated/maiya_assets.h"
 #include "ng_perf.h"
@@ -453,6 +455,7 @@ typedef struct {
 enum { MG_DEMO_ATTRACT = 1, MG_DEMO_MOVES = 2 };
 
 static MGState mg;
+static int16_t mg_camera_floor; /* last settled support, held through a jump */
 
 /* A world height on the screen, with the view raised up a tall climb. */
 #define MG_SY(y) ((int16_t)((y) - mg.cam_y))
@@ -483,6 +486,25 @@ static uint8_t mg_pal_open;
 static const uint16_t *mg_cycle_source;
 static uint8_t mg_cycle_bank, mg_cycle_dark, mg_cycle_light;
 static uint8_t mg_tint_t, mg_tint_art;   /* the Secret Art's colour shake: frames left, which art */
+#ifdef NG_VRAM_DEFER
+static NGFrameSync mg_video_sync;
+
+/* Only completed main-loop batches enter the IRQ. An idle interrupt must
+ * never flush the producer's partially edited queues or palette buffer. */
+void NEOGEO_USER maiya_video_vblank(void)
+{
+    if (ng_vram_busy || !ng_vram_window_open()) return;
+    if (!ng_frame_sync_take(&mg_video_sync)) return;
+    /* Reserve the small heroine group before a full fade or many scenery
+     * moves consume the blank. Bulk work keeps its existing deadline. */
+    ng_char_commit_small(mg.player);
+    ng_palfx_vblank();
+    ng_vram_commit();
+#ifdef NG_RASTER
+    ng_raster_vblank();
+#endif
+}
+#endif
 
 /* The screen is taken over on first use, from the colours showing then. */
 static void NEOGEO_USER mg_pal_screen(void)
@@ -524,14 +546,26 @@ static void NEOGEO_USER mg_wait_vblank(void)
  * through here. */
 void NEOGEO_USER maiya_vblank(void)
 {
+    uint8_t early = 0u;
     NG_PERF_FRAME_END();        /* (measurement builds only: sdk/ng_perf.h) */
-    mg_wait_vblank();
+#ifdef NG_VRAM_DEFER
+    /* The game-owned IRQ consumes the batch before BIOS I/O spends the
+     * upload window. A stale wait flag is not acknowledgement of it. */
+    if (*(volatile uint8_t *)BIOS_SYSTEM_MODE & 0x80u) {
+        ng_frame_sync_publish(&mg_video_sync);
+        do { mg_wait_vblank(); } while (mg_video_sync.pending);
+        early = 1u;
+    } else
+#endif
+    {
+        mg_wait_vblank();
     /* A frame whose work ran on past the blank arrives here while the
      * picture is being drawn: writing then would tear it. Its writes wait
      * for the next blank (the picture shows the last frame once more, as
      * it would have anyway). A frame a few lines late, still in the top
      * border, goes on: the commit's deadline keeps it off the picture. */
-    if (!ng_vram_window_open()) mg_wait_vblank();
+        if (!ng_vram_window_open()) mg_wait_vblank();
+    }
     NG_PERF_FRAME_BEGIN();
     /* The next queued byte for the sound CPU before anything else: the
      * Z80 has the whole blank to take it, and the effect starts a frame's
@@ -541,11 +575,13 @@ void NEOGEO_USER maiya_vblank(void)
      * sprite list long enough to run past it (a scene's set-up) then only
      * finishes late behind those colours, instead of the colours changing
      * half way down the screen. */
-    ng_palfx_vblank();
-    ng_vram_commit();           /* the sprites the frame changed, in the blank */
+    if (!early) {
+        ng_palfx_vblank();
+        ng_vram_commit();       /* fallback while BIOS owns the interrupt */
 #ifdef NG_RASTER
-    ng_raster_vblank();         /* the frame's raster bands (mg_raster_step) */
+        ng_raster_vblank();
 #endif
+    }
 }
 
 static void NEOGEO_USER mg_lut_for(uint8_t *lut, uint8_t k)
@@ -1242,7 +1278,9 @@ static const uint8_t mg_stage_pit[MG_LEVEL_COUNT] = MG_PIT_TABLE;
 static const uint8_t mg_stage_climb[MG_LEVEL_COUNT] = MG_CLIMB_TABLE;
 /* How far above the screen a valley's upper tier reaches (its stage file's
  * "upper"); 0: the valley is one screen high. */
+#include "maiya_camera.h"
 static const uint16_t mg_stage_upper[MG_LEVEL_COUNT] = MG_UPPER_TABLE;
+static const uint8_t mg_stage_camera_feet[MG_LEVEL_COUNT] = MG_CAMERA_FEET_TABLE;
 
 
 /* Who stands posted on a valley's ledges (its stage file's "posted"). */
@@ -1913,26 +1951,17 @@ static void NEOGEO_USER mg_camera_follow(void)
         if (p->y > 212) { ng_char_set_pos(p, p->x, 212); if (p->vy_fp > 0) p->vy_fp = 0; }
     }
 
-    /*
-     * Up a tall climb the view rises with her, easing, once she is above
-     * the ordinary ledges, and comes back down as she does; on the road,
-     * and on any valley one screen high, it never moves.
-     */
+    /* Framed canopy routes follow settled footing and climbs. A normal
+     * jump holds that terrain view; the hero moves inside it. */
     {
-        int16_t want = 0;
         uint16_t upper = mg.stage < MG_LEVEL_COUNT ? mg_stage_upper[mg.stage] : 0u;
-        if (upper && !mg.boss_active && !mg.vault && mg.state == MG_PLAY) {
-            want = (int16_t)(p->y - 64);
-            if (want > 0) want = 0;
-            if (want < -(int16_t)upper) want = (int16_t)-upper;
-        }
-        /* A jump of the view (back out of the vault) is taken at once. */
-        if (mg_abs((int16_t)(want - mg.cam_y)) > 112) mg.cam_y = want;
-        if (want != mg.cam_y) {
-            int16_t step = (int16_t)((want - mg.cam_y) / 6);
-            if (!step) step = (int16_t)(want > mg.cam_y ? 1 : -1);
-            mg.cam_y = (int16_t)(mg.cam_y + step);
-        }
+        uint8_t framing = mg.stage < MG_LEVEL_COUNT ? mg_stage_camera_feet[mg.stage] : 0u;
+        if (mg.boss_active || mg.vault || mg.state != MG_PLAY) upper = 0u;
+        uint8_t settled = (uint8_t)(mg.climbing || (p->vy_fp >= 0 &&
+            (mg.on_ledge || ng_physics_is_grounded(p))));
+        if (settled) mg_camera_floor = p->y;
+        mg.cam_y = mg_camera_vertical_supported(mg.cam_y, p->y, mg_camera_floor,
+                                                MG_GROUND_Y, upper, framing, settled);
     }
 }
 
@@ -3910,6 +3939,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.clear_bonus = 0;   /* no clear card up yet */
     mg.vault = 0;
     mg.cam_y = 0;
+    mg_camera_floor = MG_GROUND_Y;
     ng_camera_snap(&mg.camera, 0, 0);
     ng_level_set_scroll(mg.camera.x, 0);
 
@@ -8545,14 +8575,16 @@ static void NEOGEO_USER mg_gait_commit(void)
         MG_F_GAIT_RUN4, MG_F_GAIT_RUN5, MG_F_GAIT_RUN6, MG_F_GAIT_RUN7
     };
     uint8_t k, run;
+    int32_t moved = 0;
     if (!p) return;
     if (mg.gait_clock) {
-        int32_t moved = p->x_fp - mg.gait_prev_x;
+        moved = p->x_fp - mg.gait_prev_x;
         if (moved < 0) moved = -moved;
         /* Normal/dash displacement is bounded; a scripted teleport is not gait. */
         if (moved <= DASH_SPEED)
             mg.walk_distance = mg_gait_advance(mg.walk_distance,
                                                mg_gait_units((uint16_t)moved, (uint8_t)((mg.gait & 0x10u) != 0u)));
+        if (moved) mg.gait_stop = 0;
     }
     if (!mg.gait) return;
     /* Physics may deliver a hit after animation requested gait. Keep the
@@ -8572,6 +8604,21 @@ static void NEOGEO_USER mg_gait_commit(void)
         }
         mg.gait = 0;
         mg_frame(p, action, mg.facing);
+        return;
+    }
+    /* A held direction can request gait before physics clamps against a
+     * wall. Settle once, then idle until actual travel resumes. The last
+     * footfall index doubles as a stopped marker outside its 0..7 range. */
+    if (mg.gait_clock && !moved && !p->vx_fp) {
+        mg.gait = 0;
+        if (mg.gait_step != 0xFFu) mg.gait_stop = MG_GAIT_STOP;
+        mg.gait_step = 0xFFu;
+        if (mg.gait_stop) {
+            mg.gait_stop--;
+            mg_frame(p, MG_F_GAIT_STOP0, mg.facing);
+        } else {
+            mg_frame(p, (uint8_t)(MG_F_IDLE0 + ((mg.tick / 20) % 3)), mg.facing);
+        }
         return;
     }
     run = (uint8_t)((mg.gait & 0x10u) != 0u);
@@ -8611,7 +8658,8 @@ static void NEOGEO_USER mg_animate_player(void)
     speed = (uint16_t)mg_abs((int16_t)p->vx_fp);
     mg.gait_clock = (uint8_t)(grounded && !mg.climbing && !mg.swimming);
     if (grounded && !speed && previous_gait) mg.gait_stop = MG_GAIT_STOP;
-    if (!grounded || speed || mg.climbing || mg.swimming) mg.gait_stop = 0;
+    /* Actual movement clears the stop in mg_gait_commit after collision. */
+    if (!grounded || mg.climbing || mg.swimming) mg.gait_stop = 0;
 
     if (grounded && mg.airborne && !mg.climbing) {
         mg.airborne = 0;
@@ -9247,7 +9295,7 @@ static void NEOGEO_USER mg_warp_frame(void)
             if (p->x != door) {
                 ng_char_set_pos(p, (int16_t)(p->x + (p->x < door ? 1 : -1)), p->y);
                 mg.facing = (uint8_t)(p->x > door);
-                mg.walk_distance = mg_gait_advance(mg.walk_distance, 256u);
+                mg.walk_distance = mg_gait_advance(mg.walk_distance, mg_gait_units(256u, 0u));
                 mg_gait_pose(p, 0);
             } else {
                 mg_frame(p, MG_F_IDLE0, 0);
@@ -9399,6 +9447,7 @@ static void NEOGEO_USER mg_tour_begin(void)
     mg.boss_active = 0;
     mg.arena_bg = 0;
     mg.cam_y = 0;
+    mg_camera_floor = MG_GROUND_Y;
     mg_background(lv->background, 1);          /* its own painting, in its clean colours */
     mg_glow_begin();                            /* ...still hazy, for now */
     ng_fix_clear();

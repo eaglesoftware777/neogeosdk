@@ -16,6 +16,7 @@
 #include <stdint.h>
 #include "sdk/neogeo.h"
 #include "sdk/2d_engine/ng_puzzle.h"
+#include "sw_limits.h"
 
 #define SW_START_FLAG    0x100700u      /* set by PLAYER_START (user.c) */
 #define SW_SAVE_BASE     0x100400u      /* the cartridge save block (512 bytes) */
@@ -106,7 +107,7 @@ void     NEOGEO_USER sw_panel(uint8_t show);         /* the plate behind the pla
 /* The board: bind a context, then each frame give it the engine's events
  * and draw; ng_puzzle_update() only when sw_board_idle() says the last
  * phase has been shown. */
-void     NEOGEO_USER sw_board_bind(NGPuzzle *p);
+uint8_t  NEOGEO_USER sw_board_bind(NGPuzzle *p); /* 0: invalid renderer dimensions */
 void     NEOGEO_USER sw_board_event(NGPuzzle *p, const NGPuzzleEvent *e);
 void     NEOGEO_USER sw_board_draw(NGPuzzle *p);
 uint8_t  NEOGEO_USER sw_board_idle(void);

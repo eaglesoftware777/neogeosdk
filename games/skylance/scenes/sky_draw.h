@@ -1,6 +1,15 @@
 #ifndef SKY_DRAW_H
 #define SKY_DRAW_H
 
+/* Resident critical sprites occupy the upper character-pool slots.
+ * Leave96..149 for scenery, pickups and optional effects. */
+#define SKY_FIXED_ENEMY_FIRST   150u
+#define SKY_FIXED_BOSS_FIRST    182u
+#define SKY_FIXED_FACE_FIRST    190u
+#define SKY_FIXED_PLAYER_FIRST  198u
+#define SKY_FIXED_PSHOT_FIRST   206u
+#define SKY_FIXED_ESHOT_FIRST   216u
+
 #include <stdint.h>
 #include "sky.h"
 #include "sdk/2d_engine/ng_chars.h"

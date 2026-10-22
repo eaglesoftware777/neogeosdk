@@ -25,16 +25,28 @@
 #include "sprite_meta.h"
 #include "infix_palettes.h"
 #include "sky_video_sync.h"
+#include "sdk/ng_perf.h"
 
 static SkyVideoSync s_video_sync;
 static volatile uint16_t s_palette_irq_count;
 static volatile uint8_t s_palette_irq_lines;
+static void NEOGEO_USER sky_ground_vblank(void);
+static NGCharacter *s_shot_owner[SKY_MAX_PSHOTS + SKY_MAX_ESHOTS];
+static volatile uint16_t s_shot_slot_faults;
+static NGCharacter *s_enemy_owner[SKY_MAX_ENEMIES], *s_boss_owner;
+static volatile uint16_t s_enemy_slot_faults;
 
 void NEOGEO_USER sky_palette_vblank(void)
 {
+    if (ng_vram_busy) return;
     if (!sky_video_take(&s_video_sync)) return;
     s_palette_irq_lines = ng_vram_lines_left();
     ng_palfx_vblank();
+    /* Consume the completed scene batch before BIOS I/O spends the blank. */
+    ng_vram_commit();
+    ng_vram_busy++;
+    sky_ground_vblank();
+    ng_vram_busy--;
     s_palette_irq_count++;
 }
 
@@ -174,6 +186,55 @@ NGCharacter * NEOGEO_USER sky_spawn(uint8_t kind, uint16_t id,
     NGCharacter *c = chars_add(kind, cx, cy);
     if (!c) return 0;
     sky_bind(c, id, scale, band);
+    if (kind == SKY_KIND_PSHOT || kind == SKY_KIND_ESHOT) {
+        uint8_t i, begin = kind == SKY_KIND_PSHOT ? 0u : SKY_MAX_PSHOTS;
+        uint8_t end = kind == SKY_KIND_PSHOT ? SKY_MAX_PSHOTS : SKY_MAX_PSHOTS + SKY_MAX_ESHOTS;
+        /* Shot artwork is fixed after spawn; seeker updates only move it. */
+        ng_char_set_render_mode(c, NG_CHAR_RENDER_MOVE_ONLY);
+        for (i = 0u; i < SKY_MAX_PSHOTS + SKY_MAX_ESHOTS; i++) {
+            NGCharacter *old = s_shot_owner[i];
+            uint8_t expected = i < SKY_MAX_PSHOTS ? SKY_KIND_PSHOT : SKY_KIND_ESHOT;
+            if (old && (!old->active || old->kind != expected || old == c)) {
+                uint16_t first = (uint16_t)(i < SKY_MAX_PSHOTS ? SKY_FIXED_PSHOT_FIRST + i :
+                    SKY_FIXED_ESHOT_FIRST + i - SKY_MAX_PSHOTS);
+                if (old->active && old != c && old->kind != expected && old->sprite_first == first)
+                    ng_char_pin_sprite(old, 0xFFFFu);
+                s_shot_owner[i] = 0;
+            }
+        }
+        for (i = begin; i < end && s_shot_owner[i]; i++) {}
+        if (i < end && c->sprite_strips == 1u) {
+            s_shot_owner[i] = c;
+            ng_char_pin_sprite(c, (uint16_t)(kind == SKY_KIND_PSHOT ?
+                SKY_FIXED_PSHOT_FIRST + i : SKY_FIXED_ESHOT_FIRST + i - SKY_MAX_PSHOTS));
+        } else s_shot_slot_faults++;
+    }
+    if (kind == SKY_KIND_ENEMY) {
+        uint8_t i;
+        for (i = 0u; i < SKY_MAX_ENEMIES; i++) {
+            NGCharacter *old = s_enemy_owner[i];
+            if (old && (!old->active || old->kind != SKY_KIND_ENEMY || old == c)) {
+                if (old->active && old != c && old->kind != SKY_KIND_ENEMY &&
+                    old->sprite_first == SKY_FIXED_ENEMY_FIRST + i * 8u)
+                    ng_char_pin_sprite(old, 0xFFFFu);
+                s_enemy_owner[i] = 0;
+            }
+        }
+        for (i = 0u; i < SKY_MAX_ENEMIES && s_enemy_owner[i]; i++) {}
+        if (i < SKY_MAX_ENEMIES && c->sprite_strips <= 8u) {
+            s_enemy_owner[i] = c;
+            ng_char_pin_sprite(c, (uint16_t)(SKY_FIXED_ENEMY_FIRST + i * 8u));
+        } else s_enemy_slot_faults++;
+    } else if (kind == SKY_KIND_BOSS) {
+        if (s_boss_owner && s_boss_owner->active && s_boss_owner != c && s_boss_owner->kind != SKY_KIND_BOSS &&
+            s_boss_owner->sprite_first == SKY_FIXED_BOSS_FIRST)
+            ng_char_pin_sprite(s_boss_owner, 0xFFFFu);
+        if (c->sprite_strips <= 8u && (!s_boss_owner || !s_boss_owner->active ||
+            s_boss_owner == c || s_boss_owner->kind != SKY_KIND_BOSS)) {
+            s_boss_owner = c;
+            ng_char_pin_sprite(c, SKY_FIXED_BOSS_FIRST);
+        } else s_enemy_slot_faults++;
+    }
     c->visible = 1u;
     c->life_state = NG_CHAR_LIFE_VISIBLE;
     return c;
@@ -277,6 +338,41 @@ static uint8_t s_bg_ready;
 static uint8_t s_route_stage;
 static uint8_t s_route_pages;
 static uint8_t s_ground_page[2];
+static uint8_t s_ground_target[2], s_ground_column[2], s_ground_pending[2];
+static volatile uint16_t s_ground_preload_misses;
+
+static void NEOGEO_USER sky_ground_request(uint8_t slot, uint8_t page)
+{
+    NGSpriteGroup *g = &s_ground.pages[slot];
+    const NGArtAsset *a = ng_screen_art_asset(sky_route_asset_ids[s_route_stage][page >> 1]);
+    ng_sprite_group_detach(g);
+    ng_sprite_group_set_tile_base(g, (uint16_t)(a->tile_base + (page & 1u) * 352u));
+    ng_sprite_group_set_palette_map(g, a->tile_palettes + (page & 1u) * 352u);
+    s_ground_target[slot] = page;
+    s_ground_column[slot] = 0u;
+    s_ground_pending[slot] = 1u;
+}
+
+static void NEOGEO_USER sky_ground_vblank(void)
+{
+    uint8_t slot;
+    if (!s_bg_ready) return;
+    for (slot = 0u; slot < 2u; slot++) {
+        NGSpriteGroup *g = &s_ground.pages[slot];
+        if (!s_ground_pending[slot]) continue;
+        if (s_ground_pending[slot] == 1u) {
+            if (!ng_sprite_stage_retire_range(g->firstSprite, g->strips)) return;
+            s_ground_pending[slot] = 2u;
+        }
+        if (!ng_sprite_group_stage_map(g, &s_ground_column[slot])) return;
+        s_ground_page[slot] = s_ground_target[slot];
+        s_ground_pending[slot] = 0u;
+        g->readyRows = 0u;
+        /* Controls were parked; the next producer publishes a cheap full
+         * transform over the already-complete map. */
+        g->dirty = NG_SGF_DIRTY_POS | NG_SGF_DIRTY_SHRINK | NG_SGF_DIRTY_VIS;
+    }
+}
 /* Keep the atomic fade upload within the available blanking window.
  * Higher effect banks use the normal per-bank palette queue. */
 static uint16_t s_palette_base[104u * 16u];
@@ -300,7 +396,8 @@ void NEOGEO_USER sky_bg_select(uint8_t id)
     default: s_route_stage = 0u; break;
     }
     s_route_pages=sky_route_page_counts[s_route_stage];
-    s_ground_page[0] = s_ground_page[1] = 0xffu;
+    s_ground_page[0] = 0u; s_ground_page[1] = 1u;
+    s_ground_pending[0] = s_ground_pending[1] = 0u;
     s_bg_advance = 0u;
     ng_load_screen_palette(id);
     ng_shooter_camera_init(&s_camera);
@@ -384,24 +481,27 @@ void NEOGEO_USER sky_bg_draw(void)
     sky_stage_camera_shift((int16_t)(sky_bg_camera_x()-previous_x));
     travel = sky_bg_travel();
     phase = (uint16_t)(travel & 255u);
-    /* Stream eight authored pages once. A recycled page is rebound above
-     * the visible field, giving its deferred tile upload time to complete. */
+    /* A departing page is wholly below the field at phase224. Refill it
+     * there, 32 pixels before it returns above the screen. Even cruise
+     * speed leaves32 updates for bounded column uploads. */
     for (i = 0u; i < 2u; i++) {
-        uint8_t page = (uint8_t)(travel / 256u + i);
-        uint8_t slot = (uint8_t)((travel / 256u + i) & 1u);
+        uint8_t page = (uint8_t)((travel >> 8) + i);
+        uint8_t slot = (uint8_t)(page & 1u);
         NGSpriteGroup *g = &s_ground.pages[slot];
-        const NGArtAsset *art;
-        if (page >= s_route_pages) page = s_route_pages-1u;
-        if (s_ground_page[slot] != page) {
-            uint16_t id = sky_route_asset_ids[s_route_stage][page/2u];
-            art = ng_screen_art_asset(id);
-            ng_sprite_group_set_tile_base(g, (uint16_t)(art->tile_base + (page & 1u) * 352u));
-            ng_sprite_group_set_palette_map(g, art->tile_palettes + (page & 1u) * 352u);
-            s_ground_page[slot] = page;
+        if (page >= s_route_pages) continue;
+        if (s_ground_page[slot] != page && !s_ground_pending[slot] &&
+            !(i == 0u && phase >= 224u && s_ground_page[slot] == page + 2u)) {
+            s_ground_preload_misses++;
+            sky_ground_request(slot, page);
         }
         ng_sprite_group_set_pos(g, (int16_t)(-16 - s_camera.x_q8 / 256),
                                  (int16_t)(phase - (i ? 256 : 0)));
-        ng_sprite_group_flush(g);
+        if (!s_ground_pending[slot]) ng_sprite_group_flush(g);
+    }
+    if (phase >= 224u && (travel >> 8) + 2u < s_route_pages) {
+        uint8_t page = (uint8_t)((travel >> 8) + 2u), slot = (uint8_t)(page & 1u);
+        if (!s_ground_pending[slot] && s_ground_page[slot] != page)
+            sky_ground_request(slot, page);
     }
     if(s_far_cloud_ready) {
         NGShooterProjection p=ng_depthfx_shooter_project(&s_camera,196,
@@ -502,7 +602,7 @@ void NEOGEO_USER sky_depth_draw(void)
         NGSpriteGroup *g=&s_air_shadow[i];
         if(!art || peak+art->strips>90u) {
             if(art)s_depth_shadow_drops++;
-            if(s_shadow_visible[i]) {ng_sprite_group_cancel(g);ng_sprite_group_hide(g);s_shadow_visible[i]=0u;}
+            if(s_shadow_visible[i]) {ng_sprite_group_hide_queued(g);s_shadow_visible[i]=0u;}
             continue;
         }
         if(s_shadow_asset[i]!=id) {
@@ -520,7 +620,9 @@ void NEOGEO_USER sky_depth_draw(void)
             int16_t px=(int16_t)(p.x-ng_sprite_scaled_x((uint16_t)g_ng_asset_pivots[id-1u][0],159u));
             int16_t py=(int16_t)(p.y-ng_sprite_scaled_y((uint16_t)g_ng_asset_pivots[id-1u][1],159u));
             ng_sprite_group_set_pos(g,px,py);
-            if(!s_shadow_visible[i])ng_sprite_group_upload(g);else ng_sprite_group_flush(g);
+            ng_sprite_group_set_visible(g,1u);
+            ng_sprite_group_set_priority(g, NG_SG_PRIO_LOW);
+            ng_sprite_group_flush(g);
             s_shadow_visible[i]=1u;
             ng_shooter_budget_add(&budget,py,art->active_rows,art->strips);
             peak+=art->strips; /* conservative admission; one final exact walk */
@@ -540,9 +642,12 @@ void NEOGEO_USER sky_depth_draw(void)
 
 void NEOGEO_USER sky_instrument_show(uint8_t k, uint16_t id, int16_t x, int16_t y)
 {
-    const NGArtAsset *art = ng_screen_art_asset(id);
-    NGSpriteGroup *g = &s_instrument[k];
-    if (k > 2u || !art || s_instrument_id[k] == id) return;
+    const NGArtAsset *art;
+    NGSpriteGroup *g;
+    if (k > 2u || s_instrument_id[k] == id) return;
+    art = ng_screen_art_asset(id);
+    if (!art) return;
+    g = &s_instrument[k];
     if (!s_palette_loaded[id]) {
         ng_load_screen_palette(id);
         s_palette_loaded[id] = 1u;
@@ -553,7 +658,8 @@ void NEOGEO_USER sky_instrument_show(uint8_t k, uint16_t id, int16_t x, int16_t 
         ng_sprite_group_set_tile_stride(g, art->strips);
         ng_sprite_group_set_palette_map(g, art->tile_palettes);
         ng_sprite_group_set_pos(g, x, y);
-        ng_sprite_group_upload(g);
+        ng_sprite_group_set_priority(g, NG_SG_PRIO_HIGH);
+        ng_sprite_group_flush(g);
     } else {
         ng_sprite_group_set_tile_base(g, art->tile_base);
         ng_sprite_group_set_palette_map(g, art->tile_palettes);
@@ -584,6 +690,7 @@ void NEOGEO_USER sky_bg_hide(void)
     ng_sprite_hide_vram_base(NG_SPR_VRAM_BASE(NG_SPR_BG0_FIRST), 20u);
     s_bg_id = 0u;
     s_bg_ready = 0u;
+    s_ground_pending[0] = s_ground_pending[1] = 0u;
 }
 
 void NEOGEO_USER sky_title_draw(void)
@@ -642,6 +749,12 @@ void NEOGEO_USER sky_scene_begin(void)
     clearSprs();
     ng_sprite_hide_all();
     ng_chars_init();
+    for (i = 0u; i < SKY_MAX_PSHOTS + SKY_MAX_ESHOTS; i++) s_shot_owner[i] = 0;
+    for (i = 0u; i < SKY_MAX_ENEMIES; i++) s_enemy_owner[i] = 0;
+    s_boss_owner = 0;
+    /* Bands express flight-layer order; screen Y is not actor depth here.
+     * Crossing shots should not reorder the entire same-band sprite pool. */
+    ng_chars_set_depth_sort(0u);
     sky_bg_hide();
     for (i = 0u; i <= NG_ASSET_META_COUNT; i++) s_palette_loaded[i] = 0u;
     for (i = 0u; i < 3u; i++) s_instrument_id[i] = 0u;     /* hidden with the rest */
@@ -656,11 +769,11 @@ void NEOGEO_USER sky_scene_begin(void)
 
 uint16_t NEOGEO_USER sky_frame(void)
 {
+    NG_PERF_FRAME_END();
     sky_video_publish(&s_video_sync);
     /* A stale flag from an overrun is not an acknowledgement of this batch. */
     do { waitVbl(); } while (s_video_sync.pending);
-    if (!ng_vram_window_open()) waitVbl();
-    ng_vram_commit();
+    NG_PERF_FRAME_BEGIN();
     ng_palette_fx_update();
     s_joy_prev = s_joy;
     s_joy = poll_joystick();

@@ -21,6 +21,8 @@
 #include "sdk/2d_engine/ng_palette_fx.h"
 #include "sdk/2d_engine/ng_fix.h"
 #include "sdk/2d_engine/ng_art_asset.h"
+#include "sdk/ng_input_repeat.h"
+#include "sdk/2d_engine/ng_frame_sync.h"
 #include "games/sevenwonders/artbox/generated/sw_assets.h"
 
 void NEOGEO_USER playSFX(uint8_t n);
@@ -63,14 +65,21 @@ void NEOGEO_USER soundSetADPCMBLoop(uint8_t v);
  * ==================================================================== */
 static uint16_t s_pal_base[PAL_BANKS * 16u];
 static uint16_t s_pal_out[PAL_BANKS * 16u];
-static volatile uint8_t s_publish;
-static uint16_t s_joy, s_joy_prev, s_pressed, s_hold_frames, s_frames, s_rng;
+static NGFrameSync s_video_sync;
+static uint16_t s_joy, s_joy_prev, s_pressed, s_repeat, s_frames, s_rng;
+static NGInputRepeat s_repeat_x, s_repeat_y;
+static void NEOGEO_USER sw_commit_ui(void);
+static void NEOGEO_USER sw_unbind_board(void);
 
 void NEOGEO_USER sw_vblank(void)
 {
-    if (!s_publish) return;     /* only a frame the game has finished */
-    s_publish = 0;
+    if (ng_vram_busy || !ng_vram_window_open()) return;
+    if (!ng_frame_sync_take(&s_video_sync)) return;
+    /* Completed UI before broad fades; bulk transfers retain their deadlines.
+     * An idle IRQ never consumes a producer still changing the board. */
+    sw_commit_ui();
     ng_palfx_vblank();
+    ng_vram_commit();
 }
 
 static const NGArtAsset *NEOGEO_USER art(uint8_t id)
@@ -117,16 +126,28 @@ void NEOGEO_USER sw_presentation_init(void)
 
 uint16_t NEOGEO_USER sw_frame(void)
 {
-    s_publish = 1;
-    do { waitVbl(); } while (s_publish);
-    if (!ng_vram_window_open()) waitVbl();
-    ng_vram_commit();
+    uint16_t x, y;
+    if (*(volatile uint8_t *)BIOS_SYSTEM_MODE & 0x80u) {
+        ng_frame_sync_publish(&s_video_sync);
+        do { waitVbl(); } while (s_video_sync.pending);
+    } else {
+        /* Established BIOS-owned fallback, outside the game-owned IRQ. */
+        waitVbl();
+        if (!ng_vram_window_open()) waitVbl();
+        sw_commit_ui();
+        ng_palfx_vblank();
+        ng_vram_commit();
+    }
     ng_palette_fx_update();
     s_joy_prev = s_joy;
     s_joy = poll_joystick();
     s_pressed = (uint16_t)(s_joy & (uint16_t)~s_joy_prev);
-    if (s_joy & (SW_UP | SW_DOWN | SW_LEFT | SW_RIGHT)) s_hold_frames++;
-    else s_hold_frames = 0;
+    x = (uint16_t)(s_joy & (SW_LEFT | SW_RIGHT));
+    y = (uint16_t)(s_joy & (SW_UP | SW_DOWN));
+    if (x == (SW_LEFT | SW_RIGHT)) x = 0;
+    if (y == (SW_UP | SW_DOWN)) y = 0;
+    s_repeat = (uint16_t)(ng_input_repeat_step(&s_repeat_x, x, 15u, 4u) |
+                          ng_input_repeat_step(&s_repeat_y, y, 15u, 4u));
     s_frames++;
     s_rng ^= (uint16_t)(s_joy + s_frames);
     return s_frames;
@@ -137,9 +158,7 @@ uint16_t NEOGEO_USER sw_pressed(void) { return s_pressed; }
 
 uint16_t NEOGEO_USER sw_repeat(void)
 {
-    uint16_t r = s_pressed;
-    if (s_hold_frames > 14u && !(s_hold_frames & 3u)) r = (uint16_t)(r | (s_joy & (SW_UP | SW_DOWN | SW_LEFT | SW_RIGHT)));
-    return r;
+    return (uint16_t)((s_pressed & (uint16_t)~(SW_UP | SW_DOWN | SW_LEFT | SW_RIGHT)) | s_repeat);
 }
 
 uint16_t NEOGEO_USER sw_rand(void)
@@ -205,6 +224,12 @@ void NEOGEO_USER sw_clear_text(uint8_t y0, uint8_t y1)
  * ==================================================================== */
 static NGSpriteGroup s_bg, s_logo, s_cat[2], s_star[3], s_card, s_banner[2], s_panel;
 
+static void NEOGEO_USER sw_commit_ui(void)
+{
+    ng_sprite_group_commit_small(&s_panel);
+    ng_fix_commit();
+}
+
 static void NEOGEO_USER show_asset(NGSpriteGroup *g, uint16_t first_sprite, uint8_t id, uint8_t frame,
                                    int16_t x, int16_t y)
 {
@@ -245,6 +270,7 @@ void NEOGEO_USER sw_fade_out(void)
 void NEOGEO_USER sw_scene(uint8_t background)
 {
     uint8_t id = bg_asset(background);
+    sw_unbind_board(); /* old picture may fade, but no board owns this scene */
     sw_fade_out();
     waitVbl();
     clearFix();
@@ -340,24 +366,26 @@ void NEOGEO_USER sw_sfx(uint8_t sfx)
 /* ======================================================================
  * the board
  * ==================================================================== */
-static NGSpriteGroup s_cell[120];        /* match pieces (0-48) or bubbles (0-119) */
-static NGSpriteGroup s_under[49];
+static NGSpriteGroup s_cell[SW_BUBBLE_CELLS]; /* match pieces or bubbles */
+static NGSpriteGroup s_under[SW_MATCH_CELLS];
 static NGSpriteGroup s_lock[LOCKS];
 static NGSpriteGroup s_fx[FX];
 static NGSpriteGroup s_fall[FALLS];
 static NGSpriteGroup s_shot, s_next, s_cursor, s_launch, s_dot[DOTS];
 static int16_t s_ox, s_oy;               /* the board's top-left on screen */
-static int16_t s_off[49];                /* a piece's fall offset, pixels (negative: above) */
-static uint8_t s_vel[49];                /* its speed, pixels per frame * 4 */
-static uint8_t s_drawn_color[120], s_drawn_kind[120], s_drawn_cover[49];
+static int16_t s_off[SW_MATCH_CELLS]; /* fall offset, pixels (negative: above) */
+static uint8_t s_vel[SW_MATCH_CELLS]; /* speed, pixels per frame * 4 */
+static uint8_t s_drawn_color[SW_BUBBLE_CELLS], s_drawn_kind[SW_BUBBLE_CELLS], s_drawn_cover[SW_MATCH_CELLS];
 static uint8_t s_swap_a, s_swap_b, s_swap_t, s_swap_back;
 static uint8_t s_clear_t;
 static uint8_t s_fx_t[FX];
 static int16_t s_fall_x[FALLS], s_fall_y[FALLS], s_fall_v[FALLS];
 static uint8_t s_fall_on[FALLS];
-static uint8_t s_group[15];              /* bubbles of the group the last shot joined (bits) */
-static uint8_t s_mode, s_bound, s_cursor_t;
+static uint8_t s_group[(SW_BUBBLE_CELLS + 7u) / 8u]; /* last joined group, bits */
+static uint8_t s_mode, s_bound, s_cursor_t, s_drawn_parity;
 static NGPuzzle *s_p;
+static NGPuzzlePreview s_aim_preview;
+static uint32_t s_aim_generation;
 /* t/6 of the way, in 256ths: the swap's slide without a divide */
 static const uint16_t frac6[13] = { 0, 43, 85, 128, 171, 213, 256, 213, 171, 128, 85, 43, 0 };
 
@@ -381,19 +409,29 @@ static uint8_t NEOGEO_USER bubble_frame(uint8_t color, uint8_t kind)
     return (uint8_t)(color - 1u);
 }
 
-void NEOGEO_USER sw_board_hide(void)
+static void NEOGEO_USER sw_unbind_board(void)
 {
-    ng_sprite_hide_range(SPR_UNDER, (uint16_t)(SPR_CURSOR + 2u - SPR_UNDER));
-    ng_sprite_hide_range(SPR_LAUNCH, (uint16_t)(SPR_DOT + DOTS - SPR_LAUNCH));
     s_bound = 0;
+    s_p = 0;
+    s_aim_generation++;
 }
 
-void NEOGEO_USER sw_board_bind(NGPuzzle *p)
+void NEOGEO_USER sw_board_hide(void)
+{
+    sw_unbind_board();
+    ng_sprite_hide_range(SPR_UNDER, (uint16_t)(SPR_CURSOR + 2u - SPR_UNDER));
+    ng_sprite_hide_range(SPR_LAUNCH, (uint16_t)(SPR_DOT + DOTS - SPR_LAUNCH));
+}
+
+uint8_t NEOGEO_USER sw_board_bind(NGPuzzle *p)
 {
     uint8_t c, n;
     sw_board_hide();
+    if (!p || !p->level || !sw_board_dimensions_valid(p->mode, p->w, p->h) ||
+        p->mode != p->level->mode || p->w != p->level->w || p->h != p->level->h) return 0u;
     s_p = p;
     s_mode = p->mode;
+    s_drawn_parity = 0xFFu;
     s_swap_t = 0; s_clear_t = 0;
     for (c = 0; c < FX; c++) s_fx_t[c] = 0;
     for (c = 0; c < FALLS; c++) s_fall_on[c] = 0;
@@ -443,6 +481,7 @@ void NEOGEO_USER sw_board_bind(NGPuzzle *p)
     ng_sprite_group_set_visible(&s_cursor, 0);
     ng_sprite_group_flush(&s_cursor);
     s_bound = 1;
+    return 1u;
 }
 
 static void NEOGEO_USER effect(int16_t x, int16_t y)
@@ -625,10 +664,15 @@ static void NEOGEO_USER draw_match(NGPuzzle *p)
 static void NEOGEO_USER draw_bubbles(NGPuzzle *p)
 {
     uint8_t c, n = (uint8_t)(p->w * p->h);
+    uint8_t shifted = (uint8_t)(p->parity != s_drawn_parity);
+    uint8_t changed = shifted;
     for (c = 0; c < n; c++) {
         NGSpriteGroup *g = &s_cell[c];
         uint8_t color = p->color[c], kind = p->kind[c];
-        if (color == s_drawn_color[c] && kind == s_drawn_kind[c]) continue;
+        /* New rows change the staggered geometry even if a cell keeps the
+         * same color/kind. Its cached artwork alone cannot establish position. */
+        if (color == s_drawn_color[c] && kind == s_drawn_kind[c] && (!shifted || !color)) continue;
+        changed = 1;
         if (!color && s_drawn_color[c] && s_drawn_color[c] != 0xFFu) {
             /* gone: popped where the shot stuck, dropped elsewhere */
             int16_t x, y;
@@ -646,6 +690,8 @@ static void NEOGEO_USER draw_bubbles(NGPuzzle *p)
         ng_sprite_group_flush(g);
         s_drawn_color[c] = color; s_drawn_kind[c] = kind;
     }
+    s_drawn_parity = p->parity;
+    if (changed) s_aim_generation++;
     for (c = 0; c < FALLS; c++) {
         if (!s_fall_on[c]) continue;
         s_fall_v[c] = (int16_t)(s_fall_v[c] + 1);
@@ -684,7 +730,7 @@ static void NEOGEO_USER draw_bubbles(NGPuzzle *p)
 void NEOGEO_USER sw_board_draw(NGPuzzle *p)
 {
     uint8_t i;
-    if (!s_bound) return;
+    if (!s_bound || !p || p != s_p) return;
     if (s_mode == NGP_MODE_MATCH) draw_match(p);
     else draw_bubbles(p);
     for (i = 0; i < FX; i++) {
@@ -715,9 +761,13 @@ void NEOGEO_USER sw_cursor(uint8_t show, uint8_t cell, uint8_t picked)
 
 void NEOGEO_USER sw_aim(NGPuzzle *p, uint8_t show, uint8_t guide)
 {
-    NGPuzzlePoint pts[6];
-    uint8_t n = 0, i, d = 0, cell;
-    int16_t lx = (int16_t)(s_ox + p->level->launch_x), ly = (int16_t)(s_oy + p->level->launch_y);
+    NGPuzzlePoint prefix[NGP_PREVIEW_POINTS + 1u];
+    const NGPuzzlePoint *pts = s_aim_preview.points;
+    uint8_t n = 0, i, d = 0;
+    int16_t lx, ly;
+    if (!p || !p->level || !s_bound || p != s_p) return;
+    lx = (int16_t)(s_ox + p->level->launch_x);
+    ly = (int16_t)(s_oy + p->level->launch_y);
     if (!show) {
         ng_sprite_group_set_visible(&s_launch, 0); ng_sprite_group_flush(&s_launch);
         for (i = 0; i < DOTS; i++) if (s_dot[i].visible) { ng_sprite_group_set_visible(&s_dot[i], 0); ng_sprite_group_flush(&s_dot[i]); }
@@ -726,7 +776,25 @@ void NEOGEO_USER sw_aim(NGPuzzle *p, uint8_t show, uint8_t guide)
     ng_sprite_group_set_pos(&s_launch, (int16_t)(lx - 16), (int16_t)(ly - 8));
     ng_sprite_group_set_visible(&s_launch, 1);
     ng_sprite_group_flush(&s_launch);
-    if (guide) n = ng_puzzle_bubble_preview(p, p->angle, pts, 6, &cell);
+    if (guide) {
+        uint8_t state = ng_puzzle_preview_step(&s_aim_preview, p, s_aim_generation, 0);
+        if ((state != NGP_PREVIEW_BUSY && state != NGP_PREVIEW_READY) ||
+            s_aim_preview.requested_angle != p->angle) {
+            ng_puzzle_preview_begin(&s_aim_preview, p, p->angle, s_aim_generation);
+        }
+        state = ng_puzzle_preview_step(&s_aim_preview, p, s_aim_generation, NGP_PREVIEW_MAX_STEPS);
+        n = s_aim_preview.count;
+        if (state == NGP_PREVIEW_BUSY) {
+            /* The exact computed prefix doubles as a short aiming pointer
+             * while turning; extend it only as more collision work finishes. */
+            for (i = 0; i < n; i++) {
+                prefix[i].x = pts[i].x; prefix[i].y = pts[i].y;
+            }
+            prefix[n].x = (int16_t)(s_aim_preview.x_q8 >> 8);
+            prefix[n].y = (int16_t)(s_aim_preview.y_q8 >> 8);
+            n++; pts = prefix;
+        }
+    }
     /* dots spaced along the predicted path's segments */
     for (i = 0; i + 1u < n && d < DOTS; i++) {
         int16_t x0 = pts[i].x, y0 = pts[i].y, x1 = pts[i + 1u].x, y1 = pts[i + 1u].y;

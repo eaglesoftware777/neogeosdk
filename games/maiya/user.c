@@ -59,6 +59,9 @@ NEOGEO_INTERRUPT void NEOGEO_USER VBlank(void) {
     ASM_MVEML(%%d0-%%d7/%%a0-%%a6,-(%%sp))
     ASM_MVW(#4,REG_IRQACK)
     ASM_MVB(%%d0,REG_DIPSW)
+#ifdef NG_VRAM_DEFER
+    ASM_JSR(maiya_video_vblank)
+#endif
     ASM_JSR(SYS_IO)
     ASM_MVEML((%%sp)+, %%d0-%%d7/%%a0-%%a6)
     ::: ASM_END

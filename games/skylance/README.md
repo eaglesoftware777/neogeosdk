@@ -1,5 +1,10 @@
 # Sky Lance
 
+Current source: **V3 CANDIDATE**. Local rendering/performance work is in progress;
+released packages remain separate. The latest stage0 MVS stress measurement is
+48.7 updates/s versus41.8 at baseline. Full-rate gameplay and physical NeoSD,
+BackBit and fullscreen acceptance remain pending. See CHANGELOG.md for scope.
+
 A native Neo Geo vertical shooter with three pilots, seven long routes and
 one main boss per mission. First public set: `_v1`, with the NeoGeoSDK
 v1.7.3 pre-release (see [CHANGELOG.md](CHANGELOG.md)).

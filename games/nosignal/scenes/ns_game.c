@@ -89,6 +89,7 @@ static void NEOGEO_USER scene(const NSLine *lines)
 
 static void NEOGEO_USER copyright(void)
 {
+    ns_puts_c(26, NS_VERSION_TEXT, NS_TXT_GREY);
     ns_puts_c(27, "(C) 2026 EAGLE SOFTWARE", NS_TXT_WHITE);
 }
 

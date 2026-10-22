@@ -109,6 +109,7 @@ static const uint8_t k_bank_pose[3][7] = {
 static uint32_t s_hud_score, s_hud_high;
 static uint8_t s_hud_lives, s_hud_energy, s_hud_missiles, s_hud_boss;
 static uint8_t s_hud_targets;
+static uint8_t s_hud_radar, s_hud_threat, s_hud_chaff;
 static uint8_t s_combo_count, s_combo_timer;
 static uint8_t s_boss_critical_alert, s_boss_warned;
 static uint8_t s_special_banner;
@@ -230,6 +231,7 @@ static void NEOGEO_USER sky_hud_static(void)
     s_hud_lives = s_hud_energy = s_hud_missiles = s_hud_boss = 0xFFu;
     s_resource_hud = 0xFFFFu;
     s_hud_targets = 0xFFu;
+    s_hud_radar = s_hud_threat = s_hud_chaff = 0xFFu;
     s_radio_timer = 0u;
 }
 
@@ -259,22 +261,28 @@ static void NEOGEO_USER sky_hud_draw(void)
         else if (event == 4u) sky_radio_chatter("RADAR LOCK: REINFORCEMENTS", SOUND_SFX_12);
     }
     {
-        /* Threats blink in the warning ink: a radar lock, a missile on the jet. */
         uint8_t blink = (uint8_t)((s_sortie_frames >> 4) & 1u);
-        if (sky_stage_radar_alert())
-            sky_puts(14u, 3u, "RADAR:ALERT", blink ? SKY_PAL_WARN : SKY_PAL_BODY);
-        else
-            sky_puts(14u, 3u, "RADAR:QUIET", SKY_PAL_BODY);
-        if (sky_stage_seekers())
-            sky_puts(26u, 3u, "LOCKED", blink ? SKY_PAL_WARN : SKY_PAL_SCORE);
-        else
-            sky_puts(26u, 3u, sky_stage_encounter() == 3u ? "TARGET" :
-                     sky_stage_paused() ? "DEFEND" : "FLIGHT", SKY_PAL_SCORE);
-    }
-    {
-        char stock[2];
-        stock[0] = (char)('0' + sky_stage_chaff_stock()); stock[1] = '\0';
-        sky_puts(37u, 3u, stock, SKY_PAL_SCORE);
+        uint8_t radar = sky_stage_radar_alert() ? (uint8_t)(1u + blink) : 0u;
+        uint8_t threat = sky_stage_seekers() ? (uint8_t)(4u + blink) :
+            sky_stage_encounter() == 3u ? 0u : sky_stage_paused() ? 1u : 2u;
+        uint8_t chaff = sky_stage_chaff_stock();
+        if (radar != s_hud_radar) {
+            sky_puts(14u, 3u, radar ? "RADAR:ALERT" : "RADAR:QUIET",
+                     radar == 2u ? SKY_PAL_WARN : SKY_PAL_BODY);
+            s_hud_radar = radar;
+        }
+        if (threat != s_hud_threat) {
+            sky_puts(26u, 3u, threat >= 4u ? "LOCKED" : threat == 0u ? "TARGET" :
+                     threat == 1u ? "DEFEND" : "FLIGHT",
+                     threat == 5u ? SKY_PAL_WARN : SKY_PAL_SCORE);
+            s_hud_threat = threat;
+        }
+        if (chaff != s_hud_chaff) {
+            char stock[2];
+            stock[0] = (char)('0' + chaff); stock[1] = '\0';
+            sky_puts(37u, 3u, stock, SKY_PAL_SCORE);
+            s_hud_chaff = chaff;
+        }
     }
 
     if (targets != s_hud_targets) {
@@ -855,7 +863,7 @@ static void NEOGEO_USER sky_title_card(void)
 
     sky_scene_begin();
     sky_title_draw();
-    sky_puts(8u, 27u, "(C) 2026 EAGLE SOFTWARE", SKY_PAL_BODY);
+    sky_puts(3u, 27u, "(C)2026 EAGLE SOFTWARE " SKY_VERSION_TEXT, SKY_PAL_BODY);
     sky_puts(14u, 25u, "INSERT COIN", SKY_PAL_SCORE);
 
     for (t = 0u; t < 420u; t++) {
@@ -964,7 +972,7 @@ static void NEOGEO_USER sky_how_to_play(uint8_t attract)
     }
 }
 
-#if defined(NG_AES)
+#if defined(NG_AES) || defined(NG_PLATFORM_CD)
 static void NEOGEO_USER sky_main_menu(void)
 {
     uint8_t selection = 0u;
@@ -974,7 +982,7 @@ static void NEOGEO_USER sky_main_menu(void)
         uint16_t t;
         sky_scene_begin();
         sky_title_draw();
-        sky_puts(8u, 27u, "(C) 2026 EAGLE SOFTWARE", SKY_PAL_BODY);
+        sky_puts(3u, 27u, "(C)2026 EAGLE SOFTWARE " SKY_VERSION_TEXT, SKY_PAL_BODY);
         for (t = 0u; t < 1800u; t++) {
             uint16_t pressed;
             uint8_t i;
@@ -1145,6 +1153,10 @@ static uint8_t NEOGEO_USER sky_fly_stage(uint8_t stage)
     if (!s_player) return 0u;
     s_hud_face = sky_spawn(SKY_KIND_FACE, k_pilot[s_pick % SKY_PILOTS].face,
                            288, 44, NG_SCALE(5), NG_RENDER_BAND_PLAYER);
+    /* Only the playable craft and its cockpit own these resident slots;
+     * title, selection and demonstration planes still have distinct slots. */
+    ng_char_pin_sprite(s_player, SKY_FIXED_PLAYER_FIRST);
+    ng_char_pin_sprite(s_hud_face, SKY_FIXED_FACE_FIRST);
     if (s_player) {
         /* The plane's hitbox is deliberately tiny - a shmup is read from
          * the nose of the aircraft, not from its wingspan. */
@@ -1382,7 +1394,7 @@ void NEOGEO_USER sky_run(void)
 
     soundSceneReset();
     sky_music(SOUND_TRACK_A);
-#ifdef NG_AES
+#if defined(NG_AES) || defined(NG_PLATFORM_CD)
     sky_main_menu();
 #endif
     (void)sky_select();

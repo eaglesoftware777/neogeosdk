@@ -4,6 +4,10 @@ A native Neo Geo single-player beat-'em-up, built on the SDK's beat-'em-up
 engine (`GAME_GENRE_ENGINE = beatemup`, `sdk/2d_engine/ng_beatemup.c`).
 Game ID 784.
 
+Current development build: **V2 candidate**. Depth reordering uses complete hidden
+sprite banks; existing V1 releases remain separate. See the changelog for the
+tested scenarios and outstanding hardware checks.
+
 Someone stole the phone. Then the whole city lost its signal. Choose one hero
 (exactly one person plays) and get it back across eight stages: The Hood, The
 City Underpass, The Viral Outbreak, The Clone Lab, Concrete Jungle, The

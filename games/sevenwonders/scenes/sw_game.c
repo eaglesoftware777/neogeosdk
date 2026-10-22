@@ -286,7 +286,7 @@ static void NEOGEO_USER react(const NGPuzzleEvent *e)
 /* ======================================================================
  * a level
  * ==================================================================== */
-enum { PLAY_WON = 0, PLAY_LOST, PLAY_DEMO_DONE };
+enum { PLAY_WON = 0, PLAY_LOST, PLAY_DEMO_DONE, PLAY_DATA_ERROR };
 
 /* A cell's column and row, without a divide. */
 static void NEOGEO_USER cell_xy(uint8_t c, uint8_t *x, uint8_t *y)
@@ -309,13 +309,13 @@ static uint8_t NEOGEO_USER play(const NGPuzzleLevel *lv, uint8_t level, uint32_t
 #else
     uint8_t bot = demo;
 #endif
-    ng_puzzle_init(&s_p, lv, seed);
+    if (sw_level_init(&s_p, lv, seed) != NGP_OK) return PLAY_DATA_ERROR;
     sw_scene(demo ? 1u : chapter);
     s_cat_id = demo ? SW_CAT_MIMI : sw_chapters[chapter < SW_CHAPTERS ? chapter : 0].cat;
     s_cat_timer = 0;
     cat_mood(SW_MOOD_IDLE, 0);
     sw_panel(1);
-    sw_board_bind(&s_p);
+    if (!sw_board_bind(&s_p)) return PLAY_DATA_ERROR;
     sw_music(s_p.mode == NGP_MODE_MATCH ? SW_MUS_MATCH : SW_MUS_BUBBLE);
     panel(1, level);
     if (demo) sw_puts(1, 26, "DEMO PLAY", SW_TXT_PINK);
@@ -330,6 +330,14 @@ static uint8_t NEOGEO_USER play(const NGPuzzleLevel *lv, uint8_t level, uint32_t
         if (demo && sw_start_pending()) return PLAY_DEMO_DONE;
         if (!demo && !ng_sys_is_mvs() && (sw_pressed() & SW_START)) { pause ^= 1u; sw_puts_c(13, pause ? "PAUSE" : "     ", SW_TXT_GOLD); }
         if (pause) continue;
+        /* Steering prepares the NEXT shot; the in-flight velocity is fixed.
+         * Fire, swap and boosters still require a ready board. */
+        if (!bot && s_p.mode == NGP_MODE_BUBBLE) {
+            uint16_t aim = (uint16_t)(sw_held() & (SW_LEFT | SW_RIGHT));
+            if (aim == SW_LEFT) ng_puzzle_action(&s_p, NGP_CMD_AIM_BY, -6, 0);
+            if (aim == SW_RIGHT) ng_puzzle_action(&s_p, NGP_CMD_AIM_BY, 6, 0);
+            if (sw_pressed() & SW_UP) ng_puzzle_action(&s_p, NGP_CMD_AIM, 768, 0);
+        }
         if (ng_puzzle_status(&s_p) == NGP_STATUS_READY && sw_board_idle()) {
             if (bot) {
                 /* the demonstration plays the engine's own hints, at a human pace */
@@ -383,25 +391,14 @@ static uint8_t NEOGEO_USER play(const NGPuzzleLevel *lv, uint8_t level, uint32_t
                     idle_t = 0;
                 }
             } else {
-                if (sw_held() & SW_LEFT) ng_puzzle_action(&s_p, NGP_CMD_AIM_BY, -6, 0);
-                if (sw_held() & SW_RIGHT) ng_puzzle_action(&s_p, NGP_CMD_AIM_BY, 6, 0);
-                if (sw_pressed() & SW_UP) ng_puzzle_action(&s_p, NGP_CMD_AIM, 768, 0);
                 if (sw_pressed() & SW_A) ng_puzzle_action(&s_p, NGP_CMD_FIRE, 0, 0);
                 if (sw_pressed() & SW_B) { ng_puzzle_action(&s_p, NGP_CMD_SWAP_NEXT, 0, 0); sw_sfx(SW_SFX_MOVE); }
                 if ((sw_pressed() & SW_C) && bubble_rainbow) {
-                    /* the paw hammer in a bubble field: knock out the bubble the aim points at */
-                    uint8_t cell;
-                    ng_puzzle_bubble_preview(&s_p, s_p.angle, 0, 0, &cell);
-                    {
-                        uint8_t d, hit = NGP_NO_CELL;
-                        if (cell != NGP_NO_CELL)
-                            for (d = 0; d < 6u && hit == NGP_NO_CELL; d++) {
-                                uint8_t nb = ng_puzzle_neighbor(&s_p, cell, d);
-                                if (nb != NGP_NO_CELL && s_p.color[nb] && s_p.kind[nb] != NGP_KIND_ANCHOR) hit = nb;
-                            }
-                        if (hit != NGP_NO_CELL && ng_puzzle_action(&s_p, NGP_CMD_HAMMER, hit, 0) == NGP_OK) {
-                            bubble_rainbow = 0; sw_sfx(SW_SFX_BLAST); cat_mood(SW_MOOD_CHEER, 40);
-                        }
+                    uint8_t hit = ng_puzzle_bubble_target(&s_p, s_p.angle);
+                    if (hit != NGP_NO_CELL && ng_puzzle_action(&s_p, NGP_CMD_HAMMER, hit, 0) == NGP_OK) {
+                        bubble_rainbow = 0; sw_sfx(SW_SFX_BLAST); cat_mood(SW_MOOD_CHEER, 40);
+                    } else {
+                        sw_sfx(SW_SFX_NOPE);
                     }
                 }
                 if (sw_pressed() & SW_D) s_guide ^= 1u;
@@ -413,6 +410,10 @@ static uint8_t NEOGEO_USER play(const NGPuzzleLevel *lv, uint8_t level, uint32_t
             react(&e);
             if (e.type == NGP_EV_WON || e.type == NGP_EV_LOST) finish = 1;
         }
+        /* Notifications can overflow during a large cascade. The engine's
+         * terminal state remains authoritative even if its event was lost. */
+        if (ng_puzzle_status(&s_p) == NGP_STATUS_WON ||
+            ng_puzzle_status(&s_p) == NGP_STATUS_LOST) finish = 1;
         sw_board_draw(&s_p);
         if (s_p.mode == NGP_MODE_MATCH) {
             sw_cursor((uint8_t)(ng_puzzle_status(&s_p) == NGP_STATUS_READY && (!hint_t || (hint_t & 8u))), cursor, picked);
@@ -639,10 +640,17 @@ void NEOGEO_USER sw_run(void)
     tries = max_tries;
     if (dip(1) == 0) how_to_play(900);
     while (level < SW_LEVELS) {
-        uint8_t won;
+        uint8_t won, outcome;
         if (!(level & 3u) && !attempt) chapter_card((uint8_t)(level >> 2));
         level_card(level);
-        won = (uint8_t)(play(&sw_levels[level], level, sw_levels[level].seed + attempt, 0) == PLAY_WON);
+        outcome = play(&sw_levels[level], level, sw_levels[level].seed + attempt, 0);
+        if (outcome == PLAY_DATA_ERROR) {
+            sw_scene(SW_BG_MAP);
+            sw_puts_c(13, "LEVEL DATA ERROR", SW_TXT_PINK);
+            sw_wait(180);
+            return;
+        }
+        won = (uint8_t)(outcome == PLAY_WON);
         result(won, level);
         if (won) {
             s_total += s_p.score;
