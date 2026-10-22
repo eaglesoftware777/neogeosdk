@@ -298,3 +298,17 @@ make -f MakefileWin32.mak SOX=sox samples
 | MAME                    | 0.250                  |
 | srec_cat                | 1.64                   |
 | GNU Make                | 4.x                    |
+
+## Experimental CD tooling
+
+The opt-in CD builder uses Python 3.9+, existing m68k GCC/WLA-DX and Pillow for
+the SDK-original FIX generator. Native Windows Python 3.11 and Linux builds
+were exercised. No stock system ROM is bundled; stock boot tests require a
+user-supplied, recognized 512 KiB CD BIOS and a CD-capable MAME configuration.
+
+The ISO writer/auditor uses Python's standard library. Optional independent
+checks were run with xorriso 1.5.6 and MAME tools/chdman 0.264. Firmware F1
+tests used Linux MAME 0.264, which has known optical-model limitations. An
+external NeoCD libretro core can run the separately labeled HLE diagnostic;
+it is neither bundled nor a substitute for stock/Eagle firmware verification.
+See [the measured CD matrix](roadmap/NEOGEO_CD_VALIDATION_REPORT.md).

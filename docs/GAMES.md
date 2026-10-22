@@ -187,3 +187,11 @@ or `tutorial` instead; see [`ADDING_A_GAME.md`](./ADDING_A_GAME.md).
 | See how a finished game is structured | `skylance` |
 | Look up how one subsystem is actually driven | `demo` |
 | Write the game in C++ | `demo_plus` |
+
+## Experimental Neo Geo CD target
+
+Only `helloworld/main.c` currently has an opt-in native CD build with dedicated
+startup and original diagnostic assets. Stock BIOS boot acceptance is blocked;
+the secondary HLE video/input/effect diagnostic does not establish a finished
+game port. Tutorial, demo and larger-game CD ports are not available yet.
+See [CD build/status](NEOGEO_CD.md). Existing AES/MVS game targets are unchanged.
