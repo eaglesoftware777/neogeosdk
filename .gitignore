@@ -50,6 +50,8 @@ tests/genre_*.o
 
 # make neo GAME=<name>: NeoSD images and MAME test sets, rebuilt on demand
 dist/neo/
+dist/release/*NeoGeoCD*.zip
+dist/release/*Simulator-Kit*.zip
 
 # CD build artifacts
 out/neocd/

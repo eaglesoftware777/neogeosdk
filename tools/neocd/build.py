@@ -43,6 +43,9 @@ def build_native(game, out, cc, plus=False, cdda=True, wlaz80='wla-z80', wlalink
     if game == 'skylance':
         from tools.neocd.skylance import build_skylance
         return build_skylance(out,cc,plus,cdda,wlaz80,wlalink)
+    if game == 'maiya':
+        from tools.neocd.maiya import build_maiya
+        return build_maiya(out,cc,plus,cdda,wlaz80,wlalink)
     if game != 'helloworld':
         raise ValueError('CD startup is currently enabled for helloworld only; '+game+
                          ' needs its own audited source/asset port, not a renamed cartridge')
