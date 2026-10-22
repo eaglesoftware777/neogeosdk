@@ -25,8 +25,6 @@ ng_cd_user_entry:
     .org 0x200
     .text
 ng_cd_entry:
-    cmpi.b #2,0x10FDAE
-    bcs ng_cd_return
     move.w #0x2700,%sr
     lea 0x10F000,%sp
     lea __data_load,%a0

@@ -17,23 +17,24 @@
     .word 0x0000
     jmp eagle_cd_reset
     .org 0x38
-    jmp eagle_cd_irq
-    jmp eagle_cd_irq
-    jmp eagle_cd_reset
-    jmp eagle_cd_io_service
-    .org 0x146
-    jmp eagle_cd_unsupported
-    .org 0x152
-    jmp eagle_cd_unsupported
-    .org 0x15E
-    jmp eagle_cd_reset
-    .org 0x164
-    jmp eagle_cd_unsupported
-    jmp eagle_cd_unsupported
-    jmp eagle_cd_unsupported
-    jmp eagle_cd_unsupported
-    jmp eagle_cd_unsupported
-    jmp eagle_cd_reset
+    jmp 0xC0A518
+    jmp 0xC0A4FC
+    jmp 0xC0A92C
+    jmp 0xC0ADA0
+    .org 0x140
+    jmp 0xC0B9EE
+    jmp 0xC09C36
+    jmp 0xC0D850
+    jmp 0xC0DB60
+    jmp 0xC09122
+    jmp 0xC0AD12
+    jmp 0xC0DB6A
+    jmp 0xC0B6DE
+    jmp 0xC08E84
+    jmp 0xC0C6D6
+    jmp 0xC0D48A
+    jmp 0xC0A822
+    jmp 0xC08DB0
     .org 0x300
 
     .section .identity,"a"
