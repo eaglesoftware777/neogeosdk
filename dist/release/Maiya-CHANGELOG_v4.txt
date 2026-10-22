@@ -4,6 +4,24 @@ The ROM sets shared with the NeoGeoSDK pre-releases: `_v1` and `_v2` with
 v1.7.1, `_v3` with v1.7.2, `_v4` with v1.7.3. The SDK keeps its own
 version; Maiya's ROMs are numbered on their own.
 
+## v5 candidate (2026-10-20, local development)
+
+- Rework the opening forest into ground and connected canopy routes with an
+  optional reward and preserved vine access to the required Sun Key.
+- Space the first beetle later and remove the crow encounter beside the key
+  climb. Briefing text now states the actual key/gate/guardian objective.
+- Add optional stage camera framing to keep the heroine visible during canopy
+  jumps. Other missions retain their previous camera behavior by default.
+- Settle into stop/idle when physics blocks walking against a boundary. The
+  scripted gate walk now uses the same distance rate as ordinary walking.
+- Publish completed video batches to the game-owned interrupt before BIOS I/O;
+  reserve the small heroine group before bulk fades using bounded SDK commits.
+  Extended route/latency and hardware review remain open.
+- Add read-only route diagrams and normal-input section replays with matching
+  ELF/ROM manifests. No hero-art, collision, speed, jump or sound changes.
+- This is a candidate milestone, not the complete V5 campaign or a hardware
+  compatibility release. Existing installed/released packages remain separate.
+
 ## v4 (2026-10-12, NeoGeoSDK v1.7.3 pre-release) — everything since v3
 
 ### Her walk and run, redrawn

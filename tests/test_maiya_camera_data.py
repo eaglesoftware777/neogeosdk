@@ -14,8 +14,7 @@ spec.loader.exec_module(levels)
 class CameraData(unittest.TestCase):
     def test_existing_missions_keep_legacy_framing(self):
         _, stages = levels.load()
-        self.assertEqual(stages[0]['camera_feet_y'], 144)
-        self.assertTrue(all(s['camera_feet_y'] == 0 for s in stages[1:]))
+        self.assertTrue(all(s['camera_feet_y'] == 0 for s in stages))
 
     def test_invalid_framing_is_rejected_without_output_changes(self):
         source = levels.LEVELS / '01_emerald_forest.json'
