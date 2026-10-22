@@ -9,19 +9,17 @@
  * sound. The engine decides; this file shows it.
  *
  * Sprites (hardware slots, lower behind): 1-32 the street, 37-60 props,
- * 61-76 shots, 77-208 fighters (a box of 12 strips each, kept while the
- * depth order allows), 237-252 sparks, 253-272 the dialogue plate, 273-276
+ * 61-76 shots, 77-236 fighters (two exclusive 80-strip depth-layout banks), 237-252 sparks, 253-272 the dialogue plate, 273-276
  * its portrait, 277-294 the card, 295-310 the logo, 311-334 hero pictures
  * on cards and the select screen.
  *
  * The hardware shows at most 96 sprites on a line, counting every sprite
  * whose height covers it, on the screen or not, and drops the highest
  * numbered (here the nearest fighters) past that. So the street's strips are
- * placed one by one and only those on the screen are shown (21, not 32), and
- * the crowd is kept to five. And a sprite table is written only in the
- * vertical blank (NG_VRAM_DEFER), which holds about four whole fighters: a
- * fighter keeps its box, and so its slots, for as long as it can, so a frame
- * mostly changes pictures, not whole sprite lists.
+ * placed one by one and only those on the screen are shown (21, not 32).
+ * Two exclusive 80-strip banks hold complete depth layouts, including expert
+ * crowds. Changed maps are staged in parked slots across bounded blanks;
+ * a prepared control snapshot switches banks without exposing partial poses.
  *
  * Palettes: the heroes' and the screen furniture's stay loaded; a stage
  * loads its painting and its crew's and boss's colours (they share slots,
@@ -33,6 +31,7 @@
 #include "sdk/2d_engine/ng_fix.h"
 #include "sdk/2d_engine/ng_art_asset.h"
 #include "sdk/2d_engine/ng_render_queue.h"
+#include "sdk/ng_perf.h"
 #include "games/nosignal/artbox/generated/ns_assets.h"
 #include "games/nosignal/artbox/generated/ns_faces.h"
 
@@ -50,9 +49,8 @@ void NEOGEO_USER soundSetADPCMBLoop(uint8_t v);
 #define SPR_PROP    37u
 #define SPR_SHOT    61u
 #define SPR_FIGHTER 77u
-#define BOX_STRIPS  12u                     /* the widest fighter (the bosses) */
-#define BOXES       NGB_FIGHTERS
-#define SPR_FIGHTER_END (SPR_FIGHTER + BOX_STRIPS * BOXES)   /* 209: under the sparks at 237 */
+#define FIGHTER_BANK_STRIPS 80u
+#define SPR_FIGHTER_END (SPR_FIGHTER + 2u * FIGHTER_BANK_STRIPS) /* 237 */
 #define SPR_FX      237u
 #define FXN         8u
 #define SPR_DIALOG  253u
@@ -69,12 +67,21 @@ static uint16_t s_pal_base[PAL_BANKS * 16u];
 static uint16_t s_pal_out[PAL_BANKS * 16u];
 static volatile uint8_t s_publish;
 static uint16_t s_joy, s_joy_prev, s_pressed, s_frames, s_rng;
+static void NEOGEO_USER fighters_vblank(uint8_t upload);
 
 void NEOGEO_USER ns_vblank(void)
 {
-    if (!s_publish) return;
-    s_publish = 0;
+    if (!s_publish || ng_vram_busy) return;
     ng_palfx_vblank();
+    ng_vram_busy++;
+    fighters_vblank(0u);
+    ng_vram_busy--;
+    ng_vram_commit();
+    ng_vram_busy++;
+    fighters_vblank(1u);
+    ng_vram_busy--;
+    __asm__ volatile ("" ::: "memory");
+    s_publish = 0;
 }
 
 static const NGArtAsset *NEOGEO_USER art(uint8_t id)
@@ -143,10 +150,11 @@ static void NEOGEO_USER bark_tick_internal(void);
 
 uint16_t NEOGEO_USER ns_frame(void)
 {
+    NG_PERF_FRAME_END();
+    __asm__ volatile ("" ::: "memory");
     s_publish = 1;
     do { waitVbl(); } while (s_publish);
-    if (!ng_vram_window_open()) waitVbl();
-    ng_vram_commit();
+    NG_PERF_FRAME_BEGIN();
     ng_palette_fx_update();
     s_joy_prev = s_joy;
     s_joy = (uint16_t)(poll_joystick() & 0x01FFu);    /* player 1 and its start: nobody else plays */
@@ -258,18 +266,18 @@ void NEOGEO_USER ns_clear_text(uint8_t y0, uint8_t y1)
  * sprites
  * ==================================================================== */
 static NGSpriteGroup s_bg, s_logo, s_card, s_dialog, s_face, s_cards[3];
-static NGSpriteGroup s_fighter[NGB_FIGHTERS], s_prop[NGB_MAX_PROPS], s_shot[NGB_MAX_SHOTS], s_fx[FXN];
-static uint8_t s_rank[NGB_FIGHTERS];             /* each fighter's place in last frame's order */
-static uint8_t s_box[NGB_FIGHTERS];              /* each fighter's box (0xFF: none) */
-static uint8_t s_box_owner[BOXES];               /* who has each box (0xFF: nobody) */
-static uint8_t s_box_strips[BOXES];              /* strips shown in it (the rest are hidden) */
+static NGSpriteGroup s_fighter_banks[2][NGB_FIGHTERS];
+static NGSpriteGroup *s_fighter;
+static NGSpriteGroup s_prop[NGB_MAX_PROPS], s_shot[NGB_MAX_SHOTS], s_fx[FXN];
+static uint8_t s_rank[NGB_FIGHTERS];
+static uint8_t s_order[2][NGB_FIGHTERS], s_count[2];
+static uint8_t s_art_of[2][NGB_FIGHTERS], s_pose_of[2][NGB_FIGHTERS];
+static uint8_t s_live_bank, s_reorder, s_upload_actor, s_upload_column, s_cutover_ready;
+static uint16_t s_cutover_scb[3][FIGHTER_BANK_STRIPS];
+static uint16_t s_layout_capacity_faults, s_layout_commits, s_layout_deadline_misses;
 static uint8_t s_respawn_t;                      /* frames left of the blink after a respawn */
-static uint8_t s_pic[NGB_FIGHTERS];              /* the picture each shows: frame | flip << 7 */
-/* New pictures a frame besides the hero's: each is a fighter's whole sprite
- * map, 64 tiles at some 80 clocks each, about 13 of the blank's 32 lines,
- * and the blank only starts one with half as much again to spare (PERF=2
- * builds count what waits). So one, and the rest keep theirs a frame or two
- * longer (their places still move). */
+/* Keep animation uploads small while a new depth layout is prepared in the
+ * other, hidden bank. The current layout stays visible until the cutover. */
 #define NEW_PICTURES 1u
 static uint8_t s_street, s_street_rows;          /* the street is up: its strips are placed one by one */
 static uint8_t s_fx_t[FXN];
@@ -323,8 +331,15 @@ static void NEOGEO_USER forget_all(void)
     uint8_t i;
     s_bg.visible = s_logo.visible = s_card.visible = s_dialog.visible = s_face.visible = 0;
     for (i = 0; i < 3u; i++) s_cards[i].visible = 0;
-    for (i = 0; i < NGB_FIGHTERS; i++) { s_fighter[i].visible = 0; s_rank[i] = 0xFFu; s_box[i] = 0xFFu; s_pic[i] = 0xFFu; }
-    for (i = 0; i < BOXES; i++) { s_box_owner[i] = 0xFFu; s_box_strips[i] = 0; }
+    s_live_bank = s_reorder = s_upload_actor = s_upload_column = s_cutover_ready = 0u;
+    s_count[0] = s_count[1] = 0u;
+    s_fighter = s_fighter_banks[0];
+    for (i = 0; i < NGB_FIGHTERS; i++) {
+        s_fighter_banks[0][i].visible = s_fighter_banks[1][i].visible = 0u;
+        s_rank[i] = 0xFFu;
+        s_art_of[0][i] = s_art_of[1][i] = 0xFFu;
+        s_pose_of[0][i] = s_pose_of[1][i] = 0xFFu;
+    }
     s_street = 0;
     for (i = 0; i < NGB_MAX_PROPS; i++) s_prop[i].visible = 0;
     for (i = 0; i < NGB_MAX_SHOTS; i++) s_shot[i].visible = 0;
@@ -413,7 +428,6 @@ static uint8_t s_stage_art, s_cols, s_shown[STREET_STRIPS], s_hero_id;
 static uint8_t s_ring;                   /* the strip showing the column at the screen's left */
 static uint16_t s_left = 0xFFFFu;        /* that column */
 static int16_t s_chain_x[2];             /* where each chain's first strip was last put */
-static uint8_t s_slot_of[NGB_FIGHTERS];  /* the art each fighter's group shows (0xFF: none) */
 
 /*
  * The street: 21 strips as a ring, strip i showing a painting column c with
@@ -470,6 +484,7 @@ void NEOGEO_USER ns_stage_show(const NGBeatEmUp *b, const NSStageInfo *si, uint8
     a = art(s_stage_art);
     s_cols = a->strips;
     load_art_palettes(s_stage_art);
+    load_art_palettes(hero_art(hero));
     for (i = 0; i < 6u && si->crew[i]; i++) load_art_palettes(si->crew[i]);
     ng_palfx_screen_backdrop(0x8000u);
     /* the 21-strip ring over the painting, first as one chain at the start of the street */
@@ -486,7 +501,6 @@ void NEOGEO_USER ns_stage_show(const NGBeatEmUp *b, const NSStageInfo *si, uint8
     s_ring = 0;
     s_left = 0xFFFFu;
     s_chain_x[0] = s_chain_x[1] = 0x7FFF;
-    for (i = 0; i < NGB_FIGHTERS; i++) s_slot_of[i] = 0xFFu;
     ns_stage_draw(b);
     ns_reveal();
 }
@@ -557,53 +571,104 @@ static uint8_t NEOGEO_USER enemy_frame(const NGBFighter *f, const NSLook *lk, ui
     return ef;
 }
 
-/* Box b is nobody's now: its strips go (in the blank, before anything is
- * drawn there). */
-static void NEOGEO_USER box_free(uint8_t b)
+static uint8_t NEOGEO_USER fighter_visible(const NGBeatEmUp *b, uint8_t id, uint8_t art_id)
 {
-    if (s_box_strips[b]) {
-        if (s_dark) ng_sprite_hide_range((uint16_t)(SPR_FIGHTER + BOX_STRIPS * b), s_box_strips[b]);
-        else ng_sprite_hide_range_queued((uint16_t)(SPR_FIGHTER + BOX_STRIPS * b), s_box_strips[b]);
-    }
-    s_box_owner[b] = 0xFFu;
-    s_box_strips[b] = 0;
+    const NGBFighter *f = &b->f[id];
+    return (uint8_t)(f->alive && look_of(f->def)->art == art_id);
 }
 
-/* Draws fighter i in box b. A fighter that stays in its box only changes
- * picture and place; one given another box is drawn whole there (the box
- * cleared first, so nothing of its last owner shows if the blank runs out). */
-static void NEOGEO_USER draw_fighter(const NGBeatEmUp *b, uint8_t i, uint8_t box, uint16_t cam, uint8_t pic)
+static void NEOGEO_USER fighter_position(NGSpriteGroup *g, const NGBeatEmUp *b, uint8_t id, uint8_t art_id)
 {
-    const NGBFighter *f = &b->f[i];
-    NGSpriteGroup *g = &s_fighter[i];
-    const NSLook *lk = look_of(f->def);
-    const NGArtAsset *a = art(lk->art);
-    uint8_t frame = (uint8_t)(pic & 0x7Fu), flip = (uint8_t)(pic >> 7), shown;
-    int16_t sx = (int16_t)((f->x >> 8) - (int32_t)cam), sy = (int16_t)(((f->y - f->z) >> 8) - lk->lift);
-    int16_t ox = (int16_t)((uint16_t)a->strips << 3), oy = (int16_t)(((uint16_t)a->rows << 4) - 4u);
-    uint16_t first = (uint16_t)(SPR_FIGHTER + BOX_STRIPS * box);
-    /* a blink (back after a respawn, or going out for good): hidden in its box, which it keeps */
-    shown = (uint8_t)!((i == NGB_PLAYER && s_respawn_t && (s_frames & 4u)) ||
-                       (f->state == NGB_ST_DEAD && (f->timer & 4u)));
-    s_pic[i] = pic;
-    if (s_box[i] != box || s_box_owner[box] != i || s_slot_of[i] != lk->art) {
-        uint8_t was = s_box_owner[box];
-        if (was != 0xFFu && was != i && s_box[was] == box) s_box[was] = 0xFFu;   /* taken from a farther one */
-        if (s_box_strips[box]) box_free(box);
-        s_box[i] = box;
-        s_box_owner[box] = i;
-        s_box_strips[box] = a->strips;
-        s_slot_of[i] = lk->art;
-        ng_sprite_group_set_priority(g, NG_SG_PRIO_HIGH);   /* a whole new one first in the blank */
-        show_asset(g, first, lk->art, frame, (int16_t)(sx - ox), (int16_t)(sy - oy));
-        ng_sprite_group_set_priority(g, NG_SG_PRIO_NORMAL);
-    } else {
-        set_frame(g, lk->art, frame);
-        ng_sprite_group_set_pos(g, (int16_t)(sx - ox), (int16_t)(sy - oy));
+    const NGBFighter *f = &b->f[id];
+    const NGArtAsset *a = art(art_id);
+    int16_t x = (int16_t)((f->x - b->camera_x) >> 8);
+    int16_t y = (int16_t)((f->y - f->z) >> 8);
+    uint8_t blink = (uint8_t)((id == NGB_PLAYER && s_respawn_t && (s_frames & 4u)) ||
+        (f->state == NGB_ST_DEAD && (f->timer & 4u)));
+    /* A blink keeps its exclusive map resident. Parking the whole figure
+     * below the field avoids invalidating/reloading it every four ticks. */
+    ng_sprite_group_set_pos(g, (int16_t)(x - ((uint16_t)a->strips << 3)),
+        blink ? 240 : (int16_t)(y - look_of(f->def)->lift - (((uint16_t)a->rows << 4) - 4u)));
+    ng_sprite_group_set_visible(g, fighter_visible(b, id, art_id));
+}
+
+static void NEOGEO_USER fighter_describe(NGSpriteGroup *g, const NGBeatEmUp *b,
+    uint8_t id, uint16_t first, uint8_t pic, uint8_t art_id)
+{
+    const NGArtAsset *a = art(art_id);
+    uint16_t per = (uint16_t)(a->strips * a->rows);
+    uint16_t offset = (uint16_t)(per * (pic & 0x7Fu));
+    ng_sprite_group_detach(g);
+    ng_sprite_group_init(g, first, a->strips, a->rows, (uint16_t)(a->tile_base + offset), a->palette_bank);
+    ng_sprite_group_set_priority(g, id == NGB_PLAYER ? NG_SG_PRIO_HIGH : NG_SG_PRIO_NORMAL);
+    ng_sprite_group_set_palette_map(g, a->tile_palettes + offset);
+    ng_sprite_group_set_flip(g, (uint8_t)(pic >> 7), 0u);
+    fighter_position(g, b, id, art_id);
+}
+
+/* Map columns are prepared only in parked, exclusive slots. The old bank
+ * remains live while this takes several blanks. Publish all fighters and
+ * retire the old bank together, so depth crossings cannot erase a hero. */
+static void NEOGEO_USER fighters_vblank(uint8_t upload)
+{
+    uint8_t bank, k;
+    if (!s_reorder) return;
+    bank = (uint8_t)(s_live_bank ^ 1u);
+    if (upload) {
+        while (s_upload_actor < s_count[bank]) {
+            uint8_t id = s_order[bank][s_upload_actor];
+            if (!ng_sprite_group_stage_map(&s_fighter_banks[bank][id], &s_upload_column)) return;
+            s_upload_actor++;
+            s_upload_column = 0u;
+        }
+        return;
     }
-    ng_sprite_group_set_flip(g, flip, 0);
-    ng_sprite_group_set_visible(g, shown);
-    put(g);
+    if (!s_cutover_ready) return;
+    if (!ng_sprite_stage_swap((uint16_t)(SPR_FIGHTER + s_live_bank * FIGHTER_BANK_STRIPS),
+        FIGHTER_BANK_STRIPS, (uint16_t)(SPR_FIGHTER + bank * FIGHTER_BANK_STRIPS),
+        FIGHTER_BANK_STRIPS, s_cutover_scb[0], s_cutover_scb[1], s_cutover_scb[2])) return;
+    if (!ng_vram_window_open()) s_layout_deadline_misses++;
+    for (k = 0u; k < s_count[bank]; k++) {
+        NGSpriteGroup *g = &s_fighter_banks[bank][s_order[bank][k]];
+        g->dirty = 0u;
+        g->readyRows = g->visible ? g->activeRows : 0u;
+    }
+    s_live_bank = bank;
+    s_fighter = s_fighter_banks[bank];
+    s_reorder = s_cutover_ready = 0u;
+    s_layout_commits++;
+}
+
+/* All pointer walking, palette validation and transform arithmetic happens
+ * in the producer. The interrupt publishes just four bounded register runs. */
+static void NEOGEO_USER fighters_prepare_cutover(void)
+{
+    uint8_t bank = (uint8_t)(s_live_bank ^ 1u), k;
+    uint16_t col;
+    s_cutover_ready = 0u;
+    if (!s_reorder || s_upload_actor < s_count[bank]) return;
+    for (k = 0u; k < s_count[bank]; k++) {
+        uint8_t id = s_order[bank][k], art_id = s_art_of[bank][id];
+        const NGArtAsset *a = art(art_id);
+        if (!ng_palfx_screen_ready(a->palette_bank, ns_art_banks[art_id - 1u])) return;
+    }
+    for (col = 0u; col < FIGHTER_BANK_STRIPS; col++) {
+        s_cutover_scb[0][col] = 0x0FFFu;
+        s_cutover_scb[1][col] = NG_SPRITE_DISABLED_SCB3;
+        s_cutover_scb[2][col] = 0u;
+    }
+    for (k = 0u; k < s_count[bank]; k++) {
+        NGSpriteGroup *g = &s_fighter_banks[bank][s_order[bank][k]];
+        uint16_t first = (uint16_t)(g->firstSprite - SPR_FIGHTER - bank * FIGHTER_BANK_STRIPS);
+        if (!g->visible) continue;
+        for (col = 0u; col < g->strips; col++)
+            s_cutover_scb[1][first + col] = (uint16_t)(col ? 0x40u | g->activeRows :
+                ((uint16_t)(496 - g->y) << 7) | g->activeRows);
+        s_cutover_scb[2][first] = (uint16_t)((uint16_t)g->x << 7);
+    }
+    for (k = 0u; k < s_count[s_live_bank]; k++)
+        ng_sprite_group_cancel(&s_fighter[s_order[s_live_bank][k]]);
+    s_cutover_ready = 1u;
 }
 
 static uint8_t NEOGEO_USER prop_frame(const NGBProp *p)
@@ -682,82 +747,75 @@ static void NEOGEO_USER draw_fx(void)
 
 void NEOGEO_USER ns_stage_draw(const NGBeatEmUp *b)
 {
-    uint8_t ids[NGB_FIGHTERS + NGB_MAX_PROPS + NGB_MAX_SHOTS], order[NGB_FIGHTERS], n, k, i, m = 0, seen[NGB_FIGHTERS];
-    uint8_t swapped;
-    uint8_t box[NGB_FIGHTERS];
-    int16_t last;
-    uint16_t cam = (uint16_t)(b->camera_x >> 8);
-    street(cam);
-    draw_props(b, cam);
-    for (i = 0; i < NGB_FIGHTERS; i++) seen[i] = 0;
+    uint8_t ids[NGB_FIGHTERS + NGB_MAX_PROPS + NGB_MAX_SHOTS];
+    uint8_t order[NGB_FIGHTERS], want[NGB_FIGHTERS], n, k, i, m = 0u, changed, swapped;
+    uint8_t bank = s_live_bank, left = NEW_PICTURES;
+    uint16_t used = 0u;
+    street((uint16_t)(b->camera_x >> 8));
+    draw_props(b, (uint16_t)(b->camera_x >> 8));
     n = ng_beatemup_draw_list(b, ids, (uint8_t)sizeof(ids));
-    for (k = 0; k < n; k++) {
-        uint8_t id = ids[k];
-        if (id >= NGB_FIGHTERS || !b->f[id].alive) continue;   /* props and shots: their own layer */
-        order[m++] = id;
-    }
-    /* near-equal depths keep the order they had */
+    for (k = 0u; k < n; k++)
+        if (ids[k] < NGB_FIGHTERS && b->f[ids[k]].alive) order[m++] = ids[k];
     do {
-        swapped = 0;
-        for (k = 1; k < m; k++) {
-            uint8_t a = order[k - 1], c = order[k];
-            int32_t dy = b->f[c].y - b->f[a].y;
-            if (dy < DEPTH_SLACK && s_rank[c] < s_rank[a]) { order[k - 1] = c; order[k] = a; swapped = 1; }
+        swapped = 0u;
+        for (k = 1u; k < m; k++) {
+            uint8_t a = order[k - 1u], c = order[k];
+            if (b->f[c].y - b->f[a].y < DEPTH_SLACK && s_rank[c] < s_rank[a]) {
+                order[k - 1u] = c; order[k] = a; swapped = 1u;
+            }
         }
     } while (swapped);
-    for (i = 0; i < NGB_FIGHTERS; i++) s_rank[i] = 0xFFu;
-    for (k = 0; k < m; k++) { s_rank[order[k]] = k; seen[order[k]] = 1; }
-    /* Boxes rise far to near (a higher box is drawn over a lower one). Each
-     * fighter keeps its box while that stays in order; else it takes the
-     * first box after the last one given that nobody still drawn holds,
-     * leaving enough boxes for the nearer ones. */
-    last = -1;
-    for (k = 0; k < m; k++) {
-        uint8_t id = order[k], bx = s_box[id], lim = (uint8_t)(BOXES - (m - k)), c, j;
-        if (bx == 0xFFu || (int16_t)bx <= last || bx > lim) {
-            bx = 0xFFu;
-            for (c = (uint8_t)(last + 1); c <= lim && bx == 0xFFu; c++) {
-                j = s_box_owner[c];
-                if (j == 0xFFu || !seen[j] || s_rank[j] < k) bx = c;
-            }
-            if (bx == 0xFFu) bx = (uint8_t)(last + 1);
-        }
-        box[id] = bx;
-        last = bx;
+    for (i = 0u; i < NGB_FIGHTERS; i++) s_rank[i] = 0xFFu;
+    changed = (uint8_t)(m != s_count[bank]);
+    for (k = 0u; k < m; k++) {
+        uint8_t id = order[k];
+        const NGBFighter *f = &b->f[id];
+        uint8_t art_id = look_of(f->def)->art;
+        uint8_t frame = id == NGB_PLAYER ? hero_frame(b, f, 0u) : enemy_frame(f, look_of(f->def), (uint8_t)(id * 5u));
+        s_rank[id] = k;
+        want[id] = (uint8_t)(frame | (f->facing ? 0x80u : 0u));
+        used = (uint16_t)(used + art(art_id)->strips);
+        if (s_order[bank][k] != id || s_art_of[bank][id] != art_id) changed = 1u;
     }
-    for (i = 0; i < NGB_FIGHTERS; i++)       /* gone: its box is free */
-        if (!seen[i] && s_box[i] != 0xFFu) {
-            if (s_box_owner[s_box[i]] == i) box_free(s_box[i]);
-            s_box[i] = 0xFFu;
-            s_pic[i] = 0xFFu;
-            s_fighter[i].visible = 0;
-            s_slot_of[i] = 0xFFu;
+    if (used > FIGHTER_BANK_STRIPS) {
+        s_layout_capacity_faults++;
+    } else if (s_dark || (changed && !s_reorder)) {
+        uint16_t first;
+        uint8_t target = s_dark ? bank : (uint8_t)(bank ^ 1u);
+        first = (uint16_t)(SPR_FIGHTER + target * FIGHTER_BANK_STRIPS);
+        s_count[target] = m;
+        for (k = 0u; k < m; k++) {
+            uint8_t id = order[k], art_id = look_of(b->f[id].def)->art;
+            s_order[target][k] = id;
+            s_art_of[target][id] = art_id;
+            s_pose_of[target][id] = want[id];
+            fighter_describe(&s_fighter_banks[target][id], b, id, first, want[id], art_id);
+            if (s_dark) put(&s_fighter_banks[target][id]);
+            first = (uint16_t)(first + art(art_id)->strips);
         }
-    {
-        uint8_t want[NGB_FIGHTERS], left = NEW_PICTURES;
-        for (k = 0; k < m; k++) {
-            uint8_t id = order[k];
-            const NGBFighter *f = &b->f[id];
-            uint8_t fr = id == NGB_PLAYER ? hero_frame(b, f, 0) : enemy_frame(f, look_of(f->def), (uint8_t)(id * 5u));
-            want[id] = (uint8_t)(fr | (f->facing ? 0x80u : 0u));
-        }
-        /* nearest first: a fighter given a new box is drawn whole whatever the count */
-        for (k = m; k-- > 0;) {
-            uint8_t id = order[k];
-            if (id == NGB_PLAYER || want[id] == s_pic[id] || s_box[id] != box[id] || s_box[id] == 0xFFu) {
-                if (id != NGB_PLAYER && s_box[id] != box[id] && left) left--;
-                continue;
-            }
-            if (left) left--;
-            else want[id] = s_pic[id];
-        }
-        for (k = 0; k < m; k++) draw_fighter(b, order[k], box[order[k]], cam, want[order[k]]);
+        if (!s_dark) { s_upload_actor = s_upload_column = 0u; s_reorder = 1u; }
     }
-    for (i = 0; i < BOXES; i++)              /* a box nobody drew in this frame */
-        if (s_box_owner[i] != 0xFFu && (!seen[s_box_owner[i]] || box[s_box_owner[i]] != i)) {
-            if (s_box[s_box_owner[i]] == i) s_box[s_box_owner[i]] = 0xFFu;
-            box_free(i);
+    for (k = 0u; k < s_count[bank]; k++) {
+        uint8_t id = s_order[bank][k], art_id = s_art_of[bank][id];
+        NGSpriteGroup *g = &s_fighter[id];
+        fighter_position(g, b, id, art_id);
+        if (s_rank[id] != 0xFFu && look_of(b->f[id].def)->art == art_id &&
+            (id == NGB_PLAYER || left || want[id] == s_pose_of[bank][id])) {
+            if (id != NGB_PLAYER && want[id] != s_pose_of[bank][id]) left--;
+            set_frame(g, art_id, (uint8_t)(want[id] & 0x7Fu));
+            ng_sprite_group_set_flip(g, (uint8_t)(want[id] >> 7), 0u);
+            s_pose_of[bank][id] = want[id];
         }
+        put(g);
+    }
+    if (s_reorder) {
+        uint8_t target = (uint8_t)(bank ^ 1u);
+        for (k = 0u; k < s_count[target]; k++) {
+            uint8_t id = s_order[target][k];
+            fighter_position(&s_fighter_banks[target][id], b, id, s_art_of[target][id]);
+        }
+    }
+    fighters_prepare_cutover();
     if (s_throw_t) s_throw_t--;
     if (s_respawn_t) s_respawn_t--;
     draw_fx();

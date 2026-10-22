@@ -10,6 +10,13 @@ void NEOGEO_USER maiya_frame(void);
 /* Wait for the vertical blank and put the frame's colour changes on screen
  * in it: every frame of hers, the attract's and title's included. */
 void NEOGEO_USER maiya_vblank(void);
+#ifdef NG_VRAM_DEFER
+/* IRQ consumer; uploads only completed batches published by maiya_vblank. */
+void NEOGEO_USER maiya_video_vblank(void);
+#endif
+#ifdef NG_VRAM_DEFER
+void NEOGEO_USER maiya_video_vblank(void);
+#endif
 void NEOGEO_USER maiya_title(void);
 void NEOGEO_USER maiya_title_frame(void);
 void NEOGEO_USER maiya_hero_select(void);

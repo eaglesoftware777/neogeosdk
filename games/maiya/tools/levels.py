@@ -118,6 +118,9 @@ class Stage:
         # How far above the screen the valley goes (a tall climb to an upper
         # tier); 0 for a valley all on one screen's height.
         s["upper"] = self.num(d, "upper", "stage", 0, 256) if "upper" in d else 0
+        s["camera_feet_y"] = self.num(d, "camera_feet_y", "stage", 96, 160) if "camera_feet_y" in d else 0
+        if s["camera_feet_y"] and not s["upper"]:
+            self.fail("camera_feet_y", "requires a nonzero upper camera range")
         # What the gate asks for besides the key: "drums", every poison drum
         # on the road shut off (the works). Most stages ask nothing more.
         s["objective"] = self.choice(d, "objective", "stage", OBJECTIVES) if "objective" in d else 0
@@ -547,6 +550,7 @@ def render(stages, files):
     out.append(table("MG_BLOCKS_TABLE", [s["blocks"] for s in stages]))
     out.append(table("MG_CLIMB_TABLE", [s["climb"] for s in stages]))
     out.append(table("MG_UPPER_TABLE", [str(s["upper"]) for s in stages]))
+    out.append(table("MG_CAMERA_FEET_TABLE", [str(s["camera_feet_y"]) for s in stages]))
     out.append(table("MG_OBJECTIVE_TABLE", [f"{s['objective']}u" for s in stages]))
     out.append(table("MG_POSTED_TABLE", [s["posted"] for s in stages]))
     out.append(table("MG_WAVES_TABLE", [tuples(s["waves"], 5) for s in stages]))

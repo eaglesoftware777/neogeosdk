@@ -185,6 +185,14 @@ class Alpha(unittest.TestCase):
 
 
 class Effects(unittest.TestCase):
+    def test_projectile_assets_fit_resident_slots(self):
+        assets = {a["id"]: a for a in json.loads((GAME / "artbox/generated/assets.json").read_text())}
+        # All fifteen pilot weapon drawings and all eight hostile drawings,
+        # including the guided missile also used by the player's secondary.
+        for asset_id in list(range(57, 72)) + list(range(111, 119)):
+            with self.subTest(asset=assets[asset_id]["name"]):
+                self.assertEqual(assets[asset_id]["width"], 16)
+
     def test_generated_effects_exist_and_match_manifest(self):
         manifest = GAME / "sound/diagnostics/effects.json"
         if not manifest.exists():

@@ -1,8 +1,14 @@
 # Maiya: Super Nature Girl
 
-An original seven-mission side-scrolling adventure using the SDK's C 2D engine.
+An original twelve-mission side-scrolling adventure using the SDK's C 2D engine.
 Game name: `maiya`. Cartridge ID: `780`. The repository default remains `demo`.
 New in SDK v1.7.1.
+
+Current development: **V5 candidate**. The opening forest section has separate
+ground/canopy routes, an upper-route reward, clearer key/gate instructions and
+opt-in camera framing for high jumps. Character artwork, movement speeds and
+jump physics are preserved. This is a partial level-design milestone; the full
+V5 campaign/visual upgrade and physical-hardware approval remain pending.
 
 ## Build and Play
 

@@ -98,6 +98,13 @@ fully in view on the top one), and a vine may climb up to 256 px from the
 road to reach it. The view rises with her once she is above y 64 and eases
 back down as she comes down; the painted scenery behind stays put.
 
+`camera_feet_y` optionally chooses a screen-space foot target (96..160) for
+an upper-tier stage. It requires nonzero `upper`. Camera lag is then bounded
+to keep the normal 64px heroine below the HUD and above the lower edge; all
+world objects still use the same camera snapshot. Omit it to preserve the
+existing camera behavior. The forest's canopy proof uses144 and `upper`256,
+leaving room for the hint row above ordinary jumps and for boosted leaps.
+
 `objective` (optional, `none` when left out) is what the gate asks for
 besides the key: `drums`, every toxic drum on the road shut off (stand
 close, press Up). The stage then has exactly three `toxic` hazards; the

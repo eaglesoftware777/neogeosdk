@@ -4,6 +4,12 @@ local machine = manager.machine
 local memory = machine.devices[':maincpu'].spaces['program']
 local audio = machine.devices[':audiocpu'].spaces['program']
 local screen = machine.screens[':screen']
+local function cpu_pc(tag)
+    local state = machine.devices[tag].state
+    local pc = state['CURPC'] or state['PC']
+    assert(pc, 'CPU program-counter state unavailable: ' .. tag)
+    return pc.value
+end
 local fields = config.symbols
 local log = assert(io.open(config.output .. '/state.csv', 'w'))
 log:write('seconds,frame,main_pc,audio_pc,user_mode,credit,player,energy,stage,pose,scroll,slot_wait,timer,protocol,game_frames,queue_peak,lives,invuln,visible,player_x,player_y,hits,vram_pending,vram_duplicates,roll_angle,roll_move,climb_move,special,cores,boss_health,targets,terrain_page,face_x,face_y,encounter,radar_alert,chaff_stock,decoys,travel,fuel,mini_hp\n')
@@ -169,8 +175,8 @@ emu.register_frame_done(function()
         local angle = memory:read_u16(fields.s_roll)
         if angle >= 32768 then angle = angle - 65536 end
         log:write(string.format('%s,%d,%x,%x,%d,%d,%x,%d,%d,%d,%d,%d,%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n',
-            string.format('%.3f', now):gsub(',', '.'), frames, machine.devices[':maincpu'].state['PC'].value,
-            machine.devices[':audiocpu'].state['PC'].value, mode,
+            string.format('%.3f', now):gsub(',', '.'), frames, cpu_pc(':maincpu'),
+            cpu_pc(':audiocpu'), mode,
             memory:read_u8(0x10fd00), player, byte('s_energy'), byte('s_stage'),
             byte('s_plane_pose'), math.floor(memory:read_u32(fields.s_camera) / 256) % 512,
             audio:read_u8(0xfe42), audio:read_u8(0xf927), protocol,

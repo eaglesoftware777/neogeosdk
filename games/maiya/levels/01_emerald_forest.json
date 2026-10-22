@@ -4,6 +4,8 @@
   "background": 0,
   "music": 1,
   "mechanic": "none",
+  "upper": 256,
+  "camera_feet_y": 144,
   "pit": "water",
   "blocks": "grass",
   "climb": "vine",
@@ -42,29 +44,34 @@
     "THE LOGGERS' SAWS HAVE FALLEN SILENT"
   ],
   "briefing": [
-    "SAW BOTS FELL THE FOREST FOR THE",
-    "CHAINSAW BEETLE. STOP THEM ALL!"
+    "FIND THE SUN KEY IN THE HIGH BOUGHS",
+    "OPEN THE GATE. FACE THE BEETLE."
   ],
   "platforms": [
     {
-      "x": 480,
-      "y": 128,
-      "w": 48
+      "x": 448,
+      "y": 144,
+      "w": 64
     },
     {
-      "x": 656,
-      "y": 96,
-      "w": 80
+      "x": 608,
+      "y": 112,
+      "w": 64
     },
     {
-      "x": 864,
-      "y": 128,
+      "x": 736,
+      "y": 88,
       "w": 96
     },
     {
-      "x": 1056,
-      "y": 144,
-      "w": 48
+      "x": 944,
+      "y": 120,
+      "w": 64
+    },
+    {
+      "x": 1008,
+      "y": 112,
+      "w": 64
     },
     {
       "x": 1184,
@@ -113,16 +120,12 @@
       "enemy": "slime"
     },
     {
-      "x": 520,
+      "x": 640,
       "enemy": "beetle"
     },
     {
       "x": 760,
       "enemy": "slime"
-    },
-    {
-      "x": 1080,
-      "enemy": "crow"
     },
     {
       "x": 1360,
@@ -218,13 +221,13 @@
   ],
   "secrets": [
     {
-      "x": 500,
-      "y": 88,
+      "x": 480,
+      "y": 104,
       "type": "chest"
     },
     {
-      "x": 688,
-      "y": 56,
+      "x": 640,
+      "y": 72,
       "type": "rose"
     },
     {
@@ -253,6 +256,11 @@
       "x": 700,
       "y": 168,
       "kind": "spring"
+    },
+    {
+      "x": 800,
+      "y": 56,
+      "kind": "silver"
     },
     {
       "x": 1216,
@@ -348,7 +356,7 @@
     },
     {
       "x": 488,
-      "y": 72,
+      "y": 112,
       "kind": "mushroom"
     },
     {
@@ -369,8 +377,8 @@
   ],
   "vines": [
     {
-      "x": 688,
-      "top": 96,
+      "x": 640,
+      "top": 112,
       "bottom": 192
     },
     {
@@ -388,7 +396,7 @@
     {
       "x": 444,
       "who": "elder",
-      "line": "THE GATE OPENS TO THE SUN KEY"
+      "line": "UP: VINES LEAD TO THE GOLDEN SUN KEY"
     },
     {
       "x": 1472,

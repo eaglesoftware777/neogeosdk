@@ -3,6 +3,22 @@
 Sky Lance's ROM sets ship with the NeoGeoSDK pre-releases and are numbered
 on their own: `_v1` with v1.7.3, `_v2` with v1.7.7.
 
+## v3 candidate (2026-10-20, local validation)
+
+- Publish queued video earlier in the game-owned VBlank interrupt.
+- Preload terrain in hidden whole columns rather than uploading a large recycled
+  page at once; keep completed pages visible while the next page is prepared.
+- Reserve independent sprite slots for the sortie player, portrait, enemies,
+  boss and projectiles. Keep optional scenery behind these essential objects.
+- Avoid repeated unchanged HUD writes and fixed-art projectile model checks.
+- Four 80-second MVS stress captures cover stage indices0,1,3,6 and all pilots.
+  They report no terrain preload/identity/partial-visibility or slot-owner faults,
+  and no observed active-display gameplay video writes. Stage0 cadence improves
+  from41.8 to48.7 updates/s; sustained60FPS is not achieved.
+- Existing C/S/M/V payloads are unchanged. NeoSD fullscreen behavior, complete
+  campaign/difficulty, remaining stages, AES and real hardware remain unverified.
+  This is a local candidate; no released or installed cartridge was replaced.
+
 ## v2 (2026-10-18, NeoGeoSDK v1.7.7 pre-release) — the hardware fix
 
 The Hardware RC1 correction below, now a regular set in every format (NeoSD,
