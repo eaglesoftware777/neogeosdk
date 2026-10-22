@@ -106,6 +106,13 @@ void NEOGEO_USER ng_sprite_group_set_priority(NGSpriteGroup *g, uint8_t prio);
 #define NG_VRAM_QUEUE_STRIPS  64u
 #define NG_VRAM_DEADLINE      8u     /* the last line a job may begin before: the picture is at 16 */
 void NEOGEO_USER ng_vram_commit(void);
+/* Optional reservation for one small, already-published actor before bulk
+ * palette/scene work. Whole group only; max8 strips/max16 rows,16-bit tile
+ * window only (wide maps keep their normal/staged path), no streaming
+ * columns. Checks busy, pending hides and the same deadline with50% margin.
+ * Returns1 if complete,0 if pending work cannot safely be consumed.
+ * Call only from the exclusive completed-frame consumer, never the producer. */
+uint8_t NEOGEO_USER ng_sprite_group_commit_small(NGSpriteGroup *g);
 /* Lines left before the deadline (0 while the picture is being drawn), and
  * whether a commit could start now. */
 uint8_t NEOGEO_USER ng_vram_lines_left(void);
@@ -121,6 +128,29 @@ void NEOGEO_USER ng_sprite_hide_range_queued(uint16_t firstSprite, uint16_t coun
  * reinitialise the same group before the next commit; the hide precedes
  * its replacement. The group must remain alive while still queued. */
 void NEOGEO_USER ng_sprite_group_hide_queued(NGSpriteGroup *g);
+/* Exclusive hidden-slot staging, called only by the video owner in VBlank.
+ * Start next_strip at zero; freeze the map/flip/palette until it returns 1.
+ * Each call writes only whole columns that fit, without enabling any slot.
+ * The range must already be parked and must not belong to another group or
+ * pending hide. Do not queue the staging group. Position/visibility may change.
+ * Once complete, present_staged publishes its transform if there is time.
+ * Multi-group cutovers must reserve time for ALL presents and retirement first. */
+uint8_t NEOGEO_USER ng_sprite_group_stage_map(NGSpriteGroup *g, uint8_t *next_strip);
+uint8_t NEOGEO_USER ng_sprite_group_present_staged(NGSpriteGroup *g);
+/* Remove all deferred references before transferring a descriptor to an
+ * exclusive staging owner. Call only while the video batch is unpublished
+ * or from its consumer. Unlike cancel, no list entry retains the pointer. */
+void NEOGEO_USER ng_sprite_group_detach(NGSpriteGroup *g);
+/* Park only ACT/chain controls for a staged bank. Its next owner must write
+ * complete maps and transforms before showing it; other slots are untouched. */
+uint8_t NEOGEO_USER ng_sprite_stage_retire_range(uint16_t first, uint16_t count);
+/* Publish a prepared bank as one bounded operation. SCB2/3/4 are complete
+ * snapshots in hardware slot order; unused slots have ACT=chain=0. Both
+ * exclusive ranges are <=80 strips and cannot overlap. Prepare palettes
+ * and detach old descriptors before calling; no map uploads occur here. */
+uint8_t NEOGEO_USER ng_sprite_stage_swap(uint16_t old_first, uint8_t old_count,
+    uint16_t first, uint8_t count, const uint16_t *scb2,
+    const uint16_t *scb3, const uint16_t *scb4);
 #endif
 void NEOGEO_USER ng_sprite_group_set_tile_base(NGSpriteGroup *g, uint16_t tileBase);
 /* Full 20-bit C-ROM tile address. Addresses above 0xfffff are rejected.

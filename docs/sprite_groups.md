@@ -71,6 +71,14 @@ ng_sprite_group_flush(&player);            // writes the driver position when mo
   before assigning a new one. Call `ng_chars_set_depth_sort(0)` for a scene
   whose priority bands already define a fixed order; restore `1` when Y-depth
   sorting is needed.
+- Fixed-art projectiles in the C engine can opt into
+  `ng_char_set_render_mode(c, NG_CHAR_RENDER_MOVE_ONLY)`. Position, offsets,
+  camera, visibility and VRAM priority continue to update. Sprite setters still
+  invalidate the cached model. Direct writes to tile, palette, palette map,
+  stride, dimensions, active rows, scale or flip require `c->sprite_dirty = 1`.
+  The default `NG_CHAR_RENDER_FULL` keeps detecting those direct field changes;
+  reused character slots return to that default. This option saves CPU model
+  comparisons, not the hardware cost of actually moving a sprite.
 - Limit groups to ≤ 380 total hardware slots across all active groups.
 - For scenery placed every frame, use `ng_sprite_group_show_at(g, tile, palette, x, y)`.
   It does what `set_tile_base`, `set_palette`, `set_pos`, `set_visible(1)` and
@@ -90,3 +98,28 @@ right after the frame's wait for the vertical blank, writes every listed group
 in the state it has then: hides first, then the groups, then the FIX text
 cells. A group that only moved costs two words. See
 [`FRAMEWORK_V1.md`](FRAMEWORK_V1.md) for the whole frame.
+
+## Reserving a small actor before bulk work
+
+The optional C engine `ng_sprite_group_commit_small(g)` consumes one completed
+published group before ordinary queued work. `ng_char_commit_small(c)` uses the
+character renderer's existing published group and slot ownership. Neither call
+changes the model or allocates slots. Default queue policy and all other games
+remain unchanged until they opt in.
+
+Use these only in the exclusive VBlank consumer after taking a completed frame,
+for example before a large full-screen palette fade. They reject reentrant writers,
+active display, insufficient whole-group budget, pending hides, streaming-column
+ownership, wide tile-address windows and footprints beyond eight strips/sixteen rows.
+Wide maps retain their existing normal/staged writer. The same conservative
+cost estimate plus50% margin applies. Pending work remains untouched on rejection.
+Successful uploads detach all queued references, so the ordinary commit cannot
+repeat an old request or resurrect removed ownership. Existing queued hides must
+still run first when they overlap the actor.
+
+An upload which reserves time for the actor may defer a whole-screen palette step.
+The palette writer keeps its own all-bank deadline and never splits that fade to
+force it through. This path does not make large scenery transfers safe: use hidden
+staging for those. Verify actual write windows, queue latency, palette behavior,
+scene transitions and physical hardware for each adopter. See [frame_sync.md](frame_sync.md)
+for publication ownership and [the host regression](../tests/sprite_deferred_test.c).

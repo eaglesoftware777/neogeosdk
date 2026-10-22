@@ -32,7 +32,7 @@
 #define TIME_LOW      600u
 #define DEFAULT_SEED  0x2545F491u
 #define SAVE_MAGIC    0x4E47505Au   /* 'NGPZ' */
-#define SAVE_VERSION  1u
+#define SAVE_VERSION  2u
 
 /* ======================================================================
  * helpers
@@ -927,13 +927,14 @@ static uint8_t NEOGEO_USER attach_cell(const NGPuzzle *p, int16_t x, int16_t y)
 
 /* One substep. Returns 0 still flying, 1 stuck (cell set), 2 lost.
  * *bounce gets 1 or 2 for a rebound off the left or right wall. */
-static uint8_t NEOGEO_USER flight_step(const NGPuzzle *p, Flight *f, uint8_t *cell, uint8_t *bounce)
+static uint8_t NEOGEO_USER flight_step(const NGPuzzle *p, Flight *f, uint8_t *cell, uint8_t *bounce, uint8_t *hit)
 {
     int32_t rad = (int32_t)(p->level->bubble_d >> 1) << 8;
     int32_t wide = (int32_t)((uint16_t)p->w * (uint16_t)p->level->bubble_d) << 8;   /* mulu.w */
     int16_t x, y, r0, r, c;
     int32_t hit2 = (int32_t)((uint16_t)(p->level->bubble_d - 2u) * (uint16_t)(p->level->bubble_d - 2u));
     *bounce = 0;
+    if (hit) *hit = NGP_NO_CELL;
     f->x += f->vx; f->y += f->vy; f->steps++;
     if (f->x < rad) { f->x = 2 * rad - f->x; f->vx = -f->vx; *bounce = 1; }
     else if (f->x > wide - rad) { f->x = 2 * (wide - rad) - f->x; f->vx = -f->vx; *bounce = 2; }
@@ -953,6 +954,7 @@ static uint8_t NEOGEO_USER flight_step(const NGPuzzle *p, Flight *f, uint8_t *ce
             cc = (uint8_t)((uint8_t)r * p->w + (uint8_t)c);
             if (!occupied(p, cc)) continue;
             if (dist2(p, cc, x, y) < hit2) {
+                if (hit) *hit = cc;
                 *cell = attach_cell(p, x, y);
                 return (uint8_t)(*cell == NGP_NO_CELL ? 2u : 1u);
             }
@@ -962,19 +964,20 @@ static uint8_t NEOGEO_USER flight_step(const NGPuzzle *p, Flight *f, uint8_t *ce
     return 0;
 }
 
-uint8_t NEOGEO_USER ng_puzzle_bubble_preview(const NGPuzzle *p, uint16_t angle, NGPuzzlePoint *pts,
-                                             uint8_t max, uint8_t *cell)
+static uint8_t NEOGEO_USER bubble_trace(const NGPuzzle *p, uint16_t angle, NGPuzzlePoint *pts,
+                                       uint8_t max, uint8_t *cell, uint8_t *hit)
 {
     Flight f;
     uint8_t n = 0, res = 0, bounce, at = NGP_NO_CELL;
     if (cell) *cell = NGP_NO_CELL;
-    if (!p || p->mode != NGP_MODE_BUBBLE) return 0;
+    if (hit) *hit = NGP_NO_CELL;
+    if (!p || !p->level || p->mode != NGP_MODE_BUBBLE) return 0;
     if (angle < aim_lo(p)) angle = aim_lo(p);
     if (angle > aim_hi(p)) angle = aim_hi(p);
     flight_start(p, angle, &f);
     if (pts && n < max) { pts[n].x = (int16_t)(f.x >> 8); pts[n].y = (int16_t)(f.y >> 8); n++; }
     while (!res) {
-        res = flight_step(p, &f, &at, &bounce);
+        res = flight_step(p, &f, &at, &bounce, hit);
         if (bounce && pts && n < max) { pts[n].x = (int16_t)(f.x >> 8); pts[n].y = (int16_t)(f.y >> 8); n++; }
     }
     if (res == 1) {
@@ -984,6 +987,77 @@ uint8_t NEOGEO_USER ng_puzzle_bubble_preview(const NGPuzzle *p, uint16_t angle, 
         if (cell) *cell = at;
     }
     return n;
+}
+
+uint8_t NEOGEO_USER ng_puzzle_bubble_preview(const NGPuzzle *p, uint16_t angle, NGPuzzlePoint *pts,
+                                             uint8_t max, uint8_t *cell)
+{
+    return bubble_trace(p, angle, pts, max, cell, 0);
+}
+
+uint8_t NEOGEO_USER ng_puzzle_bubble_target(const NGPuzzle *p, uint16_t angle)
+{
+    uint8_t hit;
+    bubble_trace(p, angle, 0, 0, 0, &hit);
+    return hit;
+}
+
+uint8_t NEOGEO_USER ng_puzzle_preview_begin(NGPuzzlePreview *q, const NGPuzzle *p,
+                                            uint16_t angle, uint32_t generation)
+{
+    Flight f;
+    if (!q) return NGP_PREVIEW_INVALID;
+    q->source = 0; q->level = 0;
+    q->state = NGP_PREVIEW_INVALID; q->count = 0;
+    q->cell = q->hit = NGP_NO_CELL;
+    if (!p || !p->level || p->mode != NGP_MODE_BUBBLE) return q->state;
+    q->requested_angle = angle;
+    if (angle < aim_lo(p)) angle = aim_lo(p);
+    if (angle > aim_hi(p)) angle = aim_hi(p);
+    flight_start(p, angle, &f);
+    q->source = p; q->level = p->level; q->generation = generation;
+    q->parity = p->parity; q->angle = angle; q->steps = 0;
+    q->x_q8 = f.x; q->y_q8 = f.y; q->vx_q8 = f.vx; q->vy_q8 = f.vy;
+    q->points[0].x = (int16_t)(f.x >> 8); q->points[0].y = (int16_t)(f.y >> 8);
+    q->count = 1; q->state = NGP_PREVIEW_BUSY;
+    return q->state;
+}
+
+uint8_t NEOGEO_USER ng_puzzle_preview_step(NGPuzzlePreview *q, const NGPuzzle *p,
+                                           uint32_t generation, uint8_t budget)
+{
+    Flight f;
+    uint8_t i, res = 0, cell = NGP_NO_CELL, hit = NGP_NO_CELL, bounce;
+    if (!q) return NGP_PREVIEW_INVALID;
+    if (q->state != NGP_PREVIEW_BUSY && q->state != NGP_PREVIEW_READY) return q->state;
+    if (!p || p != q->source || generation != q->generation || p->level != q->level ||
+        p->mode != NGP_MODE_BUBBLE || p->parity != q->parity) {
+        q->state = NGP_PREVIEW_CANCELLED; q->count = 0;
+        q->cell = q->hit = NGP_NO_CELL;
+        return q->state;
+    }
+    if (q->state == NGP_PREVIEW_READY || !budget) return q->state;
+    if (budget > NGP_PREVIEW_MAX_STEPS) budget = NGP_PREVIEW_MAX_STEPS;
+    f.x = q->x_q8; f.y = q->y_q8; f.vx = q->vx_q8; f.vy = q->vy_q8; f.steps = q->steps;
+    for (i = 0; i < budget && !res; i++) {
+        res = flight_step(p, &f, &cell, &bounce, &hit);
+        if (bounce && q->count < NGP_PREVIEW_POINTS) {
+            q->points[q->count].x = (int16_t)(f.x >> 8);
+            q->points[q->count].y = (int16_t)(f.y >> 8); q->count++;
+        }
+    }
+    q->x_q8 = f.x; q->y_q8 = f.y; q->vx_q8 = f.vx; q->vy_q8 = f.vy; q->steps = f.steps;
+    if (res) {
+        q->state = NGP_PREVIEW_READY; q->hit = hit;
+        if (res == 1) {
+            q->cell = cell;
+            if (q->count < NGP_PREVIEW_POINTS) {
+                bubble_center(p, cell, &q->points[q->count].x, &q->points[q->count].y);
+                q->count++;
+            }
+        }
+    }
+    return q->state;
 }
 
 /* Same-colour group through cell (its colour col), into p->queue-like
@@ -1259,7 +1333,7 @@ void NEOGEO_USER ng_puzzle_update(NGPuzzle *p)
         uint8_t i, n = substeps(p), res = 0, cell = NGP_NO_CELL, bounce;
         f.x = p->shot_x_q8; f.y = p->shot_y_q8; f.vx = p->shot_vx_q8; f.vy = p->shot_vy_q8; f.steps = 0;
         for (i = 0; i < n && !res; i++) {
-            res = flight_step(p, &f, &cell, &bounce);
+            res = flight_step(p, &f, &cell, &bounce, 0);
             if (bounce) emit(p, NGP_EV_BOUNCE, NGP_NO_CELL, (uint8_t)(bounce - 1u), 0, 0);
         }
         p->shot_x_q8 = f.x; p->shot_y_q8 = f.y; p->shot_vx_q8 = f.vx; p->shot_vy_q8 = f.vy;
@@ -1591,13 +1665,45 @@ static uint32_t NEOGEO_USER fnv32(uint32_t h, uint32_t v)
     return fnv(h, b, 4);
 }
 
+/* Keep the v1 identity solely for reading already-written saves. */
+static uint32_t NEOGEO_USER level_id_v1(const NGPuzzleLevel *lv)
+{
+    uint32_t h = fnv32(2166136261u, ((uint32_t)lv->mode << 24) | ((uint32_t)lv->w << 16) | ((uint32_t)lv->h << 8) | lv->colors);
+    h = fnv32(h, lv->seed);
+    if (lv->layout) {
+        const char *s = lv->layout;
+        while (*s) { uint8_t ch = (uint8_t)*s++; h = fnv(h, &ch, 1); }
+    }
+    return h;
+}
+
+static uint32_t NEOGEO_USER level_id(const NGPuzzleLevel *lv)
+{
+    uint8_t i;
+    uint32_t h = level_id_v1(lv);
+    h = fnv32(h, ((uint32_t)lv->moves << 16) | lv->time_frames);
+    h = fnv32(h, lv->flags);
+    for (i = 0; i < NGP_MAX_OBJ; i++)
+        h = fnv32(h, ((uint32_t)lv->goals[i].type << 24) | ((uint32_t)lv->goals[i].target << 16) | lv->goals[i].count);
+    for (i = 0; i < 3u; i++) h = fnv32(h, lv->stars[i]);
+    if (lv->mode == NGP_MODE_BUBBLE) {
+        h = fnv32(h, ((uint32_t)lv->bubble_d << 24) | ((uint32_t)lv->row_h << 16) | ((uint32_t)lv->loss_row << 8) | lv->push_every);
+        h = fnv32(h, ((uint32_t)lv->miss_limit << 8) | lv->first_shifted);
+        h = fnv32(h, ((uint32_t)(uint16_t)lv->launch_x << 16) | (uint16_t)lv->launch_y);
+        h = fnv32(h, lv->shot_speed_q8);
+        h = fnv32(h, ((uint32_t)lv->aim_min << 16) | lv->aim_max);
+    }
+    return h;
+}
+
 uint32_t NEOGEO_USER ng_puzzle_hash(const NGPuzzle *p)
 {
     uint32_t h = 2166136261u;
     uint16_t n;
     uint8_t g;
-    if (!p) return 0;
+    if (!p || !p->level || p->w > NGP_MAX_W || p->h > NGP_MAX_H) return 0;
     n = (uint16_t)((uint16_t)p->w * p->h);
+    h = fnv32(h, level_id(p->level));
     h = fnv32(h, ((uint32_t)p->mode << 24) | ((uint32_t)p->w << 16) | ((uint32_t)p->h << 8) | p->colors);
     h = fnv(h, p->color, n); h = fnv(h, p->kind, n); h = fnv(h, p->cover, n);
     h = fnv32(h, p->score);
@@ -1606,20 +1712,13 @@ uint32_t NEOGEO_USER ng_puzzle_hash(const NGPuzzle *p)
     for (g = 0; g < NGP_MAX_OBJ; g++) h = fnv32(h, p->goal_left[g]);
     h = fnv32(h, ((uint32_t)p->state << 24) | ((uint32_t)p->end_reason << 16) | ((uint32_t)p->cascade << 8) | p->stars);
     h = fnv32(h, p->rng);
+    h = fnv32(h, p->seed);
+    h = fnv32(h, ((uint32_t)p->tick << 16) | ((uint32_t)p->specials_made << 8) | p->shuffles);
+    h = fnv32(h, ((uint32_t)p->shot_kind << 24) | ((uint32_t)p->attach_cell << 16) | ((uint32_t)p->swap_a << 8) | p->swap_b);
     h = fnv32(h, ((uint32_t)p->angle << 16) | ((uint32_t)p->shot_color << 8) | p->next_color);
     h = fnv32(h, ((uint32_t)p->misses << 16) | ((uint32_t)p->shots_since_row << 8) | p->parity);
     h = fnv32(h, (uint32_t)p->shot_x_q8); h = fnv32(h, (uint32_t)p->shot_y_q8);
-    return h;
-}
-
-static uint32_t NEOGEO_USER level_id(const NGPuzzleLevel *lv)
-{
-    uint32_t h = fnv32(2166136261u, ((uint32_t)lv->mode << 24) | ((uint32_t)lv->w << 16) | ((uint32_t)lv->h << 8) | lv->colors);
-    h = fnv32(h, lv->seed);
-    if (lv->layout) {
-        const char *s = lv->layout;
-        while (*s) { uint8_t ch = (uint8_t)*s++; h = fnv(h, &ch, 1); }
-    }
+    h = fnv32(h, (uint32_t)p->shot_vx_q8); h = fnv32(h, (uint32_t)p->shot_vy_q8);
     return h;
 }
 
@@ -1649,7 +1748,9 @@ uint16_t NEOGEO_USER ng_puzzle_save(const NGPuzzle *p, uint8_t *b, uint16_t size
 {
     uint16_t o = 0, n;
     uint8_t g;
-    if (!p || !p->level || !b || size < NGP_SAVE_SIZE) return 0;
+    if (!p || !p->level || !b || size < NGP_SAVE_SIZE ||
+        p->w != p->level->w || p->h != p->level->h ||
+        p->w > NGP_MAX_W || p->h > NGP_MAX_H) return 0;
     n = (uint16_t)((uint16_t)p->w * p->h);
     o = put32(b, o, SAVE_MAGIC);
     b[o++] = SAVE_VERSION; b[o++] = p->state; b[o++] = p->cascade; b[o++] = p->end_reason;
@@ -1669,23 +1770,52 @@ uint16_t NEOGEO_USER ng_puzzle_save(const NGPuzzle *p, uint8_t *b, uint16_t size
     b[o++] = p->parity; b[o++] = p->attach_cell; b[o++] = p->swap_a; b[o++] = p->swap_b;
     o = put32(b, o, (uint32_t)p->shot_x_q8); o = put32(b, o, (uint32_t)p->shot_y_q8);
     o = put32(b, o, (uint32_t)p->shot_vx_q8); o = put32(b, o, (uint32_t)p->shot_vy_q8);
+    /* Accidental-corruption check, not an authentication signature. */
+    o = put32(b, o, fnv(2166136261u, b, o));
     return o;
 }
 
 int NEOGEO_USER ng_puzzle_load(NGPuzzle *p, const NGPuzzleLevel *lv, const uint8_t *b, uint16_t size)
 {
-    uint16_t o = 0, n;
+    uint16_t o = 0, n, payload, c;
     uint8_t g, ver, st, cas, end;
     int rc;
     if (!p || !lv || !b || size < 24u) return NGP_ERR_ARG;
     if (get32(b, 0) != SAVE_MAGIC) return NGP_ERR_SAVE;
     ver = b[4]; st = b[5]; cas = b[6]; end = b[7];
-    if (ver != SAVE_VERSION || st > ST_LOST) return NGP_ERR_SAVE;
-    if (get32(b, 8) != level_id(lv)) return NGP_ERR_SAVE;
+    if ((ver != 1u && ver != SAVE_VERSION) || st > ST_LOST || end > NGP_END_SHOTS) return NGP_ERR_SAVE;
+    rc = ng_puzzle_level_check(lv, 0);
+    if (rc != NGP_OK) return rc;
+    if (get32(b, 8) != (ver == 1u ? level_id_v1(lv) : level_id(lv))) return NGP_ERR_SAVE;
+    /* Reject every truncated payload BEFORE init clears the caller's live
+     * board, event queue and progress. Dimensions are validated above. */
+    n = (uint16_t)((uint16_t)lv->w * lv->h);
+    payload = (uint16_t)(24u + 3u * n + 2u * NGP_MAX_OBJ + 12u + 12u + 16u);
+    if (size < (uint16_t)(payload + (ver == SAVE_VERSION ? 4u : 0u))) return NGP_ERR_SAVE;
+    if (ver == SAVE_VERSION && get32(b, payload) != fnv(2166136261u, b, payload)) return NGP_ERR_SAVE;
+    /* Validate indices/enums before any mutation, also for legacy payloads
+     * which have no checksum. No temporary full context on the 68000 stack. */
+    if ((lv->mode == NGP_MODE_MATCH && (st == ST_FLIGHT || st == ST_POP)) ||
+        (lv->mode == NGP_MODE_BUBBLE && st >= ST_MATCH && st <= ST_SETTLE)) return NGP_ERR_SAVE;
+    if ((st >= ST_WON) != (end != NGP_END_NONE) || !get32(b, 12) || !get32(b, 16)) return NGP_ERR_SAVE;
+    for (c = 0; c < n; c++) {
+        uint8_t col = b[24u + c], kind = b[24u + n + c], cover = b[24u + 2u * n + c];
+        if (col > lv->colors && col != NGP_COLOR_PRISM && col != NGP_COLOR_STONE) return NGP_ERR_SAVE;
+        if (kind > NGP_KIND_RESCUE || (cover & 0x0Cu)) return NGP_ERR_SAVE;
+        if (lv->mode == NGP_MODE_MATCH && (col == NGP_COLOR_STONE || kind > NGP_KIND_PRISM)) return NGP_ERR_SAVE;
+        if (lv->mode == NGP_MODE_BUBBLE && (col == NGP_COLOR_PRISM || cover)) return NGP_ERR_SAVE;
+        if (!col && kind != NGP_KIND_PLAIN) return NGP_ERR_SAVE;
+        if ((cover & (NGP_COVER_WALL | NGP_COVER_CRATE)) && col) return NGP_ERR_SAVE;
+        if (lv->mode == NGP_MODE_MATCH && ((col == NGP_COLOR_PRISM) != (kind == NGP_KIND_PRISM))) return NGP_ERR_SAVE;
+    }
+    o = (uint16_t)(24u + 3u * n + 2u * NGP_MAX_OBJ + 12u);
+    if (b[o] > 3u || b[o + 3u] > lv->colors || b[o + 4u] > lv->colors ||
+        b[o + 5u] > NGP_KIND_RESCUE || b[o + 8u] > 1u || get16(b, (uint16_t)(o - 2u)) >= 1024u) return NGP_ERR_SAVE;
+    for (g = 9u; g < 12u; g++)
+        if (b[o + g] != NGP_NO_CELL && b[o + g] >= n) return NGP_ERR_SAVE;
+    if ((b[o + 10u] == NGP_NO_CELL) != (b[o + 11u] == NGP_NO_CELL)) return NGP_ERR_SAVE;
     rc = ng_puzzle_init(p, lv, get32(b, 12));
     if (rc != NGP_OK) return rc;
-    n = (uint16_t)((uint16_t)p->w * p->h);
-    if (size < (uint16_t)(24u + 3u * n + 2u * NGP_MAX_OBJ + 12u + 12u + 16u)) return NGP_ERR_SAVE;
     o = 16;
     p->rng = get32(b, o); o = (uint16_t)(o + 4u);
     p->score = get32(b, o); o = (uint16_t)(o + 4u);

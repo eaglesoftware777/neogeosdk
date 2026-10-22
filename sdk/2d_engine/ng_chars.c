@@ -11,6 +11,7 @@ static uint8_t ng_char_uploaded_strips[NG_MAX_CHARS];
 static uint16_t ng_char_uploaded_first[NG_MAX_CHARS];
 /* Hardware slot a character is pinned to (ng_char_pin_sprite), or 0xffff. */
 static uint16_t ng_char_pinned_first[NG_MAX_CHARS];
+static uint8_t ng_char_render_mode[NG_MAX_CHARS];
 static NGSpriteGroup ng_char_groups[NG_MAX_CHARS];
 static uint8_t ng_char_depth_sort = 1u;
 static uint8_t ng_palette_owner[64];
@@ -100,6 +101,7 @@ void NEOGEO_USER ng_chars_init(void)
         ng_char_uploaded_strips[i] = 0;
         ng_char_uploaded_first[i] = 0xffff;
         ng_char_pinned_first[i] = 0xffff;
+        ng_char_render_mode[i] = NG_CHAR_RENDER_FULL;
     }
 
     for (i = 0; i < NG_MAX_CHAR_KINDS; i++) {
@@ -159,6 +161,7 @@ NGCharacter* NEOGEO_USER chars_add(uint8_t kind, int16_t x, int16_t y)
             ng_char_uploaded_strips[i] = 0;
             ng_char_uploaded_first[i] = 0xffff;
             ng_char_pinned_first[i] = 0xffff;
+            ng_char_render_mode[i] = NG_CHAR_RENDER_FULL;
 
             c->body_x = 0;
             c->body_y = 0;
@@ -305,6 +308,7 @@ void NEOGEO_USER ng_chars_reset_slot(uint8_t index)
 
     ng_char_uploaded_strips[index] = 0;
     ng_char_uploaded_first[index] = 0xffff;
+    ng_char_render_mode[index] = NG_CHAR_RENDER_FULL;
 
     c->active = 0;
     c->visible = 0;
@@ -615,9 +619,19 @@ void NEOGEO_USER ng_chars_draw(void)
         visibleStrips = c->sprite_strips ? c->sprite_strips : 1;
         if (visibleStrips > NG_SPRITE_MAX_STRIPS) visibleStrips = NG_SPRITE_MAX_STRIPS;
 
-        ng_char_sync_group(&ng_char_groups[idx], c, visibleStrips,
-                           (uint8_t)(ng_char_uploaded_first[idx] == 0xffffu),
-                           camera_x, camera_y);
+        if (ng_char_render_mode[idx] == NG_CHAR_RENDER_MOVE_ONLY &&
+            !c->sprite_dirty && ng_char_uploaded_first[idx] != 0xffffu) {
+            NGSpriteGroup *g = &ng_char_groups[idx];
+            g->prio = c->vram_prio;
+            ng_sprite_group_set_pos(g,
+                (int16_t)(c->x + c->sprite_offset_x - camera_x),
+                (int16_t)(c->y + c->sprite_offset_y - camera_y));
+            ng_sprite_group_flush(g);
+        } else {
+            ng_char_sync_group(&ng_char_groups[idx], c, visibleStrips,
+                               (uint8_t)(ng_char_uploaded_first[idx] == 0xffffu),
+                               camera_x, camera_y);
+        }
         ng_char_uploaded_strips[idx] = visibleStrips;
         ng_char_uploaded_first[idx] = c->sprite_first;
     }
@@ -737,6 +751,14 @@ void NEOGEO_USER ng_char_set_vram_priority(NGCharacter *c, uint8_t prio)
     if (c) c->vram_prio = prio;
 }
 
+void NEOGEO_USER ng_char_set_render_mode(NGCharacter *c, uint8_t mode)
+{
+    uint8_t i = ng_chars_index(c);
+    if (i == 0xffu || mode > NG_CHAR_RENDER_MOVE_ONLY) return;
+    ng_char_render_mode[i] = mode;
+    c->sprite_dirty = 1u;
+}
+
 void NEOGEO_USER ng_char_pin_sprite(NGCharacter *c, uint16_t firstSprite)
 {
     uint8_t i;
@@ -750,6 +772,19 @@ void NEOGEO_USER ng_char_pin_sprite(NGCharacter *c, uint16_t firstSprite)
     ng_char_pinned_first[i] = firstSprite;
     c->sprite_dirty = 1;
 }
+
+#ifdef NG_VRAM_DEFER
+uint8_t NEOGEO_USER ng_char_commit_small(NGCharacter *c)
+{
+    uint8_t i = ng_chars_index(c);
+    if (i == 0xFFu || !c->active || !c->visible ||
+        ng_char_uploaded_first[i] == 0xFFFFu ||
+        ng_char_uploaded_first[i] != c->sprite_first ||
+        ng_char_groups[i].firstSprite != c->sprite_first)
+        return 0u;
+    return ng_sprite_group_commit_small(&ng_char_groups[i]);
+}
+#endif
 
 void NEOGEO_USER ng_char_set_cull_margin(NGCharacter *c, int16_t l, int16_t r, int16_t t, int16_t b)
 {

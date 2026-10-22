@@ -134,6 +134,20 @@ NGCharacter* NEOGEO_USER chars_add(uint8_t kind, int16_t x, int16_t y);
 /* How soon its sprite changes reach the screen when a blank is short
  * (NG_SG_PRIO_*, ng_sprite_group.h): the player is HIGH. */
 void NEOGEO_USER ng_char_set_vram_priority(NGCharacter *c, uint8_t prio);
+/* C engine opt-in for fixed-art objects. Position, offsets, camera, visibility
+ * and VRAM priority remain live. Sprite setters invalidate the cached model.
+ * After ANY direct change to tile/stride/palette/map/rows/scale/flip, set
+ * c->sprite_dirty = 1. Default FULL detects direct changes as before.
+ * Slot reuse resets FULL; this does not change NGCharacter's layout. */
+#define NG_CHAR_RENDER_FULL 0u
+#define NG_CHAR_RENDER_MOVE_ONLY 1u
+void NEOGEO_USER ng_char_set_render_mode(NGCharacter *c, uint8_t mode);
+#ifdef NG_VRAM_DEFER
+/* Consume its existing published small sprite group before bulk/fade work.
+ * No model changes or slot allocation occur here. Same consumer-only contract
+ * and bounded footprint as ng_sprite_group_commit_small(). */
+uint8_t NEOGEO_USER ng_char_commit_small(NGCharacter *c);
+#endif
 /* Keep its sprite_strips hardware slots from firstSprite (inside
  * NG_SPR_CHAR_FIRST..NG_SPR_CHAR_LAST) instead of the depth sorter's: the
  * others are placed below the lowest pinned slot, and the pinned char draws
