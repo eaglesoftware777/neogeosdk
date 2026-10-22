@@ -51,6 +51,9 @@ tests/genre_*.o
 # make neo GAME=<name>: NeoSD images and MAME test sets, rebuilt on demand
 dist/neo/
 
+# CD build artifacts
+out/neocd/
+
 # Setup wizards: rebuilt for each release and uploaded with it
 dist/*_Setup_Wizard.zip
 dist/*_Setup.zip

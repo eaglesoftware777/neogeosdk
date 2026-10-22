@@ -27,6 +27,15 @@ int main()
     if (ng_puzzle_action(&puzzle, NGP_CMD_SWAP, c, d) != NGP_OK) return 3;
     ng_puzzle_settle(&puzzle);
     if (ng_puzzle_status(&puzzle) == NGP_STATUS_BUSY || puzzle.score == 0) return 4;
+    lv.mode = NGP_MODE_BUBBLE; lv.bubble_d = 16; lv.row_h = 14; lv.loss_row = 7;
+    lv.launch_x = 64; lv.launch_y = 128; lv.shot_speed_q8 = 1536;
+    if (ng_puzzle_init(&puzzle, &lv, 0) != NGP_OK) return 14;
+    NGPuzzlePreview preview{};
+    if (ng_puzzle_preview_begin(&preview, &puzzle, 768, 1) != NGP_PREVIEW_BUSY) return 15;
+    for (int i = 0; i < 600 && preview.state == NGP_PREVIEW_BUSY; i++)
+        ng_puzzle_preview_step(&preview, &puzzle, 1, 8);
+    if (preview.state != NGP_PREVIEW_READY || preview.cell == NGP_NO_CELL ||
+        ng_puzzle_bubble_target(&puzzle, 768) != NGP_NO_CELL) return 16;
 
     // mahjong
     if (ng_mahjong_init(&table, nullptr, 9) != NGM_OK) return 5;

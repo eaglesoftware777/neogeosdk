@@ -193,6 +193,11 @@ static void test_aged_content_obeys_deadline(void)
     ng_vram_test_line = 7u;
     ngsg_commit_aged();
     assert(writes == before && (g.dirty & NG_SGF_DIRTY_TILE));
+    /* Being old must not let a full map start in a two-line tail. */
+    ng_vram_test_line = NG_VRAM_DEADLINE - 2u;
+    ngsg_commit_aged();
+    assert(writes == before && pending() == 1u);
+    assert(ngsg_head[1] == &g && (g.dirty & NG_SGF_DIRTY_TILE));
     ng_vram_test_line = 240u;
     ng_vram_commit();
     assert(pending() == 0u && map_tile(96, 0) == 900u);
@@ -250,6 +255,271 @@ static void test_cancel_drops_owned_streaming_columns(void)
     ngsg_queue_drop();
 }
 
+static void test_hidden_map_staging_keeps_live_pose(void)
+{
+    NGSpriteGroup live, next;
+    uint8_t column = 0u;
+    unsigned before;
+    ngsg_queue_drop(); memset(ram, 0, sizeof(ram));
+    ng_vram_test_line = 240u;
+    ng_sprite_group_init(&live, 96u, 8u, 8u, 2000u, 20u);
+    ng_sprite_group_upload(&live);
+    ng_sprite_group_init(&next, 176u, 8u, 8u, 3000u, 21u);
+    ng_sprite_group_set_flip(&next, 1u, 0u);
+    before = writes;
+    ng_vram_test_line = NG_VRAM_DEADLINE - 7u;
+    assert(!ng_sprite_group_stage_map(&next, &column));
+    assert(column == 0u && writes == before);
+    assert(!ng_sprite_group_present_staged(&next));
+    words_per_line = 24u; raster_words = 0u;
+    ng_vram_test_line = 240u;
+    while (!ng_sprite_group_stage_map(&next, &column)) {
+        assert(column < next.strips && column > 0u);
+        assert(act_of(live.firstSprite) == 8u);
+        assert(act_of(next.firstSprite) == 0u);
+        assert(!ng_sprite_group_present_staged(&next));
+        ng_vram_test_line = 240u;
+    }
+    assert(act_of(next.firstSprite) == 0u && act_of(live.firstSprite) == 8u);
+    assert(map_tile(176u, 0u) == 3007u);
+    assert(map_tile(183u, 7u) == 3056u);
+    assert(map_tile(176u, 8u) == NG_SPRITE_BLANK_TILE);
+    before = writes;
+    ng_vram_test_line = NG_VRAM_DEADLINE - 2u;
+    assert(!ng_sprite_group_present_staged(&next) && writes == before);
+    words_per_line = 0u; ng_vram_test_line = 240u;
+    assert(ng_sprite_group_present_staged(&next));
+    ng_sprite_park_off_range(live.firstSprite, live.strips);
+    assert(act_of(live.firstSprite) == 0u && act_of(next.firstSprite) == 8u);
+    assert(next.readyRows == 8u && !next.dirty);
+}
+
+static void test_staging_detaches_previous_queue_owner(void)
+{
+    NGSpriteGroup g, other;
+    uint8_t column = 0u;
+    ngsg_queue_drop(); memset(ram, 0, sizeof(ram));
+    ng_sprite_group_init(&g, 96u, 8u, 8u, 2000u, 20u);
+    ng_sprite_group_init(&other, 176u, 8u, 8u, 3000u, 21u);
+    ng_sprite_group_flush(&g); ng_sprite_group_flush(&other);
+    ngsg_list_strip(&g, 0u, 2u);
+    ngsg_head[1] = &g; ngsg_head_age[1] = 3u;
+    ng_sprite_group_detach(&g);
+    assert(pending() == 1u && ngsg_norm[0] == &other);
+    assert(!g.dirty && !ngsg_strips_n && !ngsg_head[1]);
+    ng_sprite_group_init(&g, 96u, 8u, 8u, 4000u, 20u);
+    ng_vram_test_line = 240u;
+    assert(ng_sprite_group_stage_map(&g, &column));
+    /* A generic commit must not enable this descriptor while its new
+     * owner is still assembling a multi-group presentation. */
+    ng_vram_commit();
+    assert(!act_of(96u) && act_of(176u) == 8u);
+    assert(ng_sprite_group_present_staged(&g));
+    assert(ng_sprite_stage_retire_range(176u, 8u));
+    assert(act_of(96u) == 8u && !act_of(176u));
+    assert(!(ram[SCB3_ADDR + 177u] & 0x40u));
+}
+
+static void test_whole_bank_cutover_is_bounded(void)
+{
+    uint16_t scale[80], pos[80], x[80];
+    unsigned i, before;
+    memset(ram, 0, sizeof(ram));
+    for (i = 0u; i < 80u; i++) {
+        scale[i] = 0x0FFFu; pos[i] = i ? 0x48u : 0xA008u; x[i] = 0x4000u;
+        ram[SCB3_ADDR + 77u + i] = pos[i];
+    }
+    before = writes;
+    /* A short safe tail must leave BOTH banks untouched. */
+    ng_vram_test_line = 249u;
+    assert(!ng_sprite_stage_swap(77u, 80u, 157u, 80u, scale, pos, x));
+    assert(writes == before && act_of(77u) == 8u && !act_of(157u));
+    words_per_line = 24u; raster_words = 0u; ng_vram_test_line = 240u;
+    assert(ng_sprite_stage_swap(77u, 80u, 157u, 80u, scale, pos, x));
+    assert(ng_vram_window_open() && !act_of(77u) && act_of(157u) == 8u);
+    for (i = 0u; i < 80u; i++) {
+        assert(!(ram[SCB3_ADDR + 77u + i] & 0x7Fu));
+        assert(ram[SCB2_ADDR + 157u + i] == scale[i]);
+        assert(ram[SCB3_ADDR + 157u + i] == pos[i]);
+        assert(ram[SCB4_ADDR + 157u + i] == x[i]);
+    }
+    before = writes;
+    assert(!ng_sprite_stage_swap(77u, 80u, 100u, 80u, scale, pos, x));
+    assert(writes == before); /* Overlap cannot retire live staging data. */
+    words_per_line = 0u;
+}
+
+static void test_staged_map_crosses_64k_tiles_without_wrapping(void)
+{
+    NGSpriteGroup g;
+    uint8_t column = 0u;
+    unsigned before;
+    ngsg_queue_drop(); memset(ram, 0, sizeof(ram));
+    ng_sprite_group_init(&g, 96u, 2u, 2u, 0xFFFFu, 21u);
+    ng_sprite_group_set_flip(&g, 1u, 0u);
+    before = writes; ng_vram_test_line = 261u; /* Eleven lines, wide path needs twelve. */
+    assert(!ng_sprite_group_stage_map(&g, &column));
+    assert(!column && writes == before);
+    ng_vram_test_line = 240u;
+    assert(ng_sprite_group_stage_map(&g, &column));
+    assert(map_tile(96u, 0u) == 0u && map_tile(96u, 1u) == 2u);
+    assert(ram[(96u << 6) + 1u] == (uint16_t)((21u << 8) | 0x11u));
+    assert(map_tile(97u, 0u) == 0xFFFFu && map_tile(97u, 1u) == 1u);
+    assert(ram[(97u << 6) + 1u] == (uint16_t)((21u << 8) | 1u));
+    assert(ram[(97u << 6) + 3u] == (uint16_t)((21u << 8) | 0x11u));
+    assert(map_tile(96u, 2u) == NG_SPRITE_BLANK_TILE);
+    assert(!act_of(96u));
+}
+
+static void test_move_only_character_model_lifecycle(void)
+{
+    NGCharacter *c;
+    uint16_t first;
+    unsigned before;
+    ngsg_queue_drop(); memset(ram, 0, sizeof(ram));
+    ng_vram_test_line = 240u;
+    ng_chars_init();
+    c = chars_add(1u, 50, 60);
+    ng_char_set_sprite(c, 0u, 1u, 1u, 100u, 20u);
+    ng_char_set_render_mode(c, NG_CHAR_RENDER_MOVE_ONLY);
+    ng_chars_draw(); ng_vram_commit();
+    first = c->sprite_first;
+    assert(map_tile(first, 0u) == 100u && act_of(first) == 1u);
+    /* A stationary frame does no hardware work. Movement needs controls,
+     * not another map; poison one map word to detect accidental reupload. */
+    before = writes;
+    ng_chars_draw(); ng_vram_commit();
+    assert(writes == before);
+    ram[first * 64u] = 0x1234u;
+    c->x += 3; c->sprite_offset_x = 2;
+    ng_chars_draw(); ng_vram_commit();
+    assert(ram[SCB4_ADDR + first] == setSCB4(55u));
+    assert(map_tile(first, 0u) == 0x1234u && writes > before);
+
+    /* Setters and explicit raw invalidation still update the whole model. */
+    ng_char_set_sprite(c, 0u, 1u, 1u, 200u, 21u);
+    ng_chars_draw(); ng_vram_commit();
+    assert(map_tile(first, 0u) == 200u);
+    assert((ram[first * 64u + 1u] >> 8) == 21u);
+    c->sprite_tile = 300u; c->flip_y = 1u; c->sprite_dirty = 1u;
+    ng_chars_draw(); ng_vram_commit();
+    assert(map_tile(first, 0u) == 300u);
+    assert(ram[first * 64u + 1u] & 2u);
+
+    c->visible = 0u;
+    ng_chars_draw(); ng_vram_commit(); assert(!act_of(first));
+    c->visible = 1u;
+    ng_chars_draw(); ng_vram_commit();
+    assert(act_of(first) == 1u && map_tile(first, 0u) == 300u);
+
+    /* Recycled pool entries default to FULL: legacy raw writes work. */
+    ng_chars_remove(c);
+    c = chars_add(2u, 50, 60);
+    ng_char_set_sprite(c, 0u, 1u, 1u, 400u, 22u);
+    ng_chars_draw(); ng_vram_commit();
+    c->sprite_tile = 500u;
+    ng_chars_draw(); ng_vram_commit();
+    assert(map_tile(c->sprite_first, 0u) == 500u);
+}
+
+static void test_small_actor_reserves_a_bounded_commit(void)
+{
+    NGSpriteGroup actor, bulk;
+    unsigned before;
+    ngsg_queue_drop(); memset(ram, 0, sizeof(ram));
+    ng_vram_test_line = 100u;
+    ng_sprite_group_init(&bulk, 1u, 32u, 12u, 1000u, 20u);
+    ng_sprite_group_init(&actor, 219u, 5u, 4u, 100u, 4u);
+    ng_sprite_group_set_priority(&actor, NG_SG_PRIO_HIGH);
+    ng_sprite_group_flush(&bulk); ng_sprite_group_flush(&actor);
+    before = writes;
+    assert(!ng_sprite_group_commit_small(&actor)); /* active display */
+    assert(writes == before && pending() == 2u);
+    ng_vram_test_line = 7u;
+    assert(!ng_sprite_group_commit_small(&actor)); /* insufficient whole-map budget */
+    assert(writes == before && pending() == 2u);
+    ng_vram_test_line = 240u; ng_vram_busy = 1u;
+    assert(!ng_sprite_group_commit_small(&actor));
+    ng_vram_busy = 0u;
+    words_per_line = 16u; raster_words = 0u;
+    assert(ng_sprite_group_commit_small(&actor));
+    assert(pending() == 1u && ng_vram_busy == 0u && !(actor.dirty & NG_SGF_QUEUED));
+    assert(act_of(219u) == 4u && map_tile(219u, 0u) == 100u);
+    assert(map_tile(223u, 3u) == 119u);
+    assert(ng_vram_test_line >= 240u || ng_vram_test_line < 16u);
+    before = writes;
+    assert(!ng_sprite_group_commit_small(&bulk)); /* oversized actors use normal/staged path */
+    assert(writes == before && pending() == 1u);
+    ng_vram_commit(); /* bulk cannot displace the already complete actor */
+    assert(writes == before && pending() == 1u);
+    assert(ng_sprite_group_commit_small(&actor)); /* no duplicate hardware write */
+    assert(writes == before);
+    words_per_line = 0u; ngsg_queue_drop();
+    ng_sprite_group_set_scale(&actor, 255u, 239u);
+    ng_vram_test_line = 240u;
+    assert(ng_sprite_group_commit_small(&actor));
+    assert(actor.readyRows == 0u); /* scaled maps are complete without the full-scale move shortcut */
+    before = writes;
+    assert(ng_sprite_group_commit_small(&actor) && writes == before);
+    ng_vram_test_line = 100u;
+    ng_sprite_group_init(&actor, 219u, 5u, 4u, 0u, 4u);
+    ng_sprite_group_set_tile_address(&actor, 0x10000u);
+    ng_sprite_group_flush(&actor); ng_vram_test_line = 240u; before = writes;
+    assert(!ng_sprite_group_commit_small(&actor) && writes == before && pending() == 1u);
+    ng_sprite_group_set_tile_address(&actor, 0xFFF0u); /* window crosses into the wide writer */
+    assert(!ng_sprite_group_commit_small(&actor) && writes == before && pending() == 1u);
+    ngsg_queue_drop();
+}
+
+static void test_small_actor_respects_hides_and_stream_ownership(void)
+{
+    NGSpriteGroup g;
+    unsigned before;
+    ngsg_queue_drop(); memset(ram, 0, sizeof(ram));
+    ng_vram_test_line = 100u;
+    ng_sprite_group_init(&g, 219u, 5u, 4u, 100u, 4u);
+    ng_sprite_group_flush(&g);
+    ng_sprite_hide_range_queued(219u, 5u);
+    ng_vram_test_line = 240u; before = writes;
+    assert(!ng_sprite_group_commit_small(&g));
+    assert(writes == before && pending() == 1u);
+    ng_vram_commit(); /* queued hide precedes replacement */
+    assert(act_of(219u) == 4u);
+    ng_vram_test_line = 100u;
+    ng_sprite_group_set_strip_column(&g, 0u, 2u);
+    ng_vram_test_line = 240u; before = writes;
+    assert(!ng_sprite_group_commit_small(&g)); /* even a column-only update remains pending */
+    assert(writes == before && ngsg_strips_n == 1u);
+    ng_sprite_group_set_tile_base(&g, 200u);
+    ng_sprite_group_flush(&g);
+    ng_vram_test_line = 240u; before = writes;
+    assert(!ng_sprite_group_commit_small(&g));
+    assert(writes == before && ngsg_strips_n == 1u && pending() == 1u);
+    ngsg_queue_drop();
+}
+
+static void test_character_small_commit_consumes_only_its_published_group(void)
+{
+    NGCharacter *c;
+    uint16_t first;
+    unsigned before;
+    ngsg_queue_drop(); memset(ram, 0, sizeof(ram));
+    ng_vram_test_line = 100u; ng_chars_init();
+    c = chars_add(1u, 50, 60);
+    ng_char_set_sprite(c, 0u, 5u, 4u, 100u, 4u);
+    assert(!ng_char_commit_small(c)); /* draw has not published ownership */
+    ng_chars_draw(); first = c->sprite_first;
+    ng_vram_test_line = 240u;
+    assert(ng_char_commit_small(c));
+    assert(act_of(first) == 4u && map_tile(first, 0u) == 100u && pending() == 0u);
+    before = writes; ng_vram_commit(); assert(writes == before);
+    ng_vram_test_line = 100u; c->sprite_tile = 120u; c->sprite_dirty = 1u; ng_chars_draw();
+    ng_chars_remove(c); ng_vram_test_line = 240u; before = writes;
+    assert(!ng_char_commit_small(c) && writes == before);
+    ng_vram_commit(); assert(act_of(first) == 0u);
+    ngsg_queue_drop();
+}
+
 int main(void)
 {
     test_pending_rebind_is_unique();
@@ -261,6 +531,14 @@ int main(void)
     test_aged_content_obeys_deadline();
     test_bounded_removal_and_slot_reuse();
     test_cancel_drops_owned_streaming_columns();
+    test_hidden_map_staging_keeps_live_pose();
+    test_staging_detaches_previous_queue_owner();
+    test_whole_bank_cutover_is_bounded();
+    test_staged_map_crosses_64k_tiles_without_wrapping();
+    test_move_only_character_model_lifecycle();
+    test_small_actor_reserves_a_bounded_commit();
+    test_small_actor_respects_hides_and_stream_ownership();
+    test_character_small_commit_consumes_only_its_published_group();
     puts("deferred membership, deadline, bounded hides and replacement ownership: PASS");
     return 0;
 }

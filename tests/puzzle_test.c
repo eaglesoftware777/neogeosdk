@@ -449,6 +449,163 @@ static void test_save_mid_cascade(void)
     printf("save/load mid-cascade: %d resumed games match: OK\n", checked);
 }
 
+static void test_rejected_save_keeps_live_context(void)
+{
+    NGPuzzleLevel lv = match_level(8, 8, 5, NULL, 0);
+    NGPuzzleLevel invalid;
+    static NGPuzzle before;
+    uint8_t buf[NGP_SAVE_SIZE], saved;
+    uint16_t n, size;
+    assert(ng_puzzle_init(&P, &lv, 123u) == NGP_OK);
+    assert(ng_puzzle_init(&Q, &lv, 456u) == NGP_OK);
+    n = ng_puzzle_save(&P, buf, sizeof(buf));
+    assert(n > 24u);
+    before = Q;
+    /* Every incomplete prefix, including a valid header, must leave ALL
+     * existing state/events/dirty cells untouched on rejection. */
+    for (size = 0u; size < n; size++) {
+        assert(ng_puzzle_load(&Q, &lv, buf, size) != NGP_OK);
+        assert(memcmp(&Q, &before, sizeof(Q)) == 0);
+    }
+    saved = buf[0]; buf[0] ^= 0x80u;
+    assert(ng_puzzle_load(&Q, &lv, buf, n) == NGP_ERR_SAVE);
+    assert(memcmp(&Q, &before, sizeof(Q)) == 0); buf[0] = saved;
+    saved = buf[4]; buf[4] = 99u;
+    assert(ng_puzzle_load(&Q, &lv, buf, n) == NGP_ERR_SAVE);
+    assert(memcmp(&Q, &before, sizeof(Q)) == 0); buf[4] = saved;
+    invalid = lv; invalid.w = 0u;
+    assert(ng_puzzle_load(&Q, &invalid, buf, n) != NGP_OK);
+    assert(memcmp(&Q, &before, sizeof(Q)) == 0);
+    assert(ng_puzzle_load(&Q, &lv, buf, n) == NGP_OK);
+    assert(ng_puzzle_hash(&Q) == ng_puzzle_hash(&P));
+    printf("rejected save: %u truncated prefixes preserve every live byte: OK\n", n);
+}
+
+static void test_hash_future_state(void)
+{
+    NGPuzzleLevel lv = bubble_level(NULL), other;
+    uint32_t h;
+    assert(ng_puzzle_init(&P, &lv, 123u) == NGP_OK);
+    h = ng_puzzle_hash(&P);
+#define HASH_CHANGE(field) do { Q = P; Q.field++; assert(ng_puzzle_hash(&Q) != h); } while (0)
+    HASH_CHANGE(shot_vx_q8); HASH_CHANGE(shot_vy_q8); HASH_CHANGE(shot_kind);
+    HASH_CHANGE(attach_cell); HASH_CHANGE(swap_a); HASH_CHANGE(swap_b);
+    HASH_CHANGE(seed); HASH_CHANGE(tick); HASH_CHANGE(specials_made); HASH_CHANGE(shuffles);
+#undef HASH_CHANGE
+    /* Notification queues and search/animation scratch do not decide play. */
+    Q = P; Q.ev_count = 0; Q.ev_dropped++; Q.dirty[0] ^= 1u;
+    Q.mark[0] ^= 1u; Q.queue[0]++; Q.fall[0]++; Q.cleared[0] ^= 1u;
+    assert(ng_puzzle_hash(&Q) == h);
+    other = lv; other.push_every = 4u; Q = P; Q.level = &other;
+    assert(ng_puzzle_hash(&Q) != h);
+    printf("hash distinguishes future flight, reset, phase and rule state: OK\n");
+}
+
+static void test_save_integrity_and_rules(void)
+{
+    NGPuzzleLevel lv = bubble_level(NULL), other;
+    static NGPuzzle before;
+    uint8_t buf[NGP_SAVE_SIZE];
+    uint16_t n, i;
+    uint8_t bit;
+    assert(ng_puzzle_init(&P, &lv, 123u) == NGP_OK);
+    assert(ng_puzzle_action(&P, NGP_CMD_FIRE, 0, 0) == NGP_OK);
+    ng_puzzle_update(&P);
+    n = ng_puzzle_save(&P, buf, sizeof(buf));
+    assert(n > 0u);
+    assert(ng_puzzle_init(&Q, &lv, 456u) == NGP_OK);
+    before = Q;
+    for (i = 0; i < n; i++) for (bit = 1u; bit; bit = (uint8_t)(bit << 1)) {
+        buf[i] ^= bit;
+        assert(ng_puzzle_load(&Q, &lv, buf, n) != NGP_OK);
+        assert(memcmp(&Q, &before, sizeof(Q)) == 0);
+        buf[i] ^= bit;
+    }
+#define RULE_CHANGE(field) do { other = lv; other.field++; \
+    assert(ng_puzzle_load(&Q, &other, buf, n) != NGP_OK); \
+    assert(memcmp(&Q, &before, sizeof(Q)) == 0); } while (0)
+    RULE_CHANGE(moves); RULE_CHANGE(time_frames); RULE_CHANGE(flags);
+    RULE_CHANGE(goals[0].count); RULE_CHANGE(stars[0]);
+    RULE_CHANGE(bubble_d); RULE_CHANGE(row_h); RULE_CHANGE(loss_row);
+    RULE_CHANGE(push_every); RULE_CHANGE(miss_limit); RULE_CHANGE(first_shifted);
+    RULE_CHANGE(launch_x); RULE_CHANGE(launch_y); RULE_CHANGE(shot_speed_q8);
+    RULE_CHANGE(aim_max);
+#undef RULE_CHANGE
+    assert(ng_puzzle_load(&Q, &lv, buf, n) == NGP_OK);
+    assert(ng_puzzle_hash(&Q) == ng_puzzle_hash(&P));
+    /* Each intermediate flight/pop/settle state must resume identically. */
+    for (i = 0; i < 200u && ng_puzzle_status(&P) == NGP_STATUS_BUSY; i++) {
+        ng_puzzle_update(&P); ng_puzzle_update(&Q);
+        assert(ng_puzzle_hash(&Q) == ng_puzzle_hash(&P));
+        n = ng_puzzle_save(&P, buf, sizeof(buf));
+        assert(ng_puzzle_load(&Q, &lv, buf, n) == NGP_OK);
+        assert(ng_puzzle_hash(&Q) == ng_puzzle_hash(&P));
+    }
+    assert(ng_puzzle_status(&P) != NGP_STATUS_BUSY);
+    printf("save integrity: every single-bit error rejected atomically; flight resumes: OK\n");
+}
+
+static void save_test_checksum(uint8_t *b, uint16_t size)
+{
+    uint16_t i;
+    uint32_t h = 2166136261u;
+    for (i = 0; i < size - 4u; i++) h = (h ^ b[i]) * 16777619u;
+    b[size - 4u] = (uint8_t)(h >> 24); b[size - 3u] = (uint8_t)(h >> 16);
+    b[size - 2u] = (uint8_t)(h >> 8); b[size - 1u] = (uint8_t)h;
+}
+
+static void test_save_legacy_and_validation(void)
+{
+    NGPuzzleLevel lv = match_level(8, 8, 5, NULL, 0);
+    static NGPuzzle before;
+    uint8_t buf[NGP_SAVE_SIZE];
+    uint16_t n;
+    assert(ng_puzzle_init(&P, &lv, 123u) == NGP_OK);
+    assert(ng_puzzle_init(&Q, &lv, 456u) == NGP_OK);
+    before = Q;
+    n = ng_puzzle_save(&P, buf, sizeof(buf));
+    /* Correct checksums cannot make an out-of-range swap index safe. */
+    buf[24u + 3u * 64u + 8u + 12u + 10u] = 200u;
+    save_test_checksum(buf, n);
+    assert(ng_puzzle_load(&Q, &lv, buf, n) == NGP_ERR_SAVE);
+    assert(memcmp(&Q, &before, sizeof(Q)) == 0);
+    n = ng_puzzle_save(&P, buf, sizeof(buf));
+    buf[24u] = 200u; save_test_checksum(buf, n);
+    assert(ng_puzzle_load(&Q, &lv, buf, n) == NGP_ERR_SAVE);
+    assert(memcmp(&Q, &before, sizeof(Q)) == 0);
+    n = ng_puzzle_save(&P, buf, sizeof(buf));
+    /* Legacy v1 has the same payload, the original identity of this fixed
+     * level (FNV of 00 08 08 05 00 00 04 D2), and no checksum trailer. */
+    buf[4] = 1u; buf[8] = 0x10u; buf[9] = 0x96u; buf[10] = 0xAEu; buf[11] = 0x4Cu;
+    assert(ng_puzzle_load(&Q, &lv, buf, (uint16_t)(n - 4u)) == NGP_OK);
+    assert(ng_puzzle_hash(&Q) == ng_puzzle_hash(&P));
+    printf("legacy v1 save compatibility and checked index/color validation: OK\n");
+}
+
+static void test_save_every_match_phase(void)
+{
+    NGPuzzleLevel lv = match_level(12, 16, 5, NULL, 0);
+    uint8_t buf[NGP_SAVE_SIZE], c, d;
+    uint16_t n, steps;
+    uint32_t seed;
+    for (seed = 1; seed <= 20u; seed++) {
+        assert(ng_puzzle_init(&P, &lv, seed) == NGP_OK);
+        assert(ng_puzzle_hint(&P, &c, &d));
+        assert(ng_puzzle_action(&P, NGP_CMD_SWAP, c, d) == NGP_OK);
+        steps = 0;
+        do {
+            n = ng_puzzle_save(&P, buf, sizeof(buf));
+            assert(n == 652u && n <= NGP_SAVE_SIZE);
+            assert(ng_puzzle_load(&Q, &lv, buf, n) == NGP_OK);
+            assert(ng_puzzle_hash(&P) == ng_puzzle_hash(&Q));
+            ng_puzzle_update(&P); ng_puzzle_update(&Q);
+            assert(ng_puzzle_hash(&P) == ng_puzzle_hash(&Q));
+            assert(++steps < 200u);
+        } while (ng_puzzle_status(&P) == NGP_STATUS_BUSY);
+    }
+    printf("maximum board: every match phase resumes identically across 20 seeds: OK\n");
+}
+
 static void test_timer_and_score(void)
 {
     NGPuzzleLevel lv = match_level(6, 6, 5, NULL, 0);
@@ -484,6 +641,22 @@ static void test_timer_and_score(void)
         assert(ng_puzzle_status(&P) == NGP_STATUS_LOST && P.end_reason == NGP_END_MOVES);
     }
     printf("timer, moves, score saturation: OK\n");
+}
+
+static void test_terminal_state_survives_full_event_queue(void)
+{
+    NGPuzzleLevel lv = match_level(6, 6, 5, NULL, 0);
+    NGPuzzleEvent event;
+    unsigned i, lost = 0u;
+    lv.time_frames = 1u;
+    assert(ng_puzzle_init(&P, &lv, 5) == NGP_OK);
+    P.ev_head = 0u; P.ev_count = NGP_EVENT_QUEUE;
+    for (i = 0u; i < NGP_EVENT_QUEUE; i++) P.ev[i].type = NGP_EV_TIME_LOW;
+    ng_puzzle_update(&P);
+    while (ng_puzzle_event(&P, &event)) if (event.type == NGP_EV_LOST) lost++;
+    assert(!lost && P.ev_dropped);
+    assert(ng_puzzle_status(&P) == NGP_STATUS_LOST && P.end_reason == NGP_END_TIME);
+    puts("terminal status remains authoritative after event overflow: OK");
 }
 
 static void test_worst_case(void)
@@ -662,6 +835,109 @@ static void test_bubble_hint_and_replay(void)
            ng_puzzle_status(&P) == NGP_STATUS_WON ? "cleared" : "in play");
 }
 
+static void test_bubble_target_and_busy_aim(void)
+{
+    static const char *L =
+        "12341234" "1212121-" "........" ".......-"
+        "........" ".......-" "........" ".......-"
+        "........" ".......-" "........" ".......-";
+    static const char *A =
+        "....A..." ".......-" "........" ".......-"
+        "........" ".......-" "........" ".......-"
+        "........" ".......-" "........" ".......-";
+    NGPuzzleLevel lv = bubble_level(L);
+    static NGPuzzle before;
+    uint16_t angle, steps;
+    unsigned wrong_neighbor = 0;
+    assert(ng_puzzle_init(&P, &lv, 123u) == NGP_OK);
+    before = P;
+    for (angle = 544u; angle <= 992u; angle++) {
+        uint8_t cell, hit = ng_puzzle_bubble_target(&P, angle), old = NGP_NO_CELL, d;
+        ng_puzzle_bubble_preview(&P, angle, 0, 0, &cell);
+        assert(hit != NGP_NO_CELL && P.color[hit]);
+        assert(memcmp(&P, &before, sizeof(P)) == 0);
+        if (cell != NGP_NO_CELL) for (d = 0; d < 6u && old == NGP_NO_CELL; d++) {
+            uint8_t nb = ng_puzzle_neighbor(&P, cell, d);
+            if (nb != NGP_NO_CELL && P.color[nb]) old = nb;
+        }
+        if (old != hit) wrong_neighbor++;
+    }
+    assert(wrong_neighbor > 0u); /* Original neighbour guess really differs. */
+    assert(ng_puzzle_action(&P, NGP_CMD_AIM, 700, 0) == NGP_OK);
+    assert(ng_puzzle_action(&P, NGP_CMD_FIRE, 0, 0) == NGP_OK);
+    Q = P;
+    steps = 0;
+    while (ng_puzzle_status(&P) == NGP_STATUS_BUSY) {
+        assert(ng_puzzle_action(&P, NGP_CMD_AIM_BY, 6, 0) == NGP_OK);
+        ng_puzzle_update(&P); ng_puzzle_update(&Q);
+        assert(P.angle != Q.angle);
+        assert(P.shot_x_q8 == Q.shot_x_q8 && P.shot_y_q8 == Q.shot_y_q8);
+        assert(P.shot_vx_q8 == Q.shot_vx_q8 && P.shot_vy_q8 == Q.shot_vy_q8);
+        assert(P.state == Q.state && P.score == Q.score && P.rng == Q.rng);
+        assert(memcmp(P.color, Q.color, sizeof(P.color)) == 0);
+        assert(memcmp(P.kind, Q.kind, sizeof(P.kind)) == 0);
+        assert(++steps < 200u);
+    }
+    lv = bubble_level(A);
+    assert(ng_puzzle_init(&P, &lv, 123u) == NGP_OK);
+    assert(ng_puzzle_bubble_target(&P, 768u) == 4u);
+    before = P;
+    assert(ng_puzzle_action(&P, NGP_CMD_HAMMER, 4, 0) == NGP_ERR_RANGE);
+    assert(memcmp(&P, &before, sizeof(P)) == 0);
+    lv = bubble_level(NULL);
+    assert(ng_puzzle_init(&P, &lv, 123u) == NGP_OK);
+    assert(ng_puzzle_bubble_target(&P, 768u) == NGP_NO_CELL);
+    assert(ng_puzzle_bubble_target(0, 768u) == NGP_NO_CELL);
+    printf("bubble targeting: %u wrong-neighbour cases fixed; busy aim preserves flight: OK\n", wrong_neighbor);
+}
+
+static void test_incremental_preview(void)
+{
+    static const char *L =
+        "12341234" "1212121-" "........" ".......-"
+        "........" ".......-" "........" ".......-"
+        "........" ".......-" "........" ".......-";
+    NGPuzzleLevel lv = bubble_level(L);
+    static NGPuzzle before;
+    NGPuzzlePreview q = {0};
+    NGPuzzlePoint pts[NGP_PREVIEW_POINTS];
+    uint16_t a;
+    uint8_t budget;
+    assert(ng_puzzle_init(&P, &lv, 123u) == NGP_OK);
+    before = P;
+    for (a = 544; a <= 992; a++) for (budget = 1; budget <= 9; budget++) {
+        uint8_t cell, count = ng_puzzle_bubble_preview(&P, a, pts, NGP_PREVIEW_POINTS, &cell);
+        unsigned calls = 0;
+        assert(ng_puzzle_preview_begin(&q, &P, a, 7) == NGP_PREVIEW_BUSY);
+        assert(ng_puzzle_preview_step(&q, &P, 7, 0) == NGP_PREVIEW_BUSY && q.steps == 0);
+        while (q.state == NGP_PREVIEW_BUSY) {
+            uint16_t steps = q.steps;
+            ng_puzzle_preview_step(&q, &P, 7, budget);
+            assert(q.steps - steps <= (budget < 8 ? budget : 8));
+            assert(++calls <= 4097u);
+        }
+        assert(q.state == NGP_PREVIEW_READY && q.count == count && q.cell == cell);
+        assert(q.hit == ng_puzzle_bubble_target(&P, a));
+        assert(memcmp(pts, q.points, count * sizeof(pts[0])) == 0);
+        assert(memcmp(&P, &before, sizeof(P)) == 0);
+        assert(ng_puzzle_preview_step(&q, &P, 7, 8) == NGP_PREVIEW_READY);
+    }
+    /* A completed result is stale too after a generation change. */
+    assert(ng_puzzle_preview_step(&q, &P, 8, 0) == NGP_PREVIEW_CANCELLED);
+    assert(q.count == 0 && q.cell == NGP_NO_CELL && q.hit == NGP_NO_CELL);
+    assert(ng_puzzle_preview_begin(&q, &P, 768, 9) == NGP_PREVIEW_BUSY);
+    assert(ng_puzzle_preview_step(&q, &Q, 9, 8) == NGP_PREVIEW_CANCELLED);
+    assert(ng_puzzle_preview_begin(&q, &P, 768, 9) == NGP_PREVIEW_BUSY);
+    P.parity ^= 1u;
+    assert(ng_puzzle_preview_step(&q, &P, 9, 8) == NGP_PREVIEW_CANCELLED);
+    P = before;
+    assert(ng_puzzle_preview_begin(&q, &P, 0, 9) == NGP_PREVIEW_BUSY);
+    assert(q.angle == 544 && q.requested_angle == 0);
+    assert(ng_puzzle_preview_begin(&q, 0, 768, 9) == NGP_PREVIEW_INVALID);
+    assert(ng_puzzle_preview_step(0, &P, 9, 8) == NGP_PREVIEW_INVALID);
+    puts("bounded preview: 449 angles x 9 budgets match exact paths, cancel safely, preserve all state: OK");
+}
+
 int main(void)
 {
     test_level_check();
@@ -673,11 +949,19 @@ int main(void)
     test_dead_board();
     test_random_play();
     test_save_mid_cascade();
+    test_rejected_save_keeps_live_context();
+    test_hash_future_state();
+    test_save_integrity_and_rules();
+    test_save_legacy_and_validation();
+    test_save_every_match_phase();
     test_timer_and_score();
+    test_terminal_state_survives_full_event_queue();
     test_worst_case();
     test_bubbles();
     test_bubble_rows();
     test_bubble_hint_and_replay();
+    test_bubble_target_and_busy_aim();
+    test_incremental_preview();
     printf("ng_puzzle: all tests passed (context %u bytes, save %u bytes)\n",
            (unsigned)sizeof(NGPuzzle), (unsigned)NGP_SAVE_SIZE);
     return 0;

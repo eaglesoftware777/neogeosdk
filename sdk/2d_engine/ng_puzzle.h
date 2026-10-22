@@ -268,7 +268,25 @@ typedef struct {
     uint8_t queue[NGP_MAX_CELLS];     /* scratch (searches) */
 } NGPuzzle;
 
-/* Size of ng_puzzle_save() data. */
+/* Optional bounded, read-only path prediction. Storage belongs to the caller;
+ * the source context and its immutable ROM level must remain alive. */
+#define NGP_PREVIEW_POINTS 6u
+#define NGP_PREVIEW_MAX_STEPS 8u
+enum {
+    NGP_PREVIEW_EMPTY = 0, NGP_PREVIEW_BUSY, NGP_PREVIEW_READY,
+    NGP_PREVIEW_CANCELLED, NGP_PREVIEW_INVALID
+};
+typedef struct {
+    const NGPuzzle *source;
+    const NGPuzzleLevel *level;
+    uint32_t generation;
+    int32_t x_q8, y_q8, vx_q8, vy_q8;
+    uint16_t steps, angle, requested_angle;
+    uint8_t state, count, cell, hit, parity;
+    NGPuzzlePoint points[NGP_PREVIEW_POINTS];
+} NGPuzzlePreview;
+
+/* Buffer capacity for ng_puzzle_save(); its return value is the used length. */
 #define NGP_SAVE_SIZE   (24u + 4u * NGP_MAX_CELLS + 4u * NGP_MAX_OBJ + 32u)
 
 /* ---- calls ------------------------------------------------------------ */
@@ -316,13 +334,38 @@ uint8_t  NEOGEO_USER ng_puzzle_has_moves(const NGPuzzle *p);
  * returns how many; *cell gets the lattice cell it would stick to. */
 uint8_t  NEOGEO_USER ng_puzzle_bubble_preview(const NGPuzzle *p, uint16_t angle,
                                               NGPuzzlePoint *pts, uint8_t max, uint8_t *cell);
+/* First occupied bubble actually struck along the preview's collision path.
+ * NGP_NO_CELL for a clear route to the ceiling or invalid context. Unlike
+ * preview's attachment cell, this is an occupied target, suitable for an
+ * aimed booster. Anchors/stones are returned too: the game decides whether
+ * its booster can affect them. Read-only, using the same flight geometry. */
+uint8_t  NEOGEO_USER ng_puzzle_bubble_target(const NGPuzzle *p, uint16_t angle);
+/* Begin/restart a prediction, then spend at most min(budget,8) flight substeps
+ * per step(). Returns NGP_PREVIEW_*. Budget 0 validates without advancing.
+ * Increment the caller's generation whenever occupancy, geometry or level
+ * changes; a stale BUSY or READY result becomes CANCELLED without reading an
+ * old context. Parity and level-pointer changes also cancel automatically.
+ * Never mutates p, its RNG, events, dirty flags or gameplay clock. READY has
+ * the same points/attachment/hit as the synchronous queries (up to 6 points).
+ * BUSY exposes only the computed prefix, ending at x_q8/y_q8; it must not be
+ * displayed as a completed collision prediction. Restart on an aim change. */
+uint8_t  NEOGEO_USER ng_puzzle_preview_begin(NGPuzzlePreview *preview, const NGPuzzle *p,
+                                             uint16_t angle, uint32_t generation);
+uint8_t  NEOGEO_USER ng_puzzle_preview_step(NGPuzzlePreview *preview, const NGPuzzle *p,
+                                            uint32_t generation, uint8_t budget);
 /* Bubble mode: an angle worth firing at (bounded search, about 40 trial
  * paths: call it on a request, not every frame). Returns 2 if the shot
  * would pop a group, 1 if it only joins one of its colour, 0 if none helps. */
 uint8_t  NEOGEO_USER ng_puzzle_bubble_hint(const NGPuzzle *p, uint16_t *angle);
 
-/* State hash (FNV-1a over everything that decides the game), save and load
- * (big-endian, NGP_SAVE_SIZE bytes, tied to the level it was made from). */
+/* State hash (FNV-1a over rules and future-affecting state; excludes event,
+ * dirty, animation and search scratch). Hash values changed with save v2.
+ * Saves are big-endian v2, at most NGP_SAVE_SIZE bytes, with a full rule
+ * identity and an accidental-corruption checksum (not authentication).
+ * Load validates before changing p. On success events are discarded and all
+ * cells marked dirty; games must rebuild presentation from the loaded board.
+ * Legacy v1 saves remain readable, with their original weaker level identity
+ * and no checksum. Saving a loaded v1 context upgrades it to v2. */
 uint32_t NEOGEO_USER ng_puzzle_hash(const NGPuzzle *p);
 uint16_t NEOGEO_USER ng_puzzle_save(const NGPuzzle *p, uint8_t *buf, uint16_t size);
 int      NEOGEO_USER ng_puzzle_load(NGPuzzle *p, const NGPuzzleLevel *level, const uint8_t *buf, uint16_t size);

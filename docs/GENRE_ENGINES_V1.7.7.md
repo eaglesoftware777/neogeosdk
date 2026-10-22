@@ -138,6 +138,34 @@ Calls: `level_check`, `init`, `reset`, `action` (`NGP_CMD_SWAP`,
 `dirty_clear`, `hint`, `has_moves`, `bubble_preview`, `bubble_hint`,
 `hash`, `save` / `load` (`NGP_SAVE_SIZE`, 840 bytes), `replay`.
 
+`ng_puzzle_bubble_target()` returns the first occupied bubble struck by the
+same collision path used for flight and preview. Use it for aimed boosters;
+the empty attachment cell returned by preview is a different location.
+It returns anchors/stones too, allowing the game to enforce its own booster
+rules, and `NGP_NO_CELL` for an unobstructed path to the ceiling.
+
+For a live aim guide, `NGPuzzlePreview` is optional caller-owned storage.
+Begin with `ng_puzzle_preview_begin()` and advance with
+`ng_puzzle_preview_step()`; each call spends at most eight collision substeps.
+Pass a new generation when the board or geometry changes to cancel stale work.
+A READY result matches the synchronous six-point preview and target exactly.
+A BUSY result is only the computed path prefix, ending at its current Q8
+position; show it as a short direction guide rather than a predicted landing.
+Neither API changes the board, gameplay RNG, timer or notifications. The source
+context and its immutable level must remain alive throughout the request.
+
+The save buffer capacity remains 840 bytes; use the length returned by
+`ng_puzzle_save()` (at most 652 bytes for a full board). New v2 saves include
+all level rules in their identity and a checksum for accidental corruption.
+Invalid loads leave the entire live context untouched. The loader still accepts
+v1 saves, which retain their original weaker identity and lack a checksum.
+Successful loads discard pending events and mark every board cell dirty; rebuild
+animation from the restored state. Board/flight continuation is preserved at each
+update boundary. State hashes include rules, tick, reset seed, pending swap and
+attachment, and flight velocity; older hash recordings must be regenerated.
+Presentation queues, fall/clear masks and search scratch are excluded from the
+hash. A checksum detects corruption; it does not authenticate an untrusted save.
+
 Limits: boards up to 12 x 16 cells, 8 colours, 4 objectives, 32 queued
 events. `ng_puzzle_bubble_hint()` tries about 40 paths: call it on request,
 not every frame.
