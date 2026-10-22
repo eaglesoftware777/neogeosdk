@@ -4,8 +4,6 @@
   "background": 0,
   "music": 1,
   "mechanic": "none",
-  "upper": 256,
-  "camera_feet_y": 144,
   "pit": "water",
   "blocks": "grass",
   "climb": "vine",
