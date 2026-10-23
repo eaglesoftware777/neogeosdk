@@ -74,9 +74,9 @@ def read_iso(data):
                 text = name.decode('ascii')
             except UnicodeDecodeError as e:
                 raise ValueError('Non-ASCII ISO filename') from e
-            if not text.endswith(';1'):
-                raise ValueError('Missing ISO9660 version1 suffix')
-            text = filename(text[:-2])
+            # Accept historical ISO version-1 names for extraction as well as
+            # the unversioned names required by native CD firmware.
+            text = filename(text[:-2] if text.endswith(';1') else text)
             end = extent*2048+n
             padded_end = ((end+2047)//2048)*2048
             if text in result or n == 0 or extent < root+size//2048 or end > len(data):
@@ -96,6 +96,13 @@ def audit_image(path):
     files = read_iso(data)
     if 'IPL.TXT' not in files:
         raise ValueError('Missing IPL.TXT')
+    # Validate native disc recognition independently of the writer.
+    for name, text in (
+            ('CPY.TXT', b'Copyright by SNK corporation'),
+            ('BIB.TXT', b'Bibliographiced by SNK corporation'),
+            ('ABS.TXT', b'Abstracted by SNK corporation')):
+        if files.get(name) != text:
+            raise ValueError('Missing/invalid native CD recognition marker: ' + name)
     entries = parse_ipl(files['IPL.TXT'])
     seen = {}
     for entry in entries:

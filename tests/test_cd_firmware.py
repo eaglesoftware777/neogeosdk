@@ -20,7 +20,12 @@ class FirmwareTests(unittest.TestCase):
                 self.assertEqual(len(data),0x80000)
                 self.assertEqual(data[:8],bytes.fromhex('0010f30000c01000'))
                 self.assertEqual(data[0x700:0x710],b'EAGLECD\0'+bytes.fromhex('000100070007')+ident.to_bytes(2,'big'))
-                self.assertEqual(int.from_bytes(data[0x710:0x714],'big'),1) # diagnostic only
+                self.assertEqual(int.from_bytes(data[0x710:0x714],'big'),15)
+                self.assertEqual(data[0x54:0x58],data[0x58:0x5C])
+                self.assertEqual(data[0x54:0x58],data[0x5C:0x60])
+                self.assertNotEqual(data[0x554:0x558],data[0x542:0x546])
+                self.assertNotEqual(data[0x566:0x56A],data[0x542:0x546])
+                self.assertNotEqual(data[0x56C:0x570],data[0x542:0x546])
                 for slot in (0x402,0x438,0x444,0x44A,0x546,0x552,0x564,0x56A,0x570):
                     self.assertEqual(data[slot:slot+2],b'\x4e\xf9')
                     target=int.from_bytes(data[slot+2:slot+6],'big')

@@ -11,15 +11,14 @@ and docs, plus an early CD selector around unchanged cartridge Makefile bodies.
 No existing game source or installed cartridge folder/launcher was edited.
 No commit, push, publication, identity or branch operation was performed.
 
-Development evidence root on this machine:
-`/home/kepler/neogeosdk-cd-20261021/`. It is not a portable SDK dependency.
+The commands below use an isolated sibling directory for validation output.
 Portable reproduction commands are in [the guide](../NEOGEO_CD.md).
 
 ## Exact builds
 
 ```sh
-make PLATFORM=cd GAME=helloworld CD_BUILD_DIR=/home/kepler/neogeosdk-cd-20261021/hello-final cd-image
-make PLATFORM=cd GAME=helloworld USE_2D_PLUS=1 CD_BUILD_DIR=/home/kepler/neogeosdk-cd-20261021/hello-plus-final cd-image
+make PLATFORM=cd GAME=helloworld CD_BUILD_DIR=../cd-validation/hello-final cd-image
+make PLATFORM=cd GAME=helloworld USE_2D_PLUS=1 CD_BUILD_DIR=../cd-validation/hello-plus-final cd-image
 ```
 
 Native Windows CMD equivalents were run with `MakefileWin32.mak`, producing
@@ -73,9 +72,9 @@ The successful HLE command was:
 
 ```sh
 python3 tools/neocd/qa_libretro.py --hle-debug \
-  --core /home/kepler/neogeosdk-cd-20261021/reference/neocd_libretro/neocd_libretro.so \
-  --build /home/kepler/neogeosdk-cd-20261021/hello-final \
-  --out /home/kepler/neogeosdk-cd-20261021/hle-qa-accepted
+  --core ../cd-validation/reference/neocd_libretro/neocd_libretro.so \
+  --build ../cd-validation/hello-final \
+  --out ../cd-validation/hle-qa-accepted
 ```
 
 External core source `b1e04c738cb48a1dae0574b8877f6a116d270ca1`; binary SHA-256

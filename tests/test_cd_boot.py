@@ -36,7 +36,7 @@ class NativeBootTests(unittest.TestCase):
     def test_unported_game_is_rejected_before_output(self):
         with tempfile.TemporaryDirectory() as d:
             out=Path(d)/'unported'
-            with self.assertRaises(ValueError):build_native('maiya',out,default_compiler())
+            with self.assertRaises(ValueError):build_native('nosignal',out,default_compiler())
             self.assertFalse(out.exists())
 
     @unittest.skipUnless(shutil.which(default_compiler()) and shutil.which('wla-z80') and shutil.which('wlalink'),
@@ -48,6 +48,20 @@ class NativeBootTests(unittest.TestCase):
             self.assertTrue(audit_cue(out/'disc/helloworld.cue')['passed'])
             self.assertEqual(report['image_audit']['audio'],[])
             self.assertEqual((out/'payload/HELLO.PRG').read_bytes()[0x100:0x108],b'NEO-GEO\x02')
+            raw=(out/'payload/HELLO.PRG').read_bytes()
+            entry=int.from_bytes(raw[0x124:0x128],'big')
+            self.assertEqual(raw[entry:entry+8],bytes.fromhex('0c3900020010fdae'))
+            self.assertEqual(raw[entry+8],0x65) # carry: initial USER requests
+            target=entry+10+int.from_bytes(raw[entry+9:entry+10],'big',signed=True)
+            self.assertEqual(raw[target:target+6],bytes.fromhex('4ef900c00444'))
+            # Drive IRQs can arrive during IPL, before USER has repaired RAM
+            # vectors. Each must already chain to its matching firmware vector.
+            exception=int.from_bytes(raw[8:12],'big')
+            for vector in (0x54,0x58,0x5C):
+                handler=int.from_bytes(raw[vector:vector+4],'big')
+                self.assertNotEqual(handler,exception)
+                self.assertEqual(raw[handler:handler+6],b'\x2f\x39'+(0xC00000+vector).to_bytes(4,'big'))
+                self.assertEqual(raw[handler+6:handler+8],b'\x4e\x75')
             with self.assertRaises(ValueError):build_native('helloworld',out,default_compiler())
 
     def test_make_dispatch_preserves_cartridge_recipes(self):

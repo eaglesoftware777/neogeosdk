@@ -1,9 +1,10 @@
 # Neo Geo CD — experimental 1.7.7 development backend
 
 **Status: native image toolchain and startup diagnostics, not a completed CD platform.**
-The stock-firmware boot gate is blocked by the absence of a user-supplied CD
-BIOS. EagleBIOS-CD has independently passed its F1 menu/input gate only.
-Neither a valid ISO nor HLE execution establishes stock or hardware compatibility.
+Maiya and Sky Lance have booted into gameplay using supplied stock CDZ firmware
+in MAME 0.283, and also using the independent EagleBIOS-CD native loader.
+Both paths have gameplay, input, sound-effect and CDDA evidence. Emulator
+execution does not establish hardware compatibility.
 See the [validation report](roadmap/NEOGEO_CD_VALIDATION_REPORT.md).
 
 ## Build an original native disc
@@ -13,6 +14,8 @@ From the SDK root on Linux:
 ```sh
 make GAME=helloworld PLATFORM=cd CD_BIOS=stock cd-image
 make GAME=helloworld PLATFORM=cd USE_2D_PLUS=1 cd-image
+make GAME=skylance PLATFORM=cd CD_BUILD_DIR=../cd-build/skylance cd-image
+make GAME=maiya PLATFORM=cd CD_BUILD_DIR=../cd-build/maiya cd-image
 make cd-unit-tests
 ```
 
@@ -40,10 +43,18 @@ chdman createcd -i /absolute/build/disc/helloworld.cue -o /new/helloworld.chd
 chdman verify -i /new/helloworld.chd
 ```
 
-The writer creates a flat ISO9660 Level 1 directory with versioned `;1`
-identifiers and unswapped `.PRG`. Its separate parser checks the encoded image,
-not a list returned by the writer. xorriso extraction and chdman round trips
-also passed. Stock-loader acceptance of this directory profile remains unproven.
+The writer creates a flat ISO9660 Level 1 directory with unversioned 8.3
+identifiers (the `mkisofs -N` profile), native recognition markers and unswapped
+`.PRG` files. The marker strings are firmware format requirements, not ownership
+metadata for the game. Its separate parser checks the encoded image rather than
+a list returned by the writer. See the public
+[disc recognition](https://wiki.neogeodev.org/index.php/TXT_file) and
+[ISO authoring](https://wiki.neogeodev.org/index.php/Making_an_ISO_file) notes.
+
+During IPL, the program must already delegate CD interrupt vectors to the
+firmware, because further asset transfers can interrupt before USER begins.
+USER itself is entered with a jump; startup requests return through the firmware
+scheduler. Returning from USER with `RTS` consumes an absent return address.
 
 ## Actual firmware tests
 
@@ -65,8 +76,15 @@ SDK's original LO data, records native screenshots/audio/input, and compares
 actual loaded firmware and program bytes. It neither modifies the MAME install
 nor packages firmware in the disc. Model/BIOS hashes and commands go in JSON.
 
-`CD_BIOS=eagle cd-test` explicitly refuses disc-boot testing at F1. Build/test
-its independent menu using [the firmware guide](../bios/cd/README.md).
+`CD_BIOS=eagle cd-test` accepts a source-built EagleBIOS-CD ROM whose identity
+advertises native boot, and checks the mapped firmware bytes separately from
+stock firmware evidence. Build it using [the firmware guide](../bios/cd/README.md).
+Neither test substitutes another BIOS or HLE when the selected firmware fails.
+
+Stock and Eagle packages can be kept in separate directories with distinct
+ISO volume labels and separate CUE/CHD files. Their native game payloads remain
+identical. The launch profile selects the external system ROM; the game disc
+does not contain or install a BIOS.
 
 An optional secondary debugger is available:
 
@@ -84,17 +102,20 @@ a replacement firmware and is not used to pass the stock boot gate.
 
 ## Current limitations and next gate
 
-Only `helloworld/main.c` is compiled, unchanged, with CD-specific startup,
-input and the common FIX renderer. Runtime disc loading, executable overlays,
-CDDA controls and battery saving are unavailable. File/CDDA operations return
+Hello-world uses unchanged game code with CD-specific startup, input and the
+common FIX renderer. Maiya and Sky Lance have separate CD adapters and native
+SPR/FIX/Z80/PCM payloads; their resident artwork fits CD memory. Their original
+music uses CDDA and their effects use a RAM sound driver. These adapters do not
+establish a complete generic CD backend. The Eagle direct file service has
+loaded and read back a second sprite bank; executable overlays and battery
+saving remain unavailable. Generic HAL file/CDDA operations return
 `NG_CD_UNSUPPORTED`; constructing a file descriptor is not reported as a load.
-The second sprite scene is authored on disc but has **not** been loaded by a
-running game. No tutorial, demo or full game port is declared complete.
+The runtime sprite test uses the direct BIOS ABI rather than those HAL stubs.
+Physical CD hardware and complete campaign compatibility remain unverified.
 
-Next: run the native smoke probe with a recognized user-supplied stock BIOS;
-inspect screenshots, native graphics and return/interrupt semantics. Only then
-stabilize the HAL and implement/probe LOADFILE/UPLOAD, safe scene swaps, CDDA
-and cold-restart saves in order. Firmware F2 drive work is an independent gate.
+Next: broaden stock-firmware and physical-hardware coverage, stabilize the HAL
+and broaden LOADFILE/CDDA conformance, standalone UPLOAD, safe scene swaps
+and cold-restart saves in order. Cross-model drive behavior remains a separate gate.
 
 Cartridge defaults and original recipe bodies remain unchanged. CD outputs
 never enter `roms/`, existing cartridge distributions or installed launchers.

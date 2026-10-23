@@ -52,7 +52,8 @@ def build_iso(files, volume='EAGLECD', epoch=946684800):
     root_lba = 20
     provisional = [directory_record(b'\0', root_lba, SECTOR, stamp, True),
                    directory_record(b'\1', root_lba, SECTOR, stamp, True)]
-    provisional += [directory_record((n+';1').encode(), 0, len(files[n]), stamp) for n in names]
+    # Native CD firmware searches unversioned 8.3 names (mkisofs -N).
+    provisional += [directory_record(n.encode(), 0, len(files[n]), stamp) for n in names]
     root_bytes = len(pack_directory(provisional))
     next_lba = root_lba + root_bytes // SECTOR
     extents = {}
@@ -87,7 +88,7 @@ def build_iso(files, volume='EAGLECD', epoch=946684800):
     result[18*SECTOR:18*SECTOR+10] = b'\x01\0' + struct.pack('<IH', root_lba, 1) + b'\0\0'
     result[19*SECTOR:19*SECTOR+10] = b'\x01\0' + struct.pack('>IH', root_lba, 1) + b'\0\0'
     records = [root, directory_record(b'\1', root_lba, root_bytes, stamp, True)]
-    records += [directory_record((n+';1').encode(), *extents[n], stamp) for n in names]
+    records += [directory_record(n.encode(), *extents[n], stamp) for n in names]
     result[root_lba*SECTOR:root_lba*SECTOR+root_bytes] = pack_directory(records)
     for n, (lba, size) in extents.items():
         result[lba*SECTOR:lba*SECTOR+size] = files[n]

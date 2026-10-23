@@ -1,4 +1,4 @@
-"""Isolated original-CD-firmware hello-screen probe, not a disc boot test."""
+"""Isolated original-firmware input/no-disc/retry probe, not a disc boot test."""
 import argparse
 import hashlib
 import importlib.util
@@ -39,7 +39,10 @@ def main():
     symbols = subprocess.check_output([a.nm, '-n', str(firmware / a.model / 'eagle_cd.elf')], text=True)
     symbols = {name: int(address, 16) for address, name in
                re.findall(r'^([0-9a-fA-F]+)\s+\w\s+(\w+)$', symbols, re.M)}
-    config = dict(output=str(out), frames=symbols['eagle_cd_frames'], pad=symbols['eagle_cd_pad_seen'])
+    loader = bool(int.from_bytes(raw[0x710:0x714], 'big') & 2)
+    config = dict(output=str(out), frames=symbols['eagle_cd_frames'],
+                  pad=symbols['eagle_cd_pad_seen'], error=symbols.get('eagle_cd_error', 0),
+                  loader=loader)
     script = out / 'probe.lua'
     script.write_text('local q=' + '{' + ','.join(k + '=' + json.dumps(v) for k, v in config.items()) + '}\n' + r'''
 local m=manager.machine
@@ -51,7 +54,7 @@ local function register(names)
  error('Emulator does not expose CPU state '..table.concat(names,'/'))
 end
 local log=assert(io.open(q.output..'/probe.csv','w'))
-log:write('seconds,pc,frames,pad,sp\n')
+log:write('seconds,pc,frames,pad,sp,error\n')
 local dumped=false
 local function input(name,on)
  for _,port in pairs(m.ioport.ports) do
@@ -60,8 +63,8 @@ local function input(name,on)
 end
 emu.register_frame_done(function()
  local t=m.time:as_double()
- input('P1 A',t>2 and t<2.25)
- input('P1 Right',t>3 and t<3.25)
+ input('P1 A',q.loader and t>4.5 and t<4.65 or not q.loader and t>2 and t<2.25)
+ input('P1 Right',q.loader and ((t>2 and t<2.25) or (t>8.5 and t<8.75)) or not q.loader and t>3 and t<3.25)
  if t>1 and not dumped then
   local f=assert(io.open(q.output..'/loaded-firmware.bin','wb'))
   for start=0,0x7ffff,4096 do
@@ -72,9 +75,10 @@ emu.register_frame_done(function()
   f:close();dumped=true
   screen:snapshot(q.output..'/menu.png')
  end
- log:write(string.format('%.4f,%d,%d,%d,%d\n',t,register({'PC','CURPC'}),
-  mem:read_u32(q.frames),mem:read_u16(q.pad),register({'SP','A7','CURSP'})))
- if t>=4 then
+ log:write(string.format('%.4f,%d,%d,%d,%d,%d\n',t,register({'PC','CURPC'}),
+  mem:read_u32(q.frames),mem:read_u16(q.pad),register({'SP','A7','CURSP'}),
+  q.loader and mem:read_i16(q.error) or 0))
+ if t>=(q.loader and 10 or 4) then
   screen:snapshot(q.output..'/input.png');log:close();m:exit()
  end
 end)
@@ -85,7 +89,7 @@ end)
     env.update(SDL_VIDEODRIVER='dummy', SDL_AUDIODRIVER='dummy', QT_QPA_PLATFORM='offscreen')
     command = [a.mame, machine, '-bios', 'official' if a.model == 'cdz' else a.model,
                '-noreadconfig', '-skip_gameinfo', '-video', 'none', '-sound', 'none',
-               '-nothrottle', '-nonvram_save', '-seconds_to_run', '8',
+               '-nothrottle', '-nonvram_save', '-seconds_to_run', '14' if loader else '8',
                '-rompath', str(out / 'roms'), '-cfg_directory', str(out / 'cfg'),
                '-nvram_directory', str(out / 'nvram'), '-autoboot_delay', '0',
                '-autoboot_script', str(script)]
@@ -98,10 +102,18 @@ end)
     if not rows:
         raise ValueError('No firmware samples; inspect mame.log for scripting errors')
     last = rows[-1]
-    if int(last['frames']) < 100 or int(last['pad']) & 0x18 != 0x18:
+    required_pad = 0x08 if loader else 0x18
+    if int(last['frames']) < 100 or int(last['pad']) & required_pad != required_pad:
         raise ValueError('Firmware VBlank/input probe failed: ' + str(last))
     settled = [r for r in rows if float(r['seconds']) > 1]
-    if any(int(b['frames']) < int(a['frames']) for a, b in zip(settled, settled[1:])):
+    resets = [b for a, b in zip(settled, settled[1:]) if int(b['frames']) < int(a['frames'])]
+    if loader:
+        if len(resets) != 1 or not 4.5 <= float(resets[0]['seconds']) < 4.8:
+            raise ValueError('Expected exactly one controller retry reset: ' + str(resets))
+        before = [r for r in rows if 3.5 < float(r['seconds']) < 4.5]
+        if not before or any(int(r['error']) != -2 for r in before) or int(last['error']) != -2:
+            raise ValueError('No-disc error was not bounded before and after retry')
+    elif resets:
         raise ValueError('Firmware reset during the probe (frame clock moved backward)')
     if any(not 0xC00000 <= int(r['pc']) < 0xC80000 or
            not 0x1FC000 <= int(r['sp']) <= 0x1FF000 for r in settled):
@@ -110,7 +122,8 @@ end)
     screenshot = Image.open(out / 'menu.png').convert('RGB')
     if len(screenshot.getcolors(screenshot.width * screenshot.height)) < 2:
         raise ValueError('Firmware menu is blank')
-    report = dict(passed=True, gate='F1 diagnostic only', model=a.model, command=command,
+    report = dict(passed=True, gate='input/no-disc/retry only' if loader else 'F1 diagnostic only',
+                  model=a.model, command=command, no_disc_retry=loader,
                   firmware_sha256=hashlib.sha256(raw).hexdigest(), frames=int(last['frames']),
                   pad_seen=int(last['pad']), disc_boot=False, hardware_tested=False)
     (out / 'result.json').write_text(json.dumps(report, indent=2) + '\n')

@@ -16,7 +16,7 @@ rendering and tests work. It is part of the source baseline and must survive.
 CD implementation uses separate source directories and output directories.
 The installed cartridge test folder and its launchers are outside this task.
 Temporary references, builds and baseline hashes are kept outside the checkout
-under `/home/kepler/neogeosdk-cd-20261021/` on this development machine; that
+under the isolated validation output directory; that
 path is not an SDK build dependency or a distributable asset.
 
 ## Inspected boundaries
