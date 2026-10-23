@@ -6,7 +6,7 @@ import wave
 from cd_fixtures import package
 from tools.neocd.iso9660 import build_iso
 from tools.neocd.audit_disc import read_iso,audit_image,audit_cue
-from tools.neocd.build_disc import build
+from tools.neocd.build_disc import build,RECOGNITION_FILES
 
 
 class ISOTests(unittest.TestCase):
@@ -40,6 +40,11 @@ class ISOTests(unittest.TestCase):
             result=build(source,folder/'out')
             extracted=read_iso((folder/'out/hello.iso').read_bytes())
             self.assertEqual({n:extracted[n] for n in payload},payload)
+            self.assertEqual({n:extracted[n] for n in RECOGNITION_FILES},RECOGNITION_FILES)
+            raw=(folder/'out/hello.iso').read_bytes()
+            root=int.from_bytes(raw[16*2048+158:16*2048+162],'little')*2048
+            size=int.from_bytes(raw[16*2048+166:16*2048+170],'little')
+            self.assertNotIn(b';1',raw[root:root+size])
             self.assertTrue(result['image_audit']['passed'])
             self.assertFalse(result['boot_verified'])
             self.assertEqual(audit_cue(folder/'out/hello.cue')['files'],result['image_audit']['files'])
@@ -51,6 +56,21 @@ class ISOTests(unittest.TestCase):
             files['IPL.TXT']=b'MISSING.PRG,0,0\r\n\x1a'
             iso=folder/'bad.iso';iso.write_bytes(build_iso(files))
             with self.assertRaises(ValueError):audit_image(iso)
+
+    def test_missing_or_corrupt_recognition_marker_fails(self):
+        with tempfile.TemporaryDirectory() as d:
+            folder=Path(d);manifest,_=package(folder)
+            source=folder/'manifest.json';source.write_text(json.dumps(manifest))
+            build(source,folder/'out')
+            files=read_iso((folder/'out/hello.iso').read_bytes())
+            for name in RECOGNITION_FILES:
+                for value in (None,b'Not a native disc marker'):
+                    bad=dict(files)
+                    if value is None:del bad[name]
+                    else:bad[name]=value
+                    iso=folder/'bad.iso';iso.write_bytes(build_iso(bad))
+                    with self.subTest(name=name,value=value),self.assertRaises(ValueError):
+                        audit_image(iso)
 
     def test_cue_track_association_and_paths(self):
         with tempfile.TemporaryDirectory() as d:

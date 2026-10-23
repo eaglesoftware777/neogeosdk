@@ -1,7 +1,6 @@
-"""Native CD smoke test with an explicitly supplied stock firmware file.
+"""Native CD smoke test with explicitly supplied stock or source-built firmware.
 
-The original firmware is still at F1, so --bios-mode eagle refuses disc-boot
-claims. Its separate diagnostics are bios/cd/tools/qa.py. No firmware downloads.
+Firmware is mapped and compared byte for byte. No firmware downloads.
 """
 import argparse
 import csv
@@ -31,8 +30,8 @@ STOCK_SHA1={
 
 
 def firmware_bytes(path,mode):
-    if mode != 'stock':
-        raise ValueError('EagleBIOS-CD has passed diagnostic F1 only; disc boot is not implemented')
+    if mode not in ('stock','eagle'):
+        raise ValueError('Unknown CD firmware mode')
     path=Path(path)
     if not path.is_file():
         raise ValueError('Stock CD boot is blocked: supply your own legitimate 512 KiB CD BIOS with --bios')
@@ -45,11 +44,18 @@ def firmware_bytes(path,mode):
         raw=bytes(swapped)
     if raw[:4]!=bytes.fromhex('0010f300'):
         raise ValueError('Unrecognized CD reset stack; inspect the firmware rather than guessing byte order')
-    if raw[0x700:0x708]==b'EAGLECD\0':
+    is_eagle=raw[0x700:0x708]==b'EAGLECD\0'
+    if mode=='stock' and is_eagle:
         raise ValueError('Original diagnostic firmware must not be counted as a stock BIOS')
     pc=int.from_bytes(raw[4:8],'big')
     if pc&1 or not 0xC00000<=pc<0xC80000:
         raise ValueError('Invalid CD firmware reset vector')
+    if mode=='eagle':
+        if (not is_eagle or raw[0x708:0x70E]!=bytes.fromhex('000100070007') or
+                int.from_bytes(raw[0x70E:0x710],'big')>2 or
+                int.from_bytes(raw[0x710:0x714],'big')&2==0):
+            raise ValueError('Eagle firmware does not advertise native disc boot')
+        return raw
     mame_order=bytearray(raw)
     mame_order[0::2],mame_order[1::2]=raw[1::2],raw[0::2]
     if hashlib.sha1(mame_order).hexdigest() not in STOCK_SHA1:
@@ -61,8 +67,10 @@ def run(build,bios,mode,model,out,mame,nm):
     # Validate prerequisites before creating a test directory or copying firmware.
     raw=firmware_bytes(bios,mode)
     mame_order=bytearray(raw);mame_order[0::2],mame_order[1::2]=raw[1::2],raw[0::2]
-    if STOCK_SHA1[hashlib.sha1(mame_order).hexdigest()]!=model:
+    if mode=='stock' and STOCK_SHA1[hashlib.sha1(mame_order).hexdigest()]!=model:
         raise ValueError('Supplied stock firmware belongs to a different CD model')
+    if mode=='eagle' and int.from_bytes(raw[0x70E:0x710],'big')!=('front','top','cdz').index(model):
+        raise ValueError('Supplied Eagle firmware belongs to a different CD model')
     build=Path(build).resolve()
     metadata=json.loads((build/'source-manifest.json').read_text())
     if metadata.get('game')!='helloworld':
@@ -146,7 +154,7 @@ end)
         screenshot=Image.open(out/name).convert('RGB')
         if len(screenshot.getcolors(screenshot.width*screenshot.height))<3:
             raise ValueError('Native diagnostic screen is blank')
-    report=dict(passed=True,gate='native stock smoke only',model=model,
+    report=dict(passed=True,gate='native '+mode+' smoke only',model=model,
                 command=command,firmware_sha256=hashlib.sha256(raw).hexdigest(),
                 image_sha256=audit['sha256'],frames=int(rows[-1]['frames']),
                 second_scene=False,cdda_playback=False,save_persistence=False,hardware_tested=False)

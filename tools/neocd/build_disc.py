@@ -14,6 +14,14 @@ from tools.neocd.formats import Entry, encode_ipl, filename, validate_prg, valid
 from tools.neocd.iso9660 import build_iso
 from tools.neocd.audit_disc import audit_cue
 
+# Firmware recognition markers, not ownership metadata for the homebrew.
+# These exact format strings are required by the stock CD system ROM.
+RECOGNITION_FILES = {
+    'CPY.TXT': b'Copyright by SNK corporation',
+    'BIB.TXT': b'Bibliographiced by SNK corporation',
+    'ABS.TXT': b'Abstracted by SNK corporation',
+}
+
 
 def source_file(folder, name):
     if not isinstance(name, str):
@@ -67,7 +75,7 @@ def validate_manifest(manifest, folder):
         if not isinstance(record, dict) or not {'name', 'source', 'group'} <= record.keys():
             raise ValueError('File record needs name, source and group')
         name = filename(record['name'])
-        if name in names or name == 'IPL.TXT':
+        if name in names or name == 'IPL.TXT' or name in RECOGNITION_FILES:
             raise ValueError('Duplicate/reserved CD filename')
         names.add(name)
         group = record['group']
@@ -82,7 +90,7 @@ def validate_manifest(manifest, folder):
         if 'sha256' in record and record['sha256'] != digest:
             raise ValueError('Asset checksum disagrees with manifest')
         records.append(dict(entry=entry, group=group, data=data, start=start, end=end, sha256=digest))
-    if not 1 <= len(records) <= 511:
+    if not 1 <= len(records) <= 508:
         raise ValueError('Package file count exceeds conservative CD limits')
     for group, active in closures.items():
         occupants = {}
@@ -127,6 +135,7 @@ def build(manifest_path, out, epoch=946684800):
         raise ValueError('CDDA track count exceeds99 tracks including data')
     files = {r['entry'].name: r['data'] for r in records}
     files['IPL.TXT'] = encode_ipl([r['entry'] for r in records if r['group'] == 'boot'])
+    files.update(RECOGNITION_FILES)
     iso = build_iso(files, manifest.get('volume', 'EAGLECD'), epoch)
     out = Path(out).resolve()
     if out.exists() and any(out.iterdir()):

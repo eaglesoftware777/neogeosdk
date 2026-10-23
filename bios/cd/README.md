@@ -1,6 +1,6 @@
-# EagleBIOS-CD 1.7.7 — original diagnostic firmware
+# EagleBIOS-CD 1.7.7 — independent experimental disc loader
 
-**F1 only: menu, input, VBlank and bounded execution. Disc boot is not implemented.**
+**Native CDZ disc boot, runtime asset loading and CDDA have passed emulator probes.**
 This is a separately linked 512 KiB CD system ROM. It is not the cartridge BIOS
 padded to a different size. Existing cartridge sources, vectors, ROM names and
 outputs are unchanged. No stock firmware, artwork, sound driver or patches are
@@ -26,11 +26,21 @@ and our SDK-original LO data into an isolated MAME directory, compares all
 loaded ROM bytes, checks input/frame/stack/PC behavior and saves screenshots.
 No existing MAME configuration, save, installed game or cartridge BIOS is replaced.
 
-The first meaningful optical-drive gate is F2: TOC plus sector reads, invalid
-media, lid/tray and bounded timeouts. F3 must boot the same native SDK disc;
-F4 must perform a subsequent file load and CDDA; F5 must record audio and prove
-cold-restart saving. None has passed. Do not use this diagnostic as a hardware
-replacement or distribute it as finished CD firmware.
+The independent transport implements checksummed drive packets, bounded TOC and
+sector reads, CDC/DMA transfer, flat ISO9660/IPL parsing and native PRG, SPR, FIX,
+Z80 and PCM uploads. Maiya and Sky Lance reached gameplay with input, sound
+effects and CDDA in MAME 0.283 using this ROM. The same native game files also
+boot with supplied stock CDZ firmware. Disc packages may have separate volume
+labels and launch profiles; neither package contains a system BIOS.
+
+The runtime file service was checked by loading a second sprite bank and
+comparing its bytes through the native upload window. Caller registers and
+interrupt-mask restoration, missing files, invalid banks and unsupported
+executable overlays were also checked. This is partial service conformance,
+not a complete replacement BIOS. Standalone UPLOAD, generic HAL file/audio
+integration, virtual-card saving, tray/media changes and physical hardware
+compatibility remain unfinished or unverified. Front/top optical behavior has
+not passed the CDZ game tests. Do not flash this build as finished firmware.
 
 - [Architecture and status](../../docs/EAGLEBIOS_CD.md)
 - [ABI and capabilities](../../docs/EAGLEBIOS_CD_ABI.md)

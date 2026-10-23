@@ -1,9 +1,13 @@
     .cpu 68000
     .section .cd_header,"a"
     .long 0x0010F300,0x00C00402
-    .rept 23
+    .rept 19
     .long ng_cd_exception
     .endr
+    /* IPL replaces these vectors before USER runs. Keep the drive alive
+     * throughout the remaining file transfers, not just after entry. */
+    .long ng_cd_drive_irq21,ng_cd_drive_irq22,ng_cd_drive_irq23
+    .long ng_cd_exception
     .long ng_cd_irq_entry,ng_cd_irq_entry,ng_cd_irq_entry
     .rept 36
     .long ng_cd_exception
@@ -25,6 +29,10 @@ ng_cd_user_entry:
     .org 0x200
     .text
 ng_cd_entry:
+    /* USER is entered by JMP, not JSR. Non-game requests return through
+     * the firmware scheduler, never an RTS to an absent return address. */
+    cmpi.b #2,0x10FDAE
+    bcs.s ng_cd_return
     move.w #0x2700,%sr
     lea 0x10F000,%sp
     lea __data_load,%a0
@@ -53,6 +61,15 @@ ng_cd_callback_return:
     .global ng_cd_wait_vblank
 ng_cd_wait_vblank:
     stop #0x2000
+    rts
+ng_cd_drive_irq21:
+    move.l 0xC00054,-(%sp)
+    rts
+ng_cd_drive_irq22:
+    move.l 0xC00058,-(%sp)
+    rts
+ng_cd_drive_irq23:
+    move.l 0xC0005C,-(%sp)
     rts
 ng_cd_irq_entry:
     movem.l %d0-%d7/%a0-%a6,-(%sp)

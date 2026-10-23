@@ -7,10 +7,10 @@ No proprietary BIOS code/assets or emulator implementation were copied.
 ## Reproducible original ROMs
 
 ```sh
-python3 bios/cd/tools/build.py --out /home/kepler/neogeosdk-cd-20261021/firmware-f1
+python3 bios/cd/tools/build.py --out ../cd-validation/firmware-f1
 python3 bios/cd/tools/qa.py \
-  --firmware /home/kepler/neogeosdk-cd-20261021/firmware-f1 \
-  --model cdz --out /home/kepler/neogeosdk-cd-20261021/qa-firmware-f1-cdz-3
+  --firmware ../cd-validation/firmware-f1 \
+  --model cdz --out ../cd-validation/qa-firmware-f1-cdz-3
 ```
 
 The same probe was run with `front` and `top`, each in its own new directory.
@@ -38,7 +38,7 @@ does not relabel our ROM as vendor firmware. Every test dumped and compared all
 512 KiB actually mapped at `$C00000`, checked monotonic frame count and ROM/stack
 bounds, and captured `menu.png`, `input.png`, `probe.csv`, `result.json`, logs
 and the original mapped ROM. Results are under
-`/home/kepler/neogeosdk-cd-20261021/qa-firmware-f1-{front,top,cdz}-3/`.
+`../cd-validation/qa-firmware-f1-{front,top,cdz}-3/`.
 
 ![Original CDZ diagnostic menu, native MAME capture](../images/neocd/eagle-cdz-f1.png)
 

@@ -24,7 +24,7 @@ def compiler_default():
     return 'm68k-unknown-elf-gcc'
 
 
-def build(out, cc, stock_rom=None):
+def build(out, cc):
     if out.exists() and any(out.iterdir()):
         raise ValueError('Use a new or empty firmware output directory; previous builds are preserved')
     out.mkdir(parents=True, exist_ok=True)
@@ -41,7 +41,8 @@ def build(out, cc, stock_rom=None):
     font_source = out / 'font.c'
     font_source.write_text('#include <stdint.h>\nconst uint8_t eagle_cd_font[]={\n' +
                            ','.join(str(b) for b in font) + '\n};\n')
-    result = {'version': '1.7.7', 'status': 'EagleBIOS-CD bootable firmware', 'profiles': {}}
+    result = {'version': '1.7.7', 'status': 'experimental independent native CD loader',
+              'capabilities': 15, 'hardware_tested': False, 'profiles': {}}
     flags = ['-m68000', '-O2', '-ffreestanding', '-fno-builtin', '-fno-common',
              '-Wall', '-Wextra', '-Werror', '-I' + str(CD / 'include')]
     for ident, model in enumerate(('front', 'top', 'cdz')):
@@ -53,8 +54,8 @@ def build(out, cc, stock_rom=None):
             subprocess.run([cc, *flags, '-DCD_MODEL=' + str(ident), '-c', str(source), '-o', str(obj)], check=True)
             objects.append(str(obj))
         elf, raw = folder / 'eagle_cd.elf', folder / 'raw.bin'
-        subprocess.run([prefix + 'ld' + suffix, '-T', str(CD / 'cd_bios.ld'),
-                        '-Map=' + str(folder / 'eagle_cd.map'), *objects, '-o', str(elf)], check=True)
+        subprocess.run([cc, '-m68000', '-nostdlib', '-Wl,-T,' + str(CD / 'cd_bios.ld'),
+                        '-Wl,-Map,' + str(folder / 'eagle_cd.map'), *objects, '-lgcc', '-o', str(elf)], check=True)
         subprocess.run([prefix + 'objcopy' + suffix, '-O', 'binary', str(elf), str(raw)], check=True)
         data = raw.read_bytes()
         if len(data) > 0x80000 or data[:4] != bytes.fromhex('0010f300'):
@@ -63,28 +64,7 @@ def build(out, cc, stock_rom=None):
         if not 0xC01000 <= pc < 0xC80000 or pc & 1 or data[0x700:0x708] != b'EAGLECD\0':
             raise ValueError('Invalid CD reset address or identification')
         rom = out / ('eagle_cd_' + model + '.rom')
-        if stock_rom is not None and Path(stock_rom).is_file():
-            base = bytearray(Path(stock_rom).read_bytes())
-            if len(base) == 0x80000:
-                if base[:4] == bytes.fromhex('100000f3'):
-                    unswapped = bytearray(len(base))
-                    for i in range(0, len(base), 2):
-                        unswapped[i] = base[i+1]
-                        unswapped[i+1] = base[i]
-                    base = unswapped
-                base[:len(data)] = data
-                rom.write_bytes(base)
-                # Also emit word-swapped MAME ROM for emulators that expect swapped words
-                mame_rom = out / ('mame_eagle_cd_' + model + '.rom')
-                swapped = bytearray(len(base))
-                for i in range(0, len(base), 2):
-                    swapped[i] = base[i+1]
-                    swapped[i+1] = base[i]
-                mame_rom.write_bytes(swapped)
-            else:
-                rom.write_bytes(data.ljust(0x80000, b'\xff'))
-        else:
-            rom.write_bytes(data.ljust(0x80000, b'\xff'))
+        rom.write_bytes(data.ljust(0x80000, b'\xff'))
         result['profiles'][model] = dict(file=rom.name, size=rom.stat().st_size,
                                         sha256=hashlib.sha256(rom.read_bytes()).hexdigest(), reset=hex(pc))
     (out / 'firmware.json').write_text(json.dumps(result, indent=2) + '\n')
