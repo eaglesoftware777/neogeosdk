@@ -1,9 +1,9 @@
 {
  "prefix": "ns",
- "tiles_used": 40280,
+ "tiles_used": 40328,
  "banks_used": [
   16,
-  79
+  81
  ],
  "assets": [
   {
@@ -815,6 +815,51 @@
    "banks": 1,
    "width": 256,
    "height": 80
+  },
+  {
+   "id": 55,
+   "name": "hud_jay",
+   "kind": "sprite",
+   "tile_base": 40280,
+   "tiles": 16,
+   "frames": 1,
+   "frame_tiles": 16,
+   "strips": 4,
+   "rows": 4,
+   "bank": 80,
+   "banks": 2,
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": 56,
+   "name": "hud_zoe",
+   "kind": "sprite",
+   "tile_base": 40296,
+   "tiles": 16,
+   "frames": 1,
+   "frame_tiles": 16,
+   "strips": 4,
+   "rows": 4,
+   "bank": 80,
+   "banks": 2,
+   "width": 64,
+   "height": 64
+  },
+  {
+   "id": 57,
+   "name": "hud_kai",
+   "kind": "sprite",
+   "tile_base": 40312,
+   "tiles": 16,
+   "frames": 1,
+   "frame_tiles": 16,
+   "strips": 4,
+   "rows": 4,
+   "bank": 80,
+   "banks": 2,
+   "width": 64,
+   "height": 64
   }
  ]
 }

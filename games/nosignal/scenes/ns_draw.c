@@ -11,7 +11,8 @@
  * Sprites (hardware slots, lower behind): 1-32 the street, 37-60 props,
  * 61-76 shots, 77-236 fighters (two exclusive 80-strip depth-layout banks), 237-252 sparks, 253-272 the dialogue plate, 273-276
  * its portrait, 277-294 the card, 295-310 the logo, 311-334 hero pictures
- * on cards and the select screen.
+ * on cards and the select screen, 335-338 the hero's portrait on the status
+ * line (hardware-shrunk to 32 x 32).
  *
  * The hardware shows at most 96 sprites on a line, counting every sprite
  * whose height covers it, on the screen or not, and drops the highest
@@ -58,6 +59,7 @@ void NEOGEO_USER soundSetADPCMBLoop(uint8_t v);
 #define SPR_CARD    277u
 #define SPR_LOGO    295u
 #define SPR_HERO    311u
+#define SPR_HUD     335u
 #define PAL_BANKS   112u
 
 /* ======================================================================
@@ -265,7 +267,7 @@ void NEOGEO_USER ns_clear_text(uint8_t y0, uint8_t y1)
 /* ======================================================================
  * sprites
  * ==================================================================== */
-static NGSpriteGroup s_bg, s_logo, s_card, s_dialog, s_face, s_cards[3];
+static NGSpriteGroup s_bg, s_logo, s_card, s_dialog, s_face, s_cards[3], s_hud_face;
 static NGSpriteGroup s_fighter_banks[2][NGB_FIGHTERS];
 static NGSpriteGroup *s_fighter;
 static NGSpriteGroup s_prop[NGB_MAX_PROPS], s_shot[NGB_MAX_SHOTS], s_fx[FXN];
@@ -281,6 +283,9 @@ static uint8_t s_respawn_t;                      /* frames left of the blink aft
 #define NEW_PICTURES 1u
 static uint8_t s_street, s_street_rows;          /* the street is up: its strips are placed one by one */
 static uint8_t s_fx_t[FXN];
+/* "!" over an enemy about to strike: a FIX cell, rubbed out again after a moment */
+#define MARKS 4u
+static uint8_t s_mark_col[MARKS], s_mark_row[MARKS], s_mark_t[MARKS];
 static uint8_t s_dark;      /* the screen is faded out: set a scene up at once, not over the next blanks */
 
 static void NEOGEO_USER put(NGSpriteGroup *g)
@@ -329,7 +334,7 @@ void NEOGEO_USER ns_fade_out(void)
 static void NEOGEO_USER forget_all(void)
 {
     uint8_t i;
-    s_bg.visible = s_logo.visible = s_card.visible = s_dialog.visible = s_face.visible = 0;
+    s_bg.visible = s_logo.visible = s_card.visible = s_dialog.visible = s_face.visible = s_hud_face.visible = 0;
     for (i = 0; i < 3u; i++) s_cards[i].visible = 0;
     s_live_bank = s_reorder = s_upload_actor = s_upload_column = s_cutover_ready = 0u;
     s_count[0] = s_count[1] = 0u;
@@ -344,6 +349,7 @@ static void NEOGEO_USER forget_all(void)
     for (i = 0; i < NGB_MAX_PROPS; i++) s_prop[i].visible = 0;
     for (i = 0; i < NGB_MAX_SHOTS; i++) s_shot[i].visible = 0;
     for (i = 0; i < FXN; i++) { s_fx[i].visible = 0; s_fx_t[i] = 0; }
+    for (i = 0; i < MARKS; i++) s_mark_t[i] = 0;
 }
 
 static void NEOGEO_USER clear_screen(void)
@@ -485,6 +491,7 @@ void NEOGEO_USER ns_stage_show(const NGBeatEmUp *b, const NSStageInfo *si, uint8
     s_cols = a->strips;
     load_art_palettes(s_stage_art);
     load_art_palettes(hero_art(hero));
+    if (hero < NS_HEROES && ns_hud_art[hero]) load_art_palettes(ns_hud_art[hero]);
     for (i = 0; i < 6u && si->crew[i]; i++) load_art_palettes(si->crew[i]);
     ng_palfx_screen_backdrop(0x8000u);
     /* the 21-strip ring over the painting, first as one chain at the start of the street */
@@ -513,6 +520,22 @@ static const NSLook *NEOGEO_USER look_of(const NGBFighterDef *d)
 }
 
 static uint8_t s_throw_t;
+static uint8_t s_shake;          /* frames of screen shake left (heavy blows) */
+static int16_t s_shake_dx;       /* this frame's sideways nudge of the street and everyone on it */
+
+/* The move under way. Two numbers are not rows of the fighter's table: the
+ * engine's swing of a held weapon (0xFE) and a throw's recovery (NGB_NONE,
+ * an ATTACK state with no move): read as moves they are memory past the
+ * table, a picture that doesn't exist and colours from anywhere. */
+#define SWING_MOVE 0xFEu
+static const NGBMove *NEOGEO_USER move_now(const NGBeatEmUp *b, const NGBFighter *f)
+{
+    if (f->move == SWING_MOVE) {
+        if (f->weapon == NGB_NONE || !b->stage->nweapons) return 0;
+        return b->stage->weapons[b->prop[f->weapon].contents].move;
+    }
+    return f->def && f->move < f->def->nmoves ? &f->def->moves[f->move] : 0;
+}
 
 /* Cycles (walking, running, a hurt shake, idling) run on the fighter's own
  * clock, offset by `ph` per fighter so that a crowd's pictures don't all
@@ -527,7 +550,10 @@ static uint8_t NEOGEO_USER hero_frame(const NGBeatEmUp *b, const NGBFighter *f, 
     case NGB_ST_RUN: return (uint8_t)(((t >> 2) & 1u) ? HF_RUN2 : HF_RUN1);
     case NGB_ST_JUMP: return (uint8_t)(f->vz > 0 ? HF_JUMP_UP : HF_JUMP_DOWN);
     case NGB_ST_ATTACK:
-        mv = &f->def->moves[f->move];
+        mv = move_now(b, f);
+        if (f->move == SWING_MOVE)          /* a bat or a pipe: raised over the head, then through */
+            return (uint8_t)(f->move_frame < (mv ? mv->startup : 5u) ? HF_UPPER : HF_CROSS);
+        if (!mv) return HF_THROW;           /* after a throw */
         if (mv->anim == HF_SPECIAL1 && f->move_frame >= (uint8_t)(mv->startup + (mv->active >> 1))) return HF_SPECIAL2;
         if (f->z > (8 << 8) && f->move == f->def->air) return HF_JUMPKICK;
         return mv->anim;
@@ -538,13 +564,12 @@ static uint8_t NEOGEO_USER hero_frame(const NGBeatEmUp *b, const NGBFighter *f, 
     case NGB_ST_GETUP: return HF_GETUP;
     case NGB_ST_RIDE: return HF_RIDE;
     default:
-        (void)b;
         if (s_throw_t) return HF_THROW;
         return (uint8_t)(((t >> 5) & 1u) ? HF_IDLE : HF_STANCE);
     }
 }
 
-static uint8_t NEOGEO_USER enemy_frame(const NGBFighter *f, const NSLook *lk, uint8_t ph)
+static uint8_t NEOGEO_USER enemy_frame(const NGBeatEmUp *b, const NGBFighter *f, const NSLook *lk, uint8_t ph)
 {
     static const uint8_t walk[4] = { EF_WALK1, EF_WALK2, EF_WALK3, EF_WALK2 };
     const NGBMove *mv;
@@ -553,7 +578,8 @@ static uint8_t NEOGEO_USER enemy_frame(const NGBFighter *f, const NSLook *lk, ui
     switch (f->state) {
     case NGB_ST_WALK: case NGB_ST_RUN: ef = walk[(t >> 3) & 3u]; break;
     case NGB_ST_ATTACK:
-        mv = &f->def->moves[f->move];
+        mv = move_now(b, f);
+        if (!mv) { ef = EF_ATTACK; break; }  /* after throwing the hero */
         if (mv->anim >= EF_COUNT) {                       /* the boss's own pictures */
             if (mv->anim == BF_BIKE1 && lk->art == NS_ART_F_RICO) return (uint8_t)(((t >> 2) & 1u) ? BF_BIKE2 : BF_BIKE1);
             return mv->anim;
@@ -581,7 +607,7 @@ static void NEOGEO_USER fighter_position(NGSpriteGroup *g, const NGBeatEmUp *b, 
 {
     const NGBFighter *f = &b->f[id];
     const NGArtAsset *a = art(art_id);
-    int16_t x = (int16_t)((f->x - b->camera_x) >> 8);
+    int16_t x = (int16_t)(((f->x - b->camera_x) >> 8) - s_shake_dx);
     int16_t y = (int16_t)((f->y - f->z) >> 8);
     uint8_t blink = (uint8_t)((id == NGB_PLAYER && s_respawn_t && (s_frames & 4u)) ||
         (f->state == NGB_ST_DEAD && (f->timer & 4u)));
@@ -686,23 +712,71 @@ static uint8_t NEOGEO_USER prop_frame(const NGBProp *p)
     }
 }
 
+/* What can be picked up bobs a little on the ground (one position write
+ * every eight frames), so it reads as something to walk over. */
+static int16_t NEOGEO_USER prop_bob(const NGBProp *p, uint8_t i)
+{
+    static const uint8_t bob[4] = { 0, 1, 2, 1 };
+    if (p->state != 0u || !(p->kind == NGB_PROP_FOOD || p->kind == NGB_PROP_SCORE || p->kind == NGB_PROP_WEAPON)) return 0;
+    return bob[(uint8_t)((s_frames >> 3) + i) & 3u];
+}
+
+/* Where a hero's front fist is, from the feet, facing right (measured on
+ * the heroes' 128-pixel frames, a few pixels in from the knuckles): a
+ * weapon picked up is drawn with its handle there. */
+enum { HAND_STANCE = 0, HAND_IDLE, HAND_WALK, HAND_RUN, HAND_UPPER, HAND_CROSS, HAND_THROW, HANDS };
+static const int8_t k_hand[NS_HEROES][HANDS][2] = {
+    { { 18, -64 }, { 18, -55 }, { 20, -50 }, { 29, -59 }, { 14, -111 }, { 46, -69 }, { -28, -72 } },   /* Jay */
+    { { 15, -61 }, { 16, -57 }, { 17, -47 }, { 24, -60 }, { 19, -97 }, { 39, -70 }, { -13, -55 } },    /* Zoe */
+    { { 23, -61 }, { 22, -55 }, { 19, -62 }, { 26, -66 }, { 14, -103 }, { 49, -73 }, { -28, -80 } },   /* Kai */
+};
+
+static void NEOGEO_USER hand_of(uint8_t pose, int16_t *x, int16_t *y)
+{
+    uint8_t k;
+    switch (pose) {
+    case HF_IDLE: k = HAND_IDLE; break;
+    case HF_WALK1: case HF_WALK2: case HF_WALK3: case HF_WALK4: k = HAND_WALK; break;
+    case HF_RUN1: case HF_RUN2: k = HAND_RUN; break;
+    case HF_UPPER: k = HAND_UPPER; break;      /* raised for the swing */
+    case HF_CROSS: k = HAND_CROSS; break;      /* swung through */
+    case HF_THROW: k = HAND_THROW; break;
+    default: k = HAND_STANCE; break;
+    }
+    *x = k_hand[s_hero_id < NS_HEROES ? s_hero_id : 0u][k][0];
+    *y = k_hand[s_hero_id < NS_HEROES ? s_hero_id : 0u][k][1];
+}
+
 static void NEOGEO_USER draw_props(const NGBeatEmUp *b, uint16_t cam)
 {
     uint8_t i;
     for (i = 0; i < NGB_MAX_PROPS; i++) {
         const NGBProp *p = &b->prop[i];
         NGSpriteGroup *g = &s_prop[i];
-        int16_t sx, sy;
+        int16_t sx, sy, left, top;
+        uint8_t flip = 0u;
         if (!p->kind || p->state == 3u || (p->state == 1u && p->owner != NGB_NONE && p->kind == NGB_PROP_VEHICLE)) { hide(g); continue; }
         sx = (int16_t)((p->x >> 8) - (int32_t)cam);
-        sy = (int16_t)((p->y - p->z) >> 8);
+        sy = (int16_t)(((p->y - p->z) >> 8) - prop_bob(p, i));
+        left = (int16_t)(sx - 16); top = (int16_t)(sy - 30);
+        if (p->state == 1u && p->owner == NGB_PLAYER) {   /* in the hero's hand: the handle (6, 26) on it */
+            const NGBFighter *h = &b->f[NGB_PLAYER];
+            int16_t hx, hy;
+            hand_of(hero_frame(b, h, 0u), &hx, &hy);
+            flip = h->facing;
+            sx = (int16_t)((h->x >> 8) - (int32_t)cam);
+            sy = (int16_t)((h->y - h->z) >> 8);
+            left = (int16_t)(flip ? sx - hx - 25 : sx + hx - 6);
+            top = (int16_t)(sy + hy - 26);
+        }
         if (sx < -40 || sx > 360) { hide(g); continue; }
-        if (!g->visible) show_asset(g, (uint16_t)(SPR_PROP + 2u * i), NS_ART_PROPS, prop_frame(p), (int16_t)(sx - 16), (int16_t)(sy - 30));
+        if (!g->visible) show_asset(g, (uint16_t)(SPR_PROP + 2u * i), NS_ART_PROPS, prop_frame(p), left, top);
         else {
             set_frame(g, NS_ART_PROPS, prop_frame(p));
-            ng_sprite_group_set_pos(g, (int16_t)(sx - 16), (int16_t)(sy - 30));
-            ng_sprite_group_flush(g);
+            ng_sprite_group_set_pos(g, left, top);
         }
+        ng_sprite_group_set_flip(g, flip, 0u);
+        ng_sprite_group_flush(g);
     }
     for (i = 0; i < NGB_MAX_SHOTS; i++) {
         const NGBShot *s = &b->shot[i];
@@ -750,9 +824,17 @@ void NEOGEO_USER ns_stage_draw(const NGBeatEmUp *b)
     uint8_t ids[NGB_FIGHTERS + NGB_MAX_PROPS + NGB_MAX_SHOTS];
     uint8_t order[NGB_FIGHTERS], want[NGB_FIGHTERS], n, k, i, m = 0u, changed, swapped;
     uint8_t bank = s_live_bank, left = NEW_PICTURES;
-    uint16_t used = 0u;
-    street((uint16_t)(b->camera_x >> 8));
-    draw_props(b, (uint16_t)(b->camera_x >> 8));
+    uint16_t used = 0u, cam = (uint16_t)(b->camera_x >> 8);
+    static const int8_t k_shake[8] = { 0, 1, -1, 1, -2, 2, -2, 2 };     /* by frames left: dies away */
+    s_shake_dx = 0;
+    if (s_shake && !s_dark) {
+        s_shake--;
+        s_shake_dx = k_shake[s_shake & 7u];
+        if (s_shake_dx < 0 && cam < 2u) s_shake_dx = (int16_t)-s_shake_dx;   /* the street's left end */
+    }
+    cam = (uint16_t)(cam + s_shake_dx);
+    street(cam);
+    draw_props(b, cam);
     n = ng_beatemup_draw_list(b, ids, (uint8_t)sizeof(ids));
     for (k = 0u; k < n; k++)
         if (ids[k] < NGB_FIGHTERS && b->f[ids[k]].alive) order[m++] = ids[k];
@@ -771,7 +853,8 @@ void NEOGEO_USER ns_stage_draw(const NGBeatEmUp *b)
         uint8_t id = order[k];
         const NGBFighter *f = &b->f[id];
         uint8_t art_id = look_of(f->def)->art;
-        uint8_t frame = id == NGB_PLAYER ? hero_frame(b, f, 0u) : enemy_frame(f, look_of(f->def), (uint8_t)(id * 5u));
+        uint8_t frame = id == NGB_PLAYER ? hero_frame(b, f, 0u) : enemy_frame(b, f, look_of(f->def), (uint8_t)(id * 5u));
+        if (frame >= ns_art_frames[art_id - 1u]) frame = 0u;   /* never a picture past the sheet */
         s_rank[id] = k;
         want[id] = (uint8_t)(frame | (f->facing ? 0x80u : 0u));
         used = (uint16_t)(used + art(art_id)->strips);
@@ -831,6 +914,7 @@ static uint16_t s_shown_combo = 0xFFFFu;
 static uint8_t s_focus = NGB_NONE, s_focus_t, s_focus_shown = 0xFFu;   /* the enemy last hit */
 static const NGBFighterDef *s_focus_def;
 
+#define HUD_COL    6u       /* the status line's text starts right of the hero's portrait */
 #define BAR_TILES  12u      /* the hero's and an enemy's bar: 96 steps */
 #define BOSS_TILES 20u      /* the boss's: 160 steps */
 #define FIX_BAR    (NS_FIX_ICONS + 4u)       /* + 0..8: a cell filled that many pixels */
@@ -885,10 +969,28 @@ static void NEOGEO_USER enemy_line(const NGBeatEmUp *b)
     if (u == s_focus_shown) return;
     if (s_focus_shown == 0xFFu) {
         ns_clear_text(3, 3);
-        ns_puts(20, 3, look_of(f->def)->name, NS_TXT_WHITE);
+        ns_puts(HUD_COL + 15u, 3, look_of(f->def)->name, NS_TXT_WHITE);
     }
-    bar_draw(4, 3, BAR_TILES, u, NS_BAR_ENEMY, FIX_CAP_R);
+    bar_draw(HUD_COL, 3, BAR_TILES, u, NS_BAR_ENEMY, FIX_CAP_R);
     s_focus_shown = u;
+}
+
+/* The hero's portrait at the status line's left, its dialogue picture
+ * shrunk by the hardware to 32 x 32 (SCB2), in banks of its own. */
+static void NEOGEO_USER hud_face(uint8_t hero)
+{
+    const NGArtAsset *a;
+    uint8_t id = hero < NS_HEROES ? ns_hud_art[hero] : 0u;
+    if (!id) return;
+    a = art(id);
+    ng_sprite_group_init(&s_hud_face, SPR_HUD, a->strips, a->rows, a->tile_base, a->palette_bank);
+    ng_sprite_group_set_priority(&s_hud_face, NG_SG_PRIO_HIGH);
+    ng_sprite_group_set_palette_map(&s_hud_face, a->tile_palettes);
+    ng_sprite_group_set_pos(&s_hud_face, 8, 8);
+    ng_sprite_group_set_scale(&s_hud_face, 0x7Fu, 0x7Fu);
+    ng_sprite_group_set_visible(&s_hud_face, 1);
+    ng_sprite_group_mark_dirty(&s_hud_face, NG_SGF_DIRTY_ALL);
+    put(&s_hud_face);
 }
 
 void NEOGEO_USER ns_hud(const NGBeatEmUp *b, uint8_t hero, uint8_t full)
@@ -898,12 +1000,13 @@ void NEOGEO_USER ns_hud(const NGBeatEmUp *b, uint8_t hero, uint8_t full)
     if (full) {
         s_shown_units = s_shown_lives = 0xFFu; s_shown_score = 0xFFFFFFFFu; s_shown_combo = 0xFFFFu;
         s_focus_shown = 0xFFu;
-        ns_puts(1, 1, ns_hero_info[hero].name, NS_TXT_GOLD);
+        hud_face(hero);
+        ns_puts(HUD_COL, 1, ns_hero_info[hero].name, NS_TXT_GOLD);
     }
     /* the phone's battery: green, amber under half, red under a quarter */
     units = bar_units(p->hp, p->def->max_hp, BAR_TILES * 8u);
     if (units != s_shown_units) {
-        bar_draw(4, 1, BAR_TILES, units, units <= BAR_TILES * 2u ? NS_BAR_LOW : units <= BAR_TILES * 4u ? NS_BAR_HALF : NS_BAR_FULL,
+        bar_draw(HUD_COL, 2, BAR_TILES, units, units <= BAR_TILES * 2u ? NS_BAR_LOW : units <= BAR_TILES * 4u ? NS_BAR_HALF : NS_BAR_FULL,
                  FIX_NUB);
         s_shown_units = units;
     }
@@ -915,9 +1018,9 @@ void NEOGEO_USER ns_hud(const NGBeatEmUp *b, uint8_t hero, uint8_t full)
     enemy_line(b);
     if (b->combo != s_shown_combo) {
         if (b->combo >= 2u) {
-            ns_puts(1, 4, "COMBO", NS_TXT_PINK);
-            ns_putn(7, 4, b->combo, 2, NS_TXT_GOLD);
-            ns_puts(10, 4, b->combo >= 10u ? "SKILL ISSUE (THEIRS)" : b->combo >= 6u ? "LET HIM COOK      " : "                  ", NS_TXT_SKY);
+            ns_puts(HUD_COL, 4, "COMBO", NS_TXT_PINK);
+            ns_putn(HUD_COL + 6u, 4, b->combo, 2, NS_TXT_GOLD);
+            ns_puts(HUD_COL + 9u, 4, b->combo >= 10u ? "SKILL ISSUE (THEIRS)" : b->combo >= 6u ? "LET HIM COOK      " : "                  ", NS_TXT_SKY);
             s_combo_t = 90;
         }
         s_shown_combo = b->combo;
@@ -941,6 +1044,17 @@ void NEOGEO_USER ns_boss_bar(const NGBeatEmUp *b, uint8_t boss, const char *name
 
 static uint16_t s_bark_t, s_banner_t;
 static uint8_t s_bark_row;
+void NEOGEO_USER ns_mark(int16_t x, int16_t y)
+{
+    uint8_t i, k = 0;
+    if (x <= 8 || x >= 312 || y < 40 || y >= 216) return;     /* never in the status line (rows 1-4) */
+    for (i = 1; i < MARKS; i++) if (s_mark_t[i] < s_mark_t[k]) k = i;     /* a free one, or the oldest */
+    if (s_mark_t[k]) ng_fix_clear_rect(s_mark_col[k], s_mark_row[k], 1, 1, 0);
+    s_mark_col[k] = (uint8_t)(x >> 3);
+    s_mark_row[k] = (uint8_t)(y >> 3);
+    s_mark_t[k] = 30;
+    ns_puts(s_mark_col[k], s_mark_row[k], "!", NS_TXT_RED);
+}
 
 void NEOGEO_USER ns_bark(const char *text, int16_t x, int16_t y)
 {
@@ -956,6 +1070,9 @@ void NEOGEO_USER ns_bark(const char *text, int16_t x, int16_t y)
 
 static void NEOGEO_USER bark_tick_internal(void)
 {
+    uint8_t i;
+    for (i = 0; i < MARKS; i++)
+        if (s_mark_t[i] && !--s_mark_t[i]) ng_fix_clear_rect(s_mark_col[i], s_mark_row[i], 1, 1, 0);
     if (s_bark_t && !--s_bark_t) ns_clear_text(s_bark_row, s_bark_row);
     if (s_banner_t && !--s_banner_t) ns_clear_text(12, 13);
 }
@@ -995,6 +1112,14 @@ void NEOGEO_USER ns_dialog(uint8_t speaker, const char *text)
     ns_sfx(NS_SFX_TEXT);
 }
 
+/* The dialogue box's plate alone, behind text on a busy picture (hero select). */
+void NEOGEO_USER ns_plate(uint8_t show)
+{
+    if (!show) { hide(&s_dialog); return; }
+    ng_sprite_group_set_priority(&s_dialog, NG_SG_PRIO_HIGH);
+    show_asset(&s_dialog, SPR_DIALOG, NS_ART_DIALOG, 0, 0, 160);
+}
+
 void NEOGEO_USER ns_dialog_hide(void)
 {
     hide(&s_dialog);
@@ -1026,4 +1151,5 @@ void NEOGEO_USER ns_sfx(uint8_t sfx)
 
 /* the game asks for the throw picture for a moment after a throw */
 void NEOGEO_USER ns_throw_pose(void) { s_throw_t = 16; }
+void NEOGEO_USER ns_shake(uint8_t frames) { if (frames > 8u) frames = 8u; if (frames > s_shake) s_shake = frames; }
 void NEOGEO_USER ns_respawn_blink(void) { s_respawn_t = 90; }

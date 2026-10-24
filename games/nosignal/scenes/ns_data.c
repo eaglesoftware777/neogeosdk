@@ -132,19 +132,22 @@ static const NGBWave S1_WAVES[] = {
     { 900,  0,                             3, { E_THIEF, E_THIEF, E_SKATER },                 0x00,  24 },
     { 1120, NGB_WAVE_LOCK | NGB_WAVE_BOSS, 1, { E_RICO },                                     0x00,   0 },
 };
+/* Crates, bins and weapons lie in the middle of the street (depth 168-180,
+ * the hero starts on 173) and well away from hazards: walking over what they
+ * hold takes it (NGB_SF_AUTO_PICKUP on every stage). */
 static const NGBPropSpawn S1_PROPS[] = {
     { NGB_PROP_CRATE,   176, 300, NGB_PROP_FOOD, 2 },
-    { NGB_PROP_BARREL,  158, 430, NGB_PROP_SCORE, 2 },
-    { NGB_PROP_WEAPON,  190, 600, 0, 0 },
+    { NGB_PROP_BARREL,  170, 430, NGB_PROP_SCORE, 2 },
+    { NGB_PROP_WEAPON,  176, 600, 0, 0 },
     { NGB_PROP_VEHICLE, 170, 820, 0, 0 },
     { NGB_PROP_RAMP,    176, 960, 0, 0 },
-    { NGB_PROP_CRATE,   150, 1040, NGB_PROP_FOOD, 2 },
+    { NGB_PROP_CRATE,   172, 1040, NGB_PROP_FOOD, 2 },
     { NGB_PROP_HAZARD,  204, 1180, 0, 0 },
 };
 static const NGBStage S1 = {
     1440, 140, 206, 320, S1_WAVES, S1_PROPS, S1_ENEMIES, S1_WEAPONS,
     sizeof(S1_WAVES) / sizeof(S1_WAVES[0]), sizeof(S1_PROPS) / sizeof(S1_PROPS[0]), 4, 2,
-    2, 5, NGB_SF_NO_BACKTRACK, 6, 96, 4, 3, 8
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP, 6, 96, 4, 3, 8
 };
 
 /* ---- stage 1's scenes -------------------------------------------------- */
@@ -399,14 +402,14 @@ static const NGBPropSpawn S2_PROPS[] = {
     { NGB_PROP_RAMP,    176, 380, 0, 0 },
     { NGB_PROP_VEHICLE, 190, 560, 0, 0 },
     { NGB_PROP_RAMP,    160, 640, 0, 0 },
-    { NGB_PROP_CRATE,   184, 800, NGB_PROP_FOOD, 2 },
-    { NGB_PROP_WEAPON,  150, 860, 0, 0 },
-    { NGB_PROP_BARREL,  200, 1000, NGB_PROP_SCORE, 2 },
-    { NGB_PROP_CRATE,   160, 1060, NGB_PROP_FOOD, 2 },
+    { NGB_PROP_CRATE,   176, 800, NGB_PROP_FOOD, 2 },
+    { NGB_PROP_WEAPON,  172, 860, 0, 0 },
+    { NGB_PROP_BARREL,  178, 1000, NGB_PROP_SCORE, 2 },
+    { NGB_PROP_CRATE,   170, 1060, NGB_PROP_FOOD, 2 },
 };
 static const NGBStage S2 = { 1440, 140, 206, 320, S2_WAVES, S2_PROPS, S2_ENEMIES, WEAPONS,
     sizeof(S2_WAVES) / sizeof(S2_WAVES[0]), sizeof(S2_PROPS) / sizeof(S2_PROPS[0]), 5, 2,
-    2, 5, NGB_SF_NO_BACKTRACK, 7, 128, 5, 4, 10 };
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP, 7, 128, 5, 4, 10 };
 
 /* ======================================================================
  * stage 3: the viral outbreak
@@ -422,16 +425,16 @@ static const NGBWave S3_WAVES[] = {
     { 1120, NGB_WAVE_LOCK | NGB_WAVE_BOSS, 1, { S3_ZEROX },                                  0x00,  0 },
 };
 static const NGBPropSpawn S3_PROPS[] = {
-    { NGB_PROP_CRATE,   180, 300, NGB_PROP_FOOD, 2 },
-    { NGB_PROP_WEAPON,  160, 420, 0, 0 },
-    { NGB_PROP_BARREL,  196, 560, NGB_PROP_SCORE, 2 },
+    { NGB_PROP_CRATE,   176, 300, NGB_PROP_FOOD, 2 },
+    { NGB_PROP_WEAPON,  170, 420, 0, 0 },
+    { NGB_PROP_BARREL,  178, 560, NGB_PROP_SCORE, 2 },
     { NGB_PROP_HAZARD,  150, 760, 0, 0 },
-    { NGB_PROP_CRATE,   170, 980, NGB_PROP_FOOD, 2 },
+    { NGB_PROP_CRATE,   172, 980, NGB_PROP_FOOD, 2 },
     { NGB_PROP_VEHICLE, 190, 1000, 0, 0 },
 };
 static const NGBStage S3 = { 1440, 140, 206, 320, S3_WAVES, S3_PROPS, S3_ENEMIES, WEAPONS,
     sizeof(S3_WAVES) / sizeof(S3_WAVES[0]), sizeof(S3_PROPS) / sizeof(S3_PROPS[0]), 5, 2,
-    2, 5, NGB_SF_NO_BACKTRACK, 6, 96, 4, 3, 8 };
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP, 6, 96, 4, 3, 8 };
 
 /* ======================================================================
  * stage 4: the clone lab
@@ -449,13 +452,13 @@ static const NGBWave S4_WAVES[] = {
 static const NGBPropSpawn S4_PROPS[] = {
     { NGB_PROP_CRATE,   176, 320, NGB_PROP_FOOD, 2 },
     { NGB_PROP_HAZARD,  190, 560, 0, 0 },
-    { NGB_PROP_WEAPON,  160, 620, 0, 0 },
-    { NGB_PROP_BARREL,  150, 840, NGB_PROP_SCORE, 2 },
-    { NGB_PROP_CRATE,   196, 1000, NGB_PROP_FOOD, 2 },
+    { NGB_PROP_WEAPON,  170, 620, 0, 0 },
+    { NGB_PROP_BARREL,  172, 840, NGB_PROP_SCORE, 2 },
+    { NGB_PROP_CRATE,   176, 1000, NGB_PROP_FOOD, 2 },
 };
 static const NGBStage S4 = { 1440, 140, 206, 320, S4_WAVES, S4_PROPS, S4_ENEMIES, WEAPONS,
     sizeof(S4_WAVES) / sizeof(S4_WAVES[0]), sizeof(S4_PROPS) / sizeof(S4_PROPS[0]), 4, 2,
-    2, 5, NGB_SF_NO_BACKTRACK, 6, 96, 4, 3, 8 };
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP, 6, 96, 4, 3, 8 };
 
 /* ======================================================================
  * stage 5: concrete jungle
@@ -474,14 +477,14 @@ static const NGBPropSpawn S5_PROPS[] = {
     { NGB_PROP_VEHICLE, 180, 200, 0, 0 },
     { NGB_PROP_RAMP,    170, 420, 0, 0 },
     { NGB_PROP_HAZARD,  200, 520, 0, 0 },
-    { NGB_PROP_CRATE,   160, 600, NGB_PROP_FOOD, 2 },
+    { NGB_PROP_CRATE,   172, 600, NGB_PROP_FOOD, 2 },
     { NGB_PROP_VEHICLE, 150, 760, 0, 0 },
-    { NGB_PROP_WEAPON,  190, 860, 0, 0 },
+    { NGB_PROP_WEAPON,  176, 860, 0, 0 },
     { NGB_PROP_BARREL,  176, 1040, NGB_PROP_FOOD, 2 },
 };
 static const NGBStage S5 = { 1440, 140, 206, 320, S5_WAVES, S5_PROPS, S5_ENEMIES, WEAPONS,
     sizeof(S5_WAVES) / sizeof(S5_WAVES[0]), sizeof(S5_PROPS) / sizeof(S5_PROPS[0]), 5, 2,
-    2, 5, NGB_SF_NO_BACKTRACK, 7, 120, 5, 4, 10 };
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP, 7, 120, 5, 4, 10 };
 
 /* ======================================================================
  * stage 6: the machine city
@@ -498,15 +501,15 @@ static const NGBWave S6_WAVES[] = {
 };
 static const NGBPropSpawn S6_PROPS[] = {
     { NGB_PROP_HAZARD,  160, 360, 0, 0 },
-    { NGB_PROP_CRATE,   190, 420, NGB_PROP_FOOD, 2 },
-    { NGB_PROP_WEAPON,  170, 600, 0, 0 },
+    { NGB_PROP_CRATE,   178, 420, NGB_PROP_FOOD, 2 },
+    { NGB_PROP_WEAPON,  172, 600, 0, 0 },
     { NGB_PROP_HAZARD,  196, 820, 0, 0 },
-    { NGB_PROP_BARREL,  150, 900, NGB_PROP_SCORE, 2 },
+    { NGB_PROP_BARREL,  170, 900, NGB_PROP_SCORE, 2 },
     { NGB_PROP_CRATE,   176, 1040, NGB_PROP_FOOD, 2 },
 };
 static const NGBStage S6 = { 1440, 140, 206, 320, S6_WAVES, S6_PROPS, S6_ENEMIES, WEAPONS,
     sizeof(S6_WAVES) / sizeof(S6_WAVES[0]), sizeof(S6_PROPS) / sizeof(S6_PROPS[0]), 4, 2,
-    2, 5, NGB_SF_NO_BACKTRACK, 6, 96, 4, 3, 8 };
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP, 6, 96, 4, 3, 8 };
 
 /* ======================================================================
  * stage 7: the rogue AI
@@ -523,14 +526,14 @@ static const NGBWave S7_WAVES[] = {
 };
 static const NGBPropSpawn S7_PROPS[] = {
     { NGB_PROP_CRATE,   180, 360, NGB_PROP_FOOD, 2 },
-    { NGB_PROP_WEAPON,  160, 460, 0, 0 },
+    { NGB_PROP_WEAPON,  170, 460, 0, 0 },
     { NGB_PROP_HAZARD,  196, 680, 0, 0 },
-    { NGB_PROP_BARREL,  170, 860, NGB_PROP_FOOD, 2 },
-    { NGB_PROP_CRATE,   150, 1060, NGB_PROP_FOOD, 2 },
+    { NGB_PROP_BARREL,  172, 860, NGB_PROP_FOOD, 2 },
+    { NGB_PROP_CRATE,   176, 1060, NGB_PROP_FOOD, 2 },
 };
 static const NGBStage S7 = { 1440, 140, 206, 320, S7_WAVES, S7_PROPS, S7_ENEMIES, WEAPONS,
     sizeof(S7_WAVES) / sizeof(S7_WAVES[0]), sizeof(S7_PROPS) / sizeof(S7_PROPS[0]), 5, 2,
-    2, 5, NGB_SF_NO_BACKTRACK, 6, 96, 4, 3, 8 };
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP, 6, 96, 4, 3, 8 };
 
 /* ======================================================================
  * stage 8: the signal beyond Earth
@@ -548,13 +551,13 @@ static const NGBWave S8_WAVES[] = {
 static const NGBPropSpawn S8_PROPS[] = {
     { NGB_PROP_CRATE,   176, 320, NGB_PROP_FOOD, 2 },
     { NGB_PROP_HAZARD,  160, 600, 0, 0 },
-    { NGB_PROP_WEAPON,  196, 660, 0, 0 },
-    { NGB_PROP_BARREL,  180, 880, NGB_PROP_FOOD, 2 },
-    { NGB_PROP_CRATE,   150, 1060, NGB_PROP_FOOD, 2 },
+    { NGB_PROP_WEAPON,  178, 660, 0, 0 },
+    { NGB_PROP_BARREL,  174, 880, NGB_PROP_FOOD, 2 },
+    { NGB_PROP_CRATE,   172, 1060, NGB_PROP_FOOD, 2 },
 };
 static const NGBStage S8 = { 1440, 140, 206, 320, S8_WAVES, S8_PROPS, S8_ENEMIES, WEAPONS,
     sizeof(S8_WAVES) / sizeof(S8_WAVES[0]), sizeof(S8_PROPS) / sizeof(S8_PROPS[0]), 4, 2,
-    2, 5, NGB_SF_NO_BACKTRACK, 6, 96, 4, 3, 8 };
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP, 6, 96, 4, 3, 8 };
 
 /* ======================================================================
  * Boss Rush: each stage's boss alone on its own street
@@ -564,7 +567,7 @@ static const NGBWave BR_WAVES[NS_STAGES][1] = {
     BR_WAVE(E_RICO), BR_WAVE(S2_FLEX), BR_WAVE(S3_ZEROX), BR_WAVE(S4_M08),
     BR_WAVE(S5_BEH), BR_WAVE(S6_PROXY), BR_WAVE(S7_OVER), BR_WAVE(S8_ARCH) };
 #define BR_STAGE(k, enemies, n) { 1440, 140, 206, 320, BR_WAVES[k], 0, enemies, WEAPONS, 1, 0, n, 2, 2, 4, \
-                                  NGB_SF_NO_BACKTRACK, 6, 96, 4, 3, 8 }
+                                  NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP, 6, 96, 4, 3, 8 }
 const NGBStage ns_boss_rush[NS_STAGES] = {
     BR_STAGE(0, S1_ENEMIES, 4), BR_STAGE(1, S2_ENEMIES, 5), BR_STAGE(2, S3_ENEMIES, 5), BR_STAGE(3, S4_ENEMIES, 4),
     BR_STAGE(4, S5_ENEMIES, 5), BR_STAGE(5, S6_ENEMIES, 4), BR_STAGE(6, S7_ENEMIES, 5), BR_STAGE(7, S8_ENEMIES, 4) };

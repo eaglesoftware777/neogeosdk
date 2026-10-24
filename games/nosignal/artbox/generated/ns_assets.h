@@ -111,6 +111,12 @@ static const uint16_t ns_card_pal[16] = {0x0000u,0x3101u,0x15FFu,0xA4ACu,0x64DFu
 static const uint8_t ns_card_map[216] = {78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u,78u};
 static const uint16_t ns_logo_pal[16] = {0x0000u,0x4001u,0x12EFu,0xEF2Au,0x7FD3u,0x7FFFu,0x7FFFu,0x7FFFu,0x7FFFu,0x7FFFu,0x7FFFu,0x7FFFu,0x7FFFu,0x7FFFu,0x7FFFu,0x7FFFu};
 static const uint8_t ns_logo_map[80] = {79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u,79u};
+static const uint16_t ns_hud_jay_pal[32] = {0x0000u,0x1A00u,0x2FEEu,0x3100u,0x0D62u,0x5C11u,0x0621u,0xFDB9u,0x0766u,0x0FECu,0xDCCCu,0xED77u,0x6223u,0xE311u,0x9A41u,0x4711u,0x0000u,0xEA01u,0x3FDCu,0xA212u,0x0E88u,0x7500u,0x4999u,0xCE33u,0x4555u,0x9D11u,0x4D55u,0x2EAAu,0x8811u,0xEA77u,0x0411u,0xE334u};
+static const uint8_t ns_hud_jay_map[16] = {81u,80u,80u,80u,81u,80u,80u,80u,81u,80u,80u,81u,80u,80u,80u,80u};
+static const uint16_t ns_hud_zoe_pal[32] = {0x0000u,0x00BBu,0x3FA7u,0x9222u,0x2E38u,0x0FC2u,0x6EDDu,0xE825u,0xA167u,0x1445u,0xD753u,0xDAC5u,0xE972u,0x3E91u,0x1A99u,0xED75u,0x0000u,0x1FEDu,0x9FC2u,0x9233u,0xAF49u,0x33AAu,0x6652u,0x3958u,0x0CBCu,0x47A6u,0x9FA6u,0x1888u,0x9353u,0x2B82u,0xDC97u,0x0167u};
+static const uint8_t ns_hud_zoe_map[16] = {80u,80u,80u,80u,80u,80u,80u,80u,80u,80u,80u,80u,80u,80u,81u,80u};
+static const uint16_t ns_hud_kai_pal[32] = {0x0000u,0xD426u,0x1E83u,0x9421u,0xB738u,0xF863u,0xAFDBu,0x7A52u,0x9765u,0x6101u,0x5213u,0x1631u,0x4211u,0x3CA8u,0x9534u,0xC987u,0x0000u,0xD426u,0x3863u,0xF738u,0xB211u,0x5710u,0x2136u,0xE432u,0xB313u,0xD511u,0xF731u,0xB433u,0x3642u,0x9637u,0x4124u,0x6315u};
+static const uint8_t ns_hud_kai_map[16] = {80u,80u,80u,80u,81u,80u,80u,80u,81u,80u,80u,81u,81u,81u,80u,81u};
 static const NGArtAsset ns_art[] = {
     {1u,2u,16u,256u,1515u,90u,14u,14u,90u,0,0,1440u,224u,ns_stage1_map},
     {2u,2u,16u,1516u,2775u,90u,14u,14u,90u,0,0,1440u,224u,ns_stage2_map},
@@ -166,6 +172,9 @@ static const NGArtAsset ns_art[] = {
     {52u,1u,77u,39904u,39983u,20u,4u,4u,20u,1,1,318u,62u,ns_dialog_map},
     {53u,1u,78u,39984u,40199u,18u,12u,12u,18u,1,1,286u,190u,ns_card_map},
     {54u,1u,79u,40200u,40279u,16u,5u,5u,16u,19,5,215u,56u,ns_logo_map},
+    {55u,1u,80u,40280u,40295u,4u,4u,4u,4u,0,0,64u,64u,ns_hud_jay_map},
+    {56u,1u,80u,40296u,40311u,4u,4u,4u,4u,0,0,64u,64u,ns_hud_zoe_map},
+    {57u,1u,80u,40312u,40327u,4u,4u,4u,4u,0,0,64u,64u,ns_hud_kai_map},
 };
 static const uint16_t * const ns_art_pal[] = {
     ns_stage1_pal,
@@ -222,10 +231,13 @@ static const uint16_t * const ns_art_pal[] = {
     ns_dialog_pal,
     ns_card_pal,
     ns_logo_pal,
+    ns_hud_jay_pal,
+    ns_hud_zoe_pal,
+    ns_hud_kai_pal,
 };
-static const uint8_t ns_art_banks[] = {16u,16u,16u,16u,16u,16u,16u,16u,16u,16u,16u,16u,16u,4u,4u,4u,4u,4u,4u,4u,4u,4u,4u,4u,4u,4u,4u,8u,8u,8u,8u,8u,8u,8u,8u,2u,2u,2u,2u,2u,2u,2u,2u,2u,2u,2u,2u,2u,2u,2u,1u,1u,1u,1u};
-static const uint8_t ns_art_frames[] = {1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,30u,30u,30u,10u,10u,10u,10u,10u,10u,10u,10u,10u,10u,10u,20u,20u,20u,20u,20u,20u,10u,30u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,10u,4u,1u,1u,1u};
-#define NS_ART_COUNT 54u
+static const uint8_t ns_art_banks[] = {16u,16u,16u,16u,16u,16u,16u,16u,16u,16u,16u,16u,16u,4u,4u,4u,4u,4u,4u,4u,4u,4u,4u,4u,4u,4u,4u,8u,8u,8u,8u,8u,8u,8u,8u,2u,2u,2u,2u,2u,2u,2u,2u,2u,2u,2u,2u,2u,2u,2u,1u,1u,1u,1u,2u,2u,2u};
+static const uint8_t ns_art_frames[] = {1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,30u,30u,30u,10u,10u,10u,10u,10u,10u,10u,10u,10u,10u,10u,20u,20u,20u,20u,20u,20u,10u,30u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,10u,4u,1u,1u,1u,1u,1u,1u};
+#define NS_ART_COUNT 57u
 #define NS_ART_STAGE1 1u
 #define NS_ART_STAGE2 2u
 #define NS_ART_STAGE3 3u
@@ -280,5 +292,8 @@ static const uint8_t ns_art_frames[] = {1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,1u,3
 #define NS_ART_DIALOG 52u
 #define NS_ART_CARD 53u
 #define NS_ART_LOGO 54u
-#define NS_FIRST_FREE_BANK 80u
+#define NS_ART_HUD_JAY 55u
+#define NS_ART_HUD_ZOE 56u
+#define NS_ART_HUD_KAI 57u
+#define NS_FIRST_FREE_BANK 82u
 #endif

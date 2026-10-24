@@ -3,6 +3,47 @@
 The ROM sets ship with the NeoGeoSDK pre-releases and are numbered on their
 own: `_v1` and `_v2` with v1.7.7.
 
+## v3 (in progress, SDK 1.7.7)
+
+- Walk over food, a gold sneaker or a weapon to pick it up (a weapon only with
+  empty hands; C still picks up too). The engine gains the stage flag
+  `NGB_SF_AUTO_PICKUP`; every No Signal stage sets it.
+- Crates, bins and weapons now lie in the middle of the street (depth
+  168-180, the hero starts on 173), away from hazards. The last crate of
+  stage 1 sits in reach before the boss.
+- Fix a hero drawn as a black or scrambled figure while swinging a picked-up
+  weapon, and a wrong picture for a moment after every throw (heroes and
+  grappling enemies): the drawing code read the move table past its end for
+  the engine's weapon swing (move 0xFE) and a throw's recovery (no move).
+  Poses are also clamped to the sheet. A swing now shows the hero raising
+  the weapon, then swinging it through.
+- A held bat, pipe or wreck is drawn in the hero's front fist (measured per
+  hero and pose) instead of floating at the waist.
+- Things to pick up bob gently on the ground; picking one up sparkles and
+  says what it was.
+- Status line: the hero's portrait (the dialogue portrait, shrunk to 32 x 32
+  by the hardware, in palette banks of its own), name, battery, enemy bar
+  and combo beside it.
+- All text is ringed with a dark outline (`ArtPack(text_edge=2)`), readable
+  over the streets; other games' fonts are unchanged.
+- The hero select's names and lines sit on the dialogue plate instead of the
+  lit windows.
+- The red "!" over an enemy about to strike is rubbed out after half a
+  second (it used to stay on screen).
+- Dust when landing from a jump and when breaking into a run; a short
+  sideways screen shake on heavy blows, boss phase changes, a boss going
+  down and scooter crashes.
+- Existing art is unchanged: the C ROM only gains the three 32 x 32 status
+  portraits (48 tiles appended after the logo). M1 and V1 are byte-identical.
+- Verification (MAME, 2026-10-24): an in-emulator check that every visible
+  sprite's tiles belong to a real asset frame and use that asset's own
+  palettes ran every fourth frame through 1800-second autoplay campaigns
+  for Jay, Zoe and Kai (stages 1 to 8 between them): 79,545 frames, no
+  fault (the check itself flags a planted bad palette). An AES run of the
+  real (non-autoplay) build: 1,154 frames, no fault. Host engine tests
+  (walking over pick-ups included) and the No Signal tests pass. Physical
+  hardware is untested.
+
 ## v2 (2026-10-24, SDK 1.7.7)
 
 - Restore missing clothing and armour pixels from the original pose sheets for
