@@ -255,6 +255,22 @@ static void NEOGEO_USER show_asset(NGSpriteGroup *g, uint16_t first_sprite, uint
     put(g);
 }
 
+static void NEOGEO_USER show_asset_scaled(NGSpriteGroup *g, uint16_t first_sprite, uint8_t id, uint8_t frame,
+                                          int16_t x, int16_t y, uint8_t scale_x, uint8_t scale_y)
+{
+    const NGArtAsset *a = art(id);
+    uint16_t per = (uint16_t)((uint16_t)a->strips * a->rows);
+    uint8_t prio = g->prio;
+    ng_sprite_group_init(g, first_sprite, a->strips, a->rows, (uint16_t)(a->tile_base + per * frame), a->palette_bank);
+    if (prio != NG_SG_PRIO_NORMAL) ng_sprite_group_set_priority(g, prio);
+    ng_sprite_group_set_palette_map(g, a->tile_palettes + per * frame);
+    ng_sprite_group_set_pos(g, x, y);
+    ng_sprite_group_set_scale(g, scale_x, scale_y);
+    ng_sprite_group_set_visible(g, 1);
+    ng_sprite_group_mark_dirty(g, NG_SGF_DIRTY_ALL);
+    put(g);
+}
+
 static void NEOGEO_USER set_frame(NGSpriteGroup *g, uint8_t id, uint8_t frame)
 {
     const NGArtAsset *a = art(id);
@@ -685,7 +701,7 @@ static void NEOGEO_USER draw_party(const NGRpg *g)
         uint16_t slot = (uint16_t)(SPR_PARTY + (m == front ? 5u : 0u));
         uint8_t frame, look = (uint8_t)(mm->id == ML_LUNA ? ML_LOOK_LUNA : ML_LOOK_MAIYA);
         uint8_t moving = (uint8_t)(mm->x != s_member_lx[m] || mm->y != s_member_ly[m]);
-        int16_t x = (int16_t)((mm->x >> 8) - 40), y = (int16_t)((mm->y >> 8) - 60);   /* her feet */
+        int16_t x = (int16_t)((mm->x >> 8) - 29), y = (int16_t)((mm->y >> 8) - 47);   /* her feet (scaled to NPC height ~42px) */
         if (moving) s_member_anim[m]++;
         else s_member_anim[m] = 0;
         /* the frames face right; going up or down she keeps the way she last faced */
@@ -695,11 +711,13 @@ static void NEOGEO_USER draw_party(const NGRpg *g)
         if (s_member_act[m]) s_member_act[m]--;
         s_member_lx[m] = mm->x; s_member_ly[m] = mm->y;
         if (mm->invuln && (s_frames & 8u)) { hide(gr); continue; }   /* hurt: a slow blink, not a flicker */
-        if (!gr->visible || gr->firstSprite != slot)
-            show_asset(gr, slot, ml_look_art[look].art, frame, x, y);
-        else {
+        if (!gr->visible || gr->firstSprite != slot) {
+            show_asset_scaled(gr, slot, ml_look_art[look].art, frame, x, y, 0xCF, 0xC4);
+        } else {
             set_frame(gr, ml_look_art[look].art, frame);
             ng_sprite_group_set_pos(gr, x, y);
+            ng_sprite_group_set_scale(gr, 0xCF, 0xC4);
+            gr->dirty |= NG_SGF_DIRTY_SHRINK;
         }
         ng_sprite_group_set_flip(gr, s_member_hflip[m], 0);
         put(gr);

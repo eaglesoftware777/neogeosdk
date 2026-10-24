@@ -791,7 +791,8 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
         ngsg_put_map(g, rows, (uint8_t)(dirty == NG_SGF_DIRTY_ALL));
 
     /* SCB2 shrink upload */
-    if (dirty & NG_SGF_DIRTY_SHRINK)
+    if ((dirty & NG_SGF_DIRTY_SHRINK) ||
+        g->xScale != NG_SPRITE_FULL_XSCALE || g->yScale != NG_SPRITE_FULL_YSCALE)
         ngsg_fill((uint16_t)(SCB2_ADDR + g->firstSprite), ngsg_scb2(g), ngsg_scb2(g), g->strips);
 
     /*
