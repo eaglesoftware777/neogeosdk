@@ -5,6 +5,12 @@ own: `_v1` and `_v2` with v1.7.7.
 
 ## v3 (in progress, SDK 1.7.7)
 
+- One mode on an arcade board: on MVS a credit goes straight from the hero
+  select into the story, with no menu. A console (AES) keeps its menu:
+  Story Arcade, Stage Select, Challenge and the Gallery.
+- Boss Rush is gone (the menu entry and its eight boss-only streets).
+- The electric scooter: walk onto it to ride (a held weapon is dropped), B or
+  C jumps off and lands clear of it. Engine stage flag `NGB_SF_WALK_ON`.
 - Walk over food, a gold sneaker or a weapon to pick it up (a weapon only with
   empty hands; C still picks up too). The engine gains the stage flag
   `NGB_SF_AUTO_PICKUP`; every No Signal stage sets it.

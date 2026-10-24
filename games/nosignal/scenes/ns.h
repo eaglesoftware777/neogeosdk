@@ -120,7 +120,6 @@ typedef struct {
 extern const NSStageInfo ns_stages[NS_STAGES];
 extern const NSLine *const ns_ending[NS_HEROES];
 extern const NSLine *const ns_epilogue[NS_HEROES];
-extern const NGBStage ns_boss_rush[NS_STAGES];
 
 /* The gallery: shown once the player has reached its stage (0: always). */
 typedef struct { uint8_t art, stage; const char *name, *bio; } NSGalleryEntry;

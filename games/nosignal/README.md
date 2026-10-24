@@ -20,20 +20,21 @@ crew and a boss in three phases.
   Energy.
 - **Kai** ("Aura"): slow, strong, unbothered; special Aura Breaker.
 
-Modes: Story Arcade (eight stages, one phone); Boss Rush and Stage Select
-(opened by clearing the story); Challenge (two minutes, high score); the
-Gallery of everyone met so far. Health is the
+On an arcade board (MVS) a credit goes straight into the story: eight
+stages, one phone. A console (AES) also offers a menu of modes: Story
+Arcade, Stage Select (opened by clearing the story), Challenge (two
+minutes, high score) and the Gallery of everyone met so far. Health is the
 phone's battery, lives its signal bars; out of lives, RECONNECT? (a credit on
 an arcade board, free on a console).
 
 ## Controls
 
 The stick walks along and across the street; a double tap runs. A attacks (a
-chain of four; down + A sweeps), B jumps (A in the air kicks), C grabs,
-throws and rides the scooter, D is the hero's special (it costs a little
-battery). Walking over food, a gold sneaker or a weapon picks it up (a
-weapon only with empty hands; C still picks up too). On a console START
-pauses.
+chain of four; down + A sweeps), B jumps (A in the air kicks), C grabs and
+throws, D is the hero's special (it costs a little battery). Walking over
+food, a gold sneaker or a weapon picks it up (a weapon only with empty hands;
+C still picks up too). Walking onto the electric scooter rides it; B (or C)
+jumps off. On a console START pauses.
 
 ## How it is made
 

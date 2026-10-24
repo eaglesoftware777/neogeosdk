@@ -1,16 +1,19 @@
 /*
  * ns_game.c -- No Signal Z Alpha: the flow of a game.
  *
- * Attract: the title, the premise, how to play. A credited game: choose one
+ * Attract: the title, the premise, how to play. On an arcade board a credit
+ * goes straight into the story; a console first offers its modes (the story,
+ * stage select, challenge, the gallery). Choose one
  * hero (exactly one person plays), then stage by stage: a short scene, the
  * street, the boss's entrance, the boss, the boss's confession. Out of lives:
  * RECONNECT? (a credit on an arcade board, free on a console) or NO SIGNAL.
  *
  * Controls: the stick walks along and across the street; A attacks (a chain
- * of four), B jumps (A in the air kicks), C grabs, throws and rides, D is
- * the hero's special (it costs a little battery); a double tap runs; down +
- * A sweeps. Walking over food, a gold sneaker or (empty-handed) a weapon
- * picks it up. On a console START pauses.
+ * of four), B jumps (A in the air kicks), C grabs and throws, D is the
+ * hero's special (it costs a little battery); a double tap runs; down + A
+ * sweeps. Walking over food, a gold sneaker or (empty-handed) a weapon picks
+ * it up; walking onto the scooter rides it, B (or C) jumps off. On a console
+ * START pauses.
  */
 #include "ns.h"
 #include "sdk/ng_system.h"
@@ -22,21 +25,22 @@ static uint8_t s_hero, s_lives;
 static uint32_t s_total;          /* score carried from stage to stage */
 static uint16_t s_bark_cool;
 static uint8_t s_boss = NGB_NONE;
-enum { MODE_STORY = 0, MODE_BOSS_RUSH, MODE_SELECT, MODE_CHALLENGE, MODE_GALLERY, MODES };
+enum { MODE_STORY = 0, MODE_SELECT, MODE_CHALLENGE, MODE_GALLERY, MODES };
 #define CHALLENGE_FRAMES (120u * 60u)
 static uint8_t s_mode;
 
 static const NGHowToPlay k_howto = {
-    {'H', 'T', 'P', '1'}, 11, 10, "NO SIGNAL Z ALPHA",
+    {'H', 'T', 'P', '1'}, 12, 10, "NO SIGNAL Z ALPHA",
     {
         "STICK  WALK THE STREET",
         "TAP TWICE  RUN",
         "A  PUNCH  (A A A A: COMBO)",
         "B  JUMP   (A IN THE AIR)",
-        "C  GRAB / THROW / RIDE",
+        "C  GRAB / THROW",
         "D  SPECIAL (COSTS BATTERY)",
         "DOWN + A  SWEEP",
         "WALK OVER ITEMS: PICK UP",
+        "SCOOTER: WALK ON, B: HOP OFF",
         "",
         "GET THE PHONE BACK.",
         "ONE PLAYER. NO CAP.",
@@ -137,7 +141,7 @@ static void NEOGEO_USER own_how_to_play(uint16_t frames)
     ns_picture(NS_ART_MENU);
     ns_card(1);
     ns_puts_c(4, "HOW TO PLAY", NS_TXT_GOLD);
-    for (i = 0; i < k_howto.lines; i++) ns_puts(6, (uint8_t)(7u + i), k_howto.line[i], i < 8u ? NS_TXT_WHITE : NS_TXT_SKY);
+    for (i = 0; i < k_howto.lines; i++) ns_puts(6, (uint8_t)(7u + i), k_howto.line[i], i < 9u ? NS_TXT_WHITE : NS_TXT_SKY);
     ns_reveal();
     while (frames--) {
         ns_frame();
@@ -417,6 +421,7 @@ static uint16_t NEOGEO_USER autopilot(void)
     }
     /* the bot is no fighter: a slow mend lets a test run reach the ending */
     if (p->hp && p->hp < p->def->max_hp && !(s_b.tick & 31u)) s_b.f[NGB_PLAYER].hp++;
+    if (p->state == NGB_ST_RIDE && !(s_b.tick & 127u)) return NS_B;      /* off the scooter now and then */
     if (best_d == 0x7FFF) return (uint16_t)(s_b.locked ? 0u : NS_RIGHT);
     if (dy > 4) in |= NS_DOWN;
     else if (dy < -4) in |= NS_UP;
@@ -505,7 +510,7 @@ static const NGBStage *NEOGEO_USER stage_for(const NGBStage *st)
 static uint8_t NEOGEO_USER play_stage(uint8_t n)
 {
     const NSStageInfo *si = &ns_stages[n];
-    const NGBStage *st = stage_for(s_mode == MODE_BOSS_RUSH ? &ns_boss_rush[n] : si->stage);
+    const NGBStage *st = stage_for(si->stage);
     uint8_t lives = (uint8_t)(dip(0) + 1u), boss_seen = 0, pause = 0, secs = 0xFFu;
     uint16_t clock = CHALLENGE_FRAMES;
     s_boss = NGB_NONE;
@@ -513,9 +518,9 @@ static uint8_t NEOGEO_USER play_stage(uint8_t n)
     s_b.score = s_total;                       /* the engine adds this stage's points to it */
     ns_stage_show(&s_b, si, s_hero);
     ns_music(si->music);
-    if (s_mode == MODE_STORY || s_mode == MODE_SELECT) scene(si->intro[s_hero]);
+    if (s_mode != MODE_CHALLENGE) scene(si->intro[s_hero]);
     ns_hud(&s_b, s_hero, 1);
-    ns_banner(s_mode == MODE_BOSS_RUSH ? "BOSS RUSH" : s_mode == MODE_CHALLENGE ? "CHALLENGE: 2 MINUTES" : si->title,
+    ns_banner(s_mode == MODE_CHALLENGE ? "CHALLENGE: 2 MINUTES" : si->title,
               NS_TXT_GOLD, 120);
     ns_puts_c(13, si->place, NS_TXT_WHITE);
     for (;;) {
@@ -569,7 +574,7 @@ static uint8_t NEOGEO_USER play_stage(uint8_t n)
                 ns_boss_bar(&s_b, NGB_NONE, 0);
                 for (t = 0; t < 60u; t++) { ns_frame(); ng_beatemup_update(&s_b); ns_stage_draw(&s_b); }
                 ns_music(NS_MUS_CLEAR);
-                if (s_mode == MODE_STORY || s_mode == MODE_SELECT) scene(si->outro[s_hero]);
+                if (s_mode != MODE_CHALLENGE) scene(si->outro[s_hero]);
                 s_total = s_b.score;
                 s_lives = s_b.lives;
                 return STAGE_CLEAR;
@@ -650,17 +655,19 @@ static void NEOGEO_USER ending(void)
  * ==================================================================== */
 static uint8_t NEOGEO_USER mode_open(uint8_t m)
 {
-    if (m == MODE_BOSS_RUSH || m == MODE_SELECT) return (uint8_t)(cleared() & CLEARED_ANY);
+    if (m == MODE_SELECT) return (uint8_t)(cleared() & CLEARED_ANY);
     return 1;
 }
 
+/* A console's menu of modes. An arcade board has one: a credit plays the story. */
 static uint8_t NEOGEO_USER mode_menu(void)
 {
-    static const char *const name[MODES] = { "STORY ARCADE", "BOSS RUSH", "STAGE SELECT", "CHALLENGE", "GALLERY" };
-    static const char *const note[MODES] = { "EIGHT STAGES. ONE PHONE.", "EVERY BOSS IN A ROW.", "ANY STAGE, ANY TIME.",
+    static const char *const name[MODES] = { "STORY ARCADE", "STAGE SELECT", "CHALLENGE", "GALLERY" };
+    static const char *const note[MODES] = { "EIGHT STAGES. ONE PHONE.", "ANY STAGE, ANY TIME.",
                                              "TWO MINUTES. HIGH SCORE.", "EVERYONE YOU MET." };
     uint8_t sel = 0, i;
     uint16_t idle = 0;
+    if (ng_sys_is_mvs()) return MODE_STORY;
     ns_picture(NS_ART_MENU);
     ns_music(NS_MUS_SELECT);
     ns_puts_c(3, "PICK A MODE", NS_TXT_GOLD);
@@ -774,20 +781,14 @@ void NEOGEO_USER ns_run(void)
         return;
     }
     for (; n < NS_STAGES; n++) {
-        uint8_t r;
-        if (s_mode == MODE_STORY) note_reached((uint8_t)(n + 1u));
-        r = play_stage(n);
-        if (r == STAGE_OVER) {
-            if (s_mode == MODE_STORY) note_score(SV_BEST, s_total);
+        note_reached((uint8_t)(n + 1u));
+        if (play_stage(n) == STAGE_OVER) {
+            note_score(SV_BEST, s_total);
             return;
         }
         stage_tally(n);
     }
-    if (s_mode == MODE_STORY) {
-        if (save_ok()) { save()[SV_CLEARED] = (uint8_t)(save()[SV_CLEARED] | CLEARED_ANY | (2u << s_hero)); ng_save_commit(); }
-        note_score(SV_BEST, s_total);
-        ending();
-    } else {
-        stage_tally(NS_STAGES - 1u);
-    }
+    if (save_ok()) { save()[SV_CLEARED] = (uint8_t)(save()[SV_CLEARED] | CLEARED_ANY | (2u << s_hero)); ng_save_commit(); }
+    note_score(SV_BEST, s_total);
+    ending();
 }
