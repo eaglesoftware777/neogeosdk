@@ -1,0 +1,17 @@
+; World 6 & 7: Black Core Citadel
+; High-stakes dark techno pulse, final fortress confrontation
+T18
+@p7
+@b6
+V14
+O4
+L8
+
+C D# F# G  F# D# C < A#
+> C C D# C  F# F# G4
+< G# > C D# F#  D# C < G#4
+< A# > D F A#  > D4 R4
+; Deep reactor pulse
+C8 C8 C8 D#8  F#8 F#8 G4
+> D#8 C8 < A#8 G8  F#8 D#8 C4
+~

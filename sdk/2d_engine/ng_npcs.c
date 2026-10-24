@@ -1,6 +1,9 @@
 #include "ng_npcs.h"
 
 static NGNpc ng_npcs[NG_MAX_NPCS];
+/* 0 when no NPC is active: the frame's update is skipped (set by a spawn,
+ * worked out again by each update). */
+static uint8_t ng_npcs_live;
 
 void NEOGEO_USER ng_npcs_init(void)
 {
@@ -9,6 +12,7 @@ void NEOGEO_USER ng_npcs_init(void)
     for (i = 0; i < NG_MAX_NPCS; i++) {
         ng_npcs[i].active = 0;
     }
+    ng_npcs_live = 0;
 }
 
 NGNpc *NEOGEO_USER npc_spawn(uint8_t npc_kind, uint8_t char_kind, int16_t x, int16_t y)
@@ -22,6 +26,7 @@ NGNpc *NEOGEO_USER npc_spawn(uint8_t npc_kind, uint8_t char_kind, int16_t x, int
         NGNpc *npc = &ng_npcs[i];
         if (!npc->active) {
             npc->active = 1;
+            ng_npcs_live = 1;
             npc->npc_kind = npc_kind;
             npc->char_slot = ng_chars_index(c);
             npc->team = 0;
@@ -144,8 +149,9 @@ void NEOGEO_USER ng_npc_think_hover(NGNpc *npc, NGCharacter *c)
 
 void NEOGEO_USER ng_npcs_update(void)
 {
-    uint8_t i;
+    uint8_t i, live = 0;
 
+    if (!ng_npcs_live) return;
     for (i = 0; i < NG_MAX_NPCS; i++) {
         NGNpc *npc = &ng_npcs[i];
         NGCharacter *c;
@@ -156,6 +162,7 @@ void NEOGEO_USER ng_npcs_update(void)
             npc->active = 0;
             continue;
         }
+        live = 1;   /* (a think that spawns runs only while one is active) */
 
         if (npc->think_timer > 0) {
             npc->think_timer--;
@@ -166,4 +173,5 @@ void NEOGEO_USER ng_npcs_update(void)
             npc->think(npc, c);
         }
     }
+    ng_npcs_live = live;
 }

@@ -1,0 +1,19 @@
+{
+  "platform": "aes",
+  "bios_name": "asia",
+  "team": false,
+  "fighter": "kenji",
+  "attract_only": false,
+  "training": true,
+  "options": true,
+  "seconds": 100,
+  "elf_sha256": "8ea6dd2c11c982d528f62885c7169eaae1fdde8edc860ff6e5f8357c1a779f0e",
+  "rom_sha256": {
+    "781-c1.c1": "7356c8f530407eb82e9775e49ba44dbacf5d4c9441783913ecd11daff64ed19b",
+    "781-c2.c2": "d1dbf0cc47623cac250a85a8ccdcb938b144fd914c9f80ce6a9a14d85938b34d",
+    "781-m1.m1": "c93d1c9de20232bd63c1940080cca3cf6dd513a7f525fb7a076497e1b1089c47",
+    "781-p1.p1": "9b1af5c9b4ed03f7ed4dcbce563146449f1d156b235453cb37c064e6483ab258",
+    "781-s1.s1": "56d8140539b0752b19766727b11388df21f27e523acb87a0c7ad0df158865b71",
+    "781-v1.v1": "d65c22d48a0323654f4cd72ed8bdd54ef51a4d40a947e4a11c30b0773cb69b7a"
+  }
+}

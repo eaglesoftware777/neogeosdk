@@ -1,0 +1,19 @@
+{
+  "platform": "mvs",
+  "bios_name": "euro",
+  "team": false,
+  "fighter": "jack",
+  "attract_only": false,
+  "training": false,
+  "options": false,
+  "seconds": 35,
+  "elf_sha256": "4a221167ce4d77d7e1b3105587fcc372a5f35f9b72a68406259434bf6e5e74ae",
+  "rom_sha256": {
+    "781-c1.c1": "9e1ea1134041550a0b92fc373ed803a1dc797e39852de6cfef772fb75b875e95",
+    "781-c2.c2": "be49b097a5e81602e4519435eb4c67747d07c4a60b805ac89885c845918384d9",
+    "781-m1.m1": "f72aeb787b7486504e15e45cd007e71827799c75b7b3384da13054ad4f0901d5",
+    "781-p1.p1": "9451edd00be7f05673aef93f378500f927b12f9136cea2559d0f4fcaa3b3b332",
+    "781-s1.s1": "56d8140539b0752b19766727b11388df21f27e523acb87a0c7ad0df158865b71",
+    "781-v1.v1": "0da0a125e7281753f06ab0ef941257646ccfa23250241e7a0c9ec8bdce7e4720"
+  }
+}

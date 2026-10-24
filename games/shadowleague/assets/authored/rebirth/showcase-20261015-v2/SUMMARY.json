@@ -1,0 +1,41 @@
+{
+  "fighters": [
+    {
+      "fighter": "kenji",
+      "referenced_poses": 72,
+      "unique_drawings": 70,
+      "animations": 41,
+      "palette_banks": 2,
+      "opaque_area_range": [
+        2031,
+        5198
+      ],
+      "png_and_layer_roundtrip": "pass"
+    },
+    {
+      "fighter": "jack",
+      "referenced_poses": 73,
+      "unique_drawings": 60,
+      "animations": 40,
+      "palette_banks": 2,
+      "opaque_area_range": [
+        2244,
+        5826
+      ],
+      "png_and_layer_roundtrip": "pass"
+    },
+    {
+      "fighter": "amara",
+      "referenced_poses": 58,
+      "unique_drawings": 55,
+      "animations": 31,
+      "palette_banks": 4,
+      "opaque_area_range": [
+        2126,
+        4875
+      ],
+      "png_and_layer_roundtrip": "pass"
+    }
+  ],
+  "anatomy_failures": []
+}

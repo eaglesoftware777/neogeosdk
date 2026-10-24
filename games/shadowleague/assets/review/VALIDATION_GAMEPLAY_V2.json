@@ -1,0 +1,333 @@
+{
+  "version": "v2",
+  "date": "2026-10-13",
+  "core": "PASS",
+  "roster_tests": {
+    "tests": 4,
+    "frames": 29134321,
+    "hits": 240759,
+    "blocks": 100310,
+    "specials": 303674
+  },
+  "team_tests": {
+    "rosters": 44,
+    "frames": 373684,
+    "assists": 262,
+    "entries": 143
+  },
+  "artwork": {
+    "passed": true,
+    "fighters": 44,
+    "frames": 2124,
+    "limb_layers_checked": 8496,
+    "indexed_assets_checked": 88,
+    "ground_contacts_checked": 132,
+    "canvas": [
+      160,
+      160
+    ],
+    "baseline": 141,
+    "C_ROM_round_trip": true,
+    "failures": []
+  },
+  "release_audit": "PASS, zero failures",
+  "v1_archive": "C:\\neogeo\\shadowleague-v1-backup-20261013",
+  "retained_version": "v2",
+  "physical_hardware": "not tested",
+  "linux_mame": {
+    "duel-mvs": {
+      "result": "PASS",
+      "fight_samples": 120,
+      "last": {
+        "t": 99.86,
+        "state": 1,
+        "round": 1,
+        "secs": 45,
+        "life0": 888,
+        "life1": 81,
+        "x0": 444,
+        "x1": 496,
+        "st0": 3,
+        "st1": 4,
+        "wins0": 0,
+        "wins1": 0,
+        "winner": 255,
+        "frame": 1280,
+        "mode": 0,
+        "active0": 0,
+        "active1": 0,
+        "count0": 1,
+        "count1": 1,
+        "assist0": 0,
+        "assist1": 0,
+        "maxlife0": 1000,
+        "maxlife1": 970,
+        "joy0": 8,
+        "cpu0": 0,
+        "cpu1": 1
+      }
+    },
+    "duel-aes": {
+      "result": "PASS",
+      "fight_samples": 119,
+      "last": {
+        "t": 99.86,
+        "state": 1,
+        "round": 1,
+        "secs": 50,
+        "life0": 915,
+        "life1": 652,
+        "x0": 430,
+        "x1": 481,
+        "st0": 3,
+        "st1": 12,
+        "wins0": 0,
+        "wins1": 0,
+        "winner": 255,
+        "frame": 854,
+        "mode": 0,
+        "active0": 0,
+        "active1": 0,
+        "count0": 1,
+        "count1": 1,
+        "assist0": 0,
+        "assist1": 0,
+        "maxlife0": 1000,
+        "maxlife1": 1100,
+        "joy0": 8,
+        "cpu0": 0,
+        "cpu1": 1
+      }
+    },
+    "team-mvs": {
+      "result": "PASS",
+      "fight_samples": 247,
+      "last": {
+        "t": 179.94,
+        "state": 1,
+        "round": 3,
+        "secs": 49,
+        "life0": 977,
+        "life1": 639,
+        "x0": 450,
+        "x1": 496,
+        "st0": 3,
+        "st1": 4,
+        "wins0": 0,
+        "wins1": 0,
+        "winner": 255,
+        "frame": 3958,
+        "mode": 1,
+        "active0": 0,
+        "active1": 2,
+        "count0": 3,
+        "count1": 3,
+        "assist0": 0,
+        "assist1": 1,
+        "maxlife0": 1000,
+        "maxlife1": 1100,
+        "joy0": 130,
+        "cpu0": 0,
+        "cpu1": 1
+      },
+      "opponent_members_seen": [
+        0,
+        1,
+        2
+      ],
+      "player_assists_used": 3
+    },
+    "team-aes": {
+      "result": "PASS",
+      "fight_samples": 245,
+      "last": {
+        "t": 179.94,
+        "state": 1,
+        "round": 3,
+        "secs": 45,
+        "life0": 937,
+        "life1": 271,
+        "x0": 451,
+        "x1": 496,
+        "st0": 3,
+        "st1": 0,
+        "wins0": 0,
+        "wins1": 0,
+        "winner": 255,
+        "frame": 4210,
+        "mode": 1,
+        "active0": 0,
+        "active1": 2,
+        "count0": 3,
+        "count1": 3,
+        "assist0": 0,
+        "assist1": 2,
+        "maxlife0": 1000,
+        "maxlife1": 1000,
+        "joy0": 130,
+        "cpu0": 0,
+        "cpu1": 1
+      },
+      "opponent_members_seen": [
+        0,
+        1,
+        2
+      ],
+      "player_assists_used": 3
+    }
+  },
+  "windows_mame": {
+    "mvs": {
+      "result": "PASS",
+      "fight_samples": 247,
+      "last": {
+        "t": 179.94,
+        "state": 1,
+        "round": 3,
+        "secs": 49,
+        "life0": 977,
+        "life1": 639,
+        "x0": 450,
+        "x1": 496,
+        "st0": 3,
+        "st1": 4,
+        "wins0": 0,
+        "wins1": 0,
+        "winner": 255,
+        "frame": 3958,
+        "mode": 1,
+        "active0": 0,
+        "active1": 2,
+        "count0": 3,
+        "count1": 3,
+        "assist0": 0,
+        "assist1": 1,
+        "maxlife0": 1000,
+        "maxlife1": 1100,
+        "joy0": 130,
+        "cpu0": 0,
+        "cpu1": 1
+      },
+      "opponent_members_seen": [
+        0,
+        1,
+        2
+      ],
+      "player_assists_used": 3
+    },
+    "aes": {
+      "result": "PASS",
+      "fight_samples": 245,
+      "last": {
+        "t": 179.94,
+        "state": 1,
+        "round": 3,
+        "secs": 45,
+        "life0": 937,
+        "life1": 271,
+        "x0": 451,
+        "x1": 496,
+        "st0": 3,
+        "st1": 0,
+        "wins0": 0,
+        "wins1": 0,
+        "winner": 255,
+        "frame": 4210,
+        "mode": 1,
+        "active0": 0,
+        "active1": 2,
+        "count0": 3,
+        "count1": 3,
+        "assist0": 0,
+        "assist1": 2,
+        "maxlife0": 1000,
+        "maxlife1": 1000,
+        "joy0": 130,
+        "cpu0": 0,
+        "cpu1": 1
+      },
+      "opponent_members_seen": [
+        0,
+        1,
+        2
+      ],
+      "player_assists_used": 3
+    }
+  },
+  "installation": {
+    "path": "C:\\mame\\neogeosdk",
+    "backup": "backups/shadowleague/20261013-221415-before-v2-gameplay",
+    "roms": {
+      "tests/shadowleague/mvs/roms/shadowleague/781-c1.c1": {
+        "size": 4194304,
+        "sha256": "0a58c55be30267b69553072c04672f2376ce1e740c2e70975135e1f1986e5836"
+      },
+      "tests/shadowleague/mvs/roms/shadowleague/781-c2.c2": {
+        "size": 4194304,
+        "sha256": "63168e62af229cff84ead1da9ad9734ef0dbdf787db4f9ee6073f9fdcc812c2d"
+      },
+      "tests/shadowleague/mvs/roms/shadowleague/781-m1.m1": {
+        "size": 131072,
+        "sha256": "33fa692a5dd7974057cd87fa917e6f4d10ecf7275e4f8118e6206481e79fa6b5"
+      },
+      "tests/shadowleague/mvs/roms/shadowleague/781-p1.p1": {
+        "size": 524288,
+        "sha256": "285c3e61c95df9805ffad136d36ce9e292d8512e0fbf3661ca17708e7ed432ef"
+      },
+      "tests/shadowleague/mvs/roms/shadowleague/781-s1.s1": {
+        "size": 131072,
+        "sha256": "4511c96b92198b815e0d8a3d104cd83d470782ec5ad4f840ba6ebca2e12212ab"
+      },
+      "tests/shadowleague/mvs/roms/shadowleague/781-v1.v1": {
+        "size": 2097152,
+        "sha256": "39c28eb97f1f8b0038244030aad028127c97b6631e81ba9a948a982670f2a597"
+      },
+      "tests/shadowleague/aes/roms/shadowleague/781-c1.c1": {
+        "size": 4194304,
+        "sha256": "0a58c55be30267b69553072c04672f2376ce1e740c2e70975135e1f1986e5836"
+      },
+      "tests/shadowleague/aes/roms/shadowleague/781-c2.c2": {
+        "size": 4194304,
+        "sha256": "63168e62af229cff84ead1da9ad9734ef0dbdf787db4f9ee6073f9fdcc812c2d"
+      },
+      "tests/shadowleague/aes/roms/shadowleague/781-m1.m1": {
+        "size": 131072,
+        "sha256": "33fa692a5dd7974057cd87fa917e6f4d10ecf7275e4f8118e6206481e79fa6b5"
+      },
+      "tests/shadowleague/aes/roms/shadowleague/781-p1.p1": {
+        "size": 524288,
+        "sha256": "42f22aa32a62d741e060e63d911d67fcea0ea76e66703a0637aa41dfda72d8e0"
+      },
+      "tests/shadowleague/aes/roms/shadowleague/781-s1.s1": {
+        "size": 131072,
+        "sha256": "4511c96b92198b815e0d8a3d104cd83d470782ec5ad4f840ba6ebca2e12212ab"
+      },
+      "tests/shadowleague/aes/roms/shadowleague/781-v1.v1": {
+        "size": 2097152,
+        "sha256": "39c28eb97f1f8b0038244030aad028127c97b6631e81ba9a948a982670f2a597"
+      }
+    }
+  },
+  "release_files": {
+    "ShadowLeague-Darksoft-MVS_v2.zip": "a017862a21b34f5bc59dca6a2594cb9976ed182ce5d82d97246ea76b56277048",
+    "ShadowLeague-BackBit-MVS_v2.zip": "4167a54dad7a819a755e8b83415b924351586bd1e7d0ba6fa2f6fa59ea1a8100",
+    "ShadowLeague-WIP-NeoSD_AES_v2.neo": "f425fdb5fd23377d79c6e293c3f432c3f98e1d23b8e9123655b5b49b1a1fd27b",
+    "ShadowLeague-WIP-AES-EagleBIOS_v2.zip": "f93508d8d57da033a7e386f078b7c266e870efa45e6e2c84f4c15281d6747728",
+    "ShadowLeague-CHANGELOG_v2.txt": "924a40b7cefc1151e52e055fb444cbe4e35b0f7c4607ef301e828e619ab43d26",
+    "ShadowLeague-MANIFEST_v2.txt": "7d3483e402c202e890e23303c5cf0fc87e99dca8bdd79b162badb44a98d3d74f",
+    "ShadowLeague-WIP-NeoSD_MVS_v2.neo": "721f1332abf0adf5cf76d096e7b9a79c7f60639f7834122a518f6fadbf73d73d",
+    "ShadowLeague-Darksoft-AES_v2.zip": "c127878755576f88aec7bb02f2957d41beb2ea889e340add9c513504aee35faf",
+    "ShadowLeague-BackBit-AES_v2.zip": "4ffe99c813aaada463898ce0997c70567c8ed6b0dc57da413cf952bb9ebe39ed",
+    "ShadowLeague-WIP-EagleBIOS_v2.zip": "879946945ef6911bd0ac559b4ed769e49a0233b754794db36dfa94569a217cf4",
+    "ShadowLeague-README_v2.txt": "e12f4a46928e30b88eacdb36fb8391e22d62d48c563c72e738ea74a9d15cdf57"
+  },
+  "budgets_percent": {
+    "P": 82,
+    "C": 52,
+    "S": 24,
+    "M": 15,
+    "V": 9
+  },
+  "api_freeze": "PASS",
+  "level_check": "not applicable, no level exporter"
+}

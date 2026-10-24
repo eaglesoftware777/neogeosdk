@@ -1,0 +1,831 @@
+{
+ "_about": "Seven Wonders Puzzles levels. tools/levels.py turns this into scenes/sw_levels_data.h. Match layouts: '.' random, 1-8 colour, '#' wall, c C K crates, i I ice, l lock, h v b specials, p prism. Bubble rows: ten across, then nine on a shifted row (write nine; the '-' is added). '.' empty, 1-8 colour, r random, A anchor, S stone, R a kitten in a random colour.",
+ "chapters": [
+  {
+   "name": "THE SKY GARDEN",
+   "line1": "FLOWERS HANG ON THE CLOUDS",
+   "line2": "MATCH THREE TO WAKE THEM",
+   "cat": "mimi"
+  },
+  {
+   "name": "THE CRYSTAL CANAL",
+   "line1": "THE WATER HAS FROZEN STILL",
+   "line2": "BREAK THE ICE",
+   "cat": "kiko"
+  },
+  {
+   "name": "THE MOON LIGHTHOUSE",
+   "line1": "THE LAMP NEEDS ITS SPARKLE",
+   "line2": "MAKE SPECIAL PIECES",
+   "cat": "mimi"
+  },
+  {
+   "name": "THE CLOCKWORK TOWER",
+   "line1": "CRATES JAM THE GEARS",
+   "line2": "BREAK THEM, RING THE BELLS",
+   "cat": "kiko"
+  },
+  {
+   "name": "THE CORAL PALACE",
+   "line1": "KITTENS FLOAT IN BUBBLES",
+   "line2": "SET EVERY ONE FREE",
+   "cat": "mimi"
+  },
+  {
+   "name": "THE SUNSTONE PYRAMID",
+   "line1": "THE SUN WILL SOON SET",
+   "line2": "BEAT THE CLOCK",
+   "cat": "kiko"
+  },
+  {
+   "name": "THE STARLIGHT DOME",
+   "line1": "THE LAST WONDER WAITS",
+   "line2": "SHOW ALL YOU HAVE LEARNED",
+   "cat": "mimi"
+  }
+ ],
+ "demo": {
+  "mode": "match",
+  "w": 7,
+  "h": 7,
+  "colors": 5,
+  "seed": 777,
+  "moves": 0,
+  "goals": [],
+  "tip": ""
+ },
+ "levels": [
+  {
+   "mode": "match",
+   "w": 7,
+   "h": 7,
+   "colors": 5,
+   "seed": 101,
+   "moves": 22,
+   "goals": [
+    [
+     "color",
+     1,
+     12
+    ]
+   ],
+   "stars": [
+    1500,
+    2500,
+    3500
+   ],
+   "tip": "SWAP NEIGHBOURS TO LINE UP THREE"
+  },
+  {
+   "mode": "bubble",
+   "w": 10,
+   "h": 12,
+   "colors": 4,
+   "seed": 102,
+   "moves": 0,
+   "miss_limit": 6,
+   "rows": [
+    "1122334411",
+    "122334411",
+    "2233441122",
+    "233441122"
+   ],
+   "goals": [
+    [
+     "clear"
+    ]
+   ],
+   "stars": [
+    1000,
+    1600,
+    2400
+   ],
+   "tip": "AIM, FIRE, POP THREE ALIKE"
+  },
+  {
+   "mode": "match",
+   "w": 7,
+   "h": 7,
+   "colors": 5,
+   "seed": 103,
+   "moves": 24,
+   "goals": [
+    [
+     "color",
+     2,
+     15
+    ],
+    [
+     "color",
+     3,
+     15
+    ]
+   ],
+   "stars": [
+    2500,
+    4000,
+    5500
+   ],
+   "tip": "TWO COLOURS THIS TIME"
+  },
+  {
+   "mode": "bubble",
+   "w": 10,
+   "h": 12,
+   "colors": 4,
+   "seed": 104,
+   "moves": 0,
+   "miss_limit": 6,
+   "rows": [
+    "rrrrrrrrrr",
+    "rrrrrrrrr",
+    "rrrrrrrrrr",
+    "rrrrrrrrr",
+    "rrrrrrrrrr"
+   ],
+   "goals": [
+    [
+     "clear"
+    ]
+   ],
+   "stars": [
+    1400,
+    2200,
+    3200
+   ],
+   "tip": "BOUNCE SHOTS OFF THE WALLS"
+  },
+  {
+   "mode": "match",
+   "w": 7,
+   "h": 7,
+   "colors": 5,
+   "seed": 201,
+   "moves": 30,
+   "layout": [
+    ".......",
+    ".iiiii.",
+    ".iiiii.",
+    ".iiiii.",
+    ".iiiii.",
+    ".iiiii.",
+    "......."
+   ],
+   "goals": [
+    [
+     "ice"
+    ]
+   ],
+   "stars": [
+    2000,
+    3500,
+    5000
+   ],
+   "tip": "MATCH ON THE ICE TO BREAK IT"
+  },
+  {
+   "mode": "bubble",
+   "w": 10,
+   "h": 12,
+   "colors": 4,
+   "seed": 202,
+   "moves": 0,
+   "miss_limit": 6,
+   "rows": [
+    "rrrrAArrrr",
+    "rrrrrrrrr",
+    "rrrrrrrrrr",
+    "rrrrrrrrr"
+   ],
+   "goals": [
+    [
+     "clear"
+    ]
+   ],
+   "stars": [
+    1200,
+    2000,
+    2800
+   ],
+   "tip": "ANCHORS HOLD WHAT TOUCHES THEM"
+  },
+  {
+   "mode": "match",
+   "w": 7,
+   "h": 7,
+   "colors": 5,
+   "seed": 203,
+   "moves": 36,
+   "layout": [
+    "i.....i",
+    ".i...i.",
+    "...I...",
+    "..iIi..",
+    "...I...",
+    ".i...i.",
+    "i.....i"
+   ],
+   "goals": [
+    [
+     "ice"
+    ],
+    [
+     "color",
+     4,
+     12
+    ]
+   ],
+   "stars": [
+    2500,
+    4000,
+    6000
+   ],
+   "tip": "SOME ICE IS TWICE AS THICK"
+  },
+  {
+   "mode": "bubble",
+   "w": 10,
+   "h": 12,
+   "colors": 5,
+   "seed": 204,
+   "moves": 0,
+   "push_every": 9,
+   "rows": [
+    "rrrrrrrrrr",
+    "rrrrrrrrr",
+    "rrrrrrrrrr"
+   ],
+   "goals": [
+    [
+     "clear"
+    ]
+   ],
+   "stars": [
+    1400,
+    2200,
+    3000
+   ],
+   "tip": "A NEW ROW EVERY NINE SHOTS"
+  },
+  {
+   "mode": "match",
+   "w": 7,
+   "h": 7,
+   "colors": 5,
+   "seed": 301,
+   "moves": 20,
+   "goals": [
+    [
+     "special",
+     0,
+     5
+    ]
+   ],
+   "stars": [
+    2500,
+    4000,
+    5500
+   ],
+   "tip": "FOUR IN A LINE MAKES A STRIPE"
+  },
+  {
+   "mode": "bubble",
+   "w": 10,
+   "h": 12,
+   "colors": 5,
+   "seed": 302,
+   "moves": 50,
+   "miss_limit": 7,
+   "rows": [
+    "rrrrrrrrrr",
+    "rrrrrrrrr",
+    "rrrrrrrrrr",
+    "rrrrrrrrr",
+    "rrrrrrrrrr"
+   ],
+   "goals": [
+    [
+     "clear"
+    ]
+   ],
+   "stars": [
+    1800,
+    2600,
+    3600
+   ],
+   "tip": "FORTY SHOTS TO CLEAR IT"
+  },
+  {
+   "mode": "match",
+   "w": 7,
+   "h": 7,
+   "colors": 6,
+   "seed": 303,
+   "moves": 26,
+   "layout": [
+    ".......",
+    ".......",
+    "...p...",
+    ".......",
+    ".......",
+    ".......",
+    "......."
+   ],
+   "goals": [
+    [
+     "special",
+     0,
+     4
+    ],
+    [
+     "color",
+     5,
+     18
+    ]
+   ],
+   "stars": [
+    3500,
+    5000,
+    7000
+   ],
+   "tip": "SWAP THE PRISM WITH A COLOUR"
+  },
+  {
+   "mode": "bubble",
+   "w": 10,
+   "h": 12,
+   "colors": 5,
+   "seed": 304,
+   "moves": 0,
+   "push_every": 8,
+   "rows": [
+    "rrrrrrrrrr",
+    "rrSrrrSrr",
+    "rrrrrrrrrr",
+    "rrrrrrrrr"
+   ],
+   "goals": [
+    [
+     "clear"
+    ]
+   ],
+   "stars": [
+    1800,
+    2800,
+    3800
+   ],
+   "tip": "STONES FALL ONLY WHEN CUT LOOSE"
+  },
+  {
+   "mode": "match",
+   "w": 7,
+   "h": 7,
+   "colors": 5,
+   "seed": 401,
+   "moves": 25,
+   "layout": [
+    ".......",
+    ".c...c.",
+    "..c.c..",
+    "...C...",
+    "..c.c..",
+    ".c...c.",
+    "......."
+   ],
+   "goals": [
+    [
+     "crate"
+    ]
+   ],
+   "stars": [
+    2500,
+    4000,
+    5500
+   ],
+   "tip": "MATCH NEXT TO A CRATE TO BREAK IT"
+  },
+  {
+   "mode": "bubble",
+   "w": 10,
+   "h": 12,
+   "colors": 5,
+   "seed": 402,
+   "moves": 0,
+   "push_every": 7,
+   "rows": [
+    "rrrrrrrrrr",
+    "rrrrrrrrr",
+    "rrrrrrrrrr",
+    "rrrrrrrrr"
+   ],
+   "goals": [
+    [
+     "clear"
+    ]
+   ],
+   "stars": [
+    2000,
+    3000,
+    4000
+   ],
+   "tip": "THE CEILING COMES DOWN FASTER"
+  },
+  {
+   "mode": "match",
+   "w": 7,
+   "h": 7,
+   "colors": 5,
+   "seed": 403,
+   "moves": 38,
+   "layout": [
+    "C.....C",
+    ".......",
+    "..KcK..",
+    "..c#c..",
+    "..KcK..",
+    ".......",
+    "C.....C"
+   ],
+   "goals": [
+    [
+     "crate"
+    ]
+   ],
+   "stars": [
+    3000,
+    4500,
+    6500
+   ],
+   "tip": "SOME CRATES NEED THREE HITS"
+  },
+  {
+   "mode": "bubble",
+   "w": 10,
+   "h": 12,
+   "colors": 6,
+   "seed": 404,
+   "moves": 0,
+   "push_every": 8,
+   "rows": [
+    "rrrrrrrrrr",
+    "rrrrrrrrr",
+    "rrrrrrrrrr",
+    "rrrrrrrrr"
+   ],
+   "goals": [
+    [
+     "clear"
+    ]
+   ],
+   "stars": [
+    2200,
+    3200,
+    4400
+   ],
+   "tip": "SIX COLOURS NOW"
+  },
+  {
+   "mode": "match",
+   "w": 7,
+   "h": 7,
+   "colors": 5,
+   "seed": 501,
+   "moves": 25,
+   "layout": [
+    ".......",
+    ".l...l.",
+    ".......",
+    "...l...",
+    ".......",
+    ".l...l.",
+    "......."
+   ],
+   "goals": [
+    [
+     "color",
+     1,
+     15
+    ],
+    [
+     "color",
+     2,
+     15
+    ]
+   ],
+   "stars": [
+    2500,
+    4000,
+    5500
+   ],
+   "tip": "A MATCH UNLOCKS A CHAINED PIECE"
+  },
+  {
+   "mode": "bubble",
+   "w": 10,
+   "h": 12,
+   "colors": 4,
+   "seed": 502,
+   "moves": 0,
+   "miss_limit": 6,
+   "rows": [
+    "rrrrrrrrrr",
+    "rrrRrRrrr",
+    "rrrrrrrrrr",
+    "rrrrrrrrr"
+   ],
+   "goals": [
+    [
+     "rescue"
+    ]
+   ],
+   "stars": [
+    1500,
+    2400,
+    3400
+   ],
+   "tip": "POP OR DROP THE KITTENS FREE"
+  },
+  {
+   "mode": "match",
+   "w": 7,
+   "h": 7,
+   "colors": 6,
+   "seed": 503,
+   "moves": 34,
+   "layout": [
+    "l.....l",
+    ".i...i.",
+    "..lil..",
+    "..iIi..",
+    "..lil..",
+    ".i...i.",
+    "l.....l"
+   ],
+   "goals": [
+    [
+     "ice"
+    ]
+   ],
+   "stars": [
+    3000,
+    4500,
+    6500
+   ],
+   "tip": "LOCKS AND ICE TOGETHER"
+  },
+  {
+   "mode": "bubble",
+   "w": 10,
+   "h": 12,
+   "colors": 5,
+   "seed": 504,
+   "moves": 0,
+   "push_every": 8,
+   "rows": [
+    "rrRrrrrRrr",
+    "rrrrrrrrr",
+    "rrrrRrrrrr",
+    "rrrrrrrrr"
+   ],
+   "goals": [
+    [
+     "rescue"
+    ]
+   ],
+   "stars": [
+    1800,
+    2800,
+    3800
+   ],
+   "tip": "THREE KITTENS TO SAVE"
+  },
+  {
+   "mode": "match",
+   "w": 7,
+   "h": 7,
+   "colors": 5,
+   "seed": 601,
+   "moves": 0,
+   "time": 5400,
+   "goals": [
+    [
+     "score",
+     0,
+     40
+    ]
+   ],
+   "stars": [
+    4000,
+    6000,
+    8000
+   ],
+   "tip": "4000 POINTS IN NINETY SECONDS"
+  },
+  {
+   "mode": "bubble",
+   "w": 10,
+   "h": 12,
+   "colors": 4,
+   "seed": 602,
+   "moves": 0,
+   "time": 5400,
+   "miss_limit": 6,
+   "rows": [
+    "rrrrrrrrrr",
+    "rrrrrrrrr",
+    "rrrrrrrrrr",
+    "rrrrrrrrr"
+   ],
+   "goals": [
+    [
+     "clear"
+    ]
+   ],
+   "stars": [
+    1500,
+    2400,
+    3400
+   ],
+   "tip": "CLEAR IT BEFORE SUNDOWN"
+  },
+  {
+   "mode": "match",
+   "w": 7,
+   "h": 7,
+   "colors": 6,
+   "seed": 603,
+   "moves": 0,
+   "time": 6000,
+   "layout": [
+    ".......",
+    ".ccccc.",
+    ".......",
+    ".......",
+    ".......",
+    ".ccccc.",
+    "......."
+   ],
+   "goals": [
+    [
+     "crate"
+    ]
+   ],
+   "stars": [
+    3000,
+    4500,
+    6000
+   ],
+   "tip": "CRATES AGAINST THE CLOCK"
+  },
+  {
+   "mode": "bubble",
+   "w": 10,
+   "h": 12,
+   "colors": 5,
+   "seed": 604,
+   "moves": 0,
+   "time": 6000,
+   "push_every": 9,
+   "rows": [
+    "rrRrrrrRrr",
+    "rrrrrrrrr",
+    "rrrrrrrrrr",
+    "rrrrrrrrr"
+   ],
+   "goals": [
+    [
+     "rescue"
+    ]
+   ],
+   "stars": [
+    1800,
+    2800,
+    3800
+   ],
+   "tip": "SAVE THEM BEFORE THE SUN SETS"
+  },
+  {
+   "mode": "match",
+   "w": 7,
+   "h": 7,
+   "colors": 6,
+   "seed": 701,
+   "moves": 40,
+   "layout": [
+    "c.....c",
+    ".iiiii.",
+    ".il.li.",
+    ".i.p.i.",
+    ".il.li.",
+    ".iiiii.",
+    "c.....c"
+   ],
+   "goals": [
+    [
+     "ice"
+    ],
+    [
+     "crate"
+    ]
+   ],
+   "stars": [
+    4000,
+    6000,
+    8000
+   ],
+   "tip": "ICE, LOCKS, CRATES AND A PRISM"
+  },
+  {
+   "mode": "bubble",
+   "w": 10,
+   "h": 12,
+   "colors": 6,
+   "seed": 702,
+   "moves": 0,
+   "push_every": 10,
+   "rows": [
+    "rrRrAArRrr",
+    "rrrrrrrrr",
+    "rrrSrrSrrr",
+    "rrrrrrrrr"
+   ],
+   "goals": [
+    [
+     "rescue"
+    ]
+   ],
+   "stars": [
+    2000,
+    3000,
+    4200
+   ],
+   "tip": "ANCHORS, STONES AND KITTENS"
+  },
+  {
+   "mode": "match",
+   "w": 7,
+   "h": 7,
+   "colors": 6,
+   "seed": 703,
+   "moves": 42,
+   "layout": [
+    "C..p..C",
+    ".iiiii.",
+    ".i.l.i.",
+    ".il.li.",
+    ".i.l.i.",
+    ".iiiii.",
+    "C.....C"
+   ],
+   "goals": [
+    [
+     "ice"
+    ],
+    [
+     "crate"
+    ],
+    [
+     "special",
+     0,
+     2
+    ]
+   ],
+   "stars": [
+    5000,
+    7000,
+    9000
+   ],
+   "tip": "ONE LAST BOARD"
+  },
+  {
+   "mode": "bubble",
+   "w": 10,
+   "h": 12,
+   "colors": 6,
+   "seed": 704,
+   "moves": 0,
+   "push_every": 9,
+   "rows": [
+    "rrRrrrrRrr",
+    "rrrrrrrrr",
+    "rrrrRrrrrr",
+    "rrrrrrrrr",
+    "rrrrrrrrrr"
+   ],
+   "goals": [
+    [
+     "rescue"
+    ],
+    [
+     "clear"
+    ]
+   ],
+   "stars": [
+    2600,
+    3600,
+    5000
+   ],
+   "tip": "FREE THEM ALL AND CLEAR THE DOME"
+  }
+ ]
+}

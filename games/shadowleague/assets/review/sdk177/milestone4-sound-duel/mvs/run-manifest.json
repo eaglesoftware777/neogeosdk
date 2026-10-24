@@ -1,0 +1,19 @@
+{
+  "platform": "mvs",
+  "bios_name": "euro",
+  "team": false,
+  "fighter": "kenji",
+  "attract_only": false,
+  "training": false,
+  "options": false,
+  "seconds": 85,
+  "elf_sha256": "eb7f06b94a51f039f2c27a0193e96fd0abd95290ef13ff239a83222dd0a31e77",
+  "rom_sha256": {
+    "781-c1.c1": "ebd89b44ae2aa41262cdb02ecb84d382ecae8dde8895ccea047dc9f34fb0cc34",
+    "781-c2.c2": "7f00151cc431e8ae9828af02bf7104bb2563da5ff310ec274b27564feee39548",
+    "781-m1.m1": "f72aeb787b7486504e15e45cd007e71827799c75b7b3384da13054ad4f0901d5",
+    "781-p1.p1": "bf67d2311c1e77c6feb3a617fc1fb8f3b88cf57fc89695ef6d9a623da9bfefcc",
+    "781-s1.s1": "56d8140539b0752b19766727b11388df21f27e523acb87a0c7ad0df158865b71",
+    "781-v1.v1": "0da0a125e7281753f06ab0ef941257646ccfa23250241e7a0c9ec8bdce7e4720"
+  }
+}

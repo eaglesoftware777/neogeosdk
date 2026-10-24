@@ -85,8 +85,16 @@ uint16_t setSCB4(uint16_t x) { return (uint16_t)((x & 511u) << 7); }
 uint16_t setSCB1_2(uint16_t p, uint16_t t, uint16_t a8, uint16_t a4, uint16_t v, uint16_t h)
 { return (uint16_t)((p << 8) | (t << 4) | (a8 << 3) | (a4 << 2) | (v << 1) | h); }
 void vram_init(uint16_t a, uint16_t i) { address = a; increment = i; }
-void vram_sfix1(uint16_t value) { assert(address < 0x8800); ram[address] = value; address += increment; writes++; }
-void vram_SCB234(uint16_t a, uint16_t value) { assert(a < 0x8800); ram[a] = value; writes++; }
+void vram_sfix1(uint16_t value) { assert(address < 0x8800); ram[address] = value; address += increment; writes++;
+#ifdef NG_TEST_VRAM_WRITE
+    NG_TEST_VRAM_WRITE();
+#endif
+}
+void vram_SCB234(uint16_t a, uint16_t value) { assert(a < 0x8800); ram[a] = value; writes++;
+#ifdef NG_TEST_VRAM_WRITE
+    NG_TEST_VRAM_WRITE();
+#endif
+}
 void vram_SCB1(uint16_t *tiles, uint16_t *attrs, uint8_t count)
 { unsigned i; for (i = 0; i < count; i++) { vram_sfix1(tiles[i]); vram_sfix1(attrs[i]); } }
 void vram_sprite(uint16_t a, uint16_t inc, uint16_t slot, uint16_t *tiles,
@@ -335,6 +343,46 @@ static void test_tile_palette_maps(void)
     assert(!g.tilePalettes);
 }
 
+static void test_large_c_rom_addresses(void)
+{
+    NGSpriteGroup g;
+    static const uint8_t banks[] = {64u, 65u, 66u, 67u};
+    ng_sprite_group_init(&g, 300u, 2u, 2u, 0u, 7u);
+    ng_sprite_group_set_tile_address(&g, 0x1FFFEu);
+    ng_sprite_group_set_palette_map(&g, banks);
+    ng_sprite_group_flush(&g);
+    assert(ram[300u * 64u] == 0xFFFEu);
+    assert(ram[300u * 64u + 1u] == 0x4010u);
+    assert(ram[300u * 64u + 2u] == 0u);
+    assert(ram[300u * 64u + 3u] == 0x4220u);
+    assert(ram[300u * 64u + 5u] == NG_SPRITE_BLANK_ATTR);
+    ng_sprite_group_set_flip(&g, 1u, 1u);
+    ng_sprite_group_flush(&g);
+    assert(ram[300u * 64u] == 1u);
+    assert(ram[300u * 64u + 1u] == 0x4323u);
+    assert(ram[301u * 64u + 3u] == 0x4013u);
+    ng_sprite_group_set_tile_address(&g, 0x100000u);
+    assert(g.tileHigh == 1u && g.tileBase == 0xFFFEu);
+    ng_sprite_group_set_flip(&g, 0u, 0u);
+    ng_sprite_group_set_tile_address(&g, 0x7FFFEu);
+    ng_sprite_group_flush(&g);
+    assert(ram[300u * 64u + 1u] == 0x4070u);
+    assert(ram[300u * 64u + 3u] == 0x4280u);
+    ng_sprite_group_set_flip(&g, 1u, 1u);
+    ng_sprite_group_flush(&g);
+    assert(ram[300u * 64u + 1u] == 0x4383u);
+    assert(ram[301u * 64u + 3u] == 0x4073u);
+    ng_sprite_group_set_tile_address(&g, 123u);
+    ng_sprite_group_set_flip(&g, 0u, 0u);
+    ng_sprite_group_flush(&g);
+    assert(ram[300u * 64u + 1u] == 0x4000u);
+    ng_sprite_group_init(&g, 300u, 1u, 1u, 5u, 6u);
+    assert(g.tileHigh == 0u);
+    ng_sprite_group_set_tile_address(&g, 0xFFFFFu);
+    ng_sprite_group_flush(&g);
+    assert(ram[300u * 64u] == 0xFFFFu && ram[300u * 64u + 1u] == 0x06F0u);
+}
+
 static void test_character_palette_binding(void)
 {
     NGCharacter *c;
@@ -380,6 +428,105 @@ static void test_character_palette_binding(void)
     assert(c && !c->sprite_palette_map);
 }
 
+static void test_cached_character_updates(void)
+{
+    NGCharacter *a, *b;
+    unsigned before, row;
+    uint16_t first;
+    ng_chars_init();
+    a = chars_add(0u, 80, 100);
+    b = chars_add(1u, 160, 120);
+    ng_char_set_sprite(a, 1u, 5u, 4u, 1000u, 4u);
+    ng_char_set_sprite(b, 1u, 2u, 2u, 2000u, 5u);
+    ng_chars_draw();
+    first = a->sprite_first;
+    before = writes;
+    ng_chars_draw();
+    assert(writes == before);
+    a->x++;
+    ng_chars_draw();
+    assert(writes == before + 2u);
+
+    before = writes;
+    a->sprite_tile = 1100u;
+    a->sprite_dirty = 1u;
+    ng_chars_draw();
+    assert(writes == before + 5u * 4u * 2u);
+    for (row = 4; row < 16; row++) assert(map_tile(first, row) == NG_SPRITE_BLANK_TILE);
+
+    /* A shrinking frame releases its tail before the next object moves in. */
+    a->sprite_strips = 3u;
+    a->sprite_height = a->sprite_active_rows = 2u;
+    a->sprite_dirty = 1u;
+    ng_chars_draw();
+    assert(b->sprite_first == first + 3u);
+    assert(map_tile(b->sprite_first, 0u) == 2000u);
+    for (row = 2; row < 16; row++) assert(map_tile(first, row) == NG_SPRITE_BLANK_TILE);
+    before = writes;
+    ng_chars_draw();
+    assert(writes == before);
+
+    a->visible = 0u;
+    ng_chars_draw();
+    assert(map_tile(b->sprite_first, 0u) == 2000u);
+    a->visible = 1u;
+    a->flip_x = 1u;
+    ng_chars_draw();
+    assert(map_tile(a->sprite_first, 0u) == 1102u);
+    assert((ram[SCB3_ADDR + a->sprite_first + 1u] & 0x40u) != 0u);
+    assert(map_tile(b->sprite_first, 0u) == 2000u);
+}
+
+static void test_character_depth_order(void)
+{
+    NGCharacter *a, *b;
+    uint16_t first;
+    ng_chars_init();
+    a = chars_add(0u, 80, 110);
+    b = chars_add(1u, 120, 110);
+    ng_char_set_sprite(a, 1u, 2u, 2u, 100u, 4u);
+    ng_char_set_sprite(b, 1u, 2u, 2u, 200u, 5u);
+    ng_chars_draw();
+    assert(a->sprite_first < b->sprite_first);
+    b->y = 90;
+    ng_chars_draw();
+    assert(b->sprite_first < a->sprite_first);
+    ng_chars_set_depth_sort(0u);
+    ng_chars_draw();
+    first = a->sprite_first;
+    assert(first < b->sprite_first);
+    a->y = 140;
+    ng_chars_draw();
+    assert(a->sprite_first == first);
+    a->priority_band = 5u;
+    ng_chars_draw();
+    assert(b->sprite_first < a->sprite_first);
+    /* Sort Y below zero (a depth offset) still orders as a signed value. */
+    ng_chars_set_depth_sort(1u);
+    a->priority_band = b->priority_band;
+    a->y = b->y = 100;
+    a->depth_offset = -150;
+    ng_chars_draw();
+    assert(a->sprite_first < b->sprite_first);
+    b->depth_offset = -200;
+    ng_chars_draw();
+    assert(b->sprite_first < a->sprite_first);
+    a->depth_offset = b->depth_offset = 0;
+}
+
+static void test_map_growth_after_shrink(void)
+{
+    NGSpriteGroup g;
+    unsigned row;
+    ng_sprite_group_init(&g, 310u, 1u, 20u, 400u, 5u);
+    ng_sprite_group_set_scale(&g, 0x7fu, 0x7fu);
+    ng_sprite_group_flush(&g);
+    ng_sprite_group_set_scale(&g, 0xffu, 0xffu);
+    ng_sprite_group_flush(&g);
+    for (row = 0; row < 32; row++)
+        assert(map_tile(310u, row) == (row < 20u ? 400u + row : NG_SPRITE_BLANK_TILE));
+}
+
 int main(void)
 {
     NGSpriteGroup g;
@@ -406,8 +553,12 @@ int main(void)
     test_window_parks_only_its_own_tail();
     test_palette_effects();
     test_tile_palette_maps();
+    test_large_c_rom_addresses();
     test_camera_pan();
     test_character_palette_binding();
+    test_cached_character_updates();
+    test_character_depth_order();
+    test_map_growth_after_shrink();
     assert(ng_sprite_scaled_x(256u, 0x7fu) == 128u);
     assert(ng_sprite_scaled_y(256u, 0x7fu) == 128u);
     assert(ng_sprite_scaled_y(256u, 0xffu) == 256u);

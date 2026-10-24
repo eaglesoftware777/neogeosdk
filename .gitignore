@@ -26,3 +26,36 @@ games/tutorial/artbox/*
 games/demo_plus/artbox/*
 tests/test_c
 tests/test_cpp
+tests/test_rand
+tests/test_rand.exe
+tests/test_trig
+tests/test_trig.exe
+tests/test_pause
+tests/test_pause.exe
+tests/test_move
+tests/test_move.exe
+tests/test_shooter
+tests/test_shooter.exe
+tests/test_puzzle
+tests/test_puzzle.exe
+tests/test_mahjong
+tests/test_mahjong.exe
+tests/test_rpg
+tests/test_rpg.exe
+tests/test_beatemup
+tests/test_beatemup.exe
+tests/test_genre_cpp
+tests/test_genre_cpp.exe
+tests/genre_*.o
+
+# make neo GAME=<name>: NeoSD images and MAME test sets, rebuilt on demand
+dist/neo/
+dist/release/*NeoGeoCD*.zip
+dist/release/*Simulator-Kit*.zip
+
+# CD build artifacts
+out/neocd/
+
+# Setup wizards: rebuilt for each release and uploaded with it
+dist/*_Setup_Wizard.zip
+dist/*_Setup.zip

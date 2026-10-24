@@ -1,0 +1,12 @@
+{
+  "original": {
+    "video": "SHA256=943516f815f0da7132c486763757363af93e11dba0c3b19c546a49577ee3830f",
+    "audio": "SHA256=5f8d347ff10902cf87cd7399b740d0e638b0c2f7243eabad6cfe35bc8f09c5d7"
+  },
+  "lossless": {
+    "video": "SHA256=943516f815f0da7132c486763757363af93e11dba0c3b19c546a49577ee3830f",
+    "audio": "SHA256=5f8d347ff10902cf87cd7399b740d0e638b0c2f7243eabad6cfe35bc8f09c5d7"
+  },
+  "archive": "/home/kepler/shadowleague-local-archives/v1-final-jack-20261018.mkv",
+  "archive_sha256": "258fffcd5a7e0996fcaaa4a474d7f918de012c69006058b678ea5f73f74c8750"
+}

@@ -1,0 +1,369 @@
+[
+ {
+  "name": "pilot_0",
+  "bank": 44,
+  "banks": 4,
+  "pivot": [
+   32,
+   32
+  ],
+  "members": {
+   "p1_plane": "jets/f16/p1_plane.png",
+   "p1_plane_left": "jets/f16/p1_plane_left.png",
+   "p1_plane_left_mid": "jets/f16/p1_plane_left_mid.png",
+   "p1_plane_left_soft": "jets/f16/p1_plane_left_soft.png",
+   "p1_plane_right_soft": "jets/f16/p1_plane_right_soft.png",
+   "p1_plane_right_mid": "jets/f16/p1_plane_right_mid.png",
+   "p1_plane_right": "jets/f16/p1_plane_right.png",
+   "maneuver_0_0": "jets/f16/maneuver_0_0.png",
+   "maneuver_0_1": "jets/f16/maneuver_0_1.png",
+   "maneuver_0_2": "jets/f16/maneuver_0_2.png",
+   "maneuver_0_3": "jets/f16/maneuver_0_3.png",
+   "native_damage_0_0": "jets/f16/native_damage_0_0.png",
+   "native_damage_0_1": "jets/f16/native_damage_0_1.png",
+   "native_damage_0_2": "jets/f16/native_damage_0_2.png",
+   "native_damage_0_3": "jets/f16/native_damage_0_3.png",
+   "native_damage_0_4": "jets/f16/native_damage_0_4.png",
+   "native_damage_0_5": "jets/f16/native_damage_0_5.png",
+   "native_damage_0_6": "jets/f16/native_damage_0_6.png",
+   "native_boost_0_0": "jets/f16/native_boost_0_0.png",
+   "native_boost_0_1": "jets/f16/native_boost_0_1.png",
+   "native_death_0_0": "jets/f16/native_death_0_0.png",
+   "native_death_0_1": "jets/f16/native_death_0_1.png",
+   "native_death_0_2": "jets/f16/native_death_0_2.png",
+   "native_death_0_3": "jets/f16/native_death_0_3.png"
+  }
+ },
+ {
+  "name": "pilot_1",
+  "bank": 48,
+  "banks": 4,
+  "pivot": [
+   32,
+   32
+  ],
+  "members": {
+   "p2_plane": "jets/f35/p2_plane.png",
+   "p2_plane_left": "jets/f35/p2_plane_left.png",
+   "p2_plane_left_mid": "jets/f35/p2_plane_left_mid.png",
+   "p2_plane_left_soft": "jets/f35/p2_plane_left_soft.png",
+   "p2_plane_right_soft": "jets/f35/p2_plane_right_soft.png",
+   "p2_plane_right_mid": "jets/f35/p2_plane_right_mid.png",
+   "p2_plane_right": "jets/f35/p2_plane_right.png",
+   "maneuver_1_0": "jets/f35/maneuver_1_0.png",
+   "maneuver_1_1": "jets/f35/maneuver_1_1.png",
+   "maneuver_1_2": "jets/f35/maneuver_1_2.png",
+   "maneuver_1_3": "jets/f35/maneuver_1_3.png",
+   "native_damage_1_0": "jets/f35/native_damage_1_0.png",
+   "native_damage_1_1": "jets/f35/native_damage_1_1.png",
+   "native_damage_1_2": "jets/f35/native_damage_1_2.png",
+   "native_damage_1_3": "jets/f35/native_damage_1_3.png",
+   "native_damage_1_4": "jets/f35/native_damage_1_4.png",
+   "native_damage_1_5": "jets/f35/native_damage_1_5.png",
+   "native_damage_1_6": "jets/f35/native_damage_1_6.png",
+   "native_boost_1_0": "jets/f35/native_boost_1_0.png",
+   "native_boost_1_1": "jets/f35/native_boost_1_1.png",
+   "native_death_1_0": "jets/f35/native_death_1_0.png",
+   "native_death_1_1": "jets/f35/native_death_1_1.png",
+   "native_death_1_2": "jets/f35/native_death_1_2.png",
+   "native_death_1_3": "jets/f35/native_death_1_3.png"
+  }
+ },
+ {
+  "name": "pilot_2",
+  "bank": 52,
+  "banks": 4,
+  "pivot": [
+   32,
+   32
+  ],
+  "members": {
+   "p3_plane": "jets/f15/p3_plane.png",
+   "p3_plane_left": "jets/f15/p3_plane_left.png",
+   "p3_plane_left_mid": "jets/f15/p3_plane_left_mid.png",
+   "p3_plane_left_soft": "jets/f15/p3_plane_left_soft.png",
+   "p3_plane_right_soft": "jets/f15/p3_plane_right_soft.png",
+   "p3_plane_right_mid": "jets/f15/p3_plane_right_mid.png",
+   "p3_plane_right": "jets/f15/p3_plane_right.png",
+   "maneuver_2_0": "jets/f15/maneuver_2_0.png",
+   "maneuver_2_1": "jets/f15/maneuver_2_1.png",
+   "maneuver_2_2": "jets/f15/maneuver_2_2.png",
+   "maneuver_2_3": "jets/f15/maneuver_2_3.png",
+   "native_damage_2_0": "jets/f15/native_damage_2_0.png",
+   "native_damage_2_1": "jets/f15/native_damage_2_1.png",
+   "native_damage_2_2": "jets/f15/native_damage_2_2.png",
+   "native_damage_2_3": "jets/f15/native_damage_2_3.png",
+   "native_damage_2_4": "jets/f15/native_damage_2_4.png",
+   "native_damage_2_5": "jets/f15/native_damage_2_5.png",
+   "native_damage_2_6": "jets/f15/native_damage_2_6.png",
+   "native_boost_2_0": "jets/f15/native_boost_2_0.png",
+   "native_boost_2_1": "jets/f15/native_boost_2_1.png",
+   "native_death_2_0": "jets/f15/native_death_2_0.png",
+   "native_death_2_1": "jets/f15/native_death_2_1.png",
+   "native_death_2_2": "jets/f15/native_death_2_2.png",
+   "native_death_2_3": "jets/f15/native_death_2_3.png"
+  }
+ },
+ {
+  "name": "crimson_keep",
+  "bank": 56,
+  "banks": 16,
+  "members": {
+   "red_fortress": "sprites/red_fortress.png",
+   "red_fortress_1": "sprites/red_fortress_1.png",
+   "red_fortress_2": "sprites/red_fortress_2.png",
+   "red_fortress_3": "sprites/red_fortress_3.png",
+   "red_fortress_4": "sprites/red_fortress_4.png",
+   "red_fortress_5": "sprites/red_fortress_5.png",
+   "red_fortress_6": "sprites/red_fortress_6.png",
+   "red_fortress_7": "sprites/red_fortress_7.png",
+   "native_keep_turret": "sprites/native_keep_turret.png",
+   "native_keep_turret_1": "sprites/native_keep_turret_1.png",
+   "native_keep_turret_2": "sprites/native_keep_turret_2.png",
+   "native_keep_turret_3": "sprites/native_keep_turret_3.png",
+   "native_keep_turret_4": "sprites/native_keep_turret_4.png",
+   "native_keep_turret_5": "sprites/native_keep_turret_5.png",
+   "native_keep_turret_6": "sprites/native_keep_turret_6.png",
+   "native_keep_turret_7": "sprites/native_keep_turret_7.png"
+  }
+ },
+ {
+  "name": "explosions",
+  "bank": 98,
+  "banks": 2,
+  "members": {
+   "explosion_0": "sprites/explosion_0.png",
+   "explosion_1": "sprites/explosion_1.png",
+   "explosion_2": "sprites/explosion_2.png",
+   "explosion_3": "sprites/explosion_3.png",
+   "explosion_4": "sprites/explosion_4.png",
+   "explosion_5": "sprites/explosion_5.png",
+   "explosion_6": "sprites/explosion_6.png",
+   "explosion_7": "sprites/explosion_7.png"
+  },
+  "pivot": [
+   32,
+   32
+  ]
+ },
+ {
+  "name": "missile_boat",
+  "bank": 87,
+  "banks": 3,
+  "members": {
+   "missile_boat": "sprites/missile_boat.png"
+  }
+ },
+ {
+  "name": "submarine",
+  "bank": 120,
+  "banks": 1,
+  "members": {
+   "submarine": "sprites/submarine.png"
+  }
+ },
+ {
+  "name": "ridge_warden",
+  "bank": 76,
+  "banks": 2,
+  "members": {
+   "miniboss_0": "sprites/miniboss_0.png",
+   "miniboss_0_1": "sprites/miniboss_0_1.png",
+   "miniboss_0_2": "sprites/miniboss_0_2.png",
+   "miniboss_0_3": "sprites/miniboss_0_3.png",
+   "miniboss_0_4": "sprites/miniboss_0_4.png",
+   "miniboss_0_5": "sprites/miniboss_0_5.png",
+   "miniboss_0_6": "sprites/miniboss_0_6.png",
+   "miniboss_0_7": "sprites/miniboss_0_7.png"
+  }
+ },
+ {
+  "name": "interceptor",
+  "bank": 84,
+  "banks": 3,
+  "members": {
+   "interceptor": "sprites/interceptor.png",
+   "interceptor_1": "sprites/interceptor_1.png",
+   "interceptor_2": "sprites/interceptor_2.png",
+   "interceptor_3": "sprites/interceptor_3.png",
+   "interceptor_4": "sprites/interceptor_4.png",
+   "interceptor_5": "sprites/interceptor_5.png",
+   "interceptor_6": "sprites/interceptor_6.png",
+   "interceptor_7": "sprites/interceptor_7.png"
+  }
+ },
+ {
+  "name": "clouds",
+  "bank": 100,
+  "banks": 2,
+  "members": {
+   "native_far_cloud": "sprites/native_far_cloud.png",
+   "native_overhead_cloud": "sprites/native_overhead_cloud.png"
+  }
+ },
+ {
+  "name": "naval_aa",
+  "bank": 119,
+  "banks": 1,
+  "members": {
+   "naval_aa": "sprites/naval_aa.png",
+   "naval_aa_1": "sprites/naval_aa_1.png",
+   "naval_aa_2": "sprites/naval_aa_2.png",
+   "naval_aa_3": "sprites/naval_aa_3.png",
+   "naval_aa_4": "sprites/naval_aa_4.png",
+   "naval_aa_5": "sprites/naval_aa_5.png",
+   "naval_aa_6": "sprites/naval_aa_6.png",
+   "naval_aa_7": "sprites/naval_aa_7.png"
+  }
+ },
+ {
+  "name": "naval_radar",
+  "bank": 121,
+  "banks": 1,
+  "members": {
+   "naval_radar": "sprites/naval_radar.png",
+   "naval_radar_1": "sprites/naval_radar_1.png",
+   "naval_radar_2": "sprites/naval_radar_2.png",
+   "naval_radar_3": "sprites/naval_radar_3.png",
+   "naval_radar_4": "sprites/naval_radar_4.png",
+   "naval_radar_5": "sprites/naval_radar_5.png",
+   "naval_radar_6": "sprites/naval_radar_6.png",
+   "naval_radar_7": "sprites/naval_radar_7.png"
+  }
+ },
+ {
+  "name": "title",
+  "bank": 16,
+  "banks": 16,
+  "members": {
+   "title": "sprites/title.png"
+  },
+  "full": true
+ },
+ {
+  "name": "miniboss_1",
+  "bank": 124,
+  "banks": 2,
+  "members": {
+   "miniboss_1": "sprites/miniboss_1.png",
+   "miniboss_1_1": "sprites/miniboss_1_1.png",
+   "miniboss_1_2": "sprites/miniboss_1_2.png",
+   "miniboss_1_3": "sprites/miniboss_1_3.png",
+   "miniboss_1_4": "sprites/miniboss_1_4.png",
+   "miniboss_1_5": "sprites/miniboss_1_5.png",
+   "miniboss_1_6": "sprites/miniboss_1_6.png",
+   "miniboss_1_7": "sprites/miniboss_1_7.png"
+  }
+ },
+ {
+  "name": "miniboss_2",
+  "bank": 126,
+  "banks": 1,
+  "members": {
+   "miniboss_2": "sprites/miniboss_2.png",
+   "miniboss_2_1": "sprites/miniboss_2_1.png",
+   "miniboss_2_2": "sprites/miniboss_2_2.png",
+   "miniboss_2_3": "sprites/miniboss_2_3.png",
+   "miniboss_2_4": "sprites/miniboss_2_4.png",
+   "miniboss_2_5": "sprites/miniboss_2_5.png",
+   "miniboss_2_6": "sprites/miniboss_2_6.png",
+   "miniboss_2_7": "sprites/miniboss_2_7.png"
+  }
+ },
+ {
+  "name": "battleship",
+  "bank": 56,
+  "banks": 16,
+  "members": {
+   "battleship": "sprites/battleship.png"
+  }
+ },
+ {
+  "name": "gold_core",
+  "bank": 56,
+  "banks": 16,
+  "members": {
+   "gold_core": "sprites/gold_core.png"
+  }
+ },
+ {
+  "name": "stealth",
+  "bank": 56,
+  "banks": 16,
+  "members": {
+   "stealth": "sprites/stealth.png"
+  }
+ },
+ {
+  "name": "heli_carrier",
+  "bank": 56,
+  "banks": 16,
+  "members": {
+   "heli_carrier": "sprites/heli_carrier.png"
+  }
+ },
+ {
+  "name": "tank_fort",
+  "bank": 56,
+  "banks": 16,
+  "members": {
+   "tank_fort": "sprites/tank_fort.png"
+  }
+ },
+ {
+  "name": "castle",
+  "bank": 56,
+  "banks": 16,
+  "members": {
+   "castle": "sprites/castle.png"
+  }
+ },
+ {
+  "name": "instruments",
+  "bank": 95,
+  "banks": 3,
+  "members": {
+   "attitude_ind_0": "sprites/attitude_ind_0.png",
+   "attitude_ind_1": "sprites/attitude_ind_1.png",
+   "attitude_ind_2": "sprites/attitude_ind_2.png",
+   "attitude_ind_3": "sprites/attitude_ind_3.png",
+   "attitude_ind_4": "sprites/attitude_ind_4.png",
+   "attitude_ind_5": "sprites/attitude_ind_5.png",
+   "attitude_ind_6": "sprites/attitude_ind_6.png",
+   "radar_scope_0": "sprites/radar_scope_0.png",
+   "radar_scope_1": "sprites/radar_scope_1.png",
+   "radar_scope_2": "sprites/radar_scope_2.png",
+   "radar_scope_3": "sprites/radar_scope_3.png",
+   "radar_scope_4": "sprites/radar_scope_4.png",
+   "radar_scope_5": "sprites/radar_scope_5.png",
+   "radar_scope_6": "sprites/radar_scope_6.png",
+   "radar_scope_7": "sprites/radar_scope_7.png",
+   "radar_scope_8": "sprites/radar_scope_8.png",
+   "radar_scope_9": "sprites/radar_scope_9.png",
+   "radar_scope_10": "sprites/radar_scope_10.png",
+   "radar_scope_11": "sprites/radar_scope_11.png",
+   "radar_scope_12": "sprites/radar_scope_12.png",
+   "radar_scope_13": "sprites/radar_scope_13.png",
+   "radar_scope_14": "sprites/radar_scope_14.png",
+   "radar_scope_15": "sprites/radar_scope_15.png",
+   "g_meter_0": "sprites/g_meter_0.png",
+   "g_meter_1": "sprites/g_meter_1.png",
+   "g_meter_2": "sprites/g_meter_2.png",
+   "g_meter_3": "sprites/g_meter_3.png",
+   "g_meter_4": "sprites/g_meter_4.png",
+   "g_meter_5": "sprites/g_meter_5.png",
+   "g_meter_6": "sprites/g_meter_6.png",
+   "g_meter_7": "sprites/g_meter_7.png"
+  }
+ },
+ {
+  "name": "title_cards",
+  "bank": 56,
+  "banks": 6,
+  "members": {
+   "title_card_0": "sprites/title_card_0.png",
+   "title_card_1": "sprites/title_card_1.png",
+   "title_card_2": "sprites/title_card_2.png"
+  }
+ }
+]

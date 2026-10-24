@@ -1,5 +1,406 @@
 # Changelog
 
+## v1.7.7 - pre-release: genre engines and four new games
+
+### Experimental CD development backend
+
+- Added isolated native hello-world PRG/IPL/ISO/CUE authoring, format/bank
+  validation, C/C++14 build checks and optional CD startup diagnostics.
+- Added original standalone 512 KiB EagleBIOS-CD diagnostic firmware. Its menu
+  and input gate passed in three MAME configurations; disc boot is unavailable.
+- Stock CD firmware interoperability, runtime reloads, CDDA playback, saves and
+  physical compatibility remain pending. This is not full CD platform support.
+  See [CD status and evidence](docs/roadmap/NEOGEO_CD_VALIDATION_REPORT.md).
+
+Status: a pre-release from the `fix/maiya-arenas-eagle-bios` branch; v1.7.0
+remains the current release. SDK 1.7.7, Framework 1.5 (additions only).
+Engine guide: `docs/GENRE_ENGINES_V1.7.7.md`; objectives and test results:
+`docs/roadmap/V1.7.7_SDK_OBJECTIVES_AND_AUDIT.md`,
+`docs/roadmap/V1.7.7_TEST_REPORT.md`.
+
+### Engine
+
+- Four one-file genre engines in `sdk/2d_engine`, chosen per game with
+  `GAME_GENRE_ENGINE` in `game.mk` (`sdk/genre_engine.mk`, both Makefiles;
+  `make genre-info` shows what a game links): `ng_puzzle` (match and bubble
+  boards), `ng_mahjong` (four-seat Hong Kong Old Style and solitaire),
+  `ng_rpg` (top-down rooms, party, items, dialogue, environmental puzzles,
+  saves) and `ng_beatemup` (a belt-scrolling brawler for one player: waves,
+  crowd director, grabs and throws).
+- `ng_sprite_group_set_tile_address()`: 20-bit C-ROM tile addresses for
+  cartridges past 64K tiles; bank-zero assets keep the old writer.
+- `ng_fight`: seven calibrated CPU ranks, training recording and playback,
+  long, short and reverse throws, configurable round time.
+- `palette_banks.quantize(refine=N)` optional refit passes (0 keeps the
+  old output); `tools/ng_artpack.py`, `sound/tools/ng_synth.py` and
+  `ng_songs.py` for painted art, effects and music.
+
+### EagleBIOS
+
+- `SYS_HOWTOPLAY` shows the game's own `HTP1` text block;
+  `ng_sys_is_eaglebios()` and `ng_sys_howtoplay()` in `sdk/ng_system.h`.
+
+### Games
+
+- Seven Wonders Puzzles (782), Maiya & Luna (783), No Signal Z Alpha (784)
+  and Mahjong Demo (785): first ROM sets (`_v1`).
+- Shadow League Fighting (781): SDK 1.7.7 candidate (`_v3`).
+- Sky Lance (779): the hardware palette fix (`_v2`).
+
+### Tests and tools
+
+- `tests/test_genre_engines.py` (host tests, C++14 consumer, documentation
+  examples, 68000 code check, build selector); `tools/genre_qa.py` (MAME
+  timeline runner), `tools/install_wip_mame.py`, `tools/stamp_cart_header.py`.
+
+## v1.7.5 - pre-release: ng_fight, Shadow League Fighting (production slice), and EagleBIOS v1.7.4
+
+Status: a pre-release from the `fix/maiya-arenas-eagle-bios` branch with
+Shadow League Fighting's expanded 7-fighter roster and EagleBIOS v1.7.4;
+v1.7.0 remains the current release. SDK 1.7.5, Framework 1.4 (additions only).
+What is done and what remains: `docs/roadmap/V1.7.5_STATUS.md`; capability
+audit: `docs/roadmap/SDK_CAPABILITY_AUDIT.md`.
+
+### Engine (`sdk/2d_engine/ng_fight.{h,c}`, opt-in `-DNG_FIGHT=1`)
+
+- Input & motions: negative-edge release tracking, 720 motion recognition,
+  buffered simultaneous presses, quarter/half circles, dragon-punch, charge,
+  360, dash and backdash.
+- Super freeze mechanics: 30-frame screen pause, backdrop darkening, attacker
+  hit advantage, and `NGF_EV_SUPER_FREEZE` event generation.
+- Mode-aware cancel logic: chain normal cancellation into special and super arts.
+- Projectiles: spawn velocities, bounding clash physics, destruction events.
+- Tag and striker support: 3v3 team sequential battle, striker summon actor
+  (`ngf_call_striker`), and tag duo partner switch (`ngf_tag_switch`).
+- Hardware camera zoom: distance-based scaling computation (`m->zoom_scale` 192..255).
+- Deterministic match hash verification (`ngf_match_hash`).
+
+### Shadow League Fighting (id 781): production vertical slice
+
+- 7-fighter roster: Kenji Arata (Karate), Jack Mercer (Boxing), Min-Jun Park
+  (Taekwondo), Batu Temur (Bökh wrestling), Amara Silva (Capoeira), Niran Vong
+  (Muay Lao), and ATLAS (Combat Robotics boss prototype).
+- Anatomical pixel-art renderer: articulated torso musculature (pectoral/ab/lat
+  contours), uniform overlays (gi lapels, vests, cybernetic armor, belts, cords),
+  expressive hands (open palm, knife-hand, claw, fist), distinct silhouettes and
+  hairstyles, and leg musculature.
+- Two-layer parallax stage: 512x224 Arata Mountain Dojo interior with 512x160 dawn
+  mountains scrolling at half speed through open windows.
+- Hardware sprite zoom: SCB2 scaling and centered camera projection.
+- Full arcade flow: 7-fighter ladder, 10-second continue screen with MVS
+  credit deduction (`SYS_CREDIT_DOWN`), title screen P2 join.
+- Complete FIX HUD: life bars, 60s timer, names, 3-stock power gauge, round-win
+  markers, combo counter, guard gauge, spirit bar, and striker status badge.
+
+### EagleBIOS v1.7.4
+
+- `SYS_HOWTOPLAY` interactive tutorial with color-coded joystick and button badges.
+- Message stream 9: Japanese common-FIX font stream support.
+- 16-bit JEIDA/PCMCIA memory card detection, save directory inspection, error buzzer.
+- Backup RAM checksummed format v2 (`EGS2`) with automatic v1 migration and recovery.
+- Real-time clock: uPD4990A serial read/write with leap year arithmetic and weekday calculation.
+- 11-entry expanded BIOS menu: System Settings, Cabinet DIPs, Game Soft DIPs, Memory
+  Card Manager, Hardware Diagnostics, Sound Test, Input Test, Clock Setup, Cart Info,
+  Backup RAM Clear, Boot Game.
+
+### Tests
+
+- `tests/test_fight.py`, `tests/test_shadowleague.py` (774,537 frames simulated across all matchups).
+- `tools/api_freeze.py` (315 frozen prototypes preserved).
+- `bios/test_bios.py` (MVS and AES firmware contracts verified).
+- `games/shadowleague/tools/qa.py` (Headless MAME QA passed for both MVS and AES).
+
+## v1.7.3 - pre-release: Sky Lance v1 and Maiya v4
+
+Status: a pre-release from the `fix/maiya-arenas-eagle-bios` branch, with
+Sky Lance's first public ROM set (`_v1`) and Maiya's `_v4`; v1.7.0 remains
+the current release.
+
+### Engine (`sdk/2d_engine`, Framework 1.3: additions only)
+
+- New opt-in C module `ng_shooter.h`, enabled with `-DNG_SHOOTER=1`:
+  fractional/reverse vertical scroll, bounded smooth camera follow and
+  independently paced resident parallax layers. Positive travel flies up.
+  `NGShooterStripBudget` (`ng_shooter_budget_init/add/peak`) counts the
+  sprite strips each scanline would carry, so optional scenery (shadows,
+  clouds) can yield before the 96-per-line limit; `ng_depthfx_shooter_project`
+  places an object in one of the shooter's depth bands.
+- `NGVerticalLayer` uses two pages, preserves row-major palette maps and
+  queues high-priority position writes without re-uploading maps during play.
+- `ng_char_pin_sprite()` keeps a character's hardware sprite slots fixed
+  (drawn in front of the depth-sorted cast), so it never waits a frame
+  unwritten when something ahead of it in the draw order comes or goes.
+  Characters are depth-sorted by key.
+- Deferred sprite groups: rebinding or fully writing a group keeps its place
+  in the pending lists (it could be listed twice), and a list entry is
+  published before the count that makes it visible.
+- The build stops at the first scene file that fails to compile instead of
+  linking stale objects.
+- Existing camera, background, sprite and collision APIs are unchanged.
+
+### Sky Lance (id 779), `_v1`
+
+- Seven long painted routes, each ending in an open arena themed to its
+  boss (deep sea for the warship, empty desert for the tank fortress, and
+  so on); the flight cruises there once the waves are spent.
+- Three pilots (F-16, F-35, F-15) with banking, rolls, climbs and Split-S;
+  command targets with escorts, radar sites and mini-boss strips; painted
+  jets, bosses, warships, clouds and explosions; wrecks for ground units.
+- Chaff with odds per missile that fall with the route and a new DIFFICULTY
+  soft DIP (EASY to EXPERT); boss missiles resist except on EASY.
+- HUD with cockpit instruments (attitude, radar scope, G meter) drawn as
+  fixed sprite groups, segmented bars, threat cues; a painted title with the
+  pilots' faces; eight-frame explosions and chained blasts on big kills.
+- Native C-ROM audit, MAME inspection modes (features, boss, turrets, quiet,
+  per stage and pilot), cartridge packages and a Windows setup wizard.
+- See `games/skylance/CHANGELOG.md` and `games/skylance/README.md`.
+
+### Maiya (id 780), `_v4`
+
+- Her walk and run redrawn: arms with elbows, bracers and closed fists;
+  legs from her original drawings with no darker far leg; a real run with a
+  knee drive and a flight; holds matched to the planted foot so she no
+  longer skates; a 6-frame stop. Her sprite slots are pinned (no blink).
+- Both arms in sight on every frame, in step with her legs: one fist ahead
+  of her chest, the other arm swung back with the elbow out past her back
+  (the far arm used to pass hidden behind her chest and the near one fold
+  onto her hip for half of each stride). Only the 16 walk/run frames change
+  (62 C tiles); P1, S1, M1 and V1 are byte for byte the first v4 build's.
+- Throws on the move plant her feet between short walks; Emerald Forest,
+  Azure Coast and Autumn Grove re-laid; Luna's hair specks fixed.
+- See `games/maiya/CHANGELOG.md`.
+
+### Tools
+
+- `tools/make_release.py` builds both games' release sets; the Maiya setup
+  wizard points at v1.7.3 and installs the MVS and AES sets side by side;
+  `tools/build_skylance_mame.py` installs Sky Lance's MVS and AES test sets
+  into a MAME folder.
+- The art gates (`tools/check_hero_frames.py`, Maiya's `check_hands.py`,
+  `check_stride_details.py`, `check_cute_polish.py`, Sky Lance's
+  `check_skylance_native_art.py`) run in each game's art build.
+- `tools/audit_release.py` checks a game's release files for the hardware
+  fixes before they are published: ROM sizes and the blank tile, cartridge
+  id, eye-catcher flag (MVS 1, AES 2), the Universe BIOS logo bank `$49`
+  with its tiles, the game's FIX font in its own bank, the MVS sound
+  protocol (NGP2) in M1, the NeoSD alignment (P/S/M 64 KiB, V padded with
+  `$FF` to a power of two, C 256 KiB), Darksoft and BackBit round trips, no
+  system BIOS in the cartridge packages, EagleBIOS-only MAME zips with a
+  matching software list, and the manifest. Both games' v1.7.3 sets pass.
+- `games/maiya/tools/pin_reference_art.py` (`MAIYA_ART_REFERENCE=<rev>` in
+  `make`): Maiya's painted art (valleys, arenas, landmarks, creatures, the
+  title) goes through resampling and floating-point palette fitting that
+  round differently on different PCs (76 of 494 assets), while her
+  index-map frames come out the same everywhere. The script keeps the
+  reference build's tiles and palettes and lays over them only what the
+  source edits changed; it stops if the tile layout or a `#define` moved.
+- `ASEPRITE=builtin`: Maiya's walk/run source is authored, reopened and
+  exported by `games/maiya/tools/aseprite/ase_file.py` on a machine without
+  Aseprite; its `.aseprite` file is the one Aseprite saves, byte for byte.
+- `tools/make_setup_zips.py` makes the setups uploaded with the release:
+  `Maiya_Setup_Wizard.zip` and the new `SkyLance_Setup.zip`
+  (`tools/installer/skylance`: `install_skylance.bat` for Windows
+  PowerShell, `install_skylance.sh` for Linux/macOS), which installs Sky
+  Lance's MVS and AES MAME sets side by side with EagleBIOS and the
+  launchers, after checking the release zips against the manifest.
+- `tools/patch_neosd_sound.py` finds the SDK's current toolchain
+  (`x-tools-v3`).
+
+## v1.7.2 - pre-release: frames in the blank, and Maiya v3
+
+Status: a pre-release from the `fix/maiya-arenas-eagle-bios` branch, with
+Maiya's `_v3` ROM files; v1.7.0 remains the current release.
+
+### Engine (`sdk/2d_engine`, Framework 1.2: additions only)
+
+- Video memory is written only in the vertical blank, with a deadline
+  (`NG_VRAM_DEADLINE`, line 8, under `NG_VRAM_DEFER`): no job starts after
+  it, and what doesn't fit waits for the next blank. Groups that only
+  moved go first (one address and two words each: SCB3 and SCB4 are $200
+  apart); then new content by priority -- `ng_sprite_group_set_priority()`
+  and `ng_char_set_vram_priority()`: HIGH (the player, scrolling layers),
+  a streaming layer's strip columns, NORMAL, the FIX text, LOW
+  (decoration). `ng_vram_lines_left()` and `ng_vram_window_open()` say
+  how much of the blank is left.
+- A full list never writes outside the blank: a group waits for its next
+  flush, character hides are a bitmap, and a full FIX list rewrites whole
+  rows in the blank instead.
+- Palette uploads keep the same deadline; a whole-screen upload starts
+  only with room for it.
+- No job waits for ever: one that has headed its list for three blanks
+  running goes first in the next. (A big map in the lowest priority -- a
+  valley's landmark around its gate -- could otherwise find too little of
+  the blank left every frame and never be drawn.)
+- `ng_char_set_pos()` and the physics' clamps keep the fraction of an
+  axis whose pixel doesn't change: a floor stopping a fall rounded the x
+  down every frame, so a run left went a pixel a frame faster than a run
+  right.
+- The frame counters (`make PERF=2`) time the commit as well.
+
+### Release packages
+
+- BackBit Platinum folders: `tools/pack_backbit.py`, and `make_release.py`
+  adds `<Prefix>-BackBit-MVS_<v>.zip` and `-AES_<v>.zip` to a release
+  (the game's own six ROM files, `<game>.p1` to `<game>.c2`, in a folder
+  named after it).
+
+### Maiya: Super Nature Girl, v3 ROMs
+
+Her stride, the camera, every road laid out again, the valleys'
+ledge pieces, the works' three drums, dust at her feet, no hold on
+creature blows: `games/maiya/CHANGELOG.md`. `games/maiya/tools/levels.py
+--lint` checks how a stage plays (`docs/levels.md`).
+
+## v1.7.1 - Maiya: Super Nature Girl and EagleBIOS
+
+Status: in progress on the `fix/maiya-arenas-eagle-bios` branch; becomes
+the v1.7.1 release when it merges.  v1.7.0 remains the current release.
+
+### Framework v1 (`sdk/2d_engine`)
+
+- The C engine's public calls are frozen at Framework 1.0: from now on they
+  change by additions only. `docs/api/framework_v1.txt` lists them,
+  `make api-check` (part of `make test`) checks them, and `NG_SDK_VERSION` /
+  `NG_FRAMEWORK_VERSION` in `ng_defs.h` name the release. See
+  `docs/FRAMEWORK_V1.md`.
+- `NG_VRAM_DEFER`: sprite groups and FIX text are written in the vertical
+  blank by `ng_vram_commit()`.
+- `NG_SOUND_QUEUE`: sound commands queue instead of holding the frame.
+- The FIX layer writes only changed cells, as runs; screen fades blend from
+  byte tables over two frames; `ng_sprite_group_show_at()` and
+  `ng_sprite_groups_hide_all()`.
+- Frame counters (`make PERF=1` / `PERF=2`) and Maiya's measurement scripts:
+  `docs/perf/`.
+
+### Maiya: Super Nature Girl (`games/maiya`, id 780)
+
+- A new game built the way Sky Lance is: `make GAME=maiya` on Linux,
+  `make -f MakefileWin32.mak GAME=maiya` on Windows; `demo` stays the
+  default game.  Its own C-ROM, FIX ROM and sound bank.
+- Six nature valleys with blighted and cleansed palettes: Emerald Forest,
+  Valley of Sacred Falls, Azure Coral Coast, Golden Autumn Grove, Crystal
+  Grotto and the Sacred World Tree.
+- An arcade-scale cast cut at one shared scale with a foot-centre anchor:
+  Maiya at 52 px, creatures from knee to shoulder height, 96 px guardians,
+  each valley in its own creature colours.
+- Roads four times longer that climb as well as scroll: vines to canopy
+  shelves, villagers with hints, allies to free, a Golden Sun Key and an
+  Ancient Nature Gate sealing each guardian's 320 px arena.
+- Stomping soft creatures, kneeling attacks that travel low, five power-ups
+  (swiftness, might, mist veil, spring bud, thorn crown), coins, flowers,
+  forest friends, extra lives and the elder's charm; progressive difficulty
+  from a stroll to the citadel.
+- Secret Arts with a petal sweep, the rise-into-the-light death, Sunboy
+  between missions, bonus rounds that lead into the next mission, attract
+  mode that plays itself, three continues.
+- Ledges with a lit face and cast shadow, a foreground plane of boulders and
+  fronds, a house eyecatcher on FM and SSG before the title.
+- The camera is driven by the game in whole pixels: the engine's smooth
+  follow overflows a 32-bit multiply past 128 px of error at a tight follow
+  speed, which had parked the camera ahead of her after a knock-back.
+- MAME regression captures for walking, climbing, arena limits and bonus
+  progression.
+- A select screen of face cards in gold frames, each heroine standing under
+  her own over the forest drifting behind, with its own music and a
+  fanfare for whichever girl is chosen.
+- The guardian's gate is a door: walking into it fades the valley to white
+  and brings her out in the guardian's lair.
+- Hits knock her away from what struck her with a short eased stagger; a
+  guardian can no longer be walked through; heavy blows hold the scene for
+  a few frames; a red flash when she is hurt; after each guardian she hops
+  and holds her victory pose instead of flicking between two frames.
+- Bonus rounds end at the first touch. Beaten creatures pop up and drop off
+  the screen upside down; shadows are checkered and see-through; pits cut
+  straight down; the wind and tide gusts are gone; the camera keeps more
+  road ahead of her in the direction she walks.
+
+### EagleBIOS (`bios/`)
+
+- An original system ROM set for MVS and AES: eye-catcher, title screen and
+  fanfare, the USER contract, the service jump table, a service menu, Z80
+  sound firmware and hardware probing.
+- `make eagle-bios` builds it with the SDK's cross compiler on Linux and
+  Windows into an isolated ROM path; `make bios-package` packages the
+  generated firmware with a cartridge, its hashes and launch instructions.
+- Builds and tests run on the generated firmware (`USE_EAGLE_BIOS=1`, now
+  the default), so no SNK BIOS takes part in them; `USE_EAGLE_BIOS=0` goes
+  back to the stock BIOS and `BIOS=<name>` asks for another one by name.
+  Maiya's regression, play and measurement runs boot it too
+  (`--stock-bios` to opt out).  `PLATFORM=aes` selects the console machine
+  and BIOS.
+- A memory card routine (SYS_CARD) in the console system ROMs' card
+  layout -- format, search, load, save, delete, title, user name -- so a
+  card moves between EagleBIOS, the original AES BIOS and UniBIOS with its
+  saves (checked both ways in MAME).
+- Contract probes on both boards, cartridge compatibility tests that reject
+  modified ROM sets, and Maiya boot and audio checks on MVS and AES.
+  Physical hardware and retail-cartridge compatibility are not yet verified.
+
+### Build and documentation
+
+- 2D engine: `ng_game_engine_set_hitstop_freeze()` opts a game into a real
+  hitstop -- while `ng_feedback_is_hitstop()`, the engine frame skips logic,
+  physics and character movement but keeps drawing. Off by default.
+
+- Each `GAME=` selects its own `game.cfg` automatically; full builds that
+  share generated files no longer run in parallel.
+- `README.md`, `docs/GAMES.md`, `docs/DEPENDENCIES.md`, `games/maiya/README.md`
+  and `bios/README.md` describe the new game, the firmware and the options.
+- The development notes below the v1.7.0 entry are renumbered v1.6.x: they
+  were milestones on the way to v1.7.0, and had been labelled as though
+  they came after it.
+
+### Maiya v2 release files
+
+- `tools/make_release.py` names a game's release files with a version
+  suffix into `dist/release/` -- NeoSD images, Darksoft folders, MAME zips
+  with EagleBIOS for MVS and AES, a manifest of sizes and hashes -- and
+  never overwrites a released file. EagleBIOS is the only system ROM it
+  lets into a zip.
+- `tools/pack_darksoft.py` packs a cartridge as a Darksoft Neo Geo Multi
+  folder (the v1 layout, C ROMs in two-byte pairs) and `--unpack` turns one
+  back into a MAME set, so the very files the Multi gets can be run.
+- Maiya's `_v2` files join the v1.7.1 pre-release beside the v1 files,
+  which stay as published. `games/maiya/CHANGELOG.md` (shipped as
+  `Maiya-CHANGELOG_v2.txt`) lists every change from v1 to v2.
+- Maiya's AES build asks for no system eye-catcher: a console boots with
+  one logo and no jingle under EagleBIOS, UniBIOS and the original BIOS,
+  then the game's own intro.
+- `make_release.py --replace` rebuilds a version's own files, rewriting
+  only those whose content changed (a zip by its members), and
+  `--changelog` ships a changelog. The AES MAME zip carries a blank memory
+  card, and the MAME AES launchers insert one.
+
+### Multi-game build, MAME install, and customisation tooling
+
+- `make all-games` / `make dist-all` (and the `MakefileWin32.mak` equivalents)
+  build and package every game under `games/*/game.mk` in one command, so a
+  new game is picked up automatically with no Makefile changes.
+- `tools/mame_launcher.py`, wired into `make install-mame`, `make
+  install-mame-all` and `make run-mame`, and into `install/install-mame.sh` /
+  `install/install-mame.bat`: installs a packaged game's roms and MAME
+  software list into a self-contained `neogeosdk/` folder inside a
+  user-chosen MAME installation (asked for once, remembered afterwards) and
+  can launch it directly, without touching the user's own rom collection or
+  MAME ini files.
+- `make test-menu`: an interactive numbered menu over the same
+  build/package/install/run steps.
+- `make gui` (`tools/sdk_gui.py`): a desktop control panel with a game
+  picker, platform choice, and one-click build/package/install/run/full
+  pipeline/clean, with a live build log.
+- `make maiya-palette-studio` (`games/maiya/tools/maiya_palette_studio.py`):
+  edits Maiya's per-valley enemy recolour and boss-recolour tints, now
+  externalised into `games/maiya/artbox/palette_config.json` instead of
+  being hard-coded in `build_commercial_assets.py`, and rebuilds the art in
+  one click.
+- Fixed a Python-version incompatibility (`pathlib.Path.write_text`'s
+  `newline=` argument, only available on 3.10+) in the FM/SSG/MML/PCM sound
+  tool scripts, so the sound build works on older Python 3 installs.
+  Restored the executable bit on two ADPCM helper scripts, and made every
+  `make` recipe that runs a `.sh` build script invoke it through `sh`
+  instead of relying on the executable bit, so a checkout that loses file
+  permissions (a Windows filesystem, a zip export) can't break the build.
+
 ## v1.7.0 - The 2D Engine Release
 
 Release date: 2026-09-14
@@ -11,8 +412,9 @@ support, a new compiler toolchain, three new games including a finished
 arcade shooter, a 25-chapter demonstration reel, desktop authoring tools,
 a verification suite that checks ROMs in the emulator, and the documentation
 that explains all of it.  The sections below summarise everything that
-changed since v1.3.0; the dated development notes that follow this entry
-record how each piece arrived.
+changed since v1.2.0, the last full release before this one (v1.3.0 was a
+pre-release); the dated development notes that follow this entry record
+how each piece arrived.
 
 ### Release publication
 
@@ -319,12 +721,15 @@ banks stop helping.
 
 ---
 
-## Development notes toward v1.7.0
+## Development notes toward v1.7.0 (v1.6.0 - v1.6.10)
 
-The dated entries below were written as the work landed on the branch and
-are kept as its record.  Everything in them is summarised above.
+The dated entries below were written as the work landed on the
+`neo_universal_2d` branch, after the v1.3.0 pre-release and before the
+v1.7.0 release, and are kept as its record.  They are numbered v1.6.x:
+milestones on the way to v1.7.0, not releases after it.  Everything in
+them is summarised above.
 
-### v1.7.10 - Sky Lance, front to back
+### v1.6.10 - Sky Lance, front to back
 
 Release date: 2026-09-13
 
@@ -390,7 +795,7 @@ Rondo alla Turca (SSG 1) and the Toccata in D minor (SSG 2).  The SSG
 labels clear their whole row when the section ends, so no title lingers
 into the next one.
 
-### v1.7.9 - The byte that got lost
+### v1.6.9 - The byte that got lost
 
 Release date: 2026-09-12
 
@@ -428,7 +833,7 @@ Before the fix it reported nineteen of twenty-five chapters silent; after,
 none, with A pressed every nine seconds and again across the natural
 chapter lengths, beds looping past their sample ends.
 
-### v1.7.8 - The sound driver keeps time
+### v1.6.8 - The sound driver keeps time
 
 Release date: 2026-09-12
 
@@ -506,7 +911,7 @@ FM, SSG, six ADPCM-A voices, the 32 kHz bed, repeat, fades and mute all
 pass the capture checks.  These are numerical checks, not a listening
 session.
 
-### v1.7.7 - Spending the palette
+### v1.6.7 - Spending the palette
 
 Release date: 2026-09-10
 
@@ -565,7 +970,7 @@ Two things measured and deliberately not built:
   extra banks cannot address - a tile reads one palette whatever else is
   resident.
 
-### v1.7.6 - The eagle was two eagles
+### v1.6.6 - The eagle was two eagles
 
 Release date: 2026-09-09
 
@@ -597,7 +1002,7 @@ rust bird keeps the perched pose it was already used for.
   while the other catches up instead of oscillating around the target.
   Covered by a new host test.
 
-### v1.7.5 - Budgeted palette banks
+### v1.6.5 - Budgeted palette banks
 
 Release date: 2026-09-08
 
@@ -655,7 +1060,7 @@ photographic gradients.  The engine support exists either way.
   copy behind - four runs in, `main.c` had four sets of every table and
   would not compile.  Repeated syncs are idempotent again.
 
-### v1.7.4 - Tile stride, and what the palette is actually spending
+### v1.6.4 - Tile stride, and what the palette is actually spending
 
 Release date: 2026-09-07
 
@@ -663,7 +1068,7 @@ Release date: 2026-09-07
 
 An asset's rows are `tile_stride` tiles apart, and that stride is the
 canvas width in tiles - 16 only for a 256 px import.  Six places in the
-tree hardcoded 16, which was true until v1.7.3 gave Sky Lance's craft a
+tree hardcoded 16, which was true until v1.6.3 gave Sky Lance's craft a
 32 px canvas, its bosses 112, and the `neogeogame` opponent 48.  From
 that point those assets were drawn by reading each row from sixteen
 tiles on instead of two, seven or three: the right palette over whatever
@@ -698,7 +1103,7 @@ the char-select portraits and the NPC chapter render wrongly without it.
 `cat_sky_planes` shows the same idea working where the binding is
 simpler.
 
-### v1.7.3 - Sprites at the size they are drawn
+### v1.6.3 - Sprites at the size they are drawn
 
 Release date: 2026-09-06
 
@@ -770,7 +1175,7 @@ actually drawn.
   side by side join without a line down the middle.  The two black pages with
   a scatter of dots that `neogeogame` was using are replaced by it.
 
-### v1.7.2 - Active characters, art fidelity, and a testable build
+### v1.6.2 - Active characters, art fidelity, and a testable build
 
 Release date: 2026-09-06
 
@@ -855,7 +1260,7 @@ instead of drawing a dotted outline over the artwork.
   reaches it, which is the first thing `test.bat` runs.  Verified: a
   `sound-clean` on Sky Lance now leaves all 110 sample files in place.
 
-### v1.7.1 - Rendering and platform fixes
+### v1.6.1 - Rendering and platform fixes
 
 Release date: 2026-09-06
 
@@ -928,7 +1333,7 @@ corrupt the sprite writes that follow it.
 - Sky Lance and the demo's shooter chapter now aim their shots at the player and
   drift toward the player's column rather than flying fixed lanes.
 
-### v1.7.0 (branch release) - The 2D Engine Release
+### v1.6.0 (branch milestone) - The 2D Engine Release
 
 Written 2026-08-30
 

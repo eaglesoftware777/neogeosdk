@@ -1,0 +1,191 @@
+{
+  "transparent": 0,
+  "palette": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      20,
+      10,
+      8
+    ],
+    [
+      255,
+      240,
+      176
+    ],
+    [
+      236,
+      164,
+      48
+    ],
+    [
+      160,
+      80,
+      32
+    ],
+    [
+      80,
+      32,
+      24
+    ],
+    [
+      255,
+      255,
+      224
+    ],
+    [
+      48,
+      24,
+      32
+    ]
+  ],
+  "images": [
+    {
+      "name": "ROUND1",
+      "text": "ROUND 1",
+      "canvas": [
+        104,
+        24
+      ],
+      "file": "round1.png"
+    },
+    {
+      "name": "ROUND2",
+      "text": "ROUND 2",
+      "canvas": [
+        112,
+        24
+      ],
+      "file": "round2.png"
+    },
+    {
+      "name": "ROUND3",
+      "text": "ROUND 3",
+      "canvas": [
+        112,
+        24
+      ],
+      "file": "round3.png"
+    },
+    {
+      "name": "FINAL",
+      "text": "FINAL ROUND",
+      "canvas": [
+        160,
+        24
+      ],
+      "file": "final.png"
+    },
+    {
+      "name": "FIGHT",
+      "text": "FIGHT!",
+      "canvas": [
+        144,
+        32
+      ],
+      "file": "fight.png"
+    },
+    {
+      "name": "KO",
+      "text": "K.O.",
+      "canvas": [
+        88,
+        32
+      ],
+      "file": "ko.png"
+    },
+    {
+      "name": "TIMEUP",
+      "text": "TIME OVER",
+      "canvas": [
+        136,
+        24
+      ],
+      "file": "timeup.png"
+    },
+    {
+      "name": "WIN",
+      "text": "VICTORY",
+      "canvas": [
+        112,
+        24
+      ],
+      "file": "win.png"
+    },
+    {
+      "name": "DRAW",
+      "text": "DRAW",
+      "canvas": [
+        80,
+        24
+      ],
+      "file": "draw.png"
+    },
+    {
+      "name": "VS",
+      "text": "VS",
+      "canvas": [
+        40,
+        24
+      ],
+      "file": "vs.png"
+    },
+    {
+      "name": "PERFECT",
+      "text": "PERFECT",
+      "canvas": [
+        112,
+        24
+      ],
+      "file": "perfect.png"
+    },
+    {
+      "name": "GAMEOVER",
+      "text": "GAME OVER",
+      "canvas": [
+        144,
+        24
+      ],
+      "file": "gameover.png"
+    },
+    {
+      "name": "COUNTER",
+      "text": "COUNTER",
+      "canvas": [
+        120,
+        24
+      ],
+      "file": "counter.png"
+    },
+    {
+      "name": "GUARDBREAK",
+      "text": "GUARD BREAK",
+      "canvas": [
+        168,
+        24
+      ],
+      "file": "guardbreak.png"
+    },
+    {
+      "name": "CONGRATS",
+      "text": "CONGRATULATIONS",
+      "canvas": [
+        232,
+        24
+      ],
+      "file": "congrats.png"
+    },
+    {
+      "name": "CHALLENGER",
+      "text": "CHALLENGER!",
+      "canvas": [
+        168,
+        24
+      ],
+      "file": "challenger.png"
+    }
+  ]
+}

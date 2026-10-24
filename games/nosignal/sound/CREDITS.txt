@@ -1,0 +1,11 @@
+No Signal Z Alpha - sound credits
+==================================
+
+The short voice lines in voices/ (the heroes' "bruh", "no cap", "you're
+cooked" and "massive W", Rico's two lines and the announcer's "no signal")
+are spoken by Piper with the en_US-libritts_r-medium voice, which is trained
+on the LibriTTS-R corpus (Koizumi et al., 2023), licensed CC BY 4.0.
+
+Every other effect and all the music are synthesized by tools/sound.py with
+the SDK's instruments (sound/tools/ng_synth.py, ng_songs.py); the tunes are
+original compositions written for this game.

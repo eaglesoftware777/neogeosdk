@@ -1,0 +1,17 @@
+; World 5: Frozen Sky Peaks
+; Crystalline chimes and soaring azure mountain melody
+T24
+@p6
+@b5
+V13
+O5
+L8
+
+A B > C E < B A G4
+< E > A B > C < B A E4
+F A > C D < A F D4
+E G B > D < B G E4
+; High wind glide
+> A4 G8 E8  D C < A4
+> C D E G  E D C4
+~

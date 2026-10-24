@@ -59,6 +59,10 @@ Ubuntu/WSL installations. The desktop studios additionally need:
 python3 -m pip install PyQt6 scipy
 ```
 
+Maiya's frame-based art builder also needs SciPy, without the desktop UI:
+`python3 -m pip install scipy`. Run `make GAME=maiya all` for the initial
+build so its generated sprite metadata and ROMs stay in sync.
+
 Core modules used by the build scripts:
 
 | Module     | Used by                                   | Install via               |
@@ -205,6 +209,8 @@ py -m pip install numpy pillow pypng
 ```
 
 For Artbox Studio and Sound Studio, also run `py -m pip install PyQt6 scipy`.
+Maiya's art builder requires `py -m pip install scipy` even without either
+studio. Use `make -f MakefileWin32.mak GAME=maiya all` for its first build.
 Launch them with `py`, not a different Python installation. See the
 [desktop studios manual](DESKTOP_STUDIOS.md).
 
@@ -292,3 +298,17 @@ make -f MakefileWin32.mak SOX=sox samples
 | MAME                    | 0.250                  |
 | srec_cat                | 1.64                   |
 | GNU Make                | 4.x                    |
+
+## Experimental CD tooling
+
+The opt-in CD builder uses Python 3.9+, existing m68k GCC/WLA-DX and Pillow for
+the SDK-original FIX generator. Native Windows Python 3.11 and Linux builds
+were exercised. No stock system ROM is bundled; stock boot tests require a
+user-supplied, recognized 512 KiB CD BIOS and a CD-capable MAME configuration.
+
+The ISO writer/auditor uses Python's standard library. Optional independent
+checks were run with xorriso 1.5.6 and MAME tools/chdman 0.264. Firmware F1
+tests used Linux MAME 0.264, which has known optical-model limitations. An
+external NeoCD libretro core can run the separately labeled HLE diagnostic;
+it is neither bundled nor a substitute for stock/Eagle firmware verification.
+See [the measured CD matrix](roadmap/NEOGEO_CD_VALIDATION_REPORT.md).

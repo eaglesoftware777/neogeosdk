@@ -22,7 +22,7 @@ extern "C" {
  *   Slots 256-287 : particles
  *   Slots 288-379 : temporary/front effects
  *
- * The sprite_base parameter passed to showScreenN() is the VRAM byte offset
+ * The sprite_base parameter passed to showScreenN() is the VRAM word offset
  * for tile data: sprite_base = slot * 64.  SCB1 address for strip S is
  * sprite_base + 64*S, and the hardware sprite slot for SCB2/3/4 is
  * sprite_base/64 + S.

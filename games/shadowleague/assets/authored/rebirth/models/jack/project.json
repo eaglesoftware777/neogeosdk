@@ -1,0 +1,136 @@
+{
+  "width": 160,
+  "height": 160,
+  "anchor": [
+    80,
+    141
+  ],
+  "colors": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      16,
+      16,
+      32
+    ],
+    [
+      96,
+      56,
+      72
+    ],
+    [
+      168,
+      96,
+      80
+    ],
+    [
+      216,
+      152,
+      112
+    ],
+    [
+      80,
+      32,
+      56
+    ],
+    [
+      168,
+      56,
+      72
+    ],
+    [
+      232,
+      80,
+      88
+    ],
+    [
+      24,
+      40,
+      64
+    ],
+    [
+      48,
+      72,
+      104
+    ],
+    [
+      88,
+      120,
+      160
+    ],
+    [
+      24,
+      24,
+      40
+    ],
+    [
+      64,
+      48,
+      64
+    ],
+    [
+      112,
+      80,
+      72
+    ],
+    [
+      248,
+      224,
+      184
+    ],
+    [
+      232,
+      184,
+      88
+    ]
+  ],
+  "layers": [
+    "far_arm",
+    "far_leg",
+    "torso",
+    "head_hair",
+    "near_leg",
+    "near_arm"
+  ],
+  "frames": [
+    {
+      "name": "guard",
+      "file": "guard.png",
+      "layers": {
+        "far_arm": "guard-far_arm.png",
+        "far_leg": "guard-far_leg.png",
+        "torso": "guard-torso.png",
+        "head_hair": "guard-head_hair.png",
+        "near_leg": "guard-near_leg.png",
+        "near_arm": "guard-near_arm.png"
+      },
+      "duration_ms": 500,
+      "contacts": [
+        "far_leg",
+        "near_leg"
+      ]
+    },
+    {
+      "name": "contact",
+      "file": "contact.png",
+      "layers": {
+        "far_arm": "contact-far_arm.png",
+        "far_leg": "contact-far_leg.png",
+        "torso": "contact-torso.png",
+        "head_hair": "contact-head_hair.png",
+        "near_leg": "contact-near_leg.png",
+        "near_arm": "contact-near_arm.png"
+      },
+      "duration_ms": 500,
+      "contacts": [
+        "far_leg",
+        "near_leg"
+      ]
+    }
+  ],
+  "tags": [],
+  "status": "model proof; complete animation still required"
+}

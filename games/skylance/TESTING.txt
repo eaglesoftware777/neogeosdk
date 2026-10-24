@@ -1,0 +1,40 @@
+SKY LANCE - SDK v1.7.3 PRE-RELEASE TEST
+
+Run from C:\mame\neogeosdk (or your standalone installation):
+  run_skylance_mvs.bat             Arcade, EagleBIOS
+  run_skylance_aes.bat             Console, EagleBIOS
+  run_skylance_mvs_scanlines.bat    Arcade with CRT scanlines
+  run_skylance_aes_scanlines.bat    Console with CRT scanlines
+Append stock or unibios40 to choose an existing installed BIOS instead.
+Fullscreen launchers use the local display helper and optional mame-path.txt.
+Previous builds remain in backups/skylance; no root backup launcher is created.
+
+Default keys: arrows move, Ctrl=A fire, Alt=B boost/maneuver, Space=C bomb,
+Z=D missile, Alt+Z=B+D chaff. MVS: 5 coin, 1 start. AES: 1 start.
+Pilot selection: left/right, Ctrl confirms. See CONTROLS.txt for all gestures.
+
+Fuel is the mission timer (240 seconds). Three command targets stop the route:
+defeat the escorts and mini boss, then destroy the exposed target to resume.
+Avoid radar coverage or expect reinforcements and faster anti-air missiles.
+Use chaff to divert guided missiles. C:BMB and B+D show separate stock counts.
+
+Seven native pixel routes are 352x2048, streamed through eight distinct pages.
+Water lanes, roads and empty command pads own surface-object placements.
+Each pilot has a compact working cockpit, stable portrait, seven bank poses,
+four maneuver poses, distinct handling and a mission-scaled bomb strike.
+Ordinary opponents are compact; large art is reserved for bosses.
+
+AES and MVS use isolated ROMs, hashes, settings and saves under tests/skylance.
+Read skylance-build.json for the exact build ID, ROM sizes and SHA-256 hashes.
+Native captures and audio diagnostics are under tests/skylance/qa/<build ID>.
+The standalone setup includes launchers, previews, controls and all cartridge
+formats. Hardware-only candidates include no BIOS. No release is published.
+
+Rebuild/install from WSL:
+  python3 tools/build_skylance_mame.py /mnt/c/mame/neogeosdk
+Cartridge packages:
+  python3 tools/build_skylance_candidate.py
+
+MAME inspection does not certify physical AES/MVS, NeoSD, Darksoft or BackBit.
+Board owners still need to test cold boot, sustained combat, sound, slot
+switching and cartridge return shortcuts on their own hardware.
