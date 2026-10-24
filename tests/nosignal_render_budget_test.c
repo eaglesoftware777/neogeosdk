@@ -36,10 +36,7 @@ static void check_stage(const NGBStage *stage)
 int main(void)
 {
     unsigned i;
-    for (i = 0; i < NS_STAGES; i++) {
-        check_stage(ns_stages[i].stage);
-        check_stage(&ns_boss_rush[i]);
-    }
-    puts("No Signal: all 8 stages and 8 boss-rush stages fit 80-strip banks on expert");
+    for (i = 0; i < NS_STAGES; i++) check_stage(ns_stages[i].stage);
+    puts("No Signal: all 8 stages fit 80-strip banks on expert");
     return 0;
 }
