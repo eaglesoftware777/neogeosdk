@@ -88,3 +88,8 @@ python3 tools/genre_qa.py --game maiyaluna --seconds 1100 --every 4 \
 ```
 
 `s_ap` is the autopilot's step and `s_g+8` the room.
+
+## Neo Geo CD V2
+
+A native CD version preserves the released V2 artwork and game rules. See
+[the CD build and firmware notes](cd/README.md) for media, audio and saving.

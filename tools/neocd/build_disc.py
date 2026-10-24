@@ -161,8 +161,10 @@ def build(manifest_path, out, epoch=946684800):
                      for z in ('PRG', 'SPR', 'FIX', 'Z80', 'PCM')} for g, active in closures.items()}
     (out / 'memory-map.json').write_text(json.dumps(memory, indent=2)+'\n')
     (out / 'boot-files.txt').write_bytes(files['IPL.TXT'])
-    sums = [hashlib.sha256(p.read_bytes()).hexdigest()+'  '+p.relative_to(out).as_posix()
-            for p in sorted(out.rglob('*')) if p.is_file()]
+    written = [game + '.iso', game + '.cue', 'manifest.json', 'memory-map.json', 'boot-files.txt']
+    written += [f'audio/track{track:02}.wav' for track in range(2, len(audio) + 2)]
+    sums = [hashlib.sha256((out / name).read_bytes()).hexdigest()+'  '+name
+            for name in sorted(written)]
     (out / 'checksums.sha256').write_text('\n'.join(sums)+'\n')
     return report
 

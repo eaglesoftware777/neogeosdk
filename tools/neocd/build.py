@@ -43,6 +43,9 @@ def build_native(game, out, cc, plus=False, cdda=True, wlaz80='wla-z80', wlalink
     if game == 'skylance':
         from tools.neocd.skylance import build_skylance
         return build_skylance(out,cc,plus,cdda,wlaz80,wlalink)
+    if game == 'maiyaluna':
+        from tools.neocd.maiyaluna import build_maiyaluna
+        return build_maiyaluna(out,cc,plus,cdda,wlaz80,wlalink)
     if game == 'maiya':
         from tools.neocd.maiya import build_maiya
         return build_maiya(out,cc,plus,cdda,wlaz80,wlalink)
