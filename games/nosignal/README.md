@@ -30,8 +30,10 @@ an arcade board, free on a console).
 
 The stick walks along and across the street; a double tap runs. A attacks (a
 chain of four; down + A sweeps), B jumps (A in the air kicks), C grabs,
-throws, picks up and rides the scooter, D is the hero's special (it costs a
-little battery). On a console START pauses.
+throws and rides the scooter, D is the hero's special (it costs a little
+battery). Walking over food, a gold sneaker or a weapon picks it up (a
+weapon only with empty hands; C still picks up too). On a console START
+pauses.
 
 ## How it is made
 

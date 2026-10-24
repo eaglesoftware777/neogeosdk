@@ -7,9 +7,10 @@
  * RECONNECT? (a credit on an arcade board, free on a console) or NO SIGNAL.
  *
  * Controls: the stick walks along and across the street; A attacks (a chain
- * of four), B jumps (A in the air kicks), C grabs, throws, picks up and
- * rides, D is the hero's special (it costs a little battery); a double tap
- * runs; down + A sweeps. On a console START pauses.
+ * of four), B jumps (A in the air kicks), C grabs, throws and rides, D is
+ * the hero's special (it costs a little battery); a double tap runs; down +
+ * A sweeps. Walking over food, a gold sneaker or (empty-handed) a weapon
+ * picks it up. On a console START pauses.
  */
 #include "ns.h"
 #include "sdk/ng_system.h"
@@ -32,10 +33,10 @@ static const NGHowToPlay k_howto = {
         "TAP TWICE  RUN",
         "A  PUNCH  (A A A A: COMBO)",
         "B  JUMP   (A IN THE AIR)",
-        "C  GRAB / THROW / PICK UP",
-        "   / RIDE THE SCOOTER",
+        "C  GRAB / THROW / RIDE",
         "D  SPECIAL (COSTS BATTERY)",
         "DOWN + A  SWEEP",
+        "WALK OVER ITEMS: PICK UP",
         "",
         "GET THE PHONE BACK.",
         "ONE PLAYER. NO CAP.",
@@ -192,6 +193,7 @@ static uint8_t NEOGEO_USER hero_select(void)
     uint8_t sel = 0, i, shown = 0;
     uint16_t t = 15u * 60u;
     ns_picture(NS_ART_MENU);
+    ns_plate(1);                 /* the hero's lines on a plate, not over the lit windows */
     ns_music(NS_MUS_SELECT);
     ns_puts_c(2, "CHOOSE YOUR HERO", NS_TXT_GOLD);
     ns_puts_c(3, "(ONE PLAYER. ONE HERO. NO CAP.)", NS_TXT_GREY);
@@ -299,6 +301,31 @@ static void NEOGEO_USER boss_phase(const NGBEvent *e)
     }
 }
 
+/* The sound of the blow that just landed. A swing of a held weapon (move
+ * 0xFE) and a throw's recovery (no move) are not rows of the fighter's table. */
+static uint8_t NEOGEO_USER blow_sound(const NGBFighter *a)
+{
+    if (a->state != NGB_ST_ATTACK || a->move == NGB_NONE || !a->def) return NS_SFX_PUNCH;
+    if (a->move == 0xFEu) {
+        if (a->weapon == NGB_NONE || !s_b.stage->nweapons) return NS_SFX_HEAVY;
+        return s_b.stage->weapons[s_b.prop[a->weapon].contents].move->sound;
+    }
+    return a->move < a->def->nmoves ? a->def->moves[a->move].sound : NS_SFX_PUNCH;
+}
+
+/* dust at someone's feet (landing, a dash) */
+static void NEOGEO_USER dust(const NGBFighter *f)
+{
+    ns_effect((int16_t)((f->x - s_b.camera_x) >> 8), (int16_t)((f->y >> 8) - 6), NS_FX_DUST);
+}
+
+/* something picked up: a sparkle where it lay */
+static void NEOGEO_USER sparkle(uint8_t prop)
+{
+    const NGBProp *pr = &s_b.prop[prop < NGB_MAX_PROPS ? prop : 0u];
+    ns_effect((int16_t)((pr->x - s_b.camera_x) >> 8), (int16_t)((pr->y >> 8) - 14), NS_FX_HIT);
+}
+
 static void NEOGEO_USER handle(const NGBEvent *e)
 {
     const NGBFighter *p = &s_b.f[NGB_PLAYER];
@@ -308,8 +335,8 @@ static void NEOGEO_USER handle(const NGBEvent *e)
         int16_t x = (int16_t)(((t->x + a->x) >> 9) - (s_b.camera_x >> 8));
         int16_t y = (int16_t)(((t->y - t->z) >> 8) - 52);
         ns_effect(x, y, e->c >= 8u ? NS_FX_BIG : NS_FX_HIT);
-        if (a->state == NGB_ST_ATTACK && a->def->moves) ns_sfx(a->def->moves[a->move].sound);
-        else ns_sfx(NS_SFX_PUNCH);
+        ns_sfx(blow_sound(a));
+        if (e->c >= 10u) ns_shake(6);
         if (e->a == NGB_PLAYER && e->b != NGB_PLAYER && t->def && t->def->ai != NGB_AI_BOSS) ns_focus(e->b, t->def);
         if (e->b == NGB_PLAYER) {
             ns_sfx(NS_SFX_HURT);
@@ -319,6 +346,7 @@ static void NEOGEO_USER handle(const NGBEvent *e)
     }
     case NGB_EV_KO:
         ns_sfx(NS_SFX_KO);
+        if (s_b.f[e->b].def && s_b.f[e->b].def->ai == NGB_AI_BOSS) ns_shake(8);
         if (s_b.f[e->b].def == &ns_runner || s_b.f[e->b].def == &ns_bloater) {
             if (!(ns_rand() & 1u)) bark(k_wake[ns_rand() & 3u], 0xFFu, &s_b.f[e->b]);
         } else if (!(ns_rand() & 1u)) {
@@ -339,7 +367,7 @@ static void NEOGEO_USER handle(const NGBEvent *e)
         const NGBFighter *t = &s_b.f[e->a];
         int16_t x = (int16_t)((t->x - s_b.camera_x) >> 8);
         int16_t y = (int16_t)(((t->y - t->z) >> 8) - 104);
-        if (x > 8 && x < 312 && y > 8) ns_puts((uint8_t)(x >> 3), (uint8_t)(y >> 3), "!", NS_TXT_RED);
+        ns_mark(x, y);
         break;
     }
     case NGB_EV_SPECIAL:
@@ -347,20 +375,21 @@ static void NEOGEO_USER handle(const NGBEvent *e)
         ns_banner(ns_hero_info[s_hero].special, NS_TXT_PINK, 60);
         break;
     case NGB_EV_JUMP: ns_sfx(NS_SFX_JUMP); break;
-    case NGB_EV_LAND: break;
-    case NGB_EV_DASH: ns_sfx(NS_SFX_WHOOSH); break;
-    case NGB_EV_PICKUP: ns_sfx(NS_SFX_PICKUP); break;
-    case NGB_EV_FOOD: ns_sfx(NS_SFX_FOOD); bark("SNACK DIFF.", 0xFFu, p); break;
-    case NGB_EV_SCORE_ITEM: ns_sfx(NS_SFX_PICKUP); bark("DRIP ACQUIRED", 0xFFu, p); break;
+    case NGB_EV_LAND: if (e->a < NGB_FIGHTERS) dust(&s_b.f[e->a]); break;
+    case NGB_EV_DASH: ns_sfx(NS_SFX_WHOOSH); dust(p); break;
+    /* walked over or taken with C: always said, a sparkle where it lay */
+    case NGB_EV_PICKUP: ns_sfx(NS_SFX_PICKUP); sparkle(e->b); s_bark_cool = 0; bark("WEAPON UNLOCKED", 0xFFu, p); break;
+    case NGB_EV_FOOD: ns_sfx(NS_SFX_FOOD); sparkle(e->b); s_bark_cool = 0; bark("SNACK DIFF. +BATTERY", 0xFFu, p); break;
+    case NGB_EV_SCORE_ITEM: ns_sfx(NS_SFX_PICKUP); sparkle(e->b); s_bark_cool = 0; bark("DRIP ACQUIRED", 0xFFu, p); break;
     case NGB_EV_BREAK: ns_sfx(NS_SFX_BREAK); break;
     case NGB_EV_WEAPON_BREAK: ns_sfx(NS_SFX_BREAK); bark("IT'S GIVING... BROKEN", 0xFFu, p); break;
     case NGB_EV_MOUNT: ns_sfx(NS_SFX_SCOOTER); s_bark_cool = 0; bark("SCOOTER ARC UNLOCKED", 0xFFu, p); break;
-    case NGB_EV_RAM: ns_sfx(NS_SFX_CRASH); break;
-    case NGB_EV_VEHICLE_BREAK: ns_sfx(NS_SFX_CRASH); s_bark_cool = 0; bark("RIP SCOOTER. 2026-2026.", 0xFFu, p); break;
+    case NGB_EV_RAM: ns_sfx(NS_SFX_CRASH); ns_shake(4); break;
+    case NGB_EV_VEHICLE_BREAK: ns_sfx(NS_SFX_CRASH); ns_shake(6); s_bark_cool = 0; bark("RIP SCOOTER. 2026-2026.", 0xFFu, p); break;
     case NGB_EV_SHOT: ns_sfx(NS_SFX_PHONE); break;
     case NGB_EV_WAVE_CLEAR: break;
     case NGB_EV_GO: ns_sfx(NS_SFX_GO); ns_banner("GO >>>", NS_TXT_GOLD, 90); break;
-    case NGB_EV_BOSS_PHASE: boss_phase(e); break;
+    case NGB_EV_BOSS_PHASE: ns_shake(8); boss_phase(e); break;
     case NGB_EV_PLAYER_DOWN: s_bark_cool = 0; bark("BRUH.", voice(NS_V_BRUH), p); break;
     case NGB_EV_RESPAWN: ns_banner("RECONNECTED", NS_TXT_MINT, 90); ns_hud(&s_b, s_hero, 1); ns_respawn_blink(); break;
     default: break;

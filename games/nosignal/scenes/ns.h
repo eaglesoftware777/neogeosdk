@@ -160,6 +160,7 @@ void     NEOGEO_USER ns_boss_bar(const NGBeatEmUp *b, uint8_t boss, const char *
 /* the enemy the player just hit: its name and health on the second line for a while */
 void     NEOGEO_USER ns_focus(uint8_t fighter, const NGBFighterDef *def);
 void     NEOGEO_USER ns_bark(const char *text, int16_t x, int16_t y);
+void     NEOGEO_USER ns_mark(int16_t x, int16_t y);   /* a red "!" there for half a second */
 void     NEOGEO_USER ns_bark_tick(void);
 void     NEOGEO_USER ns_banner(const char *text, uint8_t pal, uint16_t frames);
 void     NEOGEO_USER ns_dialog(uint8_t speaker, const char *text);
@@ -167,6 +168,8 @@ void     NEOGEO_USER ns_dialog_hide(void);
 void     NEOGEO_USER ns_music(uint8_t track);
 void     NEOGEO_USER ns_sfx(uint8_t sfx);
 void     NEOGEO_USER ns_throw_pose(void);
+void     NEOGEO_USER ns_shake(uint8_t frames);     /* heavy blows: the street shakes a few frames (at most 8) */
+void     NEOGEO_USER ns_plate(uint8_t show);       /* the dialogue box's plate alone */
 
 /* ns_game.c ------------------------------------------------------------------ */
 void     NEOGEO_USER ns_title_screen(void);
