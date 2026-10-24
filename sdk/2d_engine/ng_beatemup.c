@@ -413,6 +413,29 @@ static void NEOGEO_USER pick_up(NGBeatEmUp *b, uint8_t pi)
     emit(b, NGB_EV_PICKUP, NGB_PLAYER, pi, 0, 0);
 }
 
+/* NGB_SF_AUTO_PICKUP: what lies under the player's feet is taken without a
+ * button. Food and points on any grounded step (a chain of punches included);
+ * a weapon only when walking or standing with empty hands, so one that was
+ * just dropped or thrown isn't swapped for another by accident. */
+#define WALK_PICK_X  (18 << 8)
+#define WALK_PICK_Y  (10 << 8)
+static void NEOGEO_USER auto_pickup(NGBeatEmUp *b)
+{
+    NGBFighter *f = &b->f[NGB_PLAYER];
+    uint8_t i, hands;
+    if (!(b->stage->flags & NGB_SF_AUTO_PICKUP) || !f->alive || f->z > 0) return;
+    if (f->state != NGB_ST_IDLE && f->state != NGB_ST_WALK && f->state != NGB_ST_RUN && f->state != NGB_ST_ATTACK) return;
+    hands = (uint8_t)(f->state != NGB_ST_ATTACK && f->weapon == NGB_NONE && f->vehicle == NGB_NONE);
+    for (i = 0; i < NGB_MAX_PROPS; i++) {
+        NGBProp *p = &b->prop[i];
+        if (p->state != 0) continue;
+        if (!(p->kind == NGB_PROP_FOOD || p->kind == NGB_PROP_SCORE || (hands && p->kind == NGB_PROP_WEAPON))) continue;
+        if (iabs(p->x - f->x) > WALK_PICK_X || iabs(p->y - f->y) > WALK_PICK_Y) continue;
+        pick_up(b, i);
+        if (f->weapon != NGB_NONE) hands = 0;
+    }
+}
+
 static void NEOGEO_USER throw_weapon(NGBeatEmUp *b)
 {
     NGBFighter *f = &b->f[NGB_PLAYER];
@@ -1158,7 +1181,8 @@ void NEOGEO_USER ng_beatemup_update(NGBeatEmUp *b)
         if (f->state == NGB_ST_ATTACK) run_move(b, i);
         physics(b, i);
         fighter_states(b, i);
-        if (i != NGB_PLAYER && f->def && f->def->think && f->alive) f->def->think(b, i);
+        if (i == NGB_PLAYER) auto_pickup(b);
+        else if (f->def && f->def->think && f->alive) f->def->think(b, i);
     }
     update_props(b);
     if (!(b->tick & 7u)) director(b);

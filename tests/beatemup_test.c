@@ -581,6 +581,49 @@ static void test_on_screen(void)
     printf("a waiting spot off the screen: the enemy waits on the other side: OK\n");
 }
 
+/* NGB_SF_AUTO_PICKUP: walking over food, points and (empty-handed) a weapon */
+static void test_walk_over_pickups(void)
+{
+    static NGBStage walk;
+    int i;
+    memcpy(&walk, &EMPTY, sizeof(walk));
+    walk.flags = NGB_SF_AUTO_PICKUP;
+    assert(ng_beatemup_init(&B, &walk, &PLAYER, 3, 7) == NGB_OK);
+    memset(ev, 0, sizeof(ev));
+    assert(ng_beatemup_add_prop(&B, NGB_PROP_FOOD, 120, 176, 12, 0) == 0);
+    assert(ng_beatemup_add_prop(&B, NGB_PROP_SCORE, 170, 170, 5, 0) == 1);
+    assert(ng_beatemup_add_prop(&B, NGB_PROP_WEAPON, 220, 178, 0, 0) == 2);
+    assert(ng_beatemup_add_prop(&B, NGB_PROP_WEAPON, 260, 172, 1, 0) == 3);
+    B.f[0].x = 64 << 8; B.f[0].y = 172 << 8; B.f[0].hp = 20;
+    /* the food lies 4 pixels deeper than the path: still taken in passing */
+    for (i = 0; i < 120 && B.prop[0].kind != NGB_PROP_NONE; i++) step(&B, NGB_IN_RIGHT, 0, 1);
+    assert(ev[NGB_EV_FOOD] == 1 && B.f[0].hp == 32);
+    for (i = 0; i < 120 && B.prop[1].kind != NGB_PROP_NONE; i++) step(&B, NGB_IN_RIGHT, 0, 1);
+    assert(ev[NGB_EV_SCORE_ITEM] == 1);
+    /* the first weapon is taken; the second is left lying: the hands are full */
+    for (i = 0; i < 120 && B.f[0].x < (290 << 8); i++) step(&B, NGB_IN_RIGHT, 0, 1);
+    assert(ev[NGB_EV_PICKUP] == 1 && B.f[0].weapon == 2 && B.prop[3].state == 0);
+    /* nothing is taken in the air or from the edge of the walk */
+    B.f[0].weapon = NGB_NONE; B.prop[2].kind = NGB_PROP_NONE;
+    B.f[0].x = 200 << 8; B.f[0].y = 150 << 8;
+    step(&B, NGB_IN_RIGHT, 0, 1);
+    for (i = 0; i < 40; i++) step(&B, NGB_IN_RIGHT, 0, 1);
+    assert(ev[NGB_EV_PICKUP] == 1 && B.prop[3].state == 0);
+    B.f[0].x = 240 << 8; B.f[0].y = 172 << 8;
+    tap(&B, 0, NGB_BTN_B);
+    for (i = 0; i < 8; i++) step(&B, NGB_IN_RIGHT, 0, 1);
+    assert(B.f[0].z > 0 && ev[NGB_EV_PICKUP] == 1);
+    for (i = 0; i < 60 && B.f[0].weapon == NGB_NONE; i++) step(&B, 0, 0, 1);    /* lands on it */
+    assert(ev[NGB_EV_PICKUP] == 2 && B.f[0].weapon == 3);
+    /* without the flag, walking over leaves everything where it lies */
+    fresh();
+    assert(ng_beatemup_add_prop(&B, NGB_PROP_FOOD, 100, 172, 12, 0) == 0);
+    B.f[0].y = 172 << 8; B.f[0].hp = 20;
+    step(&B, NGB_IN_RIGHT, 0, 60);
+    assert(ev[NGB_EV_FOOD] == 0 && B.prop[0].kind == NGB_PROP_FOOD);
+    printf("walking over pick-ups: OK\n");
+}
+
 int main(void)
 {
     setup();
@@ -590,6 +633,7 @@ int main(void)
     test_crowd();
     test_lives();
     test_vehicle_and_props();
+    test_walk_over_pickups();
     test_waves_and_boss();
     test_order_and_determinism();
     test_ranged();

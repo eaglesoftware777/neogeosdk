@@ -301,7 +301,9 @@ One `NGBeatEmUp` (1728 bytes) runs one stage for one player: ground x along
 the street, depth y across it and height z kept apart; eight-way walking,
 double-tap dash, jump, attack chains with buffered presses, air, low and
 dash attacks, a special that costs health, grabs with pummels and throws
-both ways, weapons with durability, food; per-move startup, active and
+both ways, weapons with durability, food (taken with C, or just by walking
+over it on a stage with `NGB_SF_AUTO_PICKUP`: food and points always, a
+weapon when the hands are empty); per-move startup, active and
 recovery frames and three-axis hit volumes; hitstop, hitstun, knockback,
 launches and juggles, knockdowns with invulnerable get-ups (a short hitstop:
 2 frames plus a quarter of the damage, at most 6; a beaten fighter on the
@@ -329,7 +331,11 @@ for (;;) {
 ```
 
 Other calls: `spawn`, `add_prop`, `continue` (after `NGB_EV_GAME_OVER`),
-`status`, `enemies_alive`, `hash`. The fighter, move, wave, prop and stage
+`status`, `enemies_alive`, `hash`. Drawing a fighter in `NGB_ST_ATTACK`,
+mind two `move` values that are not rows of its table: `0xFE`, the swing of
+a held weapon (its move is `stage->weapons[prop[f->weapon].contents].move`),
+and `NGB_NONE`, a throw's recovery; read as rows they are memory past the
+table. The fighter, move, wave, prop and stage
 tables are listed field by field in `ng_beatemup.h`;
 `games/nosignal/scenes/ns_data.c` is a complete stage with three heroes, a
 street crew, a three-phase boss, weapons and the scooter.

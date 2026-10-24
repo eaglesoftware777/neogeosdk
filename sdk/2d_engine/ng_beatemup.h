@@ -12,7 +12,8 @@
  *   - the player: walk in eight directions, double-tap dash, jump, attack
  *     chains (A), aerial and low attacks, dash attacks, a special (D) that
  *     costs health, grabs (C, or walking into someone) with pummels and
- *     throws forward and back, weapon pick-ups with durability, food;
+ *     throws forward and back, weapon pick-ups with durability, food
+ *     (taken with C, or by walking over it with NGB_SF_AUTO_PICKUP);
  *   - hits: startup / active / recovery frames per move, hit, hurt and
  *     grab volumes in all three axes, hitstop, hitstun, knockback,
  *     launches and juggles, knockdowns with invulnerable get-ups, combo
@@ -167,6 +168,8 @@ typedef struct {
 } NGBWave;
 
 #define NGB_SF_NO_BACKTRACK  0x01u       /* the camera never scrolls back */
+#define NGB_SF_AUTO_PICKUP   0x02u       /* walking over food or points takes them, and a weapon too
+                                            when the hands are empty (C still picks up as well) */
 typedef struct {
     uint16_t length;                     /* pixels */
     uint8_t y_min, y_max;                /* the walkable band, pixels */

@@ -28,6 +28,8 @@ artbox/tile_codec.py) so the result decodes exactly as the hardware will:
     the cartridge wants;
   * builds S1 from EagleBIOS's original font with the ASCII page at
     0xD00 (ng_fix_set_ascii_base(0xD00)), plus any extra 8x8 glyphs;
+    text_edge=N rings that page's letters with colour N, so text stays
+    readable over a busy picture (the system's own pages are left alone);
   * writes <prefix>_assets.h: an NGArtAsset per asset (tile base, size,
     first bank, per-tile bank map), its palettes as Neo Geo colour words,
     frame counts, and #defines for every name; and assets.json, a preview
@@ -101,6 +103,26 @@ def _font():
 FONT = _font()
 
 
+def ringed_glyph(ch, edge):
+    """The system font's letter (ink 1, columns 1-5, rows 0-6 of the cell)
+    with every empty pixel next to its ink set to `edge`: an outline, cut
+    off only along the cell's top row."""
+    rows = [int(r, 16) for r in FONT.GLYPHS.get(ch.upper(), FONT.GLYPHS["?"]).split()]
+    ink = [[0] * 8 for _ in range(8)]
+    for y, row in enumerate(rows):
+        for x in range(5):
+            ink[y][x + 1] = (row >> (4 - x)) & 1
+    out = [[0] * 8 for _ in range(8)]
+    for y in range(8):
+        for x in range(8):
+            if ink[y][x]:
+                out[y][x] = 1
+            elif any(ink[y + dy][x + dx] for dy in (-1, 0, 1) for dx in (-1, 0, 1)
+                     if 0 <= y + dy < 8 and 0 <= x + dx < 8):
+                out[y][x] = edge
+    return out
+
+
 def text_pixels(text, scale=1, ink=1):
     """The firmware font's glyphs as an indexed picture (8 x 8 per character)."""
     image = np.zeros((8 * scale, len(text) * 8 * scale), dtype=np.uint8)
@@ -132,8 +154,9 @@ def pad16(rgba):
 
 
 class ArtPack:
-    def __init__(self, prefix, game_id, title, first_bank=16, logo=None):
+    def __init__(self, prefix, game_id, title, first_bank=16, logo=None, text_edge=None):
         self.prefix = prefix
+        self.text_edge = text_edge  # colour of a 1-pixel ring round the ASCII page's letters (None: none)
         self.game_id = str(game_id)
         self.title = title
         self.first_bank = first_bank
@@ -185,6 +208,9 @@ class ArtPack:
         lo = FIX_ASCII_BASE * 32
         rom[lo:lo + 256 * 32] = rom[:256 * 32]
         rom[0xFF * 32:0x100 * 32] = bytes(32)
+        if self.text_edge:
+            for code in range(33, 127):
+                rom[lo + code * 32:lo + (code + 1) * 32] = FONT.encode_tile(ringed_glyph(chr(code), self.text_edge))
         for tile, glyph in self.extra_glyphs:
             if glyph.shape != (8, 8):
                 raise ValueError("FIX glyphs are 8 x 8")
