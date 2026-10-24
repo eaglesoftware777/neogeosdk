@@ -1,0 +1,3 @@
+# Preserve the exact approved metadata bytes on every checkout host.
+maiya_assets.h -text
+assets.json -text

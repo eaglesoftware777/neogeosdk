@@ -69,7 +69,7 @@ void *NEOGEO_USER memmove(void *destination, const void *source, size_t count)
 enum {
     MG_ENEMIES = 8, MG_SHOTS = 6,
     MG_ROAD_ENEMIES = 4, /* at most this many at once on the road; the sky takes all eight */ MG_SPARKS = 12, MG_ITEMS = 4,
-    MG_LEDGE_BLOCKS = 9, MG_HAZARD_BLOCKS = 6, MG_DECOR_SLOTS = 4, MG_SIGNS = 2,
+    MG_LEDGE_BLOCKS = 9, MG_HAZARD_BLOCKS = 6, MG_DECOR_SLOTS = 6, MG_SIGNS = 2,
     MG_NPC_SLOTS = 2, MG_FRONT_SLOTS = 3,
     MG_BULLETS = 16,     /* the bonus round's cannon fire (in the ledges' sprites) */
 
@@ -88,8 +88,7 @@ enum {
     SLOT_GATE = 258,     /* 3 gate strips, clear of cage and signs  */
     SLOT_SIGN = 254,     /* 2 pit caution signs (2 strips each)     */
     SLOT_HAZARD = 270,   /* 6 blocks (12 strips) fire/spikes/sludge */
-    SLOT_MID = 83,       /* two bounded 2-strip depth islands       */
-    SLOT_DECOR = 87,     /* four props behind the character pool   */
+    SLOT_DECOR = 83,     /* six approved props behind the cast     */
     SLOT_VINE = 264,     /* 3 climbing vines (2 strips each)        */
     SLOT_FRONT = 282,    /* 3 foreground props, in front of the cast */
     SLOT_HUD = 290,      /* face avatar, hearts, halo, key          */
@@ -97,8 +96,6 @@ enum {
     SLOT_TRAY = 330,     /* 12 shrunk pick-up icons (2 strips each) */
     SLOT_FX = 356,       /* her special moves' light (4 strips), over her */
     SLOT_GLIDER = 360,   /* her hang glider / parachute over a healed valley (6 strips) */
-    SLOT_SETPIECE = 366, /* four strips, moving mine cart            */
-    SLOT_IMPACT = 370,   /* two 2-strip contact effects              */
     MG_TRAY_SLOTS = 12,
 
     /*
@@ -117,7 +114,7 @@ enum {
     PAL_BOSS = 8, PAL_ALLY = 60, PAL_BLOCK = 44, PAL_EAGLE = 45,
     PAL_TOOL = 12, PAL_PORTRAIT = 41, PAL_DECOR = 46, PAL_PROP = 47,
     PAL_ITEM = 32, PAL_NPC = 33, PAL_GATE = 35, PAL_TRINKET = 36,
-    PAL_FRONT = 37, PAL_BG = 16, PAL_MID = 22, PAL_IMPACT = 23,
+    PAL_FRONT = 37, PAL_BG = 16,
     /* FIX palettes for her framed HP bar, one per tier. */
     PAL_HP_HI = 13, PAL_HP_MID = 10, PAL_HP_LO = 9,
     /* Its own art, its own bank, not a recolour of one of the shared six. */
@@ -299,13 +296,10 @@ typedef struct {
     NGCamera camera;
     NGCharacter *player, *boss, *rescue, *eagle;
     NGSpriteGroup far, road;
-    NGSpriteGroup mid[2], cart, impact[2];
-    int16_t impact_x[2], impact_y[2];
-    uint8_t impact_time[2];
     MGPlatform moving_platform;
     int16_t mini_left;
     uint8_t moving_on, arcade_phase, mini_active, mini_done, mini_slot;
-    uint8_t rank, gimmick_latch, water_anim;
+    uint8_t rank, gimmick_latch;
     NGSpriteGroup ledges[MG_LEDGE_BLOCKS];
     NGSpriteGroup hazards[MG_HAZARD_BLOCKS];
     NGSpriteGroup signs[MG_SIGNS];   /* their own sprites: a sign never waits for a hazard block */
@@ -515,7 +509,7 @@ static uint16_t mg_pal_base[MG_PAL_BANKS * 16u];
 static uint16_t mg_pal_out[MG_PAL_BANKS * 16u];
 static uint8_t mg_pal_open;
 static const uint16_t *mg_cycle_source;
-static uint8_t mg_cycle_bank;
+static uint8_t mg_cycle_bank, mg_cycle_dark, mg_cycle_light;
 static uint8_t mg_tint_t, mg_tint_art;   /* the Secret Art's colour shake: frames left, which art */
 #ifdef NG_VRAM_DEFER
 static NGFrameSync mg_video_sync;
@@ -1092,10 +1086,38 @@ static void NEOGEO_USER mg_background(uint8_t id, uint8_t restored)
 
     for (i = 0; i < count; i++) mg_palette((uint8_t)(PAL_BG + i), pal + i * 16u);
 
-    mg_cycle_source=0;
-    if (id==1u || id==2u || id==4u || id==6u || id==7u || id==8u || id==11u) {
-        mg_cycle_source=pal+64u;
-        mg_cycle_bank=PAL_BG+4u;
+    mg_cycle_source = 0;
+    {
+        uint8_t tile_x = id == 1u ? 9u : 14u;
+        uint8_t tile_y = id == 1u ? 5u : 2u;
+        uint8_t bank = far_map[(uint16_t)tile_y * cols + tile_x];
+        if (bank >= PAL_BG && bank < (uint8_t)(PAL_BG + count)) {
+            const uint16_t *colors = pal + (uint16_t)(bank - PAL_BG) * 16u;
+            uint16_t best = 49u;
+            uint8_t first, second;
+            for (first = 1u; first < 16u; first++) {
+                uint16_t c = colors[first];
+                uint8_t r = (uint8_t)(((c >> 7) & 30u) | ((c >> 14) & 1u));
+                uint8_t g = (uint8_t)(((c >> 3) & 30u) | ((c >> 13) & 1u));
+                uint8_t b = (uint8_t)(((c << 1) & 30u) | ((c >> 12) & 1u));
+                if (b < r + 2u || b < g + 1u) continue;
+                for (second = (uint8_t)(first + 1u); second < 16u; second++) {
+                    uint16_t other = colors[second];
+                    uint8_t r2 = (uint8_t)(((other >> 7) & 30u) | ((other >> 14) & 1u));
+                    uint8_t g2 = (uint8_t)(((other >> 3) & 30u) | ((other >> 13) & 1u));
+                    uint8_t b2 = (uint8_t)(((other << 1) & 30u) | ((other >> 12) & 1u));
+                    uint16_t distance;
+                    if (b2 < r2 + 2u || b2 < g2 + 1u) continue;
+                    distance = mg_palette_distance(c, other);
+                    if (!distance || distance >= best) continue;
+                    best = distance;
+                    mg_cycle_dark = first;
+                    mg_cycle_light = second;
+                    mg_cycle_bank = bank;
+                    mg_cycle_source = colors;
+                }
+            }
+        }
     }
 
     /* A cleansed valley is shown in its own painted colours: the restored
@@ -1127,14 +1149,54 @@ static void NEOGEO_USER mg_background(uint8_t id, uint8_t restored)
  */
 static void NEOGEO_USER mg_arena_background(uint8_t style)
 {
-    uint8_t stage=mg.stage<MG_LEVEL_COUNT ? mg.stage : 0u;
-    uint16_t far=mg_v5_arena_tiles[stage],road=(uint16_t)(far+384u);
-    const uint16_t *pal=mg_v5_arena_pal+(uint16_t)stage*96u;
-    const uint8_t *far_map=mg_v5_arena_maps+(uint16_t)stage*448u;
-    const uint8_t *road_map=far_map+384u;
-    uint8_t count=6,i;
-    (void)style;
-    mg_tint_t=0;
+    uint16_t far = 0, road = 0;
+    const uint16_t *pal = 0;
+    const uint8_t *far_map = 0, *road_map = 0;
+    uint8_t count = 0, i;
+    mg_tint_t = 0;
+    switch (style) {
+#if MG_ARENA0_READY
+    case 0: far = MG_ARENA0_TILE; road = MG_ARENAGROUND0_TILE; pal = mg_arena0_pal;
+             far_map = mg_arena0_map; road_map = mg_arenaground0_map; count = MG_ARENA0_BANKS; break;
+#endif
+#if MG_ARENA1_READY
+    case 1: far = MG_ARENA1_TILE; road = MG_ARENAGROUND1_TILE; pal = mg_arena1_pal;
+             far_map = mg_arena1_map; road_map = mg_arenaground1_map; count = MG_ARENA1_BANKS; break;
+#endif
+#if MG_ARENA2_READY
+    case 2: far = MG_ARENA2_TILE; road = MG_ARENAGROUND2_TILE; pal = mg_arena2_pal;
+             far_map = mg_arena2_map; road_map = mg_arenaground2_map; count = MG_ARENA2_BANKS; break;
+#endif
+#if MG_ARENA3_READY
+    case 3: far = MG_ARENA3_TILE; road = MG_ARENAGROUND3_TILE; pal = mg_arena3_pal;
+             far_map = mg_arena3_map; road_map = mg_arenaground3_map; count = MG_ARENA3_BANKS; break;
+#endif
+#if MG_ARENA4_READY
+    case 4: far = MG_ARENA4_TILE; road = MG_ARENAGROUND4_TILE; pal = mg_arena4_pal;
+             far_map = mg_arena4_map; road_map = mg_arenaground4_map; count = MG_ARENA4_BANKS; break;
+#endif
+#if MG_ARENA5_READY
+    case 5: far = MG_ARENA5_TILE; road = MG_ARENAGROUND5_TILE; pal = mg_arena5_pal;
+             far_map = mg_arena5_map; road_map = mg_arenaground5_map; count = MG_ARENA5_BANKS; break;
+#endif
+#if MG_ARENA6_READY
+    case 6: far = MG_ARENA6_TILE; road = MG_ARENAGROUND6_TILE; pal = mg_arena6_pal;
+             far_map = mg_arena6_map; road_map = mg_arenaground6_map; count = MG_ARENA6_BANKS; break;
+#endif
+#if MG_ARENA7_READY
+    case 7: far = MG_ARENA7_TILE; road = MG_ARENAGROUND7_TILE; pal = mg_arena7_pal;
+             far_map = mg_arena7_map; road_map = mg_arenaground7_map; count = MG_ARENA7_BANKS; break;
+#endif
+#if MG_ARENA8_READY
+    case 8: far = MG_ARENA8_TILE; road = MG_ARENAGROUND8_TILE; pal = mg_arena8_pal;
+             far_map = mg_arena8_map; road_map = mg_arenaground8_map; count = MG_ARENA8_BANKS; break;
+#endif
+#if MG_ARENA9_READY
+    case 9: far = MG_ARENA9_TILE; road = MG_ARENAGROUND9_TILE; pal = mg_arena9_pal;
+             far_map = mg_arena9_map; road_map = mg_arenaground9_map; count = MG_ARENA9_BANKS; break;
+#endif
+    default: return;
+    }
     mg_cycle_source = 0;
     for (i = 0; i < count; i++) mg_palette((uint8_t)(PAL_BG + i), pal + i * 16u);
     ng_sprite_group_init(&mg.far, SLOT_FAR, 32, 12, far, PAL_BG);
@@ -1155,11 +1217,12 @@ static void NEOGEO_USER mg_animate_scenery(void)
 {
     uint16_t colors[16];
     uint8_t i;
-    uint8_t phase=(uint8_t)((mg.tick>>3)&3u);
-    if (!mg_cycle_source || mg.arena_bg || mg_tint_t || (mg.tick&7u) ||
-        ng_feedback_is_hitstop() || ng_pause_is_on()) return;
-    for (i=0;i<16u;++i) colors[i]=mg_cycle_source[i];
-    for (i=0;i<4u;++i) colors[12u+i]=mg_cycle_source[12u+((i+phase)&3u)];
+    if (!mg_cycle_source || mg.arena_bg || mg_tint_t || (mg.tick & 15u)) return;
+    for (i = 0; i < 16u; i++) colors[i] = mg_cycle_source[i];
+    if ((mg.tick & 16u) && mg_cycle_dark != mg_cycle_light) {
+        colors[mg_cycle_dark] = mg_cycle_source[mg_cycle_light];
+        colors[mg_cycle_light] = mg_cycle_source[mg_cycle_dark];
+    }
     mg_palette(mg_cycle_bank, colors);
 }
 
@@ -1177,7 +1240,7 @@ static void NEOGEO_USER mg_scroll_scenery(int16_t camera_x)
     /* Up a tall climb the painting stays put, its ground band included (it
      * is the painting's own foot: dropped with the road, it would leave a
      * gap under the sky); the ledges and the road's hazards scroll by. */
-    mg_layers_at((uint16_t)(camera_x >> 3), (uint16_t)camera_x);
+    mg_layers_at((uint16_t)(camera_x >> 1), (uint16_t)camera_x);
 }
 
 /* Ledge set per valley: forest turf, mossy falls, coast sand, autumn earth,
@@ -1571,7 +1634,7 @@ static void NEOGEO_USER mg_landmark_setup(void)
     if (lm >= MG_LANDMARKS) return;
     for (k = 0; k < mg_landmark_banks[lm]; k++)
         mg_palette((uint8_t)(PAL_LANDMARK + k), mg_landmark_pals[lm] + (uint16_t)k * 16u);
-    ng_sprite_group_init(&mg_landmark_g, SLOT_MID, MG_LANDMARK_W / 16, MG_LANDMARK_H / 16,
+    ng_sprite_group_init(&mg_landmark_g, SLOT_DECOR, MG_LANDMARK_W / 16, MG_LANDMARK_H / 16,
                          mg_landmark_tiles[lm], PAL_LANDMARK);
     ng_sprite_group_set_priority(&mg_landmark_g, NG_SG_PRIO_LOW);
     ng_sprite_group_set_tile_stride(&mg_landmark_g, MG_LANDMARK_W / 16);
@@ -1590,10 +1653,6 @@ static uint8_t NEOGEO_USER mg_landmark_draw(int16_t camera_x)
                              scr > -MG_LANDMARK_W && scr < NG_SCREEN_W);
     if (want) {
         if (!mg_landmark_on) {
-            for (i = 0; i < 2u; i++) {
-                ng_sprite_group_set_visible(&mg.mid[i], 0);
-                ng_sprite_group_flush(&mg.mid[i]);
-            }
             for (i = 0; i < MG_DECOR_SLOTS; i++) {
                 ng_sprite_group_set_visible(&mg.decor[i], 0);
                 ng_sprite_group_flush(&mg.decor[i]);
@@ -1610,7 +1669,6 @@ static uint8_t NEOGEO_USER mg_landmark_draw(int16_t camera_x)
         ng_sprite_group_set_visible(&mg_landmark_g, 0);
         ng_sprite_group_flush(&mg_landmark_g);
         for (i = 0; i < MG_DECOR_SLOTS; i++) ng_sprite_group_mark_dirty(&mg.decor[i], NG_SGF_DIRTY_ALL);
-        for (i = 0; i < 2u; i++) ng_sprite_group_mark_dirty(&mg.mid[i], NG_SGF_DIRTY_ALL);
         mg_landmark_on = 0;
     }
     return 0;
@@ -1618,20 +1676,7 @@ static uint8_t NEOGEO_USER mg_landmark_draw(int16_t camera_x)
 
 /* Sparse middle-distance islands, behind every actor. The landmark leases
  * these same slots only while the scenery islands are explicitly hidden. */
-static void NEOGEO_USER mg_depth_draw(int16_t camera_x)
-{
-    uint8_t i;
-    uint16_t offset=(uint16_t)(((uint32_t)(uint16_t)camera_x*3u)>>3);
-    for (i=0;i<2u;++i) {
-        NGSpriteGroup *g=&mg.mid[i];
-        int16_t x=(int16_t)(((uint16_t)(64u+i*256u-offset))&511u);
-        if (x>384) x-=512;
-        ng_sprite_group_set_visible(g,(uint8_t)(!mg.arena_bg && !mg.vault &&
-            !mg_landmark_on && x>-32 && x<320));
-        if (g->visible) ng_sprite_group_set_pos(g,x,(int16_t)(80-(mg.cam_y*3)/8));
-        ng_sprite_group_flush(g);
-    }
-}
+
 
 static void NEOGEO_USER mg_draw_decor(int16_t camera_x)
 {
@@ -1640,7 +1685,6 @@ static void NEOGEO_USER mg_draw_decor(int16_t camera_x)
     uint8_t i, used = 0;
 
     if (mg_landmark_draw(camera_x)) { cache->valid=0;return; }
-    mg_depth_draw(camera_x);
     if (mg_cache_ready(cache,camera_x,0)) {
         mg_cache_scroll(mg.decor,MG_DECOR_SLOTS,(int16_t)(camera_x-cache->x),(int16_t)(mg.cam_y-cache->y));
         cache->x=camera_x;cache->y=mg.cam_y;
@@ -2126,34 +2170,7 @@ static void NEOGEO_USER mg_raster_step(void)
 }
 #endif
 
-static void NEOGEO_USER mg_arcade_effects_draw(int16_t camera_x)
-{
-    uint8_t i;
-    for (i=0;i<2u;++i) {
-        NGSpriteGroup *g=&mg.impact[i];
-        uint8_t life=mg.impact_time[i];
-        ng_sprite_group_set_visible(g,(uint8_t)(life && mg.state==MG_PLAY));
-        if (g->visible) {
-            ng_sprite_group_set_tile_base(g,(uint16_t)(MG_V5_IMPACT_TILE+((6u-life)>>1)*2u));
-            ng_sprite_group_set_pos(g,(int16_t)(mg.impact_x[i]-camera_x-16),MG_SY(mg.impact_y[i]-16));
-            if (!ng_feedback_is_hitstop()) --mg.impact_time[i];
-        }
-        ng_sprite_group_flush(g);
-    }
-    {
-        int16_t x=(int16_t)(mg.moving_platform.x-camera_x);
-        uint8_t visible=(uint8_t)(mg.moving_on && mg_arcade[mg.stage].gimmick==MG_A_MINECART &&
-                                  x>-64 && x<320 && mg.state==MG_PLAY);
-        if (mg.water_anim && !mg.arena_bg && !mg.vault) {
-            x=(int16_t)((288u-(((uint32_t)(uint16_t)camera_x*3u)>>3))&511u);
-            if (x>384) x-=512;
-            visible=(uint8_t)((x>=0 && x<24) || (x>=288 && x<320));
-        }
-        ng_sprite_group_set_visible(&mg.cart,visible);
-        if (visible) ng_sprite_group_set_pos(&mg.cart,x,mg.water_anim ? 96 : MG_SY(mg.moving_platform.y));
-        ng_sprite_group_flush(&mg.cart);
-    }
-}
+
 
 static void NEOGEO_USER mg_before_draw_hook(void)
 {
@@ -2170,7 +2187,6 @@ static void NEOGEO_USER mg_before_draw_hook(void)
     ng_level_set_scroll(mg.camera.x, mg.cam_y);
     mg_scroll_scenery(mg.camera.x);
     mg_animate_scenery();
-    mg_arcade_effects_draw(mg.camera.x);
     MG_PROFILE_PART(6);
     if (mg.state == MG_BONUS || mg.state == MG_ENDING) {
         mg_update_sparks(mg.camera.x);
@@ -2945,10 +2961,6 @@ static void NEOGEO_USER mg_hit_burst(int16_t x, int16_t y)
     static const int8_t vx[5] = { -3, 3, -2, 2, 0 };
     static const int8_t vy[5] = { -2, -2, -4, -4, -5 };
     uint8_t i, k = 0;
-    for (i=0;i<2u;++i) if (!mg.impact_time[i]) {
-        mg.impact_time[i]=6; mg.impact_x[i]=x; mg.impact_y[i]=y;
-        break;
-    }
     for (i = 0; i < MG_SPARKS && k < 5; i++) {
         MGSpark *p = &mg.sparks[i];
         if (p->life) continue;
@@ -4107,30 +4119,6 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
                          mg_gate_tiles[0], PAL_GATE);
     ng_sprite_group_set_tile_stride(&mg.gate, MG_GATE_STRIPS);
     ng_sprite_group_set_visible(&mg.gate, 0);
-    mg_palette(PAL_MID, mg_v5_mid_pal + stage * 16u);
-    mg_palette(PAL_IMPACT, mg_v5_impact_pal);
-    for (i=0;i<2u;++i) {
-        ng_sprite_group_init(&mg.mid[i],(uint16_t)(SLOT_MID+i*2u),2,7,mg_v5_mid_tiles[stage],PAL_MID);
-        ng_sprite_group_set_priority(&mg.mid[i],NG_SG_PRIO_LOW);
-        ng_sprite_group_set_visible(&mg.mid[i],0);
-        ng_sprite_group_init(&mg.impact[i],(uint16_t)(SLOT_IMPACT+i*2u),2,2,MG_V5_IMPACT_TILE,PAL_IMPACT);
-        ng_sprite_group_set_tile_stride(&mg.impact[i],6);
-        ng_sprite_group_set_visible(&mg.impact[i],0);
-        mg.impact_time[i]=0;
-    }
-    mg.water_anim=(uint8_t)(stage==1u || stage==2u || stage==7u);
-    if (mg.water_anim) {
-        ng_sprite_group_init(&mg.cart,SLOT_SETPIECE,1,6,MG_V5_WATER_TILE,PAL_MID);
-        ng_sprite_group_set_tile_stride(&mg.cart,4);
-        ng_sprite_group_set_auto_anim(&mg.cart,1,0);
-    } else ng_sprite_group_init(&mg.cart,SLOT_SETPIECE,4,2,MG_V5_CART_TILE,PAL_MID);
-    ng_sprite_group_set_visible(&mg.cart,0);
-#ifdef NG_RASTER
-    ng_raster_set_anim_speed(6);
-#else
-    /* CD has no raster scheduler in this adapter; raster IRQ remains off. */
-    *(volatile uint16_t *)0x3C0006u=0x0600u;
-#endif
     mg_landmark_setup();
 
     ng_sprite_group_init(&mg.cage, SLOT_CAGE, 2, 2, mg_prop_tiles[MG_P_CHEST], PAL_PROP);
@@ -5713,7 +5701,7 @@ static void NEOGEO_USER mg_arcade_step(void)
         "3/5  MID GUARDIAN","4/5  GAUNTLET","5/5  GUARDIAN ARENA"};
     static const char *const tips[12]={"THE VINE BRIDGE WILL GIVE WAY","RIDE THE LOG. WATCH THE CURRENT",
         "THE WRECKAGE SWAYS ABOVE THE COVE","FIRE RISES - KEEP YOUR FOOTING",
-        "RIDE THE CART. JUMP TO DISMOUNT","STRIKE B NEAR THE LIFT SWITCH",
+        "RIDE THE PLATFORM. JUMP OFF","STRIKE B NEAR THE LIFT SWITCH",
         "THE BELTS PULL IN OPPOSITE WAYS","THE TIDE CARRIES YOU - STEER CLEAR",
         "ICE SLIDES. BRAKE BEFORE THE EDGE","SOFT SAND PULLS AT YOUR FEET",
         "FLAK AHEAD. KEEP CHANGING HEIGHT","THE REACTOR FIRES IN A RHYTHM"};
@@ -6964,14 +6952,6 @@ static void NEOGEO_USER mg_boss_ai(NGCharacter *p)
         else frame = MG_BF_IDLE;
     }
     mg_frame(b, frame, face);
-    if (style!=MG_B_AIRSHIP) {
-        static const uint8_t breath[8]={255,254,252,250,250,252,254,255};
-        uint8_t scale=frame==MG_BF_IDLE && !mg.boss_hurt ? breath[(mg.tick>>4)&7u] : 255u;
-        int16_t anchor=(int16_t)(-94+94-((94u*(uint16_t)(scale+1u))>>8));
-        if (b->scale_y!=scale || b->sprite_offset_y!=anchor) {
-            b->scale_y=scale;b->sprite_offset_y=anchor;b->sprite_dirty=1;
-        }
-    }
 
     /*
      * Having struck her, a guardian gives ground for a moment -- steps back

@@ -1,0 +1,26 @@
+{
+  "reference": "approved-v4",
+  "source_commit": "22d09de014598d83e3c4feee811cd37ea011396a",
+  "files": {
+    "artbox/v4_reference/maiya_assets.h": {
+      "sha256": "24198c1f6088ab1248945a4292f2efbd9070fc00ba64744534cf9e226d5a104d",
+      "size": 198095
+    },
+    "artbox/v4_reference/assets.json": {
+      "sha256": "00040f3544eb9b447cb2744a03a4bc05f4a354f429fcad9ae71564f874fe4cdb",
+      "size": 77619
+    },
+    "artbox/780-c1.c1": {
+      "sha256": "d0b3f8282aa5fbb13fc85539bcd2f368d1516759d88c537b53fe38639a5a4c43",
+      "size": 4194304
+    },
+    "artbox/780-c2.c2": {
+      "sha256": "03128dfe7f76aa453993ee04609fe893961c8fad6b5d496c59d1ee95eb8b752a",
+      "size": 4194304
+    },
+    "artbox/780-s1.s1": {
+      "sha256": "bd32f8a66d6dde5a555ae66b99d1ee083d42075169dcc030ec3aad9ae8b64fd2",
+      "size": 131072
+    }
+  }
+}
