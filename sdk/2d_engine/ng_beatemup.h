@@ -29,7 +29,8 @@
  *     new attacks), props (crates, barrels, weapons, food, hazards, ramps);
  *   - a rideable light vehicle (an electric kick scooter in the first
  *     game, but nothing here names it): mount, accelerate, steer across the
- *     belt, hop, ram at speed, take damage, break into a swingable wreck.
+ *     belt, hop, ram at speed, take damage, break into a swingable wreck
+ *     (with NGB_SF_WALK_ON: walk onto it to ride, jump off with B);
  *
  * Enemy kinds come from data (NGBFighterDef: brawler, charger, ranged,
  * shield, grappler, jumper, boss) with an optional callback for anything
@@ -170,6 +171,8 @@ typedef struct {
 #define NGB_SF_NO_BACKTRACK  0x01u       /* the camera never scrolls back */
 #define NGB_SF_AUTO_PICKUP   0x02u       /* walking over food or points takes them, and a weapon too
                                             when the hands are empty (C still picks up as well) */
+#define NGB_SF_WALK_ON       0x04u       /* walking onto the vehicle rides it (a held weapon is dropped);
+                                            B or C jumps off it, clear of it (no hop on B then) */
 typedef struct {
     uint16_t length;                     /* pixels */
     uint8_t y_min, y_max;                /* the walkable band, pixels */

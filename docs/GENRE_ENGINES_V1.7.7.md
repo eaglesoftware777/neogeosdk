@@ -314,7 +314,8 @@ head is never cut off; a crowd
 director that hands out a few attack tokens, spaces the others on both
 sides and telegraphs every attack; waves that lock the camera, boss
 phases, props and a rideable light vehicle (mount, accelerate, steer, hop,
-ram, break into a swingable wreck). Enemy kinds come from data (brawler,
+ram, break into a swingable wreck; with `NGB_SF_WALK_ON` the player walks
+onto it to ride and B or C jumps off, clear of it). Enemy kinds come from data (brawler,
 charger, ranged, shield, grappler, jumper, boss) with an optional
 per-kind callback.
 
