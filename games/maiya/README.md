@@ -4,23 +4,24 @@ An original twelve-mission side-scrolling adventure using the SDK's C 2D engine.
 Game name: `maiya`. Cartridge ID: `780`. The repository default remains `demo`.
 New in SDK v1.7.1.
 
-Current development: **V5 gameplay candidate with approved V4 artwork**.
-All backgrounds, scenery, arenas, terrain, landmarks, characters, effects,
-portraits, title artwork, palettes and font are frozen to the approved V4 set.
-The rejected visual replacement has been removed. Original scenery layering,
-decor capacity and background scrolling are restored. No artwork authoring or
-image-editor export runs during a build.
+Current development: **V5 stability candidate with V4 artwork**.
+The original combat, encounters, scoring, collision and rendering behavior are
+restored. There are no intermediate guardians, rank system or experimental
+moving ledges. Three small platform-height adjustments preserve reachable
+routes; the archer on a raised platform follows its supporting surface.
 
-Gameplay work remains separate: five mission beats, defended clearings using
-existing creatures, moving ledges using existing tiles, readable hazard
-warnings, a bounded hit chain and restrained rank. Character gait, movement
-speeds and jump physics are preserved. The title's existing font displays
-`V5 TEST`; its underlying artwork is unchanged.
+Backgrounds, scenery, arenas, terrain, landmarks, portraits, effects, palettes
+and fonts use the approved V4 sources. The only character-art exception is the
+requested walk/run back-contour correction: 90 explicit native pixels across
+16 drawings, shared by Maiya and Luna. Heads, hands, legs, feet, timing and
+anchors are unchanged. No editor or image generation runs during a build.
+The existing title font displays `V5 TEST`.
 
-`tools/locked_art.py` checks the immutable graphics/FIX banks and palette/tile
-metadata against `artbox/v4_reference/lock.json`. A changed reference fails the
-build. `tools/art.py` only installs the approved bytes. Even `--rebuild-art`
-restores that same approved set; it does not regenerate drawings or palettes.
+`tools/locked_art.py` checks immutable source graphics and metadata against
+`artbox/v4_reference/lock.json`. `tools/maiya_posture.py` applies the finite
+pixel recipe in `assets/authored/posture_correction.json`, with source and
+result hashes checked. The ROM checker compares every decoded hero pixel with
+that exact expected result. No approved reference hash is updated.
 
 Build isolated AES/MVS test packages:
 

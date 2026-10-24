@@ -22,8 +22,6 @@
 #include "maiya_feel.h"     /* hitstop and shake: every tuning value */
 #include "maiya_presentation.h"
 #include "maiya_collision.h"
-#include "maiya_arcade.h"
-#include "sdk/2d_engine/ng_spatial_grid.h"
 #include <stddef.h>
 
 #pragma GCC optimize ("O2")
@@ -88,7 +86,7 @@ enum {
     SLOT_GATE = 258,     /* 3 gate strips, clear of cage and signs  */
     SLOT_SIGN = 254,     /* 2 pit caution signs (2 strips each)     */
     SLOT_HAZARD = 270,   /* 6 blocks (12 strips) fire/spikes/sludge */
-    SLOT_DECOR = 83,     /* six approved props behind the cast     */
+    SLOT_DECOR = 83,     /* 6 props behind the character pool      */
     SLOT_VINE = 264,     /* 3 climbing vines (2 strips each)        */
     SLOT_FRONT = 282,    /* 3 foreground props, in front of the cast */
     SLOT_HUD = 290,      /* face avatar, hearts, halo, key          */
@@ -296,10 +294,6 @@ typedef struct {
     NGCamera camera;
     NGCharacter *player, *boss, *rescue, *eagle;
     NGSpriteGroup far, road;
-    MGPlatform moving_platform;
-    int16_t mini_left;
-    uint8_t moving_on, arcade_phase, mini_active, mini_done, mini_slot;
-    uint8_t rank, gimmick_latch;
     NGSpriteGroup ledges[MG_LEDGE_BLOCKS];
     NGSpriteGroup hazards[MG_HAZARD_BLOCKS];
     NGSpriteGroup signs[MG_SIGNS];   /* their own sprites: a sign never waits for a hazard block */
@@ -461,25 +455,6 @@ typedef struct {
 enum { MG_DEMO_ATTRACT = 1, MG_DEMO_MOVES = 2 };
 
 static MGState mg;
-static const MGArcadeProfile mg_arcade[MG_LEVEL_COUNT] = MG_ARCADE_TABLE;
-static NGSpatialGrid mg_collision_grid;
-#ifdef NG_DEBUG_PERF
-volatile uint16_t maiya_profile_peak[10];
-volatile uint32_t maiya_profile_sum[10];
-static uint16_t NEOGEO_USER mg_profile_end(uint16_t start,uint8_t part)
-{
-    uint16_t now=ng_perf_line();
-    uint16_t used=(uint16_t)(now>=start ? now-start : now+264u-start);
-    if (used>maiya_profile_peak[part]) maiya_profile_peak[part]=used;
-    maiya_profile_sum[part]+=used;
-    return now;
-}
-#define MG_PROFILE_BEGIN uint16_t profile_line=ng_perf_line()
-#define MG_PROFILE_PART(p) profile_line=mg_profile_end(profile_line,p)
-#else
-#define MG_PROFILE_BEGIN ((void)0)
-#define MG_PROFILE_PART(p) ((void)0)
-#endif
 static int16_t mg_camera_floor; /* last settled support, held through a jump */
 
 /* A world height on the screen, with the view raised up a tall climb. */
@@ -1363,7 +1338,6 @@ static const MGPlatform *NEOGEO_USER mg_platform(uint8_t index)
 {
     if (mg.state == MG_BONUS) return 0;
     if (mg.boss_active || mg.vault) return index < 2 ? &mg.arena[index] : 0;
-    if (mg.moving_on && index == mg_arcade[mg.stage].platform) return &mg.moving_platform;
     if (index < MG_PLATFORM_COUNT && mg.ledge_gone[index]) return 0;   /* crumbled away */
     return &mg_levels[mg.stage].platforms[index];
 }
@@ -1408,37 +1382,6 @@ static void NEOGEO_USER mg_pool_show(NGSpriteGroup *pool, uint16_t *owner, uint8
     }
 }
 static uint16_t mg_ledge_owner[MG_LEDGE_BLOCKS], mg_hazard_owner[MG_HAZARD_BLOCKS], mg_decor_owner[MG_DECOR_SLOTS];
-typedef struct {
-    int16_t x,y,column,row,moving_x,moving_y;
-    uint32_t revision;
-    uint8_t stage,state,valid;
-} MGSceneryCache;
-static MGSceneryCache mg_scenery_cache[3];
-static uint16_t mg_terrain_revision;
-static uint8_t mg_terrain_dynamic;
-
-static uint8_t NEOGEO_USER mg_cache_ready(MGSceneryCache *c,int16_t x,uint32_t revision)
-{
-    return (uint8_t)(c->valid && c->stage==mg.stage && c->state==mg.state &&
-        c->column==(x>>4) && c->row==(mg.cam_y>>4) && c->revision==revision);
-}
-
-static void NEOGEO_USER mg_cache_mark(MGSceneryCache *c,int16_t x,uint32_t revision)
-{
-    c->x=x;c->y=mg.cam_y;c->column=(int16_t)(x>>4);c->row=(int16_t)(mg.cam_y>>4);
-    c->stage=mg.stage;c->state=mg.state;c->revision=revision;c->valid=1;
-    c->moving_x=mg.moving_platform.x;c->moving_y=mg.moving_platform.y;
-}
-
-static void NEOGEO_USER mg_cache_scroll(NGSpriteGroup *g,uint8_t count,int16_t dx,int16_t dy)
-{
-    uint8_t i;
-    if (!dx && !dy) return;
-    for (i=0;i<count;++i) if (g[i].visible) {
-        ng_sprite_group_set_pos(&g[i],(int16_t)(g[i].x-dx),(int16_t)(g[i].y-dy));
-        ng_sprite_group_flush(&g[i]);
-    }
-}
 
 /*
  * One-way ledges are drawn as rows of 32x32 blocks from a small pool;
@@ -1452,14 +1395,6 @@ static void NEOGEO_USER mg_cache_scroll(NGSpriteGroup *g,uint8_t count,int16_t d
  */
 static void NEOGEO_USER mg_draw_ledges(int16_t camera_x)
 {
-    MGSceneryCache *cache=&mg_scenery_cache[0];
-    if (!mg.boss_active && !mg.vault && !mg_terrain_dynamic &&
-        (!mg.moving_on || (cache->moving_x==mg.moving_platform.x && cache->moving_y==mg.moving_platform.y)) &&
-        mg_cache_ready(cache,camera_x,mg_terrain_revision)) {
-        mg_cache_scroll(mg.ledges,MG_LEDGE_BLOCKS,(int16_t)(camera_x-cache->x),(int16_t)(mg.cam_y-cache->y));
-        cache->x=camera_x;cache->y=mg.cam_y;
-        return;
-    }
     MGPoolWant want[MG_LEDGE_BLOCKS];
     uint16_t under_key[3];              /* (fields, not struct copies: the  */
     int16_t under_x[3], under_y[3];     /*  compiler's small-struct copy    */
@@ -1479,9 +1414,8 @@ static void NEOGEO_USER mg_draw_ledges(int16_t camera_x)
         /* On the road a ledge well off the screen is passed over first (most
          * of the 32 are): in an arena or the vault the ledges are others. */
         if (road && !mg.vault) {
-            const MGPlatform *bounds=(mg.moving_on && i==mg_arcade[mg.stage].platform) ? &mg.moving_platform : &all[i];
-            int16_t far = (int16_t)(bounds->x - camera_x);
-            if (!bounds->width || far > 336 || (int16_t)(far + bounds->width) < -16) continue;
+            int16_t far = (int16_t)(all[i].x - camera_x);
+            if (!all[i].width || far > 336 || (int16_t)(far + all[i].width) < -16) continue;
         }
         pl = mg_platform(i);
         rot = (uint8_t)((rotten >> i) & 1u);
@@ -1541,20 +1475,10 @@ static void NEOGEO_USER mg_draw_ledges(int16_t camera_x)
         want[used].y = under_y[k];
     }
     mg_pool_show(mg.ledges, mg_ledge_owner, MG_LEDGE_BLOCKS, want, used);
-    mg_cache_mark(cache,camera_x,mg_terrain_revision);
 }
 
 static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
 {
-    MGSceneryCache *cache=&mg_scenery_cache[1];
-    uint32_t revision=((uint32_t)mg.hazard_disabled_mask<<4)|((mg.tick>>3)&15u);
-    if (mg_cache_ready(cache,camera_x,revision)) {
-        int16_t dx=(int16_t)(camera_x-cache->x),dy=(int16_t)(mg.cam_y-cache->y);
-        mg_cache_scroll(mg.hazards,MG_HAZARD_BLOCKS,dx,dy);
-        mg_cache_scroll(mg.signs,MG_SIGNS,dx,dy);
-        cache->x=camera_x;cache->y=mg.cam_y;
-        return;
-    }
     const MGLevel *level = &mg_levels[mg.stage];
     MGPoolWant want[MG_HAZARD_BLOCKS];
     uint8_t i, k, used = 0, signs = 0;
@@ -1607,7 +1531,6 @@ static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
     }
     mg_pool_show(mg.hazards, mg_hazard_owner, MG_HAZARD_BLOCKS, want, used);
     if (signs < MG_SIGNS) ng_sprite_groups_hide_all(&mg.signs[signs], (uint8_t)(MG_SIGNS - signs));
-    mg_cache_mark(cache,camera_x,revision);
 }
 
 /*
@@ -1674,22 +1597,12 @@ static uint8_t NEOGEO_USER mg_landmark_draw(int16_t camera_x)
     return 0;
 }
 
-/* Sparse middle-distance islands, behind every actor. The landmark leases
- * these same slots only while the scenery islands are explicitly hidden. */
-
-
 static void NEOGEO_USER mg_draw_decor(int16_t camera_x)
 {
-    MGSceneryCache *cache=&mg_scenery_cache[2];
     MGPoolWant want[MG_DECOR_SLOTS];
     uint8_t i, used = 0;
 
-    if (mg_landmark_draw(camera_x)) { cache->valid=0;return; }
-    if (mg_cache_ready(cache,camera_x,0)) {
-        mg_cache_scroll(mg.decor,MG_DECOR_SLOTS,(int16_t)(camera_x-cache->x),(int16_t)(mg.cam_y-cache->y));
-        cache->x=camera_x;cache->y=mg.cam_y;
-        return;
-    }
+    if (mg_landmark_draw(camera_x)) return;
 
     for (i = 0; i < MG_DECOR_COUNT && used < MG_DECOR_SLOTS; i++) {
         const MGDecor *d = &mg_decor[mg.stage][i];
@@ -1704,7 +1617,6 @@ static void NEOGEO_USER mg_draw_decor(int16_t camera_x)
         used++;
     }
     mg_pool_show(mg.decor, mg_decor_owner, MG_DECOR_SLOTS, want, used);
-    mg_cache_mark(cache,camera_x,0);
 }
 
 /* Climbing vines run from the road to a canopy shelf; one sprite group each. */
@@ -1890,11 +1802,10 @@ static void NEOGEO_USER mg_collision_hook(void)
 
     if (!p) return;
 
-    if (mg.boss_active || mg.mini_active || mg.state == MG_BONUS || mg.vault) {
-        int16_t left = mg.boss_active ? mg.arena_left : mg.mini_active ? mg.mini_left : (mg.vault ? (int16_t)(level->width - NG_SCREEN_W) : 0);
-        int16_t right = (int16_t)(left + (mg.mini_active && mg.flying ? 180 : 300));
+    if (mg.boss_active || mg.state == MG_BONUS || mg.vault) {
+        int16_t left = mg.boss_active ? mg.arena_left : (mg.vault ? (int16_t)(level->width - NG_SCREEN_W) : 0);
         if (p->x < left + 20) { ng_char_set_pos(p, left + 20, p->y); p->vx_fp = 0; }
-        if (p->x > right) { ng_char_set_pos(p, right, p->y); p->vx_fp = 0; }
+        if (p->x > left + 300) { ng_char_set_pos(p, left + 300, p->y); p->vx_fp = 0; }
         if (mg.boss) {
             NGCharacter *b = mg.boss;
             if (b->x < left + 52) { ng_char_set_pos(b, left + 52, b->y); b->vx_fp = 0; }
@@ -1979,9 +1890,6 @@ static void NEOGEO_USER mg_camera_follow(void)
     if (mg.boss_active) {
         left = mg.arena_left;
         right = (int16_t)(mg.arena_left + NG_SCREEN_W - 1);
-    } else if (mg.mini_active) {
-        left = mg.mini_left;
-        right = (int16_t)(left + NG_SCREEN_W - 1);
     } else if (mg.vault) {
         left = (int16_t)(mg_levels[mg.stage].width - NG_SCREEN_W);
         right = (int16_t)(left + NG_SCREEN_W - 1);
@@ -2002,8 +1910,6 @@ static void NEOGEO_USER mg_camera_follow(void)
 
     if (mg.state == MG_TOUR) {
         mg.camera.x = mg.tour_x;            /* the healed valley's own slow pan */
-    } else if (mg.mini_active) {
-        mg.camera.x = mg.mini_left;
     } else if (mg.flying && !mg.boss_active) {
         /* On the Sky Road the sky carries the view along at a pixel a
          * frame (not through a hitstop or a pause), to the guardian. */
@@ -2170,11 +2076,8 @@ static void NEOGEO_USER mg_raster_step(void)
 }
 #endif
 
-
-
 static void NEOGEO_USER mg_before_draw_hook(void)
 {
-    MG_PROFILE_BEGIN;
     ng_sound_pump();        /* mid-frame: a second queued sound byte can go */
     mg_falls_step();
     mg_art_step();
@@ -2187,7 +2090,6 @@ static void NEOGEO_USER mg_before_draw_hook(void)
     ng_level_set_scroll(mg.camera.x, mg.cam_y);
     mg_scroll_scenery(mg.camera.x);
     mg_animate_scenery();
-    MG_PROFILE_PART(6);
     if (mg.state == MG_BONUS || mg.state == MG_ENDING) {
         mg_update_sparks(mg.camera.x);
         return;
@@ -2206,17 +2108,14 @@ static void NEOGEO_USER mg_before_draw_hook(void)
         return;
     }
     mg_draw_ledges(mg.camera.x);
-    MG_PROFILE_PART(7);
     mg_draw_hazards(mg.camera.x);
     mg_draw_vines(mg.camera.x);
     mg_draw_decor(mg.camera.x);
-    MG_PROFILE_PART(8);
     mg_draw_front(mg.camera.x);
     mg_draw_gate(mg.camera.x);
     mg_draw_cage(mg.camera.x);
     mg_update_sparks(mg.camera.x);
     mg_draw_light(mg.camera.x);
-    MG_PROFILE_PART(9);
 }
 
 /* ------------------------------------------------------------------ */
@@ -3190,7 +3089,6 @@ static void NEOGEO_USER mg_enemy_damage(MGEnemy *e, uint8_t damage)
 {
     if (!e->body || e->hurt || e->mood == MG_MOOD_DYING) return;
     e->hurt = 14;
-    mg_combo_add();
     playSFX(SOUND_SFX_3); /* squish / hit */
 
     if (damage >= e->body->hp) {
@@ -3219,8 +3117,9 @@ static void NEOGEO_USER mg_enemy_damage(MGEnemy *e, uint8_t damage)
             e->body = 0;
         }
         mg_impact(MG_IMPACT_KILL, 0, 0, SOUND_SFX_10, MG_HITSTOP_KILL);
-        mg.score += (uint16_t)(250u*mg_arcade_multiplier(mg.combo_n));
+        mg.score += 250u;
         mg.kills++;
+        mg_combo_add();
 
         /*
          * What the blight was holding: coins mostly, a heart or a rose now
@@ -3860,13 +3759,6 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     mg.wave_mask = 0;
     mg.tick = mg.boss_timer = mg.encounter_mask = mg.archer_mask = 0;
     mg.walk_distance = 0;
-    mg.arcade_phase = 0xFFu;
-    mg.mini_active = 0;
-    if (!retry) mg.mini_done = 0;
-    mg.moving_on = mg.gimmick_latch = 0;
-    mg.rank = 0;
-    for (i=0;i<3u;++i) mg_scenery_cache[i].valid=0;
-    mg_terrain_dynamic=0;mg_terrain_revision=0;
     mg.gait = mg.gait_clock = mg.gait_stop = 0;
     mg.gait_step = 0xFFu;
     mg.run_hold = 0;
@@ -4746,6 +4638,7 @@ void NEOGEO_USER maiya_title(void)
     ng_sprite_group_upload(&title_vis);
     ng_fix_puts(32, 26, "V5 TEST", PAL_GOLD);
 
+
     /* The title theme, looping until a credit or the demo takes over. */
     mg.music_on = 0;
     mg_music(SOUND_TRACK_G);
@@ -5188,7 +5081,7 @@ static int16_t NEOGEO_USER mg_pace(int16_t base)
  * on the harder settings. `base` in frames. */
 static uint16_t NEOGEO_USER mg_rate(uint16_t base)
 {
-    uint16_t cut = (uint16_t)(mg.stage * 4u + (mg.difficulty >= 2 ? 6u : 0u) + mg.rank*3u);
+    uint16_t cut = (uint16_t)(mg.stage * 4u + (mg.difficulty >= 2 ? 6u : 0u));
     return (uint16_t)(base - mg_div16((uint16_t)(base * cut), 100u));   /* (base * cut fits a word) */
 }
 
@@ -5637,10 +5530,10 @@ static void NEOGEO_USER mg_spawn(void)
 
     if (mg.boss_active) return;
 
-    /* Four ticks between visits to either list still leave more than a
-     * screen-edge reaction interval, even at dash speed. Spread streaming
-     * work without changing the fixed-rate physics or creature logic. */
-    if (!(mg.tick & 1u)) mg_spawn_scan(level, px, (uint8_t)((mg.tick >> 1) & 1u));
+    /* The road ahead is looked over every other frame, half of it a frame
+     * (mg_spawn_scan): nothing there needs the frame it comes into reach,
+     * and the scan is one of a frame's bigger costs. */
+    mg_spawn_scan(level, px, (uint8_t)(mg.tick & 1u));
 
     /* The guardian only shows itself once the gate is open. Walking into
      * the open gate carries her to its lair (mg_warp_begin); a valley with
@@ -5650,126 +5543,6 @@ static void NEOGEO_USER mg_spawn(void)
             if (px >= (int16_t)level->gate_x + 8) mg_warp_begin();
         } else if ((mg.flying ? mg.fly_x >= mg.arena_left : px > mg.arena_left + 32) && mg_boss_arrive()) {
             mg_boss_announce();
-        }
-    }
-}
-
-/* The five road beats are world positions, never CPU-time delays. A single
- * defended clearing leases the viewport; normal encounter streaming resumes
- * only after its authored guard is beaten. Collected progress survives retry. */
-static void NEOGEO_USER mg_lob(int16_t x,int16_t y,int16_t vx,int16_t vy,uint8_t kind);
-
-static void NEOGEO_USER mg_arcade_prepare(void)
-{
-    const MGArcadeProfile *a=&mg_arcade[mg.stage];
-    NGCharacter *p=mg.player;
-    uint8_t moving=(uint8_t)(a->platform<MG_PLATFORM_COUNT &&
-        (a->gimmick==MG_A_RAFT || a->gimmick==MG_A_SWAY ||
-         a->gimmick==MG_A_MINECART || a->gimmick==MG_A_LIFT) &&
-        !mg.boss_active && !mg.mini_active && !mg.vault);
-    MGPlatform previous=mg.moving_platform;
-    uint8_t was_on=mg.moving_on;
-    mg.moving_on=moving;
-    if (moving) {
-        const MGPlatform *source=&mg_levels[mg.stage].platforms[a->platform];
-        int8_t sway=mg_arcade_sway(mg.tick);
-        mg.moving_platform=*source;
-        if (a->gimmick==MG_A_LIFT) {
-            if (!mg.gimmick_latch && mg_abs((int16_t)(p->x-source->x))<100 && (mg.previous_joy&BUTTON_B)) {
-                mg.gimmick_latch=1;
-                mg_hint("THE LIFT IS AWAKE",PAL_GOLD,90);
-            }
-            if (mg.gimmick_latch) mg.moving_platform.y=(int16_t)(source->y+sway*4);
-        } else if (a->gimmick==MG_A_SWAY) mg.moving_platform.y=(int16_t)(source->y+sway);
-        else mg.moving_platform.x=(int16_t)(source->x+sway*(a->gimmick==MG_A_MINECART ? 4 : 2));
-        if (a->gimmick==MG_A_MINECART) mg.moving_platform.width=64;
-        if (was_on && mg.on_ledge && mg.ledge_index==a->platform &&
-            (mg.moving_platform.x!=previous.x || mg.moving_platform.y!=previous.y)) {
-            int32_t xf=p->x_fp,yf=p->y_fp;
-            int16_t dx=(int16_t)(mg.moving_platform.x-previous.x),dy=(int16_t)(mg.moving_platform.y-previous.y);
-            ng_char_set_pos(p,(int16_t)(p->x+mg.moving_platform.x-previous.x),
-                              (int16_t)(p->y+mg.moving_platform.y-previous.y));
-            p->x_fp=xf+(int32_t)dx*NG_FP_ONE;
-            p->y_fp=yf+(int32_t)dy*NG_FP_ONE;
-        }
-    }
-}
-
-static void NEOGEO_USER mg_arcade_step(void)
-{
-    static const char *const beats[5]={"1/5  INTRO RUSH","2/5  STAGE HAZARD",
-        "3/5  MID GUARDIAN","4/5  GAUNTLET","5/5  GUARDIAN ARENA"};
-    static const char *const tips[12]={"THE VINE BRIDGE WILL GIVE WAY","RIDE THE LOG. WATCH THE CURRENT",
-        "THE WRECKAGE SWAYS ABOVE THE COVE","FIRE RISES - KEEP YOUR FOOTING",
-        "RIDE THE PLATFORM. JUMP OFF","STRIKE B NEAR THE LIFT SWITCH",
-        "THE BELTS PULL IN OPPOSITE WAYS","THE TIDE CARRIES YOU - STEER CLEAR",
-        "ICE SLIDES. BRAKE BEFORE THE EDGE","SOFT SAND PULLS AT YOUR FEET",
-        "FLAK AHEAD. KEEP CHANGING HEIGHT","THE REACTOR FIRES IN A RHYTHM"};
-    const MGArcadeProfile *a=&mg_arcade[mg.stage];
-    NGCharacter *p=mg.player;
-    uint8_t phase;
-    if (!a->end[4] || mg.vault || mg.demo==MG_DEMO_MOVES) return;
-    mg.rank=mg.demo ? 0u : mg_arcade_rank(mg.combo_n,mg.lives,mg.attempt_hits);
-    phase=mg.boss_active ? MG_A_BOSS : mg_arcade_phase(a,p->x);
-    if (mg.mini_active) {
-        MGEnemy *e=&mg.enemies[mg.mini_slot];
-        phase=MG_A_MINIBOSS;
-        if (!e->body || e->mood==MG_MOOD_DYING) {
-            mg.mini_active=0; mg.mini_done=1;
-            mg.score+=2500u; mg.hud_dirty=1;
-            if (p->hp<MAX_HP) ++p->hp;
-            mg_hint("MID GUARDIAN CLEAR! PRESS ON",PAL_GOLD,118);
-            playSFX(SOUND_SFX_12);
-        } else {
-            NGCharacter *b=e->body;
-            /* The eagle's forward guns need a target ahead, as in the
-             * flagship arena. A guard drifting behind her cannot be hit. */
-            int16_t left=(int16_t)(mg.mini_left+(mg.flying ? 220 : 40));
-            if (b->x<left) ng_char_set_pos(b,left,b->y);
-            if (b->x>mg.mini_left+280) ng_char_set_pos(b,mg.mini_left+280,b->y);
-        }
-    } else if (!mg.mini_done && !mg.boss_active && !mg.demo &&
-               p->x>=a->miniboss_x && p->x<(int16_t)a->end[2]) {
-        MGEnemy *e;
-        uint8_t i;
-        mg_bonus_clear_creatures(1);
-        /* The validated clear floor is centre +/-144. Keep the player
-         * inside centre +/-140, independent of camera lead/backtracking. */
-        mg.mini_left=(int16_t)(a->miniboss_x-160);
-        e=mg_spawn_enemy(a->enemy,(int16_t)(mg.mini_left+252),mg.flying ? 120 : MG_GROUND_Y,0);
-        if (e) {
-            for (i=0;i<MG_ENEMIES && &mg.enemies[i]!=e;++i) {}
-            mg.mini_slot=i;mg.mini_active=1;phase=MG_A_MINIBOSS;
-            e->body->hp=e->body->max_hp=a->hp;
-            mg_hint(a->name,PAL_WARN,180);
-        }
-    }
-    if (phase!=mg.arcade_phase) {
-        mg.arcade_phase=phase;
-        ng_fix_clear_rect(3,ROW_COMBO,22,1,PAL_TEXT);
-        ng_fix_puts(3,ROW_COMBO,beats[phase],PAL_SKY);
-        if (phase==MG_A_HAZARD) mg_hint(tips[a->gimmick],PAL_GOLD,180);
-    }
-    if (phase==MG_A_HAZARD && !mg.mini_active && !mg.boss_active) {
-        uint8_t ground=(uint8_t)(p->y>=MG_GROUND_Y-2 && !mg.swimming);
-        if (a->gimmick==MG_A_CONVEYOR && ground && !(mg.tick&1u)) {
-            int16_t direction=(p->x&128) ? -1 : 1;
-            ng_char_set_pos(p,(int16_t)(p->x+direction),p->y);
-        } else if (a->gimmick==MG_A_QUICKSAND && ground) {
-            p->vx_fp=(p->vx_fp*3)/4;
-            if (!(mg.tick&15u)) mg_burst(p->x,(int16_t)(p->y-3),MG_T_DUST,1,-1);
-        } else if ((a->gimmick==MG_A_BRUSHFIRE || a->gimmick==MG_A_REACTOR || a->gimmick==MG_A_FLAK) &&
-                   (mg.tick&127u)==88u) {
-            mg_hint(a->gimmick==MG_A_FLAK ? "FLAK FLASH - CHANGE HEIGHT" :
-                    a->gimmick==MG_A_REACTOR ? "REACTOR VENT - KEEP CLEAR" : "BRUSHFIRE - JUMP THE EMBERS",PAL_WARN,36);
-        } else if ((a->gimmick==MG_A_BRUSHFIRE || a->gimmick==MG_A_REACTOR || a->gimmick==MG_A_FLAK) &&
-                   (mg.tick&127u)==112u) {
-            int16_t side=(mg.tick&128u) ? -1 : 1;
-            mg_lob((int16_t)(p->x+side*144),a->gimmick==MG_A_FLAK ? (int16_t)(p->y-24) : MG_GROUND_Y,
-                   (int16_t)(-side*2),a->gimmick==MG_A_FLAK ? -1 : -4,
-                   a->gimmick==MG_A_BRUSHFIRE ? MG_T_FIRE : MG_T_BOLT);
-        } else if (a->gimmick==MG_A_BUOYANCY && mg.swimming && !(mg.tick&7u)) {
-            ng_char_set_pos(p,(int16_t)(p->x+1),p->y);
         }
     }
 }
@@ -7311,31 +7084,13 @@ static void NEOGEO_USER mg_update_entities(void)
     uint8_t i, j;
     int16_t cam_x = mg.camera.x;
     NGCharacter *p = mg.player;
-    uint8_t friendly=0,grid_ready=0;
-    for (i=0;i<MG_SHOTS;++i) if (mg.shots[i].life && !mg.shots[i].hostile) ++friendly;
-    /* Building a grid costs more than testing one projectile against a tiny
-     * road cast. Use it only for the dense scenes it actually accelerates. */
-    if (friendly>=3u) {
-        uint8_t enemies=0;
-        for (i=0;i<MG_ENEMIES;++i) if (mg.enemies[i].body) ++enemies;
-        if (enemies>=4u) {
-            grid_ready=1;
-            ng_spatial_grid_reset(&mg_collision_grid,(int16_t)(cam_x-32),(int16_t)(mg.cam_y-64));
-            for (i=0;i<MG_ENEMIES;++i) {
-                NGCharacter *b=mg.enemies[i].body;
-                if (b) ng_spatial_grid_insert(&mg_collision_grid,i,b->x-24,b->y-32,b->x+24,b->y+32);
-            }
-        }
-    }
 
     /* Update shots */
     for (i = 0; i < MG_SHOTS; i++) {
         MGShot *s = &mg.shots[i];
         if (!s->life) {
-            if (s->sprite.visible) {
-                ng_sprite_group_set_visible(&s->sprite, 0);
-                ng_sprite_group_flush(&s->sprite);
-            }
+            ng_sprite_group_set_visible(&s->sprite, 0);
+            ng_sprite_group_flush(&s->sprite);
             continue;
         }
         /* The wind leaf is always being pulled home: it slows, turns, and
@@ -7392,13 +7147,9 @@ static void NEOGEO_USER mg_update_entities(void)
              * keeps a passing shot from striking the same creature twice. */
             uint8_t through = (uint8_t)(s->mode != MG_SHOT_PLAIN);
             uint8_t power = (uint8_t)((mg.might ? 2 : 1) + (s->mode == MG_SHOT_PIERCE ? 1 : 0));
-            uint16_t candidates=0xFFFFu;
-            if (grid_ready && s->x>=mg_collision_grid.x && s->x<mg_collision_grid.x+384 &&
-                s->y>=mg_collision_grid.y && s->y<mg_collision_grid.y+320)
-                candidates=ng_spatial_grid_query(&mg_collision_grid,s->x,s->y,s->x+1,s->y+1);
             for (j = 0; j < MG_ENEMIES; j++) {
                 MGEnemy *e = &mg.enemies[j];
-                if ((candidates & (1u<<j)) && e->body && e->mood != MG_MOOD_DYING &&
+                if (e->body && e->mood != MG_MOOD_DYING &&
                     mg_abs((int16_t)(e->body->x - s->x)) < 24 &&
                     mg_abs((int16_t)(e->body->y - s->y)) < 32) {
                     mg_enemy_damage(e, power);
@@ -7416,15 +7167,10 @@ static void NEOGEO_USER mg_update_entities(void)
                     mg_burst(s->x, s->y, MG_T_SPARK, 1, -1);
                     s->life = 0;
                 }
-            } else if (s->life && mg.boss) {
-                uint8_t contact=mg_arcade_boss_contact(s->x,s->y,mg.boss->x,mg.boss->y,(uint8_t)mg.boss->data0);
-                if (contact==2u || (contact && s->mode==MG_SHOT_PIERCE)) {
-                    mg_boss_damage((uint8_t)(s->mode==MG_SHOT_PIERCE ? 2 : 1));
-                    if (!through) s->life=0;
-                } else if (contact) {
-                    mg_burst(s->x,s->y,MG_T_SPARK,1,-1);
-                    s->life=0;
-                }
+            } else if (s->life && mg.boss && mg_abs((int16_t)(mg.boss->x - s->x)) < 40 &&
+                mg_abs((int16_t)(mg.boss->y - s->y)) < 48) {
+                mg_boss_damage((uint8_t)(s->mode == MG_SHOT_PIERCE ? 2 : 1));
+                if (!through) s->life = 0;
             }
         } else {
             if (mg_abs((int16_t)(p->x - s->x)) < 20 &&
@@ -7448,10 +7194,8 @@ static void NEOGEO_USER mg_update_entities(void)
     for (i = 0; i < MG_ITEMS; i++) {
         MGItem *it = &mg.items[i];
         if (!it->life) {
-            if (it->sprite.visible) {
-                ng_sprite_group_set_visible(&it->sprite, 0);
-                ng_sprite_group_flush(&it->sprite);
-            }
+            ng_sprite_group_set_visible(&it->sprite, 0);
+            ng_sprite_group_flush(&it->sprite);
             continue;
         }
         /* Uncollected map items may be streamed again on backtracking.
@@ -8130,19 +7874,16 @@ static void NEOGEO_USER mg_draw_hp_bar(void)
 static void NEOGEO_USER mg_draw_boss_bar(void)
 {
     static uint8_t shown = 0;
-    NGCharacter *boss=mg.mini_active ? mg.enemies[mg.mini_slot].body : mg.boss;
-    uint8_t kind=mg.mini_active ? 2u : 1u;
-    if ((!mg.boss_active && !mg.mini_active) || !boss || !boss->max_hp) {
+    if (!mg.boss_active || !mg.boss || !mg.boss->max_hp) {
         if (shown) {
             ng_fix_clear_rect(0, ROW_POWER, 40, 1, PAL_TEXT);
             shown = 0;
         }
         return;
     }
-    if (shown!=kind) {
-        ng_fix_clear_rect(MG_BOSS_BAR_LABEL_COL,ROW_POWER,5,1,PAL_TEXT);
-        ng_fix_puts(MG_BOSS_BAR_LABEL_COL, ROW_POWER,kind==2u ? "GUARD" : "BOSS", PAL_WARN);
-        shown = kind;
+    if (!shown) {
+        ng_fix_puts(MG_BOSS_BAR_LABEL_COL, ROW_POWER, "BOSS", PAL_WARN);
+        shown = 1;
     }
     mg_draw_bar(MG_BOSS_BAR_COL, ROW_POWER, MG_BOSS_BAR_CELLS, mg.boss_px,
                 mg_bar_tier(mg.boss_px, MG_BOSS_BAR_PX, PAL_BOSS_HP_HI, PAL_BOSS_HP_MID, PAL_BOSS_HP_LO));
@@ -8167,20 +7908,19 @@ static uint8_t NEOGEO_USER mg_bar_toward(uint8_t shown, uint8_t target)
 
 static void NEOGEO_USER mg_bars_step(void)
 {
-    NGCharacter *boss=mg.mini_active ? mg.enemies[mg.mini_slot].body : mg.boss;
     uint8_t hp = mg.player ? mg.player->hp : 0;
     uint8_t target = (uint8_t)((uint16_t)((uint16_t)hp * MG_HP_BAR_PX) / (uint16_t)MAX_HP);
     if (mg.hp_px != target) {
         mg.hp_px = mg_bar_toward(mg.hp_px, target);
         mg_draw_hp_bar();
     }
-    if ((mg.boss_active || mg.mini_active) && boss && boss->max_hp) {
-        target = (uint8_t)((uint16_t)((uint16_t)boss->hp * MG_BOSS_BAR_PX) / (uint16_t)boss->max_hp);
+    if (mg.boss_active && mg.boss && mg.boss->max_hp) {
+        target = (uint8_t)((uint16_t)((uint16_t)mg.boss->hp * MG_BOSS_BAR_PX) / (uint16_t)mg.boss->max_hp);
         if (mg.boss_px != target) {
             mg.boss_px = mg_bar_toward(mg.boss_px, target);
             mg_draw_boss_bar();
         }
-    } else mg_draw_boss_bar();
+    }
 }
 
 /* The clock under her HP bar; it turns to the warning ink once she's
@@ -8280,17 +8020,17 @@ static void NEOGEO_USER mg_draw_stage_time(void)
 
 /* The clear: the final time under the victory lines, and the best. */
 /*
- * The combo: each accepted hit within two seconds of the last adds one,
- * shown at the right under the HUD; when the chain breaks it
+ * The combo: every creature beaten within a second and two thirds of the
+ * last adds one, shown at the right under the HUD; when the chain breaks it
  * pays out n x n x 50 (a chain of ten, 5000) and the total stays up a
  * moment.
  */
-enum { MG_COMBO_TIME = 118, MG_COMBO_SHOW = 90, MG_COMBO_COL = 26 };
+enum { MG_COMBO_TIME = 100, MG_COMBO_SHOW = 90, MG_COMBO_COL = 26 };
 
 static void NEOGEO_USER mg_combo_add(void)
 {
     if (mg.state != MG_PLAY || mg.demo == MG_DEMO_MOVES) return;
-    if (mg.combo_t) { if (mg.combo_n < 10u) mg.combo_n++; }
+    if (mg.combo_t) { if (mg.combo_n < 99u) mg.combo_n++; }
     else mg.combo_n = 1;
     mg.combo_t = MG_COMBO_TIME;
     if (mg.combo_n >= 2u) {
@@ -8580,16 +8320,13 @@ static void NEOGEO_USER mg_stage_mechanics(void)
     uint8_t mech = mg_mech(), i;
     NGCharacter *p = mg.player;
     const MGLevel *lv = &mg_levels[mg.stage < MG_LEVEL_COUNT ? mg.stage : 0];
-    mg_terrain_dynamic=0;
 
     if (lv->rotten && !mg.boss_active && mg.state == MG_PLAY) {
         for (i = 0; i < MG_PLATFORM_COUNT; i++) {
             const MGPlatform *pl = &lv->platforms[i];
             if (!((lv->rotten >> i) & 1u)) continue;
             if (mg.ledge_gone[i]) {
-                if (mg.ledge_gone[i]>MG_CRUMBLE_BACK-40) mg_terrain_dynamic=1;
                 if (--mg.ledge_gone[i] == 0) {
-                    ++mg_terrain_revision;
                     /* It grows back: a puff of leaves where it stands again. */
                     mg.ledge_stand[i] = 0;
                     mg_burst((int16_t)(pl->x + pl->width / 2), (int16_t)(pl->y + 8), MG_T_LEAF, 3, -1);
@@ -8600,7 +8337,6 @@ static void NEOGEO_USER mg_stage_mechanics(void)
                 if (++mg.ledge_stand[i] >= MG_CRUMBLE_AFTER) {
                     /* It gives way and drops out from under her. */
                     mg.ledge_gone[i] = MG_CRUMBLE_BACK;
-                    ++mg_terrain_revision;
                     mg.on_ledge = 0;
                     mg_burst((int16_t)(pl->x + pl->width / 2), (int16_t)(pl->y + 10), MG_T_DUST, 3, 1);
                     playSFX(SOUND_SFX_10);
@@ -8608,7 +8344,6 @@ static void NEOGEO_USER mg_stage_mechanics(void)
                     mg_burst((int16_t)(pl->x + 8 + ng_rand_range((uint16_t)(pl->width - 16))), (int16_t)(pl->y + 18),
                              MG_T_DUST, 1, 2);
                 }
-                if (mg.ledge_stand[i]>12) mg_terrain_dynamic=1;
             } else if (mg.ledge_stand[i]) {
                 mg.ledge_stand[i]--;
             }
@@ -10134,23 +9869,16 @@ void NEOGEO_USER maiya_frame(void)
             mg_world_step();
             return;
         }
-        MG_PROFILE_BEGIN;
-        mg_arcade_prepare();
-        mg_arcade_step();
         mg_controls();
-        MG_PROFILE_PART(0);
-        if (!mg.vault && !mg.mini_active && mg.demo != MG_DEMO_MOVES) mg_spawn();
+        if (!mg.vault && mg.demo != MG_DEMO_MOVES) mg_spawn();   /* the road waits while she's in the vault */
         mg_animate_player();
-        MG_PROFILE_PART(1);
         mg_world_step();
-        MG_PROFILE_PART(2);
         mg_update_entities();
-        MG_PROFILE_PART(3);
         if (mg.demo != MG_DEMO_MOVES) {   /* the moves demo: her moves alone */
             mg_hideout_step();
             mg_hazard_check();
             mg_hazard_warn_check();
-            if (!mg.mini_active) mg_npc_check();
+            mg_npc_check();
             mg_rescue_check();
         }
         mg_freed_step();
@@ -10159,7 +9887,6 @@ void NEOGEO_USER maiya_frame(void)
         mg_combo_tick();
         mg_bars_step();
         mg_stage_mechanics();
-        MG_PROFILE_PART(4);
         /* Fell into a pit: that's the life, however much health is left. */
         if (mg.player->y > MG_GROUND_Y + 20 && mg.state == MG_PLAY) {
             mg.hurt = 0; mg.veil = 0; mg.dash = 0; mg.super_surge = 0;

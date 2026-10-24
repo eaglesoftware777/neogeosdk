@@ -72,17 +72,5 @@
     {"x": 6500, "enemy": "gnat", "form": "swarm", "count": 6, "y": 90},
     {"x": 6800, "enemy": "rhino", "form": "charge", "count": 3, "y": 120},
     {"x": 7050, "enemy": "dragonfly", "form": "line", "count": 4, "y": 160}
-  ],
-  "arcade": {
-    "phases": [
-      {"name": "intro", "start": 0, "end": 1472},
-      {"name": "hazard", "start": 1472, "end": 3008},
-      {"name": "miniboss", "start": 3008, "end": 4704},
-      {"name": "gauntlet", "start": 4704, "end": 7360},
-      {"name": "boss", "start": 7360, "end": 7680}
-    ],
-    "miniboss": {"x": 3856, "enemy": "gunship", "hp": 18, "name": "FALCON INTERCEPTOR"},
-    "gimmick": "flak",
-    "platform": 32
-  }
+  ]
 }

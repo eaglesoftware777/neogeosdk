@@ -11,6 +11,7 @@ local log = assert(io.open(output .. '/telemetry.jsonl', 'w'))
 local frames = assert(io.open(output .. '/frames.csv', 'w'))
 frames:write('time,tick,state,stage,x,y,boss_x,ship_z,scale_x,scale_y,arena_left\n')
 local next_capture, placed, play_frame, continue_frame = 0, false, 0, 0
+local placed_frame = 0
 local pit_step, pit_wait = 0, 0
 local pit_after, pit_after_frame = false, 0
 local function u8(name) return memory:read_u8(a[name]) end
@@ -64,7 +65,8 @@ emu.register_frame_done(function()
         play_frame = play_frame + 1
         if not placed and u8('state') == 1 then
             placed = true
-            if scenario == 'climb' then position(p, 708, 192) end
+            placed_frame = play_frame
+            if scenario == 'climb' then position(p, a.qa_vine_x, a.qa_vine_bottom) end
             if scenario == 'boss' then
                 position(p, 3560, 192)
                 memory:write_u16(a.camera_x, 3400)
@@ -186,9 +188,9 @@ emu.register_frame_done(function()
             input('P1 A', (scenario == 'walk' or scenario == 'bonus') and play_frame % 180 < 6)
         end
         input('P1 Left', scenario == 'boss' or (scenario == 'bonus' and play_frame % 240 >= 120))
-        input('P1 Up', (scenario == 'climb' and placed and play_frame < 210) or
+        input('P1 Up', (scenario == 'climb' and placed and play_frame - placed_frame < 210) or
               (scenario == 'flight' and u8('stage') == 10 and play_frame % 240 < 120))
-        input('P1 Down', (scenario == 'climb' and play_frame >= 240 and play_frame < 390) or
+        input('P1 Down', (scenario == 'climb' and placed and play_frame - placed_frame >= 240 and play_frame - placed_frame < 390) or
               (scenario == 'flight' and u8('stage') == 10 and play_frame % 240 >= 120))
         input('P1 B', ((scenario == 'walk' or scenario == 'bonus') and play_frame % 24 < 6) or
               (scenario == 'flight' and u8('stage') == 10 and play_frame % 16 < 4) or
@@ -255,7 +257,7 @@ emu.register_frame_done(function()
             u8('start_count'), u8('has_key'), u8('gate_unlocked'), u8('demo'), memory:read_u16(a.pick_mask),
             key_count, duplicates, b ~= 0 and memory:read_u16(b + a.char_data0) or -1))
         log:flush()
-        next_capture = t + 0.5
+        next_capture = t + (scenario == 'climb' and 0.1 or 0.5)
     end
 end)
 emu.register_stop(function() log:close(); frames:close() end)
