@@ -413,17 +413,58 @@ static void NEOGEO_USER pick_up(NGBeatEmUp *b, uint8_t pi)
     emit(b, NGB_EV_PICKUP, NGB_PLAYER, pi, 0, 0);
 }
 
+static void NEOGEO_USER mount(NGBeatEmUp *b, uint8_t v)
+{
+    NGBFighter *f = &b->f[NGB_PLAYER];
+    NGBProp *p = &b->prop[v];
+    f->state = NGB_ST_RIDE; f->vehicle = v; p->state = 3; p->owner = NGB_PLAYER; p->speed = 0;
+    f->x = p->x; f->y = p->y;
+    emit(b, NGB_EV_MOUNT, NGB_PLAYER, v, 0, 0);
+}
+
+/* NGB_SF_WALK_ON: off the vehicle with a jump that carries the player clear
+ * of it (a running jump's reach, the way held or faced), so that walking on
+ * doesn't put them straight back on. */
+static void NEOGEO_USER jump_off(NGBeatEmUp *b)
+{
+    NGBFighter *f = &b->f[NGB_PLAYER];
+    const NGBFighterDef *d = f->def;
+    if (b->in_dirs & NGB_IN_LEFT) f->facing = 1;
+    else if (b->in_dirs & NGB_IN_RIGHT) f->facing = 0;
+    dismount(b, NGB_PLAYER, 0);
+    f->state = NGB_ST_JUMP; f->air_done = 0; f->timer = 0;
+    f->vz = (int32_t)(d->jump ? d->jump : 64u) << 4;
+    f->vx = flip(f->facing, (int32_t)d->speed << 5);
+    f->vy = 0;
+    emit(b, NGB_EV_JUMP, NGB_PLAYER, 0, 0, 0);
+}
+
 /* NGB_SF_AUTO_PICKUP: what lies under the player's feet is taken without a
  * button. Food and points on any grounded step (a chain of punches included);
  * a weapon only when walking or standing with empty hands, so one that was
  * just dropped or thrown isn't swapped for another by accident. */
 #define WALK_PICK_X  (18 << 8)
 #define WALK_PICK_Y  (10 << 8)
-static void NEOGEO_USER auto_pickup(NGBeatEmUp *b)
+static void NEOGEO_USER walk_over(NGBeatEmUp *b)
 {
     NGBFighter *f = &b->f[NGB_PLAYER];
     uint8_t i, hands;
-    if (!(b->stage->flags & NGB_SF_AUTO_PICKUP) || !f->alive || f->z > 0) return;
+    if (!f->alive || f->z > 0) return;
+    /* NGB_SF_WALK_ON: walking (or running) onto a vehicle that stands still
+     * rides it. Only a step towards it counts, so stepping off one that was
+     * just left (or landed on) doesn't mount it again. */
+    if ((b->stage->flags & NGB_SF_WALK_ON) && (f->state == NGB_ST_WALK || f->state == NGB_ST_RUN) && f->vehicle == NGB_NONE)
+        for (i = 0; i < NGB_MAX_PROPS; i++) {
+            NGBProp *p = &b->prop[i];
+            int32_t dx = p->x - f->x, dy = p->y - f->y;
+            if (p->kind != NGB_PROP_VEHICLE || p->state != 0) continue;
+            if (iabs(dx) > WALK_PICK_X || iabs(dy) > WALK_PICK_Y) continue;
+            if (!((f->vx > 0 && dx > 0) || (f->vx < 0 && dx < 0) || (f->vy > 0 && dy > 0) || (f->vy < 0 && dy < 0))) continue;
+            drop_weapon(b, NGB_PLAYER);
+            mount(b, i);
+            return;
+        }
+    if (!(b->stage->flags & NGB_SF_AUTO_PICKUP)) return;
     if (f->state != NGB_ST_IDLE && f->state != NGB_ST_WALK && f->state != NGB_ST_RUN && f->state != NGB_ST_ATTACK) return;
     hands = (uint8_t)(f->state != NGB_ST_ATTACK && f->weapon == NGB_NONE && f->vehicle == NGB_NONE);
     for (i = 0; i < NGB_MAX_PROPS; i++) {
@@ -500,13 +541,7 @@ static void NEOGEO_USER player_ground(NGBeatEmUp *b)
     }
     if (pr & NGB_BTN_C) {
         uint8_t v = near_prop(b, NGB_PLAYER, 1), p, t;
-        if (v != NGB_NONE && f->weapon == NGB_NONE) {
-            NGBProp *pp = &b->prop[v];
-            f->state = NGB_ST_RIDE; f->vehicle = v; pp->state = 3; pp->owner = NGB_PLAYER; pp->speed = 0;
-            f->x = pp->x; f->y = pp->y;
-            emit(b, NGB_EV_MOUNT, NGB_PLAYER, v, 0, 0);
-            return;
-        }
+        if (v != NGB_NONE && f->weapon == NGB_NONE) { mount(b, v); return; }
         p = near_prop(b, NGB_PLAYER, 0);
         if (p != NGB_NONE) { pick_up(b, p); return; }
         if (f->weapon != NGB_NONE) { throw_weapon(b); return; }
@@ -538,6 +573,7 @@ static void NEOGEO_USER player_ride(NGBeatEmUp *b)
     const NGBStage *s = b->stage;
     int16_t max = (int16_t)(s->vehicle_max ? s->vehicle_max : 96u), acc = (int16_t)(s->vehicle_accel ? s->vehicle_accel : 3u);
     uint8_t d = b->in_dirs, i;
+    if ((s->flags & NGB_SF_WALK_ON) && (b->in_pressed & (NGB_BTN_B | NGB_BTN_C)) && !airborne(f)) { jump_off(b); return; }
     if (b->in_pressed & NGB_BTN_C) { dismount(b, NGB_PLAYER, 0); return; }
     if (d & NGB_IN_RIGHT) { p->speed = (int16_t)(p->speed + acc > max ? max : p->speed + acc); f->facing = 0; }
     else if (d & NGB_IN_LEFT) { p->speed = (int16_t)(p->speed - acc < -max ? -max : p->speed - acc); f->facing = 1; }
@@ -1181,7 +1217,7 @@ void NEOGEO_USER ng_beatemup_update(NGBeatEmUp *b)
         if (f->state == NGB_ST_ATTACK) run_move(b, i);
         physics(b, i);
         fighter_states(b, i);
-        if (i == NGB_PLAYER) auto_pickup(b);
+        if (i == NGB_PLAYER) walk_over(b);
         else if (f->def && f->def->think && f->alive) f->def->think(b, i);
     }
     update_props(b);

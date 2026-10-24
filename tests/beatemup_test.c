@@ -624,6 +624,52 @@ static void test_walk_over_pickups(void)
     printf("walking over pick-ups: OK\n");
 }
 
+/* NGB_SF_WALK_ON: walk onto the vehicle to ride it, B jumps off clear of it */
+static void test_walk_on_vehicle(void)
+{
+    static NGBStage walk;
+    int i;
+    int32_t landed;
+    memcpy(&walk, &EMPTY, sizeof(walk));
+    walk.flags = NGB_SF_WALK_ON | NGB_SF_AUTO_PICKUP;
+    assert(ng_beatemup_init(&B, &walk, &PLAYER, 3, 9) == NGB_OK);
+    memset(ev, 0, sizeof(ev));
+    assert(ng_beatemup_add_prop(&B, NGB_PROP_VEHICLE, 200, 176, 0, 0) == 0);
+    assert(ng_beatemup_add_prop(&B, NGB_PROP_WEAPON, 120, 172, 0, 0) == 1);
+    B.f[0].x = 100 << 8; B.f[0].y = 172 << 8;
+    /* the pipe on the way is taken, then dropped to get on */
+    for (i = 0; i < 120 && B.f[0].state != NGB_ST_RIDE; i++) step(&B, NGB_IN_RIGHT, 0, 1);
+    assert(B.f[0].state == NGB_ST_RIDE && ev[NGB_EV_MOUNT] == 1 && ev[NGB_EV_PICKUP] == 1);
+    assert(B.f[0].weapon == NGB_NONE && B.prop[1].state == 0);
+    /* B: off with a jump that lands clear of it, no hop */
+    step(&B, NGB_IN_RIGHT, 0, 20);
+    tap(&B, 0, NGB_BTN_B);
+    assert(B.f[0].state == NGB_ST_JUMP && B.f[0].vehicle == NGB_NONE && B.prop[0].state == 0);
+    for (i = 0; i < 60 && B.f[0].state == NGB_ST_JUMP; i++) step(&B, 0, 0, 1);
+    landed = B.f[0].x - B.prop[0].x;
+    assert(landed > (18 << 8));
+    /* walking on, away from it: stays off; back towards it: on again */
+    step(&B, NGB_IN_RIGHT, 0, 20);
+    assert(B.f[0].state != NGB_ST_RIDE && ev[NGB_EV_MOUNT] == 1);
+    for (i = 0; i < 120 && B.f[0].state != NGB_ST_RIDE; i++) step(&B, NGB_IN_LEFT, 0, 1);
+    assert(ev[NGB_EV_MOUNT] == 2);
+    /* C gets off the same way */
+    tap(&B, 0, NGB_BTN_C);
+    assert(B.f[0].state == NGB_ST_JUMP && B.f[0].vehicle == NGB_NONE);
+    /* standing still over it never mounts it */
+    for (i = 0; i < 60 && B.f[0].state == NGB_ST_JUMP; i++) step(&B, 0, 0, 1);
+    B.f[0].x = B.prop[0].x; B.f[0].y = B.prop[0].y;
+    step(&B, 0, 0, 30);
+    assert(B.f[0].state == NGB_ST_IDLE && ev[NGB_EV_MOUNT] == 2);
+    /* without the flag: walking over it leaves it */
+    fresh();
+    assert(ng_beatemup_add_prop(&B, NGB_PROP_VEHICLE, 120, 172, 0, 0) == 0);
+    B.f[0].y = 172 << 8;
+    step(&B, NGB_IN_RIGHT, 0, 60);
+    assert(ev[NGB_EV_MOUNT] == 0 && B.f[0].state == NGB_ST_WALK);
+    printf("walking onto the vehicle, jumping off it: OK\n");
+}
+
 int main(void)
 {
     setup();
@@ -634,6 +680,7 @@ int main(void)
     test_lives();
     test_vehicle_and_props();
     test_walk_over_pickups();
+    test_walk_on_vehicle();
     test_waves_and_boss();
     test_order_and_determinism();
     test_ranged();
