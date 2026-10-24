@@ -1,4 +1,5 @@
 import json
+import hashlib
 from pathlib import Path
 import tempfile
 import unittest
@@ -47,6 +48,11 @@ class ISOTests(unittest.TestCase):
             self.assertNotIn(b';1',raw[root:root+size])
             self.assertTrue(result['image_audit']['passed'])
             self.assertFalse(result['boot_verified'])
+            checks=dict(line.split('  ',1)[::-1] for line in (folder/'out/checksums.sha256').read_text().splitlines())
+            expected={p.name for p in (folder/'out').iterdir() if p.is_file() and p.name!='checksums.sha256'}
+            self.assertEqual(set(checks),expected)
+            for name,digest in checks.items():
+                self.assertEqual(hashlib.sha256((folder/'out'/name).read_bytes()).hexdigest(),digest)
             self.assertEqual(audit_cue(folder/'out/hello.cue')['files'],result['image_audit']['files'])
             with self.assertRaises(ValueError):build(source,folder/'out')
 

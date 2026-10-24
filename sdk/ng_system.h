@@ -273,6 +273,10 @@ static inline void NEOGEO_USER ng_copy_bytes(volatile uint8_t *d, const volatile
 
 static inline uint8_t NEOGEO_USER ng_card_call(uint8_t command, void *data, uint16_t size)
 {
+#ifdef NG_PLATFORM_CD
+    /* Early CD firmware may omit SYS_CARD. Never jump into an absent service. */
+    if (*(const volatile uint16_t *)0xC00468u != 0x4EF9u) return NG_CARD_NONE;
+#endif
     *(volatile uint8_t *)BIOS_CRDF = command;
     *(volatile uint32_t *)BIOS_CRDPTR = (uint32_t)(uintptr_t)data;
     *(volatile uint16_t *)BIOS_CRDSIZE = size;

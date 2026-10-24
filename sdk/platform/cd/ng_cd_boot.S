@@ -15,8 +15,14 @@
     .ascii "NEO-GEO"
     .byte 2
     .word NG_CD_GAME_ID
-    .long 0x00080000,0x00100000
+    .long 0x00080000
+#ifdef NG_CD_SAVE_BYTES
+    .long 0x00100400
+    .word NG_CD_SAVE_BYTES
+#else
+    .long 0x00100000
     .word 0
+#endif
     .byte 2,0
     .long 0,0,0
     .global ng_cd_user_entry
@@ -86,6 +92,12 @@ ng_cd_irq_entry:
     beq.s 7f
     jsr maiya_video_vblank
 7:
+#endif
+#ifdef NG_CD_MAIYALUNA
+    btst #7,0x10FD80
+    beq.s 8f
+    jsr ml_vblank
+8:
 #endif
     jsr 0xC0044A
     jsr ng_cd_irq
