@@ -36,7 +36,9 @@ def main():
         args.seconds = 110 if args.scenario == "bonus" else 50
     output = (args.output or GAME / "build" / args.scenario).resolve()
     output.mkdir(parents=True, exist_ok=True)
-    gdb = next(ROOT.parent.glob("x-tools-v*/m68k-unknown-elf/bin/m68k-unknown-elf-gdb"))
+    gdb = next(ROOT.parent / name / "m68k-unknown-elf/bin/m68k-unknown-elf-gdb"
+               for name in ("x-tools-v3", "x-tools-v2", "x-tools")
+               if (ROOT.parent / name / "m68k-unknown-elf/bin/m68k-unknown-elf-gdb").is_file())
     fields = {name: "&mg." + name for name in (
         "stage", "state", "player", "boss", "boss_active", "state_timer",
         "gate_unlocked", "climbing", "demo", "shake_x", "lives", "continues",
@@ -56,6 +58,15 @@ def main():
     for name, expr in fields.items():
         command += ["-ex", f'printf "{name}=%lu\\n", (unsigned long){expr}']
     layout = dict(line.split("=", 1) for line in subprocess.check_output(command, text=True).splitlines() if "=" in line)
+    if args.scenario == 'pickups':
+        level = json.loads((GAME / 'levels/01_emerald_forest.json').read_text())
+        picks = level['pickups']
+        road = next(i for i, p in enumerate(picks) if p['kind'] == 'spring' and p['y'] >= 160)
+        shelf = next(i for i, p in enumerate(picks) if p['x'] > level['arcade']['phases'][2]['end'] and p['y'] < 100)
+        for name, index in (('road', road), ('shelf', shelf)):
+            layout['qa_' + name + '_x'] = picks[index]['x'] + 16
+            layout['qa_' + name + '_y'] = picks[index]['y'] + 40
+            layout['qa_' + name + '_mask'] = 1 << index
     (output / "layout.lua").write_text("return {" + ",".join(f"{key}={int(value)}" for key, value in layout.items()) + "}\n")
     env = dict(os.environ, SDL_VIDEODRIVER="dummy", SDL_AUDIODRIVER="dummy", DISPLAY="",
                MG_CAPTURE_DIR=str(output), MG_SCENARIO=args.scenario, MG_PLATFORM=args.platform)
@@ -121,8 +132,8 @@ def main():
         assert factory and any(s["boss_active"] for s in factory), "Factory guardian did not spawn"
         assert any(s["boss_kind"] == 5 for s in factory), "Second factory guardian did not spawn"
     elif args.scenario == "pickups":
-        assert any(s["pick_mask"] & 1 for s in active), "Later road pickup never became collectible"
-        assert any(s["pick_mask"] & 64 for s in active), "Uncollected shelf pickup was lost on backtracking"
+        assert any(s["pick_mask"] & int(layout['qa_road_mask']) for s in active), "Later road pickup never became collectible"
+        assert any(s["pick_mask"] & int(layout['qa_shelf_mask']) for s in active), "Uncollected shelf pickup was lost on backtracking"
         assert all(s["key_count"] == 1 for s in active if s["state"] == 1), "Mandatory key was discarded or duplicated"
         assert all(s["duplicate_items"] == 0 for s in active), "Map pickup spawned twice"
     elif args.scenario == "pit":

@@ -49,12 +49,12 @@
     {"x": 3616, "y": 128, "w": 96},
     {"x": 3904, "y": 144, "w": 48},
     {"x": 4000, "y": 112, "w": 32},
-    {"x": 4080, "y": 144, "w": 48},
-    {"x": 4272, "y": 136, "w": 64},
+    {"x": 4096, "y": 144, "w": 48},
+    {"x": 4256, "y": 136, "w": 64},
     {"x": 4464, "y": 144, "w": 48},
-    {"x": 4560, "y": 104, "w": 80},
-    {"x": 4832, "y": 128, "w": 96},
-    {"x": 5008, "y": 144, "w": 64},
+    {"x": 4544, "y": 104, "w": 64},
+    {"x": 4848, "y": 128, "w": 80},
+    {"x": 4992, "y": 144, "w": 64},
     {"x": 5136, "y": 144, "w": 64},
     {"x": 5264, "y": 136, "w": 48},
     {"x": 5376, "y": 136, "w": 32}
@@ -76,8 +76,6 @@
     {"x": 2720, "enemy": "drone"},
     {"x": 2908, "enemy": "toxiccrab"},
     {"x": 3096, "enemy": "jellyfish"},
-    {"x": 3284, "enemy": "slime"},
-    {"x": 3472, "enemy": "toxiccrab"},
     {"x": 3600, "enemy": "toxiccrab"},
     {"x": 3904, "enemy": "binocto"},
     {"x": 4010, "enemy": "toxiccrab"},
@@ -109,7 +107,6 @@
     {"x": 2160, "w": 48, "type": "sludge"},
     {"x": 2496, "w": 48, "type": "spikes"},
     {"x": 2964, "w": 64, "type": "pit"},
-    {"x": 3380, "w": 48, "type": "toxic"},
     {"x": 3730, "w": 48, "type": "spikes"},
     {"x": 4318, "w": 64, "type": "pit"},
     {"x": 5104, "w": 48, "type": "spikes"},
@@ -169,5 +166,17 @@
     {"x": 396, "who": "elder", "line": "DOWN SINKS YOU THROUGH THE CORAL"},
     {"x": 1764, "who": "spirit", "line": "CRABS CHARGE WHEN YOU COME CLOSE"},
     {"x": 3004, "who": "maiden", "line": "THE KEY GLEAMS ON THE HIGH CORAL"}
-  ]
+  ],
+  "arcade": {
+    "phases": [
+      {"name": "intro", "start": 0, "end": 1264},
+      {"name": "hazard", "start": 1264, "end": 2592},
+      {"name": "miniboss", "start": 2592, "end": 4048},
+      {"name": "gauntlet", "start": 4048, "end": 6328},
+      {"name": "boss", "start": 6328, "end": 6912}
+    ],
+    "miniboss": {"x": 3312, "enemy": "jellyfish", "hp": 15, "name": "ABYSS ANGLER"},
+    "gimmick": "buoyancy",
+    "platform": 6
+  }
 }

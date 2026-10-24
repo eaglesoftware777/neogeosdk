@@ -15,7 +15,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--fix-only", action="store_true")
     args = parser.parse_args()
-    subprocess.run([sys.executable, str(ROOT / "tools/check_hero_frames.py")], check=True)
+    subprocess.run([sys.executable, str(ROOT / "tools/check_hero_frames.py"), "--no-export"], check=True)
     subprocess.run([sys.executable, str(GAME / "tools/check_hands.py")], check=True)
     subprocess.run([sys.executable, str(GAME / "tools/check_stride_details.py")], check=True)
     subprocess.run([sys.executable, str(GAME / "tools/check_cute_polish.py")], check=True)
@@ -24,6 +24,7 @@ def main():
     roms.mkdir(parents=True, exist_ok=True)
     if not args.fix_only:
         subprocess.run([sys.executable, str(GAME / "tools/build_commercial_assets.py")], check=True)
+        subprocess.run([sys.executable, str(GAME / "tools/arcade_art.py")], check=True)
         # MAIYA_ART_REFERENCE=<revision>: keep the painted art as that
         # revision's build drew it (tools/pin_reference_art.py)
         if os.environ.get("MAIYA_ART_REFERENCE"):

@@ -135,9 +135,9 @@
       "w": 80
     },
     {
-      "x": 2912,
+      "x": 2928,
       "y": 104,
-      "w": 80,
+      "w": 64,
       "rotten": true
     },
     {
@@ -146,9 +146,9 @@
       "w": 64
     },
     {
-      "x": 3344,
+      "x": 3360,
       "y": 120,
-      "w": 80
+      "w": 64
     },
     {
       "x": 3504,
@@ -168,15 +168,15 @@
       "rotten": true
     },
     {
-      "x": 3936,
+      "x": 3952,
       "y": 136,
       "w": 64,
       "rotten": true
     },
     {
-      "x": 4128,
+      "x": 4112,
       "y": 136,
-      "w": 112
+      "w": 96
     }
   ],
   "encounters": [
@@ -227,18 +227,6 @@
     {
       "x": 2104,
       "enemy": "worm"
-    },
-    {
-      "x": 2252,
-      "enemy": "goblin"
-    },
-    {
-      "x": 2396,
-      "enemy": "crow"
-    },
-    {
-      "x": 2540,
-      "enemy": "pair"
     },
     {
       "x": 2688,
@@ -556,5 +544,17 @@
       "who": "spirit",
       "line": "D CALLS THE ROSE WIND STRIKE"
     }
-  ]
+  ],
+  "arcade": {
+    "phases": [
+      {"name": "intro", "start": 0, "end": 896},
+      {"name": "hazard", "start": 896, "end": 1840},
+      {"name": "miniboss", "start": 1840, "end": 2880},
+      {"name": "gauntlet", "start": 2880, "end": 4508},
+      {"name": "boss", "start": 4508, "end": 5120}
+    ],
+    "miniboss": {"x": 2352, "enemy": "torchbot", "hp": 11, "name": "EMBER FOX"},
+    "gimmick": "brushfire",
+    "platform": 4
+  }
 }

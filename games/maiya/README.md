@@ -4,11 +4,36 @@ An original twelve-mission side-scrolling adventure using the SDK's C 2D engine.
 Game name: `maiya`. Cartridge ID: `780`. The repository default remains `demo`.
 New in SDK v1.7.1.
 
-Current development: **V5 candidate**. The opening forest section has separate
-ground/canopy routes, an upper-route reward, clearer key/gate instructions and
-opt-in camera framing for high jumps. Character artwork, movement speeds and
-jump physics are preserved. This is a partial level-design milestone; the full
-V5 campaign/visual upgrade and physical-hardware approval remain pending.
+Current development: **V5 test candidate**. All twelve roads now have indexed
+environment artwork, a middle parallax plane and five authored progression
+beats. Each has a defended clearing using an existing creature, followed by
+the gauntlet and the original guardian. Maiya, Luna, enemies, villagers and
+guardian drawings, character palettes, gait and jump physics are preserved.
+The title displays `V5 TEST` to distinguish this candidate from released V4.
+
+Rafts, swaying wreckage, a mine cart and a switch lift carry their riders.
+Foundry belts, reef currents, soft sand and warned fire/flak/reactor volleys
+add stage hazards. Existing ice, swimming, crumbling ledges and rescue systems
+remain. Accepted hits build a two-second chain capped at x10; road kill points
+use that multiplier. Rank adjusts attack frequency conservatively and drops
+after repeated damage or lost lives. Guardian projectiles distinguish armour
+from exposed regions; piercing seeds can penetrate armour.
+
+Stock-speed timing remains an acceptance issue in busy scenes. These changes
+are a playable candidate, not hardware certification or a claim that every
+set piece and guardian transformation in the production specification is done.
+
+Build isolated AES/MVS test packages without replacing released cartridges:
+
+```sh
+python3 games/maiya/tools/package_v5.py --out dist/maiya-v5-test
+```
+
+An optional `--install` destination refreshes only Maiya's ROMs, matching
+software lists and NeoSD images. Saves, launch settings, configuration and
+other games are preserved; older launchers get only their Maiya ROM search
+path corrected. Use a new output directory for each candidate.
+Native CD media is built with `python3 tools/neocd/build.py --game maiya`.
 
 ## Build and Play
 

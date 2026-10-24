@@ -66,7 +66,13 @@ local function play(p, MG)
         if MODE == 'gate' then mem:write_u8(MG + a.has_key, 1) end
         place(p, AT, 192)
     end
-    if pf == 60 then for o = 0, 74, 2 do mem:write_u16(P + o, 0) end; start = pf end
+    if pf == 60 then
+        for o = 0, 74, 2 do mem:write_u16(P + o, 0) end
+        if a.profile_peak then
+            for i=0,9 do mem:write_u16(a.profile_peak+i*2,0);mem:write_u32(a.profile_sum+i*4,0) end
+        end
+        start=pf
+    end
     if MODE == 'gate' and pf < 200 then
         press('P1 Right', pf > 20); press('P1 Up', pf > 30 and pf < 40)
     elseif MODE == 'gate' then
@@ -88,6 +94,11 @@ local function play(p, MG)
             'outside_sum=%d outside_active_sum=%d commit_late=%d commit_spill=%d commit_lines_sum=%d commit_lines_peak=%d groups_peak=%d groups_sum=%d fixlines_sum=%d fixcells_sum=%d\n',
             u32(0), u32(4), u32(8), u16(22), u32(12), u16(26), u32(16), u16(30), speak, sat, over96,
             mem:read_u8(a.state), u32(38), u32(42), u16(46), u16(48), u32(50), u16(54), u16(58), u32(60), u32(64), u32(68)))
+        if a.profile_peak then
+            for i=0,9 do
+                out:write(string.format('part%d_peak=%d part%d_sum=%d\n',i,mem:read_u16(a.profile_peak+i*2),i,mem:read_u32(a.profile_sum+i*4)))
+            end
+        end
         out:close()
         machine:exit()
     end

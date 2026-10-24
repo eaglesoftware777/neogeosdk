@@ -85,6 +85,9 @@ def layout(tc):
         raise SystemExit("The workspace is not a measurement build: run games/maiya/tools/build.py --perf")
     lay = {"mg": sym["mg"], "ng_perf": sym["ng_perf"], "st_play": off["st_play"],
            "st_interlude": off["st_interlude"]}
+    if 'maiya_profile_peak' in sym:
+        lay['profile_peak']=sym['maiya_profile_peak']
+        lay['profile_sum']=sym['maiya_profile_sum']
     for f in ("state", "player", "demo", "next_stage", "state_timer", "stage"):
         lay[f] = sym["mg"] + off[f]
     for f in ("veil", "has_key"):

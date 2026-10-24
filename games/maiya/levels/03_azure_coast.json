@@ -122,7 +122,7 @@
       "w": 80
     },
     {
-      "x": 2912,
+      "x": 2928,
       "y": 120,
       "w": 64
     },
@@ -132,12 +132,12 @@
       "w": 64
     },
     {
-      "x": 3184,
+      "x": 3200,
       "y": 120,
-      "w": 80
+      "w": 64
     },
     {
-      "x": 3520,
+      "x": 3504,
       "y": 128,
       "w": 64
     },
@@ -179,14 +179,6 @@
     {
       "x": 1880,
       "enemy": "pair"
-    },
-    {
-      "x": 2080,
-      "enemy": "bagocto"
-    },
-    {
-      "x": 2280,
-      "enemy": "toxiccrab"
     },
     {
       "x": 2500,
@@ -482,5 +474,17 @@
       "who": "maiden",
       "line": "SEEK THE KEY ABOVE THE SAND"
     }
-  ]
+  ],
+  "arcade": {
+    "phases": [
+      {"name": "intro", "start": 0, "end": 832},
+      {"name": "hazard", "start": 832, "end": 1696},
+      {"name": "miniboss", "start": 1696, "end": 2656},
+      {"name": "gauntlet", "start": 2656, "end": 4168},
+      {"name": "boss", "start": 4168, "end": 4864}
+    ],
+    "miniboss": {"x": 2176, "enemy": "goblin", "hp": 10, "name": "COVE ENFORCER"},
+    "gimmick": "sway",
+    "platform": 5
+  }
 }

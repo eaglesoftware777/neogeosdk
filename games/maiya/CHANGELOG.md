@@ -4,7 +4,34 @@ The ROM sets shared with the NeoGeoSDK pre-releases: `_v1` and `_v2` with
 v1.7.1, `_v3` with v1.7.2, `_v4` with v1.7.3. The SDK keeps its own
 version; Maiya's ROMs are numbered on their own.
 
-## v5 candidate (2026-10-20, local development)
+## v5 test candidate (2026-10-23, local development)
+
+- Replace environment, terrain interiors and architectural surrounds with
+  editable native indexed PNG artwork. Use six environment palette banks,
+  1/8 far, 3/8 middle and 5/4 foreground scrolling, and restrained water,
+  crystal and furnace animation. Preserve all cast tile reservations,
+  character palettes, animation frames and physics constants.
+- Give all twelve stages five contiguous progression beats and a defended
+  clearing with an existing creature. Lock that view during its fight and
+  resume the road after its defeat. Preserve cleared-guard progress on retry.
+- Add moving raft, wreck, cart and switch-lift platforms, belts and currents,
+  soft sand and warned elemental/flak volleys. Keep required keys, objective
+  drums, rescues, vine access and guardian gates.
+- Add bounded contact sparks, armour/weak-region projectile tests, a small
+  guardian idle shrink pulse, a two-second x10 hit chain and restrained rank.
+- Cache scenery membership between camera cells, stagger road streaming and
+  avoid redundant hidden-pool submissions. Add an optional allocation-free
+  64px collision-candidate grid without changing shared engine ABI.
+- Validate phase data, indexed scenery and grid bounds on the host; use
+  matching-ELF emulator captures for camera, motion and encounter checks.
+  Correct the pickup replay to read its slot coordinates from level data.
+- Package separate AES/MVS test images with lossless cartridge checks and
+  preserve existing launch scripts when refreshing an installation.
+- Busy-scene stock-clock timing and physical AES/MVS/CD acceptance remain
+  open. New multi-phase guardian choreography and elaborate story set pieces
+  still need further production; existing guardian artwork is retained.
+
+### Earlier V5 work (2026-10-20)
 
 - Rework the opening forest into ground and connected canopy routes with an
   optional reward and preserved vine access to the required Sun Key.

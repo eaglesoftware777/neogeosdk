@@ -203,8 +203,45 @@ class Stage:
                        self.name(v, "form", w, "formation", "MG_FORM_"), self.num(v, "count", w, 1, 6),
                        self.num(v, "y", w, 16, 208))
                       for w, v in self.rows("waves", "MG_WAVE_COUNT")]
+        s["arcade"] = self.arcade(s)
         self.rules(s)
         return s
+
+    def arcade(self, stage):
+        data = self.data.get("arcade")
+        if data is None:
+            return None
+        phases = self.get(data, "phases", "arcade", list)
+        if len(phases) != 5:
+            self.fail("arcade.phases", "exactly five contiguous stage beats are required")
+        ends, previous = [], 0
+        for i, (row, name) in enumerate(zip(phases, ARCADE_PHASES)):
+            where = f"arcade.phases[{i}]"
+            if self.get(row, "name", where, str) != name:
+                self.fail(where, "phase order must be intro, hazard, miniboss, gauntlet, boss")
+            start = self.num(row, "start", where, 0, stage["width"])
+            end = self.num(row, "end", where, 1, stage["width"])
+            if start != previous or end <= start:
+                self.fail(where, "phases must meet without gaps or overlap")
+            ends.append(end)
+            previous = end
+        if previous != stage["width"]:
+            self.fail("arcade.phases", "the last beat must end at stage width")
+        mini = self.get(data, "miniboss", "arcade", dict)
+        x = self.num(mini, "x", "arcade.miniboss", ends[1] + 96, ends[2] - 96)
+        kind = self.name(mini, "enemy", "arcade.miniboss", "enemy", "MG_E_")
+        hp = self.num(mini, "hp", "arcade.miniboss", 4, 24)
+        name = self.text(mini, "name", "arcade.miniboss", 28)
+        gimmick = self.choice(data, "gimmick", "arcade", ARCADE_GIMMICKS)
+        platform = self.num(data, "platform", "arcade", 0, self.cap["MG_PLATFORM_COUNT"])
+        if platform < self.cap["MG_PLATFORM_COUNT"] and platform >= len(stage["platforms"]):
+            self.fail("arcade.platform", "references a missing platform")
+        # An encounter must not seal the player inside an authored pit or fire.
+        for hx, hw, _ in stage["hazards"]:
+            if hx < x + 144 and hx + hw > x - 144:
+                self.fail("arcade.miniboss", "keep its combat floor clear of hazards")
+        return dict(ends=ends, x=x, kind=kind, hp=hp, name=name,
+                    gimmick=gimmick, platform=platform)
 
     def rules(self, s):
         """How the game plays a stage: what it needs of the numbers."""
@@ -293,6 +330,9 @@ class Stage:
 
 # What a gate can ask for besides the key, in the order of MG_OBJ_* (maiya_game.c).
 OBJECTIVES = ("none", "drums")
+ARCADE_PHASES = ("intro", "hazard", "miniboss", "gauntlet", "boss")
+ARCADE_GIMMICKS = ("bridge", "raft", "sway", "brushfire", "minecart", "lift",
+                  "conveyor", "buoyancy", "ice", "quicksand", "flak", "reactor")
 
 # The Secret Arts, in the order of the game's MG_ART_* (maiya_game.c): the
 # rose storm she knows from the start, and four she learns in the valleys.
@@ -557,6 +597,11 @@ def render(stages, files):
     out.append(table("MG_RUSH_TABLE", ["{" + ",".join(s["rush"] + ["0xFFu"]) + "}" for s in stages]))
     out.append(table("MG_LANDMARK_TABLE", [s["landmark"] for s in stages]))
     out.append(table("MG_FLIGHT_TABLE", ["1" if s["mechanic"] == "MG_M_FLIGHT" else "0" for s in stages]))
+    out.append(table("MG_ARCADE_TABLE", [
+        "{{" + ",".join(map(str, s["arcade"]["ends"])) + "}," +
+        f"{s['arcade']['x']},{s['arcade']['kind']},{s['arcade']['hp']}," +
+        f"{s['arcade']['gimmick']},{s['arcade']['platform']},{c_string(s['arcade']['name'])}" + "}"
+        if s["arcade"] else "{{0},0,0,0,0,32,0}" for s in stages]))
     out.append("#endif")
     return "\n".join(out) + "\n"
 
