@@ -353,12 +353,14 @@ def build(fix_only=False):
     for hero in HEROES:
         pack.background(f"end_{hero}", ending_pic(hero), banks=16, bank=16, refine=6)
     for name, (count, size, slot, banks) in FIGHTERS.items():
-        pack.sprite(f"f_{name}", fighter_sheet(name), frame=(size, size), banks=banks, bank=SLOT[slot])
+        # Refit the existing banks to the complete outfit across all poses.
+        # This improves skin/cloth separation without extra runtime palettes.
+        pack.sprite(f"f_{name}", fighter_sheet(name), frame=(size, size), banks=banks, bank=SLOT[slot], refine=4)
     faces = []
     for s in SPEAKERS:
         pic = painted(f"portrait_{s}.png", 64, 64)
         if pic is not None:
-            pack.sprite(f"face_{s}", pic, frame=(64, 64), banks=2, bank=FACE_BANK)
+            pack.sprite(f"face_{s}", pic, frame=(64, 64), banks=2, bank=FACE_BANK, refine=4)
             faces.append(f"NS_ART_FACE_{s.upper()}")
         else:
             faces.append("0")

@@ -70,7 +70,7 @@ def build(rom_dir, game_id, platform, name):
         "game": name,
         "platform": platform,
         "format": "Darksoft Neo Geo Multi",
-        "source": f"{rom_dir.as_posix()}/{game_id}-*",
+        "source": f"{game_id}-*",
         "files": {k: {"size": len(v), "size_hex": hex(len(v)),
                       "crc32": "%08x" % (zlib.crc32(v) & 0xffffffff),
                       "sha256": hashlib.sha256(v).hexdigest()} for k, v in files.items()},

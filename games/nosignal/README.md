@@ -4,9 +4,10 @@ A native Neo Geo single-player beat-'em-up, built on the SDK's beat-'em-up
 engine (`GAME_GENRE_ENGINE = beatemup`, `sdk/2d_engine/ng_beatemup.c`).
 Game ID 784.
 
-Current development build: **V2 candidate**. Depth reordering uses complete hidden
-sprite banks; existing V1 releases remain separate. See the changelog for the
-tested scenarios and outstanding hardware checks.
+Current build: **V2**. Purple clothing is recovered from the original pose sheets,
+and character/portrait palettes receive additional fitting passes within their
+existing bank allocations. Depth reordering uses complete hidden sprite banks;
+existing V1 releases remain separate. See the changelog for verification limits.
 
 Someone stole the phone. Then the whole city lost its signal. Choose one hero
 (exactly one person plays) and get it back across eight stages: The Hood, The
@@ -61,6 +62,7 @@ frame (the others a frame later).
 python3 games/nosignal/tools/sound.py        # when the music or voices change
 make GAME=nosignal GAME_CFG_FILE=games/nosignal/game.cfg all
 make unit-tests                               # includes tests/beatemup_test.c
+python3 -m unittest discover -s tests -p 'test_nosignal*.py'
 ```
 
 ## Test builds (never install these)

@@ -1,7 +1,27 @@
 # No Signal Z Alpha — changelog
 
 The ROM sets ship with the NeoGeoSDK pre-releases and are numbered on their
-own: `_v1` with v1.7.7.
+own: `_v1` and `_v2` with v1.7.7.
+
+## v2 (2026-10-24, SDK 1.7.7)
+
+- Restore missing clothing and armour pixels from the original pose sheets for
+  all 22 fighters (360 poses), including Kai's hoodie, Zoe's outfit and the
+  Archivist's cape. Background removal now starts at the bright magenta key
+  and stops before purple fabric; enclosed spaces between limbs stay clear.
+- Refit fighter and portrait colours within their existing palette allocations
+  for cleaner skin, clothing and material shading. Canvas sizes, frame order,
+  anchors, gameplay, sound and cartridge alignment are retained.
+- Add regression tests for fabric versus key colour, enclosed gaps, recovered
+  clothing samples, existing canvas limits and exact source-to-C-ROM alpha.
+- Includes the hidden-bank depth-ordering improvements described below.
+- Verification: all 360 source masks match decoded C-ROM pixels. All three
+  heroes passed 110-second MAME crowd replays on both AES and MVS with no
+  missing visible hero rows, black hero palettes or layout faults; peak load
+  was 81 strips. Beat-'em-up, deferred-renderer, content-budget and API checks
+  pass. Physical cartridge testing and full campaigns remain unverified.
+- The broader SDK host suite still stops at the existing sprite-position
+  write-count assertion in `tests/sprite_render_test.c`; it is unchanged here.
 
 ## v2 candidate (2026-10-20, SDK 1.7.7)
 

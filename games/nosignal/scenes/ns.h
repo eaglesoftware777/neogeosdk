@@ -16,7 +16,7 @@
 #include "sdk/2d_engine/ng_beatemup.h"
 
 #define NS_START_FLAG   0x100700u
-#define NS_VERSION_TEXT "V2 CANDIDATE"
+#define NS_VERSION_TEXT "V2"
 
 #define NS_UP      0x0001u
 #define NS_DOWN    0x0002u

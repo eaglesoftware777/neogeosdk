@@ -38,6 +38,30 @@ def magenta(rgb):
     return (r > 110) & (b > 110) & (g < 140) & (r - g > 45) & (b - g > 45)
 
 
+def background_mask(rgb):
+    """Remove the bright key and its fringe, keeping enclosed purple fabric.
+
+    A purple pixel alone is not background. Grow only from unmistakable hot
+    magenta through the tolerant key range. Seed throughout the sheet so real
+    gaps between limbs stay transparent even when surrounded by the figure.
+    """
+    r, g, b = (rgb[..., i].astype(int) for i in range(3))
+    key = (r >= 225) & (b >= 225) & (g <= 35)
+    # Do not let propagation walk from a gap's pink fringe into an adjacent
+    # purple sleeve. The old key's dark-purple range is for layout guides only.
+    fringe = (r >= 190) & (b >= 190) & (g <= 80) & (r - g >= 120) & (b - g >= 120)
+    return ndi.binary_propagation(key, mask=fringe)
+
+
+def figure_matte(rgb, guide):
+    """Recover clothing and fine contours inside the existing figure's crop.
+
+    The legacy guide still determines scale, centring and the ground anchor.
+    Only the exported matte changes; do not fill enclosed transparent regions.
+    """
+    return ndi.binary_propagation(guide, mask=~background_mask(rgb))
+
+
 def trim(sl, mask):
     """The slice and mask cut down to the mask's own bounding box."""
     ys, xs = np.nonzero(mask)
@@ -125,14 +149,12 @@ def import_one(src, name):
         rgb = np.asarray(Image.open(f).convert("RGB")).astype(float)
         figs = figures(rgb)
         if len(figs) != 10:
-            print(f"import: {f.name}: {len(figs)} figures (10 expected): using what is there")
-        if not figs:
-            continue
+            raise ValueError(f"import: {f.name}: {len(figs)} figures (10 expected)")
         key_sl, key_mask, key_floor = figs[0]
         s = target / (key_sl[0].stop - key_sl[0].start)
         for i, (sl, mask, floor) in enumerate(figs[:10]):
             crop = rgb[sl]
-            small = reduce(crop, mask, s)
+            small = reduce(crop, figure_matte(crop, mask), s)
             # the body's middle: mean x of the figure between 35% and 60% of its height
             hh = mask.shape[0]
             band = mask[int(hh * 0.35):int(hh * 0.6)]
