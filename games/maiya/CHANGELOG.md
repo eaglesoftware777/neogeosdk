@@ -4,32 +4,22 @@ The ROM sets shared with the NeoGeoSDK pre-releases: `_v1` and `_v2` with
 v1.7.1, `_v3` with v1.7.2, `_v4` with v1.7.3. The SDK keeps its own
 version; Maiya's ROMs are numbered on their own.
 
-## v5 test candidate (2026-10-23, local development)
+## v5 gameplay candidate with V4 artwork (2026-10-24, local development)
 
-- Replace environment, terrain interiors and architectural surrounds with
-  editable native indexed PNG artwork. Use six environment palette banks,
-  1/8 far, 3/8 middle and 5/4 foreground scrolling, and restrained water,
-  crystal and furnace animation. Preserve all cast tile reservations,
-  character palettes, animation frames and physics constants.
-- Give all twelve stages five contiguous progression beats and a defended
-  clearing with an existing creature. Lock that view during its fight and
-  resume the road after its defeat. Preserve cleared-guard progress on retry.
-- Add moving raft, wreck, cart and switch-lift platforms, belts and currents,
-  soft sand and warned elemental/flak volleys. Keep required keys, objective
-  drums, rescues, vine access and guardian gates.
-- Add bounded contact sparks, armour/weak-region projectile tests, a small
-  guardian idle shrink pulse, a two-second x10 hit chain and restrained rank.
-- Cache scenery membership between camera cells, stagger road streaming and
-  avoid redundant hidden-pool submissions. Add an optional allocation-free
-  64px collision-candidate grid without changing shared engine ABI.
-- Validate phase data, indexed scenery and grid bounds on the host; use
-  matching-ELF emulator captures for camera, motion and encounter checks.
-  Correct the pickup replay to read its slot coordinates from level data.
-- Package separate AES/MVS test images with lossless cartridge checks and
-  preserve existing launch scripts when refreshing an installation.
-- Busy-scene stock-clock timing and physical AES/MVS/CD acceptance remain
-  open. New multi-phase guardian choreography and elaborate story set pieces
-  still need further production; existing guardian artwork is retained.
+- Restore the approved V4 graphics/FIX banks and exact palette/tile metadata.
+  Restore original backgrounds, guardian arena selection, terrain, landmarks,
+  decor slots, parallax and existing palette animation.
+- Remove the rejected replacement sources, scenery generator, extra middle
+  plane, water overlay, cart drawing, new hit sparks and boss shrink effect.
+- Lock all graphics and metadata with immutable reference hashes. Normal and
+  art build targets copy approved assets without editing or regenerating art.
+- Keep gameplay-only progression beats, existing-creature mid-guardians,
+  moving ledges, bounded combos, rank, collision candidates and performance
+  work. Existing art represents every moving platform and encounter.
+- Preserve accepted character artwork, movement, gait, camera/floor behavior,
+  pickups, objectives, Continue and hardware packaging conventions.
+- Busy-scene timing, actual 12/24 MHz parity and physical hardware acceptance
+  remain open. Further work is restricted to gameplay and technical defects.
 
 ### Earlier V5 work (2026-10-20)
 

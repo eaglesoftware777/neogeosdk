@@ -36,7 +36,8 @@ def main():
     args = parser.parse_args()
     dest = args.out.resolve()
     dest.mkdir(parents=True, exist_ok=False)
-    manifest = {'version': 'v5-test', 'hardware_approval': 'pending', 'roms': {}}
+    manifest = {'version': 'v5-gameplay-v4-art', 'art_reference': 'approved-v4',
+                'hardware_approval': 'pending', 'roms': {}}
     for mode in ('mvs', 'aes'):
         with (dest / (mode + '-build.log')).open('w') as log:
             subprocess.run([sys.executable, str(GAME / 'tools/build.py'),

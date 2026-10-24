@@ -53,6 +53,8 @@ def check_sound_driver(m1):
 
 def check_authored_hero():
     """Reject missing hands, malformed drawings and stale C-ROM imports."""
+    from locked_art import check_generated
+    check_generated()
     subprocess.run([sys.executable, str(ROOT / "tools/check_hero_frames.py"),
                     "--no-export"], check=True)
     subprocess.run([sys.executable, str(GAME / "tools/check_hands.py")], check=True)
@@ -215,7 +217,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", action="store_true")
     parser.add_argument("--run-only", action="store_true")
-    parser.add_argument("--rebuild-art", action="store_true")
+    parser.add_argument("--rebuild-art", action="store_true", help="Restore approved V4 banks; never generate artwork")
     parser.add_argument("--quick", action="store_true", help="Rebuild scene code only, using the staged SDK")
     parser.add_argument("--perf", action="store_true", help="Measurement build: frame and VRAM counters (sdk/ng_perf.h)")
     parser.add_argument("--perf-lite", action="store_true", help="Measurement build: the frame's timing only (PERF=2)")
@@ -226,12 +228,9 @@ def main():
     parser.add_argument("--toolchain", type=Path, help="Directory containing m68k-unknown-elf/")
     args = parser.parse_args()
     if not args.run_only:
-        if args.rebuild_art or not (GAME / "artbox/generated/maiya_assets.h").is_file():
-            subprocess.run([sys.executable, str(GAME / "tools/build_commercial_assets.py")], check=True)
         if not args.quick:
-            # Install editable scenery into its reserved tiles even when a
-            # character/audio build already exists from an earlier version.
-            subprocess.run([sys.executable, str(GAME / "tools/arcade_art.py")], check=True)
+            from locked_art import install
+            install()
         if args.quick:
             toolchain = args.toolchain
             if toolchain is None:

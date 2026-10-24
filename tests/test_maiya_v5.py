@@ -1,4 +1,4 @@
-"""V5 pacing, collision candidates and indexed-environment contracts."""
+"""V5 pacing, collision candidates and the approved V4 art lock."""
 import importlib.util
 import json
 from pathlib import Path
@@ -7,7 +7,6 @@ import subprocess
 import tempfile
 import unittest
 
-import numpy as np
 
 ROOT=Path(__file__).resolve().parents[1]
 GAME=ROOT/'games/maiya'
@@ -45,18 +44,16 @@ class StageTests(unittest.TestCase):
 
 
 class ArtworkTests(unittest.TestCase):
-    def test_all_native_scenery_tiles_use_one_embedded_palette_bank(self):
-        art=module('arcade_art')
-        for stage,cols in enumerate(art.COLS):
-            image=art.panorama(stage,cols*16)
-            self.assertEqual(image.mode,'P');self.assertEqual(image.info['transparency'],0)
-            pixels=np.asarray(image)
-            self.assertFalse(np.any(pixels%16==0))
-            for y in range(0,224,16):
-                self.assertEqual(len(np.unique(pixels[y:y+16]//16)),1)
-            self.assertGreater(len(image.getcolors()),32)
-            mid=art.midground(stage)
-            self.assertEqual(mid.size,(32,112));self.assertTrue(np.any(np.asarray(mid)==0))
+    def test_graphics_and_metadata_match_the_approved_v4_reference(self):
+        module('locked_art').check_generated()
+
+    def test_changed_art_is_rejected(self):
+        art=module('locked_art')
+        expected=art.verify_reference()['files']['artbox/780-c1.c1']
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'780-c1.c1';path.write_bytes(b'changed')
+            with self.assertRaisesRegex(ValueError,'Approved V4 artwork differs'):
+                art.verify_file(path,expected)
 
 
 @unittest.skipUnless(shutil.which('cc'),'host C compiler required')

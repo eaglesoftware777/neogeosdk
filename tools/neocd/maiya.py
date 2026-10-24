@@ -19,6 +19,8 @@ GAME = ROOT / 'games/maiya'
 
 
 def convert_graphics(folder):
+    from games.maiya.tools.locked_art import check_generated
+    check_generated()
     art = GAME / 'artbox'
     assets = json.loads((art / 'generated/assets.json').read_text())
     end = max(row['tile_last'] for row in assets) + 1

@@ -1,0 +1,4448 @@
+[
+  {
+    "name": "bg0",
+    "tile_base": 0,
+    "tile_last": 839,
+    "strips": 70,
+    "rows": 12,
+    "stride": 70,
+    "palette_count": 16
+  },
+  {
+    "name": "ground0",
+    "tile_base": 840,
+    "tile_last": 903,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "bg1",
+    "tile_base": 904,
+    "tile_last": 1671,
+    "strips": 64,
+    "rows": 12,
+    "stride": 64,
+    "palette_count": 16
+  },
+  {
+    "name": "ground1",
+    "tile_base": 1672,
+    "tile_last": 1735,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "bg2",
+    "tile_base": 1736,
+    "tile_last": 2503,
+    "strips": 64,
+    "rows": 12,
+    "stride": 64,
+    "palette_count": 16
+  },
+  {
+    "name": "ground2",
+    "tile_base": 2504,
+    "tile_last": 2567,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "bg3",
+    "tile_base": 2568,
+    "tile_last": 3335,
+    "strips": 64,
+    "rows": 12,
+    "stride": 64,
+    "palette_count": 16
+  },
+  {
+    "name": "ground3",
+    "tile_base": 3336,
+    "tile_last": 3399,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "bg4",
+    "tile_base": 3400,
+    "tile_last": 4167,
+    "strips": 64,
+    "rows": 12,
+    "stride": 64,
+    "palette_count": 16
+  },
+  {
+    "name": "ground4",
+    "tile_base": 4168,
+    "tile_last": 4231,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "bg5",
+    "tile_base": 4232,
+    "tile_last": 5071,
+    "strips": 70,
+    "rows": 12,
+    "stride": 70,
+    "palette_count": 16
+  },
+  {
+    "name": "ground5",
+    "tile_base": 5072,
+    "tile_last": 5135,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "bg6",
+    "tile_base": 5136,
+    "tile_last": 5975,
+    "strips": 70,
+    "rows": 12,
+    "stride": 70,
+    "palette_count": 16
+  },
+  {
+    "name": "ground6",
+    "tile_base": 5976,
+    "tile_last": 6039,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "bg7",
+    "tile_base": 6040,
+    "tile_last": 6807,
+    "strips": 64,
+    "rows": 12,
+    "stride": 64,
+    "palette_count": 16
+  },
+  {
+    "name": "ground7",
+    "tile_base": 6808,
+    "tile_last": 6871,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "bg8",
+    "tile_base": 6872,
+    "tile_last": 7639,
+    "strips": 64,
+    "rows": 12,
+    "stride": 64,
+    "palette_count": 16
+  },
+  {
+    "name": "ground8",
+    "tile_base": 7640,
+    "tile_last": 7703,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "bg9",
+    "tile_base": 7704,
+    "tile_last": 8471,
+    "strips": 64,
+    "rows": 12,
+    "stride": 64,
+    "palette_count": 16
+  },
+  {
+    "name": "ground9",
+    "tile_base": 8472,
+    "tile_last": 8535,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "bg10",
+    "tile_base": 8536,
+    "tile_last": 9411,
+    "strips": 73,
+    "rows": 12,
+    "stride": 73,
+    "palette_count": 16
+  },
+  {
+    "name": "ground10",
+    "tile_base": 9412,
+    "tile_last": 9475,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "bg11",
+    "tile_base": 9476,
+    "tile_last": 10351,
+    "strips": 73,
+    "rows": 12,
+    "stride": 73,
+    "palette_count": 16
+  },
+  {
+    "name": "ground11",
+    "tile_base": 10352,
+    "tile_last": 10415,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arena0",
+    "tile_base": 10416,
+    "tile_last": 10799,
+    "strips": 32,
+    "rows": 12,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arenaground0",
+    "tile_base": 10800,
+    "tile_last": 10863,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arena1",
+    "tile_base": 10864,
+    "tile_last": 11247,
+    "strips": 32,
+    "rows": 12,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arenaground1",
+    "tile_base": 11248,
+    "tile_last": 11311,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arena2",
+    "tile_base": 11312,
+    "tile_last": 11695,
+    "strips": 32,
+    "rows": 12,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arenaground2",
+    "tile_base": 11696,
+    "tile_last": 11759,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arena3",
+    "tile_base": 11760,
+    "tile_last": 12143,
+    "strips": 32,
+    "rows": 12,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arenaground3",
+    "tile_base": 12144,
+    "tile_last": 12207,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arena4",
+    "tile_base": 12208,
+    "tile_last": 12591,
+    "strips": 32,
+    "rows": 12,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arenaground4",
+    "tile_base": 12592,
+    "tile_last": 12655,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arena5",
+    "tile_base": 12656,
+    "tile_last": 13039,
+    "strips": 32,
+    "rows": 12,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arenaground5",
+    "tile_base": 13040,
+    "tile_last": 13103,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arena6",
+    "tile_base": 13104,
+    "tile_last": 13487,
+    "strips": 32,
+    "rows": 12,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arenaground6",
+    "tile_base": 13488,
+    "tile_last": 13551,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arena7",
+    "tile_base": 13552,
+    "tile_last": 13935,
+    "strips": 32,
+    "rows": 12,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arenaground7",
+    "tile_base": 13936,
+    "tile_last": 13999,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arena8",
+    "tile_base": 14000,
+    "tile_last": 14383,
+    "strips": 32,
+    "rows": 12,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arenaground8",
+    "tile_base": 14384,
+    "tile_last": 14447,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arena9",
+    "tile_base": 14448,
+    "tile_last": 14831,
+    "strips": 32,
+    "rows": 12,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "arenaground9",
+    "tile_base": 14832,
+    "tile_last": 14895,
+    "strips": 32,
+    "rows": 2,
+    "stride": 32,
+    "palette_count": 16
+  },
+  {
+    "name": "hero_idle0",
+    "tile_base": 14896,
+    "tile_last": 14915,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_idle1",
+    "tile_base": 14916,
+    "tile_last": 14935,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_idle2",
+    "tile_base": 14936,
+    "tile_last": 14955,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_walk0",
+    "tile_base": 14956,
+    "tile_last": 14975,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_walk1",
+    "tile_base": 14976,
+    "tile_last": 14995,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_walk2",
+    "tile_base": 14996,
+    "tile_last": 15015,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_walk3",
+    "tile_base": 15016,
+    "tile_last": 15035,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_walk4",
+    "tile_base": 15036,
+    "tile_last": 15055,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_walk5",
+    "tile_base": 15056,
+    "tile_last": 15075,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_walk6",
+    "tile_base": 15076,
+    "tile_last": 15095,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_walk7",
+    "tile_base": 15096,
+    "tile_last": 15115,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_crouch",
+    "tile_base": 15116,
+    "tile_last": 15135,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_run0",
+    "tile_base": 15136,
+    "tile_last": 15155,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_run1",
+    "tile_base": 15156,
+    "tile_last": 15175,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_run2",
+    "tile_base": 15176,
+    "tile_last": 15195,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_jump0",
+    "tile_base": 15196,
+    "tile_last": 15215,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_jump1",
+    "tile_base": 15216,
+    "tile_last": 15235,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_jump2",
+    "tile_base": 15236,
+    "tile_last": 15255,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_jump3",
+    "tile_base": 15256,
+    "tile_last": 15275,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_jump4",
+    "tile_base": 15276,
+    "tile_last": 15295,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_land",
+    "tile_base": 15296,
+    "tile_last": 15315,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_atk0",
+    "tile_base": 15316,
+    "tile_last": 15335,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_atk1",
+    "tile_base": 15336,
+    "tile_last": 15355,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_atk2",
+    "tile_base": 15356,
+    "tile_last": 15375,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_atk3",
+    "tile_base": 15376,
+    "tile_last": 15395,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_sweep0",
+    "tile_base": 15396,
+    "tile_last": 15415,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_sweep1",
+    "tile_base": 15416,
+    "tile_last": 15435,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_sweep2",
+    "tile_base": 15436,
+    "tile_last": 15455,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_sweep3",
+    "tile_base": 15456,
+    "tile_last": 15475,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_low",
+    "tile_base": 15476,
+    "tile_last": 15495,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_spin",
+    "tile_base": 15496,
+    "tile_last": 15515,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_cast0",
+    "tile_base": 15516,
+    "tile_last": 15535,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_cast1",
+    "tile_base": 15536,
+    "tile_last": 15555,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_cast2",
+    "tile_base": 15556,
+    "tile_last": 15575,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_hurt0",
+    "tile_base": 15576,
+    "tile_last": 15595,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_hurt1",
+    "tile_base": 15596,
+    "tile_last": 15615,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_down",
+    "tile_base": 15616,
+    "tile_last": 15635,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_sit",
+    "tile_base": 15636,
+    "tile_last": 15655,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_win",
+    "tile_base": 15656,
+    "tile_last": 15675,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_swim0",
+    "tile_base": 15676,
+    "tile_last": 15695,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_swim1",
+    "tile_base": 15696,
+    "tile_last": 15715,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_swim2",
+    "tile_base": 15716,
+    "tile_last": 15735,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_flip0",
+    "tile_base": 15736,
+    "tile_last": 15755,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_flip1",
+    "tile_base": 15756,
+    "tile_last": 15775,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_flip2",
+    "tile_base": 15776,
+    "tile_last": 15795,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_flip3",
+    "tile_base": 15796,
+    "tile_last": 15815,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_ride",
+    "tile_base": 15816,
+    "tile_last": 15835,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_rise0",
+    "tile_base": 15836,
+    "tile_last": 15855,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_rise1",
+    "tile_base": 15856,
+    "tile_last": 15875,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_rise2",
+    "tile_base": 15876,
+    "tile_last": 15895,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_surge",
+    "tile_base": 15896,
+    "tile_last": 15915,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_art0",
+    "tile_base": 15916,
+    "tile_last": 15935,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_art1",
+    "tile_base": 15936,
+    "tile_last": 15955,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_leap0",
+    "tile_base": 15956,
+    "tile_last": 15975,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_leap1",
+    "tile_base": 15976,
+    "tile_last": 15995,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_run3",
+    "tile_base": 15996,
+    "tile_last": 16015,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_run4",
+    "tile_base": 16016,
+    "tile_last": 16035,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_run5",
+    "tile_base": 16036,
+    "tile_last": 16055,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_run6",
+    "tile_base": 16056,
+    "tile_last": 16075,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_run7",
+    "tile_base": 16076,
+    "tile_last": 16095,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_walk0",
+    "tile_base": 16096,
+    "tile_last": 16115,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_walk1",
+    "tile_base": 16116,
+    "tile_last": 16135,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_walk2",
+    "tile_base": 16136,
+    "tile_last": 16155,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_walk3",
+    "tile_base": 16156,
+    "tile_last": 16175,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_walk4",
+    "tile_base": 16176,
+    "tile_last": 16195,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_walk5",
+    "tile_base": 16196,
+    "tile_last": 16215,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_walk6",
+    "tile_base": 16216,
+    "tile_last": 16235,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_walk7",
+    "tile_base": 16236,
+    "tile_last": 16255,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_run0",
+    "tile_base": 16256,
+    "tile_last": 16275,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_run1",
+    "tile_base": 16276,
+    "tile_last": 16295,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_run2",
+    "tile_base": 16296,
+    "tile_last": 16315,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_run3",
+    "tile_base": 16316,
+    "tile_last": 16335,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_run4",
+    "tile_base": 16336,
+    "tile_last": 16355,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_run5",
+    "tile_base": 16356,
+    "tile_last": 16375,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_run6",
+    "tile_base": 16376,
+    "tile_last": 16395,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_run7",
+    "tile_base": 16396,
+    "tile_last": 16415,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "hero_gait_stop0",
+    "tile_base": 16416,
+    "tile_last": 16435,
+    "strips": 5,
+    "rows": 4,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "eagle_fly0",
+    "tile_base": 16436,
+    "tile_last": 16459,
+    "strips": 8,
+    "rows": 3,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "eagle_fly1",
+    "tile_base": 16460,
+    "tile_last": 16483,
+    "strips": 8,
+    "rows": 3,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "eagle_fly2",
+    "tile_base": 16484,
+    "tile_last": 16507,
+    "strips": 8,
+    "rows": 3,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "face",
+    "tile_base": 16508,
+    "tile_last": 16511,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "portrait",
+    "tile_base": 16512,
+    "tile_last": 16547,
+    "strips": 6,
+    "rows": 6,
+    "stride": 6,
+    "palette_count": 2
+  },
+  {
+    "name": "portrait_alt",
+    "tile_base": 16548,
+    "tile_last": 16583,
+    "strips": 6,
+    "rows": 6,
+    "stride": 6,
+    "palette_count": 2
+  },
+  {
+    "name": "face_alt",
+    "tile_base": 16584,
+    "tile_last": 16587,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "slime_0",
+    "tile_base": 16588,
+    "tile_last": 16591,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "slime_1",
+    "tile_base": 16592,
+    "tile_last": 16595,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "slime_2",
+    "tile_base": 16596,
+    "tile_last": 16599,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "slime_3",
+    "tile_base": 16600,
+    "tile_last": 16603,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "beetle_0",
+    "tile_base": 16604,
+    "tile_last": 16609,
+    "strips": 3,
+    "rows": 2,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "beetle_1",
+    "tile_base": 16610,
+    "tile_last": 16615,
+    "strips": 3,
+    "rows": 2,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "beetle_2",
+    "tile_base": 16616,
+    "tile_last": 16621,
+    "strips": 3,
+    "rows": 2,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "crow_0",
+    "tile_base": 16622,
+    "tile_last": 16627,
+    "strips": 3,
+    "rows": 2,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "crow_1",
+    "tile_base": 16628,
+    "tile_last": 16633,
+    "strips": 3,
+    "rows": 2,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "crow_2",
+    "tile_base": 16634,
+    "tile_last": 16639,
+    "strips": 3,
+    "rows": 2,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "crow_3",
+    "tile_base": 16640,
+    "tile_last": 16645,
+    "strips": 3,
+    "rows": 2,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "crow_4",
+    "tile_base": 16646,
+    "tile_last": 16651,
+    "strips": 3,
+    "rows": 2,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "crow_5",
+    "tile_base": 16652,
+    "tile_last": 16657,
+    "strips": 3,
+    "rows": 2,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "goblin_0",
+    "tile_base": 16658,
+    "tile_last": 16663,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "goblin_1",
+    "tile_base": 16664,
+    "tile_last": 16669,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "goblin_2",
+    "tile_base": 16670,
+    "tile_last": 16675,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "goblin_3",
+    "tile_base": 16676,
+    "tile_last": 16681,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "worm_0",
+    "tile_base": 16682,
+    "tile_last": 16687,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "worm_1",
+    "tile_base": 16688,
+    "tile_last": 16693,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "robot_0",
+    "tile_base": 16694,
+    "tile_last": 16697,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "robot_1",
+    "tile_base": 16698,
+    "tile_last": 16701,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "robot_2",
+    "tile_base": 16702,
+    "tile_last": 16705,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "jellyfish_0",
+    "tile_base": 16706,
+    "tile_last": 16714,
+    "strips": 3,
+    "rows": 3,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "jellyfish_1",
+    "tile_base": 16715,
+    "tile_last": 16723,
+    "strips": 3,
+    "rows": 3,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "toxiccrab_0",
+    "tile_base": 16724,
+    "tile_last": 16735,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "toxiccrab_1",
+    "tile_base": 16736,
+    "tile_last": 16747,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "acidmoth_0",
+    "tile_base": 16748,
+    "tile_last": 16759,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "acidmoth_1",
+    "tile_base": 16760,
+    "tile_last": 16771,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "smogbat_0",
+    "tile_base": 16772,
+    "tile_last": 16783,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "smogbat_1",
+    "tile_base": 16784,
+    "tile_last": 16795,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "poachdrone_0",
+    "tile_base": 16796,
+    "tile_last": 16807,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "poachdrone_1",
+    "tile_base": 16808,
+    "tile_last": 16819,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "chemfly_0",
+    "tile_base": 16820,
+    "tile_last": 16828,
+    "strips": 3,
+    "rows": 3,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "chemfly_1",
+    "tile_base": 16829,
+    "tile_last": 16837,
+    "strips": 3,
+    "rows": 3,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "plasticbat_0",
+    "tile_base": 16838,
+    "tile_last": 16849,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "plasticbat_1",
+    "tile_base": 16850,
+    "tile_last": 16861,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "slaggolem_0",
+    "tile_base": 16862,
+    "tile_last": 16877,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "slaggolem_1",
+    "tile_base": 16878,
+    "tile_last": 16893,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "vinesting_0",
+    "tile_base": 16894,
+    "tile_last": 16909,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "vinesting_1",
+    "tile_base": 16910,
+    "tile_last": 16925,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "sporegob_0",
+    "tile_base": 16926,
+    "tile_last": 16941,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "sporegob_1",
+    "tile_base": 16942,
+    "tile_last": 16957,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "dartfrog_0",
+    "tile_base": 16958,
+    "tile_last": 16963,
+    "strips": 3,
+    "rows": 2,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "dartfrog_1",
+    "tile_base": 16964,
+    "tile_last": 16969,
+    "strips": 3,
+    "rows": 2,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "rhino_0",
+    "tile_base": 16970,
+    "tile_last": 16981,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "rhino_1",
+    "tile_base": 16982,
+    "tile_last": 16993,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "dragonfly_0",
+    "tile_base": 16994,
+    "tile_last": 17005,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "dragonfly_1",
+    "tile_base": 17006,
+    "tile_last": 17017,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "gnat_0",
+    "tile_base": 17018,
+    "tile_last": 17021,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "gnat_1",
+    "tile_base": 17022,
+    "tile_last": 17025,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "gunship_0",
+    "tile_base": 17026,
+    "tile_last": 17040,
+    "strips": 5,
+    "rows": 3,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "gunship_1",
+    "tile_base": 17041,
+    "tile_last": 17055,
+    "strips": 5,
+    "rows": 3,
+    "stride": 5,
+    "palette_count": 1
+  },
+  {
+    "name": "bagocto_0",
+    "tile_base": 17056,
+    "tile_last": 17067,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "bagocto_1",
+    "tile_base": 17068,
+    "tile_last": 17079,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "binocto_0",
+    "tile_base": 17080,
+    "tile_last": 17091,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "binocto_1",
+    "tile_base": 17092,
+    "tile_last": 17103,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "sawbot_0",
+    "tile_base": 17104,
+    "tile_last": 17115,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "sawbot_1",
+    "tile_base": 17116,
+    "tile_last": 17127,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "drillbot_0",
+    "tile_base": 17128,
+    "tile_last": 17139,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "drillbot_1",
+    "tile_base": 17140,
+    "tile_last": 17151,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "torchbot_0",
+    "tile_base": 17152,
+    "tile_last": 17163,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "torchbot_1",
+    "tile_base": 17164,
+    "tile_last": 17175,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "smogstack_0",
+    "tile_base": 17176,
+    "tile_last": 17187,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "smogstack_1",
+    "tile_base": 17188,
+    "tile_last": 17199,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "sludgebarrel_0",
+    "tile_base": 17200,
+    "tile_last": 17211,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "sludgebarrel_1",
+    "tile_base": 17212,
+    "tile_last": 17223,
+    "strips": 4,
+    "rows": 3,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "sunboy_0",
+    "tile_base": 17224,
+    "tile_last": 17229,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "sunboy_1",
+    "tile_base": 17230,
+    "tile_last": 17235,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "sunboy_2",
+    "tile_base": 17236,
+    "tile_last": 17241,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "spirit_0",
+    "tile_base": 17242,
+    "tile_last": 17247,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "spirit_1",
+    "tile_base": 17248,
+    "tile_last": 17253,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "spirit_2",
+    "tile_base": 17254,
+    "tile_last": 17259,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "elder_0",
+    "tile_base": 17260,
+    "tile_last": 17265,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "elder_1",
+    "tile_base": 17266,
+    "tile_last": 17271,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "girl_0",
+    "tile_base": 17272,
+    "tile_last": 17277,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "girl_1",
+    "tile_base": 17278,
+    "tile_last": 17283,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "eldersalute_0",
+    "tile_base": 17284,
+    "tile_last": 17289,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "eldersalute_1",
+    "tile_base": 17290,
+    "tile_last": 17295,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_beetle_idle",
+    "tile_base": 17296,
+    "tile_last": 17343,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_beetle_walk",
+    "tile_base": 17344,
+    "tile_last": 17391,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_beetle_windup",
+    "tile_base": 17392,
+    "tile_last": 17439,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_beetle_attack",
+    "tile_base": 17440,
+    "tile_last": 17487,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_beetle_special",
+    "tile_base": 17488,
+    "tile_last": 17535,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_beetle_jump",
+    "tile_base": 17536,
+    "tile_last": 17583,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_beetle_hurt",
+    "tile_base": 17584,
+    "tile_last": 17631,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_beetle_dead",
+    "tile_base": 17632,
+    "tile_last": 17679,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_toad_idle",
+    "tile_base": 17680,
+    "tile_last": 17727,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_toad_walk",
+    "tile_base": 17728,
+    "tile_last": 17775,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_toad_windup",
+    "tile_base": 17776,
+    "tile_last": 17823,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_toad_attack",
+    "tile_base": 17824,
+    "tile_last": 17871,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_toad_special",
+    "tile_base": 17872,
+    "tile_last": 17919,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_toad_jump",
+    "tile_base": 17920,
+    "tile_last": 17967,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_toad_hurt",
+    "tile_base": 17968,
+    "tile_last": 18015,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_toad_dead",
+    "tile_base": 18016,
+    "tile_last": 18063,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_leviathan_idle",
+    "tile_base": 18064,
+    "tile_last": 18111,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_leviathan_walk",
+    "tile_base": 18112,
+    "tile_last": 18159,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_leviathan_windup",
+    "tile_base": 18160,
+    "tile_last": 18207,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_leviathan_attack",
+    "tile_base": 18208,
+    "tile_last": 18255,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_leviathan_special",
+    "tile_base": 18256,
+    "tile_last": 18303,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_leviathan_jump",
+    "tile_base": 18304,
+    "tile_last": 18351,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_leviathan_hurt",
+    "tile_base": 18352,
+    "tile_last": 18399,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_leviathan_dead",
+    "tile_base": 18400,
+    "tile_last": 18447,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_jackal_idle",
+    "tile_base": 18448,
+    "tile_last": 18495,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_jackal_walk",
+    "tile_base": 18496,
+    "tile_last": 18543,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_jackal_windup",
+    "tile_base": 18544,
+    "tile_last": 18591,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_jackal_attack",
+    "tile_base": 18592,
+    "tile_last": 18639,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_jackal_special",
+    "tile_base": 18640,
+    "tile_last": 18687,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_jackal_jump",
+    "tile_base": 18944,
+    "tile_last": 18991,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_jackal_hurt",
+    "tile_base": 18992,
+    "tile_last": 19039,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_jackal_dead",
+    "tile_base": 19040,
+    "tile_last": 19087,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_owl_idle",
+    "tile_base": 19088,
+    "tile_last": 19135,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_owl_walk",
+    "tile_base": 19136,
+    "tile_last": 19183,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_owl_windup",
+    "tile_base": 19184,
+    "tile_last": 19231,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_owl_attack",
+    "tile_base": 19232,
+    "tile_last": 19279,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_owl_special",
+    "tile_base": 19280,
+    "tile_last": 19327,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_owl_jump",
+    "tile_base": 19328,
+    "tile_last": 19375,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_owl_hurt",
+    "tile_base": 19376,
+    "tile_last": 19423,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_owl_dead",
+    "tile_base": 19424,
+    "tile_last": 19471,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_smoggar_idle",
+    "tile_base": 19472,
+    "tile_last": 19519,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_smoggar_walk",
+    "tile_base": 19520,
+    "tile_last": 19567,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_smoggar_windup",
+    "tile_base": 19568,
+    "tile_last": 19615,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_smoggar_attack",
+    "tile_base": 19616,
+    "tile_last": 19663,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_smoggar_special",
+    "tile_base": 19664,
+    "tile_last": 19711,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_smoggar_jump",
+    "tile_base": 19712,
+    "tile_last": 19759,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_smoggar_hurt",
+    "tile_base": 19760,
+    "tile_last": 19807,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_smoggar_dead",
+    "tile_base": 19808,
+    "tile_last": 19855,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_vulture_idle",
+    "tile_base": 19856,
+    "tile_last": 19903,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_vulture_walk",
+    "tile_base": 19904,
+    "tile_last": 19951,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_vulture_windup",
+    "tile_base": 19952,
+    "tile_last": 19999,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_vulture_attack",
+    "tile_base": 20000,
+    "tile_last": 20047,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_vulture_special",
+    "tile_base": 20048,
+    "tile_last": 20095,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_vulture_jump",
+    "tile_base": 20096,
+    "tile_last": 20143,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_vulture_hurt",
+    "tile_base": 20144,
+    "tile_last": 20191,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_vulture_dead",
+    "tile_base": 20192,
+    "tile_last": 20239,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_eel_idle",
+    "tile_base": 20240,
+    "tile_last": 20287,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_eel_walk",
+    "tile_base": 20288,
+    "tile_last": 20335,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_eel_windup",
+    "tile_base": 20336,
+    "tile_last": 20383,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_eel_attack",
+    "tile_base": 20384,
+    "tile_last": 20431,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_eel_special",
+    "tile_base": 20432,
+    "tile_last": 20479,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_eel_jump",
+    "tile_base": 20480,
+    "tile_last": 20527,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_eel_hurt",
+    "tile_base": 20528,
+    "tile_last": 20575,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_eel_dead",
+    "tile_base": 20576,
+    "tile_last": 20623,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_wyrm_idle",
+    "tile_base": 20624,
+    "tile_last": 20671,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_wyrm_walk",
+    "tile_base": 20672,
+    "tile_last": 20719,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_wyrm_windup",
+    "tile_base": 20720,
+    "tile_last": 20767,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_wyrm_attack",
+    "tile_base": 20768,
+    "tile_last": 20815,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_wyrm_special",
+    "tile_base": 20816,
+    "tile_last": 20863,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_wyrm_jump",
+    "tile_base": 20864,
+    "tile_last": 20911,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_wyrm_hurt",
+    "tile_base": 20912,
+    "tile_last": 20959,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_wyrm_dead",
+    "tile_base": 20960,
+    "tile_last": 21007,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_hyena_idle",
+    "tile_base": 21008,
+    "tile_last": 21055,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_hyena_walk",
+    "tile_base": 21056,
+    "tile_last": 21103,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_hyena_windup",
+    "tile_base": 21104,
+    "tile_last": 21151,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_hyena_attack",
+    "tile_base": 21152,
+    "tile_last": 21199,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_hyena_special",
+    "tile_base": 21200,
+    "tile_last": 21247,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_hyena_jump",
+    "tile_base": 21248,
+    "tile_last": 21295,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_hyena_hurt",
+    "tile_base": 21296,
+    "tile_last": 21343,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "boss_hyena_dead",
+    "tile_base": 21344,
+    "tile_last": 21391,
+    "strips": 8,
+    "rows": 6,
+    "stride": 8,
+    "palette_count": 1
+  },
+  {
+    "name": "prop_chest",
+    "tile_base": 21392,
+    "tile_last": 21395,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "prop_chest_open",
+    "tile_base": 21396,
+    "tile_last": 21399,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "prop_spikes",
+    "tile_base": 21400,
+    "tile_last": 21403,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "prop_lava",
+    "tile_base": 21404,
+    "tile_last": 21407,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "prop_sludge",
+    "tile_base": 21408,
+    "tile_last": 21411,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "item_rose_gold",
+    "tile_base": 21412,
+    "tile_last": 21415,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "item_rose_red",
+    "tile_base": 21416,
+    "tile_last": 21419,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "item_heart",
+    "tile_base": 21420,
+    "tile_last": 21423,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "item_seed",
+    "tile_base": 21424,
+    "tile_last": 21427,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "item_gem",
+    "tile_base": 21428,
+    "tile_last": 21431,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_grass",
+    "tile_base": 21432,
+    "tile_last": 21435,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_flowers",
+    "tile_base": 21436,
+    "tile_last": 21439,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_bush",
+    "tile_base": 21440,
+    "tile_last": 21443,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_mushroom",
+    "tile_base": 21444,
+    "tile_last": 21447,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_sapling",
+    "tile_base": 21448,
+    "tile_last": 21451,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_rock",
+    "tile_base": 21452,
+    "tile_last": 21455,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_lantern",
+    "tile_base": 21456,
+    "tile_last": 21459,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_sign",
+    "tile_base": 21460,
+    "tile_last": 21463,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_lily",
+    "tile_base": 21464,
+    "tile_last": 21467,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_fall",
+    "tile_base": 21468,
+    "tile_last": 21471,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_vine",
+    "tile_base": 21472,
+    "tile_last": 21503,
+    "strips": 2,
+    "rows": 16,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_door",
+    "tile_base": 21504,
+    "tile_last": 21507,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_door_open",
+    "tile_base": 21508,
+    "tile_last": 21511,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_rope",
+    "tile_base": 21512,
+    "tile_last": 21543,
+    "strips": 2,
+    "rows": 16,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_ladder",
+    "tile_base": 21544,
+    "tile_last": 21575,
+    "strips": 2,
+    "rows": 16,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_chain",
+    "tile_base": 21576,
+    "tile_last": 21607,
+    "strips": 2,
+    "rows": 16,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_kelp",
+    "tile_base": 21608,
+    "tile_last": 21639,
+    "strips": 2,
+    "rows": 16,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "decor_icevine",
+    "tile_base": 21640,
+    "tile_last": 21671,
+    "strips": 2,
+    "rows": 16,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_gold",
+    "tile_base": 21672,
+    "tile_last": 21675,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_silver",
+    "tile_base": 21676,
+    "tile_last": 21679,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_flower",
+    "tile_base": 21680,
+    "tile_last": 21683,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_critter",
+    "tile_base": 21684,
+    "tile_last": 21687,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_life",
+    "tile_base": 21688,
+    "tile_last": 21691,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_swift",
+    "tile_base": 21692,
+    "tile_last": 21695,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_might",
+    "tile_base": 21696,
+    "tile_last": 21699,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_veil",
+    "tile_base": 21700,
+    "tile_last": 21703,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_charm",
+    "tile_base": 21704,
+    "tile_last": 21707,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_spring",
+    "tile_base": 21708,
+    "tile_last": 21711,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_crown",
+    "tile_base": 21712,
+    "tile_last": 21715,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_thorns",
+    "tile_base": 21716,
+    "tile_last": 21719,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_spread",
+    "tile_base": 21720,
+    "tile_last": 21723,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_pierce",
+    "tile_base": 21724,
+    "tile_last": 21727,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_gale",
+    "tile_base": 21728,
+    "tile_last": 21731,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_bloom",
+    "tile_base": 21732,
+    "tile_last": 21735,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_lily",
+    "tile_base": 21736,
+    "tile_last": 21739,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "trinket_art",
+    "tile_base": 21740,
+    "tile_last": 21743,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "airship_0",
+    "tile_base": 21744,
+    "tile_last": 21839,
+    "strips": 16,
+    "rows": 6,
+    "stride": 16,
+    "palette_count": 1
+  },
+  {
+    "name": "airship_1",
+    "tile_base": 21840,
+    "tile_last": 21935,
+    "strips": 16,
+    "rows": 6,
+    "stride": 16,
+    "palette_count": 1
+  },
+  {
+    "name": "airship_2",
+    "tile_base": 21936,
+    "tile_last": 22031,
+    "strips": 16,
+    "rows": 6,
+    "stride": 16,
+    "palette_count": 1
+  },
+  {
+    "name": "glider_wing",
+    "tile_base": 22032,
+    "tile_last": 22049,
+    "strips": 6,
+    "rows": 3,
+    "stride": 6,
+    "palette_count": 1
+  },
+  {
+    "name": "glider_chute",
+    "tile_base": 22050,
+    "tile_last": 22067,
+    "strips": 6,
+    "rows": 3,
+    "stride": 6,
+    "palette_count": 1
+  },
+  {
+    "name": "fx_whirl0",
+    "tile_base": 22068,
+    "tile_last": 22083,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "fx_whirl1",
+    "tile_base": 22084,
+    "tile_last": 22099,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "fx_whirl2",
+    "tile_base": 22100,
+    "tile_last": 22115,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "fx_trail0",
+    "tile_base": 22116,
+    "tile_last": 22131,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "fx_trail1",
+    "tile_base": 22132,
+    "tile_last": 22147,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "fx_sun0",
+    "tile_base": 22148,
+    "tile_last": 22163,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "fx_sun1",
+    "tile_base": 22164,
+    "tile_last": 22179,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "fx_sun2",
+    "tile_base": 22180,
+    "tile_last": 22195,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "fx_burst0",
+    "tile_base": 22196,
+    "tile_last": 22211,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "fx_burst1",
+    "tile_base": 22212,
+    "tile_last": 22227,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "fx_aura0",
+    "tile_base": 22228,
+    "tile_last": 22243,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "fx_aura1",
+    "tile_base": 22244,
+    "tile_last": 22259,
+    "strips": 4,
+    "rows": 4,
+    "stride": 4,
+    "palette_count": 1
+  },
+  {
+    "name": "hazard_fire0",
+    "tile_base": 22260,
+    "tile_last": 22263,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "hazard_fire1",
+    "tile_base": 22264,
+    "tile_last": 22267,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "hazard_sludge0",
+    "tile_base": 22268,
+    "tile_last": 22271,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "hazard_sludge1",
+    "tile_base": 22272,
+    "tile_last": 22275,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "hazard_toxic0",
+    "tile_base": 22276,
+    "tile_last": 22279,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "hazard_toxic1",
+    "tile_base": 22280,
+    "tile_last": 22283,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "hazard_spikes0",
+    "tile_base": 22284,
+    "tile_last": 22287,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "hazard_spikes1",
+    "tile_base": 22288,
+    "tile_last": 22291,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "hazard_sign0",
+    "tile_base": 22292,
+    "tile_last": 22295,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "hazard_sign1",
+    "tile_base": 22296,
+    "tile_last": 22299,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_water_s0",
+    "tile_base": 22300,
+    "tile_last": 22303,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_water_l48_0",
+    "tile_base": 22304,
+    "tile_last": 22307,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_water_r48_0",
+    "tile_base": 22308,
+    "tile_last": 22311,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_water_l64_0",
+    "tile_base": 22312,
+    "tile_last": 22315,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_water_r64_0",
+    "tile_base": 22316,
+    "tile_last": 22319,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_water_s1",
+    "tile_base": 22320,
+    "tile_last": 22323,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_water_l48_1",
+    "tile_base": 22324,
+    "tile_last": 22327,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_water_r48_1",
+    "tile_base": 22328,
+    "tile_last": 22331,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_water_l64_1",
+    "tile_base": 22332,
+    "tile_last": 22335,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_water_r64_1",
+    "tile_base": 22336,
+    "tile_last": 22339,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_toxic_s0",
+    "tile_base": 22340,
+    "tile_last": 22343,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_toxic_l48_0",
+    "tile_base": 22344,
+    "tile_last": 22347,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_toxic_r48_0",
+    "tile_base": 22348,
+    "tile_last": 22351,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_toxic_l64_0",
+    "tile_base": 22352,
+    "tile_last": 22355,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_toxic_r64_0",
+    "tile_base": 22356,
+    "tile_last": 22359,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_toxic_s1",
+    "tile_base": 22360,
+    "tile_last": 22363,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_toxic_l48_1",
+    "tile_base": 22364,
+    "tile_last": 22367,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_toxic_r48_1",
+    "tile_base": 22368,
+    "tile_last": 22371,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_toxic_l64_1",
+    "tile_base": 22372,
+    "tile_last": 22375,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_toxic_r64_1",
+    "tile_base": 22376,
+    "tile_last": 22379,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_fire_s0",
+    "tile_base": 22380,
+    "tile_last": 22383,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_fire_l48_0",
+    "tile_base": 22384,
+    "tile_last": 22387,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_fire_r48_0",
+    "tile_base": 22388,
+    "tile_last": 22391,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_fire_l64_0",
+    "tile_base": 22392,
+    "tile_last": 22395,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_fire_r64_0",
+    "tile_base": 22396,
+    "tile_last": 22399,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_fire_s1",
+    "tile_base": 22400,
+    "tile_last": 22403,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_fire_l48_1",
+    "tile_base": 22404,
+    "tile_last": 22407,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_fire_r48_1",
+    "tile_base": 22408,
+    "tile_last": 22411,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_fire_l64_1",
+    "tile_base": 22412,
+    "tile_last": 22415,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_fire_r64_1",
+    "tile_base": 22416,
+    "tile_last": 22419,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_void_s0",
+    "tile_base": 22420,
+    "tile_last": 22423,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_void_l48_0",
+    "tile_base": 22424,
+    "tile_last": 22427,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_void_r48_0",
+    "tile_base": 22428,
+    "tile_last": 22431,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_void_l64_0",
+    "tile_base": 22432,
+    "tile_last": 22435,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_void_r64_0",
+    "tile_base": 22436,
+    "tile_last": 22439,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_void_s1",
+    "tile_base": 22440,
+    "tile_last": 22443,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_void_l48_1",
+    "tile_base": 22444,
+    "tile_last": 22447,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_void_r48_1",
+    "tile_base": 22448,
+    "tile_last": 22451,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_void_l64_1",
+    "tile_base": 22452,
+    "tile_last": 22455,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "pit_void_r64_1",
+    "tile_base": 22456,
+    "tile_last": 22459,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "front_fern",
+    "tile_base": 22460,
+    "tile_last": 22465,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "front_stone_grass",
+    "tile_base": 22466,
+    "tile_last": 22471,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "front_stone_moss",
+    "tile_base": 22472,
+    "tile_last": 22477,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "front_stone_sand",
+    "tile_base": 22478,
+    "tile_last": 22483,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "front_stone_autumn",
+    "tile_base": 22484,
+    "tile_last": 22489,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "front_stone_snow",
+    "tile_base": 22490,
+    "tile_last": 22495,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "front_stone_bark",
+    "tile_base": 22496,
+    "tile_last": 22501,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "front_stone_rust",
+    "tile_base": 22502,
+    "tile_last": 22507,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "front_stone_coral",
+    "tile_base": 22508,
+    "tile_last": 22513,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "front_stone_stone",
+    "tile_base": 22514,
+    "tile_last": 22519,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "front_stone_savanna",
+    "tile_base": 22520,
+    "tile_last": 22525,
+    "strips": 2,
+    "rows": 3,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "gate_shut",
+    "tile_base": 22526,
+    "tile_last": 22537,
+    "strips": 3,
+    "rows": 4,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "gate_open",
+    "tile_base": 22538,
+    "tile_last": 22549,
+    "strips": 3,
+    "rows": 4,
+    "stride": 3,
+    "palette_count": 1
+  },
+  {
+    "name": "landmark_forest",
+    "tile_base": 22550,
+    "tile_last": 22681,
+    "strips": 12,
+    "rows": 11,
+    "stride": 12,
+    "palette_count": 3
+  },
+  {
+    "name": "landmark_falls",
+    "tile_base": 22682,
+    "tile_last": 22813,
+    "strips": 12,
+    "rows": 11,
+    "stride": 12,
+    "palette_count": 3
+  },
+  {
+    "name": "landmark_coast",
+    "tile_base": 22814,
+    "tile_last": 22945,
+    "strips": 12,
+    "rows": 11,
+    "stride": 12,
+    "palette_count": 3
+  },
+  {
+    "name": "landmark_autumn",
+    "tile_base": 22946,
+    "tile_last": 23077,
+    "strips": 12,
+    "rows": 11,
+    "stride": 12,
+    "palette_count": 3
+  },
+  {
+    "name": "landmark_ice",
+    "tile_base": 23078,
+    "tile_last": 23209,
+    "strips": 12,
+    "rows": 11,
+    "stride": 12,
+    "palette_count": 3
+  },
+  {
+    "name": "landmark_worldtree",
+    "tile_base": 23210,
+    "tile_last": 23341,
+    "strips": 12,
+    "rows": 11,
+    "stride": 12,
+    "palette_count": 3
+  },
+  {
+    "name": "landmark_works",
+    "tile_base": 23342,
+    "tile_last": 23473,
+    "strips": 12,
+    "rows": 11,
+    "stride": 12,
+    "palette_count": 3
+  },
+  {
+    "name": "landmark_reef",
+    "tile_base": 23474,
+    "tile_last": 23605,
+    "strips": 12,
+    "rows": 11,
+    "stride": 12,
+    "palette_count": 3
+  },
+  {
+    "name": "landmark_mountain",
+    "tile_base": 23606,
+    "tile_last": 23737,
+    "strips": 12,
+    "rows": 11,
+    "stride": 12,
+    "palette_count": 3
+  },
+  {
+    "name": "landmark_baobab",
+    "tile_base": 23738,
+    "tile_last": 23869,
+    "strips": 12,
+    "rows": 11,
+    "stride": 12,
+    "palette_count": 3
+  },
+  {
+    "name": "landmark_citadel",
+    "tile_base": 23870,
+    "tile_last": 24001,
+    "strips": 12,
+    "rows": 11,
+    "stride": 12,
+    "palette_count": 3
+  },
+  {
+    "name": "block_grass_0",
+    "tile_base": 24002,
+    "tile_last": 24005,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_grass_1",
+    "tile_base": 24006,
+    "tile_last": 24009,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_grass_2",
+    "tile_base": 24010,
+    "tile_last": 24013,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_grass_3",
+    "tile_base": 24014,
+    "tile_last": 24017,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_grass_4",
+    "tile_base": 24018,
+    "tile_last": 24021,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_grass_5",
+    "tile_base": 24022,
+    "tile_last": 24025,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_grass_6",
+    "tile_base": 24026,
+    "tile_last": 24029,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_moss_0",
+    "tile_base": 24030,
+    "tile_last": 24033,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_moss_1",
+    "tile_base": 24034,
+    "tile_last": 24037,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_moss_2",
+    "tile_base": 24038,
+    "tile_last": 24041,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_moss_3",
+    "tile_base": 24042,
+    "tile_last": 24045,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_moss_4",
+    "tile_base": 24046,
+    "tile_last": 24049,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_moss_5",
+    "tile_base": 24050,
+    "tile_last": 24053,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_moss_6",
+    "tile_base": 24054,
+    "tile_last": 24057,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_sand_0",
+    "tile_base": 24058,
+    "tile_last": 24061,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_sand_1",
+    "tile_base": 24062,
+    "tile_last": 24065,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_sand_2",
+    "tile_base": 24066,
+    "tile_last": 24069,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_sand_3",
+    "tile_base": 24070,
+    "tile_last": 24073,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_sand_4",
+    "tile_base": 24074,
+    "tile_last": 24077,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_sand_5",
+    "tile_base": 24078,
+    "tile_last": 24081,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_sand_6",
+    "tile_base": 24082,
+    "tile_last": 24085,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_autumn_0",
+    "tile_base": 24086,
+    "tile_last": 24089,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_autumn_1",
+    "tile_base": 24090,
+    "tile_last": 24093,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_autumn_2",
+    "tile_base": 24094,
+    "tile_last": 24097,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_autumn_3",
+    "tile_base": 24098,
+    "tile_last": 24101,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_autumn_4",
+    "tile_base": 24102,
+    "tile_last": 24105,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_autumn_5",
+    "tile_base": 24106,
+    "tile_last": 24109,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_autumn_6",
+    "tile_base": 24110,
+    "tile_last": 24113,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_snow_0",
+    "tile_base": 24114,
+    "tile_last": 24117,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_snow_1",
+    "tile_base": 24118,
+    "tile_last": 24121,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_snow_2",
+    "tile_base": 24122,
+    "tile_last": 24125,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_snow_3",
+    "tile_base": 24126,
+    "tile_last": 24129,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_snow_4",
+    "tile_base": 24130,
+    "tile_last": 24133,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_snow_5",
+    "tile_base": 24134,
+    "tile_last": 24137,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_snow_6",
+    "tile_base": 24138,
+    "tile_last": 24141,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_bark_0",
+    "tile_base": 24142,
+    "tile_last": 24145,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_bark_1",
+    "tile_base": 24146,
+    "tile_last": 24149,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_bark_2",
+    "tile_base": 24150,
+    "tile_last": 24153,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_bark_3",
+    "tile_base": 24154,
+    "tile_last": 24157,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_bark_4",
+    "tile_base": 24158,
+    "tile_last": 24161,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_bark_5",
+    "tile_base": 24162,
+    "tile_last": 24165,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_bark_6",
+    "tile_base": 24166,
+    "tile_last": 24169,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_rust_0",
+    "tile_base": 24170,
+    "tile_last": 24173,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_rust_1",
+    "tile_base": 24174,
+    "tile_last": 24177,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_rust_2",
+    "tile_base": 24178,
+    "tile_last": 24181,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_rust_3",
+    "tile_base": 24182,
+    "tile_last": 24185,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_rust_4",
+    "tile_base": 24186,
+    "tile_last": 24189,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_rust_5",
+    "tile_base": 24190,
+    "tile_last": 24193,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_rust_6",
+    "tile_base": 24194,
+    "tile_last": 24197,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_coral_0",
+    "tile_base": 24198,
+    "tile_last": 24201,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_coral_1",
+    "tile_base": 24202,
+    "tile_last": 24205,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_coral_2",
+    "tile_base": 24206,
+    "tile_last": 24209,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_coral_3",
+    "tile_base": 24210,
+    "tile_last": 24213,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_coral_4",
+    "tile_base": 24214,
+    "tile_last": 24217,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_coral_5",
+    "tile_base": 24218,
+    "tile_last": 24221,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_coral_6",
+    "tile_base": 24222,
+    "tile_last": 24225,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_stone_0",
+    "tile_base": 24226,
+    "tile_last": 24229,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_stone_1",
+    "tile_base": 24230,
+    "tile_last": 24233,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_stone_2",
+    "tile_base": 24234,
+    "tile_last": 24237,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_stone_3",
+    "tile_base": 24238,
+    "tile_last": 24241,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_stone_4",
+    "tile_base": 24242,
+    "tile_last": 24245,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_stone_5",
+    "tile_base": 24246,
+    "tile_last": 24249,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_stone_6",
+    "tile_base": 24250,
+    "tile_last": 24253,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_savanna_0",
+    "tile_base": 24254,
+    "tile_last": 24257,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_savanna_1",
+    "tile_base": 24258,
+    "tile_last": 24261,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_savanna_2",
+    "tile_base": 24262,
+    "tile_last": 24265,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_savanna_3",
+    "tile_base": 24266,
+    "tile_last": 24269,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_savanna_4",
+    "tile_base": 24270,
+    "tile_last": 24273,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_savanna_5",
+    "tile_base": 24274,
+    "tile_last": 24277,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "block_savanna_6",
+    "tile_base": 24278,
+    "tile_last": 24281,
+    "strips": 2,
+    "rows": 2,
+    "stride": 2,
+    "palette_count": 1
+  },
+  {
+    "name": "title",
+    "tile_base": 24314,
+    "tile_last": 24579,
+    "strips": 19,
+    "rows": 14,
+    "stride": 19,
+    "palette_count": 16
+  }
+]

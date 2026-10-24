@@ -4,36 +4,38 @@ An original twelve-mission side-scrolling adventure using the SDK's C 2D engine.
 Game name: `maiya`. Cartridge ID: `780`. The repository default remains `demo`.
 New in SDK v1.7.1.
 
-Current development: **V5 test candidate**. All twelve roads now have indexed
-environment artwork, a middle parallax plane and five authored progression
-beats. Each has a defended clearing using an existing creature, followed by
-the gauntlet and the original guardian. Maiya, Luna, enemies, villagers and
-guardian drawings, character palettes, gait and jump physics are preserved.
-The title displays `V5 TEST` to distinguish this candidate from released V4.
+Current development: **V5 gameplay candidate with approved V4 artwork**.
+All backgrounds, scenery, arenas, terrain, landmarks, characters, effects,
+portraits, title artwork, palettes and font are frozen to the approved V4 set.
+The rejected visual replacement has been removed. Original scenery layering,
+decor capacity and background scrolling are restored. No artwork authoring or
+image-editor export runs during a build.
 
-Rafts, swaying wreckage, a mine cart and a switch lift carry their riders.
-Foundry belts, reef currents, soft sand and warned fire/flak/reactor volleys
-add stage hazards. Existing ice, swimming, crumbling ledges and rescue systems
-remain. Accepted hits build a two-second chain capped at x10; road kill points
-use that multiplier. Rank adjusts attack frequency conservatively and drops
-after repeated damage or lost lives. Guardian projectiles distinguish armour
-from exposed regions; piercing seeds can penetrate armour.
+Gameplay work remains separate: five mission beats, defended clearings using
+existing creatures, moving ledges using existing tiles, readable hazard
+warnings, a bounded hit chain and restrained rank. Character gait, movement
+speeds and jump physics are preserved. The title's existing font displays
+`V5 TEST`; its underlying artwork is unchanged.
 
-Stock-speed timing remains an acceptance issue in busy scenes. These changes
-are a playable candidate, not hardware certification or a claim that every
-set piece and guardian transformation in the production specification is done.
+`tools/locked_art.py` checks the immutable graphics/FIX banks and palette/tile
+metadata against `artbox/v4_reference/lock.json`. A changed reference fails the
+build. `tools/art.py` only installs the approved bytes. Even `--rebuild-art`
+restores that same approved set; it does not regenerate drawings or palettes.
 
-Build isolated AES/MVS test packages without replacing released cartridges:
+Build isolated AES/MVS test packages:
 
 ```sh
 python3 games/maiya/tools/package_v5.py --out dist/maiya-v5-test
 ```
 
-An optional `--install` destination refreshes only Maiya's ROMs, matching
-software lists and NeoSD images. Saves, launch settings, configuration and
-other games are preserved; older launchers get only their Maiya ROM search
-path corrected. Use a new output directory for each candidate.
-Native CD media is built with `python3 tools/neocd/build.py --game maiya`.
+The optional `--install` destination refreshes only Maiya's ROMs, matching
+software lists and NeoSD images. Saves, launch settings and other games are
+preserved. An older launcher's Maiya ROM search path is corrected if needed.
+Use a new output directory for each candidate. Native CD media is built with
+`python3 tools/neocd/build.py --game maiya` using the same approved graphics.
+
+Busy-scene timing, actual 12/24 MHz parity and physical hardware approval
+remain open. This is a gameplay test candidate, not a hardware certification.
 
 ## Build and Play
 
@@ -52,8 +54,8 @@ make -f MakefileWin32.mak GAME=maiya test
 ```
 
 `GAME=maiya` selects its configuration without editing the root `game.cfg`.
-`make GAME=maiya` rebuilds P1 only after the first full build. `art` rebuilds
-C1/C2 and the HUD font; `sfix` refreshes the HUD font; `sound` builds the game's
+`make GAME=maiya` rebuilds P1 only after the first full build. `art` installs
+the approved C1/C2 and FIX banks; `sfix` restores that same FIX bank; `sound` builds the game's
 M1/V1 bank. Outputs are copied into `roms/maiya/`.
 
 Use the SDK's configured 68000 toolchain, WLA-DX, Python 3, NumPy, Pillow,
@@ -175,28 +177,16 @@ the game flow. Rebuild `make GAME=maiya sound` when changing that bank.
 
 ## Rendering and Art
 
-`tools/art.py` is the Makefile entry point. It runs the frame-based converter
-in `tools/build_commercial_assets.py`, not the full-screen Artbox importer.
-Do not run `prepare_assets.py` over this game's current assets: it is the
-earlier prototype layout and has different sprite dimensions.
+`tools/art.py` is the Makefile entry point. It copies the immutable approved
+V4 banks and their matching metadata. The old conversion and authoring tools
+are archival; they are not part of the build. Do not run them over approved
+assets. The art lock rejects changes rather than accepting a new hash.
 
-Maiya's canvas is 80x64, guardians 96x96. Animation groups share one palette
-and fixed feet anchors. Guardian source sheets contain differently sized
-drawings; their longest visible dimension is normalized before conversion.
-`assets/source_art/WALK.png` and `RUN.png` are eight-frame indexed sheets
-(80x64 per frame, index 0 transparent): her original walk and run drawings.
-`tools/aseprite/compose_gait.py` builds each gait frame from the stride
-figure on her original heroine sheet (head, rose, ponytail, tunic: the same
-pixels in every frame, moved only by its bob), one leg pair per phase cut
-from those sheets (both legs in the same colours), and drawn arms with a
-sleeve, bracer and closed fist. Each pose is held for the road its planted
-foot covers. `tools/aseprite/pipeline.py --author` turns the maps into
-`assets/authored/maiya_walkrun.aseprite` and exports the strips and layers;
-`tools/check_hero_frames.py`, `check_hands.py`, `check_stride_details.py`
-and `check_cute_polish.py` gate them (same head, solid boots, fists joined
-at the wrist, legs alternating, no sliding feet). See
-`assets/authored/POSES.md`. The larger `maiya_*_master.png` files are pose
-references, not build inputs.
+Maiya's canvas remains 80x64, guardians 96x96. The accepted indexed walk/run
+strips, layers, head placement, hands, legs, frame timing and feet anchors
+remain unchanged for both Maiya and Luna. Existing hero validators still
+check those accepted drawings against the actual encoded C-ROMs.
+
 The generated `artbox/generated/assets.json` describes exact tile bounds,
 row stride and dimensions. The game never guesses a screen ID for a frame.
 
@@ -211,8 +201,8 @@ three-strip window is separate from the cage, signs and vines. Walking and
 dashing share a forward distance-based gait clock (walk: contact, down,
 passing, up for each foot; run: contact, down, push-off, flight), without
 changing character scale or jump physics. Every gait frame keeps one hip, so
-the sprite moves with her and never jumps; new poses must be drawn, not made
-by stretching the existing drawings. Her sprite slots are pinned
+the sprite moves with her and never jumps; the accepted poses are fixed and must not be
+redrawn or stretched. Her sprite slots are pinned
 (`ng_char_pin_sprite`), so creatures coming and going never move her into
 slots still waiting to be written. Water shimmer resolves its two inks from the compiled
 decor palette rather than relying on pre-quantization palette indices.
