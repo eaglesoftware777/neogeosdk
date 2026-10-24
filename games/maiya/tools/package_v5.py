@@ -33,15 +33,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--install', type=Path)
+    parser.add_argument('--toolchain', type=Path)
     args = parser.parse_args()
     dest = args.out.resolve()
     dest.mkdir(parents=True, exist_ok=False)
-    manifest = {'version': 'v5-gameplay-v4-art', 'art_reference': 'approved-v4',
+    manifest = {'version': 'v5-stability', 'art_reference': 'v4-with-requested-back-contour',
                 'hardware_approval': 'pending', 'roms': {}}
     for mode in ('mvs', 'aes'):
         with (dest / (mode + '-build.log')).open('w') as log:
             subprocess.run([sys.executable, str(GAME / 'tools/build.py'),
-                            '--platform', mode, '--debug'], cwd=ROOT,
+                            '--platform', mode, '--debug', *(['--toolchain',str(args.toolchain)] if args.toolchain else [])], cwd=ROOT,
                            stdout=log, stderr=subprocess.STDOUT, check=True)
         folder = dest / 'tests' / mode
         roms = folder / 'roms/maiya'

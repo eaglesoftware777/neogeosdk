@@ -24,5 +24,5 @@ bounds are clipped. Use a full-list fallback if a query can interact with
 objects beyond the grid. Rebuild after movement before testing collisions.
 
 For a tiny cast or one projectile, a linear scan can cost less than building
-the grid. Maiya enables it only when several friendly shots and enemies are
-active. The host test checks cell boundaries, clipping and candidate coverage.
+the grid. Maiya keeps its established linear collision path. The helper remains
+optional for games with larger casts. The host test checks cell boundaries, clipping and candidate coverage.

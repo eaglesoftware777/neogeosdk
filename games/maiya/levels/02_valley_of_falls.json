@@ -39,7 +39,7 @@
     {"x": 1636, "y": 88, "w": 64},
     {"x": 1780, "y": 136, "w": 64},
     {"x": 1892, "y": 96, "w": 48},
-    {"x": 2004, "y": 64, "w": 48},
+    {"x": 2020, "y": 64, "w": 48},
     {"x": 2308, "y": 128, "w": 64},
     {"x": 2324, "y": 64, "w": 48},
     {"x": 2420, "y": 88, "w": 80},
@@ -56,6 +56,8 @@
     {"x": 964, "enemy": "beetle"},
     {"x": 1064, "enemy": "sludgebarrel"},
     {"x": 1228, "enemy": "vinesting"},
+    {"x": 1364, "enemy": "slime"},
+    {"x": 1628, "enemy": "beetle"},
     {"x": 1760, "enemy": "dartfrog"},
     {"x": 1952, "enemy": "sludgebarrel"},
     {"x": 2028, "enemy": "slime"},
@@ -130,17 +132,5 @@
     {"x": 348, "who": "maiden", "line": "THE FALLS HIDE A GOLDEN ROSE"},
     {"x": 1432, "who": "elder", "line": "DOWN THEN FORWARD AND B: SURGE"},
     {"x": 2472, "who": "spirit", "line": "SPIRITS GUARD THE HIGH LEDGES"}
-  ],
-  "arcade": {
-    "phases": [
-      {"name": "intro", "start": 0, "end": 560},
-      {"name": "hazard", "start": 560, "end": 1168},
-      {"name": "miniboss", "start": 1168, "end": 1824},
-      {"name": "gauntlet", "start": 1824, "end": 2864},
-      {"name": "boss", "start": 2864, "end": 3456}
-    ],
-    "miniboss": {"x": 1488, "enemy": "toxiccrab", "hp": 9, "name": "RIVER DRAKE"},
-    "gimmick": "raft",
-    "platform": 3
-  }
+  ]
 }

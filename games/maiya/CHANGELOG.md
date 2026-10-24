@@ -4,22 +4,19 @@ The ROM sets shared with the NeoGeoSDK pre-releases: `_v1` and `_v2` with
 v1.7.1, `_v3` with v1.7.2, `_v4` with v1.7.3. The SDK keeps its own
 version; Maiya's ROMs are numbered on their own.
 
-## v5 gameplay candidate with V4 artwork (2026-10-24, local development)
+## v5 stability candidate (2026-10-24, local development)
 
-- Restore the approved V4 graphics/FIX banks and exact palette/tile metadata.
-  Restore original backgrounds, guardian arena selection, terrain, landmarks,
-  decor slots, parallax and existing palette animation.
-- Remove the rejected replacement sources, scenery generator, extra middle
-  plane, water overlay, cart drawing, new hit sparks and boss shrink effect.
-- Lock all graphics and metadata with immutable reference hashes. Normal and
-  art build targets copy approved assets without editing or regenerating art.
-- Keep gameplay-only progression beats, existing-creature mid-guardians,
-  moving ledges, bounded combos, rank, collision candidates and performance
-  work. Existing art represents every moving platform and encounter.
-- Preserve accepted character artwork, movement, gait, camera/floor behavior,
-  pickups, objectives, Continue and hardware packaging conventions.
-- Busy-scene timing, actual 12/24 MHz parity and physical hardware acceptance
-  remain open. Further work is restricted to gameplay and technical defects.
+- Restore original combat, encounters, scoring, collision, rendering and
+  guardian behavior; remove experimental intermediate encounters, rank,
+  moving ledges, new weak points and hit chains.
+- Preserve V4 scenery and immutable source artwork. Apply only the requested
+  back-contour correction through 90 checked native-pixel changes. Character
+  heads, hands, legs, timing, anchors and palettes remain unchanged.
+- Adjust three platform heights for reachable routes, with the supported
+  archer moved to its matching floor. Reject experimental level rules before
+  export rather than silently ignoring them.
+- Build separate AES/MVS test cartridges and verify decoded graphics and
+  packaging. Physical hardware approval remains open.
 
 ### Earlier V5 work (2026-10-20)
 

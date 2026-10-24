@@ -195,7 +195,7 @@ def check(export=True):
         need(sum(p['hold_distance'] for p in poses if p['mode']==mode)==80,f'{mode}: hold distances must total 80 pixels')
     for p in poses:p.pop('_fist',None);p.pop('_boot',None)
     previews(poses,flats,palette['colors'])
-    result={'passed':not errors,'errors':errors,'poses':metrics,'review':str(ART/'review')};(ART/'check-result.json').write_text(json.dumps(result,indent=2)+'\n')
+    result={'passed':not errors,'errors':errors,'poses':metrics,'review':str((ART/'review').relative_to(ROOT))};(ART/'check-result.json').write_text(json.dumps(result,indent=2)+'\n')
     for error in errors:print('FAIL:',error)
     print(f'Hero art gate: {"PASS" if not errors else "FAIL"} ({len(poses)} frames, {len(errors)} failures). Previews: {ART / "review"}')
     return not errors
@@ -226,6 +226,8 @@ def check_rom():
                 raise ValueError('Legacy C tiles changed: '+p['name'])
     for name,words in old['palettes'].items():
         if array(name)!=words:raise ValueError('Existing hero/Luna palette changed: '+name)
+    sys.path.insert(0,str(ROOT/'games/maiya/tools'))
+    from maiya_posture import correct_frame
     decoded=[]
     for i,p in enumerate(json.loads((ART/'poses.json').read_text()),60):
         mode=p['mode'];slot=p['slot'];name=f'gait_{mode}{slot}'
@@ -234,6 +236,7 @@ def check_rom():
         # The builder writes final ROM wiring by swapping every byte pair.
         actual=decode_image(lanes[0][start:start+1280],lanes[1][start:start+1280],80,64,swapped=True)
         expected=np.array(Image.open(ART/'layers'/f"{p['name']}__flat.png"))
+        expected=correct_frame(i,expected)
         if not np.array_equal(actual,expected):raise ValueError('C-ROM pixel indices differ: '+name)
         decoded.append(name)
     result={'passed':True,'legacy_frames_byte_identical':len(old['frames']),

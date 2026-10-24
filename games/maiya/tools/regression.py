@@ -58,11 +58,18 @@ def main():
     for name, expr in fields.items():
         command += ["-ex", f'printf "{name}=%lu\\n", (unsigned long){expr}']
     layout = dict(line.split("=", 1) for line in subprocess.check_output(command, text=True).splitlines() if "=" in line)
+    if args.scenario == 'climb':
+        level = json.loads((GAME / 'levels/01_emerald_forest.json').read_text())
+        vine = next(v for v in level['vines']
+                    if v['bottom'] - v['top'] > 50 and
+                    all(abs(v['x'] + 16 - e['x']) > 96 for e in level['encounters']))
+        layout['qa_vine_x'] = vine['x'] + 16
+        layout['qa_vine_bottom'] = vine['bottom']
     if args.scenario == 'pickups':
         level = json.loads((GAME / 'levels/01_emerald_forest.json').read_text())
         picks = level['pickups']
         road = next(i for i, p in enumerate(picks) if p['kind'] == 'spring' and p['y'] >= 160)
-        shelf = next(i for i, p in enumerate(picks) if p['x'] > level['arcade']['phases'][2]['end'] and p['y'] < 100)
+        shelf = next(i for i, p in enumerate(picks) if p['x'] > level['width'] // 2 and p['y'] < 100)
         for name, index in (('road', road), ('shelf', shelf)):
             layout['qa_' + name + '_x'] = picks[index]['x'] + 16
             layout['qa_' + name + '_y'] = picks[index]['y'] + 40

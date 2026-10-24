@@ -48,15 +48,15 @@
     {"x": 2960, "y": 96, "w": 64},
     {"x": 3104, "y": 128, "w": 64},
     {"x": 3216, "y": 104, "w": 64},
-    {"x": 3328, "y": 72, "w": 64},
-    {"x": 3568, "y": 144, "w": 48},
-    {"x": 3552, "y": 72, "w": 64},
-    {"x": 3680, "y": 104, "w": 64},
-    {"x": 3808, "y": 128, "w": 48},
-    {"x": 3952, "y": 104, "w": 32},
-    {"x": 4000, "y": 112, "w": 32},
+    {"x": 3344, "y": 72, "w": 64},
+    {"x": 3552, "y": 144, "w": 48},
+    {"x": 3568, "y": 72, "w": 64},
+    {"x": 3664, "y": 104, "w": 64},
+    {"x": 3824, "y": 128, "w": 48},
+    {"x": 3936, "y": 104, "w": 32},
+    {"x": 4016, "y": 112, "w": 32},
     {"x": 4112, "y": 144, "w": 64},
-    {"x": 4256, "y": 144, "w": 48},
+    {"x": 4272, "y": 144, "w": 48},
     {"x": 4384, "y": 128, "w": 80}
   ],
   "encounters": [
@@ -72,6 +72,10 @@
     {"x": 1816, "enemy": "crow"},
     {"x": 2004, "enemy": "worm"},
     {"x": 2192, "enemy": "smogbat"},
+    {"x": 2392, "enemy": "drillbot"},
+    {"x": 2572, "enemy": "goblin"},
+    {"x": 2680, "enemy": "drillbot"},
+    {"x": 2760, "enemy": "crow"},
     {"x": 2948, "enemy": "worm"},
     {"x": 3136, "enemy": "pair"},
     {"x": 3324, "enemy": "goblin"},
@@ -96,6 +100,7 @@
     {"x": 1036, "w": 32, "type": "spikes"},
     {"x": 1816, "w": 32, "type": "spikes"},
     {"x": 2036, "w": 64, "type": "pit"},
+    {"x": 2596, "w": 32, "type": "spikes"},
     {"x": 2792, "w": 64, "type": "pit"},
     {"x": 3372, "w": 32, "type": "spikes"},
     {"x": 4128, "w": 32, "type": "spikes"},
@@ -152,17 +157,5 @@
     {"x": 524, "who": "spirit", "line": "COLD SLEEPS, IT DOES NOT DIE"},
     {"x": 2336, "who": "elder", "line": "THE KEY WAITS ON THE HIGH SHELF"},
     {"x": 4056, "who": "maiden", "line": "WARM STONES MARK THE SAFE PATH"}
-  ],
-  "arcade": {
-    "phases": [
-      {"name": "intro", "start": 0, "end": 976},
-      {"name": "hazard", "start": 976, "end": 2016},
-      {"name": "miniboss", "start": 2016, "end": 3136},
-      {"name": "gauntlet", "start": 3136, "end": 4924},
-      {"name": "boss", "start": 4924, "end": 5632}
-    ],
-    "miniboss": {"x": 2576, "enemy": "slaggolem", "hp": 12, "name": "PRISM WARDEN"},
-    "gimmick": "minecart",
-    "platform": 5
-  }
+  ]
 }

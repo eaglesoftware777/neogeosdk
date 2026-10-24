@@ -69,24 +69,9 @@ road, y 192), the key just above a ledge, and each climb's top on a ledge.
 A platform marked `"rotten": true` is drawn greyed and gives way under her:
 it trembles, drops out of sight and grows back a while later.
 
-V5 stages additionally describe their road pacing in an optional `arcade`
-object. Its `phases` list contains exactly five entries named `intro`,
-`hazard`, `miniboss`, `gauntlet`, `boss`, each with integer `start` and `end`.
-The first starts at zero, adjacent intervals meet, and the last ends at the
-stage width. The miniboss entry specifies an existing `enemy`, `x`, `hp`
-(4..24) and a short `name`. Its trigger must lie safely inside the third
-interval, with a clear 288px floor around the authored centre.
-
-`gimmick` selects `bridge`, `raft`, `sway`, `brushfire`, `minecart`, `lift`,
-`conveyor`, `buoyancy`, `ice`, `quicksand`, `flak` or `reactor`. `platform`
-is a zero-based platform index; the sentinel 32 means no designated ledge.
-Moving-platform variants use a copy of that ledge at runtime, leaving the
-JSON's collision dimensions and the other platforms intact. The exporter
-rejects missing referenced ledges and unknown creature/gimmick names.
-
-The existing guardian, key, objective and gate fields keep their roles.
-These five road intervals do not replace the guardian's animation or story
-data. Fixtures without an `arcade` object retain the earlier stage behavior.
+Maiya retains its established gameplay. Layout edits use the existing fields;
+experimental `arcade` metadata and intermediate encounters are rejected.
+Original combat, scoring, objectives and end guardians remain unchanged.
 
 `healed` is what her work gave back, told by the elder in the healed
 valley after its guardian falls; `briefing` is the elder's word before the
