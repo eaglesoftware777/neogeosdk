@@ -130,14 +130,6 @@
       "enemy": "dartfrog"
     },
     {
-      "x": 1540,
-      "enemy": "beetle"
-    },
-    {
-      "x": 1720,
-      "enemy": "acidmoth"
-    },
-    {
       "x": 1980,
       "enemy": "sawbot"
     },
@@ -177,11 +169,6 @@
       "x": 1152,
       "w": 48,
       "type": "pit"
-    },
-    {
-      "x": 1584,
-      "w": 48,
-      "type": "spikes"
     },
     {
       "x": 2080,
@@ -406,5 +393,20 @@
       "who": "spirit",
       "line": "HOLD DOWN TO KNEEL AND REST"
     }
-  ]
+  ],
+  "rotten": [
+    2
+  ],
+  "arcade": {
+    "phases": [
+      {"name": "intro", "start": 0, "end": 640},
+      {"name": "hazard", "start": 640, "end": 1312},
+      {"name": "miniboss", "start": 1312, "end": 2048},
+      {"name": "gauntlet", "start": 2048, "end": 3200},
+      {"name": "boss", "start": 3200, "end": 3840}
+    ],
+    "miniboss": {"x": 1680, "enemy": "slaggolem", "hp": 8, "name": "TREANT SENTINEL"},
+    "gimmick": "bridge",
+    "platform": 2
+  }
 }

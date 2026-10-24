@@ -50,7 +50,7 @@
     {"x": 3440, "y": 128, "w": 64},
     {"x": 3456, "y": 64, "w": 64},
     {"x": 3568, "y": 88, "w": 64, "rotten": true},
-    {"x": 3760, "y": 136, "w": 64},
+    {"x": 3776, "y": 136, "w": 64},
     {"x": 3904, "y": 96, "w": 64},
     {"x": 4064, "y": 64, "w": 80},
     {"x": 2080, "y": -64, "w": 96},
@@ -74,8 +74,6 @@
     {"x": 2264, "enemy": "pair"},
     {"x": 2432, "enemy": "crow"},
     {"x": 2600, "enemy": "pair"},
-    {"x": 2768, "enemy": "drone"},
-    {"x": 2936, "enemy": "worm"},
     {"x": 3100, "enemy": "pair"},
     {"x": 3268, "enemy": "vinesting"},
     {"x": 3436, "enemy": "goblin"},
@@ -107,7 +105,6 @@
     {"x": 1524, "w": 48, "type": "spikes"},
     {"x": 2192, "w": 48, "type": "fire"},
     {"x": 2488, "w": 48, "type": "pit"},
-    {"x": 2860, "w": 48, "type": "spikes"},
     {"x": 3156, "w": 48, "type": "pit"},
     {"x": 3528, "w": 48, "type": "fire"},
     {"x": 3954, "w": 48, "type": "fire"},
@@ -166,5 +163,17 @@
     {"x": 412, "who": "elder", "line": "THE WORLD TREE STILL BREATHES"},
     {"x": 1932, "who": "sunboy", "line": "MAIYA! THE LAST GATE IS NEAR"},
     {"x": 3380, "who": "spirit", "line": "ONE ROOT, ONE VALLEY, ONE SUN"}
-  ]
+  ],
+  "arcade": {
+    "phases": [
+      {"name": "intro", "start": 0, "end": 1104},
+      {"name": "hazard", "start": 1104, "end": 2256},
+      {"name": "miniboss", "start": 2256, "end": 3536},
+      {"name": "gauntlet", "start": 3536, "end": 5528},
+      {"name": "boss", "start": 5528, "end": 6144}
+    ],
+    "miniboss": {"x": 2896, "enemy": "rhino", "hp": 13, "name": "HORNET MARSHAL"},
+    "gimmick": "lift",
+    "platform": 8
+  }
 }

@@ -31,7 +31,7 @@
 
 #define MG_HEAVY_DAMAGE        3    /* a blow this strong (Surge, stomp, Secret Art) is heavy */
 #define MG_HITSTOP_KILL        0    /* frames held when a creature is beaten (the preset: 3)  */
-#define MG_HITSTOP_HEAVY_HIT   0    /* frames held by a heavy blow a creature survives        */
+#define MG_HITSTOP_HEAVY_HIT   1    /* one impact frame for a surviving heavy blow            */
 #define MG_HITSTOP_HURT        2    /* frames held when Maiya is struck                       */
 #define MG_HITSTOP_BOSS_HIT    2    /* frames held when a guardian is struck (the preset: 5)  */
 #define MG_HITSTOP_BOSS_DOWN   10   /* frames held on a guardian's last blow                  */

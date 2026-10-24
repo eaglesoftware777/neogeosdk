@@ -149,7 +149,7 @@ def engine_objects():
     return [f"{name}0.o" for name in keep]
 
 
-def quick_build(toolchain, platform):
+def quick_build(toolchain, platform, perf=0):
     """Recompile this game's scene against the previously staged SDK objects."""
     check_authored_hero()
     if not (WORK / "out/neogeolib.o").exists():
@@ -158,6 +158,10 @@ def quick_build(toolchain, platform):
     staged_platform = marker.read_text().strip() if marker.exists() else "mvs"
     if staged_platform != platform:
         raise SystemExit(f"Run a full build with --platform {platform} before --quick")
+    perf_marker=WORK / 'perf.txt'
+    staged_perf=int(perf_marker.read_text()) if perf_marker.exists() else 0
+    if staged_perf != perf:
+        raise SystemExit('Quick build requires matching staged performance instrumentation')
     copy_source(GAME / "scenes/maiya_game.c", WORK / "games/maiya/scenes/maiya_game.c")
     for header in (GAME / "scenes").glob("*.h"):
         copy_source(header, WORK / "games/maiya/scenes" / header.name)
@@ -172,6 +176,8 @@ def quick_build(toolchain, platform):
                        cwd=WORK, check=True)
     command("gcc", "-c", "-O2", "-g", "-m68000", "-ffreestanding", "-fomit-frame-pointer",
             "-std=gnu99", "-Wall", "-DNG_" + platform.upper() + "=1",
+            *(["-DNG_DEBUG_PERF=1"] if perf else []),
+            *(["-DNG_DEBUG_PERF_LITE=1"] if perf==2 else []),
             *game_setting("GAME_ENGINE_DEFINES"),
             "-I.", "-Isdk", "-Isdk/2d_engine", "-Igames/maiya",
             "games/maiya/scenes/maiya_game.c", "-o", "out/maiya_game0.o")
@@ -213,6 +219,7 @@ def main():
     parser.add_argument("--quick", action="store_true", help="Rebuild scene code only, using the staged SDK")
     parser.add_argument("--perf", action="store_true", help="Measurement build: frame and VRAM counters (sdk/ng_perf.h)")
     parser.add_argument("--perf-lite", action="store_true", help="Measurement build: the frame's timing only (PERF=2)")
+    parser.add_argument("--debug", action="store_true", help="Keep ELF types for native emulator probes")
     parser.add_argument("--mame", default="mame")
     parser.add_argument("--platform", choices=("mvs", "aes"), default="mvs")
     parser.add_argument("--make", default="make")
@@ -221,8 +228,10 @@ def main():
     if not args.run_only:
         if args.rebuild_art or not (GAME / "artbox/generated/maiya_assets.h").is_file():
             subprocess.run([sys.executable, str(GAME / "tools/build_commercial_assets.py")], check=True)
-        if args.quick and (args.perf or args.perf_lite):
-            raise SystemExit("--perf needs a full build: the staged engine objects are built without it")
+        if not args.quick:
+            # Install editable scenery into its reserved tiles even when a
+            # character/audio build already exists from an earlier version.
+            subprocess.run([sys.executable, str(GAME / "tools/arcade_art.py")], check=True)
         if args.quick:
             toolchain = args.toolchain
             if toolchain is None:
@@ -230,7 +239,7 @@ def main():
                                   if (ROOT.parent / p).is_dir()), None)
             if toolchain is None:
                 raise SystemExit("Pass --toolchain with the cross compiler location")
-            quick_build(toolchain, args.platform)
+            quick_build(toolchain, args.platform, 1 if args.perf else 2 if args.perf_lite else 0)
             if args.run:
                 run(args.mame, args.platform)
             return
@@ -242,6 +251,10 @@ def main():
         # boot the one the main tree builds -- eagle_bios_path)
         command += ["GAME=maiya", "GAME_CFG_FILE=games/maiya/game.cfg",
                     f"SDKHOME={ROOT.parent}", f"PLATFORM={args.platform}", "USE_EAGLE_BIOS=0", "p1"]
+        if args.debug:
+            # Keep release startup stripping: the SDK's generic .text memcpy
+            # must not collide with Maiya's cartridge-section implementation.
+            command.append("GAME_OPTIMIZE=-O2 -g3 -gdwarf-2")
         if args.perf:
             command.append("PERF=1")
         elif args.perf_lite:
@@ -254,6 +267,7 @@ def main():
             print((GAME / "build/build.log").read_text()[-12000:])
             raise SystemExit(result.returncode)
         (WORK / "platform.txt").write_text(args.platform + "\n")
+        (WORK / "perf.txt").write_text(str(1 if args.perf else 2 if args.perf_lite else 0))
         print(f"Built {WORK / 'roms/maiya'}")
         print(f"Build log: {GAME / 'build/build.log'}")
     if args.run or args.run_only:

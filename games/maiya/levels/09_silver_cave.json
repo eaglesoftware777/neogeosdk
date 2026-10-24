@@ -51,7 +51,7 @@
     {"x": 4048, "y": 144, "w": 64},
     {"x": 4160, "y": 136, "w": 80},
     {"x": 4304, "y": 136, "w": 48},
-    {"x": 4512, "y": 144, "w": 96},
+    {"x": 4496, "y": 144, "w": 80},
     {"x": 4688, "y": 128, "w": 64},
     {"x": 4832, "y": 96, "w": 80},
     {"x": 5008, "y": 64, "w": 80},
@@ -74,7 +74,6 @@
     {"x": 2800, "enemy": "slaggolem"},
     {"x": 3044, "enemy": "plasticbat"},
     {"x": 3292, "enemy": "worm"},
-    {"x": 3536, "enemy": "goblin"},
     {"x": 3784, "enemy": "slaggolem"},
     {"x": 4028, "enemy": "plasticbat"},
     {"x": 4276, "enemy": "worm"},
@@ -166,5 +165,17 @@
     {"x": 496, "who": "spirit", "line": "A SECRET FOUND CAN LIFT THE POISON"},
     {"x": 2216, "who": "elder", "line": "THE GOLEMS POUND: JUMP THE WAVE"},
     {"x": 3852, "who": "maiden", "line": "BATS DROP TRASH FROM THE DARK"}
-  ]
+  ],
+  "arcade": {
+    "phases": [
+      {"name": "intro", "start": 0, "end": 1344},
+      {"name": "hazard", "start": 1344, "end": 2768},
+      {"name": "miniboss", "start": 2768, "end": 4336},
+      {"name": "gauntlet", "start": 4336, "end": 6780},
+      {"name": "boss", "start": 6780, "end": 7424}
+    ],
+    "miniboss": {"x": 3552, "enemy": "plasticbat", "hp": 16, "name": "FROST SENTINEL"},
+    "gimmick": "ice",
+    "platform": 9
+  }
 }
