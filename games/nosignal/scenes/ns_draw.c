@@ -35,6 +35,9 @@
 #include "sdk/ng_perf.h"
 #include "games/nosignal/artbox/generated/ns_assets.h"
 #include "games/nosignal/artbox/generated/ns_faces.h"
+#ifdef NG_CD_NOSIGNAL
+#include "games/nosignal/cd/platform.h"
+#endif
 
 void NEOGEO_USER playSFX(uint8_t n);
 void NEOGEO_USER playSFXB(uint8_t n);
@@ -368,6 +371,9 @@ void NEOGEO_USER ns_picture(uint8_t id)
 {
     ns_fade_out();
     clear_screen();
+#ifdef NG_CD_NOSIGNAL
+    ns_cd_load_background(id);
+#endif
     load_art_palettes(id);
     ng_palfx_screen_backdrop(0x8000u);
     show_asset(&s_bg, SPR_BG, id, 0, 0, 0);
@@ -486,6 +492,9 @@ void NEOGEO_USER ns_stage_show(const NGBeatEmUp *b, const NSStageInfo *si, uint8
     ns_fade_out();
     clear_screen();
     s_stage_art = si->bg;
+#ifdef NG_CD_NOSIGNAL
+    ns_cd_load_background(s_stage_art);
+#endif
     s_hero_id = hero;
     a = art(s_stage_art);
     s_cols = a->strips;

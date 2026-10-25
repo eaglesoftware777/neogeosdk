@@ -36,7 +36,7 @@ class NativeBootTests(unittest.TestCase):
     def test_unported_game_is_rejected_before_output(self):
         with tempfile.TemporaryDirectory() as d:
             out=Path(d)/'unported'
-            with self.assertRaises(ValueError):build_native('nosignal',out,default_compiler())
+            with self.assertRaises(ValueError):build_native('shadowleague',out,default_compiler())
             self.assertFalse(out.exists())
 
     @unittest.skipUnless(shutil.which(default_compiler()) and shutil.which('wla-z80') and shutil.which('wlalink'),

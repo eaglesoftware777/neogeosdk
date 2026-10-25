@@ -39,13 +39,18 @@ def module(path, name):
     return result
 
 
-def build_native(game, out, cc, plus=False, cdda=True, wlaz80='wla-z80', wlalink='wlalink'):
+def build_native(game, out, cc, plus=False, cdda=True, wlaz80='wla-z80', wlalink='wlalink', media_audit=False):
+    if media_audit and game != 'nosignal':
+        raise ValueError('The media audit is specific to the No Signal CD port')
     if game == 'skylance':
         from tools.neocd.skylance import build_skylance
         return build_skylance(out,cc,plus,cdda,wlaz80,wlalink)
     if game == 'maiyaluna':
         from tools.neocd.maiyaluna import build_maiyaluna
         return build_maiyaluna(out,cc,plus,cdda,wlaz80,wlalink)
+    if game == 'nosignal':
+        from tools.neocd.nosignal import build_nosignal
+        return build_nosignal(out,cc,plus,cdda,wlaz80,wlalink,media_audit=media_audit)
     if game == 'maiya':
         from tools.neocd.maiya import build_maiya
         return build_maiya(out,cc,plus,cdda,wlaz80,wlalink)
@@ -130,13 +135,14 @@ def main():
     p.add_argument('--cc',default=default_compiler())
     p.add_argument('--plus',action='store_true')
     p.add_argument('--no-cdda',action='store_true')
+    p.add_argument('--media-audit',action='store_true',help='Build the separate No Signal scene-transfer diagnostic')
     p.add_argument('--wlaz80',default='wla-z80')
     p.add_argument('--wlalink',default='wlalink')
     a=p.parse_args()
     if a.out is None:
         stamp=datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S%fZ')
         a.out=ROOT/'out/neocd'/a.game/stamp
-    result=build_native(a.game,a.out,a.cc,a.plus,not a.no_cdda,a.wlaz80,a.wlalink)
+    result=build_native(a.game,a.out,a.cc,a.plus,not a.no_cdda,a.wlaz80,a.wlalink,a.media_audit)
     print('CD build: '+str(a.out.resolve()))
     print(json.dumps(result['image_audit'],indent=2))
 

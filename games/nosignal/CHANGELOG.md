@@ -3,6 +3,20 @@
 The ROM sets ship with the NeoGeoSDK pre-releases and are numbered on their
 own: `_v1` and `_v2` with v1.7.7.
 
+## Native Neo Geo CD v2 (2026-10-25, SDK 1.7.7)
+
+- Compile the current V2 game and beat-'em-up engine as a native CD program.
+  Retain all three heroes, eight stages, console menus, moves and original art.
+- Keep fighters and interface graphics resident; load the 13 scenery assets
+  into one bounded sprite-RAM area with CRC readback before revealing them.
+- Preserve all 47 effects/voice samples in sound RAM and all 18 music files as
+  CD audio. Supply a verified complete CHD and CUE/BIN extraction helper, with
+  stock and EagleBIOS
+  launchers that release automatic startup inputs before play.
+- Validate all heroes under both real BIOS profiles in MAME, complete scenery
+  transfers and resident sprite readback, lossless conversion, CD formats and
+  cartridge isolation. Physical hardware and full campaigns remain unverified.
+
 ## v3 (in progress, SDK 1.7.7)
 
 - One mode on an arcade board: on MVS a credit goes straight from the hero
