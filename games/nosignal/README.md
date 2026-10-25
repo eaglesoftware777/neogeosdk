@@ -9,6 +9,10 @@ and character/portrait palettes receive additional fitting passes within their
 existing bank allocations. Depth reordering uses complete hidden sprite banks;
 existing V1 releases remain separate. See the changelog for verification limits.
 
+A native Neo Geo CD version is also available. It retains the V2 artwork and
+gameplay, with resident fighters, scene loading and CD audio. See
+[`cd/README.md`](cd/README.md) for building, testing and firmware requirements.
+
 Someone stole the phone. Then the whole city lost its signal. Choose one hero
 (exactly one person plays) and get it back across eight stages: The Hood, The
 City Underpass, The Viral Outbreak, The Clone Lab, Concrete Jungle, The

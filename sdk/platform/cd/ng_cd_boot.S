@@ -99,6 +99,12 @@ ng_cd_irq_entry:
     jsr ml_vblank
 8:
 #endif
+#ifdef NG_CD_NOSIGNAL
+    btst #7,0x10FD80
+    beq.s 9f
+    jsr ns_vblank
+9:
+#endif
     jsr 0xC0044A
     jsr ng_cd_irq
     movem.l (%sp)+,%d0-%d7/%a0-%a6
