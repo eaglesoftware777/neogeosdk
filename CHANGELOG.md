@@ -2,6 +2,20 @@
 
 ## v1.7.7 - pre-release: genre engines and four new games
 
+### Documentation: AI/SI transparency
+
+- Added [AI/SI Transparency and Disclosure](AI_SI_TRANSPARENCY.md),
+  distinguishing traditionally programmed foundations from later, selective
+  AI/SI assistance in test automation, the 2D engine, prototype games and their
+  artwork, and other supporting development work.
+- Makes an acknowledgement of the SDK's AI/SI history optional unless requested
+  or required by applicable rules. Retains clear disclosure of AI/SI used in
+  the game's own development, with examples and developer creative freedom.
+- Provides guidance on disclosure details and presentation when requested or
+  required, and clarifies the roles of Python and Z80 assembly in development.
+- Allows for updates as AI/SI regulations and publication requirements evolve.
+  Linked from the main README.
+
 ### Experimental CD development backend
 
 - Added isolated native hello-world PRG/IPL/ISO/CUE authoring, format/bank

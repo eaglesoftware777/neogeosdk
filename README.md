@@ -24,6 +24,25 @@ including the [ready-to-run demo ROM package (777)](https://github.com/eaglesoft
 See [release and demo installation notes](docs/RELEASE_v1.7.0.md) for the
 matching MAME manifest, BIOS requirements, and checksum verification.
 
+## AI/SI transparency
+
+NeoGeoSDK's main kernel and original foundations, including Artbox, the original
+sound tools and first driver implementations, were traditionally programmed.
+Selective AI/SI assistance was introduced later, notably for test automation
+and work on the 2D engine, prototype games and their artwork; involvement varies
+by component and revision.
+
+The **v1.7.7 pre-release** policy makes an acknowledgement of the SDK's
+AI/SI development history **optional unless requested or required by applicable
+rules**. **AI/SI used in a game's own development must be clearly disclosed.**
+Provide further details when requested or required by applicable rules.
+Developers can also use traditional code and manually created assets without
+AI/SI tools in their own workflow, and retain control over their creative
+choices and quality standards. This policy may evolve with applicable AI/SI
+regulations and publication requirements.
+
+Read the [AI/SI Transparency and Disclosure policy](AI_SI_TRANSPARENCY.md).
+
 ## What's new in v1.7.0 — the 2D engine release
 
 v1.7.0 consolidates the `neo_universal_2d` line of work, including the
@@ -547,6 +566,7 @@ Current release page:
 
 | Document | For |
 |---|---|
+| [`AI_SI_TRANSPARENCY.md`](./AI_SI_TRANSPARENCY.md) | Component provenance, optional SDK acknowledgement and the game-development disclosure policy for v1.7.7 |
 | [`docs/INTRODUCTION.md`](./docs/INTRODUCTION.md) | What the SDK is, what the machine is, and the reading order |
 | [`docs/HELLO_WORLD.md`](./docs/HELLO_WORLD.md) | Your first ROM, in ten minutes |
 | [`docs/PROGRAMMERS_MANUAL.md`](./docs/PROGRAMMERS_MANUAL.md) | The working manual — build, layout, engine tick, assets, frame budget |
