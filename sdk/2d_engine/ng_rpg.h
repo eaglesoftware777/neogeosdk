@@ -34,7 +34,7 @@
  *
  * The core never touches video RAM or sound: the game draws the room,
  * party and objects from the context and turns events into sounds and
- * effects. Everything lives in the caller's NGRpg (3256 bytes): no heap,
+ * effects. Everything lives in the caller's NGRpg (3568 bytes): no heap,
  * no floating point, no hidden globals, no recursion. Positions are Q8
  * pixels (pixels * 256) of a character's feet, from the room's top-left.
  * One ng_rpg_update() is one frame.
@@ -321,6 +321,14 @@ typedef struct {
     uint8_t floor[NGR_ROOM_BITS];      /* tiles made floor (bridges, filled pits, platforms) */
     uint8_t wet[NGR_ROOM_BITS];        /* water reached these channel tiles */
     uint8_t lit[NGR_ROOM_BITS];        /* light crossed these tiles */
+    uint8_t occupied[NGR_ROOM_BITS];   /* tiles under objects that stay put (the quick test of ng_rpg_object_at) */
+    uint32_t movers;                   /* bit i: object i moves about (person, creature, platform) */
+    uint8_t keys[4u * NGR_MAX_OBJECTS]; /* each object as the overlays were last made from it */
+    uint16_t ov_epoch;                 /* bumped each time the overlays are made */
+    uint16_t water_epoch, light_epoch; /* the overlays the wet and lit tiles were last worked out on */
+    uint32_t water_sig, light_sig;     /* ... and the signals */
+    uint32_t light_rx;                 /* bit i: receiver i was lit then */
+    uint8_t water_ok, light_ok;
     uint32_t signals;
     uint32_t derived;                  /* last frame's signals from water, light and gears */
     uint8_t flags[NGR_FLAGS / 8u];
