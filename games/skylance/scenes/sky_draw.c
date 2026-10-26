@@ -567,8 +567,9 @@ void NEOGEO_USER sky_depth_draw(void)
     }
     if(actor[0]) {
         s_cloud_tick++;
-        if(s_cloud_tick==200u) sky_puts(4u,3u,"CLOUD BANK AHEAD",SKY_PAL_TITLE);
-        if(s_cloud_tick==240u) sky_fix_blank(4u,3u,20u);
+        /* over the field, clear of the status line (row 3) it would blank */
+        if(s_cloud_tick==200u) sky_puts(12u,6u,"CLOUD BANK AHEAD",SKY_PAL_TITLE);
+        if(s_cloud_tick==240u) sky_fix_blank(12u,6u,16u);
         if(s_overhead_cloud && (!s_overhead_cloud->active || s_overhead_cloud->kind!=SKY_KIND_CANOPY))s_overhead_cloud=0;
         if(s_overhead_cloud && s_overhead_cloud->y>256) {ng_chars_remove(s_overhead_cloud);s_overhead_cloud=0;}
         /* The strip budget is counted once a frame below; only the frame
