@@ -72,7 +72,11 @@ NODE_ORDER = []
 EVENTS = []          # game events (NGR_A_EVENT a)
 CHAPTERS = []
 
-TEXT_W, TEXT_LINES = 28, 4
+# The dialogue box beside a portrait: columns 12-36 of rows 22-25, choices on row 26 (or,
+# when they don't fit side by side, one a row ending on row 26). Columns 3-36 are what a
+# CRT shows of the 40.
+TEXT_W, TEXT_LINES = 25, 4
+TOOL_TITLE_W = 15    # the status line's "C:" slot
 
 # ---- journeys ------------------------------------------------------------------
 JOURNEYS = ('maiya', 'luna')
@@ -151,6 +155,8 @@ def counter(name):
 def item(name, kind, title, text, stack=1, param=0, weight=0):
     bits = {'key': 0x01, 'consume': 0x02, 'tool': 0x04, 'collect': 0x08, 'material': 0x10, 'record': 0x20}
     f = 0
+    if 'tool' in kind.split('|') and len(title) > TOOL_TITLE_W:
+        raise SystemExit(f"world: tool {name}'s title {title!r} is longer than {TOOL_TITLE_W}")
     for k in kind.split('|'):
         f |= bits[k]
     ITEMS.append((name, f, stack, param, weight, title, text))
@@ -217,6 +223,7 @@ def talk(name, who, text, next=None, cond=None, alt=None, actions=(), choices=()
     if name in NODES:
         raise SystemExit(f"world: dialogue {name} twice")
     pages = paginate(text)
+    check_choices(name, pages[-1], choices)
     names = [name] + [f"{name}__{k}" for k in range(1, len(pages))]
     for k, page in enumerate(pages):
         last = k == len(pages) - 1
@@ -231,6 +238,21 @@ def say(name, text, luna_text=None, **kw):
     """A line the travelling sister says herself: Maiya in her journey, Luna in
     hers (luna_text: Luna's words when they differ)."""
     return talk(name, J('MAIYA', 'LUNA'), J(text, luna_text if luna_text is not None else text), **kw)
+
+
+def check_choices(name, last_page, choices):
+    """Choices go side by side on row 26 when they fit; otherwise one a row, ending on
+    row 26, so the question's last page must leave them the rows."""
+    labels = [c[0] for c in choices]
+    if not labels or sum(len(t) + 1 for t in labels) + len(labels) - 1 <= TEXT_W:
+        return
+    long = [t for t in labels if len(t) > TEXT_W - 1]
+    if long:
+        raise SystemExit(f"world: {name}: choice {long[0]!r} is longer than {TEXT_W - 1}")
+    lines = last_page.count('\n') + 1
+    if lines + len(labels) > TEXT_LINES + 1:
+        raise SystemExit(f"world: {name}: {len(labels)} choices one a row leave the question "
+                         f"{TEXT_LINES + 1 - len(labels)} lines, it has {lines}")
 
 
 def wrap(text, width, lines):

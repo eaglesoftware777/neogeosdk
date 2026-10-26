@@ -297,19 +297,19 @@ say('valve_open', "It's open! The reservoir is flowing into the machine. Everyth
      actions=[('ctr', 'QUEST7', 6)])
 say('charter_found', "A charter, sealed by the builders. Every region's share, season by season, measured "
      "by the mill, the survey, the tides, the rows, the river and the stars.")
-talk('valen7', 'VALEN', J("Well. You have woken the whole system. So, Maiya: where should the water go?",
-                          "Well. You have woken the whole system. So, Luna: where should the water go?"),
-     cond=('flag', 'RESERVOIR_VALVE'), alt='valen7_before',
-     choices=[("All of it to the central plant", 'plan_central'),
+talk('valen7', 'VALEN', "Well. You have woken the whole system.",
+     cond=('flag', 'RESERVOIR_VALVE'), alt='valen7_before', next='valen7_ask')
+talk('valen7_ask', 'VALEN', J("So, Maiya: where should the water go?", "So, Luna: where should the water go?"),
+     choices=[("All to the central plant", 'plan_central'),
               ("Open every gate at once", 'plan_flood'),
-              ("As the builders' charter shares it", 'plan_fair', ('item', 'CHARTER'))])
+              ("As the charter shares it", 'plan_fair', ('item', 'CHARTER'))])
 talk('valen7_before', 'VALEN', "So you stopped my drill. Impressive. Misguided, but impressive. Let's see if you can "
      "even open the valve.")
 say('plan_central', "Then the forest roads lose their bog, the coast loses its tide pools, the orchard dries, "
     "and the grotto river stops again. I saw all of it, Director.", next='plan_central2')
-talk('plan_central2', 'VALEN', "...I had not seen it from the ground. Ask me again.", next='valen7')
+talk('plan_central2', 'VALEN', "...I had not seen it from the ground. Ask me again.", next='valen7_ask')
 say('plan_flood', "No! The bay floods, the workers' camp floods, and the coast gets it all at once. "
-     "Even I know that's too much at once.", next='valen7')
+     "Even I know that's too much at once.", next='valen7_ask')
 say('plan_fair', "Each region its share, by season and by need, read by the six wonders. The builders "
      "wrote it all down. Here.", next='plan_fair2')
 talk('plan_fair2', 'VALEN', "Seasons... need... measured, not decided by an office. Every village has its own "
