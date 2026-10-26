@@ -38,6 +38,34 @@ static int puzzle_example(void)
     return s_board.score > 0u;
 }
 
+/* ---- puzzle: a picture-logic level, filled from its clues -------------- */
+static const NGPuzzleLevel k_picture = {
+    .mode = NGP_MODE_LOGIC, .w = 5, .h = 5, .colors = 7, .moves = 5,   /* five hearts */
+    .layout = "4.4.4" "44444" ".444." "..7.." ".777.",                 /* a tulip */
+    .goals = { { NGP_OBJ_PICTURE, 0, 0 } },
+};
+
+static int picture_example(void)
+{
+    NGPuzzleEvent e;
+    uint8_t row, runs[4], k, cell;
+    if (ng_puzzle_level_check(&k_picture, 0) != NGP_OK) return 0;
+    ng_puzzle_init(&s_board, &k_picture, 0);
+    /* a full row's clue is a single run of five: fill it, as a player would first */
+    for (row = 0; row < 5u; row++) {
+        uint8_t n = ng_puzzle_logic_clue(&s_board, 0, row, runs, 4);  /* a row's clue */
+        if (n == 1u && runs[0] == 5u)
+            for (k = 0; k < 5u; k++)
+                ng_puzzle_action(&s_board, NGP_CMD_MARK, (int16_t)(row * 5u + k), NGP_MARK_FILL);
+    }
+    /* then the rest of the picture */
+    for (cell = 0; cell < 25u; cell++)
+        if (s_board.color[cell] && s_board.kind[cell] != NGP_MARK_FILL)
+            ng_puzzle_action(&s_board, NGP_CMD_MARK, cell, NGP_MARK_FILL);  /* or NGP_MARK_CROSS */
+    while (ng_puzzle_event(&s_board, &e)) { /* NGP_EV_MARK, NGP_EV_MISTAKE, NGP_EV_LINE: sounds */ }
+    return ng_puzzle_status(&s_board) == NGP_STATUS_WON && s_board.moves_left == 5u;
+}
+
 /* ---- mahjong: one hand of four-seat HK Old Style, all seats CPU --------- */
 static NGMahjong s_table;
 
@@ -151,7 +179,7 @@ static int beatemup_example(void)
 
 int main(void)
 {
-    int ok = puzzle_example() && mahjong_example() && solitaire_example() && rpg_example() && beatemup_example();
+    int ok = puzzle_example() && picture_example() && mahjong_example() && solitaire_example() && rpg_example() && beatemup_example();
     printf("genre examples: %s\n", ok ? "all tests passed" : "FAILED");
     return ok ? 0 : 1;
 }

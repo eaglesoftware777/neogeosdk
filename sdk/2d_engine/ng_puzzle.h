@@ -5,7 +5,7 @@
  * Selected with GAME_GENRE_ENGINE = puzzle in a game's game.mk, which
  * compiles sdk/2d_engine/ng_puzzle.c into the ROM; nothing else is needed.
  *
- * One context plays one level of one of two families:
+ * One context plays one level of one of three families:
  *
  *   NGP_MODE_MATCH   swap two neighbouring pieces to line up three or more
  *                    of a colour: runs clear, pieces fall, the board refills
@@ -17,6 +17,11 @@
  *                    sticks to the nearest free lattice cell, pops a group of
  *                    three or more of its colour, and drops whatever no
  *                    longer hangs from the ceiling or an anchor.
+ *   NGP_MODE_LOGIC   picture logic: number clues give, for every row and
+ *                    column, the runs of filled cells in order; fill them
+ *                    all to complete the picture. A cell filled wrongly is
+ *                    a mistake (it is crossed out and costs a heart); a
+ *                    finished row or column crosses out its other cells.
  *
  * The core owns the logic only. It never touches video RAM or the sound
  * driver: the game draws the board with the SDK's sprites and FIX layer and
@@ -65,7 +70,7 @@ enum {
     NGP_ERR_SAVE = -7        /* save data from another level or version */
 };
 
-enum { NGP_MODE_MATCH = 0, NGP_MODE_BUBBLE = 1 };
+enum { NGP_MODE_MATCH = 0, NGP_MODE_BUBBLE = 1, NGP_MODE_LOGIC = 2 };
 
 /* ng_puzzle_status() */
 enum { NGP_STATUS_READY = 0, NGP_STATUS_BUSY = 1, NGP_STATUS_WON = 2, NGP_STATUS_LOST = 3 };
@@ -73,12 +78,15 @@ enum { NGP_STATUS_READY = 0, NGP_STATUS_BUSY = 1, NGP_STATUS_WON = 2, NGP_STATUS
 /* Why a level ended (NGPuzzle.end_reason). */
 enum {
     NGP_END_NONE = 0, NGP_END_OBJECTIVES, NGP_END_MOVES, NGP_END_TIME,
-    NGP_END_LOSS_LINE, NGP_END_NO_MOVES, NGP_END_BOARD_CLEAR, NGP_END_SHOTS
+    NGP_END_LOSS_LINE, NGP_END_NO_MOVES, NGP_END_BOARD_CLEAR, NGP_END_SHOTS,
+    NGP_END_MISTAKES          /* logic: the last heart went on a wrong cell */
 };
 
 /* ---- the board ------------------------------------------------------- */
 /* color[]: 0 empty, 1..8 a colour, NGP_COLOR_PRISM (matches nothing, takes
- * the colour it is swapped with), NGP_COLOR_STONE (bubble mode: never pops). */
+ * the colour it is swapped with), NGP_COLOR_STONE (bubble mode: never pops).
+ * Logic boards keep the solution here: 0 an empty cell, 1..15 a filled one
+ * in that picture colour (the game shows it once the picture is done). */
 #define NGP_COLOR_EMPTY  0u
 #define NGP_COLOR_PRISM  9u
 #define NGP_COLOR_STONE  10u
@@ -92,6 +100,14 @@ enum {
     NGP_KIND_PRISM,          /* swapped with a piece: clears that colour */
     NGP_KIND_ANCHOR,         /* bubble: holds what touches it, never pops */
     NGP_KIND_RESCUE          /* bubble: a caged friend, freed when popped or dropped */
+};
+
+/* kind[] on a logic board: what the player has marked. */
+enum {
+    NGP_MARK_NONE = 0,
+    NGP_MARK_FILL,           /* filled (always right: a wrong fill is a mistake) */
+    NGP_MARK_CROSS,          /* crossed out by the player or a finished line */
+    NGP_MARK_MISS            /* a mistake: crossed out, never fillable */
 };
 
 /* cover[]: board furniture under or instead of a piece. */
@@ -115,7 +131,8 @@ enum {
     NGP_OBJ_CRATE,           /* break count crates (0: all of them) */
     NGP_OBJ_SPECIAL,         /* make count special pieces */
     NGP_OBJ_RESCUE,          /* bubble: free count caged friends (0: all) */
-    NGP_OBJ_CLEAR            /* bubble: clear every bubble (count unused) */
+    NGP_OBJ_CLEAR,           /* bubble: clear every bubble (count unused) */
+    NGP_OBJ_PICTURE          /* logic: fill every cell of the picture (count unused) */
 };
 
 typedef struct {
@@ -136,16 +153,19 @@ typedef struct {
  * hold w-1 bubbles; write their last column as '-'):
  *   .  empty      1-8  a bubble of that colour   r  a random colour
  *   A  anchor     S  stone   R  caged friend in a random colour   -  none
+ * Logic boards (a layout is required):
+ *   .  an empty cell          1-9 a-f  a filled cell in picture colour 1..15
  * A NULL layout fills a match board at random and leaves a bubble field
  * empty.
  */
 typedef struct {
     uint8_t mode;            /* NGP_MODE_* */
     uint8_t w, h;            /* board size, cells (bubble: w is the long row) */
-    uint8_t colors;          /* colours in play, 2..8 */
+    uint8_t colors;          /* colours in play, 2..8 (logic: picture colours, 1..15) */
     uint32_t seed;           /* 0: a fixed default seed */
     uint16_t moves;          /* match: swaps allowed (0 = unlimited);
-                                bubble: shots allowed (0 = unlimited) */
+                                bubble: shots allowed (0 = unlimited);
+                                logic: hearts, mistakes allowed (0 = unlimited) */
     uint16_t time_frames;    /* 0 = untimed; counts only while waiting for input */
     const char *layout;
     NGPuzzleGoal goals[NGP_MAX_OBJ];
@@ -194,7 +214,11 @@ enum {
     NGP_EV_NO_ATTACH,        /* the shot found no free cell and was lost */
     NGP_EV_TIME_LOW,         /* ten seconds left */
     NGP_EV_WON,              /* a = NGP_END_*, b = stars */
-    NGP_EV_LOST              /* a = NGP_END_* */
+    NGP_EV_LOST,             /* a = NGP_END_* */
+    NGP_EV_MARK,             /* logic: cell, a = new mark, b = old mark, value = points */
+    NGP_EV_MISTAKE,          /* logic: cell, a = hearts left (255: unlimited) */
+    NGP_EV_LINE,             /* logic: cell = row or column, a = 0 row / 1 column, value = points */
+    NGP_EV_REVEAL            /* logic: the hint showed the row and column through cell */
 };
 
 typedef struct {
@@ -210,9 +234,12 @@ enum {
     NGP_CMD_AIM_BY,          /* a = signed change of angle */
     NGP_CMD_FIRE,            /* launch the loaded bubble */
     NGP_CMD_SWAP_NEXT,       /* exchange the loaded and the next bubble */
-    NGP_CMD_HAMMER,          /* booster: clear cell a (match) or bubble a */
+    NGP_CMD_HAMMER,          /* booster: clear cell a (match) or bubble a; logic:
+                                show the row and column through cell a */
     NGP_CMD_SHUFFLE,         /* booster: reshuffle the board now (match) */
-    NGP_CMD_COLOR_SHOT       /* booster: load a bubble of colour a */
+    NGP_CMD_COLOR_SHOT,      /* booster: load a bubble of colour a */
+    NGP_CMD_MARK             /* logic: mark cell a as b (NGP_MARK_FILL, _CROSS or _NONE
+                                to take a cross away); filling a wrong cell is a mistake */
 };
 
 /* One recorded action, for ng_puzzle_replay(): applied when the context
@@ -325,6 +352,14 @@ void     NEOGEO_USER ng_puzzle_cell_px(const NGPuzzle *p, uint8_t cell, uint8_t 
 /* Dirty cells: the next one at or after from, or NGP_NO_CELL; then clear. */
 uint8_t  NEOGEO_USER ng_puzzle_next_dirty(const NGPuzzle *p, uint8_t from);
 void     NEOGEO_USER ng_puzzle_dirty_clear(NGPuzzle *p);
+
+/* Logic mode: the clue of row (column 0) or column (column 1) `index`: its runs
+ * of filled cells, first to last, into runs[] (up to max). Returns how many
+ * runs the line has (0: an empty line); 0xFF for a bad context or index. */
+uint8_t  NEOGEO_USER ng_puzzle_logic_clue(const NGPuzzle *p, uint8_t column, uint8_t index,
+                                          uint8_t *runs, uint8_t max);
+/* Logic mode: 1 when every filled cell of that row or column is filled. */
+uint8_t  NEOGEO_USER ng_puzzle_logic_line_done(const NGPuzzle *p, uint8_t column, uint8_t index);
 
 /* Match mode: a swap worth making (the longest run, first in board order). */
 uint8_t  NEOGEO_USER ng_puzzle_hint(const NGPuzzle *p, uint8_t *cell, uint8_t *dir);

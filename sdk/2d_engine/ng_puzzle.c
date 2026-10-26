@@ -4,8 +4,9 @@
  * One translation unit, sections in this order: small helpers (bits,
  * copies, the random generator, events), level parsing, the match board
  * (runs, specials, clearing, gravity, moves, shuffles), the bubble lattice
- * (topology, flight, attachment, groups, rows), and the shared state
- * machine, hashing, save/load and replay.
+ * (topology, flight, attachment, groups, rows), picture logic (clues,
+ * marks, finished lines), and the shared state machine, hashing,
+ * save/load and replay.
  *
  * 68000 notes: no 32-bit divide or modulo in the frame's work (16-bit
  * divu.w through ngp_div only), straight copies through ngp_copy (GCC -O2
@@ -30,6 +31,10 @@
 #define SETTLE_LIMIT  8192u
 #define FLIGHT_LIMIT  4096u
 #define TIME_LOW      600u
+#define LOGIC_FILL    10u           /* points: a cell filled */
+#define LOGIC_LINE    50u           /* a row or column finished */
+#define LOGIC_HEART   300u          /* the finished picture: per heart left */
+#define LOGIC_SECOND  5u            /* and per second left on a timed board */
 #define DEFAULT_SEED  0x2545F491u
 #define SAVE_MAGIC    0x4E47505Au   /* 'NGPZ' */
 #define SAVE_VERSION  2u
@@ -136,8 +141,17 @@ static uint8_t NEOGEO_USER is_sep(char ch)
     return (uint8_t)(ch == ' ' || ch == '/' || ch == '\n' || ch == '\r' || ch == '\t');
 }
 
+/* A logic layout character's picture colour: 0 for an empty cell. */
+static uint8_t NEOGEO_USER logic_color(char ch)
+{
+    if (ch >= '1' && ch <= '9') return (uint8_t)(ch - '0');
+    if (ch >= 'a' && ch <= 'f') return (uint8_t)(ch - 'a' + 10);
+    return 0;
+}
+
 static uint8_t NEOGEO_USER char_ok(uint8_t mode, char ch)
 {
+    if (mode == NGP_MODE_LOGIC) return (uint8_t)(ch == '.' || logic_color(ch));
     if (ch >= '1' && ch <= '8') return 1;
     if (mode == NGP_MODE_MATCH) {
         switch (ch) {
@@ -187,16 +201,18 @@ static uint8_t NEOGEO_USER fixed_run(const char *grid, uint8_t w, uint8_t h)
 
 int NEOGEO_USER ng_puzzle_level_check(const NGPuzzleLevel *lv, uint16_t *bad)
 {
-    uint16_t i, n = 0, cells, ice = 0, crates = 0, rescue = 0;
+    uint16_t i, n = 0, cells, ice = 0, crates = 0, rescue = 0, filled = 0;
     char grid[NGP_MAX_CELLS];
     uint8_t g;
     if (bad) *bad = 0xFFFFu;
     if (!lv) return NGP_ERR_ARG;
-    if (lv->mode > NGP_MODE_BUBBLE) return NGP_ERR_LEVEL;
+    if (lv->mode > NGP_MODE_LOGIC) return NGP_ERR_LEVEL;
     if (lv->w < 3 || lv->w > NGP_MAX_W || lv->h < 3 || lv->h > NGP_MAX_H) return NGP_ERR_LEVEL;
     cells = (uint16_t)((uint16_t)lv->w * lv->h);
     if (cells > NGP_MAX_CELLS) return NGP_ERR_LEVEL;
-    if (lv->colors < 2 || lv->colors > NGP_MAX_COLORS) return NGP_ERR_LEVEL;
+    if (lv->mode == NGP_MODE_LOGIC) {
+        if (lv->colors < 1 || lv->colors > 15 || !lv->layout) return NGP_ERR_LEVEL;
+    } else if (lv->colors < 2 || lv->colors > NGP_MAX_COLORS) return NGP_ERR_LEVEL;
     if (lv->mode == NGP_MODE_BUBBLE) {
         if (lv->bubble_d < 8 || lv->bubble_d > 32) return NGP_ERR_LEVEL;
         if (lv->row_h < 4 || lv->row_h > lv->bubble_d) return NGP_ERR_LEVEL;
@@ -216,7 +232,10 @@ int NEOGEO_USER ng_puzzle_level_check(const NGPuzzleLevel *lv, uint16_t *bad)
                 uint8_t x = (uint8_t)(n - (uint16_t)(ngp_div(n, lv->w) * lv->w));
                 uint8_t y = (uint8_t)ngp_div(n, lv->w);
                 char ch = s[i];
-                if (ch >= '1' && ch <= '8' && (uint8_t)(ch - '0') > lv->colors) { if (bad) *bad = i; return NGP_ERR_LEVEL; }
+                if (lv->mode == NGP_MODE_LOGIC) {
+                    if (logic_color(ch) > lv->colors) { if (bad) *bad = i; return NGP_ERR_LEVEL; }
+                    if (logic_color(ch)) filled++;
+                } else if (ch >= '1' && ch <= '8' && (uint8_t)(ch - '0') > lv->colors) { if (bad) *bad = i; return NGP_ERR_LEVEL; }
                 if (ch == 'i' || ch == 'I') ice++;
                 if (ch == 'c' || ch == 'C' || ch == 'K') crates++;
                 if (ch == 'R') rescue++;
@@ -231,9 +250,16 @@ int NEOGEO_USER ng_puzzle_level_check(const NGPuzzleLevel *lv, uint16_t *bad)
         }
         if (n != cells) { if (bad) *bad = 0xFFFEu; return NGP_ERR_LEVEL; }
         if (lv->mode == NGP_MODE_MATCH && fixed_run(grid, lv->w, lv->h)) return NGP_ERR_LEVEL;
+        if (lv->mode == NGP_MODE_LOGIC && !filled) return NGP_ERR_LEVEL;
     }
     for (g = 0; g < NGP_MAX_OBJ; g++) {
         const NGPuzzleGoal *o = &lv->goals[g];
+        if (lv->mode == NGP_MODE_LOGIC) {
+            /* a picture is won by finishing it, and nothing else may be asked: a
+               finished picture that missed another goal would leave nothing to do */
+            if (o->type != NGP_OBJ_NONE && o->type != NGP_OBJ_PICTURE) return NGP_ERR_LEVEL;
+            continue;
+        }
         switch (o->type) {
         case NGP_OBJ_NONE: case NGP_OBJ_SCORE: case NGP_OBJ_SPECIAL: break;
         case NGP_OBJ_COLOR: if (o->target < 1 || o->target > lv->colors) return NGP_ERR_LEVEL; break;
@@ -765,7 +791,7 @@ uint8_t NEOGEO_USER ng_puzzle_neighbor(const NGPuzzle *p, uint8_t cell, uint8_t 
     int16_t r, c;
     if (!p || cell >= (uint8_t)(p->w * p->h)) return NGP_NO_CELL;
     r = cell_y(p, cell); c = cell_x(p, cell);
-    if (p->mode == NGP_MODE_MATCH) {
+    if (p->mode != NGP_MODE_BUBBLE) {
         switch (dir) {
         case NGP_DIR_RIGHT: c++; break;
         case NGP_DIR_DOWN: r++; break;
@@ -1234,11 +1260,176 @@ static void NEOGEO_USER pop_phase(NGPuzzle *p)
 }
 
 /* ======================================================================
+ * picture logic
+ * ==================================================================== */
+/* The k-th cell of row (column 0) or column (column 1) `index`. */
+static uint8_t NEOGEO_USER line_cell(const NGPuzzle *p, uint8_t column, uint8_t index, uint8_t k)
+{
+    return column ? (uint8_t)(k * p->w + index) : (uint8_t)(index * p->w + k);
+}
+
+uint8_t NEOGEO_USER ng_puzzle_logic_clue(const NGPuzzle *p, uint8_t column, uint8_t index,
+                                         uint8_t *runs, uint8_t max)
+{
+    uint8_t k, len, count = 0, run = 0;
+    if (!p || p->mode != NGP_MODE_LOGIC || index >= (column ? p->w : p->h)) return 0xFFu;
+    len = column ? p->h : p->w;
+    for (k = 0; k <= len; k++) {
+        if (k < len && p->color[line_cell(p, column, index, k)]) { run++; continue; }
+        if (!run) continue;
+        if (runs && count < max) runs[count] = run;
+        count++;
+        run = 0;
+    }
+    return count;
+}
+
+uint8_t NEOGEO_USER ng_puzzle_logic_line_done(const NGPuzzle *p, uint8_t column, uint8_t index)
+{
+    uint8_t k, len;
+    if (!p || p->mode != NGP_MODE_LOGIC || index >= (column ? p->w : p->h)) return 0;
+    len = column ? p->h : p->w;
+    for (k = 0; k < len; k++) {
+        uint8_t c = line_cell(p, column, index, k);
+        if (p->color[c] && p->kind[c] != NGP_MARK_FILL) return 0;
+    }
+    return 1;
+}
+
+/* Cells of the picture still to fill. */
+static uint16_t NEOGEO_USER logic_left(const NGPuzzle *p)
+{
+    uint8_t c, n = (uint8_t)(p->w * p->h);
+    uint16_t left = 0;
+    for (c = 0; c < n; c++) if (p->color[c] && p->kind[c] != NGP_MARK_FILL) left++;
+    return left;
+}
+
+static void NEOGEO_USER logic_goal(NGPuzzle *p)
+{
+    uint8_t g;
+    uint16_t left = logic_left(p);
+    for (g = 0; g < NGP_MAX_OBJ; g++) {
+        if (p->level->goals[g].type != NGP_OBJ_PICTURE || p->goal_left[g] == left) continue;
+        p->goal_left[g] = left;
+        emit(p, NGP_EV_GOAL, NGP_NO_CELL, g, 0, left);
+    }
+}
+
+/* A line just finished: cross out its other cells and score it. */
+static void NEOGEO_USER logic_line(NGPuzzle *p, uint8_t column, uint8_t index)
+{
+    uint8_t k, len = column ? p->h : p->w;
+    for (k = 0; k < len; k++) {
+        uint8_t c = line_cell(p, column, index, k);
+        if (p->kind[c] == NGP_MARK_NONE) { p->kind[c] = NGP_MARK_CROSS; touch(p, c); }
+    }
+    add_score(p, LOGIC_LINE);
+    emit(p, NGP_EV_LINE, index, column, 0, LOGIC_LINE);
+}
+
+/* Cell c was just filled (by the player or the hint): finish its lines. */
+static void NEOGEO_USER logic_filled(NGPuzzle *p, uint8_t c)
+{
+    uint8_t x = cell_x(p, c), y = cell_y(p, c);
+    if (ng_puzzle_logic_line_done(p, 0, y)) logic_line(p, 0, y);
+    if (ng_puzzle_logic_line_done(p, 1, x)) logic_line(p, 1, x);
+}
+
+static uint8_t NEOGEO_USER goals_met(const NGPuzzle *p);
+static void NEOGEO_USER finish(NGPuzzle *p, uint8_t won, uint8_t reason);
+
+/* After any change: the picture done wins, with a bonus for hearts and time left. */
+static void NEOGEO_USER logic_settle(NGPuzzle *p)
+{
+    logic_goal(p);
+    if (logic_left(p)) return;
+    if (p->moves_left != 0xFFFFu) add_score(p, (uint32_t)p->moves_left * LOGIC_HEART);
+    if (p->time_left != 0xFFFFu) add_score(p, (uint32_t)ngp_div(p->time_left, 60u) * LOGIC_SECOND);
+    if (goals_met(p)) finish(p, 1, NGP_END_OBJECTIVES);
+}
+
+static int NEOGEO_USER logic_mark(NGPuzzle *p, uint8_t c, uint8_t mark)
+{
+    uint8_t old = p->kind[c];
+    if (mark == NGP_MARK_FILL) {
+        if (old != NGP_MARK_NONE) return NGP_ERR_ILLEGAL;
+        if (!p->color[c]) {
+            /* a mistake: the cell is crossed out and a heart goes */
+            p->kind[c] = NGP_MARK_MISS;
+            touch(p, c);
+            p->moves_used++;
+            if (p->moves_left != 0xFFFFu && p->moves_left) p->moves_left--;
+            emit(p, NGP_EV_MARK, c, NGP_MARK_MISS, old, 0);
+            emit(p, NGP_EV_MISTAKE, c, p->moves_left == 0xFFFFu ? 0xFFu : (uint8_t)(p->moves_left > 254u ? 254u : p->moves_left), 0, 0);
+            if (p->moves_left == 0) finish(p, 0, NGP_END_MISTAKES);
+            return NGP_OK;
+        }
+        p->kind[c] = NGP_MARK_FILL;
+        touch(p, c);
+        add_score(p, LOGIC_FILL);
+        emit(p, NGP_EV_MARK, c, NGP_MARK_FILL, old, LOGIC_FILL);
+        logic_filled(p, c);
+        logic_settle(p);
+        return NGP_OK;
+    }
+    if (mark == NGP_MARK_CROSS) {
+        if (old != NGP_MARK_NONE) return NGP_ERR_ILLEGAL;
+    } else if (mark == NGP_MARK_NONE) {
+        if (old != NGP_MARK_CROSS) return NGP_ERR_ILLEGAL;
+    } else {
+        return NGP_ERR_ARG;
+    }
+    p->kind[c] = mark;
+    touch(p, c);
+    emit(p, NGP_EV_MARK, c, mark, old, 0);
+    return NGP_OK;
+}
+
+/* Rows (bits 0..15) and columns (bits 16..27) finished now. */
+static uint32_t NEOGEO_USER logic_done_lines(const NGPuzzle *p)
+{
+    uint32_t done = 0;
+    uint8_t k;
+    for (k = 0; k < p->h; k++) if (ng_puzzle_logic_line_done(p, 0, k)) done |= (uint32_t)1u << k;
+    for (k = 0; k < p->w; k++) if (ng_puzzle_logic_line_done(p, 1, k)) done |= (uint32_t)1u << (16u + k);
+    return done;
+}
+
+/* The hint: the row and the column through c, filled and crossed as the
+ * picture has them (a player's cross on a picture cell is corrected). */
+static void NEOGEO_USER logic_reveal(NGPuzzle *p, uint8_t c)
+{
+    uint8_t x = cell_x(p, c), y = cell_y(p, c), k, pass;
+    uint32_t before = logic_done_lines(p), after;
+    emit(p, NGP_EV_REVEAL, c, 0, 0, 0);
+    for (pass = 0; pass < 2; pass++) {
+        uint8_t len = pass ? p->h : p->w;
+        for (k = 0; k < len; k++) {
+            uint8_t t = line_cell(p, pass, pass ? x : y, k);
+            if (p->color[t]) {
+                if (p->kind[t] == NGP_MARK_FILL) continue;
+                p->kind[t] = NGP_MARK_FILL;
+            } else {
+                if (p->kind[t] != NGP_MARK_NONE) continue;
+                p->kind[t] = NGP_MARK_CROSS;
+            }
+            touch(p, t);
+        }
+    }
+    after = logic_done_lines(p) & ~before;
+    for (k = 0; k < p->h; k++) if ((after >> k) & 1u) logic_line(p, 0, k);
+    for (k = 0; k < p->w; k++) if ((after >> (16u + k)) & 1u) logic_line(p, 1, k);
+    logic_settle(p);
+}
+
+/* ======================================================================
  * state machine
  * ==================================================================== */
 static uint8_t NEOGEO_USER goals_met(const NGPuzzle *p)
 {
     uint8_t g, any = 0;
+    if (p->mode == NGP_MODE_LOGIC && logic_left(p)) return 0;
     for (g = 0; g < NGP_MAX_OBJ; g++) {
         const NGPuzzleGoal *o = &p->level->goals[g];
         if (o->type == NGP_OBJ_NONE) continue;
@@ -1248,6 +1439,7 @@ static uint8_t NEOGEO_USER goals_met(const NGPuzzle *p)
         if (p->goal_left[g]) return 0;
     }
     if (!any && p->mode == NGP_MODE_BUBBLE) return (uint8_t)!present_colors(p);
+    if (p->mode == NGP_MODE_LOGIC) return 1;    /* the picture is done */
     return any;
 }
 
@@ -1424,7 +1616,8 @@ static void NEOGEO_USER parse_layout(NGPuzzle *p)
     while (s[i] && c < n) {
         char ch = s[i++];
         if (is_sep(ch)) continue;
-        if (ch >= '1' && ch <= '8') { p->color[c] = (uint8_t)(ch - '0'); }
+        if (p->mode == NGP_MODE_LOGIC) { p->color[c] = logic_color(ch); }
+        else if (ch >= '1' && ch <= '8') { p->color[c] = (uint8_t)(ch - '0'); }
         else if (p->mode == NGP_MODE_MATCH) {
             switch (ch) {
             case '.': p->color[c] = 0xFFu; break;
@@ -1487,7 +1680,7 @@ int NEOGEO_USER ng_puzzle_init(NGPuzzle *p, const NGPuzzleLevel *lv, uint32_t se
     p->parity = (uint8_t)(lv->first_shifted ? 1u : 0u);
     p->swap_a = p->swap_b = NGP_NO_CELL;
     p->attach_cell = NGP_NO_CELL;
-    p->moves_left = (p->mode == NGP_MODE_MATCH && lv->moves) ? lv->moves : 0xFFFFu;
+    p->moves_left = (p->mode != NGP_MODE_BUBBLE && lv->moves) ? lv->moves : 0xFFFFu;
     p->shots_left = (p->mode == NGP_MODE_BUBBLE && lv->moves) ? lv->moves : 0xFFFFu;
     p->time_left = lv->time_frames ? lv->time_frames : 0xFFFFu;
     parse_layout(p);
@@ -1503,6 +1696,7 @@ int NEOGEO_USER ng_puzzle_init(NGPuzzle *p, const NGPuzzleLevel *lv, uint32_t se
                 else if (o->type == NGP_OBJ_RESCUE && p->kind[c] == NGP_KIND_RESCUE) cnt++;
             }
         }
+        if (o->type == NGP_OBJ_PICTURE) cnt = logic_left(p);
         p->goal_left[g] = (o->type == NGP_OBJ_SCORE || o->type == NGP_OBJ_CLEAR || o->type == NGP_OBJ_NONE) ? 0u : cnt;
     }
     if (p->mode == NGP_MODE_BUBBLE) {
@@ -1612,10 +1806,15 @@ int NEOGEO_USER ng_puzzle_action(NGPuzzle *p, uint8_t cmd, int16_t a, int16_t b)
         if (a < 1 || a > (int16_t)p->colors) return NGP_ERR_RANGE;
         p->shot_color = (uint8_t)a;
         return NGP_OK;
+    case NGP_CMD_MARK:
+        if (p->mode != NGP_MODE_LOGIC) return NGP_ERR_STATE;
+        if (a < 0 || a >= (int16_t)(p->w * p->h) || b < 0 || b > NGP_MARK_CROSS) return NGP_ERR_RANGE;
+        return logic_mark(p, (uint8_t)a, (uint8_t)b);
     case NGP_CMD_HAMMER: {
         uint8_t c;
         if (a < 0 || a >= (int16_t)(p->w * p->h)) return NGP_ERR_RANGE;
         c = (uint8_t)a;
+        if (p->mode == NGP_MODE_LOGIC) { logic_reveal(p, c); return NGP_OK; }
         if (p->mode == NGP_MODE_MATCH) {
             if (p->cover[c] & NGP_COVER_CRATE) { hit_crate(p, c); p->state = ST_FALL; p->cascade = 1; return NGP_OK; }
             if (!p->color[c] || (p->cover[c] & NGP_COVER_WALL)) return NGP_ERR_RANGE;
@@ -1783,7 +1982,7 @@ int NEOGEO_USER ng_puzzle_load(NGPuzzle *p, const NGPuzzleLevel *lv, const uint8
     if (!p || !lv || !b || size < 24u) return NGP_ERR_ARG;
     if (get32(b, 0) != SAVE_MAGIC) return NGP_ERR_SAVE;
     ver = b[4]; st = b[5]; cas = b[6]; end = b[7];
-    if ((ver != 1u && ver != SAVE_VERSION) || st > ST_LOST || end > NGP_END_SHOTS) return NGP_ERR_SAVE;
+    if ((ver != 1u && ver != SAVE_VERSION) || st > ST_LOST || end > NGP_END_MISTAKES) return NGP_ERR_SAVE;
     rc = ng_puzzle_level_check(lv, 0);
     if (rc != NGP_OK) return rc;
     if (get32(b, 8) != (ver == 1u ? level_id_v1(lv) : level_id(lv))) return NGP_ERR_SAVE;
@@ -1796,10 +1995,16 @@ int NEOGEO_USER ng_puzzle_load(NGPuzzle *p, const NGPuzzleLevel *lv, const uint8
     /* Validate indices/enums before any mutation, also for legacy payloads
      * which have no checksum. No temporary full context on the 68000 stack. */
     if ((lv->mode == NGP_MODE_MATCH && (st == ST_FLIGHT || st == ST_POP)) ||
-        (lv->mode == NGP_MODE_BUBBLE && st >= ST_MATCH && st <= ST_SETTLE)) return NGP_ERR_SAVE;
+        (lv->mode == NGP_MODE_BUBBLE && st >= ST_MATCH && st <= ST_SETTLE) ||
+        (lv->mode == NGP_MODE_LOGIC && st != ST_IDLE && st < ST_WON)) return NGP_ERR_SAVE;
     if ((st >= ST_WON) != (end != NGP_END_NONE) || !get32(b, 12) || !get32(b, 16)) return NGP_ERR_SAVE;
     for (c = 0; c < n; c++) {
         uint8_t col = b[24u + c], kind = b[24u + n + c], cover = b[24u + 2u * n + c];
+        if (lv->mode == NGP_MODE_LOGIC) {
+            if (col > lv->colors || kind > NGP_MARK_MISS || cover || (kind == NGP_MARK_FILL && !col) ||
+                (kind == NGP_MARK_MISS && col)) return NGP_ERR_SAVE;
+            continue;
+        }
         if (col > lv->colors && col != NGP_COLOR_PRISM && col != NGP_COLOR_STONE) return NGP_ERR_SAVE;
         if (kind > NGP_KIND_RESCUE || (cover & 0x0Cu)) return NGP_ERR_SAVE;
         if (lv->mode == NGP_MODE_MATCH && (col == NGP_COLOR_STONE || kind > NGP_KIND_PRISM)) return NGP_ERR_SAVE;

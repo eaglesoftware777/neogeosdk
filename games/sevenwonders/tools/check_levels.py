@@ -6,7 +6,8 @@ Play every Seven Wonders level on the host with the puzzle engine.
 
 Each level is checked by ng_puzzle_level_check(), then played over many
 seeds by a simple bot (the engine's own hints: the best swap, the best
-aim, or a random aim when no shot helps). It reports the bot's win rate
+aim, or a random aim when no shot helps; on a picture, the solution in a
+shuffled order with a cross and a mistake or two on the way). It reports the bot's win rate
 per level and fails if a level is rejected, ever stays busy after settling
 (a softlock), or is never won. The bot is far weaker than a player, so its
 win rates are a floor for tuning, not the difficulty a player feels.
@@ -26,10 +27,11 @@ HARNESS = r"""
 #include <string.h>
 #include "ng_puzzle.h"
 #define SW_CHAPTERS 7u
-#define SW_PER_CHAPTER 4u
-#define SW_LEVELS 28u
+#define SW_PER_CHAPTER 5u
+#define SW_LEVELS 35u
 enum { SW_CAT_MIMI = 0, SW_CAT_KIKO };
 typedef struct { const char *name, *line1, *line2; uint8_t cat; } SWChapter;
+typedef struct { const char *name; uint8_t bg; } SWPicture;
 #include "sw_levels_data.h"
 static NGPuzzle P;
 static uint32_t rng = 1;
@@ -49,7 +51,17 @@ int main(int argc, char **argv)
             if (ng_puzzle_init(&P, lv, (uint32_t)s * 7919u) != NGP_OK) { bad++; break; }
             rng = (uint32_t)s * 2654435761u;
             while (ng_puzzle_status(&P) == NGP_STATUS_READY && guard++ < 400) {
-                if (lv->mode == NGP_MODE_MATCH) {
+                if (lv->mode == NGP_MODE_LOGIC) {
+                    /* a cell at random: fill it if it is in the picture, now and then
+                       cross out or fill an empty one by mistake */
+                    uint8_t c = (uint8_t)(rnd() % (lv->w * lv->h));
+                    if (P.kind[c] == NGP_MARK_NONE) {
+                        if (P.color[c]) ng_puzzle_action(&P, NGP_CMD_MARK, c, NGP_MARK_FILL);
+                        else ng_puzzle_action(&P, NGP_CMD_MARK, c, (rnd() & 15u) ? NGP_MARK_CROSS : NGP_MARK_FILL);
+                    }
+                    guard--;
+                    if (++moves > 100000L) break;
+                } else if (lv->mode == NGP_MODE_MATCH) {
                     uint8_t c, d;
                     if (!ng_puzzle_hint(&P, &c, &d)) break;
                     ng_puzzle_action(&P, NGP_CMD_SWAP, c, d);
@@ -69,7 +81,7 @@ int main(int argc, char **argv)
             moves += P.moves_used;
         }
         printf("level %2u %-6s: bot won %3d%% (%d/%d), %ld moves a game%s\n", li + 1,
-               lv->mode == NGP_MODE_MATCH ? "match" : "bubble", 100 * wins / seeds, wins, seeds,
+               lv->mode == NGP_MODE_MATCH ? "match" : lv->mode == NGP_MODE_LOGIC ? "logic" : "bubble", 100 * wins / seeds, wins, seeds,
                moves / seeds, stuck ? "  STUCK" : "");
         if (stuck || !wins) bad++;
     }

@@ -12,9 +12,13 @@
  *   1-20 background, 27-124 cell backs (match) or bubbles (bubble mode),
  *   125-222 pieces, 147-172 falling bubbles and the shot (bubble mode),
  *   223-254 locks, 255-270 effects, 271-272 cursor, 273-286 launcher and
- *   aim guide, 287-294 cats, 295-310 logo, 311-313 stars; 21-26 the
- *   panel in play. A card's plate (223-238) and the banners (223-240,
- *   241-258) borrow the locks' and effects' slots: none is shown with the board.
+ *   aim guide, 287-298 cats (six strips each), 299-317 logo, 318-320
+ *   stars, 321-330 the cheering word, 331-340 the lucky paw's prizes,
+ *   341-361 the album's pictures; 21-26 the panel in play. A card's plate (223-238) and the
+ *   banners (223-240, 241-258) borrow the locks' and effects' slots: none
+ *   is shown with the board. Picture logic: 27-41 the plate behind the
+ *   clues and the grid, 42-141 the cells (one strip each, or two for
+ *   32-pixel cells), the paw on 271-272.
  */
 #include "sw.h"
 #include "sdk/2d_engine/ng_sprite_group.h"
@@ -47,8 +51,13 @@ void NEOGEO_USER soundSetADPCMBLoop(uint8_t v);
 #define SPR_LAUNCH    273u
 #define SPR_DOT       275u
 #define SPR_CAT       287u
-#define SPR_LOGO      295u
-#define SPR_STAR      311u
+#define SPR_LOGO      299u
+#define SPR_STAR      318u
+#define SPR_WORD      321u
+#define SPR_PRIZE     331u
+#define SPR_ALBUM     341u
+#define SPR_LPLATE    27u          /* 18 strips */
+#define SPR_LCELL     46u
 #define SPR_CARD      223u        /* the locks' slots */
 #define SPR_BANNER    223u        /* and two of 18 strips */
 #define SPR_PANEL     21u
@@ -59,6 +68,13 @@ void NEOGEO_USER soundSetADPCMBLoop(uint8_t v);
 #define FALLS         24u
 #define DOTS          12u
 #define PAL_BANKS     112u
+/* Everything that matters stays within x 24..296 (FIX columns 3..36): a
+ * television hides up to about twenty pixels at each side. */
+#define SAFE_X        24
+#define LGRID_X       84           /* picture logic: the grid's top-left (tools/art.py) */
+#define LGRID_Y       52
+#define LPLATE_X      16
+#define LPLATE_Y      4
 
 /* ======================================================================
  * frame pump, input, palettes
@@ -69,6 +85,7 @@ static NGFrameSync s_video_sync;
 static uint16_t s_joy, s_joy_prev, s_pressed, s_repeat, s_frames, s_rng;
 static NGInputRepeat s_repeat_x, s_repeat_y;
 static void NEOGEO_USER sw_commit_ui(void);
+static void NEOGEO_USER word_tick(void);
 static void NEOGEO_USER sw_unbind_board(void);
 
 void NEOGEO_USER sw_vblank(void)
@@ -112,6 +129,20 @@ void NEOGEO_USER sw_fix_palettes(void)
     fix_pal(SW_TXT_PINK, 0x6F8Cu, 0x8000u);
     fix_pal(SW_TXT_SKY, 0x16DFu, 0x8000u);
     fix_pal(SW_TXT_MINT, 0x07FAu, 0x8000u);
+    fix_pal(SW_TXT_CLUE, 0x9414u, 0x5FFEu);        /* plum on cream: the edge melts into the plate */
+    fix_pal(SW_TXT_CLUE_HI, 0xFE27u, 0x5FFEu);
+    fix_pal(SW_TXT_CLUE_DONE, 0x8CBDu, 0x5FFEu);
+    {
+        uint16_t h[16];
+        uint8_t i;
+        for (i = 0; i < 16u; i++) h[i] = 0;
+        h[1] = 0x7F59u; h[2] = 0x0714u; h[3] = 0x7FFFu;  /* fill, outline, shine */
+        ng_palfx_screen_load(SW_TXT_HEART, h);
+        h[1] = 0x6FC3u; h[2] = 0x0714u; h[3] = 0x7FFFu;  /* a gold star */
+        ng_palfx_screen_load(SW_TXT_STAR, h);
+        h[1] = 0x5AACu; h[3] = 0x3DCEu;                  /* a star still to win */
+        ng_palfx_screen_load(SW_TXT_STAR_OFF, h);
+    }
 }
 
 void NEOGEO_USER sw_presentation_init(void)
@@ -150,6 +181,7 @@ uint16_t NEOGEO_USER sw_frame(void)
                           ng_input_repeat_step(&s_repeat_y, y, 15u, 4u));
     s_frames++;
     s_rng ^= (uint16_t)(s_joy + s_frames);
+    word_tick();
     return s_frames;
 }
 
@@ -223,6 +255,11 @@ void NEOGEO_USER sw_clear_text(uint8_t y0, uint8_t y1)
  * backgrounds, logo, cats, stars
  * ==================================================================== */
 static NGSpriteGroup s_bg, s_logo, s_cat[2], s_star[3], s_card, s_banner[2], s_panel;
+static NGSpriteGroup s_word, s_prize[SW_PRIZE_KINDS], s_album[7];
+static uint8_t s_cat_art[2];          /* the asset each cat slot shows */
+static uint8_t s_small_cats;          /* sw_cat draws the 48-pixel cats (a picture's column) */
+static uint8_t s_word_t;              /* frames the word has left on screen */
+static int16_t s_word_cx, s_word_cy;
 
 static void NEOGEO_USER sw_commit_ui(void)
 {
@@ -279,6 +316,13 @@ void NEOGEO_USER sw_scene(uint8_t background)
     s_cat[0].visible = s_cat[1].visible = 0;    /* parked above: show them whole next time */
     s_banner[0].visible = s_banner[1].visible = 0;
     s_star[0].visible = s_star[1].visible = s_star[2].visible = 0;
+    s_word.visible = 0; s_word_t = 0;
+    s_small_cats = 0;
+    {
+        uint8_t i;
+        for (i = 0; i < SW_PRIZE_KINDS; i++) s_prize[i].visible = 0;
+        for (i = 0; i < 7u; i++) s_album[i].visible = 0;
+    }
     ng_fix_invalidate_all();
     load_art_palettes(id);
     ng_palfx_screen_backdrop(0x8000u);
@@ -292,16 +336,29 @@ void NEOGEO_USER sw_logo(uint8_t show, int16_t y)
 {
     if (!show) { ng_sprite_group_set_visible(&s_logo, 0); ng_sprite_group_flush(&s_logo); return; }
     ng_sprite_group_set_priority(&s_logo, NG_SG_PRIO_HIGH);
-    show_asset(&s_logo, SPR_LOGO, SW_ART_LOGO, 0, (int16_t)((320 - 256) >> 1), y);
+    show_asset(&s_logo, SPR_LOGO, SW_ART_LOGO, 0, (int16_t)((320 - 304) >> 1), y);
+}
+
+/* A cat slot changing picture: all six of its strips go first, as the new
+ * picture may be narrower and a group set up again forgets its old strips. */
+static void NEOGEO_USER cat_slot_for(uint8_t slot, uint8_t id)
+{
+    if (s_cat_art[slot] != id && s_cat[slot].visible) {
+        ng_sprite_hide_range((uint16_t)(SPR_CAT + 6u * slot), 6u);
+        s_cat[slot].visible = 0;
+    }
 }
 
 void NEOGEO_USER sw_cat(uint8_t slot, uint8_t cat, uint8_t mood, int16_t x, int16_t y)
 {
     NGSpriteGroup *g = &s_cat[slot & 1u];
-    uint8_t id = cat == SW_CAT_KIKO ? SW_ART_KIKO : SW_ART_MIMI;
+    uint8_t id = s_small_cats ? (cat == SW_CAT_KIKO ? SW_ART_SKIKO : SW_ART_SMIMI)
+                              : (cat == SW_CAT_KIKO ? SW_ART_KIKO : SW_ART_MIMI);
+    cat_slot_for((uint8_t)(slot & 1u), id);
     if (mood >= SW_MOODS) mood = SW_MOOD_IDLE;
-    if (!g->visible || g->firstSprite != (uint16_t)(SPR_CAT + 4u * (slot & 1u))) {
-        show_asset(g, (uint16_t)(SPR_CAT + 4u * (slot & 1u)), id, mood, x, y);
+    if (!g->visible || g->firstSprite != (uint16_t)(SPR_CAT + 6u * (slot & 1u)) || s_cat_art[slot & 1u] != id) {
+        show_asset(g, (uint16_t)(SPR_CAT + 6u * (slot & 1u)), id, mood, x, y);
+        s_cat_art[slot & 1u] = id;
         return;
     }
     set_frame(g, id, mood);
@@ -309,10 +366,100 @@ void NEOGEO_USER sw_cat(uint8_t slot, uint8_t cat, uint8_t mood, int16_t x, int1
     ng_sprite_group_flush(g);
 }
 
+void NEOGEO_USER sw_title_cat(uint8_t slot, uint8_t cat, uint8_t frame, int16_t x, int16_t y)
+{
+    NGSpriteGroup *g = &s_cat[slot & 1u];
+    uint8_t f = (uint8_t)((cat == SW_CAT_KIKO ? 3u : 0u) + (frame < 3u ? frame : 0u));
+    cat_slot_for((uint8_t)(slot & 1u), SW_ART_TCATS);
+    if (!g->visible || g->firstSprite != (uint16_t)(SPR_CAT + 6u * (slot & 1u)) || s_cat_art[slot & 1u] != SW_ART_TCATS) {
+        show_asset(g, (uint16_t)(SPR_CAT + 6u * (slot & 1u)), SW_ART_TCATS, f, x, y);
+        s_cat_art[slot & 1u] = SW_ART_TCATS;
+        return;
+    }
+    set_frame(g, SW_ART_TCATS, f);
+    ng_sprite_group_set_pos(g, x, y);
+    ng_sprite_group_flush(g);
+}
+
+void NEOGEO_USER sw_lucky_cat(uint8_t frame, int16_t x, int16_t y)
+{
+    NGSpriteGroup *g = &s_cat[0];
+    cat_slot_for(0, SW_ART_LUCKY);
+    if (!g->visible || g->firstSprite != SPR_CAT || s_cat_art[0] != SW_ART_LUCKY) {
+        show_asset(g, SPR_CAT, SW_ART_LUCKY, (uint8_t)(frame & 1u), x, y);
+        s_cat_art[0] = SW_ART_LUCKY;
+        return;
+    }
+    set_frame(g, SW_ART_LUCKY, (uint8_t)(frame & 1u));
+    ng_sprite_group_set_pos(g, x, y);
+    ng_sprite_group_flush(g);
+}
+
+void NEOGEO_USER sw_prize(uint8_t slot, uint8_t kind, int16_t x, int16_t y)
+{
+    NGSpriteGroup *g;
+    if (slot >= SW_PRIZE_KINDS) return;
+    g = &s_prize[slot];
+    if (kind >= SW_PRIZE_KINDS) {
+        if (g->visible) { ng_sprite_group_set_visible(g, 0); ng_sprite_group_flush(g); }
+        return;
+    }
+    if (!g->visible) { show_asset(g, (uint16_t)(SPR_PRIZE + 2u * slot), SW_ART_PRIZES, kind, x, y); return; }
+    set_frame(g, SW_ART_PRIZES, kind);
+    ng_sprite_group_set_pos(g, x, y);
+    ng_sprite_group_flush(g);
+}
+
+void NEOGEO_USER sw_album(uint8_t i, uint8_t solved, int16_t x, int16_t y)
+{
+    if (i >= 7u) return;
+    show_asset(&s_album[i], (uint16_t)(SPR_ALBUM + 3u * i), SW_ART_ALBUM, solved ? i : 7u, x, y);
+}
+
+/* The word pops in (the hardware shrink, six frames), bobs, holds, then rises and goes. */
+void NEOGEO_USER sw_word(uint8_t word, int16_t cx, int16_t cy)
+{
+    s_word_cx = cx; s_word_cy = cy;
+    if (!s_word.visible) show_asset(&s_word, SPR_WORD, SW_ART_WORDS, word, (int16_t)(cx - 80), (int16_t)(cy - 16));
+    else set_frame(&s_word, SW_ART_WORDS, word);
+    s_word_t = 60;
+    word_tick();
+}
+
+static void NEOGEO_USER word_tick(void)
+{
+    static const uint8_t grow[6] = { 0x3Fu, 0x6Fu, 0x9Fu, 0xCFu, 0xEFu, 0xFFu };
+    static const int8_t bob[8] = { -3, -5, -6, -5, -3, -1, 0, 0 };
+    uint8_t k, scale;
+    int16_t w, h, y;
+    if (!s_word_t) return;
+    if (!--s_word_t) {
+        ng_sprite_group_set_visible(&s_word, 0);
+        ng_sprite_group_flush(&s_word);
+        return;
+    }
+    k = (uint8_t)(59u - s_word_t);                   /* frames shown, from 0 */
+    scale = k < 6u ? grow[k] : 0xFFu;
+    w = (int16_t)(10 * ((scale >> 4) + 1));          /* ten strips, each (nibble + 1) wide */
+    h = (int16_t)((32 * (scale + 1)) >> 8);
+    y = (int16_t)(s_word_cy - (h >> 1));
+    if (k >= 6u && k < 14u) y = (int16_t)(y + bob[k - 6u]);
+    if (s_word_t < 18u) y = (int16_t)(y - (int16_t)((18u - s_word_t) >> 1));
+    ng_sprite_group_set_scale(&s_word, scale, scale);
+    ng_sprite_group_set_pos(&s_word, (int16_t)(s_word_cx - (w >> 1)), y);
+    ng_sprite_group_flush(&s_word);
+}
+
+void NEOGEO_USER sw_cats_small(uint8_t small)
+{
+    s_small_cats = (uint8_t)(small != 0u);
+}
+
 void NEOGEO_USER sw_cat_hide(uint8_t slot)
 {
     ng_sprite_group_set_visible(&s_cat[slot & 1u], 0);
     ng_sprite_group_flush(&s_cat[slot & 1u]);
+    ng_sprite_hide_range((uint16_t)(SPR_CAT + 6u * (slot & 1u)), 6u);   /* a big cat's last strips too */
 }
 
 void NEOGEO_USER sw_card(uint8_t show)
@@ -324,14 +471,14 @@ void NEOGEO_USER sw_card(uint8_t show)
 
 void NEOGEO_USER sw_banner(uint8_t which, int16_t y)
 {
-    show_asset(&s_banner[which & 1u], (uint16_t)(SPR_BANNER + 18u * (which & 1u)), SW_ART_BANNER, 0, 16, y);
+    show_asset(&s_banner[which & 1u], (uint16_t)(SPR_BANNER + 18u * (which & 1u)), SW_ART_BANNER, 0, SAFE_X, y);
 }
 
 void NEOGEO_USER sw_panel(uint8_t show)
 {
     if (!show) { ng_sprite_group_set_visible(&s_panel, 0); ng_sprite_group_flush(&s_panel); return; }
     ng_sprite_group_set_priority(&s_panel, NG_SG_PRIO_HIGH);
-    show_asset(&s_panel, SPR_PANEL, SW_ART_PANEL, 0, 4, 4);
+    show_asset(&s_panel, SPR_PANEL, SW_ART_LPANEL, 0, SAFE_X - 6, 4);
 }
 
 void NEOGEO_USER sw_stars(uint8_t count, int16_t x, int16_t y)
@@ -358,9 +505,28 @@ void NEOGEO_USER sw_music(uint8_t track)
     waitVbl();
 }
 
+/* Effects never pile up: the same one waits six frames before it plays
+ * again, and no more than two new ones start in a frame (each takes one of
+ * the six ADPCM-A voices at full voice volume, so stacks add up to noise). */
 void NEOGEO_USER sw_sfx(uint8_t sfx)
 {
-    if (sfx < SW_SFX_COUNT) playSFX(sfx);
+    static uint16_t at[SW_SFX_COUNT];
+    static uint16_t frame;
+    static uint8_t in_frame;
+    if (sfx >= SW_SFX_COUNT) return;
+    if (frame != s_frames) { frame = s_frames; in_frame = 0; }
+    if (in_frame >= 2u) return;
+    if (at[sfx] && (uint16_t)(s_frames - at[sfx]) < 6u) return;
+    at[sfx] = s_frames ? s_frames : 1u;
+    in_frame++;
+    playSFX(sfx);
+}
+
+/* Silence: the tune stops, so a fanfare can play alone. */
+void NEOGEO_USER sw_hush(void)
+{
+    soundStopAll();
+    waitVbl();
 }
 
 /* ======================================================================
@@ -385,6 +551,13 @@ static uint8_t s_group[(SW_BUBBLE_CELLS + 7u) / 8u]; /* last joined group, bits 
 static uint8_t s_mode, s_bound, s_cursor_t, s_drawn_parity;
 static NGPuzzle *s_p;
 static NGPuzzlePreview s_aim_preview;
+/* picture logic */
+static NGSpriteGroup s_lplate;
+static uint8_t s_lbig, s_lpitch, s_lart;          /* 32-pixel cells?, the pitch, the cell asset */
+static uint8_t s_lborder[SW_BUBBLE_CELLS];        /* a thick line on the right (1) or the bottom (2) */
+static uint8_t s_reveal, s_reveal_bg;             /* cells with x + y < s_reveal show the picture */
+static uint8_t s_hi_row, s_hi_col;                /* the clues drawn highlighted (0xFE: draw them all) */
+static uint32_t s_done_lines;                     /* rows (bits 0-15) and columns (16-27) drawn finished */
 static uint32_t s_aim_generation;
 /* t/6 of the way, in 256ths: the swap's slide without a divide */
 static const uint16_t frac6[13] = { 0, 43, 85, 128, 171, 213, 256, 213, 171, 128, 85, 43, 0 };
@@ -432,11 +605,12 @@ uint8_t NEOGEO_USER sw_board_bind(NGPuzzle *p)
     s_p = p;
     s_mode = p->mode;
     s_drawn_parity = 0xFFu;
+    s_reveal = 0;
     s_swap_t = 0; s_clear_t = 0;
     for (c = 0; c < FX; c++) s_fx_t[c] = 0;
     for (c = 0; c < FALLS; c++) s_fall_on[c] = 0;
     if (s_mode == NGP_MODE_MATCH) {
-        s_ox = (int16_t)(104 + ((216 - PITCH * p->w) >> 1) - 2);
+        s_ox = (int16_t)(96 + ((200 - PITCH * p->w) >> 1) - 2);     /* the board within x 96..296 */
         s_oy = (int16_t)(12 + ((PITCH * 7 - PITCH * p->h) >> 1) - 2);
         n = (uint8_t)(p->w * p->h);
         for (c = 0; c < n; c++) {
@@ -448,8 +622,26 @@ uint8_t NEOGEO_USER sw_board_bind(NGPuzzle *p)
             s_off[c] = 0; s_vel[c] = 0;
         }
         for (c = 0; c < LOCKS; c++) show_asset(&s_lock[c], (uint16_t)(SPR_LOCK + 2u * c), SW_ART_LOCK, 0, 0, 240);
+    } else if (s_mode == NGP_MODE_LOGIC) {
+        uint8_t x = 0, y = 0;
+        s_lbig = (uint8_t)(p->w <= 5u);
+        s_lpitch = s_lbig ? 32u : 16u;
+        s_lart = s_lbig ? SW_ART_LBIG : SW_ART_LCELL;
+        s_ox = LGRID_X; s_oy = LGRID_Y;
+        show_asset(&s_lplate, SPR_LPLATE, SW_ART_LPLATE, s_lbig, LPLATE_X, LPLATE_Y);
+        n = (uint8_t)(p->w * p->h);
+        for (c = 0; c < n; c++) {
+            /* a darker line after every fifth row and column of a big grid */
+            s_lborder[c] = (uint8_t)((!s_lbig && x == 4u && p->w > 5u ? 1u : 0u) | (!s_lbig && y == 4u && p->h > 5u ? 2u : 0u));
+            show_asset(&s_cell[c], (uint16_t)(SPR_LCELL + (s_lbig ? 2u * c : c)), s_lart, s_lborder[c],
+                       (int16_t)(LGRID_X + x * s_lpitch), (int16_t)(LGRID_Y + y * s_lpitch));
+            s_drawn_kind[c] = s_lborder[c];
+            if (++x == p->w) { x = 0; y++; }
+        }
+        s_hi_row = s_hi_col = 0xFEu;
+        s_done_lines = 0;
     } else {
-        s_ox = (int16_t)(104 + ((216 - 16 * p->w) >> 1));
+        s_ox = (int16_t)(96 + ((200 - 16 * p->w) >> 1));
         s_oy = 6;
         n = (uint8_t)(p->w * p->h);
         for (c = 0; c < n; c++) {
@@ -477,7 +669,7 @@ uint8_t NEOGEO_USER sw_board_bind(NGPuzzle *p)
         ng_sprite_group_set_visible(&s_fx[c], 0);
         ng_sprite_group_flush(&s_fx[c]);
     }
-    show_asset(&s_cursor, SPR_CURSOR, SW_ART_CURSOR, 0, 0, 240);
+    show_asset(&s_cursor, SPR_CURSOR, s_mode != NGP_MODE_LOGIC ? SW_ART_CURSOR : s_lbig ? SW_ART_LBCURSOR : SW_ART_LCURSOR, 0, 0, 240);
     ng_sprite_group_set_visible(&s_cursor, 0);
     ng_sprite_group_flush(&s_cursor);
     s_bound = 1;
@@ -589,6 +781,18 @@ void NEOGEO_USER sw_board_event(NGPuzzle *p, const NGPuzzleEvent *e)
         break;
     case NGP_EV_RESCUE: sw_sfx(SW_SFX_RESCUE); break;
     case NGP_EV_TIME_LOW: sw_sfx(SW_SFX_TICK); break;
+    case NGP_EV_MARK:
+        sw_sfx(e->a == NGP_MARK_FILL ? SW_SFX_PICK : e->a == NGP_MARK_MISS ? SW_SFX_NOPE : SW_SFX_MOVE);
+        break;
+    case NGP_EV_MISTAKE:
+    case NGP_EV_REVEAL: {
+        int16_t x, y;
+        ng_puzzle_cell_px(p, e->cell, s_lpitch, &x, &y);
+        effect((int16_t)(s_ox + x + (s_lpitch >> 1) - 16), (int16_t)(s_oy + y + (s_lpitch >> 1) - 16));
+        if (e->type == NGP_EV_REVEAL) sw_sfx(SW_SFX_SPECIAL);
+        break;
+    }
+    case NGP_EV_LINE: sw_sfx(SW_SFX_MATCH); break;
     default: break;
     }
 }
@@ -604,15 +808,15 @@ uint8_t NEOGEO_USER sw_board_idle(void)
 
 static void NEOGEO_USER draw_match(NGPuzzle *p)
 {
-    uint8_t c, n = (uint8_t)(p->w * p->h), locks = 0;
+    uint8_t c, n = (uint8_t)(p->w * p->h), locks = 0, gx = 0, gy = 0;
     for (c = 0; c < n; c++) {
         NGSpriteGroup *g = &s_cell[c];
         int16_t x, y, dx = 0, dy = 0;
         uint8_t color = p->color[c], kind = p->kind[c], cover = p->cover[c];
         ng_puzzle_cell_px(p, c, PITCH, &x, &y);
-        /* the cell back: wall, crate, ice, or the plain slot */
+        /* the cell back: wall, crate, ice, or the plain slot (a gingham check) */
         if (cover != s_drawn_cover[c]) {
-            uint8_t f = 6;
+            uint8_t f = (uint8_t)(6u + ((gx + gy) & 1u));
             if (cover & NGP_COVER_WALL) f = 5;
             else if (NGP_CRATE_HP(cover)) f = (uint8_t)(1u + NGP_CRATE_HP(cover));
             else if (NGP_ICE(cover)) f = (uint8_t)(NGP_ICE(cover) - 1u);
@@ -651,6 +855,7 @@ static void NEOGEO_USER draw_match(NGPuzzle *p)
         if (s_clear_t && ((p->cleared[c >> 3] >> (c & 7u)) & 1u)) ng_sprite_group_set_visible(g, 0);
         ng_sprite_group_set_pos(g, (int16_t)(s_ox + x + dx), (int16_t)(s_oy + y + dy));
         ng_sprite_group_flush(g);
+        if (++gx == p->w) { gx = 0; gy++; }
     }
     for (c = locks; c < LOCKS; c++) {
         if (!s_lock[c].visible) continue;
@@ -727,11 +932,124 @@ static void NEOGEO_USER draw_bubbles(NGPuzzle *p)
     ng_sprite_group_flush(&s_next);
 }
 
+/* ======================================================================
+ * picture logic
+ * ==================================================================== */
+static void NEOGEO_USER draw_logic(NGPuzzle *p)
+{
+    uint8_t c, n = (uint8_t)(p->w * p->h), x = 0, y = 0;
+    for (c = 0; c < n; c++) {
+        uint8_t k = p->kind[c], f;
+        if ((uint8_t)(x + y) < s_reveal) f = (uint8_t)(16u + (p->color[c] ? p->color[c] : s_reveal_bg));
+        else f = (uint8_t)(((k > NGP_MARK_MISS ? 0u : k) << 2) + s_lborder[c]);
+        if (f != s_drawn_kind[c]) {
+            set_frame(&s_cell[c], s_lart, f);
+            ng_sprite_group_flush(&s_cell[c]);
+            s_drawn_kind[c] = f;
+        }
+        if (++x == p->w) { x = 0; y++; }
+    }
+}
+
+void NEOGEO_USER sw_logic_reveal(NGPuzzle *p, uint8_t bg, uint8_t step)
+{
+    if (!s_bound || p != s_p || s_mode != NGP_MODE_LOGIC) return;
+    s_reveal = step;
+    s_reveal_bg = (uint8_t)(bg & 15u);
+}
+
+/* One line's clue: a row's numbers right-aligned against the grid, a
+ * column's stacked above it, nearest the grid last. */
+static void NEOGEO_USER clue_line(NGPuzzle *p, uint8_t column, uint8_t index, uint8_t pal)
+{
+    uint8_t runs[4], n = ng_puzzle_logic_clue(p, column, index, runs, 4), i;
+    if (n > 4u) n = 4u;
+    if (!column) {
+        char buf[8];
+        uint8_t o = 7;
+        for (i = 0; i < 7u; i++) buf[i] = ' ';
+        buf[7] = 0;
+        if (!n) buf[6] = '0';
+        for (i = n; i-- > 0;) {
+            uint8_t v = runs[i];
+            if (v >= 10u) { buf[--o] = (char)('0' + v - 10u); buf[--o] = '1'; }
+            else buf[--o] = (char)('0' + v);
+            if (o) o--;
+        }
+        sw_puts(SAFE_X >> 3, (uint8_t)(s_lbig ? 8u + (index << 2) : 7u + (index << 1)), buf, pal);
+    } else {
+        /* a digit centred on its column: the grid sits 4 pixels off the FIX grid */
+        uint8_t col = (uint8_t)(s_lbig ? ((LGRID_X + 12) >> 3) + (index << 2) : ((LGRID_X + 4) >> 3) + (index << 1)), r;
+        for (r = 0; r < 4u; r++) {
+            char buf[3];
+            int8_t k = (int8_t)(r - (4 - (n ? n : 1)));
+            buf[0] = ' '; buf[1] = ' '; buf[2] = 0;
+            if (k >= 0) {
+                uint8_t v = n ? runs[k] : 0u;
+                if (v >= 10u) { buf[0] = '1'; buf[1] = (char)('0' + v - 10u); }
+                else buf[0] = (char)('0' + v);
+            }
+            sw_puts(col, (uint8_t)(2u + r), buf, pal);
+        }
+    }
+}
+
+void NEOGEO_USER sw_logic_clues(NGPuzzle *p, uint8_t cursor)
+{
+    uint8_t cx = cursor, cy = 0, i, all;
+    uint32_t done = 0;
+    if (!s_bound || p != s_p || s_mode != NGP_MODE_LOGIC) return;
+    if (cursor == NGP_NO_CELL) { cx = 0xFDu; cy = 0xFDu; }
+    else while (cx >= p->w) { cx = (uint8_t)(cx - p->w); cy++; }
+    for (i = 0; i < p->h; i++) if (ng_puzzle_logic_line_done(p, 0, i)) done |= (uint32_t)1u << i;
+    for (i = 0; i < p->w; i++) if (ng_puzzle_logic_line_done(p, 1, i)) done |= (uint32_t)1u << (16u + i);
+    all = (uint8_t)(s_hi_row == 0xFEu);
+    for (i = 0; i < p->h; i++) {
+        uint8_t was = (uint8_t)((s_done_lines >> i) & 1u), is = (uint8_t)((done >> i) & 1u);
+        if (all || was != is || i == cy || i == s_hi_row)
+            clue_line(p, 0, i, is ? SW_TXT_CLUE_DONE : i == cy ? SW_TXT_CLUE_HI : SW_TXT_CLUE);
+    }
+    for (i = 0; i < p->w; i++) {
+        uint8_t was = (uint8_t)((s_done_lines >> (16u + i)) & 1u), is = (uint8_t)((done >> (16u + i)) & 1u);
+        if (all || was != is || i == cx || i == s_hi_col)
+            clue_line(p, 1, i, is ? SW_TXT_CLUE_DONE : i == cx ? SW_TXT_CLUE_HI : SW_TXT_CLUE);
+    }
+    s_hi_row = cy; s_hi_col = cx;
+    s_done_lines = done;
+}
+
+void NEOGEO_USER sw_logic_hearts(uint16_t left, uint16_t total)
+{
+    uint8_t i;
+    if (total == 0xFFFFu || !total) return;
+    for (i = 0; i < 6u; i++) {
+        if (i < total) ng_fix_put_tile((uint8_t)((SAFE_X >> 3) + i), 2, (uint16_t)(SW_HEART_TILE + (i < left ? 0u : 1u)), SW_TXT_HEART);
+    }
+}
+
+void NEOGEO_USER sw_logic_cursor(uint8_t show, uint8_t cursor)
+{
+    if (!s_bound || s_mode != NGP_MODE_LOGIC || !show || cursor == NGP_NO_CELL) {
+        if (s_cursor.visible) { ng_sprite_group_set_visible(&s_cursor, 0); ng_sprite_group_flush(&s_cursor); }
+        return;
+    }
+    {
+        int16_t x, y;
+        ng_puzzle_cell_px(s_p, cursor, s_lpitch, &x, &y);
+        ng_sprite_group_set_pos(&s_cursor, (int16_t)(s_ox + x), (int16_t)(s_oy + y));
+    }
+    s_cursor_t++;
+    set_frame(&s_cursor, s_lbig ? SW_ART_LBCURSOR : SW_ART_LCURSOR, (uint8_t)((s_cursor_t >> 4) & 1u));
+    ng_sprite_group_set_visible(&s_cursor, 1);
+    ng_sprite_group_flush(&s_cursor);
+}
+
 void NEOGEO_USER sw_board_draw(NGPuzzle *p)
 {
     uint8_t i;
     if (!s_bound || !p || p != s_p) return;
     if (s_mode == NGP_MODE_MATCH) draw_match(p);
+    else if (s_mode == NGP_MODE_LOGIC) draw_logic(p);
     else draw_bubbles(p);
     for (i = 0; i < FX; i++) {
         if (!s_fx_t[i]) continue;

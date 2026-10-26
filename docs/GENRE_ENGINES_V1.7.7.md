@@ -5,7 +5,7 @@ games the SDK's 2D engine did not cover on its own:
 
 | `GAME_GENRE_ENGINE` | Source | What it runs |
 |---|---|---|
-| `puzzle` | `sdk/2d_engine/ng_puzzle.c` / `.h` | match-3 boards and launched-bubble lattices |
+| `puzzle` | `sdk/2d_engine/ng_puzzle.c` / `.h` | match-3 boards, launched-bubble lattices and picture logic |
 | `mahjong` | `sdk/2d_engine/ng_mahjong.c` / `.h` | four-seat Mahjong (Hong Kong Old Style) and Mahjong solitaire |
 | `rpg` | `sdk/2d_engine/ng_rpg.c` / `.h` | top-down adventure: rooms, party, items, dialogue, environmental puzzles |
 | `beatemup` | `sdk/2d_engine/ng_beatemup.c` / `.h` | belt-scrolling 2.5D brawler for one player against a crowd |
@@ -94,7 +94,7 @@ in the examples below are C99; a C++14 game writes its tables positionally.
 
 ## 3. Puzzle (`ng_puzzle`)
 
-One `NGPuzzle` (1312 bytes) plays one level of either family:
+One `NGPuzzle` (1312 bytes) plays one level of one of three families:
 
 - `NGP_MODE_MATCH`: swap neighbours to line up three or more; runs of four
   make line pieces, five a prism, crossing runs a bomb; crates, ice, locks
@@ -104,6 +104,19 @@ One `NGPuzzle` (1312 bytes) plays one level of either family:
   lattice; rebounds off the side walls; groups of three or more pop,
   anything no longer hanging falls; anchors, stones, caged friends to
   rescue, new rows pushed in, a loss line; an exact path preview and a hint.
+- `NGP_MODE_LOGIC`: picture logic. The layout is the finished picture
+  (`.` empty, `1`-`9` `a`-`f` a filled cell in that picture colour, kept in
+  `color[]`); the clues are its runs, read with `ng_puzzle_logic_clue()`.
+  `NGP_CMD_MARK` fills a cell or crosses it out (`kind[]` holds the marks).
+  Filling a cell outside the picture is a mistake: it is crossed out for
+  good and costs a heart (`moves` hearts, 0 for unlimited; the last one
+  ends the level with `NGP_END_MISTAKES`). A finished row or column crosses
+  out its other cells and scores; `NGP_CMD_HAMMER` shows the row and column
+  through a cell. The picture done wins, with points for the hearts and
+  seconds left; the only objective allowed is `NGP_OBJ_PICTURE` (squares
+  left to fill). Every action resolves at once, so the status never says
+  busy. Check pictures offline for a single solution by line logic; the
+  engine takes any picture.
 
 Levels are `NGPuzzleLevel` tables with the board written as text
 (`ng_puzzle.h` lists the characters). `ng_puzzle_level_check()` reports the
@@ -133,10 +146,22 @@ for (;;) {                                         /* the game's frame loop */
 
 Calls: `level_check`, `init`, `reset`, `action` (`NGP_CMD_SWAP`,
 `SWAP_CELLS`, `AIM`, `AIM_BY`, `FIRE`, `SWAP_NEXT`, `HAMMER`, `SHUFFLE`,
-`COLOR_SHOT`), `update`, `settle`, `status`, `flying`, `event`, `cell`,
-`neighbor`, `row_shifted`, `row_cells`, `cell_px`, `next_dirty`,
+`COLOR_SHOT`, `MARK`), `update`, `settle`, `status`, `flying`, `event`,
+`cell`, `neighbor`, `row_shifted`, `row_cells`, `cell_px`, `next_dirty`,
 `dirty_clear`, `hint`, `has_moves`, `bubble_preview`, `bubble_hint`,
-`hash`, `save` / `load` (`NGP_SAVE_SIZE`, 840 bytes), `replay`.
+`logic_clue`, `logic_line_done`, `hash`, `save` / `load` (`NGP_SAVE_SIZE`,
+840 bytes), `replay`.
+
+```c
+static const NGPuzzleLevel k_picture = {
+    .mode = NGP_MODE_LOGIC, .w = 5, .h = 5, .colors = 7, .moves = 5,   /* five hearts */
+    .layout = "4.4.4" "44444" ".444." "..7.." ".777.",                 /* a tulip */
+    .goals = { { NGP_OBJ_PICTURE, 0, 0 } },
+};
+uint8_t runs[4], n = ng_puzzle_logic_clue(&s_board, 0, row, runs, 4);  /* a row's clue */
+ng_puzzle_action(&s_board, NGP_CMD_MARK, cell, NGP_MARK_FILL);          /* or NGP_MARK_CROSS */
+/* NGP_EV_MARK, NGP_EV_MISTAKE, NGP_EV_LINE: sounds; draw kind[] as the marks */
+```
 
 `ng_puzzle_bubble_target()` returns the first occupied bubble struck by the
 same collision path used for flight and preview. Use it for aimed boosters;
@@ -166,8 +191,8 @@ attachment, and flight velocity; older hash recordings must be regenerated.
 Presentation queues, fall/clear masks and search scratch are excluded from the
 hash. A checksum detects corruption; it does not authenticate an untrusted save.
 
-Limits: boards up to 12 x 16 cells, 8 colours, 4 objectives, 32 queued
-events. `ng_puzzle_bubble_hint()` tries about 40 paths: call it on request,
+Limits: boards up to 12 x 16 cells, 8 colours (15 picture colours), 4
+objectives, 32 queued events. `ng_puzzle_bubble_hint()` tries about 40 paths: call it on request,
 not every frame.
 
 ## 4. Mahjong (`ng_mahjong`)

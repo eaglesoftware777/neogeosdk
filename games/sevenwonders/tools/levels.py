@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
-"""Seven Wonders levels: levels/levels.json -> scenes/sw_levels_data.h (the build's GAME_LEVEL_BUILDER)."""
+"""Seven Wonders levels: levels/levels.json -> scenes/sw_levels_data.h (the build's GAME_LEVEL_BUILDER).
+
+Seven chapters of five levels: four of matching and bubbles, then a picture
+(picture logic) that ends the chapter. A picture is written as its rows:
+'.' an empty cell, 1-9 a-f a filled one in that picture colour (tools/art.py
+PICTURE). Each must be 5 x 5 or 10 x 10, have at most four runs in a line
+(the room the clues have on screen) and solve from its clues by line logic
+alone, so no guess is ever needed; this script checks all three.
+"""
 
 import argparse
 import json
@@ -11,8 +19,13 @@ OUT = GAME / "scenes/sw_levels_data.h"
 
 MATCH_CHARS = set(".12345678#cCKiIlhvbp")
 BUBBLE_CHARS = set(".12345678rASR")
+LOGIC_CHARS = set(".123456789abcdef")
+LOGIC_SIZES = ((5, 5), (10, 10))
+LOGIC_RUNS = 4
+LOGIC_FILL, LOGIC_LINE, LOGIC_HEART, LOGIC_SECOND = 10, 50, 300, 5   # ng_puzzle.c's points
 GOALS = {"color": "NGP_OBJ_COLOR", "ice": "NGP_OBJ_ICE", "crate": "NGP_OBJ_CRATE", "special": "NGP_OBJ_SPECIAL",
-         "rescue": "NGP_OBJ_RESCUE", "clear": "NGP_OBJ_CLEAR", "score": "NGP_OBJ_SCORE"}
+         "rescue": "NGP_OBJ_RESCUE", "clear": "NGP_OBJ_CLEAR", "score": "NGP_OBJ_SCORE",
+         "picture": "NGP_OBJ_PICTURE"}
 BUBBLE = dict(d=16, row_h=14, loss_row=11, launch_x=80, launch_y=196, speed=6 * 256)
 
 
@@ -58,9 +71,112 @@ def layout(lv, where):
     return "".join(out)
 
 
+def runs(line):
+    """The clue of a line of picture cells."""
+    out, r = [], 0
+    for c in line:
+        if c != ".":
+            r += 1
+        elif r:
+            out.append(r)
+            r = 0
+    if r:
+        out.append(r)
+    return out
+
+
+def placements(clue, n):
+    """Every line of n cells (1 filled, 0 empty) with these runs."""
+    if not clue:
+        yield (0,) * n
+        return
+    first, rest = clue[0], clue[1:]
+    need = sum(rest) + len(rest)
+    for start in range(0, n - need - first + 1):
+        head = (0,) * start + (1,) * first
+        if rest:
+            for tail in placements(rest, n - start - first - 1):
+                yield head + (0,) + tail
+        else:
+            yield head + (0,) * (n - start - first)
+
+
+def line_solvable(rows, cols, w, h):
+    """1 when line logic alone (no guess) fills the whole grid from the clues."""
+    grid = [[None] * w for _ in range(h)]
+    changed = True
+    while changed:
+        changed = False
+        for axis, clues, n, m in ((0, rows, h, w), (1, cols, w, h)):
+            for i in range(n):
+                known = [grid[i][k] if axis == 0 else grid[k][i] for k in range(m)]
+                if None not in known:
+                    continue
+                cands = [q for q in placements(clues[i], m) if all(k is None or k == v for k, v in zip(known, q))]
+                if not cands:
+                    return False
+                for k in range(m):
+                    vals = {q[k] for q in cands}
+                    if len(vals) == 1 and known[k] is None:
+                        v = vals.pop()
+                        if axis == 0:
+                            grid[i][k] = v
+                        else:
+                            grid[k][i] = v
+                        changed = True
+    return all(v is not None for r in grid for v in r)
+
+
+def picture(lv, where):
+    """A picture level's rows, checked: size, characters, clue room, line logic."""
+    rows = lv.get("picture")
+    if not isinstance(rows, list) or not rows or any(not isinstance(r, str) for r in rows):
+        raise SystemExit(f"{where}: a picture is a list of rows")
+    h, w = len(rows), len(rows[0])
+    if (w, h) not in LOGIC_SIZES or any(len(r) != w for r in rows):
+        raise SystemExit(f"{where}: pictures are 5x5 or 10x10")
+    if any(c not in LOGIC_CHARS for r in rows for c in r):
+        raise SystemExit(f"{where}: picture cells are from {''.join(sorted(LOGIC_CHARS))}")
+    row_clues = [runs(r) for r in rows]
+    col_clues = [runs("".join(r[x] for r in rows)) for x in range(w)]
+    if max(len(c) for c in row_clues + col_clues) > LOGIC_RUNS:
+        raise SystemExit(f"{where}: at most {LOGIC_RUNS} runs in a line (the clues' room on screen)")
+    if not any(row_clues):
+        raise SystemExit(f"{where}: an empty picture")
+    if not line_solvable(row_clues, col_clues, w, h):
+        raise SystemExit(f"{where}: the clues need a guess; change the picture")
+    filled = sum(c != "." for r in rows for c in r)
+    lines = sum(1 for c in row_clues + col_clues if c)
+    return w, h, "".join(rows), filled, lines
+
+
+def logic_c(lv, name, where):
+    w, h, lay, filled, lines = picture(lv, where)
+    colors = max(int(c, 16) for c in lay if c != ".")
+    hearts = number(lv.get("moves", 5), 0, 99, f"{where} hearts")
+    time = number(lv.get("time", 0), 0, 65535, f"{where} time")
+    number(lv.get("seed", 0), 0, 0xFFFFFFFF, f"{where} seed")
+    bg = lv.get("bg", "0")
+    if not isinstance(bg, str) or len(bg) != 1 or bg not in "0123456789abcdef":
+        raise SystemExit(f"{where}: bg is one picture colour, 0-9 a-f")
+    # stars: finished; finished with three hearts left; no mistake and a minute to spare
+    base = filled * LOGIC_FILL + lines * LOGIC_LINE
+    stars = lv.get("stars") or [base // 2, base + min(3, hearts) * LOGIC_HEART,
+                                base + hearts * LOGIC_HEART + (60 * LOGIC_SECOND if time else 0)]
+    if len(stars) != 3 or stars != sorted(stars):
+        raise SystemExit(f"{where}: expected three ordered star thresholds")
+    decl = f'static const char {name}_layout[] = "{lay}";\n'
+    body = (f"    {{ NGP_MODE_LOGIC, {w}, {h}, {colors}, {lv.get('seed', 0)}u, {hearts}, {time}, {name}_layout,\n"
+            f"      {{ {{ NGP_OBJ_PICTURE, 0, 0 }}, {{ NGP_OBJ_NONE, 0, 0 }}, {{ NGP_OBJ_NONE, 0, 0 }}, {{ NGP_OBJ_NONE, 0, 0 }} }}, "
+            f"{{ {stars[0]}u, {stars[1]}u, {stars[2]}u }}, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }}")
+    return decl, body, f"{{ {text(lv.get('name', ''), 22)}, {int(bg, 16)} }}"
+
+
 def level_c(lv, name, where):
     if not isinstance(lv, dict):
         raise SystemExit(f"{where}: expected level object")
+    if lv.get("mode") == "logic":
+        return logic_c(lv, name, where)
     mode = lv.get("mode")
     w, h = lv.get("w", 0), lv.get("h", 0)
     if mode not in ("match", "bubble"):
@@ -136,26 +252,31 @@ def level_c(lv, name, where):
     decl = f'static const char {name}_layout[] = "{lay}";\n' if lay else ""
     body = (f"    {{ {mode}, {lv['w']}, {lv['h']}, {lv['colors']}, {lv['seed']}u, {lv.get('moves', 0)}, {lv.get('time', 0)}, {lay_c},\n"
             f"      {{ {', '.join(goals)} }}, {{ {stars[0]}u, {stars[1]}u, {stars[2]}u }}, 0, {tail} }}")
-    return decl, body
+    return decl, body, '{ "", 0 }'
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--check", action="store_true", help="validate without rewriting the generated header")
     args = parser.parse_args()
     data = json.loads(SRC.read_text(encoding="utf-8"))
     chapters, levels = data["chapters"], data["levels"]
-    if len(chapters) != 7 or len(levels) != 28:
-        raise SystemExit("seven chapters of four levels")
-    decls, bodies, tips = [], [], []
+    if len(chapters) != 7 or len(levels) != 35:
+        raise SystemExit("seven chapters of five levels")
     for i, lv in enumerate(levels):
-        d, b = level_c(lv, f"sw_l{i}", f"level {i + 1}")
+        if (lv.get("mode") == "logic") != (i % 5 == 4):
+            raise SystemExit(f"level {i + 1}: each chapter ends with its picture, and only there")
+    decls, bodies, tips, pics = [], [], [], []
+    for i, lv in enumerate(levels):
+        d, b, pic = level_c(lv, f"sw_l{i}", f"level {i + 1}")
         decls.append(d)
         bodies.append(b)
-        tips.append(text(lv.get("tip", ""), 36))
-    dd, db = level_c(data["demo"], "sw_demo", "demo")
+        pics.append(pic)
+        tips.append(text(lv.get("tip", ""), 30))      # inside the level card, with a margin
+    dd, db, _ = level_c(data["demo"], "sw_demo", "demo")
+    ld, lb, lpic = level_c(data["demo_logic"], "sw_demo_logic", "picture demo")
     out = ["/* Generated by games/sevenwonders/tools/levels.py from levels/levels.json: do not edit. */",
-           "#ifndef SW_LEVELS_DATA_H", "#define SW_LEVELS_DATA_H", *[d for d in decls if d], dd if dd else "",
+           "#ifndef SW_LEVELS_DATA_H", "#define SW_LEVELS_DATA_H", *[d for d in decls if d], dd if dd else "", ld,
            "const SWChapter sw_chapters[SW_CHAPTERS] = {"]
     for c in chapters:
         if c.get("cat") not in ("mimi", "kiko"):
@@ -164,7 +285,10 @@ def main():
                    f"{'SW_CAT_KIKO' if c['cat'] == 'kiko' else 'SW_CAT_MIMI'} }},")
     out += ["};", "const NGPuzzleLevel sw_levels[SW_LEVELS] = {", ",\n".join(bodies), "};",
             "const char *const sw_level_tips[SW_LEVELS] = {", ",\n".join("    " + t for t in tips), "};",
-            "const NGPuzzleLevel sw_demo_level =", db.strip() + ";", "#endif", ""]
+            "const SWPicture sw_pictures[SW_LEVELS] = {", ",\n".join("    " + p for p in pics), "};",
+            "const NGPuzzleLevel sw_demo_level =", db.strip() + ";",
+            "const NGPuzzleLevel sw_demo_logic =", lb.strip() + ";",
+            f"const SWPicture sw_demo_picture = {lpic};", "#endif", ""]
     text_out = "\n".join(out)
     if not OUT.exists() or OUT.read_text(encoding="ascii") != text_out:
         if args.check:

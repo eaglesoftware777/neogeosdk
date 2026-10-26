@@ -99,11 +99,12 @@ RHYTHMS = ["x.x.x.x.", "x..xx.x.", "x~~.x.x.", "x.xx.x~~", "x~~~x.x.", "xx.x.x~~
 
 
 class Song:
-    def __init__(self, name, bpm, key, mode, sections, inst, swing=0.0, loop=True, seed=1, master=1.0):
+    def __init__(self, name, bpm, key, mode, sections, inst, swing=0.0, loop=True, seed=1, master=1.0, gentle=False):
         self.name, self.bpm, self.key, self.mode = name, bpm, key, mode
         self.sections, self.inst, self.swing, self.loop, self.seed = sections, inst, swing, loop, seed
         self.step = 60.0 / bpm / 4
         self.master = master
+        self.gentle = gentle          # a light touch of compression and no saturation: quiet, open songs
 
     def scale_notes(self, lo, hi):
         root = note_midi(self.key + "0") % 12
@@ -340,8 +341,11 @@ def render_song(song):
         wet += buf * gain * sends.get(bus, 0.2)
     wet = signal.fftconvolve(wet, reverb_ir(1.6))[:track.n] * 0.9
     mix = highpass(dry + wet, 32)
-    mix = compress(mix / max(np.abs(mix).max(), 1e-6), threshold=0.3, ratio=3.0)
-    mix = np.tanh(mix * 1.6) / np.tanh(1.6)
+    if song.gentle:
+        mix = compress(mix / max(np.abs(mix).max(), 1e-6), threshold=0.6, ratio=1.8)
+    else:
+        mix = compress(mix / max(np.abs(mix).max(), 1e-6), threshold=0.3, ratio=3.0)
+        mix = np.tanh(mix * 1.6) / np.tanh(1.6)
     length = int(bars * 16 * song.step * RATE)
     if song.loop:
         mix = mix[length:2 * length]                                # the second pass: tails wrap around
