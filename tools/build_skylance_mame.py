@@ -12,6 +12,7 @@ import tempfile
 import xml.etree.ElementTree as ET
 import zlib
 
+import mame_bats
 from pack_neosd import build_image
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -105,11 +106,10 @@ def install(target, stage, manifest):
     shutil.copytree(ROOT / "games/skylance/artbox/generated", target / "previews/skylance", dirs_exist_ok=True)
     for log in stage.glob("*-build.log"):
         shutil.copy2(log, target / "tests/skylance" / log.name)
-    for source in (ROOT / "tools/mame_tests").glob("*skylance*.bat"):
-        if "backup" in source.stem:
-            continue
-        data = source.read_text(encoding="ascii").replace("\r\n", "\n").replace("\n", "\r\n")
-        (target / source.name).write_bytes(data.encode("ascii"))
+    # The launchers and MENU.bat, with the sector launchers for this build.
+    for platform in ("mvs", "aes"):
+        mame_bats.describe(target, "skylance", platform, target / "tests/skylance" / platform / "game.elf", ROOT)
+    mame_bats.write_all(target)
     # Keep archived cartridges, while honoring the removed root shortcuts.
     for name in ("run_skylance_backup.bat", "run_skylance_backup_scanlines.bat"):
         (target / name).unlink(missing_ok=True)
@@ -162,6 +162,7 @@ def main():
             # Symbols let the hardware capture inspect the actual game state.
             nm = ROOT.parent / "x-tools-v3/m68k-unknown-elf/bin/m68k-unknown-elf-nm"
             (destination / "symbols.txt").write_bytes(subprocess.check_output([str(nm), "-n", str(ROOT / "out/game")]))
+            shutil.copy2(ROOT / "out/game", destination / "game.elf")
         shutil.copytree(ROOT / "bios/test_roms", stage / "tests/skylance/bios")
         install(args.target.resolve(), stage, manifest)
 

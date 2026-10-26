@@ -8,10 +8,11 @@ copy that was there (no backup is kept: the folder is for trying builds).
 
 Run it after building that platform (roms/<game> holds the last build). The
 game goes to tests/<game>/<platform>/ with its own software list, settings
-and saves; EagleBIOS goes to tests/<game>/bios/. Launchers run_<game>.bat,
-run_<game>_mvs.bat and run_<game>_aes.bat (CRLF) are written next to the
-other games' ones, and <GAME>-TEST.txt says which build is installed.
---fresh also clears that platform's settings and saves.
+and saves; EagleBIOS goes to tests/<game>/bios/. tools/mame_bats.py then
+writes the folder's launchers and MENU.bat again (and, for a game with level
+launchers, records this build's addresses from out/game), and <GAME>-TEST.txt
+says which build is installed. --fresh also clears that platform's settings
+and saves.
 """
 
 import argparse
@@ -22,6 +23,8 @@ import re
 import shutil
 import subprocess
 import sys
+
+import mame_bats
 
 ROOT = Path(__file__).resolve().parents[1]
 PARTS = ("p1", "m1", "s1", "v1", "c1", "c2")
@@ -43,30 +46,6 @@ def game_name(game):
 
 def crlf(path, text):
     path.write_bytes(text.replace("\r\n", "\n").replace("\n", "\r\n").encode("ascii"))
-
-
-def launcher(game):
-    return f"""@echo off
-setlocal
-set "HERE=%~dp0"
-set "MODE=%~1"
-if "%MODE%"=="" set "MODE=mvs"
-set "SYSTEM=neogeo"
-set "BIOS=euro"
-if /i "%MODE%"=="aes" set "SYSTEM=aes"
-if /i "%MODE%"=="aes" set "BIOS=asia"
-set "MAME_EXE=%HERE%..\\mame.exe"
-if not exist "%MAME_EXE%" set "MAME_EXE=mame"
-set "SCAN="
-if /i "%~2"=="scanlines" set "SCAN=-hlsl_enable -scanline_alpha 0.25"
-set "DATA=%HERE%tests\\{game}\\%MODE%"
-set "ROMS=%HERE%tests\\{game}\\bios;%DATA%\\roms"
-set "MAME_DISPLAY=-skip_gameinfo -nowindow -keepaspect -video d3d"
-if exist "%HERE%mame_display.bat" call "%HERE%mame_display.bat"
-"%MAME_EXE%" %SYSTEM% -noreadconfig %MAME_DISPLAY% -nofilter -prescale 3 -rompath "%ROMS%" -hashpath "%DATA%\\hash" -bios %BIOS% -cart1 {game} -cfg_directory "%DATA%\\cfg" -nvram_directory "%DATA%\\nvram" -state_directory "%DATA%\\state" -noautosave -noautoframeskip -frameskip 0 %SCAN%
-if errorlevel 1 pause
-exit /b %ERRORLEVEL%
-"""
 
 
 def main(argv=None):
@@ -108,10 +87,9 @@ def main(argv=None):
             if f.is_file():
                 shutil.copyfile(f, bios / f.name)
 
-    crlf(dest / f"run_{args.game}.bat", launcher(args.game))
-    for mode in ("mvs", "aes"):
-        crlf(dest / f"run_{args.game}_{mode}.bat", f'@echo off\ncall "%~dp0run_{args.game}.bat" {mode}\n')
-        crlf(dest / f"run_{args.game}_{mode}_scanlines.bat", f'@echo off\ncall "%~dp0run_{args.game}.bat" {mode} scanlines\n')
+    if args.game in mame_bats.PROBES:
+        mame_bats.describe(dest, args.game, args.platform, ROOT / "out" / "game", ROOT)
+    mame_bats.write_all(dest)
 
     note = dest / f"{args.game.upper()}-TEST.txt"
     builds = {}
@@ -128,10 +106,10 @@ def main(argv=None):
 MVS build: {builds.get('MVS', 'not installed')}
 AES build: {builds.get('AES', 'not installed')}
 
-Windows, from this folder:
+Windows, from this folder: MENU.bat, or
     run_{args.game}_mvs.bat   MVS cartridge, EagleBIOS (euro)
     run_{args.game}_aes.bat   AES cartridge, EagleBIOS (asia)
-    (the _scanlines launchers add a scanline filter)
+    (the _scanlines launchers use the CRT picture; README-LAUNCHERS.txt has the rest)
 
 Each platform keeps its own ROMs, settings and saves in tests\\{args.game}\\mvs and
 tests\\{args.game}\\aes. A new build replaces the old one; settings and saves stay.
