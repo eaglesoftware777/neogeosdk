@@ -3,6 +3,15 @@
 The ROM sets ship with the NeoGeoSDK pre-releases and are numbered on their
 own: `_v1` with v1.7.7.
 
+## v1 update (2026-10-26, NeoGeoSDK v1.7.7 pre-release, same file names)
+
+- Everything on screen stays inside columns 3-36 of the 40 (x 24-295), the
+  part of the picture every CRT shows: the table's header and seat lines,
+  the discards (17 to a row), the melds, the hand, the hand results,
+  solitaire's header and the title lines.
+- The claim menu goes on to a second row when its choices do not fit one; a
+  seat holding more than six flowers shows five and a count.
+
 ## v1 (2026-10-18, NeoGeoSDK v1.7.7 pre-release) — the first public set
 
 - Four-seat Mahjong, Hong Kong Old Style: the player at East against three
