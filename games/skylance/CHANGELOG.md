@@ -3,6 +3,19 @@
 Sky Lance's ROM sets ship with the NeoGeoSDK pre-releases and are numbered
 on their own: `_v1` with v1.7.3, `_v2` with v1.7.7.
 
+## Title-safe HUD (2026-10-26)
+
+- The flight HUD stays inside columns 3-36 of the 40 (x 24-295), the part
+  of the picture every CRT shows: SCORE and HI with the callsign under
+  SCORE (the aircraft model is on the briefing), the status line, the
+  equipment row, the hull and the CHAFF count on the bottom row. The
+  instruments and the portrait moved 8 pixels in, and the jet keeps clear
+  of them.
+- The status line is drawn again after the cloud warning and the super
+  bomb's name, which used to leave it partly blank.
+- The title's version and copyright are on rows of their own; the briefing
+  boxes are 24 letters wide.
+
 ## v3 candidate (2026-10-20, local validation)
 
 - Publish queued video earlier in the game-owned VBlank interrupt.
