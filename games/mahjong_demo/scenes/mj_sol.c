@@ -102,14 +102,14 @@ static void NEOGEO_USER status(void)
     while (sec >= 60u) { sec = (uint16_t)(sec - 60u); m++; }
     while (m >= 10u) { m = (uint16_t)(m - 10u); if (++mt >= 10u) mt = 0; }
     while (sec >= 10u) { sec = (uint16_t)(sec - 10u); st++; }
-    mj_puts(1, 0, "TILES", MJ_TXT_GOLD);
-    mj_putn(7, 0, s_s.left, 3, MJ_TXT_WHITE);
-    mj_puts(12, 0, "PAIRS", MJ_TXT_GOLD);
-    mj_putn(18, 0, ng_mjsol_free_pairs(&s_s), 2, MJ_TXT_WHITE);
-    mj_puts(22, 0, "TIME", MJ_TXT_GOLD);
+    mj_puts(3, 0, "TILES", MJ_TXT_GOLD);
+    mj_putn(9, 0, s_s.left, 3, MJ_TXT_WHITE);
+    mj_puts(14, 0, "PAIRS", MJ_TXT_GOLD);
+    mj_putn(20, 0, ng_mjsol_free_pairs(&s_s), 2, MJ_TXT_WHITE);
+    mj_puts(24, 0, "TIME", MJ_TXT_GOLD);
     t[0] = (char)('0' + mt); t[1] = (char)('0' + m); t[2] = ':';
     t[3] = (char)('0' + st); t[4] = (char)('0' + sec); t[5] = 0;
-    mj_puts(27, 0, t, MJ_TXT_WHITE);
+    mj_puts(29, 0, t, MJ_TXT_WHITE);
 }
 
 /* The free tile nearest in a direction (dx, dy = -1, 0, 1), or the cursor. */

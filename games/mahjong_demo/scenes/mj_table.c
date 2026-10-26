@@ -27,6 +27,9 @@ static uint8_t s_demo, s_cursor, s_hinted;     /* s_hinted: the message line hol
 static const char *const k_wind[4] = { "EAST", "SOUTH", "WEST", "NORTH" };
 static const char *const k_wind5[4] = { "EAST ", "SOUTH", "WEST ", "NORTH" };
 
+/* Everything stays inside columns 3-36 (x 24-296): a CRT's frame hides the edges. */
+#define COL_L          3u
+#define COL_R          36u
 #define HEAD_Y         1u
 #define PANEL_Y(seat)  ((uint8_t)(2u + 4u * ((seat) - 1u)))   /* seats 1-3 */
 #define OWN_Y          14u
@@ -38,29 +41,35 @@ static const char *const k_wind5[4] = { "EAST ", "SOUTH", "WEST ", "NORTH" };
 
 static void NEOGEO_USER header(void)
 {
-    mj_puts(1, HEAD_Y, k_wind5[s_m.round_wind - NGM_EAST], MJ_TXT_GOLD);
-    mj_puts(7, HEAD_Y, "ROUND  HAND", MJ_TXT_GOLD);
-    mj_putn(19, HEAD_Y, (int32_t)s_m.hand_no + 1, 2, MJ_TXT_WHITE);
+    mj_puts(3, HEAD_Y, k_wind5[s_m.round_wind - NGM_EAST], MJ_TXT_GOLD);
+    mj_puts(9, HEAD_Y, "ROUND HAND", MJ_TXT_GOLD);
+    mj_putn(19, HEAD_Y, (int32_t)s_m.hand_no + 1, 3, MJ_TXT_WHITE);
     mj_puts(23, HEAD_Y, "WALL", MJ_TXT_GOLD);
-    mj_putn(28, HEAD_Y, s_m.wall_left, 3, MJ_TXT_WHITE);
-    mj_puts(33, HEAD_Y, "HK OS", MJ_TXT_GREY);
+    mj_putn(27, HEAD_Y, s_m.wall_left, 3, MJ_TXT_WHITE);
+    mj_puts(32, HEAD_Y, "HK OS", MJ_TXT_GREY);
 }
 
-/* A seat's name line: a turn marker, its wind, who plays it, its score, and its flowers. */
+/* A seat's name line: a turn marker, its wind, who plays it, its score, and
+ * its flowers (room for six; past that five and a count). */
 static void NEOGEO_USER seat_line(uint8_t seat, uint8_t y)
 {
     const NGMahjongHand *h = &s_m.hand[seat];
-    uint8_t b, x = 26;
-    mj_puts(0, y, s_m.turn == seat && s_m.phase == NGM_PH_TURN ? ">" : " ", MJ_TXT_GOLD);
-    mj_puts(1, y, k_wind5[ng_mahjong_seat_wind(&s_m, seat) - NGM_EAST], seat == 0 ? MJ_TXT_SKY : MJ_TXT_WHITE);
-    mj_puts(7, y, seat == 0 && !s_demo ? "YOU" : "CPU", seat == 0 ? MJ_TXT_SKY : MJ_TXT_GREY);
-    mj_putn(11, y, s_m.score[seat], 6, MJ_TXT_WHITE);
+    uint8_t b, n = 0, x = 25;
+    mj_puts(3, y, s_m.turn == seat && s_m.phase == NGM_PH_TURN ? ">" : " ", MJ_TXT_GOLD);
+    mj_puts(4, y, k_wind5[ng_mahjong_seat_wind(&s_m, seat) - NGM_EAST], seat == 0 ? MJ_TXT_SKY : MJ_TXT_WHITE);
+    mj_puts(10, y, seat == 0 && !s_demo ? "YOU" : "CPU", seat == 0 ? MJ_TXT_SKY : MJ_TXT_GREY);
+    mj_putn(13, y, s_m.score[seat], 6, MJ_TXT_WHITE);
     if (seat) {
-        mj_putn(19, y, h->count, 2, MJ_TXT_GREY);
+        mj_putn(20, y, h->count, 2, MJ_TXT_GREY);
         mj_mini_back(22, y);
     }
-    for (b = 0; b < 8u; b++)
-        if (h->flowers & (1u << b)) { mj_mini(x, y, (uint8_t)(NGM_FLOWER + b)); x = (uint8_t)(x + 2u); }
+    for (b = 0; b < 8u; b++) if (h->flowers & (1u << b)) n++;
+    for (b = 0; b < 8u; b++) {
+        if (!(h->flowers & (1u << b))) continue;
+        if (n > 6u && x >= 35u) { mj_puts(x, y, "+", MJ_TXT_MINT); mj_putn((uint8_t)(x + 1u), y, n - 5u, 1, MJ_TXT_MINT); x = 37; break; }
+        mj_mini(x, y, (uint8_t)(NGM_FLOWER + b));
+        x = (uint8_t)(x + 2u);
+    }
     mj_clear_from(x, y);
 }
 
@@ -74,19 +83,19 @@ static uint8_t NEOGEO_USER meld_size(const NGMahjongMeld *md)
     return (uint8_t)(md->type >= NGM_MELD_KONG ? 4u : 3u);
 }
 
-/* Discards in rows of 19 from (0, y); the one up for claims marked. */
+/* Discards in rows of 17 from (COL_L, y); the one up for claims marked. */
 static void NEOGEO_USER discards(uint8_t seat, uint8_t y, uint8_t rows)
 {
     const NGMahjongHand *h = &s_m.hand[seat];
-    uint8_t i, x = 1, row = 0;
+    uint8_t i, x = COL_L, row = 0;
     for (i = 0; i < h->ndiscards && row < rows; i++) {
         uint8_t taken = (uint8_t)(h->discard_taken[i >> 3] & (1u << (i & 7u)));
         if (taken) continue;                               /* claimed into a meld */
         mj_mini(x, (uint8_t)(y + row), h->discards[i]);
         x = (uint8_t)(x + 2u);
-        if (x >= 39u) { x = 1; row++; }
+        if (x + 1u > COL_R) { x = COL_L; row++; }
     }
-    if (s_m.phase == NGM_PH_CLAIM && s_m.discarder == seat && x > 1u && row < rows) {
+    if (s_m.phase == NGM_PH_CLAIM && s_m.discarder == seat && x > COL_L && row < rows) {
         mj_puts(x, (uint8_t)(y + row), "<", MJ_TXT_GOLD);
         x++;
     }
@@ -96,8 +105,10 @@ static void NEOGEO_USER discards(uint8_t seat, uint8_t y, uint8_t rows)
 static void NEOGEO_USER other_seat(uint8_t seat)
 {
     const NGMahjongHand *h = &s_m.hand[seat];
-    uint8_t y = PANEL_Y(seat), m, i, x = 1;
+    uint8_t y = PANEL_Y(seat), m, i, x = COL_L, gap, w = 0;
     seat_line(seat, y);
+    for (m = 0; m < h->nmelds; m++) w = (uint8_t)(w + 2u * meld_size(&h->melds[m]) + 1u);
+    gap = (uint8_t)(w <= COL_R - COL_L + 2u ? 1u : 0u);    /* four kongs only fit shoulder to shoulder */
     for (m = 0; m < h->nmelds; m++) {
         const NGMahjongMeld *md = &h->melds[m];
         for (i = 0; i < meld_size(md); i++) {
@@ -105,7 +116,7 @@ static void NEOGEO_USER other_seat(uint8_t seat)
             else mj_mini(x, (uint8_t)(y + 1u), meld_tile(md, i));
             x = (uint8_t)(x + 2u);
         }
-        x++;
+        x = (uint8_t)(x + gap);
     }
     mj_clear_from(x, (uint8_t)(y + 1u));
     discards(seat, (uint8_t)(y + 2u), 2);
@@ -119,7 +130,7 @@ static void NEOGEO_USER own_hand(uint8_t show_cursor)
 {
     const NGMahjongHand *h = &s_m.hand[0];
     uint8_t i, n = 0, slot = 0, drawn_left = 0, m, k;
-    int16_t x = 8;
+    int16_t x = 8 * COL_L;
     uint8_t drawn = (s_m.phase == NGM_PH_TURN && s_m.turn == 0 && s_m.drawn != NGM_NO_TILE) ? s_m.drawn : NGM_NO_TILE;
     for (i = 0; i < h->count; i++) {
         if (h->tiles[i] == drawn && !drawn_left) { drawn_left = 1; continue; }
@@ -292,18 +303,21 @@ static void NEOGEO_USER claim_window(void)
     message(say(s_m.discarder, mj_tile_name(k)), MJ_TXT_WHITE);
     help("LEFT/RIGHT CHOOSE  A TAKE  B PASS");
     for (;;) {
-        uint8_t x = 1;
+        uint8_t x = COL_L, y = MENU_Y;
         for (i = 0; i < n; i++) {
-            mj_puts(x, MENU_Y, i == sel ? ">" : " ", MJ_TXT_GOLD);
-            mj_puts((uint8_t)(x + 1u), MENU_Y, opt[i]->label, i == sel ? MJ_TXT_GOLD : MJ_TXT_WHITE);
+            uint8_t chow = (uint8_t)(opt[i]->act == NGM_ACT_CHOW);
+            if (x + (chow ? 12u : 5u) > COL_R + 1u) { mj_clear_from(x, y); x = COL_L; y++; }   /* on to the next row */
+            mj_puts(x, y, i == sel ? ">" : " ", MJ_TXT_GOLD);
+            mj_puts((uint8_t)(x + 1u), y, opt[i]->label, i == sel ? MJ_TXT_GOLD : MJ_TXT_WHITE);
             x = (uint8_t)(x + 6u);
-            if (opt[i]->act == NGM_ACT_CHOW) {                 /* the run it makes */
+            if (chow) {                                        /* the run it makes */
                 uint8_t lo = (uint8_t)(k - opt[i]->arg), t;
-                for (t = 0; t < 3u; t++) { mj_mini(x, MENU_Y, (uint8_t)(lo + t)); x = (uint8_t)(x + 2u); }
+                for (t = 0; t < 3u; t++) { mj_mini(x, y, (uint8_t)(lo + t)); x = (uint8_t)(x + 2u); }
                 x++;
             }
         }
-        mj_clear_from(x, MENU_Y);
+        mj_clear_from(x, y);
+        if (y == MENU_Y) mj_clear_from(0, (uint8_t)(MENU_Y + 1u));
         for (;;) {
             uint16_t in;
             mj_frame();
@@ -319,7 +333,7 @@ static void NEOGEO_USER claim_window(void)
         }
     }
 done:
-    mj_clear_text(MENU_Y, MENU_Y);
+    mj_clear_text(MENU_Y, MENU_Y + 1u);
     help(0);
 }
 
@@ -344,7 +358,7 @@ static const Pattern k_patterns[] = {
 static uint8_t NEOGEO_USER hand_over(void)
 {
     const NGMahjongResult *r = &s_m.result;
-    uint8_t y = 4, i, s, x = 2;
+    uint8_t y = 4, i, s, x = COL_L;
     mj_tiles_hide(0, 24u);
     mj_clear_text(1, 27);
     mj_music(MJ_MUS_RESULT);
@@ -357,6 +371,7 @@ static uint8_t NEOGEO_USER hand_over(void)
         x++;
         for (i = 0; i < h->nmelds; i++) {
             uint8_t t;
+            if (x + 2u * meld_size(&h->melds[i]) > COL_R + 1u) { x = COL_L; y++; }   /* kongs: a second row */
             for (t = 0; t < meld_size(&h->melds[i]); t++) { mj_mini(x, y, meld_tile(&h->melds[i], t)); x = (uint8_t)(x + 2u); }
             x++;
         }

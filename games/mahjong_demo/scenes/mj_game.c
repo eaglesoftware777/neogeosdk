@@ -45,9 +45,9 @@ static void NEOGEO_USER title_art(void)
     uint8_t i;
     mj_screen(1);
     for (i = 0; i < 6u; i++) mj_tile(i, show[i], (int16_t)(112 + 16 * i), 92, MJ_LOOK_NORMAL);
-    mj_puts_c(17, "FOUR-SEAT MAHJONG, HONG KONG OLD STYLE", MJ_TXT_WHITE);
-    mj_puts_c(18, "AND MAHJONG SOLITAIRE", MJ_TXT_WHITE);
-    mj_puts_c(25, "NEOGEOSDK GENRE ENGINE DEMO - TEST ART", MJ_TXT_GREY);
+    mj_puts_c(17, "FOUR-SEAT HONG KONG OLD STYLE", MJ_TXT_WHITE);
+    mj_puts_c(18, "MAHJONG AND MAHJONG SOLITAIRE", MJ_TXT_WHITE);
+    mj_puts_c(25, "NEOGEOSDK ENGINE DEMO - TEST ART", MJ_TXT_GREY);
     mj_puts_c(27, "(C) 2026 EAGLE SOFTWARE", MJ_TXT_WHITE);
     mj_reveal();
 }
