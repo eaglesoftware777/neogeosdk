@@ -791,7 +791,7 @@ static void NEOGEO_USER dialog_tick(void)
     next = (uint16_t)(s_dlg_shown + 2u);
     if (next > s_dlg_len) next = s_dlg_len;
     dialog_put(next);
-    if (s_dlg_shown >= s_dlg_len) ng_fix_put_tile(37, 26, (uint16_t)(ML_FIX_HEART + 3u), ML_TXT_GOLD);
+    if (s_dlg_shown >= s_dlg_len) ng_fix_put_tile(36, 26, (uint16_t)(ML_FIX_HEART + 3u), ML_TXT_GOLD);
 }
 
 uint8_t NEOGEO_USER ml_dialog_typing(void)
@@ -803,7 +803,7 @@ void NEOGEO_USER ml_dialog_finish(void)
 {
     if (!ml_dialog_typing()) return;
     dialog_put(s_dlg_len);
-    ng_fix_put_tile(37, 26, (uint16_t)(ML_FIX_HEART + 3u), ML_TXT_GOLD);
+    ng_fix_put_tile(36, 26, (uint16_t)(ML_FIX_HEART + 3u), ML_TXT_GOLD);
 }
 
 void NEOGEO_USER ml_dialog(uint8_t speaker, const char *text, uint8_t typing)
@@ -818,11 +818,11 @@ void NEOGEO_USER ml_dialog(uint8_t speaker, const char *text, uint8_t typing)
     if (face) {
         load_art_palettes(face);             /* every portrait shares one pair of banks */
         ng_sprite_group_set_priority(&s_face, NG_SG_PRIO_HIGH);
-        show_asset(&s_face, SPR_FACE, face, 0, 8, 160);
+        show_asset(&s_face, SPR_FACE, face, 0, 24, 160);
     }
     else hide(&s_face);
     ml_clear_text(21, 27);
-    s_dlg_x = (uint8_t)(face ? 10u : 3u);
+    s_dlg_x = (uint8_t)(face ? 12u : 3u);
     if (speaker < ML_SPEAKERS && ml_text[ml_speakers[speaker].name][0])
         ml_puts(s_dlg_x, 21, ml_text[ml_speakers[speaker].name], ML_TXT_GOLD);
     s_dlg_text = text;
@@ -833,15 +833,27 @@ void NEOGEO_USER ml_dialog(uint8_t speaker, const char *text, uint8_t typing)
     if (!typing) ml_dialog_finish();
 }
 
+/* Side by side on row 26 when they fit, else one a row ending on row 26 (the
+ * world tool leaves the question's last page room for that). */
 void NEOGEO_USER ml_dialog_choices(const NGRpgDialogueNode *nd, uint8_t offered, uint8_t cursor)
 {
-    uint8_t i, row = 0;
-    ml_clear_text(26, 26);
+    const char *t[3];
+    uint8_t len[3], i, n = 0, w = 0, x = s_dlg_x, y, stacked;
     for (i = 0; i < nd->nchoices && i < 3u; i++) {
         if (!((offered >> i) & 1u)) continue;
-        ml_puts((uint8_t)(s_dlg_x + 1u + row * 10u), 26, ml_text[nd->choice_text[i]], row == cursor ? ML_TXT_GOLD : ML_TXT_GREY);
-        if (row == cursor) ng_fix_put_tile((uint8_t)(s_dlg_x + row * 10u), 26, (uint16_t)(ML_FIX_HEART + 3u), ML_TXT_GOLD);
-        row++;
+        t[n] = ml_text[nd->choice_text[i]];
+        for (len[n] = 0; t[n][len[n]]; len[n]++) {}
+        w = (uint8_t)(w + len[n] + (n ? 2u : 1u));
+        n++;
+    }
+    stacked = (uint8_t)(s_dlg_x + w > 37u);
+    y = (uint8_t)(stacked ? 27u - n : 26u);
+    ml_clear_text(y, 26);
+    for (i = 0; i < n; i++) {
+        if (i == cursor) ng_fix_put_tile(x, y, (uint16_t)(ML_FIX_HEART + 3u), ML_TXT_GOLD);
+        ml_puts((uint8_t)(x + 1u), y, t[i], i == cursor ? ML_TXT_GOLD : ML_TXT_GREY);
+        if (stacked) y++;
+        else x = (uint8_t)(x + len[i] + 2u);
     }
 }
 
@@ -858,6 +870,7 @@ void NEOGEO_USER ml_dialog_hide(void)
  * the status line and toasts
  * ==================================================================== */
 static uint16_t s_toast_t;
+static uint8_t s_toast_rows;
 
 void NEOGEO_USER ml_hud(NGRpg *g, uint8_t tool, uint8_t full)
 {
@@ -866,22 +879,28 @@ void NEOGEO_USER ml_hud(NGRpg *g, uint8_t tool, uint8_t full)
     uint8_t i, found = 0;
     if (full) shown_hp = shown_lead = shown_tool = shown_found = 0xFFu;
     if (m->id != shown_lead) {
-        ml_puts(1, 1, m->id == ML_LUNA ? "LUNA " : "MAIYA", m->id == ML_LUNA ? ML_TXT_SKY : ML_TXT_MINT);
+        ml_puts(3, 1, m->id == ML_LUNA ? "LUNA " : "MAIYA", m->id == ML_LUNA ? ML_TXT_SKY : ML_TXT_MINT);
         shown_lead = m->id;
     }
     if (m->hp != shown_hp) {
         for (i = 0; i < (uint8_t)((m->max_hp + 1u) >> 1); i++) {
             uint8_t left = (uint8_t)(m->hp > (uint8_t)(2u * i) ? m->hp - 2u * i : 0u);
-            ng_fix_put_tile((uint8_t)(7u + i), 1, (uint16_t)(ML_FIX_HEART + (left >= 2u ? 0u : left == 1u ? 1u : 2u)), ML_TXT_HEART);
+            ng_fix_put_tile((uint8_t)(9u + i), 1, (uint16_t)(ML_FIX_HEART + (left >= 2u ? 0u : left == 1u ? 1u : 2u)), ML_TXT_HEART);
         }
         shown_hp = m->hp;
     }
     if (tool != shown_tool) {
-        ml_puts(22, 1, "C:                ", ML_TXT_GREY);
-        if (tool < ML_ITEMS) ml_puts(24, 1, ml_text[ml_item_text[ml_journey][tool].title], ML_TXT_WHITE);
+        ml_puts(20, 1, "C:               ", ML_TXT_GREY);        /* tool titles: 15 at most (worldlib) */
+        if (tool < ML_ITEMS) ml_puts(22, 1, ml_text[ml_item_text[ml_journey][tool].title], ML_TXT_WHITE);
         shown_tool = tool;
     }
-    for (i = 0; i < ML_COLLECT; i++) found = (uint8_t)(found + ng_rpg_collected(g, i));
+    /* the collected bits a byte at a time (175 calls a frame cost a fifth of it) */
+    for (i = 0; i < (uint8_t)((ML_COLLECT + 7u) >> 3); i++) {
+        static const uint8_t bits4[16] = { 0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4 };
+        uint8_t b = g->collected[i];
+        if (i == (uint8_t)(ML_COLLECT >> 3)) b = (uint8_t)(b & ((1u << (ML_COLLECT & 7u)) - 1u));
+        found = (uint8_t)(found + bits4[b & 15u] + bits4[b >> 4]);
+    }
     if (found != shown_found) {
         ng_fix_put_tile(15, 1, (uint16_t)(ML_FIX_HEART + 4u), ML_TXT_GOLD);
         ml_putn(16, 1, found, 3, ML_TXT_GOLD);
@@ -889,16 +908,31 @@ void NEOGEO_USER ml_hud(NGRpg *g, uint8_t tool, uint8_t full)
     }
 }
 
+/* Row 3, and row 4 for what doesn't fit: 34 columns (3-36), 28 beside an icon. */
 void NEOGEO_USER ml_toast(const char *a, const char *b, uint8_t icon)
 {
-    char line[40];
-    uint8_t i = 0, k = 0;
-    while (a && a[k] && i < 38u) line[i++] = a[k++];
+    char line[72];
+    uint8_t i = 0, k = 0, cut, room = (uint8_t)(icon != 0xFFu ? 28u : 34u);
+    while (a && a[k] && i < 68u) line[i++] = a[k++];
     k = 0;
-    if (b && i < 37u) line[i++] = ' ';
-    while (b && b[k] && b[k] != '\n' && i < 38u) line[i++] = b[k++];
+    if (b && i < 67u) line[i++] = ' ';
+    while (b && b[k] && b[k] != '\n' && i < 68u) line[i++] = b[k++];
     line[i] = 0;
-    ml_clear_text(3, 3);
+    cut = i;
+    if (i > room) {                                  /* break at the last space that fits */
+        for (cut = room; cut && line[cut] != ' '; cut--) {}
+        if (!cut) cut = room;
+    }
+    ml_clear_text(3, (uint8_t)(s_toast_rows > 1u ? 4u : 3u));
+    s_toast_rows = 1;
+    if (cut < i) {
+        uint8_t rest = (uint8_t)(cut + (line[cut] == ' ' ? 1u : 0u));
+        if (i - rest > 34u) line[rest + 34u] = 0;
+        line[cut] = 0;
+        ml_puts_c(4, line + rest, ML_TXT_GOLD);
+        s_toast_rows = 2;
+        i = cut;
+    }
     ml_puts_c(3, line, ML_TXT_GOLD);
     if (icon != 0xFFu) ml_icon(0, icon, (int16_t)(((40 - i) >> 1) * 8 - 20), 20);
     s_toast_t = 150;
@@ -907,7 +941,7 @@ void NEOGEO_USER ml_toast(const char *a, const char *b, uint8_t icon)
 void NEOGEO_USER ml_toast_tick(void)
 {
     if (!s_toast_t) return;
-    if (!--s_toast_t) { ml_clear_text(3, 3); ml_icon(0, 0xFFu, 0, 0); }
+    if (!--s_toast_t) { ml_clear_text(3, (uint8_t)(s_toast_rows > 1u ? 4u : 3u)); s_toast_rows = 0; ml_icon(0, 0xFFu, 0, 0); }
 }
 
 /* ======================================================================

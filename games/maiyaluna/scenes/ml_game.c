@@ -33,7 +33,7 @@ uint8_t ml_journey;                 /* ML_J_MAIYA or ML_J_LUNA: who set out (her
 static uint8_t s_tool;              /* the item C uses */
 static uint8_t s_dlg_node_open;     /* a conversation is on screen */
 static uint16_t s_dlg_node;
-static uint8_t s_choice;
+static uint8_t s_choice, s_choices_up;     /* s_choices_up: this node's choices are on screen */
 static uint8_t s_pending;           /* a game event waiting for the conversation to end */
 static uint8_t s_quit;
 static uint16_t s_d_held;
@@ -331,16 +331,17 @@ static void NEOGEO_USER chapter_end(void)
     go_to(ch->start_room, ch->start_x, ch->start_y, ch->start_face);
 }
 
-static const char *const k_credits[] = {
-    "MAIYA & LUNA",
-    "WONDERFUL ADVENTURES IN NATURE FANTASY",
-    "",
-    "A GAME BY EAGLE SOFTWARE",
-    "MADE WITH THE NEOGEOSDK",
-    "AND ITS ADVENTURE ENGINE",
-    "",
-    "THE VALLEY'S WATER RUNS FAIRLY AGAIN.",
-    "THANK YOU FOR PLAYING.",
+typedef struct { uint8_t row, pal; const char *text; } MLCredit;
+static const MLCredit k_credits[] = {
+    { 5, ML_TXT_GOLD, "MAIYA & LUNA" },
+    { 7, ML_TXT_WHITE, "WONDERFUL ADVENTURES" },
+    { 8, ML_TXT_WHITE, "IN NATURE FANTASY" },
+    { 11, ML_TXT_WHITE, "A GAME BY EAGLE SOFTWARE" },
+    { 13, ML_TXT_WHITE, "MADE WITH THE NEOGEOSDK" },
+    { 15, ML_TXT_WHITE, "AND ITS ADVENTURE ENGINE" },
+    { 19, ML_TXT_MINT, "THE VALLEY'S WATER" },
+    { 20, ML_TXT_MINT, "RUNS FAIRLY AGAIN." },
+    { 22, ML_TXT_MINT, "THANK YOU FOR PLAYING." },
 };
 
 /* After the last chapter: the credits, then the restored valley to wander. */
@@ -351,7 +352,7 @@ static void NEOGEO_USER the_end(void)
     ml_music(ML_MUS_ENDING);
     ml_card(1);
     for (i = 0; i < sizeof(k_credits) / sizeof(k_credits[0]); i++)
-        ml_puts_c((uint8_t)(5u + 2u * i), k_credits[i], i == 0u ? ML_TXT_GOLD : i >= 7u ? ML_TXT_MINT : ML_TXT_WHITE);
+        ml_puts_c(k_credits[i].row, k_credits[i].text, k_credits[i].pal);
     ml_wait_button(1800);
     go_to(ml_chapters[ml_journey][0].back_room, ml_chapters[ml_journey][0].back_x, ml_chapters[ml_journey][0].back_y, ml_chapters[ml_journey][0].back_face);
 }
@@ -476,6 +477,7 @@ static void NEOGEO_USER show_node(uint16_t node)
     s_dlg_node = node;
     s_dlg_node_open = 1;
     s_choice = 0;
+    s_choices_up = 0;
     ml_dialog(n->speaker, ml_text[n->text], 1);
     ml_sfx(ML_SFX_TALK);
 }
@@ -487,7 +489,11 @@ static void NEOGEO_USER dialog_input(uint16_t pressed)
     for (i = 0; i < 3u; i++) if ((offered >> i) & 1u) count++;
     if (ml_dialog_typing()) {
         if (pressed & (ML_A | ML_B)) ml_dialog_finish();
-        if (!ml_dialog_typing() && count) ml_dialog_choices(n, offered, s_choice);
+        return;
+    }
+    if (count && !s_choices_up) {            /* the text is all out, by a press or by itself */
+        s_choices_up = 1;
+        ml_dialog_choices(n, offered, s_choice);
         return;
     }
     if (count) {
