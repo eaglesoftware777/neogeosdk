@@ -3,6 +3,16 @@
 Shadow League Fighting's ROM sets ship with the NeoGeoSDK pre-releases and
 are numbered on their own: `_v1` and `_v2` with v1.7.5, `_v3` with v1.7.7.
 
+## v3 update (2026-10-26, NeoGeoSDK v1.7.7 pre-release, same file names)
+
+- The fight HUD stays inside columns 3-36 of the 40 (x 24-295), the part of
+  the picture every CRT shows: life bars of 14 cells between their caps,
+  names, guard and spirit meters, round marks, power gauges, assist badges
+  and combo counts. The HUD plates are the same art with their ends moved in.
+- The select screen's lines and faces, the VS names, how to play and the
+  training readouts moved in too; four story captions and the Chimera
+  stage's name are shorter so they fit.
+
 ## v3 (2026-10-18, NeoGeoSDK v1.7.7 pre-release) — painted roster, training and CPU ranks
 
 - All 44 fighters load complete painted pose sets (2,460 runtime frames, four

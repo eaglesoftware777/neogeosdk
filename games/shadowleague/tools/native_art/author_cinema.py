@@ -194,10 +194,10 @@ def compose():
  save(title,folder/'title.png')
  panels=[]
  im=city();film_bars(im);save(im,folder/'summons.png')
- panels.append(('summons',210,['NEO TOKYO. THE YEAR IS 2099.','FORTY-FOUR INVITATIONS. ONE SECRET.']))
+ panels.append(('summons',210,['NEO TOKYO. THE YEAR IS 2099.','FORTY-FOUR INVITES. ONE SECRET.']))
  for n,(who,text) in enumerate([
   ('kenji',['KENJI ARATA / KARATE','A STOLEN LEGACY. A VOW TO RETURN.']),
-  ('jack',['JACK MERCER / BOXING','ONE LAST FIGHT. NO MORE FIXED ODDS.']),
+  ('jack',['JACK MERCER / BOXING','ONE LAST FIGHT. NO FIXED ODDS.']),
   ('amara',['AMARA SILVA / CAPOEIRA','FOLLOW THE RHYTHM. BREAK THE CIRCLE.'])]):
   im=city();art=bust(who);x=32 if n!=1 else 224
   im.paste(art,(x,24),Image.fromarray((np.asarray(art)>0).astype(np.uint8)*255,'L'))
@@ -221,7 +221,7 @@ def compose():
  film_bars(lab);save(lab,folder/'protocol.png')
  panels.append(('protocol',180,['BENEATH THE LEAGUE: PROJECT CHIMERA.','THE PRIZE WAS NEVER MEANT FOR YOU.']))
  end=city();film_bars(end);save(end,folder/'challenge.png')
- panels.append(('challenge',150,['ONE FIGHTER. OR THREE AND A STRIKER.','ENTER THE SHADOW LEAGUE.']))
+ panels.append(('challenge',150,['SOLO, OR THREE AND A STRIKER.','ENTER THE SHADOW LEAGUE.']))
  project={'canvas':[352,224],'palette':COLORS,'title':'title.png',
           'cards':[{'file':name+'.png','duration':time,'caption':text} for name,time,text in panels]}
  (folder/'project.json').write_text(json.dumps(project,indent=2)+'\n')

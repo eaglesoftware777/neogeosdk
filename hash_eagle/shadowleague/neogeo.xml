@@ -20,7 +20,7 @@
         <part name="cart" interface="neo_cart">
             <feature name="slot" value="rom" />
             <dataarea name="maincpu" width="16" endianness="big" size="0x300000">
-                <rom loadflag="load16_word_swap" name="781-p1.p1" offset="0x000000" size="0x300000" crc="127535e0" sha1="81593efb8d8c8d54b58bd9e8a22a4324bac01859" />
+                <rom loadflag="load16_word_swap" name="781-p1.p1" offset="0x000000" size="0x300000" crc="3f53b8e5" sha1="a4eaa15584d36c9f19e0c70abd477105390c83a6" />
             </dataarea>
             <dataarea name="fixed" size="0x020000">
                 <rom offset="0x000000" size="0x020000" name="781-s1.s1" crc="636d9736" sha1="81472c10d87a63717617c79dbb89eadc7f6c6a7f" />
@@ -32,8 +32,8 @@
                 <rom name="781-v1.v1" offset="0x000000" size="0x79c100" crc="63c1b4e6" sha1="718aa37a1c3754fb62196ddb121a00c323bc8533" />
             </dataarea>
             <dataarea name="sprites" size="0x1000000">
-                <rom loadflag="load16_byte" name="781-c1.c1" offset="0x000000" size="0x800000" crc="ac935b79" sha1="aee0d3176568c6f6181343afd06846501455b2c8" />
-                <rom loadflag="load16_byte" name="781-c2.c2" offset="0x000001" size="0x800000" crc="d65c95ab" sha1="705910e7bf2cb7c41e61b3e201ae8610e6b1ec0a" />
+                <rom loadflag="load16_byte" name="781-c1.c1" offset="0x000000" size="0x800000" crc="e9b1d686" sha1="7b971a366d370650731772933b139d4e957829f2" />
+                <rom loadflag="load16_byte" name="781-c2.c2" offset="0x000001" size="0x800000" crc="e03418d8" sha1="b582681bb35bc697da537cee21150c3ed556dd88" />
             </dataarea>
         </part>
     </software>
