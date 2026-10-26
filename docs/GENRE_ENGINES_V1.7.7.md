@@ -265,7 +265,7 @@ tiles are never routed to hand scoring.
 
 ## 5. Adventure / RPG (`ng_rpg`)
 
-One `NGRpg` (3256 bytes) runs a world described by ROM tables
+One `NGRpg` (3568 bytes) runs a world described by ROM tables
 (`NGRpgWorld`): rooms on a 16-pixel tile grid (walls, water, pits, narrow
 gaps, climbable faces, hazards, doorways, one-way ledges) with exits that
 can be locked by conditions; a party of up to four with abilities (narrow,
@@ -372,14 +372,14 @@ progress between stages.
 
 ## 7. Costs
 
-Measured on 2026-10-18 with the SDK's m68k GCC (`tools/check_genre_codegen.py`,
+Measured on 2026-10-26 with the SDK's m68k GCC (`tools/check_genre_codegen.py`,
 `-O2`) and the host tests:
 
 | Engine | Context (RAM) | Save data | Code at -O2 | Largest stack frame |
 |---|---|---|---|---|
-| puzzle | 1312 B | 840 B | 26,902 B | 588 B (`match_phase`) |
+| puzzle | 1312 B | 840 B | 33,772 B | 588 B (`match_phase`) |
 | mahjong | 748 B (table), 1016 B (solitaire) | 553 B used of 1024 | 27,422 B | 248 B (`lay`) |
-| rpg | 3256 B | 320 B | 33,778 B | 192 B (`find_path`) |
+| rpg | 3568 B | 320 B | 35,338 B | 192 B (`find_path`) |
 | beatemup | 1728 B | - | 20,826 B | 176 B (`ng_beatemup_update`) |
 
 None of the four uses 32-bit multiply or divide library calls at `-O2`, and

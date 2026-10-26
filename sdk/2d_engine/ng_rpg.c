@@ -303,10 +303,17 @@ static uint8_t NEOGEO_USER covers(const NGRpg *g, uint8_t i, uint8_t tx, uint8_t
 uint8_t NEOGEO_USER ng_rpg_object_at(const NGRpg *g, uint8_t tx, uint8_t ty)
 {
     uint8_t i;
+    uint32_t only = 0xFFFFFFFFu;
     if (!g || !g->def) return NGR_NONE;
+    /* Nothing that stays put covers the tile (rebuild_overlays keeps the
+     * map): only people, creatures and platforms can be there. */
+    if (tx < g->def->w && ty < g->def->h && !bget(g->occupied, tindex(g, tx, ty))) {
+        if (!g->movers) return NGR_NONE;
+        only = g->movers;
+    }
     for (i = 0; i < g->def->nobjects && i < NGR_MAX_OBJECTS; i++) {
         uint8_t t = g->def->objects[i].type;
-        if (!g->obj[i].alive) continue;
+        if (!((only >> i) & 1u) || !g->obj[i].alive) continue;
         if (t == NGR_O_SEQUENCE || t == NGR_O_BALANCE || t == NGR_O_SIGNAL_FLAG) continue;
         if (t == NGR_O_NPC || t == NGR_O_CREATURE || t == NGR_O_PLATFORM) {
             if (tile_of(g->obj[i].px) == tx && tile_of(g->obj[i].py) == ty) return i;
@@ -334,15 +341,43 @@ static uint8_t NEOGEO_USER object_solid(const NGRpg *g, uint8_t i)
     }
 }
 
+/* What an object adds to the overlays, the object map and so to water and
+ * light: alive, the state that opens, turns or fills it, and its tile (a
+ * person's, a creature's or a platform's where it is now). */
+static void NEOGEO_USER object_key(const NGRpg *g, uint8_t i, uint8_t *k)
+{
+    const NGRpgObject *o = &g->obj[i];
+    k[0] = o->alive; k[1] = 0; k[2] = o->x; k[3] = o->y;
+    switch (g->def->objects[i].type) {
+    case NGR_O_NPC: case NGR_O_CREATURE: case NGR_O_PLATFORM: k[2] = tile_of(o->px); k[3] = tile_of(o->py); break;
+    case NGR_O_SEQUENCE: case NGR_O_BALANCE: case NGR_O_SIGNAL_FLAG: k[0] = 0; k[2] = 0; k[3] = 0; break;
+    case NGR_O_BLOCK: k[1] = o->aux; break;
+    case NGR_O_LOCK: case NGR_O_GATE: case NGR_O_SECRET: case NGR_O_BRIDGE: case NGR_O_VALVE: case NGR_O_MIRROR:
+        k[1] = o->state; break;
+    default: break;
+    }
+}
+
 static void NEOGEO_USER rebuild_overlays(NGRpg *g)
 {
     uint8_t i;
     zero(g->solid, NGR_ROOM_BITS);
     zero(g->floor, NGR_ROOM_BITS);
+    zero(g->occupied, NGR_ROOM_BITS);
+    g->movers = 0;
     for (i = 0; i < g->def->nobjects && i < NGR_MAX_OBJECTS; i++) {
         const NGRpgObjectDef *d = &g->def->objects[i];
         const NGRpgObject *o = &g->obj[i];
         uint8_t x, y, solid = object_solid(g, i), floor = 0;
+        /* ng_rpg_object_at's map: the tiles of what is there and stays put;
+         * the ones that move about are looked at every time */
+        if (d->type == NGR_O_NPC || d->type == NGR_O_CREATURE || d->type == NGR_O_PLATFORM) g->movers |= (uint32_t)1u << i;
+        else if (o->alive && d->type != NGR_O_SEQUENCE && d->type != NGR_O_BALANCE && d->type != NGR_O_SIGNAL_FLAG)
+            for (y = 0; y < def_h(d); y++)
+                for (x = 0; x < def_w(d); x++) {
+                    uint8_t tx = (uint8_t)(o->x + x), ty = (uint8_t)(o->y + y);
+                    if (tx < g->def->w && ty < g->def->h) bset(g->occupied, tindex(g, tx, ty));
+                }
         if (d->type == NGR_O_BRIDGE && o->state) floor = 1;
         if (d->type == NGR_O_BLOCK && !o->alive && o->aux) floor = 1;   /* sank into a pit */
         if (d->type == NGR_O_PLATFORM) {
@@ -359,6 +394,19 @@ static void NEOGEO_USER rebuild_overlays(NGRpg *g)
                 if (solid) bset(g->solid, tindex(g, tx, ty));
                 if (floor) bset(g->floor, tindex(g, tx, ty));
             }
+    }
+    for (i = 0; i < g->def->nobjects && i < NGR_MAX_OBJECTS; i++) object_key(g, i, &g->keys[4u * i]);
+    g->ov_epoch++;
+}
+
+/* The overlays again only if an object's key changed since they were made. */
+static void NEOGEO_USER refresh_overlays(NGRpg *g)
+{
+    uint8_t i, k[4];
+    const uint8_t *s = g->keys;
+    for (i = 0; i < g->def->nobjects && i < NGR_MAX_OBJECTS; i++, s += 4) {
+        object_key(g, i, k);
+        if (k[0] != s[0] || k[1] != s[1] || k[2] != s[2] || k[3] != s[3]) { rebuild_overlays(g); return; }
     }
 }
 
@@ -668,6 +716,9 @@ static void NEOGEO_USER flow_water(NGRpg *g)
     uint8_t i;
     uint16_t *q = g->nav_q;
     uint16_t cap = (uint16_t)(NGR_NAV_W * NGR_NAV_H);
+    /* the same objects where they were and the same signals: the same water */
+    if (g->water_ok && g->water_epoch == g->ov_epoch && g->water_sig == g->signals) return;
+    g->water_ok = 1; g->water_epoch = g->ov_epoch; g->water_sig = g->signals;
     zero(g->wet, NGR_ROOM_BITS);
     if (!g->def->channels) return;
     for (i = 0; i < g->def->nobjects && i < NGR_MAX_OBJECTS; i++) {
@@ -686,16 +737,15 @@ static void NEOGEO_USER flow_water(NGRpg *g)
         while (r >= g->def->w) { r = (uint16_t)(r - g->def->w); y++; }
         x = (uint8_t)r;
         for (d = 0; d < 4u; d++) {
-            int8_t dx, dy;
-            int16_t nx, ny;
+            uint8_t nx = x, ny = y, o;
             uint16_t nt;
-            uint8_t o;
-            dir_step(d, &dx, &dy);
-            nx = (int16_t)(x + dx); ny = (int16_t)(y + dy);
-            if (nx < 0 || ny < 0 || nx >= (int16_t)g->def->w || ny >= (int16_t)g->def->h) continue;
-            nt = tindex(g, (uint8_t)nx, (uint8_t)ny);
+            /* the neighbour the way NGR_FACE_<d> faces, by steps of the index */
+            if (d == NGR_FACE_RIGHT) { if ((uint8_t)(x + 1u) >= g->def->w) continue; nx++; nt = (uint16_t)(t + 1u); }
+            else if (d == NGR_FACE_DOWN) { if ((uint8_t)(y + 1u) >= g->def->h) continue; ny++; nt = (uint16_t)(t + g->def->w); }
+            else if (d == NGR_FACE_LEFT) { if (!x) continue; nx--; nt = (uint16_t)(t - 1u); }
+            else { if (!y) continue; ny--; nt = (uint16_t)(t - g->def->w); }
             if (nt >= n || bget(g->wet, nt) || !g->def->channels[nt]) continue;
-            o = ng_rpg_object_at(g, (uint8_t)nx, (uint8_t)ny);
+            o = ng_rpg_object_at(g, nx, ny);
             if (o != NGR_NONE) {
                 uint8_t ty = g->def->objects[o].type;
                 if (ty == NGR_O_VALVE && !g->obj[o].state) continue;
@@ -712,6 +762,11 @@ static void NEOGEO_USER flow_water(NGRpg *g)
 static void NEOGEO_USER trace_light(NGRpg *g)
 {
     uint8_t i;
+    if (g->light_ok && g->light_epoch == g->ov_epoch && g->light_sig == g->signals) {
+        for (i = 0; i < NGR_MAX_OBJECTS; i++) if ((g->light_rx >> i) & 1u) g->obj[i].timer = 1;
+        return;
+    }
+    g->light_ok = 1; g->light_epoch = g->ov_epoch; g->light_sig = g->signals; g->light_rx = 0;
     zero(g->lit, NGR_ROOM_BITS);
     for (i = 0; i < g->def->nobjects && i < NGR_MAX_OBJECTS; i++) {
         const NGRpgObjectDef *d = &g->def->objects[i];
@@ -739,7 +794,11 @@ static void NEOGEO_USER trace_light(NGRpg *g)
                 }
                 if (t == NGR_O_LENS) { focused = 1; bset(g->lit, tindex(g, (uint8_t)x, (uint8_t)y)); continue; }
                 if (t == NGR_O_RECEIVER) {
-                    if (!g->def->objects[o].p[0] || focused) { bset(g->lit, tindex(g, (uint8_t)x, (uint8_t)y)); g->obj[o].timer = 1; }
+                    if (!g->def->objects[o].p[0] || focused) {
+                        bset(g->lit, tindex(g, (uint8_t)x, (uint8_t)y));
+                        g->obj[o].timer = 1;
+                        g->light_rx |= (uint32_t)1u << o;
+                    }
                     break;
                 }
                 if (object_solid(g, o)) break;
@@ -794,15 +853,22 @@ static uint8_t NEOGEO_USER gate_wants_open(const NGRpg *g, uint8_t i, uint32_t s
     return (uint8_t)(d->p[0] & 1u ? !on : on);
 }
 
-static void NEOGEO_USER set_gates(NGRpg *g, uint32_t sig)
+/* Gates and bridges to match the signals. The solid and floor overlays are
+ * rebuilt when one of them moves; with check set, also when anything else
+ * they are made of changed (blocks, platforms, locks): once a frame. */
+static void NEOGEO_USER set_gates(NGRpg *g, uint32_t sig, uint8_t check)
 {
+    uint8_t moved = 0;
     uint8_t i;
     for (i = 0; i < g->def->nobjects && i < NGR_MAX_OBJECTS; i++) {
         const NGRpgObjectDef *d = &g->def->objects[i];
         NGRpgObject *o = &g->obj[i];
         uint8_t want;
         if (d->type != NGR_O_GATE && d->type != NGR_O_BRIDGE) continue;
-        if (d->flag && ng_rpg_flag(g, d->flag)) { o->state = 1; continue; }   /* open for good */
+        if (d->flag && ng_rpg_flag(g, d->flag)) {                          /* open for good */
+            if (!o->state) { o->state = 1; moved = 1; }
+            continue;
+        }
         want = gate_wants_open(g, i, sig);
         if (want == o->state) continue;
         /* a gate never closes on someone standing in it */
@@ -812,11 +878,13 @@ static void NEOGEO_USER set_gates(NGRpg *g, uint32_t sig)
             if (blocked) continue;
         }
         o->state = want;
+        moved = 1;
         emit(g, NGR_EV_OPEN, i, want, 0);
         if (want && d->flag) { ng_rpg_set_flag(g, d->flag, 1); ng_rpg_run(g, d->actions); }
         else if (want) ng_rpg_run(g, d->actions);
     }
-    rebuild_overlays(g);
+    if (moved) rebuild_overlays(g);
+    else if (check) refresh_overlays(g);
 }
 
 /*
@@ -882,7 +950,7 @@ static void NEOGEO_USER networks(NGRpg *g)
     for (pass_no = 0; pass_no < 4u; pass_no++) {
         prev = derived;
         g->signals = base | derived;
-        set_gates(g, g->signals);
+        set_gates(g, g->signals, (uint8_t)(pass_no == 0));
         for (i = 0; i < g->def->nobjects && i < NGR_MAX_OBJECTS; i++) if (g->def->objects[i].type == NGR_O_RECEIVER) g->obj[i].timer = 0;
         flow_water(g);
         trace_light(g);
@@ -892,7 +960,7 @@ static void NEOGEO_USER networks(NGRpg *g)
     }
     g->derived = derived;
     g->signals = base | derived;
-    set_gates(g, g->signals);
+    set_gates(g, g->signals, 0);
     /* events for outlets and receivers that changed */
     for (i = 0; i < g->def->nobjects && i < NGR_MAX_OBJECTS; i++) {
         const NGRpgObjectDef *d = &g->def->objects[i];
