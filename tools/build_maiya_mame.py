@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
 import zlib
+import mame_bats
 from pack_neosd import build_image
 from patch_neosd_sound import read_regions
 
@@ -126,13 +127,14 @@ def main():
             print(f"Built {mode.upper()}", flush=True)
         (target / "latest-backup.txt").write_text(stamp + "\n", encoding="ascii")
         shutil.copytree(stage / "tests", target / "tests", dirs_exist_ok=True)
-        shutil.copytree(stage / "tests/mvs/roms/maiya", target / "roms/maiya", dirs_exist_ok=True)
-        (target / "hash/maiya").mkdir(parents=True, exist_ok=True)
-        shutil.copy2(stage / "tests/mvs/hash/neogeo.xml", target / "hash/maiya/neogeo.xml")
         for log in stage.glob("*-build.log"):
             shutil.copy2(log, target / log.name)
+        # The launchers and MENU.bat come from mame_bats, with this build's mission launchers.
+        for mode in ("mvs", "aes"):
+            mame_bats.describe(target, "maiya", mode, target / "tests" / mode / "game.elf", root)
+        mame_bats.write_all(target)
         for source in (root / "tools/mame_tests").glob("*.bat"):
-            if "skylance" in source.name:
+            if "skylance" in source.name or source.name.startswith("run_maiya"):
                 continue
             (target / source.name).write_bytes(source.read_text().replace("\r\n", "\n")
                                               .replace("\n", "\r\n").encode("ascii"))

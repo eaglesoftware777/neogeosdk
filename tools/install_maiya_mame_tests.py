@@ -3,7 +3,9 @@ MAME folder's neogeosdk/ (e.g. C:\\mame\\neogeosdk), with its launchers.
 
     tests/mvs/roms/maiya, tests/mvs/hash   the MVS build (run_maiya_mvs.bat)
     tests/aes/roms/maiya, tests/aes/hash   the AES build (run_maiya_aes.bat)
-    roms/maiya, roms/maiya.zip, hash/maiya the MVS build, for MAME's own lists
+
+The launchers and MENU.bat are written by tools/mame_bats.py; its mission
+launchers wait for `mame_bats.py --describe` with the builds' ELF files.
 
 The launchers boot EagleBIOS (euro on MVS, asia on AES), installed in
 roms/neogeo and roms/aes from bios/ (`make eagle-bios`). The UniBIOS
@@ -23,8 +25,9 @@ import argparse
 from pathlib import Path
 import shutil
 import time
-import zipfile
 import zlib
+
+import mame_bats
 
 ROOT = Path(__file__).resolve().parents[1]
 PARTS = ("p1", "s1", "m1", "v1", "c1", "c2")
@@ -80,14 +83,6 @@ def install(target, label, tidy, clear_nvram):
                 (tests / "memcard.bin").write_bytes(bytes(2048))
         print(f"{platform}: P1 {crc(tests / 'roms/maiya/780-p1.p1'):08x}")
 
-    keep(target / "roms/maiya"); keep(target / "roms/maiya.zip"); keep(target / "hash/maiya")
-    shutil.rmtree(target / "roms/maiya", ignore_errors=True)
-    shutil.copytree(sets / "mvs/roms/maiya", target / "roms/maiya")
-    (target / "hash/maiya").mkdir(parents=True, exist_ok=True)
-    shutil.copy2(sets / "mvs/hash/neogeo.xml", target / "hash/maiya/neogeo.xml")
-    with zipfile.ZipFile(target / "roms/maiya.zip", "w", zipfile.ZIP_DEFLATED) as z:
-        for part in PARTS:
-            z.write(sets / "mvs/roms/maiya" / f"780-{part}.{part}", f"maiya/780-{part}.{part}")
 
     for board, names in EAGLE.items():
         for name in names:
@@ -100,15 +95,18 @@ def install(target, label, tidy, clear_nvram):
                 shutil.copy2(source, dest)
 
     templates = ROOT / "tools/mame_tests"
-    for name in LAUNCHERS + ("README.txt",):
-        keep(target / name)
-        text = (templates / name).read_text().replace("\r\n", "\n")
-        # CMD batch files need Windows line endings even when installed from WSL.
-        (target / name).write_bytes(text.replace("\n", "\r\n").encode("ascii"))
+    keep(target / "README.txt")
+    text = (templates / "README.txt").read_text().replace("\r\n", "\n")
+    (target / "README.txt").write_bytes(text.replace("\n", "\r\n").encode("ascii"))
+    mame_bats.write_all(target)
+
+    def generated(path):
+        return mame_bats.MARK in path.read_text(errors="replace")[:400]
 
     if tidy:
         for path in sorted(target.iterdir()):
-            old_launcher = path.suffix.lower() in (".bat", ".ps1", ".sh") and path.name not in LAUNCHERS
+            old_launcher = (path.suffix.lower() in (".bat", ".ps1", ".sh") and path.name not in LAUNCHERS
+                            and not generated(path))
             if old_launcher or (path.is_dir() and path.name in OLD_FOLDERS) or path.name == "POLISH_TESTS.txt":
                 move(path)
     print(f"Replaced and retired files are in {backup}")
