@@ -676,7 +676,7 @@ void NEOGEO_USER slf_wall_face(uint8_t side, uint8_t def)
     if (!s_face_live[side]) {
         ng_sprite_group_init(g, (uint16_t)(SPR_FACE + side * 4u), 4u, 4u, (uint16_t)SLF_FACE_TILE, pal);
         ng_sprite_group_set_tile_stride(g, 4u);
-        ng_sprite_group_set_pos(g, side ? 254 : 2, 2);
+        ng_sprite_group_set_pos(g, side ? 238 : 18, 2);       /* clear of the wall's second row (x 82-237) */
     }
     ng_sprite_group_set_tile_address(g, (uint32_t)SLF_FACE_TILE + (uint32_t)def * SLF_FACE_TILES);
     ng_sprite_group_set_palette_map(g, s_face_map[side]);
@@ -896,17 +896,21 @@ void NEOGEO_USER slf_match_draw(const NGFMatch *m, const uint8_t *def_index)
 }
 
 /* ------------------------------------------------------------ HUD */
+/* Everything inside columns 3-36 (x 24-295), what a CRT shows of the 40:
+ * life bars of 14 cells (112 steps) either side of the clock. */
+#define LIFE_CELLS 14u
+
 static void NEOGEO_USER life_bar(uint8_t side, uint8_t px, uint8_t trail)
 {
     uint8_t c;
-    for (c = 0u; c < 16u; c++) {
+    for (c = 0u; c < LIFE_CELLS; c++) {
         uint8_t lv = px > c * 8u ? (uint8_t)(px - c * 8u) : 0u;
         uint8_t recent = trail > c * 8u ? (uint8_t)(trail - c * 8u) : 0u;
         if (lv > 8u) lv = 8u;
         if (recent > 8u) recent = 8u;
         if (recent < lv) recent = lv;
-        if (side == 0u) ng_fix_put_tile((uint8_t)(2u + c), 2u, (uint16_t)(SLF_FIX_BAR_L + lv * 9u + recent), SLF_PAL_HUD);
-        else ng_fix_put_tile((uint8_t)(37u - c), 2u, (uint16_t)(SLF_FIX_BAR_R + lv * 9u + recent), SLF_PAL_HUD);
+        if (side == 0u) ng_fix_put_tile((uint8_t)(4u + c), 2u, (uint16_t)(SLF_FIX_BAR_L + lv * 9u + recent), SLF_PAL_HUD);
+        else ng_fix_put_tile((uint8_t)(35u - c), 2u, (uint16_t)(SLF_FIX_BAR_R + lv * 9u + recent), SLF_PAL_HUD);
     }
 }
 
@@ -934,7 +938,7 @@ static void NEOGEO_USER small_meter(uint8_t side, uint8_t spirit, uint8_t value,
         (side ? SLF_FIX_GUARD_R : SLF_FIX_GUARD_L);
     for (c = 0u; c < 4u; c++) {
         uint8_t level = value > c * 8u ? (uint8_t)(value - c * 8u) : 0u;
-        uint8_t x = side ? (uint8_t)((spirit ? 28u : 35u) - c) : (uint8_t)((spirit ? 11u : 4u) + c);
+        uint8_t x = side ? (uint8_t)((spirit ? 29u : 35u) - c) : (uint8_t)((spirit ? 10u : 4u) + c);
         if (level > 8u) level = 8u;
         ng_fix_put_tile(x, 4u, (uint16_t)(base + level), SLF_PAL_HUD);
     }
@@ -951,11 +955,11 @@ static void NEOGEO_USER power_bar(uint8_t side, uint16_t power, uint16_t max_tim
     for (c = 0u; c < 8u; c++) {
         uint8_t lv = px > c * 8u ? (uint8_t)(px - c * 8u) : 0u;
         if (lv > 8u) lv = 8u;
-        ng_fix_put_tile((uint8_t)((side ? 30u : 4u) + c), 26u, (uint16_t)(SLF_FIX_POWER + lv), SLF_PAL_HUD);
+        ng_fix_put_tile((uint8_t)((side ? 26u : 6u) + c), 26u, (uint16_t)(SLF_FIX_POWER + lv), SLF_PAL_HUD);
     }
     digit[0] = (char)('0' + stock);
     digit[1] = '\0';
-    slf_puts(side ? 38u : 2u, 26u, digit, stock ? SLF_PAL_GOLD : SLF_PAL_DIM);
+    slf_puts(side ? 35u : 4u, 26u, digit, stock ? SLF_PAL_GOLD : SLF_PAL_DIM);
 }
 
 void NEOGEO_USER slf_hud_draw(const NGFMatch *m)
@@ -965,14 +969,14 @@ void NEOGEO_USER slf_hud_draw(const NGFMatch *m)
     if (!s_hud_valid) {
         slf_clear_rows(1u, 4u);
         slf_clear_rows(24u, 26u);
-        ng_fix_put_tile(1u, 2u, SLF_FIX_CAP_L, SLF_PAL_HUD);
-        ng_fix_put_tile(38u, 2u, SLF_FIX_CAP_R, SLF_PAL_HUD);
-        slf_puts(2u, 3u, m->f[0].def->name, SLF_PAL_TEXT);
-        slf_puts_right(37u, 3u, m->f[1].def->name, SLF_PAL_TEXT);
-        slf_puts(4u, 25u, "POWER", SLF_PAL_DIM);
-        slf_puts(33u, 25u, "POWER", SLF_PAL_DIM);
-        slf_puts(2u, 4u, "G", SLF_PAL_TEXT);slf_puts(9u, 4u, "S", SLF_PAL_TEXT);
-        slf_puts(37u, 4u, "G", SLF_PAL_TEXT);slf_puts(30u, 4u, "S", SLF_PAL_TEXT);
+        ng_fix_put_tile(3u, 2u, SLF_FIX_CAP_L, SLF_PAL_HUD);
+        ng_fix_put_tile(36u, 2u, SLF_FIX_CAP_R, SLF_PAL_HUD);
+        slf_puts(3u, 3u, m->f[0].def->name, SLF_PAL_TEXT);
+        slf_puts_right(36u, 3u, m->f[1].def->name, SLF_PAL_TEXT);
+        slf_puts(6u, 25u, "POWER", SLF_PAL_DIM);
+        slf_puts(29u, 25u, "POWER", SLF_PAL_DIM);
+        slf_puts(3u, 4u, "G", SLF_PAL_TEXT);slf_puts(9u, 4u, "S", SLF_PAL_TEXT);
+        slf_puts(36u, 4u, "G", SLF_PAL_TEXT);slf_puts(30u, 4u, "S", SLF_PAL_TEXT);
         for (i = 0u; i < 2u; i++) s_hud_life[i] = s_hud_power[i] = s_hud_stock[i] = s_hud_wins[i] = s_hud_max[i] = 0xFFu;
         for (i = 0u; i < 2u; i++) {
             s_hud_trail[i] = 0xFFu;s_hud_trail_hold[i] = 0u;
@@ -983,7 +987,7 @@ void NEOGEO_USER slf_hud_draw(const NGFMatch *m)
     }
     for (i = 0u; i < 2u; i++) {
         const NGFFighter *f = &m->f[i];
-        uint8_t px = (uint8_t)((uint32_t)f->life * 128u / f->def->life);
+        uint8_t px = (uint8_t)((uint32_t)f->life * (LIFE_CELLS * 8u) / f->def->life);
         uint8_t pw = (uint8_t)((f->power % NGF_POWER_STOCK) / 2u);
         uint8_t st = (uint8_t)(f->power / NGF_POWER_STOCK);
         uint8_t mx = f->max_timer ? (uint8_t)(1u + ((m->frame >> 3) & 1u)) : 0u;
@@ -992,7 +996,7 @@ void NEOGEO_USER slf_hud_draw(const NGFMatch *m)
             st = (uint8_t)(st | 0x10u);
         }
         if (mx != s_hud_max[i]) {
-            slf_puts(i ? 33u : 4u, 25u, mx ? "MAX!!" : "POWER", mx == 1u ? SLF_PAL_RED : mx ? SLF_PAL_GOLD : SLF_PAL_DIM);
+            slf_puts(i ? 29u : 6u, 25u, mx ? "MAX!!" : "POWER", mx == 1u ? SLF_PAL_RED : mx ? SLF_PAL_GOLD : SLF_PAL_DIM);
             s_hud_max[i] = mx;
         }
         if (f->life && !px) px = 1u;
@@ -1032,7 +1036,7 @@ void NEOGEO_USER slf_hud_draw(const NGFMatch *m)
             char badge[7] = {'A','S','S','T',' ', '0', '\0'};
             if (m->assist[i]) {
                 badge[5] = (char)('0' + m->assist_uses[i]);
-                slf_puts(i ? 32u : 2u, 24u, badge,
+                slf_puts(i ? 31u : 3u, 24u, badge,
                     m->assist_uses[i] && !m->striker[i].cooldown ? SLF_PAL_GOLD : SLF_PAL_DIM);
             }
             if (m->match_mode != NGF_MODE_1V1) {
@@ -1054,9 +1058,9 @@ void NEOGEO_USER slf_hud_draw(const NGFMatch *m)
                     text[1] = (char)('0' + s_hud_combo[i] % 10u);
                     text[2] = ' '; text[3] = 'H'; text[4] = 'I'; text[5] = 'T'; text[6] = 'S'; text[7] = '!'; text[8] = '\0';
                     if (text[0] == '0') text[0] = ' ';
-                    slf_puts_tall(i ? 30u : 2u, 6u, text, SLF_TALL_RED);
+                    slf_puts_tall(i ? 29u : 3u, 6u, text, SLF_TALL_RED);
                 }
-                if (!--s_hud_combo_timer[i]) slf_puts_tall(i ? 30u : 2u, 6u, "        ", SLF_TALL_RED);
+                if (!--s_hud_combo_timer[i]) slf_puts_tall(i ? 29u : 3u, 6u, "        ", SLF_TALL_RED);
             }
         }
     }

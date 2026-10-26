@@ -139,7 +139,8 @@ static uint8_t NEOGEO_USER wall_move(uint8_t side, uint8_t def, uint8_t dir)
     return def;
 }
 
-/* Up to n characters of text (the two players' lines share the bottom rows). */
+/* Up to n characters of text (the two players' lines share the bottom rows,
+ * columns 3-36: 16 each and a gap). */
 static const char *NEOGEO_USER clip(char *buf, const char *text, uint8_t n)
 {
     uint8_t i;
@@ -152,13 +153,13 @@ static void NEOGEO_USER select_info(uint8_t side, uint8_t def)
 {
     char buf[20];
     if (side == 0u) {
-        slf_puts(1u, 24u, clip(buf, slf_fighter_origin[def], 13u), SLF_PAL_DIM);
-        slf_puts(1u, 25u, clip(buf, slf_fighter_style[def], 18u), SLF_PAL_TEXT);
-        slf_puts_tall(1u, 26u, slf_fighter_defs[def]->name, SLF_TALL_SILVER);
+        slf_puts(3u, 24u, clip(buf, slf_fighter_origin[def], 16u), SLF_PAL_DIM);
+        slf_puts(3u, 25u, clip(buf, slf_fighter_style[def], 16u), SLF_PAL_TEXT);
+        slf_puts_tall(3u, 26u, slf_fighter_defs[def]->name, SLF_TALL_SILVER);
     } else {
-        slf_puts_right(38u, 24u, clip(buf, slf_fighter_origin[def], 13u), SLF_PAL_DIM);
-        slf_puts_right(38u, 25u, clip(buf, slf_fighter_style[def], 18u), SLF_PAL_TEXT);
-        slf_puts_tall_right(38u, 26u, slf_fighter_defs[def]->name, SLF_TALL_SILVER);
+        slf_puts_right(36u, 24u, clip(buf, slf_fighter_origin[def], 16u), SLF_PAL_DIM);
+        slf_puts_right(36u, 25u, clip(buf, slf_fighter_style[def], 16u), SLF_PAL_TEXT);
+        slf_puts_tall_right(36u, 26u, slf_fighter_defs[def]->name, SLF_TALL_SILVER);
     }
 }
 
@@ -282,8 +283,8 @@ static void NEOGEO_USER vs_screen(uint8_t stage_fighter)
         slf_fighter_pose(1u, s_def[1], anim_sprite(s_def[1], NGF_A_INTRO, tick), 236, SLF_FLOOR_Y - 125, 1u);
         if (tick == 1u) {
             slf_big_center(9u, SLF_BIG_VS, SLF_BIG_VS_W, SLF_BIG_VS_H, SLF_PAL_RED);
-            slf_puts_tall(2u, 23u, slf_fighter_defs[s_def[0]]->name, SLF_TALL_RED);
-            slf_puts_tall_right(37u, 23u, slf_fighter_defs[s_def[1]]->name, SLF_TALL_BLUE);
+            slf_puts_tall(3u, 23u, slf_fighter_defs[s_def[0]]->name, SLF_TALL_RED);
+            slf_puts_tall_right(36u, 23u, slf_fighter_defs[s_def[1]]->name, SLF_TALL_BLUE);
             slf_puts_center(26u, slf_stage_names[stage_id], SLF_PAL_TEXT);
         }
     }
@@ -768,7 +769,7 @@ static uint8_t NEOGEO_USER attract_story(void)
             if (slf_start_pressed(1u)) { NEO_REGISTER8(SLF_P2_FLAG) = 1u; return 1u; }
             if (slf_start_pending() || slf_start_pressed(0u)) return 1u;
             if ((t & 31u) == 0u)
-                slf_puts(1u, 0u, (t & 32u) ? (ng_sys_is_mvs() ? "INSERT COIN" : "PUSH START ") : "           ", SLF_PAL_TEXT);
+                slf_puts(3u, 0u, (t & 32u) ? (ng_sys_is_mvs() ? "INSERT COIN" : "PUSH START ") : "           ", SLF_PAL_TEXT);
         }
     }
     return 0u;
@@ -787,11 +788,11 @@ static uint8_t NEOGEO_USER attract_tutorial(void)
     slf_puts_tall_center(1u, "HOW TO PLAY", SLF_TALL_GOLD);
     slf_puts(4u, 5u, "(A) LIGHT PUNCH    (B) LIGHT KICK", SLF_PAL_WHITE);
     slf_puts(4u, 7u, "(C) HEAVY PUNCH    (D) HEAVY KICK", SLF_PAL_WHITE);
-    slf_puts(4u, 10u, "EVADE ROLL       :  (A) + (B)", SLF_PAL_BLUE);
-    slf_puts(4u, 12u, "BLOWBACK         :  (C) + (D)", SLF_PAL_RED);
-    slf_puts(4u, 14u, "MAX POWER MODE   :  (B) + (C)", SLF_PAL_RED);
-    slf_puts(4u, 16u, "SPECIAL MOVES    :  D,DF,F + BTN", SLF_PAL_GOLD);
-    slf_puts(4u, 18u, "SUPER MOVES      :  D,DF,F X2 + BTN", SLF_PAL_GOLD);
+    slf_puts(4u, 10u, "EVADE ROLL     : (A) + (B)", SLF_PAL_BLUE);
+    slf_puts(4u, 12u, "BLOWBACK       : (C) + (D)", SLF_PAL_RED);
+    slf_puts(4u, 14u, "MAX POWER MODE : (B) + (C)", SLF_PAL_RED);
+    slf_puts(4u, 16u, "SPECIAL MOVES  : D,DF,F + BTN", SLF_PAL_GOLD);
+    slf_puts(4u, 18u, "SUPER MOVES    : D,DF,F X2 + BTN", SLF_PAL_GOLD);
     for (t = 0u; t < 360u; t++) {
         slf_frame();
         slf_fighter_pose(0u, a, anim_sprite(a, NGF_A_IDLE, t), 72, SLF_FLOOR_Y - 125, 0u);

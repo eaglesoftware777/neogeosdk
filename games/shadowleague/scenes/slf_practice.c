@@ -96,7 +96,7 @@ static void NEOGEO_USER practice_scene(const uint8_t *defs)
     slf_scene_begin(); slf_fx_reset();
     slf_stage_set(slf_fighter_stages[defs[1]]);
     slf_fighter_palettes(defs[0], 0u, defs[1], (uint8_t)(defs[0] == defs[1]));
-    slf_puts(1u, 7u, "TRAINING", SLF_PAL_BLUE);
+    slf_puts(3u, 7u, "TRAINING", SLF_PAL_BLUE);
     slf_puts_center(26u, "START: TRAINING MENU", SLF_PAL_GOLD);
 }
 
@@ -106,16 +106,16 @@ static void NEOGEO_USER practice_commands(uint8_t def)
     slf_scene_begin();
     slf_puts_tall_center(1u, "COMMAND PRACTICE", SLF_TALL_GOLD);
     slf_puts_center(4u, slf_fighter_defs[def]->name, SLF_PAL_WHITE);
-    slf_puts(2u,6u,"A: LIGHT PUNCH   B: LIGHT KICK",SLF_PAL_TEXT);
-    slf_puts(2u,7u,"C: HEAVY PUNCH   D: HEAVY KICK",SLF_PAL_TEXT);
-    slf_puts(2u,9u,"CLOSE + FORWARD C: LONG THROW",SLF_PAL_BLUE);
-    slf_puts(2u,10u,"CLOSE + FORWARD D: SHORT THROW",SLF_PAL_BLUE);
-    slf_puts(2u,11u,"BACK + C/D: REVERSE THROW",SLF_PAL_BLUE);
-    slf_puts(2u,13u,"COMBO: A > C > SPECIAL",SLF_PAL_GOLD);
-    slf_puts(2u,14u,"CANCEL AFTER THE STRIKE CONNECTS",SLF_PAL_TEXT);
+    slf_puts(3u,6u,"A: LIGHT PUNCH   B: LIGHT KICK",SLF_PAL_TEXT);
+    slf_puts(3u,7u,"C: HEAVY PUNCH   D: HEAVY KICK",SLF_PAL_TEXT);
+    slf_puts(3u,9u,"CLOSE + FORWARD C: LONG THROW",SLF_PAL_BLUE);
+    slf_puts(3u,10u,"CLOSE + FORWARD D: SHORT THROW",SLF_PAL_BLUE);
+    slf_puts(3u,11u,"BACK + C/D: REVERSE THROW",SLF_PAL_BLUE);
+    slf_puts(3u,13u,"COMBO: A > C > SPECIAL",SLF_PAL_GOLD);
+    slf_puts(3u,14u,"CANCEL AFTER THE STRIKE CONNECTS",SLF_PAL_TEXT);
     row=16u;
     for (i=0u;i<6u;i++) if (slf_command_guides[def][i])
-        slf_puts(2u,row++,slf_command_guides[def][i],SLF_PAL_TEXT);
+        slf_puts(3u,row++,slf_command_guides[def][i],SLF_PAL_TEXT);
     slf_puts_center(25u,"A / B / START TO RETURN",SLF_PAL_GOLD);
     for (;;) {
         slf_frame();
@@ -214,7 +214,7 @@ void NEOGEO_USER slf_training_run(uint8_t fighter, uint8_t partner)
             input[8] = (raw & NGF_BTN_C) ? 'C' : '-'; input[10] = (raw & NGF_BTN_D) ? 'D' : '-';
             input[12] = (raw & NGF_RAW_UP) ? 'U' : (raw & NGF_RAW_DOWN) ? 'D' : '-';
             input[14] = (raw & NGF_RAW_LEFT) ? 'L' : (raw & NGF_RAW_RIGHT) ? 'R' : '-';
-            slf_puts(1u, 23u, input, SLF_PAL_TEXT);
+            slf_puts(3u, 23u, input, SLF_PAL_TEXT);
             if (raw) {
                 for (hist_i = 0u; hist_i < 7u; hist_i++) hist[hist_i] = hist[hist_i + 1u];
                 hist[7] = raw;
@@ -231,7 +231,7 @@ void NEOGEO_USER slf_training_run(uint8_t fighter, uint8_t partner)
                                                  (h & NGF_BTN_C) ? 'C' : (h & NGF_BTN_D) ? 'D' : ' ';
                     timeline[hist_i * 3u + 2u] = ' ';
                 }
-                slf_puts(1u, 22u, timeline, SLF_PAL_DIM);
+                slf_puts(3u, 22u, timeline, SLF_PAL_DIM);
             }
         }
         if (s_practice.dummy != last_dummy) {
@@ -251,7 +251,7 @@ void NEOGEO_USER slf_training_run(uint8_t fighter, uint8_t partner)
                 m->f[1].juggle_points >= m->f[1].def->combat->juggle_limit) status = 7u;
             if (status != last_status) {
                 last_status = status;
-                slf_puts(1u, 24u, reason[status], SLF_PAL_TEXT);
+                slf_puts(3u, 24u, reason[status], SLF_PAL_TEXT);
             }
         }
         dist = ngf_distance(m);
