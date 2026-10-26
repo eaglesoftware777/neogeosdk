@@ -17,15 +17,15 @@
   "hideout": {
     "x": 2624,
     "y": 80,
-    "hint": "KNEEL ON THE ARCH PAST THE LOG CAMP"
+    "hint": "KNEEL ON THE ARCH PAST LOG CAMP"
   },
   "guardian": {
     "name": "CHAINSAW BEETLE",
     "style": "beetle",
     "hp": 4,
     "hint": "STRIKE THE BEETLE WHEN IT LANDS",
-    "taunt": "I CUT DOWN WHAT TOOK CENTURIES TO GROW!",
-    "reply": "THE FOREST WILL OUTLIVE YOUR BLADES!"
+    "taunt": "I FELLED WHAT TOOK AGES TO GROW!",
+    "reply": "THE FOREST OUTLIVES YOUR BLADES!"
   },
   "art": {
     "kind": "blossom",
@@ -39,10 +39,10 @@
   ],
   "healed": [
     "THE OLD TREES BREATHE FREELY AGAIN",
-    "THE LOGGERS' SAWS HAVE FALLEN SILENT"
+    "THE LOGGERS' SAWS FALL SILENT"
   ],
   "briefing": [
-    "FIND THE SUN KEY IN THE HIGH BOUGHS",
+    "FIND THE SUN KEY IN HIGH BOUGHS",
     "OPEN THE GATE. FACE THE BEETLE."
   ],
   "platforms": [
@@ -394,7 +394,7 @@
     {
       "x": 444,
       "who": "elder",
-      "line": "UP: VINES LEAD TO THE GOLDEN SUN KEY"
+      "line": "UP: VINES LEAD TO THE SUN KEY"
     },
     {
       "x": 1472,

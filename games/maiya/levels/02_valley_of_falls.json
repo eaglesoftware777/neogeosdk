@@ -12,13 +12,13 @@
   "gate_x": 2864,
   "landmark": "falls",
   "key": {"x": 1652, "y": 60},
-  "hideout": {"x": 1720, "y": -96, "hint": "CLIMB OVER THE FALLS, KNEEL AT THE END"},
+  "hideout": {"x": 1720, "y": -96, "hint": "CLIMB THE FALLS, KNEEL AT THE END"},
   "guardian": {
     "name": "SLUDGE TOAD",
     "style": "toad",
     "hp": 5,
     "hint": "THE TOAD GULPS: HIT ITS THROAT",
-    "taunt": "I DROWNED YOUR SPRINGS IN MY OWN FILTH!",
+    "taunt": "I DROWNED YOUR SPRINGS IN FILTH!",
     "reply": "THE WATER REMEMBERS ITS OWN COLOR!"
   },
   "art": {"kind": "rain", "name": "PURIFYING RAIN", "words": "MAIYA: RAIN, WASH IT CLEAN!"},

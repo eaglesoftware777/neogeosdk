@@ -191,11 +191,11 @@ enum {
     MG_SURGE_TIME = 22, MG_SURGE_WINDUP = 6, MG_SURGE_SPEED = 1600,
     MG_BONUS_LIFE_SCORE_STEP = 50000,
     MG_BONUS_LIFE_SCORE_FIRST = 20000,
-    MG_BOSS_BAR_COL = 12, MG_BOSS_BAR_LABEL_COL = 7,
+    MG_BOSS_BAR_COL = 13, MG_BOSS_BAR_LABEL_COL = 8,
     /* Framed bar tiles (see mg_draw_bar) and the two bars' sizes. */
     MG_BAR_TILE = 0xE80, MG_BAR_CELL_TILE = MG_BAR_TILE + 6, MG_BAR_RCAP_TILE = MG_BAR_TILE + 15,
     MG_FRAME_TILE = MG_BAR_TILE + 21,   /* the select screen's card frame: TL T TR L R BL B BR */
-    MG_HP_BAR_COL = 10, MG_HP_BAR_CELLS = 8, MG_HP_BAR_PX = 5 + MG_HP_BAR_CELLS * 8 + 5,
+    MG_HP_BAR_COL = 11, MG_HP_BAR_CELLS = 8, MG_HP_BAR_PX = 5 + MG_HP_BAR_CELLS * 8 + 5,
     MG_BOSS_BAR_CELLS = 18, MG_BOSS_BAR_PX = 5 + MG_BOSS_BAR_CELLS * 8 + 5,
 
     /* FIX rows: 2..29 are visible (8 px each). ROW_POWER was reserved but
@@ -738,19 +738,20 @@ static void NEOGEO_USER mg_centre(uint8_t y, const char *text, uint8_t pal)
     ng_fix_puts((uint8_t)(20 - n / 2), y, text, pal);
 }
 
-/* The hint line, columns 1..38, made whole and then written over the old
- * one, so only the cells that change reach the FIX layer. */
+/* The hint line, columns 3..36 (what a CRT shows of the 40; the level tool
+ * holds every line to 34), made whole and then written over the old one,
+ * so only the cells that change reach the FIX layer. */
 static void NEOGEO_USER mg_hint(const char *text, uint8_t pal, uint8_t frames)
 {
-    char row[39];
+    char row[35];
     uint8_t n = 0, i, at;
     if (mg.demo == MG_DEMO_MOVES) return;   /* its own words are the move's name */
     while (text[n]) n++;
-    for (i = 0; i < 38u; i++) row[i] = ' ';
-    row[38] = 0;
-    at = n < 38u ? (uint8_t)(19u - n / 2u) : 0u;     /* column 20 - n/2 */
-    for (i = 0; i < n && (uint8_t)(at + i) < 38u; i++) row[at + i] = text[i];
-    ng_fix_puts(1, ROW_HINT, row, pal);
+    for (i = 0; i < 34u; i++) row[i] = ' ';
+    row[34] = 0;
+    at = n < 34u ? (uint8_t)(17u - n / 2u) : 0u;      /* column 20 - n/2, as mg_centre */
+    for (i = 0; i < n && (uint8_t)(at + i) < 34u; i++) row[at + i] = text[i];
+    ng_fix_puts(3, ROW_HINT, row, pal);
     mg.hint_timer = frames;
 }
 
@@ -3260,7 +3261,7 @@ static void NEOGEO_USER mg_ship_part_down(uint8_t part)
     mg.shake = 12;
     playSFX(SOUND_SFX_10);
     if (part != MG_SHIP_BRIDGE && !mg.ship_part[MG_SHIP_STACK_L] && !mg.ship_part[MG_SHIP_STACK_R])
-        mg_hint("ITS BRIDGE IS BARE - STRIKE THE EYE!", PAL_GOLD, 150);
+        mg_hint("ITS BRIDGE IS BARE: HIT THE EYE!", PAL_GOLD, 150);
 }
 
 static uint8_t NEOGEO_USER mg_boss_spawn(uint8_t style, uint8_t stomps);
@@ -4063,9 +4064,9 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
         {
             static const char *const warn[] = {
                 0, 0, 0,
-                "ROTTEN LEDGES CRUMBLE - KEEP MOVING", "THE ROAD IS ICE - SHE WILL SLIDE",
-                "UNDERWATER - SWIM ANY WAY, A TO STROKE",
-                "ON THE SUN EAGLE: B THORNS, C SWOOP",
+                "ROTTEN LEDGES CRUMBLE: KEEP MOVING", "THE ROAD IS ICE - SHE WILL SLIDE",
+                "UNDERWATER: SWIM FREE, A TO STROKE",
+                "ON THE SUN EAGLE: B THORN, C SWOOP",
             };
             uint8_t m = mg_mech();
             if (m && m < sizeof(warn) / sizeof(warn[0]) && warn[m]) mg_centre(ROW_CARD + 8, warn[m], PAL_GOLD);
@@ -4636,7 +4637,7 @@ void NEOGEO_USER maiya_title(void)
     ng_sprite_group_set_palette_map(&title_vis, mg_title_map);
     ng_sprite_group_set_pos(&title_vis, 8, 8);
     ng_sprite_group_upload(&title_vis);
-    ng_fix_puts(32, 26, "V5 TEST", PAL_GOLD);
+    ng_fix_puts(29, 26, "V5 TEST", PAL_GOLD);
 
 
     /* The title theme, looping until a credit or the demo takes over. */
@@ -4896,12 +4897,12 @@ static void NEOGEO_USER mg_show_how_to_play(void)
         mg_centre(10, "A: JUMP (HOLD FOR HEIGHT)", PAL_TEXT);
         mg_centre(11, "RUN, THEN JUMP: HIGHER STILL", PAL_TEXT);
         mg_centre(12, "KNEEL, THEN UP + A: A HIGH LEAP", PAL_TEXT);
-        mg_centre(13, "B: THROW A THORN, OR STRIKE UP CLOSE", PAL_TEXT);
+        mg_centre(13, "B: THORN THROW, OR STRIKE UP CLOSE", PAL_TEXT);
         mg_centre(14, "C: DASH      D: SECRET ART", PAL_TEXT);
-        mg_centre(16, "DOWN, FORWARD + B: ROSE BLOSSOM SURGE", PAL_SKY);
-        mg_centre(17, "FWD, DOWN, DOWN-FWD + B: RISING BLOOM", PAL_SKY);
+        mg_centre(16, "D, F + B: ROSE BLOSSOM SURGE", PAL_SKY);
+        mg_centre(17, "F, D, DF + B: RISING BLOOM", PAL_SKY);
         mg_centre(18, "LAND ON A CREATURE TO BEAT IT TOO", PAL_SKY);
-        mg_centre(19, "A SKY LILY: UP + A IN THE AIR, ONE MORE", PAL_SKY);
+        mg_centre(19, "A SKY LILY: UP + A, ONE MORE JUMP", PAL_SKY);
         mg_centre(22, "PRESS ANY BUTTON TO BEGIN", PAL_GOLD);
         mg_centre(24, "A + B TOGETHER: SEE THEIR MOVES", PAL_TEXT);
         if (!mg_reminder_wait(1)) break;
@@ -4939,12 +4940,13 @@ static void NEOGEO_USER mg_show_intro_story(void)
  * player side, Luna answers the call by default instead of Maiya -- still
  * just a starting point, still changeable before confirming.
  */
-/* The chooser's countdown, top right: seconds left to choose. */
+/* The chooser's countdown, top right under the heading, where the title
+ * screen keeps its own: seconds left to choose. */
 #define MG_CHOOSER_SECONDS   15u
 static void NEOGEO_USER mg_chooser_clock(uint8_t secs)
 {
-    ng_fix_puts(31, 2, "TIME", PAL_GOLD);
-    mg_number(36, 2, secs, 2, secs <= 5u ? PAL_WARN : PAL_TEXT);
+    ng_fix_puts(29, 3, "TIME", PAL_GOLD);
+    mg_number(35, 3, secs, 2, secs <= 5u ? PAL_WARN : PAL_TEXT);
 }
 
 void NEOGEO_USER maiya_hero_select(void)
@@ -4986,7 +4988,7 @@ void NEOGEO_USER maiya_hero_select(void)
         ng_sprite_group_set_visible(g, 1);
     }
     mg_centre(2, "CHOOSE YOUR GUARDIAN", PAL_GOLD);
-    mg_centre(MG_CHOOSER_HINT_ROW, "LEFT / RIGHT TO CHOOSE - A TO CONFIRM", PAL_SKY);
+    mg_centre(MG_CHOOSER_HINT_ROW, "LEFT / RIGHT: CHOOSE   A: CONFIRM", PAL_SKY);
     mg_draw_chooser();
     mg_chooser_tick(t, 0);
 
@@ -5132,32 +5134,32 @@ static void NEOGEO_USER mg_wave(NGCharacter *b, int16_t centre, int16_t swing, i
 static void NEOGEO_USER mg_kind_hint(uint8_t type)
 {
     static const char *const hint[MG_E_SLUDGEBARREL + 1] = {
-        [MG_E_CROW]       = "CROW: IT DIVES - STRIKE AS IT SWOOPS",
+        [MG_E_CROW]       = "CROW: IT DIVES - HIT AS IT SWOOPS",
         [MG_E_GOBLIN]     = "GOBLIN: IT HURLS SCRAP FROM LEDGES",
         [MG_E_WORM]       = "WORM: IT SPITS FROM ITS PIPE",
         [MG_E_DRONE]      = "DRONE: IT HOVERS AND FIRES PULSES",
         [MG_E_JELLYFISH]  = "JELLYFISH: LAND ON IT TO POP IT",
         [MG_E_TOXICCRAB]  = "TOXIC CRAB: IT CHARGES UP CLOSE",
-        [MG_E_ACIDMOTH]   = "ACID MOTH: IT WEAVES - WAIT, THEN HIT",
-        [MG_E_DARTFROG]   = "DART FROG: POISON SKIN - DON'T STOMP",
+        [MG_E_ACIDMOTH]   = "ACID MOTH WEAVES - WAIT, THEN HIT",
+        [MG_E_DARTFROG]   = "DART FROG: POISONOUS - DON'T STOMP",
         [MG_E_SMOGBAT]    = "SMOG BAT: IT DIVES OUT OF THE HAZE",
         [MG_E_POACHDRONE] = "POACHER DRONE: DODGE ITS NET",
-        [MG_E_CHEMFLY]    = "CHEM FLY: IT LOOPS - HIT IT MID-LOOP",
+        [MG_E_CHEMFLY]    = "CHEM FLY LOOPS - HIT IT MID-LOOP",
         [MG_E_PLASTICBAT] = "PLASTIC BAT: IT DROPS TRASH ON YOU",
         [MG_E_SLAGGOLEM]  = "SLAG GOLEM: JUMP ITS SHOCKWAVE",
-        [MG_E_VINESTING]  = "VINE STING: ROOTED - KEEP OUT OF REACH",
+        [MG_E_VINESTING]  = "VINE STING: ROOTED - STAY CLEAR",
         [MG_E_SPOREGOB]   = "SPORE GOBLIN: DODGE ITS TOXIC PUFF",
         [MG_E_RHINO]      = "HORN BEETLE: IT RAMS - THREE BLOWS",
         [MG_E_DRAGONFLY]  = "DRAGONFLY: IT WEAVES IN A LINE",
         [MG_E_GNAT]       = "GNATS: A SWARM - SCATTER THEM",
-        [MG_E_GUNSHIP]    = "GUNSHIP: IT FIRES - STRIKE FROM ABOVE",
+        [MG_E_GUNSHIP]    = "GUNSHIP FIRES - STRIKE FROM ABOVE",
         [MG_E_BAGOCTO]    = "BAG OCTOPUS: IT FLINGS PLASTIC",
-        [MG_E_BINOCTO]    = "BIN OCTOPUS: TOUGH, FLINGS TWO CANS",
+        [MG_E_BINOCTO]    = "BIN OCTOPUS: TOUGH, FLINGS 2 CANS",
         [MG_E_SAWBOT]     = "SAW BOT: IT REVS, THEN CHARGES",
         [MG_E_DRILLBOT]   = "DRILL BOT: IT BURSTS - JUMP OVER",
-        [MG_E_TORCHBOT]   = "TORCH BOT: FIRE UP CLOSE, HIT IT FAR",
+        [MG_E_TORCHBOT]   = "TORCH BOT: FIRE UP CLOSE, HIT FAR",
         [MG_E_SMOGSTACK]  = "SMOG STACK: DODGE ITS SMOG BALLS",
-        [MG_E_SLUDGEBARREL] = "SLUDGE BARREL: IT SPITS UP AND OVER",
+        [MG_E_SLUDGEBARREL] = "SLUDGE BARREL SPITS UP AND OVER",
     };
     uint32_t bit;
     if (type > MG_E_SLUDGEBARREL || type == MG_E_WRAITH || mg.demo || mg.state != MG_PLAY) return;
@@ -5793,7 +5795,7 @@ static void NEOGEO_USER mg_controls(void)
         const MGLevel *lvl = &mg_levels[mg.stage];
         if (lvl->gate_x && mg_abs((int16_t)(p->x - (int16_t)lvl->gate_x)) < 48 &&
             mg_stage_objective[mg.stage] == MG_OBJ_DRUMS && mg_drums_left()) {
-            mg_hint("THE GATE HOLDS WHILE THE DRUMS POUR", PAL_TEXT, 120);
+            mg_hint("THE GATE HOLDS WHILE DRUMS POUR", PAL_TEXT, 120);
             mg.previous_joy = joy;
             return;
         }
@@ -7280,7 +7282,7 @@ static void NEOGEO_USER mg_update_entities(void)
                     mg.air_jump = 1;
                     playSFX(SOUND_SFX_13);
                     playSFX(SOUND_SFX_12);
-                    mg_hint("SKY LILY: UP + A IN THE AIR, ONE MORE", PAL_GOLD, 150);
+                    mg_hint("SKY LILY: UP + A, ONE MORE JUMP", PAL_GOLD, 150);
                     mg_voice(MG_VOICE_LILY);
                     break;
                 case MG_K_SPRING:
@@ -7788,15 +7790,15 @@ static void NEOGEO_USER mg_hud_static(void)
     mg_palette(PAL_FACE, mg.hero_choice ? mg_face_alt_pal : mg_face_pal);
     ng_sprite_group_init(&mg.hud[0], SLOT_HUD, 2, 2,
                          (uint16_t)(mg.hero_choice ? MG_FACE_ALT_TILE : MG_FACE_TILE), PAL_FACE);
-    ng_sprite_group_set_pos(&mg.hud[0], 16, 8);
+    ng_sprite_group_set_pos(&mg.hud[0], 24, 8);
     ng_sprite_group_upload(&mg.hud[0]);
 
     /* Her health used to be five separate heart sprites here; at this scale
      * they read as loose dots instead of a status, so a solid FIX bar next
      * to her face takes their place -- it drains visibly, left instead of
      * blinking off one at a time. */
-    ng_fix_putc(7, 1, 'H', PAL_GOLD);
-    ng_fix_putc(8, 1, 'P', PAL_GOLD);
+    ng_fix_putc(8, 1, 'H', PAL_GOLD);
+    ng_fix_putc(9, 1, 'P', PAL_GOLD);
 
     for (i = 0; i < MG_TRAY_SLOTS; i++) {
         ng_sprite_group_init(&mg.tray[i], (uint16_t)(SLOT_TRAY + i * 2), 2, 2,
@@ -7813,7 +7815,7 @@ static void NEOGEO_USER mg_hud_static(void)
 
     /* Sun Key: lights up in the corner once Maiya is carrying it. */
     ng_sprite_group_init(&mg.hud[9], (uint16_t)(SLOT_HUD + 10), 2, 2, mg_item_tiles[MG_I_GEM], PAL_ITEM);
-    ng_sprite_group_set_pos(&mg.hud[9], 288, 8);
+    ng_sprite_group_set_pos(&mg.hud[9], 272, 8);
     ng_sprite_group_set_visible(&mg.hud[9], mg.has_key);
     ng_sprite_group_upload(&mg.hud[9]);
 
@@ -7930,16 +7932,16 @@ static void NEOGEO_USER mg_draw_clock(void)
     if (mg.demo) return;
     /* The bonus round keeps its own time, and counts what she has cleared. */
     if (mg.state == MG_BONUS) {
-        ng_fix_puts(7, ROW_CLOCK, "TIME", PAL_GOLD);
-        mg_number(12, ROW_CLOCK, (uint32_t)((mg.state_timer + 59u) / 60u), 3, PAL_TEXT);
-        ng_fix_puts(7, ROW_CLOCK + 1, "GOLD", PAL_GOLD);
-        mg_number(12, ROW_CLOCK + 1, mg.bonus_hits, 3, PAL_TEXT);
-        ng_fix_puts(7, ROW_CLOCK + 2, "LIFE", PAL_GOLD);
-        mg_number(12, ROW_CLOCK + 2, mg.bonus_life, 3, mg.bonus_life > 1u ? PAL_TEXT : PAL_WARN);
+        ng_fix_puts(8, ROW_CLOCK, "TIME", PAL_GOLD);
+        mg_number(13, ROW_CLOCK, (uint32_t)((mg.state_timer + 59u) / 60u), 3, PAL_TEXT);
+        ng_fix_puts(8, ROW_CLOCK + 1, "GOLD", PAL_GOLD);
+        mg_number(13, ROW_CLOCK + 1, mg.bonus_hits, 3, PAL_TEXT);
+        ng_fix_puts(8, ROW_CLOCK + 2, "LIFE", PAL_GOLD);
+        mg_number(13, ROW_CLOCK + 2, mg.bonus_life, 3, mg.bonus_life > 1u ? PAL_TEXT : PAL_WARN);
         return;
     }
-    ng_fix_puts(7, ROW_CLOCK, "TIME", PAL_GOLD);
-    mg_number(12, ROW_CLOCK, mg.clock, 3, mg.clock <= MG_HURRY_AT ? PAL_WARN : PAL_TEXT);
+    ng_fix_puts(8, ROW_CLOCK, "TIME", PAL_GOLD);
+    mg_number(13, ROW_CLOCK, mg.clock, 3, mg.clock <= MG_HURRY_AT ? PAL_WARN : PAL_TEXT);
 }
 
 /*
@@ -8035,7 +8037,7 @@ static void NEOGEO_USER mg_combo_add(void)
     mg.combo_t = MG_COMBO_TIME;
     if (mg.combo_n >= 2u) {
         mg.combo_show = 0;
-        ng_fix_clear_rect(MG_COMBO_COL, ROW_COMBO, 13, 1, PAL_TEXT);
+        ng_fix_clear_rect(MG_COMBO_COL, ROW_COMBO, 11, 1, PAL_TEXT);
         ng_fix_puts(MG_COMBO_COL, ROW_COMBO, "COMBO X", PAL_GOLD);
         mg_number(MG_COMBO_COL + 7, ROW_COMBO, mg.combo_n, 2, PAL_TEXT);
     }
@@ -8044,12 +8046,12 @@ static void NEOGEO_USER mg_combo_add(void)
 static void NEOGEO_USER mg_combo_tick(void)
 {
     if (mg.combo_show && --mg.combo_show == 0)
-        ng_fix_clear_rect(MG_COMBO_COL, ROW_COMBO, 13, 1, PAL_TEXT);
+        ng_fix_clear_rect(MG_COMBO_COL, ROW_COMBO, 11, 1, PAL_TEXT);
     if (!mg.combo_t || --mg.combo_t) return;
     if (mg.combo_n >= 2u) {
         uint16_t bonus = (uint16_t)((uint16_t)mg.combo_n * mg.combo_n * 50u);
         mg.score += bonus;
-        ng_fix_clear_rect(MG_COMBO_COL, ROW_COMBO, 13, 1, PAL_TEXT);
+        ng_fix_clear_rect(MG_COMBO_COL, ROW_COMBO, 11, 1, PAL_TEXT);
         ng_fix_putc(MG_COMBO_COL, ROW_COMBO, '+', PAL_GOLD);
         mg_number(MG_COMBO_COL + 1, ROW_COMBO, bonus, 5, PAL_GOLD);
         mg.combo_show = MG_COMBO_SHOW;
@@ -8163,7 +8165,7 @@ static uint16_t NEOGEO_USER mg_tray_slot(char *row, uint8_t slot, uint16_t x, ui
                                         uint32_t count, uint8_t digits)
 {
     NGSpriteGroup *g = &mg.tray[slot];
-    if (x > 296u) {   /* the row is full: never draw past the screen edge */
+    if (x + MG_TRAY_ICON_PX + digits * 8u > 296u) {   /* the row is full: never past column 36 */
         ng_sprite_group_set_visible(g, 0);
         ng_sprite_group_flush(g);
         return x;
@@ -8182,7 +8184,7 @@ static uint16_t NEOGEO_USER mg_tray_slot(char *row, uint8_t slot, uint16_t x, ui
 static void NEOGEO_USER mg_draw_tray(void)
 {
     uint8_t slot = 0;
-    uint16_t x = 0;
+    uint16_t x = 24;          /* column 3: a CRT hides the screen's edges */
     char row[41];
 
     for (slot = 0; slot < 40u; slot++) row[slot] = ' ';
@@ -8446,7 +8448,7 @@ static void NEOGEO_USER mg_hazard_warn_check(void)
         mg_hint(hz->type == MG_H_PIT ? "A BREAK IN THE ROAD - JUMP IT"
               : hz->type == MG_H_FIRE ? "HAZARD: OPEN FLAME AHEAD"
               : hz->type == MG_H_SPIKES ? "HAZARD: SHARP SPIKES AHEAD"
-              : hz->type == MG_H_TOXIC ? "HAZARD: TOXIC - STAND CLOSE, PRESS UP"
+              : hz->type == MG_H_TOXIC ? "TOXIC DRUM: STAND CLOSE, PRESS UP"
               : "TOXIC SLUDGE AHEAD - KEEP CLEAR", PAL_WARN, 90);
         /* A pit also plants its own caution sign at its near edge (see
          * mg_draw_hazards) -- a real board in the world, always there,
@@ -9535,7 +9537,7 @@ static void NEOGEO_USER mg_tour_frame(void)
         else mg_frame(p, (uint8_t)(p->y < floor ? MG_F_LEAP1 : (mg.tour_t < 200u ? MG_F_IDLE0 : MG_F_WIN)), 0);
         if (mg.tour_t == 70u) {
             mg_centre(ROW_CARD - 3, "ELDER: WELL DONE, MAIYA!", PAL_GOLD);
-            mg_centre(ROW_CARD - 1, "YOUR COURAGE HAS HEALED THIS VALLEY", PAL_SKY);
+            mg_centre(ROW_CARD - 1, "YOUR COURAGE HEALED THIS VALLEY", PAL_SKY);
             mg_voice(MG_VOICE_ELDER);
         }
         if (mg.tour_t == 150u) {
@@ -9636,7 +9638,7 @@ static void NEOGEO_USER mg_session_end(void)
     mg_centre(6, "A NEW HIGH SCORE!", PAL_GOLD);
     mg_number(16, 8, mg.score, 7, PAL_TEXT);
     mg_centre(11, "ENTER YOUR NAME", PAL_SKY);
-    mg_centre(20, "UP, DOWN: LETTER   A: NEXT   B: BACK", PAL_TEXT);
+    mg_centre(20, "UP/DOWN: LETTER  A: NEXT  B: BACK", PAL_TEXT);
     mg.name_buf[0] = 'A'; mg.name_buf[1] = 'A'; mg.name_buf[2] = 'A';
     mg.name_pos = 0;
     mg_name_draw();

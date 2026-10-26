@@ -11,7 +11,7 @@
   "gate_x": 7216,
   "landmark": "baobab",
   "key": {"x": 3112, "y": 52},
-  "hideout": {"x": 1016, "y": 88, "hint": "KNEEL HIGH ABOVE THE FIRST ROPE LADDER"},
+  "hideout": {"x": 1016, "y": 88, "hint": "KNEEL HIGH ABOVE THE FIRST LADDER"},
   "guardian": {
     "name": "BLIGHT HYENA",
     "style": "hyena",
@@ -23,7 +23,7 @@
   "art": {"kind": "gale", "name": "LEAF GALE", "words": "MAIYA: WIND, CLEAR THEIR TRAPS!"},
   "secret_hint": "THE BAOBAB HOLLOW HIDES A CHARM",
   "sunboy": ["THE HERD RUNS FREE. WE DID IT", "THANK YOU, SUPER NATURE GIRL"],
-  "healed": ["THE HERDS RUN FREE ACROSS THE PLAIN", "THE POACHERS' TRAPS LIE BROKEN"],
+  "healed": ["THE HERDS RUN FREE ON THE PLAIN", "THE POACHERS' TRAPS LIE BROKEN"],
   "briefing": ["POACHERS' MACHINES CLEAR THE PLAIN", "THEIR DRONES SNARE ALL THAT LIVES"],
   "platforms": [
     {"x": 480, "y": 136, "w": 176},
@@ -158,7 +158,7 @@
   ],
   "npcs": [
     {"x": 528, "who": "maiden", "line": "POACHER DRONES FIRE CAPTURE NETS"},
-    {"x": 2420, "who": "elder", "line": "PESTICIDE FLIES LOOP: WAIT, THEN HIT"},
+    {"x": 2420, "who": "elder", "line": "PESTICIDE FLIES LOOP: WAIT, HIT!"},
     {"x": 4188, "who": "spirit", "line": "THE KEY RESTS ON THE ACACIA SHELF"}
   ]
 }
