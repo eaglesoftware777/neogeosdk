@@ -1,12 +1,12 @@
 # SkyLance v2: dist/release, made by tools/make_release.py
 # size  crc32     sha256  file
- 17567744  f6c7c5a9  60ec77d88183f2be8b1052310a9f76d1ba085b9aefb3d044a6b466fa16418d84  SkyLance-WIP-NeoSD_MVS_v2.neo
- 17567744  58c9e539  3cb6da8a8b4e2db8521eae3274914bf79779a052ca1aea1227246985c3ba64f8  SkyLance-WIP-NeoSD_AES_v2.neo
-  5354517  372454a7  6b758f3bdf1283e6a80648cf8dc071e11fe890bf6759c31351f747b375e961db  SkyLance-Darksoft-MVS_v2.zip
-  5354517  67b64ac1  c6815de125bc8d0389af2ac3507d610b25acb1388805cd60d8723f1c222973ef  SkyLance-Darksoft-AES_v2.zip
-  5340452  3cae4785  dd76a5c73e39795912b6450a8764c2ea13a1d645fafffb258ca3abd92f351fa2  SkyLance-BackBit-MVS_v2.zip
-  5340534  154cd462  802efe2616fb4fcd0cd72fd328811dd768439e82716082d718b3cfb20340746d  SkyLance-BackBit-AES_v2.zip
-  5390806  aaff40cd  4762c406ce659a51ac6bbe6c83ff5603017756e1ae0f4a3e6f2ec090ba2acd9f  SkyLance-WIP-EagleBIOS_v2.zip
-  5369296  9eaa65ed  204a96c04376c5e6b01539d4723b82c063e4b932a7cde965126283cdad4dc742  SkyLance-WIP-AES-EagleBIOS_v2.zip
+ 17567744  9371dd8c  b3c63fc19a5efb3caed68092877269e68e502c87fe49646a41068cc402941935  SkyLance-WIP-NeoSD_MVS_v2.neo
+ 17567744  3d7ffd1c  c7e72758e4cadc3216bc93ae44e24f24deca3ebbb43c5820fc374d7844ac2ae7  SkyLance-WIP-NeoSD_AES_v2.neo
+  5357662  9da57fc1  b94e9ebcaf7cc00ac1a31f3f8041213d8a7010384cb1eecc7855f719efc9e638  SkyLance-Darksoft-MVS_v2.zip
+  5357661  e3e6b274  3883dcec93d1f7b456012f4240e3661efda56d510dfdb24c38a07781dac0dfdf  SkyLance-Darksoft-AES_v2.zip
+  5343628  77b8fb7f  592da4c2f7da75494a9ec897525dfa7a594ffdf0f9fed4cbe57b43e1b8db91c6  SkyLance-BackBit-MVS_v2.zip
+  5343712  09e6f4b1  bd2ed77f0c3656401a26fc6c219782f2343225228c440c9fcc8a2b39911cea89  SkyLance-BackBit-AES_v2.zip
+  5393986  173f24f6  66ad01fbe473d915eb6e9e5652fb896a24d1768c71d23e7859ad2b04a00e1ac1  SkyLance-WIP-EagleBIOS_v2.zip
+  5372473  c42bcb35  a5f253efa6e6ef5881ceba6e48cd215c05c12cd76dbb43a56f11527f6b26e81a  SkyLance-WIP-AES-EagleBIOS_v2.zip
      7190  1fd8088c  3ca61ef5db49a618c4a4987d4b67270eed001b2ae616fa28d64ef2fb7f97110f  SkyLance-README_v2.txt
-     3811  02c34a2a  fd06d4409b0de2e0b7a1ff8c016ece951900a25ce1fdfecefc1c4a2f5ae9dd48  SkyLance-CHANGELOG_v2.txt
+     5519  325d8085  3ca9be8de47c647b20808c8d57d0e63f4bf64cce5081292abb28338b9438f0ea  SkyLance-CHANGELOG_v2.txt

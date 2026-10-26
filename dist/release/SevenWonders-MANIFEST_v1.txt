@@ -1,12 +1,12 @@
 # SevenWonders v1: dist/release, made by tools/make_release.py
 # size  crc32     sha256  file
- 13373440  a54b7cff  621ce50b9019c46837b6ff136574bab8a5200aafefd11a9556be74660d5acd71  SevenWonders-WIP-NeoSD_MVS_v1.neo
- 13373440  e7b2bdc8  7ebb16c520f03c36b4b4825c78382bc7fd776443ca6009357205f693db2488d0  SevenWonders-WIP-NeoSD_AES_v1.neo
-  3041306  a2cd5f51  cd0765820b973e88acf3c5ee1777f57cf51521cbccd2a891e53ca82514eef818  SevenWonders-Darksoft-MVS_v1.zip
-  3041307  556e4bcf  99f982958941172ccda576f55276c912244abb78be61b36d7201ff88cc5fba61  SevenWonders-Darksoft-AES_v1.zip
-  3049402  4c503840  ff83d2f07c51bd7d6c228ec1c3eb3e9b11a45b56e17b44e911b4c6cf84b59d07  SevenWonders-BackBit-MVS_v1.zip
-  3049487  17b60e1e  292b6f00cb1475499d46ffa0a2c788ba128e054fa47dd05bd15e5bc992a1c638  SevenWonders-BackBit-AES_v1.zip
-  3099698  d69f5884  d82b70cce4549e0d62afcbb8ecf283ea2291375856c8ade912aab2d6ed76ea3d  SevenWonders-WIP-EagleBIOS_v1.zip
-  3078182  a4402d5a  bb4495b4d0be592b08b75ead805aba0394a7d01defc94e53fae617ea7db4d400  SevenWonders-WIP-AES-EagleBIOS_v1.zip
+ 13373440  01e9210f  9fca2daef8b9d4d6141c1bbd493917209337c233517165eed92979e938197629  SevenWonders-WIP-NeoSD_MVS_v1.neo
+ 13373440  4310e038  d06c1141061b2ee1db3cb03d83a2c9b7a81034b9016355d268fd0e3cf1f3169b  SevenWonders-WIP-NeoSD_AES_v1.neo
+  3224234  9c67bc41  64dd4d2aeb0ddaf4ad868f4bdd6b9effd451ca2915ec4cbebd6393238e08d1c9  SevenWonders-Darksoft-MVS_v1.zip
+  3224234  5d098bb0  97668c10f2117010ee6b1b7cbbafdc0093feb1de39ebd86b504192005bdd6fb2  SevenWonders-Darksoft-AES_v1.zip
+  3235724  9cf8604f  80dc5cb245bae0ecda8d5504917b92304308cfabff7511b8a9a0bb615df01b9e  SevenWonders-BackBit-MVS_v1.zip
+  3235809  00063c7e  99dd8055d196e10112950d983b1f1544d028e0a4e30c716e3ba96a110ab9ac8b  SevenWonders-BackBit-AES_v1.zip
+  3286019  4fa56ec0  2720150b09ec1468588affc7386145d3ae036b122722e361ce9d0998efffe63e  SevenWonders-WIP-EagleBIOS_v1.zip
+  3264503  9e1254ac  09ea20ccbf45255a30088f66cdd4b5530b02177b0628dbc54ae1e6762ad8b651  SevenWonders-WIP-AES-EagleBIOS_v1.zip
      2209  98e51084  b60284abfd71e65f6888e202c47566127cd0cf03aa4d694bc5130932aba992bd  SevenWonders-README_v1.txt
-      864  8586b498  1ad3f8099cb69a81af80fce19e3cdb26cc5b8b259328052acf06ec64f455afc5  SevenWonders-CHANGELOG_v1.txt
+     2856  e993c068  fbb7861f382ab823c87f355faf14dc60346b38d0495c9753391e86f900094ddb  SevenWonders-CHANGELOG_v1.txt
