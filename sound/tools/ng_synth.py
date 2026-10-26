@@ -360,6 +360,17 @@ def steel_drum(f0, n, vel=1.0):
     return additive(f0, n2, [(1, 1, 0.5), (2, 0.5, 0.35), (3, 0.3, 0.2), (3.98, 0.25, 0.15)]) * vel * 0.6
 
 
+def music_box(f0, n, vel=1.0):
+    """A music-box tine: a clean tone with a soft octave above it, a touch of
+    sparkle at the strike, ringing down; whole-number partials only, so it
+    stays sweet and never clangs."""
+    n2 = max(n, int(0.7 * RATE))
+    ring = 0.5 * min(1.0, 880.0 / max(f0, 1.0)) ** 0.5 + 0.15
+    x = additive(f0, n2, [(1, 1, ring), (2, 0.2, ring * 0.45), (3, 0.06, ring * 0.25), (4, 0.03, 0.03)])
+    attack = np.minimum(1.0, times(n2) / 0.002)
+    return x * attack * vel * 0.6
+
+
 def marimba(f0, n, vel=1.0):
     n2 = max(n, int(0.5 * RATE))
     return additive(f0, n2, [(1, 1, 0.35), (4, 0.35, 0.06), (9.9, 0.1, 0.02)]) * vel * 0.8
@@ -459,7 +470,7 @@ INSTRUMENTS = {
     "epiano": epiano, "organ": organ, "brass": brass, "stab": stab, "strings": strings, "choir": choir,
     "power": guitar_power, "mute": lambda f, n, v=1.0: guitar_power(f, n, v, True), "guitar_lead": guitar_lead,
     "clean": clean_guitar, "nylon": nylon, "koto": koto, "balalaika": balalaika, "steel": steel_drum,
-    "marimba": marimba, "kulintang": kulintang, "flute": flute, "shakuhachi": shakuhachi, "erhu": erhu,
+    "marimba": marimba, "music_box": music_box, "kulintang": kulintang, "flute": flute, "shakuhachi": shakuhachi, "erhu": erhu,
     "reed": reed, "fiddle": fiddle_low, "trumpet": trumpet, "sax": sax, "lead": lead_synth, "arp": arp_synth,
     "berimbau": berimbau, "drone": drone,
 }

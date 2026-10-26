@@ -1,4 +1,4 @@
-/* Host checks for ng_puzzle (match boards and bubble lattices). */
+/* Host checks for ng_puzzle (match boards, bubble lattices and picture logic). */
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -938,6 +938,197 @@ static void test_incremental_preview(void)
     puts("bounded preview: 449 angles x 9 budgets match exact paths, cancel safely, preserve all state: OK");
 }
 
+
+/* ---- picture logic ----------------------------------------------------- */
+/* 5 x 5, colours 1-3:  rows [2 2] [] [4] [1 1] [5]; columns [1 1 1] [1 3] [1 1] [1 3] [1 1]. */
+static const char *const LOGIC5 =
+    "11.11"
+    "....."
+    "2222."
+    ".3.3."
+    "33333";
+
+static NGPuzzleLevel logic_level(const char *layout, uint16_t hearts)
+{
+    NGPuzzleLevel lv;
+    memset(&lv, 0, sizeof(lv));
+    lv.mode = NGP_MODE_LOGIC; lv.w = 5; lv.h = 5; lv.colors = 3; lv.seed = 5;
+    lv.moves = hearts; lv.layout = layout;
+    lv.goals[0].type = NGP_OBJ_PICTURE;
+    lv.stars[0] = 100; lv.stars[1] = 600; lv.stars[2] = 1500;
+    return lv;
+}
+
+static void test_logic_level_check(void)
+{
+    NGPuzzleLevel lv = logic_level(LOGIC5, 3);
+    uint16_t bad;
+    assert(ng_puzzle_level_check(&lv, &bad) == NGP_OK);
+    lv.layout = "11.11" "....." "2222." ".3.g." "33333";
+    assert(ng_puzzle_level_check(&lv, &bad) == NGP_ERR_LEVEL && bad == 18);
+    lv.layout = "11.11" "....." "2222." ".3.4." "33333";            /* colour 4 > colors 3 */
+    assert(ng_puzzle_level_check(&lv, &bad) == NGP_ERR_LEVEL && bad == 18);
+    lv.layout = "....." "....." "....." "....." ".....";            /* nothing to fill */
+    assert(ng_puzzle_level_check(&lv, &bad) == NGP_ERR_LEVEL);
+    lv.layout = NULL;
+    assert(ng_puzzle_level_check(&lv, &bad) == NGP_ERR_LEVEL);
+    lv.layout = LOGIC5; lv.colors = 16;
+    assert(ng_puzzle_level_check(&lv, &bad) == NGP_ERR_LEVEL);
+    lv.colors = 15;
+    lv.layout = "11.11" "....." "2222." ".f.a." "33333";
+    assert(ng_puzzle_level_check(&lv, &bad) == NGP_OK);
+    lv.layout = LOGIC5;
+    lv.goals[1].type = NGP_OBJ_SCORE; lv.goals[1].count = 5;      /* only the picture may be asked */
+    assert(ng_puzzle_level_check(&lv, &bad) == NGP_ERR_LEVEL);
+    lv.goals[1].type = NGP_OBJ_COLOR; lv.goals[1].target = 1;
+    assert(ng_puzzle_level_check(&lv, &bad) == NGP_ERR_LEVEL);
+    lv.goals[1].type = NGP_OBJ_NONE;
+    {
+        NGPuzzleLevel m = match_level(5, 5, 4, NULL, 0);
+        m.goals[0].type = NGP_OBJ_PICTURE;
+        assert(ng_puzzle_level_check(&m, &bad) == NGP_ERR_LEVEL);
+    }
+    printf("picture logic level check: OK\n");
+}
+
+static void test_logic_clues(void)
+{
+    NGPuzzleLevel lv = logic_level(LOGIC5, 3);
+    uint8_t runs[8];
+    static const uint8_t rows[5][3] = { {2, 2, 2}, {0}, {1, 4}, {2, 1, 1}, {1, 5} };
+    static const uint8_t cols[5][4] = { {3, 1, 1, 1}, {2, 1, 3}, {2, 1, 1}, {2, 1, 3}, {2, 1, 1} };
+    uint8_t i, k;
+    assert(ng_puzzle_init(&P, &lv, 0) == NGP_OK);
+    for (i = 0; i < 5; i++) {
+        uint8_t n = ng_puzzle_logic_clue(&P, 0, i, runs, 8);
+        assert(n == rows[i][0]);
+        for (k = 0; k < n; k++) assert(runs[k] == rows[i][1 + k]);
+        n = ng_puzzle_logic_clue(&P, 1, i, runs, 8);
+        assert(n == cols[i][0]);
+        for (k = 0; k < n; k++) assert(runs[k] == cols[i][1 + k]);
+    }
+    assert(ng_puzzle_logic_clue(&P, 0, 5, runs, 8) == 0xFF);
+    assert(ng_puzzle_logic_clue(&P, 1, 0, runs, 1) == 3 && runs[0] == 1);    /* counts past max */
+    /* the empty row is finished from the start */
+    assert(ng_puzzle_logic_line_done(&P, 0, 1) && !ng_puzzle_logic_line_done(&P, 0, 0));
+    assert(P.goal_left[0] == 15 && P.moves_left == 3);
+    assert(ng_puzzle_logic_clue(&Q, 0, 0, runs, 8) == 0xFF || Q.mode != NGP_MODE_LOGIC);
+    printf("picture logic clues: OK\n");
+}
+
+static void test_logic_play(void)
+{
+    NGPuzzleLevel lv = logic_level(LOGIC5, 3);
+    NGPuzzleEvent e;
+    uint8_t c;
+    uint32_t score;
+    assert(ng_puzzle_init(&P, &lv, 0) == NGP_OK);
+    count_events(&P, NGP_EV_NONE, 0);
+    /* a wrong fill is a mistake: crossed out, a heart gone, never fillable */
+    assert(ng_puzzle_action(&P, NGP_CMD_MARK, 2, NGP_MARK_FILL) == NGP_OK);
+    assert(P.kind[2] == NGP_MARK_MISS && P.moves_left == 2 && P.moves_used == 1);
+    assert(find_event(&P, NGP_EV_MISTAKE, &e) && e.cell == 2 && e.a == 2);
+    assert(ng_puzzle_action(&P, NGP_CMD_MARK, 2, NGP_MARK_FILL) == NGP_ERR_ILLEGAL);
+    assert(ng_puzzle_action(&P, NGP_CMD_MARK, 2, NGP_MARK_NONE) == NGP_ERR_ILLEGAL);
+    /* crosses come and go without a cost */
+    assert(ng_puzzle_action(&P, NGP_CMD_MARK, 5, NGP_MARK_CROSS) == NGP_OK && P.kind[5] == NGP_MARK_CROSS);
+    assert(ng_puzzle_action(&P, NGP_CMD_MARK, 5, NGP_MARK_CROSS) == NGP_ERR_ILLEGAL);
+    assert(ng_puzzle_action(&P, NGP_CMD_MARK, 5, NGP_MARK_FILL) == NGP_ERR_ILLEGAL);   /* a cross guards it */
+    assert(ng_puzzle_action(&P, NGP_CMD_MARK, 5, NGP_MARK_NONE) == NGP_OK && P.kind[5] == NGP_MARK_NONE);
+    assert(ng_puzzle_action(&P, NGP_CMD_MARK, 5, NGP_MARK_MISS) == NGP_ERR_RANGE);
+    assert(ng_puzzle_action(&P, NGP_CMD_SWAP, 0, NGP_DIR_RIGHT) == NGP_ERR_STATE);
+    assert(ng_puzzle_action(&P, NGP_CMD_FIRE, 0, 0) == NGP_ERR_STATE);
+    count_events(&P, NGP_EV_NONE, 0);
+    /* finishing row 2 (cells 10-13) crosses out its last cell */
+    for (c = 10; c < 14; c++) assert(ng_puzzle_action(&P, NGP_CMD_MARK, c, NGP_MARK_FILL) == NGP_OK);
+    assert(P.kind[14] == NGP_MARK_CROSS && P.kind[13] == NGP_MARK_FILL);
+    assert(count_events(&P, NGP_EV_LINE, &e) == 1 && e.cell == 2 && e.a == 0 && e.value == 50);
+    assert(P.score == 4 * 10 + 50 && P.goal_left[0] == 11);
+    assert(ng_puzzle_status(&P) == NGP_STATUS_READY);
+    /* the rest, in board order */
+    for (c = 0; c < 25; c++)
+        if (P.color[c] && P.kind[c] != NGP_MARK_FILL) assert(ng_puzzle_action(&P, NGP_CMD_MARK, c, NGP_MARK_FILL) == NGP_OK);
+    assert(ng_puzzle_status(&P) == NGP_STATUS_WON && P.end_reason == NGP_END_OBJECTIVES);
+    /* 15 cells, rows 0 2 3 4 and five columns (row 1 was done from the start), two hearts */
+    score = 15u * 10u + 9u * 50u + 2u * 300u;
+    assert(P.score == score && P.stars == 2 && P.goal_left[0] == 0);
+    assert(find_event(&P, NGP_EV_WON, &e) && e.b == 2);
+    assert(ng_puzzle_action(&P, NGP_CMD_MARK, 5, NGP_MARK_CROSS) == NGP_ERR_STATE);
+    for (c = 0; c < 25; c++) assert(P.color[c] ? P.kind[c] == NGP_MARK_FILL : P.kind[c] != NGP_MARK_NONE);
+    /* three mistakes lose */
+    assert(ng_puzzle_init(&P, &lv, 0) == NGP_OK);
+    assert(ng_puzzle_action(&P, NGP_CMD_MARK, 2, NGP_MARK_FILL) == NGP_OK);
+    assert(ng_puzzle_action(&P, NGP_CMD_MARK, 5, NGP_MARK_FILL) == NGP_OK);
+    assert(ng_puzzle_status(&P) == NGP_STATUS_READY);
+    assert(ng_puzzle_action(&P, NGP_CMD_MARK, 6, NGP_MARK_FILL) == NGP_OK);
+    assert(ng_puzzle_status(&P) == NGP_STATUS_LOST && P.end_reason == NGP_END_MISTAKES && P.moves_left == 0);
+    assert(find_event(&P, NGP_EV_LOST, &e) && e.a == NGP_END_MISTAKES);
+    /* hearts 0: mistakes never end it */
+    lv.moves = 0;
+    assert(ng_puzzle_init(&P, &lv, 0) == NGP_OK && P.moves_left == 0xFFFFu);
+    for (c = 5; c < 10; c++) assert(ng_puzzle_action(&P, NGP_CMD_MARK, c, NGP_MARK_FILL) == NGP_OK);
+    assert(ng_puzzle_status(&P) == NGP_STATUS_READY && P.moves_used == 5);
+    assert(find_event(&P, NGP_EV_MISTAKE, &e) && e.a == 0xFF);
+    printf("picture logic marks, mistakes, hearts, finished lines, win bonus: OK\n");
+}
+
+static void test_logic_hint_timer_and_saves(void)
+{
+    NGPuzzleLevel lv = logic_level(LOGIC5, 3);
+    NGPuzzleEvent e;
+    uint8_t buf[NGP_SAVE_SIZE];
+    uint16_t n;
+    uint8_t c;
+    static const NGPuzzleAction acts[] = {
+        { 1, NGP_CMD_MARK, 0, 0, NGP_MARK_FILL }, { 2, NGP_CMD_MARK, 0, 6, NGP_MARK_CROSS },
+        { 3, NGP_CMD_HAMMER, 0, 12, 0 }, { 5, NGP_CMD_MARK, 0, 5, NGP_MARK_FILL },
+    };
+    uint32_t h;
+    assert(ng_puzzle_init(&P, &lv, 0) == NGP_OK);
+    /* a player's cross on a picture cell, then the hint through cell 16 (row 3, column 1) */
+    assert(ng_puzzle_action(&P, NGP_CMD_MARK, 15, NGP_MARK_FILL) == NGP_OK);     /* a mistake */
+    assert(ng_puzzle_action(&P, NGP_CMD_MARK, 21, NGP_MARK_CROSS) == NGP_OK);    /* wrongly crossed */
+    count_events(&P, NGP_EV_NONE, 0);
+    assert(ng_puzzle_action(&P, NGP_CMD_HAMMER, 16, 0) == NGP_OK);
+    assert(find_event(&P, NGP_EV_REVEAL, &e) && e.cell == 16);
+    for (c = 15; c < 20; c++) assert(P.color[c] ? P.kind[c] == NGP_MARK_FILL : P.kind[c] != NGP_MARK_NONE);
+    for (c = 1; c < 25; c += 5) assert(P.color[c] ? P.kind[c] == NGP_MARK_FILL : P.kind[c] != NGP_MARK_NONE);
+    assert(P.kind[15] == NGP_MARK_MISS && P.kind[21] == NGP_MARK_FILL);
+    assert(ng_puzzle_logic_line_done(&P, 0, 3) && ng_puzzle_logic_line_done(&P, 1, 1));
+    assert(P.score == 2u * 50u && P.goal_left[0] == 15u - 5u);              /* hinted cells score nothing */
+    /* the same line is never scored twice */
+    assert(ng_puzzle_action(&P, NGP_CMD_HAMMER, 16, 0) == NGP_OK && P.score == 100u);
+    /* save and load mid-picture */
+    n = ng_puzzle_save(&P, buf, sizeof(buf));
+    assert(n > 0);
+    assert(ng_puzzle_load(&Q, &lv, buf, n) == NGP_OK && ng_puzzle_hash(&Q) == ng_puzzle_hash(&P));
+    buf[24u + 25u + 5u] = NGP_MARK_FILL;                        /* a fill on an empty cell */
+    save_test_checksum(buf, n);
+    assert(ng_puzzle_load(&Q, &lv, buf, n) == NGP_ERR_SAVE);
+    buf[24u + 25u + 5u] = NGP_MARK_NONE; buf[24u + 25u + 0u] = NGP_MARK_MISS;   /* a mistake on a picture cell */
+    save_test_checksum(buf, n);
+    assert(ng_puzzle_load(&Q, &lv, buf, n) == NGP_ERR_SAVE);
+    /* a timed picture runs out */
+    lv.time_frames = 120;
+    assert(ng_puzzle_init(&P, &lv, 0) == NGP_OK);
+    for (n = 0; n < 119; n++) ng_puzzle_update(&P);
+    assert(ng_puzzle_status(&P) == NGP_STATUS_READY);
+    ng_puzzle_update(&P);
+    assert(ng_puzzle_status(&P) == NGP_STATUS_LOST && P.end_reason == NGP_END_TIME);
+    /* the time bonus: a second left is worth 5 */
+    lv.time_frames = 600;
+    assert(ng_puzzle_init(&P, &lv, 0) == NGP_OK);
+    for (n = 0; n < 61; n++) ng_puzzle_update(&P);
+    for (c = 0; c < 25; c++) if (P.color[c]) ng_puzzle_action(&P, NGP_CMD_MARK, c, NGP_MARK_FILL);
+    assert(ng_puzzle_status(&P) == NGP_STATUS_WON && P.score == 15u * 10u + 9u * 50u + 3u * 300u + 8u * 5u);
+    /* replays are exact */
+    lv.time_frames = 0;
+    h = ng_puzzle_replay(&P, &lv, 0, acts, 4);
+    assert(h && h == ng_puzzle_replay(&Q, &lv, 0, acts, 4));
+    assert(P.kind[0] == NGP_MARK_FILL && P.kind[6] == NGP_MARK_CROSS && P.kind[2] == NGP_MARK_CROSS && P.kind[5] == NGP_MARK_MISS);
+    printf("picture logic hint, timer, saves and replay: OK\n");
+}
+
 int main(void)
 {
     test_level_check();
@@ -962,6 +1153,10 @@ int main(void)
     test_bubble_hint_and_replay();
     test_bubble_target_and_busy_aim();
     test_incremental_preview();
+    test_logic_level_check();
+    test_logic_clues();
+    test_logic_play();
+    test_logic_hint_timer_and_saves();
     printf("ng_puzzle: all tests passed (context %u bytes, save %u bytes)\n",
            (unsigned)sizeof(NGPuzzle), (unsigned)NGP_SAVE_SIZE);
     return 0;

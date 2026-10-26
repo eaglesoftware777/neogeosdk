@@ -11,6 +11,8 @@ static inline uint8_t NEOGEO_USER sw_board_dimensions_valid(uint8_t mode, uint8_
     if (w < 3u || h < 3u) return 0u;
     if (mode == NGP_MODE_MATCH) return (uint8_t)(w <= 7u && h <= 7u);
     if (mode == NGP_MODE_BUBBLE) return (uint8_t)(w <= 10u && h <= 12u);
+    /* pictures: 5 x 5 in 32-pixel cells or 10 x 10 in 16-pixel ones, a 160-pixel grid */
+    if (mode == NGP_MODE_LOGIC) return (uint8_t)((w == 5u && h == 5u) || (w == 10u && h == 10u));
     return 0u;
 }
 
