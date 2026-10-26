@@ -80,7 +80,7 @@ class Stage:
             self.fail(f"{where}.{key}", f"{value} is outside {lo}..{hi}")
         return value
 
-    def text(self, obj, key, where, longest=38):
+    def text(self, obj, key, where, longest=34):
         value = self.get(obj, key, where, str)
         if len(value) > longest:
             self.fail(f"{where}.{key}", f"{len(value)} characters, the screen takes {longest}")
@@ -145,12 +145,12 @@ class Stage:
         s["boss_style"] = self.name(g, "style", "guardian", "guardian", "MG_B_")
         s["boss_hp"] = self.num(g, "hp", "guardian", 1, 255)
         s["boss_hint"] = self.text(g, "hint", "guardian")
-        s["taunt"] = self.text(g, "taunt", "guardian", 40)
-        s["reply"] = self.text(g, "reply", "guardian", 40)
+        s["taunt"] = self.text(g, "taunt", "guardian")
+        s["reply"] = self.text(g, "reply", "guardian")
         art = self.get(d, "art", "stage", dict)
         s["art_kind"] = self.choice(art, "kind", "art", ART_KINDS)
         s["art_name"] = self.text(art, "name", "art", 30)
-        s["art_words"] = self.text(art, "words", "art", 40)
+        s["art_words"] = self.text(art, "words", "art")
         s["secret_hint"] = self.text(d, "secret_hint", "stage")
         sunboy = self.get(d, "sunboy", "stage", list)
         if len(sunboy) != 2:

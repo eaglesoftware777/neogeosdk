@@ -12,20 +12,20 @@
   "gate_x": 5936,
   "landmark": "works",
   "key": {"x": 2208, "y": 60},
-  "hideout": {"x": 4264, "y": 80, "hint": "KNEEL ON THE HIGH GIRDER PAST THE KEY"},
+  "hideout": {"x": 4264, "y": 80, "hint": "KNEEL ON THE GIRDER PAST THE KEY"},
   "guardian": {
     "name": "IRON VULTURE",
     "style": "vulture",
     "hp": 5,
     "hint": "THE VULTURE FALLS, THEN SMOGGAR",
-    "taunt": "I BUILT THIS PLANT TO CHOKE YOUR RIVER!",
-    "reply": "YOUR SMOKE ENDS HERE, IRON VULTURE!"
+    "taunt": "MY PLANT WILL CHOKE YOUR RIVER!",
+    "reply": "YOUR SMOKE ENDS HERE, VULTURE!"
   },
   "art": {"kind": "sun", "name": "SUNFLARE DANCE", "words": "MAIYA: SUN, BURN THEIR SMOKE AWAY!"},
   "secret_hint": "A LIFE HANGS ABOVE THE FIRST TANK",
-  "sunboy": ["YOU FREED ME! I FELT THE CHAINS BREAK", "THREE MORE VALLEYS NEED US. LET'S GO"],
-  "healed": ["THE RIVER RUNS BLACK NO MORE", "THE OLD WORKS STAND STILL AND QUIET"],
-  "briefing": ["THREE POISON DRUMS FOUL THE RIVER", "SHUT THEM ALL, THEN FACE THE VULTURE"],
+  "sunboy": ["YOU FREED ME! THE CHAINS BROKE!", "THREE MORE VALLEYS! LET'S GO"],
+  "healed": ["THE RIVER RUNS BLACK NO MORE", "THE OLD WORKS STAND STILL, QUIET"],
+  "briefing": ["THREE POISON DRUMS FOUL THE RIVER", "SHUT ALL, THEN FACE THE VULTURE"],
   "platforms": [
     {"x": 240, "y": 128, "w": 112},
     {"x": 528, "y": 136, "w": 64},
@@ -153,7 +153,7 @@
     {"x": 4240, "top": 80, "bottom": 192}
   ],
   "npcs": [
-    {"x": 464, "who": "elder", "line": "SHUT THE DRUMS: STAND CLOSE, PRESS UP"},
+    {"x": 464, "who": "elder", "line": "SHUT A DRUM: STAND CLOSE, PRESS UP"},
     {"x": 2412, "who": "spirit", "line": "TWO GUARDIANS HOLD THE GATE"},
     {"x": 4340, "who": "sunboy", "line": "MAIYA, I AM RIGHT BEHIND IT"}
   ]

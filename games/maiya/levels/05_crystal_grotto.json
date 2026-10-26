@@ -17,7 +17,7 @@
     "style": "owl",
     "hp": 5,
     "hint": "THE OWL BLINKS BETWEEN GUSTS",
-    "taunt": "I FROZE THE GROTTO'S HEART TO STONE!",
+    "taunt": "I FROZE THE GROTTO HEART TO STONE!",
     "reply": "WINTER ENDS. I AM ITS SPRING!"
   },
   "art": {"kind": "frost", "name": "FROST PETAL STORM", "words": "MAIYA: FROST, HOLD THEM STILL!"},

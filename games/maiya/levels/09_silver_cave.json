@@ -18,14 +18,14 @@
     "style": "wyrm",
     "hp": 7,
     "hint": "THE WYRM GLOWS BEFORE IT BITES",
-    "taunt": "I HOARD THE CAVE'S LIGHT FOR MYSELF!",
+    "taunt": "THE CAVE'S LIGHT IS MINE ALONE!",
     "reply": "HER LIGHT WAS NEVER YOURS TO KEEP!"
   },
   "art": {"kind": "frost", "name": "FROST PETAL STORM", "words": "MAIYA: FROST, HOLD THEM FAST!"},
   "secret_hint": "THE DEEP VEIN GLINTS WITH GOLD",
   "sunboy": ["THE CAVE BREATHES CLEAN AIR AGAIN", "ONE VALLEY LEFT: THE OPEN SAVANNA"],
   "healed": ["THE MINE HAS FALLEN SILENT AT LAST", "THE CAVE'S SILVER SHINES AGAIN"],
-  "briefing": ["DRILL BOTS DIG POISON FROM THE CAVE", "A WYRM OF SLAG COILS IN THE DEEP"],
+  "briefing": ["DRILL BOTS DIG UP CAVE POISON", "A WYRM OF SLAG COILS IN THE DEEP"],
   "platforms": [
     {"x": 240, "y": 128, "w": 64},
     {"x": 256, "y": 64, "w": 64},

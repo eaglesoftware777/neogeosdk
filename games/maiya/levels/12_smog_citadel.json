@@ -16,15 +16,15 @@
     "name": "LORD SMOGGAR",
     "style": "smoggar",
     "hp": 9,
-    "hint": "HIS FISTS COME DOWN - LAND AFTER THEM",
+    "hint": "HIS FISTS FALL - LAND AFTER THEM",
     "taunt": "YOU BEAT MY GUARDIANS. NOT ME!",
     "reply": "FOR EVERY VALLEY YOU POISONED!"
   },
   "art": {"kind": "blossom", "name": "ROSE BLOSSOM STORM", "words": "MAIYA: ALL VALLEYS, BLOOM AS ONE!"},
-  "secret_hint": "THE CITADEL HIDES A SUN GEM UP HIGH",
+  "secret_hint": "THE CITADEL HIDES A SUN GEM HIGH",
   "sunboy": ["THE SMOG IS GONE FOREVER", "MAIYA, YOU SAVED US ALL"],
   "healed": ["THE CITADEL'S FIRES ARE OUT", "THE WORLD CAN BREATHE AGAIN"],
-  "briefing": ["LORD SMOGGAR WAITS IN HIS CITADEL", "HIS FALLEN GUARDIANS WILL RISE AGAIN"],
+  "briefing": ["LORD SMOGGAR WAITS IN HIS CITADEL", "HIS FALLEN GUARDIANS RISE AGAIN"],
   "rush": ["beetle", "toad", "jackal", "owl", "vulture"],
   "platforms": [
     {"x": 240, "y": 88, "w": 80},

@@ -4,6 +4,15 @@ The ROM sets shared with the NeoGeoSDK pre-releases: `_v1` and `_v2` with
 v1.7.1, `_v3` with v1.7.2, `_v4` with v1.7.3. The SDK keeps its own
 version; Maiya's ROMs are numbered on their own.
 
+## Title-safe screens (2026-10-26)
+
+- The HUD, the hint line, the collection tray, the title and chooser clocks
+  and every card's text stay inside columns 3-36 of the 40 (x 24-295), the
+  part of the picture every CRT shows. Her face and the Sun Key moved in.
+- Lines longer than 34 letters were shortened (briefings, guardians' words,
+  Sunboy, hideout and creature hints, how to play); `tools/levels.py` holds
+  the stage texts to 34.
+
 ## v5 stability candidate (2026-10-24, local development)
 
 - Restore original combat, encounters, scoring, collision, rendering and

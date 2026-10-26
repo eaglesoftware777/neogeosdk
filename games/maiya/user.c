@@ -374,7 +374,7 @@ void NEOGEO_USER TITLE_WAIT(void) {
             timer[6] = (char)('0' + secs / 10);
             timer[7] = (char)('0' + secs % 10);
             timer[8] = '\0';
-            ng_fix_puts(30, 3, timer, 3);   /* top right, clear of the painted copyright line */
+            ng_fix_puts(29, 3, timer, 3);   /* top right (inside column 36), clear of the painted copyright line */
             if ((i >> 4) & 1) ng_fix_puts(13, 25, "PUSH 1P START", 1);
             else ng_fix_puts(13, 25, "             ", 1);
             if (auto_frames > 0) auto_frames--;
@@ -400,7 +400,7 @@ void NEOGEO_USER TITLE_WAIT(void) {
                 if (MAIYA_START_LATCH) break;
             }
         } else {
-            ng_fix_puts(30, 3, "        ", 0);
+            ng_fix_puts(29, 3, "        ", 0);
             ng_fix_puts(13, 25, "             ", 0);
         }
         maiya_vblank();

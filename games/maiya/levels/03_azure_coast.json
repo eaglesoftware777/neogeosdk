@@ -24,8 +24,8 @@
     "style": "leviathan",
     "hp": 5,
     "hint": "THE LEVIATHAN RISES, THEN STALLS",
-    "taunt": "I FED THE LIVING REEF TO MY HUNGER!",
-    "reply": "THE TIDE WILL CARRY YOU OUT INSTEAD!"
+    "taunt": "I FED THE REEF TO MY HUNGER!",
+    "reply": "THE TIDE CARRIES YOU OUT INSTEAD!"
   },
   "art": {
     "kind": "rain",

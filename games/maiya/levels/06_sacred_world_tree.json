@@ -12,14 +12,14 @@
   "gate_x": 5528,
   "landmark": "worldtree",
   "key": {"x": 1832, "y": 44},
-  "hideout": {"x": 3600, "y": 88, "hint": "KNEEL ON THE LAST ROTTEN BRANCH, QUICK"},
+  "hideout": {"x": 3600, "y": 88, "hint": "KNEEL ON THE LAST ROTTEN BRANCH!"},
   "guardian": {
     "name": "LORD SMOGGAR",
     "style": "smoggar",
     "hp": 7,
     "hint": "SMOGGAR'S CORE OPENS AS IT ROARS",
-    "taunt": "I DRINK THE WORLD TREE DRY FOR POWER!",
-    "reply": "ITS ROOTS RUN DEEPER THAN YOUR GREED!"
+    "taunt": "I DRINK THE WORLD TREE DRY!",
+    "reply": "ITS ROOTS RUN DEEPER THAN GREED!"
   },
   "art": {"kind": "blossom", "name": "ROSE BLOSSOM STORM", "words": "MAIYA: WORLD TREE, BLOOM!"},
   "secret_hint": "THE ROOT HOLLOW HOLDS ONE LIFE",
