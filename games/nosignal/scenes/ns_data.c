@@ -12,42 +12,42 @@
 /* ======================================================================
  * the three heroes
  * ==================================================================== */
-/*             su ac re dmg hs flags                                  bx  bw bz bh bd  px  pz lng cnl next           snd            anim */
+/*             su ac re dmg hs flags                                  bx  bw bz bh bd  px  pz lng cnl next           snd            anim stop step */
 static const NGBMove JAY_MOVES[] = {
-    /* 0 jab    */ { 3, 2, 7, 3, 14, 0,                                6, 34, 46, 30, 10, 14,  0,  0,  6, 1,             NS_SFX_PUNCH,  HF_JAB },
-    /* 1 cross  */ { 3, 2, 8, 4, 14, 0,                                6, 38, 46, 30, 10, 16,  0,  4,  6, 2,             NS_SFX_PUNCH,  HF_CROSS },
-    /* 2 upper  */ { 4, 3, 10, 5, 18, 0,                               4, 32, 40, 44, 10, 10,  0,  0,  8, 3,             NS_SFX_HEAVY,  HF_UPPER },
-    /* 3 kick   */ { 5, 3, 14, 7, 0, NGB_MV_KNOCKDOWN,                 4, 46, 30, 34, 12, 44, 30,  8,  0, NGB_NONE,      NS_SFX_KICK,   HF_KICK },
-    /* 4 air    */ { 2, 10, 4, 6, 0, NGB_MV_KNOCKDOWN,                 0, 38, 10, 46, 10, 34, 24,  0,  0, NGB_NONE,      NS_SFX_KICK,   HF_JUMPKICK },
-    /* 5 low    */ { 4, 3, 12, 5, 0, NGB_MV_LOW | NGB_MV_KNOCKDOWN,    4, 42,  0, 16, 10, 24, 16,  0,  0, NGB_NONE,      NS_SFX_KICK,   HF_SWEEP },
-    /* 6 dash   */ { 3, 8, 12, 7, 0, NGB_MV_KNOCKDOWN,                 0, 36, 10, 56, 10, 48, 32, 32,  0, NGB_NONE,      NS_SFX_HEAVY,  HF_DASH },
+    /* 0 jab    */ { 3, 2, 7, 3, 14, 0,                                6, 43, 46, 30,  7,  8,  0,  0,  6, 1,             NS_SFX_PUNCH,  HF_JAB, 3 },
+    /* 1 cross  */ { 3, 2, 8, 4, 14, 0,                                6, 44, 46, 30,  7, 10,  0,  4,  6, 2,             NS_SFX_PUNCH,  HF_CROSS, 4, 40 },
+    /* 2 upper  */ { 5, 3, 10, 5, 18, 0,                               4, 22, 40, 44,  7, 10,  0,  0,  8, 3,             NS_SFX_HEAVY,  HF_UPPER, 5, 80 },
+    /* 3 kick   */ { 5, 3, 14, 7, 0, NGB_MV_KNOCKDOWN,                 4, 44, 30, 50,  7, 44, 30,  8,  0, NGB_NONE,      NS_SFX_KICK,   HF_KICK, 6, 40 },
+    /* 4 air    */ { 2, 10, 4, 6, 0, NGB_MV_KNOCKDOWN,                 0, 41, 20, 54,  7, 34, 24,  0,  0, NGB_NONE,      NS_SFX_KICK,   HF_JUMPKICK, 5 },
+    /* 5 low    */ { 4, 3, 12, 5, 0, NGB_MV_LOW | NGB_MV_KNOCKDOWN,    4, 49,  0, 22,  7, 24, 16,  0,  0, NGB_NONE,      NS_SFX_KICK,   HF_SWEEP, 5 },
+    /* 6 dash   */ { 3, 8, 12, 7, 0, NGB_MV_KNOCKDOWN,                 0, 31, 10, 70,  7, 48, 32, 32,  0, NGB_NONE,      NS_SFX_HEAVY,  HF_DASH, 6 },
     /* 7 Ratio Rush: a blur of fists, then the spin kick */
-               { 4, 16, 14, 11, 0, NGB_MV_KNOCKDOWN | NGB_MV_UNBLOCKABLE | NGB_MV_INVULN, -36, 96, 10, 70, 18, 52, 44, 12, 0, NGB_NONE, NS_SFX_SPECIAL, HF_SPECIAL1 },
-    /* 8 knee   */ { 2, 2, 8, 3, 10, 0,                                0, 30, 20, 40, 10,  0,  0,  0,  0, NGB_NONE,      NS_SFX_PUNCH,  HF_GRAB },
+               { 4, 16, 14, 11, 0, NGB_MV_KNOCKDOWN | NGB_MV_UNBLOCKABLE | NGB_MV_INVULN, -36, 89, 10, 70, 12, 52, 44, 12, 0, NGB_NONE, NS_SFX_SPECIAL, HF_SPECIAL1, 8 },
+    /* 8 knee   */ { 2, 2, 8, 3, 10, 0,                                0, 32, 20, 40,  7,  0,  0,  0,  0, NGB_NONE,      NS_SFX_PUNCH,  HF_GRAB },
 };
 static const NGBMove ZOE_MOVES[] = {
-    /* 0 jab    */ { 2, 2, 6, 2, 12, 0,                                6, 30, 46, 30, 10, 12,  0,  0,  5, 1,             NS_SFX_PUNCH,  HF_JAB },
-    /* 1 cross  */ { 2, 2, 7, 3, 12, 0,                                6, 32, 46, 30, 10, 14,  0,  4,  5, 2,             NS_SFX_PUNCH,  HF_CROSS },
-    /* 2 upper  */ { 3, 3, 9, 4, 16, 0,                                4, 30, 40, 44, 10, 10,  0,  0,  7, 3,             NS_SFX_KICK,   HF_UPPER },
-    /* 3 kick   */ { 4, 3, 12, 6, 0, NGB_MV_KNOCKDOWN | NGB_MV_LAUNCH, 4, 42, 30, 40, 12, 32, 48,  8,  0, NGB_NONE,      NS_SFX_KICK,   HF_KICK },
-    /* 4 air    */ { 2, 12, 4, 6, 0, NGB_MV_KNOCKDOWN,                 0, 40,  0, 50, 12, 32, 24,  0,  0, NGB_NONE,      NS_SFX_KICK,   HF_JUMPKICK },
-    /* 5 low    */ { 3, 3, 10, 4, 0, NGB_MV_LOW | NGB_MV_KNOCKDOWN,    4, 40,  0, 16, 10, 24, 16,  0,  0, NGB_NONE,      NS_SFX_KICK,   HF_SWEEP },
-    /* 6 dash   */ { 2, 8, 10, 6, 0, NGB_MV_KNOCKDOWN,                 0, 36, 20, 50, 10, 40, 32, 36,  0, NGB_NONE,      NS_SFX_WHOOSH, HF_DASH },
+    /* 0 jab    */ { 2, 2, 6, 2, 12, 0,                                6, 40, 46, 30,  7,  8,  0,  0,  5, 1,             NS_SFX_PUNCH,  HF_JAB, 3 },
+    /* 1 cross  */ { 2, 2, 7, 3, 12, 0,                                6, 37, 46, 30,  7, 10,  0,  4,  5, 2,             NS_SFX_PUNCH,  HF_CROSS, 4, 40 },
+    /* 2 upper  */ { 4, 3, 9, 4, 16, 0,                                4, 22, 40, 44,  7, 10,  0,  0,  7, 3,             NS_SFX_KICK,   HF_UPPER, 5, 80 },
+    /* 3 kick   */ { 4, 3, 12, 6, 0, NGB_MV_KNOCKDOWN | NGB_MV_LAUNCH, 4, 40, 30, 48,  7, 32, 48,  8,  0, NGB_NONE,      NS_SFX_KICK,   HF_KICK, 6, 40 },
+    /* 4 air    */ { 2, 12, 4, 6, 0, NGB_MV_KNOCKDOWN,                 0, 44, 16, 54,  7, 32, 24,  0,  0, NGB_NONE,      NS_SFX_KICK,   HF_JUMPKICK, 5 },
+    /* 5 low    */ { 3, 3, 10, 4, 0, NGB_MV_LOW | NGB_MV_KNOCKDOWN,    4, 40,  0, 20,  7, 24, 16,  0,  0, NGB_NONE,      NS_SFX_KICK,   HF_SWEEP, 5 },
+    /* 6 dash   */ { 2, 8, 10, 6, 0, NGB_MV_KNOCKDOWN,                 0, 34, 20, 50,  7, 40, 32, 36,  0, NGB_NONE,      NS_SFX_WHOOSH, HF_DASH, 6 },
     /* 7 Main Character Energy: up in a flip, down in an axe kick */
-               { 6, 14, 12, 10, 0, NGB_MV_KNOCKDOWN | NGB_MV_UNBLOCKABLE | NGB_MV_INVULN, -24, 80, 0, 90, 16, 40, 56, 16, 0, NGB_NONE, NS_SFX_SPECIAL, HF_SPECIAL1 },
-    /* 8 knee   */ { 2, 2, 7, 2, 10, 0,                                0, 30, 20, 40, 10,  0,  0,  0,  0, NGB_NONE,      NS_SFX_PUNCH,  HF_GRAB },
+               { 6, 14, 12, 10, 0, NGB_MV_KNOCKDOWN | NGB_MV_UNBLOCKABLE | NGB_MV_INVULN, -24, 64, 0, 90, 12, 40, 56, 16, 0, NGB_NONE, NS_SFX_SPECIAL, HF_SPECIAL1, 8 },
+    /* 8 knee   */ { 2, 2, 7, 2, 10, 0,                                0, 42, 20, 40,  7,  0,  0,  0,  0, NGB_NONE,      NS_SFX_PUNCH,  HF_GRAB },
 };
 static const NGBMove KAI_MOVES[] = {
-    /* 0 jab    */ { 4, 3, 8, 4, 16, 0,                                6, 36, 46, 30, 10, 16,  0,  0,  7, 1,             NS_SFX_PUNCH,  HF_JAB },
-    /* 1 cross  */ { 4, 3, 9, 6, 16, 0,                                6, 40, 46, 30, 10, 18,  0,  4,  8, 2,             NS_SFX_HEAVY,  HF_CROSS },
-    /* 2 upper  */ { 6, 3, 12, 7, 18, 0,                               4, 36, 40, 44, 12, 12,  0,  0, 10, 3,             NS_SFX_HEAVY,  HF_UPPER },
-    /* 3 kick   */ { 7, 4, 16, 10, 0, NGB_MV_KNOCKDOWN,                4, 48, 26, 40, 14, 56, 36,  8,  0, NGB_NONE,      NS_SFX_HEAVY,  HF_KICK },
-    /* 4 air    */ { 3, 10, 6, 8, 0, NGB_MV_KNOCKDOWN,                 0, 40,  0, 50, 12, 40, 28,  0,  0, NGB_NONE,      NS_SFX_HEAVY,  HF_JUMPKICK },
-    /* 5 low    */ { 5, 3, 14, 6, 0, NGB_MV_LOW | NGB_MV_KNOCKDOWN,    4, 44,  0, 16, 12, 28, 16,  0,  0, NGB_NONE,      NS_SFX_HEAVY,  HF_SWEEP },
-    /* 6 dash   */ { 4, 8, 14, 9, 0, NGB_MV_KNOCKDOWN,                 0, 38, 10, 56, 12, 56, 36, 28,  0, NGB_NONE,      NS_SFX_HEAVY,  HF_DASH },
+    /* 0 jab    */ { 4, 3, 8, 4, 16, 0,                                6, 45, 46, 30,  7,  8,  0,  0,  7, 1,             NS_SFX_PUNCH,  HF_JAB, 3 },
+    /* 1 cross  */ { 4, 3, 9, 6, 16, 0,                                6, 47, 46, 30,  7, 10,  0,  4,  8, 2,             NS_SFX_HEAVY,  HF_CROSS, 5, 40 },
+    /* 2 upper  */ { 6, 3, 12, 7, 18, 0,                               4, 24, 40, 44,  7, 12,  0,  0, 10, 3,             NS_SFX_HEAVY,  HF_UPPER, 6, 80 },
+    /* 3 kick   */ { 7, 4, 16, 10, 0, NGB_MV_KNOCKDOWN,                4, 49, 26, 56,  7, 56, 36,  8,  0, NGB_NONE,      NS_SFX_HEAVY,  HF_KICK, 7, 40 },
+    /* 4 air    */ { 3, 10, 6, 8, 0, NGB_MV_KNOCKDOWN,                 0, 52, 24, 58,  7, 40, 28,  0,  0, NGB_NONE,      NS_SFX_HEAVY,  HF_JUMPKICK, 5 },
+    /* 5 low    */ { 5, 3, 14, 6, 0, NGB_MV_LOW | NGB_MV_KNOCKDOWN,    4, 58,  0, 18,  7, 28, 16,  0,  0, NGB_NONE,      NS_SFX_HEAVY,  HF_SWEEP, 5 },
+    /* 6 dash   */ { 4, 8, 14, 9, 0, NGB_MV_KNOCKDOWN,                 0, 38, 10, 56,  7, 56, 36, 28,  0, NGB_NONE,      NS_SFX_HEAVY,  HF_DASH, 7 },
     /* 7 Aura Breaker: everyone near goes down */
-               { 8, 10, 18, 13, 0, NGB_MV_KNOCKDOWN | NGB_MV_UNBLOCKABLE | NGB_MV_INVULN, -64, 128, 0, 80, 24, 56, 52, 0, 0, NGB_NONE, NS_SFX_SPECIAL, HF_SPECIAL1 },
-    /* 8 headbutt */ { 3, 2, 9, 5, 12, 0,                              0, 30, 30, 40, 10,  0,  0,  0,  0, NGB_NONE,      NS_SFX_HEAVY,  HF_GRAB },
+               { 8, 10, 18, 13, 0, NGB_MV_KNOCKDOWN | NGB_MV_UNBLOCKABLE | NGB_MV_INVULN, -64, 128, 0, 80, 14, 56, 52, 0, 0, NGB_NONE, NS_SFX_SPECIAL, HF_SPECIAL1, 8 },
+    /* 8 headbutt */ { 3, 2, 9, 5, 12, 0,                              0, 51, 30, 40,  7,  0,  0,  0,  0, NGB_NONE,      NS_SFX_HEAVY,  HF_GRAB },
 };
 
 /* max_hp speed depth jump half_w height half_depth weight | moves n | chain air low dash special pummel throw_f throw_b | ai reach aggr attacks n flags score phases n think */
@@ -80,22 +80,22 @@ const NSHeroInfo ns_hero_info[NS_HEROES] = {
  * the street crew of New Vista
  * ==================================================================== */
 static const NGBMove THIEF_MOVES[] = {
-    /* 0 jab    */ { 10, 3, 16, 3, 12, 0,                              4, 30, 40, 30, 10, 16,  0,  0,  0, NGB_NONE,      NS_SFX_PUNCH,  EF_ATTACK },
-    /* 1 sneaky shove */ { 12, 4, 18, 4, 0, NGB_MV_KNOCKDOWN,          4, 30, 20, 50, 10, 36, 20, 12,  0, NGB_NONE,      NS_SFX_WHOOSH, EF_ATTACK },
+    /* 0 jab    */ { 10, 3, 16, 3, 12, 0,                              4, 37, 40, 30,  9, 16,  0,  0,  0, NGB_NONE,      NS_SFX_PUNCH,  EF_ATTACK },
+    /* 1 sneaky shove */ { 12, 4, 18, 4, 0, NGB_MV_KNOCKDOWN,          4, 37, 20, 50,  9, 36, 20, 12,  0, NGB_NONE,      NS_SFX_WHOOSH, EF_ATTACK },
 };
 static const NGBMove BIKER_MOVES[] = {
-    /* 0 belly bump, at a run */ { 14, 28, 22, 7, 0, NGB_MV_KNOCKDOWN | NGB_MV_RUN, 0, 34, 0, 64, 12, 44, 30, 52, 0, NGB_NONE, NS_SFX_HEAVY, EF_ATTACK },
-    /* 1 haymaker */ { 16, 4, 20, 8, 0, NGB_MV_KNOCKDOWN,              4, 40, 40, 40, 12, 40, 24,  0,  0, NGB_NONE,      NS_SFX_HEAVY,  EF_ATTACK },
+    /* 0 charging punch, at a run */ { 14, 28, 22, 7, 0, NGB_MV_KNOCKDOWN | NGB_MV_RUN, 0, 50, 40, 40,  9, 44, 30, 52, 0, NGB_NONE, NS_SFX_HEAVY, EF_ATTACK },
+    /* 1 haymaker */ { 16, 4, 20, 8, 0, NGB_MV_KNOCKDOWN,              4, 48, 40, 40,  9, 40, 24,  0,  0, NGB_NONE,      NS_SFX_HEAVY,  EF_ATTACK },
 };
 static const NGBMove SKATER_MOVES[] = {
-    /* 0 board swing */ { 10, 4, 16, 5, 0, NGB_MV_KNOCKDOWN,           4, 44, 20, 50, 12, 36, 24,  8,  0, NGB_NONE,      NS_SFX_WHOOSH, EF_ATTACK },
-    /* 1 kickflip leap */ { 8, 10, 14, 5, 0, NGB_MV_KNOCKDOWN,         0, 40,  0, 50, 12, 32, 24, 28,  0, NGB_NONE,      NS_SFX_KICK,   EF_ATTACK },
+    /* 0 board swing */ { 10, 4, 16, 5, 0, NGB_MV_KNOCKDOWN,           4, 48, 20, 50,  9, 36, 24,  8,  0, NGB_NONE,      NS_SFX_WHOOSH, EF_ATTACK },
+    /* 1 kickflip leap */ { 8, 10, 14, 5, 0, NGB_MV_KNOCKDOWN,         0, 46,  0, 50,  9, 32, 24, 28,  0, NGB_NONE,      NS_SFX_KICK,   EF_ATTACK },
 };
 static const NGBMove RICO_MOVES[] = {
-    /* 0 LED jab   */ { 8, 3, 12, 5, 14, 0,                            4, 36, 46, 30, 10, 18,  0,  0,  0, NGB_NONE,      NS_SFX_PUNCH,  EF_ATTACK },
-    /* 1 boot      */ { 12, 4, 16, 7, 0, NGB_MV_KNOCKDOWN,             4, 44, 26, 40, 12, 44, 28,  8,  0, NGB_NONE,      NS_SFX_KICK,   EF_ATTACK },
+    /* 0 LED jab   */ { 8, 3, 12, 5, 14, 0,                            4, 46, 46, 30,  9, 18,  0,  0,  0, NGB_NONE,      NS_SFX_PUNCH,  EF_ATTACK },
+    /* 1 boot      */ { 12, 4, 16, 7, 0, NGB_MV_KNOCKDOWN,             4, 46, 26, 40,  9, 44, 28,  8,  0, NGB_NONE,      NS_SFX_KICK,   EF_ATTACK },
     /* 2 phone pitch */ { 16, 1, 22, 6, 0, NGB_MV_PROJECTILE,          8,  0, 50, 12, 10,  0,  0, 64,  0, NGB_NONE,      NS_SFX_PHONE,  BF_THROW_PHONE },
-    /* 3 bike charge */ { 24, 40, 24, 10, 0, NGB_MV_KNOCKDOWN | NGB_MV_RUN | NGB_MV_UNBLOCKABLE, 0, 48, 0, 70, 14, 56, 40, 80, 0, NGB_NONE, NS_SFX_BIKE, BF_BIKE1 },
+    /* 3 bike charge */ { 24, 40, 24, 10, 0, NGB_MV_KNOCKDOWN | NGB_MV_RUN | NGB_MV_UNBLOCKABLE, 0, 48, 0, 70,  9, 56, 40, 80, 0, NGB_NONE, NS_SFX_BIKE, BF_BIKE1 },
     /* 4 desperate grab */ { 10, 5, 18, 0, 0, NGB_MV_GRAB,             4, 30,  0, 60, 10,  0,  0, 24,  0, NGB_NONE,      NS_SFX_GRAB,   BF_LUNGE },
 };
 static const NGBBossPhase RICO_PHASES[3] = {
@@ -147,8 +147,7 @@ static const NGBPropSpawn S1_PROPS[] = {
 static const NGBStage S1 = {
     1440, 140, 206, 320, S1_WAVES, S1_PROPS, S1_ENEMIES, S1_WEAPONS,
     sizeof(S1_WAVES) / sizeof(S1_WAVES[0]), sizeof(S1_PROPS) / sizeof(S1_PROPS[0]), 4, 2,
-    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 6, 96, 4, 3, 8
-};
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 6, 96, 4, 3, 8, 10, 18 };
 
 /* ---- stage 1's scenes -------------------------------------------------- */
 static const NSLine S1_INTRO_JAY[] = {
@@ -190,35 +189,35 @@ static const NSLine S1_OUTRO_ALL[] = {
  * ==================================================================== */
 /*                         su ac re dmg hs flags                              bx bw bz bh bd  px  pz lng cnl next      snd            anim */
 static const NGBMove GUARD_MOVES[] = {
-    /* 0 baton jab */    { 9, 3, 14, 5, 14, 0,                                4, 40, 40, 30, 10, 20,  0,  0,  0, NGB_NONE, NS_SFX_ZAP,    EF_ATTACK },
-    /* 1 shield bash */  { 12, 4, 18, 6, 0, NGB_MV_KNOCKDOWN,                 0, 34, 10, 70, 12, 40, 24, 16,  0, NGB_NONE, NS_SFX_HEAVY,  EF_WINDUP },
+    /* 0 baton jab */    { 9, 3, 14, 5, 14, 0,                                4, 46, 40, 30,  9, 20,  0,  0,  0, NGB_NONE, NS_SFX_ZAP,    EF_ATTACK },
+    /* 1 shield bash */  { 12, 4, 18, 6, 0, NGB_MV_KNOCKDOWN,                 0, 50, 10, 70,  9, 40, 24, 16,  0, NGB_NONE, NS_SFX_HEAVY,  EF_WINDUP },
 };
 static const NGBMove DRONE_MOVES[] = {
     /* 0 bolt */         { 18, 1, 26, 4, 0, NGB_MV_PROJECTILE,                 8,  0, 52, 10, 10,  0,  0, 56,  0, NGB_NONE, NS_SFX_LASER,  EF_ATTACK },
-    /* 1 ram */          { 10, 6, 18, 3, 12, 0,                                0, 30, 36, 40, 10, 24,  0, 40,  0, NGB_NONE, NS_SFX_SERVO,  EF_WINDUP },
+    /* 1 ram */          { 10, 6, 18, 3, 12, 0,                                0, 21, 36, 40,  9, 24,  0, 40,  0, NGB_NONE, NS_SFX_SERVO,  EF_WINDUP },
 };
 static const NGBMove RUNNER_MOVES[] = {
-    /* 0 flailing leap */{ 7, 6, 16, 4, 0, NGB_MV_KNOCKDOWN | NGB_MV_RUN,      0, 32, 20, 50, 10, 30, 20, 44,  0, NGB_NONE, NS_SFX_WHOOSH, EF_ATTACK },
-    /* 1 slap */         { 6, 3, 12, 3, 12, 0,                                 4, 30, 40, 30, 10, 14,  0,  0,  0, NGB_NONE, NS_SFX_PUNCH,  EF_ATTACK },
+    /* 0 flailing leap */{ 7, 6, 16, 4, 0, NGB_MV_KNOCKDOWN | NGB_MV_RUN,      0, 63, 20, 50,  9, 30, 20, 44,  0, NGB_NONE, NS_SFX_WHOOSH, EF_ATTACK },
+    /* 1 slap */         { 6, 3, 12, 3, 12, 0,                                 4, 59, 40, 30,  9, 14,  0,  0,  0, NGB_NONE, NS_SFX_PUNCH,  EF_ATTACK },
 };
 static const NGBMove BLOATER_MOVES[] = {
-    /* 0 double slam */  { 18, 4, 22, 10, 0, NGB_MV_KNOCKDOWN,                4, 46, 10, 60, 14, 46, 26,  0,  0, NGB_NONE, NS_SFX_STOMP,  EF_ATTACK },
-    /* 1 belly shove */  { 12, 4, 18, 6, 14, 0,                                0, 36, 20, 50, 12, 30,  0, 10,  0, NGB_NONE, NS_SFX_HEAVY,  EF_WINDUP },
+    /* 0 double slam */  { 18, 4, 22, 10, 0, NGB_MV_KNOCKDOWN,                4, 34, 10, 60,  9, 46, 26,  0,  0, NGB_NONE, NS_SFX_STOMP,  EF_ATTACK },
+    /* 1 belly shove */  { 12, 4, 18, 6, 14, 0,                                0, 38, 20, 50,  9, 30,  0, 10,  0, NGB_NONE, NS_SFX_HEAVY,  EF_WINDUP },
 };
 static const NGBMove ANDROID_MOVES[] = {
-    /* 0 blade thrust */ { 7, 3, 12, 5, 14, 0,                                 6, 44, 40, 30, 10, 20,  0,  8,  6, 1,        NS_SFX_ZAP,    EF_ATTACK },
-    /* 1 blade sweep */  { 6, 3, 16, 6, 0, NGB_MV_KNOCKDOWN,                   4, 46, 30, 30, 12, 36, 24,  0,  0, NGB_NONE, NS_SFX_WHOOSH, EF_ATTACK },
+    /* 0 blade thrust */ { 7, 3, 12, 5, 14, 0,                                 6, 54, 40, 30,  9, 20,  0,  8,  6, 1,        NS_SFX_ZAP,    EF_ATTACK },
+    /* 1 blade sweep */  { 6, 3, 16, 6, 0, NGB_MV_KNOCKDOWN,                   4, 56, 30, 46,  9, 36, 24,  0,  0, NGB_NONE, NS_SFX_WHOOSH, EF_ATTACK },
 };
 static const NGBMove ROBODOG_MOVES[] = {
-    /* 0 pounce */       { 10, 8, 16, 5, 0, NGB_MV_KNOCKDOWN,                  0, 34, 10, 40, 12, 30, 22, 48,  0, NGB_NONE, NS_SFX_SERVO,  EF_ATTACK },
-    /* 1 bite */         { 6, 3, 12, 3, 12, NGB_MV_LOW,                        4, 30,  0, 30, 10, 12,  0,  0,  0, NGB_NONE, NS_SFX_PUNCH,  EF_WINDUP },
+    /* 0 pounce */       { 10, 8, 16, 5, 0, NGB_MV_KNOCKDOWN,                  0, 28, 10, 40,  9, 30, 22, 48,  0, NGB_NONE, NS_SFX_SERVO,  EF_ATTACK },
+    /* 1 bite */         { 6, 3, 12, 3, 12, NGB_MV_LOW,                        4, 24,  0, 30,  9, 12,  0,  0,  0, NGB_NONE, NS_SFX_PUNCH,  EF_WINDUP },
 };
 static const NGBMove WALKER_MOVES[] = {
-    /* 0 clamp swing */  { 16, 4, 20, 9, 0, NGB_MV_KNOCKDOWN,                  4, 50, 30, 50, 14, 44, 26,  0,  0, NGB_NONE, NS_SFX_STOMP,  EF_ATTACK },
-    /* 1 steam vent */   { 14, 6, 18, 5, 14, 0,                                0, 40, 40, 40, 14, 20,  0,  0,  0, NGB_NONE, NS_SFX_GAS,    EF_WINDUP },
+    /* 0 clamp swing */  { 16, 4, 20, 9, 0, NGB_MV_KNOCKDOWN,                  4, 47, 30, 50,  9, 44, 26,  0,  0, NGB_NONE, NS_SFX_STOMP,  EF_ATTACK },
+    /* 1 steam vent */   { 14, 6, 18, 5, 14, 0,                                0, 51, 40, 40,  9, 20,  0,  0,  0, NGB_NONE, NS_SFX_GAS,    EF_WINDUP },
 };
 static const NGBMove ALIEN_MOVES[] = {
-    /* 0 staff thrust */ { 9, 3, 14, 6, 14, 0,                                 6, 56, 40, 30, 10, 22,  0,  6,  0, NGB_NONE, NS_SFX_WARBLE, EF_ATTACK },
+    /* 0 staff thrust */ { 9, 3, 14, 6, 14, 0,                                 6, 57, 40, 30,  9, 22,  0,  6,  0, NGB_NONE, NS_SFX_WARBLE, EF_ATTACK },
     /* 1 energy orb */   { 20, 1, 24, 6, 0, NGB_MV_PROJECTILE,                 10,  0, 50, 12, 10,  0,  0, 52,  0, NGB_NONE, NS_SFX_LASER,  EF_WINDUP },
 };
 
@@ -246,7 +245,7 @@ const NGBFighterDef ns_alien = { 44, 30, 22, 80, 12, 96, 6, 3, ALIEN_MOVES, 2, N
  * ==================================================================== */
 /*                          su ac re dmg hs flags                                              bx  bw bz bh bd  px  pz lng cnl next      snd             anim */
 static const NGBMove BIGFLEX_MOVES[] = {
-    /* 0 jab */             { 8, 3, 12, 7, 14, 0,                                               6, 44, 50, 34, 12, 22,  0,  0,  0, NGB_NONE, NS_SFX_PUNCH,   EF_ATTACK },
+    /* 0 jab */             { 8, 3, 12, 7, 14, 0,                                               6, 73, 50, 34, 12, 22,  0,  0,  0, NGB_NONE, NS_SFX_PUNCH,   EF_ATTACK },
     /* 1 shoulder charge */ { 20, 30, 24, 10, 0, NGB_MV_KNOCKDOWN | NGB_MV_RUN,                 0, 50, 20, 70, 14, 52, 30, 64,  0, NGB_NONE, NS_SFX_HEAVY,   NS_SHEET2(2) },
     /* 2 ground pound */    { 24, 4, 28, 12, 0, NGB_MV_KNOCKDOWN | NGB_MV_UNBLOCKABLE,         -40, 120, 0, 24, 30, 40, 36,  0,  0, NGB_NONE, NS_SFX_STOMP,   NS_SHEET2(4) },
     /* 3 bear hug */        { 12, 6, 20, 0, 0, NGB_MV_GRAB,                                     4, 40,  0, 70, 12,  0,  0, 24,  0, NGB_NONE, NS_SFX_GRAB,    NS_SHEET2(5) },
@@ -321,7 +320,7 @@ static const NGBMove ARCHIVIST_MOVES[] = {
     /* 0 glide strike */    { 10, 16, 20, 8, 0, NGB_MV_KNOCKDOWN | NGB_MV_RUN,                  0, 50, 20, 60, 14, 40, 24, 64,  0, NGB_NONE, NS_SFX_WARBLE,  NS_SHEET2(2) },
     /* 1 crystal beam */    { 18, 1, 24, 8, 0, NGB_MV_PROJECTILE,                              14,  0, 60, 12, 12,  0,  0, 68,  0, NGB_NONE, NS_SFX_LASER,   NS_SHEET2(5) },
     /* 2 core shockwave */  { 22, 6, 26, 11, 0, NGB_MV_KNOCKDOWN | NGB_MV_UNBLOCKABLE,        -60, 160, 0, 60, 30, 50, 30,  0,  0, NGB_NONE, NS_SFX_ALARM,   NS_SHEET3(2) },
-    /* 3 crystal blades */  { 8, 4, 14, 9, 14, 0,                                               6, 56, 30, 50, 12, 30,  0, 10,  0, NGB_NONE, NS_SFX_ZAP,     NS_SHEET3(3) },
+    /* 3 crystal blades */  { 8, 4, 14, 9, 14, 0,                                               6, 65, 30, 50, 12, 30,  0, 10,  0, NGB_NONE, NS_SFX_ZAP,     NS_SHEET3(3) },
     /* 4 many arms */       { 16, 10, 22, 12, 0, NGB_MV_KNOCKDOWN,                              0, 90, 10, 90, 20, 50, 30, 20,  0, NGB_NONE, NS_SFX_WARBLE,  NS_SHEET3(7) },
     /* 5 giant beam */      { 30, 1, 34, 14, 0, NGB_MV_PROJECTILE | NGB_MV_UNBLOCKABLE,        16,  0, 56, 20, 16,  0,  0, 80,  0, NGB_NONE, NS_SFX_LASER,   NS_SHEET3(8) },
 };
@@ -409,7 +408,7 @@ static const NGBPropSpawn S2_PROPS[] = {
 };
 static const NGBStage S2 = { 1440, 140, 206, 320, S2_WAVES, S2_PROPS, S2_ENEMIES, WEAPONS,
     sizeof(S2_WAVES) / sizeof(S2_WAVES[0]), sizeof(S2_PROPS) / sizeof(S2_PROPS[0]), 5, 2,
-    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 7, 128, 5, 4, 10 };
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 7, 128, 5, 4, 10, 10, 18 };
 
 /* ======================================================================
  * stage 3: the viral outbreak
@@ -434,7 +433,7 @@ static const NGBPropSpawn S3_PROPS[] = {
 };
 static const NGBStage S3 = { 1440, 140, 206, 320, S3_WAVES, S3_PROPS, S3_ENEMIES, WEAPONS,
     sizeof(S3_WAVES) / sizeof(S3_WAVES[0]), sizeof(S3_PROPS) / sizeof(S3_PROPS[0]), 5, 2,
-    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 6, 96, 4, 3, 8 };
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 6, 96, 4, 3, 8, 10, 18 };
 
 /* ======================================================================
  * stage 4: the clone lab
@@ -458,7 +457,7 @@ static const NGBPropSpawn S4_PROPS[] = {
 };
 static const NGBStage S4 = { 1440, 140, 206, 320, S4_WAVES, S4_PROPS, S4_ENEMIES, WEAPONS,
     sizeof(S4_WAVES) / sizeof(S4_WAVES[0]), sizeof(S4_PROPS) / sizeof(S4_PROPS[0]), 4, 2,
-    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 6, 96, 4, 3, 8 };
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 6, 96, 4, 3, 8, 10, 18 };
 
 /* ======================================================================
  * stage 5: concrete jungle
@@ -484,7 +483,7 @@ static const NGBPropSpawn S5_PROPS[] = {
 };
 static const NGBStage S5 = { 1440, 140, 206, 320, S5_WAVES, S5_PROPS, S5_ENEMIES, WEAPONS,
     sizeof(S5_WAVES) / sizeof(S5_WAVES[0]), sizeof(S5_PROPS) / sizeof(S5_PROPS[0]), 5, 2,
-    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 7, 120, 5, 4, 10 };
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 7, 120, 5, 4, 10, 10, 18 };
 
 /* ======================================================================
  * stage 6: the machine city
@@ -509,7 +508,7 @@ static const NGBPropSpawn S6_PROPS[] = {
 };
 static const NGBStage S6 = { 1440, 140, 206, 320, S6_WAVES, S6_PROPS, S6_ENEMIES, WEAPONS,
     sizeof(S6_WAVES) / sizeof(S6_WAVES[0]), sizeof(S6_PROPS) / sizeof(S6_PROPS[0]), 4, 2,
-    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 6, 96, 4, 3, 8 };
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 6, 96, 4, 3, 8, 10, 18 };
 
 /* ======================================================================
  * stage 7: the rogue AI
@@ -533,7 +532,7 @@ static const NGBPropSpawn S7_PROPS[] = {
 };
 static const NGBStage S7 = { 1440, 140, 206, 320, S7_WAVES, S7_PROPS, S7_ENEMIES, WEAPONS,
     sizeof(S7_WAVES) / sizeof(S7_WAVES[0]), sizeof(S7_PROPS) / sizeof(S7_PROPS[0]), 5, 2,
-    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 6, 96, 4, 3, 8 };
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 6, 96, 4, 3, 8, 10, 18 };
 
 /* ======================================================================
  * stage 8: the signal beyond Earth
@@ -557,7 +556,7 @@ static const NGBPropSpawn S8_PROPS[] = {
 };
 static const NGBStage S8 = { 1440, 140, 206, 320, S8_WAVES, S8_PROPS, S8_ENEMIES, WEAPONS,
     sizeof(S8_WAVES) / sizeof(S8_WAVES[0]), sizeof(S8_PROPS) / sizeof(S8_PROPS[0]), 4, 2,
-    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 6, 96, 4, 3, 8 };
+    2, 5, NGB_SF_NO_BACKTRACK | NGB_SF_AUTO_PICKUP | NGB_SF_WALK_ON, 6, 96, 4, 3, 8, 10, 18 };
 
 /* ======================================================================
  * the gallery
@@ -568,7 +567,7 @@ const NSGalleryEntry ns_gallery[] = {
     { NS_ART_F_KAI, 0, "KAI 'AURA' REYES", "18. FIXES PHONES. FIXES PEOPLE. NOT HIS SLEEP." },
     { NS_ART_F_THIEF, 1, "SNATCH", "STEALS PHONES. CAN'T WORK A SINGLE ONE." },
     { NS_ART_F_SKATER, 1, "KICKFLIP", "HAS NEVER LANDED A KICKFLIP. NEVER STOPS TRYING." },
-    { NS_ART_F_BIKER, 1, "DIESEL", "OWNS NINE MOTORBIKES. WALKS EVERYWHERE." },
+    { NS_ART_F_BIKER, 1, "DIESEL", "E-BIKE COURIER. ONLY DELIVERS STOLEN PHONES." },
     { NS_ART_F_RICO, 1, "RICO 'SWIPE' MENDOZA", "FASTEST HANDS IN NEW VISTA. SLOWEST APOLOGIES." },
     { NS_ART_F_GUARD, 2, "BADGE", "COMPANY SECURITY. PAID HOURLY. FEELS IT." },
     { NS_ART_F_DRONE, 2, "PEEPER", "A FLYING CAMERA. ALWAYS FINDS YOUR BAD SIDE." },

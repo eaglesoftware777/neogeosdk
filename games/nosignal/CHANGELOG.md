@@ -1,23 +1,133 @@
 # No Signal Z Alpha — changelog
 
 The ROM sets ship with the NeoGeoSDK pre-releases and are numbered on their
-own: `_v1` and `_v2` with v1.7.7.
+own: `_v1`, `_v2` and `_v3` with v1.7.7.
 
-## Native Neo Geo CD v2 (2026-10-25, SDK 1.7.7)
+## v3 (2026-10-27, NeoGeoSDK v1.7.7 pre-release)
 
-- Compile the current V2 game and beat-'em-up engine as a native CD program.
-  Retain all three heroes, eight stages, console menus, moves and original art.
-- Keep fighters and interface graphics resident; load the 13 scenery assets
-  into one bounded sprite-RAM area with CRC readback before revealing them.
-- Preserve all 47 effects/voice samples in sound RAM and all 18 music files as
-  CD audio. Supply a verified complete CHD and CUE/BIN extraction helper, with
-  stock and EagleBIOS
-  launchers that release automatic startup inputs before play.
-- Validate all heroes under both real BIOS profiles in MAME, complete scenery
-  transfers and resident sprite readback, lossless conversion, CD formats and
-  cartridge isolation. Physical hardware and full campaigns remain unverified.
+Players' feedback on V2 asked for five things, and then a sixth (the
+backgrounds don't move). What V3 does about each:
 
-## v3 (in progress, SDK 1.7.7)
+| Feedback | Status | In short |
+|---|---|---|
+| Stiff animation | partial | the heroes' blows, landing and run have their own in-between pictures; walking follows the distance covered; the crews wind up and recover. The crews still have no run or jump pictures, and the bosses are unchanged |
+| Weightless blows | implemented | hitstop per move and a longer hold on the last blow, sparks where the blow lands, the struck fighter shudders, heavier layered sounds |
+| Hit boxes off | implemented | every strike box fitted to its picture, tighter lanes, a step into the next blow, a debug view and automated checks; grab range is the engine's and was not refitted |
+| Inconsistent colour | partial | each street repainted to one time of day and one light; every fighter checked against every street it fights on. The fighters' own shading was not redrawn for each stage's light |
+| Dated street crew | implemented | the two 1980s thugs redrawn in today's clothes |
+| Lifeless backgrounds | implemented | the streets' lights pulse, flicker and blink, and each street has its own drifting specks: leaves, dust, drizzle, bubbles, pollen, embers, falling bits, sparkles |
+
+### Animation
+
+- The heroes gain ten pictures each (40 instead of 30): a punch wound up
+  with the rear fist by the cheek, a punch coming back to the chin, the crouch
+  before an uppercut and the step down after it, the kick's raised knee and
+  its leg coming back down, the drop into a sweep, a landing crouch and a run
+  stride with both feet off the ground.
+- A blow shows its wind-up, the blow, the blow held through the first half of
+  its recovery, then its own way back to guard (`ng_beatemup_move_phase`).
+  Wind-ups of four frames or more start from the chambered guard, so the
+  uppercut and the kick draw back in two steps. A jump ends in a crouch for a
+  moment, and an air kick that lands recovers crouched.
+- Walking and running change picture every 16 pixels covered
+  (`NGBFighter.stride`), so the feet keep to the street at any speed; the run
+  has three pictures (a foot down, both up).
+- The street crews wind up, strike, hold the blow half the recovery, then
+  return to their stance (the attack picture used to stay up through the
+  whole recovery).
+- Struck high, the head snaps back; struck at the body or below, the fighter
+  doubles over.
+- Picture changes are ranked when the blank is short: the hero always, then
+  fighters striking or struck, then walkers, two others a frame besides the
+  hero.
+
+### The weight of a blow
+
+- Hitstop by move (`NGBMove.hitstop`): the jab holds 3 frames, the cross 4
+  or 5, the uppercut, kicks, sweep and dash 5 to 7, the special 8; the blow
+  that beats an enemy holds 10, a boss 18
+  (`NGBStage.ko_hitstop`, `boss_ko_hitstop`). It used to be 2 + damage / 4
+  frames, at most 6, for every move.
+- The spark flies at the edge of the body on the striker's side, at the
+  height the blow landed (`NGB_EV_HIT`'s value, `NGBFighter.hit_z`), instead
+  of 52 pixels up whatever the blow: a sweep sparks at the ankles.
+- The struck fighter shudders two pixels during the hold.
+- Punch, kick, heavy and knockout sounds rebuilt in layers: a click, a crack
+  that snaps shut, a thump falling in pitch, and for the heavier ones a sub
+  drop and a short rumble.
+
+### Hit boxes
+
+- Every strike box now ends where its picture does (`tools/boxes.py --check`:
+  33 of 71 moves were more than 4 pixels short or past; a punch that visibly
+  landed could miss, a slam could land from out of reach). The new crew
+  pictures were fitted too: the thief's jab and shove reach 41 pixels, the
+  courier's charging punch is a punch at shoulder height.
+- Across the street a blow reaches 13 to 16 pixels instead of 16 to 21, so
+  fighters on visibly different lines no longer hit each other.
+- `NGBMove.step`: a blow steps in while winding up, only as far as the
+  nearest foe in its lane needs; the cross, uppercut and kick use it, so the
+  four-blow chain lands from the jab's reach on every enemy (it lost the
+  uppercut every time before).
+- `tools/beatemup_boxes.py` draws the hurt, wind-up and strike volumes, depth
+  and hitstop live in MAME and onto snapshots. Host tests run the moves on the
+  engine: the chain lands against six kinds of enemy, a jab misses 4 pixels
+  past the fist and 17 across, a brawler's blows reach where it stops.
+
+### Colour
+
+- Seven of the 24 street sections repainted so each street keeps one time of
+  day and one light: stage 3's bright station hall at night like the streets
+  either side, stage 4's blue lab under the same green light as the rest,
+  stage 5's green morning and blue evening ends in the golden hour of its
+  middle, stage 6's lit factory at night, stage 7's sunny lobby after hours,
+  stage 8's golden hall in the station's violet light. Same layouts, the
+  kerbs where they were; the repainted floors have cracks, patches and wear.
+  Stages 1 and 2 already kept one light. The widest colour difference
+  between a street's sections (CIE Lab, scenery above the kerb) fell from
+  34 to 28 (stage 3), 25 to 23 (4), 33 to 13 (5), 30 to 17 (6), 25 to 13 (7)
+  and 26 to 18 (8). Where unlike scenery meets (stage 5's shaded overpass
+  beside sunlit ruins) a seam can still change brightness.
+- The street keeps 15 shared colours (it had 12), so the road keeps more of
+  its texture.
+- `tools/contrast.py --check` stands every fighter on every street it fights
+  on, every 60 pixels, and checks how much of its outline melts into the
+  street behind it (within dE 10): at most 11% on average (the security
+  guard's navy uniform on stage 7's darkened lobby) and 17% at the worst
+  spot, against a limit of 15% on average. Fighters span lightness 3 to 98
+  and the streets 4 to 76, so the fighters stay the brightest thing on the
+  night stages, on purpose.
+- Tinting the fighters to each stage at run time was tried on paper and left
+  out: the night stages' average light is dark blue and would muddy the
+  heroes.
+
+### Living streets
+
+- Each street's lights live: `tools/art.py` picks up to 14 small, bright,
+  saturated colours of the painting (shop windows, neon signs, ambulance
+  lights, screens, sparks; never a sky or a wall) and writes 8 brightness
+  steps for each (`ns_glow.h`). Neon breathes over two seconds, lamps hold
+  and now and then dip, warning lights blink, each on its own phase. A frame
+  reloads at most one palette bank, and only one whose lights changed step
+  (16 words in the blank); no tile changes.
+- Six specks drift over each street, under the fighters, moving with the
+  street as it scrolls: leaves on stage 1, dust in the light on stage 2,
+  drizzle on stage 3, bubbles in the lab, pollen in the overgrown ruins,
+  embers in the factory, falling bits in the machine core, sparkles in
+  space. One 16 x 16 sprite each (sprites 24-29), from a 16-frame sheet made
+  in `tools/art.py`; once shown, only their position is written each frame
+  (two words in the blank).
+
+### The street crew
+
+- SNATCH, the thief: a dark green hoodie half up, black joggers with one
+  stripe, chunky white trainers and a sling bag (the striped tracksuit and
+  beanie are gone).
+- DIESEL: an e-bike courier in a black padded jacket with a reflective
+  harness and a helmet (the red mohawk, studded vest and chains are gone).
+- Same silhouettes, moves, sizes and palette slots; new dialogue portraits.
+
+### Also in v3
 
 - One mode on an arcade board: on MVS a credit goes straight from the hero
   select into the story, with no menu. A console (AES) keeps its menu:
@@ -53,9 +163,7 @@ own: `_v1` and `_v2` with v1.7.7.
 - Dust when landing from a jump and when breaking into a run; a short
   sideways screen shake on heavy blows, boss phase changes, a boss going
   down and scooter crashes.
-- Existing art is unchanged: the C ROM only gains the three 32 x 32 status
-  portraits (48 tiles appended after the logo). M1 and V1 are byte-identical.
-- Verification (MAME, 2026-10-24): an in-emulator check that every visible
+- (Checked on 2026-10-24, before the art above changed:) an in-emulator check that every visible
   sprite's tiles belong to a real asset frame and use that asset's own
   palettes ran every fourth frame through 1800-second autoplay campaigns
   for Jay, Zoe and Kai (stages 1 to 8 between them): 79,545 frames, no
@@ -63,6 +171,78 @@ own: `_v1` and `_v2` with v1.7.7.
   real (non-autoplay) build: 1,154 frames, no fault. Host engine tests
   (walking over pick-ups included) and the No Signal tests pass. Physical
   hardware is untested.
+- (2026-10-26, from a report on a CRT:) everything on screen stays inside
+  columns 3-36 of the 40 (x 24-295), the part of the picture every CRT
+  shows: the hero's portrait and status line,
+  the score, the enemy and boss bars (the boss bar is 128 steps now, its
+  name before it), the dialogue (25 letters a line beside a portrait), the
+  stage select and the gallery (its notes on two centred rows).
+- The bosses' longer lines go on to a second row instead of running off
+  the screen; the challenge clock moved to the battery's row.
+
+### Neo Geo CD
+
+- The CD port follows the cartridge version named in `cd/reference.json`
+  (now V3) instead of being tied to V2. The scenery's upload slot moved up
+  to tile 0x7A00 (bank 3, offset 0xD0000), so the larger resident set fits
+  (29,720 tiles; the old slot left room for 28,416).
+
+### Verification
+
+- Host tests: the No Signal tests (moves on the engine, every strike box
+  against its picture, colour key and C-ROM alpha for all 390 fighter
+  frames, fighters against their streets, render budget, the CD conversion)
+  and the beat-'em-up engine's tests pass.
+- MAME (MVS, EagleBIOS), 240-second autoplay campaigns for Jay, Zoe and Kai:
+  every visible sprite's tiles and palettes checked every fourth frame,
+  3,433 frames each, no fault; at most 81 sprites on a line (the hardware
+  draws 96). The released MVS and AES sets played 120 seconds each with stick
+  and buttons on EagleBIOS: 1,657 checked frames each, no fault.
+- Frame time, the same 240-second campaign as the v1.7.7 report, measured
+  in a `PERF=2` build; "before" is the V2-era source as committed before
+  this work:
+
+  | | frames with a sprite update waiting | longest run | frames over time | in play | work, median / 99% of frames (of 264 lines) |
+  |---|---|---|---|---|---|
+  | before, Zoe | 832 of 14,204 (5.9%) | 10 | 10 | 6 | 71 / 166 |
+  | V3, Jay | 1,257 (8.8%) | 22 | 8 | 4 | 84 / 160 |
+  | V3, Zoe | 1,160 (8.2%) | 16 | 7 | 4 | 83 / 164 |
+  | V3, Kai | 1,013 (7.1%) | 16 | 8 | 4 | 80 / 158 |
+
+  "Frames over time" counts the scene loads at the start as well; "in
+  play" those after 45 seconds. V3 changes pictures three or four times a
+  blow, so more updates wait a frame than before (the v1.7.7 report
+  measured 12% on the build of its day), but fewer frames run long: the
+  fighters' look is found once, the status line writes one thing a frame,
+  and the street's life skips the frame a blow lands.
+- Neo Geo CD V3, in MAME's CDZ driver with stock and EagleBIOS-CD firmware:
+  all three heroes play (stick and buttons, movement, jumps, effects, CD
+  music, exact program and firmware readback); a separate diagnostic build
+  loads all 13 scenes with their CRCs checked and the resident fighters
+  intact (3,804,160 bytes compared); the CHD boots and plays on both.
+- The NeoSD, Darksoft and BackBit files are built from the same two sets by
+  `tools/make_release.py`; they were not run on those carts.
+
+### Not changed, not claimed
+
+- A player reported the picture's size on an AES+ (it outputs the full 320
+  pixels over HDMI). V3 keeps every text inside the title-safe columns; no
+  AES+ was available, so the report is recorded, not resolved.
+- Nothing here was run on physical hardware.
+
+## Native Neo Geo CD v2 (2026-10-25, SDK 1.7.7)
+
+- Compile the current V2 game and beat-'em-up engine as a native CD program.
+  Retain all three heroes, eight stages, console menus, moves and original art.
+- Keep fighters and interface graphics resident; load the 13 scenery assets
+  into one bounded sprite-RAM area with CRC readback before revealing them.
+- Preserve all 47 effects/voice samples in sound RAM and all 18 music files as
+  CD audio. Supply a verified complete CHD and CUE/BIN extraction helper, with
+  stock and EagleBIOS
+  launchers that release automatic startup inputs before play.
+- Validate all heroes under both real BIOS profiles in MAME, complete scenery
+  transfers and resident sprite readback, lossless conversion, CD formats and
+  cartridge isolation. Physical hardware and full campaigns remain unverified.
 
 ## v2 (2026-10-24, SDK 1.7.7)
 

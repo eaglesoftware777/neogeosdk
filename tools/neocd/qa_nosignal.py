@@ -97,7 +97,7 @@ def run(build, out, bios, lo, profile, hero, mame, cc, media=None, startup=None)
     music = sorted({int(r['music']) for r in rows})
     assert any(t>=2 for t in music), 'CDDA music not requested'
     report = dict(passed=True, profile=profile, hero=int(hero), hardware_tested=False,
-                  source_game_version=2, gameplay_samples=len(active), audio_peak=peak,
+                  source_game_version=metadata.get('version', 2), gameplay_samples=len(active), audio_peak=peak,
                   music_tracks=music, background_loads=max(int(r['loads']) for r in rows),
                   media_format='CHD' if media and Path(media).suffix.lower()=='.chd' else 'CUE',
                   media_sha256=hashlib.sha256(Path(media or build/'disc/nosignal.cue').read_bytes()).hexdigest(),

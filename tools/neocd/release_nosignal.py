@@ -10,7 +10,7 @@ import zipfile
 
 from tools.neocd.audit_disc import audit_cue
 from tools.neocd.build import default_compiler
-from tools.neocd.nosignal import verify_v2
+from tools.neocd.nosignal import verify_reference
 
 ROOT=Path(__file__).resolve().parents[2]
 
@@ -20,7 +20,7 @@ def package(build,out,qa,cc):
     meta=json.loads((build/'source-manifest.json').read_text())
     if meta.get('game')!='nosignal' or meta.get('media_audit'):
         raise ValueError('Only the playable native No Signal CD may be released')
-    verify_v2()
+    version=verify_reference()['version']
     for name,expected in meta['source_sha256'].items():
         if hashlib.sha256((ROOT/name).read_bytes()).hexdigest()!=expected:
             raise ValueError('Source changed after the tested CD build: '+name)
@@ -43,7 +43,7 @@ def package(build,out,qa,cc):
             raise ValueError('Missing or mismatched CHD boot QA')
     audit_cue(build/'disc/nosignal.cue')
     out.mkdir(parents=True,exist_ok=True)
-    dest=out/'NoSignal-NeoGeoCD_v2.zip'
+    dest=out/f'NoSignal-NeoGeoCD_v{version}.zip'
     if dest.exists():raise ValueError('Existing release stays unchanged')
     stage=out/'package';stage.mkdir(exist_ok=False)
     (stage/'disc').mkdir()
@@ -54,10 +54,10 @@ def package(build,out,qa,cc):
     (stage/'boot.lua').write_text((ROOT/'games/nosignal/cd/boot.lua.in').read_text().replace('@FRAMES_ADDR@',str(address)))
     shutil.copy2(ROOT/'LICENSE',stage/'LICENSE')
     shutil.copy2(ROOT/'games/nosignal/sound/CREDITS.txt',stage/'SOUND-CREDITS.txt')
-    readme='''No Signal Z Alpha V2 - Native Neo Geo CD
+    readme='''No Signal Z Alpha VERSION - Native Neo Geo CD
 
 Original single-player beat-'em-up: Jay, Zoe or Kai, eight stages, console
-menus and the existing V2 moves, graphics, effects, voices and music.
+menus and the cartridge VERSION's moves, graphics, effects, voices and music.
 
 This package contains the complete disc/nosignal.chd, including the data
 track and all 18 audio tracks. Select it directly in MAME. To produce a
@@ -88,7 +88,7 @@ hardware certification. Front/top models, full campaigns and power-cycle
 save persistence remain unverified. Session progress/unlocks are retained.
 
 Source and build instructions: games/nosignal/cd/README.md in NeoGeoSDK.
-'''
+'''.replace('VERSION',f'V{version}')
     readme+='\nSource commit: '+source+'\nhttps://github.com/eaglesoftware777/neogeosdk/commit/'+source+'\n'
     (stage/'README.txt').write_text(readme)
     for profile in ('stock','eagle'):
@@ -114,10 +114,10 @@ if errorlevel 1 pause
 '''.replace('PROFILE',profile)
         (stage/f'run_{profile}.bat').write_bytes(bat.replace('\n','\r\n').encode('ascii'))
     # Publish portable evidence, never local command lines, paths or firmware.
-    report=dict(game='No Signal Z Alpha',version=2,platform='Neo Geo CD',source_commit=source,
+    report=dict(game='No Signal Z Alpha',version=version,platform='Neo Geo CD',source_commit=source,
                 bios_profiles=['stock CDZ','EagleBIOS CDZ'],hardware_tested=False,
                 geometry_and_palette_preserved=True,gameplay=reports,
-                resident_sprite_bytes=3556352,backgrounds_verified=13,
+                resident_sprite_bytes=(meta['graphics']['resident_tiles']-0x100)*128,backgrounds_verified=13,
                 source_sha256=meta['source_sha256'])
     (stage/'VALIDATION.json').write_text(json.dumps(report,indent=2)+'\n')
     extract='''@echo off
@@ -135,8 +135,8 @@ if errorlevel 1 pause
     with zipfile.ZipFile(dest,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as z:
         for p in sorted(stage.rglob('*')):
             if p.is_file():z.write(p,p.relative_to(stage).as_posix())
-    (out/'NoSignal-NeoGeoCD-README_v2.txt').write_text(readme)
-    (out/'NoSignal-NeoGeoCD-SHA256_v2.txt').write_text(hashlib.sha256(dest.read_bytes()).hexdigest()+'  '+dest.name+'\n')
+    (out/f'NoSignal-NeoGeoCD-README_v{version}.txt').write_text(readme)
+    (out/f'NoSignal-NeoGeoCD-SHA256_v{version}.txt').write_text(hashlib.sha256(dest.read_bytes()).hexdigest()+'  '+dest.name+'\n')
     print(dest.name, dest.stat().st_size)
     return dest
 

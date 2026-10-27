@@ -16,7 +16,7 @@
 #include "sdk/2d_engine/ng_beatemup.h"
 
 #define NS_START_FLAG   0x100700u
-#define NS_VERSION_TEXT "V2"
+#define NS_VERSION_TEXT "V3"
 
 #define NS_UP      0x0001u
 #define NS_DOWN    0x0002u
@@ -43,12 +43,16 @@ enum {
 };
 #define NS_SPK_HERO 0xFFu        /* a scene line spoken by whichever hero is playing */
 
-/* A fighter's pictures: frame numbers in its sheet. Heroes have 30 frames,
- * the street crew 10, the boss 20 (see tools/art.py). */
+/* A fighter's pictures: frame numbers in its sheet. Heroes have 40 frames,
+ * the street crew 10, the boss 20 (see tools/art.py). The heroes' fourth
+ * sheet holds the in-between poses: a blow's wind-up and its return to
+ * guard, the landing, and the run's stride in the air. */
 enum {
     HF_STANCE = 0, HF_IDLE, HF_WALK1, HF_WALK2, HF_WALK3, HF_WALK4, HF_RUN1, HF_RUN2, HF_JUMP_UP, HF_JUMP_DOWN,
     HF_KEY2, HF_JAB, HF_CROSS, HF_UPPER, HF_KICK, HF_JUMPKICK, HF_SWEEP, HF_DASH, HF_GRAB, HF_THROW,
     HF_KEY3, HF_HURT, HF_HURT_LOW, HF_KNOCKED, HF_DOWN, HF_GETUP, HF_SPECIAL1, HF_SPECIAL2, HF_WIN, HF_RIDE,
+    HF_KEY4, HF_PUNCH_WIND, HF_PUNCH_BACK, HF_UPPER_WIND, HF_UPPER_BACK, HF_KICK_WIND, HF_KICK_BACK,
+    HF_SWEEP_WIND, HF_LAND, HF_RUN3,
     HF_COUNT
 };
 enum { EF_STANCE = 0, EF_WALK1, EF_WALK2, EF_WALK3, EF_WINDUP, EF_ATTACK, EF_HURT, EF_KNOCKED, EF_DOWN, EF_GETUP, EF_COUNT };
@@ -139,6 +143,7 @@ uint8_t  NEOGEO_USER ns_wait_button(uint16_t frames);
 void     NEOGEO_USER ns_puts(uint8_t x, uint8_t y, const char *text, uint8_t pal);
 void     NEOGEO_USER ns_puts_c(uint8_t y, const char *text, uint8_t pal);
 void     NEOGEO_USER ns_putn(uint8_t x, uint8_t y, uint32_t value, uint8_t digits, uint8_t pal);
+#define NS_CENTRE 0xFFu      /* ns_text_block's x: each line centred */
 void     NEOGEO_USER ns_text_block(uint8_t x, uint8_t y, const char *text, uint8_t pal);
 void     NEOGEO_USER ns_clear_text(uint8_t y0, uint8_t y1);
 void     NEOGEO_USER ns_fade_out(void);
@@ -167,6 +172,7 @@ void     NEOGEO_USER ns_dialog_hide(void);
 void     NEOGEO_USER ns_music(uint8_t track);
 void     NEOGEO_USER ns_sfx(uint8_t sfx);
 void     NEOGEO_USER ns_throw_pose(void);
+void     NEOGEO_USER ns_land_pose(void);     /* the hero crouches a moment on landing */
 void     NEOGEO_USER ns_shake(uint8_t frames);     /* heavy blows: the street shakes a few frames (at most 8) */
 void     NEOGEO_USER ns_plate(uint8_t show);       /* the dialogue box's plate alone */
 

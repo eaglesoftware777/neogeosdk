@@ -11,7 +11,7 @@ from tools.neocd.formats import Entry
 
 class NoSignalCDTests(unittest.TestCase):
     def test_source_and_media_reference(self):
-        self.assertEqual(nosignal.verify_v2()['version'], 2)
+        self.assertEqual(nosignal.verify_reference()['version'], 3)
 
     def test_every_sprite_byte_and_palette_survives_relocation(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -31,7 +31,7 @@ class NoSignalCDTests(unittest.TestCase):
                 dest = result['tile_mapping'][a['id']]*128
                 if a['kind']=='background':
                     native = (payload/f"BG{a['id']:02}.SPR").read_bytes()
-                    Entry(f"BG{a['id']:02}.SPR", 3, 0x80000).validate(len(native))
+                    Entry(f"BG{a['id']:02}.SPR", nosignal.BG_BANK, nosignal.BG_OFFSET).validate(len(native))
                     self.assertLessEqual(dest+len(native), 0x7FFD*128)
                 else:
                     native = resident[dest:dest+a['tiles']*128]
@@ -58,8 +58,8 @@ class NoSignalCDTests(unittest.TestCase):
     def test_source_changes_are_rejected(self):
         with patch.object(nosignal.hashlib, 'sha256') as sha:
             sha.return_value.hexdigest.return_value = 'changed'
-            with self.assertRaisesRegex(ValueError, 'V2 source or artwork differs'):
-                nosignal.verify_v2()
+            with self.assertRaisesRegex(ValueError, 'V3 source or artwork differs'):
+                nosignal.verify_reference()
 
 
 if __name__=='__main__':

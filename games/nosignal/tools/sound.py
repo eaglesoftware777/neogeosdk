@@ -82,6 +82,38 @@ def hit(seconds, lo, hi, body_hz, snap=0.012, body=0.6):
     return mix(crack, thump)
 
 
+# The blows' noise has a generator of its own: the shared one (ng_synth's)
+# then runs on as it did for the effects and songs after them (keep_stream).
+_blows = np.random.default_rng(0xB10)
+
+
+def keep_stream(*seconds):
+    """Draw from the shared noise what the effects these replaced drew."""
+    for sec in seconds:
+        syn.noise(n_of(sec))
+
+
+def impact(seconds, lo, hi, body_hz, snap, body, sub=0.0, tail=0.0, drive=1.6):
+    """A blow landing: a click, a crack of noise that snaps shut, a thump that
+    drops in pitch; for heavier blows a sub drop and a short low rumble. Soft
+    clipped, so it stays dense at the same peak as the other effects."""
+    n = n_of(seconds)
+    t = np.arange(n) / RATE
+    click = np.zeros(n)
+    k = n_of(0.004)
+    click[:k] = syn.highpass(_blows.uniform(-1, 1, k), 2500) * np.linspace(1, 0, k)
+    crack = syn.bandpass(_blows.uniform(-1, 1, n), lo, hi) * syn.decay(n, snap)
+    f = np.geomspace(body_hz * 1.6, body_hz * 0.7, n)
+    thump = np.sin(2 * np.pi * np.cumsum(f) / RATE) * syn.decay(n, snap * 4) * body
+    parts = [click * 0.8, crack, thump]
+    if sub:
+        drop = np.geomspace(110, 42, n)
+        parts.append(np.sin(2 * np.pi * np.cumsum(drop) / RATE) * np.exp(-t / 0.09) * sub)
+    if tail:
+        parts.append(syn.lowpass(_blows.uniform(-1, 1, n), 700) * syn.decay(n, seconds * 0.4) * tail)
+    return np.tanh(mix(*parts) * drive) / np.tanh(drive)
+
+
 def engine(seconds, f0, f1, rough=0.35):
     """A small motor: a buzzy pulse whose rate climbs from f0 to f1."""
     n = n_of(seconds)
@@ -111,10 +143,11 @@ def effects():
     fx.append(seq(*[note("marimba", m, 0.06) for m in ("E5", "G5", "B5")], mix(note("steel", "E6", 0.4), note("marimba", "B6", 0.4, 0.6))))
     # 2 select: a swipe tick
     fx.append(mix(chirp(1800, 2600, 0.05) * syn.decay(n_of(0.05), 0.02), 0.3 * syn.noise(n_of(0.03)) * syn.decay(n_of(0.03), 0.006)))
-    # 3 punch, 4 kick, 5 heavy
-    fx.append(hit(0.14, 900, 4200, 170, 0.014, 0.7))
-    fx.append(hit(0.18, 600, 3200, 120, 0.02, 0.9))
-    fx.append(mix(hit(0.3, 400, 2600, 85, 0.035, 1.2), syn.kick(n_of(0.3), 1.0) * 0.6))
+    # 3 punch, 4 kick, 5 heavy: each heavier than the last (a deeper thump, then a sub and a rumble)
+    fx.append(impact(0.16, 900, 4200, 160, 0.014, 0.8))
+    fx.append(impact(0.2, 600, 3400, 115, 0.02, 0.9, sub=0.35))
+    fx.append(impact(0.34, 400, 2800, 80, 0.032, 1.1, sub=0.8, tail=0.45, drive=1.9))
+    keep_stream(0.14, 0.18, 0.3, 0.38)    # the kick under the old heavy drew at least 0.38 s
     # 6 whoosh
     n = n_of(0.2)
     fx.append(syn.bandpass(syn.noise(n), 700, 3800) * np.sin(np.linspace(0, np.pi, n)) ** 2)
@@ -163,7 +196,9 @@ def effects():
     fx.append(seq(chirp(1400, 1400, 0.08, "square") * 0.5, chirp(1400, 1400, 0.08, "square") * 0.5, gap=0.05))
     # 20 ko: a deep impact with a ring
     n = n_of(0.7)
-    fx.append(mix(syn.kick(n, 1.0) * 1.2, hit(0.35, 400, 3000, 70, 0.05, 1.0), note("steel", "E5", 0.7, 0.35)))
+    ko = mix(syn.kick(n, 1.0) * 1.2, impact(0.4, 400, 3000, 70, 0.05, 1.0, sub=0.6, tail=0.5) * 1.5, note("steel", "E5", 0.7, 0.35))
+    fx.append(np.tanh(ko * 1.4))
+    keep_stream(0.35)
     # 21 text: a typing click
     n = n_of(0.03)
     fx.append(syn.bandpass(syn.noise(n), 2500, 7000) * syn.decay(n, 0.006))

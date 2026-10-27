@@ -2,6 +2,7 @@
 import importlib.util
 import json
 from pathlib import Path
+import subprocess
 import sys
 import unittest
 
@@ -94,7 +95,11 @@ class NoSignalRomTests(unittest.TestCase):
                     pixels = decode_image(lanes[0][start:end], lanes[1][start:end], size, size)
                     np.testing.assert_array_equal(pixels != 0, rgba[..., 3] == 255)
                     checked += 1
-        self.assertEqual(checked, 360)
+        self.assertEqual(checked, 390)
+
+    def test_fighters_stand_out_from_their_streets(self):
+        r = subprocess.run([sys.executable, str(GAME / "tools/contrast.py"), "--check"], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
 
 if __name__ == "__main__":

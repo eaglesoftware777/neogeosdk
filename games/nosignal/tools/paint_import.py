@@ -33,8 +33,19 @@ SPEAKERS = ["jay", "zoe", "kai", "rico", "thief", "biker", "skater",
 STAGES = 8
 # panels whose floor is brighter than the scenery above it (tiled interiors)
 LIGHT_FLOOR = {"ns_bg3b", "ns_bg7a", "ns_bg8a", "ns_bg8b"}
-# panels whose floor cracks fool the search: the kerb row, at the 496-pixel width
-KERB_AT = {}
+# the kerb row of every panel, at the 496-pixel width, as the released
+# streets were cut (the search alone is fooled by floor cracks and tiles,
+# and a repainted panel must land where the one it replaces did)
+KERB_AT = {
+    "ns_bg1a": 185, "ns_bg1b": 184, "ns_bg1c": 185,
+    "ns_bg2a": 172, "ns_bg2b": 155, "ns_bg2c": 188,
+    "ns_bg3a": 178, "ns_bg3b": 243, "ns_bg3c": 172,
+    "ns_bg4a": 227, "ns_bg4b": 235, "ns_bg4c": 193,
+    "ns_bg5a": 182, "ns_bg5b": 202, "ns_bg5c": 196,
+    "ns_bg6a": 187, "ns_bg6b": 168, "ns_bg6c": 183,
+    "ns_bg7a": 198, "ns_bg7b": 193, "ns_bg7c": 191,
+    "ns_bg8a": 185, "ns_bg8b": 213, "ns_bg8c": 222,
+}
 KERB = 146
 ROAD_COLOURS = 15     # one full palette: the whole road shares it, and keeps its markings and puddles
 SECTION_W, H = 496, 224
