@@ -322,7 +322,7 @@ through the engine on the host.
 
 ## 6. Beat-'em-up (`ng_beatemup`)
 
-One `NGBeatEmUp` (1728 bytes) runs one stage for one player: ground x along
+One `NGBeatEmUp` (1816 bytes) runs one stage for one player: ground x along
 the street, depth y across it and height z kept apart; eight-way walking,
 double-tap dash, jump, attack chains with buffered presses, air, low and
 dash attacks, a special that costs health, grabs with pummels and throws
@@ -356,8 +356,32 @@ for (;;) {
 }
 ```
 
+The weight of a blow and its pictures (added for No Signal v3; tables that
+leave the new fields out keep the old behaviour):
+
+- `NGBMove.hitstop`: frames attacker and target hold on contact (0: the
+  rule above). `NGBStage.ko_hitstop` and `boss_ko_hitstop`: the blow that
+  beats an enemy, or a boss, holds at least that long.
+- `NGBMove.step`: while winding up, the attacker steps towards the nearest
+  foe in front and in its lane (within 64 pixels beyond the reach), up to
+  `step` pixels * 16 a frame, until the blow will reach it 4 pixels deep,
+  then plants. A chain whose blows reach less than its first one still lands.
+- `NGB_EV_HIT`'s `value`: where the blow met the target, pixels above its
+  feet (the middle of the move's reach on its body); also kept in
+  `NGBFighter.hit_z`, for a spark at the right height and a hurt picture
+  that fits the blow.
+- `NGBFighter.stride`: the distance walked or run on the ground (pixels *
+  16, wrapping): walk pictures picked from it keep the feet on the ground at
+  any speed.
+- `ng_beatemup_move_phase(b, fighter, &frame)`: `NGB_PH_STARTUP`, `_ACTIVE`
+  or `_RECOVERY` and the frames spent in it (`_NONE` without a move), to
+  show a wind-up, the blow and a follow-through.
+
+`tools/beatemup_boxes.py` draws the volumes in MAME (hurt, wind-up and
+strike boxes, depth, hitstop) and paints them onto snapshots.
+
 Other calls: `spawn`, `add_prop`, `continue` (after `NGB_EV_GAME_OVER`),
-`status`, `enemies_alive`, `hash`. Drawing a fighter in `NGB_ST_ATTACK`,
+`status`, `enemies_alive`, `move_phase`, `hash`. Drawing a fighter in `NGB_ST_ATTACK`,
 mind two `move` values that are not rows of its table: `0xFE`, the swing of
 a held weapon (its move is `stage->weapons[prop[f->weapon].contents].move`),
 and `NGB_NONE`, a throw's recovery; read as rows they are memory past the
@@ -380,7 +404,7 @@ Measured on 2026-10-26 with the SDK's m68k GCC (`tools/check_genre_codegen.py`,
 | puzzle | 1312 B | 840 B | 33,772 B | 588 B (`match_phase`) |
 | mahjong | 748 B (table), 1016 B (solitaire) | 553 B used of 1024 | 27,422 B | 248 B (`lay`) |
 | rpg | 3568 B | 320 B | 35,338 B | 192 B (`find_path`) |
-| beatemup | 1728 B | - | 20,826 B | 176 B (`ng_beatemup_update`) |
+| beatemup | 1816 B | - | 23,726 B | 188 B (`ng_beatemup_update`) |
 
 None of the four uses 32-bit multiply or divide library calls at `-O2`, and
 none contains the post-increment copy pattern GCC miscompiles for the

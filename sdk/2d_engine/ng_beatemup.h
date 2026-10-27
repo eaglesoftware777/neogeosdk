@@ -88,6 +88,11 @@ typedef struct {
     uint8_t cancel;                      /* from this frame the next chain move may start (0: none) */
     uint8_t next;                        /* the chain's next move (NGB_NONE) */
     uint8_t sound, anim;                 /* the game's ids */
+    /* v1.7.7 additions, last so that older tables (which leave them out) keep their behaviour */
+    uint8_t hitstop;                     /* frames attacker and target hold on contact (0: 2 + damage / 4, at most 6) */
+    int8_t step;                         /* while winding up, the attacker steps towards the nearest foe in front
+                                            (in its lane, within 64 pixels of the reach) at up to pixels * 16 a
+                                            frame, until the blow will reach it 4 pixels deep; then it plants */
 } NGBMove;
 
 /* Enemy behaviour */
@@ -188,6 +193,9 @@ typedef struct {
     uint8_t camera_max;                  /* camera speed, pixels per frame (6) */
     uint8_t vehicle_max, vehicle_accel;  /* pixels * 16 per frame, and per frame squared */
     uint8_t vehicle_durability, vehicle_ram;  /* hits, ram damage */
+    /* v1.7.7 additions (0: the last blow holds like any other) */
+    uint8_t ko_hitstop;                  /* the blow that beats an enemy holds at least this long */
+    uint8_t boss_ko_hitstop;             /* ... and a boss */
 } NGBStage;
 
 /* ---- runtime -------------------------------------------------------------- */
@@ -214,6 +222,8 @@ typedef struct {
     uint8_t last_hit[NGB_FIGHTERS];      /* serial of the attacker's move that last hit this one */
     uint16_t timer;                      /* frames in this state */
     uint8_t air_done, wave;
+    uint16_t stride;                     /* pixels * 16 walked or run on the ground (wraps): walk cycles by distance */
+    uint8_t hit_z;                       /* height above the feet, pixels, where the last blow landed */
 } NGBFighter;
 
 typedef struct {
@@ -230,7 +240,8 @@ typedef struct {
 
 enum {
     NGB_EV_NONE = 0,
-    NGB_EV_HIT,          /* a = attacker, b = target, c = damage */
+    NGB_EV_HIT,          /* a = attacker, b = target, c = damage, value = height of the contact above
+                            the target's feet, pixels (the middle of the blow's reach on its body) */
     NGB_EV_BLOCKED,      /* a = attacker, b = target */
     NGB_EV_KO,           /* b = target, value = score */
     NGB_EV_KNOCKDOWN,    /* b = target */
@@ -306,6 +317,12 @@ uint8_t  NEOGEO_USER ng_beatemup_event(NGBeatEmUp *b, NGBEvent *out);
  * 0x40 + i props, 0x80 + i shots. Returns how many. */
 uint8_t  NEOGEO_USER ng_beatemup_draw_list(const NGBeatEmUp *b, uint8_t *ids, uint8_t max);
 uint8_t  NEOGEO_USER ng_beatemup_enemies_alive(const NGBeatEmUp *b);
+/* Where a fighter's move is: NGB_PH_NONE (no move), _STARTUP (winding up),
+ * _ACTIVE (can hit) or _RECOVERY, and *frame the frames spent in that phase
+ * (frame may be NULL). A game picks anticipation, contact and follow-through
+ * pictures from it. A held weapon's swing counts; a throw's recovery is NONE. */
+enum { NGB_PH_NONE = 0, NGB_PH_STARTUP, NGB_PH_ACTIVE, NGB_PH_RECOVERY };
+uint8_t  NEOGEO_USER ng_beatemup_move_phase(const NGBeatEmUp *b, uint8_t fighter, uint8_t *frame);
 uint32_t NEOGEO_USER ng_beatemup_hash(const NGBeatEmUp *b);
 
 #ifdef __cplusplus
