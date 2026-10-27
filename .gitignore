@@ -38,3 +38,7 @@ roms/helloworld/*
 roms/neogeogame/*
 roms/tutorial/*
 !roms/*/.gitkeep
+
+# Old Sky Lance ROMs are built locally
+roms/skylance/*
+!roms/skylance/.gitkeep

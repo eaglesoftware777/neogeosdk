@@ -84,8 +84,8 @@ def convert_fix_png(path):
 
 # Collect all numeric PNG files, then any remaining named ones.
 # A game with no fix-layer art of its own has no infix directory at all.  That
-# is a valid setup - the FIX ROM still gets built from the font and the sfix
-# seed - so read a missing directory the same way as an empty one.
+# is a valid setup - the FIX ROM still gets built from the system font - so
+# read a missing directory the same way as an empty one.
 if os.path.isdir(INFIX_DIR):
     pngs = sorted(f for f in os.listdir(INFIX_DIR)
                   if f.endswith('.png') and os.path.isfile(os.path.join(INFIX_DIR, f)))
