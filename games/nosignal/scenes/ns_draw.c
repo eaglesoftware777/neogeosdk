@@ -65,6 +65,7 @@ void NEOGEO_USER soundSetADPCMBLoop(uint8_t v);
 #define SPR_LOGO    295u
 #define SPR_HERO    311u
 #define SPR_HUD     335u
+#define SPR_FRONT   340u    /* the front plane: two objects of 4 strips, over everyone */
 #define PAL_BANKS   112u
 
 /* ======================================================================
@@ -154,6 +155,7 @@ void NEOGEO_USER ns_presentation_init(void)
 }
 
 static void NEOGEO_USER bark_tick_internal(void);
+static void NEOGEO_USER front_hide(void);
 
 uint16_t NEOGEO_USER ns_frame(void)
 {
@@ -305,7 +307,8 @@ static uint8_t s_dark;      /* the screen is faded out: set a scene up at once, 
 /* A street's life (ns_stage_show picks them): the painting's lights and a
  * few specks in the air. */
 #define AMBS 6u
-static NGSpriteGroup s_amb[AMBS];
+#define FRONTS 2u
+static NGSpriteGroup s_amb[AMBS], s_front[FRONTS];
 static int16_t s_amb_x[AMBS], s_amb_y[AMBS];      /* on the screen, pixels * 16 */
 static uint8_t s_amb_t[AMBS], s_amb_kind = 0xFFu;
 static uint16_t s_amb_cam, s_amb_seed = 0x5EEDu;
@@ -319,13 +322,25 @@ static void NEOGEO_USER put(NGSpriteGroup *g)
     else ng_sprite_group_flush(g);
 }
 
+/* A picture's first tile, `offset` tiles into its asset. The CD keeps only
+ * a hero's first pictures resident; the played hero's walk and run strides
+ * past them are in the hero slot (ns_cd_load_hero). */
+static uint16_t NEOGEO_USER frame_tile(const NGArtAsset *a, uint16_t offset)
+{
+    uint16_t t = (uint16_t)(a->tile_base + offset);
+#ifdef NG_CD_NOSIGNAL
+    if (t > a->tile_reserved_last) t = (uint16_t)(NS_CD_HERO_TILES + (t - a->tile_reserved_last - 1u));
+#endif
+    return t;
+}
+
 static void NEOGEO_USER show_asset(NGSpriteGroup *g, uint16_t first_sprite, uint8_t id, uint8_t frame,
                                    int16_t x, int16_t y)
 {
     const NGArtAsset *a = art(id);
     uint16_t per = (uint16_t)((uint16_t)a->strips * a->rows);
     uint8_t prio = g->prio;
-    ng_sprite_group_init(g, first_sprite, a->strips, a->rows, (uint16_t)(a->tile_base + per * frame), a->palette_bank);
+    ng_sprite_group_init(g, first_sprite, a->strips, a->rows, frame_tile(a, (uint16_t)(per * frame)), a->palette_bank);
     if (prio != NG_SG_PRIO_NORMAL) ng_sprite_group_set_priority(g, prio);
     ng_sprite_group_set_palette_map(g, a->tile_palettes + per * frame);
     ng_sprite_group_set_pos(g, x, y);
@@ -338,7 +353,7 @@ static void NEOGEO_USER set_frame(NGSpriteGroup *g, uint8_t id, uint8_t frame)
 {
     const NGArtAsset *a = art(id);
     uint16_t per = (uint16_t)((uint16_t)a->strips * a->rows);
-    ng_sprite_group_set_tile_base(g, (uint16_t)(a->tile_base + per * frame));
+    ng_sprite_group_set_tile_base(g, frame_tile(a, (uint16_t)(per * frame)));
     ng_sprite_group_set_palette_map(g, a->tile_palettes + per * frame);
 }
 
@@ -376,6 +391,7 @@ static void NEOGEO_USER forget_all(void)
     for (i = 0; i < FXN; i++) { s_fx[i].visible = 0; s_fx_t[i] = 0; }
     for (i = 0; i < MARKS; i++) s_mark_t[i] = 0;
     for (i = 0; i < AMBS; i++) s_amb[i].visible = 0;
+    for (i = 0; i < FRONTS; i++) s_front[i].visible = 0;
     s_amb_kind = 0xFFu;
     s_glow_n = 0u;
 }
@@ -421,6 +437,7 @@ void NEOGEO_USER ns_logo(uint8_t show, int16_t x, int16_t y)
 void NEOGEO_USER ns_card(uint8_t show)
 {
     if (!show) { hide(&s_card); return; }
+    front_hide();
     ng_sprite_group_set_priority(&s_card, NG_SG_PRIO_HIGH);
     show_asset(&s_card, SPR_CARD, NS_ART_CARD, 0, 16, 16);
 }
@@ -527,6 +544,7 @@ void NEOGEO_USER ns_stage_show(const NGBeatEmUp *b, const NSStageInfo *si, uint8
     }
 #ifdef NG_CD_NOSIGNAL
     ns_cd_load_background(s_stage_art);
+    ns_cd_load_hero(hero);
 #endif
     s_hero_id = hero;
     a = art(s_stage_art);
@@ -536,6 +554,7 @@ void NEOGEO_USER ns_stage_show(const NGBeatEmUp *b, const NSStageInfo *si, uint8
     if (hero < NS_HEROES && ns_hud_art[hero]) load_art_palettes(ns_hud_art[hero]);
     for (i = 0; i < 6u && si->crew[i]; i++) load_art_palettes(si->crew[i]);
     load_art_palettes(NS_ART_AMBIENT);
+    load_art_palettes(NS_ART_FRONT);
     ng_palfx_screen_backdrop(0x8000u);
     /* the 21-strip ring over the painting, first as one chain at the start of the street */
     ng_sprite_group_init(&s_bg, SPR_BG, STREET_STRIPS, a->rows, a->tile_base, a->palette_bank);
@@ -629,13 +648,16 @@ static uint8_t NEOGEO_USER return_of(uint8_t strike)
  * crowd's pictures don't all change on the same frame. */
 static uint8_t NEOGEO_USER hero_frame(const NGBeatEmUp *b, const NGBFighter *f, uint8_t ph)
 {
-    static const uint8_t walk[4] = { HF_WALK1, HF_WALK2, HF_WALK3, HF_WALK4 };
-    static const uint8_t run[4] = { HF_RUN1, HF_RUN3, HF_RUN2, HF_RUN3 };   /* a foot down, both up */
+    /* a six-step walk in guard (heel down, weight on, passing, other heel...),
+     * the body lowest on the heel and highest passing; a four-step run (a
+     * foot strikes, pushes off, the other strikes, both off the ground) */
+    static const uint8_t walk[6] = { HF_STEP1, HF_STEP2, HF_STEP3, HF_STEP4, HF_STEP5, HF_STEP6 };
+    static const uint8_t run[4] = { HF_RUN4, HF_RUN5, HF_RUN6, HF_RUN3 };
     const NGBMove *mv;
     uint8_t phase, fr;
     uint16_t t = (uint16_t)(f->timer + ph);
     switch (f->state) {
-    case NGB_ST_WALK: return walk[(f->stride >> 8) & 3u];
+    case NGB_ST_WALK: return walk[(uint8_t)(f->stride >> 8) % 6u];
     case NGB_ST_RUN: return run[(f->stride >> 8) & 3u];
     case NGB_ST_JUMP: return (uint8_t)(f->vz > 0 ? HF_JUMP_UP : HF_JUMP_DOWN);
     case NGB_ST_ATTACK:
@@ -728,7 +750,7 @@ static void NEOGEO_USER fighter_describe(NGSpriteGroup *g, const NGBeatEmUp *b,
     uint16_t per = (uint16_t)(a->strips * a->rows);
     uint16_t offset = (uint16_t)(per * (pic & 0x7Fu));
     ng_sprite_group_detach(g);
-    ng_sprite_group_init(g, first, a->strips, a->rows, (uint16_t)(a->tile_base + offset), a->palette_bank);
+    ng_sprite_group_init(g, first, a->strips, a->rows, frame_tile(a, offset), a->palette_bank);
     ng_sprite_group_set_priority(g, id == NGB_PLAYER ? NG_SG_PRIO_HIGH : NG_SG_PRIO_NORMAL);
     ng_sprite_group_set_palette_map(g, a->tile_palettes + offset);
     ng_sprite_group_set_flip(g, (uint8_t)(pic >> 7), 0u);
@@ -839,8 +861,9 @@ static void NEOGEO_USER hand_of(uint8_t pose, int16_t *x, int16_t *y)
     uint8_t k;
     switch (pose) {
     case HF_IDLE: k = HAND_IDLE; break;
-    case HF_WALK1: case HF_WALK2: case HF_WALK3: case HF_WALK4: k = HAND_WALK; break;
-    case HF_RUN1: case HF_RUN2: case HF_RUN3: k = HAND_RUN; break;
+    case HF_WALK1: case HF_WALK2: case HF_WALK3: case HF_WALK4:
+    case HF_STEP1: case HF_STEP2: case HF_STEP3: case HF_STEP4: case HF_STEP5: case HF_STEP6: k = HAND_WALK; break;
+    case HF_RUN1: case HF_RUN2: case HF_RUN3: case HF_RUN4: case HF_RUN5: case HF_RUN6: k = HAND_RUN; break;
     case HF_LAND: k = HAND_LAND; break;
     case HF_UPPER: k = HAND_UPPER; break;      /* raised for the swing */
     case HF_CROSS: k = HAND_CROSS; break;      /* swung through */
@@ -1016,6 +1039,42 @@ static void NEOGEO_USER ambient(uint16_t cam)
     }
 }
 
+/* The front plane: an object close to the camera (a hydrant, cones, a
+ * barrier, a lab console, ferns, a pipe, a server rack, a railing: one a
+ * street) passes in front of everyone at a quarter again the street's speed,
+ * one every FRONT_GAP pixels, flipped every other time, standing below the
+ * screen's edge: the street gains a near side, and depth. At most two on the
+ * screen, 4 sprites each; hidden while the dialogue box or a card is up. */
+#define FRONT_GAP 260
+#define FRONT_Y   136
+static void NEOGEO_USER front_plane(uint16_t cam)
+{
+    uint16_t lead = (uint16_t)((uint16_t)(cam + (cam >> 2)) % (2u * FRONT_GAP));
+    uint8_t i, k = s_amb_kind;
+    int16_t x;
+    if (k >= 8u) return;
+    for (i = 0; i < FRONTS; i++) {
+        NGSpriteGroup *g = &s_front[i];
+        x = (int16_t)(i * FRONT_GAP + 2 * FRONT_GAP - (int16_t)lead + 64);
+        while (x >= 2 * FRONT_GAP) x = (int16_t)(x - 2 * FRONT_GAP);
+        x = (int16_t)(x - 64);
+        if (x <= -64 || x >= 320 || s_dialog.visible || s_card.visible) { hide(g); continue; }
+        if (!g->visible) {
+            show_asset(g, (uint16_t)(SPR_FRONT + 4u * i), NS_ART_FRONT, k, x, FRONT_Y);
+            ng_sprite_group_set_flip(g, (uint8_t)(i & 1u), 0u);
+        } else ng_sprite_group_set_pos(g, x, FRONT_Y);
+        ng_sprite_group_flush(g);
+    }
+}
+
+/* The front plane off the screen: the dialogue box or a card covers the
+ * street, and front_plane() isn't run while a scene's lines are read. */
+static void NEOGEO_USER front_hide(void)
+{
+    uint8_t i;
+    for (i = 0; i < FRONTS; i++) hide(&s_front[i]);
+}
+
 /* Two fighters within this many pixels of depth keep last frame's order, so
  * walking side by side doesn't swap their sprites (and redraw both) every frame. */
 #define DEPTH_SLACK (6 << 8)
@@ -1039,6 +1098,7 @@ void NEOGEO_USER ns_stage_draw(const NGBeatEmUp *b)
      * and neither on the frame a blow lands (already the busiest) */
     if (!s_busy) {
         ambient(cam);
+        front_plane(cam);
         if (s_frames & 1u) glow_tick();
     }
     s_busy = 0u;
@@ -1350,6 +1410,7 @@ void NEOGEO_USER ns_dialog(uint8_t speaker, const char *text)
 {
     uint8_t face = speaker < NS_SPK_NARRATOR ? ns_face_art[speaker] : 0u, x;
     if (!s_dialog.visible) {
+        front_hide();
         ng_sprite_group_set_priority(&s_dialog, NG_SG_PRIO_HIGH);
         show_asset(&s_dialog, SPR_DIALOG, NS_ART_DIALOG, 0, 0, 160);
     }
@@ -1369,6 +1430,7 @@ void NEOGEO_USER ns_dialog(uint8_t speaker, const char *text)
 void NEOGEO_USER ns_plate(uint8_t show)
 {
     if (!show) { hide(&s_dialog); return; }
+    front_hide();
     ng_sprite_group_set_priority(&s_dialog, NG_SG_PRIO_HIGH);
     show_asset(&s_dialog, SPR_DIALOG, NS_ART_DIALOG, 0, 0, 160);
 }

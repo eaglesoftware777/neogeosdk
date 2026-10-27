@@ -6,10 +6,14 @@ and palettes. It compiles the existing game
 and beat-'em-up engine for CD; it does not rename a cartridge program or rebuild
 the artwork. Cartridge builds exclude the CD hooks.
 
-All fighters, portraits and interface graphics remain resident. The 13 scenery
-assets share one upload area and load while the scene is hidden. Every scenery
-transfer is checked by reading back sprite RAM and comparing CRC32. The total
-layout stays within the CD's 4 MiB sprite RAM. The original 47 ADPCM-A effects
+All fighters, portraits and interface graphics remain resident, except the
+heroes' walk and run strides (each hero's pictures past the first 40): the
+played hero's are loaded from `HEROn.SPR` into one 640-tile slot when a street
+starts, once a game unless the hero changes (`ns_cd_load_hero`; the drawing
+code sends those pictures to the slot). The 13 scenery assets share one upload
+area and load while the scene is hidden. Every transfer is checked by reading
+back sprite RAM and comparing CRC32. The total layout stays within the CD's
+4 MiB sprite RAM. The original 47 ADPCM-A effects
 and voices use sound RAM, and the 18 original music files become CD audio tracks
 in the same order.
 
@@ -36,7 +40,8 @@ movement, jumping, sound, music, and exact program/firmware readback. Use
 `--media` to repeat against a CHD and `--startup-script` to test its launcher.
 
 The separate `--media-audit --no-cdda` build exercises all 13 scenery transfers
-and checks that the complete resident fighter/interface graphics survive.
+and the three hero-slot transfers, and checks that the complete resident
+fighter/interface graphics survive and the slot holds the last hero loaded.
 It is a diagnostic, and release packaging rejects it.
 
 The source build supplies ISO/CUE/WAV media. The compact release contains the

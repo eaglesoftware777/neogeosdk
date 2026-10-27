@@ -139,6 +139,7 @@ recorded, not resolved.
 | 19 | Frame time: each fighter's look found once instead of searched for several times a frame; the status line writes one of score, enemy bar and combo a frame in play | performance | done |
 | 20 | The CD port converts the cartridge version named in `cd/reference.json` (V3); the scenery slot moved up to tile 0x7A00 for the larger fighter set | CD | done |
 | 21 | Living streets: each painting's lights (small bright colours picked by `tools/art.py`) pulse, flicker or blink through palette reloads; six drifting specks a street (leaves, dust, drizzle, bubbles, pollen, embers, bits, sparkles) | colour | done |
+| 22 | Depth: a front plane of near objects (one a street) passing in front of everyone at 1.25 times the street's speed; the heroes' walk in six steps and run in four (ten new pictures each); on CD the played hero's ten strides load into their own slot with each street | animation, colour, CD | done |
 
 Art (items 14 to 17) is drawn with the image tools, then reviewed frame by
 frame for anatomy, matching proportions, palette and originality before it
@@ -181,7 +182,8 @@ committed source this work started from, built and run the same way.
 | V3, first build | Jay, Zoe, Kai | 1118, 1210, 839 | 12, 14, 18 | 17, 18, 11 / 13, 14, 7 | 77, 80, 71 / 175, 182, 162 | 81, 79, 79 |
 | V3, frame-time fixes (item 19) | Jay, Zoe, Kai | 1290, 1366, 833 | 15, 19, 18 | 9, 8, 6 / 5, 4, 2 | 78, 77, 68 / 162, 165, 146 | 81, 79, 79 |
 | V3 with living streets, first try | Jay, Zoe, Kai | 2580, 2491, 2178 | 25, 30, 21 | 18, 13, 9 / 14, 9, 5 | 98, 95, 93 / 179, 173, 174 | 82, 81, 79 |
-| V3, final | Jay, Zoe, Kai | 1257, 1160, 1013 | 22, 16, 16 | 8, 7, 8 / 4, 3, 4 | 84, 83, 80 / 160, 164, 158 | 81, 79, 80 |
+| V3, living streets (first release) | Jay, Zoe, Kai | 1257, 1160, 1013 | 22, 16, 16 | 8, 7, 8 / 4, 3, 4 | 84, 83, 80 / 160, 164, 158 | 81, 79, 80 |
+| V3, final: front plane and new walk and run (item 22) | Jay, Zoe, Kai | 1291, 1193, 1039 | 22, 16, 16 | 8, 7, 8 / 4, 3, 4 | 79, 78, 76 / 158, 163, 158 | 85, 83, 84 |
 
 The first V3 build ran long on frames where a blow landed in a crowd: an
 instruction trace of one such frame (492 lines) showed the status line

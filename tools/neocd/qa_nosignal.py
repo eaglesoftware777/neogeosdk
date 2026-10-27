@@ -44,7 +44,9 @@ def run(build, out, bios, lo, profile, hero, mame, cc, media=None, startup=None)
     program = read_iso((build/'disc/nosignal.iso').read_bytes())['NS.PRG']
     q = dict(out=str(out), syms=symbols, fields=fields, profile=profile,
              hero=int(hero), program_bytes=len(program), media_audit=media_audit,
-             resident_bytes=metadata['graphics']['resident_tiles']*128)
+             resident_bytes=metadata['graphics']['resident_tiles']*128,
+             hero_bank=3, hero_offset=(metadata['graphics'].get('hero_base', 0x6000)-0x6000)*128,
+             hero_bytes=max((h['size'] for h in metadata['graphics'].get('heroes', [])), default=0))
     def lua(v):
         if isinstance(v,dict):return '{'+','.join('['+json.dumps(k)+']='+lua(x) for k,x in v.items())+'}'
         if isinstance(v,bool):return 'true' if v else 'false'
@@ -73,8 +75,14 @@ def run(build, out, bios, lo, profile, hero, mame, cc, media=None, startup=None)
         expected=b''.join((build/'payload'/f'SPR{bank}.SPR').read_bytes() for bank in range(4))
         end=q['resident_bytes']
         assert loaded[0x8000:end]==expected[0x8000:end], 'Scenery loading changed resident fighter graphics'
+        heroes = metadata['graphics'].get('heroes', [])
+        if heroes:
+            assert max(int(r['heroloads']) for r in rows)==len(heroes), 'Not every hero slot transfer completed'
+            last = max(heroes, key=lambda h: h['id'])
+            assert (out/'heroslot.bin').read_bytes()[:last['size']]==(build/'payload'/last['name']).read_bytes(), 'Hero slot differs'
         report = dict(passed=True, scope='separate scenery-transfer diagnostic', profile=profile,
                       backgrounds_verified=13, background_crc_errors=0,
+                      hero_slots_verified=len(metadata['graphics'].get('heroes', [])),
                       resident_sprite_bytes_verified=end-0x8000, hardware_tested=False)
         (out/'result.json').write_text(json.dumps(report,indent=2)+'\n')
         print(json.dumps(report))
@@ -90,6 +98,10 @@ def run(build, out, bios, lo, profile, hero, mame, cc, media=None, startup=None)
     assert max(int(r['pz']) for r in active)>0, 'Jump did not execute'
     assert max(int(r['errors']) for r in rows)==0, 'Background readback failed'
     assert max(int(r['loads']) for r in rows)>=3, 'Scene overlays not exercised'
+    for h in metadata['graphics'].get('heroes', []):
+        if h['id']==int(hero):
+            assert int(rows[-1]['heroslot'])==int(hero)+1, 'Played hero not in the hero slot'
+            assert (out/'heroslot.bin').read_bytes()[:h['size']]==(build/'payload'/h['name']).read_bytes(), 'Hero slot differs'
     with wave.open(str(out/'audio.wav'),'rb') as w:
         samples = array.array('h',w.readframes(w.getnframes()))
     peak = max(map(abs,samples),default=0)
