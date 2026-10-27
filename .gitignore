@@ -61,8 +61,16 @@ dist/*_Setup_Wizard.zip
 dist/*_Setup.zip
 
 # System ROMs stay local
-roms/neogeo/
-roms/aes/
+roms/neogeo/*
+roms/aes/*
 dist/release/Maiya-WIP-AES-Europe.zip
 dist/release/Maiya-WIP-AES-USA.zip
 dist/release/Maiya-WIP-AES-NeoGeoBIOS.zip
+
+# Old demo ROMs are built locally
+roms/demo/*
+roms/demo_plus/*
+roms/helloworld/*
+roms/neogeogame/*
+roms/tutorial/*
+!roms/*/.gitkeep
