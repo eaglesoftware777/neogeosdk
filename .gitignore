@@ -59,3 +59,10 @@ out/neocd/
 # Setup wizards: rebuilt for each release and uploaded with it
 dist/*_Setup_Wizard.zip
 dist/*_Setup.zip
+
+# System ROMs stay local
+roms/neogeo/
+roms/aes/
+dist/release/Maiya-WIP-AES-Europe.zip
+dist/release/Maiya-WIP-AES-USA.zip
+dist/release/Maiya-WIP-AES-NeoGeoBIOS.zip
