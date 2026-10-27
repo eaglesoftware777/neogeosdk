@@ -8,9 +8,8 @@
 Neo Geo FIX ROM (S1) tile generator.
 
 Builds the 128 KB 777-s1.s1 from:
-  1. sfix.sfix system-font ROM  (standard ASCII/FIX tiles)
-  2. Existing 777-s1.s1  (non-infix area preserved at original addresses)
-  3. infix/*.png images imported via the imagefix DB table at tile 256+
+  1. The EagleBIOS system font  (bios/tools/gen_sfix.py, ASCII at its codes)
+  2. infix/*.png images imported via the imagefix DB table at tile 256+
 
 Hardware tile format (after romtool /f or direct from this script):
   Each 8×8 / 4-bpp tile = 32 bytes.
@@ -19,7 +18,7 @@ Hardware tile format (after romtool /f or direct from this script):
   Each byte: MSNibble = right-column pixel, LSNibble = left-column pixel.
 """
 
-import io, os, sys, struct
+import importlib.util, io, os, sys, struct
 import numpy as np
 try:
     import pysqlite3 as sqlite3
@@ -36,11 +35,7 @@ NUM_TILES  = ROM_SIZE // TILE_BYTES   # 4096
 SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR    = os.path.abspath(os.environ.get("ARTBOX_DATA_DIR", SCRIPT_DIR))
 _GAME_ID    = os.environ.get('GAME_ID', '777')
-_GAME       = os.environ.get('GAME', 'demo')
-ROMS_DIR    = os.path.join(SCRIPT_DIR, '..', 'roms', _GAME)
-GAME_S1     = os.path.join(ROMS_DIR, f'{_GAME_ID}-s1.s1')
-SFIX_ROM    = os.path.join(ROMS_DIR, 'sfix.sfix')
-SFIX_FALLBACK = os.path.join(SCRIPT_DIR, '..', 'roms', 'neogeo', 'sfix.sfix')
+SYSTEM_FONT = os.path.join(SCRIPT_DIR, '..', 'bios', 'tools', 'gen_sfix.py')
 OUT_S1      = os.path.join(DATA_DIR, f'{_GAME_ID}-s1.s1')
 DB_PATH     = os.path.join(DATA_DIR, 'neorom.db')
 INFIX_DIR   = os.path.join(DATA_DIR, 'infix')
@@ -86,9 +81,6 @@ def decode_tile(raw32):
             px[row, cr] = (b >> 4) & 0xF
     return px
 
-def is_empty_tile(raw32):
-    return all(b in (0x00, 0x11) for b in raw32)
-
 def remap_tile_pen(raw32, src_pen, dst_pen):
     px = decode_tile(raw32)
     px[px == src_pen] = dst_pen
@@ -125,42 +117,17 @@ def _np_from_blob(blob):
     except Exception:
         return np.frombuffer(raw, dtype=np.uint8)
 
-# ── read all tiles from a ROM file ────────────────────────────────────────────
-def read_rom(path):
-    if not os.path.exists(path):
-        return []
-    with open(path,'rb') as f:
-        data = f.read()
-    n = len(data) // TILE_BYTES
-    return [data[i*TILE_BYTES:(i+1)*TILE_BYTES] for i in range(n)]
-
 # ── build the 128-KB ROM buffer ───────────────────────────────────────────────
 rom = bytearray(ROM_SIZE)   # transparent = all 0x00
 
-# Step 1: seed with sfix.sfix so standard NeoGeo fonts are available everywhere
-sfix_path = SFIX_ROM if os.path.exists(SFIX_ROM) else SFIX_FALLBACK
-sfix_tiles = read_rom(sfix_path)
-if sfix_tiles:
-    for i, t in enumerate(sfix_tiles[:NUM_TILES]):
-        rom[i*TILE_BYTES:(i+1)*TILE_BYTES] = t
-    print(f"Seeded {len(sfix_tiles[:NUM_TILES])} tiles from {os.path.basename(sfix_path)}")
-else:
-    print(f"Warning: no sfix.sfix found in {SFIX_ROM} or {SFIX_FALLBACK}")
-
-# Step 2: overlay the existing game S1 ROM outside the generated infix region.
-# Tiles 0-255 remain the normal font area.  Tiles 256+ are deterministic
-# generated art slots so runtime code can address infix images by fixed tile
-# numbers without depending on old ROM contents.
-game_tiles = read_rom(GAME_S1)
-preserved  = 0
-for i, t in enumerate(game_tiles[:NUM_TILES]):
-    if i >= INFIX_REGION_START:
-        continue
-    if not is_empty_tile(t):
-        rom[i*TILE_BYTES:(i+1)*TILE_BYTES] = t
-        preserved += 1
-if preserved:
-    print(f"Preserved {preserved} non-empty base-font tiles from {os.path.basename(GAME_S1)}")
+# Step 1: seed with the EagleBIOS system font so text works in every game.
+# Tiles 0-255 are the font area; tiles 256+ are deterministic generated art
+# slots, so the ROM never depends on an earlier build's contents.
+_font_spec = importlib.util.spec_from_file_location("eagle_sfix", SYSTEM_FONT)
+_font = importlib.util.module_from_spec(_font_spec)
+_font_spec.loader.exec_module(_font)
+rom[:] = _font.build_rom()
+print(f"Seeded the system font from {os.path.relpath(SYSTEM_FONT, SCRIPT_DIR)}")
 
 make_base_font_transparent()
 print("Made base FIX font background transparent")
@@ -218,7 +185,7 @@ except Exception as e:
     print(f"DB error: {e}")
 
 # ── fallback: read PNG files directly from infix/ dir ─────────────────────────
-if not infix_tiles:
+if not infix_tiles and os.path.isdir(INFIX_DIR):
     try:
         import png as pypng
         pngs = sorted(f for f in os.listdir(INFIX_DIR) if f.endswith('.png'))

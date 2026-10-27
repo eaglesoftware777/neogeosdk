@@ -16,9 +16,8 @@ Pipeline:
   fixtiles.py        →  777-s1.s1 (128 KB, hardware format)
 
 fixtiles.py build order:
-  1. Seed from sfix.sfix (standard NeoGeo system fonts)
-  2. Preserve non-infix base font tiles from existing 777-s1.s1
-  3. Write infix PNG tiles sequentially starting at tile 256
+  1. Seed from the EagleBIOS system font (bios/tools/gen_sfix.py)
+  2. Write infix PNG tiles sequentially starting at tile 256
 
 Runtime code can address these generated FIX images by stable tile numbers.
 The standard text font remains in the low tile range used by the SDK text

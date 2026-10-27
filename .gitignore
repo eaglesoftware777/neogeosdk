@@ -74,3 +74,14 @@ roms/helloworld/*
 roms/neogeogame/*
 roms/tutorial/*
 !roms/*/.gitkeep
+
+# Maiya packages built before the fix ROM cleanup stay local
+dist/maiya-eagle-bios.zip
+dist/roms/maiya.zip
+dist/release/Maiya-BackBit-*_v[2-4].zip
+dist/release/Maiya-Darksoft-*_v[2-4].zip
+dist/release/Maiya-WIP-EagleBIOS.zip
+dist/release/Maiya-WIP-*EagleBIOS_v[2-4].zip
+dist/release/Maiya-WIP-NeoSD_*_v[1-4].neo
+dist/release/Maiya-WIP-NeoSD_*_TEST.neo
+dist/release/Maiya-WIP-NeoSD_*PRERELEASE*.neo
