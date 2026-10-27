@@ -1,0 +1,12 @@
+# NoSignal v3: dist/release, made by tools/make_release.py
+# size  crc32     sha256  file
+ 17567744  27621fdd  8f6d020e341fc343b6313bf3745643b31cc008e171665c2702c5f0cf64fca0f8  NoSignal-WIP-NeoSD_MVS_v3.neo
+ 17567744  896c3f4d  859ba082b30ee241ebb4c852fbe8cb386e0bc61c1cdeb81740810f39f65642db  NoSignal-WIP-NeoSD_AES_v3.neo
+  6955333  cea0900e  370a6282c6387af8fa434b652c6a5346cc1029f3b41490d410a2070e9f1dfb51  NoSignal-Darksoft-MVS_v3.zip
+  6955332  51cdc21d  680e9ab366fbd461513318c332ceb6a3c253774545b66a99a05b476f59907dac  NoSignal-Darksoft-AES_v3.zip
+  7033914  b78124a1  faa6cf6976f9c1eae51890bc722185a116f770f4010490f1cd3064c0c96ae3f1  NoSignal-BackBit-MVS_v3.zip
+  7033999  d693159c  4b85c9d6289e813ddb6992830c4be79e355e0884dc90506404f1429adc27fa5a  NoSignal-BackBit-AES_v3.zip
+  7084268  28ea201e  ca34787ed7740c9b37c4affb783fb9691ad9cb86a9ba6ee1df72714543d5ce72  NoSignal-WIP-EagleBIOS_v3.zip
+  7062753  d3d28885  5f7527f7562be48e080bd837736b5ceab0f6f66c729e1e944ca32f7aee61532e  NoSignal-WIP-AES-EagleBIOS_v3.zip
+     5154  871da423  1f9bb5764f1272dfdab394c586f42e0249999dcf32f2ee6769b414bacc11a0a2  NoSignal-README_v3.txt
+    17818  d0654f2d  3e3ce329dc0dc143cfcc308c26c0774033e3be0db0dbe39c9d890b00c929a83e  NoSignal-CHANGELOG_v3.txt
