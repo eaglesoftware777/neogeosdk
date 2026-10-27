@@ -1,0 +1,12 @@
+# MahjongDemo v1: dist/release, made by tools/make_release.py
+# size  crc32     sha256  file
+ 11276288  728d5c5f  7f65722cdb0fef00a2e85b40a3b6385cb58f733884af8f3ce38081c5e485f07e  MahjongDemo-WIP-NeoSD_MVS_v1.neo
+ 11276288  f67a3f74  0d2ae52eb34d4cf2222cc31cc657123eb75b58bbb4db050b0eb35e38ac7abf7b  MahjongDemo-WIP-NeoSD_AES_v1.neo
+  1263783  b1918176  833d0cedc6bdf5a7e29950db1d02cfb79d7799c38930ce2d1ee4538c6aab27af  MahjongDemo-Darksoft-MVS_v1.zip
+  1263781  557450bb  457c708e993fa08a87ec6749fc2057b87d60168c4df9926c8fb4a48b1a8ace41  MahjongDemo-Darksoft-AES_v1.zip
+  1264253  3554d7b3  fd0a72002ba5b64a0b20ed27c8e30d8e03d23c212bdfc1d5222f7ed9019878cc  MahjongDemo-BackBit-MVS_v1.zip
+  1264339  f9d31cd0  5b3f6c580b5d323a9441fbcd379d3118b28bc1311afa04e2f360b8bb1c582147  MahjongDemo-BackBit-AES_v1.zip
+  1314557  b1b0253e  0d22619c1c6d738052b7e706e540f15365b2044f4ac0cbf6a39b0ca52a49b683  MahjongDemo-WIP-EagleBIOS_v1.zip
+  1293043  0ff7cf44  613f929149fc9841538c15ac69b9d8e7dd162ba75c6f89c7a87fe7d4de76c7e3  MahjongDemo-WIP-AES-EagleBIOS_v1.zip
+     1656  a6f3c37f  423b006c83e4778a24f1cda49001975c18af8ca2697eb4e314818f9e98fb1254  MahjongDemo-README_v1.txt
+     1151  24a16361  1d81af81f99bcf809339f726a6f6d5fb329e18300b574fcf7de2cfac4e76ec07  MahjongDemo-CHANGELOG_v1.txt

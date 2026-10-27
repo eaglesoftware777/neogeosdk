@@ -1,0 +1,16 @@
+{
+  "platform": "aes",
+  "bios": "asia",
+  "bios_path": "/mnt/c/mame/neogeosdk/tests/skylance/bios",
+  "stress": true,
+  "seconds": 90,
+  "elf_sha256": "86576bebb6b41f11466ea75818db9526cc9b072cec4d74160dd306b0a8b82cf8",
+  "rom_sha256": {
+    "p1": "c828342e62810008af0c8e3b4bccb1890fefa96fc697d1c91de90ebbdfc7f74c",
+    "s1": "7c0a7c634b0e4a7d627fc4cb10eac3f83236cc211f3977ef4f59b69a4871a5f2",
+    "m1": "f02b49f35b2d2a0f3ca47804b0a534d91c3364bf4177afc54f4ef3e724435545",
+    "v1": "a2158efee16142826c399890976bc6ae3013c9977f56a09abb59220ccbeef6d2",
+    "c1": "2c061abcb8a50933b5bac3ad2cb6460cf82f9450d0cb3c24a48fb77fcf8c7d06",
+    "c2": "0f4941f9249542a27aa2abd7e583a74111ea6eecc8a45f92d71a2a20a6107ca2"
+  }
+}

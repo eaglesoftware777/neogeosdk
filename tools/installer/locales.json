@@ -1,0 +1,1166 @@
+{
+  "en_US": {
+    "lang_name": "English (US)",
+    "app_title": "Maiya: Super Nature Girl",
+    "app_subtitle": "Eagle Software Official Release",
+    "copyright": "© 2026 Eagle Software Studio. All Rights Reserved.",
+    "step_badge": "Step {step} of {total}",
+    "btn_back": "Back",
+    "btn_next": "Next >",
+    "btn_install": "Install Now",
+    "btn_finish": "Finish & Play",
+    "step1_title": "Welcome to Maiya: Super Nature Girl Setup",
+    "step1_desc": "Welcome to the official installer for Maiya: Super Nature Girl, the arcade platformer built for SNK Neo-Geo MVS and Neo-Geo AES systems, powered by the open-source EagleBIOS architecture.",
+    "step1_notice_title": "Eagle Software Release Notice:",
+    "step1_notice": "Neo-Geo MVS and Neo-Geo AES are trademarks of SNK Corporation. This commercial release uses open-source EagleBIOS and runs authentically on original hardware and official MAME.",
+    "step2_title": "Storyline: The Legend of Maiya & Luna",
+    "hero_maiya_title": "Maiya (Guardian of the Sun)",
+    "hero_maiya_desc": "Master of solar leaf attacks, agile double-jumps, and nature martial arts.",
+    "hero_luna_title": "Luna (Silver Moon Hunter)",
+    "hero_luna_desc": "Deadly blade strikes, nocturnal arts, and high-velocity ninja sprints.",
+    "story_chapters": [
+      {
+        "title": "PROLOGUE",
+        "text": "In the heart of a vast, unspoiled land lie several valleys filled with forests, rivers, mountains, and open plains.\n\n**Maiya** and **Luna**, twin sisters, know this land better than anyone. Raised close to nature, they have become formidable fighters through years of rigorous training and mastery of the martial arts.\n\nThey live simple lives, watch over the villagers, and step in whenever someone is in danger.\n\nBut lately, something has changed.\n\nMachines are appearing along the edges of the valleys.\n\nThe rivers are growing murky.\n\nThe animals are disappearing.\n\nAnd thick clouds of smoke are rising on the horizon.\n\nBehind it all is a ruthless industrialist: **Lord Smoggar**.\n\nHis ambition is to transform this untouched land, piece by piece, into a vast industrial empire.\n\nTo accelerate his plans, he has **Sunboy** kidnapped — the young prince who opposes his expansion.\n\nAs soon as Maiya hears the news, she decides to set out and rescue him.\n\nLuna stays behind to protect the valley and its people.\n\nAnd so Maiya's adventure begins."
+      },
+      {
+        "title": "MISSION 1 — EMERALD FOREST",
+        "text": "Maiya enters **Emerald Forest**, a vast woodland that remains largely untouched.\n\nBut Smoggar's machines have already established a foothold.\n\nSoldiers patrol between the trees, and industrial facilities loom among the greenery.\n\nMaiya ventures deep into the forest, driving back enemy forces and helping villagers along the way.\n\nShe soon discovers that the pollution originates from several facilities scattered throughout the valley.\n\nDeep in the woods, she reaches an area controlled by one of Smoggar's guardians.\n\nAfter defeating the guardian, Maiya destroys the facility and liberates the region.\n\nLittle by little, the forest begins to recover its natural beauty.\n\nBut her journey has only just begun."
+      },
+      {
+        "title": "MISSION 2 — SACRED FALLS",
+        "text": "Maiya's next destination is **Sacred Falls**.\n\nTowering waterfalls and steep mountain trails dominate the region.\n\nHigh above the valley, Smoggar has installed machinery to divert the water and bring it under his control.\n\nMaiya must scale the cliffs and cross the waterfalls to reach the enemy installations.\n\nThe higher she climbs, the more dangerous the terrain becomes.\n\nAt the summit, she faces the forces guarding the region.\n\nOnce the enemy is defeated, Maiya destroys the installations.\n\nAt last, the water returns to its natural course.\n\nWith Sacred Falls liberated, Maiya continues toward the next valley."
+      },
+      {
+        "title": "MISSION 3 — CORAL COAST",
+        "text": "Maiya's journey leads her to **Coral Coast**.\n\nThis time, the threat comes from the sea.\n\nIndustrial complexes have appeared along the shoreline, dumping waste that is beginning to contaminate the water.\n\nMaiya makes her way along coastal trails, across docks, and through areas overrun by machines.\n\nShe soon realizes that Smoggar's operations extend much farther than she originally imagined.\n\nThe valleys are not being attacked at random.\n\nThey are all part of a single, carefully coordinated plan.\n\nMaiya presses forward and confronts those responsible for polluting the coast.\n\nAnother region is liberated."
+      },
+      {
+        "title": "MISSION 4 — AUTUMN GROVE",
+        "text": "Maiya arrives at **Autumn Grove**.\n\nThis valley was once famous for its trees and their brilliant fall colors.\n\nBut Smoggar's industrial operations have begun to devastate the landscape.\n\nSeveral mountain passes have been destroyed, and many trails have become dangerous.\n\nMaiya fights her way through the damaged terrain, battling the soldiers protecting the installations.\n\nEventually, she reaches the heart of the contaminated area.\n\nAfter a fierce battle, the machines finally grind to a halt.\n\nThe villagers can once again travel freely throughout their valley.\n\nBut Maiya can feel it: the attacks are growing more aggressive.\n\nSmoggar is getting closer to achieving his goal."
+      },
+      {
+        "title": "MISSION 5 — CRYSTAL GROTTO",
+        "text": "Maiya's journey continues into **Crystal Grotto**.\n\nBeneath the mountains lies a vast network of caverns and underground tunnels.\n\nSmoggar uses these passages to transport materials and supply his industrial network.\n\nMaiya must navigate the caves, overcome dangerous obstacles, and fight the forces guarding the underground facilities.\n\nThere, she uncovers another part of Smoggar's plan:\n\nThe resources extracted from the natural world are being used to power his machines.\n\nMaiya destroys the main facility.\n\nBut before leaving, she learns that Smoggar's operations extend much farther south."
+      },
+      {
+        "title": "MISSION 6 — WORLD TREE / SUNKEN REEF / SILVER CAVE",
+        "text": "Maiya's adventure takes her into increasingly distant lands.\n\nShe climbs the towering heights of the **World Tree**, explores the underwater depths of **Sunken Reef**, and ventures into the mysterious **Silver Cave**.\n\nEach region presents a unique environment and conceals another part of Smoggar's industrial network.\n\nMaiya faces new enemies and gradually discovers the true scale of his organization.\n\nThe facilities are growing larger.\n\nThe machines are becoming more powerful.\n\nAnd the defenses are increasingly sophisticated.\n\nYet with every victory, Maiya liberates another part of the land.\n\nAt last, she begins closing in on the center of Smoggar's operation.\n\nAnd this time, the landscape changes completely."
+      },
+      {
+        "title": "MISSION 7 — RIO NEGRO WORKS",
+        "text": "Maiya reaches **Rio Negro Works**.\n\nFor the first time, she enters the very heart of Smoggar's industrial territory.\n\nHere, the trees are gone.\n\nNatural trails have been replaced by steel structures, platforms, and elevated walkways.\n\nThe factories operate around the clock.\n\nThick smoke fills the sky.\n\n**Barrels of toxic waste** are transported throughout the complex.\n\nMaiya realizes that Rio Negro Works is one of the main sources of pollution affecting the entire region.\n\nShe fights her way through the industrial complex and begins shutting down the systems responsible for the contamination.\n\nBut Smoggar has prepared a powerful response.\n\nA formidable mechanical guardian appears."
+      },
+      {
+        "title": "IRON VULTURE",
+        "text": "**Iron Vulture** is the mechanical guardian of Rio Negro Works.\n\nTo continue her mission, Maiya must defeat this powerful machine.\n\nAfter an exhausting battle, she finally brings it down.\n\nOne by one, the complex's systems begin shutting down.\n\nBut before the facility collapses, the enemy reveals the truth:\n\n**Lord Smoggar is waiting for her at the heart of his empire.**\n\nMaiya now knows what she must do.\n\nShe must confront him herself."
+      },
+      {
+        "title": "FINAL CHAPTER — THE CITADEL",
+        "text": "Maiya finally reaches **the Citadel**.\n\nIt is the center of Smoggar's power.\n\nAll around her, industrial facilities stretch as far as the eye can see.\n\nAnd yet, something has changed.\n\nThe regions Maiya has traveled through are already beginning to recover.\n\nThe destroyed facilities have fallen silent.\n\nVillagers are reclaiming their land.\n\nAnd the valleys are slowly returning to their former beauty.\n\nMaiya enters the Citadel.\n\nShe breaks through Smoggar's final defenses and reaches the heart of the fortress.\n\nThere, she finds **Sunboy**.\n\nThe young prince is still being held prisoner.\n\nMaiya sets him free.\n\nAt that very moment, Lord Smoggar appears."
+      },
+      {
+        "title": "FINAL BATTLE — LORD SMOGGAR",
+        "text": "Smoggar refuses to surrender his empire.\n\nTo him, forests, rivers, and untouched wilderness are nothing more than resources waiting to be exploited.\n\nHe activates his ultimate defense system.\n\nMaiya prepares for her final battle.\n\nDeep inside the Citadel, she confronts Smoggar.\n\nThe fight is long and brutal.\n\nBut Maiya draws upon everything she has learned throughout her journey.\n\nIn the end, she destroys the central system powering Smoggar's industrial empire.\n\nThe machines shut down.\n\nThe factories fall silent.\n\nAnd the thick smoke slowly begins to clear from the sky.\n\n**Lord Smoggar has been defeated.**"
+      },
+      {
+        "title": "EPILOGUE",
+        "text": "Sunboy is free.\n\nMaiya leaves the Citadel with him by her side.\n\nIn the distance, the first regions she liberated are already coming back to life.\n\nThe rivers run clear again.\n\nAnimals return to the forests.\n\nVillagers return to their homes.\n\nAt last, Luna is reunited with her sister.\n\nStanding side by side, the twins look out across the valley.\n\nThe battle is over.\n\nBut their greatest victory is more than simply defeating Smoggar.\n\nThey have protected their homeland and given its people the opportunity to rebuild their future.\n\nMaiya takes one final look toward the horizon.\n\nLittle by little, nature is reclaiming what rightfully belongs to it.\n\n**The valley is free.**\n\n**Sunboy is safe.**\n\n**Lord Smoggar is defeated.**\n\nAnd Maiya, together with Luna, stands ready to defend their homeland whenever a new threat arises.\n\n\n\n# MAIYA: SUPER NATURE GIRL"
+      }
+    ],
+    "step3_title": "MAME Neo-Geo Emulator Setup",
+    "step3_desc": "Maiya runs seamlessly on MAME. The installer can detect an existing installation or automatically download a working release from official GitHub release pages.",
+    "step3_status_label": "MAME Status on System:",
+    "step3_detected": "MAME Detected",
+    "step3_missing": "MAME Not Found (Download recommended)",
+    "step3_opt_existing": "Use existing MAME on system",
+    "step3_opt_download": "Download MAME from official GitHub release pages",
+    "step3_select_release": "Select Official MAME Release:",
+    "step3_custom_path": "Custom MAME Executable Path (if applicable):",
+    "step4_title": "Destination Directory & Components",
+    "step4_desc": "Choose the installation folder and select editions to install.",
+    "step4_target_label": "Install Destination Directory:",
+    "step4_components_label": "Components to Install:",
+    "step4_chk_mvs": "Maiya MVS Edition (Neo-Geo Arcade format + EagleBIOS euro)",
+    "step4_chk_aes": "Maiya AES Edition (Neo-Geo Home Console format + EagleBIOS asia + Memory Card)",
+    "step4_chk_shortcuts": "Desktop Shortcuts (Custom Maiya desktop icons for MVS and AES)",
+    "step5_title": "Installing Maiya: Super Nature Girl...",
+    "step5_desc": "Please wait while the Eagle Software installer deploys the game ROMs, BIOS packages, and desktop shortcuts.",
+    "step5_complete_title": "Installation Complete!",
+    "step5_complete_desc": "Maiya: Super Nature Girl has been installed successfully with custom Desktop icons!",
+    "chapter_select_label": "Jump to Mission / Chapter:",
+    "btn_prev_chapter": "← Previous",
+    "btn_next_chapter": "Next →",
+    "step4_game_source_label": "Game Edition Source:",
+    "step4_game_source_local": "Latest Local Build (v4 Walk-to-Run Engine & EagleBIOS)",
+    "step4_game_source_download": "Download from Official Release Page",
+    "desktop_icon_hint": "Includes high-definition Maiya icon (.ico / .png)"
+  },
+  "en_GB": {
+    "lang_name": "English (GB)",
+    "app_title": "Maiya: Super Nature Girl",
+    "app_subtitle": "Eagle Software Official Release",
+    "copyright": "© 2026 Eagle Software Studio. All Rights Reserved.",
+    "step_badge": "Step {step} of {total}",
+    "btn_back": "Back",
+    "btn_next": "Next >",
+    "btn_install": "Install Now",
+    "btn_finish": "Finish & Play",
+    "step1_title": "Welcome to Maiya: Super Nature Girl Setup",
+    "step1_desc": "Welcome to the official installer for Maiya: Super Nature Girl, the arcade platformer built for SNK Neo-Geo MVS and Neo-Geo AES systems, powered by the open-source EagleBIOS architecture.",
+    "step1_notice_title": "Eagle Software Release Notice:",
+    "step1_notice": "Neo-Geo MVS and Neo-Geo AES are trademarks of SNK Corporation. This commercial release uses open-source EagleBIOS and runs authentically on original hardware and official MAME.",
+    "step2_title": "Storyline: The Legend of Maiya & Luna",
+    "hero_maiya_title": "Maiya (Guardian of the Sun)",
+    "hero_maiya_desc": "Master of solar leaf attacks, agile double-jumps, and nature martial arts.",
+    "hero_luna_title": "Luna (Silver Moon Hunter)",
+    "hero_luna_desc": "Deadly blade strikes, nocturnal arts, and high-velocity ninja sprints.",
+    "story_chapters": [
+      {
+        "title": "PROLOGUE",
+        "text": "In the heart of a vast, unspoiled land lie several valleys filled with forests, rivers, mountains, and open plains.\n\n**Maiya** and **Luna**, twin sisters, know this land better than anyone. Raised close to nature, they have become formidable fighters through years of rigorous training and mastery of the martial arts.\n\nThey live simple lives, watch over the villagers, and step in whenever someone is in danger.\n\nBut lately, something has changed.\n\nMachines are appearing along the edges of the valleys.\n\nThe rivers are growing murky.\n\nThe animals are disappearing.\n\nAnd thick clouds of smoke are rising on the horizon.\n\nBehind it all is a ruthless industrialist: **Lord Smoggar**.\n\nHis ambition is to transform this untouched land, piece by piece, into a vast industrial empire.\n\nTo accelerate his plans, he has **Sunboy** kidnapped — the young prince who opposes his expansion.\n\nAs soon as Maiya hears the news, she decides to set out and rescue him.\n\nLuna stays behind to protect the valley and its people.\n\nAnd so Maiya's adventure begins."
+      },
+      {
+        "title": "MISSION 1 — EMERALD FOREST",
+        "text": "Maiya enters **Emerald Forest**, a vast woodland that remains largely untouched.\n\nBut Smoggar's machines have already established a foothold.\n\nSoldiers patrol between the trees, and industrial facilities loom among the greenery.\n\nMaiya ventures deep into the forest, driving back enemy forces and helping villagers along the way.\n\nShe soon discovers that the pollution originates from several facilities scattered throughout the valley.\n\nDeep in the woods, she reaches an area controlled by one of Smoggar's guardians.\n\nAfter defeating the guardian, Maiya destroys the facility and liberates the region.\n\nLittle by little, the forest begins to recover its natural beauty.\n\nBut her journey has only just begun."
+      },
+      {
+        "title": "MISSION 2 — SACRED FALLS",
+        "text": "Maiya's next destination is **Sacred Falls**.\n\nTowering waterfalls and steep mountain trails dominate the region.\n\nHigh above the valley, Smoggar has installed machinery to divert the water and bring it under his control.\n\nMaiya must scale the cliffs and cross the waterfalls to reach the enemy installations.\n\nThe higher she climbs, the more dangerous the terrain becomes.\n\nAt the summit, she faces the forces guarding the region.\n\nOnce the enemy is defeated, Maiya destroys the installations.\n\nAt last, the water returns to its natural course.\n\nWith Sacred Falls liberated, Maiya continues toward the next valley."
+      },
+      {
+        "title": "MISSION 3 — CORAL COAST",
+        "text": "Maiya's journey leads her to **Coral Coast**.\n\nThis time, the threat comes from the sea.\n\nIndustrial complexes have appeared along the shoreline, dumping waste that is beginning to contaminate the water.\n\nMaiya makes her way along coastal trails, across docks, and through areas overrun by machines.\n\nShe soon realizes that Smoggar's operations extend much farther than she originally imagined.\n\nThe valleys are not being attacked at random.\n\nThey are all part of a single, carefully coordinated plan.\n\nMaiya presses forward and confronts those responsible for polluting the coast.\n\nAnother region is liberated."
+      },
+      {
+        "title": "MISSION 4 — AUTUMN GROVE",
+        "text": "Maiya arrives at **Autumn Grove**.\n\nThis valley was once famous for its trees and their brilliant fall colors.\n\nBut Smoggar's industrial operations have begun to devastate the landscape.\n\nSeveral mountain passes have been destroyed, and many trails have become dangerous.\n\nMaiya fights her way through the damaged terrain, battling the soldiers protecting the installations.\n\nEventually, she reaches the heart of the contaminated area.\n\nAfter a fierce battle, the machines finally grind to a halt.\n\nThe villagers can once again travel freely throughout their valley.\n\nBut Maiya can feel it: the attacks are growing more aggressive.\n\nSmoggar is getting closer to achieving his goal."
+      },
+      {
+        "title": "MISSION 5 — CRYSTAL GROTTO",
+        "text": "Maiya's journey continues into **Crystal Grotto**.\n\nBeneath the mountains lies a vast network of caverns and underground tunnels.\n\nSmoggar uses these passages to transport materials and supply his industrial network.\n\nMaiya must navigate the caves, overcome dangerous obstacles, and fight the forces guarding the underground facilities.\n\nThere, she uncovers another part of Smoggar's plan:\n\nThe resources extracted from the natural world are being used to power his machines.\n\nMaiya destroys the main facility.\n\nBut before leaving, she learns that Smoggar's operations extend much farther south."
+      },
+      {
+        "title": "MISSION 6 — WORLD TREE / SUNKEN REEF / SILVER CAVE",
+        "text": "Maiya's adventure takes her into increasingly distant lands.\n\nShe climbs the towering heights of the **World Tree**, explores the underwater depths of **Sunken Reef**, and ventures into the mysterious **Silver Cave**.\n\nEach region presents a unique environment and conceals another part of Smoggar's industrial network.\n\nMaiya faces new enemies and gradually discovers the true scale of his organization.\n\nThe facilities are growing larger.\n\nThe machines are becoming more powerful.\n\nAnd the defenses are increasingly sophisticated.\n\nYet with every victory, Maiya liberates another part of the land.\n\nAt last, she begins closing in on the center of Smoggar's operation.\n\nAnd this time, the landscape changes completely."
+      },
+      {
+        "title": "MISSION 7 — RIO NEGRO WORKS",
+        "text": "Maiya reaches **Rio Negro Works**.\n\nFor the first time, she enters the very heart of Smoggar's industrial territory.\n\nHere, the trees are gone.\n\nNatural trails have been replaced by steel structures, platforms, and elevated walkways.\n\nThe factories operate around the clock.\n\nThick smoke fills the sky.\n\n**Barrels of toxic waste** are transported throughout the complex.\n\nMaiya realizes that Rio Negro Works is one of the main sources of pollution affecting the entire region.\n\nShe fights her way through the industrial complex and begins shutting down the systems responsible for the contamination.\n\nBut Smoggar has prepared a powerful response.\n\nA formidable mechanical guardian appears."
+      },
+      {
+        "title": "IRON VULTURE",
+        "text": "**Iron Vulture** is the mechanical guardian of Rio Negro Works.\n\nTo continue her mission, Maiya must defeat this powerful machine.\n\nAfter an exhausting battle, she finally brings it down.\n\nOne by one, the complex's systems begin shutting down.\n\nBut before the facility collapses, the enemy reveals the truth:\n\n**Lord Smoggar is waiting for her at the heart of his empire.**\n\nMaiya now knows what she must do.\n\nShe must confront him herself."
+      },
+      {
+        "title": "FINAL CHAPTER — THE CITADEL",
+        "text": "Maiya finally reaches **the Citadel**.\n\nIt is the center of Smoggar's power.\n\nAll around her, industrial facilities stretch as far as the eye can see.\n\nAnd yet, something has changed.\n\nThe regions Maiya has traveled through are already beginning to recover.\n\nThe destroyed facilities have fallen silent.\n\nVillagers are reclaiming their land.\n\nAnd the valleys are slowly returning to their former beauty.\n\nMaiya enters the Citadel.\n\nShe breaks through Smoggar's final defenses and reaches the heart of the fortress.\n\nThere, she finds **Sunboy**.\n\nThe young prince is still being held prisoner.\n\nMaiya sets him free.\n\nAt that very moment, Lord Smoggar appears."
+      },
+      {
+        "title": "FINAL BATTLE — LORD SMOGGAR",
+        "text": "Smoggar refuses to surrender his empire.\n\nTo him, forests, rivers, and untouched wilderness are nothing more than resources waiting to be exploited.\n\nHe activates his ultimate defense system.\n\nMaiya prepares for her final battle.\n\nDeep inside the Citadel, she confronts Smoggar.\n\nThe fight is long and brutal.\n\nBut Maiya draws upon everything she has learned throughout her journey.\n\nIn the end, she destroys the central system powering Smoggar's industrial empire.\n\nThe machines shut down.\n\nThe factories fall silent.\n\nAnd the thick smoke slowly begins to clear from the sky.\n\n**Lord Smoggar has been defeated.**"
+      },
+      {
+        "title": "EPILOGUE",
+        "text": "Sunboy is free.\n\nMaiya leaves the Citadel with him by her side.\n\nIn the distance, the first regions she liberated are already coming back to life.\n\nThe rivers run clear again.\n\nAnimals return to the forests.\n\nVillagers return to their homes.\n\nAt last, Luna is reunited with her sister.\n\nStanding side by side, the twins look out across the valley.\n\nThe battle is over.\n\nBut their greatest victory is more than simply defeating Smoggar.\n\nThey have protected their homeland and given its people the opportunity to rebuild their future.\n\nMaiya takes one final look toward the horizon.\n\nLittle by little, nature is reclaiming what rightfully belongs to it.\n\n**The valley is free.**\n\n**Sunboy is safe.**\n\n**Lord Smoggar is defeated.**\n\nAnd Maiya, together with Luna, stands ready to defend their homeland whenever a new threat arises.\n\n\n\n# MAIYA: SUPER NATURE GIRL"
+      }
+    ],
+    "step3_title": "MAME Neo-Geo Emulator Setup",
+    "step3_desc": "Maiya runs seamlessly on MAME. The installer can detect an existing installation or automatically download a working release from official GitHub release pages.",
+    "step3_status_label": "MAME Status on System:",
+    "step3_detected": "MAME Detected",
+    "step3_missing": "MAME Not Found (Download recommended)",
+    "step3_opt_existing": "Use existing MAME on system",
+    "step3_opt_download": "Download MAME from official GitHub release pages",
+    "step3_select_release": "Select Official MAME Release:",
+    "step3_custom_path": "Custom MAME Executable Path (if applicable):",
+    "step4_title": "Destination Directory & Components",
+    "step4_desc": "Choose the installation folder and select editions to install.",
+    "step4_target_label": "Install Destination Directory:",
+    "step4_components_label": "Components to Install:",
+    "step4_chk_mvs": "Maiya MVS Edition (Neo-Geo Arcade format + EagleBIOS euro)",
+    "step4_chk_aes": "Maiya AES Edition (Neo-Geo Home Console format + EagleBIOS asia + Memory Card)",
+    "step4_chk_shortcuts": "Desktop Shortcuts (Custom Maiya desktop icons for MVS and AES)",
+    "step5_title": "Installing Maiya: Super Nature Girl...",
+    "step5_desc": "Please wait while the Eagle Software installer deploys the game ROMs, BIOS packages, and desktop shortcuts.",
+    "step5_complete_title": "Installation Complete!",
+    "step5_complete_desc": "Maiya: Super Nature Girl has been installed successfully with custom Desktop icons!",
+    "chapter_select_label": "Jump to Mission / Chapter:",
+    "btn_prev_chapter": "← Previous",
+    "btn_next_chapter": "Next →",
+    "step4_game_source_label": "Game Edition Source:",
+    "step4_game_source_local": "Latest Local Build (v4 Walk-to-Run Engine & EagleBIOS)",
+    "step4_game_source_download": "Download from Official Release Page",
+    "desktop_icon_hint": "Includes high-definition Maiya icon (.ico / .png)"
+  },
+  "fr_FR": {
+    "lang_name": "Français (French)",
+    "app_title": "Maiya: Super Nature Girl",
+    "app_subtitle": "Version Officielle Eagle Software",
+    "copyright": "© 2026 Eagle Software Studio. Tous droits réservés.",
+    "step_badge": "Étape {step} sur {total}",
+    "btn_back": "Précédent",
+    "btn_next": "Suivant >",
+    "btn_install": "Installer Maintenant",
+    "btn_finish": "Terminer & Jouer",
+    "step1_title": "Bienvenue dans l’installation de Maiya",
+    "step1_desc": "Bienvenue dans le programme d’installation officiel de Maiya: Super Nature Girl pour bornes d’arcade SNK Neo-Geo MVS et consoles Neo-Geo AES, propulsé par EagleBIOS.",
+    "step1_notice_title": "Avis Officiel Eagle Software :",
+    "step1_notice": "Neo-Geo MVS et AES sont des marques de SNK Corporation. Cette édition commerciale tourne sur matériel authentique ainsi que sur le dernier émulateur officiel MAME.",
+    "step2_title": "Histoire : La Légende de Maiya & Luna",
+    "hero_maiya_title": "Maiya (Gardienne du Soleil)",
+    "hero_maiya_desc": "Maîtresse des attaques de feuilles solaires, double-sauts agiles et arts martiaux de la nature.",
+    "hero_luna_title": "Luna (Chasseresse de la Lune d’Argent)",
+    "hero_luna_desc": "Frappes tranchantes précises, arts nocturnes et sprints fulgurants.",
+    "story_chapters": [
+      {
+        "title": "PROLOGUE",
+        "text": "Au cœur d’une terre vaste et préservée s’étendent des vallées de forêts, rivières et montagnes.\n\nMaiya et Luna, sœurs jumelles, connaissent cette terre mieux que quiconque. Élevées au contact de la nature, elles maîtrisent les arts martiaux les plus redoutables.\n\nMais des machines polluantes surgissent sous le commandement du cruel Lord Smoggar. Pour accélérer son empire industriel, il fait enlever le jeune prince Sunboy. Maiya part aussitôt à sa rescousse tandis que Luna protège la vallée !"
+      },
+      {
+        "title": "MISSION 1 — FORÊT D’ÉMERAUDE",
+        "text": "Maiya pénètre dans la Forêt d’Émeraude, où patrouillent les soldats et les machines de Smoggar. Elle repousse les assaillants, libère les villageois, anéantit le gardien et détruit l’usine toxique."
+      },
+      {
+        "title": "MISSION 2 — CASCADES SACRÉES",
+        "text": "Maiya gravit les Cascades Sacrées pour stopper les machines qui détournent l’eau pure. Au sommet, elle terrasse la garnison ennemie et rend aux cascades leur cours naturel."
+      },
+      {
+        "title": "MISSION 3 — CÔTE DE CORAIL",
+        "text": "Sur la Côte de Corail, des complexes industriels déversent du poison dans la mer. Maiya traverse les pontons, vainc le monstre mécanique des mers et purifie l’océan."
+      },
+      {
+        "title": "MISSION 4 — BOSQUET D’AUTOMNE",
+        "text": "Dans le Bosquet d’Automne, d’immenses scies abattent les arbres anciens. Maiya bondit de branche en branche et neutralise les bûcherons robotiques."
+      },
+      {
+        "title": "MISSION 5 — GROTTE DE CRISTAL",
+        "text": "Sous terre, des forages fracturent les parois de cristal. Maiya s’enfonce dans les profondeurs et détruit le ver foreur titan."
+      },
+      {
+        "title": "MISSION 6 — ARBRE MONDE & LES ABÎMES",
+        "text": "Maiya plonge dans les récifs submergés et escalade les racines du grand Arbre Monde pour briser les canalisations de déchets acides."
+      },
+      {
+        "title": "MISSION 7 — USINES DU RIO NEGRO",
+        "text": "Dans la forteresse métallurgique du Rio Negro, Maiya infiltre les hauts-fourneaux et sabote les générateurs de smog."
+      },
+      {
+        "title": "MISSION 8 — LE VAUTOUR DE FER",
+        "text": "À bord de l’Aigle Solaire, Maiya livre un duel aérien épique au milieu des orages pour abattre la forteresse volante du Vautour de Fer."
+      },
+      {
+        "title": "CHAPITRE FINAL — LA CITADELLE",
+        "text": "Maiya infiltre la Citadelle, cœur du pouvoir de Smoggar. Elle brise les ultimes blindages et délivre enfin Sunboy de ses chaînes."
+      },
+      {
+        "title": "COMBAT FINAL — LORD SMOGGAR",
+        "text": "Aux commandes d’un exosquelette titanesque, Smoggar tente d’écraser Maiya. Dans un déchaînement d’arts martiaux et d’énergie solaire, Maiya terrasse le tyran !"
+      },
+      {
+        "title": "ÉPILOGUE",
+        "text": "Les fumées se dissipent, la nature s’épanouit de nouveau. Sunboy rentre chez lui et Maiya retrouve Luna sous le feuillage fleuri de la vallée."
+      }
+    ],
+    "step3_title": "Configuration de l’Émulateur MAME",
+    "step3_desc": "Maiya fonctionne parfaitement sur MAME. L’installateur détecte votre version existante ou télécharge automatiquement une version fonctionnelle depuis les pages officielles.",
+    "step3_status_label": "Statut de MAME sur le système :",
+    "step3_detected": "MAME Détecté",
+    "step3_missing": "MAME Non Trouvé (Téléchargement recommandé)",
+    "step3_opt_existing": "Utiliser le MAME déjà installé",
+    "step3_opt_download": "Télécharger MAME depuis les versions officielles GitHub",
+    "step3_select_release": "Sélectionner la version MAME :",
+    "step3_custom_path": "Chemin personnalisé de l’exécutable MAME (facultatif) :",
+    "step4_title": "Dossier de Destination & Composants",
+    "step4_desc": "Choisissez le dossier d’installation et les éditions désirées.",
+    "step4_target_label": "Dossier d’Installation :",
+    "step4_components_label": "Composants à Installer :",
+    "step4_chk_mvs": "Édition Maiya MVS (Format Arcade + EagleBIOS euro)",
+    "step4_chk_aes": "Édition Maiya AES (Format Console + EagleBIOS asia + Carte Mémoire)",
+    "step4_chk_shortcuts": "Raccourcis Bureau (Icônes personnalisées Maiya pour MVS et AES)",
+    "step5_title": "Installation de Maiya: Super Nature Girl...",
+    "step5_desc": "Veuillez patienter pendant le déploiement des ROMs, d’EagleBIOS et des icônes du bureau.",
+    "step5_complete_title": "Installation Terminée !",
+    "step5_complete_desc": "Maiya: Super Nature Girl a été installé avec succès avec ses raccourcis bureau !",
+    "chapter_select_label": "Aller à la mission / chapitre :",
+    "btn_prev_chapter": "← Précédent",
+    "btn_next_chapter": "Suivant →",
+    "step4_game_source_label": "Source de l'édition du jeu :",
+    "step4_game_source_local": "Version locale récente (Moteur v4 Course/Marche & EagleBIOS)",
+    "step4_game_source_download": "Télécharger depuis la page officielle des versions",
+    "desktop_icon_hint": "Comprend l'icône HD de Maiya (.ico / .png)"
+  },
+  "es_ES": {
+    "lang_name": "Español (Spanish)",
+    "app_title": "Maiya: Super Nature Girl",
+    "app_subtitle": "Lanzamiento Oficial Eagle Software",
+    "copyright": "© 2026 Eagle Software Studio. Todos los derechos reservados.",
+    "step_badge": "Paso {step} de {total}",
+    "btn_back": "Atrás",
+    "btn_next": "Siguiente >",
+    "btn_install": "Instalar Ahora",
+    "btn_finish": "Finalizar y Jugar",
+    "step1_title": "Bienvenido a la Instalación de Maiya",
+    "step1_desc": "Bienvenido al instalador oficial de Maiya: Super Nature Girl para sistemas arcade SNK Neo-Geo MVS y consolas Neo-Geo AES con EagleBIOS.",
+    "step1_notice_title": "Aviso Oficial Eagle Software:",
+    "step1_notice": "Neo-Geo MVS y AES son marcas registradas de SNK Corporation. Esta versión comercial funciona en hardware original y en el emulador oficial MAME.",
+    "step2_title": "Historia: La Leyenda de Maiya & Luna",
+    "hero_maiya_title": "Maiya (Guardiana del Sol)",
+    "hero_maiya_desc": "Maestra del ataque solar de hojas, saltos dobles ágiles y artes marciales de la naturaleza.",
+    "hero_luna_title": "Luna (Cazadora de la Luna Plateada)",
+    "hero_luna_desc": "Ataques cortantes certeros, artes nocturnas y veloces carreras ninja.",
+    "story_chapters": [
+      {
+        "title": "PRÓLOGO",
+        "text": "En el corazón de una tierra virgen se extienden valles de bosques, ríos y montañas.\n\nMaiya y Luna, hermanas gemelas, conocen esta tierra mejor que nadie. Criadas en la naturaleza, son guerreras formidables expertas en artes marciales.\n\nPero extrañas máquinas industriales comienzan a invadir los valles bajo el mando del despiadado Lord Smoggar. Para acelerar sus planes, secuestra al joven príncipe Sunboy. ¡Maiya parte de inmediato a rescatarlo mientras Luna defiende el valle!"
+      },
+      {
+        "title": "MISIÓN 1 — BOSQUE ESMERALDA",
+        "text": "Maiya entra en el Bosque Esmeralda, dominado por las máquinas de Smoggar. Derrota a los soldados, rescata a los aldeanos y destruye la fábrica contaminante."
+      },
+      {
+        "title": "MISIÓN 2 — CASCADAS SAGRADAS",
+        "text": "Escala las Cascadas Sagradas para desmantelar la maquinaria que desvía el agua pura y restablece el curso natural del río."
+      },
+      {
+        "title": "MISIÓN 3 — COSTA DE CORAL",
+        "text": "En la Costa de Coral, refinerías vierten desechos en el mar. Maiya derrota al coloso marino mecanizado y devuelve la pureza al océano."
+      },
+      {
+        "title": "MISIÓN 4 — BOSQUE DE OTOÑO",
+        "text": "En el Bosque de Otoño, sierras gigantes talan árboles milenarios. Maiya salta entre ramas y destruye los robots leñadores."
+      },
+      {
+        "title": "MISIÓN 5 — GRUTA DE CRISTAL",
+        "text": "Bajo tierra, excavadoras fracturan las cavernas de cristal. Maiya desciende a las profundidades y vence al titánico gusano perforador."
+      },
+      {
+        "title": "MISIÓN 6 — ÁRBOL DEL MUNDO",
+        "text": "Maiya desciende a los arrecifes y trepa por las raíces del Árbol del Mundo para liberar la savia vital de las tuberías ácidas."
+      },
+      {
+        "title": "MISIÓN 7 — FÁBRICAS DE RÍO NEGRO",
+        "text": "En el complejo industrial de Río Negro, sabotea los hornos y neutraliza las chimeneas tóxicas."
+      },
+      {
+        "title": "MISIÓN 8 — EL BUITRE DE HIERRO",
+        "text": "A lomos del Águila Solar, combate entre nubes de tormenta contra la fortaleza voladora del Buitre de Hierro."
+      },
+      {
+        "title": "CAPÍTULO FINAL — LA CIUDADELA",
+        "text": "Maiya asalta la Ciudadela de Smoggar, vence las últimas defensas y libera a Sunboy de su prisión."
+      },
+      {
+        "title": "BATALLA FINAL — LORD SMOGGAR",
+        "text": "En un duelo decisivo contra el colosal exoesqueleto de Smoggar, Maiya desata el poder del sol y destruye al tirano."
+      },
+      {
+        "title": "EPÍLOGO",
+        "text": "El humo se desvanece, el sol vuelve a brillar y la naturaleza florece. Sunboy regresa triunfante y Maiya se reúne con Luna."
+      }
+    ],
+    "step3_title": "Configuración del Emulador MAME",
+    "step3_desc": "Maiya funciona de forma nativa en MAME. El instalador detecta tu versión existente o descarga una versión oficial directamente.",
+    "step3_status_label": "Estado de MAME en el sistema:",
+    "step3_detected": "MAME Detectado",
+    "step3_missing": "MAME No Encontrado (Descarga recomendada)",
+    "step3_opt_existing": "Usar MAME existente en el equipo",
+    "step3_opt_download": "Descargar MAME desde las versiones oficiales de GitHub",
+    "step3_select_release": "Seleccionar Versión de MAME:",
+    "step3_custom_path": "Ruta personalizada de MAME (si aplica):",
+    "step4_title": "Directorio de Destino y Componentes",
+    "step4_desc": "Elija la carpeta de instalación y las ediciones deseadas.",
+    "step4_target_label": "Directorio de Instalación:",
+    "step4_components_label": "Componentes a Instalar:",
+    "step4_chk_mvs": "Edición Maiya MVS (Formato Arcade + EagleBIOS euro)",
+    "step4_chk_aes": "Edición Maiya AES (Formato Consola + EagleBIOS asia + Tarjeta de Memoria)",
+    "step4_chk_shortcuts": "Accesos Directos (Iconos de escritorio personalizados de Maiya)",
+    "step5_title": "Instalando Maiya: Super Nature Girl...",
+    "step5_desc": "Desplegando ROMs, paquetes de EagleBIOS y accesos directos en el escritorio...",
+    "step5_complete_title": "¡Instalación Completada!",
+    "step5_complete_desc": "¡Maiya: Super Nature Girl se ha instalado con éxito con iconos de escritorio!",
+    "chapter_select_label": "Ir a la misión / capítulo:",
+    "btn_prev_chapter": "← Anterior",
+    "btn_next_chapter": "Siguiente →",
+    "step4_game_source_label": "Fuente de la edición del juego:",
+    "step4_game_source_local": "Versión local reciente (Motor v4 Carrera/Paseo y EagleBIOS)",
+    "step4_game_source_download": "Descargar desde la página oficial de versiones",
+    "desktop_icon_hint": "Incluye icono HD de Maiya (.ico / .png)"
+  },
+  "pt_PT": {
+    "lang_name": "Português (Portuguese)",
+    "app_title": "Maiya: Super Nature Girl",
+    "app_subtitle": "Lançamento Oficial Eagle Software",
+    "copyright": "© 2026 Eagle Software Studio. Todos los derechos reservados.",
+    "step_badge": "Passo {step} de {total}",
+    "btn_back": "Voltar",
+    "btn_next": "Avançar >",
+    "btn_install": "Instalar Agora",
+    "btn_finish": "Concluir & Jogar",
+    "step1_title": "Bem-vindo à Instalação de Maiya",
+    "step1_desc": "Bienvenido al instalador oficial de Maiya: Super Nature Girl para sistemas arcade SNK Neo-Geo MVS y consolas Neo-Geo AES con EagleBIOS.",
+    "step1_notice_title": "Aviso Oficial Eagle Software:",
+    "step1_notice": "Neo-Geo MVS y AES son marcas registradas de SNK Corporation. Esta versión comercial funciona en hardware original y en el emulador oficial MAME.",
+    "step2_title": "Enredo: A Lenda de Maiya & Luna",
+    "hero_maiya_title": "Maiya (Guardiã do Sol)",
+    "hero_maiya_desc": "Maestra del ataque solar de hojas, saltos dobles ágiles y artes marciales de la naturaleza.",
+    "hero_luna_title": "Luna (Caçadora da Lua de Prata)",
+    "hero_luna_desc": "Ataques cortantes certeros, artes nocturnas y veloces carreras ninja.",
+    "story_chapters": [
+      {
+        "title": "PRÓLOGO",
+        "text": "En el corazón de una tierra virgen se extienden valles de bosques, ríos y montañas.\n\nMaiya y Luna, hermanas gemelas, conocen esta tierra mejor que nadie. Criadas en la naturaleza, son guerreras formidables expertas en artes marciales.\n\nPero extrañas máquinas industriales comienzan a invadir los valles bajo el mando del despiadado Lord Smoggar. Para acelerar sus planes, secuestra al joven príncipe Sunboy. ¡Maiya parte de inmediato a rescatarlo mientras Luna defiende el valle!"
+      },
+      {
+        "title": "MISSÃO 1 — FLORESTA ESMERALDA",
+        "text": "Maiya entra en el Bosque Esmeralda, dominado por las máquinas de Smoggar. Derrota a los soldados, rescata a los aldeanos y destruye la fábrica contaminante."
+      },
+      {
+        "title": "MISSÃO 2 — QUEDAS SAGRADAS",
+        "text": "Escala las Cascadas Sagradas para desmantelar la maquinaria que desvía el agua pura y restablece el curso natural del río."
+      },
+      {
+        "title": "MISSÃO 3 — COSTA DE CORAL",
+        "text": "En la Costa de Coral, refinerías vierten desechos en el mar. Maiya derrota al coloso marino mecanizado y devuelve la pureza al océano."
+      },
+      {
+        "title": "MISSÃO 4 — BOSQUE DE OUTONO",
+        "text": "En el Bosque de Otoño, sierras gigantes talan árboles milenarios. Maiya salta entre ramas y destruye los robots leñadores."
+      },
+      {
+        "title": "MISSÃO 5 — GRUTA DE CRISTAL",
+        "text": "Bajo tierra, excavadoras fracturan las cavernas de cristal. Maiya desciende a las profundidades y vence al titánico gusano perforador."
+      },
+      {
+        "title": "MISSÃO 6 — ÁRVORE DO MUNDO",
+        "text": "Maiya desciende a los arrecifes y trepa por las raíces del Árbol del Mundo para liberar la savia vital de las tuberías ácidas."
+      },
+      {
+        "title": "MISSÃO 7 — USINAS DE RIO NEGRO",
+        "text": "En el complejo industrial de Río Negro, sabotea los hornos y neutraliza las chimeneas tóxicas."
+      },
+      {
+        "title": "MISSÃO 8 — O ABUTRE DE FERRO",
+        "text": "A lomos del Águila Solar, combate entre nubes de tormenta contra la fortaleza voladora del Buitre de Hierro."
+      },
+      {
+        "title": "CAPÍTULO FINAL — A CIDADELA",
+        "text": "Maiya asalta la Ciudadela de Smoggar, vence las últimas defensas y libera a Sunboy de su prisión."
+      },
+      {
+        "title": "BATALHA FINAL — LORD SMOGGAR",
+        "text": "En un duelo decisivo contra el colosal exoesqueleto de Smoggar, Maiya desata el poder del sol y destruye al tirano."
+      },
+      {
+        "title": "EPÍLOGO",
+        "text": "El humo se desvanece, el sol vuelve a brillar y la naturaleza florece. Sunboy regresa triunfante y Maiya se reúne con Luna."
+      }
+    ],
+    "step3_title": "Configuración del Emulador MAME",
+    "step3_desc": "Maiya funciona de forma nativa en MAME. El instalador detecta tu versión existente o descarga una versión oficial directamente.",
+    "step3_status_label": "Estado de MAME en el sistema:",
+    "step3_detected": "MAME Detectado",
+    "step3_missing": "MAME No Encontrado (Descarga recomendada)",
+    "step3_opt_existing": "Usar MAME existente en el equipo",
+    "step3_opt_download": "Descargar MAME desde las versiones oficiales de GitHub",
+    "step3_select_release": "Seleccionar Versión de MAME:",
+    "step3_custom_path": "Ruta personalizada de MAME (si aplica):",
+    "step4_title": "Directorio de Destino y Componentes",
+    "step4_desc": "Elija la carpeta de instalación y las ediciones deseadas.",
+    "step4_target_label": "Directorio de Instalación:",
+    "step4_components_label": "Componentes a Instalar:",
+    "step4_chk_mvs": "Edición Maiya MVS (Formato Arcade + EagleBIOS euro)",
+    "step4_chk_aes": "Edición Maiya AES (Formato Consola + EagleBIOS asia + Tarjeta de Memoria)",
+    "step4_chk_shortcuts": "Accesos Directos (Iconos de escritorio personalizados de Maiya)",
+    "step5_title": "Instalando Maiya: Super Nature Girl...",
+    "step5_desc": "Desplegando ROMs, paquetes de EagleBIOS y accesos directos en el escritorio...",
+    "step5_complete_title": "¡Instalación Completada!",
+    "step5_complete_desc": "¡Maiya: Super Nature Girl se ha instalado con éxito con iconos de escritorio!",
+    "chapter_select_label": "Ir para a missão / capítulo:",
+    "btn_prev_chapter": "← Anterior",
+    "btn_next_chapter": "Seguinte →",
+    "step4_game_source_label": "Origem da edição do jogo:",
+    "step4_game_source_local": "Versão local recente (Motor v4 Corrida/Caminhada e EagleBIOS)",
+    "step4_game_source_download": "Descarregar da página oficial de lançamentos",
+    "desktop_icon_hint": "Inclui ícone HD de Maiya (.ico / .png)"
+  },
+  "de_DE": {
+    "lang_name": "Deutsch (German)",
+    "app_title": "Maiya: Super Nature Girl",
+    "app_subtitle": "Offizielle Eagle Software Veröffentlichung",
+    "copyright": "© 2026 Eagle Software Studio. Alle Rechte vorbehalten.",
+    "step_badge": "Schritt {step} von {total}",
+    "btn_back": "Zurück",
+    "btn_next": "Weiter >",
+    "btn_install": "Jetzt Installieren",
+    "btn_finish": "Fertigstellen & Spielen",
+    "step1_title": "Willkommen beim Maiya Setup-Assistenten",
+    "step1_desc": "Offizieller Installer für Maiya: Super Nature Girl für SNK Neo-Geo MVS Arcade und Neo-Geo AES Konsolensysteme mit EagleBIOS.",
+    "step1_notice_title": "Eagle Software Hinweis:",
+    "step1_notice": "Neo-Geo MVS und AES sind Marken der SNK Corporation. Diese Veröffentlichung läuft auf Original-Hardware sowie aktuellem offiziellem MAME.",
+    "step2_title": "Handlung: Die Legende von Maiya & Luna",
+    "hero_maiya_title": "Maiya (Hüterin der Sonne)",
+    "hero_maiya_desc": "Meisterin der Sonnenblatt-Angriffe, Doppelsprünge und Natur-Kampfkünste.",
+    "hero_luna_title": "Luna (Silbermond-Jägerin)",
+    "hero_luna_desc": "Präzise Klingenangriffe, Nachtkünste und blitzschnelle Ninja-Sprints.",
+    "story_chapters": [
+      {
+        "title": "PROLOG",
+        "text": "Im Herzen eines unberührten Landes liegen weite Täler voller Wälder, Flüsse und Berge.\n\nMaiya und Luna, Zwillingsschwestern, kennen diese Welt wie niemand sonst. Aufgewachsen in der Natur, sind sie meisterhafte Kampfkünstlerinnen.\n\nDoch düstere Industriemaschinen unter Lord Smoggar bedrohen die Heimat. Um seine Expansion zu erzwingen, entführt er Prinz Sunboy. Maiya bricht sofort auf, um ihn zu retten, während Luna ihr Tal beschützt!"
+      },
+      {
+        "title": "MISSION 1 — SMARAGDWALD",
+        "text": "Maiya betritt den Smaragdwald, besiegt die Vorhut von Smoggar, befreit die Dorfbewohner und zerstört die Giftfabrik."
+      },
+      {
+        "title": "MISSION 2 — HEILIGE WASSERFÄLLE",
+        "text": "Sie erklimmt die Heiligen Wasserfälle, schaltet die Wasserumleitungsanlagen aus und stellt die reinigenden Quellen wieder her."
+      },
+      {
+        "title": "MISSION 3 — KORALLENKÜSTE",
+        "text": "An der Korallenküste stoppt sie die Verschmutzung des Meeres und zwingt den mechanischen Titanen in die Knie."
+      },
+      {
+        "title": "MISSION 4 — HERBSTHAIN",
+        "text": "Im Herbsthain schützt sie die uralten Bäume vor gewaltigen Kreissägen-Bots."
+      },
+      {
+        "title": "MISSION 5 — KRISTALLGROTTE",
+        "text": "In den Tiefen der Kristallgrotte vernichtet sie den gigantischen Bohrwurm."
+      },
+      {
+        "title": "MISSION 6 — WELTENBAUM",
+        "text": "Sie taucht zum versunkenen Riff und rettet die Wurzeln des Weltenbaums vor sauren Industrieabfällen."
+      },
+      {
+        "title": "MISSION 7 — RIO NEGRO WERKE",
+        "text": "In den Hochöfen von Rio Negro sabotiert Maiya die Generatoren der Smog-Gilde."
+      },
+      {
+        "title": "MISSION 8 — DER EISENGEIER",
+        "text": "Auf dem Rücken des Sonnenadlers besiegt sie die fliegende Festung des Eisengeiers im Sturm."
+      },
+      {
+        "title": "FINALES KAPITEL — DIE ZITADELLE",
+        "text": "Sie dringt in die Zitadelle ein, überwindet die finalen Bollwerke und befreit Prinz Sunboy."
+      },
+      {
+        "title": "FINALE SCHLACHT — LORD SMOGGAR",
+        "text": "Im epischen Duell gegen Smoggars riesiges Exoskelett erringt Maiya den triumphalen Sieg!"
+      },
+      {
+        "title": "EPILOG",
+        "text": "Der Himmel klart auf, die Wälder erblühen und Maiya kehrt glücklich zu Luna zurück."
+      }
+    ],
+    "step3_title": "MAME Neo-Geo Emulator Einrichtung",
+    "step3_desc": "Maiya läuft perfekt auf MAME. Der Installer erkennt bestehende MAME-Installationen oder lädt eine Version automatisch herunter.",
+    "step3_status_label": "MAME-Status auf dem System:",
+    "step3_detected": "MAME Erkannt",
+    "step3_missing": "MAME Nicht Gefunden (Download empfohlen)",
+    "step3_opt_existing": "Vorhandenes MAME verwenden",
+    "step3_opt_download": "MAME von offiziellen GitHub-Releases herunterladen",
+    "step3_select_release": "MAME-Version auswählen:",
+    "step3_custom_path": "Benutzerdefinierter MAME-Pfad (optional):",
+    "step4_title": "Zielverzeichnis & Komponenten",
+    "step4_desc": "Wählen Sie das Installationsverzeichnis und die gewünschten Editionen.",
+    "step4_target_label": "Installationsverzeichnis:",
+    "step4_components_label": "Komponenten auswählen:",
+    "step4_chk_mvs": "Maiya MVS Edition (Neo-Geo Arcade Format + EagleBIOS euro)",
+    "step4_chk_aes": "Maiya AES Edition (Neo-Geo Heimkonsole + EagleBIOS asia + Memory Card)",
+    "step4_chk_shortcuts": "Desktop-Verknüpfungen (Individuelle Maiya Desktop-Icons)",
+    "step5_title": "Installiere Maiya: Super Nature Girl...",
+    "step5_desc": "ROMs, EagleBIOS-Dateien und Desktop-Verknüpfungen werden eingerichtet...",
+    "step5_complete_title": "Installation Abgeschlossen!",
+    "step5_complete_desc": "Maiya: Super Nature Girl wurde erfolgreich mit Desktop-Icons installiert!",
+    "chapter_select_label": "Zu Mission / Kapitel springen:",
+    "btn_prev_chapter": "← Zurück",
+    "btn_next_chapter": "Weiter →",
+    "step4_game_source_label": "Quelle der Spielversion:",
+    "step4_game_source_local": "Neueste lokale Version (v4 Lauf-/Sprintsystem & EagleBIOS)",
+    "step4_game_source_download": "Von der offiziellen Release-Seite herunterladen",
+    "desktop_icon_hint": "Enthält HD Maiya-Icon (.ico / .png)"
+  },
+  "it_IT": {
+    "lang_name": "Italiano (Italian)",
+    "app_title": "Maiya: Super Nature Girl",
+    "app_subtitle": "Rilascio Ufficiale Eagle Software",
+    "copyright": "© 2026 Eagle Software Studio. Todos los derechos reservados.",
+    "step_badge": "Passaggio {step} di {total}",
+    "btn_back": "Indietro",
+    "btn_next": "Avanti >",
+    "btn_install": "Installa Ora",
+    "btn_finish": "Fine & Gioca",
+    "step1_title": "Installazione di Maiya: Super Nature Girl",
+    "step1_desc": "Bienvenido al instalador oficial de Maiya: Super Nature Girl para sistemas arcade SNK Neo-Geo MVS y consolas Neo-Geo AES con EagleBIOS.",
+    "step1_notice_title": "Aviso Oficial Eagle Software:",
+    "step1_notice": "Neo-Geo MVS y AES son marcas registradas de SNK Corporation. Esta versión comercial funciona en hardware original y en el emulador oficial MAME.",
+    "step2_title": "Historia: La Leyenda de Maiya & Luna",
+    "hero_maiya_title": "Maiya (Guardiana del Sole)",
+    "hero_maiya_desc": "Maestra del ataque solar de hojas, saltos dobles ágiles y artes marciales de la naturaleza.",
+    "hero_luna_title": "Luna (Cacciatrice della Luna d’Argento)",
+    "hero_luna_desc": "Ataques cortantes certeros, artes nocturnas y veloces carreras ninja.",
+    "story_chapters": [
+      {
+        "title": "PROLOGO",
+        "text": "Au cœur d’une terre vaste et préservée s’étendent des vallées de forêts, rivières et montagnes.\n\nMaiya et Luna, sœurs jumelles, connaissent cette terre mieux que quiconque. Élevées au contact de la nature, elles maîtrisent les arts martiaux les plus redoutables.\n\nMais des machines polluantes surgissent sous le commandement du cruel Lord Smoggar. Pour accélérer son empire industriel, il fait enlever le jeune prince Sunboy. Maiya part aussitôt à sa rescousse tandis que Luna protège la vallée !"
+      },
+      {
+        "title": "MISSIONE 1 — FORESTA DI SMERALDO",
+        "text": "Maiya pénètre dans la Forêt d’Émeraude, où patrouillent les soldats et les machines de Smoggar. Elle repousse les assaillants, libère les villageois, anéantit le gardien et détruit l’usine toxique."
+      },
+      {
+        "title": "MISSIONE 2 — CASCATE SACRE",
+        "text": "Maiya gravit les Cascades Sacrées pour stopper les machines qui détournent l’eau pure. Au sommet, elle terrasse la garnison ennemie et rend aux cascades leur cours naturel."
+      },
+      {
+        "title": "MISSIONE 3 — COSTA DI CORALLO",
+        "text": "Sur la Côte de Corail, des complexes industriels déversent du poison dans la mer. Maiya traverse les pontons, vainc le monstre mécanique des mers et purifie l’océan."
+      },
+      {
+        "title": "MISSIONE 4 — BOSCO D’AUTUNNO",
+        "text": "Dans le Bosquet d’Automne, d’immenses scies abattent les arbres anciens. Maiya bondit de branche en branche et neutralise les bûcherons robotiques."
+      },
+      {
+        "title": "MISSIONE 5 — GROTTA DI CRISTALLO",
+        "text": "Sous terre, des forages fracturent les parois de cristal. Maiya s’enfonce dans les profondeurs et détruit le ver foreur titan."
+      },
+      {
+        "title": "MISSIONE 6 — ALBERO DEL MONDO",
+        "text": "Maiya plonge dans les récifs submergés et escalade les racines du grand Arbre Monde pour briser les canalisations de déchets acides."
+      },
+      {
+        "title": "MISSIONE 7 — FABBRICHE DEL RIO NEGRO",
+        "text": "Dans la forteresse métallurgique du Rio Negro, Maiya infiltre les hauts-fourneaux et sabote les générateurs de smog."
+      },
+      {
+        "title": "MISSIONE 8 — L’AVVOLTOIO DI FERRO",
+        "text": "À bord de l’Aigle Solaire, Maiya livre un duel aérien épique au milieu des orages pour abattre la forteresse volante du Vautour de Fer."
+      },
+      {
+        "title": "CAPITOLO FINALE — LA CITTADELLA",
+        "text": "Maiya infiltre la Citadelle, cœur du pouvoir de Smoggar. Elle brise les ultimes blindages et délivre enfin Sunboy de ses chaînes."
+      },
+      {
+        "title": "BATTAGLIA FINALE — LORD SMOGGAR",
+        "text": "Aux commandes d’un exosquelette titanesque, Smoggar tente d’écraser Maiya. Dans un déchaînement d’arts martiaux et d’énergie solaire, Maiya terrasse le tyran !"
+      },
+      {
+        "title": "EPILOGO",
+        "text": "Les fumées se dissipent, la nature s’épanouit de nouveau. Sunboy rentre chez lui et Maiya retrouve Luna sous le feuillage fleuri de la vallée."
+      }
+    ],
+    "step3_title": "Configuración del Emulador MAME",
+    "step3_desc": "Maiya funciona de forma nativa en MAME. El instalador detecta tu versión existente o descarga una versión oficial directamente.",
+    "step3_status_label": "Estado de MAME en el sistema:",
+    "step3_detected": "MAME Detectado",
+    "step3_missing": "MAME No Encontrado (Descarga recomendada)",
+    "step3_opt_existing": "Usar MAME existente en el equipo",
+    "step3_opt_download": "Descargar MAME desde las versiones oficiales de GitHub",
+    "step3_select_release": "Seleccionar Versión de MAME:",
+    "step3_custom_path": "Ruta personalizada de MAME (si aplica):",
+    "step4_title": "Directorio de Destino y Componentes",
+    "step4_desc": "Elija la carpeta de instalación y las ediciones deseadas.",
+    "step4_target_label": "Directorio de Instalación:",
+    "step4_components_label": "Componentes a Instalar:",
+    "step4_chk_mvs": "Edición Maiya MVS (Formato Arcade + EagleBIOS euro)",
+    "step4_chk_aes": "Edición Maiya AES (Formato Consola + EagleBIOS asia + Tarjeta de Memoria)",
+    "step4_chk_shortcuts": "Accesos Directos (Iconos de escritorio personalizados de Maiya)",
+    "step5_title": "Instalando Maiya: Super Nature Girl...",
+    "step5_desc": "Desplegando ROMs, paquetes de EagleBIOS y accesos directos en el escritorio...",
+    "step5_complete_title": "¡Instalación Completada!",
+    "step5_complete_desc": "¡Maiya: Super Nature Girl se ha instalado con éxito con iconos de escritorio!",
+    "chapter_select_label": "Vai alla missione / capitolo:",
+    "btn_prev_chapter": "← Precedente",
+    "btn_next_chapter": "Successivo →",
+    "step4_game_source_label": "Origine dell'edizione di gioco:",
+    "step4_game_source_local": "Ultima build locale (Motore v4 Corsa/Camminata & EagleBIOS)",
+    "step4_game_source_download": "Scarica dalla pagina ufficiale delle release",
+    "desktop_icon_hint": "Include l'icona HD di Maiya (.ico / .png)"
+  },
+  "ja_JP": {
+    "lang_name": "日本語 (Japanese)",
+    "app_title": "マイヤ：スーパーネイチャーガール",
+    "app_subtitle": "Eagle Software 公式リリース",
+    "copyright": "© 2026 Eagle Software Studio. All Rights Reserved.",
+    "step_badge": "ステップ {step} / {total}",
+    "btn_back": "戻る",
+    "btn_next": "次へ >",
+    "btn_install": "今すぐインストール",
+    "btn_finish": "完了してプレイ",
+    "step1_title": "マイヤ：スーパーネイチャーガール セットアップへようこそ",
+    "step1_desc": "SNK ネオジオ MVS アーケードおよび AES 家庭用ネオジオ向け完全新作アクションゲームの公式インストーラーです（EagleBIOS搭載）。",
+    "step1_notice_title": "Eagle Software 公式ライセンス表記:",
+    "step1_notice": "Neo-Geo MVS / AES は SNK Corporation の商標です。実機および公式最新MAMEエミュレータで完全動作します。",
+    "step2_title": "ストーリー：マイヤとルナの伝説",
+    "hero_maiya_title": "マイヤ（太陽の守護少女）",
+    "hero_maiya_desc": "太陽の葉手裏剣、二段ジャンプ、自然の武術を極めたヒロイン。",
+    "hero_luna_title": "ルナ（銀月の狩人）",
+    "hero_luna_desc": "冷徹な刃の連撃、夜の秘術、高速忍者ダッシュを繰り出す妹。",
+    "story_chapters": [
+      {
+        "title": "プロローグ",
+        "text": "緑豊かな大自然が広がる広大な渓谷。双子の姉妹「マイヤ」と「ルナ」は、武術の達人として谷の平和を守っていました。\n\nしかし、冷酷な産業王「ロード・スモッガー」の公害軍団が谷を侵略し、太陽の王子サンボーイを誘拐します。マイヤは救出のため旅立ち、ルナは谷の守りを固めます！"
+      },
+      {
+        "title": "ミッション1 — エメラルドの森",
+        "text": "マイヤはエメラルドの森へ進撃し、スモッガーの伐採部隊を撃退して汚染工場を粉砕します。"
+      },
+      {
+        "title": "ミッション2 — 聖なる滝",
+        "text": "滝をよじ登り、清らかな水源を汚す巨大タービンを破壊して清流を取り戻します。"
+      },
+      {
+        "title": "ミッション3 — 珊瑚の海岸",
+        "text": "珊瑚の海にヘドロを流す海洋要塞を強襲し、水質汚染の元凶を討伐します。"
+      },
+      {
+        "title": "ミッション4 — 黄金の秋の森",
+        "text": "紅葉の森で巨大回転鋸ロボット部隊を蹴散らし、自然の巨木を守り抜きます。"
+      },
+      {
+        "title": "ミッション5 — 水晶の洞窟",
+        "text": "水晶の洞窟の地底深くへ潜入し、超大型採掘ドリルワームを撃破します。"
+      },
+      {
+        "title": "ミッション6 — 世界樹の聖域",
+        "text": "世界樹の根に張り巡らされた硫酸パイプを断ち切り、世界の命脈を救います。"
+      },
+      {
+        "title": "ミッション7 — リオ・ネグロ工場地帯",
+        "text": "リオ・ネグロの製鉄要塞へ潜入し、毒煙ジェネレーターを停止させます。"
+      },
+      {
+        "title": "ミッション8 — 鋼鉄のハゲワシ",
+        "text": "太陽の白鷹を駆り、雷雲の中で巨大飛行戦艦「鋼鉄のハゲワシ」との空中戦を制します。"
+      },
+      {
+        "title": "最終章 — 漆黒の要塞シタデル",
+        "text": "最終要塞シタデルに突入し、囚われのサンボーイ王子を救出します。"
+      },
+      {
+        "title": "決戦 — ロード・スモッガー",
+        "text": "巨大強化外骨格に搭乗したスモッガーと最終決戦。太陽拳の奥義で完全勝利を収めます！"
+      },
+      {
+        "title": "エピローグ",
+        "text": "青空が戻り、緑が蘇ります。マイヤはルナの待つ故郷の森へと凱旋します。"
+      }
+    ],
+    "step3_title": "MAME ネオジオエミュレータ環境の設定",
+    "step3_desc": "マイヤはMAMEで快適に動作します。既存のMAMEを検出するか、最新の公式リリースを自動ダウンロードできます。",
+    "step3_status_label": "システムのMAME検出状況:",
+    "step3_detected": "MAME を検出しました",
+    "step3_missing": "MAME が見つかりません（ダウンロード推奨）",
+    "step3_opt_existing": "既存のMAMEを使用する",
+    "step3_opt_download": "公式GitHubリリースページから最新MAMEをダウンロード",
+    "step3_select_release": "MAMEリリースバージョンを選択:",
+    "step3_custom_path": "MAME実行ファイルのカスタムパス（任意）:",
+    "step4_title": "インストール先フォルダおよびコンポーネント選択",
+    "step4_desc": "インストール先および導入するバージョンを選択してください。",
+    "step4_target_label": "インストール先フォルダ:",
+    "step4_components_label": "インストール項目:",
+    "step4_chk_mvs": "マイヤ MVS版（ネオジオ アーケード仕様 + EagleBIOS euro）",
+    "step4_chk_aes": "マイヤ AES版（ネオジオ 家庭用仕様 + EagleBIOS asia + メモリーカード）",
+    "step4_chk_shortcuts": "デスクトップ ショートカット（マイヤ特製デスクトップアイコン付き）",
+    "step5_title": "マイヤ：スーパーネイチャーガール をインストール中...",
+    "step5_desc": "ゲームROM、BIOSパッケージ、特製デスクトップアイコンを展開しています...",
+    "step5_complete_title": "インストール完了！",
+    "step5_complete_desc": "マイヤ：スーパーネイチャーガールのインストールが完了しました！",
+    "chapter_select_label": "ミッション／チャプターを選択：",
+    "btn_prev_chapter": "← 前へ",
+    "btn_next_chapter": "次へ →",
+    "step4_game_source_label": "ゲームパッケージの取得元：",
+    "step4_game_source_local": "最新ローカルビルド（v4歩行・疾走エンジン＆EagleBIOS）",
+    "step4_game_source_download": "公式リリース配信用ページからダウンロード",
+    "desktop_icon_hint": "高精細マイヤ専用アプリアイコン同梱 (.ico / .png)"
+  },
+  "zh_CN": {
+    "lang_name": "简体中文 (Chinese)",
+    "app_title": "玛雅：超级自然女孩 (Maiya)",
+    "app_subtitle": "Eagle Software 官方正式发布",
+    "copyright": "© 2026 Eagle Software Studio. 保留所有权利。",
+    "step_badge": "第 {step} 步 / 共 {total} 步",
+    "btn_back": "上一步",
+    "btn_next": "下一步 >",
+    "btn_install": "立即安装",
+    "btn_finish": "完成并启动",
+    "step1_title": "欢迎使用 玛雅：超级自然女孩 安装向导",
+    "step1_desc": "本程序将安装适用于 SNK Neo-Geo MVS 街机及 Neo-Geo AES 家用机的全商业级动作游戏《玛雅：超级自然女孩》（搭载开源 EagleBIOS）。",
+    "step1_notice_title": "Eagle Software 版权与商标声明:",
+    "step1_notice": "Neo-Geo MVS 及 AES 为 SNK Corporation 之注册商标。本作为商业自制力作，完美支持原版硬件及官方最新 MAME。",
+    "step2_title": "剧情故事：玛雅与露娜的传说",
+    "hero_maiya_title": "玛雅 (太阳守护者)",
+    "hero_maiya_desc": "精通太阳飞叶暗器、敏捷二段跳及自然格斗绝技。",
+    "hero_luna_title": "露娜 (银月女猎手)",
+    "hero_luna_desc": "致命利刃连斩、夜色秘术及超高速忍者冲刺。",
+    "story_chapters": [
+      {
+        "title": "序章",
+        "text": "在广袤无垠的自然秘境中，双胞胎姐妹玛雅（Maiya）与露娜（Luna）是守护家园的格斗高手。\n\n冷酷的工业巨头斯莫加（Lord Smoggar）率领机器军团侵入森林，并绑架了太阳王子桑男孩。玛雅毅然踏上救险征途，露娜留守保护谷地！"
+      },
+      {
+        "title": "第一关 — 翡翠森林",
+        "text": "玛雅突入翡翠森林，击退机械步兵，摧毁污染精炼厂。"
+      },
+      {
+        "title": "第二关 — 神圣瀑布",
+        "text": "攀登神圣瀑布，粉碎截流引水的水利涡轮，还大自然以清流。"
+      },
+      {
+        "title": "第三关 — 珊瑚海岸",
+        "text": "进军珊瑚海岸，击败巨型钢铁海怪，净化蔚蓝大海。"
+      },
+      {
+        "title": "第四关 — 黄金秋林",
+        "text": "在秋意盎然的古木林中，踩踏树冠斩除锯木机器人。"
+      },
+      {
+        "title": "第五关 — 水晶洞穴",
+        "text": "深入水晶地底溶洞，摧毁潜藏于黑暗中的钻探巨兽。"
+      },
+      {
+        "title": "第六关 — 世界树圣域",
+        "text": "潜入深海并登上世界树主干，拆除酸液管道，拯救大地生机。"
+      },
+      {
+        "title": "第七关 — 黑河工厂要塞",
+        "text": "潜入黑河炼钢工厂，破坏排污发电机。"
+      },
+      {
+        "title": "第八关 — 钢铁秃鹰",
+        "text": "骑乘太阳白鹰在雷云风暴中展开空战，轰落钢铁秃鹰空中堡垒。"
+      },
+      {
+        "title": "终章 — 斯莫加工业城堡",
+        "text": "攻陷终极城堡，解救被囚禁的桑男孩王子。"
+      },
+      {
+        "title": "决战 — 烟雾领主",
+        "text": "迎战身披重型蒸汽机甲的斯莫加领主，以自然奥义将其彻底击垮！"
+      },
+      {
+        "title": "尾声",
+        "text": "云雾散去，太阳普照，玛雅凯旋回归故里。"
+      }
+    ],
+    "step3_title": "MAME 模拟器运行环境配置",
+    "step3_desc": "游戏支持官方 MAME 完美运行。安装程序可自动检测本地已有的 MAME，或直接从 GitHub 官方发布页下载。",
+    "step3_status_label": "系统 MAME 检测状态:",
+    "step3_detected": "已检测到 MAME",
+    "step3_missing": "未检测到 MAME (推荐自动下载)",
+    "step3_opt_existing": "使用本地已安装的 MAME",
+    "step3_opt_download": "从官方 GitHub Release 页面下载最新版本",
+    "step3_select_release": "选择 MAME 版本:",
+    "step3_custom_path": "自定义 MAME 执行路径 (可选):",
+    "step4_title": "安装目标目录与版本组件",
+    "step4_desc": "请选择游戏安装路径及需要部署的版本。",
+    "step4_target_label": "目标安装目录:",
+    "step4_components_label": "组件选项:",
+    "step4_chk_mvs": "玛雅 MVS 街机版 (Arcade 格式 + EagleBIOS euro)",
+    "step4_chk_aes": "玛雅 AES 家用机版 (Console 格式 + EagleBIOS asia + 专属记忆卡)",
+    "step4_chk_shortcuts": "创建桌面快捷方式 (附带玛雅专属定制高清桌面图标)",
+    "step5_title": "正在安装 玛雅：超级自然女孩...",
+    "step5_desc": "正在解包游戏 ROM、EagleBIOS 固件并生成高清桌面图标...",
+    "step5_complete_title": "安装成功！",
+    "step5_complete_desc": "《玛雅：超级自然女孩》已成功安装，可直接点击桌面图标开启冒险！",
+    "chapter_select_label": "跳转至任务／章节：",
+    "btn_prev_chapter": "← 上一节",
+    "btn_next_chapter": "下一节 →",
+    "step4_game_source_label": "游戏安装源选择：",
+    "step4_game_source_local": "本地最新构建（v4 疾跑行走引擎与 EagleBIOS）",
+    "step4_game_source_download": "从官方发布页面下载",
+    "desktop_icon_hint": "包含高清 Maiya 原生图标 (.ico / .png)"
+  },
+  "ko_KR": {
+    "lang_name": "한국어 (Korean)",
+    "app_title": "마이야: 슈퍼 네이처 걸",
+    "app_subtitle": "Eagle Software 공식 출시작",
+    "copyright": "© 2026 Eagle Software Studio. All Rights Reserved.",
+    "step_badge": "단계 {step} / {total}",
+    "btn_back": "이전",
+    "btn_next": "다음 >",
+    "btn_install": "지금 설치",
+    "btn_finish": "완료 및 실행",
+    "step1_title": "마이야: 슈퍼 네이처 걸 설치 마법사",
+    "step1_desc": "SNK ネオジオ MVS アーケードおよび AES 家庭用ネオジオ向け完全新作アクションゲームの公式インストーラーです（EagleBIOS搭載）。",
+    "step1_notice_title": "Eagle Software 公式ライセンス表記:",
+    "step1_notice": "Neo-Geo MVS / AES は SNK Corporation の商標です。実機および公式最新MAMEエミュレータで完全動作します。",
+    "step2_title": "ストーリー：マイヤとルナの伝説",
+    "hero_maiya_title": "마이야 (태양의 수호자)",
+    "hero_maiya_desc": "太陽の葉手裏剣、二段ジャンプ、自然の武術を極めたヒロイン。",
+    "hero_luna_title": "루나 (은빛 달의 사냥꾼)",
+    "hero_luna_desc": "冷徹な刃の連撃、夜の秘術、高速忍者ダッシュを繰り出す妹。",
+    "story_chapters": [
+      {
+        "title": "프롤로그",
+        "text": "緑豊かな大自然が広がる広大な渓谷。双子の姉妹「マイヤ」と「ルナ」は、武術の達人として谷の平和を守っていました。\n\nしかし、冷酷な産業王「ロード・スモッガー」の公害軍団が谷を侵略し、太陽の王子サンボーイを誘拐します。マイヤは救出のため旅立ち、ルナは谷の守りを固めます！"
+      },
+      {
+        "title": "미션 1 — 에메랄드 숲",
+        "text": "マイヤはエメラルドの森へ進撃し、スモッガーの伐採部隊を撃退して汚染工場を粉砕します。"
+      },
+      {
+        "title": "미션 2 — 신성한 폭포",
+        "text": "滝をよじ登り、清らかな水源を汚す巨大タービンを破壊して清流を取り戻します。"
+      },
+      {
+        "title": "미션 3 — 산호 해안",
+        "text": "珊瑚の海にヘドロを流す海洋要塞を強襲し、水質汚染の元凶を討伐します。"
+      },
+      {
+        "title": "미션 4 — 황금 가을 숲",
+        "text": "紅葉の森で巨大回転鋸ロボット部隊を蹴散らし、自然の巨木を守り抜きます。"
+      },
+      {
+        "title": "미션 5 — 수정 동굴",
+        "text": "水晶の洞窟の地底深くへ潜入し、超大型採掘ドリルワームを撃破します。"
+      },
+      {
+        "title": "미션 6 — 세계수의 성역",
+        "text": "世界樹の根に張り巡らされた硫酸パイプを断ち切り、世界の命脈を救います。"
+      },
+      {
+        "title": "미션 7 — 리오 네그로 제철소",
+        "text": "リオ・ネグロの製鉄要塞へ潜入し、毒煙ジェネレーターを停止させます。"
+      },
+      {
+        "title": "미션 8 — 강철 독수리",
+        "text": "太陽の白鷹を駆り、雷雲の中で巨大飛行戦艦「鋼鉄のハゲワシ」との空中戦を制します。"
+      },
+      {
+        "title": "최종장 — 시타델 요새",
+        "text": "最終要塞シタデルに突入し、囚われのサンボーイ王子を救出します。"
+      },
+      {
+        "title": "결전 — 로드 스모거",
+        "text": "巨大強化外骨格に搭乗したスモッガーと最終決戦。太陽拳の奥義で完全勝利を収めます！"
+      },
+      {
+        "title": "에필로그",
+        "text": "青空が戻り、緑が蘇ります。マイヤはルナの待つ故郷の森へと凱旋します。"
+      }
+    ],
+    "step3_title": "MAME ネオジオエミュレータ環境の設定",
+    "step3_desc": "マイヤはMAMEで快適に動作します。既存のMAMEを検出するか、最新の公式リリースを自動ダウンロードできます。",
+    "step3_status_label": "システムのMAME検出状況:",
+    "step3_detected": "MAME を検出しました",
+    "step3_missing": "MAME が見つかりません（ダウンロード推奨）",
+    "step3_opt_existing": "既存のMAMEを使用する",
+    "step3_opt_download": "公式GitHubリリースページから最新MAMEをダウンロード",
+    "step3_select_release": "MAMEリリースバージョンを選択:",
+    "step3_custom_path": "MAME実行ファイルのカスタムパス（任意）:",
+    "step4_title": "インストール先フォルダおよびコンポーネント選択",
+    "step4_desc": "インストール先および導入するバージョンを選択してください。",
+    "step4_target_label": "インストール先フォルダ:",
+    "step4_components_label": "インストール項目:",
+    "step4_chk_mvs": "マイヤ MVS版（ネオジオ アーケード仕様 + EagleBIOS euro）",
+    "step4_chk_aes": "マイヤ AES版（ネオジオ 家庭用仕様 + EagleBIOS asia + メモリーカード）",
+    "step4_chk_shortcuts": "デスクトップ ショートカット（マイヤ特製デスクトップアイコン付き）",
+    "step5_title": "マイヤ：スーパーネイチャーガール をインストール中...",
+    "step5_desc": "ゲームROM、BIOSパッケージ、特製デスクトップアイコンを展開しています...",
+    "step5_complete_title": "インストール完了！",
+    "step5_complete_desc": "マイヤ：スーパーネイチャーガールのインストールが完了しました！",
+    "chapter_select_label": "미션 / 챕터 바로가기:",
+    "btn_prev_chapter": "← 이전",
+    "btn_next_chapter": "다음 →",
+    "step4_game_source_label": "게임 패키지 소스:",
+    "step4_game_source_local": "최신 로컬 빌드 (v4 달리기/걷기 엔진 및 EagleBIOS)",
+    "step4_game_source_download": "공식 릴리스 페이지에서 다운로드",
+    "desktop_icon_hint": "고화질 마이야 전용 아이콘 포함 (.ico / .png)"
+  },
+  "sv_SE": {
+    "lang_name": "Svenska (Swedish)",
+    "app_title": "Maiya: Super Nature Girl",
+    "app_subtitle": "Officiell Eagle Software Utgåva",
+    "copyright": "© 2026 Eagle Software Studio. Alle Rechte vorbehalten.",
+    "step_badge": "Steg {step} av {total}",
+    "btn_back": "Tillbaka",
+    "btn_next": "Nästa >",
+    "btn_install": "Installera Nu",
+    "btn_finish": "Slutför & Spela",
+    "step1_title": "Välkommen till Maiya Installationsguide",
+    "step1_desc": "Offizieller Installer für Maiya: Super Nature Girl für SNK Neo-Geo MVS Arcade und Neo-Geo AES Konsolensysteme mit EagleBIOS.",
+    "step1_notice_title": "Eagle Software Hinweis:",
+    "step1_notice": "Neo-Geo MVS und AES sind Marken der SNK Corporation. Diese Veröffentlichung läuft auf Original-Hardware sowie aktuellem offiziellem MAME.",
+    "step2_title": "Handlung: Die Legende von Maiya & Luna",
+    "hero_maiya_title": "Maiya (Solens Väktare)",
+    "hero_maiya_desc": "Meisterin der Sonnenblatt-Angriffe, Doppelsprünge und Natur-Kampfkünste.",
+    "hero_luna_title": "Luna (Silvermånens Jägare)",
+    "hero_luna_desc": "Präzise Klingenangriffe, Nachtkünste und blitzschnelle Ninja-Sprints.",
+    "story_chapters": [
+      {
+        "title": "PROLOG",
+        "text": "Im Herzen eines unberührten Landes liegen weite Täler voller Wälder, Flüsse und Berge.\n\nMaiya und Luna, Zwillingsschwestern, kennen diese Welt wie niemand sonst. Aufgewachsen in der Natur, sind sie meisterhafte Kampfkünstlerinnen.\n\nDoch düstere Industriemaschinen unter Lord Smoggar bedrohen die Heimat. Um seine Expansion zu erzwingen, entführt er Prinz Sunboy. Maiya bricht sofort auf, um ihn zu retten, während Luna ihr Tal beschützt!"
+      },
+      {
+        "title": "UPPDRAG 1 — SMARAGDSKOGEN",
+        "text": "Maiya betritt den Smaragdwald, besiegt die Vorhut von Smoggar, befreit die Dorfbewohner und zerstört die Giftfabrik."
+      },
+      {
+        "title": "UPPDRAG 2 — HELIGA VATTENFALLEN",
+        "text": "Sie erklimmt die Heiligen Wasserfälle, schaltet die Wasserumleitungsanlagen aus und stellt die reinigenden Quellen wieder her."
+      },
+      {
+        "title": "UPPDRAG 3 — KORALLKUSTEN",
+        "text": "An der Korallenküste stoppt sie die Verschmutzung des Meeres und zwingt den mechanischen Titanen in die Knie."
+      },
+      {
+        "title": "UPPDRAG 4 — HÖSTDUNGEN",
+        "text": "Im Herbsthain schützt sie die uralten Bäume vor gewaltigen Kreissägen-Bots."
+      },
+      {
+        "title": "UPPDRAG 5 — KRISTALLGROTTAN",
+        "text": "In den Tiefen der Kristallgrotte vernichtet sie den gigantischen Bohrwurm."
+      },
+      {
+        "title": "UPPDRAG 6 — VÄRLDSTRÄDET",
+        "text": "Sie taucht zum versunkenen Riff und rettet die Wurzeln des Weltenbaums vor sauren Industrieabfällen."
+      },
+      {
+        "title": "UPPDRAG 7 — RIO NEGRO-VERKEN",
+        "text": "In den Hochöfen von Rio Negro sabotiert Maiya die Generatoren der Smog-Gilde."
+      },
+      {
+        "title": "UPPDRAG 8 — JÄRNGRAMEN",
+        "text": "Auf dem Rücken des Sonnenadlers besiegt sie die fliegende Festung des Eisengeiers im Sturm."
+      },
+      {
+        "title": "SISTA KAPITLET — CITADELLET",
+        "text": "Sie dringt in die Zitadelle ein, überwindet die finalen Bollwerke und befreit Prinz Sunboy."
+      },
+      {
+        "title": "SLUTSTRIDEN — LORD SMOGGAR",
+        "text": "Im epischen Duell gegen Smoggars riesiges Exoskelett erringt Maiya den triumphalen Sieg!"
+      },
+      {
+        "title": "EPILOG",
+        "text": "Der Himmel klart auf, die Wälder erblühen und Maiya kehrt glücklich zu Luna zurück."
+      }
+    ],
+    "step3_title": "MAME Neo-Geo Emulator Einrichtung",
+    "step3_desc": "Maiya läuft perfekt auf MAME. Der Installer erkennt bestehende MAME-Installationen oder lädt eine Version automatisch herunter.",
+    "step3_status_label": "MAME-Status auf dem System:",
+    "step3_detected": "MAME Erkannt",
+    "step3_missing": "MAME Nicht Gefunden (Download empfohlen)",
+    "step3_opt_existing": "Vorhandenes MAME verwenden",
+    "step3_opt_download": "MAME von offiziellen GitHub-Releases herunterladen",
+    "step3_select_release": "MAME-Version auswählen:",
+    "step3_custom_path": "Benutzerdefinierter MAME-Pfad (optional):",
+    "step4_title": "Zielverzeichnis & Komponenten",
+    "step4_desc": "Wählen Sie das Installationsverzeichnis und die gewünschten Editionen.",
+    "step4_target_label": "Installationsverzeichnis:",
+    "step4_components_label": "Komponenten auswählen:",
+    "step4_chk_mvs": "Maiya MVS Edition (Neo-Geo Arcade Format + EagleBIOS euro)",
+    "step4_chk_aes": "Maiya AES Edition (Neo-Geo Heimkonsole + EagleBIOS asia + Memory Card)",
+    "step4_chk_shortcuts": "Desktop-Verknüpfungen (Individuelle Maiya Desktop-Icons)",
+    "step5_title": "Installiere Maiya: Super Nature Girl...",
+    "step5_desc": "ROMs, EagleBIOS-Dateien und Desktop-Verknüpfungen werden eingerichtet...",
+    "step5_complete_title": "Installation Abgeschlossen!",
+    "step5_complete_desc": "Maiya: Super Nature Girl wurde erfolgreich mit Desktop-Icons installiert!",
+    "chapter_select_label": "Hoppa till uppdrag / kapitel:",
+    "btn_prev_chapter": "← Föregående",
+    "btn_next_chapter": "Nästa →",
+    "step4_game_source_label": "Källa för spelutgåva:",
+    "step4_game_source_local": "Senaste lokala bygget (v4 Gång-/Löpmotor & EagleBIOS)",
+    "step4_game_source_download": "Ladda ner från officiell versionssida",
+    "desktop_icon_hint": "Inkluderar högupplöst Maiya-ikon (.ico / .png)"
+  },
+  "nb_NO": {
+    "lang_name": "Norsk (Norwegian)",
+    "app_title": "Maiya: Super Nature Girl",
+    "app_subtitle": "Offisiell Eagle Software Utgivelse",
+    "copyright": "© 2026 Eagle Software Studio. Alle Rechte vorbehalten.",
+    "step_badge": "Trinn {step} av {total}",
+    "btn_back": "Tilbake",
+    "btn_next": "Neste >",
+    "btn_install": "Installer Nå",
+    "btn_finish": "Fullfør & Spill",
+    "step1_title": "Velkommen til Maiya Installasjon",
+    "step1_desc": "Offizieller Installer für Maiya: Super Nature Girl für SNK Neo-Geo MVS Arcade und Neo-Geo AES Konsolensysteme mit EagleBIOS.",
+    "step1_notice_title": "Eagle Software Hinweis:",
+    "step1_notice": "Neo-Geo MVS und AES sind Marken der SNK Corporation. Diese Veröffentlichung läuft auf Original-Hardware sowie aktuellem offiziellem MAME.",
+    "step2_title": "Handlung: Die Legende von Maiya & Luna",
+    "hero_maiya_title": "Maiya (Solens Vokter)",
+    "hero_maiya_desc": "Meisterin der Sonnenblatt-Angriffe, Doppelsprünge und Natur-Kampfkünste.",
+    "hero_luna_title": "Luna (Sølvmånens Jeger)",
+    "hero_luna_desc": "Präzise Klingenangriffe, Nachtkünste und blitzschnelle Ninja-Sprints.",
+    "story_chapters": [
+      {
+        "title": "PROLOG",
+        "text": "Im Herzen eines unberührten Landes liegen weite Täler voller Wälder, Flüsse und Berge.\n\nMaiya und Luna, Zwillingsschwestern, kennen diese Welt wie niemand sonst. Aufgewachsen in der Natur, sind sie meisterhafte Kampfkünstlerinnen.\n\nDoch düstere Industriemaschinen unter Lord Smoggar bedrohen die Heimat. Um seine Expansion zu erzwingen, entführt er Prinz Sunboy. Maiya bricht sofort auf, um ihn zu retten, während Luna ihr Tal beschützt!"
+      },
+      {
+        "title": "OPPDRAG 1 — SMARAGDSKOGEN",
+        "text": "Maiya betritt den Smaragdwald, besiegt die Vorhut von Smoggar, befreit die Dorfbewohner und zerstört die Giftfabrik."
+      },
+      {
+        "title": "OPPDRAG 2 — HELLIGE FOSSER",
+        "text": "Sie erklimmt die Heiligen Wasserfälle, schaltet die Wasserumleitungsanlagen aus und stellt die reinigenden Quellen wieder her."
+      },
+      {
+        "title": "OPPDRAG 3 — KORALLKYSTEN",
+        "text": "An der Korallenküste stoppt sie die Verschmutzung des Meeres und zwingt den mechanischen Titanen in die Knie."
+      },
+      {
+        "title": "OPPDRAG 4 — HØSTLUNDEN",
+        "text": "Im Herbsthain schützt sie die uralten Bäume vor gewaltigen Kreissägen-Bots."
+      },
+      {
+        "title": "OPPDRAG 5 — KRISTALLGROTTEN",
+        "text": "In den Tiefen der Kristallgrotte vernichtet sie den gigantischen Bohrwurm."
+      },
+      {
+        "title": "OPPDRAG 6 — VERDENSTREET",
+        "text": "Sie taucht zum versunkenen Riff und rettet die Wurzeln des Weltenbaums vor sauren Industrieabfällen."
+      },
+      {
+        "title": "OPPDRAG 7 — RIO NEGRO-VERKENE",
+        "text": "In den Hochöfen von Rio Negro sabotiert Maiya die Generatoren der Smog-Gilde."
+      },
+      {
+        "title": "OPPDRAG 8 — JERNTSKIKKELSEN",
+        "text": "Auf dem Rücken des Sonnenadlers besiegt sie die fliegende Festung des Eisengeiers im Sturm."
+      },
+      {
+        "title": "SISTE KAPITTEL — CITADELLET",
+        "text": "Sie dringt in die Zitadelle ein, überwindet die finalen Bollwerke und befreit Prinz Sunboy."
+      },
+      {
+        "title": "SLUTTSLAGET — LORD SMOGGAR",
+        "text": "Im epischen Duell gegen Smoggars riesiges Exoskelett erringt Maiya den triumphalen Sieg!"
+      },
+      {
+        "title": "EPILOG",
+        "text": "Der Himmel klart auf, die Wälder erblühen und Maiya kehrt glücklich zu Luna zurück."
+      }
+    ],
+    "step3_title": "MAME Neo-Geo Emulator Einrichtung",
+    "step3_desc": "Maiya läuft perfekt auf MAME. Der Installer erkennt bestehende MAME-Installationen oder lädt eine Version automatisch herunter.",
+    "step3_status_label": "MAME-Status auf dem System:",
+    "step3_detected": "MAME Erkannt",
+    "step3_missing": "MAME Nicht Gefunden (Download empfohlen)",
+    "step3_opt_existing": "Vorhandenes MAME verwenden",
+    "step3_opt_download": "MAME von offiziellen GitHub-Releases herunterladen",
+    "step3_select_release": "MAME-Version auswählen:",
+    "step3_custom_path": "Benutzerdefinierter MAME-Pfad (optional):",
+    "step4_title": "Zielverzeichnis & Komponenten",
+    "step4_desc": "Wählen Sie das Installationsverzeichnis und die gewünschten Editionen.",
+    "step4_target_label": "Installationsverzeichnis:",
+    "step4_components_label": "Komponenten auswählen:",
+    "step4_chk_mvs": "Maiya MVS Edition (Neo-Geo Arcade Format + EagleBIOS euro)",
+    "step4_chk_aes": "Maiya AES Edition (Neo-Geo Heimkonsole + EagleBIOS asia + Memory Card)",
+    "step4_chk_shortcuts": "Desktop-Verknüpfungen (Individuelle Maiya Desktop-Icons)",
+    "step5_title": "Installiere Maiya: Super Nature Girl...",
+    "step5_desc": "ROMs, EagleBIOS-Dateien und Desktop-Verknüpfungen werden eingerichtet...",
+    "step5_complete_title": "Installation Abgeschlossen!",
+    "step5_complete_desc": "Maiya: Super Nature Girl wurde erfolgreich mit Desktop-Icons installiert!",
+    "chapter_select_label": "Hopp til oppdrag / kapittel:",
+    "btn_prev_chapter": "← Forrige",
+    "btn_next_chapter": "Neste →",
+    "step4_game_source_label": "Kilde for spillversjon:",
+    "step4_game_source_local": "Nyeste lokale bygg (v4 Gange-/Løpemotor & EagleBIOS)",
+    "step4_game_source_download": "Last ned fra offisiell utgivelsesside",
+    "desktop_icon_hint": "Inkluderer høyoppløselig Maiya-ikon (.ico / .png)"
+  }
+}

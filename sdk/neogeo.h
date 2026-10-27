@@ -102,10 +102,22 @@ uint16_t read_joy1(void);
 void playSoundtest(uint16_t index);
 void soundCommand(uint8_t command);
 void isZ80Ready(void);
+#ifdef NG_SOUND_QUEUE
+/* NG_SOUND_QUEUE: sound commands wait in a queue instead of the 68000
+ * waiting for the Z80 (sdk/neogeolib.c). The game calls ng_sound_vblank()
+ * once a frame after its VBlank wait (waitVbl() does it itself), may call
+ * ng_sound_pump() at other points of the frame, and ng_sound_flush() to
+ * wait until every byte is out. */
+void ng_sound_pump(void);
+void ng_sound_vblank(void);
+void ng_sound_flush(void);
+#endif
 
 /* Core sound control. */
 void soundInit(void);
 void soundReset(void);
+/* Full Z80 restart; stops playback and resets volumes, sequencers and timers. */
+void soundHardwareReset(void);
 void soundStopAll(void);
 void soundStopMusic(void);
 void soundCancelFade(void);
@@ -182,6 +194,10 @@ void soundSetADPCMAVolume(uint8_t volume);
 void soundSetADPCMBVolume(uint8_t volume);
 void soundSetSSGVolume(uint8_t volume);
 void soundApplyMix(uint8_t adpcma_vol, uint8_t adpcmb_vol, uint8_t ssg_vol, uint8_t fm_vol);
+
+/* The machine, the operator's settings (software DIPs) and the game's
+ * save block: static inline, so they cost a game nothing until it uses them. */
+#include "ng_system.h"
 
 /* High-level scene helpers used by the demo flow. */
 void soundPlayDemoFM(uint8_t fm_track);

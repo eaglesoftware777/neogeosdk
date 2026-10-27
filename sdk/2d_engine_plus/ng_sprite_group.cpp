@@ -47,9 +47,11 @@ uint16_t NGSpriteGroup::tileFor(uint8_t strip, uint8_t row) const
 
 uint16_t NGSpriteGroup::attrFor(uint8_t strip, uint8_t row, uint16_t attr) const
 {
-    if (!tilePalettes) return attr;
     if (hflip) strip = (uint8_t)(strips - 1u - strip);
     if (vflip) row = (uint8_t)(heightTiles - 1u - row);
+    uint32_t address = ((uint32_t)tileHigh << 16) + tileBase + (uint32_t)row * tileStride + strip;
+    attr = (uint16_t)((attr & 0xFF0Fu) | ((address >> 12) & 0xF0u));
+    if (!tilePalettes) return attr;
     return (uint16_t)((attr & 0x00ffu) |
         ((uint16_t)tilePalettes[(uint16_t)row * tileStride + strip] << 8));
 }
@@ -177,6 +179,7 @@ void NGSpriteGroup::init(uint16_t first, uint8_t s, uint8_t h, uint16_t tb, uint
     heightTiles = h;
     activeRows  = h;
     tileBase    = tb;
+    tileHigh    = 0u;
     tileStride  = s;
     palette     = pal;
     tilePalettes = 0;
@@ -189,6 +192,9 @@ void NGSpriteGroup::init(uint16_t first, uint8_t s, uint8_t h, uint16_t tb, uint
     autoAnim8  = 0;
     visible    = 1;
     dirty      = NG_SGF_DIRTY_ALL;
+    mapRows = 0u;
+    mapFirst = 0xffffu;
+    mapStrips = mapHeight = 0u;
 }
 
 void NGSpriteGroup::markDirty(uint8_t flags) { dirty |= flags; }
@@ -198,6 +204,15 @@ void NGSpriteGroup::setTileBase(uint16_t tb)
     if (tileBase == tb) return;
     tileBase = tb;
     dirty |= NG_SGF_DIRTY_TILE;
+}
+
+void NEOGEO_USER ng_sprite_group_set_tile_address(NGSpriteGroup *g, uint32_t address)
+{
+    if (!g || address > 0xFFFFFu) return;
+    if (g->tileBase != (uint16_t)address || g->tileHigh != (uint8_t)(address >> 16)) {
+        g->tileBase = (uint16_t)address; g->tileHigh = (uint8_t)(address >> 16);
+        g->dirty |= NG_SGF_DIRTY_TILE;
+    }
 }
 
 void NGSpriteGroup::setTileStride(uint16_t ts)
@@ -290,6 +305,7 @@ void NGSpriteGroup::setVisible(uint8_t v)
 void NGSpriteGroup::hide()
 {
     hideRange(firstSprite, strips);
+    mapRows = 0u;
 }
 
 void NGSpriteGroup::upload()
@@ -334,6 +350,10 @@ void NGSpriteGroup::upload()
                     ngsg_tiles, ngsg_attrs, mapRows,
                     scb2, scb3, scb4);
     }
+    mapFirst = firstSprite;
+    mapStrips = strips;
+    mapHeight = heightTiles;
+    this->mapRows = mapRows;
     dirty = 0u;
 }
 
@@ -390,16 +410,26 @@ void NGSpriteGroup::flush()
     driverScb4 = setSCB4((uint16_t)x);
     attr       = setSCB1_2(palette, 0, autoAnim8, autoAnim4, vflip, hflip);
 
-    if (dirty & (NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_PALETTE)) {
+    if ((dirty & (NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_PALETTE)) ||
+        this->mapRows < mapRows || mapFirst != firstSprite ||
+        mapStrips != strips || mapHeight != heightTiles) {
+        uint8_t writeRows = mapRows;
+        if (dirty != NG_SGF_DIRTY_ALL && this->mapRows >= mapRows &&
+            mapFirst == firstSprite && mapStrips == strips && mapHeight == heightTiles)
+            writeRows = heightTiles < mapRows ? heightTiles : mapRows;
         for (strip = 0; strip < strips; strip++) {
             uint16_t scb1Addr = (uint16_t)(64u * (uint16_t)(firstSprite + strip));
-            for (row = 0; row < mapRows; row++) {
+            for (row = 0; row < writeRows; row++) {
                 ngsg_tiles[row] = row < heightTiles ? tileFor(strip, row) : NG_SPRITE_BLANK_TILE;
                 ngsg_attrs[row] = row < heightTiles ? attrFor(strip, row, attr) : NG_SPRITE_BLANK_ATTR;
             }
             vram_init(scb1Addr, 1);
-            vram_SCB1(ngsg_tiles, ngsg_attrs, mapRows);
+            vram_SCB1(ngsg_tiles, ngsg_attrs, writeRows);
         }
+        mapFirst = firstSprite;
+        mapStrips = strips;
+        mapHeight = heightTiles;
+        this->mapRows = mapRows;
     }
 
     if (dirty & NG_SGF_DIRTY_SHRINK) {

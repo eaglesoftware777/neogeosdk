@@ -1,0 +1,19 @@
+{
+  "platform": "aes",
+  "bios_name": "asia",
+  "team": false,
+  "fighter": "atlas",
+  "attract_only": false,
+  "training": true,
+  "options": true,
+  "seconds": 100,
+  "elf_sha256": "a6dd9ffe55de9189943a206e9bd25351886e72126c0a19219f8d941d30d2eda4",
+  "rom_sha256": {
+    "781-c1.c1": "9e1ea1134041550a0b92fc373ed803a1dc797e39852de6cfef772fb75b875e95",
+    "781-c2.c2": "be49b097a5e81602e4519435eb4c67747d07c4a60b805ac89885c845918384d9",
+    "781-m1.m1": "f72aeb787b7486504e15e45cd007e71827799c75b7b3384da13054ad4f0901d5",
+    "781-p1.p1": "0c5d95e63cf1b6c43786a81ce9ccc8cb96bead8d0b8f2501c0756f75b31a4739",
+    "781-s1.s1": "56d8140539b0752b19766727b11388df21f27e523acb87a0c7ad0df158865b71",
+    "781-v1.v1": "0da0a125e7281753f06ab0ef941257646ccfa23250241e7a0c9ec8bdce7e4720"
+  }
+}

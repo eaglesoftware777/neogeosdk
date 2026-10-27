@@ -1,0 +1,9 @@
+neo-epo.bin WRONG CHECKSUMS:
+    EXPECTED: CRC(d27a71f1) SHA1(1b3b22092f30c4d1b2c15f04d1670eb1e9fbea07)
+       FOUND: CRC(153fce0b) SHA1(12461b1f64c89418ea1824ee2447975f4db99e81)
+000-lo.lo WRONG CHECKSUMS:
+    EXPECTED: CRC(5a86cff2) SHA1(5992277debadeb64d1c1c64b0a92d9293eaf7e4a)
+       FOUND: CRC(cede14c2) SHA1(07aed5c8c3b7108ab98e8e63969a0007f7241235)
+WARNING: the machine might not run correctly.
+WARNING: the machine might not run correctly.
+Average speed: 735.36% (34 seconds)

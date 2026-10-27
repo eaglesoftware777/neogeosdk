@@ -1,0 +1,15 @@
+{
+  "passed": true,
+  "fighters": 44,
+  "frames": 2460,
+  "limb_layers_checked": 0,
+  "indexed_assets_checked": 88,
+  "ground_contacts_checked": 0,
+  "canvas": [
+    160,
+    160
+  ],
+  "baseline": 141,
+  "C_ROM_round_trip": true,
+  "failures": []
+}

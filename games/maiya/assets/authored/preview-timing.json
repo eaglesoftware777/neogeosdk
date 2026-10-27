@@ -1,0 +1,62 @@
+{
+  "maiya_walk": {
+    "duration_ms": [
+      50,
+      70,
+      90,
+      60,
+      50,
+      70,
+      90,
+      50
+    ],
+    "cycle_ms": 530,
+    "ideal_cycle_ms": 533.3333333333333,
+    "complete_frames_pixel_exact": true
+  },
+  "maiya_run": {
+    "duration_ms": [
+      50,
+      80,
+      40,
+      40,
+      60,
+      70,
+      40,
+      50
+    ],
+    "cycle_ms": 430,
+    "ideal_cycle_ms": 426.6666666666667,
+    "complete_frames_pixel_exact": true
+  },
+  "luna_walk": {
+    "duration_ms": [
+      50,
+      70,
+      90,
+      60,
+      50,
+      70,
+      90,
+      50
+    ],
+    "cycle_ms": 530,
+    "ideal_cycle_ms": 533.3333333333333,
+    "complete_frames_pixel_exact": true
+  },
+  "luna_run": {
+    "duration_ms": [
+      50,
+      80,
+      40,
+      40,
+      60,
+      70,
+      40,
+      50
+    ],
+    "cycle_ms": 430,
+    "ideal_cycle_ms": 426.6666666666667,
+    "complete_frames_pixel_exact": true
+  }
+}

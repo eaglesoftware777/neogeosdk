@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "source_commit": "6895f8c0032dfc3a8c9c3527b700e8ec8288dba5",
+  "release_asset": "MaiyaLuna-WIP-EagleBIOS_v2.zip",
+  "files": {
+    "games/maiyaluna/artbox/783-c1.c1": "b0bea530511f915bdc64545cc72fb2ade38cb542bfb9f36b5206270926f6cde3",
+    "games/maiyaluna/artbox/783-c2.c2": "3da2165d5c6d323765c9ac64e81b91135bab04c78e7824e7229e8bc6fd65fb0b",
+    "games/maiyaluna/artbox/783-s1.s1": "e9416281490b156a3a775d426146e5581049a6f797241a847fed8d90796d92a1",
+    "games/maiyaluna/artbox/generated/assets.json": "cacf60e4c081afc35cad49f5b36284c7da8181f6056a944559d66dfa6b34d6ef",
+    "games/maiyaluna/artbox/generated/ml_assets.h": "2dbdf91cdfbe6ccc686a309e3d8b5af44fbf78e7d36976b85bd64e08c89af801",
+    "games/maiyaluna/artbox/generated/ml_looks.h": "de016ca96472e5db80a2937e676c8a75a8f25785bceeb0eac9eea2a122fe15c1",
+    "games/maiyaluna/scenes/ml.h": "deaea9b81d3859c27e82c83a76eaeefcb1589fffede60cc557b59709508efc76",
+    "games/maiyaluna/scenes/ml_draw.c": "1c5e5dba755b939e72b7c8c633b3e310eb66eb19e986754f80439660ff82e62c",
+    "games/maiyaluna/scenes/ml_game.c": "bd723f7373107adae38ffa3be6c5557a992647a0dc1763c20ab2e4d10ea02b08",
+    "games/maiyaluna/scenes/ml_world.c": "d2fa19fe1998cab898ff1303b96a4f121731419e2e4395b6a58740540c098bd9",
+    "games/maiyaluna/scenes/ml_world.h": "955b279d2b8bb1d7ee15e51efb9a6c1d32819c281841bf434bebba41d9927824",
+    "games/maiyaluna/scenes/ml_world_data.h": "a7bd497c5897c650a1976014d6cb3ba0047ba101c65afbf284a0b7d8b0d5298c",
+    "games/maiyaluna/scenes/ml_world_ids.h": "886aed5339ff21e115bec6c5f9ba0577cc2f372b2cacbbd0be8180b9385959d0",
+    "games/maiyaluna/main.c": "3aa2731a49b5a34ae39dd1df5987525cd2e061e0fc3d87b0a10fe2403d2f2c7a",
+    "sdk/2d_engine/ng_rpg.c": "a9292d279bcea963fa5fbcf8310ca85f170b8cb757693a1e182b22bfc40021ba",
+    "sdk/2d_engine/ng_rpg.h": "6e9da99b3fa5ea87dfba1e2d633daceb32984a089d1ef4b773ffd990b8a90263"
+  }
+}

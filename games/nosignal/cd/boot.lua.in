@@ -1,0 +1,26 @@
+-- Navigate the stock drive menu, then release every forced input to the player.
+local machine=manager.machine
+local mem=machine.devices[':maincpu'].spaces['program']
+local frame_address=@FRAMES_ADDR@
+local names={'P1 Left','P1 Up','P1 A','P1 Start'}
+local finished=false
+local function field(name)
+ for _,port in pairs(machine.ioport.ports) do
+  if port.fields[name] then return port.fields[name] end
+ end
+end
+emu.register_frame_done(function()
+ if finished then return end
+ local t=machine.time:as_double()
+ local frames=mem:read_u32(frame_address)
+ local ready=mem:read_u32(0x100)==0x4E454F2D and mem:read_u8(0x10FD80)==0x82 and frames>0 and frames<100000
+ if ready or t>30 then
+  for _,name in ipairs(names) do local f=field(name);if f then f:clear_value() end end
+  finished=true
+  return
+ end
+ local on={['P1 Left']=t>8 and t<8.1,['P1 Up']=t>9 and t<9.1,
+           ['P1 A']=(t>15 and t<15.2) or (t>25 and t<25.2),
+           ['P1 Start']=t>18 and t<18.3}
+ for name,value in pairs(on) do local f=field(name);if f then f:set_value(value and 1 or 0) end end
+end)

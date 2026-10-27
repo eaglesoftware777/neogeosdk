@@ -182,3 +182,32 @@ If the bundled cross-GDB cannot run on the host, pass another compatible GDB:
 ```bash
 make gdb-trace GDB=/path/to/m68k-gdb
 ```
+
+## Everything a tester needs: `make neo`
+
+```
+make neo GAME=maiya
+```
+
+builds the game for AES and then for MVS, so `roms/<game>/` ends as the MVS set. For each platform `tools/make_neo.py` writes to `dist/neo/<game>/`:
+
+| Output | Contents |
+|---|---|
+| `<platform>/roms/<game>/` | MAME test set |
+| `<platform>/hash/neogeo.xml` | software list for that set |
+| `<game>-<platform>.neo` | NeoSD image, packed by `tools/pack_neosd.py` |
+| `MANIFEST.txt` | every file's size, CRC32 and SHA-256 |
+
+**Alignment in the NeoSD image:**
+- P, S and M are padded to 64 KiB.
+- V is padded to a power of two (Maiya's 7.6 MB bank becomes 8 MB).
+- C1/C2 are interleaved and padded to 256 KiB.
+
+**Using the outputs:**
+- Check a MAME set with `mame -verifysoftlist neogeo -rompath "dist/neo/<game>/<platform>/roms;roms" -hashpath dist/neo/<game>/<platform>/hash`.
+- Run it with `-cart1 <game>` and the system BIOS of your choice from your own MAME rompath.
+
+**Rules:**
+- No system BIOS goes into `dist/neo`: a NeoSD cart brings its own.
+- `dist/neo/` is rebuilt on demand and is not tracked. Release images stay in `dist/release/`, which this target never writes.
+- Linux makefile only. On Windows, run `tools/make_neo.py` after each platform's build.

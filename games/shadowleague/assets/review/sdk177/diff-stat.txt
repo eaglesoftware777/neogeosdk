@@ -1,0 +1,391 @@
+ games/shadowleague/artbox/781-c1.c1                |    Bin 8388608 -> 8388608 bytes
+ games/shadowleague/artbox/781-c2.c2                |    Bin 8388608 -> 8388608 bytes
+ .../shadowleague/artbox/generated/aditya_sheet.png |    Bin 99259 -> 316262 bytes
+ .../shadowleague/artbox/generated/aisha_sheet.png  |    Bin 94541 -> 238650 bytes
+ .../artbox/generated/aleksei_sheet.png             |    Bin 115102 -> 289027 bytes
+ .../artbox/generated/art-check-v2.json             |      6 +-
+ .../shadowleague/artbox/generated/atlas_sheet.png  |    Bin 174723 -> 422231 bytes
+ .../shadowleague/artbox/generated/banked-rom.json  |      6 +-
+ games/shadowleague/artbox/generated/batu_sheet.png |    Bin 430366 -> 376212 bytes
+ games/shadowleague/artbox/generated/echo_sheet.png |    Bin 92042 -> 245093 bytes
+ .../shadowleague/artbox/generated/elena_sheet.png  |    Bin 103983 -> 287346 bytes
+ .../shadowleague/artbox/generated/fahri_sheet.png  |    Bin 84468 -> 422764 bytes
+ .../artbox/generated/fighter-layout.json           | 216179 ++++++++++++------
+ .../shadowleague/artbox/generated/hayato_sheet.png |    Bin 96022 -> 307448 bytes
+ .../shadowleague/artbox/generated/irina_sheet.png  |    Bin 92163 -> 211788 bytes
+ .../artbox/generated/kaimana_sheet.png             |    Bin 90695 -> 402812 bytes
+ .../shadowleague/artbox/generated/kiran_sheet.png  |    Bin 92589 -> 236465 bytes
+ games/shadowleague/artbox/generated/kofi_sheet.png |    Bin 86972 -> 276669 bytes
+ .../shadowleague/artbox/generated/leila_sheet.png  |    Bin 88571 -> 236362 bytes
+ .../shadowleague/artbox/generated/lotus_sheet.png  |    Bin 81929 -> 316515 bytes
+ .../shadowleague/artbox/generated/lucas_sheet.png  |    Bin 93507 -> 395376 bytes
+ games/shadowleague/artbox/generated/maia_sheet.png |    Bin 105637 -> 265107 bytes
+ .../shadowleague/artbox/generated/mason_sheet.png  |    Bin 98772 -> 331275 bytes
+ games/shadowleague/artbox/generated/maya_sheet.png |    Bin 82485 -> 229472 bytes
+ .../shadowleague/artbox/generated/mirage_sheet.png |    Bin 95942 -> 273651 bytes
+ .../shadowleague/artbox/generated/niran_sheet.png  |    Bin 134336 -> 238975 bytes
+ games/shadowleague/artbox/generated/noah_sheet.png |    Bin 94451 -> 303075 bytes
+ .../artbox/generated/presentation-bank-0.bin       |    Bin 5520 -> 5520 bytes
+ .../artbox/generated/presentation-bank-1.bin       |    Bin 4600 -> 4600 bytes
+ .../artbox/generated/presentation-layout.json      |     34 +-
+ .../shadowleague/artbox/generated/select-wall.png  |    Bin 18871 -> 27556 bytes
+ games/shadowleague/artbox/generated/slf_assets.h   |  11807 +-
+ .../shadowleague/artbox/generated/sokha_sheet.png  |    Bin 93011 -> 247958 bytes
+ .../artbox/generated/strip-budget.json             |     10 +-
+ .../shadowleague/artbox/generated/thabo_sheet.png  |    Bin 86882 -> 262994 bytes
+ .../shadowleague/artbox/generated/tomas_sheet.png  |    Bin 93154 -> 338128 bytes
+ .../artbox/generated/tororojo_sheet.png            |    Bin 104697 -> 391941 bytes
+ .../shadowleague/artbox/generated/viper_sheet.png  |    Bin 89104 -> 220462 bytes
+ .../artbox/generated/xiaomei_sheet.png             |    Bin 88028 -> 220700 bytes
+ games/shadowleague/artbox/generated/zara_sheet.png |    Bin 89056 -> 345424 bytes
+ games/shadowleague/artbox/generated/zero_sheet.png |    Bin 98696 -> 276920 bytes
+ .../assets/authored/fighters/batu/backdash.png     |    Bin 4145 -> 3494 bytes
+ .../assets/authored/fighters/batu/cr_hk.png        |    Bin 3450 -> 3577 bytes
+ .../assets/authored/fighters/batu/cr_hp1.png       |    Bin 4045 -> 3388 bytes
+ .../assets/authored/fighters/batu/cr_hp2.png       |    Bin 4323 -> 4238 bytes
+ .../assets/authored/fighters/batu/cr_lk.png        |    Bin 3593 -> 3506 bytes
+ .../assets/authored/fighters/batu/cr_lp.png        |    Bin 3995 -> 3457 bytes
+ .../assets/authored/fighters/batu/crouch.png       |    Bin 3255 -> 2864 bytes
+ .../assets/authored/fighters/batu/dash.png         |    Bin 4377 -> 3654 bytes
+ .../assets/authored/fighters/batu/dizzy.png        |    Bin 3814 -> 3251 bytes
+ .../assets/authored/fighters/batu/dizzy_b.png      |    Bin 4211 -> 3747 bytes
+ .../assets/authored/fighters/batu/down.png         |    Bin 2437 -> 2478 bytes
+ .../assets/authored/fighters/batu/fall.png         |    Bin 3468 -> 3160 bytes
+ .../assets/authored/fighters/batu/gattack.png      |    Bin 4372 -> 3960 bytes
+ .../assets/authored/fighters/batu/getup.png        |    Bin 3488 -> 3078 bytes
+ .../assets/authored/fighters/batu/guard.png        |    Bin 4129 -> 3745 bytes
+ .../assets/authored/fighters/batu/guard_low.png    |    Bin 3758 -> 3154 bytes
+ .../assets/authored/fighters/batu/head.png         |    Bin 1098 -> 1109 bytes
+ .../assets/authored/fighters/batu/hit.png          |    Bin 4500 -> 3850 bytes
+ .../assets/authored/fighters/batu/hit_b.png        |    Bin 4058 -> 3466 bytes
+ .../assets/authored/fighters/batu/hit_low.png      |    Bin 3559 -> 3071 bytes
+ .../assets/authored/fighters/batu/hk1.png          |    Bin 3801 -> 3421 bytes
+ .../assets/authored/fighters/batu/hk2.png          |    Bin 3777 -> 3741 bytes
+ .../assets/authored/fighters/batu/hp1.png          |    Bin 4493 -> 3950 bytes
+ .../assets/authored/fighters/batu/hp2.png          |    Bin 4086 -> 4091 bytes
+ .../assets/authored/fighters/batu/idle2.png        |    Bin 3419 -> 3008 bytes
+ .../assets/authored/fighters/batu/idle3.png        |    Bin 3485 -> 2984 bytes
+ .../assets/authored/fighters/batu/intro.png        |    Bin 4216 -> 3816 bytes
+ .../assets/authored/fighters/batu/j_k.png          |    Bin 3861 -> 3183 bytes
+ .../assets/authored/fighters/batu/j_p.png          |    Bin 3013 -> 3094 bytes
+ .../assets/authored/fighters/batu/jump_apex.png    |    Bin 3282 -> 2768 bytes
+ .../assets/authored/fighters/batu/jump_down.png    |    Bin 3646 -> 3373 bytes
+ .../assets/authored/fighters/batu/jump_up.png      |    Bin 3724 -> 3608 bytes
+ .../assets/authored/fighters/batu/lk2.png          |    Bin 3885 -> 3521 bytes
+ .../assets/authored/fighters/batu/lose.png         |    Bin 3419 -> 3000 bytes
+ .../assets/authored/fighters/batu/lp1.png          |    Bin 4031 -> 3781 bytes
+ .../assets/authored/fighters/batu/lp2.png          |    Bin 3852 -> 3829 bytes
+ .../assets/authored/fighters/batu/manifest.json    |   2791 +-
+ .../authored/fighters/batu/portrait-small.png      |    Bin 1098 -> 1109 bytes
+ .../assets/authored/fighters/batu/roll.png         |    Bin 3580 -> 2918 bytes
+ .../assets/authored/fighters/batu/sp1_1.png        |    Bin 4026 -> 3524 bytes
+ .../assets/authored/fighters/batu/sp1_2.png        |    Bin 4375 -> 3624 bytes
+ .../assets/authored/fighters/batu/sp2_1.png        |    Bin 4471 -> 3833 bytes
+ .../assets/authored/fighters/batu/sp2_2.png        |    Bin 4405 -> 3778 bytes
+ .../assets/authored/fighters/batu/sp3_1.png        |    Bin 4214 -> 3948 bytes
+ .../assets/authored/fighters/batu/sp3_2.png        |    Bin 4310 -> 3504 bytes
+ .../assets/authored/fighters/batu/stance.png       |    Bin 3671 -> 3092 bytes
+ .../assets/authored/fighters/batu/super_1.png      |    Bin 4302 -> 3608 bytes
+ .../assets/authored/fighters/batu/super_2.png      |    Bin 4191 -> 3756 bytes
+ .../assets/authored/fighters/batu/super_3.png      |    Bin 4319 -> 3667 bytes
+ .../assets/authored/fighters/batu/throw_1.png      |    Bin 3973 -> 3601 bytes
+ .../assets/authored/fighters/batu/throw_2.png      |    Bin 4486 -> 3863 bytes
+ .../assets/authored/fighters/batu/walk1.png        |    Bin 3567 -> 3074 bytes
+ .../assets/authored/fighters/batu/walk2.png        |    Bin 3477 -> 2995 bytes
+ .../assets/authored/fighters/batu/walk3.png        |    Bin 3511 -> 3072 bytes
+ .../assets/authored/fighters/batu/walk4.png        |    Bin 3201 -> 2771 bytes
+ .../assets/authored/fighters/batu/walk5.png        |    Bin 3454 -> 3082 bytes
+ .../assets/authored/fighters/batu/walk6.png        |    Bin 3451 -> 3033 bytes
+ .../assets/authored/fighters/batu/win.png          |    Bin 3652 -> 3763 bytes
+ .../assets/authored/fighters/batu/win_b.png        |    Bin 4000 -> 3849 bytes
+ .../assets/authored/rebirth/cinema/project.json    |     32 +-
+ .../assets/authored/voices/aisha_sp1.wav           |    Bin 25470 -> 27946 bytes
+ .../assets/authored/voices/aisha_sp2.wav           |    Bin 25100 -> 20264 bytes
+ .../assets/authored/voices/aisha_sp3.wav           |    Bin 34386 -> 26888 bytes
+ .../assets/authored/voices/aisha_super.wav         |    Bin 25314 -> 30296 bytes
+ .../assets/authored/voices/amara_sp1.wav           |    Bin 47174 -> 26068 bytes
+ .../assets/authored/voices/amara_sp2.wav           |    Bin 29488 -> 24208 bytes
+ .../assets/authored/voices/amara_super.wav         |    Bin 41952 -> 25164 bytes
+ .../assets/authored/voices/arun_sp1.wav            |    Bin 44918 -> 30126 bytes
+ .../assets/authored/voices/arun_sp2.wav            |    Bin 28742 -> 22990 bytes
+ .../assets/authored/voices/arun_sp3.wav            |    Bin 25942 -> 21398 bytes
+ .../assets/authored/voices/arun_super.wav          |    Bin 31070 -> 37414 bytes
+ .../assets/authored/voices/chenbao_sp1.wav         |    Bin 27488 -> 21220 bytes
+ .../assets/authored/voices/chenbao_sp2.wav         |    Bin 28944 -> 13120 bytes
+ .../assets/authored/voices/chenbao_sp3.wav         |    Bin 35624 -> 18832 bytes
+ .../assets/authored/voices/chenbao_super.wav       |    Bin 37016 -> 24900 bytes
+ .../assets/authored/voices/claire_sp1.wav          |    Bin 39070 -> 27946 bytes
+ .../assets/authored/voices/claire_sp2.wav          |    Bin 45556 -> 20264 bytes
+ .../assets/authored/voices/claire_sp3.wav          |    Bin 31712 -> 26888 bytes
+ .../assets/authored/voices/claire_super.wav        |    Bin 33864 -> 30296 bytes
+ .../assets/authored/voices/diego_sp1.wav           |    Bin 44224 -> 27094 bytes
+ .../assets/authored/voices/diego_sp2.wav           |    Bin 38810 -> 24048 bytes
+ .../assets/authored/voices/diego_sp3.wav           |    Bin 40530 -> 19522 bytes
+ .../assets/authored/voices/diego_super.wav         |    Bin 38024 -> 27408 bytes
+ .../assets/authored/voices/hayato_sp1.wav          |    Bin 41178 -> 26080 bytes
+ .../assets/authored/voices/hayato_sp2.wav          |    Bin 49096 -> 26916 bytes
+ .../assets/authored/voices/hayato_sp3.wav          |    Bin 39004 -> 20442 bytes
+ .../assets/authored/voices/hayato_super.wav        |    Bin 52614 -> 43618 bytes
+ .../assets/authored/voices/kenji_sp1.wav           |    Bin 33050 -> 26080 bytes
+ .../assets/authored/voices/kenji_sp2.wav           |    Bin 29452 -> 26916 bytes
+ .../assets/authored/voices/kenji_sp3.wav           |    Bin 30880 -> 20442 bytes
+ .../assets/authored/voices/kenji_super.wav         |    Bin 40322 -> 43618 bytes
+ .../assets/authored/voices/kiran_sp1.wav           |    Bin 40370 -> 34796 bytes
+ .../assets/authored/voices/kiran_sp2.wav           |    Bin 26294 -> 30528 bytes
+ .../assets/authored/voices/kiran_sp3.wav           |    Bin 21622 -> 30494 bytes
+ .../assets/authored/voices/kiran_super.wav         |    Bin 32870 -> 34100 bytes
+ .../assets/authored/voices/linwei_sp1.wav          |    Bin 43446 -> 21220 bytes
+ .../assets/authored/voices/linwei_sp2.wav          |    Bin 30726 -> 13120 bytes
+ .../assets/authored/voices/linwei_sp3.wav          |    Bin 38876 -> 18832 bytes
+ .../assets/authored/voices/linwei_super.wav        |    Bin 35680 -> 24900 bytes
+ .../assets/authored/voices/lucas_sp1.wav           |    Bin 20896 -> 25484 bytes
+ .../assets/authored/voices/lucas_sp2.wav           |    Bin 28744 -> 23926 bytes
+ .../assets/authored/voices/lucas_sp3.wav           |    Bin 34534 -> 19908 bytes
+ .../assets/authored/voices/lucas_super.wav         |    Bin 33322 -> 25088 bytes
+ .../assets/authored/voices/ryuhei_sp1.wav          |    Bin 38930 -> 26080 bytes
+ .../assets/authored/voices/ryuhei_sp2.wav          |    Bin 39506 -> 26916 bytes
+ .../assets/authored/voices/ryuhei_sp3.wav          |    Bin 35796 -> 20442 bytes
+ .../assets/authored/voices/ryuhei_super.wav        |    Bin 44068 -> 43618 bytes
+ .../assets/authored/voices/tomas_sp1.wav           |    Bin 32194 -> 27094 bytes
+ .../assets/authored/voices/tomas_sp2.wav           |    Bin 40176 -> 24048 bytes
+ .../assets/authored/voices/tomas_sp3.wav           |    Bin 28336 -> 19522 bytes
+ .../assets/authored/voices/tomas_super.wav         |    Bin 55600 -> 27408 bytes
+ .../assets/authored/voices/tororojo_sp1.wav        |    Bin 28460 -> 27094 bytes
+ .../assets/authored/voices/tororojo_sp2.wav        |    Bin 25272 -> 24048 bytes
+ .../assets/authored/voices/tororojo_sp3.wav        |    Bin 29202 -> 19522 bytes
+ .../assets/authored/voices/tororojo_super.wav      |    Bin 41750 -> 27408 bytes
+ .../assets/authored/voices/xiaomei_sp1.wav         |    Bin 31116 -> 30462 bytes
+ .../assets/authored/voices/xiaomei_sp2.wav         |    Bin 35446 -> 19768 bytes
+ .../assets/authored/voices/xiaomei_sp3.wav         |    Bin 23478 -> 28112 bytes
+ .../assets/authored/voices/xiaomei_super.wav       |    Bin 38538 -> 34602 bytes
+ games/shadowleague/fighters/aditya.json            |    488 +-
+ games/shadowleague/fighters/aisha.json             |    488 +-
+ games/shadowleague/fighters/aleksei.json           |    488 +-
+ games/shadowleague/fighters/arun.json              |     72 +-
+ games/shadowleague/fighters/atlas.json             |    520 +-
+ games/shadowleague/fighters/echo.json              |    488 +-
+ games/shadowleague/fighters/elena.json             |    488 +-
+ games/shadowleague/fighters/fahri.json             |    488 +-
+ games/shadowleague/fighters/hayato.json            |    488 +-
+ games/shadowleague/fighters/irina.json             |    488 +-
+ games/shadowleague/fighters/kaimana.json           |    488 +-
+ games/shadowleague/fighters/kenji.json             |     72 +-
+ games/shadowleague/fighters/kiran.json             |    488 +-
+ games/shadowleague/fighters/kofi.json              |    488 +-
+ games/shadowleague/fighters/leila.json             |    488 +-
+ games/shadowleague/fighters/lotus.json             |    488 +-
+ games/shadowleague/fighters/lucas.json             |    488 +-
+ games/shadowleague/fighters/maia.json              |    488 +-
+ games/shadowleague/fighters/mason.json             |    488 +-
+ games/shadowleague/fighters/maya.json              |    488 +-
+ games/shadowleague/fighters/mirage.json            |    488 +-
+ games/shadowleague/fighters/niran.json             |    422 +-
+ games/shadowleague/fighters/noah.json              |    488 +-
+ games/shadowleague/fighters/sokha.json             |    488 +-
+ games/shadowleague/fighters/thabo.json             |    488 +-
+ games/shadowleague/fighters/tomas.json             |    488 +-
+ games/shadowleague/fighters/tororojo.json          |    488 +-
+ games/shadowleague/fighters/viper.json             |    488 +-
+ games/shadowleague/fighters/xiaomei.json           |    488 +-
+ games/shadowleague/fighters/zara.json              |    488 +-
+ games/shadowleague/fighters/zero.json              |    560 +-
+ games/shadowleague/game.mk                         |      7 +-
+ games/shadowleague/neogeo_aes.c                    |     50 +-
+ games/shadowleague/neogeo_mvs.c                    |     50 +-
+ games/shadowleague/scenes/slf.h                    |      7 +
+ games/shadowleague/scenes/slf_draw.c               |    249 +-
+ games/shadowleague/scenes/slf_game.c               |     62 +-
+ games/shadowleague/sound/samples/in_wav_a/102.wav  |    Bin 41178 -> 26080 bytes
+ games/shadowleague/sound/samples/in_wav_a/103.wav  |    Bin 49096 -> 26916 bytes
+ games/shadowleague/sound/samples/in_wav_a/104.wav  |    Bin 39004 -> 20442 bytes
+ games/shadowleague/sound/samples/in_wav_a/105.wav  |    Bin 52614 -> 43618 bytes
+ games/shadowleague/sound/samples/in_wav_a/122.wav  |    Bin 33050 -> 26080 bytes
+ games/shadowleague/sound/samples/in_wav_a/123.wav  |    Bin 29452 -> 26916 bytes
+ games/shadowleague/sound/samples/in_wav_a/124.wav  |    Bin 30880 -> 20442 bytes
+ games/shadowleague/sound/samples/in_wav_a/125.wav  |    Bin 40322 -> 43618 bytes
+ games/shadowleague/sound/samples/in_wav_a/126.wav  |    Bin 40370 -> 34796 bytes
+ games/shadowleague/sound/samples/in_wav_a/127.wav  |    Bin 26294 -> 30528 bytes
+ games/shadowleague/sound/samples/in_wav_a/128.wav  |    Bin 21622 -> 30494 bytes
+ games/shadowleague/sound/samples/in_wav_a/129.wav  |    Bin 32870 -> 34100 bytes
+ games/shadowleague/sound/samples/in_wav_a/138.wav  |    Bin 43446 -> 21220 bytes
+ games/shadowleague/sound/samples/in_wav_a/139.wav  |    Bin 30726 -> 13120 bytes
+ games/shadowleague/sound/samples/in_wav_a/140.wav  |    Bin 38876 -> 18832 bytes
+ games/shadowleague/sound/samples/in_wav_a/141.wav  |    Bin 35680 -> 24900 bytes
+ games/shadowleague/sound/samples/in_wav_a/146.wav  |    Bin 20896 -> 25484 bytes
+ games/shadowleague/sound/samples/in_wav_a/147.wav  |    Bin 28744 -> 23926 bytes
+ games/shadowleague/sound/samples/in_wav_a/148.wav  |    Bin 34534 -> 19908 bytes
+ games/shadowleague/sound/samples/in_wav_a/149.wav  |    Bin 33322 -> 25088 bytes
+ games/shadowleague/sound/samples/in_wav_a/182.wav  |    Bin 38930 -> 26080 bytes
+ games/shadowleague/sound/samples/in_wav_a/183.wav  |    Bin 39506 -> 26916 bytes
+ games/shadowleague/sound/samples/in_wav_a/184.wav  |    Bin 35796 -> 20442 bytes
+ games/shadowleague/sound/samples/in_wav_a/185.wav  |    Bin 44068 -> 43618 bytes
+ games/shadowleague/sound/samples/in_wav_a/198.wav  |    Bin 32194 -> 27094 bytes
+ games/shadowleague/sound/samples/in_wav_a/199.wav  |    Bin 40176 -> 24048 bytes
+ games/shadowleague/sound/samples/in_wav_a/200.wav  |    Bin 28336 -> 19522 bytes
+ games/shadowleague/sound/samples/in_wav_a/201.wav  |    Bin 55600 -> 27408 bytes
+ games/shadowleague/sound/samples/in_wav_a/202.wav  |    Bin 28460 -> 27094 bytes
+ games/shadowleague/sound/samples/in_wav_a/203.wav  |    Bin 25272 -> 24048 bytes
+ games/shadowleague/sound/samples/in_wav_a/204.wav  |    Bin 29202 -> 19522 bytes
+ games/shadowleague/sound/samples/in_wav_a/205.wav  |    Bin 41750 -> 27408 bytes
+ games/shadowleague/sound/samples/in_wav_a/214.wav  |    Bin 31116 -> 30462 bytes
+ games/shadowleague/sound/samples/in_wav_a/215.wav  |    Bin 35446 -> 19768 bytes
+ games/shadowleague/sound/samples/in_wav_a/216.wav  |    Bin 23478 -> 28112 bytes
+ games/shadowleague/sound/samples/in_wav_a/217.wav  |    Bin 38538 -> 34602 bytes
+ games/shadowleague/sound/samples/in_wav_a/55.wav   |    Bin 25470 -> 27946 bytes
+ games/shadowleague/sound/samples/in_wav_a/56.wav   |    Bin 25100 -> 20264 bytes
+ games/shadowleague/sound/samples/in_wav_a/57.wav   |    Bin 34386 -> 26888 bytes
+ games/shadowleague/sound/samples/in_wav_a/58.wav   |    Bin 25314 -> 30296 bytes
+ games/shadowleague/sound/samples/in_wav_a/63.wav   |    Bin 47174 -> 26068 bytes
+ games/shadowleague/sound/samples/in_wav_a/64.wav   |    Bin 29488 -> 24208 bytes
+ games/shadowleague/sound/samples/in_wav_a/65.wav   |    Bin 41952 -> 25164 bytes
+ games/shadowleague/sound/samples/in_wav_a/66.wav   |    Bin 44918 -> 30126 bytes
+ games/shadowleague/sound/samples/in_wav_a/67.wav   |    Bin 28742 -> 22990 bytes
+ games/shadowleague/sound/samples/in_wav_a/68.wav   |    Bin 25942 -> 21398 bytes
+ games/shadowleague/sound/samples/in_wav_a/69.wav   |    Bin 31070 -> 37414 bytes
+ games/shadowleague/sound/samples/in_wav_a/78.wav   |    Bin 27488 -> 21220 bytes
+ games/shadowleague/sound/samples/in_wav_a/79.wav   |    Bin 28944 -> 13120 bytes
+ games/shadowleague/sound/samples/in_wav_a/80.wav   |    Bin 35624 -> 18832 bytes
+ games/shadowleague/sound/samples/in_wav_a/81.wav   |    Bin 37016 -> 24900 bytes
+ games/shadowleague/sound/samples/in_wav_a/82.wav   |    Bin 39070 -> 27946 bytes
+ games/shadowleague/sound/samples/in_wav_a/83.wav   |    Bin 45556 -> 20264 bytes
+ games/shadowleague/sound/samples/in_wav_a/84.wav   |    Bin 31712 -> 26888 bytes
+ games/shadowleague/sound/samples/in_wav_a/85.wav   |    Bin 33864 -> 30296 bytes
+ games/shadowleague/sound/samples/in_wav_a/86.wav   |    Bin 44224 -> 27094 bytes
+ games/shadowleague/sound/samples/in_wav_a/87.wav   |    Bin 38810 -> 24048 bytes
+ games/shadowleague/sound/samples/in_wav_a/88.wav   |    Bin 40530 -> 19522 bytes
+ games/shadowleague/sound/samples/in_wav_a/89.wav   |    Bin 38024 -> 27408 bytes
+ .../shadowleague/sound/samples/out_16el_a/102.wav  |    Bin 41092 -> 26010 bytes
+ .../shadowleague/sound/samples/out_16el_a/103.wav  |    Bin 49002 -> 26844 bytes
+ .../shadowleague/sound/samples/out_16el_a/104.wav  |    Bin 38920 -> 20378 bytes
+ .../shadowleague/sound/samples/out_16el_a/105.wav  |    Bin 52516 -> 43530 bytes
+ .../shadowleague/sound/samples/out_16el_a/122.wav  |    Bin 32972 -> 26010 bytes
+ .../shadowleague/sound/samples/out_16el_a/123.wav  |    Bin 29378 -> 26844 bytes
+ .../shadowleague/sound/samples/out_16el_a/124.wav  |    Bin 30804 -> 20378 bytes
+ .../shadowleague/sound/samples/out_16el_a/125.wav  |    Bin 40236 -> 43530 bytes
+ .../shadowleague/sound/samples/out_16el_a/126.wav  |    Bin 40284 -> 34716 bytes
+ .../shadowleague/sound/samples/out_16el_a/127.wav  |    Bin 26224 -> 30452 bytes
+ .../shadowleague/sound/samples/out_16el_a/128.wav  |    Bin 21556 -> 30418 bytes
+ .../shadowleague/sound/samples/out_16el_a/129.wav  |    Bin 32792 -> 34022 bytes
+ .../shadowleague/sound/samples/out_16el_a/138.wav  |    Bin 43358 -> 21154 bytes
+ .../shadowleague/sound/samples/out_16el_a/139.wav  |    Bin 30650 -> 13062 bytes
+ .../shadowleague/sound/samples/out_16el_a/140.wav  |    Bin 38792 -> 18768 bytes
+ .../shadowleague/sound/samples/out_16el_a/141.wav  |    Bin 35600 -> 24830 bytes
+ .../shadowleague/sound/samples/out_16el_a/146.wav  |    Bin 20830 -> 25414 bytes
+ .../shadowleague/sound/samples/out_16el_a/147.wav  |    Bin 28670 -> 23858 bytes
+ .../shadowleague/sound/samples/out_16el_a/148.wav  |    Bin 34454 -> 19844 bytes
+ .../shadowleague/sound/samples/out_16el_a/149.wav  |    Bin 33244 -> 25018 bytes
+ .../shadowleague/sound/samples/out_16el_a/182.wav  |    Bin 38846 -> 26010 bytes
+ .../shadowleague/sound/samples/out_16el_a/183.wav  |    Bin 39422 -> 26844 bytes
+ .../shadowleague/sound/samples/out_16el_a/184.wav  |    Bin 35716 -> 20378 bytes
+ .../shadowleague/sound/samples/out_16el_a/185.wav  |    Bin 43978 -> 43530 bytes
+ .../shadowleague/sound/samples/out_16el_a/198.wav  |    Bin 32118 -> 27022 bytes
+ .../shadowleague/sound/samples/out_16el_a/199.wav  |    Bin 40090 -> 23980 bytes
+ .../shadowleague/sound/samples/out_16el_a/200.wav  |    Bin 28262 -> 19458 bytes
+ .../shadowleague/sound/samples/out_16el_a/201.wav  |    Bin 55500 -> 27336 bytes
+ .../shadowleague/sound/samples/out_16el_a/202.wav  |    Bin 28386 -> 27022 bytes
+ .../shadowleague/sound/samples/out_16el_a/203.wav  |    Bin 25202 -> 23980 bytes
+ .../shadowleague/sound/samples/out_16el_a/204.wav  |    Bin 29128 -> 19458 bytes
+ .../shadowleague/sound/samples/out_16el_a/205.wav  |    Bin 41664 -> 27336 bytes
+ .../shadowleague/sound/samples/out_16el_a/214.wav  |    Bin 31040 -> 30386 bytes
+ .../shadowleague/sound/samples/out_16el_a/215.wav  |    Bin 35366 -> 19704 bytes
+ .../shadowleague/sound/samples/out_16el_a/216.wav  |    Bin 23410 -> 28040 bytes
+ .../shadowleague/sound/samples/out_16el_a/217.wav  |    Bin 38454 -> 34522 bytes
+ games/shadowleague/sound/samples/out_16el_a/55.wav |    Bin 25400 -> 27874 bytes
+ games/shadowleague/sound/samples/out_16el_a/56.wav |    Bin 25030 -> 20200 bytes
+ games/shadowleague/sound/samples/out_16el_a/57.wav |    Bin 34306 -> 26816 bytes
+ games/shadowleague/sound/samples/out_16el_a/58.wav |    Bin 25244 -> 30220 bytes
+ games/shadowleague/sound/samples/out_16el_a/63.wav |    Bin 47082 -> 25998 bytes
+ games/shadowleague/sound/samples/out_16el_a/64.wav |    Bin 29414 -> 24140 bytes
+ games/shadowleague/sound/samples/out_16el_a/65.wav |    Bin 41866 -> 25094 bytes
+ games/shadowleague/sound/samples/out_16el_a/66.wav |    Bin 44828 -> 30052 bytes
+ games/shadowleague/sound/samples/out_16el_a/67.wav |    Bin 28668 -> 22922 bytes
+ games/shadowleague/sound/samples/out_16el_a/68.wav |    Bin 25872 -> 21332 bytes
+ games/shadowleague/sound/samples/out_16el_a/69.wav |    Bin 30994 -> 37332 bytes
+ games/shadowleague/sound/samples/out_16el_a/78.wav |    Bin 27416 -> 21154 bytes
+ games/shadowleague/sound/samples/out_16el_a/79.wav |    Bin 28870 -> 13062 bytes
+ games/shadowleague/sound/samples/out_16el_a/80.wav |    Bin 35544 -> 18768 bytes
+ games/shadowleague/sound/samples/out_16el_a/81.wav |    Bin 36934 -> 24830 bytes
+ games/shadowleague/sound/samples/out_16el_a/82.wav |    Bin 38986 -> 27874 bytes
+ games/shadowleague/sound/samples/out_16el_a/83.wav |    Bin 45466 -> 20200 bytes
+ games/shadowleague/sound/samples/out_16el_a/84.wav |    Bin 31636 -> 26816 bytes
+ games/shadowleague/sound/samples/out_16el_a/85.wav |    Bin 33786 -> 30220 bytes
+ games/shadowleague/sound/samples/out_16el_a/86.wav |    Bin 44134 -> 27022 bytes
+ games/shadowleague/sound/samples/out_16el_a/87.wav |    Bin 38726 -> 23980 bytes
+ games/shadowleague/sound/samples/out_16el_a/88.wav |    Bin 40444 -> 19458 bytes
+ games/shadowleague/sound/samples/out_16el_a/89.wav |    Bin 37942 -> 27336 bytes
+ games/shadowleague/sound/samples/out_a/102.adpcma  |    Bin 10496 -> 6656 bytes
+ games/shadowleague/sound/samples/out_a/103.adpcma  |    Bin 12288 -> 6912 bytes
+ games/shadowleague/sound/samples/out_a/104.adpcma  |    Bin 9984 -> 5120 bytes
+ games/shadowleague/sound/samples/out_a/105.adpcma  |    Bin 13312 -> 11008 bytes
+ games/shadowleague/sound/samples/out_a/122.adpcma  |    Bin 8448 -> 6656 bytes
+ games/shadowleague/sound/samples/out_a/123.adpcma  |    Bin 7424 -> 6912 bytes
+ games/shadowleague/sound/samples/out_a/124.adpcma  |    Bin 7936 -> 5120 bytes
+ games/shadowleague/sound/samples/out_a/125.adpcma  |    Bin 10240 -> 11008 bytes
+ games/shadowleague/sound/samples/out_a/126.adpcma  |    Bin 10240 -> 8704 bytes
+ games/shadowleague/sound/samples/out_a/127.adpcma  |    Bin 6656 -> 7680 bytes
+ games/shadowleague/sound/samples/out_a/128.adpcma  |    Bin 5632 -> 7680 bytes
+ games/shadowleague/sound/samples/out_a/129.adpcma  |    Bin 8448 -> 8704 bytes
+ games/shadowleague/sound/samples/out_a/138.adpcma  |    Bin 11008 -> 5376 bytes
+ games/shadowleague/sound/samples/out_a/139.adpcma  |    Bin 7680 -> 3328 bytes
+ games/shadowleague/sound/samples/out_a/140.adpcma  |    Bin 9728 -> 4864 bytes
+ games/shadowleague/sound/samples/out_a/141.adpcma  |    Bin 8960 -> 6400 bytes
+ games/shadowleague/sound/samples/out_a/146.adpcma  |    Bin 5376 -> 6400 bytes
+ games/shadowleague/sound/samples/out_a/147.adpcma  |    Bin 7168 -> 6144 bytes
+ games/shadowleague/sound/samples/out_a/148.adpcma  |    Bin 8704 -> 5120 bytes
+ games/shadowleague/sound/samples/out_a/149.adpcma  |    Bin 8448 -> 6400 bytes
+ games/shadowleague/sound/samples/out_a/182.adpcma  |    Bin 9728 -> 6656 bytes
+ games/shadowleague/sound/samples/out_a/183.adpcma  |    Bin 9984 -> 6912 bytes
+ games/shadowleague/sound/samples/out_a/184.adpcma  |    Bin 8960 -> 5120 bytes
+ games/shadowleague/sound/samples/out_a/185.adpcma  |    Bin 11008 -> 11008 bytes
+ games/shadowleague/sound/samples/out_a/198.adpcma  |    Bin 8192 -> 6912 bytes
+ games/shadowleague/sound/samples/out_a/199.adpcma  |    Bin 10240 -> 6144 bytes
+ games/shadowleague/sound/samples/out_a/200.adpcma  |    Bin 7168 -> 5120 bytes
+ games/shadowleague/sound/samples/out_a/201.adpcma  |    Bin 14080 -> 6912 bytes
+ games/shadowleague/sound/samples/out_a/202.adpcma  |    Bin 7168 -> 6912 bytes
+ games/shadowleague/sound/samples/out_a/203.adpcma  |    Bin 6400 -> 6144 bytes
+ games/shadowleague/sound/samples/out_a/204.adpcma  |    Bin 7424 -> 5120 bytes
+ games/shadowleague/sound/samples/out_a/205.adpcma  |    Bin 10496 -> 6912 bytes
+ games/shadowleague/sound/samples/out_a/214.adpcma  |    Bin 7936 -> 7680 bytes
+ games/shadowleague/sound/samples/out_a/215.adpcma  |    Bin 8960 -> 5120 bytes
+ games/shadowleague/sound/samples/out_a/216.adpcma  |    Bin 5888 -> 7168 bytes
+ games/shadowleague/sound/samples/out_a/217.adpcma  |    Bin 9728 -> 8704 bytes
+ games/shadowleague/sound/samples/out_a/55.adpcma   |    Bin 6400 -> 7168 bytes
+ games/shadowleague/sound/samples/out_a/56.adpcma   |    Bin 6400 -> 5120 bytes
+ games/shadowleague/sound/samples/out_a/57.adpcma   |    Bin 8704 -> 6912 bytes
+ games/shadowleague/sound/samples/out_a/58.adpcma   |    Bin 6400 -> 7680 bytes
+ games/shadowleague/sound/samples/out_a/63.adpcma   |    Bin 11776 -> 6656 bytes
+ games/shadowleague/sound/samples/out_a/64.adpcma   |    Bin 7424 -> 6144 bytes
+ games/shadowleague/sound/samples/out_a/65.adpcma   |    Bin 10496 -> 6400 bytes
+ games/shadowleague/sound/samples/out_a/66.adpcma   |    Bin 11264 -> 7680 bytes
+ games/shadowleague/sound/samples/out_a/67.adpcma   |    Bin 7168 -> 5888 bytes
+ games/shadowleague/sound/samples/out_a/68.adpcma   |    Bin 6656 -> 5376 bytes
+ games/shadowleague/sound/samples/out_a/69.adpcma   |    Bin 7936 -> 9472 bytes
+ games/shadowleague/sound/samples/out_a/78.adpcma   |    Bin 6912 -> 5376 bytes
+ games/shadowleague/sound/samples/out_a/79.adpcma   |    Bin 7424 -> 3328 bytes
+ games/shadowleague/sound/samples/out_a/80.adpcma   |    Bin 8960 -> 4864 bytes
+ games/shadowleague/sound/samples/out_a/81.adpcma   |    Bin 9472 -> 6400 bytes
+ games/shadowleague/sound/samples/out_a/82.adpcma   |    Bin 9984 -> 7168 bytes
+ games/shadowleague/sound/samples/out_a/83.adpcma   |    Bin 11520 -> 5120 bytes
+ games/shadowleague/sound/samples/out_a/84.adpcma   |    Bin 7936 -> 6912 bytes
+ games/shadowleague/sound/samples/out_a/85.adpcma   |    Bin 8448 -> 7680 bytes
+ games/shadowleague/sound/samples/out_a/86.adpcma   |    Bin 11264 -> 6912 bytes
+ games/shadowleague/sound/samples/out_a/87.adpcma   |    Bin 9728 -> 6144 bytes
+ games/shadowleague/sound/samples/out_a/88.adpcma   |    Bin 10240 -> 5120 bytes
+ games/shadowleague/sound/samples/out_a/89.adpcma   |    Bin 9728 -> 6912 bytes
+ games/shadowleague/tools/art.py                    |     37 +-
+ games/shadowleague/tools/build_candidate.py        |      9 +-
+ games/shadowleague/tools/check_art_v2.py           |     10 +-
+ games/shadowleague/tools/fighter_cook.py           |     30 +-
+ games/shadowleague/tools/fighter_validate.py       |     14 +-
+ games/shadowleague/tools/native_art_io.py          |     22 +-
+ games/shadowleague/tools/painted_fx.py             |     16 +-
+ games/shadowleague/tools/qa.lua                    |     37 +-
+ games/shadowleague/tools/qa.py                     |     44 +-
+ games/shadowleague/tools/review_capture.lua        |      3 +-
+ games/shadowleague/tools/strip_pack.py             |     15 +-
+ sdk/2d_engine/ng_fight.c                           |    158 +-
+ sdk/2d_engine/ng_fight.h                           |     26 +-
+ tests/fight_test.c                                 |     70 +
+ tests/shadowleague_controls_test.c                 |     58 +
+ tests/test_shadowleague_native_art.py              |     48 +-
+ 390 files changed, 161585 insertions(+), 84636 deletions(-)
