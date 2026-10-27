@@ -26,3 +26,15 @@ games/tutorial/artbox/*
 games/demo_plus/artbox/*
 tests/test_c
 tests/test_cpp
+
+# System ROMs stay local
+roms/neogeo/*
+roms/aes/*
+
+# Old demo ROMs are built locally
+roms/demo/*
+roms/demo_plus/*
+roms/helloworld/*
+roms/neogeogame/*
+roms/tutorial/*
+!roms/*/.gitkeep
