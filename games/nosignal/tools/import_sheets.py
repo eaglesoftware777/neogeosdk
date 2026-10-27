@@ -27,7 +27,7 @@ HEIGHT = {"jay": 96, "zoe": 92, "kai": 98, "thief": 92, "biker": 104, "skater": 
           "guard": 98, "drone": 44, "runner": 90, "bloater": 108, "android": 100, "robodog": 52, "walker": 104,
           "alien": 106, "bigflex": 120, "zerox": 106, "m08": 146, "behemoth": 142, "proxy": 106, "overmind": 176,
           "archivist": 114}
-SHEETS = {"jay": 3, "zoe": 3, "kai": 3, "thief": 1, "biker": 1, "skater": 1, "rico": 2,
+SHEETS = {"jay": 4, "zoe": 4, "kai": 4, "thief": 1, "biker": 1, "skater": 1, "rico": 2,
           "guard": 1, "drone": 1, "runner": 1, "bloater": 1, "android": 1, "robodog": 1, "walker": 1, "alien": 1,
           "bigflex": 2, "zerox": 2, "m08": 2, "behemoth": 2, "proxy": 2, "overmind": 1, "archivist": 3}
 FRAME_PX = {"bigflex": 160, "m08": 160, "behemoth": 160, "overmind": 192, "archivist": 160}   # all fit the screen

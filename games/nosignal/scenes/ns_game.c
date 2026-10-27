@@ -216,7 +216,7 @@ static uint8_t NEOGEO_USER hero_select(void)
             if (sel != NS_AUTOPLAY_HERO) { sel = NS_AUTOPLAY_HERO; break; }    /* a test build plays its own hero */
 #endif
             if (t) t--;
-            ns_putn(36, 2, (uint32_t)(t / 60u), 2, NS_TXT_GOLD);
+            ns_putn(35, 2, (uint32_t)(t / 60u), 2, NS_TXT_GOLD);
             if (ns_pressed() & NS_LEFT) { sel = (uint8_t)(sel ? sel - 1u : NS_HEROES - 1u); ns_sfx(NS_SFX_SELECT); break; }
             if (ns_pressed() & NS_RIGHT) { sel = (uint8_t)(sel + 1u < NS_HEROES ? sel + 1u : 0u); ns_sfx(NS_SFX_SELECT); break; }
             if ((ns_pressed() & (NS_BUTTONS | NS_START)) || !t) {
@@ -336,8 +336,11 @@ static void NEOGEO_USER handle(const NGBEvent *e)
     switch (e->type) {
     case NGB_EV_HIT: {
         const NGBFighter *t = &s_b.f[e->b], *a = &s_b.f[e->a];
-        int16_t x = (int16_t)(((t->x + a->x) >> 9) - (s_b.camera_x >> 8));
-        int16_t y = (int16_t)(((t->y - t->z) >> 8) - 52);
+        /* the spark where the blow met the body: its edge on the striker's side, at the height the
+         * engine gives (value: pixels above the feet) */
+        int16_t hw = (int16_t)(t->def ? t->def->half_w : 12u), side = (int16_t)(a->x <= t->x ? -1 : 1);
+        int16_t x = (int16_t)((t->x >> 8) + side * (hw - 4) - (s_b.camera_x >> 8));
+        int16_t y = (int16_t)(((t->y - t->z) >> 8) - (int16_t)e->value);
         ns_effect(x, y, e->c >= 8u ? NS_FX_BIG : NS_FX_HIT);
         ns_sfx(blow_sound(a));
         if (e->c >= 10u) ns_shake(6);
@@ -379,7 +382,10 @@ static void NEOGEO_USER handle(const NGBEvent *e)
         ns_banner(ns_hero_info[s_hero].special, NS_TXT_PINK, 60);
         break;
     case NGB_EV_JUMP: ns_sfx(NS_SFX_JUMP); break;
-    case NGB_EV_LAND: if (e->a < NGB_FIGHTERS) dust(&s_b.f[e->a]); break;
+    case NGB_EV_LAND:
+        if (e->a < NGB_FIGHTERS) dust(&s_b.f[e->a]);
+        if (e->a == NGB_PLAYER) ns_land_pose();
+        break;
     case NGB_EV_DASH: ns_sfx(NS_SFX_WHOOSH); dust(p); break;
     /* walked over or taken with C: always said, a sparkle where it lay */
     case NGB_EV_PICKUP: ns_sfx(NS_SFX_PICKUP); sparkle(e->b); s_bark_cool = 0; bark("WEAPON UNLOCKED", 0xFFu, p); break;
@@ -546,7 +552,7 @@ static uint8_t NEOGEO_USER play_stage(uint8_t n)
             uint16_t c = clock, t = 0;
             if (clock) clock--;
             while (c >= 60u) { c = (uint16_t)(c - 60u); t++; }
-            if ((uint8_t)t != secs) { secs = (uint8_t)t; ns_puts(31, 3, "TIME", NS_TXT_SKY); ns_putn(36, 3, secs, 3, secs < 10u ? NS_TXT_RED : NS_TXT_WHITE); }
+            if ((uint8_t)t != secs) { secs = (uint8_t)t; ns_puts(29, 2, "TIME", NS_TXT_SKY); ns_putn(34, 2, secs, 3, secs < 10u ? NS_TXT_RED : NS_TXT_WHITE); }
             if (!clock) { s_total = s_b.score; return STAGE_CLEAR; }
         }
         while (ng_beatemup_event(&s_b, &e)) {
@@ -707,8 +713,8 @@ static uint8_t NEOGEO_USER stage_menu(void)
     for (;;) {
         for (i = 0; i < NS_STAGES; i++) {
             ns_clear_text((uint8_t)(6u + 2u * i), (uint8_t)(6u + 2u * i));
-            ns_puts(8, (uint8_t)(6u + 2u * i), ns_stages[i].title, i == sel ? NS_TXT_GOLD : NS_TXT_GREY);
-            ns_puts(17, (uint8_t)(6u + 2u * i), ns_stages[i].place, i == sel ? NS_TXT_WHITE : NS_TXT_GREY);
+            ns_puts(5, (uint8_t)(6u + 2u * i), ns_stages[i].title, i == sel ? NS_TXT_GOLD : NS_TXT_GREY);
+            ns_puts(13, (uint8_t)(6u + 2u * i), ns_stages[i].place, i == sel ? NS_TXT_WHITE : NS_TXT_GREY);
         }
         for (;;) {
             ns_frame();
@@ -738,7 +744,7 @@ static void NEOGEO_USER gallery(void)
             if (open) {
                 ns_show_fighter(g->art, 0, (int16_t)(160 - 64), 40);
                 ns_puts_c(21, g->name, NS_TXT_GOLD);
-                ns_puts_c(23, g->bio, NS_TXT_WHITE);
+                ns_text_block(NS_CENTRE, 23, g->bio, NS_TXT_WHITE);      /* two rows of 34 */
             } else {
                 ns_puts_c(12, "???", NS_TXT_GREY);
                 ns_puts_c(21, "NOT MET YET", NS_TXT_GREY);
@@ -768,6 +774,9 @@ void NEOGEO_USER ns_run(void)
     s_mode = mode_menu();
     if (s_mode == MODE_GALLERY) { gallery(); return; }
     n = s_mode == MODE_SELECT ? stage_menu() : 0u;
+#ifdef NS_AUTOPLAY_STAGE
+    n = NS_AUTOPLAY_STAGE;                /* a test build starts the story on that street */
+#endif
     s_hero = hero_select();
     new_run();
     if (s_mode == MODE_CHALLENGE) {

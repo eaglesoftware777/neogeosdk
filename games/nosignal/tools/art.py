@@ -35,7 +35,7 @@ PAINTED = GAME / "artbox/painted"
 SLOT = {"hero_jay": 32, "hero_zoe": 36, "hero_kai": 40, "A": 44, "B": 48, "C": 52, "D": 56, "E": 60, "boss": 64}
 # name: frames, frame size (pixels, square), bank slot, banks
 FIGHTERS = {
-    "jay": (30, 128, "hero_jay", 4), "zoe": (30, 128, "hero_zoe", 4), "kai": (30, 128, "hero_kai", 4),
+    "jay": (40, 128, "hero_jay", 4), "zoe": (40, 128, "hero_zoe", 4), "kai": (40, 128, "hero_kai", 4),
     "thief": (10, 128, "A", 4), "runner": (10, 128, "A", 4), "walker": (10, 128, "A", 4),
     "skater": (10, 128, "B", 4), "android": (10, 128, "B", 4),
     "biker": (10, 128, "C", 4), "bloater": (10, 128, "C", 4), "alien": (10, 128, "C", 4),
@@ -255,6 +255,95 @@ def spark_frames():
     return np.concatenate(out, axis=1)
 
 
+# The streets' ambient specks (ns_draw.c ambient()), 16 x 16, two frames each,
+# in this order: leaf, dust, rain, bubble, pollen, ember, data, sparkle.
+AMBIENT_KINDS = ("leaf", "dust", "rain", "bubble", "pollen", "ember", "data", "sparkle")
+
+
+def ambient_frames():
+    out = []
+    for kind in AMBIENT_KINDS:
+        for f in range(2):
+            im = Image.new("RGBA", (16, 16), (0, 0, 0, 0))
+            d = ImageDraw.Draw(im)
+            if kind == "leaf":           # a small curled leaf, turning
+                if f == 0:
+                    d.ellipse([4, 6, 11, 9], fill=(214, 120, 40, 255), outline=(120, 56, 24, 255))
+                    d.line([(5, 8), (11, 7)], fill=(150, 70, 26, 255))
+                else:
+                    d.ellipse([6, 4, 9, 11], fill=(196, 96, 34, 255), outline=(120, 56, 24, 255))
+            elif kind == "dust":         # a mote catching the light
+                d.rectangle([7, 7, 8, 8], fill=(240, 214, 170, 255))
+                if f == 0:
+                    d.point([(6, 7), (9, 8)], fill=(176, 150, 120, 255))
+            elif kind == "rain":         # a falling streak
+                for i in range(7 if f == 0 else 5):
+                    d.point((10 - i // 2, 2 + i * 2 - (i % 2)), fill=(170, 200, 235, 255) if i < 4 else (110, 140, 190, 255))
+            elif kind == "bubble":       # a ring with a glint
+                r = 3 if f == 0 else 4
+                d.ellipse([8 - r, 8 - r, 8 + r, 8 + r], outline=(120, 240, 190, 255))
+                d.point((8 - r + 1, 8 - r + 2), fill=(240, 255, 250, 255))
+            elif kind == "pollen":       # a glowing seed
+                d.ellipse([6, 6, 10, 10] if f == 0 else [7, 7, 9, 9], fill=(250, 220, 90, 255))
+                d.point((8, 8), fill=(255, 250, 210, 255))
+            elif kind == "ember":        # a spark rising
+                d.rectangle([7, 7, 8, 8], fill=(255, 210, 90, 255) if f == 0 else (240, 120, 30, 255))
+                d.point((7, 9), fill=(200, 70, 20, 255))
+            elif kind == "data":         # a falling bit
+                if f == 0:
+                    d.rectangle([6, 5, 9, 10], outline=(80, 240, 130, 255))
+                else:
+                    d.line([(8, 5), (8, 10)], fill=(80, 240, 130, 255))
+                    d.point((7, 6), fill=(80, 240, 130, 255))
+            else:                        # sparkle: a four-point star
+                r = 4 if f == 0 else 2
+                d.line([(8 - r, 8), (8 + r, 8)], fill=(200, 170, 255, 255))
+                d.line([(8, 8 - r), (8, 8 + r)], fill=(200, 170, 255, 255))
+                d.point((8, 8), fill=(255, 255, 255, 255))
+            out.append(np.asarray(im))
+    return np.concatenate(out, axis=1)
+
+
+# The painting's lights (ns_draw.c glow_tick()): per street, the colours that
+# are bright, saturated and cover little of the painting (neon, lamps,
+# screens, warning lights, not a sunset sky), each with 8 brightness steps.
+GLOW_MAX, GLOW_BANKS = 14, 6
+GLOW_STEPS = (1.0, 0.93, 0.86, 0.79, 0.72, 0.65, 0.58, 0.5)
+GLOW_PULSE, GLOW_FLICKER, GLOW_BLINK = 0, 1, 2
+
+
+def glow_table(asset):
+    import colorsys
+    from palette_banks import palette_words
+    pal = np.asarray(asset["palettes"], dtype=np.uint8)          # banks x 16 x 3
+    idx, tiles = asset["indices"], asset["assignment"]
+    bank_of = tiles.repeat(16, 0).repeat(16, 1)[:idx.shape[0], :idx.shape[1]]
+    total = idx[:146].size                                          # the scenery above the kerb
+    cands = []
+    for b in range(pal.shape[0]):
+        for i in range(1, 16):
+            above = int(((bank_of[:146] == b) & (idx[:146] == i)).sum())
+            road = int(((bank_of[146:] == b) & (idx[146:] == i)).sum())
+            r, g, bl = (int(v) / 255 for v in pal[b, i])
+            h, sat, val = colorsys.rgb_to_hsv(r, g, bl)
+            if not above or road > above // 4 or above > total * 0.004 or val < 0.7 or sat < 0.45:
+                continue
+            cands.append((sat * val, b, i, h * 360))
+    cands.sort(reverse=True)
+    rows, banks = [], []
+    for score, b, i, hue in cands:
+        if b not in banks:
+            if len(banks) == GLOW_BANKS:
+                continue
+            banks.append(b)
+        kind = GLOW_FLICKER if 20 <= hue < 70 else GLOW_BLINK if hue < 12 or hue >= 345 else GLOW_PULSE
+        steps = [palette_words([(0, 0, 0)] + [tuple(int(round(c * f)) for c in pal[b, i])])[1] for f in GLOW_STEPS]
+        rows.append((b, i, kind, (len(rows) * 53) & 0xFF, steps))
+        if len(rows) == GLOW_MAX:
+            break
+    return sorted(rows)
+
+
 def plate(w, h, fill=(18, 14, 30), edge=(80, 230, 255)):
     ss = 4
     img = Image.new("RGBA", (w * ss, h * ss), (0, 0, 0, 0))
@@ -384,6 +473,7 @@ def build(fix_only=False):
         else:
             huds.append("0")
     pack.next_bank = hud_bank + 2
+    pack.sprite("ambient", ambient_frames(), frame=(16, 16), banks=1)
     if pack.next_bank > 112:
         raise SystemExit(f"art: palette banks {pack.next_bank} past the faded range (112)")
     manifest = pack.write(GAME)
@@ -397,7 +487,22 @@ def build(fix_only=False):
         f"static const uint8_t ns_hud_art[{len(HEROES)}] = {{ {', '.join(huds)} }};\n"
         f"#define NS_FIX_ICONS {FIX_ICONS:#06x}\n"
         f"#define NS_TITLE_PAINTED {1 if title_painted else 0}   /* the heroes are in the picture */\n#endif\n", encoding="ascii")
-    print(f"art: {len(manifest)} assets, banks 16-{pack.next_bank - 1}")
+    glow = ["/* Generated by games/nosignal/tools/art.py: do not edit. The streets' lights: bank (from the",
+            " * painting's first), colour, kind (0 pulse, 1 flicker, 2 blink), phase, 8 brightness steps. */",
+            "#ifndef NS_GLOW_H\n#define NS_GLOW_H",
+            "typedef struct { uint8_t bank, index, kind, phase; uint16_t level[8]; } NSGlow;"]
+    counts = []
+    for n in range(1, STAGES + 1):
+        rows = glow_table(next(a for a in pack.assets if a["name"] == f"stage{n}"))
+        counts.append(len(rows))
+        glow.append(f"static const NSGlow ns_glow_{n}[{max(1, len(rows))}] = {{")
+        glow += [f"    {{ {b}, {i}, {k}, {ph}, {{ {', '.join(f'0x{w:04X}' for w in steps)} }} }}," for b, i, k, ph, steps in rows]
+        glow.append("};")
+    glow.append(f"static const NSGlow *const ns_glow[{STAGES}] = {{ {', '.join(f'ns_glow_{n}' for n in range(1, STAGES + 1))} }};")
+    glow.append(f"static const uint8_t ns_glow_count[{STAGES}] = {{ {', '.join(map(str, counts))} }};")
+    glow.append("#endif")
+    (GAME / "artbox/generated/ns_glow.h").write_text("\n".join(glow) + "\n", encoding="ascii")
+    print(f"art: {len(manifest)} assets, banks 16-{pack.next_bank - 1}, lights a street {counts}")
     if stand_ins:
         print("art: stand-ins (no painted art yet): " + ", ".join(sorted(set(stand_ins))))
 

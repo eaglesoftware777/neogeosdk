@@ -4,13 +4,16 @@ A native Neo Geo single-player beat-'em-up, built on the SDK's beat-'em-up
 engine (`GAME_GENRE_ENGINE = beatemup`, `sdk/2d_engine/ng_beatemup.c`).
 Game ID 784.
 
-Current build: **V2**. Purple clothing is recovered from the original pose sheets,
-and character/portrait palettes receive additional fitting passes within their
-existing bank allocations. Depth reordering uses complete hidden sprite banks;
-existing V1 releases remain separate. See the changelog for verification limits.
+Current build: **V3**, the answer to the players' feedback on V2: blows wind up,
+land and recover in their own pictures, hold and spark where they hit, reach
+exactly as far as they are drawn, and sound heavier; the street crew dress
+for today; each street keeps one light from end to end, and its lights and
+air move. See the changelog for
+what was done, what is partial and how it was tested. V1 and V2 releases
+remain separate.
 
-A native Neo Geo CD version is also available. It retains the V2 artwork and
-gameplay, with resident fighters, scene loading and CD audio. See
+A native Neo Geo CD version is also available, built from the same V3 game,
+with resident fighters, scene loading and CD audio. See
 [`cd/README.md`](cd/README.md) for building, testing and firmware requirements.
 
 Someone stole the phone. Then the whole city lost its signal. Choose one hero
@@ -52,6 +55,12 @@ jumps off. On a console START pauses.
   sections each), the title, the endings and the portraits.
 - `tools/art.py` packs them; `tools/sound.py` renders the music, effects and
   voices before `make`.
+- `tools/boxes.py --check` compares every move's strike box with the picture
+  shown while it can hit (`--suggest` proposes a fitted box);
+  `tools/contrast.py --check` stands every fighter on the streets it fights on
+  and checks its outline stays visible. Both run in the tests.
+- `tools/beatemup_boxes.py` (the SDK's) draws the volumes live in MAME: hurt,
+  wind-up and strike boxes, depth and hitstop.
 
 The screen is planned around two hardware limits. The Neo Geo shows at most
 96 sprites on a scanline, counting every sprite whose height covers it,
@@ -78,7 +87,8 @@ Add to `GAME_ENGINE_DEFINES` (keep the game's own defines):
 
 - `-DNS_AUTOPLAY=1`: a plain bot plays the story (it lines up with the
   nearest enemy, punches, and spends the special when crowded; a slow mend
-  lets it reach the ending). `-DNS_AUTOPLAY_HERO=0|1|2` picks Jay, Zoe or Kai.
+  lets it reach the ending). `-DNS_AUTOPLAY_HERO=0|1|2` picks Jay, Zoe or Kai,
+  `-DNS_AUTOPLAY_STAGE=0..7` the street the story starts on.
 - `make ... PERF=2`: the SDK's frame and video-memory counters (`ng_perf`,
   `sdk/ng_perf.h`): how many sprite updates waited for a later frame.
 

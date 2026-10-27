@@ -18,19 +18,42 @@ CD = ROOT / 'sdk/platform/cd'
 GAME = ROOT / 'games/nosignal'
 
 
-def verify_v2():
-    reference=json.loads((GAME/'cd/v2_reference.json').read_text())
+REFERENCE = GAME / 'cd/reference.json'
+
+
+def reference_digest(name):
+    """A source's hash as the cartridge build sees it: ns_draw.c without its CD hooks."""
+    data = (ROOT/name).read_bytes()
+    if name == 'games/nosignal/scenes/ns_draw.c':
+        data = re.sub(rb'#ifdef NG_CD_NOSIGNAL\n.*?#endif\n', b'', data, flags=re.S)
+    return hashlib.sha256(data).hexdigest()
+
+
+def verify_reference():
+    """The cartridge release this port converts (cd/reference.json): its version,
+    and the sources, artwork and sound it was checked against."""
+    reference=json.loads(REFERENCE.read_text())
     for name,expected in reference['files'].items():
-        data = (ROOT/name).read_bytes()
-        if name == 'games/nosignal/scenes/ns_draw.c':
-            data = re.sub(rb'#ifdef NG_CD_NOSIGNAL\n.*?#endif\n', b'', data, flags=re.S)
-        if hashlib.sha256(data).hexdigest()!=expected:
-            raise ValueError('V2 source or artwork differs: '+name)
+        if reference_digest(name)!=expected:
+            raise ValueError(f"V{reference['version']} source or artwork differs: "+name)
     return reference
 
 
-BG_BASE = 0x7000
+def write_reference(version, release):
+    """Record the current inputs as cartridge version `version` (`release` names its files)."""
+    reference=json.loads(REFERENCE.read_text())
+    files={name: reference_digest(name) for name in reference['files']}
+    REFERENCE.write_text(json.dumps(dict(version=version, release=release, files=files), indent=2)+'\n')
+
+
+# Sprite RAM: resident fighters and interface from tile 0x100, then one
+# upload slot for the scene on screen (the largest is 1260 tiles), then the
+# three utility tiles. The slot sits as high as it fits, so the resident
+# graphics have all the room below it.
+BG_BASE = 0x7A00
 UTILITY_BASE = 0x7FFD
+BG_BANK = 3
+BG_OFFSET = (BG_BASE - BG_BANK * 0x2000) * 128
 
 
 def descriptor(name, bank, offset):
@@ -46,7 +69,7 @@ def descriptor(name, bank, offset):
 
 def convert_graphics(folder, include):
     import zlib
-    verify_v2()
+    verify_reference()
     art = GAME / 'artbox'
     assets = json.loads((art / 'generated/assets.json').read_text())['assets']
     lanes = [(art / f'784-{lane}.{lane}').read_bytes() for lane in ('c1', 'c2')]
@@ -65,7 +88,7 @@ def convert_graphics(folder, include):
             name = f"BG{asset['id']:02}.SPR"
             (folder / name).write_bytes(native)
             backgrounds.append(dict(id=asset['id'], name=name, tiles=count, crc32=zlib.crc32(native),
-                                    bank=3, offset=0x80000, size=len(native)))
+                                    bank=BG_BANK, offset=BG_OFFSET, size=len(native)))
         else:
             if next_tile + count > BG_BASE:
                 raise ValueError('Resident fighters exceed the CD graphics budget')
@@ -95,7 +118,7 @@ def convert_graphics(folder, include):
     rows.append('typedef struct { uint8_t id; uint32_t bytes, crc; const uint8_t *descriptor; } NSCDBg;')
     rows.append('static const NSCDBg ns_cd_backgrounds[] = {')
     rows += [f"{{{b['id']}u,{b['size']}ul,0x{b['crc32']:08X}ul,ns_cd_desc_{b['id']}}}," for b in backgrounds]
-    rows += ['};', '#define NS_CD_BG_OFFSET 0x80000ul']
+    rows += ['};', f'#define NS_CD_BG_OFFSET 0x{BG_OFFSET:X}ul']
     crc = []
     for n in range(256):
         v=n
@@ -157,7 +180,7 @@ def sound_payload(folder, include, obj, wlaz80, wlalink, cdda):
 
 def build_nosignal(out, cc, plus, cdda, wlaz80, wlalink, media_audit=False):
     if plus:
-        raise ValueError('No Signal Z Alpha V2 uses its original C beat-em-up engine')
+        raise ValueError('No Signal Z Alpha uses its own C beat-em-up engine')
     out = Path(out).resolve()
     if out.exists() and any(out.iterdir()):
         raise ValueError('Use a new CD output directory')
@@ -207,7 +230,7 @@ def build_nosignal(out, cc, plus, cdda, wlaz80, wlalink, media_audit=False):
     for name, digest in hashes.items():
         if hashlib.sha256((ROOT / name).read_bytes()).hexdigest() != digest:
             raise ValueError('Source changed during CD build: ' + name)
-    verify_v2()
+    verify_reference()
     records = [dict(name=name, source='payload/' + name, group='boot') for name in ('NS.FIX', 'SFX.PCM', 'SOUND.Z80', 'NS.PRG')]
     records += [dict(name=f'SPR{bank}.SPR', source=f'payload/SPR{bank}.SPR', group='boot', bank=bank) for bank in range(4)]
     records.append(dict(name='UTIL.SPR', source='payload/UTIL.SPR', group='boot', bank=3, offset=0xFFE80))
@@ -216,9 +239,10 @@ def build_nosignal(out, cc, plus, cdda, wlaz80, wlalink, media_audit=False):
         group = f"scene_{bg['id']}"
         groups[group] = {'depends': ['boot']}
         records.append(dict(name=bg['name'], source='payload/'+bg['name'], group=group, bank=bg['bank'], offset=bg['offset']))
-    manifest = dict(format='neogeosdk-cd-1', game='nosignal', volume='NOSIGNAL_V2_CD',
+    version = verify_reference()['version']
+    manifest = dict(format='neogeosdk-cd-1', game='nosignal', volume=f'NOSIGNAL_V{version}_CD', version=version,
                     groups=groups, files=records, audio=audio,
-                    port_status='media diagnostic; not a playable release' if media_audit else 'native CD port of V2 game and artwork',
+                    port_status='media diagnostic; not a playable release' if media_audit else f'native CD port of V{version} game and artwork',
                     media_audit=bool(media_audit),
                     graphics=graphics, sound=sound, source_sha256=hashes)
     source = out / 'source-manifest.json'

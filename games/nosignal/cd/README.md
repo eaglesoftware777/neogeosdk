@@ -1,7 +1,8 @@
-# No Signal Z Alpha V2 on Neo Geo CD
+# No Signal Z Alpha on Neo Geo CD
 
-This native CD port preserves the V2 game, three heroes, eight stages, console
-modes, controls, character frames and palettes. It compiles the existing game
+This native CD port preserves the cartridge game named in `reference.json`
+(V3): three heroes, eight stages, console modes, controls, character frames
+and palettes. It compiles the existing game
 and beat-'em-up engine for CD; it does not rename a cartridge program or rebuild
 the artwork. Cartridge builds exclude the CD hooks.
 
@@ -15,14 +16,16 @@ in the same order.
 ## Build
 
 ```sh
-python3 tools/neocd/build.py --game nosignal --out out/neocd/nosignal-v2
+python3 tools/neocd/build.py --game nosignal --out out/neocd/nosignal-v3
 python3 -m unittest discover -s tests -p 'test_nosignal*.py'
 python3 -m unittest discover -s tests -p 'test_cd_*.py'
 ```
 
-The build requires the 68000 toolchain, WLA-DX, FFmpeg and the existing V2 sound
-inputs. `v2_reference.json` checks the game, graphics and sound inputs before
-and after conversion. The generated asset header relocates tiles without
+The build requires the 68000 toolchain, WLA-DX, FFmpeg and the cartridge's sound
+inputs. `reference.json` names the cartridge version and checks the game,
+graphics and sound inputs before and after conversion. After a new cartridge
+release, record its inputs with `tools.neocd.nosignal.write_reference(version,
+release)` and rebuild. The generated asset header relocates tiles without
 changing palettes, frame geometry or pixels.
 
 ## Test
