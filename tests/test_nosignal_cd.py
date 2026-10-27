@@ -19,10 +19,11 @@ class NoSignalCDTests(unittest.TestCase):
             payload, include = root/'payload', root/'include'
             payload.mkdir(); include.mkdir()
             result = nosignal.convert_graphics(payload, include)
-            self.assertLessEqual(result['resident_tiles'], nosignal.BG_BASE)
+            self.assertLessEqual(result['resident_tiles'], nosignal.HERO_BASE)
             self.assertEqual(len(result['backgrounds']), 13)
+            self.assertEqual(sorted(h['id'] for h in result['heroes']), [0, 1, 2])
             resident = b''.join((payload/f'SPR{i}.SPR').read_bytes() for i in range(4))
-            self.assertEqual(len(resident), nosignal.BG_BASE*128)
+            self.assertEqual(len(resident), nosignal.HERO_BASE*128)
             art = nosignal.GAME/'artbox'
             source = [(art/f'784-{lane}.{lane}').read_bytes() for lane in ('c1','c2')]
             assets = json.loads((art/'generated/assets.json').read_text())['assets']
@@ -33,6 +34,12 @@ class NoSignalCDTests(unittest.TestCase):
                     native = (payload/f"BG{a['id']:02}.SPR").read_bytes()
                     Entry(f"BG{a['id']:02}.SPR", nosignal.BG_BANK, nosignal.BG_OFFSET).validate(len(native))
                     self.assertLessEqual(dest+len(native), 0x7FFD*128)
+                elif a['name'] in nosignal.HEROES:
+                    keep = nosignal.HERO_KEEP*a['frame_tiles']
+                    extra = (payload/f"HERO{nosignal.HEROES.index(a['name'])}.SPR").read_bytes()
+                    Entry(f"HERO{nosignal.HEROES.index(a['name'])}.SPR", nosignal.BG_BANK, nosignal.HERO_OFFSET).validate(len(extra))
+                    self.assertLessEqual(nosignal.HERO_BASE*128+len(extra), nosignal.BG_BASE*128)
+                    native = resident[dest:dest+keep*128] + extra
                 else:
                     native = resident[dest:dest+a['tiles']*128]
                 for lane, offsets in enumerate(((1,0),(3,2))):

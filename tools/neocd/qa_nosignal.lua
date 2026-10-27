@@ -2,7 +2,7 @@ local m=manager.machine
 local mem=m.devices[':maincpu'].spaces['program']
 local vram=emu.item(m.devices[':spritegen'].items['0/m_videoram'])
 local log=assert(io.open(q.out..'/trace.csv','w'))
-log:write('seconds,clock,pad,sfx,music,hero,tick,px,py,pz,hp,alive,state,loads,bg,errors\n')
+log:write('seconds,clock,pad,sfx,music,hero,tick,px,py,pz,hp,alive,state,loads,bg,errors,heroloads,heroslot\n')
 local seen={};local choose_clock=nil;local play_clock=nil
 local function input(name,on)
  for _,p in pairs(m.ioport.ports) do if p.fields[name] then p.fields[name]:set_value(on and 1 or 0) end end
@@ -35,6 +35,12 @@ local function finish()
    dump('resident'..bank..'.bin',0xE00000,0xE00000+size-1)
    mem:write_u8(0xFF0141,0);mem:write_u8(0xFF016F,0)
   end
+ end
+ if q.hero_bytes>0 then
+  mem:write_u8(0xFF0121,0);mem:write_u8(0xFF0105,0)
+  mem:write_u8(0xFF01A1,q.hero_bank);mem:write_u8(0xFF016F,1)
+  dump('heroslot.bin',0xE00000+q.hero_offset,0xE00000+q.hero_offset+q.hero_bytes-1)
+  mem:write_u8(0xFF0141,0);mem:write_u8(0xFF016F,0)
  end
  dump('program.bin',0x100,q.program_bytes-1)
  dump('firmware.bin',0xc00000,0xc7ffff)
@@ -80,7 +86,7 @@ emu.register_frame_done(function()
  input('P1 Start',start);input('P1 A',a);input('P1 B',b);input('P1 C',c);input('P1 D',d)
  input('P1 Right',right);input('P1 Left',left);input('P1 Up',up);input('P1 Down',down)
  if ready and (clock%5==0 or q.media_audit) then
-  log:write(string.format('%.4f,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n',t,clock,r('ng_cd_input_seen',2),r('ns_cd_sfx_calls',4),r('ns_cd_music_track',2),r('s_hero'),f('tick'),f('px'),f('py'),f('pz'),f('hp'),f('alive'),f('state'),r('ns_cd_background_loads',4),r('ns_cd_background',2),r('ns_cd_load_failures',4)));log:flush()
+  log:write(string.format('%.4f,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d\n',t,clock,r('ng_cd_input_seen',2),r('ns_cd_sfx_calls',4),r('ns_cd_music_track',2),r('s_hero'),f('tick'),f('px'),f('py'),f('pz'),f('hp'),f('alive'),f('state'),r('ns_cd_background_loads',4),r('ns_cd_background',2),r('ns_cd_load_failures',4),r('ns_cd_hero_loads',4),r('ns_cd_hero',2)));log:flush()
  end
  if ready and q.media_audit and r('ns_cd_media_done',2)==1 then finish();return end
  if t>210 then m.screens[':screen']:snapshot(q.out..'/timeout.png');finish() end

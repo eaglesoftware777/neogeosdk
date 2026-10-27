@@ -13,6 +13,10 @@ void ng_cd_start(void)
         ns_cd_load_background(ns_cd_backgrounds[i].id);
         ns_frame();
     }
+    for (i=0; i<sizeof(ns_cd_heroes)/sizeof(ns_cd_heroes[0]); ++i) {
+        ns_cd_load_hero(i);
+        ns_frame();
+    }
     ns_cd_media_done = 1;
     for (;;) ns_frame();
 }

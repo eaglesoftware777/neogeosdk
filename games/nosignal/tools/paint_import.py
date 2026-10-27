@@ -11,6 +11,8 @@ SOURCE_DIR may hold:
   ns_title.png                          the title picture -> title.png, 320 x 224
   ns_end_<hero>.png                     a hero's ending -> end_<hero>.png, 320 x 224
   ns_p_<speaker>.png                    portraits -> portrait_<speaker>.png, 64 x 64
+  ns_front.png                          the front plane: eight objects on magenta, two rows
+                                        of four in stage order -> front.png, 64 x 96 each
 
 Each street section is scaled to 496 pixels wide and cut to 224 rows so its
 kerb lands on row KERB (fighters walk below it, ns_data.c's y 140-206); the
@@ -119,6 +121,47 @@ def picture(src, name, out_name, w, h):
     print(f"paint_import: {out_name} <- {f.name} {sw}x{sh}")
 
 
+def front(src):
+    """Each object (whatever stands in its cell of the 2 x 4 grid) keyed out of
+    the magenta, fitted into 64 x 96 (the larger of its sides first), standing
+    on the frame's bottom, centred."""
+    f = src / "ns_front.png"
+    if not f.is_file():
+        print("paint_import: no ns_front.png, keeping the drawn front plane")
+        return
+    from scipy import ndimage as ndi
+    rgb = np.asarray(Image.open(f).convert("RGB")).astype(int)
+    r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
+    hot = (r >= 200) & (b >= 200) & (g <= 70)
+    fringe = (r - g > 60) & (b - g > 60)
+    bg = ndi.binary_propagation(hot, mask=hot | fringe)
+    fg = ndi.binary_opening(~bg, iterations=1)
+    h, w = fg.shape
+    out = np.zeros((96, 64 * 8, 4), np.uint8)
+    for k in range(8):
+        cy, cx = k // 4, k % 4
+        cell = np.zeros_like(fg)
+        cell[cy * h // 2:(cy + 1) * h // 2, cx * w // 4:(cx + 1) * w // 4] = True
+        lab, n = ndi.label(fg & cell)
+        sizes = ndi.sum(np.ones_like(lab), lab, range(1, n + 1))
+        keep = np.isin(lab, [i + 1 for i, sz in enumerate(sizes) if sz >= 200])
+        ys, xs = np.nonzero(keep)
+        y0, y1, x0, x1 = ys.min(), ys.max() + 1, xs.min(), xs.max() + 1
+        crop = np.dstack([rgb[y0:y1, x0:x1].astype(np.uint8), (keep[y0:y1, x0:x1] * 255).astype(np.uint8)])
+        scale = min(62 / (x1 - x0), 94 / (y1 - y0))
+        cw, ch = max(1, round((x1 - x0) * scale)), max(1, round((y1 - y0) * scale))
+        im = Image.fromarray(crop, "RGBA")
+        col = np.asarray(Image.fromarray(crop[..., :3] * (crop[..., 3:] // 255)).resize((cw, ch), Image.BOX)).astype(float)
+        al = np.asarray(im.getchannel("A").resize((cw, ch), Image.BOX)).astype(float)
+        col = np.where(al[..., None] > 0, col / np.maximum(al[..., None] / 255, 1e-3), 0)
+        a = al >= 128
+        ox, oy = 64 * k + (64 - cw) // 2, 96 - ch
+        out[oy:oy + ch, ox:ox + cw, :3] = np.where(a[..., None], np.clip(col, 0, 255), 0).astype(np.uint8)
+        out[oy:oy + ch, ox:ox + cw, 3] = np.where(a, 255, 0)
+    Image.fromarray(out, "RGBA").save(OUT / "front.png")
+    print(f"paint_import: front <- {f.name}")
+
+
 def main():
     if len(sys.argv) != 2:
         raise SystemExit(__doc__)
@@ -131,6 +174,7 @@ def main():
         picture(src, f"ns_end_{hero}", f"end_{hero}", 320, 224)
     for s in SPEAKERS:
         picture(src, f"ns_p_{s}", f"portrait_{s}", 64, 64)
+    front(src)
 
 
 if __name__ == "__main__":

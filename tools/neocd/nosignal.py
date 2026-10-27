@@ -46,14 +46,19 @@ def write_reference(version, release):
     REFERENCE.write_text(json.dumps(dict(version=version, release=release, files=files), indent=2)+'\n')
 
 
-# Sprite RAM: resident fighters and interface from tile 0x100, then one
-# upload slot for the scene on screen (the largest is 1260 tiles), then the
-# three utility tiles. The slot sits as high as it fits, so the resident
-# graphics have all the room below it.
+# Sprite RAM: resident fighters and interface from tile 0x100, then the
+# played hero's pictures from HERO_KEEP on (the walk and run strides, loaded
+# with each street: HEROn.SPR), then one upload slot for the scene on screen
+# (the largest is 1260 tiles), then the three utility tiles. The slots sit as
+# high as they fit, so the resident graphics have all the room below them.
 BG_BASE = 0x7A00
 UTILITY_BASE = 0x7FFD
 BG_BANK = 3
 BG_OFFSET = (BG_BASE - BG_BANK * 0x2000) * 128
+HEROES = ('f_jay', 'f_zoe', 'f_kai')    # NS_JAY, NS_ZOE, NS_KAI
+HERO_KEEP = 40                          # pictures of each hero kept resident (select screen, roster, fights)
+HERO_BASE = 0x7780
+HERO_OFFSET = (HERO_BASE - BG_BANK * 0x2000) * 128
 
 
 def descriptor(name, bank, offset):
@@ -75,12 +80,23 @@ def convert_graphics(folder, include):
     lanes = [(art / f'784-{lane}.{lane}').read_bytes() for lane in ('c1', 'c2')]
     if any(len(lane) != 0x400000 for lane in lanes):
         raise ValueError('Unexpected No Signal cartridge graphics layout')
-    resident = bytearray(BG_BASE * 128)
+    resident = bytearray(HERO_BASE * 128)
     next_tile = 0x100  # retain the system's reserved leading tiles
-    mapping, backgrounds, rows = {}, [], []
+    mapping, kept, backgrounds, heroes, rows = {}, {}, [], [], []
     for asset in assets:
         count, first = asset['tiles'], asset['tile_base']
         native = cartridge_sprites_to_spr(lanes[0][first*64:(first+count)*64], lanes[1][first*64:(first+count)*64])
+        if asset['name'] in HEROES:
+            keep = HERO_KEEP * asset['frame_tiles']
+            extra = native[keep*128:]
+            if HERO_BASE + len(extra) // 128 > BG_BASE:
+                raise ValueError('Hero pictures exceed the CD hero slot')
+            name = f"HERO{HEROES.index(asset['name'])}.SPR"
+            (folder / name).write_bytes(extra)
+            heroes.append(dict(id=HEROES.index(asset['name']), name=name, tiles=len(extra) // 128,
+                               crc32=zlib.crc32(extra), bank=BG_BANK, offset=HERO_OFFSET, size=len(extra)))
+            count, native = keep, native[:keep*128]
+        kept[asset['id']] = count
         if asset['kind'] == 'background':
             if BG_BASE + count > UTILITY_BASE:
                 raise ValueError('Background exceeds CD sprite overlay slot')
@@ -90,7 +106,7 @@ def convert_graphics(folder, include):
             backgrounds.append(dict(id=asset['id'], name=name, tiles=count, crc32=zlib.crc32(native),
                                     bank=BG_BANK, offset=BG_OFFSET, size=len(native)))
         else:
-            if next_tile + count > BG_BASE:
+            if next_tile + count > HERO_BASE:
                 raise ValueError('Resident fighters exceed the CD graphics budget')
             mapping[asset['id']] = next_tile
             resident[next_tile*128:(next_tile+count)*128] = native
@@ -105,20 +121,30 @@ def convert_graphics(folder, include):
     for asset in assets:
         kind = 2 if asset['kind'] == 'background' else 1
         old = f"{{{asset['id']}u,{kind}u,{asset['bank']}u,{asset['tile_base']}u,{asset['tile_base']+asset['tiles']-1}u,"
-        new = f"{{{asset['id']}u,{kind}u,{asset['bank']}u,{mapping[asset['id']]}u,{mapping[asset['id']]+asset['tiles']-1}u,"
+        new = f"{{{asset['id']}u,{kind}u,{asset['bank']}u,{mapping[asset['id']]}u,{mapping[asset['id']]+kept[asset['id']]-1}u,"
         if header.count(old) != 1:
             raise ValueError('Asset header disagrees with manifest: ' + asset['name'])
         header = header.replace(old, new)
+    # a hero's pictures past its last resident tile are in the hero slot (ns_draw.c frame_tile())
+    if header.count('#endif') != 1:
+        raise ValueError('Asset header has no single #endif for the hero slot')
+    header = header.replace('#endif', f'#define NS_CD_HERO_TILES 0x{HERO_BASE:X}u\n#endif')
     shadow = include / 'games/nosignal/artbox/generated/ns_assets.h'
     shadow.parent.mkdir(parents=True)
     shadow.write_text(header)
     for bg in backgrounds:
         data = descriptor(bg['name'], bg['bank'], bg['offset'])
         rows.append(f"static const uint8_t ns_cd_desc_{bg['id']}[] __attribute__((aligned(2))) = {{" + ','.join(str(x) for x in data) + '};')
+    for h in heroes:
+        data = descriptor(h['name'], h['bank'], h['offset'])
+        rows.append(f"static const uint8_t ns_cd_desc_hero{h['id']}[] __attribute__((aligned(2))) = {{" + ','.join(str(x) for x in data) + '};')
     rows.append('typedef struct { uint8_t id; uint32_t bytes, crc; const uint8_t *descriptor; } NSCDBg;')
     rows.append('static const NSCDBg ns_cd_backgrounds[] = {')
     rows += [f"{{{b['id']}u,{b['size']}ul,0x{b['crc32']:08X}ul,ns_cd_desc_{b['id']}}}," for b in backgrounds]
-    rows += ['};', f'#define NS_CD_BG_OFFSET 0x{BG_OFFSET:X}ul']
+    rows.append('};')
+    rows.append('static const NSCDBg ns_cd_heroes[] = {')
+    rows += [f"{{{h['id']}u,{h['size']}ul,0x{h['crc32']:08X}ul,ns_cd_desc_hero{h['id']}}}," for h in sorted(heroes, key=lambda h: h['id'])]
+    rows += ['};', f'#define NS_CD_BG_OFFSET 0x{BG_OFFSET:X}ul', f'#define NS_CD_HERO_OFFSET 0x{HERO_OFFSET:X}ul']
     crc = []
     for n in range(256):
         v=n
@@ -126,7 +152,10 @@ def convert_graphics(folder, include):
         crc.append(v)
     rows.append('static const uint32_t ns_cd_crc_table[] = {' + ','.join(f'0x{x:08X}ul' for x in crc) + '};')
     (include / 'nosignal_cd_backgrounds.h').write_text('\n'.join(rows)+'\n')
+    if sorted(h['id'] for h in heroes) != list(range(len(HEROES))):
+        raise ValueError('Missing hero sheets for the CD hero slot')
     return dict(assets=len(assets), resident_tiles=next_tile, background_base=BG_BASE,
+                hero_base=HERO_BASE, hero_keep=HERO_KEEP, heroes=heroes,
                 utility_base=UTILITY_BASE, sprite_bytes=0x400000, backgrounds=backgrounds,
                 tile_mapping=mapping, source_sha256=[hashlib.sha256(x).hexdigest() for x in lanes])
 
@@ -239,6 +268,10 @@ def build_nosignal(out, cc, plus, cdda, wlaz80, wlalink, media_audit=False):
         group = f"scene_{bg['id']}"
         groups[group] = {'depends': ['boot']}
         records.append(dict(name=bg['name'], source='payload/'+bg['name'], group=group, bank=bg['bank'], offset=bg['offset']))
+    for h in graphics['heroes']:
+        group = f"hero_{h['id']}"
+        groups[group] = {'depends': ['boot']}
+        records.append(dict(name=h['name'], source='payload/'+h['name'], group=group, bank=h['bank'], offset=h['offset']))
     version = verify_reference()['version']
     manifest = dict(format='neogeosdk-cd-1', game='nosignal', volume=f'NOSIGNAL_V{version}_CD', version=version,
                     groups=groups, files=records, audio=audio,

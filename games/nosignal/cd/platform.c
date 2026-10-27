@@ -12,15 +12,16 @@ volatile uint16_t ng_cd_input_seen;
 void ns_cd_audio_tick(void);
 void ng_fix_queue_drop(void);
 extern int32_t ng_cd_bios_load(const uint8_t *descriptor);
-volatile uint32_t ns_cd_background_loads, ns_cd_load_failures;
-volatile uint16_t ns_cd_background;
+volatile uint32_t ns_cd_background_loads, ns_cd_hero_loads, ns_cd_load_failures;
+volatile uint16_t ns_cd_background, ns_cd_hero;
 volatile int32_t ns_cd_load_status;
 
-static uint32_t background_crc(uint32_t bytes)
+/* A slot's CRC in sprite RAM bank 3 (the scenery and the hero slot). */
+static uint32_t slot_crc(uint32_t offset, uint32_t bytes)
 {
     uint32_t crc = 0xFFFFFFFFul, i;
     uint16_t saved_sr;
-    const volatile uint8_t *data = (const volatile uint8_t *)(0xE00000ul + NS_CD_BG_OFFSET);
+    const volatile uint8_t *data = (const volatile uint8_t *)(0xE00000ul + offset);
     __asm__ volatile ("move.w %%sr,%0\n\tmove.w #0x2700,%%sr" : "=d" (saved_sr) : : "memory");
     NEO_REGISTER8(0xFF0121) = 0;
     NEO_REGISTER8(0xFF0105) = 0;
@@ -36,6 +37,24 @@ static uint32_t background_crc(uint32_t bytes)
     return crc ^ 0xFFFFFFFFul;
 }
 
+/* One file from the disc into its slot, read again until its CRC matches. */
+static void load_checked(const NSCDBg *file, uint32_t offset)
+{
+    soundStopAll(); ns_cd_audio_tick();
+    for (;;) {
+        ns_cd_load_status = ng_cd_bios_load(file->descriptor);
+        if (slot_crc(offset, file->bytes) == file->crc) break;
+        ++ns_cd_load_failures;
+        setBACKDROP(0x0F00u);
+        /* Keep invalid scenery hidden. A retries the disc read. */
+        do { waitVbl(); } while (!(poll_joystick() & NS_A));
+    }
+    NEO_REGISTER8(BIOS_SYSTEM_MODE) |= 0x80;
+    NEO_REGISTER8(0xFF0111) = 0;
+    NEO_REGISTER8(0xFF0115) = 0;
+    NEO_REGISTER8(0xFF0119) = 1;
+}
+
 void ns_cd_load_background(uint8_t id)
 {
     uint8_t i;
@@ -43,23 +62,21 @@ void ns_cd_load_background(uint8_t id)
     for (i=0; i<sizeof(ns_cd_backgrounds)/sizeof(ns_cd_backgrounds[0]); ++i) {
         const NSCDBg *bg = &ns_cd_backgrounds[i];
         if (bg->id != id) continue;
-        soundStopAll(); ns_cd_audio_tick();
-        for (;;) {
-            ns_cd_load_status = ng_cd_bios_load(bg->descriptor);
-            if (background_crc(bg->bytes) == bg->crc) break;
-            ++ns_cd_load_failures;
-            setBACKDROP(0x0F00u);
-            /* Keep invalid scenery hidden. A retries the disc read. */
-            do { waitVbl(); } while (!(poll_joystick() & NS_A));
-        }
-        NEO_REGISTER8(BIOS_SYSTEM_MODE) |= 0x80;
-        NEO_REGISTER8(0xFF0111) = 0;
-        NEO_REGISTER8(0xFF0115) = 0;
-        NEO_REGISTER8(0xFF0119) = 1;
+        load_checked(bg, NS_CD_BG_OFFSET);
         ns_cd_background = id;
         ++ns_cd_background_loads;
         return;
     }
+}
+
+/* The hero's walk and run strides (the pictures past the resident ones)
+ * into the hero slot; once a game unless the hero changes. */
+void ns_cd_load_hero(uint8_t hero)
+{
+    if (hero >= sizeof(ns_cd_heroes)/sizeof(ns_cd_heroes[0]) || ns_cd_hero == hero + 1u) return;
+    load_checked(&ns_cd_heroes[hero], NS_CD_HERO_OFFSET);
+    ns_cd_hero = (uint16_t)(hero + 1u);
+    ++ns_cd_hero_loads;
 }
 
 uint16_t NEOGEO_USER setSCB3(uint16_t y, uint16_t sticky, uint16_t rows)

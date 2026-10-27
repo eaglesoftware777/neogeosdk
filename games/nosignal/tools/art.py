@@ -35,7 +35,7 @@ PAINTED = GAME / "artbox/painted"
 SLOT = {"hero_jay": 32, "hero_zoe": 36, "hero_kai": 40, "A": 44, "B": 48, "C": 52, "D": 56, "E": 60, "boss": 64}
 # name: frames, frame size (pixels, square), bank slot, banks
 FIGHTERS = {
-    "jay": (40, 128, "hero_jay", 4), "zoe": (40, 128, "hero_zoe", 4), "kai": (40, 128, "hero_kai", 4),
+    "jay": (50, 128, "hero_jay", 4), "zoe": (50, 128, "hero_zoe", 4), "kai": (50, 128, "hero_kai", 4),
     "thief": (10, 128, "A", 4), "runner": (10, 128, "A", 4), "walker": (10, 128, "A", 4),
     "skater": (10, 128, "B", 4), "android": (10, 128, "B", 4),
     "biker": (10, 128, "C", 4), "bloater": (10, 128, "C", 4), "alien": (10, 128, "C", 4),
@@ -304,6 +304,20 @@ def ambient_frames():
     return np.concatenate(out, axis=1)
 
 
+# The front plane (ns_draw.c front_plane()): one object a street, close to the
+# camera, 64 x 96 frames in stage order, from painted/front.png (8 frames side
+# by side) when it is there.
+def front_frames():
+    pic = painted("front.png", 64 * STAGES, 96)
+    if pic is not None:
+        return pic
+    img = Image.new("RGBA", (64 * STAGES, 96), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    for n in range(STAGES):
+        d.rectangle([64 * n + 20, 40, 64 * n + 44, 95], fill=(30, 30, 40, 255), outline=(70, 70, 90, 255))
+    return np.asarray(img)
+
+
 # The painting's lights (ns_draw.c glow_tick()): per street, the colours that
 # are bright, saturated and cover little of the painting (neon, lamps,
 # screens, warning lights, not a sunset sky), each with 8 brightness steps.
@@ -474,6 +488,7 @@ def build(fix_only=False):
             huds.append("0")
     pack.next_bank = hud_bank + 2
     pack.sprite("ambient", ambient_frames(), frame=(16, 16), banks=1)
+    pack.sprite("front", front_frames(), frame=(64, 96), banks=4, refine=4)
     if pack.next_bank > 112:
         raise SystemExit(f"art: palette banks {pack.next_bank} past the faded range (112)")
     manifest = pack.write(GAME)

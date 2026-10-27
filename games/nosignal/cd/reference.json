@@ -2,14 +2,14 @@
   "version": 3,
   "release": "NoSignal-*_v3 cartridge files, NeoGeoSDK v1.7.7 pre-release",
   "files": {
-    "games/nosignal/artbox/784-c1.c1": "df8476737acb964a3b277840b86d499215eb62a64971219712f3d0f06ea8e4f1",
-    "games/nosignal/artbox/784-c2.c2": "aa3983169e90c98aea375b85092ebef1ed74ceb66424e913baca4729de3393f0",
+    "games/nosignal/artbox/784-c1.c1": "012d9bb47996b59b30112610ad2e7d9f99b9cef84077f9cbeebcd09f564384ef",
+    "games/nosignal/artbox/784-c2.c2": "0f2d0ba78243ecc37a850c57db575f59018d196d78158fe01021b54095616302",
     "games/nosignal/artbox/784-s1.s1": "46abd4a1e033ede3c550f75884d3cc669c182c5dcf28e862a47630701fc7ebfa",
-    "games/nosignal/artbox/generated/assets.json": "1b018ab0773891d15a5605934eec09b135101e106c5f85ccaaa5e8a19d5ab973",
-    "games/nosignal/artbox/generated/ns_assets.h": "69c0694db01d751478c6a17b37782a6178a66cc0058c164805bf78f60f9d12ae",
+    "games/nosignal/artbox/generated/assets.json": "f0ad283b7a4d9d479de36aba62a6ad40dd0f89968cd48f3f0a9f07760cbcf060",
+    "games/nosignal/artbox/generated/ns_assets.h": "4e6b420adf150d7e680bd54727b640be0bf30b6026b6290b3883328be10aba33",
     "games/nosignal/artbox/generated/ns_faces.h": "8860a7950bded1210402c439a8a249e44ac164a71d8ab6419728fbedcd1392f8",
     "games/nosignal/main.c": "51bd5fe1102cdbabdbf02d1a38d99d6ef36ff1a429f3c4322972cf0facb54570",
-    "games/nosignal/scenes/ns.h": "e99746b60ae83e99764ba2cc111b35118c9e89d197dbcc9ecb5a1db5e929b520",
+    "games/nosignal/scenes/ns.h": "608aebaadfa67f0f15f7410df021df2e4cff5ef72a5d6bbabcc765c083c304a1",
     "games/nosignal/scenes/ns_data.c": "59ebca31d2a7f5603cba25a4400fe1aacda4da15d27e1d95867f617bd5095b69",
     "games/nosignal/scenes/ns_game.c": "4905d8bc5cf9c92764541cc89c018181c82766d1c8c3123855c79f63c058512d",
     "games/nosignal/sound/samples/out_16el_b/1.wav": "48fb5eb575158eedc87ec65df8e9a598de5082e264fbd154e2f9183360a1daf0",
@@ -97,7 +97,7 @@
     "games/nosignal/sound/samples/out_a/9.adpcma": "7e5709880c2556ddea9e7b893ddd957636c346808851f3f7bae4e924393c305c",
     "sdk/2d_engine/ng_beatemup.c": "6af541d6691c61e5a28016aee902620eb16e127fef097c8c75cd85e24285983a",
     "sdk/2d_engine/ng_beatemup.h": "8136b4604bb8bf8d1668a0417703d054052b9867348188a8102c013d0c45dc3a",
-    "games/nosignal/scenes/ns_draw.c": "8d11410f3b1a97fc998a7b85d55702202b71ed9aacad0b353311971850591da3",
+    "games/nosignal/scenes/ns_draw.c": "6490c5306bc667fa5f034d2440e59575f22abb9a43f4c5a8ddc45a1f6fd21653",
     "games/nosignal/artbox/generated/ns_glow.h": "5871e0bf5b9aa79856ae9226629bc8230dc382eac6ed8978ab67faab91725c1d"
   }
 }

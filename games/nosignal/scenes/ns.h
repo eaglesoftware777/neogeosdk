@@ -43,16 +43,18 @@ enum {
 };
 #define NS_SPK_HERO 0xFFu        /* a scene line spoken by whichever hero is playing */
 
-/* A fighter's pictures: frame numbers in its sheet. Heroes have 40 frames,
+/* A fighter's pictures: frame numbers in its sheet. Heroes have 50 frames,
  * the street crew 10, the boss 20 (see tools/art.py). The heroes' fourth
  * sheet holds the in-between poses: a blow's wind-up and its return to
- * guard, the landing, and the run's stride in the air. */
+ * guard, the landing, and the run's stride in the air; the fifth a six-step
+ * walk and three more run strides. */
 enum {
     HF_STANCE = 0, HF_IDLE, HF_WALK1, HF_WALK2, HF_WALK3, HF_WALK4, HF_RUN1, HF_RUN2, HF_JUMP_UP, HF_JUMP_DOWN,
     HF_KEY2, HF_JAB, HF_CROSS, HF_UPPER, HF_KICK, HF_JUMPKICK, HF_SWEEP, HF_DASH, HF_GRAB, HF_THROW,
     HF_KEY3, HF_HURT, HF_HURT_LOW, HF_KNOCKED, HF_DOWN, HF_GETUP, HF_SPECIAL1, HF_SPECIAL2, HF_WIN, HF_RIDE,
     HF_KEY4, HF_PUNCH_WIND, HF_PUNCH_BACK, HF_UPPER_WIND, HF_UPPER_BACK, HF_KICK_WIND, HF_KICK_BACK,
     HF_SWEEP_WIND, HF_LAND, HF_RUN3,
+    HF_KEY5, HF_STEP1, HF_STEP2, HF_STEP3, HF_STEP4, HF_STEP5, HF_STEP6, HF_RUN4, HF_RUN5, HF_RUN6,
     HF_COUNT
 };
 enum { EF_STANCE = 0, EF_WALK1, EF_WALK2, EF_WALK3, EF_WINDUP, EF_ATTACK, EF_HURT, EF_KNOCKED, EF_DOWN, EF_GETUP, EF_COUNT };

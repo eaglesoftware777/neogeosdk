@@ -15,11 +15,14 @@ backgrounds don't move). What V3 does about each:
 | Hit boxes off | implemented | every strike box fitted to its picture, tighter lanes, a step into the next blow, a debug view and automated checks; grab range is the engine's and was not refitted |
 | Inconsistent colour | partial | each street repainted to one time of day and one light; every fighter checked against every street it fights on. The fighters' own shading was not redrawn for each stage's light |
 | Dated street crew | implemented | the two 1980s thugs redrawn in today's clothes |
-| Lifeless backgrounds | implemented | the streets' lights pulse, flicker and blink, and each street has its own drifting specks: leaves, dust, drizzle, bubbles, pollen, embers, falling bits, sparkles |
+| Lifeless backgrounds | implemented | the streets' lights pulse, flicker and blink, each street has its own drifting specks (leaves, dust, drizzle, bubbles, pollen, embers, falling bits, sparkles), and a front plane passes close to the camera for depth |
 
 ### Animation
 
-- The heroes gain ten pictures each (40 instead of 30): a punch wound up
+- The heroes gain twenty pictures each (50 instead of 30): a six-step walk
+  in guard (heel down, weight on, passing, for each foot, the body lowest on
+  the heel and highest passing) instead of four pictures, three more run
+  strides (four pictures to a stride cycle instead of two), a punch wound up
   with the rear fist by the cheek, a punch coming back to the chin, the crouch
   before an uppercut and the step down after it, the kick's raised knee and
   its leg coming back down, the drop into a sweep, a landing crouch and a run
@@ -30,8 +33,9 @@ backgrounds don't move). What V3 does about each:
   uppercut and the kick draw back in two steps. A jump ends in a crouch for a
   moment, and an air kick that lands recovers crouched.
 - Walking and running change picture every 16 pixels covered
-  (`NGBFighter.stride`), so the feet keep to the street at any speed; the run
-  has three pictures (a foot down, both up).
+  (`NGBFighter.stride`), so the feet keep to the street at any speed: the
+  walk in six steps, the run in four (a foot strikes, pushes off, the other
+  strikes, both off the ground).
 - The street crews wind up, strike, hold the blow half the recovery, then
   return to their stance (the attack picture used to stay up through the
   whole recovery).
@@ -118,6 +122,17 @@ backgrounds don't move). What V3 does about each:
   in `tools/art.py`; once shown, only their position is written each frame
   (two words in the blank).
 
+### Depth: the front plane
+
+- Close to the camera, one object a street passes in front of everyone along
+  the bottom of the screen at a quarter again the street's speed, every 260
+  pixels, flipped every other time: a hydrant and a bollard, cones and a
+  barrier, a crowd barrier, a lab console, ferns on broken pavement, a pipe
+  with a valve, a server rack, a railing post. In shadow, as near things are.
+  Two at most on the screen, four sprites each (sprites 340-347), hidden
+  while the dialogue box or a card is up. `tools/paint_import.py` cuts them out of one
+  painted sheet (`ns_front.png`).
+
 ### The street crew
 
 - SNATCH, the thief: a dark green hoodie half up, black joggers with one
@@ -184,30 +199,36 @@ backgrounds don't move). What V3 does about each:
 
 - The CD port follows the cartridge version named in `cd/reference.json`
   (now V3) instead of being tied to V2. The scenery's upload slot moved up
-  to tile 0x7A00 (bank 3, offset 0xD0000), so the larger resident set fits
-  (29,720 tiles; the old slot left room for 28,416).
+  to tile 0x7A00 (bank 3, offset 0xD0000).
+- The CD's sprite memory (32,768 tiles) is smaller than the cartridge's
+  art, and the walk and run strides made the heroes 1,920 tiles larger. So
+  the heroes' first 40 pictures stay resident with every other fighter, and
+  the played hero's ten strides come from the disc (`HEROn.SPR`, 640 tiles,
+  CRC checked like the scenery) into a slot at tile 0x7780 when a street
+  starts, once a game unless the hero changes. Resident: 29,912 tiles of
+  the 30,336 below that slot.
 
 ### Verification
 
 - Host tests: the No Signal tests (moves on the engine, every strike box
-  against its picture, colour key and C-ROM alpha for all 390 fighter
+  against its picture, colour key and C-ROM alpha for all 420 fighter
   frames, fighters against their streets, render budget, the CD conversion)
   and the beat-'em-up engine's tests pass.
 - MAME (MVS, EagleBIOS), 240-second autoplay campaigns for Jay, Zoe and Kai:
   every visible sprite's tiles and palettes checked every fourth frame,
-  3,433 frames each, no fault; at most 81 sprites on a line (the hardware
-  draws 96). The released MVS and AES sets played 120 seconds each with stick
+  3,433 frames each, no fault; at most 85 sprites on a line with the front
+  plane (the hardware draws 96). The released MVS and AES sets played 120 seconds each with stick
   and buttons on EagleBIOS: 1,657 checked frames each, no fault.
 - Frame time, the same 240-second campaign as the v1.7.7 report, measured
-  in a `PERF=2` build; "before" is the V2-era source as committed before
-  this work:
+  in a `PERF=2` build with the front plane and the six-step walk; "before"
+  is the V2-era source as committed before this work:
 
   | | frames with a sprite update waiting | longest run | frames over time | in play | work, median / 99% of frames (of 264 lines) |
   |---|---|---|---|---|---|
   | before, Zoe | 832 of 14,204 (5.9%) | 10 | 10 | 6 | 71 / 166 |
-  | V3, Jay | 1,257 (8.8%) | 22 | 8 | 4 | 84 / 160 |
-  | V3, Zoe | 1,160 (8.2%) | 16 | 7 | 4 | 83 / 164 |
-  | V3, Kai | 1,013 (7.1%) | 16 | 8 | 4 | 80 / 158 |
+  | V3, Jay | 1,291 (9.1%) | 22 | 8 | 4 | 79 / 158 |
+  | V3, Zoe | 1,193 (8.4%) | 16 | 7 | 3 | 78 / 163 |
+  | V3, Kai | 1,039 (7.3%) | 16 | 8 | 4 | 76 / 158 |
 
   "Frames over time" counts the scene loads at the start as well; "in
   play" those after 45 seconds. V3 changes pictures three or four times a
@@ -217,9 +238,11 @@ backgrounds don't move). What V3 does about each:
   and the street's life skips the frame a blow lands.
 - Neo Geo CD V3, in MAME's CDZ driver with stock and EagleBIOS-CD firmware:
   all three heroes play (stick and buttons, movement, jumps, effects, CD
-  music, exact program and firmware readback); a separate diagnostic build
-  loads all 13 scenes with their CRCs checked and the resident fighters
-  intact (3,804,160 bytes compared); the CHD boots and plays on both.
+  music, exact program and firmware readback, the played hero's strides
+  read back from the hero slot); a separate diagnostic build loads all 13
+  scenes and the three heroes' strides with their CRCs checked, the
+  resident fighters intact (3,828,736 bytes compared) and the slot holding
+  the last hero loaded; the CHD boots and plays on both.
 - The NeoSD, Darksoft and BackBit files are built from the same two sets by
   `tools/make_release.py`; they were not run on those carts.
 

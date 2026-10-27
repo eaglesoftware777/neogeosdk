@@ -7,8 +7,9 @@ Game ID 784.
 Current build: **V3**, the answer to the players' feedback on V2: blows wind up,
 land and recover in their own pictures, hold and spark where they hit, reach
 exactly as far as they are drawn, and sound heavier; the street crew dress
-for today; each street keeps one light from end to end, and its lights and
-air move. See the changelog for
+for today; each street keeps one light from end to end, its lights and air
+move, and near objects pass in front of the camera for depth; the heroes
+walk in six steps and run in four. See the changelog for
 what was done, what is partial and how it was tested. V1 and V2 releases
 remain separate.
 
