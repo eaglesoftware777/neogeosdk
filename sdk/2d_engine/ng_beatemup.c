@@ -30,8 +30,8 @@
 #define THROWN_DAMAGE  6u
 #define ATTACK_COOL    24u
 
-static const NGBMove ram_move = { 0, 1, 0, 0, 0, NGB_MV_KNOCKDOWN | NGB_MV_UNBLOCKABLE, 0, 16, 0, 40, 8, 48, 40, 0, 0, NGB_NONE, 0, 0 };
-static const NGBMove shove_move = { 0, 1, 0, 0, 8, 0, 0, 16, 0, 40, 8, 24, 0, 0, 0, NGB_NONE, 0, 0 };
+static const NGBMove ram_move = { 0, 1, 0, 0, 0, NGB_MV_KNOCKDOWN | NGB_MV_UNBLOCKABLE, 0, 16, 0, 40, 8, 48, 40, 0, 0, NGB_NONE, 0, 0, 0, 0 };
+static const NGBMove shove_move = { 0, 1, 0, 0, 8, 0, 0, 16, 0, 40, 8, 24, 0, 0, 0, NGB_NONE, 0, 0, 0, 0 };
 
 /* ======================================================================
  * helpers
@@ -191,11 +191,26 @@ static void NEOGEO_USER boss_phase(NGBeatEmUp *b, uint8_t ti)
     }
 }
 
+/* Where a blow meets the target: the middle of the move's reach that is on
+ * its body, pixels above its feet (its middle for blows with no reach given). */
+static uint8_t NEOGEO_USER contact_height(const NGBFighter *a, const NGBFighter *t, const NGBMove *mv)
+{
+    int32_t th = (int32_t)(t->def ? t->def->height : 60u) << 8, z0, z1, lo, hi, mid;
+    if (t->state == NGB_ST_DOWN) th = 16 << 8;               /* lying flat */
+    if (!mv->box_h) return (uint8_t)(th >> 9);
+    z0 = a->z + ((int32_t)mv->box_z << 8); z1 = z0 + ((int32_t)mv->box_h << 8);
+    lo = z0 > t->z ? z0 : t->z;
+    hi = z1 < t->z + th ? z1 : t->z + th;
+    if (hi < lo) return (uint8_t)(th >> 9);
+    mid = (((lo + hi) >> 1) - t->z) >> 8;
+    return (uint8_t)(mid < 0 ? 0 : mid > 255 ? 255 : mid);
+}
+
 /* Returns 1 if the hit landed (not blocked or missed). */
 static uint8_t NEOGEO_USER apply_hit(NGBeatEmUp *b, uint8_t ai, uint8_t ti, const NGBMove *mv, uint8_t damage)
 {
     NGBFighter *a = &b->f[ai], *t = &b->f[ti];
-    uint8_t fl = flags_of(t), stop;
+    uint8_t fl = flags_of(t), stop, at;
     int32_t away = a->x <= t->x ? 1 : -1;
     uint8_t knock = (uint8_t)(mv->flags & (NGB_MV_KNOCKDOWN | NGB_MV_LAUNCH));
     if (!can_be_hit(t)) return 0;
@@ -209,12 +224,22 @@ static uint8_t NEOGEO_USER apply_hit(NGBeatEmUp *b, uint8_t ai, uint8_t ti, cons
         emit(b, NGB_EV_BLOCKED, ai, ti, 0, 0);
         return 0;
     }
+    at = contact_height(a, t, mv);
     t->hp = (uint8_t)(t->hp > damage ? (uint8_t)(t->hp - damage) : 0u);
-    /* a short hitstop: a jab 3 frames, the heaviest blow 6 (longer reads as the game freezing) */
-    stop = (uint8_t)(2u + (damage >> 2));
-    if (stop > 6u) stop = 6u;
+    /* a short hitstop: a jab 3 frames, the heaviest blow 6 (longer reads as the game freezing),
+     * unless the move gives its own; the blow that beats an enemy may hold longer (the stage's) */
+    stop = mv->hitstop;
+    if (!stop) {
+        stop = (uint8_t)(2u + (damage >> 2));
+        if (stop > 6u) stop = 6u;
+    }
+    if (!t->hp && ti != NGB_PLAYER) {
+        uint8_t ko = (t->def && t->def->ai == NGB_AI_BOSS) ? b->stage->boss_ko_hitstop : b->stage->ko_hitstop;
+        if (ko > stop) stop = ko;
+    }
     a->hitstop = stop; t->hitstop = stop;
-    emit(b, NGB_EV_HIT, ai, ti, damage, 0);
+    t->hit_z = at;
+    emit(b, NGB_EV_HIT, ai, ti, damage, at);
     if (ai != ti && (ai == NGB_PLAYER || a->state == NGB_ST_THROWN)) {
         b->combo = (uint16_t)(b->combo_timer ? b->combo + 1u : 1u);
         b->combo_timer = COMBO_WINDOW;
@@ -605,7 +630,7 @@ static void NEOGEO_USER player_ride(NGBeatEmUp *b)
             ram.box_x = ram_move.box_x; ram.box_w = ram_move.box_w; ram.box_z = ram_move.box_z;
             ram.box_h = ram_move.box_h; ram.box_depth = ram_move.box_depth;
             ram.push_x = ram_move.push_x; ram.push_z = ram_move.push_z; ram.lunge = 0;
-            ram.cancel = 0; ram.next = NGB_NONE; ram.sound = 0; ram.anim = 0;
+            ram.cancel = 0; ram.next = NGB_NONE; ram.sound = 0; ram.anim = 0; ram.hitstop = 0; ram.step = 0;
             if (apply_hit(b, NGB_PLAYER, i, &ram, s->vehicle_ram ? s->vehicle_ram : 6u)) {
                 emit(b, NGB_EV_RAM, NGB_PLAYER, i, 0, 0);
                 if (p->hp) p->hp--;
@@ -836,6 +861,28 @@ static void NEOGEO_USER enemy_ai(NGBeatEmUp *b, uint8_t ei)
 /* ======================================================================
  * moves, physics and states for everyone
  * ==================================================================== */
+/* How much nearer (Q8) the nearest foe in front, in the lane, must come for
+ * the move to reach it 4 pixels deep: 0 when it already does or when no one
+ * is within 64 pixels beyond the reach. */
+static int32_t NEOGEO_USER step_gap(const NGBeatEmUp *b, uint8_t fi, const NGBMove *m)
+{
+    const NGBFighter *f = &b->f[fi];
+    int32_t best = 0x7FFFFFFF;
+    uint8_t i;
+    for (i = 0; i < NGB_FIGHTERS; i++) {
+        const NGBFighter *t = &b->f[i];
+        int32_t dx, depth, in;
+        if (i == fi || !t->alive || !enemy_of(fi, i) || !can_be_hit(t)) continue;
+        depth = ((int32_t)(m->box_depth ? m->box_depth : 8u) + (int32_t)(t->def ? t->def->half_depth : 4u)) << 8;
+        if (iabs(t->y - f->y) > depth) continue;
+        dx = flip(f->facing, t->x - f->x);
+        in = ((int32_t)m->box_x + (int32_t)m->box_w + (int32_t)(t->def ? t->def->half_w : 12u) - 4) << 8;
+        if (dx <= 0 || dx > in + (64 << 8)) continue;
+        if (dx - in < best) best = dx - in;
+    }
+    return best == 0x7FFFFFFF || best < 0 ? 0 : best;
+}
+
 static void NEOGEO_USER run_move(NGBeatEmUp *b, uint8_t fi)
 {
     NGBFighter *f = &b->f[fi];
@@ -848,6 +895,15 @@ static void NEOGEO_USER run_move(NGBeatEmUp *b, uint8_t fi)
         return;
     }
     total = (uint8_t)(m->startup + m->active + m->recovery);
+    /* a step in while winding up, planted again for the blow (unless it lunges) */
+    if (m->step && !airborne(f)) {
+        if (f->move_frame < m->startup) {
+            int32_t gap = step_gap(b, fi, m), sp = (int32_t)m->step << 4;
+            f->vx = flip(f->facing, gap < sp ? gap : sp);
+        } else if (f->move_frame == m->startup && !m->lunge) {
+            f->vx = 0;
+        }
+    }
     if (f->move_frame >= m->startup && f->move_frame < (uint8_t)(m->startup + m->active)) {
         if (m->lunge) f->vx = flip(f->facing, (int32_t)m->lunge << 4);
         if (f->move_frame == m->startup && (m->flags & NGB_MV_PROJECTILE)) spawn_shot(b, fi, m);
@@ -920,7 +976,7 @@ static void NEOGEO_USER thrown_hits(NGBeatEmUp *b, uint8_t ti)
             hit.startup = 0; hit.active = 1; hit.recovery = 0; hit.damage = THROWN_DAMAGE; hit.hitstun = 0;
             hit.flags = NGB_MV_KNOCKDOWN | NGB_MV_UNBLOCKABLE; hit.box_x = 0; hit.box_w = 0; hit.box_z = 0;
             hit.box_h = 0; hit.box_depth = 0; hit.push_x = (int8_t)(t->vx > 0 ? 40 : -40); hit.push_z = 40;
-            hit.lunge = 0; hit.cancel = 0; hit.next = NGB_NONE; hit.sound = 0; hit.anim = 0;
+            hit.lunge = 0; hit.cancel = 0; hit.next = NGB_NONE; hit.sound = 0; hit.anim = 0; hit.hitstop = 0; hit.step = 0;
             apply_hit(b, NGB_PLAYER, i, &hit, THROWN_DAMAGE);
         }
     }
@@ -935,6 +991,9 @@ static void NEOGEO_USER physics(NGBeatEmUp *b, uint8_t fi)
     if (f->state == NGB_ST_GRABBED) return;
     f->x += f->vx;
     f->y += f->vy;
+    /* the distance walked, for walk cycles that match the feet to the ground */
+    if ((f->state == NGB_ST_WALK || f->state == NGB_ST_RUN) && !was_air)
+        f->stride = (uint16_t)(f->stride + (uint16_t)((iabs(f->vx) + iabs(f->vy)) >> 4));
     /* a tall fighter keeps its head on the screen: its feet no higher up than its height */
     if (f->def && ((int32_t)f->def->height << 8) > y0) y0 = (int32_t)f->def->height << 8;
     if (y0 > y1) y0 = y1;
@@ -1058,7 +1117,7 @@ static void NEOGEO_USER update_props(NGBeatEmUp *b)
                 hit.startup = 0; hit.active = 1; hit.recovery = 0; hit.damage = dmg; hit.hitstun = 0;
                 hit.flags = NGB_MV_KNOCKDOWN; hit.box_x = 0; hit.box_w = 0; hit.box_z = 0; hit.box_h = 0;
                 hit.box_depth = 0; hit.push_x = (int8_t)(p->vx > 0 ? 32 : -32); hit.push_z = 32; hit.lunge = 0;
-                hit.cancel = 0; hit.next = NGB_NONE; hit.sound = 0; hit.anim = 0;
+                hit.cancel = 0; hit.next = NGB_NONE; hit.sound = 0; hit.anim = 0; hit.hitstop = 0; hit.step = 0;
                 apply_hit(b, NGB_PLAYER, j, &hit, dmg);
                 p->vx = -(p->vx >> 2);
                 if (p->hp) p->hp--;
@@ -1079,7 +1138,7 @@ static void NEOGEO_USER update_props(NGBeatEmUp *b)
                     hit.startup = 0; hit.active = 1; hit.recovery = 0; hit.damage = 2; hit.hitstun = 0;
                     hit.flags = NGB_MV_KNOCKDOWN | NGB_MV_UNBLOCKABLE; hit.box_x = 0; hit.box_w = 0; hit.box_z = 0;
                     hit.box_h = 0; hit.box_depth = 0; hit.push_x = 24; hit.push_z = 40; hit.lunge = 0;
-                    hit.cancel = 0; hit.next = NGB_NONE; hit.sound = 0; hit.anim = 0;
+                    hit.cancel = 0; hit.next = NGB_NONE; hit.sound = 0; hit.anim = 0; hit.hitstop = 0; hit.step = 0;
                     apply_hit(b, j, j, &hit, 2);
                 }
             }
@@ -1323,6 +1382,25 @@ uint8_t NEOGEO_USER ng_beatemup_enemies_alive(const NGBeatEmUp *b)
     if (!b) return 0;
     for (i = 1; i < NGB_FIGHTERS; i++) if (b->f[i].alive) n++;
     return n;
+}
+
+uint8_t NEOGEO_USER ng_beatemup_move_phase(const NGBeatEmUp *b, uint8_t fighter, uint8_t *frame)
+{
+    const NGBFighter *f;
+    const NGBMove *m;
+    uint8_t mf;
+    if (frame) *frame = 0;
+    if (!b || fighter >= NGB_FIGHTERS) return NGB_PH_NONE;
+    f = &b->f[fighter];
+    if (f->state != NGB_ST_ATTACK) return NGB_PH_NONE;
+    m = move_of(b, f);
+    if (!m) return NGB_PH_NONE;
+    mf = f->move_frame;
+    if (mf < m->startup) { if (frame) *frame = mf; return NGB_PH_STARTUP; }
+    mf = (uint8_t)(mf - m->startup);
+    if (mf < m->active) { if (frame) *frame = mf; return NGB_PH_ACTIVE; }
+    if (frame) *frame = (uint8_t)(mf - m->active);
+    return NGB_PH_RECOVERY;
 }
 
 uint8_t NEOGEO_USER ng_beatemup_event(NGBeatEmUp *b, NGBEvent *out)

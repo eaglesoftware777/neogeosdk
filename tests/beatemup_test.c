@@ -670,6 +670,92 @@ static void test_walk_on_vehicle(void)
     printf("walking onto the vehicle, jumping off it: OK\n");
 }
 
+/* v1.7.7 feel: where a blow lands, per-move and last-blow hitstop, the
+ * distance walked, and the phase of a move. */
+static NGBMove FEEL_MOVES[8];
+static NGBFighterDef FEEL;
+static NGBStage KO_STAGE;
+static NGBEvent last_hit;
+
+static void drain_hits(NGBeatEmUp *b)
+{
+    NGBEvent e;
+    while (ng_beatemup_event(b, &e)) { ev[e.type]++; if (e.type == NGB_EV_HIT) last_hit = e; }
+}
+
+static void test_feel(void)
+{
+    uint8_t e, ph, fr, i, seen[4] = { 0, 0, 0, 0 };
+    memcpy(FEEL_MOVES, P_MOVES, sizeof(P_MOVES));
+    memcpy(&FEEL, &PLAYER, sizeof(PLAYER));
+    FEEL.moves = FEEL_MOVES;
+    /* a jab (reach 20-50 up) on a standing punk lands at 35; the low kick (0-12) at 6 */
+    fresh();
+    e = enemy_at(&B, &PUNK, 64 + 28, 170);
+    B.f[0].y = 170 << 8; B.attack_cool = 255;
+    ng_beatemup_input(&B, 0, NGB_BTN_A); ng_beatemup_update(&B); drain_hits(&B);
+    for (i = 0; i < 10 && !ev[NGB_EV_HIT]; i++) { ng_beatemup_input(&B, 0, 0); ng_beatemup_update(&B); drain_hits(&B); }
+    assert(ev[NGB_EV_HIT] == 1 && last_hit.value == 35 && B.f[e].hit_z == 35);
+    assert(B.f[0].hitstop == 2 + (P_MOVES[0].damage >> 2));          /* no hitstop of its own: as before */
+    fresh();
+    e = enemy_at(&B, &PUNK, 64 + 28, 170);
+    B.f[0].y = 170 << 8; B.attack_cool = 255;
+    ng_beatemup_input(&B, NGB_IN_DOWN, NGB_BTN_A); ng_beatemup_update(&B); drain_hits(&B);
+    for (i = 0; i < 10 && !ev[NGB_EV_HIT]; i++) { ng_beatemup_input(&B, 0, 0); ng_beatemup_update(&B); drain_hits(&B); }
+    assert(ev[NGB_EV_HIT] == 1 && last_hit.value == 6);
+    printf("a blow says where it landed: OK\n");
+
+    /* a move's own hitstop, and the last blow's */
+    FEEL_MOVES[0].hitstop = 9;
+    assert(ng_beatemup_init(&B, &EMPTY, &FEEL, 3, 11) == NGB_OK);
+    memset(ev, 0, sizeof(ev));
+    e = enemy_at(&B, &PUNK, 64 + 28, 170);
+    B.f[0].y = 170 << 8; B.attack_cool = 255;
+    tap(&B, 0, NGB_BTN_A);
+    for (i = 0; i < 10 && !ev[NGB_EV_HIT]; i++) step(&B, 0, 0, 1);
+    assert(ev[NGB_EV_HIT] == 1 && B.f[0].hitstop >= 8 && B.f[e].hitstop >= 8);
+    memcpy(&KO_STAGE, &EMPTY, sizeof(EMPTY));
+    KO_STAGE.ko_hitstop = 14; KO_STAGE.boss_ko_hitstop = 20;
+    FEEL_MOVES[0].hitstop = 0;
+    assert(ng_beatemup_init(&B, &KO_STAGE, &FEEL, 3, 11) == NGB_OK);
+    memset(ev, 0, sizeof(ev));
+    e = enemy_at(&B, &PUNK, 64 + 28, 170);
+    B.f[0].y = 170 << 8; B.attack_cool = 255; B.f[e].hp = 1;
+    tap(&B, 0, NGB_BTN_A);
+    for (i = 0; i < 10 && !ev[NGB_EV_HIT]; i++) step(&B, 0, 0, 1);
+    assert(ev[NGB_EV_HIT] == 1 && !B.f[e].hp && B.f[e].hitstop >= 13);
+    assert(ng_beatemup_init(&B, &KO_STAGE, &FEEL, 3, 11) == NGB_OK);
+    memset(ev, 0, sizeof(ev));
+    e = enemy_at(&B, &BOSS, 64 + 36, 170);
+    B.f[0].y = 170 << 8; B.attack_cool = 255; B.f[e].hp = 1; B.f[e].phase = 2;
+    tap(&B, 0, NGB_BTN_A);
+    for (i = 0; i < 10 && !ev[NGB_EV_HIT]; i++) step(&B, 0, 0, 1);
+    assert(ev[NGB_EV_HIT] == 1 && !B.f[e].hp && B.f[e].hitstop >= 19);
+    printf("a move's own hitstop; the last blow holds longer: OK\n");
+
+    /* walking adds its distance (speed 24: 1.5 pixels, 24 sixteenths a frame); standing doesn't */
+    fresh();
+    step(&B, NGB_IN_RIGHT, 0, 20);
+    assert(B.f[0].stride == 20u * 24u);
+    step(&B, 0, 0, 10);
+    assert(B.f[0].stride == 20u * 24u);
+    printf("the distance walked: OK\n");
+
+    /* a jab: 3 frames winding up, 2 that can hit, 6 to recover, then none */
+    fresh();
+    ng_beatemup_input(&B, 0, NGB_BTN_A); ng_beatemup_update(&B); drain(&B);
+    for (i = 0; i < 16; i++) {
+        ph = ng_beatemup_move_phase(&B, 0, &fr);
+        seen[ph]++;
+        if (ph == NGB_PH_STARTUP) assert(fr < 3);
+        if (ph == NGB_PH_ACTIVE) assert(fr < 2);
+        ng_beatemup_input(&B, 0, 0); ng_beatemup_update(&B); drain(&B);
+    }
+    assert(seen[NGB_PH_STARTUP] == 2 && seen[NGB_PH_ACTIVE] == 2 && seen[NGB_PH_RECOVERY] == 6 && seen[NGB_PH_NONE] == 6);
+    assert(ng_beatemup_move_phase(&B, 0, 0) == NGB_PH_NONE && ng_beatemup_move_phase(0, 0, &fr) == NGB_PH_NONE);
+    printf("a move's phases: OK\n");
+}
+
 int main(void)
 {
     setup();
@@ -687,6 +773,7 @@ int main(void)
     test_charger();
     test_approach_at_the_edge();
     test_on_screen();
+    test_feel();
     printf("ng_beatemup: all tests passed (context %u bytes)\n", (unsigned)sizeof(NGBeatEmUp));
     return 0;
 }
