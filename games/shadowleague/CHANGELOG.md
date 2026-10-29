@@ -3,6 +3,29 @@
 Shadow League Fighting's ROM sets ship with the NeoGeoSDK pre-releases and
 are numbered on their own: `_v1` and `_v2` with v1.7.5, `_v3` with v1.7.7.
 
+## v3.1.0 candidate: faces and clean edges (2026-10-29)
+
+Versions are now `MAJOR.MINOR.PATCH` (docs/releases/VERSIONING_POLICY.md);
+this graphics pass is v3.1.0.
+
+- **Select wall.** Each 24-pixel face is now the head alone (a hand-set box
+  for the 25 crops that were busts, a mask or a robot), area-averaged and
+  sharpened instead of a soft Lanczos shrink of the whole portrait, and the
+  wall's top and bottom halves get sixteen palettes each (32-63) instead of
+  sixteen for all 44 faces, so one face's skin and hair no longer bleed
+  into its neighbour's. The magenta key fringe is painted out of the faces
+  and of the 64x64 corner portraits.
+- **Pink edges.** Nine painted fighters (Aisha, Hayato, Irina, Lucas, Maia,
+  Mason, Ryuhei, Tomas, Xiaomei) kept a pink colour from the magenta key
+  along their silhouettes and in their hair; on Xiaomei it filled her hands.
+  Every such pixel now takes the colour beside it (tools/clean_fringe.py).
+- **Faces in the fight.** The painted import averaged each block of the
+  sheets, and a face ten pixels wide lost its eyes, brows and mouth. They
+  are found again on the source sheets and painted into the approved frames
+  where the frame shows skin, head only, with the colours each tile already
+  has (tools/painted_import/face_detail.py). Silhouettes, hit boxes and
+  animation are unchanged.
+
 ## v3 update (2026-10-26, NeoGeoSDK v1.7.7 pre-release, same file names)
 
 - The fight HUD stays inside columns 3-36 of the 40 (x 24-295), the part of

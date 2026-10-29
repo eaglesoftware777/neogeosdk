@@ -2,18 +2,22 @@
 
 Rows of 4, 6, 8, 8, 8, 6, 4 faces (all 44, nothing scrolls), each face a
 24x24 painting in a 26-pixel cell. The wall is one 208x192 picture packed
-like the stages and story cards: sixteen palettes, one chosen per tile.
-Beside it, a 64x64 face for each fighter (two palettes, one a tile) for the
-corner panels, and the two players' cursor frames.
+like the stages and story cards, its top and bottom halves on sixteen
+palettes each (32 in all), one chosen per tile. Beside it, a 64x64 face for
+each fighter (two palettes, one a tile) for the corner panels, and the two
+players' cursor frames.
 
 Faces are kept in assets/authored/faces/ (cropped from the painted select
 portraits, or the front view of a fighter's model sheet, when those are on
-this machine); a fighter without one shows its 32x32 roster icon.
+this machine); a fighter without one shows its 32x32 roster icon. A wall
+cell shows the head alone (HEAD_BOX for the crops that are busts), averaged
+down and sharpened: a whole bust at 24 pixels left the face a few pixels
+wide.
 """
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageEnhance, ImageFilter
 
 from palette_banks import palette_words, quantize
 
@@ -29,6 +33,18 @@ INK = (16, 14, 22)
 GROUND = (28, 24, 34)
 # Face centres (fractions of the portrait) where hair reads as skin.
 FACE_CENTRE = {'amara': (0.56, 0.44)}
+# The head in a kept 128x128 face (centre x, centre y, side) where the crop is
+# a bust or the skin misleads (a mask, a robot); other heads are found by skin.
+HEAD_BOX = {
+    'diego': (64, 56, 104), 'maya': (64, 56, 88), 'aditya': (64, 56, 88), 'sokha': (58, 52, 80),
+    'lucas': (62, 66, 96), 'noah': (56, 50, 76), 'zara': (60, 55, 84), 'thabo': (52, 40, 70),
+    'maia': (72, 44, 76), 'tomas': (50, 46, 92), 'leila': (62, 52, 84), 'kaimana': (58, 48, 86),
+    'aleksei': (66, 50, 80), 'hayato': (68, 58, 100), 'mason': (55, 55, 96), 'lotus': (88, 64, 88),
+    'tororojo': (70, 60, 104), 'irina': (55, 50, 84), 'kofi': (58, 58, 90), 'xiaomei': (55, 50, 90),
+    'zero': (75, 48, 84), 'echo': (70, 46, 76), 'atlas': (70, 46, 92), 'viper': (66, 48, 84),
+    'mirage': (62, 52, 86), 'fahri': (60, 70, 112),
+}
+HEAD_SIDE = 100
 
 
 def _magenta(rgb):
@@ -36,12 +52,57 @@ def _magenta(rgb):
     return (f[..., 0] > 150) & (f[..., 2] > 150) & (f[..., 1] < 110)
 
 
+def _key_fringe(rgb):
+    """The magenta key blended into a stroke's edge: red and blue alike, almost
+    no green (a violet costume keeps far more green than this)."""
+    f = rgb.astype(int)
+    r, g, b = f[..., 0], f[..., 1], f[..., 2]
+    return (g < 32) & (r > 70) & (b > 70) & (np.abs(r - b) < 70)
+
+
+def _unfringe(rgb):
+    """The face with its key fringe taken by the colours around it."""
+    out = rgb.copy()
+    pending = _key_fringe(out)
+    for _ in range(4):
+        if not pending.any():
+            break
+        for y, x in zip(*np.nonzero(pending)):
+            win = (slice(max(0, y - 1), y + 2), slice(max(0, x - 1), x + 2))
+            near = out[win][~pending[win]]
+            out[y, x] = near.mean(0) if len(near) else GROUND
+        pending = _key_fringe(out)
+    out[pending] = GROUND
+    return out
+
+
+def head_box(fighter_id, rgb):
+    if fighter_id in HEAD_BOX:
+        cx, cy, side = HEAD_BOX[fighter_id]
+    else:
+        hsv = np.asarray(Image.fromarray(rgb).convert('HSV')).astype(int)
+        skin = (hsv[..., 0] < 36) & (hsv[..., 1] > 45) & (hsv[..., 1] < 205) & (hsv[..., 2] > 60)
+        ys, xs = np.nonzero(skin)
+        cx, cy = (int(np.median(xs)), int(np.median(ys))) if len(xs) > 200 else (64, 64)
+        side = HEAD_SIDE
+    h, w = rgb.shape[:2]
+    x0, y0 = max(0, min(w - side, cx - side // 2)), max(0, min(h - side, cy - side // 2))
+    return x0, y0, x0 + side, y0 + side
+
+
 def face(fighter_id, size):
     """size x size RGB head shot on the cell ground."""
     kept = FACES / f'{fighter_id}.png'
-    if kept.exists():
-        return np.asarray(Image.open(kept).convert('RGB').resize((size, size), Image.Resampling.LANCZOS))
-    raise ValueError(f'Missing authored selection portrait: {kept}')
+    if not kept.exists():
+        raise ValueError(f'Missing authored selection portrait: {kept}')
+    rgb = _unfringe(np.asarray(Image.open(kept).convert('RGB')))
+    img = Image.fromarray(rgb)
+    if size >= BIG - 4:
+        return np.asarray(img.resize((size, size), Image.Resampling.LANCZOS))
+    # a wall cell: the head alone, area-averaged (Lanczos at 1/5 scale went soft)
+    img = img.crop(head_box(fighter_id, rgb)).resize((size, size), Image.Resampling.BOX)
+    img = ImageEnhance.Contrast(img).enhance(1.1).filter(ImageFilter.UnsharpMask(radius=1, percent=80, threshold=2))
+    return np.asarray(img)
 
 
 def refresh_faces(ids):
@@ -158,7 +219,13 @@ def build(ids, place, emit, pal_base, ready=None):
     """C tables for the wall, the big faces and the cursors. place(indexed)
     stores an image in the C ROM and returns its first tile."""
     header = []
-    indices, banks, assign = quantize(wall_image(ids, ready), bank_limit=16)
+    # Two halves of sixteen palettes each, 32-63 (the stage's 32-47 and the
+    # unused 48-63; no stage is up here): sixteen for all 44 faces mixed one
+    # face's skin and hair into the next.
+    parts = [quantize(half, bank_limit=16, refine=3) for half in np.split(wall_image(ids, ready), 2)]
+    indices = np.vstack([p[0] for p in parts])
+    banks = np.concatenate([p[1] for p in parts])
+    assign = np.vstack([parts[0][2], parts[1][2] + len(parts[0][1])])
     tile = place(indices)
     header.append(f'#define SLF_WALL_TILE {tile}u\n#define SLF_WALL_STRIPS {WALL_W // 16}u\n'
                   f'#define SLF_WALL_ROWS {WALL_H // 16}u\n#define SLF_WALL_PAL {pal_base}u\n'

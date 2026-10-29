@@ -1,8 +1,8 @@
 {
   "frames": 2460,
   "unshared_tiles": 354240,
-  "unique_strips": 46100,
-  "shared_tiles": 92200,
+  "unique_strips": 46087,
+  "shared_tiles": 92174,
   "pixel_loss": 0,
-  "total_tiles": 103014
+  "total_tiles": 102988
 }

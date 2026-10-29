@@ -1,67 +1,67 @@
 [
   {
     "file": "title-sdk177.png",
-    "tile": 99626,
+    "tile": 99600,
     "palette_banks": 16,
     "P_offset": 1048576
   },
   {
     "file": "summons.png",
-    "tile": 99934,
+    "tile": 99908,
     "palette_banks": 16,
     "P_offset": 2097152
   },
   {
     "file": "kenji-sdk177.png",
-    "tile": 100242,
+    "tile": 100216,
     "palette_banks": 16,
     "P_offset": 1049496
   },
   {
     "file": "ryuhei-sdk177.png",
-    "tile": 100550,
+    "tile": 100524,
     "palette_banks": 16,
     "P_offset": 2098072
   },
   {
     "file": "jack-sdk177.png",
-    "tile": 100858,
+    "tile": 100832,
     "palette_banks": 16,
     "P_offset": 1050416
   },
   {
     "file": "claire-sdk177.png",
-    "tile": 101166,
+    "tile": 101140,
     "palette_banks": 16,
     "P_offset": 2098992
   },
   {
     "file": "title-sdk177.png",
-    "tile": 101474,
+    "tile": 101448,
     "palette_banks": 16,
     "P_offset": 1051336
   },
   {
     "file": "mode.png",
-    "tile": 101782,
+    "tile": 101756,
     "palette_banks": 16,
     "P_offset": 2099912
   },
   {
     "file": "select.png",
-    "tile": 102090,
+    "tile": 102064,
     "palette_banks": 16,
     "P_offset": 1052256
   },
   {
     "file": "vs.png",
-    "tile": 102398,
+    "tile": 102372,
     "palette_banks": 16,
     "P_offset": 2100832
   },
   {
     "file": "ending.png",
-    "tile": 102706,
+    "tile": 102680,
     "palette_banks": 16,
     "P_offset": 1053176
   }
