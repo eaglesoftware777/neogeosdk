@@ -3,6 +3,45 @@
 Sky Lance's ROM sets ship with the NeoGeoSDK pre-releases and are numbered
 on their own: `_v1` with v1.7.3, `_v2` with v1.7.7.
 
+## v2.1.0 candidate: shots, clouds, flicker, difficulty (2026-10-28)
+
+Versions are now `MAJOR.MINOR.PATCH` and every changed binary gets a new
+one (docs/releases/VERSIONING_POLICY.md). The title-safe rebuild below goes
+out as v2.0.1; this pass changes gameplay and is v2.1.0.
+
+- **Shots stuck on wings.** Aimed shots worked their velocity out in whole
+  pixels, so a target within 16 pixels of the muzzle gave (0,0): the orb hung
+  at the gun (the Crimson Keep's wing guns, a hovering heli) for the rest of
+  the fight and held a place in the shot pool. Aiming is now 8.8 fixed point,
+  no shot starts still, and a non-seeker shot that stops or outlives any
+  crossing of the field is removed (`s_stale_bolts` counts them for QA).
+- **The red spot on the wing.** The damaged frames had a small fire painted
+  on the right wing: the player's jet below 35% hull, and a drone, fighter,
+  interceptor, bomber, tank, SAM or radar site on its last third of armour.
+  It was an enemy orb's size and colour and stayed put on the wing, so it
+  read as a shot stuck there. Those frames now show charred plating instead
+  (paint_jets.py, paint_sprites.py, unit_frames.py); the smoke trail and the
+  red tint still mark a hurt jet. The minibosses, warships and the Keep keep
+  their fires, which are spread over hulls far larger than an orb.
+- **The white cloud followed the plane.** The overhead cloud kept a fixed
+  screen x while the camera panned with the pilot; it now keeps its place on
+  the field and pans 1.5 times as far as the ground. The low cloud bank was
+  projected as distant terrain (a quarter of the ground's scroll and pan) and
+  drifted along with the plane; it now scrolls a quarter faster than the
+  ground, pans with it and crosses once every 1024 pixels at a new spot.
+- **Bullets lost in crowds.** On a line with more than 96 sprites the LSPC
+  drops the highest sprite numbers, and enemy shots had the highest fixed
+  slots. The pilot portrait and the player's shots now go first; enemy shots
+  still draw over every aircraft. Fire is held while the busiest line is
+  within two sprites of the limit, and the low cloud bank stands aside when
+  a line passes 88.
+- **Difficulty.** A per-sector table (`k_difficulty`) tightens fire cycles
+  to 60% by sector 7, adds lane-keeping patterns (paired fighter tracers,
+  aimed drone darts, wide interceptor fans, heli and boat follow-ups, bomber
+  side bombs), raises the live enemy-shot cap from 8 to 12 and aimed shots
+  from 3.0 to 3.75 px per update. Sector 1 is unchanged. Rates and rules:
+  DIFFICULTY.md.
+
 ## Title-safe HUD (2026-10-26)
 
 - The flight HUD stays inside columns 3-36 of the 40 (x 24-295), the part

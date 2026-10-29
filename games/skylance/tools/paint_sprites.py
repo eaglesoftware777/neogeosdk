@@ -96,8 +96,10 @@ def fire(frame, cx, cy, r):
     return out
 
 
-def damaged(frame, spots):
-    """Scorched plating with fires at the given fractional (x, y) spots."""
+def damaged(frame, spots, fires=True):
+    """Scorched plating with fires at the given fractional (x, y) spots. A jet
+    gets charred cores instead (fires=False): on a hull that small a fire is
+    an enemy orb's size and colour, and it read as a shot stuck to the wing."""
     a = frame[:, :, 3] > 0
     ys, xs = np.nonzero(a)
     x0, y0, w, h = xs.min(), ys.min(), xs.max() - xs.min(), ys.max() - ys.min()
@@ -105,7 +107,7 @@ def damaged(frame, spots):
     for fx, fy, fr in spots:
         cx, cy, r = x0 + fx * w, y0 + fy * h, max(2.0, fr * w)
         out = scorch(out, cx, cy, r * 1.8)
-        out = fire(out, cx, cy, r * 0.7)
+        out = fire(out, cx, cy, r * 0.7) if fires else scorch(out, cx, cy, r * 0.7, 0.8)
     return out
 
 
@@ -147,9 +149,9 @@ def destruction(frame, seed=1):
     return frames
 
 
-def strip(base, spots, seed):
+def strip(base, spots, seed, fires=True):
     """Eight frames: three idle (lights pulsing), damaged, four destruction."""
-    return [base, glow(base, 1.12), glow(base, 0.86), damaged(base, spots)] + destruction(base, seed)
+    return [base, glow(base, 1.12), glow(base, 0.86), damaged(base, spots, fires)] + destruction(base, seed)
 
 
 SHADOW_GREYS = [0, 0, 0] + [v for g in range(20, 231, 15) for v in (g, g, g)]
@@ -203,7 +205,7 @@ def interceptor():
     """The radar-directed interceptor: frames 1-7 follow the legacy drawing's ID."""
     jet = outline(fit(source('interceptor'), (48, 48), 44))
     frames = {('interceptor' if k == 0 else f'interceptor_{k}'): f
-              for k, f in enumerate(strip(jet, ((0.7, 0.4, 0.08), (0.3, 0.55, 0.06)), 8))}
+              for k, f in enumerate(strip(jet, ((0.7, 0.4, 0.08), (0.3, 0.55, 0.06)), 8, fires=False))}
     return family('interceptor', 84, 3, frames)
 
 

@@ -331,6 +331,8 @@ static volatile uint16_t s_depth_strip_peak;
 static NGCharacter *s_overhead_cloud;
 static uint16_t s_cloud_tick;
 static int16_t s_overhead_x;
+static int32_t s_overhead_x_q8;     /* the overhead cloud's place on the field */
+static uint16_t s_line_peak;        /* busiest line, last sky_depth_draw */
 static volatile uint16_t s_depth_shadow_drops;
 static NGShooterCamera s_camera;
 static int16_t s_follow_x = 160, s_follow_y = 112;
@@ -416,7 +418,7 @@ void NEOGEO_USER sky_bg_select(uint8_t id)
         s_far_cloud_ready=1u;
     }
     for(i=0;i<6u;i++) { s_shadow_asset[i]=0u;s_shadow_visible[i]=0u; }
-    s_overhead_cloud=0;s_cloud_tick=0u;
+    s_overhead_cloud=0;s_cloud_tick=0u;s_line_peak=0u;
     /* Palette rotation cycling disabled to eliminate hardware color glitches. */
 }
 
@@ -478,7 +480,15 @@ void NEOGEO_USER sky_bg_draw(void)
     ng_shooter_camera_set_speed(&s_camera, (int16_t)((uint16_t)s_bg_advance * 64u));
     previous_x=sky_bg_camera_x();
     ng_shooter_camera_step(&s_camera, (int16_t)(s_follow_x + 16), s_follow_y);
-    sky_stage_camera_shift((int16_t)(sky_bg_camera_x()-previous_x));
+    {
+        int16_t delta=(int16_t)(sky_bg_camera_x()-previous_x);
+        sky_stage_camera_shift(delta);
+        /* The overhead cloud is weather between the camera and the field:
+         * a pan moves it half again as far as the ground (the depth
+         * module's foreground weight). Held at a screen x it slid along
+         * with the plane whenever the pilot banked. */
+        s_overhead_x_q8-=(int32_t)delta*384;
+    }
     travel = sky_bg_travel();
     phase = (uint16_t)(travel & 255u);
     /* A departing page is wholly below the field at phase224. Refill it
@@ -504,8 +514,18 @@ void NEOGEO_USER sky_bg_draw(void)
             sky_ground_request(slot, page);
     }
     if(s_far_cloud_ready) {
-        NGShooterProjection p=ng_depthfx_shooter_project(&s_camera,196,
-                    (int16_t)((travel/4u+48u)%320u-48),NG_SHOOTER_DISTANT_TERRAIN);
+        /* A cloud bank below the plane but above the ground is nearer the
+         * camera than the terrain: it scrolls a quarter faster than the
+         * ground and pans with it, crossing once every 1024 pixels of
+         * scroll at a new spot. As distant terrain (a quarter of the
+         * ground's scroll and pan) it lingered on screen and drifted along
+         * with the plane. It is decoration: parked below the screen when
+         * the busiest line is near the LSPC's 96 sprites. */
+        uint16_t pass=(uint16_t)(travel+travel/4u);
+        NGShooterProjection p=ng_depthfx_shooter_project(&s_camera,
+                    (int16_t)(32+(int16_t)(((pass>>10)*97u)%192u)),
+                    (int16_t)((pass&1023u)-48u),NG_SHOOTER_TERRAIN);
+        if(p.y>232 || s_line_peak>88u) p.y=232;
         ng_sprite_group_set_pos(&s_far_cloud,(int16_t)(p.x-48),p.y);
         ng_sprite_group_flush(&s_far_cloud);
     }
@@ -551,6 +571,11 @@ static void NEOGEO_USER sky_actor_budget(NGShooterStripBudget *b)
             ng_shooter_budget_add(b,(int16_t)(c->y+c->sprite_offset_y),c->sprite_height,c->sprite_strips);
     }
 }
+uint16_t NEOGEO_USER sky_depth_line_peak(void)
+{
+    return s_line_peak;
+}
+
 void NEOGEO_USER sky_depth_draw(void)
 {
     static const uint16_t slot[6]={45u,48u,53u,58u,63u,68u};
@@ -577,13 +602,18 @@ void NEOGEO_USER sky_depth_draw(void)
         if((s_cloud_tick%960u)==240u && !s_overhead_cloud &&
            (sky_actor_budget(&budget),ng_shooter_budget_peak(&budget)+6u<=88u)) {
             s_overhead_x=(s_route_stage&1u)?96:192;
+            s_overhead_x_q8=(int32_t)s_overhead_x*256;
             s_overhead_cloud=sky_spawn(SKY_KIND_CANOPY,SKY_NATIVE_OVERHEAD_CLOUD,s_overhead_x,-48,
                                        SKY_SCALE_FULL,NG_RENDER_BAND_FX);
             if(s_overhead_cloud)ng_char_set_speed(s_overhead_cloud,0,2);
         }
-        /* Screen-space weather keeps its own course when the pilot banks. */
-        if(s_overhead_cloud)
-            ng_char_set_pos(s_overhead_cloud,s_overhead_x,s_overhead_cloud->y);
+        /* The cloud keeps its place on the field (see sky_bg_draw), not
+         * its place on the screen; panned well off a side, it is gone. */
+        if(s_overhead_cloud) {
+            s_overhead_x=(int16_t)(s_overhead_x_q8>>8);
+            if(s_overhead_x<-96 || s_overhead_x>400) {ng_chars_remove(s_overhead_cloud);s_overhead_cloud=0;}
+            else ng_char_set_pos(s_overhead_cloud,s_overhead_x,s_overhead_cloud->y);
+        }
     }
     sky_actor_budget(&budget);
     peak=ng_shooter_budget_peak(&budget);
@@ -629,6 +659,7 @@ void NEOGEO_USER sky_depth_draw(void)
             peak+=art->strips; /* conservative admission; one final exact walk */
         }
     }
+    s_line_peak=peak;
     /* The inspector's estimate: a full scan, so refreshed every eighth frame. */
     {static uint8_t estimate;if(!(++estimate&7u)) s_depth_strip_peak=ng_shooter_budget_peak(&budget);}
 }

@@ -2,13 +2,20 @@
 #define SKY_DRAW_H
 
 /* Resident critical sprites occupy the upper character-pool slots.
- * Leave96..149 for scenery, pickups and optional effects. */
-#define SKY_FIXED_ENEMY_FIRST   150u
-#define SKY_FIXED_BOSS_FIRST    182u
-#define SKY_FIXED_FACE_FIRST    190u
-#define SKY_FIXED_PLAYER_FIRST  198u
-#define SKY_FIXED_PSHOT_FIRST   206u
-#define SKY_FIXED_ESHOT_FIRST   216u
+ * Leave 96..145 for scenery, pickups and optional effects.
+ *
+ * Order matters twice: a higher sprite draws on top, and on a line with
+ * more than 96 sprites the LSPC drops the highest numbers first. Enemy
+ * shots used to sit last (216..223), so a crowded line lost the bullets
+ * before anything else. Now the pilot portrait and the player's own shots
+ * are the first to go; enemy shots still draw over every aircraft, and
+ * the player draws over ground units and the boss. */
+#define SKY_FIXED_ENEMY_FIRST   146u    /* 4 x 8 */
+#define SKY_FIXED_BOSS_FIRST    178u    /* 8 */
+#define SKY_FIXED_PLAYER_FIRST  186u    /* 8 */
+#define SKY_FIXED_ESHOT_FIRST   194u    /* SKY_MAX_ESHOTS = 12 */
+#define SKY_FIXED_PSHOT_FIRST   206u    /* SKY_MAX_PSHOTS = 10 */
+#define SKY_FIXED_FACE_FIRST    216u    /* 8, ends at NG_SPR_CHAR_LAST */
 
 #include <stdint.h>
 #include "sky.h"
@@ -56,6 +63,8 @@ uint8_t NEOGEO_USER sky_bg_water(int16_t x, int16_t y);
 void NEOGEO_USER sky_bg_follow(int16_t x, int16_t y);
 int16_t NEOGEO_USER sky_bg_camera_x(void);
 void NEOGEO_USER sky_depth_draw(void);
+/* The busiest line's sprite count, as of the last sky_depth_draw. */
+uint16_t NEOGEO_USER sky_depth_line_peak(void);
 void NEOGEO_USER sky_bg_draw(void);
 void NEOGEO_USER sky_bg_hide(void);
 /* Cockpit instrument k (0 attitude, 1 radar, 2 G meter) showing art id,

@@ -155,13 +155,16 @@ def fire(frame, cx, cy, r):
 
 
 def damaged(frame):
+    """Charred plating, no flame: a burning spot this small is the size and
+    colour of an enemy orb and read as a shot stuck to the wing. The smoke
+    trail and the red tint say the jet is hurt."""
     a = frame[:, :, 3] > 0
     ys, xs = np.nonzero(a)
     cy, cx = ys.mean(), xs.mean()
     w = xs.max() - xs.min()
     f = scorch(frame, cx + w * 0.22, cy + 2, max(2.5, w * 0.16))
     f = scorch(f, cx - w * 0.18, cy + 8, max(2, w * 0.1), 0.4)
-    return fire(f, cx + w * 0.22, cy + 2, max(1.5, w * 0.07))
+    return scorch(f, cx + w * 0.22, cy + 2, max(1.5, w * 0.07), 0.8)
 
 
 def destruction(level):

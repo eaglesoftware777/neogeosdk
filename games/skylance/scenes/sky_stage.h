@@ -34,7 +34,7 @@ void NEOGEO_USER sky_stage_parts_update(void);
  * fight inside both budgets instead of silently dropping sprites. */
 #define SKY_MAX_ENEMIES   4u
 #define SKY_MAX_PSHOTS    10u
-#define SKY_MAX_ESHOTS    8u
+#define SKY_MAX_ESHOTS    12u   /* pinned slots; each stage's live cap is in k_difficulty */
 #define SKY_MAX_BLASTS    4u
 #define SKY_MAX_PICKUPS   3u
 

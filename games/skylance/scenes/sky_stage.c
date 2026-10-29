@@ -70,6 +70,43 @@ static const SkyEnemy k_enemy[ENEMY_COUNT] = {
 };
 
 /* ------------------------------------------------------------------ */
+/*  Difficulty                                                          */
+/* ------------------------------------------------------------------ */
+/*
+ * One row per sector, each value measurable in a capture: how often the
+ * roster fires (every base cycle scaled by fire_pct), which extra patterns
+ * it adds (tier), how many enemy shots may be live, and how fast an aimed
+ * speed-3 shot flies (aim_q8, 8.8 pixels per update; other speeds in
+ * proportion). Sector 1 keeps the original rates. Later sectors get harder
+ * through tighter cycles and richer patterns, never through hit points,
+ * and every added pattern leaves a lane open. Documented with the expected
+ * shot counts in games/skylance/DIFFICULTY.md.
+ */
+typedef struct {
+    uint8_t fire_pct;
+    uint8_t tier;
+    uint8_t eshot_cap;
+    uint16_t aim_q8;
+} SkyDifficulty;
+
+static const SkyDifficulty k_difficulty[SKY_STAGE_COUNT] = {
+    /* fire%, tier, cap, aim */
+    { 100u, 0u,  8u, 768u },     /* 1: the released rates */
+    {  92u, 0u,  8u, 800u },
+    {  85u, 1u, 10u, 832u },     /* 3: fighters fire pairs */
+    {  78u, 1u, 10u, 864u },
+    {  72u, 2u, 12u, 896u },     /* 5: aimed drones, wide interceptor fans, heli rockets */
+    {  66u, 2u, 12u, 928u },
+    {  60u, 3u, 12u, 960u },     /* 7: bomber and boat escorts; aimed shots 3.75 px */
+};
+
+/* No aimed shot faster than this, whatever the sector and caller. */
+#define SKY_AIM_MAX_Q8    1088
+/* Hold fire while the busiest line is this close to the LSPC's 96 sprites:
+ * a shot that cannot be drawn is worse than one not fired. */
+#define SKY_FIRE_LINE_LIMIT 94u
+
+/* ------------------------------------------------------------------ */
 /*  Stage table                                                         */
 /* ------------------------------------------------------------------ */
 typedef struct {
@@ -115,6 +152,7 @@ static const SkyStage k_stage[SKY_STAGE_COUNT] = {
 /*  Director state                                                      */
 /* ------------------------------------------------------------------ */
 static uint8_t  s_stage;
+static volatile uint16_t s_stale_bolts;   /* QA: bolts removed for hanging still */
 static uint8_t  s_fire_art;
 static uint8_t  s_fire_boss;       /* the shots now being fired are a boss's */
 static uint8_t  s_difficulty;      /* the operator's setting: 0 easy .. 3 expert */
@@ -421,38 +459,51 @@ static void NEOGEO_USER sky_blast_queue_step(void)
     }
 }
 
-static void NEOGEO_USER sky_spawn_eshot(int16_t x, int16_t y, int16_t vx, int16_t vy)
+static const SkyDifficulty * NEOGEO_USER sky_difficulty(void)
+{
+    return &k_difficulty[s_stage % SKY_STAGE_COUNT];
+}
+
+/* An enemy type's fire cycle this sector. The phases the roster fires on
+ * (20..50) stay inside every cycle: the shortest is 60 * 60% = 36. */
+static uint16_t NEOGEO_USER sky_fire_cycle(uint16_t base)
+{
+    return (uint16_t)(base * sky_difficulty()->fire_pct / 100u);
+}
+
+/*
+ * Every enemy shot leaves its muzzle once, at spawn, and then flies on its
+ * own velocity: nothing ties it to the aircraft that fired it. Velocity is
+ * in 8.8 fixed point, and a shot never starts standing still.
+ */
+static void NEOGEO_USER sky_spawn_bolt(int16_t x, int16_t y, int32_t vx_fp, int32_t vy_fp, uint8_t ring)
 {
     NGCharacter *s;
 
-    if (sky_count_kind(SKY_KIND_ESHOT) >= SKY_MAX_ESHOTS) return;
+    if (sky_count_kind(SKY_KIND_ESHOT) >= sky_difficulty()->eshot_cap) return;
+    if (sky_depth_line_peak() > SKY_FIRE_LINE_LIMIT) return;
+    if (!vx_fp && !vy_fp) vy_fp = NG_FP_ONE;
     s = sky_spawn(SKY_KIND_ESHOT, (uint8_t)(SKY_HOSTILE_FIRST + s_fire_art),
                   x, y, SKY_SCALE_FULL, NG_RENDER_BAND_FRONT);
     if (!s) return;
-    ng_char_set_speed(s, vx, vy);
-    ng_char_set_body(s, -3, -3, 6, 6);
+    ng_char_set_speed_fp(s, vx_fp, vy_fp);
+    if (ring) ng_char_set_body(s, -5, -5, 10, 10);
+    else ng_char_set_body(s, -3, -3, 6, 6);
     s->data0 = s_fire_art;
     s->data1 = 0u;
     s->data2 = s_fire_art == SKY_SEEKER_ART ? sky_seeker_odds() : 0u;
     if (s->data2 && s_chaff_time && sky_seeker_fooled(s->data2)) s->data2 |= SKY_SEEKER_FOOLED;
-    s->flip_y = (uint8_t)(vy > 0);
+    s->flip_y = (uint8_t)(vy_fp > 0);
+}
+
+static void NEOGEO_USER sky_spawn_eshot(int16_t x, int16_t y, int16_t vx, int16_t vy)
+{
+    sky_spawn_bolt(x, y, (int32_t)vx * NG_FP_ONE, (int32_t)vy * NG_FP_ONE, 0u);
 }
 
 static void NEOGEO_USER sky_spawn_ering(int16_t x, int16_t y, int16_t vx, int16_t vy)
 {
-    NGCharacter *s;
-
-    if (sky_count_kind(SKY_KIND_ESHOT) >= SKY_MAX_ESHOTS) return;
-    s = sky_spawn(SKY_KIND_ESHOT, (uint8_t)(SKY_HOSTILE_FIRST + s_fire_art),
-                  x, y, SKY_SCALE_FULL, NG_RENDER_BAND_FRONT);
-    if (!s) return;
-    ng_char_set_speed(s, vx, vy);
-    ng_char_set_body(s, -5, -5, 10, 10);
-    s->data0 = s_fire_art;
-    s->data1 = 0u;
-    s->data2 = s_fire_art == SKY_SEEKER_ART ? sky_seeker_odds() : 0u;
-    if (s->data2 && s_chaff_time && sky_seeker_fooled(s->data2)) s->data2 |= SKY_SEEKER_FOOLED;
-    s->flip_y = (uint8_t)(vy > 0);
+    sky_spawn_bolt(x, y, (int32_t)vx * NG_FP_ONE, (int32_t)vy * NG_FP_ONE, 1u);
 }
 
 NGCharacter * NEOGEO_USER sky_spawn_smoke(int16_t x, int16_t y)
@@ -479,22 +530,30 @@ static void NEOGEO_USER sky_smoke_step(NGCharacter *c)
                  SKY_SCALE_FULL, NG_RENDER_BAND_FX);
 }
 
-/* Fire one orb from (x,y) towards the player, at a fixed speed. */
+/*
+ * Fire one orb from (x,y) towards the player at a fixed speed. The velocity
+ * is worked out in 8.8 fixed point: in whole pixels, a target within 16
+ * pixels of the muzzle truncated to (0,0), and that orb hung at the muzzle
+ * (a gunship's wing, the Keep's wing guns at +-28) for the rest of the
+ * fight while it took a place in the shot pool. Point blank it drops.
+ */
 static void NEOGEO_USER sky_fire_aimed(int16_t x, int16_t y,
                                        int16_t px, int16_t py, int16_t speed)
 {
     int16_t dx = (int16_t)(px - x);
     int16_t dy = (int16_t)(py - y);
-    int16_t adx = (int16_t)(dx < 0 ? -dx : dx);
-    int16_t ady = (int16_t)(dy < 0 ? -dy : dy);
-    int16_t mag = (int16_t)(adx > ady ? adx + (ady >> 1) : ady + (adx >> 1));
+    int16_t adx, ady, mag;
+    int32_t v;
 
+    if (!dx && !dy) dy = 1;
+    adx = (int16_t)(dx < 0 ? -dx : dx);
+    ady = (int16_t)(dy < 0 ? -dy : dy);
     /* Octagonal distance instead of a square root: within ~6% of the
-     * true length, and it keeps the whole aiming path in 16-bit ints. */
-    if (mag < 16) mag = 16;
-    sky_spawn_eshot(x, y,
-                    (int16_t)((int32_t)dx * speed / mag),
-                    (int16_t)((int32_t)dy * speed / mag));
+     * true length, and never 0 here. */
+    mag = (int16_t)(adx > ady ? adx + (ady >> 1) : ady + (adx >> 1));
+    v = (int32_t)speed * sky_difficulty()->aim_q8 / 3;
+    if (v > SKY_AIM_MAX_Q8) v = SKY_AIM_MAX_Q8;
+    sky_spawn_bolt(x, y, (int32_t)dx * v / mag, (int32_t)dy * v / mag, 0u);
 }
 
 static uint8_t NEOGEO_USER sky_spawn_enemy(uint8_t type, int16_t x, int16_t y, int16_t side)
@@ -798,42 +857,62 @@ static void NEOGEO_USER sky_enemy_step(NGCharacter *c, int16_t px, int16_t py)
     } else if (e->fire_odds) {
         /* Paced arcade bullet firing tailored to each specific enemy unit */
         if (c->y >= SKY_FIELD_TOP + 12 && c->y <= SKY_FIELD_BOTTOM - 20) {
+            const uint8_t tier = sky_difficulty()->tier;
             switch (c->data2) {
-            case 0u: /* Drone: High-speed dive; single needle dart at frame 20 */
-                if ((c->data1 % 60u) == 20u) {
-                    sky_spawn_eshot(c->x, (int16_t)(c->y + 8), 0, 4);
+            case 0u: /* Drone: High-speed dive; single needle dart at frame 20,
+                      * aimed from tier 2 */
+                if ((c->data1 % sky_fire_cycle(60u)) == 20u) {
+                    if (tier >= 2u) sky_fire_aimed(c->x, (int16_t)(c->y + 8), px, py, 4);
+                    else sky_spawn_eshot(c->x, (int16_t)(c->y + 8), 0, 4);
                 }
                 break;
-            case 1u: /* Fighter: Rapid aimed 20mm tracer at frame 26 */
-                if ((c->data1 % 72u) == 26u) {
+            case 1u: /* Fighter: Rapid aimed 20mm tracer at frame 26; from
+                      * tier 1 a second one 10 frames later, re-aimed */
+                if ((c->data1 % sky_fire_cycle(72u)) == 26u ||
+                    (tier >= 1u && (c->data1 % sky_fire_cycle(72u)) == 36u)) {
                     sky_fire_aimed(c->x, (int16_t)(c->y + 8), px, py, 3);
                 }
                 break;
-            case 2u: /* Interceptor: 2-way flanking burst with safe center gap at frame 24 */
-                if ((c->data1 % 80u) == 24u) {
+            case 2u: /* Interceptor: 2-way flanking burst with safe center gap at
+                      * frame 24; from tier 2 a wider outer pair, gap kept */
+                if ((c->data1 % sky_fire_cycle(80u)) == 24u) {
                     sky_spawn_eshot((int16_t)(c->x - 10), (int16_t)(c->y + 8), -1, 3);
                     sky_spawn_eshot((int16_t)(c->x + 10), (int16_t)(c->y + 8),  1, 3);
+                    if (tier >= 2u) {
+                        sky_spawn_eshot((int16_t)(c->x - 14), (int16_t)(c->y + 6), -2, 3);
+                        sky_spawn_eshot((int16_t)(c->x + 14), (int16_t)(c->y + 6),  2, 3);
+                    }
                 }
                 break;
-            case 3u: /* Heli: Twin rocket volley at frame 36 */
-                if ((c->data1 % 96u) == 36u) {
+            case 3u: /* Heli: Twin rocket volley at frame 36; from tier 2 an
+                      * aimed rocket follows at 52 */
+                if ((c->data1 % sky_fire_cycle(96u)) == 36u) {
                     sky_spawn_eshot((int16_t)(c->x - 6), (int16_t)(c->y + 8), 0, 3);
                     sky_spawn_eshot((int16_t)(c->x + 6), (int16_t)(c->y + 8), 0, 3);
+                } else if (tier >= 2u && (c->data1 % sky_fire_cycle(96u)) == 52u) {
+                    sky_fire_aimed(c->x, (int16_t)(c->y + 8), px, py, 3);
                 }
                 break;
-            case 4u: /* Missile Boat: Cruise missile at frame 40 */
-                if ((c->data1 % 100u) == 40u) {
+            case 4u: /* Missile Boat: Cruise missile at frame 40; from tier 3
+                      * a slow aimed escort shell with it */
+                if ((c->data1 % sky_fire_cycle(100u)) == 40u) {
                     sky_spawn_eshot(c->x, (int16_t)(c->y + 8), 0, 2);
+                    if (tier >= 3u) sky_fire_aimed(c->x, (int16_t)(c->y + 4), px, py, 2);
                 }
                 break;
             case 5u: /* Tank: Heavy flak shell (ring) at frame 44 */
-                if ((c->data1 % 112u) == 44u) {
+                if ((c->data1 % sky_fire_cycle(112u)) == 44u) {
                     sky_spawn_ering(c->x, (int16_t)(c->y + 8), 0, 2);
                 }
                 break;
-            case 6u: /* Bomber: Carpet bomb expanding ring at frame 50 */
-                if ((c->data1 % 100u) == 50u) {
+            case 6u: /* Bomber: Carpet bomb expanding ring at frame 50; from
+                      * tier 3 two angled bombs open the sides */
+                if ((c->data1 % sky_fire_cycle(100u)) == 50u) {
                     sky_spawn_ering(c->x, (int16_t)(c->y + 10), 0, 2);
+                    if (tier >= 3u) {
+                        sky_spawn_eshot((int16_t)(c->x - 12), (int16_t)(c->y + 10), -1, 2);
+                        sky_spawn_eshot((int16_t)(c->x + 12), (int16_t)(c->y + 10),  1, 2);
+                    }
                 }
                 break;
             default:
@@ -1235,6 +1314,13 @@ uint8_t NEOGEO_USER sky_stage_tick(int16_t player_x, int16_t player_y)
                     break;
                 }
                 if (!decoyed && c->data1 < 75u) s_seekers_counting++;
+            } else if ((!c->vx_fp && !c->vy_fp) || c->data1 > 600u) {
+                /* Nothing may hang in the air: a bolt that stopped, or one
+                 * older than any crossing of the field (at least a pixel
+                 * an update), is gone. */
+                ng_chars_remove(c);
+                s_stale_bolts++;
+                break;
             }
             if (c->y > SKY_FIELD_BOTTOM + 24 || c->y < SKY_FIELD_TOP - 24 ||
                 c->x < SKY_FIELD_X - 16 || c->x > SKY_FIELD_X + SKY_FIELD_W + 16) {

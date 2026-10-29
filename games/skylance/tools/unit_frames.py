@@ -317,7 +317,9 @@ def damaged(frame):
     w, h = xs.max() - xs.min(), ys.max() - ys.min()
     f = scorch(frame, cx + w * 0.2, cy - h * 0.1, max(2, w * 0.14))
     f = scorch(f, cx - w * 0.22, cy + h * 0.16, max(2, w * 0.09), -3)
-    return burn(f, cx + w * 0.2, cy - h * 0.1, max(1.5, w * 0.08))
+    # a charred core, not a fire: a burning spot on a unit this small is an
+    # enemy orb's size and colour, and it read as a shot stuck to the wing
+    return scorch(f, cx + w * 0.2, cy - h * 0.1, max(1.5, w * 0.08), -8)
 
 
 def build(name):
