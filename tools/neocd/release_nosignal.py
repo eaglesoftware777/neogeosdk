@@ -9,6 +9,7 @@ import subprocess
 import zipfile
 
 from tools.neocd.audit_disc import audit_cue
+from tools.neocd import bincue
 from tools.neocd.build import default_compiler
 from tools.neocd.nosignal import verify_reference
 
@@ -60,12 +61,11 @@ Original single-player beat-'em-up: Jay, Zoe or Kai, eight stages, console
 menus and the cartridge VERSION's moves, graphics, effects, voices and music.
 
 This package contains the complete disc/nosignal.chd, including the data
-track and all 18 audio tracks. Select it directly in MAME. To produce a
-burnable mixed-mode CUE/BIN image, use extract_disc.bat or run:
-  chdman extractcd -i disc/nosignal.chd -o extracted/nosignal.cue
-Create the extracted directory first. Burn the resulting CUE with a suitable
-mixed-mode CD writer. Physical hardware has not been tested. The source
-build also produces the full ISO/CUE/WAV set.
+track and all 18 audio tracks. Select it directly in MAME. SD loaders and
+CD-R burners need the BIN/CUE image instead: the same disc is published as
+BINCUE_ZIP (raw MODE1/2352 data track, audio and
+pregaps in one .bin). extract_disc.bat also unpacks the CHD with chdman.
+Physical hardware has not been tested.
 
 Windows MAME:
 1. Supply your own legitimate system ROM and LO data. They are not bundled.
@@ -88,7 +88,7 @@ hardware certification. Front/top models, full campaigns and power-cycle
 save persistence remain unverified. Session progress/unlocks are retained.
 
 Source and build instructions: games/nosignal/cd/README.md in NeoGeoSDK.
-'''.replace('VERSION',f'V{version}')
+'''.replace('VERSION',f'V{version}').replace('BINCUE_ZIP',f'NoSignal-NeoGeoCD-BinCue_v{version}.zip')
     readme+='\nSource commit: '+source+'\nhttps://github.com/eaglesoftware777/neogeosdk/commit/'+source+'\n'
     (stage/'README.txt').write_text(readme)
     for profile in ('stock','eagle'):
@@ -135,8 +135,17 @@ if errorlevel 1 pause
     with zipfile.ZipFile(dest,'w',zipfile.ZIP_DEFLATED,compresslevel=6) as z:
         for p in sorted(stage.rglob('*')):
             if p.is_file():z.write(p,p.relative_to(stage).as_posix())
+    # The burnable image: one raw .bin and its .cue, from the tested ISO and audio.
+    tracks=bincue.parse_cue(build/'disc/nosignal.cue')
+    image=out/'bincue';image.mkdir(exist_ok=False)
+    binary,sheet,layout=bincue.write(tracks,image,'nosignal')
+    if [(t['track'],t['lba'],t['frames']) for t in layout]!=bincue.disc_layout(tracks):
+        raise ValueError('BIN/CUE track layout differs from the tested disc')
+    burnable=bincue.package(out/f'NoSignal-NeoGeoCD-BinCue_v{version}.zip',binary,sheet,layout,
+                            f'No Signal Z Alpha V{version}',dest.name+' (disc/nosignal.chd)')
     (out/f'NoSignal-NeoGeoCD-README_v{version}.txt').write_text(readme)
-    (out/f'NoSignal-NeoGeoCD-SHA256_v{version}.txt').write_text(hashlib.sha256(dest.read_bytes()).hexdigest()+'  '+dest.name+'\n')
+    (out/f'NoSignal-NeoGeoCD-SHA256_v{version}.txt').write_text(''.join(
+        hashlib.sha256(z.read_bytes()).hexdigest()+'  '+z.name+'\n' for z in (dest,burnable)))
     print(dest.name, dest.stat().st_size)
     return dest
 
