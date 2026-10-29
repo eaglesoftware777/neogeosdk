@@ -1,0 +1,57 @@
+Maiya: Super Nature Girl v4.0.1: build 758f28909141 (Maiya-WIP-EagleBIOS_v4.zip, packed 2026-10-26T20:25:36)
+Proposed entries for the emulator databases, made by tools/rom_registry.py from the bytes of Maiya-WIP-EagleBIOS_v4.zip.
+Each is the database's current entry with the new sizes and hashes; layout and macros are the maintainers' own.
+
+=== hbmame: maiya (now "Maiya Super Nature Girl (v4)") ===
+
+Changed ROMs:
+  780.p1             0x0080000 5fe28a51  ->  0x0080000 7f321556
+  780.s1             0x0020000 5c7951e1  ->  0x0020000 5c7951e1
+  780.m1             0x0020000 ce7717bd  ->  0x0020000 ce7717bd
+  780.v1             0x079ab00 127b89b4  ->  0x079ab00 127b89b4
+  780.c1             0x0400000 48638505  ->  0x0400000 131fc3fc
+  780.c2             0x0400000 66a5c0e2  ->  0x0400000 55a6ddcf
+
+ROM_START( maiya )
+	ROM_REGION( 0x100000, "maincpu", 0 )
+	ROM_LOAD16_WORD_SWAP( "780.p1", 0, 0x80000, CRC(7f321556) SHA1(1134348f5dae5bd92abaed53c12d45691874b9be) )
+
+	NEO_SFIX_128K( "780.s1", CRC(5c7951e1) SHA1(b0a45c2085b5ef49f7a197bf403f103be2f21f4f) )
+
+	NEO_BIOS_AUDIO_128K( "780.m1", CRC(ce7717bd) SHA1(66f3ef28d76104adeed931bc2f6b65a5f5e4c4e8) )
+
+	ROM_REGION( 0x800000, "ymsnd:adpcma", ROMREGION_ERASE00 )
+	ROM_LOAD( "780.v1", 0, 0x79ab00, CRC(127b89b4) SHA1(8ec212c59da5e650ed6978cf358e24220b5d33c3) )
+
+	ROM_REGION( 0x800000, "sprites", ROMREGION_ERASE00 )
+	ROM_LOAD16_BYTE( "780.c1", 0, 0x400000, CRC(131fc3fc) SHA1(80de27f5e2a2efd86163048dc2af8a4e04bae868) )
+	ROM_LOAD16_BYTE( "780.c2", 1, 0x400000, CRC(55a6ddcf) SHA1(443264b01d92e49cfe77d0ab02238883c6a7594d) )
+ROM_END
+
+GAME( 2026, maiya,        neogeo,   neogeo_noslot,   neogeo,  neogeo_state, init_neogeo,   ROT0, "Eagle Software", "Maiya Super Nature Girl (v4.0.1)", MACHINE_SUPPORTS_SAVE )
+
+=== fbneo: maiya (now "Maiya: Super Nature Girl (HB, v4)") ===
+
+Changed ROMs:
+  maiya-p1.p1        0x0080000 ecef6baa  ->  0x0080000 7f321556
+  maiya-s1.s1        0x0020000 5c7951e1  ->  0x0020000 5c7951e1
+  maiya-c1.c1        0x0400000 48638505  ->  0x0400000 131fc3fc
+  maiya-c2.c2        0x0400000 66a5c0e2  ->  0x0400000 55a6ddcf
+  maiya-m1.m1        0x0020000 ce7717bd  ->  0x0020000 ce7717bd
+  maiya-v1.v1        0x079ab00 127b89b4  ->  0x079ab00 127b89b4
+
+static struct BurnRomInfo maiyaRomDesc[] = {
+	{ "maiya-p1.p1",    0x080000, 0x7f321556, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
+
+	{ "maiya-s1.s1",    0x020000, 0x5c7951e1, 2 | BRF_GRA },           //  1 Text layer tiles
+
+	{ "maiya-c1.c1",    0x400000, 0x131fc3fc, 3 | BRF_GRA },           //  2 Sprite data
+	{ "maiya-c2.c2",    0x400000, 0x55a6ddcf, 3 | BRF_GRA },           //  3
+
+	{ "maiya-m1.m1",    0x020000, 0xce7717bd, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code
+
+	{ "maiya-v1.v1",    0x79ab00, 0x127b89b4, 5 | BRF_SND },           //  5 Sound data
+};
+
+Description: Maiya: Super Nature Girl (HB, v4.0.1)
+

@@ -19,7 +19,10 @@ bios/: no SNK BIOS and no UniBIOS, whatever sits in roms/neogeo or
 roms/aes. An existing file is never overwritten (released files stay as
 they were shared), unless --replace asks to rebuild this version's own
 files: then only those whose content changes are rewritten, and the
-script lists them. Files of other versions are never touched.
+script lists them. Files of other versions are never touched. A version
+that went out (a GitHub release asset, or a build an emulator database
+lists; see releases/rom-registry.json) is frozen: --replace refuses to
+change its bytes, and the new build needs a new version number.
 
     python3 tools/make_release.py --game maiya --game-id 780 --prefix Maiya \\
         --name "Maiya: Super Nature Girl" --version v2 [--readme notes.txt]
@@ -27,6 +30,7 @@ script lists them. Files of other versions are never touched.
 
 import argparse
 import hashlib
+import json
 import shutil
 import sys
 import tempfile
@@ -76,6 +80,22 @@ def place(new, dest):
     return "new"
 
 
+def published_version(prefix, version):
+    """Where a release version went out, from releases/rom-registry.json
+    (tools/rom_registry.py): GitHub tags and emulator database sets, or None."""
+    reg = ROOT / "releases" / "rom-registry.json"
+    if not reg.is_file():
+        raise SystemExit("make_release: releases/rom-registry.json is missing; run tools/rom_registry.py before --replace")
+    where = set()
+    for b in json.loads(reg.read_text())["builds"]:
+        if b.get("prefix") == prefix and b.get("version") == version:
+            where.update(x["tag"] for x in b["published"])
+            if b.get("pushed"):
+                where.add("public repository")
+            where.update(b.get("external_matches", []))
+    return ", ".join(sorted(where)) or None
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--game", required=True)
@@ -104,6 +124,7 @@ def main():
     clash = [n for n in names.values() if (out / n).exists()]
     if clash and not args.replace:
         raise SystemExit("make_release: these exist already and stay as released: " + ", ".join(clash))
+    frozen = published_version(p, v) if clash else None
     for plat in ("mvs", "aes"):
         for part in PARTS:
             if not (src / plat / "roms" / g / f"{i}-{part}.{part}").is_file():
@@ -145,6 +166,14 @@ def main():
                 for info in z.infolist():
                     if info.filename.startswith(("roms/neogeo/", "roms/aes/")) and info.CRC not in eagle_crc:
                         raise SystemExit(f"make_release: {names[key]}: {info.filename} is not EagleBIOS")
+        # A version that went out (GitHub asset, emulator database entry) is
+        # immutable: --replace may only rewrite it with the very same bytes.
+        if frozen:
+            changed = [n for k, n in names.items() if k not in ("manifest", "readme", "changelog")
+                       and (out / n).exists() and (out / n).read_bytes() != (stage / n).read_bytes()]
+            if changed:
+                raise SystemExit(f"make_release: {p} {v} is published ({frozen}); these would change: " + ", ".join(changed)
+                                 + ". Release the build as a new version (see docs/releases/VERSIONING_POLICY.md).")
         # a released file whose content is the same stays byte for byte as it was shared
         state = {}
         for key, n in names.items():

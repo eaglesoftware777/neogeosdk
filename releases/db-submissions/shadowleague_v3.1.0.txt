@@ -1,0 +1,57 @@
+Shadow League Fighting v3.1.0: build 5a598ffe6f33 (ShadowLeague-WIP-EagleBIOS_v3.1.0.zip, packed 2026-10-29T14:53:46)
+Proposed entries for the emulator databases, made by tools/rom_registry.py from the bytes of ShadowLeague-WIP-EagleBIOS_v3.1.0.zip.
+Each is the database's current entry with the new sizes and hashes; layout and macros are the maintainers' own.
+
+=== hbmame: shadowlf (now "Shadow League Fighting (v3)") ===
+
+Changed ROMs:
+  781.p1             0x0300000 20a6ea2d  ->  0x0300000 40bcc043
+  781.s1             0x0020000 636d9736  ->  0x0020000 636d9736
+  781.m1             0x0020000 ceabdb57  ->  0x0020000 ceabdb57
+  781.v1             0x079c100 63c1b4e6  ->  0x079c100 63c1b4e6
+  781.c1             0x0800000 a8420eed  ->  0x0800000 e1404a7e
+  781.c2             0x0800000 efd2b313  ->  0x0800000 caca4020
+
+ROM_START( shadowlf )
+	ROM_REGION( 0x300000, "maincpu", 0 )
+	ROM_LOAD16_WORD_SWAP( "781.p1", 0, 0x300000, CRC(40bcc043) SHA1(81bb569ad54a2b363616b29ab2df90aa4915d743) )
+
+	NEO_SFIX_128K( "781.s1", CRC(636d9736) SHA1(81472c10d87a63717617c79dbb89eadc7f6c6a7f) )
+
+	NEO_BIOS_AUDIO_128K( "781.m1", CRC(ceabdb57) SHA1(f59d59155c52ebc177933ab9d4c9a26f499946d5) )
+
+	ROM_REGION( 0x800000, "ymsnd:adpcma", ROMREGION_ERASE00 )
+	ROM_LOAD( "781.v1", 0, 0x79c100, CRC(63c1b4e6) SHA1(718aa37a1c3754fb62196ddb121a00c323bc8533) )
+
+	ROM_REGION( 0x1000000, "sprites", ROMREGION_ERASE00 )
+	ROM_LOAD16_BYTE( "781.c1", 0, 0x800000, CRC(e1404a7e) SHA1(11fa2552e819cf796c57ec0f0f4153d79f6bde6b) )
+	ROM_LOAD16_BYTE( "781.c2", 1, 0x800000, CRC(caca4020) SHA1(453e18a7c02a78ba778b12f9db75452154e86b6e) )
+ROM_END
+
+GAME( 2026, shadowlf,     neogeo,   neogeo_noslot,   neogeo,  neogeo_state, init_neogeo,   ROT0, "Eagle Software", "Shadow League Fighting (v3.1.0)", MACHINE_SUPPORTS_SAVE )
+
+=== fbneo: shadowlf (now "Shadow League Fighting (HB, v3)") ===
+
+Changed ROMs:
+  shadowlf_p1.p1     0x0300000 127535e0  ->  0x0300000 40bcc043
+  shadowlf_s1.s1     0x0020000 636d9736  ->  0x0020000 636d9736
+  shadowlf_c1.c1     0x0800000 ac935b79  ->  0x0800000 e1404a7e
+  shadowlf_c2.c2     0x0800000 d65c95ab  ->  0x0800000 caca4020
+  shadowlf_m1.m1     0x0020000 ceabdb57  ->  0x0020000 ceabdb57
+  shadowlf_v1.v1     0x079c100 63c1b4e6  ->  0x079c100 63c1b4e6
+
+static struct BurnRomInfo shadowlfRomDesc[] = {
+	{ "shadowlf_p1.p1",    0x300000, 0x40bcc043, 1 | BRF_ESS | BRF_PRG }, //  0 68K code
+
+	{ "shadowlf_s1.s1",    0x020000, 0x636d9736, 2 | BRF_GRA },           //  1 Text layer tiles
+
+	{ "shadowlf_c1.c1",    0x800000, 0xe1404a7e, 3 | BRF_GRA },           //  2 Sprite data
+	{ "shadowlf_c2.c2",    0x800000, 0xcaca4020, 3 | BRF_GRA },           //  3
+
+	{ "shadowlf_m1.m1",    0x020000, 0xceabdb57, 4 | BRF_ESS | BRF_PRG }, //  4 Z80 code
+
+	{ "shadowlf_v1.v1",    0x79c100, 0x63c1b4e6, 5 | BRF_SND },           //  5 Sound data
+};
+
+Description: Shadow League Fighting (HB, v3.1.0)
+

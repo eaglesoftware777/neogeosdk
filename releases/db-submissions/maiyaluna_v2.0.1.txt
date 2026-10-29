@@ -1,0 +1,32 @@
+Maiya & Luna v2.0.1: build 7f446d36b854 (MaiyaLuna-WIP-EagleBIOS_v2.zip, packed 2026-10-26T19:55:14)
+Proposed entries for the emulator databases, made by tools/rom_registry.py from the bytes of MaiyaLuna-WIP-EagleBIOS_v2.zip.
+Each is the database's current entry with the new sizes and hashes; layout and macros are the maintainers' own.
+
+=== hbmame: maiyaluna (now "Maiya & Luna (v2)") ===
+
+Changed ROMs:
+  783.p1             0x0080000 aa44e49a  ->  0x0080000 c9b74f94
+  783.s1             0x0020000 74a73a67  ->  0x0020000 74a73a67
+  783.m1             0x0020000 f8436258  ->  0x0020000 f8436258
+  783.v1             0x076c400 0518d9fc  ->  0x076c400 0518d9fc
+  783.c1             0x0400000 b73a67ac  ->  0x0400000 b73a67ac
+  783.c2             0x0400000 9707b70a  ->  0x0400000 9707b70a
+
+ROM_START( maiyaluna )
+	ROM_REGION( 0x100000, "maincpu", 0 )
+	ROM_LOAD16_WORD_SWAP( "783.p1", 0, 0x80000, CRC(c9b74f94) SHA1(0ae9a7ce8f6a8c738798aeeddb8f42d99592ad01) )
+
+	NEO_SFIX_128K( "783.s1", CRC(74a73a67) SHA1(3046b5ef0309239297521ca5c5ec82d9081d9865) )
+
+	NEO_BIOS_AUDIO_128K( "783.m1", CRC(f8436258) SHA1(6ce3894e89a59cca4c5af8c656ba9eb4e0ca0941) )
+
+	ROM_REGION( 0x800000, "ymsnd:adpcma", ROMREGION_ERASE00 )
+	ROM_LOAD( "783.v1", 0, 0x76c400, CRC(0518d9fc) SHA1(b328636be66f6aedd5fcc5b48a59434858201163) )
+
+	ROM_REGION( 0x800000, "sprites", 0 )
+	ROM_LOAD16_BYTE( "783.c1", 0, 0x400000, CRC(b73a67ac) SHA1(3dcc38dc7dd22462a80209e1c22fee704cd44f82) )
+	ROM_LOAD16_BYTE( "783.c2", 1, 0x400000, CRC(9707b70a) SHA1(33f0ea6b4d94dfd40643a49df347fa2058f2a2f9) )
+ROM_END
+
+GAME( 2026, maiyaluna,    neogeo,   neogeo_noslot,   neogeo,  neogeo_state, init_neogeo,   ROT0, "Eagle Software", "Maiya & Luna (v2.0.1)", MACHINE_SUPPORTS_SAVE )
+

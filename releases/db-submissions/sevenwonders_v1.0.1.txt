@@ -1,0 +1,32 @@
+Seven Wonders Puzzles v1.0.1: build 282b83a2daf1 (SevenWonders-WIP-EagleBIOS_v1.zip, packed 2026-10-26T19:49:42)
+Proposed entries for the emulator databases, made by tools/rom_registry.py from the bytes of SevenWonders-WIP-EagleBIOS_v1.zip.
+Each is the database's current entry with the new sizes and hashes; layout and macros are the maintainers' own.
+
+=== hbmame: 7wonders (now "Seven Wonders Puzzles (v1)") ===
+
+Changed ROMs:
+  782.p1             0x0080000 30264e7a  ->  0x0080000 51cbbaee
+  782.s1             0x0020000 eb99e197  ->  0x0020000 ba1031c2
+  782.m1             0x0020000 a8031d28  ->  0x0020000 c965f1bf
+  782.v1             0x0324400 afec46cd  ->  0x039f000 565b83c5
+  782.c1             0x0400000 20efee4b  ->  0x0400000 d77a28cd
+  782.c2             0x0400000 2e56f9b5  ->  0x0400000 274b42d0
+
+ROM_START( 7wonders )
+	ROM_REGION( 0x100000, "maincpu", 0 )
+	ROM_LOAD16_WORD_SWAP( "782.p1", 0, 0x80000, CRC(51cbbaee) SHA1(f1737b00cd8e0a068a747ed440b1558139d7c7e1) )
+
+	NEO_SFIX_128K( "782.s1", CRC(ba1031c2) SHA1(f8db5fe1854761beea03df281331c09a0384e8f4) )
+
+	NEO_BIOS_AUDIO_128K( "782.m1", CRC(c965f1bf) SHA1(79e90fdf1500a7971d32c3de893db1bab802a32e) )
+
+	ROM_REGION( 0x400000, "ymsnd:adpcma", ROMREGION_ERASE00 )
+	ROM_LOAD( "782.v1", 0, 0x39f000, CRC(565b83c5) SHA1(d09b6e7ea4f8ca13a9be60a6d5df33bf672e1040) )
+
+	ROM_REGION( 0x800000, "sprites", 0 )
+	ROM_LOAD16_BYTE( "782.c1", 0, 0x400000, CRC(d77a28cd) SHA1(33a816e9f0e099146e84518ee826587316bad204) )
+	ROM_LOAD16_BYTE( "782.c2", 1, 0x400000, CRC(274b42d0) SHA1(50b09325593d07ef2533a8f1ca30c9e9c84cb6ab) )
+ROM_END
+
+GAME( 2026, 7wonders,     neogeo,   neogeo_noslot,   neogeo,  neogeo_state, init_neogeo,   ROT0, "Eagle Software", "Seven Wonders Puzzles (v1.0.1)", MACHINE_SUPPORTS_SAVE )
+

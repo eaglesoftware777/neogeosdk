@@ -1,0 +1,32 @@
+Mahjong Demo v1.0.1: build 8b12abace5c6 (MahjongDemo-WIP-EagleBIOS_v1.zip, packed 2026-10-26T19:51:28)
+Proposed entries for the emulator databases, made by tools/rom_registry.py from the bytes of MahjongDemo-WIP-EagleBIOS_v1.zip.
+Each is the database's current entry with the new sizes and hashes; layout and macros are the maintainers' own.
+
+=== hbmame: mahjongd (now "Mahjong Demo (v1)") ===
+
+Changed ROMs:
+  785.p1             0x0080000 c88f560f  ->  0x0080000 dca249c1
+  785.s1             0x0020000 fa8680fe  ->  0x0020000 fa8680fe
+  785.m1             0x0020000 a227f905  ->  0x0020000 a227f905
+  785.v1             0x0200000 f04d0f8d  ->  0x0200000 f04d0f8d
+  785.c1             0x0400000 96cd3e55  ->  0x0400000 96cd3e55
+  785.c2             0x0400000 f9d40dc0  ->  0x0400000 f9d40dc0
+
+ROM_START( mahjongd )
+	ROM_REGION( 0x100000, "maincpu", 0 )
+	ROM_LOAD16_WORD_SWAP( "785.p1", 0, 0x80000, CRC(dca249c1) SHA1(1f0ded71ecb520c590d052c21a312a3b8da8f317) )
+
+	NEO_SFIX_128K( "785.s1", CRC(fa8680fe) SHA1(b15c9960b777e6c235d84e08066c19c2492948b2) )
+
+	NEO_BIOS_AUDIO_128K( "785.m1", CRC(a227f905) SHA1(1c1a9332380cee7fb29e0c6bb205f26b809a7200) )
+
+	ROM_REGION( 0x200000, "ymsnd:adpcma", ROMREGION_ERASE00 )
+	ROM_LOAD( "785.v1", 0, 0x200000, CRC(f04d0f8d) SHA1(276f8a8e420e8e5d5418c887abaf0b6dc3c23eed) )
+
+	ROM_REGION( 0x800000, "sprites", 0 )
+	ROM_LOAD16_BYTE( "785.c1", 0, 0x400000, CRC(96cd3e55) SHA1(372e185127b3d3f7fb20ef4ffaaf24ee30a09980) )
+	ROM_LOAD16_BYTE( "785.c2", 1, 0x400000, CRC(f9d40dc0) SHA1(1de0002667d1771308f216464f6d84933f9f7afb) )
+ROM_END
+
+GAME( 2026, mahjongd,     neogeo,   neogeo_noslot,   neogeo,  neogeo_state, init_neogeo,   ROT0, "Eagle Software", "Mahjong Demo (v1.0.1)", MACHINE_SUPPORTS_SAVE )
+
