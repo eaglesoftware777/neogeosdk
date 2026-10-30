@@ -335,6 +335,7 @@ typedef struct {
     NGFStriker striker[2];                    /* striker summon actors */
     uint8_t training;                         /* practice damage cannot cause a KO */
     uint8_t round_seconds;
+    uint8_t intro_frames;                     /* round intro; the fight call comes 36 before its end */
     /* Presentation queue telemetry survives round changes. Eviction and
      * rejection both count as loss; critical loss is reported separately. */
     uint32_t events_dropped, events_critical_dropped;
@@ -358,6 +359,9 @@ void     NEOGEO_USER ngf_match_init(NGFMatch *m, const NGFFighterDef *p1, const 
                                     int16_t stage_w, uint16_t seed);
 void     NEOGEO_USER ngf_round_start(NGFMatch *m);
 uint8_t  NEOGEO_USER ngf_set_round_seconds(NGFMatch *m, uint8_t seconds);
+/* Frames before each round's fight (40-255, default 96): room for a game's own
+ * pre-round ceremony. NGF_EV_FIGHT comes 36 frames before the end. */
+void     NEOGEO_USER ngf_set_intro_frames(NGFMatch *m, uint8_t frames);
 /* One frame: raw controller bits for each side (ignored for CPU sides). */
 void     NEOGEO_USER ngf_match_step(NGFMatch *m, uint8_t raw1, uint8_t raw2);
 void     NEOGEO_USER ngf_set_cpu(NGFMatch *m, uint8_t who, uint8_t level);  /* level 0 = human */

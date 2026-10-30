@@ -292,6 +292,27 @@ static void NEOGEO_USER vs_screen(uint8_t stage_fighter)
 
 /* ------------------------------------------------------------ match */
 static uint8_t s_feedback_timer;
+static uint8_t s_ref_phase = 0xFFu;
+
+/* ONE, TWO, THREE under the round title, then clear for the fight call.
+ * The figure itself is drawn with the match sprites. */
+static void NEOGEO_USER referee_call(const NGFMatch *m)
+{
+    uint16_t t = m->state_timer;
+    uint16_t intro = m->intro_frames ? m->intro_frames : 96u;
+    uint16_t slash = (uint16_t)(intro > 36u ? intro - 36u : intro);
+    uint8_t phase = 0u;
+    if (t >= slash) phase = 4u;
+    else if (t >= (uint16_t)(intro * 58u / 100u)) phase = 3u;
+    else if (t >= (uint16_t)(intro * 40u / 100u)) phase = 2u;
+    else if (t >= (uint16_t)(intro * 22u / 100u)) phase = 1u;
+    if (phase == s_ref_phase) return;
+    s_ref_phase = phase;
+    slf_clear_rows(18u, 19u);
+    if (phase == 0u || phase == 4u) return;
+    slf_puts_tall_center(18u, phase == 1u ? "ONE" : phase == 2u ? "TWO" : "THREE", SLF_TALL_SILVER);
+    slf_sfx(phase == 3u ? SLF_SFX_WHOOSH : SLF_SFX_SELECT);
+}
 
 static void NEOGEO_USER announce_clear(void)
 {
@@ -489,6 +510,8 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
     if (lv0) ngf_set_cpu_difficulty(m, 0u, lv0); else ngf_set_cpu(m, 0u, 0u);
     if (lv1) ngf_set_cpu_difficulty(m, 1u, lv1); else ngf_set_cpu(m, 1u, 0u);
     ngf_set_round_seconds(m, ng_sys_is_mvs() ? slf_seconds_from_dip(ng_dip_option(2)) : slf_home_seconds);
+    /* Room for the shadow referee to walk in and count before the fight call. */
+    ngf_set_intro_frames(m, 200u);
     if (mode == MODE_DEMO) slf_puts_center(22u, "DEMO PLAY", SLF_PAL_GOLD);
     for (;;) {
         slf_frame();
@@ -547,7 +570,9 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
             last_state = m->state;
             last_round = m->round;
         }
-        if (m->state == NGF_M_INTRO && m->state_timer == 60u) announce(m, NGF_M_FIGHT);
+        if (m->state == NGF_M_INTRO && m->state_timer == (uint16_t)(m->intro_frames - 36u)) announce(m, NGF_M_FIGHT);
+        if (m->state == NGF_M_INTRO) referee_call(m);
+        else s_ref_phase = 0xFFu;
         if (counter_clear && !--counter_clear) announce_clear();
         if (team) {
             uint8_t side, changed = 0u;

@@ -704,16 +704,74 @@ static void test_throw_anchors_and_corners(void)
     assert(ngf_fighter_px(&m.f[1]) - ngf_fighter_px(&m.f[0]) == 24 + (28 - 20));
     run(6, 0u, 0u);
     assert(ngf_fighter_py(&m.f[1]) >= 31 && ngf_fighter_py(&m.f[1]) <= 32);
-    /* Corner back-throw keeps thrower and target separated at the stage wall. */
-    authored.moves = back_moves;
+    /* A forward throw from the corner drops the target against the stage
+     * wall behind the thrower and keeps the two separated. */
     fight_at(40);
     m.f[0].def = &authored;
     m.f[0].x = 24 * 256; m.f[1].x = 64 * 256;
     m.f[0].facing_left = 0u; m.f[1].facing_left = 1u;
-    run(1, NGF_RAW_LEFT | NGF_BTN_C, 0u);
+    run(1, NGF_RAW_RIGHT | NGF_BTN_C, 0u);
     assert(m.f[1].state == NGF_S_THROWN);
     run(7, 0u, 0u);
     assert(ngf_fighter_px(&m.f[1]) == 16 && ngf_fighter_px(&m.f[0]) == 40);
+    /* The back throw tosses the target forward instead. */
+    authored.moves = back_moves;
+    fight_at(40);
+    m.f[0].def = &authored;
+    run(1, NGF_RAW_LEFT | NGF_BTN_C, 0u);
+    assert(m.f[1].state == NGF_S_THROWN);
+    run(7, 0u, 0u);
+    assert(ngf_fighter_px(&m.f[1]) > ngf_fighter_px(&m.f[0]));
+}
+
+static void throw_until_down(void)
+{
+    uint16_t t;
+    for (t = 0; t < 200u && (m.f[1].state == NGF_S_THROWN || m.f[1].state == NGF_S_FALL); t++) run(1, 0u, 0u);
+    assert(m.f[1].grounded);
+}
+
+static void test_throw_sides_and_attacking_targets(void)
+{
+    NGFFighterDef backward = tester;
+    NGFMove back_moves[sizeof(moves) / sizeof(moves[0])];
+    memcpy(back_moves, moves, sizeof(moves));
+    back_moves[3].motion = NGF_MOTION_BACK;
+    backward.moves = back_moves;
+    /* Forward throw: over the shoulder, the two change sides. */
+    fight_at(40);
+    run(1, NGF_RAW_RIGHT | NGF_BTN_C, 0u);
+    assert(m.f[1].state == NGF_S_THROWN);
+    throw_until_down();
+    assert(ngf_fighter_px(&m.f[1]) < ngf_fighter_px(&m.f[0]) - 30);
+    /* Back throw: tossed forward, same sides. */
+    fight_at(40);
+    m.f[0].def = &backward;
+    run(1, NGF_RAW_LEFT | NGF_BTN_C, 0u);
+    assert(m.f[1].state == NGF_S_THROWN);
+    throw_until_down();
+    assert(ngf_fighter_px(&m.f[1]) > ngf_fighter_px(&m.f[0]) + 30);
+    /* A target starting a jab at point blank is grabbed, not left to hit. */
+    fight_at(40);
+    run(1, 0u, NGF_BTN_A);
+    assert(m.f[1].state == NGF_S_ATTACK);
+    run(1, NGF_RAW_RIGHT | NGF_BTN_C, 0u);
+    assert(m.f[0].move && m.f[0].move->kind == NGF_KIND_THROW && m.f[1].state == NGF_S_THROWN);
+    /* Piled into the push boxes, stick neutral: the heavy throws. A back
+     * hold does not, because this fighter has no back throw. One step
+     * outside that pile, and far away, C stays a normal. */
+    fight_at(20);
+    run(1, NGF_BTN_C, 0u);
+    assert(m.f[0].move && m.f[0].move->kind == NGF_KIND_THROW && m.f[1].state == NGF_S_THROWN);
+    fight_at(20);
+    run(1, NGF_RAW_LEFT | NGF_BTN_C, 0u);
+    assert(!(m.f[0].move && m.f[0].move->kind == NGF_KIND_THROW));
+    fight_at(60);
+    run(1, NGF_BTN_C, 0u);
+    assert(!(m.f[0].move && m.f[0].move->kind == NGF_KIND_THROW));
+    fight_at(120);
+    run(1, NGF_BTN_C, 0u);
+    assert(!(m.f[0].move && m.f[0].move->kind == NGF_KIND_THROW));
 }
 
 int main(void)
@@ -738,6 +796,7 @@ int main(void)
     test_authored_cancel_routes();
     test_juggle_budget_and_landing_reset();
     test_throw_anchors_and_corners();
+    test_throw_sides_and_attacking_targets();
     printf("fight_test: ok (NGFMatch %u bytes)\n", (unsigned)sizeof(NGFMatch));
     return 0;
 }

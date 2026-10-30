@@ -779,6 +779,8 @@ static void NEOGEO_USER fx_draw(void)
     }
 }
 
+static void NEOGEO_USER referee_show(const NGFMatch *m);
+
 void NEOGEO_USER slf_match_draw(const NGFMatch *m, const uint8_t *def_index)
 {
     uint8_t i, p, s;
@@ -893,6 +895,92 @@ void NEOGEO_USER slf_match_draw(const NGFMatch *m, const uint8_t *def_index)
     }
 
     fx_draw();
+    if (m->state == NGF_M_INTRO && !slf_training_active) referee_show(m);
+}
+
+/* Kenji, drawn as a dark silhouette. He is the pre-round referee. */
+#define REFEREE_DEF 0u
+static uint8_t s_referee_pal;
+static uint8_t s_referee_round = 0xFFu;
+
+static uint16_t NEOGEO_USER shadow_color(uint16_t c)
+{
+    uint16_t hi = (uint16_t)(c & 0x8000u);
+    uint16_t r = (uint16_t)(((c >> 10) & 31u) / 4u);
+    uint16_t g = (uint16_t)(((c >> 5) & 31u) / 4u);
+    uint16_t b = (uint16_t)((c & 31u) / 3u);
+    if (c && r < 1u && g < 1u && b < 2u) b = 2u;
+    return (uint16_t)(hi | (r << 10) | (g << 5) | b);
+}
+
+static uint8_t NEOGEO_USER referee_sprite(uint8_t anim, uint16_t tick)
+{
+    const NGFFighterDef *d = slf_fighter_defs[REFEREE_DEF];
+    const NGFAnim *a = &d->anims[anim];
+    uint16_t total = 0u, elapsed;
+    uint8_t i;
+    if (!a->count) return 0u;
+    for (i = 0u; i < a->count; i++) {
+        uint8_t time = d->frames[a->first + i].time;
+        total = (uint16_t)(total + (time == 255u ? 12u : time));
+    }
+    elapsed = (uint16_t)(tick % (total ? total : 1u));
+    for (i = 0u; i < a->count; i++) {
+        uint8_t time = d->frames[a->first + i].time;
+        uint16_t len = time == 255u ? 12u : time;
+        if (elapsed < len) break;
+        elapsed = (uint16_t)(elapsed - len);
+    }
+    if (i >= a->count) i = (uint8_t)(a->count - 1u);
+    return d->frames[a->first + i].sprite;
+}
+
+/* Walk in, count, then a short dash before the fight call. The striker
+ * slot is free during the intro, and the support palettes are darkened
+ * so the figure reads as a shadow rather than a third fighter. */
+static void NEOGEO_USER referee_show(const NGFMatch *m)
+{
+    uint16_t t = m->state_timer;
+    uint16_t intro = m->intro_frames ? m->intro_frames : 96u;
+    uint16_t slash = (uint16_t)(intro > 36u ? intro - 36u : intro);
+    uint16_t walk_end = (uint16_t)(intro * 22u / 100u);
+    uint8_t anim = NGF_A_IDLE;
+    int16_t x = 150;
+    uint8_t bank;
+    if (!walk_end) walk_end = 1u;
+    /* A striker call during the round overwrites these banks. Darken again
+     * on the next intro, once, not every frame. */
+    if (m->round != s_referee_round) {
+        s_referee_round = m->round;
+        s_referee_pal = 0u;
+    }
+    if (t >= slash) {
+        if (s_striker_live[0]) {
+            actor_hide(2u);
+            s_striker_live[0] = 0u;
+        }
+        return;
+    }
+    if (!s_referee_pal) {
+        for (bank = 0u; bank < slf_fighter_bank_counts[REFEREE_DEF]; bank++) {
+            uint16_t dark[16];
+            uint8_t i;
+            const uint16_t *src = slf_fighter_bank_pals[slf_fighter_bank_offsets[REFEREE_DEF] + bank][0];
+            for (i = 0u; i < 16u; i++) dark[i] = i ? shadow_color(src[i]) : 0u;
+            ng_palfx_screen_load((uint8_t)(PAL_SUPPORT + bank), dark);
+        }
+        s_referee_pal = 1u;
+    }
+    if (t < walk_end) {
+        x = (int16_t)(20 + (int32_t)t * 130 / walk_end);
+        anim = NGF_A_WALK_F;
+    } else if (t + 28u < slash) {
+        anim = NGF_A_INTRO;                 /* his bow while he counts */
+    } else {
+        anim = NGF_A_DASH;
+    }
+    actor_draw(2u, &s_striker_live[0], SPR_STRIKER, REFEREE_DEF, referee_sprite(anim, t),
+               x, (int16_t)(SLF_FLOOR_Y - 125), 0u, PAL_SUPPORT);
 }
 
 /* ------------------------------------------------------------ HUD */

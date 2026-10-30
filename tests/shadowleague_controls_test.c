@@ -165,9 +165,10 @@ static void throw_trajectories(uint8_t def)
             assert(t<160u);
             landing[button]=(int16_t)(ngf_fighter_px(&m.f[1])-x);
             height[button]=peak;
-            assert(back?landing[button]<-30:landing[button]>30);
+            /* Forward throws land behind the thrower, back throws in front. */
+            assert(back?landing[button]>30:landing[button]<-30);
         }
-        assert(back?landing[0]<landing[1]-20:landing[0]>landing[1]+20);
+        assert(back?landing[0]>landing[1]+20:landing[0]<landing[1]-20);
         assert(height[0]>=14 && height[1]>=14);
     }
 }
