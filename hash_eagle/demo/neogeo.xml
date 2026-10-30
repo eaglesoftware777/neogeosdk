@@ -20,10 +20,10 @@
         <part name="cart" interface="neo_cart">
             <feature name="slot" value="rom_fatfur2" />
             <dataarea name="maincpu" width="16" endianness="big" size="0x100000">
-                <rom loadflag="load16_word_swap" name="777-p1.p1" offset="0x000000" size="0x080000" crc="4626f1d7" sha1="ddc97f9225f4bdddb3e31071c1a2682d843d5646" />
+                <rom loadflag="load16_word_swap" name="777-p1.p1" offset="0x000000" size="0x080000" crc="d1cebae2" sha1="698bd12cf1409b6909fe9e0f730e717429af21aa" />
             </dataarea>
             <dataarea name="fixed" size="0x020000">
-                <rom offset="0x000000" size="0x020000" name="777-s1.s1" crc="375809b8" sha1="8e66116eeb64654ef5617b982cd5725d084653a1" />
+                <rom offset="0x000000" size="0x020000" name="777-s1.s1" crc="7eb1ec03" sha1="6c5e5fdcbe561f140b4af0f71e01b976ff2e6a07" />
             </dataarea>
             <dataarea name="audiocpu" size="0x020000">
                 <rom offset="0x000000" size="0x020000" name="777-m1.m1" crc="674f8b6d" sha1="2a84ebe9d0f06e5cb5094311c981ad137607212a" />
