@@ -1,5 +1,5 @@
 {
- "read": "2026-10-31T15:14:14+00:00",
+ "read": "2026-10-31T21:26:52+00:00",
  "releases": [
   {
    "tag": "v1.0",
@@ -1649,6 +1649,94 @@
    "size": 12475634,
    "sha256": "b8be45b7ad68615d2cec865cc1bab9246ecd90724d698e61b4eb893cac4da642",
    "updated": "2026-10-31T15:11:42Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-BackBit-AES_v3.2.1.zip",
+   "size": 12425333,
+   "sha256": "5b86d54d1ced06846621d6cd72a5e1b38b64e3ebeb7796257d9321c794e762c3",
+   "updated": "2026-10-31T20:57:16Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-BackBit-MVS_v3.2.1.zip",
+   "size": 12425246,
+   "sha256": "cd1828237e4b2b763ca76015a75378449bd45d2e5362721c6536dd89778379da",
+   "updated": "2026-10-31T20:59:30Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-CHANGELOG_v3.2.1.txt",
+   "size": 15084,
+   "sha256": "5cc917470eb350ce24c0950d52cd76a6bbe6bebd81254fb5f197fb9452b7b8ad",
+   "updated": "2026-10-31T20:59:35Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-Darksoft-AES_v3.2.1.zip",
+   "size": 12279099,
+   "sha256": "7722acbb3225ccdfef46c1a78af2bfe9cc12697a517ca5d106ec22a1115c9eef",
+   "updated": "2026-10-31T21:01:44Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-Darksoft-MVS_v3.2.1.zip",
+   "size": 12279099,
+   "sha256": "50d0efe67eece11309d1b352632075ed624d5aa519e1d20cb223806226bde1db",
+   "updated": "2026-10-31T21:03:50Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-MANIFEST_v3.2.1.txt",
+   "size": 1335,
+   "sha256": "99ceca85f418cae3ade3cdb46958c53c4d497256a8d9f4dcd2b23cb1e0c2ca56",
+   "updated": "2026-10-31T21:03:52Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-README_v3.2.1.txt",
+   "size": 5943,
+   "sha256": "997fbd77de5fb7d396fc6e772e36c7bd0ee77888fbfee5cb29611b0a71272055",
+   "updated": "2026-10-31T21:03:54Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-WIP-AES-EagleBIOS_v3.2.1.zip",
+   "size": 12454024,
+   "sha256": "a2c08bddde1baf45bb6b2bd38ebb007ac42ba739522b423e2b91cd9f48f44830",
+   "updated": "2026-10-31T21:06:25Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-WIP-EagleBIOS_v3.2.1.zip",
+   "size": 12475544,
+   "sha256": "ed4b9e7c34fe7020bc7e8e59f27575dac362af958915fb3c7cc3eae738f52166",
+   "updated": "2026-10-31T21:10:06Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-WIP-NeoSD_AES_v3.2.1.neo",
+   "size": 28577792,
+   "sha256": "b0e5df8e0b4e9cd188354c22f338a04c241b6974a29621dea89009a58b857acb",
+   "updated": "2026-10-31T21:15:50Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-WIP-NeoSD_MVS_v3.2.1.neo",
+   "size": 28577792,
+   "sha256": "72e3fd5007bb7767cc252dda576ca1b1cb8b19bb9c5a940cd57c380d5a2c89df",
+   "updated": "2026-10-31T21:23:52Z"
   },
   {
    "tag": "skylance-hardware-rc1-20261014",

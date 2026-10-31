@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "generated_from_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
- "github_assets_read": "2026-10-31T15:14:14+00:00",
+ "generated_from_commit": "d621b2cde03a9b0c4f62e042e8bfce19686b1f6f",
+ "github_assets_read": "2026-10-31T21:26:52+00:00",
  "note": "Built by tools/rom_registry.py from dist/release and its git history. Every hash is computed from the bytes; a build is identified by build_id, the hash of its ROM parts.",
  "builds": [
   {
@@ -3056,7 +3056,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "5398c23e424cfee76e007e020a4c7b1413f7ce10",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:26",
@@ -3833,7 +3833,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "5b6988af7234578d13b05a36fcf6567c3dbcca72",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:26",
@@ -4612,7 +4612,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "d838c905afb049b8eea66ebaab53fa30842deb96",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -5397,7 +5397,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "19b657b734f564728c21f8c0599b7f867166f87d",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:26",
@@ -6467,7 +6467,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "3df999a874b273635ba6a5ceddb4b5a226eba15d",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:26",
@@ -7328,7 +7328,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "3bf79791f2aa212074414d98afc8d66560924170",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -7568,7 +7568,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
+   "git_commit": "working tree (HEAD d621b2cde03a9b0c4f62e042e8bfce19686b1f6f)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -7636,7 +7636,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
+   "git_commit": "working tree (HEAD d621b2cde03a9b0c4f62e042e8bfce19686b1f6f)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -7704,7 +7704,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
+   "git_commit": "working tree (HEAD d621b2cde03a9b0c4f62e042e8bfce19686b1f6f)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -9128,7 +9128,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "490a692fcf5ab3b305601a861be8ce0c5c85fc7e",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:28",
@@ -12001,7 +12001,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "b283f02ffa04bc9aa2ec02a4846ff46d2308219c",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:28",
@@ -13531,7 +13531,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "70cbee6180f55787cc123c2eceb08afdebef6d07",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -14448,7 +14448,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "7ad1034f3ea8af509a79a6dba92cd6a004571f91",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -14882,7 +14882,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "c341392eccf2ce2278b229e7e4b5844b1d68c505",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:32",
@@ -15264,7 +15264,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "ae0f0f97d526cfda33b8ad706d2779c6ae8f97e8",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:32",
@@ -15497,7 +15497,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "a03a6218be664256fb5b9ba32f8e7392fbecfb09",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -15769,7 +15769,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "54a29be180a12d2d23d5ada815f39dd97bcc1926",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:30",
@@ -16155,7 +16155,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "74dedc70f98c502f25122906c5b2929a4803f286",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:30",
@@ -16427,7 +16427,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "47075a7ffe590b9b14f2a8456c610b3ba667fd8c",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -16503,7 +16503,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
+   "git_commit": "working tree (HEAD d621b2cde03a9b0c4f62e042e8bfce19686b1f6f)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -17000,7 +17000,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "07fd40224c8d0424ad4c5df1c0a387ea4207b064",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:32",
@@ -17616,7 +17616,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "c1559c0da90da4f61ac8454ceed1020fbd241e6b",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:32",
@@ -18024,7 +18024,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "33b93ac9a7d1e73b88d0589bab5dd2a5d89fd202",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -18187,7 +18187,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "1904546cbd6136068edcc55e44510c04713a41ee",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -19371,7 +19371,7 @@
    "contents_under_this_name": 2,
    "status": "current",
    "tracked": true,
-   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
+   "git_commit": "working tree (HEAD d621b2cde03a9b0c4f62e042e8bfce19686b1f6f)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -20662,7 +20662,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
+   "git_commit": "working tree (HEAD d621b2cde03a9b0c4f62e042e8bfce19686b1f6f)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -20824,7 +20824,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
+   "git_commit": "working tree (HEAD d621b2cde03a9b0c4f62e042e8bfce19686b1f6f)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -23241,7 +23241,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "db79123e3186ebdac8d03bb120c14f6f13e6850b",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:30",
@@ -23623,7 +23623,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "7472d6c8837ab7a872628c8c6e08efabad5a156d",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:28",
@@ -24005,7 +24005,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "8d88c3e3b049709fcaebe00320ed3e0bb4928828",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -24126,7 +24126,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "7b6f4eaedd26f24d99dd03efb8a0d5a494809e87",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:28",
@@ -24512,7 +24512,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "fc5ea3a72295f7bc2ae2d012f3d496a355c74966",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:28",
@@ -24898,7 +24898,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "d0f4d1f86406a23d1f6bdad4da14c47e2b83b01e",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -25135,7 +25135,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "0d31a8632e341550e5bbca5f567a50f96c4c8ba4",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:30",
@@ -25709,7 +25709,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "4652809e6349ba9252ffdd2e0fb08f5005635510",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:30",
@@ -26369,7 +26369,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "c24f4db8164a3bfb58a1cabc45012be5cbf121f5",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -26532,7 +26532,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "c247c54b897434f300e76b5e39ce30c0afac6e70",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -27175,7 +27175,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "98c83a3306b455116b96f7dffb9efed35c635392",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:06",
@@ -27261,6 +27261,105 @@
     "fbneo": "shadowlf"
    },
    "build_id": "538dd8c55e77",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-BackBit-AES_v3.2.1.zip",
+   "file": "ShadowLeague-BackBit-AES_v3.2.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "d621b2cde03a9b0c4f62e042e8bfce19686b1f6f",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "b854154b627be9f1a01596327f3147ed84d15783",
+   "pushed": false,
+   "commit_date": "2026-10-31T21:26:41+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T20:54:22",
+   "archive": {
+    "size": 12425333,
+    "crc32": "0fe82ea4",
+    "sha1": "317d42c499e3d65df7e6658e4f1e90fefa1aa362",
+    "sha256": "5b86d54d1ced06846621d6cd72a5e1b38b64e3ebeb7796257d9321c794e762c3"
+   },
+   "files": [
+    {
+     "name": "shadowleague/shadowleague.p1",
+     "size": 3145728,
+     "crc32": "5daabaaa",
+     "sha1": "af9b82056b7430a52380eb9ac58c8783668bef25",
+     "sha256": "ea3a1610c98ef0698751cbb19c4bab36473837a14d5076c10af4a8d287641600",
+     "part": "p1"
+    },
+    {
+     "name": "shadowleague/shadowleague.s1",
+     "size": 131072,
+     "crc32": "9dc036cc",
+     "sha1": "05ea8e3c9b4a232dcf33e4642d9e61f434297d8f",
+     "sha256": "cc6541827edac2038a19b425c08089b5a86ae4e0ab63afa4ac912aac3f24c508",
+     "part": "s1"
+    },
+    {
+     "name": "shadowleague/shadowleague.m1",
+     "size": 131072,
+     "crc32": "60928aa8",
+     "sha1": "013e512c6bdbbcc4c1b1a92ff6722e09ca8e6f39",
+     "sha256": "cd4c9cb7b373f88692e25feca0afb7fe095df4d9b279c2063635cfd52dd4d37b",
+     "part": "m1"
+    },
+    {
+     "name": "shadowleague/shadowleague.v1",
+     "size": 7984384,
+     "crc32": "c4f30a19",
+     "sha1": "f800940c961be62d32a2f01578c5532360e6daa2",
+     "sha256": "79a28505fa4f32f865322e9fe58f029492d041604af3ffba87b61f090721fd61",
+     "part": "v1"
+    },
+    {
+     "name": "shadowleague/shadowleague.c1",
+     "size": 8388608,
+     "crc32": "dbb8854a",
+     "sha1": "758dcf8642dff9843511fa7b3717bc896b301471",
+     "sha256": "395225b5e118d33cd85882eecf7ee762ff93a55352591faea3401220700dea37",
+     "part": "c1"
+    },
+    {
+     "name": "shadowleague/shadowleague.c2",
+     "size": 8388608,
+     "crc32": "e13b5303",
+     "sha1": "cd41b50283c6d67f9c95dfbbc9c84aca52638c51",
+     "sha256": "00d737102609e11b9452468eb11594c0e780ad90187689232d190875de6a4224",
+     "part": "c2"
+    },
+    {
+     "name": "shadowleague/README.txt",
+     "size": 614,
+     "crc32": "47ab9af2",
+     "sha1": "912ecb3b889546b7e81fbe8a3bb67a79887492d9",
+     "sha256": "6b9f05c8f4f8d03f14b8029fdbdbef61a88ea89ac1d873eab4f7dc31af110bbe"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-BackBit-AES_v3.2.1.zip"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.1",
+   "semver": "3.2.1",
+   "target": "backbit-aes",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "748d974b8eb5",
    "game_id": null,
    "external_matches": []
   },
@@ -28135,7 +28234,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "f5089897b41f8aa58fbaca1f25dd0564d55612ff",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:06",
@@ -28221,6 +28320,105 @@
     "fbneo": "shadowlf"
    },
    "build_id": "ccf9c43062ab",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-BackBit-MVS_v3.2.1.zip",
+   "file": "ShadowLeague-BackBit-MVS_v3.2.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "d621b2cde03a9b0c4f62e042e8bfce19686b1f6f",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "9162489f41323ac722837fc7f035261d300c6d99",
+   "pushed": false,
+   "commit_date": "2026-10-31T21:26:41+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T20:54:20",
+   "archive": {
+    "size": 12425246,
+    "crc32": "99990bf4",
+    "sha1": "3db63f4e98ce4c0e73e873909621dabe5e14c6c7",
+    "sha256": "cd1828237e4b2b763ca76015a75378449bd45d2e5362721c6536dd89778379da"
+   },
+   "files": [
+    {
+     "name": "shadowleague/shadowleague.p1",
+     "size": 3145728,
+     "crc32": "442aa49e",
+     "sha1": "dc137efc11adea2b192e0fa89567aa3ced3d8578",
+     "sha256": "1a278e0f1eb9c78458f69f2303ec5a7ee0386435b86398b09132ac267d3b5738",
+     "part": "p1"
+    },
+    {
+     "name": "shadowleague/shadowleague.s1",
+     "size": 131072,
+     "crc32": "9dc036cc",
+     "sha1": "05ea8e3c9b4a232dcf33e4642d9e61f434297d8f",
+     "sha256": "cc6541827edac2038a19b425c08089b5a86ae4e0ab63afa4ac912aac3f24c508",
+     "part": "s1"
+    },
+    {
+     "name": "shadowleague/shadowleague.m1",
+     "size": 131072,
+     "crc32": "60928aa8",
+     "sha1": "013e512c6bdbbcc4c1b1a92ff6722e09ca8e6f39",
+     "sha256": "cd4c9cb7b373f88692e25feca0afb7fe095df4d9b279c2063635cfd52dd4d37b",
+     "part": "m1"
+    },
+    {
+     "name": "shadowleague/shadowleague.v1",
+     "size": 7984384,
+     "crc32": "c4f30a19",
+     "sha1": "f800940c961be62d32a2f01578c5532360e6daa2",
+     "sha256": "79a28505fa4f32f865322e9fe58f029492d041604af3ffba87b61f090721fd61",
+     "part": "v1"
+    },
+    {
+     "name": "shadowleague/shadowleague.c1",
+     "size": 8388608,
+     "crc32": "dbb8854a",
+     "sha1": "758dcf8642dff9843511fa7b3717bc896b301471",
+     "sha256": "395225b5e118d33cd85882eecf7ee762ff93a55352591faea3401220700dea37",
+     "part": "c1"
+    },
+    {
+     "name": "shadowleague/shadowleague.c2",
+     "size": 8388608,
+     "crc32": "e13b5303",
+     "sha1": "cd41b50283c6d67f9c95dfbbc9c84aca52638c51",
+     "sha256": "00d737102609e11b9452468eb11594c0e780ad90187689232d190875de6a4224",
+     "part": "c2"
+    },
+    {
+     "name": "shadowleague/README.txt",
+     "size": 476,
+     "crc32": "1cb79c07",
+     "sha1": "ccf29f0301d46b1886ebd925b3779eaf09c147c6",
+     "sha256": "3b965daec3d3ddcd626aa4cb4e6325a5ee2b9b3433300d8301b7a37cc05e181c"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-BackBit-MVS_v3.2.1.zip"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.1",
+   "semver": "3.2.1",
+   "target": "backbit-mvs",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "370efb2d6a38",
    "game_id": null,
    "external_matches": []
   },
@@ -28815,7 +29013,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "4b59d8ea1a93f0db11f0cd3524ae2cce8d56b2b5",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -28845,6 +29043,49 @@
     "fbneo": "shadowlf"
    },
    "build_id": "9e615ec96b6e",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-CHANGELOG_v3.2.1.txt",
+   "file": "ShadowLeague-CHANGELOG_v3.2.1.txt",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "d621b2cde03a9b0c4f62e042e8bfce19686b1f6f",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "878530d7c6648b3f26b2fda719a78640a550f109",
+   "pushed": false,
+   "commit_date": "2026-10-31T21:26:41+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 15084,
+    "crc32": "d8e919a3",
+    "sha1": "35ace443aa5a8d0ad81d73fae385e1ed48f11475",
+    "sha256": "5cc917470eb350ce24c0950d52cd76a6bbe6bebd81254fb5f197fb9452b7b8ad"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-CHANGELOG_v3.2.1.txt"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.1",
+   "semver": "3.2.1",
+   "target": "document",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "5cc917470eb3",
    "game_id": null,
    "external_matches": []
   },
@@ -29424,7 +29665,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "94ad75b25f3894f2e7863130437a98a37a6a8fdf",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:04",
@@ -29511,6 +29752,106 @@
     "fbneo": "shadowlf"
    },
    "build_id": "f492374f03c7",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-Darksoft-AES_v3.2.1.zip",
+   "file": "ShadowLeague-Darksoft-AES_v3.2.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "d621b2cde03a9b0c4f62e042e8bfce19686b1f6f",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "0821b1b57fbaf1389df45462d29df2b4a0830b16",
+   "pushed": false,
+   "commit_date": "2026-10-31T21:26:41+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T20:54:20",
+   "archive": {
+    "size": 12279099,
+    "crc32": "9b5eed70",
+    "sha1": "2af3c051afe6076afdde97c793a0681df365d1d1",
+    "sha256": "7722acbb3225ccdfef46c1a78af2bfe9cc12697a517ca5d106ec22a1115c9eef"
+   },
+   "files": [
+    {
+     "name": "ShadowLeague_AES/prom",
+     "size": 3145728,
+     "crc32": "5daabaaa",
+     "sha1": "af9b82056b7430a52380eb9ac58c8783668bef25",
+     "sha256": "ea3a1610c98ef0698751cbb19c4bab36473837a14d5076c10af4a8d287641600"
+    },
+    {
+     "name": "ShadowLeague_AES/srom",
+     "size": 131072,
+     "crc32": "9dc036cc",
+     "sha1": "05ea8e3c9b4a232dcf33e4642d9e61f434297d8f",
+     "sha256": "cc6541827edac2038a19b425c08089b5a86ae4e0ab63afa4ac912aac3f24c508"
+    },
+    {
+     "name": "ShadowLeague_AES/m1rom",
+     "size": 131072,
+     "crc32": "60928aa8",
+     "sha1": "013e512c6bdbbcc4c1b1a92ff6722e09ca8e6f39",
+     "sha256": "cd4c9cb7b373f88692e25feca0afb7fe095df4d9b279c2063635cfd52dd4d37b"
+    },
+    {
+     "name": "ShadowLeague_AES/vroma0",
+     "size": 8388608,
+     "crc32": "d3a833f9",
+     "sha1": "0b70a7ff433e93f6ba5988a79fa2a65b750acea3",
+     "sha256": "3e7c56ae936758bb1da1f8a33492e48ae2d75bd37c9d4a1011fe48ecdb18591e"
+    },
+    {
+     "name": "ShadowLeague_AES/crom0",
+     "size": 16777216,
+     "crc32": "1da6f162",
+     "sha1": "3dc160e204a051acadee855145741e59dbbf4b64",
+     "sha256": "4986c1030f5f9baabc6848b07768d3c39d3f5dccb9e97a9ba9f0d922cb287645"
+    },
+    {
+     "name": "ShadowLeague_AES/fpga",
+     "size": 2,
+     "crc32": "a15d25e1",
+     "sha1": "b1d5781111d84f7b3fe45a0852e59758cd7a87e5",
+     "sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5"
+    },
+    {
+     "name": "ShadowLeague_AES/MANIFEST.json",
+     "size": 1356,
+     "crc32": "e8d37531",
+     "sha1": "25b9bbe5317b2fb7b17da803da169740a533eb74",
+     "sha256": "1e850e3db79ce01f938480101c224b412f13160664d2a8c938e63857021c0de1"
+    },
+    {
+     "name": "ShadowLeague_AES/README.txt",
+     "size": 503,
+     "crc32": "9aa0293e",
+     "sha1": "b227d6e507cc253b217700b01454ee60c073a607",
+     "sha256": "8218cfe9f381e74ffc7d3a4a2f131f8f07b8de129433892dff9fec6326a99c2d"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-Darksoft-AES_v3.2.1.zip"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.1",
+   "semver": "3.2.1",
+   "target": "darksoft-aes",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "7722acbb3225",
    "game_id": null,
    "external_matches": []
   },
@@ -30394,7 +30735,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "4f553fb8e3779ce6fad3f90a6e7b571ae2ac8b67",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:04",
@@ -30481,6 +30822,106 @@
     "fbneo": "shadowlf"
    },
    "build_id": "544c2d9f3d95",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-Darksoft-MVS_v3.2.1.zip",
+   "file": "ShadowLeague-Darksoft-MVS_v3.2.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "d621b2cde03a9b0c4f62e042e8bfce19686b1f6f",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "e03cfa45e2d750dcae898f36747dc295c9b97419",
+   "pushed": false,
+   "commit_date": "2026-10-31T21:26:41+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T20:54:18",
+   "archive": {
+    "size": 12279099,
+    "crc32": "bc9daa0e",
+    "sha1": "32851547d9c3f2eba8437974f4831003b34271e8",
+    "sha256": "50d0efe67eece11309d1b352632075ed624d5aa519e1d20cb223806226bde1db"
+   },
+   "files": [
+    {
+     "name": "ShadowLeague_MVS/prom",
+     "size": 3145728,
+     "crc32": "442aa49e",
+     "sha1": "dc137efc11adea2b192e0fa89567aa3ced3d8578",
+     "sha256": "1a278e0f1eb9c78458f69f2303ec5a7ee0386435b86398b09132ac267d3b5738"
+    },
+    {
+     "name": "ShadowLeague_MVS/srom",
+     "size": 131072,
+     "crc32": "9dc036cc",
+     "sha1": "05ea8e3c9b4a232dcf33e4642d9e61f434297d8f",
+     "sha256": "cc6541827edac2038a19b425c08089b5a86ae4e0ab63afa4ac912aac3f24c508"
+    },
+    {
+     "name": "ShadowLeague_MVS/m1rom",
+     "size": 131072,
+     "crc32": "60928aa8",
+     "sha1": "013e512c6bdbbcc4c1b1a92ff6722e09ca8e6f39",
+     "sha256": "cd4c9cb7b373f88692e25feca0afb7fe095df4d9b279c2063635cfd52dd4d37b"
+    },
+    {
+     "name": "ShadowLeague_MVS/vroma0",
+     "size": 8388608,
+     "crc32": "d3a833f9",
+     "sha1": "0b70a7ff433e93f6ba5988a79fa2a65b750acea3",
+     "sha256": "3e7c56ae936758bb1da1f8a33492e48ae2d75bd37c9d4a1011fe48ecdb18591e"
+    },
+    {
+     "name": "ShadowLeague_MVS/crom0",
+     "size": 16777216,
+     "crc32": "1da6f162",
+     "sha1": "3dc160e204a051acadee855145741e59dbbf4b64",
+     "sha256": "4986c1030f5f9baabc6848b07768d3c39d3f5dccb9e97a9ba9f0d922cb287645"
+    },
+    {
+     "name": "ShadowLeague_MVS/fpga",
+     "size": 2,
+     "crc32": "a15d25e1",
+     "sha1": "b1d5781111d84f7b3fe45a0852e59758cd7a87e5",
+     "sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5"
+    },
+    {
+     "name": "ShadowLeague_MVS/MANIFEST.json",
+     "size": 1356,
+     "crc32": "8259f927",
+     "sha1": "cf98338597117b311929bcb84e8c70fefcfe19d7",
+     "sha256": "d395c85d99fff5debb15ad05ed10ea5d518427f9d2cdae9ba901a8578902ef1f"
+    },
+    {
+     "name": "ShadowLeague_MVS/README.txt",
+     "size": 503,
+     "crc32": "f5f7e9fb",
+     "sha1": "ebcbe640400d10985a7d2b1d1c8d54c043055d6c",
+     "sha256": "086bb5f6b583808d77b731725364d3de12a0101a860812343bcdf03d4c98eb92"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-Darksoft-MVS_v3.2.1.zip"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.1",
+   "semver": "3.2.1",
+   "target": "darksoft-mvs",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "50d0efe67eec",
    "game_id": null,
    "external_matches": []
   },
@@ -31079,7 +31520,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "c84bc89a767dd58fe72e5c6593af51c95c1e11d2",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -31109,6 +31550,49 @@
     "fbneo": "shadowlf"
    },
    "build_id": "fe00190de045",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-MANIFEST_v3.2.1.txt",
+   "file": "ShadowLeague-MANIFEST_v3.2.1.txt",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "d621b2cde03a9b0c4f62e042e8bfce19686b1f6f",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "073565ad87e7f8f533547e0e99db72c5d945b4ed",
+   "pushed": false,
+   "commit_date": "2026-10-31T21:26:41+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 1335,
+    "crc32": "598c8526",
+    "sha1": "1cf7e6c3efc4276cd722a7ae8b5d199a19fc5927",
+    "sha256": "99ceca85f418cae3ade3cdb46958c53c4d497256a8d9f4dcd2b23cb1e0c2ca56"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-MANIFEST_v3.2.1.txt"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.1",
+   "semver": "3.2.1",
+   "target": "document",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "99ceca85f418",
    "game_id": null,
    "external_matches": []
   },
@@ -31479,7 +31963,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "50f8cd5d771fe9c415c661ce97e58fdfb6d53dae",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -31509,6 +31993,49 @@
     "fbneo": "shadowlf"
    },
    "build_id": "0c8231b60467",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-README_v3.2.1.txt",
+   "file": "ShadowLeague-README_v3.2.1.txt",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "d621b2cde03a9b0c4f62e042e8bfce19686b1f6f",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "9a377aecd352aab38bb147eb697b96c181ff53ba",
+   "pushed": false,
+   "commit_date": "2026-10-31T21:26:41+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 5943,
+    "crc32": "f3aa6d79",
+    "sha1": "37d0ad40020b6f2c9662406921add4c775addbef",
+    "sha256": "997fbd77de5fb7d396fc6e772e36c7bd0ee77888fbfee5cb29611b0a71272055"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-README_v3.2.1.txt"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.1",
+   "semver": "3.2.1",
+   "target": "document",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "997fbd77de5f",
    "game_id": null,
    "external_matches": []
   },
@@ -32323,7 +32850,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "ebb6a022ef761f5d73e5089f0aa0da90e7e28036",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:08",
@@ -32457,6 +32984,153 @@
     "fbneo": "shadowlf"
    },
    "build_id": "538dd8c55e77",
+   "game_id": "781",
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-WIP-AES-EagleBIOS_v3.2.1.zip",
+   "file": "ShadowLeague-WIP-AES-EagleBIOS_v3.2.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "d621b2cde03a9b0c4f62e042e8bfce19686b1f6f",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "9f15815d309ff9de27e994255ec7f2cd55a8866a",
+   "pushed": false,
+   "commit_date": "2026-10-31T21:26:41+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T20:54:24",
+   "archive": {
+    "size": 12454024,
+    "crc32": "be0ff651",
+    "sha1": "30324f5f6b53b7ecbd9d716d339fae12df605740",
+    "sha256": "a2c08bddde1baf45bb6b2bd38ebb007ac42ba739522b423e2b91cd9f48f44830"
+   },
+   "files": [
+    {
+     "name": "card.bin",
+     "size": 2048,
+     "crc32": "f1e8ba9e",
+     "sha1": "605db3fdbaff4ba13729371ad0c4fbab3889378e",
+     "sha256": "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad"
+    },
+    {
+     "name": "roms/shadowleague/781-p1.p1",
+     "size": 3145728,
+     "crc32": "5daabaaa",
+     "sha1": "af9b82056b7430a52380eb9ac58c8783668bef25",
+     "sha256": "ea3a1610c98ef0698751cbb19c4bab36473837a14d5076c10af4a8d287641600",
+     "part": "p1"
+    },
+    {
+     "name": "roms/shadowleague/781-s1.s1",
+     "size": 131072,
+     "crc32": "9dc036cc",
+     "sha1": "05ea8e3c9b4a232dcf33e4642d9e61f434297d8f",
+     "sha256": "cc6541827edac2038a19b425c08089b5a86ae4e0ab63afa4ac912aac3f24c508",
+     "part": "s1"
+    },
+    {
+     "name": "roms/shadowleague/781-m1.m1",
+     "size": 131072,
+     "crc32": "60928aa8",
+     "sha1": "013e512c6bdbbcc4c1b1a92ff6722e09ca8e6f39",
+     "sha256": "cd4c9cb7b373f88692e25feca0afb7fe095df4d9b279c2063635cfd52dd4d37b",
+     "part": "m1"
+    },
+    {
+     "name": "roms/shadowleague/781-v1.v1",
+     "size": 7984384,
+     "crc32": "c4f30a19",
+     "sha1": "f800940c961be62d32a2f01578c5532360e6daa2",
+     "sha256": "79a28505fa4f32f865322e9fe58f029492d041604af3ffba87b61f090721fd61",
+     "part": "v1"
+    },
+    {
+     "name": "roms/shadowleague/781-c1.c1",
+     "size": 8388608,
+     "crc32": "dbb8854a",
+     "sha1": "758dcf8642dff9843511fa7b3717bc896b301471",
+     "sha256": "395225b5e118d33cd85882eecf7ee762ff93a55352591faea3401220700dea37",
+     "part": "c1"
+    },
+    {
+     "name": "roms/shadowleague/781-c2.c2",
+     "size": 8388608,
+     "crc32": "e13b5303",
+     "sha1": "cd41b50283c6d67f9c95dfbbc9c84aca52638c51",
+     "sha256": "00d737102609e11b9452468eb11594c0e780ad90187689232d190875de6a4224",
+     "part": "c2"
+    },
+    {
+     "name": "roms/aes/neo-epo.bin",
+     "size": 131072,
+     "crc32": "789b3919",
+     "sha1": "35eabd4a0d5beeb52286a463bc8eec2a91ec9893",
+     "sha256": "7eec66f43b306c00bd66e25f57cf9480d3dc792c413a9cbe98425a56ea6274b7"
+    },
+    {
+     "name": "roms/aes/000-lo.lo",
+     "size": 131072,
+     "crc32": "cede14c2",
+     "sha1": "07aed5c8c3b7108ab98e8e63969a0007f7241235",
+     "sha256": "7eff4efa47f1560af2eca65a846b60567f1bd84bfce63ff8987c714ed20255c7"
+    },
+    {
+     "name": "hash/neogeo.xml",
+     "size": 2296,
+     "crc32": "2b20608e",
+     "sha1": "922a7ca5677e6d1a03193b281e1a60eec3a63bf9",
+     "sha256": "cee086fba1494b320a3b8e4066af2ae74cf04593f7d8d8800ce3699172ae396a"
+    },
+    {
+     "name": "EagleBIOS.md",
+     "size": 17737,
+     "crc32": "8eaa83e8",
+     "sha1": "fad8fef1125d56713a2e8b4353768942404d82a0",
+     "sha256": "29118e75882900937a596f6fcaaef164a1b16dba431b4898e41802e883f6e482"
+    },
+    {
+     "name": "LICENSE",
+     "size": 1073,
+     "crc32": "540e329d",
+     "sha1": "1969f56845d79f4e708999f95c2c484b8f816828",
+     "sha256": "7c316688a04ac1b751f2654ba768df53bb56af37f80ed9d8846fd945f46eab09"
+    },
+    {
+     "name": "RUN.txt",
+     "size": 235,
+     "crc32": "bbf2532a",
+     "sha1": "56d28606a787b467e1c9e68c525f6ebe23a90105",
+     "sha256": "88fbb0559a933cafff493604eb7c66934a18dbfef9a404c683d38dd39f79ed16"
+    }
+   ],
+   "mame_definition": {
+    "ok": true,
+    "software": [
+     "shadowleague"
+    ],
+    "problems": []
+   },
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-WIP-AES-EagleBIOS_v3.2.1.zip"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.1",
+   "semver": "3.2.1",
+   "target": "mame-aes",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "748d974b8eb5",
    "game_id": "781",
    "external_matches": []
   },
@@ -33868,7 +34542,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "00c38136fb0b1b97ef5ee3f9b27453080c57ac4c",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-31T13:17:08",
@@ -34023,6 +34697,174 @@
     "fbneo": "shadowlf"
    },
    "build_id": "ccf9c43062ab",
+   "game_id": "781",
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-WIP-EagleBIOS_v3.2.1.zip",
+   "file": "ShadowLeague-WIP-EagleBIOS_v3.2.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "d621b2cde03a9b0c4f62e042e8bfce19686b1f6f",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "b2f673843be947b353a4d5bf0b8a015a53bc9833",
+   "pushed": false,
+   "commit_date": "2026-10-31T21:26:41+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T20:54:22",
+   "archive": {
+    "size": 12475544,
+    "crc32": "c0e99021",
+    "sha1": "72ba23b9a9d476ecca6097bb29316e1292c61c90",
+    "sha256": "ed4b9e7c34fe7020bc7e8e59f27575dac362af958915fb3c7cc3eae738f52166"
+   },
+   "files": [
+    {
+     "name": "roms/shadowleague/781-p1.p1",
+     "size": 3145728,
+     "crc32": "442aa49e",
+     "sha1": "dc137efc11adea2b192e0fa89567aa3ced3d8578",
+     "sha256": "1a278e0f1eb9c78458f69f2303ec5a7ee0386435b86398b09132ac267d3b5738",
+     "part": "p1"
+    },
+    {
+     "name": "roms/shadowleague/781-s1.s1",
+     "size": 131072,
+     "crc32": "9dc036cc",
+     "sha1": "05ea8e3c9b4a232dcf33e4642d9e61f434297d8f",
+     "sha256": "cc6541827edac2038a19b425c08089b5a86ae4e0ab63afa4ac912aac3f24c508",
+     "part": "s1"
+    },
+    {
+     "name": "roms/shadowleague/781-m1.m1",
+     "size": 131072,
+     "crc32": "60928aa8",
+     "sha1": "013e512c6bdbbcc4c1b1a92ff6722e09ca8e6f39",
+     "sha256": "cd4c9cb7b373f88692e25feca0afb7fe095df4d9b279c2063635cfd52dd4d37b",
+     "part": "m1"
+    },
+    {
+     "name": "roms/shadowleague/781-v1.v1",
+     "size": 7984384,
+     "crc32": "c4f30a19",
+     "sha1": "f800940c961be62d32a2f01578c5532360e6daa2",
+     "sha256": "79a28505fa4f32f865322e9fe58f029492d041604af3ffba87b61f090721fd61",
+     "part": "v1"
+    },
+    {
+     "name": "roms/shadowleague/781-c1.c1",
+     "size": 8388608,
+     "crc32": "dbb8854a",
+     "sha1": "758dcf8642dff9843511fa7b3717bc896b301471",
+     "sha256": "395225b5e118d33cd85882eecf7ee762ff93a55352591faea3401220700dea37",
+     "part": "c1"
+    },
+    {
+     "name": "roms/shadowleague/781-c2.c2",
+     "size": 8388608,
+     "crc32": "e13b5303",
+     "sha1": "cd41b50283c6d67f9c95dfbbc9c84aca52638c51",
+     "sha256": "00d737102609e11b9452468eb11594c0e780ad90187689232d190875de6a4224",
+     "part": "c2"
+    },
+    {
+     "name": "roms/neogeo/sp-s2.sp1",
+     "size": 131072,
+     "crc32": "978e3f00",
+     "sha1": "61fd9d952a56c6f1cf96a68e54a17ece1a43fb3f",
+     "sha256": "aae26373b3e393782bd3aaf58c6de16df3f52b9142d28838be28692d1621d21d"
+    },
+    {
+     "name": "roms/neogeo/sm1.sm1",
+     "size": 131072,
+     "crc32": "5f2dbc26",
+     "sha1": "203340fe57b73384d8ef24926edebfb8159c7e13",
+     "sha256": "b16c4f69d01853bc5c074fe1be41e028ec950ce8cc3cb88abd385a169fdb4234"
+    },
+    {
+     "name": "roms/neogeo/sfix.sfix",
+     "size": 131072,
+     "crc32": "d5c1a013",
+     "sha1": "b5f1429090366303563468b76fbe0c19c78bc3a9",
+     "sha256": "feca1c2515473c34be89b76b45f01ec4e55a0325fe06c732b357982d047e0b96"
+    },
+    {
+     "name": "roms/neogeo/000-lo.lo",
+     "size": 131072,
+     "crc32": "cede14c2",
+     "sha1": "07aed5c8c3b7108ab98e8e63969a0007f7241235",
+     "sha256": "7eff4efa47f1560af2eca65a846b60567f1bd84bfce63ff8987c714ed20255c7"
+    },
+    {
+     "name": "roms/aes/neo-epo.bin",
+     "size": 131072,
+     "crc32": "789b3919",
+     "sha1": "35eabd4a0d5beeb52286a463bc8eec2a91ec9893",
+     "sha256": "7eec66f43b306c00bd66e25f57cf9480d3dc792c413a9cbe98425a56ea6274b7"
+    },
+    {
+     "name": "roms/aes/000-lo.lo",
+     "size": 131072,
+     "crc32": "cede14c2",
+     "sha1": "07aed5c8c3b7108ab98e8e63969a0007f7241235",
+     "sha256": "7eff4efa47f1560af2eca65a846b60567f1bd84bfce63ff8987c714ed20255c7"
+    },
+    {
+     "name": "hash/neogeo.xml",
+     "size": 2296,
+     "crc32": "51edf4a7",
+     "sha1": "3e0071f6b6dd0726b274220f1f37ec7e3d8d3e8f",
+     "sha256": "f1b6b51df93150345e27be82897b93d2c0b89e3035202916f1545fd1eb47c71b"
+    },
+    {
+     "name": "EagleBIOS.md",
+     "size": 17737,
+     "crc32": "8eaa83e8",
+     "sha1": "fad8fef1125d56713a2e8b4353768942404d82a0",
+     "sha256": "29118e75882900937a596f6fcaaef164a1b16dba431b4898e41802e883f6e482"
+    },
+    {
+     "name": "LICENSE",
+     "size": 1073,
+     "crc32": "540e329d",
+     "sha1": "1969f56845d79f4e708999f95c2c484b8f816828",
+     "sha256": "7c316688a04ac1b751f2654ba768df53bb56af37f80ed9d8846fd945f46eab09"
+    },
+    {
+     "name": "RUN.txt",
+     "size": 229,
+     "crc32": "cbfa5a76",
+     "sha1": "275c36f69cda5d50b988af65f506ee8996344410",
+     "sha256": "7d1ec60cb4eae60eb50fd1a9c5de06e881a0a133cd1281c78d226fe7284b2ae6"
+    }
+   ],
+   "mame_definition": {
+    "ok": true,
+    "software": [
+     "shadowleague"
+    ],
+    "problems": []
+   },
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-WIP-EagleBIOS_v3.2.1.zip"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.1",
+   "semver": "3.2.1",
+   "target": "mame-mvs",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "370efb2d6a38",
    "game_id": "781",
    "external_matches": []
   },
@@ -34897,7 +35739,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "903bbd3066e25c0bfbae11518a6a9e49c41c38a4",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -34927,6 +35769,49 @@
     "fbneo": "shadowlf"
    },
    "build_id": "88dd3f963b3c",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-WIP-NeoSD_AES_v3.2.1.neo",
+   "file": "ShadowLeague-WIP-NeoSD_AES_v3.2.1.neo",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "d621b2cde03a9b0c4f62e042e8bfce19686b1f6f",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "27e1c36858638444be0517e998e38d7c768c32e5",
+   "pushed": false,
+   "commit_date": "2026-10-31T21:26:41+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 28577792,
+    "crc32": "fc23267b",
+    "sha1": "75fa32ea5ea067744db98e29da71f7700fc8ac25",
+    "sha256": "b0e5df8e0b4e9cd188354c22f338a04c241b6974a29621dea89009a58b857acb"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-WIP-NeoSD_AES_v3.2.1.neo"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.1",
+   "semver": "3.2.1",
+   "target": "neosd-aes",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "b0e5df8e0b4e",
    "game_id": null,
    "external_matches": []
   },
@@ -35297,7 +36182,7 @@
    "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
    "only_in_pre_rewrite_history": false,
    "git_blob": "95ac2473264b8cfb41007c8b924e7a75449e198b",
-   "pushed": false,
+   "pushed": true,
    "commit_date": "2026-10-31T14:33:08+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
@@ -35327,6 +36212,49 @@
     "fbneo": "shadowlf"
    },
    "build_id": "cab6422a7aba",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-WIP-NeoSD_MVS_v3.2.1.neo",
+   "file": "ShadowLeague-WIP-NeoSD_MVS_v3.2.1.neo",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "d621b2cde03a9b0c4f62e042e8bfce19686b1f6f",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "00af5d22d9720a7c821fab820acc1a1fe5395160",
+   "pushed": false,
+   "commit_date": "2026-10-31T21:26:41+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 28577792,
+    "crc32": "ded10900",
+    "sha1": "e6da0d6b9d5e14bf6bda5e4e2aae6e9fc7db2aa4",
+    "sha256": "72e3fd5007bb7767cc252dda576ca1b1cb8b19bb9c5a940cd57c380d5a2c89df"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-WIP-NeoSD_MVS_v3.2.1.neo"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.1",
+   "semver": "3.2.1",
+   "target": "neosd-mvs",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "72e3fd5007bb",
    "game_id": null,
    "external_matches": []
   },
@@ -37816,7 +38744,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
+   "git_commit": "working tree (HEAD d621b2cde03a9b0c4f62e042e8bfce19686b1f6f)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -37884,7 +38812,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
+   "git_commit": "working tree (HEAD d621b2cde03a9b0c4f62e042e8bfce19686b1f6f)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -37952,7 +38880,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
+   "git_commit": "working tree (HEAD d621b2cde03a9b0c4f62e042e8bfce19686b1f6f)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
