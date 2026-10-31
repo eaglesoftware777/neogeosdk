@@ -3,6 +3,24 @@
 Shadow League Fighting's ROM sets ship with the NeoGeoSDK pre-releases and
 are numbered on their own: `_v1` and `_v2` with v1.7.5, `_v3` with v1.7.7.
 
+## v3.2.1: cleaner fights (2026-10-31)
+
+- **No more frozen fighters after a throw.** A fighter held in a throw is
+  let go the moment the thrower leaves the throw. Before, a striker blow
+  that knocked the thrower out of a throw left the victim frozen, unhit
+  and unable to move, until the round's time ran out.
+- **Throws as in the arcade.** The CPU throws rarely and only from point
+  blank, and a thrown fighter lands close by instead of flying across the
+  stage.
+- **Clean arena changes.** When the next team fighter comes in, the screen
+  fades through black and the new arena's tiles go up only once its colours
+  are in palette RAM: no more scrambled frames between bouts.
+- **Sound.** Every fight effect is rebuilt in layers (a sharp transient, a
+  band of crunch, a body that drops in pitch, a short room tail): punches,
+  kicks, the guard, whooshes, landings, throws, specials, supers, the K.O.,
+  counters and the MAX surge. Voices are cleaned and brought forward
+  (the "Hyah!" shouts are kept), and the music gets a fuller master.
+
 ## v3.2.0 candidate: the referee's ceremony and the league's own calls (2026-10-30, 2026-10-31)
 
 - **The arbiter.** The referee is his own character now, painted with the

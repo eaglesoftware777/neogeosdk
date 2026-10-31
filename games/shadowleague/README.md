@@ -1,7 +1,7 @@
 # Shadow League Fighting
 
 Original Neo Geo MVS/AES fighting game, cartridge ID 781, built on the SDK's
-fighting component (`ng_fight`). The current ROM set is v3.2.0, with the
+fighting component (`ng_fight`). The current ROM set is v3.2.1, with the
 NeoGeoSDK v1.7.7 pre-release: the `_v3` set with a new painted title, the
 league's arbiter counting each round in, the league's own calls (CLASH!,
 BLACKOUT, THE NIGHT IS YOURS), over-the-shoulder throws, larger hit effects,

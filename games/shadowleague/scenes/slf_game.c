@@ -7,6 +7,7 @@
 #include "sdk/macro.h"
 #include "sdk/neogeo.h"
 #include "sdk/ng_system.h"
+#include "sdk/2d_engine/ng_palette_fx.h"
 #include "games/shadowleague/scenes/slf.h"
 #include "games/shadowleague/artbox/generated/slf_assets.h"
 
@@ -667,13 +668,25 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
                 if (def != active_def[side]) { active_def[side] = def; changed = 1u; }
             }
             if (changed) {
-                slf_fighter_palettes(active_def[0], 0u, active_def[1], (uint8_t)(active_def[0] == active_def[1]));
                 uint8_t new_stage = slf_fighter_stages[active_def[cpu_side]];
+                /* The next fighter comes in through a short fade: the new colours and
+                 * a new arena are loaded while the screen is black, so no frame ever
+                 * shows new tiles under old palettes (or the other way round). */
+                uint8_t wait;
+                ng_palfx_screen_fade_out(16u, 6u);
+                for (wait = 0u; wait < 12u && ng_palfx_screen_fading(); wait++) slf_frame();
+                slf_fighter_palettes(active_def[0], 0u, active_def[1], (uint8_t)(active_def[0] == active_def[1]));
                 if (new_stage != slf_stage_current()) {
+                    /* the old arena goes and the new colours load; its tiles only
+                     * once those colours have reached palette RAM */
                     slf_stage_set(new_stage);
+                    for (wait = 0u; wait < 30u && !ng_palfx_screen_ready(SLF_PAL_STAGE, SLF_STAGE_BANKS); wait++)
+                        slf_frame();
                     slf_stage_show(m->camera_x);
                     if (mode != MODE_DEMO) slf_music((uint8_t)(SLF_TRACK_STAGE + new_stage));
                 }
+                slf_frame();
+                ng_palfx_screen_fade_in(0u, 8u);
             }
         }
         slf_match_draw(m, active_def);

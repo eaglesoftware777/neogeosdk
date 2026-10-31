@@ -792,6 +792,7 @@ static void NEOGEO_USER start_move(NGFMatch *m, uint8_t who, uint8_t k)
             return;
         }
         o->state = NGF_S_THROWN;
+        o->state_timer = 0;
         o->move = 0;
         o->vx = 0;
         place_thrown(m, f, o, sign_of(f), grip, (uint8_t)(ta != 0));
@@ -1107,12 +1108,14 @@ static void NEOGEO_USER fighter_step(NGFMatch *m, uint8_t who, uint8_t controls)
                 t->juggle_points = 0u;
                 t->relaunches = 0u;
                 apply_hit(m, who, &hp, ngf_fighter_px(t), 40, 1);
-                /* Throw trajectory: launch high and far in the throw direction */
+                /* Throw trajectory: over and down close by, the way a throw lands
+                 * in the arcade games, not flung across the stage */
                 {
                     int16_t lvx = hp.launch_vx ? (int16_t)(hp.launch_vx > 0 ? hp.launch_vx : -hp.launch_vx) : 16;
                     int16_t lvy = hp.launch_vy ? hp.launch_vy : 26;
-                    t->vx = (int16_t)(throw_dir * lvx * 96);
-                    t->vh = (int16_t)(lvy * 76);
+                    if (lvx > 16) lvx = 16;
+                    t->vx = (int16_t)(throw_dir * lvx * 48);
+                    t->vh = (int16_t)(lvy * 64);
                     t->h = (int32_t)(ta && ta->lift ? ta->lift : 24u) * 256;
                     t->grounded = 0u;
                     t->state = NGF_S_FALL;
@@ -1147,8 +1150,23 @@ static void NEOGEO_USER fighter_step(NGFMatch *m, uint8_t who, uint8_t controls)
             set_anim(f, NGF_A_IDLE, 1);
         }
         break;
-    case NGF_S_FALL:
     case NGF_S_THROWN:
+        /* Held only while the thrower is still in the throw: a thrower knocked
+         * out of it (a striker, a projectile) lets go, and so does a hold that
+         * outlasts any throw. */
+        if (o->state != NGF_S_ATTACK || !o->move || o->move->kind != NGF_KIND_THROW || ++f->state_timer > 180u) {
+            f->state = NGF_S_FALL;
+            f->move = 0;
+            f->grounded = 0u;
+            f->vx = 0;
+            f->vh = 48;
+            if (f->h < 256) f->h = 256;
+            set_anim(f, NGF_A_FALL, 1);
+            break;
+        }
+        anim_step(m, who);
+        break;
+    case NGF_S_FALL:
     case NGF_S_KO:
         anim_step(m, who);
         break;
@@ -1724,8 +1742,9 @@ uint8_t NEOGEO_USER ngf_cpu_input(NGFMatch *m, uint8_t who)
                 weight[PICK_RUSH] = (uint8_t)(4u + lv);
             weight[PICK_BACK] = 5;
         } else {
-            if (c->role[NGF_CPU_THROW] != 0xFFu && throwable(o) && dist <= (uint16_t)(d->moves[c->role[NGF_CPU_THROW]].range + 4u))
-                weight[PICK_THROW] = (uint8_t)(8u + lv * 2u);
+            /* a throw is a rare punish from point-blank, not a habit */
+            if (c->role[NGF_CPU_THROW] != 0xFFu && throwable(o) && dist <= (uint16_t)d->moves[c->role[NGF_CPU_THROW]].range)
+                weight[PICK_THROW] = (uint8_t)(1u + lv / 3u);
             weight[PICK_COMBO] = (uint8_t)(10u + aggro);
             weight[PICK_LOW] = (uint8_t)(6u + aggro / 2u);
             if (c->role[NGF_CPU_BLOW] != 0xFFu) weight[PICK_BLOW] = 3;

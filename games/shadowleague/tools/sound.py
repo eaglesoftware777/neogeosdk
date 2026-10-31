@@ -39,14 +39,60 @@ def sweep(t, f0, f1):
     return np.sin(2 * np.pi * (f0 * t + (f1 - f0) * t * t / (2 * dur)))
 
 
+from scipy.signal import butter, lfilter  # noqa: E402
+
+
+def _band(x, lo, hi):
+    """Band-pass (lo or hi may be None for a low- or high-pass)."""
+    nyq = RATE_A / 2
+    if lo and hi:
+        b, a = butter(2, [lo / nyq, min(hi / nyq, .99)], "band")
+    elif lo:
+        b, a = butter(2, lo / nyq, "high")
+    else:
+        b, a = butter(2, min(hi / nyq, .99), "low")
+    return lfilter(b, a, x)
+
+
+def _decay(t, ms):
+    return np.exp(-t / (ms / 1000.0))
+
+
+def _drop(t, f0, f1, ms):
+    """A sine whose pitch falls from f0 toward f1 with time constant ms."""
+    f = f1 + (f0 - f1) * np.exp(-t / (ms / 1000.0))
+    return np.sin(2 * np.pi * np.cumsum(f) / RATE_A)
+
+
+def _room(x, rng, ms=90, mix=.22):
+    """A short room tail: the sound convolved with a decaying burst of noise."""
+    n = int(ms / 1000.0 * RATE_A)
+    ir = rng.uniform(-1, 1, n) * np.exp(-np.arange(n) / (n / 4.0))
+    ir = _band(ir, 300, 5000)
+    wet = np.convolve(x, ir)[:len(x)]
+    wet /= max(np.abs(wet).max(), 1e-6)
+    return x + wet * mix * np.abs(x).max()
+
+
+def _at(n, t0, x):
+    """x placed t0 seconds into a buffer of n samples."""
+    out = np.zeros(n)
+    i = int(t0 * RATE_A)
+    k = min(len(x), n - i)
+    out[i:i + k] = x[:k]
+    return out
+
+
 def sfx(name, rng):
-    durations = {"coin": .35, "menu": .06, "start": .5, "hit_light": .12, "hit_heavy": .26, "block": .14,
-                 "whoosh": .16, "special": .38, "super": .9, "throw": .3, "ko": 1.2, "land": .14, "bell": 1.0,
+    """The effects, built the way arcade fighters build theirs: a sharp transient,
+    a band of crunch, a body that drops in pitch, and a short room tail."""
+    durations = {"coin": .35, "menu": .06, "start": .5, "hit_light": .14, "hit_heavy": .3, "block": .16,
+                 "whoosh": .17, "special": .4, "super": .9, "throw": .32, "ko": 1.2, "land": .15, "bell": 1.0,
                  "counter": .35, "select": .3, "power": .8}
     n = int(durations[name] * RATE_A)
     t = np.arange(n) / RATE_A
     noise = rng.uniform(-1, 1, n)
-    lp = lambda x, k: np.convolve(x, np.ones(k) / k, mode="same")  # noqa: E731
+    click = _band(noise, 2500, None) * _decay(t, 1.5)
     if name == "coin":
         s = np.where(t < .08, np.sin(2 * np.pi * 988 * t), np.sin(2 * np.pi * 1319 * t)) * env(n, .01, 1.5)
     elif name == "menu":
@@ -54,36 +100,94 @@ def sfx(name, rng):
     elif name in ("start", "select"):
         f = np.where(t < durations[name] / 3, 660, np.where(t < 2 * durations[name] / 3, 880, 1320))
         s = np.sign(np.sin(2 * np.pi * np.cumsum(f) / RATE_A)) * .45 * env(n, .02, .7)
-    elif name == "hit_light":
-        s = (lp(noise, 3) * .8 + sweep(t, 420, 120) * .6) * env(n, .01, 3)
-    elif name == "hit_heavy":
-        s = (lp(noise, 5) * .9 * env(n, .005, 4) + sweep(t, 160, 45) * env(n, .01, 1.6)) * .95
-    elif name == "block":
-        s = (np.sin(2 * np.pi * 1700 * t) * .5 + np.sin(2 * np.pi * 2300 * t) * .3 + noise * .3) * env(n, .005, 4)
-    elif name == "whoosh":
-        s = lp(noise, 6) * np.sin(np.pi * t / t[-1]) ** 2 * .8
-    elif name == "special":
-        s = (lp(noise, 4) * np.sin(np.pi * t / t[-1]) * .6 + sweep(t, 220, 880) * .35 * env(n, .1))
-    elif name == "super":
-        s = (sweep(t, 110, 660) * .4 + sweep(t, 165, 990) * .3 + lp(noise, 8) * .4) * env(n, .2, .8)
-    elif name == "throw":
-        s = (sweep(t, 140, 60) * .8 + lp(noise, 7) * .4) * env(n, .02, 2)
-    elif name == "ko":
-        s = (sweep(t, 90, 30) * .9 * env(n, .005, 1.2) + lp(noise, 9) * .5 * env(n, .002, 6) +
-             np.sin(2 * np.pi * 440 * t) * .2 * env(n, .05, 1))
-    elif name == "land":
-        s = (sweep(t, 110, 50) * .7 + lp(noise, 9) * .4) * env(n, .01, 3)
-    elif name == "bell":
-        s = sum(np.sin(2 * np.pi * f * t) * a for f, a in ((880, .5), (1320, .25), (2210, .15), (2960, .1))) * \
-            np.exp(-t * 3.2)
-    elif name == "power":                       # MAX mode: a rising, crackling surge
-        s = (sweep(t, 80, 640) * .5 + sweep(t, 120, 960) * .3 + lp(noise, 3) * .45 * np.sin(np.pi * t / t[-1])) * \
-            env(n, .55, .6)
-    elif name == "counter":
-        s = (np.sin(2 * np.pi * 1760 * t) * .5 + np.sin(2 * np.pi * 2637 * t) * .3) * np.exp(-t * 9) + \
-            lp(noise, 2) * .3 * env(n, .005, 6)
-    s = s / max(np.abs(s).max(), 1e-6) * 0.9
+    elif name == "hit_light":            # a snapping slap
+        s = (click * .9 + _band(noise, 900, 3800) * _decay(t, 22) * .9
+             + _drop(t, 260, 110, 25) * _decay(t, 55) * .7)
+        s = _room(np.tanh(s * 1.6), rng, 60, .15)
+    elif name == "hit_heavy":            # a deep, crunching blow
+        s = (click * 1.0 + _band(noise, 500, 2600) * _decay(t, 45) * .95
+             + _drop(t, 170, 48, 40) * _decay(t, 150) * 1.0
+             + _band(noise, None, 400) * _decay(t, 80) * .6)
+        s = _room(np.tanh(s * 2.0), rng, 110, .22)
+    elif name == "block":                # a hard clack on the guard
+        partials = sum(np.sin(2 * np.pi * f * t) * a for f, a in ((1460, .5), (2390, .35), (3710, .2)))
+        s = (click * .8 + partials * _decay(t, 28) + _drop(t, 220, 120, 20) * _decay(t, 40) * .5
+             + _band(noise, 1500, 6000) * _decay(t, 12) * .5)
+        s = _room(s, rng, 70, .18)
+    elif name == "whoosh":               # air torn past: a filtered sweep up then down
+        centre = 700 + 2200 * np.sin(np.pi * t / t[-1]) ** 1.5
+        s = np.zeros(n)
+        for k0 in range(0, n, 64):        # a sliding band, re-filtered every 64 samples
+            seg = noise[k0:k0 + 64]
+            c = centre[min(k0 + 32, n - 1)]
+            s[k0:k0 + len(seg)] = _band(noise[max(0, k0 - 256):k0 + 64], c * .6, c * 1.5)[-len(seg):]
+        s *= np.sin(np.pi * t / t[-1]) ** 2
+    elif name == "land":                 # feet into the floor, a little grit
+        s = (_drop(t, 120, 50, 30) * _decay(t, 70) + _band(noise, 200, 1400) * _decay(t, 35) * .6 + click * .3)
+        s = np.tanh(s * 1.4)
+    elif name == "throw":                # the grab, then the slam
+        grab = _band(noise, 1200, 3500) * _decay(t, 25) * .7
+        slam_t = t[:n - int(.1 * RATE_A)]
+        slam = (_drop(slam_t, 140, 42, 45) * _decay(slam_t, 160) + _band(rng.uniform(-1, 1, len(slam_t)), 300, 2000)
+                * _decay(slam_t, 60) * .8)
+        s = grab + _at(n, .1, np.tanh(slam * 1.8))
+        s = _room(s, rng, 120, .25)
+    elif name == "special":              # energy gathering into a burst
+        rise = _band(noise, 400, 4000) * np.sin(np.pi * np.minimum(t / (t[-1] * .7), 1)) ** 2 * .6
+        tone = sum(np.sin(2 * np.pi * (f * (1 + 1.5 * t / t[-1])) * t) * a for f, a in ((220, .3), (331, .2), (442, .15)))
+        burst = _at(n, t[-1] * .62, (click[:2000] * 1.2 + _drop(t[:2000], 300, 90, 30) * _decay(t[:2000], 60)))
+        s = _room(rise + tone * env(n, .3, 1.2) + burst, rng, 120, .25)
+    elif name == "super":                # the big one: a sub boom under a rising roar
+        roar = _band(noise, 200, 3000) * env(n, .25, .8) * .7
+        shimmer = (np.sin(2 * np.pi * np.cumsum(220 + 880 * t / t[-1]) / RATE_A) * .25
+                   + np.sin(2 * np.pi * np.cumsum(330 + 1320 * t / t[-1]) / RATE_A) * .18) * env(n, .4, .7)
+        boom = _drop(t, 90, 30, 120) * _decay(t, 400) * .9
+        s = _room(np.tanh((roar + shimmer + boom + click) * 1.5), rng, 200, .3)
+    elif name == "ko":                   # the finishing blow and a long fall-off
+        s = (click * 1.2 + _band(noise, 400, 3000) * _decay(t, 70) + _drop(t, 120, 30, 80) * _decay(t, 450) * 1.1
+             + _band(noise, None, 300) * _decay(t, 300) * .6)
+        s = _room(np.tanh(s * 2.2), rng, 300, .35)
+    elif name == "bell":                 # a ring bell: inharmonic partials, a slow ring-out
+        s = sum(np.sin(2 * np.pi * f * t) * a for f, a in ((812, .5), (1622, .22), (2104, .18), (2963, .1), (4006, .06)))
+        s = s * np.exp(-t * 2.6) + click * .4
+    elif name == "power":                # MAX mode: a rising, crackling surge
+        crackle = (rng.uniform(0, 1, n) > .985) * rng.uniform(-1, 1, n)
+        crackle = _band(crackle, 1500, None) * 2.0
+        s = (np.sin(2 * np.pi * np.cumsum(70 + 600 * (t / t[-1]) ** 1.5) / RATE_A) * .5
+             + _band(noise, 300, 2500) * .35 + crackle) * env(n, .5, .6)
+        s = _room(np.tanh(s * 1.4), rng, 160, .25)
+    elif name == "counter":              # a bright strike that rings
+        s = ((np.sin(2 * np.pi * 1760 * t) * .5 + np.sin(2 * np.pi * 2637 * t) * .3) * np.exp(-t * 8)
+             + click * 1.0 + _band(noise, 800, 3500) * _decay(t, 30) * .7 + _drop(t, 240, 90, 25) * _decay(t, 60) * .6)
+        s = _room(np.tanh(s * 1.4), rng, 140, .25)
+    s = s / max(np.abs(s).max(), 1e-6) * 0.92
     return (s * 32000).astype(np.int16)
+
+
+def _master_voice(pcm):
+    """Voices cleaned and pushed forward: low rumble off, a presence lift, gentle
+    compression, then up to just under full scale. The words are untouched."""
+    x = pcm.astype(np.float64) / 32768.0
+    if not np.abs(x).max():
+        return pcm
+    x = _band(x, 90, None)
+    x = x + _band(x, 2000, 4500) * .35
+    level = np.abs(x)
+    env_ = np.convolve(level, np.ones(64) / 64, mode="same")
+    thr = np.percentile(env_, 90) * .6 + 1e-6
+    gain = np.where(env_ > thr, (thr / np.maximum(env_, 1e-6)) ** .45, 1.0)
+    x = x * gain
+    x = x / max(np.abs(x).max(), 1e-6) * .95
+    return (x * 32767).astype(np.int16)
+
+
+def _master_music(pcm):
+    """The songs: a soft-knee squeeze and a limiter for a fuller, louder mix."""
+    x = pcm.astype(np.float64) / 32768.0
+    peak = max(np.abs(x).max(), 1e-6)
+    x = x / peak
+    x = np.tanh(x * 1.6) / np.tanh(1.6)
+    return (x * .95 * 32767).astype(np.int16)
 
 
 # ---------------------------------------------------------------- music
@@ -122,7 +226,7 @@ def main():
         with wave.open(str(slf_voices.VOICES / f"{line['key']}.wav")) as w:
             if w.getframerate() != RATE_A:
                 raise ValueError(f"{line['key']}: voices are recorded at {RATE_A} Hz")
-            pcm = np.frombuffer(w.readframes(w.getnframes()), "<i2")
+            pcm = _master_voice(np.frombuffer(w.readframes(w.getnframes()), "<i2"))
         wav(base / "in_wav_a" / f"{line['number']}.wav", pcm, RATE_A)
         data, _ = encode_adpcma(pcm.tolist())
         (base / "out_a" / f"{line['number']}.adpcma").write_bytes(data)
@@ -137,7 +241,7 @@ def main():
     for stale in (base / "in_wav_b").glob("*.wav"):
         stale.unlink()
     for i, song in SONGS.items():
-        pcm = render(song, rng)
+        pcm = _master_music(render(song, rng))
         wav(base / "in_wav_b" / f"{i}.wav", pcm, RATE_B)
         data = encode_adpcmb(pcm.tolist())
         data = data[0] if isinstance(data, tuple) else data
