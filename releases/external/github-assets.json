@@ -1,5 +1,5 @@
 {
- "read": "2026-10-28T19:41:09+00:00",
+ "read": "2026-10-31T15:14:14+00:00",
  "releases": [
   {
    "tag": "v1.0",
@@ -985,6 +985,670 @@
    "size": 14172,
    "sha256": "8417519522002800d2e070b0aa654854395e4528c492e77eed53375a3884544e",
    "updated": "2026-10-25T22:19:03Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SkyLance-BackBit-AES_v2.1.0.zip",
+   "size": 5344006,
+   "sha256": "586d8f8177d7979cfb3b43664e64b498dfadd67c046bc95e81936e5dc1fa90ad",
+   "updated": "2026-10-29T16:09:47Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SkyLance-BackBit-MVS_v2.1.0.zip",
+   "size": 5343923,
+   "sha256": "987ea0bdf8c0b0ec1553af8ec715a90ea8f206e3eaf99d2e775f0a5a33a4a046",
+   "updated": "2026-10-29T16:11:04Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SkyLance-CHANGELOG_v2.1.0.txt",
+   "size": 8127,
+   "sha256": "18f75895c77f1ee151d65df5815e19b897ef2478309e1a205db4fda32caded6e",
+   "updated": "2026-10-29T16:11:07Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SkyLance-Darksoft-AES_v2.1.0.zip",
+   "size": 5358125,
+   "sha256": "4a3f1a25c8471b53f6aa8f03508699e60f6ce250fee099a8702468abd99d11fe",
+   "updated": "2026-10-29T16:12:08Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SkyLance-Darksoft-MVS_v2.1.0.zip",
+   "size": 5358127,
+   "sha256": "ba1d84bf4dc587976c690ce35a73a3b1e472083ba5235188b7ad366f53b7a11a",
+   "updated": "2026-10-29T16:13:04Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SkyLance-MANIFEST_v2.1.0.txt",
+   "size": 1177,
+   "sha256": "e685102abc81a6410c6c571ce8f79034a573e306896cf4467dcadaabb6d2d5bf",
+   "updated": "2026-10-29T16:13:06Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SkyLance-WIP-AES-EagleBIOS_v2.1.0.zip",
+   "size": 5372770,
+   "sha256": "20de5d5a96ee5cefa32107d69b218a45f2407c145d4e24b38a7b4d664d3ab517",
+   "updated": "2026-10-29T16:14:14Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SkyLance-WIP-EagleBIOS_v2.1.0.zip",
+   "size": 5394292,
+   "sha256": "95c1d95baff6b5926373490552bbd7a1425e2205a564a61e9dc214d813a04997",
+   "updated": "2026-10-29T16:15:52Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SkyLance-WIP-NeoSD_AES_v2.1.0.neo",
+   "size": 17567744,
+   "sha256": "95deb79c3d82c1bbe1311da9ca4d031581b5b16829ea730a0134302b2908b7f9",
+   "updated": "2026-10-29T16:19:43Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SkyLance-WIP-NeoSD_MVS_v2.1.0.neo",
+   "size": 17567744,
+   "sha256": "d614fb9fef2f268f17b17549bd98159afaece8c9f436e3b938478e3898ecd7a5",
+   "updated": "2026-10-29T16:23:00Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-BackBit-AES_v3.1.0.zip",
+   "size": 12425426,
+   "sha256": "32591bef81ccdf6721d288848c0c68236bc41a5f0f5d272642498e89e29c1c26",
+   "updated": "2026-10-29T16:25:20Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-BackBit-MVS_v3.1.0.zip",
+   "size": 12425339,
+   "sha256": "5b5c6d6185dd4e0d679f48505da5f32563520d086c59c489b30ff133a199fe49",
+   "updated": "2026-10-29T16:27:40Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-CHANGELOG_v3.1.0.txt",
+   "size": 10233,
+   "sha256": "ae54bb899703d9cf2ef5270577700299b11b780b5d084fa2035f0996e2b0b996",
+   "updated": "2026-10-29T16:27:42Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NoSignal-BackBit-AES_v3.zip",
+   "size": 7086285,
+   "sha256": "3ff615f833eef510288d60b30d8162bee42d0c79012d17d9dbe6c35c1f49a567",
+   "updated": "2026-10-30T00:49:36Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NeoGeoCD-BinCue-SHA256SUMS.txt",
+   "size": 643,
+   "sha256": "1dbf6685c666d2624619a3aefd89c435799fbcd9bc14edbf1f7570c4ca7d8439",
+   "updated": "2026-10-30T00:41:42Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NoSignal-BackBit-MVS_v3.zip",
+   "size": 7086200,
+   "sha256": "8ae0b570dc988e0da030c3940aa99de7e3deeb084c1350d37dcfeb865fbce81d",
+   "updated": "2026-10-30T00:45:04Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NoSignal-CHANGELOG_v3.txt",
+   "size": 19369,
+   "sha256": "b4f8a57dea497bdaa76420a8b47e13cb45bfeca2a53a918b59437db9ca1ce48f",
+   "updated": "2026-10-30T00:45:11Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NoSignal-Darksoft-AES_v3.zip",
+   "size": 7005693,
+   "sha256": "026c75f580e693556178e26b7e8761e46763c29d2086dedf9b0cc2e4cca94ae5",
+   "updated": "2026-10-30T00:48:51Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NoSignal-Darksoft-MVS_v3.zip",
+   "size": 7005695,
+   "sha256": "1804c53b74b3d502881166e4fd40189cc833ddfa406b07de786b15132e3ca79d",
+   "updated": "2026-10-30T00:52:37Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NoSignal-MANIFEST_v3.txt",
+   "size": 1247,
+   "sha256": "1962b15bbdc0867cebfe8dc6cd6be262f90e605f67634e1da8e38ff76c21fab0",
+   "updated": "2026-10-30T00:49:44Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NoSignal-NeoGeoCD-BinCue_v3.zip",
+   "size": 54405543,
+   "sha256": "ba3e61ef82953edae3faeefbb9092ca60d31a83d4dcf6c1005149fa8ae88f467",
+   "updated": "2026-10-30T01:20:02Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NoSignal-NeoGeoCD-README_v3.txt",
+   "size": 2054,
+   "sha256": "f8386710f1a1386b8c9745924536572a5bfe414867f7b64e955312d67e574b61",
+   "updated": "2026-10-30T00:52:46Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NoSignal-NeoGeoCD-SHA256_v3.txt",
+   "size": 91,
+   "sha256": "74e03d3d1c7696fa203bb33c5ffdef7a161cbcfc5cc62ed5cd5f766b5585976b",
+   "updated": "2026-10-30T00:52:55Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NoSignal-NeoGeoCD_v3.zip",
+   "size": 17944404,
+   "sha256": "fb28ed487f4a70988dae606cb0fd126af4fe87c9e076bc19f9862b527701f027",
+   "updated": "2026-10-30T01:03:13Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NoSignal-README_v3.txt",
+   "size": 5252,
+   "sha256": "91541fcec2aa78dc9e2d5574f99757dfb115f5e713b51337db542086640c2de6",
+   "updated": "2026-10-30T01:03:20Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NoSignal-WIP-NeoSD_AES_v3.neo",
+   "size": 17567744,
+   "sha256": "5361302154bdbe918ef0d215504e2644ddc531a8a1a9c8a85c083f7daba4eb11",
+   "updated": "2026-10-30T01:12:44Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NoSignal-WIP-NeoSD_MVS_v3.neo",
+   "size": 17567744,
+   "sha256": "059282780cc0a11e45b206234854cde67d43988c769c26e0714024757d516c74",
+   "updated": "2026-10-30T01:23:12Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-Darksoft-AES_v3.1.0.zip",
+   "size": 12281297,
+   "sha256": "63dfb237b49435a33f7ae36f16a3df15342dbc2bba9368054040fc13bd4a9750",
+   "updated": "2026-10-30T01:27:52Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-Darksoft-MVS_v3.1.0.zip",
+   "size": 12281297,
+   "sha256": "26ba5bc1ae274bd8251e24272eae6f387a81534557bf0af23781a6d5ca9d523e",
+   "updated": "2026-10-30T01:34:13Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-MANIFEST_v3.1.0.txt",
+   "size": 1335,
+   "sha256": "4363be4c07ad5062c119355f5701fa53233122f67b5eb311b3ea28c9453473f1",
+   "updated": "2026-10-30T01:28:06Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-README_v3.1.0.txt",
+   "size": 5752,
+   "sha256": "8d435a8ed0047d0bfde99dcd21a55c391b6fa40c74d0ea9fffd0da9266f437a3",
+   "updated": "2026-10-30T01:28:17Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-WIP-NeoSD_AES_v3.1.0.neo",
+   "size": 28577792,
+   "sha256": "532d56a837ff37b1b461c0ded6c0cb095900e42ad97447370d9fddb437450917",
+   "updated": "2026-10-30T01:56:06Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-WIP-NeoSD_MVS_v3.1.0.neo",
+   "size": 28577792,
+   "sha256": "1493262bac639ce0278cd79d88ccd8cbcb803d41c087dfd45bb8d0ba70401be6",
+   "updated": "2026-10-30T02:07:50Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SkyLance-NeoGeoCD-EagleBIOS-CDZ-BinCue_v2-r2.zip",
+   "size": 28529620,
+   "sha256": "e8b75317724af7d831f2deec971a86905f167636ae0797fd3f42571a3d0ac9c1",
+   "updated": "2026-10-30T02:17:53Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SkyLance-NeoGeoCD-Stock-CDZ-BinCue_v2-r2.zip",
+   "size": 28529611,
+   "sha256": "4bcb0ab83730aa4f7afe3c2311ed1b8b8e8fdc8ece5f7f29a554ab152362b328",
+   "updated": "2026-10-30T02:27:56Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "MaiyaLuna-NeoGeoCD-BinCue_v2.zip",
+   "size": 68271662,
+   "sha256": "bfdc0be171d6bb32588fece7e4c10bb470a9c639a11d2277d59bfd84206a3f91",
+   "updated": "2026-10-30T02:51:50Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "Maiya-NeoGeoCD-EagleBIOS-CDZ-BinCue_v4-r2.zip",
+   "size": 69037283,
+   "sha256": "c3d053c6f55195d32919964c4b5844a20d9fb39df1da7f7638283ed03fa9b14f",
+   "updated": "2026-10-30T03:08:47Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "Maiya-NeoGeoCD-Stock-CDZ-BinCue_v4-r2.zip",
+   "size": 69037196,
+   "sha256": "45d86bb8b961a175e2f36c96b3feeb05f3e56d60ccabb2acef46348adc005093",
+   "updated": "2026-10-30T03:23:24Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "Maiya-Darksoft-MVS_v4.0.1.zip",
+   "size": 9045343,
+   "sha256": "ab6c09179ce4534d3c7422380432556b0ef8b9cf3672648665328104c7c27609",
+   "updated": "2026-10-31T13:28:58Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "Maiya-BackBit-MVS_v4.0.1.zip",
+   "size": 9109182,
+   "sha256": "38385752861e093dc3c0ecc9e26b5379070c5cc07eaeb524af3adaab9e879ed3",
+   "updated": "2026-10-31T13:30:48Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "Maiya-CHANGELOG_v4.0.1.txt",
+   "size": 26389,
+   "sha256": "28656d535184adb49508a20f25e2e1aaadcff07e8706ab4e6d5a39d8dc85f785",
+   "updated": "2026-10-31T13:20:11Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "Maiya-Darksoft-AES_v4.0.1.zip",
+   "size": 9045348,
+   "sha256": "52fafd5c1005e49f3c7bf6a0a03ed3fec62c67e384e689035f5095fbf0f78994",
+   "updated": "2026-10-31T13:30:44Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "Maiya-BackBit-AES_v4.0.1.zip",
+   "size": 9109268,
+   "sha256": "c61ebfcc88d728e47056267ac8d1126d89ef6ec3d06117562fc5a675f5be6c4c",
+   "updated": "2026-10-31T13:29:34Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "Maiya-MANIFEST_v4.0.1.txt",
+   "size": 1147,
+   "sha256": "766ade60c83fee774228c09f3c17c76900b40692c5281343c3661e43cefdb45d",
+   "updated": "2026-10-31T13:20:14Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "Maiya-WIP-AES-EagleBIOS_v4.0.1.zip",
+   "size": 9138055,
+   "sha256": "3e954a4e97d83cfd7b60cb49289effb4c8ea155203b43bca03074601c6af0b36",
+   "updated": "2026-10-31T13:25:11Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "Maiya-WIP-EagleBIOS_v4.0.1.zip",
+   "size": 9159568,
+   "sha256": "6ad25a52ca77cb9f75cfe1c0fab11463e75480edb5f73e49707fa7fe8fd4c9ce",
+   "updated": "2026-10-31T13:30:22Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "MaiyaLuna-BackBit-AES_v2.0.1.zip",
+   "size": 7757508,
+   "sha256": "d799b212b19eed91959406833f96477cc7c34e625f62a14670fd88129e744413",
+   "updated": "2026-10-31T13:37:04Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "MaiyaLuna-BackBit-MVS_v2.0.1.zip",
+   "size": 7757423,
+   "sha256": "50280016d83d3d5c409f9988429ec5063f4f29e1e9fbedde904b45a74ac472e8",
+   "updated": "2026-10-31T13:37:15Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "MaiyaLuna-CHANGELOG_v2.0.1.txt",
+   "size": 2734,
+   "sha256": "ff42305e4c988897cd71900f550c76b7a13484f4ff262c4b046a195a0eb443db",
+   "updated": "2026-10-31T13:31:02Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "MaiyaLuna-Darksoft-AES_v2.0.1.zip",
+   "size": 7750784,
+   "sha256": "b602c141b1499dc3e9b4d31ab97ab0f946389fc30d9cefb28862f8131b17507e",
+   "updated": "2026-10-31T13:37:35Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "MaiyaLuna-MANIFEST_v2.0.1.txt",
+   "size": 1187,
+   "sha256": "706e2274d474ca3b4f0b52423905bcea29569f9f08f0276d30e8f9701e59ac10",
+   "updated": "2026-10-31T13:37:27Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "Maiya-WIP-NeoSD_AES_v4.0.1.neo",
+   "size": 17567744,
+   "sha256": "335083e8a54206172249d881eec24ab80e6e89a7bd8cd957bc18cb158eaabff7",
+   "updated": "2026-10-31T13:53:53Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "Maiya-WIP-NeoSD_MVS_v4.0.1.neo",
+   "size": 17567744,
+   "sha256": "91baf0a45fc8ce764fee028e197b3a2c4fda87ed216c137400f1e58dc681c149",
+   "updated": "2026-10-31T14:00:41Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "MaiyaLuna-Darksoft-MVS_v2.0.1.zip",
+   "size": 7750779,
+   "sha256": "0147545ff30cd3c2f9cc0482bae25abe4ed92d2838b7e1980b9d758f42b6bc88",
+   "updated": "2026-10-31T14:02:16Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "MaiyaLuna-WIP-AES-EagleBIOS_v2.0.1.zip",
+   "size": 7786253,
+   "sha256": "bce1e8ed39db7971efbd85b9118ef1175ace3989d9dd2ba292addf48c207c073",
+   "updated": "2026-10-31T14:04:11Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "MaiyaLuna-WIP-EagleBIOS_v2.0.1.zip",
+   "size": 7807770,
+   "sha256": "7a42fd3f3c2610e9e8f77f44a53a2e5163085ba3b4f05a2d15e97347c7c02add",
+   "updated": "2026-10-31T14:06:14Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "MaiyaLuna-WIP-NeoSD_AES_v2.0.1.neo",
+   "size": 17567744,
+   "sha256": "b782684a233d5ca4246acfafa5999d02e37098849eeedb25f7dc3ae859e4f919",
+   "updated": "2026-10-31T14:17:05Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-BackBit-AES_v3.2.0.zip",
+   "size": 12453356,
+   "sha256": "0639237194ac9961b10530f3428ccf9f924952e7286214d1dbc2bd43e3f57f84",
+   "updated": "2026-10-31T14:32:46Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-BackBit-MVS_v3.2.0.zip",
+   "size": 12453268,
+   "sha256": "f6a463337172d3fc184bdf14a2a5927da2f8472be0b96eb0071658af044a39cb",
+   "updated": "2026-10-31T14:34:52Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-CHANGELOG_v3.2.0.txt",
+   "size": 14019,
+   "sha256": "9e615ec96b6ee78aeb45201f5f1fe13fed0373aea1aea74c91283618e4e363ef",
+   "updated": "2026-10-31T14:34:54Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-Darksoft-AES_v3.2.0.zip",
+   "size": 12306396,
+   "sha256": "f492374f03c7b5d232b6cc417592d0a3d3f96069d8ee7fec13094b3ee323d97d",
+   "updated": "2026-10-31T14:37:05Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-Darksoft-MVS_v3.2.0.zip",
+   "size": 12306398,
+   "sha256": "544c2d9f3d95a373c529959b1116544c5b0b938493145ce9de82bd04be995107",
+   "updated": "2026-10-31T14:39:18Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-MANIFEST_v3.2.0.txt",
+   "size": 1335,
+   "sha256": "fe00190de0453cf82a0bd05860c86a15dc7b171f237f6543c10c27288fa40138",
+   "updated": "2026-10-31T14:39:20Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-README_v3.2.0.txt",
+   "size": 5943,
+   "sha256": "0c8231b6046721e2870d83cee4cfb22f05336a6ec5c903da2b0ecb9ab8602b73",
+   "updated": "2026-10-31T14:39:22Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-WIP-AES-EagleBIOS_v3.2.0.zip",
+   "size": 12482044,
+   "sha256": "3b01c24e43d32f181b973f0486428249894ae69af97a60ce693842b61f50bcd5",
+   "updated": "2026-10-31T14:41:30Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-WIP-EagleBIOS_v3.2.0.zip",
+   "size": 12503567,
+   "sha256": "0a83d30a965ed49e7164f419fff2f55b2581ff56a2ea473cf79419893ed0da7d",
+   "updated": "2026-10-31T14:43:36Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-WIP-NeoSD_AES_v3.2.0.neo",
+   "size": 28577792,
+   "sha256": "88dd3f963b3cb6afdb6edd2f694a858cd47e4db07e7ea89b876e6ae261834fd0",
+   "updated": "2026-10-31T14:48:23Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-WIP-NeoSD_MVS_v3.2.0.neo",
+   "size": 28577792,
+   "sha256": "cab6422a7aba358bb0c5795f0e30fd471720e2759cf4192554015ed1b80c1607",
+   "updated": "2026-10-31T14:54:00Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "MaiyaLuna-WIP-NeoSD_MVS_v2.0.1.neo",
+   "size": 17567744,
+   "sha256": "2bcd6f8d07a635512498b7bd8895784e408fa6f04ac5c089b98faa4b81913ec9",
+   "updated": "2026-10-31T14:56:55Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NoSignal-WIP-AES-EagleBIOS_v3.zip",
+   "size": 7115035,
+   "sha256": "e31a7c0e93fd5ad77687bc7e7473e55467600c7adf76de626cf7ed04c9776518",
+   "updated": "2026-10-31T14:58:12Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "NoSignal-WIP-EagleBIOS_v3.zip",
+   "size": 7136552,
+   "sha256": "78b99d6b45752746f7c15a49d960bee95d639c27590923f2f6052b9ec7c4bd0e",
+   "updated": "2026-10-31T14:59:26Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SevenWonders-BackBit-AES_v1.0.1.zip",
+   "size": 3235809,
+   "sha256": "b5b68a1a309b9cd1c6af67ee597e691a89118cedbdbe06718b12283866544e05",
+   "updated": "2026-10-31T15:00:01Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SevenWonders-BackBit-MVS_v1.0.1.zip",
+   "size": 3235724,
+   "sha256": "6a58e2ca909b99bcaaadfc46d442a8a903f1d562e25a2655908f33257b782965",
+   "updated": "2026-10-31T15:00:36Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SevenWonders-CHANGELOG_v1.0.1.txt",
+   "size": 3111,
+   "sha256": "64f95de3f37ab310023e8fef1c634a3c8300df114d486e14fcd91470f234b52c",
+   "updated": "2026-10-31T15:00:38Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SevenWonders-Darksoft-AES_v1.0.1.zip",
+   "size": 3224234,
+   "sha256": "96542c44f4b0878ca076c4e12bebbf897f06354da7089dd8fc4ebefcdcf3acbc",
+   "updated": "2026-10-31T15:01:16Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SevenWonders-Darksoft-MVS_v1.0.1.zip",
+   "size": 3224234,
+   "sha256": "365252fff8e300be5822bc42c7394525da99f936dbe5baecf4b816e0db7d107e",
+   "updated": "2026-10-31T15:01:51Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SevenWonders-MANIFEST_v1.0.1.txt",
+   "size": 1217,
+   "sha256": "778dd342f56779c105850f02a33e89a272b828c8c51617c222fb995f561c274f",
+   "updated": "2026-10-31T15:01:53Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SevenWonders-WIP-AES-EagleBIOS_v1.0.1.zip",
+   "size": 3264503,
+   "sha256": "b6142e8917f602ad23b4d80a7789fcd844c06d84e95ccd7f79ee69728941ee25",
+   "updated": "2026-10-31T15:02:29Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SevenWonders-WIP-EagleBIOS_v1.0.1.zip",
+   "size": 3286022,
+   "sha256": "975c5a71c20d48dbd7b8fb41e2ef03cb3c95e1822ff3b4ad3de6ebb8d70c53f2",
+   "updated": "2026-10-31T15:03:04Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SevenWonders-WIP-NeoSD_AES_v1.0.1.neo",
+   "size": 13373440,
+   "sha256": "d06c1141061b2ee1db3cb03d83a2c9b7a81034b9016355d268fd0e3cf1f3169b",
+   "updated": "2026-10-31T15:05:19Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "SevenWonders-WIP-NeoSD_MVS_v1.0.1.neo",
+   "size": 13373440,
+   "sha256": "9fca2daef8b9d4d6141c1bbd493917209337c233517165eed92979e938197629",
+   "updated": "2026-10-31T15:07:33Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-WIP-AES-EagleBIOS_v3.1.0.zip",
+   "size": 12454115,
+   "sha256": "179506f8e78b031b5bfb257b15ea31e6fe7e38dd8ffe1e1d1f5e265b5ca9c124",
+   "updated": "2026-10-31T15:09:38Z"
+  },
+  {
+   "tag": "v1.7.7",
+   "prerelease": true,
+   "name": "ShadowLeague-WIP-EagleBIOS_v3.1.0.zip",
+   "size": 12475634,
+   "sha256": "b8be45b7ad68615d2cec865cc1bab9246ecd90724d698e61b4eb893cac4da642",
+   "updated": "2026-10-31T15:11:42Z"
   },
   {
    "tag": "skylance-hardware-rc1-20261014",

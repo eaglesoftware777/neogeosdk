@@ -1,7 +1,7 @@
 {
  "schema": 1,
- "generated_from_commit": "c7bf0b88fc9f22d23aa3829f1eedf8019111ab73",
- "github_assets_read": "2026-10-28T19:41:09+00:00",
+ "generated_from_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+ "github_assets_read": "2026-10-31T15:14:14+00:00",
  "note": "Built by tools/rom_registry.py from dist/release and its git history. Every hash is computed from the bytes; a build is identified by build_id, the hash of its ROM parts.",
  "builds": [
   {
@@ -3047,6 +3047,105 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/Maiya-BackBit-AES_v4.0.1.zip",
+   "file": "Maiya-BackBit-AES_v4.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "5398c23e424cfee76e007e020a4c7b1413f7ce10",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:26",
+   "archive": {
+    "size": 9109268,
+    "crc32": "d6e6c1ae",
+    "sha1": "432ec91e4dc7da39baf323015bd91160a3c6a0b4",
+    "sha256": "c61ebfcc88d728e47056267ac8d1126d89ef6ec3d06117562fc5a675f5be6c4c"
+   },
+   "files": [
+    {
+     "name": "maiya/maiya.p1",
+     "size": 524288,
+     "crc32": "762afd66",
+     "sha1": "6049afe0022f08b0242239f1178732c60f68a3a0",
+     "sha256": "dbfe67943fd51d75dfeacb587e16c2b4252562180768143d7b405c23581a1f20",
+     "part": "p1"
+    },
+    {
+     "name": "maiya/maiya.s1",
+     "size": 131072,
+     "crc32": "07999a92",
+     "sha1": "60b133bee92ba491e57235642f1469f93d005c20",
+     "sha256": "60b830a837657874d1124c486d9281e93c238f612dae111732ffc5e09ab7aff3",
+     "part": "s1"
+    },
+    {
+     "name": "maiya/maiya.m1",
+     "size": 131072,
+     "crc32": "ce7717bd",
+     "sha1": "66f3ef28d76104adeed931bc2f6b65a5f5e4c4e8",
+     "sha256": "e7d130680b970a6c483032df1f1d3a60db79980084358f4bcbaa9bb998381c60",
+     "part": "m1"
+    },
+    {
+     "name": "maiya/maiya.v1",
+     "size": 7973632,
+     "crc32": "127b89b4",
+     "sha1": "8ec212c59da5e650ed6978cf358e24220b5d33c3",
+     "sha256": "7897816964e6d044c408ab673a5244cd269c87f515bb8d8883ddd2a599372145",
+     "part": "v1"
+    },
+    {
+     "name": "maiya/maiya.c1",
+     "size": 4194304,
+     "crc32": "131fc3fc",
+     "sha1": "80de27f5e2a2efd86163048dc2af8a4e04bae868",
+     "sha256": "23c93fe1ed5db8626d7c4639241c193180d293e106a6fc2aa22af92e815cc1d2",
+     "part": "c1"
+    },
+    {
+     "name": "maiya/maiya.c2",
+     "size": 4194304,
+     "crc32": "55a6ddcf",
+     "sha1": "443264b01d92e49cfe77d0ab02238883c6a7594d",
+     "sha256": "8d30d9250f7be875b8ac5edebf4da3a2c606f45070999ab28ede461bf5fb6c96",
+     "part": "c2"
+    },
+    {
+     "name": "maiya/README.txt",
+     "size": 567,
+     "crc32": "f6962e5d",
+     "sha1": "b00597bbc269a16a52085d1d5c62d37d84b858ec",
+     "sha256": "f04b706599020fd14e1e992f1bf8b2622e2529a5f1af868e71f455c227802eb6"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "Maiya-BackBit-AES_v4.0.1.zip"
+    }
+   ],
+   "prefix": "Maiya",
+   "game": "maiya",
+   "title": "Maiya: Super Nature Girl",
+   "version": "v4.0.1",
+   "semver": "4.0.1",
+   "target": "backbit-aes",
+   "romset": "maiya",
+   "external_names": {
+    "hbmame": "maiya",
+    "fbneo": "maiya"
+   },
+   "build_id": "0f3570cc4620",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/Maiya-BackBit-AES_v4.zip",
    "file": "Maiya-BackBit-AES_v4.zip",
    "content_no": 1,
@@ -3721,6 +3820,105 @@
     "fbneo": "maiya"
    },
    "build_id": "d4118b466a54",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/Maiya-BackBit-MVS_v4.0.1.zip",
+   "file": "Maiya-BackBit-MVS_v4.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "5b6988af7234578d13b05a36fcf6567c3dbcca72",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:26",
+   "archive": {
+    "size": 9109182,
+    "crc32": "e0b9735c",
+    "sha1": "2fd333a0eb25be6e091b7a89e34fd7946ebc054e",
+    "sha256": "38385752861e093dc3c0ecc9e26b5379070c5cc07eaeb524af3adaab9e879ed3"
+   },
+   "files": [
+    {
+     "name": "maiya/maiya.p1",
+     "size": 524288,
+     "crc32": "7f321556",
+     "sha1": "1134348f5dae5bd92abaed53c12d45691874b9be",
+     "sha256": "8a602ca4649acb5cc1145d921e5cb3bac67074d253473ba5368f3f05da5aa80d",
+     "part": "p1"
+    },
+    {
+     "name": "maiya/maiya.s1",
+     "size": 131072,
+     "crc32": "07999a92",
+     "sha1": "60b133bee92ba491e57235642f1469f93d005c20",
+     "sha256": "60b830a837657874d1124c486d9281e93c238f612dae111732ffc5e09ab7aff3",
+     "part": "s1"
+    },
+    {
+     "name": "maiya/maiya.m1",
+     "size": 131072,
+     "crc32": "ce7717bd",
+     "sha1": "66f3ef28d76104adeed931bc2f6b65a5f5e4c4e8",
+     "sha256": "e7d130680b970a6c483032df1f1d3a60db79980084358f4bcbaa9bb998381c60",
+     "part": "m1"
+    },
+    {
+     "name": "maiya/maiya.v1",
+     "size": 7973632,
+     "crc32": "127b89b4",
+     "sha1": "8ec212c59da5e650ed6978cf358e24220b5d33c3",
+     "sha256": "7897816964e6d044c408ab673a5244cd269c87f515bb8d8883ddd2a599372145",
+     "part": "v1"
+    },
+    {
+     "name": "maiya/maiya.c1",
+     "size": 4194304,
+     "crc32": "131fc3fc",
+     "sha1": "80de27f5e2a2efd86163048dc2af8a4e04bae868",
+     "sha256": "23c93fe1ed5db8626d7c4639241c193180d293e106a6fc2aa22af92e815cc1d2",
+     "part": "c1"
+    },
+    {
+     "name": "maiya/maiya.c2",
+     "size": 4194304,
+     "crc32": "55a6ddcf",
+     "sha1": "443264b01d92e49cfe77d0ab02238883c6a7594d",
+     "sha256": "8d30d9250f7be875b8ac5edebf4da3a2c606f45070999ab28ede461bf5fb6c96",
+     "part": "c2"
+    },
+    {
+     "name": "maiya/README.txt",
+     "size": 429,
+     "crc32": "1f8ca6a9",
+     "sha1": "aad1c5e587882ad445104f689de11f9d2a3eebad",
+     "sha256": "29811ccf7b34dd1196a73de727550332b61c72ba8f0388124faaa3f5058ed206"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "Maiya-BackBit-MVS_v4.0.1.zip"
+    }
+   ],
+   "prefix": "Maiya",
+   "game": "maiya",
+   "title": "Maiya: Super Nature Girl",
+   "version": "v4.0.1",
+   "semver": "4.0.1",
+   "target": "backbit-mvs",
+   "romset": "maiya",
+   "external_names": {
+    "hbmame": "maiya",
+    "fbneo": "maiya"
+   },
+   "build_id": "d9b825447f93",
    "game_id": null,
    "external_matches": []
   },
@@ -4401,6 +4599,49 @@
     "fbneo": "maiya"
    },
    "build_id": "9a8fb7b84fbe",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/Maiya-CHANGELOG_v4.0.1.txt",
+   "file": "Maiya-CHANGELOG_v4.0.1.txt",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "d838c905afb049b8eea66ebaab53fa30842deb96",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 26389,
+    "crc32": "59d8369f",
+    "sha1": "d9c4f9c5b1a2ea3d2bc98ea5615c1571f36424d1",
+    "sha256": "28656d535184adb49508a20f25e2e1aaadcff07e8706ab4e6d5a39d8dc85f785"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "Maiya-CHANGELOG_v4.0.1.txt"
+    }
+   ],
+   "prefix": "Maiya",
+   "game": "maiya",
+   "title": "Maiya: Super Nature Girl",
+   "version": "v4.0.1",
+   "semver": "4.0.1",
+   "target": "document",
+   "romset": "maiya",
+   "external_names": {
+    "hbmame": "maiya",
+    "fbneo": "maiya"
+   },
+   "build_id": "28656d535184",
    "game_id": null,
    "external_matches": []
   },
@@ -5143,6 +5384,106 @@
     "fbneo": "maiya"
    },
    "build_id": "190dc576e77c",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/Maiya-Darksoft-AES_v4.0.1.zip",
+   "file": "Maiya-Darksoft-AES_v4.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "19b657b734f564728c21f8c0599b7f867166f87d",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:26",
+   "archive": {
+    "size": 9045348,
+    "crc32": "f72517ba",
+    "sha1": "e1b383e7b167308820b6264f47ec6d0cae936401",
+    "sha256": "52fafd5c1005e49f3c7bf6a0a03ed3fec62c67e384e689035f5095fbf0f78994"
+   },
+   "files": [
+    {
+     "name": "Maiya_AES/prom",
+     "size": 524288,
+     "crc32": "762afd66",
+     "sha1": "6049afe0022f08b0242239f1178732c60f68a3a0",
+     "sha256": "dbfe67943fd51d75dfeacb587e16c2b4252562180768143d7b405c23581a1f20"
+    },
+    {
+     "name": "Maiya_AES/srom",
+     "size": 131072,
+     "crc32": "07999a92",
+     "sha1": "60b133bee92ba491e57235642f1469f93d005c20",
+     "sha256": "60b830a837657874d1124c486d9281e93c238f612dae111732ffc5e09ab7aff3"
+    },
+    {
+     "name": "Maiya_AES/m1rom",
+     "size": 131072,
+     "crc32": "ce7717bd",
+     "sha1": "66f3ef28d76104adeed931bc2f6b65a5f5e4c4e8",
+     "sha256": "e7d130680b970a6c483032df1f1d3a60db79980084358f4bcbaa9bb998381c60"
+    },
+    {
+     "name": "Maiya_AES/vroma0",
+     "size": 8388608,
+     "crc32": "5181af9f",
+     "sha1": "1fee706c5129f3f0e9b3051515f8a17a8f109139",
+     "sha256": "ea1f4bd3acbe1105f3eb5741ab0ab930e70980bedeaa2d48874e458c60fb0792"
+    },
+    {
+     "name": "Maiya_AES/crom0",
+     "size": 8388608,
+     "crc32": "7423e7e8",
+     "sha1": "5faf4832d6dcbf18aec3d1c16fde2ec76933460b",
+     "sha256": "af1be9c4303afa3310adc7c9ff22cd53c03d9f39309528cc638998ac68dc4087"
+    },
+    {
+     "name": "Maiya_AES/fpga",
+     "size": 2,
+     "crc32": "a15d25e1",
+     "sha1": "b1d5781111d84f7b3fe45a0852e59758cd7a87e5",
+     "sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5"
+    },
+    {
+     "name": "Maiya_AES/MANIFEST.json",
+     "size": 1354,
+     "crc32": "5122ce41",
+     "sha1": "c544b99365a529a966a6ffd248977fb207196eda",
+     "sha256": "c57977b36b635778d9d6cb6a09b366e1d8528b8d91999cdd1856a80129c5f590"
+    },
+    {
+     "name": "Maiya_AES/README.txt",
+     "size": 505,
+     "crc32": "440c486e",
+     "sha1": "0c7611ce6522319702e2de211bc4c1a796e76e2c",
+     "sha256": "e9f38170b1b46c2acc0b9822c42cc638b973600df7dd92deefca91b6e4c685f1"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "Maiya-Darksoft-AES_v4.0.1.zip"
+    }
+   ],
+   "prefix": "Maiya",
+   "game": "maiya",
+   "title": "Maiya: Super Nature Girl",
+   "version": "v4.0.1",
+   "semver": "4.0.1",
+   "target": "darksoft-aes",
+   "romset": "maiya",
+   "external_names": {
+    "hbmame": "maiya",
+    "fbneo": "maiya"
+   },
+   "build_id": "52fafd5c1005",
    "game_id": null,
    "external_matches": []
   },
@@ -6117,6 +6458,106 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/Maiya-Darksoft-MVS_v4.0.1.zip",
+   "file": "Maiya-Darksoft-MVS_v4.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "3df999a874b273635ba6a5ceddb4b5a226eba15d",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:26",
+   "archive": {
+    "size": 9045343,
+    "crc32": "70b5ef73",
+    "sha1": "d45c22f411e0961c9fa816714192a78482ba8f61",
+    "sha256": "ab6c09179ce4534d3c7422380432556b0ef8b9cf3672648665328104c7c27609"
+   },
+   "files": [
+    {
+     "name": "Maiya_MVS/prom",
+     "size": 524288,
+     "crc32": "7f321556",
+     "sha1": "1134348f5dae5bd92abaed53c12d45691874b9be",
+     "sha256": "8a602ca4649acb5cc1145d921e5cb3bac67074d253473ba5368f3f05da5aa80d"
+    },
+    {
+     "name": "Maiya_MVS/srom",
+     "size": 131072,
+     "crc32": "07999a92",
+     "sha1": "60b133bee92ba491e57235642f1469f93d005c20",
+     "sha256": "60b830a837657874d1124c486d9281e93c238f612dae111732ffc5e09ab7aff3"
+    },
+    {
+     "name": "Maiya_MVS/m1rom",
+     "size": 131072,
+     "crc32": "ce7717bd",
+     "sha1": "66f3ef28d76104adeed931bc2f6b65a5f5e4c4e8",
+     "sha256": "e7d130680b970a6c483032df1f1d3a60db79980084358f4bcbaa9bb998381c60"
+    },
+    {
+     "name": "Maiya_MVS/vroma0",
+     "size": 8388608,
+     "crc32": "5181af9f",
+     "sha1": "1fee706c5129f3f0e9b3051515f8a17a8f109139",
+     "sha256": "ea1f4bd3acbe1105f3eb5741ab0ab930e70980bedeaa2d48874e458c60fb0792"
+    },
+    {
+     "name": "Maiya_MVS/crom0",
+     "size": 8388608,
+     "crc32": "7423e7e8",
+     "sha1": "5faf4832d6dcbf18aec3d1c16fde2ec76933460b",
+     "sha256": "af1be9c4303afa3310adc7c9ff22cd53c03d9f39309528cc638998ac68dc4087"
+    },
+    {
+     "name": "Maiya_MVS/fpga",
+     "size": 2,
+     "crc32": "a15d25e1",
+     "sha1": "b1d5781111d84f7b3fe45a0852e59758cd7a87e5",
+     "sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5"
+    },
+    {
+     "name": "Maiya_MVS/MANIFEST.json",
+     "size": 1354,
+     "crc32": "7a862782",
+     "sha1": "f67aa78cd207c24b6725aebaeb17e9a3ae4b2414",
+     "sha256": "263daf550ef01e110e02b7eeab53a6f3687dfcdb287b25135db36dbd88796a4c"
+    },
+    {
+     "name": "Maiya_MVS/README.txt",
+     "size": 505,
+     "crc32": "2b5b88ab",
+     "sha1": "29376eed6933f035eb572e5a69a70c48c1072def",
+     "sha256": "db3572bcbd5508820fa29c9236ac02217d505c6e30ff1ecf1557b161d77cd290"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "Maiya-Darksoft-MVS_v4.0.1.zip"
+    }
+   ],
+   "prefix": "Maiya",
+   "game": "maiya",
+   "title": "Maiya: Super Nature Girl",
+   "version": "v4.0.1",
+   "semver": "4.0.1",
+   "target": "darksoft-mvs",
+   "romset": "maiya",
+   "external_names": {
+    "hbmame": "maiya",
+    "fbneo": "maiya"
+   },
+   "build_id": "ab6c09179ce4",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/Maiya-Darksoft-MVS_v4.zip",
    "file": "Maiya-Darksoft-MVS_v4.zip",
    "content_no": 1,
@@ -6878,6 +7319,49 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/Maiya-MANIFEST_v4.0.1.txt",
+   "file": "Maiya-MANIFEST_v4.0.1.txt",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "3bf79791f2aa212074414d98afc8d66560924170",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 1147,
+    "crc32": "54a26423",
+    "sha1": "cd8b8ff8b94cda042357ee1366c773c79f59764b",
+    "sha256": "766ade60c83fee774228c09f3c17c76900b40692c5281343c3661e43cefdb45d"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "Maiya-MANIFEST_v4.0.1.txt"
+    }
+   ],
+   "prefix": "Maiya",
+   "game": "maiya",
+   "title": "Maiya: Super Nature Girl",
+   "version": "v4.0.1",
+   "semver": "4.0.1",
+   "target": "document",
+   "romset": "maiya",
+   "external_names": {
+    "hbmame": "maiya",
+    "fbneo": "maiya"
+   },
+   "build_id": "766ade60c83f",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/Maiya-MANIFEST_v4.txt",
    "file": "Maiya-MANIFEST_v4.txt",
    "content_no": 1,
@@ -7084,7 +7568,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -7135,7 +7619,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "Maiya-NeoGeoCD-EagleBIOS-CDZ-BinCue_v4-r2.zip"
+    }
+   ],
    "build_id": "c3d053c6f551",
    "game_id": null,
    "external_matches": []
@@ -7147,7 +7636,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -7198,7 +7687,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "Maiya-NeoGeoCD-Stock-CDZ-BinCue_v4-r2.zip"
+    }
+   ],
    "build_id": "45d86bb8b961",
    "game_id": null,
    "external_matches": []
@@ -7210,7 +7704,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -8621,6 +9115,153 @@
     "fbneo": "maiya"
    },
    "build_id": "84c525e35639",
+   "game_id": "780",
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/Maiya-WIP-AES-EagleBIOS_v4.0.1.zip",
+   "file": "Maiya-WIP-AES-EagleBIOS_v4.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "490a692fcf5ab3b305601a861be8ce0c5c85fc7e",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:28",
+   "archive": {
+    "size": 9138055,
+    "crc32": "88efa0b0",
+    "sha1": "3868a5e79106cbc64848ab444f54235dfd0aec17",
+    "sha256": "3e954a4e97d83cfd7b60cb49289effb4c8ea155203b43bca03074601c6af0b36"
+   },
+   "files": [
+    {
+     "name": "card.bin",
+     "size": 2048,
+     "crc32": "f1e8ba9e",
+     "sha1": "605db3fdbaff4ba13729371ad0c4fbab3889378e",
+     "sha256": "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad"
+    },
+    {
+     "name": "roms/maiya/780-p1.p1",
+     "size": 524288,
+     "crc32": "762afd66",
+     "sha1": "6049afe0022f08b0242239f1178732c60f68a3a0",
+     "sha256": "dbfe67943fd51d75dfeacb587e16c2b4252562180768143d7b405c23581a1f20",
+     "part": "p1"
+    },
+    {
+     "name": "roms/maiya/780-s1.s1",
+     "size": 131072,
+     "crc32": "07999a92",
+     "sha1": "60b133bee92ba491e57235642f1469f93d005c20",
+     "sha256": "60b830a837657874d1124c486d9281e93c238f612dae111732ffc5e09ab7aff3",
+     "part": "s1"
+    },
+    {
+     "name": "roms/maiya/780-m1.m1",
+     "size": 131072,
+     "crc32": "ce7717bd",
+     "sha1": "66f3ef28d76104adeed931bc2f6b65a5f5e4c4e8",
+     "sha256": "e7d130680b970a6c483032df1f1d3a60db79980084358f4bcbaa9bb998381c60",
+     "part": "m1"
+    },
+    {
+     "name": "roms/maiya/780-v1.v1",
+     "size": 7973632,
+     "crc32": "127b89b4",
+     "sha1": "8ec212c59da5e650ed6978cf358e24220b5d33c3",
+     "sha256": "7897816964e6d044c408ab673a5244cd269c87f515bb8d8883ddd2a599372145",
+     "part": "v1"
+    },
+    {
+     "name": "roms/maiya/780-c1.c1",
+     "size": 4194304,
+     "crc32": "131fc3fc",
+     "sha1": "80de27f5e2a2efd86163048dc2af8a4e04bae868",
+     "sha256": "23c93fe1ed5db8626d7c4639241c193180d293e106a6fc2aa22af92e815cc1d2",
+     "part": "c1"
+    },
+    {
+     "name": "roms/maiya/780-c2.c2",
+     "size": 4194304,
+     "crc32": "55a6ddcf",
+     "sha1": "443264b01d92e49cfe77d0ab02238883c6a7594d",
+     "sha256": "8d30d9250f7be875b8ac5edebf4da3a2c606f45070999ab28ede461bf5fb6c96",
+     "part": "c2"
+    },
+    {
+     "name": "roms/aes/neo-epo.bin",
+     "size": 131072,
+     "crc32": "789b3919",
+     "sha1": "35eabd4a0d5beeb52286a463bc8eec2a91ec9893",
+     "sha256": "7eec66f43b306c00bd66e25f57cf9480d3dc792c413a9cbe98425a56ea6274b7"
+    },
+    {
+     "name": "roms/aes/000-lo.lo",
+     "size": 131072,
+     "crc32": "cede14c2",
+     "sha1": "07aed5c8c3b7108ab98e8e63969a0007f7241235",
+     "sha256": "7eff4efa47f1560af2eca65a846b60567f1bd84bfce63ff8987c714ed20255c7"
+    },
+    {
+     "name": "hash/neogeo.xml",
+     "size": 2289,
+     "crc32": "4f50bfe0",
+     "sha1": "63d0aeaee5f0abf467d7dd24223cded08630ce3a",
+     "sha256": "c2ed302a03123d673792edadba53e827fd095b19df81b9bda4e9305681d9d203"
+    },
+    {
+     "name": "EagleBIOS.md",
+     "size": 17737,
+     "crc32": "8eaa83e8",
+     "sha1": "fad8fef1125d56713a2e8b4353768942404d82a0",
+     "sha256": "29118e75882900937a596f6fcaaef164a1b16dba431b4898e41802e883f6e482"
+    },
+    {
+     "name": "LICENSE",
+     "size": 1073,
+     "crc32": "540e329d",
+     "sha1": "1969f56845d79f4e708999f95c2c484b8f816828",
+     "sha256": "7c316688a04ac1b751f2654ba768df53bb56af37f80ed9d8846fd945f46eab09"
+    },
+    {
+     "name": "RUN.txt",
+     "size": 228,
+     "crc32": "b7d65427",
+     "sha1": "bc0e982d273e73eead98a55fafd8186e05cfd491",
+     "sha256": "31c05bd6299b9342146958c8fdb94e9ce1e573981b4a8ddf5950260163fd962d"
+    }
+   ],
+   "mame_definition": {
+    "ok": true,
+    "software": [
+     "maiya"
+    ],
+    "problems": []
+   },
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "Maiya-WIP-AES-EagleBIOS_v4.0.1.zip"
+    }
+   ],
+   "prefix": "Maiya",
+   "game": "maiya",
+   "title": "Maiya: Super Nature Girl",
+   "version": "v4.0.1",
+   "semver": "4.0.1",
+   "target": "mame-aes",
+   "romset": "maiya",
+   "external_names": {
+    "hbmame": "maiya",
+    "fbneo": "maiya"
+   },
+   "build_id": "0f3570cc4620",
    "game_id": "780",
    "external_matches": []
   },
@@ -11351,6 +11992,174 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/Maiya-WIP-EagleBIOS_v4.0.1.zip",
+   "file": "Maiya-WIP-EagleBIOS_v4.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "b283f02ffa04bc9aa2ec02a4846ff46d2308219c",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:28",
+   "archive": {
+    "size": 9159568,
+    "crc32": "6e6034f4",
+    "sha1": "382e2d0f30ac79d93308bffc90b9d11d2ebe399b",
+    "sha256": "6ad25a52ca77cb9f75cfe1c0fab11463e75480edb5f73e49707fa7fe8fd4c9ce"
+   },
+   "files": [
+    {
+     "name": "roms/maiya/780-p1.p1",
+     "size": 524288,
+     "crc32": "7f321556",
+     "sha1": "1134348f5dae5bd92abaed53c12d45691874b9be",
+     "sha256": "8a602ca4649acb5cc1145d921e5cb3bac67074d253473ba5368f3f05da5aa80d",
+     "part": "p1"
+    },
+    {
+     "name": "roms/maiya/780-s1.s1",
+     "size": 131072,
+     "crc32": "07999a92",
+     "sha1": "60b133bee92ba491e57235642f1469f93d005c20",
+     "sha256": "60b830a837657874d1124c486d9281e93c238f612dae111732ffc5e09ab7aff3",
+     "part": "s1"
+    },
+    {
+     "name": "roms/maiya/780-m1.m1",
+     "size": 131072,
+     "crc32": "ce7717bd",
+     "sha1": "66f3ef28d76104adeed931bc2f6b65a5f5e4c4e8",
+     "sha256": "e7d130680b970a6c483032df1f1d3a60db79980084358f4bcbaa9bb998381c60",
+     "part": "m1"
+    },
+    {
+     "name": "roms/maiya/780-v1.v1",
+     "size": 7973632,
+     "crc32": "127b89b4",
+     "sha1": "8ec212c59da5e650ed6978cf358e24220b5d33c3",
+     "sha256": "7897816964e6d044c408ab673a5244cd269c87f515bb8d8883ddd2a599372145",
+     "part": "v1"
+    },
+    {
+     "name": "roms/maiya/780-c1.c1",
+     "size": 4194304,
+     "crc32": "131fc3fc",
+     "sha1": "80de27f5e2a2efd86163048dc2af8a4e04bae868",
+     "sha256": "23c93fe1ed5db8626d7c4639241c193180d293e106a6fc2aa22af92e815cc1d2",
+     "part": "c1"
+    },
+    {
+     "name": "roms/maiya/780-c2.c2",
+     "size": 4194304,
+     "crc32": "55a6ddcf",
+     "sha1": "443264b01d92e49cfe77d0ab02238883c6a7594d",
+     "sha256": "8d30d9250f7be875b8ac5edebf4da3a2c606f45070999ab28ede461bf5fb6c96",
+     "part": "c2"
+    },
+    {
+     "name": "roms/neogeo/sp-s2.sp1",
+     "size": 131072,
+     "crc32": "978e3f00",
+     "sha1": "61fd9d952a56c6f1cf96a68e54a17ece1a43fb3f",
+     "sha256": "aae26373b3e393782bd3aaf58c6de16df3f52b9142d28838be28692d1621d21d"
+    },
+    {
+     "name": "roms/neogeo/sm1.sm1",
+     "size": 131072,
+     "crc32": "5f2dbc26",
+     "sha1": "203340fe57b73384d8ef24926edebfb8159c7e13",
+     "sha256": "b16c4f69d01853bc5c074fe1be41e028ec950ce8cc3cb88abd385a169fdb4234"
+    },
+    {
+     "name": "roms/neogeo/sfix.sfix",
+     "size": 131072,
+     "crc32": "d5c1a013",
+     "sha1": "b5f1429090366303563468b76fbe0c19c78bc3a9",
+     "sha256": "feca1c2515473c34be89b76b45f01ec4e55a0325fe06c732b357982d047e0b96"
+    },
+    {
+     "name": "roms/neogeo/000-lo.lo",
+     "size": 131072,
+     "crc32": "cede14c2",
+     "sha1": "07aed5c8c3b7108ab98e8e63969a0007f7241235",
+     "sha256": "7eff4efa47f1560af2eca65a846b60567f1bd84bfce63ff8987c714ed20255c7"
+    },
+    {
+     "name": "roms/aes/neo-epo.bin",
+     "size": 131072,
+     "crc32": "789b3919",
+     "sha1": "35eabd4a0d5beeb52286a463bc8eec2a91ec9893",
+     "sha256": "7eec66f43b306c00bd66e25f57cf9480d3dc792c413a9cbe98425a56ea6274b7"
+    },
+    {
+     "name": "roms/aes/000-lo.lo",
+     "size": 131072,
+     "crc32": "cede14c2",
+     "sha1": "07aed5c8c3b7108ab98e8e63969a0007f7241235",
+     "sha256": "7eff4efa47f1560af2eca65a846b60567f1bd84bfce63ff8987c714ed20255c7"
+    },
+    {
+     "name": "hash/neogeo.xml",
+     "size": 2289,
+     "crc32": "612817ad",
+     "sha1": "352cc72b3b98491496d66a40e8fbfc565e33da19",
+     "sha256": "561aac1d453829511597f8fe0d011c64429fedd41fb3b021d60ed198e8f5f7a8"
+    },
+    {
+     "name": "EagleBIOS.md",
+     "size": 17737,
+     "crc32": "8eaa83e8",
+     "sha1": "fad8fef1125d56713a2e8b4353768942404d82a0",
+     "sha256": "29118e75882900937a596f6fcaaef164a1b16dba431b4898e41802e883f6e482"
+    },
+    {
+     "name": "LICENSE",
+     "size": 1073,
+     "crc32": "540e329d",
+     "sha1": "1969f56845d79f4e708999f95c2c484b8f816828",
+     "sha256": "7c316688a04ac1b751f2654ba768df53bb56af37f80ed9d8846fd945f46eab09"
+    },
+    {
+     "name": "RUN.txt",
+     "size": 215,
+     "crc32": "5f357564",
+     "sha1": "2e5f792f32c0f6624192613f0c827b433b6889ad",
+     "sha256": "d97ede4a6aca4749b23561eeb3071beecef53866b0124f81d42d1456ddf4bf89"
+    }
+   ],
+   "mame_definition": {
+    "ok": true,
+    "software": [
+     "maiya"
+    ],
+    "problems": []
+   },
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "Maiya-WIP-EagleBIOS_v4.0.1.zip"
+    }
+   ],
+   "prefix": "Maiya",
+   "game": "maiya",
+   "title": "Maiya: Super Nature Girl",
+   "version": "v4.0.1",
+   "semver": "4.0.1",
+   "target": "mame-mvs",
+   "romset": "maiya",
+   "external_names": {
+    "hbmame": "maiya",
+    "fbneo": "maiya"
+   },
+   "build_id": "d9b825447f93",
+   "game_id": "780",
+   "external_matches": []
+  },
+  {
    "path": "dist/release/Maiya-WIP-EagleBIOS_v4.zip",
    "file": "Maiya-WIP-EagleBIOS_v4.zip",
    "content_no": 1,
@@ -12713,6 +13522,49 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/Maiya-WIP-NeoSD_AES_v4.0.1.neo",
+   "file": "Maiya-WIP-NeoSD_AES_v4.0.1.neo",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "70cbee6180f55787cc123c2eceb08afdebef6d07",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 17567744,
+    "crc32": "fafe1c2d",
+    "sha1": "4b7f195b09f03d729336f48fe7d8034289b326cb",
+    "sha256": "335083e8a54206172249d881eec24ab80e6e89a7bd8cd957bc18cb158eaabff7"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "Maiya-WIP-NeoSD_AES_v4.0.1.neo"
+    }
+   ],
+   "prefix": "Maiya",
+   "game": "maiya",
+   "title": "Maiya: Super Nature Girl",
+   "version": "v4.0.1",
+   "semver": "4.0.1",
+   "target": "neosd-aes",
+   "romset": "maiya",
+   "external_names": {
+    "hbmame": "maiya",
+    "fbneo": "maiya"
+   },
+   "build_id": "335083e8a542",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/Maiya-WIP-NeoSD_AES_v4.neo",
    "file": "Maiya-WIP-NeoSD_AES_v4.neo",
    "content_no": 1,
@@ -13587,6 +14439,49 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/Maiya-WIP-NeoSD_MVS_v4.0.1.neo",
+   "file": "Maiya-WIP-NeoSD_MVS_v4.0.1.neo",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "7ad1034f3ea8af509a79a6dba92cd6a004571f91",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 17567744,
+    "crc32": "54f03cbd",
+    "sha1": "c3bc575ea12cd0e61649064e3d64ce2d9f459bf6",
+    "sha256": "91baf0a45fc8ce764fee028e197b3a2c4fda87ed216c137400f1e58dc681c149"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "Maiya-WIP-NeoSD_MVS_v4.0.1.neo"
+    }
+   ],
+   "prefix": "Maiya",
+   "game": "maiya",
+   "title": "Maiya: Super Nature Girl",
+   "version": "v4.0.1",
+   "semver": "4.0.1",
+   "target": "neosd-mvs",
+   "romset": "maiya",
+   "external_names": {
+    "hbmame": "maiya",
+    "fbneo": "maiya"
+   },
+   "build_id": "91baf0a45fc8",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/Maiya-WIP-NeoSD_MVS_v4.neo",
    "file": "Maiya-WIP-NeoSD_MVS_v4.neo",
    "content_no": 1,
@@ -13978,6 +14873,104 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/MaiyaLuna-BackBit-AES_v2.0.1.zip",
+   "file": "MaiyaLuna-BackBit-AES_v2.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "c341392eccf2ce2278b229e7e4b5844b1d68c505",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:32",
+   "archive": {
+    "size": 7757508,
+    "crc32": "063c72d6",
+    "sha1": "3364c25cd919cd08d00273cd7b8b247e1f3c2bc9",
+    "sha256": "d799b212b19eed91959406833f96477cc7c34e625f62a14670fd88129e744413"
+   },
+   "files": [
+    {
+     "name": "maiyaluna/maiyaluna.p1",
+     "size": 524288,
+     "crc32": "c0afa7a4",
+     "sha1": "20cbf5c6295e80f5683ed445b3b6be164e6b26e1",
+     "sha256": "2ce0297ece8a401d937d2b3efbebe9dbc346c60c36dd44b640dd3688f3cfdecc",
+     "part": "p1"
+    },
+    {
+     "name": "maiyaluna/maiyaluna.s1",
+     "size": 131072,
+     "crc32": "74a73a67",
+     "sha1": "3046b5ef0309239297521ca5c5ec82d9081d9865",
+     "sha256": "e9416281490b156a3a775d426146e5581049a6f797241a847fed8d90796d92a1",
+     "part": "s1"
+    },
+    {
+     "name": "maiyaluna/maiyaluna.m1",
+     "size": 131072,
+     "crc32": "f8436258",
+     "sha1": "6ce3894e89a59cca4c5af8c656ba9eb4e0ca0941",
+     "sha256": "d193265b368195fb3576f1375d4c23dae4bbd9801667d8ccfc83bd978a65e3f2",
+     "part": "m1"
+    },
+    {
+     "name": "maiyaluna/maiyaluna.v1",
+     "size": 7783424,
+     "crc32": "0518d9fc",
+     "sha1": "b328636be66f6aedd5fcc5b48a59434858201163",
+     "sha256": "9e522e15039e55b1df3601b64107f4cfdbfd178ad60b528ef256c062814c2e33",
+     "part": "v1"
+    },
+    {
+     "name": "maiyaluna/maiyaluna.c1",
+     "size": 4194304,
+     "crc32": "b73a67ac",
+     "sha1": "3dcc38dc7dd22462a80209e1c22fee704cd44f82",
+     "sha256": "b0bea530511f915bdc64545cc72fb2ade38cb542bfb9f36b5206270926f6cde3",
+     "part": "c1"
+    },
+    {
+     "name": "maiyaluna/maiyaluna.c2",
+     "size": 4194304,
+     "crc32": "9707b70a",
+     "sha1": "33f0ea6b4d94dfd40643a49df347fa2058f2a2f9",
+     "sha256": "3da2165d5c6d323765c9ac64e81b91135bab04c78e7824e7229e8bc6fd65fb0b",
+     "part": "c2"
+    },
+    {
+     "name": "maiyaluna/README.txt",
+     "size": 583,
+     "crc32": "9410cc56",
+     "sha1": "2a402ba8400594e23cf84fe854346ba236d5650d",
+     "sha256": "da764addb2667f34bf0e2fa9c6804c58c248db963fd286623d0b59489df059b8"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "MaiyaLuna-BackBit-AES_v2.0.1.zip"
+    }
+   ],
+   "prefix": "MaiyaLuna",
+   "game": "maiyaluna",
+   "title": "Maiya & Luna",
+   "version": "v2.0.1",
+   "semver": "2.0.1",
+   "target": "backbit-aes",
+   "romset": "maiyaluna",
+   "external_names": {
+    "hbmame": "maiyaluna"
+   },
+   "build_id": "3682640e1299",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/MaiyaLuna-BackBit-AES_v2.zip",
    "file": "MaiyaLuna-BackBit-AES_v2.zip",
    "content_no": 1,
@@ -14262,6 +15255,104 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/MaiyaLuna-BackBit-MVS_v2.0.1.zip",
+   "file": "MaiyaLuna-BackBit-MVS_v2.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "ae0f0f97d526cfda33b8ad706d2779c6ae8f97e8",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:32",
+   "archive": {
+    "size": 7757423,
+    "crc32": "777aa7b8",
+    "sha1": "4f14bf9961f35011c27e9abfec7a546cf296cac6",
+    "sha256": "50280016d83d3d5c409f9988429ec5063f4f29e1e9fbedde904b45a74ac472e8"
+   },
+   "files": [
+    {
+     "name": "maiyaluna/maiyaluna.p1",
+     "size": 524288,
+     "crc32": "c9b74f94",
+     "sha1": "0ae9a7ce8f6a8c738798aeeddb8f42d99592ad01",
+     "sha256": "8f791770b02155b1b808cead1340156e56d11ab5caf9ebbb325319a29aabb52c",
+     "part": "p1"
+    },
+    {
+     "name": "maiyaluna/maiyaluna.s1",
+     "size": 131072,
+     "crc32": "74a73a67",
+     "sha1": "3046b5ef0309239297521ca5c5ec82d9081d9865",
+     "sha256": "e9416281490b156a3a775d426146e5581049a6f797241a847fed8d90796d92a1",
+     "part": "s1"
+    },
+    {
+     "name": "maiyaluna/maiyaluna.m1",
+     "size": 131072,
+     "crc32": "f8436258",
+     "sha1": "6ce3894e89a59cca4c5af8c656ba9eb4e0ca0941",
+     "sha256": "d193265b368195fb3576f1375d4c23dae4bbd9801667d8ccfc83bd978a65e3f2",
+     "part": "m1"
+    },
+    {
+     "name": "maiyaluna/maiyaluna.v1",
+     "size": 7783424,
+     "crc32": "0518d9fc",
+     "sha1": "b328636be66f6aedd5fcc5b48a59434858201163",
+     "sha256": "9e522e15039e55b1df3601b64107f4cfdbfd178ad60b528ef256c062814c2e33",
+     "part": "v1"
+    },
+    {
+     "name": "maiyaluna/maiyaluna.c1",
+     "size": 4194304,
+     "crc32": "b73a67ac",
+     "sha1": "3dcc38dc7dd22462a80209e1c22fee704cd44f82",
+     "sha256": "b0bea530511f915bdc64545cc72fb2ade38cb542bfb9f36b5206270926f6cde3",
+     "part": "c1"
+    },
+    {
+     "name": "maiyaluna/maiyaluna.c2",
+     "size": 4194304,
+     "crc32": "9707b70a",
+     "sha1": "33f0ea6b4d94dfd40643a49df347fa2058f2a2f9",
+     "sha256": "3da2165d5c6d323765c9ac64e81b91135bab04c78e7824e7229e8bc6fd65fb0b",
+     "part": "c2"
+    },
+    {
+     "name": "maiyaluna/README.txt",
+     "size": 445,
+     "crc32": "34304a1b",
+     "sha1": "84d8c8530911c68f52f63e82729bcaa70f3ad640",
+     "sha256": "17e89f5bedc8a981a938b295359141e56644137e848b72ad52687adb97285b19"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "MaiyaLuna-BackBit-MVS_v2.0.1.zip"
+    }
+   ],
+   "prefix": "MaiyaLuna",
+   "game": "maiyaluna",
+   "title": "Maiya & Luna",
+   "version": "v2.0.1",
+   "semver": "2.0.1",
+   "target": "backbit-mvs",
+   "romset": "maiyaluna",
+   "external_names": {
+    "hbmame": "maiyaluna"
+   },
+   "build_id": "7f446d36b854",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/MaiyaLuna-BackBit-MVS_v2.zip",
    "file": "MaiyaLuna-BackBit-MVS_v2.zip",
    "content_no": 1,
@@ -14393,6 +15484,48 @@
     "hbmame": "maiyaluna"
    },
    "build_id": "529a0c6d6526",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/MaiyaLuna-CHANGELOG_v2.0.1.txt",
+   "file": "MaiyaLuna-CHANGELOG_v2.0.1.txt",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "a03a6218be664256fb5b9ba32f8e7392fbecfb09",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 2734,
+    "crc32": "4596b65e",
+    "sha1": "1f1bf35d4191b99fde11502aaca31df364bd8d6e",
+    "sha256": "ff42305e4c988897cd71900f550c76b7a13484f4ff262c4b046a195a0eb443db"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "MaiyaLuna-CHANGELOG_v2.0.1.txt"
+    }
+   ],
+   "prefix": "MaiyaLuna",
+   "game": "maiyaluna",
+   "title": "Maiya & Luna",
+   "version": "v2.0.1",
+   "semver": "2.0.1",
+   "target": "document",
+   "romset": "maiyaluna",
+   "external_names": {
+    "hbmame": "maiyaluna"
+   },
+   "build_id": "ff42305e4c98",
    "game_id": null,
    "external_matches": []
   },
@@ -14623,6 +15756,105 @@
     "hbmame": "maiyaluna"
    },
    "build_id": "8f22dc6c18b6",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/MaiyaLuna-Darksoft-AES_v2.0.1.zip",
+   "file": "MaiyaLuna-Darksoft-AES_v2.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "54a29be180a12d2d23d5ada815f39dd97bcc1926",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:30",
+   "archive": {
+    "size": 7750784,
+    "crc32": "2a43977b",
+    "sha1": "aef15b42f64891364d9ef44962ce2a776cc520e1",
+    "sha256": "b602c141b1499dc3e9b4d31ab97ab0f946389fc30d9cefb28862f8131b17507e"
+   },
+   "files": [
+    {
+     "name": "MaiyaLuna_AES/prom",
+     "size": 524288,
+     "crc32": "c0afa7a4",
+     "sha1": "20cbf5c6295e80f5683ed445b3b6be164e6b26e1",
+     "sha256": "2ce0297ece8a401d937d2b3efbebe9dbc346c60c36dd44b640dd3688f3cfdecc"
+    },
+    {
+     "name": "MaiyaLuna_AES/srom",
+     "size": 131072,
+     "crc32": "74a73a67",
+     "sha1": "3046b5ef0309239297521ca5c5ec82d9081d9865",
+     "sha256": "e9416281490b156a3a775d426146e5581049a6f797241a847fed8d90796d92a1"
+    },
+    {
+     "name": "MaiyaLuna_AES/m1rom",
+     "size": 131072,
+     "crc32": "f8436258",
+     "sha1": "6ce3894e89a59cca4c5af8c656ba9eb4e0ca0941",
+     "sha256": "d193265b368195fb3576f1375d4c23dae4bbd9801667d8ccfc83bd978a65e3f2"
+    },
+    {
+     "name": "MaiyaLuna_AES/vroma0",
+     "size": 8388608,
+     "crc32": "02b0f61c",
+     "sha1": "2a03a58e4c03ba87a4fd5371d11e8bafdb90ab11",
+     "sha256": "8a2e18d030440157af720a4357cfcbdfbe7ed9ed3cf0ddb7039fbc66369b6aba"
+    },
+    {
+     "name": "MaiyaLuna_AES/crom0",
+     "size": 8388608,
+     "crc32": "6840a6bb",
+     "sha1": "815eddb1e25b0c10211e90b0fd3aeb1fe0b42d11",
+     "sha256": "45bc02bc943cce0a1b6b23ecf71ffb7ed5762b821ee7c5b2988a78c242bebb51"
+    },
+    {
+     "name": "MaiyaLuna_AES/fpga",
+     "size": 2,
+     "crc32": "a15d25e1",
+     "sha1": "b1d5781111d84f7b3fe45a0852e59758cd7a87e5",
+     "sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5"
+    },
+    {
+     "name": "MaiyaLuna_AES/MANIFEST.json",
+     "size": 1342,
+     "crc32": "dee8dde0",
+     "sha1": "75436c06d77ea0e8e6107a92fd10108839f869ca",
+     "sha256": "e5239da2365e05afaebda261a7602c9919c94e45e026ae31e5418bd03652594c"
+    },
+    {
+     "name": "MaiyaLuna_AES/README.txt",
+     "size": 493,
+     "crc32": "8c50e85d",
+     "sha1": "51c8fa72d23acda3fb7db06c6337aee08da3e9e4",
+     "sha256": "00aa53446a9016cd8b7e651c66fa63a11f626bb2a5f2f266a2a4344cc279dccf"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "MaiyaLuna-Darksoft-AES_v2.0.1.zip"
+    }
+   ],
+   "prefix": "MaiyaLuna",
+   "game": "maiyaluna",
+   "title": "Maiya & Luna",
+   "version": "v2.0.1",
+   "semver": "2.0.1",
+   "target": "darksoft-aes",
+   "romset": "maiyaluna",
+   "external_names": {
+    "hbmame": "maiyaluna"
+   },
+   "build_id": "b602c141b149",
    "game_id": null,
    "external_matches": []
   },
@@ -14914,6 +16146,105 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/MaiyaLuna-Darksoft-MVS_v2.0.1.zip",
+   "file": "MaiyaLuna-Darksoft-MVS_v2.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "74dedc70f98c502f25122906c5b2929a4803f286",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:30",
+   "archive": {
+    "size": 7750779,
+    "crc32": "7d228032",
+    "sha1": "48751b8bb8b6a234a66112ded22789aa409dad48",
+    "sha256": "0147545ff30cd3c2f9cc0482bae25abe4ed92d2838b7e1980b9d758f42b6bc88"
+   },
+   "files": [
+    {
+     "name": "MaiyaLuna_MVS/prom",
+     "size": 524288,
+     "crc32": "c9b74f94",
+     "sha1": "0ae9a7ce8f6a8c738798aeeddb8f42d99592ad01",
+     "sha256": "8f791770b02155b1b808cead1340156e56d11ab5caf9ebbb325319a29aabb52c"
+    },
+    {
+     "name": "MaiyaLuna_MVS/srom",
+     "size": 131072,
+     "crc32": "74a73a67",
+     "sha1": "3046b5ef0309239297521ca5c5ec82d9081d9865",
+     "sha256": "e9416281490b156a3a775d426146e5581049a6f797241a847fed8d90796d92a1"
+    },
+    {
+     "name": "MaiyaLuna_MVS/m1rom",
+     "size": 131072,
+     "crc32": "f8436258",
+     "sha1": "6ce3894e89a59cca4c5af8c656ba9eb4e0ca0941",
+     "sha256": "d193265b368195fb3576f1375d4c23dae4bbd9801667d8ccfc83bd978a65e3f2"
+    },
+    {
+     "name": "MaiyaLuna_MVS/vroma0",
+     "size": 8388608,
+     "crc32": "02b0f61c",
+     "sha1": "2a03a58e4c03ba87a4fd5371d11e8bafdb90ab11",
+     "sha256": "8a2e18d030440157af720a4357cfcbdfbe7ed9ed3cf0ddb7039fbc66369b6aba"
+    },
+    {
+     "name": "MaiyaLuna_MVS/crom0",
+     "size": 8388608,
+     "crc32": "6840a6bb",
+     "sha1": "815eddb1e25b0c10211e90b0fd3aeb1fe0b42d11",
+     "sha256": "45bc02bc943cce0a1b6b23ecf71ffb7ed5762b821ee7c5b2988a78c242bebb51"
+    },
+    {
+     "name": "MaiyaLuna_MVS/fpga",
+     "size": 2,
+     "crc32": "a15d25e1",
+     "sha1": "b1d5781111d84f7b3fe45a0852e59758cd7a87e5",
+     "sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5"
+    },
+    {
+     "name": "MaiyaLuna_MVS/MANIFEST.json",
+     "size": 1342,
+     "crc32": "72c041e3",
+     "sha1": "b764b1da42b478ecaa99ce4fe946dc13d095fc60",
+     "sha256": "299228c4af6f40657b2ed6f629cd35cc6c7800098fd988348d3de29c3110e29c"
+    },
+    {
+     "name": "MaiyaLuna_MVS/README.txt",
+     "size": 493,
+     "crc32": "e3072898",
+     "sha1": "bdc3ee659905990db41797777816472b27cc8573",
+     "sha256": "55eac67b6eeca4cfafda554aedf42991e561d4e4a460fd4aeb8cfa2d94e294d3"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "MaiyaLuna-Darksoft-MVS_v2.0.1.zip"
+    }
+   ],
+   "prefix": "MaiyaLuna",
+   "game": "maiyaluna",
+   "title": "Maiya & Luna",
+   "version": "v2.0.1",
+   "semver": "2.0.1",
+   "target": "darksoft-mvs",
+   "romset": "maiyaluna",
+   "external_names": {
+    "hbmame": "maiyaluna"
+   },
+   "build_id": "0147545ff30c",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/MaiyaLuna-Darksoft-MVS_v2.zip",
    "file": "MaiyaLuna-Darksoft-MVS_v2.zip",
    "content_no": 1,
@@ -15087,6 +16418,48 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/MaiyaLuna-MANIFEST_v2.0.1.txt",
+   "file": "MaiyaLuna-MANIFEST_v2.0.1.txt",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "47075a7ffe590b9b14f2a8456c610b3ba667fd8c",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 1187,
+    "crc32": "916d9268",
+    "sha1": "a19018adfa81ac2202a4135fcf586058b0bbf87d",
+    "sha256": "706e2274d474ca3b4f0b52423905bcea29569f9f08f0276d30e8f9701e59ac10"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "MaiyaLuna-MANIFEST_v2.0.1.txt"
+    }
+   ],
+   "prefix": "MaiyaLuna",
+   "game": "maiyaluna",
+   "title": "Maiya & Luna",
+   "version": "v2.0.1",
+   "semver": "2.0.1",
+   "target": "document",
+   "romset": "maiyaluna",
+   "external_names": {
+    "hbmame": "maiyaluna"
+   },
+   "build_id": "706e2274d474",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/MaiyaLuna-MANIFEST_v2.txt",
    "file": "MaiyaLuna-MANIFEST_v2.txt",
    "content_no": 1,
@@ -15130,7 +16503,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -15181,7 +16554,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "MaiyaLuna-NeoGeoCD-BinCue_v2.zip"
+    }
+   ],
    "prefix": "MaiyaLuna",
    "game": "maiyaluna",
    "title": "Maiya & Luna",
@@ -15609,6 +16987,152 @@
     "hbmame": "maiyaluna"
    },
    "build_id": "887040b27995",
+   "game_id": "783",
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/MaiyaLuna-WIP-AES-EagleBIOS_v2.0.1.zip",
+   "file": "MaiyaLuna-WIP-AES-EagleBIOS_v2.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "07fd40224c8d0424ad4c5df1c0a387ea4207b064",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:32",
+   "archive": {
+    "size": 7786253,
+    "crc32": "c94744e3",
+    "sha1": "2a5f6fd669ae9797acfaa79ed3aa420dd9e9d7f6",
+    "sha256": "bce1e8ed39db7971efbd85b9118ef1175ace3989d9dd2ba292addf48c207c073"
+   },
+   "files": [
+    {
+     "name": "card.bin",
+     "size": 2048,
+     "crc32": "f1e8ba9e",
+     "sha1": "605db3fdbaff4ba13729371ad0c4fbab3889378e",
+     "sha256": "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad"
+    },
+    {
+     "name": "roms/maiyaluna/783-p1.p1",
+     "size": 524288,
+     "crc32": "c0afa7a4",
+     "sha1": "20cbf5c6295e80f5683ed445b3b6be164e6b26e1",
+     "sha256": "2ce0297ece8a401d937d2b3efbebe9dbc346c60c36dd44b640dd3688f3cfdecc",
+     "part": "p1"
+    },
+    {
+     "name": "roms/maiyaluna/783-s1.s1",
+     "size": 131072,
+     "crc32": "74a73a67",
+     "sha1": "3046b5ef0309239297521ca5c5ec82d9081d9865",
+     "sha256": "e9416281490b156a3a775d426146e5581049a6f797241a847fed8d90796d92a1",
+     "part": "s1"
+    },
+    {
+     "name": "roms/maiyaluna/783-m1.m1",
+     "size": 131072,
+     "crc32": "f8436258",
+     "sha1": "6ce3894e89a59cca4c5af8c656ba9eb4e0ca0941",
+     "sha256": "d193265b368195fb3576f1375d4c23dae4bbd9801667d8ccfc83bd978a65e3f2",
+     "part": "m1"
+    },
+    {
+     "name": "roms/maiyaluna/783-v1.v1",
+     "size": 7783424,
+     "crc32": "0518d9fc",
+     "sha1": "b328636be66f6aedd5fcc5b48a59434858201163",
+     "sha256": "9e522e15039e55b1df3601b64107f4cfdbfd178ad60b528ef256c062814c2e33",
+     "part": "v1"
+    },
+    {
+     "name": "roms/maiyaluna/783-c1.c1",
+     "size": 4194304,
+     "crc32": "b73a67ac",
+     "sha1": "3dcc38dc7dd22462a80209e1c22fee704cd44f82",
+     "sha256": "b0bea530511f915bdc64545cc72fb2ade38cb542bfb9f36b5206270926f6cde3",
+     "part": "c1"
+    },
+    {
+     "name": "roms/maiyaluna/783-c2.c2",
+     "size": 4194304,
+     "crc32": "9707b70a",
+     "sha1": "33f0ea6b4d94dfd40643a49df347fa2058f2a2f9",
+     "sha256": "3da2165d5c6d323765c9ac64e81b91135bab04c78e7824e7229e8bc6fd65fb0b",
+     "part": "c2"
+    },
+    {
+     "name": "roms/aes/neo-epo.bin",
+     "size": 131072,
+     "crc32": "789b3919",
+     "sha1": "35eabd4a0d5beeb52286a463bc8eec2a91ec9893",
+     "sha256": "7eec66f43b306c00bd66e25f57cf9480d3dc792c413a9cbe98425a56ea6274b7"
+    },
+    {
+     "name": "roms/aes/000-lo.lo",
+     "size": 131072,
+     "crc32": "cede14c2",
+     "sha1": "07aed5c8c3b7108ab98e8e63969a0007f7241235",
+     "sha256": "7eff4efa47f1560af2eca65a846b60567f1bd84bfce63ff8987c714ed20255c7"
+    },
+    {
+     "name": "hash/neogeo.xml",
+     "size": 2297,
+     "crc32": "3ce124fb",
+     "sha1": "5f18b73dc38949209e8aad4ffa26600c6f7dfc97",
+     "sha256": "99d549b74a5d7deaf5ce56320ee1762ae8cdec03402bf57a6ed2ed673f5a3364"
+    },
+    {
+     "name": "EagleBIOS.md",
+     "size": 17737,
+     "crc32": "8eaa83e8",
+     "sha1": "fad8fef1125d56713a2e8b4353768942404d82a0",
+     "sha256": "29118e75882900937a596f6fcaaef164a1b16dba431b4898e41802e883f6e482"
+    },
+    {
+     "name": "LICENSE",
+     "size": 1073,
+     "crc32": "540e329d",
+     "sha1": "1969f56845d79f4e708999f95c2c484b8f816828",
+     "sha256": "7c316688a04ac1b751f2654ba768df53bb56af37f80ed9d8846fd945f46eab09"
+    },
+    {
+     "name": "RUN.txt",
+     "size": 232,
+     "crc32": "c6973f08",
+     "sha1": "a57bc098a3d508440ebe01176b9c821af6b25589",
+     "sha256": "00b78f1033b450f617359d2dec47dabd21adb4f3363e52d4d96316e7241d92f6"
+    }
+   ],
+   "mame_definition": {
+    "ok": true,
+    "software": [
+     "maiyaluna"
+    ],
+    "problems": []
+   },
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "MaiyaLuna-WIP-AES-EagleBIOS_v2.0.1.zip"
+    }
+   ],
+   "prefix": "MaiyaLuna",
+   "game": "maiyaluna",
+   "title": "Maiya & Luna",
+   "version": "v2.0.1",
+   "semver": "2.0.1",
+   "target": "mame-aes",
+   "romset": "maiyaluna",
+   "external_names": {
+    "hbmame": "maiyaluna"
+   },
+   "build_id": "3682640e1299",
    "game_id": "783",
    "external_matches": []
   },
@@ -16083,6 +17607,173 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/MaiyaLuna-WIP-EagleBIOS_v2.0.1.zip",
+   "file": "MaiyaLuna-WIP-EagleBIOS_v2.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "c1559c0da90da4f61ac8454ceed1020fbd241e6b",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:32",
+   "archive": {
+    "size": 7807770,
+    "crc32": "81668eac",
+    "sha1": "65c807f51342e935a93f3bd98ff7fac4a03849dd",
+    "sha256": "7a42fd3f3c2610e9e8f77f44a53a2e5163085ba3b4f05a2d15e97347c7c02add"
+   },
+   "files": [
+    {
+     "name": "roms/maiyaluna/783-p1.p1",
+     "size": 524288,
+     "crc32": "c9b74f94",
+     "sha1": "0ae9a7ce8f6a8c738798aeeddb8f42d99592ad01",
+     "sha256": "8f791770b02155b1b808cead1340156e56d11ab5caf9ebbb325319a29aabb52c",
+     "part": "p1"
+    },
+    {
+     "name": "roms/maiyaluna/783-s1.s1",
+     "size": 131072,
+     "crc32": "74a73a67",
+     "sha1": "3046b5ef0309239297521ca5c5ec82d9081d9865",
+     "sha256": "e9416281490b156a3a775d426146e5581049a6f797241a847fed8d90796d92a1",
+     "part": "s1"
+    },
+    {
+     "name": "roms/maiyaluna/783-m1.m1",
+     "size": 131072,
+     "crc32": "f8436258",
+     "sha1": "6ce3894e89a59cca4c5af8c656ba9eb4e0ca0941",
+     "sha256": "d193265b368195fb3576f1375d4c23dae4bbd9801667d8ccfc83bd978a65e3f2",
+     "part": "m1"
+    },
+    {
+     "name": "roms/maiyaluna/783-v1.v1",
+     "size": 7783424,
+     "crc32": "0518d9fc",
+     "sha1": "b328636be66f6aedd5fcc5b48a59434858201163",
+     "sha256": "9e522e15039e55b1df3601b64107f4cfdbfd178ad60b528ef256c062814c2e33",
+     "part": "v1"
+    },
+    {
+     "name": "roms/maiyaluna/783-c1.c1",
+     "size": 4194304,
+     "crc32": "b73a67ac",
+     "sha1": "3dcc38dc7dd22462a80209e1c22fee704cd44f82",
+     "sha256": "b0bea530511f915bdc64545cc72fb2ade38cb542bfb9f36b5206270926f6cde3",
+     "part": "c1"
+    },
+    {
+     "name": "roms/maiyaluna/783-c2.c2",
+     "size": 4194304,
+     "crc32": "9707b70a",
+     "sha1": "33f0ea6b4d94dfd40643a49df347fa2058f2a2f9",
+     "sha256": "3da2165d5c6d323765c9ac64e81b91135bab04c78e7824e7229e8bc6fd65fb0b",
+     "part": "c2"
+    },
+    {
+     "name": "roms/neogeo/sp-s2.sp1",
+     "size": 131072,
+     "crc32": "978e3f00",
+     "sha1": "61fd9d952a56c6f1cf96a68e54a17ece1a43fb3f",
+     "sha256": "aae26373b3e393782bd3aaf58c6de16df3f52b9142d28838be28692d1621d21d"
+    },
+    {
+     "name": "roms/neogeo/sm1.sm1",
+     "size": 131072,
+     "crc32": "5f2dbc26",
+     "sha1": "203340fe57b73384d8ef24926edebfb8159c7e13",
+     "sha256": "b16c4f69d01853bc5c074fe1be41e028ec950ce8cc3cb88abd385a169fdb4234"
+    },
+    {
+     "name": "roms/neogeo/sfix.sfix",
+     "size": 131072,
+     "crc32": "d5c1a013",
+     "sha1": "b5f1429090366303563468b76fbe0c19c78bc3a9",
+     "sha256": "feca1c2515473c34be89b76b45f01ec4e55a0325fe06c732b357982d047e0b96"
+    },
+    {
+     "name": "roms/neogeo/000-lo.lo",
+     "size": 131072,
+     "crc32": "cede14c2",
+     "sha1": "07aed5c8c3b7108ab98e8e63969a0007f7241235",
+     "sha256": "7eff4efa47f1560af2eca65a846b60567f1bd84bfce63ff8987c714ed20255c7"
+    },
+    {
+     "name": "roms/aes/neo-epo.bin",
+     "size": 131072,
+     "crc32": "789b3919",
+     "sha1": "35eabd4a0d5beeb52286a463bc8eec2a91ec9893",
+     "sha256": "7eec66f43b306c00bd66e25f57cf9480d3dc792c413a9cbe98425a56ea6274b7"
+    },
+    {
+     "name": "roms/aes/000-lo.lo",
+     "size": 131072,
+     "crc32": "cede14c2",
+     "sha1": "07aed5c8c3b7108ab98e8e63969a0007f7241235",
+     "sha256": "7eff4efa47f1560af2eca65a846b60567f1bd84bfce63ff8987c714ed20255c7"
+    },
+    {
+     "name": "hash/neogeo.xml",
+     "size": 2297,
+     "crc32": "104b2f46",
+     "sha1": "bf7de67bccc15b247313ec1ea6e4ce8d488ee04f",
+     "sha256": "c8d46a4864963551b40588fb0722d3f010481953c2e0b7596c20342a7620285e"
+    },
+    {
+     "name": "EagleBIOS.md",
+     "size": 17737,
+     "crc32": "8eaa83e8",
+     "sha1": "fad8fef1125d56713a2e8b4353768942404d82a0",
+     "sha256": "29118e75882900937a596f6fcaaef164a1b16dba431b4898e41802e883f6e482"
+    },
+    {
+     "name": "LICENSE",
+     "size": 1073,
+     "crc32": "540e329d",
+     "sha1": "1969f56845d79f4e708999f95c2c484b8f816828",
+     "sha256": "7c316688a04ac1b751f2654ba768df53bb56af37f80ed9d8846fd945f46eab09"
+    },
+    {
+     "name": "RUN.txt",
+     "size": 223,
+     "crc32": "21d29e83",
+     "sha1": "640ce2ab2aef28d6cd102038dd6cd309d092a244",
+     "sha256": "2b0f15fefe09305ece746224858e0a7872b0f8c62f1753ff9a0daa97c4ca5e1e"
+    }
+   ],
+   "mame_definition": {
+    "ok": true,
+    "software": [
+     "maiyaluna"
+    ],
+    "problems": []
+   },
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "MaiyaLuna-WIP-EagleBIOS_v2.0.1.zip"
+    }
+   ],
+   "prefix": "MaiyaLuna",
+   "game": "maiyaluna",
+   "title": "Maiya & Luna",
+   "version": "v2.0.1",
+   "semver": "2.0.1",
+   "target": "mame-mvs",
+   "romset": "maiyaluna",
+   "external_names": {
+    "hbmame": "maiyaluna"
+   },
+   "build_id": "7f446d36b854",
+   "game_id": "783",
+   "external_matches": []
+  },
+  {
    "path": "dist/release/MaiyaLuna-WIP-EagleBIOS_v2.zip",
    "file": "MaiyaLuna-WIP-EagleBIOS_v2.zip",
    "content_no": 1,
@@ -16324,6 +18015,48 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/MaiyaLuna-WIP-NeoSD_AES_v2.0.1.neo",
+   "file": "MaiyaLuna-WIP-NeoSD_AES_v2.0.1.neo",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "33b93ac9a7d1e73b88d0589bab5dd2a5d89fd202",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 17567744,
+    "crc32": "9af377bb",
+    "sha1": "432ee15913bfe8f882ff5e4feff92567351df1a8",
+    "sha256": "b782684a233d5ca4246acfafa5999d02e37098849eeedb25f7dc3ae859e4f919"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "MaiyaLuna-WIP-NeoSD_AES_v2.0.1.neo"
+    }
+   ],
+   "prefix": "MaiyaLuna",
+   "game": "maiyaluna",
+   "title": "Maiya & Luna",
+   "version": "v2.0.1",
+   "semver": "2.0.1",
+   "target": "neosd-aes",
+   "romset": "maiyaluna",
+   "external_names": {
+    "hbmame": "maiyaluna"
+   },
+   "build_id": "b782684a233d",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/MaiyaLuna-WIP-NeoSD_AES_v2.neo",
    "file": "MaiyaLuna-WIP-NeoSD_AES_v2.neo",
    "content_no": 1,
@@ -16345,7 +18078,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "MaiyaLuna-WIP-NeoSD_AES_v2.0.1.neo"
+    }
+   ],
    "prefix": "MaiyaLuna",
    "game": "maiyaluna",
    "title": "Maiya & Luna",
@@ -16440,6 +18178,48 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/MaiyaLuna-WIP-NeoSD_MVS_v2.0.1.neo",
+   "file": "MaiyaLuna-WIP-NeoSD_MVS_v2.0.1.neo",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "1904546cbd6136068edcc55e44510c04713a41ee",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 17567744,
+    "crc32": "34fd572b",
+    "sha1": "d68ab59e96b48462ca6a9db2d989c398e47623bf",
+    "sha256": "2bcd6f8d07a635512498b7bd8895784e408fa6f04ac5c089b98faa4b81913ec9"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "MaiyaLuna-WIP-NeoSD_MVS_v2.0.1.neo"
+    }
+   ],
+   "prefix": "MaiyaLuna",
+   "game": "maiyaluna",
+   "title": "Maiya & Luna",
+   "version": "v2.0.1",
+   "semver": "2.0.1",
+   "target": "neosd-mvs",
+   "romset": "maiyaluna",
+   "external_names": {
+    "hbmame": "maiyaluna"
+   },
+   "build_id": "2bcd6f8d07a6",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/MaiyaLuna-WIP-NeoSD_MVS_v2.neo",
    "file": "MaiyaLuna-WIP-NeoSD_MVS_v2.neo",
    "content_no": 1,
@@ -16461,7 +18241,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "MaiyaLuna-WIP-NeoSD_MVS_v2.0.1.neo"
+    }
+   ],
    "prefix": "MaiyaLuna",
    "game": "maiyaluna",
    "title": "Maiya & Luna",
@@ -16482,12 +18267,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "5a6ab3de47b12daf480179206acf873695474c0f",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "3a89818f43a80d22ae98778af5000416ef76ebf9",
+   "pushed": true,
+   "commit_date": "2026-10-30T18:46:54+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
    "archive": {
@@ -16498,7 +18283,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NeoGeoCD-BinCue-SHA256SUMS.txt"
+    }
+   ],
    "build_id": "1dbf6685c666",
    "game_id": null,
    "external_matches": []
@@ -16995,7 +18785,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NoSignal-BackBit-AES_v3.zip"
+    }
+   ],
    "prefix": "NoSignal",
    "game": "nosignal",
    "title": "No Signal Z Alpha",
@@ -17470,7 +19265,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NoSignal-BackBit-MVS_v3.zip"
+    }
+   ],
    "prefix": "NoSignal",
    "game": "nosignal",
    "title": "No Signal Z Alpha",
@@ -17571,7 +19371,7 @@
    "contents_under_this_name": 2,
    "status": "current",
    "tracked": true,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -17665,7 +19465,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NoSignal-CHANGELOG_v3.txt"
+    }
+   ],
    "prefix": "NoSignal",
    "game": "nosignal",
    "title": "No Signal Z Alpha",
@@ -18145,7 +19950,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NoSignal-Darksoft-AES_v3.zip"
+    }
+   ],
    "prefix": "NoSignal",
    "game": "nosignal",
    "title": "No Signal Z Alpha",
@@ -18625,7 +20435,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NoSignal-Darksoft-MVS_v3.zip"
+    }
+   ],
    "prefix": "NoSignal",
    "game": "nosignal",
    "title": "No Signal Z Alpha",
@@ -18820,7 +20635,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NoSignal-MANIFEST_v3.txt"
+    }
+   ],
    "prefix": "NoSignal",
    "game": "nosignal",
    "title": "No Signal Z Alpha",
@@ -18842,7 +20662,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -18893,7 +20713,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NoSignal-NeoGeoCD-BinCue_v3.zip"
+    }
+   ],
    "prefix": "NoSignal",
    "game": "nosignal",
    "title": "No Signal Z Alpha",
@@ -18914,12 +20739,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "5a6ab3de47b12daf480179206acf873695474c0f",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "cbcf9500681c2d2489a5734de2ed6d3484c482b1",
+   "pushed": true,
+   "commit_date": "2026-10-30T18:46:54+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
    "archive": {
@@ -18930,7 +20755,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NoSignal-NeoGeoCD-README_v3.txt"
+    }
+   ],
    "prefix": "NoSignal",
    "game": "nosignal",
    "title": "No Signal Z Alpha",
@@ -18951,12 +20781,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "5a6ab3de47b12daf480179206acf873695474c0f",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "678708bc68adc0e6648a58bb24ee7d1b4e3e23e0",
+   "pushed": true,
+   "commit_date": "2026-10-30T18:46:54+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
    "archive": {
@@ -18967,7 +20797,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NoSignal-NeoGeoCD-SHA256_v3.txt"
+    }
+   ],
    "prefix": "NoSignal",
    "game": "nosignal",
    "title": "No Signal Z Alpha",
@@ -18989,7 +20824,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -19089,7 +20924,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NoSignal-NeoGeoCD_v3.zip"
+    }
+   ],
    "prefix": "NoSignal",
    "game": "nosignal",
    "title": "No Signal Z Alpha",
@@ -19284,7 +21124,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NoSignal-README_v3.txt"
+    }
+   ],
    "prefix": "NoSignal",
    "game": "nosignal",
    "title": "No Signal Z Alpha",
@@ -19999,7 +21844,12 @@
     ],
     "problems": []
    },
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NoSignal-WIP-AES-EagleBIOS_v3.zip"
+    }
+   ],
    "prefix": "NoSignal",
    "game": "nosignal",
    "title": "No Signal Z Alpha",
@@ -20821,7 +22671,12 @@
     ],
     "problems": []
    },
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NoSignal-WIP-EagleBIOS_v3.zip"
+    }
+   ],
    "prefix": "NoSignal",
    "game": "nosignal",
    "title": "No Signal Z Alpha",
@@ -21016,7 +22871,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NoSignal-WIP-NeoSD_AES_v3.neo"
+    }
+   ],
    "prefix": "NoSignal",
    "game": "nosignal",
    "title": "No Signal Z Alpha",
@@ -21211,7 +23071,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "NoSignal-WIP-NeoSD_MVS_v3.neo"
+    }
+   ],
    "prefix": "NoSignal",
    "game": "nosignal",
    "title": "No Signal Z Alpha",
@@ -21363,6 +23228,104 @@
     }
    ],
    "build_id": "2b6f8766c75f",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/SevenWonders-BackBit-AES_v1.0.1.zip",
+   "file": "SevenWonders-BackBit-AES_v1.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "db79123e3186ebdac8d03bb120c14f6f13e6850b",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:30",
+   "archive": {
+    "size": 3235809,
+    "crc32": "c6cc8145",
+    "sha1": "a3adec29729c4e155cc9c82cba001efa5a77a963",
+    "sha256": "b5b68a1a309b9cd1c6af67ee597e691a89118cedbdbe06718b12283866544e05"
+   },
+   "files": [
+    {
+     "name": "sevenwonders/sevenwonders.p1",
+     "size": 524288,
+     "crc32": "58d352de",
+     "sha1": "87f322fc40d3dc4386a805dde9d0eb59cceb926e",
+     "sha256": "2eac69af056371fa37b828e8041d43e7fdfe7d5c8645a011ca312fc798641518",
+     "part": "p1"
+    },
+    {
+     "name": "sevenwonders/sevenwonders.s1",
+     "size": 131072,
+     "crc32": "ba1031c2",
+     "sha1": "f8db5fe1854761beea03df281331c09a0384e8f4",
+     "sha256": "aac713f46e06e8f4999421804a2307d23a0270ac69a7cf32de5bea8b45e17bfb",
+     "part": "s1"
+    },
+    {
+     "name": "sevenwonders/sevenwonders.m1",
+     "size": 131072,
+     "crc32": "c965f1bf",
+     "sha1": "79e90fdf1500a7971d32c3de893db1bab802a32e",
+     "sha256": "9a33914e53d64fba79a8b3ce2e6ab786b14840a73eff22bc43f68b1a8164a79a",
+     "part": "m1"
+    },
+    {
+     "name": "sevenwonders/sevenwonders.v1",
+     "size": 3796992,
+     "crc32": "565b83c5",
+     "sha1": "d09b6e7ea4f8ca13a9be60a6d5df33bf672e1040",
+     "sha256": "321182fac1ba4467b7b663c546a13f1d71500b6f5395c2a752e19370f94f9be9",
+     "part": "v1"
+    },
+    {
+     "name": "sevenwonders/sevenwonders.c1",
+     "size": 4194304,
+     "crc32": "d77a28cd",
+     "sha1": "33a816e9f0e099146e84518ee826587316bad204",
+     "sha256": "676c96769d4d1c743e3fa6ba5a8db045111cf4d164ab743690ed38fe51f7476c",
+     "part": "c1"
+    },
+    {
+     "name": "sevenwonders/sevenwonders.c2",
+     "size": 4194304,
+     "crc32": "274b42d0",
+     "sha1": "50b09325593d07ef2533a8f1ca30c9e9c84cb6ab",
+     "sha256": "7b810fd3bc77c58fa71714425263d0df49fc6475d19106eedd5b659ead5b3f5c",
+     "part": "c2"
+    },
+    {
+     "name": "sevenwonders/README.txt",
+     "size": 613,
+     "crc32": "ba4d0064",
+     "sha1": "2c5a3bccc8fddb2d3924b846ad347f112b67e43b",
+     "sha256": "41f2c3f34b3ca953a850c59a61b0240ccd681e5983dae6054669375625f7b836"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SevenWonders-BackBit-AES_v1.0.1.zip"
+    }
+   ],
+   "prefix": "SevenWonders",
+   "game": "sevenwonders",
+   "title": "Seven Wonders Puzzles",
+   "version": "v1.0.1",
+   "semver": "1.0.1",
+   "target": "backbit-aes",
+   "romset": "sevenwonders",
+   "external_names": {
+    "hbmame": "7wonders"
+   },
+   "build_id": "fc9fa1aff4d0",
    "game_id": null,
    "external_matches": []
   },
@@ -21651,6 +23614,104 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/SevenWonders-BackBit-MVS_v1.0.1.zip",
+   "file": "SevenWonders-BackBit-MVS_v1.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "7472d6c8837ab7a872628c8c6e08efabad5a156d",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:28",
+   "archive": {
+    "size": 3235724,
+    "crc32": "13d83dbb",
+    "sha1": "83bb57afad1bcbf00ee1958d1f2a93a1cb71c7e9",
+    "sha256": "6a58e2ca909b99bcaaadfc46d442a8a903f1d562e25a2655908f33257b782965"
+   },
+   "files": [
+    {
+     "name": "sevenwonders/sevenwonders.p1",
+     "size": 524288,
+     "crc32": "51cbbaee",
+     "sha1": "f1737b00cd8e0a068a747ed440b1558139d7c7e1",
+     "sha256": "24fa74b45297d3e48ba65c3d6c3a916f9d7cfd6e449c1baa114fb827c3af8e30",
+     "part": "p1"
+    },
+    {
+     "name": "sevenwonders/sevenwonders.s1",
+     "size": 131072,
+     "crc32": "ba1031c2",
+     "sha1": "f8db5fe1854761beea03df281331c09a0384e8f4",
+     "sha256": "aac713f46e06e8f4999421804a2307d23a0270ac69a7cf32de5bea8b45e17bfb",
+     "part": "s1"
+    },
+    {
+     "name": "sevenwonders/sevenwonders.m1",
+     "size": 131072,
+     "crc32": "c965f1bf",
+     "sha1": "79e90fdf1500a7971d32c3de893db1bab802a32e",
+     "sha256": "9a33914e53d64fba79a8b3ce2e6ab786b14840a73eff22bc43f68b1a8164a79a",
+     "part": "m1"
+    },
+    {
+     "name": "sevenwonders/sevenwonders.v1",
+     "size": 3796992,
+     "crc32": "565b83c5",
+     "sha1": "d09b6e7ea4f8ca13a9be60a6d5df33bf672e1040",
+     "sha256": "321182fac1ba4467b7b663c546a13f1d71500b6f5395c2a752e19370f94f9be9",
+     "part": "v1"
+    },
+    {
+     "name": "sevenwonders/sevenwonders.c1",
+     "size": 4194304,
+     "crc32": "d77a28cd",
+     "sha1": "33a816e9f0e099146e84518ee826587316bad204",
+     "sha256": "676c96769d4d1c743e3fa6ba5a8db045111cf4d164ab743690ed38fe51f7476c",
+     "part": "c1"
+    },
+    {
+     "name": "sevenwonders/sevenwonders.c2",
+     "size": 4194304,
+     "crc32": "274b42d0",
+     "sha1": "50b09325593d07ef2533a8f1ca30c9e9c84cb6ab",
+     "sha256": "7b810fd3bc77c58fa71714425263d0df49fc6475d19106eedd5b659ead5b3f5c",
+     "part": "c2"
+    },
+    {
+     "name": "sevenwonders/README.txt",
+     "size": 475,
+     "crc32": "d65bd194",
+     "sha1": "9d98998a9798efe8680e2b94924a2055810de83e",
+     "sha256": "cdf2802bf8fe4b65548325cbbd7a884231fc2db914a31f21d10d20f7a9a71430"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SevenWonders-BackBit-MVS_v1.0.1.zip"
+    }
+   ],
+   "prefix": "SevenWonders",
+   "game": "sevenwonders",
+   "title": "Seven Wonders Puzzles",
+   "version": "v1.0.1",
+   "semver": "1.0.1",
+   "target": "backbit-mvs",
+   "romset": "sevenwonders",
+   "external_names": {
+    "hbmame": "7wonders"
+   },
+   "build_id": "282b83a2daf1",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/SevenWonders-BackBit-MVS_v1.zip",
    "file": "SevenWonders-BackBit-MVS_v1.zip",
    "content_no": 1,
@@ -21935,6 +23996,48 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/SevenWonders-CHANGELOG_v1.0.1.txt",
+   "file": "SevenWonders-CHANGELOG_v1.0.1.txt",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "8d88c3e3b049709fcaebe00320ed3e0bb4928828",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 3111,
+    "crc32": "1f00c7a4",
+    "sha1": "6811e04e2430613153521bf9083cc23a7ba36338",
+    "sha256": "64f95de3f37ab310023e8fef1c634a3c8300df114d486e14fcd91470f234b52c"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SevenWonders-CHANGELOG_v1.0.1.txt"
+    }
+   ],
+   "prefix": "SevenWonders",
+   "game": "sevenwonders",
+   "title": "Seven Wonders Puzzles",
+   "version": "v1.0.1",
+   "semver": "1.0.1",
+   "target": "document",
+   "romset": "sevenwonders",
+   "external_names": {
+    "hbmame": "7wonders"
+   },
+   "build_id": "64f95de3f37a",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/SevenWonders-CHANGELOG_v1.txt",
    "file": "SevenWonders-CHANGELOG_v1.txt",
    "content_no": 1,
@@ -22010,6 +24113,105 @@
     "hbmame": "7wonders"
    },
    "build_id": "fbb7861f382a",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/SevenWonders-Darksoft-AES_v1.0.1.zip",
+   "file": "SevenWonders-Darksoft-AES_v1.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "7b6f4eaedd26f24d99dd03efb8a0d5a494809e87",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:28",
+   "archive": {
+    "size": 3224234,
+    "crc32": "71a19258",
+    "sha1": "195c3505900faf34cf4d29075881c8eca9bbcc0d",
+    "sha256": "96542c44f4b0878ca076c4e12bebbf897f06354da7089dd8fc4ebefcdcf3acbc"
+   },
+   "files": [
+    {
+     "name": "SevenWonders_AES/prom",
+     "size": 524288,
+     "crc32": "58d352de",
+     "sha1": "87f322fc40d3dc4386a805dde9d0eb59cceb926e",
+     "sha256": "2eac69af056371fa37b828e8041d43e7fdfe7d5c8645a011ca312fc798641518"
+    },
+    {
+     "name": "SevenWonders_AES/srom",
+     "size": 131072,
+     "crc32": "ba1031c2",
+     "sha1": "f8db5fe1854761beea03df281331c09a0384e8f4",
+     "sha256": "aac713f46e06e8f4999421804a2307d23a0270ac69a7cf32de5bea8b45e17bfb"
+    },
+    {
+     "name": "SevenWonders_AES/m1rom",
+     "size": 131072,
+     "crc32": "c965f1bf",
+     "sha1": "79e90fdf1500a7971d32c3de893db1bab802a32e",
+     "sha256": "9a33914e53d64fba79a8b3ce2e6ab786b14840a73eff22bc43f68b1a8164a79a"
+    },
+    {
+     "name": "SevenWonders_AES/vroma0",
+     "size": 4194304,
+     "crc32": "8edfce8d",
+     "sha1": "b6bf887a6f30145531118468aee4dafa1029715f",
+     "sha256": "01ce1a7ee14d8716e632dd84c7dc0712e503fe874c381a457cf098f6b3fa4779"
+    },
+    {
+     "name": "SevenWonders_AES/crom0",
+     "size": 8388608,
+     "crc32": "0d1acea8",
+     "sha1": "31ec94720c8234b9303c6cd313fa2d1c3ef5af7c",
+     "sha256": "a1ac53d52fac1e4b3fce76bb4db1661ac5c092f27fef39dc714aa1fa65f6ee0c"
+    },
+    {
+     "name": "SevenWonders_AES/fpga",
+     "size": 2,
+     "crc32": "a15d25e1",
+     "sha1": "b1d5781111d84f7b3fe45a0852e59758cd7a87e5",
+     "sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5"
+    },
+    {
+     "name": "SevenWonders_AES/MANIFEST.json",
+     "size": 1351,
+     "crc32": "60af1b7e",
+     "sha1": "ae690e2a42ea9a55ba597b124b9f5fb2b045a321",
+     "sha256": "113077f574a480c9274ee03277bedeb6532e94539f4b270bf29a8cd6d36eacb7"
+    },
+    {
+     "name": "SevenWonders_AES/README.txt",
+     "size": 502,
+     "crc32": "b9055361",
+     "sha1": "ddea4ba6fa027767d98741ca9f139a9fcc19c786",
+     "sha256": "56abf72d57269f5e4536c328cbf3a7f4d834b9fcccb8ce3d2370f1bfa764b929"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SevenWonders-Darksoft-AES_v1.0.1.zip"
+    }
+   ],
+   "prefix": "SevenWonders",
+   "game": "sevenwonders",
+   "title": "Seven Wonders Puzzles",
+   "version": "v1.0.1",
+   "semver": "1.0.1",
+   "target": "darksoft-aes",
+   "romset": "sevenwonders",
+   "external_names": {
+    "hbmame": "7wonders"
+   },
+   "build_id": "96542c44f4b0",
    "game_id": null,
    "external_matches": []
   },
@@ -22301,6 +24503,105 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/SevenWonders-Darksoft-MVS_v1.0.1.zip",
+   "file": "SevenWonders-Darksoft-MVS_v1.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "fc5ea3a72295f7bc2ae2d012f3d496a355c74966",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:28",
+   "archive": {
+    "size": 3224234,
+    "crc32": "e025f7ed",
+    "sha1": "01db61bc5cb530b69b5060eec8e2f98f5af2c739",
+    "sha256": "365252fff8e300be5822bc42c7394525da99f936dbe5baecf4b816e0db7d107e"
+   },
+   "files": [
+    {
+     "name": "SevenWonders_MVS/prom",
+     "size": 524288,
+     "crc32": "51cbbaee",
+     "sha1": "f1737b00cd8e0a068a747ed440b1558139d7c7e1",
+     "sha256": "24fa74b45297d3e48ba65c3d6c3a916f9d7cfd6e449c1baa114fb827c3af8e30"
+    },
+    {
+     "name": "SevenWonders_MVS/srom",
+     "size": 131072,
+     "crc32": "ba1031c2",
+     "sha1": "f8db5fe1854761beea03df281331c09a0384e8f4",
+     "sha256": "aac713f46e06e8f4999421804a2307d23a0270ac69a7cf32de5bea8b45e17bfb"
+    },
+    {
+     "name": "SevenWonders_MVS/m1rom",
+     "size": 131072,
+     "crc32": "c965f1bf",
+     "sha1": "79e90fdf1500a7971d32c3de893db1bab802a32e",
+     "sha256": "9a33914e53d64fba79a8b3ce2e6ab786b14840a73eff22bc43f68b1a8164a79a"
+    },
+    {
+     "name": "SevenWonders_MVS/vroma0",
+     "size": 4194304,
+     "crc32": "8edfce8d",
+     "sha1": "b6bf887a6f30145531118468aee4dafa1029715f",
+     "sha256": "01ce1a7ee14d8716e632dd84c7dc0712e503fe874c381a457cf098f6b3fa4779"
+    },
+    {
+     "name": "SevenWonders_MVS/crom0",
+     "size": 8388608,
+     "crc32": "0d1acea8",
+     "sha1": "31ec94720c8234b9303c6cd313fa2d1c3ef5af7c",
+     "sha256": "a1ac53d52fac1e4b3fce76bb4db1661ac5c092f27fef39dc714aa1fa65f6ee0c"
+    },
+    {
+     "name": "SevenWonders_MVS/fpga",
+     "size": 2,
+     "crc32": "a15d25e1",
+     "sha1": "b1d5781111d84f7b3fe45a0852e59758cd7a87e5",
+     "sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5"
+    },
+    {
+     "name": "SevenWonders_MVS/MANIFEST.json",
+     "size": 1351,
+     "crc32": "b5007ecd",
+     "sha1": "b5d12be05b33c2d124723eddd6ca4442f066d35e",
+     "sha256": "3d2ce6fdb53643703e337baacee147cd73d17f5ebef694925c60853b82d3236a"
+    },
+    {
+     "name": "SevenWonders_MVS/README.txt",
+     "size": 502,
+     "crc32": "d65293a4",
+     "sha1": "373a7fcd8d003f6aa9e4709131061f403116a79c",
+     "sha256": "111860e3149c1416a2aaece7686f04ef39b7038574e03ed42f4e3d90318d0201"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SevenWonders-Darksoft-MVS_v1.0.1.zip"
+    }
+   ],
+   "prefix": "SevenWonders",
+   "game": "sevenwonders",
+   "title": "Seven Wonders Puzzles",
+   "version": "v1.0.1",
+   "semver": "1.0.1",
+   "target": "darksoft-mvs",
+   "romset": "sevenwonders",
+   "external_names": {
+    "hbmame": "7wonders"
+   },
+   "build_id": "365252fff8e3",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/SevenWonders-Darksoft-MVS_v1.zip",
    "file": "SevenWonders-Darksoft-MVS_v1.zip",
    "content_no": 1,
@@ -22588,6 +24889,48 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/SevenWonders-MANIFEST_v1.0.1.txt",
+   "file": "SevenWonders-MANIFEST_v1.0.1.txt",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "d0f4d1f86406a23d1f6bdad4da14c47e2b83b01e",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 1217,
+    "crc32": "4f6f5632",
+    "sha1": "0dd02c9b5ce396b58e352b7b951c40fc7381c463",
+    "sha256": "778dd342f56779c105850f02a33e89a272b828c8c51617c222fb995f561c274f"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SevenWonders-MANIFEST_v1.0.1.txt"
+    }
+   ],
+   "prefix": "SevenWonders",
+   "game": "sevenwonders",
+   "title": "Seven Wonders Puzzles",
+   "version": "v1.0.1",
+   "semver": "1.0.1",
+   "target": "document",
+   "romset": "sevenwonders",
+   "external_names": {
+    "hbmame": "7wonders"
+   },
+   "build_id": "778dd342f567",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/SevenWonders-MANIFEST_v1.txt",
    "file": "SevenWonders-MANIFEST_v1.txt",
    "content_no": 1,
@@ -22780,6 +25123,152 @@
    },
    "build_id": "b60284abfd71",
    "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/SevenWonders-WIP-AES-EagleBIOS_v1.0.1.zip",
+   "file": "SevenWonders-WIP-AES-EagleBIOS_v1.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "0d31a8632e341550e5bbca5f567a50f96c4c8ba4",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:30",
+   "archive": {
+    "size": 3264503,
+    "crc32": "fc1a4b75",
+    "sha1": "985f3e7d240eb0598087b895887c6bc868a59fed",
+    "sha256": "b6142e8917f602ad23b4d80a7789fcd844c06d84e95ccd7f79ee69728941ee25"
+   },
+   "files": [
+    {
+     "name": "card.bin",
+     "size": 2048,
+     "crc32": "f1e8ba9e",
+     "sha1": "605db3fdbaff4ba13729371ad0c4fbab3889378e",
+     "sha256": "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad"
+    },
+    {
+     "name": "roms/sevenwonders/782-p1.p1",
+     "size": 524288,
+     "crc32": "58d352de",
+     "sha1": "87f322fc40d3dc4386a805dde9d0eb59cceb926e",
+     "sha256": "2eac69af056371fa37b828e8041d43e7fdfe7d5c8645a011ca312fc798641518",
+     "part": "p1"
+    },
+    {
+     "name": "roms/sevenwonders/782-s1.s1",
+     "size": 131072,
+     "crc32": "ba1031c2",
+     "sha1": "f8db5fe1854761beea03df281331c09a0384e8f4",
+     "sha256": "aac713f46e06e8f4999421804a2307d23a0270ac69a7cf32de5bea8b45e17bfb",
+     "part": "s1"
+    },
+    {
+     "name": "roms/sevenwonders/782-m1.m1",
+     "size": 131072,
+     "crc32": "c965f1bf",
+     "sha1": "79e90fdf1500a7971d32c3de893db1bab802a32e",
+     "sha256": "9a33914e53d64fba79a8b3ce2e6ab786b14840a73eff22bc43f68b1a8164a79a",
+     "part": "m1"
+    },
+    {
+     "name": "roms/sevenwonders/782-v1.v1",
+     "size": 3796992,
+     "crc32": "565b83c5",
+     "sha1": "d09b6e7ea4f8ca13a9be60a6d5df33bf672e1040",
+     "sha256": "321182fac1ba4467b7b663c546a13f1d71500b6f5395c2a752e19370f94f9be9",
+     "part": "v1"
+    },
+    {
+     "name": "roms/sevenwonders/782-c1.c1",
+     "size": 4194304,
+     "crc32": "d77a28cd",
+     "sha1": "33a816e9f0e099146e84518ee826587316bad204",
+     "sha256": "676c96769d4d1c743e3fa6ba5a8db045111cf4d164ab743690ed38fe51f7476c",
+     "part": "c1"
+    },
+    {
+     "name": "roms/sevenwonders/782-c2.c2",
+     "size": 4194304,
+     "crc32": "274b42d0",
+     "sha1": "50b09325593d07ef2533a8f1ca30c9e9c84cb6ab",
+     "sha256": "7b810fd3bc77c58fa71714425263d0df49fc6475d19106eedd5b659ead5b3f5c",
+     "part": "c2"
+    },
+    {
+     "name": "roms/aes/neo-epo.bin",
+     "size": 131072,
+     "crc32": "789b3919",
+     "sha1": "35eabd4a0d5beeb52286a463bc8eec2a91ec9893",
+     "sha256": "7eec66f43b306c00bd66e25f57cf9480d3dc792c413a9cbe98425a56ea6274b7"
+    },
+    {
+     "name": "roms/aes/000-lo.lo",
+     "size": 131072,
+     "crc32": "cede14c2",
+     "sha1": "07aed5c8c3b7108ab98e8e63969a0007f7241235",
+     "sha256": "7eff4efa47f1560af2eca65a846b60567f1bd84bfce63ff8987c714ed20255c7"
+    },
+    {
+     "name": "hash/neogeo.xml",
+     "size": 2303,
+     "crc32": "933e4e27",
+     "sha1": "a755983a65f9faa4abd97b956ecd2231e00e5abf",
+     "sha256": "4e3c5240eccacc3040feb93301b8b9a31ecca96bb89800d4022510644cdfc7cf"
+    },
+    {
+     "name": "EagleBIOS.md",
+     "size": 17737,
+     "crc32": "8eaa83e8",
+     "sha1": "fad8fef1125d56713a2e8b4353768942404d82a0",
+     "sha256": "29118e75882900937a596f6fcaaef164a1b16dba431b4898e41802e883f6e482"
+    },
+    {
+     "name": "LICENSE",
+     "size": 1073,
+     "crc32": "540e329d",
+     "sha1": "1969f56845d79f4e708999f95c2c484b8f816828",
+     "sha256": "7c316688a04ac1b751f2654ba768df53bb56af37f80ed9d8846fd945f46eab09"
+    },
+    {
+     "name": "RUN.txt",
+     "size": 235,
+     "crc32": "120e868d",
+     "sha1": "f9d528d639d4740f77d9d72c13de35bd960b9141",
+     "sha256": "57631e2a59377464e50c283cdbabe085032268a6aa821d579cd93077c8002d74"
+    }
+   ],
+   "mame_definition": {
+    "ok": true,
+    "software": [
+     "sevenwonders"
+    ],
+    "problems": []
+   },
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SevenWonders-WIP-AES-EagleBIOS_v1.0.1.zip"
+    }
+   ],
+   "prefix": "SevenWonders",
+   "game": "sevenwonders",
+   "title": "Seven Wonders Puzzles",
+   "version": "v1.0.1",
+   "semver": "1.0.1",
+   "target": "mame-aes",
+   "romset": "sevenwonders",
+   "external_names": {
+    "hbmame": "7wonders"
+   },
+   "build_id": "fc9fa1aff4d0",
+   "game_id": "782",
    "external_matches": []
   },
   {
@@ -23207,6 +25696,173 @@
     "hbmame": "7wonders"
    },
    "build_id": "fc9fa1aff4d0",
+   "game_id": "782",
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/SevenWonders-WIP-EagleBIOS_v1.0.1.zip",
+   "file": "SevenWonders-WIP-EagleBIOS_v1.0.1.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "4652809e6349ba9252ffdd2e0fb08f5005635510",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:30",
+   "archive": {
+    "size": 3286022,
+    "crc32": "3c5ac6f5",
+    "sha1": "e7ef58be1fd1a4c02c326efbe14d7086b8ca3d92",
+    "sha256": "975c5a71c20d48dbd7b8fb41e2ef03cb3c95e1822ff3b4ad3de6ebb8d70c53f2"
+   },
+   "files": [
+    {
+     "name": "roms/sevenwonders/782-p1.p1",
+     "size": 524288,
+     "crc32": "51cbbaee",
+     "sha1": "f1737b00cd8e0a068a747ed440b1558139d7c7e1",
+     "sha256": "24fa74b45297d3e48ba65c3d6c3a916f9d7cfd6e449c1baa114fb827c3af8e30",
+     "part": "p1"
+    },
+    {
+     "name": "roms/sevenwonders/782-s1.s1",
+     "size": 131072,
+     "crc32": "ba1031c2",
+     "sha1": "f8db5fe1854761beea03df281331c09a0384e8f4",
+     "sha256": "aac713f46e06e8f4999421804a2307d23a0270ac69a7cf32de5bea8b45e17bfb",
+     "part": "s1"
+    },
+    {
+     "name": "roms/sevenwonders/782-m1.m1",
+     "size": 131072,
+     "crc32": "c965f1bf",
+     "sha1": "79e90fdf1500a7971d32c3de893db1bab802a32e",
+     "sha256": "9a33914e53d64fba79a8b3ce2e6ab786b14840a73eff22bc43f68b1a8164a79a",
+     "part": "m1"
+    },
+    {
+     "name": "roms/sevenwonders/782-v1.v1",
+     "size": 3796992,
+     "crc32": "565b83c5",
+     "sha1": "d09b6e7ea4f8ca13a9be60a6d5df33bf672e1040",
+     "sha256": "321182fac1ba4467b7b663c546a13f1d71500b6f5395c2a752e19370f94f9be9",
+     "part": "v1"
+    },
+    {
+     "name": "roms/sevenwonders/782-c1.c1",
+     "size": 4194304,
+     "crc32": "d77a28cd",
+     "sha1": "33a816e9f0e099146e84518ee826587316bad204",
+     "sha256": "676c96769d4d1c743e3fa6ba5a8db045111cf4d164ab743690ed38fe51f7476c",
+     "part": "c1"
+    },
+    {
+     "name": "roms/sevenwonders/782-c2.c2",
+     "size": 4194304,
+     "crc32": "274b42d0",
+     "sha1": "50b09325593d07ef2533a8f1ca30c9e9c84cb6ab",
+     "sha256": "7b810fd3bc77c58fa71714425263d0df49fc6475d19106eedd5b659ead5b3f5c",
+     "part": "c2"
+    },
+    {
+     "name": "roms/neogeo/sp-s2.sp1",
+     "size": 131072,
+     "crc32": "978e3f00",
+     "sha1": "61fd9d952a56c6f1cf96a68e54a17ece1a43fb3f",
+     "sha256": "aae26373b3e393782bd3aaf58c6de16df3f52b9142d28838be28692d1621d21d"
+    },
+    {
+     "name": "roms/neogeo/sm1.sm1",
+     "size": 131072,
+     "crc32": "5f2dbc26",
+     "sha1": "203340fe57b73384d8ef24926edebfb8159c7e13",
+     "sha256": "b16c4f69d01853bc5c074fe1be41e028ec950ce8cc3cb88abd385a169fdb4234"
+    },
+    {
+     "name": "roms/neogeo/sfix.sfix",
+     "size": 131072,
+     "crc32": "d5c1a013",
+     "sha1": "b5f1429090366303563468b76fbe0c19c78bc3a9",
+     "sha256": "feca1c2515473c34be89b76b45f01ec4e55a0325fe06c732b357982d047e0b96"
+    },
+    {
+     "name": "roms/neogeo/000-lo.lo",
+     "size": 131072,
+     "crc32": "cede14c2",
+     "sha1": "07aed5c8c3b7108ab98e8e63969a0007f7241235",
+     "sha256": "7eff4efa47f1560af2eca65a846b60567f1bd84bfce63ff8987c714ed20255c7"
+    },
+    {
+     "name": "roms/aes/neo-epo.bin",
+     "size": 131072,
+     "crc32": "789b3919",
+     "sha1": "35eabd4a0d5beeb52286a463bc8eec2a91ec9893",
+     "sha256": "7eec66f43b306c00bd66e25f57cf9480d3dc792c413a9cbe98425a56ea6274b7"
+    },
+    {
+     "name": "roms/aes/000-lo.lo",
+     "size": 131072,
+     "crc32": "cede14c2",
+     "sha1": "07aed5c8c3b7108ab98e8e63969a0007f7241235",
+     "sha256": "7eff4efa47f1560af2eca65a846b60567f1bd84bfce63ff8987c714ed20255c7"
+    },
+    {
+     "name": "hash/neogeo.xml",
+     "size": 2303,
+     "crc32": "43de7a9e",
+     "sha1": "56e3e48e5194f7f6dac3d13d8b07fe604449759f",
+     "sha256": "3a915d8f94fd99d3ca59074274a7973a73f7a97e09a2344966a271417b3aa491"
+    },
+    {
+     "name": "EagleBIOS.md",
+     "size": 17737,
+     "crc32": "8eaa83e8",
+     "sha1": "fad8fef1125d56713a2e8b4353768942404d82a0",
+     "sha256": "29118e75882900937a596f6fcaaef164a1b16dba431b4898e41802e883f6e482"
+    },
+    {
+     "name": "LICENSE",
+     "size": 1073,
+     "crc32": "540e329d",
+     "sha1": "1969f56845d79f4e708999f95c2c484b8f816828",
+     "sha256": "7c316688a04ac1b751f2654ba768df53bb56af37f80ed9d8846fd945f46eab09"
+    },
+    {
+     "name": "RUN.txt",
+     "size": 229,
+     "crc32": "f22df309",
+     "sha1": "0e75773e873b182c798584c9eae362d2427ed838",
+     "sha256": "0815718d419870c6b8eabbbf0c6f2432b361f10ef5826fadd74c5d610a2f910b"
+    }
+   ],
+   "mame_definition": {
+    "ok": true,
+    "software": [
+     "sevenwonders"
+    ],
+    "problems": []
+   },
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SevenWonders-WIP-EagleBIOS_v1.0.1.zip"
+    }
+   ],
+   "prefix": "SevenWonders",
+   "game": "sevenwonders",
+   "title": "Seven Wonders Puzzles",
+   "version": "v1.0.1",
+   "semver": "1.0.1",
+   "target": "mame-mvs",
+   "romset": "sevenwonders",
+   "external_names": {
+    "hbmame": "7wonders"
+   },
+   "build_id": "282b83a2daf1",
    "game_id": "782",
    "external_matches": []
   },
@@ -23704,6 +26360,48 @@
    "external_matches": []
   },
   {
+   "path": "dist/release/SevenWonders-WIP-NeoSD_AES_v1.0.1.neo",
+   "file": "SevenWonders-WIP-NeoSD_AES_v1.0.1.neo",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "c24f4db8164a3bfb58a1cabc45012be5cbf121f5",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 13373440,
+    "crc32": "4310e038",
+    "sha1": "df8c0ffd9e57343ccb2a303c3d4ae1d3d626ce00",
+    "sha256": "d06c1141061b2ee1db3cb03d83a2c9b7a81034b9016355d268fd0e3cf1f3169b"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SevenWonders-WIP-NeoSD_AES_v1.0.1.neo"
+    }
+   ],
+   "prefix": "SevenWonders",
+   "game": "sevenwonders",
+   "title": "Seven Wonders Puzzles",
+   "version": "v1.0.1",
+   "semver": "1.0.1",
+   "target": "neosd-aes",
+   "romset": "sevenwonders",
+   "external_names": {
+    "hbmame": "7wonders"
+   },
+   "build_id": "d06c1141061b",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
    "path": "dist/release/SevenWonders-WIP-NeoSD_AES_v1.neo",
    "file": "SevenWonders-WIP-NeoSD_AES_v1.neo",
    "content_no": 1,
@@ -23804,7 +26502,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SevenWonders-WIP-NeoSD_AES_v1.0.1.neo"
+    }
+   ],
    "prefix": "SevenWonders",
    "game": "sevenwonders",
    "title": "Seven Wonders Puzzles",
@@ -23816,6 +26519,48 @@
     "hbmame": "7wonders"
    },
    "build_id": "d06c1141061b",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/SevenWonders-WIP-NeoSD_MVS_v1.0.1.neo",
+   "file": "SevenWonders-WIP-NeoSD_MVS_v1.0.1.neo",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "c247c54b897434f300e76b5e39ce30c0afac6e70",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 13373440,
+    "crc32": "01e9210f",
+    "sha1": "5ca49fc4583969815ceb716954210d4e856e5adb",
+    "sha256": "9fca2daef8b9d4d6141c1bbd493917209337c233517165eed92979e938197629"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SevenWonders-WIP-NeoSD_MVS_v1.0.1.neo"
+    }
+   ],
+   "prefix": "SevenWonders",
+   "game": "sevenwonders",
+   "title": "Seven Wonders Puzzles",
+   "version": "v1.0.1",
+   "semver": "1.0.1",
+   "target": "neosd-mvs",
+   "romset": "sevenwonders",
+   "external_names": {
+    "hbmame": "7wonders"
+   },
+   "build_id": "9fca2daef8b9",
    "game_id": null,
    "external_matches": []
   },
@@ -23920,7 +26665,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SevenWonders-WIP-NeoSD_MVS_v1.0.1.neo"
+    }
+   ],
    "prefix": "SevenWonders",
    "game": "sevenwonders",
    "title": "Seven Wonders Puzzles",
@@ -24322,12 +27072,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "7823022000aac76da0bfd15b566d622d94c9e7c3",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "aa3c5e2f76b4eef2ff0f26e054891679c0531670",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:08:00+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-29T14:53:44",
    "archive": {
@@ -24394,7 +27144,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-BackBit-AES_v3.1.0.zip"
+    }
+   ],
    "prefix": "ShadowLeague",
    "game": "shadowleague",
    "title": "Shadow League Fighting",
@@ -24407,6 +27162,105 @@
     "fbneo": "shadowlf"
    },
    "build_id": "26fbf1eb1ca9",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-BackBit-AES_v3.2.0.zip",
+   "file": "ShadowLeague-BackBit-AES_v3.2.0.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "98c83a3306b455116b96f7dffb9efed35c635392",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:06",
+   "archive": {
+    "size": 12453356,
+    "crc32": "ba1465b7",
+    "sha1": "b03af7fdb2b7900cbb464877c360fbd98b667dcf",
+    "sha256": "0639237194ac9961b10530f3428ccf9f924952e7286214d1dbc2bd43e3f57f84"
+   },
+   "files": [
+    {
+     "name": "shadowleague/shadowleague.p1",
+     "size": 3145728,
+     "crc32": "7fca36b5",
+     "sha1": "0ef3ccefc9806053fbfe905ba8dc824e64f7a9a3",
+     "sha256": "d497d64e28054cc85978e2cdc6d2728e1148d9e9f4a47952ca9d24eceac0d44b",
+     "part": "p1"
+    },
+    {
+     "name": "shadowleague/shadowleague.s1",
+     "size": 131072,
+     "crc32": "9dc036cc",
+     "sha1": "05ea8e3c9b4a232dcf33e4642d9e61f434297d8f",
+     "sha256": "cc6541827edac2038a19b425c08089b5a86ae4e0ab63afa4ac912aac3f24c508",
+     "part": "s1"
+    },
+    {
+     "name": "shadowleague/shadowleague.m1",
+     "size": 131072,
+     "crc32": "d33dbcbd",
+     "sha1": "acf361b72eaa42dccaeed53c0170b3d5beacf036",
+     "sha256": "924606dafc47813b7bf0bf5831df1345e5339cd19def57193ac5227f0a859f56",
+     "part": "m1"
+    },
+    {
+     "name": "shadowleague/shadowleague.v1",
+     "size": 7984384,
+     "crc32": "0e34c91f",
+     "sha1": "9f2804c9d5196a757a363efd06f74690c3c6f94a",
+     "sha256": "e28520fbf5c7ff90c6bdd212f187417640a9f03b835ad0929ed0e9f9041d8ce7",
+     "part": "v1"
+    },
+    {
+     "name": "shadowleague/shadowleague.c1",
+     "size": 8388608,
+     "crc32": "dbb8854a",
+     "sha1": "758dcf8642dff9843511fa7b3717bc896b301471",
+     "sha256": "395225b5e118d33cd85882eecf7ee762ff93a55352591faea3401220700dea37",
+     "part": "c1"
+    },
+    {
+     "name": "shadowleague/shadowleague.c2",
+     "size": 8388608,
+     "crc32": "e13b5303",
+     "sha1": "cd41b50283c6d67f9c95dfbbc9c84aca52638c51",
+     "sha256": "00d737102609e11b9452468eb11594c0e780ad90187689232d190875de6a4224",
+     "part": "c2"
+    },
+    {
+     "name": "shadowleague/README.txt",
+     "size": 614,
+     "crc32": "67dede08",
+     "sha1": "71a6a95834bbccd2ec6a42ce5acf3fa1b628817f",
+     "sha256": "cf08eec6022584549ede99c6dd1b393b8ae94640238d2d4e495e5971a28fef23"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-BackBit-AES_v3.2.0.zip"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.0",
+   "semver": "3.2.0",
+   "target": "backbit-aes",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "538dd8c55e77",
    "game_id": null,
    "external_matches": []
   },
@@ -25178,12 +28032,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "7823022000aac76da0bfd15b566d622d94c9e7c3",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "62e1b5c74ab73a1bb13196b11712cba25ac031e2",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:08:00+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-29T14:53:42",
    "archive": {
@@ -25250,7 +28104,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-BackBit-MVS_v3.1.0.zip"
+    }
+   ],
    "prefix": "ShadowLeague",
    "game": "shadowleague",
    "title": "Shadow League Fighting",
@@ -25263,6 +28122,105 @@
     "fbneo": "shadowlf"
    },
    "build_id": "5a598ffe6f33",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-BackBit-MVS_v3.2.0.zip",
+   "file": "ShadowLeague-BackBit-MVS_v3.2.0.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "f5089897b41f8aa58fbaca1f25dd0564d55612ff",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:06",
+   "archive": {
+    "size": 12453268,
+    "crc32": "fd41536b",
+    "sha1": "d5af69d6ccec12f4fe17cdc1ad3d42ee3a63e0ee",
+    "sha256": "f6a463337172d3fc184bdf14a2a5927da2f8472be0b96eb0071658af044a39cb"
+   },
+   "files": [
+    {
+     "name": "shadowleague/shadowleague.p1",
+     "size": 3145728,
+     "crc32": "664a2881",
+     "sha1": "9e2a2bab9d2b713be5ebe18ac7f19fce38155d18",
+     "sha256": "110c4c66e7fdba483ce2efb7b15f09fb7b02dd6806a184d55796595636660302",
+     "part": "p1"
+    },
+    {
+     "name": "shadowleague/shadowleague.s1",
+     "size": 131072,
+     "crc32": "9dc036cc",
+     "sha1": "05ea8e3c9b4a232dcf33e4642d9e61f434297d8f",
+     "sha256": "cc6541827edac2038a19b425c08089b5a86ae4e0ab63afa4ac912aac3f24c508",
+     "part": "s1"
+    },
+    {
+     "name": "shadowleague/shadowleague.m1",
+     "size": 131072,
+     "crc32": "d33dbcbd",
+     "sha1": "acf361b72eaa42dccaeed53c0170b3d5beacf036",
+     "sha256": "924606dafc47813b7bf0bf5831df1345e5339cd19def57193ac5227f0a859f56",
+     "part": "m1"
+    },
+    {
+     "name": "shadowleague/shadowleague.v1",
+     "size": 7984384,
+     "crc32": "0e34c91f",
+     "sha1": "9f2804c9d5196a757a363efd06f74690c3c6f94a",
+     "sha256": "e28520fbf5c7ff90c6bdd212f187417640a9f03b835ad0929ed0e9f9041d8ce7",
+     "part": "v1"
+    },
+    {
+     "name": "shadowleague/shadowleague.c1",
+     "size": 8388608,
+     "crc32": "dbb8854a",
+     "sha1": "758dcf8642dff9843511fa7b3717bc896b301471",
+     "sha256": "395225b5e118d33cd85882eecf7ee762ff93a55352591faea3401220700dea37",
+     "part": "c1"
+    },
+    {
+     "name": "shadowleague/shadowleague.c2",
+     "size": 8388608,
+     "crc32": "e13b5303",
+     "sha1": "cd41b50283c6d67f9c95dfbbc9c84aca52638c51",
+     "sha256": "00d737102609e11b9452468eb11594c0e780ad90187689232d190875de6a4224",
+     "part": "c2"
+    },
+    {
+     "name": "shadowleague/README.txt",
+     "size": 476,
+     "crc32": "f45b4019",
+     "sha1": "9ee7a63f2a7a228d074b5f72caeb183e52238dd3",
+     "sha256": "6168201b33d6493833e1a8fdce257e2e1000eec81fadf131262f929f04b5268a"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-BackBit-MVS_v3.2.0.zip"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.0",
+   "semver": "3.2.0",
+   "target": "backbit-mvs",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "ccf9c43062ab",
    "game_id": null,
    "external_matches": []
   },
@@ -25810,12 +28768,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "7823022000aac76da0bfd15b566d622d94c9e7c3",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "0a5f3887ac509c779f432f0b9f41e03ba598a244",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:08:00+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
    "archive": {
@@ -25826,7 +28784,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-CHANGELOG_v3.1.0.txt"
+    }
+   ],
    "prefix": "ShadowLeague",
    "game": "shadowleague",
    "title": "Shadow League Fighting",
@@ -25839,6 +28802,49 @@
     "fbneo": "shadowlf"
    },
    "build_id": "ae54bb899703",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-CHANGELOG_v3.2.0.txt",
+   "file": "ShadowLeague-CHANGELOG_v3.2.0.txt",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "4b59d8ea1a93f0db11f0cd3524ae2cce8d56b2b5",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 14019,
+    "crc32": "8ac4424b",
+    "sha1": "3ded73d6db51a05b91ab0890a89f549495402710",
+    "sha256": "9e615ec96b6ee78aeb45201f5f1fe13fed0373aea1aea74c91283618e4e363ef"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-CHANGELOG_v3.2.0.txt"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.0",
+   "semver": "3.2.0",
+   "target": "document",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "9e615ec96b6e",
    "game_id": null,
    "external_matches": []
   },
@@ -26314,12 +29320,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "7823022000aac76da0bfd15b566d622d94c9e7c3",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "c201e0e8f637e8479b8cdff845f185a311efda03",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:08:00+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-29T14:53:40",
    "archive": {
@@ -26387,7 +29393,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-Darksoft-AES_v3.1.0.zip"
+    }
+   ],
    "prefix": "ShadowLeague",
    "game": "shadowleague",
    "title": "Shadow League Fighting",
@@ -26400,6 +29411,106 @@
     "fbneo": "shadowlf"
    },
    "build_id": "63dfb237b494",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-Darksoft-AES_v3.2.0.zip",
+   "file": "ShadowLeague-Darksoft-AES_v3.2.0.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "94ad75b25f3894f2e7863130437a98a37a6a8fdf",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:04",
+   "archive": {
+    "size": 12306396,
+    "crc32": "820dc2bc",
+    "sha1": "aa12a72e9229801ee1b048639bcb11ce14caa6f7",
+    "sha256": "f492374f03c7b5d232b6cc417592d0a3d3f96069d8ee7fec13094b3ee323d97d"
+   },
+   "files": [
+    {
+     "name": "ShadowLeague_AES/prom",
+     "size": 3145728,
+     "crc32": "7fca36b5",
+     "sha1": "0ef3ccefc9806053fbfe905ba8dc824e64f7a9a3",
+     "sha256": "d497d64e28054cc85978e2cdc6d2728e1148d9e9f4a47952ca9d24eceac0d44b"
+    },
+    {
+     "name": "ShadowLeague_AES/srom",
+     "size": 131072,
+     "crc32": "9dc036cc",
+     "sha1": "05ea8e3c9b4a232dcf33e4642d9e61f434297d8f",
+     "sha256": "cc6541827edac2038a19b425c08089b5a86ae4e0ab63afa4ac912aac3f24c508"
+    },
+    {
+     "name": "ShadowLeague_AES/m1rom",
+     "size": 131072,
+     "crc32": "d33dbcbd",
+     "sha1": "acf361b72eaa42dccaeed53c0170b3d5beacf036",
+     "sha256": "924606dafc47813b7bf0bf5831df1345e5339cd19def57193ac5227f0a859f56"
+    },
+    {
+     "name": "ShadowLeague_AES/vroma0",
+     "size": 8388608,
+     "crc32": "5108b50f",
+     "sha1": "799f44760284048db9f3e8151e82a1a5ab515a8b",
+     "sha256": "333942ec3ff2b46da0ea65e34f85e9b57e2910615bdc237fd639cbc5341265af"
+    },
+    {
+     "name": "ShadowLeague_AES/crom0",
+     "size": 16777216,
+     "crc32": "1da6f162",
+     "sha1": "3dc160e204a051acadee855145741e59dbbf4b64",
+     "sha256": "4986c1030f5f9baabc6848b07768d3c39d3f5dccb9e97a9ba9f0d922cb287645"
+    },
+    {
+     "name": "ShadowLeague_AES/fpga",
+     "size": 2,
+     "crc32": "a15d25e1",
+     "sha1": "b1d5781111d84f7b3fe45a0852e59758cd7a87e5",
+     "sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5"
+    },
+    {
+     "name": "ShadowLeague_AES/MANIFEST.json",
+     "size": 1356,
+     "crc32": "a4b34e48",
+     "sha1": "68fb777a5ce5651b242b50758934bbd78b05a611",
+     "sha256": "c1e8c6f6e7c5fb45161f2bb11deb677721cc7beeb1eb8e217eb1655e2314a7f7"
+    },
+    {
+     "name": "ShadowLeague_AES/README.txt",
+     "size": 503,
+     "crc32": "9aa0293e",
+     "sha1": "b227d6e507cc253b217700b01454ee60c073a607",
+     "sha256": "8218cfe9f381e74ffc7d3a4a2f131f8f07b8de129433892dff9fec6326a99c2d"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-Darksoft-AES_v3.2.0.zip"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.0",
+   "semver": "3.2.0",
+   "target": "darksoft-aes",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "f492374f03c7",
    "game_id": null,
    "external_matches": []
   },
@@ -27179,12 +30290,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "7823022000aac76da0bfd15b566d622d94c9e7c3",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "cbacc14d717758bf5a14b87ffcfdbd797e89c4e3",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:08:00+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-29T14:53:38",
    "archive": {
@@ -27252,7 +30363,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-Darksoft-MVS_v3.1.0.zip"
+    }
+   ],
    "prefix": "ShadowLeague",
    "game": "shadowleague",
    "title": "Shadow League Fighting",
@@ -27265,6 +30381,106 @@
     "fbneo": "shadowlf"
    },
    "build_id": "26ba5bc1ae27",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-Darksoft-MVS_v3.2.0.zip",
+   "file": "ShadowLeague-Darksoft-MVS_v3.2.0.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "4f553fb8e3779ce6fad3f90a6e7b571ae2ac8b67",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:04",
+   "archive": {
+    "size": 12306398,
+    "crc32": "df47c325",
+    "sha1": "50f73d9beb3b9868396deae209f1096e29c2d3b7",
+    "sha256": "544c2d9f3d95a373c529959b1116544c5b0b938493145ce9de82bd04be995107"
+   },
+   "files": [
+    {
+     "name": "ShadowLeague_MVS/prom",
+     "size": 3145728,
+     "crc32": "664a2881",
+     "sha1": "9e2a2bab9d2b713be5ebe18ac7f19fce38155d18",
+     "sha256": "110c4c66e7fdba483ce2efb7b15f09fb7b02dd6806a184d55796595636660302"
+    },
+    {
+     "name": "ShadowLeague_MVS/srom",
+     "size": 131072,
+     "crc32": "9dc036cc",
+     "sha1": "05ea8e3c9b4a232dcf33e4642d9e61f434297d8f",
+     "sha256": "cc6541827edac2038a19b425c08089b5a86ae4e0ab63afa4ac912aac3f24c508"
+    },
+    {
+     "name": "ShadowLeague_MVS/m1rom",
+     "size": 131072,
+     "crc32": "d33dbcbd",
+     "sha1": "acf361b72eaa42dccaeed53c0170b3d5beacf036",
+     "sha256": "924606dafc47813b7bf0bf5831df1345e5339cd19def57193ac5227f0a859f56"
+    },
+    {
+     "name": "ShadowLeague_MVS/vroma0",
+     "size": 8388608,
+     "crc32": "5108b50f",
+     "sha1": "799f44760284048db9f3e8151e82a1a5ab515a8b",
+     "sha256": "333942ec3ff2b46da0ea65e34f85e9b57e2910615bdc237fd639cbc5341265af"
+    },
+    {
+     "name": "ShadowLeague_MVS/crom0",
+     "size": 16777216,
+     "crc32": "1da6f162",
+     "sha1": "3dc160e204a051acadee855145741e59dbbf4b64",
+     "sha256": "4986c1030f5f9baabc6848b07768d3c39d3f5dccb9e97a9ba9f0d922cb287645"
+    },
+    {
+     "name": "ShadowLeague_MVS/fpga",
+     "size": 2,
+     "crc32": "a15d25e1",
+     "sha1": "b1d5781111d84f7b3fe45a0852e59758cd7a87e5",
+     "sha256": "4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5"
+    },
+    {
+     "name": "ShadowLeague_MVS/MANIFEST.json",
+     "size": 1356,
+     "crc32": "6ac0bc36",
+     "sha1": "fa8bb323d926b2ad87cc91773d50b03fa95631d4",
+     "sha256": "82f88769ac37bb0d7cdaa44fbfc3efad57b5e87c71f348abf3602a0a7e04d04f"
+    },
+    {
+     "name": "ShadowLeague_MVS/README.txt",
+     "size": 503,
+     "crc32": "f5f7e9fb",
+     "sha1": "ebcbe640400d10985a7d2b1d1c8d54c043055d6c",
+     "sha256": "086bb5f6b583808d77b731725364d3de12a0101a860812343bcdf03d4c98eb92"
+    }
+   ],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-Darksoft-MVS_v3.2.0.zip"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.0",
+   "semver": "3.2.0",
+   "target": "darksoft-mvs",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "544c2d9f3d95",
    "game_id": null,
    "external_matches": []
   },
@@ -27816,12 +31032,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "7823022000aac76da0bfd15b566d622d94c9e7c3",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "6c73df333d6d7cd9afda2f03627861cad997ae2f",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:08:00+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
    "archive": {
@@ -27832,7 +31048,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-MANIFEST_v3.1.0.txt"
+    }
+   ],
    "prefix": "ShadowLeague",
    "game": "shadowleague",
    "title": "Shadow League Fighting",
@@ -27845,6 +31066,49 @@
     "fbneo": "shadowlf"
    },
    "build_id": "4363be4c07ad",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-MANIFEST_v3.2.0.txt",
+   "file": "ShadowLeague-MANIFEST_v3.2.0.txt",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "c84bc89a767dd58fe72e5c6593af51c95c1e11d2",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 1335,
+    "crc32": "7bb477b9",
+    "sha1": "94c6c43c88d1207d3127ffc54364ef8639a049e2",
+    "sha256": "fe00190de0453cf82a0bd05860c86a15dc7b171f237f6543c10c27288fa40138"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-MANIFEST_v3.2.0.txt"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.0",
+   "semver": "3.2.0",
+   "target": "document",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "fe00190de045",
    "game_id": null,
    "external_matches": []
   },
@@ -28168,12 +31432,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "7823022000aac76da0bfd15b566d622d94c9e7c3",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "5d7b0904ce92050be446e07e1a684254ebfc35ae",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:08:00+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
    "archive": {
@@ -28184,7 +31448,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-README_v3.1.0.txt"
+    }
+   ],
    "prefix": "ShadowLeague",
    "game": "shadowleague",
    "title": "Shadow League Fighting",
@@ -28197,6 +31466,49 @@
     "fbneo": "shadowlf"
    },
    "build_id": "8d435a8ed004",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-README_v3.2.0.txt",
+   "file": "ShadowLeague-README_v3.2.0.txt",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "50f8cd5d771fe9c415c661ce97e58fdfb6d53dae",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 5943,
+    "crc32": "a04de040",
+    "sha1": "07a3656f5fe2725a8512e1c00a0547a162eccabd",
+    "sha256": "0c8231b6046721e2870d83cee4cfb22f05336a6ec5c903da2b0ecb9ab8602b73"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-README_v3.2.0.txt"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.0",
+   "semver": "3.2.0",
+   "target": "document",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "0c8231b60467",
    "game_id": null,
    "external_matches": []
   },
@@ -28860,12 +32172,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "7823022000aac76da0bfd15b566d622d94c9e7c3",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "178cbbb0c2325036fff65248a324e989c2a5fad2",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:08:00+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-29T14:53:50",
    "archive": {
@@ -28980,7 +32292,12 @@
     ],
     "problems": []
    },
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-WIP-AES-EagleBIOS_v3.1.0.zip"
+    }
+   ],
    "prefix": "ShadowLeague",
    "game": "shadowleague",
    "title": "Shadow League Fighting",
@@ -28993,6 +32310,153 @@
     "fbneo": "shadowlf"
    },
    "build_id": "26fbf1eb1ca9",
+   "game_id": "781",
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-WIP-AES-EagleBIOS_v3.2.0.zip",
+   "file": "ShadowLeague-WIP-AES-EagleBIOS_v3.2.0.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "ebb6a022ef761f5d73e5089f0aa0da90e7e28036",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:08",
+   "archive": {
+    "size": 12482044,
+    "crc32": "de496537",
+    "sha1": "f209fbe75ed9330846dbd3d3e95fa2fd55973fb6",
+    "sha256": "3b01c24e43d32f181b973f0486428249894ae69af97a60ce693842b61f50bcd5"
+   },
+   "files": [
+    {
+     "name": "card.bin",
+     "size": 2048,
+     "crc32": "f1e8ba9e",
+     "sha1": "605db3fdbaff4ba13729371ad0c4fbab3889378e",
+     "sha256": "e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad"
+    },
+    {
+     "name": "roms/shadowleague/781-p1.p1",
+     "size": 3145728,
+     "crc32": "7fca36b5",
+     "sha1": "0ef3ccefc9806053fbfe905ba8dc824e64f7a9a3",
+     "sha256": "d497d64e28054cc85978e2cdc6d2728e1148d9e9f4a47952ca9d24eceac0d44b",
+     "part": "p1"
+    },
+    {
+     "name": "roms/shadowleague/781-s1.s1",
+     "size": 131072,
+     "crc32": "9dc036cc",
+     "sha1": "05ea8e3c9b4a232dcf33e4642d9e61f434297d8f",
+     "sha256": "cc6541827edac2038a19b425c08089b5a86ae4e0ab63afa4ac912aac3f24c508",
+     "part": "s1"
+    },
+    {
+     "name": "roms/shadowleague/781-m1.m1",
+     "size": 131072,
+     "crc32": "d33dbcbd",
+     "sha1": "acf361b72eaa42dccaeed53c0170b3d5beacf036",
+     "sha256": "924606dafc47813b7bf0bf5831df1345e5339cd19def57193ac5227f0a859f56",
+     "part": "m1"
+    },
+    {
+     "name": "roms/shadowleague/781-v1.v1",
+     "size": 7984384,
+     "crc32": "0e34c91f",
+     "sha1": "9f2804c9d5196a757a363efd06f74690c3c6f94a",
+     "sha256": "e28520fbf5c7ff90c6bdd212f187417640a9f03b835ad0929ed0e9f9041d8ce7",
+     "part": "v1"
+    },
+    {
+     "name": "roms/shadowleague/781-c1.c1",
+     "size": 8388608,
+     "crc32": "dbb8854a",
+     "sha1": "758dcf8642dff9843511fa7b3717bc896b301471",
+     "sha256": "395225b5e118d33cd85882eecf7ee762ff93a55352591faea3401220700dea37",
+     "part": "c1"
+    },
+    {
+     "name": "roms/shadowleague/781-c2.c2",
+     "size": 8388608,
+     "crc32": "e13b5303",
+     "sha1": "cd41b50283c6d67f9c95dfbbc9c84aca52638c51",
+     "sha256": "00d737102609e11b9452468eb11594c0e780ad90187689232d190875de6a4224",
+     "part": "c2"
+    },
+    {
+     "name": "roms/aes/neo-epo.bin",
+     "size": 131072,
+     "crc32": "789b3919",
+     "sha1": "35eabd4a0d5beeb52286a463bc8eec2a91ec9893",
+     "sha256": "7eec66f43b306c00bd66e25f57cf9480d3dc792c413a9cbe98425a56ea6274b7"
+    },
+    {
+     "name": "roms/aes/000-lo.lo",
+     "size": 131072,
+     "crc32": "cede14c2",
+     "sha1": "07aed5c8c3b7108ab98e8e63969a0007f7241235",
+     "sha256": "7eff4efa47f1560af2eca65a846b60567f1bd84bfce63ff8987c714ed20255c7"
+    },
+    {
+     "name": "hash/neogeo.xml",
+     "size": 2296,
+     "crc32": "853a3dc1",
+     "sha1": "6fef1c1efbcd889287b70d2652f0d8ad103634c6",
+     "sha256": "c59e269506e010a3de8b61205f9b260a9c96e2b8266df62eb310ce1d98858aaa"
+    },
+    {
+     "name": "EagleBIOS.md",
+     "size": 17737,
+     "crc32": "8eaa83e8",
+     "sha1": "fad8fef1125d56713a2e8b4353768942404d82a0",
+     "sha256": "29118e75882900937a596f6fcaaef164a1b16dba431b4898e41802e883f6e482"
+    },
+    {
+     "name": "LICENSE",
+     "size": 1073,
+     "crc32": "540e329d",
+     "sha1": "1969f56845d79f4e708999f95c2c484b8f816828",
+     "sha256": "7c316688a04ac1b751f2654ba768df53bb56af37f80ed9d8846fd945f46eab09"
+    },
+    {
+     "name": "RUN.txt",
+     "size": 235,
+     "crc32": "bbf2532a",
+     "sha1": "56d28606a787b467e1c9e68c525f6ebe23a90105",
+     "sha256": "88fbb0559a933cafff493604eb7c66934a18dbfef9a404c683d38dd39f79ed16"
+    }
+   ],
+   "mame_definition": {
+    "ok": true,
+    "software": [
+     "shadowleague"
+    ],
+    "problems": []
+   },
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-WIP-AES-EagleBIOS_v3.2.0.zip"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.0",
+   "semver": "3.2.0",
+   "target": "mame-aes",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "538dd8c55e77",
    "game_id": "781",
    "external_matches": []
   },
@@ -30232,12 +33696,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "7823022000aac76da0bfd15b566d622d94c9e7c3",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "87264b3f85e008424e2d6c6c0f8b090665890072",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:08:00+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-29T14:53:46",
    "archive": {
@@ -30373,7 +33837,12 @@
     ],
     "problems": []
    },
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-WIP-EagleBIOS_v3.1.0.zip"
+    }
+   ],
    "prefix": "ShadowLeague",
    "game": "shadowleague",
    "title": "Shadow League Fighting",
@@ -30386,6 +33855,174 @@
     "fbneo": "shadowlf"
    },
    "build_id": "5a598ffe6f33",
+   "game_id": "781",
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-WIP-EagleBIOS_v3.2.0.zip",
+   "file": "ShadowLeague-WIP-EagleBIOS_v3.2.0.zip",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "00c38136fb0b1b97ef5ee3f9b27453080c57ac4c",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": "2026-10-31T13:17:08",
+   "archive": {
+    "size": 12503567,
+    "crc32": "5b36e440",
+    "sha1": "ecffe5fbed6f2bac7bf96538fe7e717cdbf05a67",
+    "sha256": "0a83d30a965ed49e7164f419fff2f55b2581ff56a2ea473cf79419893ed0da7d"
+   },
+   "files": [
+    {
+     "name": "roms/shadowleague/781-p1.p1",
+     "size": 3145728,
+     "crc32": "664a2881",
+     "sha1": "9e2a2bab9d2b713be5ebe18ac7f19fce38155d18",
+     "sha256": "110c4c66e7fdba483ce2efb7b15f09fb7b02dd6806a184d55796595636660302",
+     "part": "p1"
+    },
+    {
+     "name": "roms/shadowleague/781-s1.s1",
+     "size": 131072,
+     "crc32": "9dc036cc",
+     "sha1": "05ea8e3c9b4a232dcf33e4642d9e61f434297d8f",
+     "sha256": "cc6541827edac2038a19b425c08089b5a86ae4e0ab63afa4ac912aac3f24c508",
+     "part": "s1"
+    },
+    {
+     "name": "roms/shadowleague/781-m1.m1",
+     "size": 131072,
+     "crc32": "d33dbcbd",
+     "sha1": "acf361b72eaa42dccaeed53c0170b3d5beacf036",
+     "sha256": "924606dafc47813b7bf0bf5831df1345e5339cd19def57193ac5227f0a859f56",
+     "part": "m1"
+    },
+    {
+     "name": "roms/shadowleague/781-v1.v1",
+     "size": 7984384,
+     "crc32": "0e34c91f",
+     "sha1": "9f2804c9d5196a757a363efd06f74690c3c6f94a",
+     "sha256": "e28520fbf5c7ff90c6bdd212f187417640a9f03b835ad0929ed0e9f9041d8ce7",
+     "part": "v1"
+    },
+    {
+     "name": "roms/shadowleague/781-c1.c1",
+     "size": 8388608,
+     "crc32": "dbb8854a",
+     "sha1": "758dcf8642dff9843511fa7b3717bc896b301471",
+     "sha256": "395225b5e118d33cd85882eecf7ee762ff93a55352591faea3401220700dea37",
+     "part": "c1"
+    },
+    {
+     "name": "roms/shadowleague/781-c2.c2",
+     "size": 8388608,
+     "crc32": "e13b5303",
+     "sha1": "cd41b50283c6d67f9c95dfbbc9c84aca52638c51",
+     "sha256": "00d737102609e11b9452468eb11594c0e780ad90187689232d190875de6a4224",
+     "part": "c2"
+    },
+    {
+     "name": "roms/neogeo/sp-s2.sp1",
+     "size": 131072,
+     "crc32": "978e3f00",
+     "sha1": "61fd9d952a56c6f1cf96a68e54a17ece1a43fb3f",
+     "sha256": "aae26373b3e393782bd3aaf58c6de16df3f52b9142d28838be28692d1621d21d"
+    },
+    {
+     "name": "roms/neogeo/sm1.sm1",
+     "size": 131072,
+     "crc32": "5f2dbc26",
+     "sha1": "203340fe57b73384d8ef24926edebfb8159c7e13",
+     "sha256": "b16c4f69d01853bc5c074fe1be41e028ec950ce8cc3cb88abd385a169fdb4234"
+    },
+    {
+     "name": "roms/neogeo/sfix.sfix",
+     "size": 131072,
+     "crc32": "d5c1a013",
+     "sha1": "b5f1429090366303563468b76fbe0c19c78bc3a9",
+     "sha256": "feca1c2515473c34be89b76b45f01ec4e55a0325fe06c732b357982d047e0b96"
+    },
+    {
+     "name": "roms/neogeo/000-lo.lo",
+     "size": 131072,
+     "crc32": "cede14c2",
+     "sha1": "07aed5c8c3b7108ab98e8e63969a0007f7241235",
+     "sha256": "7eff4efa47f1560af2eca65a846b60567f1bd84bfce63ff8987c714ed20255c7"
+    },
+    {
+     "name": "roms/aes/neo-epo.bin",
+     "size": 131072,
+     "crc32": "789b3919",
+     "sha1": "35eabd4a0d5beeb52286a463bc8eec2a91ec9893",
+     "sha256": "7eec66f43b306c00bd66e25f57cf9480d3dc792c413a9cbe98425a56ea6274b7"
+    },
+    {
+     "name": "roms/aes/000-lo.lo",
+     "size": 131072,
+     "crc32": "cede14c2",
+     "sha1": "07aed5c8c3b7108ab98e8e63969a0007f7241235",
+     "sha256": "7eff4efa47f1560af2eca65a846b60567f1bd84bfce63ff8987c714ed20255c7"
+    },
+    {
+     "name": "hash/neogeo.xml",
+     "size": 2296,
+     "crc32": "1dd1cf8c",
+     "sha1": "681ea9077d4a54f218cfd6367f93a945abf96b31",
+     "sha256": "21759bc3053a92942241cb46b6eecd52a28d7af1bfb0d2a0a96cc0d4629e96f4"
+    },
+    {
+     "name": "EagleBIOS.md",
+     "size": 17737,
+     "crc32": "8eaa83e8",
+     "sha1": "fad8fef1125d56713a2e8b4353768942404d82a0",
+     "sha256": "29118e75882900937a596f6fcaaef164a1b16dba431b4898e41802e883f6e482"
+    },
+    {
+     "name": "LICENSE",
+     "size": 1073,
+     "crc32": "540e329d",
+     "sha1": "1969f56845d79f4e708999f95c2c484b8f816828",
+     "sha256": "7c316688a04ac1b751f2654ba768df53bb56af37f80ed9d8846fd945f46eab09"
+    },
+    {
+     "name": "RUN.txt",
+     "size": 229,
+     "crc32": "5089b0a2",
+     "sha1": "c4d0d08c30b529a895d6e494aec413cb00000ad4",
+     "sha256": "9da6bb1e626409f55a3c07e823f2a466fc84b0e3eb8da7b894155cd35381bcbe"
+    }
+   ],
+   "mame_definition": {
+    "ok": true,
+    "software": [
+     "shadowleague"
+    ],
+    "problems": []
+   },
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-WIP-EagleBIOS_v3.2.0.zip"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.0",
+   "semver": "3.2.0",
+   "target": "mame-mvs",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "ccf9c43062ab",
    "game_id": "781",
    "external_matches": []
   },
@@ -31213,12 +34850,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "7823022000aac76da0bfd15b566d622d94c9e7c3",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "b5b217e00e0108cb45d00aab6e3b233bef5bd0c6",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:08:00+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
    "archive": {
@@ -31229,7 +34866,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-WIP-NeoSD_AES_v3.1.0.neo"
+    }
+   ],
    "prefix": "ShadowLeague",
    "game": "shadowleague",
    "title": "Shadow League Fighting",
@@ -31242,6 +34884,49 @@
     "fbneo": "shadowlf"
    },
    "build_id": "532d56a837ff",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-WIP-NeoSD_AES_v3.2.0.neo",
+   "file": "ShadowLeague-WIP-NeoSD_AES_v3.2.0.neo",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "903bbd3066e25c0bfbae11518a6a9e49c41c38a4",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 28577792,
+    "crc32": "9b440cbf",
+    "sha1": "55850d5240db756813b3dbc87b997b96844883a6",
+    "sha256": "88dd3f963b3cb6afdb6edd2f694a858cd47e4db07e7ea89b876e6ae261834fd0"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-WIP-NeoSD_AES_v3.2.0.neo"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.0",
+   "semver": "3.2.0",
+   "target": "neosd-aes",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "88dd3f963b3c",
    "game_id": null,
    "external_matches": []
   },
@@ -31565,12 +35250,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "7823022000aac76da0bfd15b566d622d94c9e7c3",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "8c344727b2293b06ea188be179f0bce09e365702",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:08:00+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
    "archive": {
@@ -31581,7 +35266,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-WIP-NeoSD_MVS_v3.1.0.neo"
+    }
+   ],
    "prefix": "ShadowLeague",
    "game": "shadowleague",
    "title": "Shadow League Fighting",
@@ -31594,6 +35284,49 @@
     "fbneo": "shadowlf"
    },
    "build_id": "1493262bac63",
+   "game_id": null,
+   "external_matches": []
+  },
+  {
+   "path": "dist/release/ShadowLeague-WIP-NeoSD_MVS_v3.2.0.neo",
+   "file": "ShadowLeague-WIP-NeoSD_MVS_v3.2.0.neo",
+   "content_no": 1,
+   "contents_under_this_name": 1,
+   "status": "current",
+   "tracked": true,
+   "git_commit": "4d1e833d96900b3d995357a65d3f15f576e4504e",
+   "only_in_pre_rewrite_history": false,
+   "git_blob": "95ac2473264b8cfb41007c8b924e7a75449e198b",
+   "pushed": false,
+   "commit_date": "2026-10-31T14:33:08+00:00",
+   "sdk_version": "1.7.7",
+   "build_timestamp": null,
+   "archive": {
+    "size": 28577792,
+    "crc32": "b9b623c4",
+    "sha1": "2031162b68a1f8ff102a240baeeddea4c08e283e",
+    "sha256": "cab6422a7aba358bb0c5795f0e30fd471720e2759cf4192554015ed1b80c1607"
+   },
+   "files": [],
+   "mame_definition": null,
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "ShadowLeague-WIP-NeoSD_MVS_v3.2.0.neo"
+    }
+   ],
+   "prefix": "ShadowLeague",
+   "game": "shadowleague",
+   "title": "Shadow League Fighting",
+   "version": "v3.2.0",
+   "semver": "3.2.0",
+   "target": "neosd-mvs",
+   "romset": "shadowleague",
+   "external_names": {
+    "hbmame": "shadowlf",
+    "fbneo": "shadowlf"
+   },
+   "build_id": "cab6422a7aba",
    "game_id": null,
    "external_matches": []
   },
@@ -31859,12 +35592,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "2e17403a82d6de12dedf2788e138f596d149e2de",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "02f14fb8b57623fbc51d62bab139a09ac412fb4e",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:05:06+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-29T10:09:16",
    "archive": {
@@ -31931,7 +35664,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SkyLance-BackBit-AES_v2.1.0.zip"
+    }
+   ],
    "prefix": "SkyLance",
    "game": "skylance",
    "title": "Sky Lance",
@@ -32339,12 +36077,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "2e17403a82d6de12dedf2788e138f596d149e2de",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "faec752d97aa4acd9b7517ffb9f0b3343f04669c",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:05:06+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-29T10:09:14",
    "archive": {
@@ -32411,7 +36149,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SkyLance-BackBit-MVS_v2.1.0.zip"
+    }
+   ],
    "prefix": "SkyLance",
    "game": "skylance",
    "title": "Sky Lance",
@@ -32763,12 +36506,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "2e17403a82d6de12dedf2788e138f596d149e2de",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "83b35c951a959c76626fe13345e05bb2e5c3f67d",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:05:06+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
    "archive": {
@@ -32779,7 +36522,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SkyLance-CHANGELOG_v2.1.0.txt"
+    }
+   ],
    "prefix": "SkyLance",
    "game": "skylance",
    "title": "Sky Lance",
@@ -32982,12 +36730,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "2e17403a82d6de12dedf2788e138f596d149e2de",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "03a1cea3e3aa4f44a84ff58323169bf2721f5cf8",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:05:06+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-29T10:09:14",
    "archive": {
@@ -33055,7 +36803,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SkyLance-Darksoft-AES_v2.1.0.zip"
+    }
+   ],
    "prefix": "SkyLance",
    "game": "skylance",
    "title": "Sky Lance",
@@ -33467,12 +37220,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "2e17403a82d6de12dedf2788e138f596d149e2de",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "4c70521a384d5e2b23a0f00136937633244718a8",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:05:06+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-29T10:09:12",
    "archive": {
@@ -33540,7 +37293,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SkyLance-Darksoft-MVS_v2.1.0.zip"
+    }
+   ],
    "prefix": "SkyLance",
    "game": "skylance",
    "title": "Sky Lance",
@@ -33895,12 +37653,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "2e17403a82d6de12dedf2788e138f596d149e2de",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "137e9ca69d1bebfd37d0405f59767fe45de266f0",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:05:06+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
    "archive": {
@@ -33911,7 +37669,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SkyLance-MANIFEST_v2.1.0.txt"
+    }
+   ],
    "prefix": "SkyLance",
    "game": "skylance",
    "title": "Sky Lance",
@@ -34053,7 +37816,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -34104,7 +37867,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SkyLance-NeoGeoCD-EagleBIOS-CDZ-BinCue_v2-r2.zip"
+    }
+   ],
    "build_id": "e8b75317724a",
    "game_id": null,
    "external_matches": []
@@ -34116,7 +37884,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -34167,7 +37935,12 @@
     }
    ],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SkyLance-NeoGeoCD-Stock-CDZ-BinCue_v2-r2.zip"
+    }
+   ],
    "build_id": "4bcb0ab83730",
    "game_id": null,
    "external_matches": []
@@ -34179,7 +37952,7 @@
    "contents_under_this_name": 1,
    "status": "current",
    "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "git_commit": "working tree (HEAD 4d1e833d96900b3d995357a65d3f15f576e4504e)",
    "only_in_pre_rewrite_history": false,
    "git_blob": null,
    "pushed": false,
@@ -34577,12 +38350,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "2e17403a82d6de12dedf2788e138f596d149e2de",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "def46e5b83a0d2fbd97c0d618475ee8ba414345c",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:05:06+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-29T10:09:20",
    "archive": {
@@ -34697,7 +38470,12 @@
     ],
     "problems": []
    },
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SkyLance-WIP-AES-EagleBIOS_v2.1.0.zip"
+    }
+   ],
    "prefix": "SkyLance",
    "game": "skylance",
    "title": "Sky Lance",
@@ -35318,12 +39096,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "2e17403a82d6de12dedf2788e138f596d149e2de",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "1b0b01f38f5f42384feeb7c7d398b9ee6f27511a",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:05:06+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": "2026-10-29T10:09:18",
    "archive": {
@@ -35459,7 +39237,12 @@
     ],
     "problems": []
    },
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SkyLance-WIP-EagleBIOS_v2.1.0.zip"
+    }
+   ],
    "prefix": "SkyLance",
    "game": "skylance",
    "title": "Sky Lance",
@@ -36021,12 +39804,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "2e17403a82d6de12dedf2788e138f596d149e2de",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "3dfd6401e08029143efc927afebd60a7a98b92d7",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:05:06+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
    "archive": {
@@ -36037,7 +39820,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SkyLance-WIP-NeoSD_AES_v2.1.0.neo"
+    }
+   ],
    "prefix": "SkyLance",
    "game": "skylance",
    "title": "Sky Lance",
@@ -36221,12 +40009,12 @@
    "content_no": 1,
    "contents_under_this_name": 1,
    "status": "current",
-   "tracked": false,
-   "git_commit": "working tree (HEAD c7bf0b88fc9f22d23aa3829f1eedf8019111ab73)",
+   "tracked": true,
+   "git_commit": "2e17403a82d6de12dedf2788e138f596d149e2de",
    "only_in_pre_rewrite_history": false,
-   "git_blob": null,
-   "pushed": false,
-   "commit_date": null,
+   "git_blob": "9da53323c4b3ed1a634188adebd2c98805e5bdbb",
+   "pushed": true,
+   "commit_date": "2026-10-29T15:05:06+00:00",
    "sdk_version": "1.7.7",
    "build_timestamp": null,
    "archive": {
@@ -36237,7 +40025,12 @@
    },
    "files": [],
    "mame_definition": null,
-   "published": [],
+   "published": [
+    {
+     "tag": "v1.7.7",
+     "name": "SkyLance-WIP-NeoSD_MVS_v2.1.0.neo"
+    }
+   ],
    "prefix": "SkyLance",
    "game": "skylance",
    "title": "Sky Lance",

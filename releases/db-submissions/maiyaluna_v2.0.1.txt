@@ -1,5 +1,5 @@
-Maiya & Luna v2.0.1: build 7f446d36b854 (MaiyaLuna-WIP-EagleBIOS_v2.zip, packed 2026-10-26T19:55:14)
-Proposed entries for the emulator databases, made by tools/rom_registry.py from the bytes of MaiyaLuna-WIP-EagleBIOS_v2.zip.
+Maiya & Luna v2.0.1: build 7f446d36b854 (MaiyaLuna-WIP-EagleBIOS_v2.0.1.zip, packed 2026-10-31T13:17:32)
+Proposed entries for the emulator databases, made by tools/rom_registry.py from the bytes of MaiyaLuna-WIP-EagleBIOS_v2.0.1.zip.
 Each is the database's current entry with the new sizes and hashes; layout and macros are the maintainers' own.
 
 === hbmame: maiyaluna (now "Maiya & Luna (v2)") ===

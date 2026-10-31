@@ -1,5 +1,5 @@
-Seven Wonders Puzzles v1.0.1: build 282b83a2daf1 (SevenWonders-WIP-EagleBIOS_v1.zip, packed 2026-10-26T19:49:42)
-Proposed entries for the emulator databases, made by tools/rom_registry.py from the bytes of SevenWonders-WIP-EagleBIOS_v1.zip.
+Seven Wonders Puzzles v1.0.1: build 282b83a2daf1 (SevenWonders-WIP-EagleBIOS_v1.0.1.zip, packed 2026-10-31T13:17:30)
+Proposed entries for the emulator databases, made by tools/rom_registry.py from the bytes of SevenWonders-WIP-EagleBIOS_v1.0.1.zip.
 Each is the database's current entry with the new sizes and hashes; layout and macros are the maintainers' own.
 
 === hbmame: 7wonders (now "Seven Wonders Puzzles (v1)") ===
