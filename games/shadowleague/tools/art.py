@@ -26,6 +26,9 @@ ROOT = GAME.parents[1]
 sys.path.insert(0, str(ROOT / "artbox"))
 sys.path.insert(0, str(TOOLS))
 from palette_banks import palette_words, quantize, reconstruct  # noqa: E402
+from palette_grade import grade  # noqa: E402
+FIGHTER_GRADE = 1.3     # fighters, the referee and the select faces
+STAGE_GRADE = 0.55      # arenas: livelier, but behind the fighters
 from tile_codec import encode_image, write_utility_tiles  # noqa: E402
 import fighter_cook  # noqa: E402
 import check_art_v2
@@ -381,8 +384,13 @@ BIG_TEXT = [("TITLE1", "SHADOW", 3), ("TITLE1B", "LEAGUE", 3), ("TITLE2", "FIGHT
             ("CONGRATS", "CONGRATULATIONS", 2), ("DIGITS", "0123456789", 2),
             ("CHALLENGER", "CHALLENGER!", 2)]
 BIG_TEXT.append(("GUARDBREAK", "GUARD BREAK", 1))
+# The referee's count and the league's own calls.
+BIG_TEXT += [("COUNT3", "3", 3), ("COUNT2", "2", 3), ("COUNT1", "1", 3), ("CLASH", "CLASH!", 3),
+             ("BLACKOUT", "BLACKOUT", 3), ("UNTOUCHED", "UNTOUCHED", 2), ("NIGHT", "THE NIGHT IS YOURS", 2),
+             ("RISE", "RISE AGAIN", 2)]
 NATIVE_WORDS = {"ROUND1", "ROUND2", "ROUND3", "FINAL", "FIGHT", "KO", "TIMEUP", "WIN", "DRAW",
-                "VS", "PERFECT", "GAMEOVER", "COUNTER", "CONGRATS", "CHALLENGER", "GUARDBREAK"}
+                "VS", "PERFECT", "GAMEOVER", "COUNTER", "CONGRATS", "CHALLENGER", "GUARDBREAK",
+                "COUNT3", "COUNT2", "COUNT1", "CLASH", "BLACKOUT", "UNTOUCHED", "NIGHT", "RISE"}
 
 
 # FIX palettes: 0 text, 1 gold text, 2 dim text, 3 HUD bars, 4 gold lettering,
@@ -481,6 +489,10 @@ def build_fix():
             shade = np.zeros_like(px)
             shade[1:, 1:] = px[:-1, :-1]
             g = np.where(px, np.where(np.arange(hgt)[:, None] < hgt // 2, 2, 3), np.where(shade, 1, 0)).astype(np.uint8)
+        # A word never straddles the tall face's tiles (0x800-0x8FF).
+        tall_end = slf_tall_font.BOTTOM + 0x80
+        if tile < tall_end and tile + (hgt // 8) * (wid // 8) > slf_tall_font.TOP:
+            tile = tall_end
         first = tile
         for y in range(0, hgt, 8):
             for x in range(0, wid, 8):
@@ -579,8 +591,10 @@ def build():
                      *colorsys.rgb_to_hsv(*(c / 255.0))[1:])] for c in proj], np.uint8)
     header.append("static const uint16_t slf_proj_pals[2][16] = {" + ",".join(
         "{" + ",".join(str(v) for v in palette_words(p)) + "}" for p in (proj, blue)) + "};")
-    fx = place(np.vstack([f for kind in ('hit', 'guard', 'dust', 'fire', 'super') for f in pfx[kind][0]]))
+    # 64x64 bursts in kind order (hit, guard, dust, super), then the 48x48 fire.
+    fx = place(np.vstack([f for kind in ('hit', 'guard', 'dust', 'super') for f in pfx[kind][0]]))
     header.append(f"#define SLF_FX_TILE {fx}u")
+    header.append(f"#define SLF_FIRE_TILE {place(np.vstack(pfx['fire'][0]))}u")
     guide_rows=[]
     for fighter in fighters:
         guide=[];seen=set()
@@ -619,6 +633,7 @@ def build():
         st_far_tiles.append(st_near)
         st_maps.append(assignment.flatten() + PAL_STAGE)
         st_far_maps.append(assignment[:10].flatten() + PAL_STAGE)
+        banks = [grade(b, STAGE_GRADE) for b in banks]
         bank_pals = [palette_words(b) for b in banks]
         dark_pals = [palette_words((np.asarray(b,dtype=np.float32)*.38).astype(np.uint8)) for b in banks]
         while len(dark_pals) < STAGE_BANKS:dark_pals.append([0]*16)
@@ -677,15 +692,41 @@ def build():
         bases.append(maps[0][0][1])
         normal_banks, alt_banks = f.palette_banks()
         bank_offsets.append(len(bank_pals));bank_counts.append(len(normal_banks))
-        bank_pals.extend([[palette_words(n),palette_words(a)] for n,a in zip(normal_banks,alt_banks)])
+        bank_pals.extend([[palette_words(grade(n, FIGHTER_GRADE)),palette_words(grade(a, FIGHTER_GRADE))]
+                          for n,a in zip(normal_banks,alt_banks)])
         normal, alt = f.palettes()
-        pals.append([palette_words(normal), palette_words(alt)])
+        pals.append([palette_words(grade(normal, FIGHTER_GRADE)), palette_words(grade(alt, FIGHTER_GRADE))])
         header.append(f.c_tables(f"slf_{f.id}"))
         names.append(f.data["name"])
         styles.append(f.data.get("discipline", f.data.get("style", "")))
         origins.append(f.data.get("origin", ""))
         f.sheet(OUT / f"{f.id}_sheet.png")
     header.append(f"#define SLF_FIGHTER_COUNT {len(fighters)}u")
+    # The referee: drawn with the fighters' sprite code, so his frames follow
+    # the 44 fighters in every per-fighter graphics table (index
+    # SLF_REFEREE_DEF). He has no fight data and is not on the roster.
+    from native_art_io import fighter_source
+    import referee_art
+    ref = fighter_source(referee_art.FOLDER, referee_art.POSES)
+    ref_banks = np.asarray(ref['banks'])
+    ref_maps = [strips.frame(image, ref['tile_maps'][i]) for i, image in enumerate(ref['images'])]
+    entries, offsets = [], []
+    for frame_map in ref_maps:
+        offsets.append(len(entries)); entries.extend(frame_map); entries.append((255, 0, 0))
+    header.append("static const SLFStripRef slf_referee_strip_map[] = {" + ",".join("{%du,%du,%du}" % (item[0], item[2], item[1]) for item in entries) + "};")
+    header.append(emit("slf_referee_strip_offsets", offsets))
+    header.append('static const SLFFrameAnchor slf_referee_frame_roots[] = {' + ','.join('{%du,%du}' % tuple(fr.get('root', ref['anchor'])) for fr in ref['metadata']) + '};')
+    strip_tables.append("slf_referee_strip_map"); offset_tables.append("slf_referee_strip_offsets")
+    anchor_tables.append("slf_referee_frame_roots")
+    bases.append(ref_maps[0][0][1])
+    bank_offsets.append(len(bank_pals)); bank_counts.append(len(ref_banks))
+    ref_graded = [grade(b, FIGHTER_GRADE) for b in ref_banks]
+    bank_pals.extend([[palette_words(b), palette_words(b)] for b in ref_graded])
+    pals.append([palette_words(ref_graded[0]), palette_words(ref_graded[0])])
+    header.append(f"#define SLF_REFEREE_DEF {len(fighters)}u")
+    header.extend(f"#define SLF_REF_{name.upper()} {i}u" for i, name in enumerate(referee_art.POSES))
+    canvases = [f.canvas[0] for f in fighters] + [ref['canvas'][0]]
+    anchors = [f.anchor for f in fighters] + [ref['anchor']]
     header.append("static const SLFStripRef * const slf_fighter_strip_maps[] = {" + ",".join(strip_tables) + "};")
     header.append("static const uint16_t * const slf_fighter_strip_offsets[] = {" + ",".join(offset_tables) + "};")
     header.append("static const NGFFighterDef * const slf_fighter_defs[] = {" + ",".join(f"&slf_{f.id}" for f in fighters) + "};")
@@ -694,14 +735,22 @@ def build():
         "{" + ",".join("{" + ",".join(str(v) for v in p) + "}" for p in pair) + "}" for pair in pals) + "};")
     header.append(emit("slf_fighter_bank_offsets",bank_offsets))
     header.append(emit("slf_fighter_bank_counts",bank_counts,"uint8_t"))
-    header.append(emit("slf_fighter_columns",[f.canvas[0]//16 for f in fighters],"uint8_t"))
+    header.append(emit("slf_fighter_columns",[c//16 for c in canvases],"uint8_t"))
     header.append('static const SLFFrameAnchor * const slf_fighter_frame_anchors[] = {'+','.join(anchor_tables)+'};')
-    header.append(emit("slf_fighter_anchor_x",[f.anchor[0] for f in fighters],"uint8_t"))
-    header.append(emit("slf_fighter_anchor_y",[f.anchor[1] for f in fighters],"uint8_t"))
+    header.append(emit("slf_fighter_anchor_x",[a[0] for a in anchors],"uint8_t"))
+    header.append(emit("slf_fighter_anchor_y",[a[1] for a in anchors],"uint8_t"))
     header.append("static const uint16_t slf_fighter_bank_pals[][2][16] = {" + ",".join(
         "{" + ",".join("{" + ",".join(str(v) for v in p) + "}" for p in pair) + "}" for pair in bank_pals) + "};")
     header.append("static const char * const slf_fighter_origin[] = {" + ",".join(f'"{o}"' for o in origins) + "};")
     header.append("static const char * const slf_fighter_style[] = {" + ",".join(f'"{s}"' for s in styles) + "};")
+    # Two lines each fighter says over a beaten opponent (assets/authored/win_quotes.json).
+    quotes = json.loads((GAME / "assets/authored/win_quotes.json").read_text())
+    for f in fighters:
+        lines = quotes.get(f.id)
+        if not lines or len(lines) != 2 or any(len(t) > 34 or '"' in t or "\\" in t for t in lines):
+            raise ValueError(f.id + ": needs a win quote of two lines, 34 characters at most")
+    header.append("static const char * const slf_fighter_quote[][2] = {" + ",".join(
+        '{"%s","%s"}' % tuple(quotes[f.id]) for f in fighters) + "};")
     fighter_stages = [stage_idx_for_fighter(f) for f in fighters]
     header.append(emit("slf_fighter_stages", fighter_stages, "uint8_t"))
     # Fighters still waiting for their painted set stay locked on the select
@@ -789,7 +838,7 @@ def main():
     header += fix_defines
     header.append("static "+fix_palette_definition())
     public_names = ("slf_fighter_defs", "slf_fighter_strip_maps", "slf_fighter_strip_offsets",
-                    "slf_fighter_pals", "slf_fighter_origin", "slf_fighter_style", "slf_fighter_stages", "slf_fighter_ready", "slf_fighter_columns", "slf_fighter_frame_anchors", "slf_fighter_anchor_x", "slf_fighter_anchor_y", "slf_voice_type", "slf_move_voice_ofs", "slf_move_voice",
+                    "slf_fighter_pals", "slf_fighter_origin", "slf_fighter_style", "slf_fighter_quote", "slf_fighter_stages", "slf_fighter_ready", "slf_fighter_columns", "slf_fighter_frame_anchors", "slf_fighter_anchor_x", "slf_fighter_anchor_y", "slf_voice_type", "slf_move_voice_ofs", "slf_move_voice",
                     "slf_cursor_pals", "slf_command_guides", "slf_fighter_fx", "slf_fx_pals", "slf_proj_pals", "slf_shadow_pal", "slf_stage_pals",
                     "slf_stage_far_maps", "slf_stage_maps", "slf_stage_far_tiles", "slf_stage_tiles",
                     "slf_stage_names", "slf_fix_pals", "slf_stage_dark_pals",

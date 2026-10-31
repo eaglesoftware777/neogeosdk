@@ -3,6 +3,12 @@
 The ROM sets ship with the NeoGeoSDK pre-releases and are numbered on their
 own: `_v1` and `_v2` with v1.7.7.
 
+## v2.0.1 (2026-10-31, NeoGeoSDK v1.7.7 pre-release)
+
+- The 2026-10-26 v2 update under a number of its own. The name v2 went out
+  as two different builds; v2.0.1 names this one only
+  (docs/releases/VERSIONING_POLICY.md). No change to the game.
+
 ## v2 update (2026-10-26, NeoGeoSDK v1.7.7 pre-release, same file names)
 
 - Everything on screen stays inside columns 3-36 of the 40 (x 24-295), the

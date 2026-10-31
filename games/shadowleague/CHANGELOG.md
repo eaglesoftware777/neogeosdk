@@ -3,6 +3,63 @@
 Shadow League Fighting's ROM sets ship with the NeoGeoSDK pre-releases and
 are numbered on their own: `_v1` and `_v2` with v1.7.5, `_v3` with v1.7.7.
 
+## v3.2.0 candidate: the referee's ceremony and the league's own calls (2026-10-30, 2026-10-31)
+
+- **The arbiter.** The referee is his own character now, painted with the
+  fighters' pipeline: a stern bald man with a grey beard in a long black
+  coat with silver trim and a crimson sash, a red flag in one hand and a
+  blue one in the other. He takes shape out of the dark at mid-screen, bows,
+  holds his arms out between the fighters while the round is called, raises
+  the red flag on 3, the blue on 2, both on 1, chops down on the call and
+  leaps away. The fighters start 104 pixels either side of mid-stage, well
+  apart, while he does.
+- **Title.** A new painted title: Claire, Kenji and Amara in the courtyard
+  of a mountain shrine at dusk under a red gate, with the SHADOW LEAGUE /
+  FIGHTING logo dropping onto it, flashing as it lands and catching a glint
+  now and then. It drops on the coin-in screen too.
+- **Colour.** Fighters, the referee and the select faces are graded for
+  livelier colour and firmer light and shade (more saturation where a colour
+  is greyest, gentler on skin, an S-curve on the mid-tones); the arenas get
+  a lighter version of the same so the fighters stand out from them.
+- **Effects.** Hit sparks, guard flashes, dust and the super flash are new
+  painted 64x64 bursts, a third larger than before. Dust kicks up from the
+  pushing foot when a dash or back-dash starts and under every landing, and
+  the arena shakes on heavy blows, knockdowns, guard breaks and the KO.
+- **Menus.** CHOOSE YOUR BATTLE lists both formats, the chosen one in gold
+  between markers, with its description and the seconds left. On the select
+  screen the cursor frame no longer touches the heading, and each player's
+  fighting style sits in gold over the name with a clear row between them;
+  the countries moved to the VS screen, under the names.
+
+- **Throws.** A forward throw carries the opponent over the thrower's
+  shoulder and drops them behind, so the fighters change sides and the
+  camera follows; a back throw still tosses them in front. With the bodies
+  pressed together a heavy button throws at once (holding back still picks
+  the back throw), and the throw buttons are read over 8 frames instead of 4.
+- **The shadow referee.** Every round opens with the arena's lights down.
+  A dark figure rises out of the dark between the fighters, bows to each
+  of them on the count, 3, 2, 1, and leaps out of the light in a puff of
+  dust as the lights come up on the fight call. The figure's colours were
+  read with the wrong channel layout and came out speckled; they are a
+  clean dark blue now.
+- **The league's calls.** The fight starts on CLASH!, a knockout is
+  BLACKOUT, a round won without a scratch is UNTOUCHED, each with a new
+  announcer line and new lettering. When a player wins the match the
+  winner's name comes up and THE NIGHT IS YOURS sweeps across, flashes and
+  settles to gold.
+- **Win scene.** After every match the winner keeps their victory poses
+  over the beaten loser, who lies darkened and bruised in the arena with
+  its lights down, and says their piece: a two-line quote for each of the
+  44 fighters (assets/authored/win_quotes.json). Any button after a second
+  moves on; versus mode uses it in place of the old WINS card.
+- **Continue.** The player's fighter stands beaten and swaying, darkened,
+  in the arena they lost in, while the clock runs. Continue and they shake
+  it off (RISE AGAIN, lights up, back in their stance); let it run out and
+  they collapse before GAME OVER. The countdown digits drew the lower half
+  of the next digit and now read correctly.
+- **Winning hop.** The winner cycles their victory poses and hops instead of
+  holding one pose.
+
 ## v3.1.0 candidate: faces and clean edges (2026-10-29)
 
 Versions are now `MAJOR.MINOR.PATCH` (docs/releases/VERSIONING_POLICY.md);

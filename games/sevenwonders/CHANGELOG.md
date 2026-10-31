@@ -3,6 +3,12 @@
 The ROM sets ship with the NeoGeoSDK pre-releases and are numbered on their
 own: `_v1` with v1.7.7.
 
+## v1.0.1 (2026-10-31, NeoGeoSDK v1.7.7 pre-release)
+
+- The 2026-10-26 v1 update under a number of its own. The name v1 went out
+  as three different builds; v1.0.1 names this one only
+  (docs/releases/VERSIONING_POLICY.md). No change to the game.
+
 ## v1 update (2026-10-26, NeoGeoSDK v1.7.7 pre-release, same file names)
 
 - Every HUD, text line and board now stays inside columns 3-36 of the 40

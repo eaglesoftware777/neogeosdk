@@ -51,12 +51,40 @@ IMPACT = {
  "!": (8, [[(4,0),(11,0),(7,14),(1,14)],[(0,18),(6,18),(6,21),(0,21)]]),
  ".": (6, [[(0,16),(6,16),(6,21),(0,21)]]),
 }
+
+
+def lean(*shapes):
+    """Upright impact contours given the alphabet's four-pixel forward lean."""
+    return [[(x + round((21 - y) * 4 / 21), y) for x, y in shape] for shape in shapes]
+
+
+# The ceremony calls: drawn upright on a seven-pixel stroke, then leaned.
+IMPACT.update({
+ "A": (25, lean([(5,0),(19,0),(24,5),(24,21),(17,21),(17,16),(7,16),(7,21),(0,21),(0,5)],
+                [(9,5),(15,5),(17,7),(17,11),(7,11),(7,7)])),
+ "B": (25, lean([(0,0),(19,0),(23,4),(23,8),(21,10),(24,13),(24,18),(21,21),(0,21)],
+                [(7,5),(16,5),(16,8),(7,8)], [(7,13),(17,13),(17,16),(7,16)])),
+ "C": (23, lean([(6,0),(22,0),(22,5),(9,5),(7,7),(7,14),(9,16),(22,16),(22,21),(6,21),(0,15),(0,6)])),
+ "L": (21, lean([(0,0),(7,0),(7,16),(20,16),(20,21),(0,21)])),
+ "S": (25, lean([(5,0),(22,0),(22,5),(8,5),(7,6),(7,8),(19,8),(24,12),(24,17),(20,21),(0,21),(0,16),
+                 (16,16),(17,15),(17,13),(5,13),(0,9),(0,4)])),
+ "U": (25, lean([(0,0),(7,0),(7,16),(17,16),(17,0),(24,0),(24,17),(20,21),(4,21),(0,17)])),
+ "1": (16, lean([(3,0),(11,0),(11,16),(15,16),(15,21),(0,21),(0,16),(4,16),(4,7),(0,7),(0,4)])),
+ "2": (24, lean([(0,0),(19,0),(23,4),(23,10),(19,13),(8,13),(8,16),(23,16),(23,21),(0,21),(0,12),
+                 (4,8),(16,8),(16,5),(0,5)])),
+ "3": (24, lean([(0,0),(19,0),(23,4),(23,8),(21,10),(23,13),(23,18),(20,21),(0,21),(0,16),(16,16),
+                 (16,13),(6,13),(6,8),(16,8),(16,5),(0,5)])),
+})
 WORDS = {
  "ROUND1":"ROUND 1", "ROUND2":"ROUND 2", "ROUND3":"ROUND 3", "FINAL":"FINAL ROUND",
  "FIGHT":"FIGHT!", "KO":"K.O.", "TIMEUP":"TIME OVER", "WIN":"VICTORY", "DRAW":"DRAW",
  "VS":"VS", "PERFECT":"PERFECT", "GAMEOVER":"GAME OVER", "COUNTER":"COUNTER",
  "GUARDBREAK":"GUARD BREAK", "CONGRATS":"CONGRATULATIONS", "CHALLENGER":"CHALLENGER!",
+ # The referee's ceremony and the league's own calls.
+ "COUNT3":"3", "COUNT2":"2", "COUNT1":"1", "CLASH":"CLASH!", "BLACKOUT":"BLACKOUT",
+ "UNTOUCHED":"UNTOUCHED", "NIGHT":"THE NIGHT IS YOURS", "RISE":"RISE AGAIN",
 }
+IMPACT_WORDS = {"FIGHT", "KO", "COUNT3", "COUNT2", "COUNT1", "CLASH", "BLACKOUT"}
 PALETTE = [(0,0,0),(20,10,8),(255,240,176),(236,164,48),(160,80,32),(80,32,24),(255,255,224),(48,24,32)]
 
 
@@ -95,10 +123,25 @@ def word(text, impact=False):
 
 
 def main():
-    OUT.mkdir(parents=True, exist_ok=False)
-    definitions=[]
-    for name,text in WORDS.items():
-        im=word(text,name in ("FIGHT","KO"));im.save(OUT/(name.lower()+".png"),transparency=0)
+    """With no arguments, author the whole set into a new folder. With word
+    names, add just those words to the existing set, never replacing one."""
+    import sys
+    add = sys.argv[1:]
+    unknown = [name for name in add if name not in WORDS]
+    if unknown:
+        raise SystemExit("unknown words: " + " ".join(unknown))
+    if add:
+        definitions = json.loads((OUT/"project.json").read_text())["images"]
+        known = {entry["name"] for entry in definitions}
+        taken = [name for name in add if name in known or (OUT/(name.lower()+".png")).exists()]
+        if taken:
+            raise SystemExit("already authored: " + " ".join(taken))
+    else:
+        OUT.mkdir(parents=True, exist_ok=False)
+        definitions = []
+    for name in add or WORDS:
+        text = WORDS[name]
+        im=word(text,name in IMPACT_WORDS);im.save(OUT/(name.lower()+".png"),transparency=0)
         a=np.asarray(im)
         (OUT/(name.lower()+".txt")).write_text("\n".join("".join("." if i==0 else format(i,"X") for i in row) for row in a)+"\n")
         definitions.append({"name":name,"text":text,"canvas":list(im.size),"file":name.lower()+".png"})

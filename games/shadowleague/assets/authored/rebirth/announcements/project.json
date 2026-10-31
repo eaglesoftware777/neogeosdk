@@ -186,6 +186,78 @@
         24
       ],
       "file": "challenger.png"
+    },
+    {
+      "name": "COUNT3",
+      "text": "3",
+      "canvas": [
+        40,
+        32
+      ],
+      "file": "count3.png"
+    },
+    {
+      "name": "COUNT2",
+      "text": "2",
+      "canvas": [
+        40,
+        32
+      ],
+      "file": "count2.png"
+    },
+    {
+      "name": "COUNT1",
+      "text": "1",
+      "canvas": [
+        32,
+        32
+      ],
+      "file": "count1.png"
+    },
+    {
+      "name": "CLASH",
+      "text": "CLASH!",
+      "canvas": [
+        160,
+        32
+      ],
+      "file": "clash.png"
+    },
+    {
+      "name": "BLACKOUT",
+      "text": "BLACKOUT",
+      "canvas": [
+        232,
+        32
+      ],
+      "file": "blackout.png"
+    },
+    {
+      "name": "UNTOUCHED",
+      "text": "UNTOUCHED",
+      "canvas": [
+        144,
+        24
+      ],
+      "file": "untouched.png"
+    },
+    {
+      "name": "NIGHT",
+      "text": "THE NIGHT IS YOURS",
+      "canvas": [
+        240,
+        24
+      ],
+      "file": "night.png"
+    },
+    {
+      "name": "RISE",
+      "text": "RISE AGAIN",
+      "canvas": [
+        144,
+        24
+      ],
+      "file": "rise.png"
     }
   ]
 }

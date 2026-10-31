@@ -322,7 +322,7 @@ void NEOGEO_USER TITLE(void) {
  * credit lands, then a 15-second auto-start countdown once one has.
  */
 void NEOGEO_USER showTitleMVS(void) {
-	uint16_t frames = 15u * 60u;
+	uint16_t frames = 15u * 60u, tick = 0u;
 	slf_scene_begin();
 	slf_music(SLF_TRACK_TITLE);
 	slf_title_draw();
@@ -394,6 +394,8 @@ void NEOGEO_USER showTitleMVS(void) {
 				}
 			} else slf_puts_tall_center(24u, "  INSERT COIN  ", SLF_TALL_SILVER);
 		}
+		slf_title_tick(tick);              /* the logo drops in and glints */
+		if (tick < 60000u) tick++;
 		slf_frame();
 	}
 }

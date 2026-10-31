@@ -4,6 +4,13 @@ The ROM sets shared with the NeoGeoSDK pre-releases: `_v1` and `_v2` with
 v1.7.1, `_v3` with v1.7.2, `_v4` with v1.7.3. The SDK keeps its own
 version; Maiya's ROMs are numbered on their own.
 
+## v4.0.1 (2026-10-31, NeoGeoSDK v1.7.7 pre-release)
+
+- The v4 game with its S ROM rebuilt: every fix-layer tile now comes from
+  the SDK's own font and artwork. The bytes differ from the v4 files, so the
+  set carries its own number (docs/releases/VERSIONING_POLICY.md); file
+  names inside stay `780-*`.
+
 ## Title-safe screens (2026-10-26)
 
 - The HUD, the hint line, the collection tray, the title and chooser clocks

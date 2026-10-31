@@ -12,6 +12,7 @@
 #define DOWN_FRAMES    34u
 #define DIZZY_FRAMES   56u
 #define INTRO_FRAMES   96u
+#define START_HALF     72u     /* mid-stage to each fighter at a round start */
 #define KO_FRAMES     150u
 #define TIMEUP_FRAMES  90u
 #define END_FRAMES    130u
@@ -1852,7 +1853,7 @@ static void NEOGEO_USER fighter_reset(NGFMatch *m, uint8_t who)
     f->life = d->life;
     f->guard = d->guard_max;
     f->grounded = 1;
-    f->x = (int32_t)(m->stage_w / 2 + (who ? 72 : -72)) << 8;
+    f->x = (int32_t)(m->stage_w / 2 + (who ? (int16_t)m->start_half : -(int16_t)m->start_half)) << 8;
     f->facing_left = who;
     f->state = NGF_S_INTRO;
     set_anim(f, NGF_A_INTRO, 1);
@@ -2018,6 +2019,7 @@ void NEOGEO_USER ngf_match_init(NGFMatch *m, const NGFFighterDef *p1, const NGFF
     m->rounds_to_win = 2;
     m->round_seconds = NGF_ROUND_SECONDS;
     m->intro_frames = INTRO_FRAMES;
+    m->start_half = START_HALF;
     m->winner = 0xFFu;
     m->round = 0;
     m->zoom_scale = 255u;
@@ -2063,6 +2065,18 @@ uint8_t NEOGEO_USER ngf_set_round_seconds(NGFMatch *m, uint8_t seconds)
 void NEOGEO_USER ngf_set_intro_frames(NGFMatch *m, uint8_t frames)
 {
     m->intro_frames = frames < 40u ? 40u : frames;
+}
+
+/* Where the fighters stand when a round opens: `half` pixels either side of
+ * mid-stage. Set before the first intro frame, it also moves the fighters
+ * already placed for round one. */
+void NEOGEO_USER ngf_set_start_distance(NGFMatch *m, uint8_t half)
+{
+    uint8_t i;
+    m->start_half = half < 24u ? 24u : half;
+    if (m->state != NGF_M_INTRO || m->state_timer) return;
+    for (i = 0; i < 2u; i++)
+        m->f[i].x = (int32_t)(m->stage_w / 2 + (i ? (int16_t)m->start_half : -(int16_t)m->start_half)) << 8;
 }
 
 static void NEOGEO_USER end_round(NGFMatch *m)
@@ -2399,7 +2413,7 @@ uint32_t NEOGEO_USER ngf_match_hash(const NGFMatch *m)
     MIX(m->clock); MIX(m->seconds); MIX(m->rng); MIX(m->round); MIX(m->state); MIX(m->state_timer);
     MIX(m->winner); MIX(m->round_winner); MIX(m->rounds_to_win); MIX(m->frame); MIX(m->hitstop);
     MIX(m->super_freeze); MIX(m->super_who); MIX(m->zoom_scale); MIX(m->match_mode);
-    MIX(m->training); MIX(m->round_seconds); MIX(m->intro_frames);
+    MIX(m->training); MIX(m->round_seconds); MIX(m->intro_frames); MIX(m->start_half);
     MIX(m->stage_w); MIX(m->camera_x); MIX(m->screen_w); MIX(m->floor_y);
 #undef MIX
     return h;

@@ -18,9 +18,10 @@ VOICES = GAME / "assets/authored/voices"
 NUM_SFX = 16          # sound.SFX, which comes first in the bank
 
 ANNOUNCER_SPEAKER = 334
+# The keys keep their sample numbers; the league's own words are in the texts.
 ANNOUNCER = [("round1", "Round one!"), ("round2", "Round two!"), ("round3", "Round three!"),
-             ("final", "Final round!"), ("fight", "Fight!"), ("ko", "K.O.!"), ("timeup", "Time up!"),
-             ("perfect", "Perfect!"), ("youwin", "You win!"), ("draw", "Draw game!")]
+             ("final", "Final round!"), ("fight", "Clash!"), ("ko", "Blackout!"), ("timeup", "Time up!"),
+             ("perfect", "Untouched!"), ("youwin", "The night is yours!"), ("draw", "Draw game!")]
 
 # Deep, middle and light men; lower and higher women; machines.
 TYPE_SPEAKERS = [646, 121, 308, 863, 213, 438]

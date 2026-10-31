@@ -20,6 +20,8 @@ import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
 
 from palette_banks import palette_words, quantize
+from palette_grade import grade
+GRADE = 1.3          # as the fighters (art.FIGHTER_GRADE)
 
 GAME = Path(__file__).resolve().parents[1]
 PAINTED = Path.home() / '.cache/slf-art/gen'
@@ -232,7 +234,7 @@ def build(ids, place, emit, pal_base, ready=None):
                   f'#define SLF_WALL_BANKS {len(banks)}u\n#define SLF_WALL_CELL {CELL}u')
     header.append(emit('slf_wall_map', assign.flatten() + pal_base, 'uint8_t'))
     header.append('static const uint16_t slf_wall_pals[][16] = {' + ','.join(
-        '{' + ','.join(str(v) for v in palette_words(b)) + '}' for b in banks) + '};')
+        '{' + ','.join(str(v) for v in palette_words(grade(b, GRADE))) + '}' for b in banks) + '};')
     rows = ROWS
     starts = np.cumsum((0,) + rows[:-1])
     header.append(emit('slf_wall_row_len', rows, 'uint8_t'))
@@ -245,7 +247,7 @@ def build(ids, place, emit, pal_base, ready=None):
         if len(fb) < 2:
             fb = np.concatenate([fb, fb])
         faces.append(ind)
-        pals.append([palette_words(b) for b in fb])
+        pals.append([palette_words(grade(b, GRADE)) for b in fb])
         maps.append(fa.flatten())
     first = place(np.vstack(faces))
     header.append(f'#define SLF_FACE_TILE {first}u\n#define SLF_FACE_TILES {(BIG // 16) ** 2}u')
