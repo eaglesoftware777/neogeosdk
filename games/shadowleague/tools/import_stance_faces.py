@@ -31,5 +31,6 @@ def main():
     sheet=Image.new('RGB',(8*128,((len(ids)+7)//8)*150),(20,22,30));draw=ImageDraw.Draw(sheet)
     for k,fid in enumerate(ids):
         x=k%8*128;y=k//8*150;sheet.paste(Image.open(faces/(fid+'.png')),(x,y));draw.text((x,y+130),fid,fill='white')
-    sheet.save(GAME/'assets/review/sdk177/new-faces-review.png');print(len(ids),'face sources exported')
+    review=GAME/'build/review';review.mkdir(parents=True,exist_ok=True)
+    sheet.save(review/'new-faces-review.png');print(len(ids),'face sources exported')
 if __name__=='__main__':main()

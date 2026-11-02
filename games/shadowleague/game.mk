@@ -6,7 +6,7 @@ GAME_ART_BUILDER = games/shadowleague/tools/art.py
 GAME_OPTIMIZE = -O2
 GAME_ENGINE_EXCLUDE = ng_particles
 GAME_ENGINE_DEFINES = -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_FIGHT=1
-# Music streams (ADPCM-B) at 21 kHz: sixteen tracks and the voices fit the 8 MiB V ROM.
+# Music streams (ADPCM-B) at 21 kHz: sixteen tracks and the voices fit the V ROM (10 MB of the 16 MiB ADPCM address range).
 export ADPCMB_RATE = 21000
 
 .PHONY: slf-voice-samples

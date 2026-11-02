@@ -107,6 +107,35 @@ emu.register_frame_done(function()
    machine.screens[':screen']:snapshot(string.format('%s/announce_%05d_state%d_round%d.png',output,frame,state,round))
   end
  end
+ -- SLF_CHEAT (tests of the match finales only): 'untouched' keeps the CPU at 1 point
+ -- and player 1 unhurt, 'sweep' the same but grazes player 1 once a bout.
+ local cheat=os.getenv('SLF_CHEAT')
+ if cheat and state==1 and round>0 then
+  fight_tick=(fight_tick or 0)+1
+  if cpu:read_u16(a.match+a.life1)>1 then cpu:write_u16(a.match+a.life1,1) end
+  if cheat=='untouched' then cpu:write_u16(a.match+a.life0,cpu:read_u16(cpu:read_u32(a.match+a.def0)+a.def_life))
+  elseif fight_tick==20 then cpu:write_u16(a.match+a.life0,cpu:read_u16(a.match+a.life0)-40) end
+ elseif state~=1 then fight_tick=0 end
+ -- SLF_TRACE_FILE (with qa.py under SLF_MAME_DEBUG=1): a noloop instruction trace of
+ -- SLF_TRACE_FRAMES frames (40) from hardware frame SLF_TRACE_AT, for profiling.
+ local trace_file=os.getenv('SLF_TRACE_FILE')
+ if trace_file then
+  local at=tonumber(os.getenv('SLF_TRACE_AT') or '3000')
+  if frame==at then manager.machine.debugger:command('trace '..trace_file..',maincpu,noloop') end
+  if frame==at+tonumber(os.getenv('SLF_TRACE_FRAMES') or '40') then manager.machine.debugger:command('trace off') end
+ end
+ -- SLF_AGE_LOG=1: each fighting frame, how many frames each fighter's newest pose has waited.
+ if os.getenv('SLF_AGE_LOG')=='1' and state==1 and a.actor_age then
+  age_log=age_log or assert(io.open(output..'/actor-age.txt','w'))
+  age_log:write(string.format('%d %d %d\n',frame,cpu:read_u16(a.actor_age),cpu:read_u16(a.actor_age+2)))
+ end
+ -- SLF_END_SHOTS=1: every 20 frames of a round's end and the match's (the bonus count, the finale).
+ if os.getenv('SLF_END_SHOTS')=='1' and round>0 and (state==4 or state==5) then
+  end_shot_tick=(end_shot_tick or 0)+1
+  if end_shot_tick%20==0 then
+   machine.screens[':screen']:snapshot(string.format('%s/end_%05d_state%d_round%d.png',output,frame,state,round))
+  end
+ else end_shot_tick=0 end
  if state==1 and previous_state==1 and sim>=previous_sim then
   observed=observed+1
   if sim==previous_sim then missed=missed+1 end

@@ -24,7 +24,9 @@ class SkyMusicTests(unittest.TestCase):
             self.assertEqual(digest, row["encoded_sha256"])
             self.assertEqual(len(data) % 256, 0)
             self.assertLessEqual(len(data), 0x100000)
-            self.assertEqual(json.loads(Path(str(path)+".json").read_text())["sample_rate"], 16000)
+            # The 16 kHz scores are resampled by the SDK build to its 32 kHz ADPCM-B rate.
+            self.assertEqual(json.loads(Path(str(path)+".json").read_text())["sample_rate"], 32000)
+            self.assertEqual(row["bank_rate"], 32000)
             self.assertEqual(row["clipped_samples"], 0)
             self.assertLess(abs(row["decoded_boundary_delta"]), 256)
             hashes.add(digest)

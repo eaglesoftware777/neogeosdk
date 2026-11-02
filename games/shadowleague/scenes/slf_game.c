@@ -68,6 +68,15 @@ static uint8_t NEOGEO_USER anim_sprite(uint8_t def, uint8_t anim, uint16_t tick)
         total = (uint16_t)(total + (time == 255u ? 30u : time));
     }
     t = (uint16_t)(tick % (total ? total : 1u));
+    if (a->loop != 0xFFu && a->loop && a->loop < a->count && tick >= total) {
+        /* played once: from then on only the part from its loop frame on */
+        uint16_t intro = 0;
+        for (i = 0u; i < a->loop; i++) {
+            uint8_t time = d->frames[a->first + i].time;
+            intro = (uint16_t)(intro + (time == 255u ? 30u : time));
+        }
+        t = (uint16_t)(intro + (tick - total) % (uint16_t)(total - intro ? total - intro : 1u));
+    }
     for (i = 0u; i < a->count; i++) {
         uint8_t time = d->frames[a->first + i].time;
         uint16_t len = time == 255u ? 30u : time;
@@ -329,6 +338,167 @@ static void NEOGEO_USER vs_screen(uint8_t stage_fighter)
     }
 }
 
+/* ------------------------------------------------------------ score */
+/*
+ * Points as the blows land -- ten a point of damage, a hundred a hit, five
+ * hundred a counter hit -- and after each round or bout a player wins, the
+ * bonus count: what life is left, the seconds left on the clock, and the
+ * untouched bonus when no blow got through, each line counted up with a tick
+ * and settled with a chime, then the total counted into the score.
+ */
+uint32_t slf_score[2];
+static uint8_t s_scoring;                 /* a match that counts (not the attract's) */
+static uint16_t s_seen_life[2], s_bout_life[2];
+static const NGFFighterDef *s_seen_def[2];
+static uint8_t s_untouched[2];            /* untouched wins this match */
+static uint8_t s_round_untouched;         /* the round just ended was won untouched */
+static uint8_t s_end_team;                /* the match just ended was a team battle */
+
+#define SCORE_MAX 99999999UL
+#define BONUS_UNTOUCHED 20000UL
+#define BONUS_SWEEP     50000UL
+#define BONUS_LEGEND   100000UL
+
+static void NEOGEO_USER score_add(uint8_t side, uint32_t points)
+{
+    if (!s_scoring || side > 1u) return;
+    slf_score[side] = slf_score[side] + points > SCORE_MAX ? SCORE_MAX : slf_score[side] + points;
+}
+
+static void NEOGEO_USER score_step(const NGFMatch *m)
+{
+    uint8_t i;
+    for (i = 0u; i < 2u; i++) {
+        const NGFFighter *f = &m->f[i];
+        if (f->def == s_seen_def[i] && f->life < s_seen_life[i] &&
+            (m->state == NGF_M_FIGHT || m->state == NGF_M_KO))
+            score_add((uint8_t)(i ^ 1u), (uint32_t)(s_seen_life[i] - f->life) * 10u);
+        s_seen_life[i] = f->life;
+        s_seen_def[i] = f->def;
+    }
+}
+
+/* value as decimal, right-aligned to end at column x_end (no leading zeros);
+ * `tall` in the two-row face */
+static void NEOGEO_USER put_number(uint8_t x_end, uint8_t y, uint32_t value, uint8_t pal, uint8_t tall)
+{
+    static const uint32_t pow10[8] = {10000000UL, 1000000UL, 100000UL, 10000UL, 1000UL, 100UL, 10UL, 1UL};
+    char text[9];
+    uint8_t i, n = 0u;
+    for (i = 0u; i < 8u; i++) {
+        char d = '0';
+        while (value >= pow10[i]) { value -= pow10[i]; d++; }
+        if (n || d != '0' || i == 7u) text[n++] = d;
+    }
+    text[n] = '\0';
+    if (tall) slf_puts_tall_right(x_end, y, text, pal);
+    else slf_puts_right(x_end, y, text, pal);
+}
+
+enum { TALLY_OFF, TALLY_BANNER, TALLY_LINE, TALLY_TOTAL, TALLY_HOLD };
+#define TALLY_X     9u              /* labels from here; numbers end at TALLY_END */
+#define TALLY_END   30u
+#define TALLY_COUNT 20u             /* frames a line counts for */
+static uint8_t s_tally, s_tally_side, s_tally_line, s_tally_lines;
+static uint16_t s_tally_t;
+static uint32_t s_tally_value[3], s_tally_shown, s_tally_total, s_tally_step;
+static const uint8_t k_tally_row[3] = {9u, 11u, 13u};
+
+static void NEOGEO_USER tally_begin(NGFMatch *m, uint8_t side)
+{
+    const NGFFighter *f = &m->f[side];
+    uint32_t pct = f->def->life ? ((uint32_t)f->life * 100u) / f->def->life : 0u;
+    s_tally_value[0] = pct * 100u;
+    s_tally_value[1] = (uint32_t)m->seconds * 100u;
+    s_tally_value[2] = s_round_untouched ? BONUS_UNTOUCHED : 0u;
+    s_tally_lines = s_round_untouched ? 3u : 2u;
+    s_tally_total = s_tally_value[0] + s_tally_value[1] + s_tally_value[2];
+    s_tally_side = side;
+    s_tally = TALLY_BANNER;
+    s_tally_t = 0u;
+    m->end_hold = 1u;
+}
+
+static void NEOGEO_USER tally_line_start(void)
+{
+    s_tally_shown = 0u;
+    s_tally_step = s_tally_value[s_tally_line] / TALLY_COUNT + 1u;
+    s_tally_t = 0u;
+}
+
+/* Everything counted at once (a button), the rest of the total into the score. */
+static void NEOGEO_USER tally_finish(void)
+{
+    uint8_t k;
+    for (k = 0u; k < s_tally_lines; k++) put_number(TALLY_END, k_tally_row[k], s_tally_value[k], SLF_PAL_TEXT, 0u);
+    score_add(s_tally_side, s_tally_total - (s_tally == TALLY_TOTAL ? s_tally_shown : 0u));
+    slf_puts_tall(TALLY_X, 16u, "TOTAL", SLF_TALL_GOLD);
+    put_number(TALLY_END, 16u, s_tally_total, SLF_TALL_GOLD, 1u);
+    slf_sfx(SLF_SFX_TALLY_END);
+    s_tally = TALLY_HOLD;
+    s_tally_t = 40u;
+}
+
+static void NEOGEO_USER tally_step(NGFMatch *m)
+{
+    uint8_t skip = (uint8_t)(slf_pressed(s_tally_side) & (NGF_BTN_A | NGF_BTN_B | NGF_BTN_C | NGF_BTN_D));
+    s_tally_t++;
+    switch (s_tally) {
+    case TALLY_BANNER:                       /* the winner's name and the calls first */
+        if (s_tally_t < 56u) return;
+        slf_clear_rows(7u, 17u);
+        slf_puts(TALLY_X, k_tally_row[0], "LIFE BONUS", SLF_PAL_TEXT);
+        slf_puts(TALLY_X, k_tally_row[1], "TIME BONUS", SLF_PAL_TEXT);
+        if (s_tally_lines > 2u) slf_puts(TALLY_X, k_tally_row[2], "UNTOUCHED BONUS", SLF_PAL_GOLD);
+        s_tally = TALLY_LINE;
+        s_tally_line = 0u;
+        tally_line_start();
+        return;
+    case TALLY_LINE:
+        if (skip) { tally_finish(); return; }
+        if (s_tally_t <= 6u) return;         /* a beat between the lines */
+        s_tally_shown += s_tally_step;
+        if (s_tally_shown >= s_tally_value[s_tally_line]) {
+            put_number(TALLY_END, k_tally_row[s_tally_line], s_tally_value[s_tally_line], SLF_PAL_TEXT, 0u);
+            slf_sfx(SLF_SFX_TALLY_END);
+            if (++s_tally_line < s_tally_lines) { tally_line_start(); return; }
+            s_tally = TALLY_TOTAL;
+            slf_puts_tall(TALLY_X, 16u, "TOTAL", SLF_TALL_GOLD);
+            s_tally_shown = 0u;
+            s_tally_step = s_tally_total / (TALLY_COUNT + 10u) + 1u;
+            s_tally_t = 0u;
+            return;
+        }
+        put_number(TALLY_END, k_tally_row[s_tally_line], s_tally_shown, SLF_PAL_TEXT, 0u);
+        if (!(s_tally_t % 3u)) slf_sfx(SLF_SFX_TALLY);
+        return;
+    case TALLY_TOTAL:                        /* counted into the score, the HUD with it */
+        if (skip) { tally_finish(); return; }
+        if (s_tally_t <= 10u) return;
+        {
+            uint32_t step = s_tally_step;
+            if (s_tally_shown + step > s_tally_total) step = s_tally_total - s_tally_shown;
+            s_tally_shown += step;
+            score_add(s_tally_side, step);
+        }
+        put_number(TALLY_END, 16u, s_tally_shown, SLF_TALL_GOLD, 1u);
+        if (s_tally_shown >= s_tally_total) {
+            slf_sfx(SLF_SFX_TALLY_END);
+            s_tally = TALLY_HOLD;
+            s_tally_t = 0u;
+        } else if (!(s_tally_t % 3u)) slf_sfx(SLF_SFX_TALLY);
+        return;
+    case TALLY_HOLD:
+        if (s_tally_t < 70u && !(skip && s_tally_t > 10u)) return;
+        slf_clear_rows(7u, 17u);
+        s_tally = TALLY_OFF;
+        m->end_hold = 0u;
+        return;
+    default:
+        return;
+    }
+}
+
 /* ------------------------------------------------------------ match */
 static uint8_t s_feedback_timer;
 static uint8_t s_ref_phase = 0xFFu;
@@ -371,11 +541,35 @@ static void NEOGEO_USER announcer(uint8_t line)
     slf_sfx((uint8_t)(SLF_SND_ANNOUNCER + line));
 }
 
-/* A fighter's grunt (SLF_GRUNT_*), in the voice type cast for them. */
+/* A fighter's own lines (slf_fighter_voice): their win, then their shouts. */
+enum { SLF_VOICE_WIN, SLF_VOICE_ATTACK, SLF_VOICE_HEAVY, SLF_VOICE_THROW, SLF_VOICE_HURT, SLF_VOICE_KO };
+
+static void NEOGEO_USER fighter_says(uint8_t def, uint8_t line)
+{
+    slf_voice(slf_fighter_voice[(uint16_t)def * SLF_VOICE_KINDS + line]);
+}
+
+/* The shared kiai of the fighter's voice type ("Hyah!", "Ugh!", the K.O. cry,
+ * "Haaaaaa!") and their own line take turns, so both stay in the fight. */
+static uint8_t s_shout_turn;
+
+static void NEOGEO_USER shout(uint8_t def, uint8_t kind, uint8_t line)
+{
+    if (++s_shout_turn & 1u) slf_sfx((uint8_t)(SLF_SND_TYPES + slf_voice_type[def] * 4u + kind));
+    else fighter_says(def, line);
+}
+
+/* A fighter's grunt (SLF_GRUNT_*): the power-up is always the kiai, the K.O.
+ * always their own last word. */
 static void NEOGEO_USER grunt(uint8_t def, uint8_t kind)
 {
-    slf_sfx((uint8_t)(SLF_SND_TYPES + slf_voice_type[def] * 4u + kind));
+    if (kind == SLF_GRUNT_POWER) slf_sfx((uint8_t)(SLF_SND_TYPES + slf_voice_type[def] * 4u + kind));
+    else if (kind == SLF_GRUNT_KO) fighter_says(def, SLF_VOICE_KO);
+    else shout(def, kind, kind == SLF_GRUNT_HURT ? SLF_VOICE_HURT : SLF_VOICE_ATTACK);
 }
+
+/* The round's winner speaks once the win pose is under way. */
+static uint8_t s_win_voice_t, s_win_voice_def;
 
 static void NEOGEO_USER announce(NGFMatch *m, uint8_t state)
 {
@@ -414,8 +608,9 @@ static void NEOGEO_USER announce(NGFMatch *m, uint8_t state)
             const NGFFighter *w = &m->f[m->round_winner];
             slf_puts_center(9u, w->def->name, SLF_PAL_GOLD);
             slf_big_center(11u, SLF_BIG_WIN, SLF_BIG_WIN_W, SLF_BIG_WIN_H, SLF_PAL_BIG);
-            if (w->life == w->def->life) {
+            if (s_round_untouched) {         /* no blow got through: a sting of its own */
                 announcer(SLF_ANN_PERFECT);
+                slf_sfx(SLF_SFX_PERFECT);
                 slf_big_center(14u, SLF_BIG_UNTOUCHED, SLF_BIG_UNTOUCHED_W, SLF_BIG_UNTOUCHED_H, SLF_PAL_BLUE);
             }
         } else {
@@ -445,6 +640,45 @@ static void NEOGEO_USER night_call(const NGFMatch *m, uint16_t over)
                        (((over - SLF_BIG_NIGHT_W) >> 2) & 1u) ? SLF_PAL_WHITE : SLF_PAL_BIG);
 }
 
+/*
+ * Before THE NIGHT IS YOURS, a match won the hard way gets its own call:
+ * three wins without a blow taken (TRIPLE UNTOUCHED, the legend's fanfare),
+ * or a whole team beaten by the first fighter sent in (CLEAN SWEEP). Its
+ * bonus is counted into the score under it.
+ */
+enum { FINALE_NONE, FINALE_SWEEP, FINALE_LEGEND };
+#define FINALE_FRAMES 170u
+static uint8_t s_finale;
+static uint32_t s_finale_shown;
+
+static void NEOGEO_USER finale_step(const NGFMatch *m, uint16_t over)
+{
+    uint8_t legend = (uint8_t)(s_finale == FINALE_LEGEND), w = m->winner;
+    uint32_t bonus = legend ? BONUS_LEGEND : BONUS_SWEEP;
+    uint16_t tile = legend ? SLF_BIG_LEGEND : SLF_BIG_SWEEP;
+    uint8_t tw = legend ? SLF_BIG_LEGEND_W : SLF_BIG_SWEEP_W, th = legend ? SLF_BIG_LEGEND_H : SLF_BIG_SWEEP_H;
+    if (over == 1u) {
+        announce_clear();
+        slf_puts_tall_center(6u, m->f[w].def->name, SLF_TALL_GOLD);
+        slf_sfx(legend ? SLF_SFX_LEGEND : SLF_SFX_SWEEP);
+        s_finale_shown = 0u;
+    }
+    if (over <= tw) slf_big_reveal(9u, tile, tw, th, SLF_PAL_BIG, (uint8_t)over);
+    else if (over <= (uint16_t)(tw + 32u) && !((over - tw) & 3u))
+        slf_big_center(9u, tile, tw, th, (((over - tw) >> 2) & 1u) ? SLF_PAL_WHITE : SLF_PAL_BIG);
+    if (over == 30u) announcer(legend ? SLF_ANN_LEGEND : SLF_ANN_SWEEP);
+    if (over == 50u) slf_puts(TALLY_X, 14u, legend ? "LEGEND BONUS" : "SWEEP BONUS", SLF_PAL_GOLD);
+    if (over > 56u && s_finale_shown < bonus) {
+        uint32_t step = bonus / 40u;
+        if (s_finale_shown + step > bonus) step = bonus - s_finale_shown;
+        s_finale_shown += step;
+        score_add(w, step);
+        put_number(TALLY_END, 14u, s_finale_shown, SLF_PAL_TEXT, 0u);
+        if (s_finale_shown >= bonus) slf_sfx(SLF_SFX_TALLY_END);
+        else if (!(over % 3u)) slf_sfx(SLF_SFX_TALLY);
+    }
+}
+
 /* Frames before a fighter may grunt again from being hit (a combo is not a choir). */
 static uint8_t s_hurt_quiet[2];
 
@@ -460,13 +694,16 @@ static void NEOGEO_USER move_voice(const NGFMatch *m, uint8_t who, uint8_t def, 
         if (line) slf_sfx(line);
         break;
     case NGF_KIND_THROW:
+        fighter_says(def, SLF_VOICE_THROW);
+        break;
     case NGF_KIND_COMMAND:
     case NGF_KIND_GUARD_ATTACK:
-        grunt(def, SLF_GRUNT_ATTACK);
+        fighter_says(def, SLF_VOICE_HEAVY);
         break;
     case NGF_KIND_NORMAL:
-        /* heavy normals, every other one */
-        if ((f->move->buttons & (NGF_BTN_C | NGF_BTN_D)) && (m->frame & 1u)) grunt(def, SLF_GRUNT_ATTACK);
+        /* heavy normals every other one, light ones now and then */
+        if (f->move->buttons & (NGF_BTN_C | NGF_BTN_D)) { if (m->frame & 1u) shout(def, SLF_GRUNT_ATTACK, SLF_VOICE_HEAVY); }
+        else if (!(m->frame % 3u)) shout(def, SLF_GRUNT_ATTACK, SLF_VOICE_ATTACK);
         break;
     default:
         break;
@@ -496,6 +733,7 @@ void NEOGEO_USER slf_combat_events(NGFMatch *m, const uint8_t *defs)
         int16_t sx = (int16_t)(e.x - m->camera_x), sy = (int16_t)(SLF_FLOOR_Y - e.y);
         switch (e.type) {
         case NGF_EV_HIT:
+            score_add(e.who, e.data == 0xFEu ? 500u : 100u);
             if (e.data == 0xFEu) { slf_sfx(SLF_SFX_COUNTER); break; }
             slf_sfx(e.data < 10u ? k_sound_map[e.data] : SLF_SFX_HIT_LIGHT);
             slf_fx_spawn(0u, sx, sy);
@@ -600,6 +838,14 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
     ngf_set_intro_frames(m, 200u);
     ngf_set_start_distance(m, 104u);
     if (mode == MODE_DEMO) slf_puts_center(22u, "DEMO PLAY", SLF_PAL_GOLD);
+    s_scoring = (uint8_t)(mode != MODE_DEMO);
+    slf_hud_scores = s_scoring;
+    s_untouched[0] = s_untouched[1] = 0u;
+    s_seen_def[0] = s_seen_def[1] = 0;
+    s_bout_life[0] = m->f[0].life; s_bout_life[1] = m->f[1].life;
+    s_tally = TALLY_OFF;
+    s_finale = FINALE_NONE;
+    s_end_team = team;
     for (;;) {
         slf_frame();
         if (mode == MODE_DEMO && (slf_start_pending() || slf_start_pressed(0u) || slf_start_pressed(1u))) return RESULT_ABORT;
@@ -651,9 +897,23 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
         ngf_match_step(m, slf_joy(0u), slf_joy(1u));
         if (s_feedback_timer && !--s_feedback_timer) slf_clear_rows(7u, 9u);
         slf_combat_events(m, active_def);
+        score_step(m);
         if (m->state != last_state || m->round != last_round) {
-            if (m->state == NGF_M_FIGHT && last_state == NGF_M_INTRO) counter_clear = 30u;
+            if (m->state == NGF_M_FIGHT && last_state == NGF_M_INTRO) {
+                counter_clear = 30u;
+                s_bout_life[0] = m->f[0].life;     /* untouched: none of this lost */
+                s_bout_life[1] = m->f[1].life;
+            }
+            if (m->state == NGF_M_ROUND_END) {
+                uint8_t w = m->round_winner;
+                if (w < 2u) { s_win_voice_def = active_def[w]; s_win_voice_t = 40u; }
+                s_round_untouched = (uint8_t)(w < 2u && m->f[w].life && m->f[w].life >= s_bout_life[w]);
+                if (s_round_untouched) s_untouched[w]++;
+            }
             if (m->state != NGF_M_OVER) announce(m, m->state == NGF_M_FIGHT ? NGF_M_FIGHT : m->state);
+            /* a player's round or bout: the bonus count, the end held for it */
+            if (m->state == NGF_M_ROUND_END && m->round_winner < 2u && s_scoring && !m->f[m->round_winner].cpu)
+                tally_begin(m, m->round_winner);
             last_state = m->state;
             last_round = m->round;
         }
@@ -661,6 +921,8 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
         if (m->state == NGF_M_INTRO) referee_call(m);
         else s_ref_phase = 0xFFu;
         if (counter_clear && !--counter_clear) announce_clear();
+        if (s_win_voice_t && !--s_win_voice_t) fighter_says(s_win_voice_def, SLF_VOICE_WIN);
+        if (s_tally) tally_step(m);
         if (team) {
             uint8_t side, changed = 0u;
             for (side = 0u; side < 2u; side++) {
@@ -696,9 +958,16 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
                             SLF_PAL_TEXT);
         if (m->state == NGF_M_OVER) {
             uint8_t player_won = (uint8_t)(mode != MODE_DEMO && m->winner < 2u && !m->f[m->winner].cpu);
-            ++over;
-            if (player_won) night_call(m, over);
-            if (over > (player_won ? 120u : 60u)) {
+            uint16_t lead;
+            if (++over == 1u && player_won) {
+                uint8_t w = m->winner;
+                if (s_untouched[w] >= 3u) s_finale = FINALE_LEGEND;
+                else if (team && m->team_active[w] == 0u && m->team_count[w ^ 1u] >= 3u) s_finale = FINALE_SWEEP;
+            }
+            lead = s_finale ? FINALE_FRAMES : 0u;
+            if (player_won && over <= lead) finale_step(m, over);
+            else if (player_won) night_call(m, (uint16_t)(over - lead));
+            if (over > (player_won ? 120u + lead : 60u)) {
                 s_end_def[0] = active_def[0];
                 s_end_def[1] = active_def[1];
                 return m->winner;
@@ -725,21 +994,23 @@ static void NEOGEO_USER big_card(uint16_t tile, uint8_t w, uint8_t h, uint8_t pa
     }
 }
 
-/* After a match: the winner's victory poses over the beaten loser, in the
- * arena with its lights down, and the winner's last word. Any button after
- * the first second moves on. */
+/* After a match: the winner's victory poses, and the side that lost -- the
+ * whole team after a team battle, one fighter otherwise -- down on one knee
+ * facing it, darkened, in the arena with its lights down; the winner's last
+ * word above. Any button after the first second moves on. */
 static void NEOGEO_USER win_scene(uint8_t side)
 {
-    uint8_t win_def = s_end_def[side], lose_def = s_end_def[side ^ 1u];
-    uint8_t mirror = (uint8_t)(win_def == lose_def);
+    static const int16_t k_lose_x[3] = {150, 210, 270};   /* a kneel is some 60 pixels wide */
+    uint8_t win_def = s_end_def[side], lose[3], n = 0u, k, win_alt = 0u;
     uint8_t stage = slf_stage_current();
     uint16_t tick;
+    if (s_end_team) for (k = 0u; k < 3u; k++) lose[n++] = s_roster[side ^ 1u][k];
+    else lose[n++] = s_end_def[side ^ 1u];
+    for (k = 0u; k < n; k++) if (lose[k] == win_def && side) win_alt = 1u;   /* (the side-2 copy wore the other colours) */
     slf_scene_begin();
     slf_music(SLF_TRACK_VICTORY);
-    slf_fighter_palettes(win_def, (uint8_t)(mirror && side), lose_def, (uint8_t)(mirror && !side));
-    slf_fighter_bank(0u, 0u);
-    slf_fighter_bank(1u, 1u);
-    slf_fighter_bruise(1u, lose_def, (uint8_t)(mirror && !side));
+    slf_actor_palettes(0u, win_def, win_alt, 0u);
+    for (k = 0u; k < n; k++) slf_actor_palettes((uint8_t)(1u + k), lose[k], (uint8_t)(lose[k] == win_def && !side), 1u);
     slf_stage_set(stage);
     slf_stage_show(96);
     slf_stage_darken(1u);
@@ -747,11 +1018,16 @@ static void NEOGEO_USER win_scene(uint8_t side)
     slf_puts_center(6u, slf_fighter_quote[win_def][0], SLF_PAL_TEXT);
     slf_puts_center(7u, slf_fighter_quote[win_def][1], SLF_PAL_TEXT);
     for (tick = 0u; tick < 300u; tick++) {
-        uint8_t down = anim_hold(lose_def, NGF_A_DOWN, tick);
         slf_frame();
-        slf_fighter_pose(0u, win_def, anim_sprite(win_def, NGF_A_WIN, tick), 104, SLF_FLOOR_Y - 125, 0u);
-        slf_fighter_pose(1u, lose_def, down, (int16_t)(220 - slf_fighter_body_offset(lose_def, down)),
-                         SLF_FLOOR_Y - 125, 0u);
+        if (tick == 30u) fighter_says(win_def, SLF_VOICE_WIN);
+        slf_actor_pose(0u, win_def, anim_sprite(win_def, NGF_A_WIN, tick), n > 1u ? 64 : 104, SLF_FLOOR_Y - 125, 0u);
+        for (k = 0u; k < n; k++) {
+            uint8_t kneel = anim_hold(lose[k], NGF_A_LOSE, tick);
+            int16_t x = n > 1u ? k_lose_x[k] : 216;
+            /* facing left, toward the winner: the drawn body centred on x */
+            slf_actor_pose((uint8_t)(1u + k), lose[k], kneel, (int16_t)(x + slf_fighter_body_offset(lose[k], kneel)),
+                           SLF_FLOOR_Y - 125, 1u);
+        }
         if (tick > 60u && ((slf_pressed(0u) | slf_pressed(1u)) & (NGF_BTN_A | NGF_BTN_B | NGF_BTN_C | NGF_BTN_D)))
             break;
     }
@@ -762,6 +1038,7 @@ static void NEOGEO_USER versus(void)
     uint8_t result;
     NEO_REGISTER8(SLF_P2_FLAG) = 0u;
     NEO_REGISTER8(SLF_START_FLAG) = 0u;
+    slf_score[0] = slf_score[1] = 0u;
     slf_scene_begin();
     slf_big_center(10u, SLF_BIG_CHALLENGER, SLF_BIG_CHALLENGER_W, SLF_BIG_CHALLENGER_H, SLF_PAL_RED);
     slf_sfx(SLF_SFX_BELL);
@@ -861,6 +1138,7 @@ void NEOGEO_USER slf_run(void)
     uint8_t human = (NEO_REGISTER8(SLF_START_FLAG) == 2u || NEO_REGISTER8(SLF_P2_FLAG) == 1u) ? 1u : 0u;
     uint8_t cpu = (uint8_t)(human ^ 1u);
     slf_audio_demo(0u);
+    slf_score[0] = slf_score[1] = 0u;        /* a new game: a new score */
     if (!ng_sys_is_mvs()) {
         uint8_t choice = slf_home_menu();
         if (choice == 1u) { versus(); return; }

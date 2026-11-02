@@ -63,9 +63,10 @@ class SevenWondersLevels(unittest.TestCase):
 #include <string.h>
 #include "games/sevenwonders/scenes/sw_limits.h"
 #define SW_CHAPTERS 7u
-#define SW_LEVELS 28u
+#define SW_LEVELS 35u
 enum { SW_CAT_MIMI, SW_CAT_KIKO };
 typedef struct { const char *name, *line1, *line2; uint8_t cat; } SWChapter;
+typedef struct { const char *name; uint8_t bg; } SWPicture;
 #include "games/sevenwonders/scenes/sw_levels_data.h"
 static NGPuzzle p, before;
 int main(void) {
@@ -73,11 +74,13 @@ int main(void) {
     NGPuzzleLevel bad;
     for (i = 0; i < SW_LEVELS; i++)
         assert(sw_level_init(&p, &sw_levels[i], 1) == NGP_OK);
+    assert(sw_level_init(&p, &sw_demo_logic, 1) == NGP_OK);
     assert(sw_level_init(&p, &sw_demo_level, 1) == NGP_OK);
     before = p;
-    for (mode = 0; mode < 3; mode++) for (w = 0; w <= 13; w++) for (h = 0; h <= 17; h++) {
+    for (mode = 0; mode < 4; mode++) for (w = 0; w <= 13; w++) for (h = 0; h <= 17; h++) {
         unsigned valid = w >= 3 && h >= 3 &&
-            ((mode == 0 && w <= 7 && h <= 7) || (mode == 1 && w <= 10 && h <= 12));
+            ((mode == 0 && w <= 7 && h <= 7) || (mode == 1 && w <= 10 && h <= 12) ||
+             (mode == 2 && ((w == 5 && h == 5) || (w == 10 && h == 10))));
         assert(sw_board_dimensions_valid(mode, w, h) == valid);
         if (!valid) {
             bad = sw_demo_level; bad.mode = mode; bad.w = w; bad.h = h;

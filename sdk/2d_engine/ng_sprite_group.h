@@ -34,6 +34,13 @@ extern "C" {
 #define NG_SG_PRIO_NORMAL     0     /* the cast, shots, objects (the default) */
 #define NG_SG_PRIO_HIGH       1     /* the player, the scrolling layers       */
 #define NG_SG_PRIO_LOW        2     /* scenery and decoration                 */
+/* Or'd into a group's priority (ng_sprite_group_set_move_first): scenery of
+ * one fixed size that animates in place -- fire, water, spikes -- may take
+ * its new place in the blank's move phase while a new look on the same
+ * sprites waits for room. Without it such a block stands still until its
+ * look can be written, and on a busy scroll that is several frames of it
+ * sliding against the road and then jumping. */
+#define NG_SG_MOVE_FIRST      0x40
 
 typedef struct {
     uint16_t firstSprite;
@@ -73,6 +80,9 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g);
 
 /* A group's commit priority (NG_SG_PRIO_*); every group starts NORMAL. */
 void NEOGEO_USER ng_sprite_group_set_priority(NGSpriteGroup *g, uint8_t prio);
+/* 1: its place may go ahead of its look (NG_SG_MOVE_FIRST); 0: both together
+ * (the default; what a creature needs, whose frames have their own offsets). */
+void NEOGEO_USER ng_sprite_group_set_move_first(NGSpriteGroup *g, uint8_t on);
 
 #ifdef NG_VRAM_DEFER
 /*

@@ -127,6 +127,7 @@ void soundSceneReset(void);
 void playMusic(uint8_t track);
 void playSFX(uint8_t sample);
 void playSFXB(uint8_t sample);
+void playSFXWide(uint16_t sample);   /* any ADPCM-A sample, 0..511 */
 
 /* FM sequencer. */
 void playFMDebug(void);

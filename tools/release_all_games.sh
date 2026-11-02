@@ -72,7 +72,6 @@ make -C tests test > docs/qa/host-tests.log 2>&1
 rc=$?
 if [ $rc != 0 ]; then
   note "host tests exit $rc: $(grep -m1 -E 'Assertion|FAIL' docs/qa/host-tests.log)"
-  note "known since the 2026-10-28 baseline: test_move_touches_driver_only (see docs/qa/BASELINE_AUDIT.md)"
 else
   note "host tests passed"
 fi

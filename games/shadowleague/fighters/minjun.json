@@ -1860,6 +1860,69 @@
     },
     "hp2": {
       "base": "stance"
+    },
+    "win1": {
+      "base": "stance"
+    },
+    "win2": {
+      "base": "stance"
+    },
+    "win3": {
+      "base": "stance"
+    },
+    "win4": {
+      "base": "stance"
+    },
+    "win5": {
+      "base": "stance"
+    },
+    "win6": {
+      "base": "stance"
+    },
+    "win7": {
+      "base": "stance"
+    },
+    "sp1_0": {
+      "base": "stance"
+    },
+    "sp1_3": {
+      "base": "stance"
+    },
+    "sp2_0": {
+      "base": "stance"
+    },
+    "sp2_3": {
+      "base": "stance"
+    },
+    "sp3_0": {
+      "base": "stance"
+    },
+    "sp3_3": {
+      "base": "stance"
+    },
+    "super_4": {
+      "base": "stance"
+    },
+    "hp3": {
+      "base": "stance"
+    },
+    "hk3": {
+      "base": "stance"
+    },
+    "lk1": {
+      "base": "stance"
+    },
+    "cr_hk0": {
+      "base": "stance"
+    },
+    "throw_3": {
+      "base": "stance"
+    },
+    "land": {
+      "base": "stance"
+    },
+    "dash2": {
+      "base": "stance"
     }
   },
   "anims": {
@@ -1995,14 +2058,22 @@
         10
       ],
       [
+        "land",
+        4
+      ],
+      [
         "crouch",
-        8
+        4
       ]
     ],
     "dash": [
       [
         "dash",
-        255
+        6
+      ],
+      [
+        "dash2",
+        6
       ]
     ],
     "backdash": [
@@ -2019,12 +2090,32 @@
     ],
     "win": [
       [
-        "win",
-        24
+        "win1",
+        6
       ],
       [
-        "win_b",
-        255
+        "win2",
+        7
+      ],
+      [
+        "win3",
+        8
+      ],
+      [
+        "win4",
+        10
+      ],
+      [
+        "win5",
+        10
+      ],
+      [
+        "win6",
+        18
+      ],
+      [
+        "win7",
+        18
       ]
     ],
     "lose": [
@@ -2070,7 +2161,7 @@
     ],
     "kick": [
       [
-        "hk1",
+        "lk1",
         4
       ],
       [
@@ -2079,8 +2170,12 @@
         "active"
       ],
       [
+        "lk1",
+        4
+      ],
+      [
         "stance",
-        7
+        3
       ]
     ],
     "hook": [
@@ -2094,8 +2189,12 @@
         "active"
       ],
       [
+        "hk3",
+        7
+      ],
+      [
         "hk1",
-        12
+        5
       ]
     ],
     "c_jab": [
@@ -2131,7 +2230,11 @@
     "c_sweep": [
       [
         "crouch",
-        6
+        3
+      ],
+      [
+        "cr_hk0",
+        3
       ],
       [
         "cr_hk",
@@ -2139,8 +2242,12 @@
         "active"
       ],
       [
+        "cr_hk0",
+        10
+      ],
+      [
         "crouch",
-        16
+        6
       ]
     ],
     "j_kick": [
@@ -2167,9 +2274,16 @@
     ],
     "axe": [
       [
-        "sp3_1",
-        5,
+        "sp3_0",
+        2,
         "airborne",
+        16,
+        32
+      ],
+      [
+        "sp3_1",
+        3,
+        "",
         16,
         32
       ],
@@ -2189,8 +2303,12 @@
     ],
     "dragon": [
       [
+        "sp1_0",
+        2
+      ],
+      [
         "sp1_1",
-        4
+        2
       ],
       [
         "sp1_2",
@@ -2206,8 +2324,12 @@
     ],
     "crescent": [
       [
+        "sp2_0",
+        2
+      ],
+      [
         "sp2_1",
-        4
+        2
       ],
       [
         "sp2_2",
@@ -2220,8 +2342,12 @@
         "active"
       ],
       [
+        "sp2_3",
+        8
+      ],
+      [
         "sp2_1",
-        14
+        6
       ]
     ],
     "super": [
@@ -2260,7 +2386,11 @@
       ],
       [
         "throw_2",
-        12
+        6
+      ],
+      [
+        "throw_3",
+        6
       ]
     ],
     "evade": [
@@ -2351,8 +2481,12 @@
         "active"
       ],
       [
+        "hp3",
+        8
+      ],
+      [
         "hp1",
-        14
+        6
       ]
     ]
   },
@@ -3197,5 +3331,8 @@
         "tech_ticks": 4
       }
     ]
+  },
+  "anim_loops": {
+    "win": 5
   }
 }

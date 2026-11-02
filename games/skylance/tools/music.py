@@ -114,15 +114,43 @@ def render(index):
     return np.rint(output*32767).astype(np.int16)
 
 
-def save_wav(path, pcm):
+def save_wav(path, pcm, rate=RATE):
     with wave.open(str(path), "wb") as stream:
         stream.setnchannels(1)
         stream.setsampwidth(2)
-        stream.setframerate(RATE)
+        stream.setframerate(rate)
         stream.writeframes(np.asarray(pcm, dtype="<i2").tobytes())
 
 
+def describe(index, name, bpm, wav, encoded, rate, diagnostic):
+    """One report row for a bank track, with its decoded preview beside it."""
+    with wave.open(str(wav)) as stream:
+        pcm = np.frombuffer(stream.readframes(stream.getnframes()), dtype="<i2")
+        source_rate = stream.getframerate()
+    state, decoded = [0, 127], []
+    for value in encoded:
+        for nibble in (value >> 4, value & 15):
+            adpcmb_decode_nibble(state, nibble)
+            decoded.append(state[0])
+    decoded = np.asarray(decoded, dtype=np.int16)
+    save_wav(diagnostic / f"{index+1}_{name}.wav", decoded, rate)
+    return dict(id=index+1, name=name, bpm=bpm, creator="Eagle Software",
+        method="Original score rendered by tools/music.py", sample_rate=source_rate,
+        bank_rate=rate, seconds=len(pcm)/source_rate, bytes=len(encoded),
+        source_sha256=hashlib.sha256(wav.read_bytes()).hexdigest(),
+        encoded_sha256=hashlib.sha256(encoded).hexdigest(),
+        peak=int(np.abs(pcm.astype(np.int32)).max()),
+        rms=float(np.sqrt(np.mean(pcm.astype(float)**2))),
+        decoded_peak=int(np.abs(decoded.astype(np.int32)).max()),
+        clipped_samples=int((np.abs(decoded.astype(np.int32)) >= 32767).sum()),
+        decoded_boundary_delta=int(decoded[-1])-int(decoded[0]))
+
+
 def main():
+    """Render the scores to in_wav_b and encode them; with --report, only
+    describe the bank the SDK build made from in_wav_b (it resamples to its
+    ADPCM-B rate, 32 kHz) without touching the WAVs or the bank."""
+    report_only = "--report" in sys.argv[1:]
     source = GAME / "sound/samples/in_wav_b"
     bank = GAME / "sound/samples/out_b"
     diagnostic = GAME / "sound/diagnostics/music"
@@ -130,31 +158,20 @@ def main():
         folder.mkdir(parents=True, exist_ok=True)
     report = []
     for index, (name, bpm, _, _, _) in enumerate(TRACKS):
-        pcm = render(index)
         wav = source / f"{index+1}.wav"
-        save_wav(wav, pcm)
-        encoded, _ = encode_adpcmb(pcm.tolist())
         target = bank / f"{index+1}.adpcmb"
-        target.write_bytes(encoded)
-        write_rate(target, RATE)
-        state, decoded = [0, 127], []
-        for value in encoded:
-            for nibble in (value >> 4, value & 15):
-                adpcmb_decode_nibble(state, nibble)
-                decoded.append(state[0])
-        decoded = np.asarray(decoded, dtype=np.int16)
-        save_wav(diagnostic / f"{index+1}_{name}.wav", decoded)
-        report.append(dict(id=index+1, name=name, bpm=bpm, creator="Eagle Software",
-            method="Original score rendered by tools/music.py", sample_rate=RATE,
-            seconds=len(pcm)/RATE, bytes=len(encoded),
-            source_sha256=hashlib.sha256(wav.read_bytes()).hexdigest(),
-            encoded_sha256=hashlib.sha256(encoded).hexdigest(),
-            peak=int(np.abs(pcm.astype(np.int32)).max()),
-            rms=float(np.sqrt(np.mean(pcm.astype(float)**2))),
-            decoded_peak=int(np.abs(decoded.astype(np.int32)).max()),
-            clipped_samples=int((np.abs(decoded.astype(np.int32)) >= 32767).sum()),
-            decoded_boundary_delta=int(decoded[-1])-int(decoded[0])))
-        print(f"{index+1}: {name}, {bpm} BPM, {len(encoded)} bytes", flush=True)
+        if report_only:
+            encoded = target.read_bytes()
+            rate = json.loads(Path(str(target) + ".json").read_text())["sample_rate"]
+        else:
+            pcm = render(index)
+            save_wav(wav, pcm)
+            encoded, _ = encode_adpcmb(pcm.tolist())
+            encoded, rate = bytes(encoded), RATE
+            target.write_bytes(encoded)
+            write_rate(target, RATE)
+        report.append(describe(index, name, bpm, wav, encoded, rate, diagnostic))
+        print(f"{index+1}: {name}, {bpm} BPM, {len(encoded)} bytes at {rate} Hz", flush=True)
     (GAME / "sound/diagnostics/music.json").write_text(json.dumps(report, indent=2)+"\n")
 
 

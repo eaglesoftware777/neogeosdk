@@ -190,18 +190,36 @@ static void test_active_rows_reach_chained_strips(NGSpriteGroup *g)
 }
 
 /* A move is the hot path.  The hardware reads no position from a chained
- * slot, so a scroll must cost two words, not two per strip. */
+ * slot, so a scroll must cost two words, not two per strip.  A shrunk group
+ * also re-asserts its shrink (SCB2, one word a strip) on every flush: the
+ * persistent hardware-shrink fix (v1.7.7), since a slot shared or cleared
+ * elsewhere would otherwise show the strip at full size. */
 static void test_move_touches_driver_only(NGSpriteGroup *g)
 {
     unsigned before;
 
+    /* full size: two words */
+    ng_sprite_group_set_scale(g, NG_SPRITE_FULL_XSCALE, NG_SPRITE_FULL_YSCALE);
+    ng_sprite_group_flush(g);
+    ram[SCB3_ADDR + 65] = UNTOUCHED;
+    before = writes;
+    ng_sprite_group_set_pos(g, 90, 100);
+    ng_sprite_group_flush(g);
+    assert(writes == before + 2u);
+    assert(ram[SCB3_ADDR + 65] == UNTOUCHED);
+    assert(ram[SCB4_ADDR + 64] == (90u << 7));
+
+    /* shrunk: two words and the shrink again, the chained strips untouched */
+    ng_sprite_group_set_scale(g, 0x3fu, 0x3fu);
+    ng_sprite_group_flush(g);
     ram[SCB3_ADDR + 65] = UNTOUCHED;
     before = writes;
     ng_sprite_group_set_pos(g, 88, 100);
     ng_sprite_group_flush(g);
-    assert(writes == before + 2u);
+    assert(writes == before + 2u + g->strips);
     assert(ram[SCB3_ADDR + 65] == UNTOUCHED);
     assert(ram[SCB4_ADDR + 64] == (88u << 7));
+    assert(ram[SCB2_ADDR + 64] == 0x033fu);
 }
 
 /* Hiding parks every strip; showing again has to put the chain bits back,

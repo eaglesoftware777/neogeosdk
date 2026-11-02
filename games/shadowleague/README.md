@@ -17,8 +17,8 @@ a new arena art/depth pass and further visual polish are unfinished.
 The new title and skippable illustrated introduction use encoded cartridge art.
 The renderer uploads fighter poses into hidden sprite banks and shows a pose only
 when complete. This prevents partial texture uploads; it does not establish that
-every reported face flicker or slowdown has been resolved. Native screenshots,
-telemetry and review sheets are in `assets/review/sdk177/`.
+every reported face flicker or slowdown has been resolved. `tools/qa.py` makes
+native screenshots and telemetry of a match in MAME.
 
 ## Playing
 
@@ -97,11 +97,17 @@ Artist/player review remains necessary.
 ## Audio sources
 
 Original music/effects and the existing announcer, male/female grunts and robot
-processing are preserved. Fifteen fighters receive 59 localized combat lines.
-Other language performances remain unfinished. `tools/sync_voice_samples.py` maps
-approved named WAVs to stable sample numbers before normal sound builds.
+processing are preserved. Every fighter has their own lines (attack, heavy
+blow, throw, hurt, K.O., win quote); 21 of them speak their specials, super,
+heavy blow, throw and win in their own language (the list is in
+`assets/authored/voices/voice-sources-sdk177.md`). The voices go past 256
+ADPCM-A samples through the driver's `$10` command (`playSFXWide()`).
+`tools/sync_voice_samples.py` maps approved named WAVs to stable sample numbers
+before normal sound builds.
 
 Existing speech: Piper `en_US-libritts_r-medium`, LibriTTS-R corpus (Koizumi et al.,
 2023), CC BY 4.0. The localized pass uses Kokoro-82M (Apache 2.0) with Koniwa
-(CC BY 3.0) and SIWIS (CC BY 4.0) attribution and full sources in
-`assets/authored/voices/voice-sources-sdk177.md`.
+(CC BY 3.0) and SIWIS (CC BY 4.0), and Piper voices: Russian "dmitri" (CC0),
+Ukrainian "mykyta" (Apache 2.0) and French "upmc" (CC BY-SA 4.0; Malik, Idris
+and Leila's localized lines are shared under CC BY-SA 4.0 too). Attribution and
+full sources: `assets/authored/voices/voice-sources-sdk177.md`.

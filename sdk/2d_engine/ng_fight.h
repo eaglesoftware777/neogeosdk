@@ -261,6 +261,8 @@ typedef struct {
     NGFInput input;
     uint8_t move_contact, cancel_reject, juggle_points, relaunches;
     uint8_t route_uses[NGF_CANCEL_RULES];
+    uint8_t contact_tick;              /* state_timer when the current move first connected */
+    uint8_t land_squat;                /* frames of the crouch shown after a jump lands */
 } NGFFighter;
 
 /* Inspect a route without consuming input or meter. rule_index may be null.
@@ -341,6 +343,12 @@ typedef struct {
      * rejection both count as loss; critical loss is reported separately. */
     uint32_t events_dropped, events_critical_dropped;
     uint8_t events_peak;
+    /* A round's end (NGF_M_ROUND_END) runs on, poses and all, while the game
+     * holds it (a bonus count, say): the next round waits for end_hold 0. */
+    uint8_t end_hold;
+    /* Team battles: a bout was won and both teams have someone left; the
+     * next member comes in once the bout's end has been shown. */
+    uint8_t team_next;
 } NGFMatch;
 
 #define NGF_TRAIN_RECORD_FRAMES 240u

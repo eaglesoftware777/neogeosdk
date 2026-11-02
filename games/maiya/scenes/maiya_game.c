@@ -87,6 +87,7 @@ enum {
     SLOT_SIGN = 254,     /* 2 pit caution signs (2 strips each)     */
     SLOT_HAZARD = 270,   /* 6 blocks (12 strips) fire/spikes/sludge */
     SLOT_DECOR = 83,     /* 6 props behind the character pool      */
+    SLOT_LANDMARK = 96,  /* 12 strips: the gate's landmark (the cast starts at 108, game.mk) */
     SLOT_VINE = 264,     /* 3 climbing vines (2 strips each)        */
     SLOT_FRONT = 282,    /* 3 foreground props, in front of the cast */
     SLOT_HUD = 290,      /* face avatar, hearts, halo, key          */
@@ -425,6 +426,7 @@ typedef struct {
     uint8_t  time_digit[6];          /* m m s s f f: carried a frame at a time          */
     char     time_shown[14];         /* what the HUD's STAGE line shows now             */
     uint32_t kinds_met;              /* creature kinds she has met this game (MG_E_*)   */
+    uint8_t hazard_kinds_met;        /* hazard kinds she has been warned of this game (1 << MG_H_*) */
     uint8_t  swimming;               /* steered through the water (the reef's road)     */
     uint8_t  air_jump;               /* 1 while her second jump is still unspent         */
     uint8_t  air_dash;               /* 1 while her dash in the air is still unspent     */
@@ -488,6 +490,7 @@ static uint8_t mg_cycle_bank, mg_cycle_dark, mg_cycle_light;
 static uint8_t mg_tint_t, mg_tint_art;   /* the Secret Art's colour shake: frames left, which art */
 #ifdef NG_VRAM_DEFER
 static NGFrameSync mg_video_sync;
+static void NEOGEO_USER mg_landmark_vblank(void);
 
 /* Only completed main-loop batches enter the IRQ. An idle interrupt must
  * never flush the producer's partially edited queues or palette buffer. */
@@ -500,6 +503,9 @@ void NEOGEO_USER maiya_video_vblank(void)
     ng_char_commit_small(mg.player);
     ng_palfx_vblank();
     ng_vram_commit();
+    ng_vram_busy++;
+    mg_landmark_vblank();       /* what the blank has left: the landmark's map */
+    ng_vram_busy--;
 #ifdef NG_RASTER
     ng_raster_vblank();
 #endif
@@ -578,6 +584,9 @@ void NEOGEO_USER maiya_vblank(void)
     if (!early) {
         ng_palfx_vblank();
         ng_vram_commit();       /* fallback while BIOS owns the interrupt */
+        ng_vram_busy++;
+        mg_landmark_vblank();
+        ng_vram_busy--;
 #ifdef NG_RASTER
         ng_raster_vblank();
 #endif
@@ -1299,15 +1308,29 @@ static const uint16_t *NEOGEO_USER mg_pit_art(const uint16_t **pal)
 
 /* Is this x over a pit? `margin` widens the test for creatures that should
  * stop short of the edge. */
+/* The stage's pits, gathered once a stage: this runs for every creature,
+ * several times a frame, and most of a stage's hazards aren't pits (the
+ * table is the stage's own, in ROM: it never changes). */
+static int16_t mg_pit_x0[MG_HAZARD_COUNT], mg_pit_x1[MG_HAZARD_COUNT];
+static uint8_t mg_pit_n, mg_pit_stage = 0xFFu;
+
 static uint8_t NEOGEO_USER mg_over_pit(int16_t x, int16_t margin)
 {
-    const MGLevel *level = &mg_levels[mg.stage];
     uint8_t i;
-    for (i = 0; i < MG_HAZARD_COUNT; i++) {
-        const MGHazard *hz = &level->hazards[i];
-        if (hz->type == MG_H_PIT && x > hz->x - margin && x < (int16_t)(hz->x + hz->width + margin))
-            return 1;
+    if (mg_pit_stage != mg.stage) {
+        const MGLevel *level = &mg_levels[mg.stage];
+        mg_pit_n = 0;
+        for (i = 0; i < MG_HAZARD_COUNT; i++) {
+            const MGHazard *hz = &level->hazards[i];
+            if (hz->type != MG_H_PIT) continue;
+            mg_pit_x0[mg_pit_n] = hz->x;
+            mg_pit_x1[mg_pit_n] = (int16_t)(hz->x + hz->width);
+            mg_pit_n++;
+        }
+        mg_pit_stage = mg.stage;
     }
+    for (i = 0; i < mg_pit_n; i++)
+        if (x > mg_pit_x0[i] - margin && x < (int16_t)(mg_pit_x1[i] + margin)) return 1;
     return 0;
 }
 
@@ -1350,14 +1373,29 @@ static const MGPlatform *NEOGEO_USER mg_platform(uint8_t index)
  * every group took its neighbour's piece each time the first left the
  * screen -- a burst of full rewrites for the vertical blank, every 32
  * pixels of road. A want's key is never 0 (a free group's owner).
+ *
+ * A block that animates in place (fire, sludge, spikes, water) has a new
+ * look every few frames; while the blank is busy that look can wait, and
+ * the block may still take its place with the road (NG_SG_MOVE_FIRST) --
+ * once the group holds this block's own map. A group just handed another
+ * block (`fresh`) waits whole instead: its old piece never shows in the
+ * new place.
  */
 typedef struct { uint16_t key, tile; int16_t x, y; uint8_t pal; } MGPoolWant;
 
-static void NEOGEO_USER mg_pool_show(NGSpriteGroup *pool, uint16_t *owner, uint8_t n,
+static void NEOGEO_USER mg_pool_show(NGSpriteGroup *pool, uint16_t *owner, uint16_t *fresh, uint8_t n,
                                      const MGPoolWant *want, uint8_t wn)
 {
     uint16_t used = 0, placed = 0;      /* (a pool is under 16 groups) */
     uint8_t i, j;
+    /* (only a pool that animates has `fresh`: the flag is the group's
+     * priority bit, set here inline -- this runs for every block a frame) */
+    if (fresh && *fresh)                /* a handed-over map that has been written */
+        for (j = 0; j < n; j++)
+            if ((*fresh & (1u << j)) && !(pool[j].dirty & NG_SGF_DIRTY_TILE)) {
+                *fresh &= (uint16_t)~(1u << j);
+                pool[j].prio |= NG_SG_MOVE_FIRST;
+            }
     for (i = 0; i < wn; i++) {          /* in view still: its own group */
         for (j = 0; j < n; j++) {
             if (owner[j] != want[i].key || (used & (1u << j))) continue;
@@ -1373,6 +1411,10 @@ static void NEOGEO_USER mg_pool_show(NGSpriteGroup *pool, uint16_t *owner, uint8
         if (j == n) break;
         used |= (uint16_t)(1u << j);
         owner[j] = want[i].key;
+        if (fresh) {
+            *fresh |= (uint16_t)(1u << j);
+            pool[j].prio &= (uint8_t)~NG_SG_MOVE_FIRST;
+        }
         ng_sprite_group_show_at(&pool[j], want[i].tile, want[i].pal, want[i].x, want[i].y);
     }
     for (j = 0; j < n; j++) {           /* gone from view */
@@ -1383,6 +1425,7 @@ static void NEOGEO_USER mg_pool_show(NGSpriteGroup *pool, uint16_t *owner, uint8
     }
 }
 static uint16_t mg_ledge_owner[MG_LEDGE_BLOCKS], mg_hazard_owner[MG_HAZARD_BLOCKS], mg_decor_owner[MG_DECOR_SLOTS];
+static uint16_t mg_hazard_fresh;   /* (mg_pool_show: only the hazards animate in place) */
 
 /*
  * One-way ledges are drawn as rows of 32x32 blocks from a small pool;
@@ -1475,7 +1518,7 @@ static void NEOGEO_USER mg_draw_ledges(int16_t camera_x)
         want[used].x = under_x[k];
         want[used].y = under_y[k];
     }
-    mg_pool_show(mg.ledges, mg_ledge_owner, MG_LEDGE_BLOCKS, want, used);
+    mg_pool_show(mg.ledges, mg_ledge_owner, 0, MG_LEDGE_BLOCKS, want, used);
 }
 
 static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
@@ -1530,7 +1573,7 @@ static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
             }
         }
     }
-    mg_pool_show(mg.hazards, mg_hazard_owner, MG_HAZARD_BLOCKS, want, used);
+    mg_pool_show(mg.hazards, mg_hazard_owner, &mg_hazard_fresh, MG_HAZARD_BLOCKS, want, used);
     if (signs < MG_SIGNS) ng_sprite_groups_hide_all(&mg.signs[signs], (uint8_t)(MG_SIGNS - signs));
 }
 
@@ -1544,58 +1587,74 @@ static void NEOGEO_USER mg_draw_hazards(int16_t camera_x)
  * forest's ancient tree, a cliff with its fall, the grotto's ice peak, the
  * citadel's tower (landmark_art.py) -- 192 x 176, the gate in the middle of
  * its foot. The view stops with it (mg_camera_follow): nothing lies past
- * the gate. It is drawn in the decoration's sprites, behind the cast; while
- * it is in view the few props of the road ahead of it wait.
+ * the gate.
+ *
+ * It has sprites of its own (SLOT_LANDMARK, behind the cast, in front of
+ * the road's props), and its map goes up once, at the start of the valley,
+ * a few strips a blank (mg_landmark_vblank) while it waits parked below
+ * the picture. Coming into view is then only a move. (It used to borrow
+ * the props' sprites and upload all 132 tiles as it came into view: the
+ * blank never had room for that while the road scrolled, so the gate
+ * walked in alone and the tree only appeared once she stopped.)
  */
 static NGSpriteGroup mg_landmark_g;
-static uint8_t mg_landmark_on;
-enum { MG_LANDMARK_W = 192, MG_LANDMARK_H = 176, MG_LANDMARK_LEFT = 80 };
+static uint8_t mg_landmark_col;       /* strips of its map written so far      */
+static volatile uint8_t mg_landmark_ready;   /* 0 none, 1 park, 2 map, 3 resident */
+enum {
+    MG_LANDMARK_W = 192, MG_LANDMARK_H = 176, MG_LANDMARK_LEFT = 80,
+    MG_LANDMARK_PARK_Y = NG_SCREEN_H + 16     /* all of it in lines never drawn */
+};
+typedef char mg_landmark_slots_fit[(SLOT_LANDMARK + MG_LANDMARK_W / 16 <= NG_SPR_CHAR_FIRST &&
+                                    SLOT_DECOR + MG_DECOR_SLOTS * 2 <= SLOT_LANDMARK) ? 1 : -1];
 
 static void NEOGEO_USER mg_landmark_setup(void)
 {
     uint8_t lm = mg_landmark_of[mg.stage < MG_LEVEL_COUNT ? mg.stage : 0], k;
-    mg_landmark_on = 0;
+    mg_landmark_ready = 0;
+    ng_sprite_group_detach(&mg_landmark_g);
     if (lm >= MG_LANDMARKS) return;
     for (k = 0; k < mg_landmark_banks[lm]; k++)
         mg_palette((uint8_t)(PAL_LANDMARK + k), mg_landmark_pals[lm] + (uint16_t)k * 16u);
-    ng_sprite_group_init(&mg_landmark_g, SLOT_DECOR, MG_LANDMARK_W / 16, MG_LANDMARK_H / 16,
+    ng_sprite_group_init(&mg_landmark_g, SLOT_LANDMARK, MG_LANDMARK_W / 16, MG_LANDMARK_H / 16,
                          mg_landmark_tiles[lm], PAL_LANDMARK);
-    ng_sprite_group_set_priority(&mg_landmark_g, NG_SG_PRIO_LOW);
+    ng_sprite_group_set_priority(&mg_landmark_g, NG_SG_PRIO_HIGH);   /* its map is resident: only moves, which must keep up with the road */
     ng_sprite_group_set_tile_stride(&mg_landmark_g, MG_LANDMARK_W / 16);
     ng_sprite_group_set_palette_map(&mg_landmark_g, mg_landmark_maps[lm]);
-    ng_sprite_group_set_visible(&mg_landmark_g, 0);
+    ng_sprite_group_set_pos(&mg_landmark_g, 0, MG_LANDMARK_PARK_Y);
+    ng_sprite_group_detach(&mg_landmark_g);   /* staged, never queued, until resident */
+    mg_landmark_col = 0;
+    mg_landmark_ready = 1;
 }
 
-/* 1 while the landmark is in view (and has the decoration's sprites). */
-static uint8_t NEOGEO_USER mg_landmark_draw(int16_t camera_x)
+/* In the blank, after the commit (the video owner): park its slots, then
+ * its map a whole strip at a time while the blank has room. When all of it
+ * is there the next draw publishes it with a cheap transform. */
+static void NEOGEO_USER mg_landmark_vblank(void)
+{
+    if (mg_landmark_ready == 1u) {
+        if (!ng_sprite_stage_retire_range(SLOT_LANDMARK, MG_LANDMARK_W / 16)) return;
+        mg_landmark_ready = 2u;
+    }
+    if (mg_landmark_ready == 2u) {
+        if (!ng_sprite_group_stage_map(&mg_landmark_g, &mg_landmark_col)) return;
+        mg_landmark_g.readyRows = 0u;
+        mg_landmark_g.dirty = NG_SGF_DIRTY_POS | NG_SGF_DIRTY_SHRINK | NG_SGF_DIRTY_VIS;
+        mg_landmark_ready = 3u;
+    }
+}
+
+/* Its place: in view, or parked below the picture with its map kept. */
+static void NEOGEO_USER mg_landmark_draw(int16_t camera_x)
 {
     const MGLevel *level = &mg_levels[mg.stage];
     int16_t scr = (int16_t)((int16_t)level->gate_x - MG_LANDMARK_LEFT - camera_x);
-    uint8_t i;
     uint8_t want = (uint8_t)(level->gate_x && mg_landmark_of[mg.stage] < MG_LANDMARKS &&
                              !mg.boss_active && !mg.vault && mg.state != MG_BONUS &&
                              scr > -MG_LANDMARK_W && scr < NG_SCREEN_W);
-    if (want) {
-        if (!mg_landmark_on) {
-            for (i = 0; i < MG_DECOR_SLOTS; i++) {
-                ng_sprite_group_set_visible(&mg.decor[i], 0);
-                ng_sprite_group_flush(&mg.decor[i]);
-            }
-            ng_sprite_group_mark_dirty(&mg_landmark_g, NG_SGF_DIRTY_ALL);
-            mg_landmark_on = 1;
-        }
-        ng_sprite_group_set_pos(&mg_landmark_g, scr, MG_SY(MG_GROUND_Y + 8 - MG_LANDMARK_H));
-        ng_sprite_group_set_visible(&mg_landmark_g, 1);
-        ng_sprite_group_flush(&mg_landmark_g);
-        return 1;
-    }
-    if (mg_landmark_on) {
-        ng_sprite_group_set_visible(&mg_landmark_g, 0);
-        ng_sprite_group_flush(&mg_landmark_g);
-        for (i = 0; i < MG_DECOR_SLOTS; i++) ng_sprite_group_mark_dirty(&mg.decor[i], NG_SGF_DIRTY_ALL);
-        mg_landmark_on = 0;
-    }
-    return 0;
+    if (mg_landmark_ready != 3u) return;
+    if (want) ng_sprite_group_set_pos(&mg_landmark_g, scr, MG_SY(MG_GROUND_Y + 8 - MG_LANDMARK_H));
+    else ng_sprite_group_set_pos(&mg_landmark_g, 0, MG_LANDMARK_PARK_Y);
+    ng_sprite_group_flush(&mg_landmark_g);
 }
 
 static void NEOGEO_USER mg_draw_decor(int16_t camera_x)
@@ -1603,7 +1662,7 @@ static void NEOGEO_USER mg_draw_decor(int16_t camera_x)
     MGPoolWant want[MG_DECOR_SLOTS];
     uint8_t i, used = 0;
 
-    if (mg_landmark_draw(camera_x)) return;
+    mg_landmark_draw(camera_x);
 
     for (i = 0; i < MG_DECOR_COUNT && used < MG_DECOR_SLOTS; i++) {
         const MGDecor *d = &mg_decor[mg.stage][i];
@@ -1617,7 +1676,7 @@ static void NEOGEO_USER mg_draw_decor(int16_t camera_x)
         want[used].y = MG_SY(d->y);
         used++;
     }
-    mg_pool_show(mg.decor, mg_decor_owner, MG_DECOR_SLOTS, want, used);
+    mg_pool_show(mg.decor, mg_decor_owner, 0, MG_DECOR_SLOTS, want, used);
 }
 
 /* Climbing vines run from the road to a canopy shelf; one sprite group each. */
@@ -1839,20 +1898,29 @@ static void NEOGEO_USER mg_collision_hook(void)
 
     mg.on_ledge = 0;
     if (mg.drop || p->vy_fp < 0) return;
+    if (mg.state == MG_BONUS) return;               /* (mg_platform: no ledges there) */
 
-    for (i = 0; i < MG_PLATFORM_COUNT; i++) {
-        const MGPlatform *pl = mg_platform(i);
-        if (!pl || !pl->width) continue;
-        if (!mg_ledge_reaches(p->x, pl->x, pl->width)) continue;
-        /* Feet crossed the ledge top this frame (or rest on it). */
-        if (mg.player_prev_y <= pl->y && p->y >= pl->y) {
-            ng_char_set_pos(p, p->x, pl->y);
-            p->y_fp = NG_TO_FP(pl->y);   /* she stands on the pixel; x keeps its fraction */
-            p->vy_fp = 0;
-            physics_body(p)->grounded = 1;
-            mg.on_ledge = 1;
-            mg.ledge_index = i;
-            return;
+    /* mg_platform(i) for each i, its choice of table made once, not 32
+     * times a frame (a multiply and three tests a call, some 10 lines). */
+    {
+        const MGPlatform *pl;
+        uint8_t n, road = (uint8_t)!(mg.boss_active || mg.vault);
+        if (road) { pl = level->platforms; n = MG_PLATFORM_COUNT; }
+        else      { pl = mg.arena; n = 2; }
+        for (i = 0; i < n; i++, pl++) {
+            if (road && mg.ledge_gone[i]) continue;   /* crumbled away */
+            if (!pl->width) continue;
+            if (!mg_ledge_reaches(p->x, pl->x, pl->width)) continue;
+            /* Feet crossed the ledge top this frame (or rest on it). */
+            if (mg.player_prev_y <= pl->y && p->y >= pl->y) {
+                ng_char_set_pos(p, p->x, pl->y);
+                p->y_fp = NG_TO_FP(pl->y);   /* she stands on the pixel; x keeps its fraction */
+                p->vy_fp = 0;
+                physics_body(p)->grounded = 1;
+                mg.on_ledge = 1;
+                mg.ledge_index = i;
+                return;
+            }
         }
     }
 }
@@ -3962,12 +4030,19 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
         mg.items[i].key = 0;
         ng_sprite_group_init(&mg.items[i].sprite, (uint16_t)(SLOT_ITEM + i * 2), 2, 2,
                              mg_item_tiles[MG_I_HEART], PAL_ITEM);
+        ng_sprite_group_set_priority(&mg.items[i].sprite, NG_SG_PRIO_HIGH);   /* (as the ledges: seen the moment it is there) */
         ng_sprite_group_set_visible(&mg.items[i].sprite, 0);
     }
     for (i = 0; i < MG_LEDGE_BLOCKS; i++) {
         mg_ledge_owner[i] = 0;                    /* (no block holds it yet) */
         ng_sprite_group_init(&mg.ledges[i], (uint16_t)(SLOT_LEDGE + i * 2), 2, 2,
                              mg.block_tiles[1], PAL_BLOCK);
+        /* HIGH with the layers: a block coming into view is written in the
+         * blank it is wanted, ahead of sparks, hazard frames and the cast
+         * (in the normal list it could wait half a second behind them, and
+         * the road ahead showed gaps until she stopped). Its write is two
+         * strips. */
+        ng_sprite_group_set_priority(&mg.ledges[i], NG_SG_PRIO_HIGH);
         ng_sprite_group_set_visible(&mg.ledges[i], 0);
     }
     for (i = 0; i < MG_HAZARD_BLOCKS; i++) {
@@ -3985,6 +4060,8 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
         mg_decor_owner[i] = 0;                    /* (no block holds it yet) */
         ng_sprite_group_init(&mg.decor[i], (uint16_t)(SLOT_DECOR + i * 2), 2, 2,
                              mg_decor_tiles[MG_D_GRASS], PAL_DECOR);
+        /* LOW: a prop's new look goes after the road's columns and the
+         * ledges, which must never wait for it. */
         ng_sprite_group_set_priority(&mg.decor[i], NG_SG_PRIO_LOW);
         ng_sprite_group_set_visible(&mg.decor[i], 0);
     }
@@ -3994,6 +4071,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
         if (rows > 16) rows = 16;
         ng_sprite_group_init(&mg.vines[i], (uint16_t)(SLOT_VINE + i * 2), 2, 16,
                              mg_decor_tiles[mg_stage_climb[stage]], PAL_DECOR);
+        ng_sprite_group_set_priority(&mg.vines[i], NG_SG_PRIO_HIGH);   /* (part of the road, as the ledges) */
         ng_sprite_group_set_active_rows(&mg.vines[i], rows);
         ng_sprite_group_set_visible(&mg.vines[i], 0);
     }
@@ -4013,6 +4091,7 @@ static void NEOGEO_USER mg_scene(uint8_t stage, uint8_t retry)
     ng_sprite_group_set_tile_stride(&mg.gate, MG_GATE_STRIPS);
     ng_sprite_group_set_visible(&mg.gate, 0);
     mg_landmark_setup();
+    mg_hazard_fresh = 0;
 
     ng_sprite_group_init(&mg.cage, SLOT_CAGE, 2, 2, mg_prop_tiles[MG_P_CHEST], PAL_PROP);
     ng_sprite_group_set_visible(&mg.cage, 0);
@@ -4213,6 +4292,7 @@ static uint8_t NEOGEO_USER mg_dip_how_to_play(void)
 void NEOGEO_USER maiya_boot(void)
 {
     mg.kinds_met = 0;
+    mg.hazard_kinds_met = 0;
     mg.lives = mg_dip_lives(); mg.art = MAX_ART; mg.score = 0; mg.rescue_mask = 0;
     mg.arts_known = 1u << MG_ART_BLOSSOM;
     mg.continues = mg_dip_continues();
@@ -4260,6 +4340,7 @@ void NEOGEO_USER maiya_demo_begin(void)
 
     mg.demo = MG_DEMO_ATTRACT;
     mg.kinds_met = 0;
+    mg.hazard_kinds_met = 0;
     mg.lives = 3; mg.art = MAX_ART; mg.score = 0; mg.rescue_mask = 0;
     mg.arts_known = (1u << MG_ARTS) - 1u;   /* the attract shows each valley's own */
     mg.coins = mg.flowers = mg.critters = 0;
@@ -8136,6 +8217,29 @@ static void NEOGEO_USER mg_update_hud(void)
     mg.tray_dirty = 0;
 }
 
+/*
+ * A redraw of the HUD's text or tray costs some 20 lines, and comes last in
+ * her frame. Begun within that of the blank in a busy fight, it would push
+ * the whole frame into the next one (every sprite then holds still a frame
+ * and jumps), so it waits a frame instead, at most MG_HUD_WAIT of them in a
+ * row: a number a frame or two late can't be seen. The line is the raster
+ * counter's ($3C0006 bits 15..7, $100 at line 0; the blank starts at 240).
+ */
+enum { MG_HUD_LINES = 26, MG_HUD_WAIT = 4 };
+static uint8_t mg_hud_waited;
+
+static uint8_t NEOGEO_USER mg_hud_later(void)
+{
+    uint16_t c = (uint16_t)(*(volatile uint16_t *)0x3C0006u >> 7);
+    uint16_t line = (uint16_t)(c >= 0x100u ? c - 0x100u : c + 8u);
+    if (line < 240u - MG_HUD_LINES || line >= 240u || mg_hud_waited >= MG_HUD_WAIT) {
+        mg_hud_waited = 0;
+        return 0;
+    }
+    mg_hud_waited++;
+    return 1;
+}
+
 static void NEOGEO_USER mg_hud_step(void)
 {
     if (mg.demo == MG_DEMO_MOVES) { mg.hud_dirty = mg.tray_dirty = 0; return; }
@@ -8445,6 +8549,13 @@ static void NEOGEO_USER mg_hazard_warn_check(void)
         if (!hz->type || (mg.hazard_warn_mask & bit) || (mg.hazard_disabled_mask & bit)) continue;
         if (p->x < near_x || p->x > (int16_t)(hz->x + hz->width)) continue;
         mg.hazard_warn_mask |= bit;
+        /* the words once a game for each kind: a road of spike patches
+         * would otherwise keep a warning on the screen */
+        if (hz->type < 8u) {
+            uint8_t kind = (uint8_t)(1u << hz->type);
+            if (mg.hazard_kinds_met & kind) return;
+            mg.hazard_kinds_met |= kind;
+        }
         mg_hint(hz->type == MG_H_PIT ? "A BREAK IN THE ROAD - JUMP IT"
               : hz->type == MG_H_FIRE ? "HAZARD: OPEN FLAME AHEAD"
               : hz->type == MG_H_SPIKES ? "HAZARD: SHARP SPIKES AHEAD"
@@ -9898,12 +10009,18 @@ void NEOGEO_USER maiya_frame(void)
         if (mg.hint_timer && --mg.hint_timer == 0) {
             ng_fix_clear_rect(1, ROW_HINT, 38, 1, PAL_TEXT);
         }
-        mg_hud_step();
         /* The FIX follows the game: score the moment it moves, the tray
-         * once a second while a power runs down. */
-        if (mg.score != mg.score_shown && mg.demo != MG_DEMO_MOVES) {
-            mg_number(28, ROW_SCORE, mg.score, 6, PAL_TEXT);
-            mg.score_shown = mg.score;
+         * once a second while a power runs down -- unless the frame is
+         * already near the blank (mg_hud_later). */
+        {
+            uint8_t score = (uint8_t)(mg.score != mg.score_shown && mg.demo != MG_DEMO_MOVES);
+            if (!((score || mg.hud_dirty || mg.tray_dirty) && mg.demo != MG_DEMO_MOVES && mg_hud_later())) {
+                mg_hud_step();
+                if (score) {
+                    mg_number(28, ROW_SCORE, mg.score, 6, PAL_TEXT);
+                    mg.score_shown = mg.score;
+                }
+            }
         }
         /* Real skill earns more lives than the map ever hands out: a
          * milestone every so many points, on top of the capped hidden

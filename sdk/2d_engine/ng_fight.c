@@ -29,18 +29,16 @@
 #define DOWNS  (DIR(1) | DIR(2) | DIR(3))
 #define UPS    (DIR(7) | DIR(8) | DIR(9))
 
-static uint8_t NEOGEO_USER numpad(uint8_t raw, uint8_t facing_left)
-{
-    uint8_t fwd = facing_left ? (raw & NGF_RAW_LEFT) : (raw & NGF_RAW_RIGHT);
-    uint8_t back = facing_left ? (raw & NGF_RAW_RIGHT) : (raw & NGF_RAW_LEFT);
-    uint8_t up = raw & NGF_RAW_UP, down = raw & NGF_RAW_DOWN;
-    uint8_t col, row;
-    if (fwd && back) fwd = back = 0;
-    if (up && down) up = down = 0;
-    col = back ? 0u : (fwd ? 2u : 1u);
-    row = down ? 0u : (up ? 2u : 1u);
-    return (uint8_t)(row * 3u + col + 1u);
-}
+/* Numpad direction (1-9) of a raw controller byte for a facing, by table:
+ * the motion readers ask for it for every frame of their windows. Opposite
+ * directions held together cancel out. */
+static const uint8_t numpad_table[2][16] = {
+    {5u, 8u, 2u, 5u, 4u, 7u, 1u, 4u, 6u, 9u, 3u, 6u, 5u, 8u, 2u, 5u},
+    {5u, 8u, 2u, 5u, 6u, 9u, 3u, 6u, 4u, 7u, 1u, 4u, 5u, 8u, 2u, 5u},
+};
+#define numpad(raw, facing_left) (numpad_table[(facing_left) ? 1 : 0][(raw) & 0x0Fu])
+/* the direction `ago` frames back, inline for the motion loops */
+#define DIR_AT(in, ago, row) ((row)[(in)->raw[(uint8_t)((in)->head - (ago)) & (NGF_INPUT_FRAMES - 1u)] & 0x0Fu])
 
 uint8_t NEOGEO_USER ngf_raw_from_numpad(uint8_t n, uint8_t facing_left)
 {
@@ -165,11 +163,12 @@ static uint8_t NEOGEO_USER ordered_rotation(const NGFInput *in, uint8_t facing_l
     uint8_t window, uint8_t backwards, uint8_t required)
 {
     static const uint8_t octant[10] = {255u, 3u, 2u, 1u, 4u, 255u, 0u, 5u, 6u, 7u};
+    const uint8_t *row = numpad_table[facing_left ? 1 : 0];
     uint8_t age = window, previous = 255u, count = 0u, travel = 0u, last_age = 255u;
     while (age) {
         uint8_t current, delta;
         age--;
-        current = octant[ngf_input_dir(in, age, facing_left)];
+        current = octant[DIR_AT(in, age, row)];
         if (current == 255u) continue;
         if (previous == current) { last_age = age; continue; }
         delta = previous == 255u ? 0u : (uint8_t)((backwards ? previous - current : current - previous) & 7u);
@@ -233,10 +232,13 @@ uint8_t NEOGEO_USER ngf_input_motion(const NGFInput *in, uint8_t motion, uint8_t
     }
     /* The motion must end within the last few frames, steps in order. */
     step = motion_len[motion];
+    {
+    const uint8_t *row = numpad_table[facing_left ? 1 : 0];
     for (ago = 0; ago < window && step; ago++) {
-        uint8_t d = ngf_input_dir(in, ago, facing_left);
+        uint8_t d = DIR_AT(in, ago, row);
         if (step == motion_len[motion] && ago > MOTION_LATE) return 0;
         if ((motion_steps[motion][step - 1u] >> d) & 1u) step--;
+    }
     }
     return (uint8_t)(step == 0u);
 }
@@ -830,6 +832,29 @@ uint8_t NEOGEO_USER ngf_cancel_check(const NGFFighter *f, uint8_t to, uint8_t *r
     return reason;
 }
 
+/*
+ * Beside a fighter's authored routes, the open ones every fighter shares, so
+ * that combos come from more than the routes someone wrote down: a normal
+ * marked to cancel (NGF_CANCEL_SPECIAL: the lights and the standing heavies)
+ * goes into any special or super once it has connected, hit or guarded; a
+ * special that hits goes into a super (the stock is still paid). Within
+ * NGF_OPEN_CANCEL ticks of the contact, so a late press is not a cancel.
+ */
+#define NGF_OPEN_CANCEL 14u
+static uint8_t NEOGEO_USER open_cancel(const NGFFighter *f, const NGFMove *to)
+{
+    const NGFMove *from = f->move;
+    if (!from || !(f->move_contact & (NGF_CONTACT_HIT | NGF_CONTACT_BLOCK))) return 0u;
+    if (f->state_timer > (uint8_t)(f->contact_tick + NGF_OPEN_CANCEL)) return 0u;
+    if (to->kind == NGF_KIND_SUPER) {
+        if (from->kind == NGF_KIND_SPECIAL) return (uint8_t)((f->move_contact & NGF_CONTACT_HIT) != 0u);
+        return (uint8_t)(from->kind <= NGF_KIND_COMMAND && (from->cancel & (NGF_CANCEL_SPECIAL | NGF_CANCEL_SUPER)));
+    }
+    if (to->kind == NGF_KIND_SPECIAL)
+        return (uint8_t)(from->kind <= NGF_KIND_COMMAND && (from->cancel & NGF_CANCEL_SPECIAL));
+    return 0u;
+}
+
 static uint8_t NEOGEO_USER try_moves(NGFMatch *m, uint8_t who, uint8_t cancel)
 {
     NGFFighter *f = &m->f[who], *o = &m->f[who ^ 1u];
@@ -881,7 +906,10 @@ static uint8_t NEOGEO_USER try_moves(NGFMatch *m, uint8_t who, uint8_t cancel)
                 continue;
             if (cancel && f->def->combat && !(cancel & NGF_CANCEL_KARA)) {
                 f->cancel_reject = ngf_cancel_check(f, k, &route);
-                if (f->cancel_reject != NGF_CANCEL_OK) continue;
+                if (f->cancel_reject != NGF_CANCEL_OK) {
+                    if (!open_cancel(f, mv)) continue;
+                    route = 255u;                    /* an open cancel: no route spent */
+                }
             }
             if (mv->kind == NGF_KIND_THROW) {
                 uint16_t reach = (uint16_t)(f->def->push_w + o->def->push_w + 20u);
@@ -986,10 +1014,12 @@ static void NEOGEO_USER free_move(NGFMatch *m, uint8_t who, uint8_t controls)
         set_anim(f, threat ? NGF_A_GUARD : NGF_A_WALK_B, 0);
     } else {
         f->vx = 0;
-        set_anim(f, NGF_A_IDLE, 0);
+        /* just down from a jump: the knees take it a moment first */
+        set_anim(f, f->land_squat ? NGF_A_CROUCH : NGF_A_IDLE, 0);
     }
 }
 
+#define LAND_SQUAT 4u
 static void NEOGEO_USER land(NGFMatch *m, uint8_t who)
 {
     NGFFighter *f = &m->f[who];
@@ -1008,9 +1038,11 @@ static void NEOGEO_USER land(NGFMatch *m, uint8_t who)
         f->frame++;            /* land into the move's recovery */
         f->frame_timer = 0;
     } else if (f->state != NGF_S_THROWN && f->state != NGF_S_WIN && f->state != NGF_S_LOSE) {
+        uint8_t from_jump = (uint8_t)(f->state == NGF_S_JUMP || f->state == NGF_S_ATTACK);
         f->state = NGF_S_IDLE;
         f->move = 0;
-        set_anim(f, NGF_A_IDLE, 1);
+        f->land_squat = from_jump && f->def->anims[NGF_A_CROUCH].count ? LAND_SQUAT : 0u;
+        set_anim(f, f->land_squat ? NGF_A_CROUCH : NGF_A_IDLE, 1);
     }
 }
 
@@ -1020,6 +1052,8 @@ static void NEOGEO_USER fighter_step(NGFMatch *m, uint8_t who, uint8_t controls)
     const NGFFrame *fr;
     if (f->invuln) f->invuln--;
     if (f->max_timer) f->max_timer--;
+    if (f->land_squat && !--f->land_squat && f->state == NGF_S_IDLE && f->anim == NGF_A_CROUCH)
+        set_anim(f, NGF_A_IDLE, 1);
     if (f->state != NGF_S_BLOCK && !(m->frame & (GUARD_REGEN - 1u)) && f->guard < f->def->guard_max) f->guard++;
     switch (f->state) {
     case NGF_S_IDLE:
@@ -1293,6 +1327,7 @@ static void NEOGEO_USER resolve_attacks(NGFMatch *m)
             f->move_hit = 1;
             if (try_counter(m, (uint8_t)(i ^ 1u), (int16_t)(f->facing_left ? box[i].l : box[i].r),
                             (int16_t)((box[i].b + box[i].t) / 2))) continue;
+            if (!f->move_contact) f->contact_tick = f->state_timer;
             f->move_contact |= can_block(&m->f[i ^ 1u], hp.level) ? NGF_CONTACT_BLOCK :
                 (uint8_t)(NGF_CONTACT_HIT | (m->f[i ^ 1u].counter ? NGF_CONTACT_COUNTER : 0u));
             apply_hit(m, i, &hp, (int16_t)(m->f[i].facing_left ? box[i].l : box[i].r),
@@ -2098,6 +2133,39 @@ void NEOGEO_USER ngf_set_start_distance(NGFMatch *m, uint8_t half)
         m->f[i].x = (int32_t)(m->stage_w / 2 + (i ? (int16_t)m->start_half : -(int16_t)m->start_half)) << 8;
 }
 
+/* A team bout's end has been shown: the loser's next member (both, after a
+ * draw) comes in, the winner gets back an eighth of its life, and the next
+ * bout begins. */
+static void NEOGEO_USER team_advance(NGFMatch *m)
+{
+    uint8_t i, w = m->round_winner, changed[2] = {0, 0};
+    uint16_t life[2];
+    for (i = 0; i < 2u; i++) {
+        NGFFighter *f = &m->f[i];
+        if (w == 2u || i != w) {
+            uint8_t n, next = m->team_active[i];
+            for (n = 1u; n < m->team_count[i]; n++) {
+                next = (uint8_t)((next + 1u) % m->team_count[i]);
+                if (m->team_life[i][next]) break;
+            }
+            m->team_active[i] = next; f->def = m->team[i][next];
+            f->life = m->team_life[i][next]; changed[i] = 1;
+        } else {
+            uint16_t recover = (uint16_t)(f->def->life / 8u);
+            f->life = f->def->life - f->life < recover ? f->def->life : (uint16_t)(f->life + recover);
+        }
+        life[i] = f->life;
+    }
+    m->team_next = 0;
+    ngf_round_start(m);
+    for (i = 0; i < 2u; i++) {
+        m->f[i].life = life[i]; m->team_life[i][m->team_active[i]] = life[i];
+        if (changed[i]) event(m, NGF_EV_TAG, i, m->team_active[i], ngf_fighter_px(&m->f[i]), 0);
+    }
+    m->assist_uses[0] = m->assist[0] ? 3u : 0u;
+    m->assist_uses[1] = m->assist[1] ? 3u : 0u;
+}
+
 static void NEOGEO_USER end_round(NGFMatch *m)
 {
     NGFFighter *a = &m->f[0], *b = &m->f[1];
@@ -2110,45 +2178,32 @@ static void NEOGEO_USER end_round(NGFMatch *m)
         if (ra > rb) w = 0;
         else if (rb > ra) w = 1;
     }
+    m->team_next = 0;
     if (m->match_mode != NGF_MODE_1V1) {
-        uint8_t i, exhausted[2] = {0, 0}, changed[2] = {0, 0};
-        uint16_t life[2];
+        /* The bout's loser (both, on a draw) is out of the team. While both
+         * teams still have someone standing, the bout ends like a round --
+         * the winner's pose over the loser -- and the next member comes in
+         * after it (team_advance). */
+        uint8_t i, exhausted[2] = {0, 0};
         for (i = 0; i < 2u; i++) {
-            NGFFighter *f = &m->f[i];
-            m->team_life[i][m->team_active[i]] = f->life;
-            if (w == 2u || i != w) {
-                uint8_t n, next = m->team_active[i];
-                m->team_life[i][next] = 0;
-                for (n = 1u; n < m->team_count[i]; n++) {
-                    next = (uint8_t)((next + 1u) % m->team_count[i]);
-                    if (m->team_life[i][next]) break;
-                }
-                if (n == m->team_count[i]) { exhausted[i] = 1; f->life = 0; }
-                else {
-                    m->team_active[i] = next; f->def = m->team[i][next];
-                    f->life = m->team_life[i][next]; changed[i] = 1;
-                }
-            } else {
-                uint16_t recover = (uint16_t)(f->def->life / 8u);
-                f->life = f->def->life - f->life < recover ? f->def->life : (uint16_t)(f->life + recover);
+            uint8_t n, next = m->team_active[i];
+            m->team_life[i][next] = m->f[i].life;
+            if (w != 2u && i == w) continue;
+            m->team_life[i][next] = 0;
+            for (n = 1u; n < m->team_count[i]; n++) {
+                next = (uint8_t)((next + 1u) % m->team_count[i]);
+                if (m->team_life[i][next]) break;
             }
-            life[i] = f->life;
+            if (n == m->team_count[i]) exhausted[i] = 1;
         }
-        if (!exhausted[0] && !exhausted[1]) {
-            ngf_round_start(m);
-            for (i = 0; i < 2u; i++) {
-                m->f[i].life = life[i]; m->team_life[i][m->team_active[i]] = life[i];
-                if (changed[i]) event(m, NGF_EV_TAG, i, m->team_active[i], ngf_fighter_px(&m->f[i]), 0);
-            }
-            m->assist_uses[0] = m->assist[0] ? 3u : 0u;
-            m->assist_uses[1] = m->assist[1] ? 3u : 0u;
-            return;
-        }
-        w = (uint8_t)(exhausted[0] && exhausted[1] ? 2u : exhausted[0] ? 1u : 0u);
+        if (!exhausted[0] && !exhausted[1]) m->team_next = 1;
+        else w = (uint8_t)(exhausted[0] && exhausted[1] ? 2u : exhausted[0] ? 1u : 0u);
     }
     m->round_winner = w;
-    if (w != 1u) a->wins++;
-    if (w != 0u) b->wins++;
+    if (!m->team_next) {
+        if (w != 1u) a->wins++;
+        if (w != 0u) b->wins++;
+    }
     if (w < 2u) {
         NGFFighter *win = &m->f[w];
         if (win->state != NGF_S_KO && win->life) {
@@ -2269,20 +2324,13 @@ void NEOGEO_USER ngf_match_step(NGFMatch *m, uint8_t raw1, uint8_t raw2)
         if (m->state_timer >= TIMEUP_FRAMES) end_round(m);
         break;
     case NGF_M_ROUND_END:
-        if (m->state_timer >= END_FRAMES) {
+        if (m->state_timer >= END_FRAMES && !m->end_hold) {
             if (m->match_mode != NGF_MODE_1V1) {
-                uint8_t exhausted0 = (uint8_t)(m->team_active[0] >= m->team_count[0] - 1u && m->team_life[0][m->team_active[0]] == 0);
-                uint8_t exhausted1 = (uint8_t)(m->team_active[1] >= m->team_count[1] - 1u && m->team_life[1][m->team_active[1]] == 0);
-                if (exhausted0 || exhausted1) {
+                if (m->team_next) team_advance(m);
+                else {
                     m->state = NGF_M_OVER;
                     m->state_timer = 0;
-                    m->winner = (uint8_t)(exhausted0 && exhausted1 ? 2u : exhausted0 ? 1u : 0u);
-                } else {
-                    ngf_round_start(m);
-                    m->f[0].life = m->team_life[0][m->team_active[0]];
-                    m->f[1].life = m->team_life[1][m->team_active[1]];
-                    m->assist_uses[0] = m->assist[0] ? 3u : 0u;
-                    m->assist_uses[1] = m->assist[1] ? 3u : 0u;
+                    m->winner = m->round_winner;
                 }
             } else {
                 uint8_t a = (uint8_t)(m->f[0].wins >= m->rounds_to_win), b = (uint8_t)(m->f[1].wins >= m->rounds_to_win);

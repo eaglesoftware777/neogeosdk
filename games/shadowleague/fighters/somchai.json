@@ -1387,6 +1387,69 @@
     },
     "win_b": {
       "base": "stance"
+    },
+    "win1": {
+      "base": "stance"
+    },
+    "win2": {
+      "base": "stance"
+    },
+    "win3": {
+      "base": "stance"
+    },
+    "win4": {
+      "base": "stance"
+    },
+    "win5": {
+      "base": "stance"
+    },
+    "win6": {
+      "base": "stance"
+    },
+    "win7": {
+      "base": "stance"
+    },
+    "sp1_0": {
+      "base": "stance"
+    },
+    "sp1_3": {
+      "base": "stance"
+    },
+    "sp2_0": {
+      "base": "stance"
+    },
+    "sp2_3": {
+      "base": "stance"
+    },
+    "sp3_0": {
+      "base": "stance"
+    },
+    "sp3_3": {
+      "base": "stance"
+    },
+    "super_4": {
+      "base": "stance"
+    },
+    "hp3": {
+      "base": "stance"
+    },
+    "hk3": {
+      "base": "stance"
+    },
+    "lk1": {
+      "base": "stance"
+    },
+    "cr_hk0": {
+      "base": "stance"
+    },
+    "throw_3": {
+      "base": "stance"
+    },
+    "land": {
+      "base": "stance"
+    },
+    "dash2": {
+      "base": "stance"
     }
   },
   "anims": {
@@ -1522,14 +1585,22 @@
         10
       ],
       [
+        "land",
+        4
+      ],
+      [
         "crouch",
-        8
+        4
       ]
     ],
     "dash": [
       [
         "dash",
-        255
+        6
+      ],
+      [
+        "dash2",
+        6
       ]
     ],
     "backdash": [
@@ -1546,12 +1617,32 @@
     ],
     "win": [
       [
-        "win",
-        24
+        "win1",
+        6
       ],
       [
-        "win_b",
-        255
+        "win2",
+        7
+      ],
+      [
+        "win3",
+        8
+      ],
+      [
+        "win4",
+        10
+      ],
+      [
+        "win5",
+        10
+      ],
+      [
+        "win6",
+        18
+      ],
+      [
+        "win7",
+        18
       ]
     ],
     "lose": [
@@ -1606,13 +1697,17 @@
         "active"
       ],
       [
+        "hp3",
+        5
+      ],
+      [
         "hp1",
-        8
+        3
       ]
     ],
     "b_kick": [
       [
-        "hk1",
+        "lk1",
         3
       ],
       [
@@ -1621,8 +1716,12 @@
         "active"
       ],
       [
+        "lk1",
+        4
+      ],
+      [
         "stance",
-        6
+        2
       ]
     ],
     "d_kick": [
@@ -1636,14 +1735,22 @@
         "active"
       ],
       [
+        "hk3",
+        6
+      ],
+      [
         "hk1",
-        10
+        4
       ]
     ],
     "c_sweep": [
       [
         "crouch",
-        4
+        2
+      ],
+      [
+        "cr_hk0",
+        2
       ],
       [
         "cr_hk",
@@ -1651,8 +1758,12 @@
         "active"
       ],
       [
+        "cr_hk0",
+        7
+      ],
+      [
         "crouch",
-        12
+        5
       ]
     ],
     "j_attack": [
@@ -1673,7 +1784,11 @@
       ],
       [
         "throw_2",
-        12
+        6
+      ],
+      [
+        "throw_3",
+        6
       ]
     ],
     "evade": [
@@ -1718,8 +1833,12 @@
     ],
     "spec_1": [
       [
+        "sp1_0",
+        2
+      ],
+      [
         "sp1_1",
-        4
+        2
       ],
       [
         "sp1_2",
@@ -1729,14 +1848,22 @@
         0
       ],
       [
+        "sp1_3",
+        6
+      ],
+      [
         "sp1_1",
-        10
+        4
       ]
     ],
     "spec_2": [
       [
+        "sp2_0",
+        2
+      ],
+      [
         "sp2_1",
-        4
+        2
       ],
       [
         "sp2_2",
@@ -1752,8 +1879,12 @@
     ],
     "spec_3": [
       [
+        "sp3_0",
+        2
+      ],
+      [
         "sp3_1",
-        4
+        2
       ],
       [
         "sp3_2",
@@ -1763,8 +1894,12 @@
         0
       ],
       [
+        "sp3_3",
+        6
+      ],
+      [
         "sp3_1",
-        10
+        4
       ]
     ],
     "super_anim": [
@@ -1786,8 +1921,12 @@
         16
       ],
       [
+        "super_4",
+        11
+      ],
+      [
         "hp1",
-        18
+        7
       ]
     ],
     "n_crouch_a": [
@@ -2714,5 +2853,8 @@
         "tech_ticks": 4
       }
     ]
+  },
+  "anim_loops": {
+    "win": 5
   }
 }

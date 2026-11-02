@@ -4,6 +4,30 @@ The ROM sets shared with the NeoGeoSDK pre-releases: `_v1` and `_v2` with
 v1.7.1, `_v3` with v1.7.2, `_v4` with v1.7.3. The SDK keeps its own
 version; Maiya's ROMs are numbered on their own.
 
+## v4.1.0: the last door, steady scenery, full-speed fights (2026-11-01, 2026-11-02, NeoGeoSDK v1.7.7)
+
+- **The tree over the last door.** Each valley's gate stands under its own
+  landmark (a tree, a rock arch...). The landmark used to be drawn only once
+  Maiya stopped walking, so the door scrolled in alone. It now has sprites of
+  its own, loaded at the valley's start, and comes into view with the door
+  on all eleven valleys that have one; the lantern beside the door stays.
+- **Hazards and scenery that keep up.** Water, fire and spike tiles no
+  longer stand still for a few frames and then jump (a water pit could open
+  a 16-pixel gap); props on the road and the big ferns in front of Maiya
+  move with the scenery every frame.
+- **Busy fights at full speed.** A hit's red flash recoloured her palette
+  with 45 slow divides a frame; the colours are now worked out with shifts
+  (exactly the same colours). With a few other savings, the worst valley's
+  fights went from 50 to about 57 frames a second, and the frames that ran
+  over from 17.5% to 3.1%. A redraw of the score, tray or text waits a frame
+  when a frame is already full, so it never costs a dropped frame.
+- **No more vanishing blocks.** Ledges, pick-ups and vines that come into
+  view near Maiya are drawn at once again; they could wait half a second
+  behind sparks and hazard frames, so blocks seemed to disappear and come
+  back after she passed. Scenery props stay behind the road as before.
+- **Quieter.** A hazard's warning shows once per kind in a game, not at
+  every pit, and the jump and dash whoosh is much softer.
+
 ## v4.0.1 (2026-10-31, NeoGeoSDK v1.7.7 pre-release)
 
 - The v4 game with its S ROM rebuilt: every fix-layer tile now comes from

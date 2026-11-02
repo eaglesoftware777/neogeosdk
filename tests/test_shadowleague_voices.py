@@ -12,7 +12,8 @@ class VoiceTests(unittest.TestCase):
         entries={x['key']:x for x in slf_voices.plan(slf_voices.load_fighters())}
         self.assertEqual({x['fighter'] for x in rows},set(LOCALES))
         self.assertEqual(len({e['number'] for e in entries.values()}),len(entries))
-        self.assertLessEqual(max(e['number'] for e in entries.values()),255)
+        # The driver reaches samples 0..511 ($40+n, $16 n, then $10 n for 256 + n).
+        self.assertLessEqual(max(e['number'] for e in entries.values()),511)
         for row in rows:
             with self.subTest(key=row['key']):
                 source=slf_voices.VOICES/(row['key']+'.wav')

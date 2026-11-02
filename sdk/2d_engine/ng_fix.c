@@ -142,6 +142,33 @@ void NEOGEO_USER ng_fix_blank_cell(uint8_t x, uint8_t y)
     NG_FIX_SET(i, NG_FIX_BLANK);
 }
 
+/*
+ * Rows y0..y1, all 40 cells, blank as ng_fix_blank_cell() leaves them, for a
+ * fraction of the cost: the cells change in place, and a changed row goes
+ * up whole at the next commit (NG_VRAM_DEFER) instead of a queue entry a
+ * cell -- 11 rows were most of a frame cell by cell.
+ */
+void NEOGEO_USER ng_fix_blank_rows(uint8_t y0, uint8_t y1)
+{
+    uint8_t x, y;
+    if (y1 >= NG_FIX_HEIGHT) y1 = NG_FIX_HEIGHT - 1;
+    for (y = y0; y <= y1; y++) {
+#ifdef NG_VRAM_DEFER
+        uint16_t *w = &ng_fix_words[y];
+        uint8_t changed = 0;
+        for (x = 0; x < NG_FIX_WIDTH; x++, w += 32) {
+            if (*w != NG_FIX_BLANK) { *w = NG_FIX_BLANK; changed = 1; }
+        }
+        if (changed) ng_fix_rows |= (uint32_t)1u << y;
+#else
+        for (x = 0; x < NG_FIX_WIDTH; x++) {
+            uint16_t i = NG_FIX_CELL(x, y);
+            NG_FIX_SET(i, NG_FIX_BLANK);
+        }
+#endif
+    }
+}
+
 void NEOGEO_USER ng_fix_init(void)
 {
 #ifdef NG_VRAM_DEFER

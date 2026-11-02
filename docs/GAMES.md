@@ -1,17 +1,24 @@
 # The Shipped Games
 
-**Eagle Software · Neo Geo SDK v1.7.0 (Maiya arrives in v1.7.1)**
+**Eagle Software · Neo Geo SDK v1.7.7**
 
-Seven projects are listed here: the showcase, its C++ counterpart,
-two shooters, a platform adventure and two minimal examples. Use their source as reference
-implementations for the SDK features they demonstrate.
+Twelve projects are listed here: seven released games (a platformer, a
+shooter, a fighting game, a beat'em-up, an adventure RPG, a puzzle game and
+a mahjong table), the showcase and its C++ counterpart, a formation shooter
+and two minimal examples. Use their source as reference implementations for
+the SDK features they demonstrate.
 
 | Game | Id | Engine | What it is |
 |---|---|---|---|
 | `demo` | 777 | C | The 25-chapter engine reel |
 | `demo_plus` | 778 | C++ | The same demo scenes, art, and sound on the C++ engine |
 | `skylance` | 779 | C | Sky Lance — a complete vertical shooter |
-| `maiya` | 780 | C | Maiya: Super Nature Girl, six valleys, vine climbing, guardian arenas and bonus playfields |
+| `maiya` | 780 | C | Maiya: Super Nature Girl, twelve stages, vine climbing, guardian arenas, vaults and bonus playfields |
+| `shadowleague` | 781 | C, `ng_fight` | Shadow League Fighting, 44 fighters, team battles |
+| `sevenwonders` | 782 | C, `ng_puzzle` | Seven Wonders Puzzles: match, bubble and picture-logic boards |
+| `maiyaluna` | 783 | C, `ng_rpg` | Maiya & Luna: two solo journeys, seven chapters |
+| `nosignal` | 784 | C, `ng_beatemup` | No Signal Z Alpha: eight streets for one player |
+| `mahjong_demo` | 785 | C, `ng_mahjong` | Mahjong Demo: four-seat Hong Kong Old Style and solitaire |
 | `helloworld` | 772 | — | FIX text and one sample. The tutorial target. |
 | `tutorial` | 555 | C | The minimal engine loop, nothing else |
 | `neogeogame` | 775 | C | A sprite-based formation shooter |
@@ -42,11 +49,14 @@ Building her release on a second machine (Python 3.10 or later):
 ```sh
 ASEPRITE=builtin MAIYA_ART_REFERENCE=v1.7.3 make neo GAME=maiya
 python3 tools/make_release.py --game maiya --game-id 780 --prefix Maiya \
-    --name "Maiya: Super Nature Girl" --version v4 --replace \
-    --readme dist/release/Maiya-README_v4.txt --changelog games/maiya/CHANGELOG.md
-python3 tools/audit_release.py --prefix Maiya --game maiya --game-id 780 --version v4
-python3 tools/make_setup_zips.py
+    --name "Maiya: Super Nature Girl" --version <MAJOR.MINOR.PATCH> \
+    --readme <readme> --changelog games/maiya/CHANGELOG.md
+python3 tools/audit_release.py --prefix Maiya --game maiya --game-id 780 --version <MAJOR.MINOR.PATCH>
+python3 tools/rom_registry.py
 ```
+
+A version that went out is never rebuilt in place: changed bytes get a new
+number (`docs/releases/VERSIONING_POLICY.md`).
 
 `ASEPRITE=builtin` stands in for Aseprite in her walk/run pipeline (the same
 `.aseprite` file and exports). `MAIYA_ART_REFERENCE` keeps her painted art
@@ -140,13 +150,32 @@ built from the same art, so you can see the same game driven two ways.
 
 ## shadowleague — Shadow League Fighting (id 781)
 
-An original one-on-one fighting game on the `ng_fight` engine
-(`docs/fighting.md`), at its first playable milestone: Kenji Arata
-(karate) and Jack Mercer (boxing), the Arata Mountain Dojo, arcade and
-versus play, MVS and AES. Fighters are JSON definitions
-(`games/shadowleague/fighters/`) drawn and cooked by the game's tools.
-Build with `make GAME=shadowleague all`; check with
-`python3 games/shadowleague/tools/qa.py`. Details: `games/shadowleague/README.md`.
+An original fighting game on the `ng_fight` engine (`docs/fighting.md`):
+44 painted fighters, 12 arenas, single matches and three-on-three team
+battles with strikers, a referee's ceremony, voices, a score with bonus
+counts after each round won, arcade, versus and practice (AES), MVS and AES.
+Fighters are JSON definitions (`games/shadowleague/fighters/`) cooked by the
+game's tools; arenas are painted panoramas fitted to 32 palettes. Build with
+`make GAME=shadowleague all`; check with `python3 games/shadowleague/tools/qa.py`
+(`--team` for a team battle). Details: `games/shadowleague/README.md`.
+
+---
+
+## The genre games (ids 782-785)
+
+Each is built on one of the v1.7.7 genre engines (`docs/GENRE_ENGINES_V1.7.7.md`),
+chosen with `GAME_GENRE_ENGINE` in its `game.mk`:
+
+- `sevenwonders` (`puzzle`): match and bubble boards and picture-logic
+  levels, an album and rewards, saves.
+- `maiyaluna` (`rpg`): two solo journeys through seven chapters of rooms,
+  people, items and environmental puzzles; saves.
+- `nosignal` (`beatemup`): eight streets for one player, weighty blows,
+  grabs and throws, a ridable scooter, living backgrounds.
+- `mahjong_demo` (`mahjong`): four seats of Hong Kong Old Style against three
+  CPU players, and solitaire.
+
+Each has its own `README.md` and `CHANGELOG.md`; `make GAME=<name> all` builds it.
 
 ## helloworld (id 772)
 

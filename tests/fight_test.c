@@ -329,6 +329,10 @@ static void test_720_and_teams(void)
     m.state = NGF_M_KO;
     m.state_timer = 150;
     ngf_match_step(&m, 0, 0);
+    /* the bout's end is shown first (winner's pose), then the next member */
+    assert(m.state == NGF_M_ROUND_END && m.round_winner == 0 && m.team_active[1] == 0);
+    assert(m.f[0].state == NGF_S_WIN);
+    run(130, 0, 0);
     assert(m.team_active[1] == 1);
     assert(m.f[1].life == tester.life);
 
@@ -422,12 +426,17 @@ static void test_team_lifecycle(void)
     ngf_team_set(&m, 1, &tester, &other, &tester);
     run(100, 0, 0); m.f[0].life = 480; m.f[1].h = 500; m.f[1].push_vx = 300;
     ko_side(1);
+    assert(m.state == NGF_M_ROUND_END && m.team_next && m.team_active[1] == 0);
+    assert(m.f[0].state == NGF_S_WIN && m.f[0].wins == 0);
+    m.end_hold = 1; run(200, 0, 0);                 /* held: the end goes on */
+    assert(m.state == NGF_M_ROUND_END && m.team_active[1] == 0);
+    m.end_hold = 0; run(1, 0, 0);
     assert(m.state == NGF_M_INTRO && m.team_active[1] == 1);
     assert(m.f[1].def == &other && m.f[1].life == 900);
     assert(m.f[1].grounded && m.f[1].h == 0 && m.f[1].push_vx == 0);
     assert(m.f[0].life == 555 && m.f[0].wins == 0);
     assert(m.clock == NGF_ROUND_SECONDS * NGF_SECOND_FRAMES);
-    run(100, 0, 0); ko_side(1);
+    run(100, 0, 0); ko_side(1); run(130, 0, 0);
     assert(m.team_active[1] == 2 && m.f[1].life == tester.life);
     run(100, 0, 0); ko_side(1);
     assert(m.state == NGF_M_ROUND_END && m.f[0].wins == 1 && m.f[1].life == 0);
@@ -438,6 +447,8 @@ static void test_team_lifecycle(void)
     ngf_team_set(&m, 0, &tester, &tester, NULL);
     ngf_team_set(&m, 1, &tester, &tester, NULL);
     run(100, 0, 0); m.f[0].life = 0; ko_side(1);
+    assert(m.state == NGF_M_ROUND_END && m.round_winner == 2 && m.team_next);
+    run(130, 0, 0);
     assert(m.team_active[0] == 1 && m.team_active[1] == 1 && m.state == NGF_M_INTRO);
     run(100, 0, 0); m.f[0].life = 0; ko_side(1);
     assert(m.round_winner == 2 && m.state == NGF_M_ROUND_END);
@@ -447,6 +458,8 @@ static void test_team_lifecycle(void)
     ngf_team_set(&m, 1, &tester, &other, NULL);
     run(100, 0, 0); m.f[0].life = 300; m.f[1].life = 100;
     m.state = NGF_M_TIME_UP; m.state_timer = 90; run(1, 0, 0);
+    assert(m.state == NGF_M_ROUND_END && m.team_life[1][0] == 0 && m.f[1].state == NGF_S_LOSE);
+    run(130, 0, 0);
     assert(m.team_active[1] == 1 && m.f[1].life == 900 && m.team_life[1][0] == 0);
 
     fight_at(180); ngf_match_set_mode(&m, NGF_MODE_TAG);

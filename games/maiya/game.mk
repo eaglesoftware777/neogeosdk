@@ -17,7 +17,9 @@ GAME_ENGINE_EXCLUDE = ng_particles
 # Her sound commands wait in a queue instead of her frame waiting on the Z80
 # (sdk/neogeo.h, NG_SOUND_QUEUE).
 # Raster bands (ng_raster.h): the savanna haze.
-GAME_ENGINE_DEFINES = -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_RASTER=1
+# The cast starts at sprite 108: 96..107 are the gate's landmark (maiya_game.c
+# SLOT_LANDMARK), its map kept in VRAM for the whole valley.
+GAME_ENGINE_DEFINES = -DNG_PALFX_SCREEN=1 -DNG_VRAM_DEFER=1 -DNG_SOUND_QUEUE=1 -DNG_RASTER=1 -DNG_SPR_CHAR_FIRST=108
 
 # Her frame doesn't fit in one vertical blank at -O0: the engine and her
 # scene are built at -O2 (the start-up sources stay at -O0).

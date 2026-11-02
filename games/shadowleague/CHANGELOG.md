@@ -3,6 +3,66 @@
 Shadow League Fighting's ROM sets ship with the NeoGeoSDK pre-releases and
 are numbered on their own: `_v1` and `_v2` with v1.7.5, `_v3` with v1.7.7.
 
+## v3.3.0: rounds that end, a score, a new HUD, victories and voices (2026-11-01, 2026-11-02, NeoGeoSDK v1.7.7)
+
+- **Every round ends.** Each round and each team bout ends with the
+  winner's victory pose over the loser (team bouts used to cut straight to
+  the next fighter). After the match the side that lost kneels in front of
+  the winner: the whole team after a team battle, one fighter otherwise.
+- **A score.** Points for every hit (more for a counter hit) and for the
+  damage done. After each round or bout the player wins, a bonus count:
+  LIFE BONUS, TIME BONUS and, when no blow got through, UNTOUCHED BONUS,
+  each counted up with a tick and a chime, then the total counted into the
+  score. A button skips to the end of the count.
+- **Untouched.** A round won without losing any life plays its own sting
+  with the "Untouched!" call.
+- **Two finales.** Three untouched wins in one match: TRIPLE UNTOUCHED, the
+  legend's fanfare, "Triple untouched! Legendary!" and 100,000 points. One
+  fighter beating a whole team of three: CLEAN SWEEP, a fanfare, "Clean
+  sweep!" and 50,000 points. Both come before THE NIGHT IS YOURS.
+- **A new HUD.** Each fighter's painted face, framed, at the outer end of
+  the life bar; short names; the team's members (the one fighting lit, the
+  beaten struck out); the striker's calls left as diamonds; a guard gauge
+  that shows only while the guard is worn down; the score on the top row,
+  with INSERT COIN or PUSH START blinking on a side the CPU plays. The
+  one-letter meters and the ASST, T 1/3 and POWER labels are gone.
+- **Cleaner arenas.** Every arena is fitted to 32 palettes instead of 16,
+  tile by tile and refined, after its single-pixel grain is cleaned: skies,
+  light beams and wet floors keep their gradients instead of breaking into
+  blocks.
+- **More combos.** A normal that may cancel goes into any of the fighter's
+  specials or supers once it has connected (hit or guarded), and a special
+  that hits goes into a super (the stock is still paid), beside each
+  fighter's own cancel routes.
+- **Movement.** A jump pushes off from a crouch, and a landing settles in a
+  short squat.
+- **A victory for every fighter.** All 44 fighters have their own painted
+  victory: seven new frames, the last two looping while the winner holds
+  the pose.
+- **Smoother moves.** Fourteen new in-between frames per fighter: the
+  wind-up and follow-through of each special and of the super, and extra
+  frames in the heavy punch, heavy kick, light kick, crouching heavy kick,
+  throw, landing and dash. They split the time of the frames they sit
+  between, so every move keeps its timing.
+- **Their own voices.** Every fighter has their own attack shout, heavy-blow
+  shout, throw call, hurt cry, K.O. cry and a win quote spoken over the
+  victory. Twenty call their specials, super, heavy blow, throw and win in
+  their own language: Japanese, Mandarin, French, Brazilian Portuguese,
+  Spanish, Russian and Ukrainian, and Hindi standing in for Malayalam and
+  Urdu. The others speak English. The shared "Hyah!" kiai
+  stays: it takes turns with the fighter's own shout on blows and when hit;
+  the power-up is always the kiai, the K.O. always the fighter's own cry.
+  Win quotes are said rather than shouted, and in full.
+- **Steadier frame rate.** Round starts, bout starts and victories no longer
+  stop the game for six to eight frames while the music changes;
+  special-move inputs are read through a direction table; the referee's
+  fade at the round intro and the clearing of text rows cost a fraction of
+  what they did (those two alone cut the frames that ran long in a replay
+  of a five-minute session from 163 to 99).
+- **Under the hood.** The C ROM is 32 MiB (two 16 MiB chips) to hold the
+  new frames, and the fighters' voices use the driver's command for
+  samples past 255.
+
 ## v3.2.1: cleaner fights (2026-10-31)
 
 - **No more frozen fighters after a throw.** A fighter held in a throw is

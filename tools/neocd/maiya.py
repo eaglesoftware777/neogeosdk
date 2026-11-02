@@ -114,7 +114,9 @@ def build_maiya(out, cc, plus, cdda, wlaz80, wlalink):
              '-I' + str(GAME), '-I' + str(GAME / 'scenes'), '-I' + str(GAME / 'artbox'), '-I' + str(GAME / 'artbox/generated'),
              '-I' + str(CD), '-DNG_PLATFORM_CD=1', '-DNG_CD_MAIYA=1',
              '-DNG_CD_GAME_ID=0x0780', '-DNG_PALFX_SCREEN=1', '-DNG_VRAM_DEFER=1',
-             '-DNG_SOUND_QUEUE=1', '-DNG_SPRITE_BLANK_TILE=0x7FFFu']
+             '-DNG_SOUND_QUEUE=1', '-DNG_SPRITE_BLANK_TILE=0x7FFFu',
+             # as games/maiya/game.mk: sprites 96..107 hold the gate's landmark
+             '-DNG_SPR_CHAR_FIRST=108']
     modules = ('ng_defs ng_properties ng_game_time ng_timers ng_progress ng_status ng_game_events '
                'ng_level ng_vram ng_sprite_window ng_art_asset ng_palette_assets ng_bg ng_fix '
                'ng_sprite_group ng_actions ng_chars ng_npcs ng_physics ng_border_constraints '

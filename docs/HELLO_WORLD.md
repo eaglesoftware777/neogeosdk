@@ -1,6 +1,6 @@
 # Hello World — your first Neo Geo ROM
 
-**Eagle Software · Neo Geo SDK v1.7.0**
+**Eagle Software · Neo Geo SDK v1.7.7**
 
 This tutorial takes you from a clean checkout to a running ROM that prints
 text on screen and plays a sample when the player presses **A**. It uses the

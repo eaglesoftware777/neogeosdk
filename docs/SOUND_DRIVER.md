@@ -264,6 +264,7 @@ matching P1/M1 pair; the experimental C driver does not implement this protocol.
 | `$0D` | Stop ADPCM-B only |
 | `$0E` *n* | Live tempo divisor |
 | `$0F` | Stop MML, SSG and FM sequences |
+| `$10` *n* | ADPCM-A sample 256 + *n* — samples 256–511 (`playSFXWide()`) |
 | `$11` | Cancel fade, restore base volumes |
 | `$12` *n* | Fade-in speed |
 | `$13` *n* | FM volume (low nibble, 0–15) |

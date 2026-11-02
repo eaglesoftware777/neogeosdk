@@ -28,8 +28,10 @@ def main():
     result=[]
     for entry in slf_voices.plan(slf_voices.load_fighters()):
         who=entry.get('fighter');locale=LOCALES.get(who)
-        if not locale or (a.only and who not in a.only):continue
-        key=entry['key'].rsplit('_',1)[-1];text=locale['lines'][key]
+        if not locale or locale.get('engine','kokoro')!='kokoro' or (a.only and who not in a.only):continue
+        key=entry['key'].rsplit('_',1)[-1]
+        if key not in locale['lines']:continue          # (the shared grunts stay as recorded)
+        text=locale['lines'][key]
         lang=locale['language'];phonetic=False
         if lang=='ja':text,_=japanese(text);phonetic=True
         elif lang=='zh':text,_=chinese(text);phonetic=True
@@ -39,6 +41,15 @@ def main():
         path=slf_voices.VOICES/(entry['key']+'.wav');write(path,pcm)
         item={'key':entry['key'],'fighter':who,'language':lang,'voice':locale['voice'],'text':locale['lines'][key],'duration':len(pcm)/18519,'peak':float(np.abs(pcm).max())}
         result.append(item);print(json.dumps(item,ensure_ascii=False),flush=True)
-    (slf_voices.VOICES/'localized-recordings.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+    write_record(result)
+
+
+def write_record(result):
+    """localized-recordings.json: every localized line, this engine's replacing its earlier entries."""
+    path=slf_voices.VOICES/'localized-recordings.json'
+    keys={r['key'] for r in result}
+    old=json.loads(path.read_text()) if path.exists() else []
+    merged=[r for r in old if r['key'] not in keys]+result
+    path.write_text(json.dumps(sorted(merged,key=lambda r:r['key']),ensure_ascii=False,indent=2)+'\n')
 
 if __name__=='__main__':main()

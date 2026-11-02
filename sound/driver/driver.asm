@@ -381,6 +381,8 @@ execute_command:
     jp z,exec_p_ssg_bpm
     cp 20
     jp z,exec_p_adpcmb_repeat
+    cp 21
+    jp z,exec_p_adpcma_sample_hi
     ret
 exec_p_tempo:
     ld a,c
@@ -392,6 +394,9 @@ exec_p_tempo:
 exec_p_adpcma_sample:
     ld a,c
     jp play_adpcma_index
+exec_p_adpcma_sample_hi:
+    ld a,c
+    jp play_adpcma_index_hi
 exec_p_fadeout:
     ld a,c
     ld (VAR_FADE_SPEED),a
@@ -929,6 +934,8 @@ exec_normal:
     jp z,set_adpcmb_pan_wait
     cp $16 ; ADPCM-A full sample index parameter follows
     jp z,set_adpcma_sample_wait
+    cp $10 ; ADPCM-A sample 256 + parameter follows (samples 256..511)
+    jp z,set_adpcma_sample_hi_wait
     cp $17 ; FM LFO enable+rate parameter follows
     jp z,set_fm_lfo_wait
     cp $18 ; ADPCM-B repeat for subsequent samples (0/1)
@@ -1036,6 +1043,12 @@ set_adpcmb_pan_wait:
 
 set_adpcma_sample_wait:
     ld a,16
+    ld (VAR_WAIT_TEMPO),a
+    ld (VAR_PARAM_MODE),a
+    ret
+
+set_adpcma_sample_hi_wait:
+    ld a,21
     ld (VAR_WAIT_TEMPO),a
     ld (VAR_PARAM_MODE),a
     ret
@@ -1569,9 +1582,20 @@ play_fm_index:
 play_adpcma_cmd:
     sub SFX_A_BASE
 play_adpcma_index:
-    cp ADPCMA_COUNT
-    ret nc
-    call get_sample_ptr
+    ld e,a
+    ld d,0
+    jr play_adpcma_de
+; samples 256..511: A is the index less 256
+play_adpcma_index_hi:
+    ld e,a
+    ld d,1
+play_adpcma_de:
+    ld hl,ADPCMA_COUNT          ; (a 16-bit count: a bank may hold up to 512)
+    or a
+    sbc hl,de
+    ret c
+    ret z
+    call get_sample_ptr_de
     push hl
     push bc
     ld a,(VAR_ADPCMA_CH)
@@ -1650,8 +1674,12 @@ play_adpcmb_index:
     cp ADPCMB_COUNT
     ret nc
     push af
-    add a,ADPCMA_COUNT
-    call get_sample_ptr
+    ld e,a                      ; the B samples follow the A ones: entry ADPCMA_COUNT + A
+    ld d,0
+    ld hl,ADPCMA_COUNT
+    add hl,de
+    ex de,hl
+    call get_sample_ptr_de
     push hl
 
     ; FIX: Full ADPCM-B reset sequence before playback
@@ -1768,6 +1796,7 @@ play_fm_demo:
 get_sample_ptr:
     ld e,a
     ld d,0
+get_sample_ptr_de:              ; DE: the sample's index, 0..511
     ld hl,sample_address_table
     add hl,de
     add hl,de

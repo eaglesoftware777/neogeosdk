@@ -2,10 +2,12 @@
 """
 Write the Windows launchers of a MAME test folder (C:\\mame\\neogeosdk): play,
 start at a level, the three video steps and MENU.bat, for every game
-installed under its tests\\ folder.
+installed under its tests\\ folder, and its Neo Geo CD disc when it has one.
 
     python3 tools/mame_bats.py --dest /mnt/c/mame/neogeosdk
     python3 tools/mame_bats.py --dest /mnt/c/mame/neogeosdk --describe nosignal mvs out/game
+    python3 tools/mame_bats.py --dest /mnt/c/mame/neogeosdk \\
+        --cd maiya build/neocd/maiya/bincue/maiya.cue --cd-bios eagle_cd_cdz.rom
 
 The launchers all call bin\\ngsdk.bat, so each one stays a single line:
 
@@ -16,6 +18,17 @@ The launchers all call bin\\ngsdk.bat, so each one stays a single line:
     2_export_<game>_<mode>_avi.bat       video step 2: replay them into a raw AVI
     3_save_<game>_<mode>_mp4.bat         video step 3: the AVI to a 1080p MP4 for YouTube
     levels\\<game>\\<mode>_<level>_NN.bat  start a game at that level
+    run_<game>_cd_eagle.bat              the Neo Geo CD disc with EagleBIOS-CD
+    run_<game>_cd_stock.bat              the same disc with your own stock CDZ firmware
+    live\\live_<game>_<mvs|aes|cd_eagle|cd_stock>.bat
+                                         play with the live log (live\\README-LIVE.txt)
+
+--cd GAME CUE copies a disc (the .cue and the files it names, best the
+single BIN/CUE of tools/neocd/bincue.py) to tests\\<game>\\cd\\<game>.cue.
+--cd-bios takes EagleBIOS-CD as built (eagle_cd_cdz.rom, CPU byte order) and
+puts it in MAME's order, with the SDK's own LO data, in
+tests\\cd-bios\\eagle\\neocdz. The stock launchers read neocdz from MAME's own
+roms folder; no stock firmware is copied or supplied.
 
 --describe records what the level launchers need from one installed build
 (where a few variables of that build live, and the layout of its structures,
@@ -239,6 +252,8 @@ rem ngsdk-bats: written by tools/mame_bats.py (NeoGeoSDK); change the tool, not 
 rem
 rem   ngsdk.bat play   GAME mvs^|aes [sharp^|crt^|smooth] [unibios]
 rem   ngsdk.bat level  GAME mvs^|aes N [sharp^|crt^|smooth]   begin at level N
+rem   ngsdk.bat cd     GAME eagle^|stock [sharp^|crt^|smooth]  the game's Neo Geo CD disc
+rem   ngsdk.bat live   GAME mvs^|aes^|cd-eagle^|cd-stock   play with the live log
 rem   ngsdk.bat record GAME mvs^|aes [N]   video step 1: play; MAME records the inputs
 rem   ngsdk.bat avi    NAME                video step 2: replay inp\NAME.inp into an AVI
 rem   ngsdk.bat mp4    NAME                video step 3: that AVI to a 1080p MP4
@@ -257,6 +272,8 @@ set "SNAPDIR=%HERE%\snap"
 set "RC=0"
 if /i "%~1"=="play" goto play
 if /i "%~1"=="level" goto level
+if /i "%~1"=="cd" goto cd
+if /i "%~1"=="live" goto live
 if /i "%~1"=="record" goto record
 if /i "%~1"=="avi" goto avi
 if /i "%~1"=="mp4" goto mp4
@@ -297,6 +314,75 @@ pushd "%MAMEDIR%"
 "%MAME_EXE%" %ARGS% %MDISPLAY% -autoboot_script "%LUA%" %NGSDK_MAME_ARGS%
 set "RC=%ERRORLEVEL%"
 popd
+goto done
+
+rem -------------------------------------------------------------------- cd
+rem The disc (tests\GAME\cd\GAME.cue) on a CDZ: eagle is EagleBIOS-CD from
+rem tests\cd-bios\eagle, stock is the player's own neocdz in MAME's roms folder.
+rem Each firmware keeps its own settings and saves.
+:cd
+call :cd_setup "%~2" "%~3" || goto failed
+call :display "%~4"
+call :cd_args
+call :title "%GAME% Neo Geo CD, %FILTER% picture" "%BIOS%"
+pushd "%MAMEDIR%"
+"%MAME_EXE%" %ARGS% %MDISPLAY% %NGSDK_MAME_ARGS%
+set "RC=%ERRORLEVEL%"
+popd
+goto done
+
+rem ------------------------------------------------------------------ live
+rem Play while live\ngsdk_live.lua writes live\sessions\<time>_<game>_<mode>\:
+rem live.log (events, also added to live\events.log), stats.csv (the game's
+rem frame rate every second), snap\, state\ (a save state at every M mark),
+rem and session.inp with start\ (the settings and saves it began from), so
+rem the session can be replayed exactly.
+:live
+set "KIND=%~3"
+if /i "%KIND%"=="cd-eagle" goto live_cd
+if /i "%KIND%"=="cd-stock" goto live_cd
+call :setup "%~2" "%~3" "" || goto failed
+call :args
+set "LIVEMODE=%MODE%"
+set "WATCH=%HERE%\live\watch\%GAME%_%MODE%.lua"
+call :p1hash
+goto live_go
+:live_cd
+call :cd_setup "%~2" "%KIND:~3%" || goto failed
+call :cd_args
+set "LIVEMODE=cd_%PROFILE%"
+set "WATCH="
+set "P1HASH="
+:live_go
+call :stamp
+set "SESSION=%HERE%\live\sessions\%STAMP%_%GAME%_%LIVEMODE%"
+mkdir "%SESSION%\start\cfg" "%SESSION%\start\nvram" "%SESSION%\snap" "%SESSION%\state"
+if exist "%CFG%\" xcopy /e /i /q /y "%CFG%" "%SESSION%\start\cfg" >nul
+if exist "%NVRAM%\" xcopy /e /i /q /y "%NVRAM%" "%SESSION%\start\nvram" >nul
+if /i "%MODE%"=="aes" copy /y "%CARD%" "%SESSION%\start\memcard.bin" >nul
+>"%SESSION%\session.txt" echo game=%GAME%
+>>"%SESSION%\session.txt" echo mode=%LIVEMODE%
+>>"%SESSION%\session.txt" echo p1=%P1HASH%
+>>"%SESSION%\session.txt" echo disc=%DISC%
+>>"%SESSION%\session.txt" echo date=%DATE% %TIME%
+>>"%SESSION%\session.txt" echo args=%ARGS%
+set "NGSDK_LIVE_DIR=%SESSION%"
+set "NGSDK_LIVE_GAME=%GAME%"
+set "NGSDK_LIVE_MODE=%LIVEMODE%"
+set "NGSDK_LIVE_EVENTS=%HERE%\live\events.log"
+set "NGSDK_LIVE_WATCH="
+if defined WATCH if exist "%WATCH%" set "NGSDK_LIVE_WATCH=%WATCH%"
+call :display ""
+call :title "LIVE TEST: %GAME% %LIVEMODE%, %FILTER% picture" "%BIOS%"
+echo   Play as usual. Press M whenever something is wrong: a mark saves a
+echo   snapshot and a save state, and goes into the log with the time.
+echo   The session goes to %SESSION%
+pushd "%MAMEDIR%"
+"%MAME_EXE%" %ARGS% %MDISPLAY% -snapshot_directory "%SESSION%\snap" -snapname %%i -state_directory "%SESSION%\state" -input_directory "%SESSION%" -record session.inp -autoboot_script "%HERE%\live\ngsdk_live.lua" %NGSDK_MAME_ARGS%
+set "RC=%ERRORLEVEL%"
+popd
+echo.
+echo   Session saved: %SESSION%
 goto done
 
 rem ---------------------------------------------------------------- record
@@ -458,6 +544,47 @@ if not exist "%HERE%\tests\aes\" mkdir "%HERE%\tests\aes"
 if not exist "%CARD%" copy /y "%~dp0memcard-blank.bin" "%CARD%" >nul
 set "P1="
 for %%F in ("%DATA%\roms\%GAME%\*-p1.p1") do set "P1=%%~fF"
+exit /b 0
+
+:cd_setup
+set "GAME=%~1"
+set "PROFILE=%~2"
+if /i not "%PROFILE%"=="stock" set "PROFILE=eagle"
+set "MODE=cd"
+set "P1="
+set "DISC=%HERE%\tests\%GAME%\cd\%GAME%.cue"
+if not exist "%DISC%" goto cd_no_disc
+set "DATA=%HERE%\tests\%GAME%\cd\%PROFILE%"
+set "ROMS=%HERE%\tests\cd-bios\eagle"
+set "BIOS=EagleBIOS-CD"
+if /i "%PROFILE%"=="stock" set "ROMS=%MAMEDIR%\roms"
+if /i "%PROFILE%"=="stock" set "BIOS=your own stock CDZ firmware, %MAMEDIR%\roms\neocdz"
+if not exist "%ROMS%\neocdz\neocd.bin" goto cd_no_bios
+if not exist "%ROMS%\neocdz\000-lo.lo" goto cd_no_bios
+set "CFG=%DATA%\cfg"
+set "NVRAM=%DATA%\nvram"
+for %%D in (cfg nvram state) do if not exist "%DATA%\%%D\" mkdir "%DATA%\%%D"
+exit /b 0
+
+:cd_no_disc
+echo.
+echo   No Neo Geo CD disc for %GAME%: %DISC% is missing.
+exit /b 1
+
+:cd_no_bios
+echo.
+echo   The %PROFILE% CD firmware is missing: %ROMS%\neocdz needs neocd.bin and 000-lo.lo.
+if /i "%PROFILE%"=="stock" echo   Put your own Neo Geo CDZ system ROM files there; none is supplied.
+exit /b 1
+
+:cd_args
+set ARGS=neocdz -bios official -noreadconfig -skip_gameinfo -rompath "%ROMS%" -cdrom "%DISC%" -cfg_directory "%CFG%" -nvram_directory "%NVRAM%" -state_directory "%DATA%\state" -snapshot_directory "%SNAPDIR%" -noautosave
+exit /b 0
+
+:stamp
+set "STAMP="
+for /f "delims=" %%T in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss"') do set "STAMP=%%T"
+if not defined STAMP set "STAMP=session%RANDOM%"
 exit /b 0
 
 :not_installed
@@ -774,7 +901,7 @@ def esc(text):
     return text
 
 
-def menu(found):
+def menu(found, cds=()):
     out = [r"""@echo off
 rem ngsdk-bats: written by tools/mame_bats.py (NeoGeoSDK); change the tool, not this file.
 rem The menu of every launcher in this folder: games, levels, video steps, settings.
@@ -822,6 +949,9 @@ echo.
             if mode in modes:
                 opts.append((f"Play {mode.upper()}" + (" (arcade)" if mode == "mvs" else " (console)"),
                              f'call "%HERE%\\run_{game}_{mode}.bat"'))
+        if game in cds:
+            opts.append(("Play the Neo Geo CD disc (EagleBIOS-CD)", f'call "%HERE%\\run_{game}_cd_eagle.bat"'))
+            opts.append(("Play the Neo Geo CD disc (your stock CDZ firmware)", f'call "%HERE%\\run_{game}_cd_stock.bat"'))
         for mode in MODES:
             if mode in modes:
                 opts.append((f"Play {mode.upper()} with the CRT picture", f'call "%HERE%\\run_{game}_{mode}_scanlines.bat"'))
@@ -831,7 +961,7 @@ echo.
         for mode in MODES:
             if mode in modes:
                 opts.append((f"Play {mode.upper()} with UniBIOS 4.0", f'call "%HERE%\\run_{game}_{mode}_unibios.bat"'))
-        choice_keys = "123456789"[:len(opts)]
+        choice_keys = "123456789CDEFG"[:len(opts)]     # B is Back
         for k, (label, _) in zip(choice_keys, opts):
             out.append(f"echo     {k}  {label}\n")
         out.append("echo     B  Back\necho.\n")
@@ -1001,6 +1131,9 @@ in it. Every launcher below can also be started on its own.
   run_<game>_mvs.bat, run_<game>_aes.bat   play (MVS arcade, AES console)
   run_<game>_<mode>_scanlines.bat          play with the CRT picture
   run_<game>_<mode>_unibios.bat            play with UniBIOS 4.0 instead of EagleBIOS
+  run_<game>_cd_eagle.bat                  the Neo Geo CD disc with EagleBIOS-CD
+  run_<game>_cd_stock.bat                  the same disc with your own stock CDZ firmware
+  live\live_<game>_<mode>.bat              play with a live log for debugging (live\README-LIVE.txt)
   levels\<game>\<mode>_<level>_NN.bat      begin a game at that level
   1_record_<game>_<mode>_inp.bat           video step 1: play while MAME records
   2_export_<game>_<mode>_avi.bat           video step 2: the recording to an AVI
@@ -1033,12 +1166,290 @@ Each game's ROMs, settings and saves are in tests\<game>\<mvs|aes>\ (Maiya's
 in tests\mvs and tests\aes), EagleBIOS in tests\<game>\bios\, the AES memory
 card in tests\aes\memcard.bin. UniBIOS (menu only) is read from roms\neogeo
 and roms\aes.
+
+Neo Geo CD: a game's disc is tests\<game>\cd\<game>.cue with one .bin (the
+same BIN/CUE an SD loader or a CD burner takes), its settings and saves in
+tests\<game>\cd\eagle and tests\<game>\cd\stock. EagleBIOS-CD and the SDK's
+own LO data are in tests\cd-bios\eagle\neocdz. The stock launchers read
+neocd.bin and 000-lo.lo from MAME's own roms\neocdz folder: supply your own,
+none is included. Loading takes about 30 seconds of disc reads.
 """
+
+
+LIVE_LUA = r"""-- ngsdk-bats: the live log of a test session, written by tools/mame_bats.py.
+-- live\sessions\<session>\ gets live.log (events), stats.csv (one row a
+-- second), snap\ and state\ (snapshot and save state at every M mark); every
+-- event also goes to live\events.log, one file to follow during play.
+local machine = manager.machine
+local mem = machine.devices[":maincpu"].spaces["program"]
+local dir = os.getenv("NGSDK_LIVE_DIR") or "."
+local game = os.getenv("NGSDK_LIVE_GAME") or "game"
+local mode = os.getenv("NGSDK_LIVE_MODE") or "?"
+local FRAMES = 0x100020     -- waitVbl() counts the game's frames here (sdk/neogeolib.c)
+local USER_MODE = 0x10FDAF  -- BIOS_USER_MODE: 0 start-up, 1 title/attract, 2 a game being played
+local MODES = {[0] = "start-up", [1] = "title/attract", [2] = "game"}
+NGSDK_LIVE = {}             -- the notifier subscriptions: a global, so they are never collected
+
+local log = io.open(dir .. "\\live.log", "a")
+local all = os.getenv("NGSDK_LIVE_EVENTS") and io.open(os.getenv("NGSDK_LIVE_EVENTS"), "a")
+local csv = io.open(dir .. "\\stats.csv", "a")
+csv:write("wall,t,game_fps,user_mode,stage,snapshot\n")
+
+local watch
+if os.getenv("NGSDK_LIVE_WATCH") then
+    local chunk = loadfile(os.getenv("NGSDK_LIVE_WATCH"))
+    local ok, w = pcall(chunk or error)
+    if ok then watch = w end
+end
+
+local function clock()
+    local s = math.floor(machine.time:as_double())
+    return string.format("%s %3d:%02d", os.date("%H:%M:%S"), s // 60, s % 60)
+end
+
+local function event(kind, text)
+    local line = string.format("%s %-6s %s", clock(), kind, text)
+    if log then log:write(line, "\n") log:flush() end
+    if all then all:write(game, " ", mode, " ", line, "\n") all:flush() end
+end
+
+local stage, stage_text = nil, "-"
+local function read_stage()
+    if not watch then return nil end
+    local ok, s = pcall(watch.stage, mem)
+    if ok then return s end
+end
+
+local shots = 0
+local function snapshot()
+    machine.video:snapshot()
+    shots = shots + 1
+    return string.format("snap\\%04d.png", shots - 1)
+end
+
+local vbl, last, sec_frames = 0, nil, nil
+local seen, stall, stalled, stalls = false, 0, false, 0
+local umode, fps, hist, norm = nil, 0, {}, nil
+local slow, slow_min, slow_sum, slow_total, slow_shot, slow_first = 0, 999, 0, 0, -1000, 0
+local played, marks, key_down, next_shot = 0, 0, false, 60
+local key = machine.input:code_from_token("KEYCODE_M")
+local test_mark = tonumber(os.getenv("NGSDK_LIVE_TEST_MARK") or "")
+
+local function mark()
+    marks = marks + 1
+    local shot = snapshot()
+    machine:save("mark_" .. marks)
+    event("MARK", string.format("#%d  %s  stage %s, %d fps last second  (%s, state mark_%d)",
+        marks, MODES[umode] or tostring(umode), stage_text, fps, shot, marks))
+    machine:popmessage(string.format("Mark %d saved", marks))
+end
+
+local function second()
+    local f = mem:read_u32(FRAMES)
+    fps = sec_frames and ((f - sec_frames) & 0xFFFFFFFF) or 0
+    if fps > 1000 then fps = 0 end
+    sec_frames = f
+    local shot = ""
+    if umode == 2 then
+        played = played + 1
+        if played >= next_shot then shot = snapshot() next_shot = played + 60 end
+    end
+    csv:write(string.format("%s,%d,%d,%d,%s,%s\n", os.date("%H:%M:%S"),
+        math.floor(machine.time:as_double()), fps, umode or -1, stage_text, shot))
+    csv:flush()
+    if not seen or fps == 0 then return end
+    hist[fps] = (hist[fps] or 0) + 1
+    if not norm or hist[fps] > hist[norm] then norm = fps end
+    -- one slow second (a scene change, a load) is a DIP; two or more in a row
+    -- are a SLOW stretch, with a snapshot at its start
+    if norm and fps <= norm - 3 then
+        slow, slow_sum, slow_total = slow + 1, slow_sum + fps, slow_total + 1
+        if fps < slow_min then slow_min = fps end
+        if slow == 1 then slow_first = fps end
+        if slow == 2 then
+            local where = ""
+            if machine.time:as_double() - slow_shot > 15 then
+                where = "  (" .. snapshot() .. ")"
+                slow_shot = machine.time:as_double()
+            end
+            event("SLOW", string.format("%d, %d fps (normally %d)  %s, stage %s%s", slow_first, fps, norm,
+                MODES[umode] or "?", stage_text, where))
+        end
+    elseif slow > 0 then
+        if slow == 1 then
+            event("DIP", string.format("%d fps for one second (normally %d)  %s, stage %s", slow_first, norm,
+                MODES[umode] or "?", stage_text))
+        else
+            event("SLOW", string.format("over after %d s: lowest %d fps, average %d", slow, slow_min,
+                slow_sum // slow))
+        end
+        slow, slow_min, slow_sum = 0, 999, 0
+    end
+end
+
+local function frame()
+    vbl = vbl + 1
+    local um = mem:read_u8(USER_MODE)
+    if um ~= umode then
+        if umode == 2 then event("GAME", "the game ended: back to " .. (MODES[um] or tostring(um))) end
+        if um == 2 then event("GAME", "a game started") end
+        if um ~= 2 and umode ~= 2 then event("MODE", MODES[um] or tostring(um)) end
+        umode = um
+    end
+    if um == 2 and watch then
+        local s = read_stage()
+        if s ~= stage then
+            stage = s
+            stage_text = s and ((watch.names and watch.names[s + 1]) and
+                string.format("%d (%s)", s + 1, watch.names[s + 1]) or tostring(s + 1)) or "-"
+            if s then event("STAGE", stage_text) end
+        end
+    end
+    local f = mem:read_u32(FRAMES)
+    if last and f ~= last then
+        local step = (f - last) & 0xFFFFFFFF
+        if step >= 1 and step <= 3 then seen = true end   -- counting, not RAM being set up
+        if stalled then
+            event("STALL", string.format("over: the game runs again after %.1f s", stall / 59.19))
+            stalled = false
+        end
+        stall = 0
+    elseif last then
+        stall = stall + 1
+        if seen and um ~= 0 and not stalled and stall == 120 then
+            stalled, stalls = true, stalls + 1
+            local shot = snapshot()
+            machine:save("stall_" .. stalls)
+            event("STALL", string.format("no game frame for 2 s: a hang, or a disc load on CD  %s, stage %s  (%s, state stall_%d)",
+                MODES[um] or tostring(um), stage_text, shot, stalls))
+        end
+    end
+    last = f
+    if vbl % 60 == 0 then second() end
+    local down = machine.input:code_pressed(key)
+    if down and not key_down then mark() end
+    key_down = down
+    if test_mark and machine.time:as_double() >= test_mark then test_mark = nil mark() end
+end
+
+local resets = 0
+event("START", string.format("%s %s, %s %s%s", game, mode, emu.app_name(), emu.app_version(),
+    watch and "" or "  (no stage watch for this build)"))
+NGSDK_LIVE[#NGSDK_LIVE + 1] = emu.add_machine_frame_notifier(frame)
+NGSDK_LIVE[#NGSDK_LIVE + 1] = emu.add_machine_reset_notifier(function()
+    resets = resets + 1
+    if resets > 1 then event("RESET", "machine reset (F3, or the watchdog)") end
+end)
+NGSDK_LIVE[#NGSDK_LIVE + 1] = emu.add_machine_stop_notifier(function()
+    if slow > 1 then event("SLOW", string.format("over after %d s: lowest %d fps", slow, slow_min)) end
+    event("END", string.format("%d:%02d in games, %d slow seconds, %d stalls, %d marks%s",
+        played // 60, played % 60, slow_total, stalls, marks,
+        seen and "" or "  (this build never counted a game frame: no frame rates)"))
+    if log then log:close() end
+    if all then all:close() end
+    csv:close()
+end)
+"""
+
+# Where each game keeps its stage (from levels.json): fn(mem) -> 0-based stage or nil.
+LIVE_STAGE = {
+    "maiya": "function(mem) return mem:read_u8({mg} + {off_stage}) end",
+    "skylance": "function(mem) return mem:read_u8({s_stage}) end",
+    "sevenwonders": """function(mem)
+        local at = mem:read_u32({s_p} + {off_level}) - {sw_levels}
+        if at >= 0 and at < {count} * {level_size} then return at // {level_size} end
+    end""",
+    "nosignal": """function(mem)
+        if not W.of then
+            W.of = {{}}
+            for i = 0, {count} - 1 do
+                local st = mem:read_u32({ns_stages} + i * {info_size} + {off_info_stage})
+                W.of[mem:read_u32(st + {off_waves})] = i
+            end
+        end
+        return W.of[mem:read_u32({s_stage} + {off_waves})]
+    end""",
+}
+
+
+def live_watch(game, info):
+    """The live log's stage watch for one build, or None."""
+    if not info or game not in LIVE_STAGE:
+        return None
+    values = dict(info["symbols"])
+    values.update(info["consts"])
+    names = ", ".join('"' + n.replace("\\", "\\\\").replace('"', '\\"') + '"' for n in info["names"])
+    return (f"-- {MARK}: where {GAMES[game]['title']} keeps its stage, for this build "
+            f"(P1 {info.get('p1_sha256', '')[:16]}).\n"
+            f"W = {{names = {{{names}}}}}\n"
+            f"W.stage = {LIVE_STAGE[game].format(**values)}\n"
+            f"return W\n")
+
+
+LIVE_README = r"""Live test sessions
+==================
+
+live_<game>_mvs.bat, live_<game>_aes.bat, live_<game>_cd_eagle.bat and
+live_<game>_cd_stock.bat play a game as usual (your settings, saves and
+controls) while ngsdk_live.lua keeps a log for debugging.
+
+Press M on the keyboard whenever something looks or plays wrong: a mark
+saves a snapshot and a save state and writes the time, the stage and the
+frame rate to the log ("Mark N saved" shows on screen).
+
+Each session is a folder in sessions\ (date, time, game, mode):
+
+  live.log      what happened: game start/end, stages, marks, slowdowns
+                (the game's own frame rate under its normal rate), stalls
+                (no game frame for 2 s: a hang, or loading on CD), resets
+  stats.csv     the game's frame rate every second, with mode and stage
+  snap\         snapshots: marks, slowdowns, stalls, one a minute in play
+  state\        save states at the marks and stalls
+  session.inp   every input, and start\ the settings and saves it began
+                from, so the session can be replayed exactly on this build
+
+events.log here collects the events of every session in one file.
+"""
+
+
+def cd_installed(dest):
+    """The games with a disc in tests\\<game>\\cd."""
+    return [g for g in GAMES if (Path(dest) / "tests" / g / "cd" / f"{g}.cue").is_file()]
+
+
+def install_cd(dest, game, cue):
+    """Copy a disc's .cue (as <game>.cue) and the files it names into tests\\<game>\\cd."""
+    cue = Path(cue)
+    names = re.findall(r'^\s*FILE\s+"([^"]+)"', cue.read_text(), re.M)
+    if not names or any("/" in n or "\\" in n for n in names):
+        raise SystemExit(f"mame_bats: {cue}: want a cue whose files lie beside it (tools/neocd/bincue.py)")
+    out = Path(dest) / "tests" / game / "cd"
+    out.mkdir(parents=True, exist_ok=True)
+    for name in names:
+        data = (cue.parent / name).read_bytes()
+        (out / name).write_bytes(data)
+    (out / f"{game}.cue").write_bytes(cue.read_bytes())
+    print(f"mame_bats: {game} disc -> {out} ({', '.join(names)})")
+
+
+def install_cd_bios(dest, rom):
+    """EagleBIOS-CD (CPU byte order) to MAME's word order, with the SDK's LO data."""
+    data = Path(rom).read_bytes()
+    if len(data) != 0x80000:
+        raise SystemExit(f"mame_bats: {rom}: EagleBIOS-CD is 512 KiB")
+    swapped = bytearray(len(data))
+    swapped[0::2], swapped[1::2] = data[1::2], data[0::2]
+    out = Path(dest) / "tests" / "cd-bios" / "eagle" / "neocdz"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "neocd.bin").write_bytes(bytes(swapped))
+    (out / "000-lo.lo").write_bytes((ROOT / "bios" / "000-lo.lo").read_bytes())
+    print(f"mame_bats: EagleBIOS-CD -> {out} (neocd.bin sha256 {hashlib.sha256(swapped).hexdigest()[:16]})")
 
 
 def write_all(dest):
     dest = Path(dest)
     found = installed(dest)
+    cds = cd_installed(dest)
     if not found:
         raise SystemExit(f"mame_bats: no games installed under {dest / 'tests'}")
     owned_file = dest / "bin" / "owned.txt"
@@ -1069,7 +1480,23 @@ def write_all(dest):
                     slug = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_")
                     put(f"levels/{game}/{mode}_{term}_{i:02d}_{slug}.bat",
                         one_liner(f'call "%~dp0..\\..\\bin\\ngsdk.bat" level {game} {mode} {i} %*', f"{GAMES[game]['title']}: {name}."))
-    put("MENU.bat", menu(found))
+    for game in cds:
+        put(f"run_{game}_cd_eagle.bat", one_liner(f'call "%~dp0bin\\ngsdk.bat" cd {game} eagle %*', "Neo Geo CD, EagleBIOS-CD."))
+        put(f"run_{game}_cd_stock.bat", one_liner(f'call "%~dp0bin\\ngsdk.bat" cd {game} stock %*', "Neo Geo CD, your stock CDZ firmware."))
+    put("live/ngsdk_live.lua", LIVE_LUA)
+    put("live/README-LIVE.txt", LIVE_README)
+    for game, modes in found.items():
+        for mode, (data, info) in modes.items():
+            put(f"live/live_{game}_{mode}.bat",
+                one_liner(f'call "%~dp0..\\bin\\ngsdk.bat" live {game} {mode} %*', "Play with the live log."))
+            watch = live_watch(game, info)
+            if watch:
+                put(f"live/watch/{game}_{mode}.lua", watch)
+    for game in cds:
+        for profile in ("eagle", "stock"):
+            put(f"live/live_{game}_cd_{profile}.bat",
+                one_liner(f'call "%~dp0..\\bin\\ngsdk.bat" live {game} cd-{profile} %*', "Play with the live log."))
+    put("MENU.bat", menu(found, cds))
     put("README-LAUNCHERS.txt", README)
     for stale in sorted(before - set(written)):
         p = dest / stale
@@ -1081,7 +1508,8 @@ def write_all(dest):
     crlf(owned_file, "\n".join(sorted(written)) + "\n")
     (dest / "settings").mkdir(exist_ok=True)
     levels = sum(len(m[1]["names"]) for g in found.values() for m in g.values() if m[1])
-    print(f"mame_bats: {len(written)} files in {dest} ({len(found)} games, {levels} level launchers)")
+    print(f"mame_bats: {len(written)} files in {dest} ({len(found)} games, {levels} level launchers, "
+          f"{len(cds)} CD discs)")
 
 
 def main(argv=None):
@@ -1090,8 +1518,17 @@ def main(argv=None):
     ap.add_argument("--describe", nargs=3, metavar=("GAME", "PLATFORM", "ELF"),
                     help="record the level launchers' addresses of an installed build")
     ap.add_argument("--src", type=Path, default=ROOT, help="the source tree the build was made from (default: this one)")
+    ap.add_argument("--cd", nargs=2, action="append", default=[], metavar=("GAME", "CUE"),
+                    help="install a game's Neo Geo CD disc (repeatable)")
+    ap.add_argument("--cd-bios", type=Path, metavar="ROM", help="install EagleBIOS-CD (eagle_cd_cdz.rom)")
     ap.add_argument("--no-write", action="store_true", help="only --describe")
     args = ap.parse_args(argv)
+    for game, cue in args.cd:
+        if game not in GAMES:
+            raise SystemExit(f"mame_bats: unknown game {game}")
+        install_cd(args.dest, game, cue)
+    if args.cd_bios:
+        install_cd_bios(args.dest, args.cd_bios)
     if args.describe:
         game, platform, elf = args.describe
         describe(args.dest, game, platform, Path(elf), args.src.resolve())

@@ -11,7 +11,7 @@ class BubbleRenderTests(unittest.TestCase):
     def test_shifted_rows_reposition_even_when_cell_colors_stay_the_same(self):
         source = (ROOT / 'games/sevenwonders/scenes/sw_draw.c').read_text()
         draw = source[source.index('static void NEOGEO_USER draw_bubbles('):
-                      source.index('\nvoid NEOGEO_USER sw_board_draw(')]
+                      source.index('\nstatic void NEOGEO_USER draw_logic(')]
         fixture = r'''
 #include <assert.h>
 #include <string.h>

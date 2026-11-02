@@ -432,7 +432,11 @@ void NGSpriteGroup::flush()
         this->mapRows = mapRows;
     }
 
-    if (dirty & NG_SGF_DIRTY_SHRINK) {
+    /* A shrunk group re-asserts its shrink on every flush, as the C engine
+     * does (the persistent hardware-shrink fix): a slot shared or cleared
+     * elsewhere would otherwise show the strip at full size. */
+    if ((dirty & NG_SGF_DIRTY_SHRINK) ||
+        xScale != NG_SPRITE_FULL_XSCALE || yScale != NG_SPRITE_FULL_YSCALE) {
         for (strip = 0; strip < strips; strip++) {
             uint16_t si = (uint16_t)(firstSprite + strip);
             vram_SCB234((uint16_t)(SCB2_ADDR + si), scb2);

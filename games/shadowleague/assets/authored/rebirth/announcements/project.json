@@ -258,6 +258,24 @@
         24
       ],
       "file": "rise.png"
+    },
+    {
+      "name": "SWEEP",
+      "text": "CLEAN SWEEP",
+      "canvas": [
+        168,
+        24
+      ],
+      "file": "sweep.png"
+    },
+    {
+      "name": "LEGEND",
+      "text": "TRIPLE UNTOUCHED",
+      "canvas": [
+        232,
+        24
+      ],
+      "file": "legend.png"
     }
   ]
 }

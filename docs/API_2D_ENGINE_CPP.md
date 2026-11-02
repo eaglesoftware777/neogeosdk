@@ -1,6 +1,6 @@
 # 2D Engine — C++ API Reference
 
-**Eagle Software · Neo Geo SDK v1.7.0 · `sdk/2d_engine_plus/`**
+**Eagle Software · Neo Geo SDK v1.7.7 (Framework 1.5) · `sdk/2d_engine_plus/`**
 
 The C++14 build of the 2D engine. This is not a different engine — it is
 the same design with the same public ABI, so a C game can link against
@@ -99,6 +99,7 @@ void NEOGEO_USER setSpeedFp(int32_t vx_fp, int32_t vy_fp);
 void NEOGEO_USER addSpeedFp(int32_t ax_fp, int32_t ay_fp);
 void NEOGEO_USER setSprite(uint16_t firstSprite, uint8_t strips, uint8_t heightTiles, uint16_t tileBase, uint8_t palette);
 void NEOGEO_USER setAssetBounds(uint16_t tileStart, uint16_t tileEnd);
+void NEOGEO_USER setPaletteMap(const uint8_t *banks);
 uint8_t NEOGEO_USER bindAsset(const NGSpriteAssetView *asset);
 void NEOGEO_USER setCullMargin(int16_t l, int16_t r, int16_t t, int16_t b);
 void NEOGEO_USER setAnimClip(const NGAnimClip *clip);
@@ -260,6 +261,7 @@ void NEOGEO_USER flush();
 void NEOGEO_USER setTileBase(uint16_t tileBase);
 void NEOGEO_USER setTileStride(uint16_t tileStride);
 void NEOGEO_USER setPalette(uint8_t palette);
+void NEOGEO_USER setPaletteMap(const uint8_t *banks);
 void NEOGEO_USER setActiveRows(uint8_t rows);
 void NEOGEO_USER setPos(int16_t x, int16_t y);
 void NEOGEO_USER move(int16_t dx, int16_t dy);
@@ -287,6 +289,7 @@ void NEOGEO_USER init(uint8_t owner, uint16_t first_slot, uint8_t max_strips);
 void NEOGEO_USER reset();
 void NEOGEO_USER setCurrent(uint8_t current_strips);
 void NEOGEO_USER setShape(uint8_t current_strips, uint8_t current_rows);
+uint8_t NEOGEO_USER footprint();
 void NEOGEO_USER clear();
 void NEOGEO_USER clearTail();
 void NEOGEO_USER hide();

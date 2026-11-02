@@ -45,7 +45,7 @@ RUNTIME_FIELDS={"bank_seen":"&slf_rom_banks_seen", "bank_errors":"&slf_rom_error
                 "input_dropped":"&slf_input_dropped", "input_catchups":"&slf_input_catchups",
                 "commit_skipped":"&slf_commit_skipped", "irq_lines_peak":"&slf_irq_lines_peak",
                 "actor_requested":"&slf_actor_requested", "actor_uploading":"&slf_actor_uploading",
-                "actor_displayed":"&slf_actor_displayed", "actor_age_peak":"&slf_actor_age_peak",
+                "actor_displayed":"&slf_actor_displayed", "actor_age_peak":"&slf_actor_age_peak", "actor_age":"&slf_actor_age",
                 "scene_input_ignored":"&slf_scene_input_ignored",
                 "scene_setup":"&s_scene_setup",
                 "perf":"&ng_perf", "render_queue_stats":"&ng_rq_stats"}
@@ -137,6 +137,7 @@ def main():
                *(["-wavwrite", native(out / "audio.wav")] if args.wav else []),
                "-autoboot_script", native(script)]
     if args.record:command += ["-aviwrite", native(out / "cartridge.avi")]
+    if os.environ.get("SLF_MAME_DEBUG"):command += ["-debug", "-debugger", "none"]   # (instruction traces: SLF_TRACE_FILE)
     provenance={'platform':args.platform,'bios_name':args.bios_name or ('asia' if aes else 'euro'),'team':args.team,'fighter':args.fighter,'attract_only':args.attract_only,'training':args.training,'options':args.options,
                 'seconds':args.seconds,'elf_sha256':hashlib.sha256(args.elf.read_bytes()).hexdigest(),
                 'layout_header_sha256':hashlib.sha256((layout_root/'sdk/2d_engine/ng_fight.h').read_bytes()).hexdigest(),

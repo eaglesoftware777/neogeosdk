@@ -22,7 +22,10 @@ RATE_A = 18519
 RATE_B = 22050
 assert RATE_B == __import__("music_synth").RATE
 SFX = ("coin", "menu", "start", "hit_light", "hit_heavy", "block", "whoosh", "special", "super",
-       "throw", "ko", "land", "bell", "counter", "select", "power")
+       "throw", "ko", "land", "bell", "counter", "select", "power",
+       # the bonus count's tick and chime; the untouched win's sting; the fanfares
+       # for a team swept by one fighter and for three untouched wins
+       "tally", "tally_end", "perfect", "sweep", "legend")
 assert len(SFX) == slf_voices.NUM_SFX
 
 
@@ -83,12 +86,37 @@ def _at(n, t0, x):
     return out
 
 
+def _brass(t, freqs, rng, bright=1.0):
+    """A brass-like chord: detuned saws through a bright low-pass, a breath of noise."""
+    out = np.zeros(len(t))
+    for f in freqs:
+        for d in (-.004, 0, .005):
+            ph = (f * (1 + d) * t) % 1.0
+            out += (2 * ph - 1) / (3 * len(freqs))
+    out = _band(out, None, 2200 + 2600 * bright)
+    return out + _band(rng.uniform(-1, 1, len(t)), 1500, 6000) * .04
+
+
+def _bell(t, f, ms):
+    """A struck bell: inharmonic partials ringing out."""
+    return sum(np.sin(2 * np.pi * f * r * t) * a for r, a in ((1, .55), (2.01, .25), (2.76, .16), (5.40, .07))) * _decay(t, ms)
+
+
+def _stab(n, t0, dur, freqs, rng, bright=1.0):
+    """A fanfare chord at t0 for dur seconds: a quick swell and a clean release."""
+    m = int(dur * RATE_A)
+    tt = np.arange(m) / RATE_A
+    shape = np.minimum(1, tt / .012) * np.where(tt > dur - .05, np.maximum(0, (dur - tt) / .05), 1)
+    return _at(n, t0, _brass(tt, freqs, rng, bright) * shape)
+
+
 def sfx(name, rng):
     """The effects, built the way arcade fighters build theirs: a sharp transient,
     a band of crunch, a body that drops in pitch, and a short room tail."""
     durations = {"coin": .35, "menu": .06, "start": .5, "hit_light": .14, "hit_heavy": .3, "block": .16,
                  "whoosh": .17, "special": .4, "super": .9, "throw": .32, "ko": 1.2, "land": .15, "bell": 1.0,
-                 "counter": .35, "select": .3, "power": .8}
+                 "counter": .35, "select": .3, "power": .8,
+                 "tally": .05, "tally_end": .5, "perfect": 1.0, "sweep": 1.9, "legend": 2.6}
     n = int(durations[name] * RATE_A)
     t = np.arange(n) / RATE_A
     noise = rng.uniform(-1, 1, n)
@@ -160,6 +188,33 @@ def sfx(name, rng):
         s = ((np.sin(2 * np.pi * 1760 * t) * .5 + np.sin(2 * np.pi * 2637 * t) * .3) * np.exp(-t * 8)
              + click * 1.0 + _band(noise, 800, 3500) * _decay(t, 30) * .7 + _drop(t, 240, 90, 25) * _decay(t, 60) * .6)
         s = _room(np.tanh(s * 1.4), rng, 140, .25)
+    elif name == "tally":                # the counter's tick: a bright, dry blip
+        s = np.sign(np.sin(2 * np.pi * 2350 * t)) * .5 * _decay(t, 9) + click * .25
+    elif name == "tally_end":            # the line settles: a two-note bell, high and clear
+        s = _bell(t, 1568, 160) * .7 + _at(n, .06, _bell(t, 2093, 220)) * .8 + click * .2
+        s = _room(s, rng, 160, .2)
+    elif name == "perfect":              # untouched: a quick climb to a ringing chord
+        s = np.zeros(n)
+        for k, f in enumerate((1047, 1319, 1568, 2093)):
+            s += _at(n, k * .06, np.sign(np.sin(2 * np.pi * f * t)) * .22 * _decay(t, 70))
+        shimmer = sum(np.sin(2 * np.pi * f * t) for f in (1047, 1319, 1568, 2093)) * .14
+        s += _at(n, .24, shimmer * np.exp(-t * 3.2)) + _at(n, .24, _bell(t, 2637, 300) * .35)
+        s = _room(s, rng, 220, .3)
+    elif name == "sweep":                # a team swept away: three stabs and a held chord
+        s = (_stab(n, 0.00, .14, (392, 494, 587), rng) + _stab(n, .18, .14, (392, 494, 587), rng)
+             + _stab(n, .36, .14, (440, 554, 659), rng) + _stab(n, .56, 1.2, (523, 659, 784, 1047), rng, 1.3))
+        crash = _band(rng.uniform(-1, 1, n), 3000, None) * np.exp(-np.maximum(t - .56, 0) * 3.5) * (t >= .56) * .35
+        boom = _at(n, .56, _drop(t, 110, 40, 120) * _decay(t, 300) * .6)
+        s = _room(np.tanh((s * 1.5 + crash + boom) * 1.2), rng, 260, .3)
+    elif name == "legend":               # three untouched wins: a rising call, a choir of brass, bells
+        rise = np.zeros(n)
+        for k, f in enumerate((262, 330, 392, 523, 659, 784)):
+            rise += _stab(n, k * .09, .11, (f, f * 1.5), rng, .8) * .8
+        chord = _stab(n, .62, 1.9, (262, 392, 523, 659, 784, 1047), rng, 1.5)
+        bells = _at(n, .62, _bell(t, 1047, 700) * .45) + _at(n, .9, _bell(t, 1568, 600) * .35) + _at(n, 1.2, _bell(t, 2093, 500) * .3)
+        crash = _band(rng.uniform(-1, 1, n), 2500, None) * np.exp(-np.maximum(t - .62, 0) * 2.2) * (t >= .62) * .3
+        boom = _at(n, .62, _drop(t, 90, 32, 160) * _decay(t, 500) * .7)
+        s = _room(np.tanh((rise + chord * 1.4 + bells + crash + boom) * 1.1), rng, 320, .32)
     s = s / max(np.abs(s).max(), 1e-6) * 0.92
     return (s * 32000).astype(np.int16)
 
@@ -250,8 +305,9 @@ def main():
         (base / "out_b" / f"{i}.adpcmb").write_bytes(data)
         (base / "out_b" / f"{i}.adpcmb.json").write_text(json.dumps({"sample_rate": RATE_B}, indent=2) + "\n")
         total += len(data)
-    if last + len(SONGS) > 256:
-        raise ValueError(f"{last} ADPCM-A and {len(SONGS)} ADPCM-B samples overflow the 256-entry table")
+    # The driver's table takes 512 entries (samples past 255: command $10, playSFXWide).
+    if last + len(SONGS) > 512:
+        raise ValueError(f"{last} ADPCM-A and {len(SONGS)} ADPCM-B samples overflow the 512-entry table")
     print(f"sound: {len(SFX)} effects, {len(lines)} voice lines, {len(SONGS)} tracks, {total} bytes encoded")
 
 

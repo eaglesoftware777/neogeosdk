@@ -1,6 +1,14 @@
 # Changelog
 
-## v1.7.7 - pre-release: genre engines and four new games
+## v1.7.7 - the games release
+
+Seven games on the SDK, four genre engines, the fighting core, EagleBIOS and
+an experimental Neo Geo CD backend. SDK 1.7.7, Framework 1.5 (additions only
+since Framework 1.0: games written for v1.7.0 build unchanged). Everything
+since v1.7.0 in one page: [docs/releases/ANNOUNCEMENT_v1.7.7.md](docs/releases/ANNOUNCEMENT_v1.7.7.md).
+Engine guide: `docs/GENRE_ENGINES_V1.7.7.md`; objectives and test results:
+`docs/roadmap/V1.7.7_SDK_OBJECTIVES_AND_AUDIT.md`,
+`docs/roadmap/V1.7.7_TEST_REPORT.md`.
 
 ### Documentation: AI/SI transparency
 
@@ -16,22 +24,6 @@
 - Allows for updates as AI/SI regulations and publication requirements evolve.
   Linked from the main README.
 
-### Experimental CD development backend
-
-- Added isolated native hello-world PRG/IPL/ISO/CUE authoring, format/bank
-  validation, C/C++14 build checks and optional CD startup diagnostics.
-- Added original standalone 512 KiB EagleBIOS-CD diagnostic firmware. Its menu
-  and input gate passed in three MAME configurations; disc boot is unavailable.
-- Stock CD firmware interoperability, runtime reloads, CDDA playback, saves and
-  physical compatibility remain pending. This is not full CD platform support.
-  See [CD status and evidence](docs/roadmap/NEOGEO_CD_VALIDATION_REPORT.md).
-
-Status: a pre-release from the `fix/maiya-arenas-eagle-bios` branch; v1.7.0
-remains the current release. SDK 1.7.7, Framework 1.5 (additions only).
-Engine guide: `docs/GENRE_ENGINES_V1.7.7.md`; objectives and test results:
-`docs/roadmap/V1.7.7_SDK_OBJECTIVES_AND_AUDIT.md`,
-`docs/roadmap/V1.7.7_TEST_REPORT.md`.
-
 ### Engine
 
 - Four one-file genre engines in `sdk/2d_engine`, chosen per game with
@@ -43,29 +35,107 @@ Engine guide: `docs/GENRE_ENGINES_V1.7.7.md`; objectives and test results:
   crowd director, grabs and throws).
 - `ng_sprite_group_set_tile_address()`: 20-bit C-ROM tile addresses for
   cartridges past 64K tiles; bank-zero assets keep the old writer.
-- `ng_fight`: seven calibrated CPU ranks, training recording and playback,
-  long, short and reverse throws, configurable round time.
-- `palette_banks.quantize(refine=N)` optional refit passes (0 keeps the
-  old output); `tools/ng_artpack.py`, `sound/tools/ng_synth.py` and
+- Deferred VRAM: no starvation of low-priority groups, priorities honoured
+  across games, deferred sprite groups, string bounds checks, frame sync
+  between the main loop and the vertical-blank interrupt.
+- `NG_SG_MOVE_FIRST` (priority bit): a group whose picture is already in
+  place keeps its position writes with the scenery while new content waits;
+  `NG_SPR_CHAR_FIRST` moves the character slot range (default unchanged).
+- `ng_palette_math.h`: colour mixing without the library's 32-bit divide
+  (exactly the same colours); a 16-colour tint costs a tenth of what it did.
+- `ng_fix_blank_rows()`: blank whole FIX rows at a fraction of the cost of
+  blanking cell by cell; with `NG_VRAM_DEFER` a changed row goes up whole
+  at the next commit.
+- `ng_beatemup`: per-move hitstop, step-in, hit height, stride-driven walk
+  and run, move phases (wind-up, blow, hold, return), walk-over pick-ups,
+  ridable vehicles.
+- `ng_rpg`: puzzle work skipped when nothing changed since the last frame;
+  `ng_rpg_party_remove()`.
+- `ng_fight`:
+  - seven calibrated CPU ranks, training recording and playback, long, short
+    and reverse throws, configurable round time, player-two challenger,
+    lenient multi-button buffer, kara-cancel state cleared on consume;
+  - a thrown fighter is released when the throw is interrupted;
+  - `NGFMatch.end_hold`: the game can hold a round's end (a bonus count);
+  - team bouts end like rounds (winner's pose, loser's) before the next
+    member comes in (`team_next`);
+  - shared cancel routes: a normal that may cancel goes into any special or
+    super once it connects, a special that hits into a super, beside each
+    fighter's authored routes;
+  - a landing squat after a jump (the fighter's crouch, four frames);
+  - motion inputs read through a direction table, inline in the matching
+    loops (matching was about half of a fight's 68000 time).
+- `palette_banks.quantize(refine=N)` refit passes (0 keeps the old output)
+  and up to 255 banks; `tools/ng_artpack.py`, `sound/tools/ng_synth.py` and
   `ng_songs.py` for painted art, effects and music.
+- The C++14 engine reports SDK 1.7.7 like the C engine, and its sprite
+  groups re-assert a shrunk group's shrink on every flush as the C engine's
+  do (the persistent hardware-shrink fix).
+
+### Sound driver
+
+- Command `$10` *n* plays ADPCM-A sample 256 + *n*, and the sample table's
+  index is 16-bit: a game can hold up to 512 ADPCM-A samples.
+  `playSFXWide(sample)` picks the shortest command for any sample, 0..511.
 
 ### EagleBIOS
 
 - `SYS_HOWTOPLAY` shows the game's own `HTP1` text block;
   `ng_sys_is_eaglebios()` and `ng_sys_howtoplay()` in `sdk/ng_system.h`.
 
+### Neo Geo CD (experimental)
+
+- Native PRG/IPL/ISO/CUE authoring, format and bank validation, C and C++14
+  build checks, an EagleBIOS-CD diagnostic firmware and a validation suite.
+- CD ports: Maiya v4, Sky Lance v2, Maiya & Luna v2 and No Signal (streamed
+  scenery, CD audio); one BIN/CUE per disc for SD loaders and burning.
+- All four discs boot to their title and attract screens in MAME with the
+  stock CDZ firmware (user-supplied) and with EagleBIOS-CD. Saves under
+  EagleBIOS-CD, burnt discs, drive emulators and real consoles remain to be
+  verified. See the [CD guide](docs/NEOGEO_CD_PIPELINE_AND_TESTING_GUIDE.md)
+  and [CD status and evidence](docs/roadmap/NEOGEO_CD_VALIDATION_REPORT.md).
+
 ### Games
 
 - Seven Wonders Puzzles (782), Maiya & Luna (783), No Signal Z Alpha (784)
-  and Mahjong Demo (785): first ROM sets (`_v1`).
-- Shadow League Fighting (781): SDK 1.7.7 candidate (`_v3`).
-- Sky Lance (779): the hardware palette fix (`_v2`).
+  and Mahjong Demo (785): first ROM sets, then Seven Wonders' picture-logic
+  levels and rewards, Maiya & Luna's two solo journeys and v2 scaling, No
+  Signal v2, v3 (animation, weight of blows, fitted boxes, living
+  streets) and v3.0.1 (open crates, walk-over pick-ups).
+- Shadow League Fighting (781): 44 painted fighters, 12 arenas, team
+  battles, the referee's ceremony, voices; for the release: bout-end win and
+  lose poses, the beaten team kneeling at the match's end, a score with
+  bonus counts, the TRIPLE UNTOUCHED and CLEAN SWEEP finales, a new HUD,
+  32-palette arenas and the shared cancel routes, every fighter's own
+  victory pose, in-between frames and voice lines (twenty in their own
+  language), and a 32 MiB C ROM.
+- Maiya: Super Nature Girl (780): v4.0.1 with the cleaned FIX ROM; for the
+  release (v4.1.0): the tree over each valley's last door drawn with the
+  door, hazards and scenery that no longer stall, busy fights at full speed
+  and no more vanishing ledges.
+- Sky Lance (779): the hardware palette fix (v2), then v2.1 (aimed shots in
+  fixed point, anchored clouds, sprite slot order, sector difficulty).
+- Every game's HUD and screens inside the title-safe area (columns 3-36).
+- Each game's changes in detail: `games/<name>/CHANGELOG.md`.
 
-### Tests and tools
+### Tests, tools and releases
 
+- `tools/rom_registry.py` and `releases/rom-registry.json`: every released
+  file, its hashes and build identity; `docs/releases/VERSIONING_POLICY.md`
+  (changed bytes always get a new version); `tools/make_release.py` refuses
+  to replace a version that went out; `tools/audit_release.py` accepts
+  banked program ROMs.
+- `tools/mame_bats.py` writes the MAME test folder's launchers, menu, level
+  launchers and video steps, and installs Neo Geo CD discs with a launcher
+  for EagleBIOS-CD and one for the player's own stock CDZ firmware; `tools/install_wip_mame.py` installs a build;
+  `tools/release_all_games.sh` runs the whole pipeline.
 - `tests/test_genre_engines.py` (host tests, C++14 consumer, documentation
   examples, 68000 code check, build selector); `tools/genre_qa.py` (MAME
-  timeline runner), `tools/install_wip_mame.py`, `tools/stamp_cart_header.py`.
+  timeline runner), `tools/stamp_cart_header.py`; NeoSD unpacker writes a
+  software list.
+- `tests/fight_test.c` covers held round ends and team bout ends.
+- `make -C tests test` passes again: `test_move_touches_driver_only` checks a
+  full-size move (two words) and a shrunk one (two words and the shrink).
 
 ## v1.7.5 - pre-release: ng_fight, Shadow League Fighting (production slice), and EagleBIOS v1.7.4
 

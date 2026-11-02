@@ -128,6 +128,11 @@ class Fighter:
         if problems:
             raise SystemExit("\n".join(problems))
         self.data["moves"] = complete_moves(self.data)
+        # A jump pushes off from a crouch: three frames of it before the rise,
+        # taken from the rise so the jump keeps its timing.
+        jump = self.data["anims"].get("jump")
+        if jump and jump[0][0] != "crouch" and "crouch" in self.data["anims"] and jump[0][1] > 4:
+            self.data["anims"]["jump"] = [["crouch", 3], [jump[0][0], jump[0][1] - 3]] + jump[1:]
         d = self.data
         self.id = d["id"]
         self.poses = {name: art.resolve(d["poses"], name) for name in d["poses"]}
@@ -231,6 +236,12 @@ class Fighter:
             count = len(d["anims"][name])
             last = d["anims"][name][-1]
             loop = "0xFF" if int(last[1]) == 255 or name in ("getup", "throw") or not self._loops(name) else "0"
+            if name in d.get("anim_loops", {}):
+                # an ending that keeps moving: from this frame to the last, again and again
+                at = int(d["anim_loops"][name])
+                if not 0 <= at < count:
+                    raise ValueError(f"{self.id}: anim_loops {name} {at} outside 0..{count - 1}")
+                loop = str(at)
             anims.append(f"{{{first}, {count}, {loop}}}")
         lines.append(f"static const NGFFrame {prefix}_frames[] = {{\n    " + ",\n    ".join(frames) + "\n};")
         lines.append(f"static const NGFAnim {prefix}_anims[] = {{\n    " + ",\n    ".join(anims) + "\n};")

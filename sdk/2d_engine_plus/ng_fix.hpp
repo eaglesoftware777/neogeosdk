@@ -24,6 +24,8 @@ void NEOGEO_USER ng_fix_put_u32(uint8_t x, uint8_t y, uint32_t value, uint8_t pa
 
 /* Direct hardware blank using tile $00FF, matching the BIOS clear pattern. */
 void NEOGEO_USER ng_fix_blank_cell(uint8_t x, uint8_t y);
+/* Whole text rows y0..y1 blank (as ng_fix_blank_cell on each cell, much faster). */
+void NEOGEO_USER ng_fix_blank_rows(uint8_t y0, uint8_t y1);
 
 
 #ifdef __cplusplus

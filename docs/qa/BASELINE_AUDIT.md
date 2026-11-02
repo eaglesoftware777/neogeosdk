@@ -64,7 +64,7 @@ No Signal P 19%, C 9%, V 48%; Shadow League P 67%, C 62%, **V 95%**.
 
 | Suite | Result at HEAD |
 |---|---|
-| `tests/` host unit tests (`make -C tests test`) | **FAILS**: `test_c` stops at `sprite_render_test.c:202`, `test_move_touches_driver_only`. Rebuilt from current sources it fails the same way. Instrumented: the first move after the previous test's vertical shrink change writes 10 VRAM words, later moves the expected 2. The test aborts the suite, so the tests after it did not run at HEAD. |
+| `tests/` host unit tests (`make -C tests test`) | **FAILS**: `test_c` stops at `sprite_render_test.c:202`, `test_move_touches_driver_only`. Rebuilt from current sources it fails the same way. Instrumented: the first move after the previous test's vertical shrink change writes 10 VRAM words, later moves the expected 2. The test aborts the suite, so the tests after it did not run at HEAD. **Resolved 2026-11-01**: the extra words were the shrink (SCB2) that a shrunk group re-asserts on every flush since the 2026-10-24 persistent-shrink fix; the test now checks a full-size move (2 words) and a shrunk one (2 + one a strip), the C++ engine got the same fix, and `make -C tests test` passes. |
 | `tools/audit_release.py` | per-release hardware checks (P/S/M sizes, eye-catcher, NeoSD alignment, EagleBIOS only); used for every release so far |
 | Sky Lance `tools/qa.py` + `qa.lua` | Windows MAME captures (features, damage, encounters, boss) recorded in its PRODUCTION_STATUS.md |
 | Maiya `regression.py` | known failure `pickups` on the re-laid Emerald Forest (project notes) |

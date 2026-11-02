@@ -465,11 +465,13 @@ static void NEOGEO_USER jump_off(NGBeatEmUp *b)
 }
 
 /* NGB_SF_AUTO_PICKUP: what lies under the player's feet is taken without a
- * button. Food and points on any grounded step (a chain of punches included);
- * a weapon only when walking or standing with empty hands, so one that was
- * just dropped or thrown isn't swapped for another by accident. */
-#define WALK_PICK_X  (18 << 8)
-#define WALK_PICK_Y  (10 << 8)
+ * button. Food and points on any grounded step the player is in control of
+ * (a chain of punches, a guard, a stagger included); a weapon only when
+ * walking or standing with empty hands, so one that was just dropped or
+ * thrown isn't swapped for another by accident. The reach is generous in
+ * depth: lining up to the pixel on a street is not a skill. */
+#define WALK_PICK_X  (26 << 8)
+#define WALK_PICK_Y  (18 << 8)
 static void NEOGEO_USER walk_over(NGBeatEmUp *b)
 {
     NGBFighter *f = &b->f[NGB_PLAYER];
@@ -490,8 +492,10 @@ static void NEOGEO_USER walk_over(NGBeatEmUp *b)
             return;
         }
     if (!(b->stage->flags & NGB_SF_AUTO_PICKUP)) return;
-    if (f->state != NGB_ST_IDLE && f->state != NGB_ST_WALK && f->state != NGB_ST_RUN && f->state != NGB_ST_ATTACK) return;
-    hands = (uint8_t)(f->state != NGB_ST_ATTACK && f->weapon == NGB_NONE && f->vehicle == NGB_NONE);
+    if (f->state != NGB_ST_IDLE && f->state != NGB_ST_WALK && f->state != NGB_ST_RUN && f->state != NGB_ST_ATTACK &&
+        f->state != NGB_ST_BLOCK && f->state != NGB_ST_HITSTUN && f->state != NGB_ST_GRAB) return;
+    hands = (uint8_t)((f->state == NGB_ST_IDLE || f->state == NGB_ST_WALK || f->state == NGB_ST_RUN) &&
+                      f->weapon == NGB_NONE && f->vehicle == NGB_NONE);
     for (i = 0; i < NGB_MAX_PROPS; i++) {
         NGBProp *p = &b->prop[i];
         if (p->state != 0) continue;
@@ -1355,6 +1359,13 @@ int NEOGEO_USER ng_beatemup_init(NGBeatEmUp *b, const NGBStage *stage, const NGB
     for (i = 0; i < NGB_MAX_SHOTS; i++) b->shot[i].alive = 0;
     for (i = 0; i < stage->nprops; i++) {
         const NGBPropSpawn *ps = &stage->props[i];
+        if ((stage->flags & NGB_SF_OPEN_ITEMS) && (ps->kind == NGB_PROP_CRATE || ps->kind == NGB_PROP_BARREL) &&
+            (ps->contents == NGB_PROP_FOOD || ps->contents == NGB_PROP_SCORE)) {
+            /* what breaking it would have dropped, as it would have dropped it */
+            ng_beatemup_add_prop(b, ps->contents, (int16_t)ps->x, ps->y,
+                                 (uint8_t)(ps->contents == NGB_PROP_FOOD ? 12u : 5u), 0);
+            continue;
+        }
         ng_beatemup_add_prop(b, ps->kind, (int16_t)ps->x, ps->y, ps->contents, ps->hp);
     }
     return NGB_OK;

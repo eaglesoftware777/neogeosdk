@@ -3,7 +3,12 @@
 Sky Lance's ROM sets ship with the NeoGeoSDK pre-releases and are numbered
 on their own: `_v1` with v1.7.3, `_v2` with v1.7.7.
 
-## v2.1.0 candidate: shots, clouds, flicker, difficulty (2026-10-28)
+## v2.1.1 (2026-11-02, NeoGeoSDK v1.7.7)
+
+- Rebuilt with the v1.7.7 release's engine and sound driver; play is
+  unchanged.
+
+## v2.1.0: shots, clouds, flicker, difficulty (2026-10-28)
 
 Versions are now `MAJOR.MINOR.PATCH` and every changed binary gets a new
 one (docs/releases/VERSIONING_POLICY.md). The title-safe rebuild below goes

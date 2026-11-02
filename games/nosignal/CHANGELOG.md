@@ -3,6 +3,15 @@
 The ROM sets ship with the NeoGeoSDK pre-releases and are numbered on their
 own: `_v1`, `_v2` and `_v3` with v1.7.7.
 
+## v3.0.1: open crates and easy pick-ups (2026-11-01, NeoGeoSDK v1.7.7)
+
+- **Ready to take.** The food and points a crate or barrel holds lie in the
+  open from the start of the stage: no box to break first.
+- **Walk over it.** A pick-up is taken by walking over it, with a wider
+  reach (26 by 18 pixels), also while guarding, while reeling from a hit
+  and in the middle of a combo.
+- Rebuilt with the v1.7.7 release's engine and sound driver.
+
 ## v3 (2026-10-27, NeoGeoSDK v1.7.7 pre-release)
 
 Players' feedback on V2 asked for five things, and then a sixth (the

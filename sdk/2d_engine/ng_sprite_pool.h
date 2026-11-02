@@ -31,7 +31,11 @@ extern "C" {
 #define NG_SPR_LAST          379
 #define NG_SPR_TITLE_FIRST   33
 #define NG_SPR_TITLE_LAST    95
+/* A game can start its character pool higher (GAME_ENGINE_DEFINES
+ * -DNG_SPR_CHAR_FIRST=n) to keep scenery slots of its own behind the cast. */
+#ifndef NG_SPR_CHAR_FIRST
 #define NG_SPR_CHAR_FIRST    96
+#endif
 #define NG_SPR_CHAR_LAST     223
 #define NG_SPR_FX_FIRST      224
 #define NG_SPR_FX_LAST       255

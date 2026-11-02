@@ -1648,6 +1648,69 @@
     },
     "walk6": {
       "base": "stance"
+    },
+    "win1": {
+      "base": "stance"
+    },
+    "win2": {
+      "base": "stance"
+    },
+    "win3": {
+      "base": "stance"
+    },
+    "win4": {
+      "base": "stance"
+    },
+    "win5": {
+      "base": "stance"
+    },
+    "win6": {
+      "base": "stance"
+    },
+    "win7": {
+      "base": "stance"
+    },
+    "sp1_0": {
+      "base": "stance"
+    },
+    "sp1_3": {
+      "base": "stance"
+    },
+    "sp2_0": {
+      "base": "stance"
+    },
+    "sp2_3": {
+      "base": "stance"
+    },
+    "sp3_0": {
+      "base": "stance"
+    },
+    "sp3_3": {
+      "base": "stance"
+    },
+    "super_4": {
+      "base": "stance"
+    },
+    "hp3": {
+      "base": "stance"
+    },
+    "hk3": {
+      "base": "stance"
+    },
+    "lk1": {
+      "base": "stance"
+    },
+    "cr_hk0": {
+      "base": "stance"
+    },
+    "throw_3": {
+      "base": "stance"
+    },
+    "land": {
+      "base": "stance"
+    },
+    "dash2": {
+      "base": "stance"
     }
   },
   "anims": {
@@ -1783,14 +1846,22 @@
         10
       ],
       [
+        "land",
+        4
+      ],
+      [
         "crouch",
-        8
+        4
       ]
     ],
     "dash": [
       [
         "dash",
-        255
+        6
+      ],
+      [
+        "dash2",
+        6
       ]
     ],
     "backdash": [
@@ -1807,12 +1878,32 @@
     ],
     "win": [
       [
-        "win",
-        24
+        "win1",
+        6
       ],
       [
-        "win_b",
-        255
+        "win2",
+        7
+      ],
+      [
+        "win3",
+        8
+      ],
+      [
+        "win4",
+        10
+      ],
+      [
+        "win5",
+        10
+      ],
+      [
+        "win6",
+        18
+      ],
+      [
+        "win7",
+        18
       ]
     ],
     "lose": [
@@ -1867,8 +1958,12 @@
         "active"
       ],
       [
+        "hp3",
+        6
+      ],
+      [
         "hp1",
-        10
+        4
       ]
     ],
     "c_piston": [
@@ -1889,7 +1984,11 @@
     "c_sweep": [
       [
         "crouch",
-        6
+        3
+      ],
+      [
+        "cr_hk0",
+        3
       ],
       [
         "cr_hk",
@@ -1897,8 +1996,12 @@
         "active"
       ],
       [
+        "cr_hk0",
+        11
+      ],
+      [
         "crouch",
-        18
+        7
       ]
     ],
     "j_stomp": [
@@ -1925,8 +2028,12 @@
     ],
     "shockwave": [
       [
+        "sp1_0",
+        3
+      ],
+      [
         "sp1_1",
-        6
+        3
       ],
       [
         "sp1_2",
@@ -1935,14 +2042,23 @@
         30
       ],
       [
+        "sp1_3",
+        10
+      ],
+      [
         "sp1_1",
-        16
+        6
       ]
     ],
     "pile": [
       [
+        "sp3_0",
+        2,
+        "invuln"
+      ],
+      [
         "sp3_1",
-        4,
+        2,
         "invuln"
       ],
       [
@@ -1963,8 +2079,12 @@
     ],
     "charge": [
       [
+        "sp2_0",
+        4
+      ],
+      [
         "sp2_1",
-        8
+        4
       ],
       [
         "sp2_2",
@@ -1973,8 +2093,14 @@
         56
       ],
       [
+        "sp2_3",
+        5,
+        "",
+        16
+      ],
+      [
         "sp2_2",
-        8,
+        3,
         "",
         16
       ],
@@ -2019,7 +2145,11 @@
       ],
       [
         "throw_2",
-        14
+        7
+      ],
+      [
+        "throw_3",
+        7
       ]
     ],
     "evade": [
@@ -2064,8 +2194,12 @@
     ],
     "palm_wave": [
       [
+        "sp1_0",
+        4
+      ],
+      [
         "sp1_1",
-        9
+        5
       ],
       [
         "sp1_2",
@@ -2079,7 +2213,7 @@
     ],
     "n_stand_b": [
       [
-        "hk1",
+        "lk1",
         3
       ],
       [
@@ -2088,8 +2222,12 @@
         "active"
       ],
       [
+        "lk1",
+        5
+      ],
+      [
         "stance",
-        9
+        4
       ]
     ],
     "n_stand_d": [
@@ -2103,8 +2241,12 @@
         "active"
       ],
       [
+        "hk3",
+        10
+      ],
+      [
         "hk1",
-        16
+        6
       ]
     ],
     "n_crouch_b": [
@@ -3047,5 +3189,8 @@
         "tech_ticks": 4
       }
     ]
+  },
+  "anim_loops": {
+    "win": 5
   }
 }

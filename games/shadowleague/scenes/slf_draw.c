@@ -115,6 +115,7 @@ static uint8_t s_proj_live[NGF_PROJECTILES], s_striker_live[2];
 static NGSpriteGroup s_wall, s_face[2], s_wall_cursor[2];
 static uint8_t s_face_live[2], s_face_def[2], s_wall_cursor_live[2];
 volatile uint8_t slf_select_live;       /* (read by the capture scripts) */
+extern uint8_t slf_hud_scores;
 volatile uint8_t slf_select_cursor[2];
 static const uint8_t k_fx_pal[5] = {18u,19u,20u,24u,25u};
 static uint8_t s_fx_kind[FX_SLOTS], s_fx_timer[FX_SLOTS], s_fx_live[FX_SLOTS];
@@ -131,7 +132,7 @@ static uint16_t s_frames, s_rng;
 /* HUD cache: what the FIX layer shows now. */
 static uint8_t s_hud_valid, s_hud_life[2], s_hud_power[2], s_hud_stock[2], s_hud_wins[2], s_hud_secs;
 static uint8_t s_hud_combo[2], s_hud_combo_timer[2];
-static uint8_t s_hud_trail[2], s_hud_trail_hold[2], s_hud_guard[2], s_hud_spirit[2], s_hud_max[2];
+static uint8_t s_hud_trail[2], s_hud_trail_hold[2], s_hud_guard[2], s_hud_max[2];
 
 /* ------------------------------------------------------------ palettes */
 void NEOGEO_USER slf_presentation_init(void)
@@ -229,6 +230,7 @@ void NEOGEO_USER slf_scene_begin(void)
     s_wall_cursor_live[0] = s_wall_cursor_live[1] = 0u;
     s_hud_valid = 0u;
     s_hud_plate_live = 0u;
+    slf_hud_scores = 0u;
     ng_fix_invalidate_all();
     slf_fix_palettes_init();
     ng_palfx_screen_fade_in(0u, 12u);
@@ -362,9 +364,8 @@ void NEOGEO_USER slf_big_reveal(uint8_t y, uint16_t tile, uint8_t w, uint8_t h, 
 
 void NEOGEO_USER slf_clear_rows(uint8_t y0, uint8_t y1)
 {
-    uint8_t x, y;
-    for (y = y0; y <= y1 && y < 28u; y++)
-        for (x = 0u; x < 40u; x++) ng_fix_blank_cell(x, y);
+    if (y0 > y1 || y0 >= 28u) return;
+    ng_fix_blank_rows(y0, y1 < 28u ? y1 : 27u);
 }
 
 /* ------------------------------------------------------------ sprites */
@@ -1055,6 +1056,39 @@ static uint16_t NEOGEO_USER color_scale(uint16_t c, uint8_t rn, uint8_t gn, uint
                       ((r >> 1) << 8) | ((g >> 1) << 4) | (b >> 1));
 }
 
+/* A bank at level/16 of its brightness (color_scale with one level and no
+ * floor): each channel's 32 values go through a table of their packed
+ * result, built by addition when the level changes, so a colour is three
+ * lookups -- the referee's fade from black rescaled 60 colours every frame,
+ * three multiplies each, and pushed those frames past the blank. */
+static uint16_t s_dim_r[32], s_dim_g[32], s_dim_b[32];
+static uint8_t s_dim_level = 0xFFu;
+
+static void NEOGEO_USER bank_dim(uint16_t *out, const uint16_t *src, uint8_t level)
+{
+    uint8_t v;
+    if (level != s_dim_level) {
+        uint16_t acc = 0u;
+        s_dim_level = level;
+        for (v = 0u; v < 32u; v++) {
+            uint8_t s = (uint8_t)(acc >> 4);          /* v * level / 16 */
+            uint8_t q = (uint8_t)(s >> 1);
+            uint16_t odd = (uint16_t)(s & 1u);
+            s_dim_r[v] = (uint16_t)(((uint16_t)q << 8) | (odd ? 0x4000u : 0u));
+            s_dim_g[v] = (uint16_t)(((uint16_t)q << 4) | (odd ? 0x2000u : 0u));
+            s_dim_b[v] = (uint16_t)(q | (odd ? 0x1000u : 0u));
+            acc = (uint16_t)(acc + level);
+        }
+    }
+    out[0] = 0u;
+    for (v = 1u; v < 16u; v++) {
+        uint16_t c = src[v];
+        out[v] = (uint16_t)(s_dim_r[((c >> 7) & 30u) | ((c >> 14) & 1u)] |
+                            s_dim_g[((c >> 3) & 30u) | ((c >> 13) & 1u)] |
+                            s_dim_b[((c << 1) & 30u) | ((c >> 12) & 1u)]);
+    }
+}
+
 /* A beaten fighter: darker, the light gone out of the face. */
 void NEOGEO_USER slf_fighter_bruise(uint8_t slot, uint8_t def, uint8_t alt)
 {
@@ -1066,6 +1100,31 @@ void NEOGEO_USER slf_fighter_bruise(uint8_t slot, uint8_t def, uint8_t alt)
         for (i = 0u; i < 16u; i++) sore[i] = i ? color_scale(src[i], 12u, 9u, 11u, 1u) : 0u;
         ng_palfx_screen_load((uint8_t)(pal + bank), sore);
     }
+}
+
+/* Any of the four drawing actors -- 0 and 1 the fighters' slots, 2 and 3
+ * the strikers' -- each with its own four banks from PAL_BODY: the end of a
+ * team match shows a whole team at once. `beaten` darkens the colours as
+ * slf_fighter_bruise does. */
+static const uint16_t k_actor_first[4] = {SPR_FIGHTER, SPR_FIGHTER + 50u, SPR_STRIKER, SPR_STRIKER + 50u};
+
+void NEOGEO_USER slf_actor_palettes(uint8_t actor, uint8_t def, uint8_t alt, uint8_t beaten)
+{
+    uint8_t bank, i, pal = (uint8_t)(PAL_BODY + (actor & 3u) * 4u);
+    for (bank = 0u; bank < slf_fighter_bank_counts[def]; bank++) {
+        uint16_t c[16];
+        const uint16_t *src = slf_fighter_bank_pals[slf_fighter_bank_offsets[def] + bank][alt ? 1 : 0];
+        for (i = 0u; i < 16u; i++) c[i] = !i ? 0u : beaten ? color_scale(src[i], 12u, 9u, 11u, 1u) : src[i];
+        ng_palfx_screen_load((uint8_t)(pal + bank), c);
+    }
+    if (actor < 2u) s_fighter_pal[actor] = actor;
+}
+
+void NEOGEO_USER slf_actor_pose(uint8_t actor, uint8_t def, uint8_t sprite, int16_t x, int16_t y, uint8_t flip)
+{
+    actor &= 3u;
+    actor_draw(actor, actor < 2u ? &s_fighter_live[actor] : &s_striker_live[actor - 2u], k_actor_first[actor],
+               def, sprite, x, y, flip, (uint8_t)(PAL_BODY + actor * 4u));
 }
 
 /* The round's opening, timed against the referee's count in slf_game.c:
@@ -1096,10 +1155,7 @@ static void NEOGEO_USER referee_show(const NGFMatch *m)
     if (s_referee_pal != level) {
         for (bank = 0u; bank < slf_fighter_bank_counts[SLF_REFEREE_DEF]; bank++) {
             uint16_t lit[16];
-            uint8_t i;
-            const uint16_t *src = slf_fighter_bank_pals[slf_fighter_bank_offsets[SLF_REFEREE_DEF] + bank][0];
-            for (i = 0u; i < 16u; i++)
-                lit[i] = i ? color_scale(src[i], (uint8_t)(level - 1u), (uint8_t)(level - 1u), (uint8_t)(level - 1u), 0u) : 0u;
+            bank_dim(lit, slf_fighter_bank_pals[slf_fighter_bank_offsets[SLF_REFEREE_DEF] + bank][0], (uint8_t)(level - 1u));
             ng_palfx_screen_load((uint8_t)(PAL_SUPPORT + bank), lit);
         }
         s_referee_pal = level;
@@ -1159,17 +1215,85 @@ static void NEOGEO_USER hud_plates(void)
     s_hud_plate_live = 1u;
 }
 
-static void NEOGEO_USER small_meter(uint8_t side, uint8_t spirit, uint8_t value, uint8_t alert)
+/*
+ * The fight's HUD, inside columns 3-36:
+ *   row 1    the score (1P left, 2P right; a CPU side invites a challenger)
+ *   row 2    the life bars, the clock between them (rows 1-2)
+ *   rows 3-6 each fighter's face at the outer end, framed; beside it the
+ *            short name (row 3), the team's members (row 4) and the guard
+ *            gauge, shown only while the guard is worn down (row 4);
+ *            round wins either side of the clock (row 4)
+ *   row 25   the striker's calls left; MAX while the mode runs
+ *   row 26   the power gauge and its stock count
+ * Each piece is redrawn only when what it shows changes.
+ */
+#define SPR_HUD_FACE  373u            /* 2 strips a side, over the plate (the title logo's 355-372 before) */
+#define PAL_HUD_FACE  102u            /* 102-103: inside the 104 managed palettes */
+uint8_t slf_hud_scores;               /* run_match: show the score row */
+static NGSpriteGroup s_hud_face[2];
+static uint8_t s_hud_face_live[2], s_hud_face_def[2];
+static const NGFFighterDef *s_hud_def[2];
+static uint8_t s_hud_team[2], s_hud_assist[2], s_hud_score_state[2];
+static uint32_t s_hud_score[2];
+
+static uint8_t NEOGEO_USER def_index_of(const NGFFighterDef *d)
+{
+    uint8_t k;
+    for (k = 0u; k < SLF_FIGHTER_COUNT; k++) if (slf_fighter_defs[k] == d) return k;
+    return 0u;
+}
+
+static void NEOGEO_USER hud_face(uint8_t side, uint8_t def)
+{
+    NGSpriteGroup *g = &s_hud_face[side];
+    uint8_t pal = (uint8_t)(PAL_HUD_FACE + side);
+    if (s_hud_face_live[side] && s_hud_face_def[side] == def) return;
+    ng_palfx_screen_load(pal, slf_hud_face_pals[def]);
+    if (!s_hud_face_live[side]) {
+        ng_sprite_group_init(g, (uint16_t)(SPR_HUD_FACE + side * 2u), 2u, 2u,
+                             (uint16_t)(SLF_HUD_FACE_TILE + def * 4u), pal);
+        ng_sprite_group_set_tile_stride(g, 2u);
+        ng_sprite_group_set_flip(g, side, 0u);           /* the right-hand face looks in */
+        ng_sprite_group_set_pos(g, side ? 264 : 24, 24);
+        ng_sprite_group_set_priority(g, NG_SG_PRIO_HIGH);
+        ng_sprite_group_upload(g);
+    } else {
+        ng_sprite_group_set_tile_base(g, (uint16_t)(SLF_HUD_FACE_TILE + def * 4u));
+        ng_sprite_group_flush(g);
+    }
+    s_hud_face_live[side] = 1u;
+    s_hud_face_def[side] = def;
+}
+
+/* the frame over a face's edge: 4x4 cells from (x, 3) */
+static void NEOGEO_USER hud_frame(uint8_t x)
+{
+    uint8_t r, c;
+    for (r = 0u; r < 4u; r++)
+        for (c = 0u; c < 4u; c++)
+            if (r == 0u || r == 3u || c == 0u || c == 3u)
+                ng_fix_put_tile((uint8_t)(x + c), (uint8_t)(3u + r), (uint16_t)(SLF_FIX_FRAME + r * 4u + c), SLF_PAL_HUD);
+}
+
+static void NEOGEO_USER hud_name(uint8_t side, uint8_t def)
+{
+    slf_puts(side ? 22u : 8u, 3u, "          ", SLF_PAL_TEXT);
+    if (side) slf_puts_right(31u, 3u, slf_fighter_hud_name[def], SLF_PAL_TEXT);
+    else slf_puts(8u, 3u, slf_fighter_hud_name[def], SLF_PAL_TEXT);
+}
+
+/* The guard gauge, 4 cells, only while the guard is below full. */
+static void NEOGEO_USER guard_meter(uint8_t side, uint8_t value, uint8_t alert, uint8_t shown)
 {
     uint8_t c;
-    uint16_t base = spirit ? (side ? SLF_FIX_SPIRIT_R : SLF_FIX_SPIRIT_L) :
-        alert ? (side ? SLF_FIX_GUARD_ALERT_R : SLF_FIX_GUARD_ALERT_L) :
+    uint16_t base = alert ? (side ? SLF_FIX_GUARD_ALERT_R : SLF_FIX_GUARD_ALERT_L) :
         (side ? SLF_FIX_GUARD_R : SLF_FIX_GUARD_L);
     for (c = 0u; c < 4u; c++) {
         uint8_t level = value > c * 8u ? (uint8_t)(value - c * 8u) : 0u;
-        uint8_t x = side ? (uint8_t)((spirit ? 29u : 35u) - c) : (uint8_t)((spirit ? 10u : 4u) + c);
+        uint8_t x = side ? (uint8_t)(28u - c) : (uint8_t)(11u + c);
         if (level > 8u) level = 8u;
-        ng_fix_put_tile(x, 4u, (uint16_t)(base + level), SLF_PAL_HUD);
+        if (shown) ng_fix_put_tile(x, 4u, (uint16_t)(base + level), SLF_PAL_HUD);
+        else ng_fix_blank_cell(x, 4u);
     }
 }
 
@@ -1191,25 +1315,60 @@ static void NEOGEO_USER power_bar(uint8_t side, uint16_t power, uint16_t max_tim
     slf_puts(side ? 35u : 4u, 26u, digit, stock ? SLF_PAL_GOLD : SLF_PAL_DIM);
 }
 
+/* The score row: "1P" and the points, or for a side the CPU plays a
+ * blinking invitation to come in. */
+static void NEOGEO_USER hud_score(uint8_t side, const NGFMatch *m)
+{
+    uint8_t state;
+    if (!slf_hud_scores) return;
+    state = m->f[side].cpu ? (uint8_t)(1u + ((m->frame >> 5) & 1u)) : 0u;
+    if (state == 0u) {
+        uint32_t v = slf_score[side];
+        if (s_hud_score_state[side] == 0u && v == s_hud_score[side]) return;
+        if (s_hud_score_state[side] != 0u) slf_puts(side ? 24u : 3u, 1u, "             ", SLF_PAL_TEXT);
+        {
+            static const uint32_t pow10[8] = {10000000UL, 1000000UL, 100000UL, 10000UL, 1000UL, 100UL, 10UL, 1UL};
+            char text[9];
+            uint8_t k;
+            uint32_t r = v;
+            for (k = 0u; k < 8u; k++) {
+                char d = '0';
+                while (r >= pow10[k]) { r -= pow10[k]; d++; }
+                text[k] = d;
+            }
+            text[8] = '\0';
+            if (side) { slf_puts(25u, 1u, text, SLF_PAL_TEXT); slf_puts(34u, 1u, "2P", SLF_PAL_GOLD); }
+            else { slf_puts(3u, 1u, "1P", SLF_PAL_GOLD); slf_puts(6u, 1u, text, SLF_PAL_TEXT); }
+        }
+        s_hud_score[side] = v;
+    } else if (state != s_hud_score_state[side]) {
+        const char *ask = state == 1u ? (ng_sys_is_mvs() ? "INSERT COIN" : "PUSH START ") : "           ";
+        slf_puts(side ? 24u : 3u, 1u, "             ", SLF_PAL_TEXT);
+        if (side) slf_puts_right(36u, 1u, ask, SLF_PAL_DIM);
+        else slf_puts(3u, 1u, ask, SLF_PAL_DIM);
+    }
+    s_hud_score_state[side] = state;
+}
+
 void NEOGEO_USER slf_hud_draw(const NGFMatch *m)
 {
     uint8_t i;
     hud_plates();
     if (!s_hud_valid) {
-        slf_clear_rows(1u, 4u);
+        slf_clear_rows(1u, 6u);
         slf_clear_rows(24u, 26u);
         ng_fix_put_tile(3u, 2u, SLF_FIX_CAP_L, SLF_PAL_HUD);
         ng_fix_put_tile(36u, 2u, SLF_FIX_CAP_R, SLF_PAL_HUD);
-        slf_puts(3u, 3u, m->f[0].def->name, SLF_PAL_TEXT);
-        slf_puts_right(36u, 3u, m->f[1].def->name, SLF_PAL_TEXT);
-        slf_puts(6u, 25u, "POWER", SLF_PAL_DIM);
-        slf_puts(29u, 25u, "POWER", SLF_PAL_DIM);
-        slf_puts(3u, 4u, "G", SLF_PAL_TEXT);slf_puts(9u, 4u, "S", SLF_PAL_TEXT);
-        slf_puts(36u, 4u, "G", SLF_PAL_TEXT);slf_puts(30u, 4u, "S", SLF_PAL_TEXT);
-        for (i = 0u; i < 2u; i++) s_hud_life[i] = s_hud_power[i] = s_hud_stock[i] = s_hud_wins[i] = s_hud_max[i] = 0xFFu;
+        hud_frame(3u);
+        hud_frame(33u);
         for (i = 0u; i < 2u; i++) {
-            s_hud_trail[i] = 0xFFu;s_hud_trail_hold[i] = 0u;
-            s_hud_guard[i] = s_hud_spirit[i] = 0xFFu;
+            s_hud_life[i] = s_hud_power[i] = s_hud_stock[i] = s_hud_wins[i] = s_hud_max[i] = 0xFFu;
+            s_hud_trail[i] = 0xFFu; s_hud_trail_hold[i] = 0u;
+            s_hud_guard[i] = 0xFFu;
+            s_hud_def[i] = 0;
+            s_hud_team[i] = s_hud_assist[i] = 0xFFu;
+            s_hud_score_state[i] = 0xFFu;
+            s_hud_face_live[i] = 0u;
         }
         s_hud_secs = 0xFFu;
         s_hud_valid = 1u;
@@ -1220,12 +1379,19 @@ void NEOGEO_USER slf_hud_draw(const NGFMatch *m)
         uint8_t pw = (uint8_t)((f->power % NGF_POWER_STOCK) / 2u);
         uint8_t st = (uint8_t)(f->power / NGF_POWER_STOCK);
         uint8_t mx = f->max_timer ? (uint8_t)(1u + ((m->frame >> 3) & 1u)) : 0u;
+        if (f->def != s_hud_def[i]) {                   /* a new fighter: face and name */
+            uint8_t def = def_index_of(f->def);
+            hud_face(i, def);
+            hud_name(i, def);
+            s_hud_def[i] = f->def;
+        }
+        hud_score(i, m);
         if (f->max_timer) {
             pw = (uint8_t)((uint32_t)f->max_timer * 64u / NGF_MAX_FRAMES);
             st = (uint8_t)(st | 0x10u);
         }
         if (mx != s_hud_max[i]) {
-            slf_puts(i ? 29u : 6u, 25u, mx ? "MAX!!" : "POWER", mx == 1u ? SLF_PAL_RED : mx ? SLF_PAL_GOLD : SLF_PAL_DIM);
+            slf_puts(i ? 26u : 9u, 25u, mx ? "MAX!!" : "     ", mx == 1u ? SLF_PAL_RED : SLF_PAL_GOLD);   /* clear of the striker diamonds */
             s_hud_max[i] = mx;
         }
         if (f->life && !px) px = 1u;
@@ -1241,42 +1407,49 @@ void NEOGEO_USER slf_hud_draw(const NGFMatch *m)
             s_hud_life[i] = px;
         }
         if (pw != s_hud_power[i] || st != s_hud_stock[i]) { power_bar(i, f->power, f->max_timer); s_hud_power[i] = pw; s_hud_stock[i] = st; }
-        if (f->wins != s_hud_wins[i]) {
+        if (m->match_mode == NGF_MODE_1V1 && f->wins != s_hud_wins[i]) {
             uint8_t k;
             for (k = 0u; k < m->rounds_to_win && k < 3u; k++)
                 ng_fix_put_tile((uint8_t)(i ? 22u + k : 17u - k), 4u,
                                 k < f->wins ? SLF_FIX_MARK_ON : SLF_FIX_MARK_OFF, SLF_PAL_HUD);
             s_hud_wins[i] = f->wins;
         }
-
-        /* Compact distinct guard and spirit meters; update only changed art. */
+        /* The team: one block a member, the one fighting lit, the beaten struck out. */
+        if (m->match_mode != NGF_MODE_1V1) {
+            uint8_t k, code = 0u;
+            for (k = 0u; k < m->team_count[i] && k < 3u; k++)
+                code = (uint8_t)(code * 3u + (k == m->team_active[i] ? 1u : m->team_life[i][k] ? 0u : 2u));
+            if (code != s_hud_team[i]) {
+                for (k = 0u; k < m->team_count[i] && k < 3u; k++)
+                    ng_fix_put_tile((uint8_t)(i ? 31u - k : 8u + k), 4u,
+                        k == m->team_active[i] ? SLF_FIX_MEMBER_NOW : m->team_life[i][k] ? SLF_FIX_MEMBER_UP : SLF_FIX_MEMBER_OUT,
+                        SLF_PAL_HUD);
+                s_hud_team[i] = code;
+            }
+        }
+        /* The striker's calls left: a diamond each. */
+        if (m->assist[i]) {
+            uint8_t ready = (uint8_t)(m->assist_uses[i] | (m->striker[i].cooldown ? 0x80u : 0u));
+            if (ready != s_hud_assist[i]) {
+                uint8_t k;
+                for (k = 0u; k < 3u; k++)
+                    ng_fix_put_tile((uint8_t)(i ? 35u - k : 4u + k), 25u,
+                        k < m->assist_uses[i] && !m->striker[i].cooldown ? SLF_FIX_ASSIST_ON : SLF_FIX_ASSIST_OFF, SLF_PAL_HUD);
+                s_hud_assist[i] = ready;
+            }
+        }
+        /* The guard gauge comes up only while the guard is worn down. */
         {
             uint8_t guard = (uint8_t)((uint16_t)f->guard * 32u / f->def->guard_max);
-            uint8_t spirit = (uint8_t)((uint16_t)f->spirit * 32u / NGF_SPIRIT_MAX);
             uint8_t alert = (uint8_t)(f->guard < 30u);
-            uint8_t encoded = (uint8_t)(guard | (alert ? 128u : 0u));
+            uint8_t shown = (uint8_t)(f->guard < f->def->guard_max);
+            uint8_t encoded;
             if (guard > 32u) guard = 32u;
-            if (spirit > 32u) spirit = 32u;
-            if (encoded != s_hud_guard[i]) { small_meter(i, 0u, guard, alert);s_hud_guard[i] = encoded; }
-            if (spirit != s_hud_spirit[i]) { small_meter(i, 1u, spirit, 0u);s_hud_spirit[i] = spirit; }
+            encoded = (uint8_t)(shown ? (guard | (alert ? 64u : 0u)) : 0x80u);
+            if (encoded != s_hud_guard[i]) { guard_meter(i, guard, alert, shown); s_hud_guard[i] = encoded; }
         }
 
-        {
-            char badge[7] = {'A','S','S','T',' ', '0', '\0'};
-            if (m->assist[i]) {
-                badge[5] = (char)('0' + m->assist_uses[i]);
-                slf_puts(i ? 31u : 3u, 24u, badge,
-                    m->assist_uses[i] && !m->striker[i].cooldown ? SLF_PAL_GOLD : SLF_PAL_DIM);
-            }
-            if (m->match_mode != NGF_MODE_1V1) {
-                char team[6] = {'T', ' ', '1', '/', '3', '\0'};
-                team[2] = (char)('1' + m->team_active[i]);
-                team[4] = (char)('0' + m->team_count[i]);
-                slf_puts(i ? 23u : 12u, 24u, team, SLF_PAL_TEXT);
-            }
-        }
-
-        /* Combo count, on the attacker's side. */
+        /* Combo count, on the attacker's side, under the face. */
         {
             uint8_t hits = m->f[i ^ 1u].combo;
             if (hits >= 2u) { s_hud_combo[i] = hits; s_hud_combo_timer[i] = 60u; }
@@ -1287,9 +1460,9 @@ void NEOGEO_USER slf_hud_draw(const NGFMatch *m)
                     text[1] = (char)('0' + s_hud_combo[i] % 10u);
                     text[2] = ' '; text[3] = 'H'; text[4] = 'I'; text[5] = 'T'; text[6] = 'S'; text[7] = '!'; text[8] = '\0';
                     if (text[0] == '0') text[0] = ' ';
-                    slf_puts_tall(i ? 29u : 3u, 6u, text, SLF_TALL_RED);
+                    slf_puts_tall(i ? 29u : 3u, 8u, text, SLF_TALL_RED);
                 }
-                if (!--s_hud_combo_timer[i]) slf_puts_tall(i ? 29u : 3u, 6u, "        ", SLF_TALL_RED);
+                if (!--s_hud_combo_timer[i]) slf_puts_tall(i ? 29u : 3u, 8u, "        ", SLF_TALL_RED);
             }
         }
     }
@@ -1430,21 +1603,27 @@ void NEOGEO_USER slf_title_tick(uint16_t tick)
 void NEOGEO_USER slf_music(uint8_t track)
 {
     if (s_demo_silent) return;
-    soundStopAll();              waitVbl();
-    soundCancelFade();           waitVbl();
-    soundSetADPCMAVolume(0x3Fu); waitVbl();
+    /* The sound queue (NG_SOUND_QUEUE) hands each byte to the driver once it
+     * is ready, so the whole change goes out without holding the game. */
+    soundStopAll();
+    soundCancelFade();
+    soundSetADPCMAVolume(0x3Fu);
     /* In a fight the music sits under the hits and the voices. */
-    soundSetADPCMBVolume(track >= SLF_TRACK_STAGE ? 0x70u : 0xA8u); waitVbl();
-    soundSetSSGVolume(0x00u);    waitVbl();
-    soundSetFMVolume(0x00u);     waitVbl();
-    soundSetADPCMBLoop(track != SLF_TRACK_VICTORY); waitVbl();
+    soundSetADPCMBVolume(track >= SLF_TRACK_STAGE ? 0x70u : 0xA8u);
+    soundSetSSGVolume(0x00u);
+    soundSetFMVolume(0x00u);
+    soundSetADPCMBLoop(track != SLF_TRACK_VICTORY);
     playSFXB((uint8_t)(SOUND_TRACK_A + track - 1u));
-    waitVbl();
 }
 
 void NEOGEO_USER slf_sfx(uint8_t id)
 {
     if (id && !s_demo_silent) playSFX((uint8_t)(SOUND_SFX_1 + id - 1u));
+}
+
+void NEOGEO_USER slf_voice(uint16_t id)
+{
+    if (id && !s_demo_silent) playSFXWide((uint16_t)(SOUND_SFX_1 + id - 1u));
 }
 
 void NEOGEO_USER slf_audio_demo(uint8_t demo)

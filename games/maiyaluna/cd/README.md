@@ -1,9 +1,10 @@
 # Maiya & Luna V2 on Neo Geo CD
 
-This native CD port uses the released V2 game, renderer, world tables and
+This native CD port uses the released V2 game (v2.0.1: title-safe screens,
+Chapter VII answers, full-speed puzzle rooms), renderer, world tables and
 artwork unchanged. It preserves both journeys, the 46 rooms, puzzles,
 notebook, character scale and controller behavior. `v2_reference.json` checks
-the source and graphics against that baseline before and after conversion.
+the source and graphics against that baseline (v2.0.1 sources, V2 artwork) before and after conversion.
 The cartridge build does not link this directory.
 
 Build from the SDK root:

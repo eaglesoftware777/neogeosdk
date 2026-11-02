@@ -15,13 +15,14 @@ from pathlib import Path
 
 GAME = Path(__file__).resolve().parents[1]
 VOICES = GAME / "assets/authored/voices"
-NUM_SFX = 16          # sound.SFX, which comes first in the bank
+NUM_SFX = 21          # sound.SFX, which comes first in the bank
 
 ANNOUNCER_SPEAKER = 334
 # The keys keep their sample numbers; the league's own words are in the texts.
 ANNOUNCER = [("round1", "Round one!"), ("round2", "Round two!"), ("round3", "Round three!"),
              ("final", "Final round!"), ("fight", "Clash!"), ("ko", "Blackout!"), ("timeup", "Time up!"),
-             ("perfect", "Untouched!"), ("youwin", "The night is yours!"), ("draw", "Draw game!")]
+             ("perfect", "Untouched!"), ("youwin", "The night is yours!"), ("draw", "Draw game!"),
+             ("sweep", "Clean sweep!"), ("legend", "Triple untouched! Legendary!")]
 
 # Deep, middle and light men; lower and higher women; machines.
 TYPE_SPEAKERS = [646, 121, 308, 863, 213, 438]
@@ -75,6 +76,58 @@ CAST = {
     'zero': {'speaker': 812, 'type': 1},
 }
 
+# Each fighter's own shouts, in their own speaker (after every older line, so
+# those keep their numbers): a light and a heavy blow, a throw, being hurt,
+# a knock-out. And their win: the first line of their win quote.
+SHOUT_KINDS = ("attack", "heavy", "throw", "hurt", "ko")
+SHOUTS = {
+    'aditya': ('Hah!', 'Harimau!', 'Jatuh!', 'Ugh!', 'Aaaargh!'),
+    'aisha': ('Tah!', 'Take that!', 'Down!', 'Agh!', 'Nooo!'),
+    'aleksei': ('Hup!', 'Hraaah!', 'Over you go!', 'Ngh!', 'Aaargh...'),
+    'amara': ('Eh!', 'Toma!', 'Vai!', 'Ai!', 'Aaaaah!'),
+    'arun': ('Hah!', 'Haiyaa!', 'Fall!', 'Uff!', 'Aaaagh!'),
+    'atlas': ('Engage.', 'Overload!', 'Grapple.', 'Damage.', 'System... failure.'),
+    'batu': ('Hoh!', 'Hraaah!', 'Up you go!', 'Guh!', 'Uuuurgh!'),
+    'chenbao': ('Hah!', 'Hiyah!', 'Down!', 'Ugh!', 'Aaaah!'),
+    'claire': ('Hop!', 'Voilà!', 'Allez!', 'Ah!', 'Non...!'),
+    'diego': ('Arriba!', 'Olé!', 'Vámonos!', 'Ay!', 'Noooo!'),
+    'echo': ('Copy.', 'Execute!', 'Seize.', 'Error.', 'Shutting... down.'),
+    'elena': ('Hup!', 'Haaah!', 'Pinned!', 'Agh!', 'Aaaaah!'),
+    'fahri': ('Hoh!', 'Haydi!', 'Over!', 'Ugh!', 'Aaargh!'),
+    'hayato': ('Hm!', 'Seiyah!', 'Gone.', 'Ngh.', 'Ooh...'),
+    'idris': ('Yah!', 'Yallah!', 'Down you go!', 'Ugh!', 'Aaaagh!'),
+    'irina': ('Hm.', 'Breathe!', 'Relax.', 'Ah!', 'Ohhh...'),
+    'jack': ('Jab!', 'Knockout!', 'Get down!', 'Oof!', 'Noooo!'),
+    'kaimana': ('Hoo!', 'Chee-hoo!', 'Up!', 'Ugh!', 'Aaaargh!'),
+    'kenji': ('Ei!', 'Seiya!', 'Hah!', 'Guh!', 'Uwaaagh!'),
+    'kiran': ('Oi!', 'Have it!', 'Down you go, mate!', 'Ow!', 'Noooo!'),
+    'kofi': ('Hah!', 'Boom!', 'Down!', 'Ugh!', 'Aaaah!'),
+    'leila': ('Yah!', 'Too slow!', 'Away!', 'Ah!', 'Nooo!'),
+    'linwei': ('Hah!', 'Hiyah!', 'Throw!', 'Ugh!', 'Aaaah!'),
+    'lotus': ('Tsk.', 'Vanish!', 'Gone.', 'Hk!', 'Ahhh...'),
+    'lucas': ('Bora!', 'Tap out!', 'Gotcha!', 'Ugh!', 'Aaargh!'),
+    'maia': ('Hup!', 'Freeze!', 'Down!', 'Ah!', 'Nooo!'),
+    'malik': ('Hah!', 'Lion!', 'Into the sand!', 'Ugh!', 'Aaaargh!'),
+    'mason': ('Hey!', 'Eat this!', 'Get over here!', 'Argh!', 'Graaagh!'),
+    'maya': ('Hah!', 'Elbow!', 'Gotcha!', 'Ah!', 'Aaaah!'),
+    'minjun': ('Hap!', 'Kiyap!', 'Hah!', 'Ugh!', 'Aaaagh!'),
+    'mirage': ('Here.', 'Gone!', 'Fall.', 'Ah!', 'Fading...'),
+    'niran': ('Hah!', 'Naga!', 'Fall!', 'Ugh!', 'Aaaagh!'),
+    'noah': ('Osu!', 'Seiken!', 'Hah!', 'Guh!', 'Aaargh!'),
+    'ryuhei': ('Hah!', 'Ippon!', 'Seoi!', 'Ugh!', 'Uwaaah!'),
+    'sokha': ('Hah!', 'Elbow!', 'Down!', 'Ugh!', 'Aaaagh!'),
+    'somchai': ('Hah!', 'Ha-ya!', 'Down!', 'Ugh!', 'Aaaargh!'),
+    'thabo': ('Jab!', 'Lightning!', 'Down!', 'Oof!', 'Aaaagh!'),
+    'tomas': ('Olé!', 'Toro!', 'Fuera!', 'Ay!', 'Noooo!'),
+    'tororojo': ('Toro!', 'Rojo!', 'Body slam!', 'Gah!', 'Graaaagh!'),
+    'viktor': ('Hup!', 'Hraaah!', 'Down!', 'Ngh!', 'Aaaargh!'),
+    'viper': ('Fast.', 'Flash!', 'Caught.', 'Hit.', 'Offline...'),
+    'xiaomei': ('Ha!', 'Hai!', 'Down!', 'Ah!', 'Aaaah!'),
+    'zara': ('Hah!', 'Shabash!', 'To the clay!', 'Ugh!', 'Aaaagh!'),
+    'zero': ('Hn.', 'Overload!', 'Gone.', 'Gh!', 'Nooo...'),
+}
+FIGHTER_VOICE_KINDS = ("win",) + SHOUT_KINDS
+
 
 def fighter_lines(data):
     """(key, text, move names) for each special (up to three) and the first super."""
@@ -108,7 +161,35 @@ def plan(fighter_data):
             out.append({"number": number, "key": f"{data['id']}_{key}", "text": text, "move": move,
                         "fighter": data["id"], "speaker": cast["speaker"], "robot": cast.get("robot", 0)})
             number += 1
+    quotes = json.loads((GAME / "assets/authored/win_quotes.json").read_text())
+    for data in sorted(fighter_data, key=lambda d: d["id"]):
+        fid, cast = data["id"], CAST[data["id"]]
+        texts = (win_text(quotes.get(fid)),) + tuple(SHOUTS[fid])
+        for kind, text in zip(FIGHTER_VOICE_KINDS, texts):
+            out.append({"number": number, "key": f"{fid}_v_{kind}", "text": text, "fighter": fid,
+                        "voice": kind, "speaker": cast["speaker"], "robot": cast.get("robot", 0)})
+            number += 1
     return out
+
+
+def win_text(quote):
+    """The spoken win: the quote's first line, as a sentence -- a line that
+    stops mid-sentence takes the next line's words up to the sentence's end."""
+    lines = [l.strip() for l in (quote or ["Victory."])]
+    line = lines[0]
+    if line[-1:] not in ".!?" and len(lines) > 1:
+        rest = lines[1]
+        cut = min((rest.find(c) for c in ".!?" if c in rest), default=-1)
+        line = f"{line} {rest[:cut + 1] if cut >= 0 else rest}"
+    if line.isupper():
+        line = line.capitalize()
+    return line if line[-1:] in ".!?" else line + "."
+
+
+def fighter_voices(fighter_id, entries):
+    """Sample numbers of a fighter's win, attack, heavy, throw, hurt and K.O. lines."""
+    own = {e["voice"]: e["number"] for e in entries if e.get("fighter") == fighter_id and e.get("voice")}
+    return [own[k] for k in FIGHTER_VOICE_KINDS]
 
 
 def load_fighters():
@@ -118,7 +199,7 @@ def load_fighters():
 def move_samples(data, entries):
     """Sample number for each of the fighter's moves (0: silent), by move name.
     A follow-up (KOKORO UKE STRIKE) shares its stance's shout."""
-    names = {e["move"]: e["number"] for e in entries if e.get("fighter") == data["id"]}
+    names = {e["move"]: e["number"] for e in entries if e.get("fighter") == data["id"] and e.get("move")}
     out = []
     for m in data["moves"]:
         n = names.get(m["name"], 0)

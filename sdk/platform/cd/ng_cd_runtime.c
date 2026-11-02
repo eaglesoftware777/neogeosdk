@@ -23,7 +23,9 @@ void NEOGEO_USER clearFix(void)
     NEO_REGISTER(VRAM_ADDR)=FIXMAP;
     for(i=0;i<1280u;i++) NEO_REGISTER(VRAM_RW)=0xFF;
 }
-void NEOGEO_USER waitVbl(void) { ng_cd_wait_vblank(); }
+/* As on the cartridge (sdk/neogeolib.c), the game's frames are counted at
+ * USER_WORKRAM + 32: test tools read the frame rate there. */
+void NEOGEO_USER waitVbl(void) { ng_cd_wait_vblank(); ++*(volatile uint32_t *)(USER_WORKRAM + 32); }
 
 void ng_cd_irq(void)
 {

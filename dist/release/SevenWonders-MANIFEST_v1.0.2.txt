@@ -1,0 +1,12 @@
+# SevenWonders v1.0.2: dist/release, made by tools/make_release.py
+# size  crc32     sha256  file
+ 13373440  541dd146  9efc6c765b6cad8755b9b3e894ff0fd63de448bf813e3d0eb65a0735c13109a1  SevenWonders-WIP-NeoSD_MVS_v1.0.2.neo
+ 13373440  16e41071  c5febbb8bdc1ac774e749e8b9ad1bd998a8d34799d8b4a7d868269d2aaecf74d  SevenWonders-WIP-NeoSD_AES_v1.0.2.neo
+  3224884  9feda0a9  d20c688c895243bea0f435134c520622cc912d6a42daa671fc299142b2c8ee74  SevenWonders-Darksoft-MVS_v1.0.2.zip
+  3224884  0df8982c  1ec51da054f3ee35180d8b0ba48b02cc4f757b3b6b0204b5489fee4e99611733  SevenWonders-Darksoft-AES_v1.0.2.zip
+  3236374  8cc9a54b  defdcc5a6f866770fbfe020074380a5a855990748d4c95cb927546f45573f59e  SevenWonders-BackBit-MVS_v1.0.2.zip
+  3236455  284c8a5d  01b532be743e7af14b0f72be901d95610a98350c8ac5fc63df9217721fe62342  SevenWonders-BackBit-AES_v1.0.2.zip
+  3286674  1ed0ee07  1db6bb4ca29bf5aaa5d14f3625ea7006cecef76eeddfc6fe533f910e6b027d42  SevenWonders-WIP-EagleBIOS_v1.0.2.zip
+  3265153  be794d16  d5b0bea018f1a1fc8a76bba5ea7769851b3f8bc5ba5537774dd7d3b002eec383  SevenWonders-WIP-AES-EagleBIOS_v1.0.2.zip
+     5842  0da05280  cfeca3c9281ac554cf7e0f31ad645757fcb2fe2091de7e7e0a2a95c3a5165ac2  SevenWonders-README_v1.0.2.txt
+     3241  d7d71d54  a1cc3da8b0eeb84edeaab3838533a9c8a6893ebe816117e833efeea3a189e61b  SevenWonders-CHANGELOG_v1.0.2.txt

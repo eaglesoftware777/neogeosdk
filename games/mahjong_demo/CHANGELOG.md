@@ -3,6 +3,11 @@
 The ROM sets ship with the NeoGeoSDK pre-releases and are numbered on their
 own: `_v1` with v1.7.7.
 
+## v1.0.1 (2026-11-02, NeoGeoSDK v1.7.7)
+
+- The 2026-10-26 v1 update under a number of its own, rebuilt with the
+  v1.7.7 release's engine and sound driver; play is unchanged.
+
 ## v1 update (2026-10-26, NeoGeoSDK v1.7.7 pre-release, same file names)
 
 - Everything on screen stays inside columns 3-36 of the 40 (x 24-295), the

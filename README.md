@@ -3,26 +3,32 @@
 Neo Geo development SDK for SNK hardware.
 
 - Repository: https://github.com/eaglesoftware777/neogeosdk
-- Current release: `v1.7.0`
-- Pre-releases: `v1.7.1` — Maiya: Super Nature Girl and EagleBIOS;
-  `v1.7.2` — frames written only in the vertical blank, and Maiya's v3
-  ROMs; `v1.7.3` — Sky Lance's first public ROM set (painted routes, boss
-  arenas, cockpit instruments, an opt-in vertical shooter module) and
-  Maiya's v4 ROMs with her walk and run redrawn; `v1.7.5` — the `ng_fight`
-  fighting-game engine and Shadow League Fighting's first playable ROM set;
-  `v1.7.7` — four genre engines (puzzle, mahjong, RPG, beat'em-up) and
-  four new games on them (see the changelog)
+- Current release: `v1.7.7` — the games release: seven games built on the
+  SDK (Maiya: Super Nature Girl, Sky Lance, Shadow League Fighting, No Signal
+  Z Alpha, Maiya & Luna, Seven Wonders Puzzles, Mahjong Demo), four genre
+  engines, the fighting core, EagleBIOS and an experimental Neo Geo CD
+  backend. Everything since v1.7.0:
+  [`docs/releases/ANNOUNCEMENT_v1.7.7.md`](docs/releases/ANNOUNCEMENT_v1.7.7.md)
+- Previous release: `v1.7.0` — the 2D engine release (below); pre-releases
+  in between: `v1.7.1` (Maiya and EagleBIOS), `v1.7.2` (frames written only
+  in the vertical blank), `v1.7.3` (Sky Lance and an opt-in vertical shooter
+  module), `v1.7.5` (the `ng_fight` fighting core and Shadow League)
 - Vertical shooter API: [`docs/vertical_shooters.md`](docs/vertical_shooters.md)
-- Fighting-game API: [`docs/fighting.md`](docs/fighting.md) (v1.7.5 work: Shadow League Fighting, first playable)
+- Fighting-game API: [`docs/fighting.md`](docs/fighting.md) and [`docs/FIGHTING_V1_7_7.md`](docs/FIGHTING_V1_7_7.md)
 - Genre engines: [`docs/GENRE_ENGINES_V1.7.7.md`](docs/GENRE_ENGINES_V1.7.7.md)
 - Changelog: [`CHANGELOG.md`](./CHANGELOG.md)
 - SDK API guide: [`SDK_API_GUIDE.md`](./SDK_API_GUIDE.md)
+- Manuals: [`docs/neogeosdk_v1.7.7_manual.pdf`](docs/neogeosdk_v1.7.7_manual.pdf)
+  (programmer's manual and library reference) and
+  [`docs/neogeosdk_v1.7.7_overview.pdf`](docs/neogeosdk_v1.7.7_overview.pdf)
+  (technical overview)
 
-**NeoGeoSDK v1.7.0 is released.** Download the
-[release assets](https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.7.0),
-including the [ready-to-run demo ROM package (777)](https://github.com/eaglesoftware777/neogeosdk/releases/download/v1.7.0/neogeosdk_v1.7.0_demo_777.zip).
-See [release and demo installation notes](docs/RELEASE_v1.7.0.md) for the
-matching MAME manifest, BIOS requirements, and checksum verification.
+**NeoGeoSDK v1.7.7 is released.** Download the
+[release assets](https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.7.7):
+every game's MAME sets with EagleBIOS, NeoSD images and Darksoft folders.
+See [release notes](docs/RELEASE_v1.7.7.md) for installation, BIOS
+requirements and checksum verification. The v1.7.0 demo package stays
+available on [its release](https://github.com/eaglesoftware777/neogeosdk/releases/tag/v1.7.0).
 
 ## AI/SI transparency
 
@@ -273,7 +279,12 @@ with `GAME=<name>`.
 | `games/demo` | 777 | `777-*` | C | The 25-chapter engine reel — every subsystem, in order |
 | `games/demo_plus` | 778 | `778-*` | C/C++ | The same shared demo scenes and assets, with the C++ engine linked (`USE_2D_PLUS=1`) |
 | `games/skylance` | 779 | `779-*` | C | Sky Lance — a complete vertical shooter |
-| `games/maiya` | 780 | `780-*` | C | Maiya: Super Nature Girl, a six-valley platform adventure with guarded arenas and bonus rounds |
+| `games/maiya` | 780 | `780-*` | C | Maiya: Super Nature Girl, a twelve-stage platform adventure with guarded arenas, vaults and bonus rounds |
+| `games/shadowleague` | 781 | `781-*` | C, `ng_fight` | Shadow League Fighting: 44 fighters, team battles, a referee's ceremony, score and bonus counts |
+| `games/sevenwonders` | 782 | `782-*` | C, `ng_puzzle` | Seven Wonders Puzzles: match, bubble and picture-logic boards |
+| `games/maiyaluna` | 783 | `783-*` | C, `ng_rpg` | Maiya & Luna: two solo journeys through seven chapters |
+| `games/nosignal` | 784 | `784-*` | C, `ng_beatemup` | No Signal Z Alpha: an eight-street beat'em-up for one player |
+| `games/mahjong_demo` | 785 | `785-*` | C, `ng_mahjong` | Mahjong Demo: Hong Kong Old Style against three CPU players, and solitaire |
 | `games/helloworld` | 772 | `772-*` | — | Minimal FIX-text and one sample; the tutorial target |
 | `games/tutorial` | 555 | `555-*` | C | The minimal engine loop, nothing else |
 | `games/neogeogame` | 775 | `775-*` | C | Sprite-based formation shooter |
@@ -540,7 +551,13 @@ and run steps directly.
 
 ## Release Assets
 
-The `v1.7.0` release publishes these attached assets:
+The `v1.7.7` release publishes, for each of the seven games and each of its
+versions, the MAME sets with EagleBIOS (MVS and AES), NeoSD images, Darksoft
+and BackBit folders, a README, a CHANGELOG and a MANIFEST of checksums, plus
+`neogeosdk_v1.7.7_manual.pdf` and `neogeosdk_v1.7.7_overview.pdf`. See
+[`docs/RELEASE_v1.7.7.md`](docs/RELEASE_v1.7.7.md).
+
+The `v1.7.0` release keeps these attached assets:
 
 - `neogeosdk_v1.7.0_demo_777.zip`: the six demo ROMs, matching MAME software
   list, checksums, and installation instructions. No BIOS or emulator is included.
@@ -567,11 +584,14 @@ Current release page:
 | Document | For |
 |---|---|
 | [`AI_SI_TRANSPARENCY.md`](./AI_SI_TRANSPARENCY.md) | Component provenance, optional SDK acknowledgement and the game-development disclosure policy for v1.7.7 |
+| [`docs/releases/ANNOUNCEMENT_v1.7.7.md`](./docs/releases/ANNOUNCEMENT_v1.7.7.md) | What v1.7.7 brings, everything since v1.7.0 |
 | [`docs/INTRODUCTION.md`](./docs/INTRODUCTION.md) | What the SDK is, what the machine is, and the reading order |
 | [`docs/HELLO_WORLD.md`](./docs/HELLO_WORLD.md) | Your first ROM, in ten minutes |
 | [`docs/PROGRAMMERS_MANUAL.md`](./docs/PROGRAMMERS_MANUAL.md) | The working manual — build, layout, engine tick, assets, frame budget |
-| [`NEOGEOSDK_v1.7.0.md`](./NEOGEOSDK_v1.7.0.md) | The single-file release overview |
-| [`docs/neogeosdk_v1.7.0_manual.pdf`](./docs/neogeosdk_v1.7.0_manual.pdf) | The printable manual and API reference |
+| [`docs/neogeosdk_v1.7.7_manual.pdf`](./docs/neogeosdk_v1.7.7_manual.pdf) | The printable manual and API reference (`tools/make_manual_pdf.py`) |
+| [`docs/neogeosdk_v1.7.7_overview.pdf`](./docs/neogeosdk_v1.7.7_overview.pdf) | The illustrated technical overview (`tools/make_overview_pdf.py`) |
+| [`NEOGEOSDK_v1.7.0.md`](./NEOGEOSDK_v1.7.0.md) | The v1.7.0 single-file release overview |
+| [`docs/neogeosdk_v1.7.0_manual.pdf`](./docs/neogeosdk_v1.7.0_manual.pdf), [`docs/neogeosdk_v1.7.0_overview.pdf`](./docs/neogeosdk_v1.7.0_overview.pdf) | The v1.7.0 manual and overview, as published with that release |
 
 **Reference**
 
@@ -582,7 +602,7 @@ Current release page:
 | [`docs/API_2D_ENGINE_CPP.md`](./docs/API_2D_ENGINE_CPP.md) | The C++14 build of the same engine |
 | [`docs/SOUND_DRIVER.md`](./docs/SOUND_DRIVER.md) | The Z80 driver, the YM2610, and the audio pipelines |
 | [`docs/ARTBOX_PIPELINE.md`](./docs/ARTBOX_PIPELINE.md) | PNG to C-ROM, the quantiser, and Artbox Studio |
-| [`docs/GAMES.md`](./docs/GAMES.md) | What each of the six shipped games demonstrates |
+| [`docs/GAMES.md`](./docs/GAMES.md) | What each game demonstrates: the seven released games, the showcase and the examples |
 | [`docs/DEMO_CHAPTERS.md`](./docs/DEMO_CHAPTERS.md) | The 25 demo chapters |
 | [`docs/TOOLS.md`](./docs/TOOLS.md) | Every helper script — art, sound, verification, launchers, GIMP plug-ins |
 

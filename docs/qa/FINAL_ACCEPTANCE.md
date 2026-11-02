@@ -131,7 +131,7 @@ that day are listed under each game); the candidates' release files are in
 | Shadow League duels (`games/shadowleague/tools/qa.py`, MVS and AES) | 2 passed |
 | Neo Geo CD BIN/CUE discs in MAME `neocdz` (EagleBIOS-CD) | 6 boot, screens identical to the CHD/ISO originals |
 | Sky Lance shot probe | v2: 1 hung shot (2999 frames still); v2.1.0: 0 |
-| Host unit tests `make -C tests test` | **fails at HEAD**: `test_move_touches_driver_only` (see BASELINE_AUDIT.md); not caused by this pass |
+| Host unit tests `make -C tests test` | **fails at HEAD**: `test_move_touches_driver_only` (see BASELINE_AUDIT.md); not caused by this pass. Resolved 2026-11-01: the suite passes |
 | Hardware (AES, MVS, NeoSD, BackBit, Darksoft, AES+) | NOT TESTED in this pass |
 
 ## Not done, and why

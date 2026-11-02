@@ -30,6 +30,7 @@ void NEOGEO_USER waitVbl(void)
 {
     uint32_t before=ng_cd_frames;
     do { ng_cd_wait_vblank(); } while (ng_cd_frames==before);
+    ++*(volatile uint32_t *)(USER_WORKRAM + 32);   /* the game's frames, as on the cartridge */
     sky_cd_audio_tick();
 }
 

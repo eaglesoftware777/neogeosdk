@@ -10,7 +10,7 @@
     "games/nosignal/artbox/generated/ns_faces.h": "8860a7950bded1210402c439a8a249e44ac164a71d8ab6419728fbedcd1392f8",
     "games/nosignal/main.c": "51bd5fe1102cdbabdbf02d1a38d99d6ef36ff1a429f3c4322972cf0facb54570",
     "games/nosignal/scenes/ns.h": "608aebaadfa67f0f15f7410df021df2e4cff5ef72a5d6bbabcc765c083c304a1",
-    "games/nosignal/scenes/ns_data.c": "59ebca31d2a7f5603cba25a4400fe1aacda4da15d27e1d95867f617bd5095b69",
+    "games/nosignal/scenes/ns_data.c": "e892bd1de5311c5b31d169358637bb796aeb7d7406de029d52da8f8d37aa8d5c",
     "games/nosignal/scenes/ns_game.c": "4905d8bc5cf9c92764541cc89c018181c82766d1c8c3123855c79f63c058512d",
     "games/nosignal/sound/samples/out_16el_b/1.wav": "48fb5eb575158eedc87ec65df8e9a598de5082e264fbd154e2f9183360a1daf0",
     "games/nosignal/sound/samples/out_16el_b/1.wav.json": "81b523f1b54f66b1253d63ee017306e7615181ab9268b46487679e104e476e9d",
@@ -95,8 +95,8 @@
     "games/nosignal/sound/samples/out_a/7.adpcma": "80e63de7d008038e68019383b2291cd750b577abaf7723362c8ffedbb7732ee4",
     "games/nosignal/sound/samples/out_a/8.adpcma": "674f4860fc96e45b561ad070ad4333128b4c7e0866b5a2741da5daf3f41befe2",
     "games/nosignal/sound/samples/out_a/9.adpcma": "7e5709880c2556ddea9e7b893ddd957636c346808851f3f7bae4e924393c305c",
-    "sdk/2d_engine/ng_beatemup.c": "6af541d6691c61e5a28016aee902620eb16e127fef097c8c75cd85e24285983a",
-    "sdk/2d_engine/ng_beatemup.h": "8136b4604bb8bf8d1668a0417703d054052b9867348188a8102c013d0c45dc3a",
+    "sdk/2d_engine/ng_beatemup.c": "f34a88a65e561cf648838a0b89c86f2c0163a60ca2128469808bc3fa7c3d7c9e",
+    "sdk/2d_engine/ng_beatemup.h": "3ec30ba2b0a5efe04e2783b7a22d940145b84f26464794b8d6b2c27b8ffa84d6",
     "games/nosignal/scenes/ns_draw.c": "6490c5306bc667fa5f034d2440e59575f22abb9a43f4c5a8ddc45a1f6fd21653",
     "games/nosignal/artbox/generated/ns_glow.h": "5871e0bf5b9aa79856ae9226629bc8230dc382eac6ed8978ab67faab91725c1d"
   }

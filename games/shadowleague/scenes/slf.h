@@ -33,13 +33,16 @@
 /* Sound effects (tools/sound.py order, 1-based like SOUND_SFX_n + 1). */
 enum { SLF_SFX_COIN = 1, SLF_SFX_MENU, SLF_SFX_START, SLF_SFX_HIT_LIGHT, SLF_SFX_HIT_HEAVY,
        SLF_SFX_BLOCK, SLF_SFX_WHOOSH, SLF_SFX_SPECIAL, SLF_SFX_SUPER, SLF_SFX_THROW, SLF_SFX_KO,
-       SLF_SFX_LAND, SLF_SFX_BELL, SLF_SFX_COUNTER, SLF_SFX_SELECT, SLF_SFX_POWER };
+       SLF_SFX_LAND, SLF_SFX_BELL, SLF_SFX_COUNTER, SLF_SFX_SELECT, SLF_SFX_POWER,
+       /* the bonus count's tick and its chime; the untouched win's sting; a
+        * team beaten by one fighter; three untouched wins in one match */
+       SLF_SFX_TALLY, SLF_SFX_TALLY_END, SLF_SFX_PERFECT, SLF_SFX_SWEEP, SLF_SFX_LEGEND };
 /* ADPCM-B tracks (tools/music.py): then one per arena, in stage order. */
 enum { SLF_TRACK_TITLE = 1, SLF_TRACK_SELECT, SLF_TRACK_VICTORY, SLF_TRACK_CONTINUE, SLF_TRACK_STAGE };
 /* Voice lines after the effects (tools/slf_voices.py): the announcer's, and
  * four grunts for each voice type. */
 enum { SLF_ANN_ROUND1, SLF_ANN_ROUND2, SLF_ANN_ROUND3, SLF_ANN_FINAL, SLF_ANN_FIGHT, SLF_ANN_KO,
-       SLF_ANN_TIMEUP, SLF_ANN_PERFECT, SLF_ANN_YOUWIN, SLF_ANN_DRAW };
+       SLF_ANN_TIMEUP, SLF_ANN_PERFECT, SLF_ANN_YOUWIN, SLF_ANN_DRAW, SLF_ANN_SWEEP, SLF_ANN_LEGEND };
 enum { SLF_GRUNT_ATTACK, SLF_GRUNT_HURT, SLF_GRUNT_KO, SLF_GRUNT_POWER };
 
 #define SLF_FLOOR_Y 212
@@ -73,6 +76,11 @@ void     NEOGEO_USER slf_fighter_hide(uint8_t slot);
 int16_t  NEOGEO_USER slf_fighter_body_offset(uint8_t def, uint8_t sprite);
 void     NEOGEO_USER slf_fighter_bank(uint8_t slot, uint8_t bank);
 void     NEOGEO_USER slf_fighter_bruise(uint8_t slot, uint8_t def, uint8_t alt);
+void     NEOGEO_USER slf_actor_palettes(uint8_t actor, uint8_t def, uint8_t alt, uint8_t beaten);
+void     NEOGEO_USER slf_actor_pose(uint8_t actor, uint8_t def, uint8_t sprite, int16_t x, int16_t y, uint8_t flip);
+/* Each player's score (slf_game.c), shown on the HUD; a CPU side shows none. */
+extern uint32_t slf_score[2];
+extern uint8_t slf_hud_scores;      /* the HUD's score row (slf_draw.c), set by a scoring match */
 void     NEOGEO_USER slf_puts_tall(uint8_t x, uint8_t y, const char *text, uint8_t pal);
 void     NEOGEO_USER slf_puts_tall_center(uint8_t y, const char *text, uint8_t pal);
 void     NEOGEO_USER slf_puts_tall_right(uint8_t x_end, uint8_t y, const char *text, uint8_t pal);
@@ -88,6 +96,7 @@ void     NEOGEO_USER slf_trail(uint8_t who, uint8_t frames);
 void     NEOGEO_USER slf_fx_reset(void);
 void     NEOGEO_USER slf_music(uint8_t track);
 void     NEOGEO_USER slf_sfx(uint8_t id);
+void     NEOGEO_USER slf_voice(uint16_t id);      /* any sample number of the plan, 1..511 */
 void     NEOGEO_USER slf_audio_demo(uint8_t demo);
 void     NEOGEO_USER slf_combat_events(NGFMatch *m, const uint8_t *defs);
 uint8_t  NEOGEO_USER slf_home_menu(void);

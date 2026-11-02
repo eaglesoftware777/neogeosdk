@@ -178,6 +178,8 @@ typedef struct {
                                             when the hands are empty (C still picks up as well) */
 #define NGB_SF_WALK_ON       0x04u       /* walking onto the vehicle rides it (a held weapon is dropped);
                                             B or C jumps off it, clear of it (no hop on B then) */
+#define NGB_SF_OPEN_ITEMS    0x08u       /* what a crate or barrel holds lies in the open from the start
+                                            (food and points: nothing to break first) */
 typedef struct {
     uint16_t length;                     /* pixels */
     uint8_t y_min, y_max;                /* the walkable band, pixels */

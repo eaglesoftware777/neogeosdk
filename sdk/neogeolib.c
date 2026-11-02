@@ -778,7 +778,7 @@ void NEOGEO_USER soundCommand(uint8_t command) {
     } else {
         switch (command) {
         case 0x05: case 0x06: case 0x07: case 0x0A: case 0x0E:
-        case 0x12: case 0x13: case 0x14: case 0x15: case 0x16:
+        case 0x10: case 0x12: case 0x13: case 0x14: case 0x15: case 0x16:
         case 0x17: case 0x18: case 0x19: case 0x1A: case 0x1B:
         case 0x1D: case 0x1E: case 0x1F: case 0x31: case 0x32:
             sound_parameter_pending = 1u;
@@ -820,6 +820,15 @@ void NEOGEO_USER playSFX(uint8_t n) {
 		isZ80Ready();
 		soundCommand(n);
 	}
+}
+/* Any ADPCM-A sample, 0..511: the short command below $40, the full index
+ * ($16) to 255, then $10 with the index less 256. */
+void NEOGEO_USER playSFXWide(uint16_t n) {
+	if (n < 0x100u) { playSFX((uint8_t)n); return; }
+	isZ80Ready();
+	soundCommand(0x10u);
+	isZ80Ready();
+	soundCommand((uint8_t)(n - 0x100u));
 }
 void NEOGEO_USER playSFXB(uint8_t n) { isZ80Ready(); soundCommand(0x80 + n); }
 void NEOGEO_USER playFMDebug(void) { isZ80Ready(); soundCommand(0x30); }

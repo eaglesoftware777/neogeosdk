@@ -2,13 +2,17 @@
 
 ## Overview
 
-The native Neo Geo CD pipeline for [neogeosdk](../) is fully implemented and verified. Both **[Maiya: Super Nature Girl](../games/maiya)** (v4 CD) and **[Sky Lance](../games/skylance)** (v2 CD) are ported to native CD media, complete with Red Book CD-DA audio, ADPCM-A sound effects and voice samples, and native CD graphics DRAM streaming.
+The native Neo Geo CD pipeline for [neogeosdk](../) builds CD programs, authors
+discs and packs them as one BIN/CUE per disc. Four games have CD ports:
+**[Maiya: Super Nature Girl](../games/maiya)**, **[Sky Lance](../games/skylance)**,
+**[Maiya & Luna](../games/maiyaluna)** and **[No Signal Z Alpha](../games/nosignal)**,
+each with Red Book CD-DA music, ADPCM-A sound effects and native CD sprite,
+FIX and sound uploads.
 
-Both titles have been verified across:
-1. **Official SNK Neo Geo CDZ BIOS** (CRC32: `0xdf9de490`, SHA1: `7bb26d1e5d1e930515219cb18bcde5b7b23e2eda`).
-2. **EagleBIOS-CD Firmware** (CDZ, Top-Loader, and Front-Loader variants).
-3. **NeoCD HLE Simulator Core** (`neocd_libretro`) across continuous automated frame runs.
-4. **Physical CD-R Media** on real Neo Geo CD hardware.
+The support is **experimental**. Every disc is checked in emulation with two
+system ROMs: the stock CDZ firmware (supplied by the user, never included) and
+**EagleBIOS-CD**, the SDK's own CD firmware built from `bios/cd`. Burnt discs,
+optical drive emulators and real Neo Geo CD consoles have not been tested.
 
 ---
 
@@ -45,13 +49,23 @@ Cartridge Assets (C1/C2, S1, ADPCM-A, ADPCM-B)
 
 ## 2. Test & Verification Matrix
 
-| Target System | Firmware / BIOS | Maiya CD (v4) | Sky Lance CD (v2) | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| **MAME neocdz** | Official SNK CDZ BIOS (`neocd.bin`) | **PASSED** (100% avg speed) | **PASSED** (100% avg speed) | Verified |
-| **MAME neocdz** | EagleBIOS-CD CDZ (`eagle_cd_cdz.rom`) | **PASSED** (100% avg speed) | **PASSED** (100% avg speed) | Verified |
-| **NeoCD HLE Core** | Built-in CD HLE BIOS | **PASSED** (2386 vblanks, 69 SFX calls) | **PASSED** (2387 vblanks, 208 SFX calls) | Verified |
-| **NeoCD/SDL** | Official SNK CDZ BIOS | **PASSED** (Audio CDDA playback OK) | **PASSED** (Audio CDDA playback OK) | Verified |
-| **Real Hardware** | SNK CD Top/Front/CDZ | **CUE/ISO CD-DA Master Ready** | **CUE/ISO CD-DA Master Ready** | Ready for Burning |
+Checked on 2026-11-01 with fresh builds of all four discs, in MAME 0.264 (Linux)
+and MAME 0.283 (Windows, through the test-folder launchers): each disc loads and
+reaches its title screen and attract mode.
+
+| Target | Firmware | Maiya | Sky Lance | Maiya & Luna | No Signal |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| MAME `neocdz` | stock CDZ (`neocd.bin`, CRC32 `df9de490`, user-supplied) | boots | boots | boots | boots |
+| MAME `neocdz` | EagleBIOS-CD CDZ (`bios/cd`) | boots | boots | boots | boots |
+| NeoCD HLE core (`neocd_libretro`) | built-in HLE | ran 2026-10-22 | ran 2026-10-22 | – | – |
+| Burnt CD-R, SD loaders, real consoles | any | not tested | not tested | not tested | not tested |
+
+The HLE core runs (`tools/neocd/qa_libretro.py`, optional) are startup
+diagnostics only and never count as firmware QA.
+
+EagleBIOS-CD has no memory card service yet: Maiya & Luna keeps its
+checkpoints in RAM under it (see `games/maiyaluna/cd/README.md`). Use the
+stock firmware when saves must persist.
 
 ---
 
@@ -59,15 +73,21 @@ Cartridge Assets (C1/C2, S1, ADPCM-A, ADPCM-B)
 
 ### Option A: Testing with MAME
 
-To test Neo Geo CD images in MAME:
+`neocdz` needs `neocd.bin` and `000-lo.lo` in a `neocdz` folder on the ROM path.
+For the stock profile these are your own files. For EagleBIOS-CD, put the
+firmware in MAME's word order (the release's `roms/neocdz/neocd.bin`) next to
+the SDK's own `bios/000-lo.lo`; MAME reports their checksums as unexpected and
+runs them.
 
 ```bash
-# Launch with official Neo Geo CDZ BIOS:
-mame neocdz -cdrom path/to/game.cue
+# stock CDZ firmware in roms-stock/neocdz:
+mame neocdz -bios official -rompath roms-stock -cdrom maiya.cue
 
-# Launch with custom EagleBIOS-CD:
-mame neocdz -cdrom path/to/game.cue -bios eagle
+# EagleBIOS-CD in roms-eagle/neocdz:
+mame neocdz -bios official -rompath roms-eagle -cdrom maiya.cue
 ```
+
+Loading takes about 30 seconds of emulated disc reads before the title.
 
 **Standard Controls**:
 - `1`: Player 1 Start
@@ -78,9 +98,27 @@ mame neocdz -cdrom path/to/game.cue -bios eagle
 - `Space`: Button C (Special Art / Bomb)
 - `Left Shift`: Button D
 
----
+### Option B: The MAME test folder
 
-### Option B: Testing with NeoCD / Libretro
+`tools/mame_bats.py` installs discs into the Windows test folder
+(`C:\mame\neogeosdk`) and writes two launchers per game, also listed in
+`MENU.bat` under each game:
+
+```bash
+python3 tools/mame_bats.py --dest /mnt/c/mame/neogeosdk \
+    --cd maiya build/neocd/maiya/bincue/maiya.cue \
+    --cd-bios build/neocd/bios/eagle_cd_cdz.rom
+```
+
+- `run_<game>_cd_eagle.bat`: the disc with EagleBIOS-CD from
+  `tests\cd-bios\eagle\neocdz` (installed by `--cd-bios`, with the SDK's LO data).
+- `run_<game>_cd_stock.bat`: the same disc with your own stock firmware from
+  MAME's `roms\neocdz` folder. No stock firmware is copied or supplied.
+
+Each firmware keeps its own settings and saves in `tests\<game>\cd\eagle` and
+`tests\<game>\cd\stock`.
+
+### Option C: Testing with NeoCD / Libretro
 
 NeoCD HLE emulation can be executed either standalone or through RetroArch's `neocd_libretro` core:
 
@@ -94,20 +132,39 @@ python3 tools/neocd/qa.py --build build/neocd/skylance --out out/qa_skylance
 
 ---
 
-## 4. Burning to CD-R for Physical Neo Geo CD Consoles
+## 4. Building a Disc, BIN/CUE, and Burning a CD-R
 
-Both games are packaged as standard Red Book Audio + Data discs (Track 01 Mode 1/2048 Data + Tracks 02..10 44.1 kHz Stereo CD-DA):
+```bash
+python3 tools/neocd/build.py --game maiya --out build/neocd/maiya
+python3 tools/neocd/bincue.py --cue build/neocd/maiya/disc/maiya.cue \
+    --out build/neocd/maiya/bincue --name maiya
+make bios-cd CD_BIOS_BUILD_DIR=build/neocd/bios     # EagleBIOS-CD
+```
 
-1. Launch your CD burning tool (e.g., **ImgBurn**, **CDBurnerXP**, or **cdrecord**).
-2. Select **Write Image to Disc** and choose `maiya.cue` or `skylance.cue`.
-3. Set write speed to **4x** (or the lowest speed supported by your drive and media).
-4. Use high-grade CD-R media (e.g., Taiyo Yuden / CMC Pro, Verbatim DataLifePlus AZO).
-5. Load the finalized disc into any Neo Geo CD Top-Loader, Front-Loader, or CDZ unit.
+`build.py` writes the ISO with WAV audio tracks and a cue (`disc/`).
+`bincue.py` turns it into one `.bin` (track 1 as MODE1/2352 with EDC/ECC, the
+audio tracks with their pregaps) and a `.cue`: the format optical drive
+emulators (SD loaders) and burning programs take; they do not read a CHD.
+
+Each disc is a mixed-mode disc: track 1 data, then 44.1 kHz stereo CD-DA
+tracks (9 for Maiya and Sky Lance, 18 for Maiya & Luna and No Signal).
+
+To burn one (untested on real consoles so far):
+
+1. Open the `.cue` (not the `.bin`) in a burner that writes mixed-mode discs
+   in disc-at-once mode (ImgBurn, CDRWIN, cdrdao).
+2. Write at a low speed on good CD-R media.
+3. Keep the `.cue` and `.bin` together; the `.cue` names the `.bin`.
 
 ---
 
 ## 5. Release Packages
 
-The production disc images are published in `dist/release/`:
-- **`Maiya-NeoGeoCD_v4.zip`**: Complete Maiya CD v4 disc master (`maiya.iso`, `maiya.cue`, 9 CD-DA audio tracks, README, SHA256 checksums).
-- **`SkyLance-NeoGeoCD_v2.zip`**: Complete Sky Lance CD v2 disc master (`skylance.iso`, `skylance.cue`, 9 CD-DA audio tracks, README, SHA256 checksums).
+Neo Geo CD archives are built at release time and published with the release
+(`dist/release/` is not tracked):
+
+- `<Game>-NeoGeoCD-BinCue_v<version>.zip`: the `.cue` and `.bin`, a README,
+  the licence and SHA-256 sums, for every CD port.
+- `EagleBIOS-CD_v<sdk>.zip`: the firmware in both byte orders.
+
+No archive contains a stock system ROM.

@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFilter
 
 TOOLS = Path(__file__).resolve().parent
 GAME = TOOLS.parent
@@ -347,7 +347,7 @@ STAGES = [
     ("frozen", "ICEBOUND HARBOR - MURMANSK", ("FROZEN", "LODGE", "NORTHERN", "MOUNTAIN COMPOUND")),
     ("docks", "PIER 9 CONTAINER YARD - MANILA", ("MANILA", "WAREHOUSE")),
 ]
-STAGE_BANKS = 16
+STAGE_BANKS = 32       # palettes 32-63: the fight leaves them all to the arena
 
 
 def stage_idx_for_fighter(f):
@@ -387,10 +387,11 @@ BIG_TEXT.append(("GUARDBREAK", "GUARD BREAK", 1))
 # The referee's count and the league's own calls.
 BIG_TEXT += [("COUNT3", "3", 3), ("COUNT2", "2", 3), ("COUNT1", "1", 3), ("CLASH", "CLASH!", 3),
              ("BLACKOUT", "BLACKOUT", 3), ("UNTOUCHED", "UNTOUCHED", 2), ("NIGHT", "THE NIGHT IS YOURS", 2),
-             ("RISE", "RISE AGAIN", 2)]
+             ("RISE", "RISE AGAIN", 2), ("SWEEP", "CLEAN SWEEP", 2), ("LEGEND", "TRIPLE UNTOUCHED", 2)]
 NATIVE_WORDS = {"ROUND1", "ROUND2", "ROUND3", "FINAL", "FIGHT", "KO", "TIMEUP", "WIN", "DRAW",
                 "VS", "PERFECT", "GAMEOVER", "COUNTER", "CONGRATS", "CHALLENGER", "GUARDBREAK",
-                "COUNT3", "COUNT2", "COUNT1", "CLASH", "BLACKOUT", "UNTOUCHED", "NIGHT", "RISE"}
+                "COUNT3", "COUNT2", "COUNT1", "CLASH", "BLACKOUT", "UNTOUCHED", "NIGHT", "RISE",
+                "SWEEP", "LEGEND"}   # (these two from tools/big_word.py)
 
 
 # FIX palettes: 0 text, 1 gold text, 2 dim text, 3 HUD bars, 4 gold lettering,
@@ -471,6 +472,44 @@ def build_fix():
         disk = np.abs(xs - 3.5) + np.abs(ys - 3.5)
         g[disk < 3.6] = 1
         g[disk < 2.6] = fill
+        defines.append(f"#define SLF_FIX_{name} {put(g)}u")
+    # The HUD portrait's frame, 4x4 cells over the 32x32 face: a dark rim and a
+    # gold line inside it (the four middle cells stay clear).
+    fr = np.zeros((32, 32), np.uint8)
+    fr[0, :] = fr[-1, :] = fr[:, 0] = fr[:, -1] = 1
+    fr[1, 1:-1] = fr[-2, 1:-1] = fr[1:-1, 1] = fr[1:-1, -2] = 2
+    fr[0, 0] = fr[0, -1] = fr[-1, 0] = fr[-1, -1] = 0          # rounded corners
+    first = tile
+    for cy in range(4):
+        for cx in range(4):
+            put(fr[cy * 8:cy * 8 + 8, cx * 8:cx * 8 + 8])
+    defines.append(f"#define SLF_FIX_FRAME {first}u")
+    # Team members (a rounded block each: waiting, fighting now, beaten) and
+    # the striker's calls left (a diamond: ready, spent).
+    ys, xs = np.mgrid[0:8, 0:8]
+    block = (np.abs(xs - 3.5) <= 2.5) & (np.abs(ys - 3.5) <= 2.5) & ~((np.abs(xs - 3.5) > 1.5) & (np.abs(ys - 3.5) > 1.5))
+    rim = np.zeros((8, 8), bool)
+    for dy in (-1, 0, 1):
+        for dx in (-1, 0, 1):
+            rim |= np.roll(np.roll(block, dy, 0), dx, 1)
+    rim &= ~block
+    for name, fill, mark in (("MEMBER_UP", 8, None), ("MEMBER_NOW", 2, 7), ("MEMBER_OUT", 4, 5)):
+        g = np.zeros((8, 8), np.uint8)
+        g[rim] = 1
+        g[block] = fill
+        if mark == 7:
+            g[2, 2:5] = 7                                   # a glint on the one fighting
+        elif mark == 5:
+            for k in range(1, 7):
+                if block[k, k]: g[k, k] = 5                 # struck through
+                if block[k, 7 - k]: g[k, 7 - k] = 5
+        defines.append(f"#define SLF_FIX_{name} {put(g)}u")
+    diamond = np.abs(xs - 3.5) + np.abs(ys - 3.5)
+    for name, fill in (("ASSIST_ON", 6), ("ASSIST_OFF", 0)):
+        g = np.zeros((8, 8), np.uint8)
+        g[diamond < 3.6] = 1 if fill else 9
+        g[diamond < 2.6] = fill if fill else 0
+        if fill: g[2, 3:5] = 8
         defines.append(f"#define SLF_FIX_{name} {put(g)}u")
     # Large lettering, in the free tiles between the system font and the text page.
     bars_end = tile
@@ -569,6 +608,21 @@ def build():
     port_tile = place(port_block)
     header.append(f"#define SLF_PORTRAIT_TILE {port_tile}u")
     header.append(f"#define SLF_CURSOR_TILE {port_tile + len(fighters) * 4}u")
+    # HUD portraits: each fighter's painted face (assets/authored/faces, the
+    # select wall's) brought down to 32x32 by area averaging, 15 colours of its
+    # own; the FIX draws the frame over its edge.
+    hud_faces, hud_pals = [], []
+    for f in fighters:
+        im = Image.open(GAME / "assets/authored/faces" / f"{f.id}.png").convert("RGB").resize((32, 32), Image.BOX)
+        q = im.quantize(colors=15, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE)
+        hud_faces.append(np.asarray(q, np.uint8) + 1)
+        cols = np.asarray(q.getpalette()[:45], np.uint8).reshape(-1, 3)
+        pal = np.zeros((16, 3), np.uint8)
+        pal[1:1 + len(cols)] = cols[:15]
+        hud_pals.append(palette_words(pal))
+    header.append(f"#define SLF_HUD_FACE_TILE {place(np.vstack(hud_faces))}u")
+    header.append("static const uint16_t slf_hud_face_pals[][16] = {" + ",".join(
+        "{" + ",".join(str(v) for v in p) + "}" for p in hud_pals) + "};")
     # The select screen's wall of faces (palettes 32-47: the stage is not up there)
     import select_wall
     ready = [int(f.authored is not None) for f in fighters]
@@ -626,8 +680,13 @@ def build():
         master = Image.open(authored).convert("RGBA")
         if master.size != (512, 224):
             master = master.resize((512, 224), Image.Resampling.LANCZOS)
+        # The painting's single-pixel grain cleaned up first (the most common
+        # colour of each 3x3, so edges stay), then 32 palettes fitted tile by
+        # tile and refined: the sky, the beams and the wet floors keep their
+        # gradients instead of breaking into 16-pixel blocks.
+        master = master.convert("RGB").filter(ImageFilter.ModeFilter(3)).convert("RGBA")
         near_rgba = np.asarray(master)
-        indices, banks, assignment = quantize(near_rgba, bank_limit=STAGE_BANKS)
+        indices, banks, assignment = quantize(near_rgba, bank_limit=STAGE_BANKS, refine=4)
         st_near = place(indices)
         st_near_tiles.append(st_near)
         st_far_tiles.append(st_near)
@@ -756,6 +815,17 @@ def build():
     # Fighters still waiting for their painted set stay locked on the select
     # wall and out of the CPU line-ups.
     header.append(emit("slf_fighter_ready", [int(f.authored is not None) for f in fighters], "uint8_t"))
+    # The HUD's short names: a name of eight letters or fewer whole, otherwise
+    # the given name (the title-led ones by what they are called).
+    hud_override = {"EL TORO ROJO": "TORO ROJO", "MAD DOG MASON": "MAD DOG", "MASTER HAYATO": "HAYATO"}
+    hud_names = []
+    for f in fighters:
+        full = f.data["name"]
+        short = hud_override.get(full, full if len(full) <= 8 else full.split()[0])
+        if len(short) > 10:
+            raise ValueError(f.id + ": HUD name over ten letters")
+        hud_names.append(short)
+    header.append("static const char * const slf_fighter_hud_name[] = {" + ",".join(f'"{n}"' for n in hud_names) + "};")
     # Voices (slf_voices.py): the shout for each move, and each fighter's voice type.
     import slf_voices
     voice_plan = slf_voices.plan(slf_voices.load_fighters())
@@ -768,6 +838,9 @@ def build():
         move_voice.extend(slf_voices.move_samples(f.data, voice_plan))
     header.append(emit("slf_move_voice_ofs", move_voice_ofs))
     header.append(emit("slf_move_voice", move_voice, "uint8_t"))
+    # each fighter's own win, attack, heavy, throw, hurt and K.O. lines (sample numbers past 255: 16 bits)
+    header.append(f"#define SLF_VOICE_KINDS {len(slf_voices.FIGHTER_VOICE_KINDS)}u")
+    header.append(emit("slf_fighter_voice", [n for f in fighters for n in slf_voices.fighter_voices(f.id, voice_plan)]))
     identity_tables, high_packed = rebirth_assets.tables(place)
     header.extend(identity_tables);identity_packed.extend(high_packed)
     end = c1.tell()
@@ -792,12 +865,15 @@ def build():
         for s in (c1, c2):
             s.seek(top)
     end = c1.tell()
-    if end > 0x800000:raise ValueError('C-ROM lane exceeds the 8 MiB cartridge capacity')
-    for stream in (c1,c2):stream.write(bytes(0x800000-stream.tell()))
+    # Each lane is 8 MiB, or 16 MiB once the art passes that (a 32 MiB C ROM:
+    # 262144 tiles, which the strip maps reach through their tile bits 16-19).
+    lane = 0x800000 if end <= 0x800000 else 0x1000000
+    if end > lane:raise ValueError('C-ROM lane exceeds the 16 MiB cartridge capacity')
+    for stream in (c1,c2):stream.write(bytes(lane-stream.tell()))
     for s, part in zip((c1, c2), ("c1", "c2")):
         final = np.frombuffer(s.getvalue(), dtype=np.uint8).reshape(-1, 2)[:, ::-1].tobytes()
-        if len(final) != 0x800000:
-            raise ValueError("C ROM lane must be 8 MiB")
+        if len(final) != lane:
+            raise ValueError("C ROM lane must be 8 or 16 MiB")
         for dest in (ART, ROMS):
             (dest / f"{GAME_ID}-{part}.{part}").write_bytes(final)
     (OUT / "fighter-layout.json").write_text(json.dumps(fighter_layout,indent=2)+"\n")
@@ -838,7 +914,7 @@ def main():
     header += fix_defines
     header.append("static "+fix_palette_definition())
     public_names = ("slf_fighter_defs", "slf_fighter_strip_maps", "slf_fighter_strip_offsets",
-                    "slf_fighter_pals", "slf_fighter_origin", "slf_fighter_style", "slf_fighter_quote", "slf_fighter_stages", "slf_fighter_ready", "slf_fighter_columns", "slf_fighter_frame_anchors", "slf_fighter_anchor_x", "slf_fighter_anchor_y", "slf_voice_type", "slf_move_voice_ofs", "slf_move_voice",
+                    "slf_fighter_pals", "slf_fighter_origin", "slf_fighter_style", "slf_fighter_quote", "slf_fighter_stages", "slf_fighter_ready", "slf_fighter_columns", "slf_fighter_frame_anchors", "slf_fighter_anchor_x", "slf_fighter_anchor_y", "slf_voice_type", "slf_fighter_voice", "slf_move_voice_ofs", "slf_move_voice",
                     "slf_cursor_pals", "slf_command_guides", "slf_fighter_fx", "slf_fx_pals", "slf_proj_pals", "slf_shadow_pal", "slf_stage_pals",
                     "slf_stage_far_maps", "slf_stage_maps", "slf_stage_far_tiles", "slf_stage_tiles",
                     "slf_stage_names", "slf_fix_pals", "slf_stage_dark_pals",
@@ -846,7 +922,8 @@ def main():
                     "slf_hud_plate_pal",
                     "slf_fighter_bank_offsets", "slf_fighter_bank_counts", "slf_fighter_bank_pals",
                     "slf_presentation_offsets", "slf_wall_map", "slf_wall_pals", "slf_wall_row_len",
-                    "slf_wall_row_start", "slf_wall_row_off", "slf_face_pals", "slf_face_maps")
+                    "slf_wall_row_start", "slf_wall_row_off", "slf_face_pals", "slf_face_maps",
+                    "slf_hud_face_pals", "slf_fighter_hud_name")
     macros=[item for item in header[6:] if item.startswith("#define ")]
     body="\n".join(item for item in header[6:] if not item.startswith("#define "))
     declarations=[]

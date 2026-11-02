@@ -34,8 +34,10 @@ import ml_objects  # noqa: E402
 PAINTED = GAME / "artbox/painted"
 # Maiya and Luna are drawn with the first game's own frames (games/maiya), in
 # its two palettes: Luna wears Maiya's pixels in her own colours, as there.
-ORIGINAL = ROOT / "games/maiya/artbox/in/generated"
-ORIGINAL_HEADER = ROOT / "games/maiya/artbox/generated/maiya_assets.h"
+# (a copy of the frames and palettes used, taken from the first game's
+# generated art, so this game builds from a clean checkout)
+ORIGINAL = GAME / "artbox/from_maiya"
+ORIGINAL_HEADER = GAME / "artbox/from_maiya/palettes.h"
 SISTER_FRAMES = (['hero_idle0', 'hero_idle1', 'hero_idle2'] + [f'hero_gait_walk{k}' for k in range(8)] +
                  ['hero_crouch', 'hero_atk0', 'hero_atk1', 'hero_atk2', 'hero_atk3', 'hero_art0', 'hero_hurt0',
                   'hero_cast2'])

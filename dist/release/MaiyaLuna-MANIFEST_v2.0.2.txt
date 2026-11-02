@@ -1,0 +1,12 @@
+# MaiyaLuna v2.0.2: dist/release, made by tools/make_release.py
+# size  crc32     sha256  file
+ 17567744  53b181bf  44ec5815e74a542ce34ee83ffe6ff7f20e381a21dff6bea0d10cef8fb49fbae3  MaiyaLuna-WIP-NeoSD_MVS_v2.0.2.neo
+ 17567744  fdbfa12f  b22d5a2f581d6b241457c1edd0787d02346fd188687c38c95dee59d7632dd432  MaiyaLuna-WIP-NeoSD_AES_v2.0.2.neo
+  7751515  2c46818d  48df48fff3228e8a06515a0c4485f218458e7d7e20a98959dfe99e870627f9e5  MaiyaLuna-Darksoft-MVS_v2.0.2.zip
+  7751516  3f2a76d6  968fd2ee4d3950a119b8e524141b4beefb3753cce8e3eb53ff2495fbf1db29fe  MaiyaLuna-Darksoft-AES_v2.0.2.zip
+  7758155  ba2925da  d476c70d088257ac62ded627fa53d5f73441701e1829d84cc4fa0f38a52029d7  MaiyaLuna-BackBit-MVS_v2.0.2.zip
+  7758241  f1137c8d  dabea187554a7789ae86469755a68956c507be4176d49eb54ac1c17b340964df  MaiyaLuna-BackBit-AES_v2.0.2.zip
+  7808503  530384db  69cdad67e1d11b108ec5b51a7cfcd0a6796744f5e1b4ccdcc53ab246c2c56505  MaiyaLuna-WIP-EagleBIOS_v2.0.2.zip
+  7786986  c29af9a3  a748a9415f73e633050f60720cc5cbf5bd2422d8ee9b4c3db887147c9758a6e1  MaiyaLuna-WIP-AES-EagleBIOS_v2.0.2.zip
+     4685  af765aa2  e95ab088ab3a39a85c009b7c8c8aa99f287b9c7355eb958c54927b13fddd241d  MaiyaLuna-README_v2.0.2.txt
+     2864  8689ebec  08551b2e69c5c9ae16255076992ecd97c17b8d3d3772e23dc711abcee7afa607  MaiyaLuna-CHANGELOG_v2.0.2.txt

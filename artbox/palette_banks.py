@@ -102,8 +102,8 @@ def quantize(rgba, bank_limit=1, master=None, dither="none", refine=0):
     height, width = rgba.shape[:2]
     if height % 16 or width % 16 or height == 0 or width == 0:
         raise ValueError("Palette canvases must be positive multiples of 16")
-    if not 1 <= bank_limit <= 16:
-        raise ValueError("palette_banks must be between 1 and 16")
+    if not 1 <= bank_limit <= 255:
+        raise ValueError("palette_banks must be between 1 and 255")
     rgb = rgba[:, :, :3]
     visible = rgba[:, :, 3] >= 128
     core = training_mask(rgba)

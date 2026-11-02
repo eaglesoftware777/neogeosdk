@@ -501,7 +501,15 @@ void NEOGEO_USER ng_sprite_group_init(NGSpriteGroup *g, uint16_t firstSprite, ui
 
 void NEOGEO_USER ng_sprite_group_set_priority(NGSpriteGroup *g, uint8_t prio)
 {
-    if (g) g->prio = prio <= NG_SG_PRIO_LOW ? prio : NG_SG_PRIO_NORMAL;
+    if (g) g->prio = (uint8_t)((g->prio & NG_SG_MOVE_FIRST) |
+                               (prio <= NG_SG_PRIO_LOW ? prio : NG_SG_PRIO_NORMAL));
+}
+
+void NEOGEO_USER ng_sprite_group_set_move_first(NGSpriteGroup *g, uint8_t on)
+{
+    if (!g) return;
+    if (on) g->prio = (uint8_t)(g->prio | NG_SG_MOVE_FIRST);
+    else g->prio = (uint8_t)(g->prio & (uint8_t)~NG_SG_MOVE_FIRST);
 }
 
 void NEOGEO_USER ng_sprite_group_mark_dirty(NGSpriteGroup *g, uint8_t dirty_flags)
@@ -975,9 +983,9 @@ void NEOGEO_USER ng_sprite_group_flush(NGSpriteGroup *g)
     uint16_t *count, n;
     if (!g || !(g->dirty & NG_SGF_DIRTY_ALL)) return;
     if (g->dirty & NG_SGF_QUEUED) return;          /* already listed: written as it is then */
-    if (g->prio == NG_SG_PRIO_HIGH && ngsg_high_n < NG_VRAM_QUEUE_HIGH) {
+    if ((g->prio & 3u) == NG_SG_PRIO_HIGH && ngsg_high_n < NG_VRAM_QUEUE_HIGH) {
         q = ngsg_high; count = &ngsg_high_n;
-    } else if (g->prio == NG_SG_PRIO_LOW && ngsg_low_n < NG_VRAM_QUEUE_LOW) {
+    } else if ((g->prio & 3u) == NG_SG_PRIO_LOW && ngsg_low_n < NG_VRAM_QUEUE_LOW) {
         q = ngsg_low; count = &ngsg_low_n;
     } else if (ngsg_norm_n < NG_VRAM_QUEUE_GROUPS) {
         q = ngsg_norm; count = &ngsg_norm_n;
@@ -1231,7 +1239,7 @@ static void NEOGEO_USER ngsg_commit_list(NGSpriteGroup **q, uint16_t *count)
             g->dirty = (uint8_t)(g->dirty & (uint8_t)~NG_SGF_QUEUED);
             continue;
         }
-        if (ngsg_waiting_hide(g)) { q[kept++] = g; continue; }
+        if (ngsg_hide_any && ngsg_waiting_hide(g)) { q[kept++] = g; continue; }
         /* A move phase A had no time for: the driving strip's Y/count and X. */
         if ((g->dirty & NG_SGF_DIRTY_ALL) == NG_SGF_DIRTY_POS && g->readyRows && g->visible) {
             if (left < 2u) { q[kept++] = g; left = ng_vram_lines_left(); continue; }
@@ -1349,11 +1357,20 @@ static void NEOGEO_USER ngsg_commit_moves(NGSpriteGroup **q, uint16_t n)
     for (i = 0; i < n; i++) {
         NGSpriteGroup *g = q[i];
         uint8_t rows = g->readyRows;
+        uint8_t content = (uint8_t)(g->dirty & NG_SGF_DIRTY_ALL);
         /* a move alone: one with new content as well (a pool block given
          * another piece, a creature's next frame) is written whole in
-         * phase B, never its place now and its look a frame later */
-        if ((g->dirty & NG_SGF_DIRTY_ALL) != NG_SGF_DIRTY_POS || !rows || !g->visible) continue;
-        if (ngsg_waiting_hide(g)) continue;
+         * phase B, never its place now and its look a frame later --
+         * unless it is scenery that may move first (NG_SG_MOVE_FIRST) and
+         * the new look is only tiles or colours on the sprites it has */
+        if (!(content & NG_SGF_DIRTY_POS) || !rows || !g->visible) continue;
+        if (content != NG_SGF_DIRTY_POS &&
+            (!(g->prio & NG_SG_MOVE_FIRST) ||
+             (content & (uint8_t)~(NG_SGF_DIRTY_POS | NG_SGF_DIRTY_TILE | NG_SGF_DIRTY_PALETTE)) ||
+             g->mapFirst != g->firstSprite || g->mapStrips != g->strips ||
+             g->mapHeight != g->heightTiles))
+            continue;
+        if (ngsg_hide_any && ngsg_waiting_hide(g)) continue;   /* (no call while none waits) */
         /* the line every eighth move (each is a fraction of a line), every
          * move near the end; what's left keeps its move for phase B or the
          * next blank */

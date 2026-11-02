@@ -65,7 +65,10 @@ def shout(x, sr, item):
     b, a = signal.butter(2, [1800 / (sr / 2), 4200 / (sr / 2)], "bandpass")
     x = x + signal.lfilter(b, a, x) * 0.6
     x = x / max(np.abs(x).max(), 1e-6)
-    drive = 1.6 if item.get("announcer") else 2.4
+    # A win line is a sentence said, not a shout: the announcer's lighter
+    # drive, half the machine colour, and room to finish (below).
+    said = bool(item.get("announcer")) or item.get("voice") == "win"
+    drive = 1.6 if said else 2.4
     x = np.tanh(x * drive) / np.tanh(drive)
     if item.get("robot"):
         t = np.arange(len(x)) / sr
@@ -75,7 +78,7 @@ def shout(x, sr, item):
         for i in range(d, len(comb)):
             comb[i] += comb[i - d] * 0.55
         comb /= max(np.abs(comb).max(), 1e-6)
-        r = item["robot"]
+        r = item["robot"] * (0.5 if item.get("voice") == "win" else 1.0)
         x = x * (1 - r) + (metal * 0.55 + comb * 0.45) * r
     if item.get("announcer"):
         x = room(x, sr, [(0.07, 0.32), (0.14, 0.2), (0.21, 0.12), (0.28, 0.07)])
@@ -88,7 +91,7 @@ def shout(x, sr, item):
     fade[-m:] = np.linspace(1, 0, m)
     x = x * fade
     x = signal.resample_poly(x, RATE, sr)
-    limit = int((2.2 if item.get("announcer") else 1.5) * RATE)
+    limit = int((2.2 if item.get("announcer") else 3.0 if item.get("voice") == "win" else 1.5) * RATE)
     if len(x) > limit:
         x = x[:limit] * np.r_[np.ones(limit - m), np.linspace(1, 0, m)][:limit]
     return x / max(np.abs(x).max(), 1e-6) * 0.97
