@@ -1,12 +1,12 @@
 # Shadow League Fighting
 
 Original Neo Geo MVS/AES fighting game, cartridge ID 781, built on the SDK's
-fighting component (`ng_fight`). The current ROM set is v3.2.1, with the
-NeoGeoSDK v1.7.7 pre-release: the `_v3` set with a new painted title, the
-league's arbiter counting each round in, the league's own calls (CLASH!,
-BLACKOUT, THE NIGHT IS YOURS), over-the-shoulder throws, larger hit effects,
-graded colour, a win scene over the beaten loser and a continue screen with
-the beaten fighter (see CHANGELOG.md).
+fighting component (`ng_fight`). The current ROM set is v3.3.0, released
+with NeoGeoSDK v1.7.7: rounds and team bouts that end with the winner's pose,
+a score with bonus counts and two finales, a new HUD, 32-palette arenas, a
+painted victory and in-between frames for every fighter and each fighter's
+own voice lines, on top of the painted title, the league's arbiter and the
+league's own calls of v3.2 (see CHANGELOG.md).
 
 Two match formats: 1 vs 1 and 3 vs 3 with one selected striker per side. All 44
 fighters now load complete indexed artwork exports. This includes the previously

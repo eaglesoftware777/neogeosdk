@@ -7,7 +7,8 @@ BackBit and fullscreen acceptance remain pending. See CHANGELOG.md for scope.
 
 A native Neo Geo vertical shooter with three pilots, seven long routes and
 one main boss per mission. First public set: `_v1`, with the NeoGeoSDK
-v1.7.3 pre-release (see [CHANGELOG.md](CHANGELOG.md)).
+v1.7.3 pre-release; the current set is v2.1.1, released with NeoGeoSDK v1.7.7
+(see [CHANGELOG.md](CHANGELOG.md)).
 
 The [2026-10-14 hardware candidate](https://github.com/eaglesoftware777/neogeosdk/releases/tag/skylance-hardware-rc1-20261014)
 corrects BIOS-dependent black graphics while retaining the v1 art and audio.

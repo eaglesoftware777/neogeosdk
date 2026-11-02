@@ -4,7 +4,8 @@ An original twelve-mission side-scrolling adventure using the SDK's C 2D engine.
 Game name: `maiya`. Cartridge ID: `780`. The repository default remains `demo`.
 New in SDK v1.7.1.
 
-Current development: **V5 stability candidate with V4 artwork**.
+Current release: **v4.1.0**, with NeoGeoSDK v1.7.7 (see CHANGELOG.md); in
+development: the V5 stability candidate with V4 artwork.
 The original combat, encounters, scoring, collision and rendering behavior are
 restored. There are no intermediate guardians, rank system or experimental
 moving ledges. Three small platform-height adjustments preserve reachable

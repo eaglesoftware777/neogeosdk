@@ -4,7 +4,7 @@ A native Neo Geo single-player beat-'em-up, built on the SDK's beat-'em-up
 engine (`GAME_GENRE_ENGINE = beatemup`, `sdk/2d_engine/ng_beatemup.c`).
 Game ID 784.
 
-Current build: **V3**, the answer to the players' feedback on V2: blows wind up,
+Current build: **V3** (v3.0.1, released with NeoGeoSDK v1.7.7), the answer to the players' feedback on V2: blows wind up,
 land and recover in their own pictures, hold and spark where they hit, reach
 exactly as far as they are drawn, and sound heavier; the street crew dress
 for today; each street keeps one light from end to end, its lights and air
