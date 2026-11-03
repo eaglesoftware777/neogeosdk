@@ -27,7 +27,7 @@ sys.path.insert(0, str(ROOT / "artbox"))
 sys.path.insert(0, str(TOOLS))
 from palette_banks import palette_words, quantize, reconstruct  # noqa: E402
 from palette_grade import grade  # noqa: E402
-FIGHTER_GRADE = 1.3     # fighters, the referee and the select faces
+FIGHTER_GRADE = 1.0     # fighters, the referee and the select faces
 STAGE_GRADE = 0.55      # arenas: livelier, but behind the fighters
 from tile_codec import encode_image, write_utility_tiles  # noqa: E402
 import fighter_cook  # noqa: E402

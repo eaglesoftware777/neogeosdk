@@ -317,7 +317,9 @@ static void NEOGEO_USER vs_screen(uint8_t stage_fighter)
 {
     uint16_t tick;
     uint8_t stage_id = stage_fighter < SLF_FIGHTER_COUNT ? slf_fighter_stages[stage_fighter] : 0u;
+    soundStopAll();
     slf_scene_begin();
+    slf_sfx(SLF_SFX_WHOOSH);
     slf_fighter_palettes(s_def[0], 0u, s_def[1], (uint8_t)(s_def[0] == s_def[1]));
     slf_story_show(SLF_CARD_VS);
     slf_fighter_bank(0u, 0u);
@@ -1031,6 +1033,9 @@ static void NEOGEO_USER win_scene(uint8_t side)
         if (tick > 60u && ((slf_pressed(0u) | slf_pressed(1u)) & (NGF_BTN_A | NGF_BTN_B | NGF_BTN_C | NGF_BTN_D)))
             break;
     }
+    soundFadeOutSpeed(3u);
+    ng_palfx_screen_fade_out(0u, 14u);
+    for (tick = 0u; tick < 14u; tick++) slf_frame();
 }
 
 static void NEOGEO_USER versus(void)
