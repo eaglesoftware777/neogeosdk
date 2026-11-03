@@ -401,8 +401,9 @@ FIX_PALS = [
     [(0, 0, 0), (250, 250, 250), (16, 16, 24), (190, 196, 210)],
     [(0, 0, 0), (255, 220, 90), (40, 20, 0), (230, 160, 40)],
     [(0, 0, 0), (150, 150, 170), (16, 16, 24), (110, 110, 130)],
-    [(0, 0, 0), (29, 36, 56), (255, 232, 96), (240, 156, 40), (44, 18, 30), (232, 44, 40),
-     (149, 105, 231), (250, 215, 113), (179, 202, 219), (91, 108, 139)],
+    [(0, 0, 0), (20, 24, 38), (255, 236, 100), (232, 152, 36), (42, 20, 28), (236, 44, 44),
+     (156, 110, 236), (255, 244, 180), (204, 220, 240), (72, 88, 120), (180, 96, 20),
+     (255, 156, 136), (144, 24, 32), (18, 10, 14), (252, 252, 255), (10, 12, 18)],
     [(0,0,0),(20,10,8),(255,240,176),(236,164,48),(160,80,32),(80,32,24),(255,255,224),(48,24,32)],
     [(0,0,0),(24,4,8),(255,184,136),(232,64,64),(144,32,56),(64,16,32),(255,240,208),(40,16,32)],
     [(0,0,0),(4,8,28),(192,232,255),(64,152,224),(32,72,144),(16,32,72),(240,248,255),(16,24,48)],
@@ -410,6 +411,27 @@ FIX_PALS = [
 ]
 import slf_tall_font  # noqa: E402
 FIX_PALS += [slf_tall_font.PALETTES[k] for k in ('GOLD', 'SILVER', 'RED', 'BLUE')]   # 8-11
+
+
+def load_win_voice_durations(fighters, voice_plan):
+    import slf_voices
+    inc_path = GAME.parents[1] / "sound/driver/sample_table.inc"
+    sizes = {}
+    if inc_path.exists():
+        import re
+        for line in inc_path.read_text().splitlines():
+            m = re.search(r"(\d+)\.adpcma.*size=(\d+)", line)
+            if m:
+                sizes[int(m.group(1))] = int(m.group(2))
+    durations = []
+    for f in fighters:
+        voices = slf_voices.fighter_voices(f.id, voice_plan)
+        win_sample = voices[0] if voices else 0
+        sz = sizes.get(win_sample, 0)
+        dur_sec = (sz * 2) / 18519.0 if sz else 2.0
+        frames = int(round(dur_sec * 60.0))
+        durations.append(max(60, min(255, frames)))
+    return durations
 
 
 def build_fix():
@@ -423,61 +445,129 @@ def build_fix():
         tile += 1
         return tile - 1
 
-    # Life bars: frame on rows 0/7, fill rows 1-6; level 0-8 pixels.
-    # P1 fills from the left, P2 from the right. Colors: 1 frame, 2 fill hi,
-    # 3 fill lo, 4 empty, 5 recent damage.
+    # Life bars: frame on rows 0/7, metallic inner bevel on rows 1/6, fill rows 2-5; level 0-8 pixels.
+    # P1 fills from the left, P2 from the right. Colors: 1 dark rim, 8/14 chrome highlight,
+    # 7/2/3/10 3D gold gradient, 11/5/12 3D damage gradient, 13/4/1 recessed empty backing.
     for side in ("L", "R"):
         first = tile
         for level in range(9):
             for trail in range(9):
                 g = np.full((8, 8), 4, np.uint8)
-                g[0] = 8;g[1] = 1;g[6] = 1;g[7] = 9
-                for c in (range(trail) if side == "L" else range(8-trail,8)):g[2:6,c]=5
-                for c in (range(level) if side == "L" else range(8-level,8)):
-                    g[2:4,c]=2;g[4:6,c]=3
+                # Outer contour: solid dark arcade keyline (1)
+                g[0, :] = 1
+                g[7, :] = 1
+                # Inner metallic bevel: polished chrome highlight (8) with specular gleam (14)
+                g[1, :] = 8
+                g[1, 0::2] = 14
+                g[6, :] = 9
+                # Recessed cavity depth for empty bar
+                g[2, :] = 13
+                g[5, :] = 1
+                # Damage trail fill (level..trail)
+                t_cols = range(trail) if side == "L" else range(8 - trail, 8)
+                for c in t_cols:
+                    g[2, c] = 11
+                    g[3, c] = 5
+                    g[4, c] = 5
+                    g[5, c] = 12
+                # Active life fill (0..level)
+                l_cols = range(level) if side == "L" else range(8 - level, 8)
+                for c in l_cols:
+                    g[2, c] = 7
+                    g[3, c] = 2
+                    g[4, c] = 3
+                    g[5, c] = 10
                 put(g)
         defines.append(f"#define SLF_FIX_BAR_{side} {first}u")
     caps = []
     for side in ("L", "R"):
         g = np.zeros((8, 8), np.uint8)
-        g[:, 3 if side == "L" else 4] = 1
-        g[0, 3:] = 1 if side == "L" else 0
-        if side == "R":
+        if side == "L":
+            g[0, 3:] = 1
+            g[7, 3:] = 1
+            g[1:7, 2] = 1
+            g[1, 3:] = 8
+            g[1, 3] = 14
+            g[6, 3:] = 9
+            g[2:6, 3] = [8, 14, 9, 9]
+            g[2, 4:] = 13
+            g[3:5, 4:] = 4
+            g[5, 4:] = 1
+        else:
             g[0, :5] = 1
-        g[7] = g[0]
+            g[7, :5] = 1
+            g[1:7, 5] = 1
+            g[1, :5] = 8
+            g[1, 4] = 14
+            g[6, :5] = 9
+            g[2:6, 4] = [8, 14, 9, 9]
+            g[2, :4] = 13
+            g[3:5, :4] = 4
+            g[5, :4] = 1
         caps.append(put(g))
     defines.append(f"#define SLF_FIX_CAP_L {caps[0]}u\n#define SLF_FIX_CAP_R {caps[1]}u")
     # Power gauge cell: 1 frame, 6 power fill, 7 full stock.
     first = tile
     for level in range(9):
         g = np.full((8, 8), 0, np.uint8)
-        g[1] = 8
-        g[6] = 1
+        g[0, :] = 1
+        g[7, :] = 1
+        g[1, :] = 8
+        g[6, :] = 9
+        g[2, :] = 13
+        g[3:5, :] = 4
+        g[5, :] = 1
         for c in range(level):
-            g[2:6, c] = 6 if level < 8 else 7
+            if level < 8:
+                g[2, c] = 8
+                g[3:5, c] = 6
+                g[5, c] = 1
+            else:
+                g[2, c] = 14
+                g[3, c] = 7
+                g[4, c] = 2
+                g[5, c] = 10
         put(g)
     defines.append(f"#define SLF_FIX_POWER {first}u")
-    for kind,fill in [('GUARD',8),('GUARD_ALERT',5),('SPIRIT',6)]:
-        for side in ('L','R'):
-            first=tile
+    for kind, fill_hi, fill_lo in [('GUARD', 8, 9), ('GUARD_ALERT', 11, 5), ('SPIRIT', 8, 6)]:
+        for side in ('L', 'R'):
+            first = tile
             for level in range(9):
-                g=np.zeros((8,8),np.uint8);g[2]=9;g[3:5]=1;g[5]=1
-                for c in (range(level) if side=='L' else range(8-level,8)):g[3:5,c]=fill
+                g = np.zeros((8, 8), np.uint8)
+                g[1, :] = 1
+                g[2, :] = 8
+                g[5, :] = 9
+                g[6, :] = 1
+                cols = range(level) if side == 'L' else range(8 - level, 8)
+                for c in cols:
+                    g[3, c] = fill_hi
+                    g[4, c] = fill_lo
                 put(g)
             defines.append(f'#define SLF_FIX_{kind}_{side} {first}u')
-    # Round-win marker: empty and won.
-    for name, fill in (("MARK_OFF", 4), ("MARK_ON", 2)):
+    # Round-win marker: empty medal vs gold medal
+    for name, rim_col, fill_core, fill_hi in (("MARK_OFF", 9, 4, 13), ("MARK_ON", 1, 2, 7)):
         g = np.zeros((8, 8), np.uint8)
         ys, xs = np.mgrid[0:8, 0:8]
         disk = np.abs(xs - 3.5) + np.abs(ys - 3.5)
         g[disk < 3.6] = 1
-        g[disk < 2.6] = fill
+        g[disk < 2.6] = rim_col
+        g[disk < 1.9] = fill_core
+        if name == "MARK_ON":
+            g[2, 3:5] = 14
+        else:
+            g[2, 3:5] = fill_hi
         defines.append(f"#define SLF_FIX_{name} {put(g)}u")
-    # The HUD portrait's frame, 4x4 cells over the 32x32 face: a dark rim and a
-    # gold line inside it (the four middle cells stay clear).
+    # The HUD portrait's frame, 4x4 cells over the 32x32 face: a dark rim, metallic chrome bevel
+    # and corner studs (the four middle cells stay clear).
     fr = np.zeros((32, 32), np.uint8)
     fr[0, :] = fr[-1, :] = fr[:, 0] = fr[:, -1] = 1
-    fr[1, 1:-1] = fr[-2, 1:-1] = fr[1:-1, 1] = fr[1:-1, -2] = 2
+    fr[1, 1:-1] = 8
+    fr[1:-1, 1] = 8
+    fr[-2, 1:-1] = 9
+    fr[1:-1, -2] = 9
+    for cy in (1, 30):
+        for cx in (1, 30):
+            fr[cy, cx] = 14
     fr[0, 0] = fr[0, -1] = fr[-1, 0] = fr[-1, -1] = 0          # rounded corners
     first = tile
     for cy in range(4):
@@ -841,6 +931,7 @@ def build():
     # each fighter's own win, attack, heavy, throw, hurt and K.O. lines (sample numbers past 255: 16 bits)
     header.append(f"#define SLF_VOICE_KINDS {len(slf_voices.FIGHTER_VOICE_KINDS)}u")
     header.append(emit("slf_fighter_voice", [n for f in fighters for n in slf_voices.fighter_voices(f.id, voice_plan)]))
+    header.append(emit("slf_fighter_voice_frames", load_win_voice_durations(fighters, voice_plan), "uint8_t"))
     identity_tables, high_packed = rebirth_assets.tables(place)
     header.extend(identity_tables);identity_packed.extend(high_packed)
     end = c1.tell()
@@ -914,7 +1005,7 @@ def main():
     header += fix_defines
     header.append("static "+fix_palette_definition())
     public_names = ("slf_fighter_defs", "slf_fighter_strip_maps", "slf_fighter_strip_offsets",
-                    "slf_fighter_pals", "slf_fighter_origin", "slf_fighter_style", "slf_fighter_quote", "slf_fighter_stages", "slf_fighter_ready", "slf_fighter_columns", "slf_fighter_frame_anchors", "slf_fighter_anchor_x", "slf_fighter_anchor_y", "slf_voice_type", "slf_fighter_voice", "slf_move_voice_ofs", "slf_move_voice",
+                    "slf_fighter_pals", "slf_fighter_origin", "slf_fighter_style", "slf_fighter_quote", "slf_fighter_stages", "slf_fighter_ready", "slf_fighter_columns", "slf_fighter_frame_anchors", "slf_fighter_anchor_x", "slf_fighter_anchor_y", "slf_voice_type", "slf_fighter_voice", "slf_fighter_voice_frames", "slf_move_voice_ofs", "slf_move_voice",
                     "slf_cursor_pals", "slf_command_guides", "slf_fighter_fx", "slf_fx_pals", "slf_proj_pals", "slf_shadow_pal", "slf_stage_pals",
                     "slf_stage_far_maps", "slf_stage_maps", "slf_stage_far_tiles", "slf_stage_tiles",
                     "slf_stage_names", "slf_fix_pals", "slf_stage_dark_pals",

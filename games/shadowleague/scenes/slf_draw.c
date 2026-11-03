@@ -295,7 +295,17 @@ void NEOGEO_USER slf_puts(uint8_t x, uint8_t y, const char *text, uint8_t pal)
     ng_fix_puts(x, y, line, pal);
 }
 
-static uint8_t NEOGEO_USER slen(const char *s)
+void NEOGEO_USER slf_puts_partial(uint8_t x, uint8_t y, const char *text, uint8_t count, uint8_t pal)
+{
+    char line[41];
+    uint8_t i;
+    if (!text || x >= 40u || y >= 28u) return;
+    for (i = 0u; i < count && i < (uint8_t)(40u - x) && text[i]; i++) line[i] = text[i];
+    line[i] = '\0';
+    ng_fix_puts(x, y, line, pal);
+}
+
+uint8_t NEOGEO_USER slf_slen(const char *s)
 {
     uint8_t n = 0u;
     while (s[n] && n < 40u) n++;
@@ -304,13 +314,13 @@ static uint8_t NEOGEO_USER slen(const char *s)
 
 void NEOGEO_USER slf_puts_center(uint8_t y, const char *text, uint8_t pal)
 {
-    uint8_t n = slen(text);
+    uint8_t n = slf_slen(text);
     slf_puts((uint8_t)(n < 40u ? (40u - n) / 2u : 0u), y, text, pal);
 }
 
 void NEOGEO_USER slf_puts_right(uint8_t x_end, uint8_t y, const char *text, uint8_t pal)
 {
-    uint8_t n = slen(text);
+    uint8_t n = slf_slen(text);
     slf_puts((uint8_t)(x_end + 1u > n ? x_end + 1u - n : 0u), y, text, pal);
 }
 
@@ -327,13 +337,13 @@ void NEOGEO_USER slf_puts_tall(uint8_t x, uint8_t y, const char *text, uint8_t p
 
 void NEOGEO_USER slf_puts_tall_center(uint8_t y, const char *text, uint8_t pal)
 {
-    uint8_t n = slen(text);
+    uint8_t n = slf_slen(text);
     slf_puts_tall((uint8_t)(n < 40u ? (40u - n) / 2u : 0u), y, text, pal);
 }
 
 void NEOGEO_USER slf_puts_tall_right(uint8_t x_end, uint8_t y, const char *text, uint8_t pal)
 {
-    uint8_t n = slen(text);
+    uint8_t n = slf_slen(text);
     slf_puts_tall((uint8_t)(x_end + 1u > n ? x_end + 1u - n : 0u), y, text, pal);
 }
 

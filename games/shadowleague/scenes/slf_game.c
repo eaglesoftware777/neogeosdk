@@ -405,6 +405,7 @@ static uint8_t s_tally, s_tally_side, s_tally_line, s_tally_lines;
 static uint16_t s_tally_t;
 static uint32_t s_tally_value[3], s_tally_shown, s_tally_total, s_tally_step;
 static const uint8_t k_tally_row[3] = {9u, 11u, 13u};
+static uint16_t s_win_voice_hold;
 
 static void NEOGEO_USER tally_begin(NGFMatch *m, uint8_t side)
 {
@@ -494,7 +495,7 @@ static void NEOGEO_USER tally_step(NGFMatch *m)
         if (s_tally_t < 70u && !(skip && s_tally_t > 10u)) return;
         slf_clear_rows(7u, 17u);
         s_tally = TALLY_OFF;
-        m->end_hold = 0u;
+        m->end_hold = (uint8_t)(s_win_voice_hold != 0u);
         return;
     default:
         return;
@@ -908,7 +909,12 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
             }
             if (m->state == NGF_M_ROUND_END) {
                 uint8_t w = m->round_winner;
-                if (w < 2u) { s_win_voice_def = active_def[w]; s_win_voice_t = 40u; }
+                if (w < 2u) {
+                    s_win_voice_def = active_def[w];
+                    s_win_voice_t = 30u;
+                    s_win_voice_hold = (uint16_t)(s_win_voice_t + slf_fighter_voice_frames[s_win_voice_def] + 20u);
+                    m->end_hold = 1u;
+                }
                 s_round_untouched = (uint8_t)(w < 2u && m->f[w].life && m->f[w].life >= s_bout_life[w]);
                 if (s_round_untouched) s_untouched[w]++;
             }
@@ -924,6 +930,9 @@ static uint8_t NEOGEO_USER run_match(uint8_t lv0, uint8_t lv1, uint8_t mode)
         else s_ref_phase = 0xFFu;
         if (counter_clear && !--counter_clear) announce_clear();
         if (s_win_voice_t && !--s_win_voice_t) fighter_says(s_win_voice_def, SLF_VOICE_WIN);
+        if (s_win_voice_hold) {
+            if (!--s_win_voice_hold && !s_tally) m->end_hold = 0u;
+        }
         if (s_tally) tally_step(m);
         if (team) {
             uint8_t side, changed = 0u;
@@ -1005,7 +1014,14 @@ static void NEOGEO_USER win_scene(uint8_t side)
     static const int16_t k_lose_x[3] = {150, 210, 270};   /* a kneel is some 60 pixels wide */
     uint8_t win_def = s_end_def[side], lose[3], n = 0u, k, win_alt = 0u;
     uint8_t stage = slf_stage_current();
-    uint16_t tick;
+    uint16_t tick, voice_len = (uint16_t)slf_fighter_voice_frames[win_def];
+    uint16_t total_ticks = (uint16_t)(voice_len + 150u);
+    const char *q0 = slf_fighter_quote[win_def][0];
+    const char *q1 = slf_fighter_quote[win_def][1];
+    uint8_t len0 = slf_slen(q0), len1 = slf_slen(q1);
+    uint8_t x0 = (uint8_t)(len0 < 40u ? (40u - len0) / 2u : 0u);
+    uint8_t x1 = (uint8_t)(len1 < 40u ? (40u - len1) / 2u : 0u);
+    if (total_ticks < 320u) total_ticks = 320u;
     if (s_end_team) for (k = 0u; k < 3u; k++) lose[n++] = s_roster[side ^ 1u][k];
     else lose[n++] = s_end_def[side ^ 1u];
     for (k = 0u; k < n; k++) if (lose[k] == win_def && side) win_alt = 1u;   /* (the side-2 copy wore the other colours) */
@@ -1017,11 +1033,20 @@ static void NEOGEO_USER win_scene(uint8_t side)
     slf_stage_show(96);
     slf_stage_darken(1u);
     slf_puts_tall_center(3u, slf_fighter_defs[win_def]->name, SLF_TALL_GOLD);
-    slf_puts_center(6u, slf_fighter_quote[win_def][0], SLF_PAL_TEXT);
-    slf_puts_center(7u, slf_fighter_quote[win_def][1], SLF_PAL_TEXT);
-    for (tick = 0u; tick < 300u; tick++) {
+    for (tick = 0u; tick < total_ticks; tick++) {
         slf_frame();
-        if (tick == 30u) fighter_says(win_def, SLF_VOICE_WIN);
+        if (tick == 20u) fighter_says(win_def, SLF_VOICE_WIN);
+        if (tick >= 20u) {
+            uint16_t sp = (uint16_t)(tick - 20u);
+            uint8_t c0 = (uint8_t)(sp / 2u);
+            if (c0 > len0) c0 = len0;
+            slf_puts_partial(x0, 6u, q0, c0, SLF_PAL_TEXT);
+            if (sp >= (uint16_t)(len0 * 2u + 8u)) {
+                uint8_t c1 = (uint8_t)((sp - (len0 * 2u + 8u)) / 2u);
+                if (c1 > len1) c1 = len1;
+                slf_puts_partial(x1, 7u, q1, c1, SLF_PAL_TEXT);
+            }
+        }
         slf_actor_pose(0u, win_def, anim_sprite(win_def, NGF_A_WIN, tick), n > 1u ? 64 : 104, SLF_FLOOR_Y - 125, 0u);
         for (k = 0u; k < n; k++) {
             uint8_t kneel = anim_hold(lose[k], NGF_A_LOSE, tick);
@@ -1030,7 +1055,7 @@ static void NEOGEO_USER win_scene(uint8_t side)
             slf_actor_pose((uint8_t)(1u + k), lose[k], kneel, (int16_t)(x + slf_fighter_body_offset(lose[k], kneel)),
                            SLF_FLOOR_Y - 125, 1u);
         }
-        if (tick > 60u && ((slf_pressed(0u) | slf_pressed(1u)) & (NGF_BTN_A | NGF_BTN_B | NGF_BTN_C | NGF_BTN_D)))
+        if (tick > (uint16_t)(voice_len + 40u) && ((slf_pressed(0u) | slf_pressed(1u)) & (NGF_BTN_A | NGF_BTN_B | NGF_BTN_C | NGF_BTN_D)))
             break;
     }
     soundFadeOutSpeed(3u);
