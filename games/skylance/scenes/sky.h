@@ -5,7 +5,7 @@
 #include "sdk/macro.h"
 #include "sdk/2d_engine/ng_sprite_pool.h"
 
-#define SKY_VERSION_TEXT "V3 CANDIDATE"
+#define SKY_VERSION_TEXT "V2.2.0 WIP"
 
 #ifndef NEOGEO_USER
 #define NEOGEO_USER

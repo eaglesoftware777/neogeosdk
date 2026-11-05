@@ -4,6 +4,7 @@ import sys
 import tempfile
 import unittest
 import subprocess
+import wave
 
 import numpy as np
 
@@ -13,7 +14,7 @@ from mml_inputs import ordered_inputs
 from pcm_metadata import delta_n, read_rate, write_rate
 import fm_compile
 import mml_compile
-from wav_to_raw_pcm import resample_bandlimited, resample_linear
+from wav_to_raw_pcm import convert_wav_to_raw, resample_bandlimited, resample_linear
 
 
 def decode_a(data):
@@ -30,6 +31,20 @@ def decode_a(data):
 
 
 class SoundToolsTests(unittest.TestCase):
+    def test_native_mono_samples_are_bit_exact(self):
+        samples = np.array([-32768, -32767, -12000, -1, 0, 1, 12000, 32767], dtype='<i2')
+        with tempfile.TemporaryDirectory() as folder:
+            wav = Path(folder) / 'source.wav'
+            raw = Path(folder) / 'output.raw'
+            with wave.open(str(wav), 'wb') as stream:
+                stream.setnchannels(1)
+                stream.setsampwidth(2)
+                stream.setframerate(16000)
+                stream.writeframes(samples.tobytes())
+            convert_wav_to_raw(wav, raw, 16000)
+            self.assertEqual(raw.read_bytes(), samples.tobytes())
+            self.assertEqual(read_rate(raw), 16000)
+
     def test_sample_rates_survive_metadata_and_legacy_fallback(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / "music.adpcmb"

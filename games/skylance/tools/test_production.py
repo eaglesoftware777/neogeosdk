@@ -9,6 +9,7 @@ import unittest
 
 from PIL import Image
 from alpha_audit import inspect
+from redrawn import hostile_projectile
 
 GAME = Path(__file__).resolve().parents[1]
 
@@ -158,6 +159,16 @@ class Gameplay(unittest.TestCase):
             self.lib.sky_score_extends(ctypes.byref(self.r), ctypes.c_uint32(999999), ctypes.byref(lives))
         self.assertEqual((lives.value, self.r.extends), (3, 3))
 
+    def test_pilots_have_distinct_balanced_fire_patterns(self):
+        velocities = []
+        for pilot in range(3):
+            shots = (Shot * 3)()
+            count = self.lib.sky_weapon_pattern(pilot, 4, shots)
+            self.assertEqual(count, 3)
+            velocities.append([shots[i].vx for i in range(count)])
+            self.assertEqual(sum(velocities[-1]), 0)
+        self.assertEqual(velocities, [[0, 0, 0], [-2, 0, 2], [1, 0, -1]])
+
     def test_death_preserves_earned_resources(self):
         self.r.power, self.r.fuel, self.r.shields = 4, 0, 2
         self.lib.sky_resources_death(ctypes.byref(self.r))
@@ -166,6 +177,17 @@ class Gameplay(unittest.TestCase):
 
 
 class Alpha(unittest.TestCase):
+    def test_hostile_projectiles_are_native_and_readable(self):
+        for kind in range(8):
+            image = hostile_projectile(kind)
+            self.assertEqual(image.size, (16, 16))
+            pixels = [image.getpixel((x, y)) for y in range(16) for x in range(16)]
+            opaque = [p for p in pixels if p[3] == 255]
+            self.assertTrue(all(p[3] in (0, 255) for p in pixels))
+            self.assertGreaterEqual(len(opaque), 25)
+            self.assertTrue(any(max(p[:3]) >= 200 for p in opaque))
+            self.assertTrue(any(max(p[:3]) <= 40 for p in opaque))
+
     def test_report_never_changes_source(self):
         original = Image.new("RGBA", (5, 5), (80, 90, 100, 255))
         original.putpixel((2, 2), (0, 0, 0, 0))

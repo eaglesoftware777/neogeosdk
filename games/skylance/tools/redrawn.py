@@ -7,6 +7,31 @@ from PIL import Image
 MASTER = Path(__file__).resolve().parents[1] / "artbox/redrawn"
 
 
+def hostile_projectile(kind):
+    """Hand-placed native pixels; keep the 16x16 canvas and impact anchor."""
+    shapes = (
+        ("...K...", "..KRK..", ".KRYRK.", ".KRYRK.", ".KRYRK.", ".KRYRK.", "..KRK..", "..KRK..", "...K..."),
+        ("...K...", "..KBK..", ".KBCBK.", ".KBCBK.", ".KBCBK.", ".KBCBK.", "..KBK..", "..KBK..", "...K..."),
+        ("...K...", "..KRK..", ".KRORK.", "KROYORK", "KROYORK", ".KRORK.", "..KRK..", "..KRK..", "...K..."),
+        ("...K...", "..KRK..", ".KROYK.", "KROWWRK", "KROWWRK", ".KROYK.", "..KRK..", ".KRRRK.", "..KRK.."),
+        ("...K...", "..KBK..", ".KBCBK.", "KBCWCBK", "KBCWCBK", ".KBCBK.", "..KBK..", "..KBK..", "...K..."),
+        ("...K...", "..KRK..", "..KOK..", ".KRYRK.", ".KRYRK.", "..KOK..", "..KRK..", "..KRK..", "...K..."),
+        ("..KKK..", ".KRRRK.", "KROOORK", "KROYORK", "KROYORK", "KROOORK", ".KRRRK.", "..KRK..", "...K..."),
+        ("..KKK..", ".KBBBK.", "KBCCCBK", "KBCWCBK", "KBCWCBK", "KBCCCBK", ".KBBBK.", "..KBK..", "...K..."),
+    )
+    palette = {'.': (0, 0, 0, 0), 'K': (24, 20, 36, 255),
+               'R': (181, 30, 39, 255), 'O': (255, 99, 32, 255),
+               'Y': (255, 202, 55, 255), 'W': (255, 248, 203, 255),
+               'B': (21, 79, 150, 255), 'C': (82, 226, 255, 255)}
+    pixels = np.zeros((16, 16, 4), dtype=np.uint8)
+    for y, row in enumerate(shapes[kind]):
+        if len(row) != 7:
+            raise ValueError("projectile row must be seven pixels wide")
+        for x, colour in enumerate(row):
+            pixels[y + 3, x + 4] = palette[colour]
+    return Image.fromarray(pixels, "RGBA")
+
+
 def cells(filename, columns, rows):
     image = Image.open(MASTER / filename).convert("RGBA")
     alpha = np.asarray(image)[:, :, 3] >= 128
@@ -78,8 +103,7 @@ def load():
                for name, p in zip(names, combat)}
     names = ("sam", "radar_truck", "submarine", "aa_bunker", "radar_site")
     artwork.update({name: native(p, (32, 32)) for name, p in zip(names, combat[7:12])})
-    artwork.update({f"hostile_{i}": native(p, (16, 16))
-                    for i, p in enumerate(combat[12:20])})
+    artwork.update({f"hostile_{i}": hostile_projectile(i) for i in range(8)})
     artwork.update({f"cockpit_{i}": native(p, (64, 112))
                     for i, p in enumerate(cells("cockpits-v2.png", 3, 1))})
     maneuvers = cells("aircraft-maneuvers-v2.png", 4, 3)

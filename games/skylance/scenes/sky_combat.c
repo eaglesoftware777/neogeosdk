@@ -143,7 +143,8 @@ uint8_t NEOGEO_USER sky_weapon_pattern(uint8_t pilot, uint8_t power, SkyShot sho
     count = (uint8_t)(power >= 3u ? 3u : power ? 2u : 1u);
     for (i = 0u; i < count; i++) {
         shots[i].x = (int8_t)(count == 1u ? 0 : count == 2u ? (i ? 8 : -8) : (i - 1) * 12);
-        shots[i].vx = (int8_t)(pilot == 1u ? (count == 1u ? 0 : count == 2u ? (i ? 1 : -1) : (i - 1) * 2) : 0);
+        shots[i].vx = (int8_t)(pilot == 1u ? (count == 1u ? 0 : count == 2u ? (i ? 1 : -1) : (i - 1) * 2) :
+                               pilot == 2u && count > 1u ? (count == 2u ? (i ? -1 : 1) : (1 - i)) : 0);
         shots[i].damage = (uint8_t)(1u + (power >= 2u) + (power == 4u) + (pilot == 2u && power >= 2u));
         shots[i].art = (uint8_t)(pilot * 5u + power);
     }

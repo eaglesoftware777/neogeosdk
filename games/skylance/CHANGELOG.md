@@ -3,6 +3,16 @@
 Sky Lance's ROM sets ship with the NeoGeoSDK pre-releases and are numbered
 on their own: `_v1` with v1.7.3, `_v2` with v1.7.7.
 
+## v2.2.0 test candidate
+
+- Added four enemy waves per sector and introduced bombers in the opening sector.
+- The third pilot's multi-shot pattern converges while the other pilots retain their patterns.
+- Redrew enemy projectiles on the native pixel grid with stronger outlines and highlights.
+- Preserve already matching PCM samples exactly in the audio conversion tools.
+
+These are incremental changes; the wider scenery and presentation redesign, full
+campaign balance checks, and physical hardware verification remain outstanding.
+
 ## v2.1.1 (2026-11-02, NeoGeoSDK v1.7.7)
 
 - Rebuilt with the v1.7.7 release's engine and sound driver; play is
